@@ -148,6 +148,13 @@ canvas:focus { outline: none; }
 /* hide the controls while Knock is in your face */
 .scaring .hud, .scaring .logbox, .scaring .sailctl, .scaring .specbar, .scaring .netbanner { visibility: hidden; }
 
+/* the folded story and rules on the title card */
+.howto { border-top: 1px solid var(--rule); padding-top: 12px; display: flex; flex-direction: column; gap: 12px; }
+.howto summary { cursor: pointer; font-family: var(--log); font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--lamp); }
+.howto summary:focus-visible { outline: 2px solid var(--lamp); outline-offset: 3px; }
+.howto[open] summary { margin-bottom: 12px; }
+.howto .rules { border-top: 0; padding-top: 0; margin-top: 12px; }
+
 /* invites, chat and the scoreboard */
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .invite { display: flex; flex-direction: column; gap: 6px; font-family: var(--log); font-size: 12px; color: var(--muted); }
@@ -189,7 +196,7 @@ canvas:focus { outline: none; }
 
 .overlay {
   position: absolute; inset: 0;
-  display: grid; place-items: center;
+  display: grid; place-items: start center;
   padding-block: 24px;
   padding-left: max(16px, env(safe-area-inset-left, 0px));
   padding-right: max(16px, env(safe-area-inset-right, 0px));
@@ -198,6 +205,7 @@ canvas:focus { outline: none; }
 }
 .card {
   max-width: 34rem; width: 100%;
+  margin-block: auto;   /* centred when it fits, scrolls from the top when it doesn't */
   background: var(--card);
   border: 1px solid var(--rule);
   padding: 28px 28px 24px;
@@ -337,19 +345,6 @@ canvas:focus { outline: none; }
       <span class="eyebrow">Master's orders · make harbour by night · sound on</span>
       <h1>Skerry Light</h1>
       <p>In the winter of 1887 the lamp at Skerry Light failed, and the keeper's wife, <span class="maren">Maren Holm</span>, rowed out with a lantern to warn the brig Gannet. The Gannet broke up on the rocks. Maren's skiff came back empty.</p>
-      <p>She still stands on the water when the lamp turns, nearer every turn, and she follows any ship she has chosen. The Gannet's drowned crew swim with her, and her figurehead, Knock, walks the water with a belaying pin. Along the coast, wreckers still hang false harbour lights over the rocks. The only thing Maren will not come near is <span class="plim">Plimsoll</span>, the shark who walked out of the surf that winter in the Gannet cabin boy's blue shoes. He knows the deep water through the skerries, but he won't wait for you. <em>Follow his shoes.</em></p>
-      <ul class="rules">
-        <li><b>See</b> rocks, wrecks and drifting timber show only while the beam or a flare is on them, then they are gone</li>
-        <li><b>Follow</b> Plimsoll's glowing shoes. Within 75 m of him, Maren holds where she is. Fall behind and he walks on alone</li>
-        <li><b>Ring the bell</b> (Space) with her anywhere ahead of you (anywhere at all once she's close) to drive her back three stages. It also sinks the drowned and freezes Knock. It swings again in about 15 seconds</li>
-        <li><b>The drowned</b> swim after you; their eyes catch the light. Sail fast to shake them off, or ring the bell. Plimsoll eats them</li>
-        <li><b>Knock</b> moves only while you can't see him. Listen for three knocks on wood, turn, and keep him in your light. The bell freezes him</li>
-        <li><b>False lights</b> red and green lamps that aren't the harbour, over rocks. The beam makes them vanish; the bearing strip shows the real harbour</li>
-        <li><b>Flare</b> (F) lights everything around you for a few seconds, for your whole crew</li>
-        <li><b>Steer</b> ← → or A / D, sail ↑ ↓ or W / S. On a phone, hold the left or right side to steer and use the ▲ ▼ buttons for speed</li>
-        <li><b>Hull</b> three hits and she goes down. Let Maren reach the bow and she comes aboard</li>
-        <li><b>Crew</b> sail with up to seven friends. Ships close together keep her back and patch each other's planks. Shout warnings (1, 2, 3), share flares, and watch your crew after your own voyage ends</li>
-      </ul>
       <div class="btnrow">
         <button class="primary" id="startBtn" type="button">Take the helm alone</button>
         <button class="tool crateOpenBtn" type="button">Crates · 0</button>
@@ -367,6 +362,22 @@ canvas:focus { outline: none; }
           <button class="tool" id="crewQuickBtn" type="button" hidden>Find me a crew</button>
         </div>
       </section>
+      <details class="howto">
+        <summary>The story, and how to play</summary>
+        <p>She still stands on the water when the lamp turns, nearer every turn, and she follows any ship she has chosen. The Gannet's drowned crew swim with her, and her figurehead, Knock, walks the water with a belaying pin. Along the coast, wreckers still hang false harbour lights over the rocks. The only thing Maren will not come near is <span class="plim">Plimsoll</span>, the shark who walked out of the surf that winter in the Gannet cabin boy's blue shoes. He knows the deep water through the skerries, but he won't wait for you. <em>Follow his shoes.</em></p>
+        <ul class="rules">
+          <li><b>See</b> rocks, wrecks and drifting timber show only while the beam or a flare is on them, then they are gone</li>
+          <li><b>Follow</b> Plimsoll's glowing shoes. Within 75 m of him, Maren holds where she is. Fall behind and he walks on alone</li>
+          <li><b>Ring the bell</b> (Space) with her anywhere ahead of you (anywhere at all once she's close) to drive her back three stages. It also sinks the drowned and freezes Knock. It swings again in about 15 seconds</li>
+          <li><b>The drowned</b> swim after you; their eyes catch the light. Sail fast to shake them off, or ring the bell. Plimsoll eats them</li>
+          <li><b>Knock</b> moves only while you can't see him. Listen for three knocks on wood, turn, and keep him in your light. The bell freezes him</li>
+          <li><b>False lights</b> red and green lamps that aren't the harbour, over rocks. The beam makes them vanish; the bearing strip shows the real harbour</li>
+          <li><b>Flare</b> (F) lights everything around you for a few seconds, for your whole crew</li>
+          <li><b>Steer</b> ← → or A / D, sail ↑ ↓ or W / S. On a phone, hold the left or right side to steer and use the ▲ ▼ buttons for speed</li>
+          <li><b>Hull</b> three hits and she goes down. Let Maren reach the bow and she comes aboard</li>
+          <li><b>Crew</b> sail with up to seven friends. Ships close together keep her back and patch each other's planks. Shout warnings (1, 2, 3), share flares, and watch your crew after your own voyage ends</li>
+        </ul>
+      </details>
     </div>
   </div>
 
