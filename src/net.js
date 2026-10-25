@@ -5,7 +5,7 @@
 //  - anywhere else, the WebSocket relay in server/server.js (see src/transport.js).
 // Everyone connected shares one lobby, and all crew traffic travels in presence (each player's
 // own state object). Each ship sails on its own screen; crewmates see each other's positions and
-// hull, hear each other's bells and shouts, share flares, and patch each other's hulls when they
+// hull, hear each other's bells, share flares, and patch each other's hulls when they
 // sail close together. Once your voyage is over you can watch a crewmate's from their deck.
 // The crew's host (whoever joined first) chooses when to set sail.
 // With no connection the game plays solo exactly as before.
@@ -121,7 +121,7 @@ function myPresence() {
     app: 'skerry', crew: NET.crew, joinedAt: NET.joinedAt, ready: NET.ready, nick: NET.nick || null,
     launch: amHostSafe() ? NET.launch : null,
     voy: NET.launch ? NET.launch.voy : 0, st: NET.st,
-    bell: NET.bells, flare: NET.flare, shout: NET.shout, chat: NET.chat, ghost: NET.ghost, stats: NET.stats,
+    bell: NET.bells, flare: NET.flare, chat: NET.chat, ghost: NET.ghost, stats: NET.stats,
     skin: mySkin().id, pennant: CRATES.pennant, boat: CRATES.boat, maxHull: myBoat().hull,
   };
 }
@@ -258,12 +258,6 @@ function syncMates() {
       if (gh > m.ghostN) { m.ghostN = gh; if (pr.ghost.to === NET.myPeer) ghostBellFor(m); }
       else m.ghostN = gh;
       m.stats = cleanStats(pr.stats);
-      const sh = counter(pr.shout);
-      if (sh > m.shoutN) {
-        m.shoutN = sh;
-        const text = SHOUTS[pr.shout.k];
-        if (text) mateShout(m, text);
-      } else m.shoutN = sh;
       m.by = p.by; m.slot = slotOf(p.peer); m.name = nameOf(p, m.slot);
       m.st = pr.voy === NET.launch.voy ? pr.st : null;
       m.hull = Number.isFinite(pr.hull) ? pr.hull : (m.maxHull || SK.HULL);

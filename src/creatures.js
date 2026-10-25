@@ -69,7 +69,7 @@ function ringBell() {
   g.stats.bells++;
   sfxBell();
   if (crewMode) { NET.bells++; send(); }
-  if (bellShoosVerity()) addLog('Verity slides off the bowsprit into the water, still smiling. He will be back.', 'p');
+  if (g.verity && g.verity.on && g.verity.t < SK.VERITY_TIME) addLog('The bell rings right over Verity. He keeps smiling. Bells don\u2019t bother him.', 'w');
   const drowned = bellDrownsThem();
   if (bellStunsKnock()) addLog('The knocking stops. Knock stands frozen for a few seconds.', 'p');
   const m = g.maren;
@@ -78,7 +78,7 @@ function ringBell() {
     addLog('The bell rings out and she draws well back.' + (drowned ? ' The drowned sink away.' : ''), 'p');
   } else if (drowned) {
     addLog('The bell rings out and the drowned sink back under.', 'p');
-  } else {
+  } else if (!(g.verity && g.verity.on)) {
     addLog(m.stage >= 1 ? 'The bell rings, but she is behind you. Turn towards her first.' : 'The bell rings out over the water. Nothing answers.');
   }
 }

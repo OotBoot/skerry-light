@@ -1,6 +1,6 @@
 // Verity: a smiling yellow face that turns up sitting on your bowsprit, offering to help.
-// He just sits there, smiling, for twenty seconds. Ring the bell before then and he slides off
-// into the water. Leave him, and he stands up and shows you what he really looks like.
+// He just sits there, smiling, for twenty seconds. The bell does nothing to him; fire a flare before
+// then and the glare sends him off into the water. Leave him, and he stands up and shows you what he really looks like.
 
 IMG.verity = new Image(); IMG.verity.src = SK.ASSETS.verity;
 IMG.verity2 = new Image(); IMG.verity2.src = SK.ASSETS.verity2;
@@ -22,7 +22,7 @@ function updateVerity(dt) {
       v.on = true; v.t = 0; v.said = 0; v.morph = 0;
       sfxVerity(1, 0.9);
       addLog('Something is sitting on the bowsprit, smiling at you. It says it wants to help.', 'w');
-      addLog('Ring the bell before it stops smiling.', 'w');
+      addLog('The bell won\u2019t move it. Fire a flare before it stops smiling.', 'w');
     }
     return;
   }
@@ -41,8 +41,8 @@ function updateVerity(dt) {
   }
 }
 
-// the bell shoos him off, as long as he's still smiling
-function bellShoosVerity() {
+// a flare shoos him off, as long as he's still smiling (the bell does nothing to him)
+function flareShoosVerity() {
   const v = g.verity;
   if (!v || !v.on || v.t >= SK.VERITY_TIME) return false;
   v.on = false; v.gone = 0.8;

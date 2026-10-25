@@ -20,7 +20,6 @@ The only thing she will not go near is **Plimsoll**, the shark who walked up out
 | Sound | M, or the sound button |
 | Speed | ▲ ▼ buttons on the left, hold to change sail (or ↑ ↓). There's no top speed: the longer you hold ▲, the faster it climbs. She picks up speed and slows down almost at once |
 | Flare | F, or the flare button |
-| Shout to crew | 1 Rocks here! · 2 Follow me! · 3 She's near me! |
 
 - **Maren** comes one stage nearer every 6 seconds or so on the first voyage (a little longer each voyage, up to 11): 400 m, 260, 160, 90, then right at the bow, and one more step after that she takes the ship. Between turns she slowly follows your ship, so sailing hard can buy you some distance. You hear her heartbeat and see red at the edges as she closes in.
 - **Plimsoll**: while you are within 45 m of him, Maren holds where she is (she doesn't fall back), so you have to sail close behind him. He keeps pace with your ship at any speed, keeping further ahead the faster you go, and runs to get back in front if you overtake him. He waits only about 4 seconds for a ship that falls behind, then walks on alone. He sometimes snaps up a drowned sailor he walks into.
@@ -30,7 +29,7 @@ The only thing she will not go near is **Plimsoll**, the shark who walked up out
 - **The lighthouse** sweeps round about every 4 seconds on the first voyage, a little slower each voyage (up to 6.5 seconds). Maren keeps her own pace, so the faster beam just shows you more.
 - **Flares** light everything within 350 m for about seven seconds, for your whole crew, then take 35 seconds to reload.
 - **Hull and collisions**: your hull is a capsule from bow to stern, so the whole length of the ship can touch things, not just the bow. Anything you touch pushes you clear. Hitting a rock, wreck, log, wall, the shore or a pier head-on (closing faster than 4.5 m/s at more than about 25°) costs a plank; a glancing touch only scrapes, slowing you and turning you along it. Crewmates' ships bump apart without damage. The drowned and Knock also cost planks. When the planks run out she sinks.
-- **Verity** sometimes climbs onto your bowsprit: a round yellow smiling face that says it wants to help. He just sits there smiling, with a ring counting down 20 seconds. Ring the bell before then and he slides off into the water (he comes back later). Leave him and he stands up into something long and thin, and that jumpscare ends the voyage. He turns up more often in the Backrooms.
+- **Verity** sometimes climbs onto your bowsprit: a round yellow smiling face that says it wants to help. He just sits there smiling, with a ring counting down 20 seconds. The bell does nothing to him: fire a flare before then and he slides off into the water (he comes back later). Leave him and he stands up into something long and thin, and that jumpscare ends the voyage. He turns up more often in the Backrooms.
 - **The Backrooms**: one voyage in twenty (rolled from the crew's seed, so a whole crew goes in together), the lights go out and the sea comes back with walls. It's a flooded maze of yellow rooms under buzzing tubes that go dark each time the lamp would have turned. Plimsoll knows the way to the green EXIT sign, and the bearing strip points at it. Maren, the drowned, Knock and Verity all follow you in. Add `?backrooms` to the address to force one (solo only).
 - **The sea**: voyages start about 2.4 km out (further each voyage), through a wide stretch of skerries, wrecks and drifting timber.
 - **Harbour**: steer between the real red and green pier lamps. Each voyage after that has more rocks, wreckage and drowned, and the beam turns slower.
@@ -71,7 +70,7 @@ Up to eight people can sail as a crew. Each of you sails your own brig through t
 - **Ships within 55 m of each other keep Maren where she is**, the same way Plimsoll does.
 - **Sailing in company**: stay within 45 m of a crewmate for 10 seconds and your carpenters patch a plank.
 - **A bell rung within 160 m of a crewmate** drives her back two stages on their ship too.
-- **Flares** light the water for everyone, and **shouts** (1, 2, 3) show over your ship on your crewmates' screens with how far away you are.
+- **Flares** light the water for everyone.
 - **Spectating**: once you sink, are taken or make harbour, you can watch a crewmate's voyage from their deck until the voyage ends, and once per voyage you can **ring a bell for them**, driving their Maren back a stage.
 - **Scoreboard**: at the end of each voyage the crew screen shows each ship's outcome, time, hits, bells, flares, planks patched and drowned fed to Plimsoll.
 - **Reconnecting**: if a connection drops, the game reconnects by itself and carries on with the same crew.

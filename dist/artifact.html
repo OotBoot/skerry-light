@@ -464,12 +464,7 @@ html, body, button, .overlay, .card { touch-action: manipulation; }
   <div class="logbox" id="logbox" hidden>
     <ul id="log" aria-live="polite"></ul>
     <div class="tools">
-      <span id="hint">← → steer · ↑ ↓ sail · Space bell · F flare · 1 2 3 shout to crew · M sound</span>
-      <div class="toolrow shouts" id="shoutRow" hidden>
-        <button class="tool" id="shout1" type="button">1 · Rocks here!</button>
-        <button class="tool" id="shout2" type="button">2 · Follow me!</button>
-        <button class="tool" id="shout3" type="button">3 · She's near me!</button>
-      </div>
+      <span id="hint">← → steer · ↑ ↓ sail · Space bell · F flare · M sound</span>
       <div class="toolrow">
         <button class="tool" id="soundBtn" type="button" aria-pressed="true">Sound on</button>
         <button class="tool meter" id="flareBtn" type="button"><b>Fire a flare</b><small>F · <span id="flareState">Ready</span></small></button>
@@ -528,9 +523,9 @@ html, body, button, .overlay, .card { touch-action: manipulation; }
           <li><b>Steer</b> ← → or A / D, sail ↑ ↓ or W / S. On a phone, hold the left or right side to steer and use the ▲ ▼ buttons for speed</li>
           <li><b>Boats</b> the Brig takes three hits, the quick Cutter two, the heavy Barque five. Glancing off a rock only slows you; hitting it head on costs a plank.</li>
           <li><b>Hull</b> when the planks run out she goes down. Let Maren reach the bow and she comes aboard</li>
-          <li><b>Verity</b> sometimes you'll find a smiling yellow face sitting on your bowsprit, offering to help. He isn't helping. Ring the bell before twenty seconds are up, or see what he really looks like</li>
+          <li><b>Verity</b> sometimes you'll find a smiling yellow face sitting on your bowsprit, offering to help. He isn't helping, and the bell doesn't bother him. Fire a flare before twenty seconds are up, or see what he really looks like</li>
           <li><b>The Backrooms</b> about one voyage in twenty, the lights go out and the sea comes back with walls: a flooded maze of yellow rooms. Follow Plimsoll to the green EXIT sign</li>
-          <li><b>Crew</b> sail with up to seven friends. Ships close together keep her back and patch each other's planks. Shout warnings (1, 2, 3), share flares, and watch your crew after your own voyage ends</li>
+          <li><b>Crew</b> sail with up to seven friends. Ships close together keep her back and patch each other's planks. Share flares, chat in the crew screen, and watch your crew after your own voyage ends</li>
         </ul>
       </details>
     </div>
@@ -1966,7 +1961,7 @@ function ringBell() {
   g.stats.bells++;
   sfxBell();
   if (crewMode) { NET.bells++; send(); }
-  if (bellShoosVerity()) addLog('Verity slides off the bowsprit into the water, still smiling. He will be back.', 'p');
+  if (g.verity && g.verity.on && g.verity.t < SK.VERITY_TIME) addLog('The bell rings right over Verity. He keeps smiling. Bells don\u2019t bother him.', 'w');
   const drowned = bellDrownsThem();
   if (bellStunsKnock()) addLog('The knocking stops. Knock stands frozen for a few seconds.', 'p');
   const m = g.maren;
@@ -1975,7 +1970,7 @@ function ringBell() {
     addLog('The bell rings out and she draws well back.' + (drowned ? ' The drowned sink away.' : ''), 'p');
   } else if (drowned) {
     addLog('The bell rings out and the drowned sink back under.', 'p');
-  } else {
+  } else if (!(g.verity && g.verity.on)) {
     addLog(m.stage >= 1 ? 'The bell rings, but she is behind you. Turn towards her first.' : 'The bell rings out over the water. Nothing answers.');
   }
 }
@@ -2368,8 +2363,8 @@ function drawLures() {
 
 // ---- src/verity.js ----
 // Verity: a smiling yellow face that turns up sitting on your bowsprit, offering to help.
-// He just sits there, smiling, for twenty seconds. Ring the bell before then and he slides off
-// into the water. Leave him, and he stands up and shows you what he really looks like.
+// He just sits there, smiling, for twenty seconds. The bell does nothing to him; fire a flare before
+// then and the glare sends him off into the water. Leave him, and he stands up and shows you what he really looks like.
 
 IMG.verity = new Image(); IMG.verity.src = SK.ASSETS.verity;
 IMG.verity2 = new Image(); IMG.verity2.src = SK.ASSETS.verity2;
@@ -2391,7 +2386,7 @@ function updateVerity(dt) {
       v.on = true; v.t = 0; v.said = 0; v.morph = 0;
       sfxVerity(1, 0.9);
       addLog('Something is sitting on the bowsprit, smiling at you. It says it wants to help.', 'w');
-      addLog('Ring the bell before it stops smiling.', 'w');
+      addLog('The bell won\u2019t move it. Fire a flare before it stops smiling.', 'w');
     }
     return;
   }
@@ -2410,8 +2405,8 @@ function updateVerity(dt) {
   }
 }
 
-// the bell shoos him off, as long as he's still smiling
-function bellShoosVerity() {
+// a flare shoos him off, as long as he's still smiling (the bell does nothing to him)
+function flareShoosVerity() {
   const v = g.verity;
   if (!v || !v.on || v.t >= SK.VERITY_TIME) return false;
   v.on = false; v.gone = 0.8;
@@ -2514,7 +2509,6 @@ let best = 0;
 try { best = parseInt(localStorage.getItem('skerry-helm-best') || '0', 10) || 0; } catch (e) {}
 const keys = {}, touches = new Map();
 let sailHold = 0;   // the on-screen sail buttons
-const SHOUTS = { 1: 'Rocks here!', 2: 'Follow me!', 3: "She's near me!" };
 
 function newVoyage(n, attract, seed, slot) {
   const v = makeVoyage(n, attract, seed);
@@ -2584,12 +2578,13 @@ function advanceBeam(dt) {
   return g.beam < prev - Math.PI;
 }
 
-// ---------- flares, shouts and sailing in company ----------
+// ---------- flares and sailing in company ----------
 function fireFlare() {
   if (state !== 'play' || g.flareCd > 0) return;
   g.flareCd = SK.FLARE_COOLDOWN;
   g.stats.flares++;
   addFlare(ship.x, ship.y, myFlare().id);
+  if (flareShoosVerity()) addLog('In the flare\u2019s glare Verity slides off the bowsprit into the water, still smiling. He will be back.', 'p');
   sfxFlare();
   addLog('Flare away. Everything within ' + SK.FLARE_RADIUS + ' m is lit for a few seconds.', 'p');
   if (crewMode) { NET.flares++; NET.flare = { n: NET.flares, x: Math.round(ship.x), y: Math.round(ship.y), skin: myFlare().id }; send(); }
@@ -2602,13 +2597,6 @@ function flareAt(x, y) {
     if (d < SK.FLARE_RADIUS) best = Math.max(best, (1 - d / SK.FLARE_RADIUS) * Math.min(1, f.t / 1.5) * 1.4);
   }
   return Math.min(1, best);
-}
-function shout(k) {
-  if (state !== 'play' || !crewMode || g.shoutT > 0 || !SHOUTS[k]) return;
-  g.shoutT = 2;
-  NET.shouts++; NET.shout = { n: NET.shouts, k }; send();
-  sfxHorn(0, 0.8);
-  addLog('You: ' + SHOUTS[k], 'p');
 }
 function sailInCompany(dt) {
   if (!crewMode || ship.hull >= ship.maxHull) { g.repairT = 0; return; }
@@ -2815,7 +2803,6 @@ function updateFlareButton() {
   b.style.setProperty('--p', p.toFixed(2));
   b.classList.toggle('ready', p >= 1);
   $('flareState').textContent = p >= 1 ? 'Ready' : 'Loading';
-  $('shoutRow').hidden = !crewMode;
 }
 
 let bellShown = -1;
@@ -2979,8 +2966,6 @@ addEventListener('keydown', e => {
     e.preventDefault(); if (!e.repeat) ringBell();
   } else if (k === 'f' && state === 'play') {
     if (!e.repeat) fireFlare();
-  } else if ((k === '1' || k === '2' || k === '3') && state === 'play') {
-    if (!e.repeat) shout(+k);
   } else if (k === 'm') {
     toggleSound();
   }
@@ -3000,7 +2985,6 @@ $('againBtn').addEventListener('click', startRun);
 $('bellBtn').addEventListener('click', e => { ringBell(); e.currentTarget.blur(); cv.focus({ preventScroll: true }); });
 $('soundBtn').addEventListener('click', e => { audioInit(); toggleSound(); e.currentTarget.blur(); });
 $('flareBtn').addEventListener('click', e => { fireFlare(); e.currentTarget.blur(); cv.focus({ preventScroll: true }); });
-for (const k of [1, 2, 3]) $('shout' + k).addEventListener('click', e => { shout(k); e.currentTarget.blur(); cv.focus({ preventScroll: true }); });
 // hold to make or shorten sail, for phones
 for (const [id, dir] of [['sailUp', 1], ['sailDown', -1]]) {
   const b = $(id);
@@ -3120,7 +3104,7 @@ function wsTransport(url) {
 //  - anywhere else, the WebSocket relay in server/server.js (see src/transport.js).
 // Everyone connected shares one lobby, and all crew traffic travels in presence (each player's
 // own state object). Each ship sails on its own screen; crewmates see each other's positions and
-// hull, hear each other's bells and shouts, share flares, and patch each other's hulls when they
+// hull, hear each other's bells, share flares, and patch each other's hulls when they
 // sail close together. Once your voyage is over you can watch a crewmate's from their deck.
 // The crew's host (whoever joined first) chooses when to set sail.
 // With no connection the game plays solo exactly as before.
@@ -3236,7 +3220,7 @@ function myPresence() {
     app: 'skerry', crew: NET.crew, joinedAt: NET.joinedAt, ready: NET.ready, nick: NET.nick || null,
     launch: amHostSafe() ? NET.launch : null,
     voy: NET.launch ? NET.launch.voy : 0, st: NET.st,
-    bell: NET.bells, flare: NET.flare, shout: NET.shout, chat: NET.chat, ghost: NET.ghost, stats: NET.stats,
+    bell: NET.bells, flare: NET.flare, chat: NET.chat, ghost: NET.ghost, stats: NET.stats,
     skin: mySkin().id, pennant: CRATES.pennant, boat: CRATES.boat, maxHull: myBoat().hull,
   };
 }
@@ -3373,12 +3357,6 @@ function syncMates() {
       if (gh > m.ghostN) { m.ghostN = gh; if (pr.ghost.to === NET.myPeer) ghostBellFor(m); }
       else m.ghostN = gh;
       m.stats = cleanStats(pr.stats);
-      const sh = counter(pr.shout);
-      if (sh > m.shoutN) {
-        m.shoutN = sh;
-        const text = SHOUTS[pr.shout.k];
-        if (text) mateShout(m, text);
-      } else m.shoutN = sh;
       m.by = p.by; m.slot = slotOf(p.peer); m.name = nameOf(p, m.slot);
       m.st = pr.voy === NET.launch.voy ? pr.st : null;
       m.hull = Number.isFinite(pr.hull) ? pr.hull : (m.maxHull || SK.HULL);

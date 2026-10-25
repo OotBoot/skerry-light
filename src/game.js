@@ -7,7 +7,6 @@ let best = 0;
 try { best = parseInt(localStorage.getItem('skerry-helm-best') || '0', 10) || 0; } catch (e) {}
 const keys = {}, touches = new Map();
 let sailHold = 0;   // the on-screen sail buttons
-const SHOUTS = { 1: 'Rocks here!', 2: 'Follow me!', 3: "She's near me!" };
 
 function newVoyage(n, attract, seed, slot) {
   const v = makeVoyage(n, attract, seed);
@@ -77,12 +76,13 @@ function advanceBeam(dt) {
   return g.beam < prev - Math.PI;
 }
 
-// ---------- flares, shouts and sailing in company ----------
+// ---------- flares and sailing in company ----------
 function fireFlare() {
   if (state !== 'play' || g.flareCd > 0) return;
   g.flareCd = SK.FLARE_COOLDOWN;
   g.stats.flares++;
   addFlare(ship.x, ship.y, myFlare().id);
+  if (flareShoosVerity()) addLog('In the flare\u2019s glare Verity slides off the bowsprit into the water, still smiling. He will be back.', 'p');
   sfxFlare();
   addLog('Flare away. Everything within ' + SK.FLARE_RADIUS + ' m is lit for a few seconds.', 'p');
   if (crewMode) { NET.flares++; NET.flare = { n: NET.flares, x: Math.round(ship.x), y: Math.round(ship.y), skin: myFlare().id }; send(); }
@@ -95,13 +95,6 @@ function flareAt(x, y) {
     if (d < SK.FLARE_RADIUS) best = Math.max(best, (1 - d / SK.FLARE_RADIUS) * Math.min(1, f.t / 1.5) * 1.4);
   }
   return Math.min(1, best);
-}
-function shout(k) {
-  if (state !== 'play' || !crewMode || g.shoutT > 0 || !SHOUTS[k]) return;
-  g.shoutT = 2;
-  NET.shouts++; NET.shout = { n: NET.shouts, k }; send();
-  sfxHorn(0, 0.8);
-  addLog('You: ' + SHOUTS[k], 'p');
 }
 function sailInCompany(dt) {
   if (!crewMode || ship.hull >= ship.maxHull) { g.repairT = 0; return; }
@@ -308,7 +301,6 @@ function updateFlareButton() {
   b.style.setProperty('--p', p.toFixed(2));
   b.classList.toggle('ready', p >= 1);
   $('flareState').textContent = p >= 1 ? 'Ready' : 'Loading';
-  $('shoutRow').hidden = !crewMode;
 }
 
 let bellShown = -1;
@@ -472,8 +464,6 @@ addEventListener('keydown', e => {
     e.preventDefault(); if (!e.repeat) ringBell();
   } else if (k === 'f' && state === 'play') {
     if (!e.repeat) fireFlare();
-  } else if ((k === '1' || k === '2' || k === '3') && state === 'play') {
-    if (!e.repeat) shout(+k);
   } else if (k === 'm') {
     toggleSound();
   }
@@ -493,7 +483,6 @@ $('againBtn').addEventListener('click', startRun);
 $('bellBtn').addEventListener('click', e => { ringBell(); e.currentTarget.blur(); cv.focus({ preventScroll: true }); });
 $('soundBtn').addEventListener('click', e => { audioInit(); toggleSound(); e.currentTarget.blur(); });
 $('flareBtn').addEventListener('click', e => { fireFlare(); e.currentTarget.blur(); cv.focus({ preventScroll: true }); });
-for (const k of [1, 2, 3]) $('shout' + k).addEventListener('click', e => { shout(k); e.currentTarget.blur(); cv.focus({ preventScroll: true }); });
 // hold to make or shorten sail, for phones
 for (const [id, dir] of [['sailUp', 1], ['sailDown', -1]]) {
   const b = $(id);
