@@ -7,7 +7,7 @@ IMG.verity2 = new Image(); IMG.verity2.src = SK.ASSETS.verity2;
 
 function newVerity(backrooms) {
   // he's more at home in the rooms
-  return { on: false, t: 0, next: backrooms ? rand(20, 40) : rand(55, 110), morph: 0, said: 0, gone: 0 };
+  return { on: false, t: 0, next: backrooms ? rand(10, 20) : rand(20, 40), morph: 0, said: 0, gone: 0 };
 }
 
 function updateVerity(dt) {
@@ -46,7 +46,7 @@ function flareShoosVerity() {
   const v = g.verity;
   if (!v || !v.on || v.t >= SK.VERITY_TIME) return false;
   v.on = false; v.gone = 0.8;
-  v.next = g.backrooms ? rand(35, 60) : rand(70, 130);
+  v.next = g.backrooms ? rand(18, 30) : rand(30, 55);
   stopVerity();
   sfxSplash(0.3, 1);
   return true;
