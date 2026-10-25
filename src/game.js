@@ -82,7 +82,7 @@ function fireFlare() {
   g.flareCd = SK.FLARE_COOLDOWN;
   g.stats.flares++;
   addFlare(ship.x, ship.y, myFlare().id);
-  if (flareShoosVerity()) addLog('In the flare\u2019s glare Verity slides off the bowsprit into the water, still smiling. He will be back.', 'p');
+  if (flareShoosVerity()) addLog('In the flare\u2019s glare Verity rolls back over the rail into the water, still smiling. He will be back.', 'p');
   sfxFlare();
   addLog('Flare away. Everything within ' + SK.FLARE_RADIUS + ' m is lit for a few seconds.', 'p');
   if (crewMode) { NET.flares++; NET.flare = { n: NET.flares, x: Math.round(ship.x), y: Math.round(ship.y), skin: myFlare().id }; send(); }
@@ -427,7 +427,7 @@ function endRun(how) {
   $('endTitle').textContent = taken ? 'Maren Came Aboard' : verity ? 'Verity Helped' : knocked ? 'Knocked Under' : 'Lost on the Skerries';
   $('endText').textContent = taken
     ? 'She stood at the bow, and then she was on the deck. The brig was found at dawn drifting off the Gannet, with her lantern still lit and nobody aboard.'
-    : verity ? 'He only wanted to help. The ship was found at dawn with nobody aboard and a wide, yellow smile scratched into the bowsprit.'
+    : verity ? 'He only wanted to help. The ship was found at dawn with nobody aboard and a wide, yellow smile scratched into the deck.'
     : knocked ? 'Three knocks on the hull, and the fourth came straight through the planks. They say the Gannet\u2019s figurehead is still smiling.'
     : (run.voyages === 0 ? 'She went down before you sighted the pier lamps. The skerries keep their reputation.' :
       'You brought her in ' + run.voyages + (run.voyages === 1 ? ' time' : ' times') + ' before the rocks had the last word.');
