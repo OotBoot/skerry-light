@@ -32,7 +32,11 @@ const SK = {
   ASSETS: {
     maren: 'assets/maren.png',
     plimsoll: 'assets/plimsoll.png',
+    knock: 'assets/knock.png',
   },
+  KNOCK_ASPECT: 201 / 474,
+  KNOCK_SPEED: 8,         // m/s, but only while nobody is looking at him
+  KNOCK_STUN: 8,          // seconds the bell freezes him
   MAREN_ASPECT: 170 / 295,
   PLIM_ASPECT: 380 / 309,
 
@@ -46,6 +50,7 @@ const SK = {
     { date: '9 January 1888', text: 'The schooner Wren came through the skerries last night without a scratch. Her master swears a shark in shoes walked ahead of her on the water the whole way in. The men call him Plimsoll now.' },
     { date: '20 January 1888', text: 'Fishermen say a woman stands on the water when the lamp turns. Each turn she is a little nearer. She keeps away from the shark. She will not go near him.' },
     { date: '3 February 1888', text: 'I saw her tonight from the gallery, close under a ship’s bow. I rang the bell as hard as I could and she was gone. She came back two turns later.' },
+    { date: '11 February 1888', text: 'The Gannet\u2019s figurehead is gone from the wreck. Old Pascoe says he saw it walking on the water with a belaying pin, and that it stops dead the moment you put a light on it. You hear it before you see it: three knocks on wood.' },
     { date: 'Undated', text: 'If you are reading this, keep Plimsoll close and keep the bell ready. She is still rowing out to the Gannet. She will take any ship that lets her come aboard.' },
   ],
 };

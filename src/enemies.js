@@ -4,12 +4,95 @@
 // but if one reaches a ship sailing slowly it climbs aboard and tears out a plank. Ships going fast
 // shake them off, the bell drives them under, and Plimsoll eats any he can catch.
 //
+// Knock is the Gannet's carved figurehead, walked off the wreck with a belaying pin. He moves only
+// while nobody is looking at him: put him in your view in the beam, your lantern or a flare and he
+// stops dead. You hear him coming, three knocks on wood, quicker and louder as he closes. If he
+// reaches the hull he strikes it and is thrown back into the dark. The bell freezes him for a while.
+//
 // The wreckers' lights are a red and a green lamp, like the harbour piers, hung over a cluster of
 // rocks to lure ships in. The lighthouse beam shows them for what they are: they go dark when it
 // passes over them, and snuff out for good when a ship gets close.
 
 function newEnemies(lures) {
-  return { drowned: [], spawnT: 10, lures: lures || [], warnedLure: false };
+  return { drowned: [], spawnT: 10, lures: lures || [], warnedLure: false, knocks: [], knockT: 22 };
+}
+
+// ---------- Knock ----------
+function placeKnock(k, near) {
+  for (let tries = 0; tries < 20; tries++) {
+    const b = ship.h + Math.PI + rand(-1.6, 1.6), d = near ? rand(200, 260) : rand(240, 320);
+    const x = ship.x + Math.sin(b) * d, y = ship.y + Math.cos(b) * d;
+    if (y < 40) continue;
+    k.x = x; k.y = y; return;
+  }
+  k.x = ship.x; k.y = ship.y + 280;
+}
+function knockSeen(k) {
+  if (flareAt(k.x, k.y) > 0.2) return true;
+  const inView = Math.abs(angDiff(bearingOf(k.x - ship.x, k.y - ship.y), ship.h)) < fov / 2;
+  return inView && visibility(k.x, k.y) > 0.25;
+}
+function updateKnocks(dt) {
+  const E = g.enemies;
+  E.knockT -= dt;
+  const max = g.n >= 4 ? 2 : 1;
+  if (E.knockT <= 0 && E.knocks.length < max) {
+    const k = { x: 0, y: 0, ph: 0, wait: 0, stun: 0, knockT: 1, seen: false, warned: false };
+    placeKnock(k, false);
+    E.knocks.push(k);
+    E.knockT = 30;
+    if (!E.knockWarned) { E.knockWarned = true; addLog('Somewhere behind you, three knocks on wood.', 'w'); }
+  }
+  for (const k of E.knocks) {
+    if (k.stun > 0) k.stun -= dt;
+    if (k.wait > 0) { k.wait -= dt; continue; }
+    const dx = ship.x - k.x, dy = ship.y - k.y, dist = Math.hypot(dx, dy) || 1;
+    k.seen = knockSeen(k);
+    const moving = !k.seen && k.stun <= 0;
+    if (moving) {
+      const sp = (SK.KNOCK_SPEED + g.n * 0.5) * dt;
+      k.x += dx / dist * sp; k.y += dy / dist * sp; k.ph += dt * 8;
+      k.knockT -= dt;
+      if (k.knockT <= 0 && dist < 420) {
+        const pan = clamp(angDiff(bearingOf(k.x - ship.x, k.y - ship.y), ship.h) / (fov / 2), -1, 1);
+        const near = 1 - dist / 420;
+        sfxKnock(pan, 0.25 + near * 0.85, 0.22 - near * 0.1);
+        k.knockT = 2.6 - near * 1.9;
+      }
+    }
+    if (dist < 9) {
+      k.wait = 15; placeKnock(k, true);
+      if (ship.inv > 0 || state !== 'play') continue;
+      ship.inv = 1.4; g.shake = 0.6;
+      sfxKnock(0, 1.2, 0.09); sfxHit();
+      burst(ship.x + Math.sin(ship.h) * 4, ship.y + Math.cos(ship.h) * 4, ['#c98a4a', '#ece4cf', '#8a6a4a'], 26, 7, 8);
+      ship.hull--; run.hits++; g.stats.hits++;
+      renderHud();
+      if (ship.hull <= 0) { addLog('Knock beat the hull in, three blows, and she went down.', 'w'); endRun('sunk'); return; }
+      addLog('Knock struck the hull. Keep a light on him and he cannot move.', 'w');
+    }
+  }
+}
+function bellStunsKnock() {
+  let n = 0;
+  for (const k of g.enemies.knocks) if (Math.hypot(k.x - ship.x, k.y - ship.y) < 160 && k.wait <= 0) { k.stun = SK.KNOCK_STUN; n++; }
+  return n;
+}
+function drawKnock(k, q, vis) {
+  if (vis < 0.02 || k.wait > 0 || !imgReady(IMG.knock)) return;
+  const h = 5.2 * q.s, w = h * SK.KNOCK_ASPECT;
+  const moving = !k.seen && k.stun <= 0;
+  const bob = moving ? Math.abs(Math.sin(k.ph)) * 0.05 * h : 0;
+  const tilt = reduceMotion ? 0 : (moving ? Math.sin(k.ph) * 0.07 : (Math.random() - 0.5) * 0.01);
+  ctx.save();
+  ctx.translate(q.x, q.y - bob);
+  ctx.rotate(tilt);
+  ctx.globalAlpha = vis * 0.2;
+  ctx.save(); ctx.scale(1, -0.4); ctx.drawImage(IMG.knock, -w / 2, -h, w, h); ctx.restore();
+  ctx.globalAlpha = vis;
+  ctx.drawImage(IMG.knock, -w / 2, -h, w, h);
+  ctx.restore();
+  ctx.globalAlpha = 1;
 }
 
 // ---------- the drowned ----------
@@ -42,6 +125,7 @@ function updateEnemies(dt) {
     if (dist < 90 && d.splashT <= 0) { d.splashT = rand(1.2, 2.6); sfxSplash(pan, 1 - dist / 90); }
     if (Math.hypot(g.plim.x - d.x, g.plim.y - d.y) < 12) {
       d.dead = true;
+      g.stats.eaten++;
       burst(d.x, d.y, ['#c8d6e8', '#ece4cf'], 14, 6, 6);
       squeakFrom(g.plim, Math.hypot(g.plim.x - ship.x, g.plim.y - ship.y), 1.8);
       addLog('Plimsoll caught one of the drowned. Good shark.', 'p');
@@ -54,6 +138,8 @@ function updateEnemies(dt) {
     }
   }
   E.drowned = E.drowned.filter(d => !d.dead && Math.hypot(d.x - ship.x, d.y - ship.y) < 400);
+  updateKnocks(dt);
+  if (state !== 'play') return;
 
   for (const l of E.lures) {
     if (l.gone) continue;
@@ -72,7 +158,7 @@ function boarded() {
   if (ship.inv > 0 || state !== 'play') return;
   ship.inv = 1.4; g.shake = 0.45;
   sfxClaw();
-  ship.hull--; run.hits++;
+  ship.hull--; run.hits++; g.stats.hits++;
   renderHud();
   if (ship.hull <= 0) { addLog('The drowned crew pulled her under.', 'w'); endRun('sunk'); }
   else addLog('A drowned sailor climbed aboard and tore out a plank. Sail faster to shake them off.', 'w');

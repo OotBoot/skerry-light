@@ -18,7 +18,7 @@ html = html.replace(/<link rel="stylesheet" href="(src\/[^"]+)">/g, (_, p) => `<
 const scripts = [...html.matchAll(/<script src="(src\/[^"]+)"><\/script>\n?/g)];
 if (!scripts.length) throw new Error('no scripts found in index.html');
 let js = scripts.map(m => `// ---- ${m[1]} ----\n` + read(m[1])).join('\n');
-for (const asset of ['assets/maren.png', 'assets/plimsoll.png']) {
+for (const asset of ['assets/maren.png', 'assets/plimsoll.png', 'assets/knock.png']) {
   if (!js.includes(`'${asset}'`)) throw new Error('asset path not found in scripts: ' + asset);
   js = js.split(`'${asset}'`).join(`'${dataUri(asset)}'`);
 }

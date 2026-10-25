@@ -52,8 +52,11 @@
     <button class="tool" id="sailDown" type="button" aria-label="Shorten sail: hold to slow down"><span aria-hidden="true">▼</span><small>Slower</small></button>
   </div>
 
+  <div class="netbanner" id="netBanner" hidden role="status">Lost touch with your crew. Reconnecting…</div>
+
   <div class="specbar" id="specBar" hidden>
     <div class="spectext"><b id="specName">Watching</b><span id="specInfo"></span></div>
+    <button class="tool" id="specGhost" type="button">Ring a bell</button>
     <button class="tool" id="specNext" type="button">Next ship</button>
     <button class="tool" id="specBack" type="button">Crew list</button>
   </div>
@@ -63,12 +66,13 @@
       <span class="eyebrow">Master's orders · make harbour by night · sound on</span>
       <h1>Skerry Light</h1>
       <p>In the winter of 1887 the lamp at Skerry Light failed, and the keeper's wife, <span class="maren">Maren Holm</span>, rowed out with a lantern to warn the brig Gannet. The Gannet broke up on the rocks. Maren's skiff came back empty.</p>
-      <p>She still stands on the water when the lamp turns, nearer every half turn, and she keeps pace with any ship she has chosen. The Gannet's drowned crew swim with her. Along the coast, wreckers still hang false harbour lights over the rocks. The only thing Maren will not come near is <span class="plim">Plimsoll</span>, the shark who walked out of the surf that winter in the Gannet cabin boy's blue shoes. He knows the deep water through the skerries, but he won't wait for you. <em>Follow his shoes.</em></p>
+      <p>She still stands on the water when the lamp turns, nearer every half turn, and she keeps pace with any ship she has chosen. The Gannet's drowned crew swim with her, and her figurehead, Knock, walks the water with a belaying pin. Along the coast, wreckers still hang false harbour lights over the rocks. The only thing Maren will not come near is <span class="plim">Plimsoll</span>, the shark who walked out of the surf that winter in the Gannet cabin boy's blue shoes. He knows the deep water through the skerries, but he won't wait for you. <em>Follow his shoes.</em></p>
       <ul class="rules">
         <li><b>See</b> rocks, wrecks and drifting timber show only while the beam or a flare is on them, then they are gone</li>
         <li><b>Follow</b> Plimsoll's glowing shoes. Within 75 m of him, Maren holds where she is. Fall behind and he walks on alone</li>
         <li><b>Ring the bell</b> (Space) while you can see her to drive her back two stages. It takes almost half a minute to swing again</li>
         <li><b>The drowned</b> swim after you; their eyes catch the light. Sail fast to shake them off, or ring the bell. Plimsoll eats them</li>
+        <li><b>Knock</b> moves only while you can't see him. Listen for three knocks on wood, turn, and keep him in your light. The bell freezes him</li>
         <li><b>False lights</b> red and green lamps that aren't the harbour, over rocks. The beam makes them vanish; the bearing strip shows the real harbour</li>
         <li><b>Flare</b> (F) lights everything around you for a few seconds, for your whole crew</li>
         <li><b>Steer</b> ← → or A / D, sail ↑ ↓ or W / S. On a phone, hold the left or right side to steer and use the ▲ ▼ buttons for speed</li>
@@ -84,7 +88,10 @@
           <input id="nick" type="text" maxlength="16" autocomplete="nickname" placeholder="Sailor">
         </div>
         <ul class="crews" id="crewList"></ul>
-        <button class="tool" id="crewStartBtn" type="button" hidden>Start a crew</button>
+        <div class="btnrow">
+          <button class="tool" id="crewStartBtn" type="button" hidden>Start a crew</button>
+          <button class="tool" id="crewQuickBtn" type="button" hidden>Find me a crew</button>
+        </div>
       </section>
     </div>
   </div>
@@ -108,6 +115,27 @@
       <h1 id="crewTitle">Crew Forming</h1>
       <p id="crewText"></p>
       <ul class="members" id="crewMembers"></ul>
+      <div class="invite" id="inviteRow" hidden>
+        <label for="inviteLink">Invite link</label>
+        <div class="inviterow">
+          <input id="inviteLink" type="text" readonly>
+          <button class="tool" id="inviteCopy" type="button">Copy link</button>
+        </div>
+      </div>
+      <div class="score" id="crewScore" hidden>
+        <table>
+          <thead><tr><th scope="col">Ship</th><th scope="col">Outcome</th><th scope="col">Time</th><th scope="col">Hits</th><th scope="col">Bells</th><th scope="col">Flares</th><th scope="col">Patched</th><th scope="col">Fed Plimsoll</th></tr></thead>
+          <tbody id="crewScoreBody"></tbody>
+        </table>
+      </div>
+      <div class="chat">
+        <ul class="chatlog" id="chatLog" hidden></ul>
+        <form class="chatform" id="chatForm">
+          <label for="chatInput" class="sr">Message your crew</label>
+          <input id="chatInput" type="text" maxlength="90" placeholder="Message your crew" autocomplete="off">
+          <button class="tool" type="submit">Send</button>
+        </form>
+      </div>
       <div class="logpage" id="crewLog" hidden>
         <span class="date">Keeper's log · <span id="crewLogDate"></span></span>
         <p id="crewLogText"></p>

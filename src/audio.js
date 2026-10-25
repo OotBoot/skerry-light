@@ -150,6 +150,16 @@ function sfxFlare() {
 function sfxHorn(pan, vol) {
   for (const f of [196, 247]) tone(f, 'sawtooth', 0.08, 0.06 * vol, 0.7, { pan });
 }
+// three knocks on wood, louder and quicker the nearer he is
+function sfxKnock(pan, vol, gap) {
+  if (vol < 0.04) return;
+  for (let i = 0; i < 3; i++) {
+    const d = i * gap;
+    tone(820 + Math.random() * 60, 'sine', 0.002, 0.35 * vol, 0.06, { pan, delay: d, to: 520 });
+    tone(210, 'triangle', 0.002, 0.3 * vol, 0.09, { pan, delay: d, to: 150 });
+    noise('bandpass', 1600, 7, 0.002, 0.25 * vol, 0.05, { pan, delay: d });
+  }
+}
 function sfxSqueak(pan, vol) {
   if (vol < 0.03) return;
   const f = 1700 + Math.random() * 700;

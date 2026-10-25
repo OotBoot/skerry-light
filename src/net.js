@@ -29,6 +29,11 @@ const NET = {
   flares: 0, flare: null,   // flares I've fired, and the last one
   shouts: 0, shout: null,
   watch: null,              // the crewmate I'm watching, once my own voyage is over
+  chats: 0, chat: null, chatLog: [], lastChat: 0,
+  ghosts: 0, ghost: null, ghostUsed: false,   // the one bell a spectator may ring for a crewmate
+  stats: null,              // my numbers for the voyage scoreboard
+  connected: true,
+  pendingJoin: null,        // crew name from an invite link
   lastSend: 0, lastUi: 0, lastNames: 0,
   st: null,                 // my status on this voyage: 'sail' | 'port' | 'sunk' | 'taken'
   results: null,            // results of the last finished voyage
@@ -61,8 +66,11 @@ async function netInit() {
     if (wasCrew) toTitle(); else renderTogether();
   });
   NET.status = 'ready';
+  if (typeof room.onConnection === 'function') room.onConnection(c => { NET.connected = c; renderNetBanner(); }, () => {});
   room.presence({ app: 'skerry', crew: null, nick: NET.nick || null }).catch(() => {});
   renderTogether();
+  // an invite link opens straight into its crew, once we've heard who is here
+  if (NET.pendingJoin) setTimeout(() => { if (NET.pendingJoin && !NET.crew && state === 'title') joinCrew(NET.pendingJoin); NET.pendingJoin = null; }, 1800);
 }
 
 function onPeersChange(change) {
@@ -113,7 +121,7 @@ function myPresence() {
     app: 'skerry', crew: NET.crew, joinedAt: NET.joinedAt, ready: NET.ready, nick: NET.nick || null,
     launch: amHostSafe() ? NET.launch : null,
     voy: NET.launch ? NET.launch.voy : 0, st: NET.st,
-    bell: NET.bells, flare: NET.flare, shout: NET.shout,
+    bell: NET.bells, flare: NET.flare, shout: NET.shout, chat: NET.chat, ghost: NET.ghost, stats: NET.stats,
   };
 }
 function amHostSafe() { return NET.crew && NET.myHostFlag; }
@@ -142,12 +150,36 @@ function joinCrew(code) {
   if (others.length >= MAX_CREW) { NET.message = 'That crew already has three ships.'; renderTogether(); return; }
   enterCrew(code);
 }
+// join the fullest crew that still has a berth, preferring one that hasn't sailed yet
+function quickJoin() {
+  const open = crewSummaries().filter(c => c.n < MAX_CREW).sort((a, b) => (a.atSea - b.atSea) || (b.n - a.n));
+  if (open.length) joinCrew(open[0].code); else startCrew();
+}
+function crewSummaries() {
+  const crews = new Map();
+  for (const p of NET.peers) {
+    const c = p.presence && p.presence.app === 'skerry' && p.presence.crew;
+    if (typeof c !== 'string' || !/^[a-z]+-\d{1,4}$/.test(c) || (p.isMe && p.sameTab)) continue;
+    if (!crews.has(c)) crews.set(c, { code: c, n: 0 });
+    crews.get(c).n++;
+  }
+  for (const c of crews.values()) {
+    const h = crewOf(c.code)[0];
+    c.host = h ? nameOf(h, 0) : '';
+    const L = h && h.presence && h.presence.launch;
+    c.atSea = L && Number.isFinite(L.voy) ? 1 : 0;
+    c.voy = c.atSea ? L.voy | 0 : 0;
+  }
+  return [...crews.values()];
+}
 function enterCrew(code) {
   NET.crew = code; NET.joinedAt = Date.now(); NET.ready = false; NET.st = null;
   NET.launch = null; NET.launchSeen = null; NET.results = null; NET.message = '';
   NET.myHostFlag = false;
   crewMode = true;
+  NET.chatLog = [];
   send();
+  try { history.replaceState(null, '', '#' + code); } catch (e) {}
   // pick up the host's launch, if this crew is already at sea
   checkLaunch();
   showCrewCard();
@@ -156,7 +188,8 @@ function leaveCrew(silent) {
   NET.crew = null; NET.ready = false; NET.st = null; NET.launch = null; NET.results = null; NET.myHostFlag = false;
   crewMode = false;
   NET.mates.clear();
-  if (NET.room && !silent) NET.room.presence({ app: 'skerry', crew: null, nick: NET.nick || null, joinedAt: null, ready: null, launch: null, voy: null, st: null, bell: null, flare: null, shout: null, x: null, y: null, h: null, v: null, hull: null, stage: null, mx: null, my: null, px: null, py: null }).catch(() => {});
+  try { history.replaceState(null, '', location.pathname + location.search); } catch (e) {}
+  if (NET.room && !silent) NET.room.presence({ app: 'skerry', crew: null, nick: NET.nick || null, joinedAt: null, ready: null, launch: null, voy: null, st: null, bell: null, flare: null, shout: null, x: null, y: null, h: null, v: null, hull: null, stage: null, mx: null, my: null, px: null, py: null, chat: null, ghost: null, stats: null }).catch(() => {});
   stopSpectating();
   if (!silent) toTitle();
 }
@@ -186,6 +219,8 @@ function checkLaunch() {
   NET.launch = { id: String(L.id), seed: L.seed | 0, voy: Math.max(1, Math.min(99, L.voy | 0)), at: L.at };
   NET.results = null;
   NET.st = 'sail';
+  NET.ghostUsed = false;
+  NET.stats = null;
   beginCrewVoyage(NET.launch, mySlot());
   send();
 }
@@ -201,7 +236,7 @@ function syncMates() {
       let m = NET.mates.get(p.peer);
       if (!m) {
         m = { peer: p.peer, x: +pr.x || 0, y: +pr.y || 0, h: +pr.h || 0, tx: 0, ty: 0, th: 0, bell: +pr.bell || 0, bob: Math.random() * 6,
-          flareN: counter(pr.flare), shoutN: counter(pr.shout), shoutT: 0, shoutText: '' };
+          flareN: counter(pr.flare), shoutN: counter(pr.shout), shoutT: 0, shoutText: '', ghostN: counter(pr.ghost) };
         NET.mates.set(p.peer, m);
       }
       // what a spectator needs to see from their deck
@@ -214,6 +249,10 @@ function syncMates() {
         m.flareN = fl;
         if (Number.isFinite(pr.flare.x) && Number.isFinite(pr.flare.y)) mateFlare(m, pr.flare.x, pr.flare.y);
       } else m.flareN = fl;
+      const gh = counter(pr.ghost);
+      if (gh > m.ghostN) { m.ghostN = gh; if (pr.ghost.to === NET.myPeer) ghostBellFor(m); }
+      else m.ghostN = gh;
+      m.stats = cleanStats(pr.stats);
       const sh = counter(pr.shout);
       if (sh > m.shoutN) {
         m.shoutN = sh;
@@ -234,6 +273,80 @@ function syncMates() {
     }
   }
   for (const k of [...NET.mates.keys()]) if (!seen.has(k)) NET.mates.delete(k);
+  syncChat();
+}
+
+// chat travels as each sailor's latest line; we keep the history as lines arrive
+const chatSeen = new Map();
+function syncChat() {
+  if (!NET.crew) return;
+  let changed = false;
+  members().forEach((p, i) => {
+    if (p.peer === NET.myPeer) return;
+    const c = p.presence && p.presence.chat, n = counter(c);
+    const key = p.peer, prev = chatSeen.get(key);
+    if (prev === undefined) { chatSeen.set(key, n); return; }   // don't replay what was said before we arrived
+    if (n > prev) {
+      chatSeen.set(key, n);
+      const text = cleanText(c.text);
+      if (!text) return;
+      const name = nameOf(p, i);
+      NET.chatLog.push({ name, slot: i, text });
+      if (NET.chatLog.length > 30) NET.chatLog.shift();
+      changed = true;
+      if (state === 'play' && g && !g.attract) addLog(name + ': ' + text, 'p');
+      sfxHorn(0, 0.25);
+    }
+  });
+  if (changed) renderCrewChat();
+}
+function cleanText(v) {
+  return typeof v === 'string' ? v.replace(/[\u0000-\u001f\u007f-\u009f\u200b-\u200f\u202a-\u202e\u2060-\u206f]/g, '').trim().slice(0, 90) : '';
+}
+function sendChat(text) {
+  text = cleanText(text);
+  if (!text || !NET.crew || performance.now() - NET.lastChat < 800) return false;
+  NET.lastChat = performance.now();
+  NET.chats++; NET.chat = { n: NET.chats, text };
+  send();
+  NET.chatLog.push({ name: 'You', slot: mySlot(), text });
+  if (NET.chatLog.length > 30) NET.chatLog.shift();
+  if (state === 'play' && g && !g.attract) addLog('You: ' + text, 'p');
+  renderCrewChat();
+  return true;
+}
+function renderCrewChat() {
+  const ul = $('chatLog'); if (!ul) return;
+  ul.textContent = '';
+  for (const c of NET.chatLog.slice(-8)) {
+    const li = document.createElement('li');
+    const b = document.createElement('b'); b.textContent = c.name + ' '; b.style.color = SLOT_COLORS[c.slot] || SLOT_COLORS[1];
+    li.appendChild(b); li.appendChild(document.createTextNode(c.text));
+    ul.appendChild(li);
+  }
+  ul.hidden = !NET.chatLog.length;
+}
+
+// a spectator's one bell, rung for the crewmate they're watching
+function ghostBell() {
+  if (!NET.watch || NET.ghostUsed) return;
+  NET.ghostUsed = true;
+  NET.ghosts++; NET.ghost = { n: NET.ghosts, to: NET.watch };
+  send();
+  sfxBellFar(0, 0.6);
+  renderSpecBar();
+}
+function ghostBellFor(m) {
+  if (!g || state !== 'play' || !g.maren.active) return;
+  sfxBellFar(0, 0.8);
+  if (g.maren.stage > 0) { g.maren.stage--; placeMaren(g.maren.stage); }
+  addLog(m.name + ' rang a bell for you from beyond the voyage. She draws back.', 'p');
+}
+
+function cleanStats(s) {
+  if (!s || typeof s !== 'object') return null;
+  const n = v => Number.isFinite(v) ? Math.max(0, Math.min(9999, Math.round(v))) : 0;
+  return { secs: n(s.secs), hits: n(s.hits), bells: n(s.bells), flares: n(s.flares), patched: n(s.patched), eaten: n(s.eaten) };
 }
 
 function counter(o) { return o && typeof o === 'object' && Number.isFinite(o.n) ? o.n : 0; }
@@ -303,25 +416,34 @@ function netTick(dt) {
       if (!w || w.st !== 'sail') nextSpectate(); else renderSpecBar();
     }
     renderCrewHud();
+    renderNetBanner();
     if (!$('crewCard').hidden) renderCrewCard();
   }
 }
 
 function myStatus(st) {
   NET.st = st;
+  if (st !== 'sail' && g && g.stats) NET.stats = cleanStats(Object.assign({}, g.stats, { secs: g.t }));
   send(st === 'sail' ? {} : { x: null, y: null });
+}
+
+function renderNetBanner() {
+  const b = $('netBanner'); if (!b) return;
+  b.hidden = !(crewMode && NET.status === 'ready' && !NET.connected);
 }
 
 // a voyage is over for the crew once nobody on it is still at sea
 function checkResults() {
   if (!NET.launch || NET.results || state === 'play' || state === 'scare') return;
+  if (!NET.connected) return;   // don't call the voyage while we can't hear the crew
   const list = members();
   const voy = NET.launch.voy;
   const live = p => p.isMe || Date.now() - (p.updatedAt || 0) < 20000;
   const atSea = list.filter(p => p.peer !== NET.myPeer && live(p) && p.presence && p.presence.voy === voy && p.presence.st === 'sail');
   if (atSea.length) return;
   const outcome = p => p.peer === NET.myPeer ? NET.st : (p.presence && p.presence.voy === voy ? p.presence.st : null);
-  const rows = list.map((p, i) => ({ name: nameOf(p, i), slot: i, st: outcome(p) })).filter(r => r.st);
+  const statsOf = p => p.peer === NET.myPeer ? NET.stats : (p.presence && p.presence.voy === voy ? cleanStats(p.presence.stats) : null);
+  const rows = list.map((p, i) => ({ name: nameOf(p, i), slot: i, st: outcome(p), stats: statsOf(p) })).filter(r => r.st);
   NET.results = { voy, rows, madeIt: rows.filter(r => r.st === 'port').length };
   stopSpectating();
   if (NET.results.madeIt > 0) {
@@ -345,23 +467,21 @@ function renderTogether() {
   if (NET.status === 'connecting') { status.textContent = 'Looking for other sailors…'; startBtn.hidden = true; nickRow.hidden = true; return; }
   startBtn.hidden = false;
   nickRow.hidden = NET.via !== 'server';
-  const crews = new Map();
-  for (const p of NET.peers) {
-    const c = p.presence && p.presence.app === 'skerry' && p.presence.crew;
-    if (typeof c === 'string' && /^[a-z]+-\d{1,4}$/.test(c)) crews.set(c, (crews.get(c) || 0) + 1);
-  }
+  const crews = crewSummaries();
   const here = NET.peers.filter(p => !(p.isMe && p.sameTab)).length;
-  status.textContent = NET.message || (here ? (here === 1 ? '1 other sailor has this page open.' : here + ' other sailors have this page open.') : 'Nobody else has this page open yet. Start a crew and send them the link.');
-  for (const [code, n] of crews) {
+  status.textContent = NET.message || (here ? (here === 1 ? '1 other sailor has this page open.' : here + ' other sailors have this page open.') : 'Nobody else has this page open yet. Start a crew and send them the invite link.');
+  $('crewQuickBtn').hidden = !crews.some(c => c.n < MAX_CREW);
+  for (const c of crews) {
     const li = document.createElement('li');
     const label = document.createElement('span');
-    label.textContent = 'Crew ' + code.toUpperCase() + ' · ' + Math.min(n, MAX_CREW) + ' of ' + MAX_CREW;
+    label.textContent = 'Crew ' + c.code.toUpperCase() + ' · ' + Math.min(c.n, MAX_CREW) + ' of ' + MAX_CREW +
+      (c.host ? ' · ' + c.host + "'s" : '') + (c.atSea ? ' · at sea, voyage ' + c.voy : ' · forming');
     li.appendChild(label);
     const b = document.createElement('button');
     b.type = 'button'; b.className = 'tool';
-    b.textContent = n >= MAX_CREW ? 'Full' : 'Join';
-    b.disabled = n >= MAX_CREW;
-    b.addEventListener('click', () => joinCrew(code));
+    b.textContent = c.n >= MAX_CREW ? 'Full' : 'Join';
+    b.disabled = c.n >= MAX_CREW;
+    b.addEventListener('click', () => joinCrew(c.code));
     li.appendChild(b);
     list.appendChild(li);
   }
@@ -392,6 +512,9 @@ function renderSpecBar() {
   const danger = ['', 'she is out there', 'she is getting closer', 'she is close', 'she is at the bow'][m.stage] || '';
   $('specInfo').textContent = 'Hull ' + m.hull + ' of ' + SK.HULL + (danger ? ' · ' + danger : '');
   $('specNext').hidden = matesAtSea().length < 2;
+  const gb = $('specGhost');
+  gb.disabled = NET.ghostUsed;
+  gb.textContent = NET.ghostUsed ? 'Bell rung' : 'Ring a bell for ' + m.name;
 }
 // draw the scene from the watched crewmate's deck, then put my own state back
 function withSpectatorView(draw) {
@@ -445,6 +568,11 @@ function renderCrewCard() {
 
   const title = $('crewTitle'), text = $('crewText'), page = $('crewLog');
   page.hidden = true;
+  $('crewScore').hidden = true;
+  // invite: a link on our own site; on claude.ai friends pick the crew from the list
+  const inv = $('inviteRow');
+  inv.hidden = !(NET.via === 'server' && (!NET.launch || r));
+  if (!inv.hidden) $('inviteLink').value = location.origin + location.pathname + '#' + NET.crew;
   if (!NET.launch) {
     title.textContent = 'Crew Forming';
     text.textContent = 'Send this page to up to two friends. They join from the title screen by picking crew ' + NET.crew.toUpperCase() + '. Everyone sails their own brig through the same skerries. Ships close together keep Maren back, and a bell rung near a crewmate drives her away from both of you.';
@@ -454,13 +582,16 @@ function renderCrewCard() {
   } else if (r.madeIt > 0) {
     title.textContent = r.madeIt === r.rows.length ? 'The Whole Crew Made It' : r.madeIt + ' of ' + r.rows.length + ' Made Harbour';
     text.textContent = 'Voyage ' + voy + ' is done. The next voyage has more wreckage and a slower light.';
+    renderScore(r);
     const pg = SK.LOG[(voy - 1) % SK.LOG.length];
     $('crewLogDate').textContent = pg.date; $('crewLogText').textContent = pg.text;
     page.hidden = false;
   } else {
     title.textContent = 'The Crew Is Lost';
     text.textContent = 'No ship made harbour on voyage ' + voy + '. The host can take the crew out again from voyage 1.';
+    renderScore(r);
   }
+  renderCrewChat();
 
   const watchBox = $('crewWatch'); watchBox.textContent = '';
   if (NET.launch && !r) {
@@ -483,6 +614,25 @@ function renderCrewCard() {
   const h = host();
   wait.hidden = amHost() || !between;
   wait.textContent = h ? 'Waiting for ' + (nameOf(h, 0) === 'You' ? 'the host' : nameOf(h, 0)) + ' to set sail.' : '';
+}
+
+// the voyage scoreboard
+function renderScore(r) {
+  const tb = $('crewScoreBody'); tb.textContent = '';
+  const fmt = s => Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
+  for (const row of r.rows) {
+    const tr = document.createElement('tr');
+    const s = row.stats || {};
+    const cells = [row.name, statusWord(row.st), s.secs ? fmt(s.secs) : '–', s.hits ?? '–', s.bells ?? '–', s.flares ?? '–', s.patched ?? '–', s.eaten ?? '–'];
+    cells.forEach((v, i) => {
+      const td = document.createElement(i === 0 ? 'th' : 'td');
+      td.textContent = String(v);
+      if (i === 0) { td.scope = 'row'; td.style.color = SLOT_COLORS[row.slot] || ''; }
+      tr.appendChild(td);
+    });
+    tb.appendChild(tr);
+  }
+  $('crewScore').hidden = !r.rows.length;
 }
 
 function renderCrewHud() {
@@ -510,6 +660,23 @@ $('nick').addEventListener('input', e => {
 });
 $('crewStartBtn').addEventListener('click', startCrew);
 $('specNext').addEventListener('click', nextSpectate);
+$('specGhost').addEventListener('click', ghostBell);
+$('crewQuickBtn').addEventListener('click', quickJoin);
+$('chatForm').addEventListener('submit', e => {
+  e.preventDefault();
+  if (sendChat($('chatInput').value)) $('chatInput').value = '';
+});
+$('inviteCopy').addEventListener('click', () => {
+  const field = $('inviteLink'), btn = $('inviteCopy');
+  const done = () => { btn.textContent = 'Copied'; setTimeout(() => { btn.textContent = 'Copy link'; }, 1600); };
+  try {
+    navigator.clipboard.writeText(field.value).then(done, () => { field.select(); btn.textContent = 'Press Ctrl+C'; });
+  } catch (e) { field.select(); btn.textContent = 'Press Ctrl+C'; }
+});
+// an invite link carries the crew name after the #
+try { const h = (location.hash || '').slice(1); if (/^[a-z]+-\d{1,4}$/.test(h)) NET.pendingJoin = h; } catch (e) {}
+// sound can only start after the first tap or click anywhere
+document.addEventListener('pointerdown', () => audioInit(), { once: true });
 $('specBack').addEventListener('click', () => { stopSpectating(); showCrewCard(); });
 $('crewSailBtn').addEventListener('click', setSail);
 $('crewReadyBtn').addEventListener('click', toggleReady);

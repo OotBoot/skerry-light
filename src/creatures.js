@@ -9,9 +9,10 @@
 // He walks ahead of you to the harbour. Keep close to him and Maren holds where she is, but he will
 // not wait long for a ship that falls behind.
 
-const IMG = { maren: new Image(), plim: new Image() };
+const IMG = { maren: new Image(), plim: new Image(), knock: new Image() };
 IMG.maren.src = SK.ASSETS.maren;
 IMG.plim.src = SK.ASSETS.plimsoll;
+IMG.knock.src = SK.ASSETS.knock;
 function imgReady(im) { return im.complete && im.naturalWidth > 0; }
 
 // ---------- Maren ----------
@@ -58,9 +59,11 @@ function ringBell() {
   if (state !== 'play' || g.bell > 0) return;
   g.bell = bellCooldown();
   g.bellFlash = 1;
+  g.stats.bells++;
   sfxBell();
   if (crewMode) { NET.bells++; send(); }
   const drowned = bellDrownsThem();
+  if (bellStunsKnock()) addLog('The knocking stops. Knock stands frozen for a few seconds.', 'p');
   const m = g.maren;
   if (m.active && m.stage >= 1 && marenInView()) {
     m.stage = Math.max(0, m.stage - SK.BELL_PUSH); placeMaren(m.stage);

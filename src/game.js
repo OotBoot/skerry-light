@@ -20,6 +20,7 @@ function newVoyage(n, attract, seed, slot) {
     rocks: v.rocks, wrecks: v.wrecks, timber: v.timber, path: v.path,
     parts: [], glare: 0, shake: 0, log: [], bell: 0, bellFlash: 0, wasLit: false, scareT: 0,
     flares: [], flareCd: 0, repairT: 0, shoutT: 0,
+    stats: { hits: 0, bells: 0, flares: 0, patched: 0, eaten: 0 },
   };
   g.enemies = newEnemies(v.lures);
   g.plim = newPlimsoll(v.path);
@@ -52,7 +53,7 @@ function hit(nx, ny, what) {
   g.shake = 0.5;
   burst(ship.x + Math.sin(ship.h) * 6, ship.y + Math.cos(ship.h) * 6, ['#ece4cf', '#c8d6e8', '#8a6a4a'], 30, 8, 9);
   sfxHit();
-  ship.hull--; run.hits++;
+  ship.hull--; run.hits++; g.stats.hits++;
   renderHud();
   if (ship.hull <= 0) { addLog('She struck ' + what + ' and is going down.', 'w'); endRun('sunk'); }
   else addLog('Struck ' + what + '. ' + (ship.hull === 1 ? 'Taking water fast.' : 'Hull still holding.'), 'w');
@@ -72,6 +73,7 @@ function advanceBeam(dt) {
 function fireFlare() {
   if (state !== 'play' || g.flareCd > 0) return;
   g.flareCd = SK.FLARE_COOLDOWN;
+  g.stats.flares++;
   addFlare(ship.x, ship.y);
   sfxFlare();
   addLog('Flare away. Everything within ' + SK.FLARE_RADIUS + ' m is lit for a few seconds.', 'p');
@@ -100,7 +102,7 @@ function sailInCompany(dt) {
   if (g.repairT === 0) addLog('Sailing in company with ' + mate.name + '. Stay close and the carpenters can patch a plank.');
   g.repairT += dt;
   if (g.repairT >= SK.REPAIR_TIME) {
-    g.repairT = 0; ship.hull++; renderHud(); sfxChime();
+    g.repairT = 0; ship.hull++; g.stats.patched++; renderHud(); sfxChime();
     addLog('With ' + mate.name + ' alongside, the carpenters patched a plank.', 'p');
   }
 }

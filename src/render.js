@@ -259,7 +259,7 @@ function drawScene() {
   for (const o of g.timber) add('timber', o);
   add('plim', g.plim);
   if (crewMode) for (const m of matesAtSea()) if (m.peer !== NET.watch) add('mate', m);
-  if (!NET.watch) for (const d of g.enemies.drowned) add('drowned', d);
+  if (!NET.watch) { for (const d of g.enemies.drowned) add('drowned', d); for (const k of g.enemies.knocks) add('knock', k); }
   if (g.maren.active) add('maren', g.maren);
   items.sort((a, b) => b.c.f - a.c.f);
   for (const it of items) {
@@ -271,6 +271,7 @@ function drawScene() {
     else if (it.kind === 'plim') drawPlimsoll(q, vis);
     else if (it.kind === 'mate') drawMate(o, q, vis);
     else if (it.kind === 'drowned') drawDrowned(o, q, vis);
+    else if (it.kind === 'knock') drawKnock(o, q, vis);
     else drawMaren(q, vis);
   }
 

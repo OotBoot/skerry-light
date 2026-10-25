@@ -26,6 +26,7 @@ The only thing she will not go near is **Plimsoll**, the shark who walked up out
 - **Plimsoll**: while you are within 75 m of him, Maren holds where she is (she no longer falls back). He waits about 7 seconds for a ship that falls behind, then walks on alone.
 - **The bell** drives Maren back two stages, but only if she is in front of you, and it takes 26 seconds (more on later voyages) to swing again. It also sends nearby drowned back under.
 - **The drowned** crew of the Gannet swim after you at about 5 m/s, faster on later voyages. Their eyes always catch the light. One that reaches a ship going under 9 knots climbs aboard and costs a plank; faster ships shake them off. Plimsoll eats any he catches.
+- **Knock**, the Gannet's walking figurehead, moves only while you can't see him. Listen for three knocks on wood (quicker and louder as he nears), turn to face him, and keep him in the beam, your lantern or a flare: he can't move while he's in your view and lit. If he reaches the hull he strikes it for a plank and is thrown back into the dark. The bell freezes him for 8 seconds. From voyage 4 there are two of him.
 - **Wreckers' false lights** are red and green lamps like the harbour piers, hung over a cluster of rocks off the true course. The lighthouse beam makes them vanish, and the bearing strip always shows the real harbour.
 - **Flares** light everything within 170 m for about seven seconds, for your whole crew, then take 35 seconds to reload.
 - **Hull**: rocks, wrecks, drifting timber, the shore, the piers and the drowned each cost a plank. Three and she sinks.
@@ -35,13 +36,16 @@ The only thing she will not go near is **Plimsoll**, the shark who walked up out
 
 Up to three people can sail as a crew. Each of you sails your own brig through the same skerries, and you can see each other's ships and lanterns, hulls and bells.
 
-- On the title screen, one person picks **Start a crew**. The others open the same page and pick that crew from the list.
+- On the title screen, one person picks **Start a crew** and sends the **invite link** from the crew screen; opening it joins that crew straight away. Others can also pick a crew from the list, or use **Find me a crew** to join any crew with a free berth.
+- The crew screen has a **chat** for planning between voyages, and messages also appear in the in-game log.
 - The host (whoever started the crew) sets sail when everyone is in. Anyone who joins later sails straight in on the current voyage.
 - **Ships within 55 m of each other keep Maren where she is**, the same way Plimsoll does.
 - **Sailing in company**: stay within 45 m of a crewmate for 10 seconds and your carpenters patch a plank.
 - **A bell rung within 100 m of a crewmate** drives her back a stage on their ship too.
 - **Flares** light the water for everyone, and **shouts** (1, 2, 3) show over your ship on your crewmates' screens with how far away you are.
-- **Spectating**: once you sink, are taken or make harbour, you can watch a crewmate's voyage from their deck until the voyage ends.
+- **Spectating**: once you sink, are taken or make harbour, you can watch a crewmate's voyage from their deck until the voyage ends, and once per voyage you can **ring a bell for them**, driving their Maren back a stage.
+- **Scoreboard**: at the end of each voyage the crew screen shows each ship's outcome, time, hits, bells, flares, planks patched and drowned fed to Plimsoll.
+- **Reconnecting**: if a connection drops, the game reconnects by itself and carries on with the same crew.
 - A voyage ends when every ship has made harbour or gone down. If anyone made it, the crew goes on to the next voyage. If nobody did, the host can start again from voyage 1.
 
 Crews connect in one of two ways:
@@ -102,13 +106,14 @@ src/audio.js        all sound, made with the Web Audio API (no audio files)
 src/world.js        voyage generation and Plimsoll's pathfinding
 src/render.js       the camera, sea, obstacles, lighthouse, deck, bearing strip and jumpscare
 src/creatures.js    Maren and Plimsoll: behaviour, animation and drawing
-src/enemies.js      the drowned crew and the wreckers' false lights
+src/enemies.js      the drowned crew, Knock and the wreckers' false lights
 src/game.js         game state, update step, input and screens
 src/transport.js    connects to the crew server outside claude.ai
 src/net.js          crews: lobby, shared voyages, crewmates' ships
 src/main.js         starts the main loop
 assets/maren.png    Maren cutout
 assets/plimsoll.png Plimsoll cutout
+assets/knock.png    Knock cutout
 tools/build.mjs     bundles everything into dist/
 server/server.js    serves the game and relays crew traffic
 server/ws-lite.js   small built-in WebSocket implementation for the server

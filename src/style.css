@@ -108,6 +108,33 @@ canvas:focus { outline: none; }
 .sailctl .tool small { font-size: 9px; letter-spacing: 0.1em; color: var(--muted); }
 .sailctl .tool.held { background: rgba(255, 216, 138, 0.25); border-color: var(--lamp); color: var(--lamp); }
 
+/* invites, chat and the scoreboard */
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.invite { display: flex; flex-direction: column; gap: 6px; font-family: var(--log); font-size: 12px; color: var(--muted); }
+.inviterow, .chatform { display: flex; gap: 8px; }
+.inviterow input, .chatform input {
+  flex: 1; min-width: 0;
+  font-family: var(--log); font-size: 13px; color: var(--ink);
+  background: rgba(6, 10, 20, 0.7); border: 1px solid var(--rule); padding: 7px 10px;
+  -webkit-user-select: text; user-select: text;
+}
+.inviterow input:focus-visible, .chatform input:focus-visible { outline: 2px solid var(--lamp); outline-offset: 1px; }
+.chat { display: flex; flex-direction: column; gap: 8px; }
+.chatlog { list-style: none; margin: 0; padding: 8px 10px; display: grid; gap: 4px; max-height: 9.5em; overflow-y: auto;
+  font-family: var(--log); font-size: 13px; line-height: 1.4; background: rgba(6, 10, 20, 0.5); border: 1px solid var(--rule); }
+.chatlog li { overflow-wrap: anywhere; }
+.score { overflow-x: auto; }
+.score table { width: 100%; border-collapse: collapse; font-family: var(--log); font-size: 12px; font-variant-numeric: tabular-nums; }
+.score th, .score td { padding: 6px 8px; text-align: right; border-bottom: 1px solid var(--rule); white-space: nowrap; }
+.score thead th { color: var(--muted); font-weight: 400; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; }
+.score th[scope="row"], .score thead th:first-child { text-align: left; }
+.score td:nth-child(2) { text-align: left; color: var(--muted); }
+.netbanner {
+  position: absolute; top: 112px; left: 50%; transform: translateX(-50%);
+  padding: 8px 14px; background: var(--card); border: 1px solid var(--wreck);
+  font-family: var(--log); font-size: 12px; color: var(--wreck); white-space: nowrap;
+}
+
 /* watching a crewmate */
 .specbar {
   position: absolute; top: 112px; left: 50%; transform: translateX(-50%);
