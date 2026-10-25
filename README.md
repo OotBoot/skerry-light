@@ -1,0 +1,109 @@
+# Skerry Light
+
+A first-person night-sailing horror game for the browser. You have the helm of a small brig coming in under the cliffs at Skerry Light. The water is full of rocks, old wrecks and drifting timber, and you can only see them while the lighthouse beam is on them. The moment it moves on, they are gone.
+
+## The story
+
+In the winter of 1887 the lamp at Skerry Light failed. The keeper's wife, **Maren Holm**, rowed out with a lantern to warn the brig *Gannet*. The *Gannet* broke up on the skerries with all hands, and Maren's skiff came back empty.
+
+She still stands on the water when the lamp turns, a little nearer your bow every time. If she reaches you, she comes aboard.
+
+The only thing she will not go near is **Plimsoll**, the shark who walked up out of the surf that same winter wearing the *Gannet* cabin boy's blue shoes. He knows the deep water through the skerries and walks ahead of ships to the harbour. Each harbour you reach unlocks another page of the keeper's log.
+
+## How to play
+
+| | |
+|---|---|
+| Steer | ← → or A / D. On a phone, hold the left or right third of the screen |
+| Sail | ↑ ↓ or W / S. On a phone, hold the middle to shorten sail |
+| Ring the bell | Space or B, or the bell button |
+| Sound | M, or the sound button |
+
+- **Follow Plimsoll.** His shoes glow faintly, so you can always see him, and the bearing strip shows where he is. He walks when you are close behind and waits if you fall back. While you are within 130 m of him, Maren cannot come nearer. Each turn of the beam she falls back one step instead.
+- **Maren** moves one step closer every time the beam completes a turn and you are away from Plimsoll: 380 m, 250, 150, 80, then right at the bow. One more turn after that and she takes the ship. You will hear her heartbeat and see red at the edges as she closes in.
+- **The bell** sends her all the way back, but only if she is in front of you when you ring it. After that it needs time to swing again.
+- **Hull**: rocks, wrecks, drifting timber, the shore and the piers each cost a plank. Three and she sinks.
+- **Harbour**: steer between the red and green pier lamps. Each voyage after that has more rocks and wreckage, and the beam turns slower, so the dark between sweeps lasts longer.
+
+## Sailing together
+
+Up to three people can sail as a crew. Each of you sails your own brig through the same skerries, and you can see each other's ships and lanterns, hulls and bells.
+
+- On the title screen, one person picks **Start a crew**. The others open the same page and pick that crew from the list.
+- The host (whoever started the crew) sets sail when everyone is in. Anyone who joins later sails straight in on the current voyage.
+- **Ships within 90 m of each other keep Maren back**, the same way Plimsoll does.
+- **A bell rung within 160 m of a crewmate** drives Maren away from both ships.
+- A voyage ends when every ship has made harbour or gone down. If anyone made it, the crew goes on to the next voyage. If nobody did, the host can start again from voyage 1.
+
+Crews connect in one of two ways:
+
+- **On your own website**, through the crew server in `server/`. Anyone with the link can join, with no sign-in. Players type a name on the title screen so their crew knows who is who.
+- **On claude.ai**, through the artifact `room` capability, for people who are signed in and can see the artifact. Visitors from a public link get the solo game there.
+
+If neither is available (for example, the file opened straight from your computer), the game plays solo.
+
+## Putting it on a website
+
+### Game and crews together (recommended)
+
+`server/server.js` serves the game and runs the crew connection from the same address, so one deployment gives you a link anyone can open and play together. It uses only Node's standard library (Node 18 or newer), so there is nothing to `npm install`.
+
+Try it on your own computer first:
+
+```
+npm run build
+npm start
+# open http://localhost:8080 in two or three browser windows
+```
+
+To put it online, use any host that runs a Node web service and allows WebSockets, such as Render, Railway or Fly.io. On Render, for example:
+
+1. Put this folder in a GitHub repository.
+2. In Render, create a **Web Service** from that repository.
+3. Set the **Build Command** to `npm run build` and the **Start Command** to `npm start`.
+4. Deploy, then share the address Render gives you.
+
+The server reads the port from the `PORT` environment variable, which these hosts set for you. `MAX_PLAYERS` (default 300) caps how many people can be connected at once. Nothing is stored on disk; restarting the server just empties the lobby. `/healthz` reports how many players are connected.
+
+### Game on a static host, crews on a separate server
+
+If you'd rather put the game on itch.io, Netlify or GitHub Pages, run the server somewhere as above and point the game at it:
+
+1. In `src/config.js`, set `SERVER` to your server's WebSocket address, for example `'wss://skerry-light.onrender.com/ws'`.
+2. Run `npm run build`.
+3. Upload `dist/skerry-light.html`, renamed to `index.html`. On itch.io, zip it first and upload it as an HTML game.
+
+You can also point any copy at a server without rebuilding by adding `?server=wss://your-server/ws` to the page address. A page served over `https` must use a `wss://` address.
+
+### Solo only
+
+Upload `dist/skerry-light.html` anywhere that serves static files. Everything it needs is inside that one file; the crew section on the title screen will say it is solo only.
+
+### Working on the source
+
+`index.html` loads the files in `src/` separately, so you can edit them and reload. Serve the folder (for example `python3 -m http.server 8000`) and open it in a browser; crews won't connect there, since that server has no `/ws`. After changing anything in `src/` or `assets/`, run `npm run build` to update `dist/`.
+
+## Project layout
+
+```
+index.html          page markup; loads the stylesheet and scripts below
+src/style.css       HUD, cards and buttons
+src/config.js       tuning numbers, asset paths and the keeper's log
+src/audio.js        all sound, made with the Web Audio API (no audio files)
+src/world.js        voyage generation and Plimsoll's pathfinding
+src/render.js       the camera, sea, obstacles, lighthouse, deck, bearing strip and jumpscare
+src/creatures.js    Maren and Plimsoll: behaviour, animation and drawing
+src/game.js         game state, update step, input and screens
+src/transport.js    connects to the crew server outside claude.ai
+src/net.js          crews: lobby, shared voyages, crewmates' ships
+src/main.js         starts the main loop
+assets/maren.png    Maren cutout
+assets/plimsoll.png Plimsoll cutout
+tools/build.mjs     bundles everything into dist/
+server/server.js    serves the game and relays crew traffic
+server/ws-lite.js   small built-in WebSocket implementation for the server
+package.json        build and start commands
+dist/               built single-file versions
+```
+
+The scripts in `src/` are plain browser scripts that share one global scope, loaded in the order listed.

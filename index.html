@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Skerry Light</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IM+Fell+English+SC&family=IM+Fell+English:ital@0;1&family=Courier+Prime:wght@400;700&display=swap">
+<link rel="stylesheet" href="src/style.css">
+</head>
+<body>
+<div id="stage">
+  <canvas id="cv" tabindex="0" aria-label="View from the deck of a ship at night, with a lighthouse beam sweeping over the sea"></canvas>
+
+  <div class="hud" id="hud" hidden>
+    <div class="col">
+      <span class="label">Voyage</span>
+      <span class="big" id="voyage">1</span>
+      <div class="crewhud" id="crewHud" hidden></div>
+    </div>
+    <div class="col right">
+      <div class="row">
+        <div class="col right"><span class="label">Knots</span><span class="big" id="knots">0</span></div>
+        <div class="col right"><span class="label">Harbour</span><span class="big" id="dist">0</span></div>
+      </div>
+      <span class="label" style="margin-top:4px">Hull</span>
+      <div class="marks" id="hull"></div>
+    </div>
+  </div>
+
+  <div class="logbox" id="logbox" hidden>
+    <ul id="log" aria-live="polite"></ul>
+    <div class="tools">
+      <span id="hint">← → steer · ↑ ↓ sail · Space rings the bell · M sound</span>
+      <div class="toolrow">
+        <button class="tool" id="soundBtn" type="button" aria-pressed="true">Sound on</button>
+        <button class="tool" id="bellBtn" type="button"><b>Ring the bell</b><small>Space · <span id="bellState">Ready</span></small></button>
+      </div>
+    </div>
+  </div>
+
+  <div class="overlay" id="titleCard">
+    <div class="card">
+      <span class="eyebrow">Master's orders · make harbour by night · sound on</span>
+      <h1>Skerry Light</h1>
+      <p>In the winter of 1887 the lamp at Skerry Light failed, and the keeper's wife, <span class="maren">Maren Holm</span>, rowed out with a lantern to warn the brig Gannet. The Gannet broke up on the rocks. Maren's skiff came back empty.</p>
+      <p>She still stands on the water when the lamp turns, a little nearer every time. The only thing she will not go near is <span class="plim">Plimsoll</span>, the shark who walked out of the surf that winter in the Gannet cabin boy's blue shoes. He knows the deep water through the skerries. <em>Follow his shoes.</em></p>
+      <ul class="rules">
+        <li><b>See</b> rocks, wrecks and drifting timber show only while the beam is on them, then they are gone</li>
+        <li><b>Follow</b> Plimsoll's glowing shoes. While he is close, Maren falls back</li>
+        <li><b>Ring the bell</b> (Space) while you can see her to drive her away. It takes a while to swing again</li>
+        <li><b>Steer</b> ← → or A / D, sail ↑ ↓ or W / S. On a phone, hold the left or right side; the middle slows you</li>
+        <li><b>Hull</b> three hits and she goes down. Let Maren reach the bow and she comes aboard</li>
+        <li><b>Crew</b> sail with up to two friends. Ships within 90 m of each other keep her back, and a bell rung near a crewmate drives her off both ships</li>
+      </ul>
+      <button class="primary" id="startBtn" type="button">Take the helm alone</button>
+      <section class="together" id="together" aria-labelledby="togetherHead">
+        <h2 id="togetherHead">Sail together · up to 3 ships</h2>
+        <p id="togetherStatus">Looking for other sailors…</p>
+        <div class="nickrow" id="nickRow" hidden>
+          <label for="nick">Your name</label>
+          <input id="nick" type="text" maxlength="16" autocomplete="nickname" placeholder="Sailor">
+        </div>
+        <ul class="crews" id="crewList"></ul>
+        <button class="tool" id="crewStartBtn" type="button" hidden>Start a crew</button>
+      </section>
+    </div>
+  </div>
+
+  <div class="overlay" id="portCard" hidden>
+    <div class="card">
+      <span class="eyebrow" id="portEyebrow">Voyage 1 · made harbour</span>
+      <h1>Safe in Harbour</h1>
+      <p id="portText"></p>
+      <div class="logpage">
+        <span class="date">Keeper's log · <span id="logDate"></span></span>
+        <p id="logText"></p>
+      </div>
+      <button class="primary" id="nextBtn" type="button">Sail again</button>
+    </div>
+  </div>
+
+  <div class="overlay" id="crewCard" hidden>
+    <div class="card">
+      <span class="eyebrow" id="crewName">Crew</span>
+      <h1 id="crewTitle">Crew Forming</h1>
+      <p id="crewText"></p>
+      <ul class="members" id="crewMembers"></ul>
+      <div class="logpage" id="crewLog" hidden>
+        <span class="date">Keeper's log · <span id="crewLogDate"></span></span>
+        <p id="crewLogText"></p>
+      </div>
+      <div class="btnrow">
+        <button class="primary" id="crewSailBtn" type="button" hidden>Set sail</button>
+        <button class="primary" id="crewReadyBtn" type="button" hidden>Ready</button>
+        <span class="wait" id="crewWait" hidden></span>
+        <button class="tool" id="crewLeaveBtn" type="button">Leave crew</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="overlay" id="endCard" hidden>
+    <div class="card">
+      <span class="eyebrow" id="endEyebrow">Voyage 1 · lost</span>
+      <h1 id="endTitle">Lost on the Skerries</h1>
+      <p id="endText"></p>
+      <div class="stats">
+        <div><span class="label">Voyages</span><strong id="sVoy">0</strong></div>
+        <div><span class="label">Hits taken</span><strong id="sHits">0</strong></div>
+        <div><span class="label">Best run</span><strong id="sBest">0</strong></div>
+      </div>
+      <button class="primary" id="againBtn" type="button">Take another ship</button>
+    </div>
+  </div>
+</div>
+
+<script src="src/config.js"></script>
+<script src="src/audio.js"></script>
+<script src="src/world.js"></script>
+<script src="src/render.js"></script>
+<script src="src/creatures.js"></script>
+<script src="src/game.js"></script>
+<script src="src/transport.js"></script>
+<script src="src/net.js"></script>
+<script src="src/main.js"></script>
+</body>
+</html>

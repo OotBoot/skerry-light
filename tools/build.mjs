@@ -1,0 +1,37 @@
+// Bundles the game into single self-contained HTML files with everything inlined.
+//   node tools/build.mjs
+// writes dist/skerry-light.html (open directly in any browser)
+// and    dist/artifact.html     (the same page without the html/head/body wrapper, for hosts that add their own)
+
+import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const root = join(dirname(fileURLToPath(import.meta.url)), '..');
+const read = p => readFileSync(join(root, p), 'utf8');
+const dataUri = p => 'data:image/png;base64,' + readFileSync(join(root, p)).toString('base64');
+
+let html = read('index.html');
+
+html = html.replace(/<link rel="stylesheet" href="(src\/[^"]+)">/g, (_, p) => `<style>\n${read(p)}</style>`);
+
+const scripts = [...html.matchAll(/<script src="(src\/[^"]+)"><\/script>\n?/g)];
+if (!scripts.length) throw new Error('no scripts found in index.html');
+let js = scripts.map(m => `// ---- ${m[1]} ----\n` + read(m[1])).join('\n');
+for (const asset of ['assets/maren.png', 'assets/plimsoll.png']) {
+  if (!js.includes(`'${asset}'`)) throw new Error('asset path not found in scripts: ' + asset);
+  js = js.split(`'${asset}'`).join(`'${dataUri(asset)}'`);
+}
+html = html.replace(scripts[0][0], () => `<script>\n${js}\n</script>\n`);
+for (const m of scripts.slice(1)) html = html.replace(m[0], () => '');
+
+mkdirSync(join(root, 'dist'), { recursive: true });
+writeFileSync(join(root, 'dist/skerry-light.html'), html);
+
+const head = html.match(/<head>([\s\S]*?)<\/head>/)[1]
+  .replace(/<meta charset[^>]*>\n?/, '')
+  .replace(/<meta name="viewport"[^>]*>\n?/, '');
+const body = html.match(/<body>([\s\S]*?)<\/body>/)[1];
+writeFileSync(join(root, 'dist/artifact.html'), head.trim() + '\n' + body.trim() + '\n');
+
+console.log('built dist/skerry-light.html and dist/artifact.html', (html.length / 1024).toFixed(0) + ' KB');

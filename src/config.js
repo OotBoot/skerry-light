@@ -1,0 +1,42 @@
+'use strict';
+// Skerry Light: tuning, asset paths and lore.
+// World units are metres. The lighthouse stands at the origin on the shoreline (y = 0);
+// north (+y) is open sea. Bearings: 0 = north, positive = east.
+
+const SK = {
+  HALF_BEAM: 0.15,        // half-width of the lighthouse beam, radians
+  SHADE: 1.75,            // the landward side of the lamp is blacked out past this bearing
+  BEAM_RANGE: 1700,
+  CAM_H: 5,               // eye height on deck
+  NEAR: 1,
+  HULL: 3,
+  HARBOUR: { x: 230, y: 30 },
+  LANTERN: 48,            // reach of your own deck lantern
+  MAREN_STAGES: [380, 250, 150, 80, 32],   // how far away she stands at each stage
+  PLIMSOLL_GUARD: 130,    // stay this close to Plimsoll and Maren cannot come nearer
+  BELL_COOLDOWN: 14,
+  SCARE_TIME: 1.8,
+  // Crew server for copies hosted on your own site, e.g. 'wss://skerry-light.onrender.com/ws'.
+  // Leave empty to use the server the page itself was loaded from. Not used on claude.ai.
+  SERVER: '',
+
+  ASSETS: {
+    maren: 'assets/maren.png',
+    plimsoll: 'assets/plimsoll.png',
+  },
+  MAREN_ASPECT: 170 / 295,
+  PLIM_ASPECT: 380 / 309,
+
+  WRECK_NAMES: ['Brae Lass', 'Kittiwake', 'Morning Star', 'Ellen Rose', 'Solan', 'Fair Isle', 'Jessie Ann'],
+
+  // Pages from the keeper's log, read one per harbour reached.
+  LOG: [
+    { date: '14 December 1887', text: 'The lamp failed in the second hour. The brig Gannet was coming in under the cliffs with no light to steer by. Maren took the skiff and a hand lantern out toward her. I could not stop her.' },
+    { date: '15 December 1887', text: 'The Gannet is on the skerries with all hands. The skiff came ashore at the harbour steps this morning, empty. Maren’s lantern was still lit.' },
+    { date: '2 January 1888', text: 'A shark walked up out of the surf at dawn, wearing the blue shoes of the Gannet’s cabin boy. He stood on the sand and looked at me, then walked back into the sea.' },
+    { date: '9 January 1888', text: 'The schooner Wren came through the skerries last night without a scratch. Her master swears a shark in shoes walked ahead of her on the water the whole way in. The men call him Plimsoll now.' },
+    { date: '20 January 1888', text: 'Fishermen say a woman stands on the water when the lamp turns. Each turn she is a little nearer. She keeps away from the shark. She will not go near him.' },
+    { date: '3 February 1888', text: 'I saw her tonight from the gallery, close under a ship’s bow. I rang the bell as hard as I could and she was gone. She came back two turns later.' },
+    { date: 'Undated', text: 'If you are reading this, keep Plimsoll close and keep the bell ready. She is still rowing out to the Gannet. She will take any ship that lets her come aboard.' },
+  ],
+};

@@ -1,0 +1,15 @@
+{
+  "name": "skerry-light",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A first-person night-sailing horror game for the browser, with crews of up to three.",
+  "type": "module",
+  "scripts": {
+    "build": "node tools/build.mjs",
+    "start": "node server/server.js",
+    "dev": "node tools/build.mjs && node server/server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
