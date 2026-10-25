@@ -7,6 +7,17 @@ let loggedError = false;
 function frame(now) {
   const dt = Math.min(0.05, (now - last) / 1000); last = now;
   try {
+    roomsHum(!!(g && g.backrooms && state === 'play'));
+    if (g && g.backrooms) roomsHumLevel(roomLevel());
+    if (state === 'play' && g.verityScare > 0) {
+      // Verity's jumpscare, and then the voyage is over
+      g.verityScare -= dt;
+      netTick(dt);
+      drawVerityScare(SK.VERITY_SCARE_TIME - g.verityScare);
+      if (g.verityScare <= 0) { g.verityScare = 0; $('stage').classList.remove('scaring'); stopVerity(); endRun('verity'); }
+      requestAnimationFrame(frame);
+      return;
+    }
     if (state === 'play' && g.knockScare > 0) {
       // Knock's jumpscare pauses the voyage for a moment
       g.knockScare -= dt;

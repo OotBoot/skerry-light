@@ -29,17 +29,31 @@ The only thing she will not go near is **Plimsoll**, the shark who walked up out
 - **Knock**, the Gannet's walking figurehead, moves only while you can't see him. Listen for three knocks on wood (you can hear him from about 650 m, quicker and louder as he nears), turn to face him, and he stops: within 150 m facing him is enough even in the dark, and further off any light on him will do. He is a little faster than your ship, so running only buys time. If he reaches the hull his face lunges at you and he strikes for a plank, then he's thrown far back and waits 30 seconds; if that blow sinks her, the voyage ends. The bell freezes him for 15 seconds within 300 m. One Knock at a time at first, up to two on later voyages.
 - **Wreckers' false lights** are red and green lamps like the harbour piers, hung over a cluster of rocks off the true course; there are two pairs on the first voyage and one more every second voyage. The lighthouse beam makes them vanish, and the bearing strip always shows the real harbour.
 - **Flares** light everything within 350 m for about seven seconds, for your whole crew, then take 35 seconds to reload.
-- **Hull**: rocks, wrecks, drifting timber, the shore, the piers and the drowned each cost a plank. Three and she sinks.
+- **Hull and collisions**: your hull is a capsule from bow to stern, so the whole length of the ship can touch things, not just the bow. Anything you touch pushes you clear. Hitting a rock, wreck, log, wall, the shore or a pier head-on (closing faster than 4.5 m/s at more than about 25°) costs a plank; a glancing touch only scrapes, slowing you and turning you along it. Crewmates' ships bump apart without damage. The drowned and Knock also cost planks. When the planks run out she sinks.
+- **Verity** sometimes climbs onto your bowsprit: a round yellow smiling face that says it wants to help. He just sits there smiling, with a ring counting down 20 seconds. Ring the bell before then and he slides off into the water (he comes back later). Leave him and he stands up into something long and thin, and that jumpscare ends the voyage. He turns up more often in the Backrooms.
+- **The Backrooms**: one voyage in twenty (rolled from the crew's seed, so a whole crew goes in together), the lights go out and the sea comes back with walls. It's a flooded maze of yellow rooms under buzzing tubes that go dark each time the lamp would have turned. Plimsoll knows the way to the green EXIT sign, and the bearing strip points at it. Maren, the drowned, Knock and Verity all follow you in. Add `?backrooms` to the address to force one (solo only).
 - **The sea**: voyages start about 2.4 km out (further each voyage), through a wide stretch of skerries, wrecks and drifting timber.
 - **Harbour**: steer between the real red and green pier lamps. Each voyage after that has more rocks, wreckage and drowned, and the beam turns slower.
 
+## Boats
+
+Choose your boat from the **Crates** screen (the shipyard is at the top). Your choice is kept on this device, and your crew sees which boat you're sailing.
+
+| Boat | Hull | Acceleration | Steering | |
+|---|---|---|---|---|
+| Brig | 3 | normal | normal | the all-rounder, two masts |
+| Cutter | 2 | 1.7× | 1.4× | small and quick, one tall mast |
+| Barque | 5 | 0.6× | 0.72× | long and heavy, three masts |
+
+Each boat has its own deck and bow as you see them from the helm, and its own length and rig as your crew sees it.
+
 ## Crates, skins and pennants
 
-Every voyage you play earns a **Skerry Crate**: one if you go down, two if you make harbour. Your first one is free. Open crates from the **Crates** button on the title, harbour, crew and end screens. A reel spins and lands on your prize.
+Every voyage you play earns a crate for the boat you sailed (**Brig Crate**, **Cutter Crate** or **Barque Crate**): one if you go down, two if you make harbour. Your first Brig Crate is free. The **crate inventory** on the Crates screen shows how many of each you have, with an Open button for each and a See loot button that shows that boat's skins. A reel spins and lands on your prize. Crates saved by older versions are kept as Brig Crates.
 
-There are 34 skins and 12 pennants to find, in five grades: **Deckhand** (sky blue) 79.9%, **Bosun** (violet) 16%, **Mate** (pink) 3.2%, **Captain** (red) 0.64% and **Admiral** (gold) 0.26%.
+Each crate holds that boat's skins (34 for the Brig, 12 each for the Cutter and Barque) plus 12 pennants that fly on any boat, in five grades: **Deckhand** (sky blue) 79.9%, **Bosun** (violet) 16%, **Mate** (pink) 3.2%, **Captain** (red) 0.64% and **Admiral** (gold) 0.26%.
 
-- A **skin** changes your deck, rails, bowsprit and lantern as you see them, and your hull and sails as your crewmates see them. Crewmates' ships are lit by their own lanterns, so you can make out their skins from about 300 m away, and the crew list and in-game crew panel show which skin everyone is sailing.
+- A **skin** belongs to one boat; each boat keeps its own equipped skin. It changes your deck, rails, bowsprit and lantern as you see them, and your hull and sails as your crewmates see them. Crewmates' ships are lit by their own lanterns, so you can make out their skins from about 300 m away, and the crew list and in-game crew panel show which skin everyone is sailing.
 - A **pennant** flies from a staff at the tip of your bowsprit, and from your masthead for your crew. Fly one, or take it down, from the crate screen.
 
 Gold (Admiral) items only ever appear in the reel when one is your prize, so if you see gold scroll past, it's yours. The chance of gold is still 0.26%.
@@ -116,19 +130,23 @@ Upload `dist/skerry-light.html` anywhere that serves static files. Everything it
 index.html          page markup; loads the stylesheet and scripts below
 src/style.css       HUD, cards and buttons
 src/config.js       tuning numbers, asset paths and the keeper's log
-src/audio.js        all sound, made with the Web Audio API (no audio files)
-src/world.js        voyage generation and Plimsoll's pathfinding
+src/audio.js        sound, made with the Web Audio API (plus Verity's voice clip)
+src/world.js        voyage generation (sea and Backrooms) and Plimsoll's pathfinding
 src/render.js       the camera, sea, obstacles, lighthouse, deck, bearing strip and jumpscare
 src/creatures.js    Maren and Plimsoll: behaviour, animation and drawing
 src/enemies.js      the drowned crew, Knock and the wreckers' false lights
+src/verity.js       Verity, on the bowsprit, and his jumpscare
 src/game.js         game state, update step, input and screens
 src/transport.js    connects to the crew server outside claude.ai
 src/net.js          crews: lobby, shared voyages, crewmates' ships
-src/crates.js       crates and ship skins
+src/crates.js       boats, crates, skins and pennants
 src/main.js         starts the main loop
 assets/maren.png    Maren cutout
 assets/plimsoll.png Plimsoll cutout
 assets/knock.png    Knock cutout
+assets/verity.png   Verity, smiling
+assets/verity2.png  Verity, standing
+assets/verity.mp3   Verity's voice
 tools/build.mjs     bundles everything into dist/
 server/server.js    serves the game and relays crew traffic
 server/ws-lite.js   small built-in WebSocket implementation for the server

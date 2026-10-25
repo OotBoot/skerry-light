@@ -69,6 +69,7 @@ function ringBell() {
   g.stats.bells++;
   sfxBell();
   if (crewMode) { NET.bells++; send(); }
+  if (bellShoosVerity()) addLog('Verity slides off the bowsprit into the water, still smiling. He will be back.', 'p');
   const drowned = bellDrownsThem();
   if (bellStunsKnock()) addLog('The knocking stops. Knock stands frozen for a few seconds.', 'p');
   const m = g.maren;

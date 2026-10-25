@@ -13,11 +13,18 @@ function newVoyage(n, attract, seed, slot) {
   const v = makeVoyage(n, attract, seed);
   ship = v.ship;
   // crewmates start abreast of each other, 40 m apart, alternating left and right of the leader
-  if (slot) { const lat = Math.ceil(slot / 2) * 40 * (slot % 2 ? -1 : 1); ship.x += Math.cos(ship.h) * lat; ship.y -= Math.sin(ship.h) * lat; }
+  // (in the Backrooms the rooms are too tight for that: three abreast, in rows going forward)
+  if (slot && v.backrooms) { const lat = (slot % 3 - 1) * 15, fwd = Math.floor(slot / 3) * 20; ship.x += Math.cos(ship.h) * lat + Math.sin(ship.h) * fwd; ship.y += -Math.sin(ship.h) * lat + Math.cos(ship.h) * fwd; }
+  else if (slot) { const lat = Math.ceil(slot / 2) * 40 * (slot % 2 ? -1 : 1); ship.x += Math.cos(ship.h) * lat; ship.y -= Math.sin(ship.h) * lat; }
   const beam0 = seed != null ? (seed % 1000) / 1000 * 3 - 1.5 : rand(-1.5, 1.5);
   g = {
     t: 0, n, attract, beam: beam0, beam0, launchAt: 0, launchId: null, period: Math.min(11, 6 + n * 0.8),
     rocks: v.rocks, wrecks: v.wrecks, timber: v.timber, path: v.path,
+    backrooms: !!v.backrooms, exit: v.exit, rooms: v.rooms,
+    walls: v.walls || [
+      { x1: SK.HARBOUR.x - 23, y1: -2, x2: SK.HARBOUR.x - 23, y2: 46, r: 3, what: 'the pier' },
+      { x1: SK.HARBOUR.x + 23, y1: -2, x2: SK.HARBOUR.x + 23, y2: 46, r: 3, what: 'the pier' },
+    ],
     parts: [], glare: 0, shake: 0, log: [], bell: 0, bellFlash: 0, wasLit: false, scareT: 0,
     flares: [], flareCd: 0, repairT: 0, shoutT: 0, knockScare: 0, knockKill: false,
     stats: { hits: 0, bells: 0, flares: 0, patched: 0, eaten: 0 },
@@ -25,13 +32,14 @@ function newVoyage(n, attract, seed, slot) {
   g.enemies = newEnemies(v.lures);
   g.plim = newPlimsoll(v.path);
   g.maren = newMaren(!attract, v.wrecks.find(w => w.name === 'Gannet'));
+  g.verity = newVerity(v.backrooms); g.verityScare = 0; g.lightsOut = 0;
   renderHud();
 }
 
 function renderHud() {
   $('voyage').textContent = g.n;
   const hull = $('hull'); hull.textContent = '';
-  for (let i = 0; i < SK.HULL; i++) { const s = document.createElement('span'); s.className = 'plank' + (i < ship.hull ? '' : ' off'); hull.appendChild(s); }
+  for (let i = 0; i < ship.maxHull; i++) { const s = document.createElement('span'); s.className = 'plank' + (i < ship.hull ? '' : ' off'); hull.appendChild(s); }
 }
 function addLog(text, cls) {
   if (!text || g.attract) return;
@@ -96,7 +104,7 @@ function shout(k) {
   addLog('You: ' + SHOUTS[k], 'p');
 }
 function sailInCompany(dt) {
-  if (!crewMode || ship.hull >= SK.HULL) { g.repairT = 0; return; }
+  if (!crewMode || ship.hull >= ship.maxHull) { g.repairT = 0; return; }
   const mate = matesAtSea().find(m => Math.hypot(m.x - ship.x, m.y - ship.y) < SK.REPAIR_DIST);
   if (!mate) { g.repairT = Math.max(0, g.repairT - dt * 0.5); return; }
   if (g.repairT === 0) addLog('Sailing in company with ' + mate.name + '. Stay close and the carpenters can patch a plank.');
@@ -107,25 +115,108 @@ function sailInCompany(dt) {
   }
 }
 
-// the bow is a few metres ahead of where you stand; returns true if she hit something or arrived
+// ---------- collision ----------
+// The hull is a capsule from bow to stern, sampled at five points along the keel. Anything that
+// overlaps it is pushed clear. Only a real impact (closing on it faster than SK.IMPACT m/s) stoves
+// in a plank; a glancing touch just scrapes, slows her a little and turns her along the obstacle.
+function hullPoints() {
+  const b = BOAT_BY_ID[ship.boat] || BOATS[0];
+  const sx = Math.sin(ship.h), sy = Math.cos(ship.h), pts = [];
+  for (let i = 0; i < 5; i++) {
+    const off = b.bow - (b.len * 0.8) * i / 4;
+    const w = b.beam * (i === 0 ? 0.55 : i === 4 ? 0.75 : 1);   // narrow at the bow, a little at the stern
+    pts.push({ x: ship.x + sx * off, y: ship.y + sy * off, w });
+  }
+  return pts;
+}
+function closestOnSeg(px, py, s) {
+  const dx = s.x2 - s.x1, dy = s.y2 - s.y1, L = dx * dx + dy * dy || 1;
+  const t = clamp(((px - s.x1) * dx + (py - s.y1) * dy) / L, 0, 1);
+  return { x: s.x1 + dx * t, y: s.y1 + dy * t };
+}
+// deepest overlap of the hull with a circle (cx, cy, r) or a wall segment; null if clear
+function hullContact(pts, cx, cy, r, seg) {
+  let best = null;
+  for (const p of pts) {
+    let qx = cx, qy = cy;
+    if (seg) { const q = closestOnSeg(p.x, p.y, seg); qx = q.x; qy = q.y; }
+    const dx = p.x - qx, dy = p.y - qy, d = Math.hypot(dx, dy) || 0.001;
+    const pen = r + p.w - d;
+    if (pen > 0 && (!best || pen > best.pen)) best = { pen, nx: dx / d, ny: dy / d };
+  }
+  return best;
+}
+// resolve one contact: push out, then either a hit or a scrape. Returns true if it was a hit.
+function resolveContact(c, what, soft) {
+  ship.x += c.nx * c.pen; ship.y += c.ny * c.pen;
+  const vx = Math.sin(ship.h) * ship.v, vy = Math.cos(ship.h) * ship.v;
+  const closing = -(vx * c.nx + vy * c.ny);   // speed into the obstacle
+  if (closing <= 0) return false;
+  // a hit needs both real speed into it and a real angle (more than about 25°); shallower is a scrape
+  if (closing > SK.IMPACT && closing > ship.v * 0.42 && !soft) {
+    hit(c.nx, c.ny, what);
+    return true;
+  }
+  // glancing: lose the speed going into it, keep the speed along it, and swing her parallel
+  const tx = vx + c.nx * closing, ty = vy + c.ny * closing, tv = Math.hypot(tx, ty);
+  if (tv > 0.5) ship.h += angDiff(bearingOf(tx, ty), ship.h) * 0.35;
+  ship.v = Math.max(2, ship.v - closing * 0.6);
+  if (!g.scrapeT || g.scrapeT <= 0) { g.scrapeT = 0.6; sfxCreak(); g.shake = Math.max(g.shake, 0.12); }
+  return false;
+}
+// returns true if she hit something or arrived (so the stepped move stops for this frame)
 function checkCollisions() {
   const hull0 = ship.hull;
-  const bx = ship.x + Math.sin(ship.h) * 5, by = ship.y + Math.cos(ship.h) * 5;
-  for (const r of g.rocks) if (Math.hypot(bx - r.x, by - r.y) < r.r + 2.5) { hit(bx - r.x, by - r.y, 'a skerry'); break; }
-  for (const o of g.wrecks) if (Math.hypot(bx - o.x, by - o.y) < o.r * 0.8 + 2.5) { hit(bx - o.x, by - o.y, 'the wreck of the ' + o.name); break; }
-  for (const o of g.timber) if (Math.hypot(bx - o.x, by - o.y) < o.r + 2.5) { hit(bx - o.x, by - o.y, 'drifting timber'); Object.assign(o, spawnTimber(ship.x, ship.y)); break; }
-  const inGap = Math.abs(ship.x - SK.HARBOUR.x) < 18;
-  if (ship.y < 5 && !inGap) { ship.y = 6; hit(0, 1, 'the shore'); }
-  for (const px of [SK.HARBOUR.x - 23, SK.HARBOUR.x + 23]) {
-    if (Math.abs(bx - px) < 3.5 && by < 48 && by > -2) { hit(bx - px, 0.3, 'the pier'); ship.x += Math.sign(ship.x - px) * 2; }
+  const pts = hullPoints();
+  let c;
+  for (const r of g.rocks) {
+    if (Math.abs(r.x - ship.x) > r.r + 40 || Math.abs(r.y - ship.y) > r.r + 40) continue;
+    if ((c = hullContact(pts, r.x, r.y, r.r)) && resolveContact(c, 'a skerry')) break;
   }
-  if (state === 'play' && inGap && ship.y < 36 && ship.y > 0) { arrive(); return true; }
+  for (const o of g.wrecks) {
+    if (Math.hypot(o.x - ship.x, o.y - ship.y) > o.r + 40) continue;
+    if ((c = hullContact(pts, o.x, o.y, o.r * 0.8)) && resolveContact(c, 'the wreck of the ' + o.name)) break;
+  }
+  for (const o of g.timber) {
+    if (Math.hypot(o.x - ship.x, o.y - ship.y) > o.r + 40) continue;
+    if ((c = hullContact(pts, o.x, o.y, o.r))) {
+      if (resolveContact(c, 'drifting timber')) { Object.assign(o, spawnTimber(ship.x, ship.y)); break; }
+      o.x -= c.nx * 1.5; o.y -= c.ny * 1.5;   // nudge the log aside
+    }
+  }
+  for (const w of g.walls) {
+    if (Math.max(Math.abs(closestOnSeg(ship.x, ship.y, w).x - ship.x), Math.abs(closestOnSeg(ship.x, ship.y, w).y - ship.y)) > 40) continue;
+    if ((c = hullContact(pts, 0, 0, w.r || 1, w)) && resolveContact(c, w.what || 'the pier')) break;
+  }
+  if (!g.backrooms) {
+    const inGap = Math.abs(ship.x - SK.HARBOUR.x) < 18;
+    if (!inGap) {
+      const lowest = pts.reduce((m, p) => Math.min(m, p.y - p.w), Infinity);
+      if (lowest < 5) resolveContact({ pen: 5 - lowest, nx: 0, ny: 1 }, 'the shore');
+    }
+    if (state === 'play' && inGap && ship.y < 36 && ship.y > 0) { arrive(); return true; }
+  } else if (state === 'play' && Math.hypot(ship.x - g.exit.x, ship.y - g.exit.y) < g.exit.r) { arrive(); return true; }
   return ship.hull !== hull0 || state !== 'play';
+}
+// crewmates' ships bump apart rather than through each other, and nobody takes damage for it
+function bumpMates() {
+  if (!crewMode || typeof matesAtSea !== 'function') return;
+  const mine = BOAT_BY_ID[ship.boat] || BOATS[0];
+  for (const m of matesAtSea()) {
+    const theirs = BOAT_BY_ID[m.boat] || BOATS[0];
+    const dx = ship.x - m.x, dy = ship.y - m.y, d = Math.hypot(dx, dy) || 0.01;
+    const need = (mine.len + theirs.len) * 0.3 + mine.beam + theirs.beam;
+    if (d < need) {
+      const push = Math.min(3, (need - d) * 0.5);
+      ship.x += dx / d * push; ship.y += dy / d * push;
+      if (!g.scrapeT || g.scrapeT <= 0) { g.scrapeT = 0.8; sfxCreak(); }
+    }
+  }
 }
 
 function update(dt) {
   g.t += dt;
-  if (advanceBeam(dt)) marenTurn();
+  if (advanceBeam(dt)) { marenTurn(); if (g.backrooms && !g.attract) { g.lightsOut = 0.7; sfxLightsOut(); } }
   if (state === 'scare') return;
 
   // the helm
@@ -140,14 +231,15 @@ function update(dt) {
     sailIn += sailHold;
     steer = clamp(steer, -1, 1); sailIn = clamp(sailIn, -1, 1);
   }
-  ship.rudder += (steer - ship.rudder) * Math.min(1, dt * 4);
+  const boat = BOAT_BY_ID[ship.boat] || BOATS[0];
+  ship.rudder += (steer - ship.rudder) * Math.min(1, dt * 4 * boat.turn);
   // no top speed: keep making sail and she keeps going faster (and the longer you hold it, the quicker it climbs)
   if (sailIn > 0) g.sailHeld = (g.sailHeld || 0) + dt; else g.sailHeld = 0;
-  const rate = sailIn > 0 ? 1.6 * (1 + g.sailHeld * 1.2) : 1.6;
+  const rate = (sailIn > 0 ? 1.6 * (1 + g.sailHeld * 1.2) : 1.6) * boat.accel;
   // shortening sail is quick too, even from a great speed
   ship.sail = Math.max(0.15, ship.sail + (sailIn > 0 ? sailIn * rate : sailIn * (1.6 + ship.sail * 1.8)) * dt);
-  ship.v += (3 + ship.sail * 12 - ship.v) * Math.min(1, dt * 4);   // she answers the sail almost at once
-  ship.h += ship.rudder * 0.55 * dt * (0.35 + 0.65 * Math.min(1, ship.v / 10));
+  ship.v += (3 + ship.sail * 12 - ship.v) * Math.min(1, dt * 4 * boat.accel);   // she answers the sail almost at once
+  ship.h += ship.rudder * 0.55 * boat.turn * dt * (0.35 + 0.65 * Math.min(1, ship.v / 10));
   // move in short steps so a fast ship can't jump clean over a rock between frames
   const steps = Math.min(60, Math.max(1, Math.ceil(ship.v * dt / 2)));
   for (let i = 0; i < steps; i++) {
@@ -155,6 +247,8 @@ function update(dt) {
     ship.y += Math.cos(ship.h) * ship.v * dt / steps;
     if (!g.attract && state === 'play' && checkCollisions()) break;
   }
+  if (!g.attract && state === 'play') bumpMates();
+  if (g.scrapeT > 0) g.scrapeT -= dt;
   ship.bob += dt;
   if (ship.inv > 0) ship.inv -= dt;
 
@@ -168,13 +262,15 @@ function update(dt) {
   updatePlimsoll(dt);
   updateMaren(dt);
   updateEnemies(dt);
+  updateVerity(dt);
   sailInCompany(dt);
   for (const f of g.flares) f.t -= dt;
   g.flares = g.flares.filter(f => f.t > 0);
   if (g.flareCd > 0) g.flareCd = Math.max(0, g.flareCd - dt);
   if (g.shoutT > 0) g.shoutT -= dt;
 
-  const meLit = litAt(ship.x, ship.y);
+  if (g.lightsOut > 0) g.lightsOut -= dt;
+  const meLit = g.backrooms ? 0 : litAt(ship.x, ship.y);
   const facing = Math.abs(angDiff(bearingOf(-ship.x, -ship.y), ship.h)) < fov / 2;
   g.glare = Math.max(g.glare - dt * 2.5, meLit * (facing ? 0.75 : 0.3));
   const nowLit = meLit > 0.3;
@@ -191,7 +287,8 @@ function update(dt) {
   if (!g.attract) {
     audioTick(dt, g.maren.stage);
     $('knots').textContent = Math.round(ship.v * 0.97);
-    const d = Math.hypot(ship.x - SK.HARBOUR.x, ship.y - SK.HARBOUR.y);
+    const goal = g.backrooms ? g.exit : SK.HARBOUR;
+    const d = Math.hypot(ship.x - goal.x, ship.y - goal.y);
     $('dist').textContent = d > 1000 ? (d / 1852).toFixed(1) + 'nm' : Math.round(d) + 'm';
     updateBellButton();
     updateFlareButton();
@@ -242,6 +339,7 @@ function beginVoyage(n) {
   $('hud').hidden = false; $('logbox').hidden = false;
   $('log').textContent = '';
   addLog(n === 1 ? 'Under way. Follow the blue shoes.' : 'Voyage ' + n + '. More wreckage, and the light turns slower.');
+  enteredBackrooms();
   cv.focus({ preventScroll: true });
 }
 
@@ -256,7 +354,19 @@ function beginCrewVoyage(L, slot) {
   $('hud').hidden = false; $('logbox').hidden = false;
   $('log').textContent = '';
   addLog(L.voy === 1 ? 'Under way with your crew. Follow the blue shoes, and keep together.' : 'Voyage ' + L.voy + '. More wreckage, and the light turns slower.');
+  enteredBackrooms();
   cv.focus({ preventScroll: true });
+}
+
+function enteredBackrooms() {
+  $('distLabel').textContent = g.backrooms ? 'Exit' : 'Harbour';
+  $('portTitle').textContent = g.backrooms ? 'Out of the Rooms' : 'Safe in Harbour';
+  $('stage').classList.toggle('rooms', !!g.backrooms);
+  if (!g.backrooms) return;
+  $('log').textContent = ''; g.log = [];
+  addLog('Plimsoll knows the way out. Follow the shoes to the green EXIT sign.', 'p');
+  addLog('The pier lamps went out. When the light came back, the sea had walls.', 'w');
+  sfxLightsOut();
 }
 
 function toTitle() {
@@ -264,17 +374,19 @@ function toTitle() {
   hideCards(); $('crewCard').hidden = true;
   $('hud').hidden = true; $('logbox').hidden = true;
   newVoyage(1, true);
+  $('stage').classList.remove('rooms');
   $('titleCard').hidden = false;
   renderTogether();
 }
 
 function arrive() {
   grantCrate(2);
+  stopVerity();
   if (crewMode) {
     state = 'port';
     audioTick(0, 0);
     sfxChime();
-    addLog('Made harbour between the pier lamps.', 'p');
+    addLog(g.backrooms ? 'Out through the green door, and back on the real sea.' : 'Made harbour between the pier lamps.', 'p');
     myStatus('port');
     $('hud').hidden = true; $('logbox').hidden = true;
     showCrewCard();
@@ -285,10 +397,10 @@ function arrive() {
   run.voyages++;
   if (run.voyages > best) { best = run.voyages; try { localStorage.setItem('skerry-helm-best', String(best)); } catch (e) {} }
   sfxChime();
-  const page = SK.LOG[(run.voyages - 1) % SK.LOG.length];
-  $('portEyebrow').textContent = 'Voyage ' + g.n + ' · made harbour';
-  $('portText').textContent = ship.hull === SK.HULL ? 'Not a scratch on her. Plimsoll sits down on the pier and takes his shoes off.' :
-    'She limps in with ' + (SK.HULL - ship.hull) + (SK.HULL - ship.hull === 1 ? ' plank' : ' planks') + ' stove in. The shipwright will patch her overnight.';
+  const page = g.backrooms ? SK.BACKROOMS_LOG : SK.LOG[(run.voyages - 1) % SK.LOG.length];
+  $('portEyebrow').textContent = 'Voyage ' + g.n + (g.backrooms ? ' · found the way out' : ' · made harbour');
+  $('portText').textContent = g.backrooms ? 'Through the green-lit door, and the sea is the sea again: cold, black, and the pier lamps right ahead. Behind you there is no door, only fog.' : ship.hull === ship.maxHull ? 'Not a scratch on her. Plimsoll sits down on the pier and takes his shoes off.' :
+    'She limps in with ' + (ship.maxHull - ship.hull) + (ship.maxHull - ship.hull === 1 ? ' plank' : ' planks') + ' stove in. The shipwright will patch her overnight.';
   $('logDate').textContent = page.date;
   $('logText').textContent = page.text;
   $('portCard').hidden = false;
@@ -304,18 +416,20 @@ function startScare() {
 
 function endRun(how) {
   state = 'over';
+  stopVerity();
   grantCrate();
   audioTick(0, 0);
-  const taken = how === 'taken', knocked = how === 'knock';
+  const taken = how === 'taken', knocked = how === 'knock' || how === 'verity', verity = how === 'verity';
   if (crewMode) {
     myStatus(taken ? 'taken' : 'sunk');
     setTimeout(() => { $('hud').hidden = true; $('logbox').hidden = true; if (crewMode && state === 'over') showCrewCard(); }, (taken || knocked) ? 0 : 900);
     return;
   }
   $('endEyebrow').textContent = 'Voyage ' + g.n + (taken ? ' · taken' : ' · lost');
-  $('endTitle').textContent = taken ? 'Maren Came Aboard' : knocked ? 'Knocked Under' : 'Lost on the Skerries';
+  $('endTitle').textContent = taken ? 'Maren Came Aboard' : verity ? 'Verity Helped' : knocked ? 'Knocked Under' : 'Lost on the Skerries';
   $('endText').textContent = taken
     ? 'She stood at the bow, and then she was on the deck. The brig was found at dawn drifting off the Gannet, with her lantern still lit and nobody aboard.'
+    : verity ? 'He only wanted to help. The ship was found at dawn with nobody aboard and a wide, yellow smile scratched into the bowsprit.'
     : knocked ? 'Three knocks on the hull, and the fourth came straight through the planks. They say the Gannet\u2019s figurehead is still smiling.'
     : (run.voyages === 0 ? 'She went down before you sighted the pier lamps. The skerries keep their reputation.' :
       'You brought her in ' + run.voyages + (run.voyages === 1 ? ' time' : ' times') + ' before the rocks had the last word.');

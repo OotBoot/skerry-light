@@ -319,3 +319,27 @@ canvas:focus { outline: none; }
   .toolrow { justify-content: flex-end; }
 }
 @media (prefers-reduced-motion: reduce) { .primary, #hint { transition: none; } }
+
+/* ---------- shipyard and crate inventory ---------- */
+.cratecard .invh { font-family: "IM Fell English SC", serif; font-size: 1.15rem; margin: 18px 0 8px; color: var(--ink, #ece4cf); }
+.boats { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; margin-top: 12px; }
+.boatcard { display: flex; flex-direction: column; gap: 5px; padding: 10px; border: 1px solid rgba(236,228,207,0.16); border-radius: 8px; background: rgba(255,255,255,0.03); }
+.boatcard.chosen { border-color: #ffd88a; box-shadow: 0 0 0 1px #ffd88a inset; }
+.boatcard svg { align-self: center; }
+.boatcard b { font-size: 1.05rem; }
+.boatcard small { color: #8f98ab; line-height: 1.35; min-height: 2.7em; }
+.boatcard .stat { display: grid; grid-template-columns: 7.5em 1fr; align-items: center; gap: 6px; font-size: 0.78rem; color: #b9c0cc; }
+.boatcard .stat i { height: 6px; border-radius: 3px; background: linear-gradient(90deg, #ffd88a calc(var(--v) * 100%), rgba(236,228,207,0.12) 0); }
+.boatcard button { margin-top: 4px; }
+.cratetypes { display: flex; flex-direction: column; gap: 6px; }
+.cratetype { display: grid; grid-template-columns: 34px 1fr auto auto auto; align-items: center; gap: 10px; padding: 8px 10px; border: 1px solid rgba(236,228,207,0.14); border-radius: 8px; }
+.cratetype.viewing { background: rgba(255,216,138,0.07); border-color: rgba(255,216,138,0.4); }
+.cratetype small { color: #8f98ab; }
+.cratebox { width: 30px; height: 24px; border-radius: 3px; background: linear-gradient(#6a4a2c, #3e2a18); border: 2px solid #b08850; box-shadow: inset 0 -8px 0 rgba(0,0,0,0.25); }
+button.small { padding: 6px 14px; min-height: 0; }
+.skincard.locked { opacity: 0.35; filter: grayscale(0.7); }
+@media (max-width: 520px) {
+  .cratetype { grid-template-columns: 28px 1fr auto; }
+  .cratetype small { grid-column: 2; }
+  .cratetype button { grid-column: span 1; }
+}

@@ -1,10 +1,12 @@
-// Crates, ship skins and pennants.
+// Boats, crates, skins and pennants.
 //
-// You earn one Skerry Crate each time a voyage ends for you, made harbour or lost. Open crates from
-// the menu: a reel spins and lands on your prize, a skin or a pennant. Skins change your deck,
-// bowsprit and lantern as you see them, and your hull and sails as your crewmates see them.
-// Pennants fly from your bowsprit, and from your masthead for your crew. Everything is kept in this
-// browser (localStorage), so it's yours on this device.
+// There are three boats, each with its own stats and its own crate. You earn a crate for the boat
+// you sailed each time a voyage ends: one if you went down, two if you made harbour. Open crates
+// from your crate inventory: a reel spins and lands on a skin for that boat or on a pennant (which
+// fits any boat). Skins change your deck, bowsprit and lantern as you see them, and your hull and
+// sails as your crew sees them; pennants fly from your bowsprit, and from your masthead for your
+// crew. Gold (Admiral) items only ever appear in the reel when one is your prize.
+// Everything is kept in this browser (localStorage), so it's yours on this device.
 
 const RARITIES = [
   { id: 'deckhand', name: 'Deckhand', color: '#3fb4ff', odds: 0.7992 },
@@ -14,8 +16,18 @@ const RARITIES = [
   { id: 'admiral',  name: 'Admiral',  color: '#ffc234', odds: 0.0026 },
 ];
 
+// hull: planks before she sinks; accel and turn multiply how fast she gathers way and answers the helm
+// deckW/tipY/rail shape the bow you see from the deck; len/masts shape the ship your crew sees
+const BOATS = [
+  { id: 'brig',   name: 'Brig',   blurb: 'The all-rounder. Two masts, three planks to spare.', hull: 3, accel: 1.0, turn: 1.0, beam: 2.6, len: 20, masts: [-0.2, 0.18], deckW: 0.75, tipY: 0.72, rail: 10, bow: 5 },
+  { id: 'cutter', name: 'Cutter', blurb: 'Light and quick, turns on a penny, but two hits and she goes.', hull: 2, accel: 1.7, turn: 1.4, beam: 2, len: 15, masts: [0.05], deckW: 0.58, tipY: 0.75, rail: 7, bow: 4 },
+  { id: 'barque', name: 'Barque', blurb: 'A heavy three-master. Slow to start and slow to turn, but she takes a beating.', hull: 5, accel: 0.6, turn: 0.72, beam: 3.4, len: 27, masts: [-0.28, 0.02, 0.3], deckW: 0.95, tipY: 0.68, rail: 14, bow: 7 },
+];
+const BOAT_BY_ID = Object.fromEntries(BOATS.map(b => [b.id, b]));
+const CRATE_TYPES = BOATS.map(b => ({ id: b.id, name: b.name + ' Crate', boat: b.id }));
+
 // deck: [near, far] planking; rail; wood (bowsprit); lantern; hull and sail are what crewmates see
-const SKINS = [
+const BRIG_SKINS = [
   { id: 'plain',      name: 'Brig, as built',      rarity: null,       deck: ['#1a130d', '#0c0806'], rail: '#1e140c', wood: '#140d08', lantern: '#ffcf86', hull: '#4b3a2b', sail: '#d8cdb0' },
   { id: 'tarred',     name: 'Tarred Oak',          rarity: 'deckhand', deck: ['#141210', '#070605'], rail: '#0d0b09', wood: '#0a0807', lantern: '#ffcf86', hull: '#1f1b17', sail: '#cfc6ae' },
   { id: 'grey',       name: "Fisherman's Grey",    rarity: 'deckhand', deck: ['#24262a', '#101114'], rail: '#2c2f34', wood: '#1c1e22', lantern: '#f4e3b8', hull: '#55595f', sail: '#c9cbc8' },
@@ -52,7 +64,41 @@ const SKINS = [
   { id: 'wreckers',   name: "Wreckers' Colours",   rarity: 'captain',  deck: ['#1b120e', '#0a0605'], rail: '#e46c4f', wood: '#2c3a2c', lantern: '#86cfae', hull: '#4a1f18', sail: '#2c4a3a' },
   { id: 'gannet',     name: 'The Gannet, Restored', rarity: 'admiral', deck: ['#2a241a', '#120f0a'], rail: '#f2d27a', wood: '#efe6d2', lantern: '#fff6dc', hull: '#f4efe3', sail: '#ffffff' },
 ];
+const CUTTER_SKINS = [
+  { id: 'c_plain',    name: 'Cutter, as built',    rarity: null,       deck: ['#1d1610', '#0d0907'], rail: '#2a1d12', wood: '#1a120b', lantern: '#ffcf86', hull: '#5a4330', sail: '#ddd2b6' },
+  { id: 'c_regatta',  name: 'Regatta White',       rarity: 'deckhand', deck: ['#2a2a28', '#121211'], rail: '#e9e6de', wood: '#c9c3b5', lantern: '#ffffff', hull: '#efece4', sail: '#ffffff' },
+  { id: 'c_customs',  name: 'Customs Grey',        rarity: 'deckhand', deck: ['#1f2226', '#0c0d0f'], rail: '#4e5660', wood: '#3a4049', lantern: '#e6eef8', hull: '#5d6772', sail: '#c2c9d1' },
+  { id: 'c_oyster',   name: 'Oyster Shell',        rarity: 'deckhand', deck: ['#2b2723', '#13110f'], rail: '#b9ab98', wood: '#8a7e6e', lantern: '#fff4e0', hull: '#c9bba6', sail: '#efe7da' },
+  { id: 'c_pilot',    name: 'Pilot Yellow',        rarity: 'deckhand', deck: ['#221d0f', '#0f0c05'], rail: '#e0b52a', wood: '#7a6216', lantern: '#fff2b0', hull: '#d6a91c', sail: '#f4ecd2' },
+  { id: 'c_tide',     name: 'Tidewater',           rarity: 'deckhand', deck: ['#14201f', '#070e0d'], rail: '#3f7f7a', wood: '#25504c', lantern: '#d8fff8', hull: '#3c7a74', sail: '#d6ece8' },
+  { id: 'c_smuggler', name: "Smuggler's Night",    rarity: 'bosun',    deck: ['#0d0d10', '#040405'], rail: '#33303b', wood: '#1d1b22', lantern: '#ff9f5a', hull: '#1b1a20', sail: '#2b2933' },
+  { id: 'c_revenue',  name: 'Revenue Blue',        rarity: 'bosun',    deck: ['#101827', '#050912'], rail: '#d9b85a', wood: '#1d2c4a', lantern: '#ffe7a0', hull: '#1f3463', sail: '#eef1f7' },
+  { id: 'c_glass',    name: 'Sea Glass',           rarity: 'bosun',    deck: ['#13221e', '#06100d'], rail: '#8fe0c4', wood: '#4f9a84', lantern: '#e6fff6', hull: '#7cc9b0', sail: '#dff7ef' },
+  { id: 'c_sunset',   name: 'Sunset Regatta',      rarity: 'mate',     deck: ['#2a140f', '#120705'], rail: '#ff8a4c', wood: '#a3402a', lantern: '#ffd08a', hull: '#e0582f', sail: '#ffcf8a' },
+  { id: 'c_coral',    name: 'Coral Reef',          rarity: 'mate',     deck: ['#2a1418', '#11070a'], rail: '#ff7b8f', wood: '#2f8a8a', lantern: '#ffd6dc', hull: '#ff6f85', sail: '#fff0e6' },
+  { id: 'c_bolt',     name: 'Lightning Bolt',      rarity: 'captain',  deck: ['#0e0f1a', '#04040a'], rail: '#ffe14d', wood: '#2a2d55', lantern: '#fff8b0', hull: '#22264a', sail: '#ffe14d' },
+  { id: 'c_gull',     name: 'Silver Gull',         rarity: 'admiral',  deck: ['#24282c', '#0e1012'], rail: '#e8eef4', wood: '#aeb8c2', lantern: '#ffffff', hull: '#cfd8e0', sail: '#ffffff' },
+];
+const BARQUE_SKINS = [
+  { id: 'b_plain',    name: 'Barque, as built',    rarity: null,       deck: ['#17110c', '#0a0705'], rail: '#1b120b', wood: '#120c07', lantern: '#ffcf86', hull: '#3f3125', sail: '#d4c9ab' },
+  { id: 'b_whaler',   name: "Whaler's Tar",        rarity: 'deckhand', deck: ['#121010', '#060505'], rail: '#1f1b19', wood: '#151210', lantern: '#ffc27a', hull: '#1d1917', sail: '#b9ae96' },
+  { id: 'b_grain',    name: 'Grain Barque',        rarity: 'deckhand', deck: ['#2a2214', '#120e08'], rail: '#8a6d3a', wood: '#5e4a26', lantern: '#ffe0a0', hull: '#9c7b40', sail: '#e9dcbc' },
+  { id: 'b_iron',     name: 'Iron Grey',           rarity: 'deckhand', deck: ['#1b1d20', '#0a0b0c'], rail: '#3d4248', wood: '#2a2e33', lantern: '#e0e8f0', hull: '#43494f', sail: '#a9afb5' },
+  { id: 'b_oak',      name: 'Oak and Pitch',       rarity: 'deckhand', deck: ['#21170e', '#0e0905'], rail: '#6b4a2a', wood: '#3e2a16', lantern: '#ffcf86', hull: '#5e4126', sail: '#dccfb0' },
+  { id: 'b_canvas',   name: 'Canvas Brown',        rarity: 'deckhand', deck: ['#221a12', '#0f0b07'], rail: '#7a5e40', wood: '#4d3a26', lantern: '#ffd9a0', hull: '#6a5038', sail: '#c4a77e' },
+  { id: 'b_emigrant', name: 'Emigrant Green',      rarity: 'bosun',    deck: ['#0f1a12', '#050b07'], rail: '#d9c27a', wood: '#1f3d28', lantern: '#fff0b8', hull: '#244a31', sail: '#ece6d2' },
+  { id: 'b_tea',      name: 'Tea Clipper',         rarity: 'bosun',    deck: ['#1a0f0b', '#0a0504'], rail: '#c99a52', wood: '#3a1d12', lantern: '#ffd68a', hull: '#2a120b', sail: '#f6efe0' },
+  { id: 'b_sheath',   name: 'Copper Sheath',       rarity: 'bosun',    deck: ['#2a180e', '#120a05'], rail: '#d07a3a', wood: '#6b3a18', lantern: '#ffb87a', hull: '#a85a26', sail: '#e9d6bc' },
+  { id: 'b_ice',      name: 'Ice Barque',          rarity: 'mate',     deck: ['#1a2630', '#0a1016'], rail: '#bfe6ff', wood: '#6f97b3', lantern: '#e6f7ff', hull: '#9cc6e0', sail: '#f2fbff' },
+  { id: 'b_spice',    name: 'Spice Route',         rarity: 'mate',     deck: ['#2a1508', '#120803'], rail: '#ffb238', wood: '#8a2f12', lantern: '#ffcf70', hull: '#b8461b', sail: '#ffd98a' },
+  { id: 'b_dutchman', name: 'Flying Dutchman',     rarity: 'captain',  deck: ['#0f1a17', '#040a08'], rail: '#7affc8', wood: '#1d3a30', lantern: '#9affd8', hull: '#163027', sail: '#5c8f7c' },
+  { id: 'b_royal',    name: 'Royal Barque',        rarity: 'admiral',  deck: ['#1e1428', '#0c0712'], rail: '#ffd34d', wood: '#4a2a6b', lantern: '#fff0c0', hull: '#4b2470', sail: '#fff6d8' },
+];
+const SKINS = BRIG_SKINS.map(s => Object.assign({ boat: 'brig' }, s))
+  .concat(CUTTER_SKINS.map(s => Object.assign({ boat: 'cutter' }, s)))
+  .concat(BARQUE_SKINS.map(s => Object.assign({ boat: 'barque' }, s)));
 const SKIN_BY_ID = Object.fromEntries(SKINS.map(s => [s.id, s]));
+const PLAIN = { brig: 'plain', cutter: 'c_plain', barque: 'b_plain' };
 
 // pennants: a small flag, in a pattern of one or two colours
 const PENNANTS = [
@@ -70,58 +116,86 @@ const PENNANTS = [
   { id: 'p_laces',    kind: 'pennant', name: "Plimsoll's Laces",   rarity: 'admiral',  colors: ['#5fd3ff', '#ffffff'], pattern: 'check' },
 ];
 const PENNANT_BY_ID = Object.fromEntries(PENNANTS.map(p => [p.id, p]));
-const LOOT = SKINS.filter(s => s.rarity).concat(PENNANTS);
 const LOOT_BY_ID = Object.assign({}, SKIN_BY_ID, PENNANT_BY_ID);
+const lootFor = crate => SKINS.filter(s => s.rarity && s.boat === crate).concat(PENNANTS);
 const rarityOf = s => RARITIES.find(r => r.id === s.rarity);
 
-const CRATES = { crates: 0, owned: {}, equipped: 'plain', pennant: null, opening: false, pending: null };
+const CRATES = {
+  crates: { brig: 0, cutter: 0, barque: 0 },
+  owned: {}, equipped: { brig: 'plain', cutter: 'c_plain', barque: 'b_plain' }, pennant: null,
+  boat: 'brig', opening: false, pending: null, view: 'brig',
+};
+function totalCrates() { return CRATES.crates.brig + CRATES.crates.cutter + CRATES.crates.barque; }
 function loadCrates() {
+  let fresh = true;
   try {
-    const d = JSON.parse(localStorage.getItem('skerry-crates') || '{}');
-    CRATES.crates = Math.max(0, Math.min(999, d.crates | 0));
-    CRATES.owned = d.owned && typeof d.owned === 'object' ? d.owned : {};
-    CRATES.equipped = SKIN_BY_ID[d.equipped] ? d.equipped : 'plain';
-    CRATES.pennant = PENNANT_BY_ID[d.pennant] ? d.pennant : null;
-    // a crate whose reel was still spinning when the page closed: the prize is still yours
-    if (LOOT_BY_ID[d.pending]) { CRATES.owned[d.pending] = (CRATES.owned[d.pending] | 0) + 1; saveCrates(); }
+    const raw = localStorage.getItem('skerry-crates');
+    if (raw) {
+      fresh = false;
+      const d = JSON.parse(raw);
+      // older saves kept one plain number of crates and one skin: those were all for the brig
+      if (typeof d.crates === 'number') CRATES.crates.brig = Math.max(0, Math.min(999, d.crates | 0));
+      else if (d.crates && typeof d.crates === 'object') for (const b of BOATS) CRATES.crates[b.id] = Math.max(0, Math.min(999, d.crates[b.id] | 0));
+      CRATES.owned = d.owned && typeof d.owned === 'object' ? d.owned : {};
+      if (typeof d.equipped === 'string') { if (SKIN_BY_ID[d.equipped] && SKIN_BY_ID[d.equipped].boat === 'brig') CRATES.equipped.brig = d.equipped; }
+      else if (d.equipped && typeof d.equipped === 'object') for (const b of BOATS) { const s = SKIN_BY_ID[d.equipped[b.id]]; if (s && s.boat === b.id) CRATES.equipped[b.id] = s.id; }
+      CRATES.pennant = PENNANT_BY_ID[d.pennant] ? d.pennant : null;
+      CRATES.boat = BOAT_BY_ID[d.boat] ? d.boat : 'brig';
+      // a crate whose reel was still spinning when the page closed: the prize is still yours
+      if (LOOT_BY_ID[d.pending]) { CRATES.owned[d.pending] = (CRATES.owned[d.pending] | 0) + 1; }
+    }
   } catch (e) {}
-  // a first crate to try, the first time
-  try { if (!localStorage.getItem('skerry-crates')) { CRATES.crates = 1; saveCrates(); } } catch (e) {}
+  if (fresh) CRATES.crates.brig = 1;   // a first crate to try
+  CRATES.view = CRATES.boat;
+  saveCrates();
 }
 function saveCrates() {
-  try { localStorage.setItem('skerry-crates', JSON.stringify({ crates: CRATES.crates, owned: CRATES.owned, equipped: CRATES.equipped, pennant: CRATES.pennant, pending: CRATES.pending })); } catch (e) {}
+  try {
+    localStorage.setItem('skerry-crates', JSON.stringify({
+      crates: CRATES.crates, owned: CRATES.owned, equipped: CRATES.equipped, pennant: CRATES.pennant, boat: CRATES.boat, pending: CRATES.pending,
+    }));
+  } catch (e) {}
 }
-function mySkin() { return SKIN_BY_ID[CRATES.equipped] || SKINS[0]; }
+function myBoat() { return BOAT_BY_ID[CRATES.boat] || BOATS[0]; }
+function mySkin() { return SKIN_BY_ID[CRATES.equipped[CRATES.boat]] || SKIN_BY_ID[PLAIN[CRATES.boat]]; }
 function myPennant() { return PENNANT_BY_ID[CRATES.pennant] || null; }
 function equip(item) {
   if (item.kind === 'pennant') CRATES.pennant = CRATES.pennant === item.id ? null : item.id;
-  else CRATES.equipped = item.id;
+  else CRATES.equipped[item.boat] = item.id;
   saveCrates(); renderCrates();
   if (crewMode) send();
 }
+function chooseBoat(id) {
+  if (!BOAT_BY_ID[id] || state === 'play') return;
+  CRATES.boat = id; CRATES.view = id;
+  saveCrates(); renderCrates(); updateCrateButtons();
+  if (crewMode) send();
+}
 
-// one crate for every voyage played, two for making harbour
+// one crate of the boat you sailed for every voyage, two for making harbour
 function grantCrate(n) {
   if (!g || g.attract || g.crateGiven) return;
   n = n || 1;
   g.crateGiven = true;
-  CRATES.crates += n;
+  const boat = (ship && ship.boat) || CRATES.boat;
+  CRATES.crates[boat] += n;
   saveCrates();
   updateCrateButtons();
-  toast(n > 1 ? 'Made harbour: two Skerry Crates. Open them from the menu.' : 'You found a Skerry Crate in the wreckage. Open it from the menu.', '+' + n + (n > 1 ? ' crates' : ' crate'));
+  const name = BOAT_BY_ID[boat].name + ' Crate';
+  toast(n > 1 ? 'Made harbour: two ' + name + 's. Open them from the menu.' : 'You found a ' + name + ' in the wreckage. Open it from the menu.', '+' + n + ' ' + name + (n > 1 ? 's' : ''));
 }
 
-// the cards that scroll past in the reel never include gold, so any gold you see is your prize
-function rollFiller() {
-  let it;
-  do { it = rollSkin(); } while (it.rarity === 'admiral');
-  return it;
-}
-function rollSkin() {
+function rollSkin(crate) {
   let r = Math.random(), rarity = RARITIES[0];
   for (const ra of RARITIES) { if (r < ra.odds) { rarity = ra; break; } r -= ra.odds; }
-  const pool = LOOT.filter(s => s.rarity === rarity.id);
+  const pool = lootFor(crate || 'brig').filter(s => s.rarity === rarity.id);
   return pool[(Math.random() * pool.length) | 0];
+}
+// the cards that scroll past in the reel never include gold, so any gold you see is your prize
+function rollFiller(crate) {
+  let it;
+  do { it = rollSkin(crate); } while (it.rarity === 'admiral');
+  return it;
 }
 
 // a pennant, drawn on any canvas: pole top at (x, y), flying to the right, size = length
@@ -147,19 +221,23 @@ function drawPennant(c, x, y, size, pen, t) {
 
 // ---------- UI ----------
 function skinPreview(skin, size) {
+  const boat = BOAT_BY_ID[skin.boat] || BOATS[0];
   const NS = 'http://www.w3.org/2000/svg';
   const svg = document.createElementNS(NS, 'svg');
   svg.setAttribute('viewBox', '0 0 120 80'); svg.setAttribute('width', size); svg.setAttribute('height', size * 2 / 3);
   svg.setAttribute('aria-hidden', 'true');
   const el = (tag, attrs) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); svg.appendChild(e); return e; };
-  el('path', { d: 'M8 64 Q60 70 112 60 L104 52 L14 54 Z', fill: 'rgba(220,232,245,0.25)' });
-  el('line', { x1: 44, y1: 54, x2: 44, y2: 10, stroke: skin.wood, 'stroke-width': 2.5 });
-  el('line', { x1: 74, y1: 54, x2: 74, y2: 14, stroke: skin.wood, 'stroke-width': 2.5 });
-  el('path', { d: 'M30 48 L58 48 L54 14 L34 14 Z', fill: skin.sail });
-  el('path', { d: 'M61 48 L87 48 L83 18 L65 18 Z', fill: skin.sail });
-  el('path', { d: 'M12 54 L108 50 L100 64 L22 66 Z', fill: skin.hull });
-  el('line', { x1: 14, y1: 54, x2: 107, y2: 50, stroke: skin.rail, 'stroke-width': 2 });
-  el('circle', { cx: 96, cy: 44, r: 3, fill: skin.lantern });
+  const half = 48 * boat.len / 27, cxp = 60, top = 54 - 44 * Math.min(1, boat.len / 22);
+  el('path', { d: `M${cxp - half - 4} 64 Q60 70 ${cxp + half + 4} 60 L${cxp + half - 2} 52 L${cxp - half + 2} 54 Z`, fill: 'rgba(220,232,245,0.25)' });
+  for (const m of boat.masts) {
+    const mx = cxp + m * half * 1.6;
+    el('line', { x1: mx, y1: 54, x2: mx, y2: top, stroke: skin.wood, 'stroke-width': 2.5 });
+    const sw = boat.masts.length === 1 ? 16 : 12;
+    el('path', { d: `M${mx - sw} 48 L${mx + sw} 48 L${mx + sw * 0.8} ${top + 4} L${mx - sw * 0.8} ${top + 4} Z`, fill: skin.sail });
+  }
+  el('path', { d: `M${cxp - half} 54 L${cxp + half} 50 L${cxp + half - 8} 64 L${cxp - half + 10} 66 Z`, fill: skin.hull });
+  el('line', { x1: cxp - half + 2, y1: 54, x2: cxp + half - 1, y2: 50, stroke: skin.rail, 'stroke-width': 2 });
+  el('circle', { cx: cxp + half - 12, cy: 44, r: 3, fill: skin.lantern });
   return svg;
 }
 function pennantPreview(pen, size) {
@@ -191,23 +269,68 @@ function itemCard(skin, cls) {
 }
 
 function updateCrateButtons() {
-  for (const b of document.querySelectorAll('.crateOpenBtn')) b.textContent = 'Crates · ' + CRATES.crates;
+  for (const b of document.querySelectorAll('.crateOpenBtn')) b.textContent = myBoat().name + ' · crates ' + totalCrates();
 }
 
 function showCrates() {
   audioInit();
   $('crateCard').hidden = false;
+  CRATES.view = CRATES.boat;
   renderCrates();
-  $('crateOpen').focus();
+  $('crateClose').focus();
 }
 function hideCrates() { if (!CRATES.opening) $('crateCard').hidden = true; }
 
+function statBar(label, value, max) {
+  const row = document.createElement('div'); row.className = 'stat';
+  const l = document.createElement('span'); l.textContent = label;
+  const bar = document.createElement('i'); bar.style.setProperty('--v', Math.min(1, value / max).toFixed(2));
+  row.append(l, bar);
+  return row;
+}
+
 function renderCrates() {
-  $('crateCount').textContent = CRATES.crates === 1 ? '1 crate' : CRATES.crates + ' crates';
-  $('crateOpen').disabled = CRATES.crates <= 0 || CRATES.opening;
-  $('crateOpen').textContent = CRATES.opening ? 'Opening…' : CRATES.crates > 0 ? 'Open a crate' : 'No crates. Play a voyage to earn one';
+  const sailing = state === 'play';
+  // the three boats
+  const bl = $('boatList'); bl.textContent = '';
+  for (const b of BOATS) {
+    const card = document.createElement('div');
+    card.className = 'boatcard' + (CRATES.boat === b.id ? ' chosen' : '');
+    card.appendChild(skinPreview(SKIN_BY_ID[CRATES.equipped[b.id]] || SKIN_BY_ID[PLAIN[b.id]], 110));
+    const h = document.createElement('b'); h.textContent = b.name; card.appendChild(h);
+    const p = document.createElement('small'); p.textContent = b.blurb; card.appendChild(p);
+    card.appendChild(statBar('Hull ' + b.hull, b.hull, 5));
+    card.appendChild(statBar('Acceleration', b.accel, 1.7));
+    card.appendChild(statBar('Steering', b.turn, 1.4));
+    const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'tool';
+    btn.textContent = CRATES.boat === b.id ? 'Sailing this boat' : 'Sail this boat';
+    btn.disabled = CRATES.boat === b.id || sailing;
+    btn.addEventListener('click', () => chooseBoat(b.id));
+    card.appendChild(btn);
+    bl.appendChild(card);
+  }
+
+  // crate inventory
+  const ci = $('crateTypes'); ci.textContent = '';
+  for (const c of CRATE_TYPES) {
+    const row = document.createElement('div');
+    row.className = 'cratetype' + (CRATES.view === c.id ? ' viewing' : '');
+    const box = document.createElement('span'); box.className = 'cratebox'; box.setAttribute('aria-hidden', 'true');
+    const nm = document.createElement('b'); nm.textContent = c.name;
+    const n = document.createElement('small'); n.textContent = CRATES.crates[c.id] === 1 ? '1 crate' : CRATES.crates[c.id] + ' crates';
+    const open = document.createElement('button'); open.type = 'button'; open.className = CRATES.crates[c.id] > 0 ? 'primary small' : 'tool';
+    open.textContent = CRATES.opening ? 'Opening…' : CRATES.crates[c.id] > 0 ? 'Open' : 'None yet';
+    open.disabled = CRATES.crates[c.id] <= 0 || CRATES.opening;
+    open.addEventListener('click', () => openCrate(c.id));
+    const look = document.createElement('button'); look.type = 'button'; look.className = 'tool';
+    look.textContent = 'See loot';
+    look.addEventListener('click', () => { CRATES.view = c.id; renderCrates(); });
+    row.append(box, nm, n, look, open);
+    ci.appendChild(row);
+  }
   $('crateClose').disabled = CRATES.opening;
-  // what's inside, by rarity
+
+  // odds
   const odds = $('crateOdds'); odds.textContent = '';
   for (const ra of RARITIES) {
     const li = document.createElement('li');
@@ -215,49 +338,58 @@ function renderCrates() {
     li.textContent = ra.name + ' · ' + (ra.odds * 100).toFixed(ra.odds < 0.01 ? 2 : 1) + '%';
     odds.appendChild(li);
   }
+
+  // what you own for the boat being viewed, and pennants
+  const view = CRATES.view, vb = BOAT_BY_ID[view];
+  $('invHead').textContent = vb.name + ' skins and pennants';
   const inv = $('crateInv'); inv.textContent = '';
-  const addCard = (item, count, isOn) => {
-    const card = itemCard(item, isOn ? 'equipped' : '');
+  const addCard = (item, count, isOn, locked) => {
+    const card = itemCard(item, (isOn ? 'equipped' : '') + (locked ? ' locked' : ''));
     if (count > 1) { const c = document.createElement('span'); c.className = 'dupes'; c.textContent = '×' + count; card.appendChild(c); }
-    const b = document.createElement('button');
-    b.type = 'button'; b.className = 'tool';
-    if (item.kind === 'pennant') b.textContent = isOn ? 'Take down' : 'Fly it';
-    else { b.textContent = isOn ? 'Equipped' : 'Equip'; b.disabled = isOn; }
-    b.addEventListener('click', () => equip(item));
-    card.appendChild(b);
+    if (!locked) {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'tool';
+      if (item.kind === 'pennant') b.textContent = isOn ? 'Take down' : 'Fly it';
+      else { b.textContent = isOn ? 'Equipped' : 'Equip'; b.disabled = isOn; }
+      b.addEventListener('click', () => equip(item));
+      card.appendChild(b);
+    }
     inv.appendChild(card);
   };
-  for (const s of SKINS) {
-    const count = s.id === 'plain' ? 1 : (CRATES.owned[s.id] | 0);
-    if (count) addCard(s, count, CRATES.equipped === s.id);
+  for (const s of SKINS.filter(s => s.boat === view)) {
+    const count = !s.rarity ? 1 : (CRATES.owned[s.id] | 0);
+    addCard(s, count, CRATES.equipped[view] === s.id, !count);
   }
   for (const p of PENNANTS) {
     const count = CRATES.owned[p.id] | 0;
-    if (count) addCard(p, count, CRATES.pennant === p.id);
+    addCard(p, count, CRATES.pennant === p.id, !count);
   }
-  const skinsOwned = SKINS.filter(s => s.id === 'plain' || CRATES.owned[s.id]).length;
+  const skinsOwned = SKINS.filter(s => s.boat === view && (!s.rarity || CRATES.owned[s.id])).length;
   const pensOwned = PENNANTS.filter(p => CRATES.owned[p.id]).length;
-  $('crateCollected').textContent = skinsOwned + ' of ' + SKINS.length + ' skins · ' + pensOwned + ' of ' + PENNANTS.length + ' pennants';
+  $('crateCollected').textContent = skinsOwned + ' of ' + SKINS.filter(s => s.boat === view).length + ' ' + vb.name + ' skins · ' + pensOwned + ' of ' + PENNANTS.length + ' pennants';
 }
 
-// the reel: a strip of skins that spins and settles on the prize under the marker
-function openCrate() {
-  if (CRATES.crates <= 0 || CRATES.opening) return;
+// the reel: a strip of loot that spins and settles on the prize under the marker
+function openCrate(type) {
+  if (CRATES.opening || !CRATES.crates[type]) return;
   CRATES.opening = true;
-  CRATES.crates--;
-  const prize = rollSkin();
+  CRATES.crates[type]--;
+  CRATES.view = type;
+  const prize = rollSkin(type);
   CRATES.pending = prize.id;   // kept safe until the reel lands
   saveCrates();
   renderCrates();
+  updateCrateButtons();
   $('crateResult').hidden = true;
+  $('crateReel').scrollIntoView({ block: 'nearest', behavior: 'smooth' });
 
   const reel = $('crateReel'), strip = $('crateStrip');
   strip.textContent = '';
   const N = 56, WIN = 48;
-  for (let i = 0; i < N; i++) strip.appendChild(itemCard(i === WIN ? prize : rollFiller(), 'reelitem'));
+  for (let i = 0; i < N; i++) strip.appendChild(itemCard(i === WIN ? prize : rollFiller(type), 'reelitem'));
   const cardW = strip.firstChild.getBoundingClientRect().width + 8;   // card plus gap
-  const view = reel.getBoundingClientRect().width;
-  const end = WIN * cardW + cardW / 2 - view / 2 + (Math.random() - 0.5) * cardW * 0.7;
+  const viewW = reel.getBoundingClientRect().width;
+  const end = WIN * cardW + cardW / 2 - viewW / 2 + (Math.random() - 0.5) * cardW * 0.7;
   const dur = reduceMotion ? 600 : 6000, t0 = performance.now();
   let lastIdx = -1;
   const step = now => {
@@ -265,7 +397,7 @@ function openCrate() {
     const e = 1 - Math.pow(1 - t, 4);
     const x = end * e;
     strip.style.transform = 'translateX(' + (-x) + 'px)';
-    const idx = Math.floor((x + view / 2) / cardW);
+    const idx = Math.floor((x + viewW / 2) / cardW);
     if (idx !== lastIdx) { lastIdx = idx; sfxTick(); }
     if (t < 1) requestAnimationFrame(step);
     else finishOpen(prize);
@@ -286,7 +418,8 @@ function finishOpen(prize) {
   res.className = 'result r-' + ra.id;
   const h = document.createElement('p'); h.className = 'won';
   h.textContent = (CRATES.owned[prize.id] > 1 ? 'Another ' : 'New: ') + prize.name;
-  const r = document.createElement('small'); r.textContent = ra.name + ' grade';
+  const r = document.createElement('small');
+  r.textContent = ra.name + ' grade' + (prize.kind === 'pennant' ? ' · pennant' : ' · ' + BOAT_BY_ID[prize.boat].name + ' skin');
   const eq = document.createElement('button'); eq.type = 'button'; eq.className = 'primary';
   eq.textContent = (prize.kind === 'pennant' ? 'Fly ' : 'Equip ') + prize.name;
   eq.addEventListener('click', () => { if (prize.kind === 'pennant') CRATES.pennant = null; equip(prize); eq.textContent = prize.kind === 'pennant' ? 'Flying' : 'Equipped'; eq.disabled = true; });
@@ -308,7 +441,6 @@ function toast(text, short) {
 
 loadCrates();
 for (const b of document.querySelectorAll('.crateOpenBtn')) b.addEventListener('click', showCrates);
-$('crateOpen').addEventListener('click', openCrate);
 $('crateClose').addEventListener('click', hideCrates);
 $('crateCard').addEventListener('keydown', e => { if (e.key === 'Escape') hideCrates(); });
 updateCrateButtons();

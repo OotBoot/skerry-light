@@ -122,7 +122,7 @@ function myPresence() {
     launch: amHostSafe() ? NET.launch : null,
     voy: NET.launch ? NET.launch.voy : 0, st: NET.st,
     bell: NET.bells, flare: NET.flare, shout: NET.shout, chat: NET.chat, ghost: NET.ghost, stats: NET.stats,
-    skin: CRATES.equipped, pennant: CRATES.pennant,
+    skin: mySkin().id, pennant: CRATES.pennant, boat: CRATES.boat, maxHull: myBoat().hull,
   };
 }
 function amHostSafe() { return NET.crew && NET.myHostFlag; }
@@ -241,6 +241,8 @@ function syncMates() {
         NET.mates.set(p.peer, m);
       }
       m.skin = SKIN_BY_ID[pr.skin] || SKINS[0];
+      m.boat = BOAT_BY_ID[pr.boat] ? pr.boat : 'brig';
+      m.maxHull = Number.isFinite(pr.maxHull) ? pr.maxHull : BOAT_BY_ID[m.boat].hull;
       m.pennant = PENNANT_BY_ID[pr.pennant] || null;
       // what a spectator needs to see from their deck
       m.v = Number.isFinite(pr.v) ? pr.v : 8;
@@ -264,7 +266,7 @@ function syncMates() {
       } else m.shoutN = sh;
       m.by = p.by; m.slot = slotOf(p.peer); m.name = nameOf(p, m.slot);
       m.st = pr.voy === NET.launch.voy ? pr.st : null;
-      m.hull = Number.isFinite(pr.hull) ? pr.hull : SK.HULL;
+      m.hull = Number.isFinite(pr.hull) ? pr.hull : (m.maxHull || SK.HULL);
       m.updatedAt = p.updatedAt;
       if (Number.isFinite(pr.x) && Number.isFinite(pr.y) && Number.isFinite(pr.h)) {
         if (!m.placed) { m.x = pr.x; m.y = pr.y; m.h = pr.h; m.placed = true; }
@@ -513,7 +515,7 @@ function renderSpecBar() {
   const m = NET.mates.get(NET.watch); if (!m) return;
   $('specName').textContent = 'Watching ' + m.name;
   const danger = ['', 'she is out there', 'she is getting closer', 'she is close', 'she is at the bow'][m.stage] || '';
-  $('specInfo').textContent = 'Hull ' + m.hull + ' of ' + SK.HULL + (danger ? ' · ' + danger : '');
+  $('specInfo').textContent = 'Hull ' + m.hull + ' of ' + (m.maxHull || SK.HULL) + (danger ? ' · ' + danger : '');
   $('specNext').hidden = matesAtSea().length < 2;
   const gb = $('specGhost');
   gb.disabled = NET.ghostUsed;
@@ -524,7 +526,7 @@ function withSpectatorView(draw) {
   const m = NET.watch && NET.mates.get(NET.watch);
   if (!m || !g) { draw(); return; }
   const mine = { ship, maren: g.maren, plim: g.plim, glare: g.glare };
-  ship = { x: m.x, y: m.y, h: m.h, bob: m.bob, rudder: 0, v: m.v, inv: 0, hull: m.hull, sail: 0.5, skin: m.skin, pennant: m.pennant };
+  ship = { x: m.x, y: m.y, h: m.h, bob: m.bob, rudder: 0, v: m.v, inv: 0, hull: m.hull, maxHull: m.maxHull || SK.HULL, boat: m.boat || 'brig', sail: 0.5, skin: m.skin, pennant: m.pennant };
   g.maren = { active: Number.isFinite(m.mx), following: true, stage: m.stage, x: m.mx, y: m.my, apparition: 0, relB: 0 };
   g.plim = Object.assign({}, mine.plim, Number.isFinite(m.px) ? { x: m.px, y: m.py } : {}, { walking: true, phase: g.t * 9, dirX: Math.sin(m.h), dirY: Math.cos(m.h) });
   g.glare = 0;
@@ -558,14 +560,14 @@ function renderCrewCard() {
   list.forEach((p, i) => {
     const li = document.createElement('li');
     const dot = document.createElement('i'); dot.style.background = SLOT_COLORS[i]; li.appendChild(dot);
-    const skin = SKIN_BY_ID[p.peer === NET.myPeer ? CRATES.equipped : p.presence && p.presence.skin] || SKINS[0];
+    const skin = SKIN_BY_ID[p.peer === NET.myPeer ? mySkin().id : p.presence && p.presence.skin] || SKINS[0];
     const who = document.createElement('b');
     who.className = 'who';
     who.appendChild(skinPreview(skin, 42));
     const nmText = document.createElement('span');
     nmText.textContent = nameOf(p, i) + (i === 0 ? ' · host' : '');
     const sk = document.createElement('small');
-    sk.textContent = skin.name;
+    sk.textContent = (BOAT_BY_ID[skin.boat] || BOATS[0]).name + ' · ' + skin.name;
     const ra = rarityOf(skin); if (ra) sk.style.color = ra.color;
     nmText.appendChild(document.createElement('br')); nmText.appendChild(sk);
     who.appendChild(nmText);

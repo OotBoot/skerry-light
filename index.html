@@ -23,7 +23,7 @@
     <div class="col right">
       <div class="row">
         <div class="col right"><span class="label">Knots</span><span class="big" id="knots">0</span></div>
-        <div class="col right"><span class="label">Harbour</span><span class="big" id="dist">0</span></div>
+        <div class="col right"><span class="label" id="distLabel">Harbour</span><span class="big" id="dist">0</span></div>
       </div>
       <span class="label" style="margin-top:4px">Hull</span>
       <div class="marks" id="hull"></div>
@@ -68,7 +68,7 @@
       <p>In the winter of 1887 the lamp at Skerry Light failed, and the keeper's wife, <span class="maren">Maren Holm</span>, rowed out with a lantern to warn the brig Gannet. The Gannet broke up on the rocks. Maren's skiff came back empty.</p>
       <div class="btnrow">
         <button class="primary" id="startBtn" type="button">Take the helm alone</button>
-        <button class="tool crateOpenBtn" type="button">Crates · 0</button>
+        <button class="tool crateOpenBtn" type="button">Crates</button>
       </div>
       <section class="together" id="together" aria-labelledby="togetherHead">
         <h2 id="togetherHead">Sail together · up to 8 ships</h2>
@@ -95,7 +95,10 @@
           <li><b>False lights</b> red and green lamps that aren't the harbour, over rocks. The beam makes them vanish; the bearing strip shows the real harbour</li>
           <li><b>Flare</b> (F) lights everything around you for a few seconds, for your whole crew</li>
           <li><b>Steer</b> ← → or A / D, sail ↑ ↓ or W / S. On a phone, hold the left or right side to steer and use the ▲ ▼ buttons for speed</li>
-          <li><b>Hull</b> three hits and she goes down. Let Maren reach the bow and she comes aboard</li>
+          <li><b>Boats</b> the Brig takes three hits, the quick Cutter two, the heavy Barque five. Glancing off a rock only slows you; hitting it head on costs a plank.</li>
+          <li><b>Hull</b> when the planks run out she goes down. Let Maren reach the bow and she comes aboard</li>
+          <li><b>Verity</b> sometimes you'll find a smiling yellow face sitting on your bowsprit, offering to help. He isn't helping. Ring the bell before twenty seconds are up, or see what he really looks like</li>
+          <li><b>The Backrooms</b> about one voyage in twenty, the lights go out and the sea comes back with walls: a flooded maze of yellow rooms. Follow Plimsoll to the green EXIT sign</li>
           <li><b>Crew</b> sail with up to seven friends. Ships close together keep her back and patch each other's planks. Shout warnings (1, 2, 3), share flares, and watch your crew after your own voyage ends</li>
         </ul>
       </details>
@@ -105,7 +108,7 @@
   <div class="overlay" id="portCard" hidden>
     <div class="card">
       <span class="eyebrow" id="portEyebrow">Voyage 1 · made harbour</span>
-      <h1>Safe in Harbour</h1>
+      <h1 id="portTitle">Safe in Harbour</h1>
       <p id="portText"></p>
       <div class="logpage">
         <span class="date">Keeper's log · <span id="logDate"></span></span>
@@ -113,7 +116,7 @@
       </div>
       <div class="btnrow">
         <button class="primary" id="nextBtn" type="button">Sail again</button>
-        <button class="tool crateOpenBtn" type="button">Crates · 0</button>
+        <button class="tool crateOpenBtn" type="button">Crates</button>
       </div>
     </div>
   </div>
@@ -154,7 +157,7 @@
         <button class="primary" id="crewSailBtn" type="button" hidden>Set sail</button>
         <button class="primary" id="crewReadyBtn" type="button" hidden>Ready</button>
         <span class="wait" id="crewWait" hidden></span>
-        <button class="tool crateOpenBtn" type="button">Crates · 0</button>
+        <button class="tool crateOpenBtn" type="button">Crates</button>
         <button class="tool" id="crewLeaveBtn" type="button">Leave crew</button>
       </div>
     </div>
@@ -172,25 +175,26 @@
       </div>
       <div class="btnrow">
         <button class="primary" id="againBtn" type="button">Take another ship</button>
-        <button class="tool crateOpenBtn" type="button">Crates · 0</button>
+        <button class="tool crateOpenBtn" type="button">Crates</button>
       </div>
     </div>
   </div>
 
   <div class="overlay cratecard" id="crateCard" hidden role="dialog" aria-modal="true" aria-labelledby="crateHead">
     <div class="card">
-      <span class="eyebrow">Skerry Crate · <span id="crateCount">0 crates</span></span>
-      <h1 id="crateHead">Ship Skins</h1>
-      <p>One crate for every voyage you play, two when you make harbour. Skins change your deck, bowsprit and lantern, and how your hull and sails look to your crew. If you see gold in the reel, it's yours.</p>
+      <span class="eyebrow">Shipyard and crates</span>
+      <h1 id="crateHead">Boats and Crates</h1>
+      <p>Pick your boat. Each voyage earns a crate for the boat you sailed: one if you go down, two when you make harbour. Each crate holds skins for its boat, plus pennants that fly on any boat. If you see gold in the reel, it's yours.</p>
+      <div class="boats" id="boatList"></div>
+      <h2 class="invh">Crate inventory</h2>
+      <div class="cratetypes" id="crateTypes"></div>
       <div class="reel" id="crateReel"><div class="strip" id="crateStrip"></div><div class="marker" aria-hidden="true"></div></div>
       <div class="result" id="crateResult" hidden aria-live="polite"></div>
-      <div class="btnrow">
-        <button class="primary" id="crateOpen" type="button">Open a crate</button>
-        <button class="tool" id="crateClose" type="button">Close</button>
-      </div>
       <ul class="odds" id="crateOdds" aria-label="Chances for each grade"></ul>
+      <h2 class="invh" id="invHead">Skins</h2>
       <span class="eyebrow" id="crateCollected"></span>
       <div class="inv" id="crateInv"></div>
+      <div class="btnrow"><button class="tool" id="crateClose" type="button">Close</button></div>
     </div>
   </div>
 
@@ -203,6 +207,7 @@
 <script src="src/render.js"></script>
 <script src="src/creatures.js"></script>
 <script src="src/enemies.js"></script>
+<script src="src/verity.js"></script>
 <script src="src/game.js"></script>
 <script src="src/transport.js"></script>
 <script src="src/net.js"></script>

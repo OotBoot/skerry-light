@@ -63,7 +63,86 @@ function lanternAt(x, y) {
   const d = Math.hypot(x - ship.x, y - ship.y);
   return d < SK.LANTERN ? Math.min(1, (1 - d / SK.LANTERN) * 1.6) : 0;
 }
-function visibility(x, y) { return Math.min(1, litAt(x, y) * 1.3 + lanternAt(x, y) + flareAt(x, y)); }
+function visibility(x, y) {
+  if (g.backrooms) return Math.min(1, roomLight(x, y) + lanternAt(x, y) + flareAt(x, y));
+  return Math.min(1, litAt(x, y) * 1.3 + lanternAt(x, y) + flareAt(x, y));
+}
+// ---------- the Backrooms ----------
+// the tubes buzz and flicker; each time the lamp would have turned they go out for a moment
+function roomLevel() {
+  if (g.lightsOut > 0) return 0.05;
+  return 0.88 + 0.12 * Math.sin(g.t * 37) * Math.sin(g.t * 5.3);
+}
+function roomLight(x, y) { return Math.max(0, 1 - Math.hypot(x - ship.x, y - ship.y) / 300) * roomLevel(); }
+const ROOM_FOG = '#211c0b';
+function drawRoomsBack() {
+  const L = roomLevel();
+  const ceil = ctx.createLinearGradient(0, -H * 0.2, 0, hy);
+  ceil.addColorStop(0, mix('#0c0a05', '#8a7c3e', L)); ceil.addColorStop(1, ROOM_FOG);
+  ctx.fillStyle = ceil; ctx.fillRect(-W, -H, W * 3, hy + H);
+  const fl = ctx.createLinearGradient(0, hy, 0, H);
+  fl.addColorStop(0, ROOM_FOG); fl.addColorStop(1, mix('#070602', '#4a4119', L));
+  ctx.fillStyle = fl; ctx.fillRect(-W, hy, W * 3, H * 2);
+  // fluorescent panels on the ceiling
+  const Z = SK.BACKROOMS_CEIL - 0.05;
+  for (const lt of g.rooms.lights) {
+    const d = Math.hypot(lt.x - ship.x, lt.y - ship.y); if (d > 330) continue;
+    const c = cam(lt.x, lt.y, Z); if (c.f < SK.NEAR + 1) continue;
+    let on = L * (1 - d / 330);
+    if (lt.bad) on *= Math.sin(g.t * 23 + lt.ph) > 0.2 ? 1 : 0.1;   // a failing tube
+    if (on < 0.03) continue;
+    for (const [ox, oy] of [[-8, -8], [8, -8], [-8, 8], [8, 8]]) {
+      fillPoly([[lt.x + ox - 3, lt.y + oy - 1, Z], [lt.x + ox + 3, lt.y + oy - 1, Z], [lt.x + ox + 3, lt.y + oy + 1, Z], [lt.x + ox - 3, lt.y + oy + 1, Z]], `rgba(255,250,215,${on.toFixed(3)})`);
+    }
+  }
+  // ripples on the flooded carpet
+  ctx.beginPath();
+  const T = 400;
+  for (const w of waves) {
+    const wx = camX + ((((w.x - camX) % T) + T * 1.5) % T - T / 2), wy = camY + ((((w.y - camY) % T) + T * 1.5) % T - T / 2);
+    const c = cam(wx, wy, 0); if (c.f < 4 || c.f > 60) continue;
+    const q = proj(c); if (q.x < -20 || q.x > W + 20) continue;
+    ctx.moveTo(q.x - w.len * q.s / 2, q.y + Math.sin(g.t * 1.3 + w.ph) * 0.2 * q.s); ctx.lineTo(q.x + w.len * q.s / 2, q.y);
+  }
+  ctx.strokeStyle = `rgba(240,225,150,${0.14 * L})`; ctx.lineWidth = 1; ctx.stroke();
+}
+function drawWall(w) {
+  const mx = (w.x1 + w.x2) / 2, my = (w.y1 + w.y2) / 2;
+  const d = Math.hypot(mx - ship.x, my - ship.y);
+  const light = Math.min(1, Math.max(roomLight(mx, my), lanternAt(mx, my) * 0.6, flareAt(mx, my)));
+  const along = Math.abs(w.x2 - w.x1) > Math.abs(w.y2 - w.y1);
+  const base = along ? '#d9c25a' : '#c2aa45';
+  const fog = Math.min(1, d / 320);
+  const col = mix(mix('#120f05', base, 0.25 + 0.75 * light), ROOM_FOG, fog * 0.75);
+  const Z = SK.BACKROOMS_CEIL;
+  fillPoly([[w.x1, w.y1, 0], [w.x2, w.y2, 0], [w.x2, w.y2, Z], [w.x1, w.y1, Z]], col);
+  // the wallpaper's faint stripes, and a damp dark line where the water meets it
+  if (d < 160) {
+    const n = 8;
+    for (let i = 1; i < n; i++) {
+      const t = i / n, x = w.x1 + (w.x2 - w.x1) * t, y = w.y1 + (w.y2 - w.y1) * t;
+      const a = cam(x, y, 0.8), b = cam(x, y, Z);
+      if (a.f < SK.NEAR || b.f < SK.NEAR) continue;
+      const pa = proj(a), pb = proj(b);
+      ctx.strokeStyle = `rgba(80,66,20,${0.25 * (1 - d / 160)})`; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(pa.x, pa.y); ctx.lineTo(pb.x, pb.y); ctx.stroke();
+    }
+  }
+  fillPoly([[w.x1, w.y1, 0], [w.x2, w.y2, 0], [w.x2, w.y2, 1.1], [w.x1, w.y1, 1.1]], mix(mix('#050402', '#4a3d16', light), ROOM_FOG, fog * 0.8));
+}
+function drawExitSign() {
+  const e = g.exit, c = cam(e.x, e.y, SK.BACKROOMS_CEIL - 2.5); if (c.f < SK.NEAR + 1) return;
+  const q = proj(c), w = 5 * q.s, h = 1.6 * q.s;
+  lamp(q.x, q.y, '#3dff7a', Math.max(3, 1.6 * Math.sqrt(q.s)));
+  ctx.fillStyle = '#0c3a1a'; ctx.fillRect(q.x - w / 2, q.y - h / 2, w, h);
+  if (h > 7) {
+    ctx.fillStyle = '#6dffa0'; ctx.font = `700 ${Math.round(h * 0.75)}px "Courier Prime", monospace`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('EXIT', q.x, q.y + 1);
+  }
+  const f = cam(e.x, e.y, 0);
+  if (f.f > SK.NEAR + 1) { const p = proj(f); ctx.globalAlpha = 0.5; lamp(p.x, p.y, '#3dff7a', Math.max(3, 1.2 * Math.sqrt(p.s))); ctx.globalAlpha = 1; }
+}
+
 
 // An image cut into horizontal strips that slip sideways, for anything that should look wrong.
 function drawGlitch(img, x, y, w, h, amt) {
@@ -130,10 +209,11 @@ function drawMate(m, p, vis) {
   // their own lanterns light their hull and sails, so you can see a crewmate's skin from a fair way off
   const hullVis = Math.max(vis, Math.max(0, 1 - d / 320) * 0.95);
   const col = SLOT_COLORS[m.slot] || SLOT_COLORS[1];
-  const L = 20 * p.s, { lat, dir } = sideOn(m.x, m.y, m.h);
+  const boat = BOAT_BY_ID[m.boat] || BOATS[0];
+  const L = boat.len * p.s, { lat, dir } = sideOn(m.x, m.y, m.h);
   const w = L * (0.28 + 0.72 * lat), hh = Math.max(1.2, L * 0.12);
   const x = p.x, y = p.y + Math.sin(m.bob * 2.2) * L * 0.01;
-  const sailH = L * 0.58;
+  const sailH = L * 0.58 * (boat.id === 'cutter' ? 1.25 : 1);
   if (hullVis > 0.02) {
     ctx.globalAlpha = hullVis;
     const skin = m.skin || SKINS[0];
@@ -141,8 +221,8 @@ function drawMate(m, p, vis) {
     ctx.beginPath();
     ctx.moveTo(x - dir * w / 2, y - hh); ctx.lineTo(x + dir * (w / 2 + L * 0.08), y - hh * 1.15);
     ctx.lineTo(x + dir * w * 0.42, y); ctx.lineTo(x - dir * w * 0.45, y); ctx.closePath(); ctx.fill();
-    const sailW = L * 0.17 * (1.35 - 0.6 * lat);
-    for (const mm of [-0.2, 0.18]) {
+    const sailW = L * (boat.masts.length === 1 ? 0.3 : 0.17) * (1.35 - 0.6 * lat);
+    for (const mm of boat.masts) {
       const mx = x + dir * mm * w * 1.6;
       ctx.strokeStyle = '#2a2018'; ctx.lineWidth = Math.max(0.8, L * 0.025);
       ctx.beginPath(); ctx.moveTo(mx, y - hh); ctx.lineTo(mx, y - hh - sailH * 1.08); ctx.stroke();
@@ -152,7 +232,7 @@ function drawMate(m, p, vis) {
       ctx.lineTo(mx + sailW * 0.4, y - hh - sailH); ctx.lineTo(mx - sailW * 0.4, y - hh - sailH); ctx.closePath(); ctx.fill();
     }
     // their pennant at the masthead
-    if (m.pennant) drawPennant(ctx, x + dir * -0.2 * w * 1.6, y - hh - sailH * 1.08, Math.max(4, L * 0.42), m.pennant, g.t + m.bob);
+    if (m.pennant) drawPennant(ctx, x + dir * boat.masts[0] * w * 1.6, y - hh - sailH * 1.08, Math.max(4, L * 0.42), m.pennant, g.t + m.bob);
     ctx.globalAlpha = 1;
   }
   lamp(x, y - hh - sailH * 0.3, col, Math.max(1.8, 1.3 * Math.sqrt(p.s)));
@@ -209,6 +289,8 @@ function drawScene() {
   ctx.translate(cx, hy); ctx.rotate(roll); ctx.translate(-cx, -hy);
   if (g.shake > 0 && !reduceMotion) ctx.translate(rand(-6, 6) * g.shake, rand(-6, 6) * g.shake);
 
+  if (g.backrooms) drawRoomsBack();
+  else {
   const sky = ctx.createLinearGradient(0, 0, 0, hy);
   sky.addColorStop(0, '#03060d'); sky.addColorStop(1, '#0c1530');
   ctx.fillStyle = sky; ctx.fillRect(-W, -H, W * 3, hy + H);
@@ -224,17 +306,17 @@ function drawScene() {
     const sz = st.m > 0.8 ? 1.6 : 1; ctx.fillRect(x, y, sz, sz);
   }
 
-  const HB = SK.HARBOUR;
+  var HB = SK.HARBOUR;
   fillPoly([[-15000, 0, 1.5], [15000, 0, 1.5], [15000, -15000, 1.5], [-15000, -15000, 1.5]], '#070b09');
   fillPoly([[-15000, -30, 30], [15000, -30, 30], [15000, -15000, 60], [-15000, -15000, 60]], '#0a100c');
   fillPoly([[-40, 4, 22], [40, 4, 22], [55, -60, 22], [-60, -60, 22]], '#0b120d');
   fillPoly([[HB.x - 26, -2, 2], [HB.x - 20, -2, 2], [HB.x - 20, 46, 2], [HB.x - 26, 46, 2]], '#1a1612');
   fillPoly([[HB.x + 20, -2, 2], [HB.x + 26, -2, 2], [HB.x + 26, 46, 2], [HB.x + 20, 46, 2]], '#1a1612');
 
-  const far = SK.BEAM_RANGE;
-  const beamOn = Math.abs(g.beam) < SK.SHADE + SK.HALF_BEAM;
-  const fl = [Math.sin(g.beam - SK.HALF_BEAM) * far, Math.cos(g.beam - SK.HALF_BEAM) * far];
-  const fr = [Math.sin(g.beam + SK.HALF_BEAM) * far, Math.cos(g.beam + SK.HALF_BEAM) * far];
+  var far = SK.BEAM_RANGE;
+  var beamOn = Math.abs(g.beam) < SK.SHADE + SK.HALF_BEAM;
+  var fl = [Math.sin(g.beam - SK.HALF_BEAM) * far, Math.cos(g.beam - SK.HALF_BEAM) * far];
+  var fr = [Math.sin(g.beam + SK.HALF_BEAM) * far, Math.cos(g.beam + SK.HALF_BEAM) * far];
   if (beamOn) {
     ctx.globalCompositeOperation = 'lighter';
     fillPoly([[0, 0, 0], [fl[0], fl[1], 0], [fr[0], fr[1], 0]], 'rgba(120,150,190,0.16)');
@@ -254,6 +336,7 @@ function drawScene() {
     ctx.moveTo(q.x - w.len * q.s / 2, q.y + Math.sin(g.t * 1.3 + w.ph) * 0.2 * q.s); ctx.lineTo(q.x + w.len * q.s / 2, q.y);
   }
   ctx.strokeStyle = 'rgba(170,200,235,0.28)'; ctx.lineWidth = 1; ctx.stroke();
+  }
 
   // everything on the water, far to near
   const items = [];
@@ -261,12 +344,26 @@ function drawScene() {
   for (const o of g.rocks) add('rock', o);
   for (const o of g.wrecks) add('wreck', o);
   for (const o of g.timber) add('timber', o);
+  if (g.backrooms) {
+    add('exit', g.exit);
+    for (const w of g.walls) {
+      const mx = (w.x1 + w.x2) / 2, my = (w.y1 + w.y2) / 2;
+      if (Math.hypot(mx - ship.x, my - ship.y) > 420) continue;
+      const a = cam(w.x1, w.y1, 0), b = cam(w.x2, w.y2, 0);
+      if (a.f < SK.NEAR && b.f < SK.NEAR) continue;
+      // sort by the nearer end that's in front, so a wall you're sailing along doesn't cover things beyond it
+      const cc = cam(mx, my, 0); cc.f = Math.max(SK.NEAR, Math.min(cc.f, Math.max(a.f, SK.NEAR) * 0.5 + Math.max(b.f, SK.NEAR) * 0.5));
+      items.push({ kind: 'wall', o: w, c: cc });
+    }
+  }
   add('plim', g.plim);
   if (crewMode) for (const m of matesAtSea()) if (m.peer !== NET.watch) add('mate', m);
   if (!NET.watch) { for (const d of g.enemies.drowned) add('drowned', d); for (const k of g.enemies.knocks) add('knock', k); }
   if (g.maren.active) add('maren', g.maren);
   items.sort((a, b) => b.c.f - a.c.f);
   for (const it of items) {
+    if (it.kind === 'wall') { drawWall(it.o); continue; }
+    if (it.kind === 'exit') { drawExitSign(); continue; }
     const q = proj(it.c); if (q.x < -500 || q.x > W + 500) continue;
     const o = it.o, vis = visibility(o.x, o.y);
     if (it.kind === 'rock') drawRock(o, q, vis);
@@ -279,6 +376,7 @@ function drawScene() {
     else drawMaren(q, vis);
   }
 
+  if (!g.backrooms) {
   // lighthouse tower and lamp
   const base = cam(0, 0, 22), top = cam(0, 0, 52);
   if (base.f > SK.NEAR) {
@@ -310,6 +408,7 @@ function drawScene() {
     const c = cam(HB.x + hx, 46, 7); if (c.f > SK.NEAR) { const q = proj(c); lamp(q.x, q.y, col, Math.max(2.4, 1.4 * Math.sqrt(q.s))); }
   }
   drawLures();
+  }
   drawFlares();
   for (const q of g.parts) {
     const c = cam(q.x, q.y, q.z); if (c.f < SK.NEAR) continue;
@@ -322,6 +421,7 @@ function drawScene() {
 
   drawDeck();
   drawBowspritApparition();
+  drawVerity();
 
   if (g.glare > 0.01) { ctx.fillStyle = `rgba(255,238,200,${g.glare * 0.55})`; ctx.fillRect(0, 0, W, H); }
   if (ship.inv > 1.1) { ctx.fillStyle = `rgba(228,108,79,${(ship.inv - 1.1) * 0.8})`; ctx.fillRect(0, 0, W, H); }
@@ -332,20 +432,30 @@ function drawScene() {
 
 // the bow of the brig, from just aft of the foremast
 function drawDeck() {
-  const tipY = H * 0.72, lit = g.glare;
+  const boat = BOAT_BY_ID[ship.boat] || BOATS[0];
+  const tipY = H * boat.tipY, lit = g.glare, DW = W * boat.deckW;
   const deck = ctx.createLinearGradient(0, tipY, 0, H);
   const skin = ship.skin || mySkin();
   deck.addColorStop(0, mix(skin.deck[0], '#6a5034', lit * 0.7)); deck.addColorStop(1, mix(skin.deck[1], '#3a2a1a', lit * 0.7));
   ctx.fillStyle = deck;
-  ctx.beginPath(); ctx.moveTo(cx - W * 0.75, H + 2); ctx.lineTo(cx, tipY); ctx.lineTo(cx + W * 0.75, H + 2); ctx.closePath(); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(cx - DW, H + 2); ctx.lineTo(cx, tipY); ctx.lineTo(cx + DW, H + 2); ctx.closePath(); ctx.fill();
   ctx.strokeStyle = 'rgba(0,0,0,0.45)'; ctx.lineWidth = 1;
-  for (let i = -5; i <= 5; i++) { ctx.beginPath(); ctx.moveTo(cx, tipY); ctx.lineTo(cx + i * W * 0.14, H + 2); ctx.stroke(); }
-  ctx.strokeStyle = skin.rail; ctx.lineWidth = 10;
-  ctx.beginPath(); ctx.moveTo(cx - W * 0.75, H - 4); ctx.lineTo(cx - 6, tipY + 2); ctx.moveTo(cx + W * 0.75, H - 4); ctx.lineTo(cx + 6, tipY + 2); ctx.stroke();
+  for (let i = -5; i <= 5; i++) { ctx.beginPath(); ctx.moveTo(cx, tipY); ctx.lineTo(cx + i * DW * 0.19, H + 2); ctx.stroke(); }
+  ctx.strokeStyle = skin.rail; ctx.lineWidth = boat.rail;
+  ctx.beginPath(); ctx.moveTo(cx - DW, H - 4); ctx.lineTo(cx - 6, tipY + 2); ctx.moveTo(cx + DW, H - 4); ctx.lineTo(cx + 6, tipY + 2); ctx.stroke();
   ctx.strokeStyle = 'rgba(255,216,138,0.25)'; ctx.lineWidth = 1.5;
-  ctx.beginPath(); ctx.moveTo(cx - W * 0.75, H - 9); ctx.lineTo(cx - 6, tipY - 2); ctx.moveTo(cx + W * 0.75, H - 9); ctx.lineTo(cx + 6, tipY - 2); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(cx - DW, H - 9); ctx.lineTo(cx - 6, tipY - 2); ctx.moveTo(cx + DW, H - 9); ctx.lineTo(cx + 6, tipY - 2); ctx.stroke();
+  // the barque's heavy catheads and anchors either side of the bow
+  if (boat.id === 'barque') for (const sd of [-1, 1]) {
+    const ax = cx + sd * DW * 0.34, ay = tipY + (H - tipY) * 0.42;
+    ctx.fillStyle = skin.wood; ctx.fillRect(ax - 14, ay - 4, 28, 8);
+    ctx.strokeStyle = '#1a1714'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(ax + sd * 12, ay); ctx.lineTo(ax + sd * 12, ay + 22); ctx.arc(ax + sd * 12, ay + 14, 9, 0.3, Math.PI - 0.3); ctx.stroke();
+  }
+  // a cutter's long running bowsprit is thin; a barque's is a tree trunk
+  const bsw = boat.id === 'cutter' ? 6 : boat.id === 'barque' ? 13 : 9;
   ctx.fillStyle = skin.wood;
-  ctx.beginPath(); ctx.moveTo(cx - 9, tipY + 6); ctx.lineTo(cx + 9, tipY + 6); ctx.lineTo(cx + 2, hy + H * 0.07); ctx.lineTo(cx - 2, hy + H * 0.07); ctx.closePath(); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(cx - bsw, tipY + 6); ctx.lineTo(cx + bsw, tipY + 6); ctx.lineTo(cx + 2, hy + H * (boat.id === 'cutter' ? 0.03 : 0.07)); ctx.lineTo(cx - 2, hy + H * (boat.id === 'cutter' ? 0.03 : 0.07)); ctx.closePath(); ctx.fill();
   // your pennant, flying from a short staff at the tip of the bowsprit
   const pen = 'pennant' in ship ? ship.pennant : myPennant();
   if (pen) {
@@ -402,9 +512,10 @@ function drawCompass() {
     ctx.fillStyle = col;
     ctx.beginPath(); ctx.moveTo(ex + (left ? -4 : 4), y + 10); ctx.lineTo(ex + (left ? 3 : -3), y + 5); ctx.lineTo(ex + (left ? 3 : -3), y + 15); ctx.closePath(); ctx.fill();
   };
-  const HB = SK.HARBOUR;
+  const HB = g.backrooms ? g.exit : SK.HARBOUR;
   const hb = bearingOf(HB.x - ship.x, HB.y - ship.y), hx = xb(hb);
-  if (inStrip(hx)) { ctx.fillStyle = '#e46c4f'; ctx.fillRect(hx - 6, y + 7, 4, 6); ctx.fillStyle = '#86cfae'; ctx.fillRect(hx + 2, y + 7, 4, 6); }
+  if (inStrip(hx) && g.backrooms) { ctx.fillStyle = '#3dff7a'; ctx.fillRect(hx - 5, y + 7, 10, 6); }
+  else if (inStrip(hx)) { ctx.fillStyle = '#e46c4f'; ctx.fillRect(hx - 6, y + 7, 4, 6); ctx.fillStyle = '#86cfae'; ctx.fillRect(hx + 2, y + 7, 4, 6); }
   else edgeArrow(hb, '#86cfae');
   const pb = bearingOf(g.plim.x - ship.x, g.plim.y - ship.y), px = xb(pb);
   if (inStrip(px)) {
@@ -419,7 +530,7 @@ function drawCompass() {
     ctx.fillRect(mx - 2.5, y + 15, 5, 5);
   }
   const lb = bearingOf(-ship.x, -ship.y), lx = xb(lb);
-  if (inStrip(lx)) {
+  if (inStrip(lx) && !g.backrooms) {
     const f = 1 - Math.min(1, Math.abs(angDiff(g.beam, bearingOf(ship.x, ship.y))) / 0.6);
     ctx.fillStyle = `rgba(255,216,138,${0.5 + 0.5 * f})`;
     ctx.beginPath(); ctx.moveTo(lx, y + 4); ctx.lineTo(lx + 3, y + 14); ctx.lineTo(lx - 3, y + 14); ctx.closePath(); ctx.fill();

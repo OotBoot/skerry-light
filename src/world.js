@@ -22,7 +22,13 @@ function pickOne(a) { return a[(RNG() * a.length) | 0]; }
 
 function makeVoyage(n, attract, seed) {
   if (seed != null) RNG = seeded(seed);
-  try { return buildVoyage(n, attract); } finally { RNG = Math.random; }
+  try {
+    // one voyage in twenty slips out of the world: the Backrooms. Rolled from the crew's seed,
+    // so a whole crew goes in together. Add ?backrooms to the address to force it (solo only).
+    const forced = seed == null && !attract && SK.FORCE_BACKROOMS;
+    const back = !attract && (RNG() < SK.BACKROOMS_CHANCE || forced);
+    return back ? buildBackrooms(n) : buildVoyage(n, attract);
+  } finally { RNG = Math.random; }
 }
 
 function buildVoyage(n, attract) {
@@ -31,7 +37,8 @@ function buildVoyage(n, attract) {
   const W = SK.WORLD;
   const sd = attract ? 760 : (880 + n * 60) * W;
   const sx = Math.sin(sb) * sd, sy = Math.cos(sb) * sd;
-  const ship = { x: sx, y: sy, h: bearingOf(HB.x - sx, HB.y - sy) + rand(-0.12, 0.12), v: 7, sail: 0.55, rudder: 0, hull: SK.HULL, inv: 0, bob: 0 };
+  const ship = { x: sx, y: sy, h: bearingOf(HB.x - sx, HB.y - sy) + rand(-0.12, 0.12), v: 7, sail: 0.55, rudder: 0, hull: 3, maxHull: 3, boat: 'brig', inv: 0, bob: 0 };
+  { const b = typeof myBoat === 'function' ? myBoat() : null; if (b) { ship.boat = b.id; ship.hull = ship.maxHull = b.hull; } }
 
   const rocks = [], wrecks = [], timber = [], solid = [];
   const ok = (x, y, r) => y > 45 && Math.hypot(x - HB.x, y - HB.y) > 115 && Math.hypot(x - sx, y - sy) > 100 &&
@@ -94,6 +101,71 @@ function buildVoyage(n, attract) {
   path.push({ x: HB.x, y: 44 }, { x: HB.x, y: 26 });
 
   return { ship, rocks, wrecks, timber, path, lures };
+}
+
+function makeShip(x, y, h) {
+  const ship = { x, y, h, v: 7, sail: 0.55, rudder: 0, hull: 3, maxHull: 3, boat: 'brig', inv: 0, bob: 0 };
+  const b = typeof myBoat === 'function' ? myBoat() : null;
+  if (b) { ship.boat = b.id; ship.hull = ship.maxHull = b.hull; }
+  return ship;
+}
+
+// The Backrooms: a flooded maze of yellow rooms, N x N cells of C metres, carved by a random
+// depth-first walk with a few extra walls knocked through so there's more than one way round.
+// The exit is the cell furthest from the start, and Plimsoll knows the way.
+function buildBackrooms(n) {
+  const C = SK.BACKROOMS_CELL, N = 8 + Math.min(4, Math.floor(n / 2));
+  const X0 = -N * C / 2, Y0 = 220;
+  const east = new Uint8Array(N * N).fill(1), north = new Uint8Array(N * N).fill(1);
+  const id = (i, j) => j * N + i;
+  const start = { i: (RNG() * N) | 0, j: 0 };
+  const seen = new Uint8Array(N * N), stack = [start];
+  seen[id(start.i, start.j)] = 1;
+  while (stack.length) {
+    const c = stack[stack.length - 1];
+    const opts = [[1, 0], [-1, 0], [0, 1], [0, -1]].map(([di, dj]) => ({ i: c.i + di, j: c.j + dj, di, dj }))
+      .filter(o => o.i >= 0 && o.j >= 0 && o.i < N && o.j < N && !seen[id(o.i, o.j)]);
+    if (!opts.length) { stack.pop(); continue; }
+    const o = opts[(RNG() * opts.length) | 0];
+    if (o.di === 1) east[id(c.i, c.j)] = 0; else if (o.di === -1) east[id(o.i, o.j)] = 0;
+    else if (o.dj === 1) north[id(c.i, c.j)] = 0; else north[id(o.i, o.j)] = 0;
+    seen[id(o.i, o.j)] = 1; stack.push({ i: o.i, j: o.j });
+  }
+  for (let k = 0; k < Math.round(N * N * 0.1); k++) {
+    const i = (RNG() * (N - 1)) | 0, j = (RNG() * (N - 1)) | 0;
+    if (RNG() < 0.5) east[id(i, j)] = 0; else north[id(i, j)] = 0;
+  }
+  const walls = [], T = 1.2;
+  const seg = (x1, y1, x2, y2) => walls.push({ x1, y1, x2, y2, r: T, what: 'the wall' });
+  seg(X0, Y0, X0 + N * C, Y0); seg(X0, Y0, X0, Y0 + N * C);
+  for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) {
+    const x = X0 + i * C, y = Y0 + j * C;
+    if (east[id(i, j)]) seg(x + C, y, x + C, y + C);
+    if (north[id(i, j)]) seg(x, y + C, x + C, y + C);
+  }
+  // breadth-first from the start: the furthest cell is the way out
+  const dist = new Int32Array(N * N).fill(-1), par = new Int32Array(N * N).fill(-1), q = [id(start.i, start.j)];
+  dist[q[0]] = 0;
+  let far = q[0];
+  while (q.length) {
+    const c = q.shift(), i = c % N, j = (c / N) | 0;
+    const nb = [];
+    if (i < N - 1 && !east[c]) nb.push(c + 1);
+    if (i > 0 && !east[c - 1]) nb.push(c - 1);
+    if (j < N - 1 && !north[c]) nb.push(c + N);
+    if (j > 0 && !north[c - N]) nb.push(c - N);
+    for (const d of nb) if (dist[d] < 0) { dist[d] = dist[c] + 1; par[d] = c; q.push(d); if (dist[d] > dist[far]) far = d; }
+  }
+  const centre = c => ({ x: X0 + (c % N + 0.5) * C, y: Y0 + (((c / N) | 0) + 0.5) * C });
+  const path = [];
+  for (let c = far; c >= 0; c = par[c]) path.unshift(centre(c));
+  const s0 = path[0], s1 = path[1] || { x: s0.x, y: s0.y + 1 };
+  const ship = makeShip(s0.x, s0.y - C * 0.2, bearingOf(s1.x - s0.x, s1.y - s0.y));
+  ship.v = 5; ship.sail = 0.3;
+  const lights = [];
+  for (let c = 0; c < N * N; c++) { const p = centre(c); lights.push({ x: p.x, y: p.y, ph: RNG() * 6.28, bad: RNG() < 0.12 }); }
+  const exit = Object.assign(centre(far), { r: C * 0.32 });
+  return { ship, rocks: [], wrecks: [], timber: [], path, lures: [], walls, exit, backrooms: true, rooms: { X0, Y0, C, N, lights } };
 }
 
 function spawnTimber(sx, sy) {

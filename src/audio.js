@@ -252,3 +252,59 @@ function audioTick(dt, stage) {
   AUD.nextCreak -= dt;
   if (AUD.nextCreak <= 0) { sfxCreak(); AUD.nextCreak = 5 + Math.random() * 7; }
 }
+
+// ---------- the Backrooms and Verity ----------
+// fluorescent tubes going out: a click, a dying buzz
+function sfxLightsOut() {
+  tone(120, 'sawtooth', 0.002, 0.18, 0.5, { to: 40 });
+  noise('highpass', 3000, 1, 0.001, 0.25, 0.04);
+  tone(60, 'square', 0.3, 0.06, 0.6, { delay: 0.45 });
+}
+// the hum of the tubes, on while the voyage is in the rooms
+function roomsHum(on) {
+  if (!AUD.ctx) return;
+  if (on && !AUD.hum) {
+    const c = AUD.ctx, gn = c.createGain(); gn.gain.value = 0;
+    const o1 = c.createOscillator(), o2 = c.createOscillator(), f = c.createBiquadFilter();
+    o1.type = 'sawtooth'; o1.frequency.value = 60; o2.type = 'square'; o2.frequency.value = 120;
+    f.type = 'lowpass'; f.frequency.value = 900;
+    o1.connect(f); o2.connect(f); f.connect(gn).connect(AUD.master);
+    o1.start(); o2.start();
+    gn.gain.setTargetAtTime(0.025, c.currentTime, 0.5);
+    AUD.hum = { gn, o1, o2 };
+  } else if (!on && AUD.hum) {
+    const h = AUD.hum; AUD.hum = null;
+    h.gn.gain.setTargetAtTime(0, AUD.ctx.currentTime, 0.2);
+    setTimeout(() => { try { h.o1.stop(); h.o2.stop(); } catch (e) {} }, 1200);
+  }
+}
+function roomsHumLevel(l) { if (AUD.hum) AUD.hum.gn.gain.setTargetAtTime(0.025 * l, AUD.ctx.currentTime, 0.05); }
+
+// Verity's voice: the clip, decoded once. rate below 1 drags it down into something else.
+let verityBuf = null, verityLoading = false, verityNode = null;
+function loadVerityVoice() {
+  if (!AUD.ctx || verityBuf || verityLoading) return;
+  verityLoading = true;
+  const src = SK.ASSETS.verityVoice;
+  const getBytes = src.startsWith('data:')
+    ? Promise.resolve(Uint8Array.from(atob(src.slice(src.indexOf(',') + 1)), ch => ch.charCodeAt(0)).buffer)
+    : fetch(src).then(r => r.arrayBuffer());
+  getBytes.then(b => AUD.ctx.decodeAudioData(b)).then(buf => { verityBuf = buf; }).catch(() => {}).finally(() => { verityLoading = false; });
+}
+function sfxVerity(rate, vol) {
+  stopVerity();
+  if (!AUD.ctx || !verityBuf) return;
+  const c = AUD.ctx, src = c.createBufferSource(), gn = c.createGain();
+  src.buffer = verityBuf; src.playbackRate.value = rate || 1;
+  gn.gain.value = vol == null ? 0.9 : vol;
+  src.connect(gn).connect(AUD.master);
+  src.start();
+  verityNode = src;
+}
+function stopVerity() { if (verityNode) { try { verityNode.stop(); } catch (e) {} verityNode = null; } }
+function sfxVerityScare() {
+  sfxScream(SK.VERITY_SCARE_TIME, 0.9);
+  sfxVerity(0.45, 1);
+  noise('lowpass', 500, 0.8, 0.004, 1.0, 0.8);
+  tone(48, 'sine', 0.004, 1.0, 1.2, { to: 28 });
+}

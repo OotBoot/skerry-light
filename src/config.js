@@ -11,7 +11,15 @@ const SK = {
   CAM_H: 5,               // eye height on deck
   NEAR: 1,
   HULL: 3,
+  IMPACT: 4.5,          // m/s closing speed that stoves in a plank; slower than that is a scrape
   HARBOUR: { x: 230, y: 30 },
+  BACKROOMS_CHANCE: 1 / 20,
+  FORCE_BACKROOMS: typeof location !== 'undefined' && /[?&#]backrooms\b/.test(location.href),
+  BACKROOMS_CELL: 64,     // metres per room
+  BACKROOMS_CEIL: 14,     // ceiling height
+  VERITY_TIME: 20,        // seconds he sits on the bow smiling before he changes
+  VERITY_MORPH: 1.6,
+  VERITY_SCARE_TIME: 1.5,
   LANTERN: 48,            // reach of your own deck lantern
   MAREN_STAGES: [400, 260, 160, 90, 35],   // how far away she stands at each stage
   // she comes one stage nearer every full turn of the beam, and slowly follows the ship between turns
@@ -34,6 +42,9 @@ const SK = {
     maren: 'assets/maren.png',
     plimsoll: 'assets/plimsoll.png',
     knock: 'assets/knock.png',
+    verity: 'assets/verity.png',
+    verity2: 'assets/verity2.png',
+    verityVoice: 'assets/verity.mp3',
   },
   KNOCK_ASPECT: 201 / 474,
   KNOCK_SPEED: 8,         // m/s at least, and always faster than the ship; only while nobody is looking at him
@@ -44,6 +55,7 @@ const SK = {
 
   WRECK_NAMES: ['Brae Lass', 'Kittiwake', 'Morning Star', 'Ellen Rose', 'Solan', 'Fair Isle', 'Jessie Ann'],
 
+  BACKROOMS_LOG: { date: 'No date', text: 'Sailed the Wren into the yellow rooms again tonight. Wet carpet under the keel, the tubes humming, every room like the last. The shark walked ahead as if he knew it. Something smiled at me from the bowsprit and said it could help. I did not let it.' },
   // Pages from the keeper's log, read one per harbour reached.
   LOG: [
     { date: '14 December 1887', text: 'The lamp failed in the second hour. The brig Gannet was coming in under the cliffs with no light to steer by. Maren took the skiff and a hand lantern out toward her. I could not stop her.' },
