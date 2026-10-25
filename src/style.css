@@ -394,3 +394,9 @@ button.small { padding: 6px 14px; min-height: 0; }
   .odds { gap: 4px 10px; font-size: 10px; }
 }
 .reel:has(.strip:empty) { display: none; }
+.invsub { grid-column: 1 / -1; font-family: var(--log); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--lamp); margin-top: 6px; }
+.overlay { overflow-x: hidden; }
+.cratecard .card, .reel { max-width: 100%; min-width: 0; }
+/* no double-tap zoom on buttons, and no auto-zoom when a phone focuses a text box (needs 16px) */
+html, body, button, .overlay, .card { touch-action: manipulation; }
+@media (max-width: 520px) { input, select, textarea { font-size: 16px !important; } }

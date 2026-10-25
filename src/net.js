@@ -252,7 +252,7 @@ function syncMates() {
       const fl = counter(pr.flare);
       if (fl > m.flareN) {
         m.flareN = fl;
-        if (Number.isFinite(pr.flare.x) && Number.isFinite(pr.flare.y)) mateFlare(m, pr.flare.x, pr.flare.y);
+        if (Number.isFinite(pr.flare.x) && Number.isFinite(pr.flare.y)) mateFlare(m, pr.flare.x, pr.flare.y, pr.flare.skin);
       } else m.flareN = fl;
       const gh = counter(pr.ghost);
       if (gh > m.ghostN) { m.ghostN = gh; if (pr.ghost.to === NET.myPeer) ghostBellFor(m); }
@@ -356,9 +356,9 @@ function cleanStats(s) {
 
 function counter(o) { return o && typeof o === 'object' && Number.isFinite(o.n) ? o.n : 0; }
 
-function mateFlare(m, x, y) {
+function mateFlare(m, x, y, skin) {
   if (!g || g.attract) return;
-  addFlare(x, y);
+  addFlare(x, y, skin);
   const d = Math.hypot(x - ship.x, y - ship.y);
   if (state === 'play') addLog(m.name + ' fired a flare, ' + Math.round(d) + ' m off.', 'p');
   if (d < 900) sfxFlare();

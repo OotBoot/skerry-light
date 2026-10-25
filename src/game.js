@@ -82,12 +82,12 @@ function fireFlare() {
   if (state !== 'play' || g.flareCd > 0) return;
   g.flareCd = SK.FLARE_COOLDOWN;
   g.stats.flares++;
-  addFlare(ship.x, ship.y);
+  addFlare(ship.x, ship.y, myFlare().id);
   sfxFlare();
   addLog('Flare away. Everything within ' + SK.FLARE_RADIUS + ' m is lit for a few seconds.', 'p');
-  if (crewMode) { NET.flares++; NET.flare = { n: NET.flares, x: Math.round(ship.x), y: Math.round(ship.y) }; send(); }
+  if (crewMode) { NET.flares++; NET.flare = { n: NET.flares, x: Math.round(ship.x), y: Math.round(ship.y), skin: myFlare().id }; send(); }
 }
-function addFlare(x, y) { g.flares.push({ x, y, t: SK.FLARE_TIME }); }
+function addFlare(x, y, skin) { g.flares.push({ x, y, t: SK.FLARE_TIME, skin: FLARE_BY_ID[skin] || FLARES[0] }); }
 function flareAt(x, y) {
   let best = 0;
   for (const f of g.flares) {

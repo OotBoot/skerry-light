@@ -49,12 +49,13 @@ Each boat has its own deck and bow as you see them from the helm, and its own le
 
 ## Crates, skins and pennants
 
-Every voyage you play earns a crate for the boat you sailed (**Brig Crate**, **Cutter Crate** or **Barque Crate**): one if you go down, two if you make harbour. Your first Brig Crate is free. The **crate inventory** on the Crates screen shows how many of each you have, with an Open button for each and a See loot button that shows that boat's skins. A reel spins and lands on your prize. Crates saved by older versions are kept as Brig Crates.
+Every voyage you play earns a crate: one if you go down, two if you make harbour. Each one is a random kind:
 
-Each crate holds that boat's skins (34 for the Brig, 12 each for the Cutter and Barque) plus 12 pennants that fly on any boat, in five grades: **Deckhand** (sky blue) 79.9%, **Bosun** (violet) 16%, **Mate** (pink) 3.2%, **Captain** (red) 0.64% and **Admiral** (gold) 0.26%.
+- **Boat Skin Crate**: skins for all three boats (34 Brig, 12 Cutter, 12 Barque). Each boat keeps its own equipped skin. A skin changes your deck, rails, bowsprit and lantern as you see them, and your hull and sails as your crewmates see them; crewmates' ships are lit by their own lanterns, so you can make out their skins from about 300 m away.
+- **Flag Crate**: 20 pennants, which fly from a staff at the tip of your bowsprit (and from your masthead for your crew) on any boat.
+- **Flare Crate**: 12 flare colours, from Magnesium White and Green Star to Pier Lamps (red and green), Gold Rain (sparks) and Aurora (cycles through colours). Your crew sees your flares in your colour.
 
-- A **skin** belongs to one boat; each boat keeps its own equipped skin. It changes your deck, rails, bowsprit and lantern as you see them, and your hull and sails as your crewmates see them. Crewmates' ships are lit by their own lanterns, so you can make out their skins from about 300 m away, and the crew list and in-game crew panel show which skin everyone is sailing.
-- A **pennant** flies from a staff at the tip of your bowsprit, and from your masthead for your crew. Fly one, or take it down, from the crate screen.
+Your first Boat Skin Crate is free. The **crate inventory** on the Crates screen shows how many of each you have, with an Open button for each and a See loot button that shows what's in it. A reel spins and lands on your prize. Every crate uses the same five grades: **Deckhand** (sky blue) 79.9%, **Bosun** (violet) 16%, **Mate** (pink) 3.2%, **Captain** (red) 0.64% and **Admiral** (gold) 0.26%. Crates saved by older versions become Boat Skin Crates.
 
 Gold (Admiral) items only ever appear in the reel when one is your prize, so if you see gold scroll past, it's yours. The chance of gold is still 0.26%.
 
