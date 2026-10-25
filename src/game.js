@@ -12,8 +12,8 @@ const SHOUTS = { 1: 'Rocks here!', 2: 'Follow me!', 3: "She's near me!" };
 function newVoyage(n, attract, seed, slot) {
   const v = makeVoyage(n, attract, seed);
   ship = v.ship;
-  // crewmates start abreast of each other, 40 m apart
-  if (slot) { const lat = (slot === 1 ? -1 : 1) * 40; ship.x += Math.cos(ship.h) * lat; ship.y -= Math.sin(ship.h) * lat; }
+  // crewmates start abreast of each other, 40 m apart, alternating left and right of the leader
+  if (slot) { const lat = Math.ceil(slot / 2) * 40 * (slot % 2 ? -1 : 1); ship.x += Math.cos(ship.h) * lat; ship.y -= Math.sin(ship.h) * lat; }
   const beam0 = seed != null ? (seed % 1000) / 1000 * 3 - 1.5 : rand(-1.5, 1.5);
   g = {
     t: 0, n, attract, beam: beam0, beam0, launchAt: 0, launchId: null, period: Math.min(11, 6 + n * 0.8),
@@ -61,12 +61,12 @@ function hit(nx, ny, what) {
 
 function wrapPi(a) { return ((a + Math.PI) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI) - Math.PI; }
 // Crew voyages run the light off the shared launch clock so every ship sees the same sweep.
-// Returns true each half turn: when the beam passes north, and when it comes round behind the land.
+// Returns true each time the beam completes a full turn (as it comes round behind the land).
 function advanceBeam(dt) {
   const prev = g.beam;
   if (g.launchAt) g.beam = wrapPi(g.beam0 + (Date.now() - g.launchAt) / 1000 / g.period * Math.PI * 2);
   else { g.beam += (Math.PI * 2 / g.period) * dt; if (g.beam > Math.PI) g.beam -= Math.PI * 2; }
-  return g.beam < prev - Math.PI || (prev < 0 && g.beam >= 0);
+  return g.beam < prev - Math.PI;
 }
 
 // ---------- flares, shouts and sailing in company ----------

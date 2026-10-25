@@ -1,4 +1,4 @@
-// Sailing together: crews of up to three ships on the same sea.
+// Sailing together: crews of up to eight ships on the same sea.
 //
 // Two ways to connect, with the same calls behind both:
 //  - on claude.ai, the artifact `room` capability (signed-in viewers only);
@@ -39,8 +39,8 @@ const NET = {
   results: null,            // results of the last finished voyage
   message: '',
 };
-const MAX_CREW = 3;
-const SLOT_COLORS = ['#ffcf86', '#ff9fb0', '#9fe6c2'];
+const MAX_CREW = 8;
+const SLOT_COLORS = ['#ffcf86', '#ff9fb0', '#9fe6c2', '#9fc4ff', '#d7a6ff', '#ffe066', '#7fe0e0', '#ff9a66'];
 const CREW_WORDS = ['gannet', 'wren', 'solan', 'tern', 'kestrel', 'brae', 'skerry', 'gull', 'merle', 'selkie'];
 let crewMode = false;
 
@@ -147,7 +147,7 @@ function startCrew() {
 function joinCrew(code) {
   audioInit();
   const others = crewOf(code).filter(p => p.peer !== NET.myPeer);
-  if (others.length >= MAX_CREW) { NET.message = 'That crew already has three ships.'; renderTogether(); return; }
+  if (others.length >= MAX_CREW) { NET.message = 'That crew is full: it already has ' + MAX_CREW + ' ships.'; renderTogether(); return; }
   enterCrew(code);
 }
 // join the fullest crew that still has a berth, preferring one that hasn't sailed yet
@@ -559,10 +559,11 @@ function renderCrewCard() {
     const st = document.createElement('span'); st.textContent = crewRowStatus(p, i, voy); li.appendChild(st);
     ul.appendChild(li);
   });
-  for (let i = list.length; i < MAX_CREW; i++) {
+  if (list.length < MAX_CREW) {
     const li = document.createElement('li'); li.className = 'empty';
     const dot = document.createElement('i'); li.appendChild(dot);
-    const nm = document.createElement('b'); nm.textContent = 'Open berth'; li.appendChild(nm);
+    const open = MAX_CREW - list.length;
+    const nm = document.createElement('b'); nm.textContent = open + (open === 1 ? ' open berth' : ' open berths'); li.appendChild(nm);
     ul.appendChild(li);
   }
 
@@ -575,7 +576,7 @@ function renderCrewCard() {
   if (!inv.hidden) $('inviteLink').value = location.origin + location.pathname + '#' + NET.crew;
   if (!NET.launch) {
     title.textContent = 'Crew Forming';
-    text.textContent = 'Send this page to up to two friends. They join from the title screen by picking crew ' + NET.crew.toUpperCase() + '. Everyone sails their own brig through the same skerries. Ships close together keep Maren back, and a bell rung near a crewmate drives her away from both of you.';
+    text.textContent = 'Send the invite to up to seven friends. They join from the title screen by picking crew ' + NET.crew.toUpperCase() + '. Everyone sails their own brig through the same skerries. Ships close together keep Maren back, and a bell rung near a crewmate drives her away from both of you.';
   } else if (!r) {
     title.textContent = statusWord(NET.st) === 'In harbour' ? 'Safe in Harbour' : 'Lost at Sea';
     text.textContent = 'Voyage ' + voy + '. Waiting for the rest of the crew to make harbour or go down. You can watch them from their deck while you wait.';

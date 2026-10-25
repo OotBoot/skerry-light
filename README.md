@@ -22,7 +22,7 @@ The only thing she will not go near is **Plimsoll**, the shark who walked up out
 | Flare | F, or the flare button |
 | Shout to crew | 1 Rocks here! · 2 Follow me! · 3 She's near me! |
 
-- **Maren** comes one stage nearer every half turn of the beam: 340 m, 220, 130, 70, then right at the bow, and one more half turn after that she takes the ship. Between turns she keeps pace with you, and at the last stages she drifts into your path. You hear her heartbeat and see red at the edges as she closes in.
+- **Maren** comes one stage nearer every full turn of the beam: 400 m, 260, 160, 90, then right at the bow, and one more turn after that she takes the ship. Between turns she slowly follows your ship, so sailing hard can buy you some distance. You hear her heartbeat and see red at the edges as she closes in.
 - **Plimsoll**: while you are within 75 m of him, Maren holds where she is (she no longer falls back). He keeps pace with your ship at any speed: the faster you sail, the faster he walks, the further ahead he keeps and the further his protection reaches, and if you overtake him he runs to get back in front. He waits about 7 seconds for a ship that falls behind, then walks on alone.
 - **The bell** drives Maren back three stages when she is anywhere ahead of you (or anywhere at all once she is close), sinks the drowned within 150 m, and freezes Knock for 20 seconds within 450 m. It swings again in 15 seconds, one more for each voyage.
 - **The drowned** crew of the Gannet swim after you at about 5 m/s, faster on later voyages. Several are out at once, more each voyage. Their eyes always catch the light. One that reaches a ship going under 9 knots climbs aboard and costs a plank; faster ships shake them off. Plimsoll eats any he catches.
@@ -35,7 +35,7 @@ The only thing she will not go near is **Plimsoll**, the shark who walked up out
 
 ## Sailing together
 
-Up to three people can sail as a crew. Each of you sails your own brig through the same skerries, and you can see each other's ships and lanterns, hulls and bells.
+Up to eight people can sail as a crew. Each of you sails your own brig through the same skerries, and you can see each other's ships and lanterns, hulls and bells.
 
 - On the title screen, one person picks **Start a crew** and sends the **invite link** from the crew screen; opening it joins that crew straight away. Others can also pick a crew from the list, or use **Find me a crew** to join any crew with a free berth.
 - The crew screen has a **chat** for planning between voyages, and messages also appear in the in-game log.

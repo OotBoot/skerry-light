@@ -13,8 +13,8 @@ const SK = {
   HULL: 3,
   HARBOUR: { x: 230, y: 30 },
   LANTERN: 48,            // reach of your own deck lantern
-  MAREN_STAGES: [340, 220, 130, 70, 28],   // how far away she stands at each stage
-  // she comes one stage nearer every half turn of the beam, and follows the ship between turns
+  MAREN_STAGES: [400, 260, 160, 90, 35],   // how far away she stands at each stage
+  // she comes one stage nearer every full turn of the beam, and slowly follows the ship between turns
   PLIMSOLL_GUARD: 75,     // this close to Plimsoll and she holds where she is
   PLIMSOLL_PATIENCE: 7,   // seconds he waits for a ship that falls behind before walking on
   CREW_GUARD: 55,         // the same, for ships sailing close together

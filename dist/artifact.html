@@ -306,7 +306,7 @@ canvas:focus { outline: none; }
       <span class="eyebrow">Master's orders · make harbour by night · sound on</span>
       <h1>Skerry Light</h1>
       <p>In the winter of 1887 the lamp at Skerry Light failed, and the keeper's wife, <span class="maren">Maren Holm</span>, rowed out with a lantern to warn the brig Gannet. The Gannet broke up on the rocks. Maren's skiff came back empty.</p>
-      <p>She still stands on the water when the lamp turns, nearer every half turn, and she keeps pace with any ship she has chosen. The Gannet's drowned crew swim with her, and her figurehead, Knock, walks the water with a belaying pin. Along the coast, wreckers still hang false harbour lights over the rocks. The only thing Maren will not come near is <span class="plim">Plimsoll</span>, the shark who walked out of the surf that winter in the Gannet cabin boy's blue shoes. He knows the deep water through the skerries, but he won't wait for you. <em>Follow his shoes.</em></p>
+      <p>She still stands on the water when the lamp turns, nearer every turn, and she follows any ship she has chosen. The Gannet's drowned crew swim with her, and her figurehead, Knock, walks the water with a belaying pin. Along the coast, wreckers still hang false harbour lights over the rocks. The only thing Maren will not come near is <span class="plim">Plimsoll</span>, the shark who walked out of the surf that winter in the Gannet cabin boy's blue shoes. He knows the deep water through the skerries, but he won't wait for you. <em>Follow his shoes.</em></p>
       <ul class="rules">
         <li><b>See</b> rocks, wrecks and drifting timber show only while the beam or a flare is on them, then they are gone</li>
         <li><b>Follow</b> Plimsoll's glowing shoes. Within 75 m of him, Maren holds where she is. Fall behind and he walks on alone</li>
@@ -317,11 +317,11 @@ canvas:focus { outline: none; }
         <li><b>Flare</b> (F) lights everything around you for a few seconds, for your whole crew</li>
         <li><b>Steer</b> ← → or A / D, sail ↑ ↓ or W / S. On a phone, hold the left or right side to steer and use the ▲ ▼ buttons for speed</li>
         <li><b>Hull</b> three hits and she goes down. Let Maren reach the bow and she comes aboard</li>
-        <li><b>Crew</b> sail with up to two friends. Ships close together keep her back and patch each other's planks. Shout warnings (1, 2, 3), share flares, and watch your crew after your own voyage ends</li>
+        <li><b>Crew</b> sail with up to seven friends. Ships close together keep her back and patch each other's planks. Shout warnings (1, 2, 3), share flares, and watch your crew after your own voyage ends</li>
       </ul>
       <button class="primary" id="startBtn" type="button">Take the helm alone</button>
       <section class="together" id="together" aria-labelledby="togetherHead">
-        <h2 id="togetherHead">Sail together · up to 3 ships</h2>
+        <h2 id="togetherHead">Sail together · up to 8 ships</h2>
         <p id="togetherStatus">Looking for other sailors…</p>
         <div class="nickrow" id="nickRow" hidden>
           <label for="nick">Your name</label>
@@ -422,8 +422,8 @@ const SK = {
   HULL: 3,
   HARBOUR: { x: 230, y: 30 },
   LANTERN: 48,            // reach of your own deck lantern
-  MAREN_STAGES: [340, 220, 130, 70, 28],   // how far away she stands at each stage
-  // she comes one stage nearer every half turn of the beam, and follows the ship between turns
+  MAREN_STAGES: [400, 260, 160, 90, 35],   // how far away she stands at each stage
+  // she comes one stage nearer every full turn of the beam, and slowly follows the ship between turns
   PLIMSOLL_GUARD: 75,     // this close to Plimsoll and she holds where she is
   PLIMSOLL_PATIENCE: 7,   // seconds he waits for a ship that falls behind before walking on
   CREW_GUARD: 55,         // the same, for ships sailing close together
@@ -1393,8 +1393,8 @@ function drawScare(t) {
 // The two that walk on the water off Skerry Light.
 //
 // Maren Holm, the keeper's wife, rowed out in 1887 to warn the brig Gannet and never came back.
-// Every half turn of the beam she stands a stage nearer your bow, and between turns she keeps pace
-// with the ship. Ring the bell while you can see her to drive her back two stages. If she reaches
+// Every full turn of the beam she stands a stage nearer your bow, and between turns she slowly
+// follows the ship. Ring the bell while you can see her to drive her back two stages. If she reaches
 // you, she takes the ship.
 //
 // Plimsoll, the shark in the Gannet cabin boy's shoes, knows the deep water through the skerries.
@@ -1425,7 +1425,7 @@ function placeMaren(stage) {
 function plimsollLead() { return 80 + Math.max(0, ship.v - 12) * 2.5; }
 function plimsollGuarding() { return Math.hypot(g.plim.x - ship.x, g.plim.y - ship.y) < SK.PLIMSOLL_GUARD + Math.max(0, ship.v - 12) * 1.2; }
 
-// called every half turn of the beam
+// called every full turn of the beam
 function marenTurn() {
   const m = g.maren;
   if (!m.active || state !== 'play') return;
@@ -1475,13 +1475,12 @@ function ringBell() {
 }
 function bellCooldown() { return SK.BELL_COOLDOWN + g.n; }
 
-// she keeps pace with the ship, and at the last stages she drifts into your path
+// she slowly follows the ship, so you can pull away from her for a while
 function followShip(m, dt) {
   if (!m.following) return;
-  if (m.stage >= 3) m.relB *= 1 - Math.min(1, dt * 0.35);
   const d = SK.MAREN_STAGES[m.stage], b = ship.h + m.relB;
   const tx = ship.x + Math.sin(b) * d, ty = Math.max(25, ship.y + Math.cos(b) * d);
-  const k = Math.min(1, dt * (0.35 + m.stage * 0.25));
+  const k = Math.min(1, dt * (0.12 + m.stage * 0.06));
   m.x += (tx - m.x) * k; m.y += (ty - m.y) * k;
 }
 
@@ -1875,8 +1874,8 @@ const SHOUTS = { 1: 'Rocks here!', 2: 'Follow me!', 3: "She's near me!" };
 function newVoyage(n, attract, seed, slot) {
   const v = makeVoyage(n, attract, seed);
   ship = v.ship;
-  // crewmates start abreast of each other, 40 m apart
-  if (slot) { const lat = (slot === 1 ? -1 : 1) * 40; ship.x += Math.cos(ship.h) * lat; ship.y -= Math.sin(ship.h) * lat; }
+  // crewmates start abreast of each other, 40 m apart, alternating left and right of the leader
+  if (slot) { const lat = Math.ceil(slot / 2) * 40 * (slot % 2 ? -1 : 1); ship.x += Math.cos(ship.h) * lat; ship.y -= Math.sin(ship.h) * lat; }
   const beam0 = seed != null ? (seed % 1000) / 1000 * 3 - 1.5 : rand(-1.5, 1.5);
   g = {
     t: 0, n, attract, beam: beam0, beam0, launchAt: 0, launchId: null, period: Math.min(11, 6 + n * 0.8),
@@ -1924,12 +1923,12 @@ function hit(nx, ny, what) {
 
 function wrapPi(a) { return ((a + Math.PI) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI) - Math.PI; }
 // Crew voyages run the light off the shared launch clock so every ship sees the same sweep.
-// Returns true each half turn: when the beam passes north, and when it comes round behind the land.
+// Returns true each time the beam completes a full turn (as it comes round behind the land).
 function advanceBeam(dt) {
   const prev = g.beam;
   if (g.launchAt) g.beam = wrapPi(g.beam0 + (Date.now() - g.launchAt) / 1000 / g.period * Math.PI * 2);
   else { g.beam += (Math.PI * 2 / g.period) * dt; if (g.beam > Math.PI) g.beam -= Math.PI * 2; }
-  return g.beam < prev - Math.PI || (prev < 0 && g.beam >= 0);
+  return g.beam < prev - Math.PI;
 }
 
 // ---------- flares, shouts and sailing in company ----------
@@ -2347,7 +2346,7 @@ function wsTransport(url) {
 }
 
 // ---- src/net.js ----
-// Sailing together: crews of up to three ships on the same sea.
+// Sailing together: crews of up to eight ships on the same sea.
 //
 // Two ways to connect, with the same calls behind both:
 //  - on claude.ai, the artifact `room` capability (signed-in viewers only);
@@ -2388,8 +2387,8 @@ const NET = {
   results: null,            // results of the last finished voyage
   message: '',
 };
-const MAX_CREW = 3;
-const SLOT_COLORS = ['#ffcf86', '#ff9fb0', '#9fe6c2'];
+const MAX_CREW = 8;
+const SLOT_COLORS = ['#ffcf86', '#ff9fb0', '#9fe6c2', '#9fc4ff', '#d7a6ff', '#ffe066', '#7fe0e0', '#ff9a66'];
 const CREW_WORDS = ['gannet', 'wren', 'solan', 'tern', 'kestrel', 'brae', 'skerry', 'gull', 'merle', 'selkie'];
 let crewMode = false;
 
@@ -2496,7 +2495,7 @@ function startCrew() {
 function joinCrew(code) {
   audioInit();
   const others = crewOf(code).filter(p => p.peer !== NET.myPeer);
-  if (others.length >= MAX_CREW) { NET.message = 'That crew already has three ships.'; renderTogether(); return; }
+  if (others.length >= MAX_CREW) { NET.message = 'That crew is full: it already has ' + MAX_CREW + ' ships.'; renderTogether(); return; }
   enterCrew(code);
 }
 // join the fullest crew that still has a berth, preferring one that hasn't sailed yet
@@ -2908,10 +2907,11 @@ function renderCrewCard() {
     const st = document.createElement('span'); st.textContent = crewRowStatus(p, i, voy); li.appendChild(st);
     ul.appendChild(li);
   });
-  for (let i = list.length; i < MAX_CREW; i++) {
+  if (list.length < MAX_CREW) {
     const li = document.createElement('li'); li.className = 'empty';
     const dot = document.createElement('i'); li.appendChild(dot);
-    const nm = document.createElement('b'); nm.textContent = 'Open berth'; li.appendChild(nm);
+    const open = MAX_CREW - list.length;
+    const nm = document.createElement('b'); nm.textContent = open + (open === 1 ? ' open berth' : ' open berths'); li.appendChild(nm);
     ul.appendChild(li);
   }
 
@@ -2924,7 +2924,7 @@ function renderCrewCard() {
   if (!inv.hidden) $('inviteLink').value = location.origin + location.pathname + '#' + NET.crew;
   if (!NET.launch) {
     title.textContent = 'Crew Forming';
-    text.textContent = 'Send this page to up to two friends. They join from the title screen by picking crew ' + NET.crew.toUpperCase() + '. Everyone sails their own brig through the same skerries. Ships close together keep Maren back, and a bell rung near a crewmate drives her away from both of you.';
+    text.textContent = 'Send the invite to up to seven friends. They join from the title screen by picking crew ' + NET.crew.toUpperCase() + '. Everyone sails their own brig through the same skerries. Ships close together keep Maren back, and a bell rung near a crewmate drives her away from both of you.';
   } else if (!r) {
     title.textContent = statusWord(NET.st) === 'In harbour' ? 'Safe in Harbour' : 'Lost at Sea';
     text.textContent = 'Voyage ' + voy + '. Waiting for the rest of the crew to make harbour or go down. You can watch them from their deck while you wait.';

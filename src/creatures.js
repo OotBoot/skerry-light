@@ -1,8 +1,8 @@
 // The two that walk on the water off Skerry Light.
 //
 // Maren Holm, the keeper's wife, rowed out in 1887 to warn the brig Gannet and never came back.
-// Every half turn of the beam she stands a stage nearer your bow, and between turns she keeps pace
-// with the ship. Ring the bell while you can see her to drive her back two stages. If she reaches
+// Every full turn of the beam she stands a stage nearer your bow, and between turns she slowly
+// follows the ship. Ring the bell while you can see her to drive her back two stages. If she reaches
 // you, she takes the ship.
 //
 // Plimsoll, the shark in the Gannet cabin boy's shoes, knows the deep water through the skerries.
@@ -33,7 +33,7 @@ function placeMaren(stage) {
 function plimsollLead() { return 80 + Math.max(0, ship.v - 12) * 2.5; }
 function plimsollGuarding() { return Math.hypot(g.plim.x - ship.x, g.plim.y - ship.y) < SK.PLIMSOLL_GUARD + Math.max(0, ship.v - 12) * 1.2; }
 
-// called every half turn of the beam
+// called every full turn of the beam
 function marenTurn() {
   const m = g.maren;
   if (!m.active || state !== 'play') return;
@@ -83,13 +83,12 @@ function ringBell() {
 }
 function bellCooldown() { return SK.BELL_COOLDOWN + g.n; }
 
-// she keeps pace with the ship, and at the last stages she drifts into your path
+// she slowly follows the ship, so you can pull away from her for a while
 function followShip(m, dt) {
   if (!m.following) return;
-  if (m.stage >= 3) m.relB *= 1 - Math.min(1, dt * 0.35);
   const d = SK.MAREN_STAGES[m.stage], b = ship.h + m.relB;
   const tx = ship.x + Math.sin(b) * d, ty = Math.max(25, ship.y + Math.cos(b) * d);
-  const k = Math.min(1, dt * (0.35 + m.stage * 0.25));
+  const k = Math.min(1, dt * (0.12 + m.stage * 0.06));
   m.x += (tx - m.x) * k; m.y += (ty - m.y) * k;
 }
 
