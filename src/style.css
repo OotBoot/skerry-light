@@ -449,3 +449,5 @@ html, body, button, .overlay, .card { touch-action: manipulation; }
   .sailctl .tool small { font-size: 8px; }
   .toast, .specbar, .netbanner { top: 96px; }
 }
+.crews li.invited { border: 1px solid var(--lamp); border-radius: 4px; padding: 6px 8px; background: rgba(255,216,138,0.07); }
+.crews li.invited span { color: var(--lamp); }

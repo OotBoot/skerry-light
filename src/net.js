@@ -77,8 +77,7 @@ async function netInit() {
   if (typeof room.onConnection === 'function') room.onConnection(c => { NET.connected = c; renderNetBanner(); }, () => {});
   room.presence({ app: 'skerry', sid: NET.sid, crew: null, nick: NET.nick || null }).catch(() => {});
   renderTogether();
-  // an invite link opens straight into its crew, once we've heard who is here
-  if (NET.pendingJoin) setTimeout(() => { if (NET.pendingJoin && !NET.crew && state === 'title') joinCrew(NET.pendingJoin); NET.pendingJoin = null; }, 1800);
+  // an invite link no longer joins by itself: the title screen shows the invite and you tap Join
 }
 
 function onPeersChange(change) {
@@ -197,6 +196,7 @@ function crewSummaries() {
   return [...crews.values()];
 }
 function enterCrew(code) {
+  NET.pendingJoin = null;
   // coming back to the same crew in the same tab (a reload, or the phone waking up) keeps your place,
   // so a host who reconnects is still the host
   let joinedAt = Date.now();
@@ -507,18 +507,23 @@ function renderTogether() {
   nickRow.hidden = NET.via !== 'server';
   const crews = crewSummaries();
   const here = NET.peers.filter(p => !(p.isMe && p.sameTab)).length;
-  status.textContent = NET.message || (here ? (here === 1 ? '1 other sailor has this page open.' : here + ' other sailors have this page open.') : 'Nobody else has this page open yet. Start a crew and send them the invite link.');
+  const invitedGone = NET.pendingJoin && !crews.some(c => c.code === NET.pendingJoin);
+  status.textContent = NET.message || (invitedGone ? 'You were invited to crew ' + NET.pendingJoin.toUpperCase() + ', but nobody is in it right now. Start your own, or wait for them to open it.' : null) || (here ? (here === 1 ? '1 other sailor has this page open.' : here + ' other sailors have this page open.') : 'Nobody else has this page open yet. Start a crew and send them the invite link.');
   $('crewQuickBtn').hidden = !crews.some(c => c.n < MAX_CREW);
   // only rebuild the list when it actually changes, so a tap never lands on a button that was
   // swapped out underneath the finger (the list refreshes every second)
-  const key = crews.map(c => [c.code, Math.min(c.n, MAX_CREW), c.host, c.atSea ? c.voy : 0].join(':')).join('|');
+  const key = (NET.pendingJoin || '') + '#' + crews.map(c => [c.code, Math.min(c.n, MAX_CREW), c.host, c.atSea ? c.voy : 0].join(':')).join('|');
   if (list.dataset.key === key) return;
   list.dataset.key = key;
   list.textContent = '';
+  // the crew from an invite link goes first, marked, but you still choose whether to join
+  const inv = NET.pendingJoin;
+  if (inv) crews.sort((a, b) => (b.code === inv) - (a.code === inv));
   for (const c of crews) {
     const li = document.createElement('li');
+    if (c.code === inv) li.className = 'invited';
     const label = document.createElement('span');
-    label.textContent = 'Crew ' + c.code.toUpperCase() + ' · ' + Math.min(c.n, MAX_CREW) + ' of ' + MAX_CREW +
+    label.textContent = (c.code === inv ? 'Your invite: ' : '') + 'Crew ' + c.code.toUpperCase() + ' · ' + Math.min(c.n, MAX_CREW) + ' of ' + MAX_CREW +
       (c.host ? ' · ' + c.host + "'s" : '') + (c.atSea ? ' · at sea, voyage ' + c.voy : ' · forming');
     li.appendChild(label);
     const b = document.createElement('button');

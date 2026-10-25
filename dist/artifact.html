@@ -455,6 +455,8 @@ html, body, button, .overlay, .card { touch-action: manipulation; }
   .sailctl .tool small { font-size: 8px; }
   .toast, .specbar, .netbanner { top: 96px; }
 }
+.crews li.invited { border: 1px solid var(--lamp); border-radius: 4px; padding: 6px 8px; background: rgba(255,216,138,0.07); }
+.crews li.invited span { color: var(--lamp); }
 </style>
 <div id="stage">
   <canvas id="cv" tabindex="0" aria-label="View from the deck of a ship at night, with a lighthouse beam sweeping over the sea"></canvas>
@@ -536,7 +538,7 @@ html, body, button, .overlay, .card { touch-action: manipulation; }
           <li><b>Steer</b> ← → or A / D, sail ↑ ↓ or W / S. On a phone, hold the left or right side to steer and use the ▲ ▼ buttons for speed</li>
           <li><b>Boats</b> the Brig takes three hits, the quick Cutter two, the heavy Barque five. Glancing off a rock only slows you; hitting it head on costs a plank.</li>
           <li><b>Hull</b> when the planks run out she goes down. Let Maren reach the bow and she comes aboard</li>
-          <li><b>Verity</b> sometimes you'll find a smiling yellow orb on your deck, right in front of you, offering to help. He isn't helping, and the bell doesn't bother him. Fire a flare before twenty seconds are up, or see what he really looks like</li>
+          <li><b>Verity</b> sometimes you'll find a small smiling yellow orb in a corner of your deck, offering to help. He isn't helping, and the bell doesn't bother him. Fire a flare before twenty seconds are up, or see what he really looks like</li>
           <li><b>The Backrooms</b> about one voyage in twenty, the lights go out and the sea comes back with walls: a flooded maze of yellow rooms. Follow Plimsoll to the green EXIT sign</li>
           <li><b>Crew</b> sail with up to seven friends. Ships close together keep her back and patch each other's planks. Share flares, chat in the crew screen, and watch your crew after your own voyage ends</li>
         </ul>
@@ -2420,8 +2422,9 @@ function updateVerity(dt) {
     v.next -= dt;
     if (v.next <= 0 && g.maren.stage < 3 && !g.knockScare) {
       v.on = true; v.t = 0; v.said = 0; v.morph = 0;
+      v.side = Math.random() < 0.5 ? -1 : 1;   // which bottom corner of your view he turns up in
       sfxVerity(1, 0.9);
-      addLog('Something is on the deck in front of you, smiling. It says it wants to help.', 'w');
+      addLog('Something small is on the deck, down in the corner, smiling at you. It says it wants to help.', 'w');
       addLog('The bell won\u2019t move it. Fire a flare before it stops smiling.', 'w');
     }
     return;
@@ -2460,13 +2463,16 @@ function drawVerity() {
   const tipY = H * boat.tipY;
   // where he touches the deck: a few steps ahead, but always above the buttons at the bottom
   const lb = $('logbox'), lbTop = lb && !lb.hidden ? lb.getBoundingClientRect().top - cv.getBoundingClientRect().top : H;
-  const seatY = Math.min(tipY + (H - tipY) * 0.62, lbTop - 10), seatX = cx;
-  const ORB = Math.min(H * 0.34, W * 0.62);   // close enough to fill a good part of the view
+  // small, down in one bottom corner of the deck, just above the buttons: easy to miss at first
+  const side = v.side || 1;
+  const ORB = Math.min(H * 0.13, W * 0.2);
+  const seatY = Math.min(H * 0.9, lbTop - 10);
+  const seatX = side < 0 ? Math.max(ORB * 0.8, W * 0.12) : W - Math.max(ORB * 0.8, W * 0.12);
   if (v.gone > 0 && imgReady(IMG.verity)) {
     // sliding off the side into the sea
     const k = 1 - v.gone / 0.8, h = ORB, w = h * IMG.verity.naturalWidth / IMG.verity.naturalHeight;
     ctx.globalAlpha = 1 - k;
-    ctx.drawImage(IMG.verity, seatX - w / 2 + k * W * 0.2, seatY - h + k * H * 0.25, w, h);
+    ctx.drawImage(IMG.verity, seatX - w / 2 + side * k * W * 0.15, seatY - h + k * H * 0.2, w, h);
     ctx.globalAlpha = 1;
     return;
   }
@@ -2495,13 +2501,13 @@ function drawVerity() {
   // the change: the round face stretches up and is replaced by the long thing standing on the bow
   const k = Math.min(1, v.morph / SK.VERITY_MORPH);
   if (imgReady(IMG.verity) && k < 0.6) {
-    const img = IMG.verity, h = ORB * (1 + k * 1.6), w = h * img.naturalWidth / img.naturalHeight * (1 - k * 0.9);
+    const img = IMG.verity, h = ORB * (1 + k * 2.4), w = h * img.naturalWidth / img.naturalHeight * (1 - k * 0.9);
     ctx.globalAlpha = 1 - k / 0.6;
     drawGlitch(img, seatX - w / 2, seatY - h, w, h, 1);
     ctx.globalAlpha = 1;
   }
   if (imgReady(IMG.verity2) && k > 0.25) {
-    const img = IMG.verity2, h = H * (0.5 + 0.75 * Math.min(1, (k - 0.25) / 0.75)), w = h * img.naturalWidth / img.naturalHeight;
+    const img = IMG.verity2, h = H * (0.25 + 0.5 * Math.min(1, (k - 0.25) / 0.75)), w = h * img.naturalWidth / img.naturalHeight;
     ctx.globalAlpha = Math.min(1, (k - 0.25) / 0.3);
     ctx.filter = `brightness(${lit.toFixed(2)})`;
     drawGlitch(img, seatX - w / 2 + (reduceMotion ? 0 : rand(-3, 3)), seatY - h * 0.97, w, h, 0.4 * (1 - k));
@@ -3218,8 +3224,7 @@ async function netInit() {
   if (typeof room.onConnection === 'function') room.onConnection(c => { NET.connected = c; renderNetBanner(); }, () => {});
   room.presence({ app: 'skerry', sid: NET.sid, crew: null, nick: NET.nick || null }).catch(() => {});
   renderTogether();
-  // an invite link opens straight into its crew, once we've heard who is here
-  if (NET.pendingJoin) setTimeout(() => { if (NET.pendingJoin && !NET.crew && state === 'title') joinCrew(NET.pendingJoin); NET.pendingJoin = null; }, 1800);
+  // an invite link no longer joins by itself: the title screen shows the invite and you tap Join
 }
 
 function onPeersChange(change) {
@@ -3338,6 +3343,7 @@ function crewSummaries() {
   return [...crews.values()];
 }
 function enterCrew(code) {
+  NET.pendingJoin = null;
   // coming back to the same crew in the same tab (a reload, or the phone waking up) keeps your place,
   // so a host who reconnects is still the host
   let joinedAt = Date.now();
@@ -3648,18 +3654,23 @@ function renderTogether() {
   nickRow.hidden = NET.via !== 'server';
   const crews = crewSummaries();
   const here = NET.peers.filter(p => !(p.isMe && p.sameTab)).length;
-  status.textContent = NET.message || (here ? (here === 1 ? '1 other sailor has this page open.' : here + ' other sailors have this page open.') : 'Nobody else has this page open yet. Start a crew and send them the invite link.');
+  const invitedGone = NET.pendingJoin && !crews.some(c => c.code === NET.pendingJoin);
+  status.textContent = NET.message || (invitedGone ? 'You were invited to crew ' + NET.pendingJoin.toUpperCase() + ', but nobody is in it right now. Start your own, or wait for them to open it.' : null) || (here ? (here === 1 ? '1 other sailor has this page open.' : here + ' other sailors have this page open.') : 'Nobody else has this page open yet. Start a crew and send them the invite link.');
   $('crewQuickBtn').hidden = !crews.some(c => c.n < MAX_CREW);
   // only rebuild the list when it actually changes, so a tap never lands on a button that was
   // swapped out underneath the finger (the list refreshes every second)
-  const key = crews.map(c => [c.code, Math.min(c.n, MAX_CREW), c.host, c.atSea ? c.voy : 0].join(':')).join('|');
+  const key = (NET.pendingJoin || '') + '#' + crews.map(c => [c.code, Math.min(c.n, MAX_CREW), c.host, c.atSea ? c.voy : 0].join(':')).join('|');
   if (list.dataset.key === key) return;
   list.dataset.key = key;
   list.textContent = '';
+  // the crew from an invite link goes first, marked, but you still choose whether to join
+  const inv = NET.pendingJoin;
+  if (inv) crews.sort((a, b) => (b.code === inv) - (a.code === inv));
   for (const c of crews) {
     const li = document.createElement('li');
+    if (c.code === inv) li.className = 'invited';
     const label = document.createElement('span');
-    label.textContent = 'Crew ' + c.code.toUpperCase() + ' · ' + Math.min(c.n, MAX_CREW) + ' of ' + MAX_CREW +
+    label.textContent = (c.code === inv ? 'Your invite: ' : '') + 'Crew ' + c.code.toUpperCase() + ' · ' + Math.min(c.n, MAX_CREW) + ' of ' + MAX_CREW +
       (c.host ? ' · ' + c.host + "'s" : '') + (c.atSea ? ' · at sea, voyage ' + c.voy : ' · forming');
     li.appendChild(label);
     const b = document.createElement('button');

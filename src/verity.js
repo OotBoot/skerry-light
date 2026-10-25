@@ -20,8 +20,9 @@ function updateVerity(dt) {
     v.next -= dt;
     if (v.next <= 0 && g.maren.stage < 3 && !g.knockScare) {
       v.on = true; v.t = 0; v.said = 0; v.morph = 0;
+      v.side = Math.random() < 0.5 ? -1 : 1;   // which bottom corner of your view he turns up in
       sfxVerity(1, 0.9);
-      addLog('Something is on the deck in front of you, smiling. It says it wants to help.', 'w');
+      addLog('Something small is on the deck, down in the corner, smiling at you. It says it wants to help.', 'w');
       addLog('The bell won\u2019t move it. Fire a flare before it stops smiling.', 'w');
     }
     return;
@@ -60,13 +61,16 @@ function drawVerity() {
   const tipY = H * boat.tipY;
   // where he touches the deck: a few steps ahead, but always above the buttons at the bottom
   const lb = $('logbox'), lbTop = lb && !lb.hidden ? lb.getBoundingClientRect().top - cv.getBoundingClientRect().top : H;
-  const seatY = Math.min(tipY + (H - tipY) * 0.62, lbTop - 10), seatX = cx;
-  const ORB = Math.min(H * 0.34, W * 0.62);   // close enough to fill a good part of the view
+  // small, down in one bottom corner of the deck, just above the buttons: easy to miss at first
+  const side = v.side || 1;
+  const ORB = Math.min(H * 0.13, W * 0.2);
+  const seatY = Math.min(H * 0.9, lbTop - 10);
+  const seatX = side < 0 ? Math.max(ORB * 0.8, W * 0.12) : W - Math.max(ORB * 0.8, W * 0.12);
   if (v.gone > 0 && imgReady(IMG.verity)) {
     // sliding off the side into the sea
     const k = 1 - v.gone / 0.8, h = ORB, w = h * IMG.verity.naturalWidth / IMG.verity.naturalHeight;
     ctx.globalAlpha = 1 - k;
-    ctx.drawImage(IMG.verity, seatX - w / 2 + k * W * 0.2, seatY - h + k * H * 0.25, w, h);
+    ctx.drawImage(IMG.verity, seatX - w / 2 + side * k * W * 0.15, seatY - h + k * H * 0.2, w, h);
     ctx.globalAlpha = 1;
     return;
   }
@@ -95,13 +99,13 @@ function drawVerity() {
   // the change: the round face stretches up and is replaced by the long thing standing on the bow
   const k = Math.min(1, v.morph / SK.VERITY_MORPH);
   if (imgReady(IMG.verity) && k < 0.6) {
-    const img = IMG.verity, h = ORB * (1 + k * 1.6), w = h * img.naturalWidth / img.naturalHeight * (1 - k * 0.9);
+    const img = IMG.verity, h = ORB * (1 + k * 2.4), w = h * img.naturalWidth / img.naturalHeight * (1 - k * 0.9);
     ctx.globalAlpha = 1 - k / 0.6;
     drawGlitch(img, seatX - w / 2, seatY - h, w, h, 1);
     ctx.globalAlpha = 1;
   }
   if (imgReady(IMG.verity2) && k > 0.25) {
-    const img = IMG.verity2, h = H * (0.5 + 0.75 * Math.min(1, (k - 0.25) / 0.75)), w = h * img.naturalWidth / img.naturalHeight;
+    const img = IMG.verity2, h = H * (0.25 + 0.5 * Math.min(1, (k - 0.25) / 0.75)), w = h * img.naturalWidth / img.naturalHeight;
     ctx.globalAlpha = Math.min(1, (k - 0.25) / 0.3);
     ctx.filter = `brightness(${lit.toFixed(2)})`;
     drawGlitch(img, seatX - w / 2 + (reduceMotion ? 0 : rand(-3, 3)), seatY - h * 0.97, w, h, 0.4 * (1 - k));
