@@ -167,9 +167,16 @@ function pennantPreview(pen, size) {
 }
 function itemCard(skin, cls) {
   const d = document.createElement('div');
-  d.className = 'skincard' + (cls ? ' ' + cls : '');
   const ra = rarityOf(skin);
+  d.className = 'skincard r-' + (ra ? ra.id : 'standard') + (cls ? ' ' + cls : '');
   d.style.setProperty('--rc', ra ? ra.color : '#8f98ab');
+  // one to five pips for the grade, so it reads without relying on colour alone
+  const level = ra ? RARITIES.indexOf(ra) + 1 : 0;
+  if (level) {
+    const pips = document.createElement('span'); pips.className = 'pips'; pips.setAttribute('aria-hidden', 'true');
+    for (let i = 0; i < level; i++) pips.appendChild(document.createElement('i'));
+    d.appendChild(pips);
+  }
   d.appendChild(skin.kind === 'pennant' ? pennantPreview(skin, 96) : skinPreview(skin, 96));
   const n = document.createElement('b'); n.textContent = skin.name; d.appendChild(n);
   const r = document.createElement('small'); r.textContent = (ra ? ra.name : 'Standard') + (skin.kind === 'pennant' ? ' · pennant' : ''); d.appendChild(r);
@@ -269,6 +276,7 @@ function finishOpen(prize) {
   const res = $('crateResult');
   res.textContent = '';
   res.style.setProperty('--rc', ra.color);
+  res.className = 'result r-' + ra.id;
   const h = document.createElement('p'); h.className = 'won';
   h.textContent = (CRATES.owned[prize.id] > 1 ? 'Another ' : 'New: ') + prize.name;
   const r = document.createElement('small'); r.textContent = ra.name + ' grade';

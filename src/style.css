@@ -121,6 +121,35 @@ canvas:focus { outline: none; }
   border-bottom: 4px solid var(--rc); font-family: var(--log);
 }
 .skincard b { font-size: 11px; color: var(--ink); text-align: center; line-height: 1.2; }
+/* grade pips, top left */
+.skincard .pips { position: absolute; top: 6px; left: 7px; display: flex; gap: 2px; }
+.skincard .pips i { width: 5px; height: 5px; background: var(--rc); }
+/* each grade dresses its card differently, each a step grander than the last */
+.skincard.r-bosun { background: linear-gradient(180deg, rgba(12,18,32,0.95) 40%, color-mix(in srgb, var(--rc) 22%, rgba(12,18,32,0.95))); }
+.skincard.r-mate {
+  background: linear-gradient(180deg, rgba(12,18,32,0.95) 25%, color-mix(in srgb, var(--rc) 32%, rgba(12,18,32,0.95)));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--rc) 55%, transparent);
+}
+.skincard.r-captain {
+  background: radial-gradient(ellipse at 50% 40%, color-mix(in srgb, var(--rc) 30%, rgba(12,18,32,0.95)), rgba(12,18,32,0.95) 75%);
+  box-shadow: inset 0 0 0 1px var(--rc), 0 0 14px -2px var(--rc);
+}
+.skincard.r-captain b { color: #ffd9d4; }
+.skincard.r-admiral {
+  background: radial-gradient(ellipse at 50% 35%, color-mix(in srgb, var(--rc) 38%, rgba(12,18,32,0.95)), rgba(12,18,32,0.95) 80%);
+  box-shadow: inset 0 0 0 2px var(--rc), 0 0 22px -2px var(--rc);
+  overflow: hidden;
+}
+.skincard.r-admiral b { color: #ffe9a8; }
+.skincard.r-admiral::after {
+  content: ""; position: absolute; inset: -40% -60%; pointer-events: none;
+  background: linear-gradient(105deg, transparent 42%, rgba(255,240,190,0.35) 50%, transparent 58%);
+  animation: shimmer 2.6s ease-in-out infinite;
+}
+@keyframes shimmer { from { transform: translateX(-45%); } to { transform: translateX(45%); } }
+.result.r-captain { box-shadow: 0 0 18px -4px var(--rc); }
+.result.r-admiral { box-shadow: 0 0 28px -2px var(--rc); background: radial-gradient(ellipse at 20% 50%, color-mix(in srgb, var(--rc) 25%, rgba(6,10,20,0.85)), rgba(6,10,20,0.85) 70%); }
+@media (prefers-reduced-motion: reduce) { .skincard.r-admiral::after { animation: none; display: none; } }
 .skincard small { font-size: 10px; color: var(--rc); letter-spacing: 0.08em; text-transform: uppercase; }
 .skincard.equipped { outline: 2px solid var(--lamp); outline-offset: -2px; }
 .skincard .tool { margin-top: 4px; padding: 4px 10px; font-size: 10px; }
