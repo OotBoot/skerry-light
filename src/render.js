@@ -155,6 +155,21 @@ function drawGlitch(img, x, y, w, h, amt) {
 }
 
 // ---------- obstacles ----------
+// Once the beam has swept over a rock (or a wreck, or a log), it stays in sight for SK.SEEN_HOLD
+// seconds, then fades out over SK.SEEN_FADE. Called every frame for everything on the water.
+function rememberLit(list) {
+  for (const o of list) {
+    const l = litAt(o.x, o.y);
+    if (l > 0.02) { o.seenT = g.t; o.seenV = Math.min(1, l * 1.3); }
+  }
+}
+function afterglow(o) {
+  if (o.seenT == null) return 0;
+  const age = g.t - o.seenT;
+  if (age < 0) { o.seenT = null; return 0; }
+  if (age <= SK.SEEN_HOLD) return o.seenV;
+  return Math.max(0, o.seenV * (1 - (age - SK.SEEN_HOLD) / SK.SEEN_FADE));
+}
 function drawRock(r, p, vis) {
   if (vis < 0.02) return;
   const w = r.r * 2.2 * p.s, h = r.r * 0.8 * p.s, x = p.x, y = p.y;
@@ -342,6 +357,7 @@ function drawScene() {
   }
 
   // everything on the water, far to near
+  if (!g.backrooms) { rememberLit(g.rocks); rememberLit(g.wrecks); rememberLit(g.timber); }
   const items = [];
   const add = (kind, o) => { const c = cam(o.x, o.y, 0); if (c.f > SK.NEAR + 2) items.push({ kind, o, c }); };
   for (const o of g.rocks) add('rock', o);
@@ -368,7 +384,9 @@ function drawScene() {
     if (it.kind === 'wall') { drawWall(it.o); continue; }
     if (it.kind === 'exit') { drawExitSign(); continue; }
     const q = proj(it.c); if (q.x < -500 || q.x > W + 500) continue;
-    const o = it.o, vis = visibility(o.x, o.y);
+    const o = it.o;
+    let vis = visibility(o.x, o.y);
+    if (it.kind === 'rock' || it.kind === 'wreck' || it.kind === 'timber') vis = Math.max(vis, afterglow(o));
     if (it.kind === 'rock') drawRock(o, q, vis);
     else if (it.kind === 'wreck') drawWreck(o, q, vis);
     else if (it.kind === 'timber') drawTimber(o, q, vis);

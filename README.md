@@ -1,6 +1,6 @@
 # Skerry Light
 
-A first-person night-sailing horror game for the browser. You have the helm of a small brig coming in under the cliffs at Skerry Light. The water is full of rocks, old wrecks and drifting timber, and you can only see them while the lighthouse beam is on them. The moment it moves on, they are gone.
+A first-person night-sailing horror game for the browser. You have the helm of a small brig coming in under the cliffs at Skerry Light. The water is full of rocks, old wrecks and drifting timber, and you only see them when the lighthouse beam sweeps over them. They stay in sight for about 3 seconds after it moves on, then fade back into the dark.
 
 ## The story
 
