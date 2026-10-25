@@ -107,7 +107,7 @@ setInterval(() => {
 attachWebSocket(server, '/ws', 8 * 1024, ws => {
   if (clients.size >= MAX_PLAYERS) { ws.close(1013, 'The harbour is full. Try again later.'); return; }
   const id = randomBytes(8).toString('hex');
-  const c = { id, ws, presence: {}, alive: true, tokens: 80, last: Date.now(), lastLobbySend: new Map(), lastCrewSeen: new Map(), pending: new Set() };
+  const c = { id, ws, presence: {}, alive: true, lastMsg: Date.now(), tokens: 80, last: Date.now(), lastLobbySend: new Map(), lastCrewSeen: new Map(), pending: new Set() };
   clients.set(id, c);
   send(c, { t: 'hello', peer: id, peers: [...clients.values()].filter(o => o !== c).map(o => ({ peer: o.id, presence: o.presence })) });
 
@@ -124,6 +124,12 @@ attachWebSocket(server, '/ws', 8 * 1024, ws => {
     const p = cleanPresence(m.presence);
     if (!p) return;
     c.presence = p;
+    c.lastMsg = now;
+    // the same browser tab on a new connection (a phone that slept or lost signal): drop the old one now
+    // rather than letting it linger as a stale copy until its heartbeat times out
+    if (typeof p.sid === 'string') {
+      for (const o of clients.values()) if (o !== c && o.presence && o.presence.sid === p.sid && now - o.lastMsg > 9000) o.ws.terminate();
+    }
     relay(c);
   });
   ws.on('close', () => {
@@ -141,7 +147,7 @@ setInterval(() => {
     c.alive = false;
     c.ws.ping();
   }
-}, 30000);
+}, 10000);
 
 server.listen(PORT, () => {
   console.log('Skerry Light is running at http://localhost:' + PORT);

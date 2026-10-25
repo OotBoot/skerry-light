@@ -3168,6 +3168,14 @@ const NET = {
   message: '',
 };
 const MAX_CREW = 8;
+// One id per browser tab, kept across reloads. A phone that sleeps or loses signal comes back on a new
+// connection while the old one can linger for a while; the shared id lets everyone (and the server)
+// see they're the same sailor and drop the stale copy, so it can't hold the host's place or look at sea.
+NET.sid = (() => {
+  try { let s = sessionStorage.getItem('skerry-sid'); if (!s) { s = Math.random().toString(36).slice(2, 12); sessionStorage.setItem('skerry-sid', s); } return s; }
+  catch (e) { return Math.random().toString(36).slice(2, 12); }
+})();
+const STALE_MS = 35000;   // a crewmate we haven't heard from for this long is treated as gone
 const SLOT_COLORS = ['#ffcf86', '#ff9fb0', '#9fe6c2', '#9fc4ff', '#d7a6ff', '#ffe066', '#7fe0e0', '#ff9a66'];
 const CREW_WORDS = ['gannet', 'wren', 'solan', 'tern', 'kestrel', 'brae', 'skerry', 'gull', 'merle', 'selkie'];
 let crewMode = false;
@@ -3195,24 +3203,37 @@ async function netInit() {
   });
   NET.status = 'ready';
   if (typeof room.onConnection === 'function') room.onConnection(c => { NET.connected = c; renderNetBanner(); }, () => {});
-  room.presence({ app: 'skerry', crew: null, nick: NET.nick || null }).catch(() => {});
+  room.presence({ app: 'skerry', sid: NET.sid, crew: null, nick: NET.nick || null }).catch(() => {});
   renderTogether();
   // an invite link opens straight into its crew, once we've heard who is here
   if (NET.pendingJoin) setTimeout(() => { if (NET.pendingJoin && !NET.crew && state === 'title') joinCrew(NET.pendingJoin); NET.pendingJoin = null; }, 1800);
 }
 
 function onPeersChange(change) {
-  NET.peers = change.peers.filter(p => p.kind === 'viewer');
-  const me = NET.peers.find(p => p.isMe && p.sameTab);
+  const all = change.peers.filter(p => p.kind === 'viewer');
+  const me = all.find(p => p.isMe && p.sameTab);
   if (me) NET.myPeer = me.peer;
+  // one entry per sailor: if the same tab shows up twice (an old connection that hasn't been dropped
+  // yet), keep this tab's own entry or else the most recently heard one
+  const bySid = new Map(), out = [];
+  for (const p of all) {
+    const sid = p.presence && typeof p.presence.sid === 'string' ? p.presence.sid : null;
+    if (!sid) { out.push(p); continue; }
+    if (p.isMe && p.sameTab) { bySid.set(sid, p); continue; }
+    if (sid === NET.sid) continue;   // a stale copy of me
+    const prev = bySid.get(sid);
+    if (!prev || (!(prev.isMe && prev.sameTab) && (p.updatedAt || 0) > (prev.updatedAt || 0))) bySid.set(sid, p);
+  }
+  NET.peers = out.concat([...bySid.values()]);
   syncMates();
   checkLaunch();
 }
 
 // ---------- crew bookkeeping ----------
+function fresh(p) { return (p.isMe && p.sameTab) || Date.now() - (p.updatedAt || 0) < STALE_MS; }
 function crewOf(code) {
   return NET.peers
-    .filter(p => p.presence && p.presence.app === 'skerry' && p.presence.crew === code)
+    .filter(p => p.presence && p.presence.app === 'skerry' && p.presence.crew === code && fresh(p))
     .sort((a, b) => (a.presence.joinedAt || 0) - (b.presence.joinedAt || 0) || (a.peer < b.peer ? -1 : 1));
 }
 function members() {
@@ -3246,7 +3267,7 @@ function refreshNames() {
 
 function myPresence() {
   return {
-    app: 'skerry', crew: NET.crew, joinedAt: NET.joinedAt, ready: NET.ready, nick: NET.nick || null,
+    app: 'skerry', sid: NET.sid, crew: NET.crew, joinedAt: NET.joinedAt, ready: NET.ready, nick: NET.nick || null,
     launch: amHostSafe() ? NET.launch : null,
     voy: NET.launch ? NET.launch.voy : 0, st: NET.st,
     bell: NET.bells, flare: NET.flare, chat: NET.chat, ghost: NET.ghost, stats: NET.stats,
@@ -3288,21 +3309,31 @@ function crewSummaries() {
   const crews = new Map();
   for (const p of NET.peers) {
     const c = p.presence && p.presence.app === 'skerry' && p.presence.crew;
-    if (typeof c !== 'string' || !/^[a-z]+-\d{1,4}$/.test(c) || (p.isMe && p.sameTab)) continue;
+    if (typeof c !== 'string' || !/^[a-z]+-\d{1,4}$/.test(c) || (p.isMe && p.sameTab) || !fresh(p)) continue;
     if (!crews.has(c)) crews.set(c, { code: c, n: 0 });
     crews.get(c).n++;
   }
   for (const c of crews.values()) {
     const h = crewOf(c.code)[0];
     c.host = h ? nameOf(h, 0) : '';
+    // at sea only while someone in it is actually sailing the current voyage (not between voyages)
     const L = h && h.presence && h.presence.launch;
-    c.atSea = L && Number.isFinite(L.voy) ? 1 : 0;
+    const sailing = L && Number.isFinite(L.voy) && crewOf(c.code).some(p => p.presence.st === 'sail' && p.presence.voy === L.voy);
+    c.atSea = sailing ? 1 : 0;
     c.voy = c.atSea ? L.voy | 0 : 0;
   }
   return [...crews.values()];
 }
 function enterCrew(code) {
-  NET.crew = code; NET.joinedAt = Date.now(); NET.ready = false; NET.st = null;
+  // coming back to the same crew in the same tab (a reload, or the phone waking up) keeps your place,
+  // so a host who reconnects is still the host
+  let joinedAt = Date.now();
+  try {
+    const prev = JSON.parse(sessionStorage.getItem('skerry-crew') || 'null');
+    if (prev && prev.crew === code && Number.isFinite(prev.joinedAt)) joinedAt = prev.joinedAt;
+    sessionStorage.setItem('skerry-crew', JSON.stringify({ crew: code, joinedAt }));
+  } catch (e) {}
+  NET.crew = code; NET.joinedAt = joinedAt; NET.ready = false; NET.st = null;
   NET.launch = null; NET.launchSeen = null; NET.results = null; NET.message = '';
   NET.myHostFlag = false;
   crewMode = true;
@@ -3314,11 +3345,12 @@ function enterCrew(code) {
   showCrewCard();
 }
 function leaveCrew(silent) {
+  if (!silent) { try { sessionStorage.removeItem('skerry-crew'); } catch (e) {} }
   NET.crew = null; NET.ready = false; NET.st = null; NET.launch = null; NET.results = null; NET.myHostFlag = false;
   crewMode = false;
   NET.mates.clear();
   try { history.replaceState(null, '', location.pathname + location.search); } catch (e) {}
-  if (NET.room && !silent) NET.room.presence({ app: 'skerry', crew: null, nick: NET.nick || null, joinedAt: null, ready: null, launch: null, voy: null, st: null, bell: null, flare: null, shout: null, x: null, y: null, h: null, v: null, hull: null, stage: null, mx: null, my: null, px: null, py: null, chat: null, ghost: null, stats: null }).catch(() => {});
+  if (NET.room && !silent) NET.room.presence({ app: 'skerry', sid: NET.sid, crew: null, nick: NET.nick || null, joinedAt: null, ready: null, launch: null, voy: null, st: null, bell: null, flare: null, shout: null, x: null, y: null, h: null, v: null, hull: null, stage: null, mx: null, my: null, px: null, py: null, chat: null, ghost: null, stats: null }).catch(() => {});
   stopSpectating();
   if (!silent) toTitle();
 }
@@ -3344,6 +3376,13 @@ function checkLaunch() {
   const L = h && (h.peer === NET.myPeer ? NET.launch : h.presence && h.presence.launch);
   if (!L || typeof L !== 'object' || !L.id || L.id === NET.launchSeen) return;
   if (!Number.isFinite(L.seed) || !Number.isFinite(L.voy) || !Number.isFinite(L.at)) return;
+  // joining a crew between voyages: the host still advertises the last launch, but that voyage is
+  // over, so wait for the next one instead of sailing out alone into it. Join a voyage in progress only
+  // while someone (the host counts: it is marked at sea the moment it launches) is really still out on it.
+  if (h.peer !== NET.myPeer) {
+    const someoneOut = crewOf(NET.crew).some(p => p.peer !== NET.myPeer && p.presence.st === 'sail' && p.presence.voy === L.voy);
+    if (!someoneOut) return;
+  }
   NET.launchSeen = L.id;
   NET.launch = { id: String(L.id), seed: L.seed | 0, voy: Math.max(1, Math.min(99, L.voy | 0)), at: L.at };
   NET.results = null;
@@ -3625,6 +3664,10 @@ $('crewList').addEventListener('click', e => {
   if (b && !b.disabled) joinCrew(b.dataset.code);
 });
 setInterval(() => { if (state === 'title' && !$('titleCard').hidden) renderTogether(); }, 1000);
+// a quiet heartbeat while in a crew, so crewmates can tell a sailor who is just waiting from one who has gone
+setInterval(() => { if (NET.crew && state !== 'play') send({ beat: Date.now() % 100000 }); }, 8000);
+// and the crew screen notices when someone drops out, even if nothing else changes
+setInterval(() => { if (NET.crew && !$('crewCard').hidden) { checkLaunch(); renderCrewCard(); } }, 2000);
 
 // ---------- watching a crewmate ----------
 function startSpectating(peer) {
@@ -3679,7 +3722,7 @@ function crewRowStatus(p, i, voy) {
     return statusWord(NET.st);
   }
   if (!NET.launch) return i === 0 ? 'Ready' : (pr.ready ? 'Ready' : 'Not ready');
-  return pr.voy === voy ? statusWord(pr.st) : 'Joining';
+  return pr.voy === voy ? statusWord(pr.st) : 'Waiting to sail';
 }
 function statusWord(st) {
   return { sail: 'At sea', port: 'In harbour', sunk: 'Sunk', taken: 'Taken by Maren' }[st] || 'Waiting';
