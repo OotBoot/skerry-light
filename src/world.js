@@ -28,7 +28,8 @@ function makeVoyage(n, attract, seed) {
 function buildVoyage(n, attract) {
   const HB = SK.HARBOUR;
   const sb = attract ? rand(-0.6, 0.6) : rand(-0.95, 0.95);
-  const sd = attract ? 760 : 880 + n * 60;
+  const W = SK.WORLD;
+  const sd = attract ? 760 : (880 + n * 60) * W;
   const sx = Math.sin(sb) * sd, sy = Math.cos(sb) * sd;
   const ship = { x: sx, y: sy, h: bearingOf(HB.x - sx, HB.y - sy) + rand(-0.12, 0.12), v: 7, sail: 0.55, rudder: 0, hull: SK.HULL, inv: 0, bob: 0 };
 
@@ -53,8 +54,9 @@ function buildVoyage(n, attract) {
     if (ok(x, y, r)) addWreck(x, y, r, 'Gannet');
   }
   const names = SK.WRECK_NAMES.slice().sort(() => RNG() - 0.5);
-  for (let tries = 0; tries < 2000 && wrecks.length < 3 + n; tries++) {
-    const b = rand(-1.45, 1.45), d = rand(150, 1050), r = rand(11, 19);
+  const wreckCount = attract ? 3 : Math.round((3 + n) * 2);
+  for (let tries = 0; tries < 4000 && wrecks.length < wreckCount; tries++) {
+    const b = rand(-1.45, 1.45), d = rand(150, 1050 * (attract ? 1 : W)), r = rand(11, 19);
     const x = Math.sin(b) * d, y = Math.cos(b) * d;
     if (ok(x, y, r)) addWreck(x, y, r, names[wrecks.length % names.length]);
   }
@@ -62,7 +64,7 @@ function buildVoyage(n, attract) {
   // wreckers' false lights: a red and green pair, like the pier lamps, over a hidden cluster of rocks
   const lures = [];
   const dirX = (HB.x - sx) / Math.hypot(HB.x - sx, HB.y - sy), dirY = (HB.y - sy) / Math.hypot(HB.x - sx, HB.y - sy);
-  for (let tries = 0; tries < 900 && lures.length < 4 + n; tries++) {
+  for (let tries = 0; tries < 1500 && lures.length < (attract ? 2 : Math.round((4 + n) * 1.6)); tries++) {
     const side = RNG() < 0.5 ? -1 : 1, off = rand(70, 170) * side;
     const [bx, by] = along(rand(0.25, 0.8), 0);
     const x = bx + dirY * off, y = by - dirX * off;
@@ -72,18 +74,20 @@ function buildVoyage(n, attract) {
     lures.push({ x, y, px: dirX, py: dirY, ph: rand(0, 6.28), gone: false });
   }
 
-  const total = 26 + n * 6, onLine = Math.round(total * 0.45);
-  for (let tries = 0; tries < 4000 && rocks.length < onLine; tries++) {
-    const [x, y] = along(rand(0.12, 0.9), 65), r = rand(6, 16);
+  // a bigger sea needs more skerries: about the same density along the way in, and plenty off it
+  const scale = attract ? 1 : W * 1.3;
+  const total = Math.round((26 + n * 6) * scale), onLine = Math.round(total * 0.45);
+  for (let tries = 0; tries < 12000 && rocks.length < onLine; tries++) {
+    const [x, y] = along(rand(0.08, 0.92), 65 * (attract ? 1 : 1.6)), r = rand(6, 16);
     if (ok(x, y, r)) addRock(x, y, r);
   }
-  for (let tries = 0; tries < 4000 && rocks.length < total; tries++) {
-    const b = rand(-1.5, 1.5), d = rand(90, 1100), r = rand(5, 18);
+  for (let tries = 0; tries < 12000 && rocks.length < total; tries++) {
+    const b = rand(-1.5, 1.5), d = rand(90, 1100 * (attract ? 1 : W)), r = rand(5, 18);
     const x = Math.sin(b) * d, y = Math.cos(b) * d;
     if (ok(x, y, r)) addRock(x, y, r);
   }
 
-  for (let i = 0; i < 8 + n * 3; i++) timber.push(spawnTimber(sx, sy));
+  for (let i = 0; i < Math.round((8 + n * 3) * (attract ? 1 : W)); i++) timber.push(spawnTimber(sx, sy));
 
   let path = findPath(sx, sy, HB.x, 80, solid);
   if (!path) path = [{ x: sx, y: sy }, { x: HB.x, y: 80 }];
@@ -95,7 +99,7 @@ function buildVoyage(n, attract) {
 function spawnTimber(sx, sy) {
   const HB = SK.HARBOUR;
   for (let tries = 0; tries < 50; tries++) {
-    const b = rand(-1.45, 1.45), d = rand(150, 1050);
+    const b = rand(-1.45, 1.45), d = rand(150, 1050 * SK.WORLD);
     const x = Math.sin(b) * d, y = Math.cos(b) * d;
     if (y < 70 || Math.hypot(x - HB.x, y - HB.y) < 130 || Math.hypot(x - sx, y - sy) < 60) continue;
     const a = rand(0, 6.28), v = rand(1.2, 3);
@@ -110,14 +114,24 @@ function findPath(sx, sy, tx, ty, blockers) {
   const x0 = Math.min(sx, tx) - 320, x1 = Math.max(sx, tx) + 320, y0 = 0, y1 = Math.max(sy, ty) + 320;
   const nx = Math.ceil((x1 - x0) / C), ny = Math.ceil((y1 - y0) / C), N = nx * ny;
   const blk = new Uint8Array(N);
-  for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) {
-    const x = x0 + (i + 0.5) * C, y = y0 + (j + 0.5) * C;
-    let b = y < 50;
-    if (!b) for (const o of blockers) {
-      const lim = o.r + PAD;
-      if (Math.abs(o.x - x) < lim && Math.abs(o.y - y) < lim && Math.hypot(o.x - x, o.y - y) < lim) { b = true; break; }
+  // the shore, then each obstacle marks only the cells around it (fast even on a big sea)
+  for (let j = 0; j < ny; j++) if (y0 + (j + 0.5) * C < 50) blk.fill(1, j * nx, (j + 1) * nx);
+  for (const o of blockers) {
+    const lim = o.r + PAD;
+    const i0 = clamp(Math.floor((o.x - lim - x0) / C), 0, nx - 1), i1 = clamp(Math.floor((o.x + lim - x0) / C), 0, nx - 1);
+    const j0 = clamp(Math.floor((o.y - lim - y0) / C), 0, ny - 1), j1 = clamp(Math.floor((o.y + lim - y0) / C), 0, ny - 1);
+    for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) {
+      if (Math.hypot(x0 + (i + 0.5) * C - o.x, y0 + (j + 0.5) * C - o.y) < lim) blk[j * nx + i] = 1;
     }
-    blk[j * nx + i] = b ? 1 : 0;
+  }
+  // obstacles bucketed by 60 m square, for the line-of-sight checks below
+  const B = 60, buckets = new Map();
+  for (const o of blockers) {
+    const lim = o.r + 11;
+    for (let bx = Math.floor((o.x - lim) / B); bx <= Math.floor((o.x + lim) / B); bx++)
+      for (let by = Math.floor((o.y - lim) / B); by <= Math.floor((o.y + lim) / B); by++) {
+        const k = bx + ',' + by; if (!buckets.has(k)) buckets.set(k, []); buckets.get(k).push(o);
+      }
   }
   const idx = (x, y) => clamp(Math.floor((y - y0) / C), 0, ny - 1) * nx + clamp(Math.floor((x - x0) / C), 0, nx - 1);
   const s = idx(sx, sy), t = idx(tx, ty);
@@ -168,14 +182,15 @@ function findPath(sx, sy, tx, ty, blockers) {
     for (let i = 0; i <= n; i++) {
       const x = a.x + (b.x - a.x) * i / n, y = a.y + (b.y - a.y) * i / n;
       if (y < 50) return false;
-      for (const o of blockers) if (Math.hypot(o.x - x, o.y - y) < o.r + 11) return false;
+      const near = buckets.get(Math.floor(x / B) + ',' + Math.floor(y / B));
+      if (near) for (const o of near) if (Math.hypot(o.x - x, o.y - y) < o.r + 11) return false;
     }
     return true;
   };
   const out = [raw[0]];
   let i = 0;
   while (i < raw.length - 1) {
-    let j = raw.length - 1;
+    let j = Math.min(raw.length - 1, i + 60);
     while (j > i + 1 && !clear(raw[i], raw[j])) j--;
     out.push(raw[j]); i = j;
   }

@@ -221,13 +221,13 @@ function drawScene() {
   }
 
   const HB = SK.HARBOUR;
-  fillPoly([[-6000, 0, 1.5], [6000, 0, 1.5], [6000, -6000, 1.5], [-6000, -6000, 1.5]], '#070b09');
-  fillPoly([[-6000, -30, 30], [6000, -30, 30], [6000, -6000, 60], [-6000, -6000, 60]], '#0a100c');
+  fillPoly([[-15000, 0, 1.5], [15000, 0, 1.5], [15000, -15000, 1.5], [-15000, -15000, 1.5]], '#070b09');
+  fillPoly([[-15000, -30, 30], [15000, -30, 30], [15000, -15000, 60], [-15000, -15000, 60]], '#0a100c');
   fillPoly([[-40, 4, 22], [40, 4, 22], [55, -60, 22], [-60, -60, 22]], '#0b120d');
   fillPoly([[HB.x - 26, -2, 2], [HB.x - 20, -2, 2], [HB.x - 20, 46, 2], [HB.x - 26, 46, 2]], '#1a1612');
   fillPoly([[HB.x + 20, -2, 2], [HB.x + 26, -2, 2], [HB.x + 26, 46, 2], [HB.x + 20, 46, 2]], '#1a1612');
 
-  const far = 1500;
+  const far = SK.BEAM_RANGE;
   const beamOn = Math.abs(g.beam) < SK.SHADE + SK.HALF_BEAM;
   const fl = [Math.sin(g.beam - SK.HALF_BEAM) * far, Math.cos(g.beam - SK.HALF_BEAM) * far];
   const fr = [Math.sin(g.beam + SK.HALF_BEAM) * far, Math.cos(g.beam + SK.HALF_BEAM) * far];

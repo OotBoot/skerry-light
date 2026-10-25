@@ -160,7 +160,7 @@ function update(dt) {
 
   for (const o of g.timber) {
     o.x += o.vx * dt; o.y += o.vy * dt; o.ang += o.spin * dt;
-    if (o.y < 60 || Math.hypot(o.x, o.y) > 1250 || Math.hypot(o.x - SK.HARBOUR.x, o.y - SK.HARBOUR.y) < 110) Object.assign(o, spawnTimber(ship.x, ship.y));
+    if (o.y < 60 || Math.hypot(o.x, o.y) > 1250 * SK.WORLD || Math.hypot(o.x - SK.HARBOUR.x, o.y - SK.HARBOUR.y) < 110) Object.assign(o, spawnTimber(ship.x, ship.y));
   }
 
 

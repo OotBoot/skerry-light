@@ -30,6 +30,7 @@ The only thing she will not go near is **Plimsoll**, the shark who walked up out
 - **Wreckers' false lights** are red and green lamps like the harbour piers, hung over a cluster of rocks off the true course; there are four pairs on the first voyage and one more each voyage after. The lighthouse beam makes them vanish, and the bearing strip always shows the real harbour.
 - **Flares** light everything within 170 m for about seven seconds, for your whole crew, then take 35 seconds to reload.
 - **Hull**: rocks, wrecks, drifting timber, the shore, the piers and the drowned each cost a plank. Three and she sinks.
+- **The sea**: voyages start about 2.4 km out (further each voyage), through a wide stretch of skerries, wrecks and drifting timber.
 - **Harbour**: steer between the real red and green pier lamps. Each voyage after that has more rocks, wreckage and drowned, and the beam turns slower.
 
 ## Sailing together

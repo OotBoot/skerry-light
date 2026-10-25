@@ -6,7 +6,8 @@
 const SK = {
   HALF_BEAM: 0.15,        // half-width of the lighthouse beam, radians
   SHADE: 1.75,            // the landward side of the lamp is blacked out past this bearing
-  BEAM_RANGE: 1700,
+  WORLD: 2.5,             // how far out to sea the voyages start, compared with the first versions
+  BEAM_RANGE: 3600,
   CAM_H: 5,               // eye height on deck
   NEAR: 1,
   HULL: 3,
