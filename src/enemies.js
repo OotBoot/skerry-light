@@ -129,7 +129,8 @@ function updateEnemies(dt) {
     const pan = clamp(angDiff(bearingOf(d.x - ship.x, d.y - ship.y), ship.h) / (fov / 2), -1, 1);
     d.splashT -= dt;
     if (dist < 90 && d.splashT <= 0) { d.splashT = rand(1.2, 2.6); sfxSplash(pan, 1 - dist / 90); }
-    if (Math.hypot(g.plim.x - d.x, g.plim.y - d.y) < 12) {
+    // he only snaps at the drowned he walks right into, and not every time
+    if (Math.hypot(g.plim.x - d.x, g.plim.y - d.y) < 7 && g.plim.walking && Math.random() < dt * 2) {
       d.dead = true;
       g.stats.eaten++;
       burst(d.x, d.y, ['#c8d6e8', '#ece4cf'], 14, 6, 6);

@@ -15,8 +15,8 @@ const SK = {
   LANTERN: 48,            // reach of your own deck lantern
   MAREN_STAGES: [400, 260, 160, 90, 35],   // how far away she stands at each stage
   // she comes one stage nearer every full turn of the beam, and slowly follows the ship between turns
-  PLIMSOLL_GUARD: 75,     // this close to Plimsoll and she holds where she is
-  PLIMSOLL_PATIENCE: 7,   // seconds he waits for a ship that falls behind before walking on
+  PLIMSOLL_GUARD: 45,     // this close to Plimsoll and she holds where she is
+  PLIMSOLL_PATIENCE: 4,   // seconds he waits for a ship that falls behind before walking on
   CREW_GUARD: 55,         // the same, for ships sailing close together
   BELL_COOLDOWN: 15,
   BELL_PUSH: 3,           // stages the bell drives her back

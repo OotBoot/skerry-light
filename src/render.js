@@ -151,6 +151,8 @@ function drawMate(m, p, vis) {
       ctx.moveTo(mx - sailW * 0.55, y - hh - sailH * 0.12); ctx.lineTo(mx + sailW * 0.55, y - hh - sailH * 0.12);
       ctx.lineTo(mx + sailW * 0.4, y - hh - sailH); ctx.lineTo(mx - sailW * 0.4, y - hh - sailH); ctx.closePath(); ctx.fill();
     }
+    // their pennant at the masthead
+    if (m.pennant) drawPennant(ctx, x + dir * -0.2 * w * 1.6, y - hh - sailH * 1.08, Math.max(4, L * 0.42), m.pennant, g.t + m.bob);
     ctx.globalAlpha = 1;
   }
   lamp(x, y - hh - sailH * 0.3, col, Math.max(1.8, 1.3 * Math.sqrt(p.s)));
@@ -344,6 +346,16 @@ function drawDeck() {
   ctx.beginPath(); ctx.moveTo(cx - W * 0.75, H - 9); ctx.lineTo(cx - 6, tipY - 2); ctx.moveTo(cx + W * 0.75, H - 9); ctx.lineTo(cx + 6, tipY - 2); ctx.stroke();
   ctx.fillStyle = skin.wood;
   ctx.beginPath(); ctx.moveTo(cx - 9, tipY + 6); ctx.lineTo(cx + 9, tipY + 6); ctx.lineTo(cx + 2, hy + H * 0.07); ctx.lineTo(cx - 2, hy + H * 0.07); ctx.closePath(); ctx.fill();
+  // your pennant, flying from a short staff at the tip of the bowsprit
+  const pen = 'pennant' in ship ? ship.pennant : myPennant();
+  if (pen) {
+    const px = cx, py = hy + H * 0.07, staff = Math.max(14, H * 0.03);
+    ctx.strokeStyle = skin.wood; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(px, py - staff); ctx.stroke();
+    ctx.globalAlpha = Math.max(0.55, Math.min(1, 0.55 + g.glare));
+    drawPennant(ctx, px + 1, py - staff + 2, Math.min(56, W * 0.06), pen, g.t);
+    ctx.globalAlpha = 1;
+  }
   ctx.strokeStyle = 'rgba(20,14,10,0.9)'; ctx.lineWidth = 1.5;
   ctx.beginPath(); ctx.moveTo(cx, hy + H * 0.07); ctx.lineTo(cx - W * 0.2, -10); ctx.moveTo(cx, hy + H * 0.07); ctx.lineTo(cx + W * 0.05, -10); ctx.stroke();
   const sp = Math.min(1, ship.v / 12);
@@ -369,7 +381,7 @@ function drawDread() {
 }
 
 function drawCompass() {
-  const w = Math.min(W - 32, 560), x0 = cx - w / 2, y = 72, h = 26, span = 2.2;
+  const w = Math.min(W - 32, 560), x0 = cx - w / 2, y = W <= 520 ? 116 : 72, h = 26, span = 2.2;
   const xb = b => cx + (angDiff(b, ship.h) / span) * (w / 2);
   const inStrip = x => x > x0 + 3 && x < x0 + w - 3;
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);

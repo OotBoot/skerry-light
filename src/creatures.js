@@ -31,7 +31,7 @@ function placeMaren(stage) {
 
 // how far ahead he keeps, and how far his protection reaches, both grow with the ship's speed
 function plimsollLead() { return 80 + Math.max(0, ship.v - 12) * 2.5; }
-function plimsollGuarding() { return Math.hypot(g.plim.x - ship.x, g.plim.y - ship.y) < SK.PLIMSOLL_GUARD + Math.max(0, ship.v - 12) * 1.2; }
+function plimsollGuarding() { return Math.hypot(g.plim.x - ship.x, g.plim.y - ship.y) < SK.PLIMSOLL_GUARD + Math.max(0, ship.v - 12) * 0.6; }
 
 // called every full turn of the beam
 function marenTurn() {

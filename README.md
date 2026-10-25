@@ -23,21 +23,26 @@ The only thing she will not go near is **Plimsoll**, the shark who walked up out
 | Shout to crew | 1 Rocks here! · 2 Follow me! · 3 She's near me! |
 
 - **Maren** comes one stage nearer every full turn of the beam: 400 m, 260, 160, 90, then right at the bow, and one more turn after that she takes the ship. Between turns she slowly follows your ship, so sailing hard can buy you some distance. You hear her heartbeat and see red at the edges as she closes in.
-- **Plimsoll**: while you are within 75 m of him, Maren holds where she is (she no longer falls back). He keeps pace with your ship at any speed: the faster you sail, the faster he walks, the further ahead he keeps and the further his protection reaches, and if you overtake him he runs to get back in front. He waits about 7 seconds for a ship that falls behind, then walks on alone.
+- **Plimsoll**: while you are within 45 m of him, Maren holds where she is (she doesn't fall back), so you have to sail close behind him. He keeps pace with your ship at any speed, keeping further ahead the faster you go, and runs to get back in front if you overtake him. He waits only about 4 seconds for a ship that falls behind, then walks on alone. He sometimes snaps up a drowned sailor he walks into.
 - **The bell** drives Maren back three stages when she is anywhere ahead of you (or anywhere at all once she is close), sinks the drowned within 150 m, and freezes Knock for 20 seconds within 450 m. It swings again in 15 seconds, one more for each voyage.
-- **The drowned** crew of the Gannet swim after you at about 5 m/s, faster on later voyages. Several are out at once, more each voyage. Their eyes always catch the light. One that reaches a ship going under 9 knots climbs aboard and costs a plank; faster ships shake them off. Plimsoll eats any he catches.
+- **The drowned** crew of the Gannet swim after you at about 5 m/s, faster on later voyages. Several are out at once, more each voyage. Their eyes always catch the light. One that reaches a ship going under 9 knots climbs aboard and costs a plank; faster ships shake them off. Plimsoll sometimes snaps up one he walks into.
 - **Knock**, the Gannet's walking figurehead, moves only while you can't see him. Listen for three knocks on wood (you can hear him from about 650 m, quicker and louder as he nears), turn to face him, and he stops: within 150 m facing him is enough even in the dark, and further off any light on him will do. He is a little faster than your ship, so running only buys time. If he reaches the hull his face lunges at you and he strikes for a plank, then he's thrown far back and waits 30 seconds; if that blow sinks her, the voyage ends. The bell freezes him for 15 seconds within 300 m. One Knock at a time at first, up to two on later voyages.
-- **Wreckers' false lights** are red and green lamps like the harbour piers, hung over a cluster of rocks off the true course; there are four pairs on the first voyage and one more each voyage after. The lighthouse beam makes them vanish, and the bearing strip always shows the real harbour.
+- **Wreckers' false lights** are red and green lamps like the harbour piers, hung over a cluster of rocks off the true course; there are two pairs on the first voyage and one more every second voyage. The lighthouse beam makes them vanish, and the bearing strip always shows the real harbour.
 - **Flares** light everything within 170 m for about seven seconds, for your whole crew, then take 35 seconds to reload.
 - **Hull**: rocks, wrecks, drifting timber, the shore, the piers and the drowned each cost a plank. Three and she sinks.
 - **The sea**: voyages start about 2.4 km out (further each voyage), through a wide stretch of skerries, wrecks and drifting timber.
 - **Harbour**: steer between the real red and green pier lamps. Each voyage after that has more rocks, wreckage and drowned, and the beam turns slower.
 
-## Crates and ship skins
+## Crates, skins and pennants
 
-Every voyage you play, whether you make harbour or go down, earns one **Skerry Crate**, and your first one is free. Open crates from the **Crates** button on the title, harbour, crew and end screens. A reel of skins spins and lands on your prize.
+Every voyage you play, whether you make harbour or go down, earns one **Skerry Crate**, and your first one is free. Open crates from the **Crates** button on the title, harbour, crew and end screens. A reel spins and lands on your prize.
 
-There are 14 skins to find, in five grades: **Deckhand** 79.9%, **Bosun** 16%, **Mate** 3.2%, **Captain** 0.64% and **Admiral** 0.26%. A skin changes your deck, rails, bowsprit and lantern as you see them, and your hull and sails as your crewmates see them. Crewmates' ships are lit by their own lanterns, so you can make out their skins from about 300 m away, and the crew list and in-game crew panel show which skin everyone is sailing. Crates and skins are kept in your browser on that device.
+There are 34 skins and 12 pennants to find, in five grades: **Deckhand** (sky blue) 79.9%, **Bosun** (violet) 16%, **Mate** (pink) 3.2%, **Captain** (red) 0.64% and **Admiral** (gold) 0.26%.
+
+- A **skin** changes your deck, rails, bowsprit and lantern as you see them, and your hull and sails as your crewmates see them. Crewmates' ships are lit by their own lanterns, so you can make out their skins from about 300 m away, and the crew list and in-game crew panel show which skin everyone is sailing.
+- A **pennant** flies from a staff at the tip of your bowsprit, and from your masthead for your crew. Fly one, or take it down, from the crate screen.
+
+Crates and loot are kept in your browser on that device.
 
 ## Sailing together
 
