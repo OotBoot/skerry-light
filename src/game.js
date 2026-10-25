@@ -6,6 +6,8 @@ let run = { voyages: 0, hits: 0 };
 let best = 0;
 try { best = parseInt(localStorage.getItem('skerry-helm-best') || '0', 10) || 0; } catch (e) {}
 const keys = {}, touches = new Map();
+let sailHold = 0;   // the on-screen sail buttons
+const SHOUTS = { 1: 'Rocks here!', 2: 'Follow me!', 3: "She's near me!" };
 
 function newVoyage(n, attract, seed, slot) {
   const v = makeVoyage(n, attract, seed);
@@ -17,7 +19,9 @@ function newVoyage(n, attract, seed, slot) {
     t: 0, n, attract, beam: beam0, beam0, launchAt: 0, launchId: null, period: Math.min(11, 6 + n * 0.8),
     rocks: v.rocks, wrecks: v.wrecks, timber: v.timber, path: v.path,
     parts: [], glare: 0, shake: 0, log: [], bell: 0, bellFlash: 0, wasLit: false, scareT: 0,
+    flares: [], flareCd: 0, repairT: 0, shoutT: 0,
   };
+  g.enemies = newEnemies(v.lures);
   g.plim = newPlimsoll(v.path);
   g.maren = newMaren(!attract, v.wrecks.find(w => w.name === 'Gannet'));
   renderHud();
@@ -56,12 +60,49 @@ function hit(nx, ny, what) {
 
 function wrapPi(a) { return ((a + Math.PI) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI) - Math.PI; }
 // Crew voyages run the light off the shared launch clock so every ship sees the same sweep.
-// Returns true when the beam has just completed a turn.
+// Returns true each half turn: when the beam passes north, and when it comes round behind the land.
 function advanceBeam(dt) {
   const prev = g.beam;
   if (g.launchAt) g.beam = wrapPi(g.beam0 + (Date.now() - g.launchAt) / 1000 / g.period * Math.PI * 2);
   else { g.beam += (Math.PI * 2 / g.period) * dt; if (g.beam > Math.PI) g.beam -= Math.PI * 2; }
-  return g.beam < prev - Math.PI;
+  return g.beam < prev - Math.PI || (prev < 0 && g.beam >= 0);
+}
+
+// ---------- flares, shouts and sailing in company ----------
+function fireFlare() {
+  if (state !== 'play' || g.flareCd > 0) return;
+  g.flareCd = SK.FLARE_COOLDOWN;
+  addFlare(ship.x, ship.y);
+  sfxFlare();
+  addLog('Flare away. Everything within ' + SK.FLARE_RADIUS + ' m is lit for a few seconds.', 'p');
+  if (crewMode) { NET.flares++; NET.flare = { n: NET.flares, x: Math.round(ship.x), y: Math.round(ship.y) }; send(); }
+}
+function addFlare(x, y) { g.flares.push({ x, y, t: SK.FLARE_TIME }); }
+function flareAt(x, y) {
+  let best = 0;
+  for (const f of g.flares) {
+    const d = Math.hypot(x - f.x, y - f.y);
+    if (d < SK.FLARE_RADIUS) best = Math.max(best, (1 - d / SK.FLARE_RADIUS) * Math.min(1, f.t / 1.5) * 1.4);
+  }
+  return Math.min(1, best);
+}
+function shout(k) {
+  if (state !== 'play' || !crewMode || g.shoutT > 0 || !SHOUTS[k]) return;
+  g.shoutT = 2;
+  NET.shouts++; NET.shout = { n: NET.shouts, k }; send();
+  sfxHorn(0, 0.8);
+  addLog('You: ' + SHOUTS[k], 'p');
+}
+function sailInCompany(dt) {
+  if (!crewMode || ship.hull >= SK.HULL) { g.repairT = 0; return; }
+  const mate = matesAtSea().find(m => Math.hypot(m.x - ship.x, m.y - ship.y) < SK.REPAIR_DIST);
+  if (!mate) { g.repairT = Math.max(0, g.repairT - dt * 0.5); return; }
+  if (g.repairT === 0) addLog('Sailing in company with ' + mate.name + '. Stay close and the carpenters can patch a plank.');
+  g.repairT += dt;
+  if (g.repairT >= SK.REPAIR_TIME) {
+    g.repairT = 0; ship.hull++; renderHud(); sfxChime();
+    addLog('With ' + mate.name + ' alongside, the carpenters patched a plank.', 'p');
+  }
 }
 
 function update(dt) {
@@ -78,7 +119,8 @@ function update(dt) {
     steer = (keys.ArrowRight || keys.d ? 1 : 0) - (keys.ArrowLeft || keys.a ? 1 : 0);
     sailIn = (keys.ArrowUp || keys.w ? 1 : 0) - (keys.ArrowDown || keys.s ? 1 : 0);
     for (const t of touches.values()) { if (t === 'L') steer -= 1; else if (t === 'R') steer += 1; else sailIn -= 1; }
-    steer = clamp(steer, -1, 1);
+    sailIn += sailHold;
+    steer = clamp(steer, -1, 1); sailIn = clamp(sailIn, -1, 1);
   }
   ship.rudder += (steer - ship.rudder) * Math.min(1, dt * 4);
   ship.sail = clamp(ship.sail + sailIn * 0.5 * dt, 0.15, 1);
@@ -110,6 +152,12 @@ function update(dt) {
 
   updatePlimsoll(dt);
   updateMaren(dt);
+  updateEnemies(dt);
+  sailInCompany(dt);
+  for (const f of g.flares) f.t -= dt;
+  g.flares = g.flares.filter(f => f.t > 0);
+  if (g.flareCd > 0) g.flareCd = Math.max(0, g.flareCd - dt);
+  if (g.shoutT > 0) g.shoutT -= dt;
 
   const meLit = litAt(ship.x, ship.y);
   const facing = Math.abs(angDiff(bearingOf(-ship.x, -ship.y), ship.h)) < fov / 2;
@@ -131,12 +179,25 @@ function update(dt) {
     const d = Math.hypot(ship.x - SK.HARBOUR.x, ship.y - SK.HARBOUR.y);
     $('dist').textContent = d > 1000 ? (d / 1852).toFixed(1) + 'nm' : Math.round(d) + 'm';
     updateBellButton();
+    updateFlareButton();
   }
+}
+
+let flareShown = -1;
+function updateFlareButton() {
+  const p = g.flareCd > 0 ? 1 - g.flareCd / SK.FLARE_COOLDOWN : 1, v = Math.round(p * 50);
+  if (v === flareShown) return;
+  flareShown = v;
+  const b = $('flareBtn');
+  b.style.setProperty('--p', p.toFixed(2));
+  b.classList.toggle('ready', p >= 1);
+  $('flareState').textContent = p >= 1 ? 'Ready' : 'Loading';
+  $('shoutRow').hidden = !crewMode;
 }
 
 let bellShown = -1;
 function updateBellButton() {
-  const max = SK.BELL_COOLDOWN + g.n * 1.5, p = g.bell > 0 ? 1 - g.bell / max : 1;
+  const max = bellCooldown(), p = g.bell > 0 ? 1 - g.bell / max : 1;
   const v = Math.round(p * 50);
   if (v === bellShown) return;
   bellShown = v;
@@ -161,7 +222,7 @@ function startRun() {
 function beginVoyage(n) {
   state = 'play';
   newVoyage(n, false);
-  bellShown = -1;
+  bellShown = -1; flareShown = -1;
   hideCards();
   $('hud').hidden = false; $('logbox').hidden = false;
   $('log').textContent = '';
@@ -174,7 +235,8 @@ function beginCrewVoyage(L, slot) {
   state = 'play';
   newVoyage(L.voy, false, L.seed, slot);
   g.launchAt = L.at; g.launchId = L.id;
-  bellShown = -1;
+  bellShown = -1; flareShown = -1;
+  stopSpectating();
   hideCards(); $('crewCard').hidden = true;
   $('hud').hidden = false; $('logbox').hidden = false;
   $('log').textContent = '';
@@ -270,12 +332,16 @@ addEventListener('keydown', e => {
     keys[k] = true; if (state === 'play') e.preventDefault();
   } else if ((k === ' ' || k === 'b') && state === 'play') {
     e.preventDefault(); if (!e.repeat) ringBell();
+  } else if (k === 'f' && state === 'play') {
+    if (!e.repeat) fireFlare();
+  } else if ((k === '1' || k === '2' || k === '3') && state === 'play') {
+    if (!e.repeat) shout(+k);
   } else if (k === 'm') {
     toggleSound();
   }
 });
 addEventListener('keyup', e => { keys[keyName(e)] = false; });
-addEventListener('blur', () => { for (const k in keys) keys[k] = false; touches.clear(); });
+addEventListener('blur', () => { for (const k in keys) keys[k] = false; touches.clear(); sailHold = 0; });
 
 function toggleSound() {
   setMuted(!AUD.muted);
@@ -288,6 +354,18 @@ $('nextBtn').addEventListener('click', () => beginVoyage(g.n + 1));
 $('againBtn').addEventListener('click', startRun);
 $('bellBtn').addEventListener('click', e => { ringBell(); e.currentTarget.blur(); cv.focus({ preventScroll: true }); });
 $('soundBtn').addEventListener('click', e => { audioInit(); toggleSound(); e.currentTarget.blur(); });
+$('flareBtn').addEventListener('click', e => { fireFlare(); e.currentTarget.blur(); cv.focus({ preventScroll: true }); });
+for (const k of [1, 2, 3]) $('shout' + k).addEventListener('click', e => { shout(k); e.currentTarget.blur(); cv.focus({ preventScroll: true }); });
+// hold to make or shorten sail, for phones
+for (const [id, dir] of [['sailUp', 1], ['sailDown', -1]]) {
+  const b = $(id);
+  const stop = () => { if (sailHold === dir) sailHold = 0; b.classList.remove('held'); };
+  b.addEventListener('pointerdown', e => { e.preventDefault(); sailHold = dir; b.classList.add('held'); try { b.setPointerCapture(e.pointerId); } catch (err) {} });
+  b.addEventListener('pointerup', stop);
+  b.addEventListener('pointercancel', stop);
+  b.addEventListener('lostpointercapture', stop);
+  b.addEventListener('contextmenu', e => e.preventDefault());
+}
 $('soundBtn').textContent = AUD.muted ? 'Sound off' : 'Sound on';
 addEventListener('resize', resize);
 

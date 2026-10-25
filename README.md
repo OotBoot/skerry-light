@@ -18,12 +18,18 @@ The only thing she will not go near is **Plimsoll**, the shark who walked up out
 | Sail | ↑ ↓ or W / S. On a phone, hold the middle to shorten sail |
 | Ring the bell | Space or B, or the bell button |
 | Sound | M, or the sound button |
+| Speed | ▲ ▼ buttons on the left, hold to change sail (or ↑ ↓) |
+| Flare | F, or the flare button |
+| Shout to crew | 1 Rocks here! · 2 Follow me! · 3 She's near me! |
 
-- **Follow Plimsoll.** His shoes glow faintly, so you can always see him, and the bearing strip shows where he is. He walks when you are close behind and waits if you fall back. While you are within 130 m of him, Maren cannot come nearer. Each turn of the beam she falls back one step instead.
-- **Maren** moves one step closer every time the beam completes a turn and you are away from Plimsoll: 380 m, 250, 150, 80, then right at the bow. One more turn after that and she takes the ship. You will hear her heartbeat and see red at the edges as she closes in.
-- **The bell** sends her all the way back, but only if she is in front of you when you ring it. After that it needs time to swing again.
-- **Hull**: rocks, wrecks, drifting timber, the shore and the piers each cost a plank. Three and she sinks.
-- **Harbour**: steer between the red and green pier lamps. Each voyage after that has more rocks and wreckage, and the beam turns slower, so the dark between sweeps lasts longer.
+- **Maren** comes one stage nearer every half turn of the beam: 340 m, 220, 130, 70, then right at the bow, and one more half turn after that she takes the ship. Between turns she keeps pace with you, and at the last stages she drifts into your path. You hear her heartbeat and see red at the edges as she closes in.
+- **Plimsoll**: while you are within 75 m of him, Maren holds where she is (she no longer falls back). He waits about 7 seconds for a ship that falls behind, then walks on alone.
+- **The bell** drives Maren back two stages, but only if she is in front of you, and it takes 26 seconds (more on later voyages) to swing again. It also sends nearby drowned back under.
+- **The drowned** crew of the Gannet swim after you at about 5 m/s, faster on later voyages. Their eyes always catch the light. One that reaches a ship going under 9 knots climbs aboard and costs a plank; faster ships shake them off. Plimsoll eats any he catches.
+- **Wreckers' false lights** are red and green lamps like the harbour piers, hung over a cluster of rocks off the true course. The lighthouse beam makes them vanish, and the bearing strip always shows the real harbour.
+- **Flares** light everything within 170 m for about seven seconds, for your whole crew, then take 35 seconds to reload.
+- **Hull**: rocks, wrecks, drifting timber, the shore, the piers and the drowned each cost a plank. Three and she sinks.
+- **Harbour**: steer between the real red and green pier lamps. Each voyage after that has more rocks, wreckage and drowned, and the beam turns slower.
 
 ## Sailing together
 
@@ -31,8 +37,11 @@ Up to three people can sail as a crew. Each of you sails your own brig through t
 
 - On the title screen, one person picks **Start a crew**. The others open the same page and pick that crew from the list.
 - The host (whoever started the crew) sets sail when everyone is in. Anyone who joins later sails straight in on the current voyage.
-- **Ships within 90 m of each other keep Maren back**, the same way Plimsoll does.
-- **A bell rung within 160 m of a crewmate** drives Maren away from both ships.
+- **Ships within 55 m of each other keep Maren where she is**, the same way Plimsoll does.
+- **Sailing in company**: stay within 45 m of a crewmate for 10 seconds and your carpenters patch a plank.
+- **A bell rung within 100 m of a crewmate** drives her back a stage on their ship too.
+- **Flares** light the water for everyone, and **shouts** (1, 2, 3) show over your ship on your crewmates' screens with how far away you are.
+- **Spectating**: once you sink, are taken or make harbour, you can watch a crewmate's voyage from their deck until the voyage ends.
 - A voyage ends when every ship has made harbour or gone down. If anyone made it, the crew goes on to the next voyage. If nobody did, the host can start again from voyage 1.
 
 Crews connect in one of two ways:
@@ -93,6 +102,7 @@ src/audio.js        all sound, made with the Web Audio API (no audio files)
 src/world.js        voyage generation and Plimsoll's pathfinding
 src/render.js       the camera, sea, obstacles, lighthouse, deck, bearing strip and jumpscare
 src/creatures.js    Maren and Plimsoll: behaviour, animation and drawing
+src/enemies.js      the drowned crew and the wreckers' false lights
 src/game.js         game state, update step, input and screens
 src/transport.js    connects to the crew server outside claude.ai
 src/net.js          crews: lobby, shared voyages, crewmates' ships

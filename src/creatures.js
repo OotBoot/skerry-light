@@ -1,11 +1,13 @@
 // The two that walk on the water off Skerry Light.
 //
 // Maren Holm, the keeper's wife, rowed out in 1887 to warn the brig Gannet and never came back.
-// Each time the beam comes round she stands a little nearer your bow. Ring the bell while you can
-// see her to drive her back. If she reaches you, she takes the ship.
+// Every half turn of the beam she stands a stage nearer your bow, and between turns she keeps pace
+// with the ship. Ring the bell while you can see her to drive her back two stages. If she reaches
+// you, she takes the ship.
 //
 // Plimsoll, the shark in the Gannet cabin boy's shoes, knows the deep water through the skerries.
-// He walks ahead of you to the harbour. Keep close to him and Maren cannot come nearer.
+// He walks ahead of you to the harbour. Keep close to him and Maren holds where she is, but he will
+// not wait long for a ship that falls behind.
 
 const IMG = { maren: new Image(), plim: new Image() };
 IMG.maren.src = SK.ASSETS.maren;
@@ -14,27 +16,29 @@ function imgReady(im) { return im.complete && im.naturalWidth > 0; }
 
 // ---------- Maren ----------
 function newMaren(active, gannet) {
-  return { active, stage: 0, x: gannet ? gannet.x : 0, y: gannet ? gannet.y + gannet.r * 0.4 : 900, seenStage: -1, apparition: 0 };
+  return { active, stage: 0, x: gannet ? gannet.x : 0, y: gannet ? gannet.y + gannet.r * 0.4 : 900, relB: 0, following: false, seenStage: -1, apparition: 0, heldLog: -99 };
 }
 
 function placeMaren(stage) {
   const m = g.maren, d = SK.MAREN_STAGES[stage];
-  const b = ship.h + rand(-0.3, 0.3);
+  m.relB = rand(-0.35, 0.35);
+  const b = ship.h + m.relB;
   m.x = ship.x + Math.sin(b) * d;
   m.y = Math.max(25, ship.y + Math.cos(b) * d);
+  m.following = true;
 }
 
 function plimsollGuarding() { return Math.hypot(g.plim.x - ship.x, g.plim.y - ship.y) < SK.PLIMSOLL_GUARD; }
 
-// called each time the beam completes a turn
+// called every half turn of the beam
 function marenTurn() {
   const m = g.maren;
   if (!m.active || state !== 'play') return;
-  const byPlim = plimsollGuarding(), byCrew = crewMode && mateNear(90);
+  const byPlim = plimsollGuarding(), byCrew = crewMode && mateNear(SK.CREW_GUARD);
   if (byPlim || byCrew) {
-    if (m.stage > 0) {
-      m.stage--; placeMaren(m.stage);
-      addLog(byPlim ? 'Plimsoll is close. She falls back.' : 'Your crew is close by. She falls back.', 'p');
+    if (m.stage > 0 && g.t - m.heldLog > 12) {
+      m.heldLog = g.t;
+      addLog(byPlim ? 'Plimsoll is close. She holds where she is.' : 'Your crew is close by. She holds where she is.', 'p');
     }
     return;
   }
@@ -52,23 +56,38 @@ function marenInView() {
 
 function ringBell() {
   if (state !== 'play' || g.bell > 0) return;
-  g.bell = SK.BELL_COOLDOWN + g.n * 1.5;
+  g.bell = bellCooldown();
   g.bellFlash = 1;
   sfxBell();
   if (crewMode) { NET.bells++; send(); }
+  const drowned = bellDrownsThem();
   const m = g.maren;
   if (m.active && m.stage >= 1 && marenInView()) {
-    m.stage = 0; placeMaren(0);
-    addLog('The bell rings out. She is gone, for now.', 'p');
+    m.stage = Math.max(0, m.stage - SK.BELL_PUSH); placeMaren(m.stage);
+    addLog('The bell rings out. She draws back, but not far.' + (drowned ? ' The drowned sink away.' : ''), 'p');
+  } else if (drowned) {
+    addLog('The bell rings out and the drowned sink back under.', 'p');
   } else {
     addLog(m.stage >= 1 ? 'The bell rings, but she is not in front of you. Turn to face her first.' : 'The bell rings out over the water. Nothing answers.');
   }
+}
+function bellCooldown() { return SK.BELL_COOLDOWN + g.n * 2; }
+
+// she keeps pace with the ship, and at the last stages she drifts into your path
+function followShip(m, dt) {
+  if (!m.following) return;
+  if (m.stage >= 3) m.relB *= 1 - Math.min(1, dt * 0.35);
+  const d = SK.MAREN_STAGES[m.stage], b = ship.h + m.relB;
+  const tx = ship.x + Math.sin(b) * d, ty = Math.max(25, ship.y + Math.cos(b) * d);
+  const k = Math.min(1, dt * (0.35 + m.stage * 0.25));
+  m.x += (tx - m.x) * k; m.y += (ty - m.y) * k;
 }
 
 function updateMaren(dt) {
   const m = g.maren;
   if (m.apparition > 0) m.apparition -= dt;
   if (!m.active) return;
+  if (state === 'play') followShip(m, dt);
   // the first time you see her at each stage, she whispers
   const vis = visibility(m.x, m.y);
   if (vis > 0.3 && marenInView() && m.seenStage !== m.stage) {
@@ -119,7 +138,7 @@ function drawBowspritApparition() {
 
 // ---------- Plimsoll ----------
 function newPlimsoll(path) {
-  const p = { x: path[0].x, y: path[0].y, k: 1, walking: false, phase: 0, lastStep: 0, call: 2, dirX: 0, dirY: 1, done: false };
+  const p = { x: path[0].x, y: path[0].y, k: 1, walking: false, phase: 0, lastStep: 0, call: 2, dirX: 0, dirY: 1, done: false, waitT: 0, warned: false };
   // start him a little way along the channel, ahead of the bow
   let left = 60;
   while (p.k < path.length && left > 0) {
@@ -133,8 +152,13 @@ function newPlimsoll(path) {
 function updatePlimsoll(dt) {
   const p = g.plim, path = g.path;
   const d = Math.hypot(p.x - ship.x, p.y - ship.y);
-  if (d < 80) p.walking = true;
-  else if (d > 105) p.walking = false;
+  if (d < 80) { p.walking = true; p.waitT = 0; }
+  else if (d > 105) {
+    // he waits a little for a ship that falls behind, then walks on without it
+    p.waitT += dt;
+    p.walking = p.waitT > SK.PLIMSOLL_PATIENCE;
+    if (p.walking && !p.warned && !g.attract) { p.warned = true; addLog("Plimsoll won't wait. He is walking on without you.", 'w'); }
+  }
   if (p.k >= path.length) { p.walking = false; p.done = true; }
   if (p.walking) {
     const t = path[p.k], dx = t.x - p.x, dy = t.y - p.y, dd = Math.hypot(dx, dy);

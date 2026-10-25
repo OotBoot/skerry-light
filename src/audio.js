@@ -124,6 +124,32 @@ function sfxBell() {
 function sfxBellFar(pan, vol) {
   for (const [f, a, d] of [[392, 0.32, 3], [988, 0.16, 2], [1567, 0.08, 1.4]]) tone(f, 'sine', 0.004, a * vol, d, { pan });
 }
+function sfxSplash(pan, vol) {
+  if (vol < 0.05) return;
+  noise('lowpass', 1400, 0.8, 0.01, 0.35 * vol, 0.35, { pan, to: 400 });
+  noise('bandpass', 3000, 2, 0.005, 0.12 * vol, 0.12, { pan, delay: 0.05 });
+}
+function sfxClaw() {
+  noise('highpass', 2500, 1, 0.005, 0.5, 0.25);
+  tone(160, 'sawtooth', 0.01, 0.25, 0.4, { to: 70 });
+  tone(70, 'sine', 0.005, 0.7, 0.5, { to: 40 });
+  noise('bandpass', 900, 4, 0.02, 0.25, 0.4, { delay: 0.12, to: 500 });
+}
+function sfxCackle(pan) {
+  for (let i = 0; i < 6; i++) {
+    const f = 380 + Math.random() * 160;
+    tone(f, 'sawtooth', 0.01, 0.06, 0.09, { pan, delay: i * 0.11, to: f * 0.8 });
+    noise('bandpass', 1800, 5, 0.01, 0.06, 0.08, { pan, delay: i * 0.11 });
+  }
+}
+function sfxFlare() {
+  noise('bandpass', 600, 0.8, 0.01, 0.4, 0.6, { to: 3000 });
+  noise('highpass', 4000, 0.7, 0.2, 0.15, 1.6, { delay: 0.3 });
+  tone(90, 'sine', 0.005, 0.5, 0.4, { to: 50 });
+}
+function sfxHorn(pan, vol) {
+  for (const f of [196, 247]) tone(f, 'sawtooth', 0.08, 0.06 * vol, 0.7, { pan });
+}
 function sfxSqueak(pan, vol) {
   if (vol < 0.03) return;
   const f = 1700 + Math.random() * 700;

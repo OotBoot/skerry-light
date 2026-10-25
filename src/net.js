@@ -4,8 +4,10 @@
 //  - on claude.ai, the artifact `room` capability (signed-in viewers only);
 //  - anywhere else, the WebSocket relay in server/server.js (see src/transport.js).
 // Everyone connected shares one lobby, and all crew traffic travels in presence (each player's
-// own state object). Each ship sails on its own screen; crewmates see each other's positions,
-// hull and bells. The crew's host (whoever joined first) chooses when to set sail.
+// own state object). Each ship sails on its own screen; crewmates see each other's positions and
+// hull, hear each other's bells and shouts, share flares, and patch each other's hulls when they
+// sail close together. Once your voyage is over you can watch a crewmate's from their deck.
+// The crew's host (whoever joined first) chooses when to set sail.
 // With no connection the game plays solo exactly as before.
 
 const NET = {
@@ -24,6 +26,9 @@ const NET = {
   mates: new Map(),         // peer -> remote ship
   names: {},
   bells: 0,
+  flares: 0, flare: null,   // flares I've fired, and the last one
+  shouts: 0, shout: null,
+  watch: null,              // the crewmate I'm watching, once my own voyage is over
   lastSend: 0, lastUi: 0, lastNames: 0,
   st: null,                 // my status on this voyage: 'sail' | 'port' | 'sunk' | 'taken'
   results: null,            // results of the last finished voyage
@@ -108,7 +113,7 @@ function myPresence() {
     app: 'skerry', crew: NET.crew, joinedAt: NET.joinedAt, ready: NET.ready, nick: NET.nick || null,
     launch: amHostSafe() ? NET.launch : null,
     voy: NET.launch ? NET.launch.voy : 0, st: NET.st,
-    bell: NET.bells,
+    bell: NET.bells, flare: NET.flare, shout: NET.shout,
   };
 }
 function amHostSafe() { return NET.crew && NET.myHostFlag; }
@@ -151,7 +156,8 @@ function leaveCrew(silent) {
   NET.crew = null; NET.ready = false; NET.st = null; NET.launch = null; NET.results = null; NET.myHostFlag = false;
   crewMode = false;
   NET.mates.clear();
-  if (NET.room && !silent) NET.room.presence({ app: 'skerry', crew: null, nick: NET.nick || null, joinedAt: null, ready: null, launch: null, voy: null, st: null, bell: null, x: null, y: null, h: null, hull: null, stage: null }).catch(() => {});
+  if (NET.room && !silent) NET.room.presence({ app: 'skerry', crew: null, nick: NET.nick || null, joinedAt: null, ready: null, launch: null, voy: null, st: null, bell: null, flare: null, shout: null, x: null, y: null, h: null, v: null, hull: null, stage: null, mx: null, my: null, px: null, py: null }).catch(() => {});
+  stopSpectating();
   if (!silent) toTitle();
 }
 function toggleReady() { NET.ready = !NET.ready; send(); renderCrewCard(); }
@@ -194,9 +200,26 @@ function syncMates() {
       seen.add(p.peer);
       let m = NET.mates.get(p.peer);
       if (!m) {
-        m = { peer: p.peer, x: +pr.x || 0, y: +pr.y || 0, h: +pr.h || 0, tx: 0, ty: 0, th: 0, bell: +pr.bell || 0, bob: Math.random() * 6 };
+        m = { peer: p.peer, x: +pr.x || 0, y: +pr.y || 0, h: +pr.h || 0, tx: 0, ty: 0, th: 0, bell: +pr.bell || 0, bob: Math.random() * 6,
+          flareN: counter(pr.flare), shoutN: counter(pr.shout), shoutT: 0, shoutText: '' };
         NET.mates.set(p.peer, m);
       }
+      // what a spectator needs to see from their deck
+      m.v = Number.isFinite(pr.v) ? pr.v : 8;
+      m.stage = Number.isFinite(pr.stage) ? clamp(pr.stage | 0, 0, SK.MAREN_STAGES.length - 1) : 0;
+      if (Number.isFinite(pr.mx) && Number.isFinite(pr.my)) { if (!Number.isFinite(m.mx)) { m.mx = pr.mx; m.my = pr.my; } m.tmx = pr.mx; m.tmy = pr.my; } else { m.mx = m.my = m.tmx = m.tmy = undefined; }
+      if (Number.isFinite(pr.px) && Number.isFinite(pr.py)) { if (!Number.isFinite(m.px)) { m.px = pr.px; m.py = pr.py; } m.tpx = pr.px; m.tpy = pr.py; }
+      const fl = counter(pr.flare);
+      if (fl > m.flareN) {
+        m.flareN = fl;
+        if (Number.isFinite(pr.flare.x) && Number.isFinite(pr.flare.y)) mateFlare(m, pr.flare.x, pr.flare.y);
+      } else m.flareN = fl;
+      const sh = counter(pr.shout);
+      if (sh > m.shoutN) {
+        m.shoutN = sh;
+        const text = SHOUTS[pr.shout.k];
+        if (text) mateShout(m, text);
+      } else m.shoutN = sh;
       m.by = p.by; m.slot = slotOf(p.peer); m.name = nameOf(p, m.slot);
       m.st = pr.voy === NET.launch.voy ? pr.st : null;
       m.hull = Number.isFinite(pr.hull) ? pr.hull : SK.HULL;
@@ -213,6 +236,24 @@ function syncMates() {
   for (const k of [...NET.mates.keys()]) if (!seen.has(k)) NET.mates.delete(k);
 }
 
+function counter(o) { return o && typeof o === 'object' && Number.isFinite(o.n) ? o.n : 0; }
+
+function mateFlare(m, x, y) {
+  if (!g || g.attract) return;
+  addFlare(x, y);
+  const d = Math.hypot(x - ship.x, y - ship.y);
+  if (state === 'play') addLog(m.name + ' fired a flare, ' + Math.round(d) + ' m off.', 'p');
+  if (d < 900) sfxFlare();
+}
+function mateShout(m, text) {
+  m.shoutText = text; m.shoutT = 4;
+  if (!g || g.attract) return;
+  const d = Math.hypot(m.x - ship.x, m.y - ship.y);
+  const pan = clamp(angDiff(bearingOf(m.x - ship.x, m.y - ship.y), ship.h) / (fov / 2), -1, 1);
+  sfxHorn(pan, Math.max(0.3, 1 - d / 800));
+  if (state === 'play') addLog(m.name + ': ' + text + ' (' + Math.round(d) + ' m)', 'p');
+}
+
 function matesAtSea() { return [...NET.mates.values()].filter(m => m.st === 'sail' && m.placed); }
 function mateNear(dist) {
   return matesAtSea().some(m => Math.hypot(m.x - ship.x, m.y - ship.y) < dist);
@@ -223,9 +264,9 @@ function mateRangBell(m) {
   const d = Math.hypot(m.x - ship.x, m.y - ship.y);
   const pan = clamp(angDiff(bearingOf(m.x - ship.x, m.y - ship.y), ship.h) / (fov / 2), -1, 1);
   sfxBellFar(pan, Math.max(0.15, 1 - d / 600));
-  if (d < 160 && g.maren.active && g.maren.stage >= 1) {
-    g.maren.stage = 0; placeMaren(0);
-    addLog(m.name + ' rang the bell close by. She falls back.', 'p');
+  if (d < SK.CREW_BELL_RANGE && g.maren.active && g.maren.stage >= 1) {
+    g.maren.stage--; placeMaren(g.maren.stage);
+    addLog(m.name + ' rang the bell close by. She draws back a little.', 'p');
   } else {
     addLog(m.name + ' rang the bell.');
   }
@@ -237,18 +278,30 @@ function netTick(dt) {
     const k = Math.min(1, dt * 6);
     m.x += (m.tx - m.x) * k; m.y += (m.ty - m.y) * k;
     m.h += angDiff(m.th, m.h) * k;
+    if (Number.isFinite(m.tmx)) { m.mx += (m.tmx - m.mx) * k; m.my += (m.tmy - m.my) * k; }
+    if (Number.isFinite(m.tpx)) { m.px += (m.tpx - m.px) * k; m.py += (m.tpy - m.py) * k; }
+    if (m.shoutT > 0) m.shoutT -= dt;
     m.bob += dt;
   }
   if (!NET.room || !NET.crew) return;
   const now = performance.now();
   if (state === 'play' && now - NET.lastSend > 66) {
     NET.lastSend = now;
-    send({ x: Math.round(ship.x * 10) / 10, y: Math.round(ship.y * 10) / 10, h: Math.round(ship.h * 1000) / 1000, hull: ship.hull, stage: g.maren.stage });
+    const r1 = v => Math.round(v * 10) / 10;
+    send({
+      x: r1(ship.x), y: r1(ship.y), h: Math.round(ship.h * 1000) / 1000, v: r1(ship.v), hull: ship.hull, stage: g.maren.stage,
+      mx: g.maren.active ? r1(g.maren.x) : null, my: g.maren.active ? r1(g.maren.y) : null,
+      px: r1(g.plim.x), py: r1(g.plim.y),
+    });
   }
   if (now - NET.lastNames > 3000) { NET.lastNames = now; refreshNames(); }
   if (now - NET.lastUi > 250) {
     NET.lastUi = now;
     checkResults();
+    if (NET.watch) {
+      const w = NET.mates.get(NET.watch);
+      if (!w || w.st !== 'sail') nextSpectate(); else renderSpecBar();
+    }
     renderCrewHud();
     if (!$('crewCard').hidden) renderCrewCard();
   }
@@ -270,6 +323,7 @@ function checkResults() {
   const outcome = p => p.peer === NET.myPeer ? NET.st : (p.presence && p.presence.voy === voy ? p.presence.st : null);
   const rows = list.map((p, i) => ({ name: nameOf(p, i), slot: i, st: outcome(p) })).filter(r => r.st);
   NET.results = { voy, rows, madeIt: rows.filter(r => r.st === 'port').length };
+  stopSpectating();
   if (NET.results.madeIt > 0) {
     run.voyages = Math.max(run.voyages, voy);
     if (voy > best) { best = voy; try { localStorage.setItem('skerry-helm-best', String(best)); } catch (e) {} }
@@ -313,6 +367,43 @@ function renderTogether() {
   }
 }
 setInterval(() => { if (state === 'title' && !$('titleCard').hidden) renderTogether(); }, 1000);
+
+// ---------- watching a crewmate ----------
+function startSpectating(peer) {
+  if (!NET.mates.get(peer)) return;
+  NET.watch = peer;
+  $('crewCard').hidden = true;
+  $('specBar').hidden = false;
+  renderSpecBar();
+}
+function stopSpectating() {
+  NET.watch = null;
+  const bar = $('specBar'); if (bar) bar.hidden = true;
+}
+function nextSpectate() {
+  const list = matesAtSea();
+  if (!list.length) { stopSpectating(); if (crewMode && state !== 'play') showCrewCard(); return; }
+  const i = list.findIndex(m => m.peer === NET.watch);
+  startSpectating(list[(i + 1) % list.length].peer);
+}
+function renderSpecBar() {
+  const m = NET.mates.get(NET.watch); if (!m) return;
+  $('specName').textContent = 'Watching ' + m.name;
+  const danger = ['', 'she is out there', 'she is getting closer', 'she is close', 'she is at the bow'][m.stage] || '';
+  $('specInfo').textContent = 'Hull ' + m.hull + ' of ' + SK.HULL + (danger ? ' · ' + danger : '');
+  $('specNext').hidden = matesAtSea().length < 2;
+}
+// draw the scene from the watched crewmate's deck, then put my own state back
+function withSpectatorView(draw) {
+  const m = NET.watch && NET.mates.get(NET.watch);
+  if (!m || !g) { draw(); return; }
+  const mine = { ship, maren: g.maren, plim: g.plim, glare: g.glare };
+  ship = { x: m.x, y: m.y, h: m.h, bob: m.bob, rudder: 0, v: m.v, inv: 0, hull: m.hull, sail: 0.5 };
+  g.maren = { active: Number.isFinite(m.mx), following: true, stage: m.stage, x: m.mx, y: m.my, apparition: 0, relB: 0 };
+  g.plim = Object.assign({}, mine.plim, Number.isFinite(m.px) ? { x: m.px, y: m.py } : {}, { walking: true, phase: g.t * 9, dirX: Math.sin(m.h), dirY: Math.cos(m.h) });
+  g.glare = 0;
+  try { draw(); } finally { ship = mine.ship; g.maren = mine.maren; g.plim = mine.plim; g.glare = mine.glare; }
+}
 
 function showCrewCard() {
   for (const id of ['titleCard', 'portCard', 'endCard']) $(id).hidden = true;
@@ -359,7 +450,7 @@ function renderCrewCard() {
     text.textContent = 'Send this page to up to two friends. They join from the title screen by picking crew ' + NET.crew.toUpperCase() + '. Everyone sails their own brig through the same skerries. Ships close together keep Maren back, and a bell rung near a crewmate drives her away from both of you.';
   } else if (!r) {
     title.textContent = statusWord(NET.st) === 'In harbour' ? 'Safe in Harbour' : 'Lost at Sea';
-    text.textContent = 'Voyage ' + voy + '. Waiting for the rest of the crew to make harbour or go down.';
+    text.textContent = 'Voyage ' + voy + '. Waiting for the rest of the crew to make harbour or go down. You can watch them from their deck while you wait.';
   } else if (r.madeIt > 0) {
     title.textContent = r.madeIt === r.rows.length ? 'The Whole Crew Made It' : r.madeIt + ' of ' + r.rows.length + ' Made Harbour';
     text.textContent = 'Voyage ' + voy + ' is done. The next voyage has more wreckage and a slower light.';
@@ -370,6 +461,18 @@ function renderCrewCard() {
     title.textContent = 'The Crew Is Lost';
     text.textContent = 'No ship made harbour on voyage ' + voy + '. The host can take the crew out again from voyage 1.';
   }
+
+  const watchBox = $('crewWatch'); watchBox.textContent = '';
+  if (NET.launch && !r) {
+    for (const m of matesAtSea()) {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'tool';
+      b.textContent = 'Watch ' + m.name;
+      b.addEventListener('click', () => startSpectating(m.peer));
+      watchBox.appendChild(b);
+    }
+  }
+  watchBox.hidden = !watchBox.childElementCount;
 
   const sail = $('crewSailBtn'), ready = $('crewReadyBtn'), wait = $('crewWait');
   const between = !NET.launch || r;
@@ -406,6 +509,8 @@ $('nick').addEventListener('input', e => {
   if (NET.room) send();
 });
 $('crewStartBtn').addEventListener('click', startCrew);
+$('specNext').addEventListener('click', nextSpectate);
+$('specBack').addEventListener('click', () => { stopSpectating(); showCrewCard(); });
 $('crewSailBtn').addEventListener('click', setSail);
 $('crewReadyBtn').addEventListener('click', toggleReady);
 $('crewLeaveBtn').addEventListener('click', () => leaveCrew(false));

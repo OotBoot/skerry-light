@@ -59,6 +59,19 @@ function buildVoyage(n, attract) {
     if (ok(x, y, r)) addWreck(x, y, r, names[wrecks.length % names.length]);
   }
 
+  // wreckers' false lights: a red and green pair, like the pier lamps, over a hidden cluster of rocks
+  const lures = [];
+  const dirX = (HB.x - sx) / Math.hypot(HB.x - sx, HB.y - sy), dirY = (HB.y - sy) / Math.hypot(HB.x - sx, HB.y - sy);
+  for (let tries = 0; tries < 600 && lures.length < 2 + Math.floor(n / 2); tries++) {
+    const side = RNG() < 0.5 ? -1 : 1, off = rand(70, 170) * side;
+    const [bx, by] = along(rand(0.25, 0.8), 0);
+    const x = bx + dirY * off, y = by - dirX * off;
+    if (!ok(x, y, 34) || lures.some(l => Math.hypot(l.x - x, l.y - y) < 160)) continue;
+    addRock(x, y, rand(7, 10));
+    for (let i = 0; i < 3; i++) { const a = rand(0, 6.28), d = rand(11, 16); addRock(x + Math.cos(a) * d, y + Math.sin(a) * d, rand(5, 8)); }
+    lures.push({ x, y, px: dirX, py: dirY, ph: rand(0, 6.28), gone: false });
+  }
+
   const total = 26 + n * 6, onLine = Math.round(total * 0.45);
   for (let tries = 0; tries < 4000 && rocks.length < onLine; tries++) {
     const [x, y] = along(rand(0.12, 0.9), 65), r = rand(6, 16);
@@ -76,7 +89,7 @@ function buildVoyage(n, attract) {
   if (!path) path = [{ x: sx, y: sy }, { x: HB.x, y: 80 }];
   path.push({ x: HB.x, y: 44 }, { x: HB.x, y: 26 });
 
-  return { ship, rocks, wrecks, timber, path };
+  return { ship, rocks, wrecks, timber, path, lures };
 }
 
 function spawnTimber(sx, sy) {

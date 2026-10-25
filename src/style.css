@@ -65,7 +65,7 @@ canvas:focus { outline: none; }
 #log .p { color: var(--port); }
 .tools { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; flex: none; }
 #hint { font-size: 12px; color: var(--muted); text-align: right; transition: opacity .6s ease; max-width: 40ch; }
-.toolrow { display: flex; gap: 8px; align-items: stretch; }
+.toolrow { display: flex; gap: 8px; align-items: stretch; justify-content: flex-end; }
 
 .tool {
   pointer-events: auto;
@@ -74,19 +74,51 @@ canvas:focus { outline: none; }
   border: 1px solid var(--rule); padding: 8px 12px; cursor: pointer;
 }
 .tool:focus-visible { outline: 2px solid var(--lamp); outline-offset: 2px; }
-#bellBtn {
+#bellBtn, #flareBtn {
   position: relative; overflow: hidden;
   display: flex; flex-direction: column; align-items: flex-start; gap: 2px;
   min-width: 9.5rem; padding: 8px 14px;
   --p: 1;
 }
-#bellBtn::before {
+#bellBtn::before, #flareBtn::before {
   content: ""; position: absolute; inset: auto 0 0 0; height: 3px;
   background: var(--lamp); transform-origin: left; transform: scaleX(var(--p));
 }
-#bellBtn b { font-family: var(--display); font-size: 1.1rem; font-weight: 400; letter-spacing: 0; text-transform: none; color: var(--muted); }
+#flareBtn { min-width: 8.5rem; }
+#flareBtn::before { background: #ff8a5a; }
+#flareBtn.ready b { color: #ff9f75; }
+#bellBtn b, #flareBtn b { font-family: var(--display); font-size: 1.1rem; font-weight: 400; letter-spacing: 0; text-transform: none; color: var(--muted); }
 #bellBtn.ready b { color: var(--lamp); }
-#bellBtn small { font-size: 10px; color: var(--muted); }
+#bellBtn small, #flareBtn small { font-size: 10px; color: var(--muted); }
+.toolrow.shouts .tool { font-size: 11px; padding: 6px 9px; letter-spacing: 0.04em; }
+
+/* hold-to-change-speed buttons, on the left edge */
+.sailctl {
+  position: absolute; top: 46%; transform: translateY(-50%);
+  left: max(16px, env(safe-area-inset-left, 0px));
+  display: flex; flex-direction: column; gap: 10px;
+}
+#logbox[hidden] ~ .sailctl { display: none; }
+.sailctl .tool {
+  width: 64px; height: 64px; padding: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  font-size: 22px; line-height: 1; touch-action: none;
+  -webkit-touch-callout: none;
+}
+.sailctl .tool small { font-size: 9px; letter-spacing: 0.1em; color: var(--muted); }
+.sailctl .tool.held { background: rgba(255, 216, 138, 0.25); border-color: var(--lamp); color: var(--lamp); }
+
+/* watching a crewmate */
+.specbar {
+  position: absolute; top: 112px; left: 50%; transform: translateX(-50%);
+  width: min(560px, calc(100% - 32px));
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  padding: 10px 12px; background: var(--card); border: 1px solid var(--rule);
+  font-family: var(--log); font-size: 12px;
+}
+.spectext { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
+.spectext b { color: var(--lamp); font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.spectext span { color: var(--muted); }
 
 .overlay {
   position: absolute; inset: 0;
@@ -172,7 +204,11 @@ canvas:focus { outline: none; }
   #hint { display: none; }
   .big { font-size: 19px; }
   .hud .row { gap: 12px; }
-  #bellBtn { min-width: 7.5rem; }
+  #bellBtn, #flareBtn { min-width: 0; flex: 1; }
+  .toolrow { flex-wrap: wrap; }
+  .toolrow.shouts .tool { flex: 1; padding: 6px 4px; }
+  .sailctl .tool { width: 56px; height: 56px; }
+  .specbar { top: 104px; }
   .logbox { flex-direction: column-reverse; align-items: stretch; }
   .tools { align-items: stretch; }
   .toolrow { justify-content: flex-end; }

@@ -71,7 +71,7 @@ canvas:focus { outline: none; }
 #log .p { color: var(--port); }
 .tools { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; flex: none; }
 #hint { font-size: 12px; color: var(--muted); text-align: right; transition: opacity .6s ease; max-width: 40ch; }
-.toolrow { display: flex; gap: 8px; align-items: stretch; }
+.toolrow { display: flex; gap: 8px; align-items: stretch; justify-content: flex-end; }
 
 .tool {
   pointer-events: auto;
@@ -80,19 +80,51 @@ canvas:focus { outline: none; }
   border: 1px solid var(--rule); padding: 8px 12px; cursor: pointer;
 }
 .tool:focus-visible { outline: 2px solid var(--lamp); outline-offset: 2px; }
-#bellBtn {
+#bellBtn, #flareBtn {
   position: relative; overflow: hidden;
   display: flex; flex-direction: column; align-items: flex-start; gap: 2px;
   min-width: 9.5rem; padding: 8px 14px;
   --p: 1;
 }
-#bellBtn::before {
+#bellBtn::before, #flareBtn::before {
   content: ""; position: absolute; inset: auto 0 0 0; height: 3px;
   background: var(--lamp); transform-origin: left; transform: scaleX(var(--p));
 }
-#bellBtn b { font-family: var(--display); font-size: 1.1rem; font-weight: 400; letter-spacing: 0; text-transform: none; color: var(--muted); }
+#flareBtn { min-width: 8.5rem; }
+#flareBtn::before { background: #ff8a5a; }
+#flareBtn.ready b { color: #ff9f75; }
+#bellBtn b, #flareBtn b { font-family: var(--display); font-size: 1.1rem; font-weight: 400; letter-spacing: 0; text-transform: none; color: var(--muted); }
 #bellBtn.ready b { color: var(--lamp); }
-#bellBtn small { font-size: 10px; color: var(--muted); }
+#bellBtn small, #flareBtn small { font-size: 10px; color: var(--muted); }
+.toolrow.shouts .tool { font-size: 11px; padding: 6px 9px; letter-spacing: 0.04em; }
+
+/* hold-to-change-speed buttons, on the left edge */
+.sailctl {
+  position: absolute; top: 46%; transform: translateY(-50%);
+  left: max(16px, env(safe-area-inset-left, 0px));
+  display: flex; flex-direction: column; gap: 10px;
+}
+#logbox[hidden] ~ .sailctl { display: none; }
+.sailctl .tool {
+  width: 64px; height: 64px; padding: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  font-size: 22px; line-height: 1; touch-action: none;
+  -webkit-touch-callout: none;
+}
+.sailctl .tool small { font-size: 9px; letter-spacing: 0.1em; color: var(--muted); }
+.sailctl .tool.held { background: rgba(255, 216, 138, 0.25); border-color: var(--lamp); color: var(--lamp); }
+
+/* watching a crewmate */
+.specbar {
+  position: absolute; top: 112px; left: 50%; transform: translateX(-50%);
+  width: min(560px, calc(100% - 32px));
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  padding: 10px 12px; background: var(--card); border: 1px solid var(--rule);
+  font-family: var(--log); font-size: 12px;
+}
+.spectext { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
+.spectext b { color: var(--lamp); font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.spectext span { color: var(--muted); }
 
 .overlay {
   position: absolute; inset: 0;
@@ -178,7 +210,11 @@ canvas:focus { outline: none; }
   #hint { display: none; }
   .big { font-size: 19px; }
   .hud .row { gap: 12px; }
-  #bellBtn { min-width: 7.5rem; }
+  #bellBtn, #flareBtn { min-width: 0; flex: 1; }
+  .toolrow { flex-wrap: wrap; }
+  .toolrow.shouts .tool { flex: 1; padding: 6px 4px; }
+  .sailctl .tool { width: 56px; height: 56px; }
+  .specbar { top: 104px; }
   .logbox { flex-direction: column-reverse; align-items: stretch; }
   .tools { align-items: stretch; }
   .toolrow { justify-content: flex-end; }
@@ -207,12 +243,29 @@ canvas:focus { outline: none; }
   <div class="logbox" id="logbox" hidden>
     <ul id="log" aria-live="polite"></ul>
     <div class="tools">
-      <span id="hint">← → steer · ↑ ↓ sail · Space rings the bell · M sound</span>
+      <span id="hint">← → steer · ↑ ↓ sail · Space bell · F flare · 1 2 3 shout to crew · M sound</span>
+      <div class="toolrow shouts" id="shoutRow" hidden>
+        <button class="tool" id="shout1" type="button">1 · Rocks here!</button>
+        <button class="tool" id="shout2" type="button">2 · Follow me!</button>
+        <button class="tool" id="shout3" type="button">3 · She's near me!</button>
+      </div>
       <div class="toolrow">
         <button class="tool" id="soundBtn" type="button" aria-pressed="true">Sound on</button>
-        <button class="tool" id="bellBtn" type="button"><b>Ring the bell</b><small>Space · <span id="bellState">Ready</span></small></button>
+        <button class="tool meter" id="flareBtn" type="button"><b>Fire a flare</b><small>F · <span id="flareState">Ready</span></small></button>
+        <button class="tool meter" id="bellBtn" type="button"><b>Ring the bell</b><small>Space · <span id="bellState">Ready</span></small></button>
       </div>
     </div>
+  </div>
+
+  <div class="sailctl" id="sailCtl" aria-label="Sail">
+    <button class="tool" id="sailUp" type="button" aria-label="Make sail: hold to speed up"><span aria-hidden="true">▲</span><small>Faster</small></button>
+    <button class="tool" id="sailDown" type="button" aria-label="Shorten sail: hold to slow down"><span aria-hidden="true">▼</span><small>Slower</small></button>
+  </div>
+
+  <div class="specbar" id="specBar" hidden>
+    <div class="spectext"><b id="specName">Watching</b><span id="specInfo"></span></div>
+    <button class="tool" id="specNext" type="button">Next ship</button>
+    <button class="tool" id="specBack" type="button">Crew list</button>
   </div>
 
   <div class="overlay" id="titleCard">
@@ -220,14 +273,17 @@ canvas:focus { outline: none; }
       <span class="eyebrow">Master's orders · make harbour by night · sound on</span>
       <h1>Skerry Light</h1>
       <p>In the winter of 1887 the lamp at Skerry Light failed, and the keeper's wife, <span class="maren">Maren Holm</span>, rowed out with a lantern to warn the brig Gannet. The Gannet broke up on the rocks. Maren's skiff came back empty.</p>
-      <p>She still stands on the water when the lamp turns, a little nearer every time. The only thing she will not go near is <span class="plim">Plimsoll</span>, the shark who walked out of the surf that winter in the Gannet cabin boy's blue shoes. He knows the deep water through the skerries. <em>Follow his shoes.</em></p>
+      <p>She still stands on the water when the lamp turns, nearer every half turn, and she keeps pace with any ship she has chosen. The Gannet's drowned crew swim with her. Along the coast, wreckers still hang false harbour lights over the rocks. The only thing Maren will not come near is <span class="plim">Plimsoll</span>, the shark who walked out of the surf that winter in the Gannet cabin boy's blue shoes. He knows the deep water through the skerries, but he won't wait for you. <em>Follow his shoes.</em></p>
       <ul class="rules">
-        <li><b>See</b> rocks, wrecks and drifting timber show only while the beam is on them, then they are gone</li>
-        <li><b>Follow</b> Plimsoll's glowing shoes. While he is close, Maren falls back</li>
-        <li><b>Ring the bell</b> (Space) while you can see her to drive her away. It takes a while to swing again</li>
-        <li><b>Steer</b> ← → or A / D, sail ↑ ↓ or W / S. On a phone, hold the left or right side; the middle slows you</li>
+        <li><b>See</b> rocks, wrecks and drifting timber show only while the beam or a flare is on them, then they are gone</li>
+        <li><b>Follow</b> Plimsoll's glowing shoes. Within 75 m of him, Maren holds where she is. Fall behind and he walks on alone</li>
+        <li><b>Ring the bell</b> (Space) while you can see her to drive her back two stages. It takes almost half a minute to swing again</li>
+        <li><b>The drowned</b> swim after you; their eyes catch the light. Sail fast to shake them off, or ring the bell. Plimsoll eats them</li>
+        <li><b>False lights</b> red and green lamps that aren't the harbour, over rocks. The beam makes them vanish; the bearing strip shows the real harbour</li>
+        <li><b>Flare</b> (F) lights everything around you for a few seconds, for your whole crew</li>
+        <li><b>Steer</b> ← → or A / D, sail ↑ ↓ or W / S. On a phone, hold the left or right side to steer and use the ▲ ▼ buttons for speed</li>
         <li><b>Hull</b> three hits and she goes down. Let Maren reach the bow and she comes aboard</li>
-        <li><b>Crew</b> sail with up to two friends. Ships within 90 m of each other keep her back, and a bell rung near a crewmate drives her off both ships</li>
+        <li><b>Crew</b> sail with up to two friends. Ships close together keep her back and patch each other's planks. Shout warnings (1, 2, 3), share flares, and watch your crew after your own voyage ends</li>
       </ul>
       <button class="primary" id="startBtn" type="button">Take the helm alone</button>
       <section class="together" id="together" aria-labelledby="togetherHead">
@@ -266,6 +322,7 @@ canvas:focus { outline: none; }
         <span class="date">Keeper's log · <span id="crewLogDate"></span></span>
         <p id="crewLogText"></p>
       </div>
+      <div class="btnrow" id="crewWatch" hidden></div>
       <div class="btnrow">
         <button class="primary" id="crewSailBtn" type="button" hidden>Set sail</button>
         <button class="primary" id="crewReadyBtn" type="button" hidden>Ready</button>
@@ -306,9 +363,18 @@ const SK = {
   HULL: 3,
   HARBOUR: { x: 230, y: 30 },
   LANTERN: 48,            // reach of your own deck lantern
-  MAREN_STAGES: [380, 250, 150, 80, 32],   // how far away she stands at each stage
-  PLIMSOLL_GUARD: 130,    // stay this close to Plimsoll and Maren cannot come nearer
-  BELL_COOLDOWN: 14,
+  MAREN_STAGES: [340, 220, 130, 70, 28],   // how far away she stands at each stage
+  // she comes one stage nearer every half turn of the beam, and follows the ship between turns
+  PLIMSOLL_GUARD: 75,     // this close to Plimsoll and she holds where she is
+  PLIMSOLL_PATIENCE: 7,   // seconds he waits for a ship that falls behind before walking on
+  CREW_GUARD: 55,         // the same, for ships sailing close together
+  BELL_COOLDOWN: 26,
+  BELL_PUSH: 2,           // stages the bell drives her back
+  CREW_BELL_RANGE: 100,
+  DROWNED_SPEED: 5,       // m/s
+  DROWNED_OUTRUN: 9,      // a ship going faster than this shakes them off
+  FLARE_COOLDOWN: 35, FLARE_TIME: 7, FLARE_RADIUS: 170,
+  REPAIR_DIST: 45, REPAIR_TIME: 10,
   SCARE_TIME: 1.8,
   // Crew server for copies hosted on your own site, e.g. 'wss://skerry-light.onrender.com/ws'.
   // Leave empty to use the server the page itself was loaded from. Not used on claude.ai.
@@ -462,6 +528,32 @@ function sfxBell() {
 function sfxBellFar(pan, vol) {
   for (const [f, a, d] of [[392, 0.32, 3], [988, 0.16, 2], [1567, 0.08, 1.4]]) tone(f, 'sine', 0.004, a * vol, d, { pan });
 }
+function sfxSplash(pan, vol) {
+  if (vol < 0.05) return;
+  noise('lowpass', 1400, 0.8, 0.01, 0.35 * vol, 0.35, { pan, to: 400 });
+  noise('bandpass', 3000, 2, 0.005, 0.12 * vol, 0.12, { pan, delay: 0.05 });
+}
+function sfxClaw() {
+  noise('highpass', 2500, 1, 0.005, 0.5, 0.25);
+  tone(160, 'sawtooth', 0.01, 0.25, 0.4, { to: 70 });
+  tone(70, 'sine', 0.005, 0.7, 0.5, { to: 40 });
+  noise('bandpass', 900, 4, 0.02, 0.25, 0.4, { delay: 0.12, to: 500 });
+}
+function sfxCackle(pan) {
+  for (let i = 0; i < 6; i++) {
+    const f = 380 + Math.random() * 160;
+    tone(f, 'sawtooth', 0.01, 0.06, 0.09, { pan, delay: i * 0.11, to: f * 0.8 });
+    noise('bandpass', 1800, 5, 0.01, 0.06, 0.08, { pan, delay: i * 0.11 });
+  }
+}
+function sfxFlare() {
+  noise('bandpass', 600, 0.8, 0.01, 0.4, 0.6, { to: 3000 });
+  noise('highpass', 4000, 0.7, 0.2, 0.15, 1.6, { delay: 0.3 });
+  tone(90, 'sine', 0.005, 0.5, 0.4, { to: 50 });
+}
+function sfxHorn(pan, vol) {
+  for (const f of [196, 247]) tone(f, 'sawtooth', 0.08, 0.06 * vol, 0.7, { pan });
+}
 function sfxSqueak(pan, vol) {
   if (vol < 0.03) return;
   const f = 1700 + Math.random() * 700;
@@ -595,6 +687,19 @@ function buildVoyage(n, attract) {
     if (ok(x, y, r)) addWreck(x, y, r, names[wrecks.length % names.length]);
   }
 
+  // wreckers' false lights: a red and green pair, like the pier lamps, over a hidden cluster of rocks
+  const lures = [];
+  const dirX = (HB.x - sx) / Math.hypot(HB.x - sx, HB.y - sy), dirY = (HB.y - sy) / Math.hypot(HB.x - sx, HB.y - sy);
+  for (let tries = 0; tries < 600 && lures.length < 2 + Math.floor(n / 2); tries++) {
+    const side = RNG() < 0.5 ? -1 : 1, off = rand(70, 170) * side;
+    const [bx, by] = along(rand(0.25, 0.8), 0);
+    const x = bx + dirY * off, y = by - dirX * off;
+    if (!ok(x, y, 34) || lures.some(l => Math.hypot(l.x - x, l.y - y) < 160)) continue;
+    addRock(x, y, rand(7, 10));
+    for (let i = 0; i < 3; i++) { const a = rand(0, 6.28), d = rand(11, 16); addRock(x + Math.cos(a) * d, y + Math.sin(a) * d, rand(5, 8)); }
+    lures.push({ x, y, px: dirX, py: dirY, ph: rand(0, 6.28), gone: false });
+  }
+
   const total = 26 + n * 6, onLine = Math.round(total * 0.45);
   for (let tries = 0; tries < 4000 && rocks.length < onLine; tries++) {
     const [x, y] = along(rand(0.12, 0.9), 65), r = rand(6, 16);
@@ -612,7 +717,7 @@ function buildVoyage(n, attract) {
   if (!path) path = [{ x: sx, y: sy }, { x: HB.x, y: 80 }];
   path.push({ x: HB.x, y: 44 }, { x: HB.x, y: 26 });
 
-  return { ship, rocks, wrecks, timber, path };
+  return { ship, rocks, wrecks, timber, path, lures };
 }
 
 function spawnTimber(sx, sy) {
@@ -771,7 +876,7 @@ function lanternAt(x, y) {
   const d = Math.hypot(x - ship.x, y - ship.y);
   return d < SK.LANTERN ? Math.min(1, (1 - d / SK.LANTERN) * 1.6) : 0;
 }
-function visibility(x, y) { return Math.min(1, litAt(x, y) * 1.3 + lanternAt(x, y)); }
+function visibility(x, y) { return Math.min(1, litAt(x, y) * 1.3 + lanternAt(x, y) + flareAt(x, y)); }
 
 // An image cut into horizontal strips that slip sideways, for anything that should look wrong.
 function drawGlitch(img, x, y, w, h, amt) {
@@ -860,10 +965,32 @@ function drawMate(m, p, vis) {
     ctx.globalAlpha = 1;
   }
   lamp(x, y - hh - sailH * 0.3, col, Math.max(1.8, 1.3 * Math.sqrt(p.s)));
-  if (d < 700) {
+  if (d < 700 || m.shoutT > 0) {
     ctx.font = '700 11px "Courier Prime", monospace'; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
     ctx.fillStyle = col; ctx.globalAlpha = 0.9;
     ctx.fillText(m.name, x, y - hh - sailH - 6);
+    if (m.shoutT > 0) {
+      ctx.globalAlpha = Math.min(1, m.shoutT);
+      ctx.font = '700 13px "Courier Prime", monospace';
+      const text = m.shoutText, tw = ctx.measureText(text).width + 14, ty = y - hh - sailH - 22;
+      ctx.fillStyle = 'rgba(6,10,20,0.85)'; ctx.fillRect(x - tw / 2, ty - 18, tw, 20);
+      ctx.strokeStyle = col; ctx.lineWidth = 1; ctx.strokeRect(x - tw / 2 + 0.5, ty - 17.5, tw - 1, 19);
+      ctx.fillStyle = col; ctx.fillText(text, x, ty);
+    }
+    ctx.globalAlpha = 1;
+  }
+}
+
+// a flare climbs, hangs and falls, lighting the water under it
+function drawFlares() {
+  for (const f of g.flares) {
+    const age = SK.FLARE_TIME - f.t;
+    const z = age < 1 ? 10 + age * 50 : 60 - (age - 1) * 5;
+    const c = cam(f.x, f.y, z); if (c.f < SK.NEAR) continue;
+    const q = proj(c), a = Math.min(1, f.t / 1.5);
+    ctx.globalAlpha = a;
+    lamp(q.x, q.y, '#ff8a5a', Math.max(3, 2.4 * Math.sqrt(q.s)) * (age < 1 ? 1.6 : 1));
+    ctx.fillStyle = '#fff3d6'; ctx.fillRect(q.x - 1.5, q.y - 1.5, 3, 3);
     ctx.globalAlpha = 1;
   }
 }
@@ -944,7 +1071,8 @@ function drawScene() {
   for (const o of g.wrecks) add('wreck', o);
   for (const o of g.timber) add('timber', o);
   add('plim', g.plim);
-  if (crewMode) for (const m of matesAtSea()) add('mate', m);
+  if (crewMode) for (const m of matesAtSea()) if (m.peer !== NET.watch) add('mate', m);
+  if (!NET.watch) for (const d of g.enemies.drowned) add('drowned', d);
   if (g.maren.active) add('maren', g.maren);
   items.sort((a, b) => b.c.f - a.c.f);
   for (const it of items) {
@@ -955,6 +1083,7 @@ function drawScene() {
     else if (it.kind === 'timber') drawTimber(o, q, vis);
     else if (it.kind === 'plim') drawPlimsoll(q, vis);
     else if (it.kind === 'mate') drawMate(o, q, vis);
+    else if (it.kind === 'drowned') drawDrowned(o, q, vis);
     else drawMaren(q, vis);
   }
 
@@ -988,6 +1117,8 @@ function drawScene() {
   for (const [hx, col] of [[-23, '#e46c4f'], [23, '#86cfae']]) {
     const c = cam(HB.x + hx, 46, 7); if (c.f > SK.NEAR) { const q = proj(c); lamp(q.x, q.y, col, Math.max(2.4, 1.4 * Math.sqrt(q.s))); }
   }
+  drawLures();
+  drawFlares();
   for (const q of g.parts) {
     const c = cam(q.x, q.y, q.z); if (c.f < SK.NEAR) continue;
     const s = proj(c);
@@ -1080,7 +1211,7 @@ function drawCompass() {
   } else edgeArrow(pb, '#5fd3ff');
   if (crewMode) for (const m of matesAtSea()) {
     const mx = xb(bearingOf(m.x - ship.x, m.y - ship.y));
-    if (!inStrip(mx)) continue;
+    if (!inStrip(mx) || m.peer === NET.watch) continue;
     ctx.fillStyle = SLOT_COLORS[m.slot] || SLOT_COLORS[1];
     ctx.fillRect(mx - 2.5, y + 15, 5, 5);
   }
@@ -1123,11 +1254,13 @@ function drawScare(t) {
 // The two that walk on the water off Skerry Light.
 //
 // Maren Holm, the keeper's wife, rowed out in 1887 to warn the brig Gannet and never came back.
-// Each time the beam comes round she stands a little nearer your bow. Ring the bell while you can
-// see her to drive her back. If she reaches you, she takes the ship.
+// Every half turn of the beam she stands a stage nearer your bow, and between turns she keeps pace
+// with the ship. Ring the bell while you can see her to drive her back two stages. If she reaches
+// you, she takes the ship.
 //
 // Plimsoll, the shark in the Gannet cabin boy's shoes, knows the deep water through the skerries.
-// He walks ahead of you to the harbour. Keep close to him and Maren cannot come nearer.
+// He walks ahead of you to the harbour. Keep close to him and Maren holds where she is, but he will
+// not wait long for a ship that falls behind.
 
 const IMG = { maren: new Image(), plim: new Image() };
 IMG.maren.src = SK.ASSETS.maren;
@@ -1136,27 +1269,29 @@ function imgReady(im) { return im.complete && im.naturalWidth > 0; }
 
 // ---------- Maren ----------
 function newMaren(active, gannet) {
-  return { active, stage: 0, x: gannet ? gannet.x : 0, y: gannet ? gannet.y + gannet.r * 0.4 : 900, seenStage: -1, apparition: 0 };
+  return { active, stage: 0, x: gannet ? gannet.x : 0, y: gannet ? gannet.y + gannet.r * 0.4 : 900, relB: 0, following: false, seenStage: -1, apparition: 0, heldLog: -99 };
 }
 
 function placeMaren(stage) {
   const m = g.maren, d = SK.MAREN_STAGES[stage];
-  const b = ship.h + rand(-0.3, 0.3);
+  m.relB = rand(-0.35, 0.35);
+  const b = ship.h + m.relB;
   m.x = ship.x + Math.sin(b) * d;
   m.y = Math.max(25, ship.y + Math.cos(b) * d);
+  m.following = true;
 }
 
 function plimsollGuarding() { return Math.hypot(g.plim.x - ship.x, g.plim.y - ship.y) < SK.PLIMSOLL_GUARD; }
 
-// called each time the beam completes a turn
+// called every half turn of the beam
 function marenTurn() {
   const m = g.maren;
   if (!m.active || state !== 'play') return;
-  const byPlim = plimsollGuarding(), byCrew = crewMode && mateNear(90);
+  const byPlim = plimsollGuarding(), byCrew = crewMode && mateNear(SK.CREW_GUARD);
   if (byPlim || byCrew) {
-    if (m.stage > 0) {
-      m.stage--; placeMaren(m.stage);
-      addLog(byPlim ? 'Plimsoll is close. She falls back.' : 'Your crew is close by. She falls back.', 'p');
+    if (m.stage > 0 && g.t - m.heldLog > 12) {
+      m.heldLog = g.t;
+      addLog(byPlim ? 'Plimsoll is close. She holds where she is.' : 'Your crew is close by. She holds where she is.', 'p');
     }
     return;
   }
@@ -1174,23 +1309,38 @@ function marenInView() {
 
 function ringBell() {
   if (state !== 'play' || g.bell > 0) return;
-  g.bell = SK.BELL_COOLDOWN + g.n * 1.5;
+  g.bell = bellCooldown();
   g.bellFlash = 1;
   sfxBell();
   if (crewMode) { NET.bells++; send(); }
+  const drowned = bellDrownsThem();
   const m = g.maren;
   if (m.active && m.stage >= 1 && marenInView()) {
-    m.stage = 0; placeMaren(0);
-    addLog('The bell rings out. She is gone, for now.', 'p');
+    m.stage = Math.max(0, m.stage - SK.BELL_PUSH); placeMaren(m.stage);
+    addLog('The bell rings out. She draws back, but not far.' + (drowned ? ' The drowned sink away.' : ''), 'p');
+  } else if (drowned) {
+    addLog('The bell rings out and the drowned sink back under.', 'p');
   } else {
     addLog(m.stage >= 1 ? 'The bell rings, but she is not in front of you. Turn to face her first.' : 'The bell rings out over the water. Nothing answers.');
   }
+}
+function bellCooldown() { return SK.BELL_COOLDOWN + g.n * 2; }
+
+// she keeps pace with the ship, and at the last stages she drifts into your path
+function followShip(m, dt) {
+  if (!m.following) return;
+  if (m.stage >= 3) m.relB *= 1 - Math.min(1, dt * 0.35);
+  const d = SK.MAREN_STAGES[m.stage], b = ship.h + m.relB;
+  const tx = ship.x + Math.sin(b) * d, ty = Math.max(25, ship.y + Math.cos(b) * d);
+  const k = Math.min(1, dt * (0.35 + m.stage * 0.25));
+  m.x += (tx - m.x) * k; m.y += (ty - m.y) * k;
 }
 
 function updateMaren(dt) {
   const m = g.maren;
   if (m.apparition > 0) m.apparition -= dt;
   if (!m.active) return;
+  if (state === 'play') followShip(m, dt);
   // the first time you see her at each stage, she whispers
   const vis = visibility(m.x, m.y);
   if (vis > 0.3 && marenInView() && m.seenStage !== m.stage) {
@@ -1241,7 +1391,7 @@ function drawBowspritApparition() {
 
 // ---------- Plimsoll ----------
 function newPlimsoll(path) {
-  const p = { x: path[0].x, y: path[0].y, k: 1, walking: false, phase: 0, lastStep: 0, call: 2, dirX: 0, dirY: 1, done: false };
+  const p = { x: path[0].x, y: path[0].y, k: 1, walking: false, phase: 0, lastStep: 0, call: 2, dirX: 0, dirY: 1, done: false, waitT: 0, warned: false };
   // start him a little way along the channel, ahead of the bow
   let left = 60;
   while (p.k < path.length && left > 0) {
@@ -1255,8 +1405,13 @@ function newPlimsoll(path) {
 function updatePlimsoll(dt) {
   const p = g.plim, path = g.path;
   const d = Math.hypot(p.x - ship.x, p.y - ship.y);
-  if (d < 80) p.walking = true;
-  else if (d > 105) p.walking = false;
+  if (d < 80) { p.walking = true; p.waitT = 0; }
+  else if (d > 105) {
+    // he waits a little for a ship that falls behind, then walks on without it
+    p.waitT += dt;
+    p.walking = p.waitT > SK.PLIMSOLL_PATIENCE;
+    if (p.walking && !p.warned && !g.attract) { p.warned = true; addLog("Plimsoll won't wait. He is walking on without you.", 'w'); }
+  }
   if (p.k >= path.length) { p.walking = false; p.done = true; }
   if (p.walking) {
     const t = path[p.k], dx = t.x - p.x, dy = t.y - p.y, dd = Math.hypot(dx, dy);
@@ -1315,6 +1470,149 @@ function drawPlimsoll(q, vis) {
   ctx.globalAlpha = 1;
 }
 
+// ---- src/enemies.js ----
+// The other things in the water.
+//
+// The drowned crew of the Gannet swim after any ship that comes into the skerries. They are slow,
+// but if one reaches a ship sailing slowly it climbs aboard and tears out a plank. Ships going fast
+// shake them off, the bell drives them under, and Plimsoll eats any he can catch.
+//
+// The wreckers' lights are a red and a green lamp, like the harbour piers, hung over a cluster of
+// rocks to lure ships in. The lighthouse beam shows them for what they are: they go dark when it
+// passes over them, and snuff out for good when a ship gets close.
+
+function newEnemies(lures) {
+  return { drowned: [], spawnT: 10, lures: lures || [], warnedLure: false };
+}
+
+// ---------- the drowned ----------
+function spawnDrowned() {
+  for (let tries = 0; tries < 20; tries++) {
+    const b = ship.h + rand(-1.3, 1.3), d = rand(110, 170);
+    const x = ship.x + Math.sin(b) * d, y = ship.y + Math.cos(b) * d;
+    if (y < 40) continue;
+    g.enemies.drowned.push({ x, y, ph: rand(0, 6.28), splashT: rand(0, 2), dead: false });
+    return;
+  }
+}
+
+function updateEnemies(dt) {
+  const E = g.enemies;
+  if (g.attract || state !== 'play') return;
+
+  E.spawnT -= dt;
+  const max = 2 + Math.min(4, g.n);
+  if (E.spawnT <= 0) {
+    if (E.drowned.length < max) spawnDrowned();
+    E.spawnT = Math.max(5, 13 - g.n * 1.2) * rand(0.75, 1.25);
+  }
+  const sp = SK.DROWNED_SPEED + g.n * 0.4;
+  for (const d of E.drowned) {
+    const dx = ship.x - d.x, dy = ship.y - d.y, dist = Math.hypot(dx, dy) || 1;
+    d.x += dx / dist * sp * dt; d.y += dy / dist * sp * dt; d.ph += dt * 3;
+    const pan = clamp(angDiff(bearingOf(d.x - ship.x, d.y - ship.y), ship.h) / (fov / 2), -1, 1);
+    d.splashT -= dt;
+    if (dist < 90 && d.splashT <= 0) { d.splashT = rand(1.2, 2.6); sfxSplash(pan, 1 - dist / 90); }
+    if (Math.hypot(g.plim.x - d.x, g.plim.y - d.y) < 12) {
+      d.dead = true;
+      burst(d.x, d.y, ['#c8d6e8', '#ece4cf'], 14, 6, 6);
+      squeakFrom(g.plim, Math.hypot(g.plim.x - ship.x, g.plim.y - ship.y), 1.8);
+      addLog('Plimsoll caught one of the drowned. Good shark.', 'p');
+      continue;
+    }
+    if (dist < 7) {
+      d.dead = true;
+      if (ship.v > SK.DROWNED_OUTRUN) addLog('A drowned hand slid off the hull. She was going too fast for it.');
+      else boarded();
+    }
+  }
+  E.drowned = E.drowned.filter(d => !d.dead && Math.hypot(d.x - ship.x, d.y - ship.y) < 400);
+
+  for (const l of E.lures) {
+    if (l.gone) continue;
+    if (Math.hypot(l.x - ship.x, l.y - ship.y) < 45) {
+      l.gone = true;
+      const pan = clamp(angDiff(bearingOf(l.x - ship.x, l.y - ship.y), ship.h) / (fov / 2), -1, 1);
+      sfxCackle(pan);
+      addLog(E.warnedLure ? 'Another pair of false lights went out. Rocks below.' :
+        'Those lamps went out. They were never the harbour. Wreckers hang false lights over rocks; trust the bearing strip.', 'w');
+      E.warnedLure = true;
+    }
+  }
+}
+
+function boarded() {
+  if (ship.inv > 0 || state !== 'play') return;
+  ship.inv = 1.4; g.shake = 0.45;
+  sfxClaw();
+  ship.hull--; run.hits++;
+  renderHud();
+  if (ship.hull <= 0) { addLog('The drowned crew pulled her under.', 'w'); endRun('sunk'); }
+  else addLog('A drowned sailor climbed aboard and tore out a plank. Sail faster to shake them off.', 'w');
+}
+
+// the bell sends the drowned back under
+function bellDrownsThem() {
+  const E = g.enemies;
+  let n = 0;
+  for (const d of E.drowned) if (Math.hypot(d.x - ship.x, d.y - ship.y) < 90) { d.dead = true; n++; }
+  E.drowned = E.drowned.filter(d => !d.dead);
+  return n;
+}
+
+function drawDrowned(d, q, vis) {
+  const s = q.s, r = Math.max(1.2, 0.32 * s);
+  const x = q.x, y = q.y + Math.sin(d.ph) * 0.12 * s;
+  // their eyes catch any light at all, so you can always see them coming
+  ctx.fillStyle = `rgba(200,235,225,${0.22 + 0.55 * vis})`;
+  const e = Math.max(1, r * 0.2);
+  ctx.fillRect(x - r * 0.4 - e / 2, y - r * 1.05, e, e);
+  ctx.fillRect(x + r * 0.4 - e / 2, y - r * 1.05, e, e);
+  if (vis < 0.02) return;
+  ctx.globalAlpha = vis;
+  ctx.strokeStyle = 'rgba(225,235,248,0.35)'; ctx.lineWidth = Math.max(1, r * 0.15);
+  ctx.beginPath(); ctx.ellipse(x, y, r * 2.4, Math.max(1, r * 0.35), 0, 0, 6.28); ctx.stroke();
+  ctx.fillStyle = '#8fa39a';
+  ctx.beginPath(); ctx.arc(x, y - r * 0.85, r, Math.PI, 0); ctx.lineTo(x + r, y); ctx.lineTo(x - r, y); ctx.closePath(); ctx.fill();
+  ctx.strokeStyle = '#2c3a34'; ctx.lineWidth = Math.max(1, r * 0.12);
+  ctx.beginPath();
+  for (let i = -2; i <= 2; i++) { ctx.moveTo(x + i * r * 0.35, y - r * 1.7); ctx.lineTo(x + i * r * 0.45, y - r * 0.2); }
+  ctx.stroke();
+  ctx.strokeStyle = '#7f938a'; ctx.lineWidth = Math.max(1, r * 0.32); ctx.lineCap = 'round';
+  for (const side of [-1, 1]) {
+    const reach = Math.sin(d.ph * 0.9 + side) * 0.4;
+    const hx = x + side * r * 2.1, hy = y - r * (3 + reach);
+    ctx.beginPath(); ctx.moveTo(x + side * r * 0.9, y - r * 0.3); ctx.quadraticCurveTo(x + side * r * 2.2, y - r * 1.2, hx, hy); ctx.stroke();
+    ctx.lineWidth = Math.max(0.8, r * 0.12);
+    ctx.beginPath();
+    for (let f = -1; f <= 1; f++) { ctx.moveTo(hx, hy); ctx.lineTo(hx + side * r * 0.25 + f * r * 0.25, hy - r * 0.55); }
+    ctx.stroke();
+    ctx.lineWidth = Math.max(1, r * 0.32);
+  }
+  ctx.lineCap = 'butt';
+  ctx.globalAlpha = 1;
+}
+
+// ---------- the wreckers' lights ----------
+function lureLamps(l) {
+  const sway = Math.sin(g.t * 0.6 + l.ph) * 2;
+  const qx = l.py, qy = -l.px;   // across the line of approach, so the "gap" faces the ships
+  return [[l.x - qx * 23 + sway, l.y - qy * 23, '#e46c4f'], [l.x + qx * 23 + sway, l.y + qy * 23, '#86cfae']];
+}
+function drawLures() {
+  for (const l of g.enemies.lures) {
+    if (l.gone || litAt(l.x, l.y) > 0) continue;   // the beam shows them up: no lamps there at all
+    for (const [x, y, col] of lureLamps(l)) {
+      const c = cam(x, y, 7); if (c.f < SK.NEAR) continue;
+      const q = proj(c);
+      const flick = 0.85 + 0.15 * Math.sin(g.t * 3 + l.ph);
+      ctx.globalAlpha = flick;
+      lamp(q.x, q.y, col, Math.max(2.4, 1.4 * Math.sqrt(q.s)));
+      ctx.globalAlpha = 1;
+    }
+  }
+}
+
 // ---- src/game.js ----
 // Game state, the update step, voyages, input and the main loop.
 
@@ -1324,6 +1622,8 @@ let run = { voyages: 0, hits: 0 };
 let best = 0;
 try { best = parseInt(localStorage.getItem('skerry-helm-best') || '0', 10) || 0; } catch (e) {}
 const keys = {}, touches = new Map();
+let sailHold = 0;   // the on-screen sail buttons
+const SHOUTS = { 1: 'Rocks here!', 2: 'Follow me!', 3: "She's near me!" };
 
 function newVoyage(n, attract, seed, slot) {
   const v = makeVoyage(n, attract, seed);
@@ -1335,7 +1635,9 @@ function newVoyage(n, attract, seed, slot) {
     t: 0, n, attract, beam: beam0, beam0, launchAt: 0, launchId: null, period: Math.min(11, 6 + n * 0.8),
     rocks: v.rocks, wrecks: v.wrecks, timber: v.timber, path: v.path,
     parts: [], glare: 0, shake: 0, log: [], bell: 0, bellFlash: 0, wasLit: false, scareT: 0,
+    flares: [], flareCd: 0, repairT: 0, shoutT: 0,
   };
+  g.enemies = newEnemies(v.lures);
   g.plim = newPlimsoll(v.path);
   g.maren = newMaren(!attract, v.wrecks.find(w => w.name === 'Gannet'));
   renderHud();
@@ -1374,12 +1676,49 @@ function hit(nx, ny, what) {
 
 function wrapPi(a) { return ((a + Math.PI) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI) - Math.PI; }
 // Crew voyages run the light off the shared launch clock so every ship sees the same sweep.
-// Returns true when the beam has just completed a turn.
+// Returns true each half turn: when the beam passes north, and when it comes round behind the land.
 function advanceBeam(dt) {
   const prev = g.beam;
   if (g.launchAt) g.beam = wrapPi(g.beam0 + (Date.now() - g.launchAt) / 1000 / g.period * Math.PI * 2);
   else { g.beam += (Math.PI * 2 / g.period) * dt; if (g.beam > Math.PI) g.beam -= Math.PI * 2; }
-  return g.beam < prev - Math.PI;
+  return g.beam < prev - Math.PI || (prev < 0 && g.beam >= 0);
+}
+
+// ---------- flares, shouts and sailing in company ----------
+function fireFlare() {
+  if (state !== 'play' || g.flareCd > 0) return;
+  g.flareCd = SK.FLARE_COOLDOWN;
+  addFlare(ship.x, ship.y);
+  sfxFlare();
+  addLog('Flare away. Everything within ' + SK.FLARE_RADIUS + ' m is lit for a few seconds.', 'p');
+  if (crewMode) { NET.flares++; NET.flare = { n: NET.flares, x: Math.round(ship.x), y: Math.round(ship.y) }; send(); }
+}
+function addFlare(x, y) { g.flares.push({ x, y, t: SK.FLARE_TIME }); }
+function flareAt(x, y) {
+  let best = 0;
+  for (const f of g.flares) {
+    const d = Math.hypot(x - f.x, y - f.y);
+    if (d < SK.FLARE_RADIUS) best = Math.max(best, (1 - d / SK.FLARE_RADIUS) * Math.min(1, f.t / 1.5) * 1.4);
+  }
+  return Math.min(1, best);
+}
+function shout(k) {
+  if (state !== 'play' || !crewMode || g.shoutT > 0 || !SHOUTS[k]) return;
+  g.shoutT = 2;
+  NET.shouts++; NET.shout = { n: NET.shouts, k }; send();
+  sfxHorn(0, 0.8);
+  addLog('You: ' + SHOUTS[k], 'p');
+}
+function sailInCompany(dt) {
+  if (!crewMode || ship.hull >= SK.HULL) { g.repairT = 0; return; }
+  const mate = matesAtSea().find(m => Math.hypot(m.x - ship.x, m.y - ship.y) < SK.REPAIR_DIST);
+  if (!mate) { g.repairT = Math.max(0, g.repairT - dt * 0.5); return; }
+  if (g.repairT === 0) addLog('Sailing in company with ' + mate.name + '. Stay close and the carpenters can patch a plank.');
+  g.repairT += dt;
+  if (g.repairT >= SK.REPAIR_TIME) {
+    g.repairT = 0; ship.hull++; renderHud(); sfxChime();
+    addLog('With ' + mate.name + ' alongside, the carpenters patched a plank.', 'p');
+  }
 }
 
 function update(dt) {
@@ -1396,7 +1735,8 @@ function update(dt) {
     steer = (keys.ArrowRight || keys.d ? 1 : 0) - (keys.ArrowLeft || keys.a ? 1 : 0);
     sailIn = (keys.ArrowUp || keys.w ? 1 : 0) - (keys.ArrowDown || keys.s ? 1 : 0);
     for (const t of touches.values()) { if (t === 'L') steer -= 1; else if (t === 'R') steer += 1; else sailIn -= 1; }
-    steer = clamp(steer, -1, 1);
+    sailIn += sailHold;
+    steer = clamp(steer, -1, 1); sailIn = clamp(sailIn, -1, 1);
   }
   ship.rudder += (steer - ship.rudder) * Math.min(1, dt * 4);
   ship.sail = clamp(ship.sail + sailIn * 0.5 * dt, 0.15, 1);
@@ -1428,6 +1768,12 @@ function update(dt) {
 
   updatePlimsoll(dt);
   updateMaren(dt);
+  updateEnemies(dt);
+  sailInCompany(dt);
+  for (const f of g.flares) f.t -= dt;
+  g.flares = g.flares.filter(f => f.t > 0);
+  if (g.flareCd > 0) g.flareCd = Math.max(0, g.flareCd - dt);
+  if (g.shoutT > 0) g.shoutT -= dt;
 
   const meLit = litAt(ship.x, ship.y);
   const facing = Math.abs(angDiff(bearingOf(-ship.x, -ship.y), ship.h)) < fov / 2;
@@ -1449,12 +1795,25 @@ function update(dt) {
     const d = Math.hypot(ship.x - SK.HARBOUR.x, ship.y - SK.HARBOUR.y);
     $('dist').textContent = d > 1000 ? (d / 1852).toFixed(1) + 'nm' : Math.round(d) + 'm';
     updateBellButton();
+    updateFlareButton();
   }
+}
+
+let flareShown = -1;
+function updateFlareButton() {
+  const p = g.flareCd > 0 ? 1 - g.flareCd / SK.FLARE_COOLDOWN : 1, v = Math.round(p * 50);
+  if (v === flareShown) return;
+  flareShown = v;
+  const b = $('flareBtn');
+  b.style.setProperty('--p', p.toFixed(2));
+  b.classList.toggle('ready', p >= 1);
+  $('flareState').textContent = p >= 1 ? 'Ready' : 'Loading';
+  $('shoutRow').hidden = !crewMode;
 }
 
 let bellShown = -1;
 function updateBellButton() {
-  const max = SK.BELL_COOLDOWN + g.n * 1.5, p = g.bell > 0 ? 1 - g.bell / max : 1;
+  const max = bellCooldown(), p = g.bell > 0 ? 1 - g.bell / max : 1;
   const v = Math.round(p * 50);
   if (v === bellShown) return;
   bellShown = v;
@@ -1479,7 +1838,7 @@ function startRun() {
 function beginVoyage(n) {
   state = 'play';
   newVoyage(n, false);
-  bellShown = -1;
+  bellShown = -1; flareShown = -1;
   hideCards();
   $('hud').hidden = false; $('logbox').hidden = false;
   $('log').textContent = '';
@@ -1492,7 +1851,8 @@ function beginCrewVoyage(L, slot) {
   state = 'play';
   newVoyage(L.voy, false, L.seed, slot);
   g.launchAt = L.at; g.launchId = L.id;
-  bellShown = -1;
+  bellShown = -1; flareShown = -1;
+  stopSpectating();
   hideCards(); $('crewCard').hidden = true;
   $('hud').hidden = false; $('logbox').hidden = false;
   $('log').textContent = '';
@@ -1588,12 +1948,16 @@ addEventListener('keydown', e => {
     keys[k] = true; if (state === 'play') e.preventDefault();
   } else if ((k === ' ' || k === 'b') && state === 'play') {
     e.preventDefault(); if (!e.repeat) ringBell();
+  } else if (k === 'f' && state === 'play') {
+    if (!e.repeat) fireFlare();
+  } else if ((k === '1' || k === '2' || k === '3') && state === 'play') {
+    if (!e.repeat) shout(+k);
   } else if (k === 'm') {
     toggleSound();
   }
 });
 addEventListener('keyup', e => { keys[keyName(e)] = false; });
-addEventListener('blur', () => { for (const k in keys) keys[k] = false; touches.clear(); });
+addEventListener('blur', () => { for (const k in keys) keys[k] = false; touches.clear(); sailHold = 0; });
 
 function toggleSound() {
   setMuted(!AUD.muted);
@@ -1606,6 +1970,18 @@ $('nextBtn').addEventListener('click', () => beginVoyage(g.n + 1));
 $('againBtn').addEventListener('click', startRun);
 $('bellBtn').addEventListener('click', e => { ringBell(); e.currentTarget.blur(); cv.focus({ preventScroll: true }); });
 $('soundBtn').addEventListener('click', e => { audioInit(); toggleSound(); e.currentTarget.blur(); });
+$('flareBtn').addEventListener('click', e => { fireFlare(); e.currentTarget.blur(); cv.focus({ preventScroll: true }); });
+for (const k of [1, 2, 3]) $('shout' + k).addEventListener('click', e => { shout(k); e.currentTarget.blur(); cv.focus({ preventScroll: true }); });
+// hold to make or shorten sail, for phones
+for (const [id, dir] of [['sailUp', 1], ['sailDown', -1]]) {
+  const b = $(id);
+  const stop = () => { if (sailHold === dir) sailHold = 0; b.classList.remove('held'); };
+  b.addEventListener('pointerdown', e => { e.preventDefault(); sailHold = dir; b.classList.add('held'); try { b.setPointerCapture(e.pointerId); } catch (err) {} });
+  b.addEventListener('pointerup', stop);
+  b.addEventListener('pointercancel', stop);
+  b.addEventListener('lostpointercapture', stop);
+  b.addEventListener('contextmenu', e => e.preventDefault());
+}
 $('soundBtn').textContent = AUD.muted ? 'Sound off' : 'Sound on';
 addEventListener('resize', resize);
 
@@ -1702,8 +2078,10 @@ function wsTransport(url) {
 //  - on claude.ai, the artifact `room` capability (signed-in viewers only);
 //  - anywhere else, the WebSocket relay in server/server.js (see src/transport.js).
 // Everyone connected shares one lobby, and all crew traffic travels in presence (each player's
-// own state object). Each ship sails on its own screen; crewmates see each other's positions,
-// hull and bells. The crew's host (whoever joined first) chooses when to set sail.
+// own state object). Each ship sails on its own screen; crewmates see each other's positions and
+// hull, hear each other's bells and shouts, share flares, and patch each other's hulls when they
+// sail close together. Once your voyage is over you can watch a crewmate's from their deck.
+// The crew's host (whoever joined first) chooses when to set sail.
 // With no connection the game plays solo exactly as before.
 
 const NET = {
@@ -1722,6 +2100,9 @@ const NET = {
   mates: new Map(),         // peer -> remote ship
   names: {},
   bells: 0,
+  flares: 0, flare: null,   // flares I've fired, and the last one
+  shouts: 0, shout: null,
+  watch: null,              // the crewmate I'm watching, once my own voyage is over
   lastSend: 0, lastUi: 0, lastNames: 0,
   st: null,                 // my status on this voyage: 'sail' | 'port' | 'sunk' | 'taken'
   results: null,            // results of the last finished voyage
@@ -1806,7 +2187,7 @@ function myPresence() {
     app: 'skerry', crew: NET.crew, joinedAt: NET.joinedAt, ready: NET.ready, nick: NET.nick || null,
     launch: amHostSafe() ? NET.launch : null,
     voy: NET.launch ? NET.launch.voy : 0, st: NET.st,
-    bell: NET.bells,
+    bell: NET.bells, flare: NET.flare, shout: NET.shout,
   };
 }
 function amHostSafe() { return NET.crew && NET.myHostFlag; }
@@ -1849,7 +2230,8 @@ function leaveCrew(silent) {
   NET.crew = null; NET.ready = false; NET.st = null; NET.launch = null; NET.results = null; NET.myHostFlag = false;
   crewMode = false;
   NET.mates.clear();
-  if (NET.room && !silent) NET.room.presence({ app: 'skerry', crew: null, nick: NET.nick || null, joinedAt: null, ready: null, launch: null, voy: null, st: null, bell: null, x: null, y: null, h: null, hull: null, stage: null }).catch(() => {});
+  if (NET.room && !silent) NET.room.presence({ app: 'skerry', crew: null, nick: NET.nick || null, joinedAt: null, ready: null, launch: null, voy: null, st: null, bell: null, flare: null, shout: null, x: null, y: null, h: null, v: null, hull: null, stage: null, mx: null, my: null, px: null, py: null }).catch(() => {});
+  stopSpectating();
   if (!silent) toTitle();
 }
 function toggleReady() { NET.ready = !NET.ready; send(); renderCrewCard(); }
@@ -1892,9 +2274,26 @@ function syncMates() {
       seen.add(p.peer);
       let m = NET.mates.get(p.peer);
       if (!m) {
-        m = { peer: p.peer, x: +pr.x || 0, y: +pr.y || 0, h: +pr.h || 0, tx: 0, ty: 0, th: 0, bell: +pr.bell || 0, bob: Math.random() * 6 };
+        m = { peer: p.peer, x: +pr.x || 0, y: +pr.y || 0, h: +pr.h || 0, tx: 0, ty: 0, th: 0, bell: +pr.bell || 0, bob: Math.random() * 6,
+          flareN: counter(pr.flare), shoutN: counter(pr.shout), shoutT: 0, shoutText: '' };
         NET.mates.set(p.peer, m);
       }
+      // what a spectator needs to see from their deck
+      m.v = Number.isFinite(pr.v) ? pr.v : 8;
+      m.stage = Number.isFinite(pr.stage) ? clamp(pr.stage | 0, 0, SK.MAREN_STAGES.length - 1) : 0;
+      if (Number.isFinite(pr.mx) && Number.isFinite(pr.my)) { if (!Number.isFinite(m.mx)) { m.mx = pr.mx; m.my = pr.my; } m.tmx = pr.mx; m.tmy = pr.my; } else { m.mx = m.my = m.tmx = m.tmy = undefined; }
+      if (Number.isFinite(pr.px) && Number.isFinite(pr.py)) { if (!Number.isFinite(m.px)) { m.px = pr.px; m.py = pr.py; } m.tpx = pr.px; m.tpy = pr.py; }
+      const fl = counter(pr.flare);
+      if (fl > m.flareN) {
+        m.flareN = fl;
+        if (Number.isFinite(pr.flare.x) && Number.isFinite(pr.flare.y)) mateFlare(m, pr.flare.x, pr.flare.y);
+      } else m.flareN = fl;
+      const sh = counter(pr.shout);
+      if (sh > m.shoutN) {
+        m.shoutN = sh;
+        const text = SHOUTS[pr.shout.k];
+        if (text) mateShout(m, text);
+      } else m.shoutN = sh;
       m.by = p.by; m.slot = slotOf(p.peer); m.name = nameOf(p, m.slot);
       m.st = pr.voy === NET.launch.voy ? pr.st : null;
       m.hull = Number.isFinite(pr.hull) ? pr.hull : SK.HULL;
@@ -1911,6 +2310,24 @@ function syncMates() {
   for (const k of [...NET.mates.keys()]) if (!seen.has(k)) NET.mates.delete(k);
 }
 
+function counter(o) { return o && typeof o === 'object' && Number.isFinite(o.n) ? o.n : 0; }
+
+function mateFlare(m, x, y) {
+  if (!g || g.attract) return;
+  addFlare(x, y);
+  const d = Math.hypot(x - ship.x, y - ship.y);
+  if (state === 'play') addLog(m.name + ' fired a flare, ' + Math.round(d) + ' m off.', 'p');
+  if (d < 900) sfxFlare();
+}
+function mateShout(m, text) {
+  m.shoutText = text; m.shoutT = 4;
+  if (!g || g.attract) return;
+  const d = Math.hypot(m.x - ship.x, m.y - ship.y);
+  const pan = clamp(angDiff(bearingOf(m.x - ship.x, m.y - ship.y), ship.h) / (fov / 2), -1, 1);
+  sfxHorn(pan, Math.max(0.3, 1 - d / 800));
+  if (state === 'play') addLog(m.name + ': ' + text + ' (' + Math.round(d) + ' m)', 'p');
+}
+
 function matesAtSea() { return [...NET.mates.values()].filter(m => m.st === 'sail' && m.placed); }
 function mateNear(dist) {
   return matesAtSea().some(m => Math.hypot(m.x - ship.x, m.y - ship.y) < dist);
@@ -1921,9 +2338,9 @@ function mateRangBell(m) {
   const d = Math.hypot(m.x - ship.x, m.y - ship.y);
   const pan = clamp(angDiff(bearingOf(m.x - ship.x, m.y - ship.y), ship.h) / (fov / 2), -1, 1);
   sfxBellFar(pan, Math.max(0.15, 1 - d / 600));
-  if (d < 160 && g.maren.active && g.maren.stage >= 1) {
-    g.maren.stage = 0; placeMaren(0);
-    addLog(m.name + ' rang the bell close by. She falls back.', 'p');
+  if (d < SK.CREW_BELL_RANGE && g.maren.active && g.maren.stage >= 1) {
+    g.maren.stage--; placeMaren(g.maren.stage);
+    addLog(m.name + ' rang the bell close by. She draws back a little.', 'p');
   } else {
     addLog(m.name + ' rang the bell.');
   }
@@ -1935,18 +2352,30 @@ function netTick(dt) {
     const k = Math.min(1, dt * 6);
     m.x += (m.tx - m.x) * k; m.y += (m.ty - m.y) * k;
     m.h += angDiff(m.th, m.h) * k;
+    if (Number.isFinite(m.tmx)) { m.mx += (m.tmx - m.mx) * k; m.my += (m.tmy - m.my) * k; }
+    if (Number.isFinite(m.tpx)) { m.px += (m.tpx - m.px) * k; m.py += (m.tpy - m.py) * k; }
+    if (m.shoutT > 0) m.shoutT -= dt;
     m.bob += dt;
   }
   if (!NET.room || !NET.crew) return;
   const now = performance.now();
   if (state === 'play' && now - NET.lastSend > 66) {
     NET.lastSend = now;
-    send({ x: Math.round(ship.x * 10) / 10, y: Math.round(ship.y * 10) / 10, h: Math.round(ship.h * 1000) / 1000, hull: ship.hull, stage: g.maren.stage });
+    const r1 = v => Math.round(v * 10) / 10;
+    send({
+      x: r1(ship.x), y: r1(ship.y), h: Math.round(ship.h * 1000) / 1000, v: r1(ship.v), hull: ship.hull, stage: g.maren.stage,
+      mx: g.maren.active ? r1(g.maren.x) : null, my: g.maren.active ? r1(g.maren.y) : null,
+      px: r1(g.plim.x), py: r1(g.plim.y),
+    });
   }
   if (now - NET.lastNames > 3000) { NET.lastNames = now; refreshNames(); }
   if (now - NET.lastUi > 250) {
     NET.lastUi = now;
     checkResults();
+    if (NET.watch) {
+      const w = NET.mates.get(NET.watch);
+      if (!w || w.st !== 'sail') nextSpectate(); else renderSpecBar();
+    }
     renderCrewHud();
     if (!$('crewCard').hidden) renderCrewCard();
   }
@@ -1968,6 +2397,7 @@ function checkResults() {
   const outcome = p => p.peer === NET.myPeer ? NET.st : (p.presence && p.presence.voy === voy ? p.presence.st : null);
   const rows = list.map((p, i) => ({ name: nameOf(p, i), slot: i, st: outcome(p) })).filter(r => r.st);
   NET.results = { voy, rows, madeIt: rows.filter(r => r.st === 'port').length };
+  stopSpectating();
   if (NET.results.madeIt > 0) {
     run.voyages = Math.max(run.voyages, voy);
     if (voy > best) { best = voy; try { localStorage.setItem('skerry-helm-best', String(best)); } catch (e) {} }
@@ -2011,6 +2441,43 @@ function renderTogether() {
   }
 }
 setInterval(() => { if (state === 'title' && !$('titleCard').hidden) renderTogether(); }, 1000);
+
+// ---------- watching a crewmate ----------
+function startSpectating(peer) {
+  if (!NET.mates.get(peer)) return;
+  NET.watch = peer;
+  $('crewCard').hidden = true;
+  $('specBar').hidden = false;
+  renderSpecBar();
+}
+function stopSpectating() {
+  NET.watch = null;
+  const bar = $('specBar'); if (bar) bar.hidden = true;
+}
+function nextSpectate() {
+  const list = matesAtSea();
+  if (!list.length) { stopSpectating(); if (crewMode && state !== 'play') showCrewCard(); return; }
+  const i = list.findIndex(m => m.peer === NET.watch);
+  startSpectating(list[(i + 1) % list.length].peer);
+}
+function renderSpecBar() {
+  const m = NET.mates.get(NET.watch); if (!m) return;
+  $('specName').textContent = 'Watching ' + m.name;
+  const danger = ['', 'she is out there', 'she is getting closer', 'she is close', 'she is at the bow'][m.stage] || '';
+  $('specInfo').textContent = 'Hull ' + m.hull + ' of ' + SK.HULL + (danger ? ' · ' + danger : '');
+  $('specNext').hidden = matesAtSea().length < 2;
+}
+// draw the scene from the watched crewmate's deck, then put my own state back
+function withSpectatorView(draw) {
+  const m = NET.watch && NET.mates.get(NET.watch);
+  if (!m || !g) { draw(); return; }
+  const mine = { ship, maren: g.maren, plim: g.plim, glare: g.glare };
+  ship = { x: m.x, y: m.y, h: m.h, bob: m.bob, rudder: 0, v: m.v, inv: 0, hull: m.hull, sail: 0.5 };
+  g.maren = { active: Number.isFinite(m.mx), following: true, stage: m.stage, x: m.mx, y: m.my, apparition: 0, relB: 0 };
+  g.plim = Object.assign({}, mine.plim, Number.isFinite(m.px) ? { x: m.px, y: m.py } : {}, { walking: true, phase: g.t * 9, dirX: Math.sin(m.h), dirY: Math.cos(m.h) });
+  g.glare = 0;
+  try { draw(); } finally { ship = mine.ship; g.maren = mine.maren; g.plim = mine.plim; g.glare = mine.glare; }
+}
 
 function showCrewCard() {
   for (const id of ['titleCard', 'portCard', 'endCard']) $(id).hidden = true;
@@ -2057,7 +2524,7 @@ function renderCrewCard() {
     text.textContent = 'Send this page to up to two friends. They join from the title screen by picking crew ' + NET.crew.toUpperCase() + '. Everyone sails their own brig through the same skerries. Ships close together keep Maren back, and a bell rung near a crewmate drives her away from both of you.';
   } else if (!r) {
     title.textContent = statusWord(NET.st) === 'In harbour' ? 'Safe in Harbour' : 'Lost at Sea';
-    text.textContent = 'Voyage ' + voy + '. Waiting for the rest of the crew to make harbour or go down.';
+    text.textContent = 'Voyage ' + voy + '. Waiting for the rest of the crew to make harbour or go down. You can watch them from their deck while you wait.';
   } else if (r.madeIt > 0) {
     title.textContent = r.madeIt === r.rows.length ? 'The Whole Crew Made It' : r.madeIt + ' of ' + r.rows.length + ' Made Harbour';
     text.textContent = 'Voyage ' + voy + ' is done. The next voyage has more wreckage and a slower light.';
@@ -2068,6 +2535,18 @@ function renderCrewCard() {
     title.textContent = 'The Crew Is Lost';
     text.textContent = 'No ship made harbour on voyage ' + voy + '. The host can take the crew out again from voyage 1.';
   }
+
+  const watchBox = $('crewWatch'); watchBox.textContent = '';
+  if (NET.launch && !r) {
+    for (const m of matesAtSea()) {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'tool';
+      b.textContent = 'Watch ' + m.name;
+      b.addEventListener('click', () => startSpectating(m.peer));
+      watchBox.appendChild(b);
+    }
+  }
+  watchBox.hidden = !watchBox.childElementCount;
 
   const sail = $('crewSailBtn'), ready = $('crewReadyBtn'), wait = $('crewWait');
   const between = !NET.launch || r;
@@ -2104,6 +2583,8 @@ $('nick').addEventListener('input', e => {
   if (NET.room) send();
 });
 $('crewStartBtn').addEventListener('click', startCrew);
+$('specNext').addEventListener('click', nextSpectate);
+$('specBack').addEventListener('click', () => { stopSpectating(); showCrewCard(); });
 $('crewSailBtn').addEventListener('click', setSail);
 $('crewReadyBtn').addEventListener('click', toggleReady);
 $('crewLeaveBtn').addEventListener('click', () => leaveCrew(false));
@@ -2120,13 +2601,18 @@ function frame(now) {
   const dt = Math.min(0.05, (now - last) / 1000); last = now;
   try {
     if (state === 'title' || state === 'play' || state === 'scare') update(dt);
-    else { g.t += dt; advanceBeam(dt); ship.v *= 0.98; }
+    else {
+      g.t += dt; advanceBeam(dt); ship.v *= 0.98;
+      for (const f of g.flares) f.t -= dt;
+      g.flares = g.flares.filter(f => f.t > 0);
+    }
     netTick(dt);
     if (state === 'scare') {
       g.scareT += dt;
       drawScare(g.scareT);
       if (g.scareT >= SK.SCARE_TIME) endRun('taken');
-    } else drawScene();
+    } else if (NET.watch) withSpectatorView(drawScene);
+    else drawScene();
   } catch (err) {
     if (!loggedError) { console.error(err); loggedError = true; }
   }

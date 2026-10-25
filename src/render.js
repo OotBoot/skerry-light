@@ -63,7 +63,7 @@ function lanternAt(x, y) {
   const d = Math.hypot(x - ship.x, y - ship.y);
   return d < SK.LANTERN ? Math.min(1, (1 - d / SK.LANTERN) * 1.6) : 0;
 }
-function visibility(x, y) { return Math.min(1, litAt(x, y) * 1.3 + lanternAt(x, y)); }
+function visibility(x, y) { return Math.min(1, litAt(x, y) * 1.3 + lanternAt(x, y) + flareAt(x, y)); }
 
 // An image cut into horizontal strips that slip sideways, for anything that should look wrong.
 function drawGlitch(img, x, y, w, h, amt) {
@@ -152,10 +152,32 @@ function drawMate(m, p, vis) {
     ctx.globalAlpha = 1;
   }
   lamp(x, y - hh - sailH * 0.3, col, Math.max(1.8, 1.3 * Math.sqrt(p.s)));
-  if (d < 700) {
+  if (d < 700 || m.shoutT > 0) {
     ctx.font = '700 11px "Courier Prime", monospace'; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
     ctx.fillStyle = col; ctx.globalAlpha = 0.9;
     ctx.fillText(m.name, x, y - hh - sailH - 6);
+    if (m.shoutT > 0) {
+      ctx.globalAlpha = Math.min(1, m.shoutT);
+      ctx.font = '700 13px "Courier Prime", monospace';
+      const text = m.shoutText, tw = ctx.measureText(text).width + 14, ty = y - hh - sailH - 22;
+      ctx.fillStyle = 'rgba(6,10,20,0.85)'; ctx.fillRect(x - tw / 2, ty - 18, tw, 20);
+      ctx.strokeStyle = col; ctx.lineWidth = 1; ctx.strokeRect(x - tw / 2 + 0.5, ty - 17.5, tw - 1, 19);
+      ctx.fillStyle = col; ctx.fillText(text, x, ty);
+    }
+    ctx.globalAlpha = 1;
+  }
+}
+
+// a flare climbs, hangs and falls, lighting the water under it
+function drawFlares() {
+  for (const f of g.flares) {
+    const age = SK.FLARE_TIME - f.t;
+    const z = age < 1 ? 10 + age * 50 : 60 - (age - 1) * 5;
+    const c = cam(f.x, f.y, z); if (c.f < SK.NEAR) continue;
+    const q = proj(c), a = Math.min(1, f.t / 1.5);
+    ctx.globalAlpha = a;
+    lamp(q.x, q.y, '#ff8a5a', Math.max(3, 2.4 * Math.sqrt(q.s)) * (age < 1 ? 1.6 : 1));
+    ctx.fillStyle = '#fff3d6'; ctx.fillRect(q.x - 1.5, q.y - 1.5, 3, 3);
     ctx.globalAlpha = 1;
   }
 }
@@ -236,7 +258,8 @@ function drawScene() {
   for (const o of g.wrecks) add('wreck', o);
   for (const o of g.timber) add('timber', o);
   add('plim', g.plim);
-  if (crewMode) for (const m of matesAtSea()) add('mate', m);
+  if (crewMode) for (const m of matesAtSea()) if (m.peer !== NET.watch) add('mate', m);
+  if (!NET.watch) for (const d of g.enemies.drowned) add('drowned', d);
   if (g.maren.active) add('maren', g.maren);
   items.sort((a, b) => b.c.f - a.c.f);
   for (const it of items) {
@@ -247,6 +270,7 @@ function drawScene() {
     else if (it.kind === 'timber') drawTimber(o, q, vis);
     else if (it.kind === 'plim') drawPlimsoll(q, vis);
     else if (it.kind === 'mate') drawMate(o, q, vis);
+    else if (it.kind === 'drowned') drawDrowned(o, q, vis);
     else drawMaren(q, vis);
   }
 
@@ -280,6 +304,8 @@ function drawScene() {
   for (const [hx, col] of [[-23, '#e46c4f'], [23, '#86cfae']]) {
     const c = cam(HB.x + hx, 46, 7); if (c.f > SK.NEAR) { const q = proj(c); lamp(q.x, q.y, col, Math.max(2.4, 1.4 * Math.sqrt(q.s))); }
   }
+  drawLures();
+  drawFlares();
   for (const q of g.parts) {
     const c = cam(q.x, q.y, q.z); if (c.f < SK.NEAR) continue;
     const s = proj(c);
@@ -372,7 +398,7 @@ function drawCompass() {
   } else edgeArrow(pb, '#5fd3ff');
   if (crewMode) for (const m of matesAtSea()) {
     const mx = xb(bearingOf(m.x - ship.x, m.y - ship.y));
-    if (!inStrip(mx)) continue;
+    if (!inStrip(mx) || m.peer === NET.watch) continue;
     ctx.fillStyle = SLOT_COLORS[m.slot] || SLOT_COLORS[1];
     ctx.fillRect(mx - 2.5, y + 15, 5, 5);
   }

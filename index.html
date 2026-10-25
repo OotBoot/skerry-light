@@ -33,12 +33,29 @@
   <div class="logbox" id="logbox" hidden>
     <ul id="log" aria-live="polite"></ul>
     <div class="tools">
-      <span id="hint">← → steer · ↑ ↓ sail · Space rings the bell · M sound</span>
+      <span id="hint">← → steer · ↑ ↓ sail · Space bell · F flare · 1 2 3 shout to crew · M sound</span>
+      <div class="toolrow shouts" id="shoutRow" hidden>
+        <button class="tool" id="shout1" type="button">1 · Rocks here!</button>
+        <button class="tool" id="shout2" type="button">2 · Follow me!</button>
+        <button class="tool" id="shout3" type="button">3 · She's near me!</button>
+      </div>
       <div class="toolrow">
         <button class="tool" id="soundBtn" type="button" aria-pressed="true">Sound on</button>
-        <button class="tool" id="bellBtn" type="button"><b>Ring the bell</b><small>Space · <span id="bellState">Ready</span></small></button>
+        <button class="tool meter" id="flareBtn" type="button"><b>Fire a flare</b><small>F · <span id="flareState">Ready</span></small></button>
+        <button class="tool meter" id="bellBtn" type="button"><b>Ring the bell</b><small>Space · <span id="bellState">Ready</span></small></button>
       </div>
     </div>
+  </div>
+
+  <div class="sailctl" id="sailCtl" aria-label="Sail">
+    <button class="tool" id="sailUp" type="button" aria-label="Make sail: hold to speed up"><span aria-hidden="true">▲</span><small>Faster</small></button>
+    <button class="tool" id="sailDown" type="button" aria-label="Shorten sail: hold to slow down"><span aria-hidden="true">▼</span><small>Slower</small></button>
+  </div>
+
+  <div class="specbar" id="specBar" hidden>
+    <div class="spectext"><b id="specName">Watching</b><span id="specInfo"></span></div>
+    <button class="tool" id="specNext" type="button">Next ship</button>
+    <button class="tool" id="specBack" type="button">Crew list</button>
   </div>
 
   <div class="overlay" id="titleCard">
@@ -46,14 +63,17 @@
       <span class="eyebrow">Master's orders · make harbour by night · sound on</span>
       <h1>Skerry Light</h1>
       <p>In the winter of 1887 the lamp at Skerry Light failed, and the keeper's wife, <span class="maren">Maren Holm</span>, rowed out with a lantern to warn the brig Gannet. The Gannet broke up on the rocks. Maren's skiff came back empty.</p>
-      <p>She still stands on the water when the lamp turns, a little nearer every time. The only thing she will not go near is <span class="plim">Plimsoll</span>, the shark who walked out of the surf that winter in the Gannet cabin boy's blue shoes. He knows the deep water through the skerries. <em>Follow his shoes.</em></p>
+      <p>She still stands on the water when the lamp turns, nearer every half turn, and she keeps pace with any ship she has chosen. The Gannet's drowned crew swim with her. Along the coast, wreckers still hang false harbour lights over the rocks. The only thing Maren will not come near is <span class="plim">Plimsoll</span>, the shark who walked out of the surf that winter in the Gannet cabin boy's blue shoes. He knows the deep water through the skerries, but he won't wait for you. <em>Follow his shoes.</em></p>
       <ul class="rules">
-        <li><b>See</b> rocks, wrecks and drifting timber show only while the beam is on them, then they are gone</li>
-        <li><b>Follow</b> Plimsoll's glowing shoes. While he is close, Maren falls back</li>
-        <li><b>Ring the bell</b> (Space) while you can see her to drive her away. It takes a while to swing again</li>
-        <li><b>Steer</b> ← → or A / D, sail ↑ ↓ or W / S. On a phone, hold the left or right side; the middle slows you</li>
+        <li><b>See</b> rocks, wrecks and drifting timber show only while the beam or a flare is on them, then they are gone</li>
+        <li><b>Follow</b> Plimsoll's glowing shoes. Within 75 m of him, Maren holds where she is. Fall behind and he walks on alone</li>
+        <li><b>Ring the bell</b> (Space) while you can see her to drive her back two stages. It takes almost half a minute to swing again</li>
+        <li><b>The drowned</b> swim after you; their eyes catch the light. Sail fast to shake them off, or ring the bell. Plimsoll eats them</li>
+        <li><b>False lights</b> red and green lamps that aren't the harbour, over rocks. The beam makes them vanish; the bearing strip shows the real harbour</li>
+        <li><b>Flare</b> (F) lights everything around you for a few seconds, for your whole crew</li>
+        <li><b>Steer</b> ← → or A / D, sail ↑ ↓ or W / S. On a phone, hold the left or right side to steer and use the ▲ ▼ buttons for speed</li>
         <li><b>Hull</b> three hits and she goes down. Let Maren reach the bow and she comes aboard</li>
-        <li><b>Crew</b> sail with up to two friends. Ships within 90 m of each other keep her back, and a bell rung near a crewmate drives her off both ships</li>
+        <li><b>Crew</b> sail with up to two friends. Ships close together keep her back and patch each other's planks. Shout warnings (1, 2, 3), share flares, and watch your crew after your own voyage ends</li>
       </ul>
       <button class="primary" id="startBtn" type="button">Take the helm alone</button>
       <section class="together" id="together" aria-labelledby="togetherHead">
@@ -92,6 +112,7 @@
         <span class="date">Keeper's log · <span id="crewLogDate"></span></span>
         <p id="crewLogText"></p>
       </div>
+      <div class="btnrow" id="crewWatch" hidden></div>
       <div class="btnrow">
         <button class="primary" id="crewSailBtn" type="button" hidden>Set sail</button>
         <button class="primary" id="crewReadyBtn" type="button" hidden>Ready</button>
@@ -121,6 +142,7 @@
 <script src="src/world.js"></script>
 <script src="src/render.js"></script>
 <script src="src/creatures.js"></script>
+<script src="src/enemies.js"></script>
 <script src="src/game.js"></script>
 <script src="src/transport.js"></script>
 <script src="src/net.js"></script>

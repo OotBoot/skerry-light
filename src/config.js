@@ -12,9 +12,18 @@ const SK = {
   HULL: 3,
   HARBOUR: { x: 230, y: 30 },
   LANTERN: 48,            // reach of your own deck lantern
-  MAREN_STAGES: [380, 250, 150, 80, 32],   // how far away she stands at each stage
-  PLIMSOLL_GUARD: 130,    // stay this close to Plimsoll and Maren cannot come nearer
-  BELL_COOLDOWN: 14,
+  MAREN_STAGES: [340, 220, 130, 70, 28],   // how far away she stands at each stage
+  // she comes one stage nearer every half turn of the beam, and follows the ship between turns
+  PLIMSOLL_GUARD: 75,     // this close to Plimsoll and she holds where she is
+  PLIMSOLL_PATIENCE: 7,   // seconds he waits for a ship that falls behind before walking on
+  CREW_GUARD: 55,         // the same, for ships sailing close together
+  BELL_COOLDOWN: 26,
+  BELL_PUSH: 2,           // stages the bell drives her back
+  CREW_BELL_RANGE: 100,
+  DROWNED_SPEED: 5,       // m/s
+  DROWNED_OUTRUN: 9,      // a ship going faster than this shakes them off
+  FLARE_COOLDOWN: 35, FLARE_TIME: 7, FLARE_RADIUS: 170,
+  REPAIR_DIST: 45, REPAIR_TIME: 10,
   SCARE_TIME: 1.8,
   // Crew server for copies hosted on your own site, e.g. 'wss://skerry-light.onrender.com/ws'.
   // Leave empty to use the server the page itself was loaded from. Not used on claude.ai.
