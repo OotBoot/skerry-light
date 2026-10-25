@@ -411,6 +411,40 @@ function drawCompass() {
   }
 }
 
+// ---------- Knock's jumpscare: his face, lunging at the glass ----------
+function drawKnockScare(t) {
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const T = SK.KNOCK_SCARE_TIME;
+  // the first instant: the scene goes black with an amber flicker
+  ctx.fillStyle = Math.floor(t * 30) % 2 ? '#1a0d02' : '#000';
+  ctx.fillRect(0, 0, W, H);
+  if (!imgReady(IMG.knock)) return;
+  const img = IMG.knock, iw = img.naturalWidth, ih = img.naturalHeight;
+  // just his head and grin: the right-hand part of the picture (the bat is on the left), top third
+  const fx = iw * 0.42, fw = iw * 0.56, faceH = ih * 0.36;
+  const lunge = Math.min(1, t / 0.12);
+  const k = 0.3 + lunge * 0.62 + Math.max(0, t - 0.12) * 0.18;
+  const dw = Math.max(W, H * 0.9) * k, dh = dw * faceH / fw;
+  const shake = reduceMotion ? 0 : 40 * (1 - t / T) + 10;
+  const x = cx - dw / 2 + rand(-shake, shake), y = H * 0.42 - dh / 2 + rand(-shake, shake);
+  const strips = reduceMotion ? 1 : 14;
+  for (let i = 0; i < strips; i++) {
+    const off = !reduceMotion && Math.random() < 0.4 ? (Math.random() - 0.5) * dw * 0.12 : 0;
+    ctx.drawImage(img, fx, faceH * i / strips, fw, faceH / strips, x + off, y + dh * i / strips, dw, dh / strips + 0.6);
+  }
+  // he blinks out and back, nearer each time
+  if (!reduceMotion && t > 0.3 && Math.random() < 0.12) { ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H); }
+  ctx.fillStyle = `rgba(150,70,0,${0.18 + 0.15 * Math.sin(t * 50)})`;
+  ctx.fillRect(0, 0, W, H);
+  if (!reduceMotion && Math.random() < 0.15) {
+    ctx.globalCompositeOperation = 'difference';
+    ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, W, H);
+    ctx.globalCompositeOperation = 'source-over';
+  }
+  // the blow lands: a crack of white
+  if (t > 0.62 && t < 0.72) { ctx.fillStyle = 'rgba(255,240,210,0.7)'; ctx.fillRect(0, 0, W, H); }
+}
+
 // ---------- the jumpscare ----------
 function drawScare(t) {
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);

@@ -19,7 +19,7 @@ function newVoyage(n, attract, seed, slot) {
     t: 0, n, attract, beam: beam0, beam0, launchAt: 0, launchId: null, period: Math.min(11, 6 + n * 0.8),
     rocks: v.rocks, wrecks: v.wrecks, timber: v.timber, path: v.path,
     parts: [], glare: 0, shake: 0, log: [], bell: 0, bellFlash: 0, wasLit: false, scareT: 0,
-    flares: [], flareCd: 0, repairT: 0, shoutT: 0,
+    flares: [], flareCd: 0, repairT: 0, shoutT: 0, knockScare: 0, knockKill: false,
     stats: { hits: 0, bells: 0, flares: 0, patched: 0, eaten: 0 },
   };
   g.enemies = newEnemies(v.lures);
@@ -303,23 +303,24 @@ function startScare() {
 function endRun(how) {
   state = 'over';
   audioTick(0, 0);
-  const taken = how === 'taken';
+  const taken = how === 'taken', knocked = how === 'knock';
   if (crewMode) {
     myStatus(taken ? 'taken' : 'sunk');
-    setTimeout(() => { $('hud').hidden = true; $('logbox').hidden = true; if (crewMode && state === 'over') showCrewCard(); }, taken ? 0 : 900);
+    setTimeout(() => { $('hud').hidden = true; $('logbox').hidden = true; if (crewMode && state === 'over') showCrewCard(); }, (taken || knocked) ? 0 : 900);
     return;
   }
   $('endEyebrow').textContent = 'Voyage ' + g.n + (taken ? ' · taken' : ' · lost');
-  $('endTitle').textContent = taken ? 'Maren Came Aboard' : 'Lost on the Skerries';
+  $('endTitle').textContent = taken ? 'Maren Came Aboard' : knocked ? 'Knocked Under' : 'Lost on the Skerries';
   $('endText').textContent = taken
     ? 'She stood at the bow, and then she was on the deck. The brig was found at dawn drifting off the Gannet, with her lantern still lit and nobody aboard.'
+    : knocked ? 'Three knocks on the hull, and the fourth came straight through the planks. They say the Gannet\u2019s figurehead is still smiling.'
     : (run.voyages === 0 ? 'She went down before you sighted the pier lamps. The skerries keep their reputation.' :
       'You brought her in ' + run.voyages + (run.voyages === 1 ? ' time' : ' times') + ' before the rocks had the last word.');
   $('sVoy').textContent = run.voyages; $('sHits').textContent = run.hits; $('sBest').textContent = best;
   setTimeout(() => {
     $('hud').hidden = true; $('logbox').hidden = true;
     $('endCard').hidden = false; $('againBtn').focus();
-  }, taken ? 0 : 900);
+  }, (taken || knocked) ? 0 : 900);
 }
 
 // ---------- input ----------

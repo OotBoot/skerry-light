@@ -50,7 +50,8 @@ function updateKnocks(dt) {
     k.seen = knockSeen(k);
     const moving = !k.seen && k.stun <= 0;
     if (moving) {
-      const sp = (SK.KNOCK_SPEED + g.n * 0.5) * dt;
+      // always faster than the ship, however much sail she carries
+      const sp = Math.max(SK.KNOCK_SPEED + g.n * 0.5, ship.v * 1.35 + 6) * dt;
       k.x += dx / dist * sp; k.y += dy / dist * sp; k.ph += dt * 8;
       k.knockT -= dt;
       if (k.knockT <= 0 && dist < 420) {
@@ -63,13 +64,17 @@ function updateKnocks(dt) {
     if (dist < 9) {
       k.wait = 15; placeKnock(k, true);
       if (ship.inv > 0 || state !== 'play') continue;
-      ship.inv = 1.4; g.shake = 0.6;
-      sfxKnock(0, 1.2, 0.09); sfxHit();
+      ship.inv = SK.KNOCK_SCARE_TIME + 1; g.shake = 0.6;
       burst(ship.x + Math.sin(ship.h) * 4, ship.y + Math.cos(ship.h) * 4, ['#c98a4a', '#ece4cf', '#8a6a4a'], 26, 7, 8);
       ship.hull--; run.hits++; g.stats.hits++;
       renderHud();
-      if (ship.hull <= 0) { addLog('Knock beat the hull in, three blows, and she went down.', 'w'); endRun('sunk'); return; }
-      addLog('Knock struck the hull. Keep a light on him and he cannot move.', 'w');
+      // he lunges into your face before the blow lands
+      g.knockScare = SK.KNOCK_SCARE_TIME;
+      g.knockKill = ship.hull <= 0;
+      sfxKnockScare();
+      $('stage').classList.add('scaring');
+      addLog(g.knockKill ? 'Knock beat the hull in, and she went down.' : 'Knock struck the hull. Keep a light on him and he cannot move.', 'w');
+      return;
     }
   }
 }

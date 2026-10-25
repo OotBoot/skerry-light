@@ -150,6 +150,19 @@ function sfxFlare() {
 function sfxHorn(pan, vol) {
   for (const f of [196, 247]) tone(f, 'sawtooth', 0.08, 0.06 * vol, 0.7, { pan });
 }
+// Knock's jumpscare: a frantic burst of knocking, a shriek and a heavy blow
+function sfxKnockScare() {
+  for (let i = 0; i < 9; i++) {
+    const d = i * 0.07;
+    tone(900 + Math.random() * 200, 'sine', 0.002, 0.6, 0.05, { delay: d, to: 500 });
+    tone(230, 'triangle', 0.002, 0.5, 0.08, { delay: d, to: 140 });
+    noise('bandpass', 1700, 6, 0.002, 0.5, 0.05, { delay: d });
+  }
+  sfxScream(SK.KNOCK_SCARE_TIME, 1.35);
+  noise('lowpass', 700, 0.7, 0.004, 1.0, 0.6, { delay: 0.65 });
+  tone(55, 'sine', 0.004, 1.0, 0.8, { delay: 0.65, to: 30 });
+}
+
 // three knocks on wood, louder and quicker the nearer he is
 function sfxKnock(pan, vol, gap) {
   if (vol < 0.04) return;
@@ -190,9 +203,9 @@ function sfxCreak() {
   const f = 120 + Math.random() * 90;
   tone(f, 'sawtooth', 0.15, 0.025, 0.5, { to: f * 0.7 });
 }
-function sfxScream() {
+function sfxScream(dur, pitch) {
   const c = AUD.ctx; if (!c) return;
-  const t = c.currentTime, end = SK.SCARE_TIME;
+  const t = c.currentTime, end = dur || SK.SCARE_TIME, pf = pitch || 1;
   const out = c.createGain();
   out.gain.setValueAtTime(0.0001, t);
   out.gain.exponentialRampToValueAtTime(1.0, t + 0.02);
@@ -203,7 +216,8 @@ function sfxScream() {
   const vib = c.createOscillator(); vib.frequency.value = 13;
   const vibAmt = c.createGain(); vibAmt.gain.value = 45;
   vib.connect(vibAmt); vib.start(t); vib.stop(t + end);
-  for (const f of [290, 307, 436, 581, 870]) {
+  for (const f0 of [290, 307, 436, 581, 870]) {
+    const f = f0 * pf;
     const o = c.createOscillator(); o.type = 'sawtooth';
     o.frequency.setValueAtTime(f, t); o.frequency.exponentialRampToValueAtTime(f * 2.3, t + end * 0.8);
     vibAmt.connect(o.frequency);

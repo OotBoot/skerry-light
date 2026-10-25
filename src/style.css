@@ -108,6 +108,9 @@ canvas:focus { outline: none; }
 .sailctl .tool small { font-size: 9px; letter-spacing: 0.1em; color: var(--muted); }
 .sailctl .tool.held { background: rgba(255, 216, 138, 0.25); border-color: var(--lamp); color: var(--lamp); }
 
+/* hide the controls while Knock is in your face */
+.scaring .hud, .scaring .logbox, .scaring .sailctl, .scaring .specbar, .scaring .netbanner { visibility: hidden; }
+
 /* invites, chat and the scoreboard */
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .invite { display: flex; flex-direction: column; gap: 6px; font-family: var(--log); font-size: 12px; color: var(--muted); }

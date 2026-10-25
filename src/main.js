@@ -7,6 +7,15 @@ let loggedError = false;
 function frame(now) {
   const dt = Math.min(0.05, (now - last) / 1000); last = now;
   try {
+    if (state === 'play' && g.knockScare > 0) {
+      // Knock's jumpscare pauses the voyage for a moment
+      g.knockScare -= dt;
+      netTick(dt);
+      drawKnockScare(SK.KNOCK_SCARE_TIME - g.knockScare);
+      if (g.knockScare <= 0) { g.knockScare = 0; $('stage').classList.remove('scaring'); if (g.knockKill) endRun('knock'); }
+      requestAnimationFrame(frame);
+      return;
+    }
     if (state === 'title' || state === 'play' || state === 'scare') update(dt);
     else {
       g.t += dt; advanceBeam(dt); ship.v *= 0.98;
