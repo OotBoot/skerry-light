@@ -18,7 +18,7 @@ The only thing she will not go near is **Plimsoll**, the shark who walked up out
 | Sail | ↑ ↓ or W / S. On a phone, hold the middle to shorten sail |
 | Ring the bell | Space or B, or the bell button |
 | Sound | M, or the sound button |
-| Speed | ▲ ▼ buttons on the left, hold to change sail (or ↑ ↓). There's no top speed: the longer you hold ▲, the faster it climbs |
+| Speed | ▲ ▼ buttons on the left, hold to change sail (or ↑ ↓). There's no top speed: the longer you hold ▲, the faster it climbs. She picks up speed and slows down almost at once |
 | Flare | F, or the flare button |
 | Shout to crew | 1 Rocks here! · 2 Follow me! · 3 She's near me! |
 

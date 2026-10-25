@@ -1976,9 +1976,10 @@ function update(dt) {
   ship.rudder += (steer - ship.rudder) * Math.min(1, dt * 4);
   // no top speed: keep making sail and she keeps going faster (and the longer you hold it, the quicker it climbs)
   if (sailIn > 0) g.sailHeld = (g.sailHeld || 0) + dt; else g.sailHeld = 0;
-  const rate = sailIn > 0 ? 0.5 * (1 + g.sailHeld * 0.6) : 0.5;
-  ship.sail = Math.max(0.15, ship.sail + sailIn * rate * dt);
-  ship.v += (3 + ship.sail * 12 - ship.v) * Math.min(1, dt * 0.6);
+  const rate = sailIn > 0 ? 1.6 * (1 + g.sailHeld * 1.2) : 1.6;
+  // shortening sail is quick too, even from a great speed
+  ship.sail = Math.max(0.15, ship.sail + (sailIn > 0 ? sailIn * rate : sailIn * (1.6 + ship.sail * 1.8)) * dt);
+  ship.v += (3 + ship.sail * 12 - ship.v) * Math.min(1, dt * 4);   // she answers the sail almost at once
   ship.h += ship.rudder * 0.55 * dt * (0.35 + 0.65 * Math.min(1, ship.v / 10));
   // move in short steps so a fast ship can't jump clean over a rock between frames
   const steps = Math.min(60, Math.max(1, Math.ceil(ship.v * dt / 2)));
