@@ -37,7 +37,7 @@ const SK = {
   },
   KNOCK_ASPECT: 201 / 474,
   KNOCK_SPEED: 8,         // m/s at least, and always faster than the ship; only while nobody is looking at him
-  KNOCK_STUN: 8,          // seconds the bell freezes him
+  KNOCK_STUN: 15,         // seconds the bell freezes him
   KNOCK_SCARE_TIME: 1.4,  // his jumpscare when he reaches the hull
   MAREN_ASPECT: 170 / 295,
   PLIM_ASPECT: 380 / 309,

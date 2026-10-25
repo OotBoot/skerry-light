@@ -453,7 +453,7 @@ const SK = {
   },
   KNOCK_ASPECT: 201 / 474,
   KNOCK_SPEED: 8,         // m/s at least, and always faster than the ship; only while nobody is looking at him
-  KNOCK_STUN: 8,          // seconds the bell freezes him
+  KNOCK_STUN: 15,         // seconds the bell freezes him
   KNOCK_SCARE_TIME: 1.4,  // his jumpscare when he reaches the hull
   MAREN_ASPECT: 170 / 295,
   PLIM_ASPECT: 380 / 309,
@@ -1636,13 +1636,13 @@ function drawPlimsoll(q, vis) {
 // passes over them, and snuff out for good when a ship gets close.
 
 function newEnemies(lures) {
-  return { drowned: [], spawnT: 5, lures: lures || [], warnedLure: false, knocks: [], knockT: 10 };
+  return { drowned: [], spawnT: 5, lures: lures || [], warnedLure: false, knocks: [], knockT: 35 };
 }
 
 // ---------- Knock ----------
 function placeKnock(k, near) {
   for (let tries = 0; tries < 20; tries++) {
-    const b = ship.h + Math.PI + rand(-1.6, 1.6), d = near ? rand(200, 260) : rand(240, 320);
+    const b = ship.h + Math.PI + rand(-1.6, 1.6), d = near ? rand(380, 460) : rand(420, 520);
     const x = ship.x + Math.sin(b) * d, y = ship.y + Math.cos(b) * d;
     if (y < 40) continue;
     k.x = x; k.y = y; return;
@@ -1650,19 +1650,20 @@ function placeKnock(k, near) {
   k.x = ship.x; k.y = ship.y + 280;
 }
 function knockSeen(k) {
-  if (flareAt(k.x, k.y) > 0.2) return true;
-  const inView = Math.abs(angDiff(bearingOf(k.x - ship.x, k.y - ship.y), ship.h)) < fov / 2;
-  return inView && visibility(k.x, k.y) > 0.25;
+  if (flareAt(k.x, k.y) > 0.1) return true;
+  const inView = Math.abs(angDiff(bearingOf(k.x - ship.x, k.y - ship.y), ship.h)) < fov / 2 + 0.15;
+  // facing him is enough when he's near, even in the dark; further off he needs a little light on him
+  return inView && (Math.hypot(k.x - ship.x, k.y - ship.y) < 150 || visibility(k.x, k.y) > 0.1);
 }
 function updateKnocks(dt) {
   const E = g.enemies;
   E.knockT -= dt;
-  const max = Math.min(4, 2 + Math.floor((g.n - 1) / 2));
+  const max = Math.min(2, 1 + Math.floor((g.n - 1) / 3));
   if (E.knockT <= 0 && E.knocks.length < max) {
     const k = { x: 0, y: 0, ph: 0, wait: 0, stun: 0, knockT: 1, seen: false, warned: false };
     placeKnock(k, false);
     E.knocks.push(k);
-    E.knockT = 14;
+    E.knockT = 40;
     if (!E.knockWarned) { E.knockWarned = true; addLog('Somewhere behind you, three knocks on wood.', 'w'); }
   }
   for (const k of E.knocks) {
@@ -1672,19 +1673,19 @@ function updateKnocks(dt) {
     k.seen = knockSeen(k);
     const moving = !k.seen && k.stun <= 0;
     if (moving) {
-      // always faster than the ship, however much sail she carries
-      const sp = Math.max(SK.KNOCK_SPEED + g.n * 0.5, ship.v * 1.35 + 6) * dt;
+      // a little faster than the ship, so running only buys time
+      const sp = Math.max(SK.KNOCK_SPEED + g.n * 0.3, ship.v * 1.08 + 2) * dt;
       k.x += dx / dist * sp; k.y += dy / dist * sp; k.ph += dt * 8;
       k.knockT -= dt;
-      if (k.knockT <= 0 && dist < 420) {
+      if (k.knockT <= 0 && dist < 650) {
         const pan = clamp(angDiff(bearingOf(k.x - ship.x, k.y - ship.y), ship.h) / (fov / 2), -1, 1);
-        const near = 1 - dist / 420;
+        const near = 1 - dist / 650;
         sfxKnock(pan, 0.25 + near * 0.85, 0.22 - near * 0.1);
         k.knockT = 2.6 - near * 1.9;
       }
     }
     if (dist < 9) {
-      k.wait = 15; placeKnock(k, true);
+      k.wait = 30; placeKnock(k, true);
       if (ship.inv > 0 || state !== 'play') continue;
       ship.inv = SK.KNOCK_SCARE_TIME + 1; g.shake = 0.6;
       burst(ship.x + Math.sin(ship.h) * 4, ship.y + Math.cos(ship.h) * 4, ['#c98a4a', '#ece4cf', '#8a6a4a'], 26, 7, 8);
@@ -1702,7 +1703,7 @@ function updateKnocks(dt) {
 }
 function bellStunsKnock() {
   let n = 0;
-  for (const k of g.enemies.knocks) if (Math.hypot(k.x - ship.x, k.y - ship.y) < 160 && k.wait <= 0) { k.stun = SK.KNOCK_STUN; n++; }
+  for (const k of g.enemies.knocks) if (Math.hypot(k.x - ship.x, k.y - ship.y) < 300 && k.wait <= 0) { k.stun = SK.KNOCK_STUN; n++; }
   return n;
 }
 function drawKnock(k, q, vis) {
