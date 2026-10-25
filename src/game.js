@@ -269,7 +269,7 @@ function toTitle() {
 }
 
 function arrive() {
-  grantCrate();
+  grantCrate(2);
   if (crewMode) {
     state = 'port';
     audioTick(0, 0);

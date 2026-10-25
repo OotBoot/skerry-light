@@ -23,7 +23,7 @@ const SK = {
   CREW_BELL_RANGE: 160,
   DROWNED_SPEED: 5,       // m/s
   DROWNED_OUTRUN: 9,      // a ship going faster than this shakes them off
-  FLARE_COOLDOWN: 35, FLARE_TIME: 7, FLARE_RADIUS: 170,
+  FLARE_COOLDOWN: 35, FLARE_TIME: 7, FLARE_RADIUS: 350,
   REPAIR_DIST: 45, REPAIR_TIME: 10,
   SCARE_TIME: 1.8,
   // Crew server for copies hosted on your own site, e.g. 'wss://skerry-light.onrender.com/ws'.

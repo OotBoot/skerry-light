@@ -496,7 +496,7 @@ canvas:focus { outline: none; }
     <div class="card">
       <span class="eyebrow">Skerry Crate · <span id="crateCount">0 crates</span></span>
       <h1 id="crateHead">Ship Skins</h1>
-      <p>One crate for every voyage you play. Skins change your deck, bowsprit and lantern, and how your hull and sails look to your crew.</p>
+      <p>One crate for every voyage you play, two when you make harbour. Skins change your deck, bowsprit and lantern, and how your hull and sails look to your crew. If you see gold in the reel, it's yours.</p>
       <div class="reel" id="crateReel"><div class="strip" id="crateStrip"></div><div class="marker" aria-hidden="true"></div></div>
       <div class="result" id="crateResult" hidden aria-live="polite"></div>
       <div class="btnrow">
@@ -539,7 +539,7 @@ const SK = {
   CREW_BELL_RANGE: 160,
   DROWNED_SPEED: 5,       // m/s
   DROWNED_OUTRUN: 9,      // a ship going faster than this shakes them off
-  FLARE_COOLDOWN: 35, FLARE_TIME: 7, FLARE_RADIUS: 170,
+  FLARE_COOLDOWN: 35, FLARE_TIME: 7, FLARE_RADIUS: 350,
   REPAIR_DIST: 45, REPAIR_TIME: 10,
   SCARE_TIME: 1.8,
   // Crew server for copies hosted on your own site, e.g. 'wss://skerry-light.onrender.com/ws'.
@@ -2262,7 +2262,7 @@ function toTitle() {
 }
 
 function arrive() {
-  grantCrate();
+  grantCrate(2);
   if (crewMode) {
     state = 'port';
     audioTick(0, 0);
@@ -3282,16 +3282,23 @@ function equip(item) {
   if (crewMode) send();
 }
 
-// one crate per voyage played
-function grantCrate() {
+// one crate for every voyage played, two for making harbour
+function grantCrate(n) {
   if (!g || g.attract || g.crateGiven) return;
+  n = n || 1;
   g.crateGiven = true;
-  CRATES.crates++;
+  CRATES.crates += n;
   saveCrates();
   updateCrateButtons();
-  toast('You found a Skerry Crate in the wreckage. Open it from the menu.', '+1 crate');
+  toast(n > 1 ? 'Made harbour: two Skerry Crates. Open them from the menu.' : 'You found a Skerry Crate in the wreckage. Open it from the menu.', '+' + n + (n > 1 ? ' crates' : ' crate'));
 }
 
+// the cards that scroll past in the reel never include gold, so any gold you see is your prize
+function rollFiller() {
+  let it;
+  do { it = rollSkin(); } while (it.rarity === 'admiral');
+  return it;
+}
 function rollSkin() {
   let r = Math.random(), rarity = RARITIES[0];
   for (const ra of RARITIES) { if (r < ra.odds) { rarity = ra; break; } r -= ra.odds; }
@@ -3429,7 +3436,7 @@ function openCrate() {
   const reel = $('crateReel'), strip = $('crateStrip');
   strip.textContent = '';
   const N = 56, WIN = 48;
-  for (let i = 0; i < N; i++) strip.appendChild(itemCard(i === WIN ? prize : rollSkin(), 'reelitem'));
+  for (let i = 0; i < N; i++) strip.appendChild(itemCard(i === WIN ? prize : rollFiller(), 'reelitem'));
   const cardW = strip.firstChild.getBoundingClientRect().width + 8;   // card plus gap
   const view = reel.getBoundingClientRect().width;
   const end = WIN * cardW + cardW / 2 - view / 2 + (Math.random() - 0.5) * cardW * 0.7;

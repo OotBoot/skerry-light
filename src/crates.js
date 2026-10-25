@@ -100,16 +100,23 @@ function equip(item) {
   if (crewMode) send();
 }
 
-// one crate per voyage played
-function grantCrate() {
+// one crate for every voyage played, two for making harbour
+function grantCrate(n) {
   if (!g || g.attract || g.crateGiven) return;
+  n = n || 1;
   g.crateGiven = true;
-  CRATES.crates++;
+  CRATES.crates += n;
   saveCrates();
   updateCrateButtons();
-  toast('You found a Skerry Crate in the wreckage. Open it from the menu.', '+1 crate');
+  toast(n > 1 ? 'Made harbour: two Skerry Crates. Open them from the menu.' : 'You found a Skerry Crate in the wreckage. Open it from the menu.', '+' + n + (n > 1 ? ' crates' : ' crate'));
 }
 
+// the cards that scroll past in the reel never include gold, so any gold you see is your prize
+function rollFiller() {
+  let it;
+  do { it = rollSkin(); } while (it.rarity === 'admiral');
+  return it;
+}
 function rollSkin() {
   let r = Math.random(), rarity = RARITIES[0];
   for (const ra of RARITIES) { if (r < ra.odds) { rarity = ra; break; } r -= ra.odds; }
@@ -247,7 +254,7 @@ function openCrate() {
   const reel = $('crateReel'), strip = $('crateStrip');
   strip.textContent = '';
   const N = 56, WIN = 48;
-  for (let i = 0; i < N; i++) strip.appendChild(itemCard(i === WIN ? prize : rollSkin(), 'reelitem'));
+  for (let i = 0; i < N; i++) strip.appendChild(itemCard(i === WIN ? prize : rollFiller(), 'reelitem'));
   const cardW = strip.firstChild.getBoundingClientRect().width + 8;   // card plus gap
   const view = reel.getBoundingClientRect().width;
   const end = WIN * cardW + cardW / 2 - view / 2 + (Math.random() - 0.5) * cardW * 0.7;
