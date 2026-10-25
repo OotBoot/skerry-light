@@ -212,9 +212,10 @@ function enterCrew(code) {
   NET.chatLog = [];
   send();
   try { history.replaceState(null, '', '#' + code); } catch (e) {}
-  // pick up the host's launch, if this crew is already at sea
-  checkLaunch();
+  // show the crew screen first, then pick up the host's launch if this crew is already at sea
+  // (which closes it again and puts you straight out on the voyage)
   showCrewCard();
+  checkLaunch();
 }
 function leaveCrew(silent) {
   if (!silent) { try { sessionStorage.removeItem('skerry-crew'); } catch (e) {} }
@@ -587,6 +588,7 @@ function withSpectatorView(draw) {
 }
 
 function showCrewCard() {
+  if (state === 'play' || state === 'scare') return;   // never over a voyage you're still sailing
   for (const id of ['titleCard', 'portCard', 'endCard']) $(id).hidden = true;
   $('crewCard').hidden = false;
   renderCrewCard();
