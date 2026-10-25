@@ -1,8 +1,8 @@
 // Boats, crates, skins and pennants.
 //
-// There are three boats, each with its own stats, and three kinds of crate: Boat Skin Crates (skins
-// for all three boats), Flag Crates (pennants) and Flare Crates (flare colours). Each voyage earns a
-// crate of a random kind: one if you went down, two if you made harbour. Open crates from your crate
+// There are three boats, each with its own stats, and one kind of crate, the Skerry Crate, which can
+// hold anything: a skin for any boat, a pennant or a flare colour. Each voyage earns a crate: one if
+// you went down, two if you made harbour. Open crates from your crate
 // inventory: a reel spins and lands on your prize. Skins change your deck, bowsprit and lantern as you see them, and your hull and
 // sails as your crew sees them; pennants fly from your bowsprit, and from your masthead for your
 // crew. Gold (Admiral) items only ever appear in the reel when one is your prize.
@@ -24,12 +24,10 @@ const BOATS = [
   { id: 'barque', name: 'Barque', blurb: 'A heavy three-master. Slow to start and slow to turn, but she takes a beating.', hull: 5, accel: 0.6, turn: 0.72, beam: 3.4, len: 27, masts: [-0.28, 0.02, 0.3], deckW: 0.95, tipY: 0.68, rail: 14, bow: 7 },
 ];
 const BOAT_BY_ID = Object.fromEntries(BOATS.map(b => [b.id, b]));
-const CRATE_TYPES = [
-  { id: 'skins',  name: 'Boat Skin Crate', holds: 'skins for the Brig, Cutter and Barque' },
-  { id: 'flags',  name: 'Flag Crate',      holds: 'pennants for your bowsprit and masthead' },
-  { id: 'flares', name: 'Flare Crate',     holds: 'colours for your flares, seen by your whole crew' },
-];
-const CRATE_BY_ID = Object.fromEntries(CRATE_TYPES.map(c => [c.id, c]));
+const CRATE_TYPES = [{ id: 'skerry', name: 'Skerry Crate', holds: 'boat skins, flags and flare colours' }];
+// the inventory has a tab for each kind of loot
+const LOOT_VIEWS = [{ id: 'skins', name: 'Boat skins' }, { id: 'flags', name: 'Flags' }, { id: 'flares', name: 'Flares' }];
+const CRATE_BY_ID = Object.fromEntries(LOOT_VIEWS.map(c => [c.id, c]));
 
 // deck: [near, far] planking; rail; wood (bowsprit); lantern; hull and sail are what crewmates see
 const BRIG_SKINS = [
@@ -155,15 +153,15 @@ function flareColour(fs, age) {
 }
 const PENNANT_BY_ID = Object.fromEntries(PENNANTS.map(p => [p.id, p]));
 const LOOT_BY_ID = Object.assign({}, SKIN_BY_ID, PENNANT_BY_ID, FLARE_BY_ID);
-const lootFor = crate => crate === 'flags' ? PENNANTS : crate === 'flares' ? FLARES.filter(f => f.rarity) : SKINS.filter(s => s.rarity);
+const lootFor = () => SKINS.filter(s => s.rarity).concat(PENNANTS, FLARES.filter(f => f.rarity));
 const rarityOf = s => RARITIES.find(r => r.id === s.rarity);
 
 const CRATES = {
-  crates: { skins: 0, flags: 0, flares: 0 },
+  crates: { skerry: 0 },
   owned: {}, equipped: { brig: 'plain', cutter: 'c_plain', barque: 'b_plain' }, pennant: null, flare: null,
   boat: 'brig', opening: false, pending: null, view: 'skins',
 };
-function totalCrates() { return CRATES.crates.skins + CRATES.crates.flags + CRATES.crates.flares; }
+function totalCrates() { return CRATES.crates.skerry; }
 function loadCrates() {
   let fresh = true;
   try {
@@ -174,11 +172,9 @@ function loadCrates() {
       // older saves kept one plain number of crates and one skin: those were all for the brig
       // older saves: one plain number, or Brig/Cutter/Barque crates. Those all become Boat Skin Crates.
       const n = v => Math.max(0, Math.min(999, v | 0));
-      if (typeof d.crates === 'number') CRATES.crates.skins = n(d.crates);
-      else if (d.crates && typeof d.crates === 'object') {
-        CRATES.crates.skins = n((d.crates.skins | 0) + (d.crates.brig | 0) + (d.crates.cutter | 0) + (d.crates.barque | 0));
-        CRATES.crates.flags = n(d.crates.flags); CRATES.crates.flares = n(d.crates.flares);
-      }
+      // (any older kinds of crate, per boat or per loot type, all become Skerry Crates)
+      if (typeof d.crates === 'number') CRATES.crates.skerry = n(d.crates);
+      else if (d.crates && typeof d.crates === 'object') CRATES.crates.skerry = n(Object.values(d.crates).reduce((a, v) => a + (v | 0), 0));
       CRATES.owned = d.owned && typeof d.owned === 'object' ? d.owned : {};
       if (typeof d.equipped === 'string') { if (SKIN_BY_ID[d.equipped] && SKIN_BY_ID[d.equipped].boat === 'brig') CRATES.equipped.brig = d.equipped; }
       else if (d.equipped && typeof d.equipped === 'object') for (const b of BOATS) { const s = SKIN_BY_ID[d.equipped[b.id]]; if (s && s.boat === b.id) CRATES.equipped[b.id] = s.id; }
@@ -189,7 +185,7 @@ function loadCrates() {
       if (LOOT_BY_ID[d.pending]) { CRATES.owned[d.pending] = (CRATES.owned[d.pending] | 0) + 1; }
     }
   } catch (e) {}
-  if (fresh) CRATES.crates.skins = 1;   // a first crate to try
+  if (fresh) CRATES.crates.skerry = 1;   // a first crate to try
   saveCrates();
 }
 function saveCrates() {
@@ -222,18 +218,16 @@ function grantCrate(n) {
   if (!g || g.attract || g.crateGiven) return;
   n = n || 1;
   g.crateGiven = true;
-  const got = [];
-  for (let i = 0; i < n; i++) { const c = CRATE_TYPES[(Math.random() * CRATE_TYPES.length) | 0]; CRATES.crates[c.id]++; got.push(c.name); }
+  CRATES.crates.skerry += n;
   saveCrates();
   updateCrateButtons();
-  const list = got.length > 1 ? (got[0] === got[1] ? 'two ' + got[0] + 's' : 'a ' + got[0] + ' and a ' + got[1]) : 'a ' + got[0];
-  toast((n > 1 ? 'Made harbour: ' : 'You found ') + list + (n > 1 ? '. ' : ' in the wreckage. ') + 'Open from the menu.', '+' + list.replace(/^a /, '1 ').replace(/ and a /, ', 1 '));
+  toast(n > 1 ? 'Made harbour: two Skerry Crates. Open them from the menu.' : 'You found a Skerry Crate in the wreckage. Open it from the menu.', '+' + n + ' Skerry Crate' + (n > 1 ? 's' : ''));
 }
 
 function rollSkin(crate) {
   let r = Math.random(), rarity = RARITIES[0];
   for (const ra of RARITIES) { if (r < ra.odds) { rarity = ra; break; } r -= ra.odds; }
-  const pool = lootFor(crate || 'skins').filter(s => s.rarity === rarity.id);
+  const pool = lootFor().filter(s => s.rarity === rarity.id);
   return pool[(Math.random() * pool.length) | 0];
 }
 // the cards that scroll past in the reel never include gold, so any gold you see is your prize
@@ -368,7 +362,6 @@ function renderBoatPicks() {
 function showCrates() {
   audioInit();
   $('crateCard').hidden = false;
-  CRATES.view = CRATES.boat;
   renderCrates();
   $('crateCard').scrollTop = 0;
   $('crateClose').focus({ preventScroll: true });
@@ -408,7 +401,7 @@ function renderCrates() {
   const ci = $('crateTypes'); ci.textContent = '';
   for (const c of CRATE_TYPES) {
     const row = document.createElement('div');
-    row.className = 'cratetype' + (CRATES.view === c.id ? ' viewing' : '');
+    row.className = 'cratetype viewing';
     const box = document.createElement('span'); box.className = 'cratebox'; box.setAttribute('aria-hidden', 'true');
     const nm = document.createElement('b'); nm.textContent = c.name;
     const n = document.createElement('small'); n.textContent = (CRATES.crates[c.id] === 1 ? '1 crate' : CRATES.crates[c.id] + ' crates') + ' · ' + c.holds;
@@ -416,10 +409,7 @@ function renderCrates() {
     open.textContent = CRATES.opening ? 'Opening…' : CRATES.crates[c.id] > 0 ? 'Open' : 'None yet';
     open.disabled = CRATES.crates[c.id] <= 0 || CRATES.opening;
     open.addEventListener('click', () => openCrate(c.id));
-    const look = document.createElement('button'); look.type = 'button'; look.className = 'tool';
-    look.textContent = 'See loot';
-    look.addEventListener('click', () => { CRATES.view = c.id; renderCrates(); });
-    row.append(box, nm, n, look, open);
+    row.append(box, nm, n, open);
     ci.appendChild(row);
   }
   $('crateClose').disabled = CRATES.opening;
@@ -435,6 +425,13 @@ function renderCrates() {
 
   // what you own, for the crate being viewed
   const view = CRATE_BY_ID[CRATES.view] ? CRATES.view : 'skins';
+  const tabs = $('lootTabs'); tabs.textContent = '';
+  for (const v of LOOT_VIEWS) {
+    const t = document.createElement('button'); t.type = 'button'; t.className = 'tool' + (v.id === view ? ' on' : '');
+    t.textContent = v.name; t.setAttribute('aria-pressed', v.id === view ? 'true' : 'false');
+    t.addEventListener('click', () => { CRATES.view = v.id; renderCrates(); });
+    tabs.appendChild(t);
+  }
   $('invHead').textContent = view === 'skins' ? 'Boat skins' : view === 'flags' ? 'Flags' : 'Flare colours';
   const inv = $('crateInv'); inv.textContent = '';
   const addCard = (item, count, isOn, locked) => {
@@ -477,7 +474,6 @@ function openCrate(type) {
   if (CRATES.opening || !CRATES.crates[type]) return;
   CRATES.opening = true;
   CRATES.crates[type]--;
-  CRATES.view = type;
   const prize = rollSkin(type);
   CRATES.pending = prize.id;   // kept safe until the reel lands
   saveCrates();
@@ -517,6 +513,7 @@ function finishOpen(prize) {
   CRATES.opening = false;
   CRATES.owned[prize.id] = (CRATES.owned[prize.id] | 0) + 1;
   CRATES.pending = null;
+  CRATES.view = prize.kind === 'pennant' ? 'flags' : prize.kind === 'flare' ? 'flares' : 'skins';
   saveCrates();
   const ra = rarityOf(prize);
   sfxReveal(RARITIES.indexOf(ra));

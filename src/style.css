@@ -435,3 +435,6 @@ html, body, button, .overlay, .card { touch-action: manipulation; }
 .closebtn { flex: none; padding: 6px 10px; }
 .cardtop.sticky { position: sticky; top: -16px; z-index: 2; margin: -16px -14px 0; padding: 12px 14px 10px; background: var(--card); border-bottom: 1px solid var(--rule); background: #0b111f; }
 @media (min-width: 521px) { .cardtop.sticky { top: -28px; margin: -28px -28px 0; padding: 14px 28px 12px; } }
+.loottabs { display: flex; gap: 6px; flex-wrap: wrap; }
+.loottabs .tool { flex: 1 1 0; }
+.loottabs .tool.on { border-color: var(--lamp); color: var(--lamp); background: rgba(255,216,138,0.08); }

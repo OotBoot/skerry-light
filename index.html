@@ -180,14 +180,16 @@
     <div class="card">
       <div class="cardtop sticky"><span class="eyebrow">Shipyard and crates</span><button class="tool closebtn" id="crateClose" type="button">✕ Close</button></div>
       <h1 id="crateHead">Boats and Crates</h1>
-      <p>Pick your boat. Each voyage earns a crate, one if you go down and two when you make harbour: a Boat Skin Crate (skins for every boat), a Flag Crate or a Flare Crate. If you see gold in the reel, it's yours.</p>
+      <p>Pick your boat. Each voyage earns a Skerry Crate, one if you go down and two when you make harbour. Any crate can hold a skin for any boat, a flag or a flare colour. If you see gold in the reel, it's yours.</p>
       <div class="boats" id="boatList"></div>
       <h2 class="invh">Crate inventory</h2>
       <div class="cratetypes" id="crateTypes"></div>
       <div class="reel" id="crateReel"><div class="strip" id="crateStrip"></div><div class="marker" aria-hidden="true"></div></div>
       <div class="result" id="crateResult" hidden aria-live="polite"></div>
       <ul class="odds" id="crateOdds" aria-label="Chances for each grade"></ul>
-      <h2 class="invh" id="invHead">Boat skins</h2>
+      <h2 class="invh">Your loot</h2>
+      <div class="loottabs" id="lootTabs" role="group" aria-label="Show"></div>
+      <span class="invh" id="invHead" hidden></span>
       <span class="eyebrow" id="crateCollected"></span>
       <div class="inv" id="crateInv"></div>
     </div>
