@@ -37,7 +37,7 @@ The only thing she will not go near is **Plimsoll**, the shark who walked up out
 
 ## Boats
 
-Choose your boat from the **Crates** screen (the shipyard is at the top). Your choice is kept on this device, and your crew sees which boat you're sailing.
+Choose your boat with the Brig / Cutter / Barque picker on the title, harbour, end and crew screens, or from the shipyard at the top of the **Crates** screen. Your choice is kept on this device, and your crew sees which boat you're sailing.
 
 | Boat | Hull | Acceleration | Steering | |
 |---|---|---|---|---|

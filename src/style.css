@@ -284,7 +284,7 @@ canvas:focus { outline: none; }
 .crews li { display: flex; justify-content: space-between; align-items: center; gap: 12px; font-family: var(--log); font-size: 13px; padding: 6px 0; border-bottom: 1px dashed var(--rule); }
 .crews li span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .tool:disabled { opacity: 0.5; cursor: default; }
-.members li { display: grid; grid-template-columns: 12px minmax(0, 1fr) auto; align-items: center; gap: 10px; font-family: var(--log); font-size: 13px; padding: 8px 0; border-bottom: 1px solid var(--rule); }
+.members li { display: grid; grid-template-columns: 12px minmax(0, 1fr) auto; align-items: center; gap: 10px; font-family: var(--log); font-size: 13px; padding: 8px 0; border-bottom: 1px solid var(--rule); background: #0b111f; }
 .members li i { width: 10px; height: 10px; border-radius: 50%; border: 1px solid var(--rule); }
 .members li b { font-weight: 700; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .members li b.who { display: flex; align-items: center; gap: 10px; min-width: 0; }
@@ -417,3 +417,21 @@ html, body, button, .overlay, .card { touch-action: manipulation; }
   .btnrow > button { flex: 1 1 40%; white-space: nowrap; }
   .btnrow > .wait { flex: 1 1 100%; order: -1; font-size: 12px; }
 }
+
+/* the quick boat switcher on the menus */
+.boatpick { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.boatpick .pick { display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 6px 4px 7px; cursor: pointer;
+  background: rgba(255,255,255,0.03); border: 1px solid var(--rule); color: var(--ink); font-family: var(--log); }
+.boatpick .pick b { font-size: 12px; letter-spacing: 0.06em; }
+.boatpick .pick small { font-size: 10px; color: var(--muted); }
+.boatpick .pick.on { border-color: var(--lamp); box-shadow: 0 0 0 1px var(--lamp) inset; background: rgba(255,216,138,0.08); }
+.boatpick .pick.on b { color: var(--lamp); }
+.boatpick .pick:disabled { opacity: 0.5; cursor: default; }
+.boatpick .pick:focus-visible { outline: 2px solid var(--lamp); outline-offset: 2px; }
+
+/* every menu's way out sits at the top right */
+.cardtop { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.cardtop .eyebrow { min-width: 0; }
+.closebtn { flex: none; padding: 6px 10px; }
+.cardtop.sticky { position: sticky; top: -16px; z-index: 2; margin: -16px -14px 0; padding: 12px 14px 10px; background: var(--card); border-bottom: 1px solid var(--rule); background: #0b111f; }
+@media (min-width: 521px) { .cardtop.sticky { top: -28px; margin: -28px -28px 0; padding: 14px 28px 12px; } }

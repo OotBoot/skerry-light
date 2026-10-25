@@ -295,7 +295,7 @@ canvas:focus { outline: none; }
 .crews li { display: flex; justify-content: space-between; align-items: center; gap: 12px; font-family: var(--log); font-size: 13px; padding: 6px 0; border-bottom: 1px dashed var(--rule); }
 .crews li span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .tool:disabled { opacity: 0.5; cursor: default; }
-.members li { display: grid; grid-template-columns: 12px minmax(0, 1fr) auto; align-items: center; gap: 10px; font-family: var(--log); font-size: 13px; padding: 8px 0; border-bottom: 1px solid var(--rule); }
+.members li { display: grid; grid-template-columns: 12px minmax(0, 1fr) auto; align-items: center; gap: 10px; font-family: var(--log); font-size: 13px; padding: 8px 0; border-bottom: 1px solid var(--rule); background: #0b111f; }
 .members li i { width: 10px; height: 10px; border-radius: 50%; border: 1px solid var(--rule); }
 .members li b { font-weight: 700; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .members li b.who { display: flex; align-items: center; gap: 10px; min-width: 0; }
@@ -428,6 +428,24 @@ html, body, button, .overlay, .card { touch-action: manipulation; }
   .btnrow > button { flex: 1 1 40%; white-space: nowrap; }
   .btnrow > .wait { flex: 1 1 100%; order: -1; font-size: 12px; }
 }
+
+/* the quick boat switcher on the menus */
+.boatpick { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.boatpick .pick { display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 6px 4px 7px; cursor: pointer;
+  background: rgba(255,255,255,0.03); border: 1px solid var(--rule); color: var(--ink); font-family: var(--log); }
+.boatpick .pick b { font-size: 12px; letter-spacing: 0.06em; }
+.boatpick .pick small { font-size: 10px; color: var(--muted); }
+.boatpick .pick.on { border-color: var(--lamp); box-shadow: 0 0 0 1px var(--lamp) inset; background: rgba(255,216,138,0.08); }
+.boatpick .pick.on b { color: var(--lamp); }
+.boatpick .pick:disabled { opacity: 0.5; cursor: default; }
+.boatpick .pick:focus-visible { outline: 2px solid var(--lamp); outline-offset: 2px; }
+
+/* every menu's way out sits at the top right */
+.cardtop { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.cardtop .eyebrow { min-width: 0; }
+.closebtn { flex: none; padding: 6px 10px; }
+.cardtop.sticky { position: sticky; top: -16px; z-index: 2; margin: -16px -14px 0; padding: 12px 14px 10px; background: var(--card); border-bottom: 1px solid var(--rule); background: #0b111f; }
+@media (min-width: 521px) { .cardtop.sticky { top: -28px; margin: -28px -28px 0; padding: 14px 28px 12px; } }
 </style>
 </head>
 <body>
@@ -486,6 +504,7 @@ html, body, button, .overlay, .card { touch-action: manipulation; }
       <span class="eyebrow">Master's orders · make harbour by night · sound on</span>
       <h1>Skerry Light</h1>
       <p>In the winter of 1887 the lamp at Skerry Light failed, and the keeper's wife, <span class="maren">Maren Holm</span>, rowed out with a lantern to warn the brig Gannet. The Gannet broke up on the rocks. Maren's skiff came back empty.</p>
+      <div class="boatpick" role="group" aria-label="Your boat"></div>
       <div class="btnrow">
         <button class="primary" id="startBtn" type="button">Take the helm alone</button>
         <button class="tool crateOpenBtn" type="button">Crates</button>
@@ -526,13 +545,14 @@ html, body, button, .overlay, .card { touch-action: manipulation; }
 
   <div class="overlay" id="portCard" hidden>
     <div class="card">
-      <span class="eyebrow" id="portEyebrow">Voyage 1 · made harbour</span>
+      <div class="cardtop"><span class="eyebrow" id="portEyebrow">Voyage 1 · made harbour</span><button class="tool closebtn menuBtn" type="button">✕ Menu</button></div>
       <h1 id="portTitle">Safe in Harbour</h1>
       <p id="portText"></p>
       <div class="logpage">
         <span class="date">Keeper's log · <span id="logDate"></span></span>
         <p id="logText"></p>
       </div>
+      <div class="boatpick" role="group" aria-label="Your boat"></div>
       <div class="btnrow">
         <button class="primary" id="nextBtn" type="button">Sail again</button>
         <button class="tool crateOpenBtn" type="button">Crates</button>
@@ -542,7 +562,7 @@ html, body, button, .overlay, .card { touch-action: manipulation; }
 
   <div class="overlay" id="crewCard" hidden>
     <div class="card">
-      <span class="eyebrow" id="crewName">Crew</span>
+      <div class="cardtop"><span class="eyebrow" id="crewName">Crew</span><button class="tool closebtn" id="crewLeaveBtn" type="button">✕ Leave crew</button></div>
       <h1 id="crewTitle">Crew Forming</h1>
       <p id="crewText"></p>
       <ul class="members" id="crewMembers"></ul>
@@ -572,19 +592,19 @@ html, body, button, .overlay, .card { touch-action: manipulation; }
         <p id="crewLogText"></p>
       </div>
       <div class="btnrow" id="crewWatch" hidden></div>
+      <div class="boatpick" role="group" aria-label="Your boat"></div>
       <div class="btnrow">
         <button class="primary" id="crewSailBtn" type="button" hidden>Set sail</button>
         <button class="primary" id="crewReadyBtn" type="button" hidden>Ready</button>
         <span class="wait" id="crewWait" hidden></span>
         <button class="tool crateOpenBtn" type="button">Crates</button>
-        <button class="tool" id="crewLeaveBtn" type="button">Leave crew</button>
       </div>
     </div>
   </div>
 
   <div class="overlay" id="endCard" hidden>
     <div class="card">
-      <span class="eyebrow" id="endEyebrow">Voyage 1 · lost</span>
+      <div class="cardtop"><span class="eyebrow" id="endEyebrow">Voyage 1 · lost</span><button class="tool closebtn menuBtn" type="button">✕ Menu</button></div>
       <h1 id="endTitle">Lost on the Skerries</h1>
       <p id="endText"></p>
       <div class="stats">
@@ -592,6 +612,7 @@ html, body, button, .overlay, .card { touch-action: manipulation; }
         <div><span class="label">Hits taken</span><strong id="sHits">0</strong></div>
         <div><span class="label">Best run</span><strong id="sBest">0</strong></div>
       </div>
+      <div class="boatpick" role="group" aria-label="Your boat"></div>
       <div class="btnrow">
         <button class="primary" id="againBtn" type="button">Take another ship</button>
         <button class="tool crateOpenBtn" type="button">Crates</button>
@@ -601,7 +622,7 @@ html, body, button, .overlay, .card { touch-action: manipulation; }
 
   <div class="overlay cratecard" id="crateCard" hidden role="dialog" aria-modal="true" aria-labelledby="crateHead">
     <div class="card">
-      <span class="eyebrow">Shipyard and crates</span>
+      <div class="cardtop sticky"><span class="eyebrow">Shipyard and crates</span><button class="tool closebtn" id="crateClose" type="button">✕ Close</button></div>
       <h1 id="crateHead">Boats and Crates</h1>
       <p>Pick your boat. Each voyage earns a crate, one if you go down and two when you make harbour: a Boat Skin Crate (skins for every boat), a Flag Crate or a Flare Crate. If you see gold in the reel, it's yours.</p>
       <div class="boats" id="boatList"></div>
@@ -613,7 +634,6 @@ html, body, button, .overlay, .card { touch-action: manipulation; }
       <h2 class="invh" id="invHead">Boat skins</h2>
       <span class="eyebrow" id="crateCollected"></span>
       <div class="inv" id="crateInv"></div>
-      <div class="btnrow"><button class="tool" id="crateClose" type="button">Close</button></div>
     </div>
   </div>
 
@@ -2867,6 +2887,8 @@ function enteredBackrooms() {
   sfxLightsOut();
 }
 
+for (const b of document.querySelectorAll('.menuBtn')) b.addEventListener('click', () => { if (state === 'port' || state === 'over') toTitle(); });
+
 function toTitle() {
   state = 'title';
   hideCards(); $('crewCard').hidden = true;
@@ -4021,14 +4043,14 @@ function equip(item) {
   if (item.kind === 'pennant') CRATES.pennant = CRATES.pennant === item.id ? null : item.id;
   else if (item.kind === 'flare') CRATES.flare = item.rarity ? item.id : null;
   else CRATES.equipped[item.boat] = item.id;
-  saveCrates(); renderCrates();
+  saveCrates(); renderCrates(); renderBoatPicks();
   if (crewMode) send();
 }
 function chooseBoat(id) {
   if (!BOAT_BY_ID[id] || state === 'play') return;
   CRATES.boat = id;
   saveCrates(); renderCrates(); updateCrateButtons();
-  if (crewMode) send();
+  if (crewMode) { send(); if (!$('crewCard').hidden && typeof renderCrewCard === 'function') renderCrewCard(); }
 }
 
 // a crate of a random kind for every voyage, two for making harbour (each rolled separately)
@@ -4148,7 +4170,35 @@ function itemCard(skin, cls) {
 }
 
 function updateCrateButtons() {
-  for (const b of document.querySelectorAll('.crateOpenBtn')) b.textContent = myBoat().name + ' · crates ' + totalCrates();
+  for (const b of document.querySelectorAll('.crateOpenBtn')) b.textContent = 'Crates · ' + totalCrates();
+  renderBoatPicks();
+}
+// a quick boat switcher on the menus, so you can change ship without opening the crates
+function renderBoatPicks() {
+  const sailing = state === 'play';
+  for (const box of document.querySelectorAll('.boatpick')) {
+    if (box.childElementCount !== BOATS.length) {
+      box.textContent = '';
+      for (const b of BOATS) {
+        const btn = document.createElement('button');
+        btn.type = 'button'; btn.className = 'pick'; btn.dataset.boat = b.id;
+        const nm = document.createElement('b'); nm.textContent = b.name;
+        const st = document.createElement('small'); st.textContent = 'Hull ' + b.hull + ' · ' + (b.accel > 1 ? 'quick' : b.accel < 1 ? 'slow' : 'steady');
+        btn.append(skinPreview(SKIN_BY_ID[CRATES.equipped[b.id]] || SKIN_BY_ID[PLAIN[b.id]], 44), nm, st);
+        btn.addEventListener('click', () => chooseBoat(b.id));
+        box.appendChild(btn);
+      }
+    }
+    for (const btn of box.children) {
+      const on = btn.dataset.boat === CRATES.boat;
+      btn.classList.toggle('on', on);
+      btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+      btn.disabled = sailing;
+      const b = BOAT_BY_ID[btn.dataset.boat];
+      const svg = btn.querySelector('svg'), fresh = skinPreview(SKIN_BY_ID[CRATES.equipped[b.id]] || SKIN_BY_ID[PLAIN[b.id]], 44);
+      if (svg) svg.replaceWith(fresh);
+    }
+  }
 }
 
 function showCrates() {

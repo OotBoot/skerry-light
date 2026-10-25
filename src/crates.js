@@ -207,14 +207,14 @@ function equip(item) {
   if (item.kind === 'pennant') CRATES.pennant = CRATES.pennant === item.id ? null : item.id;
   else if (item.kind === 'flare') CRATES.flare = item.rarity ? item.id : null;
   else CRATES.equipped[item.boat] = item.id;
-  saveCrates(); renderCrates();
+  saveCrates(); renderCrates(); renderBoatPicks();
   if (crewMode) send();
 }
 function chooseBoat(id) {
   if (!BOAT_BY_ID[id] || state === 'play') return;
   CRATES.boat = id;
   saveCrates(); renderCrates(); updateCrateButtons();
-  if (crewMode) send();
+  if (crewMode) { send(); if (!$('crewCard').hidden && typeof renderCrewCard === 'function') renderCrewCard(); }
 }
 
 // a crate of a random kind for every voyage, two for making harbour (each rolled separately)
@@ -334,7 +334,35 @@ function itemCard(skin, cls) {
 }
 
 function updateCrateButtons() {
-  for (const b of document.querySelectorAll('.crateOpenBtn')) b.textContent = myBoat().name + ' · crates ' + totalCrates();
+  for (const b of document.querySelectorAll('.crateOpenBtn')) b.textContent = 'Crates · ' + totalCrates();
+  renderBoatPicks();
+}
+// a quick boat switcher on the menus, so you can change ship without opening the crates
+function renderBoatPicks() {
+  const sailing = state === 'play';
+  for (const box of document.querySelectorAll('.boatpick')) {
+    if (box.childElementCount !== BOATS.length) {
+      box.textContent = '';
+      for (const b of BOATS) {
+        const btn = document.createElement('button');
+        btn.type = 'button'; btn.className = 'pick'; btn.dataset.boat = b.id;
+        const nm = document.createElement('b'); nm.textContent = b.name;
+        const st = document.createElement('small'); st.textContent = 'Hull ' + b.hull + ' · ' + (b.accel > 1 ? 'quick' : b.accel < 1 ? 'slow' : 'steady');
+        btn.append(skinPreview(SKIN_BY_ID[CRATES.equipped[b.id]] || SKIN_BY_ID[PLAIN[b.id]], 44), nm, st);
+        btn.addEventListener('click', () => chooseBoat(b.id));
+        box.appendChild(btn);
+      }
+    }
+    for (const btn of box.children) {
+      const on = btn.dataset.boat === CRATES.boat;
+      btn.classList.toggle('on', on);
+      btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+      btn.disabled = sailing;
+      const b = BOAT_BY_ID[btn.dataset.boat];
+      const svg = btn.querySelector('svg'), fresh = skinPreview(SKIN_BY_ID[CRATES.equipped[b.id]] || SKIN_BY_ID[PLAIN[b.id]], 44);
+      if (svg) svg.replaceWith(fresh);
+    }
+  }
 }
 
 function showCrates() {

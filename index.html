@@ -66,6 +66,7 @@
       <span class="eyebrow">Master's orders · make harbour by night · sound on</span>
       <h1>Skerry Light</h1>
       <p>In the winter of 1887 the lamp at Skerry Light failed, and the keeper's wife, <span class="maren">Maren Holm</span>, rowed out with a lantern to warn the brig Gannet. The Gannet broke up on the rocks. Maren's skiff came back empty.</p>
+      <div class="boatpick" role="group" aria-label="Your boat"></div>
       <div class="btnrow">
         <button class="primary" id="startBtn" type="button">Take the helm alone</button>
         <button class="tool crateOpenBtn" type="button">Crates</button>
@@ -106,13 +107,14 @@
 
   <div class="overlay" id="portCard" hidden>
     <div class="card">
-      <span class="eyebrow" id="portEyebrow">Voyage 1 · made harbour</span>
+      <div class="cardtop"><span class="eyebrow" id="portEyebrow">Voyage 1 · made harbour</span><button class="tool closebtn menuBtn" type="button">✕ Menu</button></div>
       <h1 id="portTitle">Safe in Harbour</h1>
       <p id="portText"></p>
       <div class="logpage">
         <span class="date">Keeper's log · <span id="logDate"></span></span>
         <p id="logText"></p>
       </div>
+      <div class="boatpick" role="group" aria-label="Your boat"></div>
       <div class="btnrow">
         <button class="primary" id="nextBtn" type="button">Sail again</button>
         <button class="tool crateOpenBtn" type="button">Crates</button>
@@ -122,7 +124,7 @@
 
   <div class="overlay" id="crewCard" hidden>
     <div class="card">
-      <span class="eyebrow" id="crewName">Crew</span>
+      <div class="cardtop"><span class="eyebrow" id="crewName">Crew</span><button class="tool closebtn" id="crewLeaveBtn" type="button">✕ Leave crew</button></div>
       <h1 id="crewTitle">Crew Forming</h1>
       <p id="crewText"></p>
       <ul class="members" id="crewMembers"></ul>
@@ -152,19 +154,19 @@
         <p id="crewLogText"></p>
       </div>
       <div class="btnrow" id="crewWatch" hidden></div>
+      <div class="boatpick" role="group" aria-label="Your boat"></div>
       <div class="btnrow">
         <button class="primary" id="crewSailBtn" type="button" hidden>Set sail</button>
         <button class="primary" id="crewReadyBtn" type="button" hidden>Ready</button>
         <span class="wait" id="crewWait" hidden></span>
         <button class="tool crateOpenBtn" type="button">Crates</button>
-        <button class="tool" id="crewLeaveBtn" type="button">Leave crew</button>
       </div>
     </div>
   </div>
 
   <div class="overlay" id="endCard" hidden>
     <div class="card">
-      <span class="eyebrow" id="endEyebrow">Voyage 1 · lost</span>
+      <div class="cardtop"><span class="eyebrow" id="endEyebrow">Voyage 1 · lost</span><button class="tool closebtn menuBtn" type="button">✕ Menu</button></div>
       <h1 id="endTitle">Lost on the Skerries</h1>
       <p id="endText"></p>
       <div class="stats">
@@ -172,6 +174,7 @@
         <div><span class="label">Hits taken</span><strong id="sHits">0</strong></div>
         <div><span class="label">Best run</span><strong id="sBest">0</strong></div>
       </div>
+      <div class="boatpick" role="group" aria-label="Your boat"></div>
       <div class="btnrow">
         <button class="primary" id="againBtn" type="button">Take another ship</button>
         <button class="tool crateOpenBtn" type="button">Crates</button>
@@ -181,7 +184,7 @@
 
   <div class="overlay cratecard" id="crateCard" hidden role="dialog" aria-modal="true" aria-labelledby="crateHead">
     <div class="card">
-      <span class="eyebrow">Shipyard and crates</span>
+      <div class="cardtop sticky"><span class="eyebrow">Shipyard and crates</span><button class="tool closebtn" id="crateClose" type="button">✕ Close</button></div>
       <h1 id="crateHead">Boats and Crates</h1>
       <p>Pick your boat. Each voyage earns a crate, one if you go down and two when you make harbour: a Boat Skin Crate (skins for every boat), a Flag Crate or a Flare Crate. If you see gold in the reel, it's yours.</p>
       <div class="boats" id="boatList"></div>
@@ -193,7 +196,6 @@
       <h2 class="invh" id="invHead">Boat skins</h2>
       <span class="eyebrow" id="crateCollected"></span>
       <div class="inv" id="crateInv"></div>
-      <div class="btnrow"><button class="tool" id="crateClose" type="button">Close</button></div>
     </div>
   </div>
 

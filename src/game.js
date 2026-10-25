@@ -373,6 +373,8 @@ function enteredBackrooms() {
   sfxLightsOut();
 }
 
+for (const b of document.querySelectorAll('.menuBtn')) b.addEventListener('click', () => { if (state === 'port' || state === 'over') toTitle(); });
+
 function toTitle() {
   state = 'title';
   hideCards(); $('crewCard').hidden = true;
