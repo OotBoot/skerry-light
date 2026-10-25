@@ -122,6 +122,7 @@ function myPresence() {
     launch: amHostSafe() ? NET.launch : null,
     voy: NET.launch ? NET.launch.voy : 0, st: NET.st,
     bell: NET.bells, flare: NET.flare, shout: NET.shout, chat: NET.chat, ghost: NET.ghost, stats: NET.stats,
+    skin: CRATES.equipped,
   };
 }
 function amHostSafe() { return NET.crew && NET.myHostFlag; }
@@ -239,6 +240,7 @@ function syncMates() {
           flareN: counter(pr.flare), shoutN: counter(pr.shout), shoutT: 0, shoutText: '', ghostN: counter(pr.ghost) };
         NET.mates.set(p.peer, m);
       }
+      m.skin = SKIN_BY_ID[pr.skin] || SKINS[0];
       // what a spectator needs to see from their deck
       m.v = Number.isFinite(pr.v) ? pr.v : 8;
       m.stage = Number.isFinite(pr.stage) ? clamp(pr.stage | 0, 0, SK.MAREN_STAGES.length - 1) : 0;
@@ -521,7 +523,7 @@ function withSpectatorView(draw) {
   const m = NET.watch && NET.mates.get(NET.watch);
   if (!m || !g) { draw(); return; }
   const mine = { ship, maren: g.maren, plim: g.plim, glare: g.glare };
-  ship = { x: m.x, y: m.y, h: m.h, bob: m.bob, rudder: 0, v: m.v, inv: 0, hull: m.hull, sail: 0.5 };
+  ship = { x: m.x, y: m.y, h: m.h, bob: m.bob, rudder: 0, v: m.v, inv: 0, hull: m.hull, sail: 0.5, skin: m.skin };
   g.maren = { active: Number.isFinite(m.mx), following: true, stage: m.stage, x: m.mx, y: m.my, apparition: 0, relB: 0 };
   g.plim = Object.assign({}, mine.plim, Number.isFinite(m.px) ? { x: m.px, y: m.py } : {}, { walking: true, phase: g.t * 9, dirX: Math.sin(m.h), dirY: Math.cos(m.h) });
   g.glare = 0;

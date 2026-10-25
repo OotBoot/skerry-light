@@ -114,6 +114,37 @@ canvas:focus { outline: none; }
 .sailctl .tool small { font-size: 9px; letter-spacing: 0.1em; color: var(--muted); }
 .sailctl .tool.held { background: rgba(255, 216, 138, 0.25); border-color: var(--lamp); color: var(--lamp); }
 
+/* crates */
+.cratecard { z-index: 20; }
+.cratecard .card { max-width: 46rem; }
+.reel { position: relative; overflow: hidden; height: 150px; border: 1px solid var(--rule); background: rgba(3, 6, 12, 0.7); }
+.strip { display: flex; gap: 8px; padding: 10px 0; will-change: transform; }
+.marker { position: absolute; top: 0; bottom: 0; left: 50%; width: 2px; margin-left: -1px; background: var(--lamp); box-shadow: 0 0 10px var(--lamp); }
+.skincard {
+  position: relative; flex: none; width: 120px;
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  padding: 8px 6px 10px; background: rgba(12, 18, 32, 0.95);
+  border-bottom: 4px solid var(--rc); font-family: var(--log);
+}
+.skincard b { font-size: 11px; color: var(--ink); text-align: center; line-height: 1.2; }
+.skincard small { font-size: 10px; color: var(--rc); letter-spacing: 0.08em; text-transform: uppercase; }
+.skincard.equipped { outline: 2px solid var(--lamp); outline-offset: -2px; }
+.skincard .tool { margin-top: 4px; padding: 4px 10px; font-size: 10px; }
+.skincard .dupes { position: absolute; top: 6px; right: 8px; font-size: 10px; color: var(--muted); }
+.result { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; padding: 12px 14px; border: 1px solid var(--rc); background: rgba(6, 10, 20, 0.7); }
+.result .won { margin: 0; font-family: var(--display); font-size: 1.5rem; color: var(--rc); }
+.result small { font-family: var(--log); font-size: 11px; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; flex: 1; }
+.odds { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px 14px; font-family: var(--log); font-size: 11px; color: var(--muted); }
+.odds li::before { content: ""; display: inline-block; width: 9px; height: 9px; margin-right: 6px; background: var(--rc); vertical-align: -1px; }
+.inv { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 8px; }
+.inv .skincard { width: auto; }
+.toast {
+  position: absolute; left: 50%; bottom: 90px; transform: translateX(-50%); z-index: 25;
+  max-width: calc(100% - 32px); padding: 10px 16px;
+  background: var(--card); border: 1px solid var(--lamp); color: var(--lamp);
+  font-family: var(--log); font-size: 13px; text-align: center;
+}
+
 /* hide the controls while Knock is in your face */
 .scaring .hud, .scaring .logbox, .scaring .sailctl, .scaring .specbar, .scaring .netbanner { visibility: hidden; }
 
@@ -319,7 +350,10 @@ canvas:focus { outline: none; }
         <li><b>Hull</b> three hits and she goes down. Let Maren reach the bow and she comes aboard</li>
         <li><b>Crew</b> sail with up to seven friends. Ships close together keep her back and patch each other's planks. Shout warnings (1, 2, 3), share flares, and watch your crew after your own voyage ends</li>
       </ul>
-      <button class="primary" id="startBtn" type="button">Take the helm alone</button>
+      <div class="btnrow">
+        <button class="primary" id="startBtn" type="button">Take the helm alone</button>
+        <button class="tool crateOpenBtn" type="button">Crates · 0</button>
+      </div>
       <section class="together" id="together" aria-labelledby="togetherHead">
         <h2 id="togetherHead">Sail together · up to 8 ships</h2>
         <p id="togetherStatus">Looking for other sailors…</p>
@@ -345,7 +379,10 @@ canvas:focus { outline: none; }
         <span class="date">Keeper's log · <span id="logDate"></span></span>
         <p id="logText"></p>
       </div>
-      <button class="primary" id="nextBtn" type="button">Sail again</button>
+      <div class="btnrow">
+        <button class="primary" id="nextBtn" type="button">Sail again</button>
+        <button class="tool crateOpenBtn" type="button">Crates · 0</button>
+      </div>
     </div>
   </div>
 
@@ -385,6 +422,7 @@ canvas:focus { outline: none; }
         <button class="primary" id="crewSailBtn" type="button" hidden>Set sail</button>
         <button class="primary" id="crewReadyBtn" type="button" hidden>Ready</button>
         <span class="wait" id="crewWait" hidden></span>
+        <button class="tool crateOpenBtn" type="button">Crates · 0</button>
         <button class="tool" id="crewLeaveBtn" type="button">Leave crew</button>
       </div>
     </div>
@@ -400,9 +438,31 @@ canvas:focus { outline: none; }
         <div><span class="label">Hits taken</span><strong id="sHits">0</strong></div>
         <div><span class="label">Best run</span><strong id="sBest">0</strong></div>
       </div>
-      <button class="primary" id="againBtn" type="button">Take another ship</button>
+      <div class="btnrow">
+        <button class="primary" id="againBtn" type="button">Take another ship</button>
+        <button class="tool crateOpenBtn" type="button">Crates · 0</button>
+      </div>
     </div>
   </div>
+
+  <div class="overlay cratecard" id="crateCard" hidden role="dialog" aria-modal="true" aria-labelledby="crateHead">
+    <div class="card">
+      <span class="eyebrow">Skerry Crate · <span id="crateCount">0 crates</span></span>
+      <h1 id="crateHead">Ship Skins</h1>
+      <p>One crate for every voyage you play. Skins change your deck, bowsprit and lantern, and how your hull and sails look to your crew.</p>
+      <div class="reel" id="crateReel"><div class="strip" id="crateStrip"></div><div class="marker" aria-hidden="true"></div></div>
+      <div class="result" id="crateResult" hidden aria-live="polite"></div>
+      <div class="btnrow">
+        <button class="primary" id="crateOpen" type="button">Open a crate</button>
+        <button class="tool" id="crateClose" type="button">Close</button>
+      </div>
+      <ul class="odds" id="crateOdds" aria-label="Chances for each grade"></ul>
+      <span class="eyebrow" id="crateCollected"></span>
+      <div class="inv" id="crateInv"></div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" hidden role="status"></div>
 </div>
 
 <script>
@@ -619,6 +679,14 @@ function sfxFlare() {
 function sfxHorn(pan, vol) {
   for (const f of [196, 247]) tone(f, 'sawtooth', 0.08, 0.06 * vol, 0.7, { pan });
 }
+// the crate reel ticking past, and the reveal (grander for rarer skins)
+function sfxTick() { tone(1800 + Math.random() * 200, 'square', 0.001, 0.035, 0.025); }
+function sfxReveal(level) {
+  const notes = [[523, 659], [523, 659, 784], [587, 740, 880], [523, 659, 784, 1047], [523, 659, 784, 1047, 1319]][Math.max(0, level)];
+  notes.forEach((f, i) => tone(f, 'triangle', 0.01, 0.18, 0.9 + level * 0.2, { delay: i * 0.09 }));
+  if (level >= 3) noise('highpass', 5000, 0.7, 0.05, 0.12, 1.2, { delay: 0.3 });
+}
+
 // Knock's jumpscare: a frantic burst of knocking, a shriek and a heavy blow
 function sfxKnockScare() {
   for (let i = 0; i < 9; i++) {
@@ -1052,7 +1120,8 @@ function drawMate(m, p, vis) {
   const sailH = L * 0.58;
   if (hullVis > 0.02) {
     ctx.globalAlpha = hullVis;
-    ctx.fillStyle = '#4b3a2b';
+    const skin = m.skin || SKINS[0];
+    ctx.fillStyle = skin.hull;
     ctx.beginPath();
     ctx.moveTo(x - dir * w / 2, y - hh); ctx.lineTo(x + dir * (w / 2 + L * 0.08), y - hh * 1.15);
     ctx.lineTo(x + dir * w * 0.42, y); ctx.lineTo(x - dir * w * 0.45, y); ctx.closePath(); ctx.fill();
@@ -1061,7 +1130,7 @@ function drawMate(m, p, vis) {
       const mx = x + dir * mm * w * 1.6;
       ctx.strokeStyle = '#2a2018'; ctx.lineWidth = Math.max(0.8, L * 0.025);
       ctx.beginPath(); ctx.moveTo(mx, y - hh); ctx.lineTo(mx, y - hh - sailH * 1.08); ctx.stroke();
-      ctx.fillStyle = '#d8cdb0';
+      ctx.fillStyle = skin.sail;
       ctx.beginPath();
       ctx.moveTo(mx - sailW * 0.55, y - hh - sailH * 0.12); ctx.lineTo(mx + sailW * 0.55, y - hh - sailH * 0.12);
       ctx.lineTo(mx + sailW * 0.4, y - hh - sailH); ctx.lineTo(mx - sailW * 0.4, y - hh - sailH); ctx.closePath(); ctx.fill();
@@ -1247,16 +1316,17 @@ function drawScene() {
 function drawDeck() {
   const tipY = H * 0.72, lit = g.glare;
   const deck = ctx.createLinearGradient(0, tipY, 0, H);
-  deck.addColorStop(0, mix('#1a130d', '#6a5034', lit)); deck.addColorStop(1, mix('#0c0806', '#3a2a1a', lit));
+  const skin = ship.skin || mySkin();
+  deck.addColorStop(0, mix(skin.deck[0], '#6a5034', lit * 0.7)); deck.addColorStop(1, mix(skin.deck[1], '#3a2a1a', lit * 0.7));
   ctx.fillStyle = deck;
   ctx.beginPath(); ctx.moveTo(cx - W * 0.75, H + 2); ctx.lineTo(cx, tipY); ctx.lineTo(cx + W * 0.75, H + 2); ctx.closePath(); ctx.fill();
   ctx.strokeStyle = 'rgba(0,0,0,0.45)'; ctx.lineWidth = 1;
   for (let i = -5; i <= 5; i++) { ctx.beginPath(); ctx.moveTo(cx, tipY); ctx.lineTo(cx + i * W * 0.14, H + 2); ctx.stroke(); }
-  ctx.strokeStyle = '#1e140c'; ctx.lineWidth = 10;
+  ctx.strokeStyle = skin.rail; ctx.lineWidth = 10;
   ctx.beginPath(); ctx.moveTo(cx - W * 0.75, H - 4); ctx.lineTo(cx - 6, tipY + 2); ctx.moveTo(cx + W * 0.75, H - 4); ctx.lineTo(cx + 6, tipY + 2); ctx.stroke();
   ctx.strokeStyle = 'rgba(255,216,138,0.25)'; ctx.lineWidth = 1.5;
   ctx.beginPath(); ctx.moveTo(cx - W * 0.75, H - 9); ctx.lineTo(cx - 6, tipY - 2); ctx.moveTo(cx + W * 0.75, H - 9); ctx.lineTo(cx + 6, tipY - 2); ctx.stroke();
-  ctx.fillStyle = '#140d08';
+  ctx.fillStyle = skin.wood;
   ctx.beginPath(); ctx.moveTo(cx - 9, tipY + 6); ctx.lineTo(cx + 9, tipY + 6); ctx.lineTo(cx + 2, hy + H * 0.07); ctx.lineTo(cx - 2, hy + H * 0.07); ctx.closePath(); ctx.fill();
   ctx.strokeStyle = 'rgba(20,14,10,0.9)'; ctx.lineWidth = 1.5;
   ctx.beginPath(); ctx.moveTo(cx, hy + H * 0.07); ctx.lineTo(cx - W * 0.2, -10); ctx.moveTo(cx, hy + H * 0.07); ctx.lineTo(cx + W * 0.05, -10); ctx.stroke();
@@ -1269,7 +1339,7 @@ function drawDeck() {
   const lx = cx + Math.min(W * 0.28, 220), ly = H * 0.8;
   const flick = g.maren.stage >= 3 && !reduceMotion ? (Math.random() < 0.15 ? 0.4 : 1) : 1;
   ctx.strokeStyle = '#2a1e14'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(lx, ly - 30); ctx.lineTo(lx, ly - 10); ctx.stroke();
-  ctx.globalAlpha = flick; lamp(lx, ly, '#ffcf86', 7); ctx.fillStyle = '#ffe9be'; ctx.fillRect(lx - 4, ly - 6, 8, 10); ctx.globalAlpha = 1;
+  ctx.globalAlpha = flick; lamp(lx, ly, skin.lantern, 7); ctx.fillStyle = mix(skin.lantern, '#ffffff', 0.5); ctx.fillRect(lx - 4, ly - 6, 8, 10); ctx.globalAlpha = 1;
 }
 
 // red closing in at the edges as she comes nearer
@@ -2131,6 +2201,7 @@ function toTitle() {
 }
 
 function arrive() {
+  grantCrate();
   if (crewMode) {
     state = 'port';
     audioTick(0, 0);
@@ -2165,6 +2236,7 @@ function startScare() {
 
 function endRun(how) {
   state = 'over';
+  grantCrate();
   audioTick(0, 0);
   const taken = how === 'taken', knocked = how === 'knock';
   if (crewMode) {
@@ -2470,6 +2542,7 @@ function myPresence() {
     launch: amHostSafe() ? NET.launch : null,
     voy: NET.launch ? NET.launch.voy : 0, st: NET.st,
     bell: NET.bells, flare: NET.flare, shout: NET.shout, chat: NET.chat, ghost: NET.ghost, stats: NET.stats,
+    skin: CRATES.equipped,
   };
 }
 function amHostSafe() { return NET.crew && NET.myHostFlag; }
@@ -2587,6 +2660,7 @@ function syncMates() {
           flareN: counter(pr.flare), shoutN: counter(pr.shout), shoutT: 0, shoutText: '', ghostN: counter(pr.ghost) };
         NET.mates.set(p.peer, m);
       }
+      m.skin = SKIN_BY_ID[pr.skin] || SKINS[0];
       // what a spectator needs to see from their deck
       m.v = Number.isFinite(pr.v) ? pr.v : 8;
       m.stage = Number.isFinite(pr.stage) ? clamp(pr.stage | 0, 0, SK.MAREN_STAGES.length - 1) : 0;
@@ -2869,7 +2943,7 @@ function withSpectatorView(draw) {
   const m = NET.watch && NET.mates.get(NET.watch);
   if (!m || !g) { draw(); return; }
   const mine = { ship, maren: g.maren, plim: g.plim, glare: g.glare };
-  ship = { x: m.x, y: m.y, h: m.h, bob: m.bob, rudder: 0, v: m.v, inv: 0, hull: m.hull, sail: 0.5 };
+  ship = { x: m.x, y: m.y, h: m.h, bob: m.bob, rudder: 0, v: m.v, inv: 0, hull: m.hull, sail: 0.5, skin: m.skin };
   g.maren = { active: Number.isFinite(m.mx), following: true, stage: m.stage, x: m.mx, y: m.my, apparition: 0, relB: 0 };
   g.plim = Object.assign({}, mine.plim, Number.isFinite(m.px) ? { x: m.px, y: m.py } : {}, { walking: true, phase: g.t * 9, dirX: Math.sin(m.h), dirY: Math.cos(m.h) });
   g.glare = 0;
@@ -3031,6 +3105,219 @@ $('crewSailBtn').addEventListener('click', setSail);
 $('crewReadyBtn').addEventListener('click', toggleReady);
 $('crewLeaveBtn').addEventListener('click', () => leaveCrew(false));
 netInit();
+
+// ---- src/crates.js ----
+// Crates and ship skins.
+//
+// You earn one Skerry Crate each time a voyage ends for you, made harbour or lost. Open crates from
+// the menu: a reel of skins spins and lands on your prize. Skins change your deck, bowsprit and
+// lantern as you see them, and your hull and sails as your crewmates see them. Crates and skins are
+// kept in this browser (localStorage), so they're yours on this device.
+
+const RARITIES = [
+  { id: 'deckhand', name: 'Deckhand', color: '#4b69ff', odds: 0.7992 },
+  { id: 'bosun',    name: 'Bosun',    color: '#8847ff', odds: 0.1598 },
+  { id: 'mate',     name: 'Mate',     color: '#d32ce6', odds: 0.032 },
+  { id: 'captain',  name: 'Captain',  color: '#eb4b4b', odds: 0.0064 },
+  { id: 'admiral',  name: 'Admiral',  color: '#e4ae39', odds: 0.0026 },
+];
+
+// deck: [near, far] planking; rail; wood (bowsprit); lantern; hull and sail are what crewmates see
+const SKINS = [
+  { id: 'plain',      name: 'Brig, as built',      rarity: null,       deck: ['#1a130d', '#0c0806'], rail: '#1e140c', wood: '#140d08', lantern: '#ffcf86', hull: '#4b3a2b', sail: '#d8cdb0' },
+  { id: 'tarred',     name: 'Tarred Oak',          rarity: 'deckhand', deck: ['#141210', '#070605'], rail: '#0d0b09', wood: '#0a0807', lantern: '#ffcf86', hull: '#1f1b17', sail: '#cfc6ae' },
+  { id: 'grey',       name: "Fisherman's Grey",    rarity: 'deckhand', deck: ['#24262a', '#101114'], rail: '#2c2f34', wood: '#1c1e22', lantern: '#f4e3b8', hull: '#55595f', sail: '#c9cbc8' },
+  { id: 'harbour',    name: 'Harbour Blue',        rarity: 'deckhand', deck: ['#16202e', '#0a0f17'], rail: '#1d3a5f', wood: '#13243a', lantern: '#ffd88a', hull: '#2c4f7c', sail: '#dfe4ea' },
+  { id: 'bleached',   name: 'Salt-Bleached',       rarity: 'deckhand', deck: ['#3a342c', '#1c1915'], rail: '#57503f', wood: '#4a4335', lantern: '#fff1cf', hull: '#9c927c', sail: '#f1ece0' },
+  { id: 'mackerel',   name: 'Mackerel Stripe',     rarity: 'deckhand', deck: ['#18241f', '#0b120f'], rail: '#2b5c4b', wood: '#1d3a30', lantern: '#e8f7c8', hull: '#2f6a58', sail: '#d9e7df' },
+  { id: 'copper',     name: 'Copper Bottom',       rarity: 'bosun',    deck: ['#2c1a10', '#140a05'], rail: '#8a4a22', wood: '#5c2f15', lantern: '#ffb26b', hull: '#b0612c', sail: '#ead7bf' },
+  { id: 'gannetw',    name: 'Gannet White',        rarity: 'bosun',    deck: ['#2d2c29', '#141412'], rail: '#d9d4c7', wood: '#bdb6a6', lantern: '#ffffff', hull: '#e8e3d6', sail: '#ffffff' },
+  { id: 'petrel',     name: 'Storm Petrel',        rarity: 'bosun',    deck: ['#15151c', '#07070b'], rail: '#3b3550', wood: '#262236', lantern: '#c9b8ff', hull: '#3d3756', sail: '#8d85a8' },
+  { id: 'wrecker',    name: "Wrecker's Red",       rarity: 'mate',     deck: ['#2a0f0d', '#120403'], rail: '#8f1f19', wood: '#5a1410', lantern: '#ff6b5a', hull: '#9b231b', sail: '#3a1714' },
+  { id: 'selkie',     name: 'Selkie Green',        rarity: 'mate',     deck: ['#0f241f', '#04110d'], rail: '#1f7a63', wood: '#11483a', lantern: '#7dffd8', hull: '#1c8c70', sail: '#bff2e2' },
+  { id: 'maren',      name: "Maren's Lantern",     rarity: 'captain',  deck: ['#1f1a12', '#0c0905'], rail: '#e4b25a', wood: '#7a5620', lantern: '#ffe9a8', hull: '#2a2016', sail: '#f7d98b' },
+  { id: 'drowned',    name: 'The Drowned Crew',    rarity: 'captain',  deck: ['#16201d', '#070c0b'], rail: '#7f938a', wood: '#3e4b46', lantern: '#c8ffe9', hull: '#5d6d66', sail: '#a9b8b1' },
+  { id: 'plimsoll',   name: 'Plimsoll Blue',       rarity: 'admiral',  deck: ['#0d2433', '#041019'], rail: '#5fd3ff', wood: '#1b6f96', lantern: '#9ff0ff', hull: '#2fb1e8', sail: '#ffffff' },
+  { id: 'skerrygold', name: 'Skerry Gold',         rarity: 'admiral',  deck: ['#2e230a', '#130e03'], rail: '#ffd34d', wood: '#a37a12', lantern: '#fff3c4', hull: '#d9a520', sail: '#fff1b8' },
+];
+const SKIN_BY_ID = Object.fromEntries(SKINS.map(s => [s.id, s]));
+const rarityOf = s => RARITIES.find(r => r.id === s.rarity);
+
+const CRATES = { crates: 0, owned: {}, equipped: 'plain', opening: false, pending: null };
+function loadCrates() {
+  try {
+    const d = JSON.parse(localStorage.getItem('skerry-crates') || '{}');
+    CRATES.crates = Math.max(0, Math.min(999, d.crates | 0));
+    CRATES.owned = d.owned && typeof d.owned === 'object' ? d.owned : {};
+    CRATES.equipped = SKIN_BY_ID[d.equipped] ? d.equipped : 'plain';
+    // a crate whose reel was still spinning when the page closed: the prize is still yours
+    if (SKIN_BY_ID[d.pending]) { CRATES.owned[d.pending] = (CRATES.owned[d.pending] | 0) + 1; saveCrates(); }
+  } catch (e) {}
+  // a first crate to try, the first time
+  try { if (!localStorage.getItem('skerry-crates')) { CRATES.crates = 1; saveCrates(); } } catch (e) {}
+}
+function saveCrates() {
+  try { localStorage.setItem('skerry-crates', JSON.stringify({ crates: CRATES.crates, owned: CRATES.owned, equipped: CRATES.equipped, pending: CRATES.pending })); } catch (e) {}
+}
+function mySkin() { return SKIN_BY_ID[CRATES.equipped] || SKINS[0]; }
+
+// one crate per voyage played
+function grantCrate() {
+  if (!g || g.attract || g.crateGiven) return;
+  g.crateGiven = true;
+  CRATES.crates++;
+  saveCrates();
+  updateCrateButtons();
+  toast('You found a Skerry Crate in the wreckage. Open it from the menu.');
+}
+
+function rollSkin() {
+  let r = Math.random(), rarity = RARITIES[0];
+  for (const ra of RARITIES) { if (r < ra.odds) { rarity = ra; break; } r -= ra.odds; }
+  const pool = SKINS.filter(s => s.rarity === rarity.id);
+  return pool[(Math.random() * pool.length) | 0];
+}
+
+// ---------- UI ----------
+function skinPreview(skin, size) {
+  const NS = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(NS, 'svg');
+  svg.setAttribute('viewBox', '0 0 120 80'); svg.setAttribute('width', size); svg.setAttribute('height', size * 2 / 3);
+  svg.setAttribute('aria-hidden', 'true');
+  const el = (tag, attrs) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); svg.appendChild(e); return e; };
+  el('path', { d: 'M8 64 Q60 70 112 60 L104 52 L14 54 Z', fill: 'rgba(220,232,245,0.25)' });
+  el('line', { x1: 44, y1: 54, x2: 44, y2: 10, stroke: skin.wood, 'stroke-width': 2.5 });
+  el('line', { x1: 74, y1: 54, x2: 74, y2: 14, stroke: skin.wood, 'stroke-width': 2.5 });
+  el('path', { d: 'M30 48 L58 48 L54 14 L34 14 Z', fill: skin.sail });
+  el('path', { d: 'M61 48 L87 48 L83 18 L65 18 Z', fill: skin.sail });
+  el('path', { d: 'M12 54 L108 50 L100 64 L22 66 Z', fill: skin.hull });
+  el('line', { x1: 14, y1: 54, x2: 107, y2: 50, stroke: skin.rail, 'stroke-width': 2 });
+  el('circle', { cx: 96, cy: 44, r: 3, fill: skin.lantern });
+  return svg;
+}
+function itemCard(skin, cls) {
+  const d = document.createElement('div');
+  d.className = 'skincard' + (cls ? ' ' + cls : '');
+  const ra = rarityOf(skin);
+  d.style.setProperty('--rc', ra ? ra.color : '#8f98ab');
+  d.appendChild(skinPreview(skin, 96));
+  const n = document.createElement('b'); n.textContent = skin.name; d.appendChild(n);
+  const r = document.createElement('small'); r.textContent = ra ? ra.name : 'Standard'; d.appendChild(r);
+  return d;
+}
+
+function updateCrateButtons() {
+  for (const b of document.querySelectorAll('.crateOpenBtn')) b.textContent = 'Crates · ' + CRATES.crates;
+}
+
+function showCrates() {
+  audioInit();
+  $('crateCard').hidden = false;
+  renderCrates();
+  $('crateOpen').focus();
+}
+function hideCrates() { if (!CRATES.opening) $('crateCard').hidden = true; }
+
+function renderCrates() {
+  $('crateCount').textContent = CRATES.crates === 1 ? '1 crate' : CRATES.crates + ' crates';
+  $('crateOpen').disabled = CRATES.crates <= 0 || CRATES.opening;
+  $('crateOpen').textContent = CRATES.opening ? 'Opening…' : CRATES.crates > 0 ? 'Open a crate' : 'No crates. Play a voyage to earn one';
+  $('crateClose').disabled = CRATES.opening;
+  // what's inside, by rarity
+  const odds = $('crateOdds'); odds.textContent = '';
+  for (const ra of RARITIES) {
+    const li = document.createElement('li');
+    li.style.setProperty('--rc', ra.color);
+    li.textContent = ra.name + ' · ' + (ra.odds * 100).toFixed(ra.odds < 0.01 ? 2 : 1) + '%';
+    odds.appendChild(li);
+  }
+  const inv = $('crateInv'); inv.textContent = '';
+  for (const s of SKINS) {
+    const count = s.id === 'plain' ? 1 : (CRATES.owned[s.id] | 0);
+    if (!count) continue;
+    const card = itemCard(s, CRATES.equipped === s.id ? 'equipped' : '');
+    if (count > 1) { const c = document.createElement('span'); c.className = 'dupes'; c.textContent = '×' + count; card.appendChild(c); }
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'tool';
+    b.textContent = CRATES.equipped === s.id ? 'Equipped' : 'Equip';
+    b.disabled = CRATES.equipped === s.id;
+    b.addEventListener('click', () => { CRATES.equipped = s.id; saveCrates(); renderCrates(); if (crewMode) send(); });
+    card.appendChild(b);
+    inv.appendChild(card);
+  }
+  const owned = SKINS.filter(s => s.id === 'plain' || CRATES.owned[s.id]).length;
+  $('crateCollected').textContent = owned + ' of ' + SKINS.length + ' skins collected';
+}
+
+// the reel: a strip of skins that spins and settles on the prize under the marker
+function openCrate() {
+  if (CRATES.crates <= 0 || CRATES.opening) return;
+  CRATES.opening = true;
+  CRATES.crates--;
+  const prize = rollSkin();
+  CRATES.pending = prize.id;   // kept safe until the reel lands
+  saveCrates();
+  renderCrates();
+  $('crateResult').hidden = true;
+
+  const reel = $('crateReel'), strip = $('crateStrip');
+  strip.textContent = '';
+  const N = 56, WIN = 48;
+  for (let i = 0; i < N; i++) strip.appendChild(itemCard(i === WIN ? prize : rollSkin(), 'reelitem'));
+  const cardW = strip.firstChild.getBoundingClientRect().width + 8;   // card plus gap
+  const view = reel.getBoundingClientRect().width;
+  const end = WIN * cardW + cardW / 2 - view / 2 + (Math.random() - 0.5) * cardW * 0.7;
+  const dur = reduceMotion ? 600 : 6000, t0 = performance.now();
+  let lastIdx = -1;
+  const step = now => {
+    const t = Math.min(1, (now - t0) / dur);
+    const e = 1 - Math.pow(1 - t, 4);
+    const x = end * e;
+    strip.style.transform = 'translateX(' + (-x) + 'px)';
+    const idx = Math.floor((x + view / 2) / cardW);
+    if (idx !== lastIdx) { lastIdx = idx; sfxTick(); }
+    if (t < 1) requestAnimationFrame(step);
+    else finishOpen(prize);
+  };
+  strip.style.transform = 'translateX(0)';
+  requestAnimationFrame(step);
+}
+function finishOpen(prize) {
+  CRATES.opening = false;
+  CRATES.owned[prize.id] = (CRATES.owned[prize.id] | 0) + 1;
+  CRATES.pending = null;
+  saveCrates();
+  const ra = rarityOf(prize);
+  sfxReveal(RARITIES.indexOf(ra));
+  const res = $('crateResult');
+  res.textContent = '';
+  res.style.setProperty('--rc', ra.color);
+  const h = document.createElement('p'); h.className = 'won';
+  h.textContent = (CRATES.owned[prize.id] > 1 ? 'Another ' : 'New: ') + prize.name;
+  const r = document.createElement('small'); r.textContent = ra.name + ' grade';
+  const eq = document.createElement('button'); eq.type = 'button'; eq.className = 'primary';
+  eq.textContent = 'Equip ' + prize.name;
+  eq.addEventListener('click', () => { CRATES.equipped = prize.id; saveCrates(); renderCrates(); if (crewMode) send(); eq.textContent = 'Equipped'; eq.disabled = true; });
+  res.append(h, r, eq);
+  res.hidden = false;
+  renderCrates();
+  updateCrateButtons();
+}
+
+let toastTimer = 0;
+function toast(text) {
+  const t = $('toast'); if (!t) return;
+  t.textContent = text; t.hidden = false;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { t.hidden = true; }, 5000);
+}
+
+loadCrates();
+for (const b of document.querySelectorAll('.crateOpenBtn')) b.addEventListener('click', showCrates);
+$('crateOpen').addEventListener('click', openCrate);
+$('crateClose').addEventListener('click', hideCrates);
+$('crateCard').addEventListener('keydown', e => { if (e.key === 'Escape') hideCrates(); });
+updateCrateButtons();
 
 // ---- src/main.js ----
 // Starts the game once every script has loaded.

@@ -269,6 +269,7 @@ function toTitle() {
 }
 
 function arrive() {
+  grantCrate();
   if (crewMode) {
     state = 'port';
     audioTick(0, 0);
@@ -303,6 +304,7 @@ function startScare() {
 
 function endRun(how) {
   state = 'over';
+  grantCrate();
   audioTick(0, 0);
   const taken = how === 'taken', knocked = how === 'knock';
   if (crewMode) {

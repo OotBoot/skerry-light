@@ -79,7 +79,10 @@
         <li><b>Hull</b> three hits and she goes down. Let Maren reach the bow and she comes aboard</li>
         <li><b>Crew</b> sail with up to seven friends. Ships close together keep her back and patch each other's planks. Shout warnings (1, 2, 3), share flares, and watch your crew after your own voyage ends</li>
       </ul>
-      <button class="primary" id="startBtn" type="button">Take the helm alone</button>
+      <div class="btnrow">
+        <button class="primary" id="startBtn" type="button">Take the helm alone</button>
+        <button class="tool crateOpenBtn" type="button">Crates · 0</button>
+      </div>
       <section class="together" id="together" aria-labelledby="togetherHead">
         <h2 id="togetherHead">Sail together · up to 8 ships</h2>
         <p id="togetherStatus">Looking for other sailors…</p>
@@ -105,7 +108,10 @@
         <span class="date">Keeper's log · <span id="logDate"></span></span>
         <p id="logText"></p>
       </div>
-      <button class="primary" id="nextBtn" type="button">Sail again</button>
+      <div class="btnrow">
+        <button class="primary" id="nextBtn" type="button">Sail again</button>
+        <button class="tool crateOpenBtn" type="button">Crates · 0</button>
+      </div>
     </div>
   </div>
 
@@ -145,6 +151,7 @@
         <button class="primary" id="crewSailBtn" type="button" hidden>Set sail</button>
         <button class="primary" id="crewReadyBtn" type="button" hidden>Ready</button>
         <span class="wait" id="crewWait" hidden></span>
+        <button class="tool crateOpenBtn" type="button">Crates · 0</button>
         <button class="tool" id="crewLeaveBtn" type="button">Leave crew</button>
       </div>
     </div>
@@ -160,9 +167,31 @@
         <div><span class="label">Hits taken</span><strong id="sHits">0</strong></div>
         <div><span class="label">Best run</span><strong id="sBest">0</strong></div>
       </div>
-      <button class="primary" id="againBtn" type="button">Take another ship</button>
+      <div class="btnrow">
+        <button class="primary" id="againBtn" type="button">Take another ship</button>
+        <button class="tool crateOpenBtn" type="button">Crates · 0</button>
+      </div>
     </div>
   </div>
+
+  <div class="overlay cratecard" id="crateCard" hidden role="dialog" aria-modal="true" aria-labelledby="crateHead">
+    <div class="card">
+      <span class="eyebrow">Skerry Crate · <span id="crateCount">0 crates</span></span>
+      <h1 id="crateHead">Ship Skins</h1>
+      <p>One crate for every voyage you play. Skins change your deck, bowsprit and lantern, and how your hull and sails look to your crew.</p>
+      <div class="reel" id="crateReel"><div class="strip" id="crateStrip"></div><div class="marker" aria-hidden="true"></div></div>
+      <div class="result" id="crateResult" hidden aria-live="polite"></div>
+      <div class="btnrow">
+        <button class="primary" id="crateOpen" type="button">Open a crate</button>
+        <button class="tool" id="crateClose" type="button">Close</button>
+      </div>
+      <ul class="odds" id="crateOdds" aria-label="Chances for each grade"></ul>
+      <span class="eyebrow" id="crateCollected"></span>
+      <div class="inv" id="crateInv"></div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" hidden role="status"></div>
 </div>
 
 <script src="src/config.js"></script>
@@ -174,6 +203,7 @@
 <script src="src/game.js"></script>
 <script src="src/transport.js"></script>
 <script src="src/net.js"></script>
+<script src="src/crates.js"></script>
 <script src="src/main.js"></script>
 </body>
 </html>

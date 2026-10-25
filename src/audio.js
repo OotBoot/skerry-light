@@ -150,6 +150,14 @@ function sfxFlare() {
 function sfxHorn(pan, vol) {
   for (const f of [196, 247]) tone(f, 'sawtooth', 0.08, 0.06 * vol, 0.7, { pan });
 }
+// the crate reel ticking past, and the reveal (grander for rarer skins)
+function sfxTick() { tone(1800 + Math.random() * 200, 'square', 0.001, 0.035, 0.025); }
+function sfxReveal(level) {
+  const notes = [[523, 659], [523, 659, 784], [587, 740, 880], [523, 659, 784, 1047], [523, 659, 784, 1047, 1319]][Math.max(0, level)];
+  notes.forEach((f, i) => tone(f, 'triangle', 0.01, 0.18, 0.9 + level * 0.2, { delay: i * 0.09 }));
+  if (level >= 3) noise('highpass', 5000, 0.7, 0.05, 0.12, 1.2, { delay: 0.3 });
+}
+
 // Knock's jumpscare: a frantic burst of knocking, a shriek and a heavy blow
 function sfxKnockScare() {
   for (let i = 0; i < 9; i++) {

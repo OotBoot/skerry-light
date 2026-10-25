@@ -33,6 +33,12 @@ The only thing she will not go near is **Plimsoll**, the shark who walked up out
 - **The sea**: voyages start about 2.4 km out (further each voyage), through a wide stretch of skerries, wrecks and drifting timber.
 - **Harbour**: steer between the real red and green pier lamps. Each voyage after that has more rocks, wreckage and drowned, and the beam turns slower.
 
+## Crates and ship skins
+
+Every voyage you play, whether you make harbour or go down, earns one **Skerry Crate**, and your first one is free. Open crates from the **Crates** button on the title, harbour, crew and end screens. A reel of skins spins and lands on your prize.
+
+There are 14 skins to find, in five grades: **Deckhand** 79.9%, **Bosun** 16%, **Mate** 3.2%, **Captain** 0.64% and **Admiral** 0.26%. A skin changes your deck, rails, bowsprit and lantern as you see them, and your hull and sails as your crewmates see them. Crates and skins are kept in your browser on that device.
+
 ## Sailing together
 
 Up to eight people can sail as a crew. Each of you sails your own brig through the same skerries, and you can see each other's ships and lanterns, hulls and bells.
@@ -111,6 +117,7 @@ src/enemies.js      the drowned crew, Knock and the wreckers' false lights
 src/game.js         game state, update step, input and screens
 src/transport.js    connects to the crew server outside claude.ai
 src/net.js          crews: lobby, shared voyages, crewmates' ships
+src/crates.js       crates and ship skins
 src/main.js         starts the main loop
 assets/maren.png    Maren cutout
 assets/plimsoll.png Plimsoll cutout

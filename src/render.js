@@ -135,7 +135,8 @@ function drawMate(m, p, vis) {
   const sailH = L * 0.58;
   if (hullVis > 0.02) {
     ctx.globalAlpha = hullVis;
-    ctx.fillStyle = '#4b3a2b';
+    const skin = m.skin || SKINS[0];
+    ctx.fillStyle = skin.hull;
     ctx.beginPath();
     ctx.moveTo(x - dir * w / 2, y - hh); ctx.lineTo(x + dir * (w / 2 + L * 0.08), y - hh * 1.15);
     ctx.lineTo(x + dir * w * 0.42, y); ctx.lineTo(x - dir * w * 0.45, y); ctx.closePath(); ctx.fill();
@@ -144,7 +145,7 @@ function drawMate(m, p, vis) {
       const mx = x + dir * mm * w * 1.6;
       ctx.strokeStyle = '#2a2018'; ctx.lineWidth = Math.max(0.8, L * 0.025);
       ctx.beginPath(); ctx.moveTo(mx, y - hh); ctx.lineTo(mx, y - hh - sailH * 1.08); ctx.stroke();
-      ctx.fillStyle = '#d8cdb0';
+      ctx.fillStyle = skin.sail;
       ctx.beginPath();
       ctx.moveTo(mx - sailW * 0.55, y - hh - sailH * 0.12); ctx.lineTo(mx + sailW * 0.55, y - hh - sailH * 0.12);
       ctx.lineTo(mx + sailW * 0.4, y - hh - sailH); ctx.lineTo(mx - sailW * 0.4, y - hh - sailH); ctx.closePath(); ctx.fill();
@@ -330,16 +331,17 @@ function drawScene() {
 function drawDeck() {
   const tipY = H * 0.72, lit = g.glare;
   const deck = ctx.createLinearGradient(0, tipY, 0, H);
-  deck.addColorStop(0, mix('#1a130d', '#6a5034', lit)); deck.addColorStop(1, mix('#0c0806', '#3a2a1a', lit));
+  const skin = ship.skin || mySkin();
+  deck.addColorStop(0, mix(skin.deck[0], '#6a5034', lit * 0.7)); deck.addColorStop(1, mix(skin.deck[1], '#3a2a1a', lit * 0.7));
   ctx.fillStyle = deck;
   ctx.beginPath(); ctx.moveTo(cx - W * 0.75, H + 2); ctx.lineTo(cx, tipY); ctx.lineTo(cx + W * 0.75, H + 2); ctx.closePath(); ctx.fill();
   ctx.strokeStyle = 'rgba(0,0,0,0.45)'; ctx.lineWidth = 1;
   for (let i = -5; i <= 5; i++) { ctx.beginPath(); ctx.moveTo(cx, tipY); ctx.lineTo(cx + i * W * 0.14, H + 2); ctx.stroke(); }
-  ctx.strokeStyle = '#1e140c'; ctx.lineWidth = 10;
+  ctx.strokeStyle = skin.rail; ctx.lineWidth = 10;
   ctx.beginPath(); ctx.moveTo(cx - W * 0.75, H - 4); ctx.lineTo(cx - 6, tipY + 2); ctx.moveTo(cx + W * 0.75, H - 4); ctx.lineTo(cx + 6, tipY + 2); ctx.stroke();
   ctx.strokeStyle = 'rgba(255,216,138,0.25)'; ctx.lineWidth = 1.5;
   ctx.beginPath(); ctx.moveTo(cx - W * 0.75, H - 9); ctx.lineTo(cx - 6, tipY - 2); ctx.moveTo(cx + W * 0.75, H - 9); ctx.lineTo(cx + 6, tipY - 2); ctx.stroke();
-  ctx.fillStyle = '#140d08';
+  ctx.fillStyle = skin.wood;
   ctx.beginPath(); ctx.moveTo(cx - 9, tipY + 6); ctx.lineTo(cx + 9, tipY + 6); ctx.lineTo(cx + 2, hy + H * 0.07); ctx.lineTo(cx - 2, hy + H * 0.07); ctx.closePath(); ctx.fill();
   ctx.strokeStyle = 'rgba(20,14,10,0.9)'; ctx.lineWidth = 1.5;
   ctx.beginPath(); ctx.moveTo(cx, hy + H * 0.07); ctx.lineTo(cx - W * 0.2, -10); ctx.moveTo(cx, hy + H * 0.07); ctx.lineTo(cx + W * 0.05, -10); ctx.stroke();
@@ -352,7 +354,7 @@ function drawDeck() {
   const lx = cx + Math.min(W * 0.28, 220), ly = H * 0.8;
   const flick = g.maren.stage >= 3 && !reduceMotion ? (Math.random() < 0.15 ? 0.4 : 1) : 1;
   ctx.strokeStyle = '#2a1e14'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(lx, ly - 30); ctx.lineTo(lx, ly - 10); ctx.stroke();
-  ctx.globalAlpha = flick; lamp(lx, ly, '#ffcf86', 7); ctx.fillStyle = '#ffe9be'; ctx.fillRect(lx - 4, ly - 6, 8, 10); ctx.globalAlpha = 1;
+  ctx.globalAlpha = flick; lamp(lx, ly, skin.lantern, 7); ctx.fillStyle = mix(skin.lantern, '#ffffff', 0.5); ctx.fillRect(lx - 4, ly - 6, 8, 10); ctx.globalAlpha = 1;
 }
 
 // red closing in at the edges as she comes nearer
