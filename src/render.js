@@ -494,6 +494,7 @@ function drawDread() {
 }
 
 function drawCompass() {
+  if (W <= 520) return;   // no compass strip on phones
   const w = Math.min(W - 32, 560), x0 = cx - w / 2, y = W <= 520 ? 116 : 72, h = 26, span = 2.2;
   const xb = b => cx + (angDiff(b, ship.h) / span) * (w / 2);
   const inStrip = x => x > x0 + 3 && x < x0 + w - 3;

@@ -438,3 +438,14 @@ html, body, button, .overlay, .card { touch-action: manipulation; }
 .loottabs { display: flex; gap: 6px; flex-wrap: wrap; }
 .loottabs .tool { flex: 1 1 0; }
 .loottabs .tool.on { border-color: var(--lamp); color: var(--lamp); background: rgba(255,216,138,0.08); }
+/* phones in play: a smaller log, slightly smaller buttons, and no compass strip (so notes sit higher) */
+@media (max-width: 520px) {
+  #log { font-size: 9.5px; line-height: 1.4; }
+  #bellBtn, #flareBtn { padding: 5px 10px; gap: 1px; }
+  #bellBtn b, #flareBtn b { font-size: 0.95rem; }
+  #bellBtn small, #flareBtn small { font-size: 9px; }
+  .sailctl { gap: 8px; }
+  .sailctl .tool { width: 48px; height: 48px; font-size: 18px; }
+  .sailctl .tool small { font-size: 8px; }
+  .toast, .specbar, .netbanner { top: 96px; }
+}
