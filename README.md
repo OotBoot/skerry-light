@@ -18,16 +18,16 @@ The only thing she will not go near is **Plimsoll**, the shark who walked up out
 | Sail | ↑ ↓ or W / S. On a phone, hold the middle to shorten sail |
 | Ring the bell | Space or B, or the bell button |
 | Sound | M, or the sound button |
-| Speed | ▲ ▼ buttons on the left, hold to change sail (or ↑ ↓) |
+| Speed | ▲ ▼ buttons on the left, hold to change sail (or ↑ ↓). There's no top speed: the longer you hold ▲, the faster it climbs |
 | Flare | F, or the flare button |
 | Shout to crew | 1 Rocks here! · 2 Follow me! · 3 She's near me! |
 
 - **Maren** comes one stage nearer every half turn of the beam: 340 m, 220, 130, 70, then right at the bow, and one more half turn after that she takes the ship. Between turns she keeps pace with you, and at the last stages she drifts into your path. You hear her heartbeat and see red at the edges as she closes in.
 - **Plimsoll**: while you are within 75 m of him, Maren holds where she is (she no longer falls back). He waits about 7 seconds for a ship that falls behind, then walks on alone.
 - **The bell** drives Maren back two stages, but only if she is in front of you, and it takes 26 seconds (more on later voyages) to swing again. It also sends nearby drowned back under.
-- **The drowned** crew of the Gannet swim after you at about 5 m/s, faster on later voyages. Their eyes always catch the light. One that reaches a ship going under 9 knots climbs aboard and costs a plank; faster ships shake them off. Plimsoll eats any he catches.
-- **Knock**, the Gannet's walking figurehead, moves only while you can't see him. Listen for three knocks on wood (quicker and louder as he nears), turn to face him, and keep him in the beam, your lantern or a flare: he can't move while he's in your view and lit. If he reaches the hull he strikes it for a plank and is thrown back into the dark. The bell freezes him for 8 seconds. From voyage 4 there are two of him.
-- **Wreckers' false lights** are red and green lamps like the harbour piers, hung over a cluster of rocks off the true course. The lighthouse beam makes them vanish, and the bearing strip always shows the real harbour.
+- **The drowned** crew of the Gannet swim after you at about 5 m/s, faster on later voyages. Several are out at once, more each voyage. Their eyes always catch the light. One that reaches a ship going under 9 knots climbs aboard and costs a plank; faster ships shake them off. Plimsoll eats any he catches.
+- **Knock**, the Gannet's walking figurehead, moves only while you can't see him. Listen for three knocks on wood (quicker and louder as he nears), turn to face him, and keep him in the beam, your lantern or a flare: he can't move while he's in your view and lit. If he reaches the hull he strikes it for a plank and is thrown back into the dark. The bell freezes him for 8 seconds. There are two of him from the start, and up to four on later voyages.
+- **Wreckers' false lights** are red and green lamps like the harbour piers, hung over a cluster of rocks off the true course; there are four pairs on the first voyage and one more each voyage after. The lighthouse beam makes them vanish, and the bearing strip always shows the real harbour.
 - **Flares** light everything within 170 m for about seven seconds, for your whole crew, then take 35 seconds to reload.
 - **Hull**: rocks, wrecks, drifting timber, the shore, the piers and the drowned each cost a plank. Three and she sinks.
 - **Harbour**: steer between the real red and green pier lamps. Each voyage after that has more rocks, wreckage and drowned, and the beam turns slower.

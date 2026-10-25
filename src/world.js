@@ -62,11 +62,11 @@ function buildVoyage(n, attract) {
   // wreckers' false lights: a red and green pair, like the pier lamps, over a hidden cluster of rocks
   const lures = [];
   const dirX = (HB.x - sx) / Math.hypot(HB.x - sx, HB.y - sy), dirY = (HB.y - sy) / Math.hypot(HB.x - sx, HB.y - sy);
-  for (let tries = 0; tries < 600 && lures.length < 2 + Math.floor(n / 2); tries++) {
+  for (let tries = 0; tries < 900 && lures.length < 4 + n; tries++) {
     const side = RNG() < 0.5 ? -1 : 1, off = rand(70, 170) * side;
     const [bx, by] = along(rand(0.25, 0.8), 0);
     const x = bx + dirY * off, y = by - dirX * off;
-    if (!ok(x, y, 34) || lures.some(l => Math.hypot(l.x - x, l.y - y) < 160)) continue;
+    if (!ok(x, y, 34) || lures.some(l => Math.hypot(l.x - x, l.y - y) < 120)) continue;
     addRock(x, y, rand(7, 10));
     for (let i = 0; i < 3; i++) { const a = rand(0, 6.28), d = rand(11, 16); addRock(x + Math.cos(a) * d, y + Math.sin(a) * d, rand(5, 8)); }
     lures.push({ x, y, px: dirX, py: dirY, ph: rand(0, 6.28), gone: false });

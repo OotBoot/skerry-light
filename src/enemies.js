@@ -14,7 +14,7 @@
 // passes over them, and snuff out for good when a ship gets close.
 
 function newEnemies(lures) {
-  return { drowned: [], spawnT: 10, lures: lures || [], warnedLure: false, knocks: [], knockT: 22 };
+  return { drowned: [], spawnT: 5, lures: lures || [], warnedLure: false, knocks: [], knockT: 10 };
 }
 
 // ---------- Knock ----------
@@ -35,12 +35,12 @@ function knockSeen(k) {
 function updateKnocks(dt) {
   const E = g.enemies;
   E.knockT -= dt;
-  const max = g.n >= 4 ? 2 : 1;
+  const max = Math.min(4, 2 + Math.floor((g.n - 1) / 2));
   if (E.knockT <= 0 && E.knocks.length < max) {
     const k = { x: 0, y: 0, ph: 0, wait: 0, stun: 0, knockT: 1, seen: false, warned: false };
     placeKnock(k, false);
     E.knocks.push(k);
-    E.knockT = 30;
+    E.knockT = 14;
     if (!E.knockWarned) { E.knockWarned = true; addLog('Somewhere behind you, three knocks on wood.', 'w'); }
   }
   for (const k of E.knocks) {
@@ -111,10 +111,10 @@ function updateEnemies(dt) {
   if (g.attract || state !== 'play') return;
 
   E.spawnT -= dt;
-  const max = 2 + Math.min(4, g.n);
+  const max = 4 + Math.min(6, g.n);
   if (E.spawnT <= 0) {
     if (E.drowned.length < max) spawnDrowned();
-    E.spawnT = Math.max(5, 13 - g.n * 1.2) * rand(0.75, 1.25);
+    E.spawnT = Math.max(2.5, 6.5 - g.n * 0.8) * rand(0.75, 1.25);
   }
   const sp = SK.DROWNED_SPEED + g.n * 0.4;
   for (const d of E.drowned) {

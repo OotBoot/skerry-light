@@ -107,6 +107,22 @@ function sailInCompany(dt) {
   }
 }
 
+// the bow is a few metres ahead of where you stand; returns true if she hit something or arrived
+function checkCollisions() {
+  const hull0 = ship.hull;
+  const bx = ship.x + Math.sin(ship.h) * 5, by = ship.y + Math.cos(ship.h) * 5;
+  for (const r of g.rocks) if (Math.hypot(bx - r.x, by - r.y) < r.r + 2.5) { hit(bx - r.x, by - r.y, 'a skerry'); break; }
+  for (const o of g.wrecks) if (Math.hypot(bx - o.x, by - o.y) < o.r * 0.8 + 2.5) { hit(bx - o.x, by - o.y, 'the wreck of the ' + o.name); break; }
+  for (const o of g.timber) if (Math.hypot(bx - o.x, by - o.y) < o.r + 2.5) { hit(bx - o.x, by - o.y, 'drifting timber'); Object.assign(o, spawnTimber(ship.x, ship.y)); break; }
+  const inGap = Math.abs(ship.x - SK.HARBOUR.x) < 18;
+  if (ship.y < 5 && !inGap) { ship.y = 6; hit(0, 1, 'the shore'); }
+  for (const px of [SK.HARBOUR.x - 23, SK.HARBOUR.x + 23]) {
+    if (Math.abs(bx - px) < 3.5 && by < 48 && by > -2) { hit(bx - px, 0.3, 'the pier'); ship.x += Math.sign(ship.x - px) * 2; }
+  }
+  if (state === 'play' && inGap && ship.y < 36 && ship.y > 0) { arrive(); return true; }
+  return ship.hull !== hull0 || state !== 'play';
+}
+
 function update(dt) {
   g.t += dt;
   if (advanceBeam(dt)) marenTurn();
@@ -125,11 +141,19 @@ function update(dt) {
     steer = clamp(steer, -1, 1); sailIn = clamp(sailIn, -1, 1);
   }
   ship.rudder += (steer - ship.rudder) * Math.min(1, dt * 4);
-  ship.sail = clamp(ship.sail + sailIn * 0.5 * dt, 0.15, 1);
+  // no top speed: keep making sail and she keeps going faster (and the longer you hold it, the quicker it climbs)
+  if (sailIn > 0) g.sailHeld = (g.sailHeld || 0) + dt; else g.sailHeld = 0;
+  const rate = sailIn > 0 ? 0.5 * (1 + g.sailHeld * 0.6) : 0.5;
+  ship.sail = Math.max(0.15, ship.sail + sailIn * rate * dt);
   ship.v += (3 + ship.sail * 12 - ship.v) * Math.min(1, dt * 0.6);
   ship.h += ship.rudder * 0.55 * dt * (0.35 + 0.65 * Math.min(1, ship.v / 10));
-  ship.x += Math.sin(ship.h) * ship.v * dt;
-  ship.y += Math.cos(ship.h) * ship.v * dt;
+  // move in short steps so a fast ship can't jump clean over a rock between frames
+  const steps = Math.min(60, Math.max(1, Math.ceil(ship.v * dt / 2)));
+  for (let i = 0; i < steps; i++) {
+    ship.x += Math.sin(ship.h) * ship.v * dt / steps;
+    ship.y += Math.cos(ship.h) * ship.v * dt / steps;
+    if (!g.attract && state === 'play' && checkCollisions()) break;
+  }
   ship.bob += dt;
   if (ship.inv > 0) ship.inv -= dt;
 
@@ -138,19 +162,7 @@ function update(dt) {
     if (o.y < 60 || Math.hypot(o.x, o.y) > 1250 || Math.hypot(o.x - SK.HARBOUR.x, o.y - SK.HARBOUR.y) < 110) Object.assign(o, spawnTimber(ship.x, ship.y));
   }
 
-  // collisions; the bow is a few metres ahead of where you stand
-  if (!g.attract && state === 'play') {
-    const bx = ship.x + Math.sin(ship.h) * 5, by = ship.y + Math.cos(ship.h) * 5;
-    for (const r of g.rocks) if (Math.hypot(bx - r.x, by - r.y) < r.r + 2.5) { hit(bx - r.x, by - r.y, 'a skerry'); break; }
-    for (const o of g.wrecks) if (Math.hypot(bx - o.x, by - o.y) < o.r * 0.8 + 2.5) { hit(bx - o.x, by - o.y, 'the wreck of the ' + o.name); break; }
-    for (const o of g.timber) if (Math.hypot(bx - o.x, by - o.y) < o.r + 2.5) { hit(bx - o.x, by - o.y, 'drifting timber'); Object.assign(o, spawnTimber(ship.x, ship.y)); break; }
-    const inGap = Math.abs(ship.x - SK.HARBOUR.x) < 18;
-    if (ship.y < 5 && !inGap) { ship.y = 6; hit(0, 1, 'the shore'); }
-    for (const px of [SK.HARBOUR.x - 23, SK.HARBOUR.x + 23]) {
-      if (Math.abs(bx - px) < 3.5 && by < 48 && by > -2) { hit(bx - px, 0.3, 'the pier'); ship.x += Math.sign(ship.x - px) * 2; }
-    }
-    if (state === 'play' && inGap && ship.y < 36 && ship.y > 0) arrive();
-  }
+
 
   updatePlimsoll(dt);
   updateMaren(dt);
