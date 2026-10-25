@@ -529,7 +529,7 @@ html, body, button, .overlay, .card { touch-action: manipulation; }
         <summary>The story, and how to play</summary>
         <p>She still stands on the water when the lamp turns, nearer every turn, and she follows any ship she has chosen. The Gannet's drowned crew swim with her, and her figurehead, Knock, walks the water with a belaying pin. The only thing Maren will not come near is <span class="plim">Plimsoll</span>, the shark who walked out of the surf that winter in the Gannet cabin boy's blue shoes. He knows the deep water through the skerries, but he won't wait for you. <em>Follow his shoes.</em></p>
         <ul class="rules">
-          <li><b>See</b> rocks, wrecks and drifting timber show up when the beam or a flare is on them, and stay in sight for about 3 seconds after the beam passes before fading away</li>
+          <li><b>See</b> rocks, wrecks and drifting timber show up when the beam or a flare is on them, then fade away over 3 seconds once the beam moves on</li>
           <li><b>Follow</b> Plimsoll's glowing shoes. Sail close behind him (within 45 m) and Maren holds where she is. Fall behind and he soon walks on alone</li>
           <li><b>Ring the bell</b> (Space) with her anywhere ahead of you (anywhere at all once she's close) to drive her back three stages. It also sinks the drowned and freezes Knock. It swings again in about 15 seconds</li>
           <li><b>The drowned</b> swim after you; their eyes catch the light. Sail fast to shake them off, or ring the bell. Plimsoll sometimes snaps one up</li>
@@ -660,8 +660,8 @@ const SK = {
   CAM_H: 5,               // eye height on deck
   NEAR: 1,
   HULL: 3,
-  SEEN_HOLD: 3,           // seconds a rock stays visible after the beam passes over it
-  SEEN_FADE: 1.5,         // ...then it fades out over this long
+  SEEN_HOLD: 0,           // seconds a rock stays fully visible after the beam passes over it
+  SEEN_FADE: 3,           // ...then it fades out over this long
   IMPACT: 4.5,          // m/s closing speed that stoves in a plank; slower than that is a scrape
   HARBOUR: { x: 230, y: 30 },
   BACKROOMS_CHANCE: 1 / 20,
@@ -1462,8 +1462,8 @@ function drawGlitch(img, x, y, w, h, amt) {
 }
 
 // ---------- obstacles ----------
-// Once the beam has swept over a rock (or a wreck, or a log), it stays in sight for SK.SEEN_HOLD
-// seconds, then fades out over SK.SEEN_FADE. Called every frame for everything on the water.
+// Once the beam has swept over a rock (or a wreck, or a log), it starts to fade as soon as the beam
+// leaves it (after SK.SEEN_HOLD, now 0) and is gone SK.SEEN_FADE seconds later. Called every frame for everything on the water.
 function rememberLit(list) {
   for (const o of list) {
     const l = litAt(o.x, o.y);
@@ -2567,7 +2567,7 @@ function newVoyage(n, attract, seed, slot) {
   else if (slot) { const lat = Math.ceil(slot / 2) * 40 * (slot % 2 ? -1 : 1); ship.x += Math.cos(ship.h) * lat; ship.y -= Math.sin(ship.h) * lat; }
   const beam0 = seed != null ? (seed % 1000) / 1000 * 3 - 1.5 : rand(-1.5, 1.5);
   g = {
-    t: 0, n, attract, beam: beam0, beam0, launchAt: 0, launchId: null, period: Math.min(6.5, 3.6 + n * 0.4), marenPeriod: Math.min(11, 6 + n * 0.8), marenClock: 0,
+    t: 0, n, attract, beam: beam0, beam0, launchAt: 0, launchId: null, period: Math.min(9, 6 + n * 0.5), marenPeriod: Math.min(11, 6 + n * 0.8), marenClock: 0,
     rocks: v.rocks, wrecks: v.wrecks, timber: v.timber, path: v.path,
     backrooms: !!v.backrooms, exit: v.exit, rooms: v.rooms,
     walls: v.walls || [

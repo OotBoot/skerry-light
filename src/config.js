@@ -11,8 +11,8 @@ const SK = {
   CAM_H: 5,               // eye height on deck
   NEAR: 1,
   HULL: 3,
-  SEEN_HOLD: 3,           // seconds a rock stays visible after the beam passes over it
-  SEEN_FADE: 1.5,         // ...then it fades out over this long
+  SEEN_HOLD: 0,           // seconds a rock stays fully visible after the beam passes over it
+  SEEN_FADE: 3,           // ...then it fades out over this long
   IMPACT: 4.5,          // m/s closing speed that stoves in a plank; slower than that is a scrape
   HARBOUR: { x: 230, y: 30 },
   BACKROOMS_CHANCE: 1 / 20,

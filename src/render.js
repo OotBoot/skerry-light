@@ -155,8 +155,8 @@ function drawGlitch(img, x, y, w, h, amt) {
 }
 
 // ---------- obstacles ----------
-// Once the beam has swept over a rock (or a wreck, or a log), it stays in sight for SK.SEEN_HOLD
-// seconds, then fades out over SK.SEEN_FADE. Called every frame for everything on the water.
+// Once the beam has swept over a rock (or a wreck, or a log), it starts to fade as soon as the beam
+// leaves it (after SK.SEEN_HOLD, now 0) and is gone SK.SEEN_FADE seconds later. Called every frame for everything on the water.
 function rememberLit(list) {
   for (const o of list) {
     const l = litAt(o.x, o.y);
