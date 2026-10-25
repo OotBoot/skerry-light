@@ -463,19 +463,25 @@ function checkResults() {
 function renderTogether() {
   const box = $('together'); if (!box) return;
   const status = $('togetherStatus'), list = $('crewList'), startBtn = $('crewStartBtn');
-  list.textContent = '';
+  const clearList = () => { if (list.dataset.key !== '') { list.textContent = ''; list.dataset.key = ''; } };
   const nickRow = $('nickRow');
   if (NET.status === 'off') {
     status.textContent = NET.offReason;
-    startBtn.hidden = true; nickRow.hidden = true; return;
+    startBtn.hidden = true; nickRow.hidden = true; clearList(); return;
   }
-  if (NET.status === 'connecting') { status.textContent = 'Looking for other sailors…'; startBtn.hidden = true; nickRow.hidden = true; return; }
+  if (NET.status === 'connecting') { status.textContent = 'Looking for other sailors…'; startBtn.hidden = true; nickRow.hidden = true; clearList(); return; }
   startBtn.hidden = false;
   nickRow.hidden = NET.via !== 'server';
   const crews = crewSummaries();
   const here = NET.peers.filter(p => !(p.isMe && p.sameTab)).length;
   status.textContent = NET.message || (here ? (here === 1 ? '1 other sailor has this page open.' : here + ' other sailors have this page open.') : 'Nobody else has this page open yet. Start a crew and send them the invite link.');
   $('crewQuickBtn').hidden = !crews.some(c => c.n < MAX_CREW);
+  // only rebuild the list when it actually changes, so a tap never lands on a button that was
+  // swapped out underneath the finger (the list refreshes every second)
+  const key = crews.map(c => [c.code, Math.min(c.n, MAX_CREW), c.host, c.atSea ? c.voy : 0].join(':')).join('|');
+  if (list.dataset.key === key) return;
+  list.dataset.key = key;
+  list.textContent = '';
   for (const c of crews) {
     const li = document.createElement('li');
     const label = document.createElement('span');
@@ -486,11 +492,16 @@ function renderTogether() {
     b.type = 'button'; b.className = 'tool';
     b.textContent = c.n >= MAX_CREW ? 'Full' : 'Join';
     b.disabled = c.n >= MAX_CREW;
-    b.addEventListener('click', () => joinCrew(c.code));
+    b.dataset.code = c.code;
     li.appendChild(b);
     list.appendChild(li);
   }
 }
+// one listener on the list, so Join works even on a button drawn a moment ago
+$('crewList').addEventListener('click', e => {
+  const b = e.target.closest && e.target.closest('button[data-code]');
+  if (b && !b.disabled) joinCrew(b.dataset.code);
+});
 setInterval(() => { if (state === 'title' && !$('titleCard').hidden) renderTogether(); }, 1000);
 
 // ---------- watching a crewmate ----------
@@ -592,7 +603,7 @@ function renderCrewCard() {
   if (!inv.hidden) $('inviteLink').value = location.origin + location.pathname + '#' + NET.crew;
   if (!NET.launch) {
     title.textContent = 'Crew Forming';
-    text.textContent = 'Send the invite to up to seven friends. They join from the title screen by picking crew ' + NET.crew.toUpperCase() + '. Everyone sails their own brig through the same skerries. Ships close together keep Maren back, and a bell rung near a crewmate drives her away from both of you.';
+    text.textContent = 'Send the invite to up to seven friends. They join from the title screen by picking crew ' + NET.crew.toUpperCase() + '. Everyone sails their own ship through the same skerries. Ships close together keep Maren back, and a bell rung near a crewmate drives her away from both of you.';
   } else if (!r) {
     title.textContent = statusWord(NET.st) === 'In harbour' ? 'Safe in Harbour' : 'Lost at Sea';
     text.textContent = 'Voyage ' + voy + '. Waiting for the rest of the crew to make harbour or go down. You can watch them from their deck while you wait.';

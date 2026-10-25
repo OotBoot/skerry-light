@@ -400,3 +400,20 @@ button.small { padding: 6px 14px; min-height: 0; }
 /* no double-tap zoom on buttons, and no auto-zoom when a phone focuses a text box (needs 16px) */
 html, body, button, .overlay, .card { touch-action: manipulation; }
 @media (max-width: 520px) { input, select, textarea { font-size: 16px !important; } }
+/* the card never grows wider than the screen, whatever is inside it */
+.overlay { grid-template-columns: minmax(0, 1fr); }
+.card { min-width: 0; max-width: min(34rem, 100%); justify-self: center; }
+.cratecard .card { max-width: min(46rem, 100%); }
+.nickrow input { min-width: 0; flex: 1 1 auto; width: auto; }
+.crews li span { flex: 1 1 auto; }
+.crews li button { flex: none; }
+@media (max-width: 520px) {
+  .crews li { font-size: 12px; gap: 8px; }
+  .crews li span { white-space: normal; line-height: 1.35; }
+  .crews li button { padding: 8px 14px; }
+}
+@media (max-width: 520px) {
+  .btnrow { flex-wrap: wrap; }
+  .btnrow > button { flex: 1 1 40%; white-space: nowrap; }
+  .btnrow > .wait { flex: 1 1 100%; order: -1; font-size: 12px; }
+}
