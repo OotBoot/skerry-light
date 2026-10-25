@@ -81,7 +81,7 @@ function updateKnocks(dt) {
 }
 function bellStunsKnock() {
   let n = 0;
-  for (const k of g.enemies.knocks) if (Math.hypot(k.x - ship.x, k.y - ship.y) < 300 && k.wait <= 0) { k.stun = SK.KNOCK_STUN; n++; }
+  for (const k of g.enemies.knocks) if (Math.hypot(k.x - ship.x, k.y - ship.y) < 450 && k.wait <= 0) { k.stun = SK.KNOCK_STUN; n++; }
   return n;
 }
 function drawKnock(k, q, vis) {
@@ -174,7 +174,7 @@ function boarded() {
 function bellDrownsThem() {
   const E = g.enemies;
   let n = 0;
-  for (const d of E.drowned) if (Math.hypot(d.x - ship.x, d.y - ship.y) < 90) { d.dead = true; n++; }
+  for (const d of E.drowned) if (Math.hypot(d.x - ship.x, d.y - ship.y) < 150) { d.dead = true; n++; }
   E.drowned = E.drowned.filter(d => !d.dead);
   return n;
 }

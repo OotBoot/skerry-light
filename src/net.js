@@ -378,7 +378,7 @@ function mateRangBell(m) {
   const pan = clamp(angDiff(bearingOf(m.x - ship.x, m.y - ship.y), ship.h) / (fov / 2), -1, 1);
   sfxBellFar(pan, Math.max(0.15, 1 - d / 600));
   if (d < SK.CREW_BELL_RANGE && g.maren.active && g.maren.stage >= 1) {
-    g.maren.stage--; placeMaren(g.maren.stage);
+    g.maren.stage = Math.max(0, g.maren.stage - 2); placeMaren(g.maren.stage);
     addLog(m.name + ' rang the bell close by. She draws back a little.', 'p');
   } else {
     addLog(m.name + ' rang the bell.');

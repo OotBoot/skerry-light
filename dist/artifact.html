@@ -310,7 +310,7 @@ canvas:focus { outline: none; }
       <ul class="rules">
         <li><b>See</b> rocks, wrecks and drifting timber show only while the beam or a flare is on them, then they are gone</li>
         <li><b>Follow</b> Plimsoll's glowing shoes. Within 75 m of him, Maren holds where she is. Fall behind and he walks on alone</li>
-        <li><b>Ring the bell</b> (Space) while you can see her to drive her back two stages. It takes almost half a minute to swing again</li>
+        <li><b>Ring the bell</b> (Space) with her anywhere ahead of you (anywhere at all once she's close) to drive her back three stages. It also sinks the drowned and freezes Knock. It swings again in about 15 seconds</li>
         <li><b>The drowned</b> swim after you; their eyes catch the light. Sail fast to shake them off, or ring the bell. Plimsoll eats them</li>
         <li><b>Knock</b> moves only while you can't see him. Listen for three knocks on wood, turn, and keep him in your light. The bell freezes him</li>
         <li><b>False lights</b> red and green lamps that aren't the harbour, over rocks. The beam makes them vanish; the bearing strip shows the real harbour</li>
@@ -427,9 +427,9 @@ const SK = {
   PLIMSOLL_GUARD: 75,     // this close to Plimsoll and she holds where she is
   PLIMSOLL_PATIENCE: 7,   // seconds he waits for a ship that falls behind before walking on
   CREW_GUARD: 55,         // the same, for ships sailing close together
-  BELL_COOLDOWN: 26,
-  BELL_PUSH: 2,           // stages the bell drives her back
-  CREW_BELL_RANGE: 100,
+  BELL_COOLDOWN: 15,
+  BELL_PUSH: 3,           // stages the bell drives her back
+  CREW_BELL_RANGE: 160,
   DROWNED_SPEED: 5,       // m/s
   DROWNED_OUTRUN: 9,      // a ship going faster than this shakes them off
   FLARE_COOLDOWN: 35, FLARE_TIME: 7, FLARE_RADIUS: 170,
@@ -446,7 +446,7 @@ const SK = {
   },
   KNOCK_ASPECT: 201 / 474,
   KNOCK_SPEED: 8,         // m/s at least, and always faster than the ship; only while nobody is looking at him
-  KNOCK_STUN: 15,         // seconds the bell freezes him
+  KNOCK_STUN: 20,         // seconds the bell freezes him
   KNOCK_SCARE_TIME: 1.4,  // his jumpscare when he reaches the hull
   MAREN_ASPECT: 170 / 295,
   PLIM_ASPECT: 380 / 309,
@@ -1448,6 +1448,11 @@ function marenInView() {
   const m = g.maren;
   return Math.abs(angDiff(bearingOf(m.x - ship.x, m.y - ship.y), ship.h)) < fov / 2 + 0.05;
 }
+// the bell reaches her anywhere ahead of the beam, or anywhere at all once she is close
+function bellReaches() {
+  const m = g.maren;
+  return m.stage >= 3 || Math.abs(angDiff(bearingOf(m.x - ship.x, m.y - ship.y), ship.h)) < Math.PI / 2 + 0.2;
+}
 
 function ringBell() {
   if (state !== 'play' || g.bell > 0) return;
@@ -1459,16 +1464,16 @@ function ringBell() {
   const drowned = bellDrownsThem();
   if (bellStunsKnock()) addLog('The knocking stops. Knock stands frozen for a few seconds.', 'p');
   const m = g.maren;
-  if (m.active && m.stage >= 1 && marenInView()) {
+  if (m.active && m.stage >= 1 && bellReaches()) {
     m.stage = Math.max(0, m.stage - SK.BELL_PUSH); placeMaren(m.stage);
-    addLog('The bell rings out. She draws back, but not far.' + (drowned ? ' The drowned sink away.' : ''), 'p');
+    addLog('The bell rings out and she draws well back.' + (drowned ? ' The drowned sink away.' : ''), 'p');
   } else if (drowned) {
     addLog('The bell rings out and the drowned sink back under.', 'p');
   } else {
-    addLog(m.stage >= 1 ? 'The bell rings, but she is not in front of you. Turn to face her first.' : 'The bell rings out over the water. Nothing answers.');
+    addLog(m.stage >= 1 ? 'The bell rings, but she is behind you. Turn towards her first.' : 'The bell rings out over the water. Nothing answers.');
   }
 }
-function bellCooldown() { return SK.BELL_COOLDOWN + g.n * 2; }
+function bellCooldown() { return SK.BELL_COOLDOWN + g.n; }
 
 // she keeps pace with the ship, and at the last stages she drifts into your path
 function followShip(m, dt) {
@@ -1704,7 +1709,7 @@ function updateKnocks(dt) {
 }
 function bellStunsKnock() {
   let n = 0;
-  for (const k of g.enemies.knocks) if (Math.hypot(k.x - ship.x, k.y - ship.y) < 300 && k.wait <= 0) { k.stun = SK.KNOCK_STUN; n++; }
+  for (const k of g.enemies.knocks) if (Math.hypot(k.x - ship.x, k.y - ship.y) < 450 && k.wait <= 0) { k.stun = SK.KNOCK_STUN; n++; }
   return n;
 }
 function drawKnock(k, q, vis) {
@@ -1797,7 +1802,7 @@ function boarded() {
 function bellDrownsThem() {
   const E = g.enemies;
   let n = 0;
-  for (const d of E.drowned) if (Math.hypot(d.x - ship.x, d.y - ship.y) < 90) { d.dead = true; n++; }
+  for (const d of E.drowned) if (Math.hypot(d.x - ship.x, d.y - ship.y) < 150) { d.dead = true; n++; }
   E.drowned = E.drowned.filter(d => !d.dead);
   return n;
 }
@@ -2722,7 +2727,7 @@ function mateRangBell(m) {
   const pan = clamp(angDiff(bearingOf(m.x - ship.x, m.y - ship.y), ship.h) / (fov / 2), -1, 1);
   sfxBellFar(pan, Math.max(0.15, 1 - d / 600));
   if (d < SK.CREW_BELL_RANGE && g.maren.active && g.maren.stage >= 1) {
-    g.maren.stage--; placeMaren(g.maren.stage);
+    g.maren.stage = Math.max(0, g.maren.stage - 2); placeMaren(g.maren.stage);
     addLog(m.name + ' rang the bell close by. She draws back a little.', 'p');
   } else {
     addLog(m.name + ' rang the bell.');

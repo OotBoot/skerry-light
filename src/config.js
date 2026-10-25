@@ -18,9 +18,9 @@ const SK = {
   PLIMSOLL_GUARD: 75,     // this close to Plimsoll and she holds where she is
   PLIMSOLL_PATIENCE: 7,   // seconds he waits for a ship that falls behind before walking on
   CREW_GUARD: 55,         // the same, for ships sailing close together
-  BELL_COOLDOWN: 26,
-  BELL_PUSH: 2,           // stages the bell drives her back
-  CREW_BELL_RANGE: 100,
+  BELL_COOLDOWN: 15,
+  BELL_PUSH: 3,           // stages the bell drives her back
+  CREW_BELL_RANGE: 160,
   DROWNED_SPEED: 5,       // m/s
   DROWNED_OUTRUN: 9,      // a ship going faster than this shakes them off
   FLARE_COOLDOWN: 35, FLARE_TIME: 7, FLARE_RADIUS: 170,
@@ -37,7 +37,7 @@ const SK = {
   },
   KNOCK_ASPECT: 201 / 474,
   KNOCK_SPEED: 8,         // m/s at least, and always faster than the ship; only while nobody is looking at him
-  KNOCK_STUN: 15,         // seconds the bell freezes him
+  KNOCK_STUN: 20,         // seconds the bell freezes him
   KNOCK_SCARE_TIME: 1.4,  // his jumpscare when he reaches the hull
   MAREN_ASPECT: 170 / 295,
   PLIM_ASPECT: 380 / 309,

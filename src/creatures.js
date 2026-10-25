@@ -56,6 +56,11 @@ function marenInView() {
   const m = g.maren;
   return Math.abs(angDiff(bearingOf(m.x - ship.x, m.y - ship.y), ship.h)) < fov / 2 + 0.05;
 }
+// the bell reaches her anywhere ahead of the beam, or anywhere at all once she is close
+function bellReaches() {
+  const m = g.maren;
+  return m.stage >= 3 || Math.abs(angDiff(bearingOf(m.x - ship.x, m.y - ship.y), ship.h)) < Math.PI / 2 + 0.2;
+}
 
 function ringBell() {
   if (state !== 'play' || g.bell > 0) return;
@@ -67,16 +72,16 @@ function ringBell() {
   const drowned = bellDrownsThem();
   if (bellStunsKnock()) addLog('The knocking stops. Knock stands frozen for a few seconds.', 'p');
   const m = g.maren;
-  if (m.active && m.stage >= 1 && marenInView()) {
+  if (m.active && m.stage >= 1 && bellReaches()) {
     m.stage = Math.max(0, m.stage - SK.BELL_PUSH); placeMaren(m.stage);
-    addLog('The bell rings out. She draws back, but not far.' + (drowned ? ' The drowned sink away.' : ''), 'p');
+    addLog('The bell rings out and she draws well back.' + (drowned ? ' The drowned sink away.' : ''), 'p');
   } else if (drowned) {
     addLog('The bell rings out and the drowned sink back under.', 'p');
   } else {
-    addLog(m.stage >= 1 ? 'The bell rings, but she is not in front of you. Turn to face her first.' : 'The bell rings out over the water. Nothing answers.');
+    addLog(m.stage >= 1 ? 'The bell rings, but she is behind you. Turn towards her first.' : 'The bell rings out over the water. Nothing answers.');
   }
 }
-function bellCooldown() { return SK.BELL_COOLDOWN + g.n * 2; }
+function bellCooldown() { return SK.BELL_COOLDOWN + g.n; }
 
 // she keeps pace with the ship, and at the last stages she drifts into your path
 function followShip(m, dt) {
