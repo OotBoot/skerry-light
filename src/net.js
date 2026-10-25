@@ -557,7 +557,18 @@ function renderCrewCard() {
   list.forEach((p, i) => {
     const li = document.createElement('li');
     const dot = document.createElement('i'); dot.style.background = SLOT_COLORS[i]; li.appendChild(dot);
-    const nm = document.createElement('b'); nm.textContent = nameOf(p, i) + (i === 0 ? ' · host' : ''); li.appendChild(nm);
+    const skin = SKIN_BY_ID[p.peer === NET.myPeer ? CRATES.equipped : p.presence && p.presence.skin] || SKINS[0];
+    const who = document.createElement('b');
+    who.className = 'who';
+    who.appendChild(skinPreview(skin, 42));
+    const nmText = document.createElement('span');
+    nmText.textContent = nameOf(p, i) + (i === 0 ? ' · host' : '');
+    const sk = document.createElement('small');
+    sk.textContent = skin.name;
+    const ra = rarityOf(skin); if (ra) sk.style.color = ra.color;
+    nmText.appendChild(document.createElement('br')); nmText.appendChild(sk);
+    who.appendChild(nmText);
+    li.appendChild(who);
     const st = document.createElement('span'); st.textContent = crewRowStatus(p, i, voy); li.appendChild(st);
     ul.appendChild(li);
   });
@@ -648,7 +659,7 @@ function renderCrewHud() {
     const dot = document.createElement('i'); dot.style.background = SLOT_COLORS[m.slot] || SLOT_COLORS[1]; row.appendChild(dot);
     const nm = document.createElement('span');
     const d = m.st === 'sail' && m.placed ? ' · ' + Math.round(Math.hypot(m.x - ship.x, m.y - ship.y)) + 'm' : '';
-    nm.textContent = m.name + ' · ' + (m.st === 'sail' ? 'hull ' + m.hull : statusWord(m.st)) + d;
+    nm.textContent = m.name + ' · ' + (m.skin ? m.skin.name + ' · ' : '') + (m.st === 'sail' ? 'hull ' + m.hull : statusWord(m.st)) + d;
     row.appendChild(nm);
     box.appendChild(row);
   }

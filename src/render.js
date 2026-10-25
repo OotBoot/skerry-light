@@ -127,7 +127,8 @@ function drawWreck(o, p, vis) {
 // a crewmate's brig: their own lantern always shows, the hull when lit or close
 function drawMate(m, p, vis) {
   const d = Math.hypot(m.x - ship.x, m.y - ship.y);
-  const hullVis = Math.max(vis, Math.max(0, 1 - d / 140) * 0.85);
+  // their own lanterns light their hull and sails, so you can see a crewmate's skin from a fair way off
+  const hullVis = Math.max(vis, Math.max(0, 1 - d / 320) * 0.95);
   const col = SLOT_COLORS[m.slot] || SLOT_COLORS[1];
   const L = 20 * p.s, { lat, dir } = sideOn(m.x, m.y, m.h);
   const w = L * (0.28 + 0.72 * lat), hh = Math.max(1.2, L * 0.12);

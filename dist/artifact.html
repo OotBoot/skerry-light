@@ -263,6 +263,10 @@ canvas:focus { outline: none; }
 .members li { display: grid; grid-template-columns: 12px minmax(0, 1fr) auto; align-items: center; gap: 10px; font-family: var(--log); font-size: 13px; padding: 8px 0; border-bottom: 1px solid var(--rule); }
 .members li i { width: 10px; height: 10px; border-radius: 50%; border: 1px solid var(--rule); }
 .members li b { font-weight: 700; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.members li b.who { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.members li b.who svg { flex: none; }
+.members li b.who span { min-width: 0; overflow: hidden; text-overflow: ellipsis; line-height: 1.3; }
+.members li b.who small { font-weight: 400; font-size: 11px; }
 .members li span { color: var(--muted); }
 .members li.empty b { color: var(--muted); font-weight: 400; }
 .btnrow { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
@@ -1123,7 +1127,8 @@ function drawWreck(o, p, vis) {
 // a crewmate's brig: their own lantern always shows, the hull when lit or close
 function drawMate(m, p, vis) {
   const d = Math.hypot(m.x - ship.x, m.y - ship.y);
-  const hullVis = Math.max(vis, Math.max(0, 1 - d / 140) * 0.85);
+  // their own lanterns light their hull and sails, so you can see a crewmate's skin from a fair way off
+  const hullVis = Math.max(vis, Math.max(0, 1 - d / 320) * 0.95);
   const col = SLOT_COLORS[m.slot] || SLOT_COLORS[1];
   const L = 20 * p.s, { lat, dir } = sideOn(m.x, m.y, m.h);
   const w = L * (0.28 + 0.72 * lat), hh = Math.max(1.2, L * 0.12);
@@ -2988,7 +2993,18 @@ function renderCrewCard() {
   list.forEach((p, i) => {
     const li = document.createElement('li');
     const dot = document.createElement('i'); dot.style.background = SLOT_COLORS[i]; li.appendChild(dot);
-    const nm = document.createElement('b'); nm.textContent = nameOf(p, i) + (i === 0 ? ' · host' : ''); li.appendChild(nm);
+    const skin = SKIN_BY_ID[p.peer === NET.myPeer ? CRATES.equipped : p.presence && p.presence.skin] || SKINS[0];
+    const who = document.createElement('b');
+    who.className = 'who';
+    who.appendChild(skinPreview(skin, 42));
+    const nmText = document.createElement('span');
+    nmText.textContent = nameOf(p, i) + (i === 0 ? ' · host' : '');
+    const sk = document.createElement('small');
+    sk.textContent = skin.name;
+    const ra = rarityOf(skin); if (ra) sk.style.color = ra.color;
+    nmText.appendChild(document.createElement('br')); nmText.appendChild(sk);
+    who.appendChild(nmText);
+    li.appendChild(who);
     const st = document.createElement('span'); st.textContent = crewRowStatus(p, i, voy); li.appendChild(st);
     ul.appendChild(li);
   });
@@ -3079,7 +3095,7 @@ function renderCrewHud() {
     const dot = document.createElement('i'); dot.style.background = SLOT_COLORS[m.slot] || SLOT_COLORS[1]; row.appendChild(dot);
     const nm = document.createElement('span');
     const d = m.st === 'sail' && m.placed ? ' · ' + Math.round(Math.hypot(m.x - ship.x, m.y - ship.y)) + 'm' : '';
-    nm.textContent = m.name + ' · ' + (m.st === 'sail' ? 'hull ' + m.hull : statusWord(m.st)) + d;
+    nm.textContent = m.name + ' · ' + (m.skin ? m.skin.name + ' · ' : '') + (m.st === 'sail' ? 'hull ' + m.hull : statusWord(m.st)) + d;
     row.appendChild(nm);
     box.appendChild(row);
   }

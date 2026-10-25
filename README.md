@@ -37,7 +37,7 @@ The only thing she will not go near is **Plimsoll**, the shark who walked up out
 
 Every voyage you play, whether you make harbour or go down, earns one **Skerry Crate**, and your first one is free. Open crates from the **Crates** button on the title, harbour, crew and end screens. A reel of skins spins and lands on your prize.
 
-There are 14 skins to find, in five grades: **Deckhand** 79.9%, **Bosun** 16%, **Mate** 3.2%, **Captain** 0.64% and **Admiral** 0.26%. A skin changes your deck, rails, bowsprit and lantern as you see them, and your hull and sails as your crewmates see them. Crates and skins are kept in your browser on that device.
+There are 14 skins to find, in five grades: **Deckhand** 79.9%, **Bosun** 16%, **Mate** 3.2%, **Captain** 0.64% and **Admiral** 0.26%. A skin changes your deck, rails, bowsprit and lantern as you see them, and your hull and sails as your crewmates see them. Crewmates' ships are lit by their own lanterns, so you can make out their skins from about 300 m away, and the crew list and in-game crew panel show which skin everyone is sailing. Crates and skins are kept in your browser on that device.
 
 ## Sailing together
 
