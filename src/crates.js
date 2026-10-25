@@ -277,7 +277,8 @@ function showCrates() {
   $('crateCard').hidden = false;
   CRATES.view = CRATES.boat;
   renderCrates();
-  $('crateClose').focus();
+  $('crateCard').scrollTop = 0;
+  $('crateClose').focus({ preventScroll: true });
 }
 function hideCrates() { if (!CRATES.opening) $('crateCard').hidden = true; }
 

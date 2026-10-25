@@ -349,6 +349,57 @@ button.small { padding: 6px 14px; min-height: 0; }
   .cratetype small { grid-column: 2; }
   .cratetype button { grid-column: span 1; }
 }
+
+/* ---------- phones: a tighter, smaller menu ---------- */
+@media (max-width: 520px) {
+  .overlay { padding-block: 10px; padding-left: max(10px, env(safe-area-inset-left, 0px)); padding-right: max(10px, env(safe-area-inset-right, 0px)); }
+  .card { padding: 16px 14px 14px; gap: 10px; }
+  .card h1 { font-size: 2rem; }
+  .card .eyebrow { font-size: 9.5px; letter-spacing: 0.12em; }
+  .card p { font-size: 0.92rem; line-height: 1.42; }
+  .btnrow { gap: 8px; }
+  .btnrow > button { flex: 1 1 0; min-width: 0; }
+  .primary { align-self: stretch; font-size: 1.08rem; padding: 9px 14px 10px; }
+  .tool { font-size: 11px; padding: 8px 10px; letter-spacing: 0.06em; }
+  .together { gap: 8px; padding-top: 10px; }
+  .together h2 { font-size: 1.1rem; }
+  .together p { font-size: 11.5px; line-height: 1.45; }
+  .together .tool { align-self: stretch; }
+  .rules { font-size: 11.5px; gap: 5px; }
+  .howto summary { font-size: 11px; }
+  .logpage { padding-left: 10px; }
+  .stats strong { font-size: 19px; }
+  .score table { font-size: 11px; }
+  /* the shipyard and crates: an opaque sheet, boats as compact rows, a denser inventory */
+  .cratecard { background: rgba(3, 6, 12, 0.97); }
+  .cratecard .card { backdrop-filter: none; }
+  .cratecard .invh { font-size: 1rem; margin: 8px 0 2px; }
+  .boats { grid-template-columns: 1fr; gap: 6px; margin-top: 4px; }
+  .boatcard { display: grid; grid-template-columns: 74px 1fr; column-gap: 10px; row-gap: 3px; padding: 8px; align-items: center; }
+  .boatcard svg { grid-row: span 5; width: 74px; height: auto; }
+  .boatcard b { font-size: 0.95rem; }
+  .boatcard small { display: none; }
+  .boatcard .stat { grid-template-columns: 6.6em 1fr; font-size: 10.5px; gap: 4px; }
+  .boatcard button { margin-top: 2px; padding: 6px 8px; }
+  .cratetype { grid-template-columns: 24px 1fr auto auto; gap: 6px 8px; padding: 6px 8px; }
+  .cratetype b { font-size: 0.9rem; }
+  .cratetype small { grid-column: 2; grid-row: 2; font-size: 10.5px; }
+  .cratetype .cratebox { grid-row: span 2; width: 24px; height: 20px; }
+  .cratetype button { grid-row: span 2; padding: 6px 9px; }
+  button.small { padding: 6px 12px; font-size: 0.95rem; }
+  .reel { height: 116px; }
+  .reel .skincard { width: 92px; }
+  .reel .skincard svg, .reel .skincard canvas { width: 70px !important; height: 47px !important; }
+  .inv { grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .inv .skincard { padding: 6px 4px 8px; }
+  .inv .skincard svg, .inv .skincard canvas { width: 64px !important; height: 43px !important; }
+  .skincard b { font-size: 10px; }
+  .skincard small { font-size: 8.5px; letter-spacing: 0.04em; text-align: center; }
+  .skincard .tool { padding: 4px 6px; font-size: 9px; }
+  .result .won { font-size: 1.2rem; }
+  .odds { gap: 4px 10px; font-size: 10px; }
+}
+.reel:has(.strip:empty) { display: none; }
 </style>
 <div id="stage">
   <canvas id="cv" tabindex="0" aria-label="View from the deck of a ship at night, with a lighthouse beam sweeping over the sea"></canvas>
@@ -424,14 +475,13 @@ button.small { padding: 6px 14px; min-height: 0; }
       </section>
       <details class="howto">
         <summary>The story, and how to play</summary>
-        <p>She still stands on the water when the lamp turns, nearer every turn, and she follows any ship she has chosen. The Gannet's drowned crew swim with her, and her figurehead, Knock, walks the water with a belaying pin. Along the coast, wreckers still hang false harbour lights over the rocks. The only thing Maren will not come near is <span class="plim">Plimsoll</span>, the shark who walked out of the surf that winter in the Gannet cabin boy's blue shoes. He knows the deep water through the skerries, but he won't wait for you. <em>Follow his shoes.</em></p>
+        <p>She still stands on the water when the lamp turns, nearer every turn, and she follows any ship she has chosen. The Gannet's drowned crew swim with her, and her figurehead, Knock, walks the water with a belaying pin. The only thing Maren will not come near is <span class="plim">Plimsoll</span>, the shark who walked out of the surf that winter in the Gannet cabin boy's blue shoes. He knows the deep water through the skerries, but he won't wait for you. <em>Follow his shoes.</em></p>
         <ul class="rules">
           <li><b>See</b> rocks, wrecks and drifting timber show only while the beam or a flare is on them, then they are gone</li>
           <li><b>Follow</b> Plimsoll's glowing shoes. Sail close behind him (within 45 m) and Maren holds where she is. Fall behind and he soon walks on alone</li>
           <li><b>Ring the bell</b> (Space) with her anywhere ahead of you (anywhere at all once she's close) to drive her back three stages. It also sinks the drowned and freezes Knock. It swings again in about 15 seconds</li>
           <li><b>The drowned</b> swim after you; their eyes catch the light. Sail fast to shake them off, or ring the bell. Plimsoll sometimes snaps one up</li>
           <li><b>Knock</b> moves only while you can't see him. Listen for three knocks on wood, turn, and keep him in your light. The bell freezes him</li>
-          <li><b>False lights</b> red and green lamps that aren't the harbour, over rocks. The beam makes them vanish; the bearing strip shows the real harbour</li>
           <li><b>Flare</b> (F) lights everything around you for a few seconds, for your whole crew</li>
           <li><b>Steer</b> ← → or A / D, sail ↑ ↓ or W / S. On a phone, hold the left or right side to steer and use the ▲ ▼ buttons for speed</li>
           <li><b>Boats</b> the Brig takes three hits, the quick Cutter two, the heavy Barque five. Glancing off a rock only slows you; hitting it head on costs a plank.</li>
@@ -996,10 +1046,10 @@ function buildVoyage(n, attract) {
     if (ok(x, y, r)) addWreck(x, y, r, names[wrecks.length % names.length]);
   }
 
-  // wreckers' false lights: a red and green pair, like the pier lamps, over a hidden cluster of rocks
+  // (the wreckers' false lights have been taken down: no lures any more)
   const lures = [];
   const dirX = (HB.x - sx) / Math.hypot(HB.x - sx, HB.y - sy), dirY = (HB.y - sy) / Math.hypot(HB.x - sx, HB.y - sy);
-  for (let tries = 0; tries < 1500 && lures.length < (attract ? 1 : 2 + Math.floor(n / 2)); tries++) {
+  for (let tries = 0; tries < 1500 && lures.length < 0; tries++) {
     const side = RNG() < 0.5 ? -1 : 1, off = rand(70, 170) * side;
     const [bx, by] = along(rand(0.25, 0.8), 0);
     const x = bx + dirY * off, y = by - dirX * off;
@@ -2429,7 +2479,7 @@ function newVoyage(n, attract, seed, slot) {
   else if (slot) { const lat = Math.ceil(slot / 2) * 40 * (slot % 2 ? -1 : 1); ship.x += Math.cos(ship.h) * lat; ship.y -= Math.sin(ship.h) * lat; }
   const beam0 = seed != null ? (seed % 1000) / 1000 * 3 - 1.5 : rand(-1.5, 1.5);
   g = {
-    t: 0, n, attract, beam: beam0, beam0, launchAt: 0, launchId: null, period: Math.min(11, 6 + n * 0.8),
+    t: 0, n, attract, beam: beam0, beam0, launchAt: 0, launchId: null, period: Math.min(6.5, 3.6 + n * 0.4), marenPeriod: Math.min(11, 6 + n * 0.8), marenClock: 0,
     rocks: v.rocks, wrecks: v.wrecks, timber: v.timber, path: v.path,
     backrooms: !!v.backrooms, exit: v.exit, rooms: v.rooms,
     walls: v.walls || [
@@ -2627,7 +2677,11 @@ function bumpMates() {
 
 function update(dt) {
   g.t += dt;
-  if (advanceBeam(dt)) { marenTurn(); if (g.backrooms && !g.attract) { g.lightsOut = 0.7; sfxLightsOut(); } }
+  advanceBeam(dt);
+  // the lamp swings round quicker than it used to, but Maren keeps to the old pace: one stage nearer
+  // every marenPeriod seconds (what a full turn of the beam used to take)
+  g.marenClock += dt;
+  if (g.marenClock >= g.marenPeriod) { g.marenClock -= g.marenPeriod; marenTurn(); if (g.backrooms && !g.attract) { g.lightsOut = 0.7; sfxLightsOut(); } }
   if (state === 'scare') return;
 
   // the helm
@@ -3993,7 +4047,8 @@ function showCrates() {
   $('crateCard').hidden = false;
   CRATES.view = CRATES.boat;
   renderCrates();
-  $('crateClose').focus();
+  $('crateCard').scrollTop = 0;
+  $('crateClose').focus({ preventScroll: true });
 }
 function hideCrates() { if (!CRATES.opening) $('crateCard').hidden = true; }
 

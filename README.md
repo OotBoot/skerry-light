@@ -22,12 +22,12 @@ The only thing she will not go near is **Plimsoll**, the shark who walked up out
 | Flare | F, or the flare button |
 | Shout to crew | 1 Rocks here! · 2 Follow me! · 3 She's near me! |
 
-- **Maren** comes one stage nearer every full turn of the beam: 400 m, 260, 160, 90, then right at the bow, and one more turn after that she takes the ship. Between turns she slowly follows your ship, so sailing hard can buy you some distance. You hear her heartbeat and see red at the edges as she closes in.
+- **Maren** comes one stage nearer every 6 seconds or so on the first voyage (a little longer each voyage, up to 11): 400 m, 260, 160, 90, then right at the bow, and one more step after that she takes the ship. Between turns she slowly follows your ship, so sailing hard can buy you some distance. You hear her heartbeat and see red at the edges as she closes in.
 - **Plimsoll**: while you are within 45 m of him, Maren holds where she is (she doesn't fall back), so you have to sail close behind him. He keeps pace with your ship at any speed, keeping further ahead the faster you go, and runs to get back in front if you overtake him. He waits only about 4 seconds for a ship that falls behind, then walks on alone. He sometimes snaps up a drowned sailor he walks into.
 - **The bell** drives Maren back three stages when she is anywhere ahead of you (or anywhere at all once she is close), sinks the drowned within 150 m, and freezes Knock for 20 seconds within 450 m. It swings again in 15 seconds, one more for each voyage.
 - **The drowned** crew of the Gannet swim after you at about 5 m/s, faster on later voyages. Several are out at once, more each voyage. Their eyes always catch the light. One that reaches a ship going under 9 knots climbs aboard and costs a plank; faster ships shake them off. Plimsoll sometimes snaps up one he walks into.
 - **Knock**, the Gannet's walking figurehead, moves only while you can't see him. Listen for three knocks on wood (you can hear him from about 650 m, quicker and louder as he nears), turn to face him, and he stops: within 150 m facing him is enough even in the dark, and further off any light on him will do. He is a little faster than your ship, so running only buys time. If he reaches the hull his face lunges at you and he strikes for a plank, then he's thrown far back and waits 30 seconds; if that blow sinks her, the voyage ends. The bell freezes him for 15 seconds within 300 m. One Knock at a time at first, up to two on later voyages.
-- **Wreckers' false lights** are red and green lamps like the harbour piers, hung over a cluster of rocks off the true course; there are two pairs on the first voyage and one more every second voyage. The lighthouse beam makes them vanish, and the bearing strip always shows the real harbour.
+- **The lighthouse** sweeps round about every 4 seconds on the first voyage, a little slower each voyage (up to 6.5 seconds). Maren keeps her own pace, so the faster beam just shows you more.
 - **Flares** light everything within 350 m for about seven seconds, for your whole crew, then take 35 seconds to reload.
 - **Hull and collisions**: your hull is a capsule from bow to stern, so the whole length of the ship can touch things, not just the bow. Anything you touch pushes you clear. Hitting a rock, wreck, log, wall, the shore or a pier head-on (closing faster than 4.5 m/s at more than about 25°) costs a plank; a glancing touch only scrapes, slowing you and turning you along it. Crewmates' ships bump apart without damage. The drowned and Knock also cost planks. When the planks run out she sinks.
 - **Verity** sometimes climbs onto your bowsprit: a round yellow smiling face that says it wants to help. He just sits there smiling, with a ring counting down 20 seconds. Ring the bell before then and he slides off into the water (he comes back later). Leave him and he stands up into something long and thin, and that jumpscare ends the voyage. He turns up more often in the Backrooms.
@@ -134,7 +134,7 @@ src/audio.js        sound, made with the Web Audio API (plus Verity's voice clip
 src/world.js        voyage generation (sea and Backrooms) and Plimsoll's pathfinding
 src/render.js       the camera, sea, obstacles, lighthouse, deck, bearing strip and jumpscare
 src/creatures.js    Maren and Plimsoll: behaviour, animation and drawing
-src/enemies.js      the drowned crew, Knock and the wreckers' false lights
+src/enemies.js      the drowned crew and Knock
 src/verity.js       Verity, on the bowsprit, and his jumpscare
 src/game.js         game state, update step, input and screens
 src/transport.js    connects to the crew server outside claude.ai

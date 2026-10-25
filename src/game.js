@@ -18,7 +18,7 @@ function newVoyage(n, attract, seed, slot) {
   else if (slot) { const lat = Math.ceil(slot / 2) * 40 * (slot % 2 ? -1 : 1); ship.x += Math.cos(ship.h) * lat; ship.y -= Math.sin(ship.h) * lat; }
   const beam0 = seed != null ? (seed % 1000) / 1000 * 3 - 1.5 : rand(-1.5, 1.5);
   g = {
-    t: 0, n, attract, beam: beam0, beam0, launchAt: 0, launchId: null, period: Math.min(11, 6 + n * 0.8),
+    t: 0, n, attract, beam: beam0, beam0, launchAt: 0, launchId: null, period: Math.min(6.5, 3.6 + n * 0.4), marenPeriod: Math.min(11, 6 + n * 0.8), marenClock: 0,
     rocks: v.rocks, wrecks: v.wrecks, timber: v.timber, path: v.path,
     backrooms: !!v.backrooms, exit: v.exit, rooms: v.rooms,
     walls: v.walls || [
@@ -216,7 +216,11 @@ function bumpMates() {
 
 function update(dt) {
   g.t += dt;
-  if (advanceBeam(dt)) { marenTurn(); if (g.backrooms && !g.attract) { g.lightsOut = 0.7; sfxLightsOut(); } }
+  advanceBeam(dt);
+  // the lamp swings round quicker than it used to, but Maren keeps to the old pace: one stage nearer
+  // every marenPeriod seconds (what a full turn of the beam used to take)
+  g.marenClock += dt;
+  if (g.marenClock >= g.marenPeriod) { g.marenClock -= g.marenPeriod; marenTurn(); if (g.backrooms && !g.attract) { g.lightsOut = 0.7; sfxLightsOut(); } }
   if (state === 'scare') return;
 
   // the helm
