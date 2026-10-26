@@ -7,6 +7,7 @@ let loggedError = false;
 function frame(now) {
   const dt = Math.min(0.05, (now - last) / 1000); last = now;
   try {
+    pollPad(dt);
     roomsHum(!!(g && g.backrooms && state === 'play'));
     if (g && g.backrooms) roomsHumLevel(roomLevel());
     if (state === 'play' && g.verityScare > 0) {

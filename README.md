@@ -20,6 +20,7 @@ The only thing she will not go near is **Plimsoll**, the shark who walked up out
 | Sound | M, or the sound button |
 | Speed | ▲ ▼ buttons on the left, hold to change sail (or ↑ ↓). There's no top speed: the longer you hold ▲, the faster it climbs. She picks up speed and slows down almost at once |
 | Flare | F, or the flare button |
+| Xbox controller | Left stick or D-pad steer · RT faster, LT slower · A bell · X flare. In menus: D-pad or stick to move, A to press, B to close or go back, Start for the main button, Y for crates. RB watches the next crewmate when spectating. Hits and jumpscares rumble |
 
 - **Maren** comes one stage nearer every 6 seconds or so on the first voyage (a little longer each voyage, up to 11): 400 m, 260, 160, 90, then right at the bow, and one more step after that she takes the ship. Between turns she slowly follows your ship, so sailing hard can buy you some distance. You hear her heartbeat and see red at the edges as she closes in.
 - **Plimsoll**: while you are within 45 m of him, Maren holds where she is (she doesn't fall back), so you have to sail close behind him. He keeps pace with your ship at any speed, keeping further ahead the faster you go, and runs to get back in front if you overtake him. He waits only about 4 seconds for a ship that falls behind, then walks on alone. He sometimes snaps up a drowned sailor he walks into.
@@ -42,9 +43,11 @@ Choose your boat with the Brig / Cutter / Barque picker on the title, harbour, e
 |---|---|---|---|---|
 | Brig | 3 | normal | normal | the all-rounder, two masts |
 | Cutter | 2 | 1.7× | 1.4× | small and quick, one tall mast |
-| Barque | 5 | 0.6× | 0.72× | long and heavy, three masts |
+| Barque | 5 | 0.8× | 0.9× | long and heavy, three masts, and a bow gun |
 
 Each boat has its own deck and bow as you see them from the helm, and its own length and rig as your crew sees it.
+
+The Barque's **bow gun** fires by itself when you're about to run onto a rock, blowing it apart before you hit. It has one charge a voyage (the *Bow gun* marker under your hull shows if it's ready). In a crew, a rock it destroys is gone for everyone.
 
 ## Crates, skins and pennants
 
@@ -139,6 +142,8 @@ src/gfx.js          the detailed look: sky, moon, clouds, sea glitter, coast, li
 src/creatures.js    Maren and Plimsoll: behaviour, animation and drawing
 src/enemies.js      the drowned crew and Knock
 src/verity.js       Verity, on your deck, and his jumpscare
+src/cannon.js       the Barque's bow gun
+src/gamepad.js      Xbox and other controllers
 src/game.js         game state, update step, input and screens
 src/transport.js    connects to the crew server outside claude.ai
 src/net.js          crews: lobby, shared voyages, crewmates' ships

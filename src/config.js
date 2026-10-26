@@ -11,6 +11,7 @@ const SK = {
   CAM_H: 5,               // eye height on deck
   NEAR: 1,
   HULL: 3,
+  CANNON_CHARGES: 1,      // the Barque's bow gun: shots per voyage
   SEEN_HOLD: 0,           // seconds a rock stays fully visible after the beam passes over it
   SEEN_FADE: 3,           // ...then it fades out over this long
   IMPACT: 4.5,          // m/s closing speed that stoves in a plank; slower than that is a scrape

@@ -141,7 +141,7 @@ function myPresence() {
     app: 'skerry', sid: NET.sid, crew: NET.crew, joinedAt: NET.joinedAt, ready: NET.ready, nick: NET.nick || null,
     launch: amHostSafe() ? NET.launch : null,
     voy: NET.launch ? NET.launch.voy : 0, st: NET.st,
-    bell: NET.bells, flare: NET.flare, chat: NET.chat, ghost: NET.ghost, stats: NET.stats,
+    bell: NET.bells, flare: NET.flare, cannon: NET.cannon || null, chat: NET.chat, ghost: NET.ghost, stats: NET.stats,
     skin: mySkin().id, pennant: CRATES.pennant, boat: CRATES.boat, maxHull: myBoat().hull,
   };
 }
@@ -277,7 +277,7 @@ function syncMates() {
       let m = NET.mates.get(p.peer);
       if (!m) {
         m = { peer: p.peer, x: +pr.x || 0, y: +pr.y || 0, h: +pr.h || 0, tx: 0, ty: 0, th: 0, bell: +pr.bell || 0, bob: Math.random() * 6,
-          flareN: counter(pr.flare), shoutN: counter(pr.shout), shoutT: 0, shoutText: '', ghostN: counter(pr.ghost) };
+          flareN: counter(pr.flare), cannonN: counter(pr.cannon), shoutN: counter(pr.shout), shoutT: 0, shoutText: '', ghostN: counter(pr.ghost) };
         NET.mates.set(p.peer, m);
       }
       m.skin = SKIN_BY_ID[pr.skin] || SKINS[0];
@@ -289,6 +289,8 @@ function syncMates() {
       m.stage = Number.isFinite(pr.stage) ? clamp(pr.stage | 0, 0, SK.MAREN_STAGES.length - 1) : 0;
       if (Number.isFinite(pr.mx) && Number.isFinite(pr.my)) { if (!Number.isFinite(m.mx)) { m.mx = pr.mx; m.my = pr.my; } m.tmx = pr.mx; m.tmy = pr.my; } else { m.mx = m.my = m.tmx = m.tmy = undefined; }
       if (Number.isFinite(pr.px) && Number.isFinite(pr.py)) { if (!Number.isFinite(m.px)) { m.px = pr.px; m.py = pr.py; } m.tpx = pr.px; m.tpy = pr.py; }
+      const cn = counter(pr.cannon);
+      if (cn > m.cannonN) { m.cannonN = cn; if (pr.cannon && pr.voy === NET.launch.voy) mateCannon(pr.cannon.i); } else m.cannonN = cn;
       const fl = counter(pr.flare);
       if (fl > m.flareN) {
         m.flareN = fl;

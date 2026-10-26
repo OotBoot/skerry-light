@@ -344,7 +344,7 @@ function drawScene() {
   if (!g.backrooms) { rememberLit(g.rocks); rememberLit(g.wrecks); rememberLit(g.timber); }
   const items = [];
   const add = (kind, o) => { const c = cam(o.x, o.y, 0); if (c.f > SK.NEAR + 2) items.push({ kind, o, c }); };
-  for (const o of g.rocks) add('rock', o);
+  for (const o of g.rocks) if (!o.gone) add('rock', o);
   for (const o of g.wrecks) add('wreck', o);
   for (const o of g.timber) add('timber', o);
   if (g.backrooms) {
@@ -390,6 +390,7 @@ function drawScene() {
   drawLures();
   }
   drawFlares();
+  drawCannonShots();
   for (const q of g.parts) {
     const c = cam(q.x, q.y, q.z); if (c.f < SK.NEAR) continue;
     const s = proj(c);
@@ -460,6 +461,7 @@ function drawDeck() {
     ctx.beginPath(); ctx.moveTo(cx + s * 14, tipY + 4);
     ctx.quadraticCurveTo(cx + s * W * 0.12, tipY + 2 + Math.sin(g.t * 6) * 2, cx + s * W * 0.22, tipY + 18); ctx.stroke();
   }
+  drawCannonDeck(tipY, DW, skin);
   updateSpray(tipY);
   const lx = cx + Math.min(W * 0.28, 220), ly = H * 0.8;
   const flick = g.maren.stage >= 3 && !reduceMotion ? (Math.random() < 0.15 ? 0.4 : 1) : 1;

@@ -35,6 +35,7 @@ function updateVerity(dt) {
     if (v.morph >= SK.VERITY_MORPH) {
       v.on = false;
       g.verityScare = SK.VERITY_SCARE_TIME;
+      if (typeof padRumble === 'function') padRumble(1, 1, SK.VERITY_SCARE_TIME * 1000);
       sfxVerityScare();
       $('stage').classList.add('scaring');
       addLog('Verity stood up.', 'w');

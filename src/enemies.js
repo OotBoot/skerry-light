@@ -71,6 +71,7 @@ function updateKnocks(dt) {
       renderHud();
       // he lunges into your face before the blow lands
       g.knockScare = SK.KNOCK_SCARE_TIME;
+      if (typeof padRumble === 'function') padRumble(1, 0.9, SK.KNOCK_SCARE_TIME * 1000);
       g.knockKill = ship.hull <= 0;
       sfxKnockScare();
       $('stage').classList.add('scaring');

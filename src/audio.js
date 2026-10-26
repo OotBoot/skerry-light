@@ -308,3 +308,16 @@ function sfxVerityScare() {
   noise('lowpass', 500, 0.8, 0.004, 1.0, 0.8);
   tone(48, 'sine', 0.004, 1.0, 1.2, { to: 28 });
 }
+
+// the Barque's bow gun: a deep boom with a crack on top, and stone breaking when the ball lands
+function sfxCannon() {
+  noise('lowpass', 900, 0.7, 0.002, 1.0, 0.9, { to: 120 });
+  noise('bandpass', 2400, 1.2, 0.001, 0.5, 0.12);
+  tone(62, 'sine', 0.003, 0.9, 0.7, { to: 32 });
+  tone(130, 'triangle', 0.002, 0.4, 0.25, { to: 60 });
+}
+function sfxSmash(vol) {
+  noise('bandpass', 1300, 0.9, 0.003, 0.6 * vol, 0.5, { to: 400 });
+  noise('lowpass', 500, 0.7, 0.01, 0.5 * vol, 0.9, { delay: 0.04 });
+  for (let i = 0; i < 4; i++) tone(300 + Math.random() * 400, 'triangle', 0.002, 0.12 * vol, 0.08, { delay: 0.05 + i * 0.07, to: 180 });
+}

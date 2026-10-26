@@ -462,6 +462,10 @@ html, body, button, .overlay, .card { touch-action: manipulation; }
 .savebox p { font-family: var(--log); font-size: 12px; color: var(--muted); line-height: 1.45; margin: 0; }
 .savebox .savemsg { color: var(--lamp); min-height: 1em; }
 .savebox input { font-family: var(--log); font-size: 13px; color: var(--ink); background: rgba(6,10,20,0.6); border: 1px solid var(--rule); padding: 9px 10px; min-width: 0; }
+.cannonbox { display: flex; flex-direction: column; align-items: flex-end; margin-top: 4px; }
+.marks .shot { width: 9px; height: 9px; border-radius: 50%; background: #c9ced6; box-shadow: inset -2px -2px 0 rgba(0,0,0,0.35); }
+.marks .shot.off { background: transparent; border: 1px solid rgba(201,206,214,0.4); box-shadow: none; }
+.padfocus { outline: 3px solid var(--lamp) !important; outline-offset: 3px; }
 </style>
 <div id="stage">
   <canvas id="cv" tabindex="0" aria-label="View from the deck of a ship at night, with a lighthouse beam sweeping over the sea"></canvas>
@@ -479,6 +483,7 @@ html, body, button, .overlay, .card { touch-action: manipulation; }
       </div>
       <span class="label" style="margin-top:4px">Hull</span>
       <div class="marks" id="hull"></div>
+      <div class="cannonbox" id="cannonBox" hidden><span class="label">Bow gun</span><div class="marks" id="cannon"></div></div>
     </div>
   </div>
 
@@ -541,7 +546,7 @@ html, body, button, .overlay, .card { touch-action: manipulation; }
           <li><b>Knock</b> moves only while you can't see him. Listen for three knocks on wood, turn, and keep him in your light. The bell freezes him</li>
           <li><b>Flare</b> (F) lights everything around you for a few seconds, for your whole crew</li>
           <li><b>Steer</b> ← → or A / D, sail ↑ ↓ or W / S. On a phone, hold the left or right side to steer and use the ▲ ▼ buttons for speed</li>
-          <li><b>Boats</b> the Brig takes three hits, the quick Cutter two, the heavy Barque five. Glancing off a rock only slows you; hitting it head on costs a plank.</li>
+          <li><b>Boats</b> the Brig takes three hits, the quick Cutter two, the heavy Barque five. The Barque's bow gun fires by itself to blow apart a rock you're about to hit, once a voyage. Glancing off a rock only slows you; hitting it head on costs a plank.</li>
           <li><b>Hull</b> when the planks run out she goes down. Let Maren reach the bow and she comes aboard</li>
           <li><b>Verity</b> sometimes you'll find a small smiling yellow orb in a corner of your deck, offering to help. He isn't helping, and the bell doesn't bother him. Fire a flare before twenty seconds are up, or see what he really looks like</li>
           <li><b>The Backrooms</b> about one voyage in twenty, the lights go out and the sea comes back with walls: a flooded maze of yellow rooms. Follow Plimsoll to the green EXIT sign</li>
@@ -677,6 +682,7 @@ const SK = {
   CAM_H: 5,               // eye height on deck
   NEAR: 1,
   HULL: 3,
+  CANNON_CHARGES: 1,      // the Barque's bow gun: shots per voyage
   SEEN_HOLD: 0,           // seconds a rock stays fully visible after the beam passes over it
   SEEN_FADE: 3,           // ...then it fades out over this long
   IMPACT: 4.5,          // m/s closing speed that stoves in a plank; slower than that is a scrape
@@ -1047,6 +1053,19 @@ function sfxVerityScare() {
   sfxVerity(0.45, 1);
   noise('lowpass', 500, 0.8, 0.004, 1.0, 0.8);
   tone(48, 'sine', 0.004, 1.0, 1.2, { to: 28 });
+}
+
+// the Barque's bow gun: a deep boom with a crack on top, and stone breaking when the ball lands
+function sfxCannon() {
+  noise('lowpass', 900, 0.7, 0.002, 1.0, 0.9, { to: 120 });
+  noise('bandpass', 2400, 1.2, 0.001, 0.5, 0.12);
+  tone(62, 'sine', 0.003, 0.9, 0.7, { to: 32 });
+  tone(130, 'triangle', 0.002, 0.4, 0.25, { to: 60 });
+}
+function sfxSmash(vol) {
+  noise('bandpass', 1300, 0.9, 0.003, 0.6 * vol, 0.5, { to: 400 });
+  noise('lowpass', 500, 0.7, 0.01, 0.5 * vol, 0.9, { delay: 0.04 });
+  for (let i = 0; i < 4; i++) tone(300 + Math.random() * 400, 'triangle', 0.002, 0.12 * vol, 0.08, { delay: 0.05 + i * 0.07, to: 180 });
 }
 
 // ---- src/world.js ----
@@ -1668,7 +1687,7 @@ function drawScene() {
   if (!g.backrooms) { rememberLit(g.rocks); rememberLit(g.wrecks); rememberLit(g.timber); }
   const items = [];
   const add = (kind, o) => { const c = cam(o.x, o.y, 0); if (c.f > SK.NEAR + 2) items.push({ kind, o, c }); };
-  for (const o of g.rocks) add('rock', o);
+  for (const o of g.rocks) if (!o.gone) add('rock', o);
   for (const o of g.wrecks) add('wreck', o);
   for (const o of g.timber) add('timber', o);
   if (g.backrooms) {
@@ -1714,6 +1733,7 @@ function drawScene() {
   drawLures();
   }
   drawFlares();
+  drawCannonShots();
   for (const q of g.parts) {
     const c = cam(q.x, q.y, q.z); if (c.f < SK.NEAR) continue;
     const s = proj(c);
@@ -1784,6 +1804,7 @@ function drawDeck() {
     ctx.beginPath(); ctx.moveTo(cx + s * 14, tipY + 4);
     ctx.quadraticCurveTo(cx + s * W * 0.12, tipY + 2 + Math.sin(g.t * 6) * 2, cx + s * W * 0.22, tipY + 18); ctx.stroke();
   }
+  drawCannonDeck(tipY, DW, skin);
   updateSpray(tipY);
   const lx = cx + Math.min(W * 0.28, 220), ly = H * 0.8;
   const flick = g.maren.stage >= 3 && !reduceMotion ? (Math.random() < 0.15 ? 0.4 : 1) : 1;
@@ -2642,6 +2663,7 @@ function updateKnocks(dt) {
       renderHud();
       // he lunges into your face before the blow lands
       g.knockScare = SK.KNOCK_SCARE_TIME;
+      if (typeof padRumble === 'function') padRumble(1, 0.9, SK.KNOCK_SCARE_TIME * 1000);
       g.knockKill = ship.hull <= 0;
       sfxKnockScare();
       $('stage').classList.add('scaring');
@@ -2842,6 +2864,7 @@ function updateVerity(dt) {
     if (v.morph >= SK.VERITY_MORPH) {
       v.on = false;
       g.verityScare = SK.VERITY_SCARE_TIME;
+      if (typeof padRumble === 'function') padRumble(1, 1, SK.VERITY_SCARE_TIME * 1000);
       sfxVerityScare();
       $('stage').classList.add('scaring');
       addLog('Verity stood up.', 'w');
@@ -2952,6 +2975,135 @@ function drawVerityScare(t) {
   }
 }
 
+// ---- src/cannon.js ----
+// The Barque's bow cannon. When a rock is dead ahead and she's about to run onto it, the cannon fires
+// on its own and blows it apart before she hits. One charge a voyage (SK.CANNON_CHARGES). In a crew the rock is gone
+// for everyone (rocks are the same, in the same order, on every ship of a crew voyage).
+
+const CANNON_LOOK_S = 2.2;   // how far ahead (in seconds at your speed) it watches for a rock in your path
+
+function newCannon() { return { charges: ship.boat === 'barque' ? SK.CANNON_CHARGES : 0, cd: 0, shots: [], muzzle: 0 }; }
+
+function updateCannon(dt) {
+  const C = g.cannon; if (!C) return;
+  if (C.cd > 0) C.cd -= dt;
+  if (C.muzzle > 0) C.muzzle -= dt;
+  // cannonballs in flight
+  for (const s of C.shots) {
+    s.t += dt;
+    if (!s.hit && s.t >= s.dur) { s.hit = true; smash(s.rock, true); }
+  }
+  C.shots = C.shots.filter(s => s.t < s.dur + 1.2);
+  if (g.attract || state !== 'play' || C.charges <= 0 || C.cd > 0 || g.backrooms) return;
+  // anything in the hull's path within the next couple of seconds?
+  const boat = BOAT_BY_ID[ship.boat] || BOATS[0];
+  const sx = Math.sin(ship.h), sy = Math.cos(ship.h), look = Math.max(30, ship.v * CANNON_LOOK_S);
+  let target = null, best = Infinity;
+  for (const r of g.rocks) {
+    if (r.gone || r.doomed) continue;
+    const dx = r.x - ship.x, dy = r.y - ship.y;
+    if (Math.abs(dx) > look + 30 || Math.abs(dy) > look + 30) continue;
+    const fwd = dx * sx + dy * sy, lat = dx * sy - dy * sx;
+    if (fwd < boat.bow + 4 || fwd > look + r.r) continue;
+    if (Math.abs(lat) > r.r + boat.beam + 0.5) continue;
+    if (fwd < best) { best = fwd; target = r; }
+  }
+  if (target) fireCannon(target);
+}
+
+function fireCannon(r) {
+  const C = g.cannon;
+  C.charges--; C.cd = 0.8; C.muzzle = 0.35;
+  r.doomed = true;   // she can no longer hit it; it shatters when the ball lands
+  const boat = BOAT_BY_ID[ship.boat] || BOATS[0];
+  const x0 = ship.x + Math.sin(ship.h) * boat.bow, y0 = ship.y + Math.cos(ship.h) * boat.bow;
+  const d = Math.hypot(r.x - x0, r.y - y0);
+  C.shots.push({ x0, y0, rock: r, t: 0, dur: Math.max(0.12, Math.min(0.6, d / 140)), hit: false });
+  sfxCannon();
+  if (typeof padRumble === 'function') padRumble(0.9, 0.3, 220);
+  g.shake = Math.max(g.shake, 0.35);
+  burst(x0, y0, ['#d8d2c4', '#9a948a', '#6e6a64'], 14, 4, 4);
+  addLog('The bow gun fires at the rock ahead! ' + (C.charges ? C.charges + (C.charges === 1 ? ' charge' : ' charges') + ' left.' : 'It\u2019s spent for this voyage.'), 'p');
+  renderCannon();
+  if (crewMode) { NET.cannonN = (NET.cannonN || 0) + 1; NET.cannon = { n: NET.cannonN, i: g.rocks.indexOf(r) }; send(); }
+}
+
+// break a rock apart: it's gone, with stone and spray thrown up where it stood
+function smash(r, mine) {
+  if (!r || r.gone) return;
+  r.gone = true; r.doomed = true;
+  const near = Math.hypot(r.x - ship.x, r.y - ship.y);
+  burst(r.x, r.y, ['#5a5f68', '#7d828b', '#33373e', '#e8eef8', '#c8d6e8'], Math.min(60, 20 + r.r * 2.5), 10 + r.r * 0.4, 12);
+  if (near < 900) sfxSmash(Math.max(0.15, 1 - near / 900));
+  if (!mine && near < 900 && state === 'play') addLog('A crewmate’s gun blew a rock apart.', 'p');
+}
+
+// a crewmate's cannon took out a rock: it's gone on this ship too
+function mateCannon(i) {
+  if (!g || g.attract || !Number.isFinite(i)) return;
+  const r = g.rocks[i | 0]; if (r) smash(r, false);
+}
+
+function renderCannon() {
+  const box = $('cannonBox'); if (!box) return;
+  const C = g && g.cannon;
+  box.hidden = !C || !C.charges && ship.boat !== 'barque' || ship.boat !== 'barque';
+  if (box.hidden) return;
+  const marks = $('cannon'); marks.textContent = '';
+  for (let i = 0; i < SK.CANNON_CHARGES; i++) { const s = document.createElement('span'); s.className = 'shot' + (i < C.charges ? '' : ' off'); marks.appendChild(s); }
+}
+
+// cannonballs in the air, drawn with the rest of the scene
+function drawCannonShots() {
+  const C = g.cannon; if (!C) return;
+  for (const s of C.shots) {
+    if (s.hit) continue;
+    const k = Math.min(1, s.t / s.dur);
+    const x = s.x0 + (s.rock.x - s.x0) * k, y = s.y0 + (s.rock.y - s.y0) * k, z = 3 + Math.sin(k * Math.PI) * 4 - k * 2;
+    // a short smoke trail behind it
+    for (let j = 1; j <= 5; j++) {
+      const kk = Math.max(0, k - j * 0.06);
+      const c = cam(s.x0 + (s.rock.x - s.x0) * kk, s.y0 + (s.rock.y - s.y0) * kk, 3 + Math.sin(kk * Math.PI) * 4 - kk * 2);
+      if (c.f < SK.NEAR) continue;
+      const q = proj(c); ctx.fillStyle = `rgba(200,200,205,${0.25 - j * 0.04})`;
+      ctx.beginPath(); ctx.arc(q.x, q.y, Math.max(1.5, 0.6 * q.s * (1 + j * 0.3)), 0, 6.28); ctx.fill();
+    }
+    const c = cam(x, y, z); if (c.f < SK.NEAR) continue;
+    const q = proj(c);
+    ctx.fillStyle = '#111'; ctx.beginPath(); ctx.arc(q.x, q.y, Math.max(1.8, 0.35 * q.s), 0, 6.28); ctx.fill();
+  }
+}
+
+// the gun on the foredeck, and its flash and smoke when it fires
+function drawCannonDeck(tipY, DW, skin) {
+  if (ship.boat !== 'barque' || !g.cannon) return;
+  const C = g.cannon;
+  const gx = cx + DW * 0.06, gy = tipY + (H - tipY) * 0.33, L = Math.max(34, (H - tipY) * 0.32);
+  const recoil = C.muzzle > 0 ? (C.muzzle / 0.35) * 8 : 0;
+  // carriage
+  ctx.fillStyle = mix(skin.wood, '#000000', 0.25);
+  ctx.fillRect(gx - L * 0.28, gy + recoil, L * 0.56, L * 0.22);
+  ctx.fillStyle = '#1a1714';
+  for (const sx of [-0.2, 0.2]) { ctx.beginPath(); ctx.arc(gx + sx * L, gy + L * 0.24 + recoil, L * 0.09, 0, 6.28); ctx.fill(); }
+  // barrel, tapering towards the muzzle (up the screen, towards the bow)
+  const bg = ctx.createLinearGradient(gx - L * 0.12, 0, gx + L * 0.12, 0);
+  bg.addColorStop(0, '#16181b'); bg.addColorStop(0.45, '#4d535b'); bg.addColorStop(1, '#0e1012');
+  ctx.fillStyle = bg;
+  ctx.beginPath();
+  ctx.moveTo(gx - L * 0.13, gy + recoil); ctx.lineTo(gx + L * 0.13, gy + recoil);
+  ctx.lineTo(gx + L * 0.07, gy - L * 0.62 + recoil); ctx.lineTo(gx - L * 0.07, gy - L * 0.62 + recoil); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = '#0b0c0e'; ctx.fillRect(gx - L * 0.09, gy - L * 0.66 + recoil, L * 0.18, L * 0.06);
+  ctx.fillStyle = '#5d636b'; ctx.fillRect(gx - L * 0.135, gy - L * 0.2 + recoil, L * 0.27, L * 0.04);
+  if (C.muzzle > 0) {
+    const k = C.muzzle / 0.35, mx = gx, my = gy - L * 0.7;
+    ctx.globalCompositeOperation = 'lighter';
+    lamp(mx, my, '#ffb050', 10 + 30 * k);
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.fillStyle = `rgba(210,205,198,${0.55 * (1 - k)})`;
+    for (let i = 0; i < 6; i++) { ctx.beginPath(); ctx.arc(mx + Math.sin(i * 2.1) * 16 * (1.5 - k), my - (1 - k) * 40 - i * 6, 10 + (1 - k) * 18, 0, 6.28); ctx.fill(); }
+  }
+}
+
 // ---- src/game.js ----
 // Game state, the update step, voyages, input and the main loop.
 
@@ -2986,6 +3138,7 @@ function newVoyage(n, attract, seed, slot) {
   g.enemies = newEnemies(v.lures);
   g.plim = newPlimsoll(v.path);
   g.maren = newMaren(!attract, v.wrecks.find(w => w.name === 'Gannet'));
+  g.cannon = newCannon();
   g.verity = newVerity(v.backrooms); g.verityScare = 0; g.lightsOut = 0;
   renderHud();
 }
@@ -2994,6 +3147,7 @@ function renderHud() {
   $('voyage').textContent = g.n;
   const hull = $('hull'); hull.textContent = '';
   for (let i = 0; i < ship.maxHull; i++) { const s = document.createElement('span'); s.className = 'plank' + (i < ship.hull ? '' : ' off'); hull.appendChild(s); }
+  if (typeof renderCannon === 'function') renderCannon();
 }
 function addLog(text, cls) {
   if (!text || g.attract) return;
@@ -3016,6 +3170,7 @@ function hit(nx, ny, what) {
   burst(ship.x + Math.sin(ship.h) * 6, ship.y + Math.cos(ship.h) * 6, ['#ece4cf', '#c8d6e8', '#8a6a4a'], 30, 8, 9);
   sfxHit();
   ship.hull--; run.hits++; g.stats.hits++;
+  if (typeof padRumble === 'function') padRumble(0.8, 0.5, 260);
   renderHud();
   if (ship.hull <= 0) { addLog('She struck ' + what + ' and is going down.', 'w'); endRun('sunk'); }
   else addLog('Struck ' + what + '. ' + (ship.hull === 1 ? 'Taking water fast.' : 'Hull still holding.'), 'w');
@@ -3118,6 +3273,7 @@ function checkCollisions() {
   const pts = hullPoints();
   let c;
   for (const r of g.rocks) {
+    if (r.doomed || r.gone) continue;
     if (Math.abs(r.x - ship.x) > r.r + 40 || Math.abs(r.y - ship.y) > r.r + 40) continue;
     if ((c = hullContact(pts, r.x, r.y, r.r)) && resolveContact(c, 'a skerry')) break;
   }
@@ -3181,6 +3337,7 @@ function update(dt) {
     sailIn = (keys.ArrowUp || keys.w ? 1 : 0) - (keys.ArrowDown || keys.s ? 1 : 0);
     for (const t of touches.values()) { if (t === 'L') steer -= 1; else if (t === 'R') steer += 1; else sailIn -= 1; }
     sailIn += sailHold;
+    if (typeof PAD !== 'undefined' && PAD.connected) { steer += PAD.steer; sailIn += PAD.sail; }
     steer = clamp(steer, -1, 1); sailIn = clamp(sailIn, -1, 1);
   }
   const boat = BOAT_BY_ID[ship.boat] || BOATS[0];
@@ -3215,6 +3372,7 @@ function update(dt) {
   updateMaren(dt);
   updateEnemies(dt);
   updateVerity(dt);
+  updateCannon(dt);
   sailInCompany(dt);
   for (const f of g.flares) f.t -= dt;
   g.flares = g.flares.filter(f => f.t > 0);
@@ -3361,6 +3519,7 @@ function arrive() {
 }
 
 function startScare() {
+  if (typeof padRumble === 'function') padRumble(1, 1, SK.SCARE_TIME * 1000);
   state = 'scare';
   g.scareT = 0;
   $('hud').hidden = true; $('logbox').hidden = true;
@@ -3693,7 +3852,7 @@ function myPresence() {
     app: 'skerry', sid: NET.sid, crew: NET.crew, joinedAt: NET.joinedAt, ready: NET.ready, nick: NET.nick || null,
     launch: amHostSafe() ? NET.launch : null,
     voy: NET.launch ? NET.launch.voy : 0, st: NET.st,
-    bell: NET.bells, flare: NET.flare, chat: NET.chat, ghost: NET.ghost, stats: NET.stats,
+    bell: NET.bells, flare: NET.flare, cannon: NET.cannon || null, chat: NET.chat, ghost: NET.ghost, stats: NET.stats,
     skin: mySkin().id, pennant: CRATES.pennant, boat: CRATES.boat, maxHull: myBoat().hull,
   };
 }
@@ -3829,7 +3988,7 @@ function syncMates() {
       let m = NET.mates.get(p.peer);
       if (!m) {
         m = { peer: p.peer, x: +pr.x || 0, y: +pr.y || 0, h: +pr.h || 0, tx: 0, ty: 0, th: 0, bell: +pr.bell || 0, bob: Math.random() * 6,
-          flareN: counter(pr.flare), shoutN: counter(pr.shout), shoutT: 0, shoutText: '', ghostN: counter(pr.ghost) };
+          flareN: counter(pr.flare), cannonN: counter(pr.cannon), shoutN: counter(pr.shout), shoutT: 0, shoutText: '', ghostN: counter(pr.ghost) };
         NET.mates.set(p.peer, m);
       }
       m.skin = SKIN_BY_ID[pr.skin] || SKINS[0];
@@ -3841,6 +4000,8 @@ function syncMates() {
       m.stage = Number.isFinite(pr.stage) ? clamp(pr.stage | 0, 0, SK.MAREN_STAGES.length - 1) : 0;
       if (Number.isFinite(pr.mx) && Number.isFinite(pr.my)) { if (!Number.isFinite(m.mx)) { m.mx = pr.mx; m.my = pr.my; } m.tmx = pr.mx; m.tmy = pr.my; } else { m.mx = m.my = m.tmx = m.tmy = undefined; }
       if (Number.isFinite(pr.px) && Number.isFinite(pr.py)) { if (!Number.isFinite(m.px)) { m.px = pr.px; m.py = pr.py; } m.tpx = pr.px; m.tpy = pr.py; }
+      const cn = counter(pr.cannon);
+      if (cn > m.cannonN) { m.cannonN = cn; if (pr.cannon && pr.voy === NET.launch.voy) mateCannon(pr.cannon.i); } else m.cannonN = cn;
       const fl = counter(pr.flare);
       if (fl > m.flareN) {
         m.flareN = fl;
@@ -4331,7 +4492,7 @@ const RARITIES = [
 const BOATS = [
   { id: 'brig',   name: 'Brig',   blurb: 'The all-rounder. Two masts, three planks to spare.', hull: 3, accel: 1.0, turn: 1.0, beam: 2.6, len: 20, masts: [-0.2, 0.18], deckW: 0.75, tipY: 0.72, rail: 10, bow: 5 },
   { id: 'cutter', name: 'Cutter', blurb: 'Light and quick, turns on a penny, but two hits and she goes.', hull: 2, accel: 1.7, turn: 1.4, beam: 2, len: 15, masts: [0.05], deckW: 0.58, tipY: 0.75, rail: 7, bow: 4 },
-  { id: 'barque', name: 'Barque', blurb: 'A heavy three-master. Slow to start and slow to turn, but she takes a beating.', hull: 5, accel: 0.6, turn: 0.72, beam: 3.4, len: 27, masts: [-0.28, 0.02, 0.3], deckW: 0.95, tipY: 0.68, rail: 14, bow: 7 },
+  { id: 'barque', name: 'Barque', blurb: 'A heavy three-master with a bow gun that blows away one rock in her path each voyage. Takes a beating.', hull: 5, accel: 0.8, turn: 0.9, beam: 3.4, len: 27, masts: [-0.28, 0.02, 0.3], deckW: 0.95, tipY: 0.68, rail: 14, bow: 7 },
 ];
 const BOAT_BY_ID = Object.fromEntries(BOATS.map(b => [b.id, b]));
 const CRATE_TYPES = [{ id: 'skerry', name: 'Skerry Crate', holds: 'boat skins, flags and flare colours' }];
@@ -4961,6 +5122,117 @@ $('crateClose').addEventListener('click', hideCrates);
 $('crateCard').addEventListener('keydown', e => { if (e.key === 'Escape') hideCrates(); });
 updateCrateButtons();
 
+// ---- src/gamepad.js ----
+// Xbox (and other standard-layout) controllers, through the browser's Gamepad API.
+//
+// Sailing: left stick or D-pad steers; RT makes sail (faster), LT shortens it (slower), or push the
+// stick up and down; A rings the bell, X fires a flare. RB watches the next crewmate when spectating.
+// Menus: D-pad or stick moves between buttons, A presses, B closes the crates (or goes back),
+// Start presses the main button. Hits and jumpscares rumble the controller.
+
+const PAD = { steer: 0, sail: 0, connected: false, prev: [], navT: 0, focusIdx: -1 };
+const DEAD = 0.18;
+const dz = v => Math.abs(v) < DEAD ? 0 : (v - Math.sign(v) * DEAD) / (1 - DEAD);
+
+function firstPad() {
+  const pads = navigator.getGamepads ? navigator.getGamepads() : [];
+  for (const p of pads) if (p && p.connected) return p;
+  return null;
+}
+
+function padRumble(strong, weak, ms) {
+  const p = firstPad();
+  const a = p && p.vibrationActuator;
+  if (!a || typeof a.playEffect !== 'function') return;
+  a.playEffect('dual-rumble', { duration: ms, strongMagnitude: strong, weakMagnitude: weak }).catch(() => {});
+}
+
+// the overlay currently on top, and the buttons on it you can move between
+function activeOverlay() {
+  for (const id of ['crateCard', 'crewCard', 'portCard', 'endCard', 'titleCard']) { const el = $(id); if (el && !el.hidden) return el; }
+  return null;
+}
+function focusables(root) {
+  return [...root.querySelectorAll('button, input, summary')].filter(el => !el.disabled && el.offsetParent !== null && !el.closest('[hidden]'));
+}
+function moveFocus(dir) {
+  const root = activeOverlay(); if (!root) return;
+  const list = focusables(root); if (!list.length) return;
+  let i = list.indexOf(document.activeElement);
+  i = i < 0 ? (dir > 0 ? 0 : list.length - 1) : Math.max(0, Math.min(list.length - 1, i + dir));
+  setPadFocus(list[i]);
+}
+function setPadFocus(el) {
+  for (const o of document.querySelectorAll('.padfocus')) o.classList.remove('padfocus');
+  el.classList.add('padfocus');
+  el.focus({ preventScroll: true });
+  el.scrollIntoView({ block: 'nearest' });
+}
+function mainButton(root) {
+  return focusables(root).find(el => el.classList.contains('primary')) || focusables(root)[0] || null;
+}
+
+function pressed(p, i) { return !!(p.buttons[i] && p.buttons[i].pressed); }
+
+function pollPad(dt) {
+  const p = firstPad();
+  if (!p) {
+    if (PAD.connected) { PAD.connected = false; PAD.steer = PAD.sail = 0; updateHint(); }
+    return;
+  }
+  if (!PAD.connected) { PAD.connected = true; updateHint(); if (typeof toast === 'function') toast('Controller connected. A rings the bell, X fires a flare.', 'Controller connected'); }
+  const now = p.buttons.map(b => b.pressed);
+  const down = i => now[i] && !PAD.prev[i];
+  const ax = dz(p.axes[0] || 0), ay = dz(p.axes[1] || 0);
+  const lt = p.buttons[6] ? p.buttons[6].value : 0, rt = p.buttons[7] ? p.buttons[7].value : 0;
+
+  if (state === 'play' && activeOverlay() === null) {
+    PAD.steer = Math.max(-1, Math.min(1, ax + (pressed(p, 15) ? 1 : 0) - (pressed(p, 14) ? 1 : 0)));
+    PAD.sail = Math.max(-1, Math.min(1, rt - lt - ay * 0.8 + (pressed(p, 12) ? 1 : 0) - (pressed(p, 13) ? 1 : 0)));
+    if (down(0)) ringBell();
+    if (down(2)) fireFlare();
+  } else {
+    PAD.steer = PAD.sail = 0;
+    // watching a crewmate: RB for the next ship, A rings your one bell for them
+    if (typeof NET !== 'undefined' && NET.watch) {
+      if (down(5)) nextSpectate();
+      if (down(0) && !$('specGhost').disabled) $('specGhost').click();
+      if (down(1)) $('specBack').click();
+    } else {
+      const root = activeOverlay();
+      if (root) {
+        // move between buttons, with a little repeat when the stick is held
+        PAD.navT -= dt;
+        const v = (pressed(p, 13) || ay > 0.6 || pressed(p, 15) || ax > 0.6) ? 1 : (pressed(p, 12) || ay < -0.6 || pressed(p, 14) || ax < -0.6) ? -1 : 0;
+        if (v && PAD.navT <= 0) { moveFocus(v); PAD.navT = PAD.navT < -0.05 ? 0.28 : 0.14; }
+        if (!v) PAD.navT = -0.1;
+        if (down(0)) {
+          const el = root.contains(document.activeElement) && document.activeElement !== document.body ? document.activeElement : mainButton(root);
+          if (el) { if (el.tagName === 'INPUT') el.focus(); else el.click(); }
+        }
+        if (down(9)) { const el = mainButton(root); if (el) el.click(); }
+        if (down(1)) {
+          if (root.id === 'crateCard') $('crateClose').click();
+          else { const back = root.querySelector('.menuBtn'); if (back && back.offsetParent) back.click(); }
+        }
+        // pressing Y on the title opens the crates
+        if (down(3)) { const cb = root.querySelector('.crateOpenBtn'); if (cb && cb.offsetParent) cb.click(); }
+      }
+    }
+  }
+  PAD.prev = now;
+}
+
+function updateHint() {
+  const h = $('hint'); if (!h) return;
+  h.textContent = PAD.connected ? 'Left stick steer · RT / LT sail · A bell · X flare' : '← → steer · ↑ ↓ sail · Space bell · F flare';
+}
+
+window.addEventListener('gamepadconnected', () => { PAD.prev = []; });
+window.addEventListener('gamepaddisconnected', () => { if (!firstPad()) { PAD.connected = false; PAD.steer = PAD.sail = 0; updateHint(); } });
+// the mouse or a touch takes over again: drop the controller's focus ring
+window.addEventListener('pointerdown', () => { for (const o of document.querySelectorAll('.padfocus')) o.classList.remove('padfocus'); }, true);
+
 // ---- src/main.js ----
 // Starts the game once every script has loaded.
 
@@ -4971,6 +5243,7 @@ let loggedError = false;
 function frame(now) {
   const dt = Math.min(0.05, (now - last) / 1000); last = now;
   try {
+    pollPad(dt);
     roomsHum(!!(g && g.backrooms && state === 'play'));
     if (g && g.backrooms) roomsHumLevel(roomLevel());
     if (state === 'play' && g.verityScare > 0) {

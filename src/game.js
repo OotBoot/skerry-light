@@ -31,6 +31,7 @@ function newVoyage(n, attract, seed, slot) {
   g.enemies = newEnemies(v.lures);
   g.plim = newPlimsoll(v.path);
   g.maren = newMaren(!attract, v.wrecks.find(w => w.name === 'Gannet'));
+  g.cannon = newCannon();
   g.verity = newVerity(v.backrooms); g.verityScare = 0; g.lightsOut = 0;
   renderHud();
 }
@@ -39,6 +40,7 @@ function renderHud() {
   $('voyage').textContent = g.n;
   const hull = $('hull'); hull.textContent = '';
   for (let i = 0; i < ship.maxHull; i++) { const s = document.createElement('span'); s.className = 'plank' + (i < ship.hull ? '' : ' off'); hull.appendChild(s); }
+  if (typeof renderCannon === 'function') renderCannon();
 }
 function addLog(text, cls) {
   if (!text || g.attract) return;
@@ -61,6 +63,7 @@ function hit(nx, ny, what) {
   burst(ship.x + Math.sin(ship.h) * 6, ship.y + Math.cos(ship.h) * 6, ['#ece4cf', '#c8d6e8', '#8a6a4a'], 30, 8, 9);
   sfxHit();
   ship.hull--; run.hits++; g.stats.hits++;
+  if (typeof padRumble === 'function') padRumble(0.8, 0.5, 260);
   renderHud();
   if (ship.hull <= 0) { addLog('She struck ' + what + ' and is going down.', 'w'); endRun('sunk'); }
   else addLog('Struck ' + what + '. ' + (ship.hull === 1 ? 'Taking water fast.' : 'Hull still holding.'), 'w');
@@ -163,6 +166,7 @@ function checkCollisions() {
   const pts = hullPoints();
   let c;
   for (const r of g.rocks) {
+    if (r.doomed || r.gone) continue;
     if (Math.abs(r.x - ship.x) > r.r + 40 || Math.abs(r.y - ship.y) > r.r + 40) continue;
     if ((c = hullContact(pts, r.x, r.y, r.r)) && resolveContact(c, 'a skerry')) break;
   }
@@ -226,6 +230,7 @@ function update(dt) {
     sailIn = (keys.ArrowUp || keys.w ? 1 : 0) - (keys.ArrowDown || keys.s ? 1 : 0);
     for (const t of touches.values()) { if (t === 'L') steer -= 1; else if (t === 'R') steer += 1; else sailIn -= 1; }
     sailIn += sailHold;
+    if (typeof PAD !== 'undefined' && PAD.connected) { steer += PAD.steer; sailIn += PAD.sail; }
     steer = clamp(steer, -1, 1); sailIn = clamp(sailIn, -1, 1);
   }
   const boat = BOAT_BY_ID[ship.boat] || BOATS[0];
@@ -260,6 +265,7 @@ function update(dt) {
   updateMaren(dt);
   updateEnemies(dt);
   updateVerity(dt);
+  updateCannon(dt);
   sailInCompany(dt);
   for (const f of g.flares) f.t -= dt;
   g.flares = g.flares.filter(f => f.t > 0);
@@ -406,6 +412,7 @@ function arrive() {
 }
 
 function startScare() {
+  if (typeof padRumble === 'function') padRumble(1, 1, SK.SCARE_TIME * 1000);
   state = 'scare';
   g.scareT = 0;
   $('hud').hidden = true; $('logbox').hidden = true;
