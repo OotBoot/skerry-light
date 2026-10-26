@@ -572,7 +572,7 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
           <li><b>Hull</b> when the planks run out she goes down. Let Maren reach the bow and she comes aboard</li>
           <li><b>Verity</b> sometimes you'll find a small smiling yellow orb in a corner of your deck, offering to help. He isn't helping, and the bell doesn't bother him. Fire a flare before twenty seconds are up, or see what he really looks like</li>
           <li><b>The Backrooms</b> about one voyage in twenty, the lights go out and the sea comes back with walls: a flooded maze of yellow rooms. Follow Plimsoll to the green EXIT sign</li>
-          <li><b>Floating crates</b> bob about the water, each with a little lantern. Sail into one to haul it aboard. Make harbour and each is worth two Skerry Crates; sink and they go down with you. Making harbour pays 4 crates on voyage 1, and doubles every voyage in a row: 8, 16, 32...</li>
+          <li><b>Floating crates</b> bob about the water, each with a little lantern. Sail into one to haul it aboard. Make harbour and each is worth two Skerry Crates; sink and they go down with you. Making harbour pays 5 crates on voyage 1, then follows the Fibonacci sequence for each voyage in a row: 8, 13, 21, 34...</li>
           <li><b>Crew</b> sail with up to seven friends. Ships close together keep her back and patch each other's planks. Share flares, chat in the crew screen, and watch your crew after your own voyage ends</li>
         </ul>
       </details>
@@ -705,10 +705,10 @@ const SK = {
   CAM_H: 5,               // eye height on deck
   NEAR: 1,
   HULL: 3,
-  PICKUPS: 5,             // floating crates to find on the first voyage (one more every second voyage)
+  PICKUPS: 12,            // floating crates to find on the first voyage (one more each voyage after)
   PICKUP_RADIUS: 12,      // sail this close to one to haul it aboard
-  HARBOUR_CRATES: 4,      // crates for making harbour on voyage 1; doubles every voyage in a row after that
-  HARBOUR_DOUBLINGS: 10,  // ...up to this many doublings (4 x 2^10 = 4096 a harbour)
+  HARBOUR_CRATES: 5,      // crates for making harbour on voyage 1; then Fibonacci for each voyage in a row: 5, 8, 13, 21...
+  HARBOUR_STEPS: 15,      // ...for up to this many voyages in a row (voyage 15 pays 4,181; it stays there after)
   CANNON_CHARGES: 1,      // the Barque's bow gun: shots it holds
   CANNON_RELOAD: 3,       // seconds to reload after a shot
   CANNON_RANGE: 45,       // metres ahead it watches (less at low speed: about a second and a half of sailing)
@@ -1208,11 +1208,11 @@ function buildVoyage(n, attract) {
 
   // floating crates scattered near the safe channel, a little off it, clear of the rocks
   const pickups = [];
-  for (let tries = 0; tries < 600 && pickups.length < SK.PICKUPS + Math.floor(n / 2); tries++) {
+  for (let tries = 0; tries < 2000 && pickups.length < SK.PICKUPS + n - 1; tries++) {
     const p = path[Math.floor(rand(1, Math.max(2, path.length - 3)))]; if (!p) break;
-    const x = p.x + rand(-70, 70), y = p.y + rand(-70, 70);
+    const x = p.x + rand(-110, 110), y = p.y + rand(-110, 110);
     if (y < 70 || Math.hypot(x - HB.x, y - HB.y) < 120 || Math.hypot(x - sx, y - sy) < 80) continue;
-    if (solid.some(o => Math.hypot(o.x - x, o.y - y) < o.r + 14) || pickups.some(q => Math.hypot(q.x - x, q.y - y) < 120)) continue;
+    if (solid.some(o => Math.hypot(o.x - x, o.y - y) < o.r + 14) || pickups.some(q => Math.hypot(q.x - x, q.y - y) < 70)) continue;
     pickups.push({ x, y, ph: rand(0, 6.28), taken: false });
   }
   return { ship, rocks, wrecks, timber, path, lures, pickups };
@@ -1980,6 +1980,11 @@ function drawCompass() {
     ctx.beginPath(); ctx.arc(px, y + 18, 3, 0, 6.28); ctx.fill();
     if (Math.hypot(g.plim.x - ship.x, g.plim.y - ship.y) < SK.PLIMSOLL_GUARD) { ctx.strokeStyle = 'rgba(95,211,255,0.7)'; ctx.beginPath(); ctx.arc(px, y + 18, 6, 0, 6.28); ctx.stroke(); }
   } else edgeArrow(pb, '#5fd3ff');
+  for (const q of g.pickups || []) {
+    if (q.taken || Math.hypot(q.x - ship.x, q.y - ship.y) > 600) continue;
+    const qx = xb(bearingOf(q.x - ship.x, q.y - ship.y)); if (!inStrip(qx)) continue;
+    ctx.fillStyle = '#ffd88a'; ctx.beginPath(); ctx.moveTo(qx, y + 3); ctx.lineTo(qx + 3, y + 6); ctx.lineTo(qx, y + 9); ctx.lineTo(qx - 3, y + 6); ctx.closePath(); ctx.fill();
+  }
   if (crewMode) for (const m of matesAtSea()) {
     const mx = xb(bearingOf(m.x - ship.x, m.y - ship.y));
     if (!inStrip(mx) || m.peer === NET.watch) continue;
@@ -4930,9 +4935,14 @@ function chooseBoat(id) {
 // a crate of a random kind for every voyage, two for making harbour (each rolled separately)
 // end of a voyage: one crate if she went down (and any floating crates aboard go down with her);
 // for making harbour SK.HARBOUR_CRATES, plus every floating crate you hauled aboard, counted double
-// the harbour reward doubles with every voyage in a row you make harbour: 4, 8, 16, 32...
-// (voyage 1 again after a sinking, so the streak starts over)
-function harbourReward() { return SK.HARBOUR_CRATES * Math.pow(2, Math.min(SK.HARBOUR_DOUBLINGS, Math.max(0, (g ? g.n : 1) - 1))); }
+// the harbour reward follows the Fibonacci sequence for each voyage in a row you make harbour:
+// 5, 8, 13, 21, 34, 55... (voyage 1 again after a sinking, so the streak starts over)
+function harbourReward() {
+  const steps = Math.min(SK.HARBOUR_STEPS, Math.max(1, g ? g.n : 1));
+  let a = 3, b = SK.HARBOUR_CRATES;   // 3, 5 -> 8 -> 13 ...
+  for (let i = 1; i < steps; i++) { const c = a + b; a = b; b = c; }
+  return b;
+}
 function grantCrate(n, harbour) {
   if (!g || g.attract || g.crateGiven) return;
   n = n || 1;
@@ -4942,7 +4952,7 @@ function grantCrate(n, harbour) {
   updateCrateButtons();
   const found = g.found || 0;
   const text = harbour
-    ? 'Made harbour on voyage ' + g.n + ': ' + harbourReward() + ' Skerry Crates' + (g.n > 1 ? ' (doubled ' + Math.min(SK.HARBOUR_DOUBLINGS, g.n - 1) + (g.n === 2 ? ' time' : ' times') + ' for your streak)' : '') + (found ? ', plus the ' + found + (found === 1 ? ' crate' : ' crates') + ' you hauled aboard, counted double: +' + found * 2 : '') + '. Open them from the menu.'
+    ? 'Made harbour on voyage ' + g.n + ': ' + harbourReward() + ' Skerry Crates' + (g.n > 1 ? ' (' + g.n + ' in a row)' : '') + (found ? ', plus the ' + found + (found === 1 ? ' crate' : ' crates') + ' you hauled aboard, counted double: +' + found * 2 : '') + '. Open them from the menu.'
     : 'You found a Skerry Crate in the wreckage.' + (found ? ' The ' + found + (found === 1 ? ' crate' : ' crates') + ' you hauled aboard went down with her.' : '') + ' Open it from the menu.';
   toast(text, '+' + n + ' Skerry Crate' + (n > 1 ? 's' : ''));
 }
@@ -4967,12 +4977,22 @@ function updatePickups() {
 }
 // a wooden crate bobbing on the water, with a little lantern lashed on top so you can find it in the dark
 function drawPickup(o, p, vis) {
-  const s = p.s, bob = Math.sin(g.t * 2 + o.ph) * 0.25 * s, sz = Math.max(3, 2.6 * s), x = p.x, y = p.y + bob;
+  const s = p.s, bob = Math.sin(g.t * 2 + o.ph) * 0.25 * s, sz = Math.max(4, 3.6 * s), x = p.x, y = p.y + bob;
   const lit = Math.max(0.35, vis);
   // glow first, visible from far away
-  const gl = Math.max(2.5, 1.5 * Math.sqrt(s)) * (1 + 0.15 * Math.sin(g.t * 4 + o.ph));
-  ctx.globalAlpha = 0.9; lamp(x, y - sz * 1.15, '#ffc46e', gl); ctx.globalAlpha = 1;
-  if (sz < 4) { ctx.fillStyle = '#ffd88a'; ctx.fillRect(x - 1, y - sz - 1, 2, 2); return; }
+  const pulse = 1 + 0.2 * Math.sin(g.t * 4 + o.ph);
+  const gl = Math.max(4, 2.4 * Math.sqrt(s)) * pulse;
+  // a faint pillar of golden light rising from it, so you can spot it from a long way off
+  const top = y - Math.max(40, 30 * s), pw = Math.max(3, sz * 0.5);
+  const pg = ctx.createLinearGradient(0, top, 0, y);
+  pg.addColorStop(0, 'rgba(255,210,120,0)'); pg.addColorStop(1, `rgba(255,210,120,${0.28 * pulse})`);
+  ctx.globalCompositeOperation = 'lighter';
+  ctx.fillStyle = pg; ctx.fillRect(x - pw / 2, top, pw, y - top);
+  lamp(x, y - sz * 1.15, '#ffc46e', gl);
+  ctx.globalCompositeOperation = 'source-over';
+  // a twinkle above it
+  if (!reduceMotion) { const tw = 0.5 + 0.5 * Math.sin(g.t * 6 + o.ph * 3); ctx.fillStyle = `rgba(255,240,200,${tw})`; const k = Math.max(2, sz * 0.18); ctx.fillRect(x - k / 2, y - sz * 1.9 - k, k, k * 3); ctx.fillRect(x - k * 1.5, y - sz * 1.9, k * 3, k); }
+  if (sz < 5) { ctx.fillStyle = '#ffd88a'; ctx.fillRect(x - 1.5, y - sz - 1.5, 3, 3); return; }
   ctx.globalAlpha = lit;
   ctx.fillStyle = 'rgba(220,232,245,0.3)';
   ctx.beginPath(); ctx.ellipse(x, y, sz * 0.9, Math.max(1, sz * 0.12), 0, 0, 6.28); ctx.fill();

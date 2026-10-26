@@ -102,11 +102,11 @@ function buildVoyage(n, attract) {
 
   // floating crates scattered near the safe channel, a little off it, clear of the rocks
   const pickups = [];
-  for (let tries = 0; tries < 600 && pickups.length < SK.PICKUPS + Math.floor(n / 2); tries++) {
+  for (let tries = 0; tries < 2000 && pickups.length < SK.PICKUPS + n - 1; tries++) {
     const p = path[Math.floor(rand(1, Math.max(2, path.length - 3)))]; if (!p) break;
-    const x = p.x + rand(-70, 70), y = p.y + rand(-70, 70);
+    const x = p.x + rand(-110, 110), y = p.y + rand(-110, 110);
     if (y < 70 || Math.hypot(x - HB.x, y - HB.y) < 120 || Math.hypot(x - sx, y - sy) < 80) continue;
-    if (solid.some(o => Math.hypot(o.x - x, o.y - y) < o.r + 14) || pickups.some(q => Math.hypot(q.x - x, q.y - y) < 120)) continue;
+    if (solid.some(o => Math.hypot(o.x - x, o.y - y) < o.r + 14) || pickups.some(q => Math.hypot(q.x - x, q.y - y) < 70)) continue;
     pickups.push({ x, y, ph: rand(0, 6.28), taken: false });
   }
   return { ship, rocks, wrecks, timber, path, lures, pickups };

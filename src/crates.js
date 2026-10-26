@@ -315,9 +315,14 @@ function chooseBoat(id) {
 // a crate of a random kind for every voyage, two for making harbour (each rolled separately)
 // end of a voyage: one crate if she went down (and any floating crates aboard go down with her);
 // for making harbour SK.HARBOUR_CRATES, plus every floating crate you hauled aboard, counted double
-// the harbour reward doubles with every voyage in a row you make harbour: 4, 8, 16, 32...
-// (voyage 1 again after a sinking, so the streak starts over)
-function harbourReward() { return SK.HARBOUR_CRATES * Math.pow(2, Math.min(SK.HARBOUR_DOUBLINGS, Math.max(0, (g ? g.n : 1) - 1))); }
+// the harbour reward follows the Fibonacci sequence for each voyage in a row you make harbour:
+// 5, 8, 13, 21, 34, 55... (voyage 1 again after a sinking, so the streak starts over)
+function harbourReward() {
+  const steps = Math.min(SK.HARBOUR_STEPS, Math.max(1, g ? g.n : 1));
+  let a = 3, b = SK.HARBOUR_CRATES;   // 3, 5 -> 8 -> 13 ...
+  for (let i = 1; i < steps; i++) { const c = a + b; a = b; b = c; }
+  return b;
+}
 function grantCrate(n, harbour) {
   if (!g || g.attract || g.crateGiven) return;
   n = n || 1;
@@ -327,7 +332,7 @@ function grantCrate(n, harbour) {
   updateCrateButtons();
   const found = g.found || 0;
   const text = harbour
-    ? 'Made harbour on voyage ' + g.n + ': ' + harbourReward() + ' Skerry Crates' + (g.n > 1 ? ' (doubled ' + Math.min(SK.HARBOUR_DOUBLINGS, g.n - 1) + (g.n === 2 ? ' time' : ' times') + ' for your streak)' : '') + (found ? ', plus the ' + found + (found === 1 ? ' crate' : ' crates') + ' you hauled aboard, counted double: +' + found * 2 : '') + '. Open them from the menu.'
+    ? 'Made harbour on voyage ' + g.n + ': ' + harbourReward() + ' Skerry Crates' + (g.n > 1 ? ' (' + g.n + ' in a row)' : '') + (found ? ', plus the ' + found + (found === 1 ? ' crate' : ' crates') + ' you hauled aboard, counted double: +' + found * 2 : '') + '. Open them from the menu.'
     : 'You found a Skerry Crate in the wreckage.' + (found ? ' The ' + found + (found === 1 ? ' crate' : ' crates') + ' you hauled aboard went down with her.' : '') + ' Open it from the menu.';
   toast(text, '+' + n + ' Skerry Crate' + (n > 1 ? 's' : ''));
 }
@@ -352,12 +357,22 @@ function updatePickups() {
 }
 // a wooden crate bobbing on the water, with a little lantern lashed on top so you can find it in the dark
 function drawPickup(o, p, vis) {
-  const s = p.s, bob = Math.sin(g.t * 2 + o.ph) * 0.25 * s, sz = Math.max(3, 2.6 * s), x = p.x, y = p.y + bob;
+  const s = p.s, bob = Math.sin(g.t * 2 + o.ph) * 0.25 * s, sz = Math.max(4, 3.6 * s), x = p.x, y = p.y + bob;
   const lit = Math.max(0.35, vis);
   // glow first, visible from far away
-  const gl = Math.max(2.5, 1.5 * Math.sqrt(s)) * (1 + 0.15 * Math.sin(g.t * 4 + o.ph));
-  ctx.globalAlpha = 0.9; lamp(x, y - sz * 1.15, '#ffc46e', gl); ctx.globalAlpha = 1;
-  if (sz < 4) { ctx.fillStyle = '#ffd88a'; ctx.fillRect(x - 1, y - sz - 1, 2, 2); return; }
+  const pulse = 1 + 0.2 * Math.sin(g.t * 4 + o.ph);
+  const gl = Math.max(4, 2.4 * Math.sqrt(s)) * pulse;
+  // a faint pillar of golden light rising from it, so you can spot it from a long way off
+  const top = y - Math.max(40, 30 * s), pw = Math.max(3, sz * 0.5);
+  const pg = ctx.createLinearGradient(0, top, 0, y);
+  pg.addColorStop(0, 'rgba(255,210,120,0)'); pg.addColorStop(1, `rgba(255,210,120,${0.28 * pulse})`);
+  ctx.globalCompositeOperation = 'lighter';
+  ctx.fillStyle = pg; ctx.fillRect(x - pw / 2, top, pw, y - top);
+  lamp(x, y - sz * 1.15, '#ffc46e', gl);
+  ctx.globalCompositeOperation = 'source-over';
+  // a twinkle above it
+  if (!reduceMotion) { const tw = 0.5 + 0.5 * Math.sin(g.t * 6 + o.ph * 3); ctx.fillStyle = `rgba(255,240,200,${tw})`; const k = Math.max(2, sz * 0.18); ctx.fillRect(x - k / 2, y - sz * 1.9 - k, k, k * 3); ctx.fillRect(x - k * 1.5, y - sz * 1.9, k * 3, k); }
+  if (sz < 5) { ctx.fillStyle = '#ffd88a'; ctx.fillRect(x - 1.5, y - sz - 1.5, 3, 3); return; }
   ctx.globalAlpha = lit;
   ctx.fillStyle = 'rgba(220,232,245,0.3)';
   ctx.beginPath(); ctx.ellipse(x, y, sz * 0.9, Math.max(1, sz * 0.12), 0, 0, 6.28); ctx.fill();

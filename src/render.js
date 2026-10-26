@@ -587,6 +587,11 @@ function drawCompass() {
     ctx.beginPath(); ctx.arc(px, y + 18, 3, 0, 6.28); ctx.fill();
     if (Math.hypot(g.plim.x - ship.x, g.plim.y - ship.y) < SK.PLIMSOLL_GUARD) { ctx.strokeStyle = 'rgba(95,211,255,0.7)'; ctx.beginPath(); ctx.arc(px, y + 18, 6, 0, 6.28); ctx.stroke(); }
   } else edgeArrow(pb, '#5fd3ff');
+  for (const q of g.pickups || []) {
+    if (q.taken || Math.hypot(q.x - ship.x, q.y - ship.y) > 600) continue;
+    const qx = xb(bearingOf(q.x - ship.x, q.y - ship.y)); if (!inStrip(qx)) continue;
+    ctx.fillStyle = '#ffd88a'; ctx.beginPath(); ctx.moveTo(qx, y + 3); ctx.lineTo(qx + 3, y + 6); ctx.lineTo(qx, y + 9); ctx.lineTo(qx - 3, y + 6); ctx.closePath(); ctx.fill();
+  }
   if (crewMode) for (const m of matesAtSea()) {
     const mx = xb(bearingOf(m.x - ship.x, m.y - ship.y));
     if (!inStrip(mx) || m.peer === NET.watch) continue;
