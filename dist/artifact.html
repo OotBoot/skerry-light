@@ -5130,7 +5130,7 @@ updateCrateButtons();
 // Menus: D-pad or stick moves between buttons, A presses, B closes the crates (or goes back),
 // Start presses the main button. Hits and jumpscares rumble the controller.
 
-const PAD = { steer: 0, sail: 0, connected: false, prev: [], navT: 0, focusIdx: -1 };
+const PAD = { steer: 0, sail: 0, connected: false, prev: [], navT: 0, held: null, root: null, cur: null };
 const DEAD = 0.18;
 const dz = v => Math.abs(v) < DEAD ? 0 : (v - Math.sign(v) * DEAD) / (1 - DEAD);
 
@@ -5155,17 +5155,43 @@ function activeOverlay() {
 function focusables(root) {
   return [...root.querySelectorAll('button, input, summary')].filter(el => !el.disabled && el.offsetParent !== null && !el.closest('[hidden]'));
 }
-function moveFocus(dir) {
+// move to the nearest button in the direction pressed (dx, dy are -1, 0 or 1), the way a console menu does
+function moveFocus(dx, dy) {
   const root = activeOverlay(); if (!root) return;
   const list = focusables(root); if (!list.length) return;
-  let i = list.indexOf(document.activeElement);
-  i = i < 0 ? (dir > 0 ? 0 : list.length - 1) : Math.max(0, Math.min(list.length - 1, i + dir));
-  setPadFocus(list[i]);
+  const cur = PAD.cur && list.includes(PAD.cur) ? PAD.cur : document.activeElement;
+  if (!cur || !list.includes(cur)) { setPadFocus(mainButton(root) || list[0]); return; }
+  const a = cur.getBoundingClientRect(), ax = a.left + a.width / 2, ay = a.top + a.height / 2;
+  let best = null, bestScore = Infinity;
+  for (const el of list) {
+    if (el === cur) continue;
+    const b = el.getBoundingClientRect(), bx = b.left + b.width / 2, by = b.top + b.height / 2;
+    // how far it is in the pressed direction, measured edge to edge so wide buttons aren't penalised
+    const along = dx ? (dx > 0 ? b.left - a.right : a.left - b.right) : (dy > 0 ? b.top - a.bottom : a.top - b.bottom);
+    const centre = dx ? (bx - ax) * dx : (by - ay) * dy;
+    if (centre <= 2 && along < -2) continue;   // not in that direction at all
+    // left and right only move along the same row; a button well above or below isn't 'to the right'
+    if (dx && Math.abs(by - ay) > Math.max(a.height, b.height) * 0.75) continue;
+    if (dy && centre <= 2) continue;
+    // sideways offset: zero if they overlap on the other axis
+    const side = dx ? Math.max(0, Math.max(a.top, b.top) - Math.min(a.bottom, b.bottom)) : Math.max(0, Math.max(a.left, b.left) - Math.min(a.right, b.right));
+    const score = Math.max(0, along) + side * 2.5 + Math.abs(dx ? by - ay : bx - ax) * 0.3;
+    if (score < bestScore) { bestScore = score; best = el; }
+  }
+  // nothing further that way: up/down wraps along the list order, left/right stays put
+  if (!best && dy) {
+    const i = list.indexOf(cur);
+    best = dy > 0 ? list[Math.min(list.length - 1, i + 1)] : list[Math.max(0, i - 1)];
+  }
+  if (best) setPadFocus(best);
 }
 function setPadFocus(el) {
   for (const o of document.querySelectorAll('.padfocus')) o.classList.remove('padfocus');
   el.classList.add('padfocus');
-  el.focus({ preventScroll: true });
+  // a text box only gets the ring: focusing it would pop up the keyboard on a phone or tablet
+  if (el.tagName !== 'INPUT') el.focus({ preventScroll: true });
+  else if (document.activeElement && document.activeElement !== el) document.activeElement.blur();
+  PAD.cur = el;
   el.scrollIntoView({ block: 'nearest' });
 }
 function mainButton(root) {
@@ -5201,13 +5227,23 @@ function pollPad(dt) {
     } else {
       const root = activeOverlay();
       if (root) {
-        // move between buttons, with a little repeat when the stick is held
-        PAD.navT -= dt;
-        const v = (pressed(p, 13) || ay > 0.6 || pressed(p, 15) || ax > 0.6) ? 1 : (pressed(p, 12) || ay < -0.6 || pressed(p, 14) || ax < -0.6) ? -1 : 0;
-        if (v && PAD.navT <= 0) { moveFocus(v); PAD.navT = PAD.navT < -0.05 ? 0.28 : 0.14; }
-        if (!v) PAD.navT = -0.1;
+        // a new screen came up: start on its main button
+        if (PAD.root !== root) {
+          PAD.root = root;
+          const here = document.activeElement && root.contains(document.activeElement) && document.activeElement.offsetParent ? document.activeElement : null;
+          const m = here && here.tagName !== 'INPUT' ? here : mainButton(root);
+          if (m) setPadFocus(m);
+        }
+        // move between buttons: one step per press, and repeating after a moment if you hold it
+        const dyN = (pressed(p, 13) || ay > 0.55) ? 1 : (pressed(p, 12) || ay < -0.55) ? -1 : 0;
+        const dxN = dyN ? 0 : (pressed(p, 15) || ax > 0.55) ? 1 : (pressed(p, 14) || ax < -0.55) ? -1 : 0;
+        const dirKey = dxN + ',' + dyN;
+        if (dirKey === '0,0') { PAD.held = null; }
+        else if (dirKey !== PAD.held) { PAD.held = dirKey; PAD.navT = 0.4; moveFocus(dxN, dyN); }
+        else { PAD.navT -= dt; if (PAD.navT <= 0) { PAD.navT = 0.13; moveFocus(dxN, dyN); } }
         if (down(0)) {
-          const el = root.contains(document.activeElement) && document.activeElement !== document.body ? document.activeElement : mainButton(root);
+          const ringed = PAD.cur && root.contains(PAD.cur) && PAD.cur.offsetParent ? PAD.cur : null;
+          const el = ringed || (root.contains(document.activeElement) && document.activeElement !== document.body ? document.activeElement : mainButton(root));
           if (el) { if (el.tagName === 'INPUT') el.focus(); else el.click(); }
         }
         if (down(9)) { const el = mainButton(root); if (el) el.click(); }
