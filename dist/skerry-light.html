@@ -485,6 +485,10 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 .padhover { outline: 2px solid rgba(255,216,138,0.8) !important; outline-offset: 2px; }
 .foundbox { display: flex; flex-direction: column; margin-top: 6px; }
 .foundbox .big { color: #ffd88a; }
+.result.haul { flex-direction: column; align-items: stretch; gap: 8px; }
+.haulstrip { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; }
+.haulstrip .skincard { flex: none; }
+@media (max-width: 520px) { .cratetype { grid-template-columns: 24px 1fr auto auto; } .cratetype button[hidden] { display: none; } }
 </style>
 </head>
 <body>
@@ -5195,7 +5199,12 @@ function renderCrates() {
     open.textContent = CRATES.opening ? 'Opening…' : CRATES.crates[c.id] > 0 ? 'Open' : 'None yet';
     open.disabled = CRATES.crates[c.id] <= 0 || CRATES.opening;
     open.addEventListener('click', () => openCrate(c.id));
-    row.append(box, nm, n, open);
+    const all = document.createElement('button'); all.type = 'button'; all.className = 'tool';
+    all.textContent = 'Open all';
+    all.hidden = CRATES.crates[c.id] < 2;
+    all.disabled = CRATES.opening;
+    all.addEventListener('click', () => openAll(c.id));
+    row.append(box, nm, n, all, open);
     ci.appendChild(row);
   }
   $('crateClose').disabled = CRATES.opening;
@@ -5295,6 +5304,56 @@ function openCrate(type) {
   strip.style.transform = 'translateX(0)';
   requestAnimationFrame(step);
 }
+// open every crate at once: no reel, just the haul
+function openAll(type) {
+  const count = CRATES.crates[type] | 0;
+  if (CRATES.opening || count < 1) return;
+  const byGrade = {}, fresh = [];
+  let best = null;
+  for (let i = 0; i < count; i++) {
+    const prize = rollSkin(type);
+    const had = CRATES.owned[prize.id] | 0;
+    CRATES.owned[prize.id] = had + 1;
+    if (!had && !fresh.includes(prize)) fresh.push(prize);
+    byGrade[prize.rarity] = (byGrade[prize.rarity] || 0) + 1;
+    if (!best || RARITIES.findIndex(r => r.id === prize.rarity) > RARITIES.findIndex(r => r.id === best.rarity)) best = prize;
+  }
+  CRATES.crates[type] = 0;
+  saveCrates();
+  const bra = rarityOf(best);
+  sfxReveal(RARITIES.indexOf(bra));
+  const res = $('crateResult');
+  res.textContent = '';
+  res.style.setProperty('--rc', bra.color);
+  res.className = 'result haul r-' + bra.id;
+  const h = document.createElement('p'); h.className = 'won';
+  h.textContent = 'Opened ' + count + (count === 1 ? ' crate' : ' crates');
+  const sub = document.createElement('small');
+  sub.textContent = fresh.length ? fresh.length + (fresh.length === 1 ? ' new item' : ' new items') + ' · best: ' + best.name : 'Nothing new this time · best: ' + best.name;
+  const grades = document.createElement('ul'); grades.className = 'odds';
+  for (const ra of RARITIES) {
+    if (!byGrade[ra.id]) continue;
+    const li = document.createElement('li'); li.style.setProperty('--rc', ra.color);
+    li.textContent = ra.name + ' \u00d7 ' + byGrade[ra.id];
+    grades.appendChild(li);
+  }
+  res.append(h, sub, grades);
+  // the new finds, best first
+  if (fresh.length) {
+    const order = it => -RARITIES.findIndex(r => r.id === it.rarity);
+    const strip = document.createElement('div'); strip.className = 'haulstrip';
+    for (const it of fresh.sort((a, b) => order(a) - order(b)).slice(0, 24)) strip.appendChild(itemCard(it, 'reelitem'));
+    if (fresh.length > 24) { const more = document.createElement('small'); more.textContent = '+' + (fresh.length - 24) + ' more'; strip.appendChild(more); }
+    res.appendChild(strip);
+  }
+  res.hidden = false;
+  $('crateStrip').textContent = '';
+  CRATES.view = best.kind === 'pennant' ? 'flags' : best.kind === 'flare' ? 'flares' : 'skins';
+  renderCrates();
+  updateCrateButtons();
+  res.scrollIntoView({ block: 'nearest' });
+}
+
 function finishOpen(prize) {
   CRATES.opening = false;
   CRATES.owned[prize.id] = (CRATES.owned[prize.id] | 0) + 1;

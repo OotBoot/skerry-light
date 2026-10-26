@@ -474,3 +474,7 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 .padhover { outline: 2px solid rgba(255,216,138,0.8) !important; outline-offset: 2px; }
 .foundbox { display: flex; flex-direction: column; margin-top: 6px; }
 .foundbox .big { color: #ffd88a; }
+.result.haul { flex-direction: column; align-items: stretch; gap: 8px; }
+.haulstrip { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; }
+.haulstrip .skincard { flex: none; }
+@media (max-width: 520px) { .cratetype { grid-template-columns: 24px 1fr auto auto; } .cratetype button[hidden] { display: none; } }
