@@ -172,12 +172,15 @@ function drawShip3D(o, skin, boat, vis, opts) {
       line(W(mu, 0, Zd + 1.2), W(-Lh * 1.05, 0, Zd + 1.4), mastC, 0.25);
     } else {
       // square sails: a course and a topsail on each mast, bellied a little forward, and a yard on each
-      const sw = B * 1.7;
+      // the yards are braced round (opts.brace radians, starboard yardarm swung aft), so the sails
+      // are seen at an angle rather than square across the view
+      const sw = B * 1.7, br = opts.brace || 0, bs = Math.sin(br), bc = Math.cos(br);
+      const Y = (u, w, z) => W(u - w * bs, w * bc, z);
       const tiers = [[0.22, 0.55, 1], [0.58, 0.86, 0.8]];
       for (const [z0, z1, wk] of tiers) {
         const za = Zd + mastH * z0, zb = Zd + mastH * z1, bel = 0.9;
-        sail([W(mu + 0.4 + bel * 0.4, -sw * wk, za), W(mu + 0.4 + bel * 0.4, sw * wk, za), W(mu + 0.4, sw * wk * 0.86, zb), W(mu + 0.4, -sw * wk * 0.86, zb)], true);
-        line(W(mu + 0.35, -sw * wk * 0.9, zb), W(mu + 0.35, sw * wk * 0.9, zb), mastC, 0.18);
+        sail([Y(mu + 0.4 + bel * 0.4, -sw * wk, za), Y(mu + 0.4 + bel * 0.4, sw * wk, za), Y(mu + 0.4, sw * wk * 0.86, zb), Y(mu + 0.4, -sw * wk * 0.86, zb)], true);
+        line(Y(mu + 0.35, -sw * wk * 0.9, zb), Y(mu + 0.35, sw * wk * 0.9, zb), mastC, 0.18);
       }
     }
     // shrouds down to the rails

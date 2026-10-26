@@ -310,7 +310,7 @@ function drawMate(m, p, vis) {
   const boat = BOAT_BY_ID[m.boat] || BOATS[0];
   const skin = m.skin || SKINS[0];
   let head = null;
-  if (hullVis > 0.02) head = drawShip3D(m, skin, boat, hullVis, { alpha: Math.min(1, hullVis + 0.15), pennant: m.pennant, lantern: col });
+  if (hullVis > 0.02) head = drawShip3D(m, skin, boat, hullVis, { alpha: Math.min(1, hullVis + 0.15), pennant: m.pennant, lantern: col, brace: 0.5 });
   const L = boat.len * p.s, x = p.x, hh = Math.max(1.2, L * 0.12), sailH = head ? Math.max(4, p.y - head.y - hh) : L * 0.58, y = p.y;
   if (d < 700 || m.shoutT > 0) {
     ctx.font = '700 11px "Courier Prime", monospace'; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
@@ -432,7 +432,7 @@ function drawScene() {
     if (it.kind === 'rock') drawRockDetailed(o, q, vis);
     else if (it.kind === 'wreck') drawWreck(o, q, vis);
     else if (it.kind === 'timber') drawTimber(o, q, vis);
-    else if (it.kind === 'self') drawShip3D(ship, ship.skin || mySkin(), BOAT_BY_ID[ship.boat] || BOATS[0], 1, { pennant: 'pennant' in ship ? ship.pennant : myPennant(), minLit: 1, sailAlpha: 0.55 });
+    else if (it.kind === 'self') drawShip3D(ship, ship.skin || mySkin(), BOAT_BY_ID[ship.boat] || BOATS[0], 1, { pennant: 'pennant' in ship ? ship.pennant : myPennant(), minLit: 1, sailAlpha: 0.7, brace: 0.95 + ship.rudder * 0.25 });
     else if (it.kind === 'pickup') drawPickup(o, q, vis);
     else if (it.kind === 'plim') drawPlimsoll(q, vis);
     else if (it.kind === 'mate') drawMate(o, q, vis);
