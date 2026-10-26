@@ -652,13 +652,17 @@ function openCrate(type) {
   renderCrates();
   updateCrateButtons();
   $('crateResult').hidden = true;
+  spinReel(prize, type, reduceMotion ? 600 : 6000, () => finishOpen(prize));
+}
+
+// scroll the reel into view, then spin a strip of loot that settles on `prize` under the marker
+function spinReel(prize, type, dur, done) {
   // bring the reel into view by scrolling the sheet up and down only (never sideways)
   requestAnimationFrame(() => {
     const sheet = $('crateCard'), r = $('crateReel').getBoundingClientRect(), sr = sheet.getBoundingClientRect();
-    if (r.top < sr.top + 10 || r.bottom > sr.bottom - 10) sheet.scrollTo({ top: sheet.scrollTop + r.top - sr.top - sr.height * 0.3, behavior: reduceMotion ? 'auto' : 'smooth' });
+    if (r.top < sr.top + 70 || r.bottom > sr.bottom - 10) sheet.scrollTo({ top: sheet.scrollTop + r.top - sr.top - sr.height * 0.25, behavior: reduceMotion ? 'auto' : 'smooth' });
     sheet.scrollLeft = 0;
   });
-
   const reel = $('crateReel'), strip = $('crateStrip');
   strip.textContent = '';
   const N = 56, WIN = 48;
@@ -666,7 +670,7 @@ function openCrate(type) {
   const cardW = strip.firstChild.getBoundingClientRect().width + 8;   // card plus gap
   const viewW = reel.getBoundingClientRect().width;
   const end = WIN * cardW + cardW / 2 - viewW / 2 + (Math.random() - 0.5) * cardW * 0.7;
-  const dur = reduceMotion ? 600 : 6000, t0 = performance.now();
+  const t0 = performance.now();
   let lastIdx = -1;
   const step = now => {
     const t = Math.min(1, (now - t0) / dur);
@@ -676,12 +680,12 @@ function openCrate(type) {
     const idx = Math.floor((x + viewW / 2) / cardW);
     if (idx !== lastIdx) { lastIdx = idx; sfxTick(); }
     if (t < 1) requestAnimationFrame(step);
-    else finishOpen(prize);
+    else done();
   };
   strip.style.transform = 'translateX(0)';
   requestAnimationFrame(step);
 }
-// open every crate at once: no reel, just the haul
+// open every crate at once: a quick spin of the reel that lands on your best pull, then the whole haul
 function openAll(type) {
   const count = CRATES.crates[type] | 0;
   if (CRATES.opening || count < 1) return;
@@ -697,6 +701,14 @@ function openAll(type) {
   }
   CRATES.crates[type] = 0;
   saveCrates();
+  CRATES.opening = true;
+  $('crateResult').hidden = true;
+  renderCrates();
+  updateCrateButtons();
+  spinReel(best, type, reduceMotion ? 400 : 2600, () => showHaul(count, byGrade, fresh, best));
+}
+function showHaul(count, byGrade, fresh, best) {
+  CRATES.opening = false;
   const bra = rarityOf(best);
   sfxReveal(RARITIES.indexOf(bra));
   const res = $('crateResult');
@@ -724,11 +736,14 @@ function openAll(type) {
     res.appendChild(strip);
   }
   res.hidden = false;
-  $('crateStrip').textContent = '';
   CRATES.view = best.kind === 'pennant' ? 'flags' : best.kind === 'flare' ? 'flares' : 'skins';
   renderCrates();
   updateCrateButtons();
-  res.scrollIntoView({ block: 'nearest' });
+  // glide down so the reel and the haul under it are both in view
+  requestAnimationFrame(() => {
+    const sheet = $('crateCard'), rr = $('crateReel').getBoundingClientRect(), sr = sheet.getBoundingClientRect();
+    sheet.scrollTo({ top: sheet.scrollTop + rr.top - sr.top - 70, behavior: reduceMotion ? 'auto' : 'smooth' });
+  });
 }
 
 function finishOpen(prize) {

@@ -489,6 +489,9 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 .haulstrip { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; }
 .haulstrip .skincard { flex: none; }
 @media (max-width: 520px) { .cratetype { grid-template-columns: 24px 1fr auto auto; } .cratetype button[hidden] { display: none; } }
+.result.haul { min-width: 0; overflow: hidden; }
+.result.haul .odds { flex-wrap: wrap; }
+.haulstrip { max-width: 100%; }
 </style>
 </head>
 <body>
@@ -668,7 +671,7 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
     <div class="card">
       <div class="cardtop sticky"><span class="eyebrow">Shipyard and crates</span><button class="tool closebtn" id="crateClose" type="button">✕ Close</button></div>
       <h1 id="crateHead">Boats and Crates</h1>
-      <p>Pick your boat. Each voyage earns a Skerry Crate, one if you go down and two when you make harbour. Any crate can hold a skin for any boat, a flag or a flare colour. If you see gold in the reel, it's yours.</p>
+      <p>Pick your boat. Each voyage earns Skerry Crates: one if you go down, and more for every harbour you make in a row (5, 8, 13, 21...), plus two for each floating crate you bring in. Any crate can hold a skin for any boat, a flag or a flare colour. If you see gold in the reel, it's yours.</p>
       <div class="boats" id="boatList"></div>
       <h2 class="invh">Crate inventory</h2>
       <div class="cratetypes" id="crateTypes"></div>
@@ -5280,13 +5283,17 @@ function openCrate(type) {
   renderCrates();
   updateCrateButtons();
   $('crateResult').hidden = true;
+  spinReel(prize, type, reduceMotion ? 600 : 6000, () => finishOpen(prize));
+}
+
+// scroll the reel into view, then spin a strip of loot that settles on `prize` under the marker
+function spinReel(prize, type, dur, done) {
   // bring the reel into view by scrolling the sheet up and down only (never sideways)
   requestAnimationFrame(() => {
     const sheet = $('crateCard'), r = $('crateReel').getBoundingClientRect(), sr = sheet.getBoundingClientRect();
-    if (r.top < sr.top + 10 || r.bottom > sr.bottom - 10) sheet.scrollTo({ top: sheet.scrollTop + r.top - sr.top - sr.height * 0.3, behavior: reduceMotion ? 'auto' : 'smooth' });
+    if (r.top < sr.top + 70 || r.bottom > sr.bottom - 10) sheet.scrollTo({ top: sheet.scrollTop + r.top - sr.top - sr.height * 0.25, behavior: reduceMotion ? 'auto' : 'smooth' });
     sheet.scrollLeft = 0;
   });
-
   const reel = $('crateReel'), strip = $('crateStrip');
   strip.textContent = '';
   const N = 56, WIN = 48;
@@ -5294,7 +5301,7 @@ function openCrate(type) {
   const cardW = strip.firstChild.getBoundingClientRect().width + 8;   // card plus gap
   const viewW = reel.getBoundingClientRect().width;
   const end = WIN * cardW + cardW / 2 - viewW / 2 + (Math.random() - 0.5) * cardW * 0.7;
-  const dur = reduceMotion ? 600 : 6000, t0 = performance.now();
+  const t0 = performance.now();
   let lastIdx = -1;
   const step = now => {
     const t = Math.min(1, (now - t0) / dur);
@@ -5304,12 +5311,12 @@ function openCrate(type) {
     const idx = Math.floor((x + viewW / 2) / cardW);
     if (idx !== lastIdx) { lastIdx = idx; sfxTick(); }
     if (t < 1) requestAnimationFrame(step);
-    else finishOpen(prize);
+    else done();
   };
   strip.style.transform = 'translateX(0)';
   requestAnimationFrame(step);
 }
-// open every crate at once: no reel, just the haul
+// open every crate at once: a quick spin of the reel that lands on your best pull, then the whole haul
 function openAll(type) {
   const count = CRATES.crates[type] | 0;
   if (CRATES.opening || count < 1) return;
@@ -5325,6 +5332,14 @@ function openAll(type) {
   }
   CRATES.crates[type] = 0;
   saveCrates();
+  CRATES.opening = true;
+  $('crateResult').hidden = true;
+  renderCrates();
+  updateCrateButtons();
+  spinReel(best, type, reduceMotion ? 400 : 2600, () => showHaul(count, byGrade, fresh, best));
+}
+function showHaul(count, byGrade, fresh, best) {
+  CRATES.opening = false;
   const bra = rarityOf(best);
   sfxReveal(RARITIES.indexOf(bra));
   const res = $('crateResult');
@@ -5352,11 +5367,14 @@ function openAll(type) {
     res.appendChild(strip);
   }
   res.hidden = false;
-  $('crateStrip').textContent = '';
   CRATES.view = best.kind === 'pennant' ? 'flags' : best.kind === 'flare' ? 'flares' : 'skins';
   renderCrates();
   updateCrateButtons();
-  res.scrollIntoView({ block: 'nearest' });
+  // glide down so the reel and the haul under it are both in view
+  requestAnimationFrame(() => {
+    const sheet = $('crateCard'), rr = $('crateReel').getBoundingClientRect(), sr = sheet.getBoundingClientRect();
+    sheet.scrollTo({ top: sheet.scrollTop + rr.top - sr.top - 70, behavior: reduceMotion ? 'auto' : 'smooth' });
+  });
 }
 
 function finishOpen(prize) {
