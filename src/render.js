@@ -130,6 +130,86 @@ function drawWall(w) {
   }
   fillPoly([[w.x1, w.y1, 0], [w.x2, w.y2, 0], [w.x2, w.y2, 1.1], [w.x1, w.y1, 1.1]], mix(mix('#050402', '#4a3d16', light), ROOM_FOG, fog * 0.8));
 }
+// The maze walls, ray cast one screen column at a time against the room grid, so the nearest wall
+// always wins (no walls sliding through each other). Fills ZBUF with each column's wall distance,
+// which drawScene uses to hide anything standing behind a wall.
+let ZBUF = new Float32Array(0), ZSTEP = 2;
+const wallShades = new Map();
+function wallShade(side, li, fi, stripe) {
+  const k = side + ':' + li + ':' + fi + ':' + stripe;
+  let c = wallShades.get(k);
+  if (!c) {
+    const base = side ? '#c2aa45' : '#d9c25a';
+    c = mix(mix('#120f05', stripe ? '#9c8a3a' : base, 0.25 + 0.75 * li / 15), ROOM_FOG, fi / 15 * 0.78);
+    wallShades.set(k, c);
+  }
+  return c;
+}
+function drawRoomWalls() {
+  const R = g.rooms; if (!R || !R.east) return;
+  const { X0, Y0, C, N, east, north } = R;
+  ZSTEP = W > 900 ? 2 : W > 500 ? 2 : 1;
+  const cols = Math.ceil(W / ZSTEP) + 1;
+  if (ZBUF.length !== cols) ZBUF = new Float32Array(cols);
+  const id = (i, j) => j * N + i;
+  const Z = SK.BACKROOMS_CEIL, L = roomLevel();
+  const px = (camX - X0) / C, py = (camY - Y0) / C;
+  for (let ci = 0; ci < cols; ci++) {
+    const sxp = ci * ZSTEP;
+    const off = Math.atan((sxp - cx) / focal), ang = yaw + off;
+    const dx = Math.sin(ang), dy = Math.cos(ang);
+    let i = Math.floor(px), j = Math.floor(py);
+    const stepI = dx > 0 ? 1 : -1, stepJ = dy > 0 ? 1 : -1;
+    const tdx = Math.abs(1 / (dx || 1e-9)), tdy = Math.abs(1 / (dy || 1e-9));
+    let tx = dx > 0 ? (i + 1 - px) * tdx : (px - i) * tdx;
+    let ty = dy > 0 ? (j + 1 - py) * tdy : (py - j) * tdy;
+    let t = 0, side = 0, hit = false;
+    for (let n = 0; n < 64 && !hit; n++) {
+      if (tx < ty) {
+        t = tx; tx += tdx; side = 0;
+        // crossing the boundary between column i and i + stepI
+        const bi = stepI > 0 ? i : i - 1;
+        if (bi < 0 || bi >= N - 1 || j < 0 || j >= N) hit = true;
+        else if (east[id(bi, j)]) hit = true;
+        i += stepI;
+      } else {
+        t = ty; ty += tdy; side = 1;
+        const bj = stepJ > 0 ? j : j - 1;
+        if (bj < 0 || bj >= N - 1 || i < 0 || i >= N) hit = true;
+        else if (north[id(i, bj)]) hit = true;
+        j += stepJ;
+      }
+    }
+    const dist = t * C, f = Math.max(SK.NEAR, dist * Math.cos(off));
+    ZBUF[ci] = hit ? f : 1e9;
+    if (!hit) continue;
+    const hx = camX + dx * dist, hy2 = camY + dy * dist;
+    const k = focal / f;
+    const yb = hy + SK.CAM_H * k, yt = hy + (SK.CAM_H - Z) * k;
+    const light = Math.min(1, Math.max(roomLight(hx, hy2), lanternAt(hx, hy2) * 0.6, flareAt(hx, hy2)));
+    const fog = Math.min(1, dist / 320);
+    // wallpaper stripes: every 8 m along the wall, a thin darker line
+    const u = side === 0 ? hy2 : hx, stripe = dist < 160 && ((u % 8) + 8) % 8 < 0.35 ? 1 : 0;
+    const li = Math.round(light * 15), fi = Math.round(fog * 15);
+    ctx.fillStyle = wallShade(side, li, fi, stripe);
+    ctx.fillRect(sxp - 0.5, yt, ZSTEP + 1, yb - yt);
+    // damp skirting where the water meets the wall
+    ctx.fillStyle = wallShade(1, Math.round(li * 0.35), fi, 0);
+    ctx.fillRect(sxp - 0.5, yb - 1.1 * k, ZSTEP + 1, 1.1 * k);
+  }
+}
+// clip to the screen columns where something at forward distance f is in front of the walls
+function clipToVisible(f) {
+  ctx.beginPath();
+  let start = -1;
+  for (let ci = 0; ci <= ZBUF.length; ci++) {
+    const open = ci < ZBUF.length && ZBUF[ci] > f;
+    if (open && start < 0) start = ci;
+    if (!open && start >= 0) { ctx.rect(start * ZSTEP - 1, -H, (ci - start) * ZSTEP + 1, H * 3); start = -1; }
+  }
+  ctx.clip();
+}
+
 function drawExitSign() {
   const e = g.exit, c = cam(e.x, e.y, SK.BACKROOMS_CEIL - 2.5); if (c.f < SK.NEAR + 1) return;
   const q = proj(c), w = 5 * q.s, h = 1.6 * q.s;
@@ -347,25 +427,17 @@ function drawScene() {
   for (const o of g.rocks) if (!o.gone) add('rock', o);
   for (const o of g.wrecks) add('wreck', o);
   for (const o of g.timber) add('timber', o);
-  if (g.backrooms) {
-    add('exit', g.exit);
-    for (const w of g.walls) {
-      const mx = (w.x1 + w.x2) / 2, my = (w.y1 + w.y2) / 2;
-      if (Math.hypot(mx - ship.x, my - ship.y) > 420) continue;
-      const a = cam(w.x1, w.y1, 0), b = cam(w.x2, w.y2, 0);
-      if (a.f < SK.NEAR && b.f < SK.NEAR) continue;
-      // sort by the nearer end that's in front, so a wall you're sailing along doesn't cover things beyond it
-      const cc = cam(mx, my, 0); cc.f = Math.max(SK.NEAR, Math.min(cc.f, Math.max(a.f, SK.NEAR) * 0.5 + Math.max(b.f, SK.NEAR) * 0.5));
-      items.push({ kind: 'wall', o: w, c: cc });
-    }
-  }
+  if (g.backrooms) { add('exit', g.exit); drawRoomWalls(); }
   add('plim', g.plim);
   if (crewMode) for (const m of matesAtSea()) if (m.peer !== NET.watch) add('mate', m);
   if (!NET.watch) { for (const d of g.enemies.drowned) add('drowned', d); for (const k of g.enemies.knocks) add('knock', k); }
   if (g.maren.active) add('maren', g.maren);
   items.sort((a, b) => b.c.f - a.c.f);
   for (const it of items) {
-    if (it.kind === 'wall') { drawWall(it.o); continue; }
+    // in the rooms, anything behind a wall is hidden by it, column by column
+    const clip = g.backrooms;
+    if (clip) { ctx.save(); clipToVisible(it.c.f); }
+    try {
     if (it.kind === 'exit') { drawExitSign(); continue; }
     const q = proj(it.c); if (q.x < -500 || q.x > W + 500) continue;
     const o = it.o;
@@ -379,6 +451,7 @@ function drawScene() {
     else if (it.kind === 'drowned') drawDrowned(o, q, vis);
     else if (it.kind === 'knock') drawKnock(o, q, vis);
     else drawMaren(q, vis);
+    } finally { if (clip) ctx.restore(); }
   }
 
   if (!g.backrooms) {

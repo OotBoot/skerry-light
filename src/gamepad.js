@@ -2,8 +2,8 @@
 //
 // Sailing: left stick or D-pad steers; RT makes sail (faster), LT shortens it (slower), or push the
 // stick up and down; A rings the bell, X fires a flare. RB watches the next crewmate when spectating.
-// Menus: D-pad or stick moves between buttons, A presses, B closes the crates (or goes back),
-// Start presses the main button. Hits and jumpscares rumble the controller.
+// Menus: the left stick moves an on-screen cursor and A clicks what it's over; the right stick scrolls.
+// The D-pad jumps between buttons instead. B closes the crates (or goes back), Start presses the main button. Hits and jumpscares rumble the controller.
 
 const PAD = { steer: 0, sail: 0, connected: false, prev: [], navT: 0, held: null, root: null, cur: null };
 const DEAD = 0.18;
@@ -87,13 +87,18 @@ function pollPad(dt) {
   const ax = dz(p.axes[0] || 0), ay = dz(p.axes[1] || 0);
   const lt = p.buttons[6] ? p.buttons[6].value : 0, rt = p.buttons[7] ? p.buttons[7].value : 0;
 
-  if (state === 'play' && activeOverlay() === null) {
+  if (state === 'play' && activeOverlay() === null && !(typeof NET !== 'undefined' && NET.watch)) {
+    hideCursor();
     PAD.steer = Math.max(-1, Math.min(1, ax + (pressed(p, 15) ? 1 : 0) - (pressed(p, 14) ? 1 : 0)));
     PAD.sail = Math.max(-1, Math.min(1, rt - lt - ay * 0.8 + (pressed(p, 12) ? 1 : 0) - (pressed(p, 13) ? 1 : 0)));
     if (down(0)) ringBell();
     if (down(2)) fireFlare();
   } else {
     PAD.steer = PAD.sail = 0;
+    // the analog sticks drive an on-screen cursor in menus: left stick moves it, right stick scrolls
+    const rx = dz(p.axes[2] || 0), ry = dz(p.axes[3] || 0);
+    const usedCursor = moveCursor(ax, ay, rx, ry, dt);
+    if (usedCursor && down(0)) { cursorClick(); PAD.prev = now; return; }
     // watching a crewmate: RB for the next ship, A rings your one bell for them
     if (typeof NET !== 'undefined' && NET.watch) {
       if (down(5)) nextSpectate();
@@ -110,8 +115,9 @@ function pollPad(dt) {
           if (m) setPadFocus(m);
         }
         // move between buttons: one step per press, and repeating after a moment if you hold it
-        const dyN = (pressed(p, 13) || ay > 0.55) ? 1 : (pressed(p, 12) || ay < -0.55) ? -1 : 0;
-        const dxN = dyN ? 0 : (pressed(p, 15) || ax > 0.55) ? 1 : (pressed(p, 14) || ax < -0.55) ? -1 : 0;
+        const dyN = pressed(p, 13) ? 1 : pressed(p, 12) ? -1 : 0;
+        const dxN = dyN ? 0 : pressed(p, 15) ? 1 : pressed(p, 14) ? -1 : 0;
+        if (dxN || dyN) hideCursor();   // the D-pad takes over from the cursor
         const dirKey = dxN + ',' + dyN;
         if (dirKey === '0,0') { PAD.held = null; }
         else if (dirKey !== PAD.held) { PAD.held = dirKey; PAD.navT = 0.4; moveFocus(dxN, dyN); }
@@ -143,3 +149,66 @@ window.addEventListener('gamepadconnected', () => { PAD.prev = []; });
 window.addEventListener('gamepaddisconnected', () => { if (!firstPad()) { PAD.connected = false; PAD.steer = PAD.sail = 0; updateHint(); } });
 // the mouse or a touch takes over again: drop the controller's focus ring
 window.addEventListener('pointerdown', () => { for (const o of document.querySelectorAll('.padfocus')) o.classList.remove('padfocus'); }, true);
+
+// ---------- the cursor ----------
+let cursorEl = null;
+function cursorNode() {
+  if (cursorEl) return cursorEl;
+  cursorEl = document.createElement('div');
+  cursorEl.id = 'padCursor'; cursorEl.setAttribute('aria-hidden', 'true');
+  cursorEl.hidden = true;
+  document.body.appendChild(cursorEl);
+  PAD.mx = innerWidth / 2; PAD.my = innerHeight / 2;
+  return cursorEl;
+}
+function hideCursor() {
+  if (cursorEl && !cursorEl.hidden) { cursorEl.hidden = true; PAD.cursorOn = false; setHover(null); }
+}
+// returns true while the cursor is the thing being used (so A clicks under it, not the highlighted button)
+function moveCursor(ax, ay, rx, ry, dt) {
+  const c = cursorNode();
+  const mag = Math.hypot(ax, ay);
+  if (mag > 0) {
+    if (!PAD.cursorOn) {
+      // start it on the highlighted button, or the middle of the screen
+      const at = PAD.cur && PAD.cur.offsetParent ? PAD.cur.getBoundingClientRect() : null;
+      PAD.mx = at ? at.left + at.width / 2 : innerWidth / 2; PAD.my = at ? at.top + at.height / 2 : innerHeight / 2;
+      PAD.cursorOn = true; c.hidden = false;
+      for (const o of document.querySelectorAll('.padfocus')) o.classList.remove('padfocus');
+    }
+    const speed = 260 + 900 * Math.pow(Math.min(1, mag), 1.6);   // fine near the centre, fast at full tilt
+    PAD.mx = Math.max(2, Math.min(innerWidth - 2, PAD.mx + ax / mag * speed * Math.min(1, mag) * dt));
+    PAD.my = Math.max(2, Math.min(innerHeight - 2, PAD.my + ay / mag * speed * Math.min(1, mag) * dt));
+  }
+  // right stick scrolls the menu; the cursor also scrolls it when pushed against the top or bottom
+  const root = activeOverlay();
+  if (root) {
+    let sc = ry * 900 * dt;
+    if (PAD.cursorOn && ay > 0.3 && PAD.my > innerHeight - 30) sc += ay * 700 * dt;
+    if (PAD.cursorOn && ay < -0.3 && PAD.my < 30) sc += ay * 700 * dt;
+    if (sc) root.scrollTop += sc;
+  }
+  if (!PAD.cursorOn) return false;
+  c.style.transform = 'translate(' + PAD.mx + 'px,' + PAD.my + 'px)';
+  setHover(clickableAt(PAD.mx, PAD.my));
+  return true;
+}
+function clickableAt(x, y) {
+  const el = document.elementFromPoint(x, y);
+  return el && el.closest ? el.closest('button, input, summary, a, label, .pick') : null;
+}
+function setHover(el) {
+  if (PAD.hover === el) return;
+  if (PAD.hover) PAD.hover.classList.remove('padhover');
+  PAD.hover = el;
+  if (el) el.classList.add('padhover');
+  if (cursorEl) cursorEl.classList.toggle('over', !!el);
+}
+function cursorClick() {
+  const el = clickableAt(PAD.mx, PAD.my);
+  if (cursorEl) { cursorEl.classList.remove('press'); void cursorEl.offsetWidth; cursorEl.classList.add('press'); }
+  if (!el || el.disabled) return;
+  if (el.tagName === 'INPUT') { el.focus(); return; }
+  if (el.tagName === 'LABEL' && el.htmlFor) { const t = document.getElementById(el.htmlFor); if (t) { t.focus(); return; } }
+  el.click();
+}

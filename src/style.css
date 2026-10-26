@@ -399,6 +399,9 @@ button.small { padding: 6px 14px; min-height: 0; }
 .cratecard .card, .reel { max-width: 100%; min-width: 0; }
 /* no double-tap zoom on buttons, and no auto-zoom when a phone focuses a text box (needs 16px) */
 html, body, button, .overlay, .card { touch-action: manipulation; }
+/* scrolling yes, pinch-zoom no (where the browser supports it) */
+html, body, .overlay, .card { touch-action: pan-x pan-y; }
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 @media (max-width: 520px) { input, select, textarea { font-size: 16px !important; } }
 /* the card never grows wider than the screen, whatever is inside it */
 .overlay { grid-template-columns: minmax(0, 1fr); }
@@ -460,3 +463,12 @@ html, body, button, .overlay, .card { touch-action: manipulation; }
 .marks .shot { width: 9px; height: 9px; border-radius: 50%; background: #c9ced6; box-shadow: inset -2px -2px 0 rgba(0,0,0,0.35); }
 .marks .shot.off { background: transparent; border: 1px solid rgba(201,206,214,0.4); box-shadow: none; }
 .padfocus { outline: 3px solid var(--lamp) !important; outline-offset: 3px; }
+
+/* the controller's cursor in menus */
+#padCursor { position: fixed; left: 0; top: 0; z-index: 1000; width: 22px; height: 22px; margin: -11px 0 0 -11px; pointer-events: none;
+  border: 2px solid var(--lamp); border-radius: 50%; background: rgba(255,216,138,0.15); box-shadow: 0 0 10px rgba(255,216,138,0.5), 0 0 0 1px rgba(0,0,0,0.6); }
+#padCursor::after { content: ""; position: absolute; left: 50%; top: 50%; width: 4px; height: 4px; margin: -2px 0 0 -2px; border-radius: 50%; background: var(--lamp); }
+#padCursor.over { transform-origin: center; background: rgba(255,216,138,0.3); width: 28px; height: 28px; margin: -14px 0 0 -14px; }
+#padCursor.press { animation: padpress .18s ease-out; }
+@keyframes padpress { from { box-shadow: 0 0 0 8px rgba(255,216,138,0.5); } to { box-shadow: 0 0 10px rgba(255,216,138,0.5); } }
+.padhover { outline: 2px solid rgba(255,216,138,0.8) !important; outline-offset: 2px; }

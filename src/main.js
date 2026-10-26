@@ -1,5 +1,18 @@
 // Starts the game once every script has loaded.
 
+// No accidental zooming on phones. iPhone Safari ignores "user-scalable=no" (an accessibility choice),
+// so the pinch and double-tap gestures themselves are stopped here; scrolling the menus still works.
+for (const t of ['gesturestart', 'gesturechange', 'gestureend']) document.addEventListener(t, e => e.preventDefault(), { passive: false });
+document.addEventListener('touchmove', e => { if (e.touches.length > 1 || (e.scale && e.scale !== 1)) e.preventDefault(); }, { passive: false });
+let lastTouchEnd = 0;
+document.addEventListener('touchend', e => {
+  const now = Date.now();
+  // a second tap within 300 ms would zoom: swallow it, unless it's on a text box
+  if (now - lastTouchEnd < 300 && !(e.target && e.target.closest && e.target.closest('input, textarea'))) e.preventDefault();
+  lastTouchEnd = now;
+}, { passive: false });
+document.addEventListener('dblclick', e => e.preventDefault(), { passive: false });
+
 resize();
 newVoyage(1, true);
 let last = performance.now();

@@ -165,7 +165,7 @@ function buildBackrooms(n) {
   const lights = [];
   for (let c = 0; c < N * N; c++) { const p = centre(c); lights.push({ x: p.x, y: p.y, ph: RNG() * 6.28, bad: RNG() < 0.12 }); }
   const exit = Object.assign(centre(far), { r: C * 0.32 });
-  return { ship, rocks: [], wrecks: [], timber: [], path, lures: [], walls, exit, backrooms: true, rooms: { X0, Y0, C, N, lights } };
+  return { ship, rocks: [], wrecks: [], timber: [], path, lures: [], walls, exit, backrooms: true, rooms: { X0, Y0, C, N, lights, east, north } };
 }
 
 function spawnTimber(sx, sy) {

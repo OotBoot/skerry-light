@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>Skerry Light</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -410,6 +410,9 @@ button.small { padding: 6px 14px; min-height: 0; }
 .cratecard .card, .reel { max-width: 100%; min-width: 0; }
 /* no double-tap zoom on buttons, and no auto-zoom when a phone focuses a text box (needs 16px) */
 html, body, button, .overlay, .card { touch-action: manipulation; }
+/* scrolling yes, pinch-zoom no (where the browser supports it) */
+html, body, .overlay, .card { touch-action: pan-x pan-y; }
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 @media (max-width: 520px) { input, select, textarea { font-size: 16px !important; } }
 /* the card never grows wider than the screen, whatever is inside it */
 .overlay { grid-template-columns: minmax(0, 1fr); }
@@ -471,6 +474,15 @@ html, body, button, .overlay, .card { touch-action: manipulation; }
 .marks .shot { width: 9px; height: 9px; border-radius: 50%; background: #c9ced6; box-shadow: inset -2px -2px 0 rgba(0,0,0,0.35); }
 .marks .shot.off { background: transparent; border: 1px solid rgba(201,206,214,0.4); box-shadow: none; }
 .padfocus { outline: 3px solid var(--lamp) !important; outline-offset: 3px; }
+
+/* the controller's cursor in menus */
+#padCursor { position: fixed; left: 0; top: 0; z-index: 1000; width: 22px; height: 22px; margin: -11px 0 0 -11px; pointer-events: none;
+  border: 2px solid var(--lamp); border-radius: 50%; background: rgba(255,216,138,0.15); box-shadow: 0 0 10px rgba(255,216,138,0.5), 0 0 0 1px rgba(0,0,0,0.6); }
+#padCursor::after { content: ""; position: absolute; left: 50%; top: 50%; width: 4px; height: 4px; margin: -2px 0 0 -2px; border-radius: 50%; background: var(--lamp); }
+#padCursor.over { transform-origin: center; background: rgba(255,216,138,0.3); width: 28px; height: 28px; margin: -14px 0 0 -14px; }
+#padCursor.press { animation: padpress .18s ease-out; }
+@keyframes padpress { from { box-shadow: 0 0 0 8px rgba(255,216,138,0.5); } to { box-shadow: 0 0 10px rgba(255,216,138,0.5); } }
+.padhover { outline: 2px solid rgba(255,216,138,0.8) !important; outline-offset: 2px; }
 </style>
 </head>
 <body>
@@ -1248,7 +1260,7 @@ function buildBackrooms(n) {
   const lights = [];
   for (let c = 0; c < N * N; c++) { const p = centre(c); lights.push({ x: p.x, y: p.y, ph: RNG() * 6.28, bad: RNG() < 0.12 }); }
   const exit = Object.assign(centre(far), { r: C * 0.32 });
-  return { ship, rocks: [], wrecks: [], timber: [], path, lures: [], walls, exit, backrooms: true, rooms: { X0, Y0, C, N, lights } };
+  return { ship, rocks: [], wrecks: [], timber: [], path, lures: [], walls, exit, backrooms: true, rooms: { X0, Y0, C, N, lights, east, north } };
 }
 
 function spawnTimber(sx, sy) {
@@ -1485,6 +1497,86 @@ function drawWall(w) {
   }
   fillPoly([[w.x1, w.y1, 0], [w.x2, w.y2, 0], [w.x2, w.y2, 1.1], [w.x1, w.y1, 1.1]], mix(mix('#050402', '#4a3d16', light), ROOM_FOG, fog * 0.8));
 }
+// The maze walls, ray cast one screen column at a time against the room grid, so the nearest wall
+// always wins (no walls sliding through each other). Fills ZBUF with each column's wall distance,
+// which drawScene uses to hide anything standing behind a wall.
+let ZBUF = new Float32Array(0), ZSTEP = 2;
+const wallShades = new Map();
+function wallShade(side, li, fi, stripe) {
+  const k = side + ':' + li + ':' + fi + ':' + stripe;
+  let c = wallShades.get(k);
+  if (!c) {
+    const base = side ? '#c2aa45' : '#d9c25a';
+    c = mix(mix('#120f05', stripe ? '#9c8a3a' : base, 0.25 + 0.75 * li / 15), ROOM_FOG, fi / 15 * 0.78);
+    wallShades.set(k, c);
+  }
+  return c;
+}
+function drawRoomWalls() {
+  const R = g.rooms; if (!R || !R.east) return;
+  const { X0, Y0, C, N, east, north } = R;
+  ZSTEP = W > 900 ? 2 : W > 500 ? 2 : 1;
+  const cols = Math.ceil(W / ZSTEP) + 1;
+  if (ZBUF.length !== cols) ZBUF = new Float32Array(cols);
+  const id = (i, j) => j * N + i;
+  const Z = SK.BACKROOMS_CEIL, L = roomLevel();
+  const px = (camX - X0) / C, py = (camY - Y0) / C;
+  for (let ci = 0; ci < cols; ci++) {
+    const sxp = ci * ZSTEP;
+    const off = Math.atan((sxp - cx) / focal), ang = yaw + off;
+    const dx = Math.sin(ang), dy = Math.cos(ang);
+    let i = Math.floor(px), j = Math.floor(py);
+    const stepI = dx > 0 ? 1 : -1, stepJ = dy > 0 ? 1 : -1;
+    const tdx = Math.abs(1 / (dx || 1e-9)), tdy = Math.abs(1 / (dy || 1e-9));
+    let tx = dx > 0 ? (i + 1 - px) * tdx : (px - i) * tdx;
+    let ty = dy > 0 ? (j + 1 - py) * tdy : (py - j) * tdy;
+    let t = 0, side = 0, hit = false;
+    for (let n = 0; n < 64 && !hit; n++) {
+      if (tx < ty) {
+        t = tx; tx += tdx; side = 0;
+        // crossing the boundary between column i and i + stepI
+        const bi = stepI > 0 ? i : i - 1;
+        if (bi < 0 || bi >= N - 1 || j < 0 || j >= N) hit = true;
+        else if (east[id(bi, j)]) hit = true;
+        i += stepI;
+      } else {
+        t = ty; ty += tdy; side = 1;
+        const bj = stepJ > 0 ? j : j - 1;
+        if (bj < 0 || bj >= N - 1 || i < 0 || i >= N) hit = true;
+        else if (north[id(i, bj)]) hit = true;
+        j += stepJ;
+      }
+    }
+    const dist = t * C, f = Math.max(SK.NEAR, dist * Math.cos(off));
+    ZBUF[ci] = hit ? f : 1e9;
+    if (!hit) continue;
+    const hx = camX + dx * dist, hy2 = camY + dy * dist;
+    const k = focal / f;
+    const yb = hy + SK.CAM_H * k, yt = hy + (SK.CAM_H - Z) * k;
+    const light = Math.min(1, Math.max(roomLight(hx, hy2), lanternAt(hx, hy2) * 0.6, flareAt(hx, hy2)));
+    const fog = Math.min(1, dist / 320);
+    // wallpaper stripes: every 8 m along the wall, a thin darker line
+    const u = side === 0 ? hy2 : hx, stripe = dist < 160 && ((u % 8) + 8) % 8 < 0.35 ? 1 : 0;
+    const li = Math.round(light * 15), fi = Math.round(fog * 15);
+    ctx.fillStyle = wallShade(side, li, fi, stripe);
+    ctx.fillRect(sxp - 0.5, yt, ZSTEP + 1, yb - yt);
+    // damp skirting where the water meets the wall
+    ctx.fillStyle = wallShade(1, Math.round(li * 0.35), fi, 0);
+    ctx.fillRect(sxp - 0.5, yb - 1.1 * k, ZSTEP + 1, 1.1 * k);
+  }
+}
+// clip to the screen columns where something at forward distance f is in front of the walls
+function clipToVisible(f) {
+  ctx.beginPath();
+  let start = -1;
+  for (let ci = 0; ci <= ZBUF.length; ci++) {
+    const open = ci < ZBUF.length && ZBUF[ci] > f;
+    if (open && start < 0) start = ci;
+    if (!open && start >= 0) { ctx.rect(start * ZSTEP - 1, -H, (ci - start) * ZSTEP + 1, H * 3); start = -1; }
+  }
+  ctx.clip();
+}
+
 function drawExitSign() {
   const e = g.exit, c = cam(e.x, e.y, SK.BACKROOMS_CEIL - 2.5); if (c.f < SK.NEAR + 1) return;
   const q = proj(c), w = 5 * q.s, h = 1.6 * q.s;
@@ -1702,25 +1794,17 @@ function drawScene() {
   for (const o of g.rocks) if (!o.gone) add('rock', o);
   for (const o of g.wrecks) add('wreck', o);
   for (const o of g.timber) add('timber', o);
-  if (g.backrooms) {
-    add('exit', g.exit);
-    for (const w of g.walls) {
-      const mx = (w.x1 + w.x2) / 2, my = (w.y1 + w.y2) / 2;
-      if (Math.hypot(mx - ship.x, my - ship.y) > 420) continue;
-      const a = cam(w.x1, w.y1, 0), b = cam(w.x2, w.y2, 0);
-      if (a.f < SK.NEAR && b.f < SK.NEAR) continue;
-      // sort by the nearer end that's in front, so a wall you're sailing along doesn't cover things beyond it
-      const cc = cam(mx, my, 0); cc.f = Math.max(SK.NEAR, Math.min(cc.f, Math.max(a.f, SK.NEAR) * 0.5 + Math.max(b.f, SK.NEAR) * 0.5));
-      items.push({ kind: 'wall', o: w, c: cc });
-    }
-  }
+  if (g.backrooms) { add('exit', g.exit); drawRoomWalls(); }
   add('plim', g.plim);
   if (crewMode) for (const m of matesAtSea()) if (m.peer !== NET.watch) add('mate', m);
   if (!NET.watch) { for (const d of g.enemies.drowned) add('drowned', d); for (const k of g.enemies.knocks) add('knock', k); }
   if (g.maren.active) add('maren', g.maren);
   items.sort((a, b) => b.c.f - a.c.f);
   for (const it of items) {
-    if (it.kind === 'wall') { drawWall(it.o); continue; }
+    // in the rooms, anything behind a wall is hidden by it, column by column
+    const clip = g.backrooms;
+    if (clip) { ctx.save(); clipToVisible(it.c.f); }
+    try {
     if (it.kind === 'exit') { drawExitSign(); continue; }
     const q = proj(it.c); if (q.x < -500 || q.x > W + 500) continue;
     const o = it.o;
@@ -1734,6 +1818,7 @@ function drawScene() {
     else if (it.kind === 'drowned') drawDrowned(o, q, vis);
     else if (it.kind === 'knock') drawKnock(o, q, vis);
     else drawMaren(q, vis);
+    } finally { if (clip) ctx.restore(); }
   }
 
   if (!g.backrooms) {
@@ -5156,8 +5241,8 @@ updateCrateButtons();
 //
 // Sailing: left stick or D-pad steers; RT makes sail (faster), LT shortens it (slower), or push the
 // stick up and down; A rings the bell, X fires a flare. RB watches the next crewmate when spectating.
-// Menus: D-pad or stick moves between buttons, A presses, B closes the crates (or goes back),
-// Start presses the main button. Hits and jumpscares rumble the controller.
+// Menus: the left stick moves an on-screen cursor and A clicks what it's over; the right stick scrolls.
+// The D-pad jumps between buttons instead. B closes the crates (or goes back), Start presses the main button. Hits and jumpscares rumble the controller.
 
 const PAD = { steer: 0, sail: 0, connected: false, prev: [], navT: 0, held: null, root: null, cur: null };
 const DEAD = 0.18;
@@ -5241,13 +5326,18 @@ function pollPad(dt) {
   const ax = dz(p.axes[0] || 0), ay = dz(p.axes[1] || 0);
   const lt = p.buttons[6] ? p.buttons[6].value : 0, rt = p.buttons[7] ? p.buttons[7].value : 0;
 
-  if (state === 'play' && activeOverlay() === null) {
+  if (state === 'play' && activeOverlay() === null && !(typeof NET !== 'undefined' && NET.watch)) {
+    hideCursor();
     PAD.steer = Math.max(-1, Math.min(1, ax + (pressed(p, 15) ? 1 : 0) - (pressed(p, 14) ? 1 : 0)));
     PAD.sail = Math.max(-1, Math.min(1, rt - lt - ay * 0.8 + (pressed(p, 12) ? 1 : 0) - (pressed(p, 13) ? 1 : 0)));
     if (down(0)) ringBell();
     if (down(2)) fireFlare();
   } else {
     PAD.steer = PAD.sail = 0;
+    // the analog sticks drive an on-screen cursor in menus: left stick moves it, right stick scrolls
+    const rx = dz(p.axes[2] || 0), ry = dz(p.axes[3] || 0);
+    const usedCursor = moveCursor(ax, ay, rx, ry, dt);
+    if (usedCursor && down(0)) { cursorClick(); PAD.prev = now; return; }
     // watching a crewmate: RB for the next ship, A rings your one bell for them
     if (typeof NET !== 'undefined' && NET.watch) {
       if (down(5)) nextSpectate();
@@ -5264,8 +5354,9 @@ function pollPad(dt) {
           if (m) setPadFocus(m);
         }
         // move between buttons: one step per press, and repeating after a moment if you hold it
-        const dyN = (pressed(p, 13) || ay > 0.55) ? 1 : (pressed(p, 12) || ay < -0.55) ? -1 : 0;
-        const dxN = dyN ? 0 : (pressed(p, 15) || ax > 0.55) ? 1 : (pressed(p, 14) || ax < -0.55) ? -1 : 0;
+        const dyN = pressed(p, 13) ? 1 : pressed(p, 12) ? -1 : 0;
+        const dxN = dyN ? 0 : pressed(p, 15) ? 1 : pressed(p, 14) ? -1 : 0;
+        if (dxN || dyN) hideCursor();   // the D-pad takes over from the cursor
         const dirKey = dxN + ',' + dyN;
         if (dirKey === '0,0') { PAD.held = null; }
         else if (dirKey !== PAD.held) { PAD.held = dirKey; PAD.navT = 0.4; moveFocus(dxN, dyN); }
@@ -5298,8 +5389,84 @@ window.addEventListener('gamepaddisconnected', () => { if (!firstPad()) { PAD.co
 // the mouse or a touch takes over again: drop the controller's focus ring
 window.addEventListener('pointerdown', () => { for (const o of document.querySelectorAll('.padfocus')) o.classList.remove('padfocus'); }, true);
 
+// ---------- the cursor ----------
+let cursorEl = null;
+function cursorNode() {
+  if (cursorEl) return cursorEl;
+  cursorEl = document.createElement('div');
+  cursorEl.id = 'padCursor'; cursorEl.setAttribute('aria-hidden', 'true');
+  cursorEl.hidden = true;
+  document.body.appendChild(cursorEl);
+  PAD.mx = innerWidth / 2; PAD.my = innerHeight / 2;
+  return cursorEl;
+}
+function hideCursor() {
+  if (cursorEl && !cursorEl.hidden) { cursorEl.hidden = true; PAD.cursorOn = false; setHover(null); }
+}
+// returns true while the cursor is the thing being used (so A clicks under it, not the highlighted button)
+function moveCursor(ax, ay, rx, ry, dt) {
+  const c = cursorNode();
+  const mag = Math.hypot(ax, ay);
+  if (mag > 0) {
+    if (!PAD.cursorOn) {
+      // start it on the highlighted button, or the middle of the screen
+      const at = PAD.cur && PAD.cur.offsetParent ? PAD.cur.getBoundingClientRect() : null;
+      PAD.mx = at ? at.left + at.width / 2 : innerWidth / 2; PAD.my = at ? at.top + at.height / 2 : innerHeight / 2;
+      PAD.cursorOn = true; c.hidden = false;
+      for (const o of document.querySelectorAll('.padfocus')) o.classList.remove('padfocus');
+    }
+    const speed = 260 + 900 * Math.pow(Math.min(1, mag), 1.6);   // fine near the centre, fast at full tilt
+    PAD.mx = Math.max(2, Math.min(innerWidth - 2, PAD.mx + ax / mag * speed * Math.min(1, mag) * dt));
+    PAD.my = Math.max(2, Math.min(innerHeight - 2, PAD.my + ay / mag * speed * Math.min(1, mag) * dt));
+  }
+  // right stick scrolls the menu; the cursor also scrolls it when pushed against the top or bottom
+  const root = activeOverlay();
+  if (root) {
+    let sc = ry * 900 * dt;
+    if (PAD.cursorOn && ay > 0.3 && PAD.my > innerHeight - 30) sc += ay * 700 * dt;
+    if (PAD.cursorOn && ay < -0.3 && PAD.my < 30) sc += ay * 700 * dt;
+    if (sc) root.scrollTop += sc;
+  }
+  if (!PAD.cursorOn) return false;
+  c.style.transform = 'translate(' + PAD.mx + 'px,' + PAD.my + 'px)';
+  setHover(clickableAt(PAD.mx, PAD.my));
+  return true;
+}
+function clickableAt(x, y) {
+  const el = document.elementFromPoint(x, y);
+  return el && el.closest ? el.closest('button, input, summary, a, label, .pick') : null;
+}
+function setHover(el) {
+  if (PAD.hover === el) return;
+  if (PAD.hover) PAD.hover.classList.remove('padhover');
+  PAD.hover = el;
+  if (el) el.classList.add('padhover');
+  if (cursorEl) cursorEl.classList.toggle('over', !!el);
+}
+function cursorClick() {
+  const el = clickableAt(PAD.mx, PAD.my);
+  if (cursorEl) { cursorEl.classList.remove('press'); void cursorEl.offsetWidth; cursorEl.classList.add('press'); }
+  if (!el || el.disabled) return;
+  if (el.tagName === 'INPUT') { el.focus(); return; }
+  if (el.tagName === 'LABEL' && el.htmlFor) { const t = document.getElementById(el.htmlFor); if (t) { t.focus(); return; } }
+  el.click();
+}
+
 // ---- src/main.js ----
 // Starts the game once every script has loaded.
+
+// No accidental zooming on phones. iPhone Safari ignores "user-scalable=no" (an accessibility choice),
+// so the pinch and double-tap gestures themselves are stopped here; scrolling the menus still works.
+for (const t of ['gesturestart', 'gesturechange', 'gestureend']) document.addEventListener(t, e => e.preventDefault(), { passive: false });
+document.addEventListener('touchmove', e => { if (e.touches.length > 1 || (e.scale && e.scale !== 1)) e.preventDefault(); }, { passive: false });
+let lastTouchEnd = 0;
+document.addEventListener('touchend', e => {
+  const now = Date.now();
+  // a second tap within 300 ms would zoom: swallow it, unless it's on a text box
+  if (now - lastTouchEnd < 300 && !(e.target && e.target.closest && e.target.closest('input, textarea'))) e.preventDefault();
+  lastTouchEnd = now;
+}, { passive: false });
+document.addEventListener('dblclick', e => e.preventDefault(), { passive: false });
 
 resize();
 newVoyage(1, true);
