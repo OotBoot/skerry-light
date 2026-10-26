@@ -171,7 +171,7 @@ function loadCrates() {
       const d = JSON.parse(raw);
       // older saves kept one plain number of crates and one skin: those were all for the brig
       // older saves: one plain number, or Brig/Cutter/Barque crates. Those all become Boat Skin Crates.
-      const n = v => Math.max(0, Math.min(999, v | 0));
+      const n = v => Math.max(0, Math.min(99999, v | 0));
       // (any older kinds of crate, per boat or per loot type, all become Skerry Crates)
       if (typeof d.crates === 'number') CRATES.crates.skerry = n(d.crates);
       else if (d.crates && typeof d.crates === 'object') CRATES.crates.skerry = n(Object.values(d.crates).reduce((a, v) => a + (v | 0), 0));
@@ -208,11 +208,11 @@ function mergeSave(d, takeLooks) {
   let changed = false;
   if (d.owned && typeof d.owned === 'object') for (const [id, n] of Object.entries(d.owned)) {
     if (!LOOT_BY_ID[id]) continue;
-    const v = Math.max(0, Math.min(999, n | 0));
+    const v = Math.max(0, Math.min(99999, n | 0));
     if (v > (CRATES.owned[id] | 0)) { CRATES.owned[id] = v; changed = true; }
   }
   const cr = d.crates && typeof d.crates === 'object' ? Object.values(d.crates).reduce((a, v) => a + (v | 0), 0) : (d.crates | 0);
-  if (cr > CRATES.crates.skerry) { CRATES.crates.skerry = Math.min(999, cr); changed = true; }
+  if (cr > CRATES.crates.skerry) { CRATES.crates.skerry = Math.min(99999, cr); changed = true; }
   if (takeLooks) {
     if (d.equipped && typeof d.equipped === 'object') for (const b of BOATS) {
       const sk = SKIN_BY_ID[d.equipped[b.id]];
@@ -313,14 +313,66 @@ function chooseBoat(id) {
 }
 
 // a crate of a random kind for every voyage, two for making harbour (each rolled separately)
-function grantCrate(n) {
+// end of a voyage: one crate if she went down (and any floating crates aboard go down with her);
+// for making harbour SK.HARBOUR_CRATES, plus every floating crate you hauled aboard, counted double
+// the harbour reward doubles with every voyage in a row you make harbour: 4, 8, 16, 32...
+// (voyage 1 again after a sinking, so the streak starts over)
+function harbourReward() { return SK.HARBOUR_CRATES * Math.pow(2, Math.min(SK.HARBOUR_DOUBLINGS, Math.max(0, (g ? g.n : 1) - 1))); }
+function grantCrate(n, harbour) {
   if (!g || g.attract || g.crateGiven) return;
   n = n || 1;
   g.crateGiven = true;
   CRATES.crates.skerry += n;
   saveCrates();
   updateCrateButtons();
-  toast(n > 1 ? 'Made harbour: two Skerry Crates. Open them from the menu.' : 'You found a Skerry Crate in the wreckage. Open it from the menu.', '+' + n + ' Skerry Crate' + (n > 1 ? 's' : ''));
+  const found = g.found || 0;
+  const text = harbour
+    ? 'Made harbour on voyage ' + g.n + ': ' + harbourReward() + ' Skerry Crates' + (g.n > 1 ? ' (doubled ' + Math.min(SK.HARBOUR_DOUBLINGS, g.n - 1) + (g.n === 2 ? ' time' : ' times') + ' for your streak)' : '') + (found ? ', plus the ' + found + (found === 1 ? ' crate' : ' crates') + ' you hauled aboard, counted double: +' + found * 2 : '') + '. Open them from the menu.'
+    : 'You found a Skerry Crate in the wreckage.' + (found ? ' The ' + found + (found === 1 ? ' crate' : ' crates') + ' you hauled aboard went down with her.' : '') + ' Open it from the menu.';
+  toast(text, '+' + n + ' Skerry Crate' + (n > 1 ? 's' : ''));
+}
+
+// a floating crate hauled aboard: it's only yours if you make harbour with it (where it counts double)
+function collectPickup(p) {
+  p.taken = true;
+  g.found++;
+  renderFound();
+  sfxPickup();
+  burst(p.x, p.y, ['#ffd88a', '#c89a52', '#ffffff'], 18, 5, 7);
+  addLog('Hauled a floating crate aboard (' + g.found + ' aboard). Make harbour and each one is worth two; sink and they\u2019re lost.', 'p');
+}
+function renderFound() {
+  const b = $('foundBox'); if (!b) return;
+  b.hidden = !g || !g.found;
+  if (g && g.found) $('found').textContent = g.found;
+}
+function updatePickups() {
+  if (!g.pickups || g.attract || state !== 'play') return;
+  for (const p of g.pickups) if (!p.taken && Math.hypot(p.x - ship.x, p.y - ship.y) < SK.PICKUP_RADIUS) collectPickup(p);
+}
+// a wooden crate bobbing on the water, with a little lantern lashed on top so you can find it in the dark
+function drawPickup(o, p, vis) {
+  const s = p.s, bob = Math.sin(g.t * 2 + o.ph) * 0.25 * s, sz = Math.max(3, 2.6 * s), x = p.x, y = p.y + bob;
+  const lit = Math.max(0.35, vis);
+  // glow first, visible from far away
+  const gl = Math.max(2.5, 1.5 * Math.sqrt(s)) * (1 + 0.15 * Math.sin(g.t * 4 + o.ph));
+  ctx.globalAlpha = 0.9; lamp(x, y - sz * 1.15, '#ffc46e', gl); ctx.globalAlpha = 1;
+  if (sz < 4) { ctx.fillStyle = '#ffd88a'; ctx.fillRect(x - 1, y - sz - 1, 2, 2); return; }
+  ctx.globalAlpha = lit;
+  ctx.fillStyle = 'rgba(220,232,245,0.3)';
+  ctx.beginPath(); ctx.ellipse(x, y, sz * 0.9, Math.max(1, sz * 0.12), 0, 0, 6.28); ctx.fill();
+  // the box, its planks, and a rope band
+  ctx.fillStyle = '#7a5530'; ctx.fillRect(x - sz / 2, y - sz * 0.8, sz, sz * 0.8);
+  ctx.fillStyle = '#9a7040'; ctx.fillRect(x - sz / 2, y - sz * 0.8, sz, sz * 0.12);
+  ctx.strokeStyle = 'rgba(40,25,10,0.8)'; ctx.lineWidth = Math.max(0.8, sz * 0.04);
+  ctx.strokeRect(x - sz / 2, y - sz * 0.8, sz, sz * 0.8);
+  ctx.beginPath(); ctx.moveTo(x - sz / 2, y - sz * 0.4); ctx.lineTo(x + sz / 2, y - sz * 0.4); ctx.moveTo(x - sz / 2, y - sz * 0.8); ctx.lineTo(x + sz / 2, y); ctx.stroke();
+  ctx.strokeStyle = '#c8a874'; ctx.lineWidth = Math.max(1, sz * 0.06);
+  ctx.beginPath(); ctx.moveTo(x, y - sz * 0.8); ctx.lineTo(x, y); ctx.stroke();
+  // the lantern
+  ctx.fillStyle = '#2a1e14'; ctx.fillRect(x - sz * 0.12, y - sz * 1.3, sz * 0.24, sz * 0.4);
+  ctx.fillStyle = '#ffd88a'; ctx.fillRect(x - sz * 0.08, y - sz * 1.25, sz * 0.16, sz * 0.3);
+  ctx.globalAlpha = 1;
 }
 
 function rollSkin(crate) {

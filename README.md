@@ -51,7 +51,7 @@ The Barque's **bow gun** fires by itself when you're about to run onto a rock, b
 
 ## Crates, skins and pennants
 
-Every voyage you play earns a **Skerry Crate**: one if you go down, two if you make harbour. Any crate can hold any item:
+Every voyage you play earns a **Skerry Crate** if you go down, and if you make harbour, **4** on voyage 1, doubling every voyage in a row after that (8, 16, 32... up to 4096); a sinking starts the streak over at voyage 1. Floating crates (look for their little lanterns) are scattered around each voyage: sail into one to haul it aboard. Make harbour and each one you're carrying is worth **two** more crates; sink and they go down with the ship. Any crate can hold any item:
 
 - **Boat skins** for all three boats (34 Brig, 12 Cutter, 12 Barque). Each boat keeps its own equipped skin. A skin changes your deck, rails, bowsprit and lantern as you see them, and your hull and sails as your crewmates see them; crewmates' ships are lit by their own lanterns, so you can make out their skins from about 300 m away.
 - **Flags**: 20 pennants, which fly from a staff at the tip of your bowsprit (and from your masthead for your crew) on any boat.

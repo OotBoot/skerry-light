@@ -472,3 +472,5 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 #padCursor.press { animation: padpress .18s ease-out; }
 @keyframes padpress { from { box-shadow: 0 0 0 8px rgba(255,216,138,0.5); } to { box-shadow: 0 0 10px rgba(255,216,138,0.5); } }
 .padhover { outline: 2px solid rgba(255,216,138,0.8) !important; outline-offset: 2px; }
+.foundbox { display: flex; flex-direction: column; margin-top: 6px; }
+.foundbox .big { color: #ffd88a; }

@@ -11,6 +11,10 @@ const SK = {
   CAM_H: 5,               // eye height on deck
   NEAR: 1,
   HULL: 3,
+  PICKUPS: 5,             // floating crates to find on the first voyage (one more every second voyage)
+  PICKUP_RADIUS: 12,      // sail this close to one to haul it aboard
+  HARBOUR_CRATES: 4,      // crates for making harbour on voyage 1; doubles every voyage in a row after that
+  HARBOUR_DOUBLINGS: 10,  // ...up to this many doublings (4 x 2^10 = 4096 a harbour)
   CANNON_CHARGES: 1,      // the Barque's bow gun: shots it holds
   CANNON_RELOAD: 3,       // seconds to reload after a shot
   CANNON_RANGE: 45,       // metres ahead it watches (less at low speed: about a second and a half of sailing)

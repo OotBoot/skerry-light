@@ -100,7 +100,16 @@ function buildVoyage(n, attract) {
   if (!path) path = [{ x: sx, y: sy }, { x: HB.x, y: 80 }];
   path.push({ x: HB.x, y: 44 }, { x: HB.x, y: 26 });
 
-  return { ship, rocks, wrecks, timber, path, lures };
+  // floating crates scattered near the safe channel, a little off it, clear of the rocks
+  const pickups = [];
+  for (let tries = 0; tries < 600 && pickups.length < SK.PICKUPS + Math.floor(n / 2); tries++) {
+    const p = path[Math.floor(rand(1, Math.max(2, path.length - 3)))]; if (!p) break;
+    const x = p.x + rand(-70, 70), y = p.y + rand(-70, 70);
+    if (y < 70 || Math.hypot(x - HB.x, y - HB.y) < 120 || Math.hypot(x - sx, y - sy) < 80) continue;
+    if (solid.some(o => Math.hypot(o.x - x, o.y - y) < o.r + 14) || pickups.some(q => Math.hypot(q.x - x, q.y - y) < 120)) continue;
+    pickups.push({ x, y, ph: rand(0, 6.28), taken: false });
+  }
+  return { ship, rocks, wrecks, timber, path, lures, pickups };
 }
 
 function makeShip(x, y, h) {
@@ -165,7 +174,13 @@ function buildBackrooms(n) {
   const lights = [];
   for (let c = 0; c < N * N; c++) { const p = centre(c); lights.push({ x: p.x, y: p.y, ph: RNG() * 6.28, bad: RNG() < 0.12 }); }
   const exit = Object.assign(centre(far), { r: C * 0.32 });
-  return { ship, rocks: [], wrecks: [], timber: [], path, lures: [], walls, exit, backrooms: true, rooms: { X0, Y0, C, N, lights, east, north } };
+  // crates left lying in the rooms, away from the start and the exit
+  const pickups = [], cells = [...Array(N * N).keys()].filter(c => dist[c] > 1 && c !== far);
+  for (let k = 0; k < SK.PICKUPS + 2 && cells.length; k++) {
+    const c = cells.splice((RNG() * cells.length) | 0, 1)[0], p = centre(c);
+    pickups.push({ x: p.x + rand(-C * 0.2, C * 0.2), y: p.y + rand(-C * 0.2, C * 0.2), ph: rand(0, 6.28), taken: false });
+  }
+  return { ship, rocks: [], wrecks: [], timber: [], path, lures: [], pickups, walls, exit, backrooms: true, rooms: { X0, Y0, C, N, lights, east, north } };
 }
 
 function spawnTimber(sx, sy) {

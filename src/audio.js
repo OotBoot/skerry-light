@@ -324,3 +324,6 @@ function sfxSmash(vol) {
 
 // the gun reloaded: a heavy click of the breech
 function sfxReload() { tone(420, 'square', 0.001, 0.08, 0.04, { to: 220 }); noise('bandpass', 2000, 4, 0.001, 0.12, 0.05, { delay: 0.06 }); }
+
+// hauling a floating crate aboard: a bright little arpeggio
+function sfxPickup() { [660, 880, 1320].forEach((f, i) => tone(f, 'triangle', 0.005, 0.18, 0.25, { delay: i * 0.07 })); noise('highpass', 3000, 1, 0.002, 0.06, 0.15); }

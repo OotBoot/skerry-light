@@ -32,6 +32,7 @@ function newVoyage(n, attract, seed, slot) {
   g.plim = newPlimsoll(v.path);
   g.maren = newMaren(!attract, v.wrecks.find(w => w.name === 'Gannet'));
   g.cannon = newCannon();
+  g.pickups = v.pickups || []; g.found = 0; if (typeof renderFound === 'function') renderFound();
   g.verity = newVerity(v.backrooms); g.verityScare = 0; g.lightsOut = 0;
   renderHud();
 }
@@ -266,6 +267,7 @@ function update(dt) {
   updateEnemies(dt);
   updateVerity(dt);
   updateCannon(dt);
+  updatePickups();
   sailInCompany(dt);
   for (const f of g.flares) f.t -= dt;
   g.flares = g.flares.filter(f => f.t > 0);
@@ -384,7 +386,7 @@ function toTitle() {
 }
 
 function arrive() {
-  grantCrate(2);
+  grantCrate(harbourReward() + g.found * 2, true);
   stopVerity();
   if (crewMode) {
     state = 'port';

@@ -478,6 +478,8 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 #padCursor.press { animation: padpress .18s ease-out; }
 @keyframes padpress { from { box-shadow: 0 0 0 8px rgba(255,216,138,0.5); } to { box-shadow: 0 0 10px rgba(255,216,138,0.5); } }
 .padhover { outline: 2px solid rgba(255,216,138,0.8) !important; outline-offset: 2px; }
+.foundbox { display: flex; flex-direction: column; margin-top: 6px; }
+.foundbox .big { color: #ffd88a; }
 </style>
 <div id="stage">
   <canvas id="cv" tabindex="0" aria-label="View from the deck of a ship at night, with a lighthouse beam sweeping over the sea"></canvas>
@@ -486,6 +488,7 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
     <div class="col">
       <span class="label">Voyage</span>
       <span class="big" id="voyage">1</span>
+      <div class="foundbox" id="foundBox" hidden><span class="label">Crates aboard</span><span class="big" id="found">0</span></div>
       <div class="crewhud" id="crewHud" hidden></div>
     </div>
     <div class="col right">
@@ -562,6 +565,7 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
           <li><b>Hull</b> when the planks run out she goes down. Let Maren reach the bow and she comes aboard</li>
           <li><b>Verity</b> sometimes you'll find a small smiling yellow orb in a corner of your deck, offering to help. He isn't helping, and the bell doesn't bother him. Fire a flare before twenty seconds are up, or see what he really looks like</li>
           <li><b>The Backrooms</b> about one voyage in twenty, the lights go out and the sea comes back with walls: a flooded maze of yellow rooms. Follow Plimsoll to the green EXIT sign</li>
+          <li><b>Floating crates</b> bob about the water, each with a little lantern. Sail into one to haul it aboard. Make harbour and each is worth two Skerry Crates; sink and they go down with you. Making harbour pays 4 crates on voyage 1, and doubles every voyage in a row: 8, 16, 32...</li>
           <li><b>Crew</b> sail with up to seven friends. Ships close together keep her back and patch each other's planks. Share flares, chat in the crew screen, and watch your crew after your own voyage ends</li>
         </ul>
       </details>
@@ -694,6 +698,10 @@ const SK = {
   CAM_H: 5,               // eye height on deck
   NEAR: 1,
   HULL: 3,
+  PICKUPS: 5,             // floating crates to find on the first voyage (one more every second voyage)
+  PICKUP_RADIUS: 12,      // sail this close to one to haul it aboard
+  HARBOUR_CRATES: 4,      // crates for making harbour on voyage 1; doubles every voyage in a row after that
+  HARBOUR_DOUBLINGS: 10,  // ...up to this many doublings (4 x 2^10 = 4096 a harbour)
   CANNON_CHARGES: 1,      // the Barque's bow gun: shots it holds
   CANNON_RELOAD: 3,       // seconds to reload after a shot
   CANNON_RANGE: 45,       // metres ahead it watches (less at low speed: about a second and a half of sailing)
@@ -1085,6 +1093,9 @@ function sfxSmash(vol) {
 // the gun reloaded: a heavy click of the breech
 function sfxReload() { tone(420, 'square', 0.001, 0.08, 0.04, { to: 220 }); noise('bandpass', 2000, 4, 0.001, 0.12, 0.05, { delay: 0.06 }); }
 
+// hauling a floating crate aboard: a bright little arpeggio
+function sfxPickup() { [660, 880, 1320].forEach((f, i) => tone(f, 'triangle', 0.005, 0.18, 0.25, { delay: i * 0.07 })); noise('highpass', 3000, 1, 0.002, 0.06, 0.15); }
+
 // ---- src/world.js ----
 // Building each voyage: where you start, the skerries, the old wrecks, drifting timber,
 // and the safe channel Plimsoll knows through all of it.
@@ -1188,7 +1199,16 @@ function buildVoyage(n, attract) {
   if (!path) path = [{ x: sx, y: sy }, { x: HB.x, y: 80 }];
   path.push({ x: HB.x, y: 44 }, { x: HB.x, y: 26 });
 
-  return { ship, rocks, wrecks, timber, path, lures };
+  // floating crates scattered near the safe channel, a little off it, clear of the rocks
+  const pickups = [];
+  for (let tries = 0; tries < 600 && pickups.length < SK.PICKUPS + Math.floor(n / 2); tries++) {
+    const p = path[Math.floor(rand(1, Math.max(2, path.length - 3)))]; if (!p) break;
+    const x = p.x + rand(-70, 70), y = p.y + rand(-70, 70);
+    if (y < 70 || Math.hypot(x - HB.x, y - HB.y) < 120 || Math.hypot(x - sx, y - sy) < 80) continue;
+    if (solid.some(o => Math.hypot(o.x - x, o.y - y) < o.r + 14) || pickups.some(q => Math.hypot(q.x - x, q.y - y) < 120)) continue;
+    pickups.push({ x, y, ph: rand(0, 6.28), taken: false });
+  }
+  return { ship, rocks, wrecks, timber, path, lures, pickups };
 }
 
 function makeShip(x, y, h) {
@@ -1253,7 +1273,13 @@ function buildBackrooms(n) {
   const lights = [];
   for (let c = 0; c < N * N; c++) { const p = centre(c); lights.push({ x: p.x, y: p.y, ph: RNG() * 6.28, bad: RNG() < 0.12 }); }
   const exit = Object.assign(centre(far), { r: C * 0.32 });
-  return { ship, rocks: [], wrecks: [], timber: [], path, lures: [], walls, exit, backrooms: true, rooms: { X0, Y0, C, N, lights, east, north } };
+  // crates left lying in the rooms, away from the start and the exit
+  const pickups = [], cells = [...Array(N * N).keys()].filter(c => dist[c] > 1 && c !== far);
+  for (let k = 0; k < SK.PICKUPS + 2 && cells.length; k++) {
+    const c = cells.splice((RNG() * cells.length) | 0, 1)[0], p = centre(c);
+    pickups.push({ x: p.x + rand(-C * 0.2, C * 0.2), y: p.y + rand(-C * 0.2, C * 0.2), ph: rand(0, 6.28), taken: false });
+  }
+  return { ship, rocks: [], wrecks: [], timber: [], path, lures: [], pickups, walls, exit, backrooms: true, rooms: { X0, Y0, C, N, lights, east, north } };
 }
 
 function spawnTimber(sx, sy) {
@@ -1788,6 +1814,7 @@ function drawScene() {
   for (const o of g.wrecks) add('wreck', o);
   for (const o of g.timber) add('timber', o);
   if (g.backrooms) { add('exit', g.exit); drawRoomWalls(); }
+  for (const o of g.pickups || []) if (!o.taken) add('pickup', o);
   add('plim', g.plim);
   if (crewMode) for (const m of matesAtSea()) if (m.peer !== NET.watch) add('mate', m);
   if (!NET.watch) { for (const d of g.enemies.drowned) add('drowned', d); for (const k of g.enemies.knocks) add('knock', k); }
@@ -1806,6 +1833,7 @@ function drawScene() {
     if (it.kind === 'rock') drawRockDetailed(o, q, vis);
     else if (it.kind === 'wreck') drawWreck(o, q, vis);
     else if (it.kind === 'timber') drawTimber(o, q, vis);
+    else if (it.kind === 'pickup') drawPickup(o, q, vis);
     else if (it.kind === 'plim') drawPlimsoll(q, vis);
     else if (it.kind === 'mate') drawMate(o, q, vis);
     else if (it.kind === 'drowned') drawDrowned(o, q, vis);
@@ -3246,6 +3274,7 @@ function newVoyage(n, attract, seed, slot) {
   g.plim = newPlimsoll(v.path);
   g.maren = newMaren(!attract, v.wrecks.find(w => w.name === 'Gannet'));
   g.cannon = newCannon();
+  g.pickups = v.pickups || []; g.found = 0; if (typeof renderFound === 'function') renderFound();
   g.verity = newVerity(v.backrooms); g.verityScare = 0; g.lightsOut = 0;
   renderHud();
 }
@@ -3480,6 +3509,7 @@ function update(dt) {
   updateEnemies(dt);
   updateVerity(dt);
   updateCannon(dt);
+  updatePickups();
   sailInCompany(dt);
   for (const f of g.flares) f.t -= dt;
   g.flares = g.flares.filter(f => f.t > 0);
@@ -3598,7 +3628,7 @@ function toTitle() {
 }
 
 function arrive() {
-  grantCrate(2);
+  grantCrate(harbourReward() + g.found * 2, true);
   stopVerity();
   if (crewMode) {
     state = 'port';
@@ -4749,7 +4779,7 @@ function loadCrates() {
       const d = JSON.parse(raw);
       // older saves kept one plain number of crates and one skin: those were all for the brig
       // older saves: one plain number, or Brig/Cutter/Barque crates. Those all become Boat Skin Crates.
-      const n = v => Math.max(0, Math.min(999, v | 0));
+      const n = v => Math.max(0, Math.min(99999, v | 0));
       // (any older kinds of crate, per boat or per loot type, all become Skerry Crates)
       if (typeof d.crates === 'number') CRATES.crates.skerry = n(d.crates);
       else if (d.crates && typeof d.crates === 'object') CRATES.crates.skerry = n(Object.values(d.crates).reduce((a, v) => a + (v | 0), 0));
@@ -4786,11 +4816,11 @@ function mergeSave(d, takeLooks) {
   let changed = false;
   if (d.owned && typeof d.owned === 'object') for (const [id, n] of Object.entries(d.owned)) {
     if (!LOOT_BY_ID[id]) continue;
-    const v = Math.max(0, Math.min(999, n | 0));
+    const v = Math.max(0, Math.min(99999, n | 0));
     if (v > (CRATES.owned[id] | 0)) { CRATES.owned[id] = v; changed = true; }
   }
   const cr = d.crates && typeof d.crates === 'object' ? Object.values(d.crates).reduce((a, v) => a + (v | 0), 0) : (d.crates | 0);
-  if (cr > CRATES.crates.skerry) { CRATES.crates.skerry = Math.min(999, cr); changed = true; }
+  if (cr > CRATES.crates.skerry) { CRATES.crates.skerry = Math.min(99999, cr); changed = true; }
   if (takeLooks) {
     if (d.equipped && typeof d.equipped === 'object') for (const b of BOATS) {
       const sk = SKIN_BY_ID[d.equipped[b.id]];
@@ -4891,14 +4921,66 @@ function chooseBoat(id) {
 }
 
 // a crate of a random kind for every voyage, two for making harbour (each rolled separately)
-function grantCrate(n) {
+// end of a voyage: one crate if she went down (and any floating crates aboard go down with her);
+// for making harbour SK.HARBOUR_CRATES, plus every floating crate you hauled aboard, counted double
+// the harbour reward doubles with every voyage in a row you make harbour: 4, 8, 16, 32...
+// (voyage 1 again after a sinking, so the streak starts over)
+function harbourReward() { return SK.HARBOUR_CRATES * Math.pow(2, Math.min(SK.HARBOUR_DOUBLINGS, Math.max(0, (g ? g.n : 1) - 1))); }
+function grantCrate(n, harbour) {
   if (!g || g.attract || g.crateGiven) return;
   n = n || 1;
   g.crateGiven = true;
   CRATES.crates.skerry += n;
   saveCrates();
   updateCrateButtons();
-  toast(n > 1 ? 'Made harbour: two Skerry Crates. Open them from the menu.' : 'You found a Skerry Crate in the wreckage. Open it from the menu.', '+' + n + ' Skerry Crate' + (n > 1 ? 's' : ''));
+  const found = g.found || 0;
+  const text = harbour
+    ? 'Made harbour on voyage ' + g.n + ': ' + harbourReward() + ' Skerry Crates' + (g.n > 1 ? ' (doubled ' + Math.min(SK.HARBOUR_DOUBLINGS, g.n - 1) + (g.n === 2 ? ' time' : ' times') + ' for your streak)' : '') + (found ? ', plus the ' + found + (found === 1 ? ' crate' : ' crates') + ' you hauled aboard, counted double: +' + found * 2 : '') + '. Open them from the menu.'
+    : 'You found a Skerry Crate in the wreckage.' + (found ? ' The ' + found + (found === 1 ? ' crate' : ' crates') + ' you hauled aboard went down with her.' : '') + ' Open it from the menu.';
+  toast(text, '+' + n + ' Skerry Crate' + (n > 1 ? 's' : ''));
+}
+
+// a floating crate hauled aboard: it's only yours if you make harbour with it (where it counts double)
+function collectPickup(p) {
+  p.taken = true;
+  g.found++;
+  renderFound();
+  sfxPickup();
+  burst(p.x, p.y, ['#ffd88a', '#c89a52', '#ffffff'], 18, 5, 7);
+  addLog('Hauled a floating crate aboard (' + g.found + ' aboard). Make harbour and each one is worth two; sink and they\u2019re lost.', 'p');
+}
+function renderFound() {
+  const b = $('foundBox'); if (!b) return;
+  b.hidden = !g || !g.found;
+  if (g && g.found) $('found').textContent = g.found;
+}
+function updatePickups() {
+  if (!g.pickups || g.attract || state !== 'play') return;
+  for (const p of g.pickups) if (!p.taken && Math.hypot(p.x - ship.x, p.y - ship.y) < SK.PICKUP_RADIUS) collectPickup(p);
+}
+// a wooden crate bobbing on the water, with a little lantern lashed on top so you can find it in the dark
+function drawPickup(o, p, vis) {
+  const s = p.s, bob = Math.sin(g.t * 2 + o.ph) * 0.25 * s, sz = Math.max(3, 2.6 * s), x = p.x, y = p.y + bob;
+  const lit = Math.max(0.35, vis);
+  // glow first, visible from far away
+  const gl = Math.max(2.5, 1.5 * Math.sqrt(s)) * (1 + 0.15 * Math.sin(g.t * 4 + o.ph));
+  ctx.globalAlpha = 0.9; lamp(x, y - sz * 1.15, '#ffc46e', gl); ctx.globalAlpha = 1;
+  if (sz < 4) { ctx.fillStyle = '#ffd88a'; ctx.fillRect(x - 1, y - sz - 1, 2, 2); return; }
+  ctx.globalAlpha = lit;
+  ctx.fillStyle = 'rgba(220,232,245,0.3)';
+  ctx.beginPath(); ctx.ellipse(x, y, sz * 0.9, Math.max(1, sz * 0.12), 0, 0, 6.28); ctx.fill();
+  // the box, its planks, and a rope band
+  ctx.fillStyle = '#7a5530'; ctx.fillRect(x - sz / 2, y - sz * 0.8, sz, sz * 0.8);
+  ctx.fillStyle = '#9a7040'; ctx.fillRect(x - sz / 2, y - sz * 0.8, sz, sz * 0.12);
+  ctx.strokeStyle = 'rgba(40,25,10,0.8)'; ctx.lineWidth = Math.max(0.8, sz * 0.04);
+  ctx.strokeRect(x - sz / 2, y - sz * 0.8, sz, sz * 0.8);
+  ctx.beginPath(); ctx.moveTo(x - sz / 2, y - sz * 0.4); ctx.lineTo(x + sz / 2, y - sz * 0.4); ctx.moveTo(x - sz / 2, y - sz * 0.8); ctx.lineTo(x + sz / 2, y); ctx.stroke();
+  ctx.strokeStyle = '#c8a874'; ctx.lineWidth = Math.max(1, sz * 0.06);
+  ctx.beginPath(); ctx.moveTo(x, y - sz * 0.8); ctx.lineTo(x, y); ctx.stroke();
+  // the lantern
+  ctx.fillStyle = '#2a1e14'; ctx.fillRect(x - sz * 0.12, y - sz * 1.3, sz * 0.24, sz * 0.4);
+  ctx.fillStyle = '#ffd88a'; ctx.fillRect(x - sz * 0.08, y - sz * 1.25, sz * 0.16, sz * 0.3);
+  ctx.globalAlpha = 1;
 }
 
 function rollSkin(crate) {
