@@ -540,6 +540,7 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
       <div class="btnrow">
         <button class="primary" id="startBtn" type="button">Take the helm alone</button>
         <button class="tool crateOpenBtn" type="button">Crates</button>
+        <button class="tool crateAllBtn" type="button" hidden>Open all</button>
       </div>
       <section class="together" id="together" aria-labelledby="togetherHead">
         <h2 id="togetherHead">Sail together · up to 8 ships</h2>
@@ -589,6 +590,7 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
       <div class="btnrow">
         <button class="primary" id="nextBtn" type="button">Sail again</button>
         <button class="tool crateOpenBtn" type="button">Crates</button>
+        <button class="tool crateAllBtn" type="button" hidden>Open all</button>
       </div>
     </div>
   </div>
@@ -631,6 +633,7 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
         <button class="primary" id="crewReadyBtn" type="button" hidden>Ready</button>
         <span class="wait" id="crewWait" hidden></span>
         <button class="tool crateOpenBtn" type="button">Crates</button>
+        <button class="tool crateAllBtn" type="button" hidden>Open all</button>
       </div>
     </div>
   </div>
@@ -649,6 +652,7 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
       <div class="btnrow">
         <button class="primary" id="againBtn" type="button">Take another ship</button>
         <button class="tool crateOpenBtn" type="button">Crates</button>
+        <button class="tool crateAllBtn" type="button" hidden>Open all</button>
       </div>
     </div>
   </div>
@@ -5112,6 +5116,7 @@ function itemCard(skin, cls) {
 
 function updateCrateButtons() {
   for (const b of document.querySelectorAll('.crateOpenBtn')) b.textContent = 'Crates · ' + totalCrates();
+  for (const b of document.querySelectorAll('.crateAllBtn')) { b.hidden = totalCrates() < 2; b.textContent = 'Open all ' + totalCrates(); }
   renderBoatPicks();
 }
 // a quick boat switcher on the menus, so you can change ship without opening the crates
@@ -5386,6 +5391,8 @@ loadCrates();
 setupSaveBox();
 cloudInit();
 for (const b of document.querySelectorAll('.crateOpenBtn')) b.addEventListener('click', showCrates);
+// open every crate straight from a menu: shows the crates screen with the haul
+for (const b of document.querySelectorAll('.crateAllBtn')) b.addEventListener('click', () => { showCrates(); openAll('skerry'); });
 $('crateClose').addEventListener('click', hideCrates);
 $('crateCard').addEventListener('keydown', e => { if (e.key === 'Escape') hideCrates(); });
 updateCrateButtons();

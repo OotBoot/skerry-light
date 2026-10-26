@@ -495,6 +495,7 @@ function itemCard(skin, cls) {
 
 function updateCrateButtons() {
   for (const b of document.querySelectorAll('.crateOpenBtn')) b.textContent = 'Crates · ' + totalCrates();
+  for (const b of document.querySelectorAll('.crateAllBtn')) { b.hidden = totalCrates() < 2; b.textContent = 'Open all ' + totalCrates(); }
   renderBoatPicks();
 }
 // a quick boat switcher on the menus, so you can change ship without opening the crates
@@ -769,6 +770,8 @@ loadCrates();
 setupSaveBox();
 cloudInit();
 for (const b of document.querySelectorAll('.crateOpenBtn')) b.addEventListener('click', showCrates);
+// open every crate straight from a menu: shows the crates screen with the haul
+for (const b of document.querySelectorAll('.crateAllBtn')) b.addEventListener('click', () => { showCrates(); openAll('skerry'); });
 $('crateClose').addEventListener('click', hideCrates);
 $('crateCard').addEventListener('keydown', e => { if (e.key === 'Escape') hideCrates(); });
 updateCrateButtons();
