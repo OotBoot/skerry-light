@@ -21,7 +21,7 @@ const RARITIES = [
 const BOATS = [
   { id: 'brig',   name: 'Brig',   blurb: 'The all-rounder. Two masts, three planks to spare.', hull: 3, accel: 1.0, turn: 1.0, beam: 2.6, len: 20, masts: [-0.2, 0.18], deckW: 0.75, tipY: 0.72, rail: 10, bow: 5 },
   { id: 'cutter', name: 'Cutter', blurb: 'Light and quick, turns on a penny, but two hits and she goes.', hull: 2, accel: 1.7, turn: 1.4, beam: 2, len: 15, masts: [0.05], deckW: 0.58, tipY: 0.75, rail: 7, bow: 4 },
-  { id: 'barque', name: 'Barque', blurb: 'A heavy three-master with a bow gun that blows away one rock in her path each voyage. Takes a beating.', hull: 5, accel: 0.8, turn: 0.9, beam: 3.4, len: 27, masts: [-0.28, 0.02, 0.3], deckW: 0.95, tipY: 0.68, rail: 14, bow: 7 },
+  { id: 'barque', name: 'Barque', blurb: 'A heavy three-master with a short-range bow gun that blows away a rock in her path, reloading in 3 seconds. Takes a beating.', hull: 5, accel: 0.8, turn: 0.9, beam: 3.4, len: 27, masts: [-0.28, 0.02, 0.3], deckW: 0.95, tipY: 0.68, rail: 14, bow: 7 },
 ];
 const BOAT_BY_ID = Object.fromEntries(BOATS.map(b => [b.id, b]));
 const CRATE_TYPES = [{ id: 'skerry', name: 'Skerry Crate', holds: 'boat skins, flags and flare colours' }];

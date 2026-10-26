@@ -546,7 +546,7 @@ html, body, button, .overlay, .card { touch-action: manipulation; }
           <li><b>Knock</b> moves only while you can't see him. Listen for three knocks on wood, turn, and keep him in your light. The bell freezes him</li>
           <li><b>Flare</b> (F) lights everything around you for a few seconds, for your whole crew</li>
           <li><b>Steer</b> ← → or A / D, sail ↑ ↓ or W / S. On a phone, hold the left or right side to steer and use the ▲ ▼ buttons for speed</li>
-          <li><b>Boats</b> the Brig takes three hits, the quick Cutter two, the heavy Barque five. The Barque's bow gun fires by itself to blow apart a rock you're about to hit, once a voyage. Glancing off a rock only slows you; hitting it head on costs a plank.</li>
+          <li><b>Boats</b> the Brig takes three hits, the quick Cutter two, the heavy Barque five. The Barque's bow gun fires by itself to blow apart a rock just ahead that you're about to hit, then takes 3 seconds to reload. Glancing off a rock only slows you; hitting it head on costs a plank.</li>
           <li><b>Hull</b> when the planks run out she goes down. Let Maren reach the bow and she comes aboard</li>
           <li><b>Verity</b> sometimes you'll find a small smiling yellow orb in a corner of your deck, offering to help. He isn't helping, and the bell doesn't bother him. Fire a flare before twenty seconds are up, or see what he really looks like</li>
           <li><b>The Backrooms</b> about one voyage in twenty, the lights go out and the sea comes back with walls: a flooded maze of yellow rooms. Follow Plimsoll to the green EXIT sign</li>
@@ -682,7 +682,9 @@ const SK = {
   CAM_H: 5,               // eye height on deck
   NEAR: 1,
   HULL: 3,
-  CANNON_CHARGES: 1,      // the Barque's bow gun: shots per voyage
+  CANNON_CHARGES: 1,      // the Barque's bow gun: shots it holds
+  CANNON_RELOAD: 3,       // seconds to reload after a shot
+  CANNON_RANGE: 45,       // metres ahead it watches (less at low speed: about a second and a half of sailing)
   SEEN_HOLD: 0,           // seconds a rock stays fully visible after the beam passes over it
   SEEN_FADE: 3,           // ...then it fades out over this long
   IMPACT: 4.5,          // m/s closing speed that stoves in a plank; slower than that is a scrape
@@ -1067,6 +1069,9 @@ function sfxSmash(vol) {
   noise('lowpass', 500, 0.7, 0.01, 0.5 * vol, 0.9, { delay: 0.04 });
   for (let i = 0; i < 4; i++) tone(300 + Math.random() * 400, 'triangle', 0.002, 0.12 * vol, 0.08, { delay: 0.05 + i * 0.07, to: 180 });
 }
+
+// the gun reloaded: a heavy click of the breech
+function sfxReload() { tone(420, 'square', 0.001, 0.08, 0.04, { to: 220 }); noise('bandpass', 2000, 4, 0.001, 0.12, 0.05, { delay: 0.06 }); }
 
 // ---- src/world.js ----
 // Building each voyage: where you start, the skerries, the old wrecks, drifting timber,
@@ -2977,17 +2982,23 @@ function drawVerityScare(t) {
 
 // ---- src/cannon.js ----
 // The Barque's bow cannon. When a rock is dead ahead and she's about to run onto it, the cannon fires
-// on its own and blows it apart before she hits. One charge a voyage (SK.CANNON_CHARGES). In a crew the rock is gone
+// on its own and blows it apart before she hits. It holds one charge and reloads SK.CANNON_RELOAD seconds after firing. In a crew the rock is gone
 // for everyone (rocks are the same, in the same order, on every ship of a crew voyage).
 
-const CANNON_LOOK_S = 2.2;   // how far ahead (in seconds at your speed) it watches for a rock in your path
+const CANNON_LOOK_S = 1.4;   // how far ahead (in seconds at your speed) it watches, up to SK.CANNON_RANGE metres
 
-function newCannon() { return { charges: ship.boat === 'barque' ? SK.CANNON_CHARGES : 0, cd: 0, shots: [], muzzle: 0 }; }
+function newCannon() { return { charges: ship.boat === 'barque' ? SK.CANNON_CHARGES : 0, cd: 0, shots: [], muzzle: 0, reload: 0 }; }
 
 function updateCannon(dt) {
   const C = g.cannon; if (!C) return;
   if (C.cd > 0) C.cd -= dt;
   if (C.muzzle > 0) C.muzzle -= dt;
+  // reloading: one charge back every SK.CANNON_RELOAD seconds until she's full
+  if (ship.boat === 'barque' && C.charges < SK.CANNON_CHARGES && state === 'play') {
+    C.reload -= dt;
+    if (C.reload <= 0) { C.charges++; C.reload = C.charges < SK.CANNON_CHARGES ? SK.CANNON_RELOAD : 0; sfxReload(); }
+    renderCannon();
+  }
   // cannonballs in flight
   for (const s of C.shots) {
     s.t += dt;
@@ -2997,7 +3008,7 @@ function updateCannon(dt) {
   if (g.attract || state !== 'play' || C.charges <= 0 || C.cd > 0 || g.backrooms) return;
   // anything in the hull's path within the next couple of seconds?
   const boat = BOAT_BY_ID[ship.boat] || BOATS[0];
-  const sx = Math.sin(ship.h), sy = Math.cos(ship.h), look = Math.max(30, ship.v * CANNON_LOOK_S);
+  const sx = Math.sin(ship.h), sy = Math.cos(ship.h), look = Math.min(SK.CANNON_RANGE, Math.max(16, ship.v * CANNON_LOOK_S));
   let target = null, best = Infinity;
   for (const r of g.rocks) {
     if (r.gone || r.doomed) continue;
@@ -3014,6 +3025,7 @@ function updateCannon(dt) {
 function fireCannon(r) {
   const C = g.cannon;
   C.charges--; C.cd = 0.8; C.muzzle = 0.35;
+  if (C.reload <= 0) C.reload = SK.CANNON_RELOAD;
   r.doomed = true;   // she can no longer hit it; it shatters when the ball lands
   const boat = BOAT_BY_ID[ship.boat] || BOATS[0];
   const x0 = ship.x + Math.sin(ship.h) * boat.bow, y0 = ship.y + Math.cos(ship.h) * boat.bow;
@@ -3023,7 +3035,7 @@ function fireCannon(r) {
   if (typeof padRumble === 'function') padRumble(0.9, 0.3, 220);
   g.shake = Math.max(g.shake, 0.35);
   burst(x0, y0, ['#d8d2c4', '#9a948a', '#6e6a64'], 14, 4, 4);
-  addLog('The bow gun fires at the rock ahead! ' + (C.charges ? C.charges + (C.charges === 1 ? ' charge' : ' charges') + ' left.' : 'It\u2019s spent for this voyage.'), 'p');
+  addLog('The bow gun fires at the rock ahead! Reloading.', 'p');
   renderCannon();
   if (crewMode) { NET.cannonN = (NET.cannonN || 0) + 1; NET.cannon = { n: NET.cannonN, i: g.rocks.indexOf(r) }; send(); }
 }
@@ -3049,8 +3061,18 @@ function renderCannon() {
   const C = g && g.cannon;
   box.hidden = !C || !C.charges && ship.boat !== 'barque' || ship.boat !== 'barque';
   if (box.hidden) return;
-  const marks = $('cannon'); marks.textContent = '';
-  for (let i = 0; i < SK.CANNON_CHARGES; i++) { const s = document.createElement('span'); s.className = 'shot' + (i < C.charges ? '' : ' off'); marks.appendChild(s); }
+  const marks = $('cannon');
+  // a filling ring while it reloads
+  const p = C.charges >= SK.CANNON_CHARGES ? 1 : 1 - Math.max(0, C.reload) / SK.CANNON_RELOAD;
+  const key = C.charges + ':' + Math.round(p * 20);
+  if (marks.dataset.key === key) return;
+  marks.dataset.key = key;
+  marks.textContent = '';
+  for (let i = 0; i < SK.CANNON_CHARGES; i++) {
+    const s = document.createElement('span'); s.className = 'shot' + (i < C.charges ? '' : ' off');
+    if (i === C.charges) s.style.background = `conic-gradient(#c9ced6 ${Math.round(p * 360)}deg, transparent 0)`;
+    marks.appendChild(s);
+  }
 }
 
 // cannonballs in the air, drawn with the rest of the scene
@@ -4492,7 +4514,7 @@ const RARITIES = [
 const BOATS = [
   { id: 'brig',   name: 'Brig',   blurb: 'The all-rounder. Two masts, three planks to spare.', hull: 3, accel: 1.0, turn: 1.0, beam: 2.6, len: 20, masts: [-0.2, 0.18], deckW: 0.75, tipY: 0.72, rail: 10, bow: 5 },
   { id: 'cutter', name: 'Cutter', blurb: 'Light and quick, turns on a penny, but two hits and she goes.', hull: 2, accel: 1.7, turn: 1.4, beam: 2, len: 15, masts: [0.05], deckW: 0.58, tipY: 0.75, rail: 7, bow: 4 },
-  { id: 'barque', name: 'Barque', blurb: 'A heavy three-master with a bow gun that blows away one rock in her path each voyage. Takes a beating.', hull: 5, accel: 0.8, turn: 0.9, beam: 3.4, len: 27, masts: [-0.28, 0.02, 0.3], deckW: 0.95, tipY: 0.68, rail: 14, bow: 7 },
+  { id: 'barque', name: 'Barque', blurb: 'A heavy three-master with a short-range bow gun that blows away a rock in her path, reloading in 3 seconds. Takes a beating.', hull: 5, accel: 0.8, turn: 0.9, beam: 3.4, len: 27, masts: [-0.28, 0.02, 0.3], deckW: 0.95, tipY: 0.68, rail: 14, bow: 7 },
 ];
 const BOAT_BY_ID = Object.fromEntries(BOATS.map(b => [b.id, b]));
 const CRATE_TYPES = [{ id: 'skerry', name: 'Skerry Crate', holds: 'boat skins, flags and flare colours' }];

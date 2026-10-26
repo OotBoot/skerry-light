@@ -321,3 +321,6 @@ function sfxSmash(vol) {
   noise('lowpass', 500, 0.7, 0.01, 0.5 * vol, 0.9, { delay: 0.04 });
   for (let i = 0; i < 4; i++) tone(300 + Math.random() * 400, 'triangle', 0.002, 0.12 * vol, 0.08, { delay: 0.05 + i * 0.07, to: 180 });
 }
+
+// the gun reloaded: a heavy click of the breech
+function sfxReload() { tone(420, 'square', 0.001, 0.08, 0.04, { to: 220 }); noise('bandpass', 2000, 4, 0.001, 0.12, 0.05, { delay: 0.06 }); }

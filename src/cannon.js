@@ -1,15 +1,21 @@
 // The Barque's bow cannon. When a rock is dead ahead and she's about to run onto it, the cannon fires
-// on its own and blows it apart before she hits. One charge a voyage (SK.CANNON_CHARGES). In a crew the rock is gone
+// on its own and blows it apart before she hits. It holds one charge and reloads SK.CANNON_RELOAD seconds after firing. In a crew the rock is gone
 // for everyone (rocks are the same, in the same order, on every ship of a crew voyage).
 
-const CANNON_LOOK_S = 2.2;   // how far ahead (in seconds at your speed) it watches for a rock in your path
+const CANNON_LOOK_S = 1.4;   // how far ahead (in seconds at your speed) it watches, up to SK.CANNON_RANGE metres
 
-function newCannon() { return { charges: ship.boat === 'barque' ? SK.CANNON_CHARGES : 0, cd: 0, shots: [], muzzle: 0 }; }
+function newCannon() { return { charges: ship.boat === 'barque' ? SK.CANNON_CHARGES : 0, cd: 0, shots: [], muzzle: 0, reload: 0 }; }
 
 function updateCannon(dt) {
   const C = g.cannon; if (!C) return;
   if (C.cd > 0) C.cd -= dt;
   if (C.muzzle > 0) C.muzzle -= dt;
+  // reloading: one charge back every SK.CANNON_RELOAD seconds until she's full
+  if (ship.boat === 'barque' && C.charges < SK.CANNON_CHARGES && state === 'play') {
+    C.reload -= dt;
+    if (C.reload <= 0) { C.charges++; C.reload = C.charges < SK.CANNON_CHARGES ? SK.CANNON_RELOAD : 0; sfxReload(); }
+    renderCannon();
+  }
   // cannonballs in flight
   for (const s of C.shots) {
     s.t += dt;
@@ -19,7 +25,7 @@ function updateCannon(dt) {
   if (g.attract || state !== 'play' || C.charges <= 0 || C.cd > 0 || g.backrooms) return;
   // anything in the hull's path within the next couple of seconds?
   const boat = BOAT_BY_ID[ship.boat] || BOATS[0];
-  const sx = Math.sin(ship.h), sy = Math.cos(ship.h), look = Math.max(30, ship.v * CANNON_LOOK_S);
+  const sx = Math.sin(ship.h), sy = Math.cos(ship.h), look = Math.min(SK.CANNON_RANGE, Math.max(16, ship.v * CANNON_LOOK_S));
   let target = null, best = Infinity;
   for (const r of g.rocks) {
     if (r.gone || r.doomed) continue;
@@ -36,6 +42,7 @@ function updateCannon(dt) {
 function fireCannon(r) {
   const C = g.cannon;
   C.charges--; C.cd = 0.8; C.muzzle = 0.35;
+  if (C.reload <= 0) C.reload = SK.CANNON_RELOAD;
   r.doomed = true;   // she can no longer hit it; it shatters when the ball lands
   const boat = BOAT_BY_ID[ship.boat] || BOATS[0];
   const x0 = ship.x + Math.sin(ship.h) * boat.bow, y0 = ship.y + Math.cos(ship.h) * boat.bow;
@@ -45,7 +52,7 @@ function fireCannon(r) {
   if (typeof padRumble === 'function') padRumble(0.9, 0.3, 220);
   g.shake = Math.max(g.shake, 0.35);
   burst(x0, y0, ['#d8d2c4', '#9a948a', '#6e6a64'], 14, 4, 4);
-  addLog('The bow gun fires at the rock ahead! ' + (C.charges ? C.charges + (C.charges === 1 ? ' charge' : ' charges') + ' left.' : 'It\u2019s spent for this voyage.'), 'p');
+  addLog('The bow gun fires at the rock ahead! Reloading.', 'p');
   renderCannon();
   if (crewMode) { NET.cannonN = (NET.cannonN || 0) + 1; NET.cannon = { n: NET.cannonN, i: g.rocks.indexOf(r) }; send(); }
 }
@@ -71,8 +78,18 @@ function renderCannon() {
   const C = g && g.cannon;
   box.hidden = !C || !C.charges && ship.boat !== 'barque' || ship.boat !== 'barque';
   if (box.hidden) return;
-  const marks = $('cannon'); marks.textContent = '';
-  for (let i = 0; i < SK.CANNON_CHARGES; i++) { const s = document.createElement('span'); s.className = 'shot' + (i < C.charges ? '' : ' off'); marks.appendChild(s); }
+  const marks = $('cannon');
+  // a filling ring while it reloads
+  const p = C.charges >= SK.CANNON_CHARGES ? 1 : 1 - Math.max(0, C.reload) / SK.CANNON_RELOAD;
+  const key = C.charges + ':' + Math.round(p * 20);
+  if (marks.dataset.key === key) return;
+  marks.dataset.key = key;
+  marks.textContent = '';
+  for (let i = 0; i < SK.CANNON_CHARGES; i++) {
+    const s = document.createElement('span'); s.className = 'shot' + (i < C.charges ? '' : ' off');
+    if (i === C.charges) s.style.background = `conic-gradient(#c9ced6 ${Math.round(p * 360)}deg, transparent 0)`;
+    marks.appendChild(s);
+  }
 }
 
 // cannonballs in the air, drawn with the rest of the scene

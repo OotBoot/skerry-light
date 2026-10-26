@@ -47,7 +47,7 @@ Choose your boat with the Brig / Cutter / Barque picker on the title, harbour, e
 
 Each boat has its own deck and bow as you see them from the helm, and its own length and rig as your crew sees it.
 
-The Barque's **bow gun** fires by itself when you're about to run onto a rock, blowing it apart before you hit. It has one charge a voyage (the *Bow gun* marker under your hull shows if it's ready). In a crew, a rock it destroys is gone for everyone.
+The Barque's **bow gun** fires by itself when you're about to run onto a rock, blowing it apart before you hit. It only fires at rocks close ahead (about a second and a half of sailing, at most 45 m) and takes 3 seconds to reload after each shot; the *Bow gun* marker under your hull fills up as it reloads. In a crew, a rock it destroys is gone for everyone.
 
 ## Crates, skins and pennants
 
