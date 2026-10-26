@@ -303,6 +303,13 @@ async function backupNow(msgEl) {
 }
 function downloadSave() {
   const text = 'Skerry Light save\n\n' + (saveLink() ? 'Open this link to load it:\n' + saveLink() + '\n\nOr paste this code into Load a save code:\n' : 'Paste this code into Load a save code:\n') + saveCode() + '\n';
+  // on claude.ai a page can only hand over a file through the viewer's download prompt
+  if (window.claude && typeof window.claude.use === 'function') {
+    window.claude.use('downloads').then(dl => {
+      if (dl) dl.save({ filename: 'skerry-light-save.txt', data: text }).then(() => markBackedUp()).catch(() => {});
+    });
+    return;
+  }
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([text], { type: 'text/plain' }));
   a.download = 'skerry-light-save.txt';
