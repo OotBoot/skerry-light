@@ -471,6 +471,8 @@ addEventListener('keydown', e => {
     keys[k] = true; if (state === 'play') e.preventDefault();
   } else if ((k === ' ' || k === 'b') && state === 'play') {
     e.preventDefault(); if (!e.repeat) ringBell();
+  } else if (k === 'v') {
+    toggleView();
   } else if (k === 'f' && state === 'play') {
     if (!e.repeat) fireFlare();
   } else if (k === 'm') {
@@ -487,6 +489,8 @@ function toggleSound() {
 }
 
 $('startBtn').addEventListener('click', startRun);
+$('viewBtn').addEventListener('click', e => { toggleView(); e.currentTarget.blur(); cv.focus({ preventScroll: true }); });
+setThirdPerson(VIEW.third);
 $('nextBtn').addEventListener('click', () => beginVoyage(g.n + 1));
 $('againBtn').addEventListener('click', startRun);
 $('bellBtn').addEventListener('click', e => { ringBell(); e.currentTarget.blur(); cv.focus({ preventScroll: true }); });

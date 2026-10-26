@@ -35,8 +35,9 @@
   <div class="logbox" id="logbox" hidden>
     <ul id="log" aria-live="polite"></ul>
     <div class="tools">
-      <span id="hint">← → steer · ↑ ↓ sail · Space bell · F flare</span>
+      <span id="hint">← → steer · ↑ ↓ sail · Space bell · F flare · V view</span>
       <div class="toolrow">
+        <button class="tool" id="viewBtn" type="button" aria-pressed="false">3rd person</button>
         <button class="tool meter" id="flareBtn" type="button"><b>Fire a flare</b><small>F · <span id="flareState">Ready</span></small></button>
         <button class="tool meter" id="bellBtn" type="button"><b>Ring the bell</b><small>Space · <span id="bellState">Ready</span></small></button>
       </div>
@@ -231,6 +232,7 @@
 <script src="src/world.js"></script>
 <script src="src/render.js"></script>
 <script src="src/gfx.js"></script>
+<script src="src/ship3d.js"></script>
 <script src="src/creatures.js"></script>
 <script src="src/enemies.js"></script>
 <script src="src/verity.js"></script>

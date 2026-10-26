@@ -6,7 +6,7 @@ const ctx = cv.getContext('2d');
 const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 let W = 0, H = 0, dpr = 1, fov = 1.2, focal = 1, cx = 0, hy = 0;
-let camX = 0, camY = 0, yaw = 0;
+let camX = 0, camY = 0, yaw = 0, camH = 5;
 
 const waves = [], stars = [], town = [];
 for (let i = 0; i < 460; i++) waves.push({ x: rand(0, 600), y: rand(0, 600), len: rand(1.5, 4), ph: rand(0, 6.28) });
@@ -27,7 +27,7 @@ function cam(x, y, z) {
   const dx = x - camX, dy = y - camY, s = Math.sin(yaw), c = Math.cos(yaw);
   return { r: dx * c - dy * s, f: dx * s + dy * c, z };
 }
-function proj(c) { const k = focal / c.f; return { x: cx + c.r * k, y: hy + (SK.CAM_H - c.z) * k, s: k, f: c.f }; }
+function proj(c) { const k = focal / c.f; return { x: cx + c.r * k, y: hy + (camH - c.z) * k, s: k, f: c.f }; }
 function polyProj(pts) {
   const c = pts.map(p => cam(p[0], p[1], p[2] || 0)), out = [];
   for (let i = 0; i < c.length; i++) {
@@ -154,6 +154,7 @@ function drawRoomWalls() {
   const id = (i, j) => j * N + i;
   const Z = SK.BACKROOMS_CEIL, L = roomLevel();
   const px = (camX - X0) / C, py = (camY - Y0) / C;
+  const cutAway = typeof VIEW !== 'undefined' && VIEW.third;
   for (let ci = 0; ci < cols; ci++) {
     const sxp = ci * ZSTEP;
     const off = Math.atan((sxp - cx) / focal), ang = yaw + off;
@@ -179,13 +180,15 @@ function drawRoomWalls() {
         else if (north[id(i, bj)]) hit = true;
         j += stepJ;
       }
+      // third person: walls between the camera and your ship are cut away, so they never hide it
+      if (hit && cutAway && t * C * Math.cos(off) < CHASE.cut) hit = false;
     }
     const dist = t * C, f = Math.max(SK.NEAR, dist * Math.cos(off));
     ZBUF[ci] = hit ? f : 1e9;
     if (!hit) continue;
     const hx = camX + dx * dist, hy2 = camY + dy * dist;
     const k = focal / f;
-    const yb = hy + SK.CAM_H * k, yt = hy + (SK.CAM_H - Z) * k;
+    const yb = hy + camH * k, yt = hy + (camH - Z) * k;
     const light = Math.min(1, Math.max(roomLight(hx, hy2), lanternAt(hx, hy2) * 0.6, flareAt(hx, hy2)));
     const fog = Math.min(1, dist / 320);
     // wallpaper stripes: every 8 m along the wall, a thin darker line
@@ -305,32 +308,10 @@ function drawMate(m, p, vis) {
   const hullVis = Math.max(vis, Math.max(0, 1 - d / 320) * 0.95);
   const col = SLOT_COLORS[m.slot] || SLOT_COLORS[1];
   const boat = BOAT_BY_ID[m.boat] || BOATS[0];
-  const L = boat.len * p.s, { lat, dir } = sideOn(m.x, m.y, m.h);
-  const w = L * (0.28 + 0.72 * lat), hh = Math.max(1.2, L * 0.12);
-  const x = p.x, y = p.y + Math.sin(m.bob * 2.2) * L * 0.01;
-  const sailH = L * 0.58 * (boat.id === 'cutter' ? 1.25 : 1);
-  if (hullVis > 0.02) {
-    ctx.globalAlpha = hullVis;
-    const skin = m.skin || SKINS[0];
-    ctx.fillStyle = skin.hull;
-    ctx.beginPath();
-    ctx.moveTo(x - dir * w / 2, y - hh); ctx.lineTo(x + dir * (w / 2 + L * 0.08), y - hh * 1.15);
-    ctx.lineTo(x + dir * w * 0.42, y); ctx.lineTo(x - dir * w * 0.45, y); ctx.closePath(); ctx.fill();
-    const sailW = L * (boat.masts.length === 1 ? 0.3 : 0.17) * (1.35 - 0.6 * lat);
-    for (const mm of boat.masts) {
-      const mx = x + dir * mm * w * 1.6;
-      ctx.strokeStyle = '#2a2018'; ctx.lineWidth = Math.max(0.8, L * 0.025);
-      ctx.beginPath(); ctx.moveTo(mx, y - hh); ctx.lineTo(mx, y - hh - sailH * 1.08); ctx.stroke();
-      ctx.fillStyle = skin.sail;
-      ctx.beginPath();
-      ctx.moveTo(mx - sailW * 0.55, y - hh - sailH * 0.12); ctx.lineTo(mx + sailW * 0.55, y - hh - sailH * 0.12);
-      ctx.lineTo(mx + sailW * 0.4, y - hh - sailH); ctx.lineTo(mx - sailW * 0.4, y - hh - sailH); ctx.closePath(); ctx.fill();
-    }
-    // their pennant at the masthead
-    if (m.pennant) drawPennant(ctx, x + dir * boat.masts[0] * w * 1.6, y - hh - sailH * 1.08, Math.max(4, L * 0.42), m.pennant, g.t + m.bob);
-    ctx.globalAlpha = 1;
-  }
-  lamp(x, y - hh - sailH * 0.3, col, Math.max(1.8, 1.3 * Math.sqrt(p.s)));
+  const skin = m.skin || SKINS[0];
+  let head = null;
+  if (hullVis > 0.02) head = drawShip3D(m, skin, boat, hullVis, { alpha: Math.min(1, hullVis + 0.15), pennant: m.pennant, lantern: col });
+  const L = boat.len * p.s, x = p.x, hh = Math.max(1.2, L * 0.12), sailH = head ? Math.max(4, p.y - head.y - hh) : L * 0.58, y = p.y;
   if (d < 700 || m.shoutT > 0) {
     ctx.font = '700 11px "Courier Prime", monospace'; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
     ctx.fillStyle = col; ctx.globalAlpha = 0.9;
@@ -378,9 +359,12 @@ function drawTimber(o, p, vis) {
 
 // ---------- the scene ----------
 function drawScene() {
-  hy = H * 0.46 + Math.sin(ship.bob * 1.1) * H * 0.006;
-  camX = ship.x; camY = ship.y; yaw = ship.h;
-  const roll = reduceMotion ? 0 : Math.sin(ship.bob * 0.9) * 0.018 + ship.rudder * 0.025;
+  hy = H * (VIEW.third ? (W < 600 ? 0.38 : CHASE.horizon) : 0.46) + Math.sin(ship.bob * 1.1) * H * 0.006;
+  const third = VIEW.third;
+  if (third) { const c = chaseCamera(ship); camX = c.x; camY = c.y; camH = c.z; }
+  else { camX = ship.x; camY = ship.y; camH = SK.CAM_H; }
+  yaw = ship.h;
+  const roll = reduceMotion ? 0 : (Math.sin(ship.bob * 0.9) * 0.018 + ship.rudder * 0.025) * (third ? 0.3 : 1);
 
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.save();
@@ -429,6 +413,7 @@ function drawScene() {
   for (const o of g.timber) add('timber', o);
   if (g.backrooms) { add('exit', g.exit); drawRoomWalls(); }
   for (const o of g.pickups || []) if (!o.taken) add('pickup', o);
+  if (third) { const c = cam(ship.x, ship.y, 0); if (c.f > SK.NEAR) items.push({ kind: 'self', o: ship, c }); }
   add('plim', g.plim);
   if (crewMode) for (const m of matesAtSea()) if (m.peer !== NET.watch) add('mate', m);
   if (!NET.watch) { for (const d of g.enemies.drowned) add('drowned', d); for (const k of g.enemies.knocks) add('knock', k); }
@@ -447,6 +432,7 @@ function drawScene() {
     if (it.kind === 'rock') drawRockDetailed(o, q, vis);
     else if (it.kind === 'wreck') drawWreck(o, q, vis);
     else if (it.kind === 'timber') drawTimber(o, q, vis);
+    else if (it.kind === 'self') drawShip3D(ship, ship.skin || mySkin(), BOAT_BY_ID[ship.boat] || BOATS[0], 1, { pennant: 'pennant' in ship ? ship.pennant : myPennant(), minLit: 1, sailAlpha: 0.78 });
     else if (it.kind === 'pickup') drawPickup(o, q, vis);
     else if (it.kind === 'plim') drawPlimsoll(q, vis);
     else if (it.kind === 'mate') drawMate(o, q, vis);
@@ -475,8 +461,7 @@ function drawScene() {
   ctx.globalAlpha = 1;
   ctx.restore();
 
-  drawDeck();
-  drawBowspritApparition();
+  if (!third) { drawDeck(); drawBowspritApparition(); }
   drawVerity();
 
   if (g.glare > 0.01) { ctx.fillStyle = `rgba(255,238,200,${g.glare * 0.55})`; ctx.fillRect(0, 0, W, H); }

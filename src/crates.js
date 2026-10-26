@@ -488,22 +488,61 @@ function drawPennant(c, x, y, size, pen, t) {
 // ---------- UI ----------
 function skinPreview(skin, size) {
   const boat = BOAT_BY_ID[skin.boat] || BOATS[0];
+  const tier = typeof skinTier === 'function' ? skinTier(skin) : 0;
   const NS = 'http://www.w3.org/2000/svg';
   const svg = document.createElementNS(NS, 'svg');
   svg.setAttribute('viewBox', '0 0 120 80'); svg.setAttribute('width', size); svg.setAttribute('height', size * 2 / 3);
   svg.setAttribute('aria-hidden', 'true');
   const el = (tag, attrs) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); svg.appendChild(e); return e; };
-  const half = 48 * boat.len / 27, cxp = 60, top = 54 - 44 * Math.min(1, boat.len / 22);
-  el('path', { d: `M${cxp - half - 4} 64 Q60 70 ${cxp + half + 4} 60 L${cxp + half - 2} 52 L${cxp - half + 2} 54 Z`, fill: 'rgba(220,232,245,0.25)' });
+  const gold = '#e8c050', rail = tier >= 5 ? gold : skin.rail;
+  const half = 46 * boat.len / 27, cxp = 58, deckY = 54, top = deckY - 44 * Math.min(1, boat.len / 22) * (boat.id === 'cutter' ? 1.05 : 1);
+  const bowX = cxp + half, sternX = cxp - half;
+  // water and a little wake
+  el('path', { d: `M${sternX - 8} 66 Q60 71 ${bowX + 10} 63`, stroke: 'rgba(220,232,245,0.35)', 'stroke-width': 1.5, fill: 'none' });
+  // bowsprit and stays
+  el('line', { x1: bowX - 3, y1: deckY - 2, x2: bowX + 13, y2: deckY - 9, stroke: skin.wood, 'stroke-width': 1.6 });
+  const fore = cxp + Math.max(...boat.masts) * half * 1.6;
+  el('line', { x1: bowX + 13, y1: deckY - 9, x2: fore, y2: top, stroke: 'rgba(30,24,18,0.8)', 'stroke-width': 0.6 });
+  // jib
+  el('path', { d: `M${bowX + 11} ${deckY - 9} L${fore + 3} ${top + 6} L${fore + 3} ${deckY - 6} Z`, fill: skin.sail, opacity: 0.95 });
+  // masts and sails
   for (const m of boat.masts) {
     const mx = cxp + m * half * 1.6;
-    el('line', { x1: mx, y1: 54, x2: mx, y2: top, stroke: skin.wood, 'stroke-width': 2.5 });
-    const sw = boat.masts.length === 1 ? 16 : 12;
-    el('path', { d: `M${mx - sw} 48 L${mx + sw} 48 L${mx + sw * 0.8} ${top + 4} L${mx - sw * 0.8} ${top + 4} Z`, fill: skin.sail });
+    el('line', { x1: mx, y1: deckY, x2: mx, y2: top, stroke: skin.wood, 'stroke-width': 2 });
+    const sails = [];
+    if (boat.id === 'cutter') sails.push(`M${mx - 1} ${deckY - 5} L${sternX + 4} ${deckY - 4} L${mx - 18} ${top + 10} L${mx - 1} ${top + 2} Z`);
+    else {
+      const sw = boat.masts.length === 2 ? 12 : 10;
+      sails.push(`M${mx - sw} ${deckY - 6} L${mx + sw} ${deckY - 6} L${mx + sw * 0.85} ${deckY - 21} L${mx - sw * 0.85} ${deckY - 21} Z`);
+      sails.push(`M${mx - sw * 0.8} ${deckY - 23} L${mx + sw * 0.8} ${deckY - 23} L${mx + sw * 0.65} ${top + 3} L${mx - sw * 0.65} ${top + 3} Z`);
+    }
+    for (const d of sails) {
+      el('path', { d, fill: skin.sail, stroke: tier >= 5 ? gold : 'none', 'stroke-width': tier >= 5 ? 0.9 : 0 });
+    }
+    if (tier >= 3) {   // coloured bands across the sails
+      const y0 = boat.id === 'cutter' ? deckY - 16 : deckY - 15;
+      el('rect', { x: mx - (boat.id === 'cutter' ? 16 : 11), y: y0, width: boat.id === 'cutter' ? 15 : 22, height: 2.2, fill: rail, opacity: 0.9 });
+      if (boat.id !== 'cutter') el('rect', { x: mx - 9, y: deckY - 32, width: 18, height: 1.8, fill: rail, opacity: 0.9 });
+    }
+    if (tier >= 4) el('circle', { cx: boat.id === 'cutter' ? mx - 9 : mx, cy: deckY - 11, r: 2.4, fill: tier >= 5 ? gold : rail });
+    // yards
+    if (boat.id !== 'cutter') for (const y of [deckY - 21, top + 3]) el('line', { x1: mx - 11, y1: y, x2: mx + 11, y2: y, stroke: skin.wood, 'stroke-width': 0.9 });
   }
-  el('path', { d: `M${cxp - half} 54 L${cxp + half} 50 L${cxp + half - 8} 64 L${cxp - half + 10} 66 Z`, fill: skin.hull });
-  el('line', { x1: cxp - half + 2, y1: 54, x2: cxp + half - 1, y2: 50, stroke: skin.rail, 'stroke-width': 2 });
-  el('circle', { cx: cxp + half - 12, cy: 44, r: 3, fill: skin.lantern });
+  // hull: bottom paint, topsides, a stripe, and the rail
+  const hullPath = `M${sternX} ${deckY} L${bowX} ${deckY - 3} L${bowX - 9} ${deckY + 11} L${sternX + 8} ${deckY + 12} Z`;
+  el('path', { d: hullPath, fill: skin.hull });
+  el('path', { d: `M${sternX + 5} ${deckY + 8} L${bowX - 6} ${deckY + 6.5} L${bowX - 9} ${deckY + 11} L${sternX + 8} ${deckY + 12} Z`, fill: tier >= 3 ? '#7a3a22' : 'rgba(0,0,0,0.35)' });
+  if (tier >= 2) el('line', { x1: sternX + 2, y1: deckY + 4, x2: bowX - 3, y2: deckY + 1.5, stroke: skin.sail, 'stroke-width': 1.3, opacity: 0.85 });
+  el('line', { x1: sternX, y1: deckY, x2: bowX, y2: deckY - 3, stroke: rail, 'stroke-width': 2.2 });
+  // gunports on the brig and barque
+  if (boat.id !== 'cutter') for (let i = 0; i < (boat.id === 'barque' ? 5 : 3); i++) {
+    const gx = sternX + 12 + i * ((bowX - sternX - 24) / Math.max(1, (boat.id === 'barque' ? 4 : 2)));
+    el('rect', { x: gx - 1.5, y: deckY + 2.5 - (gx - sternX) * 0.03, width: 3, height: 2.6, fill: '#0c0a08' });
+  }
+  // stern lantern
+  el('circle', { cx: sternX + 4, cy: deckY - 6, r: 2.2, fill: skin.lantern });
+  el('circle', { cx: sternX + 4, cy: deckY - 6, r: 5, fill: skin.lantern, opacity: 0.25 });
+  if (tier >= 5) for (const [sx, sy] of [[fore - 8, top + 4], [fore + 9, top + 14], [sternX + 16, deckY - 20]]) el('circle', { cx: sx, cy: sy, r: 0.9, fill: '#fff2c0' });
   return svg;
 }
 function pennantPreview(pen, size) {

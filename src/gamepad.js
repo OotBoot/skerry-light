@@ -93,6 +93,7 @@ function pollPad(dt) {
     PAD.sail = Math.max(-1, Math.min(1, rt - lt - ay * 0.8 + (pressed(p, 12) ? 1 : 0) - (pressed(p, 13) ? 1 : 0)));
     if (down(0)) ringBell();
     if (down(2)) fireFlare();
+    if (down(3)) toggleView();
   } else {
     PAD.steer = PAD.sail = 0;
     // the analog sticks drive an on-screen cursor in menus: left stick moves it, right stick scrolls
@@ -142,7 +143,7 @@ function pollPad(dt) {
 
 function updateHint() {
   const h = $('hint'); if (!h) return;
-  h.textContent = PAD.connected ? 'Left stick steer · RT / LT sail · A bell · X flare' : '← → steer · ↑ ↓ sail · Space bell · F flare';
+  h.textContent = PAD.connected ? 'Left stick steer · RT / LT sail · A bell · X flare · Y view' : '← → steer · ↑ ↓ sail · Space bell · F flare';
 }
 
 window.addEventListener('gamepadconnected', () => { PAD.prev = []; });

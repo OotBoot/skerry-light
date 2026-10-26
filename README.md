@@ -20,6 +20,7 @@ The only thing she will not go near is **Plimsoll**, the shark who walked up out
 | Sound | M, or the sound button |
 | Speed | ▲ ▼ buttons on the left, hold to change sail (or ↑ ↓). There's no top speed: the longer you hold ▲, the faster it climbs. She picks up speed and slows down almost at once |
 | Flare | F, or the flare button |
+| View | V, the 1st/3rd person button, or Y on a controller: switch between the deck and a chase camera behind your ship |
 | Xbox controller | Left stick or D-pad steer · RT faster, LT slower · A bell · X flare. In menus: the left stick moves an on-screen cursor and A clicks what it's over, the right stick scrolls, and the D-pad jumps between buttons; A to press, B to close or go back, Start for the main button, Y for crates. RB watches the next crewmate when spectating. Hits and jumpscares rumble |
 
 - **Maren** comes one stage nearer every 6 seconds or so on the first voyage (a little longer each voyage, up to 11): 400 m, 260, 160, 90, then right at the bow, and one more step after that she takes the ship. Between turns she slowly follows your ship, so sailing hard can buy you some distance. You hear her heartbeat and see red at the edges as she closes in.

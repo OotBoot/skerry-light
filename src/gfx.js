@@ -354,8 +354,16 @@ function buildDeck(boat, skin) {
     d.strokeStyle = 'rgba(255,230,190,0.22)'; d.lineWidth = 1.2;
     d.beginPath(); d.moveTo(x0, y0 - railT * 0.4); d.lineTo(x1, y1 - railT * 0.3); d.stroke();
   }
+  // rarer skins dress the deck up: a painted stripe along the rail (Bosun and up), brass fittings
+  // (Captain and up) and a gilded rail cap (Admiral)
+  const tier = typeof skinTier === 'function' ? skinTier(skin) : 0;
+  for (const sd of [-1, 1]) {
+    const x0 = cx + sd * DW, y0 = H - 4, x1 = cx + sd * 6, y1 = tipY + 2;
+    if (tier >= 2) { d.strokeStyle = skin.sail; d.globalAlpha = 0.55; d.lineWidth = Math.max(1.5, railT * 0.22); d.beginPath(); d.moveTo(x0, y0 + railT * 0.25); d.lineTo(x1, y1 + railT * 0.2); d.stroke(); d.globalAlpha = 1; }
+    if (tier >= 5) { d.strokeStyle = '#e8c050'; d.lineWidth = Math.max(1.5, railT * 0.2); d.beginPath(); d.moveTo(x0, y0 - railT * 0.42); d.lineTo(x1, y1 - railT * 0.35); d.stroke(); }
+  }
   // a pair of mooring cleats near the bow
-  d.fillStyle = mix(skin.wood, '#000000', 0.3);
+  d.fillStyle = tier >= 4 ? '#b08a3c' : mix(skin.wood, '#000000', 0.3);
   for (const s of [-1, 1]) { const kx = cx + s * DW * 0.16, ky = tipY + (H - tipY) * 0.25; d.fillRect(kx - 7, ky - 2, 14, 4); d.fillRect(kx - 2, ky - 4, 4, 6); }
   GFX.deck = c;
   return c;
