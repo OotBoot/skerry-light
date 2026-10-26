@@ -183,17 +183,116 @@ function loadCrates() {
       CRATES.flare = FLARE_BY_ID[d.flare] ? d.flare : null;
       // a crate whose reel was still spinning when the page closed: the prize is still yours
       if (LOOT_BY_ID[d.pending]) { CRATES.owned[d.pending] = (CRATES.owned[d.pending] | 0) + 1; }
+      CRATES.pending = null;
     }
   } catch (e) {}
   if (fresh) CRATES.crates.skerry = 1;   // a first crate to try
   saveCrates();
 }
+function saveData() {
+  return { crates: CRATES.crates, owned: CRATES.owned, equipped: CRATES.equipped, pennant: CRATES.pennant, flare: CRATES.flare, boat: CRATES.boat };
+}
 function saveCrates() {
+  try { localStorage.setItem('skerry-crates', JSON.stringify(Object.assign(saveData(), { pending: CRATES.pending }))); } catch (e) {}
+  cloudSaveSoon();
+}
+
+// ---------- keeping your loot safe ----------
+// Browser storage alone isn't enough: links opened inside other apps (Discord, Snapchat, Messages...),
+// private windows and cleared site data all start empty. So there are two backups:
+//  - on claude.ai, your save also lives in your account (a private record only you can read)
+//  - anywhere, a save code you can copy and paste into another browser to bring everything across
+// Merging never loses anything: you keep every item either side has, and the larger crate count.
+function mergeSave(d, takeLooks) {
+  if (!d || typeof d !== 'object') return false;
+  let changed = false;
+  if (d.owned && typeof d.owned === 'object') for (const [id, n] of Object.entries(d.owned)) {
+    if (!LOOT_BY_ID[id]) continue;
+    const v = Math.max(0, Math.min(999, n | 0));
+    if (v > (CRATES.owned[id] | 0)) { CRATES.owned[id] = v; changed = true; }
+  }
+  const cr = d.crates && typeof d.crates === 'object' ? Object.values(d.crates).reduce((a, v) => a + (v | 0), 0) : (d.crates | 0);
+  if (cr > CRATES.crates.skerry) { CRATES.crates.skerry = Math.min(999, cr); changed = true; }
+  if (takeLooks) {
+    if (d.equipped && typeof d.equipped === 'object') for (const b of BOATS) {
+      const sk = SKIN_BY_ID[d.equipped[b.id]];
+      if (sk && sk.boat === b.id && (!sk.rarity || CRATES.owned[sk.id]) && CRATES.equipped[b.id] !== sk.id) { CRATES.equipped[b.id] = sk.id; changed = true; }
+    }
+    if (PENNANT_BY_ID[d.pennant] && CRATES.owned[d.pennant] && CRATES.pennant !== d.pennant) { CRATES.pennant = d.pennant; changed = true; }
+    if (FLARE_BY_ID[d.flare] && CRATES.owned[d.flare] && CRATES.flare !== d.flare) { CRATES.flare = d.flare; changed = true; }
+    if (BOAT_BY_ID[d.boat] && CRATES.boat !== d.boat) { CRATES.boat = d.boat; changed = true; }
+  }
+  return changed;
+}
+function afterMerge() { saveCrates(); renderCrates(); updateCrateButtons(); if (typeof crewMode !== 'undefined' && crewMode) send(); }
+
+// the save code: your save, packed into one line of text
+function saveCode() {
+  const d = saveData();
+  const packed = { c: d.crates.skerry, o: d.owned, e: d.equipped, p: d.pennant, f: d.flare, b: d.boat };
+  return 'SKERRY-' + btoa(unescape(encodeURIComponent(JSON.stringify(packed)))).replace(/=+$/, '');
+}
+function readSaveCode(text) {
+  const m = String(text || '').trim().match(/^SKERRY-([A-Za-z0-9+/]+)$/);
+  if (!m) return null;
   try {
-    localStorage.setItem('skerry-crates', JSON.stringify({
-      crates: CRATES.crates, owned: CRATES.owned, equipped: CRATES.equipped, pennant: CRATES.pennant, flare: CRATES.flare, boat: CRATES.boat, pending: CRATES.pending,
-    }));
-  } catch (e) {}
+    const o = JSON.parse(decodeURIComponent(escape(atob(m[1]))));
+    return { crates: o.c | 0, owned: o.o, equipped: o.e, pennant: o.p, flare: o.f, boat: o.b };
+  } catch (e) { return null; }
+}
+
+// your account, on claude.ai
+const CLOUD = { ref: null, timer: 0, status: '' };
+async function cloudInit() {
+  if (!window.claude || typeof window.claude.use !== 'function') return;
+  try {
+    const [db, user] = await Promise.all([window.claude.use('db'), window.claude.use('user')]);
+    const id = user && await user.id();
+    if (!db || !id) return;
+    CLOUD.ref = db.doc('data/users/' + id + '/skerry');
+    const snap = await CLOUD.ref.get();
+    if (snap.exists) {
+      // what's in your account wins for how your ships look; nothing you own here is lost
+      if (mergeSave(snap.data(), true)) afterMerge();
+    }
+    CLOUD.status = 'Saved to your claude.ai account.';
+    cloudSaveSoon(0);
+    renderSaveBox();
+  } catch (e) { CLOUD.ref = null; }
+}
+function cloudSaveSoon(delay) {
+  if (!CLOUD.ref) return;
+  clearTimeout(CLOUD.timer);
+  CLOUD.timer = setTimeout(() => {
+    CLOUD.ref.set(Object.assign(saveData(), { savedAt: Date.now() })).then(() => { CLOUD.status = 'Saved to your claude.ai account.'; renderSaveBox(); })
+      .catch(() => { CLOUD.status = 'Couldn\u2019t save to your account just now; it\u2019s still saved in this browser.'; renderSaveBox(); });
+  }, delay == null ? 1500 : delay);
+}
+
+function renderSaveBox() {
+  const st = $('saveStatus'); if (!st) return;
+  st.textContent = CLOUD.ref ? CLOUD.status : 'Saved in this browser. To keep it safe, or to move to another browser or phone, copy your save code and paste it there.';
+}
+function setupSaveBox() {
+  const copy = $('saveCopy'), load = $('saveLoad'), input = $('saveInput'), msg = $('saveMsg');
+  if (!copy) return;
+  copy.addEventListener('click', async () => {
+    const code = saveCode();
+    input.value = code;
+    let ok = false;
+    try { await navigator.clipboard.writeText(code); ok = true; } catch (e) {}
+    if (!ok) { input.focus(); input.select(); }
+    msg.textContent = ok ? 'Save code copied. Paste it into Skerry Light on another browser or phone.' : 'Select the code in the box and copy it.';
+  });
+  load.addEventListener('click', () => {
+    const d = readSaveCode(input.value);
+    if (!d) { msg.textContent = 'That doesn\u2019t look like a save code. It starts with SKERRY-.'; return; }
+    if (CRATES.opening) return;
+    const changed = mergeSave(d, true);
+    afterMerge();
+    msg.textContent = changed ? 'Save code loaded: everything from it is now here too.' : 'You already have everything in that save code.';
+  });
+  renderSaveBox();
 }
 function myBoat() { return BOAT_BY_ID[CRATES.boat] || BOATS[0]; }
 function mySkin() { return SKIN_BY_ID[CRATES.equipped[CRATES.boat]] || SKIN_BY_ID[PLAIN[CRATES.boat]]; }
@@ -545,6 +644,8 @@ function toast(text, short) {
 }
 
 loadCrates();
+setupSaveBox();
+cloudInit();
 for (const b of document.querySelectorAll('.crateOpenBtn')) b.addEventListener('click', showCrates);
 $('crateClose').addEventListener('click', hideCrates);
 $('crateCard').addEventListener('keydown', e => { if (e.key === 'Escape') hideCrates(); });

@@ -187,11 +187,23 @@
       <div class="reel" id="crateReel"><div class="strip" id="crateStrip"></div><div class="marker" aria-hidden="true"></div></div>
       <div class="result" id="crateResult" hidden aria-live="polite"></div>
       <ul class="odds" id="crateOdds" aria-label="Chances for each grade"></ul>
+      <h2 class="invh">Keep your loot</h2>
+      <div class="savebox">
+        <p class="savestatus" id="saveStatus"></p>
+        <label for="saveInput" class="sr">Save code</label>
+        <input id="saveInput" type="text" placeholder="Paste a save code (SKERRY-...)" autocomplete="off" spellcheck="false">
+        <div class="btnrow">
+          <button class="tool" id="saveCopy" type="button">Copy my save code</button>
+          <button class="tool" id="saveLoad" type="button">Load a save code</button>
+        </div>
+        <p class="savemsg" id="saveMsg" aria-live="polite"></p>
+      </div>
       <h2 class="invh">Your loot</h2>
       <div class="loottabs" id="lootTabs" role="group" aria-label="Show"></div>
       <span class="invh" id="invHead" hidden></span>
       <span class="eyebrow" id="crateCollected"></span>
       <div class="inv" id="crateInv"></div>
+
     </div>
   </div>
 

@@ -56,6 +56,8 @@ Every voyage you play earns a **Skerry Crate**: one if you go down, two if you m
 
 Your first crate is free. The Crates screen shows how many you have, with an Open button, and tabs for your boat skins, flags and flares. A reel spins and lands on your prize. Every crate uses the same five grades: **Deckhand** (sky blue) 79.9%, **Bosun** (violet) 16%, **Mate** (pink) 3.2%, **Captain** (red) 0.64% and **Admiral** (gold) 0.26%. Crates saved by older versions become Skerry Crates.
 
+**Keeping your loot.** Your crates and cosmetics are saved in your browser. Links opened inside other apps (Discord, Snapchat, Instagram, Messages), private windows and cleared site data start with an empty save, so the Crates screen has a **save code**: tap *Copy my save code*, keep it somewhere, and paste it with *Load a save code* in any other browser or phone to bring everything across. Loading a code never takes anything away; you keep every item from both. On claude.ai, your save is also kept in your claude.ai account automatically.
+
 Gold (Admiral) items only ever appear in the reel when one is your prize, so if you see gold scroll past, it's yours. The chance of gold is still 0.26%.
 
 Crates and loot are kept in your browser on that device.
