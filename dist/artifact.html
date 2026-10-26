@@ -4981,18 +4981,18 @@ function drawPickup(o, p, vis) {
   const s = p.s, bob = Math.sin(g.t * 2 + o.ph) * 0.25 * s, sz = Math.max(4, 3.6 * s), x = p.x, y = p.y + bob;
   const lit = Math.max(0.35, vis);
   // glow first, visible from far away
-  const pulse = 1 + 0.2 * Math.sin(g.t * 4 + o.ph);
-  const gl = Math.max(4, 2.4 * Math.sqrt(s)) * pulse;
+  const pulse = 1 + 0.12 * Math.sin(g.t * 4 + o.ph);
+  const gl = Math.max(2.5, 1.3 * Math.sqrt(s)) * pulse;
   // a faint pillar of golden light rising from it, so you can spot it from a long way off
-  const top = y - Math.max(40, 30 * s), pw = Math.max(3, sz * 0.5);
+  const top = y - Math.max(30, 22 * s), pw = Math.max(2, sz * 0.3);
   const pg = ctx.createLinearGradient(0, top, 0, y);
-  pg.addColorStop(0, 'rgba(255,210,120,0)'); pg.addColorStop(1, `rgba(255,210,120,${0.28 * pulse})`);
+  pg.addColorStop(0, 'rgba(255,210,120,0)'); pg.addColorStop(1, `rgba(255,210,120,${0.1 * pulse})`);
   ctx.globalCompositeOperation = 'lighter';
   ctx.fillStyle = pg; ctx.fillRect(x - pw / 2, top, pw, y - top);
-  lamp(x, y - sz * 1.15, '#ffc46e', gl);
   ctx.globalCompositeOperation = 'source-over';
+  ctx.globalAlpha = 0.55; lamp(x, y - sz * 1.15, '#ffc46e', gl); ctx.globalAlpha = 1;
   // a twinkle above it
-  if (!reduceMotion) { const tw = 0.5 + 0.5 * Math.sin(g.t * 6 + o.ph * 3); ctx.fillStyle = `rgba(255,240,200,${tw})`; const k = Math.max(2, sz * 0.18); ctx.fillRect(x - k / 2, y - sz * 1.9 - k, k, k * 3); ctx.fillRect(x - k * 1.5, y - sz * 1.9, k * 3, k); }
+  if (!reduceMotion) { const tw = 0.5 + 0.5 * Math.sin(g.t * 6 + o.ph * 3); ctx.fillStyle = `rgba(255,240,200,${0.5 * tw})`; const k = Math.max(1.2, sz * 0.1); ctx.fillRect(x - k / 2, y - sz * 1.9 - k, k, k * 3); ctx.fillRect(x - k * 1.5, y - sz * 1.9, k * 3, k); }
   if (sz < 5) { ctx.fillStyle = '#ffd88a'; ctx.fillRect(x - 1.5, y - sz - 1.5, 3, 3); return; }
   ctx.globalAlpha = lit;
   ctx.fillStyle = 'rgba(220,232,245,0.3)';
