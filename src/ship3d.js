@@ -21,14 +21,25 @@ function toggleView() { setThirdPerson(!VIEW.third); }
 function skinTier(skin) { const i = RARITIES.findIndex(r => r.id === skin.rarity); return i < 0 ? 0 : i + 1; }
 
 // where the chase camera sits: behind and above, pulled in if a wall in the rooms is in the way
-const CHASE = { back: 44, up: 15, horizon: 0.3 };   // horizon: where the skyline sits on screen (looking down a little)
+const CHASE = { back: 44, horizon: 0.16, bottom: 0.97, phoneHorizon: 0.3 };   // horizon and ship's waterline as fractions of the screen height   // horizon: where the skyline sits on screen (looking down a little)
 function chaseCamera(sh) {
   // (in the rooms, walls between the camera and your ship are cut away rather than pulling the camera in)
-  // closer on a tall, narrow phone screen, where the view is much narrower
-  const back = CHASE.back * ((BOAT_BY_ID[sh.boat] || BOATS[0]).len / 20) ** 0.5 * (W < 600 ? 0.6 : 1);
-  CHASE.cut = back - (BOAT_BY_ID[sh.boat] || BOATS[0]).len * 0.6;
-  const up = CHASE.up * (W < 600 ? 0.75 : 1);
-  return { x: sh.x - Math.sin(sh.h) * back, y: sh.y - Math.cos(sh.h) * back, z: g.backrooms ? Math.min(up, SK.BACKROOMS_CEIL - 3) : up };
+  const boat = BOAT_BY_ID[sh.boat] || BOATS[0];
+  const phone = W < 600;
+  const back = CHASE.back * (boat.len / 20) ** 0.5 * (phone ? 0.8 : 1);
+  CHASE.cut = back - boat.len * 0.6;
+  // high enough that your ship sits near the bottom of the screen (CHASE.bottom), with plenty of sea ahead
+  // (on a phone, keep the ship clear of the buttons along the bottom)
+  const lb = $('logbox'), lbTop = lb && !lb.hidden ? lb.getBoundingClientRect().top - cv.getBoundingClientRect().top : H;
+  const target = phone ? Math.min(H * 0.84, lbTop - H * 0.1) : H * CHASE.bottom;
+  // aim with the stern (the nearest part of the ship), so the whole hull clears the target line
+  const near = Math.max(4, back - boat.len * 0.5);
+  let up = (target - hy) * near / focal, horizon = null;
+  up = Math.max(8, Math.min(60, up));
+  // under the Backrooms' low ceiling the camera can't go that high: raise the horizon instead,
+  // so the ship still sits low on the screen
+  if (g.backrooms && up > SK.BACKROOMS_CEIL - 2) { up = SK.BACKROOMS_CEIL - 2; horizon = target - up * focal / near; }
+  return { x: sh.x - Math.sin(sh.h) * back, y: sh.y - Math.cos(sh.h) * back, z: up, horizon };
 }
 
 // stern (-1) to bow (+1): half-width of the deck, and how much the sheer rises

@@ -359,9 +359,9 @@ function drawTimber(o, p, vis) {
 
 // ---------- the scene ----------
 function drawScene() {
-  hy = H * (VIEW.third ? (W < 600 ? 0.38 : CHASE.horizon) : 0.46) + Math.sin(ship.bob * 1.1) * H * 0.006;
+  hy = H * (VIEW.third ? (W < 600 ? CHASE.phoneHorizon : CHASE.horizon) : 0.46) + Math.sin(ship.bob * 1.1) * H * 0.006;
   const third = VIEW.third;
-  if (third) { const c = chaseCamera(ship); camX = c.x; camY = c.y; camH = c.z; }
+  if (third) { const c = chaseCamera(ship); camX = c.x; camY = c.y; camH = c.z; if (c.horizon != null) hy = Math.max(H * 0.08, c.horizon) + Math.sin(ship.bob * 1.1) * H * 0.006; }
   else { camX = ship.x; camY = ship.y; camH = SK.CAM_H; }
   yaw = ship.h;
   const roll = reduceMotion ? 0 : (Math.sin(ship.bob * 0.9) * 0.018 + ship.rudder * 0.025) * (third ? 0.3 : 1);
@@ -432,7 +432,7 @@ function drawScene() {
     if (it.kind === 'rock') drawRockDetailed(o, q, vis);
     else if (it.kind === 'wreck') drawWreck(o, q, vis);
     else if (it.kind === 'timber') drawTimber(o, q, vis);
-    else if (it.kind === 'self') drawShip3D(ship, ship.skin || mySkin(), BOAT_BY_ID[ship.boat] || BOATS[0], 1, { pennant: 'pennant' in ship ? ship.pennant : myPennant(), minLit: 1, sailAlpha: 0.78 });
+    else if (it.kind === 'self') drawShip3D(ship, ship.skin || mySkin(), BOAT_BY_ID[ship.boat] || BOATS[0], 1, { pennant: 'pennant' in ship ? ship.pennant : myPennant(), minLit: 1, sailAlpha: 0.55 });
     else if (it.kind === 'pickup') drawPickup(o, q, vis);
     else if (it.kind === 'plim') drawPlimsoll(q, vis);
     else if (it.kind === 'mate') drawMate(o, q, vis);
