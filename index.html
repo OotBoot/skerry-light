@@ -67,6 +67,7 @@
         <button class="primary" id="startBtn" type="button">Take the helm alone</button>
         <button class="tool crateOpenBtn" type="button">Crates</button>
         <button class="tool crateAllBtn" type="button" hidden>Open all</button>
+        <button class="tool backupBtn" type="button" title="Back up your crates and cosmetics">Back up save</button>
       </div>
       <section class="together" id="together" aria-labelledby="togetherHead">
         <h2 id="togetherHead">Sail together · up to 8 ships</h2>
@@ -117,6 +118,7 @@
         <button class="primary" id="nextBtn" type="button">Sail again</button>
         <button class="tool crateOpenBtn" type="button">Crates</button>
         <button class="tool crateAllBtn" type="button" hidden>Open all</button>
+        <button class="tool backupBtn" type="button" title="Back up your crates and cosmetics">Back up save</button>
       </div>
     </div>
   </div>
@@ -160,6 +162,7 @@
         <span class="wait" id="crewWait" hidden></span>
         <button class="tool crateOpenBtn" type="button">Crates</button>
         <button class="tool crateAllBtn" type="button" hidden>Open all</button>
+        <button class="tool backupBtn" type="button" title="Back up your crates and cosmetics">Back up save</button>
       </div>
     </div>
   </div>
@@ -179,6 +182,7 @@
         <button class="primary" id="againBtn" type="button">Take another ship</button>
         <button class="tool crateOpenBtn" type="button">Crates</button>
         <button class="tool crateAllBtn" type="button" hidden>Open all</button>
+        <button class="tool backupBtn" type="button" title="Back up your crates and cosmetics">Back up save</button>
       </div>
     </div>
   </div>
@@ -198,10 +202,15 @@
       <div class="savebox">
         <p class="savestatus" id="saveStatus"></p>
         <label for="saveInput" class="sr">Save code</label>
-        <input id="saveInput" type="text" placeholder="Paste a save code (SKERRY-...)" autocomplete="off" spellcheck="false">
+        <input id="saveInput" type="text" placeholder="Paste a save link or code (SKERRY-...)" autocomplete="off" spellcheck="false">
         <div class="btnrow">
-          <button class="tool" id="saveCopy" type="button">Copy my save code</button>
+          <button class="primary small" id="saveCopy" type="button">Back up my save</button>
           <button class="tool" id="saveLoad" type="button">Load a save code</button>
+        </div>
+        <div class="btnrow">
+          <button class="tool" id="saveFile" type="button">Download save file</button>
+          <button class="tool" id="saveFilePick" type="button">Load a save file</button>
+          <input type="file" id="saveFileIn" accept=".txt,text/plain" hidden>
         </div>
         <p class="savemsg" id="saveMsg" aria-live="polite"></p>
       </div>

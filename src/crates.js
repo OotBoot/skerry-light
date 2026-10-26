@@ -195,6 +195,7 @@ function saveData() {
 function saveCrates() {
   try { localStorage.setItem('skerry-crates', JSON.stringify(Object.assign(saveData(), { pending: CRATES.pending }))); } catch (e) {}
   cloudSaveSoon();
+  if (typeof renderBackupDot === 'function') renderBackupDot();
 }
 
 // ---------- keeping your loot safe ----------
@@ -224,19 +225,21 @@ function mergeSave(d, takeLooks) {
   }
   return changed;
 }
-function afterMerge() { saveCrates(); renderCrates(); updateCrateButtons(); if (typeof crewMode !== 'undefined' && crewMode) send(); }
+function afterMerge() { saveCrates(); renderCrates(); updateCrateButtons(); renderBackupDot(); if (typeof crewMode !== 'undefined' && crewMode) send(); }
 
 // the save code: your save, packed into one line of text
 function saveCode() {
   const d = saveData();
   const packed = { c: d.crates.skerry, o: d.owned, e: d.equipped, p: d.pennant, f: d.flare, b: d.boat };
-  return 'SKERRY-' + btoa(unescape(encodeURIComponent(JSON.stringify(packed)))).replace(/=+$/, '');
+  return 'SKERRY-' + btoa(unescape(encodeURIComponent(JSON.stringify(packed)))).replace(/=+$/, '').replace(/\+/g, '-').replace(/\//g, '_');
 }
 function readSaveCode(text) {
-  const m = String(text || '').trim().match(/^SKERRY-([A-Za-z0-9+/]+)$/);
+  // accepts a bare code, a save link, or a save file's text
+  const m = String(text || '').match(/SKERRY-([A-Za-z0-9+/_-]+)/);
   if (!m) return null;
   try {
-    const o = JSON.parse(decodeURIComponent(escape(atob(m[1]))));
+    const b64 = m[1].replace(/-/g, '+').replace(/_/g, '/');
+    const o = JSON.parse(decodeURIComponent(escape(atob(b64 + '==='.slice((b64.length + 3) % 4)))));
     return { crates: o.c | 0, owned: o.o, equipped: o.e, pennant: o.p, flare: o.f, boat: o.b };
   } catch (e) { return null; }
 }
@@ -271,28 +274,79 @@ function cloudSaveSoon(delay) {
 
 function renderSaveBox() {
   const st = $('saveStatus'); if (!st) return;
-  st.textContent = CLOUD.ref ? CLOUD.status : 'Saved in this browser. To keep it safe, or to move to another browser or phone, copy your save code and paste it there.';
+  st.textContent = CLOUD.ref ? CLOUD.status : 'Saved in this browser only. Back it up in one tap: you get a link that loads your save on any phone or browser.';
 }
+// ---------- one-tap backups ----------
+// A save link opens the game and loads your save, on any phone or browser. On claude.ai the page
+// can't be linked to like that (and your save is kept in your account there), so it's the plain code.
+function saveLink() {
+  if (window.claude && typeof window.claude.use === 'function') return null;
+  return location.origin + location.pathname + '#load=' + saveCode();
+}
+function lootSize() { return Object.values(CRATES.owned).reduce((a, v) => a + (v | 0), 0) + (CRATES.crates.skerry | 0); }
+function markBackedUp() { try { localStorage.setItem('skerry-backup', String(lootSize())); } catch (e) {} renderBackupDot(); }
+function needsBackup() { let b = 0; try { b = +localStorage.getItem('skerry-backup') || 0; } catch (e) {} return lootSize() > b && Object.keys(CRATES.owned).length > 0; }
+function renderBackupDot() { for (const b of document.querySelectorAll('.backupBtn')) b.classList.toggle('due', needsBackup()); }
+// the quickest way to keep it: the phone's share sheet (Messages, Notes, email...), else copy the link
+async function backupNow(msgEl) {
+  const link = saveLink(), text = link || saveCode();
+  const say = t => { if (msgEl) msgEl.textContent = t; if (typeof toast === 'function') toast(t, 'Save backed up'); };
+  if (navigator.share && link) {
+    try {
+      await navigator.share({ title: 'My Skerry Light save', text: 'Open this link to load my Skerry Light save:', url: link });
+      markBackedUp(); say('Save sent. Open that link on any phone or browser to get everything back.'); return;
+    } catch (e) { if (e && e.name === 'AbortError') return; }
+  }
+  try { await navigator.clipboard.writeText(text); markBackedUp(); say(link ? 'Save link copied. Paste it somewhere safe (a note, a message to yourself); opening it loads your save anywhere.' : 'Save code copied. Paste it somewhere safe, and into Load a save code to bring it back.'); return; } catch (e) {}
+  const input = $('saveInput'); if (input) { showCrates(); input.value = text; input.focus(); input.select(); }
+  say('Copy the save in the box and keep it somewhere safe.');
+}
+function downloadSave() {
+  const text = 'Skerry Light save\n\n' + (saveLink() ? 'Open this link to load it:\n' + saveLink() + '\n\nOr paste this code into Load a save code:\n' : 'Paste this code into Load a save code:\n') + saveCode() + '\n';
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([text], { type: 'text/plain' }));
+  a.download = 'skerry-light-save.txt';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  markBackedUp();
+}
+function loadSaveText(text, msgEl) {
+  const d = readSaveCode(text);
+  const say = t => { if (msgEl) msgEl.textContent = t; };
+  if (!d) { say('That doesn\u2019t look like a Skerry Light save.'); return false; }
+  if (CRATES.opening) return false;
+  const changed = mergeSave(d, true);
+  afterMerge(); markBackedUp();
+  say(changed ? 'Save loaded: everything from it is now here too.' : 'You already have everything in that save.');
+  return true;
+}
+// opening a save link: load it (nothing you already have is ever taken away), then tidy the address
+function loadFromLink() {
+  const m = (location.hash || '').match(/^#load=(SKERRY-[A-Za-z0-9+/_-]+)/);
+  if (!m) return;
+  const d = readSaveCode(m[1]);
+  try { history.replaceState(null, '', location.pathname + location.search); } catch (e) {}
+  if (!d) return;
+  const changed = mergeSave(d, true);
+  afterMerge(); markBackedUp();
+  setTimeout(() => toast(changed ? 'Your save was loaded from the link. Welcome back aboard.' : 'That save link has nothing new for this browser.', 'Save loaded'), 600);
+}
+
 function setupSaveBox() {
   const copy = $('saveCopy'), load = $('saveLoad'), input = $('saveInput'), msg = $('saveMsg');
   if (!copy) return;
-  copy.addEventListener('click', async () => {
-    const code = saveCode();
-    input.value = code;
-    let ok = false;
-    try { await navigator.clipboard.writeText(code); ok = true; } catch (e) {}
-    if (!ok) { input.focus(); input.select(); }
-    msg.textContent = ok ? 'Save code copied. Paste it into Skerry Light on another browser or phone.' : 'Select the code in the box and copy it.';
+  copy.addEventListener('click', () => backupNow(msg));
+  load.addEventListener('click', () => loadSaveText(input.value, msg));
+  $('saveFile').addEventListener('click', () => { downloadSave(); msg.textContent = 'Save file downloaded (skerry-light-save.txt). Keep it, and load it back with Load a save file.'; });
+  $('saveFileIn').addEventListener('change', async e => {
+    const f = e.target.files && e.target.files[0]; if (!f) return;
+    try { loadSaveText(await f.text(), msg); } catch (err) { msg.textContent = 'Couldn\u2019t read that file.'; }
+    e.target.value = '';
   });
-  load.addEventListener('click', () => {
-    const d = readSaveCode(input.value);
-    if (!d) { msg.textContent = 'That doesn\u2019t look like a save code. It starts with SKERRY-.'; return; }
-    if (CRATES.opening) return;
-    const changed = mergeSave(d, true);
-    afterMerge();
-    msg.textContent = changed ? 'Save code loaded: everything from it is now here too.' : 'You already have everything in that save code.';
-  });
+  $('saveFilePick').addEventListener('click', () => $('saveFileIn').click());
+  for (const b of document.querySelectorAll('.backupBtn')) b.addEventListener('click', () => backupNow(null));
   renderSaveBox();
+  renderBackupDot();
 }
 function myBoat() { return BOAT_BY_ID[CRATES.boat] || BOATS[0]; }
 function mySkin() { return SKIN_BY_ID[CRATES.equipped[CRATES.boat]] || SKIN_BY_ID[PLAIN[CRATES.boat]]; }
@@ -783,6 +837,7 @@ function toast(text, short) {
 
 loadCrates();
 setupSaveBox();
+loadFromLink();
 cloudInit();
 for (const b of document.querySelectorAll('.crateOpenBtn')) b.addEventListener('click', showCrates);
 // open every crate straight from a menu: shows the crates screen with the haul

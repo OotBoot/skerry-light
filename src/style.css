@@ -481,3 +481,5 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 .result.haul { min-width: 0; overflow: hidden; }
 .result.haul .odds { flex-wrap: wrap; }
 .haulstrip { max-width: 100%; }
+.backupBtn { position: relative; }
+.backupBtn.due::after { content: ""; position: absolute; top: 5px; right: 5px; width: 8px; height: 8px; border-radius: 50%; background: #ff6f5a; box-shadow: 0 0 6px #ff6f5a; }
