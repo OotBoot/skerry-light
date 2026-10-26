@@ -135,6 +135,7 @@ src/config.js       tuning numbers, asset paths and the keeper's log
 src/audio.js        sound, made with the Web Audio API (plus Verity's voice clip)
 src/world.js        voyage generation (sea and Backrooms) and Plimsoll's pathfinding
 src/render.js       the camera, sea, obstacles, lighthouse, deck, bearing strip and jumpscare
+src/gfx.js          the detailed look: sky, moon, clouds, sea glitter, coast, lighthouse, rocks, deck, drizzle, vignette, grain
 src/creatures.js    Maren and Plimsoll: behaviour, animation and drawing
 src/enemies.js      the drowned crew and Knock
 src/verity.js       Verity, on your deck, and his jumpscare

@@ -309,27 +309,11 @@ function drawScene() {
 
   if (g.backrooms) drawRoomsBack();
   else {
-  const sky = ctx.createLinearGradient(0, 0, 0, hy);
-  sky.addColorStop(0, '#03060d'); sky.addColorStop(1, '#0c1530');
-  ctx.fillStyle = sky; ctx.fillRect(-W, -H, W * 3, hy + H);
-  const sea = ctx.createLinearGradient(0, hy, 0, H);
-  sea.addColorStop(0, '#0a1424'); sea.addColorStop(1, '#040912');
-  ctx.fillStyle = sea; ctx.fillRect(-W, hy, W * 3, H * 2);
-
-  for (const st of stars) {
-    const d = angDiff(st.b, yaw); if (Math.abs(d) > fov / 2 + 0.2) continue;
-    const x = cx + Math.tan(d) * focal, y = hy - Math.tan(st.e) * focal;
-    if (y < -40) continue;
-    ctx.fillStyle = `rgba(236,228,207,${0.2 + 0.55 * st.m * (0.7 + 0.3 * Math.sin(g.t * 2 + st.ph))})`;
-    const sz = st.m > 0.8 ? 1.6 : 1; ctx.fillRect(x, y, sz, sz);
-  }
+  drawSky();
+  drawSea();
 
   var HB = SK.HARBOUR;
-  fillPoly([[-15000, 0, 1.5], [15000, 0, 1.5], [15000, -15000, 1.5], [-15000, -15000, 1.5]], '#070b09');
-  fillPoly([[-15000, -30, 30], [15000, -30, 30], [15000, -15000, 60], [-15000, -15000, 60]], '#0a100c');
-  fillPoly([[-40, 4, 22], [40, 4, 22], [55, -60, 22], [-60, -60, 22]], '#0b120d');
-  fillPoly([[HB.x - 26, -2, 2], [HB.x - 20, -2, 2], [HB.x - 20, 46, 2], [HB.x - 26, 46, 2]], '#1a1612');
-  fillPoly([[HB.x + 20, -2, 2], [HB.x + 26, -2, 2], [HB.x + 26, 46, 2], [HB.x + 20, 46, 2]], '#1a1612');
+  drawCoast();
 
   var far = SK.BEAM_RANGE;
   var beamOn = Math.abs(g.beam) < SK.SHADE + SK.HALF_BEAM;
@@ -387,7 +371,7 @@ function drawScene() {
     const o = it.o;
     let vis = visibility(o.x, o.y);
     if (it.kind === 'rock' || it.kind === 'wreck' || it.kind === 'timber') vis = Math.max(vis, afterglow(o));
-    if (it.kind === 'rock') drawRock(o, q, vis);
+    if (it.kind === 'rock') drawRockDetailed(o, q, vis);
     else if (it.kind === 'wreck') drawWreck(o, q, vis);
     else if (it.kind === 'timber') drawTimber(o, q, vis);
     else if (it.kind === 'plim') drawPlimsoll(q, vis);
@@ -398,33 +382,8 @@ function drawScene() {
   }
 
   if (!g.backrooms) {
-  // lighthouse tower and lamp
-  const base = cam(0, 0, 22), top = cam(0, 0, 52);
-  if (base.f > SK.NEAR) {
-    const b = proj(base), t = proj(top), hw = 4 * b.s;
-    ctx.fillStyle = '#2a2925';
-    ctx.beginPath(); ctx.moveTo(b.x - hw * 1.3, b.y); ctx.lineTo(b.x + hw * 1.3, b.y); ctx.lineTo(t.x + hw, t.y); ctx.lineTo(t.x - hw, t.y); ctx.closePath(); ctx.fill();
-    ctx.fillStyle = '#4a2420';
-    const mid = (b.y + t.y) / 2;
-    ctx.fillRect(b.x - hw * 1.15, mid - (b.y - t.y) * 0.08, hw * 2.3, (b.y - t.y) * 0.16);
-    const facing = 1 - Math.min(1, Math.abs(angDiff(g.beam, bearingOf(camX, camY))) / 0.5);
-    const shown = Math.abs(bearingOf(camX, camY)) < SK.SHADE ? facing : 0;
-    lamp(t.x, t.y - 2, '#ffd88a', Math.max(2.5, 2 * Math.sqrt(t.s)) * (1 + shown * 6));
-  }
-  if (beamOn) {
-    const L = [0, 0, 54], spread = far * Math.tan(SK.HALF_BEAM) * 0.35;
-    ctx.globalCompositeOperation = 'lighter';
-    fillPoly([L, [fl[0], fl[1], 54 + spread], [fr[0], fr[1], 54 + spread]], 'rgba(255,216,138,0.06)');
-    fillPoly([L, [fl[0], fl[1], 54 - spread], [fr[0], fr[1], 54 - spread]], 'rgba(255,216,138,0.05)');
-    ctx.globalCompositeOperation = 'source-over';
-  }
+  drawLighthouse(beamOn, fl, fr, far);
 
-  for (const tl of town) {
-    const c = cam(tl.x, tl.y, tl.z); if (c.f < SK.NEAR) continue;
-    const q = proj(c); if (q.x < -10 || q.x > W + 10) continue;
-    ctx.fillStyle = `rgba(255,200,120,${0.45 + 0.2 * Math.sin(g.t * 0.7 + tl.ph)})`;
-    ctx.fillRect(q.x, q.y, Math.max(1.5, q.s * 1.2), Math.max(1.5, q.s * 1.2));
-  }
   for (const [hx, col] of [[-23, '#e46c4f'], [23, '#86cfae']]) {
     const c = cam(HB.x + hx, 46, 7); if (c.f > SK.NEAR) { const q = proj(c); lamp(q.x, q.y, col, Math.max(2.4, 1.4 * Math.sqrt(q.s))); }
   }
@@ -448,6 +407,7 @@ function drawScene() {
   if (ship.inv > 1.1) { ctx.fillStyle = `rgba(228,108,79,${(ship.inv - 1.1) * 0.8})`; ctx.fillRect(0, 0, W, H); }
   if (g.bellFlash > 0) { ctx.fillStyle = `rgba(236,228,207,${g.bellFlash * 0.25})`; ctx.fillRect(0, 0, W, H); }
   drawDread();
+  drawAtmosphere();
   drawCompass();
 }
 
@@ -455,17 +415,20 @@ function drawScene() {
 function drawDeck() {
   const boat = BOAT_BY_ID[ship.boat] || BOATS[0];
   const tipY = H * boat.tipY, lit = g.glare, DW = W * boat.deckW;
-  const deck = ctx.createLinearGradient(0, tipY, 0, H);
   const skin = ship.skin || mySkin();
-  deck.addColorStop(0, mix(skin.deck[0], '#6a5034', lit * 0.7)); deck.addColorStop(1, mix(skin.deck[1], '#3a2a1a', lit * 0.7));
-  ctx.fillStyle = deck;
-  ctx.beginPath(); ctx.moveTo(cx - DW, H + 2); ctx.lineTo(cx, tipY); ctx.lineTo(cx + DW, H + 2); ctx.closePath(); ctx.fill();
-  ctx.strokeStyle = 'rgba(0,0,0,0.45)'; ctx.lineWidth = 1;
-  for (let i = -5; i <= 5; i++) { ctx.beginPath(); ctx.moveTo(cx, tipY); ctx.lineTo(cx + i * DW * 0.19, H + 2); ctx.stroke(); }
-  ctx.strokeStyle = skin.rail; ctx.lineWidth = boat.rail;
-  ctx.beginPath(); ctx.moveTo(cx - DW, H - 4); ctx.lineTo(cx - 6, tipY + 2); ctx.moveTo(cx + DW, H - 4); ctx.lineTo(cx + 6, tipY + 2); ctx.stroke();
-  ctx.strokeStyle = 'rgba(255,216,138,0.25)'; ctx.lineWidth = 1.5;
-  ctx.beginPath(); ctx.moveTo(cx - DW, H - 9); ctx.lineTo(cx - 6, tipY - 2); ctx.moveTo(cx + DW, H - 9); ctx.lineTo(cx + 6, tipY - 2); ctx.stroke();
+  // the planked deck, rails and rope come from a cached picture; the light on them is added here
+  ctx.drawImage(buildDeck(boat, skin), 0, 0, W, H);
+  if (lit > 0.02) {
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.fillStyle = `rgba(150,115,70,${lit * 0.45})`;
+    ctx.beginPath(); ctx.moveTo(cx - DW, H + 2); ctx.lineTo(cx, tipY); ctx.lineTo(cx + DW, H + 2); ctx.closePath(); ctx.fill();
+    ctx.globalCompositeOperation = 'source-over';
+  }
+  // the deck lantern's warm pool on the wet planks
+  { const lx0 = cx + Math.min(W * 0.28, 220), ly0 = H * 0.8;
+    const pool = ctx.createRadialGradient(lx0, ly0 + 30, 4, lx0, ly0 + 30, Math.min(W, H) * 0.3);
+    pool.addColorStop(0, 'rgba(255,196,120,0.16)'); pool.addColorStop(1, 'rgba(255,196,120,0)');
+    ctx.fillStyle = pool; ctx.fillRect(lx0 - W * 0.4, ly0 - H * 0.3, W * 0.8, H * 0.6); }
   // the barque's heavy catheads and anchors either side of the bow
   if (boat.id === 'barque') for (const sd of [-1, 1]) {
     const ax = cx + sd * DW * 0.34, ay = tipY + (H - tipY) * 0.42;
@@ -475,7 +438,9 @@ function drawDeck() {
   }
   // a cutter's long running bowsprit is thin; a barque's is a tree trunk
   const bsw = boat.id === 'cutter' ? 6 : boat.id === 'barque' ? 13 : 9;
-  ctx.fillStyle = skin.wood;
+  const bsg = ctx.createLinearGradient(cx - bsw, 0, cx + bsw, 0);
+  bsg.addColorStop(0, mix(skin.wood, '#000000', 0.4)); bsg.addColorStop(0.45, mix(skin.wood, '#ffffff', 0.18)); bsg.addColorStop(1, mix(skin.wood, '#000000', 0.5));
+  ctx.fillStyle = bsg;
   ctx.beginPath(); ctx.moveTo(cx - bsw, tipY + 6); ctx.lineTo(cx + bsw, tipY + 6); ctx.lineTo(cx + 2, hy + H * (boat.id === 'cutter' ? 0.03 : 0.07)); ctx.lineTo(cx - 2, hy + H * (boat.id === 'cutter' ? 0.03 : 0.07)); ctx.closePath(); ctx.fill();
   // your pennant, flying from a short staff at the tip of the bowsprit
   const pen = 'pennant' in ship ? ship.pennant : myPennant();
@@ -495,10 +460,10 @@ function drawDeck() {
     ctx.beginPath(); ctx.moveTo(cx + s * 14, tipY + 4);
     ctx.quadraticCurveTo(cx + s * W * 0.12, tipY + 2 + Math.sin(g.t * 6) * 2, cx + s * W * 0.22, tipY + 18); ctx.stroke();
   }
+  updateSpray(tipY);
   const lx = cx + Math.min(W * 0.28, 220), ly = H * 0.8;
   const flick = g.maren.stage >= 3 && !reduceMotion ? (Math.random() < 0.15 ? 0.4 : 1) : 1;
-  ctx.strokeStyle = '#2a1e14'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(lx, ly - 30); ctx.lineTo(lx, ly - 10); ctx.stroke();
-  ctx.globalAlpha = flick; lamp(lx, ly, skin.lantern, 7); ctx.fillStyle = mix(skin.lantern, '#ffffff', 0.5); ctx.fillRect(lx - 4, ly - 6, 8, 10); ctx.globalAlpha = 1;
+  drawLantern(lx, ly - 8, skin.lantern, flick);
 }
 
 // red closing in at the edges as she comes nearer
