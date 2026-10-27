@@ -385,6 +385,7 @@ function beginVoyage(n) {
   addLog(n === 1 ? 'Under way. Follow the blue shoes.' : 'Voyage ' + n + '. More wreckage, and the light turns slower.');
   enteredBackrooms();
   if (!g.backrooms) addLog(biomeLine());
+  if (!g.portal) showBiomeBanner();
   addLog(trioLine(), 'w');
   cv.focus({ preventScroll: true });
 }
@@ -402,6 +403,7 @@ function beginCrewVoyage(L, slot) {
   addLog(L.voy === 1 ? 'Under way with your crew. Follow the blue shoes, and keep together.' : 'Voyage ' + L.voy + '. More wreckage, and the light turns slower.');
   enteredBackrooms();
   if (!g.backrooms) addLog(biomeLine());
+  if (!g.portal) showBiomeBanner();
   addLog(trioLine(), 'w');
   cv.focus({ preventScroll: true });
 }
@@ -422,7 +424,7 @@ for (const b of document.querySelectorAll('.menuBtn')) b.addEventListener('click
 function toTitle() {
   state = 'title';
   hideCards(); $('crewCard').hidden = true;
-  $('hud').hidden = true; $('logbox').hidden = true;
+  $('hud').hidden = true; $('logbox').hidden = true; $('biomeBanner').hidden = true;
   newVoyage(1, true);
   $('stage').classList.remove('rooms');
   $('titleCard').hidden = false;

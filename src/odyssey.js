@@ -12,19 +12,19 @@ Object.assign(FOE_INTRO, {
 Object.assign(FOE_KINDS, {
   // three of them on a rock, singing; the song hauls the helm round to their rock
   sirens: {
-    h: 4, max: 1, every: [22, 32], vis: o => Math.max(0.7, foeVis(o)),
+    h: 4, max: 1, every: [30, 42], vis: o => Math.max(0.7, foeVis(o)),
     spawn() {
       const p = aheadPt(rand(170, 220), (Math.random() < 0.5 ? -1 : 1) * rand(50, 90));
       if (!okWater(p) || g.rocks.some(r => Math.hypot(r.x - p.x, r.y - p.y) < r.r + 20)) return null;
-      return { x: p.x, y: p.y, ph: rand(0, 6), hush: 0, songT: 0, life: 50, cd: 0 };
+      return { x: p.x, y: p.y, ph: rand(0, 6), hush: 0, songT: 0, life: 38, cd: 0 };
     },
     update(f, dt) {
       f.ph += dt; f.life -= dt; if (f.cd > 0) f.cd -= dt;
       if (f.hush > 0) f.hush -= dt;
       const d = dist(f);
-      if (f.hush <= 0 && d < 240) {
+      if (f.hush <= 0 && d < 200) {
         const side = angDiff(bearingOf(f.x - ship.x, f.y - ship.y), ship.h);
-        g.mods.pull += clamp(side * 4, -1, 1) * 0.75 * Math.min(1, 1.5 * (1 - d / 240));
+        g.mods.pull += clamp(side * 4, -1, 1) * 0.45 * Math.min(1, 1.5 * (1 - d / 200));
         f.songT -= dt;
         if (f.songT <= 0) { f.songT = 2.4; sfxFoe('song', panOf(f), Math.max(0.25, 1 - d / 240)); }
       }
@@ -70,12 +70,12 @@ Object.assign(FOE_KINDS, {
 
   // a whirlpool that opens on your course and drags the ship in; the middle of it breaks planks
   charybdis: {
-    h: 2, max: 1, every: [20, 30], vis: () => 1,
+    h: 2, max: 1, every: [30, 42], vis: () => 1,
     spawn() {
       const p = aheadPt(rand(170, 220), rand(-25, 25));
       if (!okWater(p) || g.rocks.some(r => Math.hypot(r.x - p.x, r.y - p.y) < r.r + 40)) return null;
       sfxFoe('gurgle', panOf(p), 0.7);
-      return { x: p.x, y: p.y, grow: 0, rot: 0, life: 28, gT: 0, close: 0, R: 34 };
+      return { x: p.x, y: p.y, grow: 0, rot: 0, life: 24, gT: 0, close: 0, R: 30 };
     },
     update(f, dt) {
       f.life -= dt; f.rot += dt * (1.2 + f.grow);
@@ -85,12 +85,12 @@ Object.assign(FOE_KINDS, {
       if (d < reach && f.grow > 0.3) {
         // the current: round and in, stronger towards the middle
         const k = (1 - d / reach) * f.grow, b = bearingOf(f.x - ship.x, f.y - ship.y);
-        const inward = 8 * k, round = 6 * k;
+        const inward = 5 * k, round = 4 * k;
         ship.x += (Math.sin(b) * inward + Math.cos(b) * round) * dt; ship.y += (Math.cos(b) * inward - Math.sin(b) * round) * dt;
         g.mods.pull += clamp(angDiff(b, ship.h) * 2, -1, 1) * 0.3 * k;
         f.gT -= dt; if (f.gT <= 0) { f.gT = 1.6; sfxFoe('gurgle', panOf(f), 0.4 + k * 0.6); }
       }
-      if (d < 8 && f.grow > 0.5) { foeHit('Charybdis'); g.shake = Math.max(g.shake, 0.7); f.close = 1.5; addLog('Charybdis spun you round and spat you out. The whirlpool closes.', 'w'); }
+      if (d < 6 && f.grow > 0.5) { foeHit('Charybdis'); g.shake = Math.max(g.shake, 0.7); f.close = 1.5; addLog('Charybdis spun you round and spat you out. The whirlpool closes.', 'w'); }
       if (f.life <= 0) f.close = 2;
     },
     draw(f, q, vis) {
@@ -119,12 +119,12 @@ Object.assign(FOE_KINDS, {
 
   // a one-eyed giant in the shallows, hurling rocks at where you're going; a flare in his eye blinds him
   cyclops: {
-    h: 18, max: 1, every: [22, 30], vis: o => Math.max(0.6, foeVis(o)),
+    h: 18, max: 1, every: [30, 42], vis: o => Math.max(0.6, foeVis(o)),
     spawn() {
       const p = aheadPt(rand(150, 200), (Math.random() < 0.5 ? -1 : 1) * rand(70, 110));
       if (!okWater(p) || g.rocks.some(r => Math.hypot(r.x - p.x, r.y - p.y) < r.r + 15)) return null;
       sfxFoe('roar', panOf(p), 0.9);
-      return { x: p.x, y: p.y, ph: rand(0, 6), throwT: 3, wind: 0, blind: 0, rise: 0, life: 45 };
+      return { x: p.x, y: p.y, ph: rand(0, 6), throwT: 4, wind: 0, blind: 0, rise: 0, life: 34 };
     },
     update(f, dt) {
       f.ph += dt; f.life -= dt; f.rise = Math.min(1, f.rise + dt * 0.4);
@@ -132,20 +132,20 @@ Object.assign(FOE_KINDS, {
       else if (f.wind > 0) {
         f.wind -= dt;
         if (f.wind <= 0) {
-          const dur = 2.6, p = aheadPt(ship.v * dur + rand(-4, 8), rand(-7, 7));
+          const dur = 3, p = aheadPt(ship.v * dur + rand(-4, 8), rand(-7, 7));
           if (!g.backrooms) p.y = Math.max(46, p.y);
           const side = angDiff(bearingOf(f.x - ship.x, f.y - ship.y), yaw) > 0 ? 1 : -1;
-          hazard({ kind: 'fireball', style: 'boulder', x: f.x, y: f.y, z: 22, x0: f.x, y0: f.y, z0: 22, x1: p.x, y1: p.y, fuse: dur, dur, r: 10, side });
-          hazard({ kind: 'scorch', style: 'boulder', x: p.x, y: p.y, r: 10, life: dur });
+          hazard({ kind: 'fireball', style: 'boulder', x: f.x, y: f.y, z: 22, x0: f.x, y0: f.y, z0: 22, x1: p.x, y1: p.y, fuse: dur, dur, r: 8.5, side });
+          hazard({ kind: 'scorch', style: 'boulder', x: p.x, y: p.y, r: 8.5, life: dur });
           sfxFoe('throw', panOf(f), 1);
         }
       } else if (f.rise >= 1) {
         f.throwT -= dt;
-        if (f.throwT <= 0 && dist(f) < 300) { f.throwT = rand(5, 7) * Math.max(0.6, 1 - (g.n - 2) * 0.04); f.wind = 1.2; sfxFoe('grunt', panOf(f), 0.8); }
+        if (f.throwT <= 0 && dist(f) < 280) { f.throwT = rand(7.5, 10) * Math.max(0.75, 1 - (g.n - 2) * 0.03); f.wind = 1.4; sfxFoe('grunt', panOf(f), 0.8); }
       }
       if (f.life <= 0) f.dead = true;
     },
-    flare(f, x, y) { if (f.blind <= 0 && Math.hypot(f.x - x, f.y - y) < SK.FLARE_RADIUS * 1.2) { f.blind = 12; sfxFoe('roar', panOf(f), 1); return 'The flare caught the Cyclops full in his eye. He is roaring and clutching his face.'; } },
+    flare(f, x, y) { if (f.blind <= 0 && Math.hypot(f.x - x, f.y - y) < SK.FLARE_RADIUS * 1.2) { f.blind = 16; sfxFoe('roar', panOf(f), 1); return 'The flare caught the Cyclops full in his eye. He is roaring and clutching his face.'; } },
     draw(f, q, vis) {
       const s = q.s, sink = (1 - f.rise) * 18 * s, lift = f.wind > 0 ? 1 - f.wind / 1.2 : 0;
       ctx.save(); ctx.globalAlpha = vis; ctx.translate(q.x, q.y);

@@ -149,7 +149,7 @@ const LAND = { peaks: [], volcano: [], palms: [], graves: [], spires: [], church
   // far mountains (the fjord): two ranges, the nearer one darker
   for (let x = -4200; x <= 4200; x += rand(260, 420)) LAND.peaks.push({ x, y: -900 - rand(0, 300), w: rand(260, 480), h: rand(240, 480), far: 1 });
   for (let x = -3000; x <= 3000; x += rand(220, 360)) LAND.peaks.push({ x, y: -380 - rand(0, 120), w: rand(180, 300), h: rand(120, 260), far: 0 });
-  for (let i = 0; i < 70; i++) { const a = rand(-Math.PI, Math.PI), d = rand(1500, 3200); LAND.lavafalls = LAND.lavafalls || []; LAND.lavafalls.push({ x: Math.sin(a) * d, y: Math.cos(a) * d + 900, w: rand(6, 18), ph: rand(0, 6) }); }
+  for (let i = 0; i < 44; i++) { const a = rand(-Math.PI, Math.PI), d = rand(1500, 3200); LAND.lavafalls = LAND.lavafalls || []; LAND.lavafalls.push({ x: Math.sin(a) * d, y: Math.cos(a) * d + 900, w: rand(6, 18), ph: rand(0, 6) }); }
   for (let i = 0; i < 26; i++) { LAND.glow = LAND.glow || []; LAND.glow.push({ b: rand(-Math.PI, Math.PI), e: rand(0.25, 0.75), s: rand(0.6, 1.6), seed: (Math.random() * 1e6) | 0 }); }
   LAND.stairs = [{ x: -700, y: -900, w: 60, steps: 26, rise: 22, run: 30 }, { x: 1300, y: -1300, w: 80, steps: 34, rise: 26, run: 34 }, { x: -2200, y: -1600, w: 70, steps: 30, rise: 28, run: -32 }, { x: 2600, y: 600, w: 60, steps: 24, rise: 24, run: -30 }];
   LAND.doors = []; for (let i = 0; i < 9; i++) LAND.doors.push({ x: rand(-2600, 2600), y: -rand(250, 900), w: rand(18, 34), lit: Math.random() < 0.3 });
@@ -204,12 +204,10 @@ function drawLandFar(B) {
       // the crater's glow and a column of lit smoke
       lamp(top.x, top.y, '#ff6a28', Math.max(4, tw * top.s * 0.5));
       ctx.globalCompositeOperation = 'source-over';
-      for (let i = 0; i < 7; i++) {
-        const k = ((g.t * 0.05 + i / 7) % 1), q = onCam(v.x + k * v.w * 0.5 + Math.sin(i * 2) * tw * 0.4, v.y, v.h + k * v.h * 0.9); if (!q) continue;
+      for (let i = 0; i < (v.h > 400 ? 5 : 3); i++) {
+        const n = v.h > 400 ? 5 : 3, k = ((g.t * 0.05 + i / n) % 1), q = onCam(v.x + k * v.w * 0.5 + Math.sin(i * 2) * tw * 0.4, v.y, v.h + k * v.h * 0.9); if (!q) continue;
         const r = (tw * 0.6 + k * v.w * 0.35) * q.s;
-        const gr = ctx.createRadialGradient(q.x, q.y, 0, q.x, q.y, r);
-        gr.addColorStop(0, `rgba(${90 - k * 40 | 0},${40 - k * 20 | 0},${36 - k * 16 | 0},${0.5 * (1 - k)})`); gr.addColorStop(1, 'rgba(40,20,18,0)');
-        ctx.fillStyle = gr; ctx.beginPath(); ctx.arc(q.x, q.y, r, 0, 6.28); ctx.fill();
+        ctx.globalAlpha = 0.55 * (1 - k); lamp(q.x, q.y, '#4a2420', r / 3); ctx.globalAlpha = 1;
       }
     }
   } else if (B.land === 'spires') {
@@ -218,11 +216,20 @@ function drawLandFar(B) {
     drawLavafalls();
   } else if (B.land === 'stairs') {
     // staircases climbing out of the sea into the clouds, and doorways standing alone on the shore
+    // (each flight is drawn as a few stepped bands rather than a polygon per step)
     for (const st of LAND.stairs) {
-      for (let i = 0; i < st.steps; i++) {
-        const x0 = st.x + i * st.run * 0.5, z0 = i * st.rise, sh = 0.18 + 0.1 * (i % 2);
-        fillPoly([[x0 - st.w / 2, st.y, z0], [x0 + st.w / 2, st.y, z0], [x0 + st.w / 2, st.y, z0 + st.rise], [x0 - st.w / 2, st.y, z0 + st.rise]], `rgba(${60 + i * 2},${54 + i * 2},${72 + i * 2},${0.75 - i / st.steps * 0.6})`);
-        fillPoly([[x0 - st.w / 2, st.y, z0 + st.rise], [x0 + st.w / 2, st.y, z0 + st.rise], [x0 + st.w / 2, st.y, z0 + st.rise * 1.06], [x0 - st.w / 2, st.y, z0 + st.rise * 1.06]], `rgba(255,225,210,${sh * (1 - i / st.steps)})`);
+      const s = Math.sign(st.run) || 1, half = st.w / 2, dx = Math.abs(st.run) * 0.5, CH = 6;
+      for (let c0 = 0; c0 < st.steps; c0 += CH) {
+        const c1 = Math.min(st.steps, c0 + CH), top = [], bot = [];
+        for (let i = c0; i < c1; i++) {
+          const xl = st.x + s * (i * dx - half), xr = st.x + s * (i * dx + half), z0 = i * st.rise;
+          top.push([xl, st.y, z0 + st.rise], [i < c1 - 1 ? xl + s * dx : xr, st.y, z0 + st.rise]);
+          bot.unshift([xr, st.y, z0], [i > c0 ? xr - s * dx : xl, st.y, z0]);
+        }
+        const k = c0 / st.steps, col = 60 + c0 * 2;
+        fillPoly(top.concat(bot), `rgba(${col},${col - 6},${col + 12},${0.72 - k * 0.6})`);
+        const edge = polyProj(top);
+        if (edge.length > 1) { ctx.strokeStyle = `rgba(255,225,210,${0.22 * (1 - k)})`; ctx.lineWidth = 1; ctx.beginPath(); edge.forEach((q, i) => i ? ctx.lineTo(q.x, q.y) : ctx.moveTo(q.x, q.y)); ctx.stroke(); }
       }
     }
     for (const d of LAND.doors) {
@@ -332,19 +339,20 @@ function drawLandNear(B) {
 // columns of lava pouring out of the roof into the sea, far off all round
 function drawLavafalls() {
   const list = LAND.lavafalls.map(f => ({ f, c: cam(f.x, f.y, 0) })).filter(o => o.c.f > 20).sort((a, b) => b.c.f - a.c.f);
+  // the glow and the core are two little gradient strips, drawn once and stretched into place
+  if (!GFX.fallGlow) {
+    const strip = (stops) => { const c = offscreen(64, 2), q = c.getContext('2d'), gr = q.createLinearGradient(0, 0, 64, 0); stops.forEach(([t, col]) => gr.addColorStop(t, col)); q.fillStyle = gr; q.fillRect(0, 0, 64, 2); return c; };
+    GFX.fallGlow = strip([[0, 'rgba(255,90,20,0)'], [0.5, 'rgba(255,110,30,0.22)'], [1, 'rgba(255,90,20,0)']]);
+    GFX.fallCore = strip([[0, 'rgba(255,120,20,0.7)'], [0.5, 'rgba(255,215,90,0.95)'], [1, 'rgba(255,120,20,0.7)']]);
+  }
   ctx.globalCompositeOperation = 'lighter';
   for (const { f, c } of list) {
     const b = proj(c); if (b.x < -200 || b.x > W + 200) continue;
     const w = Math.max(1.5, f.w * b.s), top = -10;
     const fade = Math.max(0.25, 1 - c.f / 3600);
-    // a wide soft glow, then the bright core
-    const gl = ctx.createLinearGradient(b.x - w * 4, 0, b.x + w * 4, 0);
-    gl.addColorStop(0, 'rgba(255,90,20,0)'); gl.addColorStop(0.5, `rgba(255,110,30,${0.22 * fade})`); gl.addColorStop(1, 'rgba(255,90,20,0)');
-    ctx.fillStyle = gl; ctx.fillRect(b.x - w * 4, top, w * 8, b.y - top);
-    const core = ctx.createLinearGradient(b.x - w / 2, 0, b.x + w / 2, 0);
-    core.addColorStop(0, `rgba(255,120,20,${0.7 * fade})`); core.addColorStop(0.5, `rgba(255,${200 + 30 * Math.sin(g.t * 3 + f.ph) | 0},90,${0.95 * fade})`); core.addColorStop(1, `rgba(255,120,20,${0.7 * fade})`);
-    ctx.fillStyle = core; ctx.fillRect(b.x - w / 2, top, w, b.y - top);
-    // the splash where it lands
+    ctx.globalAlpha = fade; ctx.drawImage(GFX.fallGlow, b.x - w * 3, top, w * 6, b.y - top);
+    ctx.globalAlpha = fade * (0.85 + 0.15 * Math.sin(g.t * 3 + f.ph)); ctx.drawImage(GFX.fallCore, b.x - w / 2, top, w, b.y - top);
+    ctx.globalAlpha = 1;
     lamp(b.x, b.y, '#ff7a20', Math.max(2, w * 0.9) * fade);
   }
   ctx.globalCompositeOperation = 'source-over';
@@ -360,15 +368,23 @@ function drawCavernRoof(B) {
     }
     GFX.rack = c; GFX.rackPat = ctx.createPattern(c, 'repeat');
   }
-  const y1 = hy - Math.max(30, H * 0.06);
-  ctx.save();
-  ctx.translate(-yaw * focal * 0.5, 0);
-  ctx.fillStyle = GFX.rackPat; ctx.fillRect(yaw * focal * 0.5 - W, -H, W * 3, y1 + H);
-  ctx.restore();
-  // the roof fades into red haze towards the horizon
-  const hz = ctx.createLinearGradient(0, 0, 0, hy);
-  hz.addColorStop(0, 'rgba(20,4,3,0.55)'); hz.addColorStop(0.6, 'rgba(60,12,8,0.5)'); hz.addColorStop(1, 'rgba(120,30,12,0.95)');
-  ctx.fillStyle = hz; ctx.fillRect(-W, -H, W * 3, hy + H);
+  // the rock and its haze are baked into one picture the width of the screen plus a tile, which just
+  // slides sideways as you turn (one image draw a frame instead of two full-screen fills)
+  const Hc = Math.ceil(H * 1.25), key = W + 'x' + H + '@' + dpr;
+  if (GFX.roofKey !== key) {
+    GFX.roofKey = key;
+    const RW = Math.ceil(W * 1.1) + 96, c = offscreen(RW * dpr, Hc * dpr), q = c.getContext('2d');
+    q.scale(dpr, dpr);
+    q.fillStyle = q.createPattern(GFX.rack, 'repeat'); q.fillRect(0, 0, RW, Hc - Math.max(30, H * 0.06));
+    const hz = q.createLinearGradient(0, Hc - H * 0.5, 0, Hc);
+    hz.addColorStop(0, 'rgba(20,4,3,0.55)'); hz.addColorStop(0.6, 'rgba(60,12,8,0.5)'); hz.addColorStop(1, 'rgba(120,30,12,0.95)');
+    q.fillStyle = hz; q.fillRect(0, 0, RW, Hc);
+    q.fillStyle = 'rgba(20,4,3,0.55)'; q.fillRect(0, 0, RW, Hc - H * 0.5);
+    GFX.roofW = RW;
+    GFX.roof = c;
+  }
+  const off = (((yaw * focal * 0.5) % 96) + 96) % 96;
+  ctx.drawImage(GFX.roof, -off - W * 0.05, hy - Hc, GFX.roofW, Hc);
   // glowstone clumps
   for (const s of LAND.glow) {
     const p = skyPos(s.b, s.e); if (!p || p.y > hy - 20) continue;
@@ -393,12 +409,13 @@ function drawSkyExtras(B) {
     g0.addColorStop(0, `rgba(${B.aurora[1]},0)`); g0.addColorStop(0.5, `rgba(${B.aurora[1]},0.2)`); g0.addColorStop(0.85, `rgba(${B.aurora[0]},0.35)`); g0.addColorStop(1, `rgba(${B.aurora[0]},0)`);
     ctx.fillStyle = g0; ctx.globalCompositeOperation = 'lighter';
     const y0 = hy - Math.tan(0.62) * focal, y1 = hy - Math.tan(0.1) * focal;
-    for (let i = 0; i < 120; i++) {
+    // (60 wide strips rather than 120 narrow ones: the same curtain for half the drawing)
+    for (let i = 0; i < 120; i += 2) {
       const b = -1.1 + i * 0.018 + Math.sin(i * 0.15 + g.t * 0.2) * 0.04;
       const p = skyPos(b + Math.PI, 0.3); if (!p) continue;
       const a = 0.35 + 0.65 * Math.max(0, Math.sin(i * 0.23 + g.t * 0.6) * Math.sin(i * 0.07 - g.t * 0.25));
       const lift = Math.sin(i * 0.09 + g.t * 0.3) * (y1 - y0) * 0.18;
-      ctx.globalAlpha = a; ctx.fillRect(p.x, y0 + lift, Math.max(2, focal * 0.022), (y1 - y0) * (0.7 + 0.3 * Math.sin(i * 0.4)));
+      ctx.globalAlpha = a; ctx.fillRect(p.x, y0 + lift, Math.max(3, focal * 0.04), (y1 - y0) * (0.7 + 0.3 * Math.sin(i * 0.4)));
     }
     ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
   }
@@ -418,7 +435,7 @@ function drawSkyExtras(B) {
   if (B.glow) {
     const gr = ctx.createLinearGradient(0, hy - H * 0.3, 0, hy + 4);
     gr.addColorStop(0, `rgba(${B.glow},0)`); gr.addColorStop(1, `rgba(${B.glow},${0.22 + 0.04 * Math.sin(g.t * 0.9)})`);
-    ctx.fillStyle = gr; ctx.fillRect(-W, hy - H * 0.3, W * 3, H * 0.3 + 4);
+    ctx.fillStyle = gr; ctx.fillRect(-W * 0.15, hy - H * 0.3, W * 1.3, H * 0.3 + 4);
   }
   if (B.moon2) {
     const p = skyPos(MOON.b + 0.5, 0.42);
@@ -433,9 +450,7 @@ function rockSkinInside(B, r, x, y, w, h) {
   const topAt = i => ({ x: x - w / 2 + w * i / (r.prof.length - 1), y: y - r.prof[i] * h });
   if (k === 'ice') {
     // blue light deep inside, and snow lying along the top
-    const ig = ctx.createRadialGradient(x, y - h * 0.35, 0, x, y - h * 0.35, w * 0.45);
-    ig.addColorStop(0, 'rgba(120,220,255,0.35)'); ig.addColorStop(1, 'rgba(120,220,255,0)');
-    ctx.fillStyle = ig; ctx.fillRect(x - w / 2, y - h, w, h);
+    const ga = ctx.globalAlpha; ctx.globalAlpha = ga * 0.4; lamp(x, y - h * 0.35, '#78dcff', w * 0.11); ctx.globalAlpha = ga;
     ctx.fillStyle = 'rgba(248,252,255,0.9)'; ctx.beginPath();
     r.prof.forEach((v, i) => { const p = topAt(i); i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y); });
     for (let i = r.prof.length - 1; i >= 0; i--) { const p = topAt(i); ctx.lineTo(p.x, p.y + h * (0.08 + 0.06 * Math.abs(Math.sin(r.ph * 5 + i * 2)))); }
@@ -540,9 +555,7 @@ function rockSkinOutside(B, r, x, y, w, h) {
       const bx = x - w / 2 + w * j / (r.prof.length - 1), by = y - r.prof[j] * h + h * 0.12;
       const L = h * (0.5 + 0.35 * ((Math.sin(r.ph * 9 + i * 4) + 1) / 2)), sw = w * 0.06, lean = Math.sin(r.ph * 5 + i * 2) * 0.35;
       const hue = (i + Math.round(r.ph * 3)) % 2;
-      const cg = ctx.createLinearGradient(bx, by, bx + lean * L, by - L);
-      cg.addColorStop(0, hue ? 'rgba(70,40,150,0.95)' : 'rgba(40,90,150,0.95)'); cg.addColorStop(1, hue ? 'rgba(255,150,240,0.95)' : 'rgba(150,245,255,0.95)');
-      ctx.fillStyle = cg;
+      ctx.fillStyle = hue ? 'rgba(160,95,200,0.95)' : 'rgba(95,170,205,0.95)';
       ctx.beginPath(); ctx.moveTo(bx - sw, by); ctx.lineTo(bx - sw * 0.6 + lean * L * 0.8, by - L * 0.8); ctx.lineTo(bx + lean * L, by - L); ctx.lineTo(bx + sw * 0.7 + lean * L * 0.75, by - L * 0.75); ctx.lineTo(bx + sw, by); ctx.closePath(); ctx.fill();
       ctx.fillStyle = 'rgba(255,255,255,0.3)';
       ctx.beginPath(); ctx.moveTo(bx - sw * 0.2, by); ctx.lineTo(bx + lean * L, by - L); ctx.lineTo(bx + sw * 0.7 + lean * L * 0.75, by - L * 0.75); ctx.lineTo(bx + sw, by); ctx.closePath(); ctx.fill();
@@ -638,14 +651,16 @@ function drawBiomeWeather(B) {
     const base = ctx.createLinearGradient(0, hy - H * 0.12, 0, hy + H * 0.2);
     base.addColorStop(0, 'rgba(140,155,150,0)'); base.addColorStop(0.4, 'rgba(140,155,150,0.28)'); base.addColorStop(1, 'rgba(140,155,150,0)');
     ctx.fillStyle = base; ctx.fillRect(0, hy - H * 0.12, W, H * 0.32);
+    if (!GFX.fogPuff) {
+      const c = offscreen(128, 128), q = c.getContext('2d'), gr = q.createRadialGradient(64, 64, 0, 64, 64, 64);
+      gr.addColorStop(0, 'rgba(150,165,160,0.22)'); gr.addColorStop(1, 'rgba(150,165,160,0)');
+      q.fillStyle = gr; q.fillRect(0, 0, 128, 128); GFX.fogPuff = c;
+    }
     for (const f of FX.fog) {
       f.x += f.v * 0.016; if (f.x > 1.6) f.x = -0.6; if (f.x < -0.6) f.x = 1.6;
       const x = f.x * W - yaw * W * 0.3, y = hy + f.y * H, rw = f.w * W * 0.5, rh = f.h * H;
       const xx = ((x % (W * 2.2)) + W * 2.2) % (W * 2.2) - W * 0.6;
-      const gr = ctx.createRadialGradient(xx, y, 0, xx, y, rw);
-      gr.addColorStop(0, 'rgba(150,165,160,0.22)'); gr.addColorStop(1, 'rgba(150,165,160,0)');
-      ctx.save(); ctx.translate(xx, y); ctx.scale(1, rh / rw); ctx.translate(-xx, -y);
-      ctx.fillStyle = gr; ctx.beginPath(); ctx.arc(xx, y, rw, 0, 6.28); ctx.fill(); ctx.restore();
+      ctx.drawImage(GFX.fogPuff, xx - rw, y - rh, rw * 2, rh * 2);
     }
     return false;   // and the drizzle too
   }
@@ -702,6 +717,7 @@ function updatePortal(dt) {
     if (typeof sfxPortal === 'function') sfxPortal(1);
     if (typeof padRumble === 'function') padRumble(0.6, 0.8, 600);
     addLog(BIOMES.nether.name[0].toUpperCase() + BIOMES.nether.name.slice(1) + '. ' + BIOMES.nether.intro, 'w');
+    showBiomeBanner();
   }
   if (P.t >= PORTAL.END) g.portal = null;
 }
@@ -770,4 +786,24 @@ function drawPortalOverlay() {
       ctx.fillRect(cx + Math.cos(ang) * rr, H / 2 + Math.sin(ang) * rr * 0.7, px, px);
     }
   }
+}
+
+// ---------- the sea's name across the top of the screen ----------
+const BIOME_TINT = {
+  skerry: ['#ffd88a', 'rgba(255,200,120,0.35)'], fjord: ['#d8f2ff', 'rgba(120,220,255,0.4)'], ember: ['#ffb070', 'rgba(255,90,30,0.45)'],
+  lagoon: ['#a8fff0', 'rgba(60,220,200,0.4)'], barrows: ['#d0dcc8', 'rgba(150,170,150,0.35)'], shoals: ['#e8c8ff', 'rgba(170,110,255,0.45)'],
+  nether: ['#ffb060', 'rgba(255,70,20,0.55)'], odyssey: ['#ffe2a0', 'rgba(255,200,120,0.4)'], between: ['#f4dcd4', 'rgba(255,210,200,0.35)'],
+  backrooms: ['#f0e08a', 'rgba(240,220,120,0.35)'],
+};
+function showBiomeBanner() {
+  const el = $('biomeBanner'); if (!el || !g || g.attract) return;
+  const id = g.backrooms ? 'backrooms' : g.biome || 'skerry';
+  const name = g.backrooms ? 'The Backrooms' : BIOMES[id] ? BIOMES[id].name.replace(/^the /, 'The ') : 'Skerry Light';
+  const [col, glow] = BIOME_TINT[id] || BIOME_TINT.skerry;
+  $('bbName').textContent = name;
+  $('bbSub').textContent = 'Voyage ' + g.n;
+  el.style.setProperty('--bb-col', col); el.style.setProperty('--bb-glow', glow);
+  // restart the animation even if it is already showing
+  el.hidden = true; void el.offsetWidth; el.hidden = false;
+  clearTimeout(showBiomeBanner.t); showBiomeBanner.t = setTimeout(() => { el.hidden = true; }, 5200);
 }

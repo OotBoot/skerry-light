@@ -487,3 +487,28 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 .backupBtn.due::after { content: ""; position: absolute; top: 5px; right: 5px; width: 8px; height: 8px; border-radius: 50%; background: #ff6f5a; box-shadow: 0 0 6px #ff6f5a; }
 #viewBtn { align-self: stretch; }
 @media (max-width: 520px) { #viewBtn { flex: 0 0 auto; padding: 5px 8px; font-size: 10px; } }
+
+/* the sea's name, sweeping across the top of the screen as a voyage begins, then fading */
+.biomebanner {
+  position: absolute; left: 0; right: 0; top: max(16%, 92px); z-index: 4; pointer-events: none;
+  display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center;
+  animation: bbSweep 5s ease forwards;
+}
+.biomebanner::before, .biomebanner::after {
+  content: ""; position: absolute; left: 50%; width: min(70vw, 620px); height: 1px; transform: translateX(-50%);
+  background: linear-gradient(90deg, transparent, var(--bb-col, #ffd88a), transparent); opacity: 0.6;
+}
+.biomebanner::before { top: -10px; } .biomebanner::after { bottom: -10px; }
+.bb-name {
+  font-family: var(--display); font-size: clamp(1.7rem, 5.2vw, 3.4rem); letter-spacing: 0.08em; color: var(--bb-col, #ffd88a);
+  text-shadow: 0 0 18px rgba(0,0,0,0.85), 0 0 34px var(--bb-glow, rgba(255,200,120,0.35));
+}
+.bb-sub { font-size: 11px; letter-spacing: 0.32em; text-transform: uppercase; color: #c9cfdb; text-shadow: 0 0 10px rgba(0,0,0,0.9); }
+@keyframes bbSweep {
+  0%   { opacity: 0; transform: translateX(-28vw); letter-spacing: 0.3em; }
+  18%  { opacity: 1; transform: translateX(0); }
+  70%  { opacity: 1; transform: translateX(2vw); }
+  100% { opacity: 0; transform: translateX(26vw); }
+}
+@media (prefers-reduced-motion: reduce) { .biomebanner { animation: bbFade 4s ease forwards; } }
+@keyframes bbFade { 0% { opacity: 0; } 15%, 70% { opacity: 1; } 100% { opacity: 0; } }

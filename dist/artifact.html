@@ -493,10 +493,36 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 .backupBtn.due::after { content: ""; position: absolute; top: 5px; right: 5px; width: 8px; height: 8px; border-radius: 50%; background: #ff6f5a; box-shadow: 0 0 6px #ff6f5a; }
 #viewBtn { align-self: stretch; }
 @media (max-width: 520px) { #viewBtn { flex: 0 0 auto; padding: 5px 8px; font-size: 10px; } }
+
+/* the sea's name, sweeping across the top of the screen as a voyage begins, then fading */
+.biomebanner {
+  position: absolute; left: 0; right: 0; top: max(16%, 92px); z-index: 4; pointer-events: none;
+  display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center;
+  animation: bbSweep 5s ease forwards;
+}
+.biomebanner::before, .biomebanner::after {
+  content: ""; position: absolute; left: 50%; width: min(70vw, 620px); height: 1px; transform: translateX(-50%);
+  background: linear-gradient(90deg, transparent, var(--bb-col, #ffd88a), transparent); opacity: 0.6;
+}
+.biomebanner::before { top: -10px; } .biomebanner::after { bottom: -10px; }
+.bb-name {
+  font-family: var(--display); font-size: clamp(1.7rem, 5.2vw, 3.4rem); letter-spacing: 0.08em; color: var(--bb-col, #ffd88a);
+  text-shadow: 0 0 18px rgba(0,0,0,0.85), 0 0 34px var(--bb-glow, rgba(255,200,120,0.35));
+}
+.bb-sub { font-size: 11px; letter-spacing: 0.32em; text-transform: uppercase; color: #c9cfdb; text-shadow: 0 0 10px rgba(0,0,0,0.9); }
+@keyframes bbSweep {
+  0%   { opacity: 0; transform: translateX(-28vw); letter-spacing: 0.3em; }
+  18%  { opacity: 1; transform: translateX(0); }
+  70%  { opacity: 1; transform: translateX(2vw); }
+  100% { opacity: 0; transform: translateX(26vw); }
+}
+@media (prefers-reduced-motion: reduce) { .biomebanner { animation: bbFade 4s ease forwards; } }
+@keyframes bbFade { 0% { opacity: 0; } 15%, 70% { opacity: 1; } 100% { opacity: 0; } }
 </style>
 <div id="stage">
   <canvas id="cv" tabindex="0" aria-label="View from the deck of a ship at night, with a lighthouse beam sweeping over the sea"></canvas>
 
+  <div class="biomebanner" id="biomeBanner" aria-live="polite" hidden><span class="bb-name" id="bbName"></span><span class="bb-sub" id="bbSub"></span></div>
   <div class="hud" id="hud" hidden>
     <div class="col">
       <span class="label">Voyage</span>
@@ -1526,7 +1552,23 @@ function mix(a, b, t) {
   const pa = [1, 3, 5].map(i => parseInt(a.substr(i, 2), 16)), pb = [1, 3, 5].map(i => parseInt(b.substr(i, 2), 16));
   return 'rgb(' + pa.map((v, i) => Math.round(v + (pb[i] - v) * t)).join(',') + ')';
 }
+// a soft glow: drawn from a small pre-rendered sprite per colour, which is far cheaper than building
+// a radial gradient for every light every frame
+const LAMP_SPRITES = new Map();
+function lampSprite(c) {
+  let s = LAMP_SPRITES.get(c);
+  if (!s) {
+    s = document.createElement('canvas'); s.width = s.height = 64;
+    const q = s.getContext('2d'), gr = q.createRadialGradient(32, 32, 0, 32, 32, 32);
+    gr.addColorStop(0, c); gr.addColorStop(0.3, c + '88'); gr.addColorStop(1, c + '00');
+    q.fillStyle = gr; q.fillRect(0, 0, 64, 64);
+    LAMP_SPRITES.set(c, s);
+  }
+  return s;
+}
 function lamp(x, y, c, r) {
+  if (!(r > 0)) return;
+  if (typeof c === 'string' && c.length === 7 && c[0] === '#') { const R = r * 4; ctx.drawImage(lampSprite(c), x - R, y - R, R * 2, R * 2); return; }
   const gr = ctx.createRadialGradient(x, y, 0, x, y, r * 4);
   gr.addColorStop(0, c); gr.addColorStop(0.3, c + '88'); gr.addColorStop(1, c + '00');
   ctx.fillStyle = gr; ctx.beginPath(); ctx.arc(x, y, r * 4, 0, 6.28); ctx.fill();
@@ -2230,18 +2272,21 @@ function skyPos(b, e) {
 function drawSky() {
   buildCaches();
   const B = curBiome();
-  ctx.drawImage(GFX.sky, -W, hy - GFX.sky.height + H * 0.02, W * 3, GFX.sky.height);
+  ctx.drawImage(GFX.sky, -W * 0.15, hy - GFX.sky.height + H * 0.02, W * 1.3, GFX.sky.height);
   if (B.cavern) { drawCavernRoof(B); drawSkyExtras(B); return; }
   // Milky Way dust, then the stars
-  if (!B.noStars) for (const d of dust) {
-    const p = skyPos(d.b, d.e); if (!p || p.y < -20 || p.y > hy) continue;
-    ctx.fillStyle = `rgba(${B.dust},${d.a})`; ctx.fillRect(p.x, p.y, 1, 1);
-  }
-  if (!B.noStars) for (const st of stars) {
-    const p = skyPos(st.b, st.e); if (!p || p.y < -40) continue;
-    const tw = 0.7 + 0.3 * Math.sin(g.t * (1.5 + st.m) + st.ph);
-    ctx.fillStyle = `rgba(${B.star},${0.2 + 0.6 * st.m * tw})`;
-    const sz = st.m > 0.85 ? 2 : st.m > 0.6 ? 1.4 : 1; ctx.fillRect(p.x, p.y, sz, sz);
+  // the Milky Way and the stars, batched into a few brightness levels so it's a handful of fills, not a thousand
+  if (!B.noStars) {
+    const lv = [[], [], [], []], dl = d0 => Math.min(3, (d0 * 16) | 0);
+    for (const d of dust) { const p = skyPos(d.b, d.e); if (!p || p.y < -20 || p.y > hy) continue; lv[dl(d.a)].push(p.x, p.y, 1); }
+    lv.forEach((a, i) => { if (!a.length) return; ctx.fillStyle = `rgba(${B.dust},${0.06 + i * 0.055})`; for (let k = 0; k < a.length; k += 3) ctx.fillRect(a[k], a[k + 1], 1, 1); });
+    const sl = [[], [], [], [], []];
+    for (const st of stars) {
+      const p = skyPos(st.b, st.e); if (!p || p.y < -40) continue;
+      const tw = 0.7 + 0.3 * Math.sin(g.t * (1.5 + st.m) + st.ph), a = 0.2 + 0.6 * st.m * tw;
+      sl[Math.min(4, (a * 6) | 0)].push(p.x, p.y, st.m > 0.85 ? 2 : st.m > 0.6 ? 1.4 : 1);
+    }
+    sl.forEach((a, i) => { if (!a.length) return; ctx.fillStyle = `rgba(${B.star},${0.1 + i * 0.17})`; for (let k = 0; k < a.length; k += 3) ctx.fillRect(a[k], a[k + 1], a[k + 2], a[k + 2]); });
   }
   drawSkyExtras(B);
   // the moon and its halo
@@ -2270,7 +2315,7 @@ function drawSea() {
   const B = curBiome();
   const sea = ctx.createLinearGradient(0, hy, 0, H);
   sea.addColorStop(0, B.sea[0]); sea.addColorStop(0.04, B.sea[1]); sea.addColorStop(0.5, B.sea[2]); sea.addColorStop(1, B.sea[3]);
-  ctx.fillStyle = sea; ctx.fillRect(-W, hy, W * 3, H * 2);
+  ctx.fillStyle = sea; ctx.fillRect(-W * 0.15, hy, W * 1.3, H - hy + H * 0.1);
   // moon glitter: a broken path of light on the water under the moon, widening towards you
   const mp = skyPos(MOON.b, MOON.e);
   if (mp && !reduceMotion) {
@@ -2749,7 +2794,7 @@ const LAND = { peaks: [], volcano: [], palms: [], graves: [], spires: [], church
   // far mountains (the fjord): two ranges, the nearer one darker
   for (let x = -4200; x <= 4200; x += rand(260, 420)) LAND.peaks.push({ x, y: -900 - rand(0, 300), w: rand(260, 480), h: rand(240, 480), far: 1 });
   for (let x = -3000; x <= 3000; x += rand(220, 360)) LAND.peaks.push({ x, y: -380 - rand(0, 120), w: rand(180, 300), h: rand(120, 260), far: 0 });
-  for (let i = 0; i < 70; i++) { const a = rand(-Math.PI, Math.PI), d = rand(1500, 3200); LAND.lavafalls = LAND.lavafalls || []; LAND.lavafalls.push({ x: Math.sin(a) * d, y: Math.cos(a) * d + 900, w: rand(6, 18), ph: rand(0, 6) }); }
+  for (let i = 0; i < 44; i++) { const a = rand(-Math.PI, Math.PI), d = rand(1500, 3200); LAND.lavafalls = LAND.lavafalls || []; LAND.lavafalls.push({ x: Math.sin(a) * d, y: Math.cos(a) * d + 900, w: rand(6, 18), ph: rand(0, 6) }); }
   for (let i = 0; i < 26; i++) { LAND.glow = LAND.glow || []; LAND.glow.push({ b: rand(-Math.PI, Math.PI), e: rand(0.25, 0.75), s: rand(0.6, 1.6), seed: (Math.random() * 1e6) | 0 }); }
   LAND.stairs = [{ x: -700, y: -900, w: 60, steps: 26, rise: 22, run: 30 }, { x: 1300, y: -1300, w: 80, steps: 34, rise: 26, run: 34 }, { x: -2200, y: -1600, w: 70, steps: 30, rise: 28, run: -32 }, { x: 2600, y: 600, w: 60, steps: 24, rise: 24, run: -30 }];
   LAND.doors = []; for (let i = 0; i < 9; i++) LAND.doors.push({ x: rand(-2600, 2600), y: -rand(250, 900), w: rand(18, 34), lit: Math.random() < 0.3 });
@@ -2804,12 +2849,10 @@ function drawLandFar(B) {
       // the crater's glow and a column of lit smoke
       lamp(top.x, top.y, '#ff6a28', Math.max(4, tw * top.s * 0.5));
       ctx.globalCompositeOperation = 'source-over';
-      for (let i = 0; i < 7; i++) {
-        const k = ((g.t * 0.05 + i / 7) % 1), q = onCam(v.x + k * v.w * 0.5 + Math.sin(i * 2) * tw * 0.4, v.y, v.h + k * v.h * 0.9); if (!q) continue;
+      for (let i = 0; i < (v.h > 400 ? 5 : 3); i++) {
+        const n = v.h > 400 ? 5 : 3, k = ((g.t * 0.05 + i / n) % 1), q = onCam(v.x + k * v.w * 0.5 + Math.sin(i * 2) * tw * 0.4, v.y, v.h + k * v.h * 0.9); if (!q) continue;
         const r = (tw * 0.6 + k * v.w * 0.35) * q.s;
-        const gr = ctx.createRadialGradient(q.x, q.y, 0, q.x, q.y, r);
-        gr.addColorStop(0, `rgba(${90 - k * 40 | 0},${40 - k * 20 | 0},${36 - k * 16 | 0},${0.5 * (1 - k)})`); gr.addColorStop(1, 'rgba(40,20,18,0)');
-        ctx.fillStyle = gr; ctx.beginPath(); ctx.arc(q.x, q.y, r, 0, 6.28); ctx.fill();
+        ctx.globalAlpha = 0.55 * (1 - k); lamp(q.x, q.y, '#4a2420', r / 3); ctx.globalAlpha = 1;
       }
     }
   } else if (B.land === 'spires') {
@@ -2818,11 +2861,20 @@ function drawLandFar(B) {
     drawLavafalls();
   } else if (B.land === 'stairs') {
     // staircases climbing out of the sea into the clouds, and doorways standing alone on the shore
+    // (each flight is drawn as a few stepped bands rather than a polygon per step)
     for (const st of LAND.stairs) {
-      for (let i = 0; i < st.steps; i++) {
-        const x0 = st.x + i * st.run * 0.5, z0 = i * st.rise, sh = 0.18 + 0.1 * (i % 2);
-        fillPoly([[x0 - st.w / 2, st.y, z0], [x0 + st.w / 2, st.y, z0], [x0 + st.w / 2, st.y, z0 + st.rise], [x0 - st.w / 2, st.y, z0 + st.rise]], `rgba(${60 + i * 2},${54 + i * 2},${72 + i * 2},${0.75 - i / st.steps * 0.6})`);
-        fillPoly([[x0 - st.w / 2, st.y, z0 + st.rise], [x0 + st.w / 2, st.y, z0 + st.rise], [x0 + st.w / 2, st.y, z0 + st.rise * 1.06], [x0 - st.w / 2, st.y, z0 + st.rise * 1.06]], `rgba(255,225,210,${sh * (1 - i / st.steps)})`);
+      const s = Math.sign(st.run) || 1, half = st.w / 2, dx = Math.abs(st.run) * 0.5, CH = 6;
+      for (let c0 = 0; c0 < st.steps; c0 += CH) {
+        const c1 = Math.min(st.steps, c0 + CH), top = [], bot = [];
+        for (let i = c0; i < c1; i++) {
+          const xl = st.x + s * (i * dx - half), xr = st.x + s * (i * dx + half), z0 = i * st.rise;
+          top.push([xl, st.y, z0 + st.rise], [i < c1 - 1 ? xl + s * dx : xr, st.y, z0 + st.rise]);
+          bot.unshift([xr, st.y, z0], [i > c0 ? xr - s * dx : xl, st.y, z0]);
+        }
+        const k = c0 / st.steps, col = 60 + c0 * 2;
+        fillPoly(top.concat(bot), `rgba(${col},${col - 6},${col + 12},${0.72 - k * 0.6})`);
+        const edge = polyProj(top);
+        if (edge.length > 1) { ctx.strokeStyle = `rgba(255,225,210,${0.22 * (1 - k)})`; ctx.lineWidth = 1; ctx.beginPath(); edge.forEach((q, i) => i ? ctx.lineTo(q.x, q.y) : ctx.moveTo(q.x, q.y)); ctx.stroke(); }
       }
     }
     for (const d of LAND.doors) {
@@ -2932,19 +2984,20 @@ function drawLandNear(B) {
 // columns of lava pouring out of the roof into the sea, far off all round
 function drawLavafalls() {
   const list = LAND.lavafalls.map(f => ({ f, c: cam(f.x, f.y, 0) })).filter(o => o.c.f > 20).sort((a, b) => b.c.f - a.c.f);
+  // the glow and the core are two little gradient strips, drawn once and stretched into place
+  if (!GFX.fallGlow) {
+    const strip = (stops) => { const c = offscreen(64, 2), q = c.getContext('2d'), gr = q.createLinearGradient(0, 0, 64, 0); stops.forEach(([t, col]) => gr.addColorStop(t, col)); q.fillStyle = gr; q.fillRect(0, 0, 64, 2); return c; };
+    GFX.fallGlow = strip([[0, 'rgba(255,90,20,0)'], [0.5, 'rgba(255,110,30,0.22)'], [1, 'rgba(255,90,20,0)']]);
+    GFX.fallCore = strip([[0, 'rgba(255,120,20,0.7)'], [0.5, 'rgba(255,215,90,0.95)'], [1, 'rgba(255,120,20,0.7)']]);
+  }
   ctx.globalCompositeOperation = 'lighter';
   for (const { f, c } of list) {
     const b = proj(c); if (b.x < -200 || b.x > W + 200) continue;
     const w = Math.max(1.5, f.w * b.s), top = -10;
     const fade = Math.max(0.25, 1 - c.f / 3600);
-    // a wide soft glow, then the bright core
-    const gl = ctx.createLinearGradient(b.x - w * 4, 0, b.x + w * 4, 0);
-    gl.addColorStop(0, 'rgba(255,90,20,0)'); gl.addColorStop(0.5, `rgba(255,110,30,${0.22 * fade})`); gl.addColorStop(1, 'rgba(255,90,20,0)');
-    ctx.fillStyle = gl; ctx.fillRect(b.x - w * 4, top, w * 8, b.y - top);
-    const core = ctx.createLinearGradient(b.x - w / 2, 0, b.x + w / 2, 0);
-    core.addColorStop(0, `rgba(255,120,20,${0.7 * fade})`); core.addColorStop(0.5, `rgba(255,${200 + 30 * Math.sin(g.t * 3 + f.ph) | 0},90,${0.95 * fade})`); core.addColorStop(1, `rgba(255,120,20,${0.7 * fade})`);
-    ctx.fillStyle = core; ctx.fillRect(b.x - w / 2, top, w, b.y - top);
-    // the splash where it lands
+    ctx.globalAlpha = fade; ctx.drawImage(GFX.fallGlow, b.x - w * 3, top, w * 6, b.y - top);
+    ctx.globalAlpha = fade * (0.85 + 0.15 * Math.sin(g.t * 3 + f.ph)); ctx.drawImage(GFX.fallCore, b.x - w / 2, top, w, b.y - top);
+    ctx.globalAlpha = 1;
     lamp(b.x, b.y, '#ff7a20', Math.max(2, w * 0.9) * fade);
   }
   ctx.globalCompositeOperation = 'source-over';
@@ -2960,15 +3013,23 @@ function drawCavernRoof(B) {
     }
     GFX.rack = c; GFX.rackPat = ctx.createPattern(c, 'repeat');
   }
-  const y1 = hy - Math.max(30, H * 0.06);
-  ctx.save();
-  ctx.translate(-yaw * focal * 0.5, 0);
-  ctx.fillStyle = GFX.rackPat; ctx.fillRect(yaw * focal * 0.5 - W, -H, W * 3, y1 + H);
-  ctx.restore();
-  // the roof fades into red haze towards the horizon
-  const hz = ctx.createLinearGradient(0, 0, 0, hy);
-  hz.addColorStop(0, 'rgba(20,4,3,0.55)'); hz.addColorStop(0.6, 'rgba(60,12,8,0.5)'); hz.addColorStop(1, 'rgba(120,30,12,0.95)');
-  ctx.fillStyle = hz; ctx.fillRect(-W, -H, W * 3, hy + H);
+  // the rock and its haze are baked into one picture the width of the screen plus a tile, which just
+  // slides sideways as you turn (one image draw a frame instead of two full-screen fills)
+  const Hc = Math.ceil(H * 1.25), key = W + 'x' + H + '@' + dpr;
+  if (GFX.roofKey !== key) {
+    GFX.roofKey = key;
+    const RW = Math.ceil(W * 1.1) + 96, c = offscreen(RW * dpr, Hc * dpr), q = c.getContext('2d');
+    q.scale(dpr, dpr);
+    q.fillStyle = q.createPattern(GFX.rack, 'repeat'); q.fillRect(0, 0, RW, Hc - Math.max(30, H * 0.06));
+    const hz = q.createLinearGradient(0, Hc - H * 0.5, 0, Hc);
+    hz.addColorStop(0, 'rgba(20,4,3,0.55)'); hz.addColorStop(0.6, 'rgba(60,12,8,0.5)'); hz.addColorStop(1, 'rgba(120,30,12,0.95)');
+    q.fillStyle = hz; q.fillRect(0, 0, RW, Hc);
+    q.fillStyle = 'rgba(20,4,3,0.55)'; q.fillRect(0, 0, RW, Hc - H * 0.5);
+    GFX.roofW = RW;
+    GFX.roof = c;
+  }
+  const off = (((yaw * focal * 0.5) % 96) + 96) % 96;
+  ctx.drawImage(GFX.roof, -off - W * 0.05, hy - Hc, GFX.roofW, Hc);
   // glowstone clumps
   for (const s of LAND.glow) {
     const p = skyPos(s.b, s.e); if (!p || p.y > hy - 20) continue;
@@ -2993,12 +3054,13 @@ function drawSkyExtras(B) {
     g0.addColorStop(0, `rgba(${B.aurora[1]},0)`); g0.addColorStop(0.5, `rgba(${B.aurora[1]},0.2)`); g0.addColorStop(0.85, `rgba(${B.aurora[0]},0.35)`); g0.addColorStop(1, `rgba(${B.aurora[0]},0)`);
     ctx.fillStyle = g0; ctx.globalCompositeOperation = 'lighter';
     const y0 = hy - Math.tan(0.62) * focal, y1 = hy - Math.tan(0.1) * focal;
-    for (let i = 0; i < 120; i++) {
+    // (60 wide strips rather than 120 narrow ones: the same curtain for half the drawing)
+    for (let i = 0; i < 120; i += 2) {
       const b = -1.1 + i * 0.018 + Math.sin(i * 0.15 + g.t * 0.2) * 0.04;
       const p = skyPos(b + Math.PI, 0.3); if (!p) continue;
       const a = 0.35 + 0.65 * Math.max(0, Math.sin(i * 0.23 + g.t * 0.6) * Math.sin(i * 0.07 - g.t * 0.25));
       const lift = Math.sin(i * 0.09 + g.t * 0.3) * (y1 - y0) * 0.18;
-      ctx.globalAlpha = a; ctx.fillRect(p.x, y0 + lift, Math.max(2, focal * 0.022), (y1 - y0) * (0.7 + 0.3 * Math.sin(i * 0.4)));
+      ctx.globalAlpha = a; ctx.fillRect(p.x, y0 + lift, Math.max(3, focal * 0.04), (y1 - y0) * (0.7 + 0.3 * Math.sin(i * 0.4)));
     }
     ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
   }
@@ -3018,7 +3080,7 @@ function drawSkyExtras(B) {
   if (B.glow) {
     const gr = ctx.createLinearGradient(0, hy - H * 0.3, 0, hy + 4);
     gr.addColorStop(0, `rgba(${B.glow},0)`); gr.addColorStop(1, `rgba(${B.glow},${0.22 + 0.04 * Math.sin(g.t * 0.9)})`);
-    ctx.fillStyle = gr; ctx.fillRect(-W, hy - H * 0.3, W * 3, H * 0.3 + 4);
+    ctx.fillStyle = gr; ctx.fillRect(-W * 0.15, hy - H * 0.3, W * 1.3, H * 0.3 + 4);
   }
   if (B.moon2) {
     const p = skyPos(MOON.b + 0.5, 0.42);
@@ -3033,9 +3095,7 @@ function rockSkinInside(B, r, x, y, w, h) {
   const topAt = i => ({ x: x - w / 2 + w * i / (r.prof.length - 1), y: y - r.prof[i] * h });
   if (k === 'ice') {
     // blue light deep inside, and snow lying along the top
-    const ig = ctx.createRadialGradient(x, y - h * 0.35, 0, x, y - h * 0.35, w * 0.45);
-    ig.addColorStop(0, 'rgba(120,220,255,0.35)'); ig.addColorStop(1, 'rgba(120,220,255,0)');
-    ctx.fillStyle = ig; ctx.fillRect(x - w / 2, y - h, w, h);
+    const ga = ctx.globalAlpha; ctx.globalAlpha = ga * 0.4; lamp(x, y - h * 0.35, '#78dcff', w * 0.11); ctx.globalAlpha = ga;
     ctx.fillStyle = 'rgba(248,252,255,0.9)'; ctx.beginPath();
     r.prof.forEach((v, i) => { const p = topAt(i); i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y); });
     for (let i = r.prof.length - 1; i >= 0; i--) { const p = topAt(i); ctx.lineTo(p.x, p.y + h * (0.08 + 0.06 * Math.abs(Math.sin(r.ph * 5 + i * 2)))); }
@@ -3140,9 +3200,7 @@ function rockSkinOutside(B, r, x, y, w, h) {
       const bx = x - w / 2 + w * j / (r.prof.length - 1), by = y - r.prof[j] * h + h * 0.12;
       const L = h * (0.5 + 0.35 * ((Math.sin(r.ph * 9 + i * 4) + 1) / 2)), sw = w * 0.06, lean = Math.sin(r.ph * 5 + i * 2) * 0.35;
       const hue = (i + Math.round(r.ph * 3)) % 2;
-      const cg = ctx.createLinearGradient(bx, by, bx + lean * L, by - L);
-      cg.addColorStop(0, hue ? 'rgba(70,40,150,0.95)' : 'rgba(40,90,150,0.95)'); cg.addColorStop(1, hue ? 'rgba(255,150,240,0.95)' : 'rgba(150,245,255,0.95)');
-      ctx.fillStyle = cg;
+      ctx.fillStyle = hue ? 'rgba(160,95,200,0.95)' : 'rgba(95,170,205,0.95)';
       ctx.beginPath(); ctx.moveTo(bx - sw, by); ctx.lineTo(bx - sw * 0.6 + lean * L * 0.8, by - L * 0.8); ctx.lineTo(bx + lean * L, by - L); ctx.lineTo(bx + sw * 0.7 + lean * L * 0.75, by - L * 0.75); ctx.lineTo(bx + sw, by); ctx.closePath(); ctx.fill();
       ctx.fillStyle = 'rgba(255,255,255,0.3)';
       ctx.beginPath(); ctx.moveTo(bx - sw * 0.2, by); ctx.lineTo(bx + lean * L, by - L); ctx.lineTo(bx + sw * 0.7 + lean * L * 0.75, by - L * 0.75); ctx.lineTo(bx + sw, by); ctx.closePath(); ctx.fill();
@@ -3238,14 +3296,16 @@ function drawBiomeWeather(B) {
     const base = ctx.createLinearGradient(0, hy - H * 0.12, 0, hy + H * 0.2);
     base.addColorStop(0, 'rgba(140,155,150,0)'); base.addColorStop(0.4, 'rgba(140,155,150,0.28)'); base.addColorStop(1, 'rgba(140,155,150,0)');
     ctx.fillStyle = base; ctx.fillRect(0, hy - H * 0.12, W, H * 0.32);
+    if (!GFX.fogPuff) {
+      const c = offscreen(128, 128), q = c.getContext('2d'), gr = q.createRadialGradient(64, 64, 0, 64, 64, 64);
+      gr.addColorStop(0, 'rgba(150,165,160,0.22)'); gr.addColorStop(1, 'rgba(150,165,160,0)');
+      q.fillStyle = gr; q.fillRect(0, 0, 128, 128); GFX.fogPuff = c;
+    }
     for (const f of FX.fog) {
       f.x += f.v * 0.016; if (f.x > 1.6) f.x = -0.6; if (f.x < -0.6) f.x = 1.6;
       const x = f.x * W - yaw * W * 0.3, y = hy + f.y * H, rw = f.w * W * 0.5, rh = f.h * H;
       const xx = ((x % (W * 2.2)) + W * 2.2) % (W * 2.2) - W * 0.6;
-      const gr = ctx.createRadialGradient(xx, y, 0, xx, y, rw);
-      gr.addColorStop(0, 'rgba(150,165,160,0.22)'); gr.addColorStop(1, 'rgba(150,165,160,0)');
-      ctx.save(); ctx.translate(xx, y); ctx.scale(1, rh / rw); ctx.translate(-xx, -y);
-      ctx.fillStyle = gr; ctx.beginPath(); ctx.arc(xx, y, rw, 0, 6.28); ctx.fill(); ctx.restore();
+      ctx.drawImage(GFX.fogPuff, xx - rw, y - rh, rw * 2, rh * 2);
     }
     return false;   // and the drizzle too
   }
@@ -3302,6 +3362,7 @@ function updatePortal(dt) {
     if (typeof sfxPortal === 'function') sfxPortal(1);
     if (typeof padRumble === 'function') padRumble(0.6, 0.8, 600);
     addLog(BIOMES.nether.name[0].toUpperCase() + BIOMES.nether.name.slice(1) + '. ' + BIOMES.nether.intro, 'w');
+    showBiomeBanner();
   }
   if (P.t >= PORTAL.END) g.portal = null;
 }
@@ -3370,6 +3431,26 @@ function drawPortalOverlay() {
       ctx.fillRect(cx + Math.cos(ang) * rr, H / 2 + Math.sin(ang) * rr * 0.7, px, px);
     }
   }
+}
+
+// ---------- the sea's name across the top of the screen ----------
+const BIOME_TINT = {
+  skerry: ['#ffd88a', 'rgba(255,200,120,0.35)'], fjord: ['#d8f2ff', 'rgba(120,220,255,0.4)'], ember: ['#ffb070', 'rgba(255,90,30,0.45)'],
+  lagoon: ['#a8fff0', 'rgba(60,220,200,0.4)'], barrows: ['#d0dcc8', 'rgba(150,170,150,0.35)'], shoals: ['#e8c8ff', 'rgba(170,110,255,0.45)'],
+  nether: ['#ffb060', 'rgba(255,70,20,0.55)'], odyssey: ['#ffe2a0', 'rgba(255,200,120,0.4)'], between: ['#f4dcd4', 'rgba(255,210,200,0.35)'],
+  backrooms: ['#f0e08a', 'rgba(240,220,120,0.35)'],
+};
+function showBiomeBanner() {
+  const el = $('biomeBanner'); if (!el || !g || g.attract) return;
+  const id = g.backrooms ? 'backrooms' : g.biome || 'skerry';
+  const name = g.backrooms ? 'The Backrooms' : BIOMES[id] ? BIOMES[id].name.replace(/^the /, 'The ') : 'Skerry Light';
+  const [col, glow] = BIOME_TINT[id] || BIOME_TINT.skerry;
+  $('bbName').textContent = name;
+  $('bbSub').textContent = 'Voyage ' + g.n;
+  el.style.setProperty('--bb-col', col); el.style.setProperty('--bb-glow', glow);
+  // restart the animation even if it is already showing
+  el.hidden = true; void el.offsetWidth; el.hidden = false;
+  clearTimeout(showBiomeBanner.t); showBiomeBanner.t = setTimeout(() => { el.hidden = true; }, 5200);
 }
 
 // ---- src/ship3d.js ----
@@ -5507,13 +5588,14 @@ const netherGlowVis = o => Math.max(0.8, foeVis(o));
 Object.assign(FOE_KINDS, {
   // glides in wide circles high overhead and spits fireballs at where you're going
   cinderkite: {
-    h: 10, max: 1, every: [16, 24], fly: true, vis: netherGlowVis,
+    h: 10, max: 1, every: [24, 34], fly: true, vis: netherGlowVis,
     spawn() {
       const p = aheadPt(rand(200, 260), (Math.random() < 0.5 ? -1 : 1) * rand(40, 90));
-      return { x: p.x, y: p.y, z: 42, a: bearingOf(p.x - ship.x, p.y - ship.y), ph: rand(0, 6), shotT: rand(3, 5), life: 45, flee: 0 };
+      return { x: p.x, y: p.y, z: 42, a: bearingOf(p.x - ship.x, p.y - ship.y), ph: rand(0, 6), shotT: rand(5, 7), life: 32, flee: 0 };
     },
     update(f, dt) {
       f.ph += dt; f.life -= dt;
+      if (f.life < 0 && f.flee <= 0) f.flee = 3;
       if (f.flee > 0) {
         // climbing away from the flare's glare
         f.flee -= dt; f.z += 18 * dt;
@@ -5528,11 +5610,11 @@ Object.assign(FOE_KINDS, {
       if (!g.backrooms) f.y = Math.max(50, f.y);
       f.shotT -= dt;
       if (f.shotT <= 0 && dist(f) < 260) {
-        f.shotT = rand(5, 7) * Math.max(0.6, 1 - (g.n - 2) * 0.04);
-        const dur = 2.4, p = aheadPt(ship.v * dur + rand(-4, 8), rand(-6, 6));
+        f.shotT = rand(7.5, 10) * Math.max(0.75, 1 - (g.n - 2) * 0.03);
+        const dur = 2.8, p = aheadPt(ship.v * dur + rand(-4, 8), rand(-6, 6));
         if (!g.backrooms) p.y = Math.max(46, p.y);
-        hazard({ kind: 'fireball', x: f.x, y: f.y, z: f.z, x0: f.x, y0: f.y, z0: f.z, x1: p.x, y1: p.y, fuse: dur, dur, r: 11 });
-        hazard({ kind: 'scorch', x: p.x, y: p.y, r: 11, life: dur });
+        hazard({ kind: 'fireball', x: f.x, y: f.y, z: f.z, x0: f.x, y0: f.y, z0: f.z, x1: p.x, y1: p.y, fuse: dur, dur, r: 9 });
+        hazard({ kind: 'scorch', x: p.x, y: p.y, r: 9, life: dur });
         sfxFoe('roar', panOf(f), 0.8);
       }
       if (Math.random() < dt * 0.25) sfxFoe('flap', panOf(f), 0.4);
@@ -5574,7 +5656,7 @@ Object.assign(FOE_KINDS, {
   // rises out of the lava ahead and wades at you; if it reaches the bow it holds on and burns.
   // The bell cools it and it sinks back.
   slagwader: {
-    h: 8, max: 2, every: [14, 22], vis: netherGlowVis,
+    h: 8, max: 1, every: [22, 32], vis: netherGlowVis,
     spawn() {
       const p = aheadPt(rand(120, 170), rand(-30, 30));
       if (!okWater(p) || g.rocks.some(r => Math.hypot(r.x - p.x, r.y - p.y) < r.r + 8)) return null;
@@ -5588,17 +5670,17 @@ Object.assign(FOE_KINDS, {
       const d = dist(f);
       if (f.hold > 0) {
         // clinging to the bow: dragging you down and scorching the planks
-        f.hold -= dt; g.mods.slow = Math.min(g.mods.slow, 0.3);
+        f.hold -= dt; g.mods.slow = Math.min(g.mods.slow, 0.45);
         const p = aheadPt(5, 0); f.x = p.x; f.y = p.y;
         if (f.hold <= 0) { foeHit('the Slag Wader'); sfxFoe('grunt', 0, 1); throwBack(f, 70); f.cd = 4; }
         return;
       }
       if (f.rise > 0.6) {
-        const sp = 3.5 + g.n * 0.2, b = bearingOf(ship.x - f.x, ship.y - f.y);
+        const sp = 2.4 + g.n * 0.12, b = bearingOf(ship.x - f.x, ship.y - f.y);
         f.x += Math.sin(b) * sp * dt; f.y += Math.cos(b) * sp * dt;
         if (Math.random() < dt * 0.2) sfxFoe('groan', panOf(f), Math.max(0.2, 1 - d / 200) * 0.6);
       }
-      if (d < 7 && f.cd <= 0 && f.rise > 0.6) { f.hold = 3; sfxFoe('grunt', 0, 1); g.shake = Math.max(g.shake, 0.4); addLog('The Slag Wader has the bow! Ring the bell!', 'w'); }
+      if (d < 6 && f.cd <= 0 && f.rise > 0.6) { f.hold = 4.5; sfxFoe('grunt', 0, 1); g.shake = Math.max(g.shake, 0.4); addLog('The Slag Wader has the bow! Ring the bell!', 'w'); }
       if (f.life <= 0) f.sink = 3;
     },
     bell(f) { if (f.sink <= 0 && dist(f) < 140) { f.sink = 3; f.hold = 0; return 'The bell rang out and the Slag Wader cooled, cracked and sank back into the lava.'; } },
@@ -5638,7 +5720,7 @@ Object.assign(FOE_KINDS, {
   // flutters in towards your lantern; if it lands, the light goes dim and then the deck catches.
   // A flare is brighter than your lantern: it chases that and burns up in it.
   furnacemoth: {
-    h: 6, max: 1, every: [18, 28], fly: true, vis: netherGlowVis,
+    h: 6, max: 1, every: [26, 38], fly: true, vis: netherGlowVis,
     spawn() {
       const p = aheadPt(rand(90, 140), (Math.random() < 0.5 ? -1 : 1) * rand(60, 110));
       return { x: p.x, y: p.y, z: 9, ph: rand(0, 6), on: false, t: 0, warned: false, chase: null, life: 50 };
@@ -5654,15 +5736,15 @@ Object.assign(FOE_KINDS, {
       }
       if (f.on) {
         // smothering the lantern
-        g.mods.lantern = Math.min(g.mods.lantern, 0.2);
+        g.mods.lantern = Math.min(g.mods.lantern, 0.35);
         f.x = ship.x; f.y = ship.y; f.z = 6; f.t += dt;
-        if (f.t > 3 && !f.warned) { f.warned = true; addLog('The Furnace Moth is smothering your lantern and the planks are smoking. Fire a flare!', 'w'); }
-        if (f.t > 7) { foeHit('the Furnace Moth'); f.on = false; f.t = 0; f.warned = false; throwBack(f, 120); f.z = 12; }
+        if (f.t > 3.5 && !f.warned) { f.warned = true; addLog('The Furnace Moth is smothering your lantern and the planks are smoking. Fire a flare!', 'w'); }
+        if (f.t > 10) { foeHit('the Furnace Moth'); f.on = false; f.t = 0; f.warned = false; throwBack(f, 120); f.z = 12; }
         if (Math.random() < dt * 0.8) sfxFoe('flap', 0, 0.5);
         return;
       }
       // fluttering in, weaving
-      const d = dist(f), b = bearingOf(ship.x - f.x, ship.y - f.y) + Math.sin(f.ph * 1.3) * 0.6, sp = 9 + g.n * 0.3 + Math.max(0, ship.v - 9) * 0.9;
+      const d = dist(f), b = bearingOf(ship.x - f.x, ship.y - f.y) + Math.sin(f.ph * 1.3) * 0.6, sp = 7 + g.n * 0.2 + Math.max(0, ship.v - 9) * 0.7;
       f.x += Math.sin(b) * sp * dt; f.y += Math.cos(b) * sp * dt; f.z = 8 + Math.sin(f.ph * 2) * 2;
       if (Math.random() < dt * 0.3 && d < 120) sfxFoe('flap', panOf(f), 0.5);
       if (d < 5) { f.on = true; f.t = 0; sfxFoe('flap', 0, 1); addLog('The Furnace Moth landed on your lantern. The light is going.', 'w'); }
@@ -5730,19 +5812,19 @@ Object.assign(FOE_INTRO, {
 Object.assign(FOE_KINDS, {
   // three of them on a rock, singing; the song hauls the helm round to their rock
   sirens: {
-    h: 4, max: 1, every: [22, 32], vis: o => Math.max(0.7, foeVis(o)),
+    h: 4, max: 1, every: [30, 42], vis: o => Math.max(0.7, foeVis(o)),
     spawn() {
       const p = aheadPt(rand(170, 220), (Math.random() < 0.5 ? -1 : 1) * rand(50, 90));
       if (!okWater(p) || g.rocks.some(r => Math.hypot(r.x - p.x, r.y - p.y) < r.r + 20)) return null;
-      return { x: p.x, y: p.y, ph: rand(0, 6), hush: 0, songT: 0, life: 50, cd: 0 };
+      return { x: p.x, y: p.y, ph: rand(0, 6), hush: 0, songT: 0, life: 38, cd: 0 };
     },
     update(f, dt) {
       f.ph += dt; f.life -= dt; if (f.cd > 0) f.cd -= dt;
       if (f.hush > 0) f.hush -= dt;
       const d = dist(f);
-      if (f.hush <= 0 && d < 240) {
+      if (f.hush <= 0 && d < 200) {
         const side = angDiff(bearingOf(f.x - ship.x, f.y - ship.y), ship.h);
-        g.mods.pull += clamp(side * 4, -1, 1) * 0.75 * Math.min(1, 1.5 * (1 - d / 240));
+        g.mods.pull += clamp(side * 4, -1, 1) * 0.45 * Math.min(1, 1.5 * (1 - d / 200));
         f.songT -= dt;
         if (f.songT <= 0) { f.songT = 2.4; sfxFoe('song', panOf(f), Math.max(0.25, 1 - d / 240)); }
       }
@@ -5788,12 +5870,12 @@ Object.assign(FOE_KINDS, {
 
   // a whirlpool that opens on your course and drags the ship in; the middle of it breaks planks
   charybdis: {
-    h: 2, max: 1, every: [20, 30], vis: () => 1,
+    h: 2, max: 1, every: [30, 42], vis: () => 1,
     spawn() {
       const p = aheadPt(rand(170, 220), rand(-25, 25));
       if (!okWater(p) || g.rocks.some(r => Math.hypot(r.x - p.x, r.y - p.y) < r.r + 40)) return null;
       sfxFoe('gurgle', panOf(p), 0.7);
-      return { x: p.x, y: p.y, grow: 0, rot: 0, life: 28, gT: 0, close: 0, R: 34 };
+      return { x: p.x, y: p.y, grow: 0, rot: 0, life: 24, gT: 0, close: 0, R: 30 };
     },
     update(f, dt) {
       f.life -= dt; f.rot += dt * (1.2 + f.grow);
@@ -5803,12 +5885,12 @@ Object.assign(FOE_KINDS, {
       if (d < reach && f.grow > 0.3) {
         // the current: round and in, stronger towards the middle
         const k = (1 - d / reach) * f.grow, b = bearingOf(f.x - ship.x, f.y - ship.y);
-        const inward = 8 * k, round = 6 * k;
+        const inward = 5 * k, round = 4 * k;
         ship.x += (Math.sin(b) * inward + Math.cos(b) * round) * dt; ship.y += (Math.cos(b) * inward - Math.sin(b) * round) * dt;
         g.mods.pull += clamp(angDiff(b, ship.h) * 2, -1, 1) * 0.3 * k;
         f.gT -= dt; if (f.gT <= 0) { f.gT = 1.6; sfxFoe('gurgle', panOf(f), 0.4 + k * 0.6); }
       }
-      if (d < 8 && f.grow > 0.5) { foeHit('Charybdis'); g.shake = Math.max(g.shake, 0.7); f.close = 1.5; addLog('Charybdis spun you round and spat you out. The whirlpool closes.', 'w'); }
+      if (d < 6 && f.grow > 0.5) { foeHit('Charybdis'); g.shake = Math.max(g.shake, 0.7); f.close = 1.5; addLog('Charybdis spun you round and spat you out. The whirlpool closes.', 'w'); }
       if (f.life <= 0) f.close = 2;
     },
     draw(f, q, vis) {
@@ -5837,12 +5919,12 @@ Object.assign(FOE_KINDS, {
 
   // a one-eyed giant in the shallows, hurling rocks at where you're going; a flare in his eye blinds him
   cyclops: {
-    h: 18, max: 1, every: [22, 30], vis: o => Math.max(0.6, foeVis(o)),
+    h: 18, max: 1, every: [30, 42], vis: o => Math.max(0.6, foeVis(o)),
     spawn() {
       const p = aheadPt(rand(150, 200), (Math.random() < 0.5 ? -1 : 1) * rand(70, 110));
       if (!okWater(p) || g.rocks.some(r => Math.hypot(r.x - p.x, r.y - p.y) < r.r + 15)) return null;
       sfxFoe('roar', panOf(p), 0.9);
-      return { x: p.x, y: p.y, ph: rand(0, 6), throwT: 3, wind: 0, blind: 0, rise: 0, life: 45 };
+      return { x: p.x, y: p.y, ph: rand(0, 6), throwT: 4, wind: 0, blind: 0, rise: 0, life: 34 };
     },
     update(f, dt) {
       f.ph += dt; f.life -= dt; f.rise = Math.min(1, f.rise + dt * 0.4);
@@ -5850,20 +5932,20 @@ Object.assign(FOE_KINDS, {
       else if (f.wind > 0) {
         f.wind -= dt;
         if (f.wind <= 0) {
-          const dur = 2.6, p = aheadPt(ship.v * dur + rand(-4, 8), rand(-7, 7));
+          const dur = 3, p = aheadPt(ship.v * dur + rand(-4, 8), rand(-7, 7));
           if (!g.backrooms) p.y = Math.max(46, p.y);
           const side = angDiff(bearingOf(f.x - ship.x, f.y - ship.y), yaw) > 0 ? 1 : -1;
-          hazard({ kind: 'fireball', style: 'boulder', x: f.x, y: f.y, z: 22, x0: f.x, y0: f.y, z0: 22, x1: p.x, y1: p.y, fuse: dur, dur, r: 10, side });
-          hazard({ kind: 'scorch', style: 'boulder', x: p.x, y: p.y, r: 10, life: dur });
+          hazard({ kind: 'fireball', style: 'boulder', x: f.x, y: f.y, z: 22, x0: f.x, y0: f.y, z0: 22, x1: p.x, y1: p.y, fuse: dur, dur, r: 8.5, side });
+          hazard({ kind: 'scorch', style: 'boulder', x: p.x, y: p.y, r: 8.5, life: dur });
           sfxFoe('throw', panOf(f), 1);
         }
       } else if (f.rise >= 1) {
         f.throwT -= dt;
-        if (f.throwT <= 0 && dist(f) < 300) { f.throwT = rand(5, 7) * Math.max(0.6, 1 - (g.n - 2) * 0.04); f.wind = 1.2; sfxFoe('grunt', panOf(f), 0.8); }
+        if (f.throwT <= 0 && dist(f) < 280) { f.throwT = rand(7.5, 10) * Math.max(0.75, 1 - (g.n - 2) * 0.03); f.wind = 1.4; sfxFoe('grunt', panOf(f), 0.8); }
       }
       if (f.life <= 0) f.dead = true;
     },
-    flare(f, x, y) { if (f.blind <= 0 && Math.hypot(f.x - x, f.y - y) < SK.FLARE_RADIUS * 1.2) { f.blind = 12; sfxFoe('roar', panOf(f), 1); return 'The flare caught the Cyclops full in his eye. He is roaring and clutching his face.'; } },
+    flare(f, x, y) { if (f.blind <= 0 && Math.hypot(f.x - x, f.y - y) < SK.FLARE_RADIUS * 1.2) { f.blind = 16; sfxFoe('roar', panOf(f), 1); return 'The flare caught the Cyclops full in his eye. He is roaring and clutching his face.'; } },
     draw(f, q, vis) {
       const s = q.s, sink = (1 - f.rise) * 18 * s, lift = f.wind > 0 ? 1 - f.wind / 1.2 : 0;
       ctx.save(); ctx.globalAlpha = vis; ctx.translate(q.x, q.y);
@@ -5932,11 +6014,11 @@ function shiftShip(d) {
 
 Object.assign(FOE_KINDS, {
   doors: {
-    h: 10, max: 1, every: [18, 26], vis: () => 0.95,
+    h: 10, max: 1, every: [28, 40], vis: () => 0.95,
     spawn() {
       const c = aheadPt(rand(150, 190), rand(-10, 10)), f = { x: c.x, y: c.y, h: ship.h, life: 50, prev: null, used: false };
       const r = doorRight(f), lit = Math.floor(rand(0, 4));
-      f.doors = [-27, -9, 9, 27].map((lat, i) => ({ lat, lit: i === lit, open: 0 }));
+      f.doors = [-30, -10, 10, 30].map((lat, i) => ({ lat, lit: i === lit, open: 0 }));
       for (const d of f.doors) {
         const x = f.x + r.x * d.lat, y = f.y + r.y * d.lat;
         if (!okWater({ x, y }) || g.rocks.some(o => Math.hypot(o.x - x, o.y - y) < o.r + 8)) return null;
@@ -5959,7 +6041,7 @@ Object.assign(FOE_KINDS, {
           f.used = true;
           g.flash = Math.max(g.flash, 0.5); sfxFoe('door', 0, 1);
           if (d.lit) { shiftShip(110); addLog('The lit door opened onto open water further on.', 'p'); }
-          else { shiftShip(-170); addLog('Through the dark door, and you’re back somewhere you’ve already sailed.', 'w'); }
+          else { shiftShip(-110); addLog('Through the dark door, and you’re back somewhere you’ve already sailed.', 'w'); }
         }
       }
       f.prev = along;
@@ -5988,7 +6070,7 @@ Object.assign(FOE_KINDS, {
   },
 
   echo: {
-    h: 8, max: 1, every: [20, 30], vis: () => 0.85,
+    h: 8, max: 1, every: [30, 42], vis: () => 0.85,
     spawn() {
       const p = aheadPt(rand(220, 260), rand(-12, 12));
       if (!okWater(p)) return null;
@@ -6000,13 +6082,13 @@ Object.assign(FOE_KINDS, {
       if (f.fade > 0) { f.fade -= dt; if (f.fade <= 0) f.dead = true; return; }
       // steer the mirror of your helm, half a second late
       f.hist.push({ t: f.t, r: ship.rudder });
-      while (f.hist.length > 2 && f.hist[1].t < f.t - 0.55) f.hist.shift();
-      f.rudder = -f.hist[0].r;
+      while (f.hist.length > 2 && f.hist[1].t < f.t - 0.8) f.hist.shift();
+      f.rudder = -f.hist[0].r * 0.75;
       f.h += f.rudder * 0.55 * dt * 0.9;
-      f.v = Math.max(7, ship.v * 0.8 + 5);
+      f.v = Math.max(6, ship.v * 0.7 + 3);
       f.x += Math.sin(f.h) * f.v * dt; f.y += Math.cos(f.h) * f.v * dt;
       const d = dist(f);
-      if (d < 9) { foeHit('the Echo'); sfxFoe('shatter', 0, 1); f.fade = 0.8; addLog('Your echo ran into you and broke apart.', 'w'); return; }
+      if (d < 7) { foeHit('the Echo'); sfxFoe('shatter', 0, 1); f.fade = 0.8; addLog('Your echo ran into you and broke apart.', 'w'); return; }
       const fw = fwd(), along = (f.x - ship.x) * fw.x + (f.y - ship.y) * fw.y;
       if (along < -40 || f.life <= 0 || (!g.backrooms && f.y < 45)) f.fade = 0.8;
     },
@@ -6020,8 +6102,8 @@ Object.assign(FOE_KINDS, {
   },
 
   sleeper: {
-    h: 1, max: 1, every: [18, 26], vis: () => 1,
-    spawn() { const p = aheadPt(60, 0); return { x: p.x, y: p.y, ph: 0, sleep: rand(6, 9), stir: 0, open: 0, fadeIn: 0, life: 70, told: false }; },
+    h: 1, max: 1, every: [28, 40], vis: () => 1,
+    spawn() { const p = aheadPt(60, 0); return { x: p.x, y: p.y, ph: 0, sleep: rand(8, 12), stir: 0, open: 0, fadeIn: 0, life: 50, told: false }; },
     update(f, dt) {
       f.ph += dt; f.life -= dt; f.fadeIn = Math.min(1, f.fadeIn + dt / 3);
       // it stays out ahead of you, under the glass
@@ -6029,23 +6111,23 @@ Object.assign(FOE_KINDS, {
       f.x += (p.x - f.x) * Math.min(1, dt * 0.5); f.y += (p.y - f.y) * Math.min(1, dt * 0.5);
       if (f.open > 0) {
         f.open -= dt;
-        g.mods.slow = Math.min(g.mods.slow, 0.3); g.mods.cap = Math.min(g.mods.cap, 5); g.mods.lantern = Math.min(g.mods.lantern, 0.5);
-        if (f.open <= 0) f.sleep = rand(12, 18);
+        g.mods.slow = Math.min(g.mods.slow, 0.45); g.mods.cap = Math.min(g.mods.cap, 6); g.mods.lantern = Math.min(g.mods.lantern, 0.6);
+        if (f.open <= 0) f.sleep = rand(16, 24);
       } else if (f.stir > 0) {
         f.stir -= dt;
-        if (f.stir <= 0) { f.open = 5; foeHit('the Sleeper'); sfxFoe('hum', 0, 1); addLog('Its eyes opened. Everything has slowed to a crawl.', 'w'); }
+        if (f.stir <= 0) { f.open = 3.5; foeHit('the Sleeper'); sfxFoe('hum', 0, 1); addLog('Its eyes opened. Everything has slowed to a crawl.', 'w'); }
       } else {
         f.sleep -= dt;
-        if (f.sleep <= 0) { f.stir = 3.5; sfxFoe('hum', 0, 0.8); if (!f.told) { f.told = true; addLog('The water over the face is brightening. It’s waking. Ring the bell!', 'w'); } }
+        if (f.sleep <= 0) { f.stir = 5; sfxFoe('hum', 0, 0.8); if (!f.told) { f.told = true; addLog('The water over the face is brightening. It’s waking. Ring the bell!', 'w'); } }
         if (f.life <= 0) f.dead = true;
       }
     },
     bell(f) {
-      if (f.stir > 0) { f.stir = 0; f.sleep = rand(12, 18); return 'The bell rang out over the glass and the Sleeper settled again.'; }
+      if (f.stir > 0) { f.stir = 0; f.sleep = rand(16, 24); return 'The bell rang out over the glass and the Sleeper settled again.'; }
       if (f.open <= 0) f.sleep = Math.max(f.sleep, rand(8, 12));
     },
     draw(f) {
-      const k = f.stir > 0 ? 1 - f.stir / 3.5 : f.open > 0 ? 1 : 0;
+      const k = f.stir > 0 ? 1 - f.stir / 5 : f.open > 0 ? 1 : 0;
       const base = (0.12 + 0.18 * k) * f.fadeIn * (f.life < 3 ? Math.max(0, f.life / 3) : 1);
       const fw = fwd(), rt = { x: fw.y, y: -fw.x };
       // a point on the face: u across (right), v along (away from you)
@@ -6079,7 +6161,7 @@ Object.assign(FOE_KINDS, {
 function drawBetweenOverlays() {
   if (!g.foes || !g.foes.sleeper) return;
   const f = g.foes.sleeper.list.find(o => o.open > 0); if (!f) return;
-  const a = Math.min(1, f.open / 1.5, (5 - f.open) / 0.6) * 0.35;
+  const a = Math.min(1, f.open / 1.2, (3.5 - f.open) / 0.6) * 0.3;
   ctx.fillStyle = `rgba(230,220,240,${a})`; ctx.fillRect(0, 0, W, H);
 }
 
@@ -6471,6 +6553,7 @@ function beginVoyage(n) {
   addLog(n === 1 ? 'Under way. Follow the blue shoes.' : 'Voyage ' + n + '. More wreckage, and the light turns slower.');
   enteredBackrooms();
   if (!g.backrooms) addLog(biomeLine());
+  if (!g.portal) showBiomeBanner();
   addLog(trioLine(), 'w');
   cv.focus({ preventScroll: true });
 }
@@ -6488,6 +6571,7 @@ function beginCrewVoyage(L, slot) {
   addLog(L.voy === 1 ? 'Under way with your crew. Follow the blue shoes, and keep together.' : 'Voyage ' + L.voy + '. More wreckage, and the light turns slower.');
   enteredBackrooms();
   if (!g.backrooms) addLog(biomeLine());
+  if (!g.portal) showBiomeBanner();
   addLog(trioLine(), 'w');
   cv.focus({ preventScroll: true });
 }
@@ -6508,7 +6592,7 @@ for (const b of document.querySelectorAll('.menuBtn')) b.addEventListener('click
 function toTitle() {
   state = 'title';
   hideCards(); $('crewCard').hidden = true;
-  $('hud').hidden = true; $('logbox').hidden = true;
+  $('hud').hidden = true; $('logbox').hidden = true; $('biomeBanner').hidden = true;
   newVoyage(1, true);
   $('stage').classList.remove('rooms');
   $('titleCard').hidden = false;

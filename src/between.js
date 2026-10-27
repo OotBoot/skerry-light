@@ -30,11 +30,11 @@ function shiftShip(d) {
 
 Object.assign(FOE_KINDS, {
   doors: {
-    h: 10, max: 1, every: [18, 26], vis: () => 0.95,
+    h: 10, max: 1, every: [28, 40], vis: () => 0.95,
     spawn() {
       const c = aheadPt(rand(150, 190), rand(-10, 10)), f = { x: c.x, y: c.y, h: ship.h, life: 50, prev: null, used: false };
       const r = doorRight(f), lit = Math.floor(rand(0, 4));
-      f.doors = [-27, -9, 9, 27].map((lat, i) => ({ lat, lit: i === lit, open: 0 }));
+      f.doors = [-30, -10, 10, 30].map((lat, i) => ({ lat, lit: i === lit, open: 0 }));
       for (const d of f.doors) {
         const x = f.x + r.x * d.lat, y = f.y + r.y * d.lat;
         if (!okWater({ x, y }) || g.rocks.some(o => Math.hypot(o.x - x, o.y - y) < o.r + 8)) return null;
@@ -57,7 +57,7 @@ Object.assign(FOE_KINDS, {
           f.used = true;
           g.flash = Math.max(g.flash, 0.5); sfxFoe('door', 0, 1);
           if (d.lit) { shiftShip(110); addLog('The lit door opened onto open water further on.', 'p'); }
-          else { shiftShip(-170); addLog('Through the dark door, and you’re back somewhere you’ve already sailed.', 'w'); }
+          else { shiftShip(-110); addLog('Through the dark door, and you’re back somewhere you’ve already sailed.', 'w'); }
         }
       }
       f.prev = along;
@@ -86,7 +86,7 @@ Object.assign(FOE_KINDS, {
   },
 
   echo: {
-    h: 8, max: 1, every: [20, 30], vis: () => 0.85,
+    h: 8, max: 1, every: [30, 42], vis: () => 0.85,
     spawn() {
       const p = aheadPt(rand(220, 260), rand(-12, 12));
       if (!okWater(p)) return null;
@@ -98,13 +98,13 @@ Object.assign(FOE_KINDS, {
       if (f.fade > 0) { f.fade -= dt; if (f.fade <= 0) f.dead = true; return; }
       // steer the mirror of your helm, half a second late
       f.hist.push({ t: f.t, r: ship.rudder });
-      while (f.hist.length > 2 && f.hist[1].t < f.t - 0.55) f.hist.shift();
-      f.rudder = -f.hist[0].r;
+      while (f.hist.length > 2 && f.hist[1].t < f.t - 0.8) f.hist.shift();
+      f.rudder = -f.hist[0].r * 0.75;
       f.h += f.rudder * 0.55 * dt * 0.9;
-      f.v = Math.max(7, ship.v * 0.8 + 5);
+      f.v = Math.max(6, ship.v * 0.7 + 3);
       f.x += Math.sin(f.h) * f.v * dt; f.y += Math.cos(f.h) * f.v * dt;
       const d = dist(f);
-      if (d < 9) { foeHit('the Echo'); sfxFoe('shatter', 0, 1); f.fade = 0.8; addLog('Your echo ran into you and broke apart.', 'w'); return; }
+      if (d < 7) { foeHit('the Echo'); sfxFoe('shatter', 0, 1); f.fade = 0.8; addLog('Your echo ran into you and broke apart.', 'w'); return; }
       const fw = fwd(), along = (f.x - ship.x) * fw.x + (f.y - ship.y) * fw.y;
       if (along < -40 || f.life <= 0 || (!g.backrooms && f.y < 45)) f.fade = 0.8;
     },
@@ -118,8 +118,8 @@ Object.assign(FOE_KINDS, {
   },
 
   sleeper: {
-    h: 1, max: 1, every: [18, 26], vis: () => 1,
-    spawn() { const p = aheadPt(60, 0); return { x: p.x, y: p.y, ph: 0, sleep: rand(6, 9), stir: 0, open: 0, fadeIn: 0, life: 70, told: false }; },
+    h: 1, max: 1, every: [28, 40], vis: () => 1,
+    spawn() { const p = aheadPt(60, 0); return { x: p.x, y: p.y, ph: 0, sleep: rand(8, 12), stir: 0, open: 0, fadeIn: 0, life: 50, told: false }; },
     update(f, dt) {
       f.ph += dt; f.life -= dt; f.fadeIn = Math.min(1, f.fadeIn + dt / 3);
       // it stays out ahead of you, under the glass
@@ -127,23 +127,23 @@ Object.assign(FOE_KINDS, {
       f.x += (p.x - f.x) * Math.min(1, dt * 0.5); f.y += (p.y - f.y) * Math.min(1, dt * 0.5);
       if (f.open > 0) {
         f.open -= dt;
-        g.mods.slow = Math.min(g.mods.slow, 0.3); g.mods.cap = Math.min(g.mods.cap, 5); g.mods.lantern = Math.min(g.mods.lantern, 0.5);
-        if (f.open <= 0) f.sleep = rand(12, 18);
+        g.mods.slow = Math.min(g.mods.slow, 0.45); g.mods.cap = Math.min(g.mods.cap, 6); g.mods.lantern = Math.min(g.mods.lantern, 0.6);
+        if (f.open <= 0) f.sleep = rand(16, 24);
       } else if (f.stir > 0) {
         f.stir -= dt;
-        if (f.stir <= 0) { f.open = 5; foeHit('the Sleeper'); sfxFoe('hum', 0, 1); addLog('Its eyes opened. Everything has slowed to a crawl.', 'w'); }
+        if (f.stir <= 0) { f.open = 3.5; foeHit('the Sleeper'); sfxFoe('hum', 0, 1); addLog('Its eyes opened. Everything has slowed to a crawl.', 'w'); }
       } else {
         f.sleep -= dt;
-        if (f.sleep <= 0) { f.stir = 3.5; sfxFoe('hum', 0, 0.8); if (!f.told) { f.told = true; addLog('The water over the face is brightening. It’s waking. Ring the bell!', 'w'); } }
+        if (f.sleep <= 0) { f.stir = 5; sfxFoe('hum', 0, 0.8); if (!f.told) { f.told = true; addLog('The water over the face is brightening. It’s waking. Ring the bell!', 'w'); } }
         if (f.life <= 0) f.dead = true;
       }
     },
     bell(f) {
-      if (f.stir > 0) { f.stir = 0; f.sleep = rand(12, 18); return 'The bell rang out over the glass and the Sleeper settled again.'; }
+      if (f.stir > 0) { f.stir = 0; f.sleep = rand(16, 24); return 'The bell rang out over the glass and the Sleeper settled again.'; }
       if (f.open <= 0) f.sleep = Math.max(f.sleep, rand(8, 12));
     },
     draw(f) {
-      const k = f.stir > 0 ? 1 - f.stir / 3.5 : f.open > 0 ? 1 : 0;
+      const k = f.stir > 0 ? 1 - f.stir / 5 : f.open > 0 ? 1 : 0;
       const base = (0.12 + 0.18 * k) * f.fadeIn * (f.life < 3 ? Math.max(0, f.life / 3) : 1);
       const fw = fwd(), rt = { x: fw.y, y: -fw.x };
       // a point on the face: u across (right), v along (away from you)
@@ -177,6 +177,6 @@ Object.assign(FOE_KINDS, {
 function drawBetweenOverlays() {
   if (!g.foes || !g.foes.sleeper) return;
   const f = g.foes.sleeper.list.find(o => o.open > 0); if (!f) return;
-  const a = Math.min(1, f.open / 1.5, (5 - f.open) / 0.6) * 0.35;
+  const a = Math.min(1, f.open / 1.2, (3.5 - f.open) / 0.6) * 0.3;
   ctx.fillStyle = `rgba(230,220,240,${a})`; ctx.fillRect(0, 0, W, H);
 }

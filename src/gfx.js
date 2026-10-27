@@ -82,18 +82,21 @@ function skyPos(b, e) {
 function drawSky() {
   buildCaches();
   const B = curBiome();
-  ctx.drawImage(GFX.sky, -W, hy - GFX.sky.height + H * 0.02, W * 3, GFX.sky.height);
+  ctx.drawImage(GFX.sky, -W * 0.15, hy - GFX.sky.height + H * 0.02, W * 1.3, GFX.sky.height);
   if (B.cavern) { drawCavernRoof(B); drawSkyExtras(B); return; }
   // Milky Way dust, then the stars
-  if (!B.noStars) for (const d of dust) {
-    const p = skyPos(d.b, d.e); if (!p || p.y < -20 || p.y > hy) continue;
-    ctx.fillStyle = `rgba(${B.dust},${d.a})`; ctx.fillRect(p.x, p.y, 1, 1);
-  }
-  if (!B.noStars) for (const st of stars) {
-    const p = skyPos(st.b, st.e); if (!p || p.y < -40) continue;
-    const tw = 0.7 + 0.3 * Math.sin(g.t * (1.5 + st.m) + st.ph);
-    ctx.fillStyle = `rgba(${B.star},${0.2 + 0.6 * st.m * tw})`;
-    const sz = st.m > 0.85 ? 2 : st.m > 0.6 ? 1.4 : 1; ctx.fillRect(p.x, p.y, sz, sz);
+  // the Milky Way and the stars, batched into a few brightness levels so it's a handful of fills, not a thousand
+  if (!B.noStars) {
+    const lv = [[], [], [], []], dl = d0 => Math.min(3, (d0 * 16) | 0);
+    for (const d of dust) { const p = skyPos(d.b, d.e); if (!p || p.y < -20 || p.y > hy) continue; lv[dl(d.a)].push(p.x, p.y, 1); }
+    lv.forEach((a, i) => { if (!a.length) return; ctx.fillStyle = `rgba(${B.dust},${0.06 + i * 0.055})`; for (let k = 0; k < a.length; k += 3) ctx.fillRect(a[k], a[k + 1], 1, 1); });
+    const sl = [[], [], [], [], []];
+    for (const st of stars) {
+      const p = skyPos(st.b, st.e); if (!p || p.y < -40) continue;
+      const tw = 0.7 + 0.3 * Math.sin(g.t * (1.5 + st.m) + st.ph), a = 0.2 + 0.6 * st.m * tw;
+      sl[Math.min(4, (a * 6) | 0)].push(p.x, p.y, st.m > 0.85 ? 2 : st.m > 0.6 ? 1.4 : 1);
+    }
+    sl.forEach((a, i) => { if (!a.length) return; ctx.fillStyle = `rgba(${B.star},${0.1 + i * 0.17})`; for (let k = 0; k < a.length; k += 3) ctx.fillRect(a[k], a[k + 1], a[k + 2], a[k + 2]); });
   }
   drawSkyExtras(B);
   // the moon and its halo
@@ -122,7 +125,7 @@ function drawSea() {
   const B = curBiome();
   const sea = ctx.createLinearGradient(0, hy, 0, H);
   sea.addColorStop(0, B.sea[0]); sea.addColorStop(0.04, B.sea[1]); sea.addColorStop(0.5, B.sea[2]); sea.addColorStop(1, B.sea[3]);
-  ctx.fillStyle = sea; ctx.fillRect(-W, hy, W * 3, H * 2);
+  ctx.fillStyle = sea; ctx.fillRect(-W * 0.15, hy, W * 1.3, H - hy + H * 0.1);
   // moon glitter: a broken path of light on the water under the moon, widening towards you
   const mp = skyPos(MOON.b, MOON.e);
   if (mp && !reduceMotion) {

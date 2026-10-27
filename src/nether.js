@@ -14,13 +14,14 @@ const netherGlowVis = o => Math.max(0.8, foeVis(o));
 Object.assign(FOE_KINDS, {
   // glides in wide circles high overhead and spits fireballs at where you're going
   cinderkite: {
-    h: 10, max: 1, every: [16, 24], fly: true, vis: netherGlowVis,
+    h: 10, max: 1, every: [24, 34], fly: true, vis: netherGlowVis,
     spawn() {
       const p = aheadPt(rand(200, 260), (Math.random() < 0.5 ? -1 : 1) * rand(40, 90));
-      return { x: p.x, y: p.y, z: 42, a: bearingOf(p.x - ship.x, p.y - ship.y), ph: rand(0, 6), shotT: rand(3, 5), life: 45, flee: 0 };
+      return { x: p.x, y: p.y, z: 42, a: bearingOf(p.x - ship.x, p.y - ship.y), ph: rand(0, 6), shotT: rand(5, 7), life: 32, flee: 0 };
     },
     update(f, dt) {
       f.ph += dt; f.life -= dt;
+      if (f.life < 0 && f.flee <= 0) f.flee = 3;
       if (f.flee > 0) {
         // climbing away from the flare's glare
         f.flee -= dt; f.z += 18 * dt;
@@ -35,11 +36,11 @@ Object.assign(FOE_KINDS, {
       if (!g.backrooms) f.y = Math.max(50, f.y);
       f.shotT -= dt;
       if (f.shotT <= 0 && dist(f) < 260) {
-        f.shotT = rand(5, 7) * Math.max(0.6, 1 - (g.n - 2) * 0.04);
-        const dur = 2.4, p = aheadPt(ship.v * dur + rand(-4, 8), rand(-6, 6));
+        f.shotT = rand(7.5, 10) * Math.max(0.75, 1 - (g.n - 2) * 0.03);
+        const dur = 2.8, p = aheadPt(ship.v * dur + rand(-4, 8), rand(-6, 6));
         if (!g.backrooms) p.y = Math.max(46, p.y);
-        hazard({ kind: 'fireball', x: f.x, y: f.y, z: f.z, x0: f.x, y0: f.y, z0: f.z, x1: p.x, y1: p.y, fuse: dur, dur, r: 11 });
-        hazard({ kind: 'scorch', x: p.x, y: p.y, r: 11, life: dur });
+        hazard({ kind: 'fireball', x: f.x, y: f.y, z: f.z, x0: f.x, y0: f.y, z0: f.z, x1: p.x, y1: p.y, fuse: dur, dur, r: 9 });
+        hazard({ kind: 'scorch', x: p.x, y: p.y, r: 9, life: dur });
         sfxFoe('roar', panOf(f), 0.8);
       }
       if (Math.random() < dt * 0.25) sfxFoe('flap', panOf(f), 0.4);
@@ -81,7 +82,7 @@ Object.assign(FOE_KINDS, {
   // rises out of the lava ahead and wades at you; if it reaches the bow it holds on and burns.
   // The bell cools it and it sinks back.
   slagwader: {
-    h: 8, max: 2, every: [14, 22], vis: netherGlowVis,
+    h: 8, max: 1, every: [22, 32], vis: netherGlowVis,
     spawn() {
       const p = aheadPt(rand(120, 170), rand(-30, 30));
       if (!okWater(p) || g.rocks.some(r => Math.hypot(r.x - p.x, r.y - p.y) < r.r + 8)) return null;
@@ -95,17 +96,17 @@ Object.assign(FOE_KINDS, {
       const d = dist(f);
       if (f.hold > 0) {
         // clinging to the bow: dragging you down and scorching the planks
-        f.hold -= dt; g.mods.slow = Math.min(g.mods.slow, 0.3);
+        f.hold -= dt; g.mods.slow = Math.min(g.mods.slow, 0.45);
         const p = aheadPt(5, 0); f.x = p.x; f.y = p.y;
         if (f.hold <= 0) { foeHit('the Slag Wader'); sfxFoe('grunt', 0, 1); throwBack(f, 70); f.cd = 4; }
         return;
       }
       if (f.rise > 0.6) {
-        const sp = 3.5 + g.n * 0.2, b = bearingOf(ship.x - f.x, ship.y - f.y);
+        const sp = 2.4 + g.n * 0.12, b = bearingOf(ship.x - f.x, ship.y - f.y);
         f.x += Math.sin(b) * sp * dt; f.y += Math.cos(b) * sp * dt;
         if (Math.random() < dt * 0.2) sfxFoe('groan', panOf(f), Math.max(0.2, 1 - d / 200) * 0.6);
       }
-      if (d < 7 && f.cd <= 0 && f.rise > 0.6) { f.hold = 3; sfxFoe('grunt', 0, 1); g.shake = Math.max(g.shake, 0.4); addLog('The Slag Wader has the bow! Ring the bell!', 'w'); }
+      if (d < 6 && f.cd <= 0 && f.rise > 0.6) { f.hold = 4.5; sfxFoe('grunt', 0, 1); g.shake = Math.max(g.shake, 0.4); addLog('The Slag Wader has the bow! Ring the bell!', 'w'); }
       if (f.life <= 0) f.sink = 3;
     },
     bell(f) { if (f.sink <= 0 && dist(f) < 140) { f.sink = 3; f.hold = 0; return 'The bell rang out and the Slag Wader cooled, cracked and sank back into the lava.'; } },
@@ -145,7 +146,7 @@ Object.assign(FOE_KINDS, {
   // flutters in towards your lantern; if it lands, the light goes dim and then the deck catches.
   // A flare is brighter than your lantern: it chases that and burns up in it.
   furnacemoth: {
-    h: 6, max: 1, every: [18, 28], fly: true, vis: netherGlowVis,
+    h: 6, max: 1, every: [26, 38], fly: true, vis: netherGlowVis,
     spawn() {
       const p = aheadPt(rand(90, 140), (Math.random() < 0.5 ? -1 : 1) * rand(60, 110));
       return { x: p.x, y: p.y, z: 9, ph: rand(0, 6), on: false, t: 0, warned: false, chase: null, life: 50 };
@@ -161,15 +162,15 @@ Object.assign(FOE_KINDS, {
       }
       if (f.on) {
         // smothering the lantern
-        g.mods.lantern = Math.min(g.mods.lantern, 0.2);
+        g.mods.lantern = Math.min(g.mods.lantern, 0.35);
         f.x = ship.x; f.y = ship.y; f.z = 6; f.t += dt;
-        if (f.t > 3 && !f.warned) { f.warned = true; addLog('The Furnace Moth is smothering your lantern and the planks are smoking. Fire a flare!', 'w'); }
-        if (f.t > 7) { foeHit('the Furnace Moth'); f.on = false; f.t = 0; f.warned = false; throwBack(f, 120); f.z = 12; }
+        if (f.t > 3.5 && !f.warned) { f.warned = true; addLog('The Furnace Moth is smothering your lantern and the planks are smoking. Fire a flare!', 'w'); }
+        if (f.t > 10) { foeHit('the Furnace Moth'); f.on = false; f.t = 0; f.warned = false; throwBack(f, 120); f.z = 12; }
         if (Math.random() < dt * 0.8) sfxFoe('flap', 0, 0.5);
         return;
       }
       // fluttering in, weaving
-      const d = dist(f), b = bearingOf(ship.x - f.x, ship.y - f.y) + Math.sin(f.ph * 1.3) * 0.6, sp = 9 + g.n * 0.3 + Math.max(0, ship.v - 9) * 0.9;
+      const d = dist(f), b = bearingOf(ship.x - f.x, ship.y - f.y) + Math.sin(f.ph * 1.3) * 0.6, sp = 7 + g.n * 0.2 + Math.max(0, ship.v - 9) * 0.7;
       f.x += Math.sin(b) * sp * dt; f.y += Math.cos(b) * sp * dt; f.z = 8 + Math.sin(f.ph * 2) * 2;
       if (Math.random() < dt * 0.3 && d < 120) sfxFoe('flap', panOf(f), 0.5);
       if (d < 5) { f.on = true; f.t = 0; sfxFoe('flap', 0, 1); addLog('The Furnace Moth landed on your lantern. The light is going.', 'w'); }

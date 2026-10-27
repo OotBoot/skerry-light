@@ -46,7 +46,23 @@ function mix(a, b, t) {
   const pa = [1, 3, 5].map(i => parseInt(a.substr(i, 2), 16)), pb = [1, 3, 5].map(i => parseInt(b.substr(i, 2), 16));
   return 'rgb(' + pa.map((v, i) => Math.round(v + (pb[i] - v) * t)).join(',') + ')';
 }
+// a soft glow: drawn from a small pre-rendered sprite per colour, which is far cheaper than building
+// a radial gradient for every light every frame
+const LAMP_SPRITES = new Map();
+function lampSprite(c) {
+  let s = LAMP_SPRITES.get(c);
+  if (!s) {
+    s = document.createElement('canvas'); s.width = s.height = 64;
+    const q = s.getContext('2d'), gr = q.createRadialGradient(32, 32, 0, 32, 32, 32);
+    gr.addColorStop(0, c); gr.addColorStop(0.3, c + '88'); gr.addColorStop(1, c + '00');
+    q.fillStyle = gr; q.fillRect(0, 0, 64, 64);
+    LAMP_SPRITES.set(c, s);
+  }
+  return s;
+}
 function lamp(x, y, c, r) {
+  if (!(r > 0)) return;
+  if (typeof c === 'string' && c.length === 7 && c[0] === '#') { const R = r * 4; ctx.drawImage(lampSprite(c), x - R, y - R, R * 2, R * 2); return; }
   const gr = ctx.createRadialGradient(x, y, 0, x, y, r * 4);
   gr.addColorStop(0, c); gr.addColorStop(0.3, c + '88'); gr.addColorStop(1, c + '00');
   ctx.fillStyle = gr; ctx.beginPath(); ctx.arc(x, y, r * 4, 0, 6.28); ctx.fill();

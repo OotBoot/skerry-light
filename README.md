@@ -67,16 +67,16 @@ The only thing she will not go near is **Plimsoll**, the shark who walked up out
 - **The Wine-Dark Sea** (the Odyssey): another one voyage in twenty after the first (the same seeded roll as the Nether, so the two never overlap). A purple-black sea under a golden moon and shooting stars, olive hills with white temples lit by torches, cypresses along the cliffs, and pale marble rocks with veins and broken columns. Its three enemies are the only ones there (no pool draw, Maren, Drowned, Knock or Verity):
   - **The Sirens**: three winged singers on a rock. Their song drags your helm round towards the rock (which breaks planks). Ring the bell to drown them out for 15 seconds.
   - **Charybdis**: a whirlpool that opens on your course, dragging the ship round and in. The middle breaks a plank and spits you out. At full sail you can pull clear.
-  - **The Cyclops**: a one-eyed giant wading in the shallows, hurling rocks at where you're going. A pale ring marks where each lands. A flare in his eye blinds him for 12 seconds.
+  - **The Cyclops**: a one-eyed giant wading in the shallows, hurling rocks at where you're going. A pale ring marks where each lands. A flare in his eye blinds him for 16 seconds.
 
   Add `?odyssey` to force it.
 
 - **The Places In Between**: one more voyage in twenty after the first (the same seeded roll as the Nether and the Wine-Dark Sea, so the three never overlap). A still, glassy sea stuck at dusk under a low peach sun, no stars, a pale mist on the water; staircases climbing out of the sea into the clouds, doorways standing alone on the shore (some lit), street lamps along the cliffs, and smooth pale rocks with a shut door set into each, light leaking round its edges. Its three enemies are the only ones there (no pool draw, Maren, Drowned, Knock or Verity):
-  - **The Doors**: four doors in a row across your course. Sail through a dark one and you're put back 170 m. The lit one carries you 110 m on. The gaps between are open water.
-  - **The Echo**: a pale copy of your own ship sailing straight at you, steering the mirror of your helm half a second late, so it follows your dodges. Turn late and hard, or ring the bell and it shatters.
-  - **The Sleeper**: a vast face under the water ahead of you. When the water over it brightens it's waking: ring the bell to settle it. If its eyes open you lose a plank and everything slows to a crawl for five seconds.
+  - **The Doors**: four doors in a row across your course. Sail through a dark one and you're put back 110 m. The lit one carries you 110 m on. The gaps between are open water.
+  - **The Echo**: a pale copy of your own ship sailing straight at you, steering a softer mirror of your helm most of a second late, so it follows your dodges. Turn late and hard, or ring the bell and it shatters.
+  - **The Sleeper**: a vast face under the water ahead of you. When the water over it brightens it's waking: ring the bell to settle it. It gives five seconds' warning. If its eyes open you lose a plank and everything slows for three and a half seconds.
 
-  Add `?between` to force it. Add `?biome=fjord` (or `ember`, `lagoon`, `barrows`, `shoals`, `skerry`) to the address to force one.
+  Add `?between` to force it. Each voyage opens with the sea's name sweeping across the top of the screen in its own colour, then fading (for the Nether, as you come out of the portal). Add `?biome=fjord` (or `ember`, `lagoon`, `barrows`, `shoals`, `skerry`) to the address to force one.
 - **The Backrooms**: one voyage in twenty (rolled from the crew's seed, so a whole crew goes in together), the lights go out and the sea comes back with walls. It's a flooded maze of yellow rooms under buzzing tubes that go dark each time the lamp would have turned. Plimsoll knows the way to the green EXIT sign, and the bearing strip points at it. Maren, the drowned, Knock and Verity all follow you in. Add `?backrooms` to the address to force one (solo only).
 - **The sea**: voyages start about 2.4 km out (further each voyage), through a wide stretch of skerries, wrecks and drifting timber.
 - **Harbour**: steer between the real red and green pier lamps. Each voyage after that has more rocks, wreckage and drowned, and the beam turns slower.
