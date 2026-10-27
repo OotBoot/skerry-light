@@ -359,6 +359,7 @@ function sfxFoe(kind, pan, vol) {
     case 'splat': N('lowpass', 900, 1, 0.002, 0.7, 0.3, { to: 200 }); T(140, 'sine', 0.002, 0.4, 0.2, { to: 60 }); break;
     case 'slip': T(900, 'sine', 0.01, 0.2, 0.6, { to: 200 }); break;
     case 'creak': T(90, 'sawtooth', 0.2, 0.2, 1.2, { to: 140 }); N('bandpass', 300, 4, 0.2, 0.2, 1.2); break;
+    case 'scream': T(520, 'sawtooth', 0.05, 0.25, 1.1, { to: 900 }); T(530, 'sawtooth', 0.05, 0.2, 1.1, { to: 940 }); N('bandpass', 1400, 2, 0.05, 0.25, 1.0); break;
     case 'crack': N('bandpass', 1500, 2, 0.001, 0.35, 0.1); break;
   }
 }

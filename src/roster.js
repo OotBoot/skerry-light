@@ -12,7 +12,7 @@ const FOE_ASSETS = {
   toucan: 'assets/foes/toucan.webp', brute: 'assets/foes/brute.webp', tyrefrog: 'assets/foes/tyrefrog.webp',
   assassin: 'assets/foes/assassin.webp', goose: 'assets/foes/goose.webp', shrimpcat: 'assets/foes/shrimpcat.webp',
   fridgecamel: 'assets/foes/fridgecamel.webp', condiments: 'assets/foes/condiments.webp', gentleman: 'assets/foes/gentleman.webp',
-  smuggler: 'assets/foes/smuggler.webp', bananaape: 'assets/foes/bananaape.webp', rootman: 'assets/foes/rootman.webp',
+  smuggler: 'assets/foes/smuggler.webp', stowaway: 'assets/foes/stowaway.webp', bananaape: 'assets/foes/bananaape.webp', rootman: 'assets/foes/rootman.webp',
 };
 const FOE_IMG = {};
 for (const k in FOE_ASSETS) { FOE_IMG[k] = new Image(); FOE_IMG[k].src = FOE_ASSETS[k]; }
@@ -22,9 +22,10 @@ const FOE_NAMES = {
   coconutbull: 'The Coconut Bull', bananadolphin: 'The Banana Dolphin', toucan: 'The Toucan', brute: 'The Juiced Brute',
   tyrefrog: 'The Tyre Frog', assassin: 'The Assassin Cup', goose: 'The Bomber Goose', shrimpcat: 'The Shrimp Cat',
   fridgecamel: 'The Fridge Camel', condiments: 'The Condiment Twins', gentleman: 'The Gentleman', smuggler: 'The Smuggler',
-  bananaape: 'The Banana Ape', rootman: 'The Root Hermit', drowned: 'the Drowned', knock: 'Knock', verity: 'Verity',
+  bananaape: 'The Banana Ape', rootman: 'The Root Hermit', stowaway: 'The Stowaway', drowned: 'the Drowned', knock: 'Knock', verity: 'Verity',
 };
-const FOE_POOL = Object.keys(FOE_NAMES);
+// (the Stowaway only haunts the Backrooms, and is always there: he isn't drawn from the pool)
+const FOE_POOL = Object.keys(FOE_NAMES).filter(k => k !== 'stowaway');
 const FOE_INTRO = {
   dancer: 'A ballerina is spinning on the water ahead. Her whirl drags at the helm. The bell stops her.',
   crocbomber: 'Engines overhead: the Croc Bomber. Steer out of the red rings before the bombs land.',
@@ -44,6 +45,7 @@ const FOE_INTRO = {
   smuggler: 'A gunman on a rock. He fires when you’re in the light. Stay in the dark.',
   bananaape: 'An ape in a banana is throwing fruit at your sails. Keep moving.',
   rootman: 'A root-covered hermit points at you. Turn across the roots before they reach you.',
+  stowaway: 'Thump, thump: a peg leg on wet carpet. Someone is running at you down the corridor. Dodge to the side!',
 };
 let lastTrio = null;
 try { lastTrio = JSON.parse(localStorage.getItem('skerry-trio') || 'null'); } catch (e) {}
@@ -62,6 +64,7 @@ const hasFoe = k => !g || !g.trio || g.trio.includes(k);
 
 function newFoes(trio) {
   const F = {};
+  if (g && g.backrooms) F.stowaway = { t: rand(8, 12), list: [], intro: false };
   for (const k of trio) if (FOE_KINDS[k]) F[k] = { t: rand(6, 14), list: [], intro: false };
   return F;
 }
@@ -501,6 +504,43 @@ const FOE_KINDS = {
     draw(f, q, vis) { if (f.stun > 0) return; drawSprite('bananaape', q, 3.5, vis, { flipX: -f.side, bob: Math.sin(f.ph * 3) * 0.2 }); },
   },
 
+  // the Backrooms' own: appears down the corridor ahead, screams, and charges straight at you.
+  // He runs in a straight line at where you were when he set off, so dodge to one side.
+  stowaway: {
+    h: 4.2, max: 1, every: [12, 20],
+    spawn() {
+      // somewhere straight ahead with a clear run at you, short of the next wall
+      const room = wallDistAhead();
+      if (room < 45) return null;
+      const d = Math.min(130, room - 6), p = aheadPt(d, rand(-4, 4));
+      sfxFoe('scream', panOf(p), 0.9);
+      return { x: p.x, y: p.y, wait: 1.3, dx: 0, dy: 0, ran: 0, done: false, stride: 0, ph: 0 };
+    },
+    update(f, dt) {
+      f.ph += dt;
+      if (f.wait > 0) {
+        f.wait -= dt;
+        if (f.wait <= 0) { const d = dist(f) || 1; f.dx = (ship.x - f.x) / d; f.dy = (ship.y - f.y) / d; }
+        return;
+      }
+      const sp = 24 + g.n * 0.8; f.x += f.dx * sp * dt; f.y += f.dy * sp * dt; f.ran += sp * dt;
+      // the peg leg on the carpet, louder as he comes
+      f.stride -= dt;
+      if (f.stride <= 0) { f.stride = 0.28; sfxKnock(panOf(f), Math.max(0.15, 1 - dist(f) / 140), 0.12); }
+      if (!f.done && dist(f) < 7) {
+        f.done = true; foeHit('the Stowaway'); g.shake = Math.max(g.shake, 0.6); g.flash = Math.max(g.flash, 0.4);
+        sfxFoe('grunt', 0, 1);
+      }
+      // gone through a wall or well past you
+      if (f.ran > 40 && (f.done || ((f.x - ship.x) * f.dx + (f.y - ship.y) * f.dy) > 40)) f.dead = true;
+      if (f.ran > 400) f.dead = true;
+    },
+    draw(f, q, vis) {
+      const running = f.wait <= 0;
+      drawSprite('stowaway', q, 4.2, Math.max(0.75, vis), { bob: running ? Math.abs(Math.sin(f.ph * 11)) * 0.35 : 0, rot: running ? Math.sin(f.ph * 11) * 0.06 : Math.sin(f.ph * 30) * 0.015, noReflect: true });
+    },
+  },
+
   // points at you, and a line of roots bursts up from the sea towards your ship
   rootman: {
     h: 7, max: 1, every: [18, 26],
@@ -528,6 +568,18 @@ const FOE_KINDS = {
   },
 };
 
+// how far you can see straight ahead in the rooms before a wall
+function wallDistAhead() {
+  if (!g.walls || !g.walls.length) return 300;
+  const f = fwd(); let best = 400;
+  for (const w of g.walls) {
+    const ex = w.x2 - w.x1, ey = w.y2 - w.y1, den = f.x * ey - f.y * ex;
+    if (Math.abs(den) < 1e-6) continue;
+    const t = ((w.x1 - ship.x) * ey - (w.y1 - ship.y) * ex) / den, u = ((w.x1 - ship.x) * f.y - (w.y1 - ship.y) * f.x) / den;
+    if (t > 0 && u >= 0 && u <= 1) best = Math.min(best, t);
+  }
+  return best;
+}
 function throwBack(f, d) {
   const b = bearingOf(f.x - ship.x, f.y - ship.y);
   f.x = ship.x + Math.sin(b) * d; f.y = ship.y + Math.cos(b) * d; f.hold = 0;
