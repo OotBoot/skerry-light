@@ -30,15 +30,15 @@ function newVoyage(n, attract, seed, slot) {
   };
   g.enemies = newEnemies(v.lures);
   // this voyage's three enemies from the pool
-  // the Nether has its own three and nothing else
-  g.trio = attract ? [] : v.nether ? NETHER_TRIO.slice() : pickTrio(seed);
+  // the Nether and the Wine-Dark Sea have their own three and nothing else
+  g.trio = attract ? [] : v.nether ? NETHER_TRIO.slice() : v.special === 'odyssey' ? ODYSSEY_TRIO.slice() : pickTrio(seed);
   g.foes = newFoes(g.trio); g.hazards = []; g.flash = 0; g.splat = 0; g.spinT = 0; g.capT = 0; resetMods();
   g.plim = newPlimsoll(v.path);
-  g.maren = newMaren(!attract && !v.nether, v.wrecks.find(w => w.name === 'Gannet'));
+  g.maren = newMaren(!attract && !v.special, v.wrecks.find(w => w.name === 'Gannet'));
   g.cannon = newCannon();
   g.pickups = v.pickups || []; g.found = 0; if (typeof renderFound === 'function') renderFound();
   g.verity = newVerity(v.backrooms); g.verityScare = 0; g.lightsOut = 0;
-  g.biome = v.nether ? 'nether' : biomeFor(n, attract);
+  g.biome = v.special || biomeFor(n, attract);
   g.portal = null;
   if (v.nether) startPortal(biomeFor(n - 1));
   renderHud();

@@ -28,7 +28,7 @@ function makeVoyage(n, attract, seed) {
     const forced = seed == null && !attract && SK.FORCE_BACKROOMS;
     const back = !attract && (RNG() < SK.BACKROOMS_CHANCE || forced);
     const v = back ? buildBackrooms(n) : buildVoyage(n, attract);
-    if (!back) v.nether = rollNether(n, attract, seed);
+    if (!back) { v.special = rollSpecial(n, attract, seed); v.nether = v.special === 'nether'; }
     return v;
   } finally { RNG = Math.random; }
 }

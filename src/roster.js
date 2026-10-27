@@ -643,9 +643,11 @@ function updateHazards(dt) {
       h.x = h.x0 + (h.x1 - h.x0) * k; h.y = h.y0 + (h.y1 - h.y0) * k; h.z = h.z0 * (1 - k * k);
       if (h.fuse <= 0) {
         const d1 = Math.hypot(h.x1 - ship.x, h.y1 - ship.y);
-        burst(h.x1, h.y1, ['#ffd27a', '#ff8a2a', '#ff4a1a', '#3a1a12'], 50, 18, 12);
-        sfxFoe('boom', panOf(h), Math.max(0.25, 1 - d1 / 250)); g.shake = Math.max(g.shake, d1 < 60 ? 0.5 : 0.15);
-        if (d1 < h.r + 2) foeHit('a fireball');
+        const rock = h.style === 'boulder';
+        burst(h.x1, h.y1, rock ? ['#e8eef8', '#c8d6e8', '#8a8278', '#ffffff'] : ['#ffd27a', '#ff8a2a', '#ff4a1a', '#3a1a12'], 50, 18, 12);
+        if (rock) sfxSplash(panOf(h), 1);
+        sfxFoe('boom', panOf(h), Math.max(0.25, 1 - d1 / 250) * (rock ? 0.6 : 1)); g.shake = Math.max(g.shake, d1 < 60 ? 0.5 : 0.15);
+        if (d1 < h.r + 2) foeHit(rock ? 'the Cyclops’ rock' : 'a fireball');
         continue;
       }
     } else {
@@ -734,10 +736,19 @@ function drawHazard(h, q) {
     ctx.beginPath(); ctx.ellipse(q.x, q.y, k * (1 - f), k * 0.25 * (1 - f), 0, 0, 6.28); ctx.fill();
   } else if (h.kind === 'scorch') {   // where the fireball will land: an orange ring, filling in
     const f = Math.max(0, Math.min(1, 1 - h.life / 2.4)), pulse = 0.6 + 0.4 * Math.sin(g.t * 14);
-    ctx.strokeStyle = `rgba(255,150,40,${0.55 + 0.4 * pulse})`; ctx.lineWidth = Math.max(1.5, 0.3 * s);
+    const pale = h.style === 'boulder';
+    ctx.strokeStyle = pale ? `rgba(240,232,215,${0.5 + 0.4 * pulse})` : `rgba(255,150,40,${0.55 + 0.4 * pulse})`; ctx.lineWidth = Math.max(1.5, 0.3 * s);
     ctx.beginPath(); ctx.ellipse(q.x, q.y, k, k * 0.25, 0, 0, 6.28); ctx.stroke();
-    ctx.globalAlpha = 0.2 + 0.25 * f; ctx.fillStyle = '#ff7a1a';
+    ctx.globalAlpha = 0.2 + 0.25 * f; ctx.fillStyle = pale ? '#e8dcc0' : '#ff7a1a';
     ctx.beginPath(); ctx.ellipse(q.x, q.y, k * f, k * 0.25 * f, 0, 0, 6.28); ctx.fill();
+  } else if (h.kind === 'fireball' && h.style === 'boulder') {
+    const e = Math.max(3, 1.6 * s);
+    ctx.globalAlpha = Math.max(0.75, vis); ctx.translate(q.x, q.y); ctx.rotate(h.t * 4 * (h.side || 1));
+    const rg = ctx.createRadialGradient(-e * 0.3, -e * 0.3, 0, 0, 0, e);
+    rg.addColorStop(0, '#b0a898'); rg.addColorStop(1, '#3a342c');
+    ctx.fillStyle = rg; ctx.beginPath();
+    for (let i = 0; i < 8; i++) { const a = i / 8 * 6.28, rr = e * (0.8 + 0.2 * Math.sin(i * 2.7)); i ? ctx.lineTo(Math.cos(a) * rr, Math.sin(a) * rr) : ctx.moveTo(Math.cos(a) * rr, Math.sin(a) * rr); }
+    ctx.closePath(); ctx.fill();
   } else if (h.kind === 'fireball') {
     const e = Math.max(3, 1.8 * s);
     ctx.globalCompositeOperation = 'lighter';

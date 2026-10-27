@@ -579,7 +579,7 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
           <li><b>Hull</b> when the planks run out she goes down. Let Maren reach the bow and she comes aboard</li>
           <li><b>Tonight's enemies</b> each voyage brings three enemies from a pool of 21 (the log names them as you set out), on top of Maren. Each has its own trick and its own counter: read the log when one turns up</li>
           <li><b>Verity</b> sometimes you'll find a small smiling yellow orb in a corner of your deck, offering to help. He isn't helping, and the bell doesn't bother him. Fire a flare before twenty seconds are up, or see what he really looks like</li>
-          <li><b>Six seas</b> the first voyage is always Skerry Light. After that the voyages go round six seas in turn: Skerry Light, the Frozen Fjord, the Ember Isles, the Coral Lagoon, the Barrow Shore and the Crystal Shoals. Each has its own sky, coast, weather and rocks (icebergs, lava-veined basalt, coral reefs, gravestones, crystal). They look different, but they sink you just the same. And about one voyage in twenty (never the first), a portal stands in the water ahead: you sail through it into the Nether, a lava sea under a roof of red rock with lava pouring down from it. The Nether has its own three enemies and nothing else, not even Maren: the Cinder Kite (dodge the orange rings its fireballs fall into; a flare drives it off), the Slag Wader (ring the bell before it reaches your bow) and the Furnace Moth (if it lands on your lantern, fire a flare and it chases that instead)</li>
+          <li><b>Six seas</b> the first voyage is always Skerry Light. After that the voyages go round six seas in turn: Skerry Light, the Frozen Fjord, the Ember Isles, the Coral Lagoon, the Barrow Shore and the Crystal Shoals. Each has its own sky, coast, weather and rocks (icebergs, lava-veined basalt, coral reefs, gravestones, crystal). They look different, but they sink you just the same. And about one voyage in twenty (never the first), a portal stands in the water ahead: you sail through it into the Nether, a lava sea under a roof of red rock with lava pouring down from it. The Nether has its own three enemies and nothing else, not even Maren: the Cinder Kite (dodge the orange rings its fireballs fall into; a flare drives it off), the Slag Wader (ring the bell before it reaches your bow) and the Furnace Moth (if it lands on your lantern, fire a flare and it chases that instead). Another one voyage in twenty you find yourself on the Wine-Dark Sea of the old stories, with white temples on the headlands, a golden moon and shooting stars, and three monsters of its own (again, nothing else): the Sirens (their song drags your helm to their rock; ring the bell to drown them out), Charybdis (a whirlpool that opens on your course and drags you in; sail hard round it) and the Cyclops (dodge the pale ring where his rock will land; a flare in his eye blinds him)</li>
           <li><b>The Backrooms</b> about one voyage in twenty, the lights go out and the sea comes back with walls: a flooded maze of yellow rooms. Follow Plimsoll to the green EXIT sign. The Stowaway lives there too: when he screams and charges down the corridor, dodge to the side</li>
           <li><b>Floating crates</b> bob about the water, each with a little lantern. Sail into one to haul it aboard. Make harbour and each is worth two Skerry Crates; sink and they go down with you. Making harbour pays 5 crates on voyage 1, then follows the Fibonacci sequence for each voyage in a row: 8, 13, 21, 34...</li>
           <li><b>Crew</b> sail with up to seven friends. Ships close together keep her back and patch each other's planks. Share flares, chat in the crew screen, and watch your crew after your own voyage ends</li>
@@ -1167,6 +1167,8 @@ function sfxFoe(kind, pan, vol) {
     case 'creak': T(90, 'sawtooth', 0.2, 0.2, 1.2, { to: 140 }); N('bandpass', 300, 4, 0.2, 0.2, 1.2); break;
     case 'scream': T(520, 'sawtooth', 0.05, 0.25, 1.1, { to: 900 }); T(530, 'sawtooth', 0.05, 0.2, 1.1, { to: 940 }); N('bandpass', 1400, 2, 0.05, 0.25, 1.0); break;
     case 'crack': N('bandpass', 1500, 2, 0.001, 0.35, 0.1); break;
+    case 'song': { const root = [220, 247, 196][Math.floor(Math.random() * 3)]; [1, 1.2, 1.5].forEach((m, i) => T(root * m, 'sine', 0.5, 0.06, 1.6, { delay: i * 0.18, to: root * m * 1.03 })); T(root * 2, 'triangle', 0.6, 0.03, 1.4, { delay: 0.5 }); break; }
+    case 'gurgle': N('lowpass', 320, 1.5, 0.3, 0.5, 1.4, { to: 120 }); for (let i = 0; i < 4; i++) T(90 + Math.random() * 60, 'sine', 0.02, 0.1, 0.18, { delay: 0.2 + i * 0.25, to: 50 }); break;
     case 'roar': N('lowpass', 900, 0.8, 0.08, 0.5, 0.9, { to: 200 }); T(70, 'sawtooth', 0.08, 0.25, 0.8, { to: 45 }); break;
     case 'flap': for (let i = 0; i < 3; i++) N('lowpass', 500, 1, 0.01, 0.25, 0.09, { delay: i * 0.12 }); break;
     case 'groan': T(65, 'sawtooth', 0.4, 0.22, 1.6, { to: 48 }); T(98, 'triangle', 0.4, 0.12, 1.4, { to: 80 }); N('lowpass', 250, 1, 0.3, 0.2, 1.4); break;
@@ -1204,7 +1206,7 @@ function makeVoyage(n, attract, seed) {
     const forced = seed == null && !attract && SK.FORCE_BACKROOMS;
     const back = !attract && (RNG() < SK.BACKROOMS_CHANCE || forced);
     const v = back ? buildBackrooms(n) : buildVoyage(n, attract);
-    if (!back) v.nether = rollNether(n, attract, seed);
+    if (!back) { v.special = rollSpecial(n, attract, seed); v.nether = v.special === 'nether'; }
     return v;
   } finally { RNG = Math.random; }
 }
@@ -2662,8 +2664,21 @@ const BIOMES = {
     rock: { g: ['#7e2219', '#4a120d', '#1c0605'], facet: 'rgba(255,120,90,0.12)', crack: 'rgba(30,6,4,0.6)', rim: '255,170,90', band: 'rgba(255,110,30,0.55)', foam: '255,160,70', kind: 'nether', h: 1.3, blocky: true },
     fx: 'ash', glow: '255,70,20', land: 'lavafalls', cavern: true, lavaSea: true,
   },
+  // the other rare one: the wine-dark sea of the old stories, with its own three monsters
+  odyssey: {
+    name: 'the Wine-Dark Sea', intro: 'Warm wind, white temples on the headlands and a golden moon. The old stories are true out here: listen for singing, watch the water for a whirlpool, and keep away from the one-eyed giant.',
+    sky: ['#01030c', '#050b22', '#0d1a40', '#22305c'],
+    sea: ['#30183e', '#1d0d2c', '#10061a', '#05030a'],
+    glitter: '255,220,160', haze: '150,100,160', dust: '230,225,255', star: '255,248,225', cloud: '140,130,180', halo: '255,225,170', moonTint: '#ffd98a',
+    waves: '225,195,235', beam: '200,170,215',
+    ground: '#0c0a0f', cliff: ['#29251f', '#2e2a23'], cliffTop: 'rgba(240,230,200,0.25)', cliffH: 1.1, topDepth: 1.5,
+    head: ['#26221c', '#2b261f'], surf: '235,225,245', wall: '#3a352c', roof: '#5a2818', win: '#ffcf80',
+    rock: { g: ['#ece4d0', '#ab9f88', '#3c352b'], facet: 'rgba(255,255,245,0.3)', crack: 'rgba(110,95,70,0.45)', rim: '255,230,180', band: 'rgba(40,30,45,0.85)', foam: '235,230,245', kind: 'marble', h: 1 },
+    fx: 'calm', meteors: true, land: 'temples',
+  },
 };
-const NETHER_CHANCE = 1 / 20;
+const NETHER_CHANCE = 1 / 20, ODYSSEY_CHANCE = 1 / 20;
+const ODYSSEY_FORCE = (() => { try { return /[?&#]odyssey\b/.test(location.href); } catch (e) { return false; } })();
 const NETHER_FORCE = (() => { try { return /[?&#]nether\b/.test(location.href); } catch (e) { return false; } })();
 const BIOME_ORDER = ['skerry', 'fjord', 'ember', 'lagoon', 'barrows', 'shoals'];
 const BIOME_FORCE = (() => { try { const m = location.search.match(/[?&]biome=(\w+)/); return m && BIOMES[m[1]] ? m[1] : null; } catch (e) { return null; } })();
@@ -2684,14 +2699,17 @@ function biomeLine() {
   if (g && g.portal && !g.portal.through) return 'A ring of black stone stands up out of the water dead ahead, full of swirling purple light. You are sailing straight into it.';
   const B = curBiome(); return B.intro ? B.name[0].toUpperCase() + B.name.slice(1) + '. ' + B.intro : ''; }
 
-// one in twenty voyages after the first goes to the Nether; rolled from the crew's seed so a crew goes together
-function rollNether(n, attract, seed) {
-  if (attract) return false;
-  if (seed == null && NETHER_FORCE) return true;
-  if (n <= 1) return false;
+// after the first voyage, one in twenty goes to the Nether and another one in twenty to the Wine-Dark Sea.
+// One roll from the crew's seed decides both, so a crew goes together and the two never overlap.
+function rollSpecial(n, attract, seed) {
+  if (attract) return null;
+  if (seed == null && NETHER_FORCE) return 'nether';
+  if (seed == null && ODYSSEY_FORCE) return 'odyssey';
+  if (n <= 1) return null;
   const r = seed != null ? seeded((seed ^ 0x2545f491) >>> 0)() : Math.random();
-  return r < NETHER_CHANCE;
+  return r < NETHER_CHANCE ? 'nether' : r < NETHER_CHANCE + ODYSSEY_CHANCE ? 'odyssey' : null;
 }
+const rollNether = (n, attract, seed) => rollSpecial(n, attract, seed) === 'nether';
 
 // ---------- the landscape behind the coast ----------
 const LAND = { peaks: [], volcano: [], palms: [], graves: [], spires: [], church: { x: 420, y: -150 } };
@@ -2701,6 +2719,9 @@ const LAND = { peaks: [], volcano: [], palms: [], graves: [], spires: [], church
   for (let x = -3000; x <= 3000; x += rand(220, 360)) LAND.peaks.push({ x, y: -380 - rand(0, 120), w: rand(180, 300), h: rand(120, 260), far: 0 });
   for (let i = 0; i < 70; i++) { const a = rand(-Math.PI, Math.PI), d = rand(1500, 3200); LAND.lavafalls = LAND.lavafalls || []; LAND.lavafalls.push({ x: Math.sin(a) * d, y: Math.cos(a) * d + 900, w: rand(6, 18), ph: rand(0, 6) }); }
   for (let i = 0; i < 26; i++) { LAND.glow = LAND.glow || []; LAND.glow.push({ b: rand(-Math.PI, Math.PI), e: rand(0.25, 0.75), s: rand(0.6, 1.6), seed: (Math.random() * 1e6) | 0 }); }
+  LAND.temples = [{ x: -380, y: -320, w: 70, h: 26, cols: 8, ruin: 0 }, { x: 900, y: -520, w: 90, h: 32, cols: 10, ruin: 1 }, { x: -1500, y: -700, w: 110, h: 36, cols: 12, ruin: 0 }];
+  LAND.hills = []; for (let x = -4000; x <= 4000; x += rand(300, 500)) LAND.hills.push({ x, y: -600 - rand(0, 400), w: rand(380, 620), h: rand(80, 180) });
+  LAND.cypress = []; for (let x = -2400; x <= 2400; x += rand(45, 140)) LAND.cypress.push({ x, h: rand(9, 18), ph: rand(0, 6) });
   LAND.volcano.push({ x: -650, y: -1500, w: 1100, h: 640, top: 0.12 }, { x: 1600, y: -1150, w: 600, h: 300, top: 0.15 });
   for (let x = -2400; x <= 2400; x += rand(40, 110)) LAND.palms.push({ x, h: rand(9, 16), lean: rand(-0.35, 0.35), ph: rand(0, 6) });
   for (let x = -2400; x <= 2400; x += rand(70, 170)) LAND.graves.push({ x, h: rand(12, 22), ph: rand(0, 6), br: 2 + Math.floor(rand(0, 3)) });
@@ -2760,6 +2781,10 @@ function drawLandFar(B) {
     for (const s of LAND.spires) if (!s.near) spire(s);
   } else if (B.land === 'lavafalls') {
     drawLavafalls();
+  } else if (B.land === 'temples') {
+    // low olive hills, and white temples standing on them
+    for (const h of LAND.hills) fillPoly([[h.x - h.w, h.y, 0], [h.x - h.w * 0.3, h.y, h.h], [h.x + h.w * 0.35, h.y, h.h * 0.9], [h.x + h.w, h.y, 0]], '#0f1210');
+    for (const t of LAND.temples) temple(t);
   } else if (B.land === 'graves') {
     // a ruined chapel up on the shore, its tower broken off
     const c = LAND.church;
@@ -2767,6 +2792,27 @@ function drawLandFar(B) {
     fillPoly([[c.x - 32, c.y, 26], [c.x + 10, c.y, 26], [c.x - 8, c.y, 40]], '#0a0d0b');
     fillPoly([[c.x + 18, c.y, 0], [c.x + 34, c.y, 0], [c.x + 34, c.y, 58], [c.x + 29, c.y, 63], [c.x + 24, c.y, 55], [c.x + 18, c.y, 60]], '#0c0f0d');
     for (const wx of [-18, -4, 26]) { const q = onCam(c.x + wx, c.y + 0.1, wx > 20 ? 44 : 14); if (q) { ctx.fillStyle = 'rgba(160,220,140,0.35)'; ctx.fillRect(q.x - 2 * q.s, q.y - 4 * q.s, 4 * q.s, 7 * q.s); } }
+  }
+}
+
+// a temple: steps, a row of columns, the beam across them and a pediment. Torches burn at the door.
+function temple(t) {
+  const { x, y, w, h } = t, M = '#4c473e', L = '#6a6457', D = '#2c2924';
+  const hz = t.hz || (t.hz = t.y < -400 ? 140 : 90);   // it stands up on the hill
+  fillPoly([[x - w / 2 - 4, y, hz], [x + w / 2 + 4, y, hz], [x + w / 2 + 4, y, hz + 3], [x - w / 2 - 4, y, hz + 3]], D);
+  fillPoly([[x - w / 2, y, hz + 3], [x + w / 2, y, hz + 3], [x + w / 2, y, hz + 5], [x - w / 2, y, hz + 5]], M);
+  const cw = w / (t.cols * 2 - 1);
+  for (let i = 0; i < t.cols; i++) {
+    const cx_ = x - w / 2 + cw * (i * 2), ch = t.ruin && (i % 3 === 1) ? h * 0.45 : h;
+    fillPoly([[cx_, y, hz + 5], [cx_ + cw, y, hz + 5], [cx_ + cw * 0.92, y, hz + 5 + ch], [cx_ + cw * 0.08, y, hz + 5 + ch]], i % 2 ? M : L);
+  }
+  if (!t.ruin) {
+    fillPoly([[x - w / 2 - 2, y, hz + 5 + h], [x + w / 2 + 2, y, hz + 5 + h], [x + w / 2 + 2, y, hz + 9 + h], [x - w / 2 - 2, y, hz + 9 + h]], L);
+    fillPoly([[x - w / 2 - 2, y, hz + 9 + h], [x + w / 2 + 2, y, hz + 9 + h], [x, y, hz + 9 + h + w * 0.16]], M);
+  } else fillPoly([[x - w / 2 - 2, y, hz + 5 + h], [x - w * 0.05, y, hz + 5 + h], [x - w * 0.12, y, hz + 8 + h], [x - w / 2 - 2, y, hz + 9 + h]], L);
+  for (const sx of [-0.35, 0.35]) {
+    const q = onCam(x + sx * w, y + 0.5, hz + 9); if (!q) continue;
+    ctx.globalCompositeOperation = 'lighter'; lamp(q.x, q.y, '#ffb050', Math.max(1.5, 2.5 * Math.sqrt(q.s)) * (0.85 + 0.15 * Math.sin(g.t * 7 + sx * 9))); ctx.globalCompositeOperation = 'source-over';
   }
 }
 
@@ -2816,6 +2862,12 @@ function drawLandNear(B) {
     ctx.lineCap = 'butt';
   } else if (B.land === 'spires') {
     for (const s of LAND.spires) if (s.near) spire(s);
+  } else if (B.land === 'temples') {
+    // tall dark cypresses along the cliff tops
+    for (const c of LAND.cypress) {
+      const cl = cliffAt(c.x), y = cl.y - 1, z = cl.z * B.cliffH;
+      fillPoly([[c.x - 1.6, y, z], [c.x - 1.1, y, z + c.h * 0.6], [c.x, y, z + c.h], [c.x + 1.1, y, z + c.h * 0.6], [c.x + 1.6, y, z]], '#070a08');
+    }
   }
 }
 
@@ -2892,6 +2944,19 @@ function drawSkyExtras(B) {
     }
     ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
   }
+  if (B.meteors && !reduceMotion) {
+    // a shooting star every few seconds
+    const k = (g.t % 4.5) / 4.5, n = Math.floor(g.t / 4.5);
+    if (k < 0.18) {
+      const b = yaw + ((n * 0.618) % 1 - 0.5) * fov, e = 0.35 + ((n * 0.37) % 1) * 0.35, p = skyPos(b, e);
+      if (p) {
+        const len = focal * 0.12, f = k / 0.18, x = p.x + f * len, y = p.y + f * len * 0.4;
+        const gr = ctx.createLinearGradient(x - len * 0.5, y - len * 0.2, x, y);
+        gr.addColorStop(0, 'rgba(255,245,220,0)'); gr.addColorStop(1, `rgba(255,245,220,${0.9 * (1 - f)})`);
+        ctx.strokeStyle = gr; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(x - len * 0.5, y - len * 0.2); ctx.lineTo(x, y); ctx.stroke();
+      }
+    }
+  }
   if (B.glow) {
     const gr = ctx.createLinearGradient(0, hy - H * 0.3, 0, hy + 4);
     gr.addColorStop(0, `rgba(${B.glow},0)`); gr.addColorStop(1, `rgba(${B.glow},${0.22 + 0.04 * Math.sin(g.t * 0.9)})`);
@@ -2947,6 +3012,15 @@ function rockSkinInside(B, r, x, y, w, h) {
       const fx = x - w * 0.48 + w * 0.96 * ((Math.sin(r.ph * 11 + i * 5.7) + 1) / 2), fy = y - h * (0.1 + 0.5 * ((Math.sin(r.ph * 3 + i * 2.3) + 1) / 2) ** 2);
       ctx.fillStyle = i % 3 ? 'rgba(60,95,40,0.55)' : 'rgba(170,175,110,0.35)';
       ctx.beginPath(); ctx.ellipse(fx, fy, Math.max(1, w * 0.06), Math.max(0.7, w * 0.025), 0, 0, 6.28); ctx.fill();
+    }
+  } else if (k === 'marble') {
+    // veins in the stone
+    ctx.strokeStyle = 'rgba(150,130,95,0.45)'; ctx.lineWidth = Math.max(0.6, w * 0.008);
+    for (let i = 0; i < 4; i++) {
+      ctx.beginPath(); let px = x - w * 0.45, py = y - h * (0.2 + i * 0.18 + 0.05 * Math.sin(r.ph * 3 + i));
+      ctx.moveTo(px, py);
+      for (let s = 0; s < 6; s++) { px += w * 0.16; py += Math.sin(r.ph * 7 + i * 2 + s * 1.7) * h * 0.07; ctx.lineTo(px, py); }
+      ctx.stroke();
     }
   } else if (k === 'nether') {
     // netherrack blocks, a few glowing with ore, and a vein of lava
@@ -3008,6 +3082,15 @@ function rockSkinOutside(B, r, x, y, w, h) {
       ctx.beginPath(); ctx.moveTo(bx - sw * 0.2, by); ctx.lineTo(bx + lean * L, by - L); ctx.lineTo(bx + sw * 0.7 + lean * L * 0.75, by - L * 0.75); ctx.lineTo(bx + sw, by); ctx.closePath(); ctx.fill();
       if (w > 14) { ctx.globalCompositeOperation = 'lighter'; lamp(bx + lean * L, by - L, hue ? '#ff8ae0' : '#8aeaff', Math.max(1.2, w * 0.03) * (0.8 + 0.2 * Math.sin(g.t * 3 + i + r.ph))); ctx.globalCompositeOperation = 'source-over'; }
     }
+  } else if (k === 'marble' && Math.sin(r.ph * 13) > -0.3) {
+    // a broken column standing on the top, fluted, its capital long gone (on most of them)
+    const cw = w * 0.1, chh = h * (0.4 + 0.25 * Math.abs(Math.sin(r.ph * 5)));
+    const cg = ctx.createLinearGradient(tx - cw / 2, 0, tx + cw / 2, 0);
+    cg.addColorStop(0, '#8c8270'); cg.addColorStop(0.5, '#f0e8d4'); cg.addColorStop(1, '#6c6252');
+    ctx.fillStyle = cg;
+    ctx.beginPath(); ctx.moveTo(tx - cw / 2, ty + h * 0.05); ctx.lineTo(tx - cw / 2, ty - chh); ctx.lineTo(tx - cw * 0.1, ty - chh - cw * 0.3); ctx.lineTo(tx + cw * 0.2, ty - chh + cw * 0.1); ctx.lineTo(tx + cw / 2, ty - chh - cw * 0.2); ctx.lineTo(tx + cw / 2, ty + h * 0.05); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = 'rgba(80,70,55,0.5)'; ctx.lineWidth = Math.max(0.5, cw * 0.06);
+    ctx.beginPath(); for (let i = 1; i < 4; i++) { const fx = tx - cw / 2 + cw * i / 4; ctx.moveTo(fx, ty + h * 0.03); ctx.lineTo(fx, ty - chh + cw * 0.15); } ctx.stroke();
   } else if (k === 'ice' && w > 20) {
     // icicles hanging from the overhang into the water
     ctx.fillStyle = 'rgba(220,245,255,0.7)';
@@ -3033,6 +3116,7 @@ const FX = { snow: [], ash: [], flies: [], motes: [], fog: [] };
 // returns true if the biome drew its own weather (so the default drizzle is skipped)
 function drawBiomeWeather(B) {
   const lean = Math.min(0.4, ship.v / 60) + ship.rudder * 0.1;
+  if (B.fx === 'calm') return true;   // clear skies, no rain
   if (B.fx === 'snow') {
     ctx.fillStyle = 'rgba(235,245,255,0.75)';
     for (const f of FX.snow) {
@@ -5156,9 +5240,11 @@ function updateHazards(dt) {
       h.x = h.x0 + (h.x1 - h.x0) * k; h.y = h.y0 + (h.y1 - h.y0) * k; h.z = h.z0 * (1 - k * k);
       if (h.fuse <= 0) {
         const d1 = Math.hypot(h.x1 - ship.x, h.y1 - ship.y);
-        burst(h.x1, h.y1, ['#ffd27a', '#ff8a2a', '#ff4a1a', '#3a1a12'], 50, 18, 12);
-        sfxFoe('boom', panOf(h), Math.max(0.25, 1 - d1 / 250)); g.shake = Math.max(g.shake, d1 < 60 ? 0.5 : 0.15);
-        if (d1 < h.r + 2) foeHit('a fireball');
+        const rock = h.style === 'boulder';
+        burst(h.x1, h.y1, rock ? ['#e8eef8', '#c8d6e8', '#8a8278', '#ffffff'] : ['#ffd27a', '#ff8a2a', '#ff4a1a', '#3a1a12'], 50, 18, 12);
+        if (rock) sfxSplash(panOf(h), 1);
+        sfxFoe('boom', panOf(h), Math.max(0.25, 1 - d1 / 250) * (rock ? 0.6 : 1)); g.shake = Math.max(g.shake, d1 < 60 ? 0.5 : 0.15);
+        if (d1 < h.r + 2) foeHit(rock ? 'the Cyclops’ rock' : 'a fireball');
         continue;
       }
     } else {
@@ -5247,10 +5333,19 @@ function drawHazard(h, q) {
     ctx.beginPath(); ctx.ellipse(q.x, q.y, k * (1 - f), k * 0.25 * (1 - f), 0, 0, 6.28); ctx.fill();
   } else if (h.kind === 'scorch') {   // where the fireball will land: an orange ring, filling in
     const f = Math.max(0, Math.min(1, 1 - h.life / 2.4)), pulse = 0.6 + 0.4 * Math.sin(g.t * 14);
-    ctx.strokeStyle = `rgba(255,150,40,${0.55 + 0.4 * pulse})`; ctx.lineWidth = Math.max(1.5, 0.3 * s);
+    const pale = h.style === 'boulder';
+    ctx.strokeStyle = pale ? `rgba(240,232,215,${0.5 + 0.4 * pulse})` : `rgba(255,150,40,${0.55 + 0.4 * pulse})`; ctx.lineWidth = Math.max(1.5, 0.3 * s);
     ctx.beginPath(); ctx.ellipse(q.x, q.y, k, k * 0.25, 0, 0, 6.28); ctx.stroke();
-    ctx.globalAlpha = 0.2 + 0.25 * f; ctx.fillStyle = '#ff7a1a';
+    ctx.globalAlpha = 0.2 + 0.25 * f; ctx.fillStyle = pale ? '#e8dcc0' : '#ff7a1a';
     ctx.beginPath(); ctx.ellipse(q.x, q.y, k * f, k * 0.25 * f, 0, 0, 6.28); ctx.fill();
+  } else if (h.kind === 'fireball' && h.style === 'boulder') {
+    const e = Math.max(3, 1.6 * s);
+    ctx.globalAlpha = Math.max(0.75, vis); ctx.translate(q.x, q.y); ctx.rotate(h.t * 4 * (h.side || 1));
+    const rg = ctx.createRadialGradient(-e * 0.3, -e * 0.3, 0, 0, 0, e);
+    rg.addColorStop(0, '#b0a898'); rg.addColorStop(1, '#3a342c');
+    ctx.fillStyle = rg; ctx.beginPath();
+    for (let i = 0; i < 8; i++) { const a = i / 8 * 6.28, rr = e * (0.8 + 0.2 * Math.sin(i * 2.7)); i ? ctx.lineTo(Math.cos(a) * rr, Math.sin(a) * rr) : ctx.moveTo(Math.cos(a) * rr, Math.sin(a) * rr); }
+    ctx.closePath(); ctx.fill();
   } else if (h.kind === 'fireball') {
     const e = Math.max(3, 1.8 * s);
     ctx.globalCompositeOperation = 'lighter';
@@ -5538,6 +5633,190 @@ function drawMothOnLantern() {
   }
 }
 
+// ---- src/odyssey.js ----
+// The Wine-Dark Sea's own enemies, out of the old stories. On an Odyssey voyage these three are the
+// only ones out there: no pool draw, no Maren, no Drowned, no Knock, no Verity. All drawn in code.
+
+const ODYSSEY_TRIO = ['sirens', 'charybdis', 'cyclops'];
+Object.assign(FOE_NAMES, { sirens: 'the Sirens', charybdis: 'Charybdis', cyclops: 'the Cyclops' });
+Object.assign(FOE_INTRO, {
+  sirens: 'Singing, sweet and close, from a rock off the bow: the Sirens. Their song drags your helm towards their rock. Ring the bell to drown them out.',
+  charybdis: 'The sea ahead is starting to turn. Charybdis is opening a whirlpool on your course. Sail hard round it: at full sail you can pull clear, but don’t let it take you into the middle.',
+  cyclops: 'A one-eyed giant is wading out of the shallows with a rock in his fist. Watch for the pale ring where it will land. A flare in his eye blinds him for a while.',
+});
+
+Object.assign(FOE_KINDS, {
+  // three of them on a rock, singing; the song hauls the helm round to their rock
+  sirens: {
+    h: 4, max: 1, every: [22, 32], vis: o => Math.max(0.7, foeVis(o)),
+    spawn() {
+      const p = aheadPt(rand(170, 220), (Math.random() < 0.5 ? -1 : 1) * rand(50, 90));
+      if (!okWater(p) || g.rocks.some(r => Math.hypot(r.x - p.x, r.y - p.y) < r.r + 20)) return null;
+      return { x: p.x, y: p.y, ph: rand(0, 6), hush: 0, songT: 0, life: 50, cd: 0 };
+    },
+    update(f, dt) {
+      f.ph += dt; f.life -= dt; if (f.cd > 0) f.cd -= dt;
+      if (f.hush > 0) f.hush -= dt;
+      const d = dist(f);
+      if (f.hush <= 0 && d < 240) {
+        const side = angDiff(bearingOf(f.x - ship.x, f.y - ship.y), ship.h);
+        g.mods.pull += clamp(side * 4, -1, 1) * 0.75 * Math.min(1, 1.5 * (1 - d / 240));
+        f.songT -= dt;
+        if (f.songT <= 0) { f.songT = 2.4; sfxFoe('song', panOf(f), Math.max(0.25, 1 - d / 240)); }
+      }
+      // their rock is solid: they want you on it
+      if (d < 14 && f.cd <= 0) { f.cd = 3; foeHit('the Sirens’ rock'); const b = bearingOf(ship.x - f.x, ship.y - f.y); ship.x = f.x + Math.sin(b) * 16; ship.y = f.y + Math.cos(b) * 16; }
+      if (f.life <= 0) f.dead = true;
+    },
+    bell(f) { if (dist(f) < 260 && f.hush <= 0) { f.hush = 15; return 'The bell drowned out the Sirens. For a while all you can hear is the sea.'; } },
+    draw(f, q, vis) {
+      const s = q.s;
+      ctx.save(); ctx.globalAlpha = vis; ctx.translate(q.x, q.y);
+      // their rock
+      ctx.fillStyle = 'rgba(235,230,245,0.3)'; ctx.beginPath(); ctx.ellipse(0, 0, 11 * s, 1.4 * s, 0, 0, 6.28); ctx.fill();
+      const rg = ctx.createLinearGradient(0, -3.5 * s, 0, 0); rg.addColorStop(0, '#9a8e78'); rg.addColorStop(1, '#2e2820');
+      ctx.fillStyle = rg; ctx.beginPath(); ctx.moveTo(-9 * s, 0); ctx.lineTo(-7 * s, -2.4 * s); ctx.lineTo(-3 * s, -3.4 * s); ctx.lineTo(2 * s, -3.6 * s); ctx.lineTo(6.5 * s, -2.6 * s); ctx.lineTo(9 * s, 0); ctx.closePath(); ctx.fill();
+      // the three singers, each a woman with a bird's wings, swaying
+      for (let i = 0; i < 3; i++) {
+        const bx = (i - 1) * 4.2 * s, by = -3.3 * s - (i === 1 ? 0.4 * s : 0), sway = Math.sin(f.ph * 1.4 + i * 2) * 0.08;
+        ctx.save(); ctx.translate(bx, by); ctx.rotate(sway);
+        const open = 0.6 + 0.4 * Math.sin(f.ph * 0.9 + i);
+        for (const sd of [-1, 1]) {
+          ctx.fillStyle = i % 2 ? '#5a4a6a' : '#4a3c58';
+          ctx.beginPath(); ctx.moveTo(sd * 0.3 * s, -3.4 * s); ctx.quadraticCurveTo(sd * 2.6 * open * s, -4.6 * s, sd * 3 * open * s, -2 * s); ctx.lineTo(sd * 1.6 * open * s, -1.8 * s); ctx.lineTo(sd * 2.2 * open * s, -0.8 * s); ctx.lineTo(sd * 0.4 * s, -1.4 * s); ctx.closePath(); ctx.fill();
+        }
+        // a pale gown and body
+        const bg = ctx.createLinearGradient(-0.6 * s, 0, 0.6 * s, 0); bg.addColorStop(0, '#b8aa98'); bg.addColorStop(0.5, '#f2e8d8'); bg.addColorStop(1, '#a89a88');
+        ctx.fillStyle = bg; ctx.beginPath(); ctx.moveTo(-0.9 * s, 0); ctx.lineTo(-0.45 * s, -3.4 * s); ctx.lineTo(0.45 * s, -3.4 * s); ctx.lineTo(0.9 * s, 0); ctx.closePath(); ctx.fill();
+        // head tipped back mid-song, long dark hair
+        ctx.fillStyle = '#e8dccb'; ctx.beginPath(); ctx.arc(0, -3.9 * s, 0.45 * s, 0, 6.28); ctx.fill();
+        ctx.fillStyle = '#1c1418'; ctx.beginPath(); ctx.moveTo(-0.5 * s, -4.1 * s); ctx.quadraticCurveTo(-0.9 * s, -2.8 * s, -0.4 * s, -2.2 * s); ctx.lineTo(0.4 * s, -2.2 * s); ctx.quadraticCurveTo(0.9 * s, -2.8 * s, 0.5 * s, -4.1 * s); ctx.quadraticCurveTo(0, -4.6 * s, -0.5 * s, -4.1 * s); ctx.fill();
+        ctx.fillStyle = '#e8dccb'; ctx.beginPath(); ctx.arc(0, -3.85 * s, 0.32 * s, 0, 6.28); ctx.fill();
+        if (f.hush <= 0) { ctx.fillStyle = '#3a1a1a'; ctx.beginPath(); ctx.ellipse(0, -3.65 * s, 0.1 * s, 0.13 * s, 0, 0, 6.28); ctx.fill(); }
+        ctx.restore();
+      }
+      // the song, rising off them in golden notes
+      if (f.hush <= 0 && s > 0.6) {
+        ctx.font = `${Math.max(9, 1.4 * s) | 0}px serif`; ctx.textAlign = 'center';
+        for (let i = 0; i < 5; i++) { const k = (f.ph * 0.35 + i / 5) % 1; ctx.fillStyle = `rgba(255,220,140,${0.8 * (1 - k)})`; ctx.fillText(i % 2 ? '♪' : '♫', Math.sin(i * 2 + f.ph) * 5 * s, -6 * s - k * 8 * s); }
+      }
+      ctx.restore(); ctx.globalAlpha = 1;
+    },
+  },
+
+  // a whirlpool that opens on your course and drags the ship in; the middle of it breaks planks
+  charybdis: {
+    h: 2, max: 1, every: [20, 30], vis: () => 1,
+    spawn() {
+      const p = aheadPt(rand(170, 220), rand(-25, 25));
+      if (!okWater(p) || g.rocks.some(r => Math.hypot(r.x - p.x, r.y - p.y) < r.r + 40)) return null;
+      sfxFoe('gurgle', panOf(p), 0.7);
+      return { x: p.x, y: p.y, grow: 0, rot: 0, life: 28, gT: 0, close: 0, R: 34 };
+    },
+    update(f, dt) {
+      f.life -= dt; f.rot += dt * (1.2 + f.grow);
+      if (f.close > 0) { f.close -= dt; f.grow = Math.max(0, f.grow - dt); if (f.close <= 0) f.dead = true; return; }
+      f.grow = Math.min(1, f.grow + dt / 3);
+      const d = dist(f), reach = f.R * 2.6;
+      if (d < reach && f.grow > 0.3) {
+        // the current: round and in, stronger towards the middle
+        const k = (1 - d / reach) * f.grow, b = bearingOf(f.x - ship.x, f.y - ship.y);
+        const inward = 8 * k, round = 6 * k;
+        ship.x += (Math.sin(b) * inward + Math.cos(b) * round) * dt; ship.y += (Math.cos(b) * inward - Math.sin(b) * round) * dt;
+        g.mods.pull += clamp(angDiff(b, ship.h) * 2, -1, 1) * 0.3 * k;
+        f.gT -= dt; if (f.gT <= 0) { f.gT = 1.6; sfxFoe('gurgle', panOf(f), 0.4 + k * 0.6); }
+      }
+      if (d < 8 && f.grow > 0.5) { foeHit('Charybdis'); g.shake = Math.max(g.shake, 0.7); f.close = 1.5; addLog('Charybdis spun you round and spat you out. The whirlpool closes.', 'w'); }
+      if (f.life <= 0) f.close = 2;
+    },
+    draw(f, q, vis) {
+      const R = f.R * f.grow; if (R < 1) return;
+      ctx.save();
+      // the hollow in the middle
+      const ring = (r, z) => { const pts = []; for (let i = 0; i <= 28; i++) { const a = i / 28 * 6.28; const c = cam(f.x + Math.cos(a) * r, f.y + Math.sin(a) * r, z); if (c.f < SK.NEAR) return null; pts.push(proj(c)); } return pts; };
+      const hole = ring(R * 0.35, -1.5);
+      if (hole) { ctx.fillStyle = 'rgba(4,2,8,0.85)'; ctx.beginPath(); hole.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)); ctx.fill(); }
+      const dark = ring(R, 0);
+      if (dark) { ctx.fillStyle = 'rgba(10,4,18,0.35)'; ctx.beginPath(); dark.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)); ctx.fill(); }
+      // spiral arms of foam winding in
+      ctx.strokeStyle = 'rgba(235,225,245,0.32)'; ctx.lineWidth = Math.max(1, Math.min(4, q.s * 0.25));
+      for (let arm = 0; arm < 6; arm++) {
+        ctx.beginPath(); let started = false;
+        for (let i = 0; i <= 24; i++) {
+          const t = i / 24, r = R * (1.15 - t * 0.85), a = arm / 6 * 6.28 + t * 4 + f.rot;
+          const c = cam(f.x + Math.cos(a) * r, f.y + Math.sin(a) * r, -t * 1.2); if (c.f < SK.NEAR) { started = false; continue; }
+          const p = proj(c); started ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y); started = true;
+        }
+        ctx.stroke();
+      }
+      ctx.restore();
+    },
+  },
+
+  // a one-eyed giant in the shallows, hurling rocks at where you're going; a flare in his eye blinds him
+  cyclops: {
+    h: 18, max: 1, every: [22, 30], vis: o => Math.max(0.6, foeVis(o)),
+    spawn() {
+      const p = aheadPt(rand(150, 200), (Math.random() < 0.5 ? -1 : 1) * rand(70, 110));
+      if (!okWater(p) || g.rocks.some(r => Math.hypot(r.x - p.x, r.y - p.y) < r.r + 15)) return null;
+      sfxFoe('roar', panOf(p), 0.9);
+      return { x: p.x, y: p.y, ph: rand(0, 6), throwT: 3, wind: 0, blind: 0, rise: 0, life: 45 };
+    },
+    update(f, dt) {
+      f.ph += dt; f.life -= dt; f.rise = Math.min(1, f.rise + dt * 0.4);
+      if (f.blind > 0) { f.blind -= dt; f.wind = 0; if (Math.random() < dt * 0.4) sfxFoe('roar', panOf(f), 0.5); }
+      else if (f.wind > 0) {
+        f.wind -= dt;
+        if (f.wind <= 0) {
+          const dur = 2.6, p = aheadPt(ship.v * dur + rand(-4, 8), rand(-7, 7));
+          if (!g.backrooms) p.y = Math.max(46, p.y);
+          const side = angDiff(bearingOf(f.x - ship.x, f.y - ship.y), yaw) > 0 ? 1 : -1;
+          hazard({ kind: 'fireball', style: 'boulder', x: f.x, y: f.y, z: 22, x0: f.x, y0: f.y, z0: 22, x1: p.x, y1: p.y, fuse: dur, dur, r: 10, side });
+          hazard({ kind: 'scorch', style: 'boulder', x: p.x, y: p.y, r: 10, life: dur });
+          sfxFoe('throw', panOf(f), 1);
+        }
+      } else if (f.rise >= 1) {
+        f.throwT -= dt;
+        if (f.throwT <= 0 && dist(f) < 300) { f.throwT = rand(5, 7) * Math.max(0.6, 1 - (g.n - 2) * 0.04); f.wind = 1.2; sfxFoe('grunt', panOf(f), 0.8); }
+      }
+      if (f.life <= 0) f.dead = true;
+    },
+    flare(f, x, y) { if (f.blind <= 0 && Math.hypot(f.x - x, f.y - y) < SK.FLARE_RADIUS * 1.2) { f.blind = 12; sfxFoe('roar', panOf(f), 1); return 'The flare caught the Cyclops full in his eye. He is roaring and clutching his face.'; } },
+    draw(f, q, vis) {
+      const s = q.s, sink = (1 - f.rise) * 18 * s, lift = f.wind > 0 ? 1 - f.wind / 1.2 : 0;
+      ctx.save(); ctx.globalAlpha = vis; ctx.translate(q.x, q.y);
+      ctx.fillStyle = 'rgba(235,230,245,0.3)'; ctx.beginPath(); ctx.ellipse(0, 0, 6 * s, 1 * s, 0, 0, 6.28); ctx.fill();
+      ctx.beginPath(); ctx.rect(-20 * s, -30 * s, 40 * s, 30 * s); ctx.clip();   // wading: hidden below the thighs
+      ctx.translate(0, sink); ctx.rotate(Math.sin(f.ph * 0.8) * 0.03);
+      const skin = ctx.createLinearGradient(-4 * s, 0, 4 * s, 0); skin.addColorStop(0, '#5a4232'); skin.addColorStop(0.5, '#9a7458'); skin.addColorStop(1, '#4a3628');
+      // legs, a hide round his waist, and the great chest
+      ctx.fillStyle = skin;
+      ctx.fillRect(-3 * s, -5 * s, 2.4 * s, 5 * s); ctx.fillRect(0.6 * s, -5 * s, 2.4 * s, 5 * s);
+      ctx.fillStyle = '#3a2a1c'; ctx.beginPath(); ctx.moveTo(-3.8 * s, -4 * s); ctx.lineTo(3.8 * s, -4 * s); ctx.lineTo(3.4 * s, -7 * s); ctx.lineTo(-3.4 * s, -7 * s); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = skin; ctx.beginPath(); ctx.moveTo(-3.4 * s, -7 * s); ctx.lineTo(3.4 * s, -7 * s); ctx.lineTo(4.4 * s, -13 * s); ctx.lineTo(-4.4 * s, -13 * s); ctx.closePath(); ctx.fill();
+      // arms: the throwing one swings up over his head with the rock
+      ctx.strokeStyle = '#7a5c46'; ctx.lineCap = 'round'; ctx.lineWidth = Math.max(2, 1.4 * s);
+      ctx.beginPath(); ctx.moveTo(-4 * s, -12.5 * s); ctx.lineTo(-5.4 * s, -7 * s); ctx.stroke();
+      const ax = 4.6 * s - lift * 2 * s, ay = -8 * s - lift * 9 * s;
+      ctx.beginPath(); ctx.moveTo(4 * s, -12.5 * s); ctx.lineTo(ax, ay); ctx.stroke();
+      if (f.wind > 0 || (f.blind <= 0 && f.rise >= 1)) { ctx.fillStyle = '#6a6258'; ctx.beginPath(); ctx.arc(ax, ay - 0.8 * s, 1.5 * s, 0, 6.28); ctx.fill(); }
+      if (f.blind > 0) { ctx.beginPath(); ctx.moveTo(-4 * s, -12.5 * s); ctx.lineTo(-1 * s, -15.2 * s); ctx.stroke(); }
+      // the head: wild hair, a heavy beard and the one eye
+      ctx.fillStyle = '#8a6850'; ctx.beginPath(); ctx.arc(0, -15 * s, 2.2 * s, 0, 6.28); ctx.fill();
+      ctx.fillStyle = '#20160e'; ctx.beginPath(); ctx.moveTo(-2.3 * s, -15 * s); ctx.quadraticCurveTo(0, -18.6 * s, 2.3 * s, -15 * s); ctx.quadraticCurveTo(0, -16.6 * s, -2.3 * s, -15 * s); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(-1.8 * s, -14 * s); ctx.quadraticCurveTo(0, -10.4 * s, 1.8 * s, -14 * s); ctx.quadraticCurveTo(0, -13 * s, -1.8 * s, -14 * s); ctx.fill();
+      if (f.blind > 0) { ctx.strokeStyle = '#2a1a12'; ctx.lineWidth = Math.max(1, 0.25 * s); ctx.beginPath(); ctx.moveTo(-0.9 * s, -15.4 * s); ctx.lineTo(0.9 * s, -15.4 * s); ctx.stroke(); }
+      else {
+        ctx.fillStyle = '#f0ead8'; ctx.beginPath(); ctx.ellipse(0, -15.4 * s, 1 * s, 0.7 * s, 0, 0, 6.28); ctx.fill();
+        ctx.fillStyle = '#c8801a'; ctx.beginPath(); ctx.arc(0, -15.4 * s, 0.45 * s, 0, 6.28); ctx.fill();
+        ctx.fillStyle = '#100804'; ctx.beginPath(); ctx.arc(0, -15.4 * s, 0.22 * s, 0, 6.28); ctx.fill();
+        ctx.globalCompositeOperation = 'lighter'; lamp(0, -15.4 * s, '#ffb040', Math.max(1, 0.4 * s)); ctx.globalCompositeOperation = 'source-over';
+      }
+      ctx.restore(); ctx.globalAlpha = 1;
+    },
+  },
+});
+
 // ---- src/game.js ----
 // Game state, the update step, voyages, input and the main loop.
 
@@ -5571,15 +5850,15 @@ function newVoyage(n, attract, seed, slot) {
   };
   g.enemies = newEnemies(v.lures);
   // this voyage's three enemies from the pool
-  // the Nether has its own three and nothing else
-  g.trio = attract ? [] : v.nether ? NETHER_TRIO.slice() : pickTrio(seed);
+  // the Nether and the Wine-Dark Sea have their own three and nothing else
+  g.trio = attract ? [] : v.nether ? NETHER_TRIO.slice() : v.special === 'odyssey' ? ODYSSEY_TRIO.slice() : pickTrio(seed);
   g.foes = newFoes(g.trio); g.hazards = []; g.flash = 0; g.splat = 0; g.spinT = 0; g.capT = 0; resetMods();
   g.plim = newPlimsoll(v.path);
-  g.maren = newMaren(!attract && !v.nether, v.wrecks.find(w => w.name === 'Gannet'));
+  g.maren = newMaren(!attract && !v.special, v.wrecks.find(w => w.name === 'Gannet'));
   g.cannon = newCannon();
   g.pickups = v.pickups || []; g.found = 0; if (typeof renderFound === 'function') renderFound();
   g.verity = newVerity(v.backrooms); g.verityScare = 0; g.lightsOut = 0;
-  g.biome = v.nether ? 'nether' : biomeFor(n, attract);
+  g.biome = v.special || biomeFor(n, attract);
   g.portal = null;
   if (v.nether) startPortal(biomeFor(n - 1));
   renderHud();

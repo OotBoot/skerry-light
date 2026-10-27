@@ -81,8 +81,21 @@ const BIOMES = {
     rock: { g: ['#7e2219', '#4a120d', '#1c0605'], facet: 'rgba(255,120,90,0.12)', crack: 'rgba(30,6,4,0.6)', rim: '255,170,90', band: 'rgba(255,110,30,0.55)', foam: '255,160,70', kind: 'nether', h: 1.3, blocky: true },
     fx: 'ash', glow: '255,70,20', land: 'lavafalls', cavern: true, lavaSea: true,
   },
+  // the other rare one: the wine-dark sea of the old stories, with its own three monsters
+  odyssey: {
+    name: 'the Wine-Dark Sea', intro: 'Warm wind, white temples on the headlands and a golden moon. The old stories are true out here: listen for singing, watch the water for a whirlpool, and keep away from the one-eyed giant.',
+    sky: ['#01030c', '#050b22', '#0d1a40', '#22305c'],
+    sea: ['#30183e', '#1d0d2c', '#10061a', '#05030a'],
+    glitter: '255,220,160', haze: '150,100,160', dust: '230,225,255', star: '255,248,225', cloud: '140,130,180', halo: '255,225,170', moonTint: '#ffd98a',
+    waves: '225,195,235', beam: '200,170,215',
+    ground: '#0c0a0f', cliff: ['#29251f', '#2e2a23'], cliffTop: 'rgba(240,230,200,0.25)', cliffH: 1.1, topDepth: 1.5,
+    head: ['#26221c', '#2b261f'], surf: '235,225,245', wall: '#3a352c', roof: '#5a2818', win: '#ffcf80',
+    rock: { g: ['#ece4d0', '#ab9f88', '#3c352b'], facet: 'rgba(255,255,245,0.3)', crack: 'rgba(110,95,70,0.45)', rim: '255,230,180', band: 'rgba(40,30,45,0.85)', foam: '235,230,245', kind: 'marble', h: 1 },
+    fx: 'calm', meteors: true, land: 'temples',
+  },
 };
-const NETHER_CHANCE = 1 / 20;
+const NETHER_CHANCE = 1 / 20, ODYSSEY_CHANCE = 1 / 20;
+const ODYSSEY_FORCE = (() => { try { return /[?&#]odyssey\b/.test(location.href); } catch (e) { return false; } })();
 const NETHER_FORCE = (() => { try { return /[?&#]nether\b/.test(location.href); } catch (e) { return false; } })();
 const BIOME_ORDER = ['skerry', 'fjord', 'ember', 'lagoon', 'barrows', 'shoals'];
 const BIOME_FORCE = (() => { try { const m = location.search.match(/[?&]biome=(\w+)/); return m && BIOMES[m[1]] ? m[1] : null; } catch (e) { return null; } })();
@@ -103,14 +116,17 @@ function biomeLine() {
   if (g && g.portal && !g.portal.through) return 'A ring of black stone stands up out of the water dead ahead, full of swirling purple light. You are sailing straight into it.';
   const B = curBiome(); return B.intro ? B.name[0].toUpperCase() + B.name.slice(1) + '. ' + B.intro : ''; }
 
-// one in twenty voyages after the first goes to the Nether; rolled from the crew's seed so a crew goes together
-function rollNether(n, attract, seed) {
-  if (attract) return false;
-  if (seed == null && NETHER_FORCE) return true;
-  if (n <= 1) return false;
+// after the first voyage, one in twenty goes to the Nether and another one in twenty to the Wine-Dark Sea.
+// One roll from the crew's seed decides both, so a crew goes together and the two never overlap.
+function rollSpecial(n, attract, seed) {
+  if (attract) return null;
+  if (seed == null && NETHER_FORCE) return 'nether';
+  if (seed == null && ODYSSEY_FORCE) return 'odyssey';
+  if (n <= 1) return null;
   const r = seed != null ? seeded((seed ^ 0x2545f491) >>> 0)() : Math.random();
-  return r < NETHER_CHANCE;
+  return r < NETHER_CHANCE ? 'nether' : r < NETHER_CHANCE + ODYSSEY_CHANCE ? 'odyssey' : null;
 }
+const rollNether = (n, attract, seed) => rollSpecial(n, attract, seed) === 'nether';
 
 // ---------- the landscape behind the coast ----------
 const LAND = { peaks: [], volcano: [], palms: [], graves: [], spires: [], church: { x: 420, y: -150 } };
@@ -120,6 +136,9 @@ const LAND = { peaks: [], volcano: [], palms: [], graves: [], spires: [], church
   for (let x = -3000; x <= 3000; x += rand(220, 360)) LAND.peaks.push({ x, y: -380 - rand(0, 120), w: rand(180, 300), h: rand(120, 260), far: 0 });
   for (let i = 0; i < 70; i++) { const a = rand(-Math.PI, Math.PI), d = rand(1500, 3200); LAND.lavafalls = LAND.lavafalls || []; LAND.lavafalls.push({ x: Math.sin(a) * d, y: Math.cos(a) * d + 900, w: rand(6, 18), ph: rand(0, 6) }); }
   for (let i = 0; i < 26; i++) { LAND.glow = LAND.glow || []; LAND.glow.push({ b: rand(-Math.PI, Math.PI), e: rand(0.25, 0.75), s: rand(0.6, 1.6), seed: (Math.random() * 1e6) | 0 }); }
+  LAND.temples = [{ x: -380, y: -320, w: 70, h: 26, cols: 8, ruin: 0 }, { x: 900, y: -520, w: 90, h: 32, cols: 10, ruin: 1 }, { x: -1500, y: -700, w: 110, h: 36, cols: 12, ruin: 0 }];
+  LAND.hills = []; for (let x = -4000; x <= 4000; x += rand(300, 500)) LAND.hills.push({ x, y: -600 - rand(0, 400), w: rand(380, 620), h: rand(80, 180) });
+  LAND.cypress = []; for (let x = -2400; x <= 2400; x += rand(45, 140)) LAND.cypress.push({ x, h: rand(9, 18), ph: rand(0, 6) });
   LAND.volcano.push({ x: -650, y: -1500, w: 1100, h: 640, top: 0.12 }, { x: 1600, y: -1150, w: 600, h: 300, top: 0.15 });
   for (let x = -2400; x <= 2400; x += rand(40, 110)) LAND.palms.push({ x, h: rand(9, 16), lean: rand(-0.35, 0.35), ph: rand(0, 6) });
   for (let x = -2400; x <= 2400; x += rand(70, 170)) LAND.graves.push({ x, h: rand(12, 22), ph: rand(0, 6), br: 2 + Math.floor(rand(0, 3)) });
@@ -179,6 +198,10 @@ function drawLandFar(B) {
     for (const s of LAND.spires) if (!s.near) spire(s);
   } else if (B.land === 'lavafalls') {
     drawLavafalls();
+  } else if (B.land === 'temples') {
+    // low olive hills, and white temples standing on them
+    for (const h of LAND.hills) fillPoly([[h.x - h.w, h.y, 0], [h.x - h.w * 0.3, h.y, h.h], [h.x + h.w * 0.35, h.y, h.h * 0.9], [h.x + h.w, h.y, 0]], '#0f1210');
+    for (const t of LAND.temples) temple(t);
   } else if (B.land === 'graves') {
     // a ruined chapel up on the shore, its tower broken off
     const c = LAND.church;
@@ -186,6 +209,27 @@ function drawLandFar(B) {
     fillPoly([[c.x - 32, c.y, 26], [c.x + 10, c.y, 26], [c.x - 8, c.y, 40]], '#0a0d0b');
     fillPoly([[c.x + 18, c.y, 0], [c.x + 34, c.y, 0], [c.x + 34, c.y, 58], [c.x + 29, c.y, 63], [c.x + 24, c.y, 55], [c.x + 18, c.y, 60]], '#0c0f0d');
     for (const wx of [-18, -4, 26]) { const q = onCam(c.x + wx, c.y + 0.1, wx > 20 ? 44 : 14); if (q) { ctx.fillStyle = 'rgba(160,220,140,0.35)'; ctx.fillRect(q.x - 2 * q.s, q.y - 4 * q.s, 4 * q.s, 7 * q.s); } }
+  }
+}
+
+// a temple: steps, a row of columns, the beam across them and a pediment. Torches burn at the door.
+function temple(t) {
+  const { x, y, w, h } = t, M = '#4c473e', L = '#6a6457', D = '#2c2924';
+  const hz = t.hz || (t.hz = t.y < -400 ? 140 : 90);   // it stands up on the hill
+  fillPoly([[x - w / 2 - 4, y, hz], [x + w / 2 + 4, y, hz], [x + w / 2 + 4, y, hz + 3], [x - w / 2 - 4, y, hz + 3]], D);
+  fillPoly([[x - w / 2, y, hz + 3], [x + w / 2, y, hz + 3], [x + w / 2, y, hz + 5], [x - w / 2, y, hz + 5]], M);
+  const cw = w / (t.cols * 2 - 1);
+  for (let i = 0; i < t.cols; i++) {
+    const cx_ = x - w / 2 + cw * (i * 2), ch = t.ruin && (i % 3 === 1) ? h * 0.45 : h;
+    fillPoly([[cx_, y, hz + 5], [cx_ + cw, y, hz + 5], [cx_ + cw * 0.92, y, hz + 5 + ch], [cx_ + cw * 0.08, y, hz + 5 + ch]], i % 2 ? M : L);
+  }
+  if (!t.ruin) {
+    fillPoly([[x - w / 2 - 2, y, hz + 5 + h], [x + w / 2 + 2, y, hz + 5 + h], [x + w / 2 + 2, y, hz + 9 + h], [x - w / 2 - 2, y, hz + 9 + h]], L);
+    fillPoly([[x - w / 2 - 2, y, hz + 9 + h], [x + w / 2 + 2, y, hz + 9 + h], [x, y, hz + 9 + h + w * 0.16]], M);
+  } else fillPoly([[x - w / 2 - 2, y, hz + 5 + h], [x - w * 0.05, y, hz + 5 + h], [x - w * 0.12, y, hz + 8 + h], [x - w / 2 - 2, y, hz + 9 + h]], L);
+  for (const sx of [-0.35, 0.35]) {
+    const q = onCam(x + sx * w, y + 0.5, hz + 9); if (!q) continue;
+    ctx.globalCompositeOperation = 'lighter'; lamp(q.x, q.y, '#ffb050', Math.max(1.5, 2.5 * Math.sqrt(q.s)) * (0.85 + 0.15 * Math.sin(g.t * 7 + sx * 9))); ctx.globalCompositeOperation = 'source-over';
   }
 }
 
@@ -235,6 +279,12 @@ function drawLandNear(B) {
     ctx.lineCap = 'butt';
   } else if (B.land === 'spires') {
     for (const s of LAND.spires) if (s.near) spire(s);
+  } else if (B.land === 'temples') {
+    // tall dark cypresses along the cliff tops
+    for (const c of LAND.cypress) {
+      const cl = cliffAt(c.x), y = cl.y - 1, z = cl.z * B.cliffH;
+      fillPoly([[c.x - 1.6, y, z], [c.x - 1.1, y, z + c.h * 0.6], [c.x, y, z + c.h], [c.x + 1.1, y, z + c.h * 0.6], [c.x + 1.6, y, z]], '#070a08');
+    }
   }
 }
 
@@ -311,6 +361,19 @@ function drawSkyExtras(B) {
     }
     ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
   }
+  if (B.meteors && !reduceMotion) {
+    // a shooting star every few seconds
+    const k = (g.t % 4.5) / 4.5, n = Math.floor(g.t / 4.5);
+    if (k < 0.18) {
+      const b = yaw + ((n * 0.618) % 1 - 0.5) * fov, e = 0.35 + ((n * 0.37) % 1) * 0.35, p = skyPos(b, e);
+      if (p) {
+        const len = focal * 0.12, f = k / 0.18, x = p.x + f * len, y = p.y + f * len * 0.4;
+        const gr = ctx.createLinearGradient(x - len * 0.5, y - len * 0.2, x, y);
+        gr.addColorStop(0, 'rgba(255,245,220,0)'); gr.addColorStop(1, `rgba(255,245,220,${0.9 * (1 - f)})`);
+        ctx.strokeStyle = gr; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(x - len * 0.5, y - len * 0.2); ctx.lineTo(x, y); ctx.stroke();
+      }
+    }
+  }
   if (B.glow) {
     const gr = ctx.createLinearGradient(0, hy - H * 0.3, 0, hy + 4);
     gr.addColorStop(0, `rgba(${B.glow},0)`); gr.addColorStop(1, `rgba(${B.glow},${0.22 + 0.04 * Math.sin(g.t * 0.9)})`);
@@ -366,6 +429,15 @@ function rockSkinInside(B, r, x, y, w, h) {
       const fx = x - w * 0.48 + w * 0.96 * ((Math.sin(r.ph * 11 + i * 5.7) + 1) / 2), fy = y - h * (0.1 + 0.5 * ((Math.sin(r.ph * 3 + i * 2.3) + 1) / 2) ** 2);
       ctx.fillStyle = i % 3 ? 'rgba(60,95,40,0.55)' : 'rgba(170,175,110,0.35)';
       ctx.beginPath(); ctx.ellipse(fx, fy, Math.max(1, w * 0.06), Math.max(0.7, w * 0.025), 0, 0, 6.28); ctx.fill();
+    }
+  } else if (k === 'marble') {
+    // veins in the stone
+    ctx.strokeStyle = 'rgba(150,130,95,0.45)'; ctx.lineWidth = Math.max(0.6, w * 0.008);
+    for (let i = 0; i < 4; i++) {
+      ctx.beginPath(); let px = x - w * 0.45, py = y - h * (0.2 + i * 0.18 + 0.05 * Math.sin(r.ph * 3 + i));
+      ctx.moveTo(px, py);
+      for (let s = 0; s < 6; s++) { px += w * 0.16; py += Math.sin(r.ph * 7 + i * 2 + s * 1.7) * h * 0.07; ctx.lineTo(px, py); }
+      ctx.stroke();
     }
   } else if (k === 'nether') {
     // netherrack blocks, a few glowing with ore, and a vein of lava
@@ -427,6 +499,15 @@ function rockSkinOutside(B, r, x, y, w, h) {
       ctx.beginPath(); ctx.moveTo(bx - sw * 0.2, by); ctx.lineTo(bx + lean * L, by - L); ctx.lineTo(bx + sw * 0.7 + lean * L * 0.75, by - L * 0.75); ctx.lineTo(bx + sw, by); ctx.closePath(); ctx.fill();
       if (w > 14) { ctx.globalCompositeOperation = 'lighter'; lamp(bx + lean * L, by - L, hue ? '#ff8ae0' : '#8aeaff', Math.max(1.2, w * 0.03) * (0.8 + 0.2 * Math.sin(g.t * 3 + i + r.ph))); ctx.globalCompositeOperation = 'source-over'; }
     }
+  } else if (k === 'marble' && Math.sin(r.ph * 13) > -0.3) {
+    // a broken column standing on the top, fluted, its capital long gone (on most of them)
+    const cw = w * 0.1, chh = h * (0.4 + 0.25 * Math.abs(Math.sin(r.ph * 5)));
+    const cg = ctx.createLinearGradient(tx - cw / 2, 0, tx + cw / 2, 0);
+    cg.addColorStop(0, '#8c8270'); cg.addColorStop(0.5, '#f0e8d4'); cg.addColorStop(1, '#6c6252');
+    ctx.fillStyle = cg;
+    ctx.beginPath(); ctx.moveTo(tx - cw / 2, ty + h * 0.05); ctx.lineTo(tx - cw / 2, ty - chh); ctx.lineTo(tx - cw * 0.1, ty - chh - cw * 0.3); ctx.lineTo(tx + cw * 0.2, ty - chh + cw * 0.1); ctx.lineTo(tx + cw / 2, ty - chh - cw * 0.2); ctx.lineTo(tx + cw / 2, ty + h * 0.05); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = 'rgba(80,70,55,0.5)'; ctx.lineWidth = Math.max(0.5, cw * 0.06);
+    ctx.beginPath(); for (let i = 1; i < 4; i++) { const fx = tx - cw / 2 + cw * i / 4; ctx.moveTo(fx, ty + h * 0.03); ctx.lineTo(fx, ty - chh + cw * 0.15); } ctx.stroke();
   } else if (k === 'ice' && w > 20) {
     // icicles hanging from the overhang into the water
     ctx.fillStyle = 'rgba(220,245,255,0.7)';
@@ -452,6 +533,7 @@ const FX = { snow: [], ash: [], flies: [], motes: [], fog: [] };
 // returns true if the biome drew its own weather (so the default drizzle is skipped)
 function drawBiomeWeather(B) {
   const lean = Math.min(0.4, ship.v / 60) + ship.rudder * 0.1;
+  if (B.fx === 'calm') return true;   // clear skies, no rain
   if (B.fx === 'snow') {
     ctx.fillStyle = 'rgba(235,245,255,0.75)';
     for (const f of FX.snow) {
