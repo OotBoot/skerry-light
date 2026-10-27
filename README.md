@@ -69,7 +69,14 @@ The only thing she will not go near is **Plimsoll**, the shark who walked up out
   - **Charybdis**: a whirlpool that opens on your course, dragging the ship round and in. The middle breaks a plank and spits you out. At full sail you can pull clear.
   - **The Cyclops**: a one-eyed giant wading in the shallows, hurling rocks at where you're going. A pale ring marks where each lands. A flare in his eye blinds him for 12 seconds.
 
-  Add `?odyssey` to force it. Add `?biome=fjord` (or `ember`, `lagoon`, `barrows`, `shoals`, `skerry`) to the address to force one.
+  Add `?odyssey` to force it.
+
+- **The Places In Between**: one more voyage in twenty after the first (the same seeded roll as the Nether and the Wine-Dark Sea, so the three never overlap). A still, glassy sea stuck at dusk under a low peach sun, no stars, a pale mist on the water; staircases climbing out of the sea into the clouds, doorways standing alone on the shore (some lit), street lamps along the cliffs, and smooth pale rocks with a shut door set into each, light leaking round its edges. Its three enemies are the only ones there (no pool draw, Maren, Drowned, Knock or Verity):
+  - **The Doors**: four doors in a row across your course. Sail through a dark one and you're put back 170 m. The lit one carries you 110 m on. The gaps between are open water.
+  - **The Echo**: a pale copy of your own ship sailing straight at you, steering the mirror of your helm half a second late, so it follows your dodges. Turn late and hard, or ring the bell and it shatters.
+  - **The Sleeper**: a vast face under the water ahead of you. When the water over it brightens it's waking: ring the bell to settle it. If its eyes open you lose a plank and everything slows to a crawl for five seconds.
+
+  Add `?between` to force it. Add `?biome=fjord` (or `ember`, `lagoon`, `barrows`, `shoals`, `skerry`) to the address to force one.
 - **The Backrooms**: one voyage in twenty (rolled from the crew's seed, so a whole crew goes in together), the lights go out and the sea comes back with walls. It's a flooded maze of yellow rooms under buzzing tubes that go dark each time the lamp would have turned. Plimsoll knows the way to the green EXIT sign, and the bearing strip points at it. Maren, the drowned, Knock and Verity all follow you in. Add `?backrooms` to the address to force one (solo only).
 - **The sea**: voyages start about 2.4 km out (further each voyage), through a wide stretch of skerries, wrecks and drifting timber.
 - **Harbour**: steer between the real red and green pier lamps. Each voyage after that has more rocks, wreckage and drowned, and the beam turns slower.
@@ -179,6 +186,7 @@ src/audio.js        sound, made with the Web Audio API (plus Verity's voice clip
 src/biomes.js       the seas: palettes, landscapes, rock skins, weather, the Nether portal
 src/nether.js       the Nether's three enemies
 src/odyssey.js      the Wine-Dark Sea's three enemies
+src/between.js      the Places In Between's three enemies
 src/world.js        voyage generation (sea and Backrooms) and Plimsoll's pathfinding
 src/render.js       the camera, sea, obstacles, lighthouse, deck, bearing strip and jumpscare
 src/gfx.js          the detailed look: sky, moon, clouds, sea glitter, coast, lighthouse, rocks, deck, drizzle, vignette, grain

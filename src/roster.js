@@ -791,6 +791,7 @@ function drawHazard(h, q) {
 // screen overlays: the Informer's flash and a banana in the sails
 function drawFoeOverlays() {
   if (typeof drawMothOnLantern === 'function') drawMothOnLantern();
+  if (typeof drawBetweenOverlays === 'function') drawBetweenOverlays();
   if (g.flash > 0) { ctx.fillStyle = `rgba(255,255,255,${Math.min(1, g.flash / 1.5)})`; ctx.fillRect(0, 0, W, H); }
   if (g.splat > 0) {
     const a = Math.min(1, g.splat / 1.2);

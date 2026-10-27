@@ -85,11 +85,11 @@ function drawSky() {
   ctx.drawImage(GFX.sky, -W, hy - GFX.sky.height + H * 0.02, W * 3, GFX.sky.height);
   if (B.cavern) { drawCavernRoof(B); drawSkyExtras(B); return; }
   // Milky Way dust, then the stars
-  for (const d of dust) {
+  if (!B.noStars) for (const d of dust) {
     const p = skyPos(d.b, d.e); if (!p || p.y < -20 || p.y > hy) continue;
     ctx.fillStyle = `rgba(${B.dust},${d.a})`; ctx.fillRect(p.x, p.y, 1, 1);
   }
-  for (const st of stars) {
+  if (!B.noStars) for (const st of stars) {
     const p = skyPos(st.b, st.e); if (!p || p.y < -40) continue;
     const tw = 0.7 + 0.3 * Math.sin(g.t * (1.5 + st.m) + st.ph);
     ctx.fillStyle = `rgba(${B.star},${0.2 + 0.6 * st.m * tw})`;

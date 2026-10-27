@@ -93,7 +93,21 @@ const BIOMES = {
     rock: { g: ['#ece4d0', '#ab9f88', '#3c352b'], facet: 'rgba(255,255,245,0.3)', crack: 'rgba(110,95,70,0.45)', rim: '255,230,180', band: 'rgba(40,30,45,0.85)', foam: '235,230,245', kind: 'marble', h: 1 },
     fx: 'calm', meteors: true, land: 'temples',
   },
+  // the third rare one: a still, glassy sea stuck at dusk, where doors and stairs stand in the water
+  between: {
+    name: 'the Places In Between', intro: 'The sea has gone still as glass and the light has stopped at dusk. Doors stand in the water. Nothing out here is quite where it should be.',
+    sky: ['#24222f', '#433c52', '#7e6e82', '#c9a99e'],
+    sea: ['#9a8690', '#5a5064', '#2e2a3a', '#14121c'],
+    glitter: '255,232,215', haze: '215,190,200', dust: '230,220,230', star: '240,230,240', cloud: '190,170,185', halo: '255,220,200', moonTint: '#ffd2b8',
+    waves: '240,228,240', beam: '220,200,215',
+    ground: '#2a2632', cliff: ['#383241', '#3c3645'], cliffTop: 'rgba(255,230,220,0.14)', cliffH: 0.55, topDepth: 1,
+    head: ['#34303e', '#383342'], surf: '240,230,240', wall: '#4a4452', roof: '#3a3442', win: '#ffd6a0',
+    rock: { g: ['#d6ced6', '#8c8294', '#3a3442'], facet: 'rgba(255,250,255,0.25)', crack: 'rgba(60,50,70,0.3)', rim: '255,215,195', band: 'rgba(40,34,50,0.7)', foam: '240,232,245', kind: 'door', h: 1.1 },
+    fx: 'drift', noStars: true, cloudy: 1, land: 'stairs',
+  },
 };
+const BETWEEN_CHANCE = 1 / 20;
+const BETWEEN_FORCE = (() => { try { return /[?&#]between\b/.test(location.href); } catch (e) { return false; } })();
 const NETHER_CHANCE = 1 / 20, ODYSSEY_CHANCE = 1 / 20;
 const ODYSSEY_FORCE = (() => { try { return /[?&#]odyssey\b/.test(location.href); } catch (e) { return false; } })();
 const NETHER_FORCE = (() => { try { return /[?&#]nether\b/.test(location.href); } catch (e) { return false; } })();
@@ -122,9 +136,10 @@ function rollSpecial(n, attract, seed) {
   if (attract) return null;
   if (seed == null && NETHER_FORCE) return 'nether';
   if (seed == null && ODYSSEY_FORCE) return 'odyssey';
+  if (seed == null && BETWEEN_FORCE) return 'between';
   if (n <= 1) return null;
   const r = seed != null ? seeded((seed ^ 0x2545f491) >>> 0)() : Math.random();
-  return r < NETHER_CHANCE ? 'nether' : r < NETHER_CHANCE + ODYSSEY_CHANCE ? 'odyssey' : null;
+  return r < NETHER_CHANCE ? 'nether' : r < NETHER_CHANCE + ODYSSEY_CHANCE ? 'odyssey' : r < NETHER_CHANCE + ODYSSEY_CHANCE + BETWEEN_CHANCE ? 'between' : null;
 }
 const rollNether = (n, attract, seed) => rollSpecial(n, attract, seed) === 'nether';
 
@@ -136,6 +151,9 @@ const LAND = { peaks: [], volcano: [], palms: [], graves: [], spires: [], church
   for (let x = -3000; x <= 3000; x += rand(220, 360)) LAND.peaks.push({ x, y: -380 - rand(0, 120), w: rand(180, 300), h: rand(120, 260), far: 0 });
   for (let i = 0; i < 70; i++) { const a = rand(-Math.PI, Math.PI), d = rand(1500, 3200); LAND.lavafalls = LAND.lavafalls || []; LAND.lavafalls.push({ x: Math.sin(a) * d, y: Math.cos(a) * d + 900, w: rand(6, 18), ph: rand(0, 6) }); }
   for (let i = 0; i < 26; i++) { LAND.glow = LAND.glow || []; LAND.glow.push({ b: rand(-Math.PI, Math.PI), e: rand(0.25, 0.75), s: rand(0.6, 1.6), seed: (Math.random() * 1e6) | 0 }); }
+  LAND.stairs = [{ x: -700, y: -900, w: 60, steps: 26, rise: 22, run: 30 }, { x: 1300, y: -1300, w: 80, steps: 34, rise: 26, run: 34 }, { x: -2200, y: -1600, w: 70, steps: 30, rise: 28, run: -32 }, { x: 2600, y: 600, w: 60, steps: 24, rise: 24, run: -30 }];
+  LAND.doors = []; for (let i = 0; i < 9; i++) LAND.doors.push({ x: rand(-2600, 2600), y: -rand(250, 900), w: rand(18, 34), lit: Math.random() < 0.3 });
+  LAND.lamps = []; for (let x = -2400; x <= 2400; x += rand(120, 240)) LAND.lamps.push({ x });
   LAND.temples = [{ x: -380, y: -320, w: 70, h: 26, cols: 8, ruin: 0 }, { x: 900, y: -520, w: 90, h: 32, cols: 10, ruin: 1 }, { x: -1500, y: -700, w: 110, h: 36, cols: 12, ruin: 0 }];
   LAND.hills = []; for (let x = -4000; x <= 4000; x += rand(300, 500)) LAND.hills.push({ x, y: -600 - rand(0, 400), w: rand(380, 620), h: rand(80, 180) });
   LAND.cypress = []; for (let x = -2400; x <= 2400; x += rand(45, 140)) LAND.cypress.push({ x, h: rand(9, 18), ph: rand(0, 6) });
@@ -198,6 +216,21 @@ function drawLandFar(B) {
     for (const s of LAND.spires) if (!s.near) spire(s);
   } else if (B.land === 'lavafalls') {
     drawLavafalls();
+  } else if (B.land === 'stairs') {
+    // staircases climbing out of the sea into the clouds, and doorways standing alone on the shore
+    for (const st of LAND.stairs) {
+      for (let i = 0; i < st.steps; i++) {
+        const x0 = st.x + i * st.run * 0.5, z0 = i * st.rise, sh = 0.18 + 0.1 * (i % 2);
+        fillPoly([[x0 - st.w / 2, st.y, z0], [x0 + st.w / 2, st.y, z0], [x0 + st.w / 2, st.y, z0 + st.rise], [x0 - st.w / 2, st.y, z0 + st.rise]], `rgba(${60 + i * 2},${54 + i * 2},${72 + i * 2},${0.75 - i / st.steps * 0.6})`);
+        fillPoly([[x0 - st.w / 2, st.y, z0 + st.rise], [x0 + st.w / 2, st.y, z0 + st.rise], [x0 + st.w / 2, st.y, z0 + st.rise * 1.06], [x0 - st.w / 2, st.y, z0 + st.rise * 1.06]], `rgba(255,225,210,${sh * (1 - i / st.steps)})`);
+      }
+    }
+    for (const d of LAND.doors) {
+      const h = d.w * 2.1, t = d.w * 0.14;
+      fillPoly([[d.x - d.w / 2 - t, d.y, 0], [d.x + d.w / 2 + t, d.y, 0], [d.x + d.w / 2 + t, d.y, h + t], [d.x - d.w / 2 - t, d.y, h + t]], '#3e3848');
+      fillPoly([[d.x - d.w / 2, d.y + 0.2, 0], [d.x + d.w / 2, d.y + 0.2, 0], [d.x + d.w / 2, d.y + 0.2, h], [d.x - d.w / 2, d.y + 0.2, h]], d.lit ? 'rgba(255,214,160,0.75)' : '#141019');
+      if (d.lit) { const q = onCam(d.x, d.y + 1, h * 0.5); if (q) { ctx.globalCompositeOperation = 'lighter'; lamp(q.x, q.y, '#ffd6a0', Math.max(3, d.w * q.s * 0.35)); ctx.globalCompositeOperation = 'source-over'; } }
+    }
   } else if (B.land === 'temples') {
     // low olive hills, and white temples standing on them
     for (const h of LAND.hills) fillPoly([[h.x - h.w, h.y, 0], [h.x - h.w * 0.3, h.y, h.h], [h.x + h.w * 0.35, h.y, h.h * 0.9], [h.x + h.w, h.y, 0]], '#0f1210');
@@ -279,6 +312,14 @@ function drawLandNear(B) {
     ctx.lineCap = 'butt';
   } else if (B.land === 'spires') {
     for (const s of LAND.spires) if (s.near) spire(s);
+  } else if (B.land === 'stairs') {
+    // old street lamps along the shore, all lit, nobody about
+    for (const l of LAND.lamps) {
+      const cl = cliffAt(l.x), y = cl.y - 1, z = cl.z * B.cliffH;
+      const base = onCam(l.x, y, z), top = onCam(l.x, y, z + 7); if (!base || !top || base.x < -40 || base.x > W + 40) continue;
+      ctx.strokeStyle = '#1c1822'; ctx.lineWidth = Math.max(1, 0.3 * base.s); ctx.beginPath(); ctx.moveTo(base.x, base.y); ctx.lineTo(top.x, top.y); ctx.stroke();
+      ctx.globalCompositeOperation = 'lighter'; lamp(top.x, top.y, '#ffd6a0', Math.max(1.5, 1.2 * Math.sqrt(top.s) * 2)); ctx.globalCompositeOperation = 'source-over';
+    }
   } else if (B.land === 'temples') {
     // tall dark cypresses along the cliff tops
     for (const c of LAND.cypress) {
@@ -430,6 +471,14 @@ function rockSkinInside(B, r, x, y, w, h) {
       ctx.fillStyle = i % 3 ? 'rgba(60,95,40,0.55)' : 'rgba(170,175,110,0.35)';
       ctx.beginPath(); ctx.ellipse(fx, fy, Math.max(1, w * 0.06), Math.max(0.7, w * 0.025), 0, 0, 6.28); ctx.fill();
     }
+  } else if (k === 'door') {
+    // a door set into the stone, shut, with light around its edges
+    let hi = 0; r.prof.forEach((v, i) => { if (v > r.prof[hi]) hi = i; });
+    const dx = x - w / 2 + w * hi / (r.prof.length - 1), dw = w * 0.13, dh = Math.min(h * r.prof[hi] * 0.7, dw * 2.1), dy = y - h * 0.12;
+    ctx.fillStyle = '#2a2430'; ctx.fillRect(dx - dw / 2, dy - dh, dw, dh);
+    ctx.strokeStyle = `rgba(255,214,160,${0.55 + 0.25 * Math.sin(g.t * 1.3 + r.ph)})`; ctx.lineWidth = Math.max(0.6, w * 0.006);
+    ctx.strokeRect(dx - dw / 2, dy - dh, dw, dh);
+    ctx.fillStyle = '#c8a870'; ctx.beginPath(); ctx.arc(dx + dw * 0.3, dy - dh * 0.45, Math.max(0.6, dw * 0.06), 0, 6.28); ctx.fill();
   } else if (k === 'marble') {
     // veins in the stone
     ctx.strokeStyle = 'rgba(150,130,95,0.45)'; ctx.lineWidth = Math.max(0.6, w * 0.008);
@@ -534,6 +583,18 @@ const FX = { snow: [], ash: [], flies: [], motes: [], fog: [] };
 function drawBiomeWeather(B) {
   const lean = Math.min(0.4, ship.v / 60) + ship.rudder * 0.1;
   if (B.fx === 'calm') return true;   // clear skies, no rain
+  if (B.fx === 'drift') {
+    // pale motes rising very slowly through still air, and a low mist on the glass
+    const base = ctx.createLinearGradient(0, hy - H * 0.08, 0, hy + H * 0.12);
+    base.addColorStop(0, 'rgba(225,205,215,0)'); base.addColorStop(0.5, 'rgba(225,205,215,0.22)'); base.addColorStop(1, 'rgba(225,205,215,0)');
+    ctx.fillStyle = base; ctx.fillRect(0, hy - H * 0.08, W, H * 0.2);
+    for (const f of FX.motes) {
+      f.y -= 0.00025 * f.v; if (f.y < -0.03) { f.y = 1.03; f.x = Math.random(); }
+      ctx.fillStyle = `rgba(255,240,235,${0.18 + 0.2 * Math.sin(g.t * 0.7 + f.ph * 5)})`;
+      ctx.fillRect((f.x + Math.sin(g.t * 0.2 + f.ph) * 0.02) * W, f.y * H, 2, 2);
+    }
+    return true;
+  }
   if (B.fx === 'snow') {
     ctx.fillStyle = 'rgba(235,245,255,0.75)';
     for (const f of FX.snow) {

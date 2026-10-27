@@ -30,8 +30,8 @@ function newVoyage(n, attract, seed, slot) {
   };
   g.enemies = newEnemies(v.lures);
   // this voyage's three enemies from the pool
-  // the Nether and the Wine-Dark Sea have their own three and nothing else
-  g.trio = attract ? [] : v.nether ? NETHER_TRIO.slice() : v.special === 'odyssey' ? ODYSSEY_TRIO.slice() : pickTrio(seed);
+  // the rare seas (the Nether, the Wine-Dark Sea, the Places In Between) have their own three and nothing else
+  g.trio = attract ? [] : v.special ? SPECIAL_TRIOS[v.special].slice() : pickTrio(seed);
   g.foes = newFoes(g.trio); g.hazards = []; g.flash = 0; g.splat = 0; g.spinT = 0; g.capT = 0; resetMods();
   g.plim = newPlimsoll(v.path);
   g.maren = newMaren(!attract && !v.special, v.wrecks.find(w => w.name === 'Gannet'));

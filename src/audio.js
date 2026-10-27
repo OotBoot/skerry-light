@@ -373,6 +373,9 @@ function sfxFoe(kind, pan, vol) {
     case 'crack': N('bandpass', 1500, 2, 0.001, 0.35, 0.1); break;
     case 'song': { const root = [220, 247, 196][Math.floor(Math.random() * 3)]; [1, 1.2, 1.5].forEach((m, i) => T(root * m, 'sine', 0.5, 0.06, 1.6, { delay: i * 0.18, to: root * m * 1.03 })); T(root * 2, 'triangle', 0.6, 0.03, 1.4, { delay: 0.5 }); break; }
     case 'gurgle': N('lowpass', 320, 1.5, 0.3, 0.5, 1.4, { to: 120 }); for (let i = 0; i < 4; i++) T(90 + Math.random() * 60, 'sine', 0.02, 0.1, 0.18, { delay: 0.2 + i * 0.25, to: 50 }); break;
+    case 'door': T(140, 'sawtooth', 0.15, 0.12, 0.7, { to: 90 }); N('bandpass', 500, 6, 0.1, 0.12, 0.6, { to: 300 }); N('lowpass', 300, 1, 0.002, 0.3, 0.2, { delay: 0.75 }); break;
+    case 'hum': T(110, 'sine', 1.2, 0.18, 2.2, { to: 165 }); T(165, 'sine', 1.2, 0.1, 2.2, { to: 247 }); break;
+    case 'shatter': for (let i = 0; i < 10; i++) { N('highpass', 4000 + Math.random() * 3000, 3, 0.001, 0.25, 0.08, { delay: i * 0.035 }); T(2000 + Math.random() * 3000, 'sine', 0.001, 0.05, 0.3, { delay: i * 0.04 }); } break;
     case 'roar': N('lowpass', 900, 0.8, 0.08, 0.5, 0.9, { to: 200 }); T(70, 'sawtooth', 0.08, 0.25, 0.8, { to: 45 }); break;
     case 'flap': for (let i = 0; i < 3; i++) N('lowpass', 500, 1, 0.01, 0.25, 0.09, { delay: i * 0.12 }); break;
     case 'groan': T(65, 'sawtooth', 0.4, 0.22, 1.6, { to: 48 }); T(98, 'triangle', 0.4, 0.12, 1.4, { to: 80 }); N('lowpass', 250, 1, 0.3, 0.2, 1.4); break;
