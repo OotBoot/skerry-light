@@ -543,6 +543,7 @@ function skinPreview(skin, size) {
   el('circle', { cx: sternX + 4, cy: deckY - 6, r: 2.2, fill: skin.lantern });
   el('circle', { cx: sternX + 4, cy: deckY - 6, r: 5, fill: skin.lantern, opacity: 0.25 });
   if (tier >= 5) for (const [sx, sy] of [[fore - 8, top + 4], [fore + 9, top + 14], [sternX + 16, deckY - 20]]) el('circle', { cx: sx, cy: sy, r: 0.9, fill: '#fff2c0' });
+  if (typeof previewFx === 'function') previewFx(svg, skin, null, { sternX, bowX, deckY });
   return svg;
 }
 function pennantPreview(pen, size) {

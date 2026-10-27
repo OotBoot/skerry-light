@@ -485,6 +485,7 @@ function drawDeck() {
     ctx.beginPath(); ctx.moveTo(cx - DW, H + 2); ctx.lineTo(cx, tipY); ctx.lineTo(cx + DW, H + 2); ctx.closePath(); ctx.fill();
     ctx.globalCompositeOperation = 'source-over';
   }
+  drawDeckFx(skin, tipY, DW, boat.rail);
   // the deck lantern's warm pool on the wet planks
   { const lx0 = cx + Math.min(W * 0.28, 220), ly0 = H * 0.8;
     const pool = ctx.createRadialGradient(lx0, ly0 + 30, 4, lx0, ly0 + 30, Math.min(W, H) * 0.3);

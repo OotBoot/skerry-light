@@ -68,6 +68,9 @@ function drawShip3D(o, skin, boat, vis, opts) {
   const camAt = [camX, camY];
   ctx.save();
   ctx.globalAlpha = opts.alpha == null ? 1 : opts.alpha;
+  const fx = skinFx(skin);
+  if (fx === 'ghost' && !reduceMotion) ctx.globalAlpha *= 0.62 + 0.25 * Math.sin(g.t * 1.7) + 0.08 * Math.sin(g.t * 7.3);
+  const P = (u, w, z) => { const q = polyProj([W(u, w, z)]); return q.length ? q[0] : null; };
 
   // wake: two white lines off the bow and a smear astern, stronger with speed
   const sp = Math.min(1, (o.v || 0) / 14);
@@ -78,6 +81,8 @@ function drawShip3D(o, skin, boat, vis, opts) {
       if (p.length === 3) { ctx.beginPath(); ctx.moveTo(p[0].x, p[0].y); ctx.quadraticCurveTo(p[1].x, p[1].y, p[2].x, p[2].y); ctx.stroke(); }
     }
   }
+
+  shipFxBefore(skin, P, Lh, B, Zd, boat.id === 'cutter' ? boat.len * 1.15 : boat.len * 0.95);
 
   // hull sides, banded, only the ones facing the camera, far ones first
   const faces = [];
@@ -115,6 +120,9 @@ function drawShip3D(o, skin, boat, vis, opts) {
     }
     if (tier >= 2) band(0.62, 0.68, shade(skin.sail, k));   // a painted stripe along the topsides
     band(0.84, 1, shade(railC, k * 0.6));
+    // flowing paint: a wave of the effect's colour travelling along the topsides
+    const fa = f.side ? hullFlowAlpha(skin, f.i) : 0;
+    if (fa > 0.02) { const ga = ctx.globalAlpha; ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = ga * fa; band(0.5, 0.84, fxColour(skin, fx, g.t + f.i * 0.4)); ctx.restore(); }
     // gunports on the brig and barque
     if (f.side && boat.id !== 'cutter' && f.i >= 1 && f.i <= 4 && f.d < 260) {
       for (const t of [0.3, 0.7]) {
@@ -151,7 +159,12 @@ function drawShip3D(o, skin, boat, vis, opts) {
     fillPoly(pts, sailCol);
     if (stripes && tier >= 3) { // two coloured bands across the sail
       const L = (t) => [lerp(pts[0], pts[3], t), lerp(pts[1], pts[2], t)];
-      for (const [t0, t1] of [[0.3, 0.4], [0.6, 0.7]]) { const [a0, b0] = L(t0), [a1, b1] = L(t1); fillPoly([a0, b0, b1, a1], shade(skin.rail, 0.1)); }
+      const off = sailFlow(skin);
+      for (const [t0, t1] of [[0.3, 0.4], [0.6, 0.7]]) {
+        const s0 = (t0 + off) % 1, s1 = Math.min(1, s0 + (t1 - t0));
+        const [a0, b0] = L(s0), [a1, b1] = L(s1);
+        fillPoly([a0, b0, b1, a1], fx === 'aurora' ? fxColour(skin, fx, g.t + t0 * 4) : shade(skin.rail, 0.1));
+      }
     }
     if (stripes && tier >= 4) { // an emblem in the middle of the sail
       const c = polyProj([lerp(lerp(pts[0], pts[1], 0.5), lerp(pts[3], pts[2], 0.5), 0.5)]);
@@ -168,8 +181,10 @@ function drawShip3D(o, skin, boat, vis, opts) {
     line(base, top, mastC, 0.35);
     if (boat.id === 'cutter') {
       // gaff mainsail, fore and aft, and a long boom
-      sail([W(mu - 0.3, 0, Zd + 1.2), W(-Lh * 0.95, 0, Zd + 1.4), W(-Lh * 0.7, 0, Zd + mastH * 0.72), W(mu - 0.3, 0, Zd + mastH * 0.9)], true);
-      line(W(mu, 0, Zd + 1.2), W(-Lh * 1.05, 0, Zd + 1.4), mastC, 0.25);
+      // the boom swung out to one side by the brace, so the mainsail shows its face from astern
+      const gb = opts.brace || 0, G = (u, z) => W(mu + (u - mu) * Math.cos(gb), (u - mu) * -Math.sin(gb) * -1, z);
+      sail([G(mu - 0.3, Zd + 1.2), G(-Lh * 0.95, Zd + 1.4), G(-Lh * 0.7, Zd + mastH * 0.72), G(mu - 0.3, Zd + mastH * 0.9)], true);
+      line(G(mu, Zd + 1.2), G(-Lh * 1.05, Zd + 1.4), mastC, 0.25);
     } else {
       // square sails: a course and a topsail on each mast, bellied a little forward, and a yard on each
       // the yards are braced round (opts.brace radians, starboard yardarm swung aft), so the sails
@@ -207,6 +222,7 @@ function drawShip3D(o, skin, boat, vis, opts) {
     ctx.fillStyle = 'rgba(255,232,150,0.8)';
     for (let i = 0; i < 4; i++) { const a = g.t * 1.5 + i * 1.6, r = 1.5 * head[0].s; ctx.fillRect(head[0].x + Math.cos(a) * r, head[0].y + mastH * 0.4 * head[0].s * (0.3 + 0.2 * i) + Math.sin(a) * r * 0.4, 1.5, 1.5); }
   }
+  shipFxAfter(skin, P, Lh, B, Zd, mastH);
   ctx.restore();
   return head.length ? head[0] : null;
 }
