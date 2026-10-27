@@ -125,6 +125,7 @@ Up to eight people can sail as a crew. Each of you sails your own brig through t
 - The crew screen has a **chat** for planning between voyages, and messages also appear in the in-game log.
 - The host (whoever started the crew) sets sail when everyone is in. Anyone who joins later sails straight in on the current voyage.
 - **Ships within 55 m of each other keep Maren where she is**, the same way Plimsoll does.
+- **The race to harbour**: the first ship into harbour on a crew voyage wins a bonus of 3 Skerry Crates for every other ship in the crew (+3 with two ships, +21 with a full crew of eight), on top of the usual harbour crates. "First" means the fastest voyage time, timed from your own launch, so a late joiner isn't penalised; a dead heat goes to the ship with fewer hits. The crew screen tells you while you wait whether you got in first, and the scoreboard marks the winner with a ★ when the voyage ends.
 - **Sailing in company**: stay within 45 m of a crewmate for 10 seconds and your carpenters patch a plank.
 - **A bell rung within 160 m of a crewmate** drives her back two stages on their ship too.
 - **Flares** light the water for everyone.

@@ -438,6 +438,9 @@ function arrive() {
     state = 'port';
     audioTick(0, 0);
     sfxChime();
+    // the race: is anyone else in yet? (shown on the crew card while you wait)
+    { const mates = [...NET.mates.values()];
+      NET.race = mates.length ? { first: !mates.some(m => m.st === 'port'), bonus: FIRST_BONUS * mates.length, voy: g.n } : null; }
     addLog(g.backrooms ? 'Out through the green door, and back on the real sea.' : 'Made harbour between the pier lamps.', 'p');
     myStatus('port');
     $('hud').hidden = true; $('logbox').hidden = true;

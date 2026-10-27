@@ -387,7 +387,9 @@ function ghostBellFor(m) {
 function cleanStats(s) {
   if (!s || typeof s !== 'object') return null;
   const n = v => Number.isFinite(v) ? Math.max(0, Math.min(9999, Math.round(v))) : 0;
-  return { secs: n(s.secs), hits: n(s.hits), bells: n(s.bells), flares: n(s.flares), patched: n(s.patched), eaten: n(s.eaten) };
+  // fin: the voyage time in tenths of a second, to settle who made harbour first
+  const fin = Number.isFinite(s.fin) ? s.fin : Number.isFinite(s.secs) ? s.secs * 10 : 0;
+  return { secs: n(s.secs), fin: Math.max(0, Math.min(999999, Math.round(fin))), hits: n(s.hits), bells: n(s.bells), flares: n(s.flares), patched: n(s.patched), eaten: n(s.eaten) };
 }
 
 function counter(o) { return o && typeof o === 'object' && Number.isFinite(o.n) ? o.n : 0; }
@@ -464,7 +466,7 @@ function netTick(dt) {
 
 function myStatus(st) {
   NET.st = st;
-  if (st !== 'sail' && g && g.stats) NET.stats = cleanStats(Object.assign({}, g.stats, { secs: g.t }));
+  if (st !== 'sail' && g && g.stats) NET.stats = cleanStats(Object.assign({}, g.stats, { secs: g.t, fin: g.t * 10 }));
   send(st === 'sail' ? {} : { x: null, y: null });
 }
 
@@ -484,8 +486,17 @@ function checkResults() {
   if (atSea.length) return;
   const outcome = p => p.peer === NET.myPeer ? NET.st : (p.presence && p.presence.voy === voy ? p.presence.st : null);
   const statsOf = p => p.peer === NET.myPeer ? NET.stats : (p.presence && p.presence.voy === voy ? cleanStats(p.presence.stats) : null);
-  const rows = list.map((p, i) => ({ name: nameOf(p, i), slot: i, st: outcome(p), stats: statsOf(p) })).filter(r => r.st);
+  const rows = list.map((p, i) => ({ name: nameOf(p, i), slot: i, st: outcome(p), stats: statsOf(p), me: p.peer === NET.myPeer })).filter(r => r.st);
   NET.results = { voy, rows, madeIt: rows.filter(r => r.st === 'port').length };
+  // the race to harbour: the first ship in earns the bonus
+  const first = firstIn(rows);
+  if (first) {
+    NET.results.first = first; NET.results.bonus = firstBonus(rows);
+    if (first.me) {
+      CRATES.crates.skerry += NET.results.bonus; saveCrates(); updateCrateButtons();
+      toast('First into harbour out of ' + rows.length + ' ships: +' + NET.results.bonus + ' bonus Skerry Crates.', '+' + NET.results.bonus + ' first-in bonus');
+    }
+  }
   stopSpectating();
   if (NET.results.madeIt > 0) {
     run.voyages = Math.max(run.voyages, voy);
@@ -493,6 +504,18 @@ function checkResults() {
     sfxChime();
   }
   showCrewCard();
+}
+
+// the first ship into harbour on a crew voyage (2 or more ships) wins FIRST_BONUS crates for each other ship
+const FIRST_BONUS = 3;
+function firstBonus(rows) { return FIRST_BONUS * Math.max(1, rows.length - 1); }
+function firstIn(rows) {
+  if (rows.length < 2) return null;
+  const made = rows.filter(r => r.st === 'port' && r.stats && r.stats.fin > 0);
+  if (!made.length) return null;
+  // fastest voyage time; a dead heat goes to the ship with fewer hits, then the lower slot
+  made.sort((a, b) => a.stats.fin - b.stats.fin || a.stats.hits - b.stats.hits || a.slot - b.slot);
+  return made[0];
 }
 
 // ---------- UI ----------
@@ -652,10 +675,12 @@ function renderCrewCard() {
     text.textContent = 'Send the invite to up to seven friends. They join from the title screen by picking crew ' + NET.crew.toUpperCase() + '. Everyone sails their own ship through the same skerries. Ships close together keep Maren back, and a bell rung near a crewmate drives her away from both of you.';
   } else if (!r) {
     title.textContent = statusWord(NET.st) === 'In harbour' ? 'Safe in Harbour' : 'Lost at Sea';
-    text.textContent = 'Voyage ' + voy + '. Waiting for the rest of the crew to make harbour or go down. You can watch them from their deck while you wait.';
+    const race = NET.race && NET.race.voy === voy && NET.st === 'port' ? (NET.race.first ? ' You were first into harbour: the +' + NET.race.bonus + ' crate bonus is yours when the voyage ends.' : ' A crewmate beat you in.') : '';
+    text.textContent = 'Voyage ' + voy + '. Waiting for the rest of the crew to make harbour or go down.' + race + ' You can watch them from their deck while you wait.';
   } else if (r.madeIt > 0) {
     title.textContent = r.madeIt === r.rows.length ? 'The Whole Crew Made It' : r.madeIt + ' of ' + r.rows.length + ' Made Harbour';
-    text.textContent = 'Voyage ' + voy + ' is done. The next voyage has more wreckage and a slower light.';
+    text.textContent = 'Voyage ' + voy + ' is done. The next voyage has more wreckage and a slower light.' +
+      (r.first ? (r.first.me ? ' You were first into harbour: +' + r.bonus + ' bonus Skerry Crates!' : ' ' + r.first.name + ' was first into harbour and takes the +' + r.bonus + ' crate bonus.') : '');
     renderScore(r);
     const pg = g && g.backrooms ? SK.BACKROOMS_LOG : (g && SK.SEA_LOG[g.biome]) || SK.LOG[(voy - 1) % SK.LOG.length];
     $('crewLogDate').textContent = pg.date; $('crewLogText').textContent = pg.text;
@@ -697,7 +722,7 @@ function renderScore(r) {
   for (const row of r.rows) {
     const tr = document.createElement('tr');
     const s = row.stats || {};
-    const cells = [row.name, statusWord(row.st), s.secs ? fmt(s.secs) : '–', s.hits ?? '–', s.bells ?? '–', s.flares ?? '–', s.patched ?? '–', s.eaten ?? '–'];
+    const cells = [row.name + (r.first === row ? ' \u2605 first' : ''), statusWord(row.st), s.secs ? fmt(s.secs) : '–', s.hits ?? '–', s.bells ?? '–', s.flares ?? '–', s.patched ?? '–', s.eaten ?? '–'];
     cells.forEach((v, i) => {
       const td = document.createElement(i === 0 ? 'th' : 'td');
       td.textContent = String(v);
