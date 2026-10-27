@@ -100,6 +100,16 @@ function flareAt(x, y) {
   }
   return Math.min(1, best);
 }
+// the Brig's carpenter patches a stove-in plank every so often, even out of company
+function carpenter(dt) {
+  const b = BOAT_BY_ID[ship.boat] || BOATS[0];
+  if (!b.carpenter || g.attract || state !== 'play' || ship.hull >= ship.maxHull) { g.carpT = 0; return; }
+  g.carpT = (g.carpT || 0) + dt;
+  if (g.carpT >= b.carpenter) {
+    g.carpT = 0; ship.hull++; renderHud(); sfxChime();
+    addLog('The carpenter has patched a plank. ' + (ship.hull === ship.maxHull ? 'She\u2019s sound again.' : 'Still ' + (ship.maxHull - ship.hull) + ' to go.'), 'p');
+  }
+}
 function sailInCompany(dt) {
   if (!crewMode || ship.hull >= ship.maxHull) { g.repairT = 0; return; }
   const mate = matesAtSea().find(m => Math.hypot(m.x - ship.x, m.y - ship.y) < SK.REPAIR_DIST);
@@ -267,6 +277,7 @@ function update(dt) {
   updateEnemies(dt);
   updateVerity(dt);
   updateCannon(dt);
+  carpenter(dt);
   updatePickups();
   sailInCompany(dt);
   for (const f of g.flares) f.t -= dt;

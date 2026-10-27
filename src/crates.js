@@ -19,7 +19,7 @@ const RARITIES = [
 // hull: planks before she sinks; accel and turn multiply how fast she gathers way and answers the helm
 // deckW/tipY/rail shape the bow you see from the deck; len/masts shape the ship your crew sees
 const BOATS = [
-  { id: 'brig',   name: 'Brig',   blurb: 'The all-rounder. Two masts, three planks to spare.', hull: 3, accel: 1.0, turn: 1.0, beam: 2.6, len: 20, masts: [-0.2, 0.18], deckW: 0.75, tipY: 0.72, rail: 10, bow: 5 },
+  { id: 'brig',   name: 'Brig',   blurb: 'The all-rounder: four planks, good speed and steering, and a carpenter who patches a plank every 40 seconds.', hull: 4, accel: 1.3, turn: 1.2, carpenter: 40, beam: 2.6, len: 20, masts: [-0.2, 0.18], deckW: 0.75, tipY: 0.72, rail: 10, bow: 5 },
   { id: 'cutter', name: 'Cutter', blurb: 'Light and quick, turns on a penny, but two hits and she goes.', hull: 2, accel: 1.7, turn: 1.4, beam: 2, len: 15, masts: [0.05], deckW: 0.58, tipY: 0.75, rail: 7, bow: 4 },
   { id: 'barque', name: 'Barque', blurb: 'A heavy three-master with a short-range bow gun that blows away a rock in her path, reloading in 3 seconds. Takes a beating.', hull: 5, accel: 0.8, turn: 0.9, beam: 3.4, len: 27, masts: [-0.28, 0.02, 0.3], deckW: 0.95, tipY: 0.68, rail: 14, bow: 7 },
 ];
@@ -609,7 +609,7 @@ function renderBoatPicks() {
         const btn = document.createElement('button');
         btn.type = 'button'; btn.className = 'pick'; btn.dataset.boat = b.id;
         const nm = document.createElement('b'); nm.textContent = b.name;
-        const st = document.createElement('small'); st.textContent = 'Hull ' + b.hull + ' · ' + (b.accel > 1 ? 'quick' : b.accel < 1 ? 'slow' : 'steady');
+        const st = document.createElement('small'); st.textContent = 'Hull ' + b.hull + ' · ' + (b.id === 'brig' ? 'repairs' : b.accel > 1.5 ? 'quick' : b.accel < 1 ? 'slow' : 'steady');
         btn.append(skinPreview(SKIN_BY_ID[CRATES.equipped[b.id]] || SKIN_BY_ID[PLAIN[b.id]], 44), nm, st);
         btn.addEventListener('click', () => chooseBoat(b.id));
         box.appendChild(btn);

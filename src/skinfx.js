@@ -58,8 +58,46 @@ function shipFxBefore(skin, P, Lh, B, Zd, mastH) {
   fxGlow(c.x, c.y, r * (fx === 'lantern' ? 1.3 : 1), col, strength * pulse * (fx === 'lantern' ? 0.8 + 0.2 * Math.random() : 1));
   // its light on the water around the hull
   const w = P(0, 0, 0);
-  if (w) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = 0.18 * pulse; ctx.fillStyle = col; ctx.beginPath(); ctx.ellipse(w.x, w.y, r * 0.9, Math.max(2, r * 0.16), 0, 0, 6.28); ctx.fill(); ctx.restore(); }
+  if (w) waterGlow(w.x, w.y, r, col, pulse, fx);
 }
+// light on the water: a soft pool fading out at the edges, a broken shimmer of reflected streaks
+// below the ship that dance with the waves, and slow rings spreading out from the hull
+function waterGlow(x, y, r, col, pulse, fx) {
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter';
+  const rx = r * 1.1, ry = Math.max(3, r * 0.22);
+  // the pool: a radial gradient squashed flat onto the water
+  ctx.save();
+  ctx.translate(x, y); ctx.scale(1, ry / rx);
+  const gr = ctx.createRadialGradient(0, 0, 0, 0, 0, rx);
+  gr.addColorStop(0, col); gr.addColorStop(0.45, col); gr.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.globalAlpha = 0.16 * pulse; ctx.fillStyle = gr;
+  ctx.beginPath(); ctx.arc(0, 0, rx, 0, 6.28); ctx.fill();
+  ctx.restore();
+  if (!reduceMotion) {
+    // shimmering reflection: little glints scattered over the pool, flickering with the swell
+    ctx.fillStyle = col;
+    const n = 34, t = g.t;
+    for (let i = 0; i < n; i++) {
+      const ang = hash(i, 21) * 6.28, d = Math.sqrt(hash(i, 22));
+      const gx = x + Math.cos(ang) * rx * d + Math.sin(t * 1.3 + i) * rx * 0.03, gy = y + Math.sin(ang) * ry * d;
+      const tw = Math.sin(t * (2.5 + hash(i, 23) * 3) + i * 1.9);
+      if (tw < 0.25) continue;
+      const len = Math.max(2, r * 0.07 * (1 - d * 0.5)) * tw;
+      ctx.globalAlpha = (1 - d * 0.7) * 0.6 * tw * pulse;
+      ctx.fillRect(gx - len / 2, gy, len, 1.5);
+    }
+    // ripple rings spreading out from the hull
+    ctx.strokeStyle = col; ctx.lineWidth = Math.max(0.8, r * 0.006);
+    for (let i = 0; i < 3; i++) {
+      const life = (t * 0.35 + i / 3) % 1;
+      ctx.globalAlpha = (1 - life) * (1 - life) * 0.22 * pulse;
+      ctx.beginPath(); ctx.ellipse(x, y, rx * (0.4 + life * 0.9), ry * (0.4 + life * 0.9), 0, 0, 6.28); ctx.stroke();
+    }
+  }
+  ctx.restore();
+}
+
 // flowing paint along one hull face (i = station index, 0 at the stern): a wave of colour travelling aft
 function hullFlowAlpha(skin, i) {
   const fx = skinFx(skin); if (!fx || reduceMotion) return 0;

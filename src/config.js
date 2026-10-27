@@ -11,6 +11,7 @@ const SK = {
   CAM_H: 5,               // eye height on deck
   NEAR: 1,
   HULL: 3,
+  // the Brig's carpenter: seconds per plank patched at sea (set per boat as `carpenter`)
   PICKUPS: 12,            // floating crates to find on the first voyage (one more each voyage after)
   PICKUP_RADIUS: 12,      // sail this close to one to haul it aboard
   HARBOUR_CRATES: 5,      // crates for making harbour on voyage 1; then Fibonacci for each voyage in a row: 5, 8, 13, 21...
