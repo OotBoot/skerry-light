@@ -57,6 +57,7 @@ The only thing she will not go near is **Plimsoll**, the shark who walked up out
 
   **The Stowaway** haunts only the Backrooms, on every Backrooms voyage, on top of the three: a peg-legged pirate who appears down the corridor ahead, screams, and charges straight at where you are. You hear his peg leg thumping closer. Dodge to the side once he sets off; he runs straight past.
 - **Verity** sometimes appears small in a bottom corner of your deck, facing you: a round yellow smiling orb that says it wants to help. He just stands there smiling, with a ring counting down 20 seconds. The bell does nothing to him: fire a flare before then and he rolls back over the rail into the water (he comes back later). Leave him and he stands up into something long and thin standing in that corner, and that jumpscare ends the voyage. He first turns up 20 to 40 seconds into a voyage and comes back 30 to 55 seconds after you send him off (about twice as often in the Backrooms).
+- **Six seas**: voyage 1 is always Skerry Light. After that the voyages go round six biomes in turn (so a crew always shares one): Skerry Light, the Frozen Fjord (icebergs, snowy peaks, aurora, snow), the Ember Isles (lava-veined basalt, a smoking volcano, ash and embers), the Coral Lagoon (coral reefs, palms, glowing water, fireflies), the Barrow Shore (mossy rocks topped with gravestones, dead trees, a ruined chapel, rolling fog) and the Crystal Shoals (glowing crystal rocks, crystal spires, two moons, violet aurora). Only the look changes: rocks, routes and enemies work the same. Add `?biome=fjord` (or `ember`, `lagoon`, `barrows`, `shoals`, `skerry`) to the address to force one.
 - **The Backrooms**: one voyage in twenty (rolled from the crew's seed, so a whole crew goes in together), the lights go out and the sea comes back with walls. It's a flooded maze of yellow rooms under buzzing tubes that go dark each time the lamp would have turned. Plimsoll knows the way to the green EXIT sign, and the bearing strip points at it. Maren, the drowned, Knock and Verity all follow you in. Add `?backrooms` to the address to force one (solo only).
 - **The sea**: voyages start about 2.4 km out (further each voyage), through a wide stretch of skerries, wrecks and drifting timber.
 - **Harbour**: steer between the real red and green pier lamps. Each voyage after that has more rocks, wreckage and drowned, and the beam turns slower.
@@ -163,6 +164,7 @@ index.html          page markup; loads the stylesheet and scripts below
 src/style.css       HUD, cards and buttons
 src/config.js       tuning numbers, asset paths and the keeper's log
 src/audio.js        sound, made with the Web Audio API (plus Verity's voice clip)
+src/biomes.js       the six seas: palettes, landscapes, rock skins and weather
 src/world.js        voyage generation (sea and Backrooms) and Plimsoll's pathfinding
 src/render.js       the camera, sea, obstacles, lighthouse, deck, bearing strip and jumpscare
 src/gfx.js          the detailed look: sky, moon, clouds, sea glitter, coast, lighthouse, rocks, deck, drizzle, vignette, grain

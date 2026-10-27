@@ -386,7 +386,7 @@ function drawScene() {
   var fr = [Math.sin(g.beam + SK.HALF_BEAM) * far, Math.cos(g.beam + SK.HALF_BEAM) * far];
   if (beamOn) {
     ctx.globalCompositeOperation = 'lighter';
-    fillPoly([[0, 0, 0], [fl[0], fl[1], 0], [fr[0], fr[1], 0]], 'rgba(120,150,190,0.16)');
+    fillPoly([[0, 0, 0], [fl[0], fl[1], 0], [fr[0], fr[1], 0]], `rgba(${curBiome().beam},0.16)`);
     ctx.globalCompositeOperation = 'source-over';
   }
 
@@ -402,7 +402,7 @@ function drawScene() {
     if (0.08 + 0.45 * lit + 0.25 * local < 0.1) continue;
     ctx.moveTo(q.x - w.len * q.s / 2, q.y + Math.sin(g.t * 1.3 + w.ph) * 0.2 * q.s); ctx.lineTo(q.x + w.len * q.s / 2, q.y);
   }
-  ctx.strokeStyle = 'rgba(170,200,235,0.28)'; ctx.lineWidth = 1; ctx.stroke();
+  ctx.strokeStyle = `rgba(${curBiome().waves},0.28)`; ctx.lineWidth = 1; ctx.stroke();
   }
 
   // everything on the water, far to near

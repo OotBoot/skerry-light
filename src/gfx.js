@@ -20,14 +20,15 @@ const cliffs = [], dust = [], drizzle = [], spray = [];
 function offscreen(w, h) { const c = document.createElement('canvas'); c.width = Math.max(1, Math.round(w)); c.height = Math.max(1, Math.round(h)); return c; }
 
 function buildCaches() {
-  const key = W + 'x' + H + '@' + dpr;
+  const B = curBiome();
+  const key = W + 'x' + H + '@' + dpr + ':' + B.name;
   if (GFX.key === key) return;
   GFX.key = key;
   // night sky gradient, tall enough for the horizon to bob and roll
   const sh = Math.ceil(H * 1.2);
   GFX.sky = offscreen(4, sh);
   const s = GFX.sky.getContext('2d'), gr = s.createLinearGradient(0, 0, 0, sh);
-  gr.addColorStop(0, '#02040a'); gr.addColorStop(0.45, '#060c1c'); gr.addColorStop(0.8, '#0e1a36'); gr.addColorStop(1, '#1a2744');
+  gr.addColorStop(0, B.sky[0]); gr.addColorStop(0.45, B.sky[1]); gr.addColorStop(0.8, B.sky[2]); gr.addColorStop(1, B.sky[3]);
   s.fillStyle = gr; s.fillRect(0, 0, 4, sh);
   // vignette
   GFX.vignette = offscreen(W * dpr, H * dpr);
@@ -57,13 +58,14 @@ function buildCaches() {
     m.restore();
   }
   // soft cloud sprites
-  if (!GFX.clouds.length) {
+  if (GFX.cloudCol !== B.cloud) {
+    GFX.cloudCol = B.cloud; GFX.clouds = [];
     for (let k = 0; k < 6; k++) {
       const cw = 420, ch = 120, c = offscreen(cw, ch), q = c.getContext('2d');
       for (let i = 0; i < 26; i++) {
         const x = rand(60, cw - 60), y = rand(ch * 0.35, ch * 0.75), r = rand(22, 54);
         const bg = q.createRadialGradient(x, y, 0, x, y, r);
-        bg.addColorStop(0, 'rgba(150,165,195,0.22)'); bg.addColorStop(1, 'rgba(150,165,195,0)');
+        bg.addColorStop(0, `rgba(${B.cloud},0.22)`); bg.addColorStop(1, `rgba(${B.cloud},0)`);
         q.fillStyle = bg; q.beginPath(); q.arc(x, y, r, 0, 6.28); q.fill();
       }
       GFX.clouds.push({ img: c, b: rand(-Math.PI, Math.PI), e: rand(0.08, 0.42), s: rand(0.8, 1.6), v: rand(0.004, 0.012) });
@@ -79,26 +81,29 @@ function skyPos(b, e) {
 
 function drawSky() {
   buildCaches();
+  const B = curBiome();
   ctx.drawImage(GFX.sky, -W, hy - GFX.sky.height + H * 0.02, W * 3, GFX.sky.height);
   // Milky Way dust, then the stars
   for (const d of dust) {
     const p = skyPos(d.b, d.e); if (!p || p.y < -20 || p.y > hy) continue;
-    ctx.fillStyle = `rgba(200,210,235,${d.a})`; ctx.fillRect(p.x, p.y, 1, 1);
+    ctx.fillStyle = `rgba(${B.dust},${d.a})`; ctx.fillRect(p.x, p.y, 1, 1);
   }
   for (const st of stars) {
     const p = skyPos(st.b, st.e); if (!p || p.y < -40) continue;
     const tw = 0.7 + 0.3 * Math.sin(g.t * (1.5 + st.m) + st.ph);
-    ctx.fillStyle = `rgba(236,232,215,${0.2 + 0.6 * st.m * tw})`;
+    ctx.fillStyle = `rgba(${B.star},${0.2 + 0.6 * st.m * tw})`;
     const sz = st.m > 0.85 ? 2 : st.m > 0.6 ? 1.4 : 1; ctx.fillRect(p.x, p.y, sz, sz);
   }
+  drawSkyExtras(B);
   // the moon and its halo
   const mp = skyPos(MOON.b, MOON.e);
   if (mp) {
     const r = Math.max(14, focal * 0.022);
     const halo = ctx.createRadialGradient(mp.x, mp.y, r * 0.8, mp.x, mp.y, r * 9);
-    halo.addColorStop(0, 'rgba(220,226,240,0.28)'); halo.addColorStop(0.3, 'rgba(160,180,220,0.08)'); halo.addColorStop(1, 'rgba(120,140,190,0)');
+    halo.addColorStop(0, `rgba(${B.halo},0.28)`); halo.addColorStop(0.3, `rgba(${B.halo},0.08)`); halo.addColorStop(1, `rgba(${B.halo},0)`);
     ctx.fillStyle = halo; ctx.beginPath(); ctx.arc(mp.x, mp.y, r * 9, 0, 6.28); ctx.fill();
     ctx.drawImage(GFX.moon, mp.x - r, mp.y - r, r * 2, r * 2);
+    if (B.moonTint) { ctx.globalCompositeOperation = 'multiply'; ctx.fillStyle = B.moonTint; ctx.beginPath(); ctx.arc(mp.x, mp.y, r - 0.5, 0, 6.28); ctx.fill(); ctx.globalCompositeOperation = 'source-over'; }
   }
   // clouds drifting slowly across, their edges lit where they pass the moon
   for (const c of GFX.clouds) {
@@ -106,20 +111,21 @@ function drawSky() {
     const p = skyPos(b, c.e); if (!p) continue;
     const w = focal * 0.55 * c.s, h = w * c.img.height / c.img.width;
     const nearMoon = mp ? Math.max(0, 1 - Math.hypot(p.x - mp.x, p.y - mp.y) / (w * 0.8)) : 0;
-    ctx.globalAlpha = 0.55 + nearMoon * 0.45;
+    ctx.globalAlpha = Math.min(1, 0.55 + nearMoon * 0.45 + (B.cloudy || 0) * 0.3);
     ctx.drawImage(c.img, p.x - w / 2, p.y - h / 2, w, h);
   }
   ctx.globalAlpha = 1;
 }
 
 function drawSea() {
+  const B = curBiome();
   const sea = ctx.createLinearGradient(0, hy, 0, H);
-  sea.addColorStop(0, '#15213a'); sea.addColorStop(0.04, '#0b1528'); sea.addColorStop(0.5, '#060d1b'); sea.addColorStop(1, '#03070f');
+  sea.addColorStop(0, B.sea[0]); sea.addColorStop(0.04, B.sea[1]); sea.addColorStop(0.5, B.sea[2]); sea.addColorStop(1, B.sea[3]);
   ctx.fillStyle = sea; ctx.fillRect(-W, hy, W * 3, H * 2);
   // moon glitter: a broken path of light on the water under the moon, widening towards you
   const mp = skyPos(MOON.b, MOON.e);
   if (mp && !reduceMotion) {
-    ctx.fillStyle = 'rgba(225,230,240,0.5)';
+    ctx.fillStyle = `rgba(${B.glitter},0.5)`;
     const seed = Math.floor(g.t * 6);
     for (let i = 0; i < 120; i++) {
       const k = ((i * 9301 + seed * 49297) % 233280) / 233280, k2 = ((i * 7919 + seed * 104729) % 9973) / 9973;
@@ -135,42 +141,46 @@ function drawSea() {
   }
   // haze where the sea meets the sky
   const hz = ctx.createLinearGradient(0, hy - 16, 0, hy + 22);
-  hz.addColorStop(0, 'rgba(60,80,120,0)'); hz.addColorStop(0.45, 'rgba(70,92,135,0.22)'); hz.addColorStop(1, 'rgba(60,80,120,0)');
+  hz.addColorStop(0, `rgba(${B.haze},0)`); hz.addColorStop(0.45, `rgba(${B.haze},0.22)`); hz.addColorStop(1, `rgba(${B.haze},0)`);
   ctx.fillStyle = hz; ctx.fillRect(-W, hy - 16, W * 3, 38);
+  drawBiolum(B);
 }
 
 // the coast: a ragged line of cliffs, the headland under the light, the piers and the harbour cottages
 function drawCoast() {
-  const HB = SK.HARBOUR;
-  fillPoly([[-15000, 0, 1.5], [15000, 0, 1.5], [15000, -15000, 1.5], [-15000, -15000, 1.5]], '#05080a');
+  const HB = SK.HARBOUR, B = curBiome(), ch = B.cliffH, td = B.topDepth;
+  fillPoly([[-15000, 0, 1.5], [15000, 0, 1.5], [15000, -15000, 1.5], [-15000, -15000, 1.5]], B.ground);
+  drawLandFar(B);
   for (let i = 0; i < cliffs.length - 1; i++) {
     const a = cliffs[i], b = cliffs[i + 1];
     if (cam(a.x, a.y, 0).f < SK.NEAR && cam(b.x, b.y, 0).f < SK.NEAR) continue;
-    fillPoly([[a.x, a.y, 0], [a.x, a.y, a.z], [b.x, b.y, b.z], [b.x, b.y, 0]], i % 2 ? '#081009' : '#09120b');
-    // moonlight on the cliff tops
-    fillPoly([[a.x, a.y, a.z], [b.x, b.y, b.z], [b.x, b.y, b.z - 1.5], [a.x, a.y, a.z - 1.5]], 'rgba(120,140,170,0.12)');
+    const az = a.z * ch, bz = b.z * ch;
+    fillPoly([[a.x, a.y, 0], [a.x, a.y, az], [b.x, b.y, bz], [b.x, b.y, 0]], B.cliff[i % 2]);
+    // moonlight (or snow, or firelight) on the cliff tops
+    fillPoly([[a.x, a.y, az], [b.x, b.y, bz], [b.x, b.y, bz - td], [a.x, a.y, az - td]], B.cliffTop);
   }
+  drawLandNear(B);
   // the headland the lighthouse stands on, with a little surf at its foot
-  fillPoly([[-45, 6, 0], [45, 6, 0], [40, 4, 22], [-40, 4, 22]], '#0a110c');
-  fillPoly([[-40, 4, 22], [40, 4, 22], [55, -60, 22], [-60, -60, 22]], '#0c140e');
-  fillPoly([[-48, 8, 0.2], [48, 8, 0.2], [45, 6, 1.4], [-45, 6, 1.4]], 'rgba(210,225,240,' + (0.12 + 0.06 * Math.sin(g.t * 1.4)) + ')');
+  fillPoly([[-45, 6, 0], [45, 6, 0], [40, 4, 22], [-40, 4, 22]], B.head[0]);
+  fillPoly([[-40, 4, 22], [40, 4, 22], [55, -60, 22], [-60, -60, 22]], B.head[1]);
+  fillPoly([[-48, 8, 0.2], [48, 8, 0.2], [45, 6, 1.4], [-45, 6, 1.4]], `rgba(${B.surf},` + (0.12 + 0.06 * Math.sin(g.t * 1.4)) + ')');
   // stone piers with a lighter top course
   for (const sx of [-1, 1]) {
     const x0 = HB.x + sx * 20, x1 = HB.x + sx * 26;
     fillPoly([[x0, -2, 0], [x0, 46, 0], [x0, 46, 2.4], [x0, -2, 2.4]], '#16130f');
     fillPoly([[Math.min(x0, x1), -2, 2.4], [Math.max(x0, x1), -2, 2.4], [Math.max(x0, x1), 46, 2.4], [Math.min(x0, x1), 46, 2.4]], '#24201a');
-    fillPoly([[x0, 46, 0.1], [x1, 46, 0.1], [x1, 46.8, 1], [x0, 46.8, 1]], 'rgba(210,225,240,0.18)');
+    fillPoly([[x0, 46, 0.1], [x1, 46, 0.1], [x1, 46.8, 1], [x0, 46.8, 1]], `rgba(${B.surf},0.18)`);
   }
   // cottages along the waterfront: walls, roofs and a lit window each
   for (const t of town) {
     const w = 7 + (t.ph % 3), d = 5, hgt = t.z * 0.45 + 4, x = t.x, y = t.y;
     const front = cam(x, y + d, 0); if (front.f < SK.NEAR + 2) continue;
-    fillPoly([[x - w / 2, y + d, 0], [x + w / 2, y + d, 0], [x + w / 2, y + d, hgt], [x - w / 2, y + d, hgt]], '#0d1210');
-    fillPoly([[x - w / 2 - 0.6, y + d, hgt], [x + w / 2 + 0.6, y + d, hgt], [x, y + d, hgt + w * 0.45]], '#151a17');
+    fillPoly([[x - w / 2, y + d, 0], [x + w / 2, y + d, 0], [x + w / 2, y + d, hgt], [x - w / 2, y + d, hgt]], B.wall);
+    fillPoly([[x - w / 2 - 0.6, y + d, hgt], [x + w / 2 + 0.6, y + d, hgt], [x, y + d, hgt + w * 0.45]], B.roof);
     const win = proj(cam(x + (t.ph % 2 - 0.5) * w * 0.4, y + d + 0.05, hgt * 0.45));
     const ws = Math.max(1.4, win.s * 1.3), flick = 0.55 + 0.25 * Math.sin(g.t * 0.7 + t.ph);
-    ctx.fillStyle = `rgba(255,196,110,${flick})`; ctx.fillRect(win.x - ws / 2, win.y - ws, ws, ws * 1.2);
-    if (ws > 3) { ctx.globalAlpha = 0.25 * flick; lamp(win.x, win.y - ws / 2, '#ffc46e', ws * 0.9); ctx.globalAlpha = 1; }
+    ctx.globalAlpha = flick; ctx.fillStyle = B.win; ctx.fillRect(win.x - ws / 2, win.y - ws, ws, ws * 1.2); ctx.globalAlpha = 1;
+    if (ws > 3) { ctx.globalAlpha = 0.25 * flick; lamp(win.x, win.y - ws / 2, B.win, ws * 0.9); ctx.globalAlpha = 1; }
   }
 }
 
@@ -245,13 +255,14 @@ function drawLighthouse(beamOn, fl, fr, far) {
 // and a bright rim on the side the lighthouse is shining from
 function drawRockDetailed(r, p, vis) {
   if (vis < 0.02) return;
-  const w = r.r * 2.2 * p.s, h = r.r * 0.85 * p.s, x = p.x, y = p.y;
+  const B = curBiome(), RK = B.rock;
+  const w = r.r * 2.2 * p.s, h = r.r * 0.85 * p.s * RK.h, x = p.x, y = p.y;
   ctx.globalAlpha = vis;
   // foam ring, breathing with the swell
   const sw = Math.sin(g.t * 1.7 + r.ph);
-  ctx.fillStyle = 'rgba(210,225,242,0.22)';
+  ctx.fillStyle = `rgba(${RK.foam},0.22)`;
   ctx.beginPath(); ctx.ellipse(x, y + h * 0.02, w * (0.72 + sw * 0.04), Math.max(1, w * 0.07), 0, 0, 6.28); ctx.fill();
-  ctx.fillStyle = 'rgba(235,243,255,0.38)';
+  ctx.fillStyle = `rgba(${RK.foam},0.38)`;
   ctx.beginPath(); ctx.ellipse(x, y, w * (0.6 + sw * 0.03), Math.max(1, w * 0.04), 0, 0, 6.28); ctx.fill();
   // body
   const body = () => {
@@ -260,32 +271,34 @@ function drawRockDetailed(r, p, vis) {
     ctx.lineTo(x + w / 2, y); ctx.closePath();
   };
   const bg = ctx.createLinearGradient(0, y - h, 0, y);
-  bg.addColorStop(0, '#5a5f68'); bg.addColorStop(0.5, '#33373e'); bg.addColorStop(1, '#14161a');
+  bg.addColorStop(0, RK.g[0]); bg.addColorStop(0.5, RK.g[1]); bg.addColorStop(1, RK.g[2]);
   ctx.fillStyle = bg; body(); ctx.fill();
   ctx.save(); body(); ctx.clip();
   // facets
-  ctx.fillStyle = 'rgba(150,158,170,0.22)';
+  ctx.fillStyle = RK.facet;
   ctx.beginPath(); ctx.moveTo(x - w * 0.3, y - r.prof[1] * h * 0.9);
   r.prof.slice(1, 5).forEach((v, i) => ctx.lineTo(x - w * 0.3 + w * 0.15 * (i + 1), y - v * h * 0.97));
   ctx.lineTo(x + w * 0.05, y - h * 0.15); ctx.lineTo(x - w * 0.25, y - h * 0.2); ctx.closePath(); ctx.fill();
-  ctx.strokeStyle = 'rgba(20,22,26,0.5)'; ctx.lineWidth = Math.max(0.6, w * 0.012);
+  ctx.strokeStyle = RK.crack; ctx.lineWidth = Math.max(0.6, w * 0.012);
   ctx.beginPath();
   for (let i = 0; i < 3; i++) { const fx = x - w * 0.3 + w * 0.25 * i + Math.sin(r.ph + i) * w * 0.05; ctx.moveTo(fx, y - h * 0.8); ctx.lineTo(fx + w * 0.06, y - h * 0.2); }
   ctx.stroke();
   // rim light from the lighthouse side
   const toLight = angDiff(bearingOf(-r.x, -r.y), yaw), side = toLight > 0 ? 1 : -1;
   const rim = ctx.createLinearGradient(x + side * w / 2, 0, x, 0);
-  rim.addColorStop(0, 'rgba(255,224,165,0.5)'); rim.addColorStop(0.28, 'rgba(255,224,165,0)');
+  rim.addColorStop(0, `rgba(${RK.rim},0.5)`); rim.addColorStop(0.28, `rgba(${RK.rim},0)`);
   ctx.fillStyle = rim; ctx.fillRect(x - w / 2, y - h, w, h);
   // dark wet weed along the waterline
-  ctx.fillStyle = 'rgba(20,34,24,0.85)'; ctx.fillRect(x - w / 2, y - h * 0.14, w, h * 0.14);
-  ctx.fillStyle = 'rgba(220,235,250,0.16)'; ctx.fillRect(x - w / 2, y - h * 0.17, w, Math.max(0.6, h * 0.025));
+  rockSkinInside(B, r, x, y, w, h);
+  ctx.fillStyle = RK.band; ctx.fillRect(x - w / 2, y - h * 0.14, w, h * 0.14);
+  ctx.fillStyle = `rgba(${RK.foam},0.16)`; ctx.fillRect(x - w / 2, y - h * 0.17, w, Math.max(0.6, h * 0.025));
   ctx.restore();
+  rockSkinOutside(B, r, x, y, w, h);
   // spray flicking up off the rock now and then
   if (!reduceMotion && w > 18) {
     const k = (g.t * 0.8 + r.ph) % 3;
     if (k < 0.6) {
-      ctx.fillStyle = `rgba(235,242,252,${0.5 * (1 - k / 0.6)})`;
+      ctx.fillStyle = `rgba(${RK.foam},${0.5 * (1 - k / 0.6)})`;
       for (let i = 0; i < 6; i++) { const a = r.ph * 3 + i; ctx.fillRect(x + Math.cos(a) * w * 0.4, y - k * h * 0.9 - Math.abs(Math.sin(a)) * h * 0.3, 1.6, 1.6); }
     }
   }
@@ -406,7 +419,8 @@ function drawLantern(lx, ly, colour, flick) {
 function drawAtmosphere() {
   buildCaches();
   // light drizzle on open water, slanting with the wind and the ship's speed
-  if (!g.backrooms && !reduceMotion) {
+  const own = !g.backrooms && !reduceMotion && drawBiomeWeather(curBiome());
+  if (!g.backrooms && !reduceMotion && !own) {
     const lean = 0.18 + Math.min(0.4, ship.v / 60) + ship.rudder * 0.1;
     ctx.strokeStyle = 'rgba(190,205,230,0.13)'; ctx.lineWidth = 1;
     ctx.beginPath();

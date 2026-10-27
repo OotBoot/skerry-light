@@ -37,6 +37,7 @@ function newVoyage(n, attract, seed, slot) {
   g.cannon = newCannon();
   g.pickups = v.pickups || []; g.found = 0; if (typeof renderFound === 'function') renderFound();
   g.verity = newVerity(v.backrooms); g.verityScare = 0; g.lightsOut = 0;
+  g.biome = biomeFor(n, attract);
   renderHud();
 }
 
@@ -363,6 +364,7 @@ function beginVoyage(n) {
   $('log').textContent = '';
   addLog(n === 1 ? 'Under way. Follow the blue shoes.' : 'Voyage ' + n + '. More wreckage, and the light turns slower.');
   enteredBackrooms();
+  if (!g.backrooms) addLog(biomeLine());
   addLog(trioLine(), 'w');
   cv.focus({ preventScroll: true });
 }
@@ -379,6 +381,7 @@ function beginCrewVoyage(L, slot) {
   $('log').textContent = '';
   addLog(L.voy === 1 ? 'Under way with your crew. Follow the blue shoes, and keep together.' : 'Voyage ' + L.voy + '. More wreckage, and the light turns slower.');
   enteredBackrooms();
+  if (!g.backrooms) addLog(biomeLine());
   addLog(trioLine(), 'w');
   cv.focus({ preventScroll: true });
 }
