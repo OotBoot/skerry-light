@@ -14,6 +14,8 @@ const FX_BY_SKIN = {
   aurora: 'aurora', ghost: 'ghost', b_dutchman: 'ghost', drowned: 'ghost', c_bolt: 'electric',
   maren: 'lantern', witch: 'wisp', c_sunset: 'ember', b_spice: 'ember', wrecker: 'ember', wreckers: 'ember',
   b_ice: 'frost', abyss: 'void', selkie: 'flow', c_coral: 'flow', knockwood: 'ember',
+  shoal: 'frost', siren: 'wisp', portal: 'void', lavaforged: 'ember', c_echo: 'ghost', c_kite: 'ember', c_aurora: 'aurora',
+  b_whirl: 'flow', b_moth: 'ember', b_cyclops: 'lantern',
 };
 function skinFx(skin) {
   if (!skin || !skin.rarity) return null;

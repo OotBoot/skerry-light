@@ -3612,6 +3612,8 @@ const FX_BY_SKIN = {
   aurora: 'aurora', ghost: 'ghost', b_dutchman: 'ghost', drowned: 'ghost', c_bolt: 'electric',
   maren: 'lantern', witch: 'wisp', c_sunset: 'ember', b_spice: 'ember', wrecker: 'ember', wreckers: 'ember',
   b_ice: 'frost', abyss: 'void', selkie: 'flow', c_coral: 'flow', knockwood: 'ember',
+  shoal: 'frost', siren: 'wisp', portal: 'void', lavaforged: 'ember', c_echo: 'ghost', c_kite: 'ember', c_aurora: 'aurora',
+  b_whirl: 'flow', b_moth: 'ember', b_cyclops: 'lantern',
 };
 function skinFx(skin) {
   if (!skin || !skin.rarity) return null;
@@ -7540,6 +7542,17 @@ const BRIG_SKINS = [
   { id: 'witch',      name: 'Witch Light',         rarity: 'mate',     deck: ['#160f20', '#08040e'], rail: '#7d3fd1', wood: '#3d1f6b', lantern: '#c27bff', hull: '#2d1a4d', sail: '#b58cff' },
   { id: 'wreckers',   name: "Wreckers' Colours",   rarity: 'captain',  deck: ['#1b120e', '#0a0605'], rail: '#e46c4f', wood: '#2c3a2c', lantern: '#86cfae', hull: '#4a1f18', sail: '#2c4a3a' },
   { id: 'gannet',     name: 'The Gannet, Restored', rarity: 'admiral', deck: ['#2a241a', '#120f0a'], rail: '#f2d27a', wood: '#efe6d2', lantern: '#fff6dc', hull: '#f4efe3', sail: '#ffffff' },
+  // from the far seas
+  { id: 'fjordfrost', name: 'Fjord Frost',         rarity: 'deckhand', deck: ['#1c2830', '#0a1116'], rail: '#a9d4e8', wood: '#5c8298', lantern: '#e8f8ff', hull: '#7fa9c0', sail: '#eef8fc' },
+  { id: 'olive',      name: 'Olive Grove',         rarity: 'deckhand', deck: ['#1d1d12', '#0c0c07'], rail: '#7d7a3e', wood: '#4a4824', lantern: '#fff0b8', hull: '#6b6936', sail: '#e6e0c4' },
+  { id: 'duskmauve',  name: 'Dusk Mauve',          rarity: 'deckhand', deck: ['#221d26', '#0e0b10'], rail: '#9a8098', wood: '#5a4a5e', lantern: '#ffd6c0', hull: '#8a7088', sail: '#e8dce6' },
+  { id: 'basalt',     name: 'Basalt and Ember',    rarity: 'bosun',    deck: ['#151112', '#070506'], rail: '#ff6a2a', wood: '#2a2224', lantern: '#ffb070', hull: '#231c1d', sail: '#5a4a48' },
+  { id: 'lagoon',     name: 'Lagoon Turquoise',    rarity: 'bosun',    deck: ['#0c2226', '#041012'], rail: '#3fe0d0', wood: '#1a8a84', lantern: '#c8fff6', hull: '#22b8ac', sail: '#f2fff8' },
+  { id: 'barrowmoss', name: 'Barrow Moss',         rarity: 'bosun',    deck: ['#141a12', '#070a06'], rail: '#6a8a4a', wood: '#3a4a2c', lantern: '#c8f0a0', hull: '#4a5a40', sail: '#a8b498' },
+  { id: 'shoal',      name: 'Crystal Shoal',       rarity: 'mate',     deck: ['#160f28', '#080412'], rail: '#8aeaff', wood: '#4a2a8a', lantern: '#e0b8ff', hull: '#5a3aa8', sail: '#d8c8ff' },
+  { id: 'siren',      name: 'Siren Song',          rarity: 'mate',     deck: ['#1a1222', '#0a060e'], rail: '#f2d27a', wood: '#5a4a6a', lantern: '#ffe0a8', hull: '#4a3c58', sail: '#f2e8d8' },
+  { id: 'portal',     name: 'Through the Portal',  rarity: 'captain',  deck: ['#140a20', '#06030c'], rail: '#b060ff', wood: '#1c1030', lantern: '#d090ff', hull: '#170d24', sail: '#7a3ad0' },
+  { id: 'lavaforged', name: 'Lava-Forged',         rarity: 'admiral',  deck: ['#1c0a06', '#0a0302'], rail: '#ffb030', wood: '#3a120a', lantern: '#ffd070', hull: '#5a1a0c', sail: '#ff8a30' },
 ];
 const CUTTER_SKINS = [
   { id: 'c_plain',    name: 'Cutter, as built',    rarity: null,       deck: ['#1d1610', '#0d0907'], rail: '#2a1d12', wood: '#1a120b', lantern: '#ffcf86', hull: '#5a4330', sail: '#ddd2b6' },
@@ -7555,6 +7568,17 @@ const CUTTER_SKINS = [
   { id: 'c_coral',    name: 'Coral Reef',          rarity: 'mate',     deck: ['#2a1418', '#11070a'], rail: '#ff7b8f', wood: '#2f8a8a', lantern: '#ffd6dc', hull: '#ff6f85', sail: '#fff0e6' },
   { id: 'c_bolt',     name: 'Lightning Bolt',      rarity: 'captain',  deck: ['#0e0f1a', '#04040a'], rail: '#ffe14d', wood: '#2a2d55', lantern: '#fff8b0', hull: '#22264a', sail: '#ffe14d' },
   { id: 'c_gull',     name: 'Silver Gull',         rarity: 'admiral',  deck: ['#24282c', '#0e1012'], rail: '#e8eef4', wood: '#aeb8c2', lantern: '#ffffff', hull: '#cfd8e0', sail: '#ffffff' },
+  // from the far seas
+  { id: 'c_snow',     name: 'Snowfield',           rarity: 'deckhand', deck: ['#262c30', '#101315'], rail: '#f2f8fc', wood: '#9ab0bc', lantern: '#ffffff', hull: '#e4eef4', sail: '#ffffff' },
+  { id: 'c_sand',     name: 'Lagoon Sand',         rarity: 'deckhand', deck: ['#2a2418', '#120f0a'], rail: '#e0c890', wood: '#9a8656', lantern: '#fff4d0', hull: '#d4bc84', sail: '#f8f0dc' },
+  { id: 'c_marble',   name: 'Temple Marble',       rarity: 'deckhand', deck: ['#2a2826', '#121110'], rail: '#ece4d0', wood: '#ab9f88', lantern: '#fff0d0', hull: '#ddd4c0', sail: '#f6f0e4' },
+  { id: 'c_ash',      name: 'Ash Cloud',           rarity: 'bosun',    deck: ['#1a1818', '#090808'], rail: '#ff7a3a', wood: '#3a3434', lantern: '#ffb07a', hull: '#4a4444', sail: '#8a8282' },
+  { id: 'c_firefly',  name: 'Firefly',             rarity: 'bosun',    deck: ['#101a10', '#050a05'], rail: '#d8ff7a', wood: '#2a3a20', lantern: '#e8ff9a', hull: '#24301c', sail: '#c8d8a8' },
+  { id: 'c_lamp',     name: 'Street Lamp',         rarity: 'bosun',    deck: ['#1c1822', '#0a080e'], rail: '#ffd6a0', wood: '#2a2430', lantern: '#ffd6a0', hull: '#3a3442', sail: '#d8ccd8' },
+  { id: 'c_echo',     name: 'The Echo',            rarity: 'mate',     deck: ['#2a2830', '#121116'], rail: '#f4f0f8', wood: '#a8a0b0', lantern: '#ffffff', hull: '#cfc8d6', sail: '#f8f4fc' },
+  { id: 'c_kite',     name: 'Cinder Kite',         rarity: 'mate',     deck: ['#1c0e0a', '#0a0504'], rail: '#ff7a2a', wood: '#2c1612', lantern: '#ffa050', hull: '#2a1512', sail: '#1c1110' },
+  { id: 'c_aurora',   name: 'Fjord Aurora',        rarity: 'captain',  deck: ['#0a1820', '#030a0f'], rail: '#50ffaa', wood: '#123a4a', lantern: '#a0fff0', hull: '#0e3040', sail: '#7affd0' },
+  { id: 'c_sleeper',  name: "The Sleeper's Eye",   rarity: 'admiral',  deck: ['#24202c', '#0e0c12'], rail: '#fff8ff', wood: '#7a7088', lantern: '#f6f0ff', hull: '#e6e0f0', sail: '#fffaff' },
 ];
 const BARQUE_SKINS = [
   { id: 'b_plain',    name: 'Barque, as built',    rarity: null,       deck: ['#17110c', '#0a0705'], rail: '#1b120b', wood: '#120c07', lantern: '#ffcf86', hull: '#3f3125', sail: '#d4c9ab' },
@@ -7570,6 +7594,17 @@ const BARQUE_SKINS = [
   { id: 'b_spice',    name: 'Spice Route',         rarity: 'mate',     deck: ['#2a1508', '#120803'], rail: '#ffb238', wood: '#8a2f12', lantern: '#ffcf70', hull: '#b8461b', sail: '#ffd98a' },
   { id: 'b_dutchman', name: 'Flying Dutchman',     rarity: 'captain',  deck: ['#0f1a17', '#040a08'], rail: '#7affc8', wood: '#1d3a30', lantern: '#9affd8', hull: '#163027', sail: '#5c8f7c' },
   { id: 'b_royal',    name: 'Royal Barque',        rarity: 'admiral',  deck: ['#1e1428', '#0c0712'], rail: '#ffd34d', wood: '#4a2a6b', lantern: '#fff0c0', hull: '#4b2470', sail: '#fff6d8' },
+  // from the far seas
+  { id: 'b_slate',    name: 'Slate',               rarity: 'deckhand', deck: ['#1c1e22', '#0b0c0e'], rail: '#5a606a', wood: '#3a3e46', lantern: '#e8eef6', hull: '#4c525c', sail: '#b8bcc4' },
+  { id: 'b_wine',     name: 'Wine-Dark',           rarity: 'deckhand', deck: ['#1e1020', '#0c060e'], rail: '#7a3a6a', wood: '#3a1838', lantern: '#ffd0b0', hull: '#5a2448', sail: '#e8d6dc' },
+  { id: 'b_mist',     name: 'Morning Mist',        rarity: 'deckhand', deck: ['#262a2c', '#101213'], rail: '#b8c4c8', wood: '#7a8488', lantern: '#f4fbff', hull: '#a4b0b4', sail: '#eef2f4' },
+  { id: 'b_cypress',  name: 'Cypress',             rarity: 'bosun',    deck: ['#0e140f', '#050805'], rail: '#3a5a3a', wood: '#1c2a1c', lantern: '#ffcf80', hull: '#1e2e20', sail: '#c8c0a0' },
+  { id: 'b_emberglass', name: 'Ember Glass',       rarity: 'bosun',    deck: ['#1a0c08', '#0a0403'], rail: '#ffc060', wood: '#4a1e10', lantern: '#ffe090', hull: '#6a2410', sail: '#e8a060' },
+  { id: 'b_grave',    name: 'Gravestone',          rarity: 'bosun',    deck: ['#1c1e1a', '#0a0b09'], rail: '#8a8e84', wood: '#4a4e46', lantern: '#c8e0b0', hull: '#6a6e64', sail: '#b0b4a8' },
+  { id: 'b_whirl',    name: 'Whirlpool',           rarity: 'mate',     deck: ['#120c20', '#06040e'], rail: '#d8d0f0', wood: '#30204a', lantern: '#e8e0ff', hull: '#2a1d3e', sail: '#b8acd8' },
+  { id: 'b_moth',     name: 'Furnace Moth',        rarity: 'mate',     deck: ['#1e0e08', '#0c0503'], rail: '#ffc860', wood: '#3a0c06', lantern: '#ffb040', hull: '#d0461a', sail: '#ffa040' },
+  { id: 'b_cyclops',  name: "The Cyclops' Eye",    rarity: 'captain',  deck: ['#1c140c', '#0a0705'], rail: '#ffb040', wood: '#5a4232', lantern: '#ffc860', hull: '#4a3628', sail: '#e8d8c0' },
+  { id: 'b_fleece',   name: 'Golden Fleece',       rarity: 'admiral',  deck: ['#241a0a', '#100b04'], rail: '#ffe07a', wood: '#8a6a1a', lantern: '#fff4c8', hull: '#e8c040', sail: '#fff8dc' },
 ];
 const SKINS = BRIG_SKINS.map(s => Object.assign({ boat: 'brig' }, s))
   .concat(CUTTER_SKINS.map(s => Object.assign({ boat: 'cutter' }, s)))
