@@ -42,7 +42,7 @@ Choose your boat with the Brig / Cutter / Barque picker on the title, harbour, e
 
 | Boat | Hull | Acceleration | Steering | |
 |---|---|---|---|---|
-| Brig | 4 | 1.3× | 1.2× | the all-rounder, two masts, and a carpenter who patches a plank every 40 seconds |
+| Brig | 4 | 1.3× | 1.2× | the all-rounder, two masts, a carpenter who patches a plank every 40 seconds, and floating crates reload her flare and bell |
 | Cutter | 2 | 1.7× | 1.4× | small and quick, one tall mast |
 | Barque | 5 | 0.8× | 0.9× | long and heavy, three masts, and a bow gun |
 
