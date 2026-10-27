@@ -38,6 +38,7 @@
       <span id="hint">← → steer · ↑ ↓ sail · Space bell · F flare · V view</span>
       <div class="toolrow">
         <button class="tool" id="viewBtn" type="button" aria-pressed="false">3rd person</button>
+        <button class="tool meter" id="jetBtn" type="button" hidden><b>Launch jet</b><small>J · <span id="jetState">Ready</span></small></button>
         <button class="tool meter" id="flareBtn" type="button"><b>Fire a flare</b><small>F · <span id="flareState">Ready</span></small></button>
         <button class="tool meter" id="bellBtn" type="button"><b>Ring the bell</b><small>Space · <span id="bellState">Ready</span></small></button>
       </div>
@@ -94,7 +95,7 @@
           <li><b>Knock</b> moves only while you can't see him. Listen for three knocks on wood, turn, and keep him in your light. The bell freezes him</li>
           <li><b>Flare</b> (F) lights everything around you for a few seconds, for your whole crew</li>
           <li><b>Steer</b> ← → or A / D, sail ↑ ↓ or W / S. On a phone, hold the left or right side to steer and use the ▲ ▼ buttons for speed</li>
-          <li><b>Boats</b> the Brig takes four hits, her carpenter patches a plank every 40 seconds, and each floating crate she picks up reloads her flare and bell; the quick Cutter takes two, the heavy Barque five. The Barque's bow gun fires by itself to blow apart a rock just ahead that you're about to hit, then takes 3 seconds to reload. Glancing off a rock only slows you; hitting it head on costs a plank.</li>
+          <li><b>Boats</b> the Brig takes four hits, her carpenter patches a plank every 40 seconds, and each floating crate she picks up reloads her flare and bell; the quick Cutter takes two, the heavy Barque five. The Barque's bow gun fires by itself to blow apart a rock just ahead that you're about to hit, then takes 3 seconds to reload. The Carrier takes six, her floodlights reach far, and she launches a scout jet (J) that lights the rocks along your course, but she is huge, slow and slow to turn. Glancing off a rock only slows you; hitting it head on costs a plank.</li>
           <li><b>Hull</b> when the planks run out she goes down. Let Maren reach the bow and she comes aboard</li>
           <li><b>Tonight's enemies</b> each voyage brings three enemies from a pool of 21 (the log names them as you set out), on top of Maren. Each has its own trick and its own counter: read the log when one turns up</li>
           <li><b>Verity</b> sometimes you'll find a small smiling yellow orb in a corner of your deck, offering to help. He isn't helping, and the bell doesn't bother him. Fire a flare before twenty seconds are up, or see what he really looks like</li>
@@ -248,6 +249,7 @@
 <script src="src/game.js"></script>
 <script src="src/transport.js"></script>
 <script src="src/net.js"></script>
+<script src="src/carrier.js"></script>
 <script src="src/crates.js"></script>
 <script src="src/gamepad.js"></script>
 <script src="src/main.js"></script>

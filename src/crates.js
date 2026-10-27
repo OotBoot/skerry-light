@@ -22,6 +22,7 @@ const BOATS = [
   { id: 'brig',   name: 'Brig',   blurb: 'The all-rounder: four planks, good speed and steering, a carpenter who patches a plank every 40 seconds, and floating crates reload her flare and bell.', hull: 4, accel: 1.3, turn: 1.2, carpenter: 40, beam: 2.6, len: 20, masts: [-0.2, 0.18], deckW: 0.75, tipY: 0.72, rail: 10, bow: 5 },
   { id: 'cutter', name: 'Cutter', blurb: 'Light and quick, turns on a penny, but two hits and she goes.', hull: 2, accel: 1.7, turn: 1.4, beam: 2, len: 15, masts: [0.05], deckW: 0.58, tipY: 0.75, rail: 7, bow: 4 },
   { id: 'barque', name: 'Barque', blurb: 'A heavy three-master with a short-range bow gun that blows away a rock in her path, reloading in 3 seconds. Takes a beating.', hull: 5, accel: 0.8, turn: 0.9, beam: 3.4, len: 27, masts: [-0.28, 0.02, 0.3], deckW: 0.95, tipY: 0.68, rail: 14, bow: 7 },
+  { id: 'carrier', name: 'Carrier', blurb: 'A modern supercarrier. Six planks of steel and floodlights that light the water much further out, and she launches a scout jet (J) that flies ahead lighting the rocks on your course. But she is huge, slow to get going and slow to turn: there is a lot of her to hit things with.', hull: 6, accel: 0.6, turn: 0.7, top: 1.08, lamp: 1.6, jet: true, beam: 5.2, len: 40, masts: [], deckW: 1.2, tipY: 0.6, rail: 4, bow: 15 },
 ];
 const BOAT_BY_ID = Object.fromEntries(BOATS.map(b => [b.id, b]));
 const CRATE_TYPES = [{ id: 'skerry', name: 'Skerry Crate', holds: 'boat skins, flags and flare colours' }];
@@ -130,11 +131,34 @@ const BARQUE_SKINS = [
   { id: 'b_cyclops',  name: "The Cyclops' Eye",    rarity: 'captain',  deck: ['#1c140c', '#0a0705'], rail: '#ffb040', wood: '#5a4232', lantern: '#ffc860', hull: '#4a3628', sail: '#e8d8c0' },
   { id: 'b_fleece',   name: 'Golden Fleece',       rarity: 'admiral',  deck: ['#241a0a', '#100b04'], rail: '#ffe07a', wood: '#8a6a1a', lantern: '#fff4c8', hull: '#e8c040', sail: '#fff8dc' },
 ];
+// the carrier: deck is the flight deck (near, far), rail the deck markings, wood the island and
+// superstructure, lantern her lights, hull the hull, sail the accent stripe
+const CARRIER_SKINS = [
+  { id: 'k_plain',    name: 'Carrier, haze grey',  rarity: null,       deck: ['#2a2d31', '#16181b'], rail: '#e8e8e0', wood: '#6a7078', lantern: '#ffe6b0', hull: '#5c636b', sail: '#d8c040' },
+  { id: 'k_fleet',    name: 'Fleet Grey',          rarity: 'deckhand', deck: ['#26292c', '#141618'], rail: '#f0f0ea', wood: '#7a8088', lantern: '#fff0c8', hull: '#6c737b', sail: '#f0d040' },
+  { id: 'k_dark',     name: 'Dark Hull',           rarity: 'deckhand', deck: ['#1e2023', '#0e0f11'], rail: '#d8d8d0', wood: '#3e434a', lantern: '#ffe0a0', hull: '#33383e', sail: '#c8b040' },
+  { id: 'k_arctic',   name: 'Arctic White',        rarity: 'deckhand', deck: ['#33373b', '#1a1c1f'], rail: '#ffffff', wood: '#d8dee4', lantern: '#eef8ff', hull: '#c8d0d8', sail: '#7ab8e0' },
+  { id: 'k_sand',     name: 'Desert Tan',          rarity: 'deckhand', deck: ['#2e2a24', '#171511'], rail: '#f4ecd8', wood: '#9a8a6a', lantern: '#fff0c0', hull: '#8a7a5c', sail: '#e0a040' },
+  { id: 'k_slate',    name: 'Slate Blue',          rarity: 'deckhand', deck: ['#23272e', '#111419'], rail: '#e0e8f0', wood: '#4c5a6e', lantern: '#e6f0ff', hull: '#3e4c60', sail: '#e8e8e0' },
+  { id: 'k_dazzle',   name: 'Dazzle Stripes',      rarity: 'bosun',    deck: ['#26282b', '#121315'], rail: '#ffffff', wood: '#1a1c20', lantern: '#ffffff', hull: '#e8e8e8', sail: '#141414' },
+  { id: 'k_night',    name: 'Night Ops',           rarity: 'bosun',    deck: ['#141518', '#08090a'], rail: '#ff4a3a', wood: '#22252a', lantern: '#ff6a5a', hull: '#1c1f24', sail: '#ff4a3a' },
+  { id: 'k_jungle',   name: 'Jungle Green',        rarity: 'bosun',    deck: ['#1c211c', '#0c100c'], rail: '#e0e8c8', wood: '#3e5a3a', lantern: '#e8ffc8', hull: '#34503a', sail: '#c8b048' },
+  { id: 'k_rust',     name: 'Mothballed',          rarity: 'bosun',    deck: ['#2a221c', '#14100c'], rail: '#d8c8b0', wood: '#7a4a2a', lantern: '#ffb070', hull: '#6a3e22', sail: '#a85a2a' },
+  { id: 'k_neon',     name: 'Neon Deck',           rarity: 'mate',     deck: ['#141420', '#08080f'], rail: '#3affff', wood: '#2a1a4a', lantern: '#ff4af0', hull: '#1a1a30', sail: '#ff4af0' },
+  { id: 'k_carbon',   name: 'Carbon Black',        rarity: 'mate',     deck: ['#0e0f10', '#050506'], rail: '#7a8088', wood: '#1a1c1e', lantern: '#c8e0ff', hull: '#121416', sail: '#3a8aff' },
+  { id: 'k_tiger',    name: 'Tiger Stripe',        rarity: 'mate',     deck: ['#2a1e12', '#140e08'], rail: '#ffa030', wood: '#1a120a', lantern: '#ffc860', hull: '#d07a20', sail: '#1a120a' },
+  { id: 'k_stealth',  name: 'Stealth',             rarity: 'captain',  deck: ['#0a0b0e', '#030304'], rail: '#6a5aff', wood: '#101218', lantern: '#9a8aff', hull: '#0e1014', sail: '#6a5aff' },
+  { id: 'k_ghost',    name: 'Ghost Fleet',         rarity: 'captain',  deck: ['#2a3436', '#121819'], rail: '#c8fff0', wood: '#7a9a96', lantern: '#c8fff0', hull: '#8aa8a4', sail: '#e0fff8' },
+  { id: 'k_admiral',  name: 'Admiral of the Fleet', rarity: 'admiral', deck: ['#24282e', '#10121a'], rail: '#ffd34d', wood: '#1e2a48', lantern: '#fff0c0', hull: '#1a2440', sail: '#ffd34d' },
+  { id: 'k_aurora',   name: 'Aurora Flagship',     rarity: 'admiral',  deck: ['#10181e', '#060a0e'], rail: '#7affd8', wood: '#203a5a', lantern: '#b8a0ff', hull: '#1a3048', sail: '#7affd8' },
+];
+
 const SKINS = BRIG_SKINS.map(s => Object.assign({ boat: 'brig' }, s))
   .concat(CUTTER_SKINS.map(s => Object.assign({ boat: 'cutter' }, s)))
-  .concat(BARQUE_SKINS.map(s => Object.assign({ boat: 'barque' }, s)));
+  .concat(BARQUE_SKINS.map(s => Object.assign({ boat: 'barque' }, s)))
+  .concat(CARRIER_SKINS.map(s => Object.assign({ boat: 'carrier' }, s)));
 const SKIN_BY_ID = Object.fromEntries(SKINS.map(s => [s.id, s]));
-const PLAIN = { brig: 'plain', cutter: 'c_plain', barque: 'b_plain' };
+const PLAIN = { brig: 'plain', cutter: 'c_plain', barque: 'b_plain', carrier: 'k_plain' };
 
 // pennants: a small flag, in a pattern of one or two colours
 const PENNANTS = [
@@ -191,7 +215,7 @@ const rarityOf = s => RARITIES.find(r => r.id === s.rarity);
 
 const CRATES = {
   crates: { skerry: 0 },
-  owned: {}, equipped: { brig: 'plain', cutter: 'c_plain', barque: 'b_plain' }, pennant: null, flare: null,
+  owned: {}, equipped: { brig: 'plain', cutter: 'c_plain', barque: 'b_plain', carrier: 'k_plain' }, pennant: null, flare: null,
   boat: 'brig', opening: false, pending: null, view: 'skins',
 };
 function totalCrates() { return CRATES.crates.skerry; }
@@ -525,6 +549,7 @@ function drawPennant(c, x, y, size, pen, t) {
 // ---------- UI ----------
 function skinPreview(skin, size) {
   const boat = BOAT_BY_ID[skin.boat] || BOATS[0];
+  if (boat.id === 'carrier' && typeof carrierPreview === 'function') return carrierPreview(skin, size);
   const tier = typeof skinTier === 'function' ? skinTier(skin) : 0;
   const NS = 'http://www.w3.org/2000/svg';
   const svg = document.createElementNS(NS, 'svg');
@@ -646,7 +671,7 @@ function renderBoatPicks() {
         const btn = document.createElement('button');
         btn.type = 'button'; btn.className = 'pick'; btn.dataset.boat = b.id;
         const nm = document.createElement('b'); nm.textContent = b.name;
-        const st = document.createElement('small'); st.textContent = 'Hull ' + b.hull + ' · ' + (b.id === 'brig' ? 'repairs' : b.accel > 1.5 ? 'quick' : b.accel < 1 ? 'slow' : 'steady');
+        const st = document.createElement('small'); st.textContent = 'Hull ' + b.hull + ' · ' + (b.id === 'brig' ? 'repairs' : b.jet ? 'scout jet' : b.accel > 1.5 ? 'quick' : b.accel < 1 ? 'slow' : 'steady');
         btn.append(skinPreview(SKIN_BY_ID[CRATES.equipped[b.id]] || SKIN_BY_ID[PLAIN[b.id]], 44), nm, st);
         btn.addEventListener('click', () => chooseBoat(b.id));
         box.appendChild(btn);
@@ -691,7 +716,7 @@ function renderCrates() {
     card.appendChild(skinPreview(SKIN_BY_ID[CRATES.equipped[b.id]] || SKIN_BY_ID[PLAIN[b.id]], 110));
     const h = document.createElement('b'); h.textContent = b.name; card.appendChild(h);
     const p = document.createElement('small'); p.textContent = b.blurb; card.appendChild(p);
-    card.appendChild(statBar('Hull ' + b.hull, b.hull, 5));
+    card.appendChild(statBar('Hull ' + b.hull, b.hull, 6));
     card.appendChild(statBar('Acceleration', b.accel, 1.7));
     card.appendChild(statBar('Steering', b.turn, 1.4));
     const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'tool';

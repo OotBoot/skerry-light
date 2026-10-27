@@ -74,22 +74,24 @@ canvas:focus { outline: none; }
   border: 1px solid var(--rule); padding: 8px 12px; cursor: pointer;
 }
 .tool:focus-visible { outline: 2px solid var(--lamp); outline-offset: 2px; }
-#bellBtn, #flareBtn {
+#bellBtn, #flareBtn, #jetBtn {
   position: relative; overflow: hidden;
   display: flex; flex-direction: column; align-items: flex-start; gap: 2px;
   min-width: 9.5rem; padding: 8px 14px;
   --p: 1;
 }
-#bellBtn::before, #flareBtn::before {
+#bellBtn::before, #flareBtn::before, #jetBtn::before {
   content: ""; position: absolute; inset: auto 0 0 0; height: 3px;
   background: var(--lamp); transform-origin: left; transform: scaleX(var(--p));
 }
-#flareBtn { min-width: 8.5rem; }
+#flareBtn, #jetBtn { min-width: 8.5rem; }
+#jetBtn::before { background: #8ac8ff; }
+#jetBtn.ready b { color: #a8d8ff; }
 #flareBtn::before { background: #ff8a5a; }
 #flareBtn.ready b { color: #ff9f75; }
-#bellBtn b, #flareBtn b { font-family: var(--display); font-size: 1.1rem; font-weight: 400; letter-spacing: 0; text-transform: none; color: var(--muted); }
+#bellBtn b, #flareBtn b, #jetBtn b { font-family: var(--display); font-size: 1.1rem; font-weight: 400; letter-spacing: 0; text-transform: none; color: var(--muted); }
 #bellBtn.ready b { color: var(--lamp); }
-#bellBtn small, #flareBtn small { font-size: 10px; color: var(--muted); }
+#bellBtn small, #flareBtn small, #jetBtn small { font-size: 10px; color: var(--muted); }
 .toolrow.shouts .tool { font-size: 11px; padding: 6px 9px; letter-spacing: 0.04em; }
 
 /* hold-to-change-speed buttons, on the left edge */
@@ -309,7 +311,7 @@ canvas:focus { outline: none; }
   #hint { display: none; }
   .big { font-size: 19px; }
   .hud .row { gap: 12px; }
-  #bellBtn, #flareBtn { min-width: 0; flex: 1; }
+  #bellBtn, #flareBtn, #jetBtn { min-width: 0; flex: 1; }
   .toolrow { flex-wrap: wrap; }
   .toolrow.shouts .tool { flex: 1; padding: 6px 4px; }
   .sailctl .tool { width: 56px; height: 56px; }
@@ -322,7 +324,7 @@ canvas:focus { outline: none; }
 
 /* ---------- shipyard and crate inventory ---------- */
 .cratecard .invh { font-family: "IM Fell English SC", serif; font-size: 1.15rem; margin: 18px 0 8px; color: var(--ink, #ece4cf); }
-.boats { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; margin-top: 12px; }
+.boats { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 10px; margin-top: 12px; }
 .boatcard { display: flex; flex-direction: column; gap: 5px; padding: 10px; border: 1px solid rgba(236,228,207,0.16); border-radius: 8px; background: rgba(255,255,255,0.03); }
 .boatcard.chosen { border-color: #ffd88a; box-shadow: 0 0 0 1px #ffd88a inset; }
 .boatcard svg { align-self: center; }
@@ -444,9 +446,9 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 /* phones in play: a smaller log, slightly smaller buttons, and no compass strip (so notes sit higher) */
 @media (max-width: 520px) {
   #log { font-size: 9.5px; line-height: 1.4; }
-  #bellBtn, #flareBtn { padding: 5px 10px; gap: 1px; }
-  #bellBtn b, #flareBtn b { font-size: 0.95rem; }
-  #bellBtn small, #flareBtn small { font-size: 9px; }
+  #bellBtn, #flareBtn, #jetBtn { padding: 5px 10px; gap: 1px; }
+  #bellBtn b, #flareBtn b, #jetBtn b { font-size: 0.95rem; }
+  #bellBtn small, #flareBtn small, #jetBtn small { font-size: 9px; }
   .sailctl { gap: 8px; }
   .sailctl .tool { width: 48px; height: 48px; font-size: 18px; }
   .sailctl .tool small { font-size: 8px; }

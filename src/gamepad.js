@@ -94,6 +94,7 @@ function pollPad(dt) {
     if (down(0)) ringBell();
     if (down(2)) fireFlare();
     if (down(3)) toggleView();
+    if (down(1)) launchJet();
   } else {
     PAD.steer = PAD.sail = 0;
     // the analog sticks drive an on-screen cursor in menus: left stick moves it, right stick scrolls

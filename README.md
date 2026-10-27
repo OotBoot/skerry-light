@@ -83,23 +83,26 @@ The only thing she will not go near is **Plimsoll**, the shark who walked up out
 
 ## Boats
 
-Choose your boat with the Brig / Cutter / Barque picker on the title, harbour, end and crew screens, or from the shipyard at the top of the **Crates** screen. Your choice is kept on this device, and your crew sees which boat you're sailing.
+Choose your boat with the Brig / Cutter / Barque / Carrier picker on the title, harbour, end and crew screens, or from the shipyard at the top of the **Crates** screen. Your choice is kept on this device, and your crew sees which boat you're sailing.
 
 | Boat | Hull | Acceleration | Steering | |
 |---|---|---|---|---|
 | Brig | 4 | 1.3× | 1.2× | the all-rounder, two masts, a carpenter who patches a plank every 40 seconds, and floating crates reload her flare and bell |
 | Cutter | 2 | 1.7× | 1.4× | small and quick, one tall mast |
 | Barque | 5 | 0.8× | 0.9× | long and heavy, three masts, and a bow gun |
+| Carrier | 6 | 0.6× | 0.7× | a modern supercarrier, 40 m long; 8% faster flat out, floodlights, and a scout jet |
 
 Each boat has its own deck and bow as you see them from the helm, and its own length and rig as your crew sees it.
 
 The Barque's **bow gun** fires by itself when you're about to run onto a rock, blowing it apart before you hit. It only fires at rocks close ahead (about a second and a half of sailing, at most 45 m) and takes 3 seconds to reload after each shot; the *Bow gun* marker under your hull fills up as it reloads. In a crew, a rock it destroys is gone for everyone.
 
+The **Carrier** is a modern nuclear supercarrier in the style of the newest carrier class: a flat flight deck with an angled landing deck to port, the island aft on the starboard side with its mast and turning radar, aircraft parked on the bow, and a row of lit hangar openings. From her deck you look out over the non-skid, the landing-area markings and the catapult tracks to a broad flat bow. She is the toughest boat (six planks) and a touch faster flat out, and her **floodlights** light the water 1.6 times as far as a lantern. Her **scout jet** (J, the *Launch jet* button, or B on a controller) is thrown off the bow by the catapult and flies a loop about 330 m out along your course and back, its searchlight lighting every rock under it; then it needs 25 seconds to refuel. The trade: she is huge, so there is far more of her to put on a rock, she gathers way slowly and she turns like a carrier. The jet can't fly in the Backrooms.
+
 ## Crates, skins and pennants
 
 Every voyage you play earns a **Skerry Crate** if you go down, and if you make harbour, **5** on voyage 1, then the Fibonacci sequence for each voyage in a row (8, 13, 21, 34, 55... up to 4,181 from voyage 15 on); a sinking starts the streak over at voyage 1. About a dozen floating crates (look for their lanterns, pillars of golden light, and the gold diamonds on the bearing strip) are scattered around each voyage: sail into one to haul it aboard. Make harbour and each one you're carrying is worth **two** more crates; sink and they go down with the ship. Any crate can hold any item:
 
-- **Boat skins** for all three boats (44 Brig, 22 Cutter, 22 Barque, plus each boat's plain finish). Thirty of them come from the far seas: fjord ice, basalt and ember, lagoon turquoise, barrow moss, crystal, temple marble, the Places In Between, and the Nether and Wine-Dark Sea monsters, from Lava-Forged and Golden Fleece (Admiral) down. Each boat keeps its own equipped skin. A skin changes your deck, rails, bowsprit and lantern as you see them, and your hull and sails as your crewmates see them; crewmates' ships are lit by their own lanterns, so you can make out their skins from about 300 m away.
+- **Boat skins** for all four boats (44 Brig, 22 Cutter, 22 Barque, 16 Carrier, plus each boat's plain finish). The Carrier's run from Fleet Grey and Arctic White through Dazzle Stripes, Night Ops and Neon Deck to Stealth, Ghost Fleet, and the Admiral of the Fleet and Aurora Flagship. Thirty of them come from the far seas: fjord ice, basalt and ember, lagoon turquoise, barrow moss, crystal, temple marble, the Places In Between, and the Nether and Wine-Dark Sea monsters, from Lava-Forged and Golden Fleece (Admiral) down. Each boat keeps its own equipped skin. A skin changes your deck, rails, bowsprit and lantern as you see them, and your hull and sails as your crewmates see them; crewmates' ships are lit by their own lanterns, so you can make out their skins from about 300 m away.
 - **Animated flair**: every Mate, Captain and Admiral skin moves. Mates glow, Captains have paint flowing along the hull and sails, Admirals sparkle with a sweeping gold sheen, and some have their own: Northern Lights cycles colour, the Ghost Ship and Flying Dutchman flicker with green wisps, Lightning Bolt crackles, Spice Route and Sunset Regatta throw off embers, Ice Barque glints with frost, Abyssal Black has a dark aura, Maren's Lantern burns warm, and Witch Light has orbs circling the masts. It shows on your ship in third person, on your deck in first person, on crewmates' ships, and in the crate previews.
 - **Flags**: 20 pennants, which fly from a staff at the tip of your bowsprit (and from your masthead for your crew) on any boat.
 - **Flare colours**: 12 of them, from Magnesium White and Green Star to Pier Lamps (red and green), Gold Rain (sparks) and Aurora (cycles through colours). Your crew sees your flares in your colour.
@@ -194,6 +197,7 @@ src/creatures.js    Maren and Plimsoll: behaviour, animation and drawing
 src/enemies.js      the drowned crew and Knock
 src/verity.js       Verity, on your deck, and his jumpscare
 src/cannon.js       the Barque's bow gun
+src/carrier.js      the Carrier: her 3D model, flight deck view, crate picture and scout jet
 src/roster.js       the enemy pool: each voyage's three, and the 18 new enemies
 assets/foes/        the new enemies' pictures
 src/gamepad.js      Xbox and other controllers

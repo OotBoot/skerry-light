@@ -49,6 +49,7 @@ const STATIONS = [
 ];
 
 function drawShip3D(o, skin, boat, vis, opts) {
+  if (boat.id === 'carrier') return drawCarrier3D(o, skin, boat, vis, opts);
   opts = opts || {};
   const tier = skinTier(skin);
   const Lh = boat.len / 2, B = boat.beam * 1.25, Zd = boat.id === 'cutter' ? 1.5 : boat.id === 'barque' ? 2.6 : 2;

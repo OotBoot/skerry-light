@@ -61,12 +61,13 @@ function litAt(x, y) {
 }
 function lanternAt(x, y) {
   const d = Math.hypot(x - ship.x, y - ship.y);
-  const L = SK.LANTERN * (g && g.mods ? g.mods.lantern : 1);
+  // (the carrier's floodlights reach further)
+  const L = SK.LANTERN * (g && g.mods ? g.mods.lantern : 1) * ((BOAT_BY_ID[ship.boat] || {}).lamp || 1);
   return d < L ? Math.min(1, (1 - d / L) * 1.6) : 0;
 }
 function visibility(x, y) {
   if (g.backrooms) return Math.min(1, roomLight(x, y) + lanternAt(x, y) + flareAt(x, y));
-  return Math.min(1, litAt(x, y) * 1.3 + lanternAt(x, y) + flareAt(x, y));
+  return Math.min(1, litAt(x, y) * 1.3 + lanternAt(x, y) + flareAt(x, y) + jetAt(x, y));
 }
 // ---------- the Backrooms ----------
 // the tubes buzz and flicker; each time the lamp would have turned they go out for a moment
@@ -417,6 +418,7 @@ function drawScene() {
   if (third) { const c = cam(ship.x, ship.y, 0); if (c.f > SK.NEAR) items.push({ kind: 'self', o: ship, c }); }
   foeItems((kind, o, z, k) => { const c = cam(o.x, o.y, z); if (c.f > SK.NEAR + 1) items.push({ kind, o, c, k }); });
   add('plim', g.plim);
+  jetItem((kind, o, z) => { const c = cam(o.x, o.y, z); if (c.f > SK.NEAR) items.push({ kind, o, c }); });
   portalItem((kind, o, z) => { const c = cam(o.x, o.y, z); if (c.f > 0.1) items.push({ kind, o, c }); });
   if (crewMode) for (const m of matesAtSea()) if (m.peer !== NET.watch) add('mate', m);
   if (!NET.watch) { for (const d of g.enemies.drowned) add('drowned', d); for (const k of g.enemies.knocks) add('knock', k); }
@@ -439,6 +441,7 @@ function drawScene() {
     else if (it.kind === 'foe') drawFoe(it.k, o, q);
     else if (it.kind === 'hazard') drawHazard(o, q);
     else if (it.kind === 'portal') drawPortal(o);
+    else if (it.kind === 'jet') drawJet(o);
     else if (it.kind === 'pickup') drawPickup(o, q, vis);
     else if (it.kind === 'plim') drawPlimsoll(q, vis);
     else if (it.kind === 'mate') drawMate(o, q, vis);
@@ -485,6 +488,7 @@ function drawDeck() {
   const boat = BOAT_BY_ID[ship.boat] || BOATS[0];
   const tipY = H * boat.tipY, lit = g.glare, DW = W * boat.deckW;
   const skin = ship.skin || mySkin();
+  if (boat.id === 'carrier') { drawCarrierDeck(boat, skin); return; }
   // the planked deck, rails and rope come from a cached picture; the light on them is added here
   ctx.drawImage(buildDeck(boat, skin), 0, 0, W, H);
   if (lit > 0.02) {

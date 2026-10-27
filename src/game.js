@@ -261,7 +261,7 @@ function update(dt) {
   const rate = (sailIn > 0 ? 1.6 * (1 + g.sailHeld * 1.2) : 1.6) * boat.accel;
   // shortening sail is quick too, even from a great speed
   ship.sail = Math.max(0.15, ship.sail + (sailIn > 0 ? sailIn * rate : sailIn * (1.6 + ship.sail * 1.8)) * dt);
-  const vTarget = Math.min(g.mods.cap, (3 + ship.sail * 12) * g.mods.slow);
+  const vTarget = Math.min(g.mods.cap, (3 + ship.sail * 12) * g.mods.slow * (boat.top || 1));
   ship.v += (vTarget - ship.v) * Math.min(1, dt * 4 * boat.accel);   // she answers the sail almost at once
   ship.h += ship.rudder * 0.55 * boat.turn * dt * (0.35 + 0.65 * Math.min(1, ship.v / 10));
   // move in short steps so a fast ship can't jump clean over a rock between frames
@@ -289,6 +289,7 @@ function update(dt) {
   updateFoes(dt);
   updateVerity(dt);
   updatePortal(dt);
+  updateJet(dt);
   updateCannon(dt);
   carpenter(dt);
   updatePickups();
@@ -321,6 +322,7 @@ function update(dt) {
     $('dist').textContent = d > 1000 ? (d / 1852).toFixed(1) + 'nm' : Math.round(d) + 'm';
     updateBellButton();
     updateFlareButton();
+    updateJetButton();
   }
 }
 
@@ -333,6 +335,20 @@ function updateFlareButton() {
   b.style.setProperty('--p', p.toFixed(2));
   b.classList.toggle('ready', p >= 1);
   $('flareState').textContent = p >= 1 ? 'Ready' : 'Loading';
+}
+
+let jetShown = -1;
+function updateJetButton() {
+  const b = $('jetBtn'); if (!b) return;
+  const on = ship.boat === 'carrier' && !g.attract;
+  if (b.hidden === on) b.hidden = !on;
+  if (!on) return;
+  const busy = !!g.jet, p = busy ? 0 : g.jetCd > 0 ? 1 - g.jetCd / JET.CD : 1, v = Math.round(p * 50) + (busy ? 100 : 0);
+  if (v === jetShown) return;
+  jetShown = v;
+  b.style.setProperty('--p', p.toFixed(2));
+  b.classList.toggle('ready', p >= 1);
+  $('jetState').textContent = busy ? 'Flying' : p >= 1 ? 'Ready' : 'Refuelling';
 }
 
 let bellShown = -1;
@@ -503,6 +519,8 @@ addEventListener('keydown', e => {
     toggleView();
   } else if (k === 'f' && state === 'play') {
     if (!e.repeat) fireFlare();
+  } else if (k === 'j' && state === 'play') {
+    if (!e.repeat) launchJet();
   } else if (k === 'm') {
     toggleSound();
   }
@@ -523,6 +541,7 @@ $('nextBtn').addEventListener('click', () => beginVoyage(g.n + 1));
 $('againBtn').addEventListener('click', startRun);
 $('bellBtn').addEventListener('click', e => { ringBell(); e.currentTarget.blur(); cv.focus({ preventScroll: true }); });
 $('soundBtn').addEventListener('click', e => { audioInit(); toggleSound(); e.currentTarget.blur(); });
+$('jetBtn').addEventListener('click', e => { launchJet(); e.currentTarget.blur(); cv.focus({ preventScroll: true }); });
 $('flareBtn').addEventListener('click', e => { fireFlare(); e.currentTarget.blur(); cv.focus({ preventScroll: true }); });
 // hold to make or shorten sail, for phones
 for (const [id, dir] of [['sailUp', 1], ['sailDown', -1]]) {
