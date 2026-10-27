@@ -424,7 +424,7 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 }
 
 /* the quick boat switcher on the menus */
-.boatpick { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.boatpick { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
 .boatpick .pick { display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 6px 4px 7px; cursor: pointer;
   background: rgba(255,255,255,0.03); border: 1px solid var(--rule); color: var(--ink); font-family: var(--log); }
 .boatpick .pick b { font-size: 12px; letter-spacing: 0.06em; }
@@ -512,3 +512,4 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 }
 @media (prefers-reduced-motion: reduce) { .biomebanner { animation: bbFade 4s ease forwards; } }
 @keyframes bbFade { 0% { opacity: 0; } 15%, 70% { opacity: 1; } 100% { opacity: 0; } }
+@media (max-width: 420px) { .boatpick { grid-template-columns: repeat(2, 1fr); } }

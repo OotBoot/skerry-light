@@ -449,9 +449,12 @@ function arrive() {
   run.voyages++;
   if (run.voyages > best) { best = run.voyages; try { localStorage.setItem('skerry-helm-best', String(best)); } catch (e) {} }
   sfxChime();
-  const page = g.backrooms ? SK.BACKROOMS_LOG : SK.LOG[(run.voyages - 1) % SK.LOG.length];
+  const page = g.backrooms ? SK.BACKROOMS_LOG : SK.SEA_LOG[g.biome] || SK.LOG[(run.voyages - 1) % SK.LOG.length];
+  const seaPort = { nether: 'The lava thins to black water, the red roof lifts into ordinary cloud, and the pier lamps are dead ahead. Your paint is blistered. Plimsoll is steaming gently.',
+    odyssey: 'The warm wind drops, the temples fade off the headland, and it is the old cold harbour again. Somewhere behind you a voice is still singing.',
+    between: 'The dusk lets go all at once, like a held breath, and the night comes back. The pier is where it should be. You check twice.' };
   $('portEyebrow').textContent = 'Voyage ' + g.n + (g.backrooms ? ' · found the way out' : ' · made harbour');
-  $('portText').textContent = g.backrooms ? 'Through the green-lit door, and the sea is the sea again: cold, black, and the pier lamps right ahead. Behind you there is no door, only fog.' : ship.hull === ship.maxHull ? 'Not a scratch on her. Plimsoll sits down on the pier and takes his shoes off.' :
+  $('portText').textContent = seaPort[g.biome] && !g.backrooms ? seaPort[g.biome] : g.backrooms ? 'Through the green-lit door, and the sea is the sea again: cold, black, and the pier lamps right ahead. Behind you there is no door, only fog.' : ship.hull === ship.maxHull ? 'Not a scratch on her. Plimsoll sits down on the pier and takes his shoes off.' :
     'She limps in with ' + (ship.maxHull - ship.hull) + (ship.maxHull - ship.hull === 1 ? ' plank' : ' planks') + ' stove in. The shipwright will patch her overnight.';
   $('logDate').textContent = page.date;
   $('logText').textContent = page.text;

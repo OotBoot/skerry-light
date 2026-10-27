@@ -657,7 +657,7 @@ function renderCrewCard() {
     title.textContent = r.madeIt === r.rows.length ? 'The Whole Crew Made It' : r.madeIt + ' of ' + r.rows.length + ' Made Harbour';
     text.textContent = 'Voyage ' + voy + ' is done. The next voyage has more wreckage and a slower light.';
     renderScore(r);
-    const pg = SK.LOG[(voy - 1) % SK.LOG.length];
+    const pg = g && g.backrooms ? SK.BACKROOMS_LOG : (g && SK.SEA_LOG[g.biome]) || SK.LOG[(voy - 1) % SK.LOG.length];
     $('crewLogDate').textContent = pg.date; $('crewLogText').textContent = pg.text;
     page.hidden = false;
   } else {

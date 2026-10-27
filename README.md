@@ -10,6 +10,8 @@ She still stands on the water when the lamp turns, a little nearer your bow ever
 
 The only thing she will not go near is **Plimsoll**, the shark who walked up out of the surf that same winter wearing the *Gannet* cabin boy's blue shoes. He knows the deep water through the skerries and walks ahead of ships to the harbour. Each harbour you reach unlocks another page of the keeper's log.
 
+The log goes on through 1888. The sea stops being one sea: some nights it freezes, some nights the hills burn, some nights the water is warm and green, or full of fog and gravestones, or the rocks are glass. Stranger things than Maren start turning up on the water, and a small yellow thing called **Verity** sits on decks offering to help. Now and then a ship sails through a ring of black stone into a sea of fire, or onto the wine-dark sea of an older story, or into a place at dusk where doors stand in the water. And one night an iron ship with no sails comes into the harbour, from a year the keeper will not write down. Those far seas each have their own page.
+
 ## How to play
 
 | | |
