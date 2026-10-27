@@ -29,6 +29,9 @@ function newVoyage(n, attract, seed, slot) {
     stats: { hits: 0, bells: 0, flares: 0, patched: 0, eaten: 0 },
   };
   g.enemies = newEnemies(v.lures);
+  // this voyage's three enemies from the pool
+  g.trio = attract ? [] : pickTrio(seed);
+  g.foes = newFoes(g.trio); g.hazards = []; g.flash = 0; g.splat = 0; g.spinT = 0; g.capT = 0; resetMods();
   g.plim = newPlimsoll(v.path);
   g.maren = newMaren(!attract, v.wrecks.find(w => w.name === 'Gannet'));
   g.cannon = newCannon();
@@ -86,6 +89,7 @@ function fireFlare() {
   g.flareCd = SK.FLARE_COOLDOWN;
   g.stats.flares++;
   addFlare(ship.x, ship.y, myFlare().id);
+  foesSeeFlare(ship.x, ship.y);
   if (flareShoosVerity()) addLog('In the flare\u2019s glare Verity rolls back over the rail into the water, still smiling. He will be back.', 'p');
   sfxFlare();
   addLog('Flare away. Everything within ' + SK.FLARE_RADIUS + ' m is lit for a few seconds.', 'p');
@@ -242,6 +246,8 @@ function update(dt) {
     for (const t of touches.values()) { if (t === 'L') steer -= 1; else if (t === 'R') steer += 1; else sailIn -= 1; }
     sailIn += sailHold;
     if (typeof PAD !== 'undefined' && PAD.connected) { steer += PAD.steer; sailIn += PAD.sail; }
+    steer += g.mods.pull;
+    if (g.mods.spinDir) steer = g.mods.spinDir;
     steer = clamp(steer, -1, 1); sailIn = clamp(sailIn, -1, 1);
   }
   const boat = BOAT_BY_ID[ship.boat] || BOATS[0];
@@ -251,7 +257,8 @@ function update(dt) {
   const rate = (sailIn > 0 ? 1.6 * (1 + g.sailHeld * 1.2) : 1.6) * boat.accel;
   // shortening sail is quick too, even from a great speed
   ship.sail = Math.max(0.15, ship.sail + (sailIn > 0 ? sailIn * rate : sailIn * (1.6 + ship.sail * 1.8)) * dt);
-  ship.v += (3 + ship.sail * 12 - ship.v) * Math.min(1, dt * 4 * boat.accel);   // she answers the sail almost at once
+  const vTarget = Math.min(g.mods.cap, (3 + ship.sail * 12) * g.mods.slow);
+  ship.v += (vTarget - ship.v) * Math.min(1, dt * 4 * boat.accel);   // she answers the sail almost at once
   ship.h += ship.rudder * 0.55 * boat.turn * dt * (0.35 + 0.65 * Math.min(1, ship.v / 10));
   // move in short steps so a fast ship can't jump clean over a rock between frames
   const steps = Math.min(60, Math.max(1, Math.ceil(ship.v * dt / 2)));
@@ -275,6 +282,7 @@ function update(dt) {
   updatePlimsoll(dt);
   updateMaren(dt);
   updateEnemies(dt);
+  updateFoes(dt);
   updateVerity(dt);
   updateCannon(dt);
   carpenter(dt);
@@ -355,6 +363,7 @@ function beginVoyage(n) {
   $('log').textContent = '';
   addLog(n === 1 ? 'Under way. Follow the blue shoes.' : 'Voyage ' + n + '. More wreckage, and the light turns slower.');
   enteredBackrooms();
+  addLog(trioLine(), 'w');
   cv.focus({ preventScroll: true });
 }
 
@@ -370,6 +379,7 @@ function beginCrewVoyage(L, slot) {
   $('log').textContent = '';
   addLog(L.voy === 1 ? 'Under way with your crew. Follow the blue shoes, and keep together.' : 'Voyage ' + L.voy + '. More wreckage, and the light turns slower.');
   enteredBackrooms();
+  addLog(trioLine(), 'w');
   cv.focus({ preventScroll: true });
 }
 

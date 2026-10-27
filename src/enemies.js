@@ -119,7 +119,7 @@ function updateEnemies(dt) {
 
   E.spawnT -= dt;
   const max = 4 + Math.min(6, g.n);
-  if (E.spawnT <= 0) {
+  if (E.spawnT <= 0 && hasFoe('drowned')) {
     if (E.drowned.length < max) spawnDrowned();
     E.spawnT = Math.max(2.5, 6.5 - g.n * 0.8) * rand(0.75, 1.25);
   }
@@ -146,7 +146,7 @@ function updateEnemies(dt) {
     }
   }
   E.drowned = E.drowned.filter(d => !d.dead && Math.hypot(d.x - ship.x, d.y - ship.y) < 400);
-  updateKnocks(dt);
+  if (hasFoe('knock')) updateKnocks(dt);
   if (state !== 'play') return;
 
   for (const l of E.lures) {

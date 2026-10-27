@@ -327,3 +327,38 @@ function sfxReload() { tone(420, 'square', 0.001, 0.08, 0.04, { to: 220 }); nois
 
 // hauling a floating crate aboard: a bright little arpeggio
 function sfxPickup() { [660, 880, 1320].forEach((f, i) => tone(f, 'triangle', 0.005, 0.18, 0.25, { delay: i * 0.07 })); noise('highpass', 3000, 1, 0.002, 0.06, 0.15); }
+
+// ---------- the new enemies' sounds ----------
+function sfxFoe(kind, pan, vol) {
+  if (!AUD.ctx || vol < 0.03) return;
+  const o = { pan: pan || 0 }, v = vol == null ? 1 : vol;
+  const T = (f, type, a, p, d, extra) => tone(f, type, a, p * v, d, Object.assign({}, o, extra || {}));
+  const N = (ft, f, q, a, p, d, extra) => noise(ft, f, q, a, p * v, d, Object.assign({}, o, extra || {}));
+  switch (kind) {
+    case 'whirl': T(500, 'sine', 0.2, 0.12, 1.2, { to: 900 }); N('bandpass', 800, 3, 0.3, 0.12, 1.2, { to: 2000 }); break;
+    case 'drone': for (const f of [62, 66, 124]) T(f, 'sawtooth', 0.8, 0.07, 3.5); break;
+    case 'whistle': T(1800, 'sine', 0.05, 0.12, 1.8, { to: 500 }); break;
+    case 'boom': N('lowpass', 700, 0.7, 0.003, 0.9, 1.0, { to: 90 }); T(55, 'sine', 0.004, 0.8, 0.9, { to: 30 }); break;
+    case 'spines': for (let i = 0; i < 8; i++) N('highpass', 3000, 2, 0.001, 0.2, 0.05, { delay: i * 0.03 }); T(180, 'triangle', 0.004, 0.3, 0.3, { to: 90 }); break;
+    case 'click': T(2400, 'square', 0.001, 0.08, 0.03); break;
+    case 'camera': N('highpass', 2000, 1, 0.001, 0.4, 0.12); T(3000, 'sine', 0.001, 0.15, 0.4, { to: 1200 }); break;
+    case 'trumpet': for (const f of [233, 466, 350]) T(f, 'sawtooth', 0.05, 0.12, 0.9, { to: f * 1.2 }); break;
+    case 'caw': T(700, 'sawtooth', 0.01, 0.15, 0.25, { to: 450 }); T(650, 'sawtooth', 0.01, 0.12, 0.25, { delay: 0.3, to: 420 }); break;
+    case 'grunt': T(110, 'sawtooth', 0.02, 0.3, 0.4, { to: 70 }); N('lowpass', 400, 1, 0.02, 0.2, 0.3); break;
+    case 'croak': T(160, 'square', 0.01, 0.15, 0.18, { to: 120 }); T(150, 'square', 0.01, 0.12, 0.2, { delay: 0.22, to: 110 }); break;
+    case 'shing': N('highpass', 5000, 6, 0.002, 0.35, 0.5); T(4200, 'sine', 0.002, 0.15, 0.6, { to: 5200 }); break;
+    case 'slash': N('bandpass', 3000, 1, 0.002, 0.6, 0.18, { to: 900 }); break;
+    case 'whoosh': N('bandpass', 600, 1, 0.05, 0.3, 0.4, { to: 1800 }); break;
+    case 'honk': T(330, 'sawtooth', 0.02, 0.18, 0.3, { to: 300 }); T(300, 'sawtooth', 0.02, 0.15, 0.35, { delay: 0.32, to: 270 }); break;
+    case 'meow': T(700, 'triangle', 0.05, 0.15, 0.5, { to: 1100 }); T(1100, 'triangle', 0.05, 0.1, 0.4, { delay: 0.3, to: 600 }); break;
+    case 'freeze': N('highpass', 6000, 2, 0.01, 0.15, 0.6); T(2600, 'sine', 0.01, 0.06, 0.5, { to: 3200 }); break;
+    case 'shake': for (let i = 0; i < 6; i++) N('highpass', 4000, 1, 0.002, 0.25, 0.06, { delay: i * 0.08 }); break;
+    case 'rumble': N('lowpass', 200, 0.7, 0.3, 0.6, 1.8); T(40, 'sine', 0.3, 0.5, 1.8); break;
+    case 'gun': for (let i = 0; i < 5; i++) { N('bandpass', 1200, 0.8, 0.001, 0.6, 0.08, { delay: i * 0.08 }); T(90, 'square', 0.001, 0.3, 0.06, { delay: i * 0.08 }); } break;
+    case 'throw': N('bandpass', 900, 1, 0.02, 0.2, 0.3, { to: 400 }); break;
+    case 'splat': N('lowpass', 900, 1, 0.002, 0.7, 0.3, { to: 200 }); T(140, 'sine', 0.002, 0.4, 0.2, { to: 60 }); break;
+    case 'slip': T(900, 'sine', 0.01, 0.2, 0.6, { to: 200 }); break;
+    case 'creak': T(90, 'sawtooth', 0.2, 0.2, 1.2, { to: 140 }); N('bandpass', 300, 4, 0.2, 0.2, 1.2); break;
+    case 'crack': N('bandpass', 1500, 2, 0.001, 0.35, 0.1); break;
+  }
+}

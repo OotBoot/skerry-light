@@ -70,6 +70,7 @@ function ringBell() {
   sfxBell();
   if (crewMode) { NET.bells++; send(); }
   if (g.verity && g.verity.on && g.verity.t < SK.VERITY_TIME) addLog('The bell rings right over Verity. He keeps smiling. Bells don\u2019t bother him.', 'w');
+  const foeMsg = foesHearBell(); if (foeMsg) addLog(foeMsg, 'p');
   const drowned = bellDrownsThem();
   if (bellStunsKnock()) addLog('The knocking stops. Knock stands frozen for a few seconds.', 'p');
   const m = g.maren;

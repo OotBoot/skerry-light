@@ -31,6 +31,29 @@ The only thing she will not go near is **Plimsoll**, the shark who walked up out
 - **The lighthouse** sweeps round about every 6.5 seconds on the first voyage, a little slower each voyage (up to 9 seconds). Maren keeps her own pace, so the faster beam just shows you more.
 - **Flares** light everything within 350 m for about seven seconds, for your whole crew, then take 35 seconds to reload.
 - **Hull and collisions**: your hull is a capsule from bow to stern, so the whole length of the ship can touch things, not just the bow. Anything you touch pushes you clear. Hitting a rock, wreck, log, wall, the shore or a pier head-on (closing faster than 4.5 m/s at more than about 25°) costs a plank; a glancing touch only scrapes, slowing you and turning you along it. Crewmates' ships bump apart without damage. The drowned and Knock also cost planks. When the planks run out she sinks.
+- **Tonight's enemies**: each voyage draws three enemies from a pool of 21 and only those appear (Maren is always out there). The log names them as you set out, and introduces each one the first time it turns up. You never get the same enemy two voyages running when sailing alone; a crew all gets the same three.
+
+  | Enemy | What it does | Counter |
+  |---|---|---|
+  | The Dancer | spins ahead of you; her whirl drags the helm | sail against it, or ring the bell |
+  | The Croc Bomber | flies over dropping bombs; red rings mark them | steer out of the rings |
+  | The Cactus Mammoth | stands like a rock; fires spines inside 30 m | give it a wide berth |
+  | The Informer | a pigeon's camera flash blinds you and brings Maren nearer | look away when its red light blinks; the bell scares it |
+  | The Coconut Bull | trumpets, then charges from the side | change speed to dodge |
+  | The Banana Dolphin | leaps across your bow leaving peel slicks that spin the helm | steer round the slicks |
+  | The Toucan | dives to steal your flare | ring the bell during the dive |
+  | The Juiced Brute | sprints after you, grabs the bow, squeezes off a plank | ring the bell |
+  | The Tyre Frog | bounces across the sea; landings rock you | watch its shadow |
+  | The Assassin Cup | invisible; appears beside you with a 'shing' and slashes a second later | change speed or turn at the sound |
+  | The Bomber Goose | lays floating egg-mines in your path | steer between them; the bell sinks them |
+  | The Shrimp Cat | clings to the hull and dims your lantern | turn hard one way for 2 s |
+  | The Fridge Camel | freezes the sea into solid ice floes that slow you | go round; a flare melts them |
+  | The Condiment Twins | flank you from both sides | turn hard as they close, or ring the bell |
+  | The Gentleman | a huge, solid figure rising in your way, sweeping an arm | steer round; the bell sinks him |
+  | The Smuggler | fires from a rock while you're in the light | stay in the dark or behind rocks |
+  | The Banana Ape | throws bananas: a splat on your view and a speed cap | keep moving; the bell sends it under |
+  | The Root Hermit | sends a line of roots bursting up towards you | turn across the line |
+  | the Drowned, Knock, Verity | as before | as before |
 - **Verity** sometimes appears small in a bottom corner of your deck, facing you: a round yellow smiling orb that says it wants to help. He just stands there smiling, with a ring counting down 20 seconds. The bell does nothing to him: fire a flare before then and he rolls back over the rail into the water (he comes back later). Leave him and he stands up into something long and thin standing in that corner, and that jumpscare ends the voyage. He first turns up 20 to 40 seconds into a voyage and comes back 30 to 55 seconds after you send him off (about twice as often in the Backrooms).
 - **The Backrooms**: one voyage in twenty (rolled from the crew's seed, so a whole crew goes in together), the lights go out and the sea comes back with walls. It's a flooded maze of yellow rooms under buzzing tubes that go dark each time the lamp would have turned. Plimsoll knows the way to the green EXIT sign, and the bearing strip points at it. Maren, the drowned, Knock and Verity all follow you in. Add `?backrooms` to the address to force one (solo only).
 - **The sea**: voyages start about 2.4 km out (further each voyage), through a wide stretch of skerries, wrecks and drifting timber.
@@ -145,6 +168,8 @@ src/creatures.js    Maren and Plimsoll: behaviour, animation and drawing
 src/enemies.js      the drowned crew and Knock
 src/verity.js       Verity, on your deck, and his jumpscare
 src/cannon.js       the Barque's bow gun
+src/roster.js       the enemy pool: each voyage's three, and the 18 new enemies
+assets/foes/        the new enemies' pictures
 src/gamepad.js      Xbox and other controllers
 src/game.js         game state, update step, input and screens
 src/transport.js    connects to the crew server outside claude.ai

@@ -13,7 +13,7 @@ function newVerity(backrooms) {
 function updateVerity(dt) {
   loadVerityVoice();
   const v = g.verity;
-  if (g.attract || state !== 'play' || !v) return;
+  if (g.attract || state !== 'play' || !v || !hasFoe('verity')) return;
   if (v.gone > 0) v.gone -= dt;
   if (!v.on) {
     // he won't climb aboard while Maren is right at the bow, or while Knock is mid-swing
