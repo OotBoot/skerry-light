@@ -83,6 +83,7 @@ function drawSky() {
   buildCaches();
   const B = curBiome();
   ctx.drawImage(GFX.sky, -W, hy - GFX.sky.height + H * 0.02, W * 3, GFX.sky.height);
+  if (B.cavern) { drawCavernRoof(B); drawSkyExtras(B); return; }
   // Milky Way dust, then the stars
   for (const d of dust) {
     const p = skyPos(d.b, d.e); if (!p || p.y < -20 || p.y > hy) continue;
@@ -143,7 +144,7 @@ function drawSea() {
   const hz = ctx.createLinearGradient(0, hy - 16, 0, hy + 22);
   hz.addColorStop(0, `rgba(${B.haze},0)`); hz.addColorStop(0.45, `rgba(${B.haze},0.22)`); hz.addColorStop(1, `rgba(${B.haze},0)`);
   ctx.fillStyle = hz; ctx.fillRect(-W, hy - 16, W * 3, 38);
-  drawBiolum(B);
+  drawBiolum(B); drawLavaSea(B);
 }
 
 // the coast: a ragged line of cliffs, the headland under the light, the piers and the harbour cottages
@@ -265,7 +266,13 @@ function drawRockDetailed(r, p, vis) {
   ctx.fillStyle = `rgba(${RK.foam},0.38)`;
   ctx.beginPath(); ctx.ellipse(x, y, w * (0.6 + sw * 0.03), Math.max(1, w * 0.04), 0, 0, 6.28); ctx.fill();
   // body
-  const body = () => {
+  const body = RK.blocky ? () => {
+    // stepped, like stacked blocks
+    ctx.beginPath(); ctx.moveTo(x - w / 2, y);
+    const n = r.prof.length, step = Math.max(2, h / 6);
+    for (let i = 0; i < n; i++) { const v = Math.round(r.prof[i] * h / step) * step, x0 = x - w / 2 + w * Math.max(0, i - 0.5) / (n - 1), x1 = x - w / 2 + w * Math.min(n - 1, i + 0.5) / (n - 1); ctx.lineTo(x0, y - v); ctx.lineTo(x1, y - v); }
+    ctx.lineTo(x + w / 2, y); ctx.closePath();
+  } : () => {
     ctx.beginPath(); ctx.moveTo(x - w / 2, y);
     r.prof.forEach((v, i) => ctx.lineTo(x - w / 2 + w * i / (r.prof.length - 1), y - v * h));
     ctx.lineTo(x + w / 2, y); ctx.closePath();

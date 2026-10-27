@@ -37,7 +37,9 @@ function newVoyage(n, attract, seed, slot) {
   g.cannon = newCannon();
   g.pickups = v.pickups || []; g.found = 0; if (typeof renderFound === 'function') renderFound();
   g.verity = newVerity(v.backrooms); g.verityScare = 0; g.lightsOut = 0;
-  g.biome = biomeFor(n, attract);
+  g.biome = v.nether ? 'nether' : biomeFor(n, attract);
+  g.portal = null;
+  if (v.nether) startPortal(biomeFor(n - 1));
   renderHud();
 }
 
@@ -285,6 +287,7 @@ function update(dt) {
   updateEnemies(dt);
   updateFoes(dt);
   updateVerity(dt);
+  updatePortal(dt);
   updateCannon(dt);
   carpenter(dt);
   updatePickups();

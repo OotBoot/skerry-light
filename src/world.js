@@ -27,7 +27,9 @@ function makeVoyage(n, attract, seed) {
     // so a whole crew goes in together. Add ?backrooms to the address to force it (solo only).
     const forced = seed == null && !attract && SK.FORCE_BACKROOMS;
     const back = !attract && (RNG() < SK.BACKROOMS_CHANCE || forced);
-    return back ? buildBackrooms(n) : buildVoyage(n, attract);
+    const v = back ? buildBackrooms(n) : buildVoyage(n, attract);
+    if (!back) v.nether = rollNether(n, attract, seed);
+    return v;
   } finally { RNG = Math.random; }
 }
 

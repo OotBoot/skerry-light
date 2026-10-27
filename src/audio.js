@@ -192,6 +192,16 @@ function sfxHit() {
   tone(70, 'sine', 0.005, 0.8, 0.6, { to: 38 });
   noise('bandpass', 2400, 3, 0.01, 0.25, 0.25, { delay: 0.05 });
 }
+// the portal: a low hum rising as you close on it, then a rush as you go through
+function sfxPortal(through) {
+  if (!through) {
+    tone(55, 'sawtooth', 2.2, 0.07, 0.6, { to: 160 }); tone(82, 'triangle', 2.2, 0.06, 0.6, { to: 240 });
+    noise('bandpass', 200, 2, 2.2, 0.12, 0.5, { to: 1200 });
+  } else {
+    noise('bandpass', 1600, 0.8, 0.02, 0.35, 1.6, { to: 120 });
+    tone(320, 'sine', 0.01, 0.12, 1.4, { to: 60 }); tone(480, 'triangle', 0.01, 0.06, 1.2, { to: 90, delay: 0.05 });
+  }
+}
 function sfxWhoosh() { noise('bandpass', 300, 1.2, 0.25, 0.22, 0.6, { to: 1400 }); }
 function sfxChime() { tone(659, 'sine', 0.01, 0.25, 1.6); tone(988, 'sine', 0.01, 0.2, 1.8, { delay: 0.35 }); }
 function sfxHeart(vol) {

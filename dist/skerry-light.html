@@ -586,7 +586,7 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
           <li><b>Hull</b> when the planks run out she goes down. Let Maren reach the bow and she comes aboard</li>
           <li><b>Tonight's enemies</b> each voyage brings three enemies from a pool of 21 (the log names them as you set out), on top of Maren. Each has its own trick and its own counter: read the log when one turns up</li>
           <li><b>Verity</b> sometimes you'll find a small smiling yellow orb in a corner of your deck, offering to help. He isn't helping, and the bell doesn't bother him. Fire a flare before twenty seconds are up, or see what he really looks like</li>
-          <li><b>Six seas</b> the first voyage is always Skerry Light. After that the voyages go round six seas in turn: Skerry Light, the Frozen Fjord, the Ember Isles, the Coral Lagoon, the Barrow Shore and the Crystal Shoals. Each has its own sky, coast, weather and rocks (icebergs, lava-veined basalt, coral reefs, gravestones, crystal). They look different, but they sink you just the same</li>
+          <li><b>Six seas</b> the first voyage is always Skerry Light. After that the voyages go round six seas in turn: Skerry Light, the Frozen Fjord, the Ember Isles, the Coral Lagoon, the Barrow Shore and the Crystal Shoals. Each has its own sky, coast, weather and rocks (icebergs, lava-veined basalt, coral reefs, gravestones, crystal). They look different, but they sink you just the same. And about one voyage in twenty (never the first), a portal stands in the water ahead: you sail through it into the Nether, a lava sea under a roof of red rock with lava pouring down from it</li>
           <li><b>The Backrooms</b> about one voyage in twenty, the lights go out and the sea comes back with walls: a flooded maze of yellow rooms. Follow Plimsoll to the green EXIT sign. The Stowaway lives there too: when he screams and charges down the corridor, dodge to the side</li>
           <li><b>Floating crates</b> bob about the water, each with a little lantern. Sail into one to haul it aboard. Make harbour and each is worth two Skerry Crates; sink and they go down with you. Making harbour pays 5 crates on voyage 1, then follows the Fibonacci sequence for each voyage in a row: 8, 13, 21, 34...</li>
           <li><b>Crew</b> sail with up to seven friends. Ships close together keep her back and patch each other's planks. Share flares, chat in the crew screen, and watch your crew after your own voyage ends</li>
@@ -995,6 +995,16 @@ function sfxHit() {
   tone(70, 'sine', 0.005, 0.8, 0.6, { to: 38 });
   noise('bandpass', 2400, 3, 0.01, 0.25, 0.25, { delay: 0.05 });
 }
+// the portal: a low hum rising as you close on it, then a rush as you go through
+function sfxPortal(through) {
+  if (!through) {
+    tone(55, 'sawtooth', 2.2, 0.07, 0.6, { to: 160 }); tone(82, 'triangle', 2.2, 0.06, 0.6, { to: 240 });
+    noise('bandpass', 200, 2, 2.2, 0.12, 0.5, { to: 1200 });
+  } else {
+    noise('bandpass', 1600, 0.8, 0.02, 0.35, 1.6, { to: 120 });
+    tone(320, 'sine', 0.01, 0.12, 1.4, { to: 60 }); tone(480, 'triangle', 0.01, 0.06, 1.2, { to: 90, delay: 0.05 });
+  }
+}
 function sfxWhoosh() { noise('bandpass', 300, 1.2, 0.25, 0.22, 0.6, { to: 1400 }); }
 function sfxChime() { tone(659, 'sine', 0.01, 0.25, 1.6); tone(988, 'sine', 0.01, 0.2, 1.8, { delay: 0.35 }); }
 function sfxHeart(vol) {
@@ -1197,7 +1207,9 @@ function makeVoyage(n, attract, seed) {
     // so a whole crew goes in together. Add ?backrooms to the address to force it (solo only).
     const forced = seed == null && !attract && SK.FORCE_BACKROOMS;
     const back = !attract && (RNG() < SK.BACKROOMS_CHANCE || forced);
-    return back ? buildBackrooms(n) : buildVoyage(n, attract);
+    const v = back ? buildBackrooms(n) : buildVoyage(n, attract);
+    if (!back) v.nether = rollNether(n, attract, seed);
+    return v;
   } finally { RNG = Math.random; }
 }
 
@@ -1874,6 +1886,7 @@ function drawScene() {
   if (third) { const c = cam(ship.x, ship.y, 0); if (c.f > SK.NEAR) items.push({ kind: 'self', o: ship, c }); }
   foeItems((kind, o, z, k) => { const c = cam(o.x, o.y, z); if (c.f > SK.NEAR + 1) items.push({ kind, o, c, k }); });
   add('plim', g.plim);
+  portalItem((kind, o, z) => { const c = cam(o.x, o.y, z); if (c.f > 0.1) items.push({ kind, o, c }); });
   if (crewMode) for (const m of matesAtSea()) if (m.peer !== NET.watch) add('mate', m);
   if (!NET.watch) { for (const d of g.enemies.drowned) add('drowned', d); for (const k of g.enemies.knocks) add('knock', k); }
   if (g.maren.active) add('maren', g.maren);
@@ -1894,6 +1907,7 @@ function drawScene() {
     else if (it.kind === 'self') drawShip3D(ship, ship.skin || mySkin(), BOAT_BY_ID[ship.boat] || BOATS[0], 1, { pennant: 'pennant' in ship ? ship.pennant : myPennant(), minLit: 1, sailAlpha: 0.7, brace: 0.95 + ship.rudder * 0.25 });
     else if (it.kind === 'foe') drawFoe(it.k, o, q);
     else if (it.kind === 'hazard') drawHazard(o, q);
+    else if (it.kind === 'portal') drawPortal(o);
     else if (it.kind === 'pickup') drawPickup(o, q, vis);
     else if (it.kind === 'plim') drawPlimsoll(q, vis);
     else if (it.kind === 'mate') drawMate(o, q, vis);
@@ -1931,6 +1945,7 @@ function drawScene() {
   drawFoeOverlays();
   drawDread();
   drawAtmosphere();
+  drawPortalOverlay();
   drawCompass();
 }
 
@@ -2201,6 +2216,7 @@ function drawSky() {
   buildCaches();
   const B = curBiome();
   ctx.drawImage(GFX.sky, -W, hy - GFX.sky.height + H * 0.02, W * 3, GFX.sky.height);
+  if (B.cavern) { drawCavernRoof(B); drawSkyExtras(B); return; }
   // Milky Way dust, then the stars
   for (const d of dust) {
     const p = skyPos(d.b, d.e); if (!p || p.y < -20 || p.y > hy) continue;
@@ -2261,7 +2277,7 @@ function drawSea() {
   const hz = ctx.createLinearGradient(0, hy - 16, 0, hy + 22);
   hz.addColorStop(0, `rgba(${B.haze},0)`); hz.addColorStop(0.45, `rgba(${B.haze},0.22)`); hz.addColorStop(1, `rgba(${B.haze},0)`);
   ctx.fillStyle = hz; ctx.fillRect(-W, hy - 16, W * 3, 38);
-  drawBiolum(B);
+  drawBiolum(B); drawLavaSea(B);
 }
 
 // the coast: a ragged line of cliffs, the headland under the light, the piers and the harbour cottages
@@ -2383,7 +2399,13 @@ function drawRockDetailed(r, p, vis) {
   ctx.fillStyle = `rgba(${RK.foam},0.38)`;
   ctx.beginPath(); ctx.ellipse(x, y, w * (0.6 + sw * 0.03), Math.max(1, w * 0.04), 0, 0, 6.28); ctx.fill();
   // body
-  const body = () => {
+  const body = RK.blocky ? () => {
+    // stepped, like stacked blocks
+    ctx.beginPath(); ctx.moveTo(x - w / 2, y);
+    const n = r.prof.length, step = Math.max(2, h / 6);
+    for (let i = 0; i < n; i++) { const v = Math.round(r.prof[i] * h / step) * step, x0 = x - w / 2 + w * Math.max(0, i - 0.5) / (n - 1), x1 = x - w / 2 + w * Math.min(n - 1, i + 0.5) / (n - 1); ctx.lineTo(x0, y - v); ctx.lineTo(x1, y - v); }
+    ctx.lineTo(x + w / 2, y); ctx.closePath();
+  } : () => {
     ctx.beginPath(); ctx.moveTo(x - w / 2, y);
     r.prof.forEach((v, i) => ctx.lineTo(x - w / 2 + w * i / (r.prof.length - 1), y - v * h));
     ctx.lineTo(x + w / 2, y); ctx.closePath();
@@ -2632,7 +2654,21 @@ const BIOMES = {
     rock: { g: ['#4d3c7c', '#251a4a', '#0c0820'], facet: 'rgba(185,145,255,0.25)', crack: 'rgba(120,240,255,0.45)', rim: '225,185,255', band: 'rgba(20,10,50,0.85)', foam: '205,195,255', kind: 'crystal', h: 1 },
     fx: 'motes', aurora: ['255,90,210', '140,90,255'], moon2: true, land: 'spires',
   },
+  // the rare one: one voyage in twenty (never the first) you sail through a portal into the Nether
+  nether: {
+    name: 'the Nether', intro: 'Through the portal. A sea of lava under a roof of red rock, and lava pouring down out of it. The lighthouse came with you.',
+    sky: ['#0b0202', '#170404', '#260806', '#3a0e09'],
+    sea: ['#6a1c06', '#401004', '#240703', '#120302'],
+    glitter: '255,170,60', haze: '255,90,30', dust: '255,120,60', star: '255,180,90', cloud: '90,30,20', halo: '255,120,60',
+    waves: '255,180,80', beam: '255,150,80',
+    ground: '#1a0504', cliff: ['#3a0d0a', '#430f0b'], cliffTop: 'rgba(255,110,40,0.25)', cliffH: 1.4, topDepth: 2,
+    head: ['#2e0a08', '#360c09'], surf: '255,170,80', wall: '#2a0a08', roof: '#1a0605', win: '#ffb040',
+    rock: { g: ['#7e2219', '#4a120d', '#1c0605'], facet: 'rgba(255,120,90,0.12)', crack: 'rgba(30,6,4,0.6)', rim: '255,170,90', band: 'rgba(255,110,30,0.55)', foam: '255,160,70', kind: 'nether', h: 1.3, blocky: true },
+    fx: 'ash', glow: '255,70,20', land: 'lavafalls', cavern: true, lavaSea: true,
+  },
 };
+const NETHER_CHANCE = 1 / 20;
+const NETHER_FORCE = (() => { try { return /[?&#]nether\b/.test(location.href); } catch (e) { return false; } })();
 const BIOME_ORDER = ['skerry', 'fjord', 'ember', 'lagoon', 'barrows', 'shoals'];
 const BIOME_FORCE = (() => { try { const m = location.search.match(/[?&]biome=(\w+)/); return m && BIOMES[m[1]] ? m[1] : null; } catch (e) { return null; } })();
 
@@ -2642,8 +2678,24 @@ function biomeFor(n, attract) {
   if (attract || n <= 1) return 'skerry';
   return BIOME_ORDER[(n - 1) % BIOME_ORDER.length];
 }
-function curBiome() { return (g && !g.backrooms && BIOMES[g.biome]) || BIOMES.skerry; }
-function biomeLine() { const B = curBiome(); return B.intro ? B.name[0].toUpperCase() + B.name.slice(1) + '. ' + B.intro : ''; }
+function curBiome() {
+  if (!g || g.backrooms) return BIOMES.skerry;
+  // on the way through the portal you're still in the sea you came from
+  if (g.portal && !g.portal.through) return BIOMES[g.portal.from] || BIOMES.skerry;
+  return BIOMES[g.biome] || BIOMES.skerry;
+}
+function biomeLine() {
+  if (g && g.portal && !g.portal.through) return 'A ring of black stone stands up out of the water dead ahead, full of swirling purple light. You are sailing straight into it.';
+  const B = curBiome(); return B.intro ? B.name[0].toUpperCase() + B.name.slice(1) + '. ' + B.intro : ''; }
+
+// one in twenty voyages after the first goes to the Nether; rolled from the crew's seed so a crew goes together
+function rollNether(n, attract, seed) {
+  if (attract) return false;
+  if (seed == null && NETHER_FORCE) return true;
+  if (n <= 1) return false;
+  const r = seed != null ? seeded((seed ^ 0x2545f491) >>> 0)() : Math.random();
+  return r < NETHER_CHANCE;
+}
 
 // ---------- the landscape behind the coast ----------
 const LAND = { peaks: [], volcano: [], palms: [], graves: [], spires: [], church: { x: 420, y: -150 } };
@@ -2651,6 +2703,8 @@ const LAND = { peaks: [], volcano: [], palms: [], graves: [], spires: [], church
   // far mountains (the fjord): two ranges, the nearer one darker
   for (let x = -4200; x <= 4200; x += rand(260, 420)) LAND.peaks.push({ x, y: -900 - rand(0, 300), w: rand(260, 480), h: rand(240, 480), far: 1 });
   for (let x = -3000; x <= 3000; x += rand(220, 360)) LAND.peaks.push({ x, y: -380 - rand(0, 120), w: rand(180, 300), h: rand(120, 260), far: 0 });
+  for (let i = 0; i < 70; i++) { const a = rand(-Math.PI, Math.PI), d = rand(1500, 3200); LAND.lavafalls = LAND.lavafalls || []; LAND.lavafalls.push({ x: Math.sin(a) * d, y: Math.cos(a) * d + 900, w: rand(6, 18), ph: rand(0, 6) }); }
+  for (let i = 0; i < 26; i++) { LAND.glow = LAND.glow || []; LAND.glow.push({ b: rand(-Math.PI, Math.PI), e: rand(0.25, 0.75), s: rand(0.6, 1.6), seed: (Math.random() * 1e6) | 0 }); }
   LAND.volcano.push({ x: -650, y: -1500, w: 1100, h: 640, top: 0.12 }, { x: 1600, y: -1150, w: 600, h: 300, top: 0.15 });
   for (let x = -2400; x <= 2400; x += rand(40, 110)) LAND.palms.push({ x, h: rand(9, 16), lean: rand(-0.35, 0.35), ph: rand(0, 6) });
   for (let x = -2400; x <= 2400; x += rand(70, 170)) LAND.graves.push({ x, h: rand(12, 22), ph: rand(0, 6), br: 2 + Math.floor(rand(0, 3)) });
@@ -2708,6 +2762,8 @@ function drawLandFar(B) {
     }
   } else if (B.land === 'spires') {
     for (const s of LAND.spires) if (!s.near) spire(s);
+  } else if (B.land === 'lavafalls') {
+    drawLavafalls();
   } else if (B.land === 'graves') {
     // a ruined chapel up on the shore, its tower broken off
     const c = LAND.church;
@@ -2764,6 +2820,62 @@ function drawLandNear(B) {
     ctx.lineCap = 'butt';
   } else if (B.land === 'spires') {
     for (const s of LAND.spires) if (s.near) spire(s);
+  }
+}
+
+// columns of lava pouring out of the roof into the sea, far off all round
+function drawLavafalls() {
+  const list = LAND.lavafalls.map(f => ({ f, c: cam(f.x, f.y, 0) })).filter(o => o.c.f > 20).sort((a, b) => b.c.f - a.c.f);
+  ctx.globalCompositeOperation = 'lighter';
+  for (const { f, c } of list) {
+    const b = proj(c); if (b.x < -200 || b.x > W + 200) continue;
+    const w = Math.max(1.5, f.w * b.s), top = -10;
+    const fade = Math.max(0.25, 1 - c.f / 3600);
+    // a wide soft glow, then the bright core
+    const gl = ctx.createLinearGradient(b.x - w * 4, 0, b.x + w * 4, 0);
+    gl.addColorStop(0, 'rgba(255,90,20,0)'); gl.addColorStop(0.5, `rgba(255,110,30,${0.22 * fade})`); gl.addColorStop(1, 'rgba(255,90,20,0)');
+    ctx.fillStyle = gl; ctx.fillRect(b.x - w * 4, top, w * 8, b.y - top);
+    const core = ctx.createLinearGradient(b.x - w / 2, 0, b.x + w / 2, 0);
+    core.addColorStop(0, `rgba(255,120,20,${0.7 * fade})`); core.addColorStop(0.5, `rgba(255,${200 + 30 * Math.sin(g.t * 3 + f.ph) | 0},90,${0.95 * fade})`); core.addColorStop(1, `rgba(255,120,20,${0.7 * fade})`);
+    ctx.fillStyle = core; ctx.fillRect(b.x - w / 2, top, w, b.y - top);
+    // the splash where it lands
+    lamp(b.x, b.y, '#ff7a20', Math.max(2, w * 0.9) * fade);
+  }
+  ctx.globalCompositeOperation = 'source-over';
+}
+
+// the roof of the cavern: blocky red rock, with clumps of glowing stone hanging from it
+function drawCavernRoof(B) {
+  if (!GFX.rack) {
+    const T = 96, c = offscreen(T, T), q = c.getContext('2d');
+    for (let y = 0; y < T; y += 8) for (let x = 0; x < T; x += 8) {
+      const v = Math.random(); q.fillStyle = v < 0.08 ? '#5a1510' : v < 0.5 ? '#2a0806' : v < 0.85 ? '#330a07' : '#1d0504';
+      q.fillRect(x, y, 8, 8);
+    }
+    GFX.rack = c; GFX.rackPat = ctx.createPattern(c, 'repeat');
+  }
+  const y1 = hy - Math.max(30, H * 0.06);
+  ctx.save();
+  ctx.translate(-yaw * focal * 0.5, 0);
+  ctx.fillStyle = GFX.rackPat; ctx.fillRect(yaw * focal * 0.5 - W, -H, W * 3, y1 + H);
+  ctx.restore();
+  // the roof fades into red haze towards the horizon
+  const hz = ctx.createLinearGradient(0, 0, 0, hy);
+  hz.addColorStop(0, 'rgba(20,4,3,0.55)'); hz.addColorStop(0.6, 'rgba(60,12,8,0.5)'); hz.addColorStop(1, 'rgba(120,30,12,0.95)');
+  ctx.fillStyle = hz; ctx.fillRect(-W, -H, W * 3, hy + H);
+  // glowstone clumps
+  for (const s of LAND.glow) {
+    const p = skyPos(s.b, s.e); if (!p || p.y > hy - 20) continue;
+    const z = focal * 0.012 * s.s;
+    ctx.globalCompositeOperation = 'lighter';
+    lamp(p.x, p.y, '#ffb84a', z * 1.6);
+    ctx.globalCompositeOperation = 'source-over';
+    let k = s.seed;
+    for (let i = 0; i < 14; i++) {
+      k = (k * 1103515245 + 12345) & 0x7fffffff;
+      const dx = ((k % 9) - 4) * z * 0.45, dy = (((k >> 4) % 7) - 2) * z * 0.45;
+      ctx.fillStyle = i % 3 ? '#ffd76a' : '#fff2a8'; ctx.fillRect(p.x + dx, p.y + dy, z * 0.45, z * 0.45);
+    }
   }
 }
 
@@ -2839,6 +2951,14 @@ function rockSkinInside(B, r, x, y, w, h) {
       const fx = x - w * 0.48 + w * 0.96 * ((Math.sin(r.ph * 11 + i * 5.7) + 1) / 2), fy = y - h * (0.1 + 0.5 * ((Math.sin(r.ph * 3 + i * 2.3) + 1) / 2) ** 2);
       ctx.fillStyle = i % 3 ? 'rgba(60,95,40,0.55)' : 'rgba(170,175,110,0.35)';
       ctx.beginPath(); ctx.ellipse(fx, fy, Math.max(1, w * 0.06), Math.max(0.7, w * 0.025), 0, 0, 6.28); ctx.fill();
+    }
+  } else if (k === 'nether') {
+    // netherrack blocks, a few glowing with ore, and a vein of lava
+    const bs = Math.max(3, w / 9);
+    for (let by = y - h; by < y; by += bs) for (let bx = x - w / 2; bx < x + w / 2; bx += bs) {
+      const v = Math.abs(Math.sin(bx * 12.9898 / bs + by * 78.233 / bs + r.ph * 43.1)) % 1;
+      if (v < 0.07) { ctx.fillStyle = `rgba(255,${180 + 40 * Math.sin(g.t * 2 + v * 50) | 0},70,0.85)`; ctx.fillRect(bx + bs * 0.2, by + bs * 0.2, bs * 0.6, bs * 0.6); }
+      else { ctx.fillStyle = v < 0.4 ? 'rgba(0,0,0,0.22)' : v < 0.7 ? 'rgba(255,90,60,0.1)' : 'rgba(0,0,0,0.08)'; ctx.fillRect(bx, by, bs - 0.5, bs - 0.5); }
     }
   } else if (k === 'crystal') {
     // light moving through the stone
@@ -2974,6 +3094,23 @@ function drawBiomeWeather(B) {
   return false;
 }
 
+// a lava sea: bright patches welling up and bursting near you
+function drawLavaSea(B) {
+  if (!B.lavaSea) return;
+  ctx.globalCompositeOperation = 'lighter';
+  const T = 400;
+  for (let i = 0; i < 60; i++) {
+    const gx = Math.floor(camX / T) * T + ((i * 137) % 10) * (T / 10) * 3 - T, gy = Math.floor(camY / T) * T + ((i * 71) % 12) * (T / 12) * 3 - T;
+    const c = cam(gx, gy, 0); if (c.f < 4) continue;
+    const q = proj(c); if (q.x < -50 || q.x > W + 50) continue;
+    const ph = (g.t * 0.35 + i * 0.37) % 1, a = Math.sin(ph * Math.PI);
+    const r = Math.max(2, (3 + (i % 4) * 2) * q.s * (0.6 + ph * 0.6));
+    ctx.fillStyle = `rgba(255,${120 + (i % 3) * 30},30,${0.3 * a})`;
+    ctx.beginPath(); ctx.ellipse(q.x, q.y, r, r * 0.25, 0, 0, 6.28); ctx.fill();
+  }
+  ctx.globalCompositeOperation = 'source-over';
+}
+
 // glowing water in the lagoon: wherever the hull cuts the sea it lights up
 function drawBiolum(B) {
   if (!B.biolum || reduceMotion) return;
@@ -2988,6 +3125,93 @@ function drawBiolum(B) {
     const s = Math.max(1, q.s * 0.25); ctx.fillRect(q.x, q.y, s, s * 0.5);
   }
   ctx.globalCompositeOperation = 'source-over';
+}
+
+// ---------- the portal ----------
+// The Nether voyage opens in the sea you came from, with a portal standing in the water dead ahead.
+// It comes at you, you sail through it in a rush of purple, and come out the other side in the Nether.
+const PORTAL = { PASS: 2.6, END: 4.4, W: 15.4, H: 19.8, B: 2.2 };
+
+function startPortal(from) {
+  g.portal = { t: 0, from: from === 'nether' ? 'skerry' : from, through: false };
+  if (typeof sfxPortal === 'function') sfxPortal(0);
+}
+function updatePortal(dt) {
+  const P = g.portal; if (!P) return;
+  P.t += dt;
+  if (!P.through && P.t >= PORTAL.PASS) {
+    P.through = true;
+    if (typeof sfxPortal === 'function') sfxPortal(1);
+    if (typeof padRumble === 'function') padRumble(0.6, 0.8, 600);
+    addLog(BIOMES.nether.name[0].toUpperCase() + BIOMES.nether.name.slice(1) + '. ' + BIOMES.nether.intro, 'w');
+  }
+  if (P.t >= PORTAL.END) g.portal = null;
+}
+// distance of the portal ahead of the camera, closing fast
+function portalDist() { const k = Math.min(1, g.portal.t / PORTAL.PASS); return (130 + (VIEW.third ? CHASE.back : 0)) * Math.pow(1 - k, 1.2) + 0.2; }
+function portalItem(push) {
+  if (!g.portal || g.portal.through) return;
+  const d = portalDist(), o = { x: camX + Math.sin(yaw) * d, y: camY + Math.cos(yaw) * d };
+  push('portal', o, 0);
+}
+function drawPortal(o) {
+  // big enough that the camera goes through it, even the high chase camera in third person
+  const sc = Math.max(1, camH * 1.4 / PORTAL.H);
+  const rx = Math.cos(yaw), ry = -Math.sin(yaw), B = PORTAL.B * sc;
+  const pt = (u, z) => [o.x + rx * u, o.y + ry * u, z];
+  const quad = (u0, z0, u1, z1, col) => fillPoly([pt(u0, z0), pt(u1, z0), pt(u1, z1), pt(u0, z1)], col);
+  const cols = Math.round(PORTAL.W / PORTAL.B), rows = Math.round(PORTAL.H / PORTAL.B), u0 = -cols * B / 2;
+  // the swirling purple inside first, so the frame sits over its edges
+  const inner = polyProj([pt(u0 + B, B), pt(-u0 - B, B), pt(-u0 - B, rows * B - B), pt(u0 + B, rows * B - B)]);
+  if (inner.length >= 3) {
+    ctx.save();
+    ctx.beginPath(); inner.forEach((q, i) => i ? ctx.lineTo(q.x, q.y) : ctx.moveTo(q.x, q.y)); ctx.closePath(); ctx.clip();
+    const xs = inner.map(q => q.x), ys = inner.map(q => q.y);
+    const x0 = Math.max(-50, Math.min(...xs)), x1 = Math.min(W + 50, Math.max(...xs)), y0 = Math.max(-50, Math.min(...ys)), y1 = Math.min(H + 50, Math.max(...ys));
+    const mx = (x0 + x1) / 2, my = (y0 + y1) / 2, R = Math.hypot(x1 - x0, y1 - y0) / 2;
+    const gr = ctx.createRadialGradient(mx, my, 0, mx, my, R);
+    gr.addColorStop(0, 'rgba(210,140,255,0.85)'); gr.addColorStop(0.5, 'rgba(120,40,210,0.75)'); gr.addColorStop(1, 'rgba(70,10,140,0.8)');
+    ctx.fillStyle = gr; ctx.fillRect(x0, y0, x1 - x0, y1 - y0);
+    // pixels of light swirling round
+    const px = Math.max(2, R * 0.03);
+    for (let i = 0; i < 140; i++) {
+      const a = i * 0.61 + g.t * (2 + (i % 3)) * (i % 2 ? 1 : -1), rr = R * (((i * 0.137) % 1) * 0.9 + 0.05) * (1 + 0.1 * Math.sin(g.t * 3 + i));
+      ctx.fillStyle = i % 4 ? `rgba(190,110,255,${0.4 + 0.3 * Math.sin(g.t * 5 + i)})` : 'rgba(240,210,255,0.8)';
+      ctx.fillRect(mx + Math.cos(a) * rr * (x1 - x0) / (2 * R), my + Math.sin(a) * rr * (y1 - y0) / (2 * R), px, px);
+    }
+    ctx.restore();
+    ctx.globalCompositeOperation = 'lighter';
+    lamp(mx, my, '#a050ff', Math.min(400, R * 0.5));
+    ctx.globalCompositeOperation = 'source-over';
+  }
+  // the frame: blocks of glossy black stone
+  const shades = ['#120a1c', '#170d24', '#0d0714', '#1c1030'];
+  for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
+    if (r > 0 && r < rows - 1 && c > 0 && c < cols - 1) continue;
+    const ua = u0 + c * B, za = r * B - 0.6;
+    quad(ua, za, ua + B, za + B, shades[(r * 7 + c * 3) % 4]);
+    quad(ua + B * 0.08, za + B * 0.8, ua + B * 0.6, za + B * 0.92, 'rgba(140,100,200,0.25)');
+  }
+}
+// on the screen: the purple closes in as you reach it, then fills everything and clears in the Nether
+function drawPortalOverlay() {
+  const P = g.portal; if (!P) return;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  let a;
+  if (!P.through) a = Math.pow(Math.min(1, P.t / PORTAL.PASS), 4) * 0.7;
+  else { const k = (P.t - PORTAL.PASS) / (PORTAL.END - PORTAL.PASS); a = k < 0.25 ? 1 : Math.max(0, 1 - (k - 0.25) / 0.75); }
+  if (a <= 0.01) return;
+  const vg = ctx.createRadialGradient(cx, H / 2, Math.min(W, H) * (P.through ? 0 : 0.3), cx, H / 2, Math.hypot(W, H) * 0.6);
+  vg.addColorStop(0, `rgba(150,60,240,${P.through ? a * 0.9 : 0})`); vg.addColorStop(1, `rgba(90,20,170,${a})`);
+  ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H);
+  if (!reduceMotion) {
+    const R = Math.hypot(W, H) * 0.55, px = Math.max(3, R * 0.012);
+    for (let i = 0; i < 220; i++) {
+      const ang = i * 0.61 + g.t * (1.5 + (i % 3)) * (i % 2 ? 1 : -1), rr = R * ((i * 0.137) % 1);
+      ctx.fillStyle = `rgba(${i % 4 ? '200,130,255' : '245,225,255'},${a * (0.35 + 0.3 * Math.sin(g.t * 6 + i))})`;
+      ctx.fillRect(cx + Math.cos(ang) * rr, H / 2 + Math.sin(ang) * rr * 0.7, px, px);
+    }
+  }
 }
 
 // ---- src/ship3d.js ----
@@ -5106,7 +5330,9 @@ function newVoyage(n, attract, seed, slot) {
   g.cannon = newCannon();
   g.pickups = v.pickups || []; g.found = 0; if (typeof renderFound === 'function') renderFound();
   g.verity = newVerity(v.backrooms); g.verityScare = 0; g.lightsOut = 0;
-  g.biome = biomeFor(n, attract);
+  g.biome = v.nether ? 'nether' : biomeFor(n, attract);
+  g.portal = null;
+  if (v.nether) startPortal(biomeFor(n - 1));
   renderHud();
 }
 
@@ -5354,6 +5580,7 @@ function update(dt) {
   updateEnemies(dt);
   updateFoes(dt);
   updateVerity(dt);
+  updatePortal(dt);
   updateCannon(dt);
   carpenter(dt);
   updatePickups();

@@ -417,6 +417,7 @@ function drawScene() {
   if (third) { const c = cam(ship.x, ship.y, 0); if (c.f > SK.NEAR) items.push({ kind: 'self', o: ship, c }); }
   foeItems((kind, o, z, k) => { const c = cam(o.x, o.y, z); if (c.f > SK.NEAR + 1) items.push({ kind, o, c, k }); });
   add('plim', g.plim);
+  portalItem((kind, o, z) => { const c = cam(o.x, o.y, z); if (c.f > 0.1) items.push({ kind, o, c }); });
   if (crewMode) for (const m of matesAtSea()) if (m.peer !== NET.watch) add('mate', m);
   if (!NET.watch) { for (const d of g.enemies.drowned) add('drowned', d); for (const k of g.enemies.knocks) add('knock', k); }
   if (g.maren.active) add('maren', g.maren);
@@ -437,6 +438,7 @@ function drawScene() {
     else if (it.kind === 'self') drawShip3D(ship, ship.skin || mySkin(), BOAT_BY_ID[ship.boat] || BOATS[0], 1, { pennant: 'pennant' in ship ? ship.pennant : myPennant(), minLit: 1, sailAlpha: 0.7, brace: 0.95 + ship.rudder * 0.25 });
     else if (it.kind === 'foe') drawFoe(it.k, o, q);
     else if (it.kind === 'hazard') drawHazard(o, q);
+    else if (it.kind === 'portal') drawPortal(o);
     else if (it.kind === 'pickup') drawPickup(o, q, vis);
     else if (it.kind === 'plim') drawPlimsoll(q, vis);
     else if (it.kind === 'mate') drawMate(o, q, vis);
@@ -474,6 +476,7 @@ function drawScene() {
   drawFoeOverlays();
   drawDread();
   drawAtmosphere();
+  drawPortalOverlay();
   drawCompass();
 }
 
