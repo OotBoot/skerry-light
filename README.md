@@ -78,7 +78,14 @@ The log goes on through 1888. The sea stops being one sea: some nights it freeze
   - **The Echo**: a pale copy of your own ship sailing straight at you, steering a softer mirror of your helm most of a second late, so it follows your dodges. Turn late and hard, or ring the bell and it shatters.
   - **The Sleeper**: a vast face under the water ahead of you. When the water over it brightens it's waking: ring the bell to settle it. It gives five seconds' warning. If its eyes open you lose a plank and everything slows for three and a half seconds.
 
-  Add `?between` to force it. Each voyage opens with the sea's name sweeping across the top of the screen in its own colour, then fading (for the Nether, as you come out of the portal). Add `?biome=fjord` (or `ember`, `lagoon`, `barrows`, `shoals`, `skerry`) to the address to force one.
+  Add `?between` to force it.
+
+- **The Open Sky**: one more voyage in twenty after the first (the same roll again, so it never overlaps the other rare seas). You aren't sailing: whatever boat you chose, you're flying a little propeller plane at night over a sea of moonlit cloud, with snowy peaks standing out of it and the lighthouse on its mountain. You can go anywhere in the air: ← → bank and turn, **↑ climbs and ↓ dives** (the Faster/Slower buttons become Climb/Dive, and the left stick works the same on a controller). Diving gathers speed and climbing costs it; you can't go below the cloud floor or above about 120 m. The rocks become towering storm clouds stacked at different heights, so you can thread between them sideways or go over or under; flying into one costs a plank. Lightning flickers every few seconds and lights every cloud for a moment; the beam, your landing light (weaker the further above or below a cloud you are), flares and the carrier's jet light them too. Floating crates hang from little balloons at all heights. To land, come down below 14 m between the runway lamps where the harbour mouth is. From the cockpit you look over the cowling and the spinning prop, with the canopy frame and an instrument panel (speed, altitude, heading, hull); in third person the chase camera follows the plane, and your crew sees you as a plane in your skin's colours. Its three enemies are the only ones there:
+  - **The Thunderhead**: a ring of white light opens around you at your height; get out of it before the bolt comes down.
+  - **The Petrels**: a flock of storm birds crossing your course at your altitude. Climb, dive or turn round them, or sound the horn (the bell) to scatter them; flying through them is a birdstrike.
+  - **The Squall**: a warning, then a gust from one side shoves you sideways and down for three seconds. Lean into it and climb.
+
+  Add `?sky` to force it. Each voyage opens with the sea's name sweeping across the top of the screen in its own colour, then fading (for the Nether, as you come out of the portal). Add `?biome=fjord` (or `ember`, `lagoon`, `barrows`, `shoals`, `skerry`) to the address to force one.
 - **The Backrooms**: one voyage in twenty (rolled from the crew's seed, so a whole crew goes in together), the lights go out and the sea comes back with walls. It's a flooded maze of yellow rooms under buzzing tubes that go dark each time the lamp would have turned. Plimsoll knows the way to the green EXIT sign, and the bearing strip points at it. Maren, the drowned, Knock and Verity all follow you in. Add `?backrooms` to the address to force one (solo only).
 - **The sea**: voyages start about 2.4 km out (further each voyage), through a wide stretch of skerries, wrecks and drifting timber.
 - **Harbour**: steer between the real red and green pier lamps. Each voyage after that has more rocks, wreckage and drowned, and the beam turns slower.
@@ -193,6 +200,7 @@ src/biomes.js       the seas: palettes, landscapes, rock skins, weather, the Net
 src/nether.js       the Nether's three enemies
 src/odyssey.js      the Wine-Dark Sea's three enemies
 src/between.js      the Places In Between's three enemies
+src/sky.js          the Open Sky: flying, clouds, cockpit, plane and its three enemies
 src/world.js        voyage generation (sea and Backrooms) and Plimsoll's pathfinding
 src/render.js       the camera, sea, obstacles, lighthouse, deck, bearing strip and jumpscare
 src/gfx.js          the detailed look: sky, moon, clouds, sea glitter, coast, lighthouse, rocks, deck, drizzle, vignette, grain

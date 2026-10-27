@@ -22,6 +22,7 @@ function frame(now) {
   try {
     pollPad(dt);
     roomsHum(!!(g && g.backrooms && state === 'play'));
+    skyHum(!!(g && g.sky && state === 'play'));
     if (g && g.backrooms) roomsHumLevel(roomLevel());
     if (state === 'play' && g.verityScare > 0) {
       // Verity's jumpscare, and then the voyage is over

@@ -7,7 +7,7 @@ const CANNON_LOOK_S = 1.4;   // how far ahead (in seconds at your speed) it watc
 function newCannon() { return { charges: ship.boat === 'barque' ? SK.CANNON_CHARGES : 0, cd: 0, shots: [], muzzle: 0, reload: 0 }; }
 
 function updateCannon(dt) {
-  const C = g.cannon; if (!C) return;
+  const C = g.cannon; if (!C || g.sky) return;
   if (C.cd > 0) C.cd -= dt;
   if (C.muzzle > 0) C.muzzle -= dt;
   // reloading: one charge back every SK.CANNON_RELOAD seconds until she's full

@@ -168,6 +168,7 @@ function drawCoast() {
   fillPoly([[-45, 6, 0], [45, 6, 0], [40, 4, 22], [-40, 4, 22]], B.head[0]);
   fillPoly([[-40, 4, 22], [40, 4, 22], [55, -60, 22], [-60, -60, 22]], B.head[1]);
   fillPoly([[-48, 8, 0.2], [48, 8, 0.2], [45, 6, 1.4], [-45, 6, 1.4]], `rgba(${B.surf},` + (0.12 + 0.06 * Math.sin(g.t * 1.4)) + ')');
+  if (B.sky3d) { drawRunway(); return; }
   // stone piers with a lighter top course
   for (const sx of [-1, 1]) {
     const x0 = HB.x + sx * 20, x1 = HB.x + sx * 26;

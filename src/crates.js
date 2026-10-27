@@ -475,12 +475,14 @@ function renderFound() {
 }
 function updatePickups() {
   if (!g.pickups || g.attract || state !== 'play') return;
-  for (const p of g.pickups) if (!p.taken && Math.hypot(p.x - ship.x, p.y - ship.y) < SK.PICKUP_RADIUS) collectPickup(p);
+  for (const p of g.pickups) if (!p.taken && Math.hypot(p.x - ship.x, p.y - ship.y) < SK.PICKUP_RADIUS && (!g.sky || Math.abs((p.z || 0) - ship.z) < 8)) collectPickup(p);
 }
 // a wooden crate bobbing on the water, with a little lantern lashed on top so you can find it in the dark
 function drawPickup(o, p, vis) {
   const s = p.s, bob = Math.sin(g.t * 2 + o.ph) * 0.25 * s, sz = Math.max(4, 3.6 * s), x = p.x, y = p.y + bob;
   const lit = Math.max(0.35, vis);
+  // in the sky it hangs from a little balloon
+  if (g.sky) { ctx.strokeStyle = 'rgba(200,190,170,0.6)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(x, y - sz); ctx.lineTo(x, y - sz * 3.2); ctx.stroke(); ctx.fillStyle = 'rgba(210,80,60,0.85)'; ctx.beginPath(); ctx.ellipse(x, y - sz * 4, sz * 0.9, sz * 1.1, 0, 0, 6.28); ctx.fill(); }
   // glow first, visible from far away
   const pulse = 1 + 0.12 * Math.sin(g.t * 4 + o.ph);
   const gl = Math.max(2.5, 1.3 * Math.sqrt(s)) * pulse;

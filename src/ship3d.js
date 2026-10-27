@@ -23,6 +23,8 @@ function skinTier(skin) { const i = RARITIES.findIndex(r => r.id === skin.rarity
 // where the chase camera sits: behind and above, pulled in if a wall in the rooms is in the way
 const CHASE = { back: 44, horizon: 0.16, bottom: 0.97, phoneHorizon: 0.3 };   // horizon and ship's waterline as fractions of the screen height   // horizon: where the skyline sits on screen (looking down a little)
 function chaseCamera(sh) {
+  // flying: just behind and a little above the plane, wherever it is in the sky
+  if (g && g.sky) return { x: sh.x - Math.sin(sh.h) * 26, y: sh.y - Math.cos(sh.h) * 26, z: (sh.z || 0) + 7 - (sh.pitch || 0) * 8, horizon: H * (W < 600 ? 0.42 : 0.4) + (sh.pitch || 0) * focal * 0.5 };
   // (in the rooms, walls between the camera and your ship are cut away rather than pulling the camera in)
   const boat = BOAT_BY_ID[sh.boat] || BOATS[0];
   const phone = W < 600;
@@ -49,6 +51,7 @@ const STATIONS = [
 ];
 
 function drawShip3D(o, skin, boat, vis, opts) {
+  if (g && g.sky) return drawPlane3D(o, skin, boat, vis, opts);
   if (boat.id === 'carrier') return drawCarrier3D(o, skin, boat, vis, opts);
   opts = opts || {};
   const tier = skinTier(skin);

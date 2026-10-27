@@ -105,7 +105,21 @@ const BIOMES = {
     rock: { g: ['#d6ced6', '#8c8294', '#3a3442'], facet: 'rgba(255,250,255,0.25)', crack: 'rgba(60,50,70,0.3)', rim: '255,215,195', band: 'rgba(40,34,50,0.7)', foam: '240,232,245', kind: 'door', h: 1.1 },
     fx: 'drift', noStars: true, cloudy: 1, land: 'stairs',
   },
+  // and one more: you aren't on the sea at all, but flying over it
+  sky: {
+    name: 'the Open Sky', intro: 'No deck under you tonight: a little plane over a sea of cloud, and storm clouds standing up out of it like towers. Steer round them, \u2191 to climb and \u2193 to dive, and come down low between the runway lamps to land.',
+    sky: ['#01030a', '#040b1e', '#0c1d40', '#1e3664'],
+    sea: ['#4a5a78', '#2c3854', '#1a2238', '#0e1424'],
+    glitter: '225,232,255', haze: '170,190,230', dust: '210,220,245', star: '240,244,255', cloud: '150,165,200', halo: '220,230,255',
+    waves: '215,225,245', beam: '170,190,230',
+    ground: '#141a26', cliff: ['#1e2636', '#222a3a'], cliffTop: 'rgba(230,240,255,0.35)', cliffH: 1.3, topDepth: 3,
+    head: ['#1a2130', '#1e2534'], surf: '220,230,250', wall: '#2a3040', roof: '#1a2030', win: '#ffd890',
+    rock: { g: ['#8a94aa', '#4a5468', '#1e2434'], facet: 'rgba(255,255,255,0.2)', crack: 'rgba(20,24,34,0.4)', rim: '220,230,255', band: 'rgba(30,36,50,0.6)', foam: '220,230,250', kind: 'stone', h: 1 },
+    fx: 'sky', land: 'peaks', sky3d: true,
+  },
 };
+const SKY_CHANCE = 1 / 20;
+const SKY_FORCE = (() => { try { return /[?&#]sky\b/.test(location.href); } catch (e) { return false; } })();
 const BETWEEN_CHANCE = 1 / 20;
 const BETWEEN_FORCE = (() => { try { return /[?&#]between\b/.test(location.href); } catch (e) { return false; } })();
 const NETHER_CHANCE = 1 / 20, ODYSSEY_CHANCE = 1 / 20;
@@ -137,9 +151,10 @@ function rollSpecial(n, attract, seed) {
   if (seed == null && NETHER_FORCE) return 'nether';
   if (seed == null && ODYSSEY_FORCE) return 'odyssey';
   if (seed == null && BETWEEN_FORCE) return 'between';
+  if (seed == null && SKY_FORCE) return 'sky';
   if (n <= 1) return null;
   const r = seed != null ? seeded((seed ^ 0x2545f491) >>> 0)() : Math.random();
-  return r < NETHER_CHANCE ? 'nether' : r < NETHER_CHANCE + ODYSSEY_CHANCE ? 'odyssey' : r < NETHER_CHANCE + ODYSSEY_CHANCE + BETWEEN_CHANCE ? 'between' : null;
+  return r < NETHER_CHANCE ? 'nether' : r < NETHER_CHANCE + ODYSSEY_CHANCE ? 'odyssey' : r < NETHER_CHANCE + ODYSSEY_CHANCE + BETWEEN_CHANCE ? 'between' : r < NETHER_CHANCE + ODYSSEY_CHANCE + BETWEEN_CHANCE + SKY_CHANCE ? 'sky' : null;
 }
 const rollNether = (n, attract, seed) => rollSpecial(n, attract, seed) === 'nether';
 
@@ -596,6 +611,7 @@ const FX = { snow: [], ash: [], flies: [], motes: [], fog: [] };
 function drawBiomeWeather(B) {
   const lean = Math.min(0.4, ship.v / 60) + ship.rudder * 0.1;
   if (B.fx === 'calm') return true;   // clear skies, no rain
+  if (B.fx === 'sky') return drawSkyWeather();
   if (B.fx === 'drift') {
     // pale motes rising very slowly through still air, and a low mist on the glass
     const base = ctx.createLinearGradient(0, hy - H * 0.08, 0, hy + H * 0.12);
@@ -793,7 +809,7 @@ const BIOME_TINT = {
   skerry: ['#ffd88a', 'rgba(255,200,120,0.35)'], fjord: ['#d8f2ff', 'rgba(120,220,255,0.4)'], ember: ['#ffb070', 'rgba(255,90,30,0.45)'],
   lagoon: ['#a8fff0', 'rgba(60,220,200,0.4)'], barrows: ['#d0dcc8', 'rgba(150,170,150,0.35)'], shoals: ['#e8c8ff', 'rgba(170,110,255,0.45)'],
   nether: ['#ffb060', 'rgba(255,70,20,0.55)'], odyssey: ['#ffe2a0', 'rgba(255,200,120,0.4)'], between: ['#f4dcd4', 'rgba(255,210,200,0.35)'],
-  backrooms: ['#f0e08a', 'rgba(240,220,120,0.35)'],
+  backrooms: ['#f0e08a', 'rgba(240,220,120,0.35)'], sky: ['#d8e6ff', 'rgba(140,180,255,0.45)'],
 };
 function showBiomeBanner() {
   const el = $('biomeBanner'); if (!el || !g || g.attract) return;

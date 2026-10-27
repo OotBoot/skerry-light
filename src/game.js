@@ -39,6 +39,8 @@ function newVoyage(n, attract, seed, slot) {
   g.pickups = v.pickups || []; g.found = 0; if (typeof renderFound === 'function') renderFound();
   g.verity = newVerity(v.backrooms); g.verityScare = 0; g.lightsOut = 0;
   g.biome = v.special || biomeFor(n, attract);
+  g.sky = false; ship.z = 0; ship.pitch = 0;
+  if (g.biome === 'sky' && !v.backrooms) setupSky(seed);
   g.portal = null;
   if (v.nether) startPortal(biomeFor(n - 1));
   renderHud();
@@ -135,7 +137,7 @@ function sailInCompany(dt) {
 // overlaps it is pushed clear. Only a real impact (closing on it faster than SK.IMPACT m/s) stoves
 // in a plank; a glancing touch just scrapes, slows her a little and turns her along the obstacle.
 function hullPoints() {
-  const b = BOAT_BY_ID[ship.boat] || BOATS[0];
+  const b = g && g.sky ? SKYF.PLANE : BOAT_BY_ID[ship.boat] || BOATS[0];
   const sx = Math.sin(ship.h), sy = Math.cos(ship.h), pts = [];
   for (let i = 0; i < 5; i++) {
     const off = b.bow - (b.len * 0.8) * i / 4;
@@ -187,7 +189,8 @@ function checkCollisions() {
   for (const r of g.rocks) {
     if (r.doomed || r.gone) continue;
     if (Math.abs(r.x - ship.x) > r.r + 40 || Math.abs(r.y - ship.y) > r.r + 40) continue;
-    if ((c = hullContact(pts, r.x, r.y, r.r)) && resolveContact(c, 'a skerry')) break;
+    if (g.sky && Math.abs(ship.z - r.z) > r.rz + 1.5) continue;   // above or below this cloud
+    if ((c = hullContact(pts, r.x, r.y, r.r)) && resolveContact(c, g.sky ? 'a storm cloud' : 'a skerry')) break;
   }
   for (const o of g.wrecks) {
     if (Math.hypot(o.x - ship.x, o.y - ship.y) > o.r + 40) continue;
@@ -201,6 +204,7 @@ function checkCollisions() {
     }
   }
   for (const w of g.walls) {
+    if (g.sky && ship.z > 6) continue;   // flying over the piers
     if (Math.max(Math.abs(closestOnSeg(ship.x, ship.y, w).x - ship.x), Math.abs(closestOnSeg(ship.x, ship.y, w).y - ship.y)) > 40) continue;
     if ((c = hullContact(pts, 0, 0, w.r || 1, w)) && resolveContact(c, w.what || 'the pier')) break;
   }
@@ -210,7 +214,7 @@ function checkCollisions() {
       const lowest = pts.reduce((m, p) => Math.min(m, p.y - p.w), Infinity);
       if (lowest < 5) resolveContact({ pen: 5 - lowest, nx: 0, ny: 1 }, 'the shore');
     }
-    if (state === 'play' && inGap && ship.y < 36 && ship.y > 0) { arrive(); return true; }
+    if (state === 'play' && inGap && ship.y < 36 && ship.y > 0 && (!g.sky || ship.z < SKYF.LAND)) { arrive(); return true; }
   } else if (state === 'play' && Math.hypot(ship.x - g.exit.x, ship.y - g.exit.y) < g.exit.r) { arrive(); return true; }
   return ship.hull !== hull0 || state !== 'play';
 }
@@ -255,7 +259,9 @@ function update(dt) {
     steer = clamp(steer, -1, 1); sailIn = clamp(sailIn, -1, 1);
   }
   const boat = BOAT_BY_ID[ship.boat] || BOATS[0];
-  ship.rudder += (steer - ship.rudder) * Math.min(1, dt * 4 * boat.turn);
+  const turnK = g.sky ? 1.25 : boat.turn;   // in the sky every boat is the same little plane
+  ship.rudder += (steer - ship.rudder) * Math.min(1, dt * 4 * turnK);
+  if (g.sky) skyFlight(dt, sailIn, boat); else {
   // no top speed: keep making sail and she keeps going faster (and the longer you hold it, the quicker it climbs)
   if (sailIn > 0) g.sailHeld = (g.sailHeld || 0) + dt; else g.sailHeld = 0;
   const rate = (sailIn > 0 ? 1.6 * (1 + g.sailHeld * 1.2) : 1.6) * boat.accel;
@@ -263,7 +269,8 @@ function update(dt) {
   ship.sail = Math.max(0.15, ship.sail + (sailIn > 0 ? sailIn * rate : sailIn * (1.6 + ship.sail * 1.8)) * dt);
   const vTarget = Math.min(g.mods.cap, (3 + ship.sail * 12) * g.mods.slow * (boat.top || 1));
   ship.v += (vTarget - ship.v) * Math.min(1, dt * 4 * boat.accel);   // she answers the sail almost at once
-  ship.h += ship.rudder * 0.55 * boat.turn * dt * (0.35 + 0.65 * Math.min(1, ship.v / 10));
+  }
+  ship.h += ship.rudder * 0.55 * turnK * dt * (0.35 + 0.65 * Math.min(1, ship.v / 10));
   // move in short steps so a fast ship can't jump clean over a rock between frames
   const steps = Math.min(60, Math.max(1, Math.ceil(ship.v * dt / 2)));
   for (let i = 0; i < steps; i++) {
@@ -340,7 +347,7 @@ function updateFlareButton() {
 let jetShown = -1;
 function updateJetButton() {
   const b = $('jetBtn'); if (!b) return;
-  const on = ship.boat === 'carrier' && !g.attract;
+  const on = ship.boat === 'carrier' && !g.attract && !g.sky;
   if (b.hidden === on) b.hidden = !on;
   if (!on) return;
   const busy = !!g.jet, p = busy ? 0 : g.jetCd > 0 ? 1 - g.jetCd / JET.CD : 1, v = Math.round(p * 50) + (busy ? 100 : 0);
@@ -408,7 +415,17 @@ function beginCrewVoyage(L, slot) {
   cv.focus({ preventScroll: true });
 }
 
+// in the sky the sail buttons become the stick
+function setFlightControls() {
+  const up = $('sailUp'), dn = $('sailDown'), sky = !!(g && g.sky);
+  if (up) up.querySelector('small').textContent = sky ? 'Climb' : 'Faster';
+  if (dn) dn.querySelector('small').textContent = sky ? 'Dive' : 'Slower';
+  const bb = $('bellBtn') && $('bellBtn').querySelector('b'); if (bb) bb.textContent = sky ? 'Sound the horn' : 'Ring the bell';
+  const h = $('hint'); if (h && !h.dataset.base) h.dataset.base = h.textContent;
+  if (h) h.textContent = sky ? '\u2190 \u2192 steer \u00b7 \u2191 climb \u00b7 \u2193 dive \u00b7 Space horn \u00b7 F flare \u00b7 V view' : h.dataset.base;
+}
 function enteredBackrooms() {
+  setFlightControls();
   $('distLabel').textContent = g.backrooms ? 'Exit' : 'Harbour';
   $('portTitle').textContent = g.backrooms ? 'Out of the Rooms' : 'Safe in Harbour';
   $('stage').classList.toggle('rooms', !!g.backrooms);
@@ -455,7 +472,8 @@ function arrive() {
   const page = g.backrooms ? SK.BACKROOMS_LOG : SK.SEA_LOG[g.biome] || SK.LOG[(run.voyages - 1) % SK.LOG.length];
   const seaPort = { nether: 'The lava thins to black water, the red roof lifts into ordinary cloud, and the pier lamps are dead ahead. Your paint is blistered. Plimsoll is steaming gently.',
     odyssey: 'The warm wind drops, the temples fade off the headland, and it is the old cold harbour again. Somewhere behind you a voice is still singing.',
-    between: 'The dusk lets go all at once, like a held breath, and the night comes back. The pier is where it should be. You check twice.' };
+    between: 'The dusk lets go all at once, like a held breath, and the night comes back. The pier is where it should be. You check twice.',
+    sky: 'You put her down between the runway lamps with a bump and a squeal, and taxi to a stop at the end of the pier. Plimsoll is waiting there, looking up.' };
   $('portEyebrow').textContent = 'Voyage ' + g.n + (g.backrooms ? ' · found the way out' : ' · made harbour');
   $('portText').textContent = seaPort[g.biome] && !g.backrooms ? seaPort[g.biome] : g.backrooms ? 'Through the green-lit door, and the sea is the sea again: cold, black, and the pier lamps right ahead. Behind you there is no door, only fog.' : ship.hull === ship.maxHull ? 'Not a scratch on her. Plimsoll sits down on the pier and takes his shoes off.' :
     'She limps in with ' + (ship.maxHull - ship.hull) + (ship.maxHull - ship.hull === 1 ? ' plank' : ' planks') + ' stove in. The shipwright will patch her overnight.';

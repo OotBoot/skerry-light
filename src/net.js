@@ -307,6 +307,8 @@ function syncMates() {
       if (Number.isFinite(pr.x) && Number.isFinite(pr.y) && Number.isFinite(pr.h)) {
         if (!m.placed) { m.x = pr.x; m.y = pr.y; m.h = pr.h; m.placed = true; }
         m.tx = pr.x; m.ty = pr.y; m.th = pr.h;
+        m.tz = Number.isFinite(pr.z) ? pr.z : 0; m.pitch = Number.isFinite(pr.pi) ? pr.pi : 0;
+        if (m.z == null) m.z = m.tz;
       }
       const bell = Number.isFinite(pr.bell) ? pr.bell : 0;
       if (bell > m.bell) { m.bell = bell; if (m.st === 'sail') mateRangBell(m); }
@@ -432,7 +434,7 @@ function mateRangBell(m) {
 function netTick(dt) {
   for (const m of NET.mates.values()) {
     const k = Math.min(1, dt * 6);
-    m.x += (m.tx - m.x) * k; m.y += (m.ty - m.y) * k;
+    m.x += (m.tx - m.x) * k; m.y += (m.ty - m.y) * k; m.z = (m.z || 0) + ((m.tz || 0) - (m.z || 0)) * k;
     m.h += angDiff(m.th, m.h) * k;
     if (Number.isFinite(m.tmx)) { m.mx += (m.tmx - m.mx) * k; m.my += (m.tmy - m.my) * k; }
     if (Number.isFinite(m.tpx)) { m.px += (m.tpx - m.px) * k; m.py += (m.tpy - m.py) * k; }
@@ -446,6 +448,7 @@ function netTick(dt) {
     const r1 = v => Math.round(v * 10) / 10;
     send({
       x: r1(ship.x), y: r1(ship.y), h: Math.round(ship.h * 1000) / 1000, v: r1(ship.v), hull: ship.hull, stage: g.maren.stage,
+      z: g.sky ? r1(ship.z) : 0, pi: g.sky ? Math.round((ship.pitch || 0) * 100) / 100 : 0,
       mx: g.maren.active ? r1(g.maren.x) : null, my: g.maren.active ? r1(g.maren.y) : null,
       px: r1(g.plim.x), py: r1(g.plim.y),
     });

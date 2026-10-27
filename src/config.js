@@ -92,6 +92,7 @@ const SK = {
   SEA_LOG: {
     nether: { date: 'No date', text: 'Written in the margin, in a hand not mine: came back through the black ring with the paint blistered off her and ash in every seam. No woman on that sea. Worse things in her place. The light was there too, burning red. It always comes with you.' },
     odyssey: { date: 'No date', text: 'Pasted in, a page from the schoolmaster’s book, the ink run with salt: the singers on the rock, the whirlpool and the cave of the one-eyed shepherd. In pencil beneath it: we drowned the singing with the bell, sailed hard round the water that turned, and blinded the giant with a flare. Home by the lamp.' },
+    sky: { date: 'No date', text: 'A page in a different hand, in pencil: flew in from the clouds tonight, no keel under me, the lamp turning below like a coin in a well. Stacks of storm cloud as tall as cathedrals, and lightning in them. Birds at my height. The shark was walking on the cloud tops, and he led me down.' },
     between: { date: 'No date', text: 'This page is blank except for one line, written very carefully: the lit door, not the dark ones. Keep the bell ready for the face. It is still asleep. Do not wake it.' },
   },
 };

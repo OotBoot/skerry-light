@@ -609,7 +609,7 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
           <li><b>Hull</b> when the planks run out she goes down. Let Maren reach the bow and she comes aboard</li>
           <li><b>Tonight's enemies</b> each voyage brings three enemies from a pool of 21 (the log names them as you set out), on top of Maren. Each has its own trick and its own counter: read the log when one turns up</li>
           <li><b>Verity</b> sometimes you'll find a small smiling yellow orb in a corner of your deck, offering to help. He isn't helping, and the bell doesn't bother him. Fire a flare before twenty seconds are up, or see what he really looks like</li>
-          <li><b>Six seas</b> the first voyage is always Skerry Light. After that the voyages go round six seas in turn: Skerry Light, the Frozen Fjord, the Ember Isles, the Coral Lagoon, the Barrow Shore and the Crystal Shoals. Each has its own sky, coast, weather and rocks (icebergs, lava-veined basalt, coral reefs, gravestones, crystal). They look different, but they sink you just the same. And about one voyage in twenty (never the first), a portal stands in the water ahead: you sail through it into the Nether, a lava sea under a roof of red rock with lava pouring down from it. The Nether has its own three enemies and nothing else, not even Maren: the Cinder Kite (dodge the orange rings its fireballs fall into; a flare drives it off), the Slag Wader (ring the bell before it reaches your bow) and the Furnace Moth (if it lands on your lantern, fire a flare and it chases that instead). Another one voyage in twenty you find yourself on the Wine-Dark Sea of the old stories, with white temples on the headlands, a golden moon and shooting stars, and three monsters of its own (again, nothing else): the Sirens (their song drags your helm to their rock; ring the bell to drown them out), Charybdis (a whirlpool that opens on your course and drags you in; sail hard round it) and the Cyclops (dodge the pale ring where his rock will land; a flare in his eye blinds him). And one more in twenty takes you to the Places In Between: a glassy sea stuck at dusk, with doors and staircases standing in the water. Its own three, and nothing else: the Doors (dark ones send you back, the lit one sends you on), the Echo (a pale copy of your ship that steers the mirror of you; turn late and hard, or ring the bell to shatter it) and the Sleeper (a face under the water; when the water over it brightens, ring the bell before its eyes open)</li>
+          <li><b>Six seas</b> the first voyage is always Skerry Light. After that the voyages go round six seas in turn: Skerry Light, the Frozen Fjord, the Ember Isles, the Coral Lagoon, the Barrow Shore and the Crystal Shoals. Each has its own sky, coast, weather and rocks (icebergs, lava-veined basalt, coral reefs, gravestones, crystal). They look different, but they sink you just the same. And about one voyage in twenty (never the first), a portal stands in the water ahead: you sail through it into the Nether, a lava sea under a roof of red rock with lava pouring down from it. The Nether has its own three enemies and nothing else, not even Maren: the Cinder Kite (dodge the orange rings its fireballs fall into; a flare drives it off), the Slag Wader (ring the bell before it reaches your bow) and the Furnace Moth (if it lands on your lantern, fire a flare and it chases that instead). Another one voyage in twenty you find yourself on the Wine-Dark Sea of the old stories, with white temples on the headlands, a golden moon and shooting stars, and three monsters of its own (again, nothing else): the Sirens (their song drags your helm to their rock; ring the bell to drown them out), Charybdis (a whirlpool that opens on your course and drags you in; sail hard round it) and the Cyclops (dodge the pale ring where his rock will land; a flare in his eye blinds him). And one more in twenty takes you to the Places In Between: a glassy sea stuck at dusk, with doors and staircases standing in the water. Its own three, and nothing else: the Doors (dark ones send you back, the lit one sends you on), the Echo (a pale copy of your ship that steers the mirror of you; turn late and hard, or ring the bell to shatter it) and the Sleeper (a face under the water; when the water over it brightens, ring the bell before its eyes open). One more in twenty you're not sailing at all but flying a plane over the clouds: ↑ climbs, ↓ dives, steer round the storm clouds at every height, and come down low between the runway lamps to land</li>
           <li><b>The Backrooms</b> about one voyage in twenty, the lights go out and the sea comes back with walls: a flooded maze of yellow rooms. Follow Plimsoll to the green EXIT sign. The Stowaway lives there too: when he screams and charges down the corridor, dodge to the side</li>
           <li><b>Floating crates</b> bob about the water, each with a little lantern. Sail into one to haul it aboard. Make harbour and each is worth two Skerry Crates; sink and they go down with you. Making harbour pays 5 crates on voyage 1, then follows the Fibonacci sequence for each voyage in a row: 8, 13, 21, 34...</li>
           <li><b>Crew</b> sail with up to seven friends. Ships close together keep her back and patch each other's planks. Share flares, chat in the crew screen, and watch your crew after your own voyage ends. The first ship into harbour wins 3 bonus crates for every other ship in the crew</li>
@@ -836,6 +836,7 @@ const SK = {
   SEA_LOG: {
     nether: { date: 'No date', text: 'Written in the margin, in a hand not mine: came back through the black ring with the paint blistered off her and ash in every seam. No woman on that sea. Worse things in her place. The light was there too, burning red. It always comes with you.' },
     odyssey: { date: 'No date', text: 'Pasted in, a page from the schoolmaster’s book, the ink run with salt: the singers on the rock, the whirlpool and the cave of the one-eyed shepherd. In pencil beneath it: we drowned the singing with the bell, sailed hard round the water that turned, and blinded the giant with a flare. Home by the lamp.' },
+    sky: { date: 'No date', text: 'A page in a different hand, in pencil: flew in from the clouds tonight, no keel under me, the lamp turning below like a coin in a well. Stacks of storm cloud as tall as cathedrals, and lightning in them. Birds at my height. The shark was walking on the cloud tops, and he led me down.' },
     between: { date: 'No date', text: 'This page is blank except for one line, written very carefully: the lit door, not the dark ones. Keep the bell ready for the face. It is still asleep. Do not wake it.' },
   },
 };
@@ -1904,9 +1905,11 @@ function drawScene() {
   hy = H * (VIEW.third ? (W < 600 ? CHASE.phoneHorizon : CHASE.horizon) : 0.46) + Math.sin(ship.bob * 1.1) * H * 0.006;
   const third = VIEW.third;
   if (third) { const c = chaseCamera(ship); camX = c.x; camY = c.y; camH = c.z; if (c.horizon != null) hy = Math.max(H * 0.08, c.horizon) + Math.sin(ship.bob * 1.1) * H * 0.006; }
-  else { camX = ship.x; camY = ship.y; camH = SK.CAM_H; }
+  else { camX = ship.x; camY = ship.y; camH = g.sky ? ship.z + 1.2 : SK.CAM_H; }
+  // flying: the horizon drops as the nose comes up, and the whole view banks into a turn
+  if (g.sky && !third) hy += (ship.pitch || 0) * focal * 0.9;
   yaw = ship.h;
-  const roll = reduceMotion ? 0 : (Math.sin(ship.bob * 0.9) * 0.018 + ship.rudder * 0.025) * (third ? 0.3 : 1);
+  const roll = reduceMotion ? 0 : g.sky ? ship.rudder * (third ? 0.08 : 0.3) : (Math.sin(ship.bob * 0.9) * 0.018 + ship.rudder * 0.025) * (third ? 0.3 : 1);
 
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.save();
@@ -1947,15 +1950,15 @@ function drawScene() {
   }
 
   // everything on the water, far to near
-  if (!g.backrooms) { rememberLit(g.rocks); rememberLit(g.wrecks); rememberLit(g.timber); }
+  if (!g.backrooms) { if (g.sky) rememberClouds(); else rememberLit(g.rocks); rememberLit(g.wrecks); rememberLit(g.timber); }
   const items = [];
-  const add = (kind, o) => { const c = cam(o.x, o.y, 0); if (c.f > SK.NEAR + 2) items.push({ kind, o, c }); };
+  const add = (kind, o) => { const c = cam(o.x, o.y, g.sky ? (o.z || 0) : 0); if (c.f > SK.NEAR + 2) items.push({ kind, o, c }); };
   for (const o of g.rocks) if (!o.gone) add('rock', o);
   for (const o of g.wrecks) add('wreck', o);
   for (const o of g.timber) add('timber', o);
   if (g.backrooms) { add('exit', g.exit); drawRoomWalls(); }
   for (const o of g.pickups || []) if (!o.taken) add('pickup', o);
-  if (third) { const c = cam(ship.x, ship.y, 0); if (c.f > SK.NEAR) items.push({ kind: 'self', o: ship, c }); }
+  if (third) { const c = cam(ship.x, ship.y, g.sky ? ship.z : 0); if (c.f > SK.NEAR) items.push({ kind: 'self', o: ship, c }); }
   foeItems((kind, o, z, k) => { const c = cam(o.x, o.y, z); if (c.f > SK.NEAR + 1) items.push({ kind, o, c, k }); });
   add('plim', g.plim);
   jetItem((kind, o, z) => { const c = cam(o.x, o.y, z); if (c.f > SK.NEAR) items.push({ kind, o, c }); });
@@ -1974,7 +1977,7 @@ function drawScene() {
     const o = it.o;
     let vis = visibility(o.x, o.y);
     if (it.kind === 'rock' || it.kind === 'wreck' || it.kind === 'timber') vis = Math.max(vis, afterglow(o));
-    if (it.kind === 'rock') drawRockDetailed(o, q, vis);
+    if (it.kind === 'rock') { if (g.sky) drawCloud(o, q); else drawRockDetailed(o, q, vis); }
     else if (it.kind === 'wreck') drawWreck(o, q, vis);
     else if (it.kind === 'timber') drawTimber(o, q, vis);
     else if (it.kind === 'self') drawShip3D(ship, ship.skin || mySkin(), BOAT_BY_ID[ship.boat] || BOATS[0], 1, { pennant: 'pennant' in ship ? ship.pennant : myPennant(), minLit: 1, sailAlpha: 0.7, brace: 0.95 + ship.rudder * 0.25 });
@@ -2010,7 +2013,8 @@ function drawScene() {
   ctx.globalAlpha = 1;
   ctx.restore();
 
-  if (!third) { drawDeck(); drawBowspritApparition(); }
+  if (!third) { if (g.sky) drawCockpit(ship.skin || mySkin()); else { drawDeck(); drawBowspritApparition(); } }
+  if (g.sky) drawSquall();
   drawVerity();
 
   if (g.glare > 0.01) { ctx.fillStyle = `rgba(255,238,200,${g.glare * 0.55})`; ctx.fillRect(0, 0, W, H); }
@@ -2376,6 +2380,7 @@ function drawCoast() {
   fillPoly([[-45, 6, 0], [45, 6, 0], [40, 4, 22], [-40, 4, 22]], B.head[0]);
   fillPoly([[-40, 4, 22], [40, 4, 22], [55, -60, 22], [-60, -60, 22]], B.head[1]);
   fillPoly([[-48, 8, 0.2], [48, 8, 0.2], [45, 6, 1.4], [-45, 6, 1.4]], `rgba(${B.surf},` + (0.12 + 0.06 * Math.sin(g.t * 1.4)) + ')');
+  if (B.sky3d) { drawRunway(); return; }
   // stone piers with a lighter top course
   for (const sx of [-1, 1]) {
     const x0 = HB.x + sx * 20, x1 = HB.x + sx * 26;
@@ -2768,7 +2773,21 @@ const BIOMES = {
     rock: { g: ['#d6ced6', '#8c8294', '#3a3442'], facet: 'rgba(255,250,255,0.25)', crack: 'rgba(60,50,70,0.3)', rim: '255,215,195', band: 'rgba(40,34,50,0.7)', foam: '240,232,245', kind: 'door', h: 1.1 },
     fx: 'drift', noStars: true, cloudy: 1, land: 'stairs',
   },
+  // and one more: you aren't on the sea at all, but flying over it
+  sky: {
+    name: 'the Open Sky', intro: 'No deck under you tonight: a little plane over a sea of cloud, and storm clouds standing up out of it like towers. Steer round them, \u2191 to climb and \u2193 to dive, and come down low between the runway lamps to land.',
+    sky: ['#01030a', '#040b1e', '#0c1d40', '#1e3664'],
+    sea: ['#4a5a78', '#2c3854', '#1a2238', '#0e1424'],
+    glitter: '225,232,255', haze: '170,190,230', dust: '210,220,245', star: '240,244,255', cloud: '150,165,200', halo: '220,230,255',
+    waves: '215,225,245', beam: '170,190,230',
+    ground: '#141a26', cliff: ['#1e2636', '#222a3a'], cliffTop: 'rgba(230,240,255,0.35)', cliffH: 1.3, topDepth: 3,
+    head: ['#1a2130', '#1e2534'], surf: '220,230,250', wall: '#2a3040', roof: '#1a2030', win: '#ffd890',
+    rock: { g: ['#8a94aa', '#4a5468', '#1e2434'], facet: 'rgba(255,255,255,0.2)', crack: 'rgba(20,24,34,0.4)', rim: '220,230,255', band: 'rgba(30,36,50,0.6)', foam: '220,230,250', kind: 'stone', h: 1 },
+    fx: 'sky', land: 'peaks', sky3d: true,
+  },
 };
+const SKY_CHANCE = 1 / 20;
+const SKY_FORCE = (() => { try { return /[?&#]sky\b/.test(location.href); } catch (e) { return false; } })();
 const BETWEEN_CHANCE = 1 / 20;
 const BETWEEN_FORCE = (() => { try { return /[?&#]between\b/.test(location.href); } catch (e) { return false; } })();
 const NETHER_CHANCE = 1 / 20, ODYSSEY_CHANCE = 1 / 20;
@@ -2800,9 +2819,10 @@ function rollSpecial(n, attract, seed) {
   if (seed == null && NETHER_FORCE) return 'nether';
   if (seed == null && ODYSSEY_FORCE) return 'odyssey';
   if (seed == null && BETWEEN_FORCE) return 'between';
+  if (seed == null && SKY_FORCE) return 'sky';
   if (n <= 1) return null;
   const r = seed != null ? seeded((seed ^ 0x2545f491) >>> 0)() : Math.random();
-  return r < NETHER_CHANCE ? 'nether' : r < NETHER_CHANCE + ODYSSEY_CHANCE ? 'odyssey' : r < NETHER_CHANCE + ODYSSEY_CHANCE + BETWEEN_CHANCE ? 'between' : null;
+  return r < NETHER_CHANCE ? 'nether' : r < NETHER_CHANCE + ODYSSEY_CHANCE ? 'odyssey' : r < NETHER_CHANCE + ODYSSEY_CHANCE + BETWEEN_CHANCE ? 'between' : r < NETHER_CHANCE + ODYSSEY_CHANCE + BETWEEN_CHANCE + SKY_CHANCE ? 'sky' : null;
 }
 const rollNether = (n, attract, seed) => rollSpecial(n, attract, seed) === 'nether';
 
@@ -3259,6 +3279,7 @@ const FX = { snow: [], ash: [], flies: [], motes: [], fog: [] };
 function drawBiomeWeather(B) {
   const lean = Math.min(0.4, ship.v / 60) + ship.rudder * 0.1;
   if (B.fx === 'calm') return true;   // clear skies, no rain
+  if (B.fx === 'sky') return drawSkyWeather();
   if (B.fx === 'drift') {
     // pale motes rising very slowly through still air, and a low mist on the glass
     const base = ctx.createLinearGradient(0, hy - H * 0.08, 0, hy + H * 0.12);
@@ -3456,7 +3477,7 @@ const BIOME_TINT = {
   skerry: ['#ffd88a', 'rgba(255,200,120,0.35)'], fjord: ['#d8f2ff', 'rgba(120,220,255,0.4)'], ember: ['#ffb070', 'rgba(255,90,30,0.45)'],
   lagoon: ['#a8fff0', 'rgba(60,220,200,0.4)'], barrows: ['#d0dcc8', 'rgba(150,170,150,0.35)'], shoals: ['#e8c8ff', 'rgba(170,110,255,0.45)'],
   nether: ['#ffb060', 'rgba(255,70,20,0.55)'], odyssey: ['#ffe2a0', 'rgba(255,200,120,0.4)'], between: ['#f4dcd4', 'rgba(255,210,200,0.35)'],
-  backrooms: ['#f0e08a', 'rgba(240,220,120,0.35)'],
+  backrooms: ['#f0e08a', 'rgba(240,220,120,0.35)'], sky: ['#d8e6ff', 'rgba(140,180,255,0.45)'],
 };
 function showBiomeBanner() {
   const el = $('biomeBanner'); if (!el || !g || g.attract) return;
@@ -3497,6 +3518,8 @@ function skinTier(skin) { const i = RARITIES.findIndex(r => r.id === skin.rarity
 // where the chase camera sits: behind and above, pulled in if a wall in the rooms is in the way
 const CHASE = { back: 44, horizon: 0.16, bottom: 0.97, phoneHorizon: 0.3 };   // horizon and ship's waterline as fractions of the screen height   // horizon: where the skyline sits on screen (looking down a little)
 function chaseCamera(sh) {
+  // flying: just behind and a little above the plane, wherever it is in the sky
+  if (g && g.sky) return { x: sh.x - Math.sin(sh.h) * 26, y: sh.y - Math.cos(sh.h) * 26, z: (sh.z || 0) + 7 - (sh.pitch || 0) * 8, horizon: H * (W < 600 ? 0.42 : 0.4) + (sh.pitch || 0) * focal * 0.5 };
   // (in the rooms, walls between the camera and your ship are cut away rather than pulling the camera in)
   const boat = BOAT_BY_ID[sh.boat] || BOATS[0];
   const phone = W < 600;
@@ -3523,6 +3546,7 @@ const STATIONS = [
 ];
 
 function drawShip3D(o, skin, boat, vis, opts) {
+  if (g && g.sky) return drawPlane3D(o, skin, boat, vis, opts);
   if (boat.id === 'carrier') return drawCarrier3D(o, skin, boat, vis, opts);
   opts = opts || {};
   const tier = skinTier(skin);
@@ -4638,7 +4662,7 @@ const CANNON_LOOK_S = 1.4;   // how far ahead (in seconds at your speed) it watc
 function newCannon() { return { charges: ship.boat === 'barque' ? SK.CANNON_CHARGES : 0, cd: 0, shots: [], muzzle: 0, reload: 0 }; }
 
 function updateCannon(dt) {
-  const C = g.cannon; if (!C) return;
+  const C = g.cannon; if (!C || g.sky) return;
   if (C.cd > 0) C.cd -= dt;
   if (C.muzzle > 0) C.muzzle -= dt;
   // reloading: one charge back every SK.CANNON_RELOAD seconds until she's full
@@ -6183,6 +6207,374 @@ function drawBetweenOverlays() {
   ctx.fillStyle = `rgba(230,220,240,${a})`; ctx.fillRect(0, 0, W, H);
 }
 
+// ---- src/sky.js ----
+// The Open Sky: one voyage in twenty (never the first) you aren't sailing at all. You're flying a little
+// propeller plane over a sea of cloud at night, free to climb, dive, bank and turn, threading between
+// towering storm clouds. The clouds are the rocks: hit one and the turbulence costs you a plank.
+// Lightning lights them up now and then. Come down low between the runway lamps to land.
+// Its own three enemies, and nothing else: the Thunderhead, the Petrels and the Squall.
+
+const SKYF = { Z0: 34, ZMIN: 3, ZMAX: 120, LAND: 14, SPEED: 12, PLANE: { bow: 5, len: 10, beam: 3 } };
+
+// ---------- setting up the voyage ----------
+// every rock becomes a stack of one to three clouds at different heights over the same spot, so the
+// route Plimsoll knows is still clear at any height, and the gaps between are yours to find
+function setupSky(seed) {
+  g.sky = true;
+  ship.z = SKYF.Z0; ship.pitch = 0; ship.vz = 0;
+  g.wrecks = []; g.timber = [];
+  g.lightning = 0; g.ltT = 4; g.skyHint = 0;
+  const rng = seed != null ? seeded((seed ^ 0x6b1d3) >>> 0) : Math.random;
+  const R = (a, b) => a + rng() * (b - a);
+  const clouds = [];
+  for (const r of g.rocks) {
+    const n = 1 + (rng() < 0.6 ? 1 : 0) + (rng() < 0.3 ? 1 : 0);
+    const rz = Math.max(9, r.r * 1.3), used = [];
+    for (let k = 0; k < n; k++) {
+      let z = 0, tries = 0;
+      do { z = R(10, 100); tries++; } while (tries < 12 && used.some(u => Math.abs(u - z) < rz * 2 + 12));
+      used.push(z);
+      const puffs = []; for (let i = 0; i < 12; i++) puffs.push({ dx: R(-0.75, 0.75), dz: R(-0.8, 0.85), s: R(0.6, 1.05) });
+      clouds.push(Object.assign({}, r, { z, rz, puffs, flash: 0, seenT: null, seenV: 0 }));
+    }
+  }
+  g.rocks = clouds;
+  for (const p of g.pickups || []) p.z = R(10, 70);
+}
+
+// ---------- flying ----------
+// ↑ climbs and ↓ dives (the stick, not the throttle); diving gathers speed and climbing costs it
+function skyFlight(dt, pitchIn, boat) {
+  const target = clamp(pitchIn, -1, 1) * 0.42;
+  ship.pitch += (target - ship.pitch) * Math.min(1, dt * 3);
+  const vT = Math.min(g.mods.cap, (SKYF.SPEED - ship.pitch * 9) * g.mods.slow * (boat.top || 1));
+  ship.v += (vT - ship.v) * Math.min(1, dt * 1.5);
+  ship.sail = 0.7;
+  ship.z += Math.sin(ship.pitch) * ship.v * dt;
+  if (ship.z < SKYF.ZMIN) {
+    // skimming the cloud floor: it drags at you
+    ship.z = SKYF.ZMIN; ship.pitch = Math.max(ship.pitch, 0); ship.v *= 1 - dt * 0.8;
+    if (!g.floorWarned) { g.floorWarned = true; addLog('You’re skimming the cloud floor. Pull up!', 'w'); }
+  }
+  if (ship.z > SKYF.ZMAX) { ship.z = SKYF.ZMAX; ship.pitch = Math.min(ship.pitch, 0); }
+  // lightning, every few seconds, lights every cloud for a moment
+  g.ltT -= dt;
+  if (g.ltT <= 0) {
+    g.ltT = rand(6, 11); g.lightning = 1;
+    const near = g.rocks.filter(r => Math.hypot(r.x - ship.x, r.y - ship.y) < 500);
+    if (near.length) near[(Math.random() * near.length) | 0].flash = 0.6;
+    setTimeout(() => sfxFoe('rumble', rand(-0.6, 0.6), 0.6), 600);
+  }
+  if (g.lightning > 0) g.lightning = Math.max(0, g.lightning - dt * 2.5);
+  for (const r of g.rocks) if (r.flash > 0) r.flash -= dt;
+  // too high to land over the runway
+  const inGap = Math.abs(ship.x - SK.HARBOUR.x) < 18;
+  if (inGap && ship.y < 90 && ship.z >= SKYF.LAND && !g.skyHint) { g.skyHint = 1; addLog('Too high to land. Dive (↓) to come in below ' + SKYF.LAND + ' m between the runway lamps.', 'w'); }
+}
+
+// how well you can see a cloud: the beam, your landing light (weaker the further above or below),
+// a flare, the carrier's jet, and lightning
+function cloudVis(o) {
+  const dz = Math.abs((o.z || 0) - (ship.z || 0));
+  const v = litAt(o.x, o.y) * 1.3 + lanternAt(o.x, o.y) * clamp(1 - dz / 45, 0, 1) + flareAt(o.x, o.y) + jetAt(o.x, o.y) + (g.lightning || 0) * 0.9 + Math.max(0, o.flash || 0) * 1.5;
+  return Math.min(1, v);
+}
+
+// ---------- drawing ----------
+const SKY_PUFF = {};
+function puffSprite(col) {
+  if (!SKY_PUFF[col]) {
+    const c = offscreen(64, 64), q = c.getContext('2d'), gr = q.createRadialGradient(32, 32, 0, 32, 32, 32);
+    gr.addColorStop(0, `rgba(${col},1)`); gr.addColorStop(0.55, `rgba(${col},0.85)`); gr.addColorStop(1, `rgba(${col},0)`);
+    q.fillStyle = gr; q.fillRect(0, 0, 64, 64); SKY_PUFF[col] = c;
+  }
+  return SKY_PUFF[col];
+}
+// a storm cloud: a dark billowing mass, its tops caught by whatever light there is
+function drawCloud(o, q) {
+  const vis = Math.max(cloudVis(o), afterglow(o) * 0.9);
+  if (vis < 0.03) return;
+  const R = o.r * 1.3 * q.s, Rz = o.rz * 1.1 * q.s;
+  const dark = puffSprite('34,40,62'), lite = puffSprite('205,215,240');
+  for (const p of o.puffs) {
+    const x = q.x + p.dx * R * 0.7, y = q.y - p.dz * Rz * 0.75, s = p.s * Math.min(R, Rz) * 1.15;
+    ctx.globalAlpha = vis * 0.9; ctx.drawImage(dark, x - s, y - s, s * 2, s * 2);
+  }
+  for (const p of o.puffs) {
+    if (p.dz < 0) continue;
+    const x = q.x + p.dx * R * 0.7, y = q.y - p.dz * Rz * 0.75 - p.s * Rz * 0.25, s = p.s * Math.min(R, Rz) * 0.7;
+    ctx.globalAlpha = vis * 0.35; ctx.drawImage(lite, x - s, y - s, s * 2, s * 2);
+  }
+  if (o.flash > 0) { ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = Math.min(1, o.flash * 2); lamp(q.x, q.y, '#c8d8ff', Math.max(4, R * 0.35)); ctx.globalCompositeOperation = 'source-over'; }
+  ctx.globalAlpha = 1;
+}
+
+// the plane, for the chase camera and your crew: fuselage, wings, tail, a spinning prop
+function drawPlane3D(o, skin, boat, vis, opts) {
+  opts = opts || {};
+  const tier = skinTier(skin);
+  const sh = Math.sin(o.h), ch = Math.cos(o.h), p = o.pitch || 0, b = (o.rudder || 0) * 0.55;
+  const cp = Math.cos(p), sp = Math.sin(p), cb = Math.cos(b), sb = Math.sin(b), z0 = (o.z || 0) + Math.sin((o.bob || 0) * 1.7) * 0.15;
+  // local: u forward, w starboard, z up; bank about u, then pitch about w
+  const K = 1.5;
+  const W3 = (u0, w0, zz) => { const u = u0 * K, w = w0 * K, z = zz * K; const w1 = w * cb - z * sb, z1 = w * sb + z * cb, u2 = u * cp - z1 * sp, z2 = u * sp + z1 * cp; return [o.x + sh * u2 + ch * w1, o.y + ch * u2 - sh * w1, z0 + z2]; };
+  const lit = Math.max(opts.minLit || 0.35, Math.min(1, vis));
+  const shade = (c, k) => { const h = String(c).replace('#', ''), v = [0, 2, 4].map(i => parseInt(h.substr(i, 2), 16) || 0), n = [8, 10, 16]; return 'rgb(' + v.map((x, i) => Math.round((n[i] + (x - n[i]) * lit) * (1 - k))).join(',') + ')'; };
+  const P = (u, w, z) => { const q = polyProj([W3(u, w, z)]); return q.length ? q[0] : null; };
+  ctx.save(); ctx.globalAlpha = opts.alpha == null ? 1 : opts.alpha;
+  const fx = skinFx(skin);
+  shipFxBefore(skin, P, 4.5, 5, 0, 2);
+  const parts = [];
+  const dist = pt => Math.hypot(camX - pt[0], camY - pt[1], camH - pt[2]);
+  const poly = (pts, col) => parts.push({ d: dist(pts.reduce((a, q) => [a[0] + q[0] / pts.length, a[1] + q[1] / pts.length, a[2] + q[2] / pts.length], [0, 0, 0])), draw: () => fillPoly(pts, col) });
+  // wings, a touch of dihedral
+  for (const s of [-1, 1]) poly([W3(1.4, 0, 0), W3(1.0, s * 5.5, 0.35), W3(-0.2, s * 5.5, 0.35), W3(-0.6, 0, 0)], shade(skin.sail, s > 0 ? 0.05 : 0.15));
+  if (tier >= 3) for (const s of [-1, 1]) poly([W3(0.5, s * 4.2, 0.37), W3(0.3, s * 5.3, 0.37), W3(-0.05, s * 5.3, 0.37), W3(0.15, s * 4.2, 0.37)], shade(skin.rail, 0));
+  // tailplane and fin
+  for (const s of [-1, 1]) poly([W3(-3.4, 0, 0.2), W3(-3.7, s * 2, 0.25), W3(-4.3, s * 2, 0.25), W3(-4.4, 0, 0.2)], shade(skin.sail, 0.2));
+  poly([W3(-3.2, 0, 0.4), W3(-4.5, 0, 2.1), W3(-4.6, 0, 2.1), W3(-4.5, 0, 0.3)], shade(skin.hull, 0.15));
+  // fuselage: two side panels and a top, tapering to the tail
+  for (const s of [-1, 1]) poly([W3(3.6, s * 0.55, -0.4), W3(3.6, s * 0.55, 0.5), W3(-4.4, s * 0.12, 0.45), W3(-4.4, s * 0.12, 0.1)], shade(skin.hull, s > 0 ? 0.1 : 0.25));
+  poly([W3(3.6, -0.55, 0.5), W3(3.6, 0.55, 0.5), W3(-4.4, 0.12, 0.45), W3(-4.4, -0.12, 0.45)], shade(skin.hull, 0));
+  poly([W3(1.8, -0.45, 0.55), W3(1.8, 0.45, 0.55), W3(0.2, 0.35, 1.15), W3(0.2, -0.35, 1.15)], `rgba(${tier >= 4 ? '255,220,140' : '170,200,230'},0.55)`);   // the canopy
+  parts.sort((a, b2) => b2.d - a.d);
+  for (const q of parts) q.draw();
+  // the propeller disc and its blur
+  const nose = P(3.8, 0, 0.05);
+  if (nose) {
+    const r = Math.max(2, 1.4 * nose.s);
+    ctx.fillStyle = 'rgba(220,225,235,0.12)'; ctx.beginPath(); ctx.arc(nose.x, nose.y, r, 0, 6.28); ctx.fill();
+    ctx.strokeStyle = 'rgba(30,30,34,0.35)'; ctx.lineWidth = Math.max(1, r * 0.12); const a = g.t * 40;
+    ctx.beginPath(); ctx.moveTo(nose.x + Math.cos(a) * r, nose.y + Math.sin(a) * r); ctx.lineTo(nose.x - Math.cos(a) * r, nose.y - Math.sin(a) * r); ctx.stroke();
+  }
+  // nav lights: red to port, green to starboard, a white strobe on the tail; the skin's lamp in the cockpit
+  const L = P(0.4, -5.5, 0.4), Rr = P(0.4, 5.5, 0.4), T = P(-4.6, 0, 2.1), C = P(1, 0, 1);
+  ctx.globalAlpha = 1;
+  if (L) lamp(L.x, L.y, '#ff3a2a', Math.max(1.4, 0.35 * L.s));
+  if (Rr) lamp(Rr.x, Rr.y, '#3aff7a', Math.max(1.4, 0.35 * Rr.s));
+  if (T && Math.sin(g.t * 7 + (o.bob || 0)) > 0.85) lamp(T.x, T.y, '#ffffff', Math.max(1.5, 0.4 * T.s));
+  if (C) lamp(C.x, C.y, opts.lantern || skin.lantern, Math.max(1.5, 0.35 * C.s));
+  if (opts.pennant && T) drawPennant(ctx, T.x, T.y, Math.min(40, Math.max(5, 1.3 * T.s)), opts.pennant, g.t + (o.bob || 0));
+  shipFxAfter(skin, P, 4.5, 5, 0, 2);
+  ctx.restore();
+  return T || nose;
+}
+
+// the view from the cockpit: canopy frame, the cowling and the prop, and the instrument panel
+function drawCockpit(skin) {
+  const tier = skinTier(skin);
+  // canopy struts
+  ctx.strokeStyle = mix(skin.wood, '#000000', 0.45); ctx.lineWidth = Math.max(8, W * 0.012); ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(W * 0.06, H * 0.73); ctx.lineTo(W * 0.27, -10); ctx.moveTo(W * 0.94, H * 0.73); ctx.lineTo(W * 0.73, -10); ctx.stroke();
+  ctx.lineWidth = Math.max(5, W * 0.007); ctx.beginPath(); ctx.moveTo(W * 0.27, H * 0.02); ctx.quadraticCurveTo(cx, -H * 0.03, W * 0.73, H * 0.02); ctx.stroke();
+  ctx.lineCap = 'butt';
+  // the propeller: a pale disc with a blade flicking round
+  const px = cx, py = H * 0.6, pr = Math.min(W * 0.2, H * 0.2);
+  ctx.fillStyle = 'rgba(220,226,236,0.06)'; ctx.beginPath(); ctx.ellipse(px, py, pr, pr * 0.95, 0, 0, 6.28); ctx.fill();
+  if (!reduceMotion) {
+    ctx.strokeStyle = 'rgba(20,20,24,0.22)'; ctx.lineWidth = pr * 0.12;
+    for (const k of [0, Math.PI]) { const a = g.t * 31 + k; ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(px + Math.cos(a) * pr, py + Math.sin(a) * pr * 0.95); ctx.stroke(); }
+  }
+  // the cowling
+  const cg = ctx.createLinearGradient(cx - W * 0.14, 0, cx + W * 0.14, 0);
+  cg.addColorStop(0, mix(skin.hull, '#000000', 0.55)); cg.addColorStop(0.5, mix(skin.hull, '#ffffff', 0.12)); cg.addColorStop(1, mix(skin.hull, '#000000', 0.6));
+  ctx.fillStyle = cg;
+  ctx.beginPath(); ctx.moveTo(cx - W * 0.16, H * 0.73); ctx.quadraticCurveTo(cx - W * 0.1, H * 0.615, cx, H * 0.605); ctx.quadraticCurveTo(cx + W * 0.1, H * 0.615, cx + W * 0.16, H * 0.73); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = '#16161a'; ctx.beginPath(); ctx.arc(px, py, Math.max(4, pr * 0.07), 0, 6.28); ctx.fill();
+  if (tier >= 2) { ctx.strokeStyle = skin.sail; ctx.lineWidth = Math.max(2, H * 0.006); ctx.beginPath(); ctx.moveTo(cx - W * 0.12, H * 0.68); ctx.quadraticCurveTo(cx, H * 0.635, cx + W * 0.12, H * 0.68); ctx.stroke(); }
+  // the instrument panel
+  const pg = ctx.createLinearGradient(0, H * 0.78, 0, H);
+  pg.addColorStop(0, mix(skin.deck[0], '#000000', 0.2)); pg.addColorStop(1, mix(skin.deck[1], '#000000', 0.4));
+  ctx.fillStyle = pg;
+  ctx.beginPath(); ctx.moveTo(-5, H + 5); ctx.lineTo(-5, H * 0.74); ctx.quadraticCurveTo(cx, H * 0.67, W + 5, H * 0.74); ctx.lineTo(W + 5, H + 5); ctx.closePath(); ctx.fill();
+  ctx.strokeStyle = tier >= 5 ? '#e8c050' : skin.rail; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(-5, H * 0.74); ctx.quadraticCurveTo(cx, H * 0.67, W + 5, H * 0.74); ctx.stroke();
+  // four gauges: speed, altitude, heading, hull (up on the panel, clear of the buttons below)
+  const gr = Math.min(W, H) * 0.042, gy = H * 0.755;
+  const gauges = [
+    ['KTS', Math.min(1, ship.v / 25)], ['ALT', clamp(ship.z / SKYF.ZMAX, 0, 1)], ['HDG', null], ['HULL', ship.hull / ship.maxHull],
+  ];
+  gauges.forEach(([label, v], i) => {
+    const x = cx + (i - 1.5) * Math.min(W * 0.17, gr * 4.2);
+    ctx.fillStyle = '#0b0c10'; ctx.beginPath(); ctx.arc(x, gy, gr, 0, 6.28); ctx.fill();
+    ctx.strokeStyle = tier >= 5 ? '#e8c050' : mix(skin.rail, '#000000', 0.2); ctx.lineWidth = 2; ctx.stroke();
+    ctx.globalAlpha = 0.35; lamp(x, gy, skin.lantern && skin.lantern.length === 7 ? skin.lantern : '#ffcf86', gr * 0.35); ctx.globalAlpha = 1;
+    ctx.strokeStyle = 'rgba(230,230,220,0.35)'; ctx.lineWidth = 1;
+    for (let t = 0; t < 8; t++) { const a = -Math.PI * 1.25 + t / 7 * Math.PI * 1.5; ctx.beginPath(); ctx.moveTo(x + Math.cos(a) * gr * 0.78, gy + Math.sin(a) * gr * 0.78); ctx.lineTo(x + Math.cos(a) * gr * 0.92, gy + Math.sin(a) * gr * 0.92); ctx.stroke(); }
+    const a = v == null ? -ship.h - Math.PI / 2 : -Math.PI * 1.25 + v * Math.PI * 1.5;
+    ctx.strokeStyle = label === 'HULL' && v < 0.4 ? '#ff6a5a' : skin.lantern || '#ffcf86'; ctx.lineWidth = Math.max(1.5, gr * 0.08);
+    ctx.beginPath(); ctx.moveTo(x, gy); ctx.lineTo(x + Math.cos(a) * gr * 0.75, gy + Math.sin(a) * gr * 0.75); ctx.stroke();
+    ctx.fillStyle = 'rgba(220,220,210,0.6)'; ctx.font = `${Math.max(8, gr * 0.28) | 0}px "Courier Prime", monospace`; ctx.textAlign = 'center';
+    ctx.fillText(label, x, gy + gr * 0.55);
+  });
+  // an artificial horizon in the middle of the panel would crowd it; the bank shows in the view itself
+}
+
+// the runway lamps where the pier would be, and a strobe leading in
+function drawRunway() {
+  const HB = SK.HARBOUR;
+  for (const sx of [-1, 1]) for (let y = 0; y <= 60; y += 6) {
+    const c = cam(HB.x + sx * 16, y, 0.5); if (c.f < SK.NEAR) continue;
+    const q = proj(c); lamp(q.x, q.y, sx < 0 ? '#e46c4f' : '#86cfae', Math.max(1.2, 0.5 * Math.sqrt(q.s)));
+  }
+  const k = Math.floor(g.t * 6) % 8;
+  const c = cam(HB.x, 60 + k * 14, 0.6); if (c.f > SK.NEAR) { const q = proj(c); lamp(q.x, q.y, '#ffffff', Math.max(1.5, 0.6 * Math.sqrt(q.s))); }
+}
+
+// wind streaks rushing past, quicker the faster you fly
+const SKY_STREAKS = []; for (let i = 0; i < 40; i++) SKY_STREAKS.push({ x: Math.random(), y: Math.random(), l: 0.02 + Math.random() * 0.05 });
+function drawSkyWeather() {
+  const sp = Math.min(1, ship.v / 20);
+  ctx.strokeStyle = `rgba(210,220,240,${0.06 + 0.1 * sp})`; ctx.lineWidth = 1; ctx.beginPath();
+  for (const s of SKY_STREAKS) {
+    s.y += 0.01 + sp * 0.03; if (s.y > 1.1) { s.y = -0.1; s.x = Math.random(); }
+    const x = cx + (s.x - 0.5) * W * (0.6 + s.y), y = H * 0.5 + (s.y - 0.5) * H;
+    const dx = (x - cx) * s.l * 3, dy = (y - H * 0.5) * s.l * 3;
+    ctx.moveTo(x, y); ctx.lineTo(x + dx, y + dy);
+  }
+  ctx.stroke();
+  if (g.lightning > 0) { ctx.fillStyle = `rgba(220,230,255,${g.lightning * 0.22})`; ctx.fillRect(0, 0, W, H); }
+  return true;
+}
+
+// ---------- the sky's own three ----------
+const SKY_TRIO = ['thunder', 'petrels', 'squall'];
+SPECIAL_TRIOS.sky = SKY_TRIO;
+Object.assign(FOE_NAMES, { thunder: 'the Thunderhead', petrels: 'the Petrels', squall: 'the Squall' });
+Object.assign(FOE_INTRO, {
+  thunder: 'A cloud ahead is flickering from inside: the Thunderhead. When a ring of white light opens round you, get out of it before the bolt comes down.',
+  petrels: 'A flock of storm petrels is crossing your course at your height. Climb, dive or turn, or sound the horn (the bell) to scatter them.',
+  squall: 'The air is starting to shove. The Squall throws a gust at you from one side and pushes you down: lean into it and climb.',
+});
+Object.assign(FOE_KINDS, {
+  thunder: {
+    h: 1, max: 1, every: [16, 24], vis: () => 1,
+    spawn() {
+      const t = aheadPt(ship.v * 2.4 + rand(-4, 10), rand(-8, 8));
+      sfxFoe('rumble', panOf(t), 0.5);
+      return { x: t.x, y: t.y, z: ship.z, fuse: 2.4, r: 9, done: false, t: 0 };
+    },
+    update(f, dt) {
+      f.t += dt; f.fuse -= dt; f.z += (ship.z - f.z) * Math.min(1, dt * 2);
+      if (!f.done && f.fuse <= 0) {
+        f.done = true; g.lightning = Math.max(g.lightning, 1); g.shake = Math.max(g.shake, 0.4);
+        sfxFoe('boom', panOf(f), 1); sfxFoe('crack', panOf(f), 1);
+        if (Math.hypot(ship.x - f.x, ship.y - f.y) < f.r + 2) foeHit('a lightning bolt');
+      }
+      if (f.fuse < -0.5) f.dead = true;
+    },
+    draw(f, q) {
+      const k = q.s * f.r;
+      if (!f.done) {
+        // a ring of white light at your height, tightening to the strike
+        const p = 1 - Math.max(0, f.fuse / 2.4), pulse = 0.6 + 0.4 * Math.sin(g.t * 16);
+        ctx.strokeStyle = `rgba(220,235,255,${0.5 + 0.4 * pulse})`; ctx.lineWidth = Math.max(1.5, 0.3 * q.s);
+        ctx.beginPath(); ctx.ellipse(q.x, q.y, k, k * 0.3, 0, 0, 6.28); ctx.stroke();
+        ctx.fillStyle = `rgba(200,220,255,${0.12 + 0.2 * p})`; ctx.beginPath(); ctx.ellipse(q.x, q.y, k * p, k * 0.3 * p, 0, 0, 6.28); ctx.fill();
+      } else {
+        // the bolt, top of the screen down through the ring
+        ctx.strokeStyle = 'rgba(235,242,255,0.95)'; ctx.lineWidth = Math.max(2, 0.25 * q.s); ctx.beginPath();
+        let x = q.x + rand(-20, 20), y = -10; ctx.moveTo(x, y);
+        while (y < q.y) { y += rand(15, 40); x += rand(-14, 14); ctx.lineTo(x, Math.min(y, q.y)); }
+        ctx.stroke();
+      }
+    },
+  },
+  petrels: {
+    h: 1, max: 1, every: [18, 26], fly: true, vis: () => 0.9,
+    spawn() {
+      const side = Math.random() < 0.5 ? -1 : 1, p = aheadPt(rand(110, 150), side * 70), fx = Math.cos(ship.h) * -side, fy = -Math.sin(ship.h) * -side;
+      const birds = []; for (let i = 0; i < 14; i++) birds.push({ dx: rand(-7, 7), dy: rand(-7, 7), dz: rand(-3, 3), ph: rand(0, 6) });
+      return { x: p.x, y: p.y, z: ship.z + rand(-3, 3), vx: fx * 13, vy: fy * 13, birds, life: 14, hit: false, scatter: 0 };
+    },
+    update(f, dt) {
+      f.life -= dt; f.x += f.vx * dt; f.y += f.vy * dt;
+      if (f.scatter > 0) { f.scatter += dt; f.z += 12 * dt; if (f.scatter > 2) f.dead = true; return; }
+      const d = Math.hypot(f.x - ship.x, f.y - ship.y, (f.z - ship.z) * 1.3);
+      if (!f.hit && d < 8) { f.hit = true; foeHit('a birdstrike'); sfxFoe('caw', 0, 1); f.scatter = 0.01; }
+      if (Math.random() < dt * 0.6 && d < 200) sfxFoe('caw', panOf(f), 0.3);
+      if (f.life <= 0) f.dead = true;
+    },
+    bell(f) { if (f.scatter <= 0 && dist(f) < 160) { f.scatter = 0.01; return 'The horn scattered the petrels.'; } },
+    draw(f, q, vis) {
+      ctx.strokeStyle = `rgba(20,22,30,${0.9 * vis})`; ctx.lineWidth = Math.max(1, 0.18 * q.s);
+      const spread = 1 + f.scatter * 3;
+      ctx.beginPath();
+      for (const b of f.birds) {
+        const x = q.x + b.dx * spread * q.s, y = q.y - b.dz * spread * q.s + b.dy * 0.3 * q.s, w = Math.max(2, 0.9 * q.s), fl = Math.sin(g.t * 14 + b.ph) * w * 0.5;
+        ctx.moveTo(x - w, y - fl); ctx.lineTo(x, y); ctx.lineTo(x + w, y - fl);
+      }
+      ctx.stroke();
+    },
+  },
+  squall: {
+    h: 1, max: 1, every: [20, 30], vis: () => 0,
+    spawn() {
+      const side = Math.random() < 0.5 ? -1 : 1, p = aheadPt(30, side * 40);
+      sfxFoe('whoosh', side, 0.8);
+      addLog('Gust coming from ' + (side < 0 ? 'port' : 'starboard') + '! Lean into it and climb.', 'w');
+      return { x: p.x, y: p.y, z: ship.z, side, warn: 1.8, push: 3.2, ph: 0 };
+    },
+    update(f, dt) {
+      f.ph += dt;
+      const p = aheadPt(30, f.side * 40); f.x = p.x; f.y = p.y; f.z = ship.z;
+      if (f.warn > 0) { f.warn -= dt; return; }
+      f.push -= dt;
+      // shoves you sideways (away from where it came from) and down
+      const rx = Math.cos(ship.h), ry = -Math.sin(ship.h);
+      ship.x -= rx * f.side * 6 * dt; ship.y -= ry * f.side * 6 * dt; ship.z -= 3 * dt;
+      g.shake = Math.max(g.shake, 0.12);
+      if (Math.random() < dt * 2) sfxFoe('whoosh', f.side, 0.4);
+      if (f.push <= 0) f.dead = true;
+    },
+    draw() {},
+  },
+});
+// the squall's streaks across the screen (drawn over everything, from the side the gust comes from)
+function drawSquall() {
+  if (!g.foes || !g.foes.squall) return;
+  for (const f of g.foes.squall.list) {
+    if (f.dead) continue;
+    const a = f.warn > 0 ? 0.25 * (1 - f.warn / 1.8) : 0.45;
+    ctx.strokeStyle = `rgba(220,230,250,${a})`; ctx.lineWidth = 2; ctx.beginPath();
+    for (let i = 0; i < 14; i++) {
+      const y = H * (0.15 + ((i * 0.37 + f.ph * 0.6) % 0.7)), k = ((f.ph * 1.8 + i * 0.13) % 1);
+      const x = f.side < 0 ? k * W : W - k * W, L = W * 0.12 * (0.5 + (i % 3) * 0.3);
+      ctx.moveTo(x, y); ctx.lineTo(x - f.side * L, y + L * 0.12);
+    }
+    ctx.stroke();
+  }
+}
+
+// the engine's drone while you're flying
+function skyHum(on) {
+  if (!AUD.ctx) return;
+  if (on && !AUD.engine) {
+    const c = AUD.ctx, gn = c.createGain(); gn.gain.value = 0;
+    const o1 = c.createOscillator(), o2 = c.createOscillator(), f = c.createBiquadFilter();
+    o1.type = 'sawtooth'; o1.frequency.value = 72; o2.type = 'square'; o2.frequency.value = 36;
+    f.type = 'lowpass'; f.frequency.value = 500;
+    o1.connect(f); o2.connect(f); f.connect(gn).connect(AUD.master);
+    o1.start(); o2.start();
+    gn.gain.setTargetAtTime(0.03, c.currentTime, 0.6);
+    AUD.engine = { gn, o1, o2 };
+  } else if (!on && AUD.engine) {
+    const h = AUD.engine; AUD.engine = null;
+    h.gn.gain.setTargetAtTime(0, AUD.ctx.currentTime, 0.2);
+    setTimeout(() => { try { h.o1.stop(); h.o2.stop(); } catch (e) {} }, 1200);
+  } else if (on && AUD.engine && ship) {
+    AUD.engine.o1.frequency.setTargetAtTime(60 + ship.v * 2 - (ship.pitch || 0) * 20, AUD.ctx.currentTime, 0.2);
+  }
+}
+
+// remember which clouds you've seen, by their own light (like rocks fading after the beam passes)
+function rememberClouds() {
+  for (const o of g.rocks) {
+    const v = cloudVis(o);
+    if (v > 0.3 && (o.seenT == null || v >= afterglow(o))) { o.seenT = g.t; o.seenV = Math.min(1, v); }
+  }
+}
+
 // ---- src/game.js ----
 // Game state, the update step, voyages, input and the main loop.
 
@@ -6225,6 +6617,8 @@ function newVoyage(n, attract, seed, slot) {
   g.pickups = v.pickups || []; g.found = 0; if (typeof renderFound === 'function') renderFound();
   g.verity = newVerity(v.backrooms); g.verityScare = 0; g.lightsOut = 0;
   g.biome = v.special || biomeFor(n, attract);
+  g.sky = false; ship.z = 0; ship.pitch = 0;
+  if (g.biome === 'sky' && !v.backrooms) setupSky(seed);
   g.portal = null;
   if (v.nether) startPortal(biomeFor(n - 1));
   renderHud();
@@ -6321,7 +6715,7 @@ function sailInCompany(dt) {
 // overlaps it is pushed clear. Only a real impact (closing on it faster than SK.IMPACT m/s) stoves
 // in a plank; a glancing touch just scrapes, slows her a little and turns her along the obstacle.
 function hullPoints() {
-  const b = BOAT_BY_ID[ship.boat] || BOATS[0];
+  const b = g && g.sky ? SKYF.PLANE : BOAT_BY_ID[ship.boat] || BOATS[0];
   const sx = Math.sin(ship.h), sy = Math.cos(ship.h), pts = [];
   for (let i = 0; i < 5; i++) {
     const off = b.bow - (b.len * 0.8) * i / 4;
@@ -6373,7 +6767,8 @@ function checkCollisions() {
   for (const r of g.rocks) {
     if (r.doomed || r.gone) continue;
     if (Math.abs(r.x - ship.x) > r.r + 40 || Math.abs(r.y - ship.y) > r.r + 40) continue;
-    if ((c = hullContact(pts, r.x, r.y, r.r)) && resolveContact(c, 'a skerry')) break;
+    if (g.sky && Math.abs(ship.z - r.z) > r.rz + 1.5) continue;   // above or below this cloud
+    if ((c = hullContact(pts, r.x, r.y, r.r)) && resolveContact(c, g.sky ? 'a storm cloud' : 'a skerry')) break;
   }
   for (const o of g.wrecks) {
     if (Math.hypot(o.x - ship.x, o.y - ship.y) > o.r + 40) continue;
@@ -6387,6 +6782,7 @@ function checkCollisions() {
     }
   }
   for (const w of g.walls) {
+    if (g.sky && ship.z > 6) continue;   // flying over the piers
     if (Math.max(Math.abs(closestOnSeg(ship.x, ship.y, w).x - ship.x), Math.abs(closestOnSeg(ship.x, ship.y, w).y - ship.y)) > 40) continue;
     if ((c = hullContact(pts, 0, 0, w.r || 1, w)) && resolveContact(c, w.what || 'the pier')) break;
   }
@@ -6396,7 +6792,7 @@ function checkCollisions() {
       const lowest = pts.reduce((m, p) => Math.min(m, p.y - p.w), Infinity);
       if (lowest < 5) resolveContact({ pen: 5 - lowest, nx: 0, ny: 1 }, 'the shore');
     }
-    if (state === 'play' && inGap && ship.y < 36 && ship.y > 0) { arrive(); return true; }
+    if (state === 'play' && inGap && ship.y < 36 && ship.y > 0 && (!g.sky || ship.z < SKYF.LAND)) { arrive(); return true; }
   } else if (state === 'play' && Math.hypot(ship.x - g.exit.x, ship.y - g.exit.y) < g.exit.r) { arrive(); return true; }
   return ship.hull !== hull0 || state !== 'play';
 }
@@ -6441,7 +6837,9 @@ function update(dt) {
     steer = clamp(steer, -1, 1); sailIn = clamp(sailIn, -1, 1);
   }
   const boat = BOAT_BY_ID[ship.boat] || BOATS[0];
-  ship.rudder += (steer - ship.rudder) * Math.min(1, dt * 4 * boat.turn);
+  const turnK = g.sky ? 1.25 : boat.turn;   // in the sky every boat is the same little plane
+  ship.rudder += (steer - ship.rudder) * Math.min(1, dt * 4 * turnK);
+  if (g.sky) skyFlight(dt, sailIn, boat); else {
   // no top speed: keep making sail and she keeps going faster (and the longer you hold it, the quicker it climbs)
   if (sailIn > 0) g.sailHeld = (g.sailHeld || 0) + dt; else g.sailHeld = 0;
   const rate = (sailIn > 0 ? 1.6 * (1 + g.sailHeld * 1.2) : 1.6) * boat.accel;
@@ -6449,7 +6847,8 @@ function update(dt) {
   ship.sail = Math.max(0.15, ship.sail + (sailIn > 0 ? sailIn * rate : sailIn * (1.6 + ship.sail * 1.8)) * dt);
   const vTarget = Math.min(g.mods.cap, (3 + ship.sail * 12) * g.mods.slow * (boat.top || 1));
   ship.v += (vTarget - ship.v) * Math.min(1, dt * 4 * boat.accel);   // she answers the sail almost at once
-  ship.h += ship.rudder * 0.55 * boat.turn * dt * (0.35 + 0.65 * Math.min(1, ship.v / 10));
+  }
+  ship.h += ship.rudder * 0.55 * turnK * dt * (0.35 + 0.65 * Math.min(1, ship.v / 10));
   // move in short steps so a fast ship can't jump clean over a rock between frames
   const steps = Math.min(60, Math.max(1, Math.ceil(ship.v * dt / 2)));
   for (let i = 0; i < steps; i++) {
@@ -6526,7 +6925,7 @@ function updateFlareButton() {
 let jetShown = -1;
 function updateJetButton() {
   const b = $('jetBtn'); if (!b) return;
-  const on = ship.boat === 'carrier' && !g.attract;
+  const on = ship.boat === 'carrier' && !g.attract && !g.sky;
   if (b.hidden === on) b.hidden = !on;
   if (!on) return;
   const busy = !!g.jet, p = busy ? 0 : g.jetCd > 0 ? 1 - g.jetCd / JET.CD : 1, v = Math.round(p * 50) + (busy ? 100 : 0);
@@ -6594,7 +6993,17 @@ function beginCrewVoyage(L, slot) {
   cv.focus({ preventScroll: true });
 }
 
+// in the sky the sail buttons become the stick
+function setFlightControls() {
+  const up = $('sailUp'), dn = $('sailDown'), sky = !!(g && g.sky);
+  if (up) up.querySelector('small').textContent = sky ? 'Climb' : 'Faster';
+  if (dn) dn.querySelector('small').textContent = sky ? 'Dive' : 'Slower';
+  const bb = $('bellBtn') && $('bellBtn').querySelector('b'); if (bb) bb.textContent = sky ? 'Sound the horn' : 'Ring the bell';
+  const h = $('hint'); if (h && !h.dataset.base) h.dataset.base = h.textContent;
+  if (h) h.textContent = sky ? '\u2190 \u2192 steer \u00b7 \u2191 climb \u00b7 \u2193 dive \u00b7 Space horn \u00b7 F flare \u00b7 V view' : h.dataset.base;
+}
 function enteredBackrooms() {
+  setFlightControls();
   $('distLabel').textContent = g.backrooms ? 'Exit' : 'Harbour';
   $('portTitle').textContent = g.backrooms ? 'Out of the Rooms' : 'Safe in Harbour';
   $('stage').classList.toggle('rooms', !!g.backrooms);
@@ -6641,7 +7050,8 @@ function arrive() {
   const page = g.backrooms ? SK.BACKROOMS_LOG : SK.SEA_LOG[g.biome] || SK.LOG[(run.voyages - 1) % SK.LOG.length];
   const seaPort = { nether: 'The lava thins to black water, the red roof lifts into ordinary cloud, and the pier lamps are dead ahead. Your paint is blistered. Plimsoll is steaming gently.',
     odyssey: 'The warm wind drops, the temples fade off the headland, and it is the old cold harbour again. Somewhere behind you a voice is still singing.',
-    between: 'The dusk lets go all at once, like a held breath, and the night comes back. The pier is where it should be. You check twice.' };
+    between: 'The dusk lets go all at once, like a held breath, and the night comes back. The pier is where it should be. You check twice.',
+    sky: 'You put her down between the runway lamps with a bump and a squeal, and taxi to a stop at the end of the pier. Plimsoll is waiting there, looking up.' };
   $('portEyebrow').textContent = 'Voyage ' + g.n + (g.backrooms ? ' · found the way out' : ' · made harbour');
   $('portText').textContent = seaPort[g.biome] && !g.backrooms ? seaPort[g.biome] : g.backrooms ? 'Through the green-lit door, and the sea is the sea again: cold, black, and the pier lamps right ahead. Behind you there is no door, only fog.' : ship.hull === ship.maxHull ? 'Not a scratch on her. Plimsoll sits down on the pier and takes his shoes off.' :
     'She limps in with ' + (ship.maxHull - ship.hull) + (ship.maxHull - ship.hull === 1 ? ' plank' : ' planks') + ' stove in. The shipwright will patch her overnight.';
@@ -7158,6 +7568,8 @@ function syncMates() {
       if (Number.isFinite(pr.x) && Number.isFinite(pr.y) && Number.isFinite(pr.h)) {
         if (!m.placed) { m.x = pr.x; m.y = pr.y; m.h = pr.h; m.placed = true; }
         m.tx = pr.x; m.ty = pr.y; m.th = pr.h;
+        m.tz = Number.isFinite(pr.z) ? pr.z : 0; m.pitch = Number.isFinite(pr.pi) ? pr.pi : 0;
+        if (m.z == null) m.z = m.tz;
       }
       const bell = Number.isFinite(pr.bell) ? pr.bell : 0;
       if (bell > m.bell) { m.bell = bell; if (m.st === 'sail') mateRangBell(m); }
@@ -7283,7 +7695,7 @@ function mateRangBell(m) {
 function netTick(dt) {
   for (const m of NET.mates.values()) {
     const k = Math.min(1, dt * 6);
-    m.x += (m.tx - m.x) * k; m.y += (m.ty - m.y) * k;
+    m.x += (m.tx - m.x) * k; m.y += (m.ty - m.y) * k; m.z = (m.z || 0) + ((m.tz || 0) - (m.z || 0)) * k;
     m.h += angDiff(m.th, m.h) * k;
     if (Number.isFinite(m.tmx)) { m.mx += (m.tmx - m.mx) * k; m.my += (m.tmy - m.my) * k; }
     if (Number.isFinite(m.tpx)) { m.px += (m.tpx - m.px) * k; m.py += (m.tpy - m.py) * k; }
@@ -7297,6 +7709,7 @@ function netTick(dt) {
     const r1 = v => Math.round(v * 10) / 10;
     send({
       x: r1(ship.x), y: r1(ship.y), h: Math.round(ship.h * 1000) / 1000, v: r1(ship.v), hull: ship.hull, stage: g.maren.stage,
+      z: g.sky ? r1(ship.z) : 0, pi: g.sky ? Math.round((ship.pitch || 0) * 100) / 100 : 0,
       mx: g.maren.active ? r1(g.maren.x) : null, my: g.maren.active ? r1(g.maren.y) : null,
       px: r1(g.plim.x), py: r1(g.plim.y),
     });
@@ -7648,6 +8061,7 @@ const CARRIER_ZD = 6;   // flight deck height above the water
 function launchJet() {
   if (state !== 'play' || ship.boat !== 'carrier' || !g || g.attract) return;
   if (g.backrooms) { addLog('No room to fly in here. The ceiling is too low.', 'w'); return; }
+  if (g.sky) return;
   if (g.jet || (g.jetCd || 0) > 0) return;
   g.jet = { t: 0, x: ship.x, y: ship.y, z: CARRIER_ZD + 1, h: ship.h };
   g.jetCd = JET.CD;
@@ -8423,12 +8837,14 @@ function renderFound() {
 }
 function updatePickups() {
   if (!g.pickups || g.attract || state !== 'play') return;
-  for (const p of g.pickups) if (!p.taken && Math.hypot(p.x - ship.x, p.y - ship.y) < SK.PICKUP_RADIUS) collectPickup(p);
+  for (const p of g.pickups) if (!p.taken && Math.hypot(p.x - ship.x, p.y - ship.y) < SK.PICKUP_RADIUS && (!g.sky || Math.abs((p.z || 0) - ship.z) < 8)) collectPickup(p);
 }
 // a wooden crate bobbing on the water, with a little lantern lashed on top so you can find it in the dark
 function drawPickup(o, p, vis) {
   const s = p.s, bob = Math.sin(g.t * 2 + o.ph) * 0.25 * s, sz = Math.max(4, 3.6 * s), x = p.x, y = p.y + bob;
   const lit = Math.max(0.35, vis);
+  // in the sky it hangs from a little balloon
+  if (g.sky) { ctx.strokeStyle = 'rgba(200,190,170,0.6)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(x, y - sz); ctx.lineTo(x, y - sz * 3.2); ctx.stroke(); ctx.fillStyle = 'rgba(210,80,60,0.85)'; ctx.beginPath(); ctx.ellipse(x, y - sz * 4, sz * 0.9, sz * 1.1, 0, 0, 6.28); ctx.fill(); }
   // glow first, visible from far away
   const pulse = 1 + 0.12 * Math.sin(g.t * 4 + o.ph);
   const gl = Math.max(2.5, 1.3 * Math.sqrt(s)) * pulse;
@@ -9146,6 +9562,7 @@ function frame(now) {
   try {
     pollPad(dt);
     roomsHum(!!(g && g.backrooms && state === 'play'));
+    skyHum(!!(g && g.sky && state === 'play'));
     if (g && g.backrooms) roomsHumLevel(roomLevel());
     if (state === 'play' && g.verityScare > 0) {
       // Verity's jumpscare, and then the voyage is over

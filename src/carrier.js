@@ -12,6 +12,7 @@ const CARRIER_ZD = 6;   // flight deck height above the water
 function launchJet() {
   if (state !== 'play' || ship.boat !== 'carrier' || !g || g.attract) return;
   if (g.backrooms) { addLog('No room to fly in here. The ceiling is too low.', 'w'); return; }
+  if (g.sky) return;
   if (g.jet || (g.jetCd || 0) > 0) return;
   g.jet = { t: 0, x: ship.x, y: ship.y, z: CARRIER_ZD + 1, h: ship.h };
   g.jetCd = JET.CD;

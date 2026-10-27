@@ -380,9 +380,11 @@ function drawScene() {
   hy = H * (VIEW.third ? (W < 600 ? CHASE.phoneHorizon : CHASE.horizon) : 0.46) + Math.sin(ship.bob * 1.1) * H * 0.006;
   const third = VIEW.third;
   if (third) { const c = chaseCamera(ship); camX = c.x; camY = c.y; camH = c.z; if (c.horizon != null) hy = Math.max(H * 0.08, c.horizon) + Math.sin(ship.bob * 1.1) * H * 0.006; }
-  else { camX = ship.x; camY = ship.y; camH = SK.CAM_H; }
+  else { camX = ship.x; camY = ship.y; camH = g.sky ? ship.z + 1.2 : SK.CAM_H; }
+  // flying: the horizon drops as the nose comes up, and the whole view banks into a turn
+  if (g.sky && !third) hy += (ship.pitch || 0) * focal * 0.9;
   yaw = ship.h;
-  const roll = reduceMotion ? 0 : (Math.sin(ship.bob * 0.9) * 0.018 + ship.rudder * 0.025) * (third ? 0.3 : 1);
+  const roll = reduceMotion ? 0 : g.sky ? ship.rudder * (third ? 0.08 : 0.3) : (Math.sin(ship.bob * 0.9) * 0.018 + ship.rudder * 0.025) * (third ? 0.3 : 1);
 
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.save();
@@ -423,15 +425,15 @@ function drawScene() {
   }
 
   // everything on the water, far to near
-  if (!g.backrooms) { rememberLit(g.rocks); rememberLit(g.wrecks); rememberLit(g.timber); }
+  if (!g.backrooms) { if (g.sky) rememberClouds(); else rememberLit(g.rocks); rememberLit(g.wrecks); rememberLit(g.timber); }
   const items = [];
-  const add = (kind, o) => { const c = cam(o.x, o.y, 0); if (c.f > SK.NEAR + 2) items.push({ kind, o, c }); };
+  const add = (kind, o) => { const c = cam(o.x, o.y, g.sky ? (o.z || 0) : 0); if (c.f > SK.NEAR + 2) items.push({ kind, o, c }); };
   for (const o of g.rocks) if (!o.gone) add('rock', o);
   for (const o of g.wrecks) add('wreck', o);
   for (const o of g.timber) add('timber', o);
   if (g.backrooms) { add('exit', g.exit); drawRoomWalls(); }
   for (const o of g.pickups || []) if (!o.taken) add('pickup', o);
-  if (third) { const c = cam(ship.x, ship.y, 0); if (c.f > SK.NEAR) items.push({ kind: 'self', o: ship, c }); }
+  if (third) { const c = cam(ship.x, ship.y, g.sky ? ship.z : 0); if (c.f > SK.NEAR) items.push({ kind: 'self', o: ship, c }); }
   foeItems((kind, o, z, k) => { const c = cam(o.x, o.y, z); if (c.f > SK.NEAR + 1) items.push({ kind, o, c, k }); });
   add('plim', g.plim);
   jetItem((kind, o, z) => { const c = cam(o.x, o.y, z); if (c.f > SK.NEAR) items.push({ kind, o, c }); });
@@ -450,7 +452,7 @@ function drawScene() {
     const o = it.o;
     let vis = visibility(o.x, o.y);
     if (it.kind === 'rock' || it.kind === 'wreck' || it.kind === 'timber') vis = Math.max(vis, afterglow(o));
-    if (it.kind === 'rock') drawRockDetailed(o, q, vis);
+    if (it.kind === 'rock') { if (g.sky) drawCloud(o, q); else drawRockDetailed(o, q, vis); }
     else if (it.kind === 'wreck') drawWreck(o, q, vis);
     else if (it.kind === 'timber') drawTimber(o, q, vis);
     else if (it.kind === 'self') drawShip3D(ship, ship.skin || mySkin(), BOAT_BY_ID[ship.boat] || BOATS[0], 1, { pennant: 'pennant' in ship ? ship.pennant : myPennant(), minLit: 1, sailAlpha: 0.7, brace: 0.95 + ship.rudder * 0.25 });
@@ -486,7 +488,8 @@ function drawScene() {
   ctx.globalAlpha = 1;
   ctx.restore();
 
-  if (!third) { drawDeck(); drawBowspritApparition(); }
+  if (!third) { if (g.sky) drawCockpit(ship.skin || mySkin()); else { drawDeck(); drawBowspritApparition(); } }
+  if (g.sky) drawSquall();
   drawVerity();
 
   if (g.glare > 0.01) { ctx.fillStyle = `rgba(255,238,200,${g.glare * 0.55})`; ctx.fillRect(0, 0, W, H); }
