@@ -636,6 +636,18 @@ function updateHazards(dt) {
         else sfxSplash(panOf(h), 0.4);
         continue;
       }
+    } else if (h.kind === 'fireball') {
+      // arcing down from the Cinder Kite onto its orange ring
+      h.fuse -= dt;
+      const k = 1 - h.fuse / h.dur;
+      h.x = h.x0 + (h.x1 - h.x0) * k; h.y = h.y0 + (h.y1 - h.y0) * k; h.z = h.z0 * (1 - k * k);
+      if (h.fuse <= 0) {
+        const d1 = Math.hypot(h.x1 - ship.x, h.y1 - ship.y);
+        burst(h.x1, h.y1, ['#ffd27a', '#ff8a2a', '#ff4a1a', '#3a1a12'], 50, 18, 12);
+        sfxFoe('boom', panOf(h), Math.max(0.25, 1 - d1 / 250)); g.shake = Math.max(g.shake, d1 < 60 ? 0.5 : 0.15);
+        if (d1 < h.r + 2) foeHit('a fireball');
+        continue;
+      }
     } else {
       if (h.life != null) { h.life -= dt; if (h.life <= 0) continue; }
       if (h.vx) { h.x += h.vx * dt; h.y += h.vy * dt; }
@@ -673,6 +685,7 @@ function foesHearBell() {
 }
 function foesSeeFlare(x, y) {
   if (!g.hazards) return;
+  if (g.foes) for (const k in g.foes) { const K = FOE_KINDS[k]; if (K.flare) for (const o of g.foes[k].list) { const m = !o.dead && K.flare(o, x, y); if (m) addLog(m, 'p'); } }
   const n0 = g.hazards.length;
   g.hazards = g.hazards.filter(h => !(h.kind === 'ice' && Math.hypot(h.x - x, h.y - y) < SK.FLARE_RADIUS * 0.6));
   if (g.hazards.length < n0) addLog('The flare’s heat melted the ice around you.', 'p');
@@ -719,6 +732,19 @@ function drawHazard(h, q) {
     ctx.beginPath(); ctx.ellipse(q.x, q.y, k, k * 0.25, 0, 0, 6.28); ctx.stroke();
     ctx.globalAlpha = 0.25 + 0.2 * (1 - f); ctx.fillStyle = '#ff3a2a';
     ctx.beginPath(); ctx.ellipse(q.x, q.y, k * (1 - f), k * 0.25 * (1 - f), 0, 0, 6.28); ctx.fill();
+  } else if (h.kind === 'scorch') {   // where the fireball will land: an orange ring, filling in
+    const f = Math.max(0, Math.min(1, 1 - h.life / 2.4)), pulse = 0.6 + 0.4 * Math.sin(g.t * 14);
+    ctx.strokeStyle = `rgba(255,150,40,${0.55 + 0.4 * pulse})`; ctx.lineWidth = Math.max(1.5, 0.3 * s);
+    ctx.beginPath(); ctx.ellipse(q.x, q.y, k, k * 0.25, 0, 0, 6.28); ctx.stroke();
+    ctx.globalAlpha = 0.2 + 0.25 * f; ctx.fillStyle = '#ff7a1a';
+    ctx.beginPath(); ctx.ellipse(q.x, q.y, k * f, k * 0.25 * f, 0, 0, 6.28); ctx.fill();
+  } else if (h.kind === 'fireball') {
+    const e = Math.max(3, 1.8 * s);
+    ctx.globalCompositeOperation = 'lighter';
+    lamp(q.x, q.y, '#ff7a2a', e * 1.2);
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.fillStyle = '#ffe9a0'; ctx.beginPath(); ctx.arc(q.x, q.y, e * 0.6, 0, 6.28); ctx.fill();
+    ctx.fillStyle = 'rgba(255,120,40,0.6)'; for (let i = 1; i < 5; i++) { ctx.beginPath(); ctx.arc(q.x - i * e * 0.3 * Math.sin(g.t * 9 + i), q.y - i * e * 0.5, e * (0.5 - i * 0.08), 0, 6.28); ctx.fill(); }
   } else if (h.kind === 'shadow') {
     ctx.globalAlpha = 0.45; ctx.fillStyle = '#000';
     const g2 = Math.min(1, h.t / 2.2); ctx.beginPath(); ctx.ellipse(q.x, q.y, k * (0.5 + g2), k * 0.25 * (0.5 + g2), 0, 0, 6.28); ctx.fill();
@@ -753,6 +779,7 @@ function drawHazard(h, q) {
 
 // screen overlays: the Informer's flash and a banana in the sails
 function drawFoeOverlays() {
+  if (typeof drawMothOnLantern === 'function') drawMothOnLantern();
   if (g.flash > 0) { ctx.fillStyle = `rgba(255,255,255,${Math.min(1, g.flash / 1.5)})`; ctx.fillRect(0, 0, W, H); }
   if (g.splat > 0) {
     const a = Math.min(1, g.splat / 1.2);

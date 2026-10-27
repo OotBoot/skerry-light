@@ -371,5 +371,8 @@ function sfxFoe(kind, pan, vol) {
     case 'creak': T(90, 'sawtooth', 0.2, 0.2, 1.2, { to: 140 }); N('bandpass', 300, 4, 0.2, 0.2, 1.2); break;
     case 'scream': T(520, 'sawtooth', 0.05, 0.25, 1.1, { to: 900 }); T(530, 'sawtooth', 0.05, 0.2, 1.1, { to: 940 }); N('bandpass', 1400, 2, 0.05, 0.25, 1.0); break;
     case 'crack': N('bandpass', 1500, 2, 0.001, 0.35, 0.1); break;
+    case 'roar': N('lowpass', 900, 0.8, 0.08, 0.5, 0.9, { to: 200 }); T(70, 'sawtooth', 0.08, 0.25, 0.8, { to: 45 }); break;
+    case 'flap': for (let i = 0; i < 3; i++) N('lowpass', 500, 1, 0.01, 0.25, 0.09, { delay: i * 0.12 }); break;
+    case 'groan': T(65, 'sawtooth', 0.4, 0.22, 1.6, { to: 48 }); T(98, 'triangle', 0.4, 0.12, 1.4, { to: 80 }); N('lowpass', 250, 1, 0.3, 0.2, 1.4); break;
   }
 }
