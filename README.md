@@ -31,7 +31,7 @@ The only thing she will not go near is **Plimsoll**, the shark who walked up out
 - **The lighthouse** sweeps round about every 6.5 seconds on the first voyage, a little slower each voyage (up to 9 seconds). Maren keeps her own pace, so the faster beam just shows you more.
 - **Flares** light everything within 350 m for about seven seconds, for your whole crew, then take 35 seconds to reload.
 - **Hull and collisions**: your hull is a capsule from bow to stern, so the whole length of the ship can touch things, not just the bow. Anything you touch pushes you clear. Hitting a rock, wreck, log, wall, the shore or a pier head-on (closing faster than 4.5 m/s at more than about 25°) costs a plank; a glancing touch only scrapes, slowing you and turning you along it. Crewmates' ships bump apart without damage. The drowned and Knock also cost planks. When the planks run out she sinks.
-- **Tonight's enemies**: each voyage draws three enemies from a pool of 21 and only those appear (Maren is always out there). The log names them as you set out, and introduces each one the first time it turns up. You never get the same enemy two voyages running when sailing alone; a crew all gets the same three.
+- **Tonight's enemies**: each voyage draws three enemies from a pool of 21 and only those appear (Maren is always out there). The log names them as you set out, and introduces each one the first time it turns up. You never get the same enemy two voyages running when sailing alone; a crew all gets the same three. They turn up every half-minute or so each, give you a clear warning before they strike (rings, shadows, a blink, a shing, a trumpet), and only slowly grow more frequent on later voyages.
 
   | Enemy | What it does | Counter |
   |---|---|---|
