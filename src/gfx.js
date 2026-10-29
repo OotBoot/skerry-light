@@ -408,14 +408,19 @@ function updateSpray(tipY) {
   ctx.globalAlpha = 1;
 }
 
-// a caged deck lantern on a short post
-function drawLantern(lx, ly, colour, flick) {
+// a caged deck lantern on a short post; `lean` (pixels) bends the flame sideways, as if in a draught
+function drawLantern(lx, ly, colour, flick, lean) {
   ctx.strokeStyle = '#1c140d'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(lx, ly + 10); ctx.lineTo(lx, ly + 34); ctx.stroke();
   ctx.globalAlpha = flick;
   lamp(lx, ly, colour, 9);
   const gl = ctx.createLinearGradient(0, ly - 9, 0, ly + 8);
   gl.addColorStop(0, mix(colour, '#ffffff', 0.6)); gl.addColorStop(1, colour);
   ctx.fillStyle = gl; ctx.fillRect(lx - 5, ly - 8, 10, 15);
+  if (lean) {
+    // the bright heart of the flame, pulled over towards whatever is drawing it
+    ctx.fillStyle = mix(colour, '#ffffff', 0.8);
+    ctx.beginPath(); ctx.ellipse(lx + lean, ly - 2, 2, 4, lean * 0.08, 0, 6.28); ctx.fill();
+  }
   ctx.globalAlpha = 1;
   ctx.strokeStyle = '#231a12'; ctx.lineWidth = 1.4;
   ctx.strokeRect(lx - 5.5, ly - 8.5, 11, 16);

@@ -226,7 +226,7 @@ function drawSkyWeather() {
     ctx.moveTo(x, y); ctx.lineTo(x + dx, y + dy);
   }
   ctx.stroke();
-  if (g.lightning > 0) { ctx.fillStyle = `rgba(220,230,255,${g.lightning * 0.22})`; ctx.fillRect(0, 0, W, H); }
+  if (g.lightning > 0) { ctx.fillStyle = `rgba(220,230,255,${g.lightning * 0.22 * flashK()})`; ctx.fillRect(0, 0, W, H); }
   return true;
 }
 

@@ -4,6 +4,11 @@
 const AUD = { ctx: null, master: null, muted: false, white: null, brown: null, drone: null, nextBeat: 0, nextCreak: 4, panOK: false };
 try { AUD.muted = localStorage.getItem('skerry-muted') === '1'; } catch (e) {}
 
+// the master level: off when muted, otherwise scaled by the volume on the Settings card
+function masterLevel() { return AUD.muted ? 0 : 0.85 * (SETTINGS.vol == null ? 1 : SETTINGS.vol); }
+// can the player hear anything at all? (if not, sound-only warnings get written on screen instead)
+function soundOff() { return AUD.muted || !(SETTINGS.vol > 0); }
+
 function audioInit() {
   if (AUD.ctx) { if (AUD.ctx.state === 'suspended') AUD.ctx.resume().catch(() => {}); return; }
   const AC = window.AudioContext || window.webkitAudioContext;
@@ -16,7 +21,7 @@ function audioInit() {
   comp.threshold.value = -12; comp.ratio.value = 6;
   comp.connect(c.destination);
   AUD.master = c.createGain();
-  AUD.master.gain.value = AUD.muted ? 0 : 0.85;
+  AUD.master.gain.value = masterLevel();
   AUD.master.connect(comp);
 
   const len = c.sampleRate * 2;
@@ -71,8 +76,9 @@ function loopNoise(buf) {
 function setMuted(m) {
   AUD.muted = m;
   try { localStorage.setItem('skerry-muted', m ? '1' : '0'); } catch (e) {}
-  if (AUD.master) AUD.master.gain.setTargetAtTime(m ? 0 : 0.85, AUD.ctx.currentTime, 0.05);
+  applyVolume();
 }
+function applyVolume() { if (AUD.master) AUD.master.gain.setTargetAtTime(masterLevel(), AUD.ctx.currentTime, 0.05); }
 
 function outNode(pan) {
   const c = AUD.ctx;
@@ -217,6 +223,19 @@ function sfxSting() {
   noise('highpass', 3000, 0.7, 0.005, 0.4, 0.5);
   tone(55, 'sine', 0.01, 0.6, 1.0, { to: 30 });
 }
+// the swell before Maren steps nearer: a low surge of water and a falling note, from where she is
+function sfxSwell(pan) {
+  noise('lowpass', 260, 0.9, 0.5, 0.45, 1.1, { pan, to: 90 });
+  tone(140, 'sine', 0.3, 0.22, 1.2, { pan, to: 52 });
+  tone(147, 'triangle', 0.35, 0.06, 1.0, { pan, to: 70 });
+}
+// oars working in wooden rowlocks: a short creak and a knock, somewhere out of sight
+function sfxRowlock(pan) {
+  const f = 230 + Math.random() * 40;
+  tone(f, 'sawtooth', 0.04, 0.05, 0.22, { pan, to: f * 0.75 });
+  tone(140, 'triangle', 0.003, 0.12, 0.08, { pan, delay: 0.24, to: 95 });
+  noise('lowpass', 500, 1, 0.08, 0.06, 0.4, { pan, delay: 0.3 });
+}
 function sfxCreak() {
   const f = 120 + Math.random() * 90;
   tone(f, 'sawtooth', 0.15, 0.025, 0.5, { to: f * 0.7 });
@@ -224,10 +243,11 @@ function sfxCreak() {
 function sfxScream(dur, pitch) {
   const c = AUD.ctx; if (!c) return;
   const t = c.currentTime, end = dur || SK.SCARE_TIME, pf = pitch || 1;
+  const peak = softScares() ? 0.4 : 1;   // softened jumpscares scream quieter
   const out = c.createGain();
   out.gain.setValueAtTime(0.0001, t);
-  out.gain.exponentialRampToValueAtTime(1.0, t + 0.02);
-  out.gain.setValueAtTime(1.0, t + end - 0.4);
+  out.gain.exponentialRampToValueAtTime(peak, t + 0.02);
+  out.gain.setValueAtTime(peak, t + end - 0.4);
   out.gain.exponentialRampToValueAtTime(0.0001, t + end);
   const shaper = c.createWaveShaper(); shaper.curve = distCurve(300);
   shaper.connect(out); out.connect(AUD.master);

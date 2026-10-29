@@ -544,6 +544,52 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 @media (pointer: coarse) { #hint { display: none; } }
 
 @media (min-width: 521px) { .biomebanner { top: max(16%, 112px); } }
+/* the centre call-out: one urgent line, clear of the sea's name above and the buttons below */
+.callout {
+  position: absolute; left: 50%; top: max(36%, 168px); transform: translateX(-50%); z-index: 4; pointer-events: none;
+  display: flex; align-items: center; gap: 12px; width: max-content; max-width: calc(100% - 32px);
+  padding: 10px 18px; background: rgba(10, 6, 8, 0.82); border: 1px solid var(--wreck);
+  font-family: var(--display); font-size: clamp(1.15rem, 3.4vw, 1.7rem); color: #ffd9cc; text-align: center;
+  text-shadow: 0 0 12px rgba(0,0,0,0.9);
+  animation: coIn .25s ease-out;
+}
+.co-chev { font-family: var(--log); font-weight: 700; font-size: 1.6em; line-height: 0.8; color: var(--wreck); animation: coNudge 0.7s ease-in-out infinite alternate; }
+@keyframes coIn { from { opacity: 0; transform: translate(-50%, 8px); } to { opacity: 1; transform: translate(-50%, 0); } }
+@keyframes coNudge { from { opacity: 0.55; } to { opacity: 1; } }
+/* the button that answers it pulses */
+#bellBtn.urgent, #flareBtn.urgent { border-color: var(--wreck); animation: urgent 0.6s ease-in-out infinite alternate; }
+@keyframes urgent { from { box-shadow: 0 0 0 0 rgba(228,108,79,0.2); } to { box-shadow: 0 0 0 4px rgba(228,108,79,0.75); } }
+/* less motion (the system's setting or the player's): a still outline instead of a pulse */
+.lessmotion .callout, .lessmotion .co-chev { animation: none; }
+.lessmotion #bellBtn.urgent, .lessmotion #flareBtn.urgent { animation: none; outline: 2px solid var(--wreck); outline-offset: 2px; }
+.scaring .callout { visibility: hidden; }
+@media (max-height: 480px) { .callout { top: 44%; padding: 6px 14px; font-size: 1.1rem; } }
+
+/* key names on the buttons mean nothing on a touch screen */
+@media (hover: none) and (pointer: coarse) { .key { display: none; } }
+/* the crew's hail buttons are for touch screens; a keyboard has 1 to 4 */
+@media (hover: hover) and (pointer: fine) { #hailRow { display: none; } }
+
+/* pause and settings */
+.pausecard, .settingscard { z-index: 22; }
+.pausecard { background: rgba(4, 7, 14, 0.55); place-items: center; }
+.pausecard .card { max-width: 24rem; }
+.setrow { display: flex; flex-direction: column; gap: 6px; }
+.card p.setnote { font-family: var(--log); font-size: 12px; color: var(--muted); }
+.card p#settingsCrew { color: var(--port); font-size: 13px; }
+
+/* the end card's recap: what got you, a tip, and Maren's stages over the voyage */
+.recap { display: flex; flex-direction: column; gap: 6px; }
+.card .recap p { font-family: var(--log); font-size: 13px; }
+.recap b { color: var(--wreck); font-size: 15px; }
+.dotsrow { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.dots { display: flex; gap: 5px; align-items: center; }
+.dots i { width: 10px; height: 10px; border-radius: 50%; background: #3a2a2a; border: 1px solid rgba(236,228,207,0.25); }
+.dots i.st1 { background: #6a3a30; } .dots i.st2 { background: #a04a36; } .dots i.st3 { background: #d0583e; } .dots i.st4 { background: #ff3a2a; }
+.dots i.bell { box-shadow: 0 0 0 2px var(--lamp); }
+.dots i.held { box-shadow: 0 0 0 2px var(--shoe); }
+.card p.recapline { font-family: var(--log); font-size: 12px; color: var(--muted); }
+.stats { grid-template-columns: repeat(4, 1fr); }
 </style>
 </head>
 <body>
@@ -551,6 +597,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
   <canvas id="cv" tabindex="0" aria-label="View from the deck of a ship at night, with a lighthouse beam sweeping over the sea"></canvas>
 
   <div class="biomebanner" id="biomeBanner" aria-live="polite" hidden><span class="bb-name" id="bbName"></span><span class="bb-sub" id="bbSub"></span></div>
+  <div id="callout" class="callout" role="alert" hidden><span class="co-chev" id="calloutL" aria-hidden="true">‹</span><span id="calloutText"></span><span class="co-chev" id="calloutR" aria-hidden="true">›</span></div>
   <div class="hud" id="hud" hidden>
     <div class="col">
       <span class="label">Voyage</span>
@@ -572,12 +619,18 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
   <div class="logbox" id="logbox" hidden>
     <ul id="log" aria-live="polite"></ul>
     <div class="tools">
-      <span id="hint">← → steer · ↑ ↓ sail · Space bell · F flare · V view</span>
+      <span id="hint">← → steer · ↑ ↓ sail · Space bell · F flare · V view · Esc pause</span>
+      <div class="toolrow shouts" id="hailRow" role="group" aria-label="Hail your crew" hidden>
+        <button class="tool" type="button" data-i="0">Here!</button>
+        <button class="tool" type="button" data-i="1">Help!</button>
+        <button class="tool" type="button" data-i="2">Follow me</button>
+        <button class="tool" type="button" data-i="3">Maren close</button>
+      </div>
       <div class="toolrow">
         <button class="tool" id="viewBtn" type="button" aria-pressed="false">3rd person</button>
-        <button class="tool meter" id="jetBtn" type="button" hidden><b>Launch jet</b><small>J · <span id="jetState">Ready</span></small></button>
-        <button class="tool meter" id="flareBtn" type="button"><b>Fire a flare</b><small>F · <span id="flareState">Ready</span></small></button>
-        <button class="tool meter" id="bellBtn" type="button"><b>Ring the bell</b><small>Space · <span id="bellState">Ready</span></small></button>
+        <button class="tool meter" id="jetBtn" type="button" hidden><b>Launch jet</b><small><span class="key">J · </span><span id="jetState">Ready</span></small></button>
+        <button class="tool meter" id="flareBtn" type="button"><b>Fire a flare</b><small><span class="key">F · </span><span id="flareState">Ready</span></small></button>
+        <button class="tool meter" id="bellBtn" type="button"><b>Ring the bell</b><small><span class="key">Space · </span><span id="bellState">Ready</span></small></button>
       </div>
     </div>
   </div>
@@ -607,6 +660,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
         <button class="tool crateOpenBtn" type="button">Crates</button>
         <button class="tool crateAllBtn" type="button" hidden>Open all</button>
         <button class="tool backupBtn" type="button" title="Back up your crates and cosmetics">Back up save</button>
+        <button class="tool" id="titleSettings" type="button">Settings</button>
       </div>
       <section class="together" id="together" aria-labelledby="togetherHead">
         <h2 id="togetherHead">Sail together · up to 8 ships</h2>
@@ -626,20 +680,22 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
         <p>She still stands on the water when the lamp turns, nearer every turn, and she follows any ship she has chosen. The Gannet's drowned crew swim with her, and her figurehead, Knock, walks the water with a belaying pin. The only thing Maren will not come near is <span class="plim">Plimsoll</span>, the shark who walked out of the surf that winter in the Gannet cabin boy's blue shoes. He knows the deep water through the skerries, but he won't wait for you. <em>Follow his shoes.</em></p>
         <ul class="rules">
           <li><b>See</b> rocks, wrecks and drifting timber show up when the beam or a flare is on them, then fade away over 3 seconds once the beam moves on</li>
-          <li><b>Follow</b> Plimsoll's glowing shoes. Sail close behind him (within 45 m) and Maren holds where she is. Fall behind and he soon walks on alone</li>
+          <li><b>Follow</b> Plimsoll's glowing shoes. Keep up with him (within about 120 m at a cruise, further the faster you go) and Maren holds where she is: his ring on the bearing strip fills while he's keeping her off. Fall behind and he soon walks on alone</li>
           <li><b>Ring the bell</b> (Space) with her anywhere ahead of you (anywhere at all once she's close) to drive her back three stages. It also sinks the drowned and freezes Knock. It swings again in about 15 seconds</li>
           <li><b>The drowned</b> swim after you; their eyes catch the light. Sail fast to shake them off, or ring the bell. Plimsoll sometimes snaps one up</li>
           <li><b>Knock</b> moves only while you can't see him. Listen for three knocks on wood, turn, and keep him in your light. The bell freezes him</li>
           <li><b>Flare</b> (F) lights everything around you for a few seconds, for your whole crew</li>
           <li><b>Steer</b> ← → or A / D, sail ↑ ↓ or W / S. On a phone, hold the left or right side to steer and use the ▲ ▼ buttons for speed</li>
+          <li><b>Pause</b> Esc or P (or Start on a controller) pauses a voyage on your own; in a crew it opens the settings, and your crew sails on. <b>Settings</b> (title screen or pause): volume, softened jumpscares, fewer flashes, less motion</li>
           <li><b>Boats</b> the Brig takes four hits, her carpenter patches a plank every 40 seconds, and each floating crate she picks up reloads her flare and bell; the quick Cutter takes two, the heavy Barque five. The Barque's bow gun fires by itself to blow apart a rock just ahead that you're about to hit, then takes 3 seconds to reload. The Carrier takes six, her floodlights reach far, and she launches a scout jet (J) that lights the rocks along your course, but she is huge, slow and slow to turn. Glancing off a rock only slows you; hitting it head on costs a plank.</li>
           <li><b>Hull</b> when the planks run out she goes down. Let Maren reach the bow and she comes aboard</li>
-          <li><b>Tonight's enemies</b> each voyage brings three enemies from a pool of 21 (the log names them as you set out), on top of Maren. Each has its own trick and its own counter: read the log when one turns up</li>
-          <li><b>Verity</b> sometimes you'll find a small smiling yellow orb in a corner of your deck, offering to help. He isn't helping, and the bell doesn't bother him. Fire a flare before twenty seconds are up, or see what he really looks like</li>
+          <li><b>Tonight's enemies</b> each voyage brings three enemies from a pool of 21 (the log names them as you set out), on top of Maren. Your very first voyage brings just one gentle one, and the second two. Each has its own trick and its own counter: read the log when one turns up, and watch for the call-out in the middle of the screen when something needs an answer now</li>
+          <li><b>Verity</b> sometimes you'll find a small smiling yellow orb in a corner of your deck, offering to help. He isn't helping, and the bell doesn't bother him. Fire a flare before twenty seconds are up, or see what he really looks like. He only comes aboard when your flare is nearly loaded, and his countdown waits (the ring turns grey) until it is. A crewmate's flare close by sends him off too</li>
           <li><b>Six seas</b> the first voyage is always Skerry Light. After that the voyages go round six seas in turn: Skerry Light, the Frozen Fjord, the Ember Isles, the Coral Lagoon, the Barrow Shore and the Crystal Shoals. Each has its own sky, coast, weather and rocks (icebergs, lava-veined basalt, coral reefs, gravestones, crystal). They look different, but they sink you just the same. And about one voyage in twenty (never the first), a portal stands in the water ahead: you sail through it into the Nether, a lava sea under a roof of red rock with lava pouring down from it. The Nether has its own three enemies and nothing else, not even Maren: the Cinder Kite (dodge the orange rings its fireballs fall into; a flare drives it off), the Slag Wader (ring the bell before it reaches your bow) and the Furnace Moth (if it lands on your lantern, fire a flare and it chases that instead). Another one voyage in twenty you find yourself on the Wine-Dark Sea of the old stories, with white temples on the headlands, a golden moon and shooting stars, and three monsters of its own (again, nothing else): the Sirens (their song drags your helm to their rock; ring the bell to drown them out), Charybdis (a whirlpool that opens on your course and drags you in; sail hard round it) and the Cyclops (dodge the pale ring where his rock will land; a flare in his eye blinds him). And one more in twenty takes you to the Places In Between: a glassy sea stuck at dusk, with doors and staircases standing in the water. Its own three, and nothing else: the Doors (dark ones send you back, the lit one sends you on), the Echo (a pale copy of your ship that steers the mirror of you; turn late and hard, or ring the bell to shatter it) and the Sleeper (a face under the water; when the water over it brightens, ring the bell before its eyes open). One more in twenty you're not sailing at all but flying a plane over the clouds: ↑ climbs, ↓ dives, steer round the storm clouds at every height, and come down low between the runway lamps to land</li>
           <li><b>The Backrooms</b> about one voyage in twenty, the lights go out and the sea comes back with walls: a flooded maze of yellow rooms. Follow Plimsoll to the green EXIT sign. The Stowaway lives there too: when he screams and charges down the corridor, dodge to the side</li>
           <li><b>Floating crates</b> bob about the water, each with a little lantern. Sail into one to haul it aboard. Make harbour and each is worth two Skerry Crates; sink and they go down with you. Making harbour pays 5 crates on voyage 1, then follows the Fibonacci sequence for each voyage in a row: 8, 13, 21, 34...</li>
-          <li><b>Crew</b> sail with up to seven friends. Ships close together keep her back and patch each other's planks. Share flares, chat in the crew screen, and watch your crew after your own voyage ends. The first ship into harbour wins 3 bonus crates for every other ship in the crew</li>
+          <li><b>Crew</b> sail with up to seven friends. Ships close together keep her back and patch each other's planks. Share flares, chat in the crew screen, and watch your crew after your own voyage ends. Keys 1 to 4 (or the hail buttons on a phone) call Here!, Help!, Follow me and Maren close to your crew. The first ship into harbour wins 3 bonus crates for every other ship in the crew</li>
+          <li><b>Close shaves</b> slip past a rock at speed (over 15 knots) with under 2.5 m to spare and it counts as a close shave on your end card</li>
         </ul>
       </details>
     </div>
@@ -679,10 +735,11 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
       </div>
       <div class="score" id="crewScore" hidden>
         <table>
-          <thead><tr><th scope="col">Ship</th><th scope="col">Outcome</th><th scope="col">Time</th><th scope="col">Hits</th><th scope="col">Bells</th><th scope="col">Flares</th><th scope="col">Patched</th><th scope="col">Fed Plimsoll</th></tr></thead>
+          <thead><tr><th scope="col">Ship</th><th scope="col">Outcome</th><th scope="col">Time</th><th scope="col">Hits</th><th scope="col">Bells</th><th scope="col">Flares</th><th scope="col">Patched</th><th scope="col">Fed Plimsoll</th><th scope="col">Shaves</th></tr></thead>
           <tbody id="crewScoreBody"></tbody>
         </table>
       </div>
+      <p class="recapline" id="crewRecap" hidden></p>
       <div class="chat">
         <ul class="chatlog" id="chatLog" hidden></ul>
         <form class="chatform" id="chatForm">
@@ -717,6 +774,12 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
         <div><span class="label">Voyages</span><strong id="sVoy">0</strong></div>
         <div><span class="label">Hits taken</span><strong id="sHits">0</strong></div>
         <div><span class="label">Best run</span><strong id="sBest">0</strong></div>
+        <div><span class="label">Close shaves</span><strong id="sShaves">0</strong></div>
+      </div>
+      <div class="recap" id="endRecap" hidden>
+        <p><span class="label">What got you</span> <b id="recapWhat"></b></p>
+        <p class="tip" id="recapTip"></p>
+        <div class="dotsrow" id="recapDotsRow"><span class="label">Maren, turn by turn</span><span class="dots" id="recapDots" aria-label="How near Maren stood after each of her last turns"></span></div>
       </div>
       <div class="boatpick" role="group" aria-label="Your boat"></div>
       <div class="btnrow">
@@ -764,6 +827,31 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
     </div>
   </div>
 
+  <div class="overlay pausecard" id="pauseCard" hidden role="dialog" aria-modal="true" aria-labelledby="pauseHead">
+    <div class="card">
+      <span class="eyebrow">The helm is lashed</span>
+      <h1 id="pauseHead">Paused</h1>
+      <div class="btnrow">
+        <button class="primary" id="resumeBtn" type="button">Resume</button>
+        <button class="tool" id="pauseSettings" type="button">Settings</button>
+        <button class="tool" id="pauseMenu" type="button">Give up the voyage</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="overlay settingscard" id="settingsCard" hidden role="dialog" aria-modal="true" aria-labelledby="settingsHead">
+    <div class="card">
+      <div class="cardtop"><span class="eyebrow">Kept on this device</span><button class="tool closebtn" id="settingsClose" type="button">✕ Close</button></div>
+      <h1 id="settingsHead">Settings</h1>
+      <p class="setnote" id="settingsCrew" hidden>Your crew sails on.</p>
+      <div class="setrow"><span class="label" id="lbl-vol">Volume</span><div class="loottabs" id="set-vol" role="group" aria-labelledby="lbl-vol"></div></div>
+      <div class="setrow"><span class="label" id="lbl-scares">Jumpscares</span><div class="loottabs" id="set-scares" role="group" aria-labelledby="lbl-scares"></div></div>
+      <div class="setrow"><span class="label" id="lbl-flashes">Flashes</span><div class="loottabs" id="set-flashes" role="group" aria-labelledby="lbl-flashes"></div></div>
+      <div class="setrow"><span class="label" id="lbl-motion">Motion</span><div class="loottabs" id="set-motion" role="group" aria-labelledby="lbl-motion"></div></div>
+      <p class="setnote">Softened jumpscares are smaller and quieter, with no shaking or black frames. Fewer flashes dims the camera flash, the beam's glare, the bell and lightning. Auto motion follows your device's setting.</p>
+    </div>
+  </div>
+
   <div class="toast" id="toast" hidden role="status"></div>
 </div>
 
@@ -804,7 +892,7 @@ const SK = {
   LANTERN: 48,            // reach of your own deck lantern
   MAREN_STAGES: [400, 260, 160, 90, 35],   // how far away she stands at each stage
   // she comes one stage nearer every full turn of the beam, and slowly follows the ship between turns
-  PLIMSOLL_GUARD: 45,     // this close to Plimsoll and she holds where she is
+  // (how close to Plimsoll keeps her back grows with his lead: see plimsollGuardRange in creatures.js)
   PLIMSOLL_PATIENCE: 4,   // seconds he waits for a ship that falls behind before walking on
   CREW_GUARD: 55,         // the same, for ships sailing close together
   BELL_COOLDOWN: 15,
@@ -868,12 +956,26 @@ const SK = {
   },
 };
 
+// The player's own settings (the Settings card), kept on this device. Loaded here, before anything
+// draws or makes a sound, because the sound, the jumpscares and the motion all read them.
+const SETTINGS = { vol: 1, scares: 'full', flashes: 'normal', motion: 'auto' };
+try { Object.assign(SETTINGS, JSON.parse(localStorage.getItem('skerry-settings') || '{}') || {}); } catch (e) {}
+function saveSettings() { try { localStorage.setItem('skerry-settings', JSON.stringify(SETTINGS)); } catch (e) {} }
+const softScares = () => SETTINGS.scares === 'soft';
+// reduced flashes: the Informer's flash, the beam's glare, the bell's flash and lightning at 30%
+const flashK = () => SETTINGS.flashes === 'reduced' ? 0.3 : 1;
+
 // ---- src/audio.js ----
 // Every sound in the game is synthesised with the Web Audio API, so there are no audio files.
 // The context is created on the first button press, since browsers only allow sound after a click.
 
 const AUD = { ctx: null, master: null, muted: false, white: null, brown: null, drone: null, nextBeat: 0, nextCreak: 4, panOK: false };
 try { AUD.muted = localStorage.getItem('skerry-muted') === '1'; } catch (e) {}
+
+// the master level: off when muted, otherwise scaled by the volume on the Settings card
+function masterLevel() { return AUD.muted ? 0 : 0.85 * (SETTINGS.vol == null ? 1 : SETTINGS.vol); }
+// can the player hear anything at all? (if not, sound-only warnings get written on screen instead)
+function soundOff() { return AUD.muted || !(SETTINGS.vol > 0); }
 
 function audioInit() {
   if (AUD.ctx) { if (AUD.ctx.state === 'suspended') AUD.ctx.resume().catch(() => {}); return; }
@@ -887,7 +989,7 @@ function audioInit() {
   comp.threshold.value = -12; comp.ratio.value = 6;
   comp.connect(c.destination);
   AUD.master = c.createGain();
-  AUD.master.gain.value = AUD.muted ? 0 : 0.85;
+  AUD.master.gain.value = masterLevel();
   AUD.master.connect(comp);
 
   const len = c.sampleRate * 2;
@@ -942,8 +1044,9 @@ function loopNoise(buf) {
 function setMuted(m) {
   AUD.muted = m;
   try { localStorage.setItem('skerry-muted', m ? '1' : '0'); } catch (e) {}
-  if (AUD.master) AUD.master.gain.setTargetAtTime(m ? 0 : 0.85, AUD.ctx.currentTime, 0.05);
+  applyVolume();
 }
+function applyVolume() { if (AUD.master) AUD.master.gain.setTargetAtTime(masterLevel(), AUD.ctx.currentTime, 0.05); }
 
 function outNode(pan) {
   const c = AUD.ctx;
@@ -1088,6 +1191,19 @@ function sfxSting() {
   noise('highpass', 3000, 0.7, 0.005, 0.4, 0.5);
   tone(55, 'sine', 0.01, 0.6, 1.0, { to: 30 });
 }
+// the swell before Maren steps nearer: a low surge of water and a falling note, from where she is
+function sfxSwell(pan) {
+  noise('lowpass', 260, 0.9, 0.5, 0.45, 1.1, { pan, to: 90 });
+  tone(140, 'sine', 0.3, 0.22, 1.2, { pan, to: 52 });
+  tone(147, 'triangle', 0.35, 0.06, 1.0, { pan, to: 70 });
+}
+// oars working in wooden rowlocks: a short creak and a knock, somewhere out of sight
+function sfxRowlock(pan) {
+  const f = 230 + Math.random() * 40;
+  tone(f, 'sawtooth', 0.04, 0.05, 0.22, { pan, to: f * 0.75 });
+  tone(140, 'triangle', 0.003, 0.12, 0.08, { pan, delay: 0.24, to: 95 });
+  noise('lowpass', 500, 1, 0.08, 0.06, 0.4, { pan, delay: 0.3 });
+}
 function sfxCreak() {
   const f = 120 + Math.random() * 90;
   tone(f, 'sawtooth', 0.15, 0.025, 0.5, { to: f * 0.7 });
@@ -1095,10 +1211,11 @@ function sfxCreak() {
 function sfxScream(dur, pitch) {
   const c = AUD.ctx; if (!c) return;
   const t = c.currentTime, end = dur || SK.SCARE_TIME, pf = pitch || 1;
+  const peak = softScares() ? 0.4 : 1;   // softened jumpscares scream quieter
   const out = c.createGain();
   out.gain.setValueAtTime(0.0001, t);
-  out.gain.exponentialRampToValueAtTime(1.0, t + 0.02);
-  out.gain.setValueAtTime(1.0, t + end - 0.4);
+  out.gain.exponentialRampToValueAtTime(peak, t + 0.02);
+  out.gain.setValueAtTime(peak, t + end - 0.4);
   out.gain.exponentialRampToValueAtTime(0.0001, t + end);
   const shaper = c.createWaveShaper(); shaper.curve = distCurve(300);
   shaper.connect(out); out.connect(AUD.master);
@@ -1555,7 +1672,15 @@ function findPath(sx, sy, tx, ty, blockers) {
 
 const cv = document.getElementById('cv');
 const ctx = cv.getContext('2d');
-const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+// less motion: the system setting, unless the player chose otherwise on the Settings card
+const motionMQ = matchMedia('(prefers-reduced-motion: reduce)');
+let reduceMotion = motionMQ.matches;
+function refreshMotion() {
+  reduceMotion = SETTINGS.motion === 'reduce' || (SETTINGS.motion !== 'full' && motionMQ.matches);
+  document.documentElement.classList.toggle('lessmotion', reduceMotion);
+}
+refreshMotion();
+try { motionMQ.addEventListener('change', refreshMotion); } catch (e) {}
 
 let W = 0, H = 0, dpr = 1, fov = 1.2, focal = 1, cx = 0, hy = 0;
 let camX = 0, camY = 0, yaw = 0, camH = 5;
@@ -1568,6 +1693,7 @@ for (let i = 0; i < 14; i++) town.push({ x: SK.HARBOUR.x + rand(-140, 160), y: r
 function resize() {
   dpr = Math.min(window.devicePixelRatio || 1, 2);
   W = cv.clientWidth; H = cv.clientHeight;
+  HUD_BOX.t = -99;   // measure the HUD again for the bearing strip
   cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
   fov = W < 600 ? 1.4 : 1.15;
   focal = (W / 2) / Math.tan(fov / 2);
@@ -1936,7 +2062,7 @@ function drawScene() {
   // flying: the horizon drops as the nose comes up, and the whole view banks into a turn
   if (g.sky && !third) hy += (ship.pitch || 0) * focal * 0.9;
   yaw = ship.h;
-  const roll = reduceMotion ? 0 : g.sky ? ship.rudder * (third ? 0.08 : 0.3) : (Math.sin(ship.bob * 0.9) * 0.018 + ship.rudder * 0.025) * (third ? 0.3 : 1);
+  const roll = reduceMotion ? 0 : (g.sky ? ship.rudder * (third ? 0.08 : 0.3) : (Math.sin(ship.bob * 0.9) * 0.018 + ship.rudder * 0.025) * (third ? 0.3 : 1)) + (g.rollKick || 0) * (third ? 0.4 : 1);
 
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.save();
@@ -1994,6 +2120,7 @@ function drawScene() {
   if (!NET.watch) { for (const d of g.enemies.drowned) add('drowned', d); for (const k of g.enemies.knocks) add('knock', k); }
   if (g.maren.active) add('maren', g.maren);
   items.sort((a, b) => b.c.f - a.c.f);
+  drawPlimRing();
   for (const it of items) {
     // in the rooms, anything behind a wall is hidden by it, column by column
     const clip = g.backrooms;
@@ -2044,9 +2171,9 @@ function drawScene() {
   if (g.sky) drawSquall();
   drawVerity();
 
-  if (g.glare > 0.01) { ctx.fillStyle = `rgba(255,238,200,${g.glare * 0.55})`; ctx.fillRect(0, 0, W, H); }
+  if (g.glare > 0.01) { ctx.fillStyle = `rgba(255,238,200,${g.glare * 0.55 * flashK()})`; ctx.fillRect(0, 0, W, H); }
   if (ship.inv > 1.1) { ctx.fillStyle = `rgba(228,108,79,${(ship.inv - 1.1) * 0.8})`; ctx.fillRect(0, 0, W, H); }
-  if (g.bellFlash > 0) { ctx.fillStyle = `rgba(236,228,207,${g.bellFlash * 0.25})`; ctx.fillRect(0, 0, W, H); }
+  if (g.bellFlash > 0) { ctx.fillStyle = `rgba(236,228,207,${g.bellFlash * 0.25 * flashK()})`; ctx.fillRect(0, 0, W, H); }
   drawFoeOverlays();
   drawDread();
   drawAtmosphere();
@@ -2108,67 +2235,110 @@ function drawDeck() {
   drawCannonDeck(tipY, DW, skin);
   updateSpray(tipY);
   const lx = cx + Math.min(W * 0.28, 220), ly = H * 0.8;
-  const flick = g.maren.stage >= 3 && !reduceMotion ? (Math.random() < 0.15 ? 0.4 : 1) : 1;
-  drawLantern(lx, ly - 8, skin.lantern, flick);
+  const lf = lanternFlick();
+  drawLantern(lx, ly - 8, skin.lantern, lf.flick, lf.lean);
+}
+// the deck lantern flickers when she's close, and gutters, leaning towards her, just before she steps nearer
+function lanternFlick() {
+  let flick = g.maren.stage >= 3 && !reduceMotion ? (Math.random() < 0.15 ? 0.4 : 1) : 1, lean = 0;
+  if (g.marenTell > 0 && !NET.watch) {
+    flick = reduceMotion ? 0.5 : rand(0.35, 1);
+    lean = clamp(angDiff(bearingOf(g.maren.x - ship.x, g.maren.y - ship.y), ship.h) / (fov / 2), -1, 1) * 4;
+  }
+  return { flick, lean };
 }
 
-// red closing in at the edges as she comes nearer
+// red closing in at the edges as she comes nearer (and a pulse of it as she's about to step closer)
 function drawDread() {
   const st = g.maren.active ? g.maren.stage : 0;
-  if (st < 2) return;
-  const a = [0, 0, 0.22, 0.38, 0.58][st] * (0.85 + 0.15 * Math.sin(g.t * (st * 2.2)));
+  const tell = g.marenTell > 0 && !NET.watch ? 0.12 * g.marenTell / 1.5 * (reduceMotion ? 1 : 0.6 + 0.4 * Math.sin(g.t * 9)) : 0;
+  if (st < 2 && tell <= 0) return;
+  const a = [0, 0, 0.22, 0.38, 0.58][st] * (0.85 + 0.15 * Math.sin(g.t * (st * 2.2))) + tell;
   const gr = ctx.createRadialGradient(cx, H * 0.5, Math.min(W, H) * 0.25, cx, H * 0.5, Math.max(W, H) * 0.75);
   gr.addColorStop(0, 'rgba(60,0,0,0)'); gr.addColorStop(1, `rgba(60,0,0,${a})`);
   ctx.fillStyle = gr; ctx.fillRect(0, 0, W, H);
 }
 
+// where the HUD sits on screen, measured now and then (its crew list and crate count change size)
+const HUD_BOX = { t: -99, bottom: 0, left: 0, right: 0 };
+function hudBox() {
+  const now = performance.now();
+  if (now - HUD_BOX.t < 500) return HUD_BOX;
+  HUD_BOX.t = now;
+  const hud = $('hud'), top = cv.getBoundingClientRect().top;
+  if (hud && !hud.hidden) {
+    const cols = hud.children;
+    HUD_BOX.bottom = hud.getBoundingClientRect().bottom - top;
+    HUD_BOX.left = cols[0] ? cols[0].getBoundingClientRect().right : 0;
+    HUD_BOX.right = cols[1] ? cols[1].getBoundingClientRect().left : W;
+  }
+  return HUD_BOX;
+}
 function drawCompass() {
-  if (W <= 520) return;   // no compass strip on phones
-  const w = Math.min(W - 32, 560), x0 = cx - w / 2, y = W <= 520 ? 116 : 72, h = 26, span = 2.2;
-  const xb = b => cx + (angDiff(b, ship.h) / span) * (w / 2);
+  // phones get a slimmer strip right under the HUD, with only what matters most on it
+  const phone = W <= 520;
+  if (phone && NET.watch) return;   // the spectator bar sits there
+  let w = Math.min(W - 32, 560), x0 = cx - w / 2, y = 72, h = 26;
+  const hb0 = hudBox();
+  if (phone) { w = W - 32; x0 = 16; y = Math.round(hb0.bottom + 8); h = 20; }
+  else if (H < 450 || x0 < hb0.left + 12 || x0 + w > hb0.right - 12) {
+    // a short landscape screen: fit it in between the HUD's two columns, up at the top
+    const a = hb0.left + 12, b = hb0.right - 12;
+    w = Math.min(560, b - a); if (w < 200) return;
+    x0 = (a + b) / 2 - w / 2; y = 16;
+  }
+  const mid = x0 + w / 2, span = 2.2, k = h / 26;
+  const xb = b => mid + (angDiff(b, ship.h) / span) * (w / 2);
   const inStrip = x => x > x0 + 3 && x < x0 + w - 3;
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.fillStyle = 'rgba(6,10,20,0.66)'; ctx.fillRect(x0, y, w, h);
   ctx.strokeStyle = 'rgba(236,228,207,0.18)'; ctx.lineWidth = 1; ctx.strokeRect(x0 + 0.5, y + 0.5, w - 1, h - 1);
-  ctx.fillStyle = 'rgba(236,228,207,0.06)'; ctx.fillRect(cx - (fov / 2 / span) * (w / 2), y, (fov / span) * w / 2, h);
-  ctx.fillStyle = 'rgba(255,216,138,0.9)'; ctx.fillRect(cx - 0.75, y, 1.5, 5);
+  ctx.fillStyle = 'rgba(236,228,207,0.06)'; ctx.fillRect(mid - (fov / 2 / span) * (w / 2), y, (fov / span) * w / 2, h);
+  ctx.fillStyle = 'rgba(255,216,138,0.9)'; ctx.fillRect(mid - 0.75, y, 1.5, 5 * k);
   ctx.font = '700 10px "Courier Prime", monospace'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   const names = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
   for (let i = 0; i < 32; i++) {
+    if (phone && i % 8) continue;   // just N, E, S and W
     const xx = xb(i / 32 * Math.PI * 2); if (!inStrip(xx)) continue;
     const cardinal = i % 4 === 0;
-    if (cardinal) { ctx.fillStyle = 'rgba(143,152,171,0.95)'; ctx.fillText(names[i / 4], xx, y + h - 7); }
+    if (cardinal) { ctx.fillStyle = 'rgba(143,152,171,0.95)'; ctx.fillText(names[i / 4], xx, y + h - 7 * k); }
     ctx.fillStyle = 'rgba(143,152,171,0.5)'; ctx.fillRect(xx - 0.5, y, 1, cardinal ? 4 : 2.5);
   }
   const edgeArrow = (b, col) => {
-    const left = angDiff(b, ship.h) < 0, ex = left ? x0 + 8 : x0 + w - 8;
+    const left = angDiff(b, ship.h) < 0, ex = left ? x0 + 8 : x0 + w - 8, ym = y + h / 2 - 3 * k;
     ctx.fillStyle = col;
-    ctx.beginPath(); ctx.moveTo(ex + (left ? -4 : 4), y + 10); ctx.lineTo(ex + (left ? 3 : -3), y + 5); ctx.lineTo(ex + (left ? 3 : -3), y + 15); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(ex + (left ? -4 : 4), ym); ctx.lineTo(ex + (left ? 3 : -3), ym - 5 * k); ctx.lineTo(ex + (left ? 3 : -3), ym + 5 * k); ctx.closePath(); ctx.fill();
   };
   const HB = g.backrooms ? g.exit : SK.HARBOUR;
   const hb = bearingOf(HB.x - ship.x, HB.y - ship.y), hx = xb(hb);
-  if (inStrip(hx) && g.backrooms) { ctx.fillStyle = '#3dff7a'; ctx.fillRect(hx - 5, y + 7, 10, 6); }
-  else if (inStrip(hx)) { ctx.fillStyle = '#e46c4f'; ctx.fillRect(hx - 6, y + 7, 4, 6); ctx.fillStyle = '#86cfae'; ctx.fillRect(hx + 2, y + 7, 4, 6); }
+  if (inStrip(hx) && g.backrooms) { ctx.fillStyle = '#3dff7a'; ctx.fillRect(hx - 5, y + 7 * k, 10, 6 * k); }
+  else if (inStrip(hx)) { ctx.fillStyle = '#e46c4f'; ctx.fillRect(hx - 6, y + 7 * k, 4, 6 * k); ctx.fillStyle = '#86cfae'; ctx.fillRect(hx + 2, y + 7 * k, 4, 6 * k); }
   else edgeArrow(hb, '#86cfae');
-  const pb = bearingOf(g.plim.x - ship.x, g.plim.y - ship.y), px = xb(pb);
+  const pb = bearingOf(g.plim.x - ship.x, g.plim.y - ship.y), px = xb(pb), py = y + 18 * k;
   if (inStrip(px)) {
     ctx.fillStyle = '#5fd3ff';
-    ctx.beginPath(); ctx.arc(px, y + 18, 3, 0, 6.28); ctx.fill();
-    if (Math.hypot(g.plim.x - ship.x, g.plim.y - ship.y) < SK.PLIMSOLL_GUARD) { ctx.strokeStyle = 'rgba(95,211,255,0.7)'; ctx.beginPath(); ctx.arc(px, y + 18, 6, 0, 6.28); ctx.stroke(); }
+    ctx.beginPath(); ctx.arc(px, py, 3, 0, 6.28); ctx.fill();
+    // his ring: filled while he's keeping her off you, outlined while you're nearly close enough
+    if (g.maren.active) {
+      const d = Math.hypot(g.plim.x - ship.x, g.plim.y - ship.y), R = plimsollGuardRange();
+      if (d < R) { ctx.fillStyle = 'rgba(95,211,255,0.35)'; ctx.beginPath(); ctx.arc(px, py, 6, 0, 6.28); ctx.fill(); ctx.strokeStyle = 'rgba(95,211,255,0.9)'; ctx.stroke(); }
+      else if (d < R * 1.5) { ctx.strokeStyle = 'rgba(95,211,255,0.6)'; ctx.beginPath(); ctx.arc(px, py, 6, 0, 6.28); ctx.stroke(); }
+    }
   } else edgeArrow(pb, '#5fd3ff');
   for (const q of g.pickups || []) {
     if (q.taken || Math.hypot(q.x - ship.x, q.y - ship.y) > 600) continue;
     const qx = xb(bearingOf(q.x - ship.x, q.y - ship.y)); if (!inStrip(qx)) continue;
-    ctx.fillStyle = '#ffd88a'; ctx.beginPath(); ctx.moveTo(qx, y + 3); ctx.lineTo(qx + 3, y + 6); ctx.lineTo(qx, y + 9); ctx.lineTo(qx - 3, y + 6); ctx.closePath(); ctx.fill();
+    const qy = y + 6 * k;
+    ctx.fillStyle = '#ffd88a'; ctx.beginPath(); ctx.moveTo(qx, qy - 3); ctx.lineTo(qx + 3, qy); ctx.lineTo(qx, qy + 3); ctx.lineTo(qx - 3, qy); ctx.closePath(); ctx.fill();
   }
   if (crewMode) for (const m of matesAtSea()) {
     const mx = xb(bearingOf(m.x - ship.x, m.y - ship.y));
     if (!inStrip(mx) || m.peer === NET.watch) continue;
     ctx.fillStyle = SLOT_COLORS[m.slot] || SLOT_COLORS[1];
-    ctx.fillRect(mx - 2.5, y + 15, 5, 5);
+    ctx.fillRect(mx - 2.5, y + 15 * k, 5, 5);
   }
   const lb = bearingOf(-ship.x, -ship.y), lx = xb(lb);
-  if (inStrip(lx) && !g.backrooms) {
+  if (inStrip(lx) && !g.backrooms && !phone) {
     const f = 1 - Math.min(1, Math.abs(angDiff(g.beam, bearingOf(ship.x, ship.y))) / 0.6);
     ctx.fillStyle = `rgba(255,216,138,${0.5 + 0.5 * f})`;
     ctx.beginPath(); ctx.moveTo(lx, y + 4); ctx.lineTo(lx + 3, y + 14); ctx.lineTo(lx - 3, y + 14); ctx.closePath(); ctx.fill();
@@ -2178,58 +2348,61 @@ function drawCompass() {
 // ---------- Knock's jumpscare: his face, lunging at the glass ----------
 function drawKnockScare(t) {
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  const T = SK.KNOCK_SCARE_TIME;
-  // the first instant: the scene goes black with an amber flicker
-  ctx.fillStyle = Math.floor(t * 30) % 2 ? '#1a0d02' : '#000';
+  const T = SK.KNOCK_SCARE_TIME, soft = softScares(), wild = !reduceMotion && !soft;
+  // the first instant: the scene goes black with an amber flicker (a steady dark amber when softened)
+  ctx.fillStyle = soft ? '#140a02' : Math.floor(t * 30) % 2 ? '#1a0d02' : '#000';
   ctx.fillRect(0, 0, W, H);
   if (!imgReady(IMG.knock)) return;
   const img = IMG.knock, iw = img.naturalWidth, ih = img.naturalHeight;
   // just his head and grin: the right-hand part of the picture (the bat is on the left), top third
   const fx = iw * 0.42, fw = iw * 0.56, faceH = ih * 0.36;
   const lunge = Math.min(1, t / 0.12);
-  const k = 0.3 + lunge * 0.62 + Math.max(0, t - 0.12) * 0.18;
+  let k = 0.3 + lunge * 0.62 + Math.max(0, t - 0.12) * 0.18;
+  if (soft) k = Math.min(0.6, k);
   const dw = Math.max(W, H * 0.9) * k, dh = dw * faceH / fw;
-  const shake = reduceMotion ? 0 : 40 * (1 - t / T) + 10;
+  const shake = wild ? 40 * (1 - t / T) + 10 : 0;
   const x = cx - dw / 2 + rand(-shake, shake), y = H * 0.42 - dh / 2 + rand(-shake, shake);
-  const strips = reduceMotion ? 1 : 14;
+  const strips = wild ? 14 : 1;
   for (let i = 0; i < strips; i++) {
-    const off = !reduceMotion && Math.random() < 0.4 ? (Math.random() - 0.5) * dw * 0.12 : 0;
+    const off = wild && Math.random() < 0.4 ? (Math.random() - 0.5) * dw * 0.12 : 0;
     ctx.drawImage(img, fx, faceH * i / strips, fw, faceH / strips, x + off, y + dh * i / strips, dw, dh / strips + 0.6);
   }
   // he blinks out and back, nearer each time
-  if (!reduceMotion && t > 0.3 && Math.random() < 0.12) { ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H); }
+  if (wild && t > 0.3 && Math.random() < 0.12) { ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H); }
   ctx.fillStyle = `rgba(150,70,0,${0.18 + 0.15 * Math.sin(t * 50)})`;
   ctx.fillRect(0, 0, W, H);
-  if (!reduceMotion && Math.random() < 0.15) {
+  if (wild && Math.random() < 0.15) {
     ctx.globalCompositeOperation = 'difference';
     ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, W, H);
     ctx.globalCompositeOperation = 'source-over';
   }
   // the blow lands: a crack of white
-  if (t > 0.62 && t < 0.72) { ctx.fillStyle = 'rgba(255,240,210,0.7)'; ctx.fillRect(0, 0, W, H); }
+  if (t > 0.62 && t < 0.72) { ctx.fillStyle = `rgba(255,240,210,${0.7 * flashK() * (soft ? 0.5 : 1)})`; ctx.fillRect(0, 0, W, H); }
 }
 
 // ---------- the jumpscare ----------
 function drawScare(t) {
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const soft = softScares(), wild = !reduceMotion && !soft;
   const flick = Math.floor(t * 28) % 2;
-  ctx.fillStyle = flick ? '#160000' : '#000';
+  ctx.fillStyle = soft ? '#120000' : flick ? '#160000' : '#000';
   ctx.fillRect(0, 0, W, H);
   if (!imgReady(IMG.maren)) return;
   const grow = Math.min(1, t / 0.18);
-  const k = 0.55 + grow * 0.85 + Math.max(0, t - 0.18) * 0.35;
+  let k = 0.55 + grow * 0.85 + Math.max(0, t - 0.18) * 0.35;
+  if (soft) k = Math.min(0.6, k);
   const h = H * k, w = h * SK.MAREN_ASPECT;
-  const shake = reduceMotion ? 0 : 34 * (1 - t / SK.SCARE_TIME) + 8;
+  const shake = wild ? 34 * (1 - t / SK.SCARE_TIME) + 8 : 0;
   const x = cx - w / 2 + rand(-shake, shake), y = H * 0.56 - h * 0.5 + rand(-shake, shake);
-  drawGlitch(IMG.maren, x, y, w, h, 0.7);
-  if (!reduceMotion && t < SK.SCARE_TIME - 0.4) {
+  drawGlitch(IMG.maren, x, y, w, h, soft ? 0 : 0.7);
+  if (wild && t < SK.SCARE_TIME - 0.4) {
     ctx.globalAlpha = 0.35;
     drawGlitch(IMG.maren, x + rand(-30, 30), y + rand(-20, 20), w * 1.08, h * 1.08, 1);
     ctx.globalAlpha = 1;
   }
   ctx.fillStyle = `rgba(170,0,0,${0.22 + 0.18 * Math.sin(t * 47)})`;
   ctx.fillRect(0, 0, W, H);
-  if (!reduceMotion && Math.random() < 0.18) {
+  if (wild && Math.random() < 0.18) {
     ctx.globalCompositeOperation = 'difference';
     ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, W, H);
     ctx.globalCompositeOperation = 'source-over';
@@ -2647,14 +2820,19 @@ function updateSpray(tipY) {
   ctx.globalAlpha = 1;
 }
 
-// a caged deck lantern on a short post
-function drawLantern(lx, ly, colour, flick) {
+// a caged deck lantern on a short post; `lean` (pixels) bends the flame sideways, as if in a draught
+function drawLantern(lx, ly, colour, flick, lean) {
   ctx.strokeStyle = '#1c140d'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(lx, ly + 10); ctx.lineTo(lx, ly + 34); ctx.stroke();
   ctx.globalAlpha = flick;
   lamp(lx, ly, colour, 9);
   const gl = ctx.createLinearGradient(0, ly - 9, 0, ly + 8);
   gl.addColorStop(0, mix(colour, '#ffffff', 0.6)); gl.addColorStop(1, colour);
   ctx.fillStyle = gl; ctx.fillRect(lx - 5, ly - 8, 10, 15);
+  if (lean) {
+    // the bright heart of the flame, pulled over towards whatever is drawing it
+    ctx.fillStyle = mix(colour, '#ffffff', 0.8);
+    ctx.beginPath(); ctx.ellipse(lx + lean, ly - 2, 2, 4, lean * 0.08, 0, 6.28); ctx.fill();
+  }
   ctx.globalAlpha = 1;
   ctx.strokeStyle = '#231a12'; ctx.lineWidth = 1.4;
   ctx.strokeRect(lx - 5.5, ly - 8.5, 11, 16);
@@ -4090,8 +4268,8 @@ function previewFx(svg, skin, el, geo) {
 // you, she takes the ship.
 //
 // Plimsoll, the shark in the Gannet cabin boy's shoes, knows the deep water through the skerries.
-// He walks ahead of you to the harbour. Keep close to him and Maren holds where she is, but he will
-// not wait long for a ship that falls behind.
+// He walks ahead of you to the harbour. Keep up with him and Maren holds where she is (his reach grows
+// with the lead he keeps, so it works at any speed), but he will not wait long for a ship that falls behind.
 
 const IMG = { maren: new Image(), plim: new Image(), knock: new Image() };
 IMG.maren.src = SK.ASSETS.maren;
@@ -4115,7 +4293,13 @@ function placeMaren(stage) {
 
 // how far ahead he keeps, and how far his protection reaches, both grow with the ship's speed
 function plimsollLead() { return 80 + Math.max(0, ship.v - 12) * 2.5; }
-function plimsollGuarding() { return Math.hypot(g.plim.x - ship.x, g.plim.y - ship.y) < SK.PLIMSOLL_GUARD + Math.max(0, ship.v - 12) * 0.6; }
+// his protection reaches a little past where he walks, so a ship keeping up with him is always covered,
+// however fast it goes (a little less in the tight rooms of the Backrooms)
+function plimsollGuardRange() { return plimsollLead() * 1.15 + 30 - (g.backrooms ? 20 : 0); }
+function plimsollGuarding() { return Math.hypot(g.plim.x - ship.x, g.plim.y - ship.y) < plimsollGuardRange(); }
+// anything keeping her where she is: Plimsoll, or a crewmate close by
+function marenHeld() { return plimsollGuarding() || (crewMode && mateNear(SK.CREW_GUARD)); }
+function marenLog(why) { const m = g.maren; if (m.active && g.marenLog) g.marenLog.push({ t: g.t, stage: m.stage, why }); }
 
 // called every full turn of the beam
 function marenTurn() {
@@ -4123,6 +4307,7 @@ function marenTurn() {
   if (!m.active || state !== 'play') return;
   const byPlim = plimsollGuarding(), byCrew = crewMode && mateNear(SK.CREW_GUARD);
   if (byPlim || byCrew) {
+    marenLog('held');
     if (m.stage > 0 && g.t - m.heldLog > 12) {
       m.heldLog = g.t;
       addLog(byPlim ? 'Plimsoll is close. She holds where she is.' : 'Your crew is close by. She holds where she is.', 'p');
@@ -4132,8 +4317,22 @@ function marenTurn() {
   if (m.stage >= SK.MAREN_STAGES.length - 1) { startScare(); return; }
   m.stage++;
   placeMaren(m.stage);
+  marenLog('turn');
   const lines = [null, 'Someone is humming out on the water.', 'A woman is standing on the sea ahead.', 'She is close now. Find Plimsoll or ring the bell.', 'She is at the bow.'];
   addLog(lines[m.stage], m.stage >= 3 ? 'w' : null);
+  marenCallout();
+  // first lessons, once each: Plimsoll keeps her back, and the bell drives her off
+  // (not over the urgent call-out once she's close)
+  if (m.stage < 3 && !teach('bell', m.stage === 2 && g.bell <= 0, 'She’s ahead: ' + bellWord().toLowerCase() + ' to drive her back', { btn: 'bell', bearing: bearingOf(m.x - ship.x, m.y - ship.y) }))
+    teach('plim', m.stage >= 1 && m.stage < 3, 'Keep up with Plimsoll: she won’t come near him', { bearing: bearingOf(g.plim.x - ship.x, g.plim.y - ship.y) });
+}
+// she's close or at the bow: say what to do about it, big, in the middle of the screen
+function marenCallout() {
+  const m = g.maren;
+  if (m.stage < 3) return;
+  const at = bearingOf(m.x - ship.x, m.y - ship.y);
+  if (g.bell <= 0) callout(m.stage >= 4 ? 'She’s at the bow! ' + bellWord() + '!' : 'She’s close: ' + bellWord().toLowerCase() + '!', { btn: 'bell', bearing: at, pri: true });
+  else callout(m.stage >= 4 ? 'She’s at the bow! Get to Plimsoll!' : 'She’s close: get to Plimsoll!', { bearing: bearingOf(g.plim.x - ship.x, g.plim.y - ship.y), pri: true });
 }
 
 function marenInView() {
@@ -4159,7 +4358,7 @@ function ringBell() {
   if (bellStunsKnock()) addLog('The knocking stops. Knock stands frozen for a few seconds.', 'p');
   const m = g.maren;
   if (m.active && m.stage >= 1 && bellReaches()) {
-    m.stage = Math.max(0, m.stage - SK.BELL_PUSH); placeMaren(m.stage);
+    m.stage = Math.max(0, m.stage - SK.BELL_PUSH); placeMaren(m.stage); marenLog('bell');
     addLog('The bell rings out and she draws well back.' + (drowned ? ' The drowned sink away.' : ''), 'p');
   } else if (drowned) {
     addLog('The bell rings out and the drowned sink back under.', 'p');
@@ -4183,6 +4382,11 @@ function updateMaren(dt) {
   if (m.apparition > 0) m.apparition -= dt;
   if (!m.active) return;
   if (state === 'play') followShip(m, dt);
+  // close in and out of sight, you hear her oars working in the rowlocks
+  if (state === 'play' && !g.attract && m.stage >= 3 && !marenInView()) {
+    m.oarT = (m.oarT == null ? 1 : m.oarT) - dt;
+    if (m.oarT <= 0) { m.oarT = rand(2.5, 4); sfxRowlock(clamp(angDiff(bearingOf(m.x - ship.x, m.y - ship.y), ship.h) / (fov / 2), -1, 1)); }
+  }
   // the first time you see her at each stage, she whispers
   const vis = visibility(m.x, m.y);
   if (vis > 0.3 && marenInView() && m.seenStage !== m.stage) {
@@ -4251,7 +4455,8 @@ function updatePlimsoll(dt) {
   // has the ship overtaken him? then he runs to get back out in front
   const behind = (p.x - ship.x) * Math.sin(ship.h) + (p.y - ship.y) * Math.cos(ship.h) < 0 && d < lead * 2;
   if (d < lead || behind) { p.walking = true; p.waitT = 0; }
-  else if (d > lead * 1.3 + 25) {
+  // (he stops to wait just inside his own ring, so a ship that keeps up with him stays covered)
+  else if (d > Math.min(lead * 1.3 + 25, plimsollGuardRange() - 8)) {
     // he waits a little for a ship that falls behind, then walks on without it
     p.waitT += dt;
     p.walking = p.waitT > SK.PLIMSOLL_PATIENCE;
@@ -4278,6 +4483,23 @@ function updatePlimsoll(dt) {
       setTimeout(() => { if (g && g.plim === p) squeakFrom(p, Math.hypot(p.x - ship.x, p.y - ship.y), 1.6); }, 160);
     }
   }
+}
+
+// while he's keeping her off you, a faint blue shimmer on the water shows how far his reach goes
+function drawPlimRing() {
+  if (g.attract || g.sky || g.backrooms || NET.watch || !g.maren.active || state !== 'play' || !plimsollGuarding()) return;
+  const R = plimsollGuardRange(), p = g.plim, N = 24;
+  const a = reduceMotion ? 0.14 : 0.14 + 0.04 * Math.sin(g.t * 2.4);
+  ctx.strokeStyle = `rgba(95,211,255,${a.toFixed(3)})`; ctx.lineWidth = 2;
+  ctx.beginPath();
+  for (let i = 0; i < N; i++) {
+    const a0 = i / N * Math.PI * 2, a1 = (i + 1) / N * Math.PI * 2;
+    // one short edge at a time, so the part behind the camera is simply left out
+    const q = polyProj([[p.x + Math.sin(a0) * R, p.y + Math.cos(a0) * R, 0], [p.x + Math.sin(a1) * R, p.y + Math.cos(a1) * R, 0]]);
+    if (q.length < 2) continue;
+    ctx.moveTo(q[0].x, q[0].y); for (let k = 1; k < q.length; k++) ctx.lineTo(q[k].x, q[k].y);
+  }
+  ctx.stroke();
 }
 
 function squeakFrom(p, d, boost) {
@@ -4381,6 +4603,8 @@ function updateKnocks(dt) {
         const near = 1 - dist / 650;
         sfxKnock(pan, 0.25 + near * 0.85, 0.22 - near * 0.1);
         k.knockT = 2.6 - near * 1.9;
+        // close, or out of earshot because the sound is off: say so, and which way to turn
+        if (dist < 300 || soundOff()) callout((soundOff() ? 'Three knocks: ' : 'Knock is coming: ') + 'turn and face him', { bearing: bearingOf(k.x - ship.x, k.y - ship.y) });
       }
     }
     if (dist < 9) {
@@ -4388,7 +4612,7 @@ function updateKnocks(dt) {
       if (ship.inv > 0 || state !== 'play') continue;
       ship.inv = SK.KNOCK_SCARE_TIME + 1; g.shake = 0.6;
       burst(ship.x + Math.sin(ship.h) * 4, ship.y + Math.cos(ship.h) * 4, ['#c98a4a', '#ece4cf', '#8a6a4a'], 26, 7, 8);
-      ship.hull--; run.hits++; g.stats.hits++;
+      ship.hull--; run.hits++; g.stats.hits++; g.lastHit = 'Knock';
       renderHud();
       // he lunges into your face before the blow lands
       g.knockScare = SK.KNOCK_SCARE_TIME;
@@ -4487,7 +4711,7 @@ function boarded() {
   if (ship.inv > 0 || state !== 'play') return;
   ship.inv = 1.4; g.shake = 0.45;
   sfxClaw();
-  ship.hull--; run.hits++; g.stats.hits++;
+  ship.hull--; run.hits++; g.stats.hits++; g.lastHit = 'the drowned';
   renderHud();
   if (ship.hull <= 0) { addLog('The drowned crew pulled her under.', 'w'); endRun('sunk'); }
   else addLog('A drowned sailor climbed aboard and tore out a plank. Sail faster to shake them off.', 'w');
@@ -4574,18 +4798,23 @@ function updateVerity(dt) {
   if (g.attract || state !== 'play' || !v || !hasFoe('verity')) return;
   if (v.gone > 0) v.gone -= dt;
   if (!v.on) {
-    // he won't climb aboard while Maren is right at the bow, or while Knock is mid-swing
+    // he won't climb aboard while Maren is right at the bow, or while Knock is mid-swing,
+    // or while your flare is still too far from loaded to send him off in time
     v.next -= dt;
-    if (v.next <= 0 && g.maren.stage < 3 && !g.knockScare) {
+    if (v.next <= 0 && g.maren.stage < 3 && !g.knockScare && g.flareCd <= SK.VERITY_TIME - 5) {
       v.on = true; v.t = 0; v.said = 0; v.morph = 0;
       v.side = Math.random() < 0.5 ? -1 : 1;   // which bottom corner of your view he turns up in
       sfxVerity(1, 0.9);
       addLog('Something small is on the deck, down in the corner, smiling at you. It says it wants to help.', 'w');
       addLog('The bell won\u2019t move it. Fire a flare before it stops smiling.', 'w');
+      if (!teach('flare', true, 'Verity is aboard: fire a flare before he stops smiling', { btn: 'flare' })) callout('Verity! Fire a flare!', { btn: 'flare', pri: true });
     }
     return;
   }
-  v.t += dt;
+  // he always gives you time to use a flare: while it still needs longer to load than he has left
+  // (with 3 seconds to spare), his smile holds and the ring stops counting
+  v.paused = g.flareCd > Math.max(0, SK.VERITY_TIME - v.t - 3) && v.t < SK.VERITY_TIME;
+  if (!v.paused) v.t += dt;
   if (v.said === 0 && v.t > 10) { v.said = 1; sfxVerity(0.93, 0.95); addLog('Verity is still smiling. Ten seconds.', 'w'); }
   if (v.t >= SK.VERITY_TIME) {
     if (v.morph === 0) { stopVerity(); sfxVerity(0.62, 1); sfxCreak(); }
@@ -4601,7 +4830,7 @@ function updateVerity(dt) {
   }
 }
 
-// a flare shoos him off, as long as he's still smiling (the bell does nothing to him)
+// a flare (yours, or a crewmate's landing close by) shoos him off, as long as he's still smiling (the bell does nothing to him)
 function flareShoosVerity() {
   const v = g.verity;
   if (!v || !v.on || v.t >= SK.VERITY_TIME) return false;
@@ -4651,7 +4880,7 @@ function drawVerity() {
     ctx.restore();
     // a countdown ring under him, so it reads without the log
     const p = 1 - v.t / SK.VERITY_TIME;
-    ctx.strokeStyle = `rgba(255,214,60,${0.35 + 0.4 * wrong})`; ctx.lineWidth = 3;
+    ctx.strokeStyle = v.paused ? 'rgba(170,170,170,0.5)' : `rgba(255,214,60,${0.35 + 0.4 * wrong})`; ctx.lineWidth = 3;
     ctx.beginPath(); ctx.arc(seatX, seatY - h / 2, w * 0.62, -Math.PI / 2, -Math.PI / 2 + p * Math.PI * 2); ctx.stroke();
     return;
   }
@@ -4671,33 +4900,34 @@ function drawVerity() {
     ctx.filter = 'none';
     ctx.globalAlpha = 1;
   }
-  if (!reduceMotion && Math.random() < 0.1 * k) { ctx.fillStyle = 'rgba(0,0,0,0.85)'; ctx.fillRect(0, 0, W, H); }
+  if (!reduceMotion && !softScares() && Math.random() < 0.1 * k) { ctx.fillStyle = 'rgba(0,0,0,0.85)'; ctx.fillRect(0, 0, W, H); }
 }
 
 // the jumpscare: that grin, filling the screen
 function drawVerityScare(t) {
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  const T = SK.VERITY_SCARE_TIME;
-  ctx.fillStyle = Math.floor(t * 28) % 2 ? '#1c1a04' : '#000';
+  const T = SK.VERITY_SCARE_TIME, soft = softScares(), wild = !reduceMotion && !soft;
+  ctx.fillStyle = soft ? '#141203' : Math.floor(t * 28) % 2 ? '#1c1a04' : '#000';
   ctx.fillRect(0, 0, W, H);
   if (!imgReady(IMG.verity2)) return;
   const img = IMG.verity2, iw = img.naturalWidth, ih = img.naturalHeight;
   // just the head and the teeth: top tenth of the picture, middle half
   const fx = iw * 0.24, fw = iw * 0.52, fy = 0, fh = ih * 0.115;
   const lunge = Math.min(1, t / 0.1);
-  const k = 0.35 + lunge * 0.7 + Math.max(0, t - 0.1) * 0.2;
+  let k = 0.35 + lunge * 0.7 + Math.max(0, t - 0.1) * 0.2;
+  if (soft) k = Math.min(0.6, k);
   const dw = Math.max(W, H * 0.85) * k, dh = dw * fh / fw;
-  const shake = reduceMotion ? 0 : 36 * (1 - t / T) + 8;
+  const shake = wild ? 36 * (1 - t / T) + 8 : 0;
   const x = cx - dw / 2 + rand(-shake, shake), y = H * 0.45 - dh / 2 + rand(-shake, shake);
-  const strips = reduceMotion ? 1 : 12;
+  const strips = wild ? 12 : 1;
   for (let i = 0; i < strips; i++) {
-    const off = !reduceMotion && Math.random() < 0.4 ? (Math.random() - 0.5) * dw * 0.1 : 0;
+    const off = wild && Math.random() < 0.4 ? (Math.random() - 0.5) * dw * 0.1 : 0;
     ctx.drawImage(img, fx, fy + fh * i / strips, fw, fh / strips, x + off, y + dh * i / strips, dw, dh / strips + 0.6);
   }
-  if (!reduceMotion && t > 0.3 && Math.random() < 0.1) { ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H); }
+  if (wild && t > 0.3 && Math.random() < 0.1) { ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H); }
   ctx.fillStyle = `rgba(160,140,0,${0.15 + 0.12 * Math.sin(t * 45)})`;
   ctx.fillRect(0, 0, W, H);
-  if (!reduceMotion && Math.random() < 0.12) {
+  if (wild && Math.random() < 0.12) {
     ctx.globalCompositeOperation = 'difference';
     ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, W, H);
     ctx.globalCompositeOperation = 'source-over';
@@ -4903,22 +5133,29 @@ const FOE_INTRO = {
 let lastTrio = null;
 try { lastTrio = JSON.parse(localStorage.getItem('skerry-trio') || 'null'); } catch (e) {}
 
-// draw this voyage's three: from the crew's seed in a crew, so everyone gets the same
-function pickTrio(seed) {
-  const rng = seed != null ? seeded((seed ^ 0x5bd1e995) >>> 0) : Math.random;
-  let pool = FOE_POOL.slice();
-  if (seed == null && Array.isArray(lastTrio)) { const fresh = pool.filter(k => !lastTrio.includes(k)); if (fresh.length >= 3) pool = fresh; }
+// the gentlest of the pool, for a new sailor's very first voyage (no Knock, no Verity)
+const GENTLE_FOES = ['dancer', 'cactusmammoth', 'bananadolphin', 'tyrefrog', 'goose', 'fridgecamel', 'gentleman', 'drowned'];
+// draw this voyage's enemies: from the crew's seed in a crew, so everyone gets the same.
+// New sailors start easy: one gentle enemy on their first voyage, two on the second, then three.
+// A crew's count depends only on the voyage number (two on voyage 1), so every ship in it matches.
+function pickTrio(seed, n) {
+  const crew = seed != null, rookie = !crew && firstTimer();
+  const rng = crew ? seeded((seed ^ 0x5bd1e995) >>> 0) : Math.random;
+  const count = crew ? (n === 1 ? 2 : 3) : rookie ? Math.min(3, Math.max(1, n || 1)) : 3;
+  let pool = (rookie && n === 1 ? GENTLE_FOES : FOE_POOL).slice();
+  if (!crew && Array.isArray(lastTrio)) { const fresh = pool.filter(k => !lastTrio.includes(k)); if (fresh.length >= count) pool = fresh; }
   const out = [];
-  while (out.length < 3 && pool.length) out.push(pool.splice(Math.floor(rng() * pool.length), 1)[0]);
+  while (out.length < count && pool.length) out.push(pool.splice(Math.floor(rng() * pool.length), 1)[0]);
   if (seed == null) { lastTrio = out; try { localStorage.setItem('skerry-trio', JSON.stringify(out)); } catch (e) {} }
   return out;
 }
 const hasFoe = k => !g || !g.trio || g.trio.includes(k);
 
-function newFoes(trio) {
+// (`easy`: a new sailor's first voyage, where the first one takes a little longer to turn up)
+function newFoes(trio, easy) {
   const F = {};
   if (g && g.backrooms) F.stowaway = { t: rand(8, 12), list: [], intro: false };
-  for (const k of trio) if (FOE_KINDS[k]) F[k] = { t: rand(6, 14), list: [], intro: false };
+  for (const k of trio) if (FOE_KINDS[k]) F[k] = { t: easy ? rand(14, 20) : rand(6, 14), list: [], intro: false };
   return F;
 }
 function resetMods() {
@@ -4944,7 +5181,7 @@ function hazard(h) { g.hazards.push(Object.assign({ t: 0 }, h)); return h; }
 const ceilingZ = z => g.backrooms ? Math.min(z, SK.BACKROOMS_CEIL - 2) : z;
 function nextMarenStage() {
   const m = g.maren;
-  if (m.active && m.stage < SK.MAREN_STAGES.length - 1) { m.stage++; placeMaren(m.stage); }
+  if (m.active && m.stage < SK.MAREN_STAGES.length - 1) { m.stage++; placeMaren(m.stage); marenLog('flash'); marenCallout(); }
 }
 
 // ---------- the kinds ----------
@@ -5462,11 +5699,11 @@ function updateFoes(dt) {
     const live = F.list.filter(o => !o.dead).length;
     if (F.t <= 0 && live < K.max) {
       const o = K.spawn();
-      if (o) { F.list.push(o); intro(k); }
+      if (o) { F.list.push(o); intro(k); foeCue(k, o, true); }
       F.t = rand(K.every[0], K.every[1]) * Math.max(0.7, 1 - (g.n - 1) * 0.04);
     }
     if (k === 'cactusmammoth') rememberLit(F.list);
-    for (const o of F.list) if (!o.dead) K.update(o, dt);
+    for (const o of F.list) if (!o.dead) { K.update(o, dt); if (!o.dead) foeCue(k, o, false); }
     F.list = F.list.filter(o => !o.dead);
   }
   updateHazards(dt);
@@ -5650,7 +5887,7 @@ function drawHazard(h, q) {
 function drawFoeOverlays() {
   if (typeof drawMothOnLantern === 'function') drawMothOnLantern();
   if (typeof drawBetweenOverlays === 'function') drawBetweenOverlays();
-  if (g.flash > 0) { ctx.fillStyle = `rgba(255,255,255,${Math.min(1, g.flash / 1.5)})`; ctx.fillRect(0, 0, W, H); }
+  if (g.flash > 0) { ctx.fillStyle = `rgba(255,255,255,${Math.min(1, g.flash / 1.5) * flashK()})`; ctx.fillRect(0, 0, W, H); }
   if (g.splat > 0) {
     const a = Math.min(1, g.splat / 1.2);
     ctx.save(); ctx.globalAlpha = a * 0.85;
@@ -5663,11 +5900,88 @@ function drawFoeOverlays() {
   }
 }
 
-// the voyage's line-up, for the log at the start
+// the voyage's line-up, for the log at the start ("Tonight: the Tyre Frog, the Root Hermit and Knock.")
 function trioLine() {
-  if (!g.trio) return '';
-  const n = g.trio.map(k => FOE_NAMES[k]);
-  return 'Tonight: ' + n[0] + ', ' + n[1] + ' and ' + n[2] + '.';
+  if (!g.trio || !g.trio.length) return '';
+  const n = g.trio.map(k => FOE_NAMES[k].replace(/^The /, 'the '));
+  return 'Tonight: ' + (n.length === 1 ? n[0] : n.slice(0, -1).join(', ') + ' and ' + n[n.length - 1]) + '.';
+}
+
+// ---------- urgent warnings ----------
+// Watches each enemy from outside its own code and puts up the centre call-out at the moment that
+// needs an answer. `fresh` is true the frame it turns up. Sound-only warnings (a shing, a trumpet,
+// a scream) always get one, so they still reach a player who can't hear them.
+function foeCue(k, o, fresh) {
+  const at = () => bearingOf(o.x - ship.x, o.y - ship.y);
+  if (k === 'brute' && o.hold > 0 && !o.cued) { o.cued = true; callout('The Brute has the bow! ' + bellWord() + '!', { btn: 'bell', pri: true }); }
+  else if (k === 'brute' && !(o.hold > 0)) o.cued = false;
+  if (k === 'toucan' && o.dive > 0 && !o.cued) { o.cued = true; callout('The Toucan is diving for your flare! ' + bellWord() + '!', { btn: 'bell', bearing: at(), pri: true }); }
+  if (k === 'assassin' && fresh) callout('Shing! Turn or change speed!', { bearing: at(), pri: true });
+  if (k === 'coconutbull' && fresh) callout('A trumpet: the Bull will charge. Change speed!', { bearing: at(), pri: true });
+  if (k === 'stowaway') {
+    if (fresh) callout('A scream down the corridor!', { bearing: at(), pri: true });
+    else if (o.wait <= 0 && !o.cued) { o.cued = true; callout('He’s charging: dodge to the side!', { bearing: at(), pri: true }); }
+  }
+  if (k === 'petrels' && fresh) callout('Petrels at your height: climb, dive or ' + bellWord().toLowerCase() + '!', { btn: 'bell', bearing: at() });
+  if (k === 'squall' && fresh) callout('Gust from ' + (o.side < 0 ? 'port' : 'starboard') + ': lean into it and climb!', { bearing: at(), pri: true });
+}
+// the bell is a horn in the Open Sky
+function bellWord() { return g && g.sky ? 'Sound the horn' : 'Ring the bell'; }
+
+// ---------- what got you ----------
+// one tip for the end card, from the counters in the README, for whatever sank you
+const FOE_TIP = {
+  maren: 'Keep within Plimsoll’s ring and ring the bell while she’s ahead.',
+  rocks: 'Rocks only show in the light: watch the beam and the bearing strip, and turn along a rock rather than into it. A glancing touch only scrapes.',
+  drowned: 'The drowned can’t climb aboard a ship doing 9 knots or more, and the bell sinks them.',
+  knock: 'When you hear three knocks, turn to face him: he can’t move while you look. The bell freezes him too.',
+  verity: 'A flare sends Verity over the rail. He waits until your flare is nearly loaded, so keep it ready.',
+  dancer: 'Sail against the Dancer’s pull, or ring the bell to stop her.',
+  crocbomber: 'Steer out of the red rings before the bombs land.',
+  cactusmammoth: 'Give the Cactus Mammoth a wide berth: its spines only reach 30 m.',
+  pigeon: 'Look away from the Informer when its red light blinks; the bell scares it off.',
+  coconutbull: 'When the Coconut Bull trumpets, change speed so its charge misses.',
+  bananadolphin: 'Steer round the banana peel slicks.',
+  toucan: 'Ring the bell while the Toucan dives.',
+  brute: 'Ring the bell to break the Juiced Brute’s grip.',
+  tyrefrog: 'Watch the Tyre Frog’s shadow and steer off it.',
+  assassin: 'At the shing, change speed or turn.',
+  goose: 'Steer between the goose eggs; the bell sinks them.',
+  shrimpcat: 'Turn hard one way for two seconds to shake the Shrimp Cat off.',
+  fridgecamel: 'Go round the ice, or melt it with a flare.',
+  condiments: 'Turn hard as the Twins close, or ring the bell.',
+  gentleman: 'Steer round the Gentleman; the bell sinks him.',
+  smuggler: 'Stay out of the light, or put a rock between you and the Smuggler.',
+  bananaape: 'Keep moving; the bell sends the Banana Ape under.',
+  rootman: 'Turn across the line of roots before it reaches you.',
+  stowaway: 'When the Stowaway sets off, dodge to the side: he runs straight.',
+  cinderkite: 'Steer out of the orange rings; a flare drives the Cinder Kite off.',
+  slagwader: 'Ring the bell before the Slag Wader reaches your bow.',
+  furnacemoth: 'If the Furnace Moth lands on your lantern, fire a flare.',
+  sirens: 'Ring the bell to drown out the Sirens’ song.',
+  charybdis: 'Sail hard round the whirlpool; at full sail you pull clear.',
+  cyclops: 'Dodge the pale rings; a flare in his eye blinds the Cyclops.',
+  echo: 'Turn late and hard past your Echo, or ring the bell to shatter it.',
+  sleeper: 'When the water over the face brightens, ring the bell.',
+  thunder: 'Get out of the white ring before the bolt comes down.',
+  petrels: 'Climb, dive or sound the horn to scatter the petrels.',
+  squall: 'Lean into the gust and climb.',
+};
+// match what the log said hit you to an entry above
+const TIP_MATCH = [
+  [/skerry|wreck|timber|shore|pier|storm cloud|wall/i, 'rocks'], [/drowned/i, 'drowned'], [/knock/i, 'knock'],
+  [/bomb/i, 'crocbomber'], [/goose egg/i, 'goose'], [/roots/i, 'rootman'], [/fireball/i, 'cinderkite'], [/slag/i, 'slagwader'],
+  [/moth/i, 'furnacemoth'], [/siren/i, 'sirens'], [/charybdis/i, 'charybdis'], [/cyclops/i, 'cyclops'], [/echo/i, 'echo'],
+  [/sleeper/i, 'sleeper'], [/lightning/i, 'thunder'], [/birdstrike/i, 'petrels'], [/brute/i, 'brute'],
+];
+function foeTip(how, what) {
+  if (how === 'taken') return FOE_TIP.maren;
+  if (how === 'knock') return FOE_TIP.knock;
+  if (how === 'verity') return FOE_TIP.verity;
+  const s = String(what || '');
+  for (const [re, k] of TIP_MATCH) if (re.test(s)) return FOE_TIP[k];
+  for (const k in FOE_NAMES) if (FOE_TIP[k] && s.toLowerCase().includes(FOE_NAMES[k].toLowerCase().replace(/^the /, ''))) return FOE_TIP[k];
+  return FOE_TIP.rocks;
 }
 
 // ---- src/nether.js ----
@@ -6494,7 +6808,7 @@ function drawSkyWeather() {
     ctx.moveTo(x, y); ctx.lineTo(x + dx, y + dy);
   }
   ctx.stroke();
-  if (g.lightning > 0) { ctx.fillStyle = `rgba(220,230,255,${g.lightning * 0.22})`; ctx.fillRect(0, 0, W, H); }
+  if (g.lightning > 0) { ctx.fillStyle = `rgba(220,230,255,${g.lightning * 0.22 * flashK()})`; ctx.fillRect(0, 0, W, H); }
   return true;
 }
 
@@ -6647,6 +6961,13 @@ let best = 0;
 try { best = parseInt(localStorage.getItem('skerry-helm-best') || '0', 10) || 0; } catch (e) {}
 const keys = {}, touches = new Map();
 let sailHold = 0;   // the on-screen sail buttons
+let paused = false;  // solo only: a crew never stops for one sailor
+
+// a new sailor: never made harbour on this device. Their first voyages start gentler.
+function firstTimer() {
+  if (best > 0) return false;
+  try { return !localStorage.getItem('skerry-harboured'); } catch (e) { return true; }
+}
 
 function newVoyage(n, attract, seed, slot) {
   const v = makeVoyage(n, attract, seed);
@@ -6666,13 +6987,17 @@ function newVoyage(n, attract, seed, slot) {
     ],
     parts: [], glare: 0, shake: 0, log: [], bell: 0, bellFlash: 0, wasLit: false, scareT: 0,
     flares: [], flareCd: 0, repairT: 0, shoutT: 0, knockScare: 0, knockKill: false,
-    stats: { hits: 0, bells: 0, flares: 0, patched: 0, eaten: 0 },
+    stats: { hits: 0, bells: 0, flares: 0, patched: 0, eaten: 0, shaves: 0 },
+    marenLog: [], marenTell: 0, lastHit: null, callT: 0, rollKick: 0,
   };
   g.enemies = newEnemies(v.lures);
-  // this voyage's three enemies from the pool
+  // this voyage's enemies from the pool (fewer and gentler for a new sailor's first voyages)
   // the rare seas (the Nether, the Wine-Dark Sea, the Places In Between) have their own three and nothing else
-  g.trio = attract ? [] : v.special ? SPECIAL_TRIOS[v.special].slice() : pickTrio(seed);
-  g.foes = newFoes(g.trio); g.hazards = []; g.flash = 0; g.splat = 0; g.spinT = 0; g.capT = 0; resetMods();
+  g.trio = attract ? [] : v.special ? SPECIAL_TRIOS[v.special].slice() : pickTrio(seed, n);
+  // a new sailor's very first voyage: a few quiet seconds before anything turns up, Maren included
+  const easy = !attract && seed == null && n === 1 && firstTimer() && !v.special;
+  if (easy) g.marenClock = -6;
+  g.foes = newFoes(g.trio, easy); g.hazards = []; g.flash = 0; g.splat = 0; g.spinT = 0; g.capT = 0; resetMods();
   g.plim = newPlimsoll(v.path);
   g.maren = newMaren(!attract && !v.special, v.wrecks.find(w => w.name === 'Gannet'));
   g.cannon = newCannon();
@@ -6705,8 +7030,10 @@ function burst(x, y, colors, n, spd, up) {
   }
 }
 
-function hit(nx, ny, what) {
+// `struck`: she ran into something (a rock, a wreck, the pier); otherwise something hit her
+function hit(nx, ny, what, struck) {
   if (ship.inv > 0 || state !== 'play') return;
+  g.lastHit = what;
   ship.inv = 1.4; ship.v = 1.5;
   ship.h += angDiff(bearingOf(nx, ny), ship.h) * 0.6;
   g.shake = 0.5;
@@ -6715,8 +7042,8 @@ function hit(nx, ny, what) {
   ship.hull--; run.hits++; g.stats.hits++;
   if (typeof padRumble === 'function') padRumble(0.8, 0.5, 260);
   renderHud();
-  if (ship.hull <= 0) { addLog('She struck ' + what + ' and is going down.', 'w'); endRun('sunk'); }
-  else addLog('Struck ' + what + '. ' + (ship.hull === 1 ? 'Taking water fast.' : 'Hull still holding.'), 'w');
+  if (ship.hull <= 0) { addLog((struck ? 'She struck ' + what + ' and is' : 'Hit by ' + what + '. She is') + ' going down.', 'w'); endRun('sunk'); }
+  else addLog((struck ? 'Struck ' : 'Hit by ') + what + '. ' + (ship.hull === 1 ? 'Taking water fast.' : 'Hull still holding.'), 'w');
 }
 
 function wrapPi(a) { return ((a + Math.PI) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI) - Math.PI; }
@@ -6811,7 +7138,7 @@ function resolveContact(c, what, soft) {
   if (closing <= 0) return false;
   // a hit needs both real speed into it and a real angle (more than about 25°); shallower is a scrape
   if (closing > SK.IMPACT && closing > ship.v * 0.5 && !soft) {
-    hit(c.nx, c.ny, what);
+    hit(c.nx, c.ny, what, true);
     return true;
   }
   // glancing: lose the speed going into it, keep the speed along it, and swing her parallel
@@ -6831,6 +7158,7 @@ function checkCollisions() {
     if (Math.abs(r.x - ship.x) > r.r + 40 || Math.abs(r.y - ship.y) > r.r + 40) continue;
     if (g.sky && Math.abs(ship.z - r.z) > r.rz + 1.5) continue;   // above or below this cloud
     if ((c = hullContact(pts, r.x, r.y, r.r)) && resolveContact(c, g.sky ? 'a storm cloud' : 'a skerry')) break;
+    if (!c) closeShave(pts, r);
   }
   for (const o of g.wrecks) {
     if (Math.hypot(o.x - ship.x, o.y - ship.y) > o.r + 40) continue;
@@ -6860,6 +7188,21 @@ function checkCollisions() {
   } else if (state === 'play' && Math.hypot(ship.x - g.exit.x, ship.y - g.exit.y) < g.exit.r) { arrive(); return true; }
   return ship.hull !== hull0 || state !== 'play';
 }
+// shaving past a rock at speed with under 2.5 m to spare: a creak, a burst of spray, a lurch, and it counts
+function closeShave(pts, r) {
+  if (ship.v <= 15 || g.t - (r.shaveT || -99) < 3) return;
+  let clear = Infinity, near = pts[0];
+  for (const p of pts) { const d = Math.hypot(p.x - r.x, p.y - r.y) - r.r - p.w; if (d < clear) { clear = d; near = p; } }
+  if (!(clear > 0 && clear < 2.5)) return;
+  r.shaveT = g.t;
+  g.stats.shaves++; run.shaves = (run.shaves || 0) + 1;
+  sfxCreak();
+  const a = bearingOf(near.x - r.x, near.y - r.y);
+  burst(r.x + Math.sin(a) * r.r, r.y + Math.cos(a) * r.r, ['#ece4cf', '#c8d6e8', '#ffffff'], 22, 7, 8);
+  // she heels away from the rock
+  if (!reduceMotion) g.rollKick = (angDiff(bearingOf(r.x - ship.x, r.y - ship.y), ship.h) > 0 ? -1 : 1) * 0.06;
+}
+
 // crewmates' ships bump apart rather than through each other, and nobody takes damage for it
 function bumpMates() {
   if (!crewMode || typeof matesAtSea !== 'function') return;
@@ -6881,7 +7224,19 @@ function update(dt) {
   advanceBeam(dt);
   // the lamp swings round quicker than it used to, but Maren keeps to the old pace: one stage nearer
   // every marenPeriod seconds (what a full turn of the beam used to take)
+  const clock0 = g.marenClock;
   g.marenClock += dt;
+  // a moment before she steps nearer: a swell from her side, the lantern gutters, red at the edges
+  const tellAt = g.marenPeriod - 1.5;
+  if (clock0 < tellAt && g.marenClock >= tellAt && g.maren.active && state === 'play' && !g.attract && !marenHeld()) {
+    g.marenTell = 1.5;
+    const at = bearingOf(g.maren.x - ship.x, g.maren.y - ship.y);
+    sfxSwell(clamp(angDiff(at, ship.h) / (fov / 2), -1, 1));
+    if (soundOff()) callout('A swell: she\u2019s about to step nearer', { bearing: at });
+  }
+  if (g.marenTell > 0) g.marenTell = Math.max(0, g.marenTell - dt);
+  if (g.rollKick) g.rollKick *= Math.max(0, 1 - dt * 4);
+  if (g.callT > 0) { g.callT -= dt; if (g.callT <= 0) hideCallout(); else calloutChevron(); }
   if (g.marenClock >= g.marenPeriod) { g.marenClock -= g.marenPeriod; marenTurn(); if (g.backrooms && !g.attract) { g.lightsOut = 0.7; sfxLightsOut(); } }
   if (state === 'scare') return;
 
@@ -6914,7 +7269,8 @@ function update(dt) {
   }
   ship.h += ship.rudder * 0.55 * turnK * dt * (0.35 + 0.65 * Math.min(1, ship.v / 10));
   // move in short steps so a fast ship can't jump clean over a rock between frames
-  const steps = Math.min(60, Math.max(1, Math.ceil(ship.v * dt / 2)));
+  // (up to 600 steps a frame: this never limits her speed, it only keeps the steps short)
+  const steps = Math.min(600, Math.max(1, Math.ceil(ship.v * dt / 2)));
   for (let i = 0; i < steps; i++) {
     ship.x += Math.sin(ship.h) * ship.v * dt / steps;
     ship.y += Math.cos(ship.h) * ship.v * dt / steps;
@@ -6942,6 +7298,10 @@ function update(dt) {
   updateCannon(dt);
   carpenter(dt);
   updatePickups();
+  if (!g.attract && state === 'play' && g.pickups && !taught('crate')) {
+    const p = g.pickups.find(q => !q.taken && Math.hypot(q.x - ship.x, q.y - ship.y) < 150);
+    if (p) teach('crate', true, 'A floating crate: sail into it to haul it aboard', { bearing: bearingOf(p.x - ship.x, p.y - ship.y) });
+  }
   sailInCompany(dt);
   for (const f of g.flares) f.t -= dt;
   g.flares = g.flares.filter(f => f.t > 0);
@@ -7012,6 +7372,105 @@ function updateBellButton() {
   $('bellState').textContent = p >= 1 ? 'Ready' : 'Swinging';
 }
 
+// ---------- the centre call-out ----------
+// One short line in the middle of the screen for the moments that need an answer now. It lasts
+// 2.5 seconds, and only one comes every 3 seconds unless it's urgent (`pri`). `btn` ('bell' or
+// 'flare') pulses that button; `bearing` adds a chevron pointing the way to turn.
+function callout(text, o) {
+  o = o || {};
+  if (!g || g.attract || state !== 'play' || NET.watch) return false;
+  if (!o.pri && g.t - (g.callAt == null ? -99 : g.callAt) < 3) return false;
+  g.callAt = g.t; g.callT = 2.5; g.callB = o.bearing == null ? null : o.bearing;
+  const el = $('callout');
+  $('calloutText').textContent = text;
+  for (const b of ['bellBtn', 'flareBtn']) $(b).classList.toggle('urgent', !!o.btn && b === o.btn + 'Btn');
+  el.hidden = true; void el.offsetWidth; el.hidden = false;   // restart its entrance
+  calloutChevron();
+  return true;
+}
+// the chevron follows the bearing as you turn, and goes once you're facing it
+function calloutChevron() {
+  if (g.callB == null) { $('calloutL').hidden = $('calloutR').hidden = true; return; }
+  const d = angDiff(g.callB, ship.h);
+  $('calloutL').hidden = !(d < -0.2); $('calloutR').hidden = !(d > 0.2);
+}
+function hideCallout() {
+  if (g) g.callT = 0;
+  $('callout').hidden = true;
+  for (const b of ['bellBtn', 'flareBtn']) $(b).classList.remove('urgent');
+}
+// one-time lessons for a new sailor: each is shown once on this device, through the call-out
+let TAUGHT = {};
+try { TAUGHT = JSON.parse(localStorage.getItem('skerry-taught') || '{}') || {}; } catch (e) {}
+const taught = k => !!TAUGHT[k];
+function teach(k, when, text, o) {
+  if (!when || TAUGHT[k] || !g || g.attract || state !== 'play' || NET.watch) return false;
+  if (!callout(text, Object.assign({}, o, { pri: true }))) return false;
+  TAUGHT[k] = 1;
+  try { localStorage.setItem('skerry-taught', JSON.stringify(TAUGHT)); } catch (e) {}
+  return true;
+}
+
+// ---------- quick hails to the crew ----------
+const HAILS = ['Here!', 'Help!', 'Follow me', 'Maren close'];
+function sendHail(i) {
+  if (!crewMode || state !== 'play' || !HAILS[i] || g.shoutT > 0) return;
+  g.shoutT = 3;
+  NET.shouts++; NET.shout = { n: NET.shouts, i };
+  send();
+  sfxHorn(0, 0.3);
+  addLog('You: ' + HAILS[i], 'p');
+}
+
+// ---------- pause and settings ----------
+// Solo voyages pause (Esc, P, Start, or the tab going to the background). A crew never stops for one
+// sailor, so there Esc only opens the settings.
+function pauseGame() {
+  if (paused || state !== 'play' || crewMode || g.attract || g.verityScare > 0 || g.knockScare > 0) return;
+  paused = true;
+  for (const k in keys) keys[k] = false; touches.clear(); sailHold = 0;
+  if (AUD.ctx && AUD.ctx.state === 'running') AUD.ctx.suspend().catch(() => {});
+  $('pauseCard').hidden = false;
+  setTimeout(() => $('resumeBtn').focus({ preventScroll: true }), 30);
+}
+function resumeGame() {
+  if (!paused) return;
+  paused = false;
+  $('pauseCard').hidden = true; $('settingsCard').hidden = true;
+  if (AUD.ctx) AUD.ctx.resume().catch(() => {});
+  cv.focus({ preventScroll: true });
+}
+function openSettings() {
+  $('settingsCrew').hidden = !(crewMode && state === 'play');
+  renderSettings();
+  $('settingsCard').hidden = false;
+  setTimeout(() => $('settingsClose').focus({ preventScroll: true }), 30);
+}
+function closeSettings() {
+  $('settingsCard').hidden = true;
+  if (paused) $('resumeBtn').focus({ preventScroll: true });
+  else if (state === 'play') cv.focus({ preventScroll: true });
+}
+const SETTING_OPTS = {
+  vol: [[0, 'Off'], [0.25, '25%'], [0.5, '50%'], [0.75, '75%'], [1, '100%']],
+  scares: [['full', 'Full'], ['soft', 'Softened']],
+  flashes: [['normal', 'Normal'], ['reduced', 'Reduced']],
+  motion: [['auto', 'Auto'], ['reduce', 'Reduce'], ['full', 'Full']],
+};
+function renderSettings() {
+  for (const key in SETTING_OPTS) {
+    const box = $('set-' + key); if (!box) continue;
+    if (!box.childElementCount) for (const [v, label] of SETTING_OPTS[key]) {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'tool'; b.textContent = label; b.dataset.v = String(v);
+      b.addEventListener('click', () => { SETTINGS[key] = v; saveSettings(); applySettings(); renderSettings(); });
+      box.appendChild(b);
+    }
+    for (const b of box.children) { const on = b.dataset.v === String(SETTINGS[key]); b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on)); }
+  }
+}
+function applySettings() { applyVolume(); refreshMotion(); }
+
 // ---------- flow ----------
 function hideCards() { for (const id of ['titleCard', 'portCard', 'endCard']) $(id).hidden = true; }
 
@@ -7027,6 +7486,7 @@ function startRun() {
 function beginVoyage(n) {
   state = 'play';
   newVoyage(n, false);
+  hideCallout(); showHails();
   bellShown = -1; flareShown = -1;
   hideCards();
   $('hud').hidden = false; $('logbox').hidden = false;
@@ -7046,6 +7506,7 @@ function beginCrewVoyage(L, slot) {
   newVoyage(L.voy, false, L.seed, slot);
   g.launchAt = L.at; g.launchId = L.id;
   bellShown = -1; flareShown = -1;
+  hideCallout(); showHails(); $('crewRecap').hidden = true;
   stopSpectating();
   hideCards(); $('crewCard').hidden = true;
   $('hud').hidden = false; $('logbox').hidden = false;
@@ -7057,6 +7518,9 @@ function beginCrewVoyage(L, slot) {
   addLog(trioLine(), 'w');
   cv.focus({ preventScroll: true });
 }
+
+// the hail buttons, for phones in a crew
+function showHails() { const r = $('hailRow'); if (r) r.hidden = !crewMode; }
 
 // in the sky the sail buttons become the stick
 function setFlightControls() {
@@ -7083,6 +7547,8 @@ for (const b of document.querySelectorAll('.menuBtn')) b.addEventListener('click
 
 function toTitle() {
   state = 'title';
+  paused = false; $('pauseCard').hidden = true; $('settingsCard').hidden = true;
+  if (g) hideCallout();
   hideCards(); $('crewCard').hidden = true;
   $('hud').hidden = true; $('logbox').hidden = true; $('biomeBanner').hidden = true;
   newVoyage(1, true);
@@ -7092,6 +7558,9 @@ function toTitle() {
 }
 
 function arrive() {
+  hideCallout();
+  // once you've made harbour you're no longer new here
+  try { localStorage.setItem('skerry-harboured', '1'); } catch (e) {}
   const wasState = state; state = 'port';   // before the reward, so the menus' boat picker isn't greyed out as 'sailing'
   grantCrate(harbourReward() + g.found * 2, true);
   state = wasState;
@@ -7141,27 +7610,64 @@ function startScare() {
 }
 
 function hideBanner() { const b = $('biomeBanner'); if (b) b.hidden = true; clearTimeout(showBiomeBanner.t); }
+// the end card's recap: what got you, one tip against it, and how near Maren came over the voyage
+function recapLine(how) {
+  const what = how === 'taken' ? 'Maren' : how === 'knock' ? 'Knock' : how === 'verity' ? 'Verity' : g.lastHit || 'the skerries';
+  return { what, tip: foeTip(how, g.lastHit) };
+}
+function fillRecap(how) {
+  const box = $('endRecap'), r = recapLine(how);
+  $('recapWhat').textContent = r.what.charAt(0).toUpperCase() + r.what.slice(1);
+  $('recapTip').textContent = r.tip;
+  const dots = $('recapDots'); dots.textContent = '';
+  // her last dozen moves, oldest first: each dot is how near she stood afterwards
+  const log = g.maren.active ? g.marenLog.slice(-12) : [];
+  const words = { turn: 'came nearer', held: 'held back', bell: 'driven back by the bell', flash: 'drawn nearer by a flash' };
+  for (const e of log) {
+    const i = document.createElement('i');
+    i.className = 'st' + e.stage + (e.why === 'bell' ? ' bell' : e.why === 'held' ? ' held' : '');
+    i.title = Math.floor(e.t / 60) + ':' + String(Math.floor(e.t % 60)).padStart(2, '0') + ' ' + words[e.why] + ' (stage ' + e.stage + ')';
+    dots.appendChild(i);
+  }
+  $('recapDotsRow').hidden = !log.length;
+  box.hidden = false;
+}
+// the far seas have their own way of losing you
+const SEA_END = {
+  nether: ['Lost in the Fire', 'The lava had her. Somewhere under the red roof a ring of black stone is still humming.'],
+  odyssey: ['Lost on the Wine-Dark Sea', 'She went down under the golden moon, and the singing on the rock went on without her.'],
+  between: ['Lost In Between', 'The dusk closed over her like water. The doors are still standing there, one of them lit.'],
+  sky: ['Lost in the Clouds', 'She went down through the cloud floor and was never found. On clear nights you can still hear an engine up there.'],
+};
 function endRun(how) {
   hideBanner();
+  hideCallout();
   state = 'over';
   stopVerity();
   grantCrate();
   audioTick(0, 0);
   const taken = how === 'taken', knocked = how === 'knock' || how === 'verity', verity = how === 'verity';
   if (crewMode) {
+    const r = recapLine(how), cr = $('crewRecap');
+    cr.textContent = 'What got you: ' + r.what + '. ' + r.tip;
+    cr.hidden = false;
     myStatus(taken ? 'taken' : 'sunk');
     setTimeout(() => { $('hud').hidden = true; $('logbox').hidden = true; if (crewMode && state === 'over') showCrewCard(); }, (taken || knocked) ? 0 : 900);
     return;
   }
   $('endEyebrow').textContent = 'Voyage ' + g.n + (taken ? ' · taken' : ' · lost');
-  $('endTitle').textContent = taken ? 'Maren Came Aboard' : verity ? 'Verity Helped' : knocked ? 'Knocked Under' : 'Lost on the Skerries';
+  const sea = !g.backrooms && SEA_END[g.biome];
+  $('endTitle').textContent = taken ? 'Maren Came Aboard' : verity ? 'Verity Helped' : knocked ? 'Knocked Under' : g.backrooms ? 'Lost in the Rooms' : sea ? sea[0] : 'Lost on the Skerries';
   $('endText').textContent = taken
     ? 'She stood at the bow, and then she was on the deck. The ' + (myBoat() ? myBoat().name.toLowerCase() : 'brig') + ' was found at dawn drifting off the Gannet, with her lantern still lit and nobody aboard.'
     : verity ? 'He only wanted to help. The ship was found at dawn with nobody aboard and a wide, yellow smile scratched into the deck.'
     : knocked ? 'Three knocks on the hull, and the fourth came straight through the planks. They say the Gannet\u2019s figurehead is still smiling.'
+    : sea ? sea[1] + (run.voyages ? ' You had brought her in ' + run.voyages + (run.voyages === 1 ? ' time.' : ' times.') : '')
+    : g.backrooms ? 'She went down between the yellow walls, a long way from any sea. The tubes are still humming.' + (run.voyages ? ' You had brought her in ' + run.voyages + (run.voyages === 1 ? ' time.' : ' times.') : '')
     : (run.voyages === 0 ? 'She went down before you sighted the pier lamps. The skerries keep their reputation.' :
       'You brought her in ' + run.voyages + (run.voyages === 1 ? ' time' : ' times') + ' before the rocks had the last word.');
-  $('sVoy').textContent = run.voyages; $('sHits').textContent = run.hits; $('sBest').textContent = best;
+  $('sVoy').textContent = run.voyages; $('sHits').textContent = run.hits; $('sBest').textContent = best; $('sShaves').textContent = run.shaves || 0;
+  fillRecap(how);
   setTimeout(() => {
     $('hud').hidden = true; $('logbox').hidden = true;
     $('endCard').hidden = false; $('againBtn').focus();
@@ -7188,6 +7694,17 @@ const keyName = e => e.key.length === 1 ? e.key.toLowerCase() : e.key;
 addEventListener('keydown', e => {
   if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
   const k = keyName(e);
+  // Esc closes the settings, then resumes; in play it pauses (solo) or opens the settings (crew)
+  if (k === 'Escape' || (k === 'p' && state === 'play')) {
+    if (e.repeat) return;
+    if (!$('settingsCard').hidden) closeSettings();
+    else if (paused) resumeGame();
+    else if (state === 'play' && !(g.verityScare > 0 || g.knockScare > 0)) { if (crewMode) { if (k === 'Escape') openSettings(); } else pauseGame(); }
+    return;
+  }
+  // while paused or in the settings, the game keys do nothing (Space and Enter work the buttons)
+  if (paused || !$('settingsCard').hidden) return;
+  if (crewMode && state === 'play' && k >= '1' && k <= '4') { if (!e.repeat) sendHail(+k - 1); return; }
   if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'a', 'd', 'w', 's'].includes(k)) {
     keys[k] = true; if (state === 'play') e.preventDefault();
   } else if ((k === ' ' || k === 'b') && state === 'play') {
@@ -7204,6 +7721,8 @@ addEventListener('keydown', e => {
 });
 addEventListener('keyup', e => { keys[keyName(e)] = false; });
 addEventListener('blur', () => { for (const k in keys) keys[k] = false; touches.clear(); sailHold = 0; });
+// the tab going into the background pauses a solo voyage
+document.addEventListener('visibilitychange', () => { if (document.hidden) pauseGame(); });
 
 function toggleSound() {
   setMuted(!AUD.muted);
@@ -7212,6 +7731,12 @@ function toggleSound() {
 }
 
 $('startBtn').addEventListener('click', startRun);
+$('resumeBtn').addEventListener('click', resumeGame);
+$('pauseSettings').addEventListener('click', openSettings);
+$('pauseMenu').addEventListener('click', () => { if (paused) { resumeGame(); state = 'over'; toTitle(); } });
+$('settingsClose').addEventListener('click', closeSettings);
+$('titleSettings').addEventListener('click', openSettings);
+for (const b of document.querySelectorAll('#hailRow button')) b.addEventListener('click', e => { sendHail(+b.dataset.i); e.currentTarget.blur(); cv.focus({ preventScroll: true }); });
 $('viewBtn').addEventListener('click', e => { toggleView(); e.currentTarget.blur(); cv.focus({ preventScroll: true }); });
 setThirdPerson(VIEW.third);
 $('nextBtn').addEventListener('click', () => beginVoyage(g.n + 1));
@@ -7490,7 +8015,7 @@ function myPresence() {
     app: 'skerry', sid: NET.sid, crew: NET.crew, joinedAt: NET.joinedAt, ready: NET.ready, nick: NET.nick || null,
     launch: amHostSafe() ? NET.launch : null,
     voy: NET.launch ? NET.launch.voy : 0, st: NET.st,
-    bell: NET.bells, flare: NET.flare, cannon: NET.cannon || null, chat: NET.chat, ghost: NET.ghost, stats: NET.stats,
+    bell: NET.bells, flare: NET.flare, shout: NET.shout, cannon: NET.cannon || null, chat: NET.chat, ghost: NET.ghost, stats: NET.stats,
     skin: mySkin().id, pennant: CRATES.pennant, boat: CRATES.boat, maxHull: myBoat().hull,
   };
 }
@@ -7665,6 +8190,10 @@ function syncMates() {
         m.flareN = fl;
         if (Number.isFinite(pr.flare.x) && Number.isFinite(pr.flare.y)) mateFlare(m, pr.flare.x, pr.flare.y, pr.flare.skin);
       } else m.flareN = fl;
+      // a quick hail: only the number of one of the four set phrases travels, never free text
+      const sh = counter(pr.shout);
+      if (sh > m.shoutN && pr.shout && HAILS[pr.shout.i] && pr.voy === NET.launch.voy) mateShout(m, HAILS[pr.shout.i]);
+      m.shoutN = sh;
       const gh = counter(pr.ghost);
       if (gh > m.ghostN) { m.ghostN = gh; if (pr.ghost.to === NET.myPeer) ghostBellFor(m); }
       else m.ghostN = gh;
@@ -7760,7 +8289,7 @@ function cleanStats(s) {
   const n = v => Number.isFinite(v) ? Math.max(0, Math.min(9999, Math.round(v))) : 0;
   // fin: the voyage time in tenths of a second, to settle who made harbour first
   const fin = Number.isFinite(s.fin) ? s.fin : Number.isFinite(s.secs) ? s.secs * 10 : 0;
-  return { secs: n(s.secs), fin: Math.max(0, Math.min(999999, Math.round(fin))), hits: n(s.hits), bells: n(s.bells), flares: n(s.flares), patched: n(s.patched), eaten: n(s.eaten) };
+  return { secs: n(s.secs), fin: Math.max(0, Math.min(999999, Math.round(fin))), hits: n(s.hits), bells: n(s.bells), flares: n(s.flares), patched: n(s.patched), eaten: n(s.eaten), shaves: n(s.shaves) };
 }
 
 function counter(o) { return o && typeof o === 'object' && Number.isFinite(o.n) ? o.n : 0; }
@@ -7771,6 +8300,8 @@ function mateFlare(m, x, y, skin) {
   const d = Math.hypot(x - ship.x, y - ship.y);
   if (state === 'play') addLog(m.name + ' fired a flare, ' + Math.round(d) + ' m off.', 'p');
   if (d < 900) sfxFlare();
+  // close enough to light your deck: it sends Verity off too
+  if (state === 'play' && d < SK.FLARE_RADIUS && flareShoosVerity()) addLog(m.name + '\u2019s flare sent Verity over the rail.', 'p');
 }
 function mateShout(m, text) {
   m.shoutText = text; m.shoutT = 4;
@@ -8101,7 +8632,7 @@ function renderScore(r) {
   for (const row of r.rows) {
     const tr = document.createElement('tr');
     const s = row.stats || {};
-    const cells = [row.name + (r.first === row ? ' \u2605 first' : ''), statusWord(row.st), s.secs ? fmt(s.secs) : '–', s.hits ?? '–', s.bells ?? '–', s.flares ?? '–', s.patched ?? '–', s.eaten ?? '–'];
+    const cells = [row.name + (r.first === row ? ' \u2605 first' : ''), statusWord(row.st), s.secs ? fmt(s.secs) : '–', s.hits ?? '–', s.bells ?? '–', s.flares ?? '–', s.patched ?? '–', s.eaten ?? '–', s.shaves ?? '–'];
     cells.forEach((v, i) => {
       const td = document.createElement(i === 0 ? 'th' : 'td');
       td.textContent = String(v);
@@ -8431,8 +8962,8 @@ function drawCarrierDeck(boat, skin) {
   }
   updateSpray(tipY);
   const lx = cx + Math.min(W * 0.28, 220), ly = H * 0.8;
-  const flick = g.maren.stage >= 3 && !reduceMotion ? (Math.random() < 0.15 ? 0.4 : 1) : 1;
-  drawLantern(lx, ly - 8, skin.lantern, flick);
+  const lf = lanternFlick();
+  drawLantern(lx, ly - 8, skin.lantern, lf.flick, lf.lean);
 }
 // a little grey jet seen from behind, on the deck
 function drawDeckJet(x, y, s, a) {
@@ -9453,6 +9984,8 @@ updateCrateButtons();
 // stick up and down; A rings the bell, X fires a flare. RB watches the next crewmate when spectating.
 // Menus: the left stick moves an on-screen cursor and A clicks what it's over; the right stick scrolls.
 // The D-pad jumps between buttons instead. B closes the crates (or goes back), Start presses the main button. Hits and jumpscares rumble the controller.
+// Start during a voyage pauses it (alone) or opens the settings (in a crew); in a crew, hold LB and
+// press the D-pad for the quick hails.
 
 const PAD = { steer: 0, sail: 0, connected: false, prev: [], navT: 0, held: null, root: null, cur: null };
 const DEAD = 0.18;
@@ -9473,7 +10006,7 @@ function padRumble(strong, weak, ms) {
 
 // the overlay currently on top, and the buttons on it you can move between
 function activeOverlay() {
-  for (const id of ['crateCard', 'crewCard', 'portCard', 'endCard', 'titleCard']) { const el = $(id); if (el && !el.hidden) return el; }
+  for (const id of ['settingsCard', 'pauseCard', 'crateCard', 'crewCard', 'portCard', 'endCard', 'titleCard']) { const el = $(id); if (el && !el.hidden) return el; }
   return null;
 }
 function focusables(root) {
@@ -9538,8 +10071,14 @@ function pollPad(dt) {
 
   if (state === 'play' && activeOverlay() === null && !(typeof NET !== 'undefined' && NET.watch)) {
     hideCursor();
-    PAD.steer = Math.max(-1, Math.min(1, ax + (pressed(p, 15) ? 1 : 0) - (pressed(p, 14) ? 1 : 0)));
-    PAD.sail = Math.max(-1, Math.min(1, rt - lt - ay * 0.8 + (pressed(p, 12) ? 1 : 0) - (pressed(p, 13) ? 1 : 0)));
+    // in a crew, LB held turns the D-pad into the four quick hails (up, right, down, left) instead of the helm
+    const hailing = crewMode && pressed(p, 4);
+    const dp = i => !hailing && pressed(p, i);
+    if (hailing) [12, 15, 13, 14].forEach((b, i) => { if (down(b)) sendHail(i); });
+    PAD.steer = Math.max(-1, Math.min(1, ax + (dp(15) ? 1 : 0) - (dp(14) ? 1 : 0)));
+    PAD.sail = Math.max(-1, Math.min(1, rt - lt - ay * 0.8 + (dp(12) ? 1 : 0) - (dp(13) ? 1 : 0)));
+    // Start pauses a solo voyage, or opens the settings in a crew
+    if (down(9)) { if (crewMode) openSettings(); else pauseGame(); }
     if (down(0)) ringBell();
     if (down(2)) fireFlare();
     if (down(3)) toggleView();
@@ -9587,7 +10126,9 @@ function pollPad(dt) {
         }
         if (down(9)) { const el = mainButton(root); if (el) el.click(); }
         if (down(1)) {
-          if (root.id === 'crateCard') $('crateClose').click();
+          if (root.id === 'settingsCard') closeSettings();
+          else if (root.id === 'pauseCard') resumeGame();
+          else if (root.id === 'crateCard') $('crateClose').click();
           else { const back = root.querySelector('.menuBtn'); if (back && back.offsetParent) back.click(); }
         }
         // pressing Y on the title opens the crates
@@ -9600,7 +10141,7 @@ function pollPad(dt) {
 
 function updateHint() {
   const h = $('hint'); if (!h) return;
-  h.textContent = PAD.connected ? 'Left stick steer · RT / LT sail · A bell · X flare · Y view' : '← → steer · ↑ ↓ sail · Space bell · F flare';
+  h.textContent = PAD.connected ? 'Left stick steer · RT / LT sail · A bell · X flare · Y view · Start pause' : '← → steer · ↑ ↓ sail · Space bell · F flare · Esc pause';
 }
 
 window.addEventListener('gamepadconnected', () => { PAD.prev = []; });
@@ -9695,6 +10236,8 @@ function frame(now) {
   const dt = Math.min(0.05, (now - last) / 1000); last = now;
   try {
     pollPad(dt);
+    // paused: nothing moves, but the scene is still drawn under the pause card
+    if (paused) { drawScene(); requestAnimationFrame(frame); return; }
     roomsHum(!!(g && g.backrooms && state === 'play'));
     skyHum(!!(g && g.sky && state === 'play'));
     if (g && g.backrooms) roomsHumLevel(roomLevel());

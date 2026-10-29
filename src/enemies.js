@@ -60,6 +60,8 @@ function updateKnocks(dt) {
         const near = 1 - dist / 650;
         sfxKnock(pan, 0.25 + near * 0.85, 0.22 - near * 0.1);
         k.knockT = 2.6 - near * 1.9;
+        // close, or out of earshot because the sound is off: say so, and which way to turn
+        if (dist < 300 || soundOff()) callout((soundOff() ? 'Three knocks: ' : 'Knock is coming: ') + 'turn and face him', { bearing: bearingOf(k.x - ship.x, k.y - ship.y) });
       }
     }
     if (dist < 9) {
@@ -67,7 +69,7 @@ function updateKnocks(dt) {
       if (ship.inv > 0 || state !== 'play') continue;
       ship.inv = SK.KNOCK_SCARE_TIME + 1; g.shake = 0.6;
       burst(ship.x + Math.sin(ship.h) * 4, ship.y + Math.cos(ship.h) * 4, ['#c98a4a', '#ece4cf', '#8a6a4a'], 26, 7, 8);
-      ship.hull--; run.hits++; g.stats.hits++;
+      ship.hull--; run.hits++; g.stats.hits++; g.lastHit = 'Knock';
       renderHud();
       // he lunges into your face before the blow lands
       g.knockScare = SK.KNOCK_SCARE_TIME;
@@ -166,7 +168,7 @@ function boarded() {
   if (ship.inv > 0 || state !== 'play') return;
   ship.inv = 1.4; g.shake = 0.45;
   sfxClaw();
-  ship.hull--; run.hits++; g.stats.hits++;
+  ship.hull--; run.hits++; g.stats.hits++; g.lastHit = 'the drowned';
   renderHud();
   if (ship.hull <= 0) { addLog('The drowned crew pulled her under.', 'w'); endRun('sunk'); }
   else addLog('A drowned sailor climbed aboard and tore out a plank. Sail faster to shake them off.', 'w');

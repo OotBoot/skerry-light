@@ -6,8 +6,8 @@
 // you, she takes the ship.
 //
 // Plimsoll, the shark in the Gannet cabin boy's shoes, knows the deep water through the skerries.
-// He walks ahead of you to the harbour. Keep close to him and Maren holds where she is, but he will
-// not wait long for a ship that falls behind.
+// He walks ahead of you to the harbour. Keep up with him and Maren holds where she is (his reach grows
+// with the lead he keeps, so it works at any speed), but he will not wait long for a ship that falls behind.
 
 const IMG = { maren: new Image(), plim: new Image(), knock: new Image() };
 IMG.maren.src = SK.ASSETS.maren;
@@ -31,7 +31,13 @@ function placeMaren(stage) {
 
 // how far ahead he keeps, and how far his protection reaches, both grow with the ship's speed
 function plimsollLead() { return 80 + Math.max(0, ship.v - 12) * 2.5; }
-function plimsollGuarding() { return Math.hypot(g.plim.x - ship.x, g.plim.y - ship.y) < SK.PLIMSOLL_GUARD + Math.max(0, ship.v - 12) * 0.6; }
+// his protection reaches a little past where he walks, so a ship keeping up with him is always covered,
+// however fast it goes (a little less in the tight rooms of the Backrooms)
+function plimsollGuardRange() { return plimsollLead() * 1.15 + 30 - (g.backrooms ? 20 : 0); }
+function plimsollGuarding() { return Math.hypot(g.plim.x - ship.x, g.plim.y - ship.y) < plimsollGuardRange(); }
+// anything keeping her where she is: Plimsoll, or a crewmate close by
+function marenHeld() { return plimsollGuarding() || (crewMode && mateNear(SK.CREW_GUARD)); }
+function marenLog(why) { const m = g.maren; if (m.active && g.marenLog) g.marenLog.push({ t: g.t, stage: m.stage, why }); }
 
 // called every full turn of the beam
 function marenTurn() {
@@ -39,6 +45,7 @@ function marenTurn() {
   if (!m.active || state !== 'play') return;
   const byPlim = plimsollGuarding(), byCrew = crewMode && mateNear(SK.CREW_GUARD);
   if (byPlim || byCrew) {
+    marenLog('held');
     if (m.stage > 0 && g.t - m.heldLog > 12) {
       m.heldLog = g.t;
       addLog(byPlim ? 'Plimsoll is close. She holds where she is.' : 'Your crew is close by. She holds where she is.', 'p');
@@ -48,8 +55,22 @@ function marenTurn() {
   if (m.stage >= SK.MAREN_STAGES.length - 1) { startScare(); return; }
   m.stage++;
   placeMaren(m.stage);
+  marenLog('turn');
   const lines = [null, 'Someone is humming out on the water.', 'A woman is standing on the sea ahead.', 'She is close now. Find Plimsoll or ring the bell.', 'She is at the bow.'];
   addLog(lines[m.stage], m.stage >= 3 ? 'w' : null);
+  marenCallout();
+  // first lessons, once each: Plimsoll keeps her back, and the bell drives her off
+  // (not over the urgent call-out once she's close)
+  if (m.stage < 3 && !teach('bell', m.stage === 2 && g.bell <= 0, 'She’s ahead: ' + bellWord().toLowerCase() + ' to drive her back', { btn: 'bell', bearing: bearingOf(m.x - ship.x, m.y - ship.y) }))
+    teach('plim', m.stage >= 1 && m.stage < 3, 'Keep up with Plimsoll: she won’t come near him', { bearing: bearingOf(g.plim.x - ship.x, g.plim.y - ship.y) });
+}
+// she's close or at the bow: say what to do about it, big, in the middle of the screen
+function marenCallout() {
+  const m = g.maren;
+  if (m.stage < 3) return;
+  const at = bearingOf(m.x - ship.x, m.y - ship.y);
+  if (g.bell <= 0) callout(m.stage >= 4 ? 'She’s at the bow! ' + bellWord() + '!' : 'She’s close: ' + bellWord().toLowerCase() + '!', { btn: 'bell', bearing: at, pri: true });
+  else callout(m.stage >= 4 ? 'She’s at the bow! Get to Plimsoll!' : 'She’s close: get to Plimsoll!', { bearing: bearingOf(g.plim.x - ship.x, g.plim.y - ship.y), pri: true });
 }
 
 function marenInView() {
@@ -75,7 +96,7 @@ function ringBell() {
   if (bellStunsKnock()) addLog('The knocking stops. Knock stands frozen for a few seconds.', 'p');
   const m = g.maren;
   if (m.active && m.stage >= 1 && bellReaches()) {
-    m.stage = Math.max(0, m.stage - SK.BELL_PUSH); placeMaren(m.stage);
+    m.stage = Math.max(0, m.stage - SK.BELL_PUSH); placeMaren(m.stage); marenLog('bell');
     addLog('The bell rings out and she draws well back.' + (drowned ? ' The drowned sink away.' : ''), 'p');
   } else if (drowned) {
     addLog('The bell rings out and the drowned sink back under.', 'p');
@@ -99,6 +120,11 @@ function updateMaren(dt) {
   if (m.apparition > 0) m.apparition -= dt;
   if (!m.active) return;
   if (state === 'play') followShip(m, dt);
+  // close in and out of sight, you hear her oars working in the rowlocks
+  if (state === 'play' && !g.attract && m.stage >= 3 && !marenInView()) {
+    m.oarT = (m.oarT == null ? 1 : m.oarT) - dt;
+    if (m.oarT <= 0) { m.oarT = rand(2.5, 4); sfxRowlock(clamp(angDiff(bearingOf(m.x - ship.x, m.y - ship.y), ship.h) / (fov / 2), -1, 1)); }
+  }
   // the first time you see her at each stage, she whispers
   const vis = visibility(m.x, m.y);
   if (vis > 0.3 && marenInView() && m.seenStage !== m.stage) {
@@ -167,7 +193,8 @@ function updatePlimsoll(dt) {
   // has the ship overtaken him? then he runs to get back out in front
   const behind = (p.x - ship.x) * Math.sin(ship.h) + (p.y - ship.y) * Math.cos(ship.h) < 0 && d < lead * 2;
   if (d < lead || behind) { p.walking = true; p.waitT = 0; }
-  else if (d > lead * 1.3 + 25) {
+  // (he stops to wait just inside his own ring, so a ship that keeps up with him stays covered)
+  else if (d > Math.min(lead * 1.3 + 25, plimsollGuardRange() - 8)) {
     // he waits a little for a ship that falls behind, then walks on without it
     p.waitT += dt;
     p.walking = p.waitT > SK.PLIMSOLL_PATIENCE;
@@ -194,6 +221,23 @@ function updatePlimsoll(dt) {
       setTimeout(() => { if (g && g.plim === p) squeakFrom(p, Math.hypot(p.x - ship.x, p.y - ship.y), 1.6); }, 160);
     }
   }
+}
+
+// while he's keeping her off you, a faint blue shimmer on the water shows how far his reach goes
+function drawPlimRing() {
+  if (g.attract || g.sky || g.backrooms || NET.watch || !g.maren.active || state !== 'play' || !plimsollGuarding()) return;
+  const R = plimsollGuardRange(), p = g.plim, N = 24;
+  const a = reduceMotion ? 0.14 : 0.14 + 0.04 * Math.sin(g.t * 2.4);
+  ctx.strokeStyle = `rgba(95,211,255,${a.toFixed(3)})`; ctx.lineWidth = 2;
+  ctx.beginPath();
+  for (let i = 0; i < N; i++) {
+    const a0 = i / N * Math.PI * 2, a1 = (i + 1) / N * Math.PI * 2;
+    // one short edge at a time, so the part behind the camera is simply left out
+    const q = polyProj([[p.x + Math.sin(a0) * R, p.y + Math.cos(a0) * R, 0], [p.x + Math.sin(a1) * R, p.y + Math.cos(a1) * R, 0]]);
+    if (q.length < 2) continue;
+    ctx.moveTo(q[0].x, q[0].y); for (let k = 1; k < q.length; k++) ctx.lineTo(q[k].x, q[k].y);
+  }
+  ctx.stroke();
 }
 
 function squeakFrom(p, d, boost) {

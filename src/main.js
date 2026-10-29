@@ -21,6 +21,8 @@ function frame(now) {
   const dt = Math.min(0.05, (now - last) / 1000); last = now;
   try {
     pollPad(dt);
+    // paused: nothing moves, but the scene is still drawn under the pause card
+    if (paused) { drawScene(); requestAnimationFrame(frame); return; }
     roomsHum(!!(g && g.backrooms && state === 'play'));
     skyHum(!!(g && g.sky && state === 'play'));
     if (g && g.backrooms) roomsHumLevel(roomLevel());

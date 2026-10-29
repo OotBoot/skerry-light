@@ -156,7 +156,7 @@ function myPresence() {
     app: 'skerry', sid: NET.sid, crew: NET.crew, joinedAt: NET.joinedAt, ready: NET.ready, nick: NET.nick || null,
     launch: amHostSafe() ? NET.launch : null,
     voy: NET.launch ? NET.launch.voy : 0, st: NET.st,
-    bell: NET.bells, flare: NET.flare, cannon: NET.cannon || null, chat: NET.chat, ghost: NET.ghost, stats: NET.stats,
+    bell: NET.bells, flare: NET.flare, shout: NET.shout, cannon: NET.cannon || null, chat: NET.chat, ghost: NET.ghost, stats: NET.stats,
     skin: mySkin().id, pennant: CRATES.pennant, boat: CRATES.boat, maxHull: myBoat().hull,
   };
 }
@@ -331,6 +331,10 @@ function syncMates() {
         m.flareN = fl;
         if (Number.isFinite(pr.flare.x) && Number.isFinite(pr.flare.y)) mateFlare(m, pr.flare.x, pr.flare.y, pr.flare.skin);
       } else m.flareN = fl;
+      // a quick hail: only the number of one of the four set phrases travels, never free text
+      const sh = counter(pr.shout);
+      if (sh > m.shoutN && pr.shout && HAILS[pr.shout.i] && pr.voy === NET.launch.voy) mateShout(m, HAILS[pr.shout.i]);
+      m.shoutN = sh;
       const gh = counter(pr.ghost);
       if (gh > m.ghostN) { m.ghostN = gh; if (pr.ghost.to === NET.myPeer) ghostBellFor(m); }
       else m.ghostN = gh;
@@ -426,7 +430,7 @@ function cleanStats(s) {
   const n = v => Number.isFinite(v) ? Math.max(0, Math.min(9999, Math.round(v))) : 0;
   // fin: the voyage time in tenths of a second, to settle who made harbour first
   const fin = Number.isFinite(s.fin) ? s.fin : Number.isFinite(s.secs) ? s.secs * 10 : 0;
-  return { secs: n(s.secs), fin: Math.max(0, Math.min(999999, Math.round(fin))), hits: n(s.hits), bells: n(s.bells), flares: n(s.flares), patched: n(s.patched), eaten: n(s.eaten) };
+  return { secs: n(s.secs), fin: Math.max(0, Math.min(999999, Math.round(fin))), hits: n(s.hits), bells: n(s.bells), flares: n(s.flares), patched: n(s.patched), eaten: n(s.eaten), shaves: n(s.shaves) };
 }
 
 function counter(o) { return o && typeof o === 'object' && Number.isFinite(o.n) ? o.n : 0; }
@@ -437,6 +441,8 @@ function mateFlare(m, x, y, skin) {
   const d = Math.hypot(x - ship.x, y - ship.y);
   if (state === 'play') addLog(m.name + ' fired a flare, ' + Math.round(d) + ' m off.', 'p');
   if (d < 900) sfxFlare();
+  // close enough to light your deck: it sends Verity off too
+  if (state === 'play' && d < SK.FLARE_RADIUS && flareShoosVerity()) addLog(m.name + '\u2019s flare sent Verity over the rail.', 'p');
 }
 function mateShout(m, text) {
   m.shoutText = text; m.shoutT = 4;
@@ -767,7 +773,7 @@ function renderScore(r) {
   for (const row of r.rows) {
     const tr = document.createElement('tr');
     const s = row.stats || {};
-    const cells = [row.name + (r.first === row ? ' \u2605 first' : ''), statusWord(row.st), s.secs ? fmt(s.secs) : '–', s.hits ?? '–', s.bells ?? '–', s.flares ?? '–', s.patched ?? '–', s.eaten ?? '–'];
+    const cells = [row.name + (r.first === row ? ' \u2605 first' : ''), statusWord(row.st), s.secs ? fmt(s.secs) : '–', s.hits ?? '–', s.bells ?? '–', s.flares ?? '–', s.patched ?? '–', s.eaten ?? '–', s.shaves ?? '–'];
     cells.forEach((v, i) => {
       const td = document.createElement(i === 0 ? 'th' : 'td');
       td.textContent = String(v);

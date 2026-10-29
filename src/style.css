@@ -533,3 +533,49 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 @media (pointer: coarse) { #hint { display: none; } }
 
 @media (min-width: 521px) { .biomebanner { top: max(16%, 112px); } }
+/* the centre call-out: one urgent line, clear of the sea's name above and the buttons below */
+.callout {
+  position: absolute; left: 50%; top: max(36%, 168px); transform: translateX(-50%); z-index: 4; pointer-events: none;
+  display: flex; align-items: center; gap: 12px; width: max-content; max-width: calc(100% - 32px);
+  padding: 10px 18px; background: rgba(10, 6, 8, 0.82); border: 1px solid var(--wreck);
+  font-family: var(--display); font-size: clamp(1.15rem, 3.4vw, 1.7rem); color: #ffd9cc; text-align: center;
+  text-shadow: 0 0 12px rgba(0,0,0,0.9);
+  animation: coIn .25s ease-out;
+}
+.co-chev { font-family: var(--log); font-weight: 700; font-size: 1.6em; line-height: 0.8; color: var(--wreck); animation: coNudge 0.7s ease-in-out infinite alternate; }
+@keyframes coIn { from { opacity: 0; transform: translate(-50%, 8px); } to { opacity: 1; transform: translate(-50%, 0); } }
+@keyframes coNudge { from { opacity: 0.55; } to { opacity: 1; } }
+/* the button that answers it pulses */
+#bellBtn.urgent, #flareBtn.urgent { border-color: var(--wreck); animation: urgent 0.6s ease-in-out infinite alternate; }
+@keyframes urgent { from { box-shadow: 0 0 0 0 rgba(228,108,79,0.2); } to { box-shadow: 0 0 0 4px rgba(228,108,79,0.75); } }
+/* less motion (the system's setting or the player's): a still outline instead of a pulse */
+.lessmotion .callout, .lessmotion .co-chev { animation: none; }
+.lessmotion #bellBtn.urgent, .lessmotion #flareBtn.urgent { animation: none; outline: 2px solid var(--wreck); outline-offset: 2px; }
+.scaring .callout { visibility: hidden; }
+@media (max-height: 480px) { .callout { top: 44%; padding: 6px 14px; font-size: 1.1rem; } }
+
+/* key names on the buttons mean nothing on a touch screen */
+@media (hover: none) and (pointer: coarse) { .key { display: none; } }
+/* the crew's hail buttons are for touch screens; a keyboard has 1 to 4 */
+@media (hover: hover) and (pointer: fine) { #hailRow { display: none; } }
+
+/* pause and settings */
+.pausecard, .settingscard { z-index: 22; }
+.pausecard { background: rgba(4, 7, 14, 0.55); place-items: center; }
+.pausecard .card { max-width: 24rem; }
+.setrow { display: flex; flex-direction: column; gap: 6px; }
+.card p.setnote { font-family: var(--log); font-size: 12px; color: var(--muted); }
+.card p#settingsCrew { color: var(--port); font-size: 13px; }
+
+/* the end card's recap: what got you, a tip, and Maren's stages over the voyage */
+.recap { display: flex; flex-direction: column; gap: 6px; }
+.card .recap p { font-family: var(--log); font-size: 13px; }
+.recap b { color: var(--wreck); font-size: 15px; }
+.dotsrow { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.dots { display: flex; gap: 5px; align-items: center; }
+.dots i { width: 10px; height: 10px; border-radius: 50%; background: #3a2a2a; border: 1px solid rgba(236,228,207,0.25); }
+.dots i.st1 { background: #6a3a30; } .dots i.st2 { background: #a04a36; } .dots i.st3 { background: #d0583e; } .dots i.st4 { background: #ff3a2a; }
+.dots i.bell { box-shadow: 0 0 0 2px var(--lamp); }
+.dots i.held { box-shadow: 0 0 0 2px var(--shoe); }
+.card p.recapline { font-family: var(--log); font-size: 12px; color: var(--muted); }
+.stats { grid-template-columns: repeat(4, 1fr); }

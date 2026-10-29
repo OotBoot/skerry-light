@@ -50,22 +50,29 @@ const FOE_INTRO = {
 let lastTrio = null;
 try { lastTrio = JSON.parse(localStorage.getItem('skerry-trio') || 'null'); } catch (e) {}
 
-// draw this voyage's three: from the crew's seed in a crew, so everyone gets the same
-function pickTrio(seed) {
-  const rng = seed != null ? seeded((seed ^ 0x5bd1e995) >>> 0) : Math.random;
-  let pool = FOE_POOL.slice();
-  if (seed == null && Array.isArray(lastTrio)) { const fresh = pool.filter(k => !lastTrio.includes(k)); if (fresh.length >= 3) pool = fresh; }
+// the gentlest of the pool, for a new sailor's very first voyage (no Knock, no Verity)
+const GENTLE_FOES = ['dancer', 'cactusmammoth', 'bananadolphin', 'tyrefrog', 'goose', 'fridgecamel', 'gentleman', 'drowned'];
+// draw this voyage's enemies: from the crew's seed in a crew, so everyone gets the same.
+// New sailors start easy: one gentle enemy on their first voyage, two on the second, then three.
+// A crew's count depends only on the voyage number (two on voyage 1), so every ship in it matches.
+function pickTrio(seed, n) {
+  const crew = seed != null, rookie = !crew && firstTimer();
+  const rng = crew ? seeded((seed ^ 0x5bd1e995) >>> 0) : Math.random;
+  const count = crew ? (n === 1 ? 2 : 3) : rookie ? Math.min(3, Math.max(1, n || 1)) : 3;
+  let pool = (rookie && n === 1 ? GENTLE_FOES : FOE_POOL).slice();
+  if (!crew && Array.isArray(lastTrio)) { const fresh = pool.filter(k => !lastTrio.includes(k)); if (fresh.length >= count) pool = fresh; }
   const out = [];
-  while (out.length < 3 && pool.length) out.push(pool.splice(Math.floor(rng() * pool.length), 1)[0]);
+  while (out.length < count && pool.length) out.push(pool.splice(Math.floor(rng() * pool.length), 1)[0]);
   if (seed == null) { lastTrio = out; try { localStorage.setItem('skerry-trio', JSON.stringify(out)); } catch (e) {} }
   return out;
 }
 const hasFoe = k => !g || !g.trio || g.trio.includes(k);
 
-function newFoes(trio) {
+// (`easy`: a new sailor's first voyage, where the first one takes a little longer to turn up)
+function newFoes(trio, easy) {
   const F = {};
   if (g && g.backrooms) F.stowaway = { t: rand(8, 12), list: [], intro: false };
-  for (const k of trio) if (FOE_KINDS[k]) F[k] = { t: rand(6, 14), list: [], intro: false };
+  for (const k of trio) if (FOE_KINDS[k]) F[k] = { t: easy ? rand(14, 20) : rand(6, 14), list: [], intro: false };
   return F;
 }
 function resetMods() {
@@ -91,7 +98,7 @@ function hazard(h) { g.hazards.push(Object.assign({ t: 0 }, h)); return h; }
 const ceilingZ = z => g.backrooms ? Math.min(z, SK.BACKROOMS_CEIL - 2) : z;
 function nextMarenStage() {
   const m = g.maren;
-  if (m.active && m.stage < SK.MAREN_STAGES.length - 1) { m.stage++; placeMaren(m.stage); }
+  if (m.active && m.stage < SK.MAREN_STAGES.length - 1) { m.stage++; placeMaren(m.stage); marenLog('flash'); marenCallout(); }
 }
 
 // ---------- the kinds ----------
@@ -609,11 +616,11 @@ function updateFoes(dt) {
     const live = F.list.filter(o => !o.dead).length;
     if (F.t <= 0 && live < K.max) {
       const o = K.spawn();
-      if (o) { F.list.push(o); intro(k); }
+      if (o) { F.list.push(o); intro(k); foeCue(k, o, true); }
       F.t = rand(K.every[0], K.every[1]) * Math.max(0.7, 1 - (g.n - 1) * 0.04);
     }
     if (k === 'cactusmammoth') rememberLit(F.list);
-    for (const o of F.list) if (!o.dead) K.update(o, dt);
+    for (const o of F.list) if (!o.dead) { K.update(o, dt); if (!o.dead) foeCue(k, o, false); }
     F.list = F.list.filter(o => !o.dead);
   }
   updateHazards(dt);
@@ -797,7 +804,7 @@ function drawHazard(h, q) {
 function drawFoeOverlays() {
   if (typeof drawMothOnLantern === 'function') drawMothOnLantern();
   if (typeof drawBetweenOverlays === 'function') drawBetweenOverlays();
-  if (g.flash > 0) { ctx.fillStyle = `rgba(255,255,255,${Math.min(1, g.flash / 1.5)})`; ctx.fillRect(0, 0, W, H); }
+  if (g.flash > 0) { ctx.fillStyle = `rgba(255,255,255,${Math.min(1, g.flash / 1.5) * flashK()})`; ctx.fillRect(0, 0, W, H); }
   if (g.splat > 0) {
     const a = Math.min(1, g.splat / 1.2);
     ctx.save(); ctx.globalAlpha = a * 0.85;
@@ -810,9 +817,86 @@ function drawFoeOverlays() {
   }
 }
 
-// the voyage's line-up, for the log at the start
+// the voyage's line-up, for the log at the start ("Tonight: the Tyre Frog, the Root Hermit and Knock.")
 function trioLine() {
-  if (!g.trio) return '';
-  const n = g.trio.map(k => FOE_NAMES[k]);
-  return 'Tonight: ' + n[0] + ', ' + n[1] + ' and ' + n[2] + '.';
+  if (!g.trio || !g.trio.length) return '';
+  const n = g.trio.map(k => FOE_NAMES[k].replace(/^The /, 'the '));
+  return 'Tonight: ' + (n.length === 1 ? n[0] : n.slice(0, -1).join(', ') + ' and ' + n[n.length - 1]) + '.';
+}
+
+// ---------- urgent warnings ----------
+// Watches each enemy from outside its own code and puts up the centre call-out at the moment that
+// needs an answer. `fresh` is true the frame it turns up. Sound-only warnings (a shing, a trumpet,
+// a scream) always get one, so they still reach a player who can't hear them.
+function foeCue(k, o, fresh) {
+  const at = () => bearingOf(o.x - ship.x, o.y - ship.y);
+  if (k === 'brute' && o.hold > 0 && !o.cued) { o.cued = true; callout('The Brute has the bow! ' + bellWord() + '!', { btn: 'bell', pri: true }); }
+  else if (k === 'brute' && !(o.hold > 0)) o.cued = false;
+  if (k === 'toucan' && o.dive > 0 && !o.cued) { o.cued = true; callout('The Toucan is diving for your flare! ' + bellWord() + '!', { btn: 'bell', bearing: at(), pri: true }); }
+  if (k === 'assassin' && fresh) callout('Shing! Turn or change speed!', { bearing: at(), pri: true });
+  if (k === 'coconutbull' && fresh) callout('A trumpet: the Bull will charge. Change speed!', { bearing: at(), pri: true });
+  if (k === 'stowaway') {
+    if (fresh) callout('A scream down the corridor!', { bearing: at(), pri: true });
+    else if (o.wait <= 0 && !o.cued) { o.cued = true; callout('He’s charging: dodge to the side!', { bearing: at(), pri: true }); }
+  }
+  if (k === 'petrels' && fresh) callout('Petrels at your height: climb, dive or ' + bellWord().toLowerCase() + '!', { btn: 'bell', bearing: at() });
+  if (k === 'squall' && fresh) callout('Gust from ' + (o.side < 0 ? 'port' : 'starboard') + ': lean into it and climb!', { bearing: at(), pri: true });
+}
+// the bell is a horn in the Open Sky
+function bellWord() { return g && g.sky ? 'Sound the horn' : 'Ring the bell'; }
+
+// ---------- what got you ----------
+// one tip for the end card, from the counters in the README, for whatever sank you
+const FOE_TIP = {
+  maren: 'Keep within Plimsoll’s ring and ring the bell while she’s ahead.',
+  rocks: 'Rocks only show in the light: watch the beam and the bearing strip, and turn along a rock rather than into it. A glancing touch only scrapes.',
+  drowned: 'The drowned can’t climb aboard a ship doing 9 knots or more, and the bell sinks them.',
+  knock: 'When you hear three knocks, turn to face him: he can’t move while you look. The bell freezes him too.',
+  verity: 'A flare sends Verity over the rail. He waits until your flare is nearly loaded, so keep it ready.',
+  dancer: 'Sail against the Dancer’s pull, or ring the bell to stop her.',
+  crocbomber: 'Steer out of the red rings before the bombs land.',
+  cactusmammoth: 'Give the Cactus Mammoth a wide berth: its spines only reach 30 m.',
+  pigeon: 'Look away from the Informer when its red light blinks; the bell scares it off.',
+  coconutbull: 'When the Coconut Bull trumpets, change speed so its charge misses.',
+  bananadolphin: 'Steer round the banana peel slicks.',
+  toucan: 'Ring the bell while the Toucan dives.',
+  brute: 'Ring the bell to break the Juiced Brute’s grip.',
+  tyrefrog: 'Watch the Tyre Frog’s shadow and steer off it.',
+  assassin: 'At the shing, change speed or turn.',
+  goose: 'Steer between the goose eggs; the bell sinks them.',
+  shrimpcat: 'Turn hard one way for two seconds to shake the Shrimp Cat off.',
+  fridgecamel: 'Go round the ice, or melt it with a flare.',
+  condiments: 'Turn hard as the Twins close, or ring the bell.',
+  gentleman: 'Steer round the Gentleman; the bell sinks him.',
+  smuggler: 'Stay out of the light, or put a rock between you and the Smuggler.',
+  bananaape: 'Keep moving; the bell sends the Banana Ape under.',
+  rootman: 'Turn across the line of roots before it reaches you.',
+  stowaway: 'When the Stowaway sets off, dodge to the side: he runs straight.',
+  cinderkite: 'Steer out of the orange rings; a flare drives the Cinder Kite off.',
+  slagwader: 'Ring the bell before the Slag Wader reaches your bow.',
+  furnacemoth: 'If the Furnace Moth lands on your lantern, fire a flare.',
+  sirens: 'Ring the bell to drown out the Sirens’ song.',
+  charybdis: 'Sail hard round the whirlpool; at full sail you pull clear.',
+  cyclops: 'Dodge the pale rings; a flare in his eye blinds the Cyclops.',
+  echo: 'Turn late and hard past your Echo, or ring the bell to shatter it.',
+  sleeper: 'When the water over the face brightens, ring the bell.',
+  thunder: 'Get out of the white ring before the bolt comes down.',
+  petrels: 'Climb, dive or sound the horn to scatter the petrels.',
+  squall: 'Lean into the gust and climb.',
+};
+// match what the log said hit you to an entry above
+const TIP_MATCH = [
+  [/skerry|wreck|timber|shore|pier|storm cloud|wall/i, 'rocks'], [/drowned/i, 'drowned'], [/knock/i, 'knock'],
+  [/bomb/i, 'crocbomber'], [/goose egg/i, 'goose'], [/roots/i, 'rootman'], [/fireball/i, 'cinderkite'], [/slag/i, 'slagwader'],
+  [/moth/i, 'furnacemoth'], [/siren/i, 'sirens'], [/charybdis/i, 'charybdis'], [/cyclops/i, 'cyclops'], [/echo/i, 'echo'],
+  [/sleeper/i, 'sleeper'], [/lightning/i, 'thunder'], [/birdstrike/i, 'petrels'], [/brute/i, 'brute'],
+];
+function foeTip(how, what) {
+  if (how === 'taken') return FOE_TIP.maren;
+  if (how === 'knock') return FOE_TIP.knock;
+  if (how === 'verity') return FOE_TIP.verity;
+  const s = String(what || '');
+  for (const [re, k] of TIP_MATCH) if (re.test(s)) return FOE_TIP[k];
+  for (const k in FOE_NAMES) if (FOE_TIP[k] && s.toLowerCase().includes(FOE_NAMES[k].toLowerCase().replace(/^the /, ''))) return FOE_TIP[k];
+  return FOE_TIP.rocks;
 }

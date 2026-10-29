@@ -33,7 +33,7 @@ const SK = {
   LANTERN: 48,            // reach of your own deck lantern
   MAREN_STAGES: [400, 260, 160, 90, 35],   // how far away she stands at each stage
   // she comes one stage nearer every full turn of the beam, and slowly follows the ship between turns
-  PLIMSOLL_GUARD: 45,     // this close to Plimsoll and she holds where she is
+  // (how close to Plimsoll keeps her back grows with his lead: see plimsollGuardRange in creatures.js)
   PLIMSOLL_PATIENCE: 4,   // seconds he waits for a ship that falls behind before walking on
   CREW_GUARD: 55,         // the same, for ships sailing close together
   BELL_COOLDOWN: 15,
@@ -96,3 +96,12 @@ const SK = {
     between: { date: 'No date', text: 'This page is blank except for one line, written very carefully: the lit door, not the dark ones. Keep the bell ready for the face. It is still asleep. Do not wake it.' },
   },
 };
+
+// The player's own settings (the Settings card), kept on this device. Loaded here, before anything
+// draws or makes a sound, because the sound, the jumpscares and the motion all read them.
+const SETTINGS = { vol: 1, scares: 'full', flashes: 'normal', motion: 'auto' };
+try { Object.assign(SETTINGS, JSON.parse(localStorage.getItem('skerry-settings') || '{}') || {}); } catch (e) {}
+function saveSettings() { try { localStorage.setItem('skerry-settings', JSON.stringify(SETTINGS)); } catch (e) {} }
+const softScares = () => SETTINGS.scares === 'soft';
+// reduced flashes: the Informer's flash, the beam's glare, the bell's flash and lightning at 30%
+const flashK = () => SETTINGS.flashes === 'reduced' ? 0.3 : 1;

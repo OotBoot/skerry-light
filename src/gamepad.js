@@ -4,6 +4,8 @@
 // stick up and down; A rings the bell, X fires a flare. RB watches the next crewmate when spectating.
 // Menus: the left stick moves an on-screen cursor and A clicks what it's over; the right stick scrolls.
 // The D-pad jumps between buttons instead. B closes the crates (or goes back), Start presses the main button. Hits and jumpscares rumble the controller.
+// Start during a voyage pauses it (alone) or opens the settings (in a crew); in a crew, hold LB and
+// press the D-pad for the quick hails.
 
 const PAD = { steer: 0, sail: 0, connected: false, prev: [], navT: 0, held: null, root: null, cur: null };
 const DEAD = 0.18;
@@ -24,7 +26,7 @@ function padRumble(strong, weak, ms) {
 
 // the overlay currently on top, and the buttons on it you can move between
 function activeOverlay() {
-  for (const id of ['crateCard', 'crewCard', 'portCard', 'endCard', 'titleCard']) { const el = $(id); if (el && !el.hidden) return el; }
+  for (const id of ['settingsCard', 'pauseCard', 'crateCard', 'crewCard', 'portCard', 'endCard', 'titleCard']) { const el = $(id); if (el && !el.hidden) return el; }
   return null;
 }
 function focusables(root) {
@@ -89,8 +91,14 @@ function pollPad(dt) {
 
   if (state === 'play' && activeOverlay() === null && !(typeof NET !== 'undefined' && NET.watch)) {
     hideCursor();
-    PAD.steer = Math.max(-1, Math.min(1, ax + (pressed(p, 15) ? 1 : 0) - (pressed(p, 14) ? 1 : 0)));
-    PAD.sail = Math.max(-1, Math.min(1, rt - lt - ay * 0.8 + (pressed(p, 12) ? 1 : 0) - (pressed(p, 13) ? 1 : 0)));
+    // in a crew, LB held turns the D-pad into the four quick hails (up, right, down, left) instead of the helm
+    const hailing = crewMode && pressed(p, 4);
+    const dp = i => !hailing && pressed(p, i);
+    if (hailing) [12, 15, 13, 14].forEach((b, i) => { if (down(b)) sendHail(i); });
+    PAD.steer = Math.max(-1, Math.min(1, ax + (dp(15) ? 1 : 0) - (dp(14) ? 1 : 0)));
+    PAD.sail = Math.max(-1, Math.min(1, rt - lt - ay * 0.8 + (dp(12) ? 1 : 0) - (dp(13) ? 1 : 0)));
+    // Start pauses a solo voyage, or opens the settings in a crew
+    if (down(9)) { if (crewMode) openSettings(); else pauseGame(); }
     if (down(0)) ringBell();
     if (down(2)) fireFlare();
     if (down(3)) toggleView();
@@ -138,7 +146,9 @@ function pollPad(dt) {
         }
         if (down(9)) { const el = mainButton(root); if (el) el.click(); }
         if (down(1)) {
-          if (root.id === 'crateCard') $('crateClose').click();
+          if (root.id === 'settingsCard') closeSettings();
+          else if (root.id === 'pauseCard') resumeGame();
+          else if (root.id === 'crateCard') $('crateClose').click();
           else { const back = root.querySelector('.menuBtn'); if (back && back.offsetParent) back.click(); }
         }
         // pressing Y on the title opens the crates
@@ -151,7 +161,7 @@ function pollPad(dt) {
 
 function updateHint() {
   const h = $('hint'); if (!h) return;
-  h.textContent = PAD.connected ? 'Left stick steer · RT / LT sail · A bell · X flare · Y view' : '← → steer · ↑ ↓ sail · Space bell · F flare';
+  h.textContent = PAD.connected ? 'Left stick steer · RT / LT sail · A bell · X flare · Y view · Start pause' : '← → steer · ↑ ↓ sail · Space bell · F flare · Esc pause';
 }
 
 window.addEventListener('gamepadconnected', () => { PAD.prev = []; });
