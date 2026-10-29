@@ -64,8 +64,8 @@ canvas:focus { outline: none; }
   display: flex; justify-content: space-between; align-items: flex-end; gap: 12px;
   font-family: var(--log);
 }
-#log { list-style: none; margin: 0; padding: 0; font-size: 12px; line-height: 1.5; color: var(--muted); max-width: 46ch; min-width: 0; flex: 1; }
-#log li { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#log { list-style: none; margin: 0; padding: 0; font-size: 12px; line-height: 1.45; color: var(--muted); max-width: 62ch; min-width: 0; flex: 1; }
+#log li { white-space: normal; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
 #log li:first-child { color: var(--ink); }
 #log .w { color: var(--wreck); }
 #log .p { color: var(--port); }
@@ -519,6 +519,24 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 @media (prefers-reduced-motion: reduce) { .biomebanner { animation: bbFade 4s ease forwards; } }
 @keyframes bbFade { 0% { opacity: 0; } 15%, 70% { opacity: 1; } 100% { opacity: 0; } }
 @media (max-width: 420px) { .boatpick { grid-template-columns: repeat(2, 1fr); } }
+
+.overlay { z-index: 5; }
+.toast.oncard { bottom: auto; top: 14px; }
+
+/* QA fixes: crew list in the corner, toasts clear of the spectator bar, bigger touch targets */
+.crewhud { max-width: min(55vw, 360px); }
+.crewhud div { min-width: 0; }
+.crewhud span { overflow: hidden; text-overflow: ellipsis; }
+@media (max-width: 520px), (max-height: 480px) { .crewhud div:nth-child(n+5) { display: none; } }
+body:has(#specBar:not([hidden])) .toast { top: 170px; }
+@media (max-width: 520px) {
+  .tool, .closebtn { min-height: 44px; }
+  .howto summary { padding: 12px 0; }
+  body:has(#specBar:not([hidden])) .toast { top: 200px; }
+}
+.btnrow .primary { min-width: 0; white-space: normal; }
+@media (max-height: 480px) { .card h1 { font-size: 2rem; } #crewText { font-size: 0.9rem; } }
+@media (pointer: coarse) { #hint { display: none; } }
 </style>
 <div id="stage">
   <canvas id="cv" tabindex="0" aria-label="View from the deck of a ship at night, with a lighthouse beam sweeping over the sea"></canvas>
@@ -765,7 +783,7 @@ const SK = {
   CANNON_RANGE: 45,       // metres ahead it watches (less at low speed: about a second and a half of sailing)
   SEEN_HOLD: 0,           // seconds a rock stays fully visible after the beam passes over it
   SEEN_FADE: 3,           // ...then it fades out over this long
-  IMPACT: 4.5,          // m/s closing speed that stoves in a plank; slower than that is a scrape
+  IMPACT: 5,          // m/s closing speed that stoves in a plank; slower than that is a scrape
   HARBOUR: { x: 230, y: 30 },
   BACKROOMS_CHANCE: 1 / 20,
   FORCE_BACKROOMS: typeof location !== 'undefined' && /[?&#]backrooms\b/.test(location.href),
@@ -6694,7 +6712,7 @@ function carpenter(dt) {
   if (!b.carpenter || g.attract || state !== 'play' || ship.hull >= ship.maxHull) { g.carpT = 0; return; }
   g.carpT = (g.carpT || 0) + dt;
   if (g.carpT >= b.carpenter) {
-    g.carpT = 0; ship.hull++; renderHud(); sfxChime();
+    g.carpT = 0; ship.hull++; g.stats.patched++; renderHud(); sfxChime();
     addLog('The carpenter has patched a plank. ' + (ship.hull === ship.maxHull ? 'She\u2019s sound again.' : 'Still ' + (ship.maxHull - ship.hull) + ' to go.'), 'p');
   }
 }
@@ -6748,7 +6766,7 @@ function resolveContact(c, what, soft) {
   const closing = -(vx * c.nx + vy * c.ny);   // speed into the obstacle
   if (closing <= 0) return false;
   // a hit needs both real speed into it and a real angle (more than about 25°); shallower is a scrape
-  if (closing > SK.IMPACT && closing > ship.v * 0.42 && !soft) {
+  if (closing > SK.IMPACT && closing > ship.v * 0.5 && !soft) {
     hit(c.nx, c.ny, what);
     return true;
   }
@@ -6904,7 +6922,7 @@ function update(dt) {
     $('knots').textContent = Math.round(ship.v * 0.97);
     const goal = g.backrooms ? g.exit : SK.HARBOUR;
     const d = Math.hypot(ship.x - goal.x, ship.y - goal.y);
-    $('dist').textContent = d > 1000 ? (d / 1852).toFixed(1) + 'nm' : Math.round(d) + 'm';
+    $('dist').textContent = d >= 1852 ? (d / 1852).toFixed(1) + 'nm' : Math.round(d) + 'm';
     updateBellButton();
     updateFlareButton();
     updateJetButton();
@@ -6976,6 +6994,7 @@ function beginVoyage(n) {
 }
 
 function beginCrewVoyage(L, slot) {
+  if (!$('crateCard').hidden && typeof hideCrates === 'function') hideCrates();
   if (L.voy === 1) run = { voyages: 0, hits: 0 };
   state = 'play';
   newVoyage(L.voy, false, L.seed, slot);
@@ -6996,8 +7015,8 @@ function beginCrewVoyage(L, slot) {
 // in the sky the sail buttons become the stick
 function setFlightControls() {
   const up = $('sailUp'), dn = $('sailDown'), sky = !!(g && g.sky);
-  if (up) up.querySelector('small').textContent = sky ? 'Climb' : 'Faster';
-  if (dn) dn.querySelector('small').textContent = sky ? 'Dive' : 'Slower';
+  if (up) { up.querySelector('small').textContent = sky ? 'Climb' : 'Faster'; up.setAttribute('aria-label', sky ? 'Climb: hold to pull the nose up' : 'Make sail: hold to speed up'); }
+  if (dn) { dn.querySelector('small').textContent = sky ? 'Dive' : 'Slower'; dn.setAttribute('aria-label', sky ? 'Dive: hold to push the nose down' : 'Shorten sail: hold to slow down'); }
   const bb = $('bellBtn') && $('bellBtn').querySelector('b'); if (bb) bb.textContent = sky ? 'Sound the horn' : 'Ring the bell';
   const h = $('hint'); if (h && !h.dataset.base) h.dataset.base = h.textContent;
   if (h) h.textContent = sky ? '\u2190 \u2192 steer \u00b7 \u2191 climb \u00b7 \u2193 dive \u00b7 Space horn \u00b7 F flare \u00b7 V view' : h.dataset.base;
@@ -7027,15 +7046,19 @@ function toTitle() {
 }
 
 function arrive() {
+  const wasState = state; state = 'port';   // before the reward, so the menus' boat picker isn't greyed out as 'sailing'
   grantCrate(harbourReward() + g.found * 2, true);
+  state = wasState;
   stopVerity();
+  hideBanner();
   if (crewMode) {
     state = 'port';
     audioTick(0, 0);
     sfxChime();
     // the race: is anyone else in yet? (shown on the crew card while you wait)
-    { const mates = [...NET.mates.values()];
-      NET.race = mates.length ? { first: !mates.some(m => m.st === 'port'), bonus: FIRST_BONUS * mates.length, voy: g.n } : null; }
+    // (judged like the final results: by voyage time, so it can still change if a faster ship comes in later)
+    { const mates = [...NET.mates.values()], mine = g.t * 10;
+      NET.race = mates.length ? { first: !mates.some(m => m.st === 'port' && m.stats && m.stats.fin > 0 && m.stats.fin < mine), bonus: FIRST_BONUS * mates.length, voy: g.n } : null; }
     addLog(g.backrooms ? 'Out through the green door, and back on the real sea.' : 'Made harbour between the pier lamps.', 'p');
     myStatus('port');
     $('hud').hidden = true; $('logbox').hidden = true;
@@ -7043,6 +7066,8 @@ function arrive() {
     return;
   }
   state = 'port';
+  $('hud').hidden = true; $('logbox').hidden = true;
+  if (typeof renderBoatPicks === 'function') renderBoatPicks();
   audioTick(0, 0);
   run.voyages++;
   if (run.voyages > best) { best = run.voyages; try { localStorage.setItem('skerry-helm-best', String(best)); } catch (e) {} }
@@ -7069,7 +7094,9 @@ function startScare() {
   sfxScream();
 }
 
+function hideBanner() { const b = $('biomeBanner'); if (b) b.hidden = true; clearTimeout(showBiomeBanner.t); }
 function endRun(how) {
+  hideBanner();
   state = 'over';
   stopVerity();
   grantCrate();
@@ -7083,7 +7110,7 @@ function endRun(how) {
   $('endEyebrow').textContent = 'Voyage ' + g.n + (taken ? ' · taken' : ' · lost');
   $('endTitle').textContent = taken ? 'Maren Came Aboard' : verity ? 'Verity Helped' : knocked ? 'Knocked Under' : 'Lost on the Skerries';
   $('endText').textContent = taken
-    ? 'She stood at the bow, and then she was on the deck. The brig was found at dawn drifting off the Gannet, with her lantern still lit and nobody aboard.'
+    ? 'She stood at the bow, and then she was on the deck. The ' + (myBoat() ? myBoat().name.toLowerCase() : 'brig') + ' was found at dawn drifting off the Gannet, with her lantern still lit and nobody aboard.'
     : verity ? 'He only wanted to help. The ship was found at dawn with nobody aboard and a wide, yellow smile scratched into the deck.'
     : knocked ? 'Three knocks on the hull, and the fourth came straight through the planks. They say the Gannet\u2019s figurehead is still smiling.'
     : (run.voyages === 0 ? 'She went down before you sighted the pier lamps. The skerries keep their reputation.' :
@@ -7308,6 +7335,21 @@ NET.sid = (() => {
   try { let s = sessionStorage.getItem('skerry-sid'); if (!s) { s = Math.random().toString(36).slice(2, 12); sessionStorage.setItem('skerry-sid', s); } return s; }
   catch (e) { return Math.random().toString(36).slice(2, 12); }
 })();
+try {
+  const bc = new BroadcastChannel('skerry-sid');
+  bc.onmessage = e => {
+    const m = e.data || {};
+    if (m.q === NET.sid) bc.postMessage({ dup: NET.sid, at: NET.sidAt });
+    if (m.dup === NET.sid && (m.at || 0) < NET.sidAt) {
+      // another tab already has this id (a duplicated tab copies it): take a fresh one
+      NET.sid = Math.random().toString(36).slice(2, 12);
+      try { sessionStorage.setItem('skerry-sid', NET.sid); } catch (err) {}
+      if (typeof send === 'function') send();
+    }
+  };
+  NET.sidAt = Date.now() + Math.random();
+  bc.postMessage({ q: NET.sid });
+} catch (e) {}
 const STALE_MS = 35000;   // a crewmate we haven't heard from for this long is treated as gone
 const SLOT_COLORS = ['#ffcf86', '#ff9fb0', '#9fe6c2', '#9fc4ff', '#d7a6ff', '#ffe066', '#7fe0e0', '#ff9a66'];
 const CREW_WORDS = ['gannet', 'wren', 'solan', 'tern', 'kestrel', 'brae', 'skerry', 'gull', 'merle', 'selkie'];
@@ -7502,6 +7544,16 @@ function setSail() {
   checkLaunch();
 }
 
+// launches you've already finished (made harbour, sank or were taken): leaving and rejoining, or a
+// reload, puts you back on the crew card for that voyage instead of sailing it a second time
+function doneLaunches() { try { return JSON.parse(localStorage.getItem('skerry-done') || '{}') || {}; } catch (e) { return {}; } }
+function markLaunchDone(st, stats) {
+  if (!NET.launch) return;
+  const d = doneLaunches(); d[NET.launch.id] = { st, stats, at: Date.now() };
+  const keys = Object.keys(d).sort((a, b) => d[b].at - d[a].at).slice(0, 12), out = {};
+  for (const k of keys) out[k] = d[k];
+  try { localStorage.setItem('skerry-done', JSON.stringify(out)); } catch (e) {}
+}
 // follow the host's launch
 function checkLaunch() {
   if (!NET.crew) return;
@@ -7510,6 +7562,16 @@ function checkLaunch() {
   const L = h && (h.peer === NET.myPeer ? NET.launch : h.presence && h.presence.launch);
   if (!L || typeof L !== 'object' || !L.id || L.id === NET.launchSeen) return;
   if (!Number.isFinite(L.seed) || !Number.isFinite(L.voy) || !Number.isFinite(L.at)) return;
+  // never be pulled back to an older voyage (a host that went quiet and came back still advertising it)
+  if (NET.launch && L.id !== NET.launch.id && L.at <= NET.launch.at) return;
+  const done = doneLaunches()[L.id];
+  if (done) {
+    NET.launchSeen = L.id;
+    NET.launch = { id: String(L.id), seed: L.seed | 0, voy: Math.max(1, Math.min(99, L.voy | 0)), at: L.at };
+    NET.results = null; NET.st = done.st; NET.stats = done.stats || null; NET.ghostUsed = true;
+    send(); showCrewCard();
+    return;
+  }
   // joining a crew between voyages: the host still advertises the last launch, but that voyage is
   // over, so wait for the next one instead of sailing out alone into it. Join a voyage in progress only
   // while someone (the host counts: it is marked at sea the moment it launches) is really still out on it.
@@ -7731,6 +7793,7 @@ function netTick(dt) {
 function myStatus(st) {
   NET.st = st;
   if (st !== 'sail' && g && g.stats) NET.stats = cleanStats(Object.assign({}, g.stats, { secs: g.t, fin: g.t * 10 }));
+  if (st !== 'sail') markLaunchDone(st, NET.stats);
   send(st === 'sail' ? {} : { x: null, y: null });
 }
 
@@ -7819,6 +7882,7 @@ function renderTogether() {
     const b = document.createElement('button');
     b.type = 'button'; b.className = 'tool';
     b.textContent = c.n >= MAX_CREW ? 'Full' : 'Join';
+    b.setAttribute('aria-label', (c.n >= MAX_CREW ? 'Crew ' : 'Join crew ') + c.code.toUpperCase() + (c.n >= MAX_CREW ? ' is full' : ''));
     b.disabled = c.n >= MAX_CREW;
     b.dataset.code = c.code;
     li.appendChild(b);
@@ -7832,7 +7896,8 @@ $('crewList').addEventListener('click', e => {
 });
 setInterval(() => { if (state === 'title' && !$('titleCard').hidden) renderTogether(); }, 1000);
 // a quiet heartbeat while in a crew, so crewmates can tell a sailor who is just waiting from one who has gone
-setInterval(() => { if (NET.crew && state !== 'play') send({ beat: Date.now() % 100000 }); }, 8000);
+// (in every state: a sailing tab in the background stops drawing frames, but timers still run)
+setInterval(() => { if (NET.crew) send({ beat: Date.now() % 100000 }); }, 4000);
 // and the crew screen notices when someone drops out, even if nothing else changes
 setInterval(() => { if (NET.crew && !$('crewCard').hidden) { checkLaunch(); renderCrewCard(); } }, 2000);
 
@@ -7869,7 +7934,7 @@ function withSpectatorView(draw) {
   const m = NET.watch && NET.mates.get(NET.watch);
   if (!m || !g) { draw(); return; }
   const mine = { ship, maren: g.maren, plim: g.plim, glare: g.glare };
-  ship = { x: m.x, y: m.y, h: m.h, bob: m.bob, rudder: 0, v: m.v, inv: 0, hull: m.hull, maxHull: m.maxHull || SK.HULL, boat: m.boat || 'brig', sail: 0.5, skin: m.skin, pennant: m.pennant };
+  ship = { x: m.x, y: m.y, h: m.h, bob: m.bob, rudder: 0, v: m.v, inv: 0, hull: m.hull, maxHull: m.maxHull || SK.HULL, boat: m.boat || 'brig', sail: 0.5, skin: m.skin, pennant: m.pennant, z: m.z || 0, pitch: m.pitch || 0 };
   g.maren = { active: Number.isFinite(m.mx), following: true, stage: m.stage, x: m.mx, y: m.my, apparition: 0, relB: 0 };
   g.plim = Object.assign({}, mine.plim, Number.isFinite(m.px) ? { x: m.px, y: m.py } : {}, { walking: true, phase: g.t * 9, dirX: Math.sin(m.h), dirY: Math.cos(m.h) });
   g.glare = 0;
@@ -7881,6 +7946,7 @@ function showCrewCard() {
   for (const id of ['titleCard', 'portCard', 'endCard']) $(id).hidden = true;
   $('crewCard').hidden = false;
   renderCrewCard();
+  setTimeout(() => { const b = ['crewSailBtn', 'crewReadyBtn'].map($).find(x => x && !x.hidden) || $('crewLeaveBtn'); if (b && !$('crewCard').hidden && !$('crewCard').contains(document.activeElement)) b.focus({ preventScroll: true }); }, 60);
 }
 
 function crewRowStatus(p, i, voy) {
@@ -7939,7 +8005,7 @@ function renderCrewCard() {
     text.textContent = 'Send the invite to up to seven friends. They join from the title screen by picking crew ' + NET.crew.toUpperCase() + '. Everyone sails their own ship through the same skerries. Ships close together keep Maren back, and a bell rung near a crewmate drives her away from both of you.';
   } else if (!r) {
     title.textContent = statusWord(NET.st) === 'In harbour' ? 'Safe in Harbour' : 'Lost at Sea';
-    const race = NET.race && NET.race.voy === voy && NET.st === 'port' ? (NET.race.first ? ' You were first into harbour: the +' + NET.race.bonus + ' crate bonus is yours when the voyage ends.' : ' A crewmate beat you in.') : '';
+    const race = NET.race && NET.race.voy === voy && NET.st === 'port' ? (NET.race.first ? ' Fastest so far: if nobody beats your time, the +' + NET.race.bonus + ' crate bonus is yours when the voyage ends.' : ' A crewmate has a faster time.') : '';
     text.textContent = 'Voyage ' + voy + '. Waiting for the rest of the crew to make harbour or go down.' + race + ' You can watch them from their deck while you wait.';
   } else if (r.madeIt > 0) {
     title.textContent = r.madeIt === r.rows.length ? 'The Whole Crew Made It' : r.madeIt + ' of ' + r.rows.length + ' Made Harbour';
@@ -7956,9 +8022,12 @@ function renderCrewCard() {
   }
   renderCrewChat();
 
-  const watchBox = $('crewWatch'); watchBox.textContent = '';
-  if (NET.launch && !r) {
-    for (const m of matesAtSea()) {
+  const watchBox = $('crewWatch');
+  const watchList = NET.launch && !r ? matesAtSea() : [];
+  const wkey = watchList.map(m => m.peer + ':' + m.name).join('|');
+  if (watchBox.dataset.key !== wkey) {
+    watchBox.dataset.key = wkey; watchBox.textContent = '';
+    for (const m of watchList) {
       const b = document.createElement('button');
       b.type = 'button'; b.className = 'tool';
       b.textContent = 'Watch ' + m.name;
@@ -8033,8 +8102,12 @@ $('inviteCopy').addEventListener('click', () => {
   const field = $('inviteLink'), btn = $('inviteCopy');
   const done = () => { btn.textContent = 'Copied'; setTimeout(() => { btn.textContent = 'Copy link'; }, 1600); };
   try {
-    navigator.clipboard.writeText(field.value).then(done, () => { field.select(); btn.textContent = 'Press Ctrl+C'; });
-  } catch (e) { field.select(); btn.textContent = 'Press Ctrl+C'; }
+    const fail = () => {
+      if (navigator.share) { navigator.share({ url: field.value, title: 'Skerry Light crew' }).catch(() => {}); return; }
+      field.select(); btn.textContent = 'Copy it from the box'; setTimeout(() => { btn.textContent = 'Copy link'; }, 3000);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(field.value).then(done, fail); else fail();
+  } catch (e) { field.select(); }
 });
 // an invite link carries the crew name after the #
 try { const h = (location.hash || '').slice(1); if (/^[a-z]+-\d{1,4}$/.test(h)) NET.pendingJoin = h; } catch (e) {}
@@ -8362,9 +8435,9 @@ function carrierPreview(skin, size) {
 // ---- src/crates.js ----
 // Boats, crates, skins and pennants.
 //
-// There are three boats, each with its own stats, and one kind of crate, the Skerry Crate, which can
+// There are four boats, each with its own stats, and one kind of crate, the Skerry Crate, which can
 // hold anything: a skin for any boat, a pennant or a flare colour. Each voyage earns a crate: one if
-// you went down, two if you made harbour. Open crates from your crate
+// you went down, and more for each harbour in a row (5, 8, 13...). Open crates from your crate
 // inventory: a reel spins and lands on your prize. Skins change your deck, bowsprit and lantern as you see them, and your hull and
 // sails as your crew sees them; pennants fly from your bowsprit, and from your masthead for your
 // crew. Gold (Admiral) items only ever appear in the reel when one is your prize.
@@ -8577,7 +8650,7 @@ const rarityOf = s => RARITIES.find(r => r.id === s.rarity);
 
 const CRATES = {
   crates: { skerry: 0 },
-  owned: {}, equipped: { brig: 'plain', cutter: 'c_plain', barque: 'b_plain', carrier: 'k_plain' }, pennant: null, flare: null,
+  owned: {}, opened: 0, equipped: { brig: 'plain', cutter: 'c_plain', barque: 'b_plain', carrier: 'k_plain' }, pennant: null, flare: null,
   boat: 'brig', opening: false, pending: null, view: 'skins',
 };
 function totalCrates() { return CRATES.crates.skerry; }
@@ -8595,6 +8668,7 @@ function loadCrates() {
       if (typeof d.crates === 'number') CRATES.crates.skerry = n(d.crates);
       else if (d.crates && typeof d.crates === 'object') CRATES.crates.skerry = n(Object.values(d.crates).reduce((a, v) => a + (v | 0), 0));
       CRATES.owned = d.owned && typeof d.owned === 'object' ? d.owned : {};
+      CRATES.opened = n(d.opened);
       if (typeof d.equipped === 'string') { if (SKIN_BY_ID[d.equipped] && SKIN_BY_ID[d.equipped].boat === 'brig') CRATES.equipped.brig = d.equipped; }
       else if (d.equipped && typeof d.equipped === 'object') for (const b of BOATS) { const s = SKIN_BY_ID[d.equipped[b.id]]; if (s && s.boat === b.id) CRATES.equipped[b.id] = s.id; }
       CRATES.pennant = PENNANT_BY_ID[d.pennant] ? d.pennant : null;
@@ -8609,7 +8683,7 @@ function loadCrates() {
   saveCrates();
 }
 function saveData() {
-  return { crates: CRATES.crates, owned: CRATES.owned, equipped: CRATES.equipped, pennant: CRATES.pennant, flare: CRATES.flare, boat: CRATES.boat };
+  return { crates: CRATES.crates, opened: CRATES.opened, owned: CRATES.owned, equipped: CRATES.equipped, pennant: CRATES.pennant, flare: CRATES.flare, boat: CRATES.boat };
 }
 function saveCrates() {
   try { localStorage.setItem('skerry-crates', JSON.stringify(Object.assign(saveData(), { pending: CRATES.pending }))); } catch (e) {}
@@ -8632,7 +8706,12 @@ function mergeSave(d, takeLooks) {
     if (v > (CRATES.owned[id] | 0)) { CRATES.owned[id] = v; changed = true; }
   }
   const cr = d.crates && typeof d.crates === 'object' ? Object.values(d.crates).reduce((a, v) => a + (v | 0), 0) : (d.crates | 0);
-  if (cr > CRATES.crates.skerry) { CRATES.crates.skerry = Math.min(99999, cr); changed = true; }
+  // crates: compare everything ever earned (unopened + opened), so reloading an old code can't hand back
+  // crates you've since opened
+  const earned = Math.max(cr + Math.max(0, d.opened | 0), CRATES.crates.skerry + (CRATES.opened | 0));
+  const opened = Math.max(CRATES.opened | 0, Math.max(0, d.opened | 0));
+  const left = Math.min(99999, Math.max(0, earned - opened));
+  if (left !== CRATES.crates.skerry || opened !== (CRATES.opened | 0)) { CRATES.crates.skerry = left; CRATES.opened = opened; changed = true; }
   if (takeLooks) {
     if (d.equipped && typeof d.equipped === 'object') for (const b of BOATS) {
       const sk = SKIN_BY_ID[d.equipped[b.id]];
@@ -8649,7 +8728,7 @@ function afterMerge() { saveCrates(); renderCrates(); updateCrateButtons(); rend
 // the save code: your save, packed into one line of text
 function saveCode() {
   const d = saveData();
-  const packed = { c: d.crates.skerry, o: d.owned, e: d.equipped, p: d.pennant, f: d.flare, b: d.boat };
+  const packed = { c: d.crates.skerry, n: d.opened | 0, o: d.owned, e: d.equipped, p: d.pennant, f: d.flare, b: d.boat };
   return 'SKERRY-' + btoa(unescape(encodeURIComponent(JSON.stringify(packed)))).replace(/=+$/, '').replace(/\+/g, '-').replace(/\//g, '_');
 }
 function readSaveCode(text) {
@@ -8659,7 +8738,7 @@ function readSaveCode(text) {
   try {
     const b64 = m[1].replace(/-/g, '+').replace(/_/g, '/');
     const o = JSON.parse(decodeURIComponent(escape(atob(b64 + '==='.slice((b64.length + 3) % 4)))));
-    return { crates: o.c | 0, owned: o.o, equipped: o.e, pennant: o.p, flare: o.f, boat: o.b };
+    return { crates: o.c | 0, opened: o.n | 0, owned: o.o, equipped: o.e, pennant: o.p, flare: o.f, boat: o.b };
   } catch (e) { return null; }
 }
 
@@ -9172,7 +9251,7 @@ function renderCrates() {
 function openCrate(type) {
   if (CRATES.opening || !CRATES.crates[type]) return;
   CRATES.opening = true;
-  CRATES.crates[type]--;
+  CRATES.crates[type]--; CRATES.opened = (CRATES.opened | 0) + 1;
   const prize = rollSkin(type);
   CRATES.pending = prize.id;   // kept safe until the reel lands
   saveCrates();
@@ -9187,8 +9266,8 @@ function spinReel(prize, type, dur, done) {
   // bring the reel into view by scrolling the sheet up and down only (never sideways)
   requestAnimationFrame(() => {
     const sheet = $('crateCard'), r = $('crateReel').getBoundingClientRect(), sr = sheet.getBoundingClientRect();
+    if (sheet.scrollLeft) sheet.scrollLeft = 0;   // (before the smooth scroll: setting it after cancels it)
     if (r.top < sr.top + 70 || r.bottom > sr.bottom - 10) sheet.scrollTo({ top: sheet.scrollTop + r.top - sr.top - sr.height * 0.25, behavior: reduceMotion ? 'auto' : 'smooth' });
-    sheet.scrollLeft = 0;
   });
   const reel = $('crateReel'), strip = $('crateStrip');
   strip.textContent = '';
@@ -9226,7 +9305,7 @@ function openAll(type) {
     byGrade[prize.rarity] = (byGrade[prize.rarity] || 0) + 1;
     if (!best || RARITIES.findIndex(r => r.id === prize.rarity) > RARITIES.findIndex(r => r.id === best.rarity)) best = prize;
   }
-  CRATES.crates[type] = 0;
+  CRATES.crates[type] = 0; CRATES.opened = (CRATES.opened | 0) + count;
   saveCrates();
   CRATES.opening = true;
   $('crateResult').hidden = true;
@@ -9304,6 +9383,8 @@ function toast(text, short) {
   const t = $('toast'); if (!t) return;
   const phone = innerWidth <= 520;
   t.textContent = phone && short ? short : text; t.hidden = false;
+  // with a card open, keep clear of its buttons: show it at the top instead
+  t.classList.toggle('oncard', !!document.querySelector('.overlay:not([hidden])'));
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => { t.hidden = true; }, phone ? 2500 : 5000);
 }
@@ -9446,10 +9527,17 @@ function pollPad(dt) {
         if (dirKey === '0,0') { PAD.held = null; }
         else if (dirKey !== PAD.held) { PAD.held = dirKey; PAD.navT = 0.4; moveFocus(dxN, dyN); }
         else { PAD.navT -= dt; if (PAD.navT <= 0) { PAD.navT = 0.13; moveFocus(dxN, dyN); } }
+        // a highlighted button that was swapped out underneath: find its replacement by id or label
+        if (PAD.cur && !(root.contains(PAD.cur) && PAD.cur.offsetParent)) {
+          const was = PAD.cur;
+          PAD.cur = (was.id && document.getElementById(was.id)) || focusables(root).find(b => b.textContent === was.textContent) || null;
+          if (PAD.cur && !PAD.cur.offsetParent) PAD.cur = null;
+        }
         if (down(0)) {
           const ringed = PAD.cur && root.contains(PAD.cur) && PAD.cur.offsetParent ? PAD.cur : null;
           const el = ringed || (root.contains(document.activeElement) && document.activeElement !== document.body ? document.activeElement : mainButton(root));
-          if (el) { if (el.tagName === 'INPUT') el.focus(); else el.click(); }
+          // (never leave a crew or close a screen by accident: A only presses a close button you chose)
+          if (el && !(el.classList.contains('closebtn') && el !== ringed && el !== document.activeElement)) { if (el.tagName === 'INPUT') el.focus(); else el.click(); }
         }
         if (down(9)) { const el = mainButton(root); if (el) el.click(); }
         if (down(1)) {

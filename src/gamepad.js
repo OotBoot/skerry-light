@@ -124,10 +124,17 @@ function pollPad(dt) {
         if (dirKey === '0,0') { PAD.held = null; }
         else if (dirKey !== PAD.held) { PAD.held = dirKey; PAD.navT = 0.4; moveFocus(dxN, dyN); }
         else { PAD.navT -= dt; if (PAD.navT <= 0) { PAD.navT = 0.13; moveFocus(dxN, dyN); } }
+        // a highlighted button that was swapped out underneath: find its replacement by id or label
+        if (PAD.cur && !(root.contains(PAD.cur) && PAD.cur.offsetParent)) {
+          const was = PAD.cur;
+          PAD.cur = (was.id && document.getElementById(was.id)) || focusables(root).find(b => b.textContent === was.textContent) || null;
+          if (PAD.cur && !PAD.cur.offsetParent) PAD.cur = null;
+        }
         if (down(0)) {
           const ringed = PAD.cur && root.contains(PAD.cur) && PAD.cur.offsetParent ? PAD.cur : null;
           const el = ringed || (root.contains(document.activeElement) && document.activeElement !== document.body ? document.activeElement : mainButton(root));
-          if (el) { if (el.tagName === 'INPUT') el.focus(); else el.click(); }
+          // (never leave a crew or close a screen by accident: A only presses a close button you chose)
+          if (el && !(el.classList.contains('closebtn') && el !== ringed && el !== document.activeElement)) { if (el.tagName === 'INPUT') el.focus(); else el.click(); }
         }
         if (down(9)) { const el = mainButton(root); if (el) el.click(); }
         if (down(1)) {

@@ -47,6 +47,21 @@ NET.sid = (() => {
   try { let s = sessionStorage.getItem('skerry-sid'); if (!s) { s = Math.random().toString(36).slice(2, 12); sessionStorage.setItem('skerry-sid', s); } return s; }
   catch (e) { return Math.random().toString(36).slice(2, 12); }
 })();
+try {
+  const bc = new BroadcastChannel('skerry-sid');
+  bc.onmessage = e => {
+    const m = e.data || {};
+    if (m.q === NET.sid) bc.postMessage({ dup: NET.sid, at: NET.sidAt });
+    if (m.dup === NET.sid && (m.at || 0) < NET.sidAt) {
+      // another tab already has this id (a duplicated tab copies it): take a fresh one
+      NET.sid = Math.random().toString(36).slice(2, 12);
+      try { sessionStorage.setItem('skerry-sid', NET.sid); } catch (err) {}
+      if (typeof send === 'function') send();
+    }
+  };
+  NET.sidAt = Date.now() + Math.random();
+  bc.postMessage({ q: NET.sid });
+} catch (e) {}
 const STALE_MS = 35000;   // a crewmate we haven't heard from for this long is treated as gone
 const SLOT_COLORS = ['#ffcf86', '#ff9fb0', '#9fe6c2', '#9fc4ff', '#d7a6ff', '#ffe066', '#7fe0e0', '#ff9a66'];
 const CREW_WORDS = ['gannet', 'wren', 'solan', 'tern', 'kestrel', 'brae', 'skerry', 'gull', 'merle', 'selkie'];
@@ -241,6 +256,16 @@ function setSail() {
   checkLaunch();
 }
 
+// launches you've already finished (made harbour, sank or were taken): leaving and rejoining, or a
+// reload, puts you back on the crew card for that voyage instead of sailing it a second time
+function doneLaunches() { try { return JSON.parse(localStorage.getItem('skerry-done') || '{}') || {}; } catch (e) { return {}; } }
+function markLaunchDone(st, stats) {
+  if (!NET.launch) return;
+  const d = doneLaunches(); d[NET.launch.id] = { st, stats, at: Date.now() };
+  const keys = Object.keys(d).sort((a, b) => d[b].at - d[a].at).slice(0, 12), out = {};
+  for (const k of keys) out[k] = d[k];
+  try { localStorage.setItem('skerry-done', JSON.stringify(out)); } catch (e) {}
+}
 // follow the host's launch
 function checkLaunch() {
   if (!NET.crew) return;
@@ -249,6 +274,16 @@ function checkLaunch() {
   const L = h && (h.peer === NET.myPeer ? NET.launch : h.presence && h.presence.launch);
   if (!L || typeof L !== 'object' || !L.id || L.id === NET.launchSeen) return;
   if (!Number.isFinite(L.seed) || !Number.isFinite(L.voy) || !Number.isFinite(L.at)) return;
+  // never be pulled back to an older voyage (a host that went quiet and came back still advertising it)
+  if (NET.launch && L.id !== NET.launch.id && L.at <= NET.launch.at) return;
+  const done = doneLaunches()[L.id];
+  if (done) {
+    NET.launchSeen = L.id;
+    NET.launch = { id: String(L.id), seed: L.seed | 0, voy: Math.max(1, Math.min(99, L.voy | 0)), at: L.at };
+    NET.results = null; NET.st = done.st; NET.stats = done.stats || null; NET.ghostUsed = true;
+    send(); showCrewCard();
+    return;
+  }
   // joining a crew between voyages: the host still advertises the last launch, but that voyage is
   // over, so wait for the next one instead of sailing out alone into it. Join a voyage in progress only
   // while someone (the host counts: it is marked at sea the moment it launches) is really still out on it.
@@ -470,6 +505,7 @@ function netTick(dt) {
 function myStatus(st) {
   NET.st = st;
   if (st !== 'sail' && g && g.stats) NET.stats = cleanStats(Object.assign({}, g.stats, { secs: g.t, fin: g.t * 10 }));
+  if (st !== 'sail') markLaunchDone(st, NET.stats);
   send(st === 'sail' ? {} : { x: null, y: null });
 }
 
@@ -558,6 +594,7 @@ function renderTogether() {
     const b = document.createElement('button');
     b.type = 'button'; b.className = 'tool';
     b.textContent = c.n >= MAX_CREW ? 'Full' : 'Join';
+    b.setAttribute('aria-label', (c.n >= MAX_CREW ? 'Crew ' : 'Join crew ') + c.code.toUpperCase() + (c.n >= MAX_CREW ? ' is full' : ''));
     b.disabled = c.n >= MAX_CREW;
     b.dataset.code = c.code;
     li.appendChild(b);
@@ -571,7 +608,8 @@ $('crewList').addEventListener('click', e => {
 });
 setInterval(() => { if (state === 'title' && !$('titleCard').hidden) renderTogether(); }, 1000);
 // a quiet heartbeat while in a crew, so crewmates can tell a sailor who is just waiting from one who has gone
-setInterval(() => { if (NET.crew && state !== 'play') send({ beat: Date.now() % 100000 }); }, 8000);
+// (in every state: a sailing tab in the background stops drawing frames, but timers still run)
+setInterval(() => { if (NET.crew) send({ beat: Date.now() % 100000 }); }, 4000);
 // and the crew screen notices when someone drops out, even if nothing else changes
 setInterval(() => { if (NET.crew && !$('crewCard').hidden) { checkLaunch(); renderCrewCard(); } }, 2000);
 
@@ -608,7 +646,7 @@ function withSpectatorView(draw) {
   const m = NET.watch && NET.mates.get(NET.watch);
   if (!m || !g) { draw(); return; }
   const mine = { ship, maren: g.maren, plim: g.plim, glare: g.glare };
-  ship = { x: m.x, y: m.y, h: m.h, bob: m.bob, rudder: 0, v: m.v, inv: 0, hull: m.hull, maxHull: m.maxHull || SK.HULL, boat: m.boat || 'brig', sail: 0.5, skin: m.skin, pennant: m.pennant };
+  ship = { x: m.x, y: m.y, h: m.h, bob: m.bob, rudder: 0, v: m.v, inv: 0, hull: m.hull, maxHull: m.maxHull || SK.HULL, boat: m.boat || 'brig', sail: 0.5, skin: m.skin, pennant: m.pennant, z: m.z || 0, pitch: m.pitch || 0 };
   g.maren = { active: Number.isFinite(m.mx), following: true, stage: m.stage, x: m.mx, y: m.my, apparition: 0, relB: 0 };
   g.plim = Object.assign({}, mine.plim, Number.isFinite(m.px) ? { x: m.px, y: m.py } : {}, { walking: true, phase: g.t * 9, dirX: Math.sin(m.h), dirY: Math.cos(m.h) });
   g.glare = 0;
@@ -620,6 +658,7 @@ function showCrewCard() {
   for (const id of ['titleCard', 'portCard', 'endCard']) $(id).hidden = true;
   $('crewCard').hidden = false;
   renderCrewCard();
+  setTimeout(() => { const b = ['crewSailBtn', 'crewReadyBtn'].map($).find(x => x && !x.hidden) || $('crewLeaveBtn'); if (b && !$('crewCard').hidden && !$('crewCard').contains(document.activeElement)) b.focus({ preventScroll: true }); }, 60);
 }
 
 function crewRowStatus(p, i, voy) {
@@ -678,7 +717,7 @@ function renderCrewCard() {
     text.textContent = 'Send the invite to up to seven friends. They join from the title screen by picking crew ' + NET.crew.toUpperCase() + '. Everyone sails their own ship through the same skerries. Ships close together keep Maren back, and a bell rung near a crewmate drives her away from both of you.';
   } else if (!r) {
     title.textContent = statusWord(NET.st) === 'In harbour' ? 'Safe in Harbour' : 'Lost at Sea';
-    const race = NET.race && NET.race.voy === voy && NET.st === 'port' ? (NET.race.first ? ' You were first into harbour: the +' + NET.race.bonus + ' crate bonus is yours when the voyage ends.' : ' A crewmate beat you in.') : '';
+    const race = NET.race && NET.race.voy === voy && NET.st === 'port' ? (NET.race.first ? ' Fastest so far: if nobody beats your time, the +' + NET.race.bonus + ' crate bonus is yours when the voyage ends.' : ' A crewmate has a faster time.') : '';
     text.textContent = 'Voyage ' + voy + '. Waiting for the rest of the crew to make harbour or go down.' + race + ' You can watch them from their deck while you wait.';
   } else if (r.madeIt > 0) {
     title.textContent = r.madeIt === r.rows.length ? 'The Whole Crew Made It' : r.madeIt + ' of ' + r.rows.length + ' Made Harbour';
@@ -695,9 +734,12 @@ function renderCrewCard() {
   }
   renderCrewChat();
 
-  const watchBox = $('crewWatch'); watchBox.textContent = '';
-  if (NET.launch && !r) {
-    for (const m of matesAtSea()) {
+  const watchBox = $('crewWatch');
+  const watchList = NET.launch && !r ? matesAtSea() : [];
+  const wkey = watchList.map(m => m.peer + ':' + m.name).join('|');
+  if (watchBox.dataset.key !== wkey) {
+    watchBox.dataset.key = wkey; watchBox.textContent = '';
+    for (const m of watchList) {
       const b = document.createElement('button');
       b.type = 'button'; b.className = 'tool';
       b.textContent = 'Watch ' + m.name;
@@ -772,8 +814,12 @@ $('inviteCopy').addEventListener('click', () => {
   const field = $('inviteLink'), btn = $('inviteCopy');
   const done = () => { btn.textContent = 'Copied'; setTimeout(() => { btn.textContent = 'Copy link'; }, 1600); };
   try {
-    navigator.clipboard.writeText(field.value).then(done, () => { field.select(); btn.textContent = 'Press Ctrl+C'; });
-  } catch (e) { field.select(); btn.textContent = 'Press Ctrl+C'; }
+    const fail = () => {
+      if (navigator.share) { navigator.share({ url: field.value, title: 'Skerry Light crew' }).catch(() => {}); return; }
+      field.select(); btn.textContent = 'Copy it from the box'; setTimeout(() => { btn.textContent = 'Copy link'; }, 3000);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(field.value).then(done, fail); else fail();
+  } catch (e) { field.select(); }
 });
 // an invite link carries the crew name after the #
 try { const h = (location.hash || '').slice(1); if (/^[a-z]+-\d{1,4}$/.test(h)) NET.pendingJoin = h; } catch (e) {}

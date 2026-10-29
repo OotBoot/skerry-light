@@ -61,7 +61,7 @@ function send(c, msg) {
 function cleanPresence(p) {
   if (!p || typeof p !== 'object' || Array.isArray(p)) return null;
   const keys = Object.keys(p);
-  if (keys.length > 32) return null;
+  if (keys.length > 48) return null;
   for (const k of keys) if (!/^[A-Za-z_][A-Za-z0-9_-]{0,63}$/.test(k)) return null;
   const text = JSON.stringify(p);
   if (Buffer.byteLength(text) > MAX_PRESENCE_BYTES) return null;

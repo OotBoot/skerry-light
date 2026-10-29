@@ -116,7 +116,7 @@ function carpenter(dt) {
   if (!b.carpenter || g.attract || state !== 'play' || ship.hull >= ship.maxHull) { g.carpT = 0; return; }
   g.carpT = (g.carpT || 0) + dt;
   if (g.carpT >= b.carpenter) {
-    g.carpT = 0; ship.hull++; renderHud(); sfxChime();
+    g.carpT = 0; ship.hull++; g.stats.patched++; renderHud(); sfxChime();
     addLog('The carpenter has patched a plank. ' + (ship.hull === ship.maxHull ? 'She\u2019s sound again.' : 'Still ' + (ship.maxHull - ship.hull) + ' to go.'), 'p');
   }
 }
@@ -170,7 +170,7 @@ function resolveContact(c, what, soft) {
   const closing = -(vx * c.nx + vy * c.ny);   // speed into the obstacle
   if (closing <= 0) return false;
   // a hit needs both real speed into it and a real angle (more than about 25°); shallower is a scrape
-  if (closing > SK.IMPACT && closing > ship.v * 0.42 && !soft) {
+  if (closing > SK.IMPACT && closing > ship.v * 0.5 && !soft) {
     hit(c.nx, c.ny, what);
     return true;
   }
@@ -326,7 +326,7 @@ function update(dt) {
     $('knots').textContent = Math.round(ship.v * 0.97);
     const goal = g.backrooms ? g.exit : SK.HARBOUR;
     const d = Math.hypot(ship.x - goal.x, ship.y - goal.y);
-    $('dist').textContent = d > 1000 ? (d / 1852).toFixed(1) + 'nm' : Math.round(d) + 'm';
+    $('dist').textContent = d >= 1852 ? (d / 1852).toFixed(1) + 'nm' : Math.round(d) + 'm';
     updateBellButton();
     updateFlareButton();
     updateJetButton();
@@ -398,6 +398,7 @@ function beginVoyage(n) {
 }
 
 function beginCrewVoyage(L, slot) {
+  if (!$('crateCard').hidden && typeof hideCrates === 'function') hideCrates();
   if (L.voy === 1) run = { voyages: 0, hits: 0 };
   state = 'play';
   newVoyage(L.voy, false, L.seed, slot);
@@ -418,8 +419,8 @@ function beginCrewVoyage(L, slot) {
 // in the sky the sail buttons become the stick
 function setFlightControls() {
   const up = $('sailUp'), dn = $('sailDown'), sky = !!(g && g.sky);
-  if (up) up.querySelector('small').textContent = sky ? 'Climb' : 'Faster';
-  if (dn) dn.querySelector('small').textContent = sky ? 'Dive' : 'Slower';
+  if (up) { up.querySelector('small').textContent = sky ? 'Climb' : 'Faster'; up.setAttribute('aria-label', sky ? 'Climb: hold to pull the nose up' : 'Make sail: hold to speed up'); }
+  if (dn) { dn.querySelector('small').textContent = sky ? 'Dive' : 'Slower'; dn.setAttribute('aria-label', sky ? 'Dive: hold to push the nose down' : 'Shorten sail: hold to slow down'); }
   const bb = $('bellBtn') && $('bellBtn').querySelector('b'); if (bb) bb.textContent = sky ? 'Sound the horn' : 'Ring the bell';
   const h = $('hint'); if (h && !h.dataset.base) h.dataset.base = h.textContent;
   if (h) h.textContent = sky ? '\u2190 \u2192 steer \u00b7 \u2191 climb \u00b7 \u2193 dive \u00b7 Space horn \u00b7 F flare \u00b7 V view' : h.dataset.base;
@@ -449,15 +450,19 @@ function toTitle() {
 }
 
 function arrive() {
+  const wasState = state; state = 'port';   // before the reward, so the menus' boat picker isn't greyed out as 'sailing'
   grantCrate(harbourReward() + g.found * 2, true);
+  state = wasState;
   stopVerity();
+  hideBanner();
   if (crewMode) {
     state = 'port';
     audioTick(0, 0);
     sfxChime();
     // the race: is anyone else in yet? (shown on the crew card while you wait)
-    { const mates = [...NET.mates.values()];
-      NET.race = mates.length ? { first: !mates.some(m => m.st === 'port'), bonus: FIRST_BONUS * mates.length, voy: g.n } : null; }
+    // (judged like the final results: by voyage time, so it can still change if a faster ship comes in later)
+    { const mates = [...NET.mates.values()], mine = g.t * 10;
+      NET.race = mates.length ? { first: !mates.some(m => m.st === 'port' && m.stats && m.stats.fin > 0 && m.stats.fin < mine), bonus: FIRST_BONUS * mates.length, voy: g.n } : null; }
     addLog(g.backrooms ? 'Out through the green door, and back on the real sea.' : 'Made harbour between the pier lamps.', 'p');
     myStatus('port');
     $('hud').hidden = true; $('logbox').hidden = true;
@@ -465,6 +470,8 @@ function arrive() {
     return;
   }
   state = 'port';
+  $('hud').hidden = true; $('logbox').hidden = true;
+  if (typeof renderBoatPicks === 'function') renderBoatPicks();
   audioTick(0, 0);
   run.voyages++;
   if (run.voyages > best) { best = run.voyages; try { localStorage.setItem('skerry-helm-best', String(best)); } catch (e) {} }
@@ -491,7 +498,9 @@ function startScare() {
   sfxScream();
 }
 
+function hideBanner() { const b = $('biomeBanner'); if (b) b.hidden = true; clearTimeout(showBiomeBanner.t); }
 function endRun(how) {
+  hideBanner();
   state = 'over';
   stopVerity();
   grantCrate();
@@ -505,7 +514,7 @@ function endRun(how) {
   $('endEyebrow').textContent = 'Voyage ' + g.n + (taken ? ' · taken' : ' · lost');
   $('endTitle').textContent = taken ? 'Maren Came Aboard' : verity ? 'Verity Helped' : knocked ? 'Knocked Under' : 'Lost on the Skerries';
   $('endText').textContent = taken
-    ? 'She stood at the bow, and then she was on the deck. The brig was found at dawn drifting off the Gannet, with her lantern still lit and nobody aboard.'
+    ? 'She stood at the bow, and then she was on the deck. The ' + (myBoat() ? myBoat().name.toLowerCase() : 'brig') + ' was found at dawn drifting off the Gannet, with her lantern still lit and nobody aboard.'
     : verity ? 'He only wanted to help. The ship was found at dawn with nobody aboard and a wide, yellow smile scratched into the deck.'
     : knocked ? 'Three knocks on the hull, and the fourth came straight through the planks. They say the Gannet\u2019s figurehead is still smiling.'
     : (run.voyages === 0 ? 'She went down before you sighted the pier lamps. The skerries keep their reputation.' :

@@ -1,8 +1,8 @@
 // Boats, crates, skins and pennants.
 //
-// There are three boats, each with its own stats, and one kind of crate, the Skerry Crate, which can
+// There are four boats, each with its own stats, and one kind of crate, the Skerry Crate, which can
 // hold anything: a skin for any boat, a pennant or a flare colour. Each voyage earns a crate: one if
-// you went down, two if you made harbour. Open crates from your crate
+// you went down, and more for each harbour in a row (5, 8, 13...). Open crates from your crate
 // inventory: a reel spins and lands on your prize. Skins change your deck, bowsprit and lantern as you see them, and your hull and
 // sails as your crew sees them; pennants fly from your bowsprit, and from your masthead for your
 // crew. Gold (Admiral) items only ever appear in the reel when one is your prize.
@@ -215,7 +215,7 @@ const rarityOf = s => RARITIES.find(r => r.id === s.rarity);
 
 const CRATES = {
   crates: { skerry: 0 },
-  owned: {}, equipped: { brig: 'plain', cutter: 'c_plain', barque: 'b_plain', carrier: 'k_plain' }, pennant: null, flare: null,
+  owned: {}, opened: 0, equipped: { brig: 'plain', cutter: 'c_plain', barque: 'b_plain', carrier: 'k_plain' }, pennant: null, flare: null,
   boat: 'brig', opening: false, pending: null, view: 'skins',
 };
 function totalCrates() { return CRATES.crates.skerry; }
@@ -233,6 +233,7 @@ function loadCrates() {
       if (typeof d.crates === 'number') CRATES.crates.skerry = n(d.crates);
       else if (d.crates && typeof d.crates === 'object') CRATES.crates.skerry = n(Object.values(d.crates).reduce((a, v) => a + (v | 0), 0));
       CRATES.owned = d.owned && typeof d.owned === 'object' ? d.owned : {};
+      CRATES.opened = n(d.opened);
       if (typeof d.equipped === 'string') { if (SKIN_BY_ID[d.equipped] && SKIN_BY_ID[d.equipped].boat === 'brig') CRATES.equipped.brig = d.equipped; }
       else if (d.equipped && typeof d.equipped === 'object') for (const b of BOATS) { const s = SKIN_BY_ID[d.equipped[b.id]]; if (s && s.boat === b.id) CRATES.equipped[b.id] = s.id; }
       CRATES.pennant = PENNANT_BY_ID[d.pennant] ? d.pennant : null;
@@ -247,7 +248,7 @@ function loadCrates() {
   saveCrates();
 }
 function saveData() {
-  return { crates: CRATES.crates, owned: CRATES.owned, equipped: CRATES.equipped, pennant: CRATES.pennant, flare: CRATES.flare, boat: CRATES.boat };
+  return { crates: CRATES.crates, opened: CRATES.opened, owned: CRATES.owned, equipped: CRATES.equipped, pennant: CRATES.pennant, flare: CRATES.flare, boat: CRATES.boat };
 }
 function saveCrates() {
   try { localStorage.setItem('skerry-crates', JSON.stringify(Object.assign(saveData(), { pending: CRATES.pending }))); } catch (e) {}
@@ -270,7 +271,12 @@ function mergeSave(d, takeLooks) {
     if (v > (CRATES.owned[id] | 0)) { CRATES.owned[id] = v; changed = true; }
   }
   const cr = d.crates && typeof d.crates === 'object' ? Object.values(d.crates).reduce((a, v) => a + (v | 0), 0) : (d.crates | 0);
-  if (cr > CRATES.crates.skerry) { CRATES.crates.skerry = Math.min(99999, cr); changed = true; }
+  // crates: compare everything ever earned (unopened + opened), so reloading an old code can't hand back
+  // crates you've since opened
+  const earned = Math.max(cr + Math.max(0, d.opened | 0), CRATES.crates.skerry + (CRATES.opened | 0));
+  const opened = Math.max(CRATES.opened | 0, Math.max(0, d.opened | 0));
+  const left = Math.min(99999, Math.max(0, earned - opened));
+  if (left !== CRATES.crates.skerry || opened !== (CRATES.opened | 0)) { CRATES.crates.skerry = left; CRATES.opened = opened; changed = true; }
   if (takeLooks) {
     if (d.equipped && typeof d.equipped === 'object') for (const b of BOATS) {
       const sk = SKIN_BY_ID[d.equipped[b.id]];
@@ -287,7 +293,7 @@ function afterMerge() { saveCrates(); renderCrates(); updateCrateButtons(); rend
 // the save code: your save, packed into one line of text
 function saveCode() {
   const d = saveData();
-  const packed = { c: d.crates.skerry, o: d.owned, e: d.equipped, p: d.pennant, f: d.flare, b: d.boat };
+  const packed = { c: d.crates.skerry, n: d.opened | 0, o: d.owned, e: d.equipped, p: d.pennant, f: d.flare, b: d.boat };
   return 'SKERRY-' + btoa(unescape(encodeURIComponent(JSON.stringify(packed)))).replace(/=+$/, '').replace(/\+/g, '-').replace(/\//g, '_');
 }
 function readSaveCode(text) {
@@ -297,7 +303,7 @@ function readSaveCode(text) {
   try {
     const b64 = m[1].replace(/-/g, '+').replace(/_/g, '/');
     const o = JSON.parse(decodeURIComponent(escape(atob(b64 + '==='.slice((b64.length + 3) % 4)))));
-    return { crates: o.c | 0, owned: o.o, equipped: o.e, pennant: o.p, flare: o.f, boat: o.b };
+    return { crates: o.c | 0, opened: o.n | 0, owned: o.o, equipped: o.e, pennant: o.p, flare: o.f, boat: o.b };
   } catch (e) { return null; }
 }
 
@@ -810,7 +816,7 @@ function renderCrates() {
 function openCrate(type) {
   if (CRATES.opening || !CRATES.crates[type]) return;
   CRATES.opening = true;
-  CRATES.crates[type]--;
+  CRATES.crates[type]--; CRATES.opened = (CRATES.opened | 0) + 1;
   const prize = rollSkin(type);
   CRATES.pending = prize.id;   // kept safe until the reel lands
   saveCrates();
@@ -825,8 +831,8 @@ function spinReel(prize, type, dur, done) {
   // bring the reel into view by scrolling the sheet up and down only (never sideways)
   requestAnimationFrame(() => {
     const sheet = $('crateCard'), r = $('crateReel').getBoundingClientRect(), sr = sheet.getBoundingClientRect();
+    if (sheet.scrollLeft) sheet.scrollLeft = 0;   // (before the smooth scroll: setting it after cancels it)
     if (r.top < sr.top + 70 || r.bottom > sr.bottom - 10) sheet.scrollTo({ top: sheet.scrollTop + r.top - sr.top - sr.height * 0.25, behavior: reduceMotion ? 'auto' : 'smooth' });
-    sheet.scrollLeft = 0;
   });
   const reel = $('crateReel'), strip = $('crateStrip');
   strip.textContent = '';
@@ -864,7 +870,7 @@ function openAll(type) {
     byGrade[prize.rarity] = (byGrade[prize.rarity] || 0) + 1;
     if (!best || RARITIES.findIndex(r => r.id === prize.rarity) > RARITIES.findIndex(r => r.id === best.rarity)) best = prize;
   }
-  CRATES.crates[type] = 0;
+  CRATES.crates[type] = 0; CRATES.opened = (CRATES.opened | 0) + count;
   saveCrates();
   CRATES.opening = true;
   $('crateResult').hidden = true;
@@ -942,6 +948,8 @@ function toast(text, short) {
   const t = $('toast'); if (!t) return;
   const phone = innerWidth <= 520;
   t.textContent = phone && short ? short : text; t.hidden = false;
+  // with a card open, keep clear of its buttons: show it at the top instead
+  t.classList.toggle('oncard', !!document.querySelector('.overlay:not([hidden])'));
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => { t.hidden = true; }, phone ? 2500 : 5000);
 }
