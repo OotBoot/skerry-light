@@ -4,7 +4,7 @@
 // Lightning lights them up now and then. Come down low between the runway lamps to land.
 // Its own three enemies, and nothing else: the Thunderhead, the Petrels and the Squall.
 
-const SKYF = { Z0: 34, ZMIN: 3, ZMAX: 120, LAND: 14, SPEED: 12, PLANE: { bow: 5, len: 10, beam: 3 } };
+const SKYF = { Z0: 34, ZMIN: 3, ZMAX: 100, LAND: 14, SPEED: 12, PLANE: { bow: 5, len: 10, beam: 3 } };
 
 // ---------- setting up the voyage ----------
 // every rock becomes a stack of one to three clouds at different heights over the same spot, so the
@@ -22,7 +22,7 @@ function setupSky(seed) {
     const rz = Math.max(9, r.r * 1.3), used = [];
     for (let k = 0; k < n; k++) {
       let z = 0, tries = 0;
-      do { z = R(10, 100); tries++; } while (tries < 12 && used.some(u => Math.abs(u - z) < rz * 2 + 12));
+      do { z = R(10, SKYF.ZMAX); tries++; } while (tries < 12 && used.some(u => Math.abs(u - z) < rz * 2 + 12));
       used.push(z);
       const puffs = []; for (let i = 0; i < 12; i++) puffs.push({ dx: R(-0.75, 0.75), dz: R(-0.8, 0.85), s: R(0.6, 1.05) });
       clouds.push(Object.assign({}, r, { z, rz, puffs, flash: 0, seenT: null, seenV: 0 }));
@@ -85,9 +85,12 @@ function drawCloud(o, q) {
   const vis = Math.max(cloudVis(o), afterglow(o) * 0.9);
   if (vis < 0.03) return;
   const R = o.r * 1.3 * q.s, Rz = o.rz * 1.1 * q.s;
+  // right up against (or inside) it: just a wash of grey, rather than dozens of screen-sized puffs
+  if (Math.min(R, Rz) > Math.max(W, H) * 1.2) { ctx.globalAlpha = Math.min(0.85, vis * 0.8); ctx.fillStyle = '#262c42'; ctx.fillRect(-W * 0.1, -H * 0.1, W * 1.2, H * 1.2); ctx.globalAlpha = 1; return; }
   const dark = puffSprite('34,40,62'), lite = puffSprite('205,215,240');
   for (const p of o.puffs) {
     const x = q.x + p.dx * R * 0.7, y = q.y - p.dz * Rz * 0.75, s = p.s * Math.min(R, Rz) * 1.15;
+    if (x + s < 0 || x - s > W || y + s < 0 || y - s > H) continue;
     ctx.globalAlpha = vis * 0.9; ctx.drawImage(dark, x - s, y - s, s * 2, s * 2);
   }
   for (const p of o.puffs) {

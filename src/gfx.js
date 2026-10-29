@@ -446,9 +446,14 @@ function drawAtmosphere() {
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.drawImage(GFX.vignette, 0, 0);
   if (GFX.grainPat && !reduceMotion) {
+    // the grain is tiled once per screen size into one big picture, then just copied at a random offset
+    const gw = Math.ceil(W * dpr) + 128, gh = Math.ceil(H * dpr) + 128;
+    if (!GFX.grainBig || GFX.grainBig.width !== gw || GFX.grainBig.height !== gh) {
+      GFX.grainBig = offscreen(gw, gh); const q = GFX.grainBig.getContext('2d');
+      q.fillStyle = q.createPattern(GFX.grain, 'repeat'); q.fillRect(0, 0, gw, gh);
+    }
     ctx.globalAlpha = 0.6;
-    ctx.translate((Math.random() * 128) | 0, (Math.random() * 128) | 0);
-    ctx.fillStyle = GFX.grainPat; ctx.fillRect(-128, -128, W * dpr + 256, H * dpr + 256);
+    ctx.drawImage(GFX.grainBig, -((Math.random() * 128) | 0), -((Math.random() * 128) | 0));
   }
   ctx.restore();
 }

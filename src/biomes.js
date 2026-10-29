@@ -126,7 +126,8 @@ const NETHER_CHANCE = 1 / 20, ODYSSEY_CHANCE = 1 / 20;
 const ODYSSEY_FORCE = (() => { try { return /[?&#]odyssey\b/.test(location.href); } catch (e) { return false; } })();
 const NETHER_FORCE = (() => { try { return /[?&#]nether\b/.test(location.href); } catch (e) { return false; } })();
 const BIOME_ORDER = ['skerry', 'fjord', 'ember', 'lagoon', 'barrows', 'shoals'];
-const BIOME_FORCE = (() => { try { const m = location.search.match(/[?&]biome=(\w+)/); return m && BIOMES[m[1]] ? m[1] : null; } catch (e) { return null; } })();
+// (only the six regular seas: the rare ones have their own switches, with their own monsters and rules)
+const BIOME_FORCE = (() => { try { const m = location.search.match(/[?&]biome=(\w+)/); return m && ['skerry', 'fjord', 'ember', 'lagoon', 'barrows', 'shoals'].includes(m[1]) ? m[1] : null; } catch (e) { return null; } })();
 
 // voyage 1 is always Skerry Light; after that they go round all six in turn, so a crew sees the same sea
 function biomeFor(n, attract) {
@@ -166,7 +167,7 @@ const LAND = { peaks: [], volcano: [], palms: [], graves: [], spires: [], church
   for (let x = -3000; x <= 3000; x += rand(220, 360)) LAND.peaks.push({ x, y: -380 - rand(0, 120), w: rand(180, 300), h: rand(120, 260), far: 0 });
   for (let i = 0; i < 44; i++) { const a = rand(-Math.PI, Math.PI), d = rand(1500, 3200); LAND.lavafalls = LAND.lavafalls || []; LAND.lavafalls.push({ x: Math.sin(a) * d, y: Math.cos(a) * d + 900, w: rand(6, 18), ph: rand(0, 6) }); }
   for (let i = 0; i < 26; i++) { LAND.glow = LAND.glow || []; LAND.glow.push({ b: rand(-Math.PI, Math.PI), e: rand(0.25, 0.75), s: rand(0.6, 1.6), seed: (Math.random() * 1e6) | 0 }); }
-  LAND.stairs = [{ x: -700, y: -900, w: 60, steps: 26, rise: 22, run: 30 }, { x: 1300, y: -1300, w: 80, steps: 34, rise: 26, run: 34 }, { x: -2200, y: -1600, w: 70, steps: 30, rise: 28, run: -32 }, { x: 2600, y: 600, w: 60, steps: 24, rise: 24, run: -30 }];
+  LAND.stairs = [{ x: -700, y: -900, w: 60, steps: 26, rise: 22, run: 30 }, { x: 1300, y: -1300, w: 80, steps: 34, rise: 26, run: 34 }, { x: -2200, y: -1600, w: 70, steps: 30, rise: 28, run: -32 }, { x: 2600, y: -650, w: 60, steps: 24, rise: 24, run: -30 }];
   LAND.doors = []; for (let i = 0; i < 9; i++) LAND.doors.push({ x: rand(-2600, 2600), y: -rand(250, 900), w: rand(18, 34), lit: Math.random() < 0.3 });
   LAND.lamps = []; for (let x = -2400; x <= 2400; x += rand(120, 240)) LAND.lamps.push({ x });
   LAND.temples = [{ x: -380, y: -320, w: 70, h: 26, cols: 8, ruin: 0 }, { x: 900, y: -520, w: 90, h: 32, cols: 10, ruin: 1 }, { x: -1500, y: -700, w: 110, h: 36, cols: 12, ruin: 0 }];
@@ -256,7 +257,12 @@ function drawLandFar(B) {
   } else if (B.land === 'temples') {
     // low olive hills, and white temples standing on them
     for (const h of LAND.hills) fillPoly([[h.x - h.w, h.y, 0], [h.x - h.w * 0.3, h.y, h.h], [h.x + h.w * 0.35, h.y, h.h * 0.9], [h.x + h.w, h.y, 0]], '#0f1210');
-    for (const t of LAND.temples) temple(t);
+    for (const t of LAND.temples) {
+      // the hill each temple stands on
+      const hz = t.hz || (t.hz = t.y < -400 ? 140 : 90);
+      fillPoly([[t.x - t.w * 1.9, t.y, 0], [t.x - t.w * 0.75, t.y, hz], [t.x + t.w * 0.75, t.y, hz], [t.x + t.w * 1.9, t.y, 0]], '#0f1210');
+      temple(t);
+    }
   } else if (B.land === 'graves') {
     // a ruined chapel up on the shore, its tower broken off
     const c = LAND.church;
@@ -398,7 +404,7 @@ function drawCavernRoof(B) {
     GFX.roofW = RW;
     GFX.roof = c;
   }
-  const off = (((yaw * focal * 0.5) % 96) + 96) % 96;
+  const off = (((yaw * focal) % 96) + 96) % 96;   // (turns at the same rate as the glowstone hanging from it)
   ctx.drawImage(GFX.roof, -off - W * 0.05, hy - Hc, GFX.roofW, Hc);
   // glowstone clumps
   for (const s of LAND.glow) {
@@ -425,12 +431,26 @@ function drawSkyExtras(B) {
     ctx.fillStyle = g0; ctx.globalCompositeOperation = 'lighter';
     const y0 = hy - Math.tan(0.62) * focal, y1 = hy - Math.tan(0.1) * focal;
     // (60 wide strips rather than 120 narrow ones: the same curtain for half the drawing)
+    const key = B.aurora.join('|');
+    if (GFX.auroraKey !== key) {
+      // one strip, faded at its sides and its ends, drawn once and stretched into place
+      GFX.auroraKey = key;
+      const c = offscreen(32, 256), q = c.getContext('2d');
+      const vg = q.createLinearGradient(0, 0, 0, 256);
+      vg.addColorStop(0, `rgba(${B.aurora[1]},0)`); vg.addColorStop(0.5, `rgba(${B.aurora[1]},0.2)`); vg.addColorStop(0.85, `rgba(${B.aurora[0]},0.35)`); vg.addColorStop(1, `rgba(${B.aurora[0]},0)`);
+      q.fillStyle = vg; q.fillRect(0, 0, 32, 256);
+      q.globalCompositeOperation = 'destination-in';
+      const hg = q.createLinearGradient(0, 0, 32, 0); hg.addColorStop(0, 'rgba(0,0,0,0)'); hg.addColorStop(0.5, 'rgba(0,0,0,1)'); hg.addColorStop(1, 'rgba(0,0,0,0)');
+      q.fillStyle = hg; q.fillRect(0, 0, 32, 256);
+      GFX.aurora = c;
+    }
+    const sw = Math.max(6, focal * 0.075);
     for (let i = 0; i < 120; i += 2) {
       const b = -1.1 + i * 0.018 + Math.sin(i * 0.15 + g.t * 0.2) * 0.04;
       const p = skyPos(b + Math.PI, 0.3); if (!p) continue;
       const a = 0.35 + 0.65 * Math.max(0, Math.sin(i * 0.23 + g.t * 0.6) * Math.sin(i * 0.07 - g.t * 0.25));
-      const lift = Math.sin(i * 0.09 + g.t * 0.3) * (y1 - y0) * 0.18;
-      ctx.globalAlpha = a; ctx.fillRect(p.x, y0 + lift, Math.max(3, focal * 0.04), (y1 - y0) * (0.7 + 0.3 * Math.sin(i * 0.4)));
+      const lift = Math.sin(i * 0.09 + g.t * 0.3) * (y1 - y0) * 0.18, hk = 0.75 + 0.25 * Math.sin(i * 0.4);
+      ctx.globalAlpha = a; ctx.drawImage(GFX.aurora, p.x - sw / 2, y0 + lift + (y1 - y0) * (1 - hk), sw, (y1 - y0) * hk);
     }
     ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
   }

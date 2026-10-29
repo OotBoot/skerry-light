@@ -209,10 +209,12 @@ function checkCollisions() {
     if ((c = hullContact(pts, 0, 0, w.r || 1, w)) && resolveContact(c, w.what || 'the pier')) break;
   }
   if (!g.backrooms) {
-    const inGap = Math.abs(ship.x - SK.HARBOUR.x) < 18;
+    // (flying, the harbour mouth is only a gap on the water side: no slipping down it over the land)
+    const inGap = Math.abs(ship.x - SK.HARBOUR.x) < 18 && (!g.sky || ship.y > 5);
     if (!inGap) {
       const lowest = pts.reduce((m, p) => Math.min(m, p.y - p.w), Infinity);
-      if (lowest < 5) resolveContact({ pen: 5 - lowest, nx: 0, ny: 1 }, 'the shore');
+      // high over the coast a plane only brushes the edge of the flying area; low, the cliffs are solid
+      if (lowest < 5) resolveContact({ pen: 5 - lowest, nx: 0, ny: 1 }, 'the shore', g.sky && ship.z > 20);
     }
     if (state === 'play' && inGap && ship.y < 36 && ship.y > 0 && (!g.sky || ship.z < SKYF.LAND)) { arrive(); return true; }
   } else if (state === 'play' && Math.hypot(ship.x - g.exit.x, ship.y - g.exit.y) < g.exit.r) { arrive(); return true; }

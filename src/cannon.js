@@ -76,7 +76,7 @@ function mateCannon(i) {
 function renderCannon() {
   const box = $('cannonBox'); if (!box) return;
   const C = g && g.cannon;
-  box.hidden = !C || !C.charges && ship.boat !== 'barque' || ship.boat !== 'barque';
+  box.hidden = !C || ship.boat !== 'barque' || !!(g && (g.sky || g.backrooms));
   if (box.hidden) return;
   const marks = $('cannon');
   // a filling ring while it reloads

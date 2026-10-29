@@ -531,3 +531,5 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 .btnrow .primary { min-width: 0; white-space: normal; }
 @media (max-height: 480px) { .card h1 { font-size: 2rem; } #crewText { font-size: 0.9rem; } }
 @media (pointer: coarse) { #hint { display: none; } }
+
+@media (min-width: 521px) { .biomebanner { top: max(16%, 112px); } }
