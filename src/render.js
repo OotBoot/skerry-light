@@ -3,7 +3,15 @@
 
 const cv = document.getElementById('cv');
 const ctx = cv.getContext('2d');
-const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+// less motion: the system setting, unless the player chose otherwise on the Settings card
+const motionMQ = matchMedia('(prefers-reduced-motion: reduce)');
+let reduceMotion = motionMQ.matches;
+function refreshMotion() {
+  reduceMotion = SETTINGS.motion === 'reduce' || (SETTINGS.motion !== 'full' && motionMQ.matches);
+  document.documentElement.classList.toggle('lessmotion', reduceMotion);
+}
+refreshMotion();
+try { motionMQ.addEventListener('change', refreshMotion); } catch (e) {}
 
 let W = 0, H = 0, dpr = 1, fov = 1.2, focal = 1, cx = 0, hy = 0;
 let camX = 0, camY = 0, yaw = 0, camH = 5;
@@ -16,6 +24,7 @@ for (let i = 0; i < 14; i++) town.push({ x: SK.HARBOUR.x + rand(-140, 160), y: r
 function resize() {
   dpr = Math.min(window.devicePixelRatio || 1, 2);
   W = cv.clientWidth; H = cv.clientHeight;
+  HUD_BOX.t = -99;   // measure the HUD again for the bearing strip
   cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
   fov = W < 600 ? 1.4 : 1.15;
   focal = (W / 2) / Math.tan(fov / 2);
@@ -384,7 +393,7 @@ function drawScene() {
   // flying: the horizon drops as the nose comes up, and the whole view banks into a turn
   if (g.sky && !third) hy += (ship.pitch || 0) * focal * 0.9;
   yaw = ship.h;
-  const roll = reduceMotion ? 0 : g.sky ? ship.rudder * (third ? 0.08 : 0.3) : (Math.sin(ship.bob * 0.9) * 0.018 + ship.rudder * 0.025) * (third ? 0.3 : 1);
+  const roll = reduceMotion ? 0 : (g.sky ? ship.rudder * (third ? 0.08 : 0.3) : (Math.sin(ship.bob * 0.9) * 0.018 + ship.rudder * 0.025) * (third ? 0.3 : 1)) + (g.rollKick || 0) * (third ? 0.4 : 1);
 
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.save();
@@ -442,6 +451,7 @@ function drawScene() {
   if (!NET.watch) { for (const d of g.enemies.drowned) add('drowned', d); for (const k of g.enemies.knocks) add('knock', k); }
   if (g.maren.active) add('maren', g.maren);
   items.sort((a, b) => b.c.f - a.c.f);
+  drawPlimRing();
   for (const it of items) {
     // in the rooms, anything behind a wall is hidden by it, column by column
     const clip = g.backrooms;
@@ -492,9 +502,9 @@ function drawScene() {
   if (g.sky) drawSquall();
   drawVerity();
 
-  if (g.glare > 0.01) { ctx.fillStyle = `rgba(255,238,200,${g.glare * 0.55})`; ctx.fillRect(0, 0, W, H); }
+  if (g.glare > 0.01) { ctx.fillStyle = `rgba(255,238,200,${g.glare * 0.55 * flashK()})`; ctx.fillRect(0, 0, W, H); }
   if (ship.inv > 1.1) { ctx.fillStyle = `rgba(228,108,79,${(ship.inv - 1.1) * 0.8})`; ctx.fillRect(0, 0, W, H); }
-  if (g.bellFlash > 0) { ctx.fillStyle = `rgba(236,228,207,${g.bellFlash * 0.25})`; ctx.fillRect(0, 0, W, H); }
+  if (g.bellFlash > 0) { ctx.fillStyle = `rgba(236,228,207,${g.bellFlash * 0.25 * flashK()})`; ctx.fillRect(0, 0, W, H); }
   drawFoeOverlays();
   drawDread();
   drawAtmosphere();
@@ -556,67 +566,110 @@ function drawDeck() {
   drawCannonDeck(tipY, DW, skin);
   updateSpray(tipY);
   const lx = cx + Math.min(W * 0.28, 220), ly = H * 0.8;
-  const flick = g.maren.stage >= 3 && !reduceMotion ? (Math.random() < 0.15 ? 0.4 : 1) : 1;
-  drawLantern(lx, ly - 8, skin.lantern, flick);
+  const lf = lanternFlick();
+  drawLantern(lx, ly - 8, skin.lantern, lf.flick, lf.lean);
+}
+// the deck lantern flickers when she's close, and gutters, leaning towards her, just before she steps nearer
+function lanternFlick() {
+  let flick = g.maren.stage >= 3 && !reduceMotion ? (Math.random() < 0.15 ? 0.4 : 1) : 1, lean = 0;
+  if (g.marenTell > 0 && !NET.watch) {
+    flick = reduceMotion ? 0.5 : rand(0.35, 1);
+    lean = clamp(angDiff(bearingOf(g.maren.x - ship.x, g.maren.y - ship.y), ship.h) / (fov / 2), -1, 1) * 4;
+  }
+  return { flick, lean };
 }
 
-// red closing in at the edges as she comes nearer
+// red closing in at the edges as she comes nearer (and a pulse of it as she's about to step closer)
 function drawDread() {
   const st = g.maren.active ? g.maren.stage : 0;
-  if (st < 2) return;
-  const a = [0, 0, 0.22, 0.38, 0.58][st] * (0.85 + 0.15 * Math.sin(g.t * (st * 2.2)));
+  const tell = g.marenTell > 0 && !NET.watch ? 0.12 * g.marenTell / 1.5 * (reduceMotion ? 1 : 0.6 + 0.4 * Math.sin(g.t * 9)) : 0;
+  if (st < 2 && tell <= 0) return;
+  const a = [0, 0, 0.22, 0.38, 0.58][st] * (0.85 + 0.15 * Math.sin(g.t * (st * 2.2))) + tell;
   const gr = ctx.createRadialGradient(cx, H * 0.5, Math.min(W, H) * 0.25, cx, H * 0.5, Math.max(W, H) * 0.75);
   gr.addColorStop(0, 'rgba(60,0,0,0)'); gr.addColorStop(1, `rgba(60,0,0,${a})`);
   ctx.fillStyle = gr; ctx.fillRect(0, 0, W, H);
 }
 
+// where the HUD sits on screen, measured now and then (its crew list and crate count change size)
+const HUD_BOX = { t: -99, bottom: 0, left: 0, right: 0 };
+function hudBox() {
+  const now = performance.now();
+  if (now - HUD_BOX.t < 500) return HUD_BOX;
+  HUD_BOX.t = now;
+  const hud = $('hud'), top = cv.getBoundingClientRect().top;
+  if (hud && !hud.hidden) {
+    const cols = hud.children;
+    HUD_BOX.bottom = hud.getBoundingClientRect().bottom - top;
+    HUD_BOX.left = cols[0] ? cols[0].getBoundingClientRect().right : 0;
+    HUD_BOX.right = cols[1] ? cols[1].getBoundingClientRect().left : W;
+  }
+  return HUD_BOX;
+}
 function drawCompass() {
-  if (W <= 520) return;   // no compass strip on phones
-  const w = Math.min(W - 32, 560), x0 = cx - w / 2, y = W <= 520 ? 116 : 72, h = 26, span = 2.2;
-  const xb = b => cx + (angDiff(b, ship.h) / span) * (w / 2);
+  // phones get a slimmer strip right under the HUD, with only what matters most on it
+  const phone = W <= 520;
+  if (phone && NET.watch) return;   // the spectator bar sits there
+  let w = Math.min(W - 32, 560), x0 = cx - w / 2, y = 72, h = 26;
+  const hb0 = hudBox();
+  if (phone) { w = W - 32; x0 = 16; y = Math.round(hb0.bottom + 8); h = 20; }
+  else if (H < 450 || x0 < hb0.left + 12 || x0 + w > hb0.right - 12) {
+    // a short landscape screen: fit it in between the HUD's two columns, up at the top
+    const a = hb0.left + 12, b = hb0.right - 12;
+    w = Math.min(560, b - a); if (w < 200) return;
+    x0 = (a + b) / 2 - w / 2; y = 16;
+  }
+  const mid = x0 + w / 2, span = 2.2, k = h / 26;
+  const xb = b => mid + (angDiff(b, ship.h) / span) * (w / 2);
   const inStrip = x => x > x0 + 3 && x < x0 + w - 3;
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.fillStyle = 'rgba(6,10,20,0.66)'; ctx.fillRect(x0, y, w, h);
   ctx.strokeStyle = 'rgba(236,228,207,0.18)'; ctx.lineWidth = 1; ctx.strokeRect(x0 + 0.5, y + 0.5, w - 1, h - 1);
-  ctx.fillStyle = 'rgba(236,228,207,0.06)'; ctx.fillRect(cx - (fov / 2 / span) * (w / 2), y, (fov / span) * w / 2, h);
-  ctx.fillStyle = 'rgba(255,216,138,0.9)'; ctx.fillRect(cx - 0.75, y, 1.5, 5);
+  ctx.fillStyle = 'rgba(236,228,207,0.06)'; ctx.fillRect(mid - (fov / 2 / span) * (w / 2), y, (fov / span) * w / 2, h);
+  ctx.fillStyle = 'rgba(255,216,138,0.9)'; ctx.fillRect(mid - 0.75, y, 1.5, 5 * k);
   ctx.font = '700 10px "Courier Prime", monospace'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   const names = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
   for (let i = 0; i < 32; i++) {
+    if (phone && i % 8) continue;   // just N, E, S and W
     const xx = xb(i / 32 * Math.PI * 2); if (!inStrip(xx)) continue;
     const cardinal = i % 4 === 0;
-    if (cardinal) { ctx.fillStyle = 'rgba(143,152,171,0.95)'; ctx.fillText(names[i / 4], xx, y + h - 7); }
+    if (cardinal) { ctx.fillStyle = 'rgba(143,152,171,0.95)'; ctx.fillText(names[i / 4], xx, y + h - 7 * k); }
     ctx.fillStyle = 'rgba(143,152,171,0.5)'; ctx.fillRect(xx - 0.5, y, 1, cardinal ? 4 : 2.5);
   }
   const edgeArrow = (b, col) => {
-    const left = angDiff(b, ship.h) < 0, ex = left ? x0 + 8 : x0 + w - 8;
+    const left = angDiff(b, ship.h) < 0, ex = left ? x0 + 8 : x0 + w - 8, ym = y + h / 2 - 3 * k;
     ctx.fillStyle = col;
-    ctx.beginPath(); ctx.moveTo(ex + (left ? -4 : 4), y + 10); ctx.lineTo(ex + (left ? 3 : -3), y + 5); ctx.lineTo(ex + (left ? 3 : -3), y + 15); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(ex + (left ? -4 : 4), ym); ctx.lineTo(ex + (left ? 3 : -3), ym - 5 * k); ctx.lineTo(ex + (left ? 3 : -3), ym + 5 * k); ctx.closePath(); ctx.fill();
   };
   const HB = g.backrooms ? g.exit : SK.HARBOUR;
   const hb = bearingOf(HB.x - ship.x, HB.y - ship.y), hx = xb(hb);
-  if (inStrip(hx) && g.backrooms) { ctx.fillStyle = '#3dff7a'; ctx.fillRect(hx - 5, y + 7, 10, 6); }
-  else if (inStrip(hx)) { ctx.fillStyle = '#e46c4f'; ctx.fillRect(hx - 6, y + 7, 4, 6); ctx.fillStyle = '#86cfae'; ctx.fillRect(hx + 2, y + 7, 4, 6); }
+  if (inStrip(hx) && g.backrooms) { ctx.fillStyle = '#3dff7a'; ctx.fillRect(hx - 5, y + 7 * k, 10, 6 * k); }
+  else if (inStrip(hx)) { ctx.fillStyle = '#e46c4f'; ctx.fillRect(hx - 6, y + 7 * k, 4, 6 * k); ctx.fillStyle = '#86cfae'; ctx.fillRect(hx + 2, y + 7 * k, 4, 6 * k); }
   else edgeArrow(hb, '#86cfae');
-  const pb = bearingOf(g.plim.x - ship.x, g.plim.y - ship.y), px = xb(pb);
+  const pb = bearingOf(g.plim.x - ship.x, g.plim.y - ship.y), px = xb(pb), py = y + 18 * k;
   if (inStrip(px)) {
     ctx.fillStyle = '#5fd3ff';
-    ctx.beginPath(); ctx.arc(px, y + 18, 3, 0, 6.28); ctx.fill();
-    if (Math.hypot(g.plim.x - ship.x, g.plim.y - ship.y) < SK.PLIMSOLL_GUARD) { ctx.strokeStyle = 'rgba(95,211,255,0.7)'; ctx.beginPath(); ctx.arc(px, y + 18, 6, 0, 6.28); ctx.stroke(); }
+    ctx.beginPath(); ctx.arc(px, py, 3, 0, 6.28); ctx.fill();
+    // his ring: filled while he's keeping her off you, outlined while you're nearly close enough
+    if (g.maren.active) {
+      const d = Math.hypot(g.plim.x - ship.x, g.plim.y - ship.y), R = plimsollGuardRange();
+      if (d < R) { ctx.fillStyle = 'rgba(95,211,255,0.35)'; ctx.beginPath(); ctx.arc(px, py, 6, 0, 6.28); ctx.fill(); ctx.strokeStyle = 'rgba(95,211,255,0.9)'; ctx.stroke(); }
+      else if (d < R * 1.5) { ctx.strokeStyle = 'rgba(95,211,255,0.6)'; ctx.beginPath(); ctx.arc(px, py, 6, 0, 6.28); ctx.stroke(); }
+    }
   } else edgeArrow(pb, '#5fd3ff');
   for (const q of g.pickups || []) {
     if (q.taken || Math.hypot(q.x - ship.x, q.y - ship.y) > 600) continue;
     const qx = xb(bearingOf(q.x - ship.x, q.y - ship.y)); if (!inStrip(qx)) continue;
-    ctx.fillStyle = '#ffd88a'; ctx.beginPath(); ctx.moveTo(qx, y + 3); ctx.lineTo(qx + 3, y + 6); ctx.lineTo(qx, y + 9); ctx.lineTo(qx - 3, y + 6); ctx.closePath(); ctx.fill();
+    const qy = y + 6 * k;
+    ctx.fillStyle = '#ffd88a'; ctx.beginPath(); ctx.moveTo(qx, qy - 3); ctx.lineTo(qx + 3, qy); ctx.lineTo(qx, qy + 3); ctx.lineTo(qx - 3, qy); ctx.closePath(); ctx.fill();
   }
   if (crewMode) for (const m of matesAtSea()) {
     const mx = xb(bearingOf(m.x - ship.x, m.y - ship.y));
     if (!inStrip(mx) || m.peer === NET.watch) continue;
     ctx.fillStyle = SLOT_COLORS[m.slot] || SLOT_COLORS[1];
-    ctx.fillRect(mx - 2.5, y + 15, 5, 5);
+    ctx.fillRect(mx - 2.5, y + 15 * k, 5, 5);
   }
   const lb = bearingOf(-ship.x, -ship.y), lx = xb(lb);
-  if (inStrip(lx) && !g.backrooms) {
+  if (inStrip(lx) && !g.backrooms && !phone) {
     const f = 1 - Math.min(1, Math.abs(angDiff(g.beam, bearingOf(ship.x, ship.y))) / 0.6);
     ctx.fillStyle = `rgba(255,216,138,${0.5 + 0.5 * f})`;
     ctx.beginPath(); ctx.moveTo(lx, y + 4); ctx.lineTo(lx + 3, y + 14); ctx.lineTo(lx - 3, y + 14); ctx.closePath(); ctx.fill();
@@ -626,58 +679,61 @@ function drawCompass() {
 // ---------- Knock's jumpscare: his face, lunging at the glass ----------
 function drawKnockScare(t) {
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  const T = SK.KNOCK_SCARE_TIME;
-  // the first instant: the scene goes black with an amber flicker
-  ctx.fillStyle = Math.floor(t * 30) % 2 ? '#1a0d02' : '#000';
+  const T = SK.KNOCK_SCARE_TIME, soft = softScares(), wild = !reduceMotion && !soft;
+  // the first instant: the scene goes black with an amber flicker (a steady dark amber when softened)
+  ctx.fillStyle = soft ? '#140a02' : Math.floor(t * 30) % 2 ? '#1a0d02' : '#000';
   ctx.fillRect(0, 0, W, H);
   if (!imgReady(IMG.knock)) return;
   const img = IMG.knock, iw = img.naturalWidth, ih = img.naturalHeight;
   // just his head and grin: the right-hand part of the picture (the bat is on the left), top third
   const fx = iw * 0.42, fw = iw * 0.56, faceH = ih * 0.36;
   const lunge = Math.min(1, t / 0.12);
-  const k = 0.3 + lunge * 0.62 + Math.max(0, t - 0.12) * 0.18;
+  let k = 0.3 + lunge * 0.62 + Math.max(0, t - 0.12) * 0.18;
+  if (soft) k = Math.min(0.6, k);
   const dw = Math.max(W, H * 0.9) * k, dh = dw * faceH / fw;
-  const shake = reduceMotion ? 0 : 40 * (1 - t / T) + 10;
+  const shake = wild ? 40 * (1 - t / T) + 10 : 0;
   const x = cx - dw / 2 + rand(-shake, shake), y = H * 0.42 - dh / 2 + rand(-shake, shake);
-  const strips = reduceMotion ? 1 : 14;
+  const strips = wild ? 14 : 1;
   for (let i = 0; i < strips; i++) {
-    const off = !reduceMotion && Math.random() < 0.4 ? (Math.random() - 0.5) * dw * 0.12 : 0;
+    const off = wild && Math.random() < 0.4 ? (Math.random() - 0.5) * dw * 0.12 : 0;
     ctx.drawImage(img, fx, faceH * i / strips, fw, faceH / strips, x + off, y + dh * i / strips, dw, dh / strips + 0.6);
   }
   // he blinks out and back, nearer each time
-  if (!reduceMotion && t > 0.3 && Math.random() < 0.12) { ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H); }
+  if (wild && t > 0.3 && Math.random() < 0.12) { ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H); }
   ctx.fillStyle = `rgba(150,70,0,${0.18 + 0.15 * Math.sin(t * 50)})`;
   ctx.fillRect(0, 0, W, H);
-  if (!reduceMotion && Math.random() < 0.15) {
+  if (wild && Math.random() < 0.15) {
     ctx.globalCompositeOperation = 'difference';
     ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, W, H);
     ctx.globalCompositeOperation = 'source-over';
   }
   // the blow lands: a crack of white
-  if (t > 0.62 && t < 0.72) { ctx.fillStyle = 'rgba(255,240,210,0.7)'; ctx.fillRect(0, 0, W, H); }
+  if (t > 0.62 && t < 0.72) { ctx.fillStyle = `rgba(255,240,210,${0.7 * flashK() * (soft ? 0.5 : 1)})`; ctx.fillRect(0, 0, W, H); }
 }
 
 // ---------- the jumpscare ----------
 function drawScare(t) {
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const soft = softScares(), wild = !reduceMotion && !soft;
   const flick = Math.floor(t * 28) % 2;
-  ctx.fillStyle = flick ? '#160000' : '#000';
+  ctx.fillStyle = soft ? '#120000' : flick ? '#160000' : '#000';
   ctx.fillRect(0, 0, W, H);
   if (!imgReady(IMG.maren)) return;
   const grow = Math.min(1, t / 0.18);
-  const k = 0.55 + grow * 0.85 + Math.max(0, t - 0.18) * 0.35;
+  let k = 0.55 + grow * 0.85 + Math.max(0, t - 0.18) * 0.35;
+  if (soft) k = Math.min(0.6, k);
   const h = H * k, w = h * SK.MAREN_ASPECT;
-  const shake = reduceMotion ? 0 : 34 * (1 - t / SK.SCARE_TIME) + 8;
+  const shake = wild ? 34 * (1 - t / SK.SCARE_TIME) + 8 : 0;
   const x = cx - w / 2 + rand(-shake, shake), y = H * 0.56 - h * 0.5 + rand(-shake, shake);
-  drawGlitch(IMG.maren, x, y, w, h, 0.7);
-  if (!reduceMotion && t < SK.SCARE_TIME - 0.4) {
+  drawGlitch(IMG.maren, x, y, w, h, soft ? 0 : 0.7);
+  if (wild && t < SK.SCARE_TIME - 0.4) {
     ctx.globalAlpha = 0.35;
     drawGlitch(IMG.maren, x + rand(-30, 30), y + rand(-20, 20), w * 1.08, h * 1.08, 1);
     ctx.globalAlpha = 1;
   }
   ctx.fillStyle = `rgba(170,0,0,${0.22 + 0.18 * Math.sin(t * 47)})`;
   ctx.fillRect(0, 0, W, H);
-  if (!reduceMotion && Math.random() < 0.18) {
+  if (wild && Math.random() < 0.18) {
     ctx.globalCompositeOperation = 'difference';
     ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, W, H);
     ctx.globalCompositeOperation = 'source-over';

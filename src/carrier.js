@@ -263,8 +263,8 @@ function drawCarrierDeck(boat, skin) {
   }
   updateSpray(tipY);
   const lx = cx + Math.min(W * 0.28, 220), ly = H * 0.8;
-  const flick = g.maren.stage >= 3 && !reduceMotion ? (Math.random() < 0.15 ? 0.4 : 1) : 1;
-  drawLantern(lx, ly - 8, skin.lantern, flick);
+  const lf = lanternFlick();
+  drawLantern(lx, ly - 8, skin.lantern, lf.flick, lf.lean);
 }
 // a little grey jet seen from behind, on the deck
 function drawDeckJet(x, y, s, a) {

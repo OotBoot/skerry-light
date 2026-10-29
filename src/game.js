@@ -7,6 +7,13 @@ let best = 0;
 try { best = parseInt(localStorage.getItem('skerry-helm-best') || '0', 10) || 0; } catch (e) {}
 const keys = {}, touches = new Map();
 let sailHold = 0;   // the on-screen sail buttons
+let paused = false;  // solo only: a crew never stops for one sailor
+
+// a new sailor: never made harbour on this device. Their first voyages start gentler.
+function firstTimer() {
+  if (best > 0) return false;
+  try { return !localStorage.getItem('skerry-harboured'); } catch (e) { return true; }
+}
 
 function newVoyage(n, attract, seed, slot) {
   const v = makeVoyage(n, attract, seed);
@@ -26,13 +33,17 @@ function newVoyage(n, attract, seed, slot) {
     ],
     parts: [], glare: 0, shake: 0, log: [], bell: 0, bellFlash: 0, wasLit: false, scareT: 0,
     flares: [], flareCd: 0, repairT: 0, shoutT: 0, knockScare: 0, knockKill: false,
-    stats: { hits: 0, bells: 0, flares: 0, patched: 0, eaten: 0 },
+    stats: { hits: 0, bells: 0, flares: 0, patched: 0, eaten: 0, shaves: 0 },
+    marenLog: [], marenTell: 0, lastHit: null, callT: 0, rollKick: 0,
   };
   g.enemies = newEnemies(v.lures);
-  // this voyage's three enemies from the pool
+  // this voyage's enemies from the pool (fewer and gentler for a new sailor's first voyages)
   // the rare seas (the Nether, the Wine-Dark Sea, the Places In Between) have their own three and nothing else
-  g.trio = attract ? [] : v.special ? SPECIAL_TRIOS[v.special].slice() : pickTrio(seed);
-  g.foes = newFoes(g.trio); g.hazards = []; g.flash = 0; g.splat = 0; g.spinT = 0; g.capT = 0; resetMods();
+  g.trio = attract ? [] : v.special ? SPECIAL_TRIOS[v.special].slice() : pickTrio(seed, n);
+  // a new sailor's very first voyage: a few quiet seconds before anything turns up, Maren included
+  const easy = !attract && seed == null && n === 1 && firstTimer() && !v.special;
+  if (easy) g.marenClock = -6;
+  g.foes = newFoes(g.trio, easy); g.hazards = []; g.flash = 0; g.splat = 0; g.spinT = 0; g.capT = 0; resetMods();
   g.plim = newPlimsoll(v.path);
   g.maren = newMaren(!attract && !v.special, v.wrecks.find(w => w.name === 'Gannet'));
   g.cannon = newCannon();
@@ -65,8 +76,10 @@ function burst(x, y, colors, n, spd, up) {
   }
 }
 
-function hit(nx, ny, what) {
+// `struck`: she ran into something (a rock, a wreck, the pier); otherwise something hit her
+function hit(nx, ny, what, struck) {
   if (ship.inv > 0 || state !== 'play') return;
+  g.lastHit = what;
   ship.inv = 1.4; ship.v = 1.5;
   ship.h += angDiff(bearingOf(nx, ny), ship.h) * 0.6;
   g.shake = 0.5;
@@ -75,8 +88,8 @@ function hit(nx, ny, what) {
   ship.hull--; run.hits++; g.stats.hits++;
   if (typeof padRumble === 'function') padRumble(0.8, 0.5, 260);
   renderHud();
-  if (ship.hull <= 0) { addLog('She struck ' + what + ' and is going down.', 'w'); endRun('sunk'); }
-  else addLog('Struck ' + what + '. ' + (ship.hull === 1 ? 'Taking water fast.' : 'Hull still holding.'), 'w');
+  if (ship.hull <= 0) { addLog((struck ? 'She struck ' + what + ' and is' : 'Hit by ' + what + '. She is') + ' going down.', 'w'); endRun('sunk'); }
+  else addLog((struck ? 'Struck ' : 'Hit by ') + what + '. ' + (ship.hull === 1 ? 'Taking water fast.' : 'Hull still holding.'), 'w');
 }
 
 function wrapPi(a) { return ((a + Math.PI) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI) - Math.PI; }
@@ -171,7 +184,7 @@ function resolveContact(c, what, soft) {
   if (closing <= 0) return false;
   // a hit needs both real speed into it and a real angle (more than about 25°); shallower is a scrape
   if (closing > SK.IMPACT && closing > ship.v * 0.5 && !soft) {
-    hit(c.nx, c.ny, what);
+    hit(c.nx, c.ny, what, true);
     return true;
   }
   // glancing: lose the speed going into it, keep the speed along it, and swing her parallel
@@ -191,6 +204,7 @@ function checkCollisions() {
     if (Math.abs(r.x - ship.x) > r.r + 40 || Math.abs(r.y - ship.y) > r.r + 40) continue;
     if (g.sky && Math.abs(ship.z - r.z) > r.rz + 1.5) continue;   // above or below this cloud
     if ((c = hullContact(pts, r.x, r.y, r.r)) && resolveContact(c, g.sky ? 'a storm cloud' : 'a skerry')) break;
+    if (!c) closeShave(pts, r);
   }
   for (const o of g.wrecks) {
     if (Math.hypot(o.x - ship.x, o.y - ship.y) > o.r + 40) continue;
@@ -218,6 +232,21 @@ function checkCollisions() {
   } else if (state === 'play' && Math.hypot(ship.x - g.exit.x, ship.y - g.exit.y) < g.exit.r) { arrive(); return true; }
   return ship.hull !== hull0 || state !== 'play';
 }
+// shaving past a rock at speed with under 2.5 m to spare: a creak, a burst of spray, a lurch, and it counts
+function closeShave(pts, r) {
+  if (ship.v <= 15 || g.t - (r.shaveT || -99) < 3) return;
+  let clear = Infinity, near = pts[0];
+  for (const p of pts) { const d = Math.hypot(p.x - r.x, p.y - r.y) - r.r - p.w; if (d < clear) { clear = d; near = p; } }
+  if (!(clear > 0 && clear < 2.5)) return;
+  r.shaveT = g.t;
+  g.stats.shaves++; run.shaves = (run.shaves || 0) + 1;
+  sfxCreak();
+  const a = bearingOf(near.x - r.x, near.y - r.y);
+  burst(r.x + Math.sin(a) * r.r, r.y + Math.cos(a) * r.r, ['#ece4cf', '#c8d6e8', '#ffffff'], 22, 7, 8);
+  // she heels away from the rock
+  if (!reduceMotion) g.rollKick = (angDiff(bearingOf(r.x - ship.x, r.y - ship.y), ship.h) > 0 ? -1 : 1) * 0.06;
+}
+
 // crewmates' ships bump apart rather than through each other, and nobody takes damage for it
 function bumpMates() {
   if (!crewMode || typeof matesAtSea !== 'function') return;
@@ -239,7 +268,19 @@ function update(dt) {
   advanceBeam(dt);
   // the lamp swings round quicker than it used to, but Maren keeps to the old pace: one stage nearer
   // every marenPeriod seconds (what a full turn of the beam used to take)
+  const clock0 = g.marenClock;
   g.marenClock += dt;
+  // a moment before she steps nearer: a swell from her side, the lantern gutters, red at the edges
+  const tellAt = g.marenPeriod - 1.5;
+  if (clock0 < tellAt && g.marenClock >= tellAt && g.maren.active && state === 'play' && !g.attract && !marenHeld()) {
+    g.marenTell = 1.5;
+    const at = bearingOf(g.maren.x - ship.x, g.maren.y - ship.y);
+    sfxSwell(clamp(angDiff(at, ship.h) / (fov / 2), -1, 1));
+    if (soundOff()) callout('A swell: she\u2019s about to step nearer', { bearing: at });
+  }
+  if (g.marenTell > 0) g.marenTell = Math.max(0, g.marenTell - dt);
+  if (g.rollKick) g.rollKick *= Math.max(0, 1 - dt * 4);
+  if (g.callT > 0) { g.callT -= dt; if (g.callT <= 0) hideCallout(); else calloutChevron(); }
   if (g.marenClock >= g.marenPeriod) { g.marenClock -= g.marenPeriod; marenTurn(); if (g.backrooms && !g.attract) { g.lightsOut = 0.7; sfxLightsOut(); } }
   if (state === 'scare') return;
 
@@ -272,7 +313,8 @@ function update(dt) {
   }
   ship.h += ship.rudder * 0.55 * turnK * dt * (0.35 + 0.65 * Math.min(1, ship.v / 10));
   // move in short steps so a fast ship can't jump clean over a rock between frames
-  const steps = Math.min(60, Math.max(1, Math.ceil(ship.v * dt / 2)));
+  // (up to 600 steps a frame: this never limits her speed, it only keeps the steps short)
+  const steps = Math.min(600, Math.max(1, Math.ceil(ship.v * dt / 2)));
   for (let i = 0; i < steps; i++) {
     ship.x += Math.sin(ship.h) * ship.v * dt / steps;
     ship.y += Math.cos(ship.h) * ship.v * dt / steps;
@@ -300,6 +342,10 @@ function update(dt) {
   updateCannon(dt);
   carpenter(dt);
   updatePickups();
+  if (!g.attract && state === 'play' && g.pickups && !taught('crate')) {
+    const p = g.pickups.find(q => !q.taken && Math.hypot(q.x - ship.x, q.y - ship.y) < 150);
+    if (p) teach('crate', true, 'A floating crate: sail into it to haul it aboard', { bearing: bearingOf(p.x - ship.x, p.y - ship.y) });
+  }
   sailInCompany(dt);
   for (const f of g.flares) f.t -= dt;
   g.flares = g.flares.filter(f => f.t > 0);
@@ -370,6 +416,105 @@ function updateBellButton() {
   $('bellState').textContent = p >= 1 ? 'Ready' : 'Swinging';
 }
 
+// ---------- the centre call-out ----------
+// One short line in the middle of the screen for the moments that need an answer now. It lasts
+// 2.5 seconds, and only one comes every 3 seconds unless it's urgent (`pri`). `btn` ('bell' or
+// 'flare') pulses that button; `bearing` adds a chevron pointing the way to turn.
+function callout(text, o) {
+  o = o || {};
+  if (!g || g.attract || state !== 'play' || NET.watch) return false;
+  if (!o.pri && g.t - (g.callAt == null ? -99 : g.callAt) < 3) return false;
+  g.callAt = g.t; g.callT = 2.5; g.callB = o.bearing == null ? null : o.bearing;
+  const el = $('callout');
+  $('calloutText').textContent = text;
+  for (const b of ['bellBtn', 'flareBtn']) $(b).classList.toggle('urgent', !!o.btn && b === o.btn + 'Btn');
+  el.hidden = true; void el.offsetWidth; el.hidden = false;   // restart its entrance
+  calloutChevron();
+  return true;
+}
+// the chevron follows the bearing as you turn, and goes once you're facing it
+function calloutChevron() {
+  if (g.callB == null) { $('calloutL').hidden = $('calloutR').hidden = true; return; }
+  const d = angDiff(g.callB, ship.h);
+  $('calloutL').hidden = !(d < -0.2); $('calloutR').hidden = !(d > 0.2);
+}
+function hideCallout() {
+  if (g) g.callT = 0;
+  $('callout').hidden = true;
+  for (const b of ['bellBtn', 'flareBtn']) $(b).classList.remove('urgent');
+}
+// one-time lessons for a new sailor: each is shown once on this device, through the call-out
+let TAUGHT = {};
+try { TAUGHT = JSON.parse(localStorage.getItem('skerry-taught') || '{}') || {}; } catch (e) {}
+const taught = k => !!TAUGHT[k];
+function teach(k, when, text, o) {
+  if (!when || TAUGHT[k] || !g || g.attract || state !== 'play' || NET.watch) return false;
+  if (!callout(text, Object.assign({}, o, { pri: true }))) return false;
+  TAUGHT[k] = 1;
+  try { localStorage.setItem('skerry-taught', JSON.stringify(TAUGHT)); } catch (e) {}
+  return true;
+}
+
+// ---------- quick hails to the crew ----------
+const HAILS = ['Here!', 'Help!', 'Follow me', 'Maren close'];
+function sendHail(i) {
+  if (!crewMode || state !== 'play' || !HAILS[i] || g.shoutT > 0) return;
+  g.shoutT = 3;
+  NET.shouts++; NET.shout = { n: NET.shouts, i };
+  send();
+  sfxHorn(0, 0.3);
+  addLog('You: ' + HAILS[i], 'p');
+}
+
+// ---------- pause and settings ----------
+// Solo voyages pause (Esc, P, Start, or the tab going to the background). A crew never stops for one
+// sailor, so there Esc only opens the settings.
+function pauseGame() {
+  if (paused || state !== 'play' || crewMode || g.attract || g.verityScare > 0 || g.knockScare > 0) return;
+  paused = true;
+  for (const k in keys) keys[k] = false; touches.clear(); sailHold = 0;
+  if (AUD.ctx && AUD.ctx.state === 'running') AUD.ctx.suspend().catch(() => {});
+  $('pauseCard').hidden = false;
+  setTimeout(() => $('resumeBtn').focus({ preventScroll: true }), 30);
+}
+function resumeGame() {
+  if (!paused) return;
+  paused = false;
+  $('pauseCard').hidden = true; $('settingsCard').hidden = true;
+  if (AUD.ctx) AUD.ctx.resume().catch(() => {});
+  cv.focus({ preventScroll: true });
+}
+function openSettings() {
+  $('settingsCrew').hidden = !(crewMode && state === 'play');
+  renderSettings();
+  $('settingsCard').hidden = false;
+  setTimeout(() => $('settingsClose').focus({ preventScroll: true }), 30);
+}
+function closeSettings() {
+  $('settingsCard').hidden = true;
+  if (paused) $('resumeBtn').focus({ preventScroll: true });
+  else if (state === 'play') cv.focus({ preventScroll: true });
+}
+const SETTING_OPTS = {
+  vol: [[0, 'Off'], [0.25, '25%'], [0.5, '50%'], [0.75, '75%'], [1, '100%']],
+  scares: [['full', 'Full'], ['soft', 'Softened']],
+  flashes: [['normal', 'Normal'], ['reduced', 'Reduced']],
+  motion: [['auto', 'Auto'], ['reduce', 'Reduce'], ['full', 'Full']],
+};
+function renderSettings() {
+  for (const key in SETTING_OPTS) {
+    const box = $('set-' + key); if (!box) continue;
+    if (!box.childElementCount) for (const [v, label] of SETTING_OPTS[key]) {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'tool'; b.textContent = label; b.dataset.v = String(v);
+      b.addEventListener('click', () => { SETTINGS[key] = v; saveSettings(); applySettings(); renderSettings(); });
+      box.appendChild(b);
+    }
+    for (const b of box.children) { const on = b.dataset.v === String(SETTINGS[key]); b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on)); }
+  }
+}
+function applySettings() { applyVolume(); refreshMotion(); }
+
 // ---------- flow ----------
 function hideCards() { for (const id of ['titleCard', 'portCard', 'endCard']) $(id).hidden = true; }
 
@@ -385,6 +530,7 @@ function startRun() {
 function beginVoyage(n) {
   state = 'play';
   newVoyage(n, false);
+  hideCallout(); showHails();
   bellShown = -1; flareShown = -1;
   hideCards();
   $('hud').hidden = false; $('logbox').hidden = false;
@@ -404,6 +550,7 @@ function beginCrewVoyage(L, slot) {
   newVoyage(L.voy, false, L.seed, slot);
   g.launchAt = L.at; g.launchId = L.id;
   bellShown = -1; flareShown = -1;
+  hideCallout(); showHails(); $('crewRecap').hidden = true;
   stopSpectating();
   hideCards(); $('crewCard').hidden = true;
   $('hud').hidden = false; $('logbox').hidden = false;
@@ -415,6 +562,9 @@ function beginCrewVoyage(L, slot) {
   addLog(trioLine(), 'w');
   cv.focus({ preventScroll: true });
 }
+
+// the hail buttons, for phones in a crew
+function showHails() { const r = $('hailRow'); if (r) r.hidden = !crewMode; }
 
 // in the sky the sail buttons become the stick
 function setFlightControls() {
@@ -441,6 +591,8 @@ for (const b of document.querySelectorAll('.menuBtn')) b.addEventListener('click
 
 function toTitle() {
   state = 'title';
+  paused = false; $('pauseCard').hidden = true; $('settingsCard').hidden = true;
+  if (g) hideCallout();
   hideCards(); $('crewCard').hidden = true;
   $('hud').hidden = true; $('logbox').hidden = true; $('biomeBanner').hidden = true;
   newVoyage(1, true);
@@ -450,6 +602,9 @@ function toTitle() {
 }
 
 function arrive() {
+  hideCallout();
+  // once you've made harbour you're no longer new here
+  try { localStorage.setItem('skerry-harboured', '1'); } catch (e) {}
   const wasState = state; state = 'port';   // before the reward, so the menus' boat picker isn't greyed out as 'sailing'
   grantCrate(harbourReward() + g.found * 2, true);
   state = wasState;
@@ -499,27 +654,64 @@ function startScare() {
 }
 
 function hideBanner() { const b = $('biomeBanner'); if (b) b.hidden = true; clearTimeout(showBiomeBanner.t); }
+// the end card's recap: what got you, one tip against it, and how near Maren came over the voyage
+function recapLine(how) {
+  const what = how === 'taken' ? 'Maren' : how === 'knock' ? 'Knock' : how === 'verity' ? 'Verity' : g.lastHit || 'the skerries';
+  return { what, tip: foeTip(how, g.lastHit) };
+}
+function fillRecap(how) {
+  const box = $('endRecap'), r = recapLine(how);
+  $('recapWhat').textContent = r.what.charAt(0).toUpperCase() + r.what.slice(1);
+  $('recapTip').textContent = r.tip;
+  const dots = $('recapDots'); dots.textContent = '';
+  // her last dozen moves, oldest first: each dot is how near she stood afterwards
+  const log = g.maren.active ? g.marenLog.slice(-12) : [];
+  const words = { turn: 'came nearer', held: 'held back', bell: 'driven back by the bell', flash: 'drawn nearer by a flash' };
+  for (const e of log) {
+    const i = document.createElement('i');
+    i.className = 'st' + e.stage + (e.why === 'bell' ? ' bell' : e.why === 'held' ? ' held' : '');
+    i.title = Math.floor(e.t / 60) + ':' + String(Math.floor(e.t % 60)).padStart(2, '0') + ' ' + words[e.why] + ' (stage ' + e.stage + ')';
+    dots.appendChild(i);
+  }
+  $('recapDotsRow').hidden = !log.length;
+  box.hidden = false;
+}
+// the far seas have their own way of losing you
+const SEA_END = {
+  nether: ['Lost in the Fire', 'The lava had her. Somewhere under the red roof a ring of black stone is still humming.'],
+  odyssey: ['Lost on the Wine-Dark Sea', 'She went down under the golden moon, and the singing on the rock went on without her.'],
+  between: ['Lost In Between', 'The dusk closed over her like water. The doors are still standing there, one of them lit.'],
+  sky: ['Lost in the Clouds', 'She went down through the cloud floor and was never found. On clear nights you can still hear an engine up there.'],
+};
 function endRun(how) {
   hideBanner();
+  hideCallout();
   state = 'over';
   stopVerity();
   grantCrate();
   audioTick(0, 0);
   const taken = how === 'taken', knocked = how === 'knock' || how === 'verity', verity = how === 'verity';
   if (crewMode) {
+    const r = recapLine(how), cr = $('crewRecap');
+    cr.textContent = 'What got you: ' + r.what + '. ' + r.tip;
+    cr.hidden = false;
     myStatus(taken ? 'taken' : 'sunk');
     setTimeout(() => { $('hud').hidden = true; $('logbox').hidden = true; if (crewMode && state === 'over') showCrewCard(); }, (taken || knocked) ? 0 : 900);
     return;
   }
   $('endEyebrow').textContent = 'Voyage ' + g.n + (taken ? ' · taken' : ' · lost');
-  $('endTitle').textContent = taken ? 'Maren Came Aboard' : verity ? 'Verity Helped' : knocked ? 'Knocked Under' : 'Lost on the Skerries';
+  const sea = !g.backrooms && SEA_END[g.biome];
+  $('endTitle').textContent = taken ? 'Maren Came Aboard' : verity ? 'Verity Helped' : knocked ? 'Knocked Under' : g.backrooms ? 'Lost in the Rooms' : sea ? sea[0] : 'Lost on the Skerries';
   $('endText').textContent = taken
     ? 'She stood at the bow, and then she was on the deck. The ' + (myBoat() ? myBoat().name.toLowerCase() : 'brig') + ' was found at dawn drifting off the Gannet, with her lantern still lit and nobody aboard.'
     : verity ? 'He only wanted to help. The ship was found at dawn with nobody aboard and a wide, yellow smile scratched into the deck.'
     : knocked ? 'Three knocks on the hull, and the fourth came straight through the planks. They say the Gannet\u2019s figurehead is still smiling.'
+    : sea ? sea[1] + (run.voyages ? ' You had brought her in ' + run.voyages + (run.voyages === 1 ? ' time.' : ' times.') : '')
+    : g.backrooms ? 'She went down between the yellow walls, a long way from any sea. The tubes are still humming.' + (run.voyages ? ' You had brought her in ' + run.voyages + (run.voyages === 1 ? ' time.' : ' times.') : '')
     : (run.voyages === 0 ? 'She went down before you sighted the pier lamps. The skerries keep their reputation.' :
       'You brought her in ' + run.voyages + (run.voyages === 1 ? ' time' : ' times') + ' before the rocks had the last word.');
-  $('sVoy').textContent = run.voyages; $('sHits').textContent = run.hits; $('sBest').textContent = best;
+  $('sVoy').textContent = run.voyages; $('sHits').textContent = run.hits; $('sBest').textContent = best; $('sShaves').textContent = run.shaves || 0;
+  fillRecap(how);
   setTimeout(() => {
     $('hud').hidden = true; $('logbox').hidden = true;
     $('endCard').hidden = false; $('againBtn').focus();
@@ -546,6 +738,17 @@ const keyName = e => e.key.length === 1 ? e.key.toLowerCase() : e.key;
 addEventListener('keydown', e => {
   if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
   const k = keyName(e);
+  // Esc closes the settings, then resumes; in play it pauses (solo) or opens the settings (crew)
+  if (k === 'Escape' || (k === 'p' && state === 'play')) {
+    if (e.repeat) return;
+    if (!$('settingsCard').hidden) closeSettings();
+    else if (paused) resumeGame();
+    else if (state === 'play' && !(g.verityScare > 0 || g.knockScare > 0)) { if (crewMode) { if (k === 'Escape') openSettings(); } else pauseGame(); }
+    return;
+  }
+  // while paused or in the settings, the game keys do nothing (Space and Enter work the buttons)
+  if (paused || !$('settingsCard').hidden) return;
+  if (crewMode && state === 'play' && k >= '1' && k <= '4') { if (!e.repeat) sendHail(+k - 1); return; }
   if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'a', 'd', 'w', 's'].includes(k)) {
     keys[k] = true; if (state === 'play') e.preventDefault();
   } else if ((k === ' ' || k === 'b') && state === 'play') {
@@ -562,6 +765,8 @@ addEventListener('keydown', e => {
 });
 addEventListener('keyup', e => { keys[keyName(e)] = false; });
 addEventListener('blur', () => { for (const k in keys) keys[k] = false; touches.clear(); sailHold = 0; });
+// the tab going into the background pauses a solo voyage
+document.addEventListener('visibilitychange', () => { if (document.hidden) pauseGame(); });
 
 function toggleSound() {
   setMuted(!AUD.muted);
@@ -570,6 +775,12 @@ function toggleSound() {
 }
 
 $('startBtn').addEventListener('click', startRun);
+$('resumeBtn').addEventListener('click', resumeGame);
+$('pauseSettings').addEventListener('click', openSettings);
+$('pauseMenu').addEventListener('click', () => { if (paused) { resumeGame(); state = 'over'; toTitle(); } });
+$('settingsClose').addEventListener('click', closeSettings);
+$('titleSettings').addEventListener('click', openSettings);
+for (const b of document.querySelectorAll('#hailRow button')) b.addEventListener('click', e => { sendHail(+b.dataset.i); e.currentTarget.blur(); cv.focus({ preventScroll: true }); });
 $('viewBtn').addEventListener('click', e => { toggleView(); e.currentTarget.blur(); cv.focus({ preventScroll: true }); });
 setThirdPerson(VIEW.third);
 $('nextBtn').addEventListener('click', () => beginVoyage(g.n + 1));

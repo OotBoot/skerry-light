@@ -15,6 +15,7 @@
   <canvas id="cv" tabindex="0" aria-label="View from the deck of a ship at night, with a lighthouse beam sweeping over the sea"></canvas>
 
   <div class="biomebanner" id="biomeBanner" aria-live="polite" hidden><span class="bb-name" id="bbName"></span><span class="bb-sub" id="bbSub"></span></div>
+  <div id="callout" class="callout" role="alert" hidden><span class="co-chev" id="calloutL" aria-hidden="true">‹</span><span id="calloutText"></span><span class="co-chev" id="calloutR" aria-hidden="true">›</span></div>
   <div class="hud" id="hud" hidden>
     <div class="col">
       <span class="label">Voyage</span>
@@ -36,12 +37,18 @@
   <div class="logbox" id="logbox" hidden>
     <ul id="log" aria-live="polite"></ul>
     <div class="tools">
-      <span id="hint">← → steer · ↑ ↓ sail · Space bell · F flare · V view</span>
+      <span id="hint">← → steer · ↑ ↓ sail · Space bell · F flare · V view · Esc pause</span>
+      <div class="toolrow shouts" id="hailRow" role="group" aria-label="Hail your crew" hidden>
+        <button class="tool" type="button" data-i="0">Here!</button>
+        <button class="tool" type="button" data-i="1">Help!</button>
+        <button class="tool" type="button" data-i="2">Follow me</button>
+        <button class="tool" type="button" data-i="3">Maren close</button>
+      </div>
       <div class="toolrow">
         <button class="tool" id="viewBtn" type="button" aria-pressed="false">3rd person</button>
-        <button class="tool meter" id="jetBtn" type="button" hidden><b>Launch jet</b><small>J · <span id="jetState">Ready</span></small></button>
-        <button class="tool meter" id="flareBtn" type="button"><b>Fire a flare</b><small>F · <span id="flareState">Ready</span></small></button>
-        <button class="tool meter" id="bellBtn" type="button"><b>Ring the bell</b><small>Space · <span id="bellState">Ready</span></small></button>
+        <button class="tool meter" id="jetBtn" type="button" hidden><b>Launch jet</b><small><span class="key">J · </span><span id="jetState">Ready</span></small></button>
+        <button class="tool meter" id="flareBtn" type="button"><b>Fire a flare</b><small><span class="key">F · </span><span id="flareState">Ready</span></small></button>
+        <button class="tool meter" id="bellBtn" type="button"><b>Ring the bell</b><small><span class="key">Space · </span><span id="bellState">Ready</span></small></button>
       </div>
     </div>
   </div>
@@ -71,6 +78,7 @@
         <button class="tool crateOpenBtn" type="button">Crates</button>
         <button class="tool crateAllBtn" type="button" hidden>Open all</button>
         <button class="tool backupBtn" type="button" title="Back up your crates and cosmetics">Back up save</button>
+        <button class="tool" id="titleSettings" type="button">Settings</button>
       </div>
       <section class="together" id="together" aria-labelledby="togetherHead">
         <h2 id="togetherHead">Sail together · up to 8 ships</h2>
@@ -90,20 +98,22 @@
         <p>She still stands on the water when the lamp turns, nearer every turn, and she follows any ship she has chosen. The Gannet's drowned crew swim with her, and her figurehead, Knock, walks the water with a belaying pin. The only thing Maren will not come near is <span class="plim">Plimsoll</span>, the shark who walked out of the surf that winter in the Gannet cabin boy's blue shoes. He knows the deep water through the skerries, but he won't wait for you. <em>Follow his shoes.</em></p>
         <ul class="rules">
           <li><b>See</b> rocks, wrecks and drifting timber show up when the beam or a flare is on them, then fade away over 3 seconds once the beam moves on</li>
-          <li><b>Follow</b> Plimsoll's glowing shoes. Sail close behind him (within 45 m) and Maren holds where she is. Fall behind and he soon walks on alone</li>
+          <li><b>Follow</b> Plimsoll's glowing shoes. Keep up with him (within about 120 m at a cruise, further the faster you go) and Maren holds where she is: his ring on the bearing strip fills while he's keeping her off. Fall behind and he soon walks on alone</li>
           <li><b>Ring the bell</b> (Space) with her anywhere ahead of you (anywhere at all once she's close) to drive her back three stages. It also sinks the drowned and freezes Knock. It swings again in about 15 seconds</li>
           <li><b>The drowned</b> swim after you; their eyes catch the light. Sail fast to shake them off, or ring the bell. Plimsoll sometimes snaps one up</li>
           <li><b>Knock</b> moves only while you can't see him. Listen for three knocks on wood, turn, and keep him in your light. The bell freezes him</li>
           <li><b>Flare</b> (F) lights everything around you for a few seconds, for your whole crew</li>
           <li><b>Steer</b> ← → or A / D, sail ↑ ↓ or W / S. On a phone, hold the left or right side to steer and use the ▲ ▼ buttons for speed</li>
+          <li><b>Pause</b> Esc or P (or Start on a controller) pauses a voyage on your own; in a crew it opens the settings, and your crew sails on. <b>Settings</b> (title screen or pause): volume, softened jumpscares, fewer flashes, less motion</li>
           <li><b>Boats</b> the Brig takes four hits, her carpenter patches a plank every 40 seconds, and each floating crate she picks up reloads her flare and bell; the quick Cutter takes two, the heavy Barque five. The Barque's bow gun fires by itself to blow apart a rock just ahead that you're about to hit, then takes 3 seconds to reload. The Carrier takes six, her floodlights reach far, and she launches a scout jet (J) that lights the rocks along your course, but she is huge, slow and slow to turn. Glancing off a rock only slows you; hitting it head on costs a plank.</li>
           <li><b>Hull</b> when the planks run out she goes down. Let Maren reach the bow and she comes aboard</li>
-          <li><b>Tonight's enemies</b> each voyage brings three enemies from a pool of 21 (the log names them as you set out), on top of Maren. Each has its own trick and its own counter: read the log when one turns up</li>
-          <li><b>Verity</b> sometimes you'll find a small smiling yellow orb in a corner of your deck, offering to help. He isn't helping, and the bell doesn't bother him. Fire a flare before twenty seconds are up, or see what he really looks like</li>
+          <li><b>Tonight's enemies</b> each voyage brings three enemies from a pool of 21 (the log names them as you set out), on top of Maren. Your very first voyage brings just one gentle one, and the second two. Each has its own trick and its own counter: read the log when one turns up, and watch for the call-out in the middle of the screen when something needs an answer now</li>
+          <li><b>Verity</b> sometimes you'll find a small smiling yellow orb in a corner of your deck, offering to help. He isn't helping, and the bell doesn't bother him. Fire a flare before twenty seconds are up, or see what he really looks like. He only comes aboard when your flare is nearly loaded, and his countdown waits (the ring turns grey) until it is. A crewmate's flare close by sends him off too</li>
           <li><b>Six seas</b> the first voyage is always Skerry Light. After that the voyages go round six seas in turn: Skerry Light, the Frozen Fjord, the Ember Isles, the Coral Lagoon, the Barrow Shore and the Crystal Shoals. Each has its own sky, coast, weather and rocks (icebergs, lava-veined basalt, coral reefs, gravestones, crystal). They look different, but they sink you just the same. And about one voyage in twenty (never the first), a portal stands in the water ahead: you sail through it into the Nether, a lava sea under a roof of red rock with lava pouring down from it. The Nether has its own three enemies and nothing else, not even Maren: the Cinder Kite (dodge the orange rings its fireballs fall into; a flare drives it off), the Slag Wader (ring the bell before it reaches your bow) and the Furnace Moth (if it lands on your lantern, fire a flare and it chases that instead). Another one voyage in twenty you find yourself on the Wine-Dark Sea of the old stories, with white temples on the headlands, a golden moon and shooting stars, and three monsters of its own (again, nothing else): the Sirens (their song drags your helm to their rock; ring the bell to drown them out), Charybdis (a whirlpool that opens on your course and drags you in; sail hard round it) and the Cyclops (dodge the pale ring where his rock will land; a flare in his eye blinds him). And one more in twenty takes you to the Places In Between: a glassy sea stuck at dusk, with doors and staircases standing in the water. Its own three, and nothing else: the Doors (dark ones send you back, the lit one sends you on), the Echo (a pale copy of your ship that steers the mirror of you; turn late and hard, or ring the bell to shatter it) and the Sleeper (a face under the water; when the water over it brightens, ring the bell before its eyes open). One more in twenty you're not sailing at all but flying a plane over the clouds: ↑ climbs, ↓ dives, steer round the storm clouds at every height, and come down low between the runway lamps to land</li>
           <li><b>The Backrooms</b> about one voyage in twenty, the lights go out and the sea comes back with walls: a flooded maze of yellow rooms. Follow Plimsoll to the green EXIT sign. The Stowaway lives there too: when he screams and charges down the corridor, dodge to the side</li>
           <li><b>Floating crates</b> bob about the water, each with a little lantern. Sail into one to haul it aboard. Make harbour and each is worth two Skerry Crates; sink and they go down with you. Making harbour pays 5 crates on voyage 1, then follows the Fibonacci sequence for each voyage in a row: 8, 13, 21, 34...</li>
-          <li><b>Crew</b> sail with up to seven friends. Ships close together keep her back and patch each other's planks. Share flares, chat in the crew screen, and watch your crew after your own voyage ends. The first ship into harbour wins 3 bonus crates for every other ship in the crew</li>
+          <li><b>Crew</b> sail with up to seven friends. Ships close together keep her back and patch each other's planks. Share flares, chat in the crew screen, and watch your crew after your own voyage ends. Keys 1 to 4 (or the hail buttons on a phone) call Here!, Help!, Follow me and Maren close to your crew. The first ship into harbour wins 3 bonus crates for every other ship in the crew</li>
+          <li><b>Close shaves</b> slip past a rock at speed (over 15 knots) with under 2.5 m to spare and it counts as a close shave on your end card</li>
         </ul>
       </details>
     </div>
@@ -143,10 +153,11 @@
       </div>
       <div class="score" id="crewScore" hidden>
         <table>
-          <thead><tr><th scope="col">Ship</th><th scope="col">Outcome</th><th scope="col">Time</th><th scope="col">Hits</th><th scope="col">Bells</th><th scope="col">Flares</th><th scope="col">Patched</th><th scope="col">Fed Plimsoll</th></tr></thead>
+          <thead><tr><th scope="col">Ship</th><th scope="col">Outcome</th><th scope="col">Time</th><th scope="col">Hits</th><th scope="col">Bells</th><th scope="col">Flares</th><th scope="col">Patched</th><th scope="col">Fed Plimsoll</th><th scope="col">Shaves</th></tr></thead>
           <tbody id="crewScoreBody"></tbody>
         </table>
       </div>
+      <p class="recapline" id="crewRecap" hidden></p>
       <div class="chat">
         <ul class="chatlog" id="chatLog" hidden></ul>
         <form class="chatform" id="chatForm">
@@ -181,6 +192,12 @@
         <div><span class="label">Voyages</span><strong id="sVoy">0</strong></div>
         <div><span class="label">Hits taken</span><strong id="sHits">0</strong></div>
         <div><span class="label">Best run</span><strong id="sBest">0</strong></div>
+        <div><span class="label">Close shaves</span><strong id="sShaves">0</strong></div>
+      </div>
+      <div class="recap" id="endRecap" hidden>
+        <p><span class="label">What got you</span> <b id="recapWhat"></b></p>
+        <p class="tip" id="recapTip"></p>
+        <div class="dotsrow" id="recapDotsRow"><span class="label">Maren, turn by turn</span><span class="dots" id="recapDots" aria-label="How near Maren stood after each of her last turns"></span></div>
       </div>
       <div class="boatpick" role="group" aria-label="Your boat"></div>
       <div class="btnrow">
@@ -225,6 +242,31 @@
       <span class="eyebrow" id="crateCollected"></span>
       <div class="inv" id="crateInv"></div>
 
+    </div>
+  </div>
+
+  <div class="overlay pausecard" id="pauseCard" hidden role="dialog" aria-modal="true" aria-labelledby="pauseHead">
+    <div class="card">
+      <span class="eyebrow">The helm is lashed</span>
+      <h1 id="pauseHead">Paused</h1>
+      <div class="btnrow">
+        <button class="primary" id="resumeBtn" type="button">Resume</button>
+        <button class="tool" id="pauseSettings" type="button">Settings</button>
+        <button class="tool" id="pauseMenu" type="button">Give up the voyage</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="overlay settingscard" id="settingsCard" hidden role="dialog" aria-modal="true" aria-labelledby="settingsHead">
+    <div class="card">
+      <div class="cardtop"><span class="eyebrow">Kept on this device</span><button class="tool closebtn" id="settingsClose" type="button">✕ Close</button></div>
+      <h1 id="settingsHead">Settings</h1>
+      <p class="setnote" id="settingsCrew" hidden>Your crew sails on.</p>
+      <div class="setrow"><span class="label" id="lbl-vol">Volume</span><div class="loottabs" id="set-vol" role="group" aria-labelledby="lbl-vol"></div></div>
+      <div class="setrow"><span class="label" id="lbl-scares">Jumpscares</span><div class="loottabs" id="set-scares" role="group" aria-labelledby="lbl-scares"></div></div>
+      <div class="setrow"><span class="label" id="lbl-flashes">Flashes</span><div class="loottabs" id="set-flashes" role="group" aria-labelledby="lbl-flashes"></div></div>
+      <div class="setrow"><span class="label" id="lbl-motion">Motion</span><div class="loottabs" id="set-motion" role="group" aria-labelledby="lbl-motion"></div></div>
+      <p class="setnote">Softened jumpscares are smaller and quieter, with no shaking or black frames. Fewer flashes dims the camera flash, the beam's glare, the bell and lightning. Auto motion follows your device's setting.</p>
     </div>
   </div>
 

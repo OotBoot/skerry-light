@@ -16,18 +16,23 @@ function updateVerity(dt) {
   if (g.attract || state !== 'play' || !v || !hasFoe('verity')) return;
   if (v.gone > 0) v.gone -= dt;
   if (!v.on) {
-    // he won't climb aboard while Maren is right at the bow, or while Knock is mid-swing
+    // he won't climb aboard while Maren is right at the bow, or while Knock is mid-swing,
+    // or while your flare is still too far from loaded to send him off in time
     v.next -= dt;
-    if (v.next <= 0 && g.maren.stage < 3 && !g.knockScare) {
+    if (v.next <= 0 && g.maren.stage < 3 && !g.knockScare && g.flareCd <= SK.VERITY_TIME - 5) {
       v.on = true; v.t = 0; v.said = 0; v.morph = 0;
       v.side = Math.random() < 0.5 ? -1 : 1;   // which bottom corner of your view he turns up in
       sfxVerity(1, 0.9);
       addLog('Something small is on the deck, down in the corner, smiling at you. It says it wants to help.', 'w');
       addLog('The bell won\u2019t move it. Fire a flare before it stops smiling.', 'w');
+      if (!teach('flare', true, 'Verity is aboard: fire a flare before he stops smiling', { btn: 'flare' })) callout('Verity! Fire a flare!', { btn: 'flare', pri: true });
     }
     return;
   }
-  v.t += dt;
+  // he always gives you time to use a flare: while it still needs longer to load than he has left
+  // (with 3 seconds to spare), his smile holds and the ring stops counting
+  v.paused = g.flareCd > Math.max(0, SK.VERITY_TIME - v.t - 3) && v.t < SK.VERITY_TIME;
+  if (!v.paused) v.t += dt;
   if (v.said === 0 && v.t > 10) { v.said = 1; sfxVerity(0.93, 0.95); addLog('Verity is still smiling. Ten seconds.', 'w'); }
   if (v.t >= SK.VERITY_TIME) {
     if (v.morph === 0) { stopVerity(); sfxVerity(0.62, 1); sfxCreak(); }
@@ -43,7 +48,7 @@ function updateVerity(dt) {
   }
 }
 
-// a flare shoos him off, as long as he's still smiling (the bell does nothing to him)
+// a flare (yours, or a crewmate's landing close by) shoos him off, as long as he's still smiling (the bell does nothing to him)
 function flareShoosVerity() {
   const v = g.verity;
   if (!v || !v.on || v.t >= SK.VERITY_TIME) return false;
@@ -93,7 +98,7 @@ function drawVerity() {
     ctx.restore();
     // a countdown ring under him, so it reads without the log
     const p = 1 - v.t / SK.VERITY_TIME;
-    ctx.strokeStyle = `rgba(255,214,60,${0.35 + 0.4 * wrong})`; ctx.lineWidth = 3;
+    ctx.strokeStyle = v.paused ? 'rgba(170,170,170,0.5)' : `rgba(255,214,60,${0.35 + 0.4 * wrong})`; ctx.lineWidth = 3;
     ctx.beginPath(); ctx.arc(seatX, seatY - h / 2, w * 0.62, -Math.PI / 2, -Math.PI / 2 + p * Math.PI * 2); ctx.stroke();
     return;
   }
@@ -113,33 +118,34 @@ function drawVerity() {
     ctx.filter = 'none';
     ctx.globalAlpha = 1;
   }
-  if (!reduceMotion && Math.random() < 0.1 * k) { ctx.fillStyle = 'rgba(0,0,0,0.85)'; ctx.fillRect(0, 0, W, H); }
+  if (!reduceMotion && !softScares() && Math.random() < 0.1 * k) { ctx.fillStyle = 'rgba(0,0,0,0.85)'; ctx.fillRect(0, 0, W, H); }
 }
 
 // the jumpscare: that grin, filling the screen
 function drawVerityScare(t) {
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  const T = SK.VERITY_SCARE_TIME;
-  ctx.fillStyle = Math.floor(t * 28) % 2 ? '#1c1a04' : '#000';
+  const T = SK.VERITY_SCARE_TIME, soft = softScares(), wild = !reduceMotion && !soft;
+  ctx.fillStyle = soft ? '#141203' : Math.floor(t * 28) % 2 ? '#1c1a04' : '#000';
   ctx.fillRect(0, 0, W, H);
   if (!imgReady(IMG.verity2)) return;
   const img = IMG.verity2, iw = img.naturalWidth, ih = img.naturalHeight;
   // just the head and the teeth: top tenth of the picture, middle half
   const fx = iw * 0.24, fw = iw * 0.52, fy = 0, fh = ih * 0.115;
   const lunge = Math.min(1, t / 0.1);
-  const k = 0.35 + lunge * 0.7 + Math.max(0, t - 0.1) * 0.2;
+  let k = 0.35 + lunge * 0.7 + Math.max(0, t - 0.1) * 0.2;
+  if (soft) k = Math.min(0.6, k);
   const dw = Math.max(W, H * 0.85) * k, dh = dw * fh / fw;
-  const shake = reduceMotion ? 0 : 36 * (1 - t / T) + 8;
+  const shake = wild ? 36 * (1 - t / T) + 8 : 0;
   const x = cx - dw / 2 + rand(-shake, shake), y = H * 0.45 - dh / 2 + rand(-shake, shake);
-  const strips = reduceMotion ? 1 : 12;
+  const strips = wild ? 12 : 1;
   for (let i = 0; i < strips; i++) {
-    const off = !reduceMotion && Math.random() < 0.4 ? (Math.random() - 0.5) * dw * 0.1 : 0;
+    const off = wild && Math.random() < 0.4 ? (Math.random() - 0.5) * dw * 0.1 : 0;
     ctx.drawImage(img, fx, fy + fh * i / strips, fw, fh / strips, x + off, y + dh * i / strips, dw, dh / strips + 0.6);
   }
-  if (!reduceMotion && t > 0.3 && Math.random() < 0.1) { ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H); }
+  if (wild && t > 0.3 && Math.random() < 0.1) { ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H); }
   ctx.fillStyle = `rgba(160,140,0,${0.15 + 0.12 * Math.sin(t * 45)})`;
   ctx.fillRect(0, 0, W, H);
-  if (!reduceMotion && Math.random() < 0.12) {
+  if (wild && Math.random() < 0.12) {
     ctx.globalCompositeOperation = 'difference';
     ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, W, H);
     ctx.globalCompositeOperation = 'source-over';
