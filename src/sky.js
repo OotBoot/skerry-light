@@ -273,7 +273,8 @@ Object.assign(FOE_KINDS, {
   petrels: {
     h: 1, max: 1, every: [18, 26], fly: true, vis: () => 0.9,
     spawn() {
-      const side = Math.random() < 0.5 ? -1 : 1, p = aheadPt(rand(110, 150), side * 70), fx = Math.cos(ship.h) * -side, fy = -Math.sin(ship.h) * -side;
+      // timed so the flock crosses your course just as you reach it
+      const side = Math.random() < 0.5 ? -1 : 1, p = aheadPt(ship.v * (70 / 13) + rand(-6, 6), side * 70), fx = Math.cos(ship.h) * -side, fy = -Math.sin(ship.h) * -side;
       const birds = []; for (let i = 0; i < 14; i++) birds.push({ dx: rand(-7, 7), dy: rand(-7, 7), dz: rand(-3, 3), ph: rand(0, 6) });
       return { x: p.x, y: p.y, z: ship.z + rand(-3, 3), vx: fx * 13, vy: fy * 13, birds, life: 14, hit: false, scatter: 0 };
     },

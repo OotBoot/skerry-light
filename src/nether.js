@@ -170,7 +170,7 @@ Object.assign(FOE_KINDS, {
         return;
       }
       // fluttering in, weaving
-      const d = dist(f), b = bearingOf(ship.x - f.x, ship.y - f.y) + Math.sin(f.ph * 1.3) * 0.6, sp = 7 + g.n * 0.2 + Math.max(0, ship.v - 9) * 0.7;
+      const d = dist(f), b = bearingOf(ship.x - f.x, ship.y - f.y) + Math.sin(f.ph * 1.3) * 0.6, sp = d < 150 ? Math.max(7 + g.n * 0.2, ship.v + 3) : 7 + g.n * 0.2 + Math.max(0, ship.v - 9) * 0.7;
       f.x += Math.sin(b) * sp * dt; f.y += Math.cos(b) * sp * dt; f.z = 8 + Math.sin(f.ph * 2) * 2;
       if (Math.random() < dt * 0.3 && d < 120) sfxFoe('flap', panOf(f), 0.5);
       if (d < 5) { f.on = true; f.t = 0; sfxFoe('flap', 0, 1); addLog('The Furnace Moth landed on your lantern. The light is going.', 'w'); }

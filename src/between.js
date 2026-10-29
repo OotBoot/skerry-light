@@ -11,7 +11,7 @@ const SPECIAL_TRIOS = { nether: NETHER_TRIO, odyssey: ODYSSEY_TRIO, between: BET
 Object.assign(FOE_NAMES, { doors: 'the Doors', echo: 'the Echo', sleeper: 'the Sleeper' });
 Object.assign(FOE_INTRO, {
   doors: 'A row of doors is standing in the water across your course. The dark ones lead back to where you’ve already been. Go through the lit one, or round them all.',
-  echo: 'A pale ship is coming straight at you. It is yours: it steers the mirror of how you steer, a moment late. Turn late and hard, or ring the bell to break it.',
+  echo: 'A pale ship is coming straight at you. It is yours: it steers the mirror of how you steer, a moment late. Turn early and hold it, or ring the bell to break it.',
   sleeper: 'There is a face under the water ahead, as big as a harbour, asleep. When the water over it brightens it is waking: ring the bell to settle it.',
 });
 
@@ -111,9 +111,10 @@ Object.assign(FOE_KINDS, {
     bell(f) { if (f.fade <= 0 && dist(f) < 280) { f.fade = 0.8; sfxFoe('shatter', panOf(f), 1); return 'The bell rang and the pale ship shattered like a mirror.'; } },
     draw(f, q, vis) {
       const a = (f.fade > 0 ? f.fade / 0.8 : 1) * 0.6 * vis;
-      ctx.save(); ctx.filter = 'grayscale(1) brightness(1.7)';
-      drawShip3D(f, ship.skin || mySkin(), BOAT_BY_ID[ship.boat] || BOATS[0], 1, { alpha: a, sailAlpha: a, minLit: 1, brace: 0.5 });
-      ctx.restore();
+      // a pale copy of your own ship (a pale skin, not a canvas filter: filters cost a fortune per polygon)
+      const s0 = ship.skin || mySkin();
+      if (!f.pale || f.paleOf !== s0.id) { f.paleOf = s0.id; f.pale = Object.assign({}, s0, { id: s0.id + '_echo', rarity: null, hull: '#d4d2dc', sail: '#eceaf2', rail: '#c4c2cc', wood: '#b0aeb8', deck: ['#a8a6b0', '#8a8892'], lantern: '#f4f2ff' }); }
+      drawShip3D(f, f.pale, BOAT_BY_ID[ship.boat] || BOATS[0], 1, { alpha: a, sailAlpha: a, minLit: 1, brace: 0.5 });
     },
   },
 

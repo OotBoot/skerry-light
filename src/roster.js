@@ -80,7 +80,7 @@ const dist = (o) => Math.hypot(o.x - ship.x, o.y - ship.y);
 const panOf = (o) => clamp(angDiff(bearingOf(o.x - ship.x, o.y - ship.y), ship.h) / (fov / 2), -1, 1);
 const inView = (o) => Math.abs(angDiff(bearingOf(o.x - ship.x, o.y - ship.y), ship.h)) < fov / 2 + 0.05;
 function intro(k) { const F = g.foes[k]; if (F && !F.intro) { F.intro = true; addLog(FOE_INTRO[k], 'w'); } }
-function foeHit(what) { if (ship.inv <= 0) hit(0, -1, what); }
+function foeHit(what) { if (ship.inv <= 0) hit(-Math.sin(ship.h), -Math.cos(ship.h), what); }
 // how well you can see something out here: the usual light, but nothing close is ever pitch black
 function foeVis(o, stealth) {
   const v = visibility(o.x, o.y);
@@ -175,8 +175,8 @@ const FOE_KINDS = {
     spawn() { const side = Math.random() < 0.5 ? -1 : 1, p = aheadPt(30, side * 45); return { x: p.x, y: p.y, z: ceilingZ(8), side, t: 0, phase: 'follow', charge: 0, life: 40 }; },
     update(f, dt) {
       f.t += dt; f.life -= dt;
-      const target = aheadPt(35 + Math.sin(f.t * 0.5) * 10, f.side * 40);
-      f.x += (target.x - f.x) * Math.min(1, dt * 1.5); f.y += (target.y - f.y) * Math.min(1, dt * 1.5);
+      // keeps station off your bow, inside your view; while its light blinks it holds still, so turning away works
+      if (f.phase !== 'charge') { const target = aheadPt(40 + Math.sin(f.t * 0.5) * 8, f.side * 15); f.x += (target.x - f.x) * Math.min(1, dt * 1.5); f.y += (target.y - f.y) * Math.min(1, dt * 1.5); }
       if (f.phase === 'follow' && f.t > 9) { f.phase = 'charge'; f.charge = 2.6; }
       if (f.phase === 'charge') {
         f.charge -= dt;
@@ -258,7 +258,7 @@ const FOE_KINDS = {
         const k = Math.min(1, f.dive);
         f.x = f.sx + (ship.x - f.sx) * k; f.y = f.sy + (ship.y - f.sy) * k; f.z = f.sz + (4 - f.sz) * k;
         if (k >= 1) {
-          g.flareCd = SK.FLARE_COOLDOWN; flareShown = -1;
+          g.flareCd = Math.max(g.flareCd, SK.FLARE_COOLDOWN * 0.6); flareShown = -1;
           addLog('The Toucan snatched your flare and flew off with it. It has to reload.', 'w');
           sfxFoe('caw', 0, 1); f.dead = true;
         }
@@ -287,7 +287,7 @@ const FOE_KINDS = {
       if (d < 6) { f.hold = 5.5; sfxFoe('grunt', panOf(f), 1); addLog('The Brute has the bow! Ring the bell to break his grip.', 'w'); }
       if (d > 400) f.dead = true;
     },
-    bell(f) { if (dist(f) < 150) { throwBack(f, 140); return 'The Brute let go and sank back.'; } },
+    bell(f) { if (dist(f) < 150) { f.dead = true; return 'The Brute let go and sank out of sight.'; } },
     draw(f, q, vis) { drawSprite('brute', q, 4.5, vis, { bob: Math.sin(f.ph) * 0.2, sink: f.hold > 0 ? 0.3 : 0.45 }); },
   },
 
@@ -320,15 +320,16 @@ const FOE_KINDS = {
   assassin: {
     h: 3.2, max: 1, every: [20, 30],
     spawn() {
-      const p = aheadPt(ship.v * 1.0 + 3, (Math.random() < 0.5 ? -1 : 1) * 5);
+      // it strikes where you'll be if you hold your course and speed: any real change dodges it
+      const p = aheadPt(ship.v * 1.6, (Math.random() < 0.5 ? -1 : 1) * 3);
       sfxFoe('shing', panOf(p), 1);
-      return { x: p.x, y: p.y, fuse: 1.3, done: false };
+      return { x: p.x, y: p.y, fuse: 1.6, done: false };
     },
     update(f, dt) {
       f.fuse -= dt;
       if (!f.done && f.fuse <= 0) {
         f.done = true;
-        if (dist(f) < 7) { sfxFoe('slash', 0, 1); foeHit('the Assassin Cup'); }
+        if (dist(f) < 4.5) { sfxFoe('slash', 0, 1); foeHit('the Assassin Cup'); }
         else { sfxFoe('whoosh', panOf(f), 0.6); addLog('A blade cut the air behind you. Missed.', 'p'); }
       }
       if (f.fuse < -0.6) f.dead = true;
@@ -443,12 +444,14 @@ const FOE_KINDS = {
       if (f.rise === dt / 2) sfxFoe('rumble', panOf(f), 1);
       f.sweep -= dt; if (f.swing > 0) f.swing -= dt;
       const d = dist(f);
-      if (f.sweep <= 0) { f.sweep = 5; f.swing = 0.8; if (d < 120) sfxFoe('whoosh', panOf(f), 0.8); if (d < 22) foeHit('the Gentleman’s arm'); }
+      // the arm winds up for a second (you hear it) before it comes down
+      if (f.sweep <= 0 && !f.wind) { f.wind = 1; if (d < 140) sfxFoe('whoosh', panOf(f), 0.8); }
+      if (f.wind) { f.wind -= dt; if (f.wind <= 0) { f.wind = 0; f.sweep = 5; f.swing = 0.8; if (d < 18) foeHit('the Gentleman’s arm'); } }
       // he's solid
       if (d < 10 + 6 && state === 'play') { const nx = (ship.x - f.x) / (d || 1), ny = (ship.y - f.y) / (d || 1); ship.x = f.x + nx * 16; ship.y = f.y + ny * 16; ship.v = Math.min(ship.v, 3); }
       if (f.life <= 0) f.dead = true;
     },
-    bell(f) { if (dist(f) < 220) { f.dead = true; g.foes.gentleman.t = 6; return 'The Gentleman sank with a dignified bubble.'; } },
+    bell(f) { if (dist(f) < 220) { f.dead = true; g.foes.gentleman.t = Math.max(g.foes.gentleman.t, 20); return 'The Gentleman sank with a dignified bubble.'; } },
     draw(f, q, vis) { drawSprite('gentleman', q, 14, Math.max(0.5, vis), { sink: 1 - f.rise, rot: f.swing > 0 ? Math.sin((0.8 - f.swing) * 8) * 0.12 : 0 }); },
   },
 
@@ -469,10 +472,11 @@ const FOE_KINDS = {
         if (f.aim <= 0) {
           sfxFoe('gun', panOf(f), Math.max(0.3, 1 - dist(f) / 400));
           f.muzzle = 0.15;
-          if (lit && clear) foeHit('the Smuggler’s bullets'); else addLog('Bullets whined past in the dark.', 'p');
+          // he aimed at you while you were lit: if you were still in the light or in plain sight then, he hits
+          if ((lit || f.aimLit) && clear) foeHit('the Smuggler’s bullets'); else addLog('Bullets whined past in the dark.', 'p');
           f.cd = 7;
         }
-      } else if (f.cd <= 0 && lit && clear && dist(f) < 340) { f.aim = 1.0; sfxFoe('click', panOf(f), 0.8); }
+      } else if (f.cd <= 0 && lit && clear && dist(f) < 340) { f.aim = 1.0; f.aimLit = true; sfxFoe('click', panOf(f), 0.8); }
       if (f.muzzle > 0) f.muzzle -= dt;
       if (f.life <= 0 || dist(f) > 500) f.dead = true;
     },
@@ -494,8 +498,8 @@ const FOE_KINDS = {
       f.throwT -= dt;
       if (f.throwT <= 0) {
         f.throwT = 7;
-        const land = aheadPt(ship.v * 1.2, 0);
-        hazard({ kind: 'banana', x: f.x, y: f.y, x0: f.x, y0: f.y, x1: land.x + rand(-3, 3), y1: land.y + rand(-3, 3), fuse: 1.2, dur: 1.2, r: 7 });
+        // aimed at where you are now: keep moving and it lands in your wake
+        hazard({ kind: 'banana', x: f.x, y: f.y, x0: f.x, y0: f.y, x1: ship.x + rand(-2, 2), y1: ship.y + rand(-2, 2), fuse: 1.2, dur: 1.2, r: 5 });
         sfxFoe('throw', panOf(f), 0.7);
       }
       if (f.life <= 0) f.dead = true;
@@ -581,7 +585,8 @@ function wallDistAhead() {
   return best;
 }
 function throwBack(f, d) {
-  const b = bearingOf(f.x - ship.x, f.y - ship.y);
+  // thrown off astern, so you sail away from it rather than straight back into it
+  const b = ship.h + Math.PI + rand(-0.4, 0.4);
   f.x = ship.x + Math.sin(b) * d; f.y = ship.y + Math.cos(b) * d; f.hold = 0;
   if (!g.backrooms) f.y = Math.max(45, f.y);
 }

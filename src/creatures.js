@@ -2,7 +2,7 @@
 //
 // Maren Holm, the keeper's wife, rowed out in 1887 to warn the brig Gannet and never came back.
 // Every full turn of the beam she stands a stage nearer your bow, and between turns she slowly
-// follows the ship. Ring the bell while you can see her to drive her back two stages. If she reaches
+// follows the ship. Ring the bell while she's ahead of you to drive her back three stages. If she reaches
 // you, she takes the ship.
 //
 // Plimsoll, the shark in the Gannet cabin boy's shoes, knows the deep water through the skerries.
@@ -79,7 +79,7 @@ function ringBell() {
     addLog('The bell rings out and she draws well back.' + (drowned ? ' The drowned sink away.' : ''), 'p');
   } else if (drowned) {
     addLog('The bell rings out and the drowned sink back under.', 'p');
-  } else if (!(g.verity && g.verity.on)) {
+  } else if (!foeMsg && !(g.verity && g.verity.on)) {
     addLog(m.stage >= 1 ? 'The bell rings, but she is behind you. Turn towards her first.' : 'The bell rings out over the water. Nothing answers.');
   }
 }

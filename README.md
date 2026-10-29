@@ -39,21 +39,21 @@ The log goes on through 1888. The sea stops being one sea: some nights it freeze
   |---|---|---|
   | The Dancer | spins ahead of you; her whirl drags the helm | sail against it, or ring the bell |
   | The Croc Bomber | flies over dropping bombs; red rings mark them | steer out of the rings |
-  | The Cactus Mammoth | stands like a rock; fires spines inside 30 m | give it a wide berth |
+  | The Cactus Mammoth | stands like a rock; fires spines inside about 22 m | give it a wide berth |
   | The Informer | a pigeon's camera flash blinds you and brings Maren nearer | look away when its red light blinks; the bell scares it |
-  | The Coconut Bull | trumpets, then charges from the side | change speed to dodge |
+  | The Coconut Bull | trumpets, then charges from the side | speed up or turn away to dodge |
   | The Banana Dolphin | leaps across your bow leaving peel slicks that spin the helm | steer round the slicks |
   | The Toucan | dives to steal your flare | ring the bell during the dive |
   | The Juiced Brute | sprints after you, grabs the bow, squeezes off a plank | ring the bell |
   | The Tyre Frog | bounces across the sea; landings rock you | watch its shadow |
-  | The Assassin Cup | invisible; appears beside you with a 'shing' and slashes a second later | change speed or turn at the sound |
+  | The Assassin Cup | invisible; a 'shing', then a slash where you'd be in 1.6 s if you held course | change speed or turn at the sound |
   | The Bomber Goose | lays floating egg-mines in your path | steer between them; the bell sinks them |
-  | The Shrimp Cat | clings to the hull and dims your lantern | turn hard one way for 2 s |
+  | The Shrimp Cat | clings to the hull and dims your lantern | turn hard one way for about 1.5 s |
   | The Fridge Camel | freezes the sea into solid ice floes that slow you | go round; a flare melts them |
   | The Condiment Twins | flank you from both sides | turn hard as they close, or ring the bell |
   | The Gentleman | a huge, solid figure rising in your way, sweeping an arm | steer round; the bell sinks him |
   | The Smuggler | fires from a rock while you're in the light | stay in the dark or behind rocks |
-  | The Banana Ape | throws bananas: a splat on your view and a speed cap | keep moving; the bell sends it under |
+  | The Banana Ape | throws bananas at where you are: a splat on your view and a speed cap | keep moving (it lands in your wake); the bell sends it under |
   | The Root Hermit | sends a line of roots bursting up towards you | turn across the line |
   | the Drowned, Knock, Verity | as before | as before |
 
@@ -75,7 +75,7 @@ The log goes on through 1888. The sea stops being one sea: some nights it freeze
 
 - **The Places In Between**: one more voyage in twenty after the first (the same seeded roll as the Nether and the Wine-Dark Sea, so the three never overlap). A still, glassy sea stuck at dusk under a low peach sun, no stars, a pale mist on the water; staircases climbing out of the sea into the clouds, doorways standing alone on the shore (some lit), street lamps along the cliffs, and smooth pale rocks with a shut door set into each, light leaking round its edges. Its three enemies are the only ones there (no pool draw, Maren, Drowned, Knock or Verity):
   - **The Doors**: four doors in a row across your course. Sail through a dark one and you're put back 110 m. The lit one carries you 110 m on. The gaps between are open water.
-  - **The Echo**: a pale copy of your own ship sailing straight at you, steering a softer mirror of your helm most of a second late, so it follows your dodges. Turn late and hard, or ring the bell and it shatters.
+  - **The Echo**: a pale copy of your own ship sailing straight at you, steering a softer mirror of your helm most of a second late, so it follows your dodges. Turn early and hold it, or ring the bell and it shatters.
   - **The Sleeper**: a vast face under the water ahead of you. When the water over it brightens it's waking: ring the bell to settle it. It gives five seconds' warning. If its eyes open you lose a plank and everything slows for three and a half seconds.
 
   Add `?between` to force it.
