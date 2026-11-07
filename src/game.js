@@ -502,6 +502,7 @@ const SETTING_OPTS = {
   scares: [['full', 'Full'], ['soft', 'Softened']],
   flashes: [['normal', 'Normal'], ['reduced', 'Reduced']],
   motion: [['auto', 'Auto'], ['reduce', 'Reduce'], ['full', 'Full']],
+  renderer: [['3d', '3D'], ['2d', 'Classic']],
 };
 function renderSettings() {
   for (const key in SETTING_OPTS) {
@@ -515,7 +516,11 @@ function renderSettings() {
     for (const b of box.children) { const on = b.dataset.v === String(SETTINGS[key]); b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on)); }
   }
 }
-function applySettings() { applyVolume(); refreshMotion(); }
+function applySettings() {
+  applyVolume(); refreshMotion();
+  if (typeof gl3dRefresh === 'function') gl3dRefresh();
+  const n = $('glNote'); if (n) n.textContent = SETTINGS.renderer !== '2d' && GL3D.failed ? ' (3D isn\'t available on this device, so the classic view is used.)' : '';
+}
 
 // ---------- flow ----------
 function hideCards() { for (const id of ['titleCard', 'portCard', 'endCard']) $(id).hidden = true; }

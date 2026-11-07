@@ -126,6 +126,11 @@ function drawSea() {
   const sea = ctx.createLinearGradient(0, hy, 0, H);
   sea.addColorStop(0, B.sea[0]); sea.addColorStop(0.04, B.sea[1]); sea.addColorStop(0.5, B.sea[2]); sea.addColorStop(1, B.sea[3]);
   ctx.fillStyle = sea; ctx.fillRect(-W * 0.15, hy, W * 1.3, H - hy + H * 0.1);
+  drawSeaFx(B);
+}
+// what's painted on top of the sea: the moon's glitter, the haze at the horizon, the biome's own touches
+// (the 3D renderer draws the water itself and then this over it)
+function drawSeaFx(B) {
   // moon glitter: a broken path of light on the water under the moon, widening towards you
   const mp = skyPos(MOON.b, MOON.e);
   if (mp && !reduceMotion) {

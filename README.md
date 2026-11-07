@@ -24,7 +24,7 @@ The log goes on through 1888. The sea stops being one sea: some nights it freeze
 | Flare | F, or the flare button |
 | View | V, the 1st/3rd person button, or Y on a controller: switch between the deck and a chase camera behind your ship |
 | Pause | Esc or P, or Start on a controller. Sailing alone, the voyage stops (it also pauses by itself if you switch to another tab or app), with Resume and Settings. A crew never stops for one sailor: there Esc or Start opens the settings and your crew sails on |
-| Settings | the Settings button on the title screen or the pause card, kept on this device: volume (off to 100%), jumpscares Full or Softened (smaller and quieter, with no shaking, black frames or inverted flashes), flashes Normal or Reduced (the Informer's camera flash, the beam's glare, the bell's flash and lightning at 30%), and motion Auto (your device's setting), Reduce or Full |
+| Settings | the Settings button on the title screen or the pause card, kept on this device: volume (off to 100%), jumpscares Full or Softened (smaller and quieter, with no shaking, black frames or inverted flashes), flashes Normal or Reduced (the Informer's camera flash, the beam's glare, the bell's flash and lightning at 30%), motion Auto (your device's setting), Reduce or Full, and graphics 3D or Classic |
 | Hail your crew | keys 1 to 4 call *Here!*, *Help!*, *Follow me* and *Maren close*; on a phone, the four hail buttons above the bell; on a controller, hold LB and press the D-pad (up, right, down, left). Once every 3 seconds |
 | Xbox controller | Left stick or D-pad steer · RT faster, LT slower · A bell · X flare · Start pause. In menus: the left stick moves an on-screen cursor and A clicks what it's over, the right stick scrolls, and the D-pad jumps between buttons; A to press, B to close or go back, Start for the main button, Y for crates. RB watches the next crewmate when spectating. Hits and jumpscares rumble |
 
@@ -96,6 +96,12 @@ The log goes on through 1888. The sea stops being one sea: some nights it freeze
 - **The Backrooms**: one voyage in twenty (rolled from the crew's seed, so a whole crew goes in together), the lights go out and the sea comes back with walls. It's a flooded maze of yellow rooms under buzzing tubes that go dark each time the lamp would have turned. Plimsoll knows the way to the green EXIT sign, and the bearing strip points at it. Maren, the drowned, Knock and Verity all follow you in. Add `?backrooms` to the address to force one (solo only).
 - **The sea**: voyages start about 2.4 km out (further each voyage), through a wide stretch of skerries, wrecks and drifting timber.
 - **Harbour**: steer between the real red and green pier lamps. Each voyage after that has more rocks, wreckage and drowned, and the beam turns slower.
+
+## Graphics: 3D and Classic
+
+The world is drawn in real 3D with WebGL (three.js): the sea is a moving surface that catches the beam and the moon, the lighthouse beam is a cone of light with a spotlight in it that lights the rocks and cliffs as it sweeps, and the skerries, bergs, reefs, wrecks and timber are solid shapes. The sky and the far landscape are painted on a canvas behind the 3D view, and the creatures, ships, deck and effects are painted on a canvas over it; the 3D camera projects exactly as the painted one does, so they line up. Rocks still only show where some light reaches them.
+
+Settings → Graphics switches between **3D** and **Classic** (the original painted view, lighter on old devices). If WebGL isn't available the game uses Classic by itself. The Backrooms and the Open Sky are still drawn by the classic renderer; ships, creatures and the biomes' landmarks move into 3D in later stages.
 
 ## Boats
 
@@ -209,6 +215,8 @@ src/nether.js       the Nether's three enemies
 src/odyssey.js      the Wine-Dark Sea's three enemies
 src/between.js      the Places In Between's three enemies
 src/sky.js          the Open Sky: flying, clouds, cockpit, plane and its three enemies
+src/gl3d.js         the 3D renderer (WebGL): sea, coast, lighthouse and beam, rocks, wrecks and timber
+vendor/three.min.js three.js r149 (MIT, see vendor/three.LICENSE), inlined by the build
 src/world.js        voyage generation (sea and Backrooms) and Plimsoll's pathfinding
 src/render.js       the camera, sea, obstacles, lighthouse, deck, bearing strip and jumpscare
 src/gfx.js          the detailed look: sky, moon, clouds, sea glitter, coast, lighthouse, rocks, deck, drizzle, vignette, grain

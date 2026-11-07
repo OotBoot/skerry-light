@@ -12,6 +12,8 @@
 </head>
 <body>
 <div id="stage">
+  <canvas id="bg" class="under" aria-hidden="true"></canvas>
+  <canvas id="gl" class="under" aria-hidden="true"></canvas>
   <canvas id="cv" tabindex="0" aria-label="View from the deck of a ship at night, with a lighthouse beam sweeping over the sea"></canvas>
 
   <div class="biomebanner" id="biomeBanner" aria-live="polite" hidden><span class="bb-name" id="bbName"></span><span class="bb-sub" id="bbSub"></span></div>
@@ -266,13 +268,15 @@
       <div class="setrow"><span class="label" id="lbl-scares">Jumpscares</span><div class="loottabs" id="set-scares" role="group" aria-labelledby="lbl-scares"></div></div>
       <div class="setrow"><span class="label" id="lbl-flashes">Flashes</span><div class="loottabs" id="set-flashes" role="group" aria-labelledby="lbl-flashes"></div></div>
       <div class="setrow"><span class="label" id="lbl-motion">Motion</span><div class="loottabs" id="set-motion" role="group" aria-labelledby="lbl-motion"></div></div>
-      <p class="setnote">Softened jumpscares are smaller and quieter, with no shaking or black frames. Fewer flashes dims the camera flash, the beam's glare, the bell and lightning. Auto motion follows your device's setting.</p>
+      <div class="setrow"><span class="label" id="lbl-renderer">Graphics</span><div class="loottabs" id="set-renderer" role="group" aria-labelledby="lbl-renderer"></div></div>
+      <p class="setnote">Softened jumpscares are smaller and quieter, with no shaking or black frames. Fewer flashes dims the camera flash, the beam's glare, the bell and lightning. Auto motion follows your device's setting. 3D graphics draw the sea, coast, lighthouse and rocks in real 3D; Classic is the original painted view, lighter on old devices.<span id="glNote"></span></p>
     </div>
   </div>
 
   <div class="toast" id="toast" hidden role="status"></div>
 </div>
 
+<script src="vendor/three.min.js"></script>
 <script src="src/config.js"></script>
 <script src="src/audio.js"></script>
 <script src="src/world.js"></script>
@@ -290,6 +294,7 @@
 <script src="src/odyssey.js"></script>
 <script src="src/between.js"></script>
 <script src="src/sky.js"></script>
+<script src="src/gl3d.js"></script>
 <script src="src/game.js"></script>
 <script src="src/transport.js"></script>
 <script src="src/net.js"></script>

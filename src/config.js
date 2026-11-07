@@ -99,7 +99,7 @@ const SK = {
 
 // The player's own settings (the Settings card), kept on this device. Loaded here, before anything
 // draws or makes a sound, because the sound, the jumpscares and the motion all read them.
-const SETTINGS = { vol: 1, scares: 'full', flashes: 'normal', motion: 'auto' };
+const SETTINGS = { vol: 1, scares: 'full', flashes: 'normal', motion: 'auto', renderer: '3d' };
 try { Object.assign(SETTINGS, JSON.parse(localStorage.getItem('skerry-settings') || '{}') || {}); } catch (e) {}
 function saveSettings() { try { localStorage.setItem('skerry-settings', JSON.stringify(SETTINGS)); } catch (e) {} }
 const softScares = () => SETTINGS.scares === 'soft';

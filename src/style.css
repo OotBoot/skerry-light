@@ -30,6 +30,9 @@ body {
 #stage { position: relative; height: 100%; width: 100%; overflow: hidden; }
 canvas { display: block; width: 100%; height: 100%; touch-action: none; }
 canvas:focus { outline: none; }
+/* the 3D world and the sky behind it sit under the main canvas, which paints everything else over them */
+canvas.under { position: absolute; inset: 0; pointer-events: none; visibility: hidden; }
+#cv { position: relative; }
 
 .hud {
   position: absolute; top: 0; left: 0; right: 0;

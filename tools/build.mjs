@@ -16,7 +16,7 @@ let html = read('index.html');
 
 html = html.replace(/<link rel="stylesheet" href="(src\/[^"]+)">/g, (_, p) => `<style>\n${read(p)}</style>`);
 
-const scripts = [...html.matchAll(/<script src="(src\/[^"]+)"><\/script>\n?/g)];
+const scripts = [...html.matchAll(/<script src="((?:src|vendor)\/[^"]+)"><\/script>\n?/g)];
 if (!scripts.length) throw new Error('no scripts found in index.html');
 let js = scripts.map(m => `// ---- ${m[1]} ----\n` + read(m[1])).join('\n');
 const foeAssets = readdirSync(join(root, 'assets/foes')).filter(f => f.endsWith('.webp')).map(f => 'assets/foes/' + f);

@@ -2,7 +2,7 @@
 // the lighthouse and its beam, the bow of your brig, and the bearing strip.
 
 const cv = document.getElementById('cv');
-const ctx = cv.getContext('2d');
+let ctx = cv.getContext('2d');   // (the 3D renderer briefly points this at the sky canvas behind it)
 // less motion: the system setting, unless the player chose otherwise on the Settings card
 const motionMQ = matchMedia('(prefers-reduced-motion: reduce)');
 let reduceMotion = motionMQ.matches;
@@ -29,6 +29,7 @@ function resize() {
   fov = W < 600 ? 1.4 : 1.15;
   focal = (W / 2) / Math.tan(fov / 2);
   cx = W / 2;
+  if (typeof gl3dResize === 'function') gl3dResize();
 }
 
 // camera space: r = right, f = forward
@@ -395,23 +396,34 @@ function drawScene() {
   yaw = ship.h;
   const roll = reduceMotion ? 0 : (g.sky ? ship.rudder * (third ? 0.08 : 0.3) : (Math.sin(ship.bob * 0.9) * 0.018 + ship.rudder * 0.025) * (third ? 0.3 : 1)) + (g.rollKick || 0) * (third ? 0.4 : 1);
 
+  // the 3D renderer draws the world (sea, coast, lighthouse, rocks) when it's on; this canvas then paints over it
+  const gl = gl3dActive();
+  gl3dShow(gl);
+  let sx = 0, sy = 0;
+  if (g.shake > 0 && !reduceMotion) { sx = (Math.random() * 12 - 6) * g.shake; sy = (Math.random() * 12 - 6) * g.shake; }
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  if (gl) ctx.clearRect(0, 0, W, H);
   ctx.save();
   ctx.translate(cx, hy); ctx.rotate(roll); ctx.translate(-cx, -hy);
-  if (g.shake > 0 && !reduceMotion) ctx.translate(rand(-6, 6) * g.shake, rand(-6, 6) * g.shake);
-
-  if (g.backrooms) drawRoomsBack();
-  else {
-  drawSky();
-  drawSea();
-
-  var HB = SK.HARBOUR;
-  drawCoast();
+  ctx.translate(sx, sy);
 
   var far = SK.BEAM_RANGE;
   var beamOn = Math.abs(g.beam) < SK.SHADE + SK.HALF_BEAM;
   var fl = [Math.sin(g.beam - SK.HALF_BEAM) * far, Math.cos(g.beam - SK.HALF_BEAM) * far];
   var fr = [Math.sin(g.beam + SK.HALF_BEAM) * far, Math.cos(g.beam + SK.HALF_BEAM) * far];
+  var HB = SK.HARBOUR, glShown = 0;
+  if (gl) {
+    gl3dBackdrop(roll, sx, sy);
+    glShown = gl3dRender(roll, sx, sy, beamOn);
+    const B = curBiome();
+    drawSeaFx(B);
+    if (B.land === 'lavafalls') drawLandFar(B);
+    drawLandNear(B);
+  } else if (g.backrooms) drawRoomsBack();
+  else {
+  drawSky();
+  drawSea();
+  drawCoast();
   if (beamOn) {
     ctx.globalCompositeOperation = 'lighter';
     fillPoly([[0, 0, 0], [fl[0], fl[1], 0], [fr[0], fr[1], 0]], `rgba(${curBiome().beam},0.16)`);
@@ -437,9 +449,11 @@ function drawScene() {
   if (!g.backrooms) { if (g.sky) rememberClouds(); else rememberLit(g.rocks); rememberLit(g.wrecks); rememberLit(g.timber); }
   const items = [];
   const add = (kind, o) => { const c = cam(o.x, o.y, g.sky ? (o.z || 0) : 0); if (c.f > SK.NEAR + 2) items.push({ kind, o, c }); };
-  for (const o of g.rocks) if (!o.gone) add('rock', o);
-  for (const o of g.wrecks) add('wreck', o);
-  for (const o of g.timber) add('timber', o);
+  if (!gl) {
+    for (const o of g.rocks) if (!o.gone) add('rock', o);
+    for (const o of g.wrecks) add('wreck', o);
+    for (const o of g.timber) add('timber', o);
+  }
   if (g.backrooms) { add('exit', g.exit); drawRoomWalls(); }
   for (const o of g.pickups || []) if (!o.taken) add('pickup', o);
   if (third) { const c = cam(ship.x, ship.y, g.sky ? ship.z : 0); if (c.f > SK.NEAR) items.push({ kind: 'self', o: ship, c }); }
@@ -480,7 +494,7 @@ function drawScene() {
   }
 
   if (!g.backrooms) {
-  drawLighthouse(beamOn, fl, fr, far);
+  if (gl) gl3dGlows(glShown); else drawLighthouse(beamOn, fl, fr, far);
 
   for (const [hx, col] of [[-23, '#e46c4f'], [23, '#86cfae']]) {
     const c = cam(HB.x + hx, 46, 7); if (c.f > SK.NEAR) { const q = proj(c); lamp(q.x, q.y, col, Math.max(2.4, 1.4 * Math.sqrt(q.s))); }
