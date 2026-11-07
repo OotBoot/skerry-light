@@ -88,7 +88,8 @@ function fpsStart() {
   paused = false;
   $('fpsCard').hidden = true; $('titleCard').hidden = true; $('hud').hidden = true; $('logbox').hidden = true; $('biomeBanner').hidden = true;
   $('stage').classList.add('fpsmode');
-  $('fpsPad').hidden = !matchMedia('(pointer: coarse)').matches;
+  FPS.touch = matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window && navigator.maxTouchPoints > 0;
+  $('fpsPad').hidden = !FPS.touch; FPS.hintT = 8; if (FPS.touch) fpsSafeArea();
   FPS.round = fpsRoundNow();
   FPS.g = fpsArena(FPS.round);
   FPS.me = { id: NET.sid, x: FPSC.CX, y: FPSC.CY, h: 0, p: 0, v: 0, z: 0, rudder: 0, bob: 0, boat: 'brig', inv: 0, pitch: 0,
@@ -593,6 +594,7 @@ function fpsFrame(dt) {
     if (m.cd > 0) m.cd -= dt;
     if (m.reload > 0) { m.reload -= dt; if (m.reload <= 0) { m.reload = 0; m.ammo = FPSC.MAG; } }
     if ((FPS.bellCd || 0) > 0) FPS.bellCd -= dt;
+    if ((FPS.hintT || 0) > 0 && (FPS.stick || FPS.lookTouch)) FPS.hintT -= dt * 2; else if ((FPS.hintT || 0) > 0) FPS.hintT -= dt * 0.25;
     for (const k of ['flash', 'hitT', 'hurtT']) if (FPS[k] > 0) FPS[k] -= dt;
     FPS.recoil = Math.max(0, FPS.recoil - dt * 6);
     for (const p of FPS.pings) p.t -= dt; FPS.pings = FPS.pings.filter(p => p.t > 0);
@@ -609,8 +611,16 @@ function fpsFrame(dt) {
 function fpsInput(dt) {
   const m = FPS.me, K = FPS.keys;
   // looking: mouse (pointer lock), the right stick, or a finger on the right of the screen
-  const sens = 0.0023;
+  let sens = 0.0023;
+  // on a touch screen, aiming slows a little as the crosshair crosses someone you can see,
+  // and then leans gently onto them (and up or down to their chest), so a thumb can hold a target
+  const assist = FPS.touch ? fpsAssistTarget() : null;
+  if (assist) sens *= 0.55;
   m.h = wrapPi(m.h + FPS.look[0] * sens); m.p = clamp(m.p - FPS.look[1] * sens, -0.6, 0.6);
+  if (assist && !(m.dead > 0)) {
+    m.h = wrapPi(m.h + clamp(assist.dh, -1, 1) * Math.min(1, dt * 3.2));
+    m.p = clamp(m.p + clamp(assist.dp, -1, 1) * Math.min(1, dt * 4), -0.6, 0.6);
+  }
   FPS.look = [0, 0];
   let fx = 0, fz = 0, fire = false;
   const pad = navigator.getGamepads ? [...navigator.getGamepads()].find(p => p && p.connected) : null;
@@ -633,11 +643,27 @@ function fpsInput(dt) {
   const len = Math.hypot(fx, fz);
   m.walk = false;
   if (m.dead <= 0 && len > 0.05 && !FPS.menu) {
-    const sp = (K.ShiftLeft || K.ShiftRight || FPS.padSprint ? FPSC.SPRINT : FPSC.SPEED) * Math.min(1, len) / len * dt;
+    const sp = (K.ShiftLeft || K.ShiftRight || FPS.padSprint || (FPS.stick && FPS.stickRun) ? FPSC.SPRINT : FPSC.SPEED) * Math.min(1, len) / len * dt;
     const s = Math.sin(m.h), c = Math.cos(m.h);
     m.walk = fpsMove(m, (s * fz + c * fx) * sp, (c * fz - s * fx) * sp);
     if (m.walk) FPS.step += dt * (K.ShiftLeft || K.ShiftRight ? 11 : 8);
   }
+}
+
+// someone visible close to the crosshair, and how far off it is
+function fpsAssistTarget() {
+  const m = FPS.me; let best = null, bestA = 0.14;
+  for (const o of fpsEveryone().concat(FPS.drowned)) {
+    if (o.me || o.dead > 0 || o.dead === 1 && o.drowned) continue;
+    const d = Math.hypot(o.x - m.x, o.y - m.y); if (d > 140 || d < 1) continue;
+    if (fpsSeeAt(o.x, o.y, o.lan) < 0.3) continue;
+    const dh = angDiff(bearingOf(o.x - m.x, o.y - m.y), m.h), a = Math.abs(dh) * Math.max(1, d / 40);
+    if (a > bestA) continue;
+    const ray = fpsRay(m.x, m.y, FPSC.GROUND + FPSC.EYE, m.h + dh, 0, m.id);
+    if (ray.kind !== 'body' || ray.who.id !== o.id) continue;
+    bestA = a; best = { dh, dp: Math.atan2(FPSC.EYE * 0.6 - FPSC.EYE, d) - m.p };
+  }
+  return best;
 }
 
 // ---------- drawing ----------
@@ -767,9 +793,9 @@ function fpsDrawDrowned(d, c) {
 function fpsDrawHands() {
   const m = FPS.me; if (m.dead > 0) return;
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  const s = Math.min(W, H) / 600, bob = reduceMotion ? 0 : Math.sin(FPS.step) * 6 * s, sway = reduceMotion ? 0 : Math.cos(FPS.step * 0.5) * 5 * s;
+  const s = Math.min(W, H) / 600 * (FPS.touch ? 0.7 : 1), bob = reduceMotion ? 0 : Math.sin(FPS.step) * 6 * s, sway = reduceMotion ? 0 : Math.cos(FPS.step * 0.5) * 5 * s;
   const rl = m.reload > 0 ? Math.sin(Math.min(1, (FPSC.RELOAD - m.reload) / FPSC.RELOAD) * Math.PI) : 0;
-  const x = W * 0.68 + sway, y = H * 0.86 + bob + FPS.recoil * 18 * s + rl * 120 * s;
+  const x = W * (FPS.touch ? 0.6 : 0.68) + sway, y = H * (FPS.touch ? 0.9 : 0.86) + bob + FPS.recoil * 18 * s + rl * 120 * s;
   const skin = fpsSkin();
   ctx.save(); ctx.translate(x, y); ctx.rotate(-0.12 - FPS.recoil * 0.25 + rl * 0.6); ctx.scale(s, s);
   // sleeve and hand
@@ -785,7 +811,8 @@ function fpsDrawHands() {
   ctx.fillStyle = '#5a5a60'; ctx.fillRect(20, -8, 10, 12);
   ctx.restore();
   if (FPS.flash > 0) { const fx = x - 120 * s * Math.cos(0.12), fy = y - 14 * s; lamp(fx, fy, '#ffd890', 18 * s * (FPS.flash / 0.07)); ctx.fillStyle = 'rgba(255,240,200,0.9)'; ctx.beginPath(); ctx.arc(fx, fy, 10 * s, 0, 6.28); ctx.fill(); }
-  // the lantern in your other hand
+  // the lantern in your other hand (on a phone the Lantern button shows it, and your left thumb's there)
+  if (FPS.touch) return;
   const lx = W * 0.2 - sway * 0.6, ly = H * 0.9 + bob * 0.8;
   ctx.save(); ctx.translate(lx, ly); ctx.scale(s, s);
   ctx.fillStyle = '#1c1814'; ctx.fillRect(-26, -70, 52, 8); ctx.fillRect(-22, 10, 44, 10);
@@ -817,54 +844,76 @@ function fpsHud() {
     ctx.stroke();
     if (FPS.hitT > 0) { ctx.strokeStyle = FPS.hitHead ? 'rgba(255,90,60,0.95)' : 'rgba(255,240,200,0.95)'; ctx.lineWidth = 2; ctx.beginPath(); for (const [dx, dy] of [[1, 1], [-1, 1], [1, -1], [-1, -1]]) { ctx.moveTo(cx + dx * 6, cy + dy * 6); ctx.lineTo(cx + dx * 13, cy + dy * 13); } ctx.stroke(); }
   }
+  // on a phone: less of everything, and nothing where your thumbs go
+  const phone = FPS.touch, top = phone ? Math.max(10, FPS.safeTop || 0) : 14;
   // the bearing strip, with the bell's pings
-  const sw = Math.min(520, W * 0.6), sx = cx - sw / 2, sy = 14;
-  ctx.fillStyle = 'rgba(8,10,14,0.55)'; ctx.fillRect(sx, sy, sw, 22);
-  ctx.font = mono(11); ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  const sw = phone ? Math.min(300, W * 0.42) : Math.min(520, W * 0.6), sx = cx - sw / 2, sy = top;
+  ctx.fillStyle = 'rgba(8,10,14,0.45)'; ctx.fillRect(sx, sy, sw, phone ? 18 : 22);
+  ctx.font = mono(phone ? 10 : 11); ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   const span = 1.6;
-  for (const [lab, b] of [['N', 0], ['NE', 0.785], ['E', 1.571], ['SE', 2.356], ['S', 3.1416], ['SW', -2.356], ['W', -1.571], ['NW', -0.785]]) {
+  for (const [lab, b] of (phone ? [['N', 0], ['E', 1.571], ['S', 3.1416], ['W', -1.571]] : [['N', 0], ['NE', 0.785], ['E', 1.571], ['SE', 2.356], ['S', 3.1416], ['SW', -2.356], ['W', -1.571], ['NW', -0.785]])) {
     const d = angDiff(b, m.h); if (Math.abs(d) > span / 2) continue;
-    ctx.fillStyle = 'rgba(236,228,207,0.7)'; ctx.fillText(lab, cx + d / span * sw, sy + 11);
+    ctx.fillStyle = 'rgba(236,228,207,0.7)'; ctx.fillText(lab, cx + d / span * sw, sy + (phone ? 9 : 11));
   }
   { const d = angDiff(bearingOf(-m.x, -m.y), m.h); if (Math.abs(d) < span / 2) { ctx.fillStyle = '#ffd88a'; ctx.fillRect(cx + d / span * sw - 2, sy + 2, 4, 4); } }
   for (const p of FPS.pings) {
-    const d = angDiff(bearingOf(p.x - m.x, p.y - m.y), m.h), xx = cx + clamp(d / span, -0.5, 0.5) * sw;
-    ctx.globalAlpha = Math.min(1, p.t); ctx.fillStyle = '#e46c4f'; ctx.beginPath(); ctx.moveTo(xx, sy + 24); ctx.lineTo(xx - 5, sy + 32); ctx.lineTo(xx + 5, sy + 32); ctx.fill();
-    ctx.font = mono(10); ctx.fillText(`${p.n} ${Math.round(Math.hypot(p.x - m.x, p.y - m.y))}m`, xx, sy + 42); ctx.globalAlpha = 1;
+    const d = angDiff(bearingOf(p.x - m.x, p.y - m.y), m.h), xx = cx + clamp(d / span, -0.5, 0.5) * sw, py = sy + (phone ? 20 : 24);
+    ctx.globalAlpha = Math.min(1, p.t); ctx.fillStyle = '#e46c4f'; ctx.beginPath(); ctx.moveTo(xx, py); ctx.lineTo(xx - 5, py + 8); ctx.lineTo(xx + 5, py + 8); ctx.fill();
+    if (!phone) { ctx.font = mono(10); ctx.fillText(`${p.n} ${Math.round(Math.hypot(p.x - m.x, p.y - m.y))}m`, xx, py + 18); }
+    ctx.globalAlpha = 1;
   }
-  // round clock and sea
-  const left = FPSC.ROUND - (Date.now() % FPSC.ROUND), mm = Math.floor(left / 60000), ss = Math.floor(left / 1000) % 60;
-  ctx.textAlign = 'left'; ctx.textBaseline = 'top'; ctx.font = mono(13); ctx.fillStyle = 'rgba(236,228,207,0.85)';
-  ctx.fillText(`ROUND ${mm}:${String(ss).padStart(2, '0')}`, 16, 14);
-  ctx.font = mono(11); ctx.fillStyle = 'rgba(236,228,207,0.55)'; ctx.fillText((BIOMES[g.biome] || BIOMES.skerry).name.replace(/^the /, 'The '), 16, 32);
+  const left = FPSC.ROUND - (Date.now() % FPSC.ROUND), mm = Math.floor(left / 60000), ss = Math.floor(left / 1000) % 60, clock = `${mm}:${String(ss).padStart(2, '0')}`;
   const sc = fpsScores(), mine = sc.find(p => p.me) || { k: 0, d: 0 };
-  ctx.textAlign = 'right'; ctx.font = mono(13); ctx.fillStyle = 'rgba(236,228,207,0.85)'; ctx.fillText(`KILLS ${mine.k}  ·  DEATHS ${mine.d}`, W - 16, 14);
-  ctx.font = mono(11); ctx.fillStyle = 'rgba(236,228,207,0.55)'; ctx.fillText(sc[0] && sc[0].k ? `Leader: ${sc[0].me ? 'you' : sc[0].n} (${sc[0].k})` : `${sc.length} on the island`, W - 16, 32);
-  // kill feed
-  ctx.font = mono(12);
-  FPS.feed.forEach((f, i) => { ctx.fillStyle = `rgba(236,228,207,${Math.min(1, f.t) * 0.85})`; ctx.fillText(f.text, W - 16, 56 + i * 17, W - 80); });
-  // health, ammo, flares, lantern
-  const by = H - 22;
-  ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
-  for (let i = 0; i < FPSC.HP; i++) { ctx.fillStyle = i < m.hp ? '#ffd88a' : 'rgba(80,70,60,0.7)'; ctx.fillRect(16 + i * 26, by - 12, 22, 10); }
-  ctx.font = mono(11); ctx.fillStyle = 'rgba(236,228,207,0.6)'; ctx.fillText('HEALTH', 16, by - 18);
-  // (on a phone the buttons sit bottom right, so the ammo goes above them)
-  const pad = $('fpsPad'), padTop = pad && !pad.hidden ? pad.getBoundingClientRect().top - cv.getBoundingClientRect().top - 12 : by;
-  const ay = Math.min(by, padTop);
-  ctx.textAlign = 'right'; ctx.font = mono(22); ctx.fillStyle = m.ammo ? 'rgba(236,228,207,0.9)' : '#e46c4f';
-  ctx.fillText(m.reload > 0 ? 'RELOADING' : `${m.ammo} / ${FPSC.MAG}`, W - 16, ay);
-  ctx.font = mono(11); ctx.fillStyle = 'rgba(236,228,207,0.6)';
-  ctx.fillText(`FLARES ${m.flares}  ·  LANTERN ${m.lan ? 'LIT' : 'DARK'}  ·  BELL ${(FPS.bellCd || 0) > 0 ? Math.ceil(FPS.bellCd) + 's' : 'READY'}`, W - 16, ay - 28);
+  if (phone) {
+    // the clock under the strip; your score top right; the last two lines of the feed under that
+    ctx.textAlign = 'center'; ctx.textBaseline = 'top'; ctx.font = mono(10); ctx.fillStyle = 'rgba(236,228,207,0.6)';
+    ctx.fillText(clock, cx, sy + 21);
+    const rx = W - Math.max(12, FPS.safeRight || 0);
+    ctx.textAlign = 'right'; ctx.font = mono(12); ctx.fillStyle = 'rgba(236,228,207,0.85)'; ctx.fillText(`${mine.k} K · ${mine.d} D`, rx, top);
+    ctx.font = mono(10);
+    FPS.feed.slice(-2).forEach((f, i) => { ctx.fillStyle = `rgba(236,228,207,${Math.min(1, f.t) * 0.75})`; ctx.fillText(f.text, rx, top + 18 + i * 13, W * 0.34); });
+    // health: four small pips at top left, beside the menu
+    const lx = Math.max(12, FPS.safeLeft || 0) + 92;
+    for (let i = 0; i < FPSC.HP; i++) { ctx.fillStyle = i < m.hp ? '#ffd88a' : 'rgba(80,70,60,0.7)'; ctx.fillRect(lx + i * 14, top + 6, 11, 7); }
+    // the floating stick, where your thumb came down
+    if (FPS.stick) {
+      const r0 = cv.getBoundingClientRect(), bx = FPS.stick.x0 - r0.left, by = FPS.stick.y0 - r0.top;
+      ctx.strokeStyle = 'rgba(236,228,207,0.28)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(bx, by, 52, 0, 6.28); ctx.stroke();
+      ctx.fillStyle = 'rgba(236,228,207,0.3)'; ctx.beginPath(); ctx.arc(bx + FPS.stick.dx * 52, by + FPS.stick.dy * 52, 22, 0, 6.28); ctx.fill();
+    } else if (!(m.dead > 0) && (FPS.hintT || 0) > 0) {
+      ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic'; ctx.font = mono(11); ctx.fillStyle = `rgba(236,228,207,${Math.min(0.6, FPS.hintT * 0.3)})`;
+      ctx.fillText('◀ thumb here to walk', Math.max(14, FPS.safeLeft || 0), H - 24);
+      ctx.textAlign = 'center'; ctx.fillText('drag here (or on Fire) to aim', W * 0.62, H * 0.66);
+    }
+    // the fire button carries the ammo; the others light up when they're on or ready
+    fpsPadState();
+  } else {
+    ctx.textAlign = 'left'; ctx.textBaseline = 'top'; ctx.font = mono(13); ctx.fillStyle = 'rgba(236,228,207,0.85)';
+    ctx.fillText(`ROUND ${clock}`, 16, 14);
+    ctx.font = mono(11); ctx.fillStyle = 'rgba(236,228,207,0.55)'; ctx.fillText((BIOMES[g.biome] || BIOMES.skerry).name.replace(/^the /, 'The '), 16, 32);
+    ctx.textAlign = 'right'; ctx.font = mono(13); ctx.fillStyle = 'rgba(236,228,207,0.85)'; ctx.fillText(`KILLS ${mine.k}  ·  DEATHS ${mine.d}`, W - 16, 14);
+    ctx.font = mono(11); ctx.fillStyle = 'rgba(236,228,207,0.55)'; ctx.fillText(sc[0] && sc[0].k ? `Leader: ${sc[0].me ? 'you' : sc[0].n} (${sc[0].k})` : `${sc.length} on the island`, W - 16, 32);
+    ctx.font = mono(12);
+    FPS.feed.forEach((f, i) => { ctx.fillStyle = `rgba(236,228,207,${Math.min(1, f.t) * 0.85})`; ctx.fillText(f.text, W - 16, 56 + i * 17, W - 80); });
+    const by = H - 22;
+    ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+    for (let i = 0; i < FPSC.HP; i++) { ctx.fillStyle = i < m.hp ? '#ffd88a' : 'rgba(80,70,60,0.7)'; ctx.fillRect(16 + i * 26, by - 12, 22, 10); }
+    ctx.font = mono(11); ctx.fillStyle = 'rgba(236,228,207,0.6)'; ctx.fillText('HEALTH', 16, by - 18);
+    ctx.textAlign = 'right'; ctx.font = mono(22); ctx.fillStyle = m.ammo ? 'rgba(236,228,207,0.9)' : '#e46c4f';
+    ctx.fillText(m.reload > 0 ? 'RELOADING' : `${m.ammo} / ${FPSC.MAG}`, W - 16, by);
+    ctx.font = mono(11); ctx.fillStyle = 'rgba(236,228,207,0.6)';
+    ctx.fillText(`FLARES ${m.flares}  ·  LANTERN ${m.lan ? 'LIT' : 'DARK'}  ·  BELL ${(FPS.bellCd || 0) > 0 ? Math.ceil(FPS.bellCd) + 's' : 'READY'}`, W - 16, by - 28);
+  }
   // being lit up by the beam: a warning
-  if (m.dead <= 0 && litAt(m.x, m.y) > 0) { ctx.textAlign = 'center'; ctx.font = mono(12); ctx.fillStyle = 'rgba(255,216,138,0.9)'; ctx.fillText('IN THE BEAM — EVERYONE CAN SEE YOU', cx, H * 0.5 + 60); }
+  if (m.dead <= 0 && litAt(m.x, m.y) > 0) { ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = mono(phone ? 10 : 12); ctx.fillStyle = 'rgba(255,216,138,0.9)'; ctx.fillText(phone ? 'IN THE BEAM' : 'IN THE BEAM — EVERYONE CAN SEE YOU', cx, H * 0.5 + (phone ? 34 : 60)); }
   // dead
   if (m.dead > 0) {
     ctx.fillStyle = 'rgba(10,4,4,0.45)'; ctx.fillRect(0, 0, W, H);
-    ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = '#e46c4f'; ctx.font = '400 34px "IM Fell English SC", serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = '#e46c4f'; ctx.font = `400 ${phone ? 26 : 34}px "IM Fell English SC", serif`;
     ctx.fillText(m.killer ? `Shot by ${m.killer}` : 'Taken by the sea', cx, H * 0.42);
     ctx.font = mono(13); ctx.fillStyle = 'rgba(236,228,207,0.8)'; ctx.fillText(`Back ashore in ${Math.ceil(m.dead)}…`, cx, H * 0.42 + 36);
   }
-  if (FPS.roundMsg) { ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = '400 30px "IM Fell English SC", serif'; ctx.fillStyle = `rgba(255,216,138,${Math.min(1, FPS.roundMsg.t)})`; ctx.fillText(FPS.roundMsg.text, cx, H * 0.3); ctx.font = mono(12); ctx.fillText(`A new round begins on ${(BIOMES[g.biome] || BIOMES.skerry).name}.`, cx, H * 0.3 + 30); }
+  if (FPS.roundMsg) { ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = `400 ${phone ? 20 : 30}px "IM Fell English SC", serif`; ctx.fillStyle = `rgba(255,216,138,${Math.min(1, FPS.roundMsg.t)})`; ctx.fillText(FPS.roundMsg.text, cx, H * 0.3, W - 24); ctx.font = mono(12); ctx.fillText(`A new round begins on ${(BIOMES[g.biome] || BIOMES.skerry).name}.`, cx, H * 0.3 + 30); }
   // scoreboard
   if (FPS.board) {
     const rows = sc, bw = Math.min(420, W - 32), bh = 54 + rows.length * 24, bx = cx - bw / 2, by2 = H * 0.18;
@@ -882,6 +931,25 @@ function fpsHud() {
   if (!FPS.mouse && !matchMedia('(pointer: coarse)').matches && !FPS.menu) {
     ctx.textAlign = 'center'; ctx.font = mono(12); ctx.fillStyle = 'rgba(236,228,207,0.6)'; ctx.fillText('Click to aim with the mouse', cx, H * 0.5 + 40);
   }
+}
+
+// the phone buttons show what they'll do: ammo on Fire, lantern lit or dark, flares left, bell ready
+function fpsPadState() {
+  const m = FPS.me, set = (id, on, text) => { const el = $(id); if (!el) return; el.classList.toggle('on', !!on); if (text != null && el.dataset.t !== text) { el.dataset.t = text; const c = el.querySelector('.cnt'); if (c) c.textContent = text; } };
+  set('fpsPadFire', m.ammo > 0 && !(m.reload > 0), m.reload > 0 ? '…' : String(m.ammo));
+  set('fpsPadLantern', m.lan);
+  set('fpsPadFlare', m.flares > 0, String(m.flares));
+  set('fpsPadBell', !((FPS.bellCd || 0) > 0), (FPS.bellCd || 0) > 0 ? String(Math.ceil(FPS.bellCd)) : '');
+  set('fpsPadReload', m.ammo < FPSC.MAG && !(m.reload > 0));
+}
+// the notch and rounded corners on phones: read the safe-area insets once in a while
+function fpsSafeArea() {
+  const probe = document.createElement('div');
+  probe.style.cssText = 'position:fixed;top:env(safe-area-inset-top,0px);left:env(safe-area-inset-left,0px);right:env(safe-area-inset-right,0px);visibility:hidden;pointer-events:none;';
+  document.body.appendChild(probe);
+  const cs = getComputedStyle(probe);
+  FPS.safeTop = parseFloat(cs.top) || 0; FPS.safeLeft = parseFloat(cs.left) || 0; FPS.safeRight = parseFloat(cs.right) || 0;
+  probe.remove();
 }
 
 // ---------- controls ----------
@@ -923,22 +991,28 @@ addEventListener('touchstart', e => {
   e.stopImmediatePropagation(); e.preventDefault();
   for (const t of e.changedTouches) {
     if (t.clientX < innerWidth * 0.45 && !FPS.stick) FPS.stick = { id: t.identifier, x0: t.clientX, y0: t.clientY, dx: 0, dy: 0 };
-    else if (!FPS.lookTouch) FPS.lookTouch = { id: t.identifier, x: t.clientX, y: t.clientY };
+    else if (!FPS.lookTouch) FPS.lookTouch = { id: t.identifier, x: t.clientX, y: t.clientY, at: performance.now(), moved: 0 };
   }
 }, { capture: true, passive: false });
 addEventListener('touchmove', e => {
   if (!FPS.on) return;
   for (const t of e.changedTouches) {
-    if (FPS.stick && t.identifier === FPS.stick.id) { FPS.stick.dx = clamp((t.clientX - FPS.stick.x0) / 50, -1, 1); FPS.stick.dy = clamp((t.clientY - FPS.stick.y0) / 50, -1, 1); }
-    if (FPS.lookTouch && t.identifier === FPS.lookTouch.id) { FPS.look[0] += (t.clientX - FPS.lookTouch.x) * 1.6; FPS.look[1] += (t.clientY - FPS.lookTouch.y) * 1.6; FPS.lookTouch.x = t.clientX; FPS.lookTouch.y = t.clientY; }
+    if (FPS.stick && t.identifier === FPS.stick.id) { let dx = (t.clientX - FPS.stick.x0) / 52, dy = (t.clientY - FPS.stick.y0) / 52; const L = Math.hypot(dx, dy);
+      if (L > 1) { dx /= L; dy /= L; }
+      // past the edge of the ring, the ring follows your thumb
+      if (L > 1.25) { FPS.stick.x0 = t.clientX - dx * 52; FPS.stick.y0 = t.clientY - dy * 52; }
+      FPS.stick.dx = L < 0.12 ? 0 : dx; FPS.stick.dy = L < 0.12 ? 0 : dy;
+      // pushed right to the edge: run
+      FPS.stickRun = L > 0.95; }
+    if (FPS.lookTouch && t.identifier === FPS.lookTouch.id) { FPS.lookTouch.moved += Math.abs(t.clientX - FPS.lookTouch.x) + Math.abs(t.clientY - FPS.lookTouch.y); FPS.look[0] += (t.clientX - FPS.lookTouch.x) * 1.6; FPS.look[1] += (t.clientY - FPS.lookTouch.y) * 1.6; FPS.lookTouch.x = t.clientX; FPS.lookTouch.y = t.clientY; }
   }
   if (e.target === cv) e.preventDefault();
 }, { capture: true, passive: false });
 const fpsTouchEnd = e => {
   if (!FPS.on) return;
   for (const t of e.changedTouches) {
-    if (FPS.stick && t.identifier === FPS.stick.id) FPS.stick = null;
-    if (FPS.lookTouch && t.identifier === FPS.lookTouch.id) FPS.lookTouch = null;
+    if (FPS.stick && t.identifier === FPS.stick.id) { FPS.stick = null; FPS.stickRun = false; }
+    if (FPS.lookTouch && t.identifier === FPS.lookTouch.id) { if (FPS.lookTouch.moved < 10 && performance.now() - FPS.lookTouch.at < 350) fpsShoot(); FPS.lookTouch = null; }
   }
 };
 addEventListener('touchend', fpsTouchEnd, true); addEventListener('touchcancel', fpsTouchEnd, true);
@@ -954,7 +1028,15 @@ $('fpsCard').addEventListener('keydown', e => { if (e.key === 'Escape') fpsClose
 for (const [id, fn] of [['fpsPadReload', fpsReload], ['fpsPadLantern', fpsLantern], ['fpsPadFlare', fpsFlare], ['fpsPadBell', fpsBell], ['fpsPadMenu', () => fpsSetMenu(true)], ['fpsPadBoard', () => { FPS.board = !FPS.board; }]]) {
   $(id).addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); fn(); });
 }
-$('fpsPadFire').addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); FPS.touchFire = true; });
-for (const ev of ['pointerup', 'pointercancel', 'pointerleave']) $('fpsPadFire').addEventListener(ev, () => { FPS.touchFire = false; });
+// Fire: hold to shoot, and drag while holding to aim, so you can turn and fire with one thumb
+{
+  const fire = $('fpsPadFire');
+  fire.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); FPS.touchFire = true; FPS.fireDrag = { id: e.pointerId, x: e.clientX, y: e.clientY }; try { fire.setPointerCapture(e.pointerId); } catch (err) {} });
+  fire.addEventListener('pointermove', e => {
+    const d = FPS.fireDrag; if (!d || d.id !== e.pointerId) return;
+    FPS.look[0] += (e.clientX - d.x) * 1.6; FPS.look[1] += (e.clientY - d.y) * 1.6; d.x = e.clientX; d.y = e.clientY;
+  });
+  for (const ev of ['pointerup', 'pointercancel']) fire.addEventListener(ev, () => { FPS.touchFire = false; FPS.fireDrag = null; });
+}
 // leaving the page: off the island
 addEventListener('pagehide', () => { if (FPS.on && NET.room) NET.room.presence({ fps: null }).catch(() => {}); });

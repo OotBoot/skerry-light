@@ -586,8 +586,26 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 /* Wreckers' Night */
 .fpsbtn { border-color: rgba(228,108,79,0.6); }
 #stage.fpsmode #cv { cursor: crosshair; }
-.fpspad { position: absolute; right: max(10px, env(safe-area-inset-right, 0px)); bottom: max(10px, env(safe-area-inset-bottom, 0px)); display: grid; grid-template-columns: repeat(3, auto); gap: 8px; align-items: end; justify-items: end; z-index: 5; }
+.fpspad { position: absolute; inset: 0; pointer-events: none; z-index: 5; }
 .fpspad[hidden] { display: none; }
-.fpspad .tool { min-width: 64px; min-height: 44px; font-size: 13px; background: rgba(8,10,14,0.55); }
-.fpspad .fpsfire { grid-column: 3; grid-row: 2 / span 2; width: 92px; height: 92px; border-radius: 50%; font-size: 16px; }
-#fpsPadMenu { position: fixed; top: max(52px, calc(env(safe-area-inset-top, 0px) + 44px)); left: max(10px, env(safe-area-inset-left, 0px)); min-width: 44px; }
+.fpspad button { pointer-events: auto; touch-action: none; -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
+.fpstop { position: absolute; top: max(8px, env(safe-area-inset-top, 0px)); left: max(8px, env(safe-area-inset-left, 0px)); display: flex; gap: 6px; }
+.fpsico { position: relative; width: 38px; height: 38px; border-radius: 50%; border: 1px solid rgba(236,228,207,0.28); background: rgba(8,10,14,0.45); color: rgba(236,228,207,0.75); display: grid; place-items: center; padding: 0; }
+.fpsico svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.fpsico .cnt { position: absolute; right: -3px; top: -3px; min-width: 15px; height: 15px; border-radius: 8px; background: rgba(8,10,14,0.85); font: 600 10px/15px "Courier Prime", monospace; color: #ecE4cf; }
+.fpsico .cnt:empty { display: none; }
+.fpsico.on { color: #ffd88a; border-color: rgba(255,216,138,0.6); }
+.fpslantern.on { background: rgba(255,200,110,0.22); }
+.fpsfirecluster { position: absolute; right: max(14px, env(safe-area-inset-right, 0px)); bottom: max(14px, env(safe-area-inset-bottom, 0px)); width: 178px; height: 178px; }
+.fpsfirecluster .fpsico { position: absolute; width: 46px; height: 46px; }
+.fpsfirecluster .fpsico svg { width: 22px; height: 22px; }
+.fpsreload { left: 0; bottom: 8px; }
+.fpslantern { left: 14px; top: 46px; }
+.fpsflare { left: 66px; top: 4px; }
+.fpsbell { right: 0; top: -20px; }
+.fpsfire { position: absolute; right: 0; bottom: 0; width: 104px; height: 104px; border-radius: 50%; border: 2px solid rgba(255,216,138,0.75); background: rgba(228,108,79,0.32); color: #ffe6b0; display: grid; place-items: center; align-content: center; gap: 0; padding: 0; }
+.fpsfire .cnt { font: 600 30px/1 "Courier Prime", monospace; }
+.fpsfire small { font: 600 10px/1.2 "Courier Prime", monospace; letter-spacing: 0.12em; opacity: 0.8; }
+.fpsfire:not(.on) { background: rgba(80,40,30,0.4); border-color: rgba(228,108,79,0.6); }
+.fpsfire:active { background: rgba(228,108,79,0.55); }
+@media (orientation: portrait) { .fpsfirecluster { transform: scale(0.9); transform-origin: bottom right; } }
