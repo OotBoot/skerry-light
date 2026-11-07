@@ -118,6 +118,7 @@ A separate game mode, from the **Wreckers' Night · FPS** button on the title sc
 
 - **Light:** you only see what light reaches. The lighthouse beam sweeps the island and shows anyone it crosses (a warning tells you when you're in it). Your lantern (L) lights what's near you, and shows you to the whole island while it burns. Flares (F, two a life) light a wide circle for everyone.
 - **The bell** (B or Space): everyone shows on your bearing strip for a few seconds, and you show on theirs.
+- **Your pistol** is a 3D pepperbox held out in the middle of the view: six barrels that turn a place with every shot, a bar hammer that drops and is thumbed back, a kick and a flash and smoke. Reloading swaps the whole barrel cluster: the gun tips up, the spent cluster slides off and drops away, your other hand brings up a loaded one and seats it with a click, and the hammer is cocked as the gun comes back to aim.
 - **Cover:** the skerries and old wrecks stop shots. Head shots do double damage. Four hits and you're down; you're back ashore 3.5 seconds later, somewhere away from everyone else, and patch yourself up after a few quiet seconds.
 - **The drowned crew** wade ashore now and then and go for whoever is nearest.
 - **Rounds** last five minutes on the clock, so everyone's round ends together; the scores reset and the island moves to the next of the six seas.
@@ -257,6 +258,7 @@ src/transport.js    connects to the crew server outside claude.ai
 src/net.js          crews: lobby, shared voyages, crewmates' ships
 src/crates.js       boats, crates, skins and pennants
 src/fps.js          Wreckers' Night, the multiplayer FPS mode
+src/fpsgun.js       Wreckers' Night: the 3D pistol, its hand and its reload
 src/main.js         starts the main loop
 assets/maren.png    Maren cutout
 assets/plimsoll.png Plimsoll cutout

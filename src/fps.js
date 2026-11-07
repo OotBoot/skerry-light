@@ -20,7 +20,7 @@
 const FPSC = {
   PLAYERS: 4, LAG: 0.35,
   CX: 0, CY: 640, R: 140, GROUND: 0.35, EYE: 1.7, BODY: 0.55, TALL: 1.85,
-  SPEED: 6.5, SPRINT: 10, HP: 4, MAG: 6, RATE: 0.26, RELOAD: 1.7, RESPAWN: 3.5, FLARES: 2,
+  SPEED: 6.5, SPRINT: 10, HP: 4, MAG: 6, RATE: 0.26, RELOAD: 2.2, RESPAWN: 3.5, FLARES: 2,
   ROUND: 300000, PERIOD: 16, RANGE: 420, SEND: 0.1, BOTS: 3, PROTECT: 2,
 };
 const FPS = {
@@ -373,7 +373,7 @@ function fpsShoot() {
   const m = FPS.me;
   if (m.dead > 0 || m.reload > 0 || m.cd > 0 || FPS.menu) return;
   if (m.ammo <= 0) { fpsReload(); return; }
-  m.ammo--; m.cd = FPSC.RATE; FPS.flash = 0.07; FPS.recoil = 1;
+  m.ammo--; m.cd = FPSC.RATE; FPS.flash = 0.07; FPS.recoil = 1; FPS.vmShots = (FPS.vmShots || 0) + 1;
   m.protect = 0;
   fpsGunSound(0, 0);
   const z = FPSC.GROUND + FPSC.EYE;
@@ -564,6 +564,7 @@ function fpsDrownedTick(dt, now) {
 
 // ---------- each frame ----------
 function fpsFrame(dt) {
+  FPS.dtLast = dt;
   const G = FPS.g, m = FPS.me;
   const saved = [g, ship];
   g = G; ship = m;
@@ -621,7 +622,7 @@ function fpsInput(dt) {
     m.h = wrapPi(m.h + clamp(assist.dh, -1, 1) * Math.min(1, dt * 3.2));
     m.p = clamp(m.p + clamp(assist.dp, -1, 1) * Math.min(1, dt * 4), -0.6, 0.6);
   }
-  FPS.look = [0, 0];
+  FPS.lastLook = FPS.look; FPS.look = [0, 0];
   let fx = 0, fz = 0, fire = false;
   const pad = navigator.getGamepads ? [...navigator.getGamepads()].find(p => p && p.connected) : null;
   if (pad) {
@@ -792,6 +793,8 @@ function fpsDrawDrowned(d, c) {
 // your hands: a pepperbox pistol on the right, your lantern on the left
 function fpsDrawHands() {
   const m = FPS.me; if (m.dead > 0) return;
+  // the 3D pistol; the flat drawing below is only for when there's no WebGL
+  if (vmDraw(FPS.dtLast || 0.016)) return;
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   const s = Math.min(W, H) / 600 * (FPS.touch ? 0.7 : 1), bob = reduceMotion ? 0 : Math.sin(FPS.step) * 6 * s, sway = reduceMotion ? 0 : Math.cos(FPS.step * 0.5) * 5 * s;
   const rl = m.reload > 0 ? Math.sin(Math.min(1, (FPSC.RELOAD - m.reload) / FPSC.RELOAD) * Math.PI) : 0;
