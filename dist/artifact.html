@@ -3831,6 +3831,9 @@ function drawShip3D(o, skin, boat, vis, opts) {
   const fx = skinFx(skin);
   if (fx === 'ghost' && !reduceMotion) ctx.globalAlpha *= 0.62 + 0.25 * Math.sin(g.t * 1.7) + 0.08 * Math.sin(g.t * 7.3);
   const P = (u, w, z) => { const q = polyProj([W(u, w, z)]); return q.length ? q[0] : null; };
+  // how much detail is worth drawing: pixels per metre at the ship
+  const mid = P(0, 0, Zd), ppm = mid ? mid.s : 0, near = ppm > 2.2, close = ppm > 5;
+  const seam = (a, b, col, w) => { const p = polyProj([a, b]); if (p.length === 2) { ctx.strokeStyle = col; ctx.lineWidth = w; ctx.beginPath(); ctx.moveTo(p[0].x, p[0].y); ctx.lineTo(p[1].x, p[1].y); ctx.stroke(); } };
 
   // wake: two white lines off the bow and a smear astern, stronger with speed
   const sp = Math.min(1, (o.v || 0) / 14);
@@ -3873,12 +3876,31 @@ function drawShip3D(o, skin, boat, vis, opts) {
     const k = f.side === 0 ? 0.25 : 0.1 + 0.15 * Math.abs(Math.sin(f.i));
     band(0, 0.3, shade(bottomC, k));
     band(0.3, 0.84, shade(hullC, k));
-    // planking seams
-    if (f.d < 200) for (const t of [0.45, 0.6, 0.72]) {
-      const p = polyProj([lerp(f.wlA, f.deckA, t), lerp(f.wlB, f.deckB, t)]);
-      if (p.length === 2) { ctx.strokeStyle = 'rgba(0,0,0,0.25)'; ctx.lineWidth = 0.8; ctx.beginPath(); ctx.moveTo(p[0].x, p[0].y); ctx.lineTo(p[1].x, p[1].y); ctx.stroke(); }
-    }
+    // a pale boot-top along the waterline, and a heavy wale below the rail
+    band(0.27, 0.31, shade('#cfc7b0', k + 0.15));
+    band(0.74, 0.79, shade(mix(String(hullC).length === 7 ? hullC : '#3a2a1e', '#000000', 0.45), k));
+    // planking seams, closer together the nearer you are
+    if (near) {
+      const step = close ? 0.055 : 0.11;
+      for (let t = 0.36; t < 0.74; t += step) seam(lerp(f.wlA, f.deckA, t), lerp(f.wlB, f.deckB, t), 'rgba(0,0,0,0.22)', 0.7);
+      // butt joints, staggered plank ends
+      if (close && f.side) for (let r = 0; r < 6; r++) {
+        const t0 = 0.36 + r * 0.06, x = ((r * 0.37 + f.i * 0.21) % 1);
+        seam(lerp(lerp(f.wlA, f.deckA, t0), lerp(f.wlB, f.deckB, t0), x), lerp(lerp(f.wlA, f.deckA, t0 + 0.055), lerp(f.wlB, f.deckB, t0 + 0.055), x), 'rgba(0,0,0,0.2)', 0.6);
+      }
+    } else if (f.d < 200) for (const t of [0.45, 0.6, 0.72]) seam(lerp(f.wlA, f.deckA, t), lerp(f.wlB, f.deckB, t), 'rgba(0,0,0,0.25)', 0.8);
     if (tier >= 2) band(0.62, 0.68, shade(skin.sail, k));   // a painted stripe along the topsides
+    // the stern: a row of lit cabin windows, framed, and carved trim on the finer skins
+    if (f.side === 0 && near) {
+      for (let i = 0; i < 4; i++) {
+        const t0 = 0.16 + i * 0.18, t1 = t0 + 0.12, lo = 0.6, hi = 0.76;
+        const a = lerp(lerp(f.wlA, f.wlB, t0), lerp(f.deckA, f.deckB, t0), lo), b = lerp(lerp(f.wlA, f.wlB, t1), lerp(f.deckA, f.deckB, t1), lo);
+        const c = lerp(lerp(f.wlA, f.wlB, t1), lerp(f.deckA, f.deckB, t1), hi), d = lerp(lerp(f.wlA, f.wlB, t0), lerp(f.deckA, f.deckB, t0), hi);
+        fillPoly([a, b, c, d], shade(skin.rail, 0.5));
+        fillPoly([lerp(a, c, 0.15), lerp(b, d, 0.15), lerp(c, a, 0.15), lerp(d, b, 0.15)], `rgba(255,${190 + 20 * Math.sin(g.t * 2 + i)},110,${0.55 + 0.3 * lit})`);
+      }
+      if (tier >= 3) band(0.82, 0.86, tier >= 5 ? '#e8c050' : shade(skin.rail, 0));
+    }
     band(0.84, 1, shade(railC, k * 0.6));
     // flowing paint: a wave of the effect's colour travelling along the topsides
     const fa = f.side ? hullFlowAlpha(skin, f.i) : 0;
@@ -3888,9 +3910,27 @@ function drawShip3D(o, skin, boat, vis, opts) {
       for (const t of [0.3, 0.7]) {
         const c0 = lerp(lerp(f.wlA, f.deckA, 0.5), lerp(f.wlB, f.deckB, 0.5), t), c1 = lerp(lerp(f.wlA, f.deckA, 0.72), lerp(f.wlB, f.deckB, 0.72), t);
         const q0 = polyProj([c0]), q1 = polyProj([c1]);
-        if (q0.length && q1.length) { const s = Math.max(1, Math.abs(q0[0].y - q1[0].y)); ctx.fillStyle = 'rgba(10,8,6,0.85)'; ctx.fillRect(q0[0].x - s * 0.5, q1[0].y, s, s); }
+        if (q0.length && q1.length) {
+          const s = Math.max(1, Math.abs(q0[0].y - q1[0].y)), x = q0[0].x - s * 0.5, y = q1[0].y;
+          if (s > 4) {
+            // the open lid above, its red inside, and the gun's muzzle in the dark
+            ctx.fillStyle = shade(railC, 0.3); ctx.fillRect(x - s * 0.08, y - s * 0.55, s * 1.16, s * 0.45);
+            ctx.fillStyle = 'rgba(120,28,18,0.9)'; ctx.fillRect(x - s * 0.08, y - s * 0.08, s * 1.16, s * 1.16);
+            ctx.fillStyle = 'rgba(10,8,6,0.92)'; ctx.fillRect(x + s * 0.06, y + s * 0.06, s * 0.88, s * 0.88);
+            ctx.fillStyle = '#16161a'; ctx.beginPath(); ctx.arc(x + s * 0.5, y + s * 0.52, s * 0.26, 0, 6.28); ctx.fill();
+            ctx.fillStyle = 'rgba(0,0,0,0.9)'; ctx.beginPath(); ctx.arc(x + s * 0.5, y + s * 0.52, s * 0.13, 0, 6.28); ctx.fill();
+          } else { ctx.fillStyle = 'rgba(10,8,6,0.85)'; ctx.fillRect(x, y, s, s); }
+        }
       }
     }
+  }
+  // the cutter has round brass-rimmed portholes instead of guns
+  if (boat.id === 'cutter' && near) for (const f of faces) {
+    if (!f.side || f.i < 1 || f.i > 4) continue;
+    const c = polyProj([lerp(lerp(f.wlA, f.deckA, 0.6), lerp(f.wlB, f.deckB, 0.6), 0.5)]); if (!c.length) continue;
+    const r = Math.max(1, c[0].s * 0.22);
+    ctx.fillStyle = '#b08a3c'; ctx.beginPath(); ctx.arc(c[0].x, c[0].y, r, 0, 6.28); ctx.fill();
+    ctx.fillStyle = `rgba(255,205,130,${0.5 + 0.3 * lit})`; ctx.beginPath(); ctx.arc(c[0].x, c[0].y, r * 0.65, 0, 6.28); ctx.fill();
   }
   // deck, with a hatch and (on the bigger boats) a cabin aft
   const deckPts = [];
@@ -3904,6 +3944,38 @@ function drawShip3D(o, skin, boat, vis, opts) {
     fillPoly([W(-Lh * 0.85, B * 0.4, Zd), W(-Lh * 0.55, B * 0.4, Zd), W(-Lh * 0.55, B * 0.4, cz), W(-Lh * 0.85, B * 0.4, cz)], shade(skin.wood, 0.35));
     fillPoly([W(-Lh * 0.55, -B * 0.4, Zd), W(-Lh * 0.55, B * 0.4, Zd), W(-Lh * 0.55, B * 0.4, cz), W(-Lh * 0.55, -B * 0.4, cz)], shade(skin.wood, 0.2));
     fillPoly([W(-Lh * 0.85, -B * 0.42, cz), W(-Lh * 0.55, -B * 0.42, cz), W(-Lh * 0.55, B * 0.42, cz), W(-Lh * 0.85, B * 0.42, cz)], shade(skin.rail, 0.1));
+    if (near) {
+      // a skylight on the cabin roof and two lit windows in its front
+      fillPoly([W(-Lh * 0.76, -B * 0.16, cz + 0.02), W(-Lh * 0.64, -B * 0.16, cz + 0.02), W(-Lh * 0.64, B * 0.16, cz + 0.02), W(-Lh * 0.76, B * 0.16, cz + 0.02)], `rgba(255,200,120,${0.35 + 0.25 * lit})`);
+      for (const s of [-1, 1]) fillPoly([W(-Lh * 0.55 + 0.02, s * B * 0.12, Zd + 0.45), W(-Lh * 0.55 + 0.02, s * B * 0.28, Zd + 0.45), W(-Lh * 0.55 + 0.02, s * B * 0.28, Zd + 0.9), W(-Lh * 0.55 + 0.02, s * B * 0.12, Zd + 0.9)], `rgba(255,205,130,${0.5 + 0.3 * lit})`);
+    }
+  }
+  if (near) {
+    // deck planking running fore and aft
+    for (let w = -0.6; w <= 0.61; w += close ? 0.15 : 0.3) seam(W(-Lh * 0.82, w * B, Zd + 0.01), W(Lh * 0.48, w * B, Zd + 0.01), 'rgba(0,0,0,0.2)', 0.6);
+    // the hatch's grating
+    for (let i = 1; i < 4; i++) {
+      seam(W(Lh * (0.1 + 0.05 * i), -B * 0.25, Zd + 0.03), W(Lh * (0.1 + 0.05 * i), B * 0.25, Zd + 0.03), 'rgba(0,0,0,0.45)', 0.7);
+      seam(W(Lh * 0.1, B * (-0.25 + 0.125 * i), Zd + 0.03), W(Lh * 0.3, B * (-0.25 + 0.125 * i), Zd + 0.03), 'rgba(0,0,0,0.45)', 0.7);
+    }
+    // the capstan: a drum with its bars
+    const cu = boat.id === 'cutter' ? Lh * 0.45 : -Lh * 0.3, ring = (r, z) => { const out = []; for (let i = 0; i < 10; i++) { const a = i / 10 * 6.283; out.push(W(cu + Math.cos(a) * r, Math.sin(a) * r, z)); } return out; };
+    fillPoly(ring(0.55, Zd + 0.9), shade(skin.wood, 0.1));
+    for (let i = 0; i < 4; i++) { const a = i / 4 * 3.1416 + 0.4; seam(W(cu - Math.cos(a) * 1.4, -Math.sin(a) * 1.4, Zd + 0.75), W(cu + Math.cos(a) * 1.4, Math.sin(a) * 1.4, Zd + 0.75), shade(skin.wood, 0.4), Math.max(0.6, ppm * 0.08)); }
+    // barrels lashed by the foremast
+    for (const [bu, bw] of [[0.42, 0.55], [0.38, -0.6], [0.47, -0.45]]) {
+      if (boat.id === 'cutter') break;
+      const top = []; for (let i = 0; i < 8; i++) { const a = i / 8 * 6.283; top.push(W(Lh * bu + Math.cos(a) * 0.35, B * bw + Math.sin(a) * 0.35, Zd + 0.75)); }
+      fillPoly(top, shade(skin.wood, 0.05));
+    }
+    // the barque carries her ship's boat upturned amidships
+    if (boat.id === 'barque') {
+      const bu = -Lh * 0.05, bl = Lh * 0.2, bb = B * 0.3, bz = Zd + 0.9;
+      fillPoly([W(bu + bl, 0, bz), W(bu + bl * 0.4, bb, bz), W(bu - bl, bb * 0.8, bz), W(bu - bl, -bb * 0.8, bz), W(bu + bl * 0.4, -bb, bz)], shade(skin.hull, 0.15));
+      seam(W(bu + bl, 0, bz + 0.01), W(bu - bl, 0, bz + 0.01), 'rgba(0,0,0,0.35)', 0.8);
+    }
+    // a figurehead under the bowsprit on the finer skins
+    if (tier >= 3) { const fh = P(Lh * 1.02, 0, Zd * 0.75); if (fh) { ctx.fillStyle = tier >= 5 ? '#e8c050' : shade(skin.rail, 0); ctx.beginPath(); ctx.ellipse(fh.x, fh.y, Math.max(1, fh.s * 0.3), Math.max(1.5, fh.s * 0.6), 0, 0, 6.28); ctx.fill(); } }
   }
 
   // rig: masts, sails, jib, bowsprit and rigging, far parts first
@@ -3917,6 +3989,14 @@ function drawShip3D(o, skin, boat, vis, opts) {
   const sail = (pts, stripes) => parts.push({ d: Math.hypot(camAt[0] - pts[0][0], camAt[1] - pts[0][1]) - 0.5, draw: () => {
     const ga = ctx.globalAlpha; if (opts.sailAlpha) ctx.globalAlpha = ga * opts.sailAlpha;
     fillPoly(pts, sailCol);
+    if (near && pts.length === 4) {
+      // canvas: the lower half in the belly's shadow, panel seams down the cloth, a row of reef points
+      const Lr = (t) => [lerp(pts[0], pts[3], t), lerp(pts[1], pts[2], t)];
+      const [m0, m1] = Lr(0.5);
+      fillPoly([pts[0], pts[1], m1, m0], 'rgba(0,0,0,0.12)');
+      for (let i = 1; i < 6; i++) seam(lerp(pts[0], pts[1], i / 6), lerp(pts[3], pts[2], i / 6), 'rgba(0,0,0,0.13)', 0.6);
+      if (close) { const [r0, r1] = Lr(0.82); for (let i = 1; i < 12; i++) { const c = polyProj([lerp(r0, r1, i / 12)]); if (c.length) { ctx.fillStyle = 'rgba(30,24,16,0.45)'; ctx.fillRect(c[0].x - 0.6, c[0].y - 0.6, 1.3, Math.max(1.3, c[0].s * 0.3)); } } }
+    }
     if (stripes && tier >= 3) { // two coloured bands across the sail
       const L = (t) => [lerp(pts[0], pts[3], t), lerp(pts[1], pts[2], t)];
       const off = sailFlow(skin);
@@ -3935,10 +4015,35 @@ function drawShip3D(o, skin, boat, vis, opts) {
     }
     ctx.globalAlpha = ga;
   } });
-  const mastC = shade(skin.wood, 0.3);
+  const mastC = shade(skin.wood, 0.3), ropeC = 'rgba(20,16,12,0.7)';
+  if (near) {
+    // the rail round the deck on its stanchions
+    for (const s of [-1, 1]) for (let i = 0; i < STATIONS.length - 1; i++) {
+      const a = STATIONS[i], b = STATIONS[i + 1];
+      const pa = W(a.u * Lh * 0.98, s * a.w * B * 0.97, Zd + a.sheer + 0.9), pb = W(b.u * Lh * 0.98, s * b.w * B * 0.97, Zd + b.sheer + 0.9);
+      line(pa, pb, shade(railC, 0.15), 0.12);
+      line(W(a.u * Lh * 0.98, s * a.w * B * 0.97, Zd + a.sheer), pa, shade(railC, 0.35), 0.08);
+    }
+    // the ship's wheel, just forward of the cabin (or right aft on the cutter)
+    const wu = boat.id === 'cutter' ? -Lh * 0.72 : -Lh * 0.5, wz = Zd + 1.25, wr = 0.75, rim = [];
+    const spin = (o.rudder || 0) * 2;
+    for (let i = 0; i <= 16; i++) { const a = i / 16 * 6.283 + spin; rim.push(W(wu, Math.cos(a) * wr, wz + Math.sin(a) * wr)); }
+    for (let i = 0; i < 16; i++) line(rim[i], rim[i + 1], shade(skin.wood, 0.1), 0.09);
+    for (let i = 0; i < 4; i++) { const a = i / 4 * 3.1416 + spin; line(W(wu, -Math.cos(a) * wr * 1.25, wz - Math.sin(a) * wr * 1.25), W(wu, Math.cos(a) * wr * 1.25, wz + Math.sin(a) * wr * 1.25), shade(skin.wood, 0.25), 0.06); }
+    line(W(wu, 0, Zd), W(wu, 0, wz), shade(skin.wood, 0.3), 0.15);
+  }
   for (const mu of masts) {
     const base = W(mu, 0, Zd), top = W(mu, 0, Zd + mastH);
-    line(base, top, mastC, 0.35);
+    // a stout lower mast, a slimmer topmast above the top
+    line(base, W(mu, 0, Zd + mastH * 0.57), mastC, 0.42);
+    line(W(mu, 0, Zd + mastH * 0.5), top, mastC, 0.26);
+    if (near) {
+      // the top (a platform where the mast steps up), and a crow's nest near the head
+      for (const [zf, r] of [[0.56, 1.1], [0.86, 0.55]]) {
+        const z = Zd + mastH * zf, pts = []; for (let i = 0; i < 8; i++) { const a = i / 8 * 6.283; pts.push(W(mu + Math.cos(a) * r * 0.8, Math.sin(a) * r, z)); }
+        parts.push({ d: dist3(base, top) - 0.3, draw: () => fillPoly(pts, shade(skin.wood, 0.35)) });
+      }
+    }
     if (boat.id === 'cutter') {
       // gaff mainsail, fore and aft, and a long boom
       // the boom swung out to one side by the brace, so the mainsail shows its face from astern
@@ -3956,15 +4061,48 @@ function drawShip3D(o, skin, boat, vis, opts) {
         const za = Zd + mastH * z0, zb = Zd + mastH * z1, bel = 0.9;
         sail([Y(mu + 0.4 + bel * 0.4, -sw * wk, za), Y(mu + 0.4 + bel * 0.4, sw * wk, za), Y(mu + 0.4, sw * wk * 0.86, zb), Y(mu + 0.4, -sw * wk * 0.86, zb)], true);
         line(Y(mu + 0.35, -sw * wk * 0.9, zb), Y(mu + 0.35, sw * wk * 0.9, zb), mastC, 0.18);
+        // footrope under the yard, and the yard's lifts up to the mast
+        if (near) {
+          line(Y(mu + 0.3, -sw * wk * 0.88, zb - 0.7), Y(mu + 0.3, sw * wk * 0.88, zb - 0.7), ropeC, 0.04);
+          for (const s of [-1, 1]) line(Y(mu + 0.35, s * sw * wk * 0.88, zb), W(mu, 0, zb + mastH * 0.12), ropeC, 0.035);
+        }
       }
     }
     // shrouds down to the rails
-    for (const s of [-1, 1]) line(W(mu, 0, Zd + mastH * 0.88), W(mu - Lh * 0.08, s * B, Zd + 0.3), 'rgba(20,16,12,0.7)', 0.06);
+    for (const s of [-1, 1]) {
+      const t0 = W(mu, 0, Zd + mastH * 0.56), a0 = W(mu - Lh * 0.05, s * B, Zd + 0.4), a1 = W(mu - Lh * 0.12, s * B, Zd + 0.4);
+      line(W(mu, 0, Zd + mastH * 0.88), W(mu - Lh * 0.08, s * B, Zd + 0.3), ropeC, 0.06);
+      if (near) {
+        // the lower shrouds in pairs, with ratlines across them to climb by
+        line(t0, a0, ropeC, 0.05); line(t0, a1, ropeC, 0.05);
+        const n = close ? 12 : 6;
+        for (let i = 1; i < n; i++) { const t = i / n; line(lerp(a0, t0, t), lerp(a1, t0, t), 'rgba(20,16,12,0.5)', 0.03); }
+      }
+    }
+  }
+  // brig and barque: a spanker, the fore-and-aft sail behind the mizzen, on its boom and gaff
+  if (boat.id !== 'cutter') {
+    const am = masts.reduce((a, b) => Math.min(a, b), 1e9), gb = (opts.brace || 0) * 0.6;
+    const G = (u, z) => W(am + (u - am) * Math.cos(gb), (u - am) * Math.sin(gb), z);
+    sail([G(am - 0.3, Zd + 2.2), G(-Lh * 0.95, Zd + 2.4), G(-Lh * 0.72, Zd + mastH * 0.5), G(am - 0.3, Zd + mastH * 0.56)], false);
+    line(G(am, Zd + 2.2), G(-Lh * 1.05, Zd + 2.4), mastC, 0.16);
+    line(G(am, Zd + mastH * 0.56), G(-Lh * 0.72, Zd + mastH * 0.5), mastC, 0.13);
+    // the ensign flying from the gaff end
+    const fe = G(-Lh * 0.72, Zd + mastH * 0.5), wv = Math.sin(g.t * 4 + (o.bob || 0)) * 0.4;
+    parts.push({ d: dist3(fe, fe) - 0.2, draw: () => fillPoly([fe, [fe[0] - sh * 1.6, fe[1] - ch * 1.6, fe[2] + wv * 0.6], [fe[0] - sh * 1.5, fe[1] - ch * 1.5, fe[2] - 1 + wv * 0.6], [fe[0], fe[1], fe[2] - 1]], shade(skin.rail, 0)) });
   }
   // bowsprit, jib and stays
   const fore = masts.reduce((a, b) => Math.max(a, b), -1e9);
   line(W(Lh * 0.9, 0, Zd + 0.5), W(tipU, 0, tipZ), mastC, 0.25);
   sail([W(tipU * 0.97, 0, tipZ), W(fore + 1, 0, Zd + 1.4), W(fore + 0.5, 0, Zd + mastH * 0.82)], false);
+  if (near) {
+    // a jib boom run out past the bowsprit, with a flying jib, and the martingale stay beneath
+    const jbU = tipU + Lh * 0.28, jbZ = tipZ + 0.5;
+    line(W(tipU * 0.95, 0, tipZ), W(jbU, 0, jbZ), mastC, 0.15);
+    sail([W(jbU * 0.98, 0, jbZ), W(tipU * 0.9, 0, tipZ + 1.2), W(fore + 0.7, 0, Zd + mastH * 0.95)], false);
+    line(W(jbU, 0, jbZ), W(Lh * 1.05, 0, Zd * 0.4), ropeC, 0.04);
+    line(W(jbU, 0, jbZ), W(fore, 0, Zd + mastH), ropeC, 0.04);
+  }
   line(W(tipU, 0, tipZ), W(fore, 0, Zd + mastH), 'rgba(20,16,12,0.75)', 0.06);
   if (masts.length > 1) for (let i = 0; i < masts.length - 1; i++) line(W(masts[i], 0, Zd + mastH * 0.95), W(masts[i + 1], 0, Zd + mastH * 0.95), 'rgba(20,16,12,0.6)', 0.05);
   const aft = masts.reduce((a, b) => Math.min(a, b), 1e9);
