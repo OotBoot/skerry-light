@@ -1097,7 +1097,7 @@ function fpsHud() {
     } else if (!(m.dead > 0) && (FPS.hintT || 0) > 0) {
       ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic'; ctx.font = mono(11); ctx.fillStyle = `rgba(236,228,207,${Math.min(0.6, FPS.hintT * 0.3)})`;
       ctx.fillText('◀ thumb here to walk', Math.max(14, FPS.safeLeft || 0), H - 24);
-      ctx.textAlign = 'center'; ctx.fillText('drag here (or on Fire) to aim', W * 0.62, H * 0.66);
+      ctx.textAlign = 'center'; ctx.fillText('drag here (or on Fire) to aim', W * (W > H ? 0.46 : 0.62), H * (W > H ? 0.56 : 0.66));
     }
     // the fire button carries the ammo; the others light up when they're on or ready
     fpsPadState();

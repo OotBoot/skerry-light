@@ -663,3 +663,75 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 .weaponpick .wart { display: grid; place-items: center; min-height: 36px; }
 .weaponpick .wart svg { max-width: 100%; height: auto; }
 .weaponpick .pick:focus-visible { outline: 2px solid var(--lamp); outline-offset: 2px; }
+
+/* ---------- phones on their side: a short, wide screen ----------
+   Everything tightens up so the sea stays visible and nothing needs a long scroll:
+   the title's two games sit side by side, menus use the width, the HUD and buttons shrink to the edges. */
+@media (orientation: landscape) and (max-height: 520px) {
+  /* the HUD */
+  .hud { padding-block: 6px 0; }
+  .label { font-size: 9px; letter-spacing: 0.12em; }
+  .big { font-size: 17px; }
+  .hud .row { gap: 12px; }
+  .hud .col { gap: 3px; }
+  .plank { width: 12px; height: 6px; }
+  .logbox { bottom: max(6px, env(safe-area-inset-bottom, 0px)); align-items: flex-end; gap: 8px; }
+  #log { font-size: 10.5px; line-height: 1.35; max-width: 34ch; }
+  #log li:nth-child(n+3) { display: none; }
+  #log li { -webkit-line-clamp: 1; }
+  #hint { display: none; }
+  .tools { gap: 5px; }
+  .toolrow { gap: 6px; }
+  .tool { font-size: 10.5px; padding: 6px 9px; letter-spacing: 0.06em; }
+  #bellBtn, #flareBtn, #jetBtn { min-width: 0; padding: 5px 10px 6px; }
+  #bellBtn b, #flareBtn b, #jetBtn b { font-size: 0.92rem; }
+  #bellBtn small, #flareBtn small, #jetBtn small { font-size: 9px; }
+  #bellBtn .key, #flareBtn .key, #jetBtn .key { display: none; }
+  .toolrow.shouts .tool { font-size: 10px; padding: 5px 7px; }
+  .sailctl { top: 52%; gap: 8px; }
+  .sailctl .tool { width: 52px; height: 52px; font-size: 18px; }
+  .sailctl .tool small { font-size: 8px; }
+  .crewhud { font-size: 10.5px; gap: 2px; }
+  .callout { font-size: 1rem; padding: 5px 12px; }
+
+  /* menus: wider and shorter */
+  .overlay { padding-block: 8px; padding-left: max(12px, env(safe-area-inset-left, 0px)); padding-right: max(12px, env(safe-area-inset-right, 0px)); }
+  .card { max-width: min(52rem, 100%); padding: 14px 18px 14px; gap: 9px; }
+  .card h1 { font-size: 1.75rem; }
+  .card p { font-size: 0.88rem; line-height: 1.38; }
+  .card .eyebrow { font-size: 9.5px; }
+  .primary { font-size: 1.02rem; padding: 7px 16px 8px; }
+  .btnrow { gap: 8px; }
+  .together { gap: 6px; padding-top: 8px; }
+  .together h2 { font-size: 1.05rem; }
+  .together p { font-size: 11px; line-height: 1.4; }
+  .howto summary { font-size: 11px; }
+  .reel { height: 112px; }
+  .cardtop.sticky { top: -14px; margin: -14px -18px 0; padding: 9px 18px 8px; }
+
+  /* the title: Skerry Light and Wreckers' Night side by side, each a compact column */
+  #titleCard { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 12px; row-gap: 0; align-items: start; place-items: start stretch; }
+  #titleCard > .newgame { display: none; }
+  #titleCard > .card { max-width: none; width: auto; min-width: 0; }
+  #titleCard .boatpick { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; }
+  #titleCard .weaponpick { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+  #titleCard .pick { min-width: 0; overflow: hidden; }
+  #titleCard .pick b { max-width: 100%; font-size: 9px; letter-spacing: 0; }
+  #titleCard .pick small { display: none; }
+  #titleCard .btnrow > button { white-space: normal; flex: 1 1 auto; min-width: 0; }
+  #titleCard .btnrow > .primary { flex: 1 1 100%; }
+  #titleCard .cardtop { flex-wrap: wrap; }
+  #titleCard .nickrow { min-width: 0; }
+  #titleCard .nickrow input { min-width: 0; width: 100%; }
+  #titleCard > .card > p { max-height: 4.2em; overflow: hidden; flex: none; mask-image: linear-gradient(#000 70%, transparent); -webkit-mask-image: linear-gradient(#000 70%, transparent); }
+  .boatpick .pick, .weaponpick .pick { padding: 4px 2px 5px; }
+  .boatpick .pick svg, .weaponpick .pick svg { max-height: 26px; }
+  .boatpick .pick b, .weaponpick .pick b { font-size: 10.5px; }
+  .boatpick .pick small, .weaponpick .pick small { font-size: 8.5px; }
+  .weaponpick { gap: 4px; }
+}
+/* very short (small phones on their side): the title's columns each scroll on their own */
+@media (orientation: landscape) and (max-height: 420px) {
+  #titleCard > .card { max-height: calc(100dvh - 16px); overflow-y: auto; }
+  .card h1 { font-size: 1.5rem; }
+}

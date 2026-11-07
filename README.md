@@ -112,6 +112,10 @@ The sky is painted on a canvas behind the 3D view, and the creatures, ships, dec
 
 Settings → Graphics switches between **3D** and **Classic** (the original painted view, lighter on old devices). If WebGL isn't available the game uses Classic by itself.
 
+## Playing on a phone in landscape
+
+Both games work with the phone turned sideways. On short landscape screens the title page puts Skerry Light and Wreckers' Night side by side, the voyage HUD shrinks (smaller labels, a two-line log, smaller sail and tool buttons), and the menus, settings and crate screens get wider and shorter so they fit without scrolling where possible. In Wreckers' Night the move stick stays under your left thumb and the fire cluster under your right, and the first-round hints move clear of the buttons. Phone notches are respected on both sides.
+
 ## Wreckers' Night (multiplayer FPS)
 
 A separate game with its own card on the title screen, below Skerry Light (a banner at the top of the title screen points to it). The card has the weapon picker (the pepperbox now, four slots waiting for more weapons), Go ashore, Settings, your name, who's on the island, and how to play. You go ashore on foot on a skerry at night with a six-shot pepperbox pistol and a lantern, and shoot it out with everyone else on the island. It never touches your voyages, crates, cosmetics or crew; your equipped skin only colours your coat and lantern.
