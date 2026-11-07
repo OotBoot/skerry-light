@@ -58,13 +58,14 @@ function gl3dResize() {
 }
 // is the 3D renderer drawing this frame? (the Backrooms and the Open Sky stay with the classic one)
 function gl3dActive() {
-  const want = gl3dWanted() && g && !g.backrooms && !g.sky;
+  const want = gl3dWanted() && !!g;
   return want && (GL3D.ok || (!GL3D.tried && gl3dInit()));
 }
 function gl3dShow(on) {
-  if (GL3D.shown === on) return;
-  GL3D.shown = on;
-  if (bgCv) bgCv.style.visibility = on ? 'visible' : 'hidden';
+  const k = on + ':' + !!(g && g.backrooms);
+  if (GL3D.shownKey === k) return;
+  GL3D.shown = on; GL3D.shownKey = k;
+  if (bgCv) bgCv.style.visibility = on && !(g && g.backrooms) ? 'visible' : 'hidden';
   if (glCv) glCv.style.visibility = on ? 'visible' : 'hidden';
 }
 function gl3dRefresh() { gl3dShow(gl3dActive()); }
@@ -275,6 +276,7 @@ function buildCoast() {
   for (let i = 0; i < 6; i++) { const a = i / 6 * Math.PI * 2, bar = new THREE.Mesh(new THREE.BoxGeometry(0.18, 4.4, 0.18), dark); bar.position.set(Math.cos(a) * 2.9, 54.8, Math.sin(a) * 2.9); tower.add(bar); }
   const cap = new THREE.Mesh(new THREE.ConeGeometry(3.45, 3.2, 20), lamb('#1a1714')); cap.position.y = 58.6; tower.add(cap);
   grp.add(tower);
+  buildLand(B, grp);
   GL3D.scene.add(grp);
 }
 
@@ -403,7 +405,7 @@ function gl3dRender(roll, sx, sy, beamOn) {
   GL3D.spot.visible = beamOn;
   GL3D.spot.target.position.set(Math.sin(g.beam) * far, 0, -Math.cos(g.beam) * far);
   GL3D.spot.color.set(glOver('#ffe2a8', `rgba(${B.beam},0.35)`));
-  GL3D.lantern.position.set(ship.x, 4, -ship.y); GL3D.lantern.distance = LR * 1.2;
+  GL3D.lantern.position.set(ship.x, (g.sky ? ship.z || 0 : 0) + 4, -ship.y); GL3D.lantern.distance = LR * 1.2;
   GL3D.lantern.intensity = 0.8 + (reduceMotion ? 0 : 0.12 * Math.sin(g.t * 9) * Math.sin(g.t * 2.3));
   GL3D.beam.visible = beamOn; GL3D.beam.rotation.y = -g.beam;
   // the lantern room shines brighter as the beam swings round to face you
@@ -413,7 +415,7 @@ function gl3dRender(roll, sx, sy, beamOn) {
   for (const w of GL3D.wins) w.m.opacity = 0.55 + 0.25 * Math.sin(g.t * 0.7 + w.t.ph);
   for (const s of GL3D.surf) s.opacity = 0.12 + 0.06 * Math.sin(g.t * 1.4);
   // the things on the water
-  syncThings(g.rocks, rockMesh, B);
+  if (g.sky) syncClouds(); else { if (GL3D.clouds) GL3D.clouds.visible = false; syncThings(g.rocks, rockMesh, B); }
   syncThings(g.wrecks, wreckMesh, B);
   syncThings(g.timber, timberMesh, B);
   findOccluders();
@@ -432,7 +434,6 @@ function gl3dBackdrop(roll, sx, sy) {
     ctx.translate(cx, hy); ctx.rotate(roll); ctx.translate(-cx, -hy); ctx.translate(sx, sy);
     drawSky();
     fillPoly([[-15000, 0, 1.5], [15000, 0, 1.5], [15000, -15000, 1.5], [-15000, -15000, 1.5]], B.ground);
-    if (B.land !== 'lavafalls') drawLandFar(B);
     ctx.restore();
   } finally { ctx = main; }
 }
@@ -463,6 +464,15 @@ function hull(p) {
 }
 function findOccluders() {
   const out = GL3D.occ = [];
+  // in the sky, a thick enough cloud hides what's behind it: an ellipse a little inside its edge
+  if (g.sky) for (const o of g.rocks) {
+    if (!(o.glVis >= 0.6)) continue;
+    const c = cam(o.x, o.y, o.z || 0); if (c.f < SK.NEAR + 2) continue;
+    const q = proj(c), R = o.r * 1.3 * q.s * 0.55, Rz = o.rz * 1.1 * q.s * 0.5;
+    if (q.x + R < -50 || q.x - R > W + 50 || Math.min(R, Rz) > Math.max(W, H)) continue;
+    const pts = []; for (let i = 0; i < 14; i++) { const a = i / 14 * Math.PI * 2; pts.push([q.x + Math.cos(a) * R, q.y - Rz * 0.3 + Math.sin(a) * Rz]); }
+    out.push({ f: c.f, pts, x0: q.x - R, x1: q.x + R, y0: q.y - Rz, y1: q.y + Rz });
+  }
   for (const [o, m] of GL3D.objs) {
     if (!m.pts || !m.root.visible || !(m.vis >= 0.5)) continue;
     const c0 = cam(o.x, o.y, 0); if (c0.f < SK.NEAR + 2) continue;
@@ -495,4 +505,381 @@ function gl3dClip(f) {
     ctx.closePath(); ctx.clip('evenodd');
   }
   return true;
+}
+
+// ---------- the landscape behind the coast, in 3D ----------
+// Each sea's landmarks (mountains, volcanoes, spires, lavafalls, stairs and doors, temples, the
+// chapel, palms, dead trees, cypresses, street lamps) built as one solid mesh plus one glowing one.
+// Their lights (torches, craters, lamps, lit doors) are glows painted over the top.
+function LandBuilder() { this.q = []; this.e = []; }
+LandBuilder.prototype = {
+  quad(a, b, c, d, col, glow) { (glow ? this.e : this.q).push([[a, b, c, d], col]); },
+  tri(a, b, c, col, glow) { this.quad(a, b, c, c, col, glow); },
+  box(x0, x1, y0, y1, z0, z1, col, top) {
+    const t = top || col;
+    this.quad([x0, y1, z0], [x1, y1, z0], [x1, y1, z1], [x0, y1, z1], col);   // seaward face
+    this.quad([x0, y0, z0], [x1, y0, z0], [x1, y0, z1], [x0, y0, z1], col);
+    this.quad([x0, y0, z0], [x0, y1, z0], [x0, y1, z1], [x0, y0, z1], col);
+    this.quad([x1, y0, z0], [x1, y1, z0], [x1, y1, z1], [x1, y0, z1], col);
+    this.quad([x0, y0, z1], [x1, y0, z1], [x1, y1, z1], [x0, y1, z1], t);
+  },
+  // a flat outline [[x, z], ...] (convex) given a depth along y
+  slab(pts, y, d, col, side) {
+    const n = pts.length, f = pts.map(p => [p[0], y + d / 2, p[1]]), b = pts.map(p => [p[0], y - d / 2, p[1]]);
+    for (let i = 1; i < n - 1; i++) { this.tri(f[0], f[i], f[i + 1], col); this.tri(b[0], b[i], b[i + 1], side || col); }
+    for (let i = 0; i < n; i++) { const j = (i + 1) % n; this.quad(f[i], f[j], b[j], b[i], side || col); }
+  },
+  // a cone or frustum standing at (x, y, z0), in bands [[t0, t1, colour]] up its height; lean tips it in x
+  cone(x, y, z0, r0, r1, h, segs, bands, lean, sq) {
+    lean = lean || 0; sq = sq || 1;
+    const ring = t => { const r = r0 + (r1 - r0) * t, out = []; for (let i = 0; i < segs; i++) { const a = i / segs * Math.PI * 2 + 0.3; out.push([x + Math.cos(a) * r + lean * h * t, y + Math.sin(a) * r * sq, z0 + h * t]); } return out; };
+    for (const [t0, t1, col] of bands) {
+      const A = ring(t0), C = ring(t1);
+      for (let i = 0; i < segs; i++) { const j = (i + 1) % segs; if (t1 === 1 && r1 === 0) this.tri(A[i], A[j], C[i], col); else this.quad(A[i], A[j], C[j], C[i], col); }
+    }
+  },
+  meshes(grp) {
+    if (this.q.length) grp.add(new THREE.Mesh(quadsGeo(this.q), lamb(0xffffff, { vertexColors: true, flatShading: true })));
+    if (this.e.length) { const m = new THREE.Mesh(quadsGeo(this.e), new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.DoubleSide })); grp.add(m); GL3D.landGlowMesh = m; }
+  },
+};
+const C3 = s => glCol(s)[0];
+// an rgba colour laid over the sky, for things that fade into the haze
+const overSky = (B, s) => glOver(B.sky[2], s);
+function buildLand(B, grp) {
+  const L = new LandBuilder(), glows = GL3D.glows = [];
+  GL3D.landGlowMesh = null; GL3D.lavaRivers = null;
+  const onCliff = x => { const cl = cliffAt(x); return [cl.y - 1, cl.z * B.cliffH]; };
+  if (B.land === 'peaks') {
+    for (const p of LAND.peaks) {
+      const body = C3(p.far ? '#13232c' : '#0e1b22'), snow = glOver(p.far ? '#13232c' : '#0e1b22', p.far ? 'rgba(205,228,240,0.55)' : 'rgba(225,240,250,0.75)');
+      L.cone(p.x, p.y, 0, p.w, 0, p.h, 6, [[0, 0.64, body], [0.64, 1, snow]], 0, 0.45);
+    }
+  } else if (B.land === 'volcano') {
+    const rivers = [];
+    for (const v of LAND.volcano) {
+      const tw = v.w * v.top;
+      L.cone(v.x, v.y, 0, v.w, tw, v.h, 16, [[0, 1, C3('#150a09')]], 0, 0.6);
+      L.cone(v.x, v.y, v.h - 2, tw * 0.9, tw * 0.5, 3, 16, [[0, 1, new THREE.Color(1, 0.42, 0.16)]], 0, 0.6);
+      glows.push({ x: v.x, y: v.y, z: v.h, col: '#ff6a28', r: tw * 0.5, add: 1, crater: v });
+      // rivers of lava down the seaward flank
+      for (let i = 0; i < 4; i++) {
+        const sx = (i - 1.5) * tw * 0.6, pts = [];
+        for (let s2 = 0; s2 <= 8; s2++) {
+          const f = s2 / 8, x = v.x + sx + (sx * 3 + Math.sin(i * 3 + f * 5) * v.w * 0.05) * f, z = v.h * (1 - f * 0.92);
+          const r = tw + (v.w - tw) * f * 0.92;   // the flank's distance from the axis at this height
+          const dx = x - v.x, yy = v.y + Math.sqrt(Math.max(0, r * r - dx * dx)) * 0.6 + 1.5;
+          pts.push([x, yy, z]);
+        }
+        const wdt = Math.max(3, v.w * 0.008);
+        for (let k = 0; k < pts.length - 1; k++) {
+          const a = pts[k], b = pts[k + 1];
+          L.quad([a[0] - wdt, a[1], a[2]], [a[0] + wdt, a[1], a[2]], [b[0] + wdt, b[1], b[2]], [b[0] - wdt, b[1], b[2]], new THREE.Color(1, (90 + i * 20) / 255, 30 / 255), true);
+        }
+      }
+    }
+  } else if (B.land === 'spires') {
+    for (const sp of LAND.spires) {
+      let y = sp.y, z0 = 0;
+      if (sp.near) [y, z0] = onCliff(sp.x);
+      L.cone(sp.x, y, z0, sp.w, 0, sp.h, 5, [[0, 0.7, C3(sp.near ? '#46288a' : '#2e1a5c')], [0.7, 1, C3(sp.hue ? '#3e5aa8' : '#6a2c9a')]], sp.lean, 0.7);
+      glows.push({ x: sp.x + sp.lean * sp.h, y, z: z0 + sp.h, col: sp.hue ? '#7ae6ff' : '#ff7ad8', r: sp.near ? 1.6 : 4, add: 1, ph: sp.x });
+    }
+  } else if (B.land === 'lavafalls') {
+    for (const f of LAND.lavafalls) {
+      L.cone(f.x, f.y, 0, f.w * 0.5, f.w * 0.5, 1400, 6, [[0, 1, new THREE.Color(1, 0.72, 0.3)]], 0, 1);
+      glows.push({ x: f.x, y: f.y, z: 2, col: '#ff7a20', r: f.w * 0.9, add: 1, fall: 1 });
+    }
+    // the lava columns glow: move them into the glowing mesh
+    L.e.push(...L.q.splice(0));
+  } else if (B.land === 'stairs') {
+    for (const st of LAND.stairs) {
+      const sgn = Math.sign(st.run) || 1, half = st.w / 2, dx = Math.abs(st.run) * 0.5;
+      for (let i = 0; i < st.steps; i++) {
+        const k = i / st.steps, c = 60 + i * 2;
+        const col = overSky(B, `rgba(${c},${c - 6},${c + 12},${Math.max(0.12, 0.72 - k * 0.6)})`);
+        const xa = st.x + sgn * (i * dx - half), xb = st.x + sgn * (i * dx + half);
+        L.box(Math.min(xa, xb), Math.max(xa, xb), st.y - 12, st.y + 12, i * st.rise, (i + 1) * st.rise, col, glOver('#' + col.getHexString(), 'rgba(255,225,210,0.25)'));
+      }
+    }
+    for (const d of LAND.doors) {
+      const h = d.w * 2.1, t = d.w * 0.14, fr = C3('#3e3848');
+      L.box(d.x - d.w / 2 - t, d.x - d.w / 2, d.y - 2, d.y + 2, 0, h + t, fr);
+      L.box(d.x + d.w / 2, d.x + d.w / 2 + t, d.y - 2, d.y + 2, 0, h + t, fr);
+      L.box(d.x - d.w / 2, d.x + d.w / 2, d.y - 2, d.y + 2, h, h + t, fr);
+      L.quad([d.x - d.w / 2, d.y + 0.3, 0], [d.x + d.w / 2, d.y + 0.3, 0], [d.x + d.w / 2, d.y + 0.3, h], [d.x - d.w / 2, d.y + 0.3, h], d.lit ? new THREE.Color(1, 0.84, 0.63) : C3('#141019'), d.lit);
+      if (d.lit) glows.push({ x: d.x, y: d.y + 1, z: h * 0.5, col: '#ffd6a0', r: d.w * 0.35, add: 1 });
+    }
+    for (const l of LAND.lamps) {
+      const [y, z] = onCliff(l.x);
+      L.box(l.x - 0.25, l.x + 0.25, y - 0.25, y + 0.25, z, z + 7, C3('#1c1822'));
+      glows.push({ x: l.x, y, z: z + 7, col: '#ffd6a0', r: 1.2, add: 1 });
+    }
+  } else if (B.land === 'temples') {
+    const hillC = C3('#0f1210');
+    for (const h of LAND.hills) L.slab([[h.x - h.w, 0], [h.x - h.w * 0.3, h.h], [h.x + h.w * 0.35, h.h * 0.9], [h.x + h.w, 0]], h.y, h.w * 0.8, hillC);
+    const M = C3('#4c473e'), Lt = C3('#6a6457'), D = C3('#2c2924');
+    for (const t of LAND.temples) {
+      const hz = t.hz || (t.hz = t.y < -400 ? 140 : 90), { x, y, w, h } = t, dep = w * 0.45;
+      L.slab([[x - w * 1.9, 0], [x - w * 0.75, hz], [x + w * 0.75, hz], [x + w * 1.9, 0]], y, w * 1.2, hillC);
+      L.box(x - w / 2 - 4, x + w / 2 + 4, y - dep / 2 - 4, y + dep / 2 + 4, hz, hz + 3, D);
+      L.box(x - w / 2, x + w / 2, y - dep / 2, y + dep / 2, hz + 3, hz + 5, M);
+      const cw = w / (t.cols * 2 - 1);
+      for (const yy of [y + dep / 2 - cw, y - dep / 2 + cw]) for (let i = 0; i < t.cols; i++) {
+        const cx_ = x - w / 2 + cw * (i * 2) + cw / 2, chh = t.ruin && (i % 3 === 1) ? h * 0.45 : h;
+        L.cone(cx_, yy, hz + 5, cw * 0.5, cw * 0.42, chh, 6, [[0, 1, i % 2 ? M : Lt]]);
+      }
+      if (!t.ruin) {
+        L.box(x - w / 2 - 2, x + w / 2 + 2, y - dep / 2 - 1, y + dep / 2 + 1, hz + 5 + h, hz + 9 + h, Lt);
+        L.slab([[x - w / 2 - 2, hz + 9 + h], [x + w / 2 + 2, hz + 9 + h], [x, hz + 9 + h + w * 0.16]], y, dep + 2, M);
+      } else L.box(x - w / 2 - 2, x - w * 0.05, y - dep / 2 - 1, y + dep / 2 + 1, hz + 5 + h, hz + 8 + h, Lt);
+      for (const sx of [-0.35, 0.35]) glows.push({ x: x + sx * w, y: y + dep / 2 + 1, z: hz + 9, col: '#ffb050', r: 1.6, add: 1, ph: sx * 9, torch: 1 });
+    }
+    for (const c of LAND.cypress) { const [y, z] = onCliff(c.x); L.cone(c.x, y, z, 1.6, 0, c.h, 6, [[0, 1, C3('#070a08')]]); }
+  } else if (B.land === 'graves') {
+    const c = LAND.church, wall = C3('#0b0e0c'), roof = C3('#0a0d0b'), tw = C3('#0c0f0d');
+    L.box(c.x - 30, c.x + 10, c.y - 12, c.y + 12, 0, 26, wall);
+    L.box(c.x + 10, c.x + 30, c.y - 12, c.y + 12, 0, 18, wall);   // the fallen-in end
+    L.slab([[c.x - 32, 26], [c.x + 10, 26], [c.x - 8, 40]], c.y, 26, roof);
+    L.box(c.x + 18, c.x + 34, c.y - 8, c.y + 8, 0, 55, tw);
+    L.slab([[c.x + 18, 55], [c.x + 34, 55], [c.x + 34, 58], [c.x + 29, 63], [c.x + 24, 55]], c.y, 16, tw);
+    for (const wx of [-18, -4, 26]) {
+      const z = wx > 20 ? 44 : 14, yy = c.y + (wx > 20 ? 8.2 : 12.2);
+      L.quad([c.x + wx - 2, yy, z - 3], [c.x + wx + 2, yy, z - 3], [c.x + wx + 2, yy, z + 4], [c.x + wx - 2, yy, z + 4], new THREE.Color(0.63, 0.86, 0.55), true);
+    }
+    // dead trees along the cliff tops
+    const bark = C3('#080a09');
+    for (const t of LAND.graves) {
+      const [y, z] = onCliff(t.x);
+      L.cone(t.x, y, z, 0.55, 0.25, t.h, 4, [[0, 1, bark]]);
+      for (let i = 0; i < t.br; i++) {
+        const f = 0.45 + i * 0.18, d = i % 2 ? 1 : -1, len = 5 + i, bz = z + t.h * f;
+        L.quad([t.x, y - 0.2, bz], [t.x, y + 0.2, bz], [t.x + d * len, y + 0.2, bz + len * 0.6], [t.x + d * len, y - 0.2, bz + len * 0.6], bark);
+      }
+    }
+  } else if (B.land === 'palms') {
+    const trunk = C3('#0c0f0a');
+    for (const p of LAND.palms) {
+      const [y, z] = onCliff(p.x), tx = p.x + p.lean * p.h, tz = z + p.h;
+      L.cone(p.x, y, z, 0.5, 0.35, p.h, 4, [[0, 1, trunk]], p.lean);
+      for (let i = 0; i < 6; i++) {
+        const a = i / 6 * Math.PI * 2 + p.ph, len = 5 + (i % 2), ex = tx + Math.cos(a) * len, ey = y + Math.sin(a) * len;
+        const mx = tx + Math.cos(a) * len * 0.5, my = y + Math.sin(a) * len * 0.5;
+        L.quad([tx, y, tz], [mx - Math.sin(a) * 0.9, my + Math.cos(a) * 0.9, tz + 0.8], [ex, ey, tz - 2.5], [mx + Math.sin(a) * 0.9, my - Math.cos(a) * 0.9, tz + 0.8], trunk);
+      }
+    }
+  }
+  L.meshes(grp);
+}
+// the land's lights, painted over the 3D view
+function gl3dLandGlows() {
+  const G = GL3D.glows; if (!G || !G.length) return;
+  ctx.globalCompositeOperation = 'lighter';
+  for (const o of G) {
+    const c = cam(o.x, o.y, o.z); if (c.f < SK.NEAR + 2) continue;
+    const q = proj(c); if (q.x < -200 || q.x > W + 200) continue;
+    let r = Math.max(1.5, o.r * q.s);
+    if (o.ph != null) r *= 0.8 + 0.2 * Math.sin(g.t * (o.torch ? 7 : 2) + o.ph);
+    if (o.fall) { const fade = Math.max(0.25, 1 - c.f / 3600); ctx.globalAlpha = fade; r = Math.max(2, o.r * q.s * 0.9); }
+    if (o.crater) r = Math.max(4, o.r * q.s);
+    lamp(q.x, q.y, o.col, r);
+    ctx.globalAlpha = 1;
+    if (o.crater && !reduceMotion) {
+      // a column of lit smoke over the crater
+      const v = o.crater, tw = v.w * v.top, n = v.h > 400 ? 5 : 3;
+      ctx.globalCompositeOperation = 'source-over';
+      for (let i = 0; i < n; i++) {
+        const k = (g.t * 0.05 + i / n) % 1, s = cam(v.x + k * v.w * 0.5 + Math.sin(i * 2) * tw * 0.4, v.y, v.h + k * v.h * 0.9); if (s.f < SK.NEAR) continue;
+        const p = proj(s); ctx.globalAlpha = 0.55 * (1 - k); lamp(p.x, p.y, '#4a2420', (tw * 0.6 + k * v.w * 0.35) * p.s / 3); ctx.globalAlpha = 1;
+      }
+      ctx.globalCompositeOperation = 'lighter';
+    }
+  }
+  ctx.globalCompositeOperation = 'source-over';
+}
+
+// ---------- the Backrooms, in 3D ----------
+// Yellow walls with their faint stripes and damp skirting, the flooded carpet, the ceiling and its
+// humming tubes. Lit the way the painted rooms are: the tubes near you (they fail together when
+// the lights go out), your lantern, and a yellow haze that swallows everything past a few rooms.
+function wallpaper() {
+  const c = document.createElement('canvas'); c.width = 64; c.height = 128;
+  const q = c.getContext('2d');
+  q.fillStyle = '#fff'; q.fillRect(0, 0, 64, 128);
+  q.fillStyle = 'rgba(0,0,0,0.28)'; q.fillRect(0, 0, 3, 128);   // a stripe every 8 m
+  for (let i = 0; i < 40; i++) { q.fillStyle = `rgba(0,0,0,${0.03 + Math.random() * 0.04})`; q.fillRect(Math.random() * 64, Math.random() * 110, 1 + Math.random() * 3, 2 + Math.random() * 10); }
+  const sk = Math.round(128 * 1.1 / SK.BACKROOMS_CEIL);
+  q.fillStyle = 'rgba(30,24,8,0.82)'; q.fillRect(0, 128 - sk, 64, sk);   // the damp line where the water meets it
+  const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 4;
+  return t;
+}
+function cutMaterial(mat) {
+  // third person: walls between the camera and your ship are cut away, as in the painted rooms
+  mat.userData.cut = { value: 0 };
+  mat.onBeforeCompile = sh => {
+    sh.uniforms.uCut = mat.userData.cut;
+    sh.vertexShader = 'varying float vCutZ;\n' + sh.vertexShader.replace('#include <project_vertex>', '#include <project_vertex>\n  vCutZ = -mvPosition.z;');
+    sh.fragmentShader = 'uniform float uCut; varying float vCutZ;\n' + sh.fragmentShader.replace('void main() {', 'void main() {\n  if (vCutZ < uCut) discard;');
+  };
+  return mat;
+}
+function buildRooms() {
+  const R = g.rooms;
+  if (GL3D.roomsFor === R) return;
+  GL3D.roomsFor = R;
+  if (GL3D.rs) GL3D.rs.traverse(glDispose);
+  const { X0, Y0, C, N, east, north, lights } = R, Z = SK.BACKROOMS_CEIL, id = (i, j) => j * N + i;
+  const scene = GL3D.rs = new THREE.Scene();
+  scene.background = new THREE.Color(ROOM_FOG);
+  scene.fog = new THREE.Fog(ROOM_FOG, 0, 427);
+  GL3D.ramb = new THREE.AmbientLight(0xffffff, 0.25); scene.add(GL3D.ramb);
+  GL3D.rlight = new THREE.PointLight(0xfff4c8, 0.75, 300, 1); scene.add(GL3D.rlight);
+  GL3D.rlant = new THREE.PointLight(0xffb060, 0.6, SK.LANTERN, 1); scene.add(GL3D.rlant);
+  // walls: one quad on each cell edge that's closed, with the paper running along it in metres
+  const pos = { x: [], y: [] }, uv = { x: [], y: [] };
+  const wall = (x1, y1, x2, y2) => {
+    const k = Math.abs(x2 - x1) > Math.abs(y2 - y1) ? 'x' : 'y', len = Math.hypot(x2 - x1, y2 - y1), u0 = (k === 'x' ? x1 : y1) / 8, u1 = u0 + len / 8;
+    const P = [[x1, Z * 0, -y1], [x2, 0, -y2], [x2, Z, -y2], [x1, Z, -y1]], U = [[u0, 0], [u1, 0], [u1, 1], [u0, 1]];
+    for (const i of [0, 1, 2, 0, 2, 3]) { pos[k].push(...P[i]); uv[k].push(...U[i]); }
+  };
+  for (let j = 0; j < N; j++) {
+    wall(X0, Y0 + j * C, X0, Y0 + (j + 1) * C);
+    wall(X0 + j * C, Y0, X0 + (j + 1) * C, Y0);
+    for (let i = 0; i < N; i++) {
+      const x = X0 + i * C, y = Y0 + j * C;
+      if (i === N - 1 || east[id(i, j)]) wall(x + C, y, x + C, y + C);
+      if (j === N - 1 || north[id(i, j)]) wall(x, y + C, x + C, y + C);
+    }
+  }
+  const paper = wallpaper(), mats = GL3D.roomMats = [];
+  for (const [k, col] of [['x', '#d9c25a'], ['y', '#c2aa45']]) {
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(pos[k], 3));
+    geo.setAttribute('uv', new THREE.Float32BufferAttribute(uv[k], 2));
+    geo.computeVertexNormals();
+    const mat = cutMaterial(new THREE.MeshLambertMaterial({ color: col, map: paper, side: THREE.DoubleSide }));
+    mats.push(mat); scene.add(new THREE.Mesh(geo, mat));
+  }
+  // the flooded carpet and the ceiling
+  const S = N * C + 400, mid = [X0 + N * C / 2, Y0 + N * C / 2];
+  const floor = new THREE.Mesh(new THREE.PlaneGeometry(S, S), new THREE.MeshPhongMaterial({ color: '#4a4119', specular: 0x6a6040, shininess: 40 }));
+  floor.rotation.x = -Math.PI / 2; floor.position.set(mid[0], 0, -mid[1]); scene.add(floor);
+  GL3D.ceilMat = new THREE.MeshLambertMaterial({ color: '#8a7c3e', emissive: '#8a7c3e', side: THREE.DoubleSide });
+  const ceil = new THREE.Mesh(new THREE.PlaneGeometry(S, S), GL3D.ceilMat);
+  ceil.rotation.x = Math.PI / 2; ceil.position.set(mid[0], Z, -mid[1]); scene.add(ceil);
+  // the tubes: four panels to a room, their brightness set every frame
+  const tp = [], tc = [];
+  for (const lt of lights) for (const [ox, oy] of [[-8, -8], [8, -8], [-8, 8], [8, 8]]) {
+    const x0 = lt.x + ox - 3, x1 = lt.x + ox + 3, y0 = lt.y + oy - 1, y1 = lt.y + oy + 1, z = Z - 0.05;
+    const P = [[x0, z, -y0], [x1, z, -y0], [x1, z, -y1], [x0, z, -y1]];
+    for (const i of [0, 1, 2, 0, 2, 3]) { tp.push(...P[i]); tc.push(0, 0, 0); }
+  }
+  const tg = new THREE.BufferGeometry();
+  tg.setAttribute('position', new THREE.Float32BufferAttribute(tp, 3));
+  tg.setAttribute('color', new THREE.Float32BufferAttribute(tc, 3));
+  const tubes = new THREE.Mesh(tg, new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.DoubleSide, blending: THREE.AdditiveBlending, transparent: true, depthWrite: false, fog: false }));
+  tubes.frustumCulled = false; scene.add(tubes); GL3D.tubes = tg;
+}
+function gl3dRooms(roll, sx, sy) {
+  buildRooms();
+  const cam3 = GL3D.camera, L = roomLevel();
+  cam3.fov = 2 * Math.atan((H / 2) / focal) * 180 / Math.PI; cam3.aspect = W / H; cam3.near = 0.5; cam3.far = 2000;
+  cam3.setViewOffset(W, H, -sx, H / 2 - hy - sy, W, H); cam3.updateProjectionMatrix();
+  cam3.position.set(camX, camH, -camY); cam3.rotation.set(0, -yaw, roll, 'YXZ');
+  GL3D.rlight.position.set(ship.x, 6, -ship.y); GL3D.rlight.intensity = 0.75 * L;
+  GL3D.rlant.position.set(ship.x, 4, -ship.y);
+  GL3D.rlant.distance = SK.LANTERN * (g.mods ? g.mods.lantern : 1) * ((BOAT_BY_ID[ship.boat] || {}).lamp || 1);
+  GL3D.ceilMat.emissiveIntensity = 0.45 * L;
+  const cut = VIEW.third ? CHASE.cut || 0 : 0;
+  for (const m of GL3D.roomMats) m.userData.cut.value = cut;
+  // the tubes
+  const col = GL3D.tubes.attributes.color, lights = g.rooms.lights;
+  for (let n = 0; n < lights.length; n++) {
+    const lt = lights[n], d = Math.hypot(lt.x - ship.x, lt.y - ship.y);
+    let on = d > 330 ? 0 : L * (1 - d / 330);
+    if (lt.bad) on *= Math.sin(g.t * 23 + lt.ph) > 0.2 ? 1 : 0.1;
+    const r = on, gg = on * 0.98, b = on * 0.84;
+    for (let k = n * 24; k < n * 24 + 24; k++) col.setXYZ(k, r, gg, b);
+  }
+  col.needsUpdate = true;
+  GL3D.r.render(GL3D.rs, cam3);
+}
+
+// ---------- the Open Sky's clouds, in 3D ----------
+// Every puff of every cloud is a soft disc that always faces you, all in one draw: the dark bulk
+// first, then the pale tops where the light catches them. Clouds are sorted far to near each frame.
+const CLOUD_VS = `
+attribute vec3 aCenter; attribute vec2 aCorner; attribute float aSize; attribute vec3 aCol; attribute float aK; attribute float aVis;
+varying vec2 vUv; varying vec3 vCol; varying float vA;
+void main() {
+  vec4 mv = modelViewMatrix * vec4(aCenter, 1.0);
+  mv.xy += aCorner * aSize;
+  gl_Position = projectionMatrix * mv;
+  vUv = aCorner; vCol = aCol; vA = aK * aVis;
+}`;
+const CLOUD_FS = `
+varying vec2 vUv; varying vec3 vCol; varying float vA;
+void main() {
+  float d = length(vUv);
+  float a = d < 0.55 ? mix(1.0, 0.85, d / 0.55) : mix(0.85, 0.0, clamp((d - 0.55) / 0.45, 0.0, 1.0));
+  if (a * vA < 0.004) discard;
+  gl_FragColor = vec4(vCol, a * vA);
+}`;
+function buildClouds() {
+  if (GL3D.cloudsFor === g.rocks) return;
+  GL3D.cloudsFor = g.rocks;
+  if (GL3D.clouds) { GL3D.scene.remove(GL3D.clouds); glDispose(GL3D.clouds); }
+  const C = [], K = [], S = [], Col = [], A = [], ranges = [];
+  const dark = [34 / 255, 40 / 255, 62 / 255], lite = [205 / 255, 215 / 255, 240 / 255];
+  let v = 0;
+  const puff = (x, y, z, size, col, k) => {
+    for (const [a, b] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) { C.push(x, z, -y); K.push(a, b); S.push(size); Col.push(...col); A.push(k); }
+    v += 4;
+  };
+  g.rocks.forEach((o, ci) => {
+    const start = v, m = Math.min(o.r * 1.3, o.rz * 1.1);
+    o.puffs.forEach((p, i) => puff(o.x + p.dx * o.r * 0.91, o.y + (glHash(ci, i) - 0.5) * o.r * 0.9, (o.z || 0) + p.dz * o.rz * 0.82, p.s * m * 1.15, dark, 0.9));
+    o.puffs.forEach((p, i) => { if (p.dz >= 0) puff(o.x + p.dx * o.r * 0.91, o.y + (glHash(ci, i) - 0.5) * o.r * 0.9 + 0.5, (o.z || 0) + p.dz * o.rz * 0.82 + p.s * o.rz * 0.27, p.s * m * 0.7, lite, 0.35); });
+    ranges.push([start, v]);
+  });
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(C, 3));
+  geo.setAttribute('aCenter', new THREE.Float32BufferAttribute(C, 3));
+  geo.setAttribute('aCorner', new THREE.Float32BufferAttribute(K, 2));
+  geo.setAttribute('aSize', new THREE.Float32BufferAttribute(S, 1));
+  geo.setAttribute('aCol', new THREE.Float32BufferAttribute(Col, 3));
+  geo.setAttribute('aK', new THREE.Float32BufferAttribute(A, 1));
+  geo.setAttribute('aVis', new THREE.Float32BufferAttribute(new Float32Array(v), 1));
+  geo.setIndex(new THREE.BufferAttribute(new Uint32Array(v / 4 * 6), 1));
+  const mat = new THREE.ShaderMaterial({ vertexShader: CLOUD_VS, fragmentShader: CLOUD_FS, transparent: true, depthWrite: false });
+  const m = new THREE.Mesh(geo, mat); m.frustumCulled = false; m.renderOrder = 5;
+  GL3D.clouds = m; GL3D.cloudRanges = ranges; GL3D.scene.add(m);
+}
+function syncClouds() {
+  buildClouds();
+  const geo = GL3D.clouds.geometry, vis = geo.attributes.aVis, idx = geo.index, order = [];
+  GL3D.clouds.visible = true;
+  g.rocks.forEach((o, ci) => {
+    const v = Math.max(cloudVis(o), afterglow(o) * 0.9); o.glVis = v;
+    const [a, b] = GL3D.cloudRanges[ci];
+    for (let k = a; k < b; k++) vis.array[k] = v;
+    if (v >= 0.03) order.push([Math.hypot(o.x - camX, o.y - camY, (o.z || 0) - camH), a, b]);
+  });
+  vis.needsUpdate = true;
+  order.sort((p, q) => q[0] - p[0]);
+  let n = 0; const I = idx.array;
+  for (const [, a, b] of order) for (let k = a; k < b; k += 4) { I[n++] = k; I[n++] = k + 1; I[n++] = k + 2; I[n++] = k; I[n++] = k + 2; I[n++] = k + 3; }
+  idx.needsUpdate = true;
+  geo.setDrawRange(0, n);
+}
+// over the 3D sky: a grey wash when you're inside a cloud, and lightning flashing in them
+function gl3dSkyOverlay() {
+  drawRunway();
+  for (const o of g.rocks) {
+    const v = o.glVis || 0; if (v < 0.03) continue;
+    const c = cam(o.x, o.y, o.z || 0); if (c.f < SK.NEAR) continue;
+    const q = proj(c), R = o.r * 1.3 * q.s, Rz = o.rz * 1.1 * q.s;
+    if (Math.min(R, Rz) > Math.max(W, H) * 1.2) { ctx.globalAlpha = Math.min(0.85, v * 0.8); ctx.fillStyle = '#262c42'; ctx.fillRect(-W * 0.1, -H * 0.1, W * 1.2, H * 1.2); ctx.globalAlpha = 1; }
+    if (o.flash > 0) { ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = Math.min(1, o.flash * 2); lamp(q.x, q.y, '#c8d8ff', Math.max(4, R * 0.35)); ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1; }
+  }
 }

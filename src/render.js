@@ -173,7 +173,8 @@ function wallShade(side, li, fi, stripe) {
   }
   return c;
 }
-function drawRoomWalls() {
+function drawRoomWalls(paint) {
+  if (paint === undefined) paint = true;   // (the 3D renderer only needs the depth of each column)
   const R = g.rooms; if (!R || !R.east) return;
   const { X0, Y0, C, N, east, north } = R;
   ZSTEP = W > 900 ? 2 : W > 500 ? 2 : 1;
@@ -214,6 +215,7 @@ function drawRoomWalls() {
     const dist = t * C, f = Math.max(SK.NEAR, dist * Math.cos(off));
     ZBUF[ci] = hit ? f : 1e9;
     if (!hit) continue;
+    if (!paint) continue;
     const hx = camX + dx * dist, hy2 = camY + dy * dist;
     const k = focal / f;
     const yb = hy + camH * k, yt = hy + (camH - Z) * k;
@@ -412,13 +414,14 @@ function drawScene() {
   var fl = [Math.sin(g.beam - SK.HALF_BEAM) * far, Math.cos(g.beam - SK.HALF_BEAM) * far];
   var fr = [Math.sin(g.beam + SK.HALF_BEAM) * far, Math.cos(g.beam + SK.HALF_BEAM) * far];
   var HB = SK.HARBOUR, glShown = 0;
-  if (gl) {
+  if (gl && g.backrooms) gl3dRooms(roll, sx, sy);
+  else if (gl) {
     gl3dBackdrop(roll, sx, sy);
     glShown = gl3dRender(roll, sx, sy, beamOn);
     const B = curBiome();
     drawSeaFx(B);
-    if (B.land === 'lavafalls') drawLandFar(B);
-    drawLandNear(B);
+    gl3dLandGlows();
+    if (g.sky) gl3dSkyOverlay();
   } else if (g.backrooms) drawRoomsBack();
   else {
   drawSky();
@@ -454,7 +457,7 @@ function drawScene() {
     for (const o of g.wrecks) add('wreck', o);
     for (const o of g.timber) add('timber', o);
   }
-  if (g.backrooms) { add('exit', g.exit); drawRoomWalls(); }
+  if (g.backrooms) { add('exit', g.exit); drawRoomWalls(!gl); }
   for (const o of g.pickups || []) if (!o.taken) add('pickup', o);
   if (third) { const c = cam(ship.x, ship.y, g.sky ? ship.z : 0); if (c.f > SK.NEAR) items.push({ kind: 'self', o: ship, c }); }
   foeItems((kind, o, z, k) => { const c = cam(o.x, o.y, z); if (c.f > SK.NEAR + 1) items.push({ kind, o, c, k }); });
