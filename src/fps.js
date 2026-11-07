@@ -41,7 +41,7 @@ const FPS_SEAS = ['skerry', 'fjord', 'ember', 'lagoon', 'barrows', 'shoals'];
 const FPSW = {
   pepperbox:   { n: 'Pepperbox',   code: 'p', mag: 6, rate: 0.26, reload: 2.2, dmg: 1, head: 2, auto: true, range: 420, kick: 1 },
   blunderbuss: { n: 'Blunderbuss', code: 'b', mag: 1, rate: 0.6, reload: 2.7, dmg: 1, head: 1, pellets: 9, spread: 0.085, range: 55, kick: 2.4 },
-  longarm:     { n: 'Longarm',     code: 'l', mag: 1, rate: 0.5, reload: 2.6, dmg: 3, head: 5, range: 650, hip: 0.035, scope: 3.2, kick: 1.6 },
+  longarm:     { n: 'Longarm',     code: 'l', mag: 1, rate: 0.5, reload: 2.6, dmg: 3, head: 5, range: 650, hip: 0.012, scope: 3.2, kick: 1.6 },
   harpoon:     { n: 'Harpoon gun', code: 'h', mag: 1, rate: 0.6, reload: 2.9, dmg: 4, head: 4, speed: 72, drop: 5, range: 300, kick: 1.9 },
   cutlass:     { n: 'Cutlass',     code: 'c', mag: 0, rate: 0.48, reload: 1.6, dmg: 2, head: 2, reach: 2.7, arc: 0.8, melee: true, kick: 0 },
 };
@@ -87,6 +87,31 @@ function fpsTitleTick() {
   fpsLobbyStatus();
 }
 setInterval(fpsTitleTick, 1000);
+// the weapon picker on the card: all five, in your equipped weapon skins; the one picked is in hand when you land
+const FPS_WSTAT = { pepperbox: '6 shots · quick', blunderbuss: '9 balls · close', longarm: '1 shot · scope', harpoon: 'harpoon · slow', cutlass: 'blade · reach' };
+function fpsRenderPicks() {
+  const box = $('weaponPick'); if (!box) return;
+  if (box.childElementCount !== FPS_WORDER.length) {
+    box.textContent = '';
+    for (const id of FPS_WORDER) {
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'pick'; b.dataset.w = id;
+      const art = document.createElement('span'); art.className = 'wart';
+      const nm = document.createElement('b'); nm.textContent = FPSW[id].n.replace(' gun', '');
+      const st = document.createElement('small'); st.textContent = FPS_WSTAT[id];
+      b.append(art, nm, st);
+      b.addEventListener('click', () => { FPS.pick = id; try { localStorage.setItem('skerry-fps-weapon', id); } catch (e) {} fpsRenderPicks(); });
+      box.appendChild(b);
+    }
+  }
+  for (const b of box.children) {
+    const id = b.dataset.w, on = id === (FPS.pick || 'pepperbox');
+    b.classList.toggle('on', on); b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    const art = b.querySelector('.wart'), sk = typeof wcEquippedSkin === 'function' ? wcEquippedSkin(id) : null, key = sk ? sk.id : 'plain';
+    if (art.dataset.k !== key && typeof wcPreview === 'function' && sk) { art.dataset.k = key; art.textContent = ''; const svg = wcPreview(sk, 58); if (svg) art.appendChild(svg); }
+  }
+}
+addEventListener('wcskin', fpsRenderPicks);
+setTimeout(fpsRenderPicks, 0);
 function fpsLobbyStatus() {
   const n = fpsPeers().length;
   $('fpsStatus').textContent = NET.status === 'ready'
@@ -111,7 +136,7 @@ function fpsStart() {
   FPS.me = { id: NET.sid, x: FPSC.CX, y: FPSC.CY, h: 0, p: 0, v: 0, z: 0, rudder: 0, bob: 0, boat: 'brig', inv: 0, pitch: 0,
     hp: FPSC.HP, ammo: 6, mags: {}, reload: 0, cd: 0, flares: FPSC.FLARES, lan: true, dead: 0, protect: 0, killer: null };
   FPS.kb = {}; FPS.deaths = 0; FPS.seq = 0; FPS.shots = []; FPS.seenSeq = {}; FPS.hist = []; FPS.host = false; FPS.joinedAt = performance.now(); FPS.ai = null; FPS.remote.clear(); FPS.feed = []; FPS.pings = []; FPS.tracers = []; FPS.parts = []; FPS.drowned = [];
-  FPS.bots = []; FPS.drownT = 25; FPS.roundMsg = null; FPS.menu = false; $('fpsMenu').hidden = true;
+  FPS.bots = []; FPS.drownT = 25; FPS.roundMsg = null; FPS.menu = false; if (FPS.wcRound !== FPS.round) { FPS.wcK = 0; FPS.wcRound = FPS.round; } $('fpsMenu').hidden = true;
   FPS.weapon = FPS.last = FPS.pick || 'pepperbox'; FPS.harps = []; FPS.swings = []; FPS.scoped = false;
   fpsRespawn(FPS.me);
   fpsSend(true);
@@ -698,7 +723,8 @@ function fpsFrame(dt) {
     if (rn !== FPS.round) {
       const top = fpsScores()[0];
       FPS.roundMsg = { t: 6, text: top && top.k > 0 ? `${top.me ? 'You' : top.n} won the round with ${top.k} ${top.k === 1 ? 'kill' : 'kills'}.` : 'The round is over.' };
-      FPS.round = rn; FPS.kb = {}; FPS.deaths = 0;
+      if (typeof wcEarn === 'function') wcEarn('round');   // weapon crates (src/wcrates.js)
+      FPS.round = rn; FPS.kb = {}; FPS.deaths = 0; FPS.wcK = 0; FPS.wcRound = rn;
       if (FPS.host) for (const b of FPS.bots) { b.kb = {}; b.d = 0; b.prevKb = {}; }
       for (const r of FPS.remote.values()) r.prevKb = {};
       G.biome = FPS_SEAS[rn % FPS_SEAS.length];
@@ -726,6 +752,8 @@ function fpsFrame(dt) {
     for (const p of FPS.parts) { p.t -= dt; p.x += p.vx * dt; p.y += p.vy * dt; p.z += p.vz * dt; p.vz -= 9 * dt; }
     FPS.parts = FPS.parts.filter(p => p.t > 0);
     fpsNetTick(dt);
+    // weapon crates: each new kill this round (kills only ever count up from the round's best so far)
+    if (typeof wcEarn === 'function') { const mine = fpsScores().find(p => p.me), k = mine ? mine.k : 0; while ((FPS.wcK || 0) < k) { FPS.wcK = (FPS.wcK || 0) + 1; wcEarn('kill'); } }
     fpsRemember(m, performance.now());
     fpsAiTick(dt);
     fpsDraw();
@@ -1058,7 +1086,9 @@ function fpsHud() {
     FPS.feed.slice(-2).forEach((f, i) => { ctx.fillStyle = `rgba(236,228,207,${Math.min(1, f.t) * 0.75})`; ctx.fillText(f.text, rx, top + 18 + i * 13, W * 0.34); });
     // health: four small pips at top left, beside the menu
     const tops = document.querySelector('.fpstop'), lx = tops ? tops.getBoundingClientRect().right - cv.getBoundingClientRect().left + 10 : Math.max(12, FPS.safeLeft || 0) + 92;
-    for (let i = 0; i < FPSC.HP; i++) { ctx.fillStyle = i < m.hp ? '#ffd88a' : 'rgba(80,70,60,0.7)'; ctx.fillRect(lx + i * 14, top + 6, 11, 7); }
+    // (under the buttons, so they stay clear of the compass)
+    const hx = Math.max(12, FPS.safeLeft || 0) + 4, hyp = tops ? tops.getBoundingClientRect().bottom - cv.getBoundingClientRect().top + 8 : top + 48;
+    for (let i = 0; i < FPSC.HP; i++) { ctx.fillStyle = i < m.hp ? '#ffd88a' : 'rgba(80,70,60,0.7)'; ctx.fillRect(hx + i * 14, hyp, 11, 7); }
     // the floating stick, where your thumb came down
     if (FPS.stick) {
       const r0 = cv.getBoundingClientRect(), bx = FPS.stick.x0 - r0.left, by = FPS.stick.y0 - r0.top;

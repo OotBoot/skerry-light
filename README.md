@@ -134,6 +134,10 @@ A separate game with its own card on the title screen, below Skerry Light (a ban
 
 It uses the same connection as crews (the claude.ai room, or the crew server), on its own key in presence, so the two never mix; the server relays island players to each other at full rate.
 
+### Weapon crates
+
+Wreckers' Night has its own crates, the **Gunsmith's Crate**, opened from **Weapon crates** on its title card. They hold skins for the five weapons (pepperbox, blunderbuss, longarm, harpoon gun and cutlass): ten each, 3 Deckhand, 2 Bosun, 2 Mate, 2 Captain and 1 Admiral, plus a plain finish everyone owns. They use the same grades, odds, reel, Open all and duplicate counts as the Skerry Crate, and gold in the reel is always your prize. Captain and Admiral finishes carry a glowing accent. You earn one crate for every 5 kills (the count carries over between rounds and visits) and one for each round you see out on the island after at least a minute ashore; your first one is free. Weapon crates are entirely separate from the boat crates: their own save in the browser (`skerry-wcrates`), their own count, and their own save code (`WCRATES-...`) on the card, so nothing here touches your boats, voyages or crew. `src/wcrates.js` gives the gun renderer `wcEquippedSkin(weaponId)` (colours: metal, dark, wood, brass, accent, glow), and fps.js calls `wcEarn('kill' | 'round')`.
+
 ## Boats
 
 Choose your boat with the Brig / Cutter / Barque / Carrier picker on the title, harbour, end and crew screens, or from the shipyard at the top of the **Crates** screen. Your choice is kept on this device, and your crew sees which boat you're sailing.
@@ -265,6 +269,7 @@ src/net.js          crews: lobby, shared voyages, crewmates' ships
 src/crates.js       boats, crates, skins and pennants
 src/fps.js          Wreckers' Night, the multiplayer FPS mode
 src/fpsgun.js       Wreckers' Night: the 3D pistol, its hand and its reload
+src/wcrates.js      Wreckers' Night: weapon skin crates, kept apart from the boat crates
 src/main.js         starts the main loop
 assets/maren.png    Maren cutout
 assets/plimsoll.png Plimsoll cutout

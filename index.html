@@ -125,12 +125,10 @@
       <div class="cardtop"><span class="eyebrow">A new game · multiplayer · first person</span></div>
       <h1 id="fpsHead">Wreckers' Night</h1>
       <p>Leave the ship. Go ashore on the skerry with a pepperbox pistol and a lantern, and shoot it out with whoever else is on the island tonight. Nothing here touches your voyages, crates or crew.</p>
-      <div class="weaponpick" role="group" aria-label="Your weapon">
-        <button class="pick on" type="button" aria-pressed="true"><svg viewBox="0 0 64 40" width="58" height="36" aria-hidden="true"><g fill="none" stroke="#cfc4a8" stroke-width="1.6" stroke-linejoin="round"><rect x="6" y="9" width="30" height="12" rx="3" fill="#2c2d33"/><path d="M8 12h26M8 15h26M8 18h26" stroke="#55565e" stroke-width="1"/><rect x="34" y="8" width="11" height="13" fill="#3a3c42"/><path d="M38 8l10-4" stroke="#1c1d22" stroke-width="2.5"/><path d="M44 21c2 6 0 12 4 15h9c-2-7-3-12-5-15z" fill="#5a3620"/><path d="M38 21c0 5 4 6 6 5" stroke="#8a6a2c"/><rect x="34" y="7" width="2" height="15" fill="#8a6a2c" stroke="none"/></g></svg><b>Pepperbox</b><small>6 shots · pistol</small></button>
-        <button class="pick soon" type="button" disabled aria-label="Weapon slot 2, coming soon"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><rect x="5" y="11" width="14" height="10" rx="1.5"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></g></svg><b>?</b><small>Coming soon</small></button><button class="pick soon" type="button" disabled aria-label="Weapon slot 3, coming soon"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><rect x="5" y="11" width="14" height="10" rx="1.5"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></g></svg><b>?</b><small>Coming soon</small></button><button class="pick soon" type="button" disabled aria-label="Weapon slot 4, coming soon"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><rect x="5" y="11" width="14" height="10" rx="1.5"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></g></svg><b>?</b><small>Coming soon</small></button><button class="pick soon" type="button" disabled aria-label="Weapon slot 5, coming soon"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><rect x="5" y="11" width="14" height="10" rx="1.5"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></g></svg><b>?</b><small>Coming soon</small></button>
-      </div>
+      <div class="weaponpick" id="weaponPick" role="group" aria-label="The weapon in your hand when you land"></div>
       <div class="btnrow">
         <button class="primary" id="fpsPlay" type="button">Go ashore</button>
+        <button class="tool wcrateBtn" id="wcrateBtn" type="button">Weapon crates</button>
         <button class="tool" id="fpsSettings" type="button">Settings</button>
       </div>
       <section class="together" aria-labelledby="fpsTogetherHead">
@@ -274,6 +272,35 @@
     </div>
   </div>
 
+  <div class="overlay cratecard wcratecard" id="wcrateCard" hidden role="dialog" aria-modal="true" aria-labelledby="wcrateHead">
+    <div class="card">
+      <div class="cardtop sticky"><span class="eyebrow">Wreckers' Night · the gunsmith</span><button class="tool closebtn" id="wcrateClose" type="button">✕ Close</button></div>
+      <h1 id="wcrateHead">Weapon Crates</h1>
+      <p>Skins for your weapons on the island, kept apart from your boat crates. You earn a Gunsmith's Crate for every 5 kills, and one for each round you see out ashore. Same grades and odds as the Skerry Crate: if you see gold in the reel, it's yours.</p>
+      <div class="wcprogress"><span id="wcProgress"></span><i id="wcBar" aria-hidden="true"></i></div>
+      <h2 class="invh">Crate inventory</h2>
+      <div class="cratetypes" id="wcTypes"></div>
+      <div class="reel" id="wcReel"><div class="strip" id="wcStrip"></div><div class="marker" aria-hidden="true"></div></div>
+      <div class="result" id="wcResult" hidden aria-live="polite"></div>
+      <ul class="odds" id="wcOdds" aria-label="Chances for each grade"></ul>
+      <h2 class="invh">Your weapon skins</h2>
+      <div class="loottabs" id="wcTabs" role="group" aria-label="Show skins for"></div>
+      <span class="eyebrow" id="wcCollected"></span>
+      <div class="inv" id="wcInv"></div>
+      <h2 class="invh">Keep your weapon skins</h2>
+      <div class="savebox">
+        <p class="savestatus" id="wcSaveStatus"></p>
+        <label for="wcSaveInput" class="sr">Weapon save code</label>
+        <input id="wcSaveInput" type="text" placeholder="Paste a weapon code (WCRATES-...)" autocomplete="off" spellcheck="false">
+        <div class="btnrow">
+          <button class="primary small" id="wcSaveCopy" type="button">Copy my code</button>
+          <button class="tool" id="wcSaveLoad" type="button">Load code</button>
+        </div>
+        <p class="savemsg" id="wcSaveMsg" aria-live="polite"></p>
+      </div>
+    </div>
+  </div>
+
   <div class="overlay pausecard" id="fpsMenu" hidden role="dialog" aria-modal="true" aria-labelledby="fpsMenuHead">
     <div class="card">
       <span class="eyebrow">Wreckers' Night carries on without you</span>
@@ -356,6 +383,7 @@
 <script src="src/gamepad.js"></script>
 <script src="src/fps.js"></script>
 <script src="src/fpsgun.js"></script>
+<script src="src/wcrates.js"></script>
 <script src="src/main.js"></script>
 </body>
 </html>

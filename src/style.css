@@ -639,3 +639,27 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 .fpsweapon .wn { font: 600 11px/1 "Courier Prime", monospace; letter-spacing: 0.04em; }
 .fpsscope { left: -52px; top: 64px; }
 .fpsico[hidden] { display: none; }
+
+/* ---------- Wreckers' Night: weapon crates (src/wcrates.js) ---------- */
+.wcratecard .card { border-color: rgba(228,108,79,0.45); }
+.wcratecard h1 { color: #f0b08e; }
+.wcprogress { display: grid; gap: 5px; font-family: var(--log); font-size: 12px; color: var(--muted); }
+.wcprogress i { display: block; height: 6px; border-radius: 3px; background: linear-gradient(90deg, #e46c4f calc(var(--v, 0) * 100%), rgba(236,228,207,0.12) 0); }
+/* an iron-bound gun crate, to tell it from the Skerry Crate */
+.cratebox.wcbox { background: linear-gradient(#3a3e44, #1e2126); border-color: #e46c4f; box-shadow: inset 0 -8px 0 rgba(0,0,0,0.3), inset 0 0 0 3px rgba(228,108,79,0.25); }
+.wcratecard .loottabs .tool { flex: 1 1 auto; }
+.skincard.wcskin svg { margin-block: 6px 2px; }
+.wcratecard .inv .skincard.locked { opacity: 0.4; }
+#wcrateBtn { white-space: nowrap; }
+@media (max-width: 520px) {
+  .wcratecard .reel .skincard svg { width: 80px !important; height: 40px !important; }
+  .wcratecard .inv .skincard svg { width: 80px !important; height: 40px !important; }
+  .wcratecard .loottabs { display: grid; grid-template-columns: repeat(3, 1fr); }
+  .wcratecard .loottabs .tool { padding: 7px 4px; }
+  .wcprogress { font-size: 10.5px; }
+}
+
+.weaponpick .pick { cursor: pointer; }
+.weaponpick .wart { display: grid; place-items: center; min-height: 36px; }
+.weaponpick .wart svg { max-width: 100%; height: auto; }
+.weaponpick .pick:focus-visible { outline: 2px solid var(--lamp); outline-offset: 2px; }
