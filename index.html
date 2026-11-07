@@ -81,6 +81,7 @@
         <button class="tool crateAllBtn" type="button" hidden>Open all</button>
         <button class="tool backupBtn" type="button" title="Back up your crates and cosmetics">Back up save</button>
         <button class="tool" id="titleSettings" type="button">Settings</button>
+        <button class="tool fpsbtn" id="fpsBtn" type="button">Wreckers' Night · FPS</button>
       </div>
       <section class="together" id="together" aria-labelledby="togetherHead">
         <h2 id="togetherHead">Sail together · up to 8 ships</h2>
@@ -247,6 +248,41 @@
     </div>
   </div>
 
+  <div class="overlay" id="fpsCard" hidden role="dialog" aria-modal="true" aria-labelledby="fpsHead">
+    <div class="card">
+      <span class="eyebrow">A separate game · multiplayer · first person</span>
+      <h1 id="fpsHead">Wreckers' Night</h1>
+      <p>Leave the ship. Go ashore on the skerry with a pepperbox pistol and a lantern, and shoot it out with whoever else is on the island tonight. Nothing here touches your voyages, crates or crew.</p>
+      <p>Light is everything. The lighthouse beam sweeps the island and shows anyone it crosses. Your lantern lets you see, and lets everyone see you. Flares light a wide circle for all. Ring the bell and everyone shows on your bearing strip, and you on theirs. The drowned crew wade ashore now and then. Keep out of trouble for a few seconds and you patch yourself up. Rounds last five minutes and the island moves to a new sea each round.</p>
+      <div class="nickrow"><label for="fpsNick">Your name</label><input id="fpsNick" type="text" maxlength="16" autocomplete="nickname" placeholder="Wrecker"></div>
+      <p class="setnote" id="fpsStatus"></p>
+      <p class="setnote"><b>Keyboard and mouse:</b> click to aim · WASD walk · Shift run · click fire · R reload · L lantern · F flare · B or Space bell · Tab scores · Esc menu. <b>Controller:</b> sticks walk and aim · RT fire · X reload · Y lantern · B flare · LB bell · Back scores · Start menu. <b>Touch:</b> left thumb walks, right thumb aims, buttons for the rest.</p>
+      <div class="btnrow">
+        <button class="primary" id="fpsPlay" type="button">Go ashore</button>
+        <button class="tool" id="fpsBack" type="button">Back</button>
+      </div>
+    </div>
+  </div>
+  <div class="overlay pausecard" id="fpsMenu" hidden role="dialog" aria-modal="true" aria-labelledby="fpsMenuHead">
+    <div class="card">
+      <span class="eyebrow">Wreckers' Night carries on without you</span>
+      <h1 id="fpsMenuHead">Menu</h1>
+      <div class="btnrow">
+        <button class="primary" id="fpsResume" type="button">Back to the fight</button>
+        <button class="tool" id="fpsLeave" type="button">Leave the island</button>
+      </div>
+    </div>
+  </div>
+  <div class="fpspad" id="fpsPad" hidden>
+    <button class="tool" id="fpsPadMenu" type="button" aria-label="Menu">☰</button>
+    <button class="tool" id="fpsPadBoard" type="button">Scores</button>
+    <button class="tool" id="fpsPadBell" type="button">Bell</button>
+    <button class="tool" id="fpsPadFlare" type="button">Flare</button>
+    <button class="tool" id="fpsPadLantern" type="button">Lantern</button>
+    <button class="tool" id="fpsPadReload" type="button">Reload</button>
+    <button class="primary fpsfire" id="fpsPadFire" type="button">Fire</button>
+  </div>
+
   <div class="overlay pausecard" id="pauseCard" hidden role="dialog" aria-modal="true" aria-labelledby="pauseHead">
     <div class="card">
       <span class="eyebrow">The helm is lashed</span>
@@ -301,6 +337,7 @@
 <script src="src/carrier.js"></script>
 <script src="src/crates.js"></script>
 <script src="src/gamepad.js"></script>
+<script src="src/fps.js"></script>
 <script src="src/main.js"></script>
 </body>
 </html>

@@ -359,7 +359,7 @@ function syncThings(list, make, B) {
       m = make(o, B); m.biome = B.name; GL3D.objs.set(o, m); GL3D.scene.add(m.root);
     }
     m.seen = F;
-    let vis = o.gone ? 0 : Math.max(visibility(o.x, o.y), afterglow(o));
+    let vis = o.gone ? 0 : Math.max(visibility(o.x, o.y), afterglow(o), g.minVis || 0);
     m.root.visible = vis > 0.02;
     if (!m.root.visible) continue;
     m.root.position.set(o.x, 0, -o.y); m.vis = vis;
@@ -382,6 +382,7 @@ function gl3dRender(roll, sx, sy, beamOn) {
   const B = curBiome(), cam3 = GL3D.camera, u = GL3D.sea.material.uniforms;
   GL3D.frame++;
   buildCoast();
+  syncIsland(B);
   // the camera, set up to project exactly as the 2D one does (the horizon at hy, the same focal length)
   cam3.fov = 2 * Math.atan((H / 2) / focal) * 180 / Math.PI;
   cam3.aspect = W / H;
@@ -886,4 +887,38 @@ function gl3dSkyOverlay() {
     if (Math.min(R, Rz) > Math.max(W, H) * 1.2) { ctx.globalAlpha = Math.min(0.85, v * 0.8); ctx.fillStyle = '#262c42'; ctx.fillRect(-W * 0.1, -H * 0.1, W * 1.2, H * 1.2); ctx.globalAlpha = 1; }
     if (o.flash > 0) { ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = Math.min(1, o.flash * 2); lamp(q.x, q.y, '#c8d8ff', Math.max(4, R * 0.35)); ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1; }
   }
+}
+
+// ---------- Wreckers' Night: the island they fight on ----------
+// a low disc of rock and shingle with a beach running down into the sea, coloured for the sea it's in
+function syncIsland(B) {
+  const I = g.island, key = I ? B.name + ':' + I.x + ':' + I.y + ':' + I.r : '';
+  if (GL3D.islandKey === key) return;
+  GL3D.islandKey = key;
+  if (GL3D.island) { GL3D.scene.remove(GL3D.island); GL3D.island.traverse(glDispose); GL3D.island = null; }
+  if (!I) return;
+  const base = glOver(B.head[1], 'rgba(150,146,130,0.22)'), dark = glOver(B.head[0], 'rgba(90,86,76,0.2)'), sand = glOver(B.head[1], `rgba(${B.surf},0.12)`);
+  const SEG = 96, RINGS = 14, pos = [], col = [], idx = [];
+  const edge = a => I.r * (1 + 0.035 * Math.sin(a * 5 + 1) + 0.02 * Math.sin(a * 13));
+  pos.push(I.x, I.z, -I.y); col.push(base.r, base.g, base.b);
+  for (let i = 1; i <= RINGS + 2; i++) {
+    for (let j = 0; j < SEG; j++) {
+      const a = j / SEG * Math.PI * 2, e = edge(a);
+      // rings out to the edge, then two more down the beach under the water
+      const r = i <= RINGS ? e * i / RINGS : e + (i - RINGS) * 7, z = i <= RINGS ? I.z + 0.08 * Math.sin(a * 7 + i) * (i / RINGS) : I.z - (i - RINGS) * 0.6;
+      pos.push(I.x + Math.cos(a) * r, z, -(I.y + Math.sin(a) * r));
+      const n = glHash(i, j), c = i > RINGS ? sand : n < 0.3 ? dark : base;
+      const k = 0.9 + 0.2 * glHash(j, i);
+      col.push(c.r * k, c.g * k, c.b * k);
+    }
+  }
+  const at = (i, j) => 1 + (i - 1) * SEG + (j % SEG);
+  for (let j = 0; j < SEG; j++) idx.push(0, at(1, j), at(1, j + 1));
+  for (let i = 1; i < RINGS + 2; i++) for (let j = 0; j < SEG; j++) { const a = at(i, j), b = at(i, j + 1), c = at(i + 1, j), d = at(i + 1, j + 1); idx.push(a, c, d, a, d, b); }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  geo.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
+  geo.setIndex(idx); geo.computeVertexNormals();
+  const m = new THREE.Mesh(geo, new THREE.MeshLambertMaterial({ vertexColors: true, side: THREE.DoubleSide }));
+  GL3D.island = m; GL3D.scene.add(m);
 }

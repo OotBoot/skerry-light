@@ -20,6 +20,8 @@ let loggedError = false;
 function frame(now) {
   const dt = Math.min(0.05, (now - last) / 1000); last = now;
   try {
+    // Wreckers' Night runs its own loop
+    if (state === 'fps') { fpsFrame(dt); requestAnimationFrame(frame); return; }
     pollPad(dt);
     // paused: nothing moves, but the scene is still drawn under the pause card
     if (paused) { drawScene(); requestAnimationFrame(frame); return; }

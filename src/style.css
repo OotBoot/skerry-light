@@ -582,3 +582,12 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 .dots i.held { box-shadow: 0 0 0 2px var(--shoe); }
 .card p.recapline { font-family: var(--log); font-size: 12px; color: var(--muted); }
 .stats { grid-template-columns: repeat(4, 1fr); }
+
+/* Wreckers' Night */
+.fpsbtn { border-color: rgba(228,108,79,0.6); }
+#stage.fpsmode #cv { cursor: crosshair; }
+.fpspad { position: absolute; right: max(10px, env(safe-area-inset-right, 0px)); bottom: max(10px, env(safe-area-inset-bottom, 0px)); display: grid; grid-template-columns: repeat(3, auto); gap: 8px; align-items: end; justify-items: end; z-index: 5; }
+.fpspad[hidden] { display: none; }
+.fpspad .tool { min-width: 64px; min-height: 44px; font-size: 13px; background: rgba(8,10,14,0.55); }
+.fpspad .fpsfire { grid-column: 3; grid-row: 2 / span 2; width: 92px; height: 92px; border-radius: 50%; font-size: 16px; }
+#fpsPadMenu { position: fixed; top: max(52px, calc(env(safe-area-inset-top, 0px) + 44px)); left: max(10px, env(safe-area-inset-left, 0px)); min-width: 44px; }

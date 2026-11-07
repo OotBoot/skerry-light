@@ -112,6 +112,20 @@ The sky is painted on a canvas behind the 3D view, and the creatures, ships, dec
 
 Settings → Graphics switches between **3D** and **Classic** (the original painted view, lighter on old devices). If WebGL isn't available the game uses Classic by itself.
 
+## Wreckers' Night (multiplayer FPS)
+
+A separate game mode, from the **Wreckers' Night · FPS** button on the title screen. You go ashore on foot on a skerry at night with a six-shot pepperbox pistol and a lantern, and shoot it out with everyone else on the island. It never touches your voyages, crates, cosmetics or crew; your equipped skin only colours your coat and lantern.
+
+- **Light:** you only see what light reaches. The lighthouse beam sweeps the island and shows anyone it crosses (a warning tells you when you're in it). Your lantern (L) lights what's near you, and shows you to the whole island while it burns. Flares (F, two a life) light a wide circle for everyone.
+- **The bell** (B or Space): everyone shows on your bearing strip for a few seconds, and you show on theirs.
+- **Cover:** the skerries and old wrecks stop shots. Head shots do double damage. Four hits and you're down; you're back ashore 3.5 seconds later, somewhere away from everyone else, and patch yourself up after a few quiet seconds.
+- **The drowned crew** wade ashore now and then and go for whoever is nearest.
+- **Rounds** last five minutes on the clock, so everyone's round ends together; the scores reset and the island moves to the next of the six seas.
+- **Alone,** three wreckers (bots) keep you company; they leave as soon as another player comes ashore.
+- **Controls:** mouse and keyboard (click to aim, WASD, Shift to run, click to fire, R reload, Tab scores, Esc menu), a controller (sticks, RT fire, X reload, Y lantern, B flare, LB bell), or touch (left thumb walks, right thumb aims, on-screen buttons).
+
+It uses the same connection as crews (the claude.ai room, or the crew server), on its own key in presence, so the two never mix; the server relays island players to each other at full rate.
+
 ## Boats
 
 Choose your boat with the Brig / Cutter / Barque / Carrier picker on the title, harbour, end and crew screens, or from the shipyard at the top of the **Crates** screen. Your choice is kept on this device, and your crew sees which boat you're sailing.
@@ -241,6 +255,7 @@ src/game.js         game state, update step, input and screens
 src/transport.js    connects to the crew server outside claude.ai
 src/net.js          crews: lobby, shared voyages, crewmates' ships
 src/crates.js       boats, crates, skins and pennants
+src/fps.js          Wreckers' Night, the multiplayer FPS mode
 src/main.js         starts the main loop
 assets/maren.png    Maren cutout
 assets/plimsoll.png Plimsoll cutout

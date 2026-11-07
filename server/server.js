@@ -68,6 +68,7 @@ function cleanPresence(p) {
   return JSON.parse(text);
 }
 
+const onIsland = c => !!(c.presence && c.presence.fps);
 const crewOf = c => (c.presence && typeof c.presence.crew === 'string' ? c.presence.crew : null);
 
 function relay(from) {
@@ -76,7 +77,9 @@ function relay(from) {
   const now = Date.now();
   for (const c of clients.values()) {
     if (c === from) continue;
-    const mate = crew && (crewOf(c) === crew || c.lastCrewSeen.get(from.id) === crew);
+    const mate = (crew && (crewOf(c) === crew || c.lastCrewSeen.get(from.id) === crew)) ||
+      // Wreckers' Night: everyone on the island hears everyone else at full rate
+      (onIsland(from) && onIsland(c));
     if (mate || now - (c.lastLobbySend.get(from.id) || 0) >= LOBBY_INTERVAL_MS) {
       send(c, msg);
       c.lastLobbySend.set(from.id, now);
