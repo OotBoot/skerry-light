@@ -468,8 +468,10 @@ function drawScene() {
   drawPlimRing();
   for (const it of items) {
     // in the rooms, anything behind a wall is hidden by it, column by column
-    const clip = g.backrooms;
+    // in 3D, anything behind a solid rock or wreck is hidden by it
+    let clip = g.backrooms;
     if (clip) { ctx.save(); clipToVisible(it.c.f); }
+    else if (gl && it.kind !== 'portal') { ctx.save(); clip = true; gl3dClip(it.c.f); }
     try {
     if (it.kind === 'exit') { drawExitSign(); continue; }
     const q = proj(it.c); if (q.x < -500 || q.x > W + 500) continue;

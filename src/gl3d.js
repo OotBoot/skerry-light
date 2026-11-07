@@ -307,7 +307,14 @@ function rockMesh(r, B) {
   const foam = new THREE.Mesh(new THREE.RingGeometry(0.85, 1.3, 28), foamM);
   foam.rotation.x = -Math.PI / 2; foam.position.y = 0.3; foam.scale.set(r.r * 1.1, r.r * 1.1 * sq, 1); root.add(foam);
   root.rotation.y = r.ph;
-  return { root, mats: [mat], foam, foamM, base: r.r * 1.1 };
+  // the rock's outline points (above the water), for hiding painted things that are behind it
+  const seen = new Set(), pts = [];
+  for (let i = 0; i < P.count; i++) {
+    const x = P.getX(i), y = P.getY(i), z = P.getZ(i), k = x.toFixed(2) + ',' + y.toFixed(2) + ',' + z.toFixed(2);
+    if (y < -0.05 || seen.has(k)) continue;
+    seen.add(k); pts.push(x, Math.max(0, y), z);
+  }
+  return { root, mats: [mat], foam, foamM, base: r.r * 1.1, pts };
 }
 function wreckMesh(o) {
   const mat = new THREE.MeshLambertMaterial({ color: '#3e3128', transparent: true, side: THREE.DoubleSide }), dark = new THREE.MeshLambertMaterial({ color: '#261c15', transparent: true });
@@ -326,7 +333,9 @@ function wreckMesh(o) {
   const foam = new THREE.Mesh(new THREE.RingGeometry(0.75, 1.1, 24), foamM);
   foam.rotation.x = -Math.PI / 2; foam.position.y = 0.3; foam.scale.set(L * 0.3, L * 0.62, 1); root.add(foam);
   root.rotation.y = -o.ang;
-  return { root, mats: [mat, dark], foam, foamM, base: 0 };
+  const pts = [];
+  for (const x of [-L * 0.2, L * 0.2]) for (const y of [0, hh * 1.6]) for (const z of [-L / 2, L / 2]) pts.push(x, y, z);
+  return { root, mats: [mat, dark], foam, foamM, base: 0, pts };
 }
 function timberMesh(o) {
   const mat = new THREE.MeshLambertMaterial({ color: '#4a3a2b', transparent: true });
@@ -347,7 +356,7 @@ function syncThings(list, make, B) {
     let vis = o.gone ? 0 : Math.max(visibility(o.x, o.y), afterglow(o));
     m.root.visible = vis > 0.02;
     if (!m.root.visible) continue;
-    m.root.position.set(o.x, 0, -o.y);
+    m.root.position.set(o.x, 0, -o.y); m.vis = vis;
     for (const mat of m.mats) { mat.opacity = vis; mat.transparent = vis < 0.999; mat.depthWrite = vis > 0.5; }
     if (m.foam) {
       const sw = Math.sin(g.t * 1.7 + (o.ph || 0));
@@ -407,6 +416,7 @@ function gl3dRender(roll, sx, sy, beamOn) {
   syncThings(g.rocks, rockMesh, B);
   syncThings(g.wrecks, wreckMesh, B);
   syncThings(g.timber, timberMesh, B);
+  findOccluders();
   for (const [o, m] of GL3D.objs) if (m.seen !== GL3D.frame) dropThing(o, m);
   GL3D.r.render(GL3D.scene, cam3);
   return shown;
@@ -436,4 +446,53 @@ function gl3dGlows(shown) {
     const q = proj(c), ws = Math.max(1.4, q.s * 1.3);
     if (ws > 3) { ctx.globalAlpha = 0.25 * w.m.opacity; lamp(q.x, q.y, B.win, ws * 0.9); ctx.globalAlpha = 1; }
   }
+}
+
+// ---------- painted things behind 3D rocks ----------
+// Creatures, ships and crewmates are still painted on the canvas over the 3D view. So that a rock
+// hides whatever is behind it, each solid rock and wreck's outline is worked out on screen, and
+// anything painted further away than it is clipped out of that outline.
+GL3D.occ = [];
+function hull(p) {
+  p.sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+  const cr = (o, a, b) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
+  const lo = [], up = [];
+  for (const q of p) { while (lo.length > 1 && cr(lo[lo.length - 2], lo[lo.length - 1], q) <= 0) lo.pop(); lo.push(q); }
+  for (let i = p.length - 1; i >= 0; i--) { const q = p[i]; while (up.length > 1 && cr(up[up.length - 2], up[up.length - 1], q) <= 0) up.pop(); up.push(q); }
+  lo.pop(); up.pop(); return lo.concat(up);
+}
+function findOccluders() {
+  const out = GL3D.occ = [];
+  for (const [o, m] of GL3D.objs) {
+    if (!m.pts || !m.root.visible || !(m.vis >= 0.5)) continue;
+    const c0 = cam(o.x, o.y, 0); if (c0.f < SK.NEAR + 2) continue;
+    const th = m.root.rotation.y, cs = Math.cos(th), sn = Math.sin(th), P = m.pts, sc = [];
+    let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9, ok = true;
+    for (let i = 0; i < P.length; i += 3) {
+      const lx = P[i], ly = P[i + 1], lz = P[i + 2];
+      const wx = o.x + lx * cs + lz * sn, wz = -o.y - lx * sn + lz * cs;
+      const c = cam(wx, -wz, ly); if (c.f < SK.NEAR) { ok = false; break; }
+      const q = proj(c); sc.push([q.x, q.y]);
+      if (q.x < x0) x0 = q.x; if (q.x > x1) x1 = q.x; if (q.y < y0) y0 = q.y; if (q.y > y1) y1 = q.y;
+    }
+    if (!ok || x1 < -50 || x0 > W + 50 || x1 - x0 < 2) continue;
+    // a little inside the true outline, so foam and edges don't cut things off early
+    const h = hull(sc), mx = (x0 + x1) / 2, my = (y0 + y1) / 2;
+    out.push({ f: c0.f - (o.r || 0) * 0.3, pts: h.map(q => [mx + (q[0] - mx) * 0.96, my + (q[1] - my) * 0.97]), x0, x1, y0, y1 });
+  }
+  out.sort((a, b) => a.f - b.f);
+}
+// clip the canvas so that a thing at depth f is hidden wherever a nearer rock stands; false if nothing is in front
+function gl3dClip(f) {
+  const occ = GL3D.occ; if (!occ.length || occ[0].f >= f) return false;
+  // one cut per rock (clips stack), so rocks that overlap on screen still both hide what's behind them
+  for (const o of occ) {
+    if (o.f >= f) break;
+    const p = o.pts;
+    ctx.beginPath(); ctx.rect(-W, -H, W * 3, H * 3);
+    ctx.moveTo(p[0][0], p[0][1]);
+    for (let i = 1; i < p.length; i++) ctx.lineTo(p[i][0], p[i][1]);
+    ctx.closePath(); ctx.clip('evenodd');
+  }
+  return true;
 }

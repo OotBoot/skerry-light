@@ -99,9 +99,9 @@ The log goes on through 1888. The sea stops being one sea: some nights it freeze
 
 ## Graphics: 3D and Classic
 
-The world is drawn in real 3D with WebGL (three.js): the sea is a moving surface that catches the beam and the moon, the lighthouse beam is a cone of light with a spotlight in it that lights the rocks and cliffs as it sweeps, and the skerries, bergs, reefs, wrecks and timber are solid shapes. The sky and the far landscape are painted on a canvas behind the 3D view, and the creatures, ships, deck and effects are painted on a canvas over it; the 3D camera projects exactly as the painted one does, so they line up. Rocks still only show where some light reaches them.
+The world is drawn in real 3D with WebGL (three.js): the sea is a moving surface that catches the beam and the moon, the lighthouse beam is a cone of light with a spotlight in it that lights the rocks and cliffs as it sweeps, and the skerries, bergs, reefs, wrecks and timber are solid shapes. The sky and the far landscape are painted on a canvas behind the 3D view, and the creatures, ships, deck and effects are painted on a canvas over it; the 3D camera projects exactly as the painted one does, so they line up, and a solid rock or wreck hides any creature, ship or crewmate behind it. Rocks still only show where some light reaches them.
 
-Settings → Graphics switches between **3D** and **Classic** (the original painted view, lighter on old devices). If WebGL isn't available the game uses Classic by itself. The Backrooms and the Open Sky are still drawn by the classic renderer; ships, creatures and the biomes' landmarks move into 3D in later stages.
+Settings → Graphics switches between **3D** and **Classic** (the original painted view, lighter on old devices). If WebGL isn't available the game uses Classic by itself. The Backrooms and the Open Sky are still drawn by the classic renderer; the biomes' landmarks move into 3D in a later stage.
 
 ## Boats
 
