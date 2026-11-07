@@ -24,7 +24,7 @@ const FPSC = {
   ROUND: 300000, PERIOD: 16, RANGE: 420, SEND: 0.1, BOTS: 3, PROTECT: 2,
 };
 const FPS = {
-  on: false, saved: null, g: null, me: null, keys: {}, mouse: false, look: [0, 0],
+  on: false, saved: null, weapon: 'pepperbox', pick: 'pepperbox', last: 'pepperbox', harps: [], swings: [], scoped: false, drawT: 0, g: null, me: null, keys: {}, mouse: false, look: [0, 0],
   remote: new Map(), bots: [], drowned: [], tracers: [], parts: [], feed: [], pings: [],
   round: 0, kb: {}, deaths: 0, seq: 0, shots: [], seenSeq: {}, hist: [], host: false, joinedAt: 0, bell: 0, flare: 0, flareAt: [0, 0],
   sendT: 0, hitT: 0, hurtT: 0, flash: 0, recoil: 0, step: 0, board: false, menu: false,
@@ -32,6 +32,24 @@ const FPS = {
 };
 const FPS_BOT_NAMES = ['Wrecker Abe', 'Black Nell', 'Silas Crane', 'Old Tobias', 'Mother Carey', 'Jory Pengelly'];
 const FPS_SEAS = ['skerry', 'fjord', 'ember', 'lagoon', 'barrows', 'shoals'];
+// the five weapons: you carry them all (1-5 to switch); the one picked on the title card is in your hand when you land
+//  pepperbox   six quick shots, one damage (two to the head)
+//  blunderbuss one shot of nine balls in a wide spread; deadly close, useless past fifty metres
+//  longarm     one heavy shot, three damage (a head shot kills); hold right mouse / Scope for the telescope
+//  harpoon     one barbed harpoon on a line, slow enough to see and to dodge, and it kills what it hits
+//  cutlass     no powder: swing it within arm's reach, two damage a cut, in a three-cut combination
+const FPSW = {
+  pepperbox:   { n: 'Pepperbox',   code: 'p', mag: 6, rate: 0.26, reload: 2.2, dmg: 1, head: 2, auto: true, range: 420, kick: 1 },
+  blunderbuss: { n: 'Blunderbuss', code: 'b', mag: 1, rate: 0.6, reload: 2.7, dmg: 1, head: 1, pellets: 9, spread: 0.085, range: 55, kick: 2.4 },
+  longarm:     { n: 'Longarm',     code: 'l', mag: 1, rate: 0.5, reload: 2.6, dmg: 3, head: 5, range: 650, hip: 0.035, scope: 3.2, kick: 1.6 },
+  harpoon:     { n: 'Harpoon gun', code: 'h', mag: 1, rate: 0.6, reload: 2.9, dmg: 4, head: 4, speed: 72, drop: 5, range: 300, kick: 1.9 },
+  cutlass:     { n: 'Cutlass',     code: 'c', mag: 0, rate: 0.48, reload: 1.6, dmg: 2, head: 2, reach: 2.7, arc: 0.8, melee: true, kick: 0 },
+};
+const FPS_WORDER = ['pepperbox', 'blunderbuss', 'longarm', 'harpoon', 'cutlass'];
+const FPSW_BY_CODE = {}; for (const id in FPSW) FPSW_BY_CODE[FPSW[id].code] = id;
+const fpsW = () => FPSW[FPS.weapon] || FPSW.pepperbox;
+const fpsWOf = code => FPSW[FPSW_BY_CODE[code] || 'pepperbox'];
+try { const w = localStorage.getItem('skerry-fps-weapon'); if (FPSW[w]) FPS.pick = w; } catch (e) {}
 
 // ---------- the island ----------
 function fpsArena(round) {
@@ -91,9 +109,10 @@ function fpsStart() {
   FPS.round = fpsRoundNow();
   FPS.g = fpsArena(FPS.round);
   FPS.me = { id: NET.sid, x: FPSC.CX, y: FPSC.CY, h: 0, p: 0, v: 0, z: 0, rudder: 0, bob: 0, boat: 'brig', inv: 0, pitch: 0,
-    hp: FPSC.HP, ammo: FPSC.MAG, reload: 0, cd: 0, flares: FPSC.FLARES, lan: true, dead: 0, protect: 0, killer: null };
+    hp: FPSC.HP, ammo: 6, mags: {}, reload: 0, cd: 0, flares: FPSC.FLARES, lan: true, dead: 0, protect: 0, killer: null };
   FPS.kb = {}; FPS.deaths = 0; FPS.seq = 0; FPS.shots = []; FPS.seenSeq = {}; FPS.hist = []; FPS.host = false; FPS.joinedAt = performance.now(); FPS.ai = null; FPS.remote.clear(); FPS.feed = []; FPS.pings = []; FPS.tracers = []; FPS.parts = []; FPS.drowned = [];
   FPS.bots = []; FPS.drownT = 25; FPS.roundMsg = null; FPS.menu = false; $('fpsMenu').hidden = true;
+  FPS.weapon = FPS.last = FPS.pick || 'pepperbox'; FPS.harps = []; FPS.swings = []; FPS.scoped = false;
   fpsRespawn(FPS.me);
   fpsSend(true);
   fpsFeed('You come ashore on the skerry. Keep out of the beam.');
@@ -132,7 +151,7 @@ function fpsSend(force) {
   const out = {
     id: NET.sid, n: FPS.nick, r: FPS.round, x: fr1(m.x), y: fr1(m.y), h: fr2(m.h), p: fr2(m.p), hp: m.hp, dead: m.dead > 0 ? 1 : 0,
     lan: m.lan ? 1 : 0, sh: FPS.shots, kb: FPS.kb, d: FPS.deaths, bl: FPS.bell, fl: [FPS.flare, fr1(FPS.flareAt[0]), fr1(FPS.flareAt[1])],
-    c: fpsColours(), wk: m.walk ? 1 : 0, ai: null,
+    c: fpsColours(), wk: m.walk ? 1 : 0, ai: null, w: fpsW().code, sc: FPS.scoped ? 1 : 0,
   };
   // the host shares the wreckers and the drowned
   if (FPS.host) out.ai = {
@@ -166,7 +185,7 @@ function fpsNetTick(dt) {
       FPS.seenSeq[f.id] = Array.isArray(f.sh) && f.sh.length ? f.sh[f.sh.length - 1][0] : 0;
       fpsFeed(`${f.n || 'A wrecker'} came ashore.`);
     }
-    r.n = f.n || 'Wrecker'; r.tx = f.x; r.ty = f.y; r.th = f.h; r.p = f.p; r.hp = f.hp; r.lan = !!f.lan; r.c = Array.isArray(f.c) ? f.c : null; r.walk = !!f.wk;
+    r.n = f.n || 'Wrecker'; r.w = typeof f.w === 'string' ? f.w : 'p'; r.tx = f.x; r.ty = f.y; r.th = f.h; r.p = f.p; r.hp = f.hp; r.lan = !!f.lan; r.c = Array.isArray(f.c) ? f.c : null; r.walk = !!f.wk;
     r.kb = f.r === FPS.round && f.kb && typeof f.kb === 'object' ? f.kb : {};
     r.r = f.r;
     if (f.dead && !r.dead) { r.x = f.x; r.y = f.y; }
@@ -268,7 +287,9 @@ function fpsRespawn(m) {
   }
   if (!best) best = [FPSC.CX, FPSC.CY - FPSC.R * 0.5];
   m.x = best[0]; m.y = best[1]; m.h = bearingOf(FPSC.CX - m.x, FPSC.CY - m.y); m.p = 0;
-  m.hp = FPSC.HP; m.ammo = FPSC.MAG; m.reload = 0; m.cd = 0; m.flares = FPSC.FLARES; m.dead = 0; m.protect = FPSC.PROTECT;
+  m.hp = FPSC.HP; m.reload = 0;
+  m.mags = {}; for (const id in FPSW) m.mags[id] = FPSW[id].mag;
+  if (m === FPS.me) { m.ammo = m.mags[FPS.weapon]; FPS.scoped = false; } else m.ammo = 6; m.cd = 0; m.flares = FPSC.FLARES; m.dead = 0; m.protect = FPSC.PROTECT;
 }
 function fpsBlocked(x, y, pad) {
   if (Math.hypot(x - FPSC.CX, y - FPSC.CY) > FPSC.R - 1.5) return true;
@@ -294,9 +315,9 @@ function fpsSeeAt(x, y, theirLantern) {
 // ---------- shooting ----------
 // the first thing along a ray from (x, y, z) heading h, pitched p: a person, a rock, a wreck or the ground
 // (targets: who can be hit; everyone on the island unless given)
-function fpsRay(x, y, z, h, p, skipId, targets) {
+function fpsRay(x, y, z, h, p, skipId, targets, range) {
   const sx = Math.sin(h), sy = Math.cos(h), tp = Math.tan(p);
-  let best = { t: FPSC.RANGE, kind: 'none' };
+  let best = { t: range || FPSC.RANGE, kind: 'none' };
   if (p < -0.001) { const tg = (z - FPSC.GROUND) / -tp; if (tg < best.t) best = { t: tg, kind: 'ground' }; }
   const circle = (cx, cy, r) => {
     const ox = cx - x, oy = cy - y, along = ox * sx + oy * sy; if (along < 0) return null;
@@ -328,66 +349,153 @@ function fpsRemember(o, now) {
   (o.hist = o.hist || []).push({ t: now, x: o.x, y: o.y });
   while (o.hist.length && now - o.hist[0].t > FPSC.LAG * 1000 + 100) o.hist.shift();
 }
-// did this shot hit them, at any place they've been in the last few tenths of a second?
+// the directions of the balls in a blunderbuss shot, the same on every screen (from the shot's seed)
+function fpsPellets(sh) {
+  const [, , , , h, p, , code, seed] = sh, w = fpsWOf(code), rng = seeded((seed || 1) >>> 0), out = [];
+  for (let i = 0; i < w.pellets; i++) { const a = rng() * 6.283, r = Math.sqrt(rng()) * w.spread; out.push([h + Math.cos(a) * r, p + Math.sin(a) * r * 0.7]); }
+  return out;
+}
+// the line(s) a shot travels: one for most guns, nine for the blunderbuss, a little wander from the hip for the longarm
+function fpsLines(sh) {
+  const [, , , , h, p, , code, seed] = sh, w = fpsWOf(code);
+  if (w.pellets) return fpsPellets(sh);
+  if (w.hip && seed) { const rng = seeded(seed >>> 0), a = rng() * 6.283, r = Math.sqrt(rng()) * w.hip; return [[h + Math.cos(a) * r, p + Math.sin(a) * r * 0.7]]; }
+  return [[h, p]];
+}
+// did this shot (or cut) hit them, at any place they've been in the last few tenths of a second? → { dmg, head } or null
 function fpsShotHits(sh, o) {
-  const [, x, y, z, h, p, by] = sh;
+  const [, x, y, z, h, p, by, code] = sh, w = fpsWOf(code);
   const places = (o.hist || []).concat([{ x: o.x, y: o.y }]);
+  let best = null;
   for (let i = places.length - 1; i >= 0; i--) {
     const at = places[i], who = { id: o.id, x: at.x, y: at.y };
-    const r = fpsRay(x, y, z, h, p, by, [who]);
-    if (r.kind === 'body') return r;
+    let dmg = 0, head = false;
+    if (w.melee) {
+      const d = Math.hypot(at.x - x, at.y - y), b = bearingOf(at.x - x, at.y - y);
+      if (d <= w.reach + FPSC.BODY && Math.abs(angDiff(b, h)) < w.arc) {
+        const r = fpsRay(x, y, z - 0.4, b, 0, by, [who], w.reach + 1);
+        if (r.kind === 'body') dmg = w.dmg;
+      }
+    } else for (const [lh, lp] of fpsLines(sh)) {
+      const r = fpsRay(x, y, z, lh, lp, by, [who], w.range);
+      if (r.kind === 'body') { dmg += r.head ? w.head : w.dmg; head = head || r.head; }
+    }
+    if (dmg && (!best || dmg > best.dmg)) best = { dmg, head };
   }
-  return null;
+  return best;
 }
-// a shot to pass on: [seq, x, y, z, heading, pitch, shooter]
-function fpsPublishShot(x, y, z, h, p, by) {
-  const sh = [++FPS.seq, fr1(x), fr1(y), fr2(z), Math.round(h * 1000) / 1000, Math.round(p * 1000) / 1000, by];
+// a shot to pass on: [seq, x, y, z, heading, pitch, shooter, weapon code, seed]
+function fpsPublishShot(x, y, z, h, p, by, code, seed) {
+  const sh = [++FPS.seq, fr1(x), fr1(y), fr2(z), Math.round(h * 1000) / 1000, Math.round(p * 1000) / 1000, by, code || 'p', seed || 0];
   FPS.shots.push(sh); if (FPS.shots.length > 8) FPS.shots.shift();
   FPS.sendT = 0;   // send it straight away
   return sh;
 }
-// someone else's shot arriving
+// what a shot looks and sounds like, wherever it came from; and, if it's mine or I'm the host, its effect on the wreckers and the drowned
+function fpsResolveShot(sh, mine) {
+  const [, x, y, z, h, p, by, code] = sh, w = fpsWOf(code), m = FPS.me;
+  const d = Math.hypot(x - m.x, y - m.y), pan = angDiff(bearingOf(x - m.x, y - m.y), m.h);
+  const shooter = by === m.id ? null : FPS.remote.get(by) || FPS.bots.find(b => b.id === by);
+  if (w.melee) { if (shooter) shooter.slashT = 0.3; fpsSwishSound(mine ? 0 : d); }
+  else { if (shooter) shooter.flashT = 0.12; fpsWeaponSound(code, mine ? 0 : d, mine ? 0 : pan); }
+  if (w.speed) {
+    // the harpoon flies as a thing of its own; everyone moves it the same way
+    const cp = Math.cos(p);
+    FPS.harps.push({ sh, by, x: x + Math.sin(h) * 0.8, y: y + Math.cos(h) * 0.8, z: z - 0.2, vx: Math.sin(h) * cp * w.speed, vy: Math.cos(h) * cp * w.speed, vz: Math.sin(p) * w.speed, t: 0, stuck: 0, mine, from: by });
+    return;
+  }
+  // streaks: one per ball, to whatever each one hits as I see it
+  if (!w.melee) for (const [lh, lp] of fpsLines(sh)) {
+    const r = fpsRay(x, y, z, lh, lp, by, null, w.range);
+    FPS.tracers.push({ a: [x + Math.sin(lh) * 0.6, y + Math.cos(lh) * 0.6, z - 0.25], b: [r.x, r.y, r.z], t: w.pellets ? 0.06 : 0.08, k: w.code });
+    if (r.kind !== 'body' && r.kind !== 'none' && (mine || d < 80)) fpsPuff(r.x, r.y, r.z, r.kind === 'ground' ? '150,140,120' : '190,190,180', w.pellets ? 2 : 6);
+  }
+  // the hit marker on my own shot is my best guess; the target (or the host) has the last word
+  if (mine) {
+    let any = null;
+    for (const o of fpsEveryone().concat(FPS.drowned)) { if (o.me || o.dead > 0) continue; const hit = fpsShotHits(sh, o); if (hit) { any = any || hit; o.hitT = 0.2; } }
+    if (any) { FPS.hitT = 0.18; FPS.hitHead = any.head; fpsHitSound(any.head); }
+  }
+  if (FPS.host || !NET.room || !FPS.remote.size) {
+    for (const b of FPS.bots) { if (b.id === by || b.dead > 0) continue; const hit = fpsShotHits(sh, b); if (hit) fpsBotHurt(b, hit.dmg, by); }
+    for (const dr of FPS.drowned) { if (dr.dead) continue; const hit = fpsShotHits(sh, dr); if (hit) fpsDrownedHurt(dr, hit.dmg); }
+  }
+}
+// someone else's shot arriving: what it looks like, and whether it hit me where I really was
 function fpsIncoming(sh, f) {
-  const [, x, y, z, h, p, by] = sh;
-  // the flash, the crack and the streak
-  const shooter = by === f.id ? FPS.remote.get(f.id) : FPS.bots.find(b => b.id === by);
-  if (shooter) shooter.flashT = 0.12;
-  fpsGunSound(Math.hypot(x - FPS.me.x, y - FPS.me.y), angDiff(bearingOf(x - FPS.me.x, y - FPS.me.y), FPS.me.h));
-  const world = fpsRay(x, y, z, h, p, by);
-  FPS.tracers.push({ a: [x + Math.sin(h) * 0.6, y + Math.cos(h) * 0.6, z - 0.25], b: [world.x, world.y, world.z], t: 0.08 });
-  // me: judged against where I really was
-  const m = FPS.me;
-  if (!(m.dead > 0) && !(m.protect > 0)) {
-    const hit = fpsShotHits(sh, m);
-    if (hit) fpsHurt(hit.head ? 2 : 1, by, fpsNameOf(by));
-  }
-  // the host judges hits on the wreckers and the drowned
-  if (FPS.host) {
-    for (const b of FPS.bots) { if (b.id === by || b.dead > 0) continue; const hit = fpsShotHits(sh, b); if (hit) fpsBotHurt(b, hit.head ? 2 : 1, by); }
-    for (const d of FPS.drowned) { if (d.dead) continue; const hit = fpsShotHits(sh, d); if (hit) fpsDrownedHurt(d, hit.head ? 2 : 1); }
-  }
+  fpsResolveShot(sh, false);
+  const by = sh[6], m = FPS.me;
+  if (fpsWOf(sh[7]).speed) return;   // harpoons hit (or miss) as they fly
+  if (!(m.dead > 0) && !(m.protect > 0)) { const hit = fpsShotHits(sh, m); if (hit) fpsHurt(hit.dmg, by, fpsNameOf(by)); }
 }
 function fpsShoot() {
-  const m = FPS.me;
-  if (m.dead > 0 || m.reload > 0 || m.cd > 0 || FPS.menu) return;
-  if (m.ammo <= 0) { fpsReload(); return; }
-  m.ammo--; m.cd = FPSC.RATE; FPS.flash = 0.07; FPS.recoil = 1; FPS.vmShots = (FPS.vmShots || 0) + 1;
-  m.protect = 0;
-  fpsGunSound(0, 0);
-  const z = FPSC.GROUND + FPSC.EYE;
-  fpsPublishShot(m.x, m.y, z, m.h, m.p, m.id);
-  const hit = fpsRay(m.x, m.y, z, m.h, m.p, m.id);
-  FPS.tracers.push({ a: [m.x + Math.sin(m.h) * 0.6 + Math.cos(m.h) * 0.3, m.y + Math.cos(m.h) * 0.6 - Math.sin(m.h) * 0.3, z - 0.25], b: [hit.x, hit.y, hit.z], t: 0.08 });
-  if (hit.kind === 'body') {
-    // the hit marker is my best guess; the one I hit (or the host, for wreckers and the drowned) has the last word
-    const dmg = hit.head ? 2 : 1, w = hit.who;
-    FPS.hitT = 0.18; FPS.hitHead = hit.head; w.hitT = 0.2;
-    fpsHitSound(hit.head);
-    if (FPS.host || !NET.room || !FPS.remote.size) { if (w.drowned) fpsDrownedHurt(w, dmg); else if (w.bot) fpsBotHurt(w, dmg, m.id); }
-  } else if (hit.kind !== 'none') fpsPuff(hit.x, hit.y, hit.z, hit.kind === 'ground' ? '150,140,120' : '190,190,180', 6);
-  if (m.ammo <= 0) setTimeout(fpsReload, 250);
+  const m = FPS.me, w = fpsW();
+  if (m.dead > 0 || m.reload > 0 || m.cd > 0 || FPS.menu || FPS.drawT > 0) return;
+  if (!w.melee && m.ammo <= 0) { fpsReload(); return; }
+  if (!w.auto && !w.melee && FPS.heldFire) return;          // single-shot guns: one pull, one shot
+  FPS.heldFire = true;
+  m.cd = w.rate; m.protect = 0;
+  if (w.melee) { FPS.swing = (FPS.swing || 0) + 1; }
+  else { m.ammo--; m.mags[FPS.weapon] = m.ammo; FPS.flash = 0.07; FPS.recoil = Math.min(1.6, w.kick); }
+  FPS.vmShots = (FPS.vmShots || 0) + 1;
+  const z = FPSC.GROUND + FPSC.EYE, seed = (Math.random() * 2147483647) | 0;
+  const sh = fpsPublishShot(m.x, m.y, z, m.h, m.p, m.id, w.code, FPS.scoped ? 0 : seed);
+  fpsResolveShot(sh, true);
+  if (!w.melee && m.ammo <= 0) setTimeout(fpsReload, w.mag === 1 ? 420 : 250);
 }
-function fpsReload() { const m = FPS.me; if (m.dead > 0 || m.reload > 0 || m.ammo >= FPSC.MAG) return; m.reload = FPSC.RELOAD; fpsClick(); }
+// the harpoons in flight (and stuck where they landed)
+function fpsHarpoonsTick(dt) {
+  const w = FPSW.harpoon, m = FPS.me;
+  for (const hp of FPS.harps) {
+    hp.t += dt;
+    if (hp.stuck) { hp.stuck -= dt; continue; }
+    if (hp.done) continue;
+    const steps = 4, sdt = dt / steps;
+    for (let i = 0; i < steps && !hp.done; i++) {
+      const ox = hp.x, oy = hp.y, oz = hp.z;
+      hp.vz -= w.drop * sdt; hp.x += hp.vx * sdt; hp.y += hp.vy * sdt; hp.z += hp.vz * sdt;
+      const seg = Math.hypot(hp.x - ox, hp.y - oy), hh = bearingOf(hp.vx, hp.vy), pp = Math.atan2(hp.vz, Math.hypot(hp.vx, hp.vy));
+      // people: me (judged here), the wreckers and the drowned (judged by the host), and a guess at the others for my hit marker
+      const people = [];
+      if (hp.by !== m.id && !(m.dead > 0) && !(m.protect > 0)) people.push({ id: m.id, x: m.x, y: m.y, me: true });
+      const hostish = FPS.host || !NET.room || !FPS.remote.size;
+      for (const b of FPS.bots) if (b.id !== hp.by && !(b.dead > 0)) people.push(b);
+      for (const d of FPS.drowned) if (!d.dead) people.push(d);
+      if (hp.mine) for (const r of FPS.remote.values()) if (!r.dead) people.push(r);
+      const r = fpsRay(ox, oy, oz, hh, pp, hp.by, people, seg + 0.05);
+      if (r.kind === 'none') { if (hp.z < FPSC.GROUND || hp.t > 6 || Math.hypot(hp.x - FPSC.CX, hp.y - FPSC.CY) > FPSC.R + 200) { hp.done = true; hp.stuck = hp.z < FPSC.GROUND ? 8 : 0; } continue; }
+      hp.x = r.x; hp.y = r.y; hp.z = r.z; hp.done = true;
+      if (r.kind === 'body') {
+        const o = r.who; o.hitT = 0.25;
+        fpsPuff(r.x, r.y, r.z, '160,30,20', 12);
+        if (o.me) fpsHurt(w.dmg, hp.by, fpsNameOf(hp.by));
+        else if (o.bot && hostish) fpsBotHurt(o, w.dmg, hp.by);
+        else if (o.drowned && hostish) fpsDrownedHurt(o, w.dmg);
+        if (hp.mine) { FPS.hitT = 0.25; FPS.hitHead = true; fpsHitSound(true); }
+        hp.stuck = 0.6;
+      } else { hp.stuck = 8; fpsPuff(r.x, r.y, r.z, '190,190,180', 8); try { noise('bandpass', 900, 3, 0.002, 0.12, 0.15); } catch (e) {} }
+    }
+  }
+  FPS.harps = FPS.harps.filter(hp => !hp.done || hp.stuck > 0);
+  if (FPS.harps.length > 12) FPS.harps.splice(0, FPS.harps.length - 12);
+}
+function fpsSwitch(id) {
+  const m = FPS.me;
+  if (!FPSW[id] || id === FPS.weapon || m.dead > 0) return;
+  m.mags[FPS.weapon] = m.ammo;
+  FPS.last = FPS.weapon; FPS.weapon = id;
+  m.ammo = m.mags[id]; m.reload = 0; m.cd = 0; FPS.drawT = 0.45; FPS.scoped = false; FPS.heldFire = false;
+  try { tone(260, 'triangle', 0.002, 0.04, 0.08); noise('bandpass', 2400, 2, 0.002, 0.04, 0.1); } catch (e) {}
+  fpsSend();
+}
+const fpsCycle = d => fpsSwitch(FPS_WORDER[(FPS_WORDER.indexOf(FPS.weapon) + d + FPS_WORDER.length) % FPS_WORDER.length]);
+function fpsScope(on) { FPS.scoped = !!on && FPS.weapon === 'longarm' && !(FPS.me.reload > 0) && !(FPS.me.dead > 0); }
+function fpsReload() {
+  const m = FPS.me, w = fpsW();
+  // (the cutlass has nothing to load: R gives it a wipe and a look along the edge instead)
+  if (m.dead > 0 || m.reload > 0 || FPS.drawT > 0 || (!w.melee && m.ammo >= w.mag)) return;
+  m.reload = w.reload; FPS.reloadOf = FPS.weapon; FPS.scoped = false; if (!w.melee) fpsClick();
+}
 function fpsHurt(n, fromId, fromName) {
   const m = FPS.me; if (m.dead > 0 || m.protect > 0) return;
   m.hp -= n; FPS.hurtT = 0.5; FPS.calm = 0;
@@ -427,6 +535,19 @@ function fpsGunSound(d, pan) {
     tone(90, 'triangle', 0.002, 0.3 * v, 0.18, { to: 45 });
   } catch (e) {}
 }
+// each weapon's own report: the pepperbox's crack, the blunderbuss's roar, the longarm's long bang,
+// the harpoon gun's thump and the hiss of its line
+function fpsWeaponSound(code, d, pan) {
+  try {
+    if (soundOff()) return;
+    const v = Math.max(0.05, 1 - d / 400), o = { pan: Math.max(-1, Math.min(1, pan || 0)) };
+    if (code === 'b') { noise('lowpass', 900 * v + 250, 0.6, 0.002, 0.8 * v, 0.55 + (1 - v) * 0.3, o); tone(55, 'sawtooth', 0.002, 0.35 * v, 0.3, { to: 30 }); }
+    else if (code === 'l') { noise('lowpass', 2200 * v + 300, 0.8, 0.001, 0.7 * v, 0.45 + (1 - v) * 0.5, o); tone(120, 'triangle', 0.001, 0.25 * v, 0.25, { to: 40 }); }
+    else if (code === 'h') { noise('lowpass', 500, 0.8, 0.003, 0.5 * v, 0.25, o); tone(70, 'triangle', 0.003, 0.4 * v, 0.2, { to: 35 }); noise('highpass', 3000, 0.7, 0.05, 0.12 * v, 0.6, o); }
+    else fpsGunSound(d, pan);
+  } catch (e) {}
+}
+function fpsSwishSound(d) { try { if (soundOff()) return; const v = Math.max(0.05, 1 - d / 60); noise('bandpass', 2600, 1.2, 0.03, 0.22 * v, 0.18); } catch (e) {} }
 function fpsBellSound(d) { try { sfxBellFar(0, Math.max(0.15, 1 - d / 400)); } catch (e) {} }
 function fpsHitSound(head) { try { tone(head ? 1250 : 900, 'square', 0.001, 0.06, 0.05); } catch (e) {} }
 function fpsClick() { try { tone(420, 'square', 0.001, 0.05, 0.04); tone(300, 'square', 0.001, 0.05, 0.04, { delay: 0.5 }); } catch (e) {} }
@@ -591,7 +712,10 @@ function fpsFrame(dt) {
     FPS.calm = (FPS.calm || 0) + dt;
     if (m.dead <= 0 && m.hp < FPSC.HP && FPS.calm > 6) { m.hp++; FPS.calm = 2; }
     if (m.cd > 0) m.cd -= dt;
-    if (m.reload > 0) { m.reload -= dt; if (m.reload <= 0) { m.reload = 0; m.ammo = FPSC.MAG; } }
+    if (m.reload > 0) { m.reload -= dt; if (m.reload <= 0) { m.reload = 0; const w = fpsW(); if (!w.melee) { m.ammo = w.mag; m.mags[FPS.weapon] = m.ammo; } } }
+    if (FPS.drawT > 0) FPS.drawT -= dt;
+    if (!FPS.mouseDown && !FPS.touchFire && !FPS.padFire) FPS.heldFire = false;
+    fpsHarpoonsTick(dt);
     if ((FPS.bellCd || 0) > 0) FPS.bellCd -= dt;
     if ((FPS.hintT || 0) > 0 && (FPS.stick || FPS.lookTouch)) FPS.hintT -= dt * 2; else if ((FPS.hintT || 0) > 0) FPS.hintT -= dt * 0.25;
     for (const k of ['flash', 'hitT', 'hurtT']) if (FPS[k] > 0) FPS[k] -= dt;
@@ -615,6 +739,7 @@ function fpsInput(dt) {
   // and then leans gently onto them (and up or down to their chest), so a thumb can hold a target
   const assist = FPS.touch ? fpsAssistTarget() : null;
   if (assist) sens *= 0.55;
+  if (FPS.scoped) sens /= FPSW.longarm.scope;
   m.h = wrapPi(m.h + FPS.look[0] * sens); m.p = clamp(m.p - FPS.look[1] * sens, -0.6, 0.6);
   if (assist && !(m.dead > 0)) {
     m.h = wrapPi(m.h + clamp(assist.dh, -1, 1) * Math.min(1, dt * 3.2));
@@ -628,9 +753,11 @@ function fpsInput(dt) {
     fx += dz(pad.axes[0] || 0); fz -= dz(pad.axes[1] || 0);
     m.h = wrapPi(m.h + dz(pad.axes[2] || 0) * dt * 2.6); m.p = clamp(m.p - dz(pad.axes[3] || 0) * dt * 1.8, -0.6, 0.6);
     const b = i => pad.buttons[i] && pad.buttons[i].pressed, was = FPS.padWas || {};
-    if (b(7) || b(5)) fire = true;
+    if (b(7)) fire = true;
+    FPS.padFire = b(7);
+    fpsScope(b(6));
     const tap = (i, fn) => { if (b(i) && !was[i]) fn(); };
-    tap(2, fpsReload); tap(3, fpsLantern); tap(1, fpsFlare); tap(4, fpsBell); tap(9, () => fpsSetMenu(!FPS.menu)); tap(8, () => { FPS.board = !FPS.board; });
+    tap(2, fpsReload); tap(5, () => fpsCycle(1)); tap(14, () => fpsCycle(-1)); tap(15, () => fpsCycle(1)); tap(3, fpsLantern); tap(1, fpsFlare); tap(4, fpsBell); tap(9, () => fpsSetMenu(!FPS.menu)); tap(8, () => { FPS.board = !FPS.board; });
     FPS.padWas = {}; for (let i = 0; i < pad.buttons.length; i++) FPS.padWas[i] = b(i);
     FPS.padSprint = b(10);
   }
@@ -667,6 +794,16 @@ function fpsAssistTarget() {
 
 // ---------- drawing ----------
 function fpsDraw() {
+  // looking through the longarm's telescope: everything drawn with a longer focal length, then put back
+  const f0 = focal;
+  if (FPS.scoped) focal = f0 * FPSW.longarm.scope;
+  try { fpsDrawScene(); } finally { focal = f0; }
+  fpsDrawHands();
+  drawAtmosphere();
+  if (FPS.scoped) fpsDrawScope();
+  fpsHud();
+}
+function fpsDrawScene() {
   const m = FPS.me;
   camX = m.x; camY = m.y; yaw = m.h;
   camH = FPSC.GROUND + FPSC.EYE + (reduceMotion ? 0 : Math.sin(FPS.step) * 0.05) - (m.dead > 0 ? 1.2 * Math.min(1, (FPSC.RESPAWN - m.dead) * 2) : 0);
@@ -718,10 +855,43 @@ function fpsDraw() {
     ctx.strokeStyle = `rgba(255,220,150,${t.t / 0.08 * 0.6})`; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(p[0].x, p[0].y); ctx.lineTo(p[1].x, p[1].y); ctx.stroke();
   }
   for (const p of FPS.parts) { const c = cam(p.x, p.y, p.z); if (c.f < 0.6) continue; const q = proj(c); ctx.fillStyle = `rgba(${p.c},${p.t / 0.6})`; const s = Math.max(1.5, 0.12 * q.s); ctx.fillRect(q.x - s / 2, q.y - s / 2, s, s); }
+  fpsDrawHarpoons();
   ctx.restore();
-  fpsDrawHands();
-  drawAtmosphere();
-  fpsHud();
+}
+// harpoons: an iron shaft with a barbed head, trailing its line back to whoever fired it
+function fpsDrawHarpoons() {
+  for (const hp of FPS.harps) {
+    const v = Math.hypot(hp.vx, hp.vy, hp.vz) || 1, dx = hp.vx / v, dy = hp.vy / v, dz = hp.vz / v, L = 1.6;
+    const tip = [hp.x, hp.y, hp.z], tail = [hp.x - dx * L, hp.y - dy * L, hp.z - dz * L];
+    const p = polyProj([tail, tip]);
+    if (p.length === 2) {
+      ctx.strokeStyle = '#2a2a30'; ctx.lineWidth = Math.max(1.2, p[1].s * 0.06); ctx.beginPath(); ctx.moveTo(p[0].x, p[0].y); ctx.lineTo(p[1].x, p[1].y); ctx.stroke();
+      const bw = Math.max(2, p[1].s * 0.14), ang = Math.atan2(p[1].y - p[0].y, p[1].x - p[0].x);
+      ctx.fillStyle = '#3a3a42'; ctx.save(); ctx.translate(p[1].x, p[1].y); ctx.rotate(ang);
+      ctx.beginPath(); ctx.moveTo(bw * 1.4, 0); ctx.lineTo(-bw * 0.6, bw); ctx.lineTo(-bw * 0.2, 0); ctx.lineTo(-bw * 0.6, -bw); ctx.closePath(); ctx.fill(); ctx.restore();
+    }
+    // the line, sagging back to the gun
+    const who = hp.by === FPS.me.id ? FPS.me : FPS.remote.get(hp.by);
+    if (who && hp.t < 10) {
+      const a = who === FPS.me ? [who.x + Math.sin(who.h) * 0.6, who.y + Math.cos(who.h) * 0.6, FPSC.GROUND + FPSC.EYE - 0.35] : [who.x, who.y, FPSC.GROUND + 1.2];
+      const sag = hp.stuck ? 1.2 : 0.3, pts = [];
+      for (let i = 0; i <= 10; i++) { const t = i / 10; pts.push([a[0] + (tail[0] - a[0]) * t, a[1] + (tail[1] - a[1]) * t, a[2] + (tail[2] - a[2]) * t - Math.sin(t * Math.PI) * sag]); }
+      const q = polyProj(pts);
+      if (q.length > 1) { ctx.strokeStyle = 'rgba(190,170,130,0.75)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(q[0].x, q[0].y); for (let i = 1; i < q.length; i++) ctx.lineTo(q[i].x, q[i].y); ctx.stroke(); }
+    }
+  }
+}
+// the telescope: a brass ring round a circle of view, black beyond, fine cross wires, a little sway
+function fpsDrawScope() {
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const r = Math.min(W, H) * 0.42, t = g.t, sx = cx + (reduceMotion ? 0 : Math.sin(t * 0.9) * 2), sy = H / 2 + (reduceMotion ? 0 : Math.sin(t * 1.3) * 2);
+  ctx.fillStyle = '#020305'; ctx.beginPath(); ctx.rect(0, 0, W, H); ctx.arc(sx, sy, r, 0, 6.283, true); ctx.fill('evenodd');
+  const gr = ctx.createRadialGradient(sx, sy, r * 0.75, sx, sy, r); gr.addColorStop(0, 'rgba(0,0,0,0)'); gr.addColorStop(1, 'rgba(0,0,0,0.75)');
+  ctx.fillStyle = gr; ctx.beginPath(); ctx.arc(sx, sy, r, 0, 6.283); ctx.fill();
+  ctx.strokeStyle = '#8a6a2c'; ctx.lineWidth = 6; ctx.beginPath(); ctx.arc(sx, sy, r + 3, 0, 6.283); ctx.stroke();
+  ctx.strokeStyle = 'rgba(10,10,12,0.85)'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(sx - r, sy); ctx.lineTo(sx - 6, sy); ctx.moveTo(sx + 6, sy); ctx.lineTo(sx + r, sy); ctx.moveTo(sx, sy - r); ctx.lineTo(sx, sy - 6); ctx.moveTo(sx, sy + 6); ctx.lineTo(sx, sy + r); ctx.stroke();
+  for (let i = 1; i <= 3; i++) { ctx.beginPath(); ctx.moveTo(sx - 4, sy + i * r * 0.12); ctx.lineTo(sx + 4, sy + i * r * 0.12); ctx.stroke(); }
 }
 // a wrecker: boots, long coat in their colours, a hat, a pistol, and their lantern if it's lit
 function fpsDrawPerson(o, c) {
@@ -753,7 +923,20 @@ function fpsDrawPerson(o, c) {
   ctx.fillStyle = dark(col[0], 0.85);
   ctx.fillRect(x - side * w * 0.62 - w * 0.1, foot.y - hgt * 0.78, w * 0.2, hgt * 0.34);
   ctx.save(); ctx.translate(x + side * w * 0.45, foot.y - hgt * 0.76); ctx.rotate(-side * 0.9 * Math.cos(facing));
-  ctx.fillRect(-w * 0.1, 0, w * 0.2, hgt * 0.3); ctx.fillStyle = dark('#2a2420'); ctx.fillRect(-w * 0.06, hgt * 0.28, w * 0.12, hgt * 0.12); ctx.restore();
+  ctx.fillRect(-w * 0.1, 0, w * 0.2, hgt * 0.3);
+  // what they're carrying
+  const wc = o.w || 'p';
+  if (wc === 'c') {
+    const sw = (o.slashT || 0) > 0 ? (0.3 - o.slashT) / 0.3 : 0;
+    ctx.rotate(-1.2 * sw); ctx.fillStyle = dark('#b8bcc4'); ctx.fillRect(-w * 0.03, hgt * 0.3, w * 0.07, hgt * 0.38); ctx.fillStyle = dark('#8a6a2c'); ctx.fillRect(-w * 0.12, hgt * 0.27, w * 0.24, hgt * 0.04);
+  } else {
+    const len = wc === 'l' ? 0.62 : wc === 'h' ? 0.5 : wc === 'b' ? 0.4 : 0.14;
+    ctx.fillStyle = dark('#2a2420'); ctx.fillRect(-w * 0.06, hgt * 0.28, w * (wc === 'h' ? 0.18 : 0.12), hgt * len);
+    if (wc === 'b') { ctx.fillStyle = dark('#8a6a2c'); ctx.beginPath(); ctx.arc(0, hgt * (0.28 + len), w * 0.14, 0, 6.28); ctx.fill(); }
+    if (wc === 'l') { ctx.fillStyle = dark('#8a6a2c'); ctx.fillRect(-w * 0.1, hgt * 0.38, w * 0.06, hgt * 0.16); }
+  }
+  ctx.restore();
+  if ((o.slashT || 0) > 0) { o.slashT -= FPS.dtLast || 0.016; }
   // head and a three-cornered hat
   ctx.fillStyle = dark('#c8a888'); ctx.beginPath(); ctx.arc(x, foot.y - hgt * 0.88, hgt * 0.075, 0, 6.28); ctx.fill();
   ctx.fillStyle = dark('#141210');
@@ -874,7 +1057,7 @@ function fpsHud() {
     ctx.font = mono(10);
     FPS.feed.slice(-2).forEach((f, i) => { ctx.fillStyle = `rgba(236,228,207,${Math.min(1, f.t) * 0.75})`; ctx.fillText(f.text, rx, top + 18 + i * 13, W * 0.34); });
     // health: four small pips at top left, beside the menu
-    const lx = Math.max(12, FPS.safeLeft || 0) + 92;
+    const tops = document.querySelector('.fpstop'), lx = tops ? tops.getBoundingClientRect().right - cv.getBoundingClientRect().left + 10 : Math.max(12, FPS.safeLeft || 0) + 92;
     for (let i = 0; i < FPSC.HP; i++) { ctx.fillStyle = i < m.hp ? '#ffd88a' : 'rgba(80,70,60,0.7)'; ctx.fillRect(lx + i * 14, top + 6, 11, 7); }
     // the floating stick, where your thumb came down
     if (FPS.stick) {
@@ -901,7 +1084,15 @@ function fpsHud() {
     for (let i = 0; i < FPSC.HP; i++) { ctx.fillStyle = i < m.hp ? '#ffd88a' : 'rgba(80,70,60,0.7)'; ctx.fillRect(16 + i * 26, by - 12, 22, 10); }
     ctx.font = mono(11); ctx.fillStyle = 'rgba(236,228,207,0.6)'; ctx.fillText('HEALTH', 16, by - 18);
     ctx.textAlign = 'right'; ctx.font = mono(22); ctx.fillStyle = m.ammo ? 'rgba(236,228,207,0.9)' : '#e46c4f';
-    ctx.fillText(m.reload > 0 ? 'RELOADING' : `${m.ammo} / ${FPSC.MAG}`, W - 16, by);
+    const w = fpsW();
+    ctx.fillText(m.reload > 0 ? (w.melee ? 'WIPING' : 'RELOADING') : w.melee ? 'CUTLASS' : `${m.ammo} / ${w.mag}`, W - 16, by);
+    // the five weapons, the one in hand lit
+    ctx.font = mono(11); let wx = W - 16;
+    for (let i = FPS_WORDER.length - 1; i >= 0; i--) {
+      const id = FPS_WORDER[i], on = id === FPS.weapon, lab = `${i + 1} ${FPSW[id].n.toUpperCase()}`;
+      ctx.fillStyle = on ? '#ffd88a' : 'rgba(236,228,207,0.38)'; ctx.fillText(lab, wx, by - 46); wx -= ctx.measureText(lab).width + 14;
+    }
+    ctx.font = mono(22);
     ctx.font = mono(11); ctx.fillStyle = 'rgba(236,228,207,0.6)';
     ctx.fillText(`FLARES ${m.flares}  ·  LANTERN ${m.lan ? 'LIT' : 'DARK'}  ·  BELL ${(FPS.bellCd || 0) > 0 ? Math.ceil(FPS.bellCd) + 's' : 'READY'}`, W - 16, by - 28);
   }
@@ -937,11 +1128,15 @@ function fpsHud() {
 // the phone buttons show what they'll do: ammo on Fire, lantern lit or dark, flares left, bell ready
 function fpsPadState() {
   const m = FPS.me, set = (id, on, text) => { const el = $(id); if (!el) return; el.classList.toggle('on', !!on); if (text != null && el.dataset.t !== text) { el.dataset.t = text; const c = el.querySelector('.cnt'); if (c) c.textContent = text; } };
-  set('fpsPadFire', m.ammo > 0 && !(m.reload > 0), m.reload > 0 ? '…' : String(m.ammo));
+  const w = fpsW();
+  set('fpsPadFire', (w.melee || m.ammo > 0) && !(m.reload > 0), m.reload > 0 ? '…' : w.melee ? '⚔' : String(m.ammo));
+  { const f = $('fpsPadFire').querySelector('small'); if (f && f.textContent !== (w.melee ? 'SWING' : 'FIRE')) f.textContent = w.melee ? 'SWING' : 'FIRE'; }
+  { const b = $('fpsPadWeapon'); if (b) { const c = b.querySelector('.wn'); if (c && c.textContent !== w.n) c.textContent = w.n; } }
+  { const b = $('fpsPadScope'); if (b) { b.hidden = FPS.weapon !== 'longarm'; b.classList.toggle('on', FPS.scoped); } }
   set('fpsPadLantern', m.lan);
   set('fpsPadFlare', m.flares > 0, String(m.flares));
   set('fpsPadBell', !((FPS.bellCd || 0) > 0), (FPS.bellCd || 0) > 0 ? String(Math.ceil(FPS.bellCd)) : '');
-  set('fpsPadReload', m.ammo < FPSC.MAG && !(m.reload > 0));
+  set('fpsPadReload', !w.melee && m.ammo < w.mag && !(m.reload > 0));
 }
 // the notch and rounded corners on phones: read the safe-area insets once in a while
 function fpsSafeArea() {
@@ -954,7 +1149,8 @@ function fpsSafeArea() {
 }
 
 // ---------- controls ----------
-const FPS_KEYS = { KeyR: fpsReload, KeyL: fpsLantern, KeyF: fpsFlare, KeyB: fpsBell, Space: fpsBell };
+const FPS_KEYS = { KeyR: fpsReload, KeyL: fpsLantern, KeyF: fpsFlare, KeyB: fpsBell, Space: fpsBell, KeyQ: () => fpsSwitch(FPS.last),
+  Digit1: () => fpsSwitch('pepperbox'), Digit2: () => fpsSwitch('blunderbuss'), Digit3: () => fpsSwitch('longarm'), Digit4: () => fpsSwitch('harpoon'), Digit5: () => fpsSwitch('cutlass') };
 addEventListener('keydown', e => {
   if (!FPS.on) return;
   if (e.target && /INPUT|TEXTAREA/.test(e.target.tagName)) return;
@@ -980,9 +1176,10 @@ addEventListener('pointerdown', e => {
   if (FPS.menu) return;
   if (document.pointerLockElement !== cv) { try { cv.requestPointerLock(); } catch (err) {} return; }
   if (e.button === 0) FPS.mouseDown = true;
-  if (e.button === 2) fpsReload();
+  if (e.button === 2) fpsScope(true);
 }, true);
-addEventListener('pointerup', e => { if (FPS.on && e.pointerType !== 'touch') FPS.mouseDown = false; }, true);
+addEventListener('pointerup', e => { if (FPS.on && e.pointerType !== 'touch') { if (e.button === 2) fpsScope(false); else FPS.mouseDown = false; } }, true);
+addEventListener('wheel', e => { if (FPS.on && document.pointerLockElement === cv) { e.preventDefault(); FPS.wheel = (FPS.wheel || 0) + e.deltaY; if (Math.abs(FPS.wheel) > 60) { fpsCycle(FPS.wheel > 0 ? 1 : -1); FPS.wheel = 0; } } }, { passive: false });
 addEventListener('contextmenu', e => { if (FPS.on && e.target === cv) e.preventDefault(); }, true);
 addEventListener('mousemove', e => { if (FPS.on && document.pointerLockElement === cv && !FPS.menu) { FPS.look[0] += e.movementX; FPS.look[1] += e.movementY; } });
 document.addEventListener('pointerlockchange', () => { FPS.mouse = document.pointerLockElement === cv; if (FPS.on && !FPS.mouse) FPS.mouseDown = false; });
@@ -1025,7 +1222,7 @@ $('fpsSettings').addEventListener('click', () => $('titleSettings').click());
 $('fpsNick').addEventListener('keydown', e => { if (e.key === 'Enter') fpsStart(); });
 $('fpsResume').addEventListener('click', () => fpsSetMenu(false));
 $('fpsLeave').addEventListener('click', fpsStop);
-for (const [id, fn] of [['fpsPadReload', fpsReload], ['fpsPadLantern', fpsLantern], ['fpsPadFlare', fpsFlare], ['fpsPadBell', fpsBell], ['fpsPadMenu', () => fpsSetMenu(true)], ['fpsPadBoard', () => { FPS.board = !FPS.board; }]]) {
+for (const [id, fn] of [['fpsPadWeapon', () => fpsCycle(1)], ['fpsPadScope', () => fpsScope(!FPS.scoped)], ['fpsPadReload', fpsReload], ['fpsPadLantern', fpsLantern], ['fpsPadFlare', fpsFlare], ['fpsPadBell', fpsBell], ['fpsPadMenu', () => fpsSetMenu(true)], ['fpsPadBoard', () => { FPS.board = !FPS.board; }]]) {
   $(id).addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); fn(); });
 }
 // Fire: hold to shoot, and drag while holding to aim, so you can turn and fire with one thumb

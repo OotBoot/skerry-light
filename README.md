@@ -118,7 +118,13 @@ A separate game with its own card on the title screen, below Skerry Light (a ban
 
 - **Light:** you only see what light reaches. The lighthouse beam sweeps the island and shows anyone it crosses (a warning tells you when you're in it). Your lantern (L) lights what's near you, and shows you to the whole island while it burns. Flares (F, two a life) light a wide circle for everyone.
 - **The bell** (B or Space): everyone shows on your bearing strip for a few seconds, and you show on theirs.
-- **Your pistol** is a 3D pepperbox held out in the middle of the view: six barrels that turn a place with every shot, a bar hammer that drops and is thumbed back, a kick and a flash and smoke. Reloading swaps the whole barrel cluster: the gun tips up, the spent cluster slides off and drops away, your other hand brings up a loaded one and seats it with a click, and the hammer is cocked as the gun comes back to aim.
+- **Five weapons**, all carried (1-5, Q for the last one, the mouse wheel, RB or the d-pad on a controller, the weapon button on a phone); the one picked on the title card is in hand when you land:
+  - **Pepperbox:** six quick shots, one damage (two to the head). Its barrels turn a place each shot; reloading swaps the whole barrel cluster.
+  - **Blunderbuss:** one shot of nine balls in a wide spread: deadly close, harmless past fifty metres. A flintlock: the cock snaps onto the frizzen and the pan flashes before it roars. Reloading: powder from the horn, a handful of shot, two strokes of the ramrod, prime, shut the frizzen, cock.
+  - **Longarm:** one heavy shot, three damage, a head shot kills; a little wander from the hip, dead true through its brass telescope (hold right mouse, LT, or Scope on a phone). Reloading: tear and pour a paper cartridge, ram it twice, return the rod, thumb on a fresh cap, cock.
+  - **Harpoon gun:** a barbed harpoon on a line that flies slow enough to see (and dodge), drops a little, and kills what it hits; it stays stuck where it lands for a while. Reloading: crank the line back onto the drum, slide a new harpoon down the barrel, cock.
+  - **Cutlass:** no powder; swing within arm's reach for two damage a cut, in a forehand, backhand, thrust combination with a pale trail through the air. R turns it to the light and wipes the blade.
+  Everyone sees what everyone else is carrying, and every shot (balls, harpoons and cuts included) is judged fairly by whoever it was aimed at.
 - **Cover:** the skerries and old wrecks stop shots. Head shots do double damage. Four hits and you're down; you're back ashore 3.5 seconds later, somewhere away from everyone else, and patch yourself up after a few quiet seconds.
 - **The drowned crew** wade ashore now and then and go for whoever is nearest.
 - **Rounds** last five minutes on the clock, so everyone's round ends together; the scores reset and the island moves to the next of the six seas.

@@ -141,8 +141,8 @@
       <details class="howto">
         <summary>How to play</summary>
         <p>Light is everything. The lighthouse beam sweeps the island and shows anyone it crosses. Your lantern lets you see, and lets everyone see you. Flares light a wide circle for all. Ring the bell and everyone shows on your bearing strip, and you on theirs. The drowned crew wade ashore now and then. Keep out of trouble for a few seconds and you patch yourself up. Rounds last five minutes and the island moves to a new sea each round. Wreckers (bots) fill the island up to four.</p>
-        <p><b>Keyboard and mouse:</b> click to aim · WASD walk · Shift run · click fire · R reload · L lantern · F flare · B or Space bell · Tab scores · Esc menu.</p>
-        <p><b>Controller:</b> sticks walk and aim · RT fire · X reload · Y lantern · B flare · LB bell · Back scores · Start menu.</p>
+        <p><b>Keyboard and mouse:</b> click to aim · WASD walk · Shift run · click fire · right mouse: telescope (longarm) · 1-5, Q or the wheel: weapons · R reload · L lantern · F flare · B or Space bell · Tab scores · Esc menu.</p>
+        <p><b>Controller:</b> sticks walk and aim · RT fire · LT telescope · RB or d-pad weapons · X reload · Y lantern · B flare · LB bell · Back scores · Start menu.</p>
         <p><b>Touch:</b> put your left thumb down anywhere on the left to walk (push to the edge to run); drag on the right to aim, tap there to fire; or hold Fire and drag it to aim and shoot with one thumb. Aiming eases onto anyone you can see near the crosshair.</p>
       </details>
     </div>
@@ -288,12 +288,14 @@
     <div class="fpstop">
       <button class="fpsico" id="fpsPadMenu" type="button" aria-label="Menu"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
       <button class="fpsico" id="fpsPadBoard" type="button" aria-label="Scores"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20V10M12 20V4M19 20v-7"/></svg></button>
+      <button class="fpsico fpsweapon" id="fpsPadWeapon" type="button" aria-label="Next weapon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h12l3-3M4 15h12l3 3"/></svg><span class="wn">Pepperbox</span></button>
     </div>
     <div class="fpsfirecluster">
       <button class="fpsico fpsbell" id="fpsPadBell" type="button" aria-label="Ring the bell"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg><span class="cnt"></span></button>
       <button class="fpsico fpsflare" id="fpsPadFlare" type="button" aria-label="Fire a flare"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v5M12 16v5M3 12h5M16 12h5M5.6 5.6l3.5 3.5M14.9 14.9l3.5 3.5M5.6 18.4l3.5-3.5M14.9 9.1l3.5-3.5"/></svg><span class="cnt"></span></button>
       <button class="fpsico fpslantern" id="fpsPadLantern" type="button" aria-label="Lantern on or off"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5h6M8 7h8v11H8zM10 3h4M10 21h4"/><path d="M12 10v5"/></svg></button>
       <button class="fpsico fpsreload" id="fpsPadReload" type="button" aria-label="Reload"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12a7 7 0 1 1-2-4.9"/><path d="M19 4v4h-4"/></svg></button>
+      <button class="fpsico fpsscope" id="fpsPadScope" type="button" aria-label="Look through the telescope" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7"/><path d="M12 3v4M12 17v4M3 12h4M17 12h4"/></svg></button>
       <button class="fpsfire" id="fpsPadFire" type="button" aria-label="Fire (hold, and drag to aim)"><span class="cnt">6</span><small>FIRE</small></button>
     </div>
   </div>

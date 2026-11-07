@@ -633,3 +633,9 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 .weaponpick .pick.soon b { color: var(--muted); }
 .weaponpick .pick.soon svg { margin-block: 9px 5px; }
 @media (max-width: 520px) { .weaponpick { grid-template-columns: repeat(3, 1fr); } .newgame { font-size: 12px; padding: 8px 10px; } }
+
+/* Wreckers' Night: weapon switch and telescope buttons on phones */
+.fpstop .fpsweapon { width: auto; border-radius: 19px; padding: 0 10px 0 8px; gap: 6px; display: flex; }
+.fpsweapon .wn { font: 600 11px/1 "Courier Prime", monospace; letter-spacing: 0.04em; }
+.fpsscope { left: -52px; top: 64px; }
+.fpsico[hidden] { display: none; }
