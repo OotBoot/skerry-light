@@ -748,6 +748,11 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 .fpsjump:active { background: rgba(236,228,207,0.25); }
 .fpsjump:not(.on) { opacity: 0.6; }
 .fpsico.fpsview.on { background: rgba(255,216,138,0.16); }
+
+/* Verity is smiling at you: the Flare button calls for your thumb */
+@keyframes fpsurgent { 0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255,214,60,0.6); } 50% { transform: scale(1.12); box-shadow: 0 0 0 8px rgba(255,214,60,0); } }
+.fpsico.urgent { border-color: #ffd63c; color: #ffd63c; background: rgba(255,214,60,0.2); animation: fpsurgent 0.8s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) { .fpsico.urgent { animation: none; } }
 </style>
 <div id="stage">
   <canvas id="bg" class="under" aria-hidden="true"></canvas>
@@ -876,7 +881,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
       </section>
       <details class="howto">
         <summary>How to play</summary>
-        <p>Light is everything. The lighthouse beam sweeps the island and shows anyone it crosses. Your lantern lets you see, and lets everyone see you. Flares light a wide circle for all. Ring the bell and everyone shows on your bearing strip, and you on theirs. The drowned crew wade ashore now and then. Keep out of trouble for a few seconds and you patch yourself up. Rounds last five minutes and the island moves to a new sea each round. Wreckers (bots) fill the island up to four.</p>
+        <p>Light is everything. The lighthouse beam sweeps the island and shows anyone it crosses. Your lantern lets you see, and lets everyone see you. Flares light a wide circle for all. Ring the bell and everyone shows on your bearing strip, and you on theirs. The drowned crew wade ashore now and then. Keep out of trouble for a few seconds and you patch yourself up. Rounds last five minutes and the island moves to a new sea each round. Verity comes ashore too: if a small yellow thing sits down in front of you smiling, fire a flare before he stops. Bullets and the bell don’t bother him, and you can’t walk away from him. Wreckers (bots) fill the island up to four.</p>
         <p><b>Keyboard and mouse:</b> click to aim · WASD walk · Shift run · Space jump · V over-the-shoulder view · click fire · right mouse: telescope (longarm) · 1-5, Q or the wheel: weapons · R reload · L lantern · F flare · B bell · Tab scores · Esc menu.</p>
         <p><b>Controller:</b> sticks walk and aim · A jump · R3 (click the right stick) view · RT fire · LT telescope · RB or d-pad weapons · X reload · Y lantern · B flare · LB bell · Back scores · Start menu.</p>
         <p><b>Touch:</b> put your left thumb down anywhere on the left to walk (push to the edge to run); drag on the right to aim, tap there to fire; or hold Fire and drag it to aim and shoot with one thumb. The arrow by Fire jumps; the camera button at the top switches between first person and over the shoulder. Aiming eases onto anyone you can see near the crosshair.</p>
@@ -11724,6 +11729,7 @@ function fpsStart() {
   FPS.bots = []; FPS.drownT = 25; FPS.roundMsg = null; FPS.menu = false; if (FPS.wcRound !== FPS.round) { FPS.wcK = 0; FPS.wcRound = FPS.round; } $('fpsMenu').hidden = true;
   FPS.weapon = FPS.last = FPS.pick || 'pepperbox'; FPS.harps = []; FPS.swings = []; FPS.scoped = false;
   fpsRespawn(FPS.me);
+  if (typeof fpsVerityReset === 'function') fpsVerityReset(true);
   fpsSend(true);
   fpsFeed('You come ashore on the skerry. Keep out of the beam.');
   try { cv.focus(); } catch (e) {}
@@ -11735,6 +11741,7 @@ function fpsStop() {
   if (NET.room) NET.room.presence({ fps: null }).catch(() => {});
   $('stage').classList.remove('fpsmode');
   $('fpsPad').hidden = true; $('fpsMenu').hidden = true;
+  if (FPS.vy) { FPS.vy.on = false; FPS.vScare = 0; } $('stage').classList.remove('scaring'); try { stopVerity(); } catch (e) {}
   state = FPS.saved ? FPS.saved.state : 'title';
   if (state !== 'title') state = 'title';
   toTitle();
@@ -11761,7 +11768,7 @@ function fpsSend(force) {
   const out = {
     id: NET.sid, n: FPS.nick, r: FPS.round, x: fr1(m.x), y: fr1(m.y), h: fr2(m.h), p: fr2(m.p), hp: m.hp, dead: m.dead > 0 ? 1 : 0,
     lan: m.lan ? 1 : 0, sh: FPS.shots, kb: FPS.kb, d: FPS.deaths, bl: FPS.bell, fl: [FPS.flare, fr1(FPS.flareAt[0]), fr1(FPS.flareAt[1])],
-    c: fpsColours(), wk: m.walk ? 1 : 0, ai: null, w: fpsW().code, sc: FPS.scoped ? 1 : 0, jz: fr2(m.jz || 0),
+    c: fpsColours(), wk: m.walk ? 1 : 0, ai: null, w: fpsW().code, sc: FPS.scoped ? 1 : 0, jz: fr2(m.jz || 0), vy: typeof fpsVerityNet === 'function' ? fpsVerityNet() : null,
   };
   // the host shares the wreckers and the drowned
   if (FPS.host) out.ai = {
@@ -11796,6 +11803,7 @@ function fpsNetTick(dt) {
       fpsFeed(`${f.n || 'A wrecker'} came ashore.`);
     }
     r.n = f.n || 'Wrecker'; r.w = typeof f.w === 'string' ? f.w : 'p'; r.tx = f.x; r.ty = f.y; r.th = f.h; r.p = f.p; r.hp = f.hp; r.lan = !!f.lan; r.c = Array.isArray(f.c) ? f.c : null; r.walk = !!f.wk; r.tjz = Math.max(0, Math.min(3, +f.jz || 0));
+    r.vy = Array.isArray(f.vy) && f.vy.length === 4 && f.vy.every(n => typeof n === 'number' && isFinite(n)) && Math.hypot(f.vy[0] - f.x, f.vy[1] - f.y) < 20 ? f.vy : null;
     r.kb = f.r === FPS.round && f.kb && typeof f.kb === 'object' ? f.kb : {};
     r.r = f.r;
     if (f.dead && !r.dead) { r.x = f.x; r.y = f.y; }
@@ -12052,6 +12060,7 @@ function fpsShoot() {
   const z = FPSC.GROUND + FPSC.EYE + (m.jz || 0), seed = (Math.random() * 2147483647) | 0;
   const [ah, ap] = fpsAimFrom(m.x, m.y, z, w);
   const sh = fpsPublishShot(m.x, m.y, z, ah, ap, m.id, w.code, FPS.scoped ? 0 : seed);
+  if (typeof fpsVerityShot === 'function') fpsVerityShot(m.x, m.y, ah);
   fpsResolveShot(sh, true);
   if (!w.melee && m.ammo <= 0) setTimeout(fpsReload, w.mag === 1 ? 420 : 250);
 }
@@ -12135,7 +12144,7 @@ function fpsDie(fromId, fromName) {
   m.hp = 0; m.dead = FPSC.RESPAWN; m.killer = fromName && fromName !== 'You' ? fromName : null;
   FPS.deaths++;
   if (fromId) FPS.kb[fromId] = (FPS.kb[fromId] || 0) + 1;
-  fpsFeed(m.killer ? `${m.killer} shot you.` : 'The sea took you.');
+  fpsFeed(m.killer === 'Verity' ? 'Verity helped.' : m.killer ? `${m.killer} shot you.` : 'The sea took you.');
   fpsSend();
 }
 function fpsFlare() {
@@ -12143,11 +12152,13 @@ function fpsFlare() {
   m.flares--; FPS.flare++; FPS.flareAt = [m.x + Math.sin(m.h) * 30, m.y + Math.cos(m.h) * 30];
   FPS.g.flares.push({ x: FPS.flareAt[0], y: FPS.flareAt[1], t: SK.FLARE_TIME, skin: FLARES[0] });
   try { sfxFlare(); } catch (e) {}
+  if (typeof fpsVerityShoo === 'function') fpsVerityShoo();
   fpsSend();
 }
 function fpsBell() {
   const m = FPS.me; if (m.dead > 0 || (FPS.bellCd || 0) > 0) return;
   FPS.bellCd = 8; FPS.bell++;
+  if (typeof fpsVerityBell === 'function') fpsVerityBell();
   try { sfxBell(); } catch (e) {}
   for (const o of fpsEveryone()) if (!o.me && !(o.dead > 0)) FPS.pings.push({ x: o.x, y: o.y, t: 3, n: o.n });
   fpsSend();
@@ -12334,7 +12345,8 @@ function fpsFrame(dt) {
       fpsRespawn(m); fpsSend(true);
     }
     if (FPS.roundMsg) { FPS.roundMsg.t -= dt; if (FPS.roundMsg.t <= 0) FPS.roundMsg = null; }
-    fpsInput(dt);
+    if (!(FPS.vScare > 0)) fpsInput(dt); else { FPS.look = [0, 0]; m.walk = false; }
+    if (typeof fpsVerityTick === 'function') fpsVerityTick(dt);
     if (m.dead > 0) { m.dead -= dt; if (m.dead <= 0) { fpsRespawn(m); fpsSend(); } }
     if (m.protect > 0) m.protect -= dt;
     // patch yourself up: a point of health back after six quiet seconds, and every four after that
@@ -12428,6 +12440,8 @@ function fpsAssistTarget() {
 
 // ---------- drawing ----------
 function fpsDraw() {
+  // Verity standing up: the grin fills the screen, and nothing else
+  if (FPS.vScare > 0) { drawVerityScare(FPSV.SCARE - FPS.vScare); return; }
   // looking through the longarm's telescope: everything drawn with a longer focal length, then put back
   const f0 = focal;
   if (FPS.scoped) focal = f0 * FPSW.longarm.scope;
@@ -12487,6 +12501,7 @@ function fpsDrawScene() {
   for (const o of FPS.remote.values()) if (!o.dead) add('person', o);
   for (const o of FPS.bots) if (!(o.dead > 0)) add('person', o);
   for (const d of FPS.drowned) add('drowned', d);
+  if (typeof fpsVerityItems === 'function') fpsVerityItems(add);
   if (third) add('person', Object.assign({}, m, { me: true, n: FPS.nick, c: fpsColours(), w: fpsW().code, flashT: FPS.meFlashT || 0, slashT: FPS.meSlashT || 0, hitT: 0 }));
   items.sort((a, b) => b.c.f - a.c.f);
   for (const it of items) {
@@ -12498,6 +12513,7 @@ function fpsDrawScene() {
       else if (it.kind === 'wreck') drawWreck(o, q, Math.max(0.5, visibility(o.x, o.y)));
       else if (it.kind === 'person') fpsDrawPerson(o, it.c);
       else if (it.kind === 'drowned') fpsDrawDrowned(o, it.c);
+      else if (it.kind === 'verity') fpsDrawVerity(o, it.c);
     } finally { ctx.restore(); }
   }
   if (gl) gl3dGlows(shown); else drawLighthouse(beamOn, fl, fr, far);
@@ -12787,13 +12803,14 @@ function fpsHud() {
     ctx.font = mono(11); ctx.fillStyle = 'rgba(236,228,207,0.6)';
     ctx.fillText(`FLARES ${m.flares}  ·  LANTERN ${m.lan ? 'LIT' : 'DARK'}  ·  BELL ${(FPS.bellCd || 0) > 0 ? Math.ceil(FPS.bellCd) + 's' : 'READY'}`, W - 16, by - 28);
   }
+  if (typeof fpsVerityHud === 'function') fpsVerityHud(phone);
   // being lit up by the beam: a warning
   if (m.dead <= 0 && litAt(m.x, m.y) > 0) { ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = mono(phone ? 10 : 12); ctx.fillStyle = 'rgba(255,216,138,0.9)'; ctx.fillText(phone ? 'IN THE BEAM' : 'IN THE BEAM — EVERYONE CAN SEE YOU', cx, H * 0.5 + (phone ? 34 : 60)); }
   // dead
   if (m.dead > 0) {
     ctx.fillStyle = 'rgba(10,4,4,0.45)'; ctx.fillRect(0, 0, W, H);
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = '#e46c4f'; ctx.font = `400 ${phone ? 26 : 34}px "IM Fell English SC", serif`;
-    ctx.fillText(m.killer ? `Shot by ${m.killer}` : 'Taken by the sea', cx, H * 0.42);
+    ctx.fillText(m.killer === 'Verity' ? 'Verity helped' : m.killer ? `Shot by ${m.killer}` : 'Taken by the sea', cx, H * 0.42);
     ctx.font = mono(13); ctx.fillStyle = 'rgba(236,228,207,0.8)'; ctx.fillText(`Back ashore in ${Math.ceil(m.dead)}…`, cx, H * 0.42 + 36);
   }
   if (FPS.roundMsg) { ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = `400 ${phone ? 20 : 30}px "IM Fell English SC", serif`; ctx.fillStyle = `rgba(255,216,138,${Math.min(1, FPS.roundMsg.t)})`; ctx.fillText(FPS.roundMsg.text, cx, H * 0.3, W - 24); ctx.font = mono(12); ctx.fillText(`A new round begins on ${(BIOMES[g.biome] || BIOMES.skerry).name}.`, cx, H * 0.3 + 30); }
@@ -12931,6 +12948,203 @@ for (const [id, fn] of [['fpsPadWeapon', () => fpsCycle(1)], ['fpsPadScope', () 
 }
 // leaving the page: off the island
 addEventListener('pagehide', () => { if (FPS.on && NET.room) NET.room.presence({ fps: null }).catch(() => {}); });
+
+// ---- src/fpsverity.js ----
+// Verity, ashore. The same small yellow thing that sits on your deck in the real game turns up on the island
+// a few steps in front of you, smiling, offering to help. The rules are his usual ones:
+//  - he only comes to someone who has a flare left, and he comes for you alone (everyone else can see him
+//    sitting there in front of you, but he isn't theirs)
+//  - bullets go straight through him, a cutlass passes through him, and the bell doesn't bother him
+//  - a flare's glare sends him rolling away: yours, or anyone's that lands on the island while he's smiling
+//  - you can't walk away from him: look away for a moment and he's sitting in front of you again
+//  - leave him twenty seconds and he stands up, and that's the end of you (a death, but nobody's kill)
+// The pictures and the voice are the real game's (src/verity.js, src/audio.js).
+
+const FPSV = { TIME: SK.VERITY_TIME, MORPH: SK.VERITY_MORPH, SCARE: SK.VERITY_SCARE_TIME, ORB: 0.85, TALL: 2.9 };
+
+function fpsVerityReset(first) {
+  FPS.vy = { on: false, t: 0, morph: 0, gone: 0, said: 0, x: 0, y: 0, lost: 0, shotSaid: false, next: first ? 45 + Math.random() * 45 : 60 + Math.random() * 60 };
+  FPS.vScare = 0;
+}
+
+// somewhere on the ground just ahead of where you're looking, a little to one side, clear of the rocks
+function fpsVerityPlace() {
+  const m = FPS.me, v = FPS.vy;
+  // (off to one side of the crosshair, so your gun doesn't hide him)
+  if (!v.side) v.side = Math.random() < 0.5 ? -1 : 1;
+  for (let i = 0; i < 16; i++) {
+    const d = 6 + Math.random() * 2, a = m.h + v.side * (0.22 + Math.random() * 0.12) * (i < 10 ? 1 : -1);
+    const x = m.x + Math.sin(a) * d, y = m.y + Math.cos(a) * d;
+    if (!fpsBlocked(x, y, 0.6)) { v.x = x; v.y = y; v.lost = 0; return true; }
+  }
+  return false;
+}
+
+function fpsVerityTick(dt) {
+  if (!FPS.vy) fpsVerityReset(true);
+  const v = FPS.vy, m = FPS.me;
+  try { loadVerityVoice(); } catch (e) {}
+  if (FPS.vScare > 0) {
+    FPS.vScare -= dt;
+    if (FPS.vScare <= 0) {
+      FPS.vScare = 0; $('stage').classList.remove('scaring');
+      try { stopVerity(); } catch (e) {}
+      m.protect = 0; fpsDie(null, 'Verity');
+      fpsVerityReset(false);
+    }
+    return;
+  }
+  if (v.gone > 0) v.gone -= dt;
+  if (!v.on) {
+    if (m.dead > 0 || m.protect > 0 || FPS.menu || m.flares <= 0) return;
+    v.next -= dt;
+    v.side = 0;
+    if (v.next > 0 || !fpsVerityPlace()) return;
+    v.on = true; v.t = 0; v.morph = 0; v.said = 0; v.shotSaid = false; v.side = 0;
+    // flares already burning when he comes don't count: he waits for a fresh one
+    for (const f of FPS.g.flares) f.vyOld = true;
+    try { sfxVerity(1, 0.9); } catch (e) {}
+    fpsFeed('Something small is on the shingle in front of you, smiling. It says it wants to help.');
+    fpsFeed('Fire a flare before it stops smiling.');
+    fpsSend();
+    return;
+  }
+  // gone if you are
+  if (m.dead > 0) { v.on = false; v.next = 50 + Math.random() * 40; try { stopVerity(); } catch (e) {} return; }
+  if (v.morph <= 0) {
+    // a fresh flare anywhere on the island: the glare sends him off
+    if (FPS.g.flares.some(f => !f.vyOld && Math.hypot(f.x - v.x, f.y - v.y) < SK.FLARE_RADIUS)) { fpsVerityShoo(); return; }
+    // you can't leave him behind: out of sight for a moment, or far off, and he's in front of you again
+    const d = Math.hypot(v.x - m.x, v.y - m.y), off = Math.abs(angDiff(bearingOf(v.x - m.x, v.y - m.y), m.h));
+    v.lost = off > 0.75 || d > 12 ? v.lost + dt : 0;
+    if (v.lost > 0.9) fpsVerityPlace();
+    v.t += dt;
+    if (v.said === 0 && v.t > 10) { v.said = 1; try { sfxVerity(0.93, 0.95); } catch (e) {} fpsFeed('Verity is still smiling. Ten seconds.'); }
+    if (v.t >= FPSV.TIME) {
+      v.morph = 0.0001;
+      try { stopVerity(); sfxVerity(0.62, 1); sfxCreak(); } catch (e) {}
+      fpsSend();
+    }
+    return;
+  }
+  // standing up, in front of you, wherever you look
+  v.morph += dt;
+  if (Math.abs(angDiff(bearingOf(v.x - m.x, v.y - m.y), m.h)) > 0.6) fpsVerityPlace();
+  if (v.morph >= FPSV.MORPH) {
+    v.on = false; FPS.vScare = FPSV.SCARE;
+    $('stage').classList.add('scaring');
+    try { sfxVerityScare(); } catch (e) {}
+    if (typeof padRumble === 'function') padRumble(1, 1, FPSV.SCARE * 1000);
+  }
+}
+
+function fpsVerityShoo() {
+  const v = FPS.vy; if (!v || !v.on || v.morph > 0) return false;
+  v.on = false; v.gone = 0.8; v.next = 70 + Math.random() * 60;
+  try { stopVerity(); sfxSplash(0.3, 1); } catch (e) {}
+  fpsFeed('In the flare’s glare Verity rolls away into the dark, still smiling. He will be back.');
+  fpsSend();
+  return true;
+}
+
+// a shot or a cut through him does nothing, and he lets you know it
+function fpsVerityShot(x, y, h) {
+  const v = FPS.vy; if (!v || !v.on || v.morph > 0) return;
+  const ox = v.x - x, oy = v.y - y, along = ox * Math.sin(h) + oy * Math.cos(h);
+  if (along < 0 || along > 40) return;
+  const side = Math.abs(ox * Math.cos(h) - oy * Math.sin(h));
+  if (side > 0.6) return;
+  fpsPuff(v.x, v.y, FPSC.GROUND + 0.4, '255,214,60', 4);
+  if (!v.shotSaid) { v.shotSaid = true; fpsFeed('It goes straight through Verity. He keeps smiling.'); }
+}
+function fpsVerityBell() { if (FPS.vy && FPS.vy.on && FPS.vy.morph <= 0) fpsFeed('The bell rings right over Verity. Bells don’t bother him.'); }
+
+// what to tell everyone else: where he's sitting, how long he's smiled, whether he's standing
+function fpsVerityNet() {
+  const v = FPS.vy;
+  if (v && v.on) return [fr1(v.x), fr1(v.y), Math.round(v.t), v.morph > 0 ? 1 : 0];
+  if (v && v.gone > 0) return [fr1(v.x), fr1(v.y), -1, 0];
+  return null;
+}
+// everyone's Verity on the island: mine, and the ones sitting in front of other people
+function fpsVerityItems(add) {
+  const v = FPS.vy;
+  if (v && (v.on || v.gone > 0)) add('verity', { x: v.x, y: v.y, t: v.t, morph: v.morph, gone: v.gone, mine: true });
+  for (const r of FPS.remote.values()) {
+    const a = r.vy; if (!Array.isArray(a) || r.dead) continue;
+    add('verity', { x: a[0], y: a[1], t: a[2] < 0 ? 0 : a[2], morph: a[3] ? 0.8 : 0, gone: a[2] < 0 ? 0.4 : 0, mine: false });
+  }
+}
+
+// drawn standing on the island like anyone, so rocks hide him and he shrinks with distance
+function fpsDrawVerity(o, c) {
+  const foot = proj(c), top = proj(cam(o.x, o.y, FPSC.GROUND + FPSV.ORB));
+  const ORB = Math.max(4, foot.y - top.y);
+  if (ORB > H * 3) return;
+  const lit = 0.5 + 0.5 * Math.max(fpsSeeAt(o.x, o.y, false), 0.25);
+  const img = IMG.verity, img2 = IMG.verity2;
+  if (o.gone > 0) {
+    // rolling away into the dark
+    if (!imgReady(img)) return;
+    const k = 1 - o.gone / 0.8, h = ORB, w = h * img.naturalWidth / img.naturalHeight;
+    ctx.globalAlpha = Math.max(0, 1 - k);
+    ctx.save(); ctx.translate(foot.x + k * ORB * 1.6, foot.y - h / 2); ctx.rotate(k * 4);
+    ctx.drawImage(img, -w / 2, -h / 2, w, h); ctx.restore();
+    ctx.globalAlpha = 1;
+    return;
+  }
+  if (o.morph <= 0) {
+    if (!imgReady(img)) return;
+    const h = ORB * (1 + Math.sin(g.t * 2.2) * 0.012), w = h * img.naturalWidth / img.naturalHeight;
+    const wrong = Math.max(0, (o.t - FPSV.TIME * 0.6) / (FPSV.TIME * 0.4));
+    ctx.fillStyle = 'rgba(0,0,0,0.45)';
+    ctx.beginPath(); ctx.ellipse(foot.x, foot.y - 1, w * 0.42, Math.max(2, h * 0.06), 0, 0, 6.28); ctx.fill();
+    ctx.save();
+    ctx.translate(foot.x, foot.y);
+    ctx.rotate(Math.sin(g.t * 1.3) * 0.05 + (wrong > 0 && !reduceMotion ? (Math.random() - 0.5) * 0.08 * wrong : 0));
+    ctx.filter = `brightness(${lit.toFixed(2)})`;
+    drawGlitch(img, -w / 2, -h, w, h, wrong * 0.8);
+    ctx.filter = 'none';
+    ctx.restore();
+    // the ring counting down, round him (only on your own: everyone else's is their business)
+    if (o.mine) {
+      const p = Math.max(0, 1 - o.t / FPSV.TIME);
+      ctx.strokeStyle = `rgba(255,214,60,${0.4 + 0.4 * wrong})`; ctx.lineWidth = Math.max(2, ORB * 0.03);
+      ctx.beginPath(); ctx.arc(foot.x, foot.y - h / 2, w * 0.66, -Math.PI / 2, -Math.PI / 2 + p * Math.PI * 2); ctx.stroke();
+    }
+    return;
+  }
+  // the change: the round face stretches up and the long thing stands there instead
+  const k = Math.min(1, o.morph / FPSV.MORPH);
+  if (imgReady(img) && k < 0.6) {
+    const h = ORB * (1 + k * 2.4), w = h * img.naturalWidth / img.naturalHeight * (1 - k * 0.9);
+    ctx.globalAlpha = 1 - k / 0.6;
+    drawGlitch(img, foot.x - w / 2, foot.y - h, w, h, 1);
+    ctx.globalAlpha = 1;
+  }
+  if (imgReady(img2) && k > 0.25) {
+    const tall = foot.y - proj(cam(o.x, o.y, FPSC.GROUND + FPSV.TALL)).y;
+    const h = tall * (0.35 + 0.65 * Math.min(1, (k - 0.25) / 0.75)), w = h * img2.naturalWidth / img2.naturalHeight;
+    ctx.globalAlpha = Math.min(1, (k - 0.25) / 0.3);
+    ctx.filter = `brightness(${lit.toFixed(2)})`;
+    drawGlitch(img2, foot.x - w / 2 + (reduceMotion ? 0 : (Math.random() - 0.5) * 6), foot.y - h * 0.97, w, h, 0.4 * (1 - k));
+    ctx.filter = 'none';
+    ctx.globalAlpha = 1;
+  }
+  if (o.mine && !reduceMotion && !softScares() && Math.random() < 0.1 * k) { ctx.fillStyle = 'rgba(0,0,0,0.85)'; ctx.fillRect(-W, -H, W * 3, H * 3); }
+}
+
+// a line on the HUD while he's smiling at you, and the Flare button shaking on a phone
+function fpsVerityHud(phone) {
+  const v = FPS.vy, on = !!(v && v.on && v.morph <= 0);
+  const fb = $('fpsPadFlare'); if (fb) fb.classList.toggle('urgent', on);
+  if (!on) return;
+  const left = Math.max(0, Math.ceil(FPSV.TIME - v.t)), a = 0.65 + 0.35 * Math.sin(g.t * 6);
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.font = `600 ${phone ? 11 : 13}px "Courier Prime", monospace`;
+  ctx.fillStyle = `rgba(255,214,60,${a})`;
+  ctx.fillText(phone ? `VERITY · ${left}s · FIRE A FLARE` : `VERITY IS SMILING AT YOU · ${left}s · FIRE A FLARE (F)`, cx, H * (phone ? 0.24 : 0.2));
+}
 
 // ---- src/fpsgun.js ----
 // Wreckers' Night: your weapons, in 3D, held out in the middle of the view.

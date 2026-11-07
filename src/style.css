@@ -742,3 +742,8 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 .fpsjump:active { background: rgba(236,228,207,0.25); }
 .fpsjump:not(.on) { opacity: 0.6; }
 .fpsico.fpsview.on { background: rgba(255,216,138,0.16); }
+
+/* Verity is smiling at you: the Flare button calls for your thumb */
+@keyframes fpsurgent { 0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255,214,60,0.6); } 50% { transform: scale(1.12); box-shadow: 0 0 0 8px rgba(255,214,60,0); } }
+.fpsico.urgent { border-color: #ffd63c; color: #ffd63c; background: rgba(255,214,60,0.2); animation: fpsurgent 0.8s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) { .fpsico.urgent { animation: none; } }

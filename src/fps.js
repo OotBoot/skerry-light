@@ -165,6 +165,7 @@ function fpsStart() {
   FPS.bots = []; FPS.drownT = 25; FPS.roundMsg = null; FPS.menu = false; if (FPS.wcRound !== FPS.round) { FPS.wcK = 0; FPS.wcRound = FPS.round; } $('fpsMenu').hidden = true;
   FPS.weapon = FPS.last = FPS.pick || 'pepperbox'; FPS.harps = []; FPS.swings = []; FPS.scoped = false;
   fpsRespawn(FPS.me);
+  if (typeof fpsVerityReset === 'function') fpsVerityReset(true);
   fpsSend(true);
   fpsFeed('You come ashore on the skerry. Keep out of the beam.');
   try { cv.focus(); } catch (e) {}
@@ -176,6 +177,7 @@ function fpsStop() {
   if (NET.room) NET.room.presence({ fps: null }).catch(() => {});
   $('stage').classList.remove('fpsmode');
   $('fpsPad').hidden = true; $('fpsMenu').hidden = true;
+  if (FPS.vy) { FPS.vy.on = false; FPS.vScare = 0; } $('stage').classList.remove('scaring'); try { stopVerity(); } catch (e) {}
   state = FPS.saved ? FPS.saved.state : 'title';
   if (state !== 'title') state = 'title';
   toTitle();
@@ -202,7 +204,7 @@ function fpsSend(force) {
   const out = {
     id: NET.sid, n: FPS.nick, r: FPS.round, x: fr1(m.x), y: fr1(m.y), h: fr2(m.h), p: fr2(m.p), hp: m.hp, dead: m.dead > 0 ? 1 : 0,
     lan: m.lan ? 1 : 0, sh: FPS.shots, kb: FPS.kb, d: FPS.deaths, bl: FPS.bell, fl: [FPS.flare, fr1(FPS.flareAt[0]), fr1(FPS.flareAt[1])],
-    c: fpsColours(), wk: m.walk ? 1 : 0, ai: null, w: fpsW().code, sc: FPS.scoped ? 1 : 0, jz: fr2(m.jz || 0),
+    c: fpsColours(), wk: m.walk ? 1 : 0, ai: null, w: fpsW().code, sc: FPS.scoped ? 1 : 0, jz: fr2(m.jz || 0), vy: typeof fpsVerityNet === 'function' ? fpsVerityNet() : null,
   };
   // the host shares the wreckers and the drowned
   if (FPS.host) out.ai = {
@@ -237,6 +239,7 @@ function fpsNetTick(dt) {
       fpsFeed(`${f.n || 'A wrecker'} came ashore.`);
     }
     r.n = f.n || 'Wrecker'; r.w = typeof f.w === 'string' ? f.w : 'p'; r.tx = f.x; r.ty = f.y; r.th = f.h; r.p = f.p; r.hp = f.hp; r.lan = !!f.lan; r.c = Array.isArray(f.c) ? f.c : null; r.walk = !!f.wk; r.tjz = Math.max(0, Math.min(3, +f.jz || 0));
+    r.vy = Array.isArray(f.vy) && f.vy.length === 4 && f.vy.every(n => typeof n === 'number' && isFinite(n)) && Math.hypot(f.vy[0] - f.x, f.vy[1] - f.y) < 20 ? f.vy : null;
     r.kb = f.r === FPS.round && f.kb && typeof f.kb === 'object' ? f.kb : {};
     r.r = f.r;
     if (f.dead && !r.dead) { r.x = f.x; r.y = f.y; }
@@ -493,6 +496,7 @@ function fpsShoot() {
   const z = FPSC.GROUND + FPSC.EYE + (m.jz || 0), seed = (Math.random() * 2147483647) | 0;
   const [ah, ap] = fpsAimFrom(m.x, m.y, z, w);
   const sh = fpsPublishShot(m.x, m.y, z, ah, ap, m.id, w.code, FPS.scoped ? 0 : seed);
+  if (typeof fpsVerityShot === 'function') fpsVerityShot(m.x, m.y, ah);
   fpsResolveShot(sh, true);
   if (!w.melee && m.ammo <= 0) setTimeout(fpsReload, w.mag === 1 ? 420 : 250);
 }
@@ -576,7 +580,7 @@ function fpsDie(fromId, fromName) {
   m.hp = 0; m.dead = FPSC.RESPAWN; m.killer = fromName && fromName !== 'You' ? fromName : null;
   FPS.deaths++;
   if (fromId) FPS.kb[fromId] = (FPS.kb[fromId] || 0) + 1;
-  fpsFeed(m.killer ? `${m.killer} shot you.` : 'The sea took you.');
+  fpsFeed(m.killer === 'Verity' ? 'Verity helped.' : m.killer ? `${m.killer} shot you.` : 'The sea took you.');
   fpsSend();
 }
 function fpsFlare() {
@@ -584,11 +588,13 @@ function fpsFlare() {
   m.flares--; FPS.flare++; FPS.flareAt = [m.x + Math.sin(m.h) * 30, m.y + Math.cos(m.h) * 30];
   FPS.g.flares.push({ x: FPS.flareAt[0], y: FPS.flareAt[1], t: SK.FLARE_TIME, skin: FLARES[0] });
   try { sfxFlare(); } catch (e) {}
+  if (typeof fpsVerityShoo === 'function') fpsVerityShoo();
   fpsSend();
 }
 function fpsBell() {
   const m = FPS.me; if (m.dead > 0 || (FPS.bellCd || 0) > 0) return;
   FPS.bellCd = 8; FPS.bell++;
+  if (typeof fpsVerityBell === 'function') fpsVerityBell();
   try { sfxBell(); } catch (e) {}
   for (const o of fpsEveryone()) if (!o.me && !(o.dead > 0)) FPS.pings.push({ x: o.x, y: o.y, t: 3, n: o.n });
   fpsSend();
@@ -775,7 +781,8 @@ function fpsFrame(dt) {
       fpsRespawn(m); fpsSend(true);
     }
     if (FPS.roundMsg) { FPS.roundMsg.t -= dt; if (FPS.roundMsg.t <= 0) FPS.roundMsg = null; }
-    fpsInput(dt);
+    if (!(FPS.vScare > 0)) fpsInput(dt); else { FPS.look = [0, 0]; m.walk = false; }
+    if (typeof fpsVerityTick === 'function') fpsVerityTick(dt);
     if (m.dead > 0) { m.dead -= dt; if (m.dead <= 0) { fpsRespawn(m); fpsSend(); } }
     if (m.protect > 0) m.protect -= dt;
     // patch yourself up: a point of health back after six quiet seconds, and every four after that
@@ -869,6 +876,8 @@ function fpsAssistTarget() {
 
 // ---------- drawing ----------
 function fpsDraw() {
+  // Verity standing up: the grin fills the screen, and nothing else
+  if (FPS.vScare > 0) { drawVerityScare(FPSV.SCARE - FPS.vScare); return; }
   // looking through the longarm's telescope: everything drawn with a longer focal length, then put back
   const f0 = focal;
   if (FPS.scoped) focal = f0 * FPSW.longarm.scope;
@@ -928,6 +937,7 @@ function fpsDrawScene() {
   for (const o of FPS.remote.values()) if (!o.dead) add('person', o);
   for (const o of FPS.bots) if (!(o.dead > 0)) add('person', o);
   for (const d of FPS.drowned) add('drowned', d);
+  if (typeof fpsVerityItems === 'function') fpsVerityItems(add);
   if (third) add('person', Object.assign({}, m, { me: true, n: FPS.nick, c: fpsColours(), w: fpsW().code, flashT: FPS.meFlashT || 0, slashT: FPS.meSlashT || 0, hitT: 0 }));
   items.sort((a, b) => b.c.f - a.c.f);
   for (const it of items) {
@@ -939,6 +949,7 @@ function fpsDrawScene() {
       else if (it.kind === 'wreck') drawWreck(o, q, Math.max(0.5, visibility(o.x, o.y)));
       else if (it.kind === 'person') fpsDrawPerson(o, it.c);
       else if (it.kind === 'drowned') fpsDrawDrowned(o, it.c);
+      else if (it.kind === 'verity') fpsDrawVerity(o, it.c);
     } finally { ctx.restore(); }
   }
   if (gl) gl3dGlows(shown); else drawLighthouse(beamOn, fl, fr, far);
@@ -1228,13 +1239,14 @@ function fpsHud() {
     ctx.font = mono(11); ctx.fillStyle = 'rgba(236,228,207,0.6)';
     ctx.fillText(`FLARES ${m.flares}  ·  LANTERN ${m.lan ? 'LIT' : 'DARK'}  ·  BELL ${(FPS.bellCd || 0) > 0 ? Math.ceil(FPS.bellCd) + 's' : 'READY'}`, W - 16, by - 28);
   }
+  if (typeof fpsVerityHud === 'function') fpsVerityHud(phone);
   // being lit up by the beam: a warning
   if (m.dead <= 0 && litAt(m.x, m.y) > 0) { ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = mono(phone ? 10 : 12); ctx.fillStyle = 'rgba(255,216,138,0.9)'; ctx.fillText(phone ? 'IN THE BEAM' : 'IN THE BEAM — EVERYONE CAN SEE YOU', cx, H * 0.5 + (phone ? 34 : 60)); }
   // dead
   if (m.dead > 0) {
     ctx.fillStyle = 'rgba(10,4,4,0.45)'; ctx.fillRect(0, 0, W, H);
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = '#e46c4f'; ctx.font = `400 ${phone ? 26 : 34}px "IM Fell English SC", serif`;
-    ctx.fillText(m.killer ? `Shot by ${m.killer}` : 'Taken by the sea', cx, H * 0.42);
+    ctx.fillText(m.killer === 'Verity' ? 'Verity helped' : m.killer ? `Shot by ${m.killer}` : 'Taken by the sea', cx, H * 0.42);
     ctx.font = mono(13); ctx.fillStyle = 'rgba(236,228,207,0.8)'; ctx.fillText(`Back ashore in ${Math.ceil(m.dead)}…`, cx, H * 0.42 + 36);
   }
   if (FPS.roundMsg) { ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = `400 ${phone ? 20 : 30}px "IM Fell English SC", serif`; ctx.fillStyle = `rgba(255,216,138,${Math.min(1, FPS.roundMsg.t)})`; ctx.fillText(FPS.roundMsg.text, cx, H * 0.3, W - 24); ctx.font = mono(12); ctx.fillText(`A new round begins on ${(BIOMES[g.biome] || BIOMES.skerry).name}.`, cx, H * 0.3 + 30); }
