@@ -7166,7 +7166,11 @@ function buildBeam() {
         vec3 c = mix(vec3(1.0, 0.88, 0.62), vec3(0.78, 0.8, 0.86), clamp(s * 1.6, 0.0, 1.0));
         gl_FragColor = vec4(c * a * 0.55 * uK, 1.0);
       }`,
-    transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide,
+    // light is added to the colour only; the alpha is left alone, so over the (transparent) sky the
+    // beam brightens the painted sky behind instead of punching a dark hole in it
+    transparent: true, depthWrite: false, side: THREE.DoubleSide,
+    blending: THREE.CustomBlending, blendEquation: THREE.AddEquation, blendSrc: THREE.OneFactor, blendDst: THREE.OneFactor,
+    blendSrcAlpha: THREE.ZeroFactor, blendDstAlpha: THREE.OneFactor,
   });
   const m = new THREE.Mesh(geo, mat);
   const far = SK.BEAM_RANGE, rad = far * Math.tan(SK.HALF_BEAM);
