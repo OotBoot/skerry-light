@@ -598,7 +598,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 .fpsfirecluster { position: absolute; right: max(14px, env(safe-area-inset-right, 0px)); bottom: max(14px, env(safe-area-inset-bottom, 0px)); width: 178px; height: 178px; }
 .fpsfirecluster .fpsico { position: absolute; width: 46px; height: 46px; }
 .fpsfirecluster .fpsico svg { width: 22px; height: 22px; }
-.fpsreload { left: 0; bottom: 8px; }
+.fpsreload { left: -54px; bottom: 10px; }
 .fpslantern { left: 14px; top: 46px; }
 .fpsflare { left: 66px; top: 4px; }
 .fpsbell { right: 0; top: -20px; }
@@ -735,3 +735,10 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
   #titleCard > .card { max-height: calc(100dvh - 16px); overflow-y: auto; }
   .card h1 { font-size: 1.5rem; }
 }
+
+/* Wreckers' Night: jump (right by Fire, where the thumb rests) and the camera switch */
+.fpsfirecluster .fpsjump { left: -4px; bottom: 2px; width: 56px; height: 56px; border-color: rgba(236,228,207,0.45); }
+.fpsfirecluster .fpsjump svg { width: 26px; height: 26px; }
+.fpsjump:active { background: rgba(236,228,207,0.25); }
+.fpsjump:not(.on) { opacity: 0.6; }
+.fpsico.fpsview.on { background: rgba(255,216,138,0.16); }

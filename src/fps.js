@@ -22,6 +22,8 @@ const FPSC = {
   CX: 0, CY: 640, R: 140, GROUND: 0.35, EYE: 1.7, BODY: 0.55, TALL: 1.85,
   SPEED: 6.5, SPRINT: 10, HP: 4, MAG: 6, RATE: 0.26, RELOAD: 2.2, RESPAWN: 3.5, FLARES: 2,
   ROUND: 300000, PERIOD: 16, RANGE: 420, SEND: 0.1, BOTS: 3, PROTECT: 2,
+  JUMP: 5.6, GRAV: 15,                       // a jump clears about a metre and lasts three-quarters of a second
+  TP_BACK: 3.7, TP_SIDE: 0.8, TP_UP: 0.12,   // the over-the-shoulder camera: behind, to the right, a little above your eyes
 };
 const FPS = {
   on: false, saved: null, weapon: 'pepperbox', pick: 'pepperbox', last: 'pepperbox', harps: [], swings: [], scoped: false, drawT: 0, g: null, me: null, keys: {}, mouse: false, look: [0, 0],
@@ -50,6 +52,30 @@ const FPSW_BY_CODE = {}; for (const id in FPSW) FPSW_BY_CODE[FPSW[id].code] = id
 const fpsW = () => FPSW[FPS.weapon] || FPSW.pepperbox;
 const fpsWOf = code => FPSW[FPSW_BY_CODE[code] || 'pepperbox'];
 try { const w = localStorage.getItem('skerry-fps-weapon'); if (FPSW[w]) FPS.pick = w; } catch (e) {}
+// first person, or over the shoulder (V, the view button, or R3 to switch; remembered)
+try { FPS.third = localStorage.getItem('skerry-fps-view') === '3rd'; } catch (e) {}
+// over the shoulder, unless you're looking through the longarm's telescope or lying dead
+const fpsThird = () => FPS.third && !FPS.scoped && !(FPS.me && FPS.me.dead > 0);
+function fpsToggleView() {
+  FPS.third = !FPS.third; FPS.camPull = null;
+  if (FPS.viewLabel) FPS.viewLabel();
+  try { localStorage.setItem('skerry-fps-view', FPS.third ? '3rd' : '1st'); } catch (e) {}
+  fpsFeed(FPS.third ? 'Over the shoulder (V to switch back).' : 'First person (V for over the shoulder).');
+}
+// jumping: only from the ground
+function fpsJump() {
+  const m = FPS.me; if (!m || m.dead > 0 || FPS.menu || (m.jz || 0) > 0.01 || (m.vz || 0) > 0) return;
+  m.vz = FPSC.JUMP; m.jz = 0.001; FPS.landed = 0;
+  try { if (!soundOff()) noise('lowpass', 500, 1, 0.01, 0.08, 0.12); } catch (e) {}
+}
+function fpsJumpTick(m, dt) {
+  if (!((m.jz || 0) > 0) && !((m.vz || 0) > 0)) { m.jz = 0; m.vz = 0; return; }
+  m.vz -= FPSC.GRAV * dt; m.jz += m.vz * dt;
+  if (m.jz <= 0) {
+    const hard = Math.min(1, -m.vz / 9); m.jz = 0; m.vz = 0; FPS.landed = 0.25 * hard;
+    try { if (!soundOff()) noise('lowpass', 320, 1, 0.005, 0.18 * hard, 0.16); } catch (e) {}
+  }
+}
 
 // ---------- the island ----------
 function fpsArena(round) {
@@ -176,7 +202,7 @@ function fpsSend(force) {
   const out = {
     id: NET.sid, n: FPS.nick, r: FPS.round, x: fr1(m.x), y: fr1(m.y), h: fr2(m.h), p: fr2(m.p), hp: m.hp, dead: m.dead > 0 ? 1 : 0,
     lan: m.lan ? 1 : 0, sh: FPS.shots, kb: FPS.kb, d: FPS.deaths, bl: FPS.bell, fl: [FPS.flare, fr1(FPS.flareAt[0]), fr1(FPS.flareAt[1])],
-    c: fpsColours(), wk: m.walk ? 1 : 0, ai: null, w: fpsW().code, sc: FPS.scoped ? 1 : 0,
+    c: fpsColours(), wk: m.walk ? 1 : 0, ai: null, w: fpsW().code, sc: FPS.scoped ? 1 : 0, jz: fr2(m.jz || 0),
   };
   // the host shares the wreckers and the drowned
   if (FPS.host) out.ai = {
@@ -210,7 +236,7 @@ function fpsNetTick(dt) {
       FPS.seenSeq[f.id] = Array.isArray(f.sh) && f.sh.length ? f.sh[f.sh.length - 1][0] : 0;
       fpsFeed(`${f.n || 'A wrecker'} came ashore.`);
     }
-    r.n = f.n || 'Wrecker'; r.w = typeof f.w === 'string' ? f.w : 'p'; r.tx = f.x; r.ty = f.y; r.th = f.h; r.p = f.p; r.hp = f.hp; r.lan = !!f.lan; r.c = Array.isArray(f.c) ? f.c : null; r.walk = !!f.wk;
+    r.n = f.n || 'Wrecker'; r.w = typeof f.w === 'string' ? f.w : 'p'; r.tx = f.x; r.ty = f.y; r.th = f.h; r.p = f.p; r.hp = f.hp; r.lan = !!f.lan; r.c = Array.isArray(f.c) ? f.c : null; r.walk = !!f.wk; r.tjz = Math.max(0, Math.min(3, +f.jz || 0));
     r.kb = f.r === FPS.round && f.kb && typeof f.kb === 'object' ? f.kb : {};
     r.r = f.r;
     if (f.dead && !r.dead) { r.x = f.x; r.y = f.y; }
@@ -240,7 +266,7 @@ function fpsNetTick(dt) {
   const k = Math.min(1, dt * 12);
   for (const r of FPS.remote.values()) {
     if (r.tx == null) continue;
-    r.x += (r.tx - r.x) * k; r.y += (r.ty - r.y) * k; r.h += angDiff(r.th, r.h) * k;
+    r.x += (r.tx - r.x) * k; r.y += (r.ty - r.y) * k; r.h += angDiff(r.th, r.h) * k; r.jz = (r.jz || 0) + ((r.tjz || 0) - (r.jz || 0)) * Math.min(1, k * 1.6);
     if (r.flashT > 0) r.flashT -= dt; if (r.hitT > 0) r.hitT -= dt;
   }
   if (!FPS.host) {
@@ -314,7 +340,7 @@ function fpsRespawn(m) {
   m.x = best[0]; m.y = best[1]; m.h = bearingOf(FPSC.CX - m.x, FPSC.CY - m.y); m.p = 0;
   m.hp = FPSC.HP; m.reload = 0;
   m.mags = {}; for (const id in FPSW) m.mags[id] = FPSW[id].mag;
-  if (m === FPS.me) { m.ammo = m.mags[FPS.weapon]; FPS.scoped = false; } else m.ammo = 6; m.cd = 0; m.flares = FPSC.FLARES; m.dead = 0; m.protect = FPSC.PROTECT;
+  if (m === FPS.me) { m.ammo = m.mags[FPS.weapon]; FPS.scoped = false; } else m.ammo = 6; m.cd = 0; m.flares = FPSC.FLARES; m.dead = 0; m.protect = FPSC.PROTECT; m.jz = 0; m.vz = 0;
 }
 function fpsBlocked(x, y, pad) {
   if (Math.hypot(x - FPSC.CX, y - FPSC.CY) > FPSC.R - 1.5) return true;
@@ -362,7 +388,7 @@ function fpsRay(x, y, z, h, p, skipId, targets, range) {
   for (const o of targets) {
     if (o.id === skipId) continue;
     const t = circle(o.x, o.y, FPSC.BODY); if (t == null || t > best.t) continue;
-    const hz = z + tp * t - FPSC.GROUND;
+    const hz = z + tp * t - FPSC.GROUND - (o.jz || 0);
     if (hz < 0 || hz > FPSC.TALL + 0.1) continue;
     best = { t, kind: 'body', who: o, head: hz > 1.5 };
   }
@@ -371,7 +397,7 @@ function fpsRay(x, y, z, h, p, skipId, targets, range) {
 }
 // where someone has been lately, for judging shots fairly
 function fpsRemember(o, now) {
-  (o.hist = o.hist || []).push({ t: now, x: o.x, y: o.y });
+  (o.hist = o.hist || []).push({ t: now, x: o.x, y: o.y, jz: o.jz || 0 });
   while (o.hist.length && now - o.hist[0].t > FPSC.LAG * 1000 + 100) o.hist.shift();
 }
 // the directions of the balls in a blunderbuss shot, the same on every screen (from the shot's seed)
@@ -390,10 +416,10 @@ function fpsLines(sh) {
 // did this shot (or cut) hit them, at any place they've been in the last few tenths of a second? → { dmg, head } or null
 function fpsShotHits(sh, o) {
   const [, x, y, z, h, p, by, code] = sh, w = fpsWOf(code);
-  const places = (o.hist || []).concat([{ x: o.x, y: o.y }]);
+  const places = (o.hist || []).concat([{ x: o.x, y: o.y, jz: o.jz || 0 }]);
   let best = null;
   for (let i = places.length - 1; i >= 0; i--) {
-    const at = places[i], who = { id: o.id, x: at.x, y: at.y };
+    const at = places[i], who = { id: o.id, x: at.x, y: at.y, jz: at.jz || 0 };
     let dmg = 0, head = false;
     if (w.melee) {
       const d = Math.hypot(at.x - x, at.y - y), b = bearingOf(at.x - x, at.y - y);
@@ -461,12 +487,30 @@ function fpsShoot() {
   FPS.heldFire = true;
   m.cd = w.rate; m.protect = 0;
   if (w.melee) { FPS.swing = (FPS.swing || 0) + 1; }
-  else { m.ammo--; m.mags[FPS.weapon] = m.ammo; FPS.flash = 0.07; FPS.recoil = Math.min(1.6, w.kick); }
+  else { m.ammo--; m.mags[FPS.weapon] = m.ammo; FPS.flash = 0.07; FPS.recoil = Math.min(1.6, w.kick); FPS.meFlashT = 0.12; }
+  if (w.melee) FPS.meSlashT = 0.3;
   FPS.vmShots = (FPS.vmShots || 0) + 1;
-  const z = FPSC.GROUND + FPSC.EYE, seed = (Math.random() * 2147483647) | 0;
-  const sh = fpsPublishShot(m.x, m.y, z, m.h, m.p, m.id, w.code, FPS.scoped ? 0 : seed);
+  const z = FPSC.GROUND + FPSC.EYE + (m.jz || 0), seed = (Math.random() * 2147483647) | 0;
+  const [ah, ap] = fpsAimFrom(m.x, m.y, z, w);
+  const sh = fpsPublishShot(m.x, m.y, z, ah, ap, m.id, w.code, FPS.scoped ? 0 : seed);
   fpsResolveShot(sh, true);
   if (!w.melee && m.ammo <= 0) setTimeout(fpsReload, w.mag === 1 ? 420 : 250);
+}
+// which way a shot leaves your gun. In first person that's simply where you look. Over the shoulder the camera sits
+// behind you and to the right, so the crosshair's line starts at the camera: find what it lands on, then fire from
+// your own eyes at that point (as shoulder cameras do), so what's under the crosshair is what you hit
+function fpsAimFrom(x, y, z, w) {
+  const m = FPS.me;
+  if (!fpsThird() || !FPS.camAt || w.melee) return [m.h, m.p];
+  const [cxp, cyp, czp] = FPS.camAt, reach = w.range || FPSC.RANGE;
+  // start the crosshair's line level with you, so nothing between the camera and your back gets in the way
+  const back = (cxp - x) * Math.sin(m.h) + (cyp - y) * Math.cos(m.h);   // negative: the camera's behind you
+  const skip = Math.max(0, -back) / Math.max(0.2, Math.cos(m.p));
+  const ox = cxp + Math.sin(m.h) * Math.cos(m.p) * skip, oy = cyp + Math.cos(m.h) * Math.cos(m.p) * skip, oz = czp + Math.sin(m.p) * skip;
+  const r = fpsRay(ox, oy, oz, m.h, m.p, m.id, null, reach + 40);
+  const tx = r.x, ty = r.y, tz = r.z, d = Math.hypot(tx - x, ty - y);
+  if (d < 1.2) return [m.h, m.p];
+  return [bearingOf(tx - x, ty - y), clamp(Math.atan2(tz - z, d), -0.9, 0.9)];
 }
 // the harpoons in flight (and stuck where they landed)
 function fpsHarpoonsTick(dt) {
@@ -740,6 +784,9 @@ function fpsFrame(dt) {
     if (m.cd > 0) m.cd -= dt;
     if (m.reload > 0) { m.reload -= dt; if (m.reload <= 0) { m.reload = 0; const w = fpsW(); if (!w.melee) { m.ammo = w.mag; m.mags[FPS.weapon] = m.ammo; } } }
     if (FPS.drawT > 0) FPS.drawT -= dt;
+    fpsJumpTick(m, dt);
+    if (FPS.landed > 0) FPS.landed -= dt;
+    if (FPS.meFlashT > 0) FPS.meFlashT -= dt; if (FPS.meSlashT > 0) FPS.meSlashT -= dt;
     if (!FPS.mouseDown && !FPS.touchFire && !FPS.padFire) FPS.heldFire = false;
     fpsHarpoonsTick(dt);
     if ((FPS.bellCd || 0) > 0) FPS.bellCd -= dt;
@@ -785,7 +832,7 @@ function fpsInput(dt) {
     FPS.padFire = b(7);
     fpsScope(b(6));
     const tap = (i, fn) => { if (b(i) && !was[i]) fn(); };
-    tap(2, fpsReload); tap(5, () => fpsCycle(1)); tap(14, () => fpsCycle(-1)); tap(15, () => fpsCycle(1)); tap(3, fpsLantern); tap(1, fpsFlare); tap(4, fpsBell); tap(9, () => fpsSetMenu(!FPS.menu)); tap(8, () => { FPS.board = !FPS.board; });
+    tap(0, fpsJump); tap(11, fpsToggleView); tap(2, fpsReload); tap(5, () => fpsCycle(1)); tap(14, () => fpsCycle(-1)); tap(15, () => fpsCycle(1)); tap(3, fpsLantern); tap(1, fpsFlare); tap(4, fpsBell); tap(9, () => fpsSetMenu(!FPS.menu)); tap(8, () => { FPS.board = !FPS.board; });
     FPS.padWas = {}; for (let i = 0; i < pad.buttons.length; i++) FPS.padWas[i] = b(i);
     FPS.padSprint = b(10);
   }
@@ -800,7 +847,7 @@ function fpsInput(dt) {
     const sp = (K.ShiftLeft || K.ShiftRight || FPS.padSprint || (FPS.stick && FPS.stickRun) ? FPSC.SPRINT : FPSC.SPEED) * Math.min(1, len) / len * dt;
     const s = Math.sin(m.h), c = Math.cos(m.h);
     m.walk = fpsMove(m, (s * fz + c * fx) * sp, (c * fz - s * fx) * sp);
-    if (m.walk) FPS.step += dt * (K.ShiftLeft || K.ShiftRight ? 11 : 8);
+    if (m.walk && !((m.jz || 0) > 0)) FPS.step += dt * (K.ShiftLeft || K.ShiftRight ? 11 : 8);
   }
 }
 
@@ -834,7 +881,25 @@ function fpsDraw() {
 function fpsDrawScene() {
   const m = FPS.me;
   camX = m.x; camY = m.y; yaw = m.h;
-  camH = FPSC.GROUND + FPSC.EYE + (reduceMotion ? 0 : Math.sin(FPS.step) * 0.05) - (m.dead > 0 ? 1.2 * Math.min(1, (FPSC.RESPAWN - m.dead) * 2) : 0);
+  const eye = FPSC.GROUND + FPSC.EYE + (m.jz || 0);
+  camH = eye + (reduceMotion ? 0 : Math.sin(FPS.step) * 0.05 - (FPS.landed || 0) * 0.4) - (m.dead > 0 ? 1.2 * Math.min(1, (FPSC.RESPAWN - m.dead) * 2) : 0);
+  const third = fpsThird();
+  if (third) {
+    // over the right shoulder: back along the way you're looking (tilted with it), then out to the side;
+    // pulled in when a rock or the island's edge is in the way, and eased back out after
+    const sh = Math.sin(m.h), ch = Math.cos(m.h), cp = Math.cos(m.p), sp = Math.sin(m.p);
+    let want = 1;
+    for (let k = 1; k <= 8; k++) {
+      const f = k / 8, bx = m.x - sh * cp * FPSC.TP_BACK * f + ch * FPSC.TP_SIDE * f, by = m.y - ch * cp * FPSC.TP_BACK * f - sh * FPSC.TP_SIDE * f;
+      if (fpsBlocked(bx, by, 0.25)) { want = Math.max(0.12, (k - 1) / 8); break; }
+    }
+    const pull = FPS.camPull == null ? want : want < FPS.camPull ? want : FPS.camPull + (want - FPS.camPull) * Math.min(1, (FPS.dtLast || 0.016) * 4);
+    FPS.camPull = pull;
+    camX = m.x - sh * cp * FPSC.TP_BACK * pull + ch * FPSC.TP_SIDE * pull;
+    camY = m.y - ch * cp * FPSC.TP_BACK * pull - sh * FPSC.TP_SIDE * pull;
+    camH = Math.max(FPSC.GROUND + 0.4, eye + FPSC.TP_UP - sp * FPSC.TP_BACK * pull - (FPS.landed || 0) * 0.3);
+    FPS.camAt = [camX, camY, camH];
+  } else { FPS.camAt = null; FPS.camPull = null; }
   hy = H * 0.5 + Math.tan(m.p) * focal;
   const roll = m.dead > 0 ? 0.25 * Math.min(1, (FPSC.RESPAWN - m.dead) * 2) : 0;
   const gl = gl3dWanted() && (GL3D.ok || (!GL3D.tried && gl3dInit()));
@@ -858,11 +923,12 @@ function fpsDrawScene() {
   }
   // everything standing on the island, far to near
   const items = [];
-  const add = (kind, o, z) => { const c = cam(o.x, o.y, z == null ? FPSC.GROUND : z); if (c.f > 0.6) items.push({ kind, o, c }); };
+  const add = (kind, o, z) => { const c = cam(o.x, o.y, z == null ? FPSC.GROUND + (o.jz || 0) : z); if (c.f > 0.6) items.push({ kind, o, c }); };
   if (!gl) { for (const o of g.rocks) add('rock', o, 0); for (const o of g.wrecks) add('wreck', o, 0); }
   for (const o of FPS.remote.values()) if (!o.dead) add('person', o);
   for (const o of FPS.bots) if (!(o.dead > 0)) add('person', o);
   for (const d of FPS.drowned) add('drowned', d);
+  if (third) add('person', Object.assign({}, m, { me: true, n: FPS.nick, c: fpsColours(), w: fpsW().code, flashT: FPS.meFlashT || 0, slashT: FPS.meSlashT || 0, hitT: 0 }));
   items.sort((a, b) => b.c.f - a.c.f);
   for (const it of items) {
     ctx.save();
@@ -901,7 +967,7 @@ function fpsDrawHarpoons() {
     // the line, sagging back to the gun
     const who = hp.by === FPS.me.id ? FPS.me : FPS.remote.get(hp.by);
     if (who && hp.t < 10) {
-      const a = who === FPS.me ? [who.x + Math.sin(who.h) * 0.6, who.y + Math.cos(who.h) * 0.6, FPSC.GROUND + FPSC.EYE - 0.35] : [who.x, who.y, FPSC.GROUND + 1.2];
+      const a = who === FPS.me ? [who.x + Math.sin(who.h) * 0.6, who.y + Math.cos(who.h) * 0.6, FPSC.GROUND + FPSC.EYE - 0.35 + (who.jz || 0)] : [who.x, who.y, FPSC.GROUND + 1.2 + (who.jz || 0)];
       const sag = hp.stuck ? 1.2 : 0.3, pts = [];
       for (let i = 0; i <= 10; i++) { const t = i / 10; pts.push([a[0] + (tail[0] - a[0]) * t, a[1] + (tail[1] - a[1]) * t, a[2] + (tail[2] - a[2]) * t - Math.sin(t * Math.PI) * sag]); }
       const q = polyProj(pts);
@@ -923,21 +989,45 @@ function fpsDrawScope() {
 }
 // a wrecker: boots, long coat in their colours, a hat, a pistol, and their lantern if it's lit
 function fpsDrawPerson(o, c) {
-  const vis = o.me ? 1 : Math.max(fpsSeeAt(o.x, o.y, o.lan), o.flashT > 0 ? 1 : 0);
-  const foot = proj(c), head = proj(cam(o.x, o.y, FPSC.GROUND + FPSC.TALL));
+  let vis = o.me ? 1 : Math.max(fpsSeeAt(o.x, o.y, o.lan), o.flashT > 0 ? 1 : 0);
+  const foot = proj(c), head = proj(cam(o.x, o.y, FPSC.GROUND + FPSC.TALL + (o.jz || 0)));
   const hgt = foot.y - head.y, w = hgt * 0.3, x = foot.x;
   const col = o.c || ['#3a2a1e', '#d8d0bc', '#7a5a3a', '#ffd88a'];
   const dark = (hex, k) => { try { return mix(String(hex).length === 7 ? hex : '#444444', '#06080c', 1 - (0.25 + 0.75 * vis) * (k || 1)); } catch (e) { return '#222'; } };
   // their lantern shows from anywhere on the island, even if they don't
   const facing = angDiff(o.h, bearingOf(camX - o.x, camY - o.y));
-  const side = Math.sin(facing) >= 0 ? 1 : -1;
+  // (your own figure, seen from behind: gun in the right hand, lantern in the left)
+  const side = o.me ? 1 : Math.sin(facing) >= 0 ? 1 : -1;
   if (o.lan) {
-    const lx = x + side * w * 0.75, ly = foot.y - hgt * 0.42;
+    const lx = x + (o.me ? -1 : side) * w * 0.75, ly = foot.y - hgt * 0.42;
     lamp(lx, ly, String(col[3]).length === 7 ? col[3] : '#ffd88a', Math.max(2.2, hgt * 0.06));
   }
   if (vis < 0.04) return;
-  ctx.globalAlpha = Math.min(1, vis * 1.2);
-  const stride = o.walk ? Math.sin(g.t * 9 + (o.x + o.y)) * w * 0.25 : 0;
+  if ((o.jz || 0) > 0.05) { const gq = proj(cam(o.x, o.y, FPSC.GROUND)); ctx.fillStyle = `rgba(0,0,0,${0.35 * Math.min(1, vis)})`; ctx.beginPath(); ctx.ellipse(gq.x, gq.y, w * 0.6, Math.max(1, w * 0.15), 0, 0, 6.283); ctx.fill(); }
+  ctx.globalAlpha = o.me ? 0.82 : Math.min(1, vis * 1.2);
+  const stride = (o.jz || 0) > 0.05 ? 0 : o.walk ? Math.sin(g.t * 9 + (o.x + o.y)) * w * 0.25 : 0;
+  // over the shoulder you see your own back: a touch see-through, so it never hides what you're aiming at
+  if (o.me) vis = 1;
+  // seen over your shoulder, your gun arm reaches forward towards the crosshair: placed in 3D and projected,
+  // so it sits right however the camera swings. It's further away than your back, so it's drawn first
+  let gunArm = false;
+  if (o.me && (o.w || 'p') !== 'c') {
+    const sh = Math.sin(o.h), ch = Math.cos(o.h), cp = Math.cos(o.p || 0), spp = Math.sin(o.p || 0), base = FPSC.GROUND + (o.jz || 0);
+    const at = (fwd, right, up) => cam(o.x + sh * cp * fwd + ch * right, o.y + ch * cp * fwd - sh * right, base + up + spp * fwd);
+    const wc = o.w || 'p', glen = wc === 'l' ? 1.15 : wc === 'h' ? 0.95 : wc === 'b' ? 0.8 : 0.42, kick = (o.flashT || 0) > 0 ? -0.08 : 0;
+    const pts = [at(0, 0.26, 1.42), at(0.45 + kick, 0.3, 1.36), at(0.45 + kick + glen, 0.28, 1.4)];
+    if (pts.every(q => q.f > 0.3)) {
+      const [S, Hd, M] = pts.map(q => proj(q));
+      gunArm = true;
+      ctx.lineCap = 'round';
+      ctx.strokeStyle = dark(col[0], 0.85); ctx.lineWidth = Math.max(3, Hd.s * 0.11); ctx.beginPath(); ctx.moveTo(S.x, S.y); ctx.lineTo(Hd.x, Hd.y); ctx.stroke();
+      ctx.strokeStyle = wc === 'h' ? dark('#3a3a42') : dark('#2a2420'); ctx.lineWidth = Math.max(2, Hd.s * (wc === 'b' ? 0.09 : 0.06)); ctx.beginPath(); ctx.moveTo(Hd.x, Hd.y); ctx.lineTo(M.x, M.y); ctx.stroke();
+      if (wc === 'l' || wc === 'b') { ctx.strokeStyle = dark('#8a6a2c'); ctx.lineWidth = Math.max(1.5, Hd.s * 0.05); const k = 0.3; ctx.beginPath(); ctx.moveTo(Hd.x, Hd.y); ctx.lineTo(Hd.x + (M.x - Hd.x) * k, Hd.y + (M.y - Hd.y) * k); ctx.stroke(); }
+      ctx.fillStyle = dark('#7a5c46'); ctx.beginPath(); ctx.arc(Hd.x, Hd.y, Math.max(2, Hd.s * 0.055), 0, 6.283); ctx.fill();
+      ctx.lineCap = 'butt';
+      if ((o.flashT || 0) > 0) lamp(M.x, M.y, '#ffd890', Math.max(4, M.s * 0.16));
+    }
+  }
   // boots and legs
   ctx.fillStyle = dark('#1a1612');
   ctx.fillRect(x - w * 0.32 + stride, foot.y - hgt * 0.38, w * 0.26, hgt * 0.38);
@@ -951,6 +1041,7 @@ function fpsDrawPerson(o, c) {
   ctx.fillStyle = dark(col[0], 0.85);
   ctx.fillRect(x - side * w * 0.62 - w * 0.1, foot.y - hgt * 0.78, w * 0.2, hgt * 0.34);
   ctx.save(); ctx.translate(x + side * w * 0.45, foot.y - hgt * 0.76); ctx.rotate(-side * 0.9 * Math.cos(facing));
+  if (gunArm) ctx.globalAlpha = 0;   // (the arm and gun are already drawn, reaching forward)
   ctx.fillRect(-w * 0.1, 0, w * 0.2, hgt * 0.3);
   // what they're carrying
   const wc = o.w || 'p';
@@ -964,9 +1055,16 @@ function fpsDrawPerson(o, c) {
     if (wc === 'l') { ctx.fillStyle = dark('#8a6a2c'); ctx.fillRect(-w * 0.1, hgt * 0.38, w * 0.06, hgt * 0.16); }
   }
   ctx.restore();
+  if (gunArm) ctx.globalAlpha = 0.82;
   if ((o.slashT || 0) > 0) { o.slashT -= FPS.dtLast || 0.016; }
   // head and a three-cornered hat
+  const away = Math.cos(facing) < -0.2;
   ctx.fillStyle = dark('#c8a888'); ctx.beginPath(); ctx.arc(x, foot.y - hgt * 0.88, hgt * 0.075, 0, 6.28); ctx.fill();
+  if (away) {
+    ctx.fillStyle = dark('#2a1e16'); ctx.beginPath(); ctx.arc(x, foot.y - hgt * 0.882, hgt * 0.079, 0, 6.28); ctx.fill();
+    ctx.fillRect(x - hgt * 0.012, foot.y - hgt * 0.84, hgt * 0.024, hgt * 0.07);
+    ctx.fillStyle = dark(col[1]); ctx.fillRect(x - hgt * 0.02, foot.y - hgt * 0.835, hgt * 0.04, hgt * 0.014);
+  }
   ctx.fillStyle = dark('#141210');
   ctx.beginPath(); ctx.moveTo(x - hgt * 0.13, foot.y - hgt * 0.93); ctx.lineTo(x + hgt * 0.13, foot.y - hgt * 0.93); ctx.lineTo(x + hgt * 0.06, foot.y - hgt * 1.0); ctx.lineTo(x - hgt * 0.06, foot.y - hgt * 1.0); ctx.closePath(); ctx.fill();
   ctx.fillStyle = dark(col[1]); ctx.fillRect(x - hgt * 0.1, foot.y - hgt * 0.945, hgt * 0.2, hgt * 0.012);
@@ -974,7 +1072,7 @@ function fpsDrawPerson(o, c) {
   ctx.globalAlpha = 1;
   if (o.flashT > 0) { const mx = x + side * w * 0.6, my = foot.y - hgt * 0.62; lamp(mx, my, '#ffd890', Math.max(3, hgt * 0.07)); }
   // a name over their head when you can see them well
-  if (vis > 0.45 && hgt > 22) {
+  if (vis > 0.45 && hgt > 22 && !o.me) {
     ctx.font = `600 ${Math.round(Math.min(16, 9 + hgt * 0.04))}px "Courier Prime", monospace`; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
     ctx.fillStyle = `rgba(236,228,207,${Math.min(1, vis)})`; ctx.fillText(o.n || '', x, foot.y - hgt * 1.04);
     if (!o.me && o.hp != null) { for (let i = 0; i < FPSC.HP; i++) { ctx.fillStyle = i < o.hp ? 'rgba(228,108,79,0.9)' : 'rgba(80,70,60,0.6)'; ctx.fillRect(x - 14 + i * 7.5, foot.y - hgt * 1.04 + 2, 6, 3); } }
@@ -1002,6 +1100,7 @@ function fpsDrawDrowned(d, c) {
 // your hands: a pepperbox pistol on the right, your lantern on the left
 function fpsDrawHands() {
   const m = FPS.me; if (m.dead > 0) return;
+  if (fpsThird()) return;   // over the shoulder you see the gun in your figure's hand instead
   // the 3D pistol; the flat drawing below is only for when there's no WebGL
   if (vmDraw(FPS.dtLast || 0.016)) return;
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -1059,7 +1158,10 @@ function fpsHud() {
   // on a phone: less of everything, and nothing where your thumbs go
   const phone = FPS.touch, top = phone ? Math.max(10, FPS.safeTop || 0) : 14;
   // the bearing strip, with the bell's pings
-  const sw = phone ? Math.min(300, W * 0.42) : Math.min(520, W * 0.6), sx = cx - sw / 2, sy = top;
+  const sw = phone ? Math.min(300, W * 0.42) : Math.min(520, W * 0.6), sx = cx - sw / 2;
+  // (on a narrow phone the buttons at top left reach the middle: the strip goes just below them)
+  let sy = top;
+  if (phone) { const tb = document.querySelector('.fpstop'); if (tb) { const r = tb.getBoundingClientRect(), r0 = cv.getBoundingClientRect(); if (r.right - r0.left > sx - 4) sy = r.bottom - r0.top + 22; } }
   ctx.fillStyle = 'rgba(8,10,14,0.45)'; ctx.fillRect(sx, sy, sw, phone ? 18 : 22);
   ctx.font = mono(phone ? 10 : 11); ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   const span = 1.6;
@@ -1164,6 +1266,8 @@ function fpsPadState() {
   { const b = $('fpsPadWeapon'); if (b) { const c = b.querySelector('.wn'); if (c && c.textContent !== w.n) c.textContent = w.n; } }
   { const b = $('fpsPadScope'); if (b) { b.hidden = FPS.weapon !== 'longarm'; b.classList.toggle('on', FPS.scoped); } }
   set('fpsPadLantern', m.lan);
+  set('fpsPadView', FPS.third);
+  set('fpsPadJump', !((m.jz || 0) > 0) && !(m.dead > 0));
   set('fpsPadFlare', m.flares > 0, String(m.flares));
   set('fpsPadBell', !((FPS.bellCd || 0) > 0), (FPS.bellCd || 0) > 0 ? String(Math.ceil(FPS.bellCd)) : '');
   set('fpsPadReload', !w.melee && m.ammo < w.mag && !(m.reload > 0));
@@ -1179,7 +1283,7 @@ function fpsSafeArea() {
 }
 
 // ---------- controls ----------
-const FPS_KEYS = { KeyR: fpsReload, KeyL: fpsLantern, KeyF: fpsFlare, KeyB: fpsBell, Space: fpsBell, KeyQ: () => fpsSwitch(FPS.last),
+const FPS_KEYS = { KeyR: fpsReload, KeyL: fpsLantern, KeyF: fpsFlare, KeyB: fpsBell, Space: fpsJump, KeyV: fpsToggleView, KeyC: fpsToggleView, KeyQ: () => fpsSwitch(FPS.last),
   Digit1: () => fpsSwitch('pepperbox'), Digit2: () => fpsSwitch('blunderbuss'), Digit3: () => fpsSwitch('longarm'), Digit4: () => fpsSwitch('harpoon'), Digit5: () => fpsSwitch('cutlass') };
 addEventListener('keydown', e => {
   if (!FPS.on) return;
@@ -1252,7 +1356,8 @@ $('fpsSettings').addEventListener('click', () => $('titleSettings').click());
 $('fpsNick').addEventListener('keydown', e => { if (e.key === 'Enter') fpsStart(); });
 $('fpsResume').addEventListener('click', () => fpsSetMenu(false));
 $('fpsLeave').addEventListener('click', fpsStop);
-for (const [id, fn] of [['fpsPadWeapon', () => fpsCycle(1)], ['fpsPadScope', () => fpsScope(!FPS.scoped)], ['fpsPadReload', fpsReload], ['fpsPadLantern', fpsLantern], ['fpsPadFlare', fpsFlare], ['fpsPadBell', fpsBell], ['fpsPadMenu', () => fpsSetMenu(true)], ['fpsPadBoard', () => { FPS.board = !FPS.board; }]]) {
+{ const vb = $('fpsViewBtn'), lab = () => { vb.textContent = FPS.third ? 'View: over the shoulder' : 'View: first person'; }; lab(); vb.addEventListener('click', () => { fpsToggleView(); lab(); }); FPS.viewLabel = lab; }
+for (const [id, fn] of [['fpsPadWeapon', () => fpsCycle(1)], ['fpsPadScope', () => fpsScope(!FPS.scoped)], ['fpsPadReload', fpsReload], ['fpsPadLantern', fpsLantern], ['fpsPadFlare', fpsFlare], ['fpsPadBell', fpsBell], ['fpsPadJump', fpsJump], ['fpsPadView', fpsToggleView], ['fpsPadMenu', () => fpsSetMenu(true)], ['fpsPadBoard', () => { FPS.board = !FPS.board; }]]) {
   $(id).addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); fn(); });
 }
 // Fire: hold to shoot, and drag while holding to aim, so you can turn and fire with one thumb

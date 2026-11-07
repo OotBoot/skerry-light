@@ -112,6 +112,10 @@ The sky is painted on a canvas behind the 3D view, and the creatures, ships, dec
 
 Settings → Graphics switches between **3D** and **Classic** (the original painted view, lighter on old devices). If WebGL isn't available the game uses Classic by itself.
 
+## Wreckers' Night: over the shoulder, and jumping
+
+Press **V** (or the camera button at the top of the phone screen, **Menu → View**, or click the right stick on a controller) to switch between first person and an over-the-shoulder camera. The camera sits behind you and to the right, and you see your own wrecker from behind, with the gun arm reaching toward the crosshair. Shots go where the crosshair points: the game finds what the crosshair line lands on, then fires from your eyes at that point. If a rock or the island's edge gets in the way, the camera pulls in and then eases back out. The longarm's telescope still looks through your own eyes, and the choice is remembered. Press **Space** (the arrow beside Fire on a phone, or **A** on a controller) to jump about a metre. Jumps travel with your position to everyone else, and the fair-hit check accounts for jumps, so a well-timed jump can make a shot pass under you. The bell has moved from Space to **B** only.
+
 ## Playing on a phone in landscape
 
 Both games work with the phone turned sideways. On short landscape screens the title page puts Skerry Light and Wreckers' Night side by side, the voyage HUD shrinks (smaller labels, a two-line log, smaller sail and tool buttons), and the menus, settings and crate screens get wider and shorter so they fit without scrolling where possible. In Wreckers' Night the move stick stays under your left thumb and the fire cluster under your right, and the first-round hints move clear of the buttons. Phone notches are respected on both sides.
