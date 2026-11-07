@@ -62,16 +62,13 @@ function fpsSkin() { try { return mySkin(); } catch (e) { return { hull: '#3a2a1
 function fpsColours() { const s = fpsSkin(); return [s.hull, s.sail, s.rail, s.lantern || '#ffd88a']; }
 
 // ---------- entering and leaving ----------
-function fpsOpen() {
-  try { audioInit(); } catch (e) {}
-  $('titleCard').hidden = true;
-  $('fpsCard').hidden = false;
-  const n = $('fpsNick'); if (n && !n.value) n.value = NET.nick || ($('nick') && $('nick').value) || '';
+// the Wreckers' Night card on the title screen: keep its count of players and its name box up to date
+function fpsTitleTick() {
+  if (state !== 'title' || $('titleCard').hidden) return;
+  const n = $('fpsNick'); if (n && !n.value && document.activeElement !== n) n.value = NET.nick || ($('nick') && $('nick').value) || '';
   fpsLobbyStatus();
-  if (!FPS.lobbyTimer) FPS.lobbyTimer = setInterval(() => { if (!$('fpsCard').hidden) fpsLobbyStatus(); }, 1000);
-  setTimeout(() => $('fpsPlay').focus(), 30);
 }
-function fpsCloseCard() { $('fpsCard').hidden = true; $('titleCard').hidden = false; }
+setInterval(fpsTitleTick, 1000);
 function fpsLobbyStatus() {
   const n = fpsPeers().length;
   $('fpsStatus').textContent = NET.status === 'ready'
@@ -86,7 +83,8 @@ function fpsStart() {
   FPS.saved = { state };
   state = 'fps';
   paused = false;
-  $('fpsCard').hidden = true; $('titleCard').hidden = true; $('hud').hidden = true; $('logbox').hidden = true; $('biomeBanner').hidden = true;
+  try { audioInit(); } catch (e) {}
+  $('titleCard').hidden = true; $('hud').hidden = true; $('logbox').hidden = true; $('biomeBanner').hidden = true;
   $('stage').classList.add('fpsmode');
   FPS.touch = matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window && navigator.maxTouchPoints > 0;
   $('fpsPad').hidden = !FPS.touch; FPS.hintT = 8; if (FPS.touch) fpsSafeArea();
@@ -1021,13 +1019,12 @@ const fpsTouchEnd = e => {
 addEventListener('touchend', fpsTouchEnd, true); addEventListener('touchcancel', fpsTouchEnd, true);
 
 // the buttons
-$('fpsBtn').addEventListener('click', fpsOpen);
-$('fpsBack').addEventListener('click', fpsCloseCard);
+$('fpsBanner').addEventListener('click', () => { const c = $('fpsTitle'); c.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' }); setTimeout(() => $('fpsPlay').focus({ preventScroll: true }), 400); });
 $('fpsPlay').addEventListener('click', fpsStart);
+$('fpsSettings').addEventListener('click', () => $('titleSettings').click());
 $('fpsNick').addEventListener('keydown', e => { if (e.key === 'Enter') fpsStart(); });
 $('fpsResume').addEventListener('click', () => fpsSetMenu(false));
 $('fpsLeave').addEventListener('click', fpsStop);
-$('fpsCard').addEventListener('keydown', e => { if (e.key === 'Escape') fpsCloseCard(); });
 for (const [id, fn] of [['fpsPadReload', fpsReload], ['fpsPadLantern', fpsLantern], ['fpsPadFlare', fpsFlare], ['fpsPadBell', fpsBell], ['fpsPadMenu', () => fpsSetMenu(true)], ['fpsPadBoard', () => { FPS.board = !FPS.board; }]]) {
   $(id).addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); fn(); });
 }

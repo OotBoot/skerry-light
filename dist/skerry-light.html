@@ -595,7 +595,6 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 .stats { grid-template-columns: repeat(4, 1fr); }
 
 /* Wreckers' Night */
-.fpsbtn { border-color: rgba(228,108,79,0.6); }
 #stage.fpsmode #cv { cursor: crosshair; }
 .fpspad { position: absolute; inset: 0; pointer-events: none; z-index: 5; }
 .fpspad[hidden] { display: none; }
@@ -620,6 +619,31 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 .fpsfire:not(.on) { background: rgba(80,40,30,0.4); border-color: rgba(228,108,79,0.6); }
 .fpsfire:active { background: rgba(228,108,79,0.55); }
 @media (orientation: portrait) { .fpsfirecluster { transform: scale(0.9); transform-origin: bottom right; } }
+
+/* the title screen: a banner for Wreckers' Night above Skerry Light, and its own card below */
+#titleCard { row-gap: 16px; }
+#titleCard > .card { margin-block: 0; }
+.newgame { max-width: 34rem; width: 100%; display: flex; align-items: center; gap: 10px; padding: 10px 14px; cursor: pointer; text-align: left;
+  background: linear-gradient(90deg, rgba(228,108,79,0.28), rgba(228,108,79,0.08)); border: 1px solid rgba(228,108,79,0.65); color: var(--ink); font-family: var(--log); font-size: 13px; }
+.newgame:hover, .newgame:focus-visible { background: linear-gradient(90deg, rgba(228,108,79,0.4), rgba(228,108,79,0.14)); outline: none; }
+.newgame .ng-tag { flex: none; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; padding: 3px 6px; background: #e46c4f; color: #1a0d08; font-weight: 700; }
+.newgame .ng-text { flex: 1; min-width: 0; }
+.newgame b { color: var(--lamp); font-weight: 700; }
+.newgame .ng-go { flex: none; font-size: 16px; color: var(--lamp); }
+.fpscard { border-color: rgba(228,108,79,0.45); }
+.fpscard h1 { color: #f0b08e; }
+.weaponpick { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+.weaponpick .pick { display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 6px 4px 7px;
+  background: rgba(255,255,255,0.03); border: 1px solid var(--rule); color: var(--ink); font-family: var(--log); }
+.weaponpick .pick b { font-size: 12px; letter-spacing: 0.06em; }
+.weaponpick .pick small { font-size: 10px; color: var(--muted); }
+.weaponpick .pick.on { border-color: var(--lamp); box-shadow: 0 0 0 1px var(--lamp) inset; background: rgba(255,216,138,0.08); }
+.weaponpick .pick.on b { color: var(--lamp); }
+.weaponpick .pick svg { margin-block: 2px; }
+.weaponpick .pick.soon { opacity: 0.55; border-style: dashed; color: var(--muted); }
+.weaponpick .pick.soon b { color: var(--muted); }
+.weaponpick .pick.soon svg { margin-block: 9px 5px; }
+@media (max-width: 520px) { .weaponpick { grid-template-columns: repeat(3, 1fr); } .newgame { font-size: 12px; padding: 8px 10px; } }
 </style>
 </head>
 <body>
@@ -682,6 +706,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
   </div>
 
   <div class="overlay" id="titleCard">
+    <button class="newgame" id="fpsBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">Try the new game, <b>Wreckers' Night</b>: a multiplayer shootout on the skerry</span><span class="ng-go" aria-hidden="true">↓</span></button>
     <div class="card">
       <div class="cardtop"><span class="eyebrow">Master's orders · make harbour by night</span><button class="tool closebtn" id="soundBtn" type="button" aria-pressed="true">Sound on</button></div>
       <h1>Skerry Light</h1>
@@ -693,7 +718,6 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
         <button class="tool crateAllBtn" type="button" hidden>Open all</button>
         <button class="tool backupBtn" type="button" title="Back up your crates and cosmetics">Back up save</button>
         <button class="tool" id="titleSettings" type="button">Settings</button>
-        <button class="tool fpsbtn" id="fpsBtn" type="button">Wreckers' Night · FPS</button>
       </div>
       <section class="together" id="together" aria-labelledby="togetherHead">
         <h2 id="togetherHead">Sail together · up to 8 ships</h2>
@@ -730,6 +754,32 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
           <li><b>Crew</b> sail with up to seven friends. Ships close together keep her back and patch each other's planks. Share flares, chat in the crew screen, and watch your crew after your own voyage ends. Keys 1 to 4 (or the hail buttons on a phone) call Here!, Help!, Follow me and Maren close to your crew. The first ship into harbour wins 3 bonus crates for every other ship in the crew</li>
           <li><b>Close shaves</b> slip past a rock at speed (over 15 knots) with under 2.5 m to spare and it counts as a close shave on your end card</li>
         </ul>
+      </details>
+    </div>
+
+    <div class="card fpscard" id="fpsTitle" aria-labelledby="fpsHead">
+      <div class="cardtop"><span class="eyebrow">A new game · multiplayer · first person</span></div>
+      <h1 id="fpsHead">Wreckers' Night</h1>
+      <p>Leave the ship. Go ashore on the skerry with a pepperbox pistol and a lantern, and shoot it out with whoever else is on the island tonight. Nothing here touches your voyages, crates or crew.</p>
+      <div class="weaponpick" role="group" aria-label="Your weapon">
+        <button class="pick on" type="button" aria-pressed="true"><svg viewBox="0 0 64 40" width="58" height="36" aria-hidden="true"><g fill="none" stroke="#cfc4a8" stroke-width="1.6" stroke-linejoin="round"><rect x="6" y="9" width="30" height="12" rx="3" fill="#2c2d33"/><path d="M8 12h26M8 15h26M8 18h26" stroke="#55565e" stroke-width="1"/><rect x="34" y="8" width="11" height="13" fill="#3a3c42"/><path d="M38 8l10-4" stroke="#1c1d22" stroke-width="2.5"/><path d="M44 21c2 6 0 12 4 15h9c-2-7-3-12-5-15z" fill="#5a3620"/><path d="M38 21c0 5 4 6 6 5" stroke="#8a6a2c"/><rect x="34" y="7" width="2" height="15" fill="#8a6a2c" stroke="none"/></g></svg><b>Pepperbox</b><small>6 shots · pistol</small></button>
+        <button class="pick soon" type="button" disabled aria-label="Weapon slot 2, coming soon"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><rect x="5" y="11" width="14" height="10" rx="1.5"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></g></svg><b>?</b><small>Coming soon</small></button><button class="pick soon" type="button" disabled aria-label="Weapon slot 3, coming soon"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><rect x="5" y="11" width="14" height="10" rx="1.5"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></g></svg><b>?</b><small>Coming soon</small></button><button class="pick soon" type="button" disabled aria-label="Weapon slot 4, coming soon"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><rect x="5" y="11" width="14" height="10" rx="1.5"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></g></svg><b>?</b><small>Coming soon</small></button><button class="pick soon" type="button" disabled aria-label="Weapon slot 5, coming soon"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><rect x="5" y="11" width="14" height="10" rx="1.5"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></g></svg><b>?</b><small>Coming soon</small></button>
+      </div>
+      <div class="btnrow">
+        <button class="primary" id="fpsPlay" type="button">Go ashore</button>
+        <button class="tool" id="fpsSettings" type="button">Settings</button>
+      </div>
+      <section class="together" aria-labelledby="fpsTogetherHead">
+        <h2 id="fpsTogetherHead">On the island · up to 8 players</h2>
+        <p id="fpsStatus">Looking for other players…</p>
+        <div class="nickrow"><label for="fpsNick">Your name</label><input id="fpsNick" type="text" maxlength="16" autocomplete="nickname" placeholder="Wrecker"></div>
+      </section>
+      <details class="howto">
+        <summary>How to play</summary>
+        <p>Light is everything. The lighthouse beam sweeps the island and shows anyone it crosses. Your lantern lets you see, and lets everyone see you. Flares light a wide circle for all. Ring the bell and everyone shows on your bearing strip, and you on theirs. The drowned crew wade ashore now and then. Keep out of trouble for a few seconds and you patch yourself up. Rounds last five minutes and the island moves to a new sea each round. Wreckers (bots) fill the island up to four.</p>
+        <p><b>Keyboard and mouse:</b> click to aim · WASD walk · Shift run · click fire · R reload · L lantern · F flare · B or Space bell · Tab scores · Esc menu.</p>
+        <p><b>Controller:</b> sticks walk and aim · RT fire · X reload · Y lantern · B flare · LB bell · Back scores · Start menu.</p>
+        <p><b>Touch:</b> put your left thumb down anywhere on the left to walk (push to the edge to run); drag on the right to aim, tap there to fire; or hold Fire and drag it to aim and shoot with one thumb. Aiming eases onto anyone you can see near the crosshair.</p>
       </details>
     </div>
   </div>
@@ -860,21 +910,6 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
     </div>
   </div>
 
-  <div class="overlay" id="fpsCard" hidden role="dialog" aria-modal="true" aria-labelledby="fpsHead">
-    <div class="card">
-      <span class="eyebrow">A separate game · multiplayer · first person</span>
-      <h1 id="fpsHead">Wreckers' Night</h1>
-      <p>Leave the ship. Go ashore on the skerry with a pepperbox pistol and a lantern, and shoot it out with whoever else is on the island tonight. Nothing here touches your voyages, crates or crew.</p>
-      <p>Light is everything. The lighthouse beam sweeps the island and shows anyone it crosses. Your lantern lets you see, and lets everyone see you. Flares light a wide circle for all. Ring the bell and everyone shows on your bearing strip, and you on theirs. The drowned crew wade ashore now and then. Keep out of trouble for a few seconds and you patch yourself up. Rounds last five minutes and the island moves to a new sea each round.</p>
-      <div class="nickrow"><label for="fpsNick">Your name</label><input id="fpsNick" type="text" maxlength="16" autocomplete="nickname" placeholder="Wrecker"></div>
-      <p class="setnote" id="fpsStatus"></p>
-      <p class="setnote"><b>Keyboard and mouse:</b> click to aim · WASD walk · Shift run · click fire · R reload · L lantern · F flare · B or Space bell · Tab scores · Esc menu. <b>Controller:</b> sticks walk and aim · RT fire · X reload · Y lantern · B flare · LB bell · Back scores · Start menu. <b>Touch:</b> put your left thumb down anywhere on the left to walk (push to the edge to run); drag on the right to aim, tap there to fire; or hold Fire and drag it to aim and shoot with one thumb. Aiming eases onto anyone you can see near the crosshair.</p>
-      <div class="btnrow">
-        <button class="primary" id="fpsPlay" type="button">Go ashore</button>
-        <button class="tool" id="fpsBack" type="button">Back</button>
-      </div>
-    </div>
-  </div>
   <div class="overlay pausecard" id="fpsMenu" hidden role="dialog" aria-modal="true" aria-labelledby="fpsMenuHead">
     <div class="card">
       <span class="eyebrow">Wreckers' Night carries on without you</span>
@@ -11451,16 +11486,13 @@ function fpsSkin() { try { return mySkin(); } catch (e) { return { hull: '#3a2a1
 function fpsColours() { const s = fpsSkin(); return [s.hull, s.sail, s.rail, s.lantern || '#ffd88a']; }
 
 // ---------- entering and leaving ----------
-function fpsOpen() {
-  try { audioInit(); } catch (e) {}
-  $('titleCard').hidden = true;
-  $('fpsCard').hidden = false;
-  const n = $('fpsNick'); if (n && !n.value) n.value = NET.nick || ($('nick') && $('nick').value) || '';
+// the Wreckers' Night card on the title screen: keep its count of players and its name box up to date
+function fpsTitleTick() {
+  if (state !== 'title' || $('titleCard').hidden) return;
+  const n = $('fpsNick'); if (n && !n.value && document.activeElement !== n) n.value = NET.nick || ($('nick') && $('nick').value) || '';
   fpsLobbyStatus();
-  if (!FPS.lobbyTimer) FPS.lobbyTimer = setInterval(() => { if (!$('fpsCard').hidden) fpsLobbyStatus(); }, 1000);
-  setTimeout(() => $('fpsPlay').focus(), 30);
 }
-function fpsCloseCard() { $('fpsCard').hidden = true; $('titleCard').hidden = false; }
+setInterval(fpsTitleTick, 1000);
 function fpsLobbyStatus() {
   const n = fpsPeers().length;
   $('fpsStatus').textContent = NET.status === 'ready'
@@ -11475,7 +11507,8 @@ function fpsStart() {
   FPS.saved = { state };
   state = 'fps';
   paused = false;
-  $('fpsCard').hidden = true; $('titleCard').hidden = true; $('hud').hidden = true; $('logbox').hidden = true; $('biomeBanner').hidden = true;
+  try { audioInit(); } catch (e) {}
+  $('titleCard').hidden = true; $('hud').hidden = true; $('logbox').hidden = true; $('biomeBanner').hidden = true;
   $('stage').classList.add('fpsmode');
   FPS.touch = matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window && navigator.maxTouchPoints > 0;
   $('fpsPad').hidden = !FPS.touch; FPS.hintT = 8; if (FPS.touch) fpsSafeArea();
@@ -12410,13 +12443,12 @@ const fpsTouchEnd = e => {
 addEventListener('touchend', fpsTouchEnd, true); addEventListener('touchcancel', fpsTouchEnd, true);
 
 // the buttons
-$('fpsBtn').addEventListener('click', fpsOpen);
-$('fpsBack').addEventListener('click', fpsCloseCard);
+$('fpsBanner').addEventListener('click', () => { const c = $('fpsTitle'); c.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' }); setTimeout(() => $('fpsPlay').focus({ preventScroll: true }), 400); });
 $('fpsPlay').addEventListener('click', fpsStart);
+$('fpsSettings').addEventListener('click', () => $('titleSettings').click());
 $('fpsNick').addEventListener('keydown', e => { if (e.key === 'Enter') fpsStart(); });
 $('fpsResume').addEventListener('click', () => fpsSetMenu(false));
 $('fpsLeave').addEventListener('click', fpsStop);
-$('fpsCard').addEventListener('keydown', e => { if (e.key === 'Escape') fpsCloseCard(); });
 for (const [id, fn] of [['fpsPadReload', fpsReload], ['fpsPadLantern', fpsLantern], ['fpsPadFlare', fpsFlare], ['fpsPadBell', fpsBell], ['fpsPadMenu', () => fpsSetMenu(true)], ['fpsPadBoard', () => { FPS.board = !FPS.board; }]]) {
   $(id).addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); fn(); });
 }

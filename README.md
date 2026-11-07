@@ -114,7 +114,7 @@ Settings → Graphics switches between **3D** and **Classic** (the original pain
 
 ## Wreckers' Night (multiplayer FPS)
 
-A separate game mode, from the **Wreckers' Night · FPS** button on the title screen. You go ashore on foot on a skerry at night with a six-shot pepperbox pistol and a lantern, and shoot it out with everyone else on the island. It never touches your voyages, crates, cosmetics or crew; your equipped skin only colours your coat and lantern.
+A separate game with its own card on the title screen, below Skerry Light (a banner at the top of the title screen points to it). The card has the weapon picker (the pepperbox now, four slots waiting for more weapons), Go ashore, Settings, your name, who's on the island, and how to play. You go ashore on foot on a skerry at night with a six-shot pepperbox pistol and a lantern, and shoot it out with everyone else on the island. It never touches your voyages, crates, cosmetics or crew; your equipped skin only colours your coat and lantern.
 
 - **Light:** you only see what light reaches. The lighthouse beam sweeps the island and shows anyone it crosses (a warning tells you when you're in it). Your lantern (L) lights what's near you, and shows you to the whole island while it burns. Flares (F, two a life) light a wide circle for everyone.
 - **The bell** (B or Space): everyone shows on your bearing strip for a few seconds, and you show on theirs.
