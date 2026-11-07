@@ -93,7 +93,7 @@ function fpsStart() {
   FPS.me = { id: NET.sid, x: FPSC.CX, y: FPSC.CY, h: 0, p: 0, v: 0, z: 0, rudder: 0, bob: 0, boat: 'brig', inv: 0, pitch: 0,
     hp: FPSC.HP, ammo: FPSC.MAG, reload: 0, cd: 0, flares: FPSC.FLARES, lan: true, dead: 0, protect: 0, killer: null };
   FPS.kb = {}; FPS.deaths = 0; FPS.seq = 0; FPS.shots = []; FPS.seenSeq = {}; FPS.hist = []; FPS.host = false; FPS.joinedAt = performance.now(); FPS.ai = null; FPS.remote.clear(); FPS.feed = []; FPS.pings = []; FPS.tracers = []; FPS.parts = []; FPS.drowned = [];
-  FPS.bots = []; FPS.drownT = 25; FPS.roundMsg = null; FPS.menu = false; $('fpsMenu').hidden = true;
+  FPS.bots = []; FPS.drownT = 25; FPS.roundMsg = null; FPS.menu = false; if (FPS.wcRound !== FPS.round) { FPS.wcK = 0; FPS.wcRound = FPS.round; } $('fpsMenu').hidden = true;
   fpsRespawn(FPS.me);
   fpsSend(true);
   fpsFeed('You come ashore on the skerry. Keep out of the beam.');
@@ -577,7 +577,8 @@ function fpsFrame(dt) {
     if (rn !== FPS.round) {
       const top = fpsScores()[0];
       FPS.roundMsg = { t: 6, text: top && top.k > 0 ? `${top.me ? 'You' : top.n} won the round with ${top.k} ${top.k === 1 ? 'kill' : 'kills'}.` : 'The round is over.' };
-      FPS.round = rn; FPS.kb = {}; FPS.deaths = 0;
+      if (typeof wcEarn === 'function') wcEarn('round');   // weapon crates (src/wcrates.js)
+      FPS.round = rn; FPS.kb = {}; FPS.deaths = 0; FPS.wcK = 0; FPS.wcRound = rn;
       if (FPS.host) for (const b of FPS.bots) { b.kb = {}; b.d = 0; b.prevKb = {}; }
       for (const r of FPS.remote.values()) r.prevKb = {};
       G.biome = FPS_SEAS[rn % FPS_SEAS.length];
@@ -602,6 +603,8 @@ function fpsFrame(dt) {
     for (const p of FPS.parts) { p.t -= dt; p.x += p.vx * dt; p.y += p.vy * dt; p.z += p.vz * dt; p.vz -= 9 * dt; }
     FPS.parts = FPS.parts.filter(p => p.t > 0);
     fpsNetTick(dt);
+    // weapon crates: each new kill this round (kills only ever count up from the round's best so far)
+    if (typeof wcEarn === 'function') { const mine = fpsScores().find(p => p.me), k = mine ? mine.k : 0; while ((FPS.wcK || 0) < k) { FPS.wcK = (FPS.wcK || 0) + 1; wcEarn('kill'); } }
     fpsRemember(m, performance.now());
     fpsAiTick(dt);
     fpsDraw();
