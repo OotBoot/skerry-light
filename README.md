@@ -121,7 +121,8 @@ A separate game mode, from the **Wreckers' Night · FPS** button on the title sc
 - **Cover:** the skerries and old wrecks stop shots. Head shots do double damage. Four hits and you're down; you're back ashore 3.5 seconds later, somewhere away from everyone else, and patch yourself up after a few quiet seconds.
 - **The drowned crew** wade ashore now and then and go for whoever is nearest.
 - **Rounds** last five minutes on the clock, so everyone's round ends together; the scores reset and the island moves to the next of the six seas.
-- **Alone,** three wreckers (bots) keep you company; they leave as soon as another player comes ashore.
+- **Wreckers (bots)** fill the island up to four people, and step aside as players come ashore. They and the drowned crew are run by one player (whoever has the lowest id on the island) and shown the same to everyone; if that player leaves, the next one carries them on where they were.
+- **Fair hits:** a shot travels as an event (where it was fired from and which way). Whoever it was aimed at checks it against where they really were over the last third of a second, rocks included, so ducking into cover in time always counts. The host judges shots at the wreckers and the drowned the same way.
 - **Controls:** mouse and keyboard (click to aim, WASD, Shift to run, click to fire, R reload, Tab scores, Esc menu), a controller (sticks, RT fire, X reload, Y lantern, B flare, LB bell), or touch (left thumb walks, right thumb aims, on-screen buttons).
 
 It uses the same connection as crews (the claude.ai room, or the crew server), on its own key in presence, so the two never mix; the server relays island players to each other at full rate.

@@ -11377,10 +11377,15 @@ function cursorClick() {
 //  - Your colours are your equipped skin's.
 // Rounds last five minutes on the wall clock, so everyone's round turns over together, and each
 // round the island moves to the next of the six seas.
+// Fair hits: a shot travels as an event (where it was fired from, which way). Whoever it's aimed at
+// checks it against where they really were over the last few tenths of a second, rocks included,
+// so ducking behind cover in time always counts. The wreckers (bots) and the drowned crew are run
+// by one player (the host: the lowest id on the island) and shown to everyone the same.
 // Connected through the same room or server as crews, but on its own key (`fps`) in presence, so
 // the two never mix. Alone, a few wreckers (bots) keep you company.
 
 const FPSC = {
+  PLAYERS: 4, LAG: 0.35,
   CX: 0, CY: 640, R: 140, GROUND: 0.35, EYE: 1.7, BODY: 0.55, TALL: 1.85,
   SPEED: 6.5, SPRINT: 10, HP: 4, MAG: 6, RATE: 0.26, RELOAD: 1.7, RESPAWN: 3.5, FLARES: 2,
   ROUND: 300000, PERIOD: 16, RANGE: 420, SEND: 0.1, BOTS: 3, PROTECT: 2,
@@ -11388,7 +11393,7 @@ const FPSC = {
 const FPS = {
   on: false, saved: null, g: null, me: null, keys: {}, mouse: false, look: [0, 0],
   remote: new Map(), bots: [], drowned: [], tracers: [], parts: [], feed: [], pings: [],
-  round: 0, sh: {}, kb: {}, deaths: 0, seenSh: {}, fire: 0, bell: 0, flare: 0, flareAt: [0, 0],
+  round: 0, kb: {}, deaths: 0, seq: 0, shots: [], seenSeq: {}, hist: [], host: false, joinedAt: 0, bell: 0, flare: 0, flareAt: [0, 0],
   sendT: 0, hitT: 0, hurtT: 0, flash: 0, recoil: 0, step: 0, board: false, menu: false,
   roundMsg: null, drownT: 30, lastBoard: [], stick: null, lookTouch: null,
 };
@@ -11455,7 +11460,7 @@ function fpsStart() {
   FPS.g = fpsArena(FPS.round);
   FPS.me = { id: NET.sid, x: FPSC.CX, y: FPSC.CY, h: 0, p: 0, v: 0, z: 0, rudder: 0, bob: 0, boat: 'brig', inv: 0, pitch: 0,
     hp: FPSC.HP, ammo: FPSC.MAG, reload: 0, cd: 0, flares: FPSC.FLARES, lan: true, dead: 0, protect: 0, killer: null };
-  FPS.sh = {}; FPS.kb = {}; FPS.deaths = 0; FPS.seenSh = {}; FPS.remote.clear(); FPS.feed = []; FPS.pings = []; FPS.tracers = []; FPS.parts = []; FPS.drowned = [];
+  FPS.kb = {}; FPS.deaths = 0; FPS.seq = 0; FPS.shots = []; FPS.seenSeq = {}; FPS.hist = []; FPS.host = false; FPS.joinedAt = performance.now(); FPS.ai = null; FPS.remote.clear(); FPS.feed = []; FPS.pings = []; FPS.tracers = []; FPS.parts = []; FPS.drowned = [];
   FPS.bots = []; FPS.drownT = 25; FPS.roundMsg = null; FPS.menu = false; $('fpsMenu').hidden = true;
   fpsRespawn(FPS.me);
   fpsSend(true);
@@ -11488,49 +11493,73 @@ function fpsPeers() {
   }
   return out;
 }
+const fr1 = v => Math.round(v * 10) / 10, fr2 = v => Math.round(v * 100) / 100;
 function fpsSend(force) {
   if (!NET.room) return;
-  const m = FPS.me, r1 = v => Math.round(v * 10) / 10, r2 = v => Math.round(v * 100) / 100;
-  NET.room.presence({ fps: {
-    id: NET.sid, n: FPS.nick, r: FPS.round, x: r1(m.x), y: r1(m.y), h: r2(m.h), p: r2(m.p), hp: m.hp, dead: m.dead > 0 ? 1 : 0,
-    lan: m.lan ? 1 : 0, fire: FPS.fire, sh: FPS.sh, kb: FPS.kb, d: FPS.deaths, bl: FPS.bell, fl: [FPS.flare, r1(FPS.flareAt[0]), r1(FPS.flareAt[1])],
-    c: fpsColours(), wk: m.walk ? 1 : 0,
-  } }).catch(() => {});
+  const m = FPS.me;
+  const out = {
+    id: NET.sid, n: FPS.nick, r: FPS.round, x: fr1(m.x), y: fr1(m.y), h: fr2(m.h), p: fr2(m.p), hp: m.hp, dead: m.dead > 0 ? 1 : 0,
+    lan: m.lan ? 1 : 0, sh: FPS.shots, kb: FPS.kb, d: FPS.deaths, bl: FPS.bell, fl: [FPS.flare, fr1(FPS.flareAt[0]), fr1(FPS.flareAt[1])],
+    c: fpsColours(), wk: m.walk ? 1 : 0, ai: null,
+  };
+  // the host shares the wreckers and the drowned
+  if (FPS.host) out.ai = {
+    b: FPS.bots.map(b => [b.id, b.n, fr1(b.x), fr1(b.y), fr2(b.h), b.hp, b.dead > 0 ? 1 : 0, b.lan ? 1 : 0, b.ci, b.walk ? 1 : 0, b.d, b.kb]),
+    dr: FPS.drowned.map(d => [d.id, fr1(d.x), fr1(d.y), d.hp, fr2(d.rise)]),
+  };
+  NET.room.presence({ fps: out }).catch(() => {});
+}
+// who runs the wreckers and the drowned: the lowest id on the island (after a moment to hear from everyone)
+function fpsPickHost() {
+  let low = NET.sid;
+  for (const id of FPS.remote.keys()) if (id < low) low = id;
+  const was = FPS.host;
+  FPS.host = low === NET.sid && (performance.now() - FPS.joinedAt > 1500 || !NET.room);
+  if (FPS.host && !was) {
+    // taking over: carry on from where the last host left them
+    for (const b of FPS.bots) { if (b.tx != null) { b.x = b.tx; b.y = b.ty; b.h = b.th; } b.cd = 1; b.goal = null; b.see = 0; b.hist = []; }
+    for (const d of FPS.drowned) { if (d.tx != null) { d.x = d.tx; d.y = d.ty; } d.bite = 0; d.hist = []; }
+  }
 }
 function fpsNetTick(dt) {
   const seen = new Set();
+  let hostAi = null, hostId = null;
   for (const f of fpsPeers()) {
     seen.add(f.id);
     let r = FPS.remote.get(f.id);
     if (!r) {
-      r = { id: f.id, x: f.x, y: f.y, h: f.h, p: f.p, fire: f.fire, bl: f.bl, fl: f.fl ? f.fl[0] : 0, hitT: 0, flashT: 0, dead: f.dead, d: f.d || 0, kills: 0 };
+      r = { id: f.id, x: f.x, y: f.y, h: f.h, p: f.p, bl: f.bl, fl: f.fl ? f.fl[0] : 0, hitT: 0, flashT: 0, dead: f.dead, d: f.d || 0, prevKb: Object.assign({}, f.kb || {}) };
       FPS.remote.set(f.id, r);
-      FPS.seenSh[f.id] = (f.sh && f.sh[NET.sid]) || 0;
+      // ignore shots fired before we arrived
+      FPS.seenSeq[f.id] = Array.isArray(f.sh) && f.sh.length ? f.sh[f.sh.length - 1][0] : 0;
       fpsFeed(`${f.n || 'A wrecker'} came ashore.`);
     }
     r.n = f.n || 'Wrecker'; r.tx = f.x; r.ty = f.y; r.th = f.h; r.p = f.p; r.hp = f.hp; r.lan = !!f.lan; r.c = Array.isArray(f.c) ? f.c : null; r.walk = !!f.wk;
     r.kb = f.r === FPS.round && f.kb && typeof f.kb === 'object' ? f.kb : {};
     r.r = f.r;
     if (f.dead && !r.dead) { r.x = f.x; r.y = f.y; }
-    if (!f.dead && r.dead) { r.x = f.x; r.y = f.y; r.h = f.h; }   // respawned: jump, don't slide
-    // a death: the victim names its killer
+    if (!f.dead && r.dead) { r.x = f.x; r.y = f.y; r.h = f.h; }   // back ashore: jump, don't slide
     if ((f.d || 0) > r.d && f.r === FPS.round) {
-      const killer = fpsKillerOf(f, r);
+      const killer = fpsKillerOf(r.kb, r);
       fpsFeed(killer ? `${killer} shot ${r.n}.` : `${r.n} was taken by the sea.`);
-    }
+    } else r.prevKb = Object.assign({}, r.kb);
     r.d = f.d || 0; r.dead = f.dead;
-    // shots fired: a flash at the muzzle and the crack, quieter with distance
-    if (f.fire > r.fire) { r.flashT = 0.12; fpsGunSound(Math.hypot(f.x - FPS.me.x, f.y - FPS.me.y), angDiff(bearingOf(f.x - FPS.me.x, f.y - FPS.me.y), FPS.me.h)); fpsTracer(r, f); }
-    r.fire = f.fire;
     if (f.bl > r.bl) { FPS.pings.push({ x: f.x, y: f.y, t: 4, n: r.n }); fpsBellSound(Math.hypot(f.x - FPS.me.x, f.y - FPS.me.y)); }
     r.bl = f.bl;
-    if (f.fl && f.fl[0] > r.fl) { FPS.g.flares.push({ x: f.fl[1], y: f.fl[2], t: SK.FLARE_TIME, skin: FLARES[0] }); }
+    if (f.fl && f.fl[0] > r.fl) FPS.g.flares.push({ x: f.fl[1], y: f.fl[2], t: SK.FLARE_TIME, skin: FLARES[0] });
     if (f.fl) r.fl = f.fl[0];
-    // hits they've landed on me
-    const n = (f.sh && f.sh[NET.sid]) || 0, prev = FPS.seenSh[f.id] || 0;
-    if (n > prev) { FPS.seenSh[f.id] = n; fpsHurt(n - prev, f.id, r.n); }
+    if (f.ai && typeof f.ai === 'object' && (hostId == null || f.id < hostId)) { hostAi = f.ai; hostId = f.id; }
   }
   for (const id of [...FPS.remote.keys()]) if (!seen.has(id)) { fpsFeed(`${FPS.remote.get(id).n} left the island.`); FPS.remote.delete(id); }
+  fpsPickHost();
+  if (!FPS.host && hostAi) fpsMirrorAi(hostAi);
+  // shots: everyone's new ones, checked against me (and, as host, against the wreckers and the drowned)
+  for (const f of fpsPeers()) {
+    if (!Array.isArray(f.sh)) continue;
+    const last = FPS.seenSeq[f.id] || 0;
+    for (const sh of f.sh) if (Array.isArray(sh) && sh[0] > last) fpsIncoming(sh, f);
+    if (f.sh.length) FPS.seenSeq[f.id] = Math.max(last, f.sh[f.sh.length - 1][0]);
+  }
   // smooth everyone towards where they last said they were
   const k = Math.min(1, dt * 12);
   for (const r of FPS.remote.values()) {
@@ -11538,15 +11567,53 @@ function fpsNetTick(dt) {
     r.x += (r.tx - r.x) * k; r.y += (r.ty - r.y) * k; r.h += angDiff(r.th, r.h) * k;
     if (r.flashT > 0) r.flashT -= dt; if (r.hitT > 0) r.hitT -= dt;
   }
+  if (!FPS.host) {
+    for (const b of FPS.bots) if (b.tx != null) { b.x += (b.tx - b.x) * k; b.y += (b.ty - b.y) * k; b.h += angDiff(b.th, b.h) * k; }
+    for (const d of FPS.drowned) if (d.tx != null) { d.x += (d.tx - d.x) * k; d.y += (d.ty - d.y) * k; }
+  }
   FPS.sendT -= dt;
   if (FPS.sendT <= 0) { FPS.sendT = FPSC.SEND; fpsSend(); }
 }
-function fpsKillerOf(f, r) {
-  // the victim's kill book grew for someone: that's who
-  const prev = r.prevKb || {}, now = f.kb || {};
-  r.prevKb = Object.assign({}, now);
-  for (const id in now) if ((now[id] || 0) > (prev[id] || 0)) return id === NET.sid ? 'You' : FPS.remote.get(id) ? FPS.remote.get(id).n : (FPS.bots.find(b => b.id === id) || {}).n || 'someone';
+// the host's wreckers and drowned, shown here
+const FPS_BOT_COLS = [['#2a3a4a', '#c8c0aa', '#6a4a2a', '#ffd88a'], ['#4a2420', '#d8ccb4', '#8a6a3a', '#ffb070'], ['#25352a', '#cfc8b0', '#5a4a3a', '#d8f0ff'], ['#3a2a40', '#d0c4d8', '#6a5a7a', '#e8c8ff']];
+function fpsMirrorAi(ai) {
+  const old = new Map(FPS.bots.map(b => [b.id, b])), bots = [];
+  for (const a of Array.isArray(ai.b) ? ai.b : []) {
+    if (!Array.isArray(a)) continue;
+    let b = old.get(a[0]);
+    if (!b) b = { id: a[0], bot: true, x: a[2], y: a[3], h: a[4], hitT: 0, flashT: 0, prevKb: {}, d: a[10] || 0 };
+    b.n = a[1]; b.tx = a[2]; b.ty = a[3]; b.th = a[4]; b.hp = a[5]; b.lan = !!a[7]; b.ci = a[8]; b.c = FPS_BOT_COLS[(a[8] || 0) % FPS_BOT_COLS.length]; b.walk = !!a[9];
+    const dead = a[6] ? 1 : 0;
+    if (!dead && b.dead > 0) { b.x = b.tx; b.y = b.ty; }
+    b.dead = dead;
+    b.kb = a[11] && typeof a[11] === 'object' ? a[11] : {};
+    if ((a[10] || 0) > (b.d || 0)) { const killer = fpsKillerOf(b.kb, b); fpsFeed(killer ? `${killer} shot ${b.n}.` : `${b.n} went down.`); }
+    else b.prevKb = Object.assign({}, b.kb);
+    b.d = a[10] || 0;
+    bots.push(b);
+  }
+  FPS.bots = bots;
+  const oldD = new Map(FPS.drowned.map(d => [d.id, d])), dr = [];
+  for (const a of Array.isArray(ai.dr) ? ai.dr : []) {
+    if (!Array.isArray(a)) continue;
+    let d = oldD.get(a[0]);
+    if (!d) { d = { drowned: true, id: a[0], n: 'a drowned man', x: a[1], y: a[2], ph: Math.random() * 6, hitT: 0 }; fpsFeed('Something is wading ashore.'); }
+    d.tx = a[1]; d.ty = a[2]; d.hp = a[3]; d.rise = a[4];
+    dr.push(d);
+  }
+  FPS.drowned = dr;
+}
+// whose name went up in someone's kill book since last time
+function fpsKillerOf(now, who) {
+  const prev = who.prevKb || {};
+  who.prevKb = Object.assign({}, now);
+  for (const id in now) if ((now[id] || 0) > (prev[id] || 0)) return fpsNameOf(id);
   return null;
+}
+function fpsNameOf(id) {
+  if (id === NET.sid || id === FPS.me.id) return 'You';
+  const r = FPS.remote.get(id); if (r) return r.n;
+  const b = FPS.bots.find(o => o.id === id); return b ? b.n : 'someone';
 }
 
 // ---------- the people on the island ----------
@@ -11594,7 +11661,8 @@ function fpsSeeAt(x, y, theirLantern) {
 
 // ---------- shooting ----------
 // the first thing along a ray from (x, y, z) heading h, pitched p: a person, a rock, a wreck or the ground
-function fpsRay(x, y, z, h, p, skipId) {
+// (targets: who can be hit; everyone on the island unless given)
+function fpsRay(x, y, z, h, p, skipId, targets) {
   const sx = Math.sin(h), sy = Math.cos(h), tp = Math.tan(p);
   let best = { t: FPSC.RANGE, kind: 'none' };
   if (p < -0.001) { const tg = (z - FPSC.GROUND) / -tp; if (tg < best.t) best = { t: tg, kind: 'ground' }; }
@@ -11612,10 +11680,9 @@ function fpsRay(x, y, z, h, p, skipId) {
     const t = circle(o.x, o.y, o.r * 0.6); if (t == null || t > best.t) continue;
     if (z + tp * Math.max(0, t) < o.r * 0.45) best = { t: Math.max(0, t), kind: 'wreck' };
   }
-  const targets = [];
-  for (const o of fpsEveryone()) if (o.id !== skipId && !(o.dead > 0)) targets.push(o);
-  for (const d of FPS.drowned) targets.push(d);
+  if (!targets) { targets = []; for (const o of fpsEveryone()) if (!(o.dead > 0)) targets.push(o); for (const d of FPS.drowned) targets.push(d); }
   for (const o of targets) {
+    if (o.id === skipId) continue;
     const t = circle(o.x, o.y, FPSC.BODY); if (t == null || t > best.t) continue;
     const hz = z + tp * t - FPSC.GROUND;
     if (hz < 0 || hz > FPSC.TALL + 0.1) continue;
@@ -11624,23 +11691,67 @@ function fpsRay(x, y, z, h, p, skipId) {
   best.x = x + sx * best.t; best.y = y + sy * best.t; best.z = z + tp * best.t;
   return best;
 }
+// where someone has been lately, for judging shots fairly
+function fpsRemember(o, now) {
+  (o.hist = o.hist || []).push({ t: now, x: o.x, y: o.y });
+  while (o.hist.length && now - o.hist[0].t > FPSC.LAG * 1000 + 100) o.hist.shift();
+}
+// did this shot hit them, at any place they've been in the last few tenths of a second?
+function fpsShotHits(sh, o) {
+  const [, x, y, z, h, p, by] = sh;
+  const places = (o.hist || []).concat([{ x: o.x, y: o.y }]);
+  for (let i = places.length - 1; i >= 0; i--) {
+    const at = places[i], who = { id: o.id, x: at.x, y: at.y };
+    const r = fpsRay(x, y, z, h, p, by, [who]);
+    if (r.kind === 'body') return r;
+  }
+  return null;
+}
+// a shot to pass on: [seq, x, y, z, heading, pitch, shooter]
+function fpsPublishShot(x, y, z, h, p, by) {
+  const sh = [++FPS.seq, fr1(x), fr1(y), fr2(z), Math.round(h * 1000) / 1000, Math.round(p * 1000) / 1000, by];
+  FPS.shots.push(sh); if (FPS.shots.length > 8) FPS.shots.shift();
+  FPS.sendT = 0;   // send it straight away
+  return sh;
+}
+// someone else's shot arriving
+function fpsIncoming(sh, f) {
+  const [, x, y, z, h, p, by] = sh;
+  // the flash, the crack and the streak
+  const shooter = by === f.id ? FPS.remote.get(f.id) : FPS.bots.find(b => b.id === by);
+  if (shooter) shooter.flashT = 0.12;
+  fpsGunSound(Math.hypot(x - FPS.me.x, y - FPS.me.y), angDiff(bearingOf(x - FPS.me.x, y - FPS.me.y), FPS.me.h));
+  const world = fpsRay(x, y, z, h, p, by);
+  FPS.tracers.push({ a: [x + Math.sin(h) * 0.6, y + Math.cos(h) * 0.6, z - 0.25], b: [world.x, world.y, world.z], t: 0.08 });
+  // me: judged against where I really was
+  const m = FPS.me;
+  if (!(m.dead > 0) && !(m.protect > 0)) {
+    const hit = fpsShotHits(sh, m);
+    if (hit) fpsHurt(hit.head ? 2 : 1, by, fpsNameOf(by));
+  }
+  // the host judges hits on the wreckers and the drowned
+  if (FPS.host) {
+    for (const b of FPS.bots) { if (b.id === by || b.dead > 0) continue; const hit = fpsShotHits(sh, b); if (hit) fpsBotHurt(b, hit.head ? 2 : 1, by); }
+    for (const d of FPS.drowned) { if (d.dead) continue; const hit = fpsShotHits(sh, d); if (hit) fpsDrownedHurt(d, hit.head ? 2 : 1); }
+  }
+}
 function fpsShoot() {
   const m = FPS.me;
   if (m.dead > 0 || m.reload > 0 || m.cd > 0 || FPS.menu) return;
   if (m.ammo <= 0) { fpsReload(); return; }
-  m.ammo--; m.cd = FPSC.RATE; FPS.fire++; FPS.flash = 0.07; FPS.recoil = 1;
+  m.ammo--; m.cd = FPSC.RATE; FPS.flash = 0.07; FPS.recoil = 1;
   m.protect = 0;
   fpsGunSound(0, 0);
   const z = FPSC.GROUND + FPSC.EYE;
+  fpsPublishShot(m.x, m.y, z, m.h, m.p, m.id);
   const hit = fpsRay(m.x, m.y, z, m.h, m.p, m.id);
   FPS.tracers.push({ a: [m.x + Math.sin(m.h) * 0.6 + Math.cos(m.h) * 0.3, m.y + Math.cos(m.h) * 0.6 - Math.sin(m.h) * 0.3, z - 0.25], b: [hit.x, hit.y, hit.z], t: 0.08 });
   if (hit.kind === 'body') {
+    // the hit marker is my best guess; the one I hit (or the host, for wreckers and the drowned) has the last word
     const dmg = hit.head ? 2 : 1, w = hit.who;
-    FPS.hitT = 0.18; FPS.hitHead = hit.head;
+    FPS.hitT = 0.18; FPS.hitHead = hit.head; w.hitT = 0.2;
     fpsHitSound(hit.head);
-    if (w.drowned) { w.hp -= dmg; w.hitT = 0.2; if (w.hp <= 0) { w.dead = 1; fpsFeed('You put a drowned man back in the sea.'); fpsPuff(w.x, w.y, FPSC.GROUND + 1, '170,210,200', 14); } }
-    else if (w.bot) fpsBotHurt(w, dmg, m.id);
-    else { FPS.sh[w.id] = (FPS.sh[w.id] || 0) + dmg; const r = FPS.remote.get(w.id); if (r) r.hitT = 0.2; fpsSend(); }
+    if (FPS.host || !NET.room || !FPS.remote.size) { if (w.drowned) fpsDrownedHurt(w, dmg); else if (w.bot) fpsBotHurt(w, dmg, m.id); }
   } else if (hit.kind !== 'none') fpsPuff(hit.x, hit.y, hit.z, hit.kind === 'ground' ? '150,140,120' : '190,190,180', 6);
   if (m.ammo <= 0) setTimeout(fpsReload, 250);
 }
@@ -11653,10 +11764,10 @@ function fpsHurt(n, fromId, fromName) {
 }
 function fpsDie(fromId, fromName) {
   const m = FPS.me;
-  m.hp = 0; m.dead = FPSC.RESPAWN; m.killer = fromName || null; m.lan = m.lan;
+  m.hp = 0; m.dead = FPSC.RESPAWN; m.killer = fromName && fromName !== 'You' ? fromName : null;
   FPS.deaths++;
   if (fromId) FPS.kb[fromId] = (FPS.kb[fromId] || 0) + 1;
-  fpsFeed(fromName ? `${fromName} shot you.` : 'The sea took you.');
+  fpsFeed(m.killer ? `${m.killer} shot you.` : 'The sea took you.');
   fpsSend();
 }
 function fpsFlare() {
@@ -11689,25 +11800,43 @@ function fpsHitSound(head) { try { tone(head ? 1250 : 900, 'square', 0.001, 0.06
 function fpsClick() { try { tone(420, 'square', 0.001, 0.05, 0.04); tone(300, 'square', 0.001, 0.05, 0.04, { delay: 0.5 }); } catch (e) {} }
 function fpsFeed(text) { FPS.feed.push({ text, t: 5 }); if (FPS.feed.length > 5) FPS.feed.shift(); }
 function fpsPuff(x, y, z, col, n) { for (let i = 0; i < n; i++) FPS.parts.push({ x, y, z, vx: (Math.random() - 0.5) * 3, vy: (Math.random() - 0.5) * 3, vz: Math.random() * 3, t: 0.6, c: col }); }
-function fpsTracer(r, f) {
-  const hit = fpsRay(f.x, f.y, FPSC.GROUND + FPSC.EYE, f.h, f.p || 0, f.id);
-  FPS.tracers.push({ a: [f.x + Math.sin(f.h) * 0.6, f.y + Math.cos(f.h) * 0.6, FPSC.GROUND + FPSC.EYE - 0.25], b: [hit.x, hit.y, hit.z], t: 0.08 });
-}
 
-// ---------- wreckers (bots), only when you're alone ----------
-function fpsBotsTick(dt) {
-  const want = FPS.remote.size === 0 ? FPSC.BOTS : 0;
+// ---------- wreckers (bots) and the drowned: run by the host, shown to everyone ----------
+function fpsAiTick(dt) {
+  const now = performance.now();
+  if (!FPS.host) {
+    // not the host: just their flashes and hit flashes fade, and the drowned can still bite me
+    for (const b of FPS.bots) { if (b.flashT > 0) b.flashT -= dt; if (b.hitT > 0) b.hitT -= dt; }
+    for (const d of FPS.drowned) { if (d.hitT > 0) d.hitT -= dt; d.ph = (d.ph || 0) + dt * 3; }
+    fpsBites(dt);
+    return;
+  }
+  fpsBotsTick(dt, now);
+  fpsDrownedTick(dt, now);
+  fpsBites(dt);
+}
+// a drowned man close enough to grab me does, about once a second
+function fpsBites(dt) {
+  const m = FPS.me; FPS.biteCd = (FPS.biteCd || 0) - dt;
+  if (m.dead > 0 || FPS.biteCd > 0) return;
+  if (FPS.drowned.some(d => !d.dead && (d.rise || 0) > 0.5 && Math.hypot(d.x - m.x, d.y - m.y) < 1.3)) { FPS.biteCd = 1.1; fpsHurt(1, null, null); }
+}
+function fpsBotsTick(dt, now) {
+  // enough wreckers to make four on the island, while there's room
+  const humans = 1 + FPS.remote.size, want = Math.max(0, FPSC.PLAYERS - humans);
   while (FPS.bots.length < want) {
-    const b = { id: 'bot' + FPS.bots.length + Math.random().toString(36).slice(2, 5), bot: true, n: FPS_BOT_NAMES[FPS.bots.length % FPS_BOT_NAMES.length], x: 0, y: 0, h: 0, p: 0,
-      c: [['#2a3a4a', '#c8c0aa', '#6a4a2a', '#ffd88a'], ['#4a2420', '#d8ccb4', '#8a6a3a', '#ffb070'], ['#25352a', '#cfc8b0', '#5a4a3a', '#d8f0ff']][FPS.bots.length % 3],
-      kb: {}, d: 0, lan: Math.random() < 0.5, cd: 1, aim: 0, goal: null, flashT: 0, hitT: 0, walk: false, see: 0 };
+    const used = new Set(FPS.bots.map(b => b.n)), n = FPS_BOT_NAMES.find(x => !used.has(x)) || 'Wrecker';
+    const ci = FPS_BOT_NAMES.indexOf(n) % FPS_BOT_COLS.length;
+    const b = { id: 'bot-' + Math.random().toString(36).slice(2, 7), bot: true, n, ci, c: FPS_BOT_COLS[ci], x: 0, y: 0, h: 0, p: 0,
+      kb: {}, d: 0, lan: Math.random() < 0.5, cd: 1, goal: null, flashT: 0, hitT: 0, walk: false, see: 0, hist: [] };
     fpsRespawn(b); b.protect = 0; FPS.bots.push(b);
   }
   while (FPS.bots.length > want) FPS.bots.pop();
   for (const b of FPS.bots) {
     if (b.flashT > 0) b.flashT -= dt; if (b.hitT > 0) b.hitT -= dt;
-    if (b.dead > 0) { b.dead -= dt; if (b.dead <= 0) { fpsRespawn(b); b.protect = 0; } continue; }
-    // pick the nearest target it can see
+    fpsRemember(b, now);
+    if (b.dead > 0) { b.dead -= dt; if (b.dead <= 0) { fpsRespawn(b); b.protect = 0; b.hist = []; } continue; }
+    // the nearest target it can see, with a clear line to it
     let tgt = null, td = 1e9;
     for (const o of fpsEveryone()) {
       if (o.id === b.id || o.dead > 0) continue;
@@ -11720,24 +11849,27 @@ function fpsBotsTick(dt) {
     }
     b.cd -= dt;
     if (tgt) {
-      const want_h = bearingOf(tgt.x - b.x, tgt.y - b.y);
-      b.h += angDiff(want_h, b.h) * Math.min(1, dt * 5);
+      const wantH = bearingOf(tgt.x - b.x, tgt.y - b.y);
+      b.h += angDiff(wantH, b.h) * Math.min(1, dt * 5);
       b.see += dt;
-      // close in a little, or back off if too close
       const step = (td > 45 ? 1 : td < 15 ? -0.6 : 0.3) * FPSC.SPEED * 0.6 * dt;
       b.walk = fpsMove(b, Math.sin(b.h) * step, Math.cos(b.h) * step);
-      if (b.cd <= 0 && b.see > 0.6 && Math.abs(angDiff(want_h, b.h)) < 0.15) {
+      if (b.cd <= 0 && b.see > 0.6 && Math.abs(angDiff(wantH, b.h)) < 0.15) {
         b.cd = 0.55 + Math.random() * 0.6; b.flashT = 0.12;
         fpsGunSound(Math.hypot(b.x - FPS.me.x, b.y - FPS.me.y), angDiff(bearingOf(b.x - FPS.me.x, b.y - FPS.me.y), FPS.me.h));
-        const moving = tgt.me ? (FPS.me.walk ? 0.65 : 1) : 1;
+        const moving = tgt.walk ? 0.65 : 1;
         const chance = Math.max(0.1, Math.min(0.55, 0.68 - td / 240)) * moving;
-        const miss = Math.random() > chance ? (Math.random() - 0.5) * 0.12 : 0;
-        const ray = fpsRay(b.x, b.y, FPSC.GROUND + FPSC.EYE, b.h + miss, miss ? 0.04 : -0.005, b.id);
-        FPS.tracers.push({ a: [b.x + Math.sin(b.h) * 0.6, b.y + Math.cos(b.h) * 0.6, FPSC.GROUND + FPSC.EYE - 0.25], b: [ray.x, ray.y, ray.z], t: 0.08 });
-        if (!miss && ray.kind === 'body') {
-          if (ray.who.me) fpsHurt(1, b.id, b.n);
-          else if (ray.who.bot) fpsBotHurt(ray.who, 1, b.id);
-          else if (ray.who.drowned) { ray.who.hp -= 1; if (ray.who.hp <= 0) ray.who.dead = 1; }
+        const err = Math.random() > chance ? (Math.random() < 0.5 ? -1 : 1) * (0.03 + Math.random() * 0.06) : 0;
+        const h = b.h + err, p = Math.atan2(FPSC.EYE * 0.55 - FPSC.EYE, td) + (err ? 0.02 : 0);
+        const z = FPSC.GROUND + FPSC.EYE;
+        // the shot goes out like anyone's: everyone else judges it against where they were
+        if (FPS.remote.size) fpsPublishShot(b.x, b.y, z, h, p, b.id);
+        const ray = fpsRay(b.x, b.y, z, h, p, b.id);
+        FPS.tracers.push({ a: [b.x + Math.sin(h) * 0.6, b.y + Math.cos(h) * 0.6, z - 0.25], b: [ray.x, ray.y, ray.z], t: 0.08 });
+        if (ray.kind === 'body') {
+          if (ray.who.me) fpsHurt(ray.head ? 2 : 1, b.id, b.n);
+          else if (ray.who.bot) fpsBotHurt(ray.who, ray.head ? 2 : 1, b.id);
+          else if (ray.who.drowned) fpsDrownedHurt(ray.who, 1);
         }
       }
     } else {
@@ -11761,34 +11893,37 @@ function fpsBotHurt(b, dmg, fromId) {
   if (b.hp <= 0) {
     b.dead = FPSC.RESPAWN; b.d++;
     if (fromId) b.kb[fromId] = (b.kb[fromId] || 0) + 1;
-    const who = fromId === FPS.me.id ? 'You' : (FPS.bots.find(o => o.id === fromId) || {}).n || 'Someone';
-    fpsFeed(`${who} shot ${b.n}.`);
+    b.prevKb = Object.assign({}, b.kb);
+    fpsFeed(`${fpsNameOf(fromId)} shot ${b.n}.`);
+    fpsSend();
   }
 }
-
-// ---------- the drowned crew wade ashore ----------
-function fpsDrownedTick(dt) {
+function fpsDrownedHurt(d, dmg) {
+  if (d.dead) return;
+  d.hp -= dmg; d.hitT = 0.2;
+  if (d.hp <= 0) { d.dead = 1; fpsFeed('A drowned man went back into the sea.'); fpsPuff(d.x, d.y, FPSC.GROUND + 1, '170,210,200', 14); }
+}
+function fpsDrownedTick(dt, now) {
   FPS.drownT -= dt;
   if (FPS.drownT <= 0 && FPS.drowned.length < 3) {
     FPS.drownT = 30 + Math.random() * 25;
     const a = Math.random() * 6.283;
-    FPS.drowned.push({ drowned: true, id: 'dr' + Math.random(), n: 'a drowned man', x: FPSC.CX + Math.cos(a) * (FPSC.R + 6), y: FPSC.CY + Math.sin(a) * (FPSC.R + 6), hp: 3, rise: 0, bite: 0, ph: Math.random() * 6, hitT: 0 });
+    FPS.drowned.push({ drowned: true, id: 'dr-' + Math.random().toString(36).slice(2, 7), n: 'a drowned man', x: FPSC.CX + Math.cos(a) * (FPSC.R + 6), y: FPSC.CY + Math.sin(a) * (FPSC.R + 6), hp: 3, rise: 0, bite: 0, ph: Math.random() * 6, hitT: 0, hist: [] });
     fpsFeed('Something is wading ashore.');
     try { sfxSplash(0, 0.5); } catch (e) {}
   }
   for (const d of FPS.drowned) {
     if (d.hitT > 0) d.hitT -= dt;
+    fpsRemember(d, now);
     d.rise = Math.min(1, d.rise + dt * 0.4); d.ph += dt * 3;
     let tgt = null, td = 1e9;
     for (const o of fpsEveryone()) { if (o.dead > 0) continue; const dd = Math.hypot(o.x - d.x, o.y - d.y); if (dd < td) { td = dd; tgt = o; } }
     if (!tgt) continue;
     const h = bearingOf(tgt.x - d.x, tgt.y - d.y), st = 2.6 * dt * d.rise;
     if (td > 1.1) { const nx = d.x + Math.sin(h) * st, ny = d.y + Math.cos(h) * st; if (!FPS.g.rocks.some(o => Math.hypot(o.x - nx, o.y - ny) < o.r)) { d.x = nx; d.y = ny; } else { d.x += Math.cos(h) * st; d.y -= Math.sin(h) * st; } }
+    // (people bite-check themselves; the host does it for the wreckers)
     d.bite -= dt;
-    if (td < 1.3 && d.bite <= 0) {
-      d.bite = 1.1;
-      if (tgt.me) fpsHurt(1, null, null); else if (tgt.bot) fpsBotHurt(tgt, 1, null);
-    }
+    if (td < 1.3 && d.bite <= 0 && tgt.bot) { d.bite = 1.1; fpsBotHurt(tgt, 1, null); }
   }
   FPS.drowned = FPS.drowned.filter(d => !d.dead);
 }
@@ -11810,7 +11945,7 @@ function fpsFrame(dt) {
       const top = fpsScores()[0];
       FPS.roundMsg = { t: 6, text: top && top.k > 0 ? `${top.me ? 'You' : top.n} won the round with ${top.k} ${top.k === 1 ? 'kill' : 'kills'}.` : 'The round is over.' };
       FPS.round = rn; FPS.kb = {}; FPS.deaths = 0;
-      for (const b of FPS.bots) { b.kb = {}; b.d = 0; }
+      if (FPS.host) for (const b of FPS.bots) { b.kb = {}; b.d = 0; b.prevKb = {}; }
       for (const r of FPS.remote.values()) r.prevKb = {};
       G.biome = FPS_SEAS[rn % FPS_SEAS.length];
       fpsRespawn(m); fpsSend(true);
@@ -11833,8 +11968,8 @@ function fpsFrame(dt) {
     for (const p of FPS.parts) { p.t -= dt; p.x += p.vx * dt; p.y += p.vy * dt; p.z += p.vz * dt; p.vz -= 9 * dt; }
     FPS.parts = FPS.parts.filter(p => p.t > 0);
     fpsNetTick(dt);
-    fpsBotsTick(dt);
-    fpsDrownedTick(dt);
+    fpsRemember(m, performance.now());
+    fpsAiTick(dt);
     fpsDraw();
   } finally { g = saved[0]; ship = saved[1]; }
 }
