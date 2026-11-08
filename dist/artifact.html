@@ -11583,7 +11583,8 @@ function cursorClick() {
 
 const FPSC = {
   PLAYERS: 4, LAG: 0.35,
-  CX: 0, CY: 640, R: 140, GROUND: 0.35, EYE: 1.7, BODY: 0.55, TALL: 1.85,
+  CX: 0, CY: 640, R: 88,   // (the island's radius: smaller now, so fights find you quicker)
+  GROUND: 0.35, EYE: 1.7, BODY: 0.55, TALL: 1.85,
   SPEED: 6.5, SPRINT: 10, HP: 4, MAG: 6, RATE: 0.26, RELOAD: 2.2, RESPAWN: 3.5, FLARES: 2,
   ROUND: 300000, PERIOD: 16, RANGE: 420, SEND: 0.1, BOTS: 3, PROTECT: 2,
   JUMP: 5.6, GRAV: 15,                       // a jump clears about a metre and lasts three-quarters of a second
@@ -11646,15 +11647,15 @@ function fpsArena(round) {
   const rng = seeded(0x5ee7 + 17);
   const R = (a, b) => a + rng() * (b - a);
   const rocks = [], wrecks = [];
-  const free = (x, y, r) => Math.hypot(x - FPSC.CX, y - FPSC.CY) < FPSC.R - r - 6 && !rocks.concat(wrecks).some(o => Math.hypot(o.x - x, o.y - y) < o.r + r + 9);
-  for (let tries = 0; rocks.length < 18 && tries < 2000; tries++) {
+  const free = (x, y, r) => Math.hypot(x - FPSC.CX, y - FPSC.CY) < FPSC.R - r - 5 && !rocks.concat(wrecks).some(o => Math.hypot(o.x - x, o.y - y) < o.r + r + 7);
+  for (let tries = 0; rocks.length < 13 && tries < 2000; tries++) {
     const a = R(0, 6.283), d = Math.sqrt(R(0.02, 1)) * (FPSC.R - 12), x = FPSC.CX + Math.cos(a) * d, y = FPSC.CY + Math.sin(a) * d, r = R(3, 9);
     if (!free(x, y, r)) continue;
     const prof = []; for (let i = 0; i < 7; i++) prof.push(R(0.35, 1)); prof[0] = R(0.15, 0.45); prof[6] = R(0.15, 0.45);
     rocks.push({ x, y, r, prof, ph: R(0, 6.28) });
   }
-  for (let tries = 0; wrecks.length < 3 && tries < 500; tries++) {
-    const a = R(0, 6.283), d = R(40, FPSC.R - 40), x = FPSC.CX + Math.cos(a) * d, y = FPSC.CY + Math.sin(a) * d, r = R(8, 12);
+  for (let tries = 0; wrecks.length < 2 && tries < 500; tries++) {
+    const a = R(0, 6.283), d = R(22, FPSC.R - 26), x = FPSC.CX + Math.cos(a) * d, y = FPSC.CY + Math.sin(a) * d, r = R(8, 12);
     if (!free(x, y, r)) continue;
     wrecks.push({ x, y, r, ang: R(0, 6.28), lean: R(-1, 1), name: 'a wreck', ribs: 5 });
   }
@@ -12554,7 +12555,7 @@ function fpsDrawHarpoons() {
 function fpsDrawScope() {
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   const r = Math.min(W, H) * 0.42, t = g.t, sx = cx + (reduceMotion ? 0 : Math.sin(t * 0.9) * 2), sy = H / 2 + (reduceMotion ? 0 : Math.sin(t * 1.3) * 2);
-  ctx.fillStyle = '#020305'; ctx.beginPath(); ctx.rect(0, 0, W, H); ctx.arc(sx, sy, r, 0, 6.283, true); ctx.fill('evenodd');
+  ctx.fillStyle = '#020305'; ctx.beginPath(); ctx.rect(0, 0, W, H); ctx.moveTo(sx + r, sy); ctx.arc(sx, sy, r, Math.PI * 2, 0, true); ctx.closePath(); ctx.fill('evenodd');   // (a full turn backwards: the hole you look through)
   const gr = ctx.createRadialGradient(sx, sy, r * 0.75, sx, sy, r); gr.addColorStop(0, 'rgba(0,0,0,0)'); gr.addColorStop(1, 'rgba(0,0,0,0.75)');
   ctx.fillStyle = gr; ctx.beginPath(); ctx.arc(sx, sy, r, 0, 6.283); ctx.fill();
   ctx.strokeStyle = '#8a6a2c'; ctx.lineWidth = 6; ctx.beginPath(); ctx.arc(sx, sy, r + 3, 0, 6.283); ctx.stroke();
