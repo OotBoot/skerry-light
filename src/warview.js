@@ -449,7 +449,7 @@ function wvSameShore(target) {
 }
 // what each thing in the build menu does: shown in a banner at the top while it's picked
 const WV_TIPS = {
-  city: ['City', () => `${warStructCost(WAR.nations[WAR.me], 'city')} gold · Room for a million more of your people: your population cap rises by 1M and grows faster. Pays ${WARC.CITY_GOLD * 1} gold a second, double when a factory's railroad reaches it. Build on your land, inland is safest.`],
+  city: ['City', () => `${warStructCost(WAR.nations[WAR.me], 'city')} gold · Room for more of your people: your population cap rises by ${warFmt(WARC.CITY_POP)} and grows a little faster. Pays ${WARC.CITY_GOLD * 1} gold a second, double when a factory's railroad reaches it. Build on your land, inland is safest.`],
   factory: ['Factory', () => `${warStructCost(WAR.nations[WAR.me], 'factory')} gold · Lays railroads out to every city of yours within ${WARC.FACTORY_R} tiles and joins them to each other. Cities on its railroads pay double gold. Build it among your cities.`],
   harbour: ['Harbour', () => `${warStructCost(WAR.nations[WAR.me], 'harbour')} gold · Built on your shore. Brings in gold, lights the shore round it at night, and lets you send fire-ships. Tap your coast; it snaps to the nearest shore tile.`],
   tower: ['Watchtower', () => `${warStructCost(WAR.nations[WAR.me], 'tower')} gold · Enemies pay far more to take your land within ${WARC.TOWER_R} tiles of it, and it fires on enemy boats that pass. Best on a border.`],

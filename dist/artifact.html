@@ -1017,7 +1017,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
         <summary>How to play</summary>
         <p><b>Land.</b> When the map opens, tap open land on a big island to mark your landing (or let the clock run and be put somewhere). Your people grow on their own; the more land you hold the faster, up to a limit the land sets. Gold comes in with land, harbours and whole islands.</p>
         <p><b>Fight.</b> The slider sets what share of your people an order sends. Tap empty land, drowned land or an enemy’s land that touches yours to march on it; the force spreads along the border and takes tiles until it is spent. Hills, watchtowers and a ringing bell make tiles dearer to take. Tap a shore across the water and a boat carries the force there instead (a landing needs at least 25). Enemy watchtowers fire on passing boats.</p>
-        <p><b>Build.</b> City: room for a million more people (people are counted in thousands), faster growth and gold. Factory: lays railroads to every city of yours within 16 tiles and joins them; cities on a railroad pay double gold. Harbour: gold, light on the shore, and fire-ships. Watchtower: tiles near it cost attackers far more, and it fires on boats. Beacon: light that keeps the drowned off the shore round it. Flare: bursts over a spot, lights it for a while and clears the drowned there. Fire-ship: sails from a harbour and burns everything round where it lands, friend or foe. Bell: your people hold for a while, dearly.</p>
+        <p><b>Build.</b> City: room for 250K more people (people are counted in thousands), a little faster growth, and gold. Factory: lays railroads to every city of yours within 16 tiles and joins them; cities on a railroad pay double gold. Harbour: gold, light on the shore, and fire-ships. Watchtower: tiles near it cost attackers far more, and it fires on boats. Beacon: light that keeps the drowned off the shore round it. Flare: bursts over a spot, lights it for a while and clears the drowned there. Fire-ship: sails from a harbour and burns everything round where it lands, friend or foe. Bell: your people hold for a while, dearly.</p>
         <p><b>The Reach.</b> The Light’s beam sweeps the map; the nation holding the Light’s rock is the Keeper, and gets gold and safe shores. At night the drowned rise on dark shores and take the land into the dark; by day they sink back and leave it empty. The tide turns every ninety seconds: at low water the shoals dry into land bridges, at high water they drown and anyone on them loses them. Hold a whole great isle for a bonus (✦). Pacts last four minutes; break one and every nation remembers.</p>
         <p><b>Keys:</b> drag or arrows to pan · wheel or +/- to zoom · Q/E the share · C city · V factory · H harbour · T tower · G beacon · F flare · X fire-ship · B bell · Space pause · 1/2/3 speed · Enter land now · Tab the leaderboard on a phone · Esc menu. <b>Touch:</b> drag to pan, pinch to zoom, tap to order.</p>
       </details>
@@ -15614,8 +15614,8 @@ const WARC = {
   DAY: 240, NIGHT_FROM: 0.62, NIGHT_TO: 0.96,   // a day, and the part of it that's night
   TIDE: 180,                      // the tide turns twice in this
   BEAM_TURN: 43, BEAM_HALF: 0.22, // the Light's sweep, lit only at night: one turn in this many seconds, this half-width (radians)
-  COSTS: { harbour: [60, 30], tower: [50, 25], beacon: [80, 35], city: [180, 140], factory: [320, 220], flare: 45, fireship: 320 },
-  CITY_POP: 1000, CITY_GROW: 2.5, CITY_GOLD: 1.2, FACTORY_R: 16,   // a city: +1M people (people are counted in thousands), faster growth, gold; doubled within a factory's rails
+  COSTS: { harbour: [60, 30], tower: [50, 25], beacon: [80, 35], city: [250, 200], factory: [350, 250], flare: 45, fireship: 320 },
+  CITY_POP: 250, CITY_GROW: 0.8, CITY_GOLD: 1.0, FACTORY_R: 16,   // a city: +250K people (people are counted in thousands), a little faster growth, gold; doubled on a factory's rails
   TOWER_R: 6, BEACON_R: 8, FLARE_R: 9, FLARE_T: 45, FIRE_R: 6, HARBOUR_R: 3,
   BELL_CD: 90, BELL_T: 18, BOAT_SPEED: 4, LANDING_MIN: 25, TRUCE: 75,   // no war between nations in the first minute and a quarter
   DR: -2,                         // the owner value of land the drowned hold
@@ -15848,7 +15848,7 @@ function warBuild(n, type, i) {
   WAR.structs.set(i, { type, owner: n.id, hp: 1, t: WAR.t });
   n[WAR_COUNT[type]] = (n[WAR_COUNT[type]] || 0) + 1;
   warRails();
-  if (n.isMe) warLog(type === 'city' ? `A city rises on ${warPlace(i)}: a million more can live in your land.` : type === 'factory' ? `A factory opens on ${warPlace(i)}; its railroads run out to your cities.` : `You raise a ${type} on ${warPlace(i)}.`);
+  if (n.isMe) warLog(type === 'city' ? `A city rises on ${warPlace(i)}: room for ${warFmt(WARC.CITY_POP)} more of your people.` : type === 'factory' ? `A factory opens on ${warPlace(i)}; its railroads run out to your cities.` : `You raise a ${type} on ${warPlace(i)}.`);
   return '';
 }
 // railroads: each factory runs a line out to every one of its owner's cities within its reach, and the cities it
@@ -16325,7 +16325,7 @@ function warBotTick(n, dt) {
   // 6. gold: harbours for sailors, beacons after a bad night, towers at the border, a fire-ship for the hated
   if (n.gold > 40) {
     const r = WAR.rng();
-    if (n.tiles > 60 && n.cities < 1 + (n.tiles / 180 | 0) && n.gold >= warStructCost(n, 'city') && r < 0.55) warBotBuild(n, 'city');
+    if (n.tiles > 80 && n.cities < 1 + (n.tiles / 250 | 0) && n.gold >= warStructCost(n, 'city') && r < 0.45) warBotBuild(n, 'city');
     else if (n.cities >= 2 && n.factories < (n.cities / 3 | 0) + 1 && n.railCities < n.cities && n.gold >= warStructCost(n, 'factory') && r < 0.5) warBotBuild(n, 'factory');
     else if (b.naval > 0.4 && n.harbours < 1 + (n.tiles / 90 | 0) && n.gold >= warStructCost(n, 'harbour') && r < 0.4) warBotBuild(n, 'harbour');
     else if (WAR.t - n.drownedT < 60 && n.gold >= warStructCost(n, 'beacon') && r < 0.6) warBotBuild(n, 'beacon');
@@ -16876,7 +16876,7 @@ function wvSameShore(target) {
 }
 // what each thing in the build menu does: shown in a banner at the top while it's picked
 const WV_TIPS = {
-  city: ['City', () => `${warStructCost(WAR.nations[WAR.me], 'city')} gold · Room for a million more of your people: your population cap rises by 1M and grows faster. Pays ${WARC.CITY_GOLD * 1} gold a second, double when a factory's railroad reaches it. Build on your land, inland is safest.`],
+  city: ['City', () => `${warStructCost(WAR.nations[WAR.me], 'city')} gold · Room for more of your people: your population cap rises by ${warFmt(WARC.CITY_POP)} and grows a little faster. Pays ${WARC.CITY_GOLD * 1} gold a second, double when a factory's railroad reaches it. Build on your land, inland is safest.`],
   factory: ['Factory', () => `${warStructCost(WAR.nations[WAR.me], 'factory')} gold · Lays railroads out to every city of yours within ${WARC.FACTORY_R} tiles and joins them to each other. Cities on its railroads pay double gold. Build it among your cities.`],
   harbour: ['Harbour', () => `${warStructCost(WAR.nations[WAR.me], 'harbour')} gold · Built on your shore. Brings in gold, lights the shore round it at night, and lets you send fire-ships. Tap your coast; it snaps to the nearest shore tile.`],
   tower: ['Watchtower', () => `${warStructCost(WAR.nations[WAR.me], 'tower')} gold · Enemies pay far more to take your land within ${WARC.TOWER_R} tiles of it, and it fires on enemy boats that pass. Best on a border.`],

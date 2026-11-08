@@ -24,8 +24,8 @@ const WARC = {
   DAY: 240, NIGHT_FROM: 0.62, NIGHT_TO: 0.96,   // a day, and the part of it that's night
   TIDE: 180,                      // the tide turns twice in this
   BEAM_TURN: 43, BEAM_HALF: 0.22, // the Light's sweep, lit only at night: one turn in this many seconds, this half-width (radians)
-  COSTS: { harbour: [60, 30], tower: [50, 25], beacon: [80, 35], city: [180, 140], factory: [320, 220], flare: 45, fireship: 320 },
-  CITY_POP: 1000, CITY_GROW: 2.5, CITY_GOLD: 1.2, FACTORY_R: 16,   // a city: +1M people (people are counted in thousands), faster growth, gold; doubled within a factory's rails
+  COSTS: { harbour: [60, 30], tower: [50, 25], beacon: [80, 35], city: [250, 200], factory: [350, 250], flare: 45, fireship: 320 },
+  CITY_POP: 250, CITY_GROW: 0.8, CITY_GOLD: 1.0, FACTORY_R: 16,   // a city: +250K people (people are counted in thousands), a little faster growth, gold; doubled on a factory's rails
   TOWER_R: 6, BEACON_R: 8, FLARE_R: 9, FLARE_T: 45, FIRE_R: 6, HARBOUR_R: 3,
   BELL_CD: 90, BELL_T: 18, BOAT_SPEED: 4, LANDING_MIN: 25, TRUCE: 75,   // no war between nations in the first minute and a quarter
   DR: -2,                         // the owner value of land the drowned hold
@@ -258,7 +258,7 @@ function warBuild(n, type, i) {
   WAR.structs.set(i, { type, owner: n.id, hp: 1, t: WAR.t });
   n[WAR_COUNT[type]] = (n[WAR_COUNT[type]] || 0) + 1;
   warRails();
-  if (n.isMe) warLog(type === 'city' ? `A city rises on ${warPlace(i)}: a million more can live in your land.` : type === 'factory' ? `A factory opens on ${warPlace(i)}; its railroads run out to your cities.` : `You raise a ${type} on ${warPlace(i)}.`);
+  if (n.isMe) warLog(type === 'city' ? `A city rises on ${warPlace(i)}: room for ${warFmt(WARC.CITY_POP)} more of your people.` : type === 'factory' ? `A factory opens on ${warPlace(i)}; its railroads run out to your cities.` : `You raise a ${type} on ${warPlace(i)}.`);
   return '';
 }
 // railroads: each factory runs a line out to every one of its owner's cities within its reach, and the cities it
@@ -735,7 +735,7 @@ function warBotTick(n, dt) {
   // 6. gold: harbours for sailors, beacons after a bad night, towers at the border, a fire-ship for the hated
   if (n.gold > 40) {
     const r = WAR.rng();
-    if (n.tiles > 60 && n.cities < 1 + (n.tiles / 180 | 0) && n.gold >= warStructCost(n, 'city') && r < 0.55) warBotBuild(n, 'city');
+    if (n.tiles > 80 && n.cities < 1 + (n.tiles / 250 | 0) && n.gold >= warStructCost(n, 'city') && r < 0.45) warBotBuild(n, 'city');
     else if (n.cities >= 2 && n.factories < (n.cities / 3 | 0) + 1 && n.railCities < n.cities && n.gold >= warStructCost(n, 'factory') && r < 0.5) warBotBuild(n, 'factory');
     else if (b.naval > 0.4 && n.harbours < 1 + (n.tiles / 90 | 0) && n.gold >= warStructCost(n, 'harbour') && r < 0.4) warBotBuild(n, 'harbour');
     else if (WAR.t - n.drownedT < 60 && n.gold >= warStructCost(n, 'beacon') && r < 0.6) warBotBuild(n, 'beacon');
