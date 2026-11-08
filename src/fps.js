@@ -178,6 +178,7 @@ function fpsStop() {
   if (NET.room) NET.room.presence({ fps: null }).catch(() => {});
   $('stage').classList.remove('fpsmode');
   $('fpsPad').hidden = true; $('fpsMenu').hidden = true;
+  if (typeof fpsBodyHide === 'function') fpsBodyHide();
   if (FPS.vy) { FPS.vy.on = false; FPS.vScare = 0; } $('stage').classList.remove('scaring'); try { stopVerity(); } catch (e) {}
   state = FPS.saved ? FPS.saved.state : 'title';
   if (state !== 'title') state = 'title';
@@ -923,9 +924,14 @@ function fpsDrawScene() {
   const far = SK.BEAM_RANGE, beamOn = Math.abs(g.beam) < SK.SHADE + SK.HALF_BEAM;
   const fl = [Math.sin(g.beam - SK.HALF_BEAM) * far, Math.cos(g.beam - SK.HALF_BEAM) * far], fr = [Math.sin(g.beam + SK.HALF_BEAM) * far, Math.cos(g.beam + SK.HALF_BEAM) * far];
   let shown = 0;
+  // over the shoulder with the 3D renderer, you're a 3D figure in the scene (src/fpsbody.js)
+  let body = false;
+  if (gl && third && typeof fpsBodySync === 'function') { try { body = fpsBodySync(true); } catch (e) { console.warn(e); body = false; } }
+  else if (typeof fpsBodyHide === 'function') fpsBodyHide();
   if (gl) {
     gl3dBackdrop(roll, 0, 0);
     shown = gl3dRender(roll, 0, 0, beamOn);
+    if (body) fpsBodyOccluder();
     drawSeaFx(curBiome()); gl3dLandGlows();
   } else {
     drawSky(); drawSea(); drawCoast();
@@ -941,7 +947,7 @@ function fpsDrawScene() {
   for (const o of FPS.bots) if (!(o.dead > 0)) add('person', o);
   for (const d of FPS.drowned) add('drowned', d);
   if (typeof fpsVerityItems === 'function') fpsVerityItems(add);
-  if (third) add('person', Object.assign({}, m, { me: true, n: FPS.nick, c: fpsColours(), w: fpsW().code, flashT: FPS.meFlashT || 0, slashT: FPS.meSlashT || 0, hitT: 0 }));
+  if (third && !body) add('person', Object.assign({}, m, { me: true, n: FPS.nick, c: fpsColours(), w: fpsW().code, flashT: FPS.meFlashT || 0, slashT: FPS.meSlashT || 0, hitT: 0 }));
   items.sort((a, b) => b.c.f - a.c.f);
   for (const it of items) {
     ctx.save();

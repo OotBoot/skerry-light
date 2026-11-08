@@ -116,6 +116,21 @@ Settings → Graphics switches between **3D** and **Classic** (the original pain
 
 Press **V** (or the camera button at the top of the phone screen, **Menu → View**, or click the right stick on a controller) to switch between first person and an over-the-shoulder camera. The camera sits behind you and to the right, and you see your own wrecker from behind, with the gun arm reaching toward the crosshair. Shots go where the crosshair points: the game finds what the crosshair line lands on, then fires from your eyes at that point. If a rock or the island's edge gets in the way, the camera pulls in and then eases back out. The longarm's telescope still looks through your own eyes, and the choice is remembered. Press **Space** (the arrow beside Fire on a phone, or **A** on a controller) to jump about a metre. Jumps travel with your position to everyone else, and the fair-hit check accounts for jumps, so a well-timed jump can make a shot pass under you. The bell has moved from Space to **B** only.
 
+## Your wrecker, in 3D
+
+Over the shoulder with the 3D renderer, you see your own wrecker as a full 3D figure standing in the scene (`src/fpsbody.js`). Rocks hide it, and the beam and your lantern light it. It's built from your boat skin's colours:
+
+- **Coat and clothes:** a long open coat in your hull colour, with cuffs and lapels in the rail colour, brass buttons, a stand collar, a back vent and a skirt that swings out as you run. Under it are a waistcoat, a shirt and cravat, and a sash in your sail colour.
+- **Kit:** a belt and buckle, a bandolier with cartridge pouches across the back, a powder horn and a dirk.
+- **Legs:** breeches, stockings and turned-down sea boots.
+- **Head:** hair in a queue tied with a ribbon, and a braided tricorn with a cockade.
+- **Weapon:** the same 3D model and skin as in first person, held properly. The pepperbox is out in one hand, the long guns are shouldered with your left hand on the barrel, and the cutlass is carried point-up and swung with each cut.
+- **Lantern:** carried in your left hand, or hooked to your belt when you need both hands. It glows while lit.
+- **Movement:** legs and arms swing as you walk and run, the body leans and follows your aim, and the gun kicks when you fire and tips up to reload. You tuck in a jump and sink a little on landing.
+- **Close camera:** the figure turns see-through when the camera is squeezed up close against a rock.
+
+With the Classic renderer the flat figure is used instead.
+
 ## Verity on the island
 
 Verity, the small smiling yellow thing from the voyages, comes ashore in Wreckers' Night (`src/fpsverity.js`, using the main game's pictures and voice). Now and then, while you have a flare left, he sits down on the shingle a few steps in front of you, off to one side, smiling, with a ring counting down his twenty seconds. On a phone the Flare button pulses. His usual rules apply: bullets and cutlass cuts pass straight through him, the bell doesn't bother him, and you can't walk away from him, because if you look away he's in front of you again. A fresh flare anywhere on the island sends him rolling into the dark, including another player's flare. If you leave him, he stands up and you get the jumpscare (softened if Scares is set to Softened). That counts as a death, "Verity helped", but nobody's kill. Other players see him sitting in front of you.
