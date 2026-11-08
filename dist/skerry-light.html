@@ -16339,10 +16339,10 @@ function wvFit() {
   wvClamp();
 }
 function wvClamp() {
-  const c = WV.cam, vw = W / c.z, vh = H / c.z;
+  const c = WV.cam;
   c.z = clamp(c.z, WV.zmin, WV.zmax);
-  c.x = vw >= WARC.W ? WARC.W / 2 : clamp(c.x, vw / 2 - 4, WARC.W - vw / 2 + 4);
-  c.y = vh >= WARC.H ? WARC.H / 2 : clamp(c.y, vh / 2 - 4, WARC.H - vh / 2 + 4);
+  // (no bounds on where you pan: drag the map anywhere, even off its edges)
+  if (!isFinite(c.x) || !isFinite(c.y)) { c.x = WARC.W / 2; c.y = WARC.H / 2; }
 }
 const wvSx = tx => (tx - WV.cam.x) * WV.cam.z + W / 2, wvSy = ty => (ty - WV.cam.y) * WV.cam.z + H / 2;
 function wvTileAt(px, py) {
