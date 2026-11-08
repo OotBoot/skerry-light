@@ -833,6 +833,13 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
   .warside { max-height: calc(100dvh - 120px); overflow-y: auto; }
   .warspawn { top: calc(max(8px, env(safe-area-inset-top, 0px)) + 42px); padding: 4px 10px; }
 }
+
+.wartip { position: absolute; left: 50%; transform: translateX(-50%); top: calc(max(8px, env(safe-area-inset-top, 0px)) + 46px); width: min(92vw, 520px); background: rgba(7,12,24,0.9); border: 1px solid var(--lamp); padding: 8px 12px; display: flex; flex-direction: column; gap: 3px; font-size: 12px; line-height: 1.35; pointer-events: none; z-index: 2; }
+.wartip b { font-family: var(--display); font-weight: 400; font-size: 1.05rem; color: var(--lamp); }
+.wartip small { color: var(--muted); font-size: 10px; letter-spacing: 0.04em; }
+@media (max-width: 720px) { .wartip { width: calc(100vw - 16px); font-size: 11px; } }
+@media (orientation: landscape) and (max-height: 520px) { .wartip { top: calc(max(8px, env(safe-area-inset-top, 0px)) + 40px); left: max(8px, env(safe-area-inset-left, 0px)); transform: none; padding: 5px 10px; width: min(calc(100vw - 280px), 520px); } }
+@media (min-width: 721px) and (min-height: 521px) { .wartip { left: calc(50% - 130px); } }
 </style>
 <div id="stage">
   <canvas id="bg" class="under" aria-hidden="true"></canvas>
@@ -997,9 +1004,10 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
     <div class="wartop">
       <button class="fpsico" id="warMenuBtn" type="button" aria-label="Menu"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
       <div class="warclock" id="warClock">Choose your landing</div>
-      <div class="warspeed" id="warSpeed"><button type="button" data-s="0" aria-label="Pause">II</button><button type="button" data-s="1">1×</button><button type="button" data-s="2" class="on">2×</button><button type="button" data-s="4">4×</button></div>
+      <div class="warspeed" id="warSpeed"><button type="button" data-s="0" aria-label="Pause">II</button><button type="button" data-s="1" class="on">1×</button><button type="button" data-s="2">2×</button><button type="button" data-s="4">4×</button></div>
       <button class="fpsico warsidebtn" id="warSideBtn" type="button" aria-label="Leaderboard"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 20V10M12 20V4M18 20v-7"/></svg></button>
     </div>
+    <div class="wartip" id="warTip" hidden role="status"></div>
     <aside class="warside" id="warSide"><h2>The Reach</h2><ol id="warBoard"></ol></aside>
     <div class="warspawn" id="warSpawnBar" hidden><span>Tap open land on a big island to mark your landing.</span><button class="primary" id="warLandNow" type="button">Land now</button><button class="tool" id="warRandomLand" type="button">Anywhere</button></div>
     <div class="warprompts" id="warPrompts"></div>
@@ -15715,7 +15723,7 @@ function warMapSize(nBots) {
 function warStart(nBots, seed) {
   [WARC.W, WARC.H] = warMapSize(nBots);
   WAR.frontSeen = null; WAR.pathPrev = null; WAR.frontScore = null; if (typeof WV !== 'undefined') WV.seen = null;
-  WAR.on = true; WAR.phase = 'spawn'; WAR.t = 0; WAR.speed = 2; WAR.paused = false; WAR.spectate = false; WAR.result = null;
+  WAR.on = true; WAR.phase = 'spawn'; WAR.t = 0; WAR.speed = 1; WAR.paused = false; WAR.spectate = false; WAR.result = null;
   WAR.nBots = nBots; WAR.seed = seed >>> 0;
   const { map, rng } = warMakeMap(WAR.seed); WAR.map = map; WAR.rng = rng;
   WAR.owner = new Int16Array(map.length).fill(-1); WAR.tideHigh = false; WAR.tideT = 0; WAR.beam = 0; WAR.day = 0;
@@ -15854,7 +15862,7 @@ function warFrontier(at) {
 }
 function warTileCost(at, j) {
   const def = at.target >= 0 ? WAR.nations[at.target] : null;
-  let cost = at.target === WARC.DR ? 4.5 : at.target === -1 ? 1.1 : 3;
+  let cost = at.target === WARC.DR ? 4.5 : at.target === -1 ? 0.8 : 3;
   if (WAR.map[j] === 3) cost += 1.4;
   if (def) {
     cost += Math.min(16, (def.troops / Math.max(1, def.tiles)) * 1.0);
@@ -15880,7 +15888,7 @@ function warAttacksTick(dt) {
     at.t += dt;
     // how many tiles this tick: bigger forces spread faster, up to the border's width
     // (over the empty wilds the advance runs: nobody is there to stop it)
-    at.prog += dt * (1.1 + Math.sqrt(at.troops) * 0.2) * (at.target === -1 ? 3.2 : 1);
+    at.prog += dt * (1.1 + Math.sqrt(at.troops) * 0.2) * (at.target === -1 ? 7 : 1);
     let n = Math.floor(at.prog); if (n <= 0) continue; at.prog -= n;
     const front = warFrontier(at);
     if (!front.length) { a.troops += at.troops * 0.9; WAR.attacks.splice(k, 1); if (a.isMe && at.taken > 0 && at.target >= 0) warLog(`No more of ${def.name}’s land within reach; your people fall back.`); continue; }
@@ -16422,6 +16430,7 @@ function warDraw(dt) {
   wvDrawHover(z);
   wvDrawVignette(dark);
   WV.uiT += dt; if (WV.uiT > 0.25) { WV.uiT = 0; wvPanels(); }
+  if (WV.tipT > 0) WV.tipT -= dt; wvTip();
 }
 function wvDrawStructs(z) {
   const s = Math.max(4, z * 0.9);
@@ -16648,7 +16657,24 @@ function wvSameShore(target) {
   while (qh < q.length) { const i = q[qh++]; if (WAR.owner[i] === WAR.me) return true; warNeighbours(i, j => { if (!seen[j] && warIsLand(j)) { seen[j] = 1; q.push(j); } }); }
   return false;
 }
-function wvMode(m) { WV.mode = WV.mode === m ? null : m; wvPanels(); if (WV.mode) wvSay({ harbour: 'Tap your shore to build the harbour.', tower: 'Tap your land to raise the tower.', beacon: 'Tap your land to light the beacon.', flare: 'Tap where the flare should burst.', fireship: 'Tap an enemy shore for the fire-ship.' }[WV.mode]); }
+// what each thing in the build menu does: shown in a banner at the top while it's picked
+const WV_TIPS = {
+  harbour: ['Harbour', () => `${warStructCost(WAR.nations[WAR.me], 'harbour')} gold · Built on your shore. Brings in gold, lights the shore round it at night, and lets you send fire-ships. Tap your coast; it snaps to the nearest shore tile.`],
+  tower: ['Watchtower', () => `${warStructCost(WAR.nations[WAR.me], 'tower')} gold · Enemies pay far more to take your land within ${WARC.TOWER_R} tiles of it, and it fires on enemy boats that pass. Best on a border.`],
+  beacon: ['Beacon', () => `${warStructCost(WAR.nations[WAR.me], 'beacon')} gold · A fire that lights ${WARC.BEACON_R} tiles round it all night: the drowned can't come up there, and it sees through the fog. Best on a dark shore.`],
+  flare: ['Flare', () => `${WARC.COSTS.flare} gold · Bursts over any spot you tap, lights ${WARC.FLARE_R} tiles for ${WARC.FLARE_T} s, clears the drowned off that land and shows it through the fog.`],
+  fireship: ['Fire-ship', () => `${WARC.COSTS.fireship} gold · Needs a harbour. Sails to the enemy shore you tap and burns everything within ${WARC.FIRE_R} tiles of where it lands, people, land and buildings, friend or foe.`],
+  bell: ['The bell', () => `Free, every ${WARC.BELL_CD} s · For ${WARC.BELL_T} s your land costs attackers far more to take, and your own attacks are heartened.`],
+};
+function wvTip() {
+  const key = WV.mode || (WV.tipT > 0 ? WV.tipKey : null), el = $('warTip');
+  if (!key || !WV_TIPS[key]) { if (!el.hidden) el.hidden = true; WV.tipShown = null; return; }
+  const [head, body] = WV_TIPS[key], txt = body();
+  if (WV.tipShown === key + txt && !el.hidden) return;
+  WV.tipShown = key + txt; el.hidden = false;
+  el.innerHTML = `<b>${head}</b><span>${txt}</span>${WV.mode ? '<small>Tap the map to place it · tap the button again or Esc to cancel</small>' : ''}`;
+}
+function wvMode(m) { WV.mode = WV.mode === m ? null : m; WV.tipT = 0; wvPanels(); wvTip(); }
 
 // ---------- input ----------
 function wvPointerDown(e) {
@@ -16764,7 +16790,7 @@ addEventListener('resize', () => { if (WAR.on) wvFit(); });
   $('warRatio').addEventListener('input', () => { WAR.ratio = (+$('warRatio').value) / 100; wvPanels(); });
   $('warHarbour').addEventListener('click', () => wvMode('harbour')); $('warTower').addEventListener('click', () => wvMode('tower')); $('warBeacon').addEventListener('click', () => wvMode('beacon'));
   $('warFlareBtn').addEventListener('click', () => wvMode('flare')); $('warFireBtn').addEventListener('click', () => wvMode('fireship'));
-  $('warBellBtn').addEventListener('click', () => { const why = warBell(WAR.nations[WAR.me]); if (why) wvSay(why); });
+  $('warBellBtn').addEventListener('click', () => { WV.mode = null; WV.tipKey = 'bell'; WV.tipT = 5; wvTip(); const why = warBell(WAR.nations[WAR.me]); if (why) wvSay(why); });
   for (const b of document.querySelectorAll('#warSpeed button')) b.addEventListener('click', () => { const s = +b.dataset.s; if (s === 0) { WAR.paused = !WAR.paused; wvSpeedUi(); } else wvSpeed(s); });
   $('warMenuBtn').addEventListener('click', () => wvMenu(true)); $('warResume').addEventListener('click', () => wvMenu(false)); $('warLeave').addEventListener('click', warStop);
   $('warSideBtn').addEventListener('click', () => $('warSide').classList.toggle('open'));

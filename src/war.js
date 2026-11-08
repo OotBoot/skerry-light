@@ -166,7 +166,7 @@ function warMapSize(nBots) {
 function warStart(nBots, seed) {
   [WARC.W, WARC.H] = warMapSize(nBots);
   WAR.frontSeen = null; WAR.pathPrev = null; WAR.frontScore = null; if (typeof WV !== 'undefined') WV.seen = null;
-  WAR.on = true; WAR.phase = 'spawn'; WAR.t = 0; WAR.speed = 2; WAR.paused = false; WAR.spectate = false; WAR.result = null;
+  WAR.on = true; WAR.phase = 'spawn'; WAR.t = 0; WAR.speed = 1; WAR.paused = false; WAR.spectate = false; WAR.result = null;
   WAR.nBots = nBots; WAR.seed = seed >>> 0;
   const { map, rng } = warMakeMap(WAR.seed); WAR.map = map; WAR.rng = rng;
   WAR.owner = new Int16Array(map.length).fill(-1); WAR.tideHigh = false; WAR.tideT = 0; WAR.beam = 0; WAR.day = 0;
@@ -305,7 +305,7 @@ function warFrontier(at) {
 }
 function warTileCost(at, j) {
   const def = at.target >= 0 ? WAR.nations[at.target] : null;
-  let cost = at.target === WARC.DR ? 4.5 : at.target === -1 ? 1.1 : 3;
+  let cost = at.target === WARC.DR ? 4.5 : at.target === -1 ? 0.8 : 3;
   if (WAR.map[j] === 3) cost += 1.4;
   if (def) {
     cost += Math.min(16, (def.troops / Math.max(1, def.tiles)) * 1.0);
@@ -331,7 +331,7 @@ function warAttacksTick(dt) {
     at.t += dt;
     // how many tiles this tick: bigger forces spread faster, up to the border's width
     // (over the empty wilds the advance runs: nobody is there to stop it)
-    at.prog += dt * (1.1 + Math.sqrt(at.troops) * 0.2) * (at.target === -1 ? 3.2 : 1);
+    at.prog += dt * (1.1 + Math.sqrt(at.troops) * 0.2) * (at.target === -1 ? 7 : 1);
     let n = Math.floor(at.prog); if (n <= 0) continue; at.prog -= n;
     const front = warFrontier(at);
     if (!front.length) { a.troops += at.troops * 0.9; WAR.attacks.splice(k, 1); if (a.isMe && at.taken > 0 && at.target >= 0) warLog(`No more of ${def.name}’s land within reach; your people fall back.`); continue; }

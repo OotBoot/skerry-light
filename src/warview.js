@@ -146,6 +146,7 @@ function warDraw(dt) {
   wvDrawHover(z);
   wvDrawVignette(dark);
   WV.uiT += dt; if (WV.uiT > 0.25) { WV.uiT = 0; wvPanels(); }
+  if (WV.tipT > 0) WV.tipT -= dt; wvTip();
 }
 function wvDrawStructs(z) {
   const s = Math.max(4, z * 0.9);
@@ -372,7 +373,24 @@ function wvSameShore(target) {
   while (qh < q.length) { const i = q[qh++]; if (WAR.owner[i] === WAR.me) return true; warNeighbours(i, j => { if (!seen[j] && warIsLand(j)) { seen[j] = 1; q.push(j); } }); }
   return false;
 }
-function wvMode(m) { WV.mode = WV.mode === m ? null : m; wvPanels(); if (WV.mode) wvSay({ harbour: 'Tap your shore to build the harbour.', tower: 'Tap your land to raise the tower.', beacon: 'Tap your land to light the beacon.', flare: 'Tap where the flare should burst.', fireship: 'Tap an enemy shore for the fire-ship.' }[WV.mode]); }
+// what each thing in the build menu does: shown in a banner at the top while it's picked
+const WV_TIPS = {
+  harbour: ['Harbour', () => `${warStructCost(WAR.nations[WAR.me], 'harbour')} gold · Built on your shore. Brings in gold, lights the shore round it at night, and lets you send fire-ships. Tap your coast; it snaps to the nearest shore tile.`],
+  tower: ['Watchtower', () => `${warStructCost(WAR.nations[WAR.me], 'tower')} gold · Enemies pay far more to take your land within ${WARC.TOWER_R} tiles of it, and it fires on enemy boats that pass. Best on a border.`],
+  beacon: ['Beacon', () => `${warStructCost(WAR.nations[WAR.me], 'beacon')} gold · A fire that lights ${WARC.BEACON_R} tiles round it all night: the drowned can't come up there, and it sees through the fog. Best on a dark shore.`],
+  flare: ['Flare', () => `${WARC.COSTS.flare} gold · Bursts over any spot you tap, lights ${WARC.FLARE_R} tiles for ${WARC.FLARE_T} s, clears the drowned off that land and shows it through the fog.`],
+  fireship: ['Fire-ship', () => `${WARC.COSTS.fireship} gold · Needs a harbour. Sails to the enemy shore you tap and burns everything within ${WARC.FIRE_R} tiles of where it lands, people, land and buildings, friend or foe.`],
+  bell: ['The bell', () => `Free, every ${WARC.BELL_CD} s · For ${WARC.BELL_T} s your land costs attackers far more to take, and your own attacks are heartened.`],
+};
+function wvTip() {
+  const key = WV.mode || (WV.tipT > 0 ? WV.tipKey : null), el = $('warTip');
+  if (!key || !WV_TIPS[key]) { if (!el.hidden) el.hidden = true; WV.tipShown = null; return; }
+  const [head, body] = WV_TIPS[key], txt = body();
+  if (WV.tipShown === key + txt && !el.hidden) return;
+  WV.tipShown = key + txt; el.hidden = false;
+  el.innerHTML = `<b>${head}</b><span>${txt}</span>${WV.mode ? '<small>Tap the map to place it · tap the button again or Esc to cancel</small>' : ''}`;
+}
+function wvMode(m) { WV.mode = WV.mode === m ? null : m; WV.tipT = 0; wvPanels(); wvTip(); }
 
 // ---------- input ----------
 function wvPointerDown(e) {
@@ -488,7 +506,7 @@ addEventListener('resize', () => { if (WAR.on) wvFit(); });
   $('warRatio').addEventListener('input', () => { WAR.ratio = (+$('warRatio').value) / 100; wvPanels(); });
   $('warHarbour').addEventListener('click', () => wvMode('harbour')); $('warTower').addEventListener('click', () => wvMode('tower')); $('warBeacon').addEventListener('click', () => wvMode('beacon'));
   $('warFlareBtn').addEventListener('click', () => wvMode('flare')); $('warFireBtn').addEventListener('click', () => wvMode('fireship'));
-  $('warBellBtn').addEventListener('click', () => { const why = warBell(WAR.nations[WAR.me]); if (why) wvSay(why); });
+  $('warBellBtn').addEventListener('click', () => { WV.mode = null; WV.tipKey = 'bell'; WV.tipT = 5; wvTip(); const why = warBell(WAR.nations[WAR.me]); if (why) wvSay(why); });
   for (const b of document.querySelectorAll('#warSpeed button')) b.addEventListener('click', () => { const s = +b.dataset.s; if (s === 0) { WAR.paused = !WAR.paused; wvSpeedUi(); } else wvSpeed(s); });
   $('warMenuBtn').addEventListener('click', () => wvMenu(true)); $('warResume').addEventListener('click', () => wvMenu(false)); $('warLeave').addEventListener('click', warStop);
   $('warSideBtn').addEventListener('click', () => $('warSide').classList.toggle('open'));

@@ -827,3 +827,10 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
   .warside { max-height: calc(100dvh - 120px); overflow-y: auto; }
   .warspawn { top: calc(max(8px, env(safe-area-inset-top, 0px)) + 42px); padding: 4px 10px; }
 }
+
+.wartip { position: absolute; left: 50%; transform: translateX(-50%); top: calc(max(8px, env(safe-area-inset-top, 0px)) + 46px); width: min(92vw, 520px); background: rgba(7,12,24,0.9); border: 1px solid var(--lamp); padding: 8px 12px; display: flex; flex-direction: column; gap: 3px; font-size: 12px; line-height: 1.35; pointer-events: none; z-index: 2; }
+.wartip b { font-family: var(--display); font-weight: 400; font-size: 1.05rem; color: var(--lamp); }
+.wartip small { color: var(--muted); font-size: 10px; letter-spacing: 0.04em; }
+@media (max-width: 720px) { .wartip { width: calc(100vw - 16px); font-size: 11px; } }
+@media (orientation: landscape) and (max-height: 520px) { .wartip { top: calc(max(8px, env(safe-area-inset-top, 0px)) + 40px); left: max(8px, env(safe-area-inset-left, 0px)); transform: none; padding: 5px 10px; width: min(calc(100vw - 280px), 520px); } }
+@media (min-width: 721px) and (min-height: 521px) { .wartip { left: calc(50% - 130px); } }
