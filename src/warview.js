@@ -308,7 +308,7 @@ function wvOrderAt(i) {
   if (troops < 1) { wvSay('You have no people to send.'); return; }
   // by land if the border touches, else by sea
   const bord = warBorders(WAR.me), byLand = o === -1 ? bord.neutral > 0 && wvSameShore(i) : o === WARC.DR ? bord.dr > 0 && wvSameShore(i) : bord.out.has(o) && wvSameShore(i);
-  if (byLand) { warAttack(WAR.me, o, troops); return; }
+  if (byLand) { warAttack(WAR.me, o, troops, null, i); return; }
   const why = warSendBoat(WAR.me, i, troops); if (why) wvSay(why);
 }
 // your nearest free shore tile to a tapped tile, within r tiles

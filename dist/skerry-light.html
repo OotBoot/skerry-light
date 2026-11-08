@@ -15721,7 +15721,7 @@ function warMapSize(nBots) {
 }
 function warStart(nBots, seed) {
   [WARC.W, WARC.H] = warMapSize(nBots);
-  WAR.frontSeen = null; WAR.pathPrev = null; if (typeof WV !== 'undefined') WV.seen = null;
+  WAR.frontSeen = null; WAR.pathPrev = null; WAR.frontScore = null; if (typeof WV !== 'undefined') WV.seen = null;
   WAR.on = true; WAR.phase = 'spawn'; WAR.t = 0; WAR.speed = 2; WAR.paused = false; WAR.spectate = false; WAR.result = null;
   WAR.nBots = nBots; WAR.seed = seed >>> 0;
   const { map, rng } = warMakeMap(WAR.seed); WAR.map = map; WAR.rng = rng;
@@ -15826,7 +15826,8 @@ function warRelight() {
 
 // ---------- attacks ----------
 // one attack per attacker and target; more troops sent the same way join it
-function warAttack(from, target, troops, landing) {
+// `aim`: the tile the order was given at; the advance heads that way (bots give none: they grow out from their middle)
+function warAttack(from, target, troops, landing, aim) {
   const a = WAR.nations[from]; if (!a || !a.alive) return null;
   troops = Math.min(troops, a.troops); if (troops < 1) return null;
   if (target >= 0) {
@@ -15836,8 +15837,8 @@ function warAttack(from, target, troops, landing) {
   }
   a.troops -= troops;
   let at = WAR.attacks.find(k => k.from === from && k.target === target);
-  if (at) { at.troops += troops; return at; }
-  at = { from, target, troops, sent: troops, t: 0, prog: 0, landing: landing || null, taken: 0 };
+  if (at) { at.troops += troops; if (aim != null && aim >= 0) at.aim = aim; return at; }
+  at = { from, target, troops, sent: troops, t: 0, prog: 0, landing: landing || null, taken: 0, aim: aim != null && aim >= 0 ? aim : landing != null ? landing : null };
   WAR.attacks.push(at);
   if (target >= 0) {
     const d = WAR.nations[target];
@@ -15890,8 +15891,18 @@ function warAttacksTick(dt) {
     let n = Math.floor(at.prog); if (n <= 0) continue; at.prog -= n;
     const front = warFrontier(at);
     if (!front.length) { a.troops += at.troops * 0.9; WAR.attacks.splice(k, 1); if (a.isMe && at.taken > 0 && at.target >= 0) warLog(`No more of ${def.name}’s land within reach; your people fall back.`); continue; }
-    // the nearest to the force's heart first, with some spread
-    for (let m = front.length - 1; m > 0; m--) { const r = (WAR.rng() * (m + 1)) | 0; const t = front[m]; front[m] = front[r]; front[r] = t; }
+    // which border tiles go first: those nearest where the order was aimed (or, for a bot, nearest its middle, so it
+    // grows round), and above all those already hemmed in by the attacker's land, so the border fills in
+    // round instead of reaching out in thin lines
+    const ax = at.aim != null ? warX(at.aim) : a.cx, ay = at.aim != null ? warY(at.aim) : a.cy;
+    const sc = WAR.frontScore || (WAR.frontScore = new Float32Array(WAR.map.length));
+    for (const j of front) {
+      let own = 0; warNeighbours(j, q => { if (WAR.owner[q] === at.from) own++; });
+      const x = warX(j), y = warY(j);
+      let diag = 0; for (const [dx, dy] of [[1, 1], [1, -1], [-1, 1], [-1, -1]]) { const qx = x + dx, qy = y + dy; if (qx >= 0 && qy >= 0 && qx < WARC.W && qy < WARC.H && WAR.owner[warIdx(qx, qy)] === at.from) diag++; }
+      sc[j] = Math.hypot(x - ax, y - ay) - own * 4 - diag * 1.2 + WAR.rng() * 1.5;
+    }
+    front.sort((p, q) => sc[p] - sc[q]);
     n = Math.min(n, front.length);
     for (let q = 0; q < n; q++) {
       const j = front[q], cost = warTileCost(at, j);
@@ -15982,7 +15993,7 @@ function warBoatsTick(dt) {
       if (b.troops < cost + 2) { if (a.isMe) warLog('The landing is thrown back into the sea.', 'bad'); continue; }
       warTakeTile(tgt, b.from, own); b.troops -= cost;
       if (own >= 0) { const d = WAR.nations[own]; d.troops = Math.max(0, d.troops - cost * 0.45); if (d.tiles <= 0) warEliminate(d, a); if (d.isMe) warLog(`${a.name} lands on your shore at ${WAR.regions[WAR.region[tgt]].name}!`, 'bad'); }
-      const at = warAttack(b.from, own, 0, tgt); a.troops -= 0;
+      const at = warAttack(b.from, own, 0, tgt, tgt); a.troops -= 0;
       if (at) { at.troops += b.troops; at.sent += b.troops; } else a.troops += b.troops;
       if (a.isMe) warLog(`Your people land on ${WAR.regions[WAR.region[tgt]].name}.`);
     }
@@ -16580,7 +16591,7 @@ function wvOrderAt(i) {
   if (troops < 1) { wvSay('You have no people to send.'); return; }
   // by land if the border touches, else by sea
   const bord = warBorders(WAR.me), byLand = o === -1 ? bord.neutral > 0 && wvSameShore(i) : o === WARC.DR ? bord.dr > 0 && wvSameShore(i) : bord.out.has(o) && wvSameShore(i);
-  if (byLand) { warAttack(WAR.me, o, troops); return; }
+  if (byLand) { warAttack(WAR.me, o, troops, null, i); return; }
   const why = warSendBoat(WAR.me, i, troops); if (why) wvSay(why);
 }
 // your nearest free shore tile to a tapped tile, within r tiles
