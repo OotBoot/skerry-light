@@ -287,8 +287,10 @@ function buildCoast() {
 // ---------- the skerries, wrecks and timber ----------
 function rockMesh(r, B) {
   const RK = B.rock, geo = new THREE.IcosahedronGeometry(1, RK.blocky ? 1 : 2);
-  const P = geo.attributes.position, hgt = r.r * 0.85 * RK.h, col = [];
+  // (Wreckers' Night islands make their rocks taller or lower, and stain them their own colour)
+  const P = geo.attributes.position, hgt = r.r * 0.85 * RK.h * (r.rk && r.rk.h || 1), col = [];
   const g0 = glCol(RK.g[0])[0], g1 = glCol(RK.g[1])[0], g2 = glCol(RK.g[2])[0], bandC = glOver(RK.g[2], RK.band);
+  if (r.rk && r.rk.tint) { const tc = new THREE.Color(r.rk.tint[0]); for (const c of [g0, g1, g2, bandC]) c.lerp(tc, r.rk.tint[1]); }
   const sq = 0.7 + 0.3 * glHash(r.ph, 3);
   for (let i = 0; i < P.count; i++) {
     let x = P.getX(i), y = P.getY(i), z = P.getZ(i);
@@ -383,6 +385,7 @@ function gl3dRender(roll, sx, sy, beamOn) {
   GL3D.frame++;
   buildCoast();
   syncIsland(B);
+  if (g.isle && typeof fpsIsleFrame3D === 'function') fpsIsleFrame3D();
   // the camera, set up to project exactly as the 2D one does (the horizon at hy, the same focal length)
   cam3.fov = 2 * Math.atan((H / 2) / focal) * 180 / Math.PI;
   cam3.aspect = W / H;
@@ -495,14 +498,18 @@ function findOccluders() {
     const h = hull(sc), mx = (x0 + x1) / 2, my = (y0 + y1) / 2;
     out.push({ f: c0.f - (o.r || 0) * 0.3, pts: h.map(q => [mx + (q[0] - mx) * 0.96, my + (q[1] - my) * 0.97]), x0, x1, y0, y1 });
   }
+  // Wreckers' Night: walls, crates, boats and the rest hide what's behind them too
+  if (g.isle && typeof fpsIsleOccluders === 'function') fpsIsleOccluders(out);
   out.sort((a, b) => a.f - b.f);
 }
 // clip the canvas so that a thing at depth f is hidden wherever a nearer rock stands; false if nothing is in front
-function gl3dClip(f) {
+// (box: where on screen the thing is drawn, if known, so rocks nowhere near it are skipped)
+function gl3dClip(f, box) {
   const occ = GL3D.occ; if (!occ.length || occ[0].f >= f) return false;
   // one cut per rock (clips stack), so rocks that overlap on screen still both hide what's behind them
   for (const o of occ) {
     if (o.f >= f) break;
+    if (box && (o.x1 < box.x0 || o.x0 > box.x1 || o.y1 < box.y0 || o.y0 > box.y1)) continue;
     const p = o.pts;
     ctx.beginPath(); ctx.rect(-W, -H, W * 3, H * 3);
     ctx.moveTo(p[0][0], p[0][1]);
@@ -892,11 +899,19 @@ function gl3dSkyOverlay() {
 // ---------- Wreckers' Night: the island they fight on ----------
 // a low disc of rock and shingle with a beach running down into the sea, coloured for the sea it's in
 function syncIsland(B) {
-  const I = g.island, key = I ? B.name + ':' + I.x + ':' + I.y + ':' + I.r : '';
+  const I = g.island, key = I ? B.name + ':' + I.x + ':' + I.y + ':' + I.r + ':' + (I.key || '') : '';
   if (GL3D.islandKey === key) return;
   GL3D.islandKey = key;
-  if (GL3D.island) { GL3D.scene.remove(GL3D.island); GL3D.island.traverse(glDispose); GL3D.island = null; }
+  if (GL3D.island) { GL3D.scene.remove(GL3D.island); GL3D.island.traverse(glDispose); GL3D.island = null; GL3D.isleState = null; GL3D.scene.fog = null; }
   if (!I) return;
+  // Wreckers' Night's themed islands: ground, props, lights and a little fog (src/fpsisle.js)
+  if (g.isle && typeof fpsIsle3D === 'function') {
+    const grp = new THREE.Group();
+    fpsIsle3D(grp, B);
+    const F = g.isle.T.fog; GL3D.scene.fog = new THREE.Fog(F[0], F[1], F[2]);
+    GL3D.island = grp; GL3D.scene.add(grp);
+    return;
+  }
   const base = glOver(B.head[1], 'rgba(150,146,130,0.22)'), dark = glOver(B.head[0], 'rgba(90,86,76,0.2)'), sand = glOver(B.head[1], `rgba(${B.surf},0.12)`);
   const SEG = 96, RINGS = 14, pos = [], col = [], idx = [];
   const edge = a => I.r * (1 + 0.035 * Math.sin(a * 5 + 1) + 0.02 * Math.sin(a * 13));

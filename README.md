@@ -171,6 +171,21 @@ A separate game with its own card on the title screen, below Skerry Light (a ban
 
 It uses the same connection as crews (the claude.ai room, or the crew server), on its own key in presence, so the two never mix; the server relays island players to each other at full rate.
 
+### The islands
+
+Each round the island is one of six kinds, as well as being in one of the six seas. Everything on it is laid out from the round number (`src/fpsisle.js`), so every player builds the same island and nothing extra is sent over the network.
+
+- **The Shingle Skerry:** grey shingle and tide pools, boats drawn up and turned over, lobster pots, fish drying on a rack, driftwood, cairns, a half-fallen sheepfold, and a bonfire still glowing. Gulls overhead.
+- **Wreckers' Reef:** dark wet rock and weed, five broken hulks, timbers, spilled crates and barrels, old cannon, an anchor, a fallen mast, a salvage fire and a lantern on a spar.
+- **Chapel Islet:** turf, a roofless chapel with a tall gable and candles on the altar, a graveyard inside a low broken wall, headstones and a cross, a well with a lantern, a ring of standing stones, dead trees. Bats round the lights.
+- **Smugglers' Cove:** sand, a jetty out into the sea with a boat moored at the end, a boathouse open to the water, stacks of crates and barrels, lantern posts, nets drying.
+- **Signal Head:** heather, crags along one shore with a stair cut up them, a ruined round signal tower with its beacon lit, drystone field walls with gaps, standing stones, wind-bent thorns, a sheep fence.
+- **The Salt Marsh:** mud, pools and reed beds, boardwalks, a fowler's hut, eel traps, peat stacks, fences and posts, a punt, and pale marsh lights over the water. Thick fog.
+
+Walls, crates, barrels, boats, headstones, stones and the rest are real cover: they block you, stop shots and hide anyone behind them, like the rocks. Low walls stop a shot at the body but not one at the head. Fences stop you but not shots, and a roof stops shots but not you. Lanterns, fires and marsh lights light the ground round them, and anyone standing near one. After laying an island out, the game checks that you can walk to every part of it from the middle, and thins the props out if less than 60% of it is walkable; respawns and the wreckers only go where you can walk. Wreckers turn aside to get round things in their way.
+
+In 3D the ground has gentle rises and hollows (a quarter of a metre at most), patches of colour, worn tracks with footprints, a wet band and foam at the shore, grass, reeds, stones and seaweed, and each kind of island has its own sky tint and fog. The props are merged into a few meshes, so the island costs only a dozen or so draw calls. The Classic renderer draws each prop as a flat-shaded block, with the pools, boardwalks, lights and birds.
+
 ### Weapon crates
 
 Wreckers' Night has its own crates, the **Gunsmith's Crate**, opened from **Weapon crates** on its title card. They hold skins for the five weapons (pepperbox, blunderbuss, longarm, harpoon gun and cutlass): ten each, 3 Deckhand, 2 Bosun, 2 Mate, 2 Captain and 1 Admiral, plus a plain finish everyone owns. They use the same grades, odds, reel, Open all and duplicate counts as the Skerry Crate, and gold in the reel is always your prize. Captain and Admiral finishes carry a glowing accent. You earn one crate for every 5 kills (the count carries over between rounds and visits) and one for each round you see out on the island after at least a minute ashore; your first one is free. Weapon crates are entirely separate from the boat crates: their own save in the browser (`skerry-wcrates`), their own count, and their own save code (`WCRATES-...`) on the card, so nothing here touches your boats, voyages or crew. `src/wcrates.js` gives the gun renderer `wcEquippedSkin(weaponId)` (colours: metal, dark, wood, brass, accent, glow), and fps.js calls `wcEarn('kill' | 'round')`.
@@ -305,6 +320,7 @@ src/transport.js    connects to the crew server outside claude.ai
 src/net.js          crews: lobby, shared voyages, crewmates' ships
 src/crates.js       boats, crates, skins and pennants
 src/fps.js          Wreckers' Night, the multiplayer FPS mode
+src/fpsisle.js      Wreckers' Night: the six kinds of island, their props, cover and 3D ground
 src/fpsgun.js       Wreckers' Night: the 3D pistol, its hand and its reload
 src/wcrates.js      Wreckers' Night: weapon skin crates, kept apart from the boat crates
 src/main.js         starts the main loop
