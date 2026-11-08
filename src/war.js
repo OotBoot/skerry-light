@@ -19,7 +19,7 @@
 // takes your orders.
 
 const WARC = {
-  W: 200, H: 124,                 // the map, in tiles
+  W: 200, H: 124,                 // the map, in tiles (set per game in warStart: more nations, a bigger Reach)
   SPAWN: 20,                      // seconds to choose a landing
   DAY: 240, NIGHT_FROM: 0.62, NIGHT_TO: 0.96,   // a day, and the part of it that's night
   TIDE: 180,                      // the tide turns twice in this
@@ -52,6 +52,8 @@ function warNeighbours(i, fn) {
 const warIsLand = i => WAR.map[i] >= 2 || (WAR.map[i] === 1 && !WAR.tideHigh);
 const warIsSea = i => !warIsLand(i);
 function warCoastal(i) { let c = false; warNeighbours(i, j => { if (warIsSea(j)) c = true; }); return c; }
+// the shore for a harbour: facing the sea or a shoal, whatever the tide (at low water the dry shoals would otherwise hide it)
+function warShore(i) { let c = false; warNeighbours(i, j => { if (WAR.map[j] <= 1) c = true; }); return c; }
 function warLoadStats() { try { return JSON.parse(localStorage.getItem('skerry-war') || '{}'); } catch (e) { return {}; } }
 function warSaveStats(s) { try { localStorage.setItem('skerry-war', JSON.stringify(s)); } catch (e) {} }
 
@@ -82,8 +84,9 @@ function warMakeMap(seed) {
   const n1 = warNoise(rng), n2 = warNoise(rng), n3 = warNoise(rng);
   // a few big island seeds and many small ones
   const blobs = [];
-  for (let i = 0; i < 7; i++) blobs.push({ x: 20 + rng() * (W - 40), y: 14 + rng() * (H - 28), r: 16 + rng() * 16 });
-  for (let i = 0; i < 22; i++) blobs.push({ x: 8 + rng() * (W - 16), y: 6 + rng() * (H - 12), r: 4 + rng() * 8 });
+  const area = (W * H) / (200 * 124);
+  for (let i = 0; i < Math.round(7 * area); i++) blobs.push({ x: 20 + rng() * (W - 40), y: 14 + rng() * (H - 28), r: 16 + rng() * 16 });
+  for (let i = 0; i < Math.round(22 * area); i++) blobs.push({ x: 8 + rng() * (W - 16), y: 6 + rng() * (H - 12), r: 4 + rng() * 8 });
   const cx = W / 2, cy = H / 2;
   for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
     let v = 0;
@@ -155,8 +158,15 @@ function warGoodSpawn(i, taken) {
 }
 
 // ---------- starting a game ----------
+function warMapSize(nBots) {
+  // 200 x 124 tiles for 16 nations; the area grows (or shrinks) with the number of nations
+  const k = Math.sqrt(clamp((nBots + 1) / 17, 0.6, 2.5));
+  return [Math.round(200 * k), Math.round(124 * k)];
+}
 function warStart(nBots, seed) {
-  WAR.on = true; WAR.phase = 'spawn'; WAR.t = 0; WAR.speed = 1; WAR.paused = false; WAR.spectate = false; WAR.result = null;
+  [WARC.W, WARC.H] = warMapSize(nBots);
+  WAR.frontSeen = null; WAR.pathPrev = null; if (typeof WV !== 'undefined') WV.seen = null;
+  WAR.on = true; WAR.phase = 'spawn'; WAR.t = 0; WAR.speed = 2; WAR.paused = false; WAR.spectate = false; WAR.result = null;
   WAR.nBots = nBots; WAR.seed = seed >>> 0;
   const { map, rng } = warMakeMap(WAR.seed); WAR.map = map; WAR.rng = rng;
   WAR.owner = new Int16Array(map.length).fill(-1); WAR.tideHigh = false; WAR.tideT = 0; WAR.beam = 0; WAR.day = 0;
@@ -215,7 +225,7 @@ function warStructCost(n, type) { const c = WARC.COSTS[type]; return Array.isArr
 function warCanBuild(n, type, i) {
   if (WAR.owner[i] !== n.id || WAR.map[i] < 2 || WAR.map[i] === 4) return 'Not your land.';
   if (WAR.structs.has(i)) return 'Something stands here already.';
-  if (type === 'harbour' && !warCoastal(i)) return 'A harbour needs the shore.';
+  if (type === 'harbour' && !warShore(i)) return 'A harbour needs the shore.';
   if (n.gold < warStructCost(n, type)) return 'Not enough gold.';
   return '';
 }
@@ -294,7 +304,7 @@ function warFrontier(at) {
 }
 function warTileCost(at, j) {
   const def = at.target >= 0 ? WAR.nations[at.target] : null;
-  let cost = at.target === WARC.DR ? 4.5 : at.target === -1 ? 3.2 : 3;
+  let cost = at.target === WARC.DR ? 4.5 : at.target === -1 ? 1.1 : 3;
   if (WAR.map[j] === 3) cost += 1.4;
   if (def) {
     cost += Math.min(16, (def.troops / Math.max(1, def.tiles)) * 1.0);
@@ -319,7 +329,8 @@ function warAttacksTick(dt) {
     if (def && !def.alive) { a.troops += at.troops; WAR.attacks.splice(k, 1); continue; }
     at.t += dt;
     // how many tiles this tick: bigger forces spread faster, up to the border's width
-    at.prog += dt * (1.1 + Math.sqrt(at.troops) * 0.2);
+    // (over the empty wilds the advance runs: nobody is there to stop it)
+    at.prog += dt * (1.1 + Math.sqrt(at.troops) * 0.2) * (at.target === -1 ? 3.2 : 1);
     let n = Math.floor(at.prog); if (n <= 0) continue; at.prog -= n;
     const front = warFrontier(at);
     if (!front.length) { a.troops += at.troops * 0.9; WAR.attacks.splice(k, 1); if (a.isMe && at.taken > 0 && at.target >= 0) warLog(`No more of ${def.name}’s land within reach; your people fall back.`); continue; }
@@ -628,7 +639,7 @@ function warBotBuild(n, type, vs) {
   for (let k = 0; k < 400; k++) {
     const i = (WAR.rng() * WAR.map.length) | 0; if (WAR.owner[i] !== n.id || WAR.structs.has(i) || WAR.map[i] < 2 || WAR.map[i] === 4) continue;
     let s = WAR.rng();
-    if (type === 'harbour') { if (!warCoastal(i)) continue; }
+    if (type === 'harbour') { if (!warShore(i)) continue; }
     else if (type === 'tower') { let nb = 0; warNeighbours(i, j => { if (vs != null ? WAR.owner[j] === vs : (WAR.owner[j] >= 0 && WAR.owner[j] !== n.id)) nb++; }); s += nb * 2; }
     else if (type === 'beacon') { if (!warCoastal(i)) continue; if (WAR.lit[i] >= 3) continue; s += 1; }
     if (s > bs) { bs = s; best = i; }

@@ -218,7 +218,17 @@ function wvDrawHover(z) {
     }
     return;
   }
-  if (i < 0 || WV.touch && !WV.mode) return;
+  if ((i < 0 && WV.mode !== 'harbour') || WV.touch && !WV.mode) return;
+  if (WV.mode === 'harbour') {
+    // your free shore glows, and the tile the harbour would snap to is ringed
+    ctx.fillStyle = 'rgba(255,216,138,0.35)';
+    const x0 = Math.max(0, Math.floor(WV.cam.x - W / 2 / z) - 1), x1 = Math.min(WARC.W - 1, Math.ceil(WV.cam.x + W / 2 / z) + 1), y0 = Math.max(0, Math.floor(WV.cam.y - H / 2 / z) - 1), y1 = Math.min(WARC.H - 1, Math.ceil(WV.cam.y + H / 2 / z) + 1);
+    for (let ty = y0; ty <= y1; ty++) for (let tx = x0; tx <= x1; tx++) { const j = warIdx(tx, ty); if (WAR.owner[j] === WAR.me && WAR.map[j] >= 2 && WAR.map[j] !== 4 && !WAR.structs.has(j) && warShore(j)) ctx.fillRect(wvSx(tx), wvSy(ty), z, z); }
+    const sn = i >= 0 ? wvNearestShore(i, WV.touch ? 5 : 3) : -1;
+    if (sn >= 0) { ctx.strokeStyle = '#ffd88a'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(wvSx(warX(sn) + 0.5), wvSy(warY(sn) + 0.5), Math.max(6, z * 1.2), 0, 6.283); ctx.stroke(); }
+    if (WV.touch) return;
+  }
+  if (i < 0) return;
   const x = wvSx(warX(i)), y = wvSy(warY(i));
   ctx.strokeStyle = 'rgba(255,255,255,0.8)'; ctx.lineWidth = 1.5; ctx.strokeRect(x, y, z, z);
   if (WV.mode === 'flare' || WV.mode === 'fireship' || WV.mode === 'beacon' || WV.mode === 'tower') {
@@ -287,7 +297,11 @@ function wvOrderAt(i) {
   const o = WAR.owner[i];
   if (WV.mode === 'flare') { const why = warFlare(me, i); if (why) wvSay(why); else WV.mode = null; return; }
   if (WV.mode === 'fireship') { const why = warSendBoat(WAR.me, i, 0, 'fire'); if (why) wvSay(why); else WV.mode = null; return; }
-  if (WV.mode === 'harbour' || WV.mode === 'tower' || WV.mode === 'beacon') { const why = warBuild(me, WV.mode, i); if (why) wvSay(why); else if (!WV.touch) WV.mode = null; else WV.mode = null; return; }
+  if (WV.mode === 'harbour' || WV.mode === 'tower' || WV.mode === 'beacon') {
+    // a harbour snaps to the nearest shore tile of yours (within a few tiles of the tap), so you needn't hit the exact edge
+    const at = WV.mode === 'harbour' ? wvNearestShore(i, WV.touch ? 5 : 3) : i;
+    const why = warBuild(me, WV.mode, at < 0 ? i : at); if (why) wvSay(at < 0 && WV.mode === 'harbour' ? 'No shore of yours near there.' : why); else WV.mode = null; return;
+  }
   if (o === WAR.me) { const s = WAR.structs.get(i); wvSay(s ? `Your ${s.type} on ${WAR.regions[WAR.region[i]].name}.` : `Your land on ${WAR.regions[WAR.region[i]].name}. Pick a building below to raise it here.`); return; }
   if (o >= 0 && me.allies.has(o)) { wvSay(`${WAR.nations[o].name} are sworn to you. Break the pact by attacking anyway? Tap again.`); if (WV.lastAlly === i) { WV.lastAlly = -1; } else { WV.lastAlly = i; return; } }
   const troops = me.troops * WAR.ratio;
@@ -296,6 +310,15 @@ function wvOrderAt(i) {
   const bord = warBorders(WAR.me), byLand = o === -1 ? bord.neutral > 0 && wvSameShore(i) : o === WARC.DR ? bord.dr > 0 && wvSameShore(i) : bord.out.has(o) && wvSameShore(i);
   if (byLand) { warAttack(WAR.me, o, troops); return; }
   const why = warSendBoat(WAR.me, i, troops); if (why) wvSay(why);
+}
+// your nearest free shore tile to a tapped tile, within r tiles
+function wvNearestShore(i, r) {
+  const x0 = warX(i), y0 = warY(i); let best = -1, bd = 1e9;
+  for (let y = Math.max(0, y0 - r); y <= Math.min(WARC.H - 1, y0 + r); y++) for (let x = Math.max(0, x0 - r); x <= Math.min(WARC.W - 1, x0 + r); x++) {
+    const j = warIdx(x, y); if (WAR.owner[j] !== WAR.me || WAR.map[j] < 2 || WAR.map[j] === 4 || WAR.structs.has(j) || !warShore(j)) continue;
+    const d = (x - x0) * (x - x0) + (y - y0) * (y - y0); if (d < bd) { bd = d; best = j; }
+  }
+  return best;
 }
 // is this tile on land that joins yours (at this tide)?
 function wvSameShore(target) {
