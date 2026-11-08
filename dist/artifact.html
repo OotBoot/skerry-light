@@ -15732,7 +15732,7 @@ function warColour(k, n) {
 }
 function warNation(id, name, isMe, rng) {
   return {
-    id, name, isMe, alive: true, col: warColour(id, 1), troops: 40, gold: 25, tiles: 0, maxTroops: 100,
+    id, name, isMe, alive: true, col: warColour(id, 1), troops: 120, gold: 25, tiles: 0, maxTroops: 100,
     bot: isMe ? null : { aggr: 0.25 + rng() * 0.7, naval: rng(), loyal: rng(), greed: rng(), next: rng() * 2, pactCd: 60 + rng() * 90 },
     reqCd: 0,
     rel: null, allies: new Map(), bell: 0, bellCd: 0, flareCd: 0, fireCd: 0, light: false, regionsHeld: 0,
@@ -15946,8 +15946,10 @@ function warFrontier(at) {
 }
 function warTileCost(at, j) {
   const def = at.target >= 0 ? WAR.nations[at.target] : null;
-  let cost = at.target === WARC.DR ? 4.5 : at.target === -1 ? 0.8 : 3;
+  let cost = at.target === WARC.DR ? 4.5 : at.target === -1 ? 0.55 : 3;
   if (WAR.map[j] === 3) cost += 1.4;
+  // overstretch: a big nation holds its far marches thinly, so every tile it takes from someone costs it more
+  if (def) { const att = WAR.nations[at.from]; if (att) cost *= 1 + Math.max(0, att.tiles / WAR.landTiles - 0.08) * 3; }
   if (def) {
     cost += Math.min(16, (def.troops / Math.max(1, def.tiles)) * 1.0);
     if (def.bell > 0) cost *= 1.6;
@@ -15972,7 +15974,8 @@ function warAttacksTick(dt) {
     at.t += dt;
     // how many tiles this tick: bigger forces spread faster, up to the border's width
     // (over the empty wilds the advance runs: nobody is there to stop it)
-    at.prog += dt * (1.1 + Math.sqrt(at.troops) * 0.2) * (at.target === -1 ? 7 : 1);
+    // (empty land is taken fast; the drowned and other nations' land at a fighting pace)
+    at.prog += at.target === -1 ? dt * (2.2 + Math.sqrt(at.troops) * 0.4) * 9 : dt * (1.1 + Math.sqrt(at.troops) * 0.2) * (at.target === WARC.DR ? 1.5 : 1);
     let n = Math.floor(at.prog); if (n <= 0) continue; at.prog -= n;
     const front = warFrontier(at);
     if (!front.length) { a.troops += at.troops * 0.9; WAR.attacks.splice(k, 1); if (a.isMe && at.taken > 0 && at.target >= 0) warLog(`No more of ${def.name}’s land within reach; your people fall back.`); continue; }
@@ -15996,7 +15999,18 @@ function warAttacksTick(dt) {
     n = Math.min(n, front.length);
     for (let q = 0; q < n; q++) {
       const j = front[q], cost = warTileCost(at, j);
-      if (at.troops < cost) { WAR.attacks.splice(k, 1); if (a.isMe) warLog(def ? `Your attack on ${def.name} is spent.` : 'Your advance runs out of people.'); break; }
+      // an advance into empty or drowned land keeps going on its own: it draws fresh people from the reserve
+      // as it needs them, as long as more than a quarter of the cap is left at home
+      if (at.troops < cost && !def && a.isMe) {
+        const spare = a.troops - a.maxTroops * 0.12;
+        if (spare > cost) { const top = Math.min(spare, Math.max(cost * 6, spare * 0.3)); a.troops -= top; at.troops += top; at.fed = (at.fed || 0) + top; at.waitT = 0; }
+        else {
+          // nobody to spare just now: the advance holds where it is and goes on as your people grow (for up to 30 s)
+          at.waitT = (at.waitT || 0) + dt;
+          if (at.waitT < 30) break;
+        }
+      }
+      if (at.troops < cost) { WAR.attacks.splice(k, 1); if (a.isMe) warLog(def ? `Your attack on ${def.name} is spent.` : at.fed ? 'Your advance halts: no one could be spared for half a minute.' : 'Your advance runs out of people.'); break; }
       at.troops -= cost; at.taken++;
       if (def) def.troops = Math.max(0, def.troops - cost * 0.45);
       warTakeTile(j, at.from, at.target);
@@ -16764,7 +16778,7 @@ function wvPanels() {
   $('warSpawnBar').hidden = WAR.phase !== 'spawn';
   $('warTroops').textContent = `${warFmt(me.troops)} / ${warFmt(me.maxTroops)}`;
   $('warGold').textContent = Math.floor(me.gold);
-  $('warLand').textContent = `${me.tiles} · ${(me.tiles / WAR.landTiles * 100).toFixed(1)}%`;
+  $('warLand').textContent = `${me.tiles} · ${(me.tiles / WAR.landTiles * 100).toFixed(1).replace(/^(\d{3,}).*/, '100.0')}%`;
   $('warRatioOut').textContent = `${Math.round(WAR.ratio * 100)}% · ${warFmt(me.troops * WAR.ratio)}`;
   const cost = t => warStructCost(me, t);
   $('warHarbour').querySelector('small').textContent = `${cost('harbour')} g`; $('warTower').querySelector('small').textContent = `${cost('tower')} g`; $('warBeacon').querySelector('small').textContent = `${cost('beacon')} g`; $('warCity').querySelector('small').textContent = `${cost('city')} g`; $('warFactory').querySelector('small').textContent = `${cost('factory')} g`;
@@ -16781,7 +16795,7 @@ function wvPanels() {
     const rows = WAR.nations.filter(A).sort((a, b) => T(b) - T(a));
     const top = rows.slice(0, 8); if (me.alive && !top.includes(me)) top.push(me);
     const dead = WAR.nations.filter(n => !A(n)).length;
-    $('warBoard').innerHTML = top.map(n => `<li class="${n.isMe ? 'me' : ''}${n.allies.has(WAR.me) && !n.isMe ? ' ally' : ''}"><i style="background:${n.col}"></i><span>${rows.indexOf(n) + 1}. ${n.name}${n.light ? ' ✦' : ''}${n.allies.has(WAR.me) && !n.isMe ? ' ☍' : ''}</span><b>${(T(n) / WAR.landTiles * 100).toFixed(1)}%</b><em>${fogd(n) ? '?' : warFmt(n.troops)}</em></li>`).join('') +
+    $('warBoard').innerHTML = top.map(n => `<li class="${n.isMe ? 'me' : ''}${n.allies.has(WAR.me) && !n.isMe ? ' ally' : ''}"><i style="background:${n.col}"></i><span>${rows.indexOf(n) + 1}. ${n.name}${n.light ? ' ✦' : ''}${n.allies.has(WAR.me) && !n.isMe ? ' ☍' : ''}</span><b>${(T(n) / WAR.landTiles * 100).toFixed(1).replace(/^(\d{3,}).*/, '100.0')}%</b><em>${fogd(n) ? '?' : warFmt(n.troops)}</em></li>`).join('') +
       `<li class="sum">${WV.fog ? 'Night: the others as they stood at dusk' : `${rows.length} nations stand${dead ? `, ${dead} fallen` : ''}`}</li>`;
   }
   // the log, newest at the bottom
@@ -16813,7 +16827,7 @@ function wvPacts() {
     const ally = me.allies.has(n.id), [mk, ml] = mood(n.rel[WAR.me]), war = WAR.attacks.some(a => a.from === n.id && a.target === WAR.me) || WAR.attacks.some(a => a.from === WAR.me && a.target === n.id);
     const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'warpact' + (ally ? ' ally' : '');
     const status = ally ? `Sworn · ${Math.ceil((me.allies.get(n.id) - WAR.t))} s left · tap to break` : n.reqCd > 0 ? `Refused · ask again in ${Math.ceil(n.reqCd)} s` : war ? 'At war with you · tap to ask for peace' : 'Tap to ask for a pact';
-    btn.innerHTML = `<i style="background:${n.col}"></i><span class="nm">${n.name}</span><span class="pct">${((fogd(n) || n).tiles / WAR.landTiles * 100).toFixed(1)}%</span><span class="mood ${mk}">${ml}</span><small>${status}</small>`;
+    btn.innerHTML = `<i style="background:${n.col}"></i><span class="nm">${n.name}</span><span class="pct">${((fogd(n) || n).tiles / WAR.landTiles * 100).toFixed(1).replace(/^(\d{3,}).*/, '100.0')}%</span><span class="mood ${mk}">${ml}</span><small>${status}</small>`;
     btn.addEventListener('click', () => wvPactTap(n));
     el.append(btn);
   }

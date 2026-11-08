@@ -337,7 +337,7 @@ function wvPanels() {
   $('warSpawnBar').hidden = WAR.phase !== 'spawn';
   $('warTroops').textContent = `${warFmt(me.troops)} / ${warFmt(me.maxTroops)}`;
   $('warGold').textContent = Math.floor(me.gold);
-  $('warLand').textContent = `${me.tiles} · ${(me.tiles / WAR.landTiles * 100).toFixed(1)}%`;
+  $('warLand').textContent = `${me.tiles} · ${(me.tiles / WAR.landTiles * 100).toFixed(1).replace(/^(\d{3,}).*/, '100.0')}%`;
   $('warRatioOut').textContent = `${Math.round(WAR.ratio * 100)}% · ${warFmt(me.troops * WAR.ratio)}`;
   const cost = t => warStructCost(me, t);
   $('warHarbour').querySelector('small').textContent = `${cost('harbour')} g`; $('warTower').querySelector('small').textContent = `${cost('tower')} g`; $('warBeacon').querySelector('small').textContent = `${cost('beacon')} g`; $('warCity').querySelector('small').textContent = `${cost('city')} g`; $('warFactory').querySelector('small').textContent = `${cost('factory')} g`;
@@ -354,7 +354,7 @@ function wvPanels() {
     const rows = WAR.nations.filter(A).sort((a, b) => T(b) - T(a));
     const top = rows.slice(0, 8); if (me.alive && !top.includes(me)) top.push(me);
     const dead = WAR.nations.filter(n => !A(n)).length;
-    $('warBoard').innerHTML = top.map(n => `<li class="${n.isMe ? 'me' : ''}${n.allies.has(WAR.me) && !n.isMe ? ' ally' : ''}"><i style="background:${n.col}"></i><span>${rows.indexOf(n) + 1}. ${n.name}${n.light ? ' ✦' : ''}${n.allies.has(WAR.me) && !n.isMe ? ' ☍' : ''}</span><b>${(T(n) / WAR.landTiles * 100).toFixed(1)}%</b><em>${fogd(n) ? '?' : warFmt(n.troops)}</em></li>`).join('') +
+    $('warBoard').innerHTML = top.map(n => `<li class="${n.isMe ? 'me' : ''}${n.allies.has(WAR.me) && !n.isMe ? ' ally' : ''}"><i style="background:${n.col}"></i><span>${rows.indexOf(n) + 1}. ${n.name}${n.light ? ' ✦' : ''}${n.allies.has(WAR.me) && !n.isMe ? ' ☍' : ''}</span><b>${(T(n) / WAR.landTiles * 100).toFixed(1).replace(/^(\d{3,}).*/, '100.0')}%</b><em>${fogd(n) ? '?' : warFmt(n.troops)}</em></li>`).join('') +
       `<li class="sum">${WV.fog ? 'Night: the others as they stood at dusk' : `${rows.length} nations stand${dead ? `, ${dead} fallen` : ''}`}</li>`;
   }
   // the log, newest at the bottom
@@ -386,7 +386,7 @@ function wvPacts() {
     const ally = me.allies.has(n.id), [mk, ml] = mood(n.rel[WAR.me]), war = WAR.attacks.some(a => a.from === n.id && a.target === WAR.me) || WAR.attacks.some(a => a.from === WAR.me && a.target === n.id);
     const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'warpact' + (ally ? ' ally' : '');
     const status = ally ? `Sworn · ${Math.ceil((me.allies.get(n.id) - WAR.t))} s left · tap to break` : n.reqCd > 0 ? `Refused · ask again in ${Math.ceil(n.reqCd)} s` : war ? 'At war with you · tap to ask for peace' : 'Tap to ask for a pact';
-    btn.innerHTML = `<i style="background:${n.col}"></i><span class="nm">${n.name}</span><span class="pct">${((fogd(n) || n).tiles / WAR.landTiles * 100).toFixed(1)}%</span><span class="mood ${mk}">${ml}</span><small>${status}</small>`;
+    btn.innerHTML = `<i style="background:${n.col}"></i><span class="nm">${n.name}</span><span class="pct">${((fogd(n) || n).tiles / WAR.landTiles * 100).toFixed(1).replace(/^(\d{3,}).*/, '100.0')}%</span><span class="mood ${mk}">${ml}</span><small>${status}</small>`;
     btn.addEventListener('click', () => wvPactTap(n));
     el.append(btn);
   }
