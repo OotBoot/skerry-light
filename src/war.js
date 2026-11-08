@@ -24,7 +24,8 @@ const WARC = {
   DAY: 240, NIGHT_FROM: 0.62, NIGHT_TO: 0.96,   // a day, and the part of it that's night
   TIDE: 180,                      // the tide turns twice in this
   BEAM_TURN: 43, BEAM_HALF: 0.22, // the Light's sweep, lit only at night: one turn in this many seconds, this half-width (radians)
-  COSTS: { harbour: [60, 30], tower: [50, 25], beacon: [80, 35], flare: 45, fireship: 320 },
+  COSTS: { harbour: [60, 30], tower: [50, 25], beacon: [80, 35], city: [180, 140], factory: [320, 220], flare: 45, fireship: 320 },
+  CITY_POP: 1000, CITY_GROW: 2.5, CITY_GOLD: 1.2, FACTORY_R: 16,   // a city: +1M people (people are counted in thousands), faster growth, gold; doubled within a factory's rails
   TOWER_R: 6, BEACON_R: 8, FLARE_R: 9, FLARE_T: 45, FIRE_R: 6, HARBOUR_R: 3,
   BELL_CD: 90, BELL_T: 18, BOAT_SPEED: 4, LANDING_MIN: 25, TRUCE: 75,   // no war between nations in the first minute and a quarter
   DR: -2,                         // the owner value of land the drowned hold
@@ -145,7 +146,7 @@ function warNation(id, name, isMe, rng) {
     bot: isMe ? null : { aggr: 0.25 + rng() * 0.7, naval: rng(), loyal: rng(), greed: rng(), next: rng() * 2, pactCd: 60 + rng() * 90 },
     reqCd: 0,
     rel: null, allies: new Map(), bell: 0, bellCd: 0, flareCd: 0, fireCd: 0, light: false, regionsHeld: 0,
-    harbours: 0, towers: 0, beacons: 0, kills: 0, taken: 0, lost: 0, lastHit: -1, lastHitT: -99, drownedT: -99, betrayed: 0, cx: 0, cy: 0,
+    harbours: 0, towers: 0, beacons: 0, cities: 0, factories: 0, railCities: 0, kills: 0, taken: 0, lost: 0, lastHit: -1, lastHitT: -99, drownedT: -99, betrayed: 0, cx: 0, cy: 0,
   };
 }
 
@@ -183,7 +184,7 @@ function warStart(nBots, seed, diff) {
   warRegions();
   WAR.landTiles = 0; for (let i = 0; i < map.length; i++) if (map[i] >= 2) WAR.landTiles++;
   WAR.attacks = []; WAR.boats = []; WAR.flares = []; WAR.structs = new Map(); WAR.log = []; WAR.prompts = []; WAR.events = [];
-  WAR.lit = new Uint8Array(map.length); WAR.build = null; WAR.ratio = 0.4;
+  WAR.lit = new Uint8Array(map.length); WAR.build = null; WAR.rails = []; WAR.railed = new Set(); WAR.ratio = 0.4;
   // nations: you, and the bots, each with a name of its own
   const houses = WAR_HOUSES.slice(), names = new Set();
   const pickName = () => { for (let k = 0; k < 20; k++) { const h = houses.splice((rng() * houses.length) | 0, 1)[0] || ('Clan ' + k); const f = WAR_FORMS[(rng() * WAR_FORMS.length) | 0]; const n = f.replace('%', h); if (!names.has(n)) { names.add(n); return n; } } return 'the Nameless'; };
@@ -227,6 +228,13 @@ function warStop() {
   state = 'title'; toTitle();
 }
 
+// people, as shown: the game counts them in thousands (so a city's 1000 is a million)
+function warFmt(v) {
+  const p = Math.max(0, v) * 1000;
+  if (p >= 1e6) return (p / 1e6).toFixed(p >= 1e7 ? 1 : 2).replace(/\.?0+$/, '') + 'M';
+  if (p >= 1e3) return Math.round(p / 1e3) + 'K';
+  return String(Math.round(p));
+}
 // the name of the island a tile is on (a shoal belongs to none)
 function warPlace(i) { const r = i >= 0 ? WAR.regions[WAR.region[i]] : null; return r ? r.name : 'the shoals'; }
 
@@ -234,11 +242,13 @@ function warPlace(i) { const r = i >= 0 ? WAR.regions[WAR.region[i]] : null; ret
 function warLog(text, kind) { WAR.log.push({ text, t: WAR.t, kind: kind || '' }); if (WAR.log.length > 60) WAR.log.shift(); WAR.logDirty = true; }
 
 // ---------- structures ----------
-function warStructCost(n, type) { const c = WARC.COSTS[type]; return Array.isArray(c) ? c[0] + c[1] * (type === 'harbour' ? n.harbours : type === 'tower' ? n.towers : n.beacons) : c; }
+const WAR_COUNT = { harbour: 'harbours', tower: 'towers', beacon: 'beacons', city: 'cities', factory: 'factories' };
+function warStructCost(n, type) { const c = WARC.COSTS[type]; return Array.isArray(c) ? c[0] + c[1] * (n[WAR_COUNT[type]] || 0) : c; }
 function warCanBuild(n, type, i) {
   if (WAR.owner[i] !== n.id || WAR.map[i] < 2 || WAR.map[i] === 4) return 'Not your land.';
   if (WAR.structs.has(i)) return 'Something stands here already.';
   if (type === 'harbour' && !warShore(i)) return 'A harbour needs the shore.';
+  if ((type === 'city' || type === 'factory') && [...WAR.structs].some(([j, s]) => (s.type === 'city' || s.type === 'factory') && Math.hypot(warX(j) - warX(i), warY(j) - warY(i)) < 3)) return 'Too close to another city or factory.';
   if (n.gold < warStructCost(n, type)) return 'Not enough gold.';
   return '';
 }
@@ -246,14 +256,31 @@ function warBuild(n, type, i) {
   const why = warCanBuild(n, type, i); if (why) return why;
   n.gold -= warStructCost(n, type);
   WAR.structs.set(i, { type, owner: n.id, hp: 1, t: WAR.t });
-  if (type === 'harbour') n.harbours++; else if (type === 'tower') n.towers++; else n.beacons++;
-  if (n.isMe) warLog(`You raise a ${type} on ${warPlace(i)}.`);
+  n[WAR_COUNT[type]] = (n[WAR_COUNT[type]] || 0) + 1;
+  warRails();
+  if (n.isMe) warLog(type === 'city' ? `A city rises on ${warPlace(i)}: a million more can live in your land.` : type === 'factory' ? `A factory opens on ${warPlace(i)}; its railroads run out to your cities.` : `You raise a ${type} on ${warPlace(i)}.`);
   return '';
+}
+// railroads: each factory runs a line out to every one of its owner's cities within its reach, and the cities it
+// reaches are joined to each other by the shortest lines between them; a city on a railroad pays double gold
+function warRails() {
+  const rails = [], served = new Set(), R = WARC.FACTORY_R;
+  const cities = [...WAR.structs].filter(([, s]) => s.type === 'city'), facts = [...WAR.structs].filter(([, s]) => s.type === 'factory');
+  for (const [fi, f] of facts) {
+    const near = cities.filter(([ci, c]) => c.owner === f.owner && Math.hypot(warX(ci) - warX(fi), warY(ci) - warY(fi)) <= R).map(([ci]) => ci);
+    for (const ci of near) { rails.push([fi, ci, f.owner]); served.add(ci); }
+    // join the reached cities to one another: each to its nearest neighbour among them (a simple chain of track)
+    for (const a of near) { let best = -1, bd = 1e9; for (const b of near) { if (b === a) continue; const d = Math.hypot(warX(a) - warX(b), warY(a) - warY(b)); if (d < bd) { bd = d; best = b; } } if (best >= 0 && !rails.some(r => (r[0] === best && r[1] === a))) rails.push([a, best, f.owner]); }
+  }
+  WAR.rails = rails; WAR.railed = served;
+  for (const n of WAR.nations) n.railCities = 0;
+  for (const ci of served) { const s = WAR.structs.get(ci); if (s) WAR.nations[s.owner].railCities++; }
 }
 function warLoseStruct(i) {
   const s = WAR.structs.get(i); if (!s) return;
-  const n = WAR.nations[s.owner]; if (n) { if (s.type === 'harbour') n.harbours--; else if (s.type === 'tower') n.towers--; else n.beacons--; }
+  const n = WAR.nations[s.owner]; if (n) n[WAR_COUNT[s.type]] = Math.max(0, (n[WAR_COUNT[s.type]] || 0) - 1);
   WAR.structs.delete(i);
+  if (s.type === 'city' || s.type === 'factory') warRails();
 }
 
 // ---------- light ----------
@@ -312,8 +339,8 @@ function warAttack(from, target, troops, landing, aim) {
     const d = WAR.nations[target];
     d.lastHit = from; d.lastHitT = WAR.t; d.rel[from] = Math.max(-1, d.rel[from] - 0.45);
     for (const n of WAR.nations) if (n.allies.has(target) && n.id !== from) n.rel[from] = Math.max(-1, n.rel[from] - 0.25);
-    if (a.isMe) warLog(`You march on ${d.name} with ${Math.round(troops)}.`); else if (d.isMe) warLog(`${a.name} attacks you with ${Math.round(troops)}.`, 'bad');
-  } else if (target === WARC.DR && a.isMe) warLog(`You go to take the drowned shore back (${Math.round(troops)}).`);
+    if (a.isMe) warLog(`You march on ${d.name} with ${warFmt(troops)}.`); else if (d.isMe) warLog(`${a.name} attacks you with ${warFmt(troops)}.`, 'bad');
+  } else if (target === WARC.DR && a.isMe) warLog(`You go to take the drowned shore back (${warFmt(troops)}).`);
   return at;
 }
 // the tiles this attack can take next: the target's tiles next to the attacker's
@@ -431,10 +458,10 @@ function warSendBoat(from, target, troops, kind) {
   if (!warCoastal(target)) return 'A boat needs a shore to land on.';
   const path = warSeaPath(from, target); if (!path) return 'No sea road reaches there.';
   if (kind === 'fire') { if (a.harbours < 1) return 'A fire-ship needs a harbour.'; if (a.gold < WARC.COSTS.fireship) return 'Not enough gold.'; a.gold -= WARC.COSTS.fireship; a.fireCd = 90; troops = 0; }
-  else { troops = Math.min(troops, a.troops); if (troops < WARC.LANDING_MIN) return `A landing needs at least ${WARC.LANDING_MIN}.`; a.troops -= troops; }
+  else { troops = Math.min(troops, a.troops); if (troops < WARC.LANDING_MIN) return `A landing needs at least ${warFmt(WARC.LANDING_MIN)}.`; a.troops -= troops; }
   const s = path[0];
   WAR.boats.push({ from, target, troops, kind: kind || 'troops', path, i: 0, x: warX(s), y: warY(s), hp: 1, t: 0 });
-  if (a.isMe) { WAR.stats.boats++; warLog(kind === 'fire' ? 'A fire-ship puts out, low in the water.' : `A boat puts out with ${Math.round(troops)} aboard.`); }
+  if (a.isMe) { WAR.stats.boats++; warLog(kind === 'fire' ? 'A fire-ship puts out, low in the water.' : `A boat puts out with ${warFmt(troops)} aboard.`); }
   return '';
 }
 function warBoatsTick(dt) {
@@ -636,13 +663,13 @@ function warGrowth(dt) {
   for (const n of WAR.nations) {
     if (!n.alive) continue;
     n.light = n.id === lo;
-    n.maxTroops = 60 + n.tiles * 10;
-    let g = (1.3 + n.tiles * 0.07) * (1 - n.troops / Math.max(1, n.maxTroops));
+    n.maxTroops = 60 + n.tiles * 10 + (n.cities || 0) * WARC.CITY_POP;
+    let g = (1.3 + n.tiles * 0.07 + (n.cities || 0) * WARC.CITY_GROW) * (1 - n.troops / Math.max(1, n.maxTroops));
     if (n.light) g *= 1.1;
     g *= 1 + 0.12 * n.regionsHeld;
     if (n.bot) g *= WAR.D.grow;
     if (g > 0) n.troops += g * dt;
-    n.gold += (0.35 + n.tiles * 0.011 + n.harbours * 0.4 + (n.light ? 1.5 : 0) + n.regionsHeld * 0.3) * dt * (n.bot ? WAR.D.gold : 1);
+    n.gold += (0.35 + n.tiles * 0.011 + n.harbours * 0.4 + (n.light ? 1.5 : 0) + n.regionsHeld * 0.3 + ((n.cities || 0) + (n.railCities || 0)) * WARC.CITY_GOLD) * dt * (n.bot ? WAR.D.gold : 1);
     if (n.reqCd > 0) n.reqCd -= dt; if (n.bot && n.bot.pactCd > 0) n.bot.pactCd -= dt;
     if (n.bell > 0) n.bell -= dt; if (n.bellCd > 0) n.bellCd -= dt; if (n.flareCd > 0) n.flareCd -= dt; if (n.fireCd > 0) n.fireCd -= dt;
     for (const [k, until] of n.allies) if (WAR.t > until) { warBreakPact(n.id, k, false); if (n.isMe) warLog(`Your pact with ${WAR.nations[k].name} has run its course.`); }
@@ -708,7 +735,9 @@ function warBotTick(n, dt) {
   // 6. gold: harbours for sailors, beacons after a bad night, towers at the border, a fire-ship for the hated
   if (n.gold > 40) {
     const r = WAR.rng();
-    if (b.naval > 0.4 && n.harbours < 1 + (n.tiles / 90 | 0) && n.gold >= warStructCost(n, 'harbour') && r < 0.4) warBotBuild(n, 'harbour');
+    if (n.tiles > 60 && n.cities < 1 + (n.tiles / 180 | 0) && n.gold >= warStructCost(n, 'city') && r < 0.55) warBotBuild(n, 'city');
+    else if (n.cities >= 2 && n.factories < (n.cities / 3 | 0) + 1 && n.railCities < n.cities && n.gold >= warStructCost(n, 'factory') && r < 0.5) warBotBuild(n, 'factory');
+    else if (b.naval > 0.4 && n.harbours < 1 + (n.tiles / 90 | 0) && n.gold >= warStructCost(n, 'harbour') && r < 0.4) warBotBuild(n, 'harbour');
     else if (WAR.t - n.drownedT < 60 && n.gold >= warStructCost(n, 'beacon') && r < 0.6) warBotBuild(n, 'beacon');
     else if (n.towers < 1 + (n.tiles / 70 | 0) && n.gold >= warStructCost(n, 'tower') && r < 0.5) warBotBuild(n, 'tower');
     else if (n.harbours > 0 && n.gold >= WARC.COSTS.fireship && n.fireCd <= 0 && b.aggr > 0.5 && WAR.rng() < 0.3) {
@@ -731,6 +760,9 @@ function warBotBuild(n, type, vs) {
     if (type === 'harbour') { if (!warShore(i)) continue; }
     else if (type === 'tower') { let nb = 0; warNeighbours(i, j => { if (vs != null ? WAR.owner[j] === vs : (WAR.owner[j] >= 0 && WAR.owner[j] !== n.id)) nb++; }); s += nb * 2; }
     else if (type === 'beacon') { if (!warCoastal(i)) continue; if (WAR.lit[i] >= 3) continue; s += 1; }
+    else if (type === 'city') { let own = 0; warNeighbours(i, j => { if (WAR.owner[j] === n.id) own++; }); if (own < 4) continue; s += 2 - Math.hypot(warX(i) - n.cx, warY(i) - n.cy) / 30; }
+    else if (type === 'factory') { let c = 0; for (const [j, st] of WAR.structs) if (st.type === 'city' && st.owner === n.id && !WAR.railed.has(j) && Math.hypot(warX(j) - warX(i), warY(j) - warY(i)) <= WARC.FACTORY_R) c++; if (!c) continue; s += c * 2; }
+    if (warCanBuild(n, type, i)) continue;
     if (s > bs) { bs = s; best = i; }
   }
   if (best >= 0) warBuild(n, type, best);

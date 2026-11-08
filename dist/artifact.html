@@ -1002,7 +1002,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
     <div class="card warcard" id="warTitle" aria-labelledby="warHead">
       <div class="cardtop"><span class="eyebrow">A third game · one against many · a war for the islands</span></div>
       <h1 id="warHead">The Drowned Reach</h1>
-      <p>Land on an archipelago of skerries and take it. Your people grow with the land you hold; send a share of them against the empty shore, then against your neighbours, tile by tile. Boats carry landings to other islands. Gold raises harbours, watchtowers and beacons, and buys flares and fire-ships. Sixteen nations (or up to forty) want the same islands, the tide opens and shuts the shoal roads between them, and at night the drowned come up on any shore the Light doesn’t reach.</p>
+      <p>Land on an archipelago of skerries and take it. Your people grow with the land you hold; send a share of them against the empty shore, then against your neighbours, tile by tile. Boats carry landings to other islands. Gold raises cities, factories and their railroads, harbours, watchtowers and beacons, and buys flares and fire-ships. Sixteen nations (or up to forty) want the same islands, the tide opens and shuts the shoal roads between them, and at night the drowned come up on any shore the Light doesn’t reach.</p>
       <div class="warsetup">
         <label>Nations against you <output id="warBotsOut">16</output><input id="warBots" type="range" min="4" max="40" value="16"></label>
         <label for="warDiff">How they play <select id="warDiff"><option value="easy">Easy: slow to grow, slow to anger</option><option value="normal" selected>Normal</option><option value="hard">Hard: quicker, richer, cleverer</option><option value="brutal">Brutal: they come for you</option></select></label>
@@ -1017,9 +1017,9 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
         <summary>How to play</summary>
         <p><b>Land.</b> When the map opens, tap open land on a big island to mark your landing (or let the clock run and be put somewhere). Your people grow on their own; the more land you hold the faster, up to a limit the land sets. Gold comes in with land, harbours and whole islands.</p>
         <p><b>Fight.</b> The slider sets what share of your people an order sends. Tap empty land, drowned land or an enemy’s land that touches yours to march on it; the force spreads along the border and takes tiles until it is spent. Hills, watchtowers and a ringing bell make tiles dearer to take. Tap a shore across the water and a boat carries the force there instead (a landing needs at least 25). Enemy watchtowers fire on passing boats.</p>
-        <p><b>Build.</b> Harbour: gold, light on the shore, and fire-ships. Watchtower: tiles near it cost attackers far more, and it fires on boats. Beacon: light that keeps the drowned off the shore round it. Flare: bursts over a spot, lights it for a while and clears the drowned there. Fire-ship: sails from a harbour and burns everything round where it lands, friend or foe. Bell: your people hold for a while, dearly.</p>
+        <p><b>Build.</b> City: room for a million more people (people are counted in thousands), faster growth and gold. Factory: lays railroads to every city of yours within 16 tiles and joins them; cities on a railroad pay double gold. Harbour: gold, light on the shore, and fire-ships. Watchtower: tiles near it cost attackers far more, and it fires on boats. Beacon: light that keeps the drowned off the shore round it. Flare: bursts over a spot, lights it for a while and clears the drowned there. Fire-ship: sails from a harbour and burns everything round where it lands, friend or foe. Bell: your people hold for a while, dearly.</p>
         <p><b>The Reach.</b> The Light’s beam sweeps the map; the nation holding the Light’s rock is the Keeper, and gets gold and safe shores. At night the drowned rise on dark shores and take the land into the dark; by day they sink back and leave it empty. The tide turns every ninety seconds: at low water the shoals dry into land bridges, at high water they drown and anyone on them loses them. Hold a whole great isle for a bonus (✦). Pacts last four minutes; break one and every nation remembers.</p>
-        <p><b>Keys:</b> drag or arrows to pan · wheel or +/- to zoom · Q/E the share · H harbour · T tower · G beacon · F flare · X fire-ship · B bell · Space pause · 1/2/3 speed · Enter land now · Tab the leaderboard on a phone · Esc menu. <b>Touch:</b> drag to pan, pinch to zoom, tap to order.</p>
+        <p><b>Keys:</b> drag or arrows to pan · wheel or +/- to zoom · Q/E the share · C city · V factory · H harbour · T tower · G beacon · F flare · X fire-ship · B bell · Space pause · 1/2/3 speed · Enter land now · Tab the leaderboard on a phone · Esc menu. <b>Touch:</b> drag to pan, pinch to zoom, tap to order.</p>
       </details>
     </div>
   </div>
@@ -1048,6 +1048,8 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
       <div class="warstats"><span>People <b id="warTroops">0</b></span><span>Gold <b id="warGold">0</b></span><span>Land <b id="warLand">0</b></span></div>
       <label class="warratio">Send <output id="warRatioOut">40%</output><input id="warRatio" type="range" min="5" max="100" value="40"></label>
       <div class="waractions" id="warActions">
+        <button type="button" id="warCity"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 21h18M5 21v-7l4-3 4 3v7M13 21V9l4-4 4 4v12M9 21v-3M17 12v1M17 16v1M6.5 15.5h0M11.5 15.5h0"/></svg>City<small></small></button>
+        <button type="button" id="warFactory"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 21V11l5 3v-3l5 3v-3l5 3V5h3v16zM3 21h18M7 18h2M12 18h2M17 18h2"/></svg>Factory<small></small></button>
         <button type="button" id="warHarbour"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="5" r="2"/><path d="M12 7v13M5 13c0 4 3 7 7 7s7-3 7-7M3 13h4M17 13h4"/></svg>Harbour<small></small></button>
         <button type="button" id="warTower"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 21V8h10v13M7 8V5h3v2h4V5h3v3M10 21v-5h4v5"/></svg>Tower<small></small></button>
         <button type="button" id="warBeacon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l4 14H8z M6 21h12"/><circle cx="12" cy="3" r="1.6"/></svg>Beacon<small></small></button>
@@ -15612,7 +15614,8 @@ const WARC = {
   DAY: 240, NIGHT_FROM: 0.62, NIGHT_TO: 0.96,   // a day, and the part of it that's night
   TIDE: 180,                      // the tide turns twice in this
   BEAM_TURN: 43, BEAM_HALF: 0.22, // the Light's sweep, lit only at night: one turn in this many seconds, this half-width (radians)
-  COSTS: { harbour: [60, 30], tower: [50, 25], beacon: [80, 35], flare: 45, fireship: 320 },
+  COSTS: { harbour: [60, 30], tower: [50, 25], beacon: [80, 35], city: [180, 140], factory: [320, 220], flare: 45, fireship: 320 },
+  CITY_POP: 1000, CITY_GROW: 2.5, CITY_GOLD: 1.2, FACTORY_R: 16,   // a city: +1M people (people are counted in thousands), faster growth, gold; doubled within a factory's rails
   TOWER_R: 6, BEACON_R: 8, FLARE_R: 9, FLARE_T: 45, FIRE_R: 6, HARBOUR_R: 3,
   BELL_CD: 90, BELL_T: 18, BOAT_SPEED: 4, LANDING_MIN: 25, TRUCE: 75,   // no war between nations in the first minute and a quarter
   DR: -2,                         // the owner value of land the drowned hold
@@ -15733,7 +15736,7 @@ function warNation(id, name, isMe, rng) {
     bot: isMe ? null : { aggr: 0.25 + rng() * 0.7, naval: rng(), loyal: rng(), greed: rng(), next: rng() * 2, pactCd: 60 + rng() * 90 },
     reqCd: 0,
     rel: null, allies: new Map(), bell: 0, bellCd: 0, flareCd: 0, fireCd: 0, light: false, regionsHeld: 0,
-    harbours: 0, towers: 0, beacons: 0, kills: 0, taken: 0, lost: 0, lastHit: -1, lastHitT: -99, drownedT: -99, betrayed: 0, cx: 0, cy: 0,
+    harbours: 0, towers: 0, beacons: 0, cities: 0, factories: 0, railCities: 0, kills: 0, taken: 0, lost: 0, lastHit: -1, lastHitT: -99, drownedT: -99, betrayed: 0, cx: 0, cy: 0,
   };
 }
 
@@ -15771,7 +15774,7 @@ function warStart(nBots, seed, diff) {
   warRegions();
   WAR.landTiles = 0; for (let i = 0; i < map.length; i++) if (map[i] >= 2) WAR.landTiles++;
   WAR.attacks = []; WAR.boats = []; WAR.flares = []; WAR.structs = new Map(); WAR.log = []; WAR.prompts = []; WAR.events = [];
-  WAR.lit = new Uint8Array(map.length); WAR.build = null; WAR.ratio = 0.4;
+  WAR.lit = new Uint8Array(map.length); WAR.build = null; WAR.rails = []; WAR.railed = new Set(); WAR.ratio = 0.4;
   // nations: you, and the bots, each with a name of its own
   const houses = WAR_HOUSES.slice(), names = new Set();
   const pickName = () => { for (let k = 0; k < 20; k++) { const h = houses.splice((rng() * houses.length) | 0, 1)[0] || ('Clan ' + k); const f = WAR_FORMS[(rng() * WAR_FORMS.length) | 0]; const n = f.replace('%', h); if (!names.has(n)) { names.add(n); return n; } } return 'the Nameless'; };
@@ -15815,6 +15818,13 @@ function warStop() {
   state = 'title'; toTitle();
 }
 
+// people, as shown: the game counts them in thousands (so a city's 1000 is a million)
+function warFmt(v) {
+  const p = Math.max(0, v) * 1000;
+  if (p >= 1e6) return (p / 1e6).toFixed(p >= 1e7 ? 1 : 2).replace(/\.?0+$/, '') + 'M';
+  if (p >= 1e3) return Math.round(p / 1e3) + 'K';
+  return String(Math.round(p));
+}
 // the name of the island a tile is on (a shoal belongs to none)
 function warPlace(i) { const r = i >= 0 ? WAR.regions[WAR.region[i]] : null; return r ? r.name : 'the shoals'; }
 
@@ -15822,11 +15832,13 @@ function warPlace(i) { const r = i >= 0 ? WAR.regions[WAR.region[i]] : null; ret
 function warLog(text, kind) { WAR.log.push({ text, t: WAR.t, kind: kind || '' }); if (WAR.log.length > 60) WAR.log.shift(); WAR.logDirty = true; }
 
 // ---------- structures ----------
-function warStructCost(n, type) { const c = WARC.COSTS[type]; return Array.isArray(c) ? c[0] + c[1] * (type === 'harbour' ? n.harbours : type === 'tower' ? n.towers : n.beacons) : c; }
+const WAR_COUNT = { harbour: 'harbours', tower: 'towers', beacon: 'beacons', city: 'cities', factory: 'factories' };
+function warStructCost(n, type) { const c = WARC.COSTS[type]; return Array.isArray(c) ? c[0] + c[1] * (n[WAR_COUNT[type]] || 0) : c; }
 function warCanBuild(n, type, i) {
   if (WAR.owner[i] !== n.id || WAR.map[i] < 2 || WAR.map[i] === 4) return 'Not your land.';
   if (WAR.structs.has(i)) return 'Something stands here already.';
   if (type === 'harbour' && !warShore(i)) return 'A harbour needs the shore.';
+  if ((type === 'city' || type === 'factory') && [...WAR.structs].some(([j, s]) => (s.type === 'city' || s.type === 'factory') && Math.hypot(warX(j) - warX(i), warY(j) - warY(i)) < 3)) return 'Too close to another city or factory.';
   if (n.gold < warStructCost(n, type)) return 'Not enough gold.';
   return '';
 }
@@ -15834,14 +15846,31 @@ function warBuild(n, type, i) {
   const why = warCanBuild(n, type, i); if (why) return why;
   n.gold -= warStructCost(n, type);
   WAR.structs.set(i, { type, owner: n.id, hp: 1, t: WAR.t });
-  if (type === 'harbour') n.harbours++; else if (type === 'tower') n.towers++; else n.beacons++;
-  if (n.isMe) warLog(`You raise a ${type} on ${warPlace(i)}.`);
+  n[WAR_COUNT[type]] = (n[WAR_COUNT[type]] || 0) + 1;
+  warRails();
+  if (n.isMe) warLog(type === 'city' ? `A city rises on ${warPlace(i)}: a million more can live in your land.` : type === 'factory' ? `A factory opens on ${warPlace(i)}; its railroads run out to your cities.` : `You raise a ${type} on ${warPlace(i)}.`);
   return '';
+}
+// railroads: each factory runs a line out to every one of its owner's cities within its reach, and the cities it
+// reaches are joined to each other by the shortest lines between them; a city on a railroad pays double gold
+function warRails() {
+  const rails = [], served = new Set(), R = WARC.FACTORY_R;
+  const cities = [...WAR.structs].filter(([, s]) => s.type === 'city'), facts = [...WAR.structs].filter(([, s]) => s.type === 'factory');
+  for (const [fi, f] of facts) {
+    const near = cities.filter(([ci, c]) => c.owner === f.owner && Math.hypot(warX(ci) - warX(fi), warY(ci) - warY(fi)) <= R).map(([ci]) => ci);
+    for (const ci of near) { rails.push([fi, ci, f.owner]); served.add(ci); }
+    // join the reached cities to one another: each to its nearest neighbour among them (a simple chain of track)
+    for (const a of near) { let best = -1, bd = 1e9; for (const b of near) { if (b === a) continue; const d = Math.hypot(warX(a) - warX(b), warY(a) - warY(b)); if (d < bd) { bd = d; best = b; } } if (best >= 0 && !rails.some(r => (r[0] === best && r[1] === a))) rails.push([a, best, f.owner]); }
+  }
+  WAR.rails = rails; WAR.railed = served;
+  for (const n of WAR.nations) n.railCities = 0;
+  for (const ci of served) { const s = WAR.structs.get(ci); if (s) WAR.nations[s.owner].railCities++; }
 }
 function warLoseStruct(i) {
   const s = WAR.structs.get(i); if (!s) return;
-  const n = WAR.nations[s.owner]; if (n) { if (s.type === 'harbour') n.harbours--; else if (s.type === 'tower') n.towers--; else n.beacons--; }
+  const n = WAR.nations[s.owner]; if (n) n[WAR_COUNT[s.type]] = Math.max(0, (n[WAR_COUNT[s.type]] || 0) - 1);
   WAR.structs.delete(i);
+  if (s.type === 'city' || s.type === 'factory') warRails();
 }
 
 // ---------- light ----------
@@ -15900,8 +15929,8 @@ function warAttack(from, target, troops, landing, aim) {
     const d = WAR.nations[target];
     d.lastHit = from; d.lastHitT = WAR.t; d.rel[from] = Math.max(-1, d.rel[from] - 0.45);
     for (const n of WAR.nations) if (n.allies.has(target) && n.id !== from) n.rel[from] = Math.max(-1, n.rel[from] - 0.25);
-    if (a.isMe) warLog(`You march on ${d.name} with ${Math.round(troops)}.`); else if (d.isMe) warLog(`${a.name} attacks you with ${Math.round(troops)}.`, 'bad');
-  } else if (target === WARC.DR && a.isMe) warLog(`You go to take the drowned shore back (${Math.round(troops)}).`);
+    if (a.isMe) warLog(`You march on ${d.name} with ${warFmt(troops)}.`); else if (d.isMe) warLog(`${a.name} attacks you with ${warFmt(troops)}.`, 'bad');
+  } else if (target === WARC.DR && a.isMe) warLog(`You go to take the drowned shore back (${warFmt(troops)}).`);
   return at;
 }
 // the tiles this attack can take next: the target's tiles next to the attacker's
@@ -16019,10 +16048,10 @@ function warSendBoat(from, target, troops, kind) {
   if (!warCoastal(target)) return 'A boat needs a shore to land on.';
   const path = warSeaPath(from, target); if (!path) return 'No sea road reaches there.';
   if (kind === 'fire') { if (a.harbours < 1) return 'A fire-ship needs a harbour.'; if (a.gold < WARC.COSTS.fireship) return 'Not enough gold.'; a.gold -= WARC.COSTS.fireship; a.fireCd = 90; troops = 0; }
-  else { troops = Math.min(troops, a.troops); if (troops < WARC.LANDING_MIN) return `A landing needs at least ${WARC.LANDING_MIN}.`; a.troops -= troops; }
+  else { troops = Math.min(troops, a.troops); if (troops < WARC.LANDING_MIN) return `A landing needs at least ${warFmt(WARC.LANDING_MIN)}.`; a.troops -= troops; }
   const s = path[0];
   WAR.boats.push({ from, target, troops, kind: kind || 'troops', path, i: 0, x: warX(s), y: warY(s), hp: 1, t: 0 });
-  if (a.isMe) { WAR.stats.boats++; warLog(kind === 'fire' ? 'A fire-ship puts out, low in the water.' : `A boat puts out with ${Math.round(troops)} aboard.`); }
+  if (a.isMe) { WAR.stats.boats++; warLog(kind === 'fire' ? 'A fire-ship puts out, low in the water.' : `A boat puts out with ${warFmt(troops)} aboard.`); }
   return '';
 }
 function warBoatsTick(dt) {
@@ -16224,13 +16253,13 @@ function warGrowth(dt) {
   for (const n of WAR.nations) {
     if (!n.alive) continue;
     n.light = n.id === lo;
-    n.maxTroops = 60 + n.tiles * 10;
-    let g = (1.3 + n.tiles * 0.07) * (1 - n.troops / Math.max(1, n.maxTroops));
+    n.maxTroops = 60 + n.tiles * 10 + (n.cities || 0) * WARC.CITY_POP;
+    let g = (1.3 + n.tiles * 0.07 + (n.cities || 0) * WARC.CITY_GROW) * (1 - n.troops / Math.max(1, n.maxTroops));
     if (n.light) g *= 1.1;
     g *= 1 + 0.12 * n.regionsHeld;
     if (n.bot) g *= WAR.D.grow;
     if (g > 0) n.troops += g * dt;
-    n.gold += (0.35 + n.tiles * 0.011 + n.harbours * 0.4 + (n.light ? 1.5 : 0) + n.regionsHeld * 0.3) * dt * (n.bot ? WAR.D.gold : 1);
+    n.gold += (0.35 + n.tiles * 0.011 + n.harbours * 0.4 + (n.light ? 1.5 : 0) + n.regionsHeld * 0.3 + ((n.cities || 0) + (n.railCities || 0)) * WARC.CITY_GOLD) * dt * (n.bot ? WAR.D.gold : 1);
     if (n.reqCd > 0) n.reqCd -= dt; if (n.bot && n.bot.pactCd > 0) n.bot.pactCd -= dt;
     if (n.bell > 0) n.bell -= dt; if (n.bellCd > 0) n.bellCd -= dt; if (n.flareCd > 0) n.flareCd -= dt; if (n.fireCd > 0) n.fireCd -= dt;
     for (const [k, until] of n.allies) if (WAR.t > until) { warBreakPact(n.id, k, false); if (n.isMe) warLog(`Your pact with ${WAR.nations[k].name} has run its course.`); }
@@ -16296,7 +16325,9 @@ function warBotTick(n, dt) {
   // 6. gold: harbours for sailors, beacons after a bad night, towers at the border, a fire-ship for the hated
   if (n.gold > 40) {
     const r = WAR.rng();
-    if (b.naval > 0.4 && n.harbours < 1 + (n.tiles / 90 | 0) && n.gold >= warStructCost(n, 'harbour') && r < 0.4) warBotBuild(n, 'harbour');
+    if (n.tiles > 60 && n.cities < 1 + (n.tiles / 180 | 0) && n.gold >= warStructCost(n, 'city') && r < 0.55) warBotBuild(n, 'city');
+    else if (n.cities >= 2 && n.factories < (n.cities / 3 | 0) + 1 && n.railCities < n.cities && n.gold >= warStructCost(n, 'factory') && r < 0.5) warBotBuild(n, 'factory');
+    else if (b.naval > 0.4 && n.harbours < 1 + (n.tiles / 90 | 0) && n.gold >= warStructCost(n, 'harbour') && r < 0.4) warBotBuild(n, 'harbour');
     else if (WAR.t - n.drownedT < 60 && n.gold >= warStructCost(n, 'beacon') && r < 0.6) warBotBuild(n, 'beacon');
     else if (n.towers < 1 + (n.tiles / 70 | 0) && n.gold >= warStructCost(n, 'tower') && r < 0.5) warBotBuild(n, 'tower');
     else if (n.harbours > 0 && n.gold >= WARC.COSTS.fireship && n.fireCd <= 0 && b.aggr > 0.5 && WAR.rng() < 0.3) {
@@ -16319,6 +16350,9 @@ function warBotBuild(n, type, vs) {
     if (type === 'harbour') { if (!warShore(i)) continue; }
     else if (type === 'tower') { let nb = 0; warNeighbours(i, j => { if (vs != null ? WAR.owner[j] === vs : (WAR.owner[j] >= 0 && WAR.owner[j] !== n.id)) nb++; }); s += nb * 2; }
     else if (type === 'beacon') { if (!warCoastal(i)) continue; if (WAR.lit[i] >= 3) continue; s += 1; }
+    else if (type === 'city') { let own = 0; warNeighbours(i, j => { if (WAR.owner[j] === n.id) own++; }); if (own < 4) continue; s += 2 - Math.hypot(warX(i) - n.cx, warY(i) - n.cy) / 30; }
+    else if (type === 'factory') { let c = 0; for (const [j, st] of WAR.structs) if (st.type === 'city' && st.owner === n.id && !WAR.railed.has(j) && Math.hypot(warX(j) - warX(i), warY(j) - warY(i)) <= WARC.FACTORY_R) c++; if (!c) continue; s += c * 2; }
+    if (warCanBuild(n, type, i)) continue;
     if (s > bs) { bs = s; best = i; }
   }
   if (best >= 0) warBuild(n, type, best);
@@ -16541,14 +16575,55 @@ function warDraw(dt) {
   WV.uiT += dt; if (WV.uiT > 0.25) { WV.uiT = 0; wvPanels(); wvPacts(); }
   if (WV.tipT > 0) WV.tipT -= dt; wvTip();
 }
+function wvDrawRails(z) {
+  if (!WAR.rails || !WAR.rails.length) return;
+  for (const [a, b, o] of WAR.rails) {
+    if (o !== WAR.me && !(wvSees(a) && wvSees(b))) continue;
+    const x1 = wvSx(warX(a) + 0.5), y1 = wvSy(warY(a) + 0.5), x2 = wvSx(warX(b) + 0.5), y2 = wvSy(warY(b) + 0.5);
+    if (Math.max(x1, x2) < -20 || Math.min(x1, x2) > W + 20 || Math.max(y1, y2) < -20 || Math.min(y1, y2) > H + 20) continue;
+    const L = Math.hypot(x2 - x1, y2 - y1); if (L < 1) continue;
+    const ux = (x2 - x1) / L, uy = (y2 - y1) / L, px = -uy, py = ux, g = Math.max(1.2, z * 0.22);
+    // sleepers, then two rails, in the owner's colour edged dark
+    ctx.strokeStyle = 'rgba(60,44,30,0.9)'; ctx.lineWidth = Math.max(1, z * 0.12); ctx.beginPath();
+    const step = Math.max(4, z * 0.7);
+    for (let d = step / 2; d < L; d += step) { const cx = x1 + ux * d, cy = y1 + uy * d; ctx.moveTo(cx - px * g * 1.6, cy - py * g * 1.6); ctx.lineTo(cx + px * g * 1.6, cy + py * g * 1.6); }
+    ctx.stroke();
+    ctx.strokeStyle = WAR.nations[o].col; ctx.lineWidth = Math.max(1, z * 0.09);
+    ctx.beginPath(); ctx.moveTo(x1 - px * g, y1 - py * g); ctx.lineTo(x2 - px * g, y2 - py * g); ctx.moveTo(x1 + px * g, y1 + py * g); ctx.lineTo(x2 + px * g, y2 + py * g); ctx.stroke();
+  }
+}
 function wvDrawStructs(z) {
+  wvDrawRails(z);
   const s = Math.max(4, z * 0.9);
   for (const [i, st] of WAR.structs) {
     if (st.owner !== WAR.me && !wvSees(i) && st.type !== 'beacon') continue;   // (a lit beacon shows through the fog)
     const x = wvSx(warX(i) + 0.5), y = wvSy(warY(i) + 0.5); if (x < -20 || y < -20 || x > W + 20 || y > H + 20) continue;
     const col = WAR.nations[st.owner].col;
     ctx.lineWidth = Math.max(1, z * 0.12);
-    if (st.type === 'harbour') {
+    if (st.type === 'city') {
+      // a huddle of houses round a spire, roofs in the owner's colour; gold coins when its railroad pays double
+      const k = s * 1.25;
+      ctx.fillStyle = 'rgba(0,0,0,0.45)'; ctx.beginPath(); ctx.ellipse(x, y + k * 0.55, k * 1.05, k * 0.3, 0, 0, 6.283); ctx.fill();
+      for (const [dx, dy, w, h] of [[-0.55, 0.1, 0.5, 0.5], [0.5, 0.15, 0.55, 0.45], [-0.05, 0.3, 0.6, 0.45]]) {
+        const hx = x + dx * k, hy = y + dy * k;
+        ctx.fillStyle = '#d8ccb0'; ctx.fillRect(hx - w * k / 2, hy - h * k / 2, w * k, h * k);
+        ctx.fillStyle = col; ctx.beginPath(); ctx.moveTo(hx - w * k * 0.6, hy - h * k / 2); ctx.lineTo(hx, hy - h * k * 1.05); ctx.lineTo(hx + w * k * 0.6, hy - h * k / 2); ctx.closePath(); ctx.fill();
+        if (z > 5) { ctx.fillStyle = 'rgba(255,216,138,0.85)'; ctx.fillRect(hx - k * 0.06, hy - k * 0.05, k * 0.12, k * 0.12); }
+      }
+      ctx.fillStyle = '#b8ac90'; ctx.fillRect(x - k * 0.12, y - k * 0.95, k * 0.24, k * 0.75); ctx.fillStyle = col; ctx.beginPath(); ctx.moveTo(x - k * 0.17, y - k * 0.95); ctx.lineTo(x, y - k * 1.45); ctx.lineTo(x + k * 0.17, y - k * 0.95); ctx.closePath(); ctx.fill();
+      if (WAR.railed && WAR.railed.has(i) && z > 3) { ctx.fillStyle = '#ffd88a'; ctx.font = `bold ${Math.max(9, z * 1.1)}px "Courier Prime", monospace`; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom'; ctx.fillText('×2', x + k * 0.9, y - k * 0.7); }
+    } else if (st.type === 'factory') {
+      // a long works with a saw-tooth roof and two smoking chimneys
+      const k = s * 1.2;
+      ctx.fillStyle = 'rgba(0,0,0,0.45)'; ctx.beginPath(); ctx.ellipse(x, y + k * 0.5, k * 1.1, k * 0.28, 0, 0, 6.283); ctx.fill();
+      ctx.fillStyle = '#5a4a3c'; ctx.fillRect(x - k * 0.9, y - k * 0.25, k * 1.8, k * 0.7);
+      ctx.fillStyle = col; ctx.beginPath(); ctx.moveTo(x - k * 0.9, y - k * 0.25);
+      for (let t = 0; t < 3; t++) { const bx = x - k * 0.9 + t * k * 0.6; ctx.lineTo(bx + k * 0.6, y - k * 0.6); ctx.lineTo(bx + k * 0.6, y - k * 0.25); }
+      ctx.closePath(); ctx.fill();
+      ctx.fillStyle = '#3a2e24'; for (const cx of [-0.55, 0.65]) ctx.fillRect(x + cx * k - k * 0.09, y - k * 1.0, k * 0.18, k * 0.8);
+      if (z > 3) for (const cx of [-0.55, 0.65]) for (let p = 0; p < 3; p++) { const t = (WAR.t * 0.6 + p / 3 + cx) % 1; ctx.fillStyle = `rgba(200,200,205,${0.35 * (1 - t)})`; ctx.beginPath(); ctx.arc(x + cx * k + t * k * 0.6, y - k * 1.05 - t * k * 1.1, k * (0.12 + t * 0.25), 0, 6.283); ctx.fill(); }
+      ctx.fillStyle = 'rgba(255,200,110,0.8)'; for (let t = 0; t < 4; t++) ctx.fillRect(x - k * 0.75 + t * k * 0.42, y + k * 0.02, k * 0.14, k * 0.14);
+    } else if (st.type === 'harbour') {
       ctx.strokeStyle = '#e8dcc0'; ctx.fillStyle = col; ctx.beginPath(); ctx.arc(x, y, s * 0.55, 0, 6.283); ctx.fill(); ctx.stroke();
       ctx.beginPath(); ctx.moveTo(x, y - s * 0.4); ctx.lineTo(x, y + s * 0.35); ctx.moveTo(x - s * 0.3, y + s * 0.1); ctx.quadraticCurveTo(x, y + s * 0.5, x + s * 0.3, y + s * 0.1); ctx.stroke();
     } else if (st.type === 'tower') {
@@ -16586,7 +16661,7 @@ function wvDrawBoats(z) {
     if (b.kind === 'fire') { ctx.fillStyle = 'rgba(255,140,40,0.5)'; ctx.beginPath(); ctx.arc(0, 0, s * 0.9 + Math.sin(b.t * 9) * 1.5, 0, 6.283); ctx.fill(); }
     if (b.hit > 0) { b.hit -= 0.016; ctx.fillStyle = 'rgba(255,220,160,0.6)'; ctx.beginPath(); ctx.arc(0, 0, s * 0.7, 0, 6.283); ctx.fill(); }
     ctx.restore();
-    if (b.kind !== 'fire' && z > 4) { ctx.fillStyle = '#ece4cf'; ctx.font = `${Math.max(9, z * 1.3)}px "Courier Prime", monospace`; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom'; ctx.fillText(Math.round(b.troops), x, y - s * 1.1); }
+    if (b.kind !== 'fire' && z > 4) { ctx.fillStyle = '#ece4cf'; ctx.font = `${Math.max(9, z * 1.3)}px "Courier Prime", monospace`; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom'; ctx.fillText(warFmt(b.troops), x, y - s * 1.1); }
   }
 }
 function wvDrawAttacks(z) {
@@ -16600,7 +16675,7 @@ function wvDrawAttacks(z) {
     ctx.strokeStyle = a.col; ctx.lineWidth = 1.5; ctx.setLineDash([3, 3]); ctx.lineDashOffset = -WAR.t * 20;
     if (!WV.fog || a.isMe) { ctx.beginPath(); ctx.moveTo(wvSx(a.cx + 0.5), wvSy(a.cy + 0.5)); ctx.lineTo(x, y); ctx.stroke(); }
     ctx.setLineDash([]);
-    ctx.fillStyle = 'rgba(0,0,0,0.55)'; const txt = `⚔ ${Math.round(at.troops)}`; ctx.font = `bold ${Math.max(10, Math.min(14, z * 1.6))}px "Courier Prime", monospace`;
+    ctx.fillStyle = 'rgba(0,0,0,0.55)'; const txt = `⚔ ${warFmt(at.troops)}`; ctx.font = `bold ${Math.max(10, Math.min(14, z * 1.6))}px "Courier Prime", monospace`;
     const tw = ctx.measureText(txt).width; ctx.fillRect(x - tw / 2 - 3, y - 8, tw + 6, 16);
     ctx.fillStyle = at.target === WAR.me ? '#ff9a7a' : a.isMe ? '#ffd88a' : '#ece4cf'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(txt, x, y);
   }
@@ -16639,7 +16714,7 @@ function wvDrawLabels(z) {
     const nm = ntiles > 25 || z > 5 ? n.name : '';
     if (hid && !seenNow) ctx.globalAlpha = 0.55;
     if (nm) { ctx.strokeText(nm, x, y - big * 0.6); ctx.fillText(nm, x, y - big * 0.6); }
-    const tr = hid && !seenNow ? '?' : `${Math.round(n.troops)}${n.bell > 0 ? ' 🔔' : ''}${n.allies.has(WAR.me) && !n.isMe ? ' ☍' : ''}`;
+    const tr = hid && !seenNow ? '?' : `${warFmt(n.troops)}${n.bell > 0 ? ' 🔔' : ''}${n.allies.has(WAR.me) && !n.isMe ? ' ☍' : ''}`;
     ctx.font = `${big * 0.95}px "Courier Prime", monospace`; ctx.strokeText(tr, x, y + (nm ? big * 0.55 : 0)); ctx.fillText(tr, x, y + (nm ? big * 0.55 : 0));
     ctx.globalAlpha = 1;
   }
@@ -16668,8 +16743,8 @@ function wvDrawHover(z) {
   if (i < 0) return;
   const x = wvSx(warX(i)), y = wvSy(warY(i));
   ctx.strokeStyle = 'rgba(255,255,255,0.8)'; ctx.lineWidth = 1.5; ctx.strokeRect(x, y, z, z);
-  if (WV.mode === 'flare' || WV.mode === 'fireship' || WV.mode === 'beacon' || WV.mode === 'tower') {
-    const r = WV.mode === 'flare' ? WARC.FLARE_R : WV.mode === 'fireship' ? WARC.FIRE_R : WV.mode === 'beacon' ? WARC.BEACON_R : WARC.TOWER_R;
+  if (WV.mode === 'flare' || WV.mode === 'fireship' || WV.mode === 'beacon' || WV.mode === 'tower' || WV.mode === 'factory') {
+    const r = WV.mode === 'flare' ? WARC.FLARE_R : WV.mode === 'fireship' ? WARC.FIRE_R : WV.mode === 'beacon' ? WARC.BEACON_R : WV.mode === 'factory' ? WARC.FACTORY_R : WARC.TOWER_R;
     ctx.strokeStyle = 'rgba(255,216,138,0.6)'; ctx.setLineDash([4, 4]); ctx.beginPath(); ctx.arc(x + z / 2, y + z / 2, r * z, 0, 6.283); ctx.stroke(); ctx.setLineDash([]);
   }
 }
@@ -16687,16 +16762,16 @@ function wvPanels() {
   const narrow = W < 720;
   $('warClock').textContent = WAR.phase === 'spawn' ? `${narrow ? 'Landing' : 'Choose your landing'} · ${Math.ceil(WAR.spawnT)} s` : narrow ? `D${WAR.day} · ${part} · ${WAR.tideHigh ? 'high' : 'low'} ${tideLeft}s` : `Day ${WAR.day} · ${part} · ${WAR.tideHigh ? 'high water' : 'low water'}, turns in ${tideLeft} s`;
   $('warSpawnBar').hidden = WAR.phase !== 'spawn';
-  $('warTroops').textContent = `${Math.round(me.troops)} / ${Math.round(me.maxTroops)}`;
+  $('warTroops').textContent = `${warFmt(me.troops)} / ${warFmt(me.maxTroops)}`;
   $('warGold').textContent = Math.floor(me.gold);
   $('warLand').textContent = `${me.tiles} · ${(me.tiles / WAR.landTiles * 100).toFixed(1)}%`;
-  $('warRatioOut').textContent = `${Math.round(WAR.ratio * 100)}% · ${Math.round(me.troops * WAR.ratio)}`;
+  $('warRatioOut').textContent = `${Math.round(WAR.ratio * 100)}% · ${warFmt(me.troops * WAR.ratio)}`;
   const cost = t => warStructCost(me, t);
-  $('warHarbour').querySelector('small').textContent = `${cost('harbour')} g`; $('warTower').querySelector('small').textContent = `${cost('tower')} g`; $('warBeacon').querySelector('small').textContent = `${cost('beacon')} g`;
+  $('warHarbour').querySelector('small').textContent = `${cost('harbour')} g`; $('warTower').querySelector('small').textContent = `${cost('tower')} g`; $('warBeacon').querySelector('small').textContent = `${cost('beacon')} g`; $('warCity').querySelector('small').textContent = `${cost('city')} g`; $('warFactory').querySelector('small').textContent = `${cost('factory')} g`;
   $('warFlareBtn').querySelector('small').textContent = me.flareCd > 0 ? `${Math.ceil(me.flareCd)} s` : `${WARC.COSTS.flare} g`;
   $('warFireBtn').querySelector('small').textContent = me.harbours < 1 ? 'needs harbour' : me.fireCd > 0 ? `${Math.ceil(me.fireCd)} s` : `${WARC.COSTS.fireship} g`;
   $('warBellBtn').querySelector('small').textContent = me.bell > 0 ? 'ringing' : me.bellCd > 0 ? `${Math.ceil(me.bellCd)} s` : 'ready';
-  for (const [id, m] of [['warHarbour', 'harbour'], ['warTower', 'tower'], ['warBeacon', 'beacon'], ['warFlareBtn', 'flare'], ['warFireBtn', 'fireship']]) $(id).classList.toggle('on', WV.mode === m);
+  for (const [id, m] of [['warCity', 'city'], ['warFactory', 'factory'], ['warHarbour', 'harbour'], ['warTower', 'tower'], ['warBeacon', 'beacon'], ['warFlareBtn', 'flare'], ['warFireBtn', 'fireship']]) $(id).classList.toggle('on', WV.mode === m);
   $('warActions').classList.toggle('dead', !me.alive);
   // the leaderboard, with pacts and the Keeper marked
   WV.boardT++;
@@ -16706,7 +16781,7 @@ function wvPanels() {
     const rows = WAR.nations.filter(A).sort((a, b) => T(b) - T(a));
     const top = rows.slice(0, 8); if (me.alive && !top.includes(me)) top.push(me);
     const dead = WAR.nations.filter(n => !A(n)).length;
-    $('warBoard').innerHTML = top.map(n => `<li class="${n.isMe ? 'me' : ''}${n.allies.has(WAR.me) && !n.isMe ? ' ally' : ''}"><i style="background:${n.col}"></i><span>${rows.indexOf(n) + 1}. ${n.name}${n.light ? ' ✦' : ''}${n.allies.has(WAR.me) && !n.isMe ? ' ☍' : ''}</span><b>${(T(n) / WAR.landTiles * 100).toFixed(1)}%</b><em>${fogd(n) ? '?' : Math.round(n.troops)}</em></li>`).join('') +
+    $('warBoard').innerHTML = top.map(n => `<li class="${n.isMe ? 'me' : ''}${n.allies.has(WAR.me) && !n.isMe ? ' ally' : ''}"><i style="background:${n.col}"></i><span>${rows.indexOf(n) + 1}. ${n.name}${n.light ? ' ✦' : ''}${n.allies.has(WAR.me) && !n.isMe ? ' ☍' : ''}</span><b>${(T(n) / WAR.landTiles * 100).toFixed(1)}%</b><em>${fogd(n) ? '?' : warFmt(n.troops)}</em></li>`).join('') +
       `<li class="sum">${WV.fog ? 'Night: the others as they stood at dusk' : `${rows.length} nations stand${dead ? `, ${dead} fallen` : ''}`}</li>`;
   }
   // the log, newest at the bottom
@@ -16769,7 +16844,7 @@ function wvOrderAt(i) {
   const o = WAR.owner[i];
   if (WV.mode === 'flare') { const why = warFlare(me, i); if (why) wvSay(why); else WV.mode = null; return; }
   if (WV.mode === 'fireship') { const why = warSendBoat(WAR.me, i, 0, 'fire'); if (why) wvSay(why); else WV.mode = null; return; }
-  if (WV.mode === 'harbour' || WV.mode === 'tower' || WV.mode === 'beacon') {
+  if (WV.mode === 'harbour' || WV.mode === 'tower' || WV.mode === 'beacon' || WV.mode === 'city' || WV.mode === 'factory') {
     // a harbour snaps to the nearest shore tile of yours (within a few tiles of the tap), so you needn't hit the exact edge
     const at = WV.mode === 'harbour' ? wvNearestShore(i, WV.touch ? 5 : 3) : i;
     const why = warBuild(me, WV.mode, at < 0 ? i : at); if (why) wvSay(at < 0 && WV.mode === 'harbour' ? 'No shore of yours near there.' : why); else WV.mode = null; return;
@@ -16801,6 +16876,8 @@ function wvSameShore(target) {
 }
 // what each thing in the build menu does: shown in a banner at the top while it's picked
 const WV_TIPS = {
+  city: ['City', () => `${warStructCost(WAR.nations[WAR.me], 'city')} gold · Room for a million more of your people: your population cap rises by 1M and grows faster. Pays ${WARC.CITY_GOLD * 1} gold a second, double when a factory's railroad reaches it. Build on your land, inland is safest.`],
+  factory: ['Factory', () => `${warStructCost(WAR.nations[WAR.me], 'factory')} gold · Lays railroads out to every city of yours within ${WARC.FACTORY_R} tiles and joins them to each other. Cities on its railroads pay double gold. Build it among your cities.`],
   harbour: ['Harbour', () => `${warStructCost(WAR.nations[WAR.me], 'harbour')} gold · Built on your shore. Brings in gold, lights the shore round it at night, and lets you send fire-ships. Tap your coast; it snaps to the nearest shore tile.`],
   tower: ['Watchtower', () => `${warStructCost(WAR.nations[WAR.me], 'tower')} gold · Enemies pay far more to take your land within ${WARC.TOWER_R} tiles of it, and it fires on enemy boats that pass. Best on a border.`],
   beacon: ['Beacon', () => `${warStructCost(WAR.nations[WAR.me], 'beacon')} gold · A fire that lights ${WARC.BEACON_R} tiles round it all night: the drowned can't come up there, and it sees through the fog. Best on a dark shore.`],
@@ -16865,6 +16942,7 @@ function wvKey(e) {
   if (!$('warMenu').hidden) return;
   if (k === 'Space') { e.preventDefault(); WAR.paused = !WAR.paused; wvSpeedUi(); }
   else if (k === 'Digit1') wvSpeed(1); else if (k === 'Digit2') wvSpeed(2); else if (k === 'Digit3') wvSpeed(4);
+  else if (k === 'KeyC') wvMode('city'); else if (k === 'KeyV') wvMode('factory');
   else if (k === 'KeyH') wvMode('harbour'); else if (k === 'KeyT') wvMode('tower'); else if (k === 'KeyG') wvMode('beacon'); else if (k === 'KeyF') wvMode('flare'); else if (k === 'KeyX') wvMode('fireship');
   else if (k === 'KeyB') { const why = warBell(WAR.nations[WAR.me]); if (why) wvSay(why); }
   else if (k === 'KeyQ' || k === 'KeyE') { WAR.ratio = clamp(WAR.ratio + (k === 'KeyE' ? 0.1 : -0.1), 0.05, 1); $('warRatio').value = Math.round(WAR.ratio * 100); wvPanels(); }
@@ -16934,6 +17012,7 @@ addEventListener('resize', () => { if (WAR.on) wvFit(); });
   $('warPactsClose').addEventListener('click', () => wvPactsOpen(false));
   $('warBots').addEventListener('input', () => { $('warBotsOut').textContent = $('warBots').value; }); $('warBotsOut').textContent = $('warBots').value;
   $('warRatio').addEventListener('input', () => { WAR.ratio = (+$('warRatio').value) / 100; wvPanels(); });
+  $('warCity').addEventListener('click', () => wvMode('city')); $('warFactory').addEventListener('click', () => wvMode('factory'));
   $('warHarbour').addEventListener('click', () => wvMode('harbour')); $('warTower').addEventListener('click', () => wvMode('tower')); $('warBeacon').addEventListener('click', () => wvMode('beacon'));
   $('warFlareBtn').addEventListener('click', () => wvMode('flare')); $('warFireBtn').addEventListener('click', () => wvMode('fireship'));
   $('warBellBtn').addEventListener('click', () => { WV.mode = null; WV.tipKey = 'bell'; WV.tipT = 5; wvTip(); const why = warBell(WAR.nations[WAR.me]); if (why) wvSay(why); });

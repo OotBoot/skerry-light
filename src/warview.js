@@ -148,14 +148,55 @@ function warDraw(dt) {
   WV.uiT += dt; if (WV.uiT > 0.25) { WV.uiT = 0; wvPanels(); wvPacts(); }
   if (WV.tipT > 0) WV.tipT -= dt; wvTip();
 }
+function wvDrawRails(z) {
+  if (!WAR.rails || !WAR.rails.length) return;
+  for (const [a, b, o] of WAR.rails) {
+    if (o !== WAR.me && !(wvSees(a) && wvSees(b))) continue;
+    const x1 = wvSx(warX(a) + 0.5), y1 = wvSy(warY(a) + 0.5), x2 = wvSx(warX(b) + 0.5), y2 = wvSy(warY(b) + 0.5);
+    if (Math.max(x1, x2) < -20 || Math.min(x1, x2) > W + 20 || Math.max(y1, y2) < -20 || Math.min(y1, y2) > H + 20) continue;
+    const L = Math.hypot(x2 - x1, y2 - y1); if (L < 1) continue;
+    const ux = (x2 - x1) / L, uy = (y2 - y1) / L, px = -uy, py = ux, g = Math.max(1.2, z * 0.22);
+    // sleepers, then two rails, in the owner's colour edged dark
+    ctx.strokeStyle = 'rgba(60,44,30,0.9)'; ctx.lineWidth = Math.max(1, z * 0.12); ctx.beginPath();
+    const step = Math.max(4, z * 0.7);
+    for (let d = step / 2; d < L; d += step) { const cx = x1 + ux * d, cy = y1 + uy * d; ctx.moveTo(cx - px * g * 1.6, cy - py * g * 1.6); ctx.lineTo(cx + px * g * 1.6, cy + py * g * 1.6); }
+    ctx.stroke();
+    ctx.strokeStyle = WAR.nations[o].col; ctx.lineWidth = Math.max(1, z * 0.09);
+    ctx.beginPath(); ctx.moveTo(x1 - px * g, y1 - py * g); ctx.lineTo(x2 - px * g, y2 - py * g); ctx.moveTo(x1 + px * g, y1 + py * g); ctx.lineTo(x2 + px * g, y2 + py * g); ctx.stroke();
+  }
+}
 function wvDrawStructs(z) {
+  wvDrawRails(z);
   const s = Math.max(4, z * 0.9);
   for (const [i, st] of WAR.structs) {
     if (st.owner !== WAR.me && !wvSees(i) && st.type !== 'beacon') continue;   // (a lit beacon shows through the fog)
     const x = wvSx(warX(i) + 0.5), y = wvSy(warY(i) + 0.5); if (x < -20 || y < -20 || x > W + 20 || y > H + 20) continue;
     const col = WAR.nations[st.owner].col;
     ctx.lineWidth = Math.max(1, z * 0.12);
-    if (st.type === 'harbour') {
+    if (st.type === 'city') {
+      // a huddle of houses round a spire, roofs in the owner's colour; gold coins when its railroad pays double
+      const k = s * 1.25;
+      ctx.fillStyle = 'rgba(0,0,0,0.45)'; ctx.beginPath(); ctx.ellipse(x, y + k * 0.55, k * 1.05, k * 0.3, 0, 0, 6.283); ctx.fill();
+      for (const [dx, dy, w, h] of [[-0.55, 0.1, 0.5, 0.5], [0.5, 0.15, 0.55, 0.45], [-0.05, 0.3, 0.6, 0.45]]) {
+        const hx = x + dx * k, hy = y + dy * k;
+        ctx.fillStyle = '#d8ccb0'; ctx.fillRect(hx - w * k / 2, hy - h * k / 2, w * k, h * k);
+        ctx.fillStyle = col; ctx.beginPath(); ctx.moveTo(hx - w * k * 0.6, hy - h * k / 2); ctx.lineTo(hx, hy - h * k * 1.05); ctx.lineTo(hx + w * k * 0.6, hy - h * k / 2); ctx.closePath(); ctx.fill();
+        if (z > 5) { ctx.fillStyle = 'rgba(255,216,138,0.85)'; ctx.fillRect(hx - k * 0.06, hy - k * 0.05, k * 0.12, k * 0.12); }
+      }
+      ctx.fillStyle = '#b8ac90'; ctx.fillRect(x - k * 0.12, y - k * 0.95, k * 0.24, k * 0.75); ctx.fillStyle = col; ctx.beginPath(); ctx.moveTo(x - k * 0.17, y - k * 0.95); ctx.lineTo(x, y - k * 1.45); ctx.lineTo(x + k * 0.17, y - k * 0.95); ctx.closePath(); ctx.fill();
+      if (WAR.railed && WAR.railed.has(i) && z > 3) { ctx.fillStyle = '#ffd88a'; ctx.font = `bold ${Math.max(9, z * 1.1)}px "Courier Prime", monospace`; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom'; ctx.fillText('×2', x + k * 0.9, y - k * 0.7); }
+    } else if (st.type === 'factory') {
+      // a long works with a saw-tooth roof and two smoking chimneys
+      const k = s * 1.2;
+      ctx.fillStyle = 'rgba(0,0,0,0.45)'; ctx.beginPath(); ctx.ellipse(x, y + k * 0.5, k * 1.1, k * 0.28, 0, 0, 6.283); ctx.fill();
+      ctx.fillStyle = '#5a4a3c'; ctx.fillRect(x - k * 0.9, y - k * 0.25, k * 1.8, k * 0.7);
+      ctx.fillStyle = col; ctx.beginPath(); ctx.moveTo(x - k * 0.9, y - k * 0.25);
+      for (let t = 0; t < 3; t++) { const bx = x - k * 0.9 + t * k * 0.6; ctx.lineTo(bx + k * 0.6, y - k * 0.6); ctx.lineTo(bx + k * 0.6, y - k * 0.25); }
+      ctx.closePath(); ctx.fill();
+      ctx.fillStyle = '#3a2e24'; for (const cx of [-0.55, 0.65]) ctx.fillRect(x + cx * k - k * 0.09, y - k * 1.0, k * 0.18, k * 0.8);
+      if (z > 3) for (const cx of [-0.55, 0.65]) for (let p = 0; p < 3; p++) { const t = (WAR.t * 0.6 + p / 3 + cx) % 1; ctx.fillStyle = `rgba(200,200,205,${0.35 * (1 - t)})`; ctx.beginPath(); ctx.arc(x + cx * k + t * k * 0.6, y - k * 1.05 - t * k * 1.1, k * (0.12 + t * 0.25), 0, 6.283); ctx.fill(); }
+      ctx.fillStyle = 'rgba(255,200,110,0.8)'; for (let t = 0; t < 4; t++) ctx.fillRect(x - k * 0.75 + t * k * 0.42, y + k * 0.02, k * 0.14, k * 0.14);
+    } else if (st.type === 'harbour') {
       ctx.strokeStyle = '#e8dcc0'; ctx.fillStyle = col; ctx.beginPath(); ctx.arc(x, y, s * 0.55, 0, 6.283); ctx.fill(); ctx.stroke();
       ctx.beginPath(); ctx.moveTo(x, y - s * 0.4); ctx.lineTo(x, y + s * 0.35); ctx.moveTo(x - s * 0.3, y + s * 0.1); ctx.quadraticCurveTo(x, y + s * 0.5, x + s * 0.3, y + s * 0.1); ctx.stroke();
     } else if (st.type === 'tower') {
@@ -193,7 +234,7 @@ function wvDrawBoats(z) {
     if (b.kind === 'fire') { ctx.fillStyle = 'rgba(255,140,40,0.5)'; ctx.beginPath(); ctx.arc(0, 0, s * 0.9 + Math.sin(b.t * 9) * 1.5, 0, 6.283); ctx.fill(); }
     if (b.hit > 0) { b.hit -= 0.016; ctx.fillStyle = 'rgba(255,220,160,0.6)'; ctx.beginPath(); ctx.arc(0, 0, s * 0.7, 0, 6.283); ctx.fill(); }
     ctx.restore();
-    if (b.kind !== 'fire' && z > 4) { ctx.fillStyle = '#ece4cf'; ctx.font = `${Math.max(9, z * 1.3)}px "Courier Prime", monospace`; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom'; ctx.fillText(Math.round(b.troops), x, y - s * 1.1); }
+    if (b.kind !== 'fire' && z > 4) { ctx.fillStyle = '#ece4cf'; ctx.font = `${Math.max(9, z * 1.3)}px "Courier Prime", monospace`; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom'; ctx.fillText(warFmt(b.troops), x, y - s * 1.1); }
   }
 }
 function wvDrawAttacks(z) {
@@ -207,7 +248,7 @@ function wvDrawAttacks(z) {
     ctx.strokeStyle = a.col; ctx.lineWidth = 1.5; ctx.setLineDash([3, 3]); ctx.lineDashOffset = -WAR.t * 20;
     if (!WV.fog || a.isMe) { ctx.beginPath(); ctx.moveTo(wvSx(a.cx + 0.5), wvSy(a.cy + 0.5)); ctx.lineTo(x, y); ctx.stroke(); }
     ctx.setLineDash([]);
-    ctx.fillStyle = 'rgba(0,0,0,0.55)'; const txt = `⚔ ${Math.round(at.troops)}`; ctx.font = `bold ${Math.max(10, Math.min(14, z * 1.6))}px "Courier Prime", monospace`;
+    ctx.fillStyle = 'rgba(0,0,0,0.55)'; const txt = `⚔ ${warFmt(at.troops)}`; ctx.font = `bold ${Math.max(10, Math.min(14, z * 1.6))}px "Courier Prime", monospace`;
     const tw = ctx.measureText(txt).width; ctx.fillRect(x - tw / 2 - 3, y - 8, tw + 6, 16);
     ctx.fillStyle = at.target === WAR.me ? '#ff9a7a' : a.isMe ? '#ffd88a' : '#ece4cf'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(txt, x, y);
   }
@@ -246,7 +287,7 @@ function wvDrawLabels(z) {
     const nm = ntiles > 25 || z > 5 ? n.name : '';
     if (hid && !seenNow) ctx.globalAlpha = 0.55;
     if (nm) { ctx.strokeText(nm, x, y - big * 0.6); ctx.fillText(nm, x, y - big * 0.6); }
-    const tr = hid && !seenNow ? '?' : `${Math.round(n.troops)}${n.bell > 0 ? ' 🔔' : ''}${n.allies.has(WAR.me) && !n.isMe ? ' ☍' : ''}`;
+    const tr = hid && !seenNow ? '?' : `${warFmt(n.troops)}${n.bell > 0 ? ' 🔔' : ''}${n.allies.has(WAR.me) && !n.isMe ? ' ☍' : ''}`;
     ctx.font = `${big * 0.95}px "Courier Prime", monospace`; ctx.strokeText(tr, x, y + (nm ? big * 0.55 : 0)); ctx.fillText(tr, x, y + (nm ? big * 0.55 : 0));
     ctx.globalAlpha = 1;
   }
@@ -275,8 +316,8 @@ function wvDrawHover(z) {
   if (i < 0) return;
   const x = wvSx(warX(i)), y = wvSy(warY(i));
   ctx.strokeStyle = 'rgba(255,255,255,0.8)'; ctx.lineWidth = 1.5; ctx.strokeRect(x, y, z, z);
-  if (WV.mode === 'flare' || WV.mode === 'fireship' || WV.mode === 'beacon' || WV.mode === 'tower') {
-    const r = WV.mode === 'flare' ? WARC.FLARE_R : WV.mode === 'fireship' ? WARC.FIRE_R : WV.mode === 'beacon' ? WARC.BEACON_R : WARC.TOWER_R;
+  if (WV.mode === 'flare' || WV.mode === 'fireship' || WV.mode === 'beacon' || WV.mode === 'tower' || WV.mode === 'factory') {
+    const r = WV.mode === 'flare' ? WARC.FLARE_R : WV.mode === 'fireship' ? WARC.FIRE_R : WV.mode === 'beacon' ? WARC.BEACON_R : WV.mode === 'factory' ? WARC.FACTORY_R : WARC.TOWER_R;
     ctx.strokeStyle = 'rgba(255,216,138,0.6)'; ctx.setLineDash([4, 4]); ctx.beginPath(); ctx.arc(x + z / 2, y + z / 2, r * z, 0, 6.283); ctx.stroke(); ctx.setLineDash([]);
   }
 }
@@ -294,16 +335,16 @@ function wvPanels() {
   const narrow = W < 720;
   $('warClock').textContent = WAR.phase === 'spawn' ? `${narrow ? 'Landing' : 'Choose your landing'} · ${Math.ceil(WAR.spawnT)} s` : narrow ? `D${WAR.day} · ${part} · ${WAR.tideHigh ? 'high' : 'low'} ${tideLeft}s` : `Day ${WAR.day} · ${part} · ${WAR.tideHigh ? 'high water' : 'low water'}, turns in ${tideLeft} s`;
   $('warSpawnBar').hidden = WAR.phase !== 'spawn';
-  $('warTroops').textContent = `${Math.round(me.troops)} / ${Math.round(me.maxTroops)}`;
+  $('warTroops').textContent = `${warFmt(me.troops)} / ${warFmt(me.maxTroops)}`;
   $('warGold').textContent = Math.floor(me.gold);
   $('warLand').textContent = `${me.tiles} · ${(me.tiles / WAR.landTiles * 100).toFixed(1)}%`;
-  $('warRatioOut').textContent = `${Math.round(WAR.ratio * 100)}% · ${Math.round(me.troops * WAR.ratio)}`;
+  $('warRatioOut').textContent = `${Math.round(WAR.ratio * 100)}% · ${warFmt(me.troops * WAR.ratio)}`;
   const cost = t => warStructCost(me, t);
-  $('warHarbour').querySelector('small').textContent = `${cost('harbour')} g`; $('warTower').querySelector('small').textContent = `${cost('tower')} g`; $('warBeacon').querySelector('small').textContent = `${cost('beacon')} g`;
+  $('warHarbour').querySelector('small').textContent = `${cost('harbour')} g`; $('warTower').querySelector('small').textContent = `${cost('tower')} g`; $('warBeacon').querySelector('small').textContent = `${cost('beacon')} g`; $('warCity').querySelector('small').textContent = `${cost('city')} g`; $('warFactory').querySelector('small').textContent = `${cost('factory')} g`;
   $('warFlareBtn').querySelector('small').textContent = me.flareCd > 0 ? `${Math.ceil(me.flareCd)} s` : `${WARC.COSTS.flare} g`;
   $('warFireBtn').querySelector('small').textContent = me.harbours < 1 ? 'needs harbour' : me.fireCd > 0 ? `${Math.ceil(me.fireCd)} s` : `${WARC.COSTS.fireship} g`;
   $('warBellBtn').querySelector('small').textContent = me.bell > 0 ? 'ringing' : me.bellCd > 0 ? `${Math.ceil(me.bellCd)} s` : 'ready';
-  for (const [id, m] of [['warHarbour', 'harbour'], ['warTower', 'tower'], ['warBeacon', 'beacon'], ['warFlareBtn', 'flare'], ['warFireBtn', 'fireship']]) $(id).classList.toggle('on', WV.mode === m);
+  for (const [id, m] of [['warCity', 'city'], ['warFactory', 'factory'], ['warHarbour', 'harbour'], ['warTower', 'tower'], ['warBeacon', 'beacon'], ['warFlareBtn', 'flare'], ['warFireBtn', 'fireship']]) $(id).classList.toggle('on', WV.mode === m);
   $('warActions').classList.toggle('dead', !me.alive);
   // the leaderboard, with pacts and the Keeper marked
   WV.boardT++;
@@ -313,7 +354,7 @@ function wvPanels() {
     const rows = WAR.nations.filter(A).sort((a, b) => T(b) - T(a));
     const top = rows.slice(0, 8); if (me.alive && !top.includes(me)) top.push(me);
     const dead = WAR.nations.filter(n => !A(n)).length;
-    $('warBoard').innerHTML = top.map(n => `<li class="${n.isMe ? 'me' : ''}${n.allies.has(WAR.me) && !n.isMe ? ' ally' : ''}"><i style="background:${n.col}"></i><span>${rows.indexOf(n) + 1}. ${n.name}${n.light ? ' ✦' : ''}${n.allies.has(WAR.me) && !n.isMe ? ' ☍' : ''}</span><b>${(T(n) / WAR.landTiles * 100).toFixed(1)}%</b><em>${fogd(n) ? '?' : Math.round(n.troops)}</em></li>`).join('') +
+    $('warBoard').innerHTML = top.map(n => `<li class="${n.isMe ? 'me' : ''}${n.allies.has(WAR.me) && !n.isMe ? ' ally' : ''}"><i style="background:${n.col}"></i><span>${rows.indexOf(n) + 1}. ${n.name}${n.light ? ' ✦' : ''}${n.allies.has(WAR.me) && !n.isMe ? ' ☍' : ''}</span><b>${(T(n) / WAR.landTiles * 100).toFixed(1)}%</b><em>${fogd(n) ? '?' : warFmt(n.troops)}</em></li>`).join('') +
       `<li class="sum">${WV.fog ? 'Night: the others as they stood at dusk' : `${rows.length} nations stand${dead ? `, ${dead} fallen` : ''}`}</li>`;
   }
   // the log, newest at the bottom
@@ -376,7 +417,7 @@ function wvOrderAt(i) {
   const o = WAR.owner[i];
   if (WV.mode === 'flare') { const why = warFlare(me, i); if (why) wvSay(why); else WV.mode = null; return; }
   if (WV.mode === 'fireship') { const why = warSendBoat(WAR.me, i, 0, 'fire'); if (why) wvSay(why); else WV.mode = null; return; }
-  if (WV.mode === 'harbour' || WV.mode === 'tower' || WV.mode === 'beacon') {
+  if (WV.mode === 'harbour' || WV.mode === 'tower' || WV.mode === 'beacon' || WV.mode === 'city' || WV.mode === 'factory') {
     // a harbour snaps to the nearest shore tile of yours (within a few tiles of the tap), so you needn't hit the exact edge
     const at = WV.mode === 'harbour' ? wvNearestShore(i, WV.touch ? 5 : 3) : i;
     const why = warBuild(me, WV.mode, at < 0 ? i : at); if (why) wvSay(at < 0 && WV.mode === 'harbour' ? 'No shore of yours near there.' : why); else WV.mode = null; return;
@@ -408,6 +449,8 @@ function wvSameShore(target) {
 }
 // what each thing in the build menu does: shown in a banner at the top while it's picked
 const WV_TIPS = {
+  city: ['City', () => `${warStructCost(WAR.nations[WAR.me], 'city')} gold · Room for a million more of your people: your population cap rises by 1M and grows faster. Pays ${WARC.CITY_GOLD * 1} gold a second, double when a factory's railroad reaches it. Build on your land, inland is safest.`],
+  factory: ['Factory', () => `${warStructCost(WAR.nations[WAR.me], 'factory')} gold · Lays railroads out to every city of yours within ${WARC.FACTORY_R} tiles and joins them to each other. Cities on its railroads pay double gold. Build it among your cities.`],
   harbour: ['Harbour', () => `${warStructCost(WAR.nations[WAR.me], 'harbour')} gold · Built on your shore. Brings in gold, lights the shore round it at night, and lets you send fire-ships. Tap your coast; it snaps to the nearest shore tile.`],
   tower: ['Watchtower', () => `${warStructCost(WAR.nations[WAR.me], 'tower')} gold · Enemies pay far more to take your land within ${WARC.TOWER_R} tiles of it, and it fires on enemy boats that pass. Best on a border.`],
   beacon: ['Beacon', () => `${warStructCost(WAR.nations[WAR.me], 'beacon')} gold · A fire that lights ${WARC.BEACON_R} tiles round it all night: the drowned can't come up there, and it sees through the fog. Best on a dark shore.`],
@@ -472,6 +515,7 @@ function wvKey(e) {
   if (!$('warMenu').hidden) return;
   if (k === 'Space') { e.preventDefault(); WAR.paused = !WAR.paused; wvSpeedUi(); }
   else if (k === 'Digit1') wvSpeed(1); else if (k === 'Digit2') wvSpeed(2); else if (k === 'Digit3') wvSpeed(4);
+  else if (k === 'KeyC') wvMode('city'); else if (k === 'KeyV') wvMode('factory');
   else if (k === 'KeyH') wvMode('harbour'); else if (k === 'KeyT') wvMode('tower'); else if (k === 'KeyG') wvMode('beacon'); else if (k === 'KeyF') wvMode('flare'); else if (k === 'KeyX') wvMode('fireship');
   else if (k === 'KeyB') { const why = warBell(WAR.nations[WAR.me]); if (why) wvSay(why); }
   else if (k === 'KeyQ' || k === 'KeyE') { WAR.ratio = clamp(WAR.ratio + (k === 'KeyE' ? 0.1 : -0.1), 0.05, 1); $('warRatio').value = Math.round(WAR.ratio * 100); wvPanels(); }
@@ -541,6 +585,7 @@ addEventListener('resize', () => { if (WAR.on) wvFit(); });
   $('warPactsClose').addEventListener('click', () => wvPactsOpen(false));
   $('warBots').addEventListener('input', () => { $('warBotsOut').textContent = $('warBots').value; }); $('warBotsOut').textContent = $('warBots').value;
   $('warRatio').addEventListener('input', () => { WAR.ratio = (+$('warRatio').value) / 100; wvPanels(); });
+  $('warCity').addEventListener('click', () => wvMode('city')); $('warFactory').addEventListener('click', () => wvMode('factory'));
   $('warHarbour').addEventListener('click', () => wvMode('harbour')); $('warTower').addEventListener('click', () => wvMode('tower')); $('warBeacon').addEventListener('click', () => wvMode('beacon'));
   $('warFlareBtn').addEventListener('click', () => wvMode('flare')); $('warFireBtn').addEventListener('click', () => wvMode('fireship'));
   $('warBellBtn').addEventListener('click', () => { WV.mode = null; WV.tipKey = 'bell'; WV.tipT = 5; wvTip(); const why = warBell(WAR.nations[WAR.me]); if (why) wvSay(why); });
