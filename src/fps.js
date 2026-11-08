@@ -79,28 +79,29 @@ function fpsJumpTick(m, dt) {
 }
 
 // ---------- the island ----------
+// Each round's island is laid out from the round number (src/fpsisle.js): one of six kinds of island,
+// its rocks, wrecks and props all from the same seed, so everyone on it builds the same one.
 function fpsArena(round) {
-  const rng = seeded(0x5ee7 + 17);
-  const R = (a, b) => a + rng() * (b - a);
-  const rocks = [], wrecks = [];
-  const free = (x, y, r) => Math.hypot(x - FPSC.CX, y - FPSC.CY) < FPSC.R - r - 5 && !rocks.concat(wrecks).some(o => Math.hypot(o.x - x, o.y - y) < o.r + r + 7);
-  for (let tries = 0; rocks.length < 13 && tries < 2000; tries++) {
-    const a = R(0, 6.283), d = Math.sqrt(R(0.02, 1)) * (FPSC.R - 12), x = FPSC.CX + Math.cos(a) * d, y = FPSC.CY + Math.sin(a) * d, r = R(3, 9);
-    if (!free(x, y, r)) continue;
-    const prof = []; for (let i = 0; i < 7; i++) prof.push(R(0.35, 1)); prof[0] = R(0.15, 0.45); prof[6] = R(0.15, 0.45);
-    rocks.push({ x, y, r, prof, ph: R(0, 6.28) });
-  }
-  for (let tries = 0; wrecks.length < 2 && tries < 500; tries++) {
-    const a = R(0, 6.283), d = R(22, FPSC.R - 26), x = FPSC.CX + Math.cos(a) * d, y = FPSC.CY + Math.sin(a) * d, r = R(8, 12);
-    if (!free(x, y, r)) continue;
-    wrecks.push({ x, y, r, ang: R(0, 6.28), lean: R(-1, 1), name: 'a wreck', ribs: 5 });
-  }
-  return {
-    fps: true, t: 0, beam: 0, period: FPSC.PERIOD, flares: [], rocks, wrecks, timber: [], pickups: [], lures: [],
+  const rng = seeded((0x5ee7 + 17 + Math.imul(round | 0, 0x9e3779b1)) >>> 0);
+  const G = {
+    fps: true, t: 0, beam: 0, period: FPSC.PERIOD, flares: [], rocks: [], wrecks: [], timber: [], pickups: [], lures: [],
     mods: { lantern: 1 }, biome: FPS_SEAS[round % FPS_SEAS.length], minVis: 0.5,
     island: { x: FPSC.CX, y: FPSC.CY, r: FPSC.R, z: FPSC.GROUND },
     backrooms: false, sky: false, enemies: { drowned: [], knocks: [] }, maren: { active: false }, lightning: 0, parts: [],
   };
+  fpsIsleGen(G, round, rng);
+  G.island.key = G.isle.key;
+  return G;
+}
+// a new round: the island is laid out again for it (keeping the clock, the flares and the beam)
+function fpsNewIsland(G, round) {
+  const N = fpsArena(round);
+  for (const k of ['rocks', 'wrecks', 'isle', 'island', 'biome']) G[k] = N[k];
+}
+// where you are: the kind of island, and the sea it's in
+function fpsPlaceName() {
+  const sea = (BIOMES[g.biome] || BIOMES.skerry).name, up = t => t.replace(/^the /, 'The ');
+  return g.isle ? `${up(g.isle.name)}, ${sea}` : up(sea);
 }
 const fpsRoundNow = () => Math.floor(Date.now() / FPSC.ROUND);
 function fpsSkin() { try { return mySkin(); } catch (e) { return { hull: '#3a2a1e', sail: '#d8d0bc', rail: '#7a5a3a', lantern: '#ffd88a' }; } }
@@ -168,7 +169,7 @@ function fpsStart() {
   fpsRespawn(FPS.me);
   if (typeof fpsVerityReset === 'function') fpsVerityReset(true);
   fpsSend(true);
-  fpsFeed('You come ashore on the skerry. Keep out of the beam.');
+  fpsFeed(`You come ashore on ${FPS.g.isle ? FPS.g.isle.name : 'the skerry'}. Keep out of the beam.`);
   try { cv.focus(); } catch (e) {}
 }
 function fpsStop() {
@@ -337,7 +338,7 @@ function fpsRespawn(m) {
   for (let i = 0; i < 40; i++) {
     const a = Math.random() * 6.283, d = Math.sqrt(Math.random()) * (FPSC.R - 20);
     const x = FPSC.CX + Math.cos(a) * d, y = FPSC.CY + Math.sin(a) * d;
-    if (fpsBlocked(x, y, 1.5)) continue;
+    if (fpsBlocked(x, y, 1.5) || !fpsReachable(x, y)) continue;
     const near = others.reduce((s, o) => Math.min(s, Math.hypot(o.x - x, o.y - y)), 1e9);
     if (near > bestD) { bestD = near; best = [x, y]; }
   }
@@ -347,10 +348,27 @@ function fpsRespawn(m) {
   m.mags = {}; for (const id in FPSW) m.mags[id] = FPSW[id].mag;
   if (m === FPS.me) { m.ammo = m.mags[FPS.weapon]; FPS.scoped = false; } else m.ammo = 6; m.cd = 0; m.flares = FPSC.FLARES; m.dead = 0; m.protect = FPSC.PROTECT; m.jz = 0; m.vz = 0;
 }
-function fpsBlocked(x, y, pad) {
+// (z: only what stands taller than that height counts, for the over-the-shoulder camera)
+function fpsBlocked(x, y, pad, z) { return fpsBlockedIn(FPS.g, x, y, pad, z); }
+function fpsBlockedIn(G, x, y, pad, z) {
   if (Math.hypot(x - FPSC.CX, y - FPSC.CY) > FPSC.R - 1.5) return true;
-  for (const o of FPS.g.rocks) if (Math.hypot(o.x - x, o.y - y) < o.r * 1.02 + pad) return true;
-  for (const o of FPS.g.wrecks) if (Math.hypot(o.x - x, o.y - y) < o.r * 0.75 + pad) return true;
+  return fpsSolidAt(G, x, y, pad, z);
+}
+// rocks, wrecks and the island's props (walls, crates, boats...), without the shore
+function fpsSolidAt(G, x, y, pad, z) {
+  for (const o of G.rocks) if (Math.hypot(o.x - x, o.y - y) < o.r * 1.02 + pad) return true;
+  for (const o of G.wrecks) if (Math.hypot(o.x - x, o.y - y) < o.r * 0.75 + pad) return true;
+  return fpsIsleBlocked(G, x, y, pad, z);
+}
+// walk towards a heading, and if something's in the way, try turning a little either side
+// (the side that worked last is tried first, so wreckers slide along a wall instead of dithering)
+function fpsSteer(m, h, step) {
+  const side = m.steer || 1;
+  for (const dh of [0, 0.45, -0.45, 0.9, -0.9, 1.4, -1.4]) {
+    const hh = h + dh * side, x0 = m.x, y0 = m.y;
+    if (fpsMove(m, Math.sin(hh) * step, Math.cos(hh) * step) && Math.hypot(m.x - x0, m.y - y0) > Math.abs(step) * 0.3) { if (dh) m.steer = Math.sign(dh * side); return true; }
+  }
+  m.steer = -side;
   return false;
 }
 // move with sliding along whatever is in the way
@@ -365,7 +383,7 @@ function fpsSeeAt(x, y, theirLantern) {
   const me = FPS.me, d = Math.hypot(x - me.x, y - me.y);
   const mine = me.lan ? Math.max(0, 1 - d / SK.LANTERN) * 1.6 : Math.max(0, 1 - d / 14) * 0.9;
   const own = theirLantern ? 0.85 : 0;
-  return Math.min(1, litAt(x, y) * 1.3 + flareAt(x, y) + mine + own);
+  return Math.min(1, litAt(x, y) * 1.3 + flareAt(x, y) + mine + own + fpsIsleLightAt(x, y));
 }
 
 // ---------- shooting ----------
@@ -383,12 +401,13 @@ function fpsRay(x, y, z, h, p, skipId, targets, range) {
   const B = curBiome();
   for (const o of FPS.g.rocks) {
     const t = circle(o.x, o.y, o.r * 0.95); if (t == null || t > best.t) continue;
-    if (z + tp * Math.max(0, t) < o.r * 0.85 * B.rock.h * 0.85) best = { t: Math.max(0, t), kind: 'rock' };
+    if (z + tp * Math.max(0, t) < o.r * 0.85 * B.rock.h * 0.85 * (o.rk && o.rk.h || 1)) best = { t: Math.max(0, t), kind: 'rock' };
   }
   for (const o of FPS.g.wrecks) {
     const t = circle(o.x, o.y, o.r * 0.6); if (t == null || t > best.t) continue;
     if (z + tp * Math.max(0, t) < o.r * 0.45) best = { t: Math.max(0, t), kind: 'wreck' };
   }
+  best = fpsIsleRay(FPS.g, x, y, z, sx, sy, tp, best);
   if (!targets) { targets = []; for (const o of fpsEveryone()) if (!(o.dead > 0)) targets.push(o); for (const d of FPS.drowned) targets.push(d); }
   for (const o of targets) {
     if (o.id === skipId) continue;
@@ -671,7 +690,7 @@ function fpsBotsTick(dt, now) {
     for (const o of fpsEveryone()) {
       if (o.id === b.id || o.dead > 0) continue;
       const d = Math.hypot(o.x - b.x, o.y - b.y); if (d > 170) continue;
-      const lit = Math.min(1, litAt(o.x, o.y) * 1.3 + flareAt(o.x, o.y) + (o.lan ? 0.9 : 0) + Math.max(0, 1 - d / (b.lan ? SK.LANTERN : 16)) + ((o.flashT || 0) > 0 || (o.me && FPS.flash > 0) ? 1 : 0));
+      const lit = Math.min(1, litAt(o.x, o.y) * 1.3 + flareAt(o.x, o.y) + (o.lan ? 0.9 : 0) + Math.max(0, 1 - d / (b.lan ? SK.LANTERN : 16)) + ((o.flashT || 0) > 0 || (o.me && FPS.flash > 0) ? 1 : 0) + fpsIsleLightAt(o.x, o.y));
       if (lit < 0.35) continue;
       const ray = fpsRay(b.x, b.y, FPSC.GROUND + FPSC.EYE, bearingOf(o.x - b.x, o.y - b.y), 0, b.id);
       if (ray.kind !== 'body' || ray.who.id !== o.id) continue;
@@ -683,7 +702,7 @@ function fpsBotsTick(dt, now) {
       b.h += angDiff(wantH, b.h) * Math.min(1, dt * 5);
       b.see += dt;
       const step = (td > 45 ? 1 : td < 15 ? -0.6 : 0.3) * FPSC.SPEED * 0.6 * dt;
-      b.walk = fpsMove(b, Math.sin(b.h) * step, Math.cos(b.h) * step);
+      b.walk = fpsSteer(b, b.h, step);
       if (b.cd <= 0 && b.see > 0.6 && Math.abs(angDiff(wantH, b.h)) < 0.15) {
         b.cd = 0.55 + Math.random() * 0.6; b.flashT = 0.12;
         fpsGunSound(Math.hypot(b.x - FPS.me.x, b.y - FPS.me.y), angDiff(bearingOf(b.x - FPS.me.x, b.y - FPS.me.y), FPS.me.h));
@@ -705,14 +724,15 @@ function fpsBotsTick(dt, now) {
     } else {
       b.see = 0;
       if (!b.goal || Math.hypot(b.goal[0] - b.x, b.goal[1] - b.y) < 4 || Math.random() < dt * 0.05) {
-        const a = Math.random() * 6.283, d = Math.sqrt(Math.random()) * (FPSC.R - 20);
-        b.goal = [FPSC.CX + Math.cos(a) * d, FPSC.CY + Math.sin(a) * d];
+        b.goal = fpsIsleSpot() || [FPSC.CX, FPSC.CY]; b.stuck = 0;
       }
       const wh = bearingOf(b.goal[0] - b.x, b.goal[1] - b.y);
       b.h += angDiff(wh, b.h) * Math.min(1, dt * 3);
       const st = FPSC.SPEED * 0.55 * dt;
-      b.walk = fpsMove(b, Math.sin(b.h) * st, Math.cos(b.h) * st);
-      if (!b.walk) b.goal = null;
+      b.walk = fpsSteer(b, wh, st);
+      // (stuck in a corner for a while: go somewhere else)
+      b.stuck = b.walk ? Math.max(0, (b.stuck || 0) - dt) : (b.stuck || 0) + dt;
+      if (b.stuck > 0.8) b.goal = null;
       if (Math.random() < dt * 0.02) b.lan = !b.lan;
     }
   }
@@ -750,7 +770,10 @@ function fpsDrownedTick(dt, now) {
     for (const o of fpsEveryone()) { if (o.dead > 0) continue; const dd = Math.hypot(o.x - d.x, o.y - d.y); if (dd < td) { td = dd; tgt = o; } }
     if (!tgt) continue;
     const h = bearingOf(tgt.x - d.x, tgt.y - d.y), st = 2.6 * dt * d.rise;
-    if (td > 1.1) { const nx = d.x + Math.sin(h) * st, ny = d.y + Math.cos(h) * st; if (!FPS.g.rocks.some(o => Math.hypot(o.x - nx, o.y - ny) < o.r)) { d.x = nx; d.y = ny; } else { d.x += Math.cos(h) * st; d.y -= Math.sin(h) * st; } }
+    if (td > 1.1) {
+      // straight at them, or round whatever's in the way
+      for (const dh of [0, 0.7, -0.7, 1.5, -1.5]) { const hh = h + dh * (d.side || 1), nx = d.x + Math.sin(hh) * st, ny = d.y + Math.cos(hh) * st; if (!fpsSolidAt(FPS.g, nx, ny, 0.35)) { d.x = nx; d.y = ny; if (dh) d.side = Math.sign(dh * (d.side || 1)); break; } }
+    }
     // (people bite-check themselves; the host does it for the wreckers)
     d.bite -= dt;
     if (td < 1.3 && d.bite <= 0 && tgt.bot) { d.bite = 1.1; fpsBotHurt(tgt, 1, null); }
@@ -779,7 +802,8 @@ function fpsFrame(dt) {
       FPS.round = rn; FPS.kb = {}; FPS.deaths = 0; FPS.wcK = 0; FPS.wcRound = rn;
       if (FPS.host) for (const b of FPS.bots) { b.kb = {}; b.d = 0; b.prevKb = {}; }
       for (const r of FPS.remote.values()) r.prevKb = {};
-      G.biome = FPS_SEAS[rn % FPS_SEAS.length];
+      fpsNewIsland(G, rn);
+      if (FPS.host) { for (const b of FPS.bots) { fpsRespawn(b); b.protect = 0; b.goal = null; b.hist = []; } FPS.drowned = []; }
       fpsRespawn(m); fpsSend(true);
     }
     if (FPS.roundMsg) { FPS.roundMsg.t -= dt; if (FPS.roundMsg.t <= 0) FPS.roundMsg = null; }
@@ -904,7 +928,7 @@ function fpsDrawScene() {
     let want = 1;
     for (let k = 1; k <= 8; k++) {
       const f = k / 8, bx = m.x - sh * cp * FPSC.TP_BACK * f + ch * FPSC.TP_SIDE * f, by = m.y - ch * cp * FPSC.TP_BACK * f - sh * FPSC.TP_SIDE * f;
-      if (fpsBlocked(bx, by, 0.25)) { want = Math.max(0.12, (k - 1) / 8); break; }
+      if (fpsBlocked(bx, by, 0.25, camH - 0.3)) { want = Math.max(0.12, (k - 1) / 8); break; }
     }
     const pull = FPS.camPull == null ? want : want < FPS.camPull ? want : FPS.camPull + (want - FPS.camPull) * Math.min(1, (FPS.dtLast || 0.016) * 4);
     FPS.camPull = pull;
@@ -930,19 +954,27 @@ function fpsDrawScene() {
   else if (typeof fpsBodyHide === 'function') fpsBodyHide();
   if (gl) {
     gl3dBackdrop(roll, 0, 0);
+    { const main = ctx; ctx = bgx; ctx.save(); ctx.translate(cx, hy); ctx.rotate(roll); ctx.translate(-cx, -hy); try { fpsIsleSkyTint(bgx); } finally { ctx.restore(); ctx = main; } }
     shown = gl3dRender(roll, 0, 0, beamOn);
     if (body) fpsBodyOccluder();
     drawSeaFx(curBiome()); gl3dLandGlows();
   } else {
-    drawSky(); drawSea(); drawCoast();
-    // the island, a low disc of rock and shingle
+    drawSky(); fpsIsleSkyTint(ctx); drawSea(); drawCoast();
+    // the island, a low disc coloured for its kind, with its pools and boardwalks
     const pts = []; for (let i = 0; i < 40; i++) { const a = i / 40 * 6.283; pts.push([FPSC.CX + Math.cos(a) * FPSC.R, FPSC.CY + Math.sin(a) * FPSC.R, FPSC.GROUND]); }
-    fillPoly(pts, mix(curBiome().ground.length === 7 ? curBiome().ground : '#0a0d0c', '#55524a', 0.35));
+    fillPoly(pts, fpsIsleGroundCss(curBiome()) || mix(curBiome().ground.length === 7 ? curBiome().ground : '#0a0d0c', '#55524a', 0.35));
+    fpsIsleDrawFlat(curBiome());
+    fpsIsleMist();
   }
   // everything standing on the island, far to near
   const items = [];
   const add = (kind, o, z) => { const c = cam(o.x, o.y, z == null ? FPSC.GROUND + (o.jz || 0) : z); if (c.f > 0.6) items.push({ kind, o, c }); };
-  if (!gl) { for (const o of g.rocks) add('rock', o, 0); for (const o of g.wrecks) add('wreck', o, 0); }
+  if (!gl) {
+    for (const o of g.rocks) add('rock', o, 0); for (const o of g.wrecks) add('wreck', o, 0);
+    // the props, each block on its own so near and far sort properly
+    if (g.isle) for (const s of g.isle.solids) if (Math.hypot(s.x - camX, s.y - camY) < 200) add('solid', s, FPSC.GROUND);
+  }
+  if (g.isle) for (const l of g.isle.lights) add('glow', l, l.z);
   for (const o of FPS.remote.values()) if (!o.dead) add('person', o);
   for (const o of FPS.bots) if (!(o.dead > 0)) add('person', o);
   for (const d of FPS.drowned) add('drowned', d);
@@ -952,16 +984,19 @@ function fpsDrawScene() {
   for (const it of items) {
     ctx.save();
     try {
-      if (gl) gl3dClip(it.c.f);
       const q = proj(it.c), o = it.o;
+      if (gl) gl3dClip(it.c.f, it.kind === 'glow' ? { x0: q.x - 4, x1: q.x + 4, y0: q.y - 4, y1: q.y + 4 } : { x0: q.x - 1.6 * q.s, x1: q.x + 1.6 * q.s, y0: q.y - 2.6 * q.s, y1: q.y + 0.5 * q.s });
       if (it.kind === 'rock') drawRockDetailed(o, q, Math.max(0.5, visibility(o.x, o.y)));
       else if (it.kind === 'wreck') drawWreck(o, q, Math.max(0.5, visibility(o.x, o.y)));
       else if (it.kind === 'person') fpsDrawPerson(o, it.c);
       else if (it.kind === 'drowned') fpsDrawDrowned(o, it.c);
       else if (it.kind === 'verity') fpsDrawVerity(o, it.c);
+      else if (it.kind === 'solid') fpsIsleDrawSolid(o);
+      else if (it.kind === 'glow') fpsIsleDrawGlow(o, it.c);
     } finally { ctx.restore(); }
   }
   if (gl) gl3dGlows(shown); else drawLighthouse(beamOn, fl, fr, far);
+  fpsIsleDrawBirds();
   drawFlares();
   // tracers and smoke
   for (const t of FPS.tracers) {
@@ -1230,7 +1265,7 @@ function fpsHud() {
   } else {
     ctx.textAlign = 'left'; ctx.textBaseline = 'top'; ctx.font = mono(13); ctx.fillStyle = 'rgba(236,228,207,0.85)';
     ctx.fillText(`ROUND ${clock}`, 16, 14);
-    ctx.font = mono(11); ctx.fillStyle = 'rgba(236,228,207,0.55)'; ctx.fillText((BIOMES[g.biome] || BIOMES.skerry).name.replace(/^the /, 'The '), 16, 32);
+    ctx.font = mono(11); ctx.fillStyle = 'rgba(236,228,207,0.55)'; ctx.fillText(fpsPlaceName(), 16, 32);
     ctx.textAlign = 'right'; ctx.font = mono(13); ctx.fillStyle = 'rgba(236,228,207,0.85)'; ctx.fillText(`KILLS ${mine.k}  ·  DEATHS ${mine.d}`, W - 16, 14);
     ctx.font = mono(11); ctx.fillStyle = 'rgba(236,228,207,0.55)'; ctx.fillText(sc[0] && sc[0].k ? `Leader: ${sc[0].me ? 'you' : sc[0].n} (${sc[0].k})` : `${sc.length} on the island`, W - 16, 32);
     ctx.font = mono(12);
@@ -1262,7 +1297,7 @@ function fpsHud() {
     ctx.fillText(m.killer === 'Verity' ? 'Verity helped' : m.killer ? `Shot by ${m.killer}` : 'Taken by the sea', cx, H * 0.42);
     ctx.font = mono(13); ctx.fillStyle = 'rgba(236,228,207,0.8)'; ctx.fillText(`Back ashore in ${Math.ceil(m.dead)}…`, cx, H * 0.42 + 36);
   }
-  if (FPS.roundMsg) { ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = `400 ${phone ? 20 : 30}px "IM Fell English SC", serif`; ctx.fillStyle = `rgba(255,216,138,${Math.min(1, FPS.roundMsg.t)})`; ctx.fillText(FPS.roundMsg.text, cx, H * 0.3, W - 24); ctx.font = mono(12); ctx.fillText(`A new round begins on ${(BIOMES[g.biome] || BIOMES.skerry).name}.`, cx, H * 0.3 + 30); }
+  if (FPS.roundMsg) { ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = `400 ${phone ? 20 : 30}px "IM Fell English SC", serif`; ctx.fillStyle = `rgba(255,216,138,${Math.min(1, FPS.roundMsg.t)})`; ctx.fillText(FPS.roundMsg.text, cx, H * 0.3, W - 24); ctx.font = mono(12); ctx.fillText(`A new round begins: ${fpsPlaceName()}.`, cx, H * 0.3 + 30); }
   // scoreboard
   if (FPS.board) {
     const rows = sc, bw = Math.min(420, W - 32), bh = 54 + rows.length * 24, bx = cx - bw / 2, by2 = H * 0.18;
