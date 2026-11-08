@@ -991,7 +991,11 @@ function fpsDrawHarpoons() {
 function fpsDrawScope() {
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   const r = Math.min(W, H) * 0.42, t = g.t, sx = cx + (reduceMotion ? 0 : Math.sin(t * 0.9) * 2), sy = H / 2 + (reduceMotion ? 0 : Math.sin(t * 1.3) * 2);
-  ctx.fillStyle = '#020305'; ctx.beginPath(); ctx.rect(0, 0, W, H); ctx.moveTo(sx + r, sy); ctx.arc(sx, sy, r, Math.PI * 2, 0, true); ctx.closePath(); ctx.fill('evenodd');   // (a full turn backwards: the hole you look through)
+  // black beyond the eyepiece: one very thick ring whose inner edge is the eyepiece. (A filled shape with a hole cut
+  // in it came out solid black in some browsers, Safari among them; a stroked ring has no fill rules to get wrong)
+  const far = Math.hypot(W, H) * 2;
+  ctx.save(); ctx.strokeStyle = '#020305'; ctx.lineWidth = far;
+  ctx.beginPath(); ctx.arc(sx, sy, r + far / 2, 0, Math.PI * 2); ctx.stroke(); ctx.restore();
   const gr = ctx.createRadialGradient(sx, sy, r * 0.75, sx, sy, r); gr.addColorStop(0, 'rgba(0,0,0,0)'); gr.addColorStop(1, 'rgba(0,0,0,0.75)');
   ctx.fillStyle = gr; ctx.beginPath(); ctx.arc(sx, sy, r, 0, 6.283); ctx.fill();
   ctx.strokeStyle = '#8a6a2c'; ctx.lineWidth = 6; ctx.beginPath(); ctx.arc(sx, sy, r + 3, 0, 6.283); ctx.stroke();
