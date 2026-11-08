@@ -145,7 +145,7 @@ function warDraw(dt) {
   wvDrawLabels(z);
   wvDrawHover(z);
   wvDrawVignette(dark);
-  WV.uiT += dt; if (WV.uiT > 0.25) { WV.uiT = 0; wvPanels(); }
+  WV.uiT += dt; if (WV.uiT > 0.25) { WV.uiT = 0; wvPanels(); wvPacts(); }
   if (WV.tipT > 0) WV.tipT -= dt; wvTip();
 }
 function wvDrawStructs(z) {
@@ -331,6 +331,39 @@ function wvPanels() {
     }
   }
 }
+// ---------- the nations panel: ask for a pact, or break one ----------
+function wvPactsOpen(on) { $('warPacts').classList.toggle('open', on); if (on) { WV.pactsKey = ''; wvPacts(); } }
+function wvPacts() {
+  const el = $('warPactsList'); if (!$('warPacts').classList.contains('open')) return;
+  const me = WAR.nations[WAR.me], fogd = n => WV.fog && !me.allies.has(n.id) && WV.snap ? WV.snap[n.id] : null;
+  const rows = WAR.nations.filter(n => !n.isMe && (fogd(n) ? fogd(n).alive : n.alive)).sort((a, b) => (b.allies.has(WAR.me) - a.allies.has(WAR.me)) || ((fogd(b) || b).tiles - (fogd(a) || a).tiles));
+  const mood = r => r > 0.3 ? ['friendly', 'Friendly'] : r > -0.1 ? ['wary', 'Wary'] : r > -0.5 ? ['cold', 'Cold'] : ['hostile', 'Hostile'];
+  const key = rows.map(n => `${n.id}:${me.allies.has(n.id) ? Math.ceil((me.allies.get(n.id) - WAR.t) / 10) : 0}:${mood(n.rel[WAR.me])[0]}:${n.reqCd > 0 ? Math.ceil(n.reqCd) : 0}:${WAR.attacks.some(a => a.from === n.id && a.target === WAR.me) ? 1 : 0}:${Math.round((fogd(n) || n).tiles / WAR.landTiles * 1000)}`).join('|');
+  if (key === WV.pactsKey) return; WV.pactsKey = key;
+  el.innerHTML = '';
+  for (const n of rows) {
+    const ally = me.allies.has(n.id), [mk, ml] = mood(n.rel[WAR.me]), war = WAR.attacks.some(a => a.from === n.id && a.target === WAR.me) || WAR.attacks.some(a => a.from === WAR.me && a.target === n.id);
+    const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'warpact' + (ally ? ' ally' : '');
+    const status = ally ? `Sworn · ${Math.ceil((me.allies.get(n.id) - WAR.t))} s left · tap to break` : n.reqCd > 0 ? `Refused · ask again in ${Math.ceil(n.reqCd)} s` : war ? 'At war with you · tap to ask for peace' : 'Tap to ask for a pact';
+    btn.innerHTML = `<i style="background:${n.col}"></i><span class="nm">${n.name}</span><span class="pct">${((fogd(n) || n).tiles / WAR.landTiles * 100).toFixed(1)}%</span><span class="mood ${mk}">${ml}</span><small>${status}</small>`;
+    btn.addEventListener('click', () => wvPactTap(n));
+    el.append(btn);
+  }
+  if (!rows.length) el.innerHTML = '<p class="muted">No one else stands.</p>';
+}
+function wvPactTap(n) {
+  const me = WAR.nations[WAR.me]; if (!me.alive || WAR.phase !== 'play') return;
+  if (me.allies.has(n.id)) {
+    // tapping a sworn nation again breaks the pact: an oath broken, which everyone remembers
+    if (WV.breakArm === n.id && WAR.t - WV.breakT < 4) { warBreakPact(WAR.me, n.id, true); WV.breakArm = -1; wvSay(`You break your pact with ${n.name}.`); }
+    else { WV.breakArm = n.id; WV.breakT = WAR.t; wvSay(`Tap ${n.name} again to break your pact. Every nation will remember.`); }
+  } else {
+    if (n.reqCd > 0) { wvSay(`${n.name} will not hear you yet.`); return; }
+    const why = warPropose(WAR.me, n.id);
+    if (!why) wvSay(`${n.name} swears a pact with you.`); else { n.reqCd = 45; wvSay(`${n.name} refuses: ${why}.`); }
+  }
+  WV.pactsKey = ''; wvPacts();
+}
 function wvSay(t) { WV.msg = t; WV.msgT = 2.5; }
 
 // ---------- orders ----------
@@ -348,7 +381,7 @@ function wvOrderAt(i) {
     const at = WV.mode === 'harbour' ? wvNearestShore(i, WV.touch ? 5 : 3) : i;
     const why = warBuild(me, WV.mode, at < 0 ? i : at); if (why) wvSay(at < 0 && WV.mode === 'harbour' ? 'No shore of yours near there.' : why); else WV.mode = null; return;
   }
-  if (o === WAR.me) { const s = WAR.structs.get(i); wvSay(s ? `Your ${s.type} on ${WAR.regions[WAR.region[i]].name}.` : `Your land on ${WAR.regions[WAR.region[i]].name}. Pick a building below to raise it here.`); return; }
+  if (o === WAR.me) { const s = WAR.structs.get(i); wvSay(s ? `Your ${s.type} on ${warPlace(i)}.` : `Your land on ${warPlace(i)}. Pick a building below to raise it here.`); return; }
   if (o >= 0 && me.allies.has(o)) { wvSay(`${WAR.nations[o].name} are sworn to you. Break the pact by attacking anyway? Tap again.`); if (WV.lastAlly === i) { WV.lastAlly = -1; } else { WV.lastAlly = i; return; } }
   const troops = me.troops * WAR.ratio;
   if (troops < 1) { wvSay('You have no people to send.'); return; }
@@ -457,7 +490,7 @@ function warViewStart() {
   WV.cam = { x: WARC.W / 2, y: WARC.H / 2, z: 6 }; WV.terr = null; WV.own = null; WV.mode = null; WV.hover = -1; WV.msgT = 0; WV.fog = false; WV.vis = null; WV.seen2 = null; WV.vdist = null; WV.vq = null; WV.fogNoise = null; WV.snap = null; WV.seenInit = false; WV.fogSaid = false;
   wvFit();
   const n = WAR.nations[WAR.me];
-  $('warUI').hidden = false; $('warOver').hidden = true; $('warMenu').hidden = true;
+  $('warUI').hidden = false; $('warOver').hidden = true; $('warMenu').hidden = true; $('warPacts').classList.remove('open'); WV.breakArm = -1;
   $('warRatio').value = Math.round(WAR.ratio * 100);
   $('warMe').innerHTML = `<i style="background:${n.col}"></i>${n.name}`;
   wvSpeedUi(); wvPanels();
@@ -484,7 +517,9 @@ function warGo() {
   WAR.saved = { state }; state = 'war'; paused = false;
   $('titleCard').hidden = true; $('hud').hidden = true; $('logbox').hidden = true; $('biomeBanner').hidden = true;
   $('stage').classList.add('warmode');
-  warStart(bots, seed);
+  const diff = $('warDiff').value || 'normal';
+  try { localStorage.setItem('skerry-war-diff', diff); } catch (e) {}
+  warStart(bots, seed, diff);
   warViewStart();
   try { localStorage.setItem('skerry-war-bots', String(bots)); } catch (e) {}
 }
@@ -501,7 +536,9 @@ addEventListener('resize', () => { if (WAR.on) wvFit(); });
 (() => {
   $('warPlay').addEventListener('click', warGo);
   $('warNick').addEventListener('keydown', e => { if (e.key === 'Enter') warGo(); });
-  try { const b = localStorage.getItem('skerry-war-bots'); if (b) $('warBots').value = b; } catch (e) {}
+  try { const b = localStorage.getItem('skerry-war-bots'); if (b) $('warBots').value = b; const d = localStorage.getItem('skerry-war-diff'); if (d && WAR_DIFF[d]) $('warDiff').value = d; } catch (e) {}
+  $('warPactsBtn').addEventListener('click', () => wvPactsOpen(!$('warPacts').classList.contains('open')));
+  $('warPactsClose').addEventListener('click', () => wvPactsOpen(false));
   $('warBots').addEventListener('input', () => { $('warBotsOut').textContent = $('warBots').value; }); $('warBotsOut').textContent = $('warBots').value;
   $('warRatio').addEventListener('input', () => { WAR.ratio = (+$('warRatio').value) / 100; wvPanels(); });
   $('warHarbour').addEventListener('click', () => wvMode('harbour')); $('warTower').addEventListener('click', () => wvMode('tower')); $('warBeacon').addEventListener('click', () => wvMode('beacon'));

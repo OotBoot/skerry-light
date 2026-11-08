@@ -845,6 +845,30 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 @media (max-width: 720px) { .wartip { width: calc(100vw - 16px); font-size: 11px; } }
 @media (orientation: landscape) and (max-height: 520px) { .wartip { top: calc(max(8px, env(safe-area-inset-top, 0px)) + 40px); left: max(8px, env(safe-area-inset-left, 0px)); transform: none; padding: 5px 10px; width: min(calc(100vw - 280px), 520px); } }
 @media (min-width: 721px) and (min-height: 521px) { .wartip { left: calc(50% - 130px); } }
+
+/* Drowned Reach: difficulty, and the nations panel */
+.warsetup select { flex: 1 1 160px; min-width: 0; max-width: 100%; box-sizing: border-box; font-family: var(--log); font-size: 12px; color: var(--ink); background: rgba(7,12,24,0.7); border: 1px solid var(--rule); padding: 6px 8px; text-transform: none; letter-spacing: 0; }
+#warUI .warpactsbtn { width: auto; padding: 0 12px; gap: 6px; display: flex; align-items: center; font-family: var(--log); font-size: 12px; color: var(--ink); border-radius: 22px; }
+#warUI .warpactsbtn svg { width: 20px; height: 20px; }
+.warpacts { position: absolute; top: calc(max(8px, env(safe-area-inset-top, 0px)) + 46px); left: max(8px, env(safe-area-inset-left, 0px)); width: min(360px, calc(100vw - 16px)); max-height: calc(100dvh - 220px); display: none; flex-direction: column; gap: 6px; background: rgba(7,12,24,0.94); border: 1px solid var(--rule); padding: 10px; z-index: 3; }
+.warpacts.open { display: flex; }
+.warpactshead { display: flex; align-items: center; justify-content: space-between; }
+.warpactshead h2 { margin: 0; font-family: var(--display); font-weight: 400; font-size: 1.2rem; color: var(--lamp); }
+.warpactshead .tool { margin: 0; font-size: 11px; padding: 4px 10px; }
+.warpacts .muted { margin: 0; font-size: 11px; color: var(--muted); }
+.warpactslist { overflow-y: auto; display: flex; flex-direction: column; gap: 4px; min-height: 0; }
+.warpact { display: grid; grid-template-columns: 12px minmax(0,1fr) auto auto; grid-template-areas: "c n p m" "c s s s"; gap: 2px 8px; align-items: center; text-align: left; font-family: var(--log); font-size: 12px; color: var(--ink); background: rgba(236,228,207,0.05); border: 1px solid var(--rule); padding: 6px 8px; cursor: pointer; }
+.warpact:hover, .warpact:focus-visible { background: rgba(255,216,138,0.1); outline: none; }
+.warpact i { grid-area: c; width: 12px; height: 12px; border-radius: 2px; align-self: start; margin-top: 2px; }
+.warpact .nm { grid-area: n; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.warpact .pct { grid-area: p; color: var(--lamp); }
+.warpact .mood { grid-area: m; font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; }
+.warpact .mood.friendly { color: #a8dcc8; } .warpact .mood.wary { color: var(--muted); } .warpact .mood.cold { color: #e8b48a; } .warpact .mood.hostile { color: #ff8a6a; }
+.warpact small { grid-area: s; font-size: 10px; color: var(--muted); }
+.warpact.ally { border-color: #a8dcc8; background: rgba(168,220,200,0.08); }
+.warpact.ally small { color: #a8dcc8; }
+@media (max-width: 720px) { #warUI .warpactsbtn span { display: none; } #warUI .warpactsbtn { padding: 0; width: 44px; justify-content: center; } .warpacts { max-height: calc(100dvh - 260px); } }
+@media (orientation: landscape) and (max-height: 520px) { .warpacts { max-height: calc(100dvh - 110px); top: calc(max(8px, env(safe-area-inset-top, 0px)) + 40px); } }
 </style>
 </head>
 <body>
@@ -988,6 +1012,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
       <p>Land on an archipelago of skerries and take it. Your people grow with the land you hold; send a share of them against the empty shore, then against your neighbours, tile by tile. Boats carry landings to other islands. Gold raises harbours, watchtowers and beacons, and buys flares and fire-ships. Sixteen nations (or up to forty) want the same islands, the tide opens and shuts the shoal roads between them, and at night the drowned come up on any shore the Light doesn’t reach.</p>
       <div class="warsetup">
         <label>Nations against you <output id="warBotsOut">16</output><input id="warBots" type="range" min="4" max="40" value="16"></label>
+        <label for="warDiff">How they play <select id="warDiff"><option value="easy">Easy: slow to grow, slow to anger</option><option value="normal" selected>Normal</option><option value="hard">Hard: quicker, richer, cleverer</option><option value="brutal">Brutal: they come for you</option></select></label>
         <div class="nickrow"><label for="warNick">Your house</label><input id="warNick" type="text" maxlength="18" autocomplete="off" placeholder="the Keeper’s Own"></div>
         <div class="nickrow"><label for="warSeed">Map word <small>(optional: the same word gives the same islands)</small></label><input id="warSeed" type="text" maxlength="24" autocomplete="off" placeholder="any word"></div>
       </div>
@@ -1012,9 +1037,15 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
       <button class="fpsico" id="warMenuBtn" type="button" aria-label="Menu"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
       <div class="warclock" id="warClock">Choose your landing</div>
       <div class="warspeed" id="warSpeed"><button type="button" data-s="0" aria-label="Pause">II</button><button type="button" data-s="1" class="on">1×</button><button type="button" data-s="2">2×</button><button type="button" data-s="4">4×</button></div>
+      <button class="fpsico warpactsbtn" id="warPactsBtn" type="button" aria-label="Nations and pacts"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 11l3-3 3 2 4-4M3 13l4-2 5 5c1 1 3 1 3-1M21 13l-4-2M12 16l-2-2"/></svg><span>Pacts</span></button>
       <button class="fpsico warsidebtn" id="warSideBtn" type="button" aria-label="Leaderboard"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 20V10M12 20V4M18 20v-7"/></svg></button>
     </div>
     <div class="wartip" id="warTip" hidden role="status"></div>
+    <aside class="warpacts" id="warPacts" aria-label="Nations and pacts">
+      <div class="warpactshead"><h2>Nations</h2><button class="tool" id="warPactsClose" type="button">Close</button></div>
+      <p class="muted">Tap a nation to ask for a pact (four minutes of peace). Tap a sworn nation twice to break it; every nation remembers an oath broken.</p>
+      <div class="warpactslist" id="warPactsList"></div>
+    </aside>
     <aside class="warside" id="warSide"><h2>The Reach</h2><ol id="warBoard"></ol></aside>
     <div class="warspawn" id="warSpawnBar" hidden><span>Tap open land on a big island to mark your landing.</span><button class="primary" id="warLandNow" type="button">Land now</button><button class="tool" id="warRandomLand" type="button">Anywhere</button></div>
     <div class="warprompts" id="warPrompts"></div>
@@ -15594,6 +15625,14 @@ const WARC = {
   DR: -2,                         // the owner value of land the drowned hold
 };
 
+// how hard the bots play: how fast they grow and earn, how quickly they think, how keen they are to fight,
+// how carefully they pick their targets, and how much they gang up on you when you get big
+const WAR_DIFF = {
+  easy:   { name: 'Easy',   grow: 0.75, gold: 0.75, think: 1.6, aggr: 0.65, smart: 0.3, vsMe: 0.6, reserve: 1.3 },
+  normal: { name: 'Normal', grow: 1.0,  gold: 1.0,  think: 1.0, aggr: 1.0,  smart: 0.6, vsMe: 1.0, reserve: 1.0 },
+  hard:   { name: 'Hard',   grow: 1.2,  gold: 1.25, think: 0.75, aggr: 1.2, smart: 0.85, vsMe: 1.25, reserve: 0.85 },
+  brutal: { name: 'Brutal', grow: 1.45, gold: 1.5,  think: 0.55, aggr: 1.45, smart: 1.0, vsMe: 1.6, reserve: 0.7 },
+};
 const WAR = {
   on: false, phase: 'off', t: 0, speed: 1, paused: false,
   seed: 0, rng: Math.random, nBots: 16,
@@ -15698,7 +15737,8 @@ function warColour(k, n) {
 function warNation(id, name, isMe, rng) {
   return {
     id, name, isMe, alive: true, col: warColour(id, 1), troops: 40, gold: 25, tiles: 0, maxTroops: 100,
-    bot: isMe ? null : { aggr: 0.25 + rng() * 0.7, naval: rng(), loyal: rng(), greed: rng(), next: rng() * 2 },
+    bot: isMe ? null : { aggr: 0.25 + rng() * 0.7, naval: rng(), loyal: rng(), greed: rng(), next: rng() * 2, pactCd: 60 + rng() * 90 },
+    reqCd: 0,
     rel: null, allies: new Map(), bell: 0, bellCd: 0, flareCd: 0, fireCd: 0, light: false, regionsHeld: 0,
     harbours: 0, towers: 0, beacons: 0, kills: 0, taken: 0, lost: 0, lastHit: -1, lastHitT: -99, drownedT: -99, betrayed: 0, cx: 0, cy: 0,
   };
@@ -15727,7 +15767,8 @@ function warMapSize(nBots) {
   const k = Math.sqrt(clamp((nBots + 1) / 17, 0.6, 2.5));
   return [Math.round(200 * k), Math.round(124 * k)];
 }
-function warStart(nBots, seed) {
+function warStart(nBots, seed, diff) {
+  WAR.diff = WAR_DIFF[diff] ? diff : 'normal'; WAR.D = WAR_DIFF[WAR.diff]; WAR.lastPromptT = -999;
   [WARC.W, WARC.H] = warMapSize(nBots);
   WAR.frontSeen = null; WAR.pathPrev = null; WAR.frontScore = null; if (typeof WV !== 'undefined') WV.seen = null;
   WAR.on = true; WAR.phase = 'spawn'; WAR.t = 0; WAR.speed = 1; WAR.paused = false; WAR.spectate = false; WAR.result = null;
@@ -15781,6 +15822,9 @@ function warStop() {
   state = 'title'; toTitle();
 }
 
+// the name of the island a tile is on (a shoal belongs to none)
+function warPlace(i) { const r = i >= 0 ? WAR.regions[WAR.region[i]] : null; return r ? r.name : 'the shoals'; }
+
 // ---------- the log ----------
 function warLog(text, kind) { WAR.log.push({ text, t: WAR.t, kind: kind || '' }); if (WAR.log.length > 60) WAR.log.shift(); WAR.logDirty = true; }
 
@@ -15798,7 +15842,7 @@ function warBuild(n, type, i) {
   n.gold -= warStructCost(n, type);
   WAR.structs.set(i, { type, owner: n.id, hp: 1, t: WAR.t });
   if (type === 'harbour') n.harbours++; else if (type === 'tower') n.towers++; else n.beacons++;
-  if (n.isMe) warLog(`You raise a ${type} on ${WAR.regions[WAR.region[i]].name}.`);
+  if (n.isMe) warLog(`You raise a ${type} on ${warPlace(i)}.`);
   return '';
 }
 function warLoseStruct(i) {
@@ -15884,7 +15928,7 @@ function warTakeTile(j, to, from) {
   if (from >= 0) { const d = WAR.nations[from]; d.tiles--; d.lost++; }
   if (to >= 0) { const a = WAR.nations[to]; a.tiles++; a.taken++; if (a.isMe) WAR.stats.taken++; }
   WAR.owner[j] = to;
-  const s = WAR.structs.get(j); if (s && s.owner !== to) { warLoseStruct(j); if (to >= 0 && from >= 0 && WAR.nations[from].isMe) warLog(`Your ${s.type} on ${WAR.regions[WAR.region[j]].name} is taken.`, 'bad'); }
+  const s = WAR.structs.get(j); if (s && s.owner !== to) { warLoseStruct(j); if (to >= 0 && from >= 0 && WAR.nations[from].isMe) warLog(`Your ${s.type} on ${warPlace(j)} is taken.`, 'bad'); }
 }
 function warAttacksTick(dt) {
   for (let k = WAR.attacks.length - 1; k >= 0; k--) {
@@ -16000,10 +16044,10 @@ function warBoatsTick(dt) {
       const cost = own >= 0 ? warTileCost({ target: own, from: b.from }, tgt) : 2;
       if (b.troops < cost + 2) { if (a.isMe) warLog('The landing is thrown back into the sea.', 'bad'); continue; }
       warTakeTile(tgt, b.from, own); b.troops -= cost;
-      if (own >= 0) { const d = WAR.nations[own]; d.troops = Math.max(0, d.troops - cost * 0.45); if (d.tiles <= 0) warEliminate(d, a); if (d.isMe) warLog(`${a.name} lands on your shore at ${WAR.regions[WAR.region[tgt]].name}!`, 'bad'); }
+      if (own >= 0) { const d = WAR.nations[own]; d.troops = Math.max(0, d.troops - cost * 0.45); if (d.tiles <= 0) warEliminate(d, a); if (d.isMe) warLog(`${a.name} lands on your shore at ${warPlace(tgt)}!`, 'bad'); }
       const at = warAttack(b.from, own, 0, tgt, tgt); a.troops -= 0;
       if (at) { at.troops += b.troops; at.sent += b.troops; } else a.troops += b.troops;
-      if (a.isMe) warLog(`Your people land on ${WAR.regions[WAR.region[tgt]].name}.`);
+      if (a.isMe) warLog(`Your people land on ${warPlace(tgt)}.`);
     }
   }
 }
@@ -16016,10 +16060,10 @@ function warFireship(b, a) {
     if (o >= 0) { hit.set(o, (hit.get(o) || 0) + 1); warTakeTile(j, -1, o); } else if (o === WARC.DR) WAR.owner[j] = -1;
     if (WAR.structs.has(j)) warLoseStruct(j);
   }
-  for (const [o, n] of hit) { const d = WAR.nations[o]; d.troops *= Math.max(0.2, 1 - n / Math.max(1, d.tiles + n) * 1.5); d.rel[a.id] = -1; if (d.tiles <= 0) warEliminate(d, a); if (d.isMe) warLog(`${a.name}’s fire-ship burns ${n} of your tiles at ${WAR.regions[WAR.region[b.target]].name}!`, 'bad'); }
+  for (const [o, n] of hit) { const d = WAR.nations[o]; d.troops *= Math.max(0.2, 1 - n / Math.max(1, d.tiles + n) * 1.5); d.rel[a.id] = -1; if (d.tiles <= 0) warEliminate(d, a); if (d.isMe) warLog(`${a.name}’s fire-ship burns ${n} of your tiles at ${warPlace(b.target)}!`, 'bad'); }
   WAR.flares.push({ x: x0, y: y0, t: WARC.FLARE_T * 0.6, fire: true, r: WARC.FIRE_R });
   WAR.events.push({ kind: 'boom', x: x0, y: y0, t: 1.2 });
-  if (a.isMe) warLog(`Your fire-ship goes up at ${WAR.regions[WAR.region[b.target]].name}: ${[...hit.values()].reduce((s, v) => s + v, 0)} tiles burnt.`, 'good');
+  if (a.isMe) warLog(`Your fire-ship goes up at ${warPlace(b.target)}: ${[...hit.values()].reduce((s, v) => s + v, 0)} tiles burnt.`, 'good');
 }
 
 // ---------- flares and the bell ----------
@@ -16046,17 +16090,62 @@ function warBell(n) {
 }
 
 // ---------- pacts ----------
+// A bot's reasons for a pact, best first: to cover one border while it fights on another; to stand with the
+// neighbours of a runaway leader against them; or to buy peace from a much stronger neighbour it fears. Never
+// with the runaway leader itself, never with an oath-breaker it remembers, and never more than two at once.
+function warBotWantsPact(n, bord, leader) {
+  if (n.allies.size >= 2) return -1;
+  const runaway = leader && leader.id !== n.id && leader.tiles > WAR.landTiles * 0.22 ? leader : null;
+  const fighting = WAR.attacks.filter(a => (a.from === n.id || a.target === n.id) && a.target >= 0).map(a => a.from === n.id ? a.target : a.from);
+  let best = -1, bs = 0.6;
+  for (const [o, shared] of bord.out) {
+    const e = WAR.nations[o]; if (!e.alive || n.allies.has(o) || (runaway && o === runaway.id) || fighting.includes(o)) continue;
+    if (n.rel[o] < -0.25 || e.betrayed > 0 && n.rel[o] < 0.3) continue;
+    if (e.isMe && WAR.t - WAR.lastPromptT < 75) continue;
+    let s = 0;
+    if (fighting.length) s += 0.7 + Math.min(0.4, shared / 30);                         // cover the other border
+    if (runaway && bord.out.has(runaway.id) && warBordersCached(o).has(runaway.id)) s += 0.8;   // stand together against the leader
+    if (e.troops > n.troops * 1.6) s += 0.5;                                              // buy peace from the strong
+    s += n.rel[o] * 0.6 + n.bot.loyal * 0.2;
+    if (s > bs) { bs = s; best = o; }
+  }
+  return best;
+}
+// which nations border this one (for the bots' reasoning; refreshed now and then)
+function warBordersCached(id) {
+  const c = WAR.bordCache || (WAR.bordCache = new Map()), hit = c.get(id);
+  if (hit && WAR.t - hit.t < 5) return hit.out;
+  const out = warBorders(id).out; c.set(id, { t: WAR.t, out }); return out;
+}
+// would this bot swear a pact offered by `a`? returns '' if yes, else its reason
+function warBotAnswer(b, a) {
+  const runaway = a.tiles > WAR.landTiles * 0.22 && a.tiles > b.tiles * 2.5;
+  if (b.allies.size >= 3) return 'it has pacts enough already';
+  if (b.rel[a.id] < -0.4) return 'it has not forgiven you';
+  if (a.betrayed > 0 && b.rel[a.id] < 0.3 && WAR.rng() < 0.75) return 'it remembers that you broke your word';
+  if (runaway) return 'you are grown too great to trust';
+  if (WAR.attacks.some(k => k.from === b.id && k.target === a.id && k.troops > a.troops * 0.5)) return 'it thinks it is winning';
+  const bord = warBordersCached(b.id), fighting = WAR.attacks.some(k => (k.from === b.id || k.target === b.id) && k.target >= 0 && k.target !== a.id && k.from !== a.id);
+  let s = 0.3 + b.rel[a.id] * 0.8 + b.bot.loyal * 0.3;
+  if (fighting) s += 0.35;
+  if (a.troops > b.troops * 1.3) s += 0.3;
+  if (b.lastHit === a.id && WAR.t - b.lastHitT < 30) s += a.troops > b.troops ? 0.3 : -0.4;
+  if (!bord.has(a.id)) s -= 0.1;
+  return s > 0.55 ? '' : 'it sees nothing in it for itself';
+}
 function warPropose(from, to) {
-  const a = WAR.nations[from], b = WAR.nations[to]; if (!a.alive || !b.alive || a.allies.has(to)) return;
+  const a = WAR.nations[from], b = WAR.nations[to]; if (!a.alive || !b.alive || a.allies.has(to)) return 'Already sworn.';
   if (b.isMe) {
-    if (WAR.prompts.some(p => p.from === from)) return;
+    if (WAR.prompts.some(p => p.from === from) || WAR.t - WAR.lastPromptT < 75) return 'wait';
+    WAR.lastPromptT = WAR.t;
     WAR.prompts.push({ from, t: 30, text: `${a.name} offers a pact: no war between you for four minutes.` });
     warLog(`${a.name} offers you a pact.`);
-  } else if (b.bot) {
-    // a bot takes a pact when it likes the other side enough, or fears it
-    const likes = b.rel[from] > -0.1 && (b.rel[from] > 0.1 || a.troops > b.troops * 1.3 || b.lastHit === a.id && WAR.t - b.lastHitT < 20);
-    if (likes && WAR.rng() < 0.6 + b.bot.loyal * 0.3) warMakePact(from, to);
+    return '';
   }
+  const why = warBotAnswer(b, a);
+  if (!why) { warMakePact(from, to); return ''; }
+  if (a.isMe) { b.rel[from] -= 0.05; warLog(`${b.name} refuses your pact: ${why}.`); }
+  return why;
 }
 function warMakePact(x, y) {
   const a = WAR.nations[x], b = WAR.nations[y], until = WAR.t + 240;
@@ -16130,8 +16219,10 @@ function warGrowth(dt) {
     let g = (1.3 + n.tiles * 0.07) * (1 - n.troops / Math.max(1, n.maxTroops));
     if (n.light) g *= 1.1;
     g *= 1 + 0.12 * n.regionsHeld;
+    if (n.bot) g *= WAR.D.grow;
     if (g > 0) n.troops += g * dt;
-    n.gold += (0.35 + n.tiles * 0.011 + n.harbours * 0.4 + (n.light ? 1.5 : 0) + n.regionsHeld * 0.3) * dt;
+    n.gold += (0.35 + n.tiles * 0.011 + n.harbours * 0.4 + (n.light ? 1.5 : 0) + n.regionsHeld * 0.3) * dt * (n.bot ? WAR.D.gold : 1);
+    if (n.reqCd > 0) n.reqCd -= dt; if (n.bot && n.bot.pactCd > 0) n.bot.pactCd -= dt;
     if (n.bell > 0) n.bell -= dt; if (n.bellCd > 0) n.bellCd -= dt; if (n.flareCd > 0) n.flareCd -= dt; if (n.fireCd > 0) n.fireCd -= dt;
     for (const [k, until] of n.allies) if (WAR.t > until) { warBreakPact(n.id, k, false); if (n.isMe) warLog(`Your pact with ${WAR.nations[k].name} has run its course.`); }
     for (let k = 0; k < n.rel.length; k++) if (k !== n.id) n.rel[k] += (0 - n.rel[k]) * dt * 0.004;
@@ -16157,29 +16248,33 @@ function warBorders(id) {
   return { out, neutral, dr };
 }
 function warBotTick(n, dt) {
-  const b = n.bot; b.next -= dt; if (b.next > 0) return; b.next = 0.9 + WAR.rng() * 0.6;
+  const b = n.bot, D = WAR.D; b.next -= dt; if (b.next > 0) return; b.next = (0.9 + WAR.rng() * 0.6) * D.think;
   const my = n.troops, bord = warBorders(n.id), leader = WAR.nations.reduce((m, k) => k.alive && (!m || k.tiles > m.tiles) ? k : m, null);
   const busy = WAR.attacks.filter(a => a.from === n.id).reduce((s, a) => s + a.troops, 0);
-  const reserve = n.maxTroops * (0.12 + (1 - b.aggr) * 0.18);
+  const reserve = n.maxTroops * (0.12 + (1 - b.aggr) * 0.18) * D.reserve;
   // 1. someone is on our land: answer, if we can
   if (n.lastHit >= 0 && WAR.t - n.lastHitT < 12) {
     const e = WAR.nations[n.lastHit];
     if (e.alive && WAR.t > WARC.TRUCE && !n.allies.has(e.id) && my > reserve * 1.2 && !WAR.attacks.some(a => a.from === n.id && a.target === e.id) && bord.out.has(e.id)) warAttack(n.id, e.id, my * (0.3 + b.aggr * 0.3));
     if (n.gold > warStructCost(n, 'tower') && WAR.rng() < 0.5) warBotBuild(n, 'tower', e.id);
-    if (e.alive && e.troops > my * 1.6 && WAR.rng() < 0.3 + b.loyal * 0.4) warPropose(n.id, e.id);
+    // outmatched by whoever hit us: sue for peace, now and then
+    if (e.alive && e.troops > my * 1.8 && b.pactCd <= 0 && WAR.rng() < 0.25 + b.loyal * 0.3) { b.pactCd = 90 + WAR.rng() * 60; warPropose(n.id, e.id); }
   }
   // 2. the empty shore
   if (bord.neutral > 0 && my > 20 && busy < my * 0.6 && WAR.rng() < 0.7) warAttack(n.id, -1, my * (0.25 + b.greed * 0.3));
   // 3. the drowned, by day
   if (bord.dr > 0 && !warIsNight() && my > 40 && WAR.rng() < 0.4) warAttack(n.id, WARC.DR, Math.min(my * 0.25, bord.dr * 6));
   // 4. a neighbour: the weakest we dislike most, and the leader when they grow too big
-  if (WAR.t > WARC.TRUCE && my > reserve + 40 && busy < my * 0.5 && WAR.rng() < 0.05 + b.aggr * 0.12 + (bord.neutral ? 0 : 0.08)) {
+  if (WAR.t > WARC.TRUCE && my > reserve + 40 && busy < my * 0.5 && WAR.rng() < (0.05 + b.aggr * 0.12 + (bord.neutral ? 0 : 0.08)) * D.aggr) {
     let best = null, bs = 0;
     for (const [o, shared] of bord.out) {
       const e = WAR.nations[o]; if (!e.alive || n.allies.has(o)) continue;
       let s = (my / Math.max(20, e.troops)) * (0.6 - n.rel[o]) * (0.5 + b.aggr) * Math.min(1, shared / 6);
       if (leader && o === leader.id && leader.tiles > WAR.landTiles * 0.22) s *= 1.8;
       if (e.bell > 0) s *= 0.5;
+      if (e.isMe) s *= D.vsMe;
+      // the cleverer the bot, the more it weighs how thin the enemy's border is held, and whether they're busy elsewhere
+      s *= 1 + D.smart * (Math.min(1.5, my / Math.max(20, e.troops)) - 0.5 + (WAR.attacks.some(a => a.from === e.id && a.target !== n.id) ? 0.4 : 0));
       if (s > bs) { bs = s; best = e; }
     }
     if (best && bs > 0.7) warAttack(n.id, best.id, my * (0.3 + b.aggr * 0.35));
@@ -16203,10 +16298,8 @@ function warBotTick(n, dt) {
   }
   // 7. the bell when hard pressed
   if (n.bellCd <= 0 && WAR.attacks.some(a => a.target === n.id && a.troops > my * 0.5)) warBell(n);
-  // 8. friends: a pact with a strong neighbour we don't hate, now and then
-  if (WAR.rng() < 0.04 + b.loyal * 0.05) {
-    for (const [o] of bord.out) { const e = WAR.nations[o]; if (e.alive && !n.allies.has(o) && n.rel[o] > 0.05 && e.troops > my * 0.8) { warPropose(n.id, o); break; } }
-  }
+  // 8. friends, rarely and for a reason
+  if (b.pactCd <= 0) { b.pactCd = 50 + WAR.rng() * 70; const k = warBotWantsPact(n, bord, leader); if (k >= 0) warPropose(n.id, k); }
 }
 function warBotBuild(n, type, vs) {
   // a tile of ours: on the shore for a harbour, at the border with `vs` for a tower, at a dark shore for a beacon
@@ -16436,7 +16529,7 @@ function warDraw(dt) {
   wvDrawLabels(z);
   wvDrawHover(z);
   wvDrawVignette(dark);
-  WV.uiT += dt; if (WV.uiT > 0.25) { WV.uiT = 0; wvPanels(); }
+  WV.uiT += dt; if (WV.uiT > 0.25) { WV.uiT = 0; wvPanels(); wvPacts(); }
   if (WV.tipT > 0) WV.tipT -= dt; wvTip();
 }
 function wvDrawStructs(z) {
@@ -16622,6 +16715,39 @@ function wvPanels() {
     }
   }
 }
+// ---------- the nations panel: ask for a pact, or break one ----------
+function wvPactsOpen(on) { $('warPacts').classList.toggle('open', on); if (on) { WV.pactsKey = ''; wvPacts(); } }
+function wvPacts() {
+  const el = $('warPactsList'); if (!$('warPacts').classList.contains('open')) return;
+  const me = WAR.nations[WAR.me], fogd = n => WV.fog && !me.allies.has(n.id) && WV.snap ? WV.snap[n.id] : null;
+  const rows = WAR.nations.filter(n => !n.isMe && (fogd(n) ? fogd(n).alive : n.alive)).sort((a, b) => (b.allies.has(WAR.me) - a.allies.has(WAR.me)) || ((fogd(b) || b).tiles - (fogd(a) || a).tiles));
+  const mood = r => r > 0.3 ? ['friendly', 'Friendly'] : r > -0.1 ? ['wary', 'Wary'] : r > -0.5 ? ['cold', 'Cold'] : ['hostile', 'Hostile'];
+  const key = rows.map(n => `${n.id}:${me.allies.has(n.id) ? Math.ceil((me.allies.get(n.id) - WAR.t) / 10) : 0}:${mood(n.rel[WAR.me])[0]}:${n.reqCd > 0 ? Math.ceil(n.reqCd) : 0}:${WAR.attacks.some(a => a.from === n.id && a.target === WAR.me) ? 1 : 0}:${Math.round((fogd(n) || n).tiles / WAR.landTiles * 1000)}`).join('|');
+  if (key === WV.pactsKey) return; WV.pactsKey = key;
+  el.innerHTML = '';
+  for (const n of rows) {
+    const ally = me.allies.has(n.id), [mk, ml] = mood(n.rel[WAR.me]), war = WAR.attacks.some(a => a.from === n.id && a.target === WAR.me) || WAR.attacks.some(a => a.from === WAR.me && a.target === n.id);
+    const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'warpact' + (ally ? ' ally' : '');
+    const status = ally ? `Sworn · ${Math.ceil((me.allies.get(n.id) - WAR.t))} s left · tap to break` : n.reqCd > 0 ? `Refused · ask again in ${Math.ceil(n.reqCd)} s` : war ? 'At war with you · tap to ask for peace' : 'Tap to ask for a pact';
+    btn.innerHTML = `<i style="background:${n.col}"></i><span class="nm">${n.name}</span><span class="pct">${((fogd(n) || n).tiles / WAR.landTiles * 100).toFixed(1)}%</span><span class="mood ${mk}">${ml}</span><small>${status}</small>`;
+    btn.addEventListener('click', () => wvPactTap(n));
+    el.append(btn);
+  }
+  if (!rows.length) el.innerHTML = '<p class="muted">No one else stands.</p>';
+}
+function wvPactTap(n) {
+  const me = WAR.nations[WAR.me]; if (!me.alive || WAR.phase !== 'play') return;
+  if (me.allies.has(n.id)) {
+    // tapping a sworn nation again breaks the pact: an oath broken, which everyone remembers
+    if (WV.breakArm === n.id && WAR.t - WV.breakT < 4) { warBreakPact(WAR.me, n.id, true); WV.breakArm = -1; wvSay(`You break your pact with ${n.name}.`); }
+    else { WV.breakArm = n.id; WV.breakT = WAR.t; wvSay(`Tap ${n.name} again to break your pact. Every nation will remember.`); }
+  } else {
+    if (n.reqCd > 0) { wvSay(`${n.name} will not hear you yet.`); return; }
+    const why = warPropose(WAR.me, n.id);
+    if (!why) wvSay(`${n.name} swears a pact with you.`); else { n.reqCd = 45; wvSay(`${n.name} refuses: ${why}.`); }
+  }
+  WV.pactsKey = ''; wvPacts();
+}
 function wvSay(t) { WV.msg = t; WV.msgT = 2.5; }
 
 // ---------- orders ----------
@@ -16639,7 +16765,7 @@ function wvOrderAt(i) {
     const at = WV.mode === 'harbour' ? wvNearestShore(i, WV.touch ? 5 : 3) : i;
     const why = warBuild(me, WV.mode, at < 0 ? i : at); if (why) wvSay(at < 0 && WV.mode === 'harbour' ? 'No shore of yours near there.' : why); else WV.mode = null; return;
   }
-  if (o === WAR.me) { const s = WAR.structs.get(i); wvSay(s ? `Your ${s.type} on ${WAR.regions[WAR.region[i]].name}.` : `Your land on ${WAR.regions[WAR.region[i]].name}. Pick a building below to raise it here.`); return; }
+  if (o === WAR.me) { const s = WAR.structs.get(i); wvSay(s ? `Your ${s.type} on ${warPlace(i)}.` : `Your land on ${warPlace(i)}. Pick a building below to raise it here.`); return; }
   if (o >= 0 && me.allies.has(o)) { wvSay(`${WAR.nations[o].name} are sworn to you. Break the pact by attacking anyway? Tap again.`); if (WV.lastAlly === i) { WV.lastAlly = -1; } else { WV.lastAlly = i; return; } }
   const troops = me.troops * WAR.ratio;
   if (troops < 1) { wvSay('You have no people to send.'); return; }
@@ -16748,7 +16874,7 @@ function warViewStart() {
   WV.cam = { x: WARC.W / 2, y: WARC.H / 2, z: 6 }; WV.terr = null; WV.own = null; WV.mode = null; WV.hover = -1; WV.msgT = 0; WV.fog = false; WV.vis = null; WV.seen2 = null; WV.vdist = null; WV.vq = null; WV.fogNoise = null; WV.snap = null; WV.seenInit = false; WV.fogSaid = false;
   wvFit();
   const n = WAR.nations[WAR.me];
-  $('warUI').hidden = false; $('warOver').hidden = true; $('warMenu').hidden = true;
+  $('warUI').hidden = false; $('warOver').hidden = true; $('warMenu').hidden = true; $('warPacts').classList.remove('open'); WV.breakArm = -1;
   $('warRatio').value = Math.round(WAR.ratio * 100);
   $('warMe').innerHTML = `<i style="background:${n.col}"></i>${n.name}`;
   wvSpeedUi(); wvPanels();
@@ -16775,7 +16901,9 @@ function warGo() {
   WAR.saved = { state }; state = 'war'; paused = false;
   $('titleCard').hidden = true; $('hud').hidden = true; $('logbox').hidden = true; $('biomeBanner').hidden = true;
   $('stage').classList.add('warmode');
-  warStart(bots, seed);
+  const diff = $('warDiff').value || 'normal';
+  try { localStorage.setItem('skerry-war-diff', diff); } catch (e) {}
+  warStart(bots, seed, diff);
   warViewStart();
   try { localStorage.setItem('skerry-war-bots', String(bots)); } catch (e) {}
 }
@@ -16792,7 +16920,9 @@ addEventListener('resize', () => { if (WAR.on) wvFit(); });
 (() => {
   $('warPlay').addEventListener('click', warGo);
   $('warNick').addEventListener('keydown', e => { if (e.key === 'Enter') warGo(); });
-  try { const b = localStorage.getItem('skerry-war-bots'); if (b) $('warBots').value = b; } catch (e) {}
+  try { const b = localStorage.getItem('skerry-war-bots'); if (b) $('warBots').value = b; const d = localStorage.getItem('skerry-war-diff'); if (d && WAR_DIFF[d]) $('warDiff').value = d; } catch (e) {}
+  $('warPactsBtn').addEventListener('click', () => wvPactsOpen(!$('warPacts').classList.contains('open')));
+  $('warPactsClose').addEventListener('click', () => wvPactsOpen(false));
   $('warBots').addEventListener('input', () => { $('warBotsOut').textContent = $('warBots').value; }); $('warBotsOut').textContent = $('warBots').value;
   $('warRatio').addEventListener('input', () => { WAR.ratio = (+$('warRatio').value) / 100; wvPanels(); });
   $('warHarbour').addEventListener('click', () => wvMode('harbour')); $('warTower').addEventListener('click', () => wvMode('tower')); $('warBeacon').addEventListener('click', () => wvMode('beacon'));

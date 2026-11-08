@@ -151,6 +151,7 @@
       <p>Land on an archipelago of skerries and take it. Your people grow with the land you hold; send a share of them against the empty shore, then against your neighbours, tile by tile. Boats carry landings to other islands. Gold raises harbours, watchtowers and beacons, and buys flares and fire-ships. Sixteen nations (or up to forty) want the same islands, the tide opens and shuts the shoal roads between them, and at night the drowned come up on any shore the Light doesn’t reach.</p>
       <div class="warsetup">
         <label>Nations against you <output id="warBotsOut">16</output><input id="warBots" type="range" min="4" max="40" value="16"></label>
+        <label for="warDiff">How they play <select id="warDiff"><option value="easy">Easy: slow to grow, slow to anger</option><option value="normal" selected>Normal</option><option value="hard">Hard: quicker, richer, cleverer</option><option value="brutal">Brutal: they come for you</option></select></label>
         <div class="nickrow"><label for="warNick">Your house</label><input id="warNick" type="text" maxlength="18" autocomplete="off" placeholder="the Keeper’s Own"></div>
         <div class="nickrow"><label for="warSeed">Map word <small>(optional: the same word gives the same islands)</small></label><input id="warSeed" type="text" maxlength="24" autocomplete="off" placeholder="any word"></div>
       </div>
@@ -175,9 +176,15 @@
       <button class="fpsico" id="warMenuBtn" type="button" aria-label="Menu"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
       <div class="warclock" id="warClock">Choose your landing</div>
       <div class="warspeed" id="warSpeed"><button type="button" data-s="0" aria-label="Pause">II</button><button type="button" data-s="1" class="on">1×</button><button type="button" data-s="2">2×</button><button type="button" data-s="4">4×</button></div>
+      <button class="fpsico warpactsbtn" id="warPactsBtn" type="button" aria-label="Nations and pacts"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 11l3-3 3 2 4-4M3 13l4-2 5 5c1 1 3 1 3-1M21 13l-4-2M12 16l-2-2"/></svg><span>Pacts</span></button>
       <button class="fpsico warsidebtn" id="warSideBtn" type="button" aria-label="Leaderboard"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 20V10M12 20V4M18 20v-7"/></svg></button>
     </div>
     <div class="wartip" id="warTip" hidden role="status"></div>
+    <aside class="warpacts" id="warPacts" aria-label="Nations and pacts">
+      <div class="warpactshead"><h2>Nations</h2><button class="tool" id="warPactsClose" type="button">Close</button></div>
+      <p class="muted">Tap a nation to ask for a pact (four minutes of peace). Tap a sworn nation twice to break it; every nation remembers an oath broken.</p>
+      <div class="warpactslist" id="warPactsList"></div>
+    </aside>
     <aside class="warside" id="warSide"><h2>The Reach</h2><ol id="warBoard"></ol></aside>
     <div class="warspawn" id="warSpawnBar" hidden><span>Tap open land on a big island to mark your landing.</span><button class="primary" id="warLandNow" type="button">Land now</button><button class="tool" id="warRandomLand" type="button">Anywhere</button></div>
     <div class="warprompts" id="warPrompts"></div>

@@ -834,3 +834,27 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 @media (max-width: 720px) { .wartip { width: calc(100vw - 16px); font-size: 11px; } }
 @media (orientation: landscape) and (max-height: 520px) { .wartip { top: calc(max(8px, env(safe-area-inset-top, 0px)) + 40px); left: max(8px, env(safe-area-inset-left, 0px)); transform: none; padding: 5px 10px; width: min(calc(100vw - 280px), 520px); } }
 @media (min-width: 721px) and (min-height: 521px) { .wartip { left: calc(50% - 130px); } }
+
+/* Drowned Reach: difficulty, and the nations panel */
+.warsetup select { flex: 1 1 160px; min-width: 0; max-width: 100%; box-sizing: border-box; font-family: var(--log); font-size: 12px; color: var(--ink); background: rgba(7,12,24,0.7); border: 1px solid var(--rule); padding: 6px 8px; text-transform: none; letter-spacing: 0; }
+#warUI .warpactsbtn { width: auto; padding: 0 12px; gap: 6px; display: flex; align-items: center; font-family: var(--log); font-size: 12px; color: var(--ink); border-radius: 22px; }
+#warUI .warpactsbtn svg { width: 20px; height: 20px; }
+.warpacts { position: absolute; top: calc(max(8px, env(safe-area-inset-top, 0px)) + 46px); left: max(8px, env(safe-area-inset-left, 0px)); width: min(360px, calc(100vw - 16px)); max-height: calc(100dvh - 220px); display: none; flex-direction: column; gap: 6px; background: rgba(7,12,24,0.94); border: 1px solid var(--rule); padding: 10px; z-index: 3; }
+.warpacts.open { display: flex; }
+.warpactshead { display: flex; align-items: center; justify-content: space-between; }
+.warpactshead h2 { margin: 0; font-family: var(--display); font-weight: 400; font-size: 1.2rem; color: var(--lamp); }
+.warpactshead .tool { margin: 0; font-size: 11px; padding: 4px 10px; }
+.warpacts .muted { margin: 0; font-size: 11px; color: var(--muted); }
+.warpactslist { overflow-y: auto; display: flex; flex-direction: column; gap: 4px; min-height: 0; }
+.warpact { display: grid; grid-template-columns: 12px minmax(0,1fr) auto auto; grid-template-areas: "c n p m" "c s s s"; gap: 2px 8px; align-items: center; text-align: left; font-family: var(--log); font-size: 12px; color: var(--ink); background: rgba(236,228,207,0.05); border: 1px solid var(--rule); padding: 6px 8px; cursor: pointer; }
+.warpact:hover, .warpact:focus-visible { background: rgba(255,216,138,0.1); outline: none; }
+.warpact i { grid-area: c; width: 12px; height: 12px; border-radius: 2px; align-self: start; margin-top: 2px; }
+.warpact .nm { grid-area: n; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.warpact .pct { grid-area: p; color: var(--lamp); }
+.warpact .mood { grid-area: m; font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; }
+.warpact .mood.friendly { color: #a8dcc8; } .warpact .mood.wary { color: var(--muted); } .warpact .mood.cold { color: #e8b48a; } .warpact .mood.hostile { color: #ff8a6a; }
+.warpact small { grid-area: s; font-size: 10px; color: var(--muted); }
+.warpact.ally { border-color: #a8dcc8; background: rgba(168,220,200,0.08); }
+.warpact.ally small { color: #a8dcc8; }
+@media (max-width: 720px) { #warUI .warpactsbtn span { display: none; } #warUI .warpactsbtn { padding: 0; width: 44px; justify-content: center; } .warpacts { max-height: calc(100dvh - 260px); } }
+@media (orientation: landscape) and (max-height: 520px) { .warpacts { max-height: calc(100dvh - 110px); top: calc(max(8px, env(safe-area-inset-top, 0px)) + 40px); } }
