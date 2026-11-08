@@ -12389,15 +12389,17 @@ function fpsInput(dt) {
   const m = FPS.me, K = FPS.keys;
   // looking: mouse (pointer lock), the right stick, or a finger on the right of the screen
   let sens = 0.0023;
-  // on a touch screen, aiming slows a little as the crosshair crosses someone you can see,
-  // and then leans gently onto them (and up or down to their chest), so a thumb can hold a target
-  const assist = FPS.touch ? fpsAssistTarget() : null;
-  if (assist) sens *= 0.55;
+  // on a touch screen, aiming slows a touch as the crosshair crosses someone you can see, and leans faintly
+  // onto them, but only while your thumb is moving the aim: it helps hold a target, it doesn't find one for you
+  // (and none at all through the telescope)
+  const aiming = Math.abs(FPS.look[0]) + Math.abs(FPS.look[1]) > 0.5;
+  const assist = FPS.touch && !FPS.scoped ? fpsAssistTarget() : null;
+  if (assist) sens *= 0.8;
   if (FPS.scoped) sens /= FPSW.longarm.scope;
   m.h = wrapPi(m.h + FPS.look[0] * sens); m.p = clamp(m.p - FPS.look[1] * sens, -0.6, 0.6);
-  if (assist && !(m.dead > 0)) {
-    m.h = wrapPi(m.h + clamp(assist.dh, -1, 1) * Math.min(1, dt * 3.2));
-    m.p = clamp(m.p + clamp(assist.dp, -1, 1) * Math.min(1, dt * 4), -0.6, 0.6);
+  if (assist && aiming && !(m.dead > 0)) {
+    m.h = wrapPi(m.h + clamp(assist.dh, -1, 1) * Math.min(1, dt * 1.1));
+    m.p = clamp(m.p + clamp(assist.dp, -1, 1) * Math.min(1, dt * 1.2), -0.6, 0.6);
   }
   FPS.lastLook = FPS.look; FPS.look = [0, 0];
   let fx = 0, fz = 0, fire = false;
@@ -12432,7 +12434,7 @@ function fpsInput(dt) {
 
 // someone visible close to the crosshair, and how far off it is
 function fpsAssistTarget() {
-  const m = FPS.me; let best = null, bestA = 0.14;
+  const m = FPS.me; let best = null, bestA = 0.075;
   for (const o of fpsEveryone().concat(FPS.drowned)) {
     if (o.me || o.dead > 0 || o.dead === 1 && o.drowned) continue;
     const d = Math.hypot(o.x - m.x, o.y - m.y); if (d > 140 || d < 1) continue;
