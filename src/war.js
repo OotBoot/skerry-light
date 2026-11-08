@@ -23,7 +23,7 @@ const WARC = {
   SPAWN: 20,                      // seconds to choose a landing
   DAY: 240, NIGHT_FROM: 0.62, NIGHT_TO: 0.96,   // a day, and the part of it that's night
   TIDE: 180,                      // the tide turns twice in this
-  BEAM_TURN: 26, BEAM_HALF: 0.11, // the Light's sweep: one turn in this many seconds, this half-width (radians)
+  BEAM_TURN: 43, BEAM_HALF: 0.22, // the Light's sweep, lit only at night: one turn in this many seconds, this half-width (radians)
   COSTS: { harbour: [60, 30], tower: [50, 25], beacon: [80, 35], flare: 45, fireship: 320 },
   TOWER_R: 6, BEACON_R: 8, FLARE_R: 9, FLARE_T: 45, FIRE_R: 6, HARBOUR_R: 3,
   BELL_CD: 90, BELL_T: 18, BOAT_SPEED: 4, LANDING_MIN: 25, TRUCE: 75,   // no war between nations in the first minute and a quarter
@@ -256,8 +256,8 @@ function warDark() {   // 0 by day, 1 in the deep of night
 function warRelight() {
   const lit = WAR.lit; lit.fill(0);
   const cx = WARC.W / 2, cy = WARC.H / 2, W = WARC.W, H = WARC.H;
-  // the beam: a wedge from the Light
-  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+  // the beam: a wedge from the Light, lit only at night
+  if (warDark() > 0.05) for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
     let d = Math.atan2(y - cy, x - cx) - WAR.beam; d = Math.atan2(Math.sin(d), Math.cos(d));
     const dist = Math.hypot(x - cx, y - cy);
     if (Math.abs(d) < WARC.BEAM_HALF + 1.2 / Math.max(2, dist)) lit[warIdx(x, y)] = 2;
@@ -702,7 +702,7 @@ function warTick(dt) {
   WAR.t += dt;
   const day = Math.floor(WAR.t / WARC.DAY) + 1; if (day !== WAR.day) { WAR.day = day; WAR.stats.days = day; if (day > 1) warLog(`Day ${day} breaks over the Reach.`); }
   WAR.beam += dt * 6.283 / WARC.BEAM_TURN;
-  WAR.relT = (WAR.relT || 0) + dt; if (WAR.relT > 0.5) { WAR.relT = 0; warRelight(); }
+  WAR.relT = (WAR.relT || 0) + dt; if (WAR.relT > 0.2) { WAR.relT = 0; warRelight(); }
   warTideTick(dt);
   warGrowth(dt);
   warAttacksTick(dt);

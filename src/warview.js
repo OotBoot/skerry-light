@@ -41,8 +41,27 @@ function wvLayers() {
   WV.night = document.createElement('canvas'); WV.night.width = W; WV.night.height = H; WV.nightG = WV.night.getContext('2d'); WV.nightImg = WV.nightG.createImageData(W, H);
   WV.cols = WAR.nations.map(n => wvRgb(n.col));
 }
+// ---------- the fog of war ----------
+// By day you see everything. At night you see only what's lit (the beam, beacons, flares, harbour lights) and the
+// land near your own and your allies'; everywhere else is fog, and other nations show as they were at dusk.
+function wvFogOn() { return WAR.phase === 'play' && warDark() > 0.05 && !WAR.spectate; }
+function wvVision() {
+  const n = WAR.map.length, vis = WV.vis && WV.vis.length === n ? WV.vis : (WV.vis = new Uint8Array(n)), dist = WV.vdist && WV.vdist.length === n ? WV.vdist : (WV.vdist = new Uint8Array(n));
+  const me = WAR.nations[WAR.me], R = 4;
+  dist.fill(255); const q = WV.vq && WV.vq.length === n ? WV.vq : (WV.vq = new Int32Array(n)); let qt = 0, qh = 0;
+  for (let i = 0; i < n; i++) { const o = WAR.owner[i]; if (o === WAR.me || (o >= 0 && me.allies.has(o))) { dist[i] = 0; q[qt++] = i; } }
+  while (qh < qt) { const i = q[qh++], d = dist[i]; if (d >= R) continue; warNeighbours(i, j => { if (dist[j] > d + 1) { dist[j] = d + 1; q[qt++] = j; } }); }
+  for (let i = 0; i < n; i++) vis[i] = dist[i] <= R || WAR.lit[i] >= 1 ? 1 : 0;
+  // what you remember: refreshed wherever you can see
+  const seen = WV.seen2 && WV.seen2.length === n ? WV.seen2 : (WV.seen2 = new Int16Array(n));
+  if (!WV.seenInit) { seen.set(WAR.owner); WV.seenInit = true; }
+  for (let i = 0; i < n; i++) if (vis[i]) seen[i] = WAR.owner[i];
+}
+// is a tile visible to you right now?
+const wvSees = i => !WV.fog || (i >= 0 && WV.vis && WV.vis[i] === 1);
 function wvOwners() {
-  const W = WARC.W, H = WARC.H, d = WV.ownImg.data, own = WAR.owner, me = WAR.me;
+  const W = WARC.W, H = WARC.H, d = WV.ownImg.data, me = WAR.me;
+  const own = WV.fog ? WV.seen2 : WAR.owner;
   for (let i = 0; i < W * H; i++) {
     const o = own[i], k = i * 4;
     if (o === -1 || !warIsLand(i)) { d[k + 3] = 0; continue; }
@@ -56,8 +75,12 @@ function wvOwners() {
   WV.ownG.putImageData(WV.ownImg, 0, 0);
 }
 function wvNight(dark) {
-  const d = WV.nightImg.data, lit = WAR.lit;
-  for (let i = 0; i < d.length / 4; i++) { const k = i * 4; d[k] = 4; d[k + 1] = 6; d[k + 2] = 14; d[k + 3] = dark * (lit[i] >= 2 ? 30 : lit[i] === 1 ? 110 : 185); }
+  const d = WV.nightImg.data, lit = WAR.lit, vis = WV.vis, fog = WV.fog, rng = WV.fogNoise || (WV.fogNoise = (() => { const a = new Uint8Array(WARC.W * WARC.H); for (let i = 0; i < a.length; i++) a[i] = (Math.random() * 30) | 0; return a; })());
+  for (let i = 0; i < d.length / 4; i++) {
+    const k = i * 4;
+    if (fog && !vis[i]) { const nz = rng[i] || 0; d[k] = 22 + nz * 0.4; d[k + 1] = 28 + nz * 0.4; d[k + 2] = 40 + nz * 0.5; d[k + 3] = dark * (222 + nz * 0.8); continue; }
+    d[k] = 4; d[k + 1] = 6; d[k + 2] = 14; d[k + 3] = dark * (lit[i] >= 2 ? 10 : lit[i] >= 1 ? 70 : 120);
+  }
   WV.nightG.putImageData(WV.nightImg, 0, 0);
 }
 
@@ -95,15 +118,24 @@ function warDraw(dt) {
   ctx.fillStyle = sg; ctx.fillRect(0, 0, W, H);
   ctx.imageSmoothingEnabled = false;
   ctx.drawImage(WV.terr, ox, oy, WARC.W * z, WARC.H * z);
+  // the fog of war comes down at nightfall; at dusk, everyone else's standing is noted (that's what you'll see in the fog)
+  const fog = wvFogOn();
+  if (fog && !WV.fog) { WV.snap = WAR.nations.map(n => ({ tiles: n.tiles, troops: n.troops, cx: n.cx, cy: n.cy, alive: n.alive })); WV.seenInit = false; }
+  WV.fog = fog;
+  if (fog) wvVision(); else WV.seenInit = false;
+  if (fog && !WV.fogSaid) { WV.fogSaid = true; warLog('Night falls. Fog covers the Reach; only the Light\u2019s beam and your own lights show what the others are doing.'); }
+  if (!fog) WV.fogSaid = false;
   wvOwners(); ctx.drawImage(WV.own, ox, oy, WARC.W * z, WARC.H * z);
   if (dark > 0.01) { wvNight(dark); ctx.drawImage(WV.night, ox, oy, WARC.W * z, WARC.H * z); }
   ctx.imageSmoothingEnabled = true;
-  // the beam: a long wedge from the Light, brighter at night
-  const lx = wvSx(WARC.W / 2), ly = wvSy(WARC.H / 2), len = Math.hypot(W, H) * 1.2;
-  ctx.save(); ctx.globalCompositeOperation = 'lighter';
-  const bg = ctx.createRadialGradient(lx, ly, 2 * z, lx, ly, len); bg.addColorStop(0, `rgba(255,216,138,${0.35 + dark * 0.3})`); bg.addColorStop(1, 'rgba(255,216,138,0)');
-  ctx.fillStyle = bg; ctx.beginPath(); ctx.moveTo(lx, ly); ctx.arc(lx, ly, len, WAR.beam - WARC.BEAM_HALF, WAR.beam + WARC.BEAM_HALF); ctx.closePath(); ctx.fill();
-  ctx.restore();
+  // the beam: the Light is dark by day; at night a wide wedge sweeps out from it, and shows everything it crosses
+  const lx = wvSx(WARC.W / 2), ly = wvSy(WARC.H / 2), len = Math.hypot(W, H) * 1.2 + Math.hypot(WARC.W, WARC.H) * z;
+  if (dark > 0.02) {
+    ctx.save(); ctx.globalCompositeOperation = 'lighter';
+    const bg = ctx.createRadialGradient(lx, ly, 2 * z, lx, ly, len * 0.7); bg.addColorStop(0, `rgba(255,216,138,${0.5 * dark})`); bg.addColorStop(1, 'rgba(255,216,138,0)');
+    ctx.fillStyle = bg; ctx.beginPath(); ctx.moveTo(lx, ly); ctx.arc(lx, ly, len, WAR.beam - WARC.BEAM_HALF, WAR.beam + WARC.BEAM_HALF); ctx.closePath(); ctx.fill();
+    ctx.restore();
+  }
   wvDrawStructs(z);
   wvDrawFlares(z, dark);
   wvDrawBoats(z);
@@ -118,6 +150,7 @@ function warDraw(dt) {
 function wvDrawStructs(z) {
   const s = Math.max(4, z * 0.9);
   for (const [i, st] of WAR.structs) {
+    if (st.owner !== WAR.me && !wvSees(i) && st.type !== 'beacon') continue;   // (a lit beacon shows through the fog)
     const x = wvSx(warX(i) + 0.5), y = wvSy(warY(i) + 0.5); if (x < -20 || y < -20 || x > W + 20 || y > H + 20) continue;
     const col = WAR.nations[st.owner].col;
     ctx.lineWidth = Math.max(1, z * 0.12);
@@ -148,6 +181,7 @@ function wvDrawFlares(z, dark) {
 function wvDrawBoats(z) {
   const s = Math.max(5, z * 1.1);
   for (const b of WAR.boats) {
+    if (b.from !== WAR.me && !wvSees(warIdx(clamp(Math.round(b.x), 0, WARC.W - 1), clamp(Math.round(b.y), 0, WARC.H - 1)))) continue;
     const x = wvSx(b.x + 0.5), y = wvSy(b.y + 0.5), col = WAR.nations[b.from].col;
     const nx = b.i < b.path.length - 1 ? warX(b.path[b.i + 1]) : b.x, ny = b.i < b.path.length - 1 ? warY(b.path[b.i + 1]) : b.y, a = Math.atan2(ny - b.y, nx - b.x);
     ctx.save(); ctx.translate(x, y); ctx.rotate(a);
@@ -167,9 +201,11 @@ function wvDrawAttacks(z) {
     const front = at.frontCache && WAR.t - at.frontCache.t < 0.5 ? at.frontCache.f : (at.frontCache = { t: WAR.t, f: warFrontier(at) }).f;
     if (!front.length) continue;
     let sx = 0, sy = 0; for (const j of front) { sx += warX(j); sy += warY(j); } sx = sx / front.length + 0.5; sy = sy / front.length + 0.5;
+    if (at.from !== WAR.me && !wvSees(warIdx(clamp(Math.floor(sx), 0, WARC.W - 1), clamp(Math.floor(sy), 0, WARC.H - 1)))) continue;
     const a = WAR.nations[at.from], x = wvSx(sx), y = wvSy(sy); if (x < -40 || y < -40 || x > W + 40 || y > H + 40) continue;
     ctx.strokeStyle = a.col; ctx.lineWidth = 1.5; ctx.setLineDash([3, 3]); ctx.lineDashOffset = -WAR.t * 20;
-    ctx.beginPath(); ctx.moveTo(wvSx(a.cx + 0.5), wvSy(a.cy + 0.5)); ctx.lineTo(x, y); ctx.stroke(); ctx.setLineDash([]);
+    if (!WV.fog || a.isMe) { ctx.beginPath(); ctx.moveTo(wvSx(a.cx + 0.5), wvSy(a.cy + 0.5)); ctx.lineTo(x, y); ctx.stroke(); }
+    ctx.setLineDash([]);
     ctx.fillStyle = 'rgba(0,0,0,0.55)'; const txt = `⚔ ${Math.round(at.troops)}`; ctx.font = `bold ${Math.max(10, Math.min(14, z * 1.6))}px "Courier Prime", monospace`;
     const tw = ctx.measureText(txt).width; ctx.fillRect(x - tw / 2 - 3, y - 8, tw + 6, 16);
     ctx.fillStyle = at.target === WAR.me ? '#ff9a7a' : a.isMe ? '#ffd88a' : '#ece4cf'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(txt, x, y);
@@ -184,8 +220,10 @@ function wvDrawLight(lx, ly, z) {
   const s = Math.max(5, z * 1.4);
   ctx.fillStyle = '#e8e0cc'; ctx.fillRect(lx - s * 0.3, ly - s * 1.4, s * 0.6, s * 1.6);
   ctx.fillStyle = '#1b1713'; ctx.fillRect(lx - s * 0.4, ly - s * 1.6, s * 0.8, s * 0.25);
-  const g = ctx.createRadialGradient(lx, ly - s * 1.35, 0, lx, ly - s * 1.35, s * 1.6); g.addColorStop(0, 'rgba(255,216,138,0.9)'); g.addColorStop(1, 'rgba(255,216,138,0)');
-  ctx.fillStyle = g; ctx.beginPath(); ctx.arc(lx, ly - s * 1.35, s * 1.6, 0, 6.283); ctx.fill();
+  // the lamp: dark by day, lit at night
+  const on = WAR.phase === 'play' ? warDark() : 0;
+  if (on > 0.02) { const g = ctx.createRadialGradient(lx, ly - s * 1.35, 0, lx, ly - s * 1.35, s * 1.6); g.addColorStop(0, `rgba(255,216,138,${0.9 * on})`); g.addColorStop(1, 'rgba(255,216,138,0)'); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(lx, ly - s * 1.35, s * 1.6, 0, 6.283); ctx.fill(); }
+  else { ctx.fillStyle = '#4a4236'; ctx.fillRect(lx - s * 0.22, ly - s * 1.5, s * 0.44, s * 0.3); }
   const lo = warLightOwner();
   if (lo >= 0 && z > 3) { ctx.fillStyle = '#ffd88a'; ctx.font = `${Math.max(9, z * 1.5)}px "Courier Prime", monospace`; ctx.textAlign = 'center'; ctx.textBaseline = 'top'; ctx.fillText(`Keeper: ${WAR.nations[lo].name}`, lx, ly + s * 0.6); }
 }
@@ -196,15 +234,20 @@ function wvDrawLabels(z) {
     for (const r of WAR.regions) { if (r.tiles < 40) continue; const x = wvSx(r.x + 0.5), y = wvSy(r.y + 0.5); if (x < -80 || x > W + 80 || y < -20 || y > H + 20) continue; ctx.fillStyle = r.owner >= 0 ? 'rgba(255,216,138,0.55)' : 'rgba(236,228,207,0.3)'; ctx.fillText(r.name + (r.owner >= 0 ? ' ✦' : ''), x, y + Math.max(10, z * 2.4)); }
   }
   for (const n of WAR.nations) {
-    if (!n.alive || n.tiles < 6) continue;
-    const x = wvSx(n.cx + 0.5), y = wvSy(n.cy + 0.5); if (x < -60 || x > W + 60 || y < -20 || y > H + 20) continue;
-    const big = Math.max(10, Math.min(15, z * 1.7 + Math.sqrt(n.tiles) * 0.25));
+    const hid = WV.fog && !n.isMe && !n.allies.has(WAR.me), sn = hid && WV.snap ? WV.snap[n.id] : null;
+    const ncx = sn ? sn.cx : n.cx, ncy = sn ? sn.cy : n.cy, ntiles = sn ? sn.tiles : n.tiles;
+    if (!(sn ? sn.alive : n.alive) || ntiles < 6) continue;
+    const seenNow = hid ? wvSees(warIdx(clamp(Math.floor(ncx), 0, WARC.W - 1), clamp(Math.floor(ncy), 0, WARC.H - 1))) : true;
+    const x = wvSx(ncx + 0.5), y = wvSy(ncy + 0.5); if (x < -60 || x > W + 60 || y < -20 || y > H + 20) continue;
+    const big = Math.max(10, Math.min(15, z * 1.7 + Math.sqrt(ntiles) * 0.25));
     ctx.font = `${n.isMe ? 'bold ' : ''}${big}px "Courier Prime", monospace`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(0,0,0,0.75)'; ctx.fillStyle = n.isMe ? '#ffd88a' : '#f2ecda';
-    const nm = n.tiles > 25 || z > 5 ? n.name : '';
+    const nm = ntiles > 25 || z > 5 ? n.name : '';
+    if (hid && !seenNow) ctx.globalAlpha = 0.55;
     if (nm) { ctx.strokeText(nm, x, y - big * 0.6); ctx.fillText(nm, x, y - big * 0.6); }
-    const tr = `${Math.round(n.troops)}${n.bell > 0 ? ' 🔔' : ''}${n.allies.has(WAR.me) && !n.isMe ? ' ☍' : ''}`;
+    const tr = hid && !seenNow ? '?' : `${Math.round(n.troops)}${n.bell > 0 ? ' 🔔' : ''}${n.allies.has(WAR.me) && !n.isMe ? ' ☍' : ''}`;
     ctx.font = `${big * 0.95}px "Courier Prime", monospace`; ctx.strokeText(tr, x, y + (nm ? big * 0.55 : 0)); ctx.fillText(tr, x, y + (nm ? big * 0.55 : 0));
+    ctx.globalAlpha = 1;
   }
 }
 function wvDrawHover(z) {
@@ -264,11 +307,13 @@ function wvPanels() {
   // the leaderboard, with pacts and the Keeper marked
   WV.boardT++;
   if (WV.boardT % 2 === 0) {
-    const rows = WAR.nations.filter(n => n.alive).sort((a, b) => b.tiles - a.tiles);
+    const fogd = n => WV.fog && !n.isMe && !n.allies.has(WAR.me) && WV.snap ? WV.snap[n.id] : null;
+    const T = n => { const s = fogd(n); return s ? s.tiles : n.tiles; }, A = n => { const s = fogd(n); return s ? s.alive : n.alive; };
+    const rows = WAR.nations.filter(A).sort((a, b) => T(b) - T(a));
     const top = rows.slice(0, 8); if (me.alive && !top.includes(me)) top.push(me);
-    const dead = WAR.nations.filter(n => !n.alive).length;
-    $('warBoard').innerHTML = top.map(n => `<li class="${n.isMe ? 'me' : ''}${n.allies.has(WAR.me) && !n.isMe ? ' ally' : ''}"><i style="background:${n.col}"></i><span>${rows.indexOf(n) + 1}. ${n.name}${n.light ? ' ✦' : ''}${n.allies.has(WAR.me) && !n.isMe ? ' ☍' : ''}</span><b>${(n.tiles / WAR.landTiles * 100).toFixed(1)}%</b><em>${Math.round(n.troops)}</em></li>`).join('') +
-      `<li class="sum">${rows.length} nations stand${dead ? `, ${dead} fallen` : ''}</li>`;
+    const dead = WAR.nations.filter(n => !A(n)).length;
+    $('warBoard').innerHTML = top.map(n => `<li class="${n.isMe ? 'me' : ''}${n.allies.has(WAR.me) && !n.isMe ? ' ally' : ''}"><i style="background:${n.col}"></i><span>${rows.indexOf(n) + 1}. ${n.name}${n.light ? ' ✦' : ''}${n.allies.has(WAR.me) && !n.isMe ? ' ☍' : ''}</span><b>${(T(n) / WAR.landTiles * 100).toFixed(1)}%</b><em>${fogd(n) ? '?' : Math.round(n.troops)}</em></li>`).join('') +
+      `<li class="sum">${WV.fog ? 'Night: the others as they stood at dusk' : `${rows.length} nations stand${dead ? `, ${dead} fallen` : ''}`}</li>`;
   }
   // the log, newest at the bottom
   if (WAR.logDirty) { WAR.logDirty = false; const last = WAR.log.slice(-7); $('warLog').innerHTML = last.map(l => `<p class="${l.kind}">${l.text}</p>`).join(''); const el = $('warLog'); el.scrollTop = el.scrollHeight; }
@@ -391,7 +436,7 @@ function wvMenu(on) { $('warMenu').hidden = !on; if (on) { WV.wasPaused = WAR.pa
 // ---------- start, stop, results ----------
 function warViewStart() {
   WV.touch = matchMedia('(pointer: coarse)').matches;
-  WV.cam = { x: WARC.W / 2, y: WARC.H / 2, z: 6 }; WV.terr = null; WV.own = null; WV.mode = null; WV.hover = -1; WV.msgT = 0;
+  WV.cam = { x: WARC.W / 2, y: WARC.H / 2, z: 6 }; WV.terr = null; WV.own = null; WV.mode = null; WV.hover = -1; WV.msgT = 0; WV.fog = false; WV.vis = null; WV.seen2 = null; WV.vdist = null; WV.vq = null; WV.fogNoise = null; WV.snap = null; WV.seenInit = false; WV.fogSaid = false;
   wvFit();
   const n = WAR.nations[WAR.me];
   $('warUI').hidden = false; $('warOver').hidden = true; $('warMenu').hidden = true;
