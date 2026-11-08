@@ -22,6 +22,8 @@ function frame(now) {
   try {
     // Wreckers' Night runs its own loop
     if (state === 'fps') { fpsFrame(dt); requestAnimationFrame(frame); return; }
+    // and so does The Drowned Reach
+    if (state === 'war') { warFrame(dt); requestAnimationFrame(frame); return; }
     pollPad(dt);
     // paused: nothing moves, but the scene is still drawn under the pause card
     if (paused) { drawScene(); requestAnimationFrame(frame); return; }

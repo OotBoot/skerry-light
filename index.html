@@ -144,6 +144,81 @@
         <p><b>Touch:</b> put your left thumb down anywhere on the left to walk (push to the edge to run); drag on the right to aim, tap there to fire; or hold Fire and drag it to aim and shoot with one thumb. The arrow by Fire jumps; the camera button at the top switches between first person and over the shoulder. Aiming eases onto anyone you can see near the crosshair.</p>
       </details>
     </div>
+
+    <div class="card warcard" id="warTitle" aria-labelledby="warHead">
+      <div class="cardtop"><span class="eyebrow">A third game · one against many · a war for the islands</span></div>
+      <h1 id="warHead">The Drowned Reach</h1>
+      <p>Land on an archipelago of skerries and take it. Your people grow with the land you hold; send a share of them against the empty shore, then against your neighbours, tile by tile. Boats carry landings to other islands. Gold raises harbours, watchtowers and beacons, and buys flares and fire-ships. Sixteen nations (or up to forty) want the same islands, the tide opens and shuts the shoal roads between them, and at night the drowned come up on any shore the Light doesn’t reach.</p>
+      <div class="warsetup">
+        <label>Nations against you <output id="warBotsOut">16</output><input id="warBots" type="range" min="4" max="40" value="16"></label>
+        <div class="nickrow"><label for="warNick">Your house</label><input id="warNick" type="text" maxlength="18" autocomplete="off" placeholder="the Keeper’s Own"></div>
+        <div class="nickrow"><label for="warSeed">Map word <small>(optional: the same word gives the same islands)</small></label><input id="warSeed" type="text" maxlength="24" autocomplete="off" placeholder="any word"></div>
+      </div>
+      <div class="btnrow">
+        <button class="primary" id="warPlay" type="button">Make landfall</button>
+      </div>
+      <p class="muted" id="warRecord"></p>
+      <details class="howto">
+        <summary>How to play</summary>
+        <p><b>Land.</b> When the map opens, tap open land on a big island to mark your landing (or let the clock run and be put somewhere). Your people grow on their own; the more land you hold the faster, up to a limit the land sets. Gold comes in with land, harbours and whole islands.</p>
+        <p><b>Fight.</b> The slider sets what share of your people an order sends. Tap empty land, drowned land or an enemy’s land that touches yours to march on it; the force spreads along the border and takes tiles until it is spent. Hills, watchtowers and a ringing bell make tiles dearer to take. Tap a shore across the water and a boat carries the force there instead (a landing needs at least 25). Enemy watchtowers fire on passing boats.</p>
+        <p><b>Build.</b> Harbour: gold, light on the shore, and fire-ships. Watchtower: tiles near it cost attackers far more, and it fires on boats. Beacon: light that keeps the drowned off the shore round it. Flare: bursts over a spot, lights it for a while and clears the drowned there. Fire-ship: sails from a harbour and burns everything round where it lands, friend or foe. Bell: your people hold for a while, dearly.</p>
+        <p><b>The Reach.</b> The Light’s beam sweeps the map; the nation holding the Light’s rock is the Keeper, and gets gold and safe shores. At night the drowned rise on dark shores and take the land into the dark; by day they sink back and leave it empty. The tide turns every ninety seconds: at low water the shoals dry into land bridges, at high water they drown and anyone on them loses them. Hold a whole great isle for a bonus (✦). Pacts last four minutes; break one and every nation remembers.</p>
+        <p><b>Keys:</b> drag or arrows to pan · wheel or +/- to zoom · Q/E the share · H harbour · T tower · G beacon · F flare · X fire-ship · B bell · Space pause · 1/2/3 speed · Enter land now · Tab the leaderboard on a phone · Esc menu. <b>Touch:</b> drag to pan, pinch to zoom, tap to order.</p>
+      </details>
+    </div>
+  </div>
+
+  <!-- The Drowned Reach: the panels round the map -->
+  <div id="warUI" hidden>
+    <div class="wartop">
+      <button class="fpsico" id="warMenuBtn" type="button" aria-label="Menu"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+      <div class="warclock" id="warClock">Choose your landing</div>
+      <div class="warspeed" id="warSpeed"><button type="button" data-s="0" aria-label="Pause">II</button><button type="button" data-s="1" class="on">1×</button><button type="button" data-s="2">2×</button><button type="button" data-s="4">4×</button></div>
+      <button class="fpsico warsidebtn" id="warSideBtn" type="button" aria-label="Leaderboard"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 20V10M12 20V4M18 20v-7"/></svg></button>
+    </div>
+    <aside class="warside" id="warSide"><h2>The Reach</h2><ol id="warBoard"></ol></aside>
+    <div class="warspawn" id="warSpawnBar" hidden><span>Tap open land on a big island to mark your landing.</span><button class="primary" id="warLandNow" type="button">Land now</button><button class="tool" id="warRandomLand" type="button">Anywhere</button></div>
+    <div class="warprompts" id="warPrompts"></div>
+    <div class="warlog" id="warLog" aria-live="polite"></div>
+    <div class="warbottom">
+      <div class="warme" id="warMe"></div>
+      <div class="warstats"><span>People <b id="warTroops">0</b></span><span>Gold <b id="warGold">0</b></span><span>Land <b id="warLand">0</b></span></div>
+      <label class="warratio">Send <output id="warRatioOut">40%</output><input id="warRatio" type="range" min="5" max="100" value="40"></label>
+      <div class="waractions" id="warActions">
+        <button type="button" id="warHarbour"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="5" r="2"/><path d="M12 7v13M5 13c0 4 3 7 7 7s7-3 7-7M3 13h4M17 13h4"/></svg>Harbour<small></small></button>
+        <button type="button" id="warTower"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 21V8h10v13M7 8V5h3v2h4V5h3v3M10 21v-5h4v5"/></svg>Tower<small></small></button>
+        <button type="button" id="warBeacon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l4 14H8z M6 21h12"/><circle cx="12" cy="3" r="1.6"/></svg>Beacon<small></small></button>
+        <button type="button" id="warFlareBtn"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M5.6 5.6l2.8 2.8M15.6 15.6l2.8 2.8M18.4 5.6l-2.8 2.8M8.4 15.6l-2.8 2.8"/></svg>Flare<small></small></button>
+        <button type="button" id="warFireBtn"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 17l2 3h12l2-3zM12 3c0 3 3 5 3 8a3 3 0 0 1-6 0c0-2 1-3 1-3s0 2 1.5 2c1 0 1.5-1.5 .5-4z"/></svg>Fire-ship<small></small></button>
+        <button type="button" id="warBellBtn"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 17V11a6 6 0 0 1 12 0v6l2 2H4zM10 21h4"/></svg>Bell<small></small></button>
+      </div>
+    </div>
+    <div class="overlay pausecard" id="warMenu" hidden role="dialog" aria-modal="true" aria-labelledby="warMenuHead">
+      <div class="card">
+        <h1 id="warMenuHead">The Drowned Reach</h1>
+        <p>The war is paused.</p>
+        <div class="btnrow">
+          <button class="primary" id="warResume" type="button">Back to the map</button>
+          <button class="tool" id="warHowBtn" type="button">How to play</button>
+          <button class="tool" id="warLeave" type="button">Leave the Reach</button>
+        </div>
+        <div id="warHow" hidden class="howto">
+          <p>Tap land touching yours to march on it with the share the slider sets; tap a far shore to send a boat. Build with gold: a harbour on the shore, a watchtower at the border, a beacon on a dark shore. Flares light and clear a spot; a fire-ship burns a shore. Ring the bell when hard pressed. The drowned rise on dark shores at night; the tide opens and shuts the shoals every ninety seconds; hold the Light’s rock to be the Keeper; hold a whole great isle for a bonus. You win with six tenths of the land, or when you stand alone.</p>
+        </div>
+      </div>
+    </div>
+    <div class="overlay pausecard" id="warOver" hidden role="dialog" aria-modal="true" aria-labelledby="warOverHead">
+      <div class="card">
+        <h1 id="warOverHead">Your line ends</h1>
+        <p id="warOverText"></p>
+        <p class="muted" id="warOverStats"></p>
+        <div class="btnrow">
+          <button class="primary" id="warWatch" type="button">Watch the war on</button>
+          <button class="tool" id="warOverLeave" type="button">Back to shore</button>
+        </div>
+      </div>
+    </div>
   </div>
 
   <div class="overlay" id="portCard" hidden>
@@ -388,6 +463,8 @@
 <script src="src/fpsverity.js"></script>
 <script src="src/fpsgun.js"></script>
 <script src="src/fpsbody.js"></script>
+<script src="src/war.js"></script>
+<script src="src/warview.js"></script>
 <script src="src/wcrates.js"></script>
 <script src="src/main.js"></script>
 </body>
