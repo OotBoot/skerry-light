@@ -97,6 +97,10 @@ The log goes on through 1888. The sea stops being one sea: some nights it freeze
 - **The sea**: voyages start about 2.4 km out (further each voyage), through a wide stretch of skerries, wrecks and drifting timber.
 - **Harbour**: steer between the real red and green pier lamps. Each voyage after that has more rocks, wreckage and drowned, and the beam turns slower.
 
+## Look sensitivity
+
+How quickly the view turns in Wreckers' Night and the Lighthouse, for the mouse, the touch screen and a controller's right stick alike: a slider on the **Settings** card, and the same one under **Options** in the first-person menu (Esc, or the menu button on a phone), from 0.3 to 3 times the usual, with a Default button. Kept on this device. The usual (1.00) turns about a third faster than it used to.
+
 ## Graphics: 3D and Classic
 
 The world is drawn in real 3D with WebGL (three.js):

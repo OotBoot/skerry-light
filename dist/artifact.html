@@ -949,6 +949,15 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 #fpsPadKnife { display: none; }
 #stage.zmmode #fpsPadKnife { display: grid; right: 0; top: -20px; }
 #stage.zmmode #fpsPadKnife:not(.on) { opacity: 0.55; }
+
+/* look sensitivity: a slider on the Settings card, and in the first-person menu's Options */
+.lookslider { width: 100%; accent-color: var(--lamp); min-height: 32px; }
+.setrow label.label output, .lookrow output { color: var(--lamp); margin-left: 6px; font-family: var(--log); }
+.setrow label.label small { color: var(--muted); font-size: 11px; }
+.lookrow { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-top: 12px; border-top: 1px solid var(--rule); padding-top: 12px; font-family: var(--log); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.lookrow[hidden] { display: none; }
+.lookrow label { flex: 1 1 100%; }
+.lookrow .lookslider { flex: 1 1 200px; }
 </style>
 <div id="stage">
   <canvas id="bg" class="under" aria-hidden="true"></canvas>
@@ -1437,7 +1446,13 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
       <div class="btnrow">
         <button class="primary" id="fpsResume" type="button">Back to the fight</button>
         <button class="tool" id="fpsViewBtn" type="button">View: first person</button>
+        <button class="tool" id="fpsOptBtn" type="button" aria-expanded="false" aria-controls="fpsOpts">Options</button>
         <button class="tool" id="fpsLeave" type="button">Leave the island</button>
+      </div>
+      <div class="lookrow" id="fpsOpts" hidden>
+        <label for="fpsLook">Look sensitivity <output id="fpsLookOut">1.00</output></label>
+        <input id="fpsLook" class="lookslider" type="range" min="0.3" max="3" step="0.05" value="1">
+        <button class="tool" id="fpsLookReset" type="button">Default</button>
       </div>
     </div>
   </div>
@@ -1495,6 +1510,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
       <div class="setrow"><span class="label" id="lbl-scares">Jumpscares</span><div class="loottabs" id="set-scares" role="group" aria-labelledby="lbl-scares"></div></div>
       <div class="setrow"><span class="label" id="lbl-flashes">Flashes</span><div class="loottabs" id="set-flashes" role="group" aria-labelledby="lbl-flashes"></div></div>
       <div class="setrow"><span class="label" id="lbl-motion">Motion</span><div class="loottabs" id="set-motion" role="group" aria-labelledby="lbl-motion"></div></div>
+      <div class="setrow"><label class="label" for="setLook">Look sensitivity <small>(Wreckers' Night and the Lighthouse)</small> <output id="setLookOut">1.00</output></label><input id="setLook" class="lookslider" type="range" min="0.3" max="3" step="0.05" value="1"></div>
       <div class="setrow"><span class="label" id="lbl-renderer">Graphics</span><div class="loottabs" id="set-renderer" role="group" aria-labelledby="lbl-renderer"></div></div>
       <p class="setnote">Softened jumpscares are smaller and quieter, with no shaking or black frames. Fewer flashes dims the camera flash, the beam's glare, the bell and lightning. Auto motion follows your device's setting. 3D graphics draw the sea, coast, lighthouse and rocks in real 3D; Classic is the original painted view, lighter on old devices.<span id="glNote"></span></p>
     </div>
@@ -1614,8 +1630,10 @@ const SK = {
 
 // The player's own settings (the Settings card), kept on this device. Loaded here, before anything
 // draws or makes a sound, because the sound, the jumpscares and the motion all read them.
-const SETTINGS = { vol: 1, scares: 'full', flashes: 'normal', motion: 'auto', renderer: '3d' };
+// (look: how quickly the view turns in Wreckers' Night and the Lighthouse, 1 the usual; from 0.3 to 3)
+const SETTINGS = { vol: 1, scares: 'full', flashes: 'normal', motion: 'auto', renderer: '3d', look: 1 };
 try { Object.assign(SETTINGS, JSON.parse(localStorage.getItem('skerry-settings') || '{}') || {}); } catch (e) {}
+const lookK = () => { const v = +SETTINGS.look; return isFinite(v) ? Math.min(3, Math.max(0.3, v)) : 1; };
 function saveSettings() { try { localStorage.setItem('skerry-settings', JSON.stringify(SETTINGS)); } catch (e) {} }
 const softScares = () => SETTINGS.scares === 'soft';
 // reduced flashes: the Informer's flash, the beam's glare, the bell's flash and lightning at 30%
@@ -9231,7 +9249,16 @@ function renderSettings() {
     for (const b of box.children) { const on = b.dataset.v === String(SETTINGS[key]); b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on)); }
   }
 }
+// the look sensitivity sliders (the Settings card's, and the one in the first-person menu's Options): one setting
+function lookSync() {
+  const v = lookK();
+  for (const [inp, out] of [['setLook', 'setLookOut'], ['fpsLook', 'fpsLookOut']]) { const i = $(inp), o = $(out); if (i && document.activeElement !== i) i.value = String(v); if (o) o.textContent = v.toFixed(2); }
+}
+for (const id of ['setLook', 'fpsLook']) { const i = $(id); if (i) i.addEventListener('input', () => { SETTINGS.look = Math.round(+i.value * 100) / 100; saveSettings(); lookSync(); }); }
+{ const r = $('fpsLookReset'); if (r) r.addEventListener('click', () => { SETTINGS.look = 1; saveSettings(); lookSync(); }); }
+setTimeout(lookSync, 0);
 function applySettings() {
+  lookSync();
   applyVolume(); refreshMotion();
   if (typeof gl3dRefresh === 'function') gl3dRefresh();
   const n = $('glNote'); if (n) n.textContent = SETTINGS.renderer !== '2d' && GL3D.failed ? ' (3D isn\'t available on this device, so the classic view is used.)' : '';
@@ -12876,7 +12903,8 @@ function fpsFrame(dt) {
 function fpsInput(dt) {
   const m = FPS.me, K = FPS.keys;
   // looking: mouse (pointer lock), the right stick, or a finger on the right of the screen
-  let sens = 0.0023;
+  // (the look sensitivity setting scales the mouse, the touch screen and the right stick alike)
+  let sens = 0.0031 * lookK();
   // on a touch screen, aiming slows a touch as the crosshair crosses someone you can see, and leans faintly
   // onto them, but only while your thumb is moving the aim: it helps hold a target, it doesn't find one for you
   // (and none at all through the telescope)
@@ -12895,7 +12923,8 @@ function fpsInput(dt) {
   if (pad) {
     const dz = v => Math.abs(v) < 0.15 ? 0 : v;
     fx += dz(pad.axes[0] || 0); fz -= dz(pad.axes[1] || 0);
-    m.h = wrapPi(m.h + dz(pad.axes[2] || 0) * dt * 2.6); m.p = clamp(m.p - dz(pad.axes[3] || 0) * dt * 1.8, -0.6, 0.6);
+    const pk = lookK() * (FPS.scoped ? 1 / fpsZoom() : 1);
+    m.h = wrapPi(m.h + dz(pad.axes[2] || 0) * dt * 3.5 * pk); m.p = clamp(m.p - dz(pad.axes[3] || 0) * dt * 2.4 * pk, -0.6, 0.6);
     const b = i => pad.buttons[i] && pad.buttons[i].pressed, was = FPS.padWas || {};
     if (b(7)) fire = true;
     FPS.padFire = b(7);
@@ -13488,6 +13517,8 @@ $('fpsSettings').addEventListener('click', () => $('titleSettings').click());
 $('fpsNick').addEventListener('keydown', e => { if (e.key === 'Enter') fpsStart(); });
 $('fpsResume').addEventListener('click', () => fpsSetMenu(false));
 $('fpsLeave').addEventListener('click', fpsStop);
+// the menu's Options: the look sensitivity slider (the same setting as on the Settings card)
+$('fpsOptBtn').addEventListener('click', () => { const o = $('fpsOpts'); o.hidden = !o.hidden; $('fpsOptBtn').setAttribute('aria-expanded', String(!o.hidden)); if (!o.hidden) lookSync(); });
 { const vb = $('fpsViewBtn'), lab = () => { vb.textContent = FPS.third ? 'View: over the shoulder' : 'View: first person'; }; lab(); vb.addEventListener('click', () => { fpsToggleView(); lab(); }); FPS.viewLabel = lab; }
 for (const [id, fn] of [['fpsPadWeapon', () => fpsCycle(1)], ['fpsPadScope', () => fpsScope(!FPS.scoped)], ['fpsPadReload', fpsReload], ['fpsPadLantern', fpsLantern], ['fpsPadFlare', fpsFlare], ['fpsPadBell', fpsBell], ['fpsPadJump', fpsJump], ['fpsPadView', fpsToggleView], ['fpsPadMenu', () => fpsSetMenu(true)], ['fpsPadBoard', () => { FPS.board = !FPS.board; }]]) {
   $(id).addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); fn(); });

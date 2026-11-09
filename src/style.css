@@ -943,3 +943,12 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 #fpsPadKnife { display: none; }
 #stage.zmmode #fpsPadKnife { display: grid; right: 0; top: -20px; }
 #stage.zmmode #fpsPadKnife:not(.on) { opacity: 0.55; }
+
+/* look sensitivity: a slider on the Settings card, and in the first-person menu's Options */
+.lookslider { width: 100%; accent-color: var(--lamp); min-height: 32px; }
+.setrow label.label output, .lookrow output { color: var(--lamp); margin-left: 6px; font-family: var(--log); }
+.setrow label.label small { color: var(--muted); font-size: 11px; }
+.lookrow { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-top: 12px; border-top: 1px solid var(--rule); padding-top: 12px; font-family: var(--log); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.lookrow[hidden] { display: none; }
+.lookrow label { flex: 1 1 100%; }
+.lookrow .lookslider { flex: 1 1 200px; }

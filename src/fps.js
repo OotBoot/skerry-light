@@ -891,7 +891,8 @@ function fpsFrame(dt) {
 function fpsInput(dt) {
   const m = FPS.me, K = FPS.keys;
   // looking: mouse (pointer lock), the right stick, or a finger on the right of the screen
-  let sens = 0.0023;
+  // (the look sensitivity setting scales the mouse, the touch screen and the right stick alike)
+  let sens = 0.0031 * lookK();
   // on a touch screen, aiming slows a touch as the crosshair crosses someone you can see, and leans faintly
   // onto them, but only while your thumb is moving the aim: it helps hold a target, it doesn't find one for you
   // (and none at all through the telescope)
@@ -910,7 +911,8 @@ function fpsInput(dt) {
   if (pad) {
     const dz = v => Math.abs(v) < 0.15 ? 0 : v;
     fx += dz(pad.axes[0] || 0); fz -= dz(pad.axes[1] || 0);
-    m.h = wrapPi(m.h + dz(pad.axes[2] || 0) * dt * 2.6); m.p = clamp(m.p - dz(pad.axes[3] || 0) * dt * 1.8, -0.6, 0.6);
+    const pk = lookK() * (FPS.scoped ? 1 / fpsZoom() : 1);
+    m.h = wrapPi(m.h + dz(pad.axes[2] || 0) * dt * 3.5 * pk); m.p = clamp(m.p - dz(pad.axes[3] || 0) * dt * 2.4 * pk, -0.6, 0.6);
     const b = i => pad.buttons[i] && pad.buttons[i].pressed, was = FPS.padWas || {};
     if (b(7)) fire = true;
     FPS.padFire = b(7);
@@ -1503,6 +1505,8 @@ $('fpsSettings').addEventListener('click', () => $('titleSettings').click());
 $('fpsNick').addEventListener('keydown', e => { if (e.key === 'Enter') fpsStart(); });
 $('fpsResume').addEventListener('click', () => fpsSetMenu(false));
 $('fpsLeave').addEventListener('click', fpsStop);
+// the menu's Options: the look sensitivity slider (the same setting as on the Settings card)
+$('fpsOptBtn').addEventListener('click', () => { const o = $('fpsOpts'); o.hidden = !o.hidden; $('fpsOptBtn').setAttribute('aria-expanded', String(!o.hidden)); if (!o.hidden) lookSync(); });
 { const vb = $('fpsViewBtn'), lab = () => { vb.textContent = FPS.third ? 'View: over the shoulder' : 'View: first person'; }; lab(); vb.addEventListener('click', () => { fpsToggleView(); lab(); }); FPS.viewLabel = lab; }
 for (const [id, fn] of [['fpsPadWeapon', () => fpsCycle(1)], ['fpsPadScope', () => fpsScope(!FPS.scoped)], ['fpsPadReload', fpsReload], ['fpsPadLantern', fpsLantern], ['fpsPadFlare', fpsFlare], ['fpsPadBell', fpsBell], ['fpsPadJump', fpsJump], ['fpsPadView', fpsToggleView], ['fpsPadMenu', () => fpsSetMenu(true)], ['fpsPadBoard', () => { FPS.board = !FPS.board; }]]) {
   $(id).addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); fn(); });

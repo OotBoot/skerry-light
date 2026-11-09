@@ -516,7 +516,16 @@ function renderSettings() {
     for (const b of box.children) { const on = b.dataset.v === String(SETTINGS[key]); b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on)); }
   }
 }
+// the look sensitivity sliders (the Settings card's, and the one in the first-person menu's Options): one setting
+function lookSync() {
+  const v = lookK();
+  for (const [inp, out] of [['setLook', 'setLookOut'], ['fpsLook', 'fpsLookOut']]) { const i = $(inp), o = $(out); if (i && document.activeElement !== i) i.value = String(v); if (o) o.textContent = v.toFixed(2); }
+}
+for (const id of ['setLook', 'fpsLook']) { const i = $(id); if (i) i.addEventListener('input', () => { SETTINGS.look = Math.round(+i.value * 100) / 100; saveSettings(); lookSync(); }); }
+{ const r = $('fpsLookReset'); if (r) r.addEventListener('click', () => { SETTINGS.look = 1; saveSettings(); lookSync(); }); }
+setTimeout(lookSync, 0);
 function applySettings() {
+  lookSync();
   applyVolume(); refreshMotion();
   if (typeof gl3dRefresh === 'function') gl3dRefresh();
   const n = $('glNote'); if (n) n.textContent = SETTINGS.renderer !== '2d' && GL3D.failed ? ' (3D isn\'t available on this device, so the classic view is used.)' : '';

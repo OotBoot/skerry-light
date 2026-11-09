@@ -498,7 +498,13 @@
       <div class="btnrow">
         <button class="primary" id="fpsResume" type="button">Back to the fight</button>
         <button class="tool" id="fpsViewBtn" type="button">View: first person</button>
+        <button class="tool" id="fpsOptBtn" type="button" aria-expanded="false" aria-controls="fpsOpts">Options</button>
         <button class="tool" id="fpsLeave" type="button">Leave the island</button>
+      </div>
+      <div class="lookrow" id="fpsOpts" hidden>
+        <label for="fpsLook">Look sensitivity <output id="fpsLookOut">1.00</output></label>
+        <input id="fpsLook" class="lookslider" type="range" min="0.3" max="3" step="0.05" value="1">
+        <button class="tool" id="fpsLookReset" type="button">Default</button>
       </div>
     </div>
   </div>
@@ -556,6 +562,7 @@
       <div class="setrow"><span class="label" id="lbl-scares">Jumpscares</span><div class="loottabs" id="set-scares" role="group" aria-labelledby="lbl-scares"></div></div>
       <div class="setrow"><span class="label" id="lbl-flashes">Flashes</span><div class="loottabs" id="set-flashes" role="group" aria-labelledby="lbl-flashes"></div></div>
       <div class="setrow"><span class="label" id="lbl-motion">Motion</span><div class="loottabs" id="set-motion" role="group" aria-labelledby="lbl-motion"></div></div>
+      <div class="setrow"><label class="label" for="setLook">Look sensitivity <small>(Wreckers' Night and the Lighthouse)</small> <output id="setLookOut">1.00</output></label><input id="setLook" class="lookslider" type="range" min="0.3" max="3" step="0.05" value="1"></div>
       <div class="setrow"><span class="label" id="lbl-renderer">Graphics</span><div class="loottabs" id="set-renderer" role="group" aria-labelledby="lbl-renderer"></div></div>
       <p class="setnote">Softened jumpscares are smaller and quieter, with no shaking or black frames. Fewer flashes dims the camera flash, the beam's glare, the bell and lightning. Auto motion follows your device's setting. 3D graphics draw the sea, coast, lighthouse and rocks in real 3D; Classic is the original painted view, lighter on old devices.<span id="glNote"></span></p>
     </div>
