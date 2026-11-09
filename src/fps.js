@@ -18,7 +18,7 @@
 // the two never mix. Alone, a few wreckers (bots) keep you company.
 
 const FPSC = {
-  PLAYERS: 8, LAG: 0.35,   // (wreckers, the bots, fill the island up to this many)
+  PLAYERS: 6, LAG: 0.35,   // (wreckers, the bots, fill the island up to this many)
   CX: 0, CY: 640, R: 88,   // (the island's radius: smaller now, so fights find you quicker)
   GROUND: 0.35, EYE: 1.7, BODY: 0.55, TALL: 1.85,
   SPEED: 6.5, SPRINT: 11, HP: 4, MAG: 6, RATE: 0.26, RELOAD: 2.2, RESPAWN: 3.5, FLARES: 2,
