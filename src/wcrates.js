@@ -46,6 +46,8 @@ const WC_SKIN_ROWS = {
     ['pb_lamproom', 'Lamp-Room Brass',         'captain',  '#c99a40', '#4a3418', '#2a1a10', '#ffd68a', '#fff1cf', '#ffcf86'],
     ['pb_drowned',  'The Drowned Bosun',       'captain',  '#5d6d66', '#1e2826', '#3e4b46', '#7f938a', '#c8ffe9', '#9affd8'],
     ['pb_skerry',   'The Skerry Light',        'admiral',  '#f2e6c4', '#3a2a10', '#1a120a', '#ffd34d', '#ffffff', '#fff3c4'],
+    // [pirate tokens] src/zmegg.js: only ever unlocked with the Lighthouse's pirate tokens, never in a crate
+    ['pb_jolly',    'Jolly Roger',             'pirate',   '#1c1c22', '#0a0a0c', '#3a1610', '#e8e0c8', '#ffffff', '#7affd0'],
   ],
   blunderbuss: [
     ['bb_plain',    'Blunderbuss, as forged',  null,       '#7a6a50', '#2e2a26', '#4a2e1a', '#a8823a', '#d8c8a0', null],
@@ -98,6 +100,8 @@ const WC_SKIN_ROWS = {
     ['cl_dusk',     'Dusk at the Door',        'captain',  '#e8dce6', '#5a4a5e', '#221d26', '#ffd6c0', '#9a8098', '#ffcf9a'],
     ['cl_wrecker',  "Wrecker's Lantern",       'captain',  '#2a2a2e', '#0e0e10', '#4a1f18', '#e46c4f', '#86cfae', '#ff6b5a'],
     ['cl_lastlamp', 'The Last Lamp',           'admiral',  '#fff6dc', '#a37a12', '#1a1208', '#ffd34d', '#ffffff', '#fff3c4'],
+    // [pirate tokens] src/zmegg.js
+    ['cl_doubloon', 'Doubloon Edge',           'pirate',   '#e8c860', '#5a3a10', '#1a0e08', '#fff0a0', '#8a1a1a', '#ffd34d'],
   ],
   avtomat: [
     ['av_plain',    'Avtomat, as stamped',     null,       '#4a4d54', '#202227', '#6a3e22', '#8a6a2c', '#c8bfa8', null],
@@ -118,8 +122,8 @@ for (const w of WC_WEAPONS) for (const [id, name, rarity, metal, dark, wood, bra
   WC_SKINS.push(Object.freeze({ id, weapon: w.id, name, rarity, metal, dark, wood, brass, accent, glow }));
 const WC_SKIN_BY_ID = Object.fromEntries(WC_SKINS.map(s => [s.id, s]));
 const WC_PLAIN = Object.fromEntries(WC_WEAPONS.map(w => [w.id, WC_SKINS.find(s => s.weapon === w.id && !s.rarity).id]));
-const wcRarityOf = s => RARITIES.find(r => r.id === s.rarity);
-const wcLevel = s => s && s.rarity ? RARITIES.findIndex(r => r.id === s.rarity) + 1 : 0;
+const wcRarityOf = s => RARITIES.find(r => r.id === s.rarity) || (s.rarity === 'pirate' ? RARITY_PIRATE : undefined);   // [pirate tokens]
+const wcLevel = s => s && s.rarity ? (s.rarity === 'pirate' ? 5 : RARITIES.findIndex(r => r.id === s.rarity) + 1) : 0;
 
 const WC = {
   crates: 0, opened: 0, kills: 0, owned: {}, equipped: Object.assign({}, WC_PLAIN),
@@ -444,7 +448,7 @@ function wcRender() {
   for (const w of WC_WEAPONS) {
     if (WC.view !== 'all' && WC.view !== w.id) continue;
     const sub = document.createElement('span'); sub.className = 'invsub';
-    const mine = WC_SKINS.filter(s => s.weapon === w.id), got = mine.filter(s => !s.rarity || WC.owned[s.id]).length;
+    const mine = WC_SKINS.filter(s => s.weapon === w.id && (s.rarity !== 'pirate' || WC.owned[s.id])), got = mine.filter(s => !s.rarity || WC.owned[s.id]).length;
     sub.textContent = w.name + ' · ' + got + ' of ' + mine.length;
     inv.appendChild(sub);
     for (const s of mine) {

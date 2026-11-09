@@ -270,6 +270,7 @@ function znRequestFrom(sid, k, a) {
   if (k === 'take') { if (ZM.box.st === 'offer' && ZM.box.owner === sid) { ZM.box.st = 'idle'; ZM.box.t = 0; } return; }
   if (k === 'board') { const w = ZM.windows[a | 0]; if (w && w.boards < 6 && !ZM.z.some(z => z.win === w && z.st === 'climb')) { w.boards++; zmBoardPay(sid); } return; }
   if (k === 'rev') { zmnRevive(String(a)); return; }
+  if (k === 'egg') { if (typeof zeRequest === 'function') zeRequest(sid, a); return; }   // [egg hook] src/zmegg.js
 }
 // someone gets someone up: everyone's told (and if it's me, up I get)
 function zmnRevive(sid) {
@@ -295,6 +296,7 @@ function znHostSend() {
   z.cr = ZM.credit;
   z.ev = ZN.ev;
   if (typeof zbHostSend === 'function') zbHostSend(z);   // [boss] the Diver's strength and his blow (src/zmboss.js)
+  if (typeof zeHostSend === 'function') zeHostSend(z);   // [egg hook] src/zmegg.js
   znSend(z);
 }
 
@@ -423,6 +425,7 @@ function znApply(hz) {
     ZM.kills = c[1]; ZM.heads = c[2];
     ZN.creditSeen = c;
   }
+  if (typeof zeApply === 'function') zeApply(hz);   // [egg hook] src/zmegg.js
   // things that happen once
   if (Array.isArray(hz.ev)) for (const e of hz.ev) {
     if (!Array.isArray(e) || !(e[0] > ZN.evSeen)) continue;

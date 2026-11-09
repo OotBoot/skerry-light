@@ -902,6 +902,7 @@ function zmReset() {
   });
   for (const w of ZM.windows) { w.boards = 6; w.q = []; w.fall = []; }
   if (typeof zmpReset === 'function') zmpReset();   // [pap]
+  if (typeof zeReset === 'function') zeReset();   // [egg hook] src/zmegg.js
 }
 // opts (playing together, src/zmnet.js): { net: 'host' | 'client', hum: [[sid, nick], ...] }
 function zmStart(opts) {
@@ -1029,6 +1030,7 @@ function zmTick(dt) {
   for (const s of ZM.sparks) s.t -= dt; ZM.sparks = ZM.sparks.filter(s => s.t > 0);
   if (FPS.beamT > 0) FPS.beamT -= dt;
   if (typeof zmpTick === 'function') zmpTick(dt);   // [pap]
+  if (typeof zeTick === 'function') zeTick(dt);   // [egg hook] src/zmegg.js
   zmNearest();
   // holding Use at a window nails its boards back; beside someone who's down, gets them up
   const hold = FPS.keys.KeyF || FPS.keys.KeyE || FPS.touchUse || FPS.padUse;
@@ -1304,6 +1306,7 @@ function zmKill(d, head, code, how, by) {
   else if (how !== 'flash' || !ZM.net) { ZM.kills++; if (head) ZM.heads++; zmEarnKill(); }
   zmMaybeDrop(d, how);
   if (d.boss && typeof zbKilled === 'function') zbKilled(d, how, by);   // [boss] his reward and his salvage
+  if (typeof zeKill === 'function') zeKill(d, how, by);   // [egg hook] src/zmegg.js
 }
 // crates (as for Wreckers' Night, every third kill here)
 function zmEarnKill() {
@@ -1351,6 +1354,7 @@ function zmResolveShot(sh, mine) {
       gone += r.t + 0.6; ox = r.x + Math.sin(lh) * 0.6; oy = r.y + Math.cos(lh) * 0.6; oz = r.z + Math.tan(lp) * 0.6;
     }
     FPS.tracers.push({ a: [x + Math.sin(lh) * 0.6, y + Math.cos(lh) * 0.6, z - 0.25], b: [last.x, last.y, last.z], t: w.pellets ? 0.06 : 0.08, k: w.code });
+    if (typeof zeShot === 'function' && mine) zeShot(x, y, z, lh, lp, by);   // [egg hook] src/zmegg.js
     if (last.kind !== 'body' && last.kind !== 'none') fpsPuff(last.x, last.y, last.z, last.kind === 'ground' ? '150,140,120' : '190,190,180', w.pellets ? 2 : 6);
   }
   let any = null;
@@ -1369,6 +1373,7 @@ function zmKnife() {
 }
 function zmMelee(x, y, z, h, w, code) {
   code = code || 'c';
+  if (typeof zeMelee === 'function') zeMelee(x, y, z, h, w, code);   // [egg hook] src/zmegg.js
   let any = false;
   for (const o of ZM.z) {
     if (o.dead) continue;
@@ -1523,11 +1528,13 @@ function zmNearest() {
   // someone down: you can get them up
   if (ZM.net) for (const r of FPS.remote.values()) if (r.down && !r.dead) consider({ k: 'rev', sid: r.id, n: r.n }, r.x, r.y, r.jz || 0, 1.8, false);
   for (const w of ZM.windows) if (w.boards < 6 && zmOpen(w.zone)) consider({ k: 'win', w }, w.x - w.nx * 0.95, w.y - w.ny * 0.95, w.z || 0, 1.9, false);
+  if (typeof zeNearest === 'function') zeNearest(consider);   // [egg hook] src/zmegg.js
   ZM.near = best;
   ZM.prompt = best ? zmPrompt(best) : null;
 }
 function zmPrompt(o) {
   { const r = typeof zmpPrompt === 'function' && zmpPrompt(o); if (r) return r; }   // [pap] the bench, a reforged weapon's ammunition
+  if (o.k === 'egg') return typeof zePrompt === 'function' ? zePrompt(o) : null;   // [egg hook] src/zmegg.js
   if (o.k === 'buy') {
     const w = FPSW[o.b.id], own = ZM.own.includes(o.b.id);
     if (own && w.melee) return { text: `${w.n}: in hand` };
@@ -1544,6 +1551,7 @@ function zmPrompt(o) {
 function zmUse() {
   const o = ZM.near, m = FPS.me; if (!o || m.dead > 0 || ZM.over) return;
   if (typeof zmpUse === 'function' && zmpUse(o)) return;   // [pap]
+  if (o.k === 'egg') { if (typeof zeUse === 'function') zeUse(o); return; }   // [egg hook] src/zmegg.js
   const pay = c => { if (ZM.pts < c) { zmSound('no'); fpsFeed('Not enough points.'); return false; } ZM.pts -= c; ZM.spent += c; return true; };
   if (o.k === 'buy') {
     const id = o.b.id, w = FPSW[id], own = ZM.own.includes(id);
@@ -1781,6 +1789,7 @@ function zm3dBuild() {
     const L = new THREE.PointLight(0xffd890, 0, 14, 1.4); grp.add(L);
     Z3.beam = { g, outer, core, L };
   }
+  if (typeof ze3dBuild === 'function') ze3dBuild(grp);   // [egg hook] src/zmegg.js
   zm3dLantern(grp);
 }
 // the glazed windows of the tower, and the lantern on top: its ring of glass in brass astragals, the gallery rail, the
@@ -2008,6 +2017,7 @@ function zmScene3D() {
     Bm.L.position.copy(z3v(ox + fx * Math.min(len, 5), oy + fy * Math.min(len, 5), oz + fz * Math.min(len, 5)));
   }
   if (typeof zmp3d === 'function') zmp3d(dt);   // [pap] the bench
+  if (typeof ze3d === 'function') ze3d(dt);   // [egg hook] src/zmegg.js
 }
 // painted over the 3D view: sparks between the burning, the chest's offer, and anyone down
 function zmDrawOver() {
@@ -2173,6 +2183,7 @@ function zmHud() {
   }
   if (ZM.over) { ctx.fillStyle = `rgba(20,2,2,${Math.min(0.6, ZM.over.t * 0.4)})`; ctx.fillRect(0, 0, W, H); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = fell(phone ? 28 : 40); ctx.fillStyle = `rgba(200,40,30,${Math.min(1, ZM.over.t)})`; ctx.fillText('They dragged you down', cx, H * 0.42); }
   if (!FPS.mouse && !phone && !FPS.menu && !ZM.over) { ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = mono(12); ctx.fillStyle = 'rgba(236,228,207,0.6)'; ctx.fillText('Click to aim with the mouse', cx, H * 0.5 + 40); }
+  if (typeof zeHud === 'function') zeHud();   // [egg hook] src/zmegg.js
 }
 // the walking stick, where your thumb came down (as on the islands), with its outer circle for running
 function zmDrawStick() {

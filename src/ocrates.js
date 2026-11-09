@@ -47,12 +47,15 @@ const OC_ROWS = [
   ['oc_herald',  'The Kraken’s Herald',     'captain',  '#2a0e3a', '#c06aff', '#8a3acc', '#1a0828', 'tricorn',   { fx: 'glow', eyes: '#e0a8ff' }],
   ['oc_drowned', 'The Drowned Captain',     'admiral',  '#0e2a2a', '#7affe0', '#1aa08a', '#082020', 'hood',      { fx: 'aura', glow: '#7affe0', eyes: '#c8fff0', halo: '#4affd8' }],
   ['oc_keeper',  'The Keeper of the Light', 'admiral',  '#e8d8a8', '#ffd34d', '#fff0b0', '#f4ecd0', 'tricorn',   { fx: 'aura', glow: '#ffd88a', eyes: '#fff4c8', halo: '#ffe08a', breeches: '#d8c8a0', brass: '#ffe08a' }],
+  // [pirate tokens] src/zmegg.js: only ever unlocked with the Lighthouse's pirate tokens, never in a crate (no crate rolls 'pirate')
+  ['oc_gannetcap','Captain of the Gannet',  'pirate',   '#141a22', '#e0b040', '#8a1a1a', '#0c0e12', 'bicorne',   { fx: 'aura', glow: '#7affd0', eyes: '#c8fff0', halo: '#3ee0b4', brass: '#ffd34d', waist: '#3a1410', breeches: '#2a2420' }],
+  ['oc_marenoil', 'Maren’s Oilskins',       'pirate',   '#c8962a', '#fff0b0', '#2a4a6a', '#b8862a', 'souwester', { fx: 'glow', glow: '#ffd88a', eyes: '#fff4c8', halo: '#ffe0a0', breeches: '#3a3a3a', brass: '#e0c060' }],
 ];
 const OC_OUTFITS = OC_ROWS.map(([id, name, rarity, coat, trim, sash, hat, style, x]) => Object.freeze(Object.assign({ id, name, rarity, coat, trim, sash, hat, style }, x || {})));
 const OC_BY_ID = Object.fromEntries(OC_OUTFITS.map(o => [o.id, o]));
 const ocOutfit = id => (typeof id === 'string' && OC_BY_ID[id]) || null;
-const ocRarityOf = o => RARITIES.find(r => r.id === o.rarity);
-const ocLevel = o => o && o.rarity ? RARITIES.findIndex(r => r.id === o.rarity) + 1 : 0;
+const ocRarityOf = o => RARITIES.find(r => r.id === o.rarity) || (o.rarity === 'pirate' ? RARITY_PIRATE : undefined);   // [pirate tokens]
+const ocLevel = o => o && o.rarity ? (o.rarity === 'pirate' ? 5 : RARITIES.findIndex(r => r.id === o.rarity) + 1) : 0;
 
 const OC = { crates: 0, opened: 0, kills: 0, owned: {}, equipped: '', pending: null, opening: false, opener: null, ashore: 0, wasOn: false };
 
@@ -215,7 +218,7 @@ function ocRender() {
   for (const ra of RARITIES) { const li = document.createElement('li'); li.style.setProperty('--rc', ra.color); li.textContent = ra.name + ' · ' + (ra.odds * 100).toFixed(ra.odds < 0.01 ? 2 : 1) + '%'; odds.appendChild(li); }
   const inv = $('ocInv'); inv.textContent = '';
   let owned = 0, lastGrade = null;
-  for (const oc of [null].concat(OC_OUTFITS)) {
+  for (const oc of [null].concat(OC_OUTFITS.filter(o => o.rarity !== 'pirate' || OC.owned[o.id]))) {   // [pirate tokens] shown once unlocked
     const gr = oc ? oc.rarity : 'standard';
     if (gr !== lastGrade) {
       lastGrade = gr;
@@ -236,7 +239,7 @@ function ocRender() {
     } else c.setAttribute('aria-label', oc.name + ', not found yet');
     inv.appendChild(c);
   }
-  $('ocCollected').textContent = owned + ' of ' + OC_OUTFITS.length + ' found';
+  $('ocCollected').textContent = owned + ' of ' + OC_OUTFITS.filter(o => o.rarity !== 'pirate' || OC.owned[o.id]).length + ' found';
 }
 
 // ---------- opening ----------
