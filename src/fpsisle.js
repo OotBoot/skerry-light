@@ -138,6 +138,8 @@ function fpsIsleGen(G, round, rng, id) {
     if (K.gen) K.gen(p, rng);
     p.sol = K.sol ? K.sol(p) : [];
     for (const s of p.sol) if (!s.col) s.col = K.col || FPI_C.stone;
+    // (lift: the prop stands on a floor that high, as in the Lighthouse's tower; everything about it goes up)
+    if (p.lift) for (const s of p.sol) { s.z1 += p.lift; s.z0 = (s.z0 != null ? s.z0 : FPSC.GROUND) + p.lift; }
     I.props.push(p); for (const s of p.sol) I.solids.push(s);
     return p;
   };
@@ -1234,12 +1236,12 @@ function fpsIsle3D(grp, B) {
   grp.add(ground); grp.add(foam);
   for (const p of I.props) {
     const K = FPI_K[p.k]; if (!K || !K.b3) continue;
-    A.at(p.x, p.y, Z + fpsIsleH(I, p.x, p.y) - 0.03, p.ang);
+    A.at(p.x, p.y, Z + fpsIsleH(I, p.x, p.y) - 0.03 + (p.lift || 0), p.ang);
     K.b3(p, A);
     // a soft shadow underneath
-    if (p.k !== 'jetty' && p.k !== 'roof') for (const s of p.sol) {
+    if (p.k !== 'jetty' && p.k !== 'roof' && !K.noShadow) for (const s of p.sol) {
       if (s.mv === false) continue;
-      A.at(s.x, s.y, Z + fpsIsleH(I, s.x, s.y), s.ang);
+      A.at(s.x, s.y, Z + fpsIsleH(I, s.x, s.y) + (p.lift || 0), s.ang);
       if (s.s === 'c') A.part('disc', '#000', 0, 0, 0.04, s.r * 2.6, 1, s.r * 2.6, 0, 0, 0, 'decal');
       else A.part('disc', '#000', 0, 0, 0.04, s.hw * 2 + 0.9, 1, s.hd * 2 + 0.9, 0, 0, 0, 'decal');
     }
@@ -1266,7 +1268,9 @@ function fpsIsle3D(grp, B) {
 function fpsIsleFrame3D() {
   const S = GL3D.isleState; if (!S || !g.isle || S.I.key !== g.isle.key) return;
   const I = g.isle, t = reduceMotion ? 0 : g.t;
-  const near = I.lights.slice().sort((a, b) => Math.hypot(a.x - camX, a.y - camY) - Math.hypot(b.x - camX, b.y - camY));
+  // (by height too: in the Lighthouse's tower the floors are stacked, and a lamp a floor away is no use)
+  const dd = l => Math.hypot(l.x - camX, l.y - camY, (l.z - camH) * 1.6);
+  const near = I.lights.slice().sort((a, b) => dd(a) - dd(b));
   S.lights.forEach((L, i) => {
     const l = near[i]; if (!l) { L.intensity = 0; L.visible = false; return; }
     L.visible = true; L.color.set(l.c); L.distance = l.r * 1.5;

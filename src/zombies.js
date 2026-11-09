@@ -38,7 +38,14 @@
 const ZMC = {
   RISE: 0.28, TREAD: 0.75, CEIL: 3.6, STEP: 0.6, START: 500, BREAK: 10, ALIVE: 24, NAV: 0.5, HP: 3, HP_STOUT: 6, BOX: 950,
 };
-ZMC.HT = ZMC.RISE * 30;   // the lantern room's floor: thirty steps up
+// The tower: round, whitewashed with two red bands, fifteen metres wide inside and five floors high, a spiral stair
+// of ninety steps round a stone newel up through the middle, one turn to a floor, and the lantern room of glass on
+// top. Floors (heights above the ground): 0 the Tower Foot, 5, 10, 15, 20 two rooms each, 25 the lantern.
+const ZMT = { X: 0, Y: 1.5, R: 10, TH: 0.6, N: 32, L: [0, 5, 10, 15, 20, 25], HOLE: 3.6, PER: 18, R0: 0.95, R1: 3.45, GLASS: 6.5 };
+ZMT.RISE = 5 / ZMT.PER;
+ZMC.HT = ZMT.L[5];   // the lantern room's floor
+const ZM_TROOMS = { tower: 'the Tower Foot', tw1n: 'the Watch Room', tw1s: 'the Oil Room', tw2n: 'the Chart Room', tw2s: 'the Bunk Room',
+  tw3n: 'the Clock Room', tw3s: 'the Lamp-Wright’s Store', tw4n: 'the Service Room', tw4s: 'the Keeper’s Study', top: 'the Lantern Room' };
 const ZM = { on: false, own: ['pepperbox'], res: {}, pts: 0, round: 0, items: [], z: [], drops: [], perks: {}, fx: [] };
 // what each weapon carries in reserve, and how much harder it hits the drowned than a wrecker
 const ZM_AMMO = { pepperbox: 60, blunderbuss: 28, longarm: 36, harpoon: 20, avtomat: 225, cutlass: 0, fresnel: 240 };
@@ -69,12 +76,12 @@ const ZM_ZONES = {
   east: { n: 'the East Passage', r: [16, 26, -9.5, 14], floor: 'flags', wall: '#b0aa98' },
   west: { n: 'the Net Loft', r: [-26, -16, -9.5, 14], floor: 'boards', wall: '#b2ab98' },
   hall: { n: 'the Store Hall', r: [-26, 26, 14, 26], floor: 'flags', wall: '#b8b2a2' },
-  lamp: { n: 'the Lamp Passage', r: [-2.5, 2.5, 5.5, 14], floor: 'flags', wall: '#c0baa8' },
-  tower: { n: 'the Tower', r: [-7.5, 7.5, -9.5, 5.5], floor: 'flags' },
+  lamp: { n: 'the Lamp Passage', r: [-2.5, 2.5, 11.3, 14], floor: 'flags', wall: '#c0baa8' },
+  tower: { n: 'the Tower Foot', r: [-10.3, 10.3, -8.8, 11.8], floor: 'flags' },
   boat: { n: 'the Boathouse', r: [26, 44, -21, 2], floor: 'boards', wall: null },
   wreck: { n: 'the Wreck Store', r: [-44, -26, -21, 2], floor: 'flags', wall: null },
 };
-const ZM_TC = [0, -2];   // the middle of the tower
+const ZM_TC = [ZMT.X, ZMT.Y];   // the middle of the tower
 
 FPS_ISLES.light = { name: 'the Lighthouse', ground: '#7a786e', ground2: '#5e5c54', wet: '#34363a', path: '#5c5a52', tint: 0.32, mound: 0, dune: 0,
   rocks: [0, 3, 6, 1], wrecks: [0], tintRock: null, sky: '120,130,160', skyA: 0.06, fog: ['#0c0e12', 70, 520], mist: '60,66,80', mistA: 0.08,
@@ -260,6 +267,125 @@ Object.assign(FPI_K, {
   coil: { col: FPI_C.rope, sol(p) { return [fpiCirc(p, 0, 0, 0.55, 0.35)]; }, b3(p, A) { for (let i = 0; i < 4; i++) A.part('torus', FPI_C.rope, 0, 0, 0.06 + i * 0.08, 1.0 - i * 0.08, 1.0 - i * 0.08, 1.0 - i * 0.08, 0, Math.PI / 2, 0); } },
 });
 
+// the tower's own: its curved wall in pieces, floors, the spiral's treads, railings, the newel, glass, and things
+// that make it a home (plants, a telescope, the clockwork that turns the lens)
+const ZM_TOWER_BANDS = [[7.4, 9.6], [16.4, 18.6]];   // the red bands round the outside
+Object.assign(FPI_K, {
+  // a piece of the tower's wall (or any wall standing on a floor), from z0 to z1: whitewashed, with a skirting and a
+  // painted rail inside on each floor it crosses, and the red bands outside
+  zwall: {
+    noShadow: true, col: '#d8d2c0',
+    sol(p) { return [fpiBox(p, 0, 0, p.len / 2, p.th / 2, p.z1, { z0: p.z0, col: '#d8d2c0' })]; },
+    b3(p, A) {
+      A.box(p.col || '#d8d2c0', 0, 0, p.z0, p.len, p.th, p.z1 - p.z0);
+      if (p.ring) {
+        for (const [b0, b1] of ZM_TOWER_BANDS) { const a = Math.max(b0, p.z0), b = Math.min(b1, p.z1); if (b > a) A.box('#9a2a22', 0, -(p.th / 2 + 0.02), a, p.len * 1.01, 0.04, b - a); }
+        for (const L of ZMT.L) if (L >= p.z0 && L < p.z1 && L < 25) { A.box('#3a3228', 0, p.th / 2 + 0.02, L, p.len * 1.01, 0.04, 0.22); A.box('#3e6a6a', 0, p.th / 2 + 0.02, L + 1.0, p.len * 1.01, 0.04, 0.07); }
+      }
+    },
+  },
+  // a floor of the tower: boards on joists, whitewashed underneath (the ceiling of the floor below)
+  slab: {
+    noShadow: true,
+    sol(p) { return [fpiBox(p, 0, 0, p.w / 2, p.d / 2, p.top, { z0: p.top - 0.3, fl: true, col: '#6a5440' })]; },
+    b3(p, A) {
+      A.box('#d4cebc', 0, 0, p.top - 0.32, p.w, p.d, 0.22);
+      const n = Math.max(1, Math.round(p.d / 0.25));
+      for (let i = 0; i < n; i++) A.box(ZMP.boards[i % 3], 0, -p.d / 2 + (i + 0.5) * p.d / n, p.top - 0.1, p.w, p.d / n * 0.95, 0.1);
+    },
+  },
+  // a tread of the spiral stair, and (except where the floors are) its iron rail on the outside
+  tread: {
+    noShadow: true,
+    sol(p) {
+      const out = [fpiBox(p, 0, 0, p.w / 2, p.d / 2, p.hh, { z0: p.hh - 0.25, fl: true, col: FPI_C.stone3 })];
+      if (p.rail) out.push(fpiBox(p, p.w / 2 - 0.04, 0, 0.05, p.d / 2, p.hh + 1.0, { z0: p.hh - 0.05, ray: false, col: ZMP.iron }));
+      return out;
+    },
+    b3(p, A) {
+      A.box('#8a8476', 0, 0, p.hh - 0.25, p.w, p.d, 0.25); A.box('#5e594e', 0, -p.d / 2 + 0.04, p.hh - 0.06, p.w, 0.08, 0.07);
+      if (p.rail) { A.box(ZMP.iron, p.w / 2 - 0.04, 0, p.hh, 0.04, 0.04, 0.95); A.box(ZMP.brass, p.w / 2 - 0.04, 0, p.hh + 0.95, 0.06, p.d * 1.1, 0.05); }
+    },
+  },
+  // the newel: the stone column the stair winds round, the lens on its top
+  newel: { noShadow: true, col: '#d8d2c0', sol(p) { return [fpiCirc(p, 0, 0, p.r, p.hh, { col: '#d8d2c0' })]; }, b3(p, A) { A.cyl('#d0cab8', 0, 0, -0.1, p.r, p.hh + 0.1, 0, 0, 0, 'cyl8'); for (const L of ZMT.L) A.cyl('#3e6a6a', 0, 0, L + 1.0, p.r * 1.03, 0.07, 0, 0, 0, 'cyl8'); } },
+  // a railing standing on a floor (base), round the stairwell
+  zrail: {
+    noShadow: true,
+    sol(p) { return [fpiBox(p, 0, 0, p.w / 2, 0.07, p.base + 1.0, { z0: p.base, ray: false, col: ZMP.iron })]; },
+    b3(p, A) {
+      const n = Math.max(2, Math.round(p.w / 0.45));
+      for (let i = 0; i <= n; i++) A.box(ZMP.iron, -p.w / 2 + i * p.w / n, 0, p.base, 0.045, 0.045, 1.0);
+      A.box(ZMP.brass, 0, 0, p.base + 0.96, p.w, 0.08, 0.06); A.box(ZMP.iron, 0, 0, p.base + 0.5, p.w, 0.035, 0.035);
+    },
+  },
+  // the lantern's glass (drawn with the mode's own glass; here only what stops you walking through it)
+  glasspane: { noShadow: true, sol(p) { return [fpiBox(p, 0, 0, p.w / 2, 0.05, p.z1, { z0: p.z0, ray: false, col: '#a8c8d8' })]; } },
+  // a pot plant: geraniums on a sill, a fern in a corner, a palm by the stair
+  plant: {
+    col: '#8a4a30',
+    sol(p) { return [fpiCirc(p, 0, 0, (p.s || 1) * 0.3, (p.s || 1) * 0.9)]; },
+    b3(p, A) {
+      const s = p.s || 1, n = Math.round(7 + s * 6);
+      A.cyl('#8a4a30', 0, 0, 0, 0.22 * s, 0.32 * s, 0, 0, 0, 'cyl8'); A.cyl('#3a2a1c', 0, 0, 0.3 * s, 0.2 * s, 0.03, 0, 0, 0, 'cyl8');
+      for (let i = 0; i < n; i++) { const a = i / n * 6.283 + A.r(), r = A.r() * 0.12 * s; A.part('blade', A.r() < 0.5 ? '#4e7a3a' : '#3e6a30', Math.cos(a) * r, Math.sin(a) * r, 0.32 * s, 0.18 * s, (0.4 + A.r() * 0.5) * s, 1, a, (A.r() - 0.5) * 0.9, (A.r() - 0.5) * 0.9); }
+      if (p.flowers) for (let i = 0; i < 6; i++) { const a = A.r() * 6.283, r = A.r() * 0.2 * s; A.part('sph', p.flowers, Math.cos(a) * r, Math.sin(a) * r, (0.65 + A.r() * 0.35) * s, 0.09 * s, 0.07 * s, 0.09 * s); }
+    },
+  },
+  // a bush in the yard, and a bed of sea-pinks and grass at the foot of a wall
+  bush: {
+    col: '#3e5a30',
+    sol(p) { return [fpiCirc(p, 0, 0, (p.s || 1) * 0.7, (p.s || 1) * 1.1)]; },
+    b3(p, A) {
+      const s = p.s || 1;
+      for (let i = 0; i < 7; i++) { const a = A.r() * 6.283, r = A.r() * 0.45 * s; A.part('ico', A.r() < 0.5 ? '#3e5a30' : '#4e6a36', Math.cos(a) * r, Math.sin(a) * r, (0.4 + A.r() * 0.5) * s, (0.7 + A.r() * 0.4) * s, (0.6 + A.r() * 0.4) * s, (0.7 + A.r() * 0.4) * s, A.r() * 3, 0, 0, 'leaf'); }
+      if (p.flowers) for (let i = 0; i < 8; i++) { const a = A.r() * 6.283, r = A.r() * 0.6 * s; A.part('sph', p.flowers, Math.cos(a) * r, Math.sin(a) * r, (0.7 + A.r() * 0.5) * s, 0.1, 0.08, 0.1); }
+    },
+  },
+  bed: {
+    sol() { return []; },
+    b3(p, A) {
+      A.box('#4a3a2a', 0, 0, -0.05, p.w, p.d, 0.12);
+      const n = Math.round(p.w * p.d * 9);
+      for (let i = 0; i < n; i++) { const u = (A.r() - 0.5) * p.w, v = (A.r() - 0.5) * p.d; A.part('blade', A.r() < 0.6 ? '#5a7a40' : '#6a8a48', u, v, 0.05, 0.12, 0.25 + A.r() * 0.3, 1, A.r() * 3, (A.r() - 0.5) * 0.6, (A.r() - 0.5) * 0.6); if (A.r() < 0.35) A.part('sph', p.flowers || '#e88aa8', u, v, 0.32 + A.r() * 0.15, 0.08, 0.06, 0.08); }
+    },
+  },
+  // a telescope on its tripod, at a window
+  telescope: {
+    col: ZMP.brass,
+    sol(p) { return [fpiCirc(p, 0, 0, 0.35, 1.5)]; },
+    b3(p, A) { for (let i = 0; i < 3; i++) { const a = i / 3 * 6.283; A.box('#4a3020', Math.cos(a) * 0.25, Math.sin(a) * 0.25, 0, 0.04, 0.04, 1.25, 0, Math.sin(a) * 0.2, -Math.cos(a) * 0.2); } A.log(ZMP.brass, 0.1, 0, 1.35, 0.06, 1.1, 0, 0.25); A.log('#2a2a2c', 0.62, 0, 1.48, 0.075, 0.12, 0, 0.25); },
+  },
+  // the clockwork that turns the lens: a frame of gears, its governor, a weight on a chain
+  clockwork: {
+    col: '#3a3c40',
+    sol(p) { return [fpiBox(p, 0, 0, 1.1, 0.6, 1.9)]; },
+    b3(p, A) {
+      A.box('#2a2c30', 0, 0, 0, 2.2, 1.2, 0.15); for (const u of [-1, 1]) A.box('#2a2c30', u * 1.0, 0, 0, 0.12, 1.1, 1.8);
+      A.box('#2a2c30', 0, 0, 1.75, 2.2, 1.2, 0.1);
+      for (const [u, h, r] of [[-0.45, 0.9, 0.42], [0.35, 1.15, 0.3], [0.5, 0.55, 0.22], [-0.1, 1.45, 0.2]]) { A.part('torus', ZMP.brass, u, 0, h, r * 2, r * 2, r * 2, 0, Math.PI / 2, 0); A.part('cyl8', ZMP.brass, u, 0, h, r * 1.6, 0.05, r * 1.6, 0, Math.PI / 2, 0); }
+      for (const s of [-1, 1]) A.part('sph', '#6a6a70', 0.75 + s * 0.12, -0.5, 1.4 - Math.abs(s) * 0.1, 0.14, 0.14, 0.14);
+    },
+  },
+  // a globe on a stand
+  globe: { col: '#6a5a3a', sol(p) { return [fpiCirc(p, 0, 0, 0.35, 1.2)]; }, b3(p, A) { A.cyl('#4a3020', 0, 0, 0, 0.05, 0.8); A.part('sph', '#c8b888', 0, 0, 1.0, 0.55, 0.55, 0.55); A.part('torus', ZMP.brass, 0, 0, 1.0, 0.6, 0.6, 0.6, 0, 0.3, 0); } },
+  // bunches of herbs and wrack drying under a beam (only to look at)
+  herbs: { sol() { return []; }, b3(p, A) { A.box(FPI_C.wood3, 0, 0, p.z, p.w, 0.06, 0.06); for (let u = -p.w / 2 + 0.2; u < p.w / 2; u += 0.3) { A.box('#3a2a1c', u, 0, p.z - 0.25, 0.01, 0.01, 0.25); A.part('cone', A.r() < 0.5 ? '#6a7a40' : '#7a6a40', u, 0, p.z - 0.45, 0.16, 0.35, 0.16, 0, Math.PI, 0); } } },
+  // a picture or a chart on a wall (only to look at)
+  picture: { sol() { return []; }, b3(p, A) { A.box(FPI_C.wood3, 0, 0, p.z, p.w + 0.08, 0.05, p.h + 0.08); A.box(p.c || '#b8a878', 0, -0.03, p.z + 0.04, p.w, 0.02, p.h); if (p.sea) { A.box('#3a5a6a', 0, -0.045, p.z + 0.04, p.w, 0.01, p.h * 0.45); A.box('#e8e0c8', p.w * 0.15, -0.05, p.z + p.h * 0.4, 0.06, 0.01, p.h * 0.4); } } },
+  // a rug (only to look at)
+  rug: { sol() { return []; }, b3(p, A) { A.box(p.c || '#6a2a24', 0, 0, 0.0, p.w, p.d, 0.025); A.box('#c8a050', 0, 0, 0.0, p.w * 0.84, p.d * 0.8, 0.03); A.box(p.c || '#6a2a24', 0, 0, 0.0, p.w * 0.78, p.d * 0.72, 0.035); } },
+  // a washing line across a yard
+  washline: {
+    sol(p) { return [fpiCirc(p, -p.len / 2, 0, 0.08, 2.0), fpiCirc(p, p.len / 2, 0, 0.08, 2.0)]; },
+    b3(p, A) {
+      for (const s of [-1, 1]) A.cyl(FPI_C.wood3, s * p.len / 2, 0, 0, 0.06, 2.1);
+      A.box('#c8c0a8', 0, 0, 1.95, p.len, 0.01, 0.01);
+      for (let u = -p.len / 2 + 0.6; u < p.len / 2 - 0.4; u += 0.9 + A.r() * 0.4) A.box(A.r() < 0.5 ? '#d8d0bc' : A.r() < 0.5 ? '#3e5a7a' : '#8a3a30', u, 0, 1.3 + A.r() * 0.2, 0.5 + A.r() * 0.3, 0.02, 0.6 - A.r() * 0.1);
+    },
+  },
+});
+
 // ---------- laying out the station ----------
 FPI_GEN.light = {
   built: true,
@@ -273,19 +399,19 @@ FPI_GEN.light = {
     // an axis-aligned wall with its openings: o.mat, o.hh; opens: [{ at, w, k: 'door' | 'arch' | 'win' | 'high' | 'debris', ... }]
     const wall = (x0, y0, x1, y1, o, opens) => {
       const horiz = y0 === y1, a0 = horiz ? Math.min(x0, x1) - TH / 2 : Math.min(y0, y1) - TH / 2, a1 = horiz ? Math.max(x0, x1) + TH / 2 : Math.max(y0, y1) + TH / 2;
-      const L = a1 - a0, hh = o.hh || CE, ang = horiz ? 0 : Math.PI / 2, gaps = [];
+      const L = a1 - a0, hh = o.hh || CE, ang = horiz ? 0 : Math.PI / 2, gaps = [], lift = o.lift || 0;
       const at = a => horiz ? [a, y0] : [x0, a];
       const wo = Object.assign({ mat: 'plaster', hh, th: TH, jag: 0, cap: false, noslit: true }, o);
       for (const op of opens || []) {
         const w = op.w || (op.k === 'win' ? 1.6 : op.k === 'arch' ? 2.6 : 2.2);
         gaps.push([(op.at - w / 2 - a0) / L, (op.at + w / 2 - a0) / L]);
         const [mx, my] = at(op.at), lc = wo.mat === 'plaster' ? (o.col2 || ZMP.plaster) : wo.mat === 'wood' ? FPI_C.wood3 : FPI_C.stone3;
-        const lintel = z0 => put('block', mx, my, ang, { w: w + 0.04, d: TH + 0.02, hh, z0, col: lc });
+        const lintel = z0 => put('block', mx, my, ang, { w: w + 0.04, d: TH + 0.02, hh, z0, col: lc, lift });
         if (op.k === 'door' || op.k === 'debris') {
           lintel(2.5);
           const [wx, wy] = W(mx, my);
-          const p = put('zdoor', mx, my, ang, { w: w + 0.1, d: TH * 0.8, hh: 2.5 });
-          Z.doors.push({ x: wx, y: wy, ang, w, cost: op.cost, zones: op.z, kind: op.k, solids: p.sol.slice(), prop: p, open: false, id: Z.doors.length });
+          const p = put('zdoor', mx, my, ang, { w: w + 0.1, d: TH * 0.8, hh: 2.5, lift });
+          Z.doors.push({ x: wx, y: wy, z: lift, ang, w, cost: op.cost, zones: op.z, kind: op.k, solids: p.sol.slice(), prop: p, open: false, id: Z.doors.length });
         } else if (op.k === 'arch') lintel(2.9);
         else if (op.k === 'win') {
           lintel(2.35);
@@ -340,43 +466,157 @@ FPI_GEN.light = {
     wall(-26, 26, 26, 26, PL(ZM_ZONES.hall.wall), [{ at: -16, k: 'win', out: 1, z: 'hall' }, { at: 0, k: 'win', out: 1, z: 'hall' }, { at: 16, k: 'win', out: 1, z: 'hall' }]);
     wall(-26, 14, -26, 26, { mat: 'stone' });
     wall(26, 14, 26, 26, { mat: 'stone' });
-    wall(-2.5, 5.5, -2.5, 14, PL(ZM_ZONES.lamp.wall));
-    wall(2.5, 5.5, 2.5, 14, PL(ZM_ZONES.lamp.wall));
-    // the tower: four tall walls (the lantern room's windows high in them), its door from the lamp passage
-    const hw = (a, b) => [{ at: a, k: 'high', w: 1.8, s0: HT + 0.9, s1: HT + 3.1 }, { at: b, k: 'high', w: 1.8, s0: HT + 0.9, s1: HT + 3.1 }];
-    wall(-7.5, -9.5, 7.5, -9.5, { mat: 'stone', hh: TOP }, hw(-3.6, 3.6));
-    wall(-7.5, 5.5, 7.5, 5.5, { mat: 'stone', hh: TOP }, [{ at: 0, k: 'arch' }, { at: -4.6, k: 'high', w: 1.8, s0: HT + 0.9, s1: HT + 3.1 }, { at: 4.6, k: 'high', w: 1.8, s0: HT + 0.9, s1: HT + 3.1 }]);
-    wall(-7.5, -9.5, -7.5, 5.5, { mat: 'stone', hh: TOP }, hw(-5.6, 1.6));
-    wall(7.5, -9.5, 7.5, 5.5, { mat: 'stone', hh: TOP }, hw(-5.6, 1.6));
-    // the short walls closing the yards beside the tower
-    wall(-10, -9.5, -7.5, -9.5, PL(ZM_ZONES.quarters.wall));
-    wall(7.5, -9.5, 10, -9.5, PL(ZM_ZONES.quarters.wall));
-    // inside the tower: the floor, the core, the stair round it, the lantern room and its ceiling
-    const [tx, ty] = ZM_TC, T = (u, v) => [tx + u, ty + v];
-    put('floor', tx, ty, 0, { w: 14.9, d: 14.9, style: 'flags' });
-    put('ceil', tx, ty, 0, { w: 15.4, d: 15.4, z0: TOP - 0.3, col: '#5a5850' });
-    put('core', ...T(0, 0), 0, { w: 9, d: 9, hh: HT });
-    let n = 0;
-    const step = (u0, u1, v0, v1) => { n++; put('step', ...T((u0 + u1) / 2, (v0 + v1) / 2), 0, { w: Math.abs(u1 - u0), d: Math.abs(v1 - v0), hh: n * ZMC.RISE }); };
-    for (let i = 0; i < 12; i++) step(4.5, 7.5, 4.5 - ZMC.TREAD * (i + 1), 4.5 - ZMC.TREAD * i);   // up the east side, southwards
-    step(4.5, 7.5, -7.5, -4.5);                                                                  // a landing in the corner
-    for (let i = 0; i < 12; i++) step(4.5 - ZMC.TREAD * (i + 1), 4.5 - ZMC.TREAD * i, -7.5, -4.5); // along the south side, westwards
-    step(-7.5, -4.5, -7.5, -4.5);                                                                // another landing
-    for (let i = 0; i < 3; i++) step(-7.5, -4.5, -4.5 + ZMC.TREAD * i, -4.5 + ZMC.TREAD * (i + 1)); // and up the west side to the top
-    const vEnd = -4.5 + ZMC.TREAD * 3;
-    // a parapet at the end of the stair, and a railing round the lantern room's floor, open where the stair arrives
-    put('block', ...T(-6, vEnd + 0.15), 0, { w: 3, d: 0.3, hh: n * ZMC.RISE + 1.0, col: FPI_C.stone3 });
-    put('rail', ...T(0, 4.36), 0, { w: 9, base: HT });
-    put('rail', ...T(0, -4.36), 0, { w: 9, base: HT });
-    put('rail', ...T(4.36, 0), Math.PI / 2, { w: 9, base: HT });
-    const g0 = -4.5 + ZMC.TREAD * 0.6, g1 = vEnd + 0.1;   // the gap on the west side
-    put('rail', ...T(-4.36, (g1 + 4.5) / 2), Math.PI / 2, { w: 4.5 - g1, base: HT });
-    put('rail', ...T(-4.36, (-4.5 + g0) / 2), Math.PI / 2, { w: g0 + 4.5, base: HT });
-    put('lens', ...T(-0.4, 0.6), 0, { base: HT });
-    light(...T(-0.4, 0.6), HT + 2.0, '#ffe2a0', 16, 'lens');
-    Z.top = { x: OX + tx, y: OY + ty, r: 4.5, z: HT };
-    // the tower's lanterns: at the foot, on the landings
-    for (const [u, v, z] of [[0, 5.9, 2.6], [-6, 5.8, 2.6], [6.6, -6.6, 3.64 + 2.4], [-6.6, -6.6, 7.28 + 2.4], [4.2, 4.2, HT + 2.6], [-3.6, -3.6, HT + 2.6]]) lamp(...T(u, v), z, '#ffc070', TOP - 0.3);
+    wall(-2.5, 11.2, -2.5, 14, PL(ZM_ZONES.lamp.wall));
+    wall(2.5, 11.2, 2.5, 14, PL(ZM_ZONES.lamp.wall));
+    // the Quarters' north wall, onto the yards (the tower stands clear of it now)
+    wall(-10, -9.5, 10, -9.5, PL(ZM_ZONES.quarters.wall));
+    // ---------- the tower ----------
+    const TX = ZMT.X, TY = ZMT.Y, RT = ZMT.R, L5 = ZMT.L[5], TW = (rx, ry) => [TX + rx, TY + ry];
+    const tput = (k, rx, ry, ang, o) => put(k, TX + rx, TY + ry, ang || 0, o || {});
+    Z.glass = []; Z.tower = { x: OX + TX, y: OY + TY, r: RT, L: ZMT.L.slice() };
+    // its wall: thirty-two pieces round, one band to each floor, with windows; the door at the foot onto the passage
+    // (z: zombie windows, with boards; g: glazed windows; a: the arch)
+    const OPEN = { 0: { 8: 'a', 0: 'z', 16: 'z', 24: 'g', 4: 'g', 12: 'g', 20: 'g', 28: 'g' },
+      1: { 4: 'z', 12: 'g', 20: 'g', 28: 'z' }, 2: { 4: 'g', 12: 'z', 20: 'z', 28: 'g' }, 3: { 4: 'z', 12: 'g', 20: 'g', 28: 'z' }, 4: { 4: 'g', 12: 'z', 20: 'z', 28: 'g' } };
+    const RC = RT + ZMT.TH / 2, SEG = 2 * RC * Math.sin(Math.PI / ZMT.N) * 1.04;
+    for (let i = 0; i < ZMT.N; i++) {
+      const a = i / ZMT.N * Math.PI * 2, ca = Math.cos(a), sa = Math.sin(a), ang = a + Math.PI / 2, px = TX + ca * RC, py = TY + sa * RC;
+      for (let k = 0; k < 6; k++) {
+        const z0 = k === 0 ? 0 : ZMT.L[k] - 0.3, z1 = k < 5 ? ZMT.L[k + 1] - 0.3 : L5 + 1.05, Lk = ZMT.L[k];
+        const o = (OPEN[k] || {})[i], piece = (zz0, zz1) => put('zwall', px, py, ang, { len: SEG, th: ZMT.TH, z0: zz0, z1: zz1, ring: true });
+        if (!o) { piece(z0, z1); continue; }
+        if (o === 'a') { piece(Lk + 2.9, z1); continue; }
+        piece(z0, Lk + 1.0); piece(Lk + 2.35, z1);
+        const zone = k === 0 ? 'tower' : 'tw' + k + (sa >= 0 ? 'n' : 's');
+        if (o === 'z') Z.windows.push({ x: OX + px, y: OY + py, nx: ca, ny: sa, zone, z: Lk, boards: 6, id: Z.windows.length, q: [] });
+        else Z.glass.push({ x: OX + px, y: OY + py, ang, w: SEG * 0.92, z0: Lk + 1.0, z1: Lk + 2.35, frame: true });
+      }
+    }
+    // the floors, in strips across, round the stairwell (a square hole, railed)
+    const HO = ZMT.HOLE;
+    for (let k = 1; k <= 5; k++) {
+      const top = ZMT.L[k], strips = [];
+      for (let y = -RT; y < -HO - 0.01; y += 1) strips.push([y, Math.min(y + 1, -HO)]);
+      strips.push([-HO, HO]);
+      for (let y = HO; y < RT - 0.01; y += 1) strips.push([y, Math.min(y + 1, RT)]);
+      for (const [y0, y1] of strips) {
+        const ym = Math.min(Math.abs(y0), Math.abs(y1)) * (y0 < 0 && y1 > 0 ? 0 : 1), xm = Math.sqrt(Math.max(0, (RT + 0.25) ** 2 - ym * ym));
+        const pieces = y0 >= -HO && y1 <= HO ? [[-xm, -HO], [HO, xm]] : [[-xm, xm]];
+        for (const [x0, x1] of pieces) if (x1 - x0 > 0.2) tput('slab', (x0 + x1) / 2, (y0 + y1) / 2, 0, { w: x1 - x0, d: y1 - y0, top });
+      }
+      // the railing round the stairwell, open on the north side where the stair comes off
+      tput('zrail', 0, -HO, 0, { w: 2 * HO, base: top });
+      tput('zrail', HO, 0, Math.PI / 2, { w: 2 * HO, base: top });
+      tput('zrail', -HO, 0, Math.PI / 2, { w: 2 * HO, base: top });
+      for (const sx of [-1, 1]) tput('zrail', sx * (HO + 1.3) / 2, HO, 0, { w: HO - 1.3, base: top });
+    }
+    // the newel, and the spiral round it: eighteen treads a turn, a turn a floor, each floor's landing on the north side
+    tput('newel', 0, 0, 0, { r: 0.9, hh: L5 + 0.9 });
+    const nT = ZMT.PER * 5;
+    for (let n = 1; n <= nT; n++) {
+      const a = Math.PI / 2 + n / ZMT.PER * Math.PI * 2, rm = (ZMT.R0 + ZMT.R1) / 2, near = n % ZMT.PER;
+      tput('tread', Math.cos(a) * rm, Math.sin(a) * rm, a, { w: ZMT.R1 - ZMT.R0, d: 1.25, hh: n * ZMT.RISE, rail: !(near <= 1 || near >= ZMT.PER - 1) });
+    }
+    // a gate across the stair a few steps above each floor: each floor of the tower is bought, on the way up
+    const gateCost = [1000, 1250, 1500, 1750, 2000];
+    for (let k = 0; k < 5; k++) {
+      const n = k * ZMT.PER + 3, a = Math.PI / 2 + (n - 0.5) / ZMT.PER * Math.PI * 2, rm = (ZMT.R0 + ZMT.R1) / 2, h = (n - 1) * ZMT.RISE;
+      const [gx, gy] = TW(Math.cos(a) * rm, Math.sin(a) * rm);
+      const p = put('zdoor', gx, gy, a, { w: ZMT.R1 - ZMT.R0 + 0.1, d: 0.16, hh: 2.6, lift: h - 0.3 });
+      Z.doors.push({ x: OX + gx, y: OY + gy, z: h, ang: a, w: ZMT.R1 - ZMT.R0, cost: gateCost[k], zones: [k === 0 ? 'tower' : 'tw' + k + 'n', k === 4 ? 'top' : 'tw' + (k + 1) + 'n'], kind: 'gate', solids: p.sol.slice(), prop: p, open: false, id: Z.doors.length });
+    }
+    // each floor's two rooms: a wall across from the stairwell to the tower wall on each side, a door in the east one
+    for (let k = 1; k <= 4; k++) {
+      const Lk = ZMT.L[k], hh = ZMT.L[k + 1] - 0.3 - Lk;
+      wall(TX + HO + 0.1, TY, TX + RT + 0.2, TY, { mat: 'plaster', col2: '#d8d2c0', hh, lift: Lk }, [{ at: TX + 7, k: 'door', cost: 750, z: ['tw' + k + 'n', 'tw' + k + 's'] }]);
+      wall(TX - RT - 0.2, TY, TX - HO - 0.1, TY, { mat: 'plaster', col2: '#d8d2c0', hh, lift: Lk });
+    }
+    // the lantern: a ring of glass on the top floor, with a door east and west onto the gallery outside
+    const GR = ZMT.GLASS, NG = 24;
+    for (let i = 0; i < NG; i++) {
+      const a = (i + 0.5) / NG * Math.PI * 2, ca = Math.cos(a), sa = Math.sin(a), w = 2 * GR * Math.sin(Math.PI / NG) * 1.02;
+      if (i === 0 || i === NG - 1 || i === NG / 2 || i === NG / 2 - 1) continue;   // (the doors)
+      tput('glasspane', ca * GR, sa * GR, a + Math.PI / 2, { w, z0: L5 + 0.05, z1: L5 + 4.4 });
+    }
+    Z.top = { x: OX + TX, y: OY + TY, r: GR - 0.2, z: L5 };
+    // the lights: the Light itself, and a lamp in every room
+    light(...TW(0, 0), L5 + 1.8, '#fff0c0', 20, 'lens');
+    for (let k = 0; k <= 4; k++) {
+      const top = k < 4 ? ZMT.L[k + 1] - 0.3 : ZMT.L[5] - 0.3, z = ZMT.L[k] + 3.0;
+      if (k === 0) { for (const [x, y] of [[-6, 5], [6, 5], [-6, -4], [6, -4]]) lamp(...TW(x, y), z, '#ffc070', top); }
+      else { lamp(...TW(-6.5, 5.5), z, '#ffc070', top); lamp(...TW(6.5, -5.5), z, '#ffc070', top); }
+    }
+    // ---------- growing things: the yards, the foot of the tower, the rooms ----------
+    for (const sx of [-1, 1]) {
+      put('bush', sx * 15.1, -8.4, 0, { s: 0.8, flowers: sx > 0 ? '#e8e0d0' : '#e88aa8' });
+      put('bush', sx * 14.9, 12.6, 0, { s: 0.9 });
+      put('bed', sx * 15.25, 3, Math.PI / 2, { w: 4, d: 0.8, flowers: '#e88aa8' });
+      put('bed', sx * 12.6, 13.25, 0, { w: 3.4, d: 0.7, flowers: sx > 0 ? '#f0d060' : '#e8e0d0' });
+      put('bed', sx * 12.8, -8.8, 0, { w: 2.6, d: 0.7, flowers: '#d84050' });
+    }
+    put('washline', 4.2, 9.6, 0.35, { len: 4.2 });
+    // round the foot of the tower, ivy and thrift
+    for (let i = 0; i < 14; i++) { const a = i / 14 * Math.PI * 2 + 0.2; if (Math.abs(Math.sin(a) - 1) < 0.25) continue; put('bed', ZMT.X + Math.cos(a) * (ZMT.R + 0.9), ZMT.Y + Math.sin(a) * (ZMT.R + 0.9), a + Math.PI / 2, { w: 2.6, d: 0.55, flowers: i % 3 ? '#e88aa8' : '#e8e0d0' }); }
+    // grass in the yards, and round the station outside
+    { const rr = seeded(0x5ea9); let n = 0;
+      for (let t = 0; t < 2400 && n < 420; t++) {
+        const x = (rr() - 0.5) * 120, y = (rr() - 0.5) * 90 - 0;
+        const inYard = Math.abs(x) > 10.9 && Math.abs(x) < 15.7 && y > -9.2 && y < 13.7, inTowerYard = Math.abs(x) < 15.7 && y > -9.2 && y < 13.7 && Math.hypot(x - ZMT.X, y - ZMT.Y) > ZMT.R + 0.7 && Math.abs(x) > 2.8;
+        const outside = (x < -44.5 || x > 44.5 || y < -21.5 || y > 26.5) && Math.hypot(x, y) < FPSC.R - 4;
+        if (!(inYard || inTowerYard || outside)) continue;
+        H.decor('tuft', OX + x, OY + y, { s: 0.7 + rr() * 0.8, c: rr() < 0.5 ? '#4e6a38' : '#5e7040' }); n++;
+      }
+      for (let i = 0; i < 26; i++) { const a = rr() * 6.283, d = 52 + rr() * 26, x = Math.cos(a) * d, y = Math.sin(a) * d * 0.8; if (Math.hypot(x, y) < FPSC.R - 6) put('stone', x, y, rr() * 6.283, { w: 0.9 + rr(), d: 0.6 + rr() * 0.5, hh: 0.6 + rr() * 1.2, lean: (rr() - 0.5) * 0.3 }); }
+    }
+    // pot plants about the rooms below
+    for (const [x, y, sz, fl] of [[8.8, -12.2, 1.2, '#d84050'], [-8.8, -20, 0.9, null], [24.5, -4, 1.0, null], [-24.4, 1.5, 1.1, '#e8e0d0'], [-24.8, 15.2, 1.3, null], [24.6, 24.6, 1.2, '#e8a0c0'], [1.6, 13.3, 0.9, null], [-1.6, 13.3, 0.9, null], [43, -19.8, 1.0, null], [-42.8, -19.8, 1.0, '#d84050']]) put('plant', x, y, 0, { s: sz, flowers: fl || undefined });
+    // ---------- in the tower's rooms ----------
+    // (a thing against the tower wall at angle a: where, and which way round)
+    const atWall = (a, r) => [TX + Math.cos(a) * r, TY + Math.sin(a) * r, a + Math.PI / 2];
+    const onFloor = (k, kind, x, y, ang, o) => put(kind, x, y, ang || 0, Object.assign({ lift: ZMT.L[k] }, o || {}));
+    // the Tower Foot: casks of oil, coils, ferns by the door
+    fpiBarrels(H, OX + TX - 7, OY + TY - 4.5); fpiBarrels(H, OX + TX + 7.2, OY + TY - 3.5);
+    put('coil', TX - 6, TY + 6.2, 0, {}); put('plant', TX - 2.3, TY + 8.4, 0, { s: 1.4 }); put('plant', TX + 2.3, TY + 8.4, 0, { s: 1.4 });
+    put('cart', TX + 6.2, TY + 4.6, 0.6, {}); put('rug', TX, TY + 6.2, 0, { w: 3, d: 1.8, c: '#3e5a6a' });
+    put('picture', ...atWall(-Math.PI / 2, RT - 0.05).slice(0, 2), Math.PI, { z: 1.4, w: 1.4, h: 0.9, sea: true });
+    // 1: the Watch Room (a desk, the log, a telescope at the window) and the Oil Room
+    { const k = 1;
+      onFloor(k, 'table', TX - 6.2, TY + 5.4, 0.5, { w: 2.0, d: 1.0, cloth: '#c8b890' }); onFloor(k, 'bench', TX - 6.6, TY + 4.5, 0.5, { w: 1.4 });
+      onFloor(k, 'telescope', ...TW(Math.cos(Math.PI * 0.3) * 8.3, Math.sin(Math.PI * 0.3) * 8.3), 0.9);
+      onFloor(k, 'plant', TX - 2.8, TY + 8.9, 0, { s: 1.1, flowers: '#d84050' }); onFloor(k, 'plant', TX + 8.2, TY + 2.6, 0, { s: 0.9, flowers: '#e8e0d0' });
+      { const [x, y, a] = atWall(Math.PI * 0.62, RT - 0.3); onFloor(k, 'shelf', x, y, a, { w: 2.0, goods: 'books' }); }
+      onFloor(k, 'picture', ...atWall(Math.PI * 0.82, RT - 0.04).slice(0, 2), Math.PI * 0.82 + Math.PI / 2, { z: 1.5, w: 1.2, h: 0.8, c: '#c8b890' });
+      for (const [x, y] of [[-6.6, -5.2], [-4.6, -7.4]]) onFloor(k, 'tank', TX + x, TY + y, 0, { r: 0.75, hh: 1.9, c: '#4a5a4a' });
+      { const [x, y, a] = atWall(-Math.PI * 0.25, RT - 0.3); onFloor(k, 'shelf', x, y, a, { w: 2.2, goods: 'cans' }); }
+      onFloor(k, 'plant', TX + 4.4, TY - 8.6, 0, { s: 1.0 });
+    }
+    // 2: the Chart Room (a table of charts, books, a globe) and the Bunk Room
+    { const k = 2;
+      onFloor(k, 'table', TX + 6, TY + 4.8, -0.5, { w: 2.4, d: 1.3, cloth: '#d8ccaa' }); onFloor(k, 'globe', TX - 6.4, TY + 5.6, 0, {});
+      { const [x, y, a] = atWall(Math.PI * 0.4, RT - 0.3); onFloor(k, 'shelf', x, y, a, { w: 2.2, goods: 'books' }); }
+      onFloor(k, 'rug', TX + 5.5, TY + 4.6, -0.5, { w: 3.2, d: 2.2, c: '#5a2a2a' }); onFloor(k, 'plant', TX + 8.6, TY + 1.4, 0, { s: 1.2 });
+      onFloor(k, 'picture', ...atWall(Math.PI * 0.18, RT - 0.04).slice(0, 2), Math.PI * 0.18 + Math.PI / 2, { z: 1.4, w: 1.6, h: 1.0, c: '#d8ccaa', sea: true });
+      for (const a of [-0.62, -0.88]) { const [x, y, ang] = atWall(Math.PI * (a), RT - 0.8); onFloor(k, 'bunk', x, y, ang, {}); }
+      onFloor(k, 'crates', TX - 7.4, TY - 3.0, 0.3, { items: [{ u: 0, v: 0, s: 0.9, h0: 0, ry: 0.1 }] });
+      onFloor(k, 'plant', TX - 3.0, TY - 8.8, 0, { s: 0.9, flowers: '#e8a0c0' });
+    }
+    // 3: the Clock Room (the clockwork that turns the lens) and the Lamp-Wright's Store
+    { const k = 3;
+      onFloor(k, 'clockwork', TX - 6.2, TY + 4.6, 0.6, {}); onFloor(k, 'clockwork', TX + 6.3, TY + 4.4, -0.6, {});
+      onFloor(k, 'plant', TX + 1.0, TY + 9.0, 0, { s: 1.0 });
+      { const [x, y, a] = atWall(-Math.PI * 0.3, RT - 0.3); onFloor(k, 'shelf', x, y, a, { w: 2.2, goods: 'prisms' }); }
+      { const [x, y, a] = atWall(-Math.PI * 0.7, RT - 0.3); onFloor(k, 'shelf', x, y, a, { w: 2.2, goods: 'prisms' }); }
+      onFloor(k, 'crates', TX - 7.4, TY - 3.2, 0.2, { items: [{ u: 0, v: 0, s: 1.0, h0: 0, ry: 0.1 }, { u: 1.05, v: 0, s: 0.9, h0: 0, ry: -0.1 }] });
+    }
+    // 4: the Service Room (wicks and oil, herbs drying) and the Keeper's Study
+    { const k = 4;
+      onFloor(k, 'table', TX - 6, TY + 5.2, 0.6, { w: 2.2, d: 1.0 }); onFloor(k, 'herbs', TX - 6, TY + 5.2, 0.6, { w: 2.2, z: 3.4 });
+      onFloor(k, 'plant', TX + 7.6, TY + 4.2, 0, { s: 1.3, flowers: '#d84050' }); onFloor(k, 'plant', TX - 1.6, TY + 9.0, 0, { s: 1.0 });
+      onFloor(k, 'table', TX + 5.6, TY - 5.4, -0.6, { w: 1.8, d: 1.0, cloth: '#3a4a3a' }); onFloor(k, 'rug', TX + 4.6, TY - 5.0, -0.6, { w: 3, d: 2, c: '#2e3e5a' });
+      { const [x, y, a] = atWall(-Math.PI * 0.75, RT - 0.3); onFloor(k, 'shelf', x, y, a, { w: 2.2, goods: 'books' }); }
+      onFloor(k, 'picture', ...atWall(-Math.PI * 0.52, RT - 0.04).slice(0, 2), -Math.PI * 0.52 + Math.PI / 2, { z: 1.4, w: 1.0, h: 1.2, c: '#6a5a4a' });
+      onFloor(k, 'plant', TX - 7.8, TY - 2.4, 0, { s: 1.4 });
+    }
     // ---------- what's in the rooms ----------
     // the Keeper's Quarters: a table by the range, bunks, a dresser, a clock, a rug
     put('stove', -7.6, -19.6, 0, {}); light(-7.85, -20.1, 0.5, '#ff8a30', 7, 'fire');
@@ -411,7 +651,7 @@ FPI_GEN.light = {
     fpiCrates(H, OX + -19, OY + 23.5, true); fpiCrates(H, OX + 23.5, OY + 19.5, true); fpiBarrels(H, OX + -24, OY + 24.5);
     for (const x of [-18, -6, 6, 18]) lamp(x, 20, 2.7);
     // the Lamp Passage
-    lamp(0, 9.8, 2.7);
+    lamp(0, 12.6, 2.7);
     // the Boathouse: the lifeboat on her slip, oars, the winch
     put('boat', 35, -10, 0, { len: 6.2, beam: 2.0, paint: '#2e4a6a', upright: true });
     put('rack', 42.6, 0, Math.PI / 2, { len: 2.4, nets: true }); fpiCrates(H, OX + 29, OY + -18.8, false); put('coil', 40.5, -19.5, 0, {});
@@ -447,7 +687,10 @@ FPI_GEN.light = {
     spot(17.2, 3, 1, 0, 0, 'east');
     spot(6, 25, 0, -1, 0, 'hall');
     spot(-38, 0.9, 0, -1, 0, 'wreck');
-    spot(...T(2.6, -2.4), -1, 0, HT, 'top');
+    spot(ZMT.X, ZMT.Y - 5.6, 0, 1, ZMT.L[5], 'top');
+    // wall buys up the tower
+    { const at = (a, k, id, cost) => { const r = ZMT.R - 0.07, x = ZMT.X + Math.cos(a) * r, y = ZMT.Y + Math.sin(a) * r; put('board', x, y, a + Math.PI / 2, { lift: ZMT.L[k] }); const [wx, wy] = W(x, y); Z.buys.push({ id, cost, x: wx, y: wy, nx: -Math.cos(a), ny: -Math.sin(a), z: ZMT.L[k] }); };
+      at(Math.PI * 0.9, 2, 'avtomat', 1200); at(Math.PI * 0.12, 4, 'longarm', 500); at(-Math.PI * 0.12, 3, 'harpoon', 1000); }
   },
   decor(H) {},
 };
@@ -465,13 +708,18 @@ function zmArena() {
 }
 // which room a place is in (and the lantern room, up the tower)
 function zmZoneAt(x, y, z) {
-  const lx = x - FPSC.CX, ly = y - FPSC.CY;
-  for (const k in ZM_ZONES) { const [x0, x1, y0, y1] = ZM_ZONES[k].r; if (lx >= x0 && lx <= x1 && ly >= y0 && ly <= y1) return k === 'tower' && (z || 0) > ZMC.HT - 0.5 ? 'top' : k; }
+  const lx = x - FPSC.CX, ly = y - FPSC.CY, tx = lx - ZMT.X, ty = ly - ZMT.Y;
+  // in the tower: which floor, and which half of it
+  if (Math.hypot(tx, ty) < ZMT.R + 0.2) {
+    let k = 0; for (let i = 1; i < 6; i++) if ((z || 0) >= ZMT.L[i] - 0.6) k = i;
+    return k === 0 ? 'tower' : k === 5 ? 'top' : 'tw' + k + (ty >= 0 ? 'n' : 's');
+  }
+  for (const k in ZM_ZONES) { if (k === 'tower') continue; const [x0, x1, y0, y1] = ZM_ZONES[k].r; if (lx >= x0 && lx <= x1 && ly >= y0 && ly <= y1) return k; }
   return null;
 }
-const zmZoneName = k => k === 'top' ? 'the Lantern Room' : ZM_ZONES[k] ? ZM_ZONES[k].n : '';
+const zmZoneName = k => ZM_TROOMS[k] || (ZM_ZONES[k] ? ZM_ZONES[k].n : '');
 // is this room open to you yet (and so to them)?
-const zmOpen = k => k === 'top' ? ZM.open.has('tower') : ZM.open.has(k);
+const zmOpen = k => ZM.open.has(k);
 
 // ---------- standing, walking and climbing ----------
 // the solids near a place (the index the islands use)
@@ -480,7 +728,10 @@ function zmNear(x, y) { const I = FPS.g.isle; return I.sh.get(Math.floor(x / 6) 
 function zmBlockedAt(x, y, pad, feet) {
   if (Math.hypot(x - FPSC.CX, y - FPSC.CY) > FPSC.R - 1.5) return true;
   for (const s of zmNear(x, y)) {
-    if (s.fl && s.z1 - FPSC.GROUND <= feet + ZMC.STEP) continue;
+    // (only what stands across the height of your body: not a floor above your head, nor one you can step up on,
+    // nor anything below your feet)
+    const bot = s.z0 != null ? s.z0 - FPSC.GROUND : 0, top = s.z1 - FPSC.GROUND;
+    if (bot >= feet + 1.9 || top <= feet + (s.fl ? ZMC.STEP : 0.05)) continue;
     if (fpiDist(s, x, y) < pad) return true;
   }
   return false;
@@ -530,50 +781,78 @@ function zmReloadK() { return ZM.perks.quick ? 0.5 : 1; }
 function zmCanReload() { const w = fpsW(); return w.melee || (ZM.res[FPS.weapon] || 0) > 0; }
 
 // ---------- the grid the drowned find their way by ----------
-// cells half a metre across over the whole station: which can be stood in, at what height; and, from wherever you are,
-// how far each one is from you (walking, round walls and up stairs)
+// Cells half a metre across over the whole station. A cell can have several places to stand, one above another
+// (the ground, a stair tread, each floor of the tower): each is a node, with its height. From wherever you are (all
+// of you, together), how far each node is from the nearest of you, walking round walls and up and down stairs.
 function zmNavBuild() {
-  const S = ZMC.NAV, x0 = FPSC.CX - 46, y0 = FPSC.CY - 23, nx = Math.ceil(92 / S), ny = Math.ceil(51 / S);
-  const fl = new Float32Array(nx * ny), ok = new Uint8Array(nx * ny);
+  const S = ZMC.NAV, x0 = FPSC.CX - 46, y0 = FPSC.CY - 23, nx = Math.ceil(92 / S), ny = Math.ceil(51 / S), nc = nx * ny;
+  const first = new Int32Array(nc + 1), hs = [];
   for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) {
-    const x = x0 + (i + 0.5) * S, y = y0 + (j + 0.5) * S, k = j * nx + i;
-    let f = 0;
-    const near = zmNear(x, y);
+    const x = x0 + (i + 0.5) * S, y = y0 + (j + 0.5) * S, k = j * nx + i, near = zmNear(x, y);
+    first[k] = hs.length;
+    // what you could stand on here: the ground, and the top of every floor under the point
     // (a hair over the edges, so a cell on the line between two treads stands on the higher)
-    for (const s of near) if (s.fl && fpiDist(s, x, y) < 0.06) f = Math.max(f, s.z1 - FPSC.GROUND);
-    let blocked = false;
-    for (const s of near) { if (s.fl && s.z1 - FPSC.GROUND <= f + ZMC.STEP) continue; if (fpiDist(s, x, y) < 0.3) { blocked = true; break; } }
-    fl[k] = f; ok[k] = blocked ? 0 : 1;
+    const cand = [0];
+    for (const s of near) if (s.fl && fpiDist(s, x, y) < 0.06) cand.push(s.z1 - FPSC.GROUND);
+    cand.sort((a, b) => b - a);
+    let last = 1e9;
+    for (const h of cand) {
+      if (last - h < 0.45) continue;   // (treads close together count as one place, the higher)
+      let ok = true;
+      for (const s of near) {
+        const bot = s.z0 != null ? s.z0 - FPSC.GROUND : 0, top = s.z1 - FPSC.GROUND;
+        if (bot >= h + 1.85 || top <= h + (s.fl ? ZMC.STEP : 0.05)) continue;
+        if (fpiDist(s, x, y) < 0.3) { ok = false; break; }
+      }
+      last = h;
+      if (ok) hs.push(h);
+    }
   }
-  ZM.nav = { S, x0, y0, nx, ny, fl, ok, d: new Float32Array(nx * ny).fill(1e9), at: -1, t: 0 };
+  first[nc] = hs.length;
+  const nn = hs.length, cellOf = new Int32Array(nn);
+  for (let k = 0; k < nc; k++) for (let a = first[k]; a < first[k + 1]; a++) cellOf[a] = k;
+  ZM.nav = { S, x0, y0, nx, ny, first, h: Float32Array.from(hs), cellOf, d: new Float32Array(nn).fill(1e9) };
 }
 function zmCell(x, y) {
   const N = ZM.nav, i = Math.floor((x - N.x0) / N.S), j = Math.floor((y - N.y0) / N.S);
   if (i < 0 || j < 0 || i >= N.nx || j >= N.ny) return -1;
   return j * N.nx + i;
 }
-// can you walk straight from cell a to its neighbour b?
-function zmEdge(a, b, di, dj) {
-  const N = ZM.nav;
-  if (!N.ok[b] || Math.abs(N.fl[a] - N.fl[b]) > ZMC.STEP + 0.02) return false;
-  if (di && dj) { const c1 = a + di, c2 = a + dj * N.nx; if (!N.ok[c1] || !N.ok[c2] || Math.abs(N.fl[c1] - N.fl[a]) > ZMC.STEP || Math.abs(N.fl[c2] - N.fl[a]) > ZMC.STEP) return false; }
-  return true;
+// the place in cell c nearest height jz (within reach), or -1
+function zmNodeIn(c, jz, tol) {
+  const N = ZM.nav; if (c < 0) return -1;
+  let best = -1, bd = tol == null ? 0.8 : tol;
+  for (let a = N.first[c]; a < N.first[c + 1]; a++) { const d = Math.abs(N.h[a] - jz); if (d < bd) { bd = d; best = a; } }
+  return best;
+}
+// the place in a neighbouring cell you can walk to from node a, or -1
+function zmStepTo(a, c2) {
+  const N = ZM.nav, h = N.h[a];
+  for (let b = N.first[c2]; b < N.first[c2 + 1]; b++) if (Math.abs(N.h[b] - h) <= ZMC.STEP + 0.02) return b;
+  return -1;
+}
+function zmEdgeTo(a, di, dj) {
+  const N = ZM.nav, c = N.cellOf[a], ci = c % N.nx, cj = (c - ci) / N.nx, i = ci + di, j = cj + dj;
+  if (i < 0 || j < 0 || i >= N.nx || j >= N.ny) return -1;
+  const b = zmStepTo(a, j * N.nx + i); if (b < 0) return -1;
+  if (di && dj && (zmStepTo(a, c + di) < 0 || zmStepTo(a, c + dj * N.nx) < 0)) return -1;
+  return b;
 }
 const ZM_NB = [[1, 0, 1], [-1, 0, 1], [0, 1, 1], [0, -1, 1], [1, 1, 1.414], [1, -1, 1.414], [-1, 1, 1.414], [-1, -1, 1.414]];
-// the cell to count from for someone standing at (x, y, jz), or -1
+// the node to count from for someone standing at (x, y, jz), or -1 (at an edge: the nearest good place at your height)
 function zmNavStart(x, y, jz) {
-  const N = ZM.nav; let s = zmCell(x, y);
-  if (s < 0) return -1;
-  if (!N.ok[s] || Math.abs(N.fl[s] - jz) > 1) {
-    // (standing at an edge: start from the nearest good cell at your height)
-    let best = -1, bd = 1e9; const si = s % N.nx, sj = (s - si) / N.nx;
-    for (let dj = -2; dj <= 2; dj++) for (let di = -2; di <= 2; di++) { const i = si + di, j = sj + dj; if (i < 0 || j < 0 || i >= N.nx || j >= N.ny) continue; const k = j * N.nx + i; if (N.ok[k] && Math.abs(N.fl[k] - jz) < 0.7) { const dd = di * di + dj * dj; if (dd < bd) { bd = dd; best = k; } } }
-    s = best;
+  const N = ZM.nav, c = zmCell(x, y); if (c < 0) return -1;
+  let s = zmNodeIn(c, jz, 0.7);
+  if (s >= 0) return s;
+  const ci = c % N.nx, cj = (c - ci) / N.nx; let bd = 1e9;
+  for (let dj = -2; dj <= 2; dj++) for (let di = -2; di <= 2; di++) {
+    const i = ci + di, j = cj + dj; if (i < 0 || j < 0 || i >= N.nx || j >= N.ny) continue;
+    const a = zmNodeIn(j * N.nx + i, jz, 0.7); if (a < 0) continue;
+    const dd = di * di + dj * dj; if (dd < bd) { bd = dd; s = a; }
   }
   return s;
 }
-// distances from everyone still on their feet, each cell to the nearest of them (Dijkstra over the cells, with a
-// small binary heap)
+// distances from everyone still on their feet, each place to the nearest of them (Dijkstra, with a small binary heap)
 function zmNavFrom(players) {
   const N = ZM.nav, d = N.d, starts = [];
   for (const p of players) { const s = zmNavStart(p.x, p.y, p.jz || 0); if (s >= 0) starts.push(s); }
@@ -581,30 +860,30 @@ function zmNavFrom(players) {
   d.fill(1e9);
   const heap = [];
   const up = i => { while (i > 0) { const p = (i - 1) >> 1; if (d[heap[p]] <= d[heap[i]]) break; [heap[p], heap[i]] = [heap[i], heap[p]]; i = p; } };
-  for (const s of starts) { d[s] = 0; heap.push(s); up(heap.length - 1); }
   const down = i => { for (;;) { const l = i * 2 + 1, r = l + 1; let m = i; if (l < heap.length && d[heap[l]] < d[heap[m]]) m = l; if (r < heap.length && d[heap[r]] < d[heap[m]]) m = r; if (m === i) break; [heap[m], heap[i]] = [heap[i], heap[m]]; i = m; } };
+  for (const s of starts) { d[s] = 0; heap.push(s); up(heap.length - 1); }
   const done = new Uint8Array(d.length);
   while (heap.length) {
     const a = heap[0], last = heap.pop(); if (heap.length) { heap[0] = last; down(0); }
     if (done[a]) continue; done[a] = 1;
-    const ai = a % N.nx, aj = (a - ai) / N.nx;
-    for (const [di, dj, c] of ZM_NB) {
-      const i = ai + di, j = aj + dj; if (i < 0 || j < 0 || i >= N.nx || j >= N.ny) continue;
-      const b = j * N.nx + i; if (done[b] || !zmEdge(a, b, di, dj)) continue;
-      const nd = d[a] + c; if (nd < d[b]) { d[b] = nd; heap.push(b); up(heap.length - 1); }
+    for (const [di, dj, cost] of ZM_NB) {
+      const b = zmEdgeTo(a, di, dj); if (b < 0 || done[b]) continue;
+      const nd = d[a] + cost; if (nd < d[b]) { d[b] = nd; heap.push(b); up(heap.length - 1); }
     }
   }
 }
-// where to head next from (x, y): a point a couple of cells further along the shortest way to you
-function zmNavNext(x, y) {
-  const N = ZM.nav; let c = zmCell(x, y);
-  if (c < 0) return null;
+// how far a place is from the nearest of you, by the walk (1e9: no way there)
+function zmNavDist(x, y, jz) { const a = zmNodeIn(zmCell(x, y), jz || 0, 0.8); return a < 0 ? 1e9 : ZM.nav.d[a]; }
+// where to head next from (x, y) at height jz: a point a couple of cells further along the shortest way to you
+function zmNavNext(x, y, jz) {
+  const N = ZM.nav; let a = zmNodeIn(zmCell(x, y), jz || 0, 0.8);
+  if (a < 0) return null;
   let target = null;
   for (let hop = 0; hop < 3; hop++) {
-    const ci = c % N.nx, cj = (c - ci) / N.nx; let best = -1, bd = N.d[c];
-    for (const [di, dj] of ZM_NB) { const i = ci + di, j = cj + dj; if (i < 0 || j < 0 || i >= N.nx || j >= N.ny) continue; const b = j * N.nx + i; if (N.d[b] < bd && (N.ok[c] ? zmEdge(c, b, di, dj) : N.ok[b])) { bd = N.d[b]; best = b; } }
+    let best = -1, bd = N.d[a];
+    for (const [di, dj] of ZM_NB) { const b = zmEdgeTo(a, di, dj); if (b >= 0 && N.d[b] < bd) { bd = N.d[b]; best = b; } }
     if (best < 0) break;
-    c = best; const bi = c % N.nx, bj = (c - bi) / N.nx; target = [N.x0 + (bi + 0.5) * N.S, N.y0 + (bj + 0.5) * N.S];
+    a = best; const c = N.cellOf[a], bi = c % N.nx, bj = (c - bi) / N.nx; target = [N.x0 + (bi + 0.5) * N.S, N.y0 + (bj + 0.5) * N.S];
   }
   return target;
 }
@@ -618,7 +897,7 @@ function zmReset() {
     open: new Set(['quarters']), zone: 'quarters', zoneT: 4, banner: null, pops: [], fx: [], sparks: [], over: null, earnK: 0, navT: 0,
     box: { at: 0, uses: 0, spins: 0, st: 'idle', t: 0, item: null, cyc: 0, show: 'avtomat', owner: null }, near: null, rebuildT: 0, groanT: 2,
     zc: 0, credit: {}, players: [], downT: 0, ghost: false, revT: 0, revOf: null, boardBy: {}, boardPts: 0,
-    doors: Zd.doors, windows: Zd.windows, buys: Zd.buys, perksAt: Zd.perks, spawns: Zd.spawns,
+    doors: Zd.doors, windows: Zd.windows, buys: Zd.buys, perksAt: Zd.perks, spawns: Zd.spawns, glass: Zd.glass || [],
   });
   for (const w of ZM.windows) { w.boards = 6; w.q = []; w.fall = []; }
 }
@@ -844,7 +1123,7 @@ function zmPickWindow() {
   const N = ZM.nav, list = [];
   for (const w of ZM.windows) {
     if (!zmOpen(w.zone) || w.q.length >= 4) continue;
-    const c = zmCell(w.x - w.nx * 1.0, w.y - w.ny * 1.0), d = c >= 0 ? N.d[c] : 1e9;
+    const d = zmNavDist(w.x - w.nx * 1.0, w.y - w.ny * 1.0, w.z || 0);
     list.push([w, d < 1e8 ? d : 9999]);
   }
   if (!list.length) return null;
@@ -852,15 +1131,26 @@ function zmPickWindow() {
   const pool = list.slice(0, Math.min(list.length, 3));
   return pool[(Math.random() * pool.length) | 0][0];
 }
+// where one comes up for a window: out on open ground in front of it (never inside the tower, never in a wall); for a
+// window up the tower, at the foot of the wall below it, to climb
+function zmSpawnPoint(w) {
+  const tx = -w.ny, ty = w.nx, T = ZM_TC, CX = FPSC.CX, CY = FPSC.CY;
+  if ((w.z || 0) > 0) { const side = (Math.random() - 0.5) * 1.2; return [w.x + w.nx * 1.3 + tx * side, w.y + w.ny * 1.3 + ty * side]; }
+  for (const out of [4 + Math.random() * 2.5, 3.2, 2.4, 1.6]) {
+    const side = (Math.random() - 0.5) * Math.min(3, out * 0.6), x = w.x + w.nx * out + tx * side, y = w.y + w.ny * out + ty * side;
+    if (Math.hypot(x - CX - T[0], y - CY - T[1]) > ZMT.R + 1.4 && !zmBlockedAt(x, y, 0.4, 0)) return [x, y];
+  }
+  return [w.x + w.nx * 1.4, w.y + w.ny * 1.4];
+}
 function zmSpawn() {
   const w = zmPickWindow(); if (!w) return false;
   const r = ZM.round, run = clamp((r - 5) * 0.1, 0, 0.7), jog = clamp((r - 2) * 0.15, 0, 1 - run), u = Math.random();
   const kind = u < run ? 'run' : u < run + jog ? 'jog' : 'walk';
-  const tx = -w.ny, ty = w.nx, out = 4 + Math.random() * 2.5, side = (Math.random() - 0.5) * 3;
+  const [sx, sy] = zmSpawnPoint(w);
   const hp = zmHp(r) * (0.9 + Math.random() * 0.2);
   const zn = ++ZM.zc;
   const z = {
-    drowned: true, zm: true, zn, id: 'z' + zn.toString(36), n: 'a drowned man', x: w.x + w.nx * out + tx * side, y: w.y + w.ny * out + ty * side, jz: 0, fl: 0, zpad: 0.27,
+    drowned: true, zm: true, zn, id: 'z' + zn.toString(36), n: 'a drowned man', x: sx, y: sy, jz: 0, fl: 0, zpad: 0.27,
     hp, max: hp, kind, sp: kind === 'run' ? 5.0 + Math.random() * 0.6 : kind === 'jog' ? 3.2 + Math.random() * 0.4 : 1.55 + Math.random() * 0.35,
     st: 'out', win: w, t: 0, ph: Math.random() * 6, hitT: 0, atk: 0.6, swing: -1, stuck: 0, h: 0, seed: (Math.random() * 1e6) | 0, rise: 1, hist: [],
   };
@@ -886,7 +1176,10 @@ function zmZombies(dt) {
       const dx = ox - z.x, dy = oy - z.y, d = Math.hypot(dx, dy);
       if (d > 0.05) { const s = Math.min(d, step); z.x += dx / d * s; z.y += dy / d * s; z.h = bearingOf(dx, dy); z.walk = true; }
       else { z.walk = false; z.h = bearingOf(-w.nx, -w.ny); }
-      if (k === 0 && d < 0.1) { z.st = 'tear'; z.t = 0; }
+      // (a window up the tower: up the outside of the wall they go, hand over hand)
+      const wz = w.z || 0;
+      if (z.jz < wz) { z.jz = Math.min(wz, z.jz + dt * 2.4); z.scaling = true; z.h = bearingOf(-w.nx, -w.ny); } else z.scaling = false;
+      if (k === 0 && d < 0.1 && z.jz >= wz - 0.01) { z.st = 'tear'; z.t = 0; }
       continue;
     }
     if (z.st === 'tear') {
@@ -901,8 +1194,8 @@ function zmZombies(dt) {
     }
     if (z.st === 'climb') {
       const w = z.win, k = Math.min(1, z.t / 1.0);
-      z.x = w.x + w.nx * 0.95 * (1 - 2 * k); z.y = w.y + w.ny * 0.95 * (1 - 2 * k); z.jz = Math.sin(k * Math.PI) * 1.05;
-      if (k >= 1) { z.st = 'in'; z.jz = 0; z.fl = 0; w.q = w.q.filter(q => q !== z); z.t = 0; z.lx = z.x; z.ly = z.y; }
+      z.x = w.x + w.nx * 0.95 * (1 - 2 * k); z.y = w.y + w.ny * 0.95 * (1 - 2 * k); z.jz = (w.z || 0) + Math.sin(k * Math.PI) * 1.05;
+      if (k >= 1) { z.st = 'in'; z.jz = z.fl = w.z || 0; w.q = w.q.filter(q => q !== z); z.t = 0; z.lx = z.x; z.ly = z.y; }
       continue;
     }
     // inside: after the nearest of you, by the shortest walk
@@ -910,7 +1203,7 @@ function zmZombies(dt) {
     if (!m) { z.walk = false; continue; }
     const dx = m.x - z.x, dy = m.y - z.y, d = Math.hypot(dx, dy), dz = (m.jz || 0) - (z.jz || 0);
     let tx = m.x, ty = m.y;
-    if (!(d < 3 && Math.abs(dz) < 0.8)) { const nx = zmNavNext(z.x, z.y); if (nx) { tx = nx[0]; ty = nx[1]; } }
+    if (!(d < 3 && Math.abs(dz) < 0.8)) { const nx = zmNavNext(z.x, z.y, z.jz); if (nx) { tx = nx[0]; ty = nx[1]; } }
     const hx = tx - z.x, hy = ty - z.y, hl = Math.hypot(hx, hy);
     const near = d < 1.15 && Math.abs(dz) < 1;
     if (hl > 0.05 && !near) {
@@ -1209,12 +1502,12 @@ function zmNearest() {
   };
   for (const b of ZM.buys) consider({ k: 'buy', b }, b.x + b.nx * 0.7, b.y + b.ny * 0.7, 0, 1.6, true);
   for (const p of ZM.perksAt) consider({ k: 'perk', p }, p.x + p.nx * 0.9, p.y + p.ny * 0.9, 0, 1.7, true);
-  for (const d of ZM.doors) if (!d.open) consider({ k: 'door', d }, d.x, d.y, 0, 2.3, false);
+  for (const d of ZM.doors) if (!d.open) consider({ k: 'door', d }, d.x, d.y, d.z || 0, 2.3, false);
   const B = ZM.box, S = ZM.spawns[B.at];
   if (S && (B.st === 'idle' || (B.st === 'offer' && B.owner === m.id))) consider({ k: 'box' }, S.x + S.nx * 0.9, S.y + S.ny * 0.9, S.z - 0.32, 1.8, true);
   // someone down: you can get them up
   if (ZM.net) for (const r of FPS.remote.values()) if (r.down && !r.dead) consider({ k: 'rev', sid: r.id, n: r.n }, r.x, r.y, r.jz || 0, 1.8, false);
-  for (const w of ZM.windows) if (w.boards < 6 && zmOpen(w.zone)) consider({ k: 'win', w }, w.x - w.nx * 0.95, w.y - w.ny * 0.95, 0, 1.9, false);
+  for (const w of ZM.windows) if (w.boards < 6 && zmOpen(w.zone)) consider({ k: 'win', w }, w.x - w.nx * 0.95, w.y - w.ny * 0.95, w.z || 0, 1.9, false);
   ZM.near = best;
   ZM.prompt = best ? zmPrompt(best) : null;
 }
@@ -1226,7 +1519,7 @@ function zmPrompt(o) {
     return { text: `the ${w.n}`, cost: o.b.cost };
   }
   if (o.k === 'perk') { const P = ZM_PERKS[o.p.k]; if (ZM.perks[o.p.k]) return { text: `${P.n}: you've had it` }; if (o.p.k === 'wind' && ZM.windBuys >= 3) return { text: `${P.n}: none left` }; return { text: `${P.n} (${P.what})`, cost: P.cost }; }
-  if (o.k === 'door') { const [a, b] = o.d.zones, to = zmOpen(a) ? b : a; return { text: `${o.d.kind === 'debris' ? 'Clear the wreckage to' : 'Open the door to'} ${zmZoneName(to)}`, cost: o.d.cost }; }
+  if (o.k === 'door') { const [a, b] = o.d.zones, to = zmOpen(a) ? b : a; return { text: `${o.d.kind === 'debris' ? 'Clear the wreckage to' : o.d.kind === 'gate' ? 'Unlock the gate up to' : 'Open the door to'} ${zmZoneName(to)}`, cost: o.d.cost }; }
   if (o.k === 'box') { const B = ZM.box; if (B.st === 'offer') return { text: `Take the ${FPSW[B.item].n}`, free: true }; return { text: 'The wreck chest', cost: ZMC.BOX }; }
   if (o.k === 'win') return { text: (ZM.boardPts || 0) >= ZM_BOARD_CAP ? 'Hold to nail the boards back (no more points for it this round)' : 'Hold to nail the boards back', hold: true };
   if (o.k === 'rev') return { text: `Hold to get ${o.n || 'them'} up${ZM.revT > 0 ? ' ' + '▮'.repeat(Math.ceil(ZM.revT)) : ''}`, hold: true };
@@ -1389,8 +1682,14 @@ function zm3dBuild() {
   // the doors and the wreckage across the ways through
   const wood = z3Lam('#4a3626'), wood2 = z3Lam('#5a4430'), iron = z3Lam('#24262a'), brass = z3Lam('#8a6a2c');
   Z3.doors = ZM.doors.map(d => {
-    const g = new THREE.Group(); g.position.copy(z3v(d.x, d.y, G0)); g.rotation.y = d.ang; grp.add(g);
-    if (d.kind === 'door') {
+    const g = new THREE.Group(); g.position.copy(z3v(d.x, d.y, G0 + (d.z || 0))); g.rotation.y = d.ang; grp.add(g);
+    if (d.kind === 'gate') {
+      // an iron gate across the stair, with a brass lock
+      const bar = new THREE.CylinderGeometry(0.025, 0.025, 2.3, 6);
+      for (let i = 0; i <= 9; i++) { const b = new THREE.Mesh(bar, iron); b.position.set(-d.w / 2 + i * d.w / 9, 1.15, 0); g.add(b); }
+      for (const y of [0.15, 1.2, 2.25]) { const b = new THREE.Mesh(new THREE.BoxGeometry(d.w, 0.06, 0.05), iron); b.position.set(0, y, 0); g.add(b); }
+      const lk = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.18, 0.1), brass); lk.position.set(0, 1.1, 0); g.add(lk);
+    } else if (d.kind === 'door') {
       const n = 5; for (let i = 0; i < n; i++) { const b = new THREE.Mesh(new THREE.BoxGeometry(d.w / n * 0.96, 2.45, 0.12), i % 2 ? wood : wood2); b.position.set(-d.w / 2 + (i + 0.5) * d.w / n, 1.22, 0); g.add(b); }
       for (const y of [0.45, 1.9]) { const b = new THREE.Mesh(new THREE.BoxGeometry(d.w * 0.98, 0.1, 0.16), iron); b.position.set(0, y, 0); g.add(b); }
       const ring = new THREE.Mesh(new THREE.TorusGeometry(0.07, 0.015, 6, 14), brass); ring.position.set(d.w * 0.3, 1.1, 0.1); g.add(ring);
@@ -1407,9 +1706,10 @@ function zm3dBuild() {
   // the boards over each window, outside it
   const boardM = [z3Lam('#6a5236'), z3Lam('#5a4630'), z3Lam('#7a6040')];
   Z3.boards = ZM.windows.map(w => {
-    const g = new THREE.Group(); g.position.copy(z3v(w.x + w.nx * 0.33, w.y + w.ny * 0.33, G0)); grp.add(g);
-    g.rotation.y = w.ny ? 0 : Math.PI / 2;
-    const rnd = seeded(w.id * 131 + 7), list = [], out = w.ny ? -w.ny : w.nx;
+    const g = new THREE.Group(); g.position.copy(z3v(w.x + w.nx * 0.33, w.y + w.ny * 0.33, G0 + (w.z || 0))); grp.add(g);
+    // (turned so its boards run along the wall, and its local z points out of the window)
+    g.rotation.y = Math.atan2(w.nx, -w.ny);
+    const rnd = seeded(w.id * 131 + 7), list = [], out = 1;
     for (let i = 0; i < 6; i++) { const b = new THREE.Mesh(new THREE.BoxGeometry(1.95, 0.17, 0.06), boardM[i % 3]); b.position.set(0, 1.12 + i * 0.2, 0); b.rotation.z = (rnd() - 0.5) * 0.22; g.add(b); list.push({ m: b, y: b.position.y, rz: b.rotation.z }); }
     return { g, list, out };
   });
@@ -1464,6 +1764,55 @@ function zm3dBuild() {
     const L = new THREE.PointLight(0xffd890, 0, 14, 1.4); grp.add(L);
     Z3.beam = { g, outer, core, L };
   }
+  zm3dLantern(grp);
+}
+// the glazed windows of the tower, and the lantern on top: its ring of glass in brass astragals, the gallery rail, the
+// copper dome with its ventilator ball and lightning rod, and the Light itself, a great lens turning on the newel
+// with its two beams sweeping out over the sea
+function zm3dLantern(grp) {
+  const G0 = FPSC.GROUND, L5 = ZMT.L[5], T = ZM_TC, cx = FPSC.CX + T[0], cy = FPSC.CY + T[1];
+  const glassM = new THREE.MeshPhongMaterial({ color: 0x9ab8c8, specular: 0xffffff, shininess: 120, transparent: true, opacity: 0.22, depthWrite: false, side: THREE.DoubleSide });
+  const frameM = z3Lam('#2e5a5a'), brassM = new THREE.MeshPhongMaterial({ color: 0x8a6a2c, specular: 0xb09060, shininess: 60 });
+  for (const w of ZM.glass) {
+    const g = new THREE.Group(); g.position.copy(z3v(w.x, w.y, G0 + w.z0)); g.rotation.y = w.ang; grp.add(g);
+    const h = w.z1 - w.z0, pane = new THREE.Mesh(new THREE.PlaneGeometry(w.w, h), glassM); pane.position.y = h / 2; g.add(pane);
+    for (const x of [-w.w / 2, 0, w.w / 2]) { const b = new THREE.Mesh(new THREE.BoxGeometry(0.06, h, 0.08), frameM); b.position.set(x, h / 2, 0); g.add(b); }
+    for (const y of [0.02, h / 2, h - 0.02]) { const b = new THREE.Mesh(new THREE.BoxGeometry(w.w, 0.06, 0.08), frameM); b.position.set(0, y, 0); g.add(b); }
+    // a box of flowers on the sill
+    const bx = new THREE.Mesh(new THREE.BoxGeometry(w.w * 0.7, 0.18, 0.25), z3Lam('#5a3a24')); bx.position.set(0, 0.09, -0.32); g.add(bx);
+    for (let i = 0; i < 5; i++) { const f = new THREE.Mesh(new THREE.SphereGeometry(0.07, 6, 4), z3Lam(i % 2 ? '#d84050' : '#e8e0d0')); f.position.set(-w.w * 0.3 + i * w.w * 0.15, 0.24, -0.32); g.add(f); }
+  }
+  const top = new THREE.Group(); top.position.copy(z3v(cx, cy, G0 + L5)); grp.add(top);
+  const R = ZMT.GLASS, HG = 4.4;
+  // the glass, and the astragals
+  const ring = new THREE.Mesh(new THREE.CylinderGeometry(R, R, HG, 48, 1, true), glassM); ring.position.y = HG / 2 + 0.05; top.add(ring);
+  for (let i = 0; i < 24; i++) { const a = i / 24 * Math.PI * 2, b = new THREE.Mesh(new THREE.BoxGeometry(0.1, HG, 0.1), brassM); b.position.set(Math.cos(a) * R, HG / 2, -Math.sin(a) * R); top.add(b); }
+  for (const y of [0.05, HG / 2, HG]) { const t = new THREE.Mesh(new THREE.TorusGeometry(R, 0.06, 6, 48), brassM); t.rotation.x = Math.PI / 2; t.position.y = y; top.add(t); }
+  // the cornice and the dome, the ball and the rod
+  const red = z3Lam('#7a2a22'), dark = z3Lam('#22282a');
+  const corn = new THREE.Mesh(new THREE.CylinderGeometry(R + 0.5, R + 0.3, 0.5, 48), dark); corn.position.y = HG + 0.25; top.add(corn);
+  const dome = new THREE.Mesh(new THREE.SphereGeometry(R + 0.4, 40, 12, 0, Math.PI * 2, 0, Math.PI / 2), red); dome.scale.y = 0.42; dome.position.y = HG + 0.5; top.add(dome);
+  const ball = new THREE.Mesh(new THREE.SphereGeometry(0.55, 16, 10), dark); ball.position.y = HG + 0.5 + (R + 0.4) * 0.42 + 0.4; top.add(ball);
+  const rod = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.06, 2.4, 6), brassM); rod.position.y = ball.position.y + 1.4; top.add(rod);
+  // the gallery's rail, outside on the parapet
+  const rail = new THREE.Mesh(new THREE.TorusGeometry(ZMT.R + 0.3, 0.05, 6, 64), dark); rail.rotation.x = Math.PI / 2; rail.position.y = 1.15; top.add(rail);
+  for (let i = 0; i < 48; i++) { const a = i / 48 * Math.PI * 2, b = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.6, 0.05), dark); b.position.set(Math.cos(a) * (ZMT.R + 0.3), 0.85, -Math.sin(a) * (ZMT.R + 0.3)); top.add(b); }
+  // the Light: a pedestal on the newel, a beehive of glass rings in a brass cage, turning
+  const ped = new THREE.Mesh(new THREE.CylinderGeometry(0.7, 0.95, 0.9, 16), brassM); ped.position.y = 0.45; top.add(ped);
+  const lens = new THREE.Group(); lens.position.y = 0.9; top.add(lens);
+  const lensM = new THREE.MeshBasicMaterial({ color: 0xfff0c8, transparent: true, opacity: 0.85 });
+  for (let i = 0; i < 11; i++) { const r = 0.95 - Math.abs(i - 5) * 0.07, t = new THREE.Mesh(new THREE.CylinderGeometry(r, r, 0.17, 24, 1, true), lensM); t.position.y = 0.15 + i * 0.2; lens.add(t); }
+  for (let i = 0; i < 8; i++) { const a = i / 8 * Math.PI * 2, b = new THREE.Mesh(new THREE.BoxGeometry(0.06, 2.3, 0.06), brassM); b.position.set(Math.cos(a) * 1.0, 1.15, Math.sin(a) * 1.0); lens.add(b); }
+  const core = new THREE.Mesh(new THREE.SphereGeometry(0.42, 16, 12), new THREE.MeshBasicMaterial({ color: 0xffffff })); core.position.y = 1.15; lens.add(core);
+  const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: z3Soft('rgba(255,236,180,0.95)', 'rgba(255,220,150,0)'), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false }));
+  glow.scale.setScalar(5); glow.position.y = 1.15; lens.add(glow);
+  // two beams, opposite each other, out of the lens and across the sea
+  const fade = z3Fade([[0, 'rgba(255,240,190,0.5)'], [0.25, 'rgba(255,236,180,0.22)'], [1, 'rgba(255,230,170,0)']]);
+  const bgeo = new THREE.CylinderGeometry(9, 0.9, 140, 24, 1, true); bgeo.translate(0, 70, 0); bgeo.rotateZ(-Math.PI / 2);
+  const beamM = new THREE.MeshBasicMaterial({ map: fade, transparent: true, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending, fog: false });
+  for (const s of [0, Math.PI]) { const b = new THREE.Mesh(bgeo, beamM); b.rotation.y = s; b.position.y = 1.15; lens.add(b); }
+  const L = new THREE.PointLight(0xfff0c8, 2.2, 22, 1.2); L.position.y = 1.4; top.add(L);
+  Z3.lens = { lens, L, beamM };
 }
 // the drowned: one model each (from a pool), coloured for the sea they came out of
 const Z3G = {};
@@ -1532,6 +1881,7 @@ function zmPose(z, M, dt) {
   // arms out in front; tearing at boards; a swing at you
   let ax = -1.35, bx = -1.35;
   if (z.st === 'tear') { ax = -1.6 + Math.sin(t * 9) * 0.5; bx = -1.6 - Math.sin(t * 9) * 0.5; }
+  if (z.scaling) { ax = -2.8 + Math.sin(t * 7) * 0.45; bx = -2.8 - Math.sin(t * 7) * 0.45; M.legs[0].rotation.x = Math.sin(t * 7) * 0.5; M.legs[1].rotation.x = -Math.sin(t * 7) * 0.5; }
   if (z.swing >= 0) { const k = z.swing / 0.6; ax = -2.2 + Math.sin(k * Math.PI) * 1.6; }
   ax += Math.sin(ph * 0.5) * 0.12 * A; bx += Math.sin(ph * 0.5 + 1) * 0.12 * A;
   M.arms[0].rotation.x = ax; M.arms[1].rotation.x = bx;
@@ -1568,11 +1918,11 @@ function zmScene3D() {
   // doors: up into the lintel and gone; wreckage: down into the floor
   ZM.doors.forEach((d, i) => {
     const g3 = Z3.doors[i]; if (!g3) return;
-    if (!d.open) { g3.visible = true; g3.position.y = G0; return; }
+    if (!d.open) { g3.visible = true; g3.position.y = G0 + (d.z || 0); return; }
     d.openT = (d.openT || 0) + dt;
     const k = Math.min(1, d.openT / 0.9);
     g3.visible = k < 1;
-    g3.position.y = G0 + (d.kind === 'debris' ? -k * 2.8 : k * 2.6);
+    g3.position.y = G0 + (d.z || 0) + (d.kind === 'debris' ? -k * 2.8 : k * 2.6);
   });
   // window boards: on, or flying off
   ZM.windows.forEach((w, i) => {
@@ -1621,6 +1971,8 @@ function zmScene3D() {
   });
   for (const o of Z3.grp.children.slice()) if (o.userData.drop && !used.has(o)) Z3.grp.remove(o);
   for (const d of ZM.drops) d.g3.userData.drop = true;
+  // the Light turns, once every twelve seconds, its beams sweeping out over the sea and through the rooms' windows
+  if (Z3.lens) { Z3.lens.lens.rotation.y = reduceMotion ? 0.6 : -g.t * Math.PI * 2 / 12; Z3.lens.L.intensity = 2.0 + (reduceMotion ? 0 : 0.2 * Math.sin(g.t * 3)); }
   // the beam
   const Bm = Z3.beam, on = FPS.beamT > 0 && FPS.weapon === 'fresnel' && !(m.dead > 0);
   Bm.g.visible = on; Bm.L.intensity = on ? 2.4 : 0;
@@ -1706,13 +2058,27 @@ function zmHud() {
   } else if (r > 5) { ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic'; ctx.font = fell(64); ctx.fillText(String(r), 0, -2); }
   ctx.restore();
   // points, over it, with what you've just earned rising off them
-  const py = rb - 74 * rs;
+  let py = rb - 74 * rs;
   ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic'; ctx.font = mono(phone ? 18 : 22); ctx.fillStyle = 'rgba(236,228,207,0.95)';
   ctx.fillText(ZM.pts.toLocaleString('en'), L, py);
-  for (const p of ZM.pops) { ctx.globalAlpha = Math.min(1, p.t * 1.5); ctx.font = mono(phone ? 12 : 14); ctx.fillStyle = p.v >= 60 ? '#ffd88a' : 'rgba(236,228,207,0.9)'; ctx.fillText('+' + p.v, L + 90 + p.dx, py - 8 - (1.1 - p.t) * 40); }
+  for (const p of ZM.pops) { ctx.globalAlpha = Math.min(1, p.t * 1.5); ctx.font = mono(phone ? 12 : 14); ctx.fillStyle = p.v >= 60 ? '#ffd88a' : 'rgba(236,228,207,0.9)'; ctx.fillText('+' + p.v, L + (phone ? 140 : 190) + p.dx * 0.5, py - 8 - (1.1 - p.t) * 40); }
   ctx.globalAlpha = 1;
-  // tonics drunk, over the points
-  let px = L;
+  // your health, over the points: a bar in as many parts as the knocks you can take, filling back up when you heal
+  {
+    const bw = phone ? 120 : 168, bh = phone ? 9 : 11, by = py - (phone ? 30 : 36), n = max, gap = 3, seg = (bw - gap * (n - 1)) / n;
+    const hp = m.dead > 0 ? 0 : clamp(m.hp, 0, n), low = hp <= 1 && !(m.dead > 0);
+    ctx.fillStyle = 'rgba(8,10,14,0.55)'; ctx.fillRect(L - 3, by - 3, bw + 6, bh + 6);
+    for (let i = 0; i < n; i++) {
+      const on = i < hp;
+      ctx.fillStyle = on ? (low ? `rgba(228,${60 + 40 * Math.sin(t * 8)},50,0.95)` : hp < n ? '#e4a04f' : '#7ac46a') : 'rgba(80,70,60,0.6)';
+      ctx.fillRect(L + i * (seg + gap), by, seg, bh);
+    }
+    ctx.font = mono(phone ? 9 : 10); ctx.textAlign = 'left'; ctx.textBaseline = 'bottom'; ctx.fillStyle = 'rgba(236,228,207,0.65)';
+    ctx.fillText(`HEALTH ${Math.ceil(hp)}/${n}`, L, by - 3);
+    ctx.textBaseline = 'alphabetic';
+  }
+  // tonics drunk, over the health
+  let px = L; py -= phone ? 34 : 42;
   for (const k of Object.keys(ZM_PERKS)) {
     if (!ZM.perks[k]) continue;
     const P = ZM_PERKS[k]; ctx.fillStyle = P.c; ctx.beginPath(); ctx.arc(px + 11, py - 36, 11, 0, 6.283); ctx.fill();
