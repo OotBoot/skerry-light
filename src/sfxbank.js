@@ -31,7 +31,12 @@ function sfxPlay(name, o) {
   const now = c.currentTime;
   if (o.gap && SFXB.last[name] != null && now - SFXB.last[name] < o.gap) return true;
   SFXB.last[name] = now;
-  const s = c.createBufferSource(); s.buffer = L[(Math.random() * L.length) | 0];
+  // a take at random, but never the same one twice running
+  SFXB.lastI = SFXB.lastI || {};
+  let i = (Math.random() * L.length) | 0;
+  if (L.length > 1 && i === SFXB.lastI[name]) i = (i + 1 + ((Math.random() * (L.length - 1)) | 0)) % L.length;
+  SFXB.lastI[name] = i;
+  const s = c.createBufferSource(); s.buffer = L[i];
   const vary = o.vary == null ? 0.08 : o.vary;
   s.playbackRate.value = (o.rate || 1) * (1 + (Math.random() - 0.5) * vary);
   const g = c.createGain(); g.gain.value = Math.max(0, o.vol == null ? 1 : o.vol);

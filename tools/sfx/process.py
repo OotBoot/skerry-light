@@ -19,7 +19,7 @@ OUT = os.path.join(ROOT, 'assets', 'sfx')
 LEN = {
     'pepperbox': 1.3, 'blunderbuss': 1.8, 'longarm': 2.0, 'harpoon': 1.4, 'avtomat': 0.55, 'swish': 0.6, 'reload': 1.6,
     'beam': 2.5, 'puntgun': 2.6, 'duckfoot': 1.4, 'explode': 2.2, 'flaregun': 2.0, 'chainshot': 2.0, 'axechop': 0.9,
-    'grapnel': 1.6, 'netmortar': 1.6, 'moan': 2.6, 'snarl': 1.6, 'tear': 1.0, 'board': 1.0, 'hit': 0.6, 'splat': 0.7,
+    'grapnel': 1.6, 'netmortar': 1.6, 'moan': 2.6, 'snarl': 1.6, 'tear': 1.1, 'board': 0.9, 'hit': 0.6, 'splat': 0.7,
     'door': 2.2, 'debris': 2.2, 'chest': 2.2, 'gull': 1.2, 'powerup': 1.8, 'pickup': 1.3, 'drink': 2.2,
     'roundstart': 4.8, 'roundend': 3.8, 'gameover': 5.8, 'heartbeat': 1.2, 'forge': 4.0, 'forgedone': 2.8, 'buy': 1.0,
     'deny': 0.6, 'diver': 3.8, 'slam': 2.2, 'mooncusser': 2.8, 'keelback': 2.8, 'charge': 2.2, 'bell': 2.8,
@@ -35,8 +35,14 @@ SKIP = {'bell', 'bellfar'}
 NOTRIM = LOOPS | {'roundstart', 'roundend', 'gameover', 'foghorn', 'thunder', 'forge', 'mooncusser', 'diver', 'creak'}
 
 
-def read(path):
-    raw = subprocess.run(['ffmpeg', '-v', 'error', '-i', path, '-ac', '1', '-ar', str(SR), '-f', 'f32le', '-'], capture_output=True, check=True).stdout
+# sounds that must stay low (the boards: a deep thud like a knock on a door, nothing high): filtered as they're read
+TONE = {'tear': 'lowpass=f=1400:p=2,lowpass=f=2200,equalizer=f=110:t=q:w=1:g=5',
+        'board': 'lowpass=f=1300:p=2,lowpass=f=2000,equalizer=f=120:t=q:w=1:g=5'}
+
+
+def read(path, name=''):
+    af = ['-af', TONE[name]] if name in TONE else []
+    raw = subprocess.run(['ffmpeg', '-v', 'error', '-i', path, '-ac', '1', '-ar', str(SR)] + af + ['-f', 'f32le', '-'], capture_output=True, check=True).stdout
     return np.frombuffer(raw, dtype=np.float32).copy()
 
 
@@ -58,6 +64,13 @@ def process(name, x):
         i = int(np.argmax(env > peak * 0.12))
         x = x[max(0, i - int(SR * 0.005)):]
     n = int(LEN.get(name, 2.0) * SR)
+    if name in TONE:
+        # one knock only: cut at the first lull (50 ms under a tenth of the peak) after the hit
+        w = int(SR * 0.025); e = np.array([np.sqrt(np.mean(x[i:i + w] ** 2)) for i in range(0, len(x) - w, w)])
+        top = e.max(); j = int(np.argmax(e > top * 0.5))
+        for i in range(j, len(e) - 2):
+            if e[i] < top * 0.1 and e[i + 1] < top * 0.1:
+                n = min(n, (i + 2) * w); break
     if name in LOOPS:
         F = int(SR * 1.2)
         if len(x) < n + F:
@@ -94,7 +107,7 @@ def main(src):
         name, k = m.group(1), int(m.group(2))
         if name == 'test' or name in SKIP:
             continue
-        x, why = process(name, read(os.path.join(src, f)))
+        x, why = process(name, read(os.path.join(src, f), name))
         print(f'{name}_{k}: {why}')
         if x is None:
             continue

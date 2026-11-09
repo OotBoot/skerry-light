@@ -2321,11 +2321,12 @@ function zmSound(k, d, pan, kind) {
     const v = d == null ? 1 : Math.max(0.05, 1 - d / 40), o = { pan: clamp(pan || 0, -1, 1) };
     // (the recordings, where there's one: src/sfxbank.js)
     { const R = { moan: kind === 'run' ? 'snarl' : 'moan', tear: 'tear', board: 'board', hit: 'hit', round: 'roundstart', end: 'roundend', buy: 'buy', no: 'deny', door: 'door', debris: 'debris', open: 'chest', gull: 'gull', drop: 'powerup', take: 'pickup', drink: 'drink', beat: 'heartbeat', over: 'gameover', beam: 'beam' }[k];
-      const VOL = { moan: 0.55, tear: 0.75, board: 0.6, round: 0.9, end: 0.8, buy: 0.6, no: 0.5, gull: 0.5, drop: 0.6, beat: 0.9, beam: 0.3 };
+      const VOL = { moan: 0.55, tear: 0.95, board: 0.85, round: 0.9, end: 0.8, buy: 0.6, no: 0.5, gull: 0.5, drop: 0.6, beat: 0.9, beam: 0.3 };
       if (R && sfxPlay(R, { vol: (VOL[k] || 0.85) * v, pan: o.pan, gap: k === 'beam' ? 1.1 : 0, vary: k === 'moan' ? 0.2 : 0.08 })) return; }
     if (k === 'moan') { const f = kind === 'run' ? 260 : 170 + Math.random() * 60; noise('bandpass', f, 6, 0.12, 0.22 * v, 0.7, Object.assign({ to: f * 0.7 }, o)); tone(f * 0.5, 'sawtooth', 0.1, 0.05 * v, 0.6, Object.assign({ to: f * 0.35 }, o)); }
-    else if (k === 'tear') { noise('bandpass', 700, 2, 0.003, 0.3 * v, 0.18); noise('lowpass', 300, 1, 0.02, 0.2 * v, 0.3, { delay: 0.12 }); }
-    else if (k === 'board') { noise('bandpass', 1400, 3, 0.002, 0.25, 0.08); tone(520, 'square', 0.001, 0.05, 0.05); tone(980, 'triangle', 0.001, 0.04, 0.12, { delay: 0.05 }); }
+    // (the boards: a deep knock, like a fist on a door)
+    else if (k === 'tear') { tone(95, 'sine', 0.002, 0.4 * v, 0.28, Object.assign({ to: 55 }, o)); noise('lowpass', 420, 1, 0.002, 0.3 * v, 0.16, o); }
+    else if (k === 'board') { tone(110, 'sine', 0.002, 0.38, 0.22, { to: 65 }); noise('lowpass', 480, 1, 0.002, 0.28, 0.12); }
     else if (k === 'hit') { noise('lowpass', 500, 1, 0.004, 0.4, 0.25); tone(90, 'sine', 0.005, 0.25, 0.2, { to: 50 }); }
     else if (k === 'round') { sfxBellFar(0, 0.8); tone(110, 'sine', 0.3, 0.12, 2.4, { to: 82 }); }
     else if (k === 'end') { for (let i = 0; i < 3; i++) tone(392 - i * 49, 'triangle', 0.01, 0.12, 0.9, { delay: i * 0.45 }); }
