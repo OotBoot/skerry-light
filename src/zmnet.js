@@ -294,6 +294,7 @@ function znHostSend() {
   z.dr = ZM.drops.map(d => [d.id, d.k, Math.round((d.x - CX) * 10), Math.round((d.y - CY) * 10), Math.round(d.z * 10), Math.round(d.t)]);
   z.cr = ZM.credit;
   z.ev = ZN.ev;
+  if (typeof zbHostSend === 'function') zbHostSend(z);   // [boss] the Diver's strength and his blow (src/zmboss.js)
   znSend(z);
 }
 
@@ -400,6 +401,7 @@ function znApply(hz) {
   }
   for (const z of ZM.z) if (!have.has(z.zn) && !(z.dead && z.deadT < 2.4)) { if (z.mdl) zmFreeModel(z); z.remove = true; }
   ZM.z = ZM.z.filter(z => !z.remove); FPS.drowned = ZM.z;
+  if (typeof zbApply === 'function') zbApply(hz);   // [boss] the Diver, and his blows landing on me
   // salvage
   if (Array.isArray(hz.dr)) {
     const keep = [];

@@ -764,7 +764,7 @@ function zmCrowd(m, x, y) {
   for (const z of ZM.z) {
     if (z.dead || z.st !== 'in' || Math.abs((z.jz || 0) - (m.jz || 0)) > 1.2) continue;
     const d = Math.hypot(z.x - x, z.y - y);
-    if (d < 0.7 && d < Math.hypot(z.x - m.x, z.y - m.y) - 0.001) return true;
+    if (d < (z.boss ? 1.3 : 0.7) && d < Math.hypot(z.x - m.x, z.y - m.y) - 0.001) return true;   // [boss] he's broader
   }
   return false;
 }
@@ -1099,6 +1099,7 @@ function zmRounds(dt) {
     return;
   }
   // round on: bring them up, a few at a time
+  if (typeof zbRounds === 'function') zbRounds(dt);   // [boss] the Diver, in his rounds (src/zmboss.js)
   const alive = ZM.z.filter(z => !z.dead).length, cap = Math.min(ZMC.ALIVE, 6 + ZM.round * 2);
   ZM.spawnT -= dt;
   if (ZM.left > 0 && alive < cap && ZM.spawnT <= 0) {
@@ -1177,6 +1178,7 @@ function zmZombies(dt) {
     if (z.hitT > 0) z.hitT -= dt;
     z.t += dt;
     if (z.dead) { z.deadT = (z.deadT || 0) + dt; continue; }
+    if (z.boss && typeof zbTick === 'function') { zbTick(z, dt, nearest); continue; }   // [boss] he goes his own way (src/zmboss.js)
     const step = z.sp * dt;
     if (z.st === 'out') {
       // across the yard (or up the beach) to the window, waiting behind any already at it
@@ -1289,7 +1291,7 @@ function zmHurt(d, dmg, head, code, by, how) {
   if (typeof zmpDmg === 'function') dmg = zmpDmg(dmg, code, by);   // [pap] reforged weapons hit harder (the shooter's side)
   if (ZM.net === 'client') { zmnHit(d, dmg, head, code, how); return; }
   const k = ZM_DMG[code] == null ? 1 : ZM_DMG[code];
-  d.hp -= ZM.insta > 0 ? 1e9 : dmg * k;
+  d.hp -= d.boss && typeof zbHurtK === 'function' ? zbHurtK(d, dmg * k, how) : ZM.insta > 0 ? 1e9 : dmg * k;   // [boss] no one-hit kills on him
   if (d.hp <= 0) { zmKill(d, head, code, how, by); if (how === 'burn') zmChain(d, 2, by); } else zmPoints(10, false, by);
 }
 function zmKill(d, head, code, how, by) {
@@ -1301,6 +1303,7 @@ function zmKill(d, head, code, how, by) {
   if (by && by !== FPS.me.id) { const c = ZM.credit[by] = ZM.credit[by] || [0, 0, 0]; c[1]++; if (head) c[2]++; }
   else if (how !== 'flash' || !ZM.net) { ZM.kills++; if (head) ZM.heads++; zmEarnKill(); }
   zmMaybeDrop(d, how);
+  if (d.boss && typeof zbKilled === 'function') zbKilled(d, how, by);   // [boss] his reward and his salvage
 }
 // crates (as for Wreckers' Night, every third kill here)
 function zmEarnKill() {
@@ -1431,7 +1434,7 @@ function zmTake(k, heard) {
   else if (k === 'spot') { if (!heard) ZM.insta = 30; fpsFeed('The Black Spot: one hit kills, for thirty seconds.'); }
   else if (heard) { FPS.flash = 0.6; fpsFeed('A Lamp Flash: every one of them burned where they stood.'); }
   else if (k === 'flash') {
-    let n = 0; for (const z of ZM.z) if (!z.dead) { zmKill(z, false, '', 'flash'); z.burn = true; n++; }
+    let n = 0; for (const z of ZM.z) if (!z.dead) { if (z.boss && typeof zbFlash === 'function') { zbFlash(z); continue; } zmKill(z, false, '', 'flash'); z.burn = true; n++; }   // [boss] only scorched
     zmPoints(400, true); for (const h of ZM.hum) if (h[0] !== FPS.me.id) zmPoints(400, true, h[0]);
     FPS.flash = 0.6; fpsFeed(n ? `A Lamp Flash: ${n} of them burned where they stood.` : 'A Lamp Flash.');
   }
@@ -1850,6 +1853,7 @@ function z3Geo() {
 }
 const ZM_COATS = ['#3a4a50', '#4a3a30', '#2e3a44', '#4a4a40', '#3a2e2e', '#5a5040', '#2a3530'];
 function zmModel(z) {
+  if (z.boss && typeof zbModel === 'function') return zbModel(z);   // [boss] a model of his own (src/zmboss.js)
   let M = Z3.pool.find(p => !p.used);
   if (!M) {
     const Q = z3Geo(), root = new THREE.Group(), hips = new THREE.Group(); root.add(hips); hips.position.y = 0.95;
@@ -1880,6 +1884,7 @@ function zmModel(z) {
 }
 function zmFreeModel(z) { if (z.mdl) { z.mdl.used = false; z.mdl.root.visible = false; z.mdl = null; } }
 function zmPose(z, M, dt) {
+  if (z.boss && typeof zbPose === 'function') return zbPose(z, M, dt);   // [boss]
   const G0 = FPSC.GROUND;
   M.root.position.copy(z3v(z.x, z.y, G0 + (z.jz || 0)));
   M.root.rotation.y = -z.h;
@@ -2128,6 +2133,7 @@ function zmHud() {
   // the feed, top right
   ctx.textAlign = 'right'; ctx.textBaseline = 'top'; ctx.font = mono(phone ? 10 : 12);
   FPS.feed.slice(phone ? -2 : -5).forEach((f, i) => { ctx.fillStyle = `rgba(236,228,207,${Math.min(1, f.t) * 0.85})`; ctx.fillText(f.text, R, feedY + i * (phone ? 13 : 17), W * (phone ? 0.5 : 0.45)); });
+  if (typeof zbHud === 'function') zbHud(phone, top);   // [boss] his strength, top middle
   // the room you've come into
   if (ZM.zoneT > 0) { ctx.textAlign = 'center'; ctx.textBaseline = 'top'; ctx.font = fell(phone ? 16 : 22); ctx.fillStyle = `rgba(236,228,207,${Math.min(1, ZM.zoneT) * 0.8})`; const nm = zmZoneName(ZM.zone); ctx.fillText(nm.charAt(0).toUpperCase() + nm.slice(1), cx, phone ? top + 30 : 18); }
   // a round beginning, salvage taken

@@ -429,10 +429,11 @@ function fpsRay(x, y, z, h, p, skipId, targets, range) {
   if (!targets) { targets = []; for (const o of fpsEveryone()) if (!(o.dead > 0)) targets.push(o); for (const d of FPS.drowned) targets.push(d); }
   for (const o of targets) {
     if (o.id === skipId) continue;
-    const t = circle(o.x, o.y, FPSC.BODY); if (t == null || t > best.t) continue;
+    // (a body can be bigger than most: rad, tall and headZ, for the Lighthouse's Diver)
+    const t = circle(o.x, o.y, o.rad || FPSC.BODY); if (t == null || t > best.t) continue;
     const hz = z + tp * t - FPSC.GROUND - (o.jz || 0);
-    if (hz < 0 || hz > FPSC.TALL + 0.1) continue;
-    best = { t, kind: 'body', who: o, head: hz > 1.5 };
+    if (hz < 0 || hz > (o.tall || FPSC.TALL) + 0.1) continue;
+    best = { t, kind: 'body', who: o, head: hz > (o.headZ || 1.5) };
   }
   best.x = x + sx * best.t; best.y = y + sy * best.t; best.z = z + tp * best.t;
   return best;
