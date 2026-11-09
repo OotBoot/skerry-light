@@ -17120,7 +17120,7 @@ Object.assign(FPI_K, {
   // a plinth where the wreck chest can stand (base: the floor it stands on)
   plinth: {
     col: FPI_C.stone3,
-    sol(p) { return [fpiBox(p, 0, 0, 0.85, 0.48, (p.base || 0) + 0.32)]; },
+    sol(p) { return [fpiBox(p, 0, 0, 0.85, 0.48, (p.base || 0) + 0.32, p.base ? { z0: p.base - 0.05 } : undefined)]; },   // (up the tower: only as tall as itself, not a column down through the floors below)
     b3(p, A) {
       const b = p.base || 0;
       A.box('#5a5650', 0, 0, b - 0.1, 1.7, 0.96, 0.42); A.box('#6a665e', 0, 0, b + 0.26, 1.78, 1.02, 0.06);
@@ -17146,29 +17146,45 @@ Object.assign(FPI_K, {
 
 // the tower's own: its curved wall in pieces, floors, the spiral's treads, railings, the newel, glass, and things
 // that make it a home (plants, a telescope, the clockwork that turns the lens)
-const ZM_TOWER_BANDS = [[7.4, 9.6], [16.4, 18.6]];   // the red bands round the outside
+// The tower's outside is one smooth skin (zm3dTower), whitewashed, a little wider at the foot than under the gallery;
+// the wall pieces draw only their inner half (the plaster inside), so their flat faces never show through it. Its
+// radius at height z (r), the granite plinth round its foot, the red band under the gallery, and the half-angle
+// of a window's opening in it (a little over half a wall piece: neat, deep-set openings)
+const ZM_SKIN = { RB: 10.95, RT: 10.5, Z0: 0.95, Z1: 24.3, PL: 11.12, PZ: 0.8, BAND: [22.8, 23.95], HA: 0.56 * Math.PI / ZMT.N, IN: 0.3 };
+ZM_SKIN.r = z => { const t = clamp((z - ZM_SKIN.Z0) / (ZM_SKIN.Z1 - ZM_SKIN.Z0), 0, 1); return ZM_SKIN.RT + (ZM_SKIN.RB - ZM_SKIN.RT) * Math.pow(1 - t, 1.2); };
 Object.assign(FPI_K, {
   // a piece of the tower's wall (or any wall standing on a floor), from z0 to z1: whitewashed, with a skirting and a
-  // painted rail inside on each floor it crosses, and the red bands outside
+  // painted rail inside on each floor it crosses. (One of the ring round the tower draws only its inner half, and
+  // nothing above the gallery's floor, where the gallery's iron rail stands on it: the skin is its outside)
   zwall: {
     noShadow: true, col: '#d8d2c0',
     sol(p) { return [fpiBox(p, 0, 0, p.len / 2, p.th / 2, p.z1, { z0: p.z0, col: '#d8d2c0' })]; },
     b3(p, A) {
-      A.box(p.col || '#d8d2c0', 0, 0, p.z0, p.len, p.th, p.z1 - p.z0);
-      if (p.ring) {
-        for (const [b0, b1] of ZM_TOWER_BANDS) { const a = Math.max(b0, p.z0), b = Math.min(b1, p.z1); if (b > a) A.box('#9a2a22', 0, -(p.th / 2 + 0.02), a, p.len * 1.01, 0.04, b - a); }
-        for (const L of ZMT.L) if (L >= p.z0 && L < p.z1 && L < 25) { A.box('#3a3228', 0, p.th / 2 + 0.02, L, p.len * 1.01, 0.04, 0.22); A.box('#3e6a6a', 0, p.th / 2 + 0.02, L + 1.0, p.len * 1.01, 0.04, 0.07); }
-      }
+      if (!p.ring) { A.box(p.col || '#d8d2c0', 0, 0, p.z0, p.len, p.th, p.z1 - p.z0); return; }
+      const z1 = Math.min(p.z1, ZMT.L[5]), ti = ZM_SKIN.IN;
+      if (z1 > p.z0) A.box(p.col || '#d8d2c0', 0, (p.th - ti) / 2, p.z0, p.len, ti, z1 - p.z0);
+      if (p.jamb) return;
+      for (const L of ZMT.L) if (L >= p.z0 && L < z1 && L < 25) { A.box('#3a3228', 0, p.th / 2 + 0.02, L, p.len * 1.01, 0.04, 0.22); A.box('#3e6a6a', 0, p.th / 2 + 0.02, L + 1.0, p.len * 1.01, 0.04, 0.07); }
     },
   },
+  // the plaster either side of a window up the tower, where the skin's opening is narrower than the wall piece's:
+  // drawn as the wall, but nothing solid (the window keeps its own width for the drowned and its boards)
+  zjamb: { noShadow: true, sol() { return []; }, b3(p, A) { FPI_K.zwall.b3(p, A); } },
   // a floor of the tower: boards on joists, whitewashed underneath (the ceiling of the floor below)
   slab: {
     noShadow: true,
     sol(p) { return [fpiBox(p, 0, 0, p.w / 2, p.d / 2, p.top, { z0: p.top - 0.3, fl: true, col: '#6a5440' })]; },
     b3(p, A) {
-      A.box('#d4cebc', 0, 0, p.top - 0.32, p.w, p.d, 0.22);
       const n = Math.max(1, Math.round(p.d / 0.25));
-      for (let i = 0; i < n; i++) A.box(ZMP.boards[i % 3], 0, -p.d / 2 + (i + 0.5) * p.d / n, p.top - 0.1, p.w, p.d / n * 0.95, 0.1);
+      // (in the tower, each board is cut to the circle at its far edge, so no corner of the floor pokes out through the
+      // skin: the strips' rectangles reach out past the wall, the boards stop inside it)
+      for (let i = 0; i < n; i++) {
+        const v = -p.d / 2 + (i + 0.5) * p.d / n;
+        let u0 = -p.w / 2, u1 = p.w / 2;
+        if (p.clip) { const ya = p.cy + v - p.d / n / 2, yb = p.cy + v + p.d / n / 2, ym = Math.max(Math.abs(ya), Math.abs(yb)), xl = Math.sqrt(Math.max(0, p.clip * p.clip - ym * ym)); u0 = Math.max(u0, -xl - p.cx); u1 = Math.min(u1, xl - p.cx); if (u1 - u0 < 0.02) continue; }
+        A.box('#d4cebc', (u0 + u1) / 2, v, p.top - 0.32, u1 - u0, p.d / n, 0.22);
+        A.box(ZMP.boards[i % 3], (u0 + u1) / 2, v, p.top - 0.1, u1 - u0, p.d / n * 0.95, 0.1);
+      }
     },
   },
   // a tread of the spiral stair, and (except where the floors are) its iron rail on the outside
@@ -17545,11 +17561,12 @@ FPI_GEN.light = {
     // ---------- the tower ----------
     const TX = ZMT.X, TY = ZMT.Y, RT = ZMT.R, L5 = ZMT.L[5], TW = (rx, ry) => [TX + rx, TY + ry];
     const tput = (k, rx, ry, ang, o) => put(k, TX + rx, TY + ry, ang || 0, o || {});
-    Z.glass = []; Z.tower = { x: OX + TX, y: OY + TY, r: RT, L: ZMT.L.slice() };
+    Z.glass = [];
     // its wall: thirty-two pieces round, one band to each floor, with windows; the door at the foot onto the passage
     // (z: zombie windows, with boards; g: glazed windows; a: the arch)
     const OPEN = { 0: { 8: 'a', 0: 'z', 16: 'z', 24: 'g', 4: 'g', 12: 'g', 20: 'g', 28: 'g' },
       1: { 4: 'z', 12: 'g', 20: 'g', 28: 'z' }, 2: { 4: 'g', 12: 'z', 20: 'z', 28: 'g' }, 3: { 4: 'z', 12: 'g', 20: 'g', 28: 'z' }, 4: { 4: 'g', 12: 'z', 20: 'z', 28: 'g' } };
+    Z.tower = { x: OX + TX, y: OY + TY, r: RT, L: ZMT.L.slice(), open: OPEN };   // (the skin is cut to OPEN)
     const RC = RT + ZMT.TH / 2, SEG = 2 * RC * Math.sin(Math.PI / ZMT.N) * 1.04;
     for (let i = 0; i < ZMT.N; i++) {
       const a = i / ZMT.N * Math.PI * 2, ca = Math.cos(a), sa = Math.sin(a), ang = a + Math.PI / 2, px = TX + ca * RC, py = TY + sa * RC;
@@ -17559,8 +17576,11 @@ FPI_GEN.light = {
         if (!o) { piece(z0, z1); continue; }
         if (o === 'a') { piece(Lk + 2.9, z1); continue; }
         piece(z0, Lk + 1.0); piece(Lk + 2.35, z1);
+        // (the plaster either side of the skin's narrower opening)
+        const hw = (RC - ZMT.TH / 2) * Math.tan(ZM_SKIN.HA), jl = SEG / 2 - hw;
+        for (const s of [-1, 1]) put('zjamb', px - sa * s * (hw + jl / 2), py + ca * s * (hw + jl / 2), ang, { len: jl, th: ZMT.TH, z0: Lk + 1.0, z1: Lk + 2.35, ring: true, jamb: true });
         const zone = k === 0 ? 'tower' : 'tw' + k + (sa >= 0 ? 'n' : 's');
-        if (o === 'z') Z.windows.push({ x: OX + px, y: OY + py, nx: ca, ny: sa, zone, z: Lk, boards: 6, id: Z.windows.length, q: [], hw: SEG / 2, th: ZMT.TH / 2 });
+        if (o === 'z') Z.windows.push({ x: OX + px, y: OY + py, nx: ca, ny: sa, zone, z: Lk, boards: 6, id: Z.windows.length, q: [], hw: SEG / 2, th: ZMT.TH / 2, tw: true });
         else Z.glass.push({ x: OX + px, y: OY + py, ang, w: SEG * 0.92, z0: Lk + 1.0, z1: Lk + 2.35, frame: true });
       }
     }
@@ -17574,7 +17594,7 @@ FPI_GEN.light = {
       for (const [y0, y1] of strips) {
         const ym = Math.min(Math.abs(y0), Math.abs(y1)) * (y0 < 0 && y1 > 0 ? 0 : 1), xm = Math.sqrt(Math.max(0, (RT + 0.25) ** 2 - ym * ym));
         const pieces = y0 >= -HO && y1 <= HO ? [[-xm, -HO], [HO, xm]] : [[-xm, xm]];
-        for (const [x0, x1] of pieces) if (x1 - x0 > 0.2) tput('slab', (x0 + x1) / 2, (y0 + y1) / 2, 0, { w: x1 - x0, d: y1 - y0, top });
+        for (const [x0, x1] of pieces) if (x1 - x0 > 0.2) tput('slab', (x0 + x1) / 2, (y0 + y1) / 2, 0, { w: x1 - x0, d: y1 - y0, top, clip: RT + 0.3, cx: (x0 + x1) / 2, cy: (y0 + y1) / 2 });
       }
       // the railing round the stairwell, open on the north side where the stair comes off
       tput('zrail', 0, -HO, 0, { w: 2 * HO, base: top });
@@ -17600,8 +17620,8 @@ FPI_GEN.light = {
     // each floor's two rooms: a wall across from the stairwell to the tower wall on each side, a door in the east one
     for (let k = 1; k <= 4; k++) {
       const Lk = ZMT.L[k], hh = ZMT.L[k + 1] - 0.3 - Lk;
-      wall(TX + HO + 0.1, TY, TX + RT + 0.2, TY, { mat: 'plaster', col2: '#d8d2c0', hh, lift: Lk }, [{ at: TX + 7, k: 'door', cost: 750, z: ['tw' + k + 'n', 'tw' + k + 's'] }]);
-      wall(TX - RT - 0.2, TY, TX - HO - 0.1, TY, { mat: 'plaster', col2: '#d8d2c0', hh, lift: Lk });
+      wall(TX + HO + 0.1, TY, TX + RT + 0.05, TY, { mat: 'plaster', col2: '#d8d2c0', hh, lift: Lk }, [{ at: TX + 7, k: 'door', cost: 750, z: ['tw' + k + 'n', 'tw' + k + 's'] }]);
+      wall(TX - RT - 0.05, TY, TX - HO - 0.1, TY, { mat: 'plaster', col2: '#d8d2c0', hh, lift: Lk });
     }
     // the lantern: a ring of glass on the top floor, with a door east and west onto the gallery outside
     const GR = ZMT.GLASS, NG = 24;
@@ -17626,14 +17646,14 @@ FPI_GEN.light = {
       put('bed', sx * 12.6, 13.25, 0, { w: 3.4, d: 0.7, flowers: sx > 0 ? '#f0d060' : '#e8e0d0' });
       put('bed', sx * 12.8, -8.8, 0, { w: 2.6, d: 0.7, flowers: '#d84050' });
     }
-    put('washline', 4.2, 9.6, 0.35, { len: 4.2 });
+    put('washline', 9.0, 11.4, -0.25, { len: 4.2 });   // (out in the yard, clear of the tower's foot)
     // round the foot of the tower, ivy and thrift
-    for (let i = 0; i < 14; i++) { const a = i / 14 * Math.PI * 2 + 0.2; if (Math.abs(Math.sin(a) - 1) < 0.25) continue; put('bed', ZMT.X + Math.cos(a) * (ZMT.R + 0.9), ZMT.Y + Math.sin(a) * (ZMT.R + 0.9), a + Math.PI / 2, { w: 2.6, d: 0.55, flowers: i % 3 ? '#e88aa8' : '#e8e0d0' }); }
+    for (let i = 0; i < 14; i++) { const a = i / 14 * Math.PI * 2 + 0.2; if (Math.abs(Math.sin(a) - 1) < 0.25 || Math.sin(a) < -0.8) continue; put('bed', ZMT.X + Math.cos(a) * (ZM_SKIN.PL + 0.4), ZMT.Y + Math.sin(a) * (ZM_SKIN.PL + 0.4), a + Math.PI / 2, { w: 2.6, d: 0.55, flowers: i % 3 ? '#e88aa8' : '#e8e0d0' }); }
     // grass in the yards, and round the station outside
     { const rr = seeded(0x5ea9); let n = 0;
       for (let t = 0; t < 2400 && n < 420; t++) {
         const x = (rr() - 0.5) * 120, y = (rr() - 0.5) * 90 - 0;
-        const inYard = Math.abs(x) > 10.9 && Math.abs(x) < 15.7 && y > -9.2 && y < 13.7, inTowerYard = Math.abs(x) < 15.7 && y > -9.2 && y < 13.7 && Math.hypot(x - ZMT.X, y - ZMT.Y) > ZMT.R + 0.7 && Math.abs(x) > 2.8;
+        const inYard = Math.abs(x) > 10.9 && Math.abs(x) < 15.7 && y > -9.2 && y < 13.7, inTowerYard = Math.abs(x) < 15.7 && y > -9.2 && y < 13.7 && Math.hypot(x - ZMT.X, y - ZMT.Y) > ZM_SKIN.PL + 0.2 && Math.abs(x) > 2.8;
         const outside = (x < -44.5 || x > 44.5 || y < -21.5 || y > 26.5) && Math.hypot(x, y) < FPSC.R - 4 && y > ZM_SHORE(x) + 0.6 && !(Math.abs(x) < 21.6 && y < -20.8);
         if (!(inYard || inTowerYard || outside)) continue;
         H.decor('tuft', OX + x, OY + y, { s: 0.7 + rr() * 0.8, c: rr() < 0.5 ? '#4e6a38' : '#5e7040' }); n++;
@@ -19138,6 +19158,14 @@ function zmSound(k, d, pan, kind) {
 const Z3 = { grp: null, key: '', pool: [], doors: [], boards: [], chest: null, wpn: {}, drops: [], beam: null };
 const z3v = (x, y, z) => new THREE.Vector3(x, z, -y);
 // (darkened for the night, as the station's own props are)
+// several geometries as one (positions and normals; for one material)
+function z3Merge(list) {
+  if (!list.length) return null;
+  const P = [], Nn = [];
+  for (const g0 of list) { const g1 = g0.index ? g0.toNonIndexed() : g0; P.push(...g1.attributes.position.array); Nn.push(...g1.attributes.normal.array); if (g1 !== g0) g1.dispose(); g0.dispose(); }
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(P, 3)); g.setAttribute('normal', new THREE.Float32BufferAttribute(Nn, 3)); g.computeBoundingSphere();
+  return g;
+}
 function z3Lam(c, extra) { const m = new THREE.MeshLambertMaterial(Object.assign({ color: c }, extra || {})); m.color.multiplyScalar(0.62); return m; }
 function z3Soft(inner, outer) {
   const c = document.createElement('canvas'); c.width = c.height = 64;
@@ -19214,7 +19242,7 @@ function zm3dBuild() {
     g.rotation.y = Math.atan2(w.nx, -w.ny);
     const rnd = seeded(w.id * 131 + 7), list = [], out = 1;
     if (w.sea) return { g, list, out };
-    for (let i = 0; i < 6; i++) { const b = new THREE.Mesh(new THREE.BoxGeometry(1.95, 0.17, 0.06), boardM[i % 3]); b.position.set(0, 1.12 + i * 0.2, 0); b.rotation.z = (rnd() - 0.5) * 0.22; g.add(b); list.push({ m: b, y: b.position.y, rz: b.rotation.z }); }
+    for (let i = 0; i < 6; i++) { const b = new THREE.Mesh(new THREE.BoxGeometry(w.tw ? 1.32 : 1.95, 0.17, 0.06), boardM[i % 3]); b.position.set(0, 1.12 + i * 0.2, 0); b.rotation.z = (rnd() - 0.5) * 0.22; g.add(b); list.push({ m: b, y: b.position.y, rz: b.rotation.z }); }
     return { g, list, out };
   });
   // weapons on the walls, and their prices chalked under them
@@ -19269,6 +19297,7 @@ function zm3dBuild() {
     Z3.beam = { g, outer, core, L };
   }
   if (typeof ze3dBuild === 'function') ze3dBuild(grp);   // [egg hook] src/zmegg.js
+  zm3dTower(grp);
   zm3dLantern(grp);
   zm3dWater(grp);
 }
@@ -19312,6 +19341,136 @@ function zm3dWater(grp) {
   const m = new THREE.Mesh(geo, mat); m.renderOrder = 0; grp.add(m);
   Z3.water = m;
 }
+// The tower from outside: one smooth whitewashed skin, wider at the foot and drawing in towards the gallery, on a
+// granite plinth; a red band under the gallery; the openings cut neat and deep, with granite sills, and the doorway
+// in a granite surround; at the top a corbel flaring out under the gallery's black deck. All one mesh (and the
+// gallery's railing another), built in world space; quads are wound to face their normals, so it's drawn one-sided
+function zm3dTower(grp) {
+  const Z = FPS.g.isle.zm; if (!Z || !Z.tower) return;
+  const G0 = FPSC.GROUND, cx = Z.tower.x, cy = Z.tower.y, S = ZM_SKIN, N = ZMT.N, DA = Math.PI / N, OPEN = Z.tower.open || {};
+  const RIN = ZMT.R, L = ZMT.L, pos = [], nor = [], col = [];
+  const C = (h, k) => { const c = new THREE.Color(h); return [c.r * k, c.g * k, c.b * k]; };
+  const WHITE = C('#f6f1e6', 0.86), RED = C('#b02c22', 0.62), GRAN = C('#62656a', 0.5), GRAN2 = C('#4a4c50', 0.5), DECK = C('#24282b', 0.6), REV = C('#e8e2d4', 0.78);
+  const P = (a, r, h) => [cx + Math.cos(a) * r, cy + Math.sin(a) * r, h];
+  // a quad from four world points (x, y, h), its normal (world), a colour or four; turned to face its normal
+  const quad = (q, n, c, shade) => {
+    const t = q.map(([x, y, h]) => [x, G0 + h, -y]), nn = [n[0], n[2], -n[1]];
+    const ux = t[1][0] - t[0][0], uy = t[1][1] - t[0][1], uz = t[1][2] - t[0][2], vx = t[2][0] - t[0][0], vy = t[2][1] - t[0][1], vz = t[2][2] - t[0][2];
+    const fx = uy * vz - uz * vy, fy = uz * vx - ux * vz, fz = ux * vy - uy * vx, flip = fx * nn[0] + fy * nn[1] + fz * nn[2] < 0;
+    const order = flip ? [0, 2, 1, 0, 3, 2] : [0, 1, 2, 0, 2, 3];
+    for (const i of order) {
+      pos.push(...t[i]);
+      const ni = Array.isArray(n[0]) ? [n[i][0], n[i][2], -n[i][1]] : nn; nor.push(...ni);
+      const ci = Array.isArray(c[0]) ? c[i] : c, k = shade ? shade(q[i]) : 1; col.push(ci[0] * k, ci[1] * k, ci[2] * k);
+    }
+  };
+  // a box: centre (x, y, h), along u (a unit (x, y)), half-sizes along u, across it, and up
+  const box = (x, y, h, u, a, b, c, colr) => {
+    const v = [-u[1], u[0]], pt = (i, j, k) => [x + u[0] * a * i + v[0] * b * j, y + u[1] * a * i + v[1] * b * j, h + c * k];
+    quad([pt(1, -1, -1), pt(1, 1, -1), pt(1, 1, 1), pt(1, -1, 1)], [u[0], u[1], 0], colr);
+    quad([pt(-1, -1, -1), pt(-1, 1, -1), pt(-1, 1, 1), pt(-1, -1, 1)], [-u[0], -u[1], 0], colr);
+    quad([pt(-1, 1, -1), pt(1, 1, -1), pt(1, 1, 1), pt(-1, 1, 1)], [v[0], v[1], 0], colr);
+    quad([pt(-1, -1, -1), pt(1, -1, -1), pt(1, -1, 1), pt(-1, -1, 1)], [-v[0], -v[1], 0], colr);
+    quad([pt(-1, -1, 1), pt(1, -1, 1), pt(1, 1, 1), pt(-1, 1, 1)], [0, 0, 1], colr);
+    quad([pt(-1, -1, -1), pt(1, -1, -1), pt(1, 1, -1), pt(-1, 1, -1)], [0, 0, -1], colr);
+  };
+  // the openings: for each wall piece round, what's cut out of it, and from where to where
+  const holes = [];
+  for (let i = 0; i < N; i++) for (let k = 0; k < 5; k++) {
+    const o = (OPEN[k] || {})[i]; if (!o) continue;
+    const ai = i / N * Math.PI * 2;
+    if (o === 'a') holes.push({ i, a0: ai - DA, a1: ai + DA, z0: -1, z1: L[k] + 2.9, arch: true });
+    else holes.push({ i, a0: ai - S.HA, a1: ai + S.HA, z0: L[k] + 1.0, z1: L[k] + 2.35, glazed: o === 'g' });
+  }
+  const cut = (a, z0, z1) => holes.some(hh => a > hh.a0 - 1e-6 && a < hh.a1 + 1e-6 && z0 >= hh.z0 - 1e-6 && z1 <= hh.z1 + 1e-6);
+  // the columns round: each wall piece in four, its window's edges among them
+  const cols = [];
+  for (let i = 0; i < N; i++) { const ai = i / N * Math.PI * 2; for (const f of [-1, -S.HA / DA, 0, S.HA / DA]) cols.push(ai + f * DA); }
+  cols.push(Math.PI * 2 - DA);
+  // (weathered a little: a soft streaking round and up, darker towards the foot)
+  const shade = q => { const a = Math.atan2(q[1] - cy, q[0] - cx), z = q[2]; return (0.95 + 0.035 * Math.sin(a * 7 + 1.3) * Math.sin(z * 0.37 + a * 3) + 0.015 * Math.sin(a * 23)) * (0.9 + 0.1 * clamp(z / 4, 0, 1)); };
+  const ring = (zs, rOf, colOf, cutOk) => {
+    for (let j = 0; j < zs.length - 1; j++) {
+      const za = zs[j], zb = zs[j + 1], ra = rOf(za), rb = rOf(zb), slope = (ra - rb) / Math.max(1e-3, zb - za), c = colOf((za + zb) / 2);
+      for (let m = 0; m < cols.length - 1; m++) {
+        const a0 = cols[m], a1 = cols[m + 1];
+        if (cutOk && cut((a0 + a1) / 2, za, zb)) continue;
+        const n = a => { const l = Math.hypot(1, slope); return [Math.cos(a) / l, Math.sin(a) / l, slope / l]; };
+        quad([P(a0, ra, za), P(a1, ra, za), P(a1, rb, zb), P(a0, rb, zb)], [n(a0), n(a1), n(a1), n(a0)], c, shade);
+      }
+    }
+  };
+  // the plinth: granite, a weathered slope up onto the shaft
+  ring([-0.5, S.PZ], () => S.PL, () => GRAN, true);
+  ring([S.PZ, S.Z0], z => S.PL + (S.RB - S.PL) * (z - S.PZ) / (S.Z0 - S.PZ), () => GRAN2, true);
+  // the shaft: rows at every window's head and sill, the band's edges, and enough between for the curve
+  const zs = new Set([S.Z0, S.Z1, ...S.BAND, L[0] + 2.9]);
+  for (let k = 0; k < 5; k++) { zs.add(L[k] + 1.0); zs.add(L[k] + 2.35); }
+  for (let z = S.Z0; z < S.Z1; z += 2.5) zs.add(z);
+  const zl = [...zs].filter(z => z >= S.Z0 && z <= S.Z1).sort((a, b) => a - b);
+  ring(zl, S.r, z => z > S.BAND[0] && z < S.BAND[1] ? RED : WHITE, true);
+  // the corbel under the gallery: a cavetto flaring out, then the deck's edge
+  const DR = 11.45, DZ = L[5] + 0.03, cav = [];
+  for (let j = 0; j <= 5; j++) { const t = j / 5; cav.push([S.RT + (DR - 0.12 - S.RT) * (1 - Math.cos(t * Math.PI / 2)), S.Z1 + (DZ - 0.2 - S.Z1) * Math.sin(t * Math.PI / 2)]); }
+  for (let j = 0; j < cav.length - 1; j++) {
+    const [ra, za] = cav[j], [rb, zb] = cav[j + 1], dz = zb - za, dr = rb - ra, l = Math.hypot(dz, dr), nr = dz / l, nz = -dr / l;
+    for (let m = 0; m < cols.length - 1; m++) { const a0 = cols[m], a1 = cols[m + 1]; quad([P(a0, ra, za), P(a1, ra, za), P(a1, rb, zb), P(a0, rb, zb)], [Math.cos((a0 + a1) / 2) * nr, Math.sin((a0 + a1) / 2) * nr, nz], WHITE); }
+  }
+  // the gallery's deck: black, overhanging, its edge and its underside
+  for (let m = 0; m < cols.length - 1; m++) {
+    const a0 = cols[m], a1 = cols[m + 1], am = (a0 + a1) / 2, ce = Math.cos(am), se = Math.sin(am);
+    quad([P(a0, RIN, DZ), P(a1, RIN, DZ), P(a1, DR, DZ), P(a0, DR, DZ)], [0, 0, 1], DECK);
+    quad([P(a0, DR, DZ - 0.2), P(a1, DR, DZ - 0.2), P(a1, DR, DZ), P(a0, DR, DZ)], [ce, se, 0], DECK);
+    quad([P(a0, DR - 0.12, DZ - 0.2), P(a1, DR - 0.12, DZ - 0.2), P(a1, DR, DZ - 0.2), P(a0, DR, DZ - 0.2)], [0, 0, -1], DECK);
+  }
+  // the openings' reveals: jambs, heads and sills, from the skin in to the plaster; granite sills; the doorway's surround
+  for (const hh of holes) {
+    const ai = hh.i / N * Math.PI * 2, zb = Math.max(hh.z0, -0.5), zt = hh.z1, rin = a => (RIN) / Math.cos(a - ai);
+    const rOut = z => z < S.PZ ? S.PL : z < S.Z0 ? S.PL + (S.RB - S.PL) * (z - S.PZ) / (S.Z0 - S.PZ) : S.r(z);
+    for (const [a, sgn] of [[hh.a0, 1], [hh.a1, -1]]) {
+      const t = [-Math.sin(a) * sgn, Math.cos(a) * sgn, 0], zz = hh.arch ? [zb, S.PZ, S.Z0, zt] : [zb, zt];
+      for (let j = 0; j < zz.length - 1; j++) quad([P(a, rin(a), zz[j]), P(a, rOut(zz[j]), zz[j]), P(a, rOut(zz[j + 1]), zz[j + 1]), P(a, rin(a), zz[j + 1])], t, REV);
+    }
+    const am = (hh.a0 + hh.a1) / 2, sub = [hh.a0, am, hh.a1];
+    for (let m = 0; m < 2; m++) {
+      const a0 = sub[m], a1 = sub[m + 1];
+      quad([P(a0, rin(a0), zt), P(a1, rin(a1), zt), P(a1, rOut(zt), zt), P(a0, rOut(zt), zt)], [0, 0, -1], REV);
+      if (!hh.arch) quad([P(a0, rin(a0), zb), P(a1, rin(a1), zb), P(a1, rOut(zb), zb), P(a0, rOut(zb), zb)], [0, 0, 1], REV);
+    }
+    const u = [-Math.sin(am), Math.cos(am)], ro = rOut(zb);
+    if (!hh.arch) {
+      // a granite sill, proud of the wall
+      const w = ro * Math.tan(S.HA) + 0.12, [x, y] = P(am, ro + 0.02, 0);
+      box(x, y, zb - 0.07, u, w, 0.16, 0.07, GRAN);
+    } else {
+      // the doorway: a granite surround, a lintel over it, a step
+      const w = ro * Math.tan(DA), top = S.r(zt);
+      for (const s of [-1, 1]) { const [x, y] = P(am, S.r(1.5) + 0.04, 0); box(x + u[0] * s * (w + 0.18), y + u[1] * s * (w + 0.18), (zt - 0.2) / 2, u, 0.18, 0.14, (zt + 0.2) / 2, GRAN); }
+      { const [x, y] = P(am, top + 0.02, 0); box(x, y, zt + 0.25, u, w + 0.42, 0.14, 0.25, GRAN); }
+    }
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  geo.setAttribute('normal', new THREE.Float32BufferAttribute(nor, 3));
+  geo.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
+  geo.computeBoundingSphere();
+  const m = new THREE.Mesh(geo, new THREE.MeshLambertMaterial({ vertexColors: true, emissive: 0x1a1915 }));
+  grp.add(m); Z3.skin = m;
+  // the gallery's railing: iron stanchions and three rails, standing on the deck over the parapet's line
+  pos.length = nor.length = col.length = 0;
+  const RR = RIN + 0.12, IRON = C('#1c1f22', 0.7), NS = 64;
+  for (let i = 0; i < NS; i++) { const a = (i + 0.5) / NS * Math.PI * 2, [x, y] = P(a, RR, 0); box(x, y, DZ + 0.53, [-Math.sin(a), Math.cos(a)], 0.025, 0.025, 0.53, IRON); }
+  for (const [h, t] of [[0.15, 0.025], [0.6, 0.025], [1.06, 0.045]]) for (let i = 0; i < NS; i++) {
+    const a0 = i / NS * Math.PI * 2, a1 = (i + 1) / NS * Math.PI * 2, am = (a0 + a1) / 2, [x, y] = P(am, RR, 0);
+    box(x, y, DZ + h, [-Math.sin(am), Math.cos(am)], RR * Math.sin(Math.PI / NS) + 0.005, t, t, IRON);
+  }
+  const rg = new THREE.BufferGeometry();
+  rg.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  rg.setAttribute('normal', new THREE.Float32BufferAttribute(nor, 3));
+  rg.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
+  rg.computeBoundingSphere();
+  grp.add(new THREE.Mesh(rg, new THREE.MeshLambertMaterial({ vertexColors: true })));
+}
 // the glazed windows of the tower, and the lantern on top: its ring of glass in brass astragals, the gallery rail, the
 // copper dome with its ventilator ball and lightning rod, and the Light itself, a great lens turning on the newel
 // with its two beams sweeping out over the sea
@@ -19320,29 +19479,45 @@ function zm3dLantern(grp) {
   const glassM = new THREE.MeshPhongMaterial({ color: 0x9ab8c8, specular: 0xffffff, shininess: 120, transparent: true, opacity: 0.22, depthWrite: false, side: THREE.DoubleSide });
   const frameM = z3Lam('#2e5a5a'), brassM = new THREE.MeshPhongMaterial({ color: 0x8a6a2c, specular: 0xb09060, shininess: 60 });
   for (const w of ZM.glass) {
-    const g = new THREE.Group(); g.position.copy(z3v(w.x, w.y, G0 + w.z0)); g.rotation.y = w.ang; grp.add(g);
-    const h = w.z1 - w.z0, pane = new THREE.Mesh(new THREE.PlaneGeometry(w.w, h), glassM); pane.position.y = h / 2; g.add(pane);
-    for (const x of [-w.w / 2, 0, w.w / 2]) { const b = new THREE.Mesh(new THREE.BoxGeometry(0.06, h, 0.08), frameM); b.position.set(x, h / 2, 0); g.add(b); }
-    for (const y of [0.02, h / 2, h - 0.02]) { const b = new THREE.Mesh(new THREE.BoxGeometry(w.w, 0.06, 0.08), frameM); b.position.set(0, y, 0); g.add(b); }
-    // a box of flowers on the sill
-    const bx = new THREE.Mesh(new THREE.BoxGeometry(w.w * 0.7, 0.18, 0.25), z3Lam('#5a3a24')); bx.position.set(0, 0.09, -0.32); g.add(bx);
-    for (let i = 0; i < 5; i++) { const f = new THREE.Mesh(new THREE.SphereGeometry(0.07, 6, 4), z3Lam(i % 2 ? '#d84050' : '#e8e0d0')); f.position.set(-w.w * 0.3 + i * w.w * 0.15, 0.24, -0.32); g.add(f); }
+    // (set back in the skin's opening: as wide as the opening, a hand's breadth out from the plaster)
+    const nx = Math.cos(w.ang - Math.PI / 2), ny = Math.sin(w.ang - Math.PI / 2), ww = 2 * (ZMT.R + 0.42) * Math.tan(ZM_SKIN.HA);
+    const g = new THREE.Group(); g.position.copy(z3v(w.x + nx * 0.12, w.y + ny * 0.12, G0 + w.z0)); g.rotation.y = w.ang; grp.add(g);
+    const h = w.z1 - w.z0, pane = new THREE.Mesh(new THREE.PlaneGeometry(ww, h), glassM); pane.position.y = h / 2; g.add(pane);
+    for (const x of [-ww / 2, 0, ww / 2]) { const b = new THREE.Mesh(new THREE.BoxGeometry(0.07, h, 0.08), frameM); b.position.set(x, h / 2, 0); g.add(b); }
+    for (const y of [0.03, h / 2, h - 0.03]) { const b = new THREE.Mesh(new THREE.BoxGeometry(ww, 0.07, 0.08), frameM); b.position.set(0, y, 0); g.add(b); }
+    // a box of flowers on the sill inside
+    const bx = new THREE.Mesh(new THREE.BoxGeometry(ww * 0.8, 0.18, 0.25), z3Lam('#5a3a24')); bx.position.set(0, 0.09, -0.44); g.add(bx);
+    for (let i = 0; i < 5; i++) { const f = new THREE.Mesh(new THREE.SphereGeometry(0.07, 6, 4), z3Lam(i % 2 ? '#d84050' : '#e8e0d0')); f.position.set(-ww * 0.32 + i * ww * 0.16, 0.24, -0.44); g.add(f); }
   }
   const top = new THREE.Group(); top.position.copy(z3v(cx, cy, G0 + L5)); grp.add(top);
-  const R = ZMT.GLASS, HG = 4.4;
-  // the glass, and the astragals
-  const ring = new THREE.Mesh(new THREE.CylinderGeometry(R, R, HG, 48, 1, true), glassM); ring.position.y = HG / 2 + 0.05; top.add(ring);
-  for (let i = 0; i < 24; i++) { const a = i / 24 * Math.PI * 2, b = new THREE.Mesh(new THREE.BoxGeometry(0.1, HG, 0.1), brassM); b.position.set(Math.cos(a) * R, HG / 2, -Math.sin(a) * R); top.add(b); }
-  for (const y of [0.05, HG / 2, HG]) { const t = new THREE.Mesh(new THREE.TorusGeometry(R, 0.06, 6, 48), brassM); t.rotation.x = Math.PI / 2; t.position.y = y; top.add(t); }
-  // the cornice and the dome, the ball and the rod
-  const red = z3Lam('#7a2a22'), dark = z3Lam('#22282a');
-  const corn = new THREE.Mesh(new THREE.CylinderGeometry(R + 0.5, R + 0.3, 0.5, 48), dark); corn.position.y = HG + 0.25; top.add(corn);
-  const dome = new THREE.Mesh(new THREE.SphereGeometry(R + 0.4, 40, 12, 0, Math.PI * 2, 0, Math.PI / 2), red); dome.scale.y = 0.42; dome.position.y = HG + 0.5; top.add(dome);
-  const ball = new THREE.Mesh(new THREE.SphereGeometry(0.55, 16, 10), dark); ball.position.y = HG + 0.5 + (R + 0.4) * 0.42 + 0.4; top.add(ball);
-  const rod = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.06, 2.4, 6), brassM); rod.position.y = ball.position.y + 1.4; top.add(rod);
-  // the gallery's rail, outside on the parapet
-  const rail = new THREE.Mesh(new THREE.TorusGeometry(ZMT.R + 0.3, 0.05, 6, 64), dark); rail.rotation.x = Math.PI / 2; rail.position.y = 1.15; top.add(rail);
-  for (let i = 0; i < 48; i++) { const a = i / 48 * Math.PI * 2, b = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.6, 0.05), dark); b.position.set(Math.cos(a) * (ZMT.R + 0.3), 0.85, -Math.sin(a) * (ZMT.R + 0.3)); top.add(b); }
+  const R = ZMT.GLASS, HG = 4.4, MH = 0.95, DOOR = Math.PI / 12;
+  // (the doors, east and west, left open: the lantern's base, its glass and its rings stop either side of them)
+  const arcs = [[DOOR, Math.PI - 2 * DOOR], [Math.PI + DOOR, Math.PI - 2 * DOOR]];
+  const arc3 = ([a, l]) => [a + Math.PI / 2, l];   // (from round the tower to three's cylinder angles)
+  // the base of the lantern: an iron murette below the glass, and the glass above it in brass astragals
+  const ironM = new THREE.MeshPhongMaterial({ color: 0x1e2224, specular: 0x404850, shininess: 30, side: THREE.DoubleSide });
+  for (const ar of arcs) {
+    const [t0, tl] = arc3(ar);
+    const mu = new THREE.Mesh(new THREE.CylinderGeometry(R + 0.05, R + 0.05, MH, 32, 1, true, t0, tl), ironM); mu.position.y = MH / 2 + 0.03; top.add(mu);
+    const gl = new THREE.Mesh(new THREE.CylinderGeometry(R, R, HG - MH, 32, 1, true, t0, tl), glassM); gl.position.y = MH + (HG - MH) / 2; top.add(gl);
+    for (const [y, rr] of [[MH, 0.07], [MH + (HG - MH) / 2, 0.045], [HG, 0.07]]) { const tg = new THREE.TorusGeometry(R, rr, 6, 32, tl); tg.rotateX(Math.PI / 2); const t = new THREE.Mesh(tg, brassM); t.rotation.y = ar[0] + tl; t.position.y = y; top.add(t); }
+  }
+  { // (the astragals, merged: one mesh)
+    const bars = [];
+    for (let i = 0; i < 24; i++) { if (i % 12 === 0) continue; const a = i / 24 * Math.PI * 2, b = new THREE.BoxGeometry(0.1, HG - MH, 0.1); b.translate(Math.cos(a) * R, MH + (HG - MH) / 2, -Math.sin(a) * R); bars.push(b); }
+    for (const s of [-1, 1]) for (const a0 of [0, Math.PI]) { const a = a0 + s * DOOR, b = new THREE.BoxGeometry(0.16, HG, 0.16); b.translate(Math.cos(a) * R, HG / 2, -Math.sin(a) * R); bars.push(b); }
+    const mg = z3Merge(bars); if (mg) top.add(new THREE.Mesh(mg, brassM));
+  }
+  // the cornice, the dome (red, a little raised), the ventilator and its ball, and the lightning rod
+  const red = new THREE.MeshPhongMaterial({ color: 0x8a261c, specular: 0x503028, shininess: 25 }), dark = z3Lam('#22282a');
+  const corn = new THREE.Mesh(new THREE.CylinderGeometry(R + 0.55, R + 0.25, 0.55, 48), dark); corn.position.y = HG + 0.27; top.add(corn);
+  const DH = 0.55, dome = new THREE.Mesh(new THREE.SphereGeometry(R + 0.45, 40, 12, 0, Math.PI * 2, 0, Math.PI / 2), red); dome.scale.y = DH; dome.position.y = HG + 0.5; top.add(dome);
+  const dTop = HG + 0.5 + (R + 0.45) * DH;
+  const vent = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.6, 0.7, 16), dark); vent.position.y = dTop + 0.25; top.add(vent);
+  const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.85, 0.85, 0.08, 16), dark); cap.position.y = dTop + 0.64; top.add(cap);
+  const ball = new THREE.Mesh(new THREE.SphereGeometry(0.55, 16, 10), dark); ball.position.y = dTop + 1.15; top.add(ball);
+  const rod = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.06, 2.8, 6), brassM); rod.position.y = ball.position.y + 1.6; top.add(rod);
+  // (the gallery's deck and its railing are the tower's skin: zm3dTower)
   // the Light: a pedestal on the newel, a beehive of glass rings in a brass cage, turning
   const ped = new THREE.Mesh(new THREE.CylinderGeometry(0.7, 0.95, 0.9, 16), brassM); ped.position.y = 0.45; top.add(ped);
   const lens = new THREE.Group(); lens.position.y = 0.9; top.add(lens);
