@@ -354,7 +354,7 @@ VM_BUILD.cutlass = (M) => {
 };
 
 // Avtomat ------------------------------------------------------------------------------------
-const VM_AVT_SIGHT = 0.083;   // the height of the sight line (the front post's tip) above the gun's origin
+const VM_AVT_SIGHT = 0.092;   // the height of the sight line (the front post's tip) above the gun's origin
 function vmAvtMag(M) {
   // a curved box magazine: three sections, each a touch further forward and tilted, and a base plate
   const g = new THREE.Group();
@@ -369,9 +369,15 @@ VM_BUILD.avtomat = (M) => {
   root.add(box(0.044, 0.055, 0.28, M.iron, 0, 0.03, -0.06));
   root.add(box(0.038, 0.008, 0.26, M.dark, 0, 0.061, -0.06));
   root.add(box(0.046, 0.012, 0.03, M.brass, 0, 0.03, -0.19));   // the receiver's front ring
-  // rear sight: a base and two ears either side of the notch
-  root.add(box(0.03, 0.012, 0.024, M.dark, 0, 0.07, -0.03));
-  for (const sx of [-1, 1]) root.add(box(0.008, 0.012, 0.012, M.dark, sx * 0.0095, 0.082, -0.03));
+  // rear sight: raised on a base, so the receiver sits low in the view; two thin ears either side of a wide
+  // notch, each with a dot of ivory paint that catches any light, and the front post with an ivory bead
+  // (the bead sits between the dots when you're on target)
+  const paint = new THREE.MeshBasicMaterial({ color: 0xfff0c8 });
+  root.add(box(0.03, 0.02, 0.022, M.dark, 0, 0.074, -0.03));
+  for (const sx of [-1, 1]) {
+    root.add(box(0.0045, 0.012, 0.01, M.dark, sx * 0.0115, VM_AVT_SIGHT + 0.0015, -0.03));
+    const dot = new THREE.Mesh(new THREE.CircleGeometry(0.0021, 12), paint); dot.position.set(sx * 0.0115, VM_AVT_SIGHT, -0.0249); root.add(dot);
+  }
   // barrel, bands, brake
   root.add(zcyl(0.011, 0.011, 0.44, M.iron, 14, -0.2, 0, 0.035));
   root.add(zcyl(0.016, 0.015, 0.04, M.dark, 12, -0.62, 0, 0.035));
@@ -382,9 +388,11 @@ VM_BUILD.avtomat = (M) => {
   root.add(box(0.0415, 0.004, 0.2, M.accent, 0, 0.03, -0.33));
   for (const z of [-0.205, -0.455]) root.add(zcyl(0.025, 0.025, 0.012, M.brass, 16, z, 0, 0.028));
   // front sight: a base on the barrel, the post, and a hood round it
-  root.add(box(0.012, 0.024, 0.016, M.dark, 0, 0.056, -0.598));
-  root.add(box(0.0035, 0.015, 0.004, M.dark, 0, VM_AVT_SIGHT - 0.0075, -0.6));
-  const hood = new THREE.Mesh(new THREE.TorusGeometry(0.014, 0.0022, 6, 18, Math.PI * 1.25), M.dark); hood.position.set(0, 0.074, -0.6); hood.rotation.z = -Math.PI * 0.125; root.add(hood);
+  root.add(box(0.012, 0.03, 0.016, M.dark, 0, 0.06, -0.598));
+  root.add(box(0.003, 0.017, 0.004, M.dark, 0, VM_AVT_SIGHT - 0.0085, -0.6));
+  const bead = new THREE.Mesh(new THREE.SphereGeometry(0.003, 12, 8), paint); bead.position.set(0, VM_AVT_SIGHT, -0.6); root.add(bead);
+  // the hood: a thin open ring well clear of the post, so it frames the bead rather than crowding it
+  const hood = new THREE.Mesh(new THREE.TorusGeometry(0.019, 0.0012, 6, 22, Math.PI), M.dark); hood.position.set(0, VM_AVT_SIGHT - 0.006, -0.6); root.add(hood);
   // the magazine, ahead of the grip
   const magHome = new THREE.Vector3(0, 0.004, -0.1);
   const mag = vmAvtMag(M); mag.position.copy(magHome); root.add(mag);
@@ -729,7 +737,7 @@ VM_ANIM.avtomat = (w, S) => {
   // down the sights: the rear notch near the eye, the post on the middle of the view; the kick shoves it back and up
   if (a > 0) {
     const L = vmLerp;
-    w.root.position.set(L(w.root.position.x, jx * 0.002 * rec, a), L(w.root.position.y, -VM_AVT_SIGHT - rec * 0.004, a), L(w.root.position.z, -0.19 + rec * 0.03, a));
+    w.root.position.set(L(w.root.position.x, jx * 0.002 * rec, a), L(w.root.position.y, -VM_AVT_SIGHT - rec * 0.004, a), L(w.root.position.z, (H < 520 ? -0.155 : -0.19) + rec * 0.03, a));
     w.root.rotation.set(L(w.root.rotation.x, rec * (0.035 + jy * 0.02), a), L(w.root.rotation.y, jx * rec * 0.025, a), L(w.root.rotation.z, jx * rec * 0.02, a));
     w.root.scale.setScalar(L(S.sc, 1, a));
   }
