@@ -1181,7 +1181,7 @@ function zmZombies(dt) {
     z.t += dt;
     if (z.dead) { z.deadT = (z.deadT || 0) + dt; continue; }
     if (z.boss && typeof zbTick === 'function') { zbTick(z, dt, nearest); continue; }   // [boss] he goes his own way (src/zmboss.js)
-    const step = z.sp * dt;
+    const step = z.sp * dt * (z.slow > 0 && typeof zmpSlowK === 'function' ? zmpSlowK(z) : 1);   // [pap] (slowed by the Equinox Gale)
     if (z.st === 'out') {
       // across the yard (or up the beach) to the window, waiting behind any already at it
       const w = z.win, k = w.q.indexOf(z), lane = Math.max(0, k);
@@ -1211,6 +1211,7 @@ function zmZombies(dt) {
       if (k >= 1) { z.st = 'in'; z.jz = z.fl = w.z || 0; w.q = w.q.filter(q => q !== z); z.t = 0; z.lx = z.x; z.ly = z.y; }
       continue;
     }
+    if (typeof zmpHeld === 'function' && zmpHeld(z, dt)) continue;   // [pap] swept off its feet, or nailed to the wall
     // inside: after the nearest of you, by the shortest walk
     const m = nearest(z.x, z.y, z.jz);
     if (!m) { z.walk = false; continue; }
@@ -1292,7 +1293,7 @@ function zmHurt(d, dmg, head, code, by, how) {
   d.hitT = 0.15;
   if (typeof zmpDmg === 'function') dmg = zmpDmg(dmg, code, by);   // [pap] reforged weapons hit harder (the shooter's side)
   if (ZM.net === 'client') { zmnHit(d, dmg, head, code, how); return; }
-  const k = ZM_DMG[code] == null ? 1 : ZM_DMG[code];
+  const k = (ZM_DMG[code] == null ? 1 : ZM_DMG[code]) * (d.mark > 0 ? 1.5 : 1);   // [pap] (lit by the Leading Light: hurt worse)
   d.hp -= d.boss && typeof zbHurtK === 'function' ? zbHurtK(d, dmg * k, how) : ZM.insta > 0 ? 1e9 : dmg * k;   // [boss] no one-hit kills on him
   if (d.hp <= 0) { zmKill(d, head, code, how, by); if (how === 'burn') zmChain(d, 2, by); } else zmPoints(10, false, by);
 }
@@ -1340,7 +1341,7 @@ function zmResolveShot(sh, mine) {
   }
   const hits = new Map();
   for (const [lh, lp] of fpsLines(sh)) {
-    let left = ZM_PIERCE[code] || 1, ox = x, oy = y, oz = z, gone = 0;
+    let left = (mine && typeof zmpPierce === 'function' && zmpPierce(code)) || ZM_PIERCE[code] || 1, ox = x, oy = y, oz = z, gone = 0;
     const skip = new Set();
     let last = null;
     while (left > 0) {
@@ -1357,6 +1358,7 @@ function zmResolveShot(sh, mine) {
     if (typeof zeShot === 'function' && mine) zeShot(x, y, z, lh, lp, by);   // [egg hook] src/zmegg.js
     if (last.kind !== 'body' && last.kind !== 'none') fpsPuff(last.x, last.y, last.z, last.kind === 'ground' ? '150,140,120' : '190,190,180', w.pellets ? 2 : 6);
   }
+  if (mine && typeof zmpShot === 'function') zmpShot(sh, hits);   // [pap] what a reforged weapon does
   let any = null;
   for (const [o, hit] of hits) { any = any || hit; zmHurt(o, hit.dmg, hit.head, code, FPS.me.id); }
   if (any && mine) { FPS.hitT = 0.18; FPS.hitHead = any.head; fpsHitSound(any.head); }
@@ -1374,6 +1376,7 @@ function zmKnife() {
 function zmMelee(x, y, z, h, w, code) {
   code = code || 'c';
   if (typeof zeMelee === 'function') zeMelee(x, y, z, h, w, code);   // [egg hook] src/zmegg.js
+  if (code === 'c' && typeof zmpSwing === 'function') zmpSwing(x, y, z, h);   // [pap] the Keel-Splitter's crescent
   let any = false;
   for (const o of ZM.z) {
     if (o.dead) continue;
@@ -1394,7 +1397,7 @@ function zmBeam() {
   const wall = fpsRay(ex, ey, ez, m.h, m.p, m.id, [], w.range);
   FPS.beamLen = Math.max(1.5, wall.t);
   const burn = Math.max(1.2, zmHp(Math.max(1, ZM.round)) * 0.36);
-  let any = false;
+  let any = false; const lit = [];
   for (const o of ZM.z) {
     if (o.dead) continue;
     const ox = o.x - ex, oy = o.y - ey, oz = FPSC.GROUND + (o.jz || 0) + 1.1 - ez, d = Math.hypot(ox, oy, oz);
@@ -1405,8 +1408,10 @@ function zmBeam() {
     const ray = fpsRay(ex, ey, ez, bearingOf(ox, oy), Math.atan2(oz, Math.hypot(ox, oy)), m.id, [o], w.range + 2);
     if (ray.kind !== 'body') continue;
     any = true; o.hitT = 0.2; o.scorch = Math.min(1, (o.scorch || 0) + 0.5);
+    lit.push(o);
     zmHurt(o, burn, false, 'f', FPS.me.id, 'burn');
   }
+  if (typeof zmpBeam === 'function') zmpBeam(lit, burn);   // [pap] the First-Order Lamp's prism
   if (any) { FPS.hitT = 0.12; FPS.hitHead = false; }
   zmSound('beam');
 }
@@ -2032,8 +2037,9 @@ function zmDrawOver() {
   for (const s of ZM.sparks) {
     const pts = []; for (let i = 0; i <= 6; i++) { const k = i / 6, j = i && i < 6 ? 0.25 : 0; pts.push([s.a[0] + (s.b[0] - s.a[0]) * k + (Math.random() - 0.5) * j, s.a[1] + (s.b[1] - s.a[1]) * k + (Math.random() - 0.5) * j, s.a[2] + (s.b[2] - s.a[2]) * k + (Math.random() - 0.5) * j]); }
     const p = polyProj(pts); if (p.length < 2) continue;
-    ctx.strokeStyle = `rgba(255,220,140,${s.t / 0.25})`; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(p[0].x, p[0].y); for (const q of p.slice(1)) ctx.lineTo(q.x, q.y); ctx.stroke();
+    ctx.strokeStyle = `rgba(${s.col || '255,220,140'},${s.t / (s.beam ? 0.14 : 0.25)})`; ctx.lineWidth = s.beam ? 3 : 2; ctx.beginPath(); ctx.moveTo(p[0].x, p[0].y); for (const q of p.slice(1)) ctx.lineTo(q.x, q.y); ctx.stroke();
   }
+  if (typeof zmpDrawOver === 'function') zmpDrawOver();   // [pap]
   const B = ZM.box, S = ZM.spawns[B.at];
   if (S && B.st === 'offer') {
     const c = cam(S.x, S.y, FPSC.GROUND + S.z + 1.9);
@@ -2072,6 +2078,7 @@ function zmHud() {
       else { const gap = 5 + FPS.recoil * (w.climb ? 14 : 6); for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { ctx.moveTo(cx + dx * gap, cy + dy * gap); ctx.lineTo(cx + dx * (gap + 7), cy + dy * (gap + 7)); } }
       ctx.stroke();
     }
+    if (typeof zmpHud === 'function') zmpHud(cx, cy);   // [pap] the Equinox Gale
     if (FPS.hitT > 0) { ctx.strokeStyle = FPS.hitHead ? 'rgba(255,90,60,0.95)' : 'rgba(255,240,200,0.95)'; ctx.lineWidth = 2; ctx.beginPath(); for (const [dx, dy] of [[1, 1], [-1, 1], [1, -1], [-1, -1]]) { ctx.moveTo(cx + dx * 6, cy + dy * 6); ctx.lineTo(cx + dx * 13, cy + dy * 13); } ctx.stroke(); }
   }
   const L = Math.max(14, FPS.safeLeft || 0), R = W - Math.max(14, FPS.safeRight || 0), top = phone ? Math.max(10, FPS.safeTop || 0) : 14;

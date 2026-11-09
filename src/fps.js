@@ -580,17 +580,19 @@ function fpsHarpoonsTick(dt) {
     for (let i = 0; i < steps && !hp.done; i++) {
       const ox = hp.x, oy = hp.y, oz = hp.z;
       hp.vz -= w.drop * sdt; hp.x += hp.vx * sdt; hp.y += hp.vy * sdt; hp.z += hp.vz * sdt;
+      if (hp.skew && typeof zmpHarpoonCarry === 'function') zmpHarpoonCarry(hp, false);   // [pap] (those on the shaft)
       const seg = Math.hypot(hp.x - ox, hp.y - oy), hh = bearingOf(hp.vx, hp.vy), pp = Math.atan2(hp.vz, Math.hypot(hp.vx, hp.vy));
       // people: me (judged here), the wreckers and the drowned (judged by the host), and a guess at the others for my hit marker
       const people = [];
       if (hp.by !== m.id && !(m.dead > 0) && !(m.protect > 0)) people.push({ id: m.id, x: m.x, y: m.y, me: true });
       const hostish = FPS.host || !NET.room || !FPS.remote.size;
       for (const b of FPS.bots) if (b.id !== hp.by && !(b.dead > 0)) people.push(b);
-      for (const d of FPS.drowned) if (!d.dead) people.push(d);
+      for (const d of FPS.drowned) if (!d.dead && !((hp.skew || hp.thru) && zmpHarpoonSkip(hp, d))) people.push(d);   // ([pap] the Whale-Road passes through)
       if (hp.mine) for (const r of FPS.remote.values()) if (!r.dead) people.push(r);
       const r = fpsRay(ox, oy, oz, hh, pp, hp.by, people, seg + 0.05);
-      if (r.kind === 'none') { if (hp.z < FPSC.GROUND || hp.t > 6 || Math.hypot(hp.x - FPSC.CX, hp.y - FPSC.CY) > FPSC.R + 200) { hp.done = true; hp.stuck = hp.z < FPSC.GROUND ? 8 : 0; } continue; }
+      if (r.kind === 'none') { if (hp.z < FPSC.GROUND || hp.t > 6 || Math.hypot(hp.x - FPSC.CX, hp.y - FPSC.CY) > FPSC.R + 200) { hp.done = true; hp.stuck = hp.z < FPSC.GROUND ? 8 : 0; if (hp.skew && typeof zmpHarpoonCarry === 'function') zmpHarpoonCarry(hp, true); } continue; }
       hp.x = r.x; hp.y = r.y; hp.z = r.z; hp.done = true;
+      if (r.kind === 'body' && FPS.zm && typeof zmpHarpoonHit === 'function' && zmpHarpoonHit(hp, r)) { hp.done = false; continue; }   // [pap] the Whale-Road runs them through
       if (r.kind === 'body') {
         const o = r.who; o.hitT = 0.25;
         fpsPuff(r.x, r.y, r.z, '160,30,20', 12);
@@ -599,7 +601,8 @@ function fpsHarpoonsTick(dt) {
         else if (o.drowned && hostish) fpsDrownedHurt(o, w.dmg, r.head, 'h');
         if (hp.mine) { FPS.hitT = 0.25; FPS.hitHead = true; fpsHitSound(true); }
         hp.stuck = 0.6;
-      } else { hp.stuck = 8; fpsPuff(r.x, r.y, r.z, '190,190,180', 8); try { noise('bandpass', 900, 3, 0.002, 0.12, 0.15); } catch (e) {} }
+        if (hp.skew && typeof zmpHarpoonCarry === 'function') zmpHarpoonCarry(hp, true);
+      } else { if (hp.skew && typeof zmpHarpoonCarry === 'function') zmpHarpoonCarry(hp, true); hp.stuck = 8; fpsPuff(r.x, r.y, r.z, '190,190,180', 8); try { noise('bandpass', 900, 3, 0.002, 0.12, 0.15); } catch (e) {} }
     }
   }
   FPS.harps = FPS.harps.filter(hp => !hp.done || hp.stuck > 0);
@@ -1065,7 +1068,7 @@ function fpsDrawScene() {
   // tracers and smoke
   for (const t of FPS.tracers) {
     const p = polyProj([t.a, t.b]); if (p.length < 2) continue;
-    ctx.strokeStyle = `rgba(255,220,150,${t.t / 0.08 * 0.6})`; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(p[0].x, p[0].y); ctx.lineTo(p[1].x, p[1].y); ctx.stroke();
+    ctx.strokeStyle = `rgba(${t.col || '255,220,150'},${Math.min(1, t.t / (t.life || 0.08)) * (t.col ? 0.9 : 0.6)})`; ctx.lineWidth = t.w || 1.2; ctx.beginPath(); ctx.moveTo(p[0].x, p[0].y); ctx.lineTo(p[1].x, p[1].y); ctx.stroke();
   }
   for (const p of FPS.parts) { const c = cam(p.x, p.y, p.z); if (c.f < 0.6) continue; const q = proj(c); ctx.fillStyle = `rgba(${p.c},${p.t / 0.6})`; const s = Math.min(9, Math.max(1.5, 0.12 * q.s)); ctx.fillRect(q.x - s / 2, q.y - s / 2, s, s); }
   fpsDrawHarpoons();

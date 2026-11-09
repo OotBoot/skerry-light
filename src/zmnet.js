@@ -270,6 +270,7 @@ function znRequestFrom(sid, k, a) {
   if (k === 'take') { if (ZM.box.st === 'offer' && ZM.box.owner === sid) { ZM.box.st = 'idle'; ZM.box.t = 0; } return; }
   if (k === 'board') { const w = ZM.windows[a | 0]; if (w && w.boards < 6 && !ZM.z.some(z => z.win === w && z.st === 'climb')) { w.boards++; zmBoardPay(sid); } return; }
   if (k === 'rev') { zmnRevive(String(a)); return; }
+  if (k === 'pst') { if (typeof zmpStatusFrom === 'function') zmpStatusFrom(sid, a); return; }   // [pap] what a reforged weapon did to them
   if (k === 'egg') { if (typeof zeRequest === 'function') zeRequest(sid, a); return; }   // [egg hook] src/zmegg.js
 }
 // someone gets someone up: everyone's told (and if it's me, up I get)
@@ -287,7 +288,7 @@ function znHostSend() {
   z.h = [++ZN.hseq, ZM.round, ZM.over ? 3 : ZN_PH[ZM.phase] | 0, Math.round(ZM.t * 10), ZM.left, Math.round(Math.max(0, ZM.double) * 10), Math.round(Math.max(0, ZM.insta) * 10)];
   // the drowned: id.x.y.jz.h.state.kind.swing.flags.window.seed.scorch, each in base 36
   z.z = ZM.z.filter(q => !q.gone).slice(0, 40).map(q => [q.zn, (q.x - CX) * 10 + 9000, (q.y - CY) * 10 + 9000, (q.jz || 0) * 10, (((q.h % TAU) + TAU) % TAU) * 100, ZN_ST[q.st] | 0, ZN_KIND.indexOf(q.kind), q.swing < 0 ? 0 : q.swing * 100 + 1,
-    (q.dead ? 1 : 0) | (q.burn ? 2 : 0) | (q.head ? 4 : 0) | (q.walk ? 8 : 0), q.win ? q.win.id : 0, q.seed % 1296, (q.scorch || 0) * 9].map(zb36).join('.')).join('~');
+    (q.dead ? 1 : 0) | (q.burn ? 2 : 0) | (q.head ? 4 : 0) | (q.walk ? 8 : 0) | (q.mark > 0 ? 16 : 0), q.win ? q.win.id : 0, q.seed % 1296, (q.scorch || 0) * 9].map(zb36).join('.')).join('~');
   z.b = ZM.windows.map(w => w.boards).join('');
   z.dm = ZM.doors.reduce((s, d, i) => s | (d.open ? 1 << i : 0), 0);
   const B = ZM.box;
@@ -399,6 +400,7 @@ function znApply(hz) {
     z.swing = sw;
     const fl = a[8];
     z.walk = !!(fl & 8); z.scorch = a[11] / 9;
+    if (fl & 16) z.mark = Math.max(z.mark || 0, 0.3);   // [pap] lit by someone's Leading Light
     if ((fl & 1) && !z.dead) { z.dead = 1; z.deadT = 0; z.burn = !!(fl & 2); z.head = !!(fl & 4); zmKillFx(z); }
   }
   for (const z of ZM.z) if (!have.has(z.zn) && !(z.dead && z.deadT < 2.4)) { if (z.mdl) zmFreeModel(z); z.remove = true; }

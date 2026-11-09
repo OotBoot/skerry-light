@@ -1170,7 +1170,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
         <p><b>Points.</b> 10 a hit, 60 a kill, 100 for one through the head, 130 with the cutlass. You start in the Keeper's Quarters with 500 points and a pepperbox. Hold Use at a window to nail its boards back (10 points a board, up to 500 a round).</p>
         <p><b>Buying.</b> Weapons hang on the walls with their prices chalked under them: buy one, or its ammunition again for half. You carry two; a third replaces the one in your hand. Doors and fallen wreckage open the rest of the station: the Oil Store, the Fog-Signal House, the passages, the Store Hall, the Boathouse, the Wreck Store, and at last the Lamp Passage and the tower, where a stair winds up round its core to the lantern room. Four tonics on the shelves: Stout Heart (take twice the knocks), Quick Hands (reload in half the time), Fleet Foot (quicker on your feet) and Second Wind (get back up once).</p>
         <p><b>The wreck chest</b> (950): a weapon you can't buy on any wall, maybe. It stands in one of five places, one of them at the very top beside the great lens. After a few goes a gull takes it (and gives you your points back), and it turns up somewhere else; look for the pale light over it. Only the chest has the <b>Fresnel Lamp</b>: a signal lantern with a lighthouse lens in it, that throws a beam of the Light's own fire. Hold the trigger, and whatever stands in the beam burns, and throws a spark to the next.</p>
-        <p><b>The Lampwright's Bench</b> (5000): somewhere deep in the station, past more than one paid door, the keepers' old bench for grinding the lens still has its fire lit. Hand it the weapon in yours and it goes behind the turning lens for a few seconds, and comes back reforged, under a new name: it hits far harder, holds more and carries more, and glows with the Light. Once each, and not the knife; lose the weapon and you lose what was done to it, and its ammunition off the wall costs a good deal more.</p>
+        <p><b>The Lampwright's Bench</b> (from 5000): somewhere up the tower, past more than one paid gate, the keepers' old bench for grinding the lens still has its fire lit. Hand it the weapon in yours and it goes behind the turning lens for a few seconds, and comes back reforged, under a new name: it hits far harder, holds more and carries more, and glows with the Light, and each one comes back working in a way of its own. It can go back into the fire again and again, dearer every time (5000, 8000, 12000, 17000...), and each time it hits harder and its new way of working grows. Not the knife; lose the weapon and you lose what was done to it, and its ammunition off the wall costs a good deal more.</p>
         <p><b>Salvage.</b> Now and then one drops something glowing: a Powder Keg (all your ammunition back), Double Salvage (double points for thirty seconds), the Black Spot (anything dies to one hit, for thirty seconds) or a Lamp Flash (every one of them in the station burns). Walk into it to take it.</p>
         <p><b>The Diver.</b> From round 10, and every fifth round after, a drowned giant in a brass helmet comes in with them, dragging an anchor. Slow, but hard to put down, and his blows take two knocks: when a ring glows on the floor in front of him, get out of it (or jump) before the anchor comes down. The round isn't held until he's down; he's worth 500 points and always drops salvage.</p>
         <p><b>Together.</b> Host a night and up to three others here can join it from this card. Nothing starts until the host presses Start the night, with whoever has joined. More of you means more of them each round. Points are your own: share the doors, race for the chest. Go down and you have half a minute on the floor for someone to hold Use beside you and get you up; bleed out and you're back next round with a pepperbox. The night ends when nobody is left standing. The pause menu doesn't stop a night together.</p>
@@ -12600,17 +12600,19 @@ function fpsHarpoonsTick(dt) {
     for (let i = 0; i < steps && !hp.done; i++) {
       const ox = hp.x, oy = hp.y, oz = hp.z;
       hp.vz -= w.drop * sdt; hp.x += hp.vx * sdt; hp.y += hp.vy * sdt; hp.z += hp.vz * sdt;
+      if (hp.skew && typeof zmpHarpoonCarry === 'function') zmpHarpoonCarry(hp, false);   // [pap] (those on the shaft)
       const seg = Math.hypot(hp.x - ox, hp.y - oy), hh = bearingOf(hp.vx, hp.vy), pp = Math.atan2(hp.vz, Math.hypot(hp.vx, hp.vy));
       // people: me (judged here), the wreckers and the drowned (judged by the host), and a guess at the others for my hit marker
       const people = [];
       if (hp.by !== m.id && !(m.dead > 0) && !(m.protect > 0)) people.push({ id: m.id, x: m.x, y: m.y, me: true });
       const hostish = FPS.host || !NET.room || !FPS.remote.size;
       for (const b of FPS.bots) if (b.id !== hp.by && !(b.dead > 0)) people.push(b);
-      for (const d of FPS.drowned) if (!d.dead) people.push(d);
+      for (const d of FPS.drowned) if (!d.dead && !((hp.skew || hp.thru) && zmpHarpoonSkip(hp, d))) people.push(d);   // ([pap] the Whale-Road passes through)
       if (hp.mine) for (const r of FPS.remote.values()) if (!r.dead) people.push(r);
       const r = fpsRay(ox, oy, oz, hh, pp, hp.by, people, seg + 0.05);
-      if (r.kind === 'none') { if (hp.z < FPSC.GROUND || hp.t > 6 || Math.hypot(hp.x - FPSC.CX, hp.y - FPSC.CY) > FPSC.R + 200) { hp.done = true; hp.stuck = hp.z < FPSC.GROUND ? 8 : 0; } continue; }
+      if (r.kind === 'none') { if (hp.z < FPSC.GROUND || hp.t > 6 || Math.hypot(hp.x - FPSC.CX, hp.y - FPSC.CY) > FPSC.R + 200) { hp.done = true; hp.stuck = hp.z < FPSC.GROUND ? 8 : 0; if (hp.skew && typeof zmpHarpoonCarry === 'function') zmpHarpoonCarry(hp, true); } continue; }
       hp.x = r.x; hp.y = r.y; hp.z = r.z; hp.done = true;
+      if (r.kind === 'body' && FPS.zm && typeof zmpHarpoonHit === 'function' && zmpHarpoonHit(hp, r)) { hp.done = false; continue; }   // [pap] the Whale-Road runs them through
       if (r.kind === 'body') {
         const o = r.who; o.hitT = 0.25;
         fpsPuff(r.x, r.y, r.z, '160,30,20', 12);
@@ -12619,7 +12621,8 @@ function fpsHarpoonsTick(dt) {
         else if (o.drowned && hostish) fpsDrownedHurt(o, w.dmg, r.head, 'h');
         if (hp.mine) { FPS.hitT = 0.25; FPS.hitHead = true; fpsHitSound(true); }
         hp.stuck = 0.6;
-      } else { hp.stuck = 8; fpsPuff(r.x, r.y, r.z, '190,190,180', 8); try { noise('bandpass', 900, 3, 0.002, 0.12, 0.15); } catch (e) {} }
+        if (hp.skew && typeof zmpHarpoonCarry === 'function') zmpHarpoonCarry(hp, true);
+      } else { if (hp.skew && typeof zmpHarpoonCarry === 'function') zmpHarpoonCarry(hp, true); hp.stuck = 8; fpsPuff(r.x, r.y, r.z, '190,190,180', 8); try { noise('bandpass', 900, 3, 0.002, 0.12, 0.15); } catch (e) {} }
     }
   }
   FPS.harps = FPS.harps.filter(hp => !hp.done || hp.stuck > 0);
@@ -13085,7 +13088,7 @@ function fpsDrawScene() {
   // tracers and smoke
   for (const t of FPS.tracers) {
     const p = polyProj([t.a, t.b]); if (p.length < 2) continue;
-    ctx.strokeStyle = `rgba(255,220,150,${t.t / 0.08 * 0.6})`; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(p[0].x, p[0].y); ctx.lineTo(p[1].x, p[1].y); ctx.stroke();
+    ctx.strokeStyle = `rgba(${t.col || '255,220,150'},${Math.min(1, t.t / (t.life || 0.08)) * (t.col ? 0.9 : 0.6)})`; ctx.lineWidth = t.w || 1.2; ctx.beginPath(); ctx.moveTo(p[0].x, p[0].y); ctx.lineTo(p[1].x, p[1].y); ctx.stroke();
   }
   for (const p of FPS.parts) { const c = cam(p.x, p.y, p.z); if (c.f < 0.6) continue; const q = proj(c); ctx.fillStyle = `rgba(${p.c},${p.t / 0.6})`; const s = Math.min(9, Math.max(1.5, 0.12 * q.s)); ctx.fillRect(q.x - s / 2, q.y - s / 2, s, s); }
   fpsDrawHarpoons();
@@ -17721,7 +17724,7 @@ function zmZombies(dt) {
     z.t += dt;
     if (z.dead) { z.deadT = (z.deadT || 0) + dt; continue; }
     if (z.boss && typeof zbTick === 'function') { zbTick(z, dt, nearest); continue; }   // [boss] he goes his own way (src/zmboss.js)
-    const step = z.sp * dt;
+    const step = z.sp * dt * (z.slow > 0 && typeof zmpSlowK === 'function' ? zmpSlowK(z) : 1);   // [pap] (slowed by the Equinox Gale)
     if (z.st === 'out') {
       // across the yard (or up the beach) to the window, waiting behind any already at it
       const w = z.win, k = w.q.indexOf(z), lane = Math.max(0, k);
@@ -17751,6 +17754,7 @@ function zmZombies(dt) {
       if (k >= 1) { z.st = 'in'; z.jz = z.fl = w.z || 0; w.q = w.q.filter(q => q !== z); z.t = 0; z.lx = z.x; z.ly = z.y; }
       continue;
     }
+    if (typeof zmpHeld === 'function' && zmpHeld(z, dt)) continue;   // [pap] swept off its feet, or nailed to the wall
     // inside: after the nearest of you, by the shortest walk
     const m = nearest(z.x, z.y, z.jz);
     if (!m) { z.walk = false; continue; }
@@ -17832,7 +17836,7 @@ function zmHurt(d, dmg, head, code, by, how) {
   d.hitT = 0.15;
   if (typeof zmpDmg === 'function') dmg = zmpDmg(dmg, code, by);   // [pap] reforged weapons hit harder (the shooter's side)
   if (ZM.net === 'client') { zmnHit(d, dmg, head, code, how); return; }
-  const k = ZM_DMG[code] == null ? 1 : ZM_DMG[code];
+  const k = (ZM_DMG[code] == null ? 1 : ZM_DMG[code]) * (d.mark > 0 ? 1.5 : 1);   // [pap] (lit by the Leading Light: hurt worse)
   d.hp -= d.boss && typeof zbHurtK === 'function' ? zbHurtK(d, dmg * k, how) : ZM.insta > 0 ? 1e9 : dmg * k;   // [boss] no one-hit kills on him
   if (d.hp <= 0) { zmKill(d, head, code, how, by); if (how === 'burn') zmChain(d, 2, by); } else zmPoints(10, false, by);
 }
@@ -17880,7 +17884,7 @@ function zmResolveShot(sh, mine) {
   }
   const hits = new Map();
   for (const [lh, lp] of fpsLines(sh)) {
-    let left = ZM_PIERCE[code] || 1, ox = x, oy = y, oz = z, gone = 0;
+    let left = (mine && typeof zmpPierce === 'function' && zmpPierce(code)) || ZM_PIERCE[code] || 1, ox = x, oy = y, oz = z, gone = 0;
     const skip = new Set();
     let last = null;
     while (left > 0) {
@@ -17897,6 +17901,7 @@ function zmResolveShot(sh, mine) {
     if (typeof zeShot === 'function' && mine) zeShot(x, y, z, lh, lp, by);   // [egg hook] src/zmegg.js
     if (last.kind !== 'body' && last.kind !== 'none') fpsPuff(last.x, last.y, last.z, last.kind === 'ground' ? '150,140,120' : '190,190,180', w.pellets ? 2 : 6);
   }
+  if (mine && typeof zmpShot === 'function') zmpShot(sh, hits);   // [pap] what a reforged weapon does
   let any = null;
   for (const [o, hit] of hits) { any = any || hit; zmHurt(o, hit.dmg, hit.head, code, FPS.me.id); }
   if (any && mine) { FPS.hitT = 0.18; FPS.hitHead = any.head; fpsHitSound(any.head); }
@@ -17914,6 +17919,7 @@ function zmKnife() {
 function zmMelee(x, y, z, h, w, code) {
   code = code || 'c';
   if (typeof zeMelee === 'function') zeMelee(x, y, z, h, w, code);   // [egg hook] src/zmegg.js
+  if (code === 'c' && typeof zmpSwing === 'function') zmpSwing(x, y, z, h);   // [pap] the Keel-Splitter's crescent
   let any = false;
   for (const o of ZM.z) {
     if (o.dead) continue;
@@ -17934,7 +17940,7 @@ function zmBeam() {
   const wall = fpsRay(ex, ey, ez, m.h, m.p, m.id, [], w.range);
   FPS.beamLen = Math.max(1.5, wall.t);
   const burn = Math.max(1.2, zmHp(Math.max(1, ZM.round)) * 0.36);
-  let any = false;
+  let any = false; const lit = [];
   for (const o of ZM.z) {
     if (o.dead) continue;
     const ox = o.x - ex, oy = o.y - ey, oz = FPSC.GROUND + (o.jz || 0) + 1.1 - ez, d = Math.hypot(ox, oy, oz);
@@ -17945,8 +17951,10 @@ function zmBeam() {
     const ray = fpsRay(ex, ey, ez, bearingOf(ox, oy), Math.atan2(oz, Math.hypot(ox, oy)), m.id, [o], w.range + 2);
     if (ray.kind !== 'body') continue;
     any = true; o.hitT = 0.2; o.scorch = Math.min(1, (o.scorch || 0) + 0.5);
+    lit.push(o);
     zmHurt(o, burn, false, 'f', FPS.me.id, 'burn');
   }
+  if (typeof zmpBeam === 'function') zmpBeam(lit, burn);   // [pap] the First-Order Lamp's prism
   if (any) { FPS.hitT = 0.12; FPS.hitHead = false; }
   zmSound('beam');
 }
@@ -18572,8 +18580,9 @@ function zmDrawOver() {
   for (const s of ZM.sparks) {
     const pts = []; for (let i = 0; i <= 6; i++) { const k = i / 6, j = i && i < 6 ? 0.25 : 0; pts.push([s.a[0] + (s.b[0] - s.a[0]) * k + (Math.random() - 0.5) * j, s.a[1] + (s.b[1] - s.a[1]) * k + (Math.random() - 0.5) * j, s.a[2] + (s.b[2] - s.a[2]) * k + (Math.random() - 0.5) * j]); }
     const p = polyProj(pts); if (p.length < 2) continue;
-    ctx.strokeStyle = `rgba(255,220,140,${s.t / 0.25})`; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(p[0].x, p[0].y); for (const q of p.slice(1)) ctx.lineTo(q.x, q.y); ctx.stroke();
+    ctx.strokeStyle = `rgba(${s.col || '255,220,140'},${s.t / (s.beam ? 0.14 : 0.25)})`; ctx.lineWidth = s.beam ? 3 : 2; ctx.beginPath(); ctx.moveTo(p[0].x, p[0].y); for (const q of p.slice(1)) ctx.lineTo(q.x, q.y); ctx.stroke();
   }
+  if (typeof zmpDrawOver === 'function') zmpDrawOver();   // [pap]
   const B = ZM.box, S = ZM.spawns[B.at];
   if (S && B.st === 'offer') {
     const c = cam(S.x, S.y, FPSC.GROUND + S.z + 1.9);
@@ -18612,6 +18621,7 @@ function zmHud() {
       else { const gap = 5 + FPS.recoil * (w.climb ? 14 : 6); for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { ctx.moveTo(cx + dx * gap, cy + dy * gap); ctx.lineTo(cx + dx * (gap + 7), cy + dy * (gap + 7)); } }
       ctx.stroke();
     }
+    if (typeof zmpHud === 'function') zmpHud(cx, cy);   // [pap] the Equinox Gale
     if (FPS.hitT > 0) { ctx.strokeStyle = FPS.hitHead ? 'rgba(255,90,60,0.95)' : 'rgba(255,240,200,0.95)'; ctx.lineWidth = 2; ctx.beginPath(); for (const [dx, dy] of [[1, 1], [-1, 1], [1, -1], [-1, -1]]) { ctx.moveTo(cx + dx * 6, cy + dy * 6); ctx.lineTo(cx + dx * 13, cy + dy * 13); } ctx.stroke(); }
   }
   const L = Math.max(14, FPS.safeLeft || 0), R = W - Math.max(14, FPS.safeRight || 0), top = phone ? Math.max(10, FPS.safeTop || 0) : 14;
@@ -18773,13 +18783,16 @@ const ZM_KEYS = { KeyF: () => zmUse(), KeyE: () => zmUse(), KeyV: () => zmKnife(
 }
 
 // ---- src/zmpap.js ----
-// The Lighthouse: the Lampwright's Bench. A brass-and-glass bench in the Store Hall where the keepers once ground and
+// The Lighthouse: the Lampwright's Bench. A brass-and-glass bench up the tower where the keepers once ground and
 // mended the great lens's prisms; 5000 points and it takes the weapon in your hand, turns it through the Light's own
 // fire behind its spinning lens for a few seconds, and gives it back reforged: a new name, a bigger magazine and
-// reserve, a warm glow along its metal, and it hits the drowned three times as hard (the Fresnel Lamp twice).
-//  - Per player, like what you carry (ZM.own, ZM.res): the reforged weapons are ZM.pap[id]. Lose the weapon (a wall
-//    buy or the chest replaces it, or you bleed out) and the reforging goes with it. A reforged weapon can't be
-//    reforged again; the knife can't be reforged at all.
+// reserve, a warm glow along its metal, it hits the drowned three times as hard (the Fresnel Lamp twice), and it
+// works in a way of its own (ZM_PAP_W[id].fx; see "what each reforged weapon does", below).
+//  - It can go back into the fire again and again, each time dearer (zmpCost): each time it hits half as hard again,
+//    carries a quarter more, takes a numeral (the Twelve Bells II, III, ...) and its own way of working grows.
+//  - Per player, like what you carry (ZM.own, ZM.res): ZM.pap[id] is how many times it's been reforged. Lose the
+//    weapon (a wall buy or the chest replaces it, or you bleed out) and the reforging goes with it. The knife can't
+//    be reforged at all.
 //  - Damage: scaled where the hit is made (zmHurt, before a joined player's hit goes to the host), so it works alone,
 //    hosting and joined alike; the host's ZM_DMG multiplier still applies on top, as for any hit.
 //  - Magazines: FPSW is shared with Wreckers' Night, so it's never changed. fpsW() (src/fps.js) asks zmpW() for the
@@ -18794,14 +18807,21 @@ const ZM_PAP_AT = { x: 0, y: 1.5 - 9.05, z: 15, nx: 0, ny: 1, zone: 'tw3s' };
 const ZM_PAP = { COST: 5000, AMMO_COST: 4500, TIME: 4.6, NAME: "the Lampwright's Bench" };
 // what each weapon becomes: its new name, magazine and reserve, and how much harder it hits the drowned
 const ZM_PAP_W = {
-  pepperbox: { n: 'Twelve Bells', mag: 12, res: 120, k: 3 },
-  blunderbuss: { n: 'Spring Tide', mag: 2, res: 48, k: 3 },
-  longarm: { n: 'Leading Light', mag: 3, res: 60, k: 3 },
-  harpoon: { n: 'Whale-Road', mag: 3, res: 40, k: 3 },
-  cutlass: { n: 'Keel-Splitter', mag: 0, res: 0, k: 3 },
-  avtomat: { n: 'Equinox Gale', mag: 50, res: 400, k: 3 },
-  fresnel: { n: 'First-Order Lamp', mag: 90, res: 450, k: 2 },
+  pepperbox: { n: 'Twelve Bells', mag: 12, res: 120, k: 3, fx: 'Every ball that strikes one of them rings off it to the next, and the next.' },
+  blunderbuss: { n: 'Spring Tide', mag: 2, res: 48, k: 3, fx: 'Each blast is a wall of green water: it sweeps them off their feet and back down the room.' },
+  longarm: { n: 'Leading Light', mag: 3, res: 60, k: 3, fx: 'The ball goes through all of them in its line, and lights each one: seen through walls, and hurt worse by everyone.' },
+  harpoon: { n: 'Whale-Road', mag: 3, res: 40, k: 3, fx: 'The iron runs them through and carries them on, and nails them to the wall it stops in.' },
+  cutlass: { n: 'Keel-Splitter', mag: 0, res: 0, k: 3, fx: 'Every stroke throws a crescent of the sea on along the floor, cutting all it passes.' },
+  avtomat: { n: 'Equinox Gale', mag: 50, res: 400, k: 3, fx: 'Held down, it spins up into a gale; at full gale its rounds run cold, and slow what they hit.' },
+  fresnel: { n: 'First-Order Lamp', mag: 90, res: 450, k: 2, fx: 'Its beam breaks in each one it burns, like light in a prism, and burns the ones beside it.' },
 };
+// how many times a weapon of yours has been reforged (0: never), and what the next time costs (t: the time it'd be)
+const zmpTier = id => (ZM.pap && ZM.pap[id]) | 0;
+const zmpCost = t => ZM_PAP.COST + 2000 * (t - 1) + 500 * (t - 1) * t;   // 5000, 8000, 12000, 17000, 23000, ...
+function zmpRoman(n) { let s = ''; for (const [v, c] of [[1000, 'M'], [900, 'CM'], [500, 'D'], [400, 'CD'], [100, 'C'], [90, 'XC'], [50, 'L'], [40, 'XL'], [10, 'X'], [9, 'IX'], [5, 'V'], [4, 'IV'], [1, 'I']]) while (n >= v) { s += c; n -= v; } return s; }
+const zmpTitle = (id, t) => ZM_PAP_W[id].n + (t > 1 ? ' ' + zmpRoman(t) : '');
+const zmpRes = (id, t) => Math.round(ZM_PAP_W[id].res * (1 + 0.25 * (t - 1)));
+const zmpK = (id, t) => ZM_PAP_W[id].k * Math.pow(1.5, t - 1);
 const ZM_PAP_GLOW = 0xffa838;
 
 // ---------- the bench itself (a prop: its solid and its static parts) ----------
@@ -18845,24 +18865,24 @@ function zmpPlace(put, light, W, Z) {
 const zmpAt = () => FPS.g && FPS.g.isle && FPS.g.isle.zm && FPS.g.isle.zm.pap;
 
 // ---------- the state ----------
-function zmpReset() { ZM.pap = {}; ZM.forge = { st: 'idle', id: null, t: 0 }; }
+function zmpReset() { ZM.pap = {}; ZM.forge = { st: 'idle', id: null, t: 0 }; zmpFxReset(); }
 // the weapon as it is in your hands: its reforged copy, if it's been reforged (else null)
 const ZM_PAP_CACHE = {};
 function zmpW(id) {
   if (!ZM.on || !ZM.pap || !ZM.pap[id] || !ZM_PAP_W[id] || !FPSW[id]) return null;
-  let w = ZM_PAP_CACHE[id];
-  if (!w || w.base !== FPSW[id]) { const U = ZM_PAP_W[id]; w = ZM_PAP_CACHE[id] = Object.assign({}, FPSW[id], { n: U.n, mag: FPSW[id].melee ? FPSW[id].mag : U.mag, pap: true, base: FPSW[id] }); }
+  let w = ZM_PAP_CACHE[id]; const t = zmpTier(id);
+  if (!w || w.base !== FPSW[id] || w.tier !== t) { const U = ZM_PAP_W[id]; w = ZM_PAP_CACHE[id] = Object.assign({}, FPSW[id], { n: zmpTitle(id, t), mag: FPSW[id].melee ? FPSW[id].mag : U.mag, pap: true, base: FPSW[id], tier: t }); }
   return w;
 }
 const zmpName = id => (zmpW(id) || FPSW[id]).n;
 const zmpMag = id => (zmpW(id) || FPSW[id]).mag;
-const zmpAmmo = id => ZM.pap && ZM.pap[id] && ZM_PAP_W[id] ? ZM_PAP_W[id].res : ZM_AMMO[id];
+const zmpAmmo = id => zmpTier(id) && ZM_PAP_W[id] ? zmpRes(id, zmpTier(id)) : ZM_AMMO[id];
 // (from zmHurt) my own hit with a reforged weapon hits harder; anyone else's was scaled where they made it
 function zmpDmg(dmg, code, by) {
   if (by && by !== FPS.me.id) return dmg;
   if (!ZM.pap || code === 'k') return dmg;
   const id = FPSW_BY_CODE[code];
-  return id && ZM.pap[id] && ZM_PAP_W[id] ? dmg * ZM_PAP_W[id].k : dmg;
+  return id && zmpTier(id) && ZM_PAP_W[id] ? dmg * zmpK(id, zmpTier(id)) : dmg;
 }
 
 // ---------- each tick ----------
@@ -18881,23 +18901,25 @@ function zmpTick(dt) {
     if (F.t >= ZM_PAP.TIME) zmpDone();
   }
   zmpTint();
+  zmpFxTick(dt);
 }
 function zmpDone() {
-  const m = FPS.me, F = ZM.forge, id = F.id, U = ZM_PAP_W[id];
+  const m = FPS.me, F = ZM.forge, id = F.id, U = ZM_PAP_W[id], cost = F.cost || ZM_PAP.COST;
   F.st = 'idle'; F.id = null; F.t = 0;
   if (!ZM.own.includes(id)) {
     // (it went from your hands while it was on the bench: the points come back)
-    ZM.pts += ZM_PAP.COST; ZM.spent -= ZM_PAP.COST;
+    ZM.pts += cost; ZM.spent -= cost;
     fpsFeed('The bench has nothing to give back to you. The points are returned.');
     return;
   }
-  ZM.pap[id] = true;
+  const was = zmpTier(id), t = ZM.pap[id] = was + 1;
   const w = zmpW(id);
-  if (!w.melee) { m.mags[id] = w.mag; ZM.res[id] = U.res; }
+  if (!w.melee) { m.mags[id] = w.mag; ZM.res[id] = zmpRes(id, t); }
   if (FPS.weapon === id) { if (!w.melee) m.ammo = w.mag; m.reload = 0; m.cd = 0; FPS.drawT = 0.45; }
   else if (!(m.dead > 0)) fpsSwitch(id);
-  ZM.banner = { text: U.n, t: 3, col: '#ffc070' };
-  fpsFeed(`The ${FPSW[id].n} comes back out of the fire as the ${U.n}.`);
+  ZM.banner = { text: w.n, t: 3, col: '#ffc070' };
+  if (was) fpsFeed(`Back out of the fire, hotter than before: the ${w.n}.`);
+  else { fpsFeed(`The ${FPSW[id].n} comes back out of the fire as the ${U.n}.`); fpsFeed(U.fx); }
   zmpSound('done');
 }
 
@@ -18917,27 +18939,29 @@ function zmpPrompt(o) {
   const F = ZM.forge, id = FPS.weapon;
   if (F.st === 'work') return { text: `The bench is at work on your ${FPSW[F.id].n}…` };
   if (!ZM_PAP_W[id]) return { text: `${ZM_PAP.NAME}: nothing it can reforge` };
-  if (ZM.pap[id]) return { text: `The ${ZM_PAP_W[id].n} has been through the fire already` };
-  return { text: `Reforge the ${FPSW[id].n} at ${ZM_PAP.NAME}`, cost: ZM_PAP.COST };
+  const t = zmpTier(id);
+  if (t) return { text: `Into the fire again: the ${zmpTitle(id, t)} becomes the ${zmpTitle(id, t + 1)}`, cost: zmpCost(t + 1) };
+  return { text: `Reforge the ${FPSW[id].n} at ${ZM_PAP.NAME}`, cost: zmpCost(1) };
 }
 // (from zmUse) true if it was the bench (or a reforged weapon's ammunition) that was used
 function zmpUse(o) {
   const m = FPS.me;
   const pay = c => { if (ZM.pts < c) { zmSound('no'); fpsFeed('Not enough points.'); return false; } ZM.pts -= c; ZM.spent += c; return true; };
   if (o.k === 'buy' && ZM.pap && ZM.pap[o.b.id] && ZM.own.includes(o.b.id)) {
-    const id = o.b.id, w = zmpW(id), U = ZM_PAP_W[id];
+    const id = o.b.id, w = zmpW(id), full = zmpRes(id, zmpTier(id));
     if (w.melee) return true;
-    if ((ZM.res[id] || 0) >= U.res && (FPS.weapon !== id || m.ammo >= w.mag)) { fpsFeed('You can’t carry any more.'); return true; }
+    if ((ZM.res[id] || 0) >= full && (FPS.weapon !== id || m.ammo >= w.mag)) { fpsFeed('You can’t carry any more.'); return true; }
     if (!pay(ZM_PAP.AMMO_COST)) return true;
-    ZM.res[id] = U.res; m.mags[id] = w.mag; if (FPS.weapon === id) m.ammo = w.mag;
+    ZM.res[id] = full; m.mags[id] = w.mag; if (FPS.weapon === id) m.ammo = w.mag;
     zmSound('buy');
     return true;
   }
   if (o.k !== 'pap') return false;
   const F = ZM.forge, id = FPS.weapon;
-  if (F.st === 'work' || !ZM_PAP_W[id] || ZM.pap[id] || !ZM.own.includes(id)) { zmSound('no'); return true; }
-  if (!pay(ZM_PAP.COST)) return true;
-  F.st = 'work'; F.id = id; F.t = 0; F.sT = 0.6;
+  if (F.st === 'work' || !ZM_PAP_W[id] || !ZM.own.includes(id)) { zmSound('no'); return true; }
+  const cost = zmpCost(zmpTier(id) + 1);
+  if (!pay(cost)) return true;
+  F.st = 'work'; F.id = id; F.t = 0; F.sT = 0.6; F.cost = cost;
   m.mags[id] = m.ammo;
   // (your other weapon comes to hand while this one's on the bench)
   const other = ZM.own.find(k => k !== id);
@@ -18970,15 +18994,20 @@ function zmpStop() {
   for (const [mt, [h, i]] of ZMP_TINT) { mt.emissive.setHex(h); mt.emissiveIntensity = i; }
   ZMP_TINT.clear();
   if (ZM.forge) ZM.forge.st = 'idle';
-  ZM.pap = {};
+  ZM.pap = {}; zmpFxReset();
 }
 
 // ---------- sounds ----------
-function zmpSound(k) {
+function zmpSound(k, i) {
   try {
     if (soundOff()) return;
     if (k === 'start') { noise('bandpass', 260, 3, 0.05, 0.25, 0.9, { to: 900 }); tone(110, 'sawtooth', 0.2, 0.06, 1.2, { to: 220 }); }
     else if (k === 'grind') { noise('bandpass', 1800 + Math.random() * 600, 6, 0.02, 0.07, 0.35); tone(140 + Math.random() * 30, 'triangle', 0.05, 0.05, 0.4); }
+    else if (k === 'ring') { const f = 1180 * Math.pow(1.12, i || 0); tone(f, 'sine', 0.002, 0.05, 0.55, { delay: (i || 0) * 0.03 }); tone(f * 2.76, 'sine', 0.002, 0.02, 0.3, { delay: (i || 0) * 0.03 }); }
+    else if (k === 'wave') { noise('lowpass', 900, 1, 0.01, 0.28, 0.8, { to: 300 }); noise('highpass', 2500, 1, 0.05, 0.1, 0.7); }
+    else if (k === 'slash') { noise('bandpass', 1400, 2, 0.01, 0.16, 0.45, { to: 500 }); tone(520, 'sine', 0.01, 0.04, 0.4, { to: 260 }); }
+    else if (k === 'skewer') { noise('bandpass', 500, 4, 0.002, 0.14, 0.18); }
+    else if (k === 'nail') { tone(90, 'triangle', 0.002, 0.2, 0.35, { to: 50 }); noise('bandpass', 700, 3, 0.002, 0.18, 0.25); }
     else if (k === 'done') { sfxBellFar(0, 0.7); for (let i = 0; i < 4; i++) tone(392 * Math.pow(1.26, i), 'triangle', 0.005, 0.1, 0.5, { delay: i * 0.09 }); noise('highpass', 3000, 1, 0.01, 0.12, 0.6, { delay: 0.1 }); }
   } catch (e) {}
 }
@@ -19005,7 +19034,7 @@ function zmp3dBuild() {
   // the weapon, on its way in and out
   const show = new THREE.Group(); g.add(show);
   // its name and price, chalked on the board over it
-  const ch = z3Chalk([["LAMPWRIGHT'S BENCH", 21], [String(ZM_PAP.COST), 40]], 1.8, 0.46); ch.position.set(0, 2.9, 0.32); ch.rotation.y = Math.PI; g.add(ch);
+  const ch = z3Chalk([["LAMPWRIGHT'S BENCH", 21], [ZM_PAP.COST + ' +', 40]], 1.8, 0.46); ch.position.set(0, 2.9, 0.32); ch.rotation.y = Math.PI; g.add(ch);
   const light = new THREE.PointLight(0xffb860, 0.8, 8, 1.5); light.position.set(0, 1.7, -0.9); g.add(light);
   // sparks thrown off the wheel while it works
   const sparks = [];
@@ -19041,6 +19070,266 @@ function zmp3d(dt) {
     if (s.t > 0) { s.t -= dt; s.m.position.addScaledVector(s.v, dt); s.v.y -= dt * 4; s.m.visible = s.t > 0; continue; }
     if (work && !reduceMotion && Math.random() < dt * 14) { const a = Math.random() * Math.PI * 2; s.t = 0.5 + Math.random() * 0.4; s.m.position.set(Math.cos(a) * 0.6, 1.86 + Math.sin(a) * 0.6, 0.05); s.v.set(Math.cos(a) * 1.5, Math.sin(a) * 1.5 + 0.8, -0.8 - Math.random()); s.m.visible = true; }
   }
+}
+
+// ---------- what each reforged weapon does (each grows with every reforging, t) ----------
+//  Twelve Bells (pepperbox): a ball that strikes one rings off it to the nearest other, and on: 1 + t bounces.
+//  Spring Tide (blunderbuss): the blast is a wall of water: everything in front of you, hit or not, is swept back
+//    and off its feet (the pellets still do the hurting).
+//  Leading Light (longarm): the ball goes through every one in its line, and lights them: a lit one is seen through
+//    walls and takes half as much again from everyone's hits, for a while.
+//  Whale-Road (harpoon): the iron runs them through and carries them on its shaft, and nails them to the wall or the
+//    floor where it stops (a second hit, and held there).
+//  Keel-Splitter (cutlass): each stroke throws a crescent of the sea on across the floor, cutting every one it passes.
+//  Equinox Gale (avtomat): held down, it spins up to a gale (two and a half times the rate); at full gale its rounds
+//    run cold, and what they hit is slowed.
+//  First-Order Lamp (fresnel): the beam breaks in each one it burns, like light in a prism, onto those beside it.
+// The Diver can be hurt, lit and slowed like the rest, but nothing moves him or holds him.
+// What happens to the drowned is done by whoever runs them: alone or hosting, here; joined, it's asked of the host
+// (zmnRequest 'pst'), with the hit itself, so everyone sees them swept, nailed and slowed.
+const ZMPX = { st: [], waves: [], gale: 0 };
+function zmpFxReset() { ZMPX.st = []; ZMPX.waves = []; ZMPX.gale = 0; }
+const zmpG = o => FPSC.GROUND + (o.jz || 0);
+// something done to one of the drowned: kb (swept back a, b metres, off its feet c s), pin (held a s, at b, c from
+// the island's middle if given), slow (a s), mark (lit, a s)
+function zmpStatus(o, k, a, b, c) {
+  if (!o || o.dead) return;
+  if (k === 'mark') o.mark = Math.max(o.mark || 0, a);
+  if (ZM.net === 'client') { ZMPX.st.push([o.zn, k, a, b, c]); return; }
+  zmpApply(o, k, a, b, c);
+}
+function zmpApply(o, k, a, b, c) {
+  if (!o || o.dead) return;
+  if (k === 'mark') { o.mark = Math.max(o.mark || 0, a); return; }
+  if (k === 'slow') { o.slow = Math.max(o.slow || 0, a); return; }
+  if (o.boss || o.st !== 'in') return;
+  if (k === 'kb') { o.kvx = a * 5; o.kvy = b * 5; o.stun = Math.max(o.stun || 0, c || 0.9); o.pin = 0; }
+  else if (k === 'pin') {
+    if (b != null && c != null && isFinite(b) && isFinite(c)) {
+      const x = FPSC.CX + b, y = FPSC.CY + c;
+      if (Math.hypot(x - o.x, y - o.y) < 40 && !zmBlockedAt(x, y, 0.2, o.jz || 0)) { o.x = x; o.y = y; zmSettle(o); }
+    }
+    o.pin = Math.max(o.pin || 0, a); o.px = o.x; o.py = o.y; o.kvx = o.kvy = 0;
+  }
+}
+// (host) what a joined player's weapon did: "zn,k,a,b,c;..." (values in hundredths)
+function zmpStatusFrom(sid, a) {
+  const lim = { kb: [8, 8, 3], pin: [12, 400, 400], slow: [10], mark: [20] };
+  for (const e of String(a || '').slice(0, 1500).split(';').slice(0, 24)) {
+    const f = e.split(','), zn = +f[0], k = f[1], L = lim[k]; if (!L) continue;
+    const o = ZM.z.find(q => q.zn === zn); if (!o) continue;
+    const v = [2, 3, 4].map((i, j) => f[i] === '' || f[i] == null || j >= L.length ? null : clamp((+f[i] || 0) / 100, -L[j], L[j]));
+    zmpApply(o, k, v[0], v[1], v[2]);
+  }
+}
+// (from zmZombies, alone or hosting) one being swept, nailed or knocked down: true while it can't come on
+function zmpHeld(z, dt) {
+  if (z.kvx || z.kvy) {
+    zmMove(z, z.kvx * dt, z.kvy * dt);
+    const f = Math.exp(-dt * 5); z.kvx *= f; z.kvy *= f;
+    if (Math.hypot(z.kvx, z.kvy) < 0.25) z.kvx = z.kvy = 0;
+  }
+  if ((z.jz || 0) > (z.fl || 0)) z.jz = Math.max(z.fl || 0, z.jz - 9 * dt);
+  if (z.pin > 0) { if (z.px != null) { z.x = z.px; z.y = z.py; } z.walk = false; return true; }
+  if (z.stun > 0) { z.walk = false; return true; }
+  return false;
+}
+const zmpSlowK = z => z.slow > 0 ? 0.45 : 1;
+// a line of sight from one point to one of them
+function zmpSees(x, y, z, o) {
+  const tz = zmpG(o) + 1.2, d = Math.hypot(o.x - x, o.y - y);
+  const r = fpsRay(x, y, z, bearingOf(o.x - x, o.y - y), Math.atan2(tz - z, Math.max(0.05, d)), FPS.me.id, [o], d + 2);
+  return r.kind === 'body';
+}
+// the nearest of them to a point (not in skip), within r, on about the same floor, and in sight
+function zmpNextTo(x, y, z, r, skip) {
+  let best = null, bd = r;
+  for (const o of ZM.z) {
+    if (o.dead || skip.has(o) || o.st === 'out') continue;
+    const d = Math.hypot(o.x - x, o.y - y);
+    if (d < bd && Math.abs(zmpG(o) + 1.2 - z) < 2.4 && zmpSees(x, y, z, o)) { bd = d; best = o; }
+  }
+  return best;
+}
+const zmpTrace = (a, b, col, w, life) => FPS.tracers.push({ a, b, t: life, life, col, w });
+
+// (from zmResolveShot, my own shot) hits: what the shot's lines struck (Map: one -> { dmg, head }), before it's dealt
+function zmpShot(sh, hits) {
+  const [, x, y, z, h, p, , code] = sh, id = FPSW_BY_CODE[code], t = zmpTier(id);
+  if (!t) return;
+  const w = FPSW[id];
+  if (code === 'p') {
+    // Twelve Bells: each ball rings on from what it struck
+    const struck = [...hits.keys()], skip = new Set(struck);
+    for (const o0 of struck) {
+      let from = o0, head = hits.get(o0).head;
+      for (let i = 0; i < Math.min(8, 1 + t); i++) {
+        const fz = zmpG(from) + (head ? 1.65 : 1.2), nx = zmpNextTo(from.x, from.y, fz, 9 + t, skip);
+        if (!nx) break;
+        skip.add(nx);
+        const prev = hits.get(nx) || { dmg: 0, head: false };
+        prev.dmg += head ? w.head : w.dmg; prev.head = prev.head || head; hits.set(nx, prev);
+        zmpTrace([from.x, from.y, fz], [nx.x, nx.y, zmpG(nx) + (head ? 1.65 : 1.2)], '255,236,170', 2, 0.16);
+        zmpSound('ring', i);
+        from = nx;
+      }
+    }
+  } else if (code === 'b') {
+    // Spring Tide: a wall of water out in front: everything in it swept back and off its feet
+    const reach = 6 + t * 0.5, dist = Math.min(6.5, 3 + 0.5 * (t - 1)), down = Math.min(2.2, 1.0 + 0.15 * (t - 1)), fz = z - FPSC.EYE;
+    for (const o of ZM.z) {
+      if (o.dead || o.st !== 'in') continue;
+      const d = Math.hypot(o.x - x, o.y - y), b = bearingOf(o.x - x, o.y - y);
+      if (d > reach || Math.abs(angDiff(b, h)) > 0.55 || Math.abs(zmpG(o) - FPSC.GROUND - fz) > 1.3) continue;
+      if (!hits.has(o) && !zmpSees(x, y, z - 0.3, o)) continue;
+      const k = (hits.has(o) ? 1 : 0.7) * (1 - d / reach * 0.4);
+      zmpStatus(o, 'kb', Math.sin(b) * dist * k, Math.cos(b) * dist * k, down);
+    }
+    for (let i = 0; i < 46; i++) {
+      const a = h + (Math.random() - 0.5) * 1.0, sp = 8 + Math.random() * 9;
+      FPS.parts.push({ x: x + Math.sin(a) * 0.8, y: y + Math.cos(a) * 0.8, z: z - 0.4 + (Math.random() - 0.4) * 0.8, vx: Math.sin(a) * sp, vy: Math.cos(a) * sp, vz: Math.random() * 3, t: 0.55, c: Math.random() < 0.5 ? '170,220,225' : '230,245,240' });
+    }
+    zmpSound('wave');
+  } else if (code === 'l') {
+    // Leading Light: (it went through them all: zmpPierce) every one it struck is lit
+    for (const o of hits.keys()) zmpStatus(o, 'mark', 6 + 1.5 * (t - 1));
+    const tr = FPS.tracers[FPS.tracers.length - 1]; if (tr) { tr.col = '255,226,140'; tr.w = 3.5; tr.t = tr.life = 0.6; }
+  } else if (code === 'a') {
+    // Equinox Gale: at full gale the rounds run cold
+    const tr = FPS.tracers[FPS.tracers.length - 1];
+    if (ZMPX.gale >= 0.98) {
+      for (const o of hits.keys()) zmpStatus(o, 'slow', 1.4 + 0.3 * (t - 1));
+      if (tr) { tr.col = '190,230,255'; tr.w = 2; tr.t = tr.life = 0.12; }
+    } else if (tr && ZMPX.gale > 0.3) { tr.col = '230,235,230'; }
+  }
+}
+// (from zmResolveShot) how many a shot of mine goes through: the Leading Light, all of them in its line
+const zmpPierce = code => code === 'l' && zmpTier('longarm') ? 99 : 0;
+
+// Keel-Splitter: (from zmMelee, my own stroke of the cutlass) a crescent of the sea, thrown on along the floor
+function zmpSwing(x, y, z, h) {
+  const t = zmpTier('cutlass'); if (!t) return;
+  ZMPX.waves.push({ x, y, fz: (FPS.me.jz || 0), h, d: 0.6, max: Math.min(22, 11 + 2 * (t - 1)), hw: Math.min(2.4, 1.3 + 0.15 * (t - 1)), hit: new Set(), t: 0 });
+  zmpSound('slash');
+}
+function zmpWaves(dt) {
+  const w = FPSW.cutlass;
+  for (const v of ZMPX.waves) {
+    v.t += dt; v.d += dt * 19;
+    const cx = v.x + Math.sin(v.h) * v.d, cy = v.y + Math.cos(v.h) * v.d;
+    if (v.d >= v.max || zmBlockedAt(cx, cy, 0.15, v.fz)) { v.done = true; fpsPuff(cx, cy, FPSC.GROUND + v.fz + 0.6, '170,230,220', 8); continue; }
+    const hw = v.hw + v.d * 0.05;
+    for (const o of ZM.z) {
+      if (o.dead || v.hit.has(o) || Math.abs((o.jz || 0) - v.fz) > 1.3) continue;
+      const dx = o.x - v.x, dy = o.y - v.y, along = dx * Math.sin(v.h) + dy * Math.cos(v.h), side = dx * Math.cos(v.h) - dy * Math.sin(v.h);
+      if (along < v.d - 0.9 || along > v.d + 0.5 || Math.abs(side) > hw + (o.rad || 0.3)) continue;
+      v.hit.add(o); o.hitT = 0.25;
+      zmHurt(o, w.dmg, false, 'c', FPS.me.id);
+      for (let i = 0; i < 6; i++) FPS.parts.push({ x: o.x, y: o.y, z: zmpG(o) + 1 + Math.random() * 0.6, vx: Math.sin(v.h) * 4 + (Math.random() - 0.5) * 3, vy: Math.cos(v.h) * 4 + (Math.random() - 0.5) * 3, vz: Math.random() * 3, t: 0.5, c: '200,245,235' });
+      FPS.hitT = 0.15; FPS.hitHead = false;
+    }
+  }
+  ZMPX.waves = ZMPX.waves.filter(v => !v.done);
+}
+
+// Whale-Road: (from fpsHarpoonsTick, my own harpoon striking one of them) true: on it goes, with that one on it
+function zmpHarpoonHit(hp, r) {
+  const t = zmpTier('harpoon'), o = r.who;
+  if (!hp.mine || !t || !o || !o.zm) return false;
+  if (hp.skew && hp.skew.includes(o)) return true;
+  if (o.boss) return false;   // (it stops in him, and hurts him as any harpoon would)
+  zmHurt(o, FPSW.harpoon.dmg, r.head, 'h', FPS.me.id); o.hitT = 0.25;
+  fpsPuff(r.x, r.y, r.z, '160,30,20', 10);
+  FPS.hitT = 0.25; FPS.hitHead = !!r.head; fpsHitSound(!!r.head);
+  hp.thru = hp.thru || new Set(); hp.thru.add(o);
+  if (!o.dead && o.st === 'in' && (hp.skew || []).length < 2 + t) { (hp.skew = hp.skew || []).push(o); hp.vx *= 0.9; hp.vy *= 0.9; zmpSound('skewer'); }
+  return true;
+}
+// (each step of its flight, and where it stops) those on the shaft go with it, and are nailed where it stops
+function zmpHarpoonCarry(hp, end) {
+  const t = zmpTier('harpoon'); if (!hp.skew) return;
+  hp.skew = hp.skew.filter(o => !o.dead);
+  const v = Math.hypot(hp.vx, hp.vy) || 1, ux = hp.vx / v, uy = hp.vy / v;
+  hp.skew.forEach((o, i) => {
+    const x = hp.x - ux * (0.55 + i * 0.75), y = hp.y - uy * (0.55 + i * 0.75);
+    if (ZM.net !== 'client' && !end) { if (!zmBlockedAt(x, y, 0.25, o.jz || 0)) { o.x = x; o.y = y; } zmSettle(o); o.stun = Math.max(o.stun || 0, 0.25); o.kvx = o.kvy = 0; }
+    if (end) {
+      zmpStatus(o, 'pin', 3.5 + 0.6 * (t - 1), x - FPSC.CX, y - FPSC.CY);
+      zmHurt(o, FPSW.harpoon.dmg, false, 'h', FPS.me.id);
+    }
+  });
+  if (end) { if (hp.skew.length) zmpSound('nail'); hp.skew = null; }
+}
+// (is this one already on the shaft, or been through: the harpoon passes it)
+const zmpHarpoonSkip = (hp, d) => !!((hp.skew && hp.skew.includes(d)) || (hp.thru && hp.thru.has(d)));
+
+// First-Order Lamp: (from zmBeam) lit: those burning in the beam this tenth of a second; burn: how hard
+function zmpBeam(lit, burn) {
+  const t = zmpTier('fresnel'); if (!t || !lit.length) return;
+  const skip = new Set(lit), per = Math.min(5, 1 + t), cols = ['255,120,110', '140,255,160', '150,170,255', '255,230,120', '230,140,255'];
+  let n = 0;
+  for (const o of lit.slice(0, 4)) {
+    const fz = zmpG(o) + 1.2;
+    for (let i = 0; i < per; i++) {
+      const q = zmpNextTo(o.x, o.y, fz, 6 + t, skip); if (!q) break;
+      skip.add(q); q.hitT = 0.2; q.scorch = Math.min(1, (q.scorch || 0) + 0.4);
+      ZM.sparks.push({ a: [o.x, o.y, fz], b: [q.x, q.y, zmpG(q) + 1.2], t: 0.14, col: cols[(n++) % cols.length], beam: true });
+      zmHurt(q, burn * 0.7, false, 'f', FPS.me.id, 'burn');
+    }
+  }
+}
+
+// each tick (from zmpTick): the waves, the gale, how long each spell on the drowned lasts, and asking the host
+function zmpFxTick(dt) {
+  if (!ZM.on) return;
+  zmpWaves(dt);
+  // the gale: held down, it spins up; let go (or it's dry, or not in hand), it runs down
+  const a = zmpTier('avtomat') ? zmpW('avtomat') : null, m = FPS.me;
+  const firing = a && FPS.weapon === 'avtomat' && FPS.heldFire && m.ammo > 0 && !(m.reload > 0) && !(m.dead > 0) && !(FPS.drawT > 0);
+  ZMPX.gale = firing ? Math.min(1, ZMPX.gale + dt / 1.4) : Math.max(0, ZMPX.gale - dt * 1.6);
+  if (a) a.rate = a.base.rate * (1 - Math.min(0.66, 0.6 + 0.02 * (a.tier - 1)) * ZMPX.gale);
+  for (const o of ZM.z) {
+    if (o.stun > 0) o.stun -= dt; if (o.pin > 0) o.pin -= dt; if (o.slow > 0) o.slow -= dt; if (o.mark > 0) o.mark -= dt;
+  }
+  if (ZMPX.st.length && ZM.net === 'client' && typeof zmnRequest === 'function') {
+    const r = v => v == null || !isFinite(v) ? '' : Math.round(v * 100);
+    zmnRequest('pst', ZMPX.st.slice(0, 24).map(s => [s[0], s[1], r(s[2]), r(s[3]), r(s[4])].join(',')).join(';'));
+    ZMPX.st = [];
+  }
+}
+
+// (from zmDrawOver) the lit ones, seen through anything; the crescents; the gale round the sights
+function zmpDrawOver() {
+  const tm = FPS.g ? FPS.g.t : 0;
+  for (const o of ZM.z) {
+    if (!(o.mark > 0) || o.dead) continue;
+    const c = cam(o.x, o.y, zmpG(o) + 2.3); if (c.f < 0.5) continue;
+    const q = proj(c), s = clamp(q.s * 0.22, 5, 20), a = Math.min(1, o.mark) * (0.75 + 0.25 * Math.sin(tm * 6 + o.zn));
+    const gr = ctx.createRadialGradient(q.x, q.y, 0, q.x, q.y, s * 2.2);
+    gr.addColorStop(0, `rgba(255,236,170,${0.9 * a})`); gr.addColorStop(0.35, `rgba(255,200,110,${0.45 * a})`); gr.addColorStop(1, 'rgba(255,190,90,0)');
+    ctx.fillStyle = gr; ctx.beginPath(); ctx.arc(q.x, q.y, s * 2.2, 0, 6.283); ctx.fill();
+    ctx.strokeStyle = `rgba(255,240,200,${a})`; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(q.x, q.y - s); ctx.lineTo(q.x + s * 0.55, q.y); ctx.lineTo(q.x, q.y + s); ctx.lineTo(q.x - s * 0.55, q.y); ctx.closePath(); ctx.stroke();
+  }
+  for (const v of ZMPX.waves) {
+    const hw = v.hw + v.d * 0.05, pts = [];
+    for (let i = 0; i <= 12; i++) {
+      const k = i / 12 * 2 - 1, side = k * hw, fwd = v.d - k * k * 0.9;
+      pts.push([v.x + Math.sin(v.h) * fwd + Math.cos(v.h) * side, v.y + Math.cos(v.h) * fwd - Math.sin(v.h) * side, FPSC.GROUND + v.fz + 0.9 + (1 - k * k) * 0.35]);
+    }
+    const p = polyProj(pts); if (p.length < 2) continue;
+    const fade = Math.max(0, 1 - v.d / v.max * 0.6);
+    for (const [lw, col] of [[14, `rgba(90,200,190,${0.25 * fade})`], [6, `rgba(170,240,230,${0.6 * fade})`], [2.5, `rgba(240,255,250,${0.95 * fade})`]]) {
+      ctx.strokeStyle = col; ctx.lineWidth = lw; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(p[0].x, p[0].y); for (const q of p.slice(1)) ctx.lineTo(q.x, q.y); ctx.stroke();
+    }
+  }
+}
+// (from zmHud) the gale, as a ring of light round the sights
+function zmpHud(cxs, cys) {
+  if (!zmpTier('avtomat') || FPS.weapon !== 'avtomat' || ZMPX.gale <= 0.02) return;
+  const g = ZMPX.gale, full = g >= 0.98;
+  ctx.strokeStyle = full ? 'rgba(190,230,255,0.85)' : `rgba(236,228,207,${0.25 + g * 0.4})`; ctx.lineWidth = full ? 3 : 2;
+  ctx.beginPath(); ctx.arc(cxs, cys, 22, -Math.PI / 2, -Math.PI / 2 + g * Math.PI * 2); ctx.stroke();
 }
 
 // ---- src/zmboss.js ----
@@ -20496,6 +20785,7 @@ function znRequestFrom(sid, k, a) {
   if (k === 'take') { if (ZM.box.st === 'offer' && ZM.box.owner === sid) { ZM.box.st = 'idle'; ZM.box.t = 0; } return; }
   if (k === 'board') { const w = ZM.windows[a | 0]; if (w && w.boards < 6 && !ZM.z.some(z => z.win === w && z.st === 'climb')) { w.boards++; zmBoardPay(sid); } return; }
   if (k === 'rev') { zmnRevive(String(a)); return; }
+  if (k === 'pst') { if (typeof zmpStatusFrom === 'function') zmpStatusFrom(sid, a); return; }   // [pap] what a reforged weapon did to them
   if (k === 'egg') { if (typeof zeRequest === 'function') zeRequest(sid, a); return; }   // [egg hook] src/zmegg.js
 }
 // someone gets someone up: everyone's told (and if it's me, up I get)
@@ -20513,7 +20803,7 @@ function znHostSend() {
   z.h = [++ZN.hseq, ZM.round, ZM.over ? 3 : ZN_PH[ZM.phase] | 0, Math.round(ZM.t * 10), ZM.left, Math.round(Math.max(0, ZM.double) * 10), Math.round(Math.max(0, ZM.insta) * 10)];
   // the drowned: id.x.y.jz.h.state.kind.swing.flags.window.seed.scorch, each in base 36
   z.z = ZM.z.filter(q => !q.gone).slice(0, 40).map(q => [q.zn, (q.x - CX) * 10 + 9000, (q.y - CY) * 10 + 9000, (q.jz || 0) * 10, (((q.h % TAU) + TAU) % TAU) * 100, ZN_ST[q.st] | 0, ZN_KIND.indexOf(q.kind), q.swing < 0 ? 0 : q.swing * 100 + 1,
-    (q.dead ? 1 : 0) | (q.burn ? 2 : 0) | (q.head ? 4 : 0) | (q.walk ? 8 : 0), q.win ? q.win.id : 0, q.seed % 1296, (q.scorch || 0) * 9].map(zb36).join('.')).join('~');
+    (q.dead ? 1 : 0) | (q.burn ? 2 : 0) | (q.head ? 4 : 0) | (q.walk ? 8 : 0) | (q.mark > 0 ? 16 : 0), q.win ? q.win.id : 0, q.seed % 1296, (q.scorch || 0) * 9].map(zb36).join('.')).join('~');
   z.b = ZM.windows.map(w => w.boards).join('');
   z.dm = ZM.doors.reduce((s, d, i) => s | (d.open ? 1 << i : 0), 0);
   const B = ZM.box;
@@ -20625,6 +20915,7 @@ function znApply(hz) {
     z.swing = sw;
     const fl = a[8];
     z.walk = !!(fl & 8); z.scorch = a[11] / 9;
+    if (fl & 16) z.mark = Math.max(z.mark || 0, 0.3);   // [pap] lit by someone's Leading Light
     if ((fl & 1) && !z.dead) { z.dead = 1; z.deadT = 0; z.burn = !!(fl & 2); z.head = !!(fl & 4); zmKillFx(z); }
   }
   for (const z of ZM.z) if (!have.has(z.zn) && !(z.dead && z.deadT < 2.4)) { if (z.mdl) zmFreeModel(z); z.remove = true; }
