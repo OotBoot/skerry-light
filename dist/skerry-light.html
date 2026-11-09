@@ -1184,6 +1184,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
         <p><b>Points.</b> 10 a hit, 60 a kill, 100 for one through the head, 130 with the cutlass. You start in the Keeper's Quarters with 500 points and a pepperbox. Hold Use at a window to nail its boards back (10 points a board, up to 500 a round).</p>
         <p><b>Buying.</b> Weapons hang on the walls with their prices chalked under them: buy one, or its ammunition again for half. You carry two; a third replaces the one in your hand. Doors and fallen wreckage open the rest of the station: the Oil Store, the Fog-Signal House, the passages, the Store Hall, the Boathouse, the Wreck Store, and at last the Lamp Passage and the tower, where a stair winds up round its core to the lantern room. Four tonics on the shelves: Stout Heart (take twice the knocks), Quick Hands (reload in half the time), Fleet Foot (quicker on your feet) and Second Wind (get back up once).</p>
         <p><b>The wreck chest</b> (950): a weapon you can't buy on any wall, maybe. It stands in one of five places, one of them at the very top beside the great lens. After a few goes a gull takes it (and gives you your points back), and it turns up somewhere else; look for the pale light over it. Only the chest has the <b>Fresnel Lamp</b>: a signal lantern with a lighthouse lens in it, that throws a beam of the Light's own fire. Hold the trigger, and whatever stands in the beam burns, and throws a spark to the next.</p>
+        <p>The chest has eight more of its own, washed up from the wrecks: the <b>Duck's-Foot</b> (four barrels splayed in a fan: a ball for each of a crowd), the <b>Bomb-Lance</b> (sticks in what it strikes, and a second later goes off), the <b>Grapnel Gun</b> (hooks one and hauls it off its feet to yours), the <b>Flare Pistol</b> (sets alight what it strikes, and leaves a ring of fire where it lands), the <b>Boarding Axe</b> (wide sweeps through all in front of you, and every third stroke a chop that knocks them down), the <b>Punt Gun</b> (one enormous load of shot through three at a time, and it kicks you back), the <b>Net Mortar</b> (lobs a net that holds everything under it) and the <b>Chain-Shot</b> (two balls on a chain that whirl out and cut through every one they pass). Each comes back from the Lampwright's Bench working a new way of its own.</p>
         <p><b>The Lampwright's Bench</b> (from 5000): somewhere up the tower, past more than one paid gate, the keepers' old bench for grinding the lens still has its fire lit. Hand it the weapon in yours and it goes behind the turning lens for a few seconds, and comes back reforged, under a new name: it hits far harder, holds more and carries more, and glows with the Light, and each one comes back working in a way of its own. It can go back into the fire again and again, dearer every time (5000, 8000, 12000, 17000...), and each time it hits harder and its new way of working grows. Not the knife; lose the weapon and you lose what was done to it, and its ammunition off the wall costs a good deal more.</p>
         <p><b>Salvage.</b> Now and then one drops something glowing: a Powder Keg (all your ammunition back), Double Salvage (double points for thirty seconds), the Black Spot (anything dies to one hit, for thirty seconds) or a Lamp Flash (every one of them in the station burns). Walk into it to take it.</p>
         <p><b>The Diver.</b> From round 10, and every fifth round after, a drowned giant in a brass helmet comes in with them, dragging an anchor. Slow, but hard to put down, and his blows take two knocks: when a ring glows on the floor in front of him, get out of it (or jump) before the anchor comes down. The round isn't held until he's down; he's worth 500 points and always drops salvage.</p>
@@ -12133,6 +12134,16 @@ const FPSW = {
   // only in the Lighthouse (src/zombies.js), and only from the wreck chest: a lantern with a lighthouse lens in it,
   // that throws a beam of the Light's own fire. Hold the trigger to burn whatever stands in it
   fresnel:     { n: 'Fresnel Lamp', code: 'f', mag: 60, rate: 0.1, reload: 3.4, dmg: 0, head: 0, auto: true, beam: true, range: 30, kick: 0.12 },
+  // [chest] eight more, also only in the Lighthouse and only from the wreck chest; how each one works is in
+  // src/zmchest.js (pv: how fast what it throws flies, gr: how fast that falls; long: held like a long gun)
+  duckfoot:    { n: "Duck's-Foot",  code: 'd', mag: 4, rate: 0.32, reload: 2.4, dmg: 1, head: 2, range: 120, fan: 4, fanW: 0.2, kick: 1.3 },
+  bomblance:   { n: 'Bomb-Lance',   code: 'w', mag: 1, rate: 0.6, reload: 2.8, dmg: 4, head: 4, pv: 46, gr: 4, range: 200, fuse: 1.1, blast: 16, br: 4, kick: 2.0, long: true },
+  grapnel:     { n: 'Grapnel Gun',  code: 'g', mag: 1, rate: 0.5, reload: 1.6, dmg: 3, head: 3, pv: 60, gr: 2, range: 22, kick: 1.2, long: true },
+  flaregun:    { n: 'Flare Pistol', code: 's', mag: 1, rate: 0.5, reload: 1.4, dmg: 3, head: 3, pv: 50, gr: 7, range: 200, kick: 1.4 },
+  axe:         { n: 'Boarding Axe', code: 'x', mag: 0, rate: 0.72, reload: 1.6, dmg: 3, head: 3, reach: 3.0, arc: 1.2, melee: true, kick: 0 },
+  puntgun:     { n: 'Punt Gun',     code: 'u', mag: 1, rate: 0.8, reload: 4.2, dmg: 1, head: 1.5, shot: 16, spread: 0.035, range: 90, kick: 3.2, shove: 2.4, long: true },
+  netmortar:   { n: 'Net Mortar',   code: 'n', mag: 1, rate: 0.6, reload: 2.3, dmg: 2, head: 2, pv: 21, gr: 12, range: 120, kick: 1.6, long: true },
+  chainshot:   { n: 'Chain-Shot',   code: 'y', mag: 1, rate: 0.6, reload: 2.6, dmg: 4, head: 4, pv: 36, gr: 0.6, range: 45, chainW: 1.3, kick: 2.2, long: true },
 };
 const FPS_WORDER = ['pepperbox', 'blunderbuss', 'longarm', 'harpoon', 'cutlass', 'avtomat'];
 // how much closer the view comes when aiming (the longarm's telescope, the avtomat's iron sights)
@@ -15805,7 +15816,7 @@ function vmDraw(dt) {
   // the weapon's own movements
   VM_ANIM[id](wpn, S);
   vmKnife(wpn, S);
-  if (id !== 'cutlass') VM.trailMesh.visible = false;
+  if (id !== 'cutlass' && !wpn.trail) VM.trailMesh.visible = false;
   // sounds as reload steps happen
   if (S.reloading && wpn.steps) { for (const [x, fn] of wpn.steps) if (VM.lastP < x && S.p >= x) fn(); }
   VM.lastP = S.reloading ? S.p : 1;
@@ -15817,7 +15828,7 @@ function vmDraw(dt) {
   if (wpn.muzzle) { wpn.muzzle.getWorldPosition(mz); wpn.muzzle.getWorldQuaternion(mq); VM.muzzle = mz.clone(); VM.muzzleQ = mq.clone(); }
   VM.flashT -= dt; VM.panT -= dt;
   VM.flash.visible = VM.flashT > 0 && !still && !!wpn.muzzle;
-  if (VM.flash.visible) { VM.flash.position.copy(mz); VM.flash.quaternion.copy(mq); VM.flash.rotateZ(Math.random() * 3); VM.flash.scale.setScalar((id === 'blunderbuss' ? 1.6 : id === 'harpoon' ? 0.7 : id === 'avtomat' ? 0.85 : id === 'fresnel' ? 1.5 : 1) * (0.8 + Math.random() * 0.5)); }
+  if (VM.flash.visible) { VM.flash.position.copy(mz); VM.flash.quaternion.copy(mq); VM.flash.rotateZ(Math.random() * 3); VM.flash.scale.setScalar((id === 'blunderbuss' ? 1.6 : id === 'harpoon' ? 0.7 : id === 'avtomat' ? 0.85 : id === 'fresnel' ? 1.5 : wpn.flashK || 1) * (0.8 + Math.random() * 0.5)); }
   VM.pan.visible = VM.panT > 0 && !!wpn.panAt && !still;
   if (VM.pan.visible) { wpn.panAt.getWorldPosition(VM.pan.position); VM.pan.lookAt(VM.cam.position); VM.pan.scale.setScalar(1 + Math.random()); }
   VM.flashL.position.copy(mz); VM.flashL.intensity = VM.flashT > 0 ? (id === 'blunderbuss' ? 5 : 3) * flashK() : 0;
@@ -16570,7 +16581,7 @@ function fbPose(F, s) {
   for (const k in F.wpn) F.wpn[k].root.visible = k === id;
   if (typeof zmpSkinFor === 'function') zmpSkinFor(wp, id, s.pap | 0);   // [pap] reforged at the Lampwright's Bench: the Light's fire
   const rec = s.rec || 0, draw = s.draw || 0, rl = s.rl || 0;
-  const long = id === 'blunderbuss' || id === 'longarm' || id === 'harpoon' || id === 'avtomat' || id === 'fresnel';
+  const long = id === 'blunderbuss' || id === 'longarm' || id === 'harpoon' || id === 'avtomat' || id === 'fresnel' || !!(FPSW[id] && FPSW[id].long);
   if (wdef.melee) {
     // the cutlass, point up and forward; each cut sweeps it across
     const sl = s.slash == null ? -1 : s.slash;
@@ -17668,6 +17679,7 @@ function zmReset() {
   });
   for (const w of ZM.windows) { w.boards = 6; w.q = []; w.fall = []; }
   if (typeof zmpReset === 'function') zmpReset();   // [pap]
+  if (typeof zxReset === 'function') zxReset();   // [chest] src/zmchest.js
   if (typeof zeReset === 'function') zeReset();   // [egg hook] src/zmegg.js
 }
 // opts (playing together, src/zmnet.js): { net: 'host' | 'client', hum: [[sid, nick], ...] }
@@ -17708,6 +17720,7 @@ function zmStart(opts) {
 function zmStop() {
   if (ZM.net && typeof zmnStop === 'function') zmnStop();
   if (typeof zmpStop === 'function') zmpStop();   // [pap]
+  if (typeof zxReset === 'function') zxReset();   // [chest]
   ZM.on = false; ZM.net = null; FPS.zm = false; FPS.eyeLag = 0; FPS.downEye = 0; ZM.spec = null; FPS.specId = null;
   $('stage').classList.remove('zmmode'); $('zmOver').hidden = true;
   { const e = document.querySelector('#fpsMenu .eyebrow'); if (e) e.textContent = "Wreckers' Night carries on without you"; $('fpsLeave').textContent = 'Leave the island'; $('fpsResume').textContent = 'Back to the fight'; }
@@ -17806,6 +17819,7 @@ function zmTick(dt) {
   for (const s of ZM.sparks) s.t -= dt; ZM.sparks = ZM.sparks.filter(s => s.t > 0);
   if (FPS.beamT > 0) FPS.beamT -= dt;
   if (typeof zmpTick === 'function') zmpTick(dt);   // [pap]
+  if (typeof zxTick === 'function') zxTick(dt);   // [chest] what the chest's weapons throw, and what they leave burning
   if (typeof zeTick === 'function') zeTick(dt);   // [egg hook] src/zmegg.js
   zmNearest();
   // holding Use at a window nails its boards back; beside someone who's down, gets them up
@@ -18253,6 +18267,7 @@ function zmMaybeDrop(d, how) {
 // nobody else's view to be fair to); long shots go through a few of them
 function zmResolveShot(sh, mine) {
   const [, x, y, z, h, p, by, code] = sh, w = fpsWOf(code);
+  if (typeof zxShot === 'function' && zxShot(sh, mine)) return;   // [chest] the wreck chest's own weapons (src/zmchest.js)
   if (w.melee) { fpsSwishSound(0); zmMelee(x, y, z, h, w); return; }
   fpsWeaponSound(code, 0, 0);
   if (w.speed) {
@@ -19009,6 +19024,7 @@ function zmScene3D() {
     Bm.L.position.copy(z3v(ox + fx * Math.min(len, 5), oy + fy * Math.min(len, 5), oz + fz * Math.min(len, 5)));
   }
   if (typeof zmp3d === 'function') zmp3d(dt);   // [pap] the bench
+  if (typeof zx3d === 'function') zx3d(dt);   // [chest] the light of flares and blasts
   if (typeof ze3d === 'function') ze3d(dt);   // [egg hook] src/zmegg.js
 }
 // painted over the 3D view: sparks between the burning, the chest's offer, and anyone down
@@ -19020,6 +19036,7 @@ function zmDrawOver() {
     ctx.strokeStyle = `rgba(${s.col || '255,220,140'},${s.t / (s.beam ? 0.14 : 0.25)})`; ctx.lineWidth = s.beam ? 3 : 2; ctx.beginPath(); ctx.moveTo(p[0].x, p[0].y); for (const q of p.slice(1)) ctx.lineTo(q.x, q.y); ctx.stroke();
   }
   if (typeof zmpDrawOver === 'function') zmpDrawOver();   // [pap]
+  if (typeof zxDrawOver === 'function') zxDrawOver();   // [chest]
   const B = ZM.box, S = ZM.spawns[B.at];
   if (S && B.st === 'offer') {
     const c = cam(S.x, S.y, FPSC.GROUND + S.z + 1.9);
@@ -19136,7 +19153,7 @@ function zmHud() {
     const by = H - 22;
     ctx.textAlign = 'right'; ctx.textBaseline = 'alphabetic'; ctx.font = mono(24);
     ctx.fillStyle = w.melee || m.ammo ? 'rgba(236,228,207,0.92)' : '#e46c4f';
-    ctx.fillText(m.reload > 0 ? (w.melee ? 'WIPING' : 'RELOADING') : w.melee ? 'CUTLASS' : `${m.ammo} / ${ZM.res[FPS.weapon] || 0}`, R, by);
+    ctx.fillText(m.reload > 0 ? (w.melee ? 'WIPING' : 'RELOADING') : w.melee ? (FPS.weapon === 'cutlass' ? 'CUTLASS' : FPSW[FPS.weapon].n.toUpperCase()) : `${m.ammo} / ${ZM.res[FPS.weapon] || 0}`, R, by);
     ctx.font = mono(11); let wx = R;
     for (let i = ZM.own.length - 1; i >= 0; i--) { const id = ZM.own[i], lab = `${i + 1} ${(typeof zmpName === 'function' ? zmpName(id) : FPSW[id].n).toUpperCase()}`; ctx.fillStyle = id === FPS.weapon ? '#ffd88a' : 'rgba(236,228,207,0.4)'; ctx.fillText(lab, wx, by - 30); wx -= ctx.measureText(lab).width + 14; }
     if (!w.melee && (m.ammo === 0 || (m.ammo < w.mag && m.ammo <= Math.ceil(w.mag * 0.25))) && !(m.reload > 0) && !ZM.over) { ctx.textAlign = 'center'; ctx.font = mono(13); ctx.fillStyle = (ZM.res[FPS.weapon] || 0) > 0 ? 'rgba(236,228,207,0.8)' : '#e46c4f'; ctx.fillText((ZM.res[FPS.weapon] || 0) > 0 ? 'R TO RELOAD' : m.ammo ? 'LOW AMMUNITION' : down ? 'NO AMMUNITION' : 'NO AMMUNITION · V OR FIRE TO KNIFE', cx, cy + 46); }
@@ -19434,6 +19451,15 @@ const ZM_PAP_W = {
   cutlass: { n: 'Keel-Splitter', mag: 0, res: 0, k: 3, fx: 'Every stroke throws a crescent of the sea on along the floor, cutting all it passes.' },
   avtomat: { n: 'Equinox Gale', mag: 50, res: 400, k: 3, fx: 'Held down, it spins up into a gale; at full gale its rounds run cold, and slow what they hit.' },
   fresnel: { n: 'First-Order Lamp', mag: 90, res: 450, k: 2, fx: 'Its beam breaks in each one it burns, like light in a prism, and burns the ones beside it.' },
+  // [chest] the wreck chest's own eight (src/zmchest.js, where each one's reforged way of working is done)
+  duckfoot: { n: 'Grey Skein', mag: 8, res: 96, k: 3, fx: 'More barrels, a wider fan, and a ball that would miss turns in flight onto the nearest of them.' },
+  bomblance: { n: 'Thunder-Pod', mag: 2, res: 24, k: 3, fx: 'Its blast throws a pod of smaller irons, and each goes off in turn where it falls.' },
+  grapnel: { n: 'Mooring Line', mag: 2, res: 40, k: 3, fx: 'The hook runs on through several of them, hauls them into a heap at your feet and lashes them there.' },
+  flaregun: { n: 'Star Shell', mag: 2, res: 36, k: 2, fx: 'It climbs and bursts into a shower of burning stars, and each burns where it falls.' },
+  axe: { n: 'Homeward Axe', mag: 0, res: 0, k: 3, fx: 'Every third stroke throws it spinning through all in its way, and it comes back to your hand.' },
+  puntgun: { n: 'Breakwater', mag: 2, res: 20, k: 3, fx: 'Its shot goes on through walls and floors and every one of them in its line, and hurls them down.' },
+  netmortar: { n: 'Barbed Trawl', mag: 2, res: 28, k: 3, fx: 'A wider net that holds longer, hauls shut, and bites those held in its barbs.' },
+  chainshot: { n: 'Reaping Chain', mag: 2, res: 36, k: 3, fx: 'A longer chain that cripples what it cuts, and rebounds off the walls to cut again.' },
 };
 // how many times a weapon of yours has been reforged (0: never), and what the next time costs (t: the time it'd be)
 const zmpTier = id => (ZM.pap && ZM.pap[id]) | 0;
@@ -19831,6 +19857,17 @@ function zmp3d(dt) {
 //  Equinox Gale (avtomat): held down, it spins up to a gale (two and a half times the rate); at full gale its rounds
 //    run cold, and what they hit is slowed.
 //  First-Order Lamp (fresnel): the beam breaks in each one it burns, like light in a prism, onto those beside it.
+//  [chest] and the wreck chest's own eight, done in src/zmchest.js (zxVolley, zxBlast, zxHaul, zxStarBurst, zxAxe,
+//  zxPunt, zxNetCatch, zxBounce), through the same zmpStatus:
+//  Grey Skein (Duck's-Foot): 4 + t barrels in a wider fan, and a ball that would miss turns onto the nearest by its line.
+//  Thunder-Pod (Bomb-Lance): the blast throws 1 + t smaller irons, each going off in turn where it falls.
+//  Mooring Line (Grapnel Gun): the hook runs on through 1 + t of them, hauls them into a heap at your feet and lashes
+//    them there (held 2.5 + t/2 s), each taking a blow for each other.
+//  Star Shell (Flare Pistol): it climbs and bursts into 3 + t burning stars, each a ring of fire where it falls.
+//  Homeward Axe (Boarding Axe): the third stroke throws it 14 + 2t m through all in its way, and back to your hand.
+//  Breakwater (Punt Gun): its shot goes through 1 + t walls and every one in its line, and hurls them across the room.
+//  Barbed Trawl (Net Mortar): a wider net (2.8 + 0.3t m), held longer, hauled shut, its barbs biting twice a second.
+//  Reaping Chain (Chain-Shot): a longer chain that cripples what it cuts (4 + t s), rebounding off t walls to cut again.
 // The Diver can be hurt, lit and slowed like the rest, but nothing moves him or holds him.
 // What happens to the drowned is done by whoever runs them: alone or hosting, here; joined, it's asked of the host
 // (zmnRequest 'pst'), with the hit itself, so everyone sees them swept, nailed and slowed.
@@ -20169,6 +20206,1143 @@ function zmpHud(cxs, cys) {
   ctx.strokeStyle = full ? 'rgba(190,230,255,0.85)' : `rgba(236,228,207,${0.25 + g * 0.4})`; ctx.lineWidth = full ? 3 : 2;
   ctx.beginPath(); ctx.arc(cxs, cys, 22, -Math.PI / 2, -Math.PI / 2 + g * Math.PI * 2); ctx.stroke();
 }
+
+// ---- src/zmchest.js ----
+// The Lighthouse: the wreck chest's own weapons. Eight more things washed up from the wrecks, found only in the
+// chest (like the Fresnel Lamp), never on a wall and never on Wreckers' Night's islands. Each plays its own way, and
+// each has its own reforging at the Lampwright's Bench (src/zmpap.js), which grows with every time it goes back into
+// the fire (t, zmpTier):
+//  - Duck's-Foot (d): a volley pistol, four barrels splayed like a duck's foot: each pull fires all four in a flat
+//    fan, a ball for each of a crowd. Reforged, the Skein: more barrels (4 + t, up to 9), a wider fan, and a ball
+//    that would miss turns in flight, like a goose in a skein, onto the nearest of them by its line.
+//  - Bomb-Lance (w): a whaler's shoulder gun: a lance with a bomb behind its head, that sticks in what it strikes
+//    (one of them, a wall, the floor) and goes off a second later, throwing back all round it. Reforged, the
+//    Thunder-Pod: the blast throws a pod of smaller irons (1 + t, up to 6) that each go off in turn where they fall.
+//  - Grapnel Gun (g): a four-tined hook on a line: it catches one of them and the line hauls it off its feet and to
+//    yours, where it lies a moment. Reforged, the Mooring Line: the hook runs on through 1 + t of them (up to 7),
+//    hauls them all into a heap in front of you and lashes them there, held, each taking a blow for each other.
+//  - Flare Pistol (s): a fat-bored signal pistol: its burning star sets alight what it strikes, and wherever it
+//    comes to rest it burns on the floor, in a ring of fire, for six seconds, and lights the room. Reforged, the
+//    Star Shell: it climbs and bursts into a shower of burning stars (3 + t, up to 9), each burning where it falls.
+//  - Boarding Axe (x): a bearded axe on a long haft: a wide, heavy sweep that hits all in front of you, and every
+//    third stroke a chop from overhead that knocks them down. Reforged, the Homeward Axe: the third stroke throws it,
+//    spinning, out through all of them in its way (14 + 2t m), and it comes back to your hand, cutting again.
+//  - Punt Gun (u): a wildfowler's gun as long as a boat-hook: one enormous load of shot in a tight column that goes
+//    through three of them each ball and throws them back, and kicks you back a couple of metres. Slow to load.
+//    Reforged, the Breakwater: its shot goes on through walls and floors (1 + t of them, up to 5), through every
+//    one of them in its line, and hurls them across the room and down.
+//  - Net Mortar (n): a short brass mortar that lobs a weighted net: wherever it falls it opens, and everything
+//    under it, and anything that walks into it for the next four seconds, is tangled and held. Reforged, the
+//    Barbed Trawl: a wider net that holds longer, hauls shut (those under it dragged in to the middle), and its
+//    barbs bite those held, twice a second.
+//  - Chain-Shot (y): a twin-barrelled cannonette firing two balls joined by a chain, that spin out sideways into a
+//    whirling bar over two metres wide: it cuts through every one it passes, slowing them, until a wall stops it.
+//    Reforged, the Reaping Chain: a longer chain (wider swath), those it cuts are crippled for longer, and it
+//    rebounds off walls (t times, up to 4), cutting again.
+// Damage, as everywhere here, is in pepperbox body shots scaled by ZM_DMG (and by zmpK when reforged). The fire of
+// the flares is a fixed fraction of a drowned man's strength that round, like the Fresnel Lamp's.
+// Together (src/zmnet.js): every shot is resolved on the shooter's screen; hits go to the host through zmHurt, and
+// what's done to them (hauled, knocked down, tangled, slowed) through zmpStatus ('pst'), so the host applies it.
+// The others see and hear each shot (zxShotFx): what it throws flies on their screens too, only to look at.
+
+// what each carries in reserve, and how hard it hits the drowned
+Object.assign(ZM_AMMO, { duckfoot: 40, bomblance: 12, grapnel: 24, flaregun: 20, axe: 0, puntgun: 10, netmortar: 14, chainshot: 18 });
+Object.assign(ZM_DMG, { d: 1.8, w: 1.5, g: 1.5, s: 1, x: 3, u: 2.2, n: 1, y: 1.6 });
+// the chest's odds: each weight against the others' (the seven before these come to 83 between them)
+ZM_BOXW.push(['duckfoot', 10], ['bomblance', 6], ['grapnel', 8], ['flaregun', 8], ['axe', 8], ['puntgun', 5], ['netmortar', 7], ['chainshot', 7]);
+// (what each becomes at the Lampwright's Bench: ZM_PAP_W, in src/zmpap.js)
+const ZX_ID = { d: 'duckfoot', w: 'bomblance', g: 'grapnel', s: 'flaregun', x: 'axe', u: 'puntgun', n: 'netmortar', y: 'chainshot' };
+const ZX = { proj: [], pools: [], nets: [], booms: [], burn: [], later: [], shove: null, axeOut: false, n: 0 };
+function zxReset() { ZX.proj = []; ZX.pools = []; ZX.nets = []; ZX.booms = []; ZX.burn = []; ZX.later = []; ZX.shove = null; ZX.axeOut = false; }
+const zxT = id => (typeof zmpTier === 'function' ? zmpTier(id) : 0);
+const zxG = o => FPSC.GROUND + (o.jz || 0);
+const zxHp = () => zmHp(Math.max(1, ZM.round));
+const zxFloor = (x, y, zr) => { try { return zmFloorAt(x, y, Math.max(0, zr), 0.35); } catch (e) { return 0; } };
+const zxMark = head => { FPS.hitT = 0.18; FPS.hitHead = !!head; fpsHitSound(!!head); };
+
+// ---------- a shot: from zmResolveShot (my own) ----------
+function zxShot(sh, mine) {
+  const [, x, y, z, h, p, by, code, seed] = sh, id = ZX_ID[code];
+  if (!id) return false;
+  const t = mine ? zxT(id) : 0;
+  zxSound(code, 0, 0);
+  if (code === 'x') zxAxe(x, y, z, h, mine, t);
+  else if (code === 'd') zxVolley(x, y, z, h, p, by, mine, t);
+  else if (code === 'u') zxPunt(x, y, z, h, p, by, seed, mine, t);
+  else zxLaunch(code, x, y, z, h, p, by, mine, t);
+  return true;
+}
+// someone else's (together): what it throws, to see and hear, and nothing more (their hits come from them)
+function zxShotFx(r, code, x, y, z, h, p, d, pan) {
+  if (!ZX_ID[code]) return false;
+  zxSound(code, d, pan);
+  if (code === 'x') { r.slashT = 0.3; return true; }
+  if (code === 'd' || code === 'u') {
+    const n = code === 'd' ? FPSW.duckfoot.fan : 6;
+    for (let i = 0; i < n; i++) {
+      const lh = code === 'd' ? h - FPSW.duckfoot.fanW + 2 * FPSW.duckfoot.fanW * i / (n - 1) : h + (Math.random() - 0.5) * 0.06, lp = code === 'd' ? p : p + (Math.random() - 0.5) * 0.04;
+      const ray = fpsRay(x, y, z, lh, lp, r.id, ZM.z.filter(q => !q.dead), FPSW[ZX_ID[code]].range);
+      FPS.tracers.push({ a: [x + Math.sin(lh) * 0.6, y + Math.cos(lh) * 0.6, z - 0.25], b: [ray.x, ray.y, ray.z], t: 0.08, k: code });
+    }
+    return true;
+  }
+  zxLaunch(code, x, y, z, h, p, r.id, false, 0);
+  return true;
+}
+// a ray that goes through n of them (and, with walls, through that many walls); hits: [{ o, head }], end: where it stopped
+function zxPierce(x, y, z, h, p, by, range, n, walls) {
+  const hits = [], skip = new Set(), sx = Math.sin(h), sy = Math.cos(h), tp = Math.tan(p);
+  let ox = x, oy = y, oz = z, gone = 0, left = n, wl = walls || 0, end = null, wallAt = -9;
+  const thru = [];
+  for (let guard = 0; guard < 48 && left > 0 && gone < range; guard++) {
+    const r = fpsRay(ox, oy, oz, h, p, by, ZM.z.filter(q => !q.dead && !skip.has(q)), range - gone);
+    end = r;
+    let step;
+    if (r.kind === 'body') { hits.push({ o: r.who, head: r.head, x: r.x, y: r.y, z: r.z }); skip.add(r.who); left--; step = 0.6; }
+    else if (r.kind !== 'none' && r.kind !== 'ground' && (wl > 0 || gone + r.t - wallAt < 0.9)) {
+      // (on through the wall: a wall hit again within a step of the last is the same wall)
+      if (gone + r.t - wallAt >= 0.9) { wl--; thru.push([r.x, r.y, r.z]); }
+      wallAt = gone + r.t; step = 0.45;
+    } else break;
+    gone += r.t + step; ox = r.x + sx * step; oy = r.y + sy * step; oz = r.z + tp * step;
+  }
+  return { hits, end: end || { x, y, z, kind: 'none' }, thru };
+}
+// hits made: each one hurt once with all that struck it
+function zxDeal(hits, code, mine) {
+  if (!mine) return;
+  let any = null;
+  for (const [o, e] of hits) { any = any || e; o.hitT = 0.2; zmHurt(o, e.dmg, e.head, code, FPS.me.id); }
+  if (any) zxMark(any.head);
+}
+const zxAdd = (hits, o, dmg, head) => { const e = hits.get(o) || { dmg: 0, head: false }; e.dmg += dmg; e.head = e.head || !!head; hits.set(o, e); };
+
+// ---------- Duck's-Foot: four balls in a flat fan (the Skein: more, and they turn onto them) ----------
+function zxVolley(x, y, z, h, p, by, mine, t) {
+  const w = FPSW.duckfoot, n = t ? Math.min(9, w.fan + t) : w.fan, half = w.fanW + (t ? Math.min(0.15, 0.03 * t) : 0);
+  const hits = new Map();
+  for (let i = 0; i < n; i++) {
+    const lh = h - half + 2 * half * i / (n - 1), a = [x + Math.sin(lh) * 0.6, y + Math.cos(lh) * 0.6, z - 0.25];
+    const R = zxPierce(x, y, z, lh, p, by, w.range, 1, 0), e = R.end;
+    if (mine && typeof zeShot === 'function') zeShot(x, y, z, lh, p, by);   // [egg hook]
+    if (R.hits.length) { zxAdd(hits, R.hits[0].o, R.hits[0].head ? w.head : w.dmg, R.hits[0].head); FPS.tracers.push({ a, b: [e.x, e.y, e.z], t: 0.07, k: 'd' }); continue; }
+    const q = t ? zxSeek(x, y, z, lh, p, 0.26 + Math.min(0.3, 0.05 * t), 45, hits) : null;
+    if (q) {
+      // the Skein: the ball bends in flight onto the nearest by its line
+      zxAdd(hits, q.o, w.dmg, false);
+      const tz = zxG(q.o) + 1.2, d = Math.hypot(q.o.x - x, q.o.y - y), mid = [x + Math.sin(lh) * d * 0.55, y + Math.cos(lh) * d * 0.55, z + Math.tan(p) * d * 0.55];
+      let prev = a;
+      for (let k = 1; k <= 7; k++) {
+        const u = k / 7, v = 1 - u, pt = [v * v * a[0] + 2 * v * u * mid[0] + u * u * q.o.x, v * v * a[1] + 2 * v * u * mid[1] + u * u * q.o.y, v * v * a[2] + 2 * v * u * mid[2] + u * u * tz];
+        FPS.tracers.push({ a: prev, b: pt, t: 0.22, life: 0.22, col: '255,230,160', w: 2 }); prev = pt;
+      }
+      continue;
+    }
+    FPS.tracers.push({ a, b: [e.x, e.y, e.z], t: 0.07, k: 'd' });
+    if (e.kind !== 'none') fpsPuff(e.x, e.y, e.z, e.kind === 'ground' ? '150,140,120' : '190,190,180', 3);
+  }
+  zxDeal(hits, 'd', mine);
+}
+// the nearest of them to a line (within cone of it, and in sight), the fewest balls on it first
+function zxSeek(x, y, z, h, p, cone, range, hits) {
+  let best = null, bs = 1e9;
+  for (const o of ZM.z) {
+    if (o.dead) continue;
+    const d = Math.hypot(o.x - x, o.y - y); if (d > range || d < 0.5) continue;
+    const off = Math.abs(angDiff(bearingOf(o.x - x, o.y - y), h)); if (off > cone) continue;
+    const s = off + (hits.has(o) ? 0.4 : 0) + d * 0.004; if (s >= bs) continue;
+    const r = fpsRay(x, y, z, bearingOf(o.x - x, o.y - y), Math.atan2(zxG(o) + 1.2 - z, d), FPS.me.id, [o], d + 2);
+    if (r.kind !== 'body') continue;
+    bs = s; best = { o };
+  }
+  return best;
+}
+
+// ---------- Punt Gun: a column of heavy shot through three of them each, and it throws you back ----------
+function zxPunt(x, y, z, h, p, by, seed, mine, t) {
+  const w = FPSW.puntgun, rng = seeded(((seed || 7) ^ 0x5a5a) >>> 0), walls = t ? Math.min(5, 1 + t) : 0, pierce = t ? 14 : 3;
+  const hits = new Map();
+  for (let i = 0; i < w.shot; i++) {
+    const a = rng() * 6.283, r = Math.sqrt(rng()) * w.spread, lh = h + Math.cos(a) * r, lp = p + Math.sin(a) * r * 0.7;
+    const R = zxPierce(x, y, z, lh, lp, by, w.range * (t ? 1.6 : 1), pierce, walls), e = R.end;
+    for (const q of R.hits) zxAdd(hits, q.o, q.head ? w.head : w.dmg, q.head);
+    if (i % 2 === 0) FPS.tracers.push({ a: [x + Math.sin(lh) * 0.6, y + Math.cos(lh) * 0.6, z - 0.25], b: [e.x, e.y, e.z], t: t ? 0.3 : 0.1, life: t ? 0.3 : 0.1, col: t ? '190,225,255' : '255,225,170', w: t ? 2.2 : 1.6 });
+    for (const q of R.thru) fpsPuff(q[0], q[1], q[2], '200,200,190', 4);
+    if (e.kind !== 'none' && e.kind !== 'body') fpsPuff(e.x, e.y, e.z, e.kind === 'ground' ? '150,140,120' : '190,190,180', 3);
+    if (mine && i < 3 && typeof zeShot === 'function') zeShot(x, y, z, lh, lp, by);   // [egg hook]
+  }
+  // the smoke of it
+  for (let i = 0; i < 26; i++) { const a = h + (Math.random() - 0.5) * 0.5, sp = 2 + Math.random() * 6; FPS.parts.push({ x: x + Math.sin(h) * 1.2, y: y + Math.cos(h) * 1.2, z: z - 0.3, vx: Math.sin(a) * sp, vy: Math.cos(a) * sp, vz: Math.random() * 1.2, t: 0.9, c: '170,170,165', up: true }); }
+  zxDeal(hits, 'u', mine);
+  if (!mine) return;
+  // thrown back where they stood, and down (the Breakwater: hurled across the room)
+  const kb = t ? Math.min(7, 4 + 0.5 * (t - 1)) : 1.6, down = t ? Math.min(3, 1.5 + 0.2 * (t - 1)) : 0.5;
+  for (const o of hits.keys()) zmpStatus(o, 'kb', Math.sin(h) * kb, Math.cos(h) * kb, down);
+  // and you, back the way you came
+  if (!zmIsDown() && !(FPS.me.dead > 0)) ZX.shove = { vx: -Math.sin(h) * w.shove / 0.28, vy: -Math.cos(h) * w.shove / 0.28, t: 0.28 };
+}
+
+// ---------- Boarding Axe: a wide sweep; every third stroke a chop (the Homeward Axe: a throw) ----------
+function zxAxe(x, y, z, h, mine, t) {
+  const w = FPSW.axe, k = ((FPS.swing || 1) - 1) % 3, chop = k === 2;
+  if (!mine) return;
+  if (typeof zeMelee === 'function') zeMelee(x, y, z, h, w, 'x');   // [egg hook] (the bell, the net)
+  if (t && chop) {
+    // thrown: out through them all, and home
+    ZX.axeOut = true;
+    ZX.proj.push({ k: 'X', by: FPS.me.id, mine: true, t: 0, x: x + Math.sin(h) * 0.8, y: y + Math.cos(h) * 0.8, z: z - 0.35, fz: FPS.me.jz || 0, h, out: 0, max: Math.min(26, 14 + 2 * t), back: false, hitO: new Set(), hitB: new Set(), spin: 0 });
+    zxSound('throw');
+    return;
+  }
+  let any = false;
+  for (const o of ZM.z) {
+    if (o.dead) continue;
+    const d = Math.hypot(o.x - x, o.y - y), b = bearingOf(o.x - x, o.y - y);
+    if (d > w.reach + FPSC.BODY + (o.rad ? o.rad - 0.3 : 0) || Math.abs(angDiff(b, h)) > (chop ? 0.62 : w.arc) || Math.abs((o.jz || 0) - (FPS.me.jz || 0)) > 1.2) continue;
+    const r = fpsRay(x, y, z - 0.4, b, Math.atan2((o.jz || 0) + 1.2 - (z - FPSC.GROUND - 0.4), Math.max(0.3, d)), FPS.me.id, [o], w.reach + 1.5);
+    if (r.kind !== 'body') continue;
+    zmHurt(o, w.dmg * (chop ? 1.6 : 1), false, 'x', FPS.me.id); o.hitT = 0.25; any = true;
+    if (chop) zmpStatus(o, 'kb', Math.sin(b) * 0.8, Math.cos(b) * 0.8, 1.1);
+    for (let i = 0; i < 5; i++) FPS.parts.push({ x: o.x, y: o.y, z: zxG(o) + 1 + Math.random() * 0.5, vx: (Math.random() - 0.5) * 3, vy: (Math.random() - 0.5) * 3, vz: Math.random() * 2, t: 0.45, c: '90,120,105' });
+  }
+  if (any) { zxMark(false); zxSound(chop ? 'chop' : 'cleave'); }
+}
+
+// ---------- what's thrown: lances, hooks, flares, nets, chain-shot (and the pods' irons, the shells' stars) ----------
+function zxLaunch(code, x, y, z, h, p, by, mine, t) {
+  const w = FPSW[ZX_ID[code]], cp = Math.cos(p);
+  let ox = x + Math.sin(h) * cp * 0.7, oy = y + Math.cos(h) * cp * 0.7, oz = z - 0.2 + Math.sin(p) * 0.7;
+  // (up against a wall: it leaves from your eyes)
+  if (fpsRay(x, y, z, h, p, by, [], 0.8).kind !== 'none') { ox = x; oy = y; oz = z - 0.05; }
+  const P = { k: code, by, mine, t: 0, tier: t, x: ox, y: oy, z: oz, vx: Math.sin(h) * cp * w.pv, vy: Math.cos(h) * cp * w.pv, vz: Math.sin(p) * w.pv, gr: w.gr, skip: new Set(), life: w.range / w.pv + (code === 'g' || code === 'y' ? 0 : 0.6), id: ++ZX.n, h };
+  if (code === 'g') { P.caught = []; P.max = t ? Math.min(7, 1 + t) : 1; P.from = [x, y, z - 0.3]; }
+  if (code === 'y') { P.hw = t ? Math.min(3, w.chainW + 0.3 * t) : w.chainW; P.bounces = t ? Math.min(4, t) : 0; P.hit = new Set(); P.spin = 0; }
+  if (code === 's' && t) P.burstT = 0.5;
+  ZX.proj.push(P);
+}
+function zxTick(dt) {
+  if (!ZM.on) return;
+  const m = FPS.me;
+  // the Punt Gun's kick, carrying you back
+  if (ZX.shove) { const S = ZX.shove; zmMove(m, S.vx * dt, S.vy * dt); S.t -= dt; if (S.t <= 0) ZX.shove = null; }
+  for (const L of ZX.later) { L.t -= dt; if (L.t <= 0) { L.done = true; try { L.fn(); } catch (e) {} } }
+  ZX.later = ZX.later.filter(L => !L.done);
+  for (const P of ZX.proj) zxProj(P, dt);
+  ZX.proj = ZX.proj.filter(P => !P.done);
+  ZX.axeOut = ZX.proj.some(P => P.k === 'X' && P.mine);
+  if (ZX.axeOut) m.cd = Math.max(m.cd, 0.05);
+  zxPools(dt); zxNets(dt);
+  // set alight by a flare: they burn on a while
+  for (const B of ZX.burn) {
+    B.t -= dt; B.k -= dt;
+    if (B.o.dead) { B.t = 0; continue; }
+    B.o.scorch = 1;
+    if (Math.random() < dt * 20) FPS.parts.push({ x: B.o.x + (Math.random() - 0.5) * 0.5, y: B.o.y + (Math.random() - 0.5) * 0.5, z: zxG(B.o) + 0.4 + Math.random() * 1.4, vx: 0, vy: 0, vz: 1.5, t: 0.5, c: Math.random() < 0.5 ? '255,170,70' : '255,220,120', up: true });
+    if (B.k <= 0) { B.k = 0.3; zmHurt(B.o, zxHp() * 0.05, false, 's', FPS.me.id); }
+  }
+  ZX.burn = ZX.burn.filter(B => B.t > 0);
+  for (const b of ZX.booms) b.t += dt;
+  ZX.booms = ZX.booms.filter(b => b.t < 0.55);
+}
+function zxProj(P, dt) {
+  P.t += dt;
+  if (P.k === 'X') return zxAxeFly(P, dt);
+  if (P.st === 'stuck') {
+    // a lance (or a pod's iron) in something, its fuse burning down
+    if (P.on) { if (!P.on.dead) { P.x = P.on.x + P.ox; P.y = P.on.y + P.oy; P.z = zxG(P.on) + P.oz; } else P.on = null; }
+    P.fuse -= dt;
+    if (Math.random() < dt * 30) FPS.parts.push({ x: P.x, y: P.y, z: P.z + 0.1, vx: (Math.random() - 0.5) * 1.5, vy: (Math.random() - 0.5) * 1.5, vz: 1 + Math.random(), t: 0.3, c: '255,210,120' });
+    if (P.fuse <= 0) { P.done = true; zxBlast(P); }
+    return;
+  }
+  if (P.st === 'reel') { P.reelT -= dt; if (P.reelT <= 0) P.done = true; return; }
+  if (P.burstT != null && P.t >= P.burstT) { P.done = true; zxStarBurst(P); return; }
+  if (P.k === 's' || P.k === 't') { if (Math.random() < dt * 60) FPS.parts.push({ x: P.x, y: P.y, z: P.z, vx: (Math.random() - 0.5), vy: (Math.random() - 0.5), vz: -0.5 + Math.random(), t: 0.45, c: Math.random() < 0.6 ? '255,120,60' : '255,230,170' }); }
+  if (P.k === 'w' && Math.random() < dt * 30) FPS.parts.push({ x: P.x, y: P.y, z: P.z, vx: 0, vy: 0, vz: 0.4, t: 0.6, c: '150,150,145', up: true });
+  if (P.k === 'y') P.spin += dt * 22;
+  if (P.t > P.life || Math.hypot(P.x - FPSC.CX, P.y - FPSC.CY) > FPSC.R) { zxLand(P, { kind: 'none', x: P.x, y: P.y, z: P.z }); return; }
+  const steps = 4, sdt = dt / steps;
+  for (let i = 0; i < steps && !P.done && !P.st; i++) {
+    const ox = P.x, oy = P.y, oz = P.z;
+    P.vz -= P.gr * sdt; P.x += P.vx * sdt; P.y += P.vy * sdt; P.z += P.vz * sdt;
+    const seg = Math.hypot(P.x - ox, P.y - oy), hh = bearingOf(P.vx, P.vy), pp = Math.atan2(P.vz, Math.max(0.01, Math.hypot(P.vx, P.vy)));
+    // (and the floor under it, wherever it is: the stair's treads and the tower's floors)
+    const fl = FPSC.GROUND + zxFloor(P.x, P.y, P.z - FPSC.GROUND);
+    if (P.k === 'y') {
+      zxChainCut(P, ox, oy, oz);
+      const r = fpsRay(ox, oy, oz, hh, pp, P.by, [], seg + 0.05);
+      if (r.kind !== 'none' || P.z < fl) {
+        if (P.bounces > 0 && r.kind !== 'ground' && P.z >= fl) { zxBounce(P, ox, oy, oz); continue; }
+        P.x = r.kind !== 'none' ? r.x : P.x; P.y = r.kind !== 'none' ? r.y : P.y; zxLand(P, r);
+      }
+      continue;
+    }
+    const tg = P.k === 'w' || P.k === 'g' || P.k === 's' || P.k === 'n' ? ZM.z.filter(q => !q.dead && !P.skip.has(q)) : [];
+    const r = fpsRay(ox, oy, oz, hh, pp, P.by, tg, seg + 0.05);
+    if (r.kind === 'none' && P.z >= fl) continue;
+    if (r.kind === 'none') { r.kind = 'ground'; r.x = P.x; r.y = P.y; r.z = fl; }
+    P.x = r.x; P.y = r.y; P.z = r.z;
+    zxContact(P, r);
+  }
+}
+// what it does where it strikes (r: what fpsRay found)
+function zxContact(P, r) {
+  const mine = P.mine, w = FPSW[ZX_ID[P.k]] || FPSW.bomblance;
+  // (a step back along its flight, out of the wall, for blasts and fires)
+  const v = Math.hypot(P.vx, P.vy, P.vz) || 1, bx = P.x - P.vx / v * 0.3, by = P.y - P.vy / v * 0.3, bz = P.z - P.vz / v * 0.3;
+  if (P.k === 'w' || P.k === 'i') {
+    P.st = 'stuck'; P.fuse = P.k === 'w' ? w.fuse : P.fuse || 0.3;
+    if (r.kind === 'body') {
+      const o = r.who; P.on = o; P.ox = (r.x - o.x) * 0.6; P.oy = (r.y - o.y) * 0.6; P.oz = r.z - zxG(o);
+      fpsPuff(r.x, r.y, r.z, '160,30,20', 8);
+      if (mine && P.k === 'w') { zmHurt(o, r.head ? w.head : w.dmg, r.head, 'w', FPS.me.id); o.hitT = 0.25; zxMark(r.head); }
+    } else { P.x = bx; P.y = by; P.z = bz; fpsPuff(r.x, r.y, r.z, '190,190,180', 5); }
+    zxSound('stick', mine ? 0 : zxDist(P));
+    return;
+  }
+  if (P.k === 'g') {
+    if (r.kind === 'body') {
+      const o = r.who;
+      fpsPuff(r.x, r.y, r.z, '160,30,20', 6);
+      if (mine) { zmHurt(o, r.head ? w.head : w.dmg, r.head, 'g', FPS.me.id); o.hitT = 0.25; zxMark(r.head); }
+      P.caught.push(o); P.skip.add(o);
+      if (P.caught.length < P.max && !o.boss) { zxSound('stick', 0); return; }   // (the Mooring Line: on it runs)
+    } else fpsPuff(r.x, r.y, r.z, '190,190,180', 4);
+    zxHaul(P);
+    return;
+  }
+  if (P.k === 's') {
+    if (r.kind === 'body') {
+      const o = r.who; fpsPuff(r.x, r.y, r.z, '255,170,70', 10);
+      if (mine) { zmHurt(o, r.head ? w.head : w.dmg, r.head, 's', FPS.me.id); o.hitT = 0.25; zxMark(r.head); if (!o.dead) ZX.burn.push({ o, t: 3, k: 0.3 }); }
+      if (P.burstT != null) { P.done = true; P.x = bx; P.y = by; P.z = bz; zxStarBurst(P); return; }
+      P.done = true; zxPool(o.x, o.y, o.jz || 0, 2.4, 6, mine, P.by, false); return;
+    }
+    if (P.burstT != null) { P.done = true; P.x = bx; P.y = by; P.z = bz; zxStarBurst(P); return; }
+    P.done = true; zxPool(bx, by, zxFloor(bx, by, bz - FPSC.GROUND), 2.4, 6, mine, P.by, false); zxSound('fizz', mine ? 0 : zxDist(P));
+    return;
+  }
+  if (P.k === 't') { P.done = true; zxPool(bx, by, zxFloor(bx, by, bz - FPSC.GROUND), 1.7, 5, mine, P.by, true); return; }
+  if (P.k === 'n') {
+    P.done = true;
+    const fz = r.kind === 'body' ? (r.who.jz || 0) : zxFloor(bx, by, bz - FPSC.GROUND);
+    zxNet(r.kind === 'body' ? r.who.x : bx, r.kind === 'body' ? r.who.y : by, fz, mine, P.tier);
+    return;
+  }
+  P.done = true;
+}
+// came down with nothing struck (or flew its course)
+function zxLand(P, r) {
+  if (P.k === 'y') { P.done = true; fpsPuff(P.x, P.y, P.z, '190,190,180', 8); if (r.kind !== 'none') zxSound('clang', P.mine ? 0 : zxDist(P)); return; }
+  if (P.k === 'g') { zxHaul(P); return; }
+  zxContact(P, Object.assign({ kind: 'ground' }, r, { x: P.x, y: P.y, z: P.z }));
+}
+const zxDist = P => Math.hypot(P.x - FPS.me.x, P.y - FPS.me.y);
+
+// Bomb-Lance: the blast (the Thunder-Pod: and its irons thrown out to go off in turn)
+function zxBlast(P) {
+  const w = FPSW.bomblance, small = P.k === 'i';
+  zxBoom(P.x, P.y, P.z, small ? 2.6 : w.br, w.blast * (small ? 0.45 : 1), 'w', P.mine, small ? 0.5 : 1.2);
+  if (!small && P.tier) {
+    const n = Math.min(6, 1 + P.tier);
+    for (let i = 0; i < n; i++) {
+      const a = (i / n) * 6.283 + Math.random() * 0.6, sp = 4 + Math.random() * 3;
+      ZX.proj.push({ k: 'i', by: P.by, mine: P.mine, t: 0, tier: 0, x: P.x, y: P.y, z: P.z + 0.3, vx: Math.sin(a) * sp, vy: Math.cos(a) * sp, vz: 4 + Math.random() * 2, gr: 12, skip: new Set(), life: 2.5, fuse: 0.18 + i * 0.14, id: ++ZX.n });
+    }
+  }
+}
+// a blast: everyone in reach (and in sight of it) hurt, more the nearer, and thrown back a little
+function zxBoom(x, y, z, R, dmg, code, mine, kb) {
+  ZX.booms.push({ x, y, z, R, t: 0 });
+  zxSound('boom', mine ? 0 : Math.hypot(x - FPS.me.x, y - FPS.me.y), R);
+  for (let i = 0; i < 24 + R * 4; i++) { const a = Math.random() * 6.283, sp = 2 + Math.random() * R * 2; FPS.parts.push({ x, y, z, vx: Math.sin(a) * sp, vy: Math.cos(a) * sp, vz: Math.random() * 5, t: 0.5 + Math.random() * 0.3, c: Math.random() < 0.5 ? '255,190,90' : '120,110,100' }); }
+  if (!mine) return;
+  let any = false;
+  for (const o of ZM.z) {
+    if (o.dead) continue;
+    const cz = zxG(o) + 1.0, d = Math.hypot(o.x - x, o.y - y, cz - z);
+    if (d > R + (o.rad || 0.3)) continue;
+    const hd = Math.hypot(o.x - x, o.y - y);
+    if (hd > 0.6 && fpsRay(x, y, z, bearingOf(o.x - x, o.y - y), Math.atan2(cz - z, hd), FPS.me.id, [o], hd + 2).kind !== 'body') continue;
+    zmHurt(o, dmg * (1 - 0.6 * Math.min(1, d / R)), false, code, FPS.me.id); o.hitT = 0.3; any = true;
+    if (kb && hd > 0.05) zmpStatus(o, 'kb', (o.x - x) / hd * kb, (o.y - y) / hd * kb, 0.4);
+  }
+  if (any) zxMark(false);
+}
+
+// Grapnel: haul in what it caught (the Mooring Line: into a heap in front of you, lashed there)
+function zxHaul(P) {
+  P.st = 'reel'; P.reelT = 0.4; P.vx = P.vy = P.vz = 0;
+  zxSound('reel', P.mine ? 0 : zxDist(P));
+  if (!P.mine) return;
+  const m = FPS.me, caught = P.caught.filter(o => !o.dead && !o.boss && o.st === 'in');
+  if (!caught.length) return;
+  if (!P.tier) {
+    const o = caught[0], d = Math.hypot(m.x - o.x, m.y - o.y), pull = clamp(d - 1.5, 0, 8);
+    if (d > 0.05) zmpStatus(o, 'kb', (m.x - o.x) / d * pull, (m.y - o.y) / d * pull, 1.3);
+    return;
+  }
+  const tx = m.x + Math.sin(m.h) * 2.2, ty = m.y + Math.cos(m.h) * 2.2, n = caught.length;
+  caught.forEach((o, i) => {
+    const ax = tx + Math.cos(i * 2.4) * 0.35 * Math.min(1, i), ay = ty + Math.sin(i * 2.4) * 0.35 * Math.min(1, i);
+    const dx = ax - o.x, dy = ay - o.y, d = Math.hypot(dx, dy), k = d > 8 ? 8 / d : 1;
+    zmpStatus(o, 'kb', dx * k, dy * k, 0.7);
+  });
+  ZX.later.push({ t: 0.55, fn: () => {
+    for (const o of caught) {
+      if (o.dead) continue;
+      zmpStatus(o, 'pin', Math.min(8, 2.5 + 0.5 * P.tier));
+      if (n > 1) zmHurt(o, FPSW.grapnel.dmg * 0.5 * (n - 1), false, 'g', FPS.me.id);
+    }
+    zxSound('lash', 0);
+  } });
+}
+
+// Flare Pistol: a ring of fire on the floor (r metres, T seconds); small: one of the Star Shell's stars
+function zxPool(x, y, fz, r, T, mine, by, small) {
+  ZX.pools.push({ x, y, fz, r, T, t: T, k: 0.2, mine, small, seed: Math.random() * 100 });
+  if (ZX.pools.length > 24) ZX.pools.shift();
+}
+function zxPools(dt) {
+  for (const F of ZX.pools) {
+    F.t -= dt; F.k -= dt;
+    const fade = Math.min(1, F.t / 1.2);
+    if (!reduceMotion && Math.random() < dt * (F.small ? 14 : 30) * fade) { const a = Math.random() * 6.283, rr = Math.sqrt(Math.random()) * F.r; FPS.parts.push({ x: F.x + Math.sin(a) * rr, y: F.y + Math.cos(a) * rr, z: FPSC.GROUND + F.fz + 0.1, vx: 0, vy: 0, vz: 1.2 + Math.random(), t: 0.5, c: Math.random() < 0.5 ? '255,150,60' : '255,215,120', up: true }); }
+    if (!F.mine || F.k > 0) continue;
+    F.k = 0.35;
+    for (const o of ZM.z) {
+      if (o.dead || Math.abs((o.jz || 0) - F.fz) > 1.3 || Math.hypot(o.x - F.x, o.y - F.y) > F.r + 0.25) continue;
+      o.scorch = Math.min(1, (o.scorch || 0) + 0.4); o.hitT = 0.12;
+      zmHurt(o, zxHp() * (F.small ? 0.05 : 0.07), false, 's', FPS.me.id);
+    }
+  }
+  ZX.pools = ZX.pools.filter(F => F.t > 0);
+}
+// the Star Shell: up it bursts into burning stars that fall round where it was
+function zxStarBurst(P) {
+  const n = Math.min(9, 3 + (P.tier || 0));
+  zxSound('burst', P.mine ? 0 : zxDist(P));
+  ZX.booms.push({ x: P.x, y: P.y, z: P.z, R: 1.2, t: 0, star: true });
+  for (let i = 0; i < n; i++) {
+    const a = (i / n) * 6.283 + Math.random() * 0.5, sp = 1.5 + Math.random() * (1.5 + 0.35 * P.tier);
+    ZX.proj.push({ k: 't', by: P.by, mine: P.mine, t: 0, tier: 0, x: P.x, y: P.y, z: P.z, vx: Math.sin(a) * sp + P.vx * 0.15, vy: Math.cos(a) * sp + P.vy * 0.15, vz: 1 + Math.random() * 2, gr: 7, skip: new Set(), life: 4, id: ++ZX.n });
+  }
+}
+
+// Net Mortar: the net opens where it falls, and holds what's under it (and what walks in)
+function zxNet(x, y, fz, mine, t) {
+  const N = { x, y, fz, r: t ? Math.min(4.5, 2.8 + 0.3 * t) : 2.8, T: t ? Math.min(9, 4 + 0.5 * t) : 4, caught: new Set(), k: 0, bite: 0.5, tier: t || 0, mine, seed: Math.random() * 6 };
+  N.t = N.T;
+  ZX.nets.push(N); if (ZX.nets.length > 8) ZX.nets.shift();
+  zxSound('net', mine ? 0 : Math.hypot(x - FPS.me.x, y - FPS.me.y));
+  if (mine) zxNetCatch(N, true);
+}
+function zxNetCatch(N, first) {
+  let any = false;
+  for (const o of ZM.z) {
+    if (o.dead || N.caught.has(o) || o.st !== 'in' || Math.abs((o.jz || 0) - N.fz) > 1.4) continue;
+    const d = Math.hypot(o.x - N.x, o.y - N.y); if (d > N.r + 0.2) continue;
+    N.caught.add(o); any = true; o.hitT = 0.2;
+    // (the Barbed Trawl hauls shut: those under it are dragged in towards the middle)
+    const k = N.tier && d > 0.8 ? 0.45 : 0, px = o.x + (N.x - o.x) * k, py = o.y + (N.y - o.y) * k;
+    zmpStatus(o, 'pin', Math.max(1, N.t), k ? px - FPSC.CX : undefined, k ? py - FPSC.CY : undefined);
+    zmHurt(o, FPSW.netmortar.dmg, false, 'n', FPS.me.id);
+  }
+  if (any) zxMark(false);
+}
+function zxNets(dt) {
+  for (const N of ZX.nets) {
+    N.t -= dt; N.k -= dt; N.bite -= dt;
+    if (!N.mine) continue;
+    if (N.k <= 0) { N.k = 0.2; zxNetCatch(N, false); }
+    if (N.tier && N.bite <= 0) {
+      N.bite = 0.5;
+      let any = false;
+      for (const o of N.caught) if (!o.dead && Math.hypot(o.x - N.x, o.y - N.y) < N.r + 0.6) { zmHurt(o, 1.2, false, 'n', FPS.me.id); o.hitT = 0.15; any = true; }
+      if (any) zxSound('bite', 0);
+    }
+  }
+  ZX.nets = ZX.nets.filter(N => N.t > 0);
+}
+
+// Chain-Shot: everything the whirling bar passes, cut (and slowed)
+function zxChainCut(P, ox, oy, oz) {
+  const dx = P.x - ox, dy = P.y - oy, L = Math.hypot(dx, dy) || 1e-3, ux = dx / L, uy = dy / L, w = FPSW.chainshot;
+  for (const o of ZM.z) {
+    if (o.dead || P.hit.has(o)) continue;
+    const rx = o.x - ox, ry = o.y - oy, along = rx * ux + ry * uy, side = Math.abs(rx * uy - ry * ux);
+    if (along < -0.35 || along > L + 0.35 || side > P.hw + (o.rad || 0.3)) continue;
+    const hz = P.z - zxG(o); if (hz < -0.3 || hz > (o.tall || 1.9) + 0.2) continue;
+    P.hit.add(o); o.hitT = 0.25;
+    for (let i = 0; i < 6; i++) FPS.parts.push({ x: o.x, y: o.y, z: zxG(o) + 0.6 + Math.random() * 0.8, vx: ux * 4 + (Math.random() - 0.5) * 2, vy: uy * 4 + (Math.random() - 0.5) * 2, vz: Math.random() * 2, t: 0.45, c: '90,120,105' });
+    if (P.mine) { zmHurt(o, w.dmg, false, 'y', FPS.me.id); zmpStatus(o, 'slow', P.tier ? Math.min(10, 4 + P.tier) : 2.5); zxMark(false); }
+  }
+}
+// the Reaping Chain: off the wall it goes, and cuts again
+function zxBounce(P, ox, oy, oz) {
+  // (which way the wall faces: feel along each axis for it)
+  const reach = 0.9, bx = Math.abs(P.vx) > 0.5 && fpsRay(ox, oy, oz, P.vx > 0 ? Math.PI / 2 : -Math.PI / 2, 0, P.by, [], reach).kind !== 'none';
+  const by = Math.abs(P.vy) > 0.5 && fpsRay(ox, oy, oz, P.vy > 0 ? 0 : Math.PI, 0, P.by, [], reach).kind !== 'none';
+  if (bx || !by) P.vx = -P.vx; if (by || !bx) P.vy = -P.vy;
+  P.x = ox; P.y = oy; P.z = oz; P.bounces--; P.hit = new Set(); P.life = P.t + 1.1;
+  fpsPuff(ox, oy, oz, '200,200,190', 6);
+  zxSound('clang', P.mine ? 0 : zxDist(P));
+}
+
+// the Homeward Axe, thrown: out (through them all) and home again to the hand that threw it
+function zxAxeFly(P, dt) {
+  const w = FPSW.axe, who = P.by === FPS.me.id ? FPS.me : FPS.remote.get(P.by);
+  P.spin += dt * 18;
+  const sp = P.back ? 24 : 21;
+  let nx, ny;
+  if (!P.back) { nx = P.x + Math.sin(P.h) * sp * dt; ny = P.y + Math.cos(P.h) * sp * dt; P.out += sp * dt; }
+  else {
+    if (!who) { P.done = true; return; }
+    const tx = who.x, ty = who.y, d = Math.hypot(tx - P.x, ty - P.y);
+    if (d < 1.0 || P.t > 5) { P.done = true; zxSound('catch', P.mine ? 0 : zxDist(P)); return; }
+    nx = P.x + (tx - P.x) / d * sp * dt; ny = P.y + (ty - P.y) / d * sp * dt;
+    P.z += ((FPSC.GROUND + FPSC.EYE - 0.4 + (who.jz || 0)) - P.z) * Math.min(1, dt * 4); P.fz = who.jz || 0;
+  }
+  if (!P.back && (P.out >= P.max || zmBlockedAt(nx, ny, 0.2, P.fz))) { P.back = true; if (P.out < P.max) { fpsPuff(P.x, P.y, P.z, '190,190,180', 6); zxSound('clang', P.mine ? 0 : zxDist(P)); } return; }
+  P.x = nx; P.y = ny;
+  const set = P.back ? P.hitB : P.hitO;
+  for (const o of ZM.z) {
+    if (o.dead || set.has(o) || Math.hypot(o.x - P.x, o.y - P.y) > 0.9 + (o.rad || 0.3) || Math.abs(zxG(o) + 1 - P.z) > 1.3) continue;
+    set.add(o); o.hitT = 0.25;
+    fpsPuff(o.x, o.y, zxG(o) + 1.2, '90,120,105', 6);
+    if (P.mine) { zmHurt(o, w.dmg * 1.25, false, 'x', FPS.me.id); zxMark(false); zxSound('cleave', 0); }
+  }
+}
+
+// ---------- sounds ----------
+function zxSound(k, d, extra) {
+  try {
+    if (soundOff()) return;
+    const v = Math.max(0.05, 1 - (d || 0) / 300), o = {};
+    if (k === 'd') { for (let i = 0; i < 4; i++) noise('lowpass', 1500 * v + 300, 0.7, 0.002, 0.42 * v, 0.24, { delay: i * 0.022 }); tone(110, 'triangle', 0.002, 0.25 * v, 0.2, { to: 50 }); }
+    else if (k === 'w') { noise('lowpass', 700, 0.8, 0.003, 0.55 * v, 0.35); tone(80, 'triangle', 0.003, 0.35 * v, 0.25, { to: 40 }); noise('highpass', 2500, 0.8, 0.05, 0.1 * v, 0.7); }
+    else if (k === 'g') { tone(240, 'sawtooth', 0.002, 0.12 * v, 0.25, { to: 120 }); noise('lowpass', 600, 0.8, 0.002, 0.35 * v, 0.2); noise('bandpass', 1800, 2, 0.03, 0.08 * v, 0.5, { to: 900 }); }
+    else if (k === 's') { noise('lowpass', 1200, 0.8, 0.002, 0.4 * v, 0.2); noise('bandpass', 3200, 1.5, 0.02, 0.14 * v, 1.0, { to: 1800 }); }
+    else if (k === 'x') { noise('bandpass', 900, 1.4, 0.04, 0.26 * v, 0.24, { to: 500 }); }
+    else if (k === 'u') { noise('lowpass', 650 * v + 200, 0.6, 0.002, 1.0 * v, 1.2); tone(42, 'sawtooth', 0.002, 0.5 * v, 0.6, { to: 24 }); noise('highpass', 1800, 0.7, 0.002, 0.25 * v, 0.4); }
+    else if (k === 'n') { tone(70, 'sine', 0.003, 0.45 * v, 0.3, { to: 40 }); noise('lowpass', 500, 1, 0.003, 0.4 * v, 0.3); noise('bandpass', 700, 3, 0.05, 0.1 * v, 0.5); }
+    else if (k === 'y') { noise('lowpass', 900 * v + 250, 0.6, 0.002, 0.7 * v, 0.5); noise('lowpass', 900 * v + 250, 0.6, 0.002, 0.5 * v, 0.4, { delay: 0.03 }); noise('bandpass', 1400, 4, 0.05, 0.12 * v, 0.9, { to: 700 }); }
+    else if (k === 'boom') { const big = (extra || 3) > 3; noise('lowpass', big ? 500 : 900, 0.7, 0.003, (big ? 0.9 : 0.5) * v, big ? 1.1 : 0.5); tone(big ? 48 : 70, 'sawtooth', 0.003, 0.4 * v, big ? 0.7 : 0.3, { to: 25 }); }
+    else if (k === 'stick') { noise('bandpass', 600, 3, 0.002, 0.2 * v, 0.12); tone(160, 'triangle', 0.002, 0.1 * v, 0.1); }
+    else if (k === 'reel') { for (let i = 0; i < 5; i++) tone(900 + i * 40, 'square', 0.001, 0.03 * v, 0.03, { delay: i * 0.06 }); }
+    else if (k === 'lash') { noise('bandpass', 400, 2, 0.01, 0.25, 0.3); tone(90, 'triangle', 0.003, 0.2, 0.3, { to: 50 }); }
+    else if (k === 'fizz') { noise('highpass', 3000, 0.8, 0.02, 0.1 * v, 1.2); }
+    else if (k === 'burst') { noise('lowpass', 1500, 0.8, 0.002, 0.45 * v, 0.4); for (let i = 0; i < 4; i++) noise('highpass', 2500, 1, 0.01, 0.08 * v, 0.3, { delay: 0.1 + i * 0.08 }); }
+    else if (k === 'net') { noise('bandpass', 500, 1.2, 0.02, 0.25 * v, 0.35, { to: 250 }); tone(60, 'sine', 0.01, 0.15 * v, 0.2); }
+    else if (k === 'bite') { noise('bandpass', 2400, 4, 0.002, 0.06, 0.08); }
+    else if (k === 'clang') { tone(620, 'square', 0.001, 0.08 * v, 0.25, { to: 520 }); tone(1310, 'sine', 0.001, 0.05 * v, 0.4); }
+    else if (k === 'throw') { noise('bandpass', 1200, 2, 0.02, 0.2, 0.5, { to: 600 }); }
+    else if (k === 'catch') { tone(300, 'triangle', 0.002, 0.15 * v, 0.12); noise('bandpass', 800, 3, 0.002, 0.12 * v, 0.1); }
+    else if (k === 'cleave') { noise('bandpass', 500, 2, 0.002, 0.22, 0.14); }
+    else if (k === 'chop') { noise('lowpass', 400, 1, 0.002, 0.35, 0.25); tone(70, 'triangle', 0.002, 0.25, 0.2, { to: 40 }); }
+  } catch (e) {}
+}
+
+// ---------- in 3D: the light of the flares, their fires and the blasts (three lamps, given to the nearest) ----------
+const ZX3 = { grp: null, L: [] };
+function zx3d(dt) {
+  if (!Z3.grp) return;
+  if (ZX3.grp !== Z3.grp) { ZX3.grp = Z3.grp; ZX3.L = []; for (let i = 0; i < 3; i++) { const L = new THREE.PointLight(0xff9a40, 0, 9, 1.6); Z3.grp.add(L); ZX3.L.push(L); } }
+  const m = FPS.me, src = [], t = g.t;
+  for (const F of ZX.pools) src.push([F.x, F.y, FPSC.GROUND + F.fz + 0.6, (F.small ? 1.0 : 1.8) * Math.min(1, F.t / 1.2) * (reduceMotion ? 1 : 0.85 + 0.15 * Math.sin(t * 19 + F.seed)), 0xff9a40, F.small ? 6 : 9]);
+  for (const P of ZX.proj) if (P.k === 's' || P.k === 't') src.push([P.x, P.y, P.z, 1.6, 0xff6a3a, 8]);
+  for (const b of ZX.booms) src.push([b.x, b.y, b.z, (b.star ? 3 : 5) * (1 - b.t / 0.55), b.star ? 0xffd0a0 : 0xffc070, b.R * 3.5]);
+  src.sort((a, b) => Math.hypot(a[0] - m.x, a[1] - m.y) - Math.hypot(b[0] - m.x, b[1] - m.y));
+  ZX3.L.forEach((L, i) => {
+    const s = src[i];
+    if (!s) { L.intensity = 0; return; }
+    L.position.copy(z3v(s[0], s[1], s[2])); L.intensity = s[3] * flashK(); L.color.setHex(s[4]); L.distance = s[5];
+  });
+}
+
+// ---------- painted over the view: what's flying, the fires, the nets, the blasts, the hauling lines ----------
+function zxDrawOver() {
+  const tm = FPS.g ? FPS.g.t : 0, G0 = FPSC.GROUND;
+  const line = (pts, col, lw) => { const p = polyProj(pts); if (p.length < 2) return; ctx.strokeStyle = col; ctx.lineWidth = lw; ctx.beginPath(); ctx.moveTo(p[0].x, p[0].y); for (const q of p.slice(1)) ctx.lineTo(q.x, q.y); ctx.stroke(); };
+  const dot = (x, y, z, r, col, glow) => {
+    const c = cam(x, y, z); if (c.f < 0.4) return; const q = proj(c), s = Math.max(1.5, r * q.s);
+    if (glow) { const gr = ctx.createRadialGradient(q.x, q.y, 0, q.x, q.y, s * 4); gr.addColorStop(0, glow); gr.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = gr; ctx.beginPath(); ctx.arc(q.x, q.y, s * 4, 0, 6.283); ctx.fill(); }
+    ctx.fillStyle = col; ctx.beginPath(); ctx.arc(q.x, q.y, s, 0, 6.283); ctx.fill();
+  };
+  const ring = (x, y, z, r, n) => { const pts = []; for (let i = 0; i < n; i++) { const a = i / n * 6.283; pts.push([x + Math.sin(a) * r, y + Math.cos(a) * r, z]); } return pts; };
+  ctx.save(); ctx.lineCap = 'round';
+  // the fires on the floor: a glowing ring, and tongues of flame
+  for (const F of ZX.pools) {
+    const fade = Math.min(1, F.t / 1.2), z = G0 + F.fz + 0.03, p = polyProj(ring(F.x, F.y, z, F.r, 20));
+    if (p.length > 2) { ctx.fillStyle = `rgba(255,120,40,${0.16 * fade})`; ctx.beginPath(); ctx.moveTo(p[0].x, p[0].y); for (const q of p.slice(1)) ctx.lineTo(q.x, q.y); ctx.closePath(); ctx.fill(); ctx.strokeStyle = `rgba(255,170,80,${0.5 * fade})`; ctx.lineWidth = 2; ctx.stroke(); }
+    const n = F.small ? 7 : 14;
+    for (let i = 0; i < n; i++) {
+      const a = i * 2.39996 + F.seed, rr = F.r * Math.sqrt((i + 0.5) / n), x = F.x + Math.sin(a) * rr, y = F.y + Math.cos(a) * rr;
+      const ht = (0.25 + 0.35 * (0.5 + 0.5 * Math.sin(tm * 11 + i * 1.7 + F.seed))) * fade * (F.small ? 0.8 : 1);
+      line([[x, y, z], [x + Math.sin(tm * 5 + i) * 0.06, y, z + ht]], `rgba(255,${150 + (i % 3) * 30},70,${0.75 * fade})`, 3.5);
+      line([[x, y, z], [x, y, z + ht * 0.55]], `rgba(255,240,180,${0.8 * fade})`, 1.6);
+    }
+  }
+  // the nets: a mesh on the floor, lead weights round its edge, and wound round those it holds
+  for (const N of ZX.nets) {
+    const a0 = Math.min(1, N.t / 0.6), open = Math.min(1, (N.T - N.t) / 0.25), r = N.r * open, z = G0 + N.fz + 0.06;
+    const col = `rgba(200,190,150,${0.55 * a0})`;
+    for (let i = -3; i <= 3; i++) for (const dir of [0, 1]) {
+      const c = i / 3.5 * r, half = Math.sqrt(Math.max(0, r * r - c * c)), ca = N.seed + dir * Math.PI / 2, ux = Math.sin(ca), uy = Math.cos(ca);
+      line([[N.x + ux * c - uy * half, N.y + uy * c + ux * half, z], [N.x + ux * c + uy * half, N.y + uy * c - ux * half, z]], col, 1.2);
+    }
+    line(ring(N.x, N.y, z, r, 18).concat([[N.x + Math.sin(0) * r, N.y + Math.cos(0) * r, z]]), `rgba(170,150,110,${0.7 * a0})`, 2);
+    for (let i = 0; i < 8; i++) { const a = i / 8 * 6.283; dot(N.x + Math.sin(a) * r, N.y + Math.cos(a) * r, z + 0.05, 0.06, `rgba(70,70,75,${a0})`); }
+    for (const o of N.caught) {
+      if (o.dead || Math.hypot(o.x - N.x, o.y - N.y) > N.r + 0.8) continue;
+      const b = zxG(o);
+      for (let k = 0; k < 4; k++) { const a = k * 1.57 + N.seed; line([[o.x + Math.sin(a) * 0.38, o.y + Math.cos(a) * 0.38, b + 0.1], [o.x + Math.sin(a + 2) * 0.32, o.y + Math.cos(a + 2) * 0.32, b + 1.75]], `rgba(220,205,160,${0.75 * a0})`, 1.3); }
+      if (N.tier) dot(o.x, o.y, b + 1.0, 0.05, `rgba(255,200,120,${a0})`);
+    }
+  }
+  // what's flying
+  for (const P of ZX.proj) {
+    const v = Math.hypot(P.vx || 0, P.vy || 0, P.vz || 0) || 1, dx = (P.vx || 0) / v, dy = (P.vy || 0) / v, dz = (P.vz || 0) / v;
+    if (P.k === 'w') {
+      const L = 1.5, tail = [P.x - dx * L, P.y - dy * L, P.z - dz * L];
+      if (P.st === 'stuck') { const a = P.on ? bearingOf(P.on.x - FPS.me.x, P.on.y - FPS.me.y) : 0; tail[0] = P.x - Math.sin(P.h || a) * 0.9; tail[1] = P.y - Math.cos(P.h || a) * 0.9; tail[2] = P.z + 0.15; }
+      line([tail, [P.x, P.y, P.z]], '#2a2a30', 3);
+      dot(tail[0] * 0.7 + P.x * 0.3, tail[1] * 0.7 + P.y * 0.3, tail[2] * 0.7 + P.z * 0.3, 0.07, '#5a4a30');
+      if (P.st === 'stuck') dot(P.x, P.y, P.z + 0.1, 0.03, 'rgba(255,230,160,1)', `rgba(255,190,90,${0.5 + 0.5 * Math.sin(tm * 30)})`);
+    } else if (P.k === 'i') { dot(P.x, P.y, P.z, 0.06, '#3a3a40', P.st === 'stuck' ? `rgba(255,200,100,${0.5 + 0.5 * Math.sin(tm * 40)})` : null); }
+    else if (P.k === 'g') {
+      const who = P.by === FPS.me.id ? FPS.me : FPS.remote.get(P.by); let hx = P.x, hy = P.y, hz = P.z;
+      if (P.st === 'reel' && who) { const k = 1 - P.reelT / 0.4; hx += (who.x - hx) * k; hy += (who.y - hy) * k; hz += (G0 + FPSC.EYE - 0.4 + (who.jz || 0) - hz) * k; }
+      if (who) {
+        const a = who === FPS.me ? [who.x + Math.sin(who.h) * 0.6, who.y + Math.cos(who.h) * 0.6, G0 + FPSC.EYE - 0.4 + (who.jz || 0)] : [who.x, who.y, G0 + 1.3 + (who.jz || 0)], pts = [];
+        for (let i = 0; i <= 8; i++) { const u = i / 8; pts.push([a[0] + (hx - a[0]) * u, a[1] + (hy - a[1]) * u, a[2] + (hz - a[2]) * u - Math.sin(u * Math.PI) * (P.st === 'reel' ? 0.05 : 0.25)]); }
+        line(pts, 'rgba(200,180,130,0.85)', 1.4);
+      }
+      for (let k = 0; k < 4; k++) { const a = k * 1.57 + P.t * 4; line([[hx, hy, hz], [hx + Math.sin(a) * 0.2 + dx * 0.1, hy + Math.cos(a) * 0.2 + dy * 0.1, hz + 0.12]], '#3a3a42', 2.4); }
+    } else if (P.k === 's' || P.k === 't') { dot(P.x, P.y, P.z, P.k === 's' ? 0.07 : 0.05, 'rgba(255,240,200,1)', 'rgba(255,110,50,0.7)'); }
+    else if (P.k === 'n') {
+      dot(P.x, P.y, P.z, 0.22, 'rgba(150,135,100,0.95)');
+      for (let k = 0; k < 4; k++) { const a = k * 1.57 + P.t * 3; dot(P.x + Math.sin(a) * 0.3, P.y + Math.cos(a) * 0.3, P.z, 0.06, '#3a3a40'); }
+    } else if (P.k === 'y') {
+      const sx = Math.cos(P.spin), sy = Math.sin(P.spin), px = -dy, py = dx;   // (the bar whirls flat, across its flight)
+      const ax = P.x + (px * sx + dx * sy) * P.hw, ay = P.y + (py * sx + dy * sy) * P.hw, bx = P.x - (px * sx + dx * sy) * P.hw, by = P.y - (py * sx + dy * sy) * P.hw;
+      line([[ax, ay, P.z], [bx, by, P.z]], 'rgba(60,60,64,0.95)', 2.5);
+      line([[ax, ay, P.z], [bx, by, P.z]], `rgba(200,210,220,${P.tier ? 0.55 : 0.25})`, 1);
+      dot(ax, ay, P.z, 0.12, '#2a2a2e'); dot(bx, by, P.z, 0.12, '#2a2a2e');
+    } else if (P.k === 'X') {
+      for (let k = 0; k < 2; k++) { const a = P.spin + k * Math.PI; line([[P.x - Math.sin(a) * 0.45 * Math.sin(P.h + 1.57), P.y - Math.sin(a) * 0.45 * Math.cos(P.h + 1.57), P.z - Math.cos(a) * 0.45], [P.x + Math.sin(a) * 0.45 * Math.sin(P.h + 1.57), P.y + Math.sin(a) * 0.45 * Math.cos(P.h + 1.57), P.z + Math.cos(a) * 0.45]], k ? 'rgba(255,200,110,0.9)' : '#5a3a22', k ? 4 : 3); }
+      dot(P.x, P.y, P.z, 0.08, 'rgba(255,220,150,0.9)', 'rgba(255,180,80,0.35)');
+    }
+  }
+  // the blasts: a flash and a ring going out
+  for (const b of ZX.booms) {
+    const c = cam(b.x, b.y, b.z); if (c.f < 0.4) continue;
+    const q = proj(c), k = b.t / 0.55, s = Math.max(6, b.R * q.s * (0.4 + k * 0.8));
+    const gr = ctx.createRadialGradient(q.x, q.y, 0, q.x, q.y, s);
+    gr.addColorStop(0, b.star ? `rgba(255,240,210,${0.9 * (1 - k)})` : `rgba(255,236,190,${0.95 * (1 - k)})`); gr.addColorStop(0.4, `rgba(255,150,60,${0.55 * (1 - k)})`); gr.addColorStop(1, 'rgba(255,120,40,0)');
+    ctx.fillStyle = gr; ctx.beginPath(); ctx.arc(q.x, q.y, s, 0, 6.283); ctx.fill();
+    if (!b.star) line(ring(b.x, b.y, b.z - 0.6, b.R * (0.3 + k * 0.8), 20).concat([[b.x, b.y + b.R * (0.3 + k * 0.8), b.z - 0.6]]), `rgba(255,210,150,${0.6 * (1 - k)})`, 2);
+  }
+  ctx.restore();
+}
+
+// ---- src/zmchestvm.js ----
+// The wreck chest's own weapons, in your hands (and on the chest, the bench and the others' figures, which borrow
+// these models): the first-person models and their movements, after src/fpsgun.js's. Each comes up with vmPlace, so
+// the sway, the bob, the run and the kick are the same as the rest; each has its own reload.
+//  - Duck's-Foot: four short barrels splayed flat from one brass breech, one big hammer, a bird's-head grip.
+//    Reloading: muzzles up, a brass charger of four paper cartridges pushed into all four mouths at once, the empty
+//    charger flicked away, the hammer thumbed back.
+//  - Bomb-Lance: a brass-bound shoulder gun with the lance's head and its bomb standing out of the muzzle.
+//    Reloading: tip it, a new lance up from below and slid home, the bomb's fuse cap given a twist, cock.
+//  - Grapnel Gun: a short bell-mouthed gun with a four-tined grapnel seated in its mouth and a drum of line under
+//    it. Firing throws the hook away; reloading cranks the line in until the hook comes back, folds its tines and
+//    seats itself, then the lever's thrown.
+//  - Flare Pistol: a fat brass barrel on a hinge, a big spur hammer. Reloading: break it open, the spent case jumps
+//    out over your shoulder, a fresh red-capped cartridge thumbed in, snapped shut.
+//  - Boarding Axe: a bearded iron head with a back spike on a long ash haft. Two wide sweeps and an overhead chop,
+//    with a trail through the air; R turns it to look along the edge. (Reforged, while it's thrown your hand's empty.)
+//  - Punt Gun: a barrel longer than you are tall, banded in iron, a heavy stock. Reloading (long): muzzle up, a
+//    great flask of powder, a bag of shot, three strokes of the long rammer, a cap, cock.
+//  - Net Mortar: a stubby brass mortar on a stock, a bundled net in its mouth with lead weights round it. Reloading:
+//    a fresh bundle pushed in, the four weights pressed into their clips, two pumps of the charging lever.
+//  - Chain-Shot: twin bronze barrels side by side, a ball in each mouth and the chain sagging between. Reloading: a
+//    linked pair of balls brought up, one dropped down each barrel, the chain laid in its notch, cock.
+
+Object.assign(VM_PLAIN, {
+  duckfoot:  { metal: '#3c3a38', dark: '#1c1b1a', wood: '#5a3a22', brass: '#a8843a', accent: '#d8ccb0', glow: null },
+  bomblance: { metal: '#3a3e44', dark: '#1a1c20', wood: '#4e3220', brass: '#b08c40', accent: '#a83a2a', glow: null },
+  grapnel:   { metal: '#44464a', dark: '#1e1f22', wood: '#5a3e26', brass: '#9a7a34', accent: '#c8b088', glow: null },
+  flaregun:  { metal: '#2e3034', dark: '#18191c', wood: '#3a2416', brass: '#c09040', accent: '#d84a2a', glow: null },
+  axe:       { metal: '#9aa0a8', dark: '#2a2b30', wood: '#7a5a38', brass: '#9a7a34', accent: '#3a2a1a', glow: null },
+  puntgun:   { metal: '#34373c', dark: '#18191d', wood: '#4a2e1a', brass: '#8a6a2c', accent: '#8a8a90', glow: null },
+  netmortar: { metal: '#3a3c40', dark: '#1a1b1e', wood: '#56381f', brass: '#b8903c', accent: '#c8b48a', glow: null },
+  chainshot: { metal: '#3a3a3e', dark: '#141416', wood: '#4a3020', brass: '#9a6a34', accent: '#5a5a60', glow: null },
+});
+const zxvV = (x, y, z) => new THREE.Vector3(x, y, z);
+const zxvTrig = (w, S) => { if (w.trig) w.trig.rotation.x = S.trigger ? 0.35 : 0; };
+function zxvBall(r, mat) { return new THREE.Mesh(new THREE.SphereGeometry(r, 12, 8), mat); }
+
+// Duck's-Foot ------------------------------------------------------------------------------------
+const ZXV_DUCK = [-0.22, -0.075, 0.075, 0.22];
+function zxvCharger(M) {
+  const g = new THREE.Group(), paper = new THREE.MeshLambertMaterial({ color: 0xe8e0c8 });
+  g.add(box(0.11, 0.008, 0.016, M.brass, 0, -0.012, 0));
+  ZXV_DUCK.forEach(a => { const c = zcyl(0.0085, 0.0085, 0.045, paper, 10, 0.04, a * 0.16, 0); c.rotation.y = -a; g.add(c); });
+  return g;
+}
+VM_BUILD.duckfoot = (M) => {
+  const root = new THREE.Group();
+  root.add(box(0.07, 0.034, 0.07, M.brass, 0, 0.04, -0.02));
+  root.add(box(0.072, 0.008, 0.074, M.iron, 0, 0.06, -0.02));
+  const barrels = new THREE.Group(); barrels.position.set(0, 0.04, -0.055); root.add(barrels);
+  for (const a of ZXV_DUCK) {
+    const b = new THREE.Group(); b.rotation.y = -a; b.position.x = a * 0.12; barrels.add(b);
+    b.add(zcyl(0.0115, 0.0105, 0.19, M.iron, 12, 0));
+    b.add(zcyl(0.0125, 0.0125, 0.012, M.brass, 12, -0.18));
+    const bore = new THREE.Mesh(new THREE.CircleGeometry(0.0075, 10), M.bore); bore.position.z = -0.1915; b.add(bore);
+  }
+  // one big hammer over a single nipple, the trigger, a bird's-head grip with a brass cap
+  const hammer = new THREE.Group(); hammer.position.set(0, 0.06, 0.02); root.add(hammer);
+  const hn = box(0.012, 0.04, 0.012, M.dark, 0, 0.018, -0.012); hn.rotation.x = -0.5; hammer.add(hn); hammer.add(box(0.02, 0.01, 0.02, M.dark, 0, 0.036, -0.028));
+  const guard = new THREE.Mesh(new THREE.TorusGeometry(0.022, 0.003, 6, 20, Math.PI), M.brass); guard.rotation.set(0, Math.PI / 2, Math.PI); guard.position.set(0, 0.02, 0.0); root.add(guard);
+  const trig = box(0.006, 0.024, 0.008, M.dark, 0, 0.012, 0.0); root.add(trig);
+  root.add(profile([[0.005, 0.03], [0.04, -0.03], [0.03, -0.09], [0.06, -0.11], [0.09, -0.09], [0.08, -0.02], [0.05, 0.035]], 0.034, M.wood, 0.004));
+  const capB = zxvBall(0.016, M.brass); capB.scale.set(1.2, 0.7, 1.3); capB.position.set(0, -0.1, 0.075); root.add(capB);
+  const hand = vmHand(VM.H, false); hand.position.set(0.01, -0.035, 0.055); root.add(hand);
+  const muzzle = new THREE.Object3D(); muzzle.position.set(0, 0.04, -0.25); root.add(muzzle);
+  const fresh = zxvCharger(M); fresh.visible = false; root.add(fresh);
+  return { root, M, hand, hammer, trig, muzzle, fresh, barrels, pose: { x: 0.055, y: -0.14, z: -0.31, rx: 0.12, ry: 0.09, rz: -0.07 }, smoke: 6, flashK: 1.5 };
+};
+VM_ANIM.duckfoot = (w, S) => {
+  const p = S.p;
+  VM.lhand.visible = false;
+  if (S.fired) w.down = 1;
+  const tip = vmSeg(p, 0, 0.14) - vmSeg(p, 0.84, 1), bring = vmSeg(p, 0.16, 0.42), push = vmSeg(p, 0.42, 0.55), away = vmSeg(p, 0.58, 0.7), cock = vmSeg(p, 0.74, 0.86);
+  w.steps = w.steps || [[0.44, () => vmNoise(2600, 0.06, 0.15)], [0.54, () => vmClick(620, 0.06)], [0.62, () => vmNoise(5000, 0.03, 0.12)], [0.85, () => { vmClick(950, 0.05); vmClick(520, 0.05); }]];
+  vmPlace(w, S, 0, { x: -tip * 0.03, y: -tip * 0.05, z: -tip * 0.06, rx: tip * 0.45, ry: -tip * 0.2, rz: tip * 0.3 });
+  if (S.reloading && p > 0.86) w.down = 0;
+  w.hammer.rotation.x = (S.reloading ? (p < 0.74 ? 1 : 1 - cock) : (w.down ? 1 : 0)) * 0.6;
+  zxvTrig(w, S);
+  w.fresh.visible = S.reloading && bring > 0.01 && away < 0.99;
+  if (w.fresh.visible) {
+    const home = zxvV(-0.2, -0.3, 0.05), front = zxvV(0, 0.04, -0.33), inn = zxvV(0, 0.04, -0.27), gone = zxvV(-0.25, 0.1, -0.2);
+    w.fresh.position.copy(home).lerp(front, bring).lerp(inn, push).lerp(gone, away); w.fresh.rotation.set(0, 0, (1 - bring) * 0.9 + away * 1.5);
+    vmLeftAt(w, w.fresh.position.clone().add(zxvV(-0.01, -0.035, 0.03)), [0.3, 0, -0.4]);
+  } else if (S.reloading && cock > 0.01 && cock < 0.99) vmLeftAt(w, zxvV(0.0, 0.1, 0.05), [0, 0, -1.2]);
+};
+
+// Bomb-Lance ------------------------------------------------------------------------------------
+function zxvLance(M) {
+  const g = new THREE.Group();
+  g.add(zcyl(0.006, 0.006, 0.5, M.iron, 8, 0.12));
+  g.add(zcyl(0.018, 0.018, 0.12, M.brass, 14, -0.36));   // the bomb
+  g.add(zcyl(0.018, 0.0, 0.03, M.brass, 14, -0.48));
+  const cap = new THREE.Group(); cap.position.z = -0.24; g.add(cap);
+  cap.add(zcyl(0.02, 0.02, 0.012, M.accent, 14, 0)); for (let i = 0; i < 4; i++) { const k = box(0.003, 0.006, 0.012, M.dark, Math.cos(i * 1.57) * 0.021, Math.sin(i * 1.57) * 0.021, -0.006); cap.add(k); }
+  const head = new THREE.Mesh(new THREE.ConeGeometry(0.014, 0.08, 4), M.dark); head.rotation.x = -Math.PI / 2; head.position.z = -0.53; g.add(head);
+  for (const s of [-1, 1]) { const f = box(0.002, 0.03, 0.04, M.iron, 0, s * 0.012, 0.1); g.add(f); }
+  g.userData.cap = cap;
+  return g;
+}
+VM_BUILD.bomblance = (M) => {
+  const root = new THREE.Group();
+  root.add(zcyl(0.028, 0.026, 0.44, M.brass, 18, 0.0, 0, 0.055));
+  for (const z of [-0.02, -0.16, -0.3, -0.43]) root.add(zcyl(0.031, 0.031, 0.014, M.iron, 18, z, 0, 0.055));
+  const bore = new THREE.Mesh(new THREE.CircleGeometry(0.02, 14), M.bore); bore.position.set(0, 0.055, -0.441); root.add(bore);
+  root.add(profile([[0.0, 0.05], [0.16, 0.04], [0.34, 0.06], [0.37, 0.065], [0.38, -0.07], [0.3, -0.06], [0.12, -0.0], [0.05, 0.0], [0.03, -0.09], [-0.004, -0.09], [-0.012, 0.03]], 0.05, M.wood, 0.005));
+  root.add(box(0.054, 0.135, 0.012, M.iron, 0, 0.0, 0.38));
+  const lance = zxvLance(M); lance.position.set(0, 0.055, -0.02); root.add(lance);
+  const hammer = new THREE.Group(); hammer.position.set(0.03, 0.055, 0.04); root.add(hammer);
+  const hn = box(0.01, 0.045, 0.012, M.dark, 0, 0.022, -0.012); hn.rotation.x = -0.5; hammer.add(hn); hammer.add(box(0.016, 0.012, 0.024, M.dark, 0, 0.04, -0.03));
+  const guard = new THREE.Mesh(new THREE.TorusGeometry(0.025, 0.003, 6, 20, Math.PI), M.brass); guard.rotation.set(0, Math.PI / 2, Math.PI); guard.position.set(0, 0.0, 0.03); root.add(guard);
+  const trig = box(0.006, 0.024, 0.008, M.dark, 0, 0.0, 0.025); root.add(trig);
+  const hand = vmHand(VM.H, false); hand.position.set(0.0, -0.05, 0.02); root.add(hand);
+  const left = vmHand(VM.H, true); left.position.set(-0.02, 0.0, -0.27); left.rotation.set(0.3, 0, 0.5); root.add(left);
+  const fresh = zxvLance(M); fresh.visible = false; root.add(fresh);
+  const muzzle = new THREE.Object3D(); muzzle.position.set(0, 0.055, -0.45); root.add(muzzle);
+  return { root, M, hand, left, lance, fresh, hammer, trig, muzzle, pose: { x: 0.065, y: -0.18, z: -0.44, rx: 0.09, ry: 0.08, rz: -0.05 }, smoke: 4, flashK: 1.1 };
+};
+VM_ANIM.bomblance = (w, S) => {
+  const p = S.p;
+  VM.lhand.visible = false;
+  if (S.fired) { w.out = 0.0001; w.down = 1; }
+  if (w.out) w.out = Math.min(1, w.out + S.dt * 8);
+  const tip = vmSeg(p, 0, 0.12) - vmSeg(p, 0.88, 1), bring = vmSeg(p, 0.14, 0.4), slide = vmSeg(p, 0.4, 0.6), twist = p > 0.62 && p < 0.76 ? (p - 0.62) / 0.14 : -1, cock = vmSeg(p, 0.78, 0.86);
+  w.steps = w.steps || [[0.42, () => vmNoise(1100, 0.05, 0.25)], [0.6, () => vmClick(480, 0.08)], [0.66, () => vmClick(1300, 0.03)], [0.72, () => vmClick(1500, 0.03)], [0.85, () => { vmClick(800, 0.06); vmClick(450, 0.06); }]];
+  vmPlace(w, S, 0, { x: -tip * 0.03, y: -tip * 0.03, z: -tip * 0.06, rx: tip * 0.4, ry: -tip * 0.25, rz: tip * 0.45 });
+  if (S.reloading && p > 0.6) w.out = 0;
+  w.lance.visible = S.reloading ? p >= 0.6 : (!w.out || w.out < 1);
+  w.lance.position.z = -0.02 - (w.out && !S.reloading ? w.out * 0.9 : 0);
+  if (twist >= 0) w.lance.userData.cap.rotation.z = twist * Math.PI * 2;
+  w.hammer.rotation.x = (S.reloading ? (p < 0.78 ? 1 : 1 - cock) : (w.down ? 1 : 0)) * 0.6;
+  if (S.reloading && p > 0.86) w.down = 0;
+  zxvTrig(w, S);
+  w.fresh.visible = S.reloading && p >= 0.14 && p < 0.6;
+  if (w.fresh.visible) {
+    const front = zxvV(0, 0.055, -0.62), home = zxvV(-0.3, -0.35, -0.45);
+    w.fresh.position.copy(home).lerp(front, bring); w.fresh.position.z += slide * 0.6; w.fresh.rotation.z = (1 - bring) * 0.8;
+    vmLeftAt(w, w.fresh.position.clone().add(zxvV(-0.015, -0.04, -0.34)), [0.2, 0, -0.5]);
+  } else if (twist >= 0) vmLeftAt(w, zxvV(-0.02, 0.03, -0.27), [0.2, twist * 0.8, -0.6]);
+  w.left.visible = !VM.lhand.visible;
+};
+
+// Grapnel Gun ------------------------------------------------------------------------------------
+function zxvHook(M) {
+  const g = new THREE.Group();
+  g.add(zcyl(0.007, 0.007, 0.16, M.iron, 8, 0.06));
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(0.01, 0.003, 6, 12), M.iron); ring.position.z = 0.065; g.add(ring);
+  const tines = [];
+  for (let i = 0; i < 4; i++) {
+    const t = new THREE.Group(); t.position.z = -0.1; t.rotation.z = i * Math.PI / 2; g.add(t);
+    const arm = new THREE.Group(); t.add(arm);
+    const arc = new THREE.Mesh(new THREE.TorusGeometry(0.028, 0.0045, 6, 12, Math.PI * 0.75), M.dark); arc.rotation.set(0, Math.PI / 2, -Math.PI * 0.5); arc.position.set(0, 0.028, 0.0); arm.add(arc);
+    const pt = new THREE.Mesh(new THREE.ConeGeometry(0.006, 0.02, 4), M.dark); pt.position.set(0, 0.05, 0.026); pt.rotation.x = Math.PI * 0.7; arm.add(pt);
+    tines.push(arm);
+  }
+  g.userData.tines = tines;
+  return g;
+}
+VM_BUILD.grapnel = (M) => {
+  const root = new THREE.Group();
+  root.add(zcyl(0.03, 0.034, 0.26, M.iron, 18, 0.0, 0, 0.055));
+  root.add(zcyl(0.034, 0.05, 0.06, M.iron, 18, -0.26, 0, 0.055));
+  root.add(zcyl(0.052, 0.052, 0.012, M.brass, 20, -0.31, 0, 0.055));
+  const bore = new THREE.Mesh(new THREE.CircleGeometry(0.045, 18), M.bore); bore.position.set(0, 0.055, -0.3); root.add(bore);
+  const hook = zxvHook(M); hook.position.set(0, 0.055, -0.27); root.add(hook);
+  // the drum of line under the barrel, its crank on the right
+  const drum = new THREE.Group(); drum.position.set(0, -0.005, -0.14); root.add(drum);
+  drum.add(zcyl(0.035, 0.035, 0.09, M.wood, 18, 0.045));
+  for (let i = 0; i < 5; i++) drum.add(zcyl(0.037, 0.037, 0.008, M.accent, 16, 0.03 - i * 0.016));
+  const crank = new THREE.Group(); crank.position.set(0.045, -0.005, -0.14); root.add(crank);
+  crank.add(box(0.006, 0.05, 0.008, M.dark, 0, -0.022, 0)); crank.add(box(0.025, 0.01, 0.01, M.wood, 0.012, -0.045, 0));
+  const line = new THREE.Mesh(new THREE.CylinderGeometry(0.002, 0.002, 0.2, 4), M.accent); line.rotation.x = Math.PI / 2; line.position.set(0, 0.03, -0.2); root.add(line);
+  root.add(profile([[0.0, 0.05], [0.1, 0.045], [0.3, 0.065], [0.32, 0.07], [0.33, -0.06], [0.26, -0.05], [0.1, 0.0], [0.05, 0.0], [0.03, -0.09], [-0.005, -0.09], [-0.01, 0.02]], 0.05, M.wood, 0.005));
+  const lever = new THREE.Group(); lever.position.set(-0.034, 0.06, 0.03); root.add(lever);
+  lever.add(box(0.006, 0.008, 0.07, M.dark, 0, 0, -0.03)); { const k = zxvBall(0.008, M.brass); k.position.set(0, 0, -0.065); lever.add(k); }
+  const guard = new THREE.Mesh(new THREE.TorusGeometry(0.025, 0.003, 6, 20, Math.PI), M.brass); guard.rotation.set(0, Math.PI / 2, Math.PI); guard.position.set(0, 0.0, 0.03); root.add(guard);
+  const trig = box(0.006, 0.024, 0.008, M.dark, 0, 0.0, 0.025); root.add(trig);
+  const hand = vmHand(VM.H, false); hand.position.set(0.0, -0.05, 0.02); root.add(hand);
+  const left = vmHand(VM.H, true); left.position.set(-0.02, -0.04, -0.2); left.rotation.set(0.3, 0, 0.5); root.add(left);
+  const muzzle = new THREE.Object3D(); muzzle.position.set(0, 0.055, -0.33); root.add(muzzle);
+  return { root, M, hand, left, hook, drum, crank, lever, line, trig, muzzle, pose: { x: 0.07, y: -0.17, z: -0.4, rx: 0.08, ry: 0.08, rz: -0.05 }, smoke: 2, flashK: 0.6 };
+};
+VM_ANIM.grapnel = (w, S) => {
+  const p = S.p;
+  VM.lhand.visible = false;
+  if (S.fired) { w.out = 0.0001; w.spin = 30; }
+  if (w.out) w.out = Math.min(1, w.out + S.dt * 7);
+  w.spin = (w.spin || 0) * Math.pow(0.1, S.dt); w.drum.rotation.z += w.spin * S.dt;
+  const tip = vmSeg(p, 0, 0.1) - vmSeg(p, 0.86, 1), crank = p > 0.1 && p < 0.62 ? (p - 0.1) / 0.52 : -1, seat = vmSeg(p, 0.55, 0.66), lever = vmSeg(p, 0.7, 0.78) - vmSeg(p, 0.8, 0.88);
+  w.steps = w.steps || [[0.14, () => vmNoise(1400, 0.04, 0.15)], [0.26, () => vmNoise(1400, 0.04, 0.15)], [0.38, () => vmNoise(1400, 0.04, 0.15)], [0.5, () => vmNoise(1400, 0.04, 0.15)], [0.64, () => vmClick(560, 0.08)], [0.76, () => vmClick(900, 0.05)], [0.86, () => vmClick(600, 0.06)]];
+  vmPlace(w, S, 0, { x: -tip * 0.03, y: -tip * 0.02, z: -tip * 0.05, rx: tip * 0.3, ry: -tip * 0.35, rz: tip * 0.3 });
+  // the hook: away with the shot; back in along its line as the drum turns, its tines folding as it comes home
+  let hz = -0.27, fold = 0;
+  if (S.reloading) { const back = crank >= 0 ? crank : p >= 0.62 ? 1 : 0; hz = -0.27 - (1 - back) * 0.9 + seat * 0.0; fold = back < 1 ? 0.6 * (1 - seat) : 0; w.hook.visible = p > 0.12; }
+  else { w.hook.visible = !w.out || w.out < 1; hz = -0.27 - (w.out ? w.out * 0.9 : 0); }
+  if (S.reloading && p > 0.6) w.out = 0;
+  w.hook.position.z = hz;
+  w.hook.userData.tines.forEach(t => { t.rotation.x = -fold; });
+  w.line.visible = w.hook.visible; w.line.scale.y = 1 + Math.max(0, -0.27 - hz) * 4; w.line.position.z = -0.2 + Math.min(0, hz + 0.27) * 0.5;
+  if (crank >= 0) {
+    const a = crank * Math.PI * 10; w.crank.rotation.z = a; w.drum.rotation.z = -a;
+    w.root.updateMatrixWorld(true);
+    vmLeftAt(w, zxvV(0.075 + Math.sin(a) * 0.04, -0.05 - Math.cos(a) * 0.04, -0.14), [0, 0.5, 0.6]);
+  }
+  w.lever.rotation.y = lever * 0.9;
+  if (lever > 0.01) vmLeftAt(w, zxvV(-0.06 - lever * 0.03, 0.06, -0.03), [0, -0.4, -1.0]);
+  zxvTrig(w, S);
+  w.left.visible = !VM.lhand.visible;
+};
+
+// Flare Pistol ------------------------------------------------------------------------------------
+function zxvShell(M) {
+  const g = new THREE.Group();
+  g.add(zcyl(0.019, 0.019, 0.1, M.accent, 14, 0.0));
+  g.add(zcyl(0.022, 0.022, 0.012, M.brass, 14, 0.012));
+  return g;
+}
+VM_BUILD.flaregun = (M) => {
+  const root = new THREE.Group();
+  // the frame and grip
+  root.add(box(0.04, 0.05, 0.08, M.iron, 0, 0.03, 0.0));
+  root.add(profile([[0.0, 0.01], [0.03, -0.06], [0.025, -0.11], [0.06, -0.12], [0.075, -0.06], [0.05, 0.02]], 0.036, M.wood, 0.004));
+  const capB = zxvBall(0.016, M.iron); capB.scale.set(1.3, 0.6, 1.4); capB.position.set(0, -0.118, 0.045); root.add(capB);
+  // the barrel, on its hinge at the front of the frame
+  const brl = new THREE.Group(); brl.position.set(0, 0.02, -0.04); root.add(brl);
+  brl.add(zcyl(0.026, 0.026, 0.19, M.brass, 18, 0.03, 0, 0.026));
+  brl.add(zcyl(0.029, 0.029, 0.014, M.iron, 18, -0.15, 0, 0.026));
+  const bore = new THREE.Mesh(new THREE.CircleGeometry(0.02, 16), M.bore); bore.position.set(0, 0.026, -0.161); brl.add(bore);
+  brl.add(box(0.012, 0.012, 0.03, M.iron, 0, -0.002, 0.0));
+  const shell = zxvShell(M); shell.position.set(0, 0.026, 0.02); shell.visible = false; brl.add(shell);
+  // a spur hammer, the trigger, a guard
+  const hammer = new THREE.Group(); hammer.position.set(0, 0.055, 0.035); root.add(hammer);
+  const hn = box(0.01, 0.04, 0.012, M.dark, 0, 0.018, -0.008); hn.rotation.x = -0.4; hammer.add(hn); hammer.add(box(0.018, 0.008, 0.024, M.dark, 0, 0.036, 0.006));
+  const guard = new THREE.Mesh(new THREE.TorusGeometry(0.02, 0.003, 6, 18, Math.PI), M.iron); guard.rotation.set(0, Math.PI / 2, Math.PI); guard.position.set(0, 0.005, 0.005); root.add(guard);
+  const trig = box(0.005, 0.022, 0.007, M.dark, 0, 0.0, 0.004); root.add(trig);
+  const hand = vmHand(VM.H, false); hand.position.set(0.01, -0.045, 0.045); root.add(hand);
+  const spent = zxvShell(M), fresh = zxvShell(M); spent.visible = fresh.visible = false; root.add(spent); root.add(fresh);
+  spent.children[0].material = M.dark;
+  const muzzle = new THREE.Object3D(); muzzle.position.set(0, 0.026, -0.17); brl.add(muzzle);
+  return { root, M, hand, brl, shell, hammer, trig, spent, fresh, muzzle, pose: { x: 0.05, y: -0.14, z: -0.29, rx: 0.12, ry: 0.1, rz: -0.07 }, smoke: 5, flashK: 1.7 };
+};
+VM_ANIM.flaregun = (w, S) => {
+  const p = S.p;
+  VM.lhand.visible = false;
+  if (S.fired) w.down = 1;
+  const open = vmSeg(p, 0.06, 0.2) - vmSeg(p, 0.7, 0.8), eject = S.reloading && p > 0.2 && p < 0.5 ? (p - 0.2) / 0.3 : -1, bring = vmSeg(p, 0.36, 0.56), push = vmSeg(p, 0.56, 0.66), cock = vmSeg(p, 0.82, 0.92);
+  w.steps = w.steps || [[0.12, () => vmClick(560, 0.06)], [0.22, () => vmNoise(3200, 0.04, 0.12)], [0.65, () => vmClick(720, 0.05)], [0.78, () => vmClick(400, 0.09)], [0.9, () => { vmClick(950, 0.05); vmClick(520, 0.04); }]];
+  vmPlace(w, S, 0, { x: -open * 0.02, y: open * 0.01, rx: -open * 0.2, ry: -open * 0.35, rz: open * 0.5 });
+  w.brl.rotation.x = -open * 0.75;
+  w.hammer.rotation.x = (S.reloading ? (p < 0.82 ? 1 : 1 - cock) : (w.down ? 1 : 0)) * 0.55;
+  if (S.reloading && p > 0.92) w.down = 0;
+  zxvTrig(w, S);
+  // the spent case jumps out of the breech and over your shoulder
+  w.spent.visible = eject >= 0 && eject < 1;
+  if (w.spent.visible) { const f = eject; w.spent.position.set(0.02 + f * 0.12, 0.08 + f * 0.25 - f * f * 0.55, 0.0 + f * 0.25); w.spent.rotation.set(f * 6, f * 2, 0); }
+  w.shell.visible = S.reloading && p >= 0.66 && p < 0.8;
+  w.fresh.visible = S.reloading && bring > 0.01 && p < 0.66;
+  if (w.fresh.visible) {
+    w.root.updateMatrixWorld(true);
+    const breech = zxvV(0, 0.02 + 0.026 * Math.cos(0.75) + 0.02, -0.04 + 0.08), home = zxvV(-0.2, -0.28, 0.05);
+    w.fresh.position.copy(home).lerp(breech.clone().add(zxvV(0, 0.04, 0.06)), bring).lerp(breech, push); w.fresh.rotation.set(0.75 * bring, 0, (1 - bring) * 0.6);
+    vmLeftAt(w, w.fresh.position.clone().add(zxvV(-0.012, -0.03, 0.04)), [0.4, 0, -0.5]);
+  } else if (S.reloading && p > 0.66 && p < 0.8) vmLeftAt(w, zxvV(-0.02, 0.06 + (1 - open) * 0.02, -0.12), [0.6, 0, -0.6]);
+};
+
+// Boarding Axe ------------------------------------------------------------------------------------
+VM_BUILD.axe = (M) => {
+  const root = new THREE.Group(), axe = new THREE.Group(), held = new THREE.Group(); root.add(held); held.add(axe);
+  // the haft along +y, the head at its top: the bearded blade forward (-z), a spike behind
+  const haft = new THREE.Mesh(new THREE.CylinderGeometry(0.014, 0.017, 0.62, 10), M.wood); haft.position.y = 0.2; axe.add(haft);
+  for (const y of [-0.06, 0.48]) { const b = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.018, 0.02, 10), M.brass); b.position.y = y; axe.add(b); }
+  const s = new THREE.Shape();
+  s.moveTo(0.0, 0.035); s.lineTo(-0.06, 0.05); s.quadraticCurveTo(-0.12, 0.07, -0.135, 0.075); s.quadraticCurveTo(-0.15, 0.0, -0.13, -0.09); s.quadraticCurveTo(-0.09, -0.07, -0.055, -0.02); s.lineTo(0.0, -0.025); s.lineTo(0.0, 0.035);
+  const blade = new THREE.Mesh(new THREE.ExtrudeGeometry(s, { depth: 0.008, bevelEnabled: true, bevelSize: 0.003, bevelThickness: 0.003, bevelSegments: 1, curveSegments: 10 }), M.blade);
+  blade.rotation.y = Math.PI / 2; blade.position.set(0.004, 0.46, 0.0); axe.add(blade);
+  axe.add(box(0.03, 0.07, 0.035, M.iron, 0, 0.465, 0.0));
+  const spike = new THREE.Mesh(new THREE.ConeGeometry(0.012, 0.07, 4), M.dark); spike.rotation.x = Math.PI / 2; spike.position.set(0, 0.47, 0.05); axe.add(spike);
+  for (let i = 0; i < 4; i++) { const t = new THREE.Mesh(new THREE.TorusGeometry(0.017, 0.002, 4, 12), M.accent); t.rotation.x = Math.PI / 2; t.position.y = -0.03 + i * 0.018; axe.add(t); }
+  const hand = vmHand(VM.H, false); hand.position.set(0.0, 0.0, 0.0); hand.rotation.set(-1.2, 0, 0); held.add(hand);
+  const tip = new THREE.Object3D(); tip.position.set(0, 0.47, -0.14); axe.add(tip);
+  const base = new THREE.Object3D(); base.position.set(0, 0.43, -0.06); axe.add(base);
+  held.scale.setScalar(0.74);
+  return { root, M, held, axe, hand, tip, base, pose: { x: 0.16, y: -0.26, z: -0.46, rx: -0.6, ry: 0.1, rz: -0.4 }, melee: true, trail: true };
+};
+VM_ANIM.axe = (w, S) => {
+  const p = S.p;
+  VM.lhand.visible = false;
+  if (S.fired) { w.swingT = 0; w.swingK = ((FPS.swing || 1) - 1) % 3; VM.trail = []; }
+  const dur = FPSW.axe.rate; w.swingT = (w.swingT == null ? 9 : w.swingT) + S.dt;
+  const k = Math.min(1, w.swingT / dur), wind = vmSeg(k, 0, 0.28), strike = vmSeg(k, 0.28, 0.55), back = vmSeg(k, 0.62, 1);
+  const thrown = typeof ZX !== 'undefined' && ZX.axeOut;
+  let e = {};
+  if (k < 1 && !thrown) {
+    if (w.swingK === 0) e = { x: 0.12 * wind - 0.42 * strike + 0.3 * back, y: 0.04 * wind - 0.04 * strike, rz: -0.9 * wind + 2.4 * strike - 1.5 * back, rx: 0.2 * wind - 0.7 * strike + 0.5 * back, ry: 0.6 * strike - 0.6 * back };
+    else if (w.swingK === 1) e = { x: -0.3 * wind + 0.44 * strike - 0.14 * back, y: 0.03 * wind - 0.03 * strike, rz: 1.4 * wind - 2.6 * strike + 1.2 * back, rx: 0.15 * wind - 0.6 * strike + 0.45 * back, ry: -0.5 * strike + 0.5 * back };
+    else e = { x: -0.06 * wind + 0.06 * back, y: 0.16 * wind - 0.2 * strike + 0.04 * back, z: 0.1 * wind - 0.12 * strike + 0.02 * back, rx: 1.0 * wind - 2.1 * strike + 1.1 * back, rz: 0.25 * wind - 0.25 * back };
+  }
+  const look = vmSeg(p, 0, 0.25) - vmSeg(p, 0.8, 1), thumb = p > 0.35 && p < 0.75 ? (p - 0.35) / 0.4 : -1;
+  if (S.reloading) e = { x: -0.08 * look, y: 0.1 * look, z: 0.05 * look, rx: 0.6 * look, ry: -1.3 * look, rz: -0.2 * look };
+  w.steps = w.steps || [[0.4, () => vmNoise(5000, 0.03, 0.3)], [0.2, () => vmNoise(7000, 0.02, 0.2)]];
+  vmPlace(w, S, 0, e);
+  // (the Homeward Axe out of your hand: an empty grip, reaching for it)
+  w.axe.visible = !thrown;
+  if (thumb >= 0) { w.root.updateMatrixWorld(true); vmLeftAt(w, zxvV(-0.03, 0.28 + thumb * 0.06, -0.05 - thumb * 0.06), [0, 0, -1.4]); }
+  w.root.updateMatrixWorld(true);
+  const a = w.tip.getWorldPosition(new THREE.Vector3()), b = w.base.getWorldPosition(new THREE.Vector3());
+  if (k > 0.26 && k < 0.6 && !S.still && !thrown) VM.trail.push([a, b]); else if (VM.trail.length) VM.trail.shift();
+  while (VM.trail.length > VM.trailN) VM.trail.shift();
+  const pos = VM.trailMesh.geometry.attributes.position, al = VM.trailMesh.geometry.attributes.alpha, n = VM.trail.length;
+  VM.trailMesh.visible = n > 1;
+  for (let i = 0; i < VM.trailN; i++) {
+    const tr = VM.trail[Math.min(n - 1, i)] || [a, b], f = n ? i / Math.max(1, n - 1) : 0;
+    pos.setXYZ(i * 2, tr[0].x, tr[0].y, tr[0].z); pos.setXYZ(i * 2 + 1, tr[1].x, tr[1].y, tr[1].z);
+    al.setX(i * 2, i < n ? f : 0); al.setX(i * 2 + 1, i < n ? f * 0.2 : 0);
+  }
+  pos.needsUpdate = true; al.needsUpdate = true;
+};
+
+// Punt Gun ------------------------------------------------------------------------------------
+VM_BUILD.puntgun = (M) => {
+  const root = new THREE.Group();
+  root.add(zcyl(0.034, 0.028, 1.15, M.iron, 16, -0.02, 0, 0.05));
+  for (const z of [-0.04, -0.3, -0.6, -0.9, -1.15]) root.add(zcyl(0.037, 0.037, 0.018, M.accent, 16, z, 0, 0.05));
+  const bore = new THREE.Mesh(new THREE.CircleGeometry(0.022, 14), M.bore); bore.position.set(0, 0.05, -1.171); root.add(bore);
+  root.add(zcyl(0.04, 0.04, 0.06, M.iron, 16, 0.04, 0, 0.05));   // the breech
+  root.add(profile([[-0.42, 0.04], [0.02, 0.04], [0.02, 0.0], [-0.4, 0.02]], 0.05, M.wood, 0.004));
+  root.add(profile([[0.0, 0.075], [0.14, 0.055], [0.36, 0.08], [0.4, 0.085], [0.42, -0.09], [0.33, -0.08], [0.14, -0.02], [0.04, -0.01], [-0.02, 0.015]], 0.05, M.wood, 0.006));
+  root.add(box(0.056, 0.175, 0.014, M.brass, 0, -0.003, 0.425));
+  root.add(box(0.008, 0.034, 0.1, M.iron, 0.03, 0.05, 0.04));
+  const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.007, 0.007, 0.008, 8), M.brass); cap.position.set(0.03, 0.085, 0.0); root.add(cap);
+  const hammer = new THREE.Group(); hammer.position.set(0.03, 0.058, 0.06); root.add(hammer);
+  const hn = box(0.01, 0.045, 0.012, M.dark, 0, 0.02, -0.016); hn.rotation.x = -0.55; hammer.add(hn); hammer.add(box(0.016, 0.014, 0.024, M.dark, 0, 0.036, -0.044));
+  const guard = new THREE.Mesh(new THREE.TorusGeometry(0.03, 0.0035, 6, 20, Math.PI), M.brass); guard.rotation.set(0, Math.PI / 2, Math.PI); guard.position.set(0, 0.0, 0.08); root.add(guard);
+  const trig = box(0.006, 0.026, 0.008, M.dark, 0, 0.0, 0.075); root.add(trig);
+  const rod = new THREE.Group(); rod.position.set(0, 0.012, -0.06); root.add(rod);
+  rod.add(zcyl(0.005, 0.005, 0.9, M.wood, 8, 0)); rod.add(zcyl(0.009, 0.009, 0.02, M.brass, 8, -0.9));
+  const flask = new THREE.Group(); flask.visible = false; root.add(flask);
+  const fb = zxvBall(0.045, new THREE.MeshPhongMaterial({ color: 0x6a4a2a, shininess: 30 })); fb.scale.set(1, 1.3, 0.55); flask.add(fb);
+  { const sp = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.008, 0.05, 8), M.brass); sp.position.y = 0.075; flask.add(sp); }
+  const bag = new THREE.Group(); bag.visible = false; root.add(bag);
+  const bb = zxvBall(0.04, new THREE.MeshLambertMaterial({ color: 0xb8a882 })); bb.scale.set(1, 1.2, 1); bag.add(bb);
+  const hand = vmHand(VM.H, false); hand.position.set(0.0, 0.0, 0.11); hand.rotation.z = -0.2; root.add(hand);
+  const left = vmHand(VM.H, true); left.position.set(-0.01, -0.01, -0.34); left.rotation.set(0.3, 0, 0.5); root.add(left);
+  const muzzle = new THREE.Object3D(); muzzle.position.set(0, 0.05, -1.18); root.add(muzzle);
+  const panAt = new THREE.Object3D(); panAt.position.set(0.03, 0.085, 0.0); root.add(panAt);
+  return { root, M, hand, left, hammer, cap, trig, rod, flask, bag, muzzle, panAt, pose: { x: 0.085, y: -0.19, z: -0.5, rx: 0.06, ry: 0.06, rz: -0.05 }, smoke: 10, flashK: 2.2 };
+};
+VM_ANIM.puntgun = (w, S) => {
+  const p = S.p;
+  VM.lhand.visible = false;
+  if (S.fired) { w.down = 1; w.jolt = 1; }
+  w.jolt = Math.max(0, (w.jolt || 0) - S.dt * 2.5);
+  const tip = vmSeg(p, 0, 0.1) - vmSeg(p, 0.88, 1);
+  const pour = vmSeg(p, 0.1, 0.18) - vmSeg(p, 0.3, 0.34), shot = vmSeg(p, 0.33, 0.4) - vmSeg(p, 0.46, 0.5), rodOut = vmSeg(p, 0.48, 0.55) - vmSeg(p, 0.72, 0.78);
+  const ram = p > 0.54 && p < 0.73 ? Math.abs(Math.sin((p - 0.54) / 0.19 * Math.PI * 3)) : 0;
+  const capOn = vmSeg(p, 0.78, 0.84) - vmSeg(p, 0.84, 0.87), cock = vmSeg(p, 0.86, 0.92);
+  w.steps = w.steps || [[0.14, () => vmNoise(3800, 0.05, 0.35)], [0.4, () => vmNoise(2200, 0.08, 0.3)], [0.58, () => vmNoise(500, 0.09, 0.12)], [0.64, () => vmNoise(500, 0.09, 0.12)], [0.7, () => vmNoise(500, 0.09, 0.12)], [0.84, () => vmClick(1100, 0.04)], [0.91, () => { vmClick(800, 0.06); vmClick(420, 0.06); }]];
+  vmPlace(w, S, 0, { x: -tip * 0.05, y: -tip * 0.06 - w.jolt * 0.05, z: -tip * 0.1 + w.jolt * 0.12, rx: tip * 0.6 + w.jolt * 0.25, ry: -tip * 0.3, rz: tip * 0.35 });
+  const down = S.reloading ? (p < 0.86 ? 1 : 1 - cock) : (w.down ? 1 : 0);
+  if (S.reloading && p > 0.92) w.down = 0;
+  w.hammer.rotation.x = 0.6 * down;
+  w.cap.visible = !(w.down && (!S.reloading || p < 0.84));
+  zxvTrig(w, S);
+  const mouth = zxvV(-0.03, 0.14, -1.16);
+  w.flask.visible = S.reloading && pour > 0.01;
+  if (w.flask.visible) {
+    w.flask.position.copy(zxvV(-0.25, -0.3, -0.1)).lerp(mouth, pour); w.flask.rotation.set(0, 0, -1.3 * pour);
+    if (pour > 0.95 && Math.random() < 0.7) { w.root.updateMatrixWorld(true); vmPour(w.muzzle.getWorldPosition(new THREE.Vector3()), false, 3); }
+    vmLeftAt(w, w.flask.position.clone().add(zxvV(0.02, -0.05, 0.02)), [0.2, 0, -0.4]);
+  }
+  w.bag.visible = S.reloading && shot > 0.01;
+  if (w.bag.visible) {
+    w.bag.position.copy(zxvV(-0.25, -0.3, -0.1)).lerp(mouth, shot); w.bag.rotation.set(0, 0, -1.6 * shot);
+    if (shot > 0.95 && Math.random() < 0.7) { w.root.updateMatrixWorld(true); vmPour(w.muzzle.getWorldPosition(new THREE.Vector3()), true, 4); }
+    vmLeftAt(w, w.bag.position.clone().add(zxvV(0.02, -0.04, 0.02)), [0.2, 0, -0.4]);
+  }
+  if (S.reloading && rodOut > 0.001) {
+    const inBore = p > 0.53 && p < 0.74;
+    if (inBore) w.rod.position.set(0, 0.05, -0.66 - (1 - ram) * 0.2); else w.rod.position.set(0, 0.012 + rodOut * 0.05, -0.06 - rodOut * 1.0);
+    vmLeftAt(w, w.rod.position.clone().add(zxvV(-0.02, 0, inBore ? 0.02 : -0.85)), [0.2, 0, -0.5]);
+  } else w.rod.position.set(0, 0.012, -0.06);
+  if (S.reloading && capOn > 0.01) vmLeftAt(w, zxvV(-0.15, -0.25, 0.1).lerp(zxvV(0.05, 0.1, 0.02), capOn), [0, 0, -0.8]);
+  w.left.visible = !VM.lhand.visible;
+};
+
+// Net Mortar ------------------------------------------------------------------------------------
+function zxvNet(M) {
+  const g = new THREE.Group();
+  const bundle = zxvBall(0.042, M.accent); bundle.scale.set(1, 1, 1.25); g.add(bundle);
+  const cord = new THREE.MeshLambertMaterial({ color: 0x6a5a40 });
+  for (let i = 0; i < 3; i++) { const r = new THREE.Mesh(new THREE.TorusGeometry(0.043, 0.0025, 4, 18), cord); r.rotation.y = i * Math.PI / 3; g.add(r); }
+  const wts = [];
+  for (let i = 0; i < 4; i++) { const b = zxvBall(0.011, M.dark); b.position.set(Math.cos(i * 1.57 + 0.78) * 0.05, Math.sin(i * 1.57 + 0.78) * 0.05, 0.02); g.add(b); wts.push(b); }
+  g.userData.wts = wts;
+  return g;
+}
+VM_BUILD.netmortar = (M) => {
+  const root = new THREE.Group(), tube = new THREE.Group(); tube.position.set(0, 0.07, -0.05); tube.rotation.x = 0.12; root.add(tube);
+  const prof = [[0.0, 0.035], [-0.04, 0.045], [-0.2, 0.05], [-0.23, 0.058], [-0.24, 0.058]];
+  const lg = new THREE.LatheGeometry(prof.map(([z, r]) => new THREE.Vector2(r, -z)), 22); lg.rotateX(-Math.PI / 2);
+  tube.add(new THREE.Mesh(lg, M.brass));
+  for (const z of [-0.06, -0.15]) tube.add(zcyl(0.053, 0.053, 0.012, M.iron, 20, z));
+  const bore = new THREE.Mesh(new THREE.CircleGeometry(0.048, 18), M.bore); bore.position.z = -0.215; tube.add(bore);
+  const net = zxvNet(M); net.position.z = -0.215; tube.add(net);
+  root.add(profile([[0.0, 0.06], [0.12, 0.045], [0.3, 0.065], [0.32, 0.07], [0.33, -0.06], [0.26, -0.05], [0.1, 0.0], [0.05, 0.0], [0.03, -0.09], [-0.005, -0.09], [-0.01, 0.03]], 0.05, M.wood, 0.005));
+  root.add(box(0.03, 0.05, 0.1, M.iron, 0, 0.045, 0.0));
+  // the charging lever on the left side, pumped on the reload
+  const lever = new THREE.Group(); lever.position.set(-0.04, 0.05, 0.02); root.add(lever);
+  lever.add(box(0.008, 0.01, 0.12, M.iron, 0, 0, -0.06)); { const k = zxvBall(0.012, M.wood); k.position.set(0, 0, -0.12); lever.add(k); }
+  const guard = new THREE.Mesh(new THREE.TorusGeometry(0.025, 0.003, 6, 20, Math.PI), M.brass); guard.rotation.set(0, Math.PI / 2, Math.PI); guard.position.set(0, 0.0, 0.03); root.add(guard);
+  const trig = box(0.006, 0.024, 0.008, M.dark, 0, 0.0, 0.025); root.add(trig);
+  const hand = vmHand(VM.H, false); hand.position.set(0.0, -0.05, 0.02); root.add(hand);
+  const left = vmHand(VM.H, true); left.position.set(-0.03, 0.0, -0.13); left.rotation.set(0.3, 0, 0.6); root.add(left);
+  const fresh = zxvNet(M); fresh.visible = false; root.add(fresh);
+  const muzzle = new THREE.Object3D(); muzzle.position.set(0, 0.0, -0.24); tube.add(muzzle);
+  return { root, M, hand, left, tube, net, lever, trig, fresh, muzzle, pose: { x: 0.07, y: -0.18, z: -0.4, rx: 0.06, ry: 0.08, rz: -0.05 }, smoke: 4, flashK: 0.9 };
+};
+VM_ANIM.netmortar = (w, S) => {
+  const p = S.p;
+  VM.lhand.visible = false;
+  if (S.fired) w.out = 0.0001;
+  if (w.out) w.out = Math.min(1, w.out + S.dt * 6);
+  const tip = vmSeg(p, 0, 0.12) - vmSeg(p, 0.86, 1), bring = vmSeg(p, 0.12, 0.34), push = vmSeg(p, 0.34, 0.44), wts = p > 0.44 && p < 0.62 ? (p - 0.44) / 0.18 : -1, pump = p > 0.64 && p < 0.84 ? (p - 0.64) / 0.2 : -1;
+  w.steps = w.steps || [[0.42, () => vmNoise(900, 0.06, 0.15)], [0.48, () => vmClick(1300, 0.03)], [0.52, () => vmClick(1300, 0.03)], [0.56, () => vmClick(1300, 0.03)], [0.6, () => vmClick(1300, 0.03)], [0.7, () => vmNoise(400, 0.07, 0.15)], [0.8, () => vmNoise(400, 0.07, 0.15)]];
+  vmPlace(w, S, 0, { x: -tip * 0.03, y: -tip * 0.03, z: -tip * 0.05, rx: tip * 0.6, ry: -tip * 0.25, rz: tip * 0.35 });
+  if (S.reloading && p > 0.44) w.out = 0;
+  const shown = S.reloading ? p >= 0.44 : (!w.out || w.out < 0.15);
+  w.net.visible = shown;
+  if (!S.reloading && w.out) w.net.position.z = -0.215 - w.out * 0.5; else w.net.position.z = -0.215;
+  w.net.userData.wts.forEach((b, i) => { const on = !S.reloading || wts < 0 ? true : wts * 4 > i; b.position.z = on ? 0.02 : 0.07; });
+  w.fresh.visible = S.reloading && bring > 0.01 && p < 0.44;
+  if (w.fresh.visible) {
+    w.root.updateMatrixWorld(true);
+    const mouth = zxvV(0, 0.07 + 0.03, -0.32), home = zxvV(-0.22, -0.3, 0.0);
+    w.fresh.position.copy(home).lerp(mouth, bring).lerp(zxvV(0, 0.095, -0.27), push); w.fresh.rotation.set(0.12, 0, (1 - bring) * 0.7);
+    vmLeftAt(w, w.fresh.position.clone().add(zxvV(-0.01, -0.04, 0.03)), [0.3, 0, -0.4]);
+  } else if (wts >= 0) vmLeftAt(w, zxvV(-0.02 + Math.sin(wts * 25) * 0.02, 0.1, -0.24), [0.6, 0, -0.5]);
+  w.lever.rotation.x = pump >= 0 ? -Math.abs(Math.sin(pump * Math.PI * 2)) * 0.7 : 0;
+  if (pump >= 0) { w.root.updateMatrixWorld(true); const a = w.lever.rotation.x; vmLeftAt(w, zxvV(-0.05, 0.05 - Math.sin(-a) * 0.12, 0.02 - Math.cos(a) * 0.12), [0.3, 0, -0.9]); }
+  zxvTrig(w, S);
+  w.left.visible = !VM.lhand.visible;
+};
+
+// Chain-Shot ------------------------------------------------------------------------------------
+function zxvPair(M) {
+  const g = new THREE.Group();
+  for (const s of [-1, 1]) { const b = zxvBall(0.019, M.dark); b.position.x = s * 0.03; g.add(b); }
+  const curve = new THREE.CatmullRomCurve3([zxvV(-0.03, 0, 0), zxvV(-0.015, -0.035, 0.01), zxvV(0.0, -0.045, 0.012), zxvV(0.015, -0.035, 0.01), zxvV(0.03, 0, 0)]);
+  g.add(new THREE.Mesh(new THREE.TubeGeometry(curve, 16, 0.0035, 5, false), M.accent));
+  for (let i = 1; i < 8; i++) { const q = curve.getPoint(i / 8), l = new THREE.Mesh(new THREE.TorusGeometry(0.005, 0.0016, 4, 8), M.iron); l.position.copy(q); l.rotation.y = i % 2 ? Math.PI / 2 : 0; g.add(l); }
+  return g;
+}
+VM_BUILD.chainshot = (M) => {
+  const root = new THREE.Group();
+  for (const s of [-1, 1]) {
+    root.add(zcyl(0.026, 0.023, 0.32, M.brass, 18, 0.0, s * 0.03, 0.05));
+    root.add(zcyl(0.028, 0.028, 0.02, M.brass, 18, -0.31, s * 0.03, 0.05));
+    root.add(zcyl(0.029, 0.029, 0.03, M.iron, 18, 0.02, s * 0.03, 0.05));
+    const bore = new THREE.Mesh(new THREE.CircleGeometry(0.019, 14), M.bore); bore.position.set(s * 0.03, 0.05, -0.332); root.add(bore);
+  }
+  root.add(box(0.03, 0.02, 0.28, M.brass, 0, 0.05, -0.16));
+  root.add(box(0.012, 0.012, 0.03, M.dark, 0, 0.082, -0.3));   // the notch the chain lies in
+  const pair = zxvPair(M); pair.position.set(0, 0.05, -0.33); root.add(pair);
+  root.add(profile([[0.0, 0.06], [0.14, 0.05], [0.32, 0.07], [0.35, 0.075], [0.36, -0.07], [0.29, -0.06], [0.12, -0.0], [0.05, 0.0], [0.03, -0.09], [-0.005, -0.09], [-0.012, 0.025]], 0.06, M.wood, 0.005));
+  root.add(box(0.064, 0.14, 0.012, M.brass, 0, 0.0, 0.36));
+  const hammer = new THREE.Group(); hammer.position.set(0, 0.085, 0.05); root.add(hammer);
+  const hn = box(0.012, 0.04, 0.012, M.dark, 0, 0.018, -0.012); hn.rotation.x = -0.5; hammer.add(hn); hammer.add(box(0.026, 0.01, 0.024, M.dark, 0, 0.034, -0.03));
+  const guard = new THREE.Mesh(new THREE.TorusGeometry(0.025, 0.003, 6, 20, Math.PI), M.brass); guard.rotation.set(0, Math.PI / 2, Math.PI); guard.position.set(0, 0.0, 0.03); root.add(guard);
+  const trig = box(0.006, 0.024, 0.008, M.dark, 0, 0.0, 0.025); root.add(trig);
+  const hand = vmHand(VM.H, false); hand.position.set(0.0, -0.05, 0.02); root.add(hand);
+  const left = vmHand(VM.H, true); left.position.set(-0.04, 0.0, -0.22); left.rotation.set(0.3, 0, 0.5); root.add(left);
+  const fresh = zxvPair(M); fresh.visible = false; root.add(fresh);
+  const muzzle = new THREE.Object3D(); muzzle.position.set(0, 0.05, -0.34); root.add(muzzle);
+  return { root, M, hand, left, pair, fresh, hammer, trig, muzzle, pose: { x: 0.065, y: -0.18, z: -0.42, rx: 0.08, ry: 0.08, rz: -0.05 }, smoke: 8, flashK: 1.5 };
+};
+VM_ANIM.chainshot = (w, S) => {
+  const p = S.p;
+  VM.lhand.visible = false;
+  if (S.fired) { w.out = 0.0001; w.down = 1; }
+  if (w.out) w.out = Math.min(1, w.out + S.dt * 7);
+  const tip = vmSeg(p, 0, 0.12) - vmSeg(p, 0.86, 1), bring = vmSeg(p, 0.12, 0.36), dropL = vmSeg(p, 0.38, 0.48), dropR = vmSeg(p, 0.5, 0.6), lay = vmSeg(p, 0.62, 0.72), cock = vmSeg(p, 0.76, 0.86);
+  w.steps = w.steps || [[0.47, () => vmNoise(700, 0.08, 0.12)], [0.59, () => vmNoise(700, 0.08, 0.12)], [0.7, () => vmNoise(5200, 0.04, 0.2)], [0.85, () => { vmClick(820, 0.06); vmClick(430, 0.06); }]];
+  vmPlace(w, S, 0, { x: -tip * 0.03, y: -tip * 0.04, z: -tip * 0.07, rx: tip * 0.55, ry: -tip * 0.25, rz: tip * 0.35 });
+  if (S.reloading && p > 0.38) w.out = 0;
+  // the pair away, whirling open
+  w.pair.visible = S.reloading ? p >= 0.6 : (!w.out || w.out < 1);
+  w.pair.position.z = -0.33 - (w.out && !S.reloading ? w.out * 0.9 : 0); w.pair.rotation.y = w.out && !S.reloading ? w.out * 8 : 0;
+  w.hammer.rotation.x = (S.reloading ? (p < 0.76 ? 1 : 1 - cock) : (w.down ? 1 : 0)) * 0.6;
+  if (S.reloading && p > 0.86) w.down = 0;
+  w.fresh.visible = S.reloading && bring > 0.01 && p < 0.6;
+  if (w.fresh.visible) {
+    const over = zxvV(0, 0.13, -0.33), home = zxvV(-0.22, -0.3, -0.05);
+    w.fresh.position.copy(home).lerp(over, bring); w.fresh.position.y -= (dropL + dropR) * 0.04; w.fresh.rotation.set(0, 0, (1 - bring) * 0.8 + (dropL - dropR) * 0.3);
+    vmLeftAt(w, w.fresh.position.clone().add(zxvV(0.0, -0.04, 0.03)), [0.3, 0, -0.4]);
+  } else if (S.reloading && lay > 0.01 && lay < 0.99) vmLeftAt(w, zxvV(-0.01, 0.12, -0.3 + lay * 0.03), [0.5, 0, -0.5]);
+  zxvTrig(w, S);
+  w.left.visible = !VM.lhand.visible;
+};
 
 // ---- src/zmboss.js ----
 // The Lighthouse: the Diver. From round 10, and every fifth round after (10, 15, 20, ...), something bigger comes up
@@ -21555,6 +22729,7 @@ function znShotFx(r, s) {
   const code = String(s[1]), w = fpsWOf(code), h = (+s[2] || 0) / 1000, p = (+s[3] || 0) / 1000, m = FPS.me;
   const x = r.x, y = r.y, z = FPSC.GROUND + FPSC.EYE + (r.jz || 0), d = Math.hypot(x - m.x, y - m.y), pan = angDiff(bearingOf(x - m.x, y - m.y), m.h);
   r.flashT = 0.12;
+  if (typeof zxShotFx === 'function' && zxShotFx(r, code, x, y, z, h, p, d, pan)) return;   // [chest] (src/zmchest.js: what they throw, to see)
   if (w.melee) { fpsSwishSound(d); r.slashT = 0.3; return; }
   if (w.beam) { if (d < 40 && Math.random() < 0.4) zmSound('beam'); }
   else fpsWeaponSound(code, d, pan);

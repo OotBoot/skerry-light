@@ -943,6 +943,7 @@ function zmReset() {
   });
   for (const w of ZM.windows) { w.boards = 6; w.q = []; w.fall = []; }
   if (typeof zmpReset === 'function') zmpReset();   // [pap]
+  if (typeof zxReset === 'function') zxReset();   // [chest] src/zmchest.js
   if (typeof zeReset === 'function') zeReset();   // [egg hook] src/zmegg.js
 }
 // opts (playing together, src/zmnet.js): { net: 'host' | 'client', hum: [[sid, nick], ...] }
@@ -983,6 +984,7 @@ function zmStart(opts) {
 function zmStop() {
   if (ZM.net && typeof zmnStop === 'function') zmnStop();
   if (typeof zmpStop === 'function') zmpStop();   // [pap]
+  if (typeof zxReset === 'function') zxReset();   // [chest]
   ZM.on = false; ZM.net = null; FPS.zm = false; FPS.eyeLag = 0; FPS.downEye = 0; ZM.spec = null; FPS.specId = null;
   $('stage').classList.remove('zmmode'); $('zmOver').hidden = true;
   { const e = document.querySelector('#fpsMenu .eyebrow'); if (e) e.textContent = "Wreckers' Night carries on without you"; $('fpsLeave').textContent = 'Leave the island'; $('fpsResume').textContent = 'Back to the fight'; }
@@ -1081,6 +1083,7 @@ function zmTick(dt) {
   for (const s of ZM.sparks) s.t -= dt; ZM.sparks = ZM.sparks.filter(s => s.t > 0);
   if (FPS.beamT > 0) FPS.beamT -= dt;
   if (typeof zmpTick === 'function') zmpTick(dt);   // [pap]
+  if (typeof zxTick === 'function') zxTick(dt);   // [chest] what the chest's weapons throw, and what they leave burning
   if (typeof zeTick === 'function') zeTick(dt);   // [egg hook] src/zmegg.js
   zmNearest();
   // holding Use at a window nails its boards back; beside someone who's down, gets them up
@@ -1528,6 +1531,7 @@ function zmMaybeDrop(d, how) {
 // nobody else's view to be fair to); long shots go through a few of them
 function zmResolveShot(sh, mine) {
   const [, x, y, z, h, p, by, code] = sh, w = fpsWOf(code);
+  if (typeof zxShot === 'function' && zxShot(sh, mine)) return;   // [chest] the wreck chest's own weapons (src/zmchest.js)
   if (w.melee) { fpsSwishSound(0); zmMelee(x, y, z, h, w); return; }
   fpsWeaponSound(code, 0, 0);
   if (w.speed) {
@@ -2284,6 +2288,7 @@ function zmScene3D() {
     Bm.L.position.copy(z3v(ox + fx * Math.min(len, 5), oy + fy * Math.min(len, 5), oz + fz * Math.min(len, 5)));
   }
   if (typeof zmp3d === 'function') zmp3d(dt);   // [pap] the bench
+  if (typeof zx3d === 'function') zx3d(dt);   // [chest] the light of flares and blasts
   if (typeof ze3d === 'function') ze3d(dt);   // [egg hook] src/zmegg.js
 }
 // painted over the 3D view: sparks between the burning, the chest's offer, and anyone down
@@ -2295,6 +2300,7 @@ function zmDrawOver() {
     ctx.strokeStyle = `rgba(${s.col || '255,220,140'},${s.t / (s.beam ? 0.14 : 0.25)})`; ctx.lineWidth = s.beam ? 3 : 2; ctx.beginPath(); ctx.moveTo(p[0].x, p[0].y); for (const q of p.slice(1)) ctx.lineTo(q.x, q.y); ctx.stroke();
   }
   if (typeof zmpDrawOver === 'function') zmpDrawOver();   // [pap]
+  if (typeof zxDrawOver === 'function') zxDrawOver();   // [chest]
   const B = ZM.box, S = ZM.spawns[B.at];
   if (S && B.st === 'offer') {
     const c = cam(S.x, S.y, FPSC.GROUND + S.z + 1.9);
@@ -2411,7 +2417,7 @@ function zmHud() {
     const by = H - 22;
     ctx.textAlign = 'right'; ctx.textBaseline = 'alphabetic'; ctx.font = mono(24);
     ctx.fillStyle = w.melee || m.ammo ? 'rgba(236,228,207,0.92)' : '#e46c4f';
-    ctx.fillText(m.reload > 0 ? (w.melee ? 'WIPING' : 'RELOADING') : w.melee ? 'CUTLASS' : `${m.ammo} / ${ZM.res[FPS.weapon] || 0}`, R, by);
+    ctx.fillText(m.reload > 0 ? (w.melee ? 'WIPING' : 'RELOADING') : w.melee ? (FPS.weapon === 'cutlass' ? 'CUTLASS' : FPSW[FPS.weapon].n.toUpperCase()) : `${m.ammo} / ${ZM.res[FPS.weapon] || 0}`, R, by);
     ctx.font = mono(11); let wx = R;
     for (let i = ZM.own.length - 1; i >= 0; i--) { const id = ZM.own[i], lab = `${i + 1} ${(typeof zmpName === 'function' ? zmpName(id) : FPSW[id].n).toUpperCase()}`; ctx.fillStyle = id === FPS.weapon ? '#ffd88a' : 'rgba(236,228,207,0.4)'; ctx.fillText(lab, wx, by - 30); wx -= ctx.measureText(lab).width + 14; }
     if (!w.melee && (m.ammo === 0 || (m.ammo < w.mag && m.ammo <= Math.ceil(w.mag * 0.25))) && !(m.reload > 0) && !ZM.over) { ctx.textAlign = 'center'; ctx.font = mono(13); ctx.fillStyle = (ZM.res[FPS.weapon] || 0) > 0 ? 'rgba(236,228,207,0.8)' : '#e46c4f'; ctx.fillText((ZM.res[FPS.weapon] || 0) > 0 ? 'R TO RELOAD' : m.ammo ? 'LOW AMMUNITION' : down ? 'NO AMMUNITION' : 'NO AMMUNITION · V OR FIRE TO KNIFE', cx, cy + 46); }

@@ -462,7 +462,7 @@ function vmDraw(dt) {
   // the weapon's own movements
   VM_ANIM[id](wpn, S);
   vmKnife(wpn, S);
-  if (id !== 'cutlass') VM.trailMesh.visible = false;
+  if (id !== 'cutlass' && !wpn.trail) VM.trailMesh.visible = false;
   // sounds as reload steps happen
   if (S.reloading && wpn.steps) { for (const [x, fn] of wpn.steps) if (VM.lastP < x && S.p >= x) fn(); }
   VM.lastP = S.reloading ? S.p : 1;
@@ -474,7 +474,7 @@ function vmDraw(dt) {
   if (wpn.muzzle) { wpn.muzzle.getWorldPosition(mz); wpn.muzzle.getWorldQuaternion(mq); VM.muzzle = mz.clone(); VM.muzzleQ = mq.clone(); }
   VM.flashT -= dt; VM.panT -= dt;
   VM.flash.visible = VM.flashT > 0 && !still && !!wpn.muzzle;
-  if (VM.flash.visible) { VM.flash.position.copy(mz); VM.flash.quaternion.copy(mq); VM.flash.rotateZ(Math.random() * 3); VM.flash.scale.setScalar((id === 'blunderbuss' ? 1.6 : id === 'harpoon' ? 0.7 : id === 'avtomat' ? 0.85 : id === 'fresnel' ? 1.5 : 1) * (0.8 + Math.random() * 0.5)); }
+  if (VM.flash.visible) { VM.flash.position.copy(mz); VM.flash.quaternion.copy(mq); VM.flash.rotateZ(Math.random() * 3); VM.flash.scale.setScalar((id === 'blunderbuss' ? 1.6 : id === 'harpoon' ? 0.7 : id === 'avtomat' ? 0.85 : id === 'fresnel' ? 1.5 : wpn.flashK || 1) * (0.8 + Math.random() * 0.5)); }
   VM.pan.visible = VM.panT > 0 && !!wpn.panAt && !still;
   if (VM.pan.visible) { wpn.panAt.getWorldPosition(VM.pan.position); VM.pan.lookAt(VM.cam.position); VM.pan.scale.setScalar(1 + Math.random()); }
   VM.flashL.position.copy(mz); VM.flashL.intensity = VM.flashT > 0 ? (id === 'blunderbuss' ? 5 : 3) * flashK() : 0;
