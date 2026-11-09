@@ -75,7 +75,7 @@ function fpsToggleView() {
 }
 // jumping: only from the ground
 function fpsJump() {
-  const m = FPS.me; if (!m || m.dead > 0 || FPS.menu || (m.jz || 0) > (m.fl || 0) + 0.01 || (m.vz || 0) > 0) return;
+  const m = FPS.me; if (!m || m.dead > 0 || FPS.menu || (m.jz || 0) > (m.fl || 0) + 0.01 || (m.vz || 0) > 0 || (FPS.zm && zmIsDown())) return;
   m.vz = FPSC.JUMP; m.jz = (m.fl || 0) + 0.001; FPS.landed = 0;
   try { if (!soundOff()) noise('lowpass', 500, 1, 0.01, 0.08, 0.12); } catch (e) {}
 }
@@ -541,7 +541,7 @@ function fpsShoot() {
   const climbNext = !!w.climb;
   if (w.melee) FPS.meSlashT = 0.3;
   FPS.vmShots = (FPS.vmShots || 0) + 1;
-  const z = FPSC.GROUND + FPSC.EYE + (m.jz || 0), seed = (Math.random() * 2147483647) | 0;
+  const z = FPSC.GROUND + FPSC.EYE + (m.jz || 0) - (FPS.downEye || 0), seed = (Math.random() * 2147483647) | 0;   // (FPS.downEye: down on the floor in the Lighthouse)
   const [ah, ap] = fpsAimFrom(m.x, m.y, z, w);
   if (FPS.zm) { FPS.zmShots = (FPS.zmShots || 0) + 1; if (typeof zmnShot === 'function') zmnShot(w.code, ah, ap); }
   const sh = fpsPublishShot(m.x, m.y, z, ah, ap, m.id, w.code, FPS.scoped ? 0 : seed);
@@ -1014,7 +1014,7 @@ function fpsDraw() {
 function fpsDrawScene() {
   const m = FPS.me;
   camX = m.x; camY = m.y; yaw = m.h;
-  const eye = FPSC.GROUND + FPSC.EYE + (m.jz || 0) - (FPS.eyeLag || 0);
+  const eye = FPSC.GROUND + FPSC.EYE + (m.jz || 0) - (FPS.eyeLag || 0) - (FPS.downEye || 0);
   camH = eye + (reduceMotion ? 0 : Math.sin(FPS.step) * 0.05 - (FPS.landed || 0) * 0.4) - (m.dead > 0 ? 1.2 * Math.min(1, (FPSC.RESPAWN - m.dead) * 2) : 0);
   const third = fpsThird();
   if (third) {
