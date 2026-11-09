@@ -17801,12 +17801,13 @@ function zmEnd() {
 
 // ---------- rounds ----------
 const zmCount = r => r <= 5 ? [6, 8, 13, 18, 24][r - 1] : Math.round(24 + (r - 5) * 3.2 + (r - 5) * (r - 5) * 0.06);
-// a drowned man's strength (in pepperbox body shots, before ZM_DMG): in the old games' manner, a fixed step each round
-// to round nine, then a tenth more every round, compounding:
-//   hp(r) = 2.5 + 1.6 (r - 1)        for r <= 9   (round 1: 2.5, three pepperbox shots; round 5: 8.9; round 9: 15.3)
-//   hp(r) = 15.3 * 1.1^(r - 9)       from r = 10  (round 10: 16.8; 15: 27.1; 20: 43.7; 25: 70.3; 30: 113)
+// a drowned man's strength (in pepperbox body shots, before ZM_DMG): a gentle step each round to round ten, so the
+// wall weapons hold up through the early game and there's time to save for the Lampwright's Bench; then 14% more
+// every round, compounding, so the late rounds outgrow anything that hasn't been reforged (and reforged again):
+//   hp(r) = 2 + 0.75 (r - 1)         for r <= 10  (round 1: 2, two pepperbox shots; round 5: 5; round 10: 8.75)
+//   hp(r) = 8.75 * 1.14^(r - 10)     after       (round 15: 16.8; 20: 32.4; 25: 62.4; 30: 120; 35: 231; 40: 444)
 // each one spawns with this, give or take a tenth; the Fresnel Lamp's burn and its sparks are fractions of it
-const zmHp = r => r <= 9 ? 2.5 + 1.6 * (r - 1) : (2.5 + 1.6 * 8) * Math.pow(1.1, r - 9);
+const zmHp = r => r <= 10 ? 2 + 0.75 * (r - 1) : 8.75 * Math.pow(1.14, r - 10);
 function zmRounds(dt) {
   ZM.t -= dt;
   if (ZM.phase === 'pre' || ZM.phase === 'break') {
