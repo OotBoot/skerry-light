@@ -17943,8 +17943,8 @@ function wnAfterStop() { if (WN.code) wnLeave(); }
 // Drowned Reach card. It borrows the boat crates' grades and odds (RARITIES), their card styles and the reel
 // sounds, without changing any of them.
 //
-// Ten banners to find, 3 Deckhand, 2 Bosun, 2 Mate, 2 Captain and 1 Admiral, and the plain one: your nation's
-// own colour, which everyone has. The better the grade, the more the banner does on the map:
+// Thirty-one banners to find, 10 Deckhand, 7 Bosun, 6 Mate, 5 Captain and 3 Admiral (the common grades between them
+// run through the colours of the rainbow), and the plain one: your nation's own colour, which everyone has. The better the grade, the more the banner does on the map:
 //   Deckhand  a colour or a simple pattern
 //   Bosun     a richer pattern, and a lit edge along your borders
 //   Mate      the pattern moves (a running tide, a bloom of phosphor)
@@ -17976,8 +17976,32 @@ const RC_ROWS = [
   ['rc_ember',   'Ember Coast',          'captain',  'ember',   ['#3a0c04', '#ff6a1a', '#ffd870'], '#ff7a2a'],
   ['rc_aurora',  'Northern Lights',      'captain',  'aurora',  ['#140a34', '#3affb0', '#b06aff'], '#86ffd8'],
   ['rc_keeper',  'The Keeper’s Beam',    'admiral',  'beam',    ['#8a6410', '#ffd34d', '#fffaf0'], '#fff0b0'],
+  // the rainbow, in the common grades: a plain colour or a simple pattern for each, then patterns, then moving ones
+  ['rc_lobster', 'Lobster Red',          'deckhand', 'solid',   ['#c43a2c'], null],
+  ['rc_marigold','Marigold Stripes',     'deckhand', 'stripes', ['#f39a2c', '#c0661a'], null],
+  ['rc_gorse',   'Gorse Yellow',         'deckhand', 'solid',   ['#e8c62a'], null],
+  ['rc_seaglass','Sea Glass',            'deckhand', 'solid',   ['#3fae7a'], null],
+  ['rc_harbour', 'Harbour Blue Stripes', 'deckhand', 'stripes', ['#3a7ad8', '#1f4a94'], null],
+  ['rc_indigo',  'Indigo Night',         'deckhand', 'solid',   ['#3c3aa0'], null],
+  ['rc_heather', 'Heather Check',        'deckhand', 'check',   ['#9a5ccc', '#64368e'], null],
+  ['rc_rose',    'Rose Tartan',          'bosun',    'tartan',  ['#a82a3a', '#f08aa0', '#ffe6c8'], null],
+  ['rc_saffron', 'Saffron Scale',        'bosun',    'scales',  ['#ffb02a', '#b0500e'], null],
+  ['rc_lemon',   'Lemon Lattice',        'bosun',    'tartan',  ['#d8b818', '#fff07a', '#6a5a10'], null],
+  ['rc_fern',    'Fern Scale',           'bosun',    'scales',  ['#6ad050', '#1e5a24'], null],
+  ['rc_violet',  'Violet Tartan',        'bosun',    'tartan',  ['#5a2a8a', '#c08aff', '#f0e0ff'], null],
+  ['rc_crimson', 'Crimson Tide',         'mate',     'tide',    ['#7a0e18', '#ff5a5a'], null],
+  ['rc_sunrise', 'Sunrise Tide',         'mate',     'tide',    ['#e0601a', '#ffe070'], null],
+  ['rc_spring',  'Spring Bloom',         'mate',     'bloom',   ['#2a5a1a', '#d8ff6a'], null],
+  ['rc_amethyst','Amethyst Bloom',       'mate',     'bloom',   ['#2a0e4a', '#d08aff'], null],
+  // rarer
+  ['rc_ink',     'Kraken Ink',           'captain',  'ink',     ['#12061e', '#4a1a7a', '#e0a0ff'], '#b66aff'],
+  ['rc_frost',   'Frost Fire',           'captain',  'ember',   ['#0a1a3a', '#3aa0ff', '#e8fbff'], '#8ad8ff'],
+  ['rc_squall',  'Rainbow Squall',       'captain',  'rainbow', ['#30303a', '#e0e0e0', '#ffffff'], '#ffffff'],
+  ['rc_crown',   'The Drowned Crown',    'admiral',  'ripples', ['#062a2a', '#1aa08a', '#c8fff0'], '#7affe0'],
+  ['rc_prism',   'Prism of the Light',   'admiral',  'prism',   ['#202030', '#ffffff', '#ffffff'], '#ffffff'],
 ];
-const RC_SKINS = RC_ROWS.map(([id, name, rarity, kind, cols, glow]) => Object.freeze({ id, name, rarity, kind, cols, glow, base: cols[cols.length > 2 ? 1 : 0] }));
+const RC_BASE = { rainbow: '#e0a040', prism: '#d8c8ff' };
+const RC_SKINS = RC_ROWS.map(([id, name, rarity, kind, cols, glow]) => Object.freeze({ id, name, rarity, kind, cols, glow, base: RC_BASE[kind] || cols[cols.length > 2 ? 1 : 0] }));
 const RC_PLAIN = Object.freeze({ id: '', name: 'Your nation’s colour', rarity: null, kind: 'plain', cols: ['#c8b890'], glow: null, base: null });
 const RC_SKIN_BY_ID = Object.fromEntries(RC_SKINS.map(s => [s.id, s]));
 const rcRarityOf = s => RARITIES.find(r => r.id === s.rarity);
@@ -17988,6 +18012,12 @@ const RC = { crates: 0, opened: 0, tiles: 0, owned: {}, equipped: '', pending: n
 
 // ---------- painting a tile ----------
 const rcHex = h => { const v = parseInt(String(h).slice(1), 16); return [(v >> 16) & 255, (v >> 8) & 255, v & 255]; };
+// a colour round the wheel: h in 0..1, s and v 0..1, into out
+function rcHsv(h, sat, v, o) {
+  h = ((h % 1) + 1) % 1; const i = Math.floor(h * 6), f = h * 6 - i, p = v * (1 - sat), q = v * (1 - f * sat), t = v * (1 - (1 - f) * sat);
+  const [r, g, b] = [[v, t, p], [q, v, p], [p, v, t], [p, q, v], [t, p, v], [v, p, q]][i % 6];
+  o[0] = r * 255; o[1] = g * 255; o[2] = b * 255;
+}
 const rcHash = (x, y) => (((x * 73856093) ^ (y * 19349663)) >>> 0) % 1024 / 1024;
 function rcPainter(skin) {
   if (!skin) return null;
@@ -18036,6 +18066,36 @@ function rcPainter(skin) {
       const h = rcHash(x, y);
       if (h > 0.975 && Math.sin(t * 5 + h * 200) > 0.6) mix(o, c, 0.95, o);   // sparkles
       if (bd) mix(o, G, 0.7, o);
+    }; break;
+    case 'ink': f = (x, y, t, bd, o) => {
+      // ink clouds curling through the water
+      const n = Math.sin(x * 0.2 + Math.sin(y * 0.17 + t * 0.7) * 2 + t * 0.3) * Math.sin(y * 0.21 - t * 0.5 + Math.sin(x * 0.13 + t * 0.2) * 2);
+      mix(a, b, n * 0.5 + 0.5, o); if (n > 0.75) mix(o, c, (n - 0.75) * 3, o); if (bd) mix(o, G, 0.6, o);
+    }; break;
+    case 'rainbow': f = (x, y, t, bd, o) => {
+      // the colours of the rainbow running across your land in a squall
+      rcHsv(x * 0.035 + y * 0.018 - t * 0.12 + Math.sin(y * 0.1 + t) * 0.05, 0.7, 0.95, o);
+      const rain = rcHash(x, y + Math.floor(t * 8)); if (rain > 0.96) mix(o, c, 0.6, o);
+      if (bd) mix(o, G, 0.55, o);
+    }; break;
+    case 'ripples': f = (x, y, t, bd, o) => {
+      // the deep, with rings spreading from drowned things below, and bubbles rising
+      mix(a, b, 0.35 + 0.25 * Math.sin(x * 0.08 + y * 0.06 + t * 0.4), o);
+      const S = 13, cx = Math.floor(x / S), cy = Math.floor(y / S), h = rcHash(cx, cy);
+      const r = Math.hypot(x - (cx * S + 6.5 + (h - 0.5) * 6), y - (cy * S + 6.5 + (rcHash(cy, cx) - 0.5) * 6));
+      const ring = Math.sin(r * 0.9 - t * 3 - h * 6);
+      if (ring > 0.7) mix(o, c, (ring - 0.7) * 2.2, o);
+      const bub = rcHash(x, y), up = (bub * 37 + t * 0.8) % 1;
+      if (bub > 0.97 && up > 0.6) mix(o, c, 0.9, o);
+      if (bd) mix(o, G, 0.7, o);
+    }; break;
+    case 'prism': f = (x, y, t, bd, o) => {
+      // the Light split into all its colours, turning, with the beam itself sweeping through
+      rcHsv((x - y) * 0.022 + t * 0.08, 0.65, 0.92, o);
+      const p = ((x * 0.6 + y * 0.8 - t * 16) % 80 + 80) % 80, d = Math.abs(p - 40);
+      if (d < 5) mix(o, c, (1 - d / 5) * 0.85, o);
+      const h = rcHash(x, y); if (h > 0.97 && Math.sin(t * 6 + h * 300) > 0.5) mix(o, c, 0.95, o);
+      if (bd) mix(o, G, 0.65, o);
     }; break;
     default: f = (x, y, t, bd, o) => { o[0] = a[0]; o[1] = a[1]; o[2] = a[2]; };
   }
@@ -18198,7 +18258,17 @@ function rcRender() {
   for (const ra of RARITIES) { const li = document.createElement('li'); li.style.setProperty('--rc', ra.color); li.textContent = ra.name + ' · ' + (ra.odds * 100).toFixed(ra.odds < 0.01 ? 2 : 1) + '%'; odds.appendChild(li); }
   const inv = $('rcInv'); inv.textContent = '';
   let owned = 0;
-  for (const s of [RC_PLAIN].concat(RC_SKINS)) {
+  let lastGrade = null;
+  for (const s of [RC_PLAIN].concat(RC_SKINS.slice().sort((p, q) => rcLevel(p) - rcLevel(q)))) {
+    // a heading for each grade, with how many of it you've found
+    const gr = s.rarity || 'standard';
+    if (gr !== lastGrade) {
+      lastGrade = gr;
+      const ra = s.rarity ? rcRarityOf(s) : null, mine = RC_SKINS.filter(k => k.rarity === s.rarity);
+      const sub = document.createElement('span'); sub.className = 'invsub';
+      sub.textContent = ra ? `${ra.name} · ${mine.filter(k => RC.owned[k.id]).length} of ${mine.length}` : 'Standard';
+      inv.appendChild(sub);
+    }
     const count = !s.rarity ? 1 : (RC.owned[s.id] | 0), isOn = rcEquippedId() === s.id;
     const c = rcCard(s, (isOn ? 'equipped' : '') + (count ? '' : ' locked'));
     if (count > 1) { const dd = document.createElement('span'); dd.className = 'dupes'; dd.textContent = '×' + count; c.appendChild(dd); }

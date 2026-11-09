@@ -151,12 +151,14 @@ Keys: drag or arrows pan, wheel or +/- zoom, Q/E the share, H harbour, T tower, 
 
 ### Banner crates
 
-`src/rcrates.js`. **Banner crates** on the Drowned Reach card open the Herald's Crate: banners that paint your land on the map, which everyone you play with sees too. Same grades, odds, reel, Open all and duplicate counts as the other crates (gold in the reel is always your prize), and the same spread: 3 Deckhand, 2 Bosun, 2 Mate, 2 Captain, 1 Admiral, plus your nation's own colour, which everyone has.
-- **Deckhand:** a colour or a simple pattern (Harbour Slate, Sailcloth Stripes, Kelp Check).
-- **Bosun:** a richer pattern with a lit edge along your borders (Tartan of the Isles, Herring Scale).
-- **Mate:** the pattern moves (Running Tide, Phosphor Bloom).
-- **Captain:** it moves, and your borders glow, pulsing (Ember Coast, Northern Lights).
-- **Admiral:** The Keeper's Beam: shifting gold with the Light's beam sweeping across it, sparkles, and the brightest glow.
+`src/rcrates.js`. **Banner crates** on the Drowned Reach card open the Herald's Crate: banners that paint your land on the map, which everyone you play with sees too. Same grades, odds, reel, Open all and duplicate counts as the other crates (gold in the reel is always your prize). Thirty-one banners, plus your nation's own colour, which everyone has; the common grades between them run through the rainbow:
+- **Deckhand (10):** a colour or a simple pattern: Harbour Slate, Sailcloth Stripes, Kelp Check, Lobster Red, Marigold Stripes, Gorse Yellow, Sea Glass, Harbour Blue Stripes, Indigo Night, Heather Check.
+- **Bosun (7):** a richer pattern with a lit edge along your borders: Tartan of the Isles, Herring Scale, Rose Tartan, Saffron Scale, Lemon Lattice, Fern Scale, Violet Tartan.
+- **Mate (6):** the pattern moves: Running Tide, Crimson Tide, Sunrise Tide, Phosphor Bloom, Spring Bloom, Amethyst Bloom.
+- **Captain (5):** it moves, and your borders glow, pulsing: Ember Coast, Northern Lights, Kraken Ink, Frost Fire, Rainbow Squall.
+- **Admiral (3):** the best: The Keeper's Beam (shifting gold with the Light's beam sweeping across it), The Drowned Crown (rings spreading from drowned things in the deep, and bubbles rising), Prism of the Light (the whole rainbow turning, with the beam through it); sparkles and the brightest glow.
+
+The grade's odds are the same however many banners it holds: more banners in a grade only means more to choose from within it.
 
 You earn one for every 400 tiles you take (the count carries over between wars), one for each war you see through (three minutes or more), and three for a win; the first is free. Kept in this browser (`skerry-rcrates`), apart from the boat and weapon crates. Playing together, each player's banner travels with them through the lobby.
 
