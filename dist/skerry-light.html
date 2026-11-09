@@ -1474,6 +1474,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
         <label for="fpsFov">Field of view <output id="fpsFovOut">69°</output></label>
         <input id="fpsFov" class="lookslider" type="range" min="60" max="110" step="1" value="69">
         <button class="tool" id="fpsFovReset" type="button">Default</button>
+        <label class="smoothrow"><input id="fpsAimToggle" type="checkbox"> Toggle aim <small>(right mouse or LT once to aim, again to stop; off: aim while held)</small></label>
         <label class="smoothrow"><input id="fpsSmooth" type="checkbox" checked> Smooth look <small>(evens out a trackpad; off for the rawest mouse)</small></label>
       </div>
       </div>
@@ -12280,7 +12281,7 @@ function fpsSetMenu(on) {
   FPS.menu = on; $('fpsMenu').hidden = !on;
   // (always opens on its first page; a controller starts on Resume)
   $('fpsMenuMain').hidden = false; $('fpsMenuPad').hidden = true; $('fpsMenuHead').textContent = 'Menu'; FPS.menuPadWas = null; fpsMenuMark(null);
-  if (on) { lookSync(); if (typeof fovSync === 'function') fovSync(); const sb = $('fpsSmooth'); if (sb) sb.checked = FPS.smooth; FPS.mlook = [0, 0]; }
+  if (on) { lookSync(); if (typeof fovSync === 'function') fovSync(); { const at = $('fpsAimToggle'); if (at) at.checked = aimToggle(); } const sb = $('fpsSmooth'); if (sb) sb.checked = FPS.smooth; FPS.mlook = [0, 0]; }
   if (on) { try { document.exitPointerLock && document.exitPointerLock(); } catch (e) {} setTimeout(() => $('fpsResume').focus(), 20); }
 }
 
@@ -13045,7 +13046,7 @@ function fpsInput(dt) {
   FPS.runK = clamp((FPS.runK || 0) + (run ? dt * 4 : -dt * 5), 0, 1);
   if (m.dead <= 0 && len > 0.05 && !FPS.menu) {
     // (on a phone a little slower all round: on a small screen the same pace feels much quicker)
-    const sp = (run ? FPSC.SPRINT : FPSC.SPEED) * Math.min(1, len) / len * dt * (FPS.zm ? zmSpeedK() : 1) * (FPS.stick ? 0.8 : 1);
+    const sp = (run ? (FPS.zm ? ZMC.SPRINT : FPSC.SPRINT) : FPSC.SPEED) * Math.min(1, len) / len * dt * (FPS.zm ? zmSpeedK() : 1) * (FPS.stick ? 0.8 : 1);
     const s = Math.sin(m.h), c = Math.cos(m.h);
     m.walk = fpsMove(m, (s * fz + c * fx) * sp, (c * fz - s * fx) * sp);
     if (m.walk && !((m.jz || 0) > 0)) FPS.step += dt * (run ? 11.5 : 8);
@@ -13681,6 +13682,8 @@ $('fpsLeave').addEventListener('click', fpsStop);
   FPS.menuPage = page;
   sync();
 }
+// Toggle aim, here as on the Settings card (the same setting)
+{ const at = $('fpsAimToggle'); if (at) { at.checked = aimToggle(); at.addEventListener('change', () => { SETTINGS.aim = at.checked ? 'toggle' : 'hold'; saveSettings(); if (typeof renderSettings === 'function') renderSettings(); if (!at.checked) FPS.scoped = false; }); } }
 { const sb = $('fpsSmooth'); if (sb) { sb.checked = FPS.smooth; sb.addEventListener('change', () => { FPS.smooth = sb.checked; FPS.mlook = [0, 0]; try { localStorage.setItem('skerry-fps-smooth', sb.checked ? '1' : '0'); } catch (e) {} }); } }
 { const vb = $('fpsViewBtn'), lab = () => { vb.textContent = FPS.third ? 'View: over the shoulder' : 'View: first person'; }; lab(); vb.addEventListener('click', () => { fpsToggleView(); lab(); }); FPS.viewLabel = lab; }
 for (const [id, fn] of [['fpsPadWeapon', () => fpsCycle(1)], ['fpsPadScope', () => fpsScope(!FPS.scoped)], ['fpsPadReload', fpsReload], ['fpsPadLantern', fpsLantern], ['fpsPadFlare', fpsFlare], ['fpsPadBell', fpsBell], ['fpsPadJump', fpsJump], ['fpsPadView', fpsToggleView], ['fpsPadMenu', () => fpsSetMenu(true)], ['fpsPadBoard', () => { FPS.board = !FPS.board; }]]) {
@@ -16739,6 +16742,9 @@ function fpsBodyOccluder() {
 // Alone, for now: no network. Uses Wreckers' Night's engine (src/fps.js), which hands over to this file when FPS.zm.
 
 const ZMC = {
+  // (BODY: how close one of the drowned and you can come, middle to middle; SPRINT: your run here, a touch
+  //  slower than on Wreckers' Night)
+  BODY: 0.5, SPRINT: 9.8,
   RISE: 0.28, TREAD: 0.75, CEIL: 3.6, STEP: 0.6, START: 500, BREAK: 10, ALIVE: 24, NAV: 0.5, HP: 3, HP_STOUT: 6, BOX: 950,
 };
 // The tower: round, whitewashed with two red bands, fifteen metres wide inside and five floors high, a spiral stair
@@ -17467,7 +17473,8 @@ function zmCrowd(m, x, y) {
   for (const z of ZM.z) {
     if (z.dead || z.st !== 'in' || Math.abs((z.jz || 0) - (m.jz || 0)) > 1.2) continue;
     const d = Math.hypot(z.x - x, z.y - y);
-    if (d < (z.boss ? 1.3 : 0.7) && d < Math.hypot(z.x - m.x, z.y - m.y) - 0.001) return true;   // [boss] he's broader
+    // (they still block you, but only about as wide as a body: you can slip past one at a doorway's edge)
+    if (d < (z.boss ? 1.05 : ZMC.BODY) && d < Math.hypot(z.x - m.x, z.y - m.y) - 0.001) return true;   // [boss] he's broader
   }
   return false;
 }
@@ -17943,12 +17950,12 @@ function zmZombies(dt) {
   const ins = all.filter(z => !z.dead && z.st === 'in');
   for (let i = 0; i < ins.length; i++) for (let j = i + 1; j < ins.length; j++) {
     const a = ins[i], b = ins[j], dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy);
-    if (d < 0.7 && d > 0.001 && Math.abs((a.jz || 0) - (b.jz || 0)) < 1) { const push = (0.7 - d) * 0.5; zmMove(a, -dx / d * push, -dy / d * push); zmMove(b, dx / d * push, dy / d * push); }
+    if (d < 0.56 && d > 0.001 && Math.abs((a.jz || 0) - (b.jz || 0)) < 1) { const push = (0.56 - d) * 0.5; zmMove(a, -dx / d * push, -dy / d * push); zmMove(b, dx / d * push, dy / d * push); }
   }
   // and from all of you
   for (const z of ins) for (const m of P) {
     const dx = z.x - m.x, dy = z.y - m.y, d = Math.hypot(dx, dy);
-    if (d < 0.72 && d > 0.001 && Math.abs((z.jz || 0) - (m.jz || 0)) < 1.2) zmMove(z, dx / d * (0.72 - d), dy / d * (0.72 - d));
+    if (d < ZMC.BODY + 0.02 && d > 0.001 && Math.abs((z.jz || 0) - (m.jz || 0)) < 1.2) zmMove(z, dx / d * (ZMC.BODY + 0.02 - d), dy / d * (ZMC.BODY + 0.02 - d));
   }
   // the dead sink away
   for (const z of all) if (z.dead && z.deadT > (z.burn ? 1.3 : 2.4)) { if (z.mdl) zmFreeModel(z); z.remove = true; }

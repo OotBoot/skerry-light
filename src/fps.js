@@ -204,7 +204,7 @@ function fpsSetMenu(on) {
   FPS.menu = on; $('fpsMenu').hidden = !on;
   // (always opens on its first page; a controller starts on Resume)
   $('fpsMenuMain').hidden = false; $('fpsMenuPad').hidden = true; $('fpsMenuHead').textContent = 'Menu'; FPS.menuPadWas = null; fpsMenuMark(null);
-  if (on) { lookSync(); if (typeof fovSync === 'function') fovSync(); const sb = $('fpsSmooth'); if (sb) sb.checked = FPS.smooth; FPS.mlook = [0, 0]; }
+  if (on) { lookSync(); if (typeof fovSync === 'function') fovSync(); { const at = $('fpsAimToggle'); if (at) at.checked = aimToggle(); } const sb = $('fpsSmooth'); if (sb) sb.checked = FPS.smooth; FPS.mlook = [0, 0]; }
   if (on) { try { document.exitPointerLock && document.exitPointerLock(); } catch (e) {} setTimeout(() => $('fpsResume').focus(), 20); }
 }
 
@@ -969,7 +969,7 @@ function fpsInput(dt) {
   FPS.runK = clamp((FPS.runK || 0) + (run ? dt * 4 : -dt * 5), 0, 1);
   if (m.dead <= 0 && len > 0.05 && !FPS.menu) {
     // (on a phone a little slower all round: on a small screen the same pace feels much quicker)
-    const sp = (run ? FPSC.SPRINT : FPSC.SPEED) * Math.min(1, len) / len * dt * (FPS.zm ? zmSpeedK() : 1) * (FPS.stick ? 0.8 : 1);
+    const sp = (run ? (FPS.zm ? ZMC.SPRINT : FPSC.SPRINT) : FPSC.SPEED) * Math.min(1, len) / len * dt * (FPS.zm ? zmSpeedK() : 1) * (FPS.stick ? 0.8 : 1);
     const s = Math.sin(m.h), c = Math.cos(m.h);
     m.walk = fpsMove(m, (s * fz + c * fx) * sp, (c * fz - s * fx) * sp);
     if (m.walk && !((m.jz || 0) > 0)) FPS.step += dt * (run ? 11.5 : 8);
@@ -1605,6 +1605,8 @@ $('fpsLeave').addEventListener('click', fpsStop);
   FPS.menuPage = page;
   sync();
 }
+// Toggle aim, here as on the Settings card (the same setting)
+{ const at = $('fpsAimToggle'); if (at) { at.checked = aimToggle(); at.addEventListener('change', () => { SETTINGS.aim = at.checked ? 'toggle' : 'hold'; saveSettings(); if (typeof renderSettings === 'function') renderSettings(); if (!at.checked) FPS.scoped = false; }); } }
 { const sb = $('fpsSmooth'); if (sb) { sb.checked = FPS.smooth; sb.addEventListener('change', () => { FPS.smooth = sb.checked; FPS.mlook = [0, 0]; try { localStorage.setItem('skerry-fps-smooth', sb.checked ? '1' : '0'); } catch (e) {} }); } }
 { const vb = $('fpsViewBtn'), lab = () => { vb.textContent = FPS.third ? 'View: over the shoulder' : 'View: first person'; }; lab(); vb.addEventListener('click', () => { fpsToggleView(); lab(); }); FPS.viewLabel = lab; }
 for (const [id, fn] of [['fpsPadWeapon', () => fpsCycle(1)], ['fpsPadScope', () => fpsScope(!FPS.scoped)], ['fpsPadReload', fpsReload], ['fpsPadLantern', fpsLantern], ['fpsPadFlare', fpsFlare], ['fpsPadBell', fpsBell], ['fpsPadJump', fpsJump], ['fpsPadView', fpsToggleView], ['fpsPadMenu', () => fpsSetMenu(true)], ['fpsPadBoard', () => { FPS.board = !FPS.board; }]]) {

@@ -36,6 +36,9 @@
 // Alone, for now: no network. Uses Wreckers' Night's engine (src/fps.js), which hands over to this file when FPS.zm.
 
 const ZMC = {
+  // (BODY: how close one of the drowned and you can come, middle to middle; SPRINT: your run here, a touch
+  //  slower than on Wreckers' Night)
+  BODY: 0.5, SPRINT: 9.8,
   RISE: 0.28, TREAD: 0.75, CEIL: 3.6, STEP: 0.6, START: 500, BREAK: 10, ALIVE: 24, NAV: 0.5, HP: 3, HP_STOUT: 6, BOX: 950,
 };
 // The tower: round, whitewashed with two red bands, fifteen metres wide inside and five floors high, a spiral stair
@@ -764,7 +767,8 @@ function zmCrowd(m, x, y) {
   for (const z of ZM.z) {
     if (z.dead || z.st !== 'in' || Math.abs((z.jz || 0) - (m.jz || 0)) > 1.2) continue;
     const d = Math.hypot(z.x - x, z.y - y);
-    if (d < (z.boss ? 1.3 : 0.7) && d < Math.hypot(z.x - m.x, z.y - m.y) - 0.001) return true;   // [boss] he's broader
+    // (they still block you, but only about as wide as a body: you can slip past one at a doorway's edge)
+    if (d < (z.boss ? 1.05 : ZMC.BODY) && d < Math.hypot(z.x - m.x, z.y - m.y) - 0.001) return true;   // [boss] he's broader
   }
   return false;
 }
@@ -1240,12 +1244,12 @@ function zmZombies(dt) {
   const ins = all.filter(z => !z.dead && z.st === 'in');
   for (let i = 0; i < ins.length; i++) for (let j = i + 1; j < ins.length; j++) {
     const a = ins[i], b = ins[j], dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy);
-    if (d < 0.7 && d > 0.001 && Math.abs((a.jz || 0) - (b.jz || 0)) < 1) { const push = (0.7 - d) * 0.5; zmMove(a, -dx / d * push, -dy / d * push); zmMove(b, dx / d * push, dy / d * push); }
+    if (d < 0.56 && d > 0.001 && Math.abs((a.jz || 0) - (b.jz || 0)) < 1) { const push = (0.56 - d) * 0.5; zmMove(a, -dx / d * push, -dy / d * push); zmMove(b, dx / d * push, dy / d * push); }
   }
   // and from all of you
   for (const z of ins) for (const m of P) {
     const dx = z.x - m.x, dy = z.y - m.y, d = Math.hypot(dx, dy);
-    if (d < 0.72 && d > 0.001 && Math.abs((z.jz || 0) - (m.jz || 0)) < 1.2) zmMove(z, dx / d * (0.72 - d), dy / d * (0.72 - d));
+    if (d < ZMC.BODY + 0.02 && d > 0.001 && Math.abs((z.jz || 0) - (m.jz || 0)) < 1.2) zmMove(z, dx / d * (ZMC.BODY + 0.02 - d), dy / d * (ZMC.BODY + 0.02 - d));
   }
   // the dead sink away
   for (const z of all) if (z.dead && z.deadT > (z.burn ? 1.3 : 2.4)) { if (z.mdl) zmFreeModel(z); z.remove = true; }
