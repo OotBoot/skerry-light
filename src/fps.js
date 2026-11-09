@@ -59,7 +59,8 @@ const FPS_WORDER = ['pepperbox', 'blunderbuss', 'longarm', 'harpoon', 'cutlass',
 // how much closer the view comes when aiming (the longarm's telescope, the avtomat's iron sights)
 const fpsZoom = () => { const w = fpsW(); return FPS.scoped ? (w.scope || w.ads || 1) : 1; };
 const FPSW_BY_CODE = {}; for (const id in FPSW) FPSW_BY_CODE[FPSW[id].code] = id;
-const fpsW = () => FPSW[FPS.weapon] || FPSW.pepperbox;
+// ([pap] in the Lighthouse, a weapon reforged at the Lampwright's Bench has its own copy: src/zmpap.js)
+const fpsW = () => (FPS.zm && typeof zmpW === 'function' && zmpW(FPS.weapon)) || FPSW[FPS.weapon] || FPSW.pepperbox;
 const fpsWOf = code => FPSW[FPSW_BY_CODE[code] || 'pepperbox'];
 try { const w = localStorage.getItem('skerry-fps-weapon'); if (FPSW[w] && FPS_WORDER.includes(w)) FPS.pick = w; } catch (e) {}
 // first person, or over the shoulder (V, the view button, or R3 to switch; remembered)
