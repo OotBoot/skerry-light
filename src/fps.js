@@ -21,7 +21,7 @@ const FPSC = {
   PLAYERS: 8, LAG: 0.35,   // (wreckers, the bots, fill the island up to this many)
   CX: 0, CY: 640, R: 88,   // (the island's radius: smaller now, so fights find you quicker)
   GROUND: 0.35, EYE: 1.7, BODY: 0.55, TALL: 1.85,
-  SPEED: 6.5, SPRINT: 10, HP: 4, MAG: 6, RATE: 0.26, RELOAD: 2.2, RESPAWN: 3.5, FLARES: 2,
+  SPEED: 6.5, SPRINT: 11, HP: 4, MAG: 6, RATE: 0.26, RELOAD: 2.2, RESPAWN: 3.5, FLARES: 2,
   ROUND: 300000, PERIOD: 16, RANGE: 420, SEND: 0.1, BOTS: 3, PROTECT: 2,
   JUMP: 5.6, GRAV: 15,                       // a jump clears about a metre and lasts three-quarters of a second
   TP_BACK: 3.7, TP_SIDE: 0.8, TP_UP: 0.12,   // the over-the-shoulder camera: behind, to the right, a little above your eyes
@@ -202,6 +202,7 @@ function fpsStop() {
 }
 function fpsSetMenu(on) {
   FPS.menu = on; $('fpsMenu').hidden = !on;
+  if (on) lookSync();
   if (on) { try { document.exitPointerLock && document.exitPointerLock(); } catch (e) {} setTimeout(() => $('fpsResume').focus(), 20); }
 }
 
@@ -939,12 +940,15 @@ function fpsInput(dt) {
   }
   const len = Math.hypot(fx, fz);
   m.walk = false;
+  // Shift (held) runs, in every mode on foot; the view widens a little as you go
+  const run = !!(K.ShiftLeft || K.ShiftRight || FPS.padSprint || (FPS.stick && FPS.stickRun)) && m.dead <= 0 && len > 0.05 && !FPS.menu && !FPS.scoped;
+  FPS.runK = clamp((FPS.runK || 0) + (run ? dt * 4 : -dt * 5), 0, 1);
   if (m.dead <= 0 && len > 0.05 && !FPS.menu) {
     // (on a phone a little slower all round: on a small screen the same pace feels much quicker)
-    const sp = (K.ShiftLeft || K.ShiftRight || FPS.padSprint || (FPS.stick && FPS.stickRun) ? FPSC.SPRINT : FPSC.SPEED) * Math.min(1, len) / len * dt * (FPS.zm ? zmSpeedK() : 1) * (FPS.stick ? 0.8 : 1);
+    const sp = (run ? FPSC.SPRINT : FPSC.SPEED) * Math.min(1, len) / len * dt * (FPS.zm ? zmSpeedK() : 1) * (FPS.stick ? 0.8 : 1);
     const s = Math.sin(m.h), c = Math.cos(m.h);
     m.walk = fpsMove(m, (s * fz + c * fx) * sp, (c * fz - s * fx) * sp);
-    if (m.walk && !((m.jz || 0) > 0)) FPS.step += dt * (K.ShiftLeft || K.ShiftRight ? 11 : 8);
+    if (m.walk && !((m.jz || 0) > 0)) FPS.step += dt * (run ? 11.5 : 8);
   }
 }
 
@@ -972,6 +976,7 @@ function fpsDraw() {
   // looking through the longarm's telescope: everything drawn with a longer focal length, then put back
   const f0 = focal;
   if (FPS.scoped) focal = f0 * fpsZoom();
+  else if (FPS.runK > 0 && !reduceMotion) focal = f0 * (1 - 0.08 * FPS.runK);
   try { fpsDrawScene(); } finally { focal = f0; }
   fpsDrawHands();
   drawAtmosphere();
@@ -1511,7 +1516,7 @@ $('fpsNick').addEventListener('keydown', e => { if (e.key === 'Enter') fpsStart(
 $('fpsResume').addEventListener('click', () => fpsSetMenu(false));
 $('fpsLeave').addEventListener('click', fpsStop);
 // the menu's Options: the look sensitivity slider (the same setting as on the Settings card)
-$('fpsOptBtn').addEventListener('click', () => { const o = $('fpsOpts'); o.hidden = !o.hidden; $('fpsOptBtn').setAttribute('aria-expanded', String(!o.hidden)); if (!o.hidden) lookSync(); });
+// (the menu's look sensitivity slider is on its first page: the same setting as on the Settings card; lookSync on opening)
 { const vb = $('fpsViewBtn'), lab = () => { vb.textContent = FPS.third ? 'View: over the shoulder' : 'View: first person'; }; lab(); vb.addEventListener('click', () => { fpsToggleView(); lab(); }); FPS.viewLabel = lab; }
 for (const [id, fn] of [['fpsPadWeapon', () => fpsCycle(1)], ['fpsPadScope', () => fpsScope(!FPS.scoped)], ['fpsPadReload', fpsReload], ['fpsPadLantern', fpsLantern], ['fpsPadFlare', fpsFlare], ['fpsPadBell', fpsBell], ['fpsPadJump', fpsJump], ['fpsPadView', fpsToggleView], ['fpsPadMenu', () => fpsSetMenu(true)], ['fpsPadBoard', () => { FPS.board = !FPS.board; }]]) {
   $(id).addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); fn(); });
