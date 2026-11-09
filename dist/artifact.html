@@ -1165,10 +1165,11 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
       </section>
       <details class="howto">
         <summary>How to play</summary>
-        <p><b>Rounds.</b> The drowned climb in through the windows, tearing the boards off as they come. Every round brings more, tougher and quicker: shamblers first, then joggers, then runners. Kill them all and you get a short breather before the next. If they drag you down, the night's over.</p>
+        <p><b>Rounds.</b> The drowned climb in through the windows, tearing the boards off as they come. Every round brings more, tougher (each takes more to put down, and after the ninth round a good deal more) and quicker: shamblers first, then joggers, then runners. Kill them all and you get a short breather before the next. If they drag you down, the night's over.</p>
         <p><b>Points.</b> 10 a hit, 60 a kill, 100 for one through the head, 130 with the cutlass. You start in the Keeper's Quarters with 500 points and a pepperbox. Hold Use at a window to nail its boards back (10 points a board, up to 500 a round).</p>
         <p><b>Buying.</b> Weapons hang on the walls with their prices chalked under them: buy one, or its ammunition again for half. You carry two; a third replaces the one in your hand. Doors and fallen wreckage open the rest of the station: the Oil Store, the Fog-Signal House, the passages, the Store Hall, the Boathouse, the Wreck Store, and at last the Lamp Passage and the tower, where a stair winds up round its core to the lantern room. Four tonics on the shelves: Stout Heart (take twice the knocks), Quick Hands (reload in half the time), Fleet Foot (quicker on your feet) and Second Wind (get back up once).</p>
         <p><b>The wreck chest</b> (950): a weapon you can't buy on any wall, maybe. It stands in one of five places, one of them at the very top beside the great lens. After a few goes a gull takes it (and gives you your points back), and it turns up somewhere else; look for the pale light over it. Only the chest has the <b>Fresnel Lamp</b>: a signal lantern with a lighthouse lens in it, that throws a beam of the Light's own fire. Hold the trigger, and whatever stands in the beam burns, and throws a spark to the next.</p>
+        <p><b>The Lampwright's Bench</b> (5000): somewhere deep in the station, past more than one paid door, the keepers' old bench for grinding the lens still has its fire lit. Hand it the weapon in yours and it goes behind the turning lens for a few seconds, and comes back reforged, under a new name: it hits far harder, holds more and carries more, and glows with the Light. Once each, and not the knife; lose the weapon and you lose what was done to it, and its ammunition off the wall costs a good deal more.</p>
         <p><b>Salvage.</b> Now and then one drops something glowing: a Powder Keg (all your ammunition back), Double Salvage (double points for thirty seconds), the Black Spot (anything dies to one hit, for thirty seconds) or a Lamp Flash (every one of them in the station burns). Walk into it to take it.</p>
         <p><b>Together.</b> Host a night and up to three others here can join it from this card. Nothing starts until the host presses Start the night, with whoever has joined. More of you means more of them each round. Points are your own: share the doors, race for the chest. Go down and you have half a minute on the floor for someone to hold Use beside you and get you up; bleed out and you're back next round with a pepperbox. The night ends when nobody is left standing. The pause menu doesn't stop a night together.</p>
         <p><b>Keys:</b> as Wreckers' Night, and F (or E) to use: buy, open, take, and hold it at a window to board it up. V (or the middle mouse button) for the knife, which never runs out; and with nothing left to fire, Fire slashes with it too. C switches the view. 1 and 2 your weapons, Tab how the night's going, Esc pauses. <b>Controller:</b> B to use, R3 the knife, d-pad down the view. <b>Touch:</b> the Use and knife buttons by Fire. On a phone, push the stick out to the dotted outer circle to run. Kills here count towards weapon and outfit crates too, and your best goes on the scoreboard.</p>
@@ -12071,7 +12072,8 @@ const FPS_WORDER = ['pepperbox', 'blunderbuss', 'longarm', 'harpoon', 'cutlass',
 // how much closer the view comes when aiming (the longarm's telescope, the avtomat's iron sights)
 const fpsZoom = () => { const w = fpsW(); return FPS.scoped ? (w.scope || w.ads || 1) : 1; };
 const FPSW_BY_CODE = {}; for (const id in FPSW) FPSW_BY_CODE[FPSW[id].code] = id;
-const fpsW = () => FPSW[FPS.weapon] || FPSW.pepperbox;
+// ([pap] in the Lighthouse, a weapon reforged at the Lampwright's Bench has its own copy: src/zmpap.js)
+const fpsW = () => (FPS.zm && typeof zmpW === 'function' && zmpW(FPS.weapon)) || FPSW[FPS.weapon] || FPSW.pepperbox;
 const fpsWOf = code => FPSW[FPSW_BY_CODE[code] || 'pepperbox'];
 try { const w = localStorage.getItem('skerry-fps-weapon'); if (FPSW[w] && FPS_WORDER.includes(w)) FPS.pick = w; } catch (e) {}
 // first person, or over the shoulder (V, the view button, or R3 to switch; remembered)
@@ -17221,6 +17223,7 @@ FPI_GEN.light = {
     // wall buys up the tower
     { const at = (a, k, id, cost) => { const r = ZMT.R - 0.07, x = ZMT.X + Math.cos(a) * r, y = ZMT.Y + Math.sin(a) * r; put('board', x, y, a + Math.PI / 2, { lift: ZMT.L[k] }); const [wx, wy] = W(x, y); Z.buys.push({ id, cost, x: wx, y: wy, nx: -Math.cos(a), ny: -Math.sin(a), z: ZMT.L[k] }); };
       at(Math.PI * 0.9, 2, 'avtomat', 1200); at(Math.PI * 0.12, 4, 'longarm', 500); at(-Math.PI * 0.12, 3, 'harpoon', 1000); }
+    if (typeof zmpPlace === 'function') zmpPlace(put, light, W, Z);   // [pap] the Lampwright's Bench (src/zmpap.js)
   },
   decor(H) {},
 };
@@ -17430,6 +17433,7 @@ function zmReset() {
     doors: Zd.doors, windows: Zd.windows, buys: Zd.buys, perksAt: Zd.perks, spawns: Zd.spawns, glass: Zd.glass || [],
   });
   for (const w of ZM.windows) { w.boards = 6; w.q = []; w.fall = []; }
+  if (typeof zmpReset === 'function') zmpReset();   // [pap]
 }
 // opts (playing together, src/zmnet.js): { net: 'host' | 'client', hum: [[sid, nick], ...] }
 function zmStart(opts) {
@@ -17467,6 +17471,7 @@ function zmStart(opts) {
 }
 function zmStop() {
   if (ZM.net && typeof zmnStop === 'function') zmnStop();
+  if (typeof zmpStop === 'function') zmpStop();   // [pap]
   ZM.on = false; ZM.net = null; FPS.zm = false; FPS.eyeLag = 0;
   $('stage').classList.remove('zmmode'); $('zmOver').hidden = true;
   { const e = document.querySelector('#fpsMenu .eyebrow'); if (e) e.textContent = "Wreckers' Night carries on without you"; $('fpsLeave').textContent = 'Leave the island'; $('fpsResume').textContent = 'Back to the fight'; }
@@ -17555,6 +17560,7 @@ function zmTick(dt) {
   if (ZM.banner) { ZM.banner.t -= dt; if (ZM.banner.t <= 0) ZM.banner = null; }
   for (const s of ZM.sparks) s.t -= dt; ZM.sparks = ZM.sparks.filter(s => s.t > 0);
   if (FPS.beamT > 0) FPS.beamT -= dt;
+  if (typeof zmpTick === 'function') zmpTick(dt);   // [pap]
   zmNearest();
   // holding Use at a window nails its boards back; beside someone who's down, gets them up
   const hold = FPS.keys.KeyF || FPS.keys.KeyE || FPS.touchUse || FPS.padUse;
@@ -17606,7 +17612,12 @@ function zmEnd() {
 
 // ---------- rounds ----------
 const zmCount = r => r <= 5 ? [6, 8, 13, 18, 24][r - 1] : Math.round(24 + (r - 5) * 3.2 + (r - 5) * (r - 5) * 0.06);
-const zmHp = r => r <= 9 ? 2.5 + 1.6 * (r - 1) : (2.5 + 1.6 * 8) * Math.pow(1.1, r - 9);
+// a drowned man's strength (in pepperbox body shots, before ZM_DMG): in the old games' manner, a fixed step each round
+// to round nine, then a tenth more every round, compounding:
+//   hp(r) = 2.5 + 2 (r - 1)          for r <= 9   (round 1: 2.5, three pepperbox shots; round 5: 10.5; round 9: 18.5)
+//   hp(r) = 18.5 * 1.1^(r - 9)       from r = 10  (round 10: 20.4; 15: 32.8; 20: 52.8; 25: 85; 30: 137)
+// each one spawns with this, give or take a tenth; the Fresnel Lamp's burn and its sparks are fractions of it
+const zmHp = r => r <= 9 ? 2.5 + 2 * (r - 1) : (2.5 + 2 * 8) * Math.pow(1.1, r - 9);
 function zmRounds(dt) {
   ZM.t -= dt;
   if (ZM.phase === 'pre' || ZM.phase === 'break') {
@@ -17807,6 +17818,7 @@ function zmPoints(n, raw, by) {
 function zmHurt(d, dmg, head, code, by, how) {
   if (!d || d.dead) return;
   d.hitT = 0.15;
+  if (typeof zmpDmg === 'function') dmg = zmpDmg(dmg, code, by);   // [pap] reforged weapons hit harder (the shooter's side)
   if (ZM.net === 'client') { zmnHit(d, dmg, head, code, how); return; }
   const k = ZM_DMG[code] == null ? 1 : ZM_DMG[code];
   d.hp -= ZM.insta > 0 ? 1e9 : dmg * k;
@@ -17945,7 +17957,8 @@ function zmDropsTick(dt) {
 function zmTake(k, heard) {
   const D = ZM_DROPS[k]; ZM.banner = { text: D.n + '!', t: 2.6, col: D.c };
   zmSound('take');
-  if (k === 'keg') { for (const id of ZM.own) ZM.res[id] = ZM_AMMO[id]; fpsFeed('A Powder Keg: everything you carry, full.'); }
+  if (k === 'keg') { for (const id of ZM.own) ZM.res[id] = typeof zmpAmmo === 'function' ? zmpAmmo(id) : ZM_AMMO[id];   // [pap] (a reforged reserve)
+    fpsFeed('A Powder Keg: everything you carry, full.'); }
   else if (k === 'double') { if (!heard) ZM.double = 30; fpsFeed('Double Salvage: double points for thirty seconds.'); }
   else if (k === 'spot') { if (!heard) ZM.insta = 30; fpsFeed('The Black Spot: one hit kills, for thirty seconds.'); }
   else if (heard) { FPS.flash = 0.6; fpsFeed('A Lamp Flash: every one of them burned where they stood.'); }
@@ -18035,6 +18048,7 @@ function zmNearest() {
   for (const d of ZM.doors) if (!d.open) consider({ k: 'door', d }, d.x, d.y, d.z || 0, 2.3, false);
   const B = ZM.box, S = ZM.spawns[B.at];
   if (S && (B.st === 'idle' || (B.st === 'offer' && B.owner === m.id))) consider({ k: 'box' }, S.x + S.nx * 0.9, S.y + S.ny * 0.9, S.z - 0.32, 1.8, true);
+  if (typeof zmpConsider === 'function') zmpConsider(consider);   // [pap] the bench
   // someone down: you can get them up
   if (ZM.net) for (const r of FPS.remote.values()) if (r.down && !r.dead) consider({ k: 'rev', sid: r.id, n: r.n }, r.x, r.y, r.jz || 0, 1.8, false);
   for (const w of ZM.windows) if (w.boards < 6 && zmOpen(w.zone)) consider({ k: 'win', w }, w.x - w.nx * 0.95, w.y - w.ny * 0.95, w.z || 0, 1.9, false);
@@ -18042,6 +18056,7 @@ function zmNearest() {
   ZM.prompt = best ? zmPrompt(best) : null;
 }
 function zmPrompt(o) {
+  { const r = typeof zmpPrompt === 'function' && zmpPrompt(o); if (r) return r; }   // [pap] the bench, a reforged weapon's ammunition
   if (o.k === 'buy') {
     const w = FPSW[o.b.id], own = ZM.own.includes(o.b.id);
     if (own && w.melee) return { text: `${w.n}: in hand` };
@@ -18057,6 +18072,7 @@ function zmPrompt(o) {
 }
 function zmUse() {
   const o = ZM.near, m = FPS.me; if (!o || m.dead > 0 || ZM.over) return;
+  if (typeof zmpUse === 'function' && zmpUse(o)) return;   // [pap]
   const pay = c => { if (ZM.pts < c) { zmSound('no'); fpsFeed('Not enough points.'); return false; } ZM.pts -= c; ZM.spent += c; return true; };
   if (o.k === 'buy') {
     const id = o.b.id, w = FPSW[id], own = ZM.own.includes(id);
@@ -18518,6 +18534,7 @@ function zmScene3D() {
     Bm.outer.material.opacity = 0.55 * flick; Bm.core.material.opacity = 0.95 * flick;
     Bm.L.position.copy(z3v(ox + fx * Math.min(len, 5), oy + fy * Math.min(len, 5), oz + fz * Math.min(len, 5)));
   }
+  if (typeof zmp3d === 'function') zmp3d(dt);   // [pap] the bench
 }
 // painted over the 3D view: sparks between the burning, the chest's offer, and anyone down
 function zmDrawOver() {
@@ -18629,7 +18646,7 @@ function zmHud() {
     ctx.fillStyle = w.melee || m.ammo ? 'rgba(236,228,207,0.92)' : '#e46c4f';
     ctx.fillText(m.reload > 0 ? (w.melee ? 'WIPING' : 'RELOADING') : w.melee ? 'CUTLASS' : `${m.ammo} / ${ZM.res[FPS.weapon] || 0}`, R, by);
     ctx.font = mono(11); let wx = R;
-    for (let i = ZM.own.length - 1; i >= 0; i--) { const id = ZM.own[i], lab = `${i + 1} ${FPSW[id].n.toUpperCase()}`; ctx.fillStyle = id === FPS.weapon ? '#ffd88a' : 'rgba(236,228,207,0.4)'; ctx.fillText(lab, wx, by - 30); wx -= ctx.measureText(lab).width + 14; }
+    for (let i = ZM.own.length - 1; i >= 0; i--) { const id = ZM.own[i], lab = `${i + 1} ${(typeof zmpName === 'function' ? zmpName(id) : FPSW[id].n).toUpperCase()}`; ctx.fillStyle = id === FPS.weapon ? '#ffd88a' : 'rgba(236,228,207,0.4)'; ctx.fillText(lab, wx, by - 30); wx -= ctx.measureText(lab).width + 14; }
     if (!w.melee && (m.ammo === 0 || (m.ammo < w.mag && m.ammo <= Math.ceil(w.mag * 0.25))) && !(m.reload > 0) && !ZM.over) { ctx.textAlign = 'center'; ctx.font = mono(13); ctx.fillStyle = (ZM.res[FPS.weapon] || 0) > 0 ? 'rgba(236,228,207,0.8)' : '#e46c4f'; ctx.fillText((ZM.res[FPS.weapon] || 0) > 0 ? 'R TO RELOAD' : m.ammo ? 'LOW AMMUNITION' : 'NO AMMUNITION · V OR FIRE TO KNIFE', cx, cy + 46); }
   } else { zmPadState(); zmDrawStick(); }
   // together: everyone's points, down the right (yours lit), and anyone down marked
@@ -18728,6 +18745,277 @@ const ZM_KEYS = { KeyF: () => zmUse(), KeyE: () => zmUse(), KeyV: () => zmKnife(
   $('zmOcrate').addEventListener('click', () => $('ocrateBtn').click());
   // your best, on the card
   setInterval(() => { const b = typeof BOARD !== 'undefined' && BOARD.mine && BOARD.mine.zm, el = $('zmRecord'); if (el && b) { const s = b.s ? `Your best: ${b.s} ${b.s === 1 ? 'round' : 'rounds'} held, and ${b.b} kills in one game.` : ''; if (el.textContent !== s) el.textContent = s; } }, 1500);
+}
+
+// ---- src/zmpap.js ----
+// The Lighthouse: the Lampwright's Bench. A brass-and-glass bench in the Store Hall where the keepers once ground and
+// mended the great lens's prisms; 5000 points and it takes the weapon in your hand, turns it through the Light's own
+// fire behind its spinning lens for a few seconds, and gives it back reforged: a new name, a bigger magazine and
+// reserve, a warm glow along its metal, and it hits the drowned three times as hard (the Fresnel Lamp twice).
+//  - Per player, like what you carry (ZM.own, ZM.res): the reforged weapons are ZM.pap[id]. Lose the weapon (a wall
+//    buy or the chest replaces it, or you bleed out) and the reforging goes with it. A reforged weapon can't be
+//    reforged again; the knife can't be reforged at all.
+//  - Damage: scaled where the hit is made (zmHurt, before a joined player's hit goes to the host), so it works alone,
+//    hosting and joined alike; the host's ZM_DMG multiplier still applies on top, as for any hit.
+//  - Magazines: FPSW is shared with Wreckers' Night, so it's never changed. fpsW() (src/fps.js) asks zmpW() for the
+//    reforged weapon's own copy of its entry (more rounds in the magazine, its new name) while you're in the
+//    Lighthouse; reloading, the ammunition count and the reload prompt all go through fpsW().
+//  - Wall ammunition for a reforged weapon costs ZM_PAP.AMMO_COST and fills the reforged reserve.
+// Everything here hangs off a few marked hook lines (// [pap]) in src/zombies.js and src/fps.js.
+
+// where the bench stands: relative to the island's middle (as ZM_ZONES), against a wall, nx/ny the way its front faces
+// (into the room), z the floor it stands on. Up the tower, against the curved wall of the Lamp-Wright's Store.
+const ZM_PAP_AT = { x: 0, y: 1.5 - 9.05, z: 15, nx: 0, ny: 1, zone: 'tw3s' };
+const ZM_PAP = { COST: 5000, AMMO_COST: 4500, TIME: 4.6, NAME: "the Lampwright's Bench" };
+// what each weapon becomes: its new name, magazine and reserve, and how much harder it hits the drowned
+const ZM_PAP_W = {
+  pepperbox: { n: 'Twelve Bells', mag: 12, res: 120, k: 3 },
+  blunderbuss: { n: 'Spring Tide', mag: 2, res: 48, k: 3 },
+  longarm: { n: 'Leading Light', mag: 3, res: 60, k: 3 },
+  harpoon: { n: 'Whale-Road', mag: 3, res: 40, k: 3 },
+  cutlass: { n: 'Keel-Splitter', mag: 0, res: 0, k: 3 },
+  avtomat: { n: 'Equinox Gale', mag: 50, res: 400, k: 3 },
+  fresnel: { n: 'First-Order Lamp', mag: 90, res: 450, k: 2 },
+};
+const ZM_PAP_GLOW = 0xffa838;
+
+// ---------- the bench itself (a prop: its solid and its static parts) ----------
+FPI_K.zmpap = {
+  col: FPI_C.wood3,
+  sol(p) { return [fpiBox(p, 0, 0, 1.15, 0.5, 2.5)]; },
+  // (the prop's front is -v; the lens wheel, the furnace's mouth and the tray are drawn by zmp3d)
+  b3(p, A) {
+    // the bench: a heavy oak top on four legs, a shelf under it with ingots of brass and a box of prisms
+    A.box(FPI_C.wood2, 0, 0, 0.86, 2.3, 0.95, 0.1);
+    for (const su of [-1, 1]) for (const sv of [-1, 1]) A.box(FPI_C.wood3, su * 1.06, sv * 0.4, -0.1, 0.1, 0.1, 0.98);
+    A.box(FPI_C.wood3, 0, 0, 0.22, 2.12, 0.86, 0.05);
+    for (let i = 0; i < 4; i++) A.box(ZMP.brass, -0.8 + i * 0.13, -0.1, 0.27, 0.1, 0.32, 0.06);
+    A.box(FPI_C.wood, 0.55, 0, 0.27, 0.6, 0.5, 0.22);
+    for (let i = 0; i < 4; i++) A.part('ico', '#cfe0e8', 0.35 + i * 0.13, -0.05, 0.52, 0.12, 0.14, 0.1, i, 0, 0, 'glow');
+    // the furnace on the bench: a brick firebox under the lens, a brass lid, and its flue back into the wall
+    A.box('#4a2e24', 0, 0.12, 0.96, 1.0, 0.6, 0.42);
+    A.box('#2a1c18', 0, -0.19, 1.02, 0.5, 0.02, 0.24);
+    A.box(ZMP.brass, 0, 0.12, 1.38, 1.06, 0.66, 0.05);
+    A.part('cyl8', ZMP.iron, 0.36, 0.42, 1.2, 0.16, 0.3, 0.16, 0, Math.PI / 2, 0);
+    // the frame the lens wheel turns in: two iron uprights and a brass crossbar, a sign board over it
+    for (const s of [-1, 1]) { A.box(ZMP.iron, s * 0.82, 0.18, 0.96, 0.1, 0.12, 1.66); A.cyl(ZMP.brass, s * 0.82, 0.18, 2.6, 0.08, 0.1); }
+    A.box(ZMP.brass, 0, 0.18, 2.36, 1.74, 0.12, 0.1);
+    A.box('#2a2622', 0, 0.36, 2.66, 1.9, 0.06, 0.5); A.box(FPI_C.wood3, 0, 0.36, 2.62, 2.0, 0.08, 0.05); A.box(FPI_C.wood3, 0, 0.36, 3.15, 2.0, 0.08, 0.05);
+    // a grindstone on its frame at one end, the bellows at the other
+    A.part('cyl8', '#8a8478', 0.92, -0.18, 1.22, 0.55, 0.09, 0.55, 0, 0, Math.PI / 2);
+    A.box(FPI_C.wood3, 0.92, -0.18, 0.96, 0.06, 0.06, 0.28);
+    A.box('#5a3a24', -0.9, -0.05, 0.96, 0.32, 0.5, 0.16, 0.2); A.box(FPI_C.wood3, -0.9, -0.35, 0.98, 0.06, 0.25, 0.04, 0.2);
+    // two small lamps at the front corners
+    for (const s of [-1, 1]) { A.cyl(ZMP.iron, s * 1.0, -0.36, 0.96, 0.05, 0.18); A.glow('#ffc070', s * 1.0, -0.36, 1.22, 0.11); }
+  },
+};
+// (from FPI_GEN.light.set) put the bench in its room, with a lamp of its own
+function zmpPlace(put, light, W, Z) {
+  const P = ZM_PAP_AT, a = Math.atan2(P.nx, -P.ny);
+  put('zmpap', P.x, P.y, a, { lift: P.z || 0 });
+  light(P.x + P.nx * 1.2, P.y + P.ny * 1.2, (P.z || 0) + 1.9, '#ffc070', 6, 'lantern');
+  const [wx, wy] = W(P.x, P.y);
+  Z.pap = { x: wx, y: wy, nx: P.nx, ny: P.ny, z: P.z || 0, zone: P.zone };
+}
+const zmpAt = () => FPS.g && FPS.g.isle && FPS.g.isle.zm && FPS.g.isle.zm.pap;
+
+// ---------- the state ----------
+function zmpReset() { ZM.pap = {}; ZM.forge = { st: 'idle', id: null, t: 0 }; }
+// the weapon as it is in your hands: its reforged copy, if it's been reforged (else null)
+const ZM_PAP_CACHE = {};
+function zmpW(id) {
+  if (!ZM.on || !ZM.pap || !ZM.pap[id] || !ZM_PAP_W[id] || !FPSW[id]) return null;
+  let w = ZM_PAP_CACHE[id];
+  if (!w || w.base !== FPSW[id]) { const U = ZM_PAP_W[id]; w = ZM_PAP_CACHE[id] = Object.assign({}, FPSW[id], { n: U.n, mag: FPSW[id].melee ? FPSW[id].mag : U.mag, pap: true, base: FPSW[id] }); }
+  return w;
+}
+const zmpName = id => (zmpW(id) || FPSW[id]).n;
+const zmpMag = id => (zmpW(id) || FPSW[id]).mag;
+const zmpAmmo = id => ZM.pap && ZM.pap[id] && ZM_PAP_W[id] ? ZM_PAP_W[id].res : ZM_AMMO[id];
+// (from zmHurt) my own hit with a reforged weapon hits harder; anyone else's was scaled where they made it
+function zmpDmg(dmg, code, by) {
+  if (by && by !== FPS.me.id) return dmg;
+  if (!ZM.pap || code === 'k') return dmg;
+  const id = FPSW_BY_CODE[code];
+  return id && ZM.pap[id] && ZM_PAP_W[id] ? dmg * ZM_PAP_W[id].k : dmg;
+}
+
+// ---------- each tick ----------
+function zmpTick(dt) {
+  if (!ZM.pap) zmpReset();
+  const m = FPS.me, F = ZM.forge;
+  // bled out: everything you carried, and its reforging, is gone; and anything no longer carried loses it
+  if (ZM.ghost) ZM.pap = {};
+  for (const id in ZM.pap) if (!ZM.own.includes(id) && !(F.st === 'work' && F.id === id)) delete ZM.pap[id];
+  if (F.st === 'work') {
+    F.t += dt;
+    // the weapon's on the bench: not in your hands
+    if (FPS.weapon === F.id) { FPS.drawT = 0.45; m.reload = 0; FPS.scoped = false; }
+    F.sT = (F.sT || 0) - dt;
+    if (F.sT <= 0) { F.sT = 0.55; zmpSound('grind'); }
+    if (F.t >= ZM_PAP.TIME) zmpDone();
+  }
+  zmpTint();
+}
+function zmpDone() {
+  const m = FPS.me, F = ZM.forge, id = F.id, U = ZM_PAP_W[id];
+  F.st = 'idle'; F.id = null; F.t = 0;
+  if (!ZM.own.includes(id)) {
+    // (it went from your hands while it was on the bench: the points come back)
+    ZM.pts += ZM_PAP.COST; ZM.spent -= ZM_PAP.COST;
+    fpsFeed('The bench has nothing to give back to you. The points are returned.');
+    return;
+  }
+  ZM.pap[id] = true;
+  const w = zmpW(id);
+  if (!w.melee) { m.mags[id] = w.mag; ZM.res[id] = U.res; }
+  if (FPS.weapon === id) { if (!w.melee) m.ammo = w.mag; m.reload = 0; m.cd = 0; FPS.drawT = 0.45; }
+  else if (!(m.dead > 0)) fpsSwitch(id);
+  ZM.banner = { text: U.n, t: 3, col: '#ffc070' };
+  fpsFeed(`The ${FPSW[id].n} comes back out of the fire as the ${U.n}.`);
+  zmpSound('done');
+}
+
+// ---------- using it ----------
+// (from zmNearest) the bench, if you're in front of it and its room is open
+function zmpConsider(consider) {
+  const P = zmpAt(); if (!P || !zmOpen(P.zone)) return;
+  consider({ k: 'pap' }, P.x + P.nx * 1.05, P.y + P.ny * 1.05, P.z || 0, 1.8, true);
+}
+// (from zmPrompt) what the bench says, and what a wall buy says for a reforged weapon; null for anything else
+function zmpPrompt(o) {
+  if (o.k === 'buy' && ZM.pap && ZM.pap[o.b.id] && ZM.own.includes(o.b.id)) {
+    const w = zmpW(o.b.id); if (w.melee) return { text: `${w.n}: in hand` };
+    return { text: `${w.n} ammunition`, cost: ZM_PAP.AMMO_COST };
+  }
+  if (o.k !== 'pap') return null;
+  const F = ZM.forge, id = FPS.weapon;
+  if (F.st === 'work') return { text: `The bench is at work on your ${FPSW[F.id].n}…` };
+  if (!ZM_PAP_W[id]) return { text: `${ZM_PAP.NAME}: nothing it can reforge` };
+  if (ZM.pap[id]) return { text: `The ${ZM_PAP_W[id].n} has been through the fire already` };
+  return { text: `Reforge the ${FPSW[id].n} at ${ZM_PAP.NAME}`, cost: ZM_PAP.COST };
+}
+// (from zmUse) true if it was the bench (or a reforged weapon's ammunition) that was used
+function zmpUse(o) {
+  const m = FPS.me;
+  const pay = c => { if (ZM.pts < c) { zmSound('no'); fpsFeed('Not enough points.'); return false; } ZM.pts -= c; ZM.spent += c; return true; };
+  if (o.k === 'buy' && ZM.pap && ZM.pap[o.b.id] && ZM.own.includes(o.b.id)) {
+    const id = o.b.id, w = zmpW(id), U = ZM_PAP_W[id];
+    if (w.melee) return true;
+    if ((ZM.res[id] || 0) >= U.res && (FPS.weapon !== id || m.ammo >= w.mag)) { fpsFeed('You can’t carry any more.'); return true; }
+    if (!pay(ZM_PAP.AMMO_COST)) return true;
+    ZM.res[id] = U.res; m.mags[id] = w.mag; if (FPS.weapon === id) m.ammo = w.mag;
+    zmSound('buy');
+    return true;
+  }
+  if (o.k !== 'pap') return false;
+  const F = ZM.forge, id = FPS.weapon;
+  if (F.st === 'work' || !ZM_PAP_W[id] || ZM.pap[id] || !ZM.own.includes(id)) { zmSound('no'); return true; }
+  if (!pay(ZM_PAP.COST)) return true;
+  F.st = 'work'; F.id = id; F.t = 0; F.sT = 0.6;
+  m.mags[id] = m.ammo;
+  // (your other weapon comes to hand while this one's on the bench)
+  const other = ZM.own.find(k => k !== id);
+  if (other) fpsSwitch(other); else { FPS.drawT = 0.45; m.reload = 0; }
+  zmpSound('start');
+  fpsFeed(`The ${FPSW[id].n} goes into the Light’s fire…`);
+  return true;
+}
+
+// ---------- the look in your hands: reforged weapons glow along their metal ----------
+const ZMP_TINT = new Map();
+function zmpTint() {
+  if (typeof VM === 'undefined' || !VM.weapons) return;
+  const t = FPS.g ? FPS.g.t : 0;
+  for (const id in VM.weapons) {
+    const M = VM.weapons[id].M; if (!M) continue;
+    const want = ZM.on && ZM.pap && ZM.pap[id];
+    for (const k of ['iron', 'brass', 'accent', 'dark', 'blade']) {
+      const mt = M[k]; if (!mt || !mt.emissive) continue;
+      if (want) {
+        if (!ZMP_TINT.has(mt)) ZMP_TINT.set(mt, [mt.emissive.getHex(), mt.emissiveIntensity]);
+        const base = k === 'accent' || k === 'brass' ? 0.75 : k === 'dark' ? 0.25 : 0.4;
+        mt.emissive.setHex(ZM_PAP_GLOW); mt.emissiveIntensity = base * (0.8 + 0.2 * Math.sin(t * 3 + (k.length)));
+      } else if (ZMP_TINT.has(mt)) { const [h, i] = ZMP_TINT.get(mt); mt.emissive.setHex(h); mt.emissiveIntensity = i; ZMP_TINT.delete(mt); }
+    }
+  }
+}
+// (from zmStop) back to how they were, for Wreckers' Night
+function zmpStop() {
+  for (const [mt, [h, i]] of ZMP_TINT) { mt.emissive.setHex(h); mt.emissiveIntensity = i; }
+  ZMP_TINT.clear();
+  if (ZM.forge) ZM.forge.st = 'idle';
+  ZM.pap = {};
+}
+
+// ---------- sounds ----------
+function zmpSound(k) {
+  try {
+    if (soundOff()) return;
+    if (k === 'start') { noise('bandpass', 260, 3, 0.05, 0.25, 0.9, { to: 900 }); tone(110, 'sawtooth', 0.2, 0.06, 1.2, { to: 220 }); }
+    else if (k === 'grind') { noise('bandpass', 1800 + Math.random() * 600, 6, 0.02, 0.07, 0.35); tone(140 + Math.random() * 30, 'triangle', 0.05, 0.05, 0.4); }
+    else if (k === 'done') { sfxBellFar(0, 0.7); for (let i = 0; i < 4; i++) tone(392 * Math.pow(1.26, i), 'triangle', 0.005, 0.1, 0.5, { delay: i * 0.09 }); noise('highpass', 3000, 1, 0.01, 0.12, 0.6, { delay: 0.1 }); }
+  } catch (e) {}
+}
+
+// ---------- in 3D: the lens wheel turning in its frame, the furnace's mouth, the weapon on the tray ----------
+const ZMP3 = { grp: null };
+function zmp3dBuild() {
+  const P = zmpAt(); if (!P) return null;
+  const g = new THREE.Group(); g.position.copy(z3v(P.x, P.y, FPSC.GROUND + (P.z || 0))); g.rotation.y = Math.atan2(P.ny, P.nx) - Math.PI / 2; Z3.grp.add(g);
+  // (in the group, -z is the bench's front)
+  const brass = z3Lam('#b08a3a', { emissive: 0x201004 }), iron = z3Lam('#24262a');
+  const add = (glow, a) => new THREE.MeshBasicMaterial({ color: glow, transparent: true, opacity: a, depthWrite: false, blending: THREE.AdditiveBlending, fog: false });
+  const wheel = new THREE.Group(); wheel.position.set(0, 1.86, 0.12); g.add(wheel);
+  const rings = [];
+  for (let i = 0; i < 5; i++) { const r = 0.14 + i * 0.1, ring = new THREE.Mesh(new THREE.TorusGeometry(r, 0.035, 6, 28), add(0xffe0a0, 0.55 - i * 0.06)); wheel.add(ring); rings.push(ring); }
+  const rim = new THREE.Mesh(new THREE.TorusGeometry(0.6, 0.045, 6, 32), brass); wheel.add(rim);
+  for (let i = 0; i < 6; i++) { const s = new THREE.Mesh(new THREE.BoxGeometry(0.03, 1.18, 0.03), brass); s.rotation.z = i / 6 * Math.PI; wheel.add(s); }
+  const bull = new THREE.Mesh(new THREE.SphereGeometry(0.1, 12, 8), add(0xfff2c8, 0.9)); bull.scale.z = 0.5; wheel.add(bull);
+  const axle = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 1.75, 8), iron); axle.rotation.z = Math.PI / 2; axle.position.copy(wheel.position); g.add(axle);
+  // the furnace's mouth, under the lens
+  const mouth = new THREE.Mesh(new THREE.PlaneGeometry(0.46, 0.22), add(0xff8a30, 0.8)); mouth.position.set(0, 1.14, -0.215); mouth.rotation.y = Math.PI; g.add(mouth);
+  const halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: z3Soft('rgba(255,190,90,0.9)', 'rgba(255,190,90,0)'), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false }));
+  halo.position.set(0, 1.86, -0.05); halo.scale.setScalar(1.6); g.add(halo);
+  // the weapon, on its way in and out
+  const show = new THREE.Group(); g.add(show);
+  // its name and price, chalked on the board over it
+  const ch = z3Chalk([["LAMPWRIGHT'S BENCH", 21], [String(ZM_PAP.COST), 40]], 1.8, 0.46); ch.position.set(0, 2.9, 0.32); ch.rotation.y = Math.PI; g.add(ch);
+  const light = new THREE.PointLight(0xffb860, 0.8, 8, 1.5); light.position.set(0, 1.7, -0.9); g.add(light);
+  // sparks thrown off the wheel while it works
+  const sparks = [];
+  for (let i = 0; i < 10; i++) { const s = new THREE.Mesh(new THREE.SphereGeometry(0.018, 4, 3), add(0xffd080, 1)); s.visible = false; g.add(s); sparks.push({ m: s, t: 0, v: new THREE.Vector3() }); }
+  return { grp: Z3.grp, g, wheel, rings, bull, mouth, halo, show, light, sparks, wpn: {}, spin: 0 };
+}
+// (from zmScene3D) each frame
+function zmp3d(dt) {
+  if (!ZMP3.b || ZMP3.b.grp !== Z3.grp) ZMP3.b = zmp3dBuild();
+  const B = ZMP3.b; if (!B) return;
+  const F = ZM.forge || { st: 'idle', t: 0 }, t = g.t, work = F.st === 'work', k = work ? Math.min(1, F.t / 0.8) * Math.min(1, (ZM_PAP.TIME - F.t) / 0.6 + 0.3) : 0;
+  B.spin += dt * (0.4 + k * 9);
+  B.wheel.rotation.z = B.spin;
+  B.rings.forEach((r, i) => { r.material.opacity = (0.35 - i * 0.05) + k * 0.3 + 0.05 * Math.sin(t * 2 + i); });
+  B.bull.material.opacity = 0.6 + 0.4 * k;
+  B.mouth.material.opacity = 0.55 + 0.25 * Math.sin(t * 7) * (reduceMotion ? 0 : 1) + k * 0.2;
+  B.halo.material.opacity = 0.25 + k * 0.35; B.halo.scale.setScalar(1.3 + k * 0.7);
+  B.light.intensity = 0.45 + k * 1.1 + (work && !reduceMotion ? 0.15 * Math.sin(t * 23) : 0);
+  // the weapon: on the tray, slid in under the lens, turned in the fire, and out again glowing
+  for (const id in B.wpn) if (B.wpn[id]) B.wpn[id].visible = false;
+  if (work && F.id) {
+    let w = B.wpn[F.id];
+    if (w === undefined) { w = B.wpn[F.id] = z3Weapon(F.id); if (w) { w.scale.setScalar(1.25); B.show.add(w); w.traverse(o => { if (o.isMesh) { const ms = Array.isArray(o.material) ? o.material : [o.material]; for (const mt of ms) if (mt && mt.emissive) mt.emissive.setHex(ZM_PAP_GLOW); } }); } }
+    if (w) {
+      w.visible = true;
+      const p = F.t / ZM_PAP.TIME, inn = Math.min(1, p / 0.18), out = Math.max(0, (p - 0.82) / 0.18);
+      B.show.position.set(0, 1.5 + Math.sin(Math.min(1, p) * Math.PI) * 0.12, -0.75 + inn * 0.55 - out * 0.55);
+      B.show.rotation.set(0, Math.PI / 2 + (p > 0.18 && p < 0.82 ? (p - 0.18) * 14 : 0), 0);
+      w.traverse(o => { if (o.isMesh) { const ms = Array.isArray(o.material) ? o.material : [o.material]; for (const mt of ms) if (mt && mt.emissive) mt.emissiveIntensity = Math.min(1, p * 1.6); } });
+    }
+  }
+  for (const s of B.sparks) {
+    if (s.t > 0) { s.t -= dt; s.m.position.addScaledVector(s.v, dt); s.v.y -= dt * 4; s.m.visible = s.t > 0; continue; }
+    if (work && !reduceMotion && Math.random() < dt * 14) { const a = Math.random() * Math.PI * 2; s.t = 0.5 + Math.random() * 0.4; s.m.position.set(Math.cos(a) * 0.6, 1.86 + Math.sin(a) * 0.6, 0.05); s.v.set(Math.cos(a) * 1.5, Math.sin(a) * 1.5 + 0.8, -0.8 - Math.random()); s.m.visible = true; }
+  }
 }
 
 // ---- src/zmnet.js ----
