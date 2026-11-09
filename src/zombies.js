@@ -961,7 +961,7 @@ function zmFrame(dt) {
     G.mods.lantern = m.lan ? 1 : 0.3;
     // (alone, the menu holds everything still; together, the night goes on)
     const live = (!FPS.menu || ZM.net) && !ZM.over;
-    if (live && !FPS.menu) fpsInput(dt); else { FPS.look = [0, 0]; m.walk = false; }
+    if (live && !FPS.menu) fpsInput(dt); else { FPS.look = [0, 0]; FPS.mlook = [0, 0]; m.walk = false; }
     if (live) {
       if (m.protect > 0) m.protect -= dt;
       // patched up quickly, if they leave you alone for a few seconds

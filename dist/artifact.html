@@ -957,6 +957,9 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 .lookrow { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-top: 12px; border-top: 1px solid var(--rule); padding-top: 12px; font-family: var(--log); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
 .lookrow[hidden] { display: none; }
 .lookrow label { flex: 1 1 100%; }
+.lookrow .smoothrow { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; cursor: pointer; min-height: 32px; }
+.lookrow .smoothrow input { width: 18px; height: 18px; accent-color: var(--lamp); }
+.lookrow .smoothrow small { flex: 1 1 100%; padding-left: 26px; text-transform: none; letter-spacing: 0; opacity: 0.8; }
 .lookrow .lookslider { flex: 1 1 200px; }
 </style>
 <div id="stage">
@@ -1455,6 +1458,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
         <label for="fpsLook">Look sensitivity <output id="fpsLookOut">1.00</output></label>
         <input id="fpsLook" class="lookslider" type="range" min="0.3" max="3" step="0.05" value="1">
         <button class="tool" id="fpsLookReset" type="button">Default</button>
+        <label class="smoothrow"><input id="fpsSmooth" type="checkbox" checked> Smooth look <small>(evens out a trackpad; off for the rawest mouse)</small></label>
       </div>
     </div>
   </div>
@@ -12221,7 +12225,7 @@ function fpsStop() {
 }
 function fpsSetMenu(on) {
   FPS.menu = on; $('fpsMenu').hidden = !on;
-  if (on) lookSync();
+  if (on) { lookSync(); const sb = $('fpsSmooth'); if (sb) sb.checked = FPS.smooth; FPS.mlook = [0, 0]; }
   if (on) { try { document.exitPointerLock && document.exitPointerLock(); } catch (e) {} setTimeout(() => $('fpsResume').focus(), 20); }
 }
 
@@ -12878,7 +12882,7 @@ function fpsFrame(dt) {
     FPS.scoreT = (FPS.scoreT || 0) + dt;
     if (FPS.scoreT > 5) { FPS.scoreT = 0; const mine = fpsScores().find(p => p.me); if (mine && typeof scoreReport === 'function') scoreReport('fps', mine.k, 0); }
     if (FPS.roundMsg) { FPS.roundMsg.t -= dt; if (FPS.roundMsg.t <= 0) FPS.roundMsg = null; }
-    if (!(FPS.vScare > 0)) fpsInput(dt); else { FPS.look = [0, 0]; m.walk = false; }
+    if (!(FPS.vScare > 0)) fpsInput(dt); else { FPS.look = [0, 0]; FPS.mlook = [0, 0]; m.walk = false; }
     if (typeof fpsVerityTick === 'function') fpsVerityTick(dt);
     if (m.dead > 0) { m.dead -= dt; if (m.dead <= 0) { fpsRespawn(m); fpsSend(); } }
     if (m.protect > 0) m.protect -= dt;
@@ -12925,6 +12929,13 @@ function fpsInput(dt) {
   const assist = FPS.touch && !FPS.scoped ? fpsAssistTarget() : null;
   if (assist) sens *= 0.8;
   if (FPS.scoped) sens /= fpsZoom();
+  // the mouse (or trackpad): what's come in since last frame is let out over a frame or two when look smoothing is on,
+  // so a trackpad's uneven run of movements (some frames two, some none) turns the view evenly
+  if (FPS.mlook) {
+    const k = FPS.smooth ? 1 - Math.exp(-dt / 0.032) : 1, ax = FPS.mlook[0] * k, ay = FPS.mlook[1] * k;
+    FPS.look[0] += ax; FPS.look[1] += ay; FPS.mlook[0] -= ax; FPS.mlook[1] -= ay;
+    if (Math.abs(FPS.mlook[0]) + Math.abs(FPS.mlook[1]) < 0.01) FPS.mlook = [0, 0];
+  }
   m.h = wrapPi(m.h + FPS.look[0] * sens); m.p = clamp(m.p - FPS.look[1] * sens, -0.6, 0.6);
   if (assist && aiming && !(m.dead > 0)) {
     m.h = wrapPi(m.h + clamp(assist.dh, -1, 1) * Math.min(1, dt * 1.1));
@@ -13490,9 +13501,19 @@ addEventListener('pointerdown', e => {
   if (e.button === 1 && FPS.zm) zmKnife();
 }, true);
 addEventListener('pointerup', e => { if (FPS.on && e.pointerType !== 'touch') { if (e.button === 2) fpsScope(false); else FPS.mouseDown = false; } }, true);
-addEventListener('wheel', e => { if (FPS.on && document.pointerLockElement === cv) { e.preventDefault(); FPS.wheel = (FPS.wheel || 0) + e.deltaY; if (Math.abs(FPS.wheel) > 60) { fpsCycle(FPS.wheel > 0 ? 1 : -1); FPS.wheel = 0; } } }, { passive: false });
+// (a trackpad's two-finger scroll runs on after the fingers stop: one weapon per swipe, not a whole run of them)
+addEventListener('wheel', e => { if (FPS.on && document.pointerLockElement === cv) { e.preventDefault(); const now = performance.now(); if (now < (FPS.wheelHold || 0)) { FPS.wheelHold = now + 180; return; } FPS.wheel = (FPS.wheel || 0) + e.deltaY; if (Math.abs(FPS.wheel) > 60) { fpsCycle(FPS.wheel > 0 ? 1 : -1); FPS.wheel = 0; FPS.wheelHold = now + 180; } } }, { passive: false });
 addEventListener('contextmenu', e => { if (FPS.on && e.target === cv) e.preventDefault(); }, true);
-addEventListener('mousemove', e => { if (FPS.on && document.pointerLockElement === cv && !FPS.menu) { FPS.look[0] += e.movementX; FPS.look[1] += e.movementY; } });
+addEventListener('mousemove', e => {
+  if (!(FPS.on && document.pointerLockElement === cv && !FPS.menu)) return;
+  const dx = e.movementX || 0, dy = e.movementY || 0;
+  // (some browsers throw in a single wild jump now and then under pointer lock: one far past anything a hand does is dropped)
+  if (Math.abs(dx) > 400 || Math.abs(dy) > 400) return;
+  if (!FPS.mlook) FPS.mlook = [0, 0];
+  FPS.mlook[0] += dx; FPS.mlook[1] += dy;
+});
+// look smoothing (on unless turned off in the menu; remembered)
+try { FPS.smooth = localStorage.getItem('skerry-fps-smooth') !== '0'; } catch (e) { FPS.smooth = true; }
 document.addEventListener('pointerlockchange', () => { FPS.mouse = document.pointerLockElement === cv; if (FPS.on && !FPS.mouse) FPS.mouseDown = false; });
 // touch: the left half of the screen is a stick to walk with, the right half drags to look
 addEventListener('touchstart', e => {
@@ -13536,6 +13557,7 @@ $('fpsResume').addEventListener('click', () => fpsSetMenu(false));
 $('fpsLeave').addEventListener('click', fpsStop);
 // the menu's Options: the look sensitivity slider (the same setting as on the Settings card)
 // (the menu's look sensitivity slider is on its first page: the same setting as on the Settings card; lookSync on opening)
+{ const sb = $('fpsSmooth'); if (sb) { sb.checked = FPS.smooth; sb.addEventListener('change', () => { FPS.smooth = sb.checked; FPS.mlook = [0, 0]; try { localStorage.setItem('skerry-fps-smooth', sb.checked ? '1' : '0'); } catch (e) {} }); } }
 { const vb = $('fpsViewBtn'), lab = () => { vb.textContent = FPS.third ? 'View: over the shoulder' : 'View: first person'; }; lab(); vb.addEventListener('click', () => { fpsToggleView(); lab(); }); FPS.viewLabel = lab; }
 for (const [id, fn] of [['fpsPadWeapon', () => fpsCycle(1)], ['fpsPadScope', () => fpsScope(!FPS.scoped)], ['fpsPadReload', fpsReload], ['fpsPadLantern', fpsLantern], ['fpsPadFlare', fpsFlare], ['fpsPadBell', fpsBell], ['fpsPadJump', fpsJump], ['fpsPadView', fpsToggleView], ['fpsPadMenu', () => fpsSetMenu(true)], ['fpsPadBoard', () => { FPS.board = !FPS.board; }]]) {
   $(id).addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); fn(); });
@@ -17508,7 +17530,7 @@ function zmFrame(dt) {
     G.mods.lantern = m.lan ? 1 : 0.3;
     // (alone, the menu holds everything still; together, the night goes on)
     const live = (!FPS.menu || ZM.net) && !ZM.over;
-    if (live && !FPS.menu) fpsInput(dt); else { FPS.look = [0, 0]; m.walk = false; }
+    if (live && !FPS.menu) fpsInput(dt); else { FPS.look = [0, 0]; FPS.mlook = [0, 0]; m.walk = false; }
     if (live) {
       if (m.protect > 0) m.protect -= dt;
       // patched up quickly, if they leave you alone for a few seconds
