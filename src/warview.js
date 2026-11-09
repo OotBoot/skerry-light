@@ -9,6 +9,7 @@ const WV = {
 
 // ---------- colours ----------
 function wvRgb(hsl) {
+  if (/^#[0-9a-f]{6}$/i.test(hsl)) { const v = parseInt(hsl.slice(1), 16); return [(v >> 16) & 255, (v >> 8) & 255, v & 255]; }
   const m = /hsl\((\d+),(\d+)%,(\d+)%\)/.exec(hsl); if (!m) return [200, 200, 200];
   const h = +m[1] / 360, s = +m[2] / 100, l = +m[3] / 100;
   const q = l < 0.5 ? l * (1 + s) : l + s - l * s, p = 2 * l - q;
@@ -40,6 +41,15 @@ function wvLayers() {
   WV.own = document.createElement('canvas'); WV.own.width = W; WV.own.height = H; WV.ownG = WV.own.getContext('2d'); WV.ownImg = WV.ownG.createImageData(W, H);
   WV.night = document.createElement('canvas'); WV.night.width = W; WV.night.height = H; WV.nightG = WV.night.getContext('2d'); WV.nightImg = WV.nightG.createImageData(W, H);
   WV.cols = WAR.nations.map(n => wvRgb(n.col));
+  // banners: a painter for each nation flying one (rcrates.js), and a soft layer for the glowing ones' borders
+  WV.paint = WAR.nations.map(n => n.skin && typeof rcPainter === 'function' ? rcPainter(rcSkin(n.skin)) : null);
+  WV.glowSkins = WAR.nations.map(n => n.skin && typeof rcSkin === 'function' && rcSkin(n.skin) && rcSkin(n.skin).glow ? rcSkin(n.skin) : null);
+  WV.anyGlow = WV.glowSkins.some(Boolean);
+  if (WV.anyGlow) for (const [k, f] of [['glowA', 2], ['glowB', 4]]) {
+    const c = document.createElement('canvas'); c.width = Math.ceil(W / f); c.height = Math.ceil(H / f);
+    WV[k] = { c, g: c.getContext('2d'), img: null, f };
+    WV[k].img = WV[k].g.createImageData(c.width, c.height);
+  }
 }
 // ---------- the fog of war ----------
 // By day you see everything. At night you see only what's lit (the beam, beacons, flares, harbour lights) and the
@@ -61,18 +71,44 @@ function wvVision() {
 const wvSees = i => !WV.fog || (i >= 0 && WV.vis && WV.vis[i] === 1);
 function wvOwners() {
   const W = WARC.W, H = WARC.H, d = WV.ownImg.data, me = WAR.me;
-  const own = WV.fog ? WV.seen2 : WAR.owner;
+  const own = WV.fog ? WV.seen2 : WAR.owner, paint = WV.paint || [], P = [0, 0, 0];
+  const t = reduceMotion ? 0 : performance.now() / 1000;
+  // the glow layers (only when someone flies a glowing banner): cleared, then each glowing border tile marks them
+  const GA = WV.anyGlow ? WV.glowA : null, GB = WV.anyGlow ? WV.glowB : null;
+  if (GA) { GA.img.data.fill(0); GB.img.data.fill(0); }
   for (let i = 0; i < W * H; i++) {
     const o = own[i], k = i * 4;
     if (o === -1 || !warIsLand(i)) { d[k + 3] = 0; continue; }
     if (o === WARC.DR) { d[k] = 40; d[k + 1] = 70; d[k + 2] = 66; d[k + 3] = 215; continue; }
     const c = WV.cols[o]; let border = false;
     const x = i % W; if (x > 0 && own[i - 1] !== o) border = true; else if (x < W - 1 && own[i + 1] !== o) border = true; else if (i >= W && own[i - W] !== o) border = true; else if (i < W * (H - 1) && own[i + W] !== o) border = true;
+    const pf = paint[o];
+    if (pf) {
+      // a banner: its own colours, a little more solid than plain land so the pattern reads
+      pf(x, (i / W) | 0, t, border, P);
+      d[k] = P[0]; d[k + 1] = P[1]; d[k + 2] = P[2]; d[k + 3] = border ? 245 : 185;
+      if (border && GA && WV.glowSkins[o]) {
+        const gs = WV.glowSkins[o], gc = pf.glow, y = (i / W) | 0;
+        for (const L of [GA, GB]) { const q = ((y / L.f | 0) * L.c.width + (x / L.f | 0)) * 4, gd = L.img.data; gd[q] = gc[0]; gd[q + 1] = gc[1]; gd[q + 2] = gc[2]; gd[q + 3] = gs.rarity === 'admiral' ? 230 : 170; }
+      }
+      continue;
+    }
     const a = border ? 240 : 140, f = border ? 1.0 : 0.85;
     d[k] = c[0] * f; d[k + 1] = c[1] * f; d[k + 2] = c[2] * f; d[k + 3] = a;
     if (o === me && border) { d[k] = Math.min(255, c[0] * 1.15 + 20); d[k + 1] = Math.min(255, c[1] * 1.15 + 20); d[k + 2] = Math.min(255, c[2] * 1.15 + 20); }
   }
   WV.ownG.putImageData(WV.ownImg, 0, 0);
+  if (GA) { GA.g.putImageData(GA.img, 0, 0); GB.g.putImageData(GB.img, 0, 0); }
+}
+// the glowing banners: their borders' light, soft and wide, pulsing (drawn over the land, under everything else)
+function wvDrawGlow(ox, oy, z) {
+  if (!WV.anyGlow || !WV.glowA) return;
+  const t = reduceMotion ? 0 : performance.now() / 1000;
+  let k = 0; for (const s of WV.glowSkins) if (s) k = Math.max(k, rcGlowAt(s, t));
+  ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.imageSmoothingEnabled = true;
+  ctx.globalAlpha = 0.22 * k; ctx.drawImage(WV.glowB.c, ox - 1.5 * z, oy - 1.5 * z, WV.glowB.c.width * WV.glowB.f * z, WV.glowB.c.height * WV.glowB.f * z);
+  ctx.globalAlpha = 0.38 * k; ctx.drawImage(WV.glowA.c, ox - z * 0.5, oy - z * 0.5, WV.glowA.c.width * WV.glowA.f * z, WV.glowA.c.height * WV.glowA.f * z);
+  ctx.restore();
 }
 function wvNight(dark) {
   const d = WV.nightImg.data, lit = WAR.lit, vis = WV.vis, fog = WV.fog, rng = WV.fogNoise || (WV.fogNoise = (() => { const a = new Uint8Array(WARC.W * WARC.H); for (let i = 0; i < a.length; i++) a[i] = (Math.random() * 30) | 0; return a; })());
@@ -130,7 +166,7 @@ function warDraw(dt) {
   if (fog) wvVision(); else WV.seenInit = false;
   if (fog && !WV.fogSaid) { WV.fogSaid = true; warLog('Night falls. Fog covers the Reach; only the Light\u2019s beam and your own lights show what the others are doing.'); }
   if (!fog) WV.fogSaid = false;
-  wvOwners(); ctx.drawImage(WV.own, ox, oy, WARC.W * z, WARC.H * z);
+  wvOwners(); ctx.drawImage(WV.own, ox, oy, WARC.W * z, WARC.H * z); wvDrawGlow(ox, oy, z);
   if (dark > 0.01) { wvNight(dark); ctx.drawImage(WV.night, ox, oy, WARC.W * z, WARC.H * z); }
   ctx.imageSmoothingEnabled = true;
   // the beam: the Light is dark by day; at night a wide wedge sweeps out from it, and shows everything it crosses

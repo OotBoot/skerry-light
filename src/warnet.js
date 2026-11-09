@@ -44,7 +44,7 @@ function wnPeers(code) {
 }
 function wnMembers() { return WN.code ? wnPeers(WN.code).slice(0, WN_MAX) : []; }
 function wnAmHost() { const m = wnMembers(); return !!m.length && m[0].isMe && m[0].sameTab; }
-function wnBase() { return { room: WN.code, sid: NET.sid, nick: wnNick(), at: WN.at }; }
+function wnBase() { return { room: WN.code, sid: NET.sid, nick: wnNick(), at: WN.at, sk: typeof rcEquippedId === 'function' ? rcEquippedId() : '' }; }
 function wnSend(w) { if (NET.room) NET.room.presence({ war: w }).catch(() => {}); }
 function wnSendLobby() {
   if (!WN.code) return;
@@ -136,7 +136,7 @@ function wnStart() {
   const m = wnMembers();
   const seedIn = ($('warSeed').value || '').trim();
   let seed = 0; if (seedIn) { for (let i = 0; i < seedIn.length; i++) seed = (seed * 31 + seedIn.charCodeAt(i)) >>> 0; } else seed = (Math.random() * 4294967295) >>> 0;
-  const st = { g: Math.random().toString(36).slice(2, 9), seed, b: clamp(+$('warMpBots').value | 0, 0, 50), d: WAR_DIFF[$('warDiff').value] ? $('warDiff').value : 'normal', hum: m.map(p => [String(wnWar(p).sid), wnClean(wnWar(p).nick || '').slice(0, 18) || 'A house']) };
+  const st = { g: Math.random().toString(36).slice(2, 9), seed, b: clamp(+$('warMpBots').value | 0, 0, 50), d: WAR_DIFF[$('warDiff').value] ? $('warDiff').value : 'normal', hum: m.map(p => [String(wnWar(p).sid), wnClean(wnWar(p).nick || '').slice(0, 18) || 'A house', typeof rcSkin === 'function' && rcSkin(wnWar(p).sk) ? wnWar(p).sk : '']) };
   if (st.b + st.hum.length < 2) st.b = 1;   // someone to fight
   wnBegin(st, 0, 'host');
 }
@@ -146,7 +146,7 @@ function wnBegin(st, me, role) {
   WN.lastSeq = st.hum.map(() => 0); WN.seenT = st.hum.map(() => performance.now());
   WN.seq = 0; WN.q = []; WN.lastH = -1; WN.lastHostT = performance.now(); WN.logId = 0; WN.ready = false; WN.gone = false; WN.relT = 0; WN.survT = 0;
   warEnter();
-  warStart(st.b, st.seed, st.d, { humans: st.hum.map(h => h[1]), me, net: role });
+  warStart(st.b, st.seed, st.d, { humans: st.hum.map(h => h[1]), skins: st.hum.map(h => h[2] || ''), me, net: role });
   warViewStart();
   if (role === 'client') wnSendClient();
 }
@@ -162,7 +162,7 @@ function warNetPeers() {
     if (h && !(h.isMe && h.sameTab) && hw.st && hw.st.g && hw.st.g !== WN.doneG && Array.isArray(hw.st.hum)) {
       const k = hw.st.hum.findIndex(x => Array.isArray(x) && x[0] === NET.sid);
       if (k >= 0) {
-        const st = { g: String(hw.st.g), seed: hw.st.seed >>> 0, b: clamp(hw.st.b | 0, 0, 50), d: WAR_DIFF[hw.st.d] ? hw.st.d : 'normal', hum: hw.st.hum.slice(0, WN_MAX).map(x => [String(x[0]), wnClean(String(x[1] || '')).slice(0, 18) || 'A house']) };
+        const st = { g: String(hw.st.g), seed: hw.st.seed >>> 0, b: clamp(hw.st.b | 0, 0, 50), d: WAR_DIFF[hw.st.d] ? hw.st.d : 'normal', hum: hw.st.hum.slice(0, WN_MAX).map(x => [String(x[0]), wnClean(String(x[1] || '')).slice(0, 18) || 'A house', typeof rcSkin === 'function' && rcSkin(x[2]) ? x[2] : '']) };
         wnBegin(st, k, 'client'); return;
       }
       WN.doneG = hw.st.g; WN.msg = 'The war started without you. Host your own, or wait for the next.';

@@ -149,6 +149,17 @@ The Reach's own rules carry over. The Light stands on its rock in the middle. By
 
 Keys: drag or arrows pan, wheel or +/- zoom, Q/E the share, H harbour, T tower, G beacon, F flare, X fire-ship, B bell, Space pause, 1/2/3 speed, Enter land now, Tab the leaderboard on a phone, Esc menu. On a phone: drag to pan, pinch to zoom, tap to order.
 
+### Banner crates
+
+`src/rcrates.js`. **Banner crates** on the Drowned Reach card open the Herald's Crate: banners that paint your land on the map, which everyone you play with sees too. Same grades, odds, reel, Open all and duplicate counts as the other crates (gold in the reel is always your prize), and the same spread: 3 Deckhand, 2 Bosun, 2 Mate, 2 Captain, 1 Admiral, plus your nation's own colour, which everyone has.
+- **Deckhand:** a colour or a simple pattern (Harbour Slate, Sailcloth Stripes, Kelp Check).
+- **Bosun:** a richer pattern with a lit edge along your borders (Tartan of the Isles, Herring Scale).
+- **Mate:** the pattern moves (Running Tide, Phosphor Bloom).
+- **Captain:** it moves, and your borders glow, pulsing (Ember Coast, Northern Lights).
+- **Admiral:** The Keeper's Beam: shifting gold with the Light's beam sweeping across it, sparkles, and the brightest glow.
+
+You earn one for every 400 tiles you take (the count carries over between wars), one for each war you see through (three minutes or more), and three for a win; the first is free. Kept in this browser (`skerry-rcrates`), apart from the boat and weapon crates. Playing together, each player's banner travels with them through the lobby.
+
 ### The Drowned Reach, together
 
 `src/warnet.js`. Under the solo setup on the title card is **Play together**: host a war, and anyone else with the page open sees it listed and can join, up to ten players. The host picks how many bot nations (none to fifty) and how they play, and starts whenever they like, alone or with everyone in the lobby. Everyone chooses a landing and taps Ready; all land together when everyone is ready or the clock runs out. Players can offer each other pacts (each offer waits half a minute for an answer) as well as the bots. The war runs at 1× and doesn't pause, and it ends for everyone when one nation holds six tenths of the land or stands alone (or no player is left). A player who leaves for more than 25 seconds hands their nation to a bot; if the host leaves, the war ends.

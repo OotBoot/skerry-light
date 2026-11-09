@@ -215,6 +215,9 @@ function warStart(nBots, seed, diff, opts) {
   for (let k = 0; k < H0; k++) WAR.nations.push(warNation(k, String(humans[k]).slice(0, 18) || 'House ' + (k + 1), true, rng));
   for (let k = 0; k < nBots; k++) WAR.nations.push(warNation(H0 + k, pickName(), false, rng));
   WAR.me = clamp(opts.me | 0, 0, H0 - 1); WAR.nations[WAR.me].isMe = true;
+  // banners (rcrates.js): each player's land in the colours of the banner they fly
+  const skins = opts.skins || (typeof rcEquippedId === 'function' ? [rcEquippedId()] : []);
+  for (let k = 0; k < H0; k++) { const sk = typeof rcSkin === 'function' ? rcSkin(skins[k]) : null; WAR.nations[k].skin = sk ? sk.id : null; if (sk) WAR.nations[k].col = sk.base; }
   const N = WAR.nations.length;
   for (const n of WAR.nations) { n.rel = new Float32Array(N); for (let k = 0; k < N; k++) n.rel[k] = k === n.id ? 1 : (rng() - 0.5) * 0.4; }
   // the bots land now, spaced out; you choose yours (or get one when the time runs out)
@@ -867,6 +870,7 @@ function warFinish(how, by) {
   const me = WAR.nations[WAR.me], st = warLoadStats();
   st.games = (st.games || 0) + 1; if (how === 'won') st.wins = (st.wins || 0) + 1; st.bestTiles = Math.max(st.bestTiles || 0, me.taken); st.bestDays = Math.max(st.bestDays || 0, WAR.day);
   warSaveStats(st);
+  if (typeof rcEarn === 'function') rcEarn('war', { won: how === 'won', t: WAR.t });   // banner crates (src/rcrates.js)
   if (typeof scoreReport === 'function') scoreReport('war', st.wins || 0, st.bestTiles || 0);   // the scoreboard (src/scores.js)
   WAR.result = { how, by: by ? by.name : null, days: WAR.day, taken: me.taken, kills: me.kills, boats: WAR.stats.boats, tiles: me.tiles, share: me.tiles / WAR.landTiles };
   WAR.spectate = how !== 'won';

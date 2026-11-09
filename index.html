@@ -159,6 +159,7 @@
       </div>
       <div class="btnrow">
         <button class="primary" id="warPlay" type="button">Make landfall</button>
+        <button class="tool rcrateBtn" id="rcrateBtn" type="button">Banner crates</button>
       </div>
       <p class="muted" id="warRecord"></p>
       <section class="warmp" id="warMp" aria-labelledby="warMpHead">
@@ -417,6 +418,23 @@
     </div>
   </div>
 
+  <div class="overlay cratecard wcratecard rcratecard" id="rcrateCard" hidden role="dialog" aria-modal="true" aria-labelledby="rcrateHead">
+    <div class="card">
+      <div class="cardtop sticky"><span class="eyebrow">The Drowned Reach · the herald</span><button class="tool closebtn" id="rcrateClose" type="button">✕ Close</button></div>
+      <h1 id="rcrateHead">Banner Crates</h1>
+      <p>Banners for your land: the colours your nation's land shows on the map, to you and to everyone you play with. The better the grade, the more it does: Mate banners move, Captain banners move and glow along your borders, and the Admiral's banner has the Light's own beam sweeping over it. You earn a Herald's Crate for every 400 tiles you take, one for each war you see through, and three for a win. Same grades and odds as the other crates: if you see gold in the reel, it's yours.</p>
+      <div class="wcprogress"><span id="rcProgress"></span><i id="rcBar" aria-hidden="true"></i></div>
+      <h2 class="invh">Crate inventory</h2>
+      <div class="cratetypes" id="rcTypes"></div>
+      <div class="reel" id="rcReel"><div class="strip" id="rcStrip"></div><div class="marker" aria-hidden="true"></div></div>
+      <div class="result" id="rcResult" hidden aria-live="polite"></div>
+      <ul class="odds" id="rcOdds" aria-label="Chances for each grade"></ul>
+      <h2 class="invh">Your banners</h2>
+      <span class="eyebrow" id="rcCollected"></span>
+      <div class="inv" id="rcInv"></div>
+    </div>
+  </div>
+
   <div class="overlay pausecard" id="fpsMenu" hidden role="dialog" aria-modal="true" aria-labelledby="fpsMenuHead">
     <div class="card">
       <span class="eyebrow">Wreckers' Night carries on without you</span>
@@ -508,6 +526,7 @@
 <script src="src/war.js"></script>
 <script src="src/warview.js"></script>
 <script src="src/warnet.js"></script>
+<script src="src/rcrates.js"></script>
 <script src="src/scores.js"></script>
 <script src="src/wcrates.js"></script>
 <script src="src/main.js"></script>
