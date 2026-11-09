@@ -202,6 +202,8 @@ function fpsStop() {
 }
 function fpsSetMenu(on) {
   FPS.menu = on; $('fpsMenu').hidden = !on;
+  // (always opens on its first page; a controller starts on Resume)
+  $('fpsMenuMain').hidden = false; $('fpsMenuPad').hidden = true; $('fpsMenuHead').textContent = 'Menu'; FPS.menuPadWas = null; fpsMenuMark(null);
   if (on) { lookSync(); const sb = $('fpsSmooth'); if (sb) sb.checked = FPS.smooth; FPS.mlook = [0, 0]; }
   if (on) { try { document.exitPointerLock && document.exitPointerLock(); } catch (e) {} setTimeout(() => $('fpsResume').focus(), 20); }
 }
@@ -860,6 +862,7 @@ function fpsFrame(dt) {
     if (FPS.scoreT > 5) { FPS.scoreT = 0; const mine = fpsScores().find(p => p.me); if (mine && typeof scoreReport === 'function') scoreReport('fps', mine.k, 0); }
     if (FPS.roundMsg) { FPS.roundMsg.t -= dt; if (FPS.roundMsg.t <= 0) FPS.roundMsg = null; }
     if (!(FPS.vScare > 0)) fpsInput(dt); else { FPS.look = [0, 0]; FPS.mlook = [0, 0]; m.walk = false; }
+    if (FPS.menu) fpsMenuPad(dt);
     if (typeof fpsVerityTick === 'function') fpsVerityTick(dt);
     if (m.dead > 0) { m.dead -= dt; if (m.dead <= 0) { fpsRespawn(m); fpsSend(); } }
     if (m.protect > 0) m.protect -= dt;
@@ -921,20 +924,31 @@ function fpsInput(dt) {
   FPS.lastLook = FPS.look; FPS.look = [0, 0];
   let fx = 0, fz = 0, fire = false;
   const pad = navigator.getGamepads ? [...navigator.getGamepads()].find(p => p && p.connected) : null;
-  if (pad) {
+  if (pad && FPS.menu) { FPS.padWas = {}; for (let i = 0; i < pad.buttons.length; i++) FPS.padWas[i] = !!(pad.buttons[i] && pad.buttons[i].pressed); }
+  else if (pad) {
     const dz = v => Math.abs(v) < 0.15 ? 0 : v;
     fx += dz(pad.axes[0] || 0); fz -= dz(pad.axes[1] || 0);
-    const pk = lookK() * (FPS.scoped ? 1 / fpsZoom() : 1);
+    // (the controller's own look sensitivity, and its own while aiming: the Controller page of the menu)
+    const pk = FPS.padLookK * (FPS.scoped ? FPS.padAdsK / fpsZoom() : 1);
     m.h = wrapPi(m.h + dz(pad.axes[2] || 0) * dt * 3.5 * pk); m.p = clamp(m.p - dz(pad.axes[3] || 0) * dt * 2.4 * pk, -0.6, 0.6);
     const b = i => pad.buttons[i] && pad.buttons[i].pressed, was = FPS.padWas || {};
     if (b(7)) fire = true;
     FPS.padFire = b(7);
     fpsScope(b(6));
     const tap = (i, fn) => { if (b(i) && !was[i]) fn(); };
-    tap(0, fpsJump); tap(11, FPS.zm ? zmKnife : fpsToggleView); if (FPS.zm) tap(13, fpsToggleView); tap(2, fpsReload); tap(5, () => fpsCycle(1)); tap(14, () => fpsCycle(-1)); tap(15, () => fpsCycle(1)); tap(3, fpsLantern); tap(1, FPS.zm ? zmUse : fpsFlare); if (!FPS.zm) tap(4, fpsBell); tap(9, () => fpsSetMenu(!FPS.menu)); tap(8, () => { FPS.board = !FPS.board; });
-    FPS.padUse = FPS.zm && b(1);
+    // X reloads; in the Lighthouse, with something in front of you to use, it uses it instead (B uses too)
+    const xUse = () => FPS.zm && ZM.near && !(FPS.me.dead > 0);
+    tap(0, fpsJump); tap(11, FPS.zm ? zmKnife : fpsToggleView); if (FPS.zm) tap(13, fpsToggleView); tap(2, () => { if (xUse()) zmUse(); else fpsReload(); }); tap(5, () => fpsCycle(1)); tap(14, () => fpsCycle(-1)); tap(15, () => fpsCycle(1)); tap(3, fpsLantern); tap(1, FPS.zm ? zmUse : fpsFlare); if (!FPS.zm) tap(4, fpsBell); tap(9, () => fpsSetMenu(!FPS.menu)); tap(8, () => { FPS.board = !FPS.board; });
+    FPS.padUse = FPS.zm && (b(1) || (b(2) && ZM.near && (ZM.near.k === 'win' || ZM.near.k === 'rev')));
+    // a click of the left stick sprints until you stop (or aim); holding it down does too
+    if (b(10) && !was[10]) { FPS.padRun = !FPS.padRun; FPS.padStill = 0; }
+    const lm = Math.hypot(pad.axes[0] || 0, pad.axes[1] || 0);
+    FPS.padStill = lm < 0.25 ? (FPS.padStill || 0) + dt : 0;
+    if (FPS.padStill > 0.3 || FPS.scoped || m.dead > 0) FPS.padRun = false;
+    FPS.padSprint = FPS.padRun || b(10);
+    // (the last thing touched was the controller: the prompts name its buttons)
+    if (pad.buttons.some(x => x && x.pressed) || lm > 0.4 || Math.hypot(pad.axes[2] || 0, pad.axes[3] || 0) > 0.4) FPS.padLast = true;
     FPS.padWas = {}; for (let i = 0; i < pad.buttons.length; i++) FPS.padWas[i] = b(i);
-    FPS.padSprint = b(10);
   }
   if (K.KeyW || K.ArrowUp) fz += 1; if (K.KeyS || K.ArrowDown) fz -= 1;
   if (K.KeyD) fx += 1; if (K.KeyA) fx -= 1;
@@ -1455,7 +1469,7 @@ addEventListener('keydown', e => {
   if (e.code === 'Escape' || e.code === 'KeyP') { e.preventDefault(); fpsSetMenu(!FPS.menu); return; }
   if (FPS.menu) return;
   if (e.code === 'Tab') { e.preventDefault(); FPS.board = true; return; }
-  FPS.keys[e.code] = true;
+  FPS.keys[e.code] = true; FPS.padLast = false;
   const keyFn = FPS.zm && e.code in ZM_KEYS ? ZM_KEYS[e.code] : FPS_KEYS[e.code];
   if (!e.repeat && keyFn) { e.preventDefault(); keyFn(); }
   if (e.code.startsWith('Arrow') || e.code === 'Space') e.preventDefault();
@@ -1486,11 +1500,46 @@ addEventListener('mousemove', e => {
   const dx = e.movementX || 0, dy = e.movementY || 0;
   // (some browsers throw in a single wild jump now and then under pointer lock: one far past anything a hand does is dropped)
   if (Math.abs(dx) > 400 || Math.abs(dy) > 400) return;
+  if (Math.abs(dx) + Math.abs(dy) > 2) FPS.padLast = false;
   if (!FPS.mlook) FPS.mlook = [0, 0];
   FPS.mlook[0] += dx; FPS.mlook[1] += dy;
 });
 // look smoothing (on unless turned off in the menu; remembered)
 try { FPS.smooth = localStorage.getItem('skerry-fps-smooth') !== '0'; } catch (e) { FPS.smooth = true; }
+FPS.padLookK = 1; FPS.padAdsK = 1;
+try { FPS.padLookK = clamp(+localStorage.getItem('skerry-pad-look') || 1, 0.3, 3); FPS.padAdsK = clamp(+localStorage.getItem('skerry-pad-ads') || 1, 0.2, 2); } catch (e) {}
+// the menu with a controller: D-pad or left stick to move between its buttons and sliders, left and right to slide,
+// A to choose (or tick), B back (or out of the menu), Start out of the menu
+function fpsMenuMark(el) {
+  if (FPS.menuCur && FPS.menuCur !== el) FPS.menuCur.classList.remove('padfocus');
+  FPS.menuCur = el; if (el) { el.classList.add('padfocus'); try { el.focus({ preventScroll: true }); } catch (e) {} el.scrollIntoView({ block: 'nearest' }); }
+}
+function fpsMenuPad(dt) {
+  const pad = navigator.getGamepads ? [...navigator.getGamepads()].find(p => p && p.connected) : null;
+  if (!pad) return;
+  const now = pad.buttons.map(x => !!(x && x.pressed)), was = FPS.menuPadWas; FPS.menuPadWas = now;
+  FPS.padWas = {}; now.forEach((v, i) => { FPS.padWas[i] = v; });   // (so nothing held as it closes fires in the game)
+  if (!was) return;   // (whatever was held as the menu came up doesn't count)
+  const down = i => now[i] && !was[i];
+  const onPad = !$('fpsMenuPad').hidden, root = onPad ? $('fpsMenuPad') : $('fpsMenuMain');
+  const items = [...root.querySelectorAll('button, input')].filter(el => el.offsetParent !== null && !el.disabled);
+  if (!items.length) return;
+  if (!items.includes(FPS.menuCur)) { if (now.some(Boolean) || Math.abs(pad.axes[1] || 0) > 0.6) fpsMenuMark(items[0]); else return; }
+  const cur = FPS.menuCur, ax = pad.axes[0] || 0, ay = pad.axes[1] || 0;
+  const dy = now[13] || ay > 0.6 ? 1 : now[12] || ay < -0.6 ? -1 : 0, dx = dy ? 0 : now[15] || ax > 0.6 ? 1 : now[14] || ax < -0.6 ? -1 : 0;
+  const key = dx + ',' + dy;
+  let go = false;
+  if (key === '0,0') FPS.menuHeld = null;
+  else if (key !== FPS.menuHeld) { FPS.menuHeld = key; FPS.menuNavT = 0.35; go = true; }
+  else { FPS.menuNavT -= dt; if (FPS.menuNavT <= 0) { FPS.menuNavT = cur.type === 'range' && dx ? 0.06 : 0.12; go = true; } }
+  if (go) {
+    if (cur.type === 'range' && dx) { const st = +cur.step || 0.05; cur.value = clamp(+cur.value + dx * st, +cur.min, +cur.max); cur.dispatchEvent(new Event('input', { bubbles: true })); }
+    else { const i = items.indexOf(cur), n = items.length; fpsMenuMark(items[(i + (dy || dx) + n) % n]); }
+  }
+  if (down(0)) { const el = FPS.menuCur; if (el.type === 'checkbox') { el.checked = !el.checked; el.dispatchEvent(new Event('change', { bubbles: true })); } else if (el.type !== 'range') el.click(); }
+  if (down(1)) { if (onPad) FPS.menuPage(false); else fpsSetMenu(false); }
+  if (down(9)) fpsSetMenu(false);
+}
 document.addEventListener('pointerlockchange', () => { FPS.mouse = document.pointerLockElement === cv; if (FPS.on && !FPS.mouse) FPS.mouseDown = false; });
 // touch: the left half of the screen is a stick to walk with, the right half drags to look
 addEventListener('touchstart', e => {
@@ -1534,6 +1583,21 @@ $('fpsResume').addEventListener('click', () => fpsSetMenu(false));
 $('fpsLeave').addEventListener('click', fpsStop);
 // the menu's Options: the look sensitivity slider (the same setting as on the Settings card)
 // (the menu's look sensitivity slider is on its first page: the same setting as on the Settings card; lookSync on opening)
+// the menu's Controller page: the controller's look sensitivity, and how much of it is left while aiming (remembered)
+{
+  const L = $('fpsPadLook'), A = $('fpsPadAds');
+  const sync = () => { L.value = FPS.padLookK; A.value = FPS.padAdsK; $('fpsPadLookOut').textContent = FPS.padLookK.toFixed(2); $('fpsPadAdsOut').textContent = FPS.padAdsK.toFixed(2); };
+  const save = () => { try { localStorage.setItem('skerry-pad-look', String(FPS.padLookK)); localStorage.setItem('skerry-pad-ads', String(FPS.padAdsK)); } catch (e) {} sync(); };
+  L.addEventListener('input', () => { FPS.padLookK = clamp(+L.value || 1, 0.3, 3); save(); });
+  A.addEventListener('input', () => { FPS.padAdsK = clamp(+A.value || 1, 0.2, 2); save(); });
+  $('fpsPadLookReset').addEventListener('click', () => { FPS.padLookK = 1; save(); });
+  $('fpsPadAdsReset').addEventListener('click', () => { FPS.padAdsK = 1; save(); });
+  const page = pad => { $('fpsMenuHead').textContent = pad ? 'Controller' : 'Menu'; $('fpsMenuMain').hidden = pad; $('fpsMenuPad').hidden = !pad; sync(); fpsMenuMark(null); (pad ? $('fpsPadBack') : $('fpsPadBtn')).focus({ preventScroll: true }); };
+  $('fpsPadBtn').addEventListener('click', () => page(true));
+  $('fpsPadBack').addEventListener('click', () => page(false));
+  FPS.menuPage = page;
+  sync();
+}
 { const sb = $('fpsSmooth'); if (sb) { sb.checked = FPS.smooth; sb.addEventListener('change', () => { FPS.smooth = sb.checked; FPS.mlook = [0, 0]; try { localStorage.setItem('skerry-fps-smooth', sb.checked ? '1' : '0'); } catch (e) {} }); } }
 { const vb = $('fpsViewBtn'), lab = () => { vb.textContent = FPS.third ? 'View: over the shoulder' : 'View: first person'; }; lab(); vb.addEventListener('click', () => { fpsToggleView(); lab(); }); FPS.viewLabel = lab; }
 for (const [id, fn] of [['fpsPadWeapon', () => fpsCycle(1)], ['fpsPadScope', () => fpsScope(!FPS.scoped)], ['fpsPadReload', fpsReload], ['fpsPadLantern', fpsLantern], ['fpsPadFlare', fpsFlare], ['fpsPadBell', fpsBell], ['fpsPadJump', fpsJump], ['fpsPadView', fpsToggleView], ['fpsPadMenu', () => fpsSetMenu(true)], ['fpsPadBoard', () => { FPS.board = !FPS.board; }]]) {

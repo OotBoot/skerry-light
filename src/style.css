@@ -951,6 +951,10 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 .lookrow { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-top: 12px; border-top: 1px solid var(--rule); padding-top: 12px; font-family: var(--log); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
 .lookrow[hidden] { display: none; }
 .lookrow label { flex: 1 1 100%; }
+.padmap { list-style: none; margin: 14px 0 4px; padding: 12px 0 0; border-top: 1px solid var(--rule); font-family: var(--log); font-size: 12px; line-height: 1.7; color: var(--muted); }
+.padmap b { color: var(--ink, #ece4cf); font-weight: 600; }
+.lookrow small { text-transform: none; letter-spacing: 0; opacity: 0.8; }
+#fpsMenu .padfocus { outline: 3px solid var(--lamp); outline-offset: 3px; }
 .lookrow .smoothrow { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; cursor: pointer; min-height: 32px; }
 .lookrow .smoothrow input { width: 18px; height: 18px; accent-color: var(--lamp); }
 .lookrow .smoothrow small { flex: 1 1 100%; padding-left: 26px; text-transform: none; letter-spacing: 0; opacity: 0.8; }

@@ -498,9 +498,11 @@
     <div class="card">
       <span class="eyebrow">Wreckers' Night carries on without you</span>
       <h1 id="fpsMenuHead">Menu</h1>
+      <div id="fpsMenuMain">
       <div class="btnrow">
         <button class="primary" id="fpsResume" type="button">Back to the fight</button>
         <button class="tool" id="fpsViewBtn" type="button">View: first person</button>
+        <button class="tool" id="fpsPadBtn" type="button">Controller</button>
         <button class="tool" id="fpsLeave" type="button">Leave the island</button>
       </div>
       <div class="lookrow" id="fpsOpts">
@@ -508,6 +510,28 @@
         <input id="fpsLook" class="lookslider" type="range" min="0.3" max="3" step="0.05" value="1">
         <button class="tool" id="fpsLookReset" type="button">Default</button>
         <label class="smoothrow"><input id="fpsSmooth" type="checkbox" checked> Smooth look <small>(evens out a trackpad; off for the rawest mouse)</small></label>
+      </div>
+      </div>
+      <div id="fpsMenuPad" hidden>
+        <div class="lookrow padrow">
+          <label for="fpsPadLook">Controller look sensitivity <output id="fpsPadLookOut">1.00</output></label>
+          <input id="fpsPadLook" class="lookslider" type="range" min="0.3" max="3" step="0.05" value="1">
+          <button class="tool" id="fpsPadLookReset" type="button">Default</button>
+        </div>
+        <div class="lookrow padrow">
+          <label for="fpsPadAds">Aiming sensitivity <small>(while aiming down the sights or the telescope, LT)</small> <output id="fpsPadAdsOut">1.00</output></label>
+          <input id="fpsPadAds" class="lookslider" type="range" min="0.2" max="2" step="0.05" value="1">
+          <button class="tool" id="fpsPadAdsReset" type="button">Default</button>
+        </div>
+        <ul class="padmap" aria-label="Controller buttons">
+          <li><b>Left stick</b> move · <b>click it</b> to sprint (until you stop)</li>
+          <li><b>Right stick</b> look · <b>click it</b> knife (the Lighthouse) or view</li>
+          <li><b>RT</b> fire · <b>LT</b> aim · <b>A</b> jump</li>
+          <li><b>X</b> reload; in the Lighthouse, use what's in front of you (hold to board up a window or get someone up) · <b>B</b> use too (a flare on Wreckers' Night)</li>
+          <li><b>Y</b> lantern · <b>RB</b>, <b>D-pad</b> weapons · <b>Start</b> menu</li>
+          <li>In the menu: <b>D-pad</b> or <b>left stick</b> to move, <b>left/right</b> to slide, <b>A</b> to choose, <b>B</b> back</li>
+        </ul>
+        <div class="btnrow"><button class="primary" id="fpsPadBack" type="button">Back</button></div>
       </div>
     </div>
   </div>

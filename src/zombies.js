@@ -962,6 +962,7 @@ function zmFrame(dt) {
     // (alone, the menu holds everything still; together, the night goes on)
     const live = (!FPS.menu || ZM.net) && !ZM.over;
     if (live && !FPS.menu) fpsInput(dt); else { FPS.look = [0, 0]; FPS.mlook = [0, 0]; m.walk = false; }
+    if (FPS.menu) fpsMenuPad(dt);
     if (live) {
       if (m.protect > 0) m.protect -= dt;
       // patched up quickly, if they leave you alone for a few seconds
@@ -2164,7 +2165,7 @@ function zmHud() {
   // what's in front of you
   const P = ZM.prompt;
   if (P && !(m.dead > 0)) {
-    const key = phone ? 'USE' : FPS.padWasUse ? 'B' : 'F';
+    const key = phone ? 'USE' : FPS.padLast ? 'X' : 'F';
     const can = P.cost == null || ZM.pts >= P.cost;
     const text = P.hold ? `Hold ${key}: ${P.text.replace(/^Hold to /, '')}` : P.cost != null ? `${key}: ${P.text} — ${P.cost.toLocaleString('en')}` : P.free ? `${key}: ${P.text}` : P.text;
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = mono(phone ? 12 : 15);
