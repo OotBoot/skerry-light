@@ -1930,6 +1930,7 @@ function zmEarnKill() {
 }
 // how one goes: burning to ash, or a burst of the sea
 function zmKillFx(d) {
+  if (!d.burn && typeof sfxPlay === 'function') sfxPlay('splat', { vol: 0.55 * Math.max(0.1, 1 - Math.hypot(d.x - FPS.me.x, d.y - FPS.me.y) / 35), gap: 0.04, vary: 0.2 });
   if (d.burn) for (let i = 0; i < 10; i++) FPS.parts.push({ x: d.x + (Math.random() - 0.5) * 0.6, y: d.y + (Math.random() - 0.5) * 0.6, z: FPSC.GROUND + (d.jz || 0) + Math.random() * 1.7, vx: (Math.random() - 0.5) * 1.2, vy: (Math.random() - 0.5) * 1.2, vz: Math.random() * 1.2, t: 1.2, c: '255,170,80', up: true });
   else fpsPuff(d.x, d.y, FPSC.GROUND + (d.jz || 0) + (d.head ? 1.6 : 1.1), d.head ? '120,150,140' : '70,100,90', d.head ? 12 : 6);
 }
@@ -2317,6 +2318,10 @@ function zmSound(k, d, pan, kind) {
   try {
     if (soundOff()) return;
     const v = d == null ? 1 : Math.max(0.05, 1 - d / 40), o = { pan: clamp(pan || 0, -1, 1) };
+    // (the recordings, where there's one: src/sfxbank.js)
+    { const R = { moan: kind === 'run' ? 'snarl' : 'moan', tear: 'tear', board: 'board', hit: 'hit', round: 'roundstart', end: 'roundend', buy: 'buy', no: 'deny', door: 'door', debris: 'debris', open: 'chest', gull: 'gull', drop: 'powerup', take: 'pickup', drink: 'drink', beat: 'heartbeat', over: 'gameover', beam: 'beam' }[k];
+      const VOL = { moan: 0.55, tear: 0.75, board: 0.6, round: 0.9, end: 0.8, buy: 0.6, no: 0.5, gull: 0.5, drop: 0.6, beat: 0.9, beam: 0.3 };
+      if (R && sfxPlay(R, { vol: (VOL[k] || 0.85) * v, pan: o.pan, gap: k === 'beam' ? 1.1 : 0, vary: k === 'moan' ? 0.2 : 0.08 })) return; }
     if (k === 'moan') { const f = kind === 'run' ? 260 : 170 + Math.random() * 60; noise('bandpass', f, 6, 0.12, 0.22 * v, 0.7, Object.assign({ to: f * 0.7 }, o)); tone(f * 0.5, 'sawtooth', 0.1, 0.05 * v, 0.6, Object.assign({ to: f * 0.35 }, o)); }
     else if (k === 'tear') { noise('bandpass', 700, 2, 0.003, 0.3 * v, 0.18); noise('lowpass', 300, 1, 0.02, 0.2 * v, 0.3, { delay: 0.12 }); }
     else if (k === 'board') { noise('bandpass', 1400, 3, 0.002, 0.25, 0.08); tone(520, 'square', 0.001, 0.05, 0.05); tone(980, 'triangle', 0.001, 0.04, 0.12, { delay: 0.05 }); }

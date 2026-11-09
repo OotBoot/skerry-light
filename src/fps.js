@@ -645,7 +645,7 @@ function fpsReload() {
   // (the cutlass has nothing to load: R gives it a wipe and a look along the edge instead)
   if (m.dead > 0 || m.reload > 0 || FPS.drawT > 0 || (!w.melee && m.ammo >= w.mag)) return;
   if (FPS.zm && !w.melee && !zmCanReload()) return;
-  m.reload = FPS.reloadDur = w.reload * (FPS.zm ? zmReloadK() : 1); FPS.reloadOf = FPS.weapon; FPS.scoped = false; if (!w.melee) fpsClick();
+  m.reload = FPS.reloadDur = w.reload * (FPS.zm ? zmReloadK() : 1); FPS.reloadOf = FPS.weapon; FPS.scoped = false; if (!w.melee) { fpsClick(); sfxPlay('reload', { vol: 0.5, rate: Math.min(1.4, Math.max(0.8, 2.2 / FPS.reloadDur)) }); }
 }
 function fpsHurt(n, fromId, fromName) {
   const m = FPS.me; if (m.dead > 0 || m.protect > 0 || m.iframe > 0) return;
@@ -687,6 +687,7 @@ function fpsGunSound(d, pan) {
   try {
     if (soundOff()) return;
     const v = Math.max(0.05, 1 - d / 350);
+    if (sfxPlay('pepperbox', { vol: 0.95 * v, pan: Math.max(-1, Math.min(1, pan || 0)), vary: 0.1 })) return;
     noise('lowpass', 1600 * v + 300, 0.7, 0.002, 0.55 * v, 0.28 + (1 - v) * 0.3, { pan: Math.max(-1, Math.min(1, pan || 0)) });
     tone(90, 'triangle', 0.002, 0.3 * v, 0.18, { to: 45 });
   } catch (e) {}
@@ -697,6 +698,7 @@ function fpsWeaponSound(code, d, pan) {
   try {
     if (soundOff()) return;
     const v = Math.max(0.05, 1 - d / 400), o = { pan: Math.max(-1, Math.min(1, pan || 0)) };
+    { const R = { p: 'pepperbox', b: 'blunderbuss', l: 'longarm', h: 'harpoon', a: 'avtomat' }[code] || (FPSW_BY_CODE[code] ? null : 'pepperbox'); if (R && sfxPlay(R, { vol: (code === 'a' ? 0.7 : 0.95) * v, pan: o.pan, vary: 0.1 })) return; }   // (the recordings: src/sfxbank.js)
     if (code === 'b') { noise('lowpass', 900 * v + 250, 0.6, 0.002, 0.8 * v, 0.55 + (1 - v) * 0.3, o); tone(55, 'sawtooth', 0.002, 0.35 * v, 0.3, { to: 30 }); }
     else if (code === 'l') { noise('lowpass', 2200 * v + 300, 0.8, 0.001, 0.7 * v, 0.45 + (1 - v) * 0.5, o); tone(120, 'triangle', 0.001, 0.25 * v, 0.25, { to: 40 }); }
     else if (code === 'a') { noise('lowpass', 2800 * v + 400, 0.9, 0.001, 0.42 * v, 0.12 + (1 - v) * 0.3, o); tone(160, 'square', 0.001, 0.1 * v, 0.05, { to: 70 }); }
@@ -704,7 +706,7 @@ function fpsWeaponSound(code, d, pan) {
     else fpsGunSound(d, pan);
   } catch (e) {}
 }
-function fpsSwishSound(d) { try { if (soundOff()) return; const v = Math.max(0.05, 1 - d / 60); noise('bandpass', 2600, 1.2, 0.03, 0.22 * v, 0.18); } catch (e) {} }
+function fpsSwishSound(d) { try { if (soundOff()) return; const v = Math.max(0.05, 1 - d / 60); if (sfxPlay('swish', { vol: 0.7 * v, vary: 0.15 })) return; noise('bandpass', 2600, 1.2, 0.03, 0.22 * v, 0.18); } catch (e) {} }
 function fpsBellSound(d) { try { sfxBellFar(0, Math.max(0.15, 1 - d / 400)); } catch (e) {} }
 function fpsHitSound(head) { try { tone(head ? 1250 : 900, 'square', 0.001, 0.06, 0.05); } catch (e) {} }
 function fpsClick() { try { tone(420, 'square', 0.001, 0.05, 0.04); tone(300, 'square', 0.001, 0.05, 0.04, { delay: 0.5 }); } catch (e) {} }

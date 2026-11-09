@@ -234,6 +234,7 @@ function zbmSound(k, d) {
   try {
     if (soundOff()) return;
     const v = d == null ? 1 : Math.max(0.08, 1 - d / 45);
+    { const R = { arrive: 'mooncusser', smash: 'debris' }[k]; if (R && sfxPlay(R, { vol: (k === 'arrive' ? 0.95 : 0.85) * v, vary: 0.05 })) return; }   // (the recordings: src/sfxbank.js)
     if (k === 'arrive') {
       // a wrecker's whistle across the water, and the lantern's iron creaking as it swings
       tone(880, 'sine', 0.05, 0.08, 0.5, { to: 1320 }); tone(1320, 'sine', 0.05, 0.07, 0.7, { delay: 0.55, to: 660 });
@@ -261,6 +262,7 @@ function zbkSound(k, d) {
   try {
     if (soundOff()) return;
     const v = d == null ? 1 : Math.max(0.08, 1 - d / 45);
+    { const R = { arrive: 'keelback', rush: 'charge', crash: 'slam', smash: 'debris' }[k]; if (R && sfxPlay(R, { vol: (k === 'arrive' ? 0.95 : 0.85) * v, vary: 0.05 })) return; }   // (the recordings: src/sfxbank.js)
     if (k === 'arrive') {
       // a hull groaning on the rocks, and the clatter of a hundred joints
       tone(48, 'sawtooth', 0.5, 0.16, 2.6, { to: 40 }); noise('bandpass', 320, 3, 0.4, 0.18, 2.2, { to: 180 });

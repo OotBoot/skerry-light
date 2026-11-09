@@ -509,6 +509,7 @@ function zxSound(k, d, extra) {
   try {
     if (soundOff()) return;
     const v = Math.max(0.05, 1 - (d || 0) / 300), o = {};
+    { const R = { d: 'duckfoot', w: 'harpoon', g: 'grapnel', s: 'flaregun', x: 'axechop', u: 'puntgun', n: 'netmortar', y: 'chainshot', boom: 'explode' }[k]; if (R && sfxPlay(R, { vol: (k === 'x' ? 0.6 : k === 'boom' ? ((extra || 3) > 3 ? 1 : 0.7) : 0.95) * v, vary: 0.1 })) return; }   // (the recordings: src/sfxbank.js)
     if (k === 'd') { for (let i = 0; i < 4; i++) noise('lowpass', 1500 * v + 300, 0.7, 0.002, 0.42 * v, 0.24, { delay: i * 0.022 }); tone(110, 'triangle', 0.002, 0.25 * v, 0.2, { to: 50 }); }
     else if (k === 'w') { noise('lowpass', 700, 0.8, 0.003, 0.55 * v, 0.35); tone(80, 'triangle', 0.003, 0.35 * v, 0.25, { to: 40 }); noise('highpass', 2500, 0.8, 0.05, 0.1 * v, 0.7); }
     else if (k === 'g') { tone(240, 'sawtooth', 0.002, 0.12 * v, 0.25, { to: 120 }); noise('lowpass', 600, 0.8, 0.002, 0.35 * v, 0.2); noise('bandpass', 1800, 2, 0.03, 0.08 * v, 0.5, { to: 900 }); }

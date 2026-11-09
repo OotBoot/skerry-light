@@ -350,6 +350,9 @@ function zmpStop() {
 function zmpSound(k, i) {
   try {
     if (soundOff()) return;
+    if (k === 'start' && sfxPlay('forge', { vol: 0.7, vary: 0 })) return;
+    if (k === 'grind' && sfxHas('forge')) return;
+    if (k === 'done' && sfxPlay('forgedone', { vol: 0.85 })) return;
     if (k === 'start') { noise('bandpass', 260, 3, 0.05, 0.25, 0.9, { to: 900 }); tone(110, 'sawtooth', 0.2, 0.06, 1.2, { to: 220 }); }
     else if (k === 'grind') { noise('bandpass', 1800 + Math.random() * 600, 6, 0.02, 0.07, 0.35); tone(140 + Math.random() * 30, 'triangle', 0.05, 0.05, 0.4); }
     else if (k === 'ring') { const f = 1180 * Math.pow(1.12, i || 0); tone(f, 'sine', 0.002, 0.05, 0.55, { delay: (i || 0) * 0.03 }); tone(f * 2.76, 'sine', 0.002, 0.02, 0.3, { delay: (i || 0) * 0.03 }); }

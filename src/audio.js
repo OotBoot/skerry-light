@@ -1,4 +1,5 @@
-// Every sound in the game is synthesised with the Web Audio API, so there are no audio files.
+// Most sounds in the game are synthesised with the Web Audio API; where a recording has been made for one, it plays
+// instead (src/sfxbank.js, sfxPlay) and the synthesised version stays as the fallback.
 // The context is created on the first button press, since browsers only allow sound after a click.
 
 const AUD = { ctx: null, master: null, muted: false, white: null, brown: null, drone: null, nextBeat: 0, nextCreak: 4, panOK: false };
@@ -47,7 +48,7 @@ function audioInit() {
   const seaG = c.createGain(); seaG.gain.value = 0.28;
   const swell = c.createOscillator(); swell.frequency.value = 0.09;
   const swellAmt = c.createGain(); swellAmt.gain.value = 0.14;
-  swell.connect(swellAmt).connect(seaG.gain);
+  swell.connect(swellAmt).connect(seaG.gain); AUD.seaG = seaG; AUD.swellAmt = swellAmt;
   sea.connect(seaF).connect(seaG).connect(AUD.outF);
   swell.start();
 
@@ -57,7 +58,7 @@ function audioInit() {
   const windG = c.createGain(); windG.gain.value = 0.02;
   const gust = c.createOscillator(); gust.frequency.value = 0.05;
   const gustAmt = c.createGain(); gustAmt.gain.value = 0.016;
-  gust.connect(gustAmt).connect(windG.gain);
+  gust.connect(gustAmt).connect(windG.gain); AUD.windG = windG; AUD.gustAmt = gustAmt;
   wind.connect(windF).connect(windG).connect(AUD.outF);
   gust.start();
 
@@ -69,6 +70,7 @@ function audioInit() {
     o.connect(dF); o.start();
   }
   dF.connect(AUD.drone).connect(AUD.master);
+  if (typeof sfxbLoad === 'function') sfxbLoad();   // (the recordings, src/sfxbank.js)
 }
 
 // how much of the outside you're out in: 1 in the open, 0 under a roof (the sea and wind dull and quieter)
@@ -139,13 +141,16 @@ function distCurve(k) {
 
 // ---- sound effects ----
 function sfxBell() {
+  if (typeof sfxPlay === 'function' && sfxPlay('bell', { vol: 0.95, vary: 0.02 })) return;
   for (const [f, a, d] of [[392, 0.5, 3.6], [988, 0.28, 2.6], [1567, 0.16, 1.8], [2350, 0.08, 1.2], [196, 0.22, 4]]) tone(f, 'sine', 0.004, a, d);
 }
 function sfxBellFar(pan, vol) {
+  if (typeof sfxPlay === 'function' && sfxPlay('bellfar', { vol: 0.9 * (vol == null ? 1 : vol), pan, vary: 0.02 })) return;
   for (const [f, a, d] of [[392, 0.32, 3], [988, 0.16, 2], [1567, 0.08, 1.4]]) tone(f, 'sine', 0.004, a * vol, d, { pan });
 }
 function sfxSplash(pan, vol) {
   if (vol < 0.05) return;
+  if (typeof sfxPlay === 'function' && sfxPlay('splash', { vol: 0.8 * vol, pan })) return;
   noise('lowpass', 1400, 0.8, 0.01, 0.35 * vol, 0.35, { pan, to: 400 });
   noise('bandpass', 3000, 2, 0.005, 0.12 * vol, 0.12, { pan, delay: 0.05 });
 }
@@ -163,11 +168,13 @@ function sfxCackle(pan) {
   }
 }
 function sfxFlare() {
+  if (typeof sfxPlay === 'function' && sfxPlay('flare', { vol: 0.8 })) return;
   noise('bandpass', 600, 0.8, 0.01, 0.4, 0.6, { to: 3000 });
   noise('highpass', 4000, 0.7, 0.2, 0.15, 1.6, { delay: 0.3 });
   tone(90, 'sine', 0.005, 0.5, 0.4, { to: 50 });
 }
 function sfxHorn(pan, vol) {
+  if (typeof sfxPlay === 'function' && sfxPlay('foghorn', { vol: 0.9 * (vol == null ? 1 : vol), pan, vary: 0.03 })) return;
   for (const f of [196, 247]) tone(f, 'sawtooth', 0.08, 0.06 * vol, 0.7, { pan });
 }
 // the crate reel ticking past, and the reveal (grander for rarer skins)
@@ -208,6 +215,7 @@ function sfxSqueak(pan, vol) {
   tone(f * 1.5, 'sine', 0.005, 0.05 * vol, 0.05, { pan, to: f * 2.2 });
 }
 function sfxHit() {
+  if (typeof sfxPlay === 'function' && sfxPlay('hit', { vol: 0.9 })) return;
   noise('lowpass', 900, 0.7, 0.005, 0.9, 0.5);
   tone(70, 'sine', 0.005, 0.8, 0.6, { to: 38 });
   noise('bandpass', 2400, 3, 0.01, 0.25, 0.25, { delay: 0.05 });
@@ -225,6 +233,7 @@ function sfxPortal(through) {
 function sfxWhoosh() { noise('bandpass', 300, 1.2, 0.25, 0.22, 0.6, { to: 1400 }); }
 function sfxChime() { tone(659, 'sine', 0.01, 0.25, 1.6); tone(988, 'sine', 0.01, 0.2, 1.8, { delay: 0.35 }); }
 function sfxHeart(vol) {
+  if (typeof sfxPlay === 'function' && sfxPlay('heartbeat', { vol: 0.9 * (vol == null ? 1 : vol), vary: 0.02 })) return;
   tone(58, 'sine', 0.008, 0.7 * vol, 0.16, { to: 40 });
   tone(52, 'sine', 0.008, 0.5 * vol, 0.18, { to: 36, delay: 0.24 });
 }
@@ -251,6 +260,7 @@ function sfxRowlock(pan) {
   noise('lowpass', 500, 1, 0.08, 0.06, 0.4, { pan, delay: 0.3 });
 }
 function sfxCreak() {
+  if (typeof sfxPlay === 'function' && sfxPlay('creak', { vol: 0.35, gap: 2 })) return;
   const f = 120 + Math.random() * 90;
   tone(f, 'sawtooth', 0.15, 0.025, 0.5, { to: f * 0.7 });
 }
@@ -355,6 +365,7 @@ function sfxVerityScare() {
 
 // the Barque's bow gun: a deep boom with a crack on top, and stone breaking when the ball lands
 function sfxCannon() {
+  if (typeof sfxPlay === 'function' && sfxPlay('cannon', { vol: 1 })) return;
   noise('lowpass', 900, 0.7, 0.002, 1.0, 0.9, { to: 120 });
   noise('bandpass', 2400, 1.2, 0.001, 0.5, 0.12);
   tone(62, 'sine', 0.003, 0.9, 0.7, { to: 32 });
@@ -377,7 +388,7 @@ function sfxJet() {
 function sfxReload() { tone(420, 'square', 0.001, 0.08, 0.04, { to: 220 }); noise('bandpass', 2000, 4, 0.001, 0.12, 0.05, { delay: 0.06 }); }
 
 // hauling a floating crate aboard: a bright little arpeggio
-function sfxPickup() { [660, 880, 1320].forEach((f, i) => tone(f, 'triangle', 0.005, 0.18, 0.25, { delay: i * 0.07 })); noise('highpass', 3000, 1, 0.002, 0.06, 0.15); }
+function sfxPickup() { if (typeof sfxPlay === 'function' && sfxPlay('pickup', { vol: 0.7 })) return; [660, 880, 1320].forEach((f, i) => tone(f, 'triangle', 0.005, 0.18, 0.25, { delay: i * 0.07 })); noise('highpass', 3000, 1, 0.002, 0.06, 0.15); }
 
 // ---------- the new enemies' sounds ----------
 function sfxFoe(kind, pan, vol) {

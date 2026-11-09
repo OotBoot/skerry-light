@@ -483,6 +483,7 @@ function zbSound(k, d) {
   try {
     if (soundOff()) return;
     const v = d == null ? 1 : Math.max(0.08, 1 - d / 45);
+    { const R = { arrive: 'diver', slam: 'slam', smash: 'debris' }[k]; if (R && sfxPlay(R, { vol: (k === 'arrive' ? 0.95 : 0.85) * v, vary: 0.05 })) return; }   // (the recordings: src/sfxbank.js)
     if (k === 'arrive') {
       // a fog signal out of the deep, flat and wrong
       tone(58, 'sawtooth', 0.5, 0.16, 2.8, { to: 49 }); tone(87, 'square', 0.5, 0.05, 2.6, { to: 74 }); noise('lowpass', 160, 1, 0.6, 0.25, 2.4);

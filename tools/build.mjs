@@ -20,7 +20,9 @@ const scripts = [...html.matchAll(/<script src="((?:src|vendor)\/[^"]+)"><\/scri
 if (!scripts.length) throw new Error('no scripts found in index.html');
 let js = scripts.map(m => `// ---- ${m[1]} ----\n` + read(m[1])).join('\n');
 const foeAssets = readdirSync(join(root, 'assets/foes')).filter(f => f.endsWith('.webp')).map(f => 'assets/foes/' + f);
-for (const asset of [...foeAssets, 'assets/maren.png', 'assets/plimsoll.png', 'assets/knock.png', 'assets/verity.png', 'assets/verity2.png', 'assets/verity.mp3']) {
+// the recorded sound effects (src/sfxlist.js names each one)
+let sfxAssets = []; try { sfxAssets = readdirSync(join(root, 'assets/sfx')).filter(f => f.endsWith('.mp3')).map(f => 'assets/sfx/' + f); } catch (e) {}
+for (const asset of [...foeAssets, ...sfxAssets, 'assets/maren.png', 'assets/plimsoll.png', 'assets/knock.png', 'assets/verity.png', 'assets/verity2.png', 'assets/verity.mp3']) {
   if (!js.includes(`'${asset}'`)) throw new Error('asset path not found in scripts: ' + asset);
   js = js.split(`'${asset}'`).join(`'${dataUri(asset)}'`);
 }
