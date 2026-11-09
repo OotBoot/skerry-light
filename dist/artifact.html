@@ -716,8 +716,11 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
   .cardtop.sticky { top: -14px; margin: -14px -18px 0; padding: 9px 18px 8px; }
 
   /* the title: Skerry Light and Wreckers' Night side by side, each a compact column */
-  #titleCard { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 12px; row-gap: 0; align-items: start; place-items: start stretch; }
-  #titleCard > .newgame { display: none; }
+  #titleCard { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-rows: max-content; align-content: start; column-gap: 12px; row-gap: 12px; align-items: start; place-items: start stretch; }
+  /* the two new-game banners side by side, slim, one over each column */
+  #titleCard > .newgame { max-width: none; width: auto; min-width: 0; font-size: 11px; padding: 6px 10px; gap: 8px; margin-bottom: 8px; }
+  #titleCard > .newgame .ng-text { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #titleCard > .newgame .ng-tag { font-size: 9px; padding: 2px 5px; }
   #titleCard > .card { max-width: none; width: auto; min-width: 0; }
   #titleCard .boatpick { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; }
   #titleCard .weaponpick { grid-template-columns: repeat(5, minmax(0, 1fr)); }
@@ -903,6 +906,20 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 .boardlist .rk { color: var(--muted); }
 .boardcard p.boardmine { margin: 0; font-family: var(--log); font-size: 12px; color: var(--lamp); }
 @media (max-width: 480px) { .boardhead, .boardlist li { grid-template-columns: 1.8em minmax(0, 1fr) 5em 5em; font-size: 12px; } }
+
+/* the Drowned Reach's banner, in its own sea-green */
+.newgame.warbanner { border-color: rgba(120,180,160,0.55); background: linear-gradient(90deg, rgba(120,180,160,0.28), rgba(120,180,160,0.08)); }
+.newgame.warbanner:hover, .newgame.warbanner:focus-visible { background: linear-gradient(90deg, rgba(120,180,160,0.42), rgba(120,180,160,0.16)); }
+.newgame.warbanner .ng-tag { background: #78b4a0; color: #08140f; }
+#titleCard > .newgame + .newgame { margin-top: -8px; }
+@media (orientation: landscape) and (max-height: 520px) {
+  #titleCard > .newgame, #titleCard > .newgame + .newgame { margin: 0; }
+  /* buttons a thumb can still hit */
+  .card .tool, .card .loottabs button { min-height: 36px; }
+  .boardtabs { flex-wrap: nowrap; }
+  .boardtabs button { flex: 1 1 0; min-width: 0; min-height: 36px; padding: 6px 4px; font-size: 11px; letter-spacing: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .boardlist { max-height: none; }
+}
 </style>
 <div id="stage">
   <canvas id="bg" class="under" aria-hidden="true"></canvas>
@@ -964,6 +981,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 
   <div class="overlay" id="titleCard">
     <button class="newgame" id="fpsBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">Try the new game, <b>Wreckers' Night</b>: a multiplayer shootout on the skerry</span><span class="ng-go" aria-hidden="true">↓</span></button>
+    <button class="newgame warbanner" id="warBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">And another, <b>The Drowned Reach</b>: a war for the islands, alone or with up to ten players</span><span class="ng-go" aria-hidden="true">↓</span></button>
     <div class="card">
       <div class="cardtop"><span class="eyebrow">Master's orders · make harbour by night</span><button class="tool closebtn" id="soundBtn" type="button" aria-pressed="true">Sound on</button></div>
       <h1>Skerry Light</h1>
@@ -17199,6 +17217,7 @@ addEventListener('contextmenu', e => { if (WAR.on && e.target === cv) e.preventD
 addEventListener('resize', () => { if (WAR.on) wvFit(); });
 (() => {
   $('warPlay').addEventListener('click', warGo);
+  $('warBanner').addEventListener('click', () => { $('warTitle').scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' }); setTimeout(() => $('warPlay').focus({ preventScroll: true }), 400); });
   $('warNick').addEventListener('keydown', e => { if (e.key === 'Enter') warGo(); });
   try { const b = localStorage.getItem('skerry-war-bots'); if (b) $('warBots').value = b; const d = localStorage.getItem('skerry-war-diff'); if (d && WAR_DIFF[d]) $('warDiff').value = d; } catch (e) {}
   $('warPactsBtn').addEventListener('click', () => wvPactsOpen(!$('warPacts').classList.contains('open')));

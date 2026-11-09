@@ -605,6 +605,7 @@ addEventListener('contextmenu', e => { if (WAR.on && e.target === cv) e.preventD
 addEventListener('resize', () => { if (WAR.on) wvFit(); });
 (() => {
   $('warPlay').addEventListener('click', warGo);
+  $('warBanner').addEventListener('click', () => { $('warTitle').scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' }); setTimeout(() => $('warPlay').focus({ preventScroll: true }), 400); });
   $('warNick').addEventListener('keydown', e => { if (e.key === 'Enter') warGo(); });
   try { const b = localStorage.getItem('skerry-war-bots'); if (b) $('warBots').value = b; const d = localStorage.getItem('skerry-war-diff'); if (d && WAR_DIFF[d]) $('warDiff').value = d; } catch (e) {}
   $('warPactsBtn').addEventListener('click', () => wvPactsOpen(!$('warPacts').classList.contains('open')));
