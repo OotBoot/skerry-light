@@ -42,7 +42,9 @@ ZMC.HT = ZMC.RISE * 30;   // the lantern room's floor: thirty steps up
 const ZM = { on: false, own: ['pepperbox'], res: {}, pts: 0, round: 0, items: [], z: [], drops: [], perks: {}, fx: [] };
 // what each weapon carries in reserve, and how much harder it hits the drowned than a wrecker
 const ZM_AMMO = { pepperbox: 60, blunderbuss: 28, longarm: 36, harpoon: 20, avtomat: 225, cutlass: 0, fresnel: 240 };
-const ZM_DMG = { p: 1, b: 1, l: 4, h: 5, c: 2.5, a: 1.15, f: 1 };
+const ZM_DMG = { p: 1, b: 1, l: 4, h: 5, c: 2.5, a: 1.15, f: 1, k: 1 };
+// the knife: always to hand, never runs out (V, middle mouse, R3, the knife button; or Fire with nothing left to fire)
+const ZM_KNIFE = { reach: 2.1, arc: 0.95, dmg: 3, rate: 0.55 };
 const ZM_PIERCE = { l: 3 };
 const ZM_PERKS = {
   stout: { n: 'Stout Heart', cost: 2500, c: '#e0504a', what: 'take twice the knocks' },
@@ -685,6 +687,7 @@ function zmFrame(dt) {
       if (m.cd > 0) m.cd -= dt;
       if (m.reload > 0) { m.reload -= dt; if (m.reload <= 0) { m.reload = 0; zmReloaded(); } }
       if (FPS.drawT > 0) FPS.drawT -= dt;
+      if (FPS.knifeT > 0) FPS.knifeT -= dt;
       fpsJumpTick(m, dt);
       if (FPS.landed > 0) FPS.landed -= dt;
       if (FPS.meFlashT > 0) FPS.meFlashT -= dt; if (FPS.meSlashT > 0) FPS.meSlashT -= dt;
@@ -979,7 +982,7 @@ function zmKill(d, head, code, how, by) {
   if (d.dead) return;
   d.dead = 1; d.deadT = 0; d.burn = how === 'burn'; d.head = !!head;
   if (d.win) d.win.q = d.win.q.filter(q => q !== d);
-  if (how !== 'flash') zmPoints(how === 'burn' ? 80 : head ? 100 : code === 'c' ? 130 : 60, false, by);
+  if (how !== 'flash') zmPoints(how === 'burn' ? 80 : head ? 100 : code === 'c' || code === 'k' ? 130 : 60, false, by);
   zmKillFx(d);
   if (by && by !== FPS.me.id) { const c = ZM.credit[by] = ZM.credit[by] || [0, 0, 0]; c[1]++; if (head) c[2]++; }
   else if (how !== 'flash' || !ZM.net) { ZM.kills++; if (head) ZM.heads++; zmEarnKill(); }
@@ -1037,7 +1040,18 @@ function zmResolveShot(sh, mine) {
   for (const [o, hit] of hits) { any = any || hit; zmHurt(o, hit.dmg, hit.head, code, FPS.me.id); }
   if (any && mine) { FPS.hitT = 0.18; FPS.hitHead = any.head; fpsHitSound(any.head); }
 }
-function zmMelee(x, y, z, h, w) {
+// a slash with the knife: whatever's in front of you and in reach, whatever's in your hands
+function zmKnife() {
+  const m = FPS.me;
+  if (!FPS.zm || m.dead > 0 || FPS.menu || ZM.over || (FPS.knifeT || 0) > 0) return;
+  FPS.knifeT = ZM_KNIFE.rate; FPS.knifeN = (FPS.knifeN || 0) + 1; FPS.meSlashT = 0.3; m.protect = 0; FPS.scoped = false;
+  fpsSwishSound(0);
+  const z = FPSC.GROUND + FPSC.EYE + (m.jz || 0);
+  zmMelee(m.x, m.y, z, m.h, ZM_KNIFE, 'k');
+  if (typeof zmnShot === 'function') zmnShot('c', m.h, m.p);
+}
+function zmMelee(x, y, z, h, w, code) {
+  code = code || 'c';
   let any = false;
   for (const o of ZM.z) {
     if (o.dead) continue;
@@ -1045,7 +1059,7 @@ function zmMelee(x, y, z, h, w) {
     if (d > w.reach + FPSC.BODY || Math.abs(angDiff(b, h)) > w.arc || Math.abs((o.jz || 0) - (FPS.me.jz || 0)) > 1.2) continue;
     const r = fpsRay(x, y, z - 0.4, b, Math.atan2((o.jz || 0) + 1.2 - (z - FPSC.GROUND - 0.4), Math.max(0.3, d)), FPS.me.id, [o], w.reach + 1);
     if (r.kind !== 'body') continue;
-    zmHurt(o, w.dmg, false, 'c', FPS.me.id); o.hitT = 0.2; any = true;
+    zmHurt(o, w.dmg, false, code, FPS.me.id); o.hitT = 0.2; any = true;
   }
   if (any) { FPS.hitT = 0.18; FPS.hitHead = false; fpsHitSound(false); }
 }
@@ -1709,8 +1723,8 @@ function zmHud() {
     ctx.fillText(m.reload > 0 ? (w.melee ? 'WIPING' : 'RELOADING') : w.melee ? 'CUTLASS' : `${m.ammo} / ${ZM.res[FPS.weapon] || 0}`, R, by);
     ctx.font = mono(11); let wx = R;
     for (let i = ZM.own.length - 1; i >= 0; i--) { const id = ZM.own[i], lab = `${i + 1} ${FPSW[id].n.toUpperCase()}`; ctx.fillStyle = id === FPS.weapon ? '#ffd88a' : 'rgba(236,228,207,0.4)'; ctx.fillText(lab, wx, by - 30); wx -= ctx.measureText(lab).width + 14; }
-    if (!w.melee && (m.ammo === 0 || (m.ammo < w.mag && m.ammo <= Math.ceil(w.mag * 0.25))) && !(m.reload > 0) && !ZM.over) { ctx.textAlign = 'center'; ctx.font = mono(13); ctx.fillStyle = (ZM.res[FPS.weapon] || 0) > 0 ? 'rgba(236,228,207,0.8)' : '#e46c4f'; ctx.fillText((ZM.res[FPS.weapon] || 0) > 0 ? 'R TO RELOAD' : m.ammo ? 'LOW AMMUNITION' : 'NO AMMUNITION', cx, cy + 46); }
-  } else zmPadState();
+    if (!w.melee && (m.ammo === 0 || (m.ammo < w.mag && m.ammo <= Math.ceil(w.mag * 0.25))) && !(m.reload > 0) && !ZM.over) { ctx.textAlign = 'center'; ctx.font = mono(13); ctx.fillStyle = (ZM.res[FPS.weapon] || 0) > 0 ? 'rgba(236,228,207,0.8)' : '#e46c4f'; ctx.fillText((ZM.res[FPS.weapon] || 0) > 0 ? 'R TO RELOAD' : m.ammo ? 'LOW AMMUNITION' : 'NO AMMUNITION · V OR FIRE TO KNIFE', cx, cy + 46); }
+  } else { zmPadState(); zmDrawStick(); }
   // together: everyone's points, down the right (yours lit), and anyone down marked
   let feedY = phone ? top + 48 : 16;
   if (ZM.net) {
@@ -1762,11 +1776,23 @@ function zmHud() {
   if (ZM.over) { ctx.fillStyle = `rgba(20,2,2,${Math.min(0.6, ZM.over.t * 0.4)})`; ctx.fillRect(0, 0, W, H); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = fell(phone ? 28 : 40); ctx.fillStyle = `rgba(200,40,30,${Math.min(1, ZM.over.t)})`; ctx.fillText('They dragged you down', cx, H * 0.42); }
   if (!FPS.mouse && !phone && !FPS.menu && !ZM.over) { ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = mono(12); ctx.fillStyle = 'rgba(236,228,207,0.6)'; ctx.fillText('Click to aim with the mouse', cx, H * 0.5 + 40); }
 }
+// the walking stick, where your thumb came down (as on the islands), with its outer circle for running
+function zmDrawStick() {
+  if (!FPS.stick) return;
+  const r0 = cv.getBoundingClientRect(), bx = FPS.stick.x0 - r0.left, by = FPS.stick.y0 - r0.top;
+  ctx.strokeStyle = 'rgba(236,228,207,0.28)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(bx, by, 52, 0, 6.28); ctx.stroke();
+  ctx.setLineDash([4, 6]); ctx.strokeStyle = FPS.stickRun ? 'rgba(255,216,138,0.55)' : 'rgba(236,228,207,0.16)'; ctx.beginPath(); ctx.arc(bx, by, 52 * 1.35, 0, 6.28); ctx.stroke(); ctx.setLineDash([]);
+  const L = FPS.stick.L || 0, d = Math.hypot(FPS.stick.dx, FPS.stick.dy) || 1, k = L > 0.12 ? Math.min(1.6, L) * 52 / d : 0;
+  ctx.fillStyle = FPS.stickRun ? 'rgba(255,216,138,0.4)' : 'rgba(236,228,207,0.3)'; ctx.beginPath(); ctx.arc(bx + FPS.stick.dx * k, by + FPS.stick.dy * k, 22, 0, 6.28); ctx.fill();
+}
 // the phone's buttons: ammunition on Fire, the weapon's name, Use lit when there's something to use
 function zmPadState() {
   const m = FPS.me, w = fpsW(), set = (id, on, text) => { const el = $(id); if (!el) return; el.classList.toggle('on', !!on); if (text != null && el.dataset.t !== text) { el.dataset.t = text; const c = el.querySelector('.cnt'); if (c) c.textContent = text; } };
-  set('fpsPadFire', (w.melee || m.ammo > 0) && !(m.reload > 0), m.reload > 0 ? '…' : w.melee ? '⚔' : String(m.ammo));
-  { const f = $('fpsPadFire').querySelector('small'); const lab = w.melee ? 'SWING' : `/${ZM.res[FPS.weapon] || 0}`; if (f && f.textContent !== lab) f.textContent = lab; }
+  // (nothing left at all: Fire is the knife)
+  const dry = !w.melee && m.ammo <= 0 && !((ZM.res[FPS.weapon] || 0) > 0);
+  set('fpsPadFire', (w.melee || m.ammo > 0 || dry) && !(m.reload > 0), m.reload > 0 ? '…' : w.melee || dry ? '⚔' : String(m.ammo));
+  { const f = $('fpsPadFire').querySelector('small'); const lab = w.melee ? 'SWING' : dry ? 'KNIFE' : `/${ZM.res[FPS.weapon] || 0}`; if (f && f.textContent !== lab) f.textContent = lab; }
+  set('fpsPadKnife', !((FPS.knifeT || 0) > 0) && !(m.dead > 0));
   { const b = $('fpsPadWeapon'); if (b) { const c = b.querySelector('.wn'); if (c && c.textContent !== w.n) c.textContent = w.n; } }
   { const b = $('fpsPadScope'); if (b) { b.hidden = !(w.scope || w.ads); b.classList.toggle('on', FPS.scoped); } }
   set('fpsPadLantern', m.lan); set('fpsPadView', FPS.third);
@@ -1776,8 +1802,10 @@ function zmPadState() {
 }
 
 // ---------- controls ----------
-const ZM_KEYS = { KeyF: () => zmUse(), KeyE: () => zmUse(), KeyB: null, Digit1: () => zmSlot(0), Digit2: () => zmSlot(1), Digit3: () => zmSlot(2), Digit4: null, Digit5: null, Digit6: null };
+const ZM_KEYS = { KeyF: () => zmUse(), KeyE: () => zmUse(), KeyV: () => zmKnife(), KeyB: null, Digit1: () => zmSlot(0), Digit2: () => zmSlot(1), Digit3: () => zmSlot(2), Digit4: null, Digit5: null, Digit6: null };
 {
+  const kn = $('fpsPadKnife');
+  if (kn) kn.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); zmKnife(); });
   const use = $('fpsPadUse');
   if (use) {
     use.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); FPS.touchUse = true; zmUse(); try { use.setPointerCapture(e.pointerId); } catch (err) {} });

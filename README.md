@@ -139,6 +139,8 @@ Verity, the small smiling yellow thing from the voyages, comes ashore in Wrecker
 
 Both games work with the phone turned sideways. On short landscape screens the title page puts Skerry Light and Wreckers' Night side by side, the voyage HUD shrinks (smaller labels, a two-line log, smaller sail and tool buttons), and the menus, settings and crate screens get wider and shorter so they fit without scrolling where possible. In Wreckers' Night the move stick stays under your left thumb and the fire cluster under your right, and the first-round hints move clear of the buttons. Phone notches are respected on both sides.
 
+
+On foot (Wreckers' Night and the Lighthouse), the walking stick eases in: a small push is a slow walk, the edge of the ring a walk at four-fifths of the keyboard's pace (the same pace looks much quicker on a small screen), and you only run when you push out past the ring to the dotted outer circle (it lights up). The ring follows your thumb only beyond that.
 ## The Drowned Reach (a war for the islands)
 
 A third game, on its own card below Wreckers' Night (`src/war.js` is the game, `src/warview.js` draws it). It plays like the territory games: you land on an archipelago of skerries and take it, one against sixteen bot nations (one to fifty, your choice), or together with up to nine other people, each with a temper of its own. Nothing here touches the voyages or Wreckers' Night.
@@ -200,6 +202,7 @@ A fourth game, on its own card on the title screen (**Hold the Light**). First p
 - **Tonics** (cabinets of glowing bottles): Second Wind (500, in the Quarters: get back up once, losing your tonics; three to a night), Fleet Foot (2000, the Boathouse), Stout Heart (2500, the Store Hall: six knocks instead of three), Quick Hands (3000, the Wreck Store: reload in half the time). You heal fully after three quiet seconds.
 - **Salvage**: up to four drops a round, about one kill in thirty: Powder Keg (all ammunition), Double Salvage (double points, 30 s), the Black Spot (one hit kills, 30 s), Lamp Flash (every one in the station burns, and 400 points).
 - **The map**: ten rooms round the tower: the Keeper's Quarters, the Oil Store, the Fog-Signal House, the East Passage, the Net Loft, the Store Hall, the Lamp Passage, the Boathouse and the Wreck Store, whitewashed and beamed, lit by hanging lanterns, and two walled yards between them open to the sky. The tower is fifteen metres square and nearly thirteen high: a stair of thirty steps winds up round its stone core (up the east side, along the south, up the west) to the lantern room on top of the core, with the great lens in the middle, an iron railing round the edge, and windows high in the tower walls looking out to sea.
+- **The knife**: always to hand and never runs out: V, the middle mouse button, R3 on a controller, or the knife button on a phone; and with nothing left to fire, Fire slashes with it too. A short backhanded slash in reach of about two metres (130 points a kill), the weapon in hand dropping away while the other hand does it.
 - **Keys**: as Wreckers' Night, with F (or E) to use and 1 / 2 for your two weapons; Tab shows the night so far; Esc pauses (alone, everything stops). Controller: B to use. Touch: a Use button by Fire takes the flare's place.
 
 ### The Lighthouse, together

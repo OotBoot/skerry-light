@@ -456,6 +456,7 @@ function vmDraw(dt) {
   if ((FPS.vmShots || 0) !== VM.shots) { S.fired = true; S.nFired = (FPS.vmShots || 0) - VM.shots; VM.shots = FPS.vmShots || 0; }
   // the weapon's own movements
   VM_ANIM[id](wpn, S);
+  vmKnife(wpn, S);
   if (id !== 'cutlass') VM.trailMesh.visible = false;
   // sounds as reload steps happen
   if (S.reloading && wpn.steps) { for (const [x, fn] of wpn.steps) if (VM.lastP < x && S.p >= x) fn(); }
@@ -855,3 +856,38 @@ VM_ANIM.fresnel = (w, S) => {
   }
   w.left.visible = !VM.lhand.visible;
 };
+
+// The knife (the Lighthouse only): the weapon in hand drops away to the lower right while the other hand comes across
+// with a short broad knife, a backhanded slash from right to left, and goes back.
+function vmKnifeBuild() {
+  if (VM.knife) return VM.knife;
+  const g = new THREE.Group(), blade = new THREE.MeshPhongMaterial({ color: 0xb8bcc4, specular: 0xffffff, shininess: 110 });
+  const wood = new THREE.MeshPhongMaterial({ color: 0x3a2414, shininess: 20 }), brass = new THREE.MeshPhongMaterial({ color: 0x9a7a34, specular: 0xb09060, shininess: 60 });
+  const k = new THREE.Group(); g.add(k);
+  const b = new THREE.Shape(); b.moveTo(0, 0); b.lineTo(0.17, 0.004); b.quadraticCurveTo(0.2, 0.012, 0.215, 0.03); b.lineTo(0.12, 0.032); b.lineTo(0, 0.026); b.lineTo(0, 0);
+  const bg = new THREE.ExtrudeGeometry(b, { depth: 0.004, bevelEnabled: true, bevelSize: 0.002, bevelThickness: 0.002, bevelSegments: 1 });
+  bg.translate(0, -0.015, -0.002); bg.rotateY(Math.PI / 2);   // along -z, the edge down
+  const bm = new THREE.Mesh(bg, blade); bm.position.z = -0.01; k.add(bm);
+  k.add(box(0.012, 0.05, 0.012, brass, 0, 0, 0.0));
+  const grip = new THREE.Mesh(new THREE.CylinderGeometry(0.013, 0.015, 0.1, 10), wood); grip.rotation.x = Math.PI / 2; grip.position.z = 0.056; k.add(grip);
+  k.add(box(0.03, 0.03, 0.012, brass, 0, 0, 0.11));
+  const hand = vmHand(VM.H, false); hand.position.set(0, -0.012, 0.06); g.add(hand);
+  g.visible = false; VM.scene.add(g);
+  return VM.knife = g;
+}
+function vmKnife(wpn, S) {
+  const t = (FPS.knifeT || 0) > 0 && FPS.zm ? 1 - FPS.knifeT / 0.55 : 1;
+  const K = VM.knife || (FPS.zm ? vmKnifeBuild() : null);
+  if (!K) return;
+  K.visible = t < 1;
+  if (!K.visible) return;
+  // the weapon in hand drops away and comes back
+  const dip = Math.sin(Math.min(1, t / 0.9) * Math.PI);
+  wpn.root.position.y -= dip * 0.2 * S.sc; wpn.root.position.x += dip * 0.06 * S.sc; wpn.root.rotation.z -= dip * 0.5;
+  // the slash: in from the right, across and down to the left, the point leading
+  const sw = vmSeg(t, 0.12, 0.62), out = vmSeg(t, 0, 0.12) - vmSeg(t, 0.75, 1);
+  const sc = S.sc;
+  K.position.set((0.24 - sw * 0.42) * sc, (-0.1 - sw * 0.07 - (1 - out) * 0.25) * sc, (-0.4 - Math.sin(sw * Math.PI) * 0.06) * (S.narrow ? 1.12 : 1));
+  K.rotation.set(-0.15 + sw * 0.2, 0.75 - sw * 1.6, -0.9 + sw * 0.5);
+  K.scale.setScalar(sc * 0.72);
+}

@@ -940,3 +940,6 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 .zmmp h2 { color: #e8a090; }
 .zmmp .warlobbyrow { background: rgba(200,60,48,0.08); border-color: rgba(200,60,48,0.35); }
 .zmmp .warlobbyrow:hover:not(:disabled) { background: rgba(200,60,48,0.16); }
+#fpsPadKnife { display: none; }
+#stage.zmmode #fpsPadKnife { display: grid; right: 0; top: -20px; }
+#stage.zmmode #fpsPadKnife:not(.on) { opacity: 0.55; }

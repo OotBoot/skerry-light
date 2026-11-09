@@ -524,7 +524,7 @@ function fpsIncoming(sh, f) {
 function fpsShoot() {
   const m = FPS.me, w = fpsW();
   if (m.dead > 0 || m.reload > 0 || m.cd > 0 || FPS.menu || FPS.drawT > 0) return;
-  if (!w.melee && m.ammo <= 0) { if (FPS.zm && !FPS.heldFire && !zmCanReload()) { FPS.heldFire = true; fpsClick(); return; } fpsReload(); return; }
+  if (!w.melee && m.ammo <= 0) { if (FPS.zm && !zmCanReload()) { zmKnife(); return; } fpsReload(); return; }
   if (!w.auto && !w.melee && FPS.heldFire) return;          // single-shot guns: one pull, one shot
   if (w.beam) { FPS.heldFire = true; m.cd = w.rate; m.protect = 0; m.ammo--; m.mags[FPS.weapon] = m.ammo; FPS.vmShots = (FPS.vmShots || 0) + 1; FPS.recoil = Math.min(1.6, w.kick); zmBeam(); if (typeof zmnShot === 'function') zmnShot(w.code, m.h, m.p); if (m.ammo <= 0) setTimeout(fpsReload, 250); return; }
   // (holding the trigger of an automatic, the time past the last round carries over, so it keeps its rate on a slow screen)
@@ -916,7 +916,7 @@ function fpsInput(dt) {
     FPS.padFire = b(7);
     fpsScope(b(6));
     const tap = (i, fn) => { if (b(i) && !was[i]) fn(); };
-    tap(0, fpsJump); tap(11, fpsToggleView); tap(2, fpsReload); tap(5, () => fpsCycle(1)); tap(14, () => fpsCycle(-1)); tap(15, () => fpsCycle(1)); tap(3, fpsLantern); tap(1, FPS.zm ? zmUse : fpsFlare); if (!FPS.zm) tap(4, fpsBell); tap(9, () => fpsSetMenu(!FPS.menu)); tap(8, () => { FPS.board = !FPS.board; });
+    tap(0, fpsJump); tap(11, FPS.zm ? zmKnife : fpsToggleView); if (FPS.zm) tap(13, fpsToggleView); tap(2, fpsReload); tap(5, () => fpsCycle(1)); tap(14, () => fpsCycle(-1)); tap(15, () => fpsCycle(1)); tap(3, fpsLantern); tap(1, FPS.zm ? zmUse : fpsFlare); if (!FPS.zm) tap(4, fpsBell); tap(9, () => fpsSetMenu(!FPS.menu)); tap(8, () => { FPS.board = !FPS.board; });
     FPS.padUse = FPS.zm && b(1);
     FPS.padWas = {}; for (let i = 0; i < pad.buttons.length; i++) FPS.padWas[i] = b(i);
     FPS.padSprint = b(10);
@@ -933,7 +933,8 @@ function fpsInput(dt) {
   const len = Math.hypot(fx, fz);
   m.walk = false;
   if (m.dead <= 0 && len > 0.05 && !FPS.menu) {
-    const sp = (K.ShiftLeft || K.ShiftRight || FPS.padSprint || (FPS.stick && FPS.stickRun) ? FPSC.SPRINT : FPSC.SPEED) * Math.min(1, len) / len * dt * (FPS.zm ? zmSpeedK() : 1);
+    // (on a phone a little slower all round: on a small screen the same pace feels much quicker)
+    const sp = (K.ShiftLeft || K.ShiftRight || FPS.padSprint || (FPS.stick && FPS.stickRun) ? FPSC.SPRINT : FPSC.SPEED) * Math.min(1, len) / len * dt * (FPS.zm ? zmSpeedK() : 1) * (FPS.stick ? 0.8 : 1);
     const s = Math.sin(m.h), c = Math.cos(m.h);
     m.walk = fpsMove(m, (s * fz + c * fx) * sp, (c * fz - s * fx) * sp);
     if (m.walk && !((m.jz || 0) > 0)) FPS.step += dt * (K.ShiftLeft || K.ShiftRight ? 11 : 8);
@@ -1336,7 +1337,8 @@ function fpsHud() {
     if (FPS.stick) {
       const r0 = cv.getBoundingClientRect(), bx = FPS.stick.x0 - r0.left, by = FPS.stick.y0 - r0.top;
       ctx.strokeStyle = 'rgba(236,228,207,0.28)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(bx, by, 52, 0, 6.28); ctx.stroke();
-      ctx.fillStyle = 'rgba(236,228,207,0.3)'; ctx.beginPath(); ctx.arc(bx + FPS.stick.dx * 52, by + FPS.stick.dy * 52, 22, 0, 6.28); ctx.fill();
+      ctx.setLineDash([4, 6]); ctx.strokeStyle = FPS.stickRun ? 'rgba(255,216,138,0.55)' : 'rgba(236,228,207,0.16)'; ctx.beginPath(); ctx.arc(bx, by, 52 * 1.35, 0, 6.28); ctx.stroke(); ctx.setLineDash([]);
+      { const L = FPS.stick.L || 0, d = Math.hypot(FPS.stick.dx, FPS.stick.dy) || 1, k = L > 0.12 ? Math.min(1.6, L) * 52 / d : 0; ctx.fillStyle = FPS.stickRun ? 'rgba(255,216,138,0.4)' : 'rgba(236,228,207,0.3)'; ctx.beginPath(); ctx.arc(bx + FPS.stick.dx * k, by + FPS.stick.dy * k, 22, 0, 6.28); ctx.fill(); }
     } else if (!(m.dead > 0) && (FPS.hintT || 0) > 0) {
       ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic'; ctx.font = mono(11); ctx.fillStyle = `rgba(236,228,207,${Math.min(0.6, FPS.hintT * 0.3)})`;
       ctx.fillText('◀ thumb here to walk', Math.max(14, FPS.safeLeft || 0), H - 24);
@@ -1454,6 +1456,7 @@ addEventListener('pointerdown', e => {
   if (document.pointerLockElement !== cv) { try { cv.requestPointerLock(); } catch (err) {} return; }
   if (e.button === 0) FPS.mouseDown = true;
   if (e.button === 2) fpsScope(true);
+  if (e.button === 1 && FPS.zm) zmKnife();
 }, true);
 addEventListener('pointerup', e => { if (FPS.on && e.pointerType !== 'touch') { if (e.button === 2) fpsScope(false); else FPS.mouseDown = false; } }, true);
 addEventListener('wheel', e => { if (FPS.on && document.pointerLockElement === cv) { e.preventDefault(); FPS.wheel = (FPS.wheel || 0) + e.deltaY; if (Math.abs(FPS.wheel) > 60) { fpsCycle(FPS.wheel > 0 ? 1 : -1); FPS.wheel = 0; } } }, { passive: false });
@@ -1472,13 +1475,14 @@ addEventListener('touchstart', e => {
 addEventListener('touchmove', e => {
   if (!FPS.on) return;
   for (const t of e.changedTouches) {
-    if (FPS.stick && t.identifier === FPS.stick.id) { let dx = (t.clientX - FPS.stick.x0) / 52, dy = (t.clientY - FPS.stick.y0) / 52; const L = Math.hypot(dx, dy);
-      if (L > 1) { dx /= L; dy /= L; }
-      // past the edge of the ring, the ring follows your thumb
-      if (L > 1.25) { FPS.stick.x0 = t.clientX - dx * 52; FPS.stick.y0 = t.clientY - dy * 52; }
-      FPS.stick.dx = L < 0.12 ? 0 : dx; FPS.stick.dy = L < 0.12 ? 0 : dy;
-      // pushed right to the edge: run
-      FPS.stickRun = L > 0.95; }
+    if (FPS.stick && t.identifier === FPS.stick.id) { const dx = (t.clientX - FPS.stick.x0) / 52, dy = (t.clientY - FPS.stick.y0) / 52; let L = Math.hypot(dx, dy);
+      // well past the edge of the ring, the ring follows your thumb
+      if (L > 1.6) { FPS.stick.x0 = t.clientX - dx / L * 1.6 * 52; FPS.stick.y0 = t.clientY - dy / L * 1.6 * 52; L = 1.6; }
+      // a gentle curve: small pushes are a slow walk, the edge of the ring a walk
+      const k = L < 0.12 ? 0 : Math.pow(Math.min(1, L), 1.5) / Math.max(L, 0.001);
+      FPS.stick.dx = dx * k; FPS.stick.dy = dy * k; FPS.stick.L = L;
+      // only pushed out past the ring (to the outer circle): run
+      FPS.stickRun = L > 1.35; }
     if (FPS.lookTouch && t.identifier === FPS.lookTouch.id) { FPS.lookTouch.moved += Math.abs(t.clientX - FPS.lookTouch.x) + Math.abs(t.clientY - FPS.lookTouch.y); FPS.look[0] += (t.clientX - FPS.lookTouch.x) * 1.6; FPS.look[1] += (t.clientY - FPS.lookTouch.y) * 1.6; FPS.lookTouch.x = t.clientX; FPS.lookTouch.y = t.clientY; }
   }
   if (e.target === cv) e.preventDefault();
