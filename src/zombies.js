@@ -281,7 +281,7 @@ Object.assign(FPI_K, {
   // a plinth where the wreck chest can stand (base: the floor it stands on)
   plinth: {
     col: FPI_C.stone3,
-    sol(p) { return [fpiBox(p, 0, 0, 0.85, 0.48, (p.base || 0) + 0.32)]; },
+    sol(p) { return [fpiBox(p, 0, 0, 0.85, 0.48, (p.base || 0) + 0.32, p.base ? { z0: p.base - 0.05 } : undefined)]; },   // (up the tower: only as tall as itself, not a column down through the floors below)
     b3(p, A) {
       const b = p.base || 0;
       A.box('#5a5650', 0, 0, b - 0.1, 1.7, 0.96, 0.42); A.box('#6a665e', 0, 0, b + 0.26, 1.78, 1.02, 0.06);
