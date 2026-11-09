@@ -100,9 +100,13 @@ const SK = {
 // The player's own settings (the Settings card), kept on this device. Loaded here, before anything
 // draws or makes a sound, because the sound, the jumpscares and the motion all read them.
 // (look: how quickly the view turns in Wreckers' Night and the Lighthouse, 1 the usual; from 0.3 to 3)
-const SETTINGS = { vol: 1, scares: 'full', flashes: 'normal', motion: 'auto', renderer: '3d', look: 1 };
+// (fov: the field of view across the screen in Wreckers' Night and the Lighthouse, in degrees, 60 to 110;
+//  aim: 'toggle' to click (or pull LT) once to aim and again to stop, 'hold' (the default) to aim while it's held)
+const SETTINGS = { vol: 1, scares: 'full', flashes: 'normal', motion: 'auto', renderer: '3d', look: 1, fov: 69, aim: 'hold' };
 try { Object.assign(SETTINGS, JSON.parse(localStorage.getItem('skerry-settings') || '{}') || {}); } catch (e) {}
 const lookK = () => { const v = +SETTINGS.look; return isFinite(v) ? Math.min(3, Math.max(0.3, v)) : 1; };
+const fovDeg = () => { const v = +SETTINGS.fov; return isFinite(v) ? Math.min(110, Math.max(60, v)) : 69; };
+const aimToggle = () => SETTINGS.aim === 'toggle';
 function saveSettings() { try { localStorage.setItem('skerry-settings', JSON.stringify(SETTINGS)); } catch (e) {} }
 const softScares = () => SETTINGS.scares === 'soft';
 // reduced flashes: the Informer's flash, the beam's glare, the bell's flash and lightning at 30%

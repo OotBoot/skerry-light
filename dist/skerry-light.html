@@ -1471,6 +1471,9 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
         <label for="fpsLook">Look sensitivity <output id="fpsLookOut">1.00</output></label>
         <input id="fpsLook" class="lookslider" type="range" min="0.3" max="3" step="0.05" value="1">
         <button class="tool" id="fpsLookReset" type="button">Default</button>
+        <label for="fpsFov">Field of view <output id="fpsFovOut">69°</output></label>
+        <input id="fpsFov" class="lookslider" type="range" min="60" max="110" step="1" value="69">
+        <button class="tool" id="fpsFovReset" type="button">Default</button>
         <label class="smoothrow"><input id="fpsSmooth" type="checkbox" checked> Smooth look <small>(evens out a trackpad; off for the rawest mouse)</small></label>
       </div>
       </div>
@@ -1552,6 +1555,8 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
       <div class="setrow"><span class="label" id="lbl-flashes">Flashes</span><div class="loottabs" id="set-flashes" role="group" aria-labelledby="lbl-flashes"></div></div>
       <div class="setrow"><span class="label" id="lbl-motion">Motion</span><div class="loottabs" id="set-motion" role="group" aria-labelledby="lbl-motion"></div></div>
       <div class="setrow"><label class="label" for="setLook">Look sensitivity <small>(Wreckers' Night and the Lighthouse)</small> <output id="setLookOut">1.00</output></label><input id="setLook" class="lookslider" type="range" min="0.3" max="3" step="0.05" value="1"></div>
+      <div class="setrow"><label class="label" for="setFov">Field of view <small>(Wreckers' Night and the Lighthouse)</small> <output id="setFovOut">69°</output></label><input id="setFov" class="lookslider" type="range" min="60" max="110" step="1" value="69"></div>
+      <div class="setrow"><span class="label" id="lbl-aim">Toggle aim <small>(click right mouse or LT once to aim, again to stop)</small></span><div class="loottabs" id="set-aim" role="group" aria-labelledby="lbl-aim"></div></div>
       <div class="setrow"><span class="label" id="lbl-renderer">Graphics</span><div class="loottabs" id="set-renderer" role="group" aria-labelledby="lbl-renderer"></div></div>
       <p class="setnote">Softened jumpscares are smaller and quieter, with no shaking or black frames. Fewer flashes dims the camera flash, the beam's glare, the bell and lightning. Auto motion follows your device's setting. 3D graphics draw the sea, coast, lighthouse and rocks in real 3D; Classic is the original painted view, lighter on old devices.<span id="glNote"></span></p>
     </div>
@@ -1672,9 +1677,13 @@ const SK = {
 // The player's own settings (the Settings card), kept on this device. Loaded here, before anything
 // draws or makes a sound, because the sound, the jumpscares and the motion all read them.
 // (look: how quickly the view turns in Wreckers' Night and the Lighthouse, 1 the usual; from 0.3 to 3)
-const SETTINGS = { vol: 1, scares: 'full', flashes: 'normal', motion: 'auto', renderer: '3d', look: 1 };
+// (fov: the field of view across the screen in Wreckers' Night and the Lighthouse, in degrees, 60 to 110;
+//  aim: 'toggle' to click (or pull LT) once to aim and again to stop, 'hold' (the default) to aim while it's held)
+const SETTINGS = { vol: 1, scares: 'full', flashes: 'normal', motion: 'auto', renderer: '3d', look: 1, fov: 69, aim: 'hold' };
 try { Object.assign(SETTINGS, JSON.parse(localStorage.getItem('skerry-settings') || '{}') || {}); } catch (e) {}
 const lookK = () => { const v = +SETTINGS.look; return isFinite(v) ? Math.min(3, Math.max(0.3, v)) : 1; };
+const fovDeg = () => { const v = +SETTINGS.fov; return isFinite(v) ? Math.min(110, Math.max(60, v)) : 69; };
+const aimToggle = () => SETTINGS.aim === 'toggle';
 function saveSettings() { try { localStorage.setItem('skerry-settings', JSON.stringify(SETTINGS)); } catch (e) {} }
 const softScares = () => SETTINGS.scares === 'soft';
 // reduced flashes: the Informer's flash, the beam's glare, the bell's flash and lightning at 30%
@@ -9277,6 +9286,7 @@ const SETTING_OPTS = {
   flashes: [['normal', 'Normal'], ['reduced', 'Reduced']],
   motion: [['auto', 'Auto'], ['reduce', 'Reduce'], ['full', 'Full']],
   renderer: [['3d', '3D'], ['2d', 'Classic']],
+  aim: [['hold', 'Off'], ['toggle', 'On']],
 };
 function renderSettings() {
   for (const key in SETTING_OPTS) {
@@ -9298,8 +9308,16 @@ function lookSync() {
 for (const id of ['setLook', 'fpsLook']) { const i = $(id); if (i) i.addEventListener('input', () => { SETTINGS.look = Math.round(+i.value * 100) / 100; saveSettings(); lookSync(); }); }
 { const r = $('fpsLookReset'); if (r) r.addEventListener('click', () => { SETTINGS.look = 1; saveSettings(); lookSync(); }); }
 setTimeout(lookSync, 0);
+// the field of view sliders (the Settings card's, and the first-person menu's): one setting
+function fovSync() {
+  const v = fovDeg();
+  for (const [inp, out] of [['setFov', 'setFovOut'], ['fpsFov', 'fpsFovOut']]) { const i = $(inp), o = $(out); if (i && document.activeElement !== i) i.value = String(v); if (o) o.textContent = v + '°'; }
+}
+for (const id of ['setFov', 'fpsFov']) { const i = $(id); if (i) i.addEventListener('input', () => { SETTINGS.fov = Math.round(+i.value); saveSettings(); fovSync(); }); }
+{ const r = $('fpsFovReset'); if (r) r.addEventListener('click', () => { SETTINGS.fov = 69; saveSettings(); fovSync(); }); }
+setTimeout(fovSync, 0);
 function applySettings() {
-  lookSync();
+  lookSync(); fovSync();
   applyVolume(); refreshMotion();
   if (typeof gl3dRefresh === 'function') gl3dRefresh();
   const n = $('glNote'); if (n) n.textContent = SETTINGS.renderer !== '2d' && GL3D.failed ? ' (3D isn\'t available on this device, so the classic view is used.)' : '';
@@ -12262,7 +12280,7 @@ function fpsSetMenu(on) {
   FPS.menu = on; $('fpsMenu').hidden = !on;
   // (always opens on its first page; a controller starts on Resume)
   $('fpsMenuMain').hidden = false; $('fpsMenuPad').hidden = true; $('fpsMenuHead').textContent = 'Menu'; FPS.menuPadWas = null; fpsMenuMark(null);
-  if (on) { lookSync(); const sb = $('fpsSmooth'); if (sb) sb.checked = FPS.smooth; FPS.mlook = [0, 0]; }
+  if (on) { lookSync(); if (typeof fovSync === 'function') fovSync(); const sb = $('fpsSmooth'); if (sb) sb.checked = FPS.smooth; FPS.mlook = [0, 0]; }
   if (on) { try { document.exitPointerLock && document.exitPointerLock(); } catch (e) {} setTimeout(() => $('fpsResume').focus(), 20); }
 }
 
@@ -12992,7 +13010,7 @@ function fpsInput(dt) {
     const b = i => pad.buttons[i] && pad.buttons[i].pressed, was = FPS.padWas || {};
     if (b(7)) fire = true;
     FPS.padFire = b(7);
-    fpsScope(b(6));
+    if (aimToggle()) { if (b(6) && !was[6]) fpsScope(!FPS.scoped); } else fpsScope(b(6));   // (Settings: Toggle aim)
     const tap = (i, fn) => { if (b(i) && !was[i]) fn(); };
     // X reloads; in the Lighthouse, with something in front of you to use, it uses it instead (B uses too)
     const xUse = () => FPS.zm && ZM.near && !(FPS.me.dead > 0);
@@ -13020,6 +13038,9 @@ function fpsInput(dt) {
   const len = Math.hypot(fx, fz);
   m.walk = false;
   // Shift (held) runs, in every mode on foot; the view widens a little as you go
+  // (with Toggle aim on, breaking into a run lowers the sights)
+  if (aimToggle() && FPS.scoped && len > 0.05 && (K.ShiftLeft || K.ShiftRight || (FPS.padSprint && !FPS.padSprintWas)) && !FPS.menu) FPS.scoped = false;
+  FPS.padSprintWas = FPS.padSprint;
   const run = !!(K.ShiftLeft || K.ShiftRight || FPS.padSprint || (FPS.stick && FPS.stickRun)) && m.dead <= 0 && len > 0.05 && !FPS.menu && !FPS.scoped;
   FPS.runK = clamp((FPS.runK || 0) + (run ? dt * 4 : -dt * 5), 0, 1);
   if (m.dead <= 0 && len > 0.05 && !FPS.menu) {
@@ -13053,14 +13074,18 @@ function fpsDraw() {
   // Verity standing up: the grin fills the screen, and nothing else
   if (FPS.vScare > 0) { drawVerityScare(FPSV.SCARE - FPS.vScare); return; }
   // looking through the longarm's telescope: everything drawn with a longer focal length, then put back
-  const f0 = focal;
-  if (FPS.scoped) focal = f0 * fpsZoom();
-  else if (FPS.runK > 0 && !reduceMotion) focal = f0 * (1 - 0.08 * FPS.runK);
-  try { fpsDrawScene(); } finally { focal = f0; }
-  fpsDrawHands();
-  drawAtmosphere();
-  if (FPS.scoped && fpsW().scope) fpsDrawScope();
-  if (FPS.zm) zmHud(); else fpsHud();
+  // (the field of view is the player's own: Settings, or the menu; measured across the screen)
+  const f0 = focal, fb = (W / 2) / Math.tan(fovDeg() * Math.PI / 360);
+  if (FPS.scoped) focal = fb * fpsZoom();
+  else if (FPS.runK > 0 && !reduceMotion) focal = fb * (1 - 0.08 * FPS.runK);
+  else focal = fb;
+  try {
+    try { fpsDrawScene(); } finally { focal = fb; }
+    fpsDrawHands();
+    drawAtmosphere();
+    if (FPS.scoped && fpsW().scope) fpsDrawScope();
+    if (FPS.zm) zmHud(); else fpsHud();
+  } finally { focal = f0; }
 }
 function fpsDrawScene() {
   const m = FPS.me;
@@ -13546,10 +13571,10 @@ addEventListener('pointerdown', e => {
   if (FPS.menu) return;
   if (document.pointerLockElement !== cv) { try { cv.requestPointerLock(); } catch (err) {} return; }
   if (e.button === 0) FPS.mouseDown = true;
-  if (e.button === 2) fpsScope(true);
+  if (e.button === 2) fpsScope(aimToggle() ? !FPS.scoped : true);
   if (e.button === 1 && FPS.zm) zmKnife();
 }, true);
-addEventListener('pointerup', e => { if (FPS.on && e.pointerType !== 'touch') { if (e.button === 2) fpsScope(false); else FPS.mouseDown = false; } }, true);
+addEventListener('pointerup', e => { if (FPS.on && e.pointerType !== 'touch') { if (e.button === 2) { if (!aimToggle()) fpsScope(false); } else FPS.mouseDown = false; } }, true);
 // (a trackpad's two-finger scroll runs on after the fingers stop: one weapon per swipe, not a whole run of them)
 addEventListener('wheel', e => { if (FPS.on && document.pointerLockElement === cv) { e.preventDefault(); const now = performance.now(); if (now < (FPS.wheelHold || 0)) { FPS.wheelHold = now + 180; return; } FPS.wheel = (FPS.wheel || 0) + e.deltaY; if (Math.abs(FPS.wheel) > 60) { fpsCycle(FPS.wheel > 0 ? 1 : -1); FPS.wheel = 0; FPS.wheelHold = now + 180; } } }, { passive: false });
 addEventListener('contextmenu', e => { if (FPS.on && e.target === cv) e.preventDefault(); }, true);
@@ -17763,10 +17788,10 @@ function zmEnd() {
 const zmCount = r => r <= 5 ? [6, 8, 13, 18, 24][r - 1] : Math.round(24 + (r - 5) * 3.2 + (r - 5) * (r - 5) * 0.06);
 // a drowned man's strength (in pepperbox body shots, before ZM_DMG): in the old games' manner, a fixed step each round
 // to round nine, then a tenth more every round, compounding:
-//   hp(r) = 2.5 + 2 (r - 1)          for r <= 9   (round 1: 2.5, three pepperbox shots; round 5: 10.5; round 9: 18.5)
-//   hp(r) = 18.5 * 1.1^(r - 9)       from r = 10  (round 10: 20.4; 15: 32.8; 20: 52.8; 25: 85; 30: 137)
+//   hp(r) = 2.5 + 1.6 (r - 1)        for r <= 9   (round 1: 2.5, three pepperbox shots; round 5: 8.9; round 9: 15.3)
+//   hp(r) = 15.3 * 1.1^(r - 9)       from r = 10  (round 10: 16.8; 15: 27.1; 20: 43.7; 25: 70.3; 30: 113)
 // each one spawns with this, give or take a tenth; the Fresnel Lamp's burn and its sparks are fractions of it
-const zmHp = r => r <= 9 ? 2.5 + 2 * (r - 1) : (2.5 + 2 * 8) * Math.pow(1.1, r - 9);
+const zmHp = r => r <= 9 ? 2.5 + 1.6 * (r - 1) : (2.5 + 1.6 * 8) * Math.pow(1.1, r - 9);
 function zmRounds(dt) {
   ZM.t -= dt;
   if (ZM.phase === 'pre' || ZM.phase === 'break') {

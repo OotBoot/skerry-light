@@ -1085,10 +1085,10 @@ function zmEnd() {
 const zmCount = r => r <= 5 ? [6, 8, 13, 18, 24][r - 1] : Math.round(24 + (r - 5) * 3.2 + (r - 5) * (r - 5) * 0.06);
 // a drowned man's strength (in pepperbox body shots, before ZM_DMG): in the old games' manner, a fixed step each round
 // to round nine, then a tenth more every round, compounding:
-//   hp(r) = 2.5 + 2 (r - 1)          for r <= 9   (round 1: 2.5, three pepperbox shots; round 5: 10.5; round 9: 18.5)
-//   hp(r) = 18.5 * 1.1^(r - 9)       from r = 10  (round 10: 20.4; 15: 32.8; 20: 52.8; 25: 85; 30: 137)
+//   hp(r) = 2.5 + 1.6 (r - 1)        for r <= 9   (round 1: 2.5, three pepperbox shots; round 5: 8.9; round 9: 15.3)
+//   hp(r) = 15.3 * 1.1^(r - 9)       from r = 10  (round 10: 16.8; 15: 27.1; 20: 43.7; 25: 70.3; 30: 113)
 // each one spawns with this, give or take a tenth; the Fresnel Lamp's burn and its sparks are fractions of it
-const zmHp = r => r <= 9 ? 2.5 + 2 * (r - 1) : (2.5 + 2 * 8) * Math.pow(1.1, r - 9);
+const zmHp = r => r <= 9 ? 2.5 + 1.6 * (r - 1) : (2.5 + 1.6 * 8) * Math.pow(1.1, r - 9);
 function zmRounds(dt) {
   ZM.t -= dt;
   if (ZM.phase === 'pre' || ZM.phase === 'break') {

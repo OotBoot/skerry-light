@@ -503,6 +503,7 @@ const SETTING_OPTS = {
   flashes: [['normal', 'Normal'], ['reduced', 'Reduced']],
   motion: [['auto', 'Auto'], ['reduce', 'Reduce'], ['full', 'Full']],
   renderer: [['3d', '3D'], ['2d', 'Classic']],
+  aim: [['hold', 'Off'], ['toggle', 'On']],
 };
 function renderSettings() {
   for (const key in SETTING_OPTS) {
@@ -524,8 +525,16 @@ function lookSync() {
 for (const id of ['setLook', 'fpsLook']) { const i = $(id); if (i) i.addEventListener('input', () => { SETTINGS.look = Math.round(+i.value * 100) / 100; saveSettings(); lookSync(); }); }
 { const r = $('fpsLookReset'); if (r) r.addEventListener('click', () => { SETTINGS.look = 1; saveSettings(); lookSync(); }); }
 setTimeout(lookSync, 0);
+// the field of view sliders (the Settings card's, and the first-person menu's): one setting
+function fovSync() {
+  const v = fovDeg();
+  for (const [inp, out] of [['setFov', 'setFovOut'], ['fpsFov', 'fpsFovOut']]) { const i = $(inp), o = $(out); if (i && document.activeElement !== i) i.value = String(v); if (o) o.textContent = v + '°'; }
+}
+for (const id of ['setFov', 'fpsFov']) { const i = $(id); if (i) i.addEventListener('input', () => { SETTINGS.fov = Math.round(+i.value); saveSettings(); fovSync(); }); }
+{ const r = $('fpsFovReset'); if (r) r.addEventListener('click', () => { SETTINGS.fov = 69; saveSettings(); fovSync(); }); }
+setTimeout(fovSync, 0);
 function applySettings() {
-  lookSync();
+  lookSync(); fovSync();
   applyVolume(); refreshMotion();
   if (typeof gl3dRefresh === 'function') gl3dRefresh();
   const n = $('glNote'); if (n) n.textContent = SETTINGS.renderer !== '2d' && GL3D.failed ? ' (3D isn\'t available on this device, so the classic view is used.)' : '';

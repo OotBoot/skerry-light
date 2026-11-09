@@ -204,7 +204,7 @@ function fpsSetMenu(on) {
   FPS.menu = on; $('fpsMenu').hidden = !on;
   // (always opens on its first page; a controller starts on Resume)
   $('fpsMenuMain').hidden = false; $('fpsMenuPad').hidden = true; $('fpsMenuHead').textContent = 'Menu'; FPS.menuPadWas = null; fpsMenuMark(null);
-  if (on) { lookSync(); const sb = $('fpsSmooth'); if (sb) sb.checked = FPS.smooth; FPS.mlook = [0, 0]; }
+  if (on) { lookSync(); if (typeof fovSync === 'function') fovSync(); const sb = $('fpsSmooth'); if (sb) sb.checked = FPS.smooth; FPS.mlook = [0, 0]; }
   if (on) { try { document.exitPointerLock && document.exitPointerLock(); } catch (e) {} setTimeout(() => $('fpsResume').focus(), 20); }
 }
 
@@ -934,7 +934,7 @@ function fpsInput(dt) {
     const b = i => pad.buttons[i] && pad.buttons[i].pressed, was = FPS.padWas || {};
     if (b(7)) fire = true;
     FPS.padFire = b(7);
-    fpsScope(b(6));
+    if (aimToggle()) { if (b(6) && !was[6]) fpsScope(!FPS.scoped); } else fpsScope(b(6));   // (Settings: Toggle aim)
     const tap = (i, fn) => { if (b(i) && !was[i]) fn(); };
     // X reloads; in the Lighthouse, with something in front of you to use, it uses it instead (B uses too)
     const xUse = () => FPS.zm && ZM.near && !(FPS.me.dead > 0);
@@ -962,6 +962,9 @@ function fpsInput(dt) {
   const len = Math.hypot(fx, fz);
   m.walk = false;
   // Shift (held) runs, in every mode on foot; the view widens a little as you go
+  // (with Toggle aim on, breaking into a run lowers the sights)
+  if (aimToggle() && FPS.scoped && len > 0.05 && (K.ShiftLeft || K.ShiftRight || (FPS.padSprint && !FPS.padSprintWas)) && !FPS.menu) FPS.scoped = false;
+  FPS.padSprintWas = FPS.padSprint;
   const run = !!(K.ShiftLeft || K.ShiftRight || FPS.padSprint || (FPS.stick && FPS.stickRun)) && m.dead <= 0 && len > 0.05 && !FPS.menu && !FPS.scoped;
   FPS.runK = clamp((FPS.runK || 0) + (run ? dt * 4 : -dt * 5), 0, 1);
   if (m.dead <= 0 && len > 0.05 && !FPS.menu) {
@@ -995,14 +998,18 @@ function fpsDraw() {
   // Verity standing up: the grin fills the screen, and nothing else
   if (FPS.vScare > 0) { drawVerityScare(FPSV.SCARE - FPS.vScare); return; }
   // looking through the longarm's telescope: everything drawn with a longer focal length, then put back
-  const f0 = focal;
-  if (FPS.scoped) focal = f0 * fpsZoom();
-  else if (FPS.runK > 0 && !reduceMotion) focal = f0 * (1 - 0.08 * FPS.runK);
-  try { fpsDrawScene(); } finally { focal = f0; }
-  fpsDrawHands();
-  drawAtmosphere();
-  if (FPS.scoped && fpsW().scope) fpsDrawScope();
-  if (FPS.zm) zmHud(); else fpsHud();
+  // (the field of view is the player's own: Settings, or the menu; measured across the screen)
+  const f0 = focal, fb = (W / 2) / Math.tan(fovDeg() * Math.PI / 360);
+  if (FPS.scoped) focal = fb * fpsZoom();
+  else if (FPS.runK > 0 && !reduceMotion) focal = fb * (1 - 0.08 * FPS.runK);
+  else focal = fb;
+  try {
+    try { fpsDrawScene(); } finally { focal = fb; }
+    fpsDrawHands();
+    drawAtmosphere();
+    if (FPS.scoped && fpsW().scope) fpsDrawScope();
+    if (FPS.zm) zmHud(); else fpsHud();
+  } finally { focal = f0; }
 }
 function fpsDrawScene() {
   const m = FPS.me;
@@ -1488,10 +1495,10 @@ addEventListener('pointerdown', e => {
   if (FPS.menu) return;
   if (document.pointerLockElement !== cv) { try { cv.requestPointerLock(); } catch (err) {} return; }
   if (e.button === 0) FPS.mouseDown = true;
-  if (e.button === 2) fpsScope(true);
+  if (e.button === 2) fpsScope(aimToggle() ? !FPS.scoped : true);
   if (e.button === 1 && FPS.zm) zmKnife();
 }, true);
-addEventListener('pointerup', e => { if (FPS.on && e.pointerType !== 'touch') { if (e.button === 2) fpsScope(false); else FPS.mouseDown = false; } }, true);
+addEventListener('pointerup', e => { if (FPS.on && e.pointerType !== 'touch') { if (e.button === 2) { if (!aimToggle()) fpsScope(false); } else FPS.mouseDown = false; } }, true);
 // (a trackpad's two-finger scroll runs on after the fingers stop: one weapon per swipe, not a whole run of them)
 addEventListener('wheel', e => { if (FPS.on && document.pointerLockElement === cv) { e.preventDefault(); const now = performance.now(); if (now < (FPS.wheelHold || 0)) { FPS.wheelHold = now + 180; return; } FPS.wheel = (FPS.wheel || 0) + e.deltaY; if (Math.abs(FPS.wheel) > 60) { fpsCycle(FPS.wheel > 0 ? 1 : -1); FPS.wheel = 0; FPS.wheelHold = now + 180; } } }, { passive: false });
 addEventListener('contextmenu', e => { if (FPS.on && e.target === cv) e.preventDefault(); }, true);
