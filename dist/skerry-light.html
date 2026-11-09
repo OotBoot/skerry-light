@@ -1731,6 +1731,11 @@ function audioInit() {
     bd[i] = last * 3.5;
   }
 
+  // the outdoor sounds, the sea and the wind, go through their own gain and low-pass, so that on foot under a roof
+  // they come in muffled, as if through the walls (audioOutdoors)
+  AUD.outF = c.createBiquadFilter(); AUD.outF.type = 'lowpass'; AUD.outF.frequency.value = 20000; AUD.outF.Q.value = 0.5;
+  AUD.outG = c.createGain(); AUD.outG.gain.value = 1;
+  AUD.outF.connect(AUD.outG).connect(AUD.master);
   // the sea: brown noise that swells and falls like waves
   const sea = loopNoise(AUD.brown);
   const seaF = c.createBiquadFilter(); seaF.type = 'lowpass'; seaF.frequency.value = 420;
@@ -1738,7 +1743,7 @@ function audioInit() {
   const swell = c.createOscillator(); swell.frequency.value = 0.09;
   const swellAmt = c.createGain(); swellAmt.gain.value = 0.14;
   swell.connect(swellAmt).connect(seaG.gain);
-  sea.connect(seaF).connect(seaG).connect(AUD.master);
+  sea.connect(seaF).connect(seaG).connect(AUD.outF);
   swell.start();
 
   // wind in the rigging
@@ -1748,7 +1753,7 @@ function audioInit() {
   const gust = c.createOscillator(); gust.frequency.value = 0.05;
   const gustAmt = c.createGain(); gustAmt.gain.value = 0.016;
   gust.connect(gustAmt).connect(windG.gain);
-  wind.connect(windF).connect(windG).connect(AUD.master);
+  wind.connect(windF).connect(windG).connect(AUD.outF);
   gust.start();
 
   // dread drone, silent until she comes close
@@ -1761,6 +1766,15 @@ function audioInit() {
   dF.connect(AUD.drone).connect(AUD.master);
 }
 
+// how much of the outside you're out in: 1 in the open, 0 under a roof (the sea and wind dull and quieter)
+function audioOutdoors(k) {
+  const c = AUD.ctx; if (!c || !AUD.outF) return;
+  k = Math.max(0, Math.min(1, k));
+  if (AUD.outK != null && Math.abs(AUD.outK - k) < 0.005) return;
+  AUD.outK = k;
+  AUD.outF.frequency.setTargetAtTime(260 + 19740 * k * k * k, c.currentTime, 0.08);
+  AUD.outG.gain.setTargetAtTime(0.4 + 0.6 * k, c.currentTime, 0.08);
+}
 function loopNoise(buf) {
   const s = AUD.ctx.createBufferSource();
   s.buffer = buf; s.loop = true;
@@ -3288,10 +3302,14 @@ function drawSea() {
 }
 // what's painted on top of the sea: the moon's glitter, the haze at the horizon, the biome's own touches
 // (the 3D renderer draws the water itself and then this over it)
-function drawSeaFx(B) {
+// (opt, on foot with the 3D renderer: glitter false, as the 3D sea has its own moon path and this one, painted over
+//  the picture, would lie across the island's ground and floors; k, how much of the outside you can see, 0 indoors)
+function drawSeaFx(B, opt) {
+  const k = opt && opt.k != null ? opt.k : 1;
+  if (k <= 0.01) return;
   // moon glitter: a broken path of light on the water under the moon, widening towards you
   const mp = skyPos(MOON.b, MOON.e);
-  if (mp && !reduceMotion) {
+  if (mp && !reduceMotion && !(opt && opt.glitter === false)) {
     ctx.fillStyle = `rgba(${B.glitter},0.5)`;
     const seed = Math.floor(g.t * 6);
     for (let i = 0; i < 120; i++) {
@@ -3309,8 +3327,16 @@ function drawSeaFx(B) {
   // haze where the sea meets the sky
   const hz = ctx.createLinearGradient(0, hy - 16, 0, hy + 22);
   hz.addColorStop(0, `rgba(${B.haze},0)`); hz.addColorStop(0.45, `rgba(${B.haze},0.22)`); hz.addColorStop(1, `rgba(${B.haze},0)`);
-  ctx.fillStyle = hz; ctx.fillRect(-W, hy - 16, W * 3, 38);
+  ctx.fillStyle = hz; ctx.globalAlpha = k; ctx.fillRect(-W, hy - 16, W * 3, 38);
   drawBiolum(B); drawLavaSea(B);
+  ctx.globalAlpha = 1;
+}
+// on foot, is this point on the island (inside its shore, the same wobbly edge its ground is built with)? The sea's
+// painted effects aren't drawn there, so they never show through the ground
+function seaUnderLand(x, y) {
+  const I = g && g.island; if (!I) return false;
+  const a = Math.atan2(y - I.y, x - I.x);
+  return Math.hypot(x - I.x, y - I.y) < I.r * (1 + 0.035 * Math.sin(a * 5 + 1) + 0.02 * Math.sin(a * 13));
 }
 
 // the coast: a ragged line of cliffs, the headland under the light, the piers and the harbour cottages
@@ -3595,21 +3621,32 @@ function drawLantern(lx, ly, colour, flick, lean) {
 }
 
 // ---------- atmosphere over everything ----------
+// (GFX.wx: how much of the weather reaches you, 1 out in it; on foot it falls to 0 under a roof (src/fps.js), and
+//  the rain, snow, ash and the rest aren't drawn, bar a lightning flash, dimmed, through the windows)
 function drawAtmosphere() {
   buildCaches();
-  // light drizzle on open water, slanting with the wind and the ship's speed
-  const own = !g.backrooms && !reduceMotion && drawBiomeWeather(curBiome());
-  if (!g.backrooms && !reduceMotion && !own) {
-    const lean = 0.18 + Math.min(0.4, ship.v / 60) + ship.rudder * 0.1;
-    ctx.strokeStyle = 'rgba(190,205,230,0.13)'; ctx.lineWidth = 1;
-    ctx.beginPath();
-    for (const d of drizzle) {
-      d.y += 0.018 * d.v; if (d.y > 1.05) { d.y = -0.05; d.x = Math.random(); }
-      const x = d.x * W, y = d.y * H;
-      ctx.moveTo(x, y); ctx.lineTo(x - d.l * lean, y + d.l);
-    }
-    ctx.stroke();
+  const wx = GFX.wx == null ? 1 : GFX.wx;
+  ctx.save(); ctx.globalAlpha = wx;
+  try {
+    // light drizzle on open water, slanting with the wind and the ship's speed
+    const own = !g.backrooms && !reduceMotion && drawBiomeWeather(curBiome(), wx);
+    if (!g.backrooms && !reduceMotion && !own && wx > 0.01) drawDrizzle();
+  } finally { ctx.restore(); }
+  drawOverlay();
+}
+function drawDrizzle() {
+  const lean = 0.18 + Math.min(0.4, ship.v / 60) + ship.rudder * 0.1;
+  ctx.strokeStyle = 'rgba(190,205,230,0.13)'; ctx.lineWidth = 1;
+  ctx.beginPath();
+  for (const d of drizzle) {
+    d.y += 0.018 * d.v; if (d.y > 1.05) { d.y = -0.05; d.x = Math.random(); }
+    const x = d.x * W, y = d.y * H;
+    ctx.moveTo(x, y); ctx.lineTo(x - d.l * lean, y + d.l);
   }
+  ctx.stroke();
+}
+// the vignette and the film grain, over everything
+function drawOverlay() {
   ctx.save();
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.drawImage(GFX.vignette, 0, 0);
@@ -4257,10 +4294,14 @@ const FX = { snow: [], ash: [], flies: [], motes: [], fog: [] };
 })();
 
 // returns true if the biome drew its own weather (so the default drizzle is skipped)
-function drawBiomeWeather(B) {
+// (wx: how much of it reaches you, 1 out in it, 0 indoors: the caller has set the canvas's alpha to it)
+function drawBiomeWeather(B, wx) {
+  if (wx == null) wx = 1;
   const lean = Math.min(0.4, ship.v / 60) + ship.rudder * 0.1;
   if (B.fx === 'calm') return true;   // clear skies, no rain
-  if (B.fx === 'sky') return drawSkyWeather();
+  if (B.fx === 'sky') return drawSkyWeather(wx);
+  if (wx <= 0.01) return true;        // indoors: none of it
+  ctx.globalAlpha = wx;
   if (B.fx === 'drift') {
     // pale motes rising very slowly through still air, and a low mist on the glass
     const base = ctx.createLinearGradient(0, hy - H * 0.08, 0, hy + H * 0.12);
@@ -4298,7 +4339,7 @@ function drawBiomeWeather(B) {
       const x = (f.x + Math.sin(g.t * f.sp + f.ph) * 0.05) * W, y = (f.y + Math.sin(g.t * f.sp * 1.3 + f.ph * 2) * 0.03) * H;
       const a = Math.max(0, Math.sin(g.t * 1.5 + f.ph * 3));
       if (a < 0.05) continue;
-      ctx.globalAlpha = a * 0.8; lamp(x, y, '#d8ff7a', 1.6); ctx.globalAlpha = 1;
+      ctx.globalAlpha = a * 0.8 * wx; lamp(x, y, '#d8ff7a', 1.6); ctx.globalAlpha = wx;
     }
     return true;
   }
@@ -4339,6 +4380,7 @@ function drawLavaSea(B) {
   const T = 400;
   for (let i = 0; i < 60; i++) {
     const gx = Math.floor(camX / T) * T + ((i * 137) % 10) * (T / 10) * 3 - T, gy = Math.floor(camY / T) * T + ((i * 71) % 12) * (T / 12) * 3 - T;
+    if (seaUnderLand(gx, gy)) continue;
     const c = cam(gx, gy, 0); if (c.f < 4) continue;
     const q = proj(c); if (q.x < -50 || q.x > W + 50) continue;
     const ph = (g.t * 0.35 + i * 0.37) % 1, a = Math.sin(ph * Math.PI);
@@ -4356,6 +4398,7 @@ function drawBiolum(B) {
   for (let i = 0; i < 70; i++) {
     const a = i * 2.4, d = 6 + (i * 7) % 60;
     const wx = ship.x + Math.sin(a) * d, wy = ship.y + Math.cos(a) * d;
+    if (seaUnderLand(wx, wy)) continue;
     const c = cam(wx, wy, 0); if (c.f < 3) continue;
     const q = proj(c), tw = Math.max(0, Math.sin(g.t * 2 + i * 1.7));
     const near = Math.max(0, 1 - d / 60) * (0.3 + Math.min(1, ship.v / 10) * 0.7);
@@ -7687,17 +7730,21 @@ function drawRunway() {
 
 // wind streaks rushing past, quicker the faster you fly
 const SKY_STREAKS = []; for (let i = 0; i < 40; i++) SKY_STREAKS.push({ x: Math.random(), y: Math.random(), l: 0.02 + Math.random() * 0.05 });
-function drawSkyWeather() {
+function drawSkyWeather(wx) {
+  if (wx == null) wx = 1;
   const sp = Math.min(1, ship.v / 20);
-  ctx.strokeStyle = `rgba(210,220,240,${0.06 + 0.1 * sp})`; ctx.lineWidth = 1; ctx.beginPath();
-  for (const s of SKY_STREAKS) {
-    s.y += 0.01 + sp * 0.03; if (s.y > 1.1) { s.y = -0.1; s.x = Math.random(); }
-    const x = cx + (s.x - 0.5) * W * (0.6 + s.y), y = H * 0.5 + (s.y - 0.5) * H;
-    const dx = (x - cx) * s.l * 3, dy = (y - H * 0.5) * s.l * 3;
-    ctx.moveTo(x, y); ctx.lineTo(x + dx, y + dy);
+  if (wx > 0.01) {
+    ctx.strokeStyle = `rgba(210,220,240,${0.06 + 0.1 * sp})`; ctx.lineWidth = 1; ctx.beginPath();
+    for (const s of SKY_STREAKS) {
+      s.y += 0.01 + sp * 0.03; if (s.y > 1.1) { s.y = -0.1; s.x = Math.random(); }
+      const x = cx + (s.x - 0.5) * W * (0.6 + s.y), y = H * 0.5 + (s.y - 0.5) * H;
+      const dx = (x - cx) * s.l * 3, dy = (y - H * 0.5) * s.l * 3;
+      ctx.moveTo(x, y); ctx.lineTo(x + dx, y + dy);
+    }
+    ctx.stroke();
   }
-  ctx.stroke();
-  if (g.lightning > 0) { ctx.fillStyle = `rgba(220,230,255,${g.lightning * 0.22 * flashK()})`; ctx.fillRect(0, 0, W, H); }
+  // (under a roof the flash still comes in at the windows, dimmer)
+  if (g.lightning > 0) { ctx.globalAlpha = 0.35 + 0.65 * wx; ctx.fillStyle = `rgba(220,230,255,${g.lightning * 0.22 * flashK()})`; ctx.fillRect(0, 0, W, H); ctx.globalAlpha = wx; }
   return true;
 }
 
@@ -7914,9 +7961,20 @@ function gl3dShow(on) {
 function gl3dRefresh() { gl3dShow(gl3dActive()); }
 
 // ---------- the sea ----------
+// On foot (Wreckers' Night, the Lighthouse) there's an island in the sea, with its ground, floors and docks only a
+// little above the water. So that the swell never comes up through them: uIsle (x, y, radius, on) is the island,
+// and the sea is calmer in its lee and is cut away under its shore (the same wobbly edge as the ground's mesh), and
+// uCap is the highest a crest may reach (a little under the ground; very high when sailing), approached smoothly.
+const SEA_ISLE = `
+uniform vec4 uIsle;
+float isleEdge(vec2 g) {
+  vec2 d = g - uIsle.xy; float a = atan(d.y, d.x);
+  return length(d) - uIsle.z * (1.0 + 0.035 * sin(a * 5.0 + 1.0) + 0.02 * sin(a * 13.0));
+}`;
 const SEA_VS = `
-uniform float uT; uniform vec3 uCamPos;
+uniform float uT, uCap; uniform vec3 uCamPos;
 varying vec3 vW; varying float vF; varying float vAmp;
+${SEA_ISLE}
 float wh(vec2 p, float t) {
   return 0.18 * sin(p.x * 0.21 + t * 1.3) + 0.14 * sin(p.x * 0.05 + p.y * 0.17 - t * 1.1)
        + 0.09 * sin((p.x + p.y) * 0.37 + t * 2.1) + 0.05 * sin((p.x - p.y) * 0.61 - t * 2.7);
@@ -7925,7 +7983,10 @@ void main() {
   vec4 w = modelMatrix * vec4(position, 1.0);
   float d = length(w.xz - uCamPos.xz);
   vAmp = 1.0 - smoothstep(60.0, 420.0, d);
-  w.y += wh(w.xz, uT) * vAmp;
+  if (uIsle.w > 0.5) vAmp *= mix(0.45, 1.0, smoothstep(4.0, 40.0, isleEdge(vec2(w.x, -w.z))));
+  float h = wh(w.xz, uT) * vAmp;
+  if (h > 0.0) { float e = exp(-2.0 * h / uCap); h = uCap * (1.0 - e) / (1.0 + e); }
+  w.y += h;
   vW = w.xyz;
   vec4 mv = viewMatrix * w;
   vF = -mv.z;
@@ -7936,6 +7997,7 @@ uniform vec3 uSea0, uSea1, uSea2, uSea3, uBeamCol, uWaveCol, uMoonDir, uGlit, uC
 uniform float uCamH, uFocal, uBelow, uBeam, uHalf, uShade, uRange, uBeamOn, uT, uLR, uLamp, uCoast;
 uniform vec2 uShip;
 varying vec3 vW; varying float vF; varying float vAmp;
+${SEA_ISLE}
 vec2 dwh(vec2 p, float t) {
   vec2 g = 0.18 * 0.21 * cos(p.x * 0.21 + t * 1.3) * vec2(1.0, 0.0);
   g += 0.14 * cos(p.x * 0.05 + p.y * 0.17 - t * 1.1) * vec2(0.05, 0.17);
@@ -7950,6 +8012,7 @@ vec2 ripple(vec2 p, float t) {
 void main() {
   float gx = vW.x, gy = -vW.z;
   if (gy < uCoast) discard;                       // the land starts here; the sky canvas paints the ground behind
+  if (uIsle.w > 0.5 && isleEdge(vec2(gx, gy)) < 0.0) discard;   // and no sea under the island's ground and floors
   // the same gradient the 2D sea has, from the horizon down to your feet
   float t = clamp(uCamH * uFocal / (max(vF, 0.01) * uBelow), 0.0, 1.0);
   vec3 col = t < 0.04 ? mix(uSea0, uSea1, t / 0.04) : t < 0.5 ? mix(uSea1, uSea2, (t - 0.04) / 0.46) : mix(uSea2, uSea3, (t - 0.5) / 0.5);
@@ -7997,7 +8060,7 @@ function buildSea() {
   const u = {};
   for (const n of ['uSea0', 'uSea1', 'uSea2', 'uSea3', 'uBeamCol', 'uWaveCol', 'uMoonDir', 'uGlit', 'uCamPos']) u[n] = { value: new THREE.Vector3() };
   for (const n of ['uCamH', 'uFocal', 'uBelow', 'uBeam', 'uHalf', 'uShade', 'uRange', 'uBeamOn', 'uT', 'uLR', 'uLamp', 'uCoast']) u[n] = { value: 0 };
-  u.uShip = { value: new THREE.Vector2() };
+  u.uShip = { value: new THREE.Vector2() }; u.uIsle = { value: new THREE.Vector4() }; u.uCap = { value: 1e3 };
   const mat = new THREE.ShaderMaterial({ uniforms: u, vertexShader: SEA_VS, fragmentShader: SEA_FS, side: THREE.DoubleSide });
   const m = new THREE.Mesh(geo, mat); m.frustumCulled = false; m.renderOrder = -10;
   GL3D.sea = m; GL3D.scene.add(m);
@@ -8250,6 +8313,10 @@ function gl3dRender(roll, sx, sy, beamOn) {
   u.uT.value = reduceMotion ? 0 : g.t; u.uShip.value.set(ship.x, ship.y);
   const LR = SK.LANTERN * (g.mods ? g.mods.lantern : 1) * ((BOAT_BY_ID[ship.boat] || {}).lamp || 1);
   u.uLR.value = LR; u.uLamp.value = 1; u.uCoast.value = 0;
+  // an island to stand on (Wreckers' Night, the Lighthouse): no sea under it, and the crests kept below its ground
+  const I = g.island;
+  if (I) u.uIsle.value.set(I.x, I.y, I.r, 1); else u.uIsle.value.set(0, 0, 1, 0);
+  u.uCap.value = I ? Math.max(0.05, (I.z != null ? I.z : 0.35) - 0.1) : 1e3;
   // the lights
   GL3D.moon.position.set(Math.sin(mb) * 1000, 400, -Math.cos(mb) * 1000); GL3D.moon.target.position.set(0, 0, 0);
   const far = SK.BEAM_RANGE;
@@ -12278,7 +12345,8 @@ function fpsStart() {
 function fpsStop() {
   if (!FPS.on) return;
   if (FPS.zm && typeof zmStop === 'function') zmStop();
-  FPS.on = false;
+  FPS.on = false; FPS.inK = 0;
+  if (typeof audioOutdoors === 'function') audioOutdoors(1);
   try { document.exitPointerLock && document.exitPointerLock(); } catch (e) {}
   if (NET.room) NET.room.presence({ fps: null }).catch(() => {});
   $('stage').classList.remove('fpsmode');
@@ -13101,7 +13169,10 @@ function fpsDraw() {
   try {
     try { fpsDrawScene(); } finally { focal = fb; }
     fpsDrawHands();
-    drawAtmosphere();
+    // under a roof (src/fpsisle.js), the weather stays outside, and so, muffled, do the sea and the wind
+    GFX.wx = 1 - FPS.inK;
+    try { drawAtmosphere(); } finally { GFX.wx = 1; }
+    if (typeof audioOutdoors === 'function') audioOutdoors(1 - FPS.inK);
     if (FPS.scoped && fpsW().scope) fpsDrawScope();
     if (FPS.zm) zmHud(); else fpsHud();
   } finally { focal = f0; }
@@ -13130,6 +13201,10 @@ function fpsDrawScene() {
     FPS.camAt = [camX, camY, camH];
   } else { FPS.camAt = null; FPS.camPull = null; }
   hy = H * 0.5 + Math.tan(m.p) * focal;
+  // indoors or out (where the camera is): eased over a quarter of a second or so, going through a door
+  { const want = fpsUnderRoof(FPS.g, camX, camY, camH) ? 1 : 0, k = Math.min(1, (FPS.dtLast || 0.016) * 5);
+    FPS.inK = FPS.inK == null || FPS.inKFor !== FPS.g ? want : FPS.inK + (want - FPS.inK) * k; FPS.inKFor = FPS.g;
+    if (Math.abs(FPS.inK - want) < 0.01) FPS.inK = want; }
   const roll = m.dead > 0 ? 0.25 * Math.min(1, (FPSC.RESPAWN - m.dead) * 2) : 0;
   const gl = gl3dWanted() && (GL3D.ok || (!GL3D.tried && gl3dInit()));
   gl3dShow(gl);
@@ -13153,7 +13228,7 @@ function fpsDrawScene() {
     if (FPS.zm) zmScene3D();
     shown = gl3dRender(roll, 0, 0, beamOn);
     if (body) fpsBodyOccluder();
-    drawSeaFx(curBiome()); gl3dLandGlows();
+    drawSeaFx(curBiome(), { glitter: false, k: 1 - FPS.inK }); gl3dLandGlows();
   } else {
     drawSky(); fpsIsleSkyTint(ctx); drawSea(); drawCoast();
     // the island, a low disc coloured for its kind, with its pools and boardwalks
@@ -13995,6 +14070,39 @@ function fpsIsleBlocked(G, x, y, pad, z) {
     if (fpiDist(s, x, y) < pad) return true;
   }
   return false;
+}
+// ---------- under a roof ----------
+// Indoors is wherever there's a roof or a ceiling over you: solids lifted off the ground (z0 set: a roof, a
+// ceiling, the floor above, a stair overhead) higher than the point, covering it and the ground half a metre round
+// it on at least three sides (so a lintel over a door, a beam, or a wall standing on the floor above isn't a roof,
+// and a floor laid in strips is). The Lighthouse's lantern room, with its dome (only in the 3D scene), is indoors too
+// (the map's I.zm.top); the gallery round it is out. So it works for anything built from props with roofs, on any
+// island. The weather, the sea's painted shimmer and the outdoor sounds go by it (src/fps.js).
+function fpsRoofIndex(I) {
+  if (I.roofIx && I.roofIx.src === I.solids && I.roofIx.n === I.solids.length) return I.roofIx.m;
+  const m = new Map(), C = 6;
+  for (const s of I.solids) {
+    if (s.z0 == null) continue;
+    const r = s.br + 0.6, i0 = Math.floor((s.x - r) / C), i1 = Math.floor((s.x + r) / C), j0 = Math.floor((s.y - r) / C), j1 = Math.floor((s.y + r) / C);
+    for (let i = i0; i <= i1; i++) for (let j = j0; j <= j1; j++) { const k = i * 65536 + j; let l = m.get(k); if (!l) m.set(k, l = []); l.push(s); }
+  }
+  I.roofIx = { src: I.solids, n: I.solids.length, m };
+  return m;
+}
+// is there a roof over this point (x, y, z: a world height, as camH is)?
+function fpsUnderRoof(G, x, y, z) {
+  const I = G && G.isle; if (!I || !I.solids) return false;
+  const top = I.zm && I.zm.top;
+  if (top && z > FPSC.GROUND + top.z && z < FPSC.GROUND + top.z + 4.4 && Math.hypot(x - top.x, y - top.y) < top.r) return true;
+  const l = fpsRoofIndex(I).get(Math.floor(x / 6) * 65536 + Math.floor(y / 6)); if (!l) return false;
+  const over = [];
+  for (const s of l) if (s.z0 > z && s.z0 < z + 40 && fpiDist(s, x, y) < 0.7) over.push(s);
+  if (!over.length) return false;
+  const covered = (px, py) => over.some(s => fpiDist(s, px, py) < 0.02);
+  if (!covered(x, y)) return false;
+  let n = 0, R = 0.5;
+  for (const [dx, dy] of [[R, 0], [-R, 0], [0, R], [0, -R]]) if (covered(x + dx, y + dy)) n++;
+  return n >= 3;
 }
 // a flood fill from the middle over a 0.6 m grid: which places can be walked to
 function fpiReach(G) {

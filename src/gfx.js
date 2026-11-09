@@ -130,10 +130,14 @@ function drawSea() {
 }
 // what's painted on top of the sea: the moon's glitter, the haze at the horizon, the biome's own touches
 // (the 3D renderer draws the water itself and then this over it)
-function drawSeaFx(B) {
+// (opt, on foot with the 3D renderer: glitter false, as the 3D sea has its own moon path and this one, painted over
+//  the picture, would lie across the island's ground and floors; k, how much of the outside you can see, 0 indoors)
+function drawSeaFx(B, opt) {
+  const k = opt && opt.k != null ? opt.k : 1;
+  if (k <= 0.01) return;
   // moon glitter: a broken path of light on the water under the moon, widening towards you
   const mp = skyPos(MOON.b, MOON.e);
-  if (mp && !reduceMotion) {
+  if (mp && !reduceMotion && !(opt && opt.glitter === false)) {
     ctx.fillStyle = `rgba(${B.glitter},0.5)`;
     const seed = Math.floor(g.t * 6);
     for (let i = 0; i < 120; i++) {
@@ -151,8 +155,16 @@ function drawSeaFx(B) {
   // haze where the sea meets the sky
   const hz = ctx.createLinearGradient(0, hy - 16, 0, hy + 22);
   hz.addColorStop(0, `rgba(${B.haze},0)`); hz.addColorStop(0.45, `rgba(${B.haze},0.22)`); hz.addColorStop(1, `rgba(${B.haze},0)`);
-  ctx.fillStyle = hz; ctx.fillRect(-W, hy - 16, W * 3, 38);
+  ctx.fillStyle = hz; ctx.globalAlpha = k; ctx.fillRect(-W, hy - 16, W * 3, 38);
   drawBiolum(B); drawLavaSea(B);
+  ctx.globalAlpha = 1;
+}
+// on foot, is this point on the island (inside its shore, the same wobbly edge its ground is built with)? The sea's
+// painted effects aren't drawn there, so they never show through the ground
+function seaUnderLand(x, y) {
+  const I = g && g.island; if (!I) return false;
+  const a = Math.atan2(y - I.y, x - I.x);
+  return Math.hypot(x - I.x, y - I.y) < I.r * (1 + 0.035 * Math.sin(a * 5 + 1) + 0.02 * Math.sin(a * 13));
 }
 
 // the coast: a ragged line of cliffs, the headland under the light, the piers and the harbour cottages
@@ -437,21 +449,32 @@ function drawLantern(lx, ly, colour, flick, lean) {
 }
 
 // ---------- atmosphere over everything ----------
+// (GFX.wx: how much of the weather reaches you, 1 out in it; on foot it falls to 0 under a roof (src/fps.js), and
+//  the rain, snow, ash and the rest aren't drawn, bar a lightning flash, dimmed, through the windows)
 function drawAtmosphere() {
   buildCaches();
-  // light drizzle on open water, slanting with the wind and the ship's speed
-  const own = !g.backrooms && !reduceMotion && drawBiomeWeather(curBiome());
-  if (!g.backrooms && !reduceMotion && !own) {
-    const lean = 0.18 + Math.min(0.4, ship.v / 60) + ship.rudder * 0.1;
-    ctx.strokeStyle = 'rgba(190,205,230,0.13)'; ctx.lineWidth = 1;
-    ctx.beginPath();
-    for (const d of drizzle) {
-      d.y += 0.018 * d.v; if (d.y > 1.05) { d.y = -0.05; d.x = Math.random(); }
-      const x = d.x * W, y = d.y * H;
-      ctx.moveTo(x, y); ctx.lineTo(x - d.l * lean, y + d.l);
-    }
-    ctx.stroke();
+  const wx = GFX.wx == null ? 1 : GFX.wx;
+  ctx.save(); ctx.globalAlpha = wx;
+  try {
+    // light drizzle on open water, slanting with the wind and the ship's speed
+    const own = !g.backrooms && !reduceMotion && drawBiomeWeather(curBiome(), wx);
+    if (!g.backrooms && !reduceMotion && !own && wx > 0.01) drawDrizzle();
+  } finally { ctx.restore(); }
+  drawOverlay();
+}
+function drawDrizzle() {
+  const lean = 0.18 + Math.min(0.4, ship.v / 60) + ship.rudder * 0.1;
+  ctx.strokeStyle = 'rgba(190,205,230,0.13)'; ctx.lineWidth = 1;
+  ctx.beginPath();
+  for (const d of drizzle) {
+    d.y += 0.018 * d.v; if (d.y > 1.05) { d.y = -0.05; d.x = Math.random(); }
+    const x = d.x * W, y = d.y * H;
+    ctx.moveTo(x, y); ctx.lineTo(x - d.l * lean, y + d.l);
   }
+  ctx.stroke();
+}
+// the vignette and the film grain, over everything
+function drawOverlay() {
   ctx.save();
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.drawImage(GFX.vignette, 0, 0);

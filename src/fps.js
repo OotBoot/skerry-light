@@ -199,7 +199,8 @@ function fpsStart() {
 function fpsStop() {
   if (!FPS.on) return;
   if (FPS.zm && typeof zmStop === 'function') zmStop();
-  FPS.on = false;
+  FPS.on = false; FPS.inK = 0;
+  if (typeof audioOutdoors === 'function') audioOutdoors(1);
   try { document.exitPointerLock && document.exitPointerLock(); } catch (e) {}
   if (NET.room) NET.room.presence({ fps: null }).catch(() => {});
   $('stage').classList.remove('fpsmode');
@@ -1022,7 +1023,10 @@ function fpsDraw() {
   try {
     try { fpsDrawScene(); } finally { focal = fb; }
     fpsDrawHands();
-    drawAtmosphere();
+    // under a roof (src/fpsisle.js), the weather stays outside, and so, muffled, do the sea and the wind
+    GFX.wx = 1 - FPS.inK;
+    try { drawAtmosphere(); } finally { GFX.wx = 1; }
+    if (typeof audioOutdoors === 'function') audioOutdoors(1 - FPS.inK);
     if (FPS.scoped && fpsW().scope) fpsDrawScope();
     if (FPS.zm) zmHud(); else fpsHud();
   } finally { focal = f0; }
@@ -1051,6 +1055,10 @@ function fpsDrawScene() {
     FPS.camAt = [camX, camY, camH];
   } else { FPS.camAt = null; FPS.camPull = null; }
   hy = H * 0.5 + Math.tan(m.p) * focal;
+  // indoors or out (where the camera is): eased over a quarter of a second or so, going through a door
+  { const want = fpsUnderRoof(FPS.g, camX, camY, camH) ? 1 : 0, k = Math.min(1, (FPS.dtLast || 0.016) * 5);
+    FPS.inK = FPS.inK == null || FPS.inKFor !== FPS.g ? want : FPS.inK + (want - FPS.inK) * k; FPS.inKFor = FPS.g;
+    if (Math.abs(FPS.inK - want) < 0.01) FPS.inK = want; }
   const roll = m.dead > 0 ? 0.25 * Math.min(1, (FPSC.RESPAWN - m.dead) * 2) : 0;
   const gl = gl3dWanted() && (GL3D.ok || (!GL3D.tried && gl3dInit()));
   gl3dShow(gl);
@@ -1074,7 +1082,7 @@ function fpsDrawScene() {
     if (FPS.zm) zmScene3D();
     shown = gl3dRender(roll, 0, 0, beamOn);
     if (body) fpsBodyOccluder();
-    drawSeaFx(curBiome()); gl3dLandGlows();
+    drawSeaFx(curBiome(), { glitter: false, k: 1 - FPS.inK }); gl3dLandGlows();
   } else {
     drawSky(); fpsIsleSkyTint(ctx); drawSea(); drawCoast();
     // the island, a low disc coloured for its kind, with its pools and boardwalks

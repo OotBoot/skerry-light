@@ -262,6 +262,39 @@ function fpsIsleBlocked(G, x, y, pad, z) {
   }
   return false;
 }
+// ---------- under a roof ----------
+// Indoors is wherever there's a roof or a ceiling over you: solids lifted off the ground (z0 set: a roof, a
+// ceiling, the floor above, a stair overhead) higher than the point, covering it and the ground half a metre round
+// it on at least three sides (so a lintel over a door, a beam, or a wall standing on the floor above isn't a roof,
+// and a floor laid in strips is). The Lighthouse's lantern room, with its dome (only in the 3D scene), is indoors too
+// (the map's I.zm.top); the gallery round it is out. So it works for anything built from props with roofs, on any
+// island. The weather, the sea's painted shimmer and the outdoor sounds go by it (src/fps.js).
+function fpsRoofIndex(I) {
+  if (I.roofIx && I.roofIx.src === I.solids && I.roofIx.n === I.solids.length) return I.roofIx.m;
+  const m = new Map(), C = 6;
+  for (const s of I.solids) {
+    if (s.z0 == null) continue;
+    const r = s.br + 0.6, i0 = Math.floor((s.x - r) / C), i1 = Math.floor((s.x + r) / C), j0 = Math.floor((s.y - r) / C), j1 = Math.floor((s.y + r) / C);
+    for (let i = i0; i <= i1; i++) for (let j = j0; j <= j1; j++) { const k = i * 65536 + j; let l = m.get(k); if (!l) m.set(k, l = []); l.push(s); }
+  }
+  I.roofIx = { src: I.solids, n: I.solids.length, m };
+  return m;
+}
+// is there a roof over this point (x, y, z: a world height, as camH is)?
+function fpsUnderRoof(G, x, y, z) {
+  const I = G && G.isle; if (!I || !I.solids) return false;
+  const top = I.zm && I.zm.top;
+  if (top && z > FPSC.GROUND + top.z && z < FPSC.GROUND + top.z + 4.4 && Math.hypot(x - top.x, y - top.y) < top.r) return true;
+  const l = fpsRoofIndex(I).get(Math.floor(x / 6) * 65536 + Math.floor(y / 6)); if (!l) return false;
+  const over = [];
+  for (const s of l) if (s.z0 > z && s.z0 < z + 40 && fpiDist(s, x, y) < 0.7) over.push(s);
+  if (!over.length) return false;
+  const covered = (px, py) => over.some(s => fpiDist(s, px, py) < 0.02);
+  if (!covered(x, y)) return false;
+  let n = 0, R = 0.5;
+  for (const [dx, dy] of [[R, 0], [-R, 0], [0, R], [0, -R]]) if (covered(x + dx, y + dy)) n++;
+  return n >= 3;
+}
 // a flood fill from the middle over a 0.6 m grid: which places can be walked to
 function fpiReach(G) {
   const I = G.isle, S = 0.6, N = Math.ceil(FPSC.R * 2 / S) + 2, x0 = FPSC.CX - FPSC.R, y0 = FPSC.CY - FPSC.R;

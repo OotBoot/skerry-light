@@ -628,10 +628,14 @@ const FX = { snow: [], ash: [], flies: [], motes: [], fog: [] };
 })();
 
 // returns true if the biome drew its own weather (so the default drizzle is skipped)
-function drawBiomeWeather(B) {
+// (wx: how much of it reaches you, 1 out in it, 0 indoors: the caller has set the canvas's alpha to it)
+function drawBiomeWeather(B, wx) {
+  if (wx == null) wx = 1;
   const lean = Math.min(0.4, ship.v / 60) + ship.rudder * 0.1;
   if (B.fx === 'calm') return true;   // clear skies, no rain
-  if (B.fx === 'sky') return drawSkyWeather();
+  if (B.fx === 'sky') return drawSkyWeather(wx);
+  if (wx <= 0.01) return true;        // indoors: none of it
+  ctx.globalAlpha = wx;
   if (B.fx === 'drift') {
     // pale motes rising very slowly through still air, and a low mist on the glass
     const base = ctx.createLinearGradient(0, hy - H * 0.08, 0, hy + H * 0.12);
@@ -669,7 +673,7 @@ function drawBiomeWeather(B) {
       const x = (f.x + Math.sin(g.t * f.sp + f.ph) * 0.05) * W, y = (f.y + Math.sin(g.t * f.sp * 1.3 + f.ph * 2) * 0.03) * H;
       const a = Math.max(0, Math.sin(g.t * 1.5 + f.ph * 3));
       if (a < 0.05) continue;
-      ctx.globalAlpha = a * 0.8; lamp(x, y, '#d8ff7a', 1.6); ctx.globalAlpha = 1;
+      ctx.globalAlpha = a * 0.8 * wx; lamp(x, y, '#d8ff7a', 1.6); ctx.globalAlpha = wx;
     }
     return true;
   }
@@ -710,6 +714,7 @@ function drawLavaSea(B) {
   const T = 400;
   for (let i = 0; i < 60; i++) {
     const gx = Math.floor(camX / T) * T + ((i * 137) % 10) * (T / 10) * 3 - T, gy = Math.floor(camY / T) * T + ((i * 71) % 12) * (T / 12) * 3 - T;
+    if (seaUnderLand(gx, gy)) continue;
     const c = cam(gx, gy, 0); if (c.f < 4) continue;
     const q = proj(c); if (q.x < -50 || q.x > W + 50) continue;
     const ph = (g.t * 0.35 + i * 0.37) % 1, a = Math.sin(ph * Math.PI);
@@ -727,6 +732,7 @@ function drawBiolum(B) {
   for (let i = 0; i < 70; i++) {
     const a = i * 2.4, d = 6 + (i * 7) % 60;
     const wx = ship.x + Math.sin(a) * d, wy = ship.y + Math.cos(a) * d;
+    if (seaUnderLand(wx, wy)) continue;
     const c = cam(wx, wy, 0); if (c.f < 3) continue;
     const q = proj(c), tw = Math.max(0, Math.sin(g.t * 2 + i * 1.7));
     const near = Math.max(0, 1 - d / 60) * (0.3 + Math.min(1, ship.v / 10) * 0.7);

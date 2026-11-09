@@ -105,7 +105,7 @@ How quickly the view turns in Wreckers' Night and the Lighthouse, for the mouse,
 
 The world is drawn in real 3D with WebGL (three.js):
 
-- **The sea** is a moving surface that catches the beam, the moon and your lantern.
+- **The sea** is a moving surface that catches the beam, the moon and your lantern. On foot (Wreckers' Night and the Lighthouse) it's cut away under the island, along the same wobbly shore its ground is built with, it runs calmer in the island's lee, and its crests are kept a little below the ground, so the swell never shows through the ground, a floor or a dock, from the shore or from the top of the tower. The painted shimmer on the water (the moon's glitter, the Lagoon's glow, lava) is never drawn over the island either.
 - **The lighthouse** is a solid tower, and its beam is a cone of light with a spotlight in it that lights the rocks and cliffs as it sweeps.
 - **The coast and landmarks** are solid: cliffs, headland, piers and cottages, and each sea's own landscape (the Fjord's mountains, the Ember Isles' volcanoes and lava rivers, the Lagoon's palms, the Barrow Shore's chapel and dead trees, the Shoals' spires, the Nether's lavafalls, the Wine-Dark Sea's temples and cypresses, the stairs, doors and lamps of the Places In Between).
 - **Skerries, bergs, reefs, wrecks and timber** are solid shapes, and still only show where some light reaches them.
@@ -113,6 +113,8 @@ The world is drawn in real 3D with WebGL (three.js):
 - **The Open Sky's** clouds are 3D, made of soft puffs that turn to face you, over the 3D sea and mountains.
 
 The sky is painted on a canvas behind the 3D view, and the creatures, ships, deck and effects on a canvas over it. The 3D camera projects exactly as the painted one does, so they line up, and anything painted behind a solid rock, wreck, thick cloud or Backrooms wall is hidden by it.
+
+**Indoors and out, on foot.** The weather (drizzle, snow, ash, embers, fireflies, rolling fog) is drawn over the view, so on foot it stops under a roof: wherever there's a ceiling, a roof, the floor above or a stair overhead (any solid lifted off the ground over you and the ground round you; a lintel or a beam doesn't count), and in the Lighthouse's lantern room under its dome (the gallery outside it is out in the weather). It fades out as you go in through a door and back as you come out, the haze on the horizon goes with it, a lightning flash comes in dimmer through the windows, and the sea and the wind are muffled (`fpsUnderRoof` in `src/fpsisle.js`, `audioOutdoors` in `src/audio.js`). It goes by what's overhead rather than by room, so anything built with a roof, on any island or in the station, works the same.
 
 Settings → Graphics switches between **3D** and **Classic** (the original painted view, lighter on old devices). If WebGL isn't available the game uses Classic by itself.
 

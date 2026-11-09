@@ -36,6 +36,11 @@ function audioInit() {
     bd[i] = last * 3.5;
   }
 
+  // the outdoor sounds, the sea and the wind, go through their own gain and low-pass, so that on foot under a roof
+  // they come in muffled, as if through the walls (audioOutdoors)
+  AUD.outF = c.createBiquadFilter(); AUD.outF.type = 'lowpass'; AUD.outF.frequency.value = 20000; AUD.outF.Q.value = 0.5;
+  AUD.outG = c.createGain(); AUD.outG.gain.value = 1;
+  AUD.outF.connect(AUD.outG).connect(AUD.master);
   // the sea: brown noise that swells and falls like waves
   const sea = loopNoise(AUD.brown);
   const seaF = c.createBiquadFilter(); seaF.type = 'lowpass'; seaF.frequency.value = 420;
@@ -43,7 +48,7 @@ function audioInit() {
   const swell = c.createOscillator(); swell.frequency.value = 0.09;
   const swellAmt = c.createGain(); swellAmt.gain.value = 0.14;
   swell.connect(swellAmt).connect(seaG.gain);
-  sea.connect(seaF).connect(seaG).connect(AUD.master);
+  sea.connect(seaF).connect(seaG).connect(AUD.outF);
   swell.start();
 
   // wind in the rigging
@@ -53,7 +58,7 @@ function audioInit() {
   const gust = c.createOscillator(); gust.frequency.value = 0.05;
   const gustAmt = c.createGain(); gustAmt.gain.value = 0.016;
   gust.connect(gustAmt).connect(windG.gain);
-  wind.connect(windF).connect(windG).connect(AUD.master);
+  wind.connect(windF).connect(windG).connect(AUD.outF);
   gust.start();
 
   // dread drone, silent until she comes close
@@ -66,6 +71,15 @@ function audioInit() {
   dF.connect(AUD.drone).connect(AUD.master);
 }
 
+// how much of the outside you're out in: 1 in the open, 0 under a roof (the sea and wind dull and quieter)
+function audioOutdoors(k) {
+  const c = AUD.ctx; if (!c || !AUD.outF) return;
+  k = Math.max(0, Math.min(1, k));
+  if (AUD.outK != null && Math.abs(AUD.outK - k) < 0.005) return;
+  AUD.outK = k;
+  AUD.outF.frequency.setTargetAtTime(260 + 19740 * k * k * k, c.currentTime, 0.08);
+  AUD.outG.gain.setTargetAtTime(0.4 + 0.6 * k, c.currentTime, 0.08);
+}
 function loopNoise(buf) {
   const s = AUD.ctx.createBufferSource();
   s.buffer = buf; s.loop = true;
