@@ -1458,6 +1458,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
         <button class="primary" id="fpsResume" type="button">Back to the fight</button>
         <button class="tool" id="fpsViewBtn" type="button">View: first person</button>
         <button class="tool" id="fpsPadBtn" type="button">Controller</button>
+        <button class="tool" id="zmUnstick" type="button" hidden title="Send one of the drowned that's stuck out of reach back out to sea, to come in again by the window nearest you">Unstick a drowned</button>
         <button class="tool" id="fpsLeave" type="button">Leave the island</button>
       </div>
       <div class="lookrow" id="fpsOpts">
@@ -12109,7 +12110,8 @@ const FPS_SEAS = ['skerry', 'fjord', 'ember', 'lagoon', 'barrows', 'shoals'];
 //  pepperbox   six quick shots, one damage (two to the head)
 //  blunderbuss one shot of nine balls in a wide spread; deadly close, useless past fifty metres
 //  longarm     one heavy shot, three damage (a head shot kills); hold right mouse / Scope for the telescope
-//  harpoon     one barbed harpoon on a line, slow enough to see and to dodge, and it kills what it hits
+//  harpoon     one barbed harpoon on a line, slow enough to see, flying flat and true, and it kills what it hits
+//              (tol: how far past a body's edge it still catches; a heavy iron is forgiving)
 //  cutlass     no powder: swing it within arm's reach, two damage a cut, in a three-cut combination
 //  avtomat     an automatic rifle: twenty-five rounds as fast as you hold the trigger, one damage (two to the head);
 //              it climbs and kicks hard, sprays from the hip, and takes a long while to load; hold right mouse /
@@ -12118,7 +12120,7 @@ const FPSW = {
   pepperbox:   { n: 'Pepperbox',   code: 'p', mag: 6, rate: 0.26, reload: 2.2, dmg: 1, head: 2, auto: true, range: 420, kick: 1 },
   blunderbuss: { n: 'Blunderbuss', code: 'b', mag: 1, rate: 0.6, reload: 2.7, dmg: 1, head: 1, pellets: 9, spread: 0.085, range: 55, kick: 2.4 },
   longarm:     { n: 'Longarm',     code: 'l', mag: 1, rate: 0.5, reload: 2.6, dmg: 3, head: 5, range: 650, hip: 0.012, scope: 3.2, kick: 1.6 },
-  harpoon:     { n: 'Harpoon gun', code: 'h', mag: 1, rate: 0.6, reload: 2.9, dmg: 4, head: 4, speed: 72, drop: 5, range: 300, kick: 1.9 },
+  harpoon:     { n: 'Harpoon gun', code: 'h', mag: 1, rate: 0.6, reload: 2.2, dmg: 4, head: 4, speed: 100, drop: 2.4, tol: 0.2, range: 300, kick: 1.9 },
   cutlass:     { n: 'Cutlass',     code: 'c', mag: 0, rate: 0.48, reload: 1.6, dmg: 2, head: 2, reach: 2.7, arc: 0.8, melee: true, kick: 0 },
   avtomat:     { n: 'Avtomat',     code: 'a', mag: 25, rate: 0.085, reload: 3.9, dmg: 1, head: 2, auto: true, range: 380, hip: 0.03, ads: 1.45, kick: 0.75, climb: 0.019, sway: 0.011 },
   // only in the Lighthouse (src/zombies.js), and only from the wreck chest: a lantern with a lighthouse lens in it,
@@ -12480,7 +12482,8 @@ function fpsSeeAt(x, y, theirLantern) {
 // ---------- shooting ----------
 // the first thing along a ray from (x, y, z) heading h, pitched p: a person, a rock, a wreck or the ground
 // (targets: who can be hit; everyone on the island unless given)
-function fpsRay(x, y, z, h, p, skipId, targets, range) {
+// (tol: a little more body to hit, all round, for a forgiving projectile: the harpoon)
+function fpsRay(x, y, z, h, p, skipId, targets, range, tol) {
   const sx = Math.sin(h), sy = Math.cos(h), tp = Math.tan(p);
   let best = { t: range || FPSC.RANGE, kind: 'none' };
   if (p < -0.001) { const tg = (z - FPSC.GROUND) / -tp; if (tg < best.t) best = { t: tg, kind: 'ground' }; }
@@ -12503,9 +12506,9 @@ function fpsRay(x, y, z, h, p, skipId, targets, range) {
   for (const o of targets) {
     if (o.id === skipId) continue;
     // (a body can be bigger than most: rad, tall and headZ, for the Lighthouse's Diver)
-    const t = circle(o.x, o.y, o.rad || FPSC.BODY); if (t == null || t > best.t) continue;
+    const t = circle(o.x, o.y, (o.rad || FPSC.BODY) + (tol || 0)); if (t == null || t > best.t) continue;
     const hz = z + tp * t - FPSC.GROUND - (o.jz || 0);
-    if (hz < 0 || hz > (o.tall || FPSC.TALL) + 0.1) continue;
+    if (hz < -(tol || 0) || hz > (o.tall || FPSC.TALL) + 0.1 + (tol || 0)) continue;
     best = { t, kind: 'body', who: o, head: hz > (o.headZ || 1.5) };
   }
   best.x = x + sx * best.t; best.y = y + sy * best.t; best.z = z + tp * best.t;
@@ -12517,9 +12520,11 @@ function fpsRemember(o, now) {
   while (o.hist.length && now - o.hist[0].t > FPSC.LAG * 1000 + 100) o.hist.shift();
 }
 // the directions of the balls in a blunderbuss shot, the same on every screen (from the shot's seed)
+// (in the Lighthouse a weapon can load differently: ZM_SHOT in src/zombies.js, the blunderbuss's wider charge)
 function fpsPellets(sh) {
   const [, , , , h, p, , code, seed] = sh, w = fpsWOf(code), rng = seeded((seed || 1) >>> 0), out = [];
-  for (let i = 0; i < w.pellets; i++) { const a = rng() * 6.283, r = Math.sqrt(rng()) * w.spread; out.push([h + Math.cos(a) * r, p + Math.sin(a) * r * 0.7]); }
+  const o = FPS.zm && typeof ZM_SHOT !== 'undefined' && ZM_SHOT[code], n = (o && o.pellets) || w.pellets, sp = (o && o.spread) || w.spread;
+  for (let i = 0; i < n; i++) { const a = rng() * 6.283, r = Math.sqrt(rng()) * sp; out.push([h + Math.cos(a) * r, p + Math.sin(a) * r * 0.7]); }
   return out;
 }
 // the line(s) a shot travels: one for most guns, nine for the blunderbuss, a little wander from the hip for the longarm
@@ -12662,7 +12667,7 @@ function fpsHarpoonsTick(dt) {
       for (const b of FPS.bots) if (b.id !== hp.by && !(b.dead > 0)) people.push(b);
       for (const d of FPS.drowned) if (!d.dead && !((hp.skew || hp.thru) && zmpHarpoonSkip(hp, d))) people.push(d);   // ([pap] the Whale-Road passes through)
       if (hp.mine) for (const r of FPS.remote.values()) if (!r.dead) people.push(r);
-      const r = fpsRay(ox, oy, oz, hh, pp, hp.by, people, seg + 0.05);
+      const r = fpsRay(ox, oy, oz, hh, pp, hp.by, people, seg + 0.05, w.tol);
       if (r.kind === 'none') { if (hp.z < FPSC.GROUND || hp.t > 6 || Math.hypot(hp.x - FPSC.CX, hp.y - FPSC.CY) > FPSC.R + 200) { hp.done = true; hp.stuck = hp.z < FPSC.GROUND ? 8 : 0; if (hp.skew && typeof zmpHarpoonCarry === 'function') zmpHarpoonCarry(hp, true); } continue; }
       hp.x = r.x; hp.y = r.y; hp.z = r.z; hp.done = true;
       if (r.kind === 'body' && FPS.zm && typeof zmpHarpoonHit === 'function' && zmpHarpoonHit(hp, r)) { hp.done = false; continue; }   // [pap] the Whale-Road runs them through
@@ -12673,6 +12678,8 @@ function fpsHarpoonsTick(dt) {
         else if (o.bot && hostish) fpsBotHurt(o, w.dmg, hp.by);
         else if (o.drowned && hostish) fpsDrownedHurt(o, w.dmg, r.head, 'h');
         if (hp.mine) { FPS.hitT = 0.25; FPS.hitHead = true; fpsHitSound(true); }
+        // (in the Lighthouse, an iron that kills goes on through and into the next: zmHarpoonOn, src/zombies.js)
+        if (o.drowned && FPS.zm && typeof zmHarpoonOn === 'function' && zmHarpoonOn(hp, o)) { hp.done = false; continue; }
         hp.stuck = 0.6;
         if (hp.skew && typeof zmpHarpoonCarry === 'function') zmpHarpoonCarry(hp, true);
       } else { if (hp.skew && typeof zmpHarpoonCarry === 'function') zmpHarpoonCarry(hp, true); hp.stuck = 8; fpsPuff(r.x, r.y, r.z, '190,190,180', 8); try { noise('bandpass', 900, 3, 0.002, 0.12, 0.15); } catch (e) {} }
@@ -16738,7 +16745,7 @@ const ZMC = {
   // (BODY: how close one of the drowned and you can come, middle to middle; SPRINT: your run here, a touch
   //  slower than on Wreckers' Night)
   BODY: 0.5, SPRINT: 9.8,
-  RISE: 0.28, TREAD: 0.75, CEIL: 3.6, STEP: 0.6, START: 500, BREAK: 10, ALIVE: 24, NAV: 0.5, HP: 3, HP_STOUT: 6, BOX: 950,
+  RISE: 0.28, TREAD: 0.75, CEIL: 3.6, STEP: 0.6, START: 500, BREAK: 15, ALIVE: 24, NAV: 0.5, HP: 3, HP_STOUT: 6, BOX: 950,
 };
 // The tower: round, whitewashed with two red bands, fifteen metres wide inside and five floors high, a spiral stair
 // of ninety steps round a stone newel up through the middle, one turn to a floor, and the lantern room of glass on
@@ -16750,8 +16757,16 @@ const ZM_TROOMS = { tower: 'the Tower Foot', tw1n: 'the Watch Room', tw1s: 'the 
   tw3n: 'the Clock Room', tw3s: 'the Lamp-Wright’s Store', tw4n: 'the Service Room', tw4s: 'the Keeper’s Study', top: 'the Lantern Room' };
 const ZM = { on: false, own: ['pepperbox'], res: {}, pts: 0, round: 0, items: [], z: [], drops: [], perks: {}, fx: [] };
 // what each weapon carries in reserve, and how much harder it hits the drowned than a wrecker
-const ZM_AMMO = { pepperbox: 60, blunderbuss: 28, longarm: 36, harpoon: 20, avtomat: 225, cutlass: 0, fresnel: 240 };
-const ZM_DMG = { p: 1, b: 2, l: 4, h: 8, c: 2.5, a: 1.15, f: 1, k: 1 };
+const ZM_AMMO = { pepperbox: 60, blunderbuss: 28, longarm: 36, harpoon: 30, avtomat: 225, cutlass: 0, fresnel: 240 };
+const ZM_DMG = { p: 1, b: 2, l: 4, h: 10, c: 2.5, a: 1.15, f: 1, k: 1 };
+// how a weapon loads here, where it differs from Wreckers' Night (FPSW is shared, and left as it is there): the
+// blunderbuss takes a heavier charge of shot in a wider cone. Each ball is its own hit (and can find a different one
+// of them), at full weight out to near, falling away to far (times ZM_DMG) by ZM_FALL; a harpoon that kills goes on
+// through, into up to thru more
+const ZM_SHOT = { b: { pellets: 15, spread: 0.15, near: 6, far: 24, min: 0.15 } };
+const ZM_HARPOON_THRU = 4;
+// (a ball's weight at d metres: whole to near, then down in a line to min at far, and no less)
+const ZM_FALL = (code, d) => { const o = ZM_SHOT[code]; return o && o.far ? clamp(1 - (d - o.near) / (o.far - o.near) * (1 - o.min), o.min, 1) : 1; };
 // the knife: always to hand, never runs out (V, middle mouse, R3, the knife button; or Fire with nothing left to fire)
 // boarding windows pays 10 a board, up to this many points a round for each player (then the boards are free work)
 const ZM_BOARD_CAP = 500;
@@ -17122,7 +17137,7 @@ FPI_GEN.light = {
           lintel(2.35);
           put('block', mx, my, ang, { w: w + 0.04, d: TH, hh: 1.0, col: lc, trim: FPI_C.wood3 });
           const [wx, wy] = W(mx, my), [nx, ny] = horiz ? [0, op.out] : [op.out, 0];
-          Z.windows.push({ x: wx, y: wy, nx, ny, zone: op.z, boards: 6, id: Z.windows.length, q: [] });
+          Z.windows.push({ x: wx, y: wy, nx, ny, zone: op.z, boards: 6, id: Z.windows.length, q: [], hw: w / 2, th: TH / 2 });
         } else if (op.k === 'high') {
           // a window high up in the tower: solid wall up to its sill, a lintel over it
           put('block', mx, my, ang, { w: w + 0.04, d: TH, hh: op.s0, col: FPI_C.stone3 });
@@ -17193,7 +17208,7 @@ FPI_GEN.light = {
         if (o === 'a') { piece(Lk + 2.9, z1); continue; }
         piece(z0, Lk + 1.0); piece(Lk + 2.35, z1);
         const zone = k === 0 ? 'tower' : 'tw' + k + (sa >= 0 ? 'n' : 's');
-        if (o === 'z') Z.windows.push({ x: OX + px, y: OY + py, nx: ca, ny: sa, zone, z: Lk, boards: 6, id: Z.windows.length, q: [] });
+        if (o === 'z') Z.windows.push({ x: OX + px, y: OY + py, nx: ca, ny: sa, zone, z: Lk, boards: 6, id: Z.windows.length, q: [], hw: SEG / 2, th: ZMT.TH / 2 });
         else Z.glass.push({ x: OX + px, y: OY + py, ang, w: SEG * 0.92, z0: Lk + 1.0, z1: Lk + 2.35, frame: true });
       }
     }
@@ -17452,11 +17467,24 @@ function zmFloorAt(x, y, feet, pad) {
   }
   return fl;
 }
+// The windows are the drowned's way in, never yours out: for a player each window's opening is filled, sill to
+// lintel and a little either side, boarded or not, walking or jumping. How far into that a place is (0: clear of
+// every one); n points out of the station, so the room's side is a < 0
+function zmWinPen(x, y, pad, feet) {
+  let pen = 0;
+  for (const w of ZM.windows || []) {
+    const wz = w.z || 0; if (feet < wz - 0.6 || feet > wz + 2.4) continue;
+    const dx = x - w.x, dy = y - w.y, a = dx * w.nx + dy * w.ny, t = -dx * w.ny + dy * w.nx, in0 = (w.th || 0.3) + 0.05 + pad;
+    if (a > -in0 && a < 1.2 && Math.abs(t) < (w.hw || 0.8) + 0.05) pen = Math.max(pen, a + in0);
+  }
+  return pen;
+}
 // move with sliding, then stand on whatever's underneath: step up onto it, step down a stair, or fall
 function zmMove(m, dx, dy) {
   const feet = m.jz || 0, pad = m.zpad || 0.5;
-  // (you can't walk through them: the drowned crowd you in)
-  const free = m === FPS.me ? (x, y) => !zmBlockedAt(x, y, pad, feet) && !zmCrowd(m, x, y) : (x, y) => !zmBlockedAt(x, y, pad, feet);
+  // (you can't walk through them: the drowned crowd you in; nor out through a window: only further back from one)
+  const pen0 = m === FPS.me ? zmWinPen(m.x, m.y, pad, feet) : 0;
+  const free = m === FPS.me ? (x, y) => !zmBlockedAt(x, y, pad, feet) && !zmCrowd(m, x, y) && (pen0 => { const p = zmWinPen(x, y, pad, feet); return p <= 0 || p < pen0 - 1e-6; })(pen0) : (x, y) => !zmBlockedAt(x, y, pad, feet);
   let ok = true;
   if (free(m.x + dx, m.y + dy)) { m.x += dx; m.y += dy; }
   else if (free(m.x + dx, m.y)) m.x += dx;
@@ -17584,7 +17612,20 @@ function zmNavDist(x, y, jz) { const a = zmNodeIn(zmCell(x, y), jz || 0, 0.8); r
 // where to head next from (x, y) at height jz: a point a couple of cells further along the shortest way to you
 function zmNavNext(x, y, jz) {
   const N = ZM.nav; let a = zmNodeIn(zmCell(x, y), jz || 0, 0.8);
-  if (a < 0) return null;
+  if (a < 0) {
+    // (squeezed off the grid, hard against a wall or the newel: back to the nearest place on it at this height that
+    // leads to you)
+    const c = zmCell(x, y); if (c < 0) return null;
+    const ci = c % N.nx, cj = (c - ci) / N.nx; let bd = 1e9, bc = -1;
+    for (let dj = -2; dj <= 2; dj++) for (let di = -2; di <= 2; di++) {
+      const i = ci + di, j = cj + dj; if (i < 0 || j < 0 || i >= N.nx || j >= N.ny) continue;
+      const b = zmNodeIn(j * N.nx + i, jz || 0, 0.7); if (b < 0 || N.d[b] >= 1e8) continue;
+      const k = (di * di + dj * dj) * 4 + N.d[b]; if (k < bd) { bd = k; bc = j * N.nx + i; }
+    }
+    if (bc < 0) return null;
+    const bi = bc % N.nx, bj = (bc - bi) / N.nx;
+    return [N.x0 + (bi + 0.5) * N.S, N.y0 + (bj + 0.5) * N.S];
+  }
   let target = null;
   for (let hop = 0; hop < 3; hop++) {
     let best = -1, bd = N.d[a];
@@ -17603,7 +17644,7 @@ function zmReset() {
     z: [], drops: [], perks: {}, windBuys: 0, double: 0, insta: 0, dropsRound: 0, kills: 0, heads: 0, downs: 0, spent: 0, doorsOpened: 0,
     open: new Set(['quarters']), zone: 'quarters', zoneT: 4, banner: null, pops: [], fx: [], sparks: [], over: null, earnK: 0, navT: 0,
     box: { at: 0, uses: 0, spins: 0, st: 'idle', t: 0, item: null, cyc: 0, show: 'avtomat', owner: null }, near: null, rebuildT: 0, groanT: 2,
-    zc: 0, credit: {}, players: [], downT: 0, ghost: false, revT: 0, revOf: null, downKit: null, beat: 0, boardBy: {}, boardPts: 0,
+    zc: 0, credit: {}, players: [], downT: 0, unstickAt: 0, unstickMine: 0, ghost: false, revT: 0, revOf: null, downKit: null, beat: 0, boardBy: {}, boardPts: 0,
     doors: Zd.doors, windows: Zd.windows, buys: Zd.buys, perksAt: Zd.perks, spawns: Zd.spawns, glass: Zd.glass || [],
   });
   for (const w of ZM.windows) { w.boards = 6; w.q = []; w.fall = []; }
@@ -17624,6 +17665,7 @@ function zmStart(opts) {
   FPS.touch = matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window && navigator.maxTouchPoints > 0;
   $('fpsPad').hidden = !FPS.touch; FPS.hintT = 8; if (FPS.touch) fpsSafeArea();
   { const e = document.querySelector('#fpsMenu .eyebrow'); if (e) e.textContent = 'The Lighthouse waits for you'; $('fpsLeave').textContent = 'Leave the Lighthouse'; $('fpsResume').textContent = 'Back to the Light'; }
+  if ($('zmUnstick')) $('zmUnstick').hidden = false;
   FPS.g = zmArena();
   const [sx, sy] = [FPSC.CX, FPSC.CY - 15];
   FPS.me = { id: (typeof NET !== 'undefined' && NET.sid) || 'me', x: sx, y: sy, h: 0, p: 0, v: 0, z: 0, rudder: 0, bob: 0, boat: 'brig', inv: 0, pitch: 0,
@@ -17650,6 +17692,7 @@ function zmStop() {
   ZM.on = false; ZM.net = null; FPS.zm = false; FPS.eyeLag = 0; FPS.downEye = 0;
   $('stage').classList.remove('zmmode'); $('zmOver').hidden = true;
   { const e = document.querySelector('#fpsMenu .eyebrow'); if (e) e.textContent = "Wreckers' Night carries on without you"; $('fpsLeave').textContent = 'Leave the island'; $('fpsResume').textContent = 'Back to the fight'; }
+  if ($('zmUnstick')) $('zmUnstick').hidden = true;
   if (Z3.grp) Z3.grp.visible = false;
   if (typeof GL3D !== 'undefined' && GL3D.tower) GL3D.tower.visible = true;
   if (typeof GL3D !== 'undefined' && GL3D.amb) { GL3D.amb.intensity = 0.9; GL3D.moon.intensity = 0.35; }
@@ -17886,6 +17929,45 @@ function zmSpawn() {
 }
 
 // ---------- the drowned ----------
+// How each one walks, its own way: a weave from side to side (how far, how quick, and a lean to one side), a pace
+// that comes and goes, now and then a stumble or a stop to sway on the spot, and the side it comes at you from (fan:
+// how far round from its own line in to you; ring: how far out from you it aims for, until it's close)
+function zmGait(z) {
+  if (z.gait) return z.gait;
+  const R = Math.random, run = z.kind === 'run', walk = z.kind === 'walk';
+  return z.gait = {
+    amp: (walk ? 0.32 : run ? 0.16 : 0.24) * (0.6 + R() * 0.8), f: 0.22 + R() * 0.4, ph: R() * 6.28, f2: 0.7 + R() * 0.6, ph2: R() * 6.28,
+    lean: (R() - 0.5) * 0.3, pace: 0.1 + R() * 0.12, paceF: 0.08 + R() * 0.12, fan: ((z.zn * 0.618034) % 1 - 0.5) * 2.6 + (R() - 0.5) * 0.4,
+    ring: 1.8 + R() * 2.6, lane: (R() - 0.5) * 1.8, next: 1.5 + R() * 5, hold: 0, stum: 0, open: 1, openT: 0, clear: false, clearT: 0, side: R() < 0.5 ? -1 : 1,
+  };
+}
+// a pace this tick (1: its own), after any stumble or stop; and now and then the next stumble or stop (not close to you)
+function zmPace(z, G, dt, far) {
+  if (G.hold > 0) G.hold -= dt;
+  if (G.stum > 0) G.stum -= dt;
+  G.next -= dt;
+  if (G.next <= 0) {
+    const u = Math.random(), walk = z.kind === 'walk', run = z.kind === 'run';
+    G.next = (run ? 5 : 3) + Math.random() * 6;
+    if (far && u < (walk ? 0.4 : run ? 0.08 : 0.2)) G.hold = 0.35 + Math.random() * (walk ? 0.9 : 0.4);
+    else if (u < 0.6) G.stum = 0.35 + Math.random() * 0.4;
+  }
+  if (G.hold > 0 && far) return 0;
+  const k = 1 + G.pace * Math.sin(z.t * G.paceF * 6.28 + G.ph2);
+  return G.stum > 0 ? k * (0.3 + 0.7 * Math.max(0, 0.75 - G.stum) / 0.75) : k;
+}
+// its sway this tick, as an angle off its way (radians)
+const zmSway = (z, G) => G.lean * G.side + G.amp * (Math.sin(z.t * G.f * 6.28 + G.ph) + 0.35 * Math.sin(z.t * G.f * G.f2 * 14 + G.ph2));
+// can it walk straight from (x0, y0) to (x1, y1) at height jz: somewhere to stand at its height all the way, that
+// leads to you (the grid's nodes: walls, furniture, the stairwell and the floor's edge all leave none)
+function zmWalkable(x0, y0, x1, y1, jz) {
+  const N = ZM.nav, L = Math.hypot(x1 - x0, y1 - y0), n = Math.max(1, Math.ceil(L / 0.35));
+  for (let i = 1; i <= n; i++) {
+    const x = x0 + (x1 - x0) * i / n, y = y0 + (y1 - y0) * i / n, a = zmNodeIn(zmCell(x, y), jz, 0.3);
+    if (a < 0 || N.d[a] >= 1e8) return false;
+  }
+  return true;
+}
 function zmZombies(dt) {
   const all = ZM.z, P = ZM.players;
   const nearest = (x, y, jz) => { let best = null, bd = 1e9; for (const p of P) { const d = Math.hypot(p.x - x, p.y - y) + Math.abs((p.jz || 0) - (jz || 0)) * 2; if (d < bd) { bd = d; best = p; } } return best; };
@@ -17895,12 +17977,18 @@ function zmZombies(dt) {
     if (z.dead) { z.deadT = (z.deadT || 0) + dt; continue; }
     if (z.boss && typeof zbTick === 'function') { zbTick(z, dt, nearest); continue; }   // [boss] he goes his own way (src/zmboss.js)
     const step = z.sp * dt * (z.slow > 0 && typeof zmpSlowK === 'function' ? zmpSlowK(z) : 1);   // [pap] (slowed by the Equinox Gale)
+    const G = zmGait(z);
     if (z.st === 'out') {
-      // across the yard (or up the beach) to the window, waiting behind any already at it
+      // across the yard (or up the beach) to the window, waiting behind any already at it; weaving as it comes, the
+      // weave dying away as it reaches its place
       const w = z.win, k = w.q.indexOf(z), lane = Math.max(0, k);
       const ox = w.x + w.nx * (0.95 + lane * 0.9) + (-w.ny) * (lane % 2 ? 0.5 : -0.5) * Math.min(1, lane), oy = w.y + w.ny * (0.95 + lane * 0.9) + w.nx * (lane % 2 ? 0.5 : -0.5) * Math.min(1, lane);
       const dx = ox - z.x, dy = oy - z.y, d = Math.hypot(dx, dy);
-      if (d > 0.05) { const s = Math.min(d, step); z.x += dx / d * s; z.y += dy / d * s; z.h = bearingOf(dx, dy); z.walk = true; }
+      if (d > 0.05) {
+        const pace = zmPace(z, G, dt, d > 2.5), s = Math.min(d, step * pace), a = bearingOf(dx, dy) + zmSway(z, G) * 1.6 * clamp((d - 0.4) / 2.5, 0, 1);
+        if (s > 0) { z.x += Math.sin(a) * s; z.y += Math.cos(a) * s; z.walk = true; } else z.walk = false;
+        z.h += angDiff(a, z.h) * Math.min(1, dt * 6);
+      }
       else { z.walk = false; z.h = bearingOf(-w.nx, -w.ny); }
       // (a window up the tower: up the outside of the wall they go, hand over hand)
       const wz = w.z || 0;
@@ -17930,29 +18018,75 @@ function zmZombies(dt) {
     if (!m) { z.walk = false; continue; }
     const dx = m.x - z.x, dy = m.y - z.y, d = Math.hypot(dx, dy), dz = (m.jz || 0) - (z.jz || 0);
     let tx = m.x, ty = m.y;
-    if (!(d < 3 && Math.abs(dz) < 0.8)) { const nx = zmNavNext(z.x, z.y, z.jz); if (nx) { tx = nx[0]; ty = nx[1]; } }
+    // on the same floor and in the open, not too far off: it comes at you from its own side (a point out round you,
+    // drawn in as it closes), if it can walk straight there; otherwise by the grid, the shortest walk
+    const level = Math.abs(dz) < 0.8;
+    G.clearT -= dt; G.openT -= dt;
+    let ax = m.x, ay = m.y;
+    if (level && d > 1.6 && d < 16) {
+      const ring = Math.min(G.ring, (d - 1.2) * 0.55), b = bearingOf(z.x - m.x, z.y - m.y) + G.fan;
+      ax = m.x + Math.sin(b) * ring; ay = m.y + Math.cos(b) * ring;
+      if (G.clearT <= 0) { G.clearT = 0.3 + Math.random() * 0.15; G.clear = zmWalkable(z.x, z.y, ax, ay, z.jz || 0); }
+    } else G.clear = false;
+    if (G.clear) { tx = ax; ty = ay; }
+    else if (!(d < 3 && level)) {
+      const nx = zmNavNext(z.x, z.y, z.jz);
+      if (nx) {
+        tx = nx[0]; ty = nx[1];
+        // (in the open, each keeps to its own lane, a little to one side of the shortest way, so they come on
+        // abreast rather than nose to tail)
+        const ll = Math.hypot(tx - z.x, ty - z.y);
+        if (G.open > 0.5 && ll > 0.2 && d > 4) {
+          const lx = tx + (ty - z.y) / ll * G.lane, ly = ty - (tx - z.x) / ll * G.lane, a = zmNodeIn(zmCell(lx, ly), z.jz || 0, 0.3);
+          if (a >= 0 && ZM.nav.d[a] < 1e8) { tx = lx; ty = ly; }
+        }
+      }
+    }
+    // (the weave: full out in the open, a little in a doorway or on the stair, none at all right on you)
+    if (G.openT <= 0) {
+      G.openT = 0.3 + Math.random() * 0.1;
+      const hb = bearingOf(tx - z.x, ty - z.y), side = s => zmNodeIn(zmCell(z.x + Math.cos(hb) * s, z.y - Math.sin(hb) * s), z.jz || 0, 0.25) >= 0;
+      G.open = side(0.9) && side(-0.9) ? 1 : 0.25;
+    }
     const hx = tx - z.x, hy = ty - z.y, hl = Math.hypot(hx, hy);
     const near = d < 1.15 && Math.abs(dz) < 1;
-    if (hl > 0.05 && !near) {
-      z.h += angDiff(bearingOf(hx, hy), z.h) * Math.min(1, dt * 8);
-      const s = Math.min(hl, step), want = bearingOf(hx, hy);
+    const pace = zmPace(z, G, dt, d > 5);
+    if (hl > 0.05 && !near && pace > 0) {
+      const want = bearingOf(hx, hy) + zmSway(z, G) * G.open * clamp((d - 1.4) / 3, 0, 1);
+      z.h += angDiff(want, z.h) * Math.min(1, dt * 8);
+      const s = Math.min(hl, step * pace);
       // (a corner in the way: try a little to either side, the side that worked last first)
       z.walk = false;
       for (const dh of [0, 0.6, -0.6, 1.2, -1.2]) { const a = want + dh * (z.side || 1), x0 = z.x, y0 = z.y; if (zmMove(z, Math.sin(a) * s, Math.cos(a) * s) && Math.hypot(z.x - x0, z.y - y0) > s * 0.3) { z.walk = true; if (dh) z.side = Math.sign(dh * (z.side || 1)); break; } }
-    } else { z.walk = false; if (d > 0.1) z.h += angDiff(bearingOf(dx, dy), z.h) * Math.min(1, dt * 6); }
+    } else { z.walk = false; if (d > 0.1) z.h += angDiff(bearingOf(dx, dy), z.h) * Math.min(1, dt * (pace > 0 ? 6 : 1.5)); }
+    // (how long since it last got any nearer you by the walk, measured from where it was a second ago against the
+    // same distances, so you running off doesn't count against it: for the menu's Unstick, zmUnstick)
+    G.navT = (G.navT || 0) - dt;
+    if (G.navT <= 0) {
+      G.navT = 1;
+      const nd = zmNavDist(z.x, z.y, z.jz), was = G.at ? zmNavDist(G.at[0], G.at[1], G.at[2]) : 1e9;
+      if (nd < 3 || (nd < 1e8 && nd < was - 0.4)) z.farT = 0;
+      G.at = [z.x, z.y, z.jz || 0];
+    }
+    z.farT = (z.farT || 0) + dt;
     // (falling off a ledge: down they go)
     if ((z.jz || 0) > z.fl) z.jz = Math.max(z.fl, z.jz - 9 * dt);
     if (near || (d < 1.6 && Math.abs(dz) < 1)) zmSwipe(z, dt);
     // stuck for a long while, far from you: back out to a window
     z.stuck = Math.hypot(z.x - (z.lx || z.x), z.y - (z.ly || z.y)) < 0.02 && !near ? z.stuck + dt : Math.max(0, z.stuck - dt * 2);
     z.lx = z.x; z.ly = z.y;
-    if ((z.stuck > 9 && d > 12) || z.stuck > 15) { z.dead = 1; z.gone = true; z.deadT = 99; ZM.left++; }
+    // (or jostling on the spot, no nearer by the walk for half a minute)
+    if ((z.stuck > 9 && d > 12) || z.stuck > 15 || (z.farT > 30 && d > 8)) { z.dead = 1; z.gone = true; z.deadT = 99; ZM.left++; }
   }
-  // the drowned keep a little apart from one another
+  // the drowned keep apart from one another: hard at a body's width, and a softer give out to arm's length, so they
+  // spread instead of filing in nose to tail
   const ins = all.filter(z => !z.dead && z.st === 'in');
   for (let i = 0; i < ins.length; i++) for (let j = i + 1; j < ins.length; j++) {
     const a = ins[i], b = ins[j], dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy);
-    if (d < 0.56 && d > 0.001 && Math.abs((a.jz || 0) - (b.jz || 0)) < 1) { const push = (0.56 - d) * 0.5; zmMove(a, -dx / d * push, -dy / d * push); zmMove(b, dx / d * push, dy / d * push); }
+    if (d < 1.0 && d > 0.001 && Math.abs((a.jz || 0) - (b.jz || 0)) < 1) {
+      const push = d < 0.6 ? (0.6 - d) * 0.5 + 0.4 * dt : (1.0 - d) * 1.6 * dt;
+      zmMove(a, -dx / d * push, -dy / d * push); zmMove(b, dx / d * push, dy / d * push);
+    }
   }
   // and from all of you
   for (const z of ins) for (const m of P) {
@@ -17963,6 +18097,59 @@ function zmZombies(dt) {
   for (const z of all) if (z.dead && z.deadT > (z.burn ? 1.3 : 2.4)) { if (z.mdl) zmFreeModel(z); z.remove = true; }
   ZM.z = all.filter(z => !z.remove); FPS.drowned = ZM.z;
 }
+// ---------- the menu's "Unstick a drowned" ----------
+// One that's stuck somewhere out of reach (the one that's gone longest without getting any nearer you by the walk,
+// else the furthest off) is taken back out to sea and comes up again outside the window nearest you, to tear its way
+// in afresh. Once in ZM_UNSTICK s for everyone; joined, you ask the host (an 'unstick' request)
+const ZM_UNSTICK = 20;
+function zmUnstickPick() {
+  const live = ZM.z.filter(z => !z.dead && !z.gone && !z.boss);
+  if (!live.length) return null;
+  const inside = live.filter(z => z.st === 'in'), stale = inside.filter(z => (z.farT || 0) > 6 && zmNavDist(z.x, z.y, z.jz) > 5);
+  if (stale.length) return stale.sort((a, b) => b.farT - a.farT)[0];
+  const far = z => { const d = zmNavDist(z.x, z.y, z.jz); return d < 1e8 ? d : 1e6 + Math.hypot(z.x - FPS.me.x, z.y - FPS.me.y); };
+  return (inside.length ? inside : live).map(z => [z, far(z)]).sort((a, b) => b[1] - a[1])[0][0];
+}
+// (alone or hosting) by: who asked. Returns a line for the asker if nothing was done
+function zmUnstick(by) {
+  if (!ZM.on || ZM.over) return 'Not now.';
+  if (ZM.phase !== 'round') return 'There are none of them to unstick between rounds.';
+  const now = zmNow();
+  if (now < (ZM.unstickAt || 0)) return `Not yet: ${Math.ceil(ZM.unstickAt - now)} s.`;
+  const z = zmUnstickPick(); if (!z) return 'None of them is left to unstick.';
+  // the window nearest you all, by the walk, of the rooms that are open
+  let w = null, bd = 1e12;
+  for (const q of ZM.windows) { if (!zmOpen(q.zone)) continue; const d = zmNavDist(q.x - q.nx * 1.0, q.y - q.ny * 1.0, q.z || 0) + q.q.length * 4; if (d < bd) { bd = d; w = q; } }
+  if (!w) return 'There’s no window to send it to.';
+  if (z.win) z.win.q = z.win.q.filter(q => q !== z);
+  const [sx, sy] = zmSpawnPoint(w);
+  Object.assign(z, { st: 'out', win: w, x: sx, y: sy, jz: 0, fl: 0, t: 0, stuck: 0, swing: -1, atk: 0.6, walk: false, scaling: false, farT: 0,
+    pin: 0, stun: 0, kvx: 0, kvy: 0, slow: 0, lx: sx, ly: sy, hist: [] });
+  z.h = bearingOf(w.x - z.x, w.y - z.y); if (z.gait) z.gait.at = null;
+  w.q.push(z);
+  ZM.unstickAt = now + ZM_UNSTICK;
+  const nick = by && by !== FPS.me.id ? ((ZM.hum.find(h => h[0] === by) || [])[1] || 'Someone') : 'You';
+  const line = `${nick} sent a stuck one back to sea: it comes again by a window in ${zmZoneName(w.zone) || 'the station'}.`;
+  fpsFeed(line); if (ZM.net) zmnEvent('feed', line);
+  return null;
+}
+// (the clock for the cooldown: game time, so it holds still while the menu holds a night alone still)
+const zmNow = () => (FPS.g && FPS.g.t) || 0;
+// the button
+function zmUnstickAsk() {
+  if (!FPS.zm || !ZM.on) return;
+  const now = zmNow();
+  if (now < (ZM.unstickMine || 0)) { fpsFeed(`Not yet: ${Math.ceil(ZM.unstickMine - now)} s.`); return; }
+  if (ZM.net === 'client') { zmnRequest('unstick', 1); ZM.unstickMine = now + ZM_UNSTICK; fpsFeed('You ask for a stuck one to be sent back to sea.'); }
+  else { const no = zmUnstick(FPS.me.id); if (no) fpsFeed(no); else ZM.unstickMine = now + ZM_UNSTICK; }
+  fpsSetMenu(false);
+}
+function zmUnstickLabel() {
+  const b = $('zmUnstick'); if (!b) return;
+  const left = Math.ceil(Math.max(ZM.unstickMine || 0, ZM.net === 'client' ? 0 : ZM.unstickAt || 0) - zmNow());
+  b.disabled = left > 0; b.textContent = left > 0 ? `Unstick a drowned (${left} s)` : 'Unstick a drowned';
+}
+if ($('zmUnstick')) { $('zmUnstick').addEventListener('click', zmUnstickAsk); setInterval(() => { if (FPS.zm && FPS.menu) zmUnstickLabel(); }, 250); }
 // moans from the nearest of them
 function zmMoans(dt) {
   const m = FPS.me;
@@ -18063,7 +18250,7 @@ function zmResolveShot(sh, mine) {
       last = r;
       if (r.kind !== 'body') break;
       const o = r.who, prev = hits.get(o) || { dmg: 0, head: false };
-      prev.dmg += r.head ? w.head : w.dmg; prev.head = prev.head || r.head; hits.set(o, prev);
+      prev.dmg += (r.head ? w.head : w.dmg) * ZM_FALL(code, gone + r.t); prev.head = prev.head || r.head; hits.set(o, prev);
       skip.add(o); left--;
       gone += r.t + 0.6; ox = r.x + Math.sin(lh) * 0.6; oy = r.y + Math.cos(lh) * 0.6; oz = r.z + Math.tan(lp) * 0.6;
     }
@@ -18075,6 +18262,17 @@ function zmResolveShot(sh, mine) {
   let any = null;
   for (const [o, hit] of hits) { any = any || hit; zmHurt(o, hit.dmg, hit.head, code, FPS.me.id); }
   if (any && mine) { FPS.hitT = 0.18; FPS.hitHead = any.head; fpsHitSound(any.head); }
+}
+// (from fpsHarpoonsTick) my harpoon has just struck one of them (o): if that killed it, true, and the iron goes on
+// through into the next, up to ZM_HARPOON_THRU more. Joined to someone's night, whether it killed is the host's to
+// say, so here it's judged against the round's strength
+function zmHarpoonOn(hp, o) {
+  if (!o || !o.zm || o.boss || !hp.mine || (hp.thruN || 0) >= ZM_HARPOON_THRU) return false;
+  const hit = (typeof zmpDmg === 'function' ? zmpDmg(FPSW.harpoon.dmg, 'h', FPS.me.id) : FPSW.harpoon.dmg) * ZM_DMG.h * (o.mark > 0 ? 1.5 : 1);
+  if (!(o.dead || (ZM.net === 'client' && (ZM.insta > 0 || hit >= zmHp(ZM.round) * 1.1)))) return false;
+  hp.thruN = (hp.thruN || 0) + 1; (hp.thru = hp.thru || new Set()).add(o);
+  hp.vx *= 0.9; hp.vy *= 0.9; hp.stuck = 0;
+  return true;
 }
 // a slash with the knife: whatever's in front of you and in reach, whatever's in your hands
 function zmKnife() {
@@ -21092,6 +21290,7 @@ function znRequestFrom(sid, k, a) {
   if (k === 'take') { if (ZM.box.st === 'offer' && ZM.box.owner === sid) { ZM.box.st = 'idle'; ZM.box.t = 0; } return; }
   if (k === 'board') { const w = ZM.windows[a | 0]; if (w && w.boards < 6 && !ZM.z.some(z => z.win === w && z.st === 'climb')) { w.boards++; zmBoardPay(sid); } return; }
   if (k === 'rev') { zmnRevive(String(a), sid); return; }
+  if (k === 'unstick') { zmUnstick(sid); return; }   // the menu's Unstick a drowned (src/zombies.js)
   if (k === 'pst') { if (typeof zmpStatusFrom === 'function') zmpStatusFrom(sid, a); return; }   // [pap] what a reforged weapon did to them
   if (k === 'egg') { if (typeof zeRequest === 'function') zeRequest(sid, a); return; }   // [egg hook] src/zmegg.js
 }
