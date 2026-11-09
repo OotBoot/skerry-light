@@ -1180,7 +1180,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
         <p>The chest has eight more of its own, washed up from the wrecks: the <b>Duck's-Foot</b> (four barrels splayed in a fan: a ball for each of a crowd), the <b>Bomb-Lance</b> (sticks in what it strikes, and a second later goes off), the <b>Grapnel Gun</b> (hooks one and hauls it off its feet to yours), the <b>Flare Pistol</b> (sets alight what it strikes, and leaves a ring of fire where it lands), the <b>Boarding Axe</b> (wide sweeps through all in front of you, and every third stroke a chop that knocks them down), the <b>Punt Gun</b> (one enormous load of shot through three at a time, and it kicks you back), the <b>Net Mortar</b> (lobs a net that holds everything under it) and the <b>Chain-Shot</b> (two balls on a chain that whirl out and cut through every one they pass). Each comes back from the Lampwright's Bench working a new way of its own.</p>
         <p><b>The Lampwright's Bench</b> (from 5000): somewhere up the tower, past more than one paid gate, the keepers' old bench for grinding the lens still has its fire lit. Hand it the weapon in yours and it goes behind the turning lens for a few seconds, and comes back reforged, under a new name: it hits far harder, holds more and carries more, and glows with the Light, and each one comes back working in a way of its own. It can go back into the fire again and again, dearer every time (5000, 8000, 12000, 17000...), and each time it hits harder and its new way of working grows. Not the knife; lose the weapon and you lose what was done to it, and its ammunition off the wall costs a good deal more.</p>
         <p><b>Salvage.</b> Now and then one drops something glowing: a Powder Keg (all your ammunition back), Double Salvage (double points for thirty seconds), the Black Spot (anything dies to one hit, for thirty seconds) or a Lamp Flash (every one of them in the station burns). Walk into it to take it.</p>
-        <p><b>The Diver.</b> From round 10, and every fifth round after, a drowned giant in a brass helmet comes in with them, dragging an anchor. Slow, but hard to put down, and his blows take two knocks: when a ring glows on the floor in front of him, get out of it (or jump) before the anchor comes down. The round isn't held until he's down; he's worth 500 points and always drops salvage.</p>
+        <p><b>Bosses.</b> From round 10, and every fourth round after, something bigger comes in with them (two at once from round 20, three from 30, and more later; tougher every time). They count towards the round, are worth hundreds of points and always drop salvage. <b>The Diver</b>, a drowned giant in a brass helmet, drags an anchor: when a ring glows on the floor in front of him, get out of it (or jump) before the anchor comes down. <b>The Mooncusser</b>, a wrecker in chains, carries a false light on a pole: when he lifts it and it swells, look away (or get behind something), or it blinds you and draws you in to him; but while he holds it up he's open to your shots. <b>The Keelback</b>, a crab made of wrecks, rears up and a lane glows on the floor through you: step out of it before it charges, and if it runs into a wall it reels, its soft belly showing.</p>
         <p><b>Together.</b> Host a night and up to three others here can join it from this card. Nothing starts until the host presses Start the night, with whoever has joined. More of you means more of them each round. Points are your own: share the doors, race for the chest. Go down and you have half a minute on the floor for someone to hold Use beside you and get you up; bleed out and you're back next round with a pepperbox. The night ends when nobody is left standing. The pause menu doesn't stop a night together.</p>
         <p><b>Keys:</b> as Wreckers' Night, and F (or E) to use: buy, open, take, and hold it at a window to board it up. V (or the middle mouse button) for the knife, which never runs out; and with nothing left to fire, Fire slashes with it too. C switches the view. 1 and 2 your weapons, Tab how the night's going, Esc pauses. <b>Controller:</b> B to use, R3 the knife, d-pad down the view. <b>Touch:</b> the Use and knife buttons by Fire. On a phone, push the stick out to the dotted outer circle to run. Kills here count towards weapon and outfit crates too, and your best goes on the scoreboard.</p>
       </details>
@@ -17944,7 +17944,7 @@ function zmCrowd(m, x, y) {
     if (z.dead || z.st !== 'in' || Math.abs((z.jz || 0) - (m.jz || 0)) > 1.2) continue;
     const d = Math.hypot(z.x - x, z.y - y);
     // (they still block you, but only about as wide as a body: you can slip past one at a doorway's edge)
-    if (d < (z.boss ? 1.05 : ZMC.BODY) && d < Math.hypot(z.x - m.x, z.y - m.y) - 0.001) return true;   // [boss] he's broader
+    if (d < (z.boss ? z.crowdR || 1.05 : ZMC.BODY) && d < Math.hypot(z.x - m.x, z.y - m.y) - 0.001) return true;   // [boss] they're broader
   }
   return false;
 }
@@ -17957,7 +17957,7 @@ function zmSettle(m) {
     m.jz = fl;
   }
 }
-function zmSpeedK() { return ZM.perks.fleet ? 1.22 : 1; }
+function zmSpeedK() { return (ZM.perks.fleet ? 1.22 : 1) * (typeof zbSpeedK === 'function' ? zbSpeedK() : 1); }   // [boss] (dragged by the false light)
 function zmReloadK() { return ZM.perks.quick ? 0.5 : 1; }
 function zmCanReload() { const w = fpsW(); return w.melee || (ZM.res[FPS.weapon] || 0) > 0; }
 
@@ -18238,6 +18238,7 @@ function zmTick(dt) {
   if (typeof zmpTick === 'function') zmpTick(dt);   // [pap]
   if (typeof zxTick === 'function') zxTick(dt);   // [chest] what the chest's weapons throw, and what they leave burning
   if (typeof zeTick === 'function') zeTick(dt);   // [egg hook] src/zmegg.js
+  if (typeof zbMe === 'function') zbMe(dt);   // [boss] their blows running on (joined), and what they've done to me (src/zmboss.js)
   zmNearest();
   // holding Use at a window nails its boards back; beside someone who's down, gets them up
   const hold = FPS.keys.KeyF || FPS.keys.KeyE || FPS.touchUse || FPS.padUse;
@@ -18309,7 +18310,7 @@ function zmRounds(dt) {
     return;
   }
   // round on: bring them up, a few at a time
-  if (typeof zbRounds === 'function') zbRounds(dt);   // [boss] the Diver, in his rounds (src/zmboss.js)
+  if (typeof zbRounds === 'function') zbRounds(dt);   // [boss] the bosses, in their rounds (src/zmboss.js)
   const alive = ZM.z.filter(z => !z.dead).length, cap = Math.min(ZMC.ALIVE, 6 + ZM.round * 2);
   ZM.spawnT -= dt;
   if (ZM.left > 0 && alive < cap && ZM.spawnT <= 0) {
@@ -18448,7 +18449,7 @@ function zmZombies(dt) {
     if (z.hitT > 0) z.hitT -= dt;
     z.t += dt;
     if (z.dead) { z.deadT = (z.deadT || 0) + dt; continue; }
-    if (z.boss && typeof zbTick === 'function') { zbTick(z, dt, nearest); continue; }   // [boss] he goes his own way (src/zmboss.js)
+    if (z.boss && typeof zbTick === 'function') { zbTick(z, dt, nearest); continue; }   // [boss] each goes its own way (src/zmboss.js)
     const step = z.sp * dt * (z.slow > 0 && typeof zmpSlowK === 'function' ? zmpSlowK(z) : 1);   // [pap] (slowed by the Equinox Gale)
     const G = zmGait(z);
     if (z.st === 'out' && z.win.sea) {
@@ -18694,7 +18695,7 @@ function zmHurt(d, dmg, head, code, by, how) {
   if (typeof zmpDmg === 'function') dmg = zmpDmg(dmg, code, by);   // [pap] reforged weapons hit harder (the shooter's side)
   if (ZM.net === 'client') { zmnHit(d, dmg, head, code, how); return; }
   const k = (ZM_DMG[code] == null ? 1 : ZM_DMG[code]) * (d.mark > 0 ? 1.5 : 1);   // [pap] (lit by the Leading Light: hurt worse)
-  d.hp -= d.boss && typeof zbHurtK === 'function' ? zbHurtK(d, dmg * k, how) : ZM.insta > 0 ? 1e9 : dmg * k;   // [boss] no one-hit kills on him
+  d.hp -= d.boss && typeof zbHurtK === 'function' ? zbHurtK(d, dmg * k, how) : ZM.insta > 0 ? 1e9 : dmg * k;   // [boss] no one-hit kills on them
   if (d.hp <= 0) { zmKill(d, head, code, how, by); if (how === 'burn') zmChain(d, 2, by); } else zmPoints(10, false, by);
 }
 function zmKill(d, head, code, how, by) {
@@ -18706,7 +18707,7 @@ function zmKill(d, head, code, how, by) {
   if (by && by !== FPS.me.id) { const c = ZM.credit[by] = ZM.credit[by] || [0, 0, 0]; c[1]++; if (head) c[2]++; }
   else if (how !== 'flash' || !ZM.net) { ZM.kills++; if (head) ZM.heads++; zmEarnKill(); }
   zmMaybeDrop(d, how);
-  if (d.boss && typeof zbKilled === 'function') zbKilled(d, how, by);   // [boss] his reward and his salvage
+  if (d.boss && typeof zbKilled === 'function') zbKilled(d, how, by);   // [boss] its reward and its salvage
   if (typeof zeKill === 'function') zeKill(d, how, by);   // [egg hook] src/zmegg.js
 }
 // crates (as for Wreckers' Night, every third kill here)
@@ -19377,7 +19378,7 @@ function z3Geo() {
 }
 const ZM_COATS = ['#3a4a50', '#4a3a30', '#2e3a44', '#4a4a40', '#3a2e2e', '#5a5040', '#2a3530'];
 function zmModel(z) {
-  if (z.boss && typeof zbModel === 'function') return zbModel(z);   // [boss] a model of his own (src/zmboss.js)
+  if (z.boss && typeof zbModel === 'function') return zbModel(z);   // [boss] a model of its own (src/zmboss.js, src/zmboss2.js)
   let M = Z3.pool.find(p => !p.used);
   if (!M) {
     const Q = z3Geo(), root = new THREE.Group(), hips = new THREE.Group(); root.add(hips); hips.position.y = 0.95;
@@ -19678,7 +19679,7 @@ function zmHud() {
   // the feed, top right
   ctx.textAlign = 'right'; ctx.textBaseline = 'top'; ctx.font = mono(phone ? 10 : 12);
   FPS.feed.slice(phone ? -2 : -5).forEach((f, i) => { ctx.fillStyle = `rgba(236,228,207,${Math.min(1, f.t) * 0.85})`; ctx.fillText(f.text, R, feedY + i * (phone ? 13 : 17), W * (phone ? 0.5 : 0.45)); });
-  if (typeof zbHud === 'function') zbHud(phone, top);   // [boss] his strength, top middle
+  if (typeof zbHud === 'function') zbHud(phone, top);   // [boss] their strength, top middle (and the false light's glare)
   // the room you've come into
   if (ZM.zoneT > 0) { ctx.textAlign = 'center'; ctx.textBaseline = 'top'; ctx.font = fell(phone ? 16 : 22); ctx.fillStyle = `rgba(236,228,207,${Math.min(1, ZM.zoneT) * 0.8})`; const nm = zmZoneName(ZM.zone); ctx.fillText(nm.charAt(0).toUpperCase() + nm.slice(1), cx, phone ? top + 30 : 18); }
   // a round beginning, salvage taken
@@ -19686,7 +19687,9 @@ function zmHud() {
     const b = ZM.banner, a = Math.min(1, b.t, 4 - b.t);
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = fell(b.small ? (phone ? 22 : 30) : (phone ? 34 : 54));
     ctx.fillStyle = b.col ? b.col : `rgba(190,30,22,${Math.max(0, a)})`; ctx.globalAlpha = Math.max(0, Math.min(1, a));
-    ctx.fillText(b.text, cx, H * 0.3); ctx.globalAlpha = 1;
+    ctx.fillText(b.text, cx, H * 0.3);
+    if (b.sub) { ctx.font = fell(phone ? 14 : 19); ctx.fillText(b.sub, cx, H * 0.3 + (phone ? 28 : 44)); }   // [boss] (what it is)
+    ctx.globalAlpha = 1;
   }
   if (ZM.phase === 'pre' && ZM.t > 0) { ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = mono(phone ? 11 : 13); ctx.fillStyle = 'rgba(236,228,207,0.7)'; ctx.fillText('They are coming up out of the sea…', cx, H * 0.3 + 40); }
   // what's in front of you
@@ -21854,149 +21857,182 @@ VM_ANIM.chainshot = (w, S) => {
 };
 
 // ---- src/zmboss.js ----
-// The Lighthouse: the Diver. From round 10, and every fifth round after (10, 15, 20, ...), something bigger comes up
-// out of the sea with the rest of them: a drowned salvage diver, half as tall again as a man, in a canvas suit and a
-// brass helmet whose ports glow sea-green, hauling a ship's anchor behind him on its ring.
-//  - He comes up out of the sea outside the nearest window, walks to it and smashes the boards in all at once, and
-//    climbs through.
-//  - Slow on his feet, but hard to put down (twelve times one of the others of that round, more with more of you),
-//    and every blow of his takes two knocks.
-//  - Close in he sweeps the anchor round at you. Further off (six metres or so) he heaves it up over his helmet, and
-//    a ring glows on the floor where it will come down; when it does, the shock goes through the floor to the edge of
-//    the ring, and knocks down everyone inside it who's on their feet (jump, or get out of the ring).
-//  - He shoulders through tight corners rather than getting stuck in a door; if he's lost for long, he goes back out
-//    and comes in again by the window nearest you.
-//  - He counts towards the round: it isn't held until he's down. 500 points on top of the kill, and he always drops
-//    salvage. The Black Spot only makes him bleed faster, the Lamp's fire burns him slowly and a Lamp Flash only
-//    scorches him. His strength shows in a bar at the top of the screen while he's about.
-// Together: the host runs him like the rest (src/zmnet.js streams him with them, and his strength, his blow in
-// progress and where it'll land in `bo`); each player judges his blows on themselves, as with the others' swings.
-// Hooks into src/zombies.js (zmRounds, zmZombies, zmCrowd, zmHurt, zmKill, zmTake, zmModel, zmPose, zmHud) and
-// src/zmnet.js (znHostSend, znApply) are single lines marked [boss]; fpsRay (src/fps.js) reads a body's own size.
+// The Lighthouse: its bosses. Bigger things come up out of the sea with the drowned in the later rounds, each in a
+// model of its own, with its own walk and its own way of hurting you, telegraphed so you can get out of the way:
+//  - the Diver (here): a drowned salvage diver, half as tall again as a man, in a canvas suit and a brass helmet
+//    whose ports glow sea-green, hauling a ship's anchor. Close in he sweeps the anchor round at you; further off he
+//    heaves it up over his helmet, a ring glows on the floor where it will come down, and when it does everyone in
+//    the ring on their feet takes the blow (jump, or get out of the ring).
+//  - the Mooncusser and the Keelback (src/zmboss2.js): a wrecker with his false light, and a crab of fused wrecks
+//    that charges in straight lines.
+// The schedule (zbPlan): boss rounds from round 10, every fourth round (10, 14, 18, 22, ...): the Diver first, the
+// Mooncusser at 14, the Keelback at 18, then any of the three; one at a time to round 19, two from 20, three from 30,
+// four from 40, five from 50; and from round 25 a stray one now and then in the rounds between. Each is
+//   zmHp(round) x its own multiplier x (1 + 0.75 for each more player) x (1 + 0.06 per round past 10)
+// so at round 10 the Diver is as he always was, and later they outgrow the drowned (zbHpOf).
+// Each comes up out of the sea outside a window it fits (zbWindow: the Diver only by the ground's windows and the
+// sea wall; the Mooncusser up the jetty's ladders and the tower's walls too; the Keelback up over the jetty's edge),
+// takes all its boards in at once and climbs through; inside, it goes after the nearest of you by the walk,
+// shouldering through tight corners, and lost for long goes back out and comes in again by the window nearest you.
+// They count towards the round (it isn't held until they're down), each is worth points on top of the kill and
+// always drops salvage. The Black Spot only makes them bleed faster, and a Lamp Flash only scorches them; each takes
+// the Lamp's fire its own way. Their strength shows in bars at the top of the screen (the nearest three).
+// Together: the host runs them like the rest (src/zmnet.js streams them with them, and in `bo`, for each, its kind,
+// its strength, its blow in progress and where it'll land); each player judges their blows on themselves, as with
+// the others' swings.
+// Hooks into src/zombies.js (zmRounds, zmZombies, zmCrowd, zmHurt, zmKill, zmTick, zmSpeedK, zmModel, zmPose, zmHud)
+// and src/zmnet.js (znHostSend, znApply) are single lines marked [boss]; fpsRay (src/fps.js) reads a body's own size.
 
 const ZBC = {
-  FROM: 10, EVERY: 5, HP: 12, HP_MORE: 0.75, DMG: 2, PTS: 500, PAD: 0.45, RAD: 0.85, TALL: 2.75, HEADZ: 2.15,
+  FROM: 10, EVERY: 4, HP: 12, HP_MORE: 0.75, LATE: 0.06, MAX: 5, STRAY_FROM: 25, STRAY: 0.3,
+  DMG: 2, PTS: 500, PAD: 0.45, RAD: 0.85, TALL: 2.75, HEADZ: 2.15,
   REACH: 2.6, NEAR: 2.0, SLAM_R: 4.2, SLAM_AT: 2.0, SLAM_RANGE: 6.5, OUT: 6,
 };
 // his blows: when each lands, and when he's ready to move again
 const ZB_T = { swing: { hit: 0.75, end: 1.3 }, slam: { hit: 1.6, end: 2.7 }, smash: { hit: 0.9, end: 1.5 } };
-const ZB_ACT = ['', 'swing', 'slam', 'smash'];
-const ZB = { g: null, round: 0, pending: 0, wait: 0, seen: new Set(), pool: [], grp: null, bar: 0 };
+// every blow of every one of them, by number (for the wire)
+const ZB_ACT = ['', 'swing', 'slam', 'smash', 'lure', 'pole', 'charge', 'pinch', 'reel'];
+// the kinds, by number (for the wire); each kind's own table is ZBT[kind] (the Diver's below, the others' in zmboss2.js)
+const ZB_KINDS = ['diver', 'moon', 'crab'];
+const ZBT = {};
+const ZB = { g: null, round: 0, plan: [], wait: 0, seen: new Set(), pool: [], grp: null, bars: new Map(), lure: null, glare: 0 };
 const zbIsRound = r => r >= ZBC.FROM && (r - ZBC.FROM) % ZBC.EVERY === 0;
-function zbNew() { if (ZB.g !== FPS.g) { ZB.g = FPS.g; ZB.round = 0; ZB.pending = 0; ZB.seen = new Set(); } }
+// how many come in a boss round
+const zbCount = r => r < ZBC.FROM ? 0 : Math.min(ZBC.MAX, Math.max(1, Math.floor(r / 10)));
+// how much more there is to them, the later it gets (1 at round 10)
+const zbLate = r => 1 + ZBC.LATE * Math.max(0, r - ZBC.FROM);
+// one of a kind's strength, that round, with n of you
+const zbHpOf = (kind, r, n) => zmHp(r) * ZBT[kind].hp * (1 + ZBC.HP_MORE * (Math.max(1, n) - 1)) * zbLate(r);
+const zbT = z => ZBT[z.bt] || ZBT.diver;
+const zbActT = z => (zbT(z).acts[z.act] || ZB_T.smash);
+const zbEnd = z => z.aEnd || zbActT(z).end;
+function zbNew() { if (ZB.g !== FPS.g) { ZB.g = FPS.g; ZB.round = 0; ZB.plan = []; ZB.seen = new Set(); ZB.bars = new Map(); ZB.lure = null; ZB.glare = 0; } }
 
-// ---------- his coming (hosting, or alone) ----------
-// from zmRounds, while a round is on: in a round of his, he comes up a few seconds in (or at once, if the rest are
-// all up already, so the round can't end before he's come)
+// ---------- the schedule ----------
+// which of them come in round r (a list of kinds, in the order they come; rnd: a random source, for tests)
+function zbPlan(r, rnd) {
+  rnd = rnd || Math.random;
+  if (!zbIsRound(r)) return r >= ZBC.STRAY_FROM && rnd() < ZBC.STRAY ? [ZB_KINDS[(rnd() * 3) | 0]] : [];
+  // (each one's first night: on its own)
+  if (r === ZBC.FROM) return ['diver'];
+  if (r === ZBC.FROM + ZBC.EVERY) return ['moon'];
+  if (r === ZBC.FROM + 2 * ZBC.EVERY) return ['crab'];
+  // then the lead goes round the three in turn, and the rest are drawn as from a bag (each kind once before any twice)
+  const n = zbCount(r), lead = ZB_KINDS[((r - ZBC.FROM) / ZBC.EVERY) % 3], out = [lead];
+  let bag = [];
+  while (out.length < n) {
+    if (!bag.length) bag = ZB_KINDS.filter(k => out.length >= 3 || !out.includes(k));
+    out.push(bag.splice((rnd() * bag.length) | 0, 1)[0]);
+  }
+  return out;
+}
+
+// ---------- their coming (hosting, or alone) ----------
+// from zmRounds, while a round is on: the first a few seconds in, the rest a few seconds apart (or at once, if the
+// rest of the drowned are all up already, so the round can't end before they've come)
 function zbRounds(dt) {
   zbNew();
-  if (ZB.round !== ZM.round) { ZB.round = ZM.round; ZB.pending = zbIsRound(ZM.round) ? 1 : 0; ZB.wait = 5 + Math.random() * 5; }
-  if (ZB.pending > 0) {
+  if (ZB.round !== ZM.round) { ZB.round = ZM.round; ZB.plan = zbPlan(ZM.round); ZB.wait = 5 + Math.random() * 5; }
+  if (ZB.plan.length) {
     ZB.wait -= dt;
-    if (ZB.wait <= 0 || ZM.left <= 0) { if (zbSpawn()) ZB.pending--; else ZB.wait = 1; }
+    if (ZB.wait <= 0 || ZM.left <= 0) {
+      if (zbSpawn(ZB.plan[0])) { ZB.plan.shift(); ZB.wait = 6 + Math.random() * 6; } else ZB.wait = 1;
+    }
   }
 }
-// the window he comes in by: one of the open rooms', nearest by the walk to you
-function zbWindow() {
-  const N = ZM.nav, list = [];
+// the window one comes in by: one of the open rooms' that it fits, nearest by the walk to you
+function zbWindow(kind) {
+  const T = ZBT[kind || 'diver'], list = [];
   for (const w of ZM.windows) {
-    if (!zmOpen(w.zone) || w.z > 0) continue;   // (too big for the windows up the tower)
-    const d = zmNavDist(w.x - w.nx * 1.0, w.y - w.ny * 1.0, 0);
+    if (!zmOpen(w.zone) || !T.win(w)) continue;
+    const d = zmNavDist(w.x - w.nx * 1.0, w.y - w.ny * 1.0, w.z || 0);
     list.push([w, d < 1e8 ? d : 9999]);
   }
   if (!list.length) return null;
   list.sort((a, b) => a[1] - b[1]);
   return list[Math.random() < 0.7 || list.length < 2 ? 0 : 1][0];
 }
-function zbSpawn() {
-  const w = zbWindow(); if (!w) return false;
-  const n = Math.max(1, ZM.hum.length), hp = zmHp(ZM.round) * ZBC.HP * (1 + ZBC.HP_MORE * (n - 1));
-  const zn = ++ZM.zc, side = (Math.random() - 0.5) * 2;
+function zbSpawn(kind) {
+  kind = kind || 'diver';
+  let w = zbWindow(kind);
+  // (none that fits it open yet: once they've all been seen, another kind that does fit comes instead; the Diver's
+  // first night, with only the jetty open, he doesn't come)
+  if (!w && ZM.round >= ZBC.FROM + 2 * ZBC.EVERY) for (const k of ZB_KINDS) if (k !== kind && (w = zbWindow(k))) { kind = k; break; }
+  if (!w) return false;
+  const T = ZBT[kind], hp = zbHpOf(kind, ZM.round, ZM.hum.length);
+  const zn = ++ZM.zc, side = (Math.random() - 0.5) * 2 * ((w.z || 0) > 0 ? 0.4 : 1), out = w.sea ? 4.5 : (w.z || 0) > 0 ? 1.4 : ZBC.OUT;
   const z = {
-    drowned: true, zm: true, boss: true, zn, id: 'z' + zn.toString(36), n: 'the Diver', kind: 'boss',
-    x: w.x + w.nx * ZBC.OUT - w.ny * side, y: w.y + w.ny * ZBC.OUT + w.nx * side, jz: -2.6, fl: 0,
-    hp, max: hp, sp: 1.3 + Math.min(0.45, (ZM.round - ZBC.FROM) * 0.025),
+    drowned: true, zm: true, boss: true, bt: kind, zn, id: 'z' + zn.toString(36), n: T.n, kind: 'boss',
+    x: w.x + w.nx * out - w.ny * side, y: w.y + w.ny * out + w.nx * side, jz: (w.z || 0) > 0 ? 0 : -2.6, fl: 0,
+    hp, max: hp, sp: T.sp(ZM.round),
     st: 'out', win: w, t: 0, ph: 0, hitT: 0, atk: 0, swing: -1, stuck: 0, lost: 0, h: 0, seed: (Math.random() * 1e6) | 0, rise: 1, hist: [],
-    act: null, at: 0, aseq: 0, slamCd: 3, swCd: 0.5, ix: 0, iy: 0,
+    act: null, at: 0, aseq: 0, slamCd: 3, swCd: 0.5, ix: 0, iy: 0, ax: 0, ay: 0,
   };
-  zbMake(z);
+  if (T.init) T.init(z);
+  zbMake(z, kind);
   z.h = bearingOf(w.x - z.x, w.y - z.y);
   ZM.z.push(z); FPS.drowned = ZM.z;
   ZB.seen.add(zn);
   zbArrive(z);
   return true;
 }
-// what makes one of the drowned the Diver: his size (for shots: fpsRay reads rad, tall and headZ), his footing
-function zbMake(z) {
-  if (z.mdl && !z.mdl.boss) zmFreeModel(z);
-  Object.assign(z, { boss: true, n: 'the Diver', kind: 'boss', rad: ZBC.RAD, tall: ZBC.TALL, headZ: ZBC.HEADZ, zpad: ZBC.PAD });
+// what makes one of the drowned one of them: its size (for shots: fpsRay reads rad, tall and headZ), its footing
+function zbMake(z, kind) {
+  kind = ZBT[kind] ? kind : 'diver';
+  if (z.mdl && z.mdl.bt !== kind) zmFreeModel(z);
+  const T = ZBT[kind];
+  Object.assign(z, { boss: true, bt: kind, n: T.n, kind: 'boss', rad: T.rad, tall: T.tall, headZ: T.headZ, zpad: T.pad, crowdR: T.crowd });
   if (z.aseq == null) z.aseq = 0;
 }
-// everyone hears him come
+// everyone hears it come
 function zbArrive(z) {
-  const zn = z.win ? zmZoneName(z.win.zone) : '';
-  ZM.banner = { text: 'The Diver', t: 3.6, col: '#8affd0' };
-  fpsFeed(`Something huge comes up out of the sea${zn ? ' outside ' + zn : ''}: the Diver, dragging his anchor.`);
-  zbSound('arrive');
+  const T = zbT(z), zn = z.win ? zmZoneName(z.win.zone) : '';
+  ZM.banner = { text: T.N, t: 3.6, col: T.col, sub: T.sub };
+  fpsFeed(T.arriveLine(zn));
+  T.sound('arrive');
 }
 
-// ---------- each tick (hosting, or alone): from zmZombies, for him instead of the usual ----------
+// ---------- each tick (hosting, or alone): from zmZombies, for them instead of the usual ----------
 function zbTick(z, dt, nearest) {
-  const m = FPS.me;
+  const T = zbT(z);
+  if (T.cool) T.cool(z, dt);
   if (z.slamCd > 0) z.slamCd -= dt; if (z.swCd > 0) z.swCd -= dt;
-  // a blow under way: he stands and sees it through
+  // a blow under way: it stands (or charges) and sees it through
   if (z.act) {
-    const T = ZB_T[z.act], was = z.at;
+    const A = zbActT(z), was = z.at, a0 = z.act;
     z.at += dt; z.walk = false;
-    if (z.act === 'slam' && z.at < T.hit * 0.6) {
-      // (turning to follow you for the first of the wind-up; then it's set, and the ring shows where)
-      const p = nearest(z.x, z.y, z.jz);
-      if (p) z.h += angDiff(bearingOf(p.x - z.x, p.y - z.y), z.h) * Math.min(1, dt * 2.5);
-      zbAim(z);
-    }
-    if (z.act === 'swing' && z.at < T.hit * 0.7) { const p = nearest(z.x, z.y, z.jz); if (p) z.h += angDiff(bearingOf(p.x - z.x, p.y - z.y), z.h) * Math.min(1, dt * 4); }
-    if (was < T.hit && z.at >= T.hit) {
+    if (T.during) T.during(z, dt, nearest, was);
+    if (z.act !== a0) return;   // (ended early, or turned into another: the charge struck something)
+    if (was < A.hit && z.at >= A.hit) {
       if (z.act === 'smash') zbSmashWindow(z);
       zbStrike(z);
     }
-    if (z.at >= T.end) {
-      const a = z.act; z.act = null; z.at = 0;
-      if (a === 'smash') { z.st = 'climb'; z.t = 0; }
+    if (z.at >= zbEnd(z)) {
+      const a = z.act; z.act = null; z.at = 0; z.aEnd = 0;
+      if (a === 'smash') { z.st = 'climb'; z.t = 0; z.jz0 = z.jz; }
+      else if (T.after) T.after(z, a);
     }
     return;
   }
-  if (z.st === 'out') {
-    // up out of the sea, and across to the window
-    const w = z.win, ox = w.x + w.nx * 1.5, oy = w.y + w.ny * 1.5, dx = ox - z.x, dy = oy - z.y, d = Math.hypot(dx, dy);
-    if (z.jz < 0) z.jz = Math.min(0, z.jz + dt * 1.1);
-    if (typeof zmSeaDepth === 'function') z.jz = Math.min(z.jz, -zmSeaDepth(z.x, z.y));   // (still in the harbour's water: wading up out of it)
-    if (d > 0.08) { const s = Math.min(d, z.sp * dt); z.x += dx / d * s; z.y += dy / d * s; z.h += angDiff(bearingOf(dx, dy), z.h) * Math.min(1, dt * 4); z.walk = true; }
-    else if (z.jz >= 0) { z.walk = false; z.h = bearingOf(-w.nx, -w.ny); zbStart(z, 'smash'); }
-    return;
-  }
-  if (z.st === 'climb') {
-    // through the empty frame, stooping
-    const w = z.win, k = Math.min(1, z.t / 1.6);
-    z.x = w.x + w.nx * (1.5 - 2.7 * k); z.y = w.y + w.ny * (1.5 - 2.7 * k); z.jz = Math.sin(k * Math.PI) * 0.9; z.walk = true;
-    if (k >= 1) { z.st = 'in'; z.jz = 0; z.fl = 0; z.t = 0; z.lx = z.x; z.ly = z.y; zmSettle(z); }
-    return;
-  }
+  if (z.st === 'out') return zbOut(z, dt);
+  if (z.st === 'climb') return zbClimb(z, dt);
   // inside: after the nearest of you, by the shortest walk
   const p = nearest(z.x, z.y, z.jz);
   if (!p) { z.walk = false; return; }
   const dx = p.x - z.x, dy = p.y - z.y, d = Math.hypot(dx, dy), dz = (p.jz || 0) - (z.jz || 0), level = Math.abs(dz) < 1;
-  if (level && d < ZBC.REACH - 0.3 && z.swCd <= 0) { zbStart(z, z.slamCd <= 0 && Math.random() < 0.3 ? 'slam' : 'swing'); return; }
-  if (level && d < ZBC.SLAM_RANGE && d > 2.6 && z.slamCd <= 0) { zbStart(z, 'slam'); return; }
+  const a = T.think(z, p, d, dz, level);
+  if (a) { zbStart(z, a, p); return; }
   let tx = p.x, ty = p.y;
   if (!(d < 3 && Math.abs(dz) < 0.8)) { const nx = zmNavNext(z.x, z.y, z.jz || 0); if (nx) { tx = nx[0]; ty = nx[1]; } }
-  const hx = tx - z.x, hy = ty - z.y, hl = Math.hypot(hx, hy), near = d < ZBC.NEAR && level, step = z.sp * dt;
+  const hx = tx - z.x, hy = ty - z.y, hl = Math.hypot(hx, hy), near = d < T.near && level;
+  const step = z.sp * dt * (z.slow > 0 && typeof zmpSlowK === 'function' ? zmpSlowK(z) : 1);   // [pap] (slowed by the Equinox Gale)
   const x0 = z.x, y0 = z.y;
   z.walk = false;
   if (hl > 0.05 && !near) {
     z.h += angDiff(bearingOf(hx, hy), z.h) * Math.min(1, dt * 3);
     const s = Math.min(hl, step), want = bearingOf(hx, hy);
     if (z.shove > 0) {
-      // (shouldering through a corner too tight for him: straight on along the way, whatever's in it)
+      // (shouldering through a corner too tight for it: straight on along the way, whatever's in it)
       z.shove -= dt; z.x += Math.sin(want) * s; z.y += Math.cos(want) * s; zmSettle(z); z.walk = true;
     } else {
       for (const dh of [0, 0.5, -0.5, 1.0, -1.0]) { const a = want + dh * (z.side || 1), ax = z.x, ay = z.y; if (zmMove(z, Math.sin(a) * s, Math.cos(a) * s) && Math.hypot(z.x - ax, z.y - ay) > s * 0.3) { z.walk = true; if (dh) z.side = Math.sign(dh * (z.side || 1)); break; } }
@@ -22012,25 +22048,58 @@ function zbTick(z, dt, nearest) {
   if (near || nd < (z.best == null ? 1e9 : z.best) - 0.5) { z.best = nd; z.lost = 0; } else z.lost += dt;
   if (z.lost > 8) z.best = nd;   // (you moved off: count again from here)
   if (z.lost > 14 && d > 10) zbReenter(z);
-  // the rest of them keep out from under his feet
-  for (const o of ZM.z) {
-    if (o === z || o.dead || o.st !== 'in' || Math.abs((o.jz || 0) - (z.jz || 0)) > 1) continue;
-    const ox = o.x - z.x, oy = o.y - z.y, od = Math.hypot(ox, oy);
-    if (od < 1.25 && od > 0.001) zmMove(o, ox / od * (1.25 - od) * 0.5, oy / od * (1.25 - od) * 0.5);
-  }
+  zbJostle(z);
   z.lx = z.x; z.ly = z.y;
 }
-function zbStart(z, act) {
-  z.act = act; z.at = 0; z.aseq = (z.aseq + 1) % 1000; z.walk = false;
-  if (act === 'slam') { z.slamCd = 6.5 + Math.random() * 2.5; z.swCd = Math.max(z.swCd, 1.2); zbAim(z); }
-  if (act === 'swing') z.swCd = 1.7 + Math.random() * 0.5;
-  zbActSound(z, act);
+// the rest of them keep out from under its feet
+function zbJostle(z, R) {
+  R = R || (z.rad || 0.85) + 0.4;
+  for (const o of ZM.z) {
+    if (o === z || o.dead || o.st !== 'in' || o.boss || Math.abs((o.jz || 0) - (z.jz || 0)) > 1) continue;
+    const ox = o.x - z.x, oy = o.y - z.y, od = Math.hypot(ox, oy);
+    if (od < R && od > 0.001) zmMove(o, ox / od * (R - od) * 0.5, oy / od * (R - od) * 0.5);
+  }
 }
-// where the anchor will come down: in front of him
-function zbAim(z) { z.ix = z.x + Math.sin(z.h) * ZBC.SLAM_AT; z.iy = z.y + Math.cos(z.h) * ZBC.SLAM_AT; }
+// up out of the sea, and across to its window: wading in to a ladder at the jetty's edge, up the foot of the tower's
+// wall to a window up there, or across the ground to one there
+function zbOut(z, dt) {
+  const w = z.win, wz = w.z || 0, T = zbT(z);
+  const off = w.sea ? 0.75 : wz > 0 ? 1.0 : 1.5, ox = w.x + w.nx * off, oy = w.y + w.ny * off, dx = ox - z.x, dy = oy - z.y, d = Math.hypot(dx, dy);
+  if (z.jz < 0 || !wz) {
+    if (z.jz < 0) z.jz = Math.min(0, z.jz + dt * 1.1);
+    if (typeof zmSeaDepth === 'function') z.jz = Math.min(z.jz, -zmSeaDepth(z.x, z.y) * (w.sea ? 1.25 : 1));   // (still in the harbour's water: wading up out of it)
+  }
+  z.scaling = false;
+  if (d > 0.08) { const s = Math.min(d, z.sp * dt * (w.sea ? 0.8 : 1)); z.x += dx / d * s; z.y += dy / d * s; z.h += angDiff(bearingOf(dx, dy), z.h) * Math.min(1, dt * 4); z.walk = true; return; }
+  z.walk = false; z.h = bearingOf(-w.nx, -w.ny);
+  if (w.sea) { z.st = 'climb'; z.t = 0; z.jz0 = z.jz; return; }   // (a ladder has no boards: straight up it)
+  if (wz > 0 && z.jz < wz) { z.jz = Math.min(wz, Math.max(0, z.jz) + dt * (T.scale || 1.6)); z.scaling = true; return; }   // (hand over hand up the wall)
+  if (z.jz < wz - 0.01) return;
+  if (T.alwaysSmash || w.boards > 0) zbStart(z, 'smash'); else { z.st = 'climb'; z.t = 0; z.jz0 = z.jz; }
+}
+// through the empty frame, stooping (or up the ladder and over the jetty's edge)
+function zbClimb(z, dt) {
+  const w = z.win, wz = w.z || 0, T = zbT(z);
+  if (w.sea) {
+    const D = T.ladder || 2.0, k = Math.min(1, z.t / D), j0 = z.jz0 != null ? z.jz0 : -1;
+    if (k < 0.6) { const q = zbE(k / 0.6); z.x = w.x + w.nx * 0.75; z.y = w.y + w.ny * 0.75; z.jz = j0 + (wz - 0.3 - j0) * q; z.scaling = true; }
+    else { const q = (k - 0.6) / 0.4; z.x = w.x + w.nx * (0.75 - 2.1 * q); z.y = w.y + w.ny * (0.75 - 2.1 * q); z.jz = wz - 0.3 + 0.3 * Math.sin(q * Math.PI / 2) + 0.25 * Math.sin(q * Math.PI); z.scaling = false; }
+    z.h = bearingOf(-w.nx, -w.ny); z.walk = true;
+  } else {
+    const D = T.through || 1.6, k = Math.min(1, z.t / D), a = wz > 0 ? 1.0 : 1.5;
+    z.x = w.x + w.nx * (a - (a + 1.2) * k); z.y = w.y + w.ny * (a - (a + 1.2) * k); z.jz = wz + Math.sin(k * Math.PI) * 0.9; z.walk = true; z.scaling = false;
+  }
+  if (z.t >= (w.sea ? T.ladder || 2.0 : T.through || 1.6)) { z.st = 'in'; z.jz = wz; z.fl = wz; z.t = 0; z.lx = z.x; z.ly = z.y; z.jz0 = null; zmSettle(z); }
+}
+function zbStart(z, act, p) {
+  z.act = act; z.at = 0; z.aseq = (z.aseq + 1) % 1000; z.walk = false; z.aEnd = 0; z.judged = false; z.chHit = false;
+  zbT(z).start(z, act, p);
+  zbT(z).actSound(z, act);
+}
 function zbReenter(z) {
-  const w = zbWindow(); if (!w) { z.lost = 0; return; }
-  Object.assign(z, { st: 'out', win: w, x: w.x + w.nx * ZBC.OUT, y: w.y + w.ny * ZBC.OUT, jz: -2.6, fl: 0, t: 0, act: null, at: 0, lost: 0, stuck: 0, shove: 0, best: null });
+  const w = zbWindow(z.bt); if (!w) { z.lost = 0; return; }
+  const out = w.sea ? 4.5 : (w.z || 0) > 0 ? 1.4 : ZBC.OUT;
+  Object.assign(z, { st: 'out', win: w, x: w.x + w.nx * out, y: w.y + w.ny * out, jz: (w.z || 0) > 0 ? 0 : -2.6, fl: 0, t: 0, act: null, at: 0, aEnd: 0, lost: 0, stuck: 0, shove: 0, best: null });
   z.h = bearingOf(w.x - z.x, w.y - z.y);
 }
 // the boards: all of them in at once
@@ -22038,74 +22107,84 @@ function zbSmashWindow(z) {
   const w = z.win; if (!w) return;
   for (let i = w.boards - 1; i >= 0; i--) w.fall.push({ i, t: 0 });
   w.boards = 0;
-  if (typeof zmnEvent === 'function' && ZM.net === 'host') zmnEvent('feed', `The Diver smashes in through a window of ${zmZoneName(w.zone)}.`);
-  fpsFeed(`The Diver smashes in through a window of ${zmZoneName(w.zone)}.`);
+  const line = zbT(z).smashLine(zmZoneName(w.zone));
+  if (typeof zmnEvent === 'function' && ZM.net === 'host') zmnEvent('feed', line);
+  fpsFeed(line);
 }
 
-// ---------- his blows land (on every screen; each judges only its own player) ----------
+// ---------- their blows land (on every screen; each judges only its own player) ----------
+const zbOk = () => { const m = FPS.me; return !(m.dead > 0) && !(m.protect > 0) && !ZM.over; };
 function zbStrike(z) {
-  const m = FPS.me, act = z.act, G0 = FPSC.GROUND;
-  const ok = () => !(m.dead > 0) && !(m.protect > 0) && !ZM.over;
-  if (act === 'slam' || act === 'smash') {
-    const ix = act === 'slam' ? z.ix : z.win ? z.win.x : z.x, iy = act === 'slam' ? z.iy : z.win ? z.win.y : z.y;
-    const dm = Math.hypot(ix - m.x, iy - m.y);
-    zbSound(act === 'slam' ? 'slam' : 'smash', dm);
-    // dust and spray, round the ring
-    const n = act === 'slam' ? 22 : 10, R = act === 'slam' ? ZBC.SLAM_R : 1.2;
-    for (let i = 0; i < n; i++) { const a = i / n * 6.283; fpsPuff(ix + Math.cos(a) * R * (0.4 + Math.random() * 0.6), iy + Math.sin(a) * R * (0.4 + Math.random() * 0.6), G0 + (z.jz || 0) + 0.15, act === 'slam' ? '150,170,160' : '120,100,80', 2); }
-    if (act === 'slam') {
-      z.wave = 0.01;
-      if (dm < 9) { FPS.eyeLag = clamp((FPS.eyeLag || 0) - 0.18 * (1 - dm / 9), -0.8, 0.8); }
-      // in the ring, at his level, feet on the floor, and nothing solid between: two knocks
-      const grounded = (m.jz || 0) - (m.fl || 0) < 0.25 && !((m.vz || 0) > 0.5);
-      if (ok() && dm < ZBC.SLAM_R && Math.abs((m.jz || 0) - (z.jz || 0)) < 1.2 && grounded) {
-        const r = fpsRay(ix, iy, G0 + (z.jz || 0) + 0.6, bearingOf(m.x - ix, m.y - iy), 0, null, [], dm);
-        if (!(r.kind !== 'none' && r.t < dm - 0.3)) { fpsHurt(ZBC.DMG, null, null); zmSound('hit'); FPS.hurtT = 0.9; }
-      }
-    }
-    return;
-  }
-  if (act === 'swing') {
-    zbSound('whoosh', Math.hypot(z.x - m.x, z.y - m.y));
-    const d = Math.hypot(m.x - z.x, m.y - z.y);
-    if (ok() && d < ZBC.REACH && Math.abs(angDiff(bearingOf(m.x - z.x, m.y - z.y), z.h)) < 1.25 && Math.abs((m.jz || 0) - (z.jz || 0)) < 1.3) { fpsHurt(ZBC.DMG, null, null); zmSound('hit'); FPS.hurtT = 0.9; }
-  }
+  if (z.act === 'smash') return zbSmashFx(z);
+  zbT(z).strike(z);
+}
+// boards going in: splinters, and the sound of it
+function zbSmashFx(z) {
+  const G0 = FPSC.GROUND, ix = z.win ? z.win.x : z.x, iy = z.win ? z.win.y : z.y, iz = z.win ? z.win.z || 0 : z.jz || 0;
+  zbT(z).sound('smash', Math.hypot(ix - FPS.me.x, iy - FPS.me.y));
+  for (let i = 0; i < 10; i++) { const a = i / 10 * 6.283; fpsPuff(ix + Math.cos(a) * 1.2 * (0.4 + Math.random() * 0.6), iy + Math.sin(a) * 1.2 * (0.4 + Math.random() * 0.6), G0 + iz + 0.15, '120,100,80', 2); }
+}
+// a melee blow in an arc in front of one of them: is it me it hits?
+function zbMelee(z, reach, arc, dmg) {
+  const m = FPS.me, d = Math.hypot(m.x - z.x, m.y - z.y);
+  if (zbOk() && d < reach && Math.abs(angDiff(bearingOf(m.x - z.x, m.y - z.y), z.h)) < arc && Math.abs((m.jz || 0) - (z.jz || 0)) < 1.3) { fpsHurt(dmg, null, null); zmSound('hit'); FPS.hurtT = 0.9; return true; }
+  return false;
 }
 
-// ---------- hurting him, and putting him down (hosting, or alone) ----------
-// from zmHurt: what a hit does to him (the Black Spot doesn't kill him outright, and the Lamp burns him slowly)
-function zbHurtK(z, dmg, how) { return dmg * (ZM.insta > 0 ? 3 : 1) * (how === 'burn' ? 0.5 : 1); }
-// a Lamp Flash only scorches him
+// ---------- hurting them, and putting them down (hosting, or alone) ----------
+// from zmHurt: what a hit does to one (the Black Spot doesn't kill outright; each takes the rest its own way)
+function zbHurtK(z, dmg, how) { return dmg * (ZM.insta > 0 ? 3 : 1) * zbT(z).hurtK(z, how); }
+// a Lamp Flash only scorches them
 function zbFlash(z) { z.hp = Math.max(1, z.hp - z.max * 0.2); z.scorch = 1; z.hitT = 0.3; }
-// from zmKill: his reward, and his salvage
+// from zmKill: its reward, and its salvage
 function zbKilled(z, how, by) {
-  zmPoints(ZBC.PTS, false, by);
+  const T = zbT(z);
+  zmPoints(T.pts, false, by);
   const r = Math.random(), k = r < 0.35 ? 'keg' : r < 0.6 ? 'double' : r < 0.8 ? 'spot' : 'flash';
   ZM.drops.push({ k, x: z.x, y: z.y, z: z.jz || 0, t: 30, ph: Math.random() * 6, id: ++ZM.zc });
   zmSound('drop');
   const who = !by || by === FPS.me.id ? 'You' : ((ZM.hum.find(h => h[0] === by) || [])[1] || 'Someone');
-  const line = `${who} sent the Diver back to the deep (+${ZBC.PTS}).`;
+  const line = T.killLine(who, T.pts);
   fpsFeed(line);
   if (typeof zmnEvent === 'function' && ZM.net === 'host') zmnEvent('feed', line);
   zbDeathFx(z);
 }
 function zbDeathFx(z) {
   if (z.dfx) return; z.dfx = true;
-  const m = FPS.me;
-  ZM.banner = { text: 'The Diver goes down', t: 3, small: true, col: '#8affd0' };
-  zbSound('die', Math.hypot(z.x - m.x, z.y - m.y));
-  for (let i = 0; i < 4; i++) fpsPuff(z.x + (Math.random() - 0.5) * 1.2, z.y + (Math.random() - 0.5) * 1.2, FPSC.GROUND + (z.jz || 0) + 0.8 + i * 0.4, '90,140,120', 8);
+  const m = FPS.me, T = zbT(z);
+  if (z.bt === 'moon' && ZB.lure && ZB.lure.zn === z.zn) ZB.lure = null;
+  ZM.banner = { text: T.N + ' goes down', t: 3, small: true, col: T.col };
+  T.sound('die', Math.hypot(z.x - m.x, z.y - m.y));
+  for (let i = 0; i < 4; i++) fpsPuff(z.x + (Math.random() - 0.5) * 1.2, z.y + (Math.random() - 0.5) * 1.2, FPSC.GROUND + (z.jz || 0) + 0.8 + i * 0.4, T.puff || '90,140,120', 8);
 }
 
+// ---------- on every screen, each frame: from zmTick ----------
+// (joined: their blows run on between the host's word, and land here when they're due); and what their blows have
+// done to me goes on: dragged towards the false light, and the glare of it
+function zbMe(dt) {
+  zbNew();
+  if (ZM.net === 'client') for (const z of ZM.z) {
+    if (!z.boss || z.dead || !z.act) continue;
+    const A = zbActT(z), was = z.at || 0;
+    z.at = Math.min(zbEnd(z), was + dt);
+    if (zbT(z).judge) zbT(z).judge(z, was, z.at);
+    if (!z.judged && was < A.hit && z.at >= A.hit) { z.judged = true; zbStrike(z); }
+  }
+  if (ZB.glare > 0) ZB.glare = Math.max(0, ZB.glare - dt);
+  if (ZB.lure && typeof zbLureTick === 'function') zbLureTick(dt);
+}
+// how quick on my feet I am, for their part (dragged by the false light: half pace)
+function zbSpeedK() { return ZB.lure ? 0.45 : 1; }
+
 // ---------- together ----------
-// (hosting) him and his blow, for the others: zn, strength (per mille), the blow and how far into it, which blow
-// (a count), and where the anchor's coming down
+// (hosting) them and their blows, for the others: zn, strength (per mille), the blow and how far into it, which blow
+// (a count), where it'll land (the anchor's ring, the end of a charge), the kind, and where a charge set off from
 function zbHostSend(o) {
   const CX = FPSC.CX, CY = FPSC.CY, list = ZM.z.filter(q => q.boss && !q.gone);
   if (!list.length) return;
-  o.bo = list.map(q => [q.zn, Math.round(clamp(q.hp / q.max, 0, 1) * 1000), ZB_ACT.indexOf(q.act || ''), Math.round((q.at || 0) * 100), q.aseq | 0, Math.round((q.ix - CX) * 10), Math.round((q.iy - CY) * 10)]);
+  o.bo = list.map(q => [q.zn, Math.round(clamp(q.hp / q.max, 0, 1) * 1000), ZB_ACT.indexOf(q.act || ''), Math.round((q.at || 0) * 100), q.aseq | 0, Math.round((q.ix - CX) * 10), Math.round((q.iy - CY) * 10), Math.max(0, ZB_KINDS.indexOf(q.bt)), Math.round(((q.ax || CX) - CX) * 10), Math.round(((q.ay || CY) - CY) * 10)]);
 }
-// (joined) what the host says of him: and a blow landing is judged here, on me
+// (joined) what the host says of them: and a blow landing is judged here, on me
 function zbApply(hz) {
   zbNew();
   const CX = FPSC.CX, CY = FPSC.CY;
@@ -22113,23 +22192,152 @@ function zbApply(hz) {
     if (!Array.isArray(r)) continue;
     const zn = r[0] | 0, z = ZM.z.find(q => q.zn === zn);
     if (!z) continue;
-    if (!z.boss) zbMake(z);
+    const kind = ZB_KINDS[r[7] | 0] || 'diver';
+    if (!z.boss || z.bt !== kind) zbMake(z, kind);
     if (!ZB.seen.has(zn)) { ZB.seen.add(zn); if (!z.dead) zbArrive(z); }
     z.hpk = clamp((+r[1] || 0) / 1000, 0, 1);
     const act = ZB_ACT[r[2] | 0] || null, at = (+r[3] || 0) / 100, seq = r[4] | 0;
     z.ix = CX + (+r[5] || 0) / 10; z.iy = CY + (+r[6] || 0) / 10;
-    if (seq !== z.aseq) { z.aseq = seq; z.judged = false; if (act) zbActSound(z, act); }
+    z.ax = CX + (+r[8] || 0) / 10; z.ay = CY + (+r[9] || 0) / 10;
+    const T = zbT(z);
+    if (seq !== z.aseq) { z.aseq = seq; z.judged = false; z.chHit = false; if (act) T.actSound(z, act); }
+    const was = z.act === act ? z.at || 0 : at;
     z.act = act; z.at = act ? at : 0;
-    if (act && !z.judged && at >= ZB_T[act].hit) { z.judged = true; zbStrike(z); }
+    if (act && T.endOf) z.aEnd = T.endOf(z, act); else z.aEnd = 0;
+    if (act && T.judge && at > was) T.judge(z, was, at);
+    if (act && !z.judged && at >= zbActT(z).hit) { z.judged = true; zbStrike(z); }
   }
   for (const z of ZM.z) if (z.boss && z.dead && !z.dfx) zbDeathFx(z);
 }
 
-// ---------- sounds ----------
-function zbActSound(z, act) {
-  const d = Math.hypot(z.x - FPS.me.x, z.y - FPS.me.y);
-  if (act === 'slam') zbSound('heave', d); else if (act === 'smash') zbSound('heave', d * 0.8);
+// ---------- in 3D: each kind's model (a pool of its own, in the mode's group), and its pose ----------
+function zbModel(z) {
+  if (ZB.grp !== Z3.grp) { ZB.grp = Z3.grp; ZB.pool = []; }
+  const kind = ZBT[z.bt] ? z.bt : 'diver';
+  let M = ZB.pool.find(p => !p.used && p.bt === kind);
+  if (!M) { M = ZBT[kind].build(); M.boss = true; M.bt = kind; M.used = false; ZB.pool.push(M); Z3.grp.add(M.root); }
+  M.used = true; M.root.visible = true;
+  ZBT[kind].reset(z, M);
+  z.mdl = M; z.duck = z.duck || 0; z.stepS = 0; z.groanT = 3 + Math.random() * 4;
+  return M;
 }
+function zbPose(z, M, dt) {
+  if (M.bt !== z.bt) { zmFreeModel(z); return; }
+  zbT(z).pose(z, M, dt);
+  // a groan now and then
+  z.groanT = (z.groanT || 3) - dt;
+  if (z.groanT <= 0 && !z.dead) { z.groanT = 4 + Math.random() * 5; zbT(z).sound('groan', Math.hypot(z.x - FPS.me.x, z.y - FPS.me.y)); }
+}
+
+// ---------- on top: their strength, in bars at the top of the screen; and the false light's glare ----------
+function zbHud(phone, top) {
+  zbNew();
+  const m = FPS.me, dt = Math.min(0.1, FPS.dtLast || 0.016);
+  // the glare: white-gold over everything, the lantern's shape burnt in the middle
+  if (ZB.glare > 0) {
+    const a = clamp(ZB.glare / 1.4, 0, 1) * 0.94, gr = ctx.createRadialGradient(cx, H * 0.48, 0, cx, H * 0.48, Math.max(W, H) * 0.75);
+    gr.addColorStop(0, `rgba(255,252,236,${a})`); gr.addColorStop(0.35, `rgba(255,236,180,${a * 0.95})`); gr.addColorStop(1, `rgba(255,190,90,${a * 0.85})`);
+    ctx.fillStyle = gr; ctx.fillRect(0, 0, W, H);
+  }
+  const live = ZM.z.filter(q => q.boss && !q.gone && (!q.dead || (q.deadT || 0) < 2));
+  for (const q of live) ZB.bars.set(q.zn, Math.min(1, (ZB.bars.get(q.zn) || 0) + dt * 3));
+  for (const [zn, v] of ZB.bars) if (!live.some(q => q.zn === zn)) { if (v - dt * 3 <= 0) ZB.bars.delete(zn); else ZB.bars.set(zn, v - dt * 3); }
+  if (!live.length) return;
+  // the nearest three (the living first), one under another; more than that, a count
+  live.sort((a, b) => (a.dead ? 1 : 0) - (b.dead ? 1 : 0) || Math.hypot(a.x - m.x, a.y - m.y) - Math.hypot(b.x - m.x, b.y - m.y));
+  const show = live.slice(0, 3), more = live.filter(q => !q.dead).length - show.filter(q => !q.dead).length;
+  const bw = Math.min(380, W * (phone ? 0.46 : 0.42)) * (show.length > 1 ? 0.85 : 1), bh = phone ? 6 : show.length > 1 ? 8 : 10, gap = phone ? 20 : 27;
+  let y0 = phone ? top + 70 : 68;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+  for (const b of show) {
+    const T = zbT(b), x0 = cx - bw / 2;
+    const frac = b.dead ? 0 : ZM.net === 'client' ? (b.hpk == null ? 1 : b.hpk) : clamp(b.hp / b.max, 0, 1);
+    ctx.globalAlpha = (ZB.bars.get(b.zn) || 0) * (b.dead ? Math.max(0, 1 - (b.deadT || 0) / 2) : 1);
+    ctx.font = `400 ${phone ? 14 : show.length > 1 ? 17 : 20}px "IM Fell English SC", serif`; ctx.fillStyle = T.col;
+    ctx.fillText(T.N, cx, y0 - 5);
+    ctx.fillStyle = 'rgba(8,10,14,0.7)'; ctx.fillRect(x0 - 2, y0 - 2, bw + 4, bh + 4);
+    const gr = ctx.createLinearGradient(x0, 0, x0 + bw, 0); gr.addColorStop(0, T.bar[0]); gr.addColorStop(1, T.bar[1]);
+    ctx.fillStyle = gr; ctx.fillRect(x0, y0, bw * frac, bh);
+    // (its big blow coming: the bar's edge burns)
+    if (b.act && b.act === T.big && !b.dead && (b.at || 0) < (T.warnT || zbActT(b).hit)) { ctx.strokeStyle = `rgba(${T.warn},${0.5 + 0.5 * Math.sin(g.t * 20)})`; ctx.lineWidth = 2; ctx.strokeRect(x0 - 2, y0 - 2, bw + 4, bh + 4); }
+    y0 += bh + gap;
+  }
+  ctx.globalAlpha = 1;
+  // (the false light being raised where it could see me: a word of warning)
+  if (live.some(q => q.bt === 'moon' && q.act === 'lure' && !q.dead && (q.at || 0) < ZBM_T.lure.hit && Math.hypot(q.x - m.x, q.y - m.y) < ZBM.LURE_SEE)) {
+    ctx.font = `400 ${phone ? 16 : 24}px "IM Fell English SC", serif`; ctx.fillStyle = `rgba(255,224,150,${0.7 + 0.3 * Math.sin(g.t * 14)})`;
+    ctx.shadowColor = 'rgba(0,0,0,0.95)'; ctx.shadowBlur = 8; ctx.shadowOffsetY = 1;
+    ctx.fillText('Look away from the false light', cx, H * (phone ? 0.42 : 0.4));
+    ctx.shadowColor = 'transparent'; ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
+  }
+  if (more > 0) { ctx.font = `400 ${phone ? 12 : 14}px "IM Fell English SC", serif`; ctx.fillStyle = 'rgba(236,228,207,0.75)'; ctx.fillText(`and ${more} more`, cx, y0 - gap + 14); }
+}
+
+// ======================================================================================================
+// the Diver
+// ======================================================================================================
+ZBT.diver = {
+  n: 'the Diver', N: 'The Diver', col: '#8affd0', bar: ['#2f9a7a', '#8affd0'], warn: '255,122,64', big: 'slam', puff: '90,140,120',
+  hp: ZBC.HP, pts: ZBC.PTS, rad: ZBC.RAD, tall: ZBC.TALL, headZ: ZBC.HEADZ, pad: ZBC.PAD, crowd: 1.05, near: ZBC.NEAR, alwaysSmash: true,
+  sp: r => 1.3 + Math.min(0.45, (r - ZBC.FROM) * 0.025),
+  // (too big for the windows up the tower, and too heavy for the jetty's ladders)
+  win: w => !w.sea && !((w.z || 0) > 0),
+  acts: ZB_T,
+  arriveLine: zn => `Something huge comes up out of the sea${zn ? ' outside ' + zn : ''}: the Diver, dragging his anchor.`,
+  smashLine: zn => `The Diver smashes in through a window of ${zn}.`,
+  killLine: (who, pts) => `${who} sent the Diver back to the deep (+${pts}).`,
+  think(z, p, d, dz, level) {
+    if (level && d < ZBC.REACH - 0.3 && z.swCd <= 0) return z.slamCd <= 0 && Math.random() < 0.3 ? 'slam' : 'swing';
+    if (level && d < ZBC.SLAM_RANGE && d > 2.6 && z.slamCd <= 0) return 'slam';
+    return null;
+  },
+  start(z, act) {
+    if (act === 'slam') { z.slamCd = 6.5 + Math.random() * 2.5; z.swCd = Math.max(z.swCd, 1.2); zbAim(z); }
+    if (act === 'swing') z.swCd = 1.7 + Math.random() * 0.5;
+  },
+  during(z, dt, nearest) {
+    const T = ZB_T[z.act];
+    if (z.act === 'slam' && z.at < T.hit * 0.6) {
+      // (turning to follow you for the first of the wind-up; then it's set, and the ring shows where)
+      const p = nearest(z.x, z.y, z.jz);
+      if (p) z.h += angDiff(bearingOf(p.x - z.x, p.y - z.y), z.h) * Math.min(1, dt * 2.5);
+      zbAim(z);
+    }
+    if (z.act === 'swing' && z.at < T.hit * 0.7) { const p = nearest(z.x, z.y, z.jz); if (p) z.h += angDiff(bearingOf(p.x - z.x, p.y - z.y), z.h) * Math.min(1, dt * 4); }
+  },
+  strike(z) {
+    const m = FPS.me, G0 = FPSC.GROUND;
+    if (z.act === 'slam') {
+      const ix = z.ix, iy = z.iy, dm = Math.hypot(ix - m.x, iy - m.y);
+      zbSound('slam', dm);
+      for (let i = 0; i < 22; i++) { const a = i / 22 * 6.283; fpsPuff(ix + Math.cos(a) * ZBC.SLAM_R * (0.4 + Math.random() * 0.6), iy + Math.sin(a) * ZBC.SLAM_R * (0.4 + Math.random() * 0.6), G0 + (z.jz || 0) + 0.15, '150,170,160', 2); }
+      z.wave = 0.01;
+      if (dm < 9) { FPS.eyeLag = clamp((FPS.eyeLag || 0) - 0.18 * (1 - dm / 9), -0.8, 0.8); }
+      // in the ring, at his level, feet on the floor, and nothing solid between: two knocks
+      const grounded = (m.jz || 0) - (m.fl || 0) < 0.25 && !((m.vz || 0) > 0.5);
+      if (zbOk() && dm < ZBC.SLAM_R && Math.abs((m.jz || 0) - (z.jz || 0)) < 1.2 && grounded) {
+        const r = fpsRay(ix, iy, G0 + (z.jz || 0) + 0.6, bearingOf(m.x - ix, m.y - iy), 0, null, [], dm);
+        if (!(r.kind !== 'none' && r.t < dm - 0.3)) { fpsHurt(ZBC.DMG, null, null); zmSound('hit'); FPS.hurtT = 0.9; }
+      }
+      return;
+    }
+    if (z.act === 'swing') { zbSound('whoosh', Math.hypot(z.x - m.x, z.y - m.y)); zbMelee(z, ZBC.REACH, 1.25, ZBC.DMG); }
+  },
+  // (the Lamp's fire burns him at half the rate)
+  hurtK: (z, how) => how === 'burn' ? 0.5 : 1,
+  actSound(z, act) {
+    const d = Math.hypot(z.x - FPS.me.x, z.y - FPS.me.y);
+    if (act === 'slam') zbSound('heave', d); else if (act === 'smash') zbSound('heave', d * 0.8);
+  },
+  sound: (k, d) => zbSound(k, d),
+  build: () => zbBuildDiver(),
+  reset(z, M) { M.suit.color.set('#6a6450').multiplyScalar(0.62); M.suit.emissive.set(0); M.brass.emissive.set(0x140e04); M.root.rotation.set(0, 0, 0); M.root.scale.setScalar(1); },
+  pose: (z, M, dt) => zbPoseDiver(z, M, dt),
+};
+// where the anchor will come down: in front of him
+function zbAim(z) { z.ix = z.x + Math.sin(z.h) * ZBC.SLAM_AT; z.iy = z.y + Math.cos(z.h) * ZBC.SLAM_AT; }
+
+// ---------- the Diver's sounds ----------
 function zbSound(k, d) {
   try {
     if (soundOff()) return;
@@ -22158,7 +22366,7 @@ function zbSound(k, d) {
   } catch (e) {}
 }
 
-// ---------- in 3D: his model (a pool of its own, in the mode's group), and his pose ----------
+// ---------- the Diver in 3D ----------
 const ZBG = {};
 function zbGeo() {
   if (ZBG.ok) return ZBG;
@@ -22199,61 +22407,51 @@ function zbGeo() {
   ZBG.ok = true;
   return ZBG;
 }
-function zbModel(z) {
-  if (ZB.grp !== Z3.grp) { ZB.grp = Z3.grp; ZB.pool = []; }
-  let M = ZB.pool.find(p => !p.used);
-  if (!M) {
-    const Q = zbGeo(), root = new THREE.Group(), hips = new THREE.Group(); root.add(hips); hips.position.y = 1.2;
-    const suit = z3Lam('#6a6450'), brass = z3Lam('#b08436', { emissive: 0x140e04 });
-    const mesh = (geo, mat, x, y, zz, parent) => { const o = new THREE.Mesh(geo, mat); o.position.set(x || 0, y || 0, zz || 0); (parent || hips).add(o); return o; };
-    const legs = [-1, 1].map(s => { const p = new THREE.Group(); p.position.set(s * 0.23, 0, 0); hips.add(p); mesh(Q.leg, suit, 0, 0, 0, p); mesh(Q.boot, Q.bootM, 0, -1.09, -0.07, p); return p; });
-    const torso = new THREE.Group(); hips.add(torso);
-    mesh(Q.body, suit, 0, 0, 0, torso).scale.set(1, 1, 0.8);
-    mesh(Q.belt, Q.beltM, 0, 0.08, 0, torso).scale.set(1, 1, 0.82);
-    mesh(Q.corselet, brass, 0, 1.0, 0, torso).scale.set(1, 1, 0.86);
-    for (let i = 0; i < 12; i++) { const a = i / 12 * 6.283; mesh(Q.bolt, brass, Math.cos(a) * 0.62, 0.96, Math.sin(a) * 0.53, torso); }
-    for (const s of [-1, 1]) mesh(Q.weight, Q.leadM, s * 0.2, 0.62, -0.38, torso).rotation.x = 0.12;
-    // a lamp on his chest, still burning green
-    mesh(Q.lamp, Q.lampM, 0, 0.32, -0.42, torso);
-    const lh = new THREE.Sprite(new THREE.SpriteMaterial({ map: Q.halo, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending })); lh.position.set(0, 0.32, -0.5); lh.scale.setScalar(0.7); torso.add(lh);
-    mesh(Q.neck, brass, 0, 1.16, -0.02, torso);
-    // the helmet: a brass dome, its faceplate barred, the glass lit from inside, ports at the sides
-    const head = new THREE.Group(); head.position.set(0, 1.42, -0.04); torso.add(head);
-    mesh(Q.dome, brass, 0, 0, 0, head);
-    mesh(Q.port, brass, 0, 0, -0.355, head);
-    mesh(Q.glass, Q.glassM, 0, 0, -0.35, head).rotation.y = Math.PI;
-    for (const x of [-0.07, 0, 0.07]) mesh(Q.bar, Q.darkM, x, 0, -0.375, head);
-    for (const s of [-1, 1]) { mesh(Q.sport, brass, s * 0.345, 0.03, -0.07, head).rotation.y = Math.PI / 2; mesh(Q.sglass, Q.glassM, s * 0.35, 0.03, -0.07, head).rotation.y = s * Math.PI / 2; }
-    mesh(Q.vent, brass, 0, 0.38, 0.03, head);
-    const hh = new THREE.Sprite(new THREE.SpriteMaterial({ map: Q.halo, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending })); hh.position.set(0, 0, -0.48); hh.scale.setScalar(1.0); head.add(hh);
-    for (let i = 0; i < 3; i++) { const k = mesh(Q.kelp, Q.weedM, -0.2 + i * 0.2, -0.05, 0.3, head); k.rotation.x = 0.3; }
-    // the air hose, torn off, trailing behind him
-    const curve = new THREE.CatmullRomCurve3([new THREE.Vector3(0, 1.5, 0.3), new THREE.Vector3(0.12, 1.15, 0.75), new THREE.Vector3(0.35, 0.2, 1.25), new THREE.Vector3(0.5, -1.1, 2.0), new THREE.Vector3(0.7, -1.18, 2.6)]);
-    mesh(new THREE.TubeGeometry(curve, 24, 0.06, 6, false), Q.hoseM, 0, 0, 0, torso);
-    const arms = [-1, 1].map(s => { const p = new THREE.Group(); p.position.set(s * 0.64, 0.86, 0); torso.add(p); mesh(Q.arm, suit, 0, 0, 0, p); mesh(Q.glove, suit, 0, -0.95, 0, p); const k = mesh(Q.kelp, Q.weedM, s * 0.1, -0.35, 0.08, p); k.rotation.z = s * 0.2; return p; });
-    // the anchor
-    const anc = new THREE.Group(); torso.add(anc);
-    mesh(Q.ring, Q.ironM, 0, 0.08, 0, anc); mesh(Q.stock, Q.ironM, 0, -0.22, 0, anc); mesh(Q.shank, Q.ironM, 0, 0, 0, anc);
-    mesh(Q.crown, Q.ironM, 0, -1.25, 0, anc);
-    for (const s of [-1, 1]) mesh(Q.fluke, Q.ironM, s * 0.55, -1.1, 0, anc);
-    for (let i = 0; i < 5; i++) { const k = mesh(Q.kelp, Q.weedM, -0.45 + i * 0.22, -1.25 - Math.abs(i - 2) * 0.12, 0.06, anc); k.rotation.z = (i - 2) * 0.25; }
-    // the ring on the floor where it'll come down, and the shock going out (in his own space: ahead of him)
-    const warnM = new THREE.MeshBasicMaterial({ color: 0xff7a40, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, fog: false });
-    const fillM = new THREE.MeshBasicMaterial({ color: 0xff5a30, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, fog: false });
-    const waveM = new THREE.MeshBasicMaterial({ color: 0xc8fff0, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, fog: false });
-    const rim = new THREE.Mesh(Q.rim, warnM), disc = new THREE.Mesh(Q.disc, fillM), wave = new THREE.Mesh(Q.wave, waveM);
-    for (const o of [rim, disc, wave]) { o.position.set(0, 0.04, -ZBC.SLAM_AT); o.renderOrder = 2; root.add(o); }
-    M = { boss: true, root, hips, legs, arms, torso, head, anc, suit, brass, rim, disc, wave, used: false };
-    ZB.pool.push(M); Z3.grp.add(root);
-  }
-  M.used = true; M.root.visible = true;
-  M.suit.color.set('#6a6450').multiplyScalar(0.62); M.suit.emissive.set(0); M.brass.emissive.set(0x140e04);
-  M.root.rotation.set(0, 0, 0); M.root.scale.setScalar(1);
-  z.mdl = M; z.duck = z.duck || 0; z.stepS = 0; z.groanT = 3 + Math.random() * 4;
-  return M;
+function zbBuildDiver() {
+  const Q = zbGeo(), root = new THREE.Group(), hips = new THREE.Group(); root.add(hips); hips.position.y = 1.2;
+  const suit = z3Lam('#6a6450'), brass = z3Lam('#b08436', { emissive: 0x140e04 });
+  const mesh = (geo, mat, x, y, zz, parent) => { const o = new THREE.Mesh(geo, mat); o.position.set(x || 0, y || 0, zz || 0); (parent || hips).add(o); return o; };
+  const legs = [-1, 1].map(s => { const p = new THREE.Group(); p.position.set(s * 0.23, 0, 0); hips.add(p); mesh(Q.leg, suit, 0, 0, 0, p); mesh(Q.boot, Q.bootM, 0, -1.09, -0.07, p); return p; });
+  const torso = new THREE.Group(); hips.add(torso);
+  mesh(Q.body, suit, 0, 0, 0, torso).scale.set(1, 1, 0.8);
+  mesh(Q.belt, Q.beltM, 0, 0.08, 0, torso).scale.set(1, 1, 0.82);
+  mesh(Q.corselet, brass, 0, 1.0, 0, torso).scale.set(1, 1, 0.86);
+  for (let i = 0; i < 12; i++) { const a = i / 12 * 6.283; mesh(Q.bolt, brass, Math.cos(a) * 0.62, 0.96, Math.sin(a) * 0.53, torso); }
+  for (const s of [-1, 1]) mesh(Q.weight, Q.leadM, s * 0.2, 0.62, -0.38, torso).rotation.x = 0.12;
+  // a lamp on his chest, still burning green
+  mesh(Q.lamp, Q.lampM, 0, 0.32, -0.42, torso);
+  const lh = new THREE.Sprite(new THREE.SpriteMaterial({ map: Q.halo, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending })); lh.position.set(0, 0.32, -0.5); lh.scale.setScalar(0.7); torso.add(lh);
+  mesh(Q.neck, brass, 0, 1.16, -0.02, torso);
+  // the helmet: a brass dome, its faceplate barred, the glass lit from inside, ports at the sides
+  const head = new THREE.Group(); head.position.set(0, 1.42, -0.04); torso.add(head);
+  mesh(Q.dome, brass, 0, 0, 0, head);
+  mesh(Q.port, brass, 0, 0, -0.355, head);
+  mesh(Q.glass, Q.glassM, 0, 0, -0.35, head).rotation.y = Math.PI;
+  for (const x of [-0.07, 0, 0.07]) mesh(Q.bar, Q.darkM, x, 0, -0.375, head);
+  for (const s of [-1, 1]) { mesh(Q.sport, brass, s * 0.345, 0.03, -0.07, head).rotation.y = Math.PI / 2; mesh(Q.sglass, Q.glassM, s * 0.35, 0.03, -0.07, head).rotation.y = s * Math.PI / 2; }
+  mesh(Q.vent, brass, 0, 0.38, 0.03, head);
+  const hh = new THREE.Sprite(new THREE.SpriteMaterial({ map: Q.halo, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending })); hh.position.set(0, 0, -0.48); hh.scale.setScalar(1.0); head.add(hh);
+  for (let i = 0; i < 3; i++) { const k = mesh(Q.kelp, Q.weedM, -0.2 + i * 0.2, -0.05, 0.3, head); k.rotation.x = 0.3; }
+  // the air hose, torn off, trailing behind him
+  const curve = new THREE.CatmullRomCurve3([new THREE.Vector3(0, 1.5, 0.3), new THREE.Vector3(0.12, 1.15, 0.75), new THREE.Vector3(0.35, 0.2, 1.25), new THREE.Vector3(0.5, -1.1, 2.0), new THREE.Vector3(0.7, -1.18, 2.6)]);
+  mesh(new THREE.TubeGeometry(curve, 24, 0.06, 6, false), Q.hoseM, 0, 0, 0, torso);
+  const arms = [-1, 1].map(s => { const p = new THREE.Group(); p.position.set(s * 0.64, 0.86, 0); torso.add(p); mesh(Q.arm, suit, 0, 0, 0, p); mesh(Q.glove, suit, 0, -0.95, 0, p); const k = mesh(Q.kelp, Q.weedM, s * 0.1, -0.35, 0.08, p); k.rotation.z = s * 0.2; return p; });
+  // the anchor
+  const anc = new THREE.Group(); torso.add(anc);
+  mesh(Q.ring, Q.ironM, 0, 0.08, 0, anc); mesh(Q.stock, Q.ironM, 0, -0.22, 0, anc); mesh(Q.shank, Q.ironM, 0, 0, 0, anc);
+  mesh(Q.crown, Q.ironM, 0, -1.25, 0, anc);
+  for (const s of [-1, 1]) mesh(Q.fluke, Q.ironM, s * 0.55, -1.1, 0, anc);
+  for (let i = 0; i < 5; i++) { const k = mesh(Q.kelp, Q.weedM, -0.45 + i * 0.22, -1.25 - Math.abs(i - 2) * 0.12, 0.06, anc); k.rotation.z = (i - 2) * 0.25; }
+  // the ring on the floor where it'll come down, and the shock going out (in his own space: ahead of him)
+  const warnM = new THREE.MeshBasicMaterial({ color: 0xff7a40, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, fog: false });
+  const fillM = new THREE.MeshBasicMaterial({ color: 0xff5a30, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, fog: false });
+  const waveM = new THREE.MeshBasicMaterial({ color: 0xc8fff0, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, fog: false });
+  const rim = new THREE.Mesh(Q.rim, warnM), disc = new THREE.Mesh(Q.disc, fillM), wave = new THREE.Mesh(Q.wave, waveM);
+  for (const o of [rim, disc, wave]) { o.position.set(0, 0.04, -ZBC.SLAM_AT); o.renderOrder = 2; root.add(o); }
+  return { root, hips, legs, arms, torso, head, anc, suit, brass, rim, disc, wave };
 }
 const ZBV = {};
-// one arm reaching for the anchor's ring (or hanging, swinging)
+// one arm reaching for a point (torso space): the anchor's ring, a lantern's pole
 function zbReach(arm, gx, gy, gz) {
   const V = ZBV.v || (ZBV.v = new THREE.Vector3()), D = ZBV.d || (ZBV.d = new THREE.Vector3(0, -1, 0));
   V.set(gx - arm.position.x, gy - arm.position.y, gz - arm.position.z);
@@ -22271,12 +22469,10 @@ function zbV3(a, b, k, arc) {
 }
 const zbE = k => k <= 0 ? 0 : k >= 1 ? 1 : k * k * (3 - 2 * k);
 const zbL = (a, b, k) => a + (b - a) * k;
-function zbPose(z, M, dt) {
+function zbPoseDiver(z, M, dt) {
   const G0 = FPSC.GROUND, t = g.t, m = FPS.me;
   M.root.position.copy(z3v(z.x, z.y, G0 + (z.jz || 0)));
   M.root.rotation.set(0, -z.h, 0);
-  // (joined: his blow runs on between the host's word)
-  if (ZM.net === 'client' && z.act && !z.dead) z.at = Math.min(ZB_T[z.act].end, (z.at || 0) + dt);
   // the walk: slow, heavy, rolling from one lead boot to the other; each one lands with a thud
   const walking = z.walk && !z.act && !z.dead;
   if (walking) z.ph += dt * z.sp * 1.7;
@@ -22339,9 +22535,6 @@ function zbPose(z, M, dt) {
     const k = (at - Tq.hit) / 0.5, r = 0.4 + k * ZBC.SLAM_R * 1.05;
     M.wave.visible = true; M.wave.scale.set(r, 1, r); M.wave.material.opacity = 0.95 * (1 - k);
   } else M.wave.visible = false;
-  // a groan inside the helmet now and then
-  z.groanT = (z.groanT || 3) - dt;
-  if (z.groanT <= 0 && !z.dead) { z.groanT = 4 + Math.random() * 5; zbSound('groan', Math.hypot(z.x - m.x, z.y - m.y)); }
   // hit: a pale flash on the canvas; burning: the brass glows; dead: over he goes, the light in the helmet dies, and he sinks
   const flash = z.hitT > 0 ? z.hitT / 0.15 : 0, hot = (z.scorch || 0) * 0.7;
   M.suit.emissive.setRGB(0.18 * flash + hot * 0.5, 0.2 * flash + hot * 0.2, 0.18 * flash + hot * 0.04);
@@ -22355,23 +22548,622 @@ function zbPose(z, M, dt) {
   }
 }
 
-// ---------- on top: his strength, in a bar at the top of the screen ----------
-function zbHud(phone, top) {
-  const b = ZM.z.find(q => q.boss && !q.gone && !q.dead) || ZM.z.find(q => q.boss && q.dead && (q.deadT || 0) < 2);
-  const frac = b ? (b.dead ? 0 : ZM.net === 'client' ? (b.hpk == null ? 1 : b.hpk) : clamp(b.hp / b.max, 0, 1)) : 0;
-  const dt = Math.min(0.1, FPS.dtLast || 0.016);
-  ZB.bar = b ? Math.min(1, ZB.bar + dt * 3) : Math.max(0, ZB.bar - dt * 3);
-  if (!b || ZB.bar <= 0) return;
-  const bw = Math.min(380, W * (phone ? 0.46 : 0.42)), bh = phone ? 7 : 10, x0 = cx - bw / 2, y0 = phone ? top + 70 : 68;
-  ctx.globalAlpha = ZB.bar * (b.dead ? Math.max(0, 1 - (b.deadT || 0) / 2) : 1);
-  ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic'; ctx.font = `400 ${phone ? 15 : 20}px "IM Fell English SC", serif`; ctx.fillStyle = '#8affd0';
-  ctx.fillText('The Diver', cx, y0 - 6);
-  ctx.fillStyle = 'rgba(8,10,14,0.7)'; ctx.fillRect(x0 - 2, y0 - 2, bw + 4, bh + 4);
-  const gr = ctx.createLinearGradient(x0, 0, x0 + bw, 0); gr.addColorStop(0, '#2f9a7a'); gr.addColorStop(1, '#8affd0');
-  ctx.fillStyle = gr; ctx.fillRect(x0, y0, bw * frac, bh);
-  // (a blow coming: the bar's edge burns)
-  if (b.act === 'slam' && !b.dead) { ctx.strokeStyle = `rgba(255,122,64,${0.5 + 0.5 * Math.sin(g.t * 20)})`; ctx.lineWidth = 2; ctx.strokeRect(x0 - 2, y0 - 2, bw + 4, bh + 4); }
-  ctx.globalAlpha = 1;
+// ---- src/zmboss2.js ----
+// The Lighthouse: two more bosses, on the framework in src/zmboss.js (their kinds' tables, ZBT.moon and ZBT.crab).
+//
+// The Mooncusser (from round 14): a wrecker hanged in chains on the point and given back by the sea, a gaunt thing
+// a head taller than a man in a long tarred coat cut to rags, iron gibbet bands round his ribs and a broken chain
+// from the collar at his throat, a slouch hat dripping weed, eyes like coals; he carries the false light the wreckers
+// lured ships onto the rocks with, a ship's lantern hung from the hook of a long boathook pole.
+//  - Lighter on his feet than the Diver, and he comes in by any window: up the jetty's ladders and the tower's walls
+//    too, and he burns the boards off with his lantern.
+//  - The false light: from 4.5 m to 22 m, where his lantern can see you, he lifts it high over his hat and opens its
+//    shutter; it swells and brightens for 1.6 s (a cone of light reaches out of it, a rising note, his bar's edge
+//    burns, and "Look away from the false light" across the screen), then flares. Anyone looking at it (within about
+//    35 degrees of straight at it), with nothing solid between, is dazzled white for three seconds and dragged
+//    towards him for 1.7 s (nearly five metres) at half pace (no knock: he means to finish you with the pole). Look away (or get behind
+//    something) and it's only a flash. But he's open while he holds it up: a hit then is worth 1.6 times as much.
+//  - Close in he swings the pole round at you (one knock).
+//  - He carries his own fire: the Lamp's burn hurts him at a quarter the rate.
+// The Keelback (from round 18): a great crab made of wrecks fused together, its back the upturned hull of a boat,
+// planked and ribbed and crusted with barnacles, a stub of mast and its keel along the top; six legs of spars and
+// oars, two great iron claws, and for eyes a ship's sidelights on stalks, red to port and green to starboard.
+//  - Wide and low; it heaves itself up over the jetty's edge or comes in by a window on the ground or the sea wall
+//    (never up the tower). It scuttles at about the Diver's pace.
+//  - The charge: on your floor, 4.5 m to 15 m from you, with a clear run, it rears up and rattles its legs, and a
+//    lane glows on the floor from it through you and on (to 4 m past you or the first thing in the way) for 1.2 s
+//    (for the first 0.6 s it turns to follow you, the lane with it; then the lane is set); then it runs down the
+//    lane at 13 m/s. Anyone it passes over takes two knocks and is thrown aside. Step out of
+//    the lane. If the lane ends in something solid, it crashes into it and reels, upturned, for nearly two seconds
+//    (and any boards on a window it hits come off).
+//  - Its shell takes only 0.6 of any hit; reeling, its soft underside shows and it takes 1.75 times as much.
+//  - Close in it snaps its claws (one knock).
+// Each always drops salvage, and is worth points on top of the kill (the Mooncusser 600, the Keelback 650).
+
+const ZBM = { HP: 9, PTS: 600, RAD: 0.55, TALL: 2.45, HEADZ: 2.0, PAD: 0.33, LURE_MIN: 4.5, LURE_MAX: 22, LURE_SEE: 26, FACE: 0.62, PULL: 2.8, PULL_T: 1.7, GLARE: 3.0, OPEN_K: 1.6, REACH: 2.6 };
+const ZBK2 = { HP: 10, PTS: 650, RAD: 1.05, TALL: 1.55, HEADZ: 1.25, PAD: 0.45, WIND: 1.2, AIM: 0.6, SPEED: 13, MIN: 4.5, MAX: 15, PAST: 4, HIT: 1.3, SHELL: 0.6, SOFT: 1.75, REACH: 2.2 };
+const ZBM_T = { lure: { hit: 1.6, end: 2.5 }, pole: { hit: 0.5, end: 1.05 }, smash: { hit: 0.8, end: 1.3 } };
+const ZBK_T = { charge: { hit: 99, end: 3 }, reel: { hit: 0.05, end: 1.9 }, pinch: { hit: 0.55, end: 1.1 }, smash: { hit: 0.7, end: 1.3 } };
+
+// where his lantern is (in the world), held up or at his side
+function zbmLantern(z) {
+  const up = z.act === 'lure' ? 1 : 0, f = up ? 0.55 : 0.35;
+  return [z.x + Math.sin(z.h) * f + Math.cos(z.h) * 0.25, z.y + Math.cos(z.h) * f - Math.sin(z.h) * 0.25, FPSC.GROUND + (z.jz || 0) + (up ? 2.75 : 1.5)];
+}
+// can his lantern see (px, py) at eye height ez: nothing solid between
+function zbmSees(z, px, py, ez) {
+  const [lx, ly, lz] = zbmLantern(z), dh = Math.hypot(px - lx, py - ly);
+  if (dh < 0.3) return true;
+  const r = fpsRay(lx, ly, lz, bearingOf(px - lx, py - ly), Math.atan2(ez - lz, dh), null, [], dh);
+  return !(r.kind !== 'none' && r.t < dh - 0.3);
+}
+
+ZBT.moon = {
+  n: 'the Mooncusser', N: 'The Mooncusser', sub: 'a wrecker, and his false light', col: '#ffc860', bar: ['#a8641c', '#ffd27a'], warn: '255,214,120', big: 'lure', puff: '200,150,80',
+  hp: ZBM.HP, pts: ZBM.PTS, rad: ZBM.RAD, tall: ZBM.TALL, headZ: ZBM.HEADZ, pad: ZBM.PAD, crowd: 0.8, near: 1.6, scale: 2.2, ladder: 1.8, through: 1.3,
+  sp: r => 2.2 + Math.min(0.6, Math.max(0, r - 14) * 0.03),
+  win: () => true,
+  acts: ZBM_T,
+  arriveLine: zn => `A light comes up out of the sea${zn ? ' by ' + zn : ''}: the Mooncusser, with his false light.`,
+  smashLine: zn => `The Mooncusser burns his way in through a window of ${zn}.`,
+  killLine: (who, pts) => `${who} put out the Mooncusser's light (+${pts}).`,
+  init(z) { z.lureCd = 4; },
+  cool(z, dt) { if (z.lureCd > 0) z.lureCd -= dt; },
+  think(z, p, d, dz, level) {
+    if (level && d < ZBM.REACH - 0.3 && z.swCd <= 0) return 'pole';
+    if (d > ZBM.LURE_MIN && d < ZBM.LURE_MAX && z.lureCd <= 0 && Math.abs(dz) < 4) {
+      if (zbmSees(z, p.x, p.y, FPSC.GROUND + FPSC.EYE + (p.jz || 0))) return 'lure';
+      z.lureCd = 0.4;   // (not in sight: look again in a moment)
+    }
+    return null;
+  },
+  start(z, act) {
+    if (act === 'lure') { z.lureCd = 7 + Math.random() * 2.5; z.swCd = Math.max(z.swCd, 1.0); }
+    if (act === 'pole') z.swCd = 1.5 + Math.random() * 0.5;
+  },
+  during(z, dt, nearest) {
+    const T = ZBM_T[z.act];
+    if ((z.act === 'lure' || z.act === 'pole') && z.at < T.hit * 0.8) { const p = nearest(z.x, z.y, z.jz); if (p) z.h += angDiff(bearingOf(p.x - z.x, p.y - z.y), z.h) * Math.min(1, dt * (z.act === 'pole' ? 5 : 3)); }
+  },
+  strike(z) {
+    const m = FPS.me;
+    if (z.act === 'pole') { zbmSound('whoosh', Math.hypot(z.x - m.x, z.y - m.y)); zbMelee(z, ZBM.REACH, 1.1, 1); return; }
+    if (z.act !== 'lure') return;
+    // the light flares: whoever's looking into it, with nothing between, is dazzled and drawn in
+    const [lx, ly, lz] = zbmLantern(z), ez = FPSC.GROUND + FPSC.EYE + (m.jz || 0), dh = Math.hypot(lx - m.x, ly - m.y);
+    zbmSound('flare', dh);
+    z.flare = 0.01;
+    if (!zbOk() || (typeof zmIsDown === 'function' && zmIsDown()) || dh > ZBM.LURE_SEE || !zbmSees(z, m.x, m.y, ez)) return;
+    const face = Math.abs(angDiff(bearingOf(lx - m.x, ly - m.y), m.h)), pe = Math.atan2(lz - ez, dh);
+    if (face < ZBM.FACE && Math.abs(pe - (m.p || 0)) < 0.75) {
+      ZB.glare = ZBM.GLARE; ZB.lure = { zn: z.zn, t: ZBM.PULL_T };
+      fpsFeed('The false light has you: you stumble towards it, blind.');
+      zbmSound('dazzle');
+    } else ZB.glare = Math.max(ZB.glare, 0.45 * Math.max(0, 1 - dh / ZBM.LURE_SEE) + 0.1);
+  },
+  // (his own fire: the Lamp burns him at a quarter the rate; holding the light up, he's open)
+  hurtK: (z, how) => (how === 'burn' ? 0.25 : 1) * (z.act === 'lure' && (z.at || 0) < ZBM_T.lure.hit ? ZBM.OPEN_K : 1),
+  actSound(z, act) { const d = Math.hypot(z.x - FPS.me.x, z.y - FPS.me.y); if (act === 'lure') zbmSound('raise', d); else if (act === 'smash') zbmSound('burn', d); },
+  sound: (k, d) => zbmSound(k, d),
+  build: () => zbBuildMoon(),
+  reset(z, M) { M.coat.emissive.set(0); M.root.rotation.set(0, 0, 0); M.root.scale.setScalar(1); M.glass.color.set(0xffc860); },
+  pose: (z, M, dt) => zbPoseMoon(z, M, dt),
+};
+// (each frame, on my screen) dragged towards his light while it has me
+function zbLureTick(dt) {
+  const L = ZB.lure, m = FPS.me, z = ZM.z.find(q => q.zn === L.zn && q.boss && !q.dead && !q.gone);
+  L.t -= dt;
+  if (!z || L.t <= 0 || m.dead > 0 || (typeof zmIsDown === 'function' && zmIsDown())) { ZB.lure = null; return; }
+  const dx = z.x - m.x, dy = z.y - m.y, d = Math.hypot(dx, dy);
+  if (d > 2.2) zmMove(m, dx / d * ZBM.PULL * dt, dy / d * ZBM.PULL * dt);
+  // (and your eyes are drawn to it)
+  m.h = wrapPi(m.h + angDiff(bearingOf(dx, dy), m.h) * Math.min(1, dt * 1.2));
+}
+
+ZBT.crab = {
+  n: 'the Keelback', N: 'The Keelback', sub: 'a crab of a hundred wrecks', col: '#ff8a6a', bar: ['#8a3a26', '#ffa07a'], warn: '255,90,60', big: 'charge', puff: '140,110,80',
+  hp: ZBK2.HP, pts: ZBK2.PTS, rad: ZBK2.RAD, tall: ZBK2.TALL, headZ: ZBK2.HEADZ, pad: ZBK2.PAD, crowd: 1.3, near: 1.9, ladder: 2.3, through: 1.5, warnT: ZBK2.WIND,
+  sp: r => 1.9 + Math.min(0.5, Math.max(0, r - 18) * 0.03),
+  // (the jetty's ladders, the sea wall and the ground's windows: never up the tower)
+  win: w => !!w.sea || !((w.z || 0) > 0),
+  acts: ZBK_T,
+  arriveLine: zn => `Something vast heaves itself out of the sea${zn ? ' by ' + zn : ''}, clattering: the Keelback.`,
+  smashLine: zn => `The Keelback tears its way in through a window of ${zn}.`,
+  killLine: (who, pts) => `${who} broke the Keelback apart (+${pts}).`,
+  init(z) { z.chCd = 3; },
+  cool(z, dt) { if (z.chCd > 0) z.chCd -= dt; },
+  think(z, p, d, dz, level) {
+    if (level && d < ZBK2.REACH && z.swCd <= 0) return 'pinch';
+    if (Math.abs(dz) < 0.4 && d > ZBK2.MIN && d < ZBK2.MAX && z.chCd <= 0) {
+      const L = zbkLane(z, p, d);
+      if (L) { z.lane = L; return 'charge'; }
+      z.chCd = 0.5;   // (no clear run at you: look again in a moment)
+    }
+    return null;
+  },
+  start(z, act) {
+    if (act === 'charge') {
+      const L = z.lane;
+      z.ax = z.x; z.ay = z.y; z.ix = L[0]; z.iy = L[1]; z.wall = L[3]; z.h = bearingOf(L[0] - z.x, L[1] - z.y);
+      z.aEnd = ZBK2.WIND + L[2] / ZBK2.SPEED; z.chCd = 6 + Math.random() * 2.5; z.swCd = Math.max(z.swCd, 1.2); z.chHit = false;
+    }
+    if (act === 'pinch') z.swCd = 1.4 + Math.random() * 0.5;
+    if (act === 'reel') { z.chCd = Math.max(z.chCd, 3); z.crashed = false; }
+  },
+  endOf: (z, act) => act === 'charge' ? ZBK2.WIND + Math.hypot(z.ix - z.ax, z.iy - z.ay) / ZBK2.SPEED : ZBK_T[act] ? ZBK_T[act].end : 1,
+  during(z, dt, nearest, was) {
+    if (z.act === 'pinch' && z.at < ZBK_T.pinch.hit * 0.8) { const p = nearest(z.x, z.y, z.jz); if (p) z.h += angDiff(bearingOf(p.x - z.x, p.y - z.y), z.h) * Math.min(1, dt * 4); }
+    if (z.act === 'reel' && !z.crashed) {
+      // (hosting) what it ran into: any boards on a window there come off
+      z.crashed = true;
+      for (const w of ZM.windows) if (w.boards > 0 && Math.abs((w.z || 0) - (z.jz || 0)) < 1 && Math.hypot(w.x - z.x, w.y - z.y) < z.rad + 1.2) {
+        for (let i = w.boards - 1; i >= 0; i--) w.fall.push({ i, t: 0 });
+        w.boards = 0;
+        const line = `The Keelback crashes into a window of ${zmZoneName(w.zone)}, and its boards fly.`;
+        fpsFeed(line); if (typeof zmnEvent === 'function' && ZM.net === 'host') zmnEvent('feed', line);
+      }
+    }
+    if (z.act !== 'charge') return;
+    // down the lane: where it should be by now, and whether it got there
+    const L = Math.hypot(z.ix - z.ax, z.iy - z.ay), ux = (z.ix - z.ax) / (L || 1), uy = (z.iy - z.ay) / (L || 1);
+    ZBT.crab.judge(z, was, z.at);
+    if (z.at < ZBK2.WIND) {
+      // (for the first half of the wind-up it follows you round, the lane with it; then it's set)
+      if (z.at < ZBK2.AIM) {
+        const p = nearest(z.x, z.y, z.jz), d = p ? Math.hypot(p.x - z.x, p.y - z.y) : 0;
+        const nl = p && d > 2.5 && Math.abs((p.jz || 0) - (z.jz || 0)) < 0.4 ? zbkLane(z, p, d) : null;
+        if (nl) { z.ix = nl[0]; z.iy = nl[1]; z.wall = nl[3]; z.aEnd = ZBK2.WIND + nl[2] / ZBK2.SPEED; }
+      }
+      z.h = bearingOf(z.ix - z.ax, z.iy - z.ay);
+      return;
+    }
+    const s = Math.min(L, (z.at - ZBK2.WIND) * ZBK2.SPEED), tx = z.ax + ux * s, ty = z.ay + uy * s, dx = tx - z.x, dy = ty - z.y, want = Math.hypot(dx, dy);
+    const x0 = z.x, y0 = z.y;
+    if (want > 0.01) zmMove(z, dx, dy);
+    z.walk = true;
+    // (the rest of them, bowled aside)
+    zbJostle(z, z.rad + 0.6);
+    const got = Math.hypot(z.x - x0, z.y - y0);
+    if ((want > 0.05 && got < want * 0.5) || s >= L - 0.01) {
+      if (z.wall || s < L - 0.01) { zbStart(z, 'reel'); return; }
+      z.act = null; z.at = 0; z.aEnd = 0; z.swCd = Math.max(z.swCd, 0.6);
+    }
+  },
+  // (on every screen, for its own player) did the charge pass over me between at0 and at1
+  judge(z, at0, at1) {
+    if (z.act !== 'charge' || z.chHit || at1 <= ZBK2.WIND) return;
+    const L = Math.hypot(z.ix - z.ax, z.iy - z.ay); if (L < 0.1) return;
+    const ux = (z.ix - z.ax) / L, uy = (z.iy - z.ay) / L, s0 = clamp((at0 - ZBK2.WIND) * ZBK2.SPEED, 0, L), s1 = clamp((at1 - ZBK2.WIND) * ZBK2.SPEED, 0, L);
+    if (s1 <= s0) return;
+    const m = FPS.me, rx = m.x - z.ax, ry = m.y - z.ay, along = clamp(rx * ux + ry * uy, s0, s1), side = rx * uy - ry * ux;
+    const d = Math.hypot(m.x - (z.ax + ux * along), m.y - (z.ay + uy * along));
+    if (d < ZBK2.HIT && zbOk() && Math.abs((m.jz || 0) - (z.jz || 0)) < 1.2) {
+      z.chHit = true;
+      fpsHurt(2, null, null); zmSound('hit'); FPS.hurtT = 1.0;
+      zbkSound('trample');
+      // (thrown aside, out of its way)
+      const sg = side >= 0 ? 1 : -1, px = uy * sg, py = -ux * sg;
+      for (let i = 0; i < 6; i++) zmMove(m, px * 0.3 + ux * 0.12, py * 0.3 + uy * 0.12);
+      FPS.eyeLag = clamp((FPS.eyeLag || 0) - 0.3, -0.8, 0.8);
+    }
+  },
+  strike(z) {
+    const m = FPS.me, d = Math.hypot(z.x - m.x, z.y - m.y);
+    if (z.act === 'pinch') { zbkSound('snap', d); zbMelee(z, ZBK2.REACH + 0.3, 1.0, 1); return; }
+    if (z.act === 'reel') {
+      zbkSound('crash', d);
+      if (d < 10) FPS.eyeLag = clamp((FPS.eyeLag || 0) - 0.15 * (1 - d / 10), -0.8, 0.8);
+      for (let i = 0; i < 12; i++) fpsPuff(z.x + Math.sin(z.h) * 1.1 + (Math.random() - 0.5) * 1.6, z.y + Math.cos(z.h) * 1.1 + (Math.random() - 0.5) * 1.6, FPSC.GROUND + (z.jz || 0) + 0.3 + Math.random() * 1.2, '130,110,90', 3);
+    }
+  },
+  // (its shell: 0.6 of any hit; reeling, its soft underside shows)
+  hurtK: z => z.act === 'reel' ? ZBK2.SOFT : ZBK2.SHELL,
+  actSound(z, act) { const d = Math.hypot(z.x - FPS.me.x, z.y - FPS.me.y); if (act === 'charge') zbkSound('rear', d); else if (act === 'smash') zbkSound('rear', d * 1.3); },
+  sound: (k, d) => zbkSound(k, d),
+  build: () => zbBuildCrab(),
+  reset(z, M) { M.wood.emissive.set(0); M.iron.emissive.set(0); M.belly.emissive.set(0); M.root.rotation.set(0, 0, 0); M.root.scale.setScalar(1); },
+  pose: (z, M, dt) => zbPoseCrab(z, M, dt),
+};
+// a clear run at p, straight, on its own floor: [end x, end y, length, whether it ends in something solid], or null
+function zbkLane(z, p, d) {
+  const ux = (p.x - z.x) / d, uy = (p.y - z.y) / d, jz = z.jz || 0, want = d + ZBK2.PAST;
+  let s = 0, wall = false;
+  const node = (x, y) => { const a = zmNodeIn(zmCell(x, y), jz, 0.3); return a >= 0 && ZM.nav.d[a] < 1e8; };
+  const ok = (x, y) => node(x, y) && !zmBlockedAt(x, y, ZBK2.PAD, jz);
+  while (s < want) {
+    const n = Math.min(want, s + 0.35), x = z.x + ux * n, y = z.y + uy * n;
+    if (!ok(x, y) || !node(x - uy * 0.5, y + ux * 0.5) || !node(x + uy * 0.5, y - ux * 0.5)) { wall = true; break; }
+    s = n;
+  }
+  if (s < d - 0.5) return null;   // (something in the way before it reaches you)
+  if (!wall) { const x = z.x + ux * (s + 0.6), y = z.y + uy * (s + 0.6); wall = !ok(x, y); }
+  return [z.x + ux * s, z.y + uy * s, s, wall];
+}
+
+// ---------- sounds ----------
+function zbmSound(k, d) {
+  try {
+    if (soundOff()) return;
+    const v = d == null ? 1 : Math.max(0.08, 1 - d / 45);
+    if (k === 'arrive') {
+      // a wrecker's whistle across the water, and the lantern's iron creaking as it swings
+      tone(880, 'sine', 0.05, 0.08, 0.5, { to: 1320 }); tone(1320, 'sine', 0.05, 0.07, 0.7, { delay: 0.55, to: 660 });
+      tone(110, 'sawtooth', 0.6, 0.08, 2.6, { delay: 0.3, to: 92 }); noise('bandpass', 700, 6, 0.4, 0.1, 2.0, { delay: 0.4, to: 420 });
+      for (let i = 0; i < 4; i++) noise('bandpass', 1800 + i * 300, 12, 0.01, 0.06, 0.25, { delay: 1.2 + i * 0.45 });
+    } else if (k === 'step') { noise('lowpass', 260, 1, 0.005, 0.12 * v, 0.14); if (Math.random() < 0.6) noise('bandpass', 3200 + Math.random() * 800, 14, 0.002, 0.05 * v, 0.1, { delay: 0.04 }); }
+    else if (k === 'raise') {
+      // the shutter opening, and the light rising to a whine
+      noise('bandpass', 2400, 8, 0.01, 0.12 * v, 0.15);
+      tone(330, 'sine', 1.4, 0.12 * v, 1.7, { to: 1480 }); tone(495, 'triangle', 1.4, 0.06 * v, 1.7, { to: 2220 });
+    } else if (k === 'flare') { noise('highpass', 2500, 1, 0.003, 0.3 * v, 0.5); tone(1760, 'sine', 0.003, 0.14 * v, 0.9, { to: 1200 }); tone(2637, 'sine', 0.003, 0.08 * v, 1.1); }
+    else if (k === 'dazzle') { tone(2093, 'sine', 0.01, 0.12, 2.4, { to: 1900 }); tone(2217, 'sine', 0.01, 0.08, 2.4, { to: 2000 }); noise('highpass', 4000, 1, 0.02, 0.08, 2.0); }
+    else if (k === 'whoosh') { noise('bandpass', 520, 2, 0.06, 0.26 * v, 0.28, { to: 220 }); }
+    else if (k === 'burn') { for (let i = 0; i < 10; i++) noise('bandpass', 900 + Math.random() * 1600, 4, 0.004, 0.14 * v, 0.1, { delay: i * 0.08 + Math.random() * 0.05 }); noise('lowpass', 500, 1, 0.1, 0.15 * v, 1.0); }
+    else if (k === 'smash') { for (let i = 0; i < 5; i++) noise('bandpass', 600 + Math.random() * 900, 2, 0.003, 0.3 * v, 0.25, { delay: i * 0.07 }); noise('lowpass', 400, 1, 0.01, 0.25 * v, 0.8); }
+    else if (k === 'groan') { tone(150 + Math.random() * 40, 'sawtooth', 0.15, 0.05 * v, 0.9, { to: 95 }); noise('bandpass', 900, 5, 0.1, 0.07 * v, 0.6, { to: 500 }); }
+    else if (k === 'die') {
+      // the lantern's glass going, and the light with it
+      for (let i = 0; i < 9; i++) noise('bandpass', 3000 + Math.random() * 3000, 9, 0.002, 0.12 * v, 0.12, { delay: i * 0.05 + Math.random() * 0.04 });
+      tone(1200, 'sine', 0.01, 0.1 * v, 1.6, { to: 120 }); tone(140, 'sawtooth', 0.1, 0.1 * v, 1.8, { to: 60 });
+    }
+  } catch (e) {}
+}
+function zbkSound(k, d) {
+  try {
+    if (soundOff()) return;
+    const v = d == null ? 1 : Math.max(0.08, 1 - d / 45);
+    if (k === 'arrive') {
+      // a hull groaning on the rocks, and the clatter of a hundred joints
+      tone(48, 'sawtooth', 0.5, 0.16, 2.6, { to: 40 }); noise('bandpass', 320, 3, 0.4, 0.18, 2.2, { to: 180 });
+      for (let i = 0; i < 16; i++) noise('bandpass', 1400 + Math.random() * 1800, 10, 0.002, 0.07, 0.05, { delay: 0.6 + i * 0.07 + Math.random() * 0.03 });
+      tone(64, 'square', 0.3, 0.05, 1.6, { delay: 1.4, to: 50 });
+    } else if (k === 'step') { for (let i = 0; i < 3; i++) noise('bandpass', 1500 + Math.random() * 1500, 9, 0.002, 0.07 * v, 0.05, { delay: i * 0.045 }); noise('lowpass', 200, 1, 0.005, 0.1 * v, 0.12); }
+    else if (k === 'rear') {
+      // rattling, faster and faster, and the timbers creaking as it digs in
+      for (let i = 0; i < 18; i++) noise('bandpass', 1200 + Math.random() * 2000, 10, 0.002, 0.09 * v, 0.04, { delay: i * 0.065 * (1 - i / 30) });
+      tone(60, 'sawtooth', 0.8, 0.1 * v, 1.2, { to: 92 }); noise('bandpass', 260, 4, 0.5, 0.12 * v, 0.9, { to: 520 });
+    } else if (k === 'rush') { noise('lowpass', 300, 1, 0.02, 0.3 * v, 0.9, { to: 900 }); tone(70, 'sine', 0.02, 0.2 * v, 0.8, { to: 45 }); }
+    else if (k === 'crash') {
+      noise('lowpass', 160, 1, 0.003, 0.7 * v, 1.0); tone(38, 'sine', 0.003, 0.5 * v, 0.9, { to: 26 });
+      for (let i = 0; i < 8; i++) noise('bandpass', 400 + Math.random() * 1200, 3, 0.003, 0.2 * v, 0.2, { delay: 0.05 + i * 0.07 });
+    } else if (k === 'trample') { noise('lowpass', 240, 1, 0.003, 0.5, 0.5); tone(55, 'sine', 0.003, 0.35, 0.5, { to: 35 }); }
+    else if (k === 'snap') { noise('bandpass', 2400, 3, 0.002, 0.35 * v, 0.08); noise('bandpass', 700, 2, 0.002, 0.25 * v, 0.15, { delay: 0.02 }); }
+    else if (k === 'smash') { for (let i = 0; i < 6; i++) noise('bandpass', 500 + Math.random() * 900, 2, 0.003, 0.35 * v, 0.3, { delay: i * 0.06 }); noise('lowpass', 220, 1, 0.005, 0.45 * v, 0.7); }
+    else if (k === 'groan') { tone(44 + Math.random() * 10, 'sawtooth', 0.4, 0.07 * v, 1.4, { to: 38 }); noise('bandpass', 240, 4, 0.4, 0.1 * v, 1.2, { to: 160 }); }
+    else if (k === 'die') {
+      tone(52, 'sawtooth', 0.1, 0.15 * v, 2.2, { to: 28 }); noise('lowpass', 260, 1, 0.05, 0.45 * v, 1.8, { to: 70 });
+      for (let i = 0; i < 12; i++) noise('bandpass', 400 + Math.random() * 1400, 4, 0.003, 0.14 * v, 0.12, { delay: 0.2 + i * 0.12 + Math.random() * 0.08 });
+    }
+  } catch (e) {}
+}
+
+// ---------- the Mooncusser in 3D ----------
+const ZBMG = {};
+function zbmGeo() {
+  if (ZBMG.ok) return ZBMG;
+  const Q = ZBMG;
+  Q.leg = new THREE.CylinderGeometry(0.09, 0.065, 1.25, 8); Q.leg.translate(0, -0.625, 0);
+  Q.boot = new THREE.BoxGeometry(0.17, 0.16, 0.34);
+  Q.body = new THREE.CylinderGeometry(0.25, 0.32, 0.95, 10); Q.body.translate(0, 0.475, 0);
+  // the coat's skirt, cut to rags at the hem
+  Q.skirt = new THREE.CylinderGeometry(0.34, 0.6, 1.1, 18, 3, true); Q.skirt.translate(0, -0.5, 0);
+  { const P = Q.skirt.attributes.position, rnd = seeded(77); for (let i = 0; i < P.count; i++) { const y = P.getY(i); if (y < -0.9) { P.setY(i, y + rnd() * 0.32); const k = 0.9 + rnd() * 0.25; P.setX(i, P.getX(i) * k); P.setZ(i, P.getZ(i) * k); } } Q.skirt.computeVertexNormals(); }
+  Q.cape = new THREE.CylinderGeometry(0.22, 0.46, 0.4, 14, 1, true);
+  Q.band = new THREE.TorusGeometry(0.3, 0.026, 6, 20); Q.band.rotateX(Math.PI / 2);
+  Q.strap = new THREE.BoxGeometry(0.05, 0.62, 0.025);
+  Q.collar = new THREE.TorusGeometry(0.13, 0.03, 6, 14); Q.collar.rotateX(Math.PI / 2);
+  Q.link = new THREE.TorusGeometry(0.035, 0.011, 4, 8);
+  Q.skull = new THREE.SphereGeometry(0.15, 12, 10);
+  Q.jaw = new THREE.BoxGeometry(0.15, 0.07, 0.13);
+  Q.eye = new THREE.SphereGeometry(0.024, 6, 5);
+  Q.brim = new THREE.CylinderGeometry(0.4, 0.43, 0.025, 18);
+  Q.crown = new THREE.CylinderGeometry(0.15, 0.19, 0.2, 12);
+  Q.arm = new THREE.CylinderGeometry(0.06, 0.045, 0.85, 8); Q.arm.translate(0, -0.425, 0);
+  Q.hand = new THREE.SphereGeometry(0.065, 8, 6);
+  Q.weed = new THREE.BoxGeometry(0.035, 0.42, 0.01); Q.weed.translate(0, -0.21, 0);
+  // the boathook pole: its grip at the origin, the hook at the top
+  Q.pole = new THREE.CylinderGeometry(0.03, 0.036, 2.7, 7); Q.pole.translate(0, 0.35, 0);
+  Q.hook = new THREE.TorusGeometry(0.11, 0.02, 5, 12, Math.PI * 1.3);
+  Q.spike = new THREE.ConeGeometry(0.03, 0.18, 6);
+  // the lantern: a cap, a brass cage, the glass lit from inside
+  Q.cap = new THREE.ConeGeometry(0.12, 0.12, 8); Q.cap.translate(0, -0.08, 0);
+  Q.cage = new THREE.BoxGeometry(0.018, 0.26, 0.018);
+  Q.glass = new THREE.CylinderGeometry(0.085, 0.085, 0.22, 10);
+  Q.base = new THREE.CylinderGeometry(0.11, 0.1, 0.05, 10);
+  Q.ringT = new THREE.TorusGeometry(0.04, 0.01, 4, 10);
+  // the false light's reach: a cone out of the lantern
+  Q.beam = new THREE.ConeGeometry(1.3, 5, 24, 1, true); Q.beam.translate(0, -2.5, 0); Q.beam.rotateX(Math.PI / 2);
+  Q.coatM = '#2a2a24'; Q.ironM = z3Lam('#4a3e36'); Q.bootM = z3Lam('#1c1a18'); Q.hatM = z3Lam('#2c241a'); Q.poleM = z3Lam('#4a3826');
+  Q.brassM = z3Lam('#a07a36', { emissive: 0x201406 });
+  Q.boneM = z3Lam('#a8b4a2'); Q.weedM = new THREE.MeshLambertMaterial({ color: 0x223e26, emissive: 0x061a0c });
+  Q.eyeM = new THREE.MeshBasicMaterial({ color: 0xffb040 });
+  Q.halo = z3Soft('rgba(255,214,130,0.95)', 'rgba(255,190,90,0)');
+  Q.ok = true;
+  return Q;
+}
+function zbBuildMoon() {
+  const Q = zbmGeo(), root = new THREE.Group(), hips = new THREE.Group(); root.add(hips); hips.position.y = 1.3;
+  const coat = z3Lam(Q.coatM, { side: THREE.DoubleSide });
+  const mesh = (geo, mat, x, y, zz, parent) => { const o = new THREE.Mesh(geo, mat); o.position.set(x || 0, y || 0, zz || 0); (parent || hips).add(o); return o; };
+  const sprite = (parent, x, y, zz, s) => { const o = new THREE.Sprite(new THREE.SpriteMaterial({ map: Q.halo, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending })); o.position.set(x, y, zz); o.scale.setScalar(s); parent.add(o); return o; };
+  const legs = [-1, 1].map(s => { const p = new THREE.Group(); p.position.set(s * 0.14, 0, 0); hips.add(p); mesh(Q.leg, Q.bootM, 0, 0, 0, p); mesh(Q.boot, Q.bootM, 0, -1.26, -0.06, p); return p; });
+  const torso = new THREE.Group(); hips.add(torso);
+  mesh(Q.body, coat, 0, 0, 0, torso).scale.set(1, 1, 0.75);
+  mesh(Q.skirt, coat, 0, 0.12, 0, hips).scale.set(1, 1, 0.8);
+  mesh(Q.cape, coat, 0, 0.82, 0, torso).scale.set(1, 1, 0.8);
+  // hanged in chains: iron bands round his ribs, straps down front and back, a collar and a broken chain
+  for (const y of [0.32, 0.6]) mesh(Q.band, Q.ironM, 0, y, 0, torso).scale.set(1, 1, 0.82);
+  for (const zz of [-0.25, 0.25]) mesh(Q.strap, Q.ironM, 0, 0.48, zz, torso);
+  mesh(Q.collar, Q.ironM, 0, 1.02, -0.01, torso);
+  for (let i = 0; i < 6; i++) { const l = mesh(Q.link, Q.ironM, -0.08 + Math.sin(i * 0.5) * 0.02, 0.97 - i * 0.06, -0.13 - i * 0.01, torso); l.rotation.y = i % 2 ? Math.PI / 2 : 0; }
+  for (let i = 0; i < 5; i++) { const k = mesh(Q.weed, Q.weedM, -0.2 + i * 0.1, 0.9 - (i % 2) * 0.25, 0.27, torso); k.rotation.z = (i - 2) * 0.12; }
+  // his head: a drowned man's skull under the skin, coals for eyes, a weed beard, the slouch hat
+  const head = new THREE.Group(); head.position.set(0, 1.2, -0.04); torso.add(head);
+  mesh(Q.skull, Q.boneM, 0, 0, 0, head).scale.set(0.85, 1.15, 0.95);
+  mesh(Q.jaw, Q.boneM, 0, -0.13, -0.04, head);
+  for (const s of [-1, 1]) mesh(Q.eye, Q.eyeM, s * 0.05, 0.02, -0.128, head);
+  sprite(head, 0, 0.02, -0.16, 0.3);
+  for (let i = 0; i < 4; i++) { const k = mesh(Q.weed, Q.weedM, -0.06 + i * 0.04, -0.15, -0.1, head); k.rotation.x = -0.2; k.scale.y = 0.8; }
+  const hat = new THREE.Group(); hat.position.y = 0.12; hat.rotation.x = 0.1; head.add(hat);
+  mesh(Q.brim, Q.hatM, 0, 0, 0, hat); mesh(Q.crown, Q.hatM, 0, 0.1, 0, hat);
+  for (let i = 0; i < 6; i++) { const a = i / 6 * 6.283 + 0.3, k = mesh(Q.weed, Q.weedM, Math.cos(a) * 0.38, -0.01, Math.sin(a) * 0.38, hat); k.scale.y = 0.6 + (i % 3) * 0.25; }
+  const arms = [-1, 1].map(s => { const p = new THREE.Group(); p.position.set(s * 0.32, 0.88, 0); torso.add(p); mesh(Q.arm, coat, 0, 0, 0, p); mesh(Q.hand, Q.boneM, 0, -0.88, 0, p); return p; });
+  // the pole in his right hand, the lantern hung from its hook
+  const pole = new THREE.Group(); torso.add(pole);
+  mesh(Q.pole, Q.poleM, 0, 0, 0, pole);
+  const hk = mesh(Q.hook, Q.ironM, 0.1, 1.72, 0, pole); hk.rotation.z = -0.4;
+  mesh(Q.spike, Q.ironM, 0, 1.78, 0, pole);
+  const lan = new THREE.Group(); lan.position.set(0.2, 1.66, 0); pole.add(lan);
+  mesh(Q.ringT, Q.brassM, 0, 0, 0, lan);
+  mesh(Q.cap, Q.brassM, 0, 0, 0, lan);
+  for (let i = 0; i < 4; i++) { const a = i / 4 * 6.283 + 0.78; mesh(Q.cage, Q.brassM, Math.cos(a) * 0.09, -0.27, Math.sin(a) * 0.09, lan); }
+  const glassM = new THREE.MeshBasicMaterial({ color: 0xffc860 });
+  mesh(Q.glass, glassM, 0, -0.27, 0, lan);
+  mesh(Q.base, Q.brassM, 0, -0.41, 0, lan);
+  const halo = sprite(lan, 0, -0.27, 0, 1.1);
+  // (the false light's cone, in his own space: out ahead of the lantern when it's held up)
+  const beamM = new THREE.MeshBasicMaterial({ color: 0xffd890, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, fog: false });
+  const beam = new THREE.Mesh(Q.beam, beamM); beam.renderOrder = 2; beam.visible = false; root.add(beam);
+  return { root, hips, legs, arms, torso, head, pole, lan, glass: glassM, halo, beam, coat };
+}
+const ZBMV = {};
+function zbPoseMoon(z, M, dt) {
+  const G0 = FPSC.GROUND, t = g.t, m = FPS.me;
+  M.root.position.copy(z3v(z.x, z.y, G0 + (z.jz || 0)));
+  M.root.rotation.set(0, -z.h, 0);
+  // a long, loping stride, stooped, the pole planted with each step
+  const walking = z.walk && !z.act && !z.dead;
+  if (walking) z.ph += dt * z.sp * 1.9;
+  const A = walking ? 0.55 : 0.05, ph = z.ph, s = Math.sin(ph);
+  if (walking && Math.sign(s) !== z.stepS && z.stepS) zbmSound('step', Math.hypot(z.x - m.x, z.y - m.y));
+  z.stepS = Math.sign(s) || 1;
+  let duck = z.st === 'climb' ? 1 : 0;
+  if (!duck) for (const d of ZM.doors) if (Math.hypot(d.x - z.x, d.y - z.y) < 1.6) { duck = 1; break; }
+  z.duck = zbL(z.duck || 0, duck, Math.min(1, dt * 4));
+  M.legs[0].rotation.x = s * A; M.legs[1].rotation.x = -s * A;
+  M.hips.position.y = 1.3 - Math.abs(Math.cos(ph)) * 0.08 * A * 2 - z.duck * 0.25;
+  let pitch = -0.28 - z.duck * 0.4, roll = Math.sin(ph) * 0.07 * (walking ? 1 : 0.3);
+  // the pole: where his right hand grips it (torso space) and which way it runs from there
+  let gx = 0.4, gy = 0.18, gz = -0.22, dx = 0.06, dy = 1, dz = -0.1 + Math.sin(ph) * 0.18 * (walking ? 1 : 0), left = null;
+  const at = z.at || 0;
+  // the light: how bright, and its cone
+  let glow = 1.1 + Math.sin(t * 13 + z.seed) * 0.06 + Math.sin(t * 7.3) * 0.05, beam = 0;
+  if (z.act === 'lure' && !z.dead) {
+    const T = ZBM_T.lure, k = zbE(at / 0.6);
+    gx = zbL(0.4, 0.26, k); gy = zbL(0.18, 1.08, k); gz = zbL(-0.22, -0.32, k); dx = zbL(0.06, 0.02, k); dy = zbL(1, 0.72, k); dz = zbL(dz, -0.7, k);
+    pitch = zbL(pitch, 0.05, k);
+    left = [-0.12, 1.12, -0.36];   // (his other arm up, shielding his own eyes)
+    if (at < T.hit) { const q = at / T.hit; glow = 1.2 + 3.0 * q * q + Math.sin(t * (20 + q * 30)) * 0.25 * q; beam = 0.03 + 0.12 * q * q; }
+    else { const q = (at - T.hit) / (T.end - T.hit); glow = zbL(7, 1.3, Math.min(1, q * 2.5)); beam = Math.max(0, 0.3 * (1 - q * 3)); }
+  } else if (z.act === 'pole' && !z.dead) {
+    const T = ZBM_T.pole;
+    if (at < 0.3) { const k = zbE(at / 0.3); gx = zbL(0.4, 0.52, k); gy = zbL(0.18, 0.75, k); gz = zbL(-0.22, 0.22, k); dx = zbL(0.06, 0.9, k); dy = zbL(1, 0.25, k); dz = zbL(dz, 0.35, k); roll = zbL(roll, -0.18, k); }
+    else if (at < T.hit + 0.1) { const k = zbE((at - 0.3) / (T.hit + 0.1 - 0.3)); gx = zbL(0.52, -0.2, k); gy = zbL(0.75, 0.6, k); gz = zbL(0.22, -0.5, k); dx = zbL(0.9, -0.75, k); dy = 0.25; dz = zbL(0.35, -0.6, k); roll = zbL(-0.18, 0.2, k); }
+    else { const k = zbE((at - T.hit - 0.1) / (T.end - T.hit - 0.1)); gx = zbL(-0.2, 0.4, k); gy = zbL(0.6, 0.18, k); gz = zbL(-0.5, -0.22, k); dx = zbL(-0.75, 0.06, k); dy = zbL(0.25, 1, k); dz = zbL(-0.6, -0.1, k); }
+    left = [gx - 0.1, gy - 0.25, gz + 0.05];
+  } else if (z.act === 'smash' && !z.dead) {
+    // the lantern held to the boards, and they catch
+    const k = zbE(at / 0.4);
+    gx = zbL(0.4, 0.22, k); gy = zbL(0.18, 0.55, k); gz = zbL(-0.22, -0.5, k); dx = zbL(0.06, 0.1, k); dy = zbL(1, 0.45, k); dz = zbL(dz, -0.9, k);
+    glow = 1.2 + 2.5 * k + Math.sin(t * 30) * 0.3;
+    if (Math.random() < dt * 14 && z.win) fpsPuff(z.win.x + (Math.random() - 0.5) * 1.2, z.win.y + (Math.random() - 0.5) * 1.2, G0 + (z.win.z || 0) + 0.6 + Math.random() * 1.2, '255,150,60', 1.5);
+  } else if (z.scaling) {
+    // (hand over hand up the wall, the pole slung)
+    pitch = 0.3; gx = 0.3; gy = 0.9; gz = 0.25; dx = 0.2; dy = 0.9; dz = 0.4; left = [-0.25, 1.4, -0.3];
+  }
+  M.torso.rotation.set(pitch, 0, roll);
+  M.pole.position.set(gx, gy, gz);
+  const V = ZBMV.v || (ZBMV.v = new THREE.Vector3()), U = ZBMV.u || (ZBMV.u = new THREE.Vector3(0, 1, 0)), Qi = ZBMV.q || (ZBMV.q = new THREE.Quaternion());
+  V.set(dx, dy, dz).normalize();
+  M.pole.quaternion.setFromUnitVectors(U, V);
+  // (the lantern hangs straight down from its hook, swinging)
+  Qi.copy(M.pole.quaternion).invert(); M.lan.quaternion.copy(Qi);
+  M.lan.rotateX(Math.sin(t * 2.1 + z.seed) * 0.15 + (walking ? Math.sin(ph) * 0.2 : 0)); M.lan.rotateZ(Math.sin(t * 1.7) * 0.1);
+  zbReach(M.arms[1], gx + 0.02, gy, gz);
+  if (left) zbReach(M.arms[0], left[0], left[1], left[2]);
+  else { M.arms[0].quaternion.identity(); M.arms[0].rotation.set(-0.15 - Math.sin(ph) * 0.4 * A, 0, -0.1); }
+  M.head.rotation.set((z.act === 'lure' ? -0.2 : 0.15) + Math.sin(t * 0.6 + z.seed) * 0.05, Math.sin(t * 0.35 + z.seed) * 0.25, Math.sin(t * 0.8) * 0.06);
+  if (z.dead) { glow = Math.max(0, 1 - (z.deadT || 0)) * 1.1; beam = 0; }
+  M.halo.scale.setScalar(Math.max(0.01, glow)); M.halo.material.opacity = Math.min(1, 0.5 + glow * 0.2);
+  M.glass.color.setRGB(1, 0.78 + Math.min(0.22, glow * 0.02), 0.38 + Math.min(0.6, glow * 0.05)).multiplyScalar(z.dead ? Math.max(0.1, 1 - (z.deadT || 0)) : 1);
+  // the cone: from the lantern (held high and ahead) out towards whoever he's looking at
+  if (beam > 0.005) {
+    M.beam.visible = true; M.beam.material.opacity = beam;
+    M.beam.position.set(0.2, 2.62 - z.duck * 0.3, -0.55); M.beam.rotation.set(-0.12, 0, 0);
+  } else M.beam.visible = false;
+  // hit: a pale flash on the coat; burning: a dull glow; dead: down on his knees, over, and the light goes out
+  const flash = z.hitT > 0 ? z.hitT / 0.15 : 0, hot = (z.scorch || 0) * 0.7;
+  M.coat.emissive.setRGB(0.2 * flash + hot * 0.5, 0.2 * flash + hot * 0.25, 0.18 * flash + hot * 0.05);
+  if (z.scorch > 0) z.scorch = Math.max(0, z.scorch - dt * 0.8);
+  if (z.dead) {
+    const k = zbE((z.deadT || 0) / 1.1);
+    M.root.rotation.set(-k * 1.4, -z.h, 0, 'YXZ');
+    M.root.position.y -= Math.max(0, (z.deadT || 0) - 1.2) * 0.9;
+  }
+}
+
+// ---------- the Keelback in 3D ----------
+const ZBKG = {};
+function zbkGeo() {
+  if (ZBKG.ok) return ZBKG;
+  const Q = ZBKG;
+  // its back: half a boat's hull, upturned, flattened, along its length (forward is -z)
+  Q.hull = new THREE.CylinderGeometry(1.0, 1.0, 2.4, 18, 1, true, Math.PI / 2, Math.PI); Q.hull.rotateX(Math.PI / 2);
+  Q.rib = new THREE.TorusGeometry(1.03, 0.045, 5, 16, Math.PI);
+  Q.keel = new THREE.BoxGeometry(0.12, 0.16, 2.6);
+  Q.strake = new THREE.BoxGeometry(0.03, 0.03, 2.38);
+  Q.end = new THREE.CircleGeometry(1.0, 16, 0, Math.PI);
+  Q.under = new THREE.SphereGeometry(0.85, 14, 10);
+  Q.barn = new THREE.ConeGeometry(0.06, 0.07, 6);
+  Q.mast = new THREE.CylinderGeometry(0.07, 0.09, 1.2, 7); Q.mast.translate(0, 0.6, 0);
+  Q.weed = new THREE.BoxGeometry(0.05, 0.5, 0.012); Q.weed.translate(0, -0.25, 0);
+  // the legs: spars and oars, each in two lengths
+  Q.upper = new THREE.CylinderGeometry(0.075, 0.06, 0.85, 7); Q.upper.translate(0, 0.425, 0);
+  Q.lower = new THREE.CylinderGeometry(0.06, 0.025, 1.38, 7); Q.lower.translate(0, -0.69, 0);
+  Q.blade = new THREE.BoxGeometry(0.16, 0.45, 0.025); Q.blade.translate(0, -0.95, 0);
+  Q.knee = new THREE.SphereGeometry(0.085, 7, 6);
+  // the claws: an iron arm, and a pincer of two jaws
+  Q.carm = new THREE.CylinderGeometry(0.11, 0.09, 0.75, 8); Q.carm.translate(0, -0.375, 0); Q.carm.rotateX(Math.PI / 2);
+  Q.jawA = new THREE.ConeGeometry(0.17, 0.8, 6); Q.jawA.rotateX(-Math.PI / 2); Q.jawA.translate(0, 0, -0.4); Q.jawA.scale(1, 0.55, 1);
+  Q.jawB = new THREE.ConeGeometry(0.11, 0.65, 6); Q.jawB.rotateX(-Math.PI / 2); Q.jawB.translate(0, 0, -0.32); Q.jawB.scale(1, 0.55, 1);
+  Q.palm = new THREE.SphereGeometry(0.2, 10, 8);
+  // the eyes: a ship's sidelights on stalks
+  Q.stalk = new THREE.CylinderGeometry(0.03, 0.04, 0.55, 6); Q.stalk.translate(0, 0.275, 0);
+  Q.light = new THREE.CylinderGeometry(0.075, 0.075, 0.13, 8);
+  Q.lcap = new THREE.ConeGeometry(0.09, 0.08, 8);
+  Q.lane = new THREE.PlaneGeometry(1, 1); Q.lane.rotateX(-Math.PI / 2);
+  Q.edge = new THREE.PlaneGeometry(0.14, 1); Q.edge.rotateX(-Math.PI / 2);
+  Q.woodC = '#5a4630'; Q.ironC = '#5e3826'; Q.bellyC = '#b89a86';
+  Q.darkM = z3Lam('#241c18'); Q.ribM = z3Lam('#3a2a1c'); Q.barnM = z3Lam('#bab4a6'); Q.copperM = z3Lam('#3f7a62'); Q.oarM = z3Lam('#7a6448');
+  Q.weedM = new THREE.MeshLambertMaterial({ color: 0x1e4a32, emissive: 0x08200f });
+  Q.portM = new THREE.MeshBasicMaterial({ color: 0xff3a2a }); Q.stbdM = new THREE.MeshBasicMaterial({ color: 0x3aff7a });
+  Q.portH = z3Soft('rgba(255,70,50,0.9)', 'rgba(255,70,50,0)'); Q.stbdH = z3Soft('rgba(70,255,130,0.9)', 'rgba(70,255,130,0)');
+  Q.ok = true;
+  return Q;
+}
+function zbBuildCrab() {
+  const Q = zbkGeo(), root = new THREE.Group(), body = new THREE.Group(); root.add(body); body.position.y = 0.95;
+  const wood = z3Lam(Q.woodC, { side: THREE.DoubleSide }), iron = z3Lam(Q.ironC), belly = z3Lam(Q.bellyC);
+  const mesh = (geo, mat, x, y, zz, parent) => { const o = new THREE.Mesh(geo, mat); o.position.set(x || 0, y || 0, zz || 0); (parent || body).add(o); return o; };
+  const rnd = seeded(4242);
+  // the hull on its back, ribs and strakes, its keel along the top, barnacles, copper sheathing, a stub of mast
+  const shell = new THREE.Group(); shell.position.y = 0.05; body.add(shell);
+  mesh(Q.hull, wood, 0, 0, 0, shell).scale.set(1.05, 0.62, 1);
+  for (const e of [-1.2, 1.2]) mesh(Q.end, Q.darkM, 0, 0, e, shell).scale.set(1.05, 0.62, 1);
+  for (const zz of [-1.0, -0.5, 0, 0.5, 1.0]) mesh(Q.rib, Q.ribM, 0, 0, zz, shell).scale.set(1.05, 0.62, 1);
+  for (let i = 1; i < 6; i++) { const a = i / 6 * Math.PI; mesh(Q.strake, Q.ribM, Math.cos(a) * 1.06, Math.sin(a) * 0.645, 0, shell); }
+  mesh(Q.keel, Q.ribM, 0, 0.66, 0, shell);
+  for (let i = 0; i < 26; i++) { const a = 0.25 + rnd() * (Math.PI - 0.5), zz = (rnd() - 0.5) * 2.2, b = mesh(Q.barn, Q.barnM, Math.cos(a) * 1.07, Math.sin(a) * 0.66, zz, shell); b.rotation.z = a - Math.PI / 2; b.scale.setScalar(0.6 + rnd() * 0.9); }
+  for (let i = 0; i < 3; i++) { const a = 0.5 + i * 0.9, p = mesh(new THREE.BoxGeometry(0.4, 0.02, 0.5), Q.copperM, Math.cos(a) * 1.07, Math.sin(a) * 0.665, 0.3 - i * 0.5, shell); p.rotation.z = a - Math.PI / 2; }
+  const mast = mesh(Q.mast, Q.oarM, 0.15, 0.6, 0.55, shell); mast.rotation.set(0.55, 0, -0.3);
+  for (let i = 0; i < 9; i++) { const s = i % 2 ? 1 : -1, k = mesh(Q.weed, Q.weedM, s * (0.95 + rnd() * 0.12), 0.05, -1.0 + i * 0.25, shell); k.rotation.z = s * 0.25; k.scale.y = 0.7 + rnd() * 0.6; }
+  // under it all, the thing itself: dark and wet, a pale belly (it shows when it's upturned)
+  mesh(Q.under, Q.darkM, 0, -0.08, 0).scale.set(1.05, 0.42, 1.3);
+  mesh(Q.under, belly, 0, -0.22, 0).scale.set(0.8, 0.3, 1.05);
+  // mouthparts, a broken figurehead's face set in among them
+  for (let i = 0; i < 4; i++) { const r = mesh(Q.stalk, Q.darkM, -0.18 + i * 0.12, -0.15, -1.15, body); r.rotation.x = Math.PI * 0.85; r.scale.set(1, 0.6, 1); }
+  mesh(new THREE.SphereGeometry(0.17, 10, 8), Q.barnM, 0, 0.0, -1.18).scale.set(0.85, 1.1, 0.6);
+  // eyes on stalks: red to port, green to starboard
+  const eyes = [-1, 1].map(s => {
+    const p = new THREE.Group(); p.position.set(s * 0.32, 0.25, -1.0); body.add(p);
+    mesh(Q.stalk, Q.darkM, 0, 0, 0, p);
+    const head = new THREE.Group(); head.position.y = 0.58; p.add(head);
+    mesh(Q.light, s < 0 ? Q.portM : Q.stbdM, 0, 0, 0, head); mesh(Q.lcap, iron, 0, 0.1, 0, head);
+    const h = new THREE.Sprite(new THREE.SpriteMaterial({ map: s < 0 ? Q.portH : Q.stbdH, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending })); h.scale.setScalar(0.7); head.add(h);
+    return p;
+  });
+  // six legs, three a side
+  const legs = [];
+  for (const s of [-1, 1]) for (const [i, zz] of [[0, -0.7], [1, 0], [2, 0.7]].map(a => a)) {
+    const hip = new THREE.Group(); hip.position.set(s * 0.82, -0.08, zz); body.add(hip);
+    const up = new THREE.Group(); hip.add(up); mesh(Q.upper, Q.oarM, 0, 0, 0, up);
+    const kn = new THREE.Group(); kn.position.y = 0.85; up.add(kn); mesh(Q.knee, Q.darkM, 0, 0, 0, kn); mesh(Q.lower, Q.oarM, 0, 0, 0, kn);
+    if ((i + (s > 0 ? 1 : 0)) % 2) mesh(Q.blade, Q.oarM, 0, 0, 0, kn);
+    legs.push({ s, i, hip, up, kn, par: (i + (s > 0 ? 1 : 0)) % 2 });
+  }
+  // two great claws
+  const claws = [-1, 1].map(s => {
+    const sh = new THREE.Group(); sh.position.set(s * 0.6, -0.05, -0.95); body.add(sh);
+    mesh(Q.carm, iron, 0, 0, 0, sh);
+    const hand = new THREE.Group(); hand.position.set(0, 0, -0.72); sh.add(hand);
+    mesh(Q.palm, iron, 0, 0, 0, hand).scale.set(1, 0.8, 1.2);
+    mesh(Q.jawA, iron, 0, 0.05, -0.1, hand);
+    const dac = new THREE.Group(); dac.position.set(0, -0.06, -0.1); hand.add(dac); mesh(Q.jawB, iron, 0, 0, 0, dac);
+    for (let i = 0; i < 3; i++) { const b = mesh(Q.barn, Q.barnM, (i - 1) * 0.08, 0.12, -0.05 - i * 0.12, hand); b.scale.setScalar(0.7); }
+    return { sh, hand, dac };
+  });
+  // the lane it'll charge down, on the floor (in its own space, set each frame)
+  const laneM = new THREE.MeshBasicMaterial({ color: 0xff4a2a, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, fog: false });
+  const edgeM = new THREE.MeshBasicMaterial({ color: 0xffa060, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, fog: false });
+  const lane = new THREE.Mesh(Q.lane, laneM), edges = [-1, 1].map(() => new THREE.Mesh(Q.edge, edgeM)), cap = new THREE.Mesh(Q.edge, edgeM);
+  for (const o of [lane, cap, ...edges]) { o.renderOrder = 2; o.visible = false; root.add(o); }
+  return { root, body, shell, legs, claws, eyes, wood, iron, belly, lane, edges, cap };
+}
+function zbPoseCrab(z, M, dt) {
+  const G0 = FPSC.GROUND, t = g.t, m = FPS.me, at = z.at || 0;
+  M.root.position.copy(z3v(z.x, z.y, G0 + (z.jz || 0)));
+  M.root.rotation.set(0, -z.h, 0);
+  const charge = z.act === 'charge' && !z.dead, wind = charge && at < ZBK2.WIND, run = charge && !wind, reel = z.act === 'reel' && !z.dead;
+  if (run && z.rushed !== z.aseq) { z.rushed = z.aseq; zbkSound('rush', Math.hypot(z.x - m.x, z.y - m.y)); }
+  const walking = (z.walk || z.st === 'out') && !z.act && !z.dead;
+  // its legs: a scuttle, three down and three up at a time; rattling in place as it rears; a blur down the lane
+  const rate = run ? 26 : wind ? 16 : reel ? 12 : walking ? z.sp * 3.2 : 0;
+  z.ph += dt * rate;
+  const ph = z.ph, A = run ? 0.45 : wind ? 0.25 : reel ? 0.7 : walking ? 0.38 : 0.03;
+  if ((walking || run) && Math.sign(Math.sin(ph)) !== z.stepS && z.stepS) zbkSound('step', Math.hypot(z.x - m.x, z.y - m.y) * (run ? 0.6 : 1));
+  z.stepS = Math.sign(Math.sin(ph)) || 1;
+  for (const L of M.legs) {
+    const q = ph + L.par * Math.PI, sw = Math.sin(q) * A, lift = Math.max(0, Math.cos(q)) * A * 0.9;
+    L.hip.rotation.set(0, sw * L.s * 0.9 + (L.i - 1) * 0.45 * L.s, 0);
+    L.up.rotation.set(0, 0, -L.s * (1.0 - lift * 0.6));
+    L.kn.rotation.set(0, 0, L.s * (2.05 - lift * 0.5));
+  }
+  // its body: low and bobbing; reared up to charge; nose-down in it; upturned, reeling
+  let pitch = Math.sin(ph * 2) * 0.02 * (walking ? 1 : 0), roll = Math.sin(ph) * 0.03 * (walking ? 1 : 0), y = 0.95 + Math.abs(Math.sin(ph)) * 0.04 * (walking ? 1 : 0);
+  if (wind) { const k = zbE(at / 0.4); pitch = 0.32 * k + Math.sin(t * 40) * 0.02; y = 0.95 + 0.25 * k; }
+  if (run) { pitch = -0.12; y = 0.9; }
+  if (reel) { const k = zbE(at / 0.25) * (1 - zbE((at - 1.4) / 0.5)); roll = 0.75 * k + Math.sin(t * 18) * 0.06 * k; pitch = 0.25 * k; y = 0.95 + 0.2 * k; }
+  if (z.scaling || z.st === 'climb') { pitch = 0.35; y = 0.95; }
+  M.body.position.y = y; M.body.rotation.set(pitch, 0, roll);
+  // the claws: carried before it; spread wide and up as it rears; together ahead of it in the charge; one snapping
+  for (const [i, C] of M.claws.entries()) {
+    const s = i ? 1 : -1;
+    let yaw = s * 0.25, lift = -0.1, open = 0.25 + Math.sin(t * 2 + i) * 0.08;
+    if (wind) { const k = zbE(at / 0.5); yaw = s * zbL(0.25, 0.75, k); lift = zbL(-0.1, 0.75, k); open = 0.6 + Math.sin(t * 25 + i) * 0.15; }
+    if (run) { yaw = s * 0.08; lift = 0.05; open = 0.15; }
+    if (reel) { yaw = s * 0.9; lift = 0.4 + Math.sin(t * 14 + i * 2) * 0.3; open = 0.5; }
+    if (z.act === 'pinch' && !z.dead && i === 1) { const T = ZBK_T.pinch; if (at < T.hit) { const k = zbE(at / T.hit); lift = zbL(-0.1, 0.35, k); open = zbL(0.25, 0.8, k); yaw = zbL(0.25, -0.05, k); } else { const k = zbE((at - T.hit) / 0.12); open = zbL(0.8, 0.0, k); lift = zbL(0.35, 0, k); yaw = -0.05; } }
+    if (z.act === 'smash' && !z.dead) { const k = Math.sin(Math.min(1, at / ZBK_T.smash.hit) * Math.PI * 2); lift = 0.3 + 0.3 * k; yaw = s * 0.1; open = 0.4; }
+    C.sh.rotation.set(lift, yaw, 0);
+    C.dac.rotation.set(-open, 0, 0);
+  }
+  for (const [i, E] of M.eyes.entries()) E.rotation.set(Math.sin(t * 1.3 + i * 2 + z.seed) * 0.15 - (wind ? 0.25 : 0), 0, (i ? 1 : -1) * (0.12 + Math.sin(t * 0.9 + i) * 0.08));
+  // the lane on the floor, from where it set off to where it'll stop: brighter and quicker as it comes; then fading behind it
+  if (charge) {
+    const ch = Math.cos(z.h), sh = Math.sin(z.h);
+    const loc = (wx, wy) => { const fx = wx - z.x, fy = wy - z.y; return [fx * ch - fy * sh, -(fx * sh + fy * ch)]; };
+    const [ax, az] = loc(z.ax, z.ay), [ix, iz] = loc(z.ix, z.iy), L = Math.hypot(ix - ax, iz - az), rot = Math.atan2(-(ix - ax), -(iz - az));
+    const k = clamp(at / ZBK2.WIND, 0, 1), pulse = 0.5 + 0.5 * Math.sin(t * (8 + k * 20)), op = wind ? (0.12 + 0.3 * k) * (0.65 + 0.35 * pulse) : 0.3 * Math.max(0, 1 - (at - ZBK2.WIND) * 2);
+    const W = ZBK2.HIT * 2, mx = (ax + ix) / 2, mz = (az + iz) / 2, ex = Math.cos(rot), ez = -Math.sin(rot);
+    M.lane.visible = op > 0.01; M.lane.position.set(mx, 0.05, mz); M.lane.rotation.set(0, rot, 0); M.lane.scale.set(W, 1, Math.max(0.1, L)); M.lane.material.opacity = op * 0.55;
+    for (const [j, E] of M.edges.entries()) { const sg = j ? 1 : -1; E.visible = M.lane.visible; E.position.set(mx + ex * sg * W / 2, 0.06, mz + ez * sg * W / 2); E.rotation.set(0, rot, 0); E.scale.set(1, 1, Math.max(0.1, L)); }
+    M.cap.visible = M.lane.visible; M.cap.position.set(ix, 0.06, iz); M.cap.rotation.set(0, rot + Math.PI / 2, 0); M.cap.scale.set(1, 1, W);
+    M.edges[0].material.opacity = Math.min(1, op * 1.6);
+    if (run && Math.random() < dt * 20) fpsPuff(z.x + (Math.random() - 0.5) * 1.6, z.y + (Math.random() - 0.5) * 1.6, G0 + (z.jz || 0) + 0.15, '140,120,100', 2);
+  } else { M.lane.visible = M.cap.visible = false; for (const E of M.edges) E.visible = false; }
+  // hit: a pale flash on the planks; reeling: its belly glows (hit it there); burning: the wood smoulders
+  const flash = z.hitT > 0 ? z.hitT / 0.15 : 0, hot = (z.scorch || 0) * 0.7, soft = reel ? 0.25 + 0.15 * Math.sin(t * 10) : 0;
+  M.wood.emissive.setRGB(0.18 * flash + hot * 0.5, 0.16 * flash + hot * 0.2, 0.14 * flash + hot * 0.04);
+  M.iron.emissive.setRGB(0.15 * flash + hot * 0.3, 0.12 * flash, 0.1 * flash);
+  M.belly.emissive.setRGB(soft + 0.3 * flash, soft * 0.55 + 0.25 * flash, soft * 0.4 + 0.2 * flash);
+  if (z.scorch > 0) z.scorch = Math.max(0, z.scorch - dt * 0.8);
+  // dead: its legs fold under it, and it settles, and sinks
+  if (z.dead) {
+    const k = zbE((z.deadT || 0) / 1.0);
+    for (const L of M.legs) { L.up.rotation.z = -L.s * zbL(1.0, 0.3, k); L.kn.rotation.z = L.s * zbL(2.05, 2.6, k); }
+    M.body.position.y = zbL(0.95, 0.45, k); M.body.rotation.set(0.1 * k, 0, 0.3 * k);
+    M.root.position.y -= Math.max(0, (z.deadT || 0) - 1.2) * 0.9;
+  }
 }
 
 // ---- src/zmegg.js ----
@@ -23355,7 +24147,7 @@ function znHostSend() {
   z.dr = ZM.drops.map(d => [d.id, d.k, Math.round((d.x - CX) * 10), Math.round((d.y - CY) * 10), Math.round(d.z * 10), Math.round(d.t)]);
   z.cr = ZM.credit;
   z.ev = ZN.ev;
-  if (typeof zbHostSend === 'function') zbHostSend(z);   // [boss] the Diver's strength and his blow (src/zmboss.js)
+  if (typeof zbHostSend === 'function') zbHostSend(z);   // [boss] the bosses: their kinds, strength and blows (src/zmboss.js)
   if (typeof zeHostSend === 'function') zeHostSend(z);   // [egg hook] src/zmegg.js
   znSend(z);
 }
@@ -23464,7 +24256,7 @@ function znApply(hz) {
   }
   for (const z of ZM.z) if (!have.has(z.zn) && !(z.dead && z.deadT < 2.4)) { if (z.mdl) zmFreeModel(z); z.remove = true; }
   ZM.z = ZM.z.filter(z => !z.remove); FPS.drowned = ZM.z;
-  if (typeof zbApply === 'function') zbApply(hz);   // [boss] the Diver, and his blows landing on me
+  if (typeof zbApply === 'function') zbApply(hz);   // [boss] the bosses, and their blows landing on me
   // salvage
   if (Array.isArray(hz.dr)) {
     const keep = [];

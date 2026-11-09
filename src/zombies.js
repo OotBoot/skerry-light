@@ -1107,7 +1107,7 @@ function zmCrowd(m, x, y) {
     if (z.dead || z.st !== 'in' || Math.abs((z.jz || 0) - (m.jz || 0)) > 1.2) continue;
     const d = Math.hypot(z.x - x, z.y - y);
     // (they still block you, but only about as wide as a body: you can slip past one at a doorway's edge)
-    if (d < (z.boss ? 1.05 : ZMC.BODY) && d < Math.hypot(z.x - m.x, z.y - m.y) - 0.001) return true;   // [boss] he's broader
+    if (d < (z.boss ? z.crowdR || 1.05 : ZMC.BODY) && d < Math.hypot(z.x - m.x, z.y - m.y) - 0.001) return true;   // [boss] they're broader
   }
   return false;
 }
@@ -1120,7 +1120,7 @@ function zmSettle(m) {
     m.jz = fl;
   }
 }
-function zmSpeedK() { return ZM.perks.fleet ? 1.22 : 1; }
+function zmSpeedK() { return (ZM.perks.fleet ? 1.22 : 1) * (typeof zbSpeedK === 'function' ? zbSpeedK() : 1); }   // [boss] (dragged by the false light)
 function zmReloadK() { return ZM.perks.quick ? 0.5 : 1; }
 function zmCanReload() { const w = fpsW(); return w.melee || (ZM.res[FPS.weapon] || 0) > 0; }
 
@@ -1401,6 +1401,7 @@ function zmTick(dt) {
   if (typeof zmpTick === 'function') zmpTick(dt);   // [pap]
   if (typeof zxTick === 'function') zxTick(dt);   // [chest] what the chest's weapons throw, and what they leave burning
   if (typeof zeTick === 'function') zeTick(dt);   // [egg hook] src/zmegg.js
+  if (typeof zbMe === 'function') zbMe(dt);   // [boss] their blows running on (joined), and what they've done to me (src/zmboss.js)
   zmNearest();
   // holding Use at a window nails its boards back; beside someone who's down, gets them up
   const hold = FPS.keys.KeyF || FPS.keys.KeyE || FPS.touchUse || FPS.padUse;
@@ -1472,7 +1473,7 @@ function zmRounds(dt) {
     return;
   }
   // round on: bring them up, a few at a time
-  if (typeof zbRounds === 'function') zbRounds(dt);   // [boss] the Diver, in his rounds (src/zmboss.js)
+  if (typeof zbRounds === 'function') zbRounds(dt);   // [boss] the bosses, in their rounds (src/zmboss.js)
   const alive = ZM.z.filter(z => !z.dead).length, cap = Math.min(ZMC.ALIVE, 6 + ZM.round * 2);
   ZM.spawnT -= dt;
   if (ZM.left > 0 && alive < cap && ZM.spawnT <= 0) {
@@ -1611,7 +1612,7 @@ function zmZombies(dt) {
     if (z.hitT > 0) z.hitT -= dt;
     z.t += dt;
     if (z.dead) { z.deadT = (z.deadT || 0) + dt; continue; }
-    if (z.boss && typeof zbTick === 'function') { zbTick(z, dt, nearest); continue; }   // [boss] he goes his own way (src/zmboss.js)
+    if (z.boss && typeof zbTick === 'function') { zbTick(z, dt, nearest); continue; }   // [boss] each goes its own way (src/zmboss.js)
     const step = z.sp * dt * (z.slow > 0 && typeof zmpSlowK === 'function' ? zmpSlowK(z) : 1);   // [pap] (slowed by the Equinox Gale)
     const G = zmGait(z);
     if (z.st === 'out' && z.win.sea) {
@@ -1857,7 +1858,7 @@ function zmHurt(d, dmg, head, code, by, how) {
   if (typeof zmpDmg === 'function') dmg = zmpDmg(dmg, code, by);   // [pap] reforged weapons hit harder (the shooter's side)
   if (ZM.net === 'client') { zmnHit(d, dmg, head, code, how); return; }
   const k = (ZM_DMG[code] == null ? 1 : ZM_DMG[code]) * (d.mark > 0 ? 1.5 : 1);   // [pap] (lit by the Leading Light: hurt worse)
-  d.hp -= d.boss && typeof zbHurtK === 'function' ? zbHurtK(d, dmg * k, how) : ZM.insta > 0 ? 1e9 : dmg * k;   // [boss] no one-hit kills on him
+  d.hp -= d.boss && typeof zbHurtK === 'function' ? zbHurtK(d, dmg * k, how) : ZM.insta > 0 ? 1e9 : dmg * k;   // [boss] no one-hit kills on them
   if (d.hp <= 0) { zmKill(d, head, code, how, by); if (how === 'burn') zmChain(d, 2, by); } else zmPoints(10, false, by);
 }
 function zmKill(d, head, code, how, by) {
@@ -1869,7 +1870,7 @@ function zmKill(d, head, code, how, by) {
   if (by && by !== FPS.me.id) { const c = ZM.credit[by] = ZM.credit[by] || [0, 0, 0]; c[1]++; if (head) c[2]++; }
   else if (how !== 'flash' || !ZM.net) { ZM.kills++; if (head) ZM.heads++; zmEarnKill(); }
   zmMaybeDrop(d, how);
-  if (d.boss && typeof zbKilled === 'function') zbKilled(d, how, by);   // [boss] his reward and his salvage
+  if (d.boss && typeof zbKilled === 'function') zbKilled(d, how, by);   // [boss] its reward and its salvage
   if (typeof zeKill === 'function') zeKill(d, how, by);   // [egg hook] src/zmegg.js
 }
 // crates (as for Wreckers' Night, every third kill here)
@@ -2540,7 +2541,7 @@ function z3Geo() {
 }
 const ZM_COATS = ['#3a4a50', '#4a3a30', '#2e3a44', '#4a4a40', '#3a2e2e', '#5a5040', '#2a3530'];
 function zmModel(z) {
-  if (z.boss && typeof zbModel === 'function') return zbModel(z);   // [boss] a model of his own (src/zmboss.js)
+  if (z.boss && typeof zbModel === 'function') return zbModel(z);   // [boss] a model of its own (src/zmboss.js, src/zmboss2.js)
   let M = Z3.pool.find(p => !p.used);
   if (!M) {
     const Q = z3Geo(), root = new THREE.Group(), hips = new THREE.Group(); root.add(hips); hips.position.y = 0.95;
@@ -2841,7 +2842,7 @@ function zmHud() {
   // the feed, top right
   ctx.textAlign = 'right'; ctx.textBaseline = 'top'; ctx.font = mono(phone ? 10 : 12);
   FPS.feed.slice(phone ? -2 : -5).forEach((f, i) => { ctx.fillStyle = `rgba(236,228,207,${Math.min(1, f.t) * 0.85})`; ctx.fillText(f.text, R, feedY + i * (phone ? 13 : 17), W * (phone ? 0.5 : 0.45)); });
-  if (typeof zbHud === 'function') zbHud(phone, top);   // [boss] his strength, top middle
+  if (typeof zbHud === 'function') zbHud(phone, top);   // [boss] their strength, top middle (and the false light's glare)
   // the room you've come into
   if (ZM.zoneT > 0) { ctx.textAlign = 'center'; ctx.textBaseline = 'top'; ctx.font = fell(phone ? 16 : 22); ctx.fillStyle = `rgba(236,228,207,${Math.min(1, ZM.zoneT) * 0.8})`; const nm = zmZoneName(ZM.zone); ctx.fillText(nm.charAt(0).toUpperCase() + nm.slice(1), cx, phone ? top + 30 : 18); }
   // a round beginning, salvage taken
@@ -2849,7 +2850,9 @@ function zmHud() {
     const b = ZM.banner, a = Math.min(1, b.t, 4 - b.t);
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = fell(b.small ? (phone ? 22 : 30) : (phone ? 34 : 54));
     ctx.fillStyle = b.col ? b.col : `rgba(190,30,22,${Math.max(0, a)})`; ctx.globalAlpha = Math.max(0, Math.min(1, a));
-    ctx.fillText(b.text, cx, H * 0.3); ctx.globalAlpha = 1;
+    ctx.fillText(b.text, cx, H * 0.3);
+    if (b.sub) { ctx.font = fell(phone ? 14 : 19); ctx.fillText(b.sub, cx, H * 0.3 + (phone ? 28 : 44)); }   // [boss] (what it is)
+    ctx.globalAlpha = 1;
   }
   if (ZM.phase === 'pre' && ZM.t > 0) { ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = mono(phone ? 11 : 13); ctx.fillStyle = 'rgba(236,228,207,0.7)'; ctx.fillText('They are coming up out of the sea…', cx, H * 0.3 + 40); }
   // what's in front of you
