@@ -114,6 +114,7 @@ function onPeersChange(change) {
   syncMates();
   checkLaunch();
   if (typeof warNetPeers === 'function') warNetPeers();
+  if (typeof zmNetPeers === 'function') zmNetPeers();
 }
 
 // ---------- crew bookkeeping ----------

@@ -526,7 +526,7 @@ function fpsShoot() {
   if (m.dead > 0 || m.reload > 0 || m.cd > 0 || FPS.menu || FPS.drawT > 0) return;
   if (!w.melee && m.ammo <= 0) { if (FPS.zm && !FPS.heldFire && !zmCanReload()) { FPS.heldFire = true; fpsClick(); return; } fpsReload(); return; }
   if (!w.auto && !w.melee && FPS.heldFire) return;          // single-shot guns: one pull, one shot
-  if (w.beam) { FPS.heldFire = true; m.cd = w.rate; m.protect = 0; m.ammo--; m.mags[FPS.weapon] = m.ammo; FPS.vmShots = (FPS.vmShots || 0) + 1; FPS.recoil = Math.min(1.6, w.kick); zmBeam(); if (m.ammo <= 0) setTimeout(fpsReload, 250); return; }
+  if (w.beam) { FPS.heldFire = true; m.cd = w.rate; m.protect = 0; m.ammo--; m.mags[FPS.weapon] = m.ammo; FPS.vmShots = (FPS.vmShots || 0) + 1; FPS.recoil = Math.min(1.6, w.kick); zmBeam(); if (typeof zmnShot === 'function') zmnShot(w.code, m.h, m.p); if (m.ammo <= 0) setTimeout(fpsReload, 250); return; }
   // (holding the trigger of an automatic, the time past the last round carries over, so it keeps its rate on a slow screen)
   const carry = w.auto && FPS.heldFire && m.cd < 0 ? Math.max(-0.3, m.cd) : 0;
   FPS.heldFire = true;
@@ -538,7 +538,7 @@ function fpsShoot() {
   FPS.vmShots = (FPS.vmShots || 0) + 1;
   const z = FPSC.GROUND + FPSC.EYE + (m.jz || 0), seed = (Math.random() * 2147483647) | 0;
   const [ah, ap] = fpsAimFrom(m.x, m.y, z, w);
-  if (FPS.zm) FPS.zmShots = (FPS.zmShots || 0) + 1;
+  if (FPS.zm) { FPS.zmShots = (FPS.zmShots || 0) + 1; if (typeof zmnShot === 'function') zmnShot(w.code, ah, ap); }
   const sh = fpsPublishShot(m.x, m.y, z, ah, ap, m.id, w.code, FPS.scoped ? 0 : seed);
   if (typeof fpsVerityShot === 'function') fpsVerityShot(m.x, m.y, ah);
   fpsResolveShot(sh, true);

@@ -80,12 +80,26 @@ function warLite(p) {
   if (w.lob) lite.lob = w.lob; if (w.st && typeof w.st === 'object') lite.st = { g: w.st.g };
   return Object.assign({}, p, { war: lite });
 }
+// The Lighthouse played together: the same, for the four (at most) in one night
+const zmRoom = c => (c.presence && c.presence.zm && typeof c.presence.zm.room === 'string' ? c.presence.zm.room : null);
+function zmLite(p) {
+  const z = p.zm; if (!z || typeof z !== 'object') return p;
+  const lite = { room: z.room, sid: z.sid, nick: z.nick, at: z.at };
+  if (z.lob) lite.lob = z.lob; if (z.st && typeof z.st === 'object') lite.st = { g: z.st.g };
+  return Object.assign({}, p, { zm: lite });
+}
+// what someone in another war, another night or the lobby hears of this player
+const liteFor = (from, c) => {
+  let p = from.presence;
+  if (warRoom(from) && warRoom(from) !== warRoom(c)) p = warLite(p);
+  if (zmRoom(from) && zmRoom(from) !== zmRoom(c)) p = zmLite(p);
+  return p;
+};
 const crewOf = c => (c.presence && typeof c.presence.crew === 'string' ? c.presence.crew : null);
 
 function relay(from) {
   const msg = JSON.stringify({ t: 'state', peer: from.id, presence: from.presence });
-  const room = warRoom(from);
-  let liteMsg = null; const lite = () => liteMsg || (liteMsg = JSON.stringify({ t: 'state', peer: from.id, presence: warLite(from.presence) }));
+  const room = warRoom(from), night = zmRoom(from);
   const crew = crewOf(from);
   const now = Date.now();
   for (const c of clients.values()) {
@@ -93,9 +107,11 @@ function relay(from) {
     const mate = (crew && (crewOf(c) === crew || c.lastCrewSeen.get(from.id) === crew)) ||
       // Wreckers' Night: everyone on the island hears everyone else at full rate
       (onIsland(from) && onIsland(c)) ||
-      (room && warRoom(c) === room);
+      (room && warRoom(c) === room) ||
+      (night && zmRoom(c) === night);
     if (mate || now - (c.lastLobbySend.get(from.id) || 0) >= LOBBY_INTERVAL_MS) {
-      send(c, mate || !room ? msg : lite());
+      if (mate || (!room && !night)) send(c, msg);
+      else send(c, { t: 'state', peer: from.id, presence: liteFor(from, c) });
       c.lastLobbySend.set(from.id, now);
       c.lastCrewSeen.set(from.id, crew);
       c.pending.delete(from.id);
@@ -113,7 +129,7 @@ setInterval(() => {
       const from = clients.get(id);
       if (!from) { c.pending.delete(id); continue; }
       if (now - (c.lastLobbySend.get(id) || 0) < LOBBY_INTERVAL_MS) continue;
-      send(c, { t: 'state', peer: id, presence: warRoom(from) && warRoom(from) !== warRoom(c) ? warLite(from.presence) : from.presence });
+      send(c, { t: 'state', peer: id, presence: liteFor(from, c) });
       c.lastLobbySend.set(id, now);
       c.lastCrewSeen.set(id, crewOf(from));
       c.pending.delete(id);

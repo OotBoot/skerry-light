@@ -556,20 +556,28 @@ function zmEdge(a, b, di, dj) {
   return true;
 }
 const ZM_NB = [[1, 0, 1], [-1, 0, 1], [0, 1, 1], [0, -1, 1], [1, 1, 1.414], [1, -1, 1.414], [-1, 1, 1.414], [-1, -1, 1.414]];
-// distances from you (Dijkstra over the cells, with a small binary heap)
-function zmNavFrom(x, y, jz) {
-  const N = ZM.nav, d = N.d;
-  let s = zmCell(x, y);
-  if (s < 0) return;
+// the cell to count from for someone standing at (x, y, jz), or -1
+function zmNavStart(x, y, jz) {
+  const N = ZM.nav; let s = zmCell(x, y);
+  if (s < 0) return -1;
   if (!N.ok[s] || Math.abs(N.fl[s] - jz) > 1) {
     // (standing at an edge: start from the nearest good cell at your height)
     let best = -1, bd = 1e9; const si = s % N.nx, sj = (s - si) / N.nx;
     for (let dj = -2; dj <= 2; dj++) for (let di = -2; di <= 2; di++) { const i = si + di, j = sj + dj; if (i < 0 || j < 0 || i >= N.nx || j >= N.ny) continue; const k = j * N.nx + i; if (N.ok[k] && Math.abs(N.fl[k] - jz) < 0.7) { const dd = di * di + dj * dj; if (dd < bd) { bd = dd; best = k; } } }
-    if (best < 0) return; s = best;   // (nowhere to start from: keep the last distances)
+    s = best;
   }
-  N.at = s; d.fill(1e9);
-  const heap = [s]; d[s] = 0;
+  return s;
+}
+// distances from everyone still on their feet, each cell to the nearest of them (Dijkstra over the cells, with a
+// small binary heap)
+function zmNavFrom(players) {
+  const N = ZM.nav, d = N.d, starts = [];
+  for (const p of players) { const s = zmNavStart(p.x, p.y, p.jz || 0); if (s >= 0) starts.push(s); }
+  if (!starts.length) return;   // (nowhere to start from: keep the last distances)
+  d.fill(1e9);
+  const heap = [];
   const up = i => { while (i > 0) { const p = (i - 1) >> 1; if (d[heap[p]] <= d[heap[i]]) break; [heap[p], heap[i]] = [heap[i], heap[p]]; i = p; } };
+  for (const s of starts) { d[s] = 0; heap.push(s); up(heap.length - 1); }
   const down = i => { for (;;) { const l = i * 2 + 1, r = l + 1; let m = i; if (l < heap.length && d[heap[l]] < d[heap[m]]) m = l; if (r < heap.length && d[heap[r]] < d[heap[m]]) m = r; if (m === i) break; [heap[m], heap[i]] = [heap[i], heap[m]]; i = m; } };
   const done = new Uint8Array(d.length);
   while (heap.length) {
@@ -604,13 +612,16 @@ function zmReset() {
     on: true, own: ['pepperbox'], res: { pepperbox: 48 }, pts: ZMC.START, round: 0, phase: 'pre', t: 3, left: 0, spawnT: 0,
     z: [], drops: [], perks: {}, windBuys: 0, double: 0, insta: 0, dropsRound: 0, kills: 0, heads: 0, downs: 0, spent: 0, doorsOpened: 0,
     open: new Set(['quarters']), zone: 'quarters', zoneT: 4, banner: null, pops: [], fx: [], sparks: [], over: null, earnK: 0, navT: 0,
-    box: { at: 0, uses: 0, spins: 0, st: 'idle', t: 0, item: null, cyc: 0, show: 'avtomat' }, near: null, rebuildT: 0, groanT: 2,
+    box: { at: 0, uses: 0, spins: 0, st: 'idle', t: 0, item: null, cyc: 0, show: 'avtomat', owner: null }, near: null, rebuildT: 0, groanT: 2,
+    zc: 0, credit: {}, players: [], downT: 0, ghost: false, revT: 0, revOf: null,
     doors: Zd.doors, windows: Zd.windows, buys: Zd.buys, perksAt: Zd.perks, spawns: Zd.spawns,
   });
   for (const w of ZM.windows) { w.boards = 6; w.q = []; w.fall = []; }
 }
-function zmStart() {
+// opts (playing together, src/zmnet.js): { net: 'host' | 'client', hum: [[sid, nick], ...] }
+function zmStart(opts) {
   if (FPS.on) return;
+  opts = opts && opts.net ? opts : {};
   FPS.nick = (typeof NET !== 'undefined' && NET.nick) || 'Keeper';
   FPS.on = true; FPS.zm = true;
   FPS.saved = { state };
@@ -631,13 +642,19 @@ function zmStart() {
   FPS.roundMsg = null; FPS.menu = false; $('fpsMenu').hidden = true; FPS.eyeLag = 0; FPS.landed = 0; FPS.calm = 0; FPS.climb = 0;
   FPS.weapon = FPS.last = 'pepperbox'; FPS.harps = []; FPS.swings = []; FPS.scoped = false; FPS.reloadDur = 0; FPS.drawT = 0.45;
   zmReset();
+  ZM.net = opts.net || null; ZM.hum = opts.hum || [[FPS.me.id, FPS.nick]];
+  // (together: each comes up in a different corner of the Quarters)
+  const slot = Math.max(0, ZM.hum.findIndex(h => h[0] === FPS.me.id));
+  if (ZM.net) { FPS.me.x += [0, 4, -4, 0][slot % 4]; FPS.me.y += [0, -2, -2, 3][slot % 4]; }
   zmNavBuild();
   $('zmOver').hidden = true;
-  fpsFeed('You come up from the boat into the Keeper’s Quarters. Hold the Light.');
+  $('zmAgain').textContent = ZM.net ? 'Back to the lobby' : 'Hold it again';
+  fpsFeed(ZM.net ? `You come up from the boat into the Keeper’s Quarters, ${ZM.hum.length} of you. Hold the Light.` : 'You come up from the boat into the Keeper’s Quarters. Hold the Light.');
   try { cv.focus(); } catch (e) {}
 }
 function zmStop() {
-  ZM.on = false; FPS.zm = false; FPS.eyeLag = 0;
+  if (ZM.net && typeof zmnStop === 'function') zmnStop();
+  ZM.on = false; ZM.net = null; FPS.zm = false; FPS.eyeLag = 0;
   $('stage').classList.remove('zmmode'); $('zmOver').hidden = true;
   { const e = document.querySelector('#fpsMenu .eyebrow'); if (e) e.textContent = "Wreckers' Night carries on without you"; $('fpsLeave').textContent = 'Leave the island'; $('fpsResume').textContent = 'Back to the fight'; }
   if (Z3.grp) Z3.grp.visible = false;
@@ -655,15 +672,16 @@ function zmFrame(dt) {
   try {
     G.t += dt; G.beam = Math.PI;
     G.mods.lantern = m.lan ? 1 : 0.3;
-    // (the menu holds everything still: it's a game alone)
-    const live = !FPS.menu && !ZM.over;
-    if (live) fpsInput(dt); else { FPS.look = [0, 0]; m.walk = false; }
+    // (alone, the menu holds everything still; together, the night goes on)
+    const live = (!FPS.menu || ZM.net) && !ZM.over;
+    if (live && !FPS.menu) fpsInput(dt); else { FPS.look = [0, 0]; m.walk = false; }
     if (live) {
       if (m.protect > 0) m.protect -= dt;
       // patched up quickly, if they leave you alone for a few seconds
       FPS.calm = (FPS.calm || 0) + dt;
       const max = ZM.perks.stout ? ZMC.HP_STOUT : ZMC.HP;
       if (m.dead <= 0 && m.hp < max && FPS.calm > 3.2) m.hp = max;
+      if (ZM.downT > 0) { ZM.downT -= dt; if (ZM.downT <= 0) zmBleedOut(); }
       if (m.cd > 0) m.cd -= dt;
       if (m.reload > 0) { m.reload -= dt; if (m.reload <= 0) { m.reload = 0; zmReloaded(); } }
       if (FPS.drawT > 0) FPS.drawT -= dt;
@@ -685,7 +703,7 @@ function zmFrame(dt) {
     for (const p of FPS.parts) { p.t -= dt; p.x += p.vx * dt; p.y += p.vy * dt; p.z += p.vz * dt; p.vz -= (p.up ? -1 : 9) * dt; }
     FPS.parts = FPS.parts.filter(p => p.t > 0);
     if (FPS.parts.length > 400) FPS.parts.splice(0, FPS.parts.length - 400);
-    if (ZM.over) { ZM.over.t += dt; if (ZM.over.t > 2.2 && $('zmOver').hidden) zmShowOver(); }
+    if (ZM.over) { ZM.over.t += dt; if (ZM.over.t > 2.2 && $('zmOver').hidden) zmShowOver(); if (ZM.net === 'host') zmnHost(dt); }
     fpsDraw();
   } finally { g = saved[0]; ship = saved[1]; }
 }
@@ -703,27 +721,64 @@ function zmTick(dt) {
   const zn = zmZoneAt(m.x, m.y, m.jz);
   if (zn && zn !== ZM.zone) { ZM.zone = zn; ZM.zoneT = 3.5; }
   if (ZM.zoneT > 0) ZM.zoneT -= dt;
-  // the grid's distances from you, a few times a second
-  ZM.navT -= dt;
-  if (ZM.navT <= 0) { ZM.navT = 0.25; zmNavFrom(m.x, m.y, m.jz || 0); }
-  zmRounds(dt);
-  zmZombies(dt);
+  if (ZM.net === 'client') zmnClient(dt);
+  else {
+    if (ZM.net === 'host') zmnHost(dt);
+    ZM.players = zmPlayers();
+    // the grid's distances from everyone standing, a few times a second
+    ZM.navT -= dt;
+    if (ZM.navT <= 0) { ZM.navT = 0.25; zmNavFrom(ZM.players); }
+    zmRounds(dt);
+    zmZombies(dt);
+    zmDropsTick(dt);
+    zmBoxTick(dt);
+    if (ZM.double > 0) ZM.double -= dt; if (ZM.insta > 0) ZM.insta -= dt;
+    zmCheckOver();
+  }
   zmWindows(dt);
-  zmDropsTick(dt);
-  zmBoxTick(dt);
-  if (ZM.double > 0) ZM.double -= dt; if (ZM.insta > 0) ZM.insta -= dt;
+  zmMoans(dt);
   for (const p of ZM.pops) p.t -= dt; ZM.pops = ZM.pops.filter(p => p.t > 0);
   if (ZM.banner) { ZM.banner.t -= dt; if (ZM.banner.t <= 0) ZM.banner = null; }
   for (const s of ZM.sparks) s.t -= dt; ZM.sparks = ZM.sparks.filter(s => s.t > 0);
   if (FPS.beamT > 0) FPS.beamT -= dt;
   zmNearest();
-  // holding Use at a window nails its boards back
+  // holding Use at a window nails its boards back; beside someone who's down, gets them up
   const hold = FPS.keys.KeyF || FPS.keys.KeyE || FPS.touchUse || FPS.padUse;
   ZM.rebuildT -= dt;
-  if (hold && ZM.near && ZM.near.k === 'win' && ZM.rebuildT <= 0) {
+  if (hold && ZM.near && ZM.near.k === 'win' && ZM.rebuildT <= 0 && !(m.dead > 0)) {
     const w = ZM.near.w;
-    if (w.boards < 6 && !ZM.z.some(z => z.win === w && z.st === 'climb')) { w.boards++; ZM.rebuildT = 0.55; zmPoints(10, true); zmSound('board'); }
+    if (w.boards < 6 && !ZM.z.some(z => z.win === w && z.st === 'climb')) {
+      ZM.rebuildT = 0.55; zmSound('board');
+      if (ZM.net === 'client') zmnRequest('board', w.id); else { w.boards++; zmPoints(10, true); }
+    }
   }
+  if (hold && ZM.near && ZM.near.k === 'rev' && !(m.dead > 0)) {
+    if (ZM.revOf !== ZM.near.sid) { ZM.revOf = ZM.near.sid; ZM.revT = 0; }
+    ZM.revT += dt;
+    if (ZM.revT >= 3) { ZM.revT = 0; ZM.revOf = null; zmnRevive(ZM.near.sid); }
+  } else { ZM.revT = 0; ZM.revOf = null; }
+}
+// who's standing: you, and (hosting) everyone else not down
+function zmPlayers() {
+  const m = FPS.me, out = [];
+  if (!(m.dead > 0)) out.push({ sid: m.id, x: m.x, y: m.y, jz: m.jz || 0, me: true });
+  if (ZM.net === 'host') for (const r of FPS.remote.values()) if (!r.dead && !r.down && r.tx != null) out.push({ sid: r.id, x: r.x, y: r.y, jz: r.jz || 0 });
+  return out;
+}
+// everyone down at once, or gone: the night is over
+function zmCheckOver() {
+  if (!ZM.net || ZM.over) return;
+  const m = FPS.me;
+  if (!(m.dead > 0)) return;
+  for (const r of FPS.remote.values()) if (!r.dead && !r.down && !r.left) return;
+  zmEnd();
+}
+function zmEnd() {
+  if (ZM.over) return;
+  FPS.me.dead = FPSC.RESPAWN - 0.6; FPS.scoped = false;
+  ZM.over = { t: 0 };
+  zmSound('over');
+  if (typeof scoreReport === 'function') scoreReport('zm', Math.max(0, ZM.round - 1), ZM.kills);
 }
 
 // ---------- rounds ----------
@@ -733,7 +788,8 @@ function zmRounds(dt) {
   ZM.t -= dt;
   if (ZM.phase === 'pre' || ZM.phase === 'break') {
     if (ZM.t <= 0) {
-      ZM.round++; ZM.phase = 'round'; ZM.left = zmCount(ZM.round); ZM.spawnT = 2; ZM.dropsRound = 0;
+      ZM.round++; ZM.phase = 'round'; ZM.left = Math.round(zmCount(ZM.round) * (1 + 0.5 * (ZM.hum.length - 1))); ZM.spawnT = 2; ZM.dropsRound = 0;
+      zmRoundBegins();
       ZM.banner = { text: 'Round ' + ZM.round, t: 4 };
       zmSound('round');
       if (ZM.round > 1) fpsFeed(`Round ${ZM.round}: ${ZM.left} of them.`);
@@ -751,10 +807,23 @@ function zmRounds(dt) {
     ZM.phase = 'break'; ZM.t = ZMC.BREAK;
     zmSound('end');
     ZM.banner = { text: `Round ${ZM.round} held`, t: 3.5, small: true };
-    if (typeof scoreReport === 'function') scoreReport('zm', ZM.round, ZM.kills);
-    // crates: one of each for every five rounds held
-    if (ZM.round % 5 === 0) { if (typeof wcEarn === 'function') wcEarn('round'); if (typeof ocEarn === 'function') ocEarn('round'); }
+    zmRoundHeld();
   }
+}
+function zmRoundHeld() {
+  if (typeof scoreReport === 'function') scoreReport('zm', ZM.round, ZM.kills);
+  // crates: one of each for every five rounds held
+  if (ZM.round % 5 === 0) { if (typeof wcEarn === 'function') wcEarn('round'); if (typeof ocEarn === 'function') ocEarn('round'); }
+}
+// a new round: anyone who bled out comes back, with a pepperbox, beside someone still standing
+function zmRoundBegins() {
+  if (!ZM.ghost) return;
+  const m = FPS.me, others = [...FPS.remote.values()].filter(r => !r.dead && !r.down && r.tx != null);
+  const at = others[0];
+  if (at) { m.x = at.x; m.y = at.y; m.jz = at.jz || 0; m.fl = m.jz; zmSettle(m); }
+  ZM.ghost = false; m.dead = 0; m.hp = ZMC.HP; m.protect = 3;
+  ZM.own = ['pepperbox']; ZM.res = { pepperbox: 48 }; FPS.weapon = FPS.last = 'pepperbox'; m.ammo = 6; m.mags.pepperbox = 6; FPS.drawT = 0.45;
+  fpsFeed('You’re back on your feet, with a pepperbox.');
 }
 // which window the next one climbs in at: one of the open rooms' windows nearest you (by the walk to you)
 function zmPickWindow() {
@@ -775,8 +844,9 @@ function zmSpawn() {
   const kind = u < run ? 'run' : u < run + jog ? 'jog' : 'walk';
   const tx = -w.ny, ty = w.nx, out = 4 + Math.random() * 2.5, side = (Math.random() - 0.5) * 3;
   const hp = zmHp(r) * (0.9 + Math.random() * 0.2);
+  const zn = ++ZM.zc;
   const z = {
-    drowned: true, zm: true, id: 'z' + Math.random().toString(36).slice(2, 8), n: 'a drowned man', x: w.x + w.nx * out + tx * side, y: w.y + w.ny * out + ty * side, jz: 0, fl: 0, zpad: 0.27,
+    drowned: true, zm: true, zn, id: 'z' + zn.toString(36), n: 'a drowned man', x: w.x + w.nx * out + tx * side, y: w.y + w.ny * out + ty * side, jz: 0, fl: 0, zpad: 0.27,
     hp, max: hp, kind, sp: kind === 'run' ? 5.0 + Math.random() * 0.6 : kind === 'jog' ? 3.2 + Math.random() * 0.4 : 1.55 + Math.random() * 0.35,
     st: 'out', win: w, t: 0, ph: Math.random() * 6, hitT: 0, atk: 0.6, swing: -1, stuck: 0, h: 0, seed: (Math.random() * 1e6) | 0, rise: 1, hist: [],
   };
@@ -788,8 +858,8 @@ function zmSpawn() {
 
 // ---------- the drowned ----------
 function zmZombies(dt) {
-  const m = FPS.me, all = ZM.z;
-  ZM.groanT -= dt;
+  const all = ZM.z, P = ZM.players;
+  const nearest = (x, y, jz) => { let best = null, bd = 1e9; for (const p of P) { const d = Math.hypot(p.x - x, p.y - y) + Math.abs((p.jz || 0) - (jz || 0)) * 2; if (d < bd) { bd = d; best = p; } } return best; };
   for (const z of all) {
     if (z.hitT > 0) z.hitT -= dt;
     z.t += dt;
@@ -809,9 +879,9 @@ function zmZombies(dt) {
       const w = z.win; z.walk = false; z.h = bearingOf(-w.nx, -w.ny);
       if (w.boards > 0) {
         // a board off every second or so (quicker as the rounds go on)
-        if (z.t > Math.max(0.55, 1.25 - ZM.round * 0.03)) { z.t = 0; w.boards--; w.fall.push({ i: w.boards, t: 0 }); zmSound('tear', Math.hypot(w.x - m.x, w.y - m.y)); }
-        // and a swipe through the gap at you if you're right there
-        if (Math.hypot(m.x - w.x, m.y - w.y) < 1.5 && Math.abs((m.jz || 0)) < 1) zmSwipe(z, dt);
+        if (z.t > Math.max(0.55, 1.25 - ZM.round * 0.03)) { z.t = 0; w.boards--; w.fall.push({ i: w.boards, t: 0 }); zmSound('tear', Math.hypot(w.x - FPS.me.x, w.y - FPS.me.y)); }
+        // and a swipe through the gap at whoever's right there
+        if (P.some(p => Math.hypot(p.x - w.x, p.y - w.y) < 1.5 && Math.abs(p.jz || 0) < 1)) zmSwipe(z, dt);
       } else { z.st = 'climb'; z.t = 0; }
       continue;
     }
@@ -821,13 +891,15 @@ function zmZombies(dt) {
       if (k >= 1) { z.st = 'in'; z.jz = 0; z.fl = 0; w.q = w.q.filter(q => q !== z); z.t = 0; z.lx = z.x; z.ly = z.y; }
       continue;
     }
-    // inside: after you, by the shortest walk
+    // inside: after the nearest of you, by the shortest walk
+    const m = nearest(z.x, z.y, z.jz);
+    if (!m) { z.walk = false; continue; }
     const dx = m.x - z.x, dy = m.y - z.y, d = Math.hypot(dx, dy), dz = (m.jz || 0) - (z.jz || 0);
     let tx = m.x, ty = m.y;
     if (!(d < 3 && Math.abs(dz) < 0.8)) { const nx = zmNavNext(z.x, z.y); if (nx) { tx = nx[0]; ty = nx[1]; } }
     const hx = tx - z.x, hy = ty - z.y, hl = Math.hypot(hx, hy);
     const near = d < 1.15 && Math.abs(dz) < 1;
-    if (hl > 0.05 && !near && !(m.dead > 0)) {
+    if (hl > 0.05 && !near) {
       z.h += angDiff(bearingOf(hx, hy), z.h) * Math.min(1, dt * 8);
       const s = Math.min(hl, step), want = bearingOf(hx, hy);
       // (a corner in the way: try a little to either side, the side that worked last first)
@@ -848,15 +920,19 @@ function zmZombies(dt) {
     const a = ins[i], b = ins[j], dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy);
     if (d < 0.7 && d > 0.001 && Math.abs((a.jz || 0) - (b.jz || 0)) < 1) { const push = (0.7 - d) * 0.5; zmMove(a, -dx / d * push, -dy / d * push); zmMove(b, dx / d * push, dy / d * push); }
   }
-  // and from you
-  for (const z of ins) {
+  // and from all of you
+  for (const z of ins) for (const m of P) {
     const dx = z.x - m.x, dy = z.y - m.y, d = Math.hypot(dx, dy);
     if (d < 0.72 && d > 0.001 && Math.abs((z.jz || 0) - (m.jz || 0)) < 1.2) zmMove(z, dx / d * (0.72 - d), dy / d * (0.72 - d));
   }
   // the dead sink away
   for (const z of all) if (z.dead && z.deadT > (z.burn ? 1.3 : 2.4)) { if (z.mdl) zmFreeModel(z); z.remove = true; }
   ZM.z = all.filter(z => !z.remove); FPS.drowned = ZM.z;
-  // moans
+}
+// moans from the nearest of them
+function zmMoans(dt) {
+  const m = FPS.me;
+  ZM.groanT -= dt;
   if (ZM.groanT <= 0) {
     ZM.groanT = 1.2 + Math.random() * 2.5;
     let best = null, bd = 30;
@@ -873,7 +949,7 @@ function zmSwipe(z, dt) {
     const was = z.swing; z.swing += dt;
     if (was < 0.28 && z.swing >= 0.28) {
       const reach = z.st === 'tear' ? 1.6 : 1.55;
-      if (Math.hypot(m.x - z.x, m.y - z.y) < reach && !(m.dead > 0) && !(m.protect > 0)) { fpsHurt(1, null, null); zmSound('hit'); }
+      if (Math.hypot(m.x - z.x, m.y - z.y) < reach && Math.abs((m.jz || 0) - (z.jz || 0)) < 1.2 && !(m.dead > 0) && !(m.protect > 0)) { fpsHurt(1, null, null); zmSound('hit'); }
     }
     if (z.swing > 0.6) z.swing = -1;
   }
@@ -881,38 +957,52 @@ function zmSwipe(z, dt) {
 function zmWindows(dt) { for (const w of ZM.windows) { for (const f of w.fall) f.t += dt; w.fall = w.fall.filter(f => f.t < 1.2); w.q = w.q.filter(z => !z.dead); } }
 
 // ---------- points, hits and kills ----------
-function zmPoints(n, raw) {
+function zmPoints(n, raw, by) {
   const v = raw ? n : n * (ZM.double > 0 ? 2 : 1);
+  if (by && by !== FPS.me.id) { const c = ZM.credit[by] = ZM.credit[by] || [0, 0, 0]; c[0] += v; return; }
   ZM.pts += v;
   // (points earned in a quick burst rise together, as one number)
   const last = ZM.pops[ZM.pops.length - 1];
   if (last && last.t > 0.95) { last.v += v; last.t = 1.1; } else ZM.pops.push({ v, t: 1.1, dx: (Math.random() - 0.5) * 30 });
   if (ZM.pops.length > 4) ZM.pops.shift();
 }
-function zmHurt(d, dmg, head, code) {
+// (by: who hit it, for the points; joined to someone else's game, the hit goes to the host to be judged)
+function zmHurt(d, dmg, head, code, by, how) {
   if (!d || d.dead) return;
+  d.hitT = 0.15;
+  if (ZM.net === 'client') { zmnHit(d, dmg, head, code, how); return; }
   const k = ZM_DMG[code] == null ? 1 : ZM_DMG[code];
-  d.hp -= ZM.insta > 0 ? 1e9 : dmg * k; d.hitT = 0.15;
-  if (d.hp <= 0) zmKill(d, head, code); else zmPoints(10);
+  d.hp -= ZM.insta > 0 ? 1e9 : dmg * k;
+  if (d.hp <= 0) { zmKill(d, head, code, how, by); if (how === 'burn') zmChain(d, 2, by); } else zmPoints(10, false, by);
 }
-function zmKill(d, head, code, how) {
+function zmKill(d, head, code, how, by) {
   if (d.dead) return;
   d.dead = 1; d.deadT = 0; d.burn = how === 'burn'; d.head = !!head;
   if (d.win) d.win.q = d.win.q.filter(q => q !== d);
-  if (how !== 'flash') zmPoints(how === 'burn' ? 80 : head ? 100 : code === 'c' ? 130 : 60);
-  ZM.kills++; if (head) ZM.heads++;
+  if (how !== 'flash') zmPoints(how === 'burn' ? 80 : head ? 100 : code === 'c' ? 130 : 60, false, by);
+  zmKillFx(d);
+  if (by && by !== FPS.me.id) { const c = ZM.credit[by] = ZM.credit[by] || [0, 0, 0]; c[1]++; if (head) c[2]++; }
+  else if (how !== 'flash' || !ZM.net) { ZM.kills++; if (head) ZM.heads++; zmEarnKill(); }
+  zmMaybeDrop(d, how);
+}
+// crates (as for Wreckers' Night, every third kill here)
+function zmEarnKill() {
+  ZM.earnK++;
+  if (ZM.earnK >= 3) { ZM.earnK = 0; if (typeof wcEarn === 'function') wcEarn('kill'); if (typeof ocEarn === 'function') ocEarn('kill'); }
+}
+// how one goes: burning to ash, or a burst of the sea
+function zmKillFx(d) {
   if (d.burn) for (let i = 0; i < 10; i++) FPS.parts.push({ x: d.x + (Math.random() - 0.5) * 0.6, y: d.y + (Math.random() - 0.5) * 0.6, z: FPSC.GROUND + (d.jz || 0) + Math.random() * 1.7, vx: (Math.random() - 0.5) * 1.2, vy: (Math.random() - 0.5) * 1.2, vz: Math.random() * 1.2, t: 1.2, c: '255,170,80', up: true });
-  else fpsPuff(d.x, d.y, FPSC.GROUND + (d.jz || 0) + (head ? 1.6 : 1.1), head ? '120,150,140' : '70,100,90', head ? 12 : 6);
-  // salvage: now and then something floats free
+  else fpsPuff(d.x, d.y, FPSC.GROUND + (d.jz || 0) + (d.head ? 1.6 : 1.1), d.head ? '120,150,140' : '70,100,90', d.head ? 12 : 6);
+}
+// salvage: now and then something floats free
+function zmMaybeDrop(d, how) {
   if (ZM.dropsRound < 4 && Math.random() < 0.03 && how !== 'flash') {
     ZM.dropsRound++;
     const r = Math.random(), k = r < 0.35 ? 'keg' : r < 0.6 ? 'double' : r < 0.8 ? 'spot' : 'flash';
-    ZM.drops.push({ k, x: d.x, y: d.y, z: d.jz || 0, t: 26, ph: Math.random() * 6 });
+    ZM.drops.push({ k, x: d.x, y: d.y, z: d.jz || 0, t: 26, ph: Math.random() * 6, id: ++ZM.zc });
     zmSound('drop');
   }
-  // crates (as for Wreckers' Night, every third kill here)
-  ZM.earnK++;
-  if (ZM.earnK >= 3) { ZM.earnK = 0; if (typeof wcEarn === 'function') wcEarn('kill'); if (typeof ocEarn === 'function') ocEarn('kill'); }
 }
 // a shot here: what it hits, as the islands judge it, but against the drowned standing where they are now (there's
 // nobody else's view to be fair to); long shots go through a few of them
@@ -944,7 +1034,7 @@ function zmResolveShot(sh, mine) {
     if (last.kind !== 'body' && last.kind !== 'none') fpsPuff(last.x, last.y, last.z, last.kind === 'ground' ? '150,140,120' : '190,190,180', w.pellets ? 2 : 6);
   }
   let any = null;
-  for (const [o, hit] of hits) { any = any || hit; zmHurt(o, hit.dmg, hit.head, code); }
+  for (const [o, hit] of hits) { any = any || hit; zmHurt(o, hit.dmg, hit.head, code, FPS.me.id); }
   if (any && mine) { FPS.hitT = 0.18; FPS.hitHead = any.head; fpsHitSound(any.head); }
 }
 function zmMelee(x, y, z, h, w) {
@@ -955,7 +1045,7 @@ function zmMelee(x, y, z, h, w) {
     if (d > w.reach + FPSC.BODY || Math.abs(angDiff(b, h)) > w.arc || Math.abs((o.jz || 0) - (FPS.me.jz || 0)) > 1.2) continue;
     const r = fpsRay(x, y, z - 0.4, b, Math.atan2((o.jz || 0) + 1.2 - (z - FPSC.GROUND - 0.4), Math.max(0.3, d)), FPS.me.id, [o], w.reach + 1);
     if (r.kind !== 'body') continue;
-    zmHurt(o, w.dmg, false, 'c'); o.hitT = 0.2; any = true;
+    zmHurt(o, w.dmg, false, 'c', FPS.me.id); o.hitT = 0.2; any = true;
   }
   if (any) { FPS.hitT = 0.18; FPS.hitHead = false; fpsHitSound(false); }
 }
@@ -979,47 +1069,48 @@ function zmBeam() {
     const ray = fpsRay(ex, ey, ez, bearingOf(ox, oy), Math.atan2(oz, Math.hypot(ox, oy)), m.id, [o], w.range + 2);
     if (ray.kind !== 'body') continue;
     any = true; o.hitT = 0.2; o.scorch = Math.min(1, (o.scorch || 0) + 0.5);
-    o.hp -= ZM.insta > 0 ? 1e9 : burn;
-    if (o.hp <= 0) { zmKill(o, false, 'f', 'burn'); zmChain(o, 2); } else zmPoints(10);
+    zmHurt(o, burn, false, 'f', FPS.me.id, 'burn');
   }
   if (any) { FPS.hitT = 0.12; FPS.hitHead = false; }
   zmSound('beam');
 }
 // a spark off one that burned, to the nearest that hasn't (and on, a hop or two)
-function zmChain(from, hops) {
+function zmChain(from, hops, by) {
   let best = null, bd = 7;
   for (const o of ZM.z) { if (o.dead || o === from) continue; const d = Math.hypot(o.x - from.x, o.y - from.y); if (d < bd && Math.abs((o.jz || 0) - (from.jz || 0)) < 2) { bd = d; best = o; } }
   if (!best) return;
   ZM.sparks.push({ a: [from.x, from.y, FPSC.GROUND + (from.jz || 0) + 1.2], b: [best.x, best.y, FPSC.GROUND + (best.jz || 0) + 1.2], t: 0.25 });
   best.hitT = 0.2; best.scorch = 1;
   best.hp -= zmHp(Math.max(1, ZM.round)) * 0.6;
-  if (best.hp <= 0) { zmKill(best, false, 'f', 'burn'); if (hops > 1) zmChain(best, hops - 1); }
+  if (best.hp <= 0) { zmKill(best, false, 'f', 'burn', by); if (hops > 1) zmChain(best, hops - 1, by); }
 }
 
 // ---------- salvage ----------
 function zmDropsTick(dt) {
-  const m = FPS.me;
   for (const d of ZM.drops) {
     d.t -= dt; d.ph += dt;
-    if (Math.hypot(d.x - m.x, d.y - m.y) < 1.4 && Math.abs(d.z - (m.jz || 0)) < 1.6 && !(m.dead > 0)) { d.t = 0; zmTake(d.k); }
+    for (const m of ZM.players) if (d.t > 0 && Math.hypot(d.x - m.x, d.y - m.y) < 1.4 && Math.abs(d.z - (m.jz || 0)) < 1.6) { d.t = 0; zmTake(d.k); if (ZM.net) zmnEvent('take', d.k); }
   }
   ZM.drops = ZM.drops.filter(d => d.t > 0);
 }
-function zmTake(k) {
+// (heard: joined, and told by the host that it was taken; the host has done the rest)
+function zmTake(k, heard) {
   const D = ZM_DROPS[k]; ZM.banner = { text: D.n + '!', t: 2.6, col: D.c };
   zmSound('take');
   if (k === 'keg') { for (const id of ZM.own) ZM.res[id] = ZM_AMMO[id]; fpsFeed('A Powder Keg: everything you carry, full.'); }
-  else if (k === 'double') { ZM.double = 30; fpsFeed('Double Salvage: double points for thirty seconds.'); }
-  else if (k === 'spot') { ZM.insta = 30; fpsFeed('The Black Spot: one hit kills, for thirty seconds.'); }
+  else if (k === 'double') { if (!heard) ZM.double = 30; fpsFeed('Double Salvage: double points for thirty seconds.'); }
+  else if (k === 'spot') { if (!heard) ZM.insta = 30; fpsFeed('The Black Spot: one hit kills, for thirty seconds.'); }
+  else if (heard) { FPS.flash = 0.6; fpsFeed('A Lamp Flash: every one of them burned where they stood.'); }
   else if (k === 'flash') {
     let n = 0; for (const z of ZM.z) if (!z.dead) { zmKill(z, false, '', 'flash'); z.burn = true; n++; }
-    zmPoints(400); FPS.flash = 0.6; fpsFeed(n ? `A Lamp Flash: ${n} of them burned where they stood.` : 'A Lamp Flash.');
+    zmPoints(400, true); for (const h of ZM.hum) if (h[0] !== FPS.me.id) zmPoints(400, true, h[0]);
+    FPS.flash = 0.6; fpsFeed(n ? `A Lamp Flash: ${n} of them burned where they stood.` : 'A Lamp Flash.');
   }
 }
 
 // ---------- the wreck chest ----------
-function zmBoxRoll() {
-  const pool = ZM_BOXW.filter(([id]) => !ZM.own.includes(id)), list = pool.length ? pool : ZM_BOXW;
+function zmBoxRoll(own) {
+  const pool = ZM_BOXW.filter(([id]) => !(own || ZM.own).includes(id)), list = pool.length ? pool : ZM_BOXW;
   let r = Math.random() * list.reduce((s, [, w]) => s + w, 0);
   for (const [id, w] of list) { r -= w; if (r <= 0) return id; }
   return list[0][0];
@@ -1032,7 +1123,7 @@ function zmBoxTick(dt) {
     if (B.cyc > 1) { B.cyc = 0; const ids = ZM_BOXW.map(a => a[0]); B.show = ids[(ids.indexOf(B.show) + 1 + ((Math.random() * 3) | 0)) % ids.length]; zmSound('tick'); }
     if (B.t > 4) {
       B.t = 0; B.show = B.item;
-      if (B.moving) { B.st = 'gull'; ZM.pts += ZMC.BOX; zmSound('gull'); fpsFeed('A gull takes the chest. Your points are back; look for it somewhere else.'); }
+      if (B.moving) { B.st = 'gull'; zmPoints(ZMC.BOX, true, B.owner); zmSound('gull'); fpsFeed('A gull takes the chest. The points are back; look for it somewhere else.'); if (ZM.net) zmnEvent('feed', 'A gull takes the chest. The points are back; look for it somewhere else.'); }
       else { B.st = 'offer'; zmSound('offer'); }
     }
   } else if (B.st === 'offer') { if (B.t > 12) { B.st = 'idle'; B.t = 0; } }
@@ -1042,6 +1133,7 @@ function zmBoxTick(dt) {
       const choices = ZM.spawns.map((s, i) => i).filter(i => i !== B.at);
       B.at = choices[(Math.random() * choices.length) | 0]; B.uses = 0; B.st = 'idle'; B.t = 0;
       fpsFeed(`The chest has turned up in ${zmZoneName(ZM.spawns[B.at].zone)}.`);
+      if (ZM.net) zmnEvent('feed', `The chest has turned up in ${zmZoneName(ZM.spawns[B.at].zone)}.`);
     }
   }
 }
@@ -1050,10 +1142,20 @@ function zmBoxUse() {
   if (B.st === 'idle') {
     if (ZM.pts < ZMC.BOX) { zmSound('no'); return; }
     ZM.pts -= ZMC.BOX; ZM.spent += ZMC.BOX;
-    B.st = 'spin'; B.t = 0; B.cyc = 0; B.item = zmBoxRoll(); B.spins++; B.uses++;
-    B.moving = B.spins > 1 && B.uses > 3 && Math.random() < 0.35;
-    zmSound('open');
-  } else if (B.st === 'offer') { zmGive(B.item); B.st = 'idle'; B.t = 0; }
+    if (ZM.net === 'client') { zmnRequest('box', ZM.own.join(',')); zmSound('open'); return; }
+    zmBoxSpin(FPS.me.id, ZM.own);
+  } else if (B.st === 'offer' && B.owner === FPS.me.id) {
+    if (ZM.net === 'client') zmnRequest('take', 0); else { B.st = 'idle'; B.t = 0; }
+    zmGive(B.item);
+  }
+}
+// (hosting or alone) the chest opens for someone: what's in it, and whether the gull comes for it
+function zmBoxSpin(by, own) {
+  const B = ZM.box;
+  if (B.st !== 'idle') { zmPoints(ZMC.BOX, true, by); return; }   // (beaten to it: the points go back)
+  B.st = 'spin'; B.t = 0; B.cyc = 0; B.item = zmBoxRoll(own); B.spins++; B.uses++; B.owner = by;
+  B.moving = B.spins > 1 && B.uses > 3 && Math.random() < 0.35;
+  zmSound('open');
 }
 // a weapon in hand: a third replaces the one you're holding
 function zmGive(id) {
@@ -1084,7 +1186,9 @@ function zmNearest() {
   for (const p of ZM.perksAt) consider({ k: 'perk', p }, p.x + p.nx * 0.9, p.y + p.ny * 0.9, 0, 1.7, true);
   for (const d of ZM.doors) if (!d.open) consider({ k: 'door', d }, d.x, d.y, 0, 2.3, false);
   const B = ZM.box, S = ZM.spawns[B.at];
-  if (S && (B.st === 'idle' || B.st === 'offer')) consider({ k: 'box' }, S.x + S.nx * 0.9, S.y + S.ny * 0.9, S.z - 0.32, 1.8, true);
+  if (S && (B.st === 'idle' || (B.st === 'offer' && B.owner === m.id))) consider({ k: 'box' }, S.x + S.nx * 0.9, S.y + S.ny * 0.9, S.z - 0.32, 1.8, true);
+  // someone down: you can get them up
+  if (ZM.net) for (const r of FPS.remote.values()) if (r.down && !r.dead) consider({ k: 'rev', sid: r.id, n: r.n }, r.x, r.y, r.jz || 0, 1.8, false);
   for (const w of ZM.windows) if (w.boards < 6 && zmOpen(w.zone)) consider({ k: 'win', w }, w.x - w.nx * 0.95, w.y - w.ny * 0.95, 0, 1.9, false);
   ZM.near = best;
   ZM.prompt = best ? zmPrompt(best) : null;
@@ -1100,6 +1204,7 @@ function zmPrompt(o) {
   if (o.k === 'door') { const [a, b] = o.d.zones, to = zmOpen(a) ? b : a; return { text: `${o.d.kind === 'debris' ? 'Clear the wreckage to' : 'Open the door to'} ${zmZoneName(to)}`, cost: o.d.cost }; }
   if (o.k === 'box') { const B = ZM.box; if (B.st === 'offer') return { text: `Take the ${FPSW[B.item].n}`, free: true }; return { text: 'The wreck chest', cost: ZMC.BOX }; }
   if (o.k === 'win') return { text: 'Hold to nail the boards back', hold: true };
+  if (o.k === 'rev') return { text: `Hold to get ${o.n || 'them'} up${ZM.revT > 0 ? ' ' + '▮'.repeat(Math.ceil(ZM.revT)) : ''}`, hold: true };
   return null;
 }
 function zmUse() {
@@ -1118,11 +1223,12 @@ function zmUse() {
     if (k === 'stout') m.hp = ZMC.HP_STOUT;
     zmSound('drink'); fpsFeed(`${P.n}: ${P.what}.`); return;
   }
-  if (o.k === 'door') { if (!pay(o.d.cost)) return; zmOpenDoor(o.d); return; }
+  if (o.k === 'door') { if (!pay(o.d.cost)) return; if (ZM.net === 'client') { zmnRequest('door', o.d.id); zmOpenDoor(o.d); } else zmOpenDoor(o.d); return; }
   if (o.k === 'box') zmBoxUse();
 }
 function zmOpenDoor(d) {
   const I = FPS.g.isle;
+  if (d.open) return;
   d.open = true; d.openT = 0; ZM.doorsOpened++;
   I.solids = I.solids.filter(s => !d.solids.includes(s)); fpiIndex(I);
   for (const k of d.zones) ZM.open.add(k);
@@ -1144,22 +1250,38 @@ function zmDown() {
     zmSound('wind');
     return;
   }
-  m.hp = 0; m.dead = 999; FPS.scoped = false;
-  ZM.over = { t: 0 };
-  zmSound('over');
-  if (typeof scoreReport === 'function') scoreReport('zm', Math.max(0, ZM.round - 1), ZM.kills);
+  if (ZM.net) {
+    // together: down on the floor for half a minute; a friend can get you up (and your tonics are gone)
+    m.hp = 0; m.dead = FPSC.RESPAWN - 0.6; FPS.scoped = false; ZM.perks = {}; ZM.downT = 30;
+    ZM.banner = { text: 'You’re down', t: 3 };
+    zmSound('over');
+    return;
+  }
+  zmEnd();
+}
+// half a minute down and nobody came: out until the next round
+function zmBleedOut() {
+  ZM.downT = 0; ZM.ghost = true;
+  fpsFeed('You bled out. You’ll be back next round, if anyone holds that long.');
+}
+// up again (a friend got to you)
+function zmGetUp() {
+  const m = FPS.me; if (!(ZM.downT > 0)) return;
+  ZM.downT = 0; m.dead = 0; m.hp = ZMC.HP; m.protect = 2; FPS.drawT = 0.45;
+  ZM.banner = { text: 'Back on your feet', t: 2, small: true };
+  zmSound('wind');
 }
 function zmShowOver() {
   const r = ZM.round, held = Math.max(0, r - 1);
   $('zmOverHead').textContent = held ? `The light went out on round ${r}` : 'The light went out';
-  $('zmOverStats').textContent = `You held ${held} ${held === 1 ? 'round' : 'rounds'}. ${ZM.kills} drowned sent back (${ZM.heads} through the head), ${ZM.doorsOpened} ${ZM.doorsOpened === 1 ? 'door' : 'doors'} opened, ${ZM.pts + ZM.spent} points earned.`;
+  $('zmOverStats').textContent = (ZM.net ? `${ZM.hum.length} of you. ` : '') + `You held ${held} ${held === 1 ? 'round' : 'rounds'}. ${ZM.kills} drowned sent back (${ZM.heads} through the head), ${ZM.doorsOpened} ${ZM.doorsOpened === 1 ? 'door' : 'doors'} opened, ${ZM.pts + ZM.spent} points earned.`;
   const best = typeof BOARD !== 'undefined' && BOARD.mine && BOARD.mine.zm;
   $('zmOverBest').textContent = best && best.s ? `Your best: round ${best.s + 1} reached, ${best.b} kills in one game.` : '';
   $('zmOver').hidden = false;
   try { document.exitPointerLock && document.exitPointerLock(); } catch (e) {}
   setTimeout(() => $('zmAgain').focus(), 30);
 }
-function zmAgain() { fpsStop(); setTimeout(zmStart, 0); }
+function zmAgain() { const net = ZM.net; fpsStop(); if (!net) setTimeout(zmStart, 0); else if (typeof zmnBackToLobby === 'function') zmnBackToLobby(); }
 
 // ---------- sounds ----------
 function zmSound(k, d, pan, kind) {
@@ -1490,8 +1612,16 @@ function zmScene3D() {
     Bm.L.position.copy(z3v(ox + fx * Math.min(len, 5), oy + fy * Math.min(len, 5), oz + fz * Math.min(len, 5)));
   }
 }
-// painted over the 3D view: sparks between the burning, and the chest's offer
+// painted over the 3D view: sparks between the burning, the chest's offer, and anyone down
 function zmDrawOver() {
+  if (ZM.net) for (const r of FPS.remote.values()) {
+    if (!r.down || r.dead) continue;
+    const c = cam(r.x, r.y, FPSC.GROUND + (r.tjz || 0) + 1.2); if (c.f < 0.8) continue;
+    const q = proj(c), pulse = 0.6 + 0.4 * Math.sin(g.t * 6);
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = '600 13px "Courier Prime", monospace';
+    ctx.fillStyle = `rgba(228,108,79,${pulse})`; ctx.fillText(`${r.n} is down`, q.x, q.y - 14);
+    ctx.beginPath(); ctx.arc(q.x, q.y + 4, 6, 0, 6.283); ctx.fill();
+  }
   for (const s of ZM.sparks) {
     const pts = []; for (let i = 0; i <= 6; i++) { const k = i / 6, j = i && i < 6 ? 0.25 : 0; pts.push([s.a[0] + (s.b[0] - s.a[0]) * k + (Math.random() - 0.5) * j, s.a[1] + (s.b[1] - s.a[1]) * k + (Math.random() - 0.5) * j, s.a[2] + (s.b[2] - s.a[2]) * k + (Math.random() - 0.5) * j]); }
     const p = polyProj(pts); if (p.length < 2) continue;
@@ -1581,9 +1711,17 @@ function zmHud() {
     for (let i = ZM.own.length - 1; i >= 0; i--) { const id = ZM.own[i], lab = `${i + 1} ${FPSW[id].n.toUpperCase()}`; ctx.fillStyle = id === FPS.weapon ? '#ffd88a' : 'rgba(236,228,207,0.4)'; ctx.fillText(lab, wx, by - 30); wx -= ctx.measureText(lab).width + 14; }
     if (!w.melee && (m.ammo === 0 || (m.ammo < w.mag && m.ammo <= Math.ceil(w.mag * 0.25))) && !(m.reload > 0) && !ZM.over) { ctx.textAlign = 'center'; ctx.font = mono(13); ctx.fillStyle = (ZM.res[FPS.weapon] || 0) > 0 ? 'rgba(236,228,207,0.8)' : '#e46c4f'; ctx.fillText((ZM.res[FPS.weapon] || 0) > 0 ? 'R TO RELOAD' : m.ammo ? 'LOW AMMUNITION' : 'NO AMMUNITION', cx, cy + 46); }
   } else zmPadState();
+  // together: everyone's points, down the right (yours lit), and anyone down marked
+  let feedY = phone ? top + 48 : 16;
+  if (ZM.net) {
+    ctx.textAlign = 'right'; ctx.textBaseline = 'top'; ctx.font = mono(phone ? 10 : 12);
+    const rows = ZM.hum.map(([sid, nick]) => { const me = sid === m.id, r = FPS.remote.get(sid); return { me, nick, pts: me ? ZM.pts : r ? r.pts || 0 : 0, down: me ? ZM.downT > 0 : r && r.down, out: me ? ZM.ghost : r && (r.dead || r.left) }; });
+    rows.forEach((r, i) => { ctx.fillStyle = r.out ? 'rgba(236,228,207,0.3)' : r.down ? '#e46c4f' : r.me ? '#ffd88a' : 'rgba(236,228,207,0.75)'; ctx.fillText(`${r.nick}${r.down ? ' · DOWN' : r.out ? ' · out' : ''}  ${r.pts.toLocaleString('en')}`, R, feedY + i * (phone ? 13 : 16), W * 0.4); });
+    feedY += rows.length * (phone ? 13 : 16) + 8;
+  }
   // the feed, top right
   ctx.textAlign = 'right'; ctx.textBaseline = 'top'; ctx.font = mono(phone ? 10 : 12);
-  FPS.feed.slice(phone ? -2 : -5).forEach((f, i) => { ctx.fillStyle = `rgba(236,228,207,${Math.min(1, f.t) * 0.85})`; ctx.fillText(f.text, R, (phone ? top + 48 : 16) + i * (phone ? 13 : 17), W * (phone ? 0.5 : 0.45)); });
+  FPS.feed.slice(phone ? -2 : -5).forEach((f, i) => { ctx.fillStyle = `rgba(236,228,207,${Math.min(1, f.t) * 0.85})`; ctx.fillText(f.text, R, feedY + i * (phone ? 13 : 17), W * (phone ? 0.5 : 0.45)); });
   // the room you've come into
   if (ZM.zoneT > 0) { ctx.textAlign = 'center'; ctx.textBaseline = 'top'; ctx.font = fell(phone ? 16 : 22); ctx.fillStyle = `rgba(236,228,207,${Math.min(1, ZM.zoneT) * 0.8})`; const nm = zmZoneName(ZM.zone); ctx.fillText(nm.charAt(0).toUpperCase() + nm.slice(1), cx, phone ? top + 30 : 18); }
   // a round beginning, salvage taken
@@ -1612,6 +1750,14 @@ function zmHud() {
     ctx.fillStyle = 'rgba(8,10,14,0.85)'; ctx.fillRect(bx, by2, bw, bh); ctx.strokeStyle = 'rgba(236,228,207,0.25)'; ctx.strokeRect(bx + 0.5, by2 + 0.5, bw - 1, bh - 1);
     ctx.textBaseline = 'middle'; ctx.textAlign = 'left'; ctx.font = fell(22); ctx.fillStyle = '#ffd88a'; ctx.fillText('The Lighthouse', bx + 14, by2 + 24);
     rows.forEach(([k, v], i) => { const yy = by2 + 58 + i * 24; ctx.font = mono(13); ctx.textAlign = 'left'; ctx.fillStyle = 'rgba(236,228,207,0.8)'; ctx.fillText(k, bx + 14, yy); ctx.textAlign = 'right'; ctx.fillStyle = '#ffd88a'; ctx.fillText(String(v), bx + bw - 14, yy); });
+  }
+  // down, waiting for a friend; or out until the next round
+  if (!ZM.over && (ZM.downT > 0 || ZM.ghost)) {
+    ctx.fillStyle = 'rgba(30,4,4,0.35)'; ctx.fillRect(0, 0, W, H);
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = fell(phone ? 24 : 34); ctx.fillStyle = '#e46c4f';
+    ctx.fillText(ZM.ghost ? 'You bled out' : 'You’re down', cx, H * 0.42);
+    ctx.font = mono(phone ? 11 : 13); ctx.fillStyle = 'rgba(236,228,207,0.85)';
+    ctx.fillText(ZM.ghost ? 'You’ll be back when the next round begins.' : `${Math.ceil(ZM.downT)}s: someone can get you up by holding Use beside you.`, cx, H * 0.42 + 34);
   }
   if (ZM.over) { ctx.fillStyle = `rgba(20,2,2,${Math.min(0.6, ZM.over.t * 0.4)})`; ctx.fillRect(0, 0, W, H); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = fell(phone ? 28 : 40); ctx.fillStyle = `rgba(200,40,30,${Math.min(1, ZM.over.t)})`; ctx.fillText('They dragged you down', cx, H * 0.42); }
   if (!FPS.mouse && !phone && !FPS.menu && !ZM.over) { ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = mono(12); ctx.fillStyle = 'rgba(236,228,207,0.6)'; ctx.fillText('Click to aim with the mouse', cx, H * 0.5 + 40); }

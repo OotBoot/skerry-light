@@ -937,3 +937,6 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 #stage.zmmode #fpsPadBell, #stage.zmmode #fpsPadFlare { display: none; }
 .zmover .card { border-color: rgba(200,60,48,0.6); }
 .zmover h1 { color: #e8a090; }
+.zmmp h2 { color: #e8a090; }
+.zmmp .warlobbyrow { background: rgba(200,60,48,0.08); border-color: rgba(200,60,48,0.35); }
+.zmmp .warlobbyrow:hover:not(:disabled) { background: rgba(200,60,48,0.16); }
