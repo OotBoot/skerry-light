@@ -216,17 +216,21 @@ function drawRunway() {
 
 // wind streaks rushing past, quicker the faster you fly
 const SKY_STREAKS = []; for (let i = 0; i < 40; i++) SKY_STREAKS.push({ x: Math.random(), y: Math.random(), l: 0.02 + Math.random() * 0.05 });
-function drawSkyWeather() {
+function drawSkyWeather(wx) {
+  if (wx == null) wx = 1;
   const sp = Math.min(1, ship.v / 20);
-  ctx.strokeStyle = `rgba(210,220,240,${0.06 + 0.1 * sp})`; ctx.lineWidth = 1; ctx.beginPath();
-  for (const s of SKY_STREAKS) {
-    s.y += 0.01 + sp * 0.03; if (s.y > 1.1) { s.y = -0.1; s.x = Math.random(); }
-    const x = cx + (s.x - 0.5) * W * (0.6 + s.y), y = H * 0.5 + (s.y - 0.5) * H;
-    const dx = (x - cx) * s.l * 3, dy = (y - H * 0.5) * s.l * 3;
-    ctx.moveTo(x, y); ctx.lineTo(x + dx, y + dy);
+  if (wx > 0.01) {
+    ctx.strokeStyle = `rgba(210,220,240,${0.06 + 0.1 * sp})`; ctx.lineWidth = 1; ctx.beginPath();
+    for (const s of SKY_STREAKS) {
+      s.y += 0.01 + sp * 0.03; if (s.y > 1.1) { s.y = -0.1; s.x = Math.random(); }
+      const x = cx + (s.x - 0.5) * W * (0.6 + s.y), y = H * 0.5 + (s.y - 0.5) * H;
+      const dx = (x - cx) * s.l * 3, dy = (y - H * 0.5) * s.l * 3;
+      ctx.moveTo(x, y); ctx.lineTo(x + dx, y + dy);
+    }
+    ctx.stroke();
   }
-  ctx.stroke();
-  if (g.lightning > 0) { ctx.fillStyle = `rgba(220,230,255,${g.lightning * 0.22 * flashK()})`; ctx.fillRect(0, 0, W, H); }
+  // (under a roof the flash still comes in at the windows, dimmer)
+  if (g.lightning > 0) { ctx.globalAlpha = 0.35 + 0.65 * wx; ctx.fillStyle = `rgba(220,230,255,${g.lightning * 0.22 * flashK()})`; ctx.fillRect(0, 0, W, H); ctx.globalAlpha = wx; }
   return true;
 }
 

@@ -71,9 +71,20 @@ function gl3dShow(on) {
 function gl3dRefresh() { gl3dShow(gl3dActive()); }
 
 // ---------- the sea ----------
+// On foot (Wreckers' Night, the Lighthouse) there's an island in the sea, with its ground, floors and docks only a
+// little above the water. So that the swell never comes up through them: uIsle (x, y, radius, on) is the island,
+// and the sea is calmer in its lee and is cut away under its shore (the same wobbly edge as the ground's mesh), and
+// uCap is the highest a crest may reach (a little under the ground; very high when sailing), approached smoothly.
+const SEA_ISLE = `
+uniform vec4 uIsle;
+float isleEdge(vec2 g) {
+  vec2 d = g - uIsle.xy; float a = atan(d.y, d.x);
+  return length(d) - uIsle.z * (1.0 + 0.035 * sin(a * 5.0 + 1.0) + 0.02 * sin(a * 13.0));
+}`;
 const SEA_VS = `
-uniform float uT; uniform vec3 uCamPos;
+uniform float uT, uCap; uniform vec3 uCamPos;
 varying vec3 vW; varying float vF; varying float vAmp;
+${SEA_ISLE}
 float wh(vec2 p, float t) {
   return 0.18 * sin(p.x * 0.21 + t * 1.3) + 0.14 * sin(p.x * 0.05 + p.y * 0.17 - t * 1.1)
        + 0.09 * sin((p.x + p.y) * 0.37 + t * 2.1) + 0.05 * sin((p.x - p.y) * 0.61 - t * 2.7);
@@ -82,7 +93,10 @@ void main() {
   vec4 w = modelMatrix * vec4(position, 1.0);
   float d = length(w.xz - uCamPos.xz);
   vAmp = 1.0 - smoothstep(60.0, 420.0, d);
-  w.y += wh(w.xz, uT) * vAmp;
+  if (uIsle.w > 0.5) vAmp *= mix(0.45, 1.0, smoothstep(4.0, 40.0, isleEdge(vec2(w.x, -w.z))));
+  float h = wh(w.xz, uT) * vAmp;
+  if (h > 0.0) { float e = exp(-2.0 * h / uCap); h = uCap * (1.0 - e) / (1.0 + e); }
+  w.y += h;
   vW = w.xyz;
   vec4 mv = viewMatrix * w;
   vF = -mv.z;
@@ -93,6 +107,7 @@ uniform vec3 uSea0, uSea1, uSea2, uSea3, uBeamCol, uWaveCol, uMoonDir, uGlit, uC
 uniform float uCamH, uFocal, uBelow, uBeam, uHalf, uShade, uRange, uBeamOn, uT, uLR, uLamp, uCoast;
 uniform vec2 uShip;
 varying vec3 vW; varying float vF; varying float vAmp;
+${SEA_ISLE}
 vec2 dwh(vec2 p, float t) {
   vec2 g = 0.18 * 0.21 * cos(p.x * 0.21 + t * 1.3) * vec2(1.0, 0.0);
   g += 0.14 * cos(p.x * 0.05 + p.y * 0.17 - t * 1.1) * vec2(0.05, 0.17);
@@ -107,6 +122,7 @@ vec2 ripple(vec2 p, float t) {
 void main() {
   float gx = vW.x, gy = -vW.z;
   if (gy < uCoast) discard;                       // the land starts here; the sky canvas paints the ground behind
+  if (uIsle.w > 0.5 && isleEdge(vec2(gx, gy)) < 0.0) discard;   // and no sea under the island's ground and floors
   // the same gradient the 2D sea has, from the horizon down to your feet
   float t = clamp(uCamH * uFocal / (max(vF, 0.01) * uBelow), 0.0, 1.0);
   vec3 col = t < 0.04 ? mix(uSea0, uSea1, t / 0.04) : t < 0.5 ? mix(uSea1, uSea2, (t - 0.04) / 0.46) : mix(uSea2, uSea3, (t - 0.5) / 0.5);
@@ -154,7 +170,7 @@ function buildSea() {
   const u = {};
   for (const n of ['uSea0', 'uSea1', 'uSea2', 'uSea3', 'uBeamCol', 'uWaveCol', 'uMoonDir', 'uGlit', 'uCamPos']) u[n] = { value: new THREE.Vector3() };
   for (const n of ['uCamH', 'uFocal', 'uBelow', 'uBeam', 'uHalf', 'uShade', 'uRange', 'uBeamOn', 'uT', 'uLR', 'uLamp', 'uCoast']) u[n] = { value: 0 };
-  u.uShip = { value: new THREE.Vector2() };
+  u.uShip = { value: new THREE.Vector2() }; u.uIsle = { value: new THREE.Vector4() }; u.uCap = { value: 1e3 };
   const mat = new THREE.ShaderMaterial({ uniforms: u, vertexShader: SEA_VS, fragmentShader: SEA_FS, side: THREE.DoubleSide });
   const m = new THREE.Mesh(geo, mat); m.frustumCulled = false; m.renderOrder = -10;
   GL3D.sea = m; GL3D.scene.add(m);
@@ -407,6 +423,10 @@ function gl3dRender(roll, sx, sy, beamOn) {
   u.uT.value = reduceMotion ? 0 : g.t; u.uShip.value.set(ship.x, ship.y);
   const LR = SK.LANTERN * (g.mods ? g.mods.lantern : 1) * ((BOAT_BY_ID[ship.boat] || {}).lamp || 1);
   u.uLR.value = LR; u.uLamp.value = 1; u.uCoast.value = 0;
+  // an island to stand on (Wreckers' Night, the Lighthouse): no sea under it, and the crests kept below its ground
+  const I = g.island;
+  if (I) u.uIsle.value.set(I.x, I.y, I.r, 1); else u.uIsle.value.set(0, 0, 1, 0);
+  u.uCap.value = I ? Math.max(0.05, (I.z != null ? I.z : 0.35) - 0.1) : 1e3;
   // the lights
   GL3D.moon.position.set(Math.sin(mb) * 1000, 400, -Math.cos(mb) * 1000); GL3D.moon.target.position.set(0, 0, 0);
   const far = SK.BEAM_RANGE;
