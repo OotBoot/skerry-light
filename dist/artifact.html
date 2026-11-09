@@ -15739,7 +15739,12 @@ function vmDraw(dt) {
   VM.sway[0] += ((FPS.lastLook ? -FPS.lastLook[0] : 0) * 0.0009 - VM.sway[0]) * Math.min(1, dt * 8);
   VM.sway[1] += ((FPS.lastLook ? FPS.lastLook[1] : 0) * 0.0009 - VM.sway[1]) * Math.min(1, dt * 8);
   const walk = m.walk ? 1 : 0;
-  const S = { dt, t, still, sc, narrow, walk,
+  // running (Shift, the left stick's click): eased into the run pose, and out of it at once to shoot, reload or aim
+  const trig = FPS.mouseDown || FPS.touchFire || FPS.padFire;
+  const runWant = (FPS.runK || 0) > 0.3 && m.walk && !(m.reload > 0) && !trig && !FPS.scoped && !(FPS.drawT > 0) && !((FPS.meSlashT || 0) > 0) && !((m.jz || 0) > (m.fl || 0) + 0.3);
+  VM.run = clamp((VM.run || 0) + (runWant ? dt * 5 : -dt * 9), 0, 1);
+  const runE = VM.run * VM.run * (3 - 2 * VM.run);
+  const S = { dt, t, still, sc, narrow, walk, run: still ? runE * 0.7 : runE, runPh: still ? 0 : FPS.step * 0.5,
     bobX: still ? 0 : Math.sin(FPS.step * 0.5) * 0.012 * walk, bobY: still ? 0 : (Math.abs(Math.cos(FPS.step * 0.5)) * 0.01 * walk + Math.sin(t * 1.6) * 0.002),
     rec: FPS.recoil, R: FPS.reloadDur || fpsW().reload, p: m.reload > 0 ? Math.max(0, 1 - m.reload / (FPS.reloadDur || fpsW().reload)) : 1, reloading: m.reload > 0,
     draw: FPS.drawT > 0 ? 1 - FPS.drawT / 0.45 : 1, fired: false, trigger: FPS.mouseDown || FPS.touchFire || FPS.padFire };
@@ -15805,11 +15810,16 @@ function vmPour(at, lead, n) {
 // the weapon's resting place, plus sway, bob, kick, a reload's tilt and being brought up from below
 function vmPlace(wpn, S, tip, extra) {
   const P = wpn.pose, e = extra || {}, sc = S.sc, rec = S.rec, d = 1 - S.draw;
+  // running: the weapon comes down and across the chest, muzzle low to the left (a blade down at your side), pumping
+  // with each stride (S.run, 0 to 1)
+  const r = S.run || 0, ph = S.runPh || 0, melee = !!wpn.melee;
+  const rx = r * (melee ? -0.12 + Math.sin(ph) * 0.05 : -0.2 + Math.abs(Math.cos(ph)) * 0.05), ry = r * (melee ? 0.15 : 0.42), rz = r * ((melee ? -0.15 : 0.3) + Math.sin(ph) * 0.06);
+  const ox = r * ((melee ? 0.0 : -0.01) + Math.sin(ph) * 0.016), oy = r * (-0.018 - Math.abs(Math.cos(ph)) * 0.016), oz = r * 0.02;
   wpn.root.position.set(
-    (P.x + S.bobX + VM.sway[0] - tip * 0.05 + (e.x || 0)) * sc,
-    (P.y - S.bobY - VM.sway[1] + tip * 0.03 - rec * 0.012 - d * 0.28 + (e.y || 0)) * sc,
-    (P.z - tip * 0.04 + rec * 0.04 + (e.z || 0)) * (S.narrow ? 1.12 : 1));
-  wpn.root.rotation.set(P.rx + rec * 0.28 + tip * 0.45 - d * 0.6 + (e.rx || 0), P.ry + VM.sway[0] * 1.5 - tip * 0.15 + (e.ry || 0), P.rz + tip * 0.55 + (e.rz || 0));
+    (P.x + S.bobX + VM.sway[0] - tip * 0.05 + (e.x || 0) + ox) * sc,
+    (P.y - S.bobY - VM.sway[1] + tip * 0.03 - rec * 0.012 - d * 0.28 + (e.y || 0) + oy) * sc,
+    (P.z - tip * 0.04 + rec * 0.04 + (e.z || 0) + oz) * (S.narrow ? 1.12 : 1));
+  wpn.root.rotation.set(P.rx + rec * 0.28 + tip * 0.45 - d * 0.6 + (e.rx || 0) + rx, P.ry + VM.sway[0] * 1.5 - tip * 0.15 + (e.ry || 0) + ry, P.rz + tip * 0.55 + (e.rz || 0) + rz);
   wpn.root.scale.setScalar(sc);
 }
 // the shared left hand, put somewhere in a weapon's own space
