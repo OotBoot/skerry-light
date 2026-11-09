@@ -2082,6 +2082,8 @@ function sfxPickup() { if (typeof sfxPlay === 'function' && sfxPlay('pickup', { 
 function sfxFoe(kind, pan, vol) {
   if (!AUD.ctx || vol < 0.03) return;
   const o = { pan: pan || 0 }, v = vol == null ? 1 : vol;
+  // the rumble: the recorded thunder, if it's in (src/sfxbank.js)
+  if (kind === 'rumble' && typeof sfxPlay === 'function' && sfxPlay('thunder', { vol: 0.75 * v, pan: o.pan, gap: 1.5 })) return;
   const T = (f, type, a, p, d, extra) => tone(f, type, a, p * v, d, Object.assign({}, o, extra || {}));
   const N = (ft, f, q, a, p, d, extra) => noise(ft, f, q, a, p * v, d, Object.assign({}, o, extra || {}));
   switch (kind) {
