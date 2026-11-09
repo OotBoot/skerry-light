@@ -268,7 +268,7 @@ function znRequestFrom(sid, k, a) {
   if (k === 'door') { const d = ZM.doors[a | 0]; if (!d) return; if (d.open) credit(d.cost); else zmOpenDoor(d); return; }
   if (k === 'box') { zmBoxSpin(sid, String(a || '').split(',').filter(id => FPSW[id])); return; }
   if (k === 'take') { if (ZM.box.st === 'offer' && ZM.box.owner === sid) { ZM.box.st = 'idle'; ZM.box.t = 0; } return; }
-  if (k === 'board') { const w = ZM.windows[a | 0]; if (w && w.boards < 6 && !ZM.z.some(z => z.win === w && z.st === 'climb')) { w.boards++; credit(10); } return; }
+  if (k === 'board') { const w = ZM.windows[a | 0]; if (w && w.boards < 6 && !ZM.z.some(z => z.win === w && z.st === 'climb')) { w.boards++; zmBoardPay(sid); } return; }
   if (k === 'rev') { zmnRevive(String(a)); return; }
 }
 // someone gets someone up: everyone's told (and if it's me, up I get)
@@ -343,7 +343,7 @@ function znApply(hz) {
   // the round and its phase
   const round = H[1] | 0, ph = H[2] | 0;
   if (round > ZM.round) {
-    ZM.round = round; ZM.banner = { text: 'Round ' + round, t: 4 }; zmSound('round'); zmRoundBegins();
+    ZM.round = round; ZM.boardPts = 0; ZM.banner = { text: 'Round ' + round, t: 4 }; zmSound('round'); zmRoundBegins();
     if (round > 1) fpsFeed(`Round ${round}.`);
   }
   const phase = ph === 3 ? 'over' : ['pre', 'round', 'break'][ph] || 'round';

@@ -44,6 +44,8 @@ const ZM = { on: false, own: ['pepperbox'], res: {}, pts: 0, round: 0, items: []
 const ZM_AMMO = { pepperbox: 60, blunderbuss: 28, longarm: 36, harpoon: 20, avtomat: 225, cutlass: 0, fresnel: 240 };
 const ZM_DMG = { p: 1, b: 1, l: 4, h: 5, c: 2.5, a: 1.15, f: 1, k: 1 };
 // the knife: always to hand, never runs out (V, middle mouse, R3, the knife button; or Fire with nothing left to fire)
+// boarding windows pays 10 a board, up to this many points a round for each player (then the boards are free work)
+const ZM_BOARD_CAP = 500;
 const ZM_KNIFE = { reach: 2.1, arc: 0.95, dmg: 3, rate: 0.55 };
 const ZM_PIERCE = { l: 3 };
 const ZM_PERKS = {
@@ -615,7 +617,7 @@ function zmReset() {
     z: [], drops: [], perks: {}, windBuys: 0, double: 0, insta: 0, dropsRound: 0, kills: 0, heads: 0, downs: 0, spent: 0, doorsOpened: 0,
     open: new Set(['quarters']), zone: 'quarters', zoneT: 4, banner: null, pops: [], fx: [], sparks: [], over: null, earnK: 0, navT: 0,
     box: { at: 0, uses: 0, spins: 0, st: 'idle', t: 0, item: null, cyc: 0, show: 'avtomat', owner: null }, near: null, rebuildT: 0, groanT: 2,
-    zc: 0, credit: {}, players: [], downT: 0, ghost: false, revT: 0, revOf: null,
+    zc: 0, credit: {}, players: [], downT: 0, ghost: false, revT: 0, revOf: null, boardBy: {}, boardPts: 0,
     doors: Zd.doors, windows: Zd.windows, buys: Zd.buys, perksAt: Zd.perks, spawns: Zd.spawns,
   });
   for (const w of ZM.windows) { w.boards = 6; w.q = []; w.fall = []; }
@@ -752,7 +754,8 @@ function zmTick(dt) {
     const w = ZM.near.w;
     if (w.boards < 6 && !ZM.z.some(z => z.win === w && z.st === 'climb')) {
       ZM.rebuildT = 0.55; zmSound('board');
-      if (ZM.net === 'client') zmnRequest('board', w.id); else { w.boards++; zmPoints(10, true); }
+      if (ZM.net === 'client') { zmnRequest('board', w.id); ZM.boardPts = Math.min(ZM_BOARD_CAP, (ZM.boardPts || 0) + 10); }
+      else { w.boards++; zmBoardPay(FPS.me.id); }
     }
   }
   if (hold && ZM.near && ZM.near.k === 'rev' && !(m.dead > 0)) {
@@ -760,6 +763,14 @@ function zmTick(dt) {
     ZM.revT += dt;
     if (ZM.revT >= 3) { ZM.revT = 0; ZM.revOf = null; zmnRevive(ZM.near.sid); }
   } else { ZM.revT = 0; ZM.revOf = null; }
+}
+// (hosting or alone) a board back on a window: 10 points to whoever did it, until they've had their round's worth
+function zmBoardPay(sid) {
+  const by = ZM.boardBy = ZM.boardBy || {}, had = by[sid] || 0;
+  if (had >= ZM_BOARD_CAP) return;
+  by[sid] = had + 10;
+  if (sid === FPS.me.id) ZM.boardPts = by[sid];
+  zmPoints(10, true, sid);
 }
 // who's standing: you, and (hosting) everyone else not down
 function zmPlayers() {
@@ -791,7 +802,7 @@ function zmRounds(dt) {
   ZM.t -= dt;
   if (ZM.phase === 'pre' || ZM.phase === 'break') {
     if (ZM.t <= 0) {
-      ZM.round++; ZM.phase = 'round'; ZM.left = Math.round(zmCount(ZM.round) * (1 + 0.5 * (ZM.hum.length - 1))); ZM.spawnT = 2; ZM.dropsRound = 0;
+      ZM.round++; ZM.phase = 'round'; ZM.left = Math.round(zmCount(ZM.round) * (1 + 0.5 * (ZM.hum.length - 1))); ZM.spawnT = 2; ZM.dropsRound = 0; ZM.boardBy = {}; ZM.boardPts = 0;
       zmRoundBegins();
       ZM.banner = { text: 'Round ' + ZM.round, t: 4 };
       zmSound('round');
@@ -1217,7 +1228,7 @@ function zmPrompt(o) {
   if (o.k === 'perk') { const P = ZM_PERKS[o.p.k]; if (ZM.perks[o.p.k]) return { text: `${P.n}: you've had it` }; if (o.p.k === 'wind' && ZM.windBuys >= 3) return { text: `${P.n}: none left` }; return { text: `${P.n} (${P.what})`, cost: P.cost }; }
   if (o.k === 'door') { const [a, b] = o.d.zones, to = zmOpen(a) ? b : a; return { text: `${o.d.kind === 'debris' ? 'Clear the wreckage to' : 'Open the door to'} ${zmZoneName(to)}`, cost: o.d.cost }; }
   if (o.k === 'box') { const B = ZM.box; if (B.st === 'offer') return { text: `Take the ${FPSW[B.item].n}`, free: true }; return { text: 'The wreck chest', cost: ZMC.BOX }; }
-  if (o.k === 'win') return { text: 'Hold to nail the boards back', hold: true };
+  if (o.k === 'win') return { text: (ZM.boardPts || 0) >= ZM_BOARD_CAP ? 'Hold to nail the boards back (no more points for it this round)' : 'Hold to nail the boards back', hold: true };
   if (o.k === 'rev') return { text: `Hold to get ${o.n || 'them'} up${ZM.revT > 0 ? ' ' + '▮'.repeat(Math.ceil(ZM.revT)) : ''}`, hold: true };
   return null;
 }
