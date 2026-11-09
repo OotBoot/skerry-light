@@ -63,6 +63,7 @@ const VM_PLAIN = {
   harpoon:     { metal: '#3e4046', dark: '#1e1f24', wood: '#5a3a22', brass: '#8a6a2c', accent: '#b8a070', glow: null },
   cutlass:     { metal: '#b8bcc4', dark: '#2a2b30', wood: '#2a1a10', brass: '#9a7a34', accent: '#c8a050', glow: null },
   avtomat:     { metal: '#3a3d44', dark: '#1a1b20', wood: '#6a3e22', brass: '#8a6a2c', accent: '#b0a080', glow: null },
+  fresnel:     { metal: '#2c3a3a', dark: '#16191a', wood: '#4a2c1a', brass: '#b08a3a', accent: '#ffe2a0', glow: '#ffc860' },
 };
 const vmHex = (c, d) => (typeof c === 'string' && /^#[0-9a-f]{6}$/i.test(c)) ? c : d;
 function vmSkinOf(id, plain) {
@@ -450,7 +451,7 @@ function vmDraw(dt) {
   const walk = m.walk ? 1 : 0;
   const S = { dt, t, still, sc, narrow, walk,
     bobX: still ? 0 : Math.sin(FPS.step * 0.5) * 0.012 * walk, bobY: still ? 0 : (Math.abs(Math.cos(FPS.step * 0.5)) * 0.01 * walk + Math.sin(t * 1.6) * 0.002),
-    rec: FPS.recoil, R: fpsW().reload, p: m.reload > 0 ? 1 - m.reload / fpsW().reload : 1, reloading: m.reload > 0,
+    rec: FPS.recoil, R: FPS.reloadDur || fpsW().reload, p: m.reload > 0 ? Math.max(0, 1 - m.reload / (FPS.reloadDur || fpsW().reload)) : 1, reloading: m.reload > 0,
     draw: FPS.drawT > 0 ? 1 - FPS.drawT / 0.45 : 1, fired: false, trigger: FPS.mouseDown || FPS.touchFire || FPS.padFire };
   if ((FPS.vmShots || 0) !== VM.shots) { S.fired = true; S.nFired = (FPS.vmShots || 0) - VM.shots; VM.shots = FPS.vmShots || 0; }
   // the weapon's own movements
@@ -460,13 +461,14 @@ function vmDraw(dt) {
   if (S.reloading && wpn.steps) { for (const [x, fn] of wpn.steps) if (VM.lastP < x && S.p >= x) fn(); }
   VM.lastP = S.reloading ? S.p : 1;
   // the flash and the smoke at the muzzle
-  if (S.fired && !wpn.melee) { VM.flashT = id === 'blunderbuss' ? 0.09 : id === 'avtomat' ? 0.045 : 0.06; vmPuff(wpn, wpn.smoke || 3); if (wpn.flint) VM.panT = 0.06; }
+  if (S.fired && wpn.beam) VM.flashT = 0.12;
+  else if (S.fired && !wpn.melee) { VM.flashT = id === 'blunderbuss' ? 0.09 : id === 'avtomat' ? 0.045 : 0.06; vmPuff(wpn, wpn.smoke || 3); if (wpn.flint) VM.panT = 0.06; }
   wpn.root.updateMatrixWorld(true);
   const mz = new THREE.Vector3(), mq = new THREE.Quaternion();
   if (wpn.muzzle) { wpn.muzzle.getWorldPosition(mz); wpn.muzzle.getWorldQuaternion(mq); VM.muzzle = mz.clone(); VM.muzzleQ = mq.clone(); }
   VM.flashT -= dt; VM.panT -= dt;
   VM.flash.visible = VM.flashT > 0 && !still && !!wpn.muzzle;
-  if (VM.flash.visible) { VM.flash.position.copy(mz); VM.flash.quaternion.copy(mq); VM.flash.rotateZ(Math.random() * 3); VM.flash.scale.setScalar((id === 'blunderbuss' ? 1.6 : id === 'harpoon' ? 0.7 : id === 'avtomat' ? 0.85 : 1) * (0.8 + Math.random() * 0.5)); }
+  if (VM.flash.visible) { VM.flash.position.copy(mz); VM.flash.quaternion.copy(mq); VM.flash.rotateZ(Math.random() * 3); VM.flash.scale.setScalar((id === 'blunderbuss' ? 1.6 : id === 'harpoon' ? 0.7 : id === 'avtomat' ? 0.85 : id === 'fresnel' ? 1.5 : 1) * (0.8 + Math.random() * 0.5)); }
   VM.pan.visible = VM.panT > 0 && !!wpn.panAt && !still;
   if (VM.pan.visible) { wpn.panAt.getWorldPosition(VM.pan.position); VM.pan.lookAt(VM.cam.position); VM.pan.scale.setScalar(1 + Math.random()); }
   VM.flashL.position.copy(mz); VM.flashL.intensity = VM.flashT > 0 ? (id === 'blunderbuss' ? 5 : 3) * flashK() : 0;
@@ -761,6 +763,95 @@ VM_ANIM.avtomat = (w, S) => {
     else if (w.fresh.visible) vmLeftAt(w, w.fresh.position.clone().add(new THREE.Vector3(-0.02, -0.08, 0.0)), [0.3, 0, -0.4]);
     else if (slap > 0.01) vmLeftAt(w, new THREE.Vector3(-0.01, -0.17 + slap * 0.02, -0.12), [0.2, 0, -0.3]);
     else if (toHandle > 0.01) vmLeftAt(w, new THREE.Vector3(-0.2, -0.25, -0.2).lerp(new THREE.Vector3(-0.05, 0.04, -0.13 + pull * 0.07), toHandle), [0, -0.6, -1.2]);
+  }
+  w.left.visible = !VM.lhand.visible;
+};
+
+// Fresnel Lamp (the Lighthouse only) -----------------------------------------------------------------
+// A ship's signal lantern made into a gun: a green-bronze housing with a stepped lighthouse lens in its front, a
+// chimney on top, an oil reservoir underneath with a sight glass, a pistol grip and a wooden fore-grip. While the
+// trigger's held the lens burns white-gold and its rings turn. Reloading: tip it, unscrew and drop the empty
+// reservoir, bring a full one up and screw it home, then crank the wick up (three turns of the side wheel).
+function vmFresnelTank(M) {
+  const g = new THREE.Group();
+  const c = new THREE.Mesh(new THREE.CylinderGeometry(0.034, 0.034, 0.085, 16), M.iron); c.position.y = -0.042; g.add(c);
+  for (const y of [-0.004, -0.08]) { const r = new THREE.Mesh(new THREE.CylinderGeometry(0.037, 0.037, 0.008, 16), M.brass); r.position.y = y; g.add(r); }
+  const sight = new THREE.Mesh(new THREE.BoxGeometry(0.008, 0.06, 0.01), M.oil); sight.position.set(-0.032, -0.042, -0.012); g.add(sight);
+  return g;
+}
+const VM_FRES_K = 0.72;
+VM_BUILD.fresnel = (M) => {
+  const root = new THREE.Group();
+  M.lens = new THREE.MeshPhongMaterial({ color: 0xfff0c8, emissive: 0xffc860, emissiveIntensity: 0.5, specular: 0xffffff, shininess: 140, transparent: true, opacity: 0.92 });
+  M.oil = new THREE.MeshBasicMaterial({ color: 0xc89030 });
+  // the housing: a drum, a little fatter at the front, banded in brass
+  root.add(zcyl(0.048, 0.056, 0.24, M.iron, 20, 0.03, 0, 0.05));
+  for (const z of [0.02, -0.09, -0.2]) root.add(zcyl(0.06, 0.06, 0.012, M.brass, 20, z + 0.006, 0, 0.05));
+  root.add(zcyl(0.04, 0.03, 0.03, M.dark, 16, 0.06, 0, 0.05));   // the back cap
+  // the lens: a bright bull's-eye and stepped rings round it, under a brass hood
+  const lens = new THREE.Group(); lens.position.set(0, 0.05, -0.215); root.add(lens);
+  lens.add(new THREE.Mesh(new THREE.CircleGeometry(0.02, 20), M.lens));
+  const rings = [];
+  for (let i = 0; i < 4; i++) { const r = new THREE.Mesh(new THREE.TorusGeometry(0.026 + i * 0.009, 0.0045, 6, 26), M.lens); r.position.z = 0.004 * i; lens.add(r); rings.push(r); }
+  lens.add(new THREE.Mesh(new THREE.TorusGeometry(0.063, 0.006, 8, 30), M.brass));
+  const hood = new THREE.Mesh(new THREE.CylinderGeometry(0.066, 0.066, 0.05, 20, 1, true, -Math.PI / 2, Math.PI), M.brass);
+  hood.rotation.x = Math.PI / 2; hood.position.set(0, 0.05, -0.235); root.add(hood);
+  // the chimney and its cap
+  const ch = new THREE.Mesh(new THREE.CylinderGeometry(0.014, 0.017, 0.05, 12), M.iron); ch.position.set(0, 0.115, -0.06); root.add(ch);
+  const cap = new THREE.Mesh(new THREE.ConeGeometry(0.026, 0.022, 12), M.brass); cap.position.set(0, 0.15, -0.06); root.add(cap);
+  // the wick wheel on the left
+  const wheel = new THREE.Group(); wheel.position.set(-0.058, 0.05, -0.04); root.add(wheel);
+  const wr = new THREE.Mesh(new THREE.TorusGeometry(0.018, 0.004, 6, 16), M.brass); wr.rotation.y = Math.PI / 2; wheel.add(wr);
+  for (let i = 0; i < 3; i++) { const sp = box(0.003, 0.034, 0.003, M.brass); sp.rotation.x = i / 3 * Math.PI; wheel.add(sp); }
+  // the reservoir underneath, the grips
+  const tankAt = new THREE.Vector3(0, 0.0, -0.07);
+  const tank = vmFresnelTank(M); tank.position.copy(tankAt); root.add(tank);
+  root.add(profile([[0.0, 0.0], [0.03, -0.11], [0.065, -0.115], [0.055, 0.0]], 0.032, M.wood, 0.004));
+  root.add(box(0.03, 0.05, 0.035, M.wood, 0, -0.01, -0.17));
+  const guard = new THREE.Mesh(new THREE.TorusGeometry(0.02, 0.003, 6, 18, Math.PI), M.brass); guard.rotation.set(0, Math.PI / 2, Math.PI); guard.position.set(0, -0.005, 0.0); root.add(guard);
+  const trig = box(0.005, 0.022, 0.006, M.dark, 0, -0.004, 0.002); root.add(trig);
+  const muzzle = new THREE.Object3D(); muzzle.position.set(0, 0.05, -0.25); root.add(muzzle);
+  const old = vmFresnelTank(M), fresh = vmFresnelTank(M); old.visible = fresh.visible = false; root.add(old); root.add(fresh);
+  // (built big, then the whole lamp brought down to a size the hands can hold; the hands stay their own size)
+  const outer = new THREE.Group(); outer.add(root); root.scale.setScalar(VM_FRES_K);
+  const hand = vmHand(VM.H, false); hand.position.set(0.0, -0.03, 0.03); hand.rotation.z = -0.15; outer.add(hand);
+  const left = vmHand(VM.H, true); left.position.set(-0.01, -0.035, -0.125); left.rotation.set(0.3, 0, 0.5); outer.add(left);
+  return { root: outer, body: root, M, hand, left, trig, muzzle, lens, rings, wheel, tank, tankAt, old, fresh, beam: true,
+    pose: { x: 0.08, y: -0.155, z: -0.4, rx: 0.07, ry: 0.08, rz: -0.05 }, smoke: 0 };
+};
+VM_ANIM.fresnel = (w, S) => {
+  const p = S.p;
+  VM.lhand.visible = false;
+  // burning: the lens flares and its rings turn; it cools slowly after
+  if (S.fired) w.heat = 1;
+  w.heat = Math.max(0, (w.heat || 0) - S.dt * 2.2);
+  const t = S.t, hot = w.heat;
+  w.M.lens.emissiveIntensity = 0.45 + hot * 1.6 + (S.still ? 0 : 0.08 * Math.sin(t * 9));
+  w.rings.forEach((r, i) => { r.rotation.z += S.dt * (0.4 + hot * 6) * (i % 2 ? -1 : 1); });
+  const shake = S.still ? 0 : hot * 0.004;
+  const tip = vmSeg(p, 0, 0.1) - vmSeg(p, 0.9, 1);
+  const unscrew = vmSeg(p, 0.08, 0.2), drop = S.reloading && p >= 0.2 && p < 0.42 ? (p - 0.2) / 0.22 : -1;
+  const bring = vmSeg(p, 0.36, 0.55), screw = vmSeg(p, 0.55, 0.66), crank = p > 0.68 && p < 0.9 ? (p - 0.68) / 0.22 : -1;
+  w.steps = w.steps || [[0.12, () => vmClick(500, 0.04)], [0.22, () => vmNoise(900, 0.05, 0.1)], [0.6, () => vmClick(650, 0.05)], [0.65, () => vmClick(820, 0.05)], [0.75, () => vmNoise(2400, 0.03, 0.15)], [0.88, () => { vmClick(1000, 0.05); vmNoise(300, 0.06, 0.3); }]];
+  vmPlace(w, S, 0, { x: -tip * 0.03 + (Math.random() - 0.5) * shake, y: -tip * 0.03 + (Math.random() - 0.5) * shake, z: -tip * 0.05, rx: tip * 0.35, ry: -tip * 0.3, rz: tip * 0.6 });
+  w.trig.rotation.x = S.trigger ? 0.35 : 0;
+  // the reservoir: unscrewed and dropped, a full one brought up and screwed home
+  const out = S.reloading && p >= 0.2 && p < 0.66;
+  w.tank.visible = !out;
+  w.tank.position.copy(w.tankAt); w.tank.rotation.y = S.reloading && p < 0.2 ? unscrew * 4 : 0; if (S.reloading && p < 0.2) w.tank.position.y -= unscrew * 0.012;
+  w.old.visible = drop >= 0 && drop < 1;
+  if (w.old.visible) { const f = drop; w.old.position.set(w.tankAt.x + f * 0.03, w.tankAt.y - 0.012 - f * f * 0.6, w.tankAt.z + f * 0.04); w.old.rotation.set(f * 1.2, 0, f * 0.8); }
+  w.fresh.visible = S.reloading && p >= 0.36 && p < 0.66;
+  if (w.fresh.visible) {
+    const home = new THREE.Vector3(-0.2, -0.36, 0.05), under = w.tankAt.clone().add(new THREE.Vector3(0, -0.05, 0));
+    w.fresh.position.copy(home).lerp(under, bring).lerp(w.tankAt, screw); w.fresh.rotation.set((1 - bring) * 0.8, screw * 5, 0);
+  }
+  if (crank >= 0) w.wheel.rotation.x = -crank * Math.PI * 6;
+  if (S.reloading) {
+    const K = VM_FRES_K;
+    if (p < 0.2 && unscrew > 0.01) vmLeftAt(w, w.tankAt.clone().add(new THREE.Vector3(-0.02, -0.06, 0.0)).multiplyScalar(K), [0.3, unscrew * 1.5, -0.4]);
+    else if (w.fresh.visible) vmLeftAt(w, w.fresh.position.clone().add(new THREE.Vector3(-0.02, -0.07, 0.0)).multiplyScalar(K), [0.3, 0, -0.4]);
+    else if (crank >= 0) { const a = -crank * Math.PI * 6; vmLeftAt(w, new THREE.Vector3(-0.08, 0.05 + Math.cos(a) * 0.015, -0.04 + Math.sin(a) * 0.015).multiplyScalar(K), [0, -0.5, -1.0]); }
   }
   w.left.visible = !VM.lhand.visible;
 };

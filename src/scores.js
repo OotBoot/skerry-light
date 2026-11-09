@@ -1,4 +1,4 @@
-// The scoreboard: everyone's best in all three games, kept where the game is hosted.
+// The scoreboard: everyone's best in all four games, kept where the game is hosted.
 //
 // On claude.ai the artifact keeps it in its own shared database (a document per player under `scores/`, each
 // written only by its player, read by everyone; names are shown as each viewer's claude.ai sees them).
@@ -9,12 +9,14 @@
 //   skerry  s: most voyages made in one run        b: voyages made in all
 //   fps     s: most kills in one round             b: rounds won
 //   war     s: wars won                            b: most land taken in one war (tiles)
+//   zm      s: most rounds held in one night        b: most kills in one night (the Lighthouse)
 
 const BOARD = {
   games: {
     skerry: { name: 'Skerry Light', s: 'Best run', b: 'Voyages', what: 'Most voyages made in one run, without losing the boat. Voyages: made in all.' },
     fps: { name: 'Wreckers’ Night', s: 'Best round', b: 'Rounds won', what: 'Most kills in one round of Wreckers’ Night. Rounds won: rounds you finished on top.' },
     war: { name: 'The Drowned Reach', s: 'Wars won', b: 'Most land', what: 'Wars of the Drowned Reach won, alone or together. Most land: the most tiles taken in one war.' },
+    zm: { name: 'The Lighthouse', s: 'Rounds held', b: 'Most kills', what: 'The most rounds held at the Lighthouse in one night. Most kills: the drowned sent back in one night.' },
   },
   tab: 'skerry', mine: null, via: null, db: null, user: null, uid: null, data: null, loading: false, err: '', lastT: 0, sendT: 0, store: '',
 };

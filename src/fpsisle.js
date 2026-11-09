@@ -100,8 +100,9 @@ function fpiCirc(p, u, v, r, top, o) {
 }
 
 // ---------- laying out the island ----------
-function fpsIsleGen(G, round, rng) {
-  const id = fpsIsleFor(round), T = FPS_ISLES[id];
+// (id: lay out that one instead of the round's; the Lighthouse, src/zombies.js, uses this)
+function fpsIsleGen(G, round, rng, id) {
+  id = id || fpsIsleFor(round); const T = FPS_ISLES[id];
   const CX = FPSC.CX, CY = FPSC.CY, IR = FPSC.R, TAU = Math.PI * 2;
   const R = (a, b) => a + rng() * (b - a), RI = (a, b) => Math.floor(R(a, b + 0.999)), pick = a => a[Math.floor(rng() * a.length)];
   const I = { id, T, name: T.name, seed: (round * 7919) & 0xfffff, props: [], solids: [], decor: [], lights: [], tracks: [], birds: [], key: id + ':' + round };
@@ -175,7 +176,8 @@ function fpsIsleGen(G, round, rng) {
   if (GEN.props) GEN.props(H);
   if (!GEN.built) fpiExtraCover(H);
   if (T.arena) I.arena = true;
-  fpiCommonDecor(H);
+  // (indoors, nothing of the shore: the building's own decor instead)
+  if (T.indoor) { if (GEN.decor) GEN.decor(H); } else fpiCommonDecor(H);
   if (id === 'marsh') fpiMarshDecor(H);
   // shadows under things, and a few tracks across the island
   fpiFinish(G, H);
@@ -219,7 +221,7 @@ function fpiFinish(G, H) {
   }
   fpiIndex(I);
   // can you walk everywhere? Thin out the extras until at least 60% of the island is reachable
-  for (let it = 0; it < 12; it++) {
+  for (let it = 0; it < 12 && !I.T.indoor; it++) {
     fpiReach(G);
     if (I.reach.nReach >= I.reach.nDisc * 0.6) break;
     const extra = I.props.filter(p => p.opt);
@@ -770,6 +772,13 @@ const FPI_K = {
       const n = p.ch.length, cl = p.len / n;
       for (let i = 0; i < n; i++) {
         const uc = -p.len / 2 + (i + 0.5) * cl, top = p.ch[i];
+        if (p.mat === 'plaster') {
+          // whitewashed: one face of lime, a tarred skirting at the foot, a painted dado rail
+          A.box(p.col2 || '#b4ae9e', uc, 0, -0.2, cl * 1.002, p.th, top + 0.2);
+          A.box('#26221c', uc, 0, -0.2, cl * 1.004, p.th + 0.04, 0.42);
+          A.box(p.dado || '#4a5a50', uc, 0, 1.05, cl * 1.004, p.th + 0.04, 0.08);
+          continue;
+        }
         if (p.mat === 'wood') {
           const k = Math.max(2, Math.round(cl / 0.3));
           for (let j = 0; j < k; j++) A.box(p.dark ? (j % 2 ? FPI_C.wood3 : FPI_C.wood) : (j % 2 ? FPI_C.wood : FPI_C.wood2), uc - cl / 2 + (j + 0.5) * cl / k, 0, -0.2, cl / k * 0.94, p.th, top + 0.2 - A.r() * 0.1);
@@ -785,7 +794,7 @@ const FPI_K = {
         if (p.cap) A.box(FPI_C.stone3, uc, 0, top, cl * 1.01, p.th * 1.18, 0.13);
         else if (p.jag && A.r() < 0.55) A.part('ico', FPI_C.stone2, uc + (A.r() - 0.5) * cl * 0.5, 0, top + 0.08, 0.55, 0.35, 0.45, A.r() * 3);
         // slit windows high in the chapel and the tower
-        if (top > 3.2 && i % 2 === 1) A.box(FPI_C.tar, uc, 0, top * 0.5, Math.min(0.35, cl * 0.3), p.th * 1.04, Math.min(1.4, top * 0.3));
+        if (top > 3.2 && i % 2 === 1 && !p.noslit) A.box(FPI_C.tar, uc, 0, top * 0.5, Math.min(0.35, cl * 0.3), p.th * 1.04, Math.min(1.4, top * 0.3));
         // fallen stones at the foot of a broken wall
         if (p.jag > 0.2 && A.r() < 0.4) A.part('ico', FPI_C.stone2, uc + (A.r() - 0.5) * cl, (A.r() < 0.5 ? -1 : 1) * (p.th / 2 + 0.35), 0.12, 0.5, 0.35, 0.45, A.r() * 3);
       }
@@ -1250,7 +1259,7 @@ function fpsIsle3D(grp, B) {
   };
   for (const k in M) { const m = M[k].mesh(mats[k]); if (m) { if (k === 'decal' || k === 'water') m.renderOrder = 1; grp.add(m); } else mats[k].dispose(); }
   const lights = [];
-  for (let i = 0; i < 3; i++) { const L = new THREE.PointLight(0xffb060, 0, 10, 1); grp.add(L); lights.push(L); }
+  for (let i = 0; i < (I.T.nLights || 3); i++) { const L = new THREE.PointLight(0xffb060, 0, 10, 1); grp.add(L); lights.push(L); }
   GL3D.isleState = { I, lights, foamM, glowM: mats.glow };
 }
 // each frame: the three lights go to the island's lanterns and fires nearest you, flickering; the surf breathes
@@ -1275,7 +1284,7 @@ function fpsIsleFrame3D() {
 // to the thing actually crosses the solid (see fpsIsleBehind), not by comparing the solid's middle.
 const FPI_CUT = 0.25;
 function fpsIsleOccluders(out) {
-  const I = g.isle; if (!I) return;
+  const I = g.isle; if (!I || I.T.indoor) return;   // (the Lighthouse paints nothing over its 3D rooms that walls need to hide)
   for (const s of I.solids) {
     if (s.occ === false || (s.ray === false && s.occ !== true)) continue;
     const c0 = cam(s.x, s.y, FPSC.GROUND), reach = s.s === 'c' ? s.r : Math.hypot(s.hw, s.hd);

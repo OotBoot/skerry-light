@@ -24,7 +24,8 @@ const TOP = 25;
 //   skerry: s = most voyages in one run,        b = voyages made in all
 //   fps:    s = most kills in one round,        b = rounds won
 //   war:    s = wars won,                       b = most land taken in one war (tiles)
-const GAMES = { skerry: [1000, 1e6], fps: [300, 1e5], war: [1e5, 1e6] };
+//   zm:     s = most rounds held in one night,  b = most kills in one night
+const GAMES = { skerry: [1000, 1e6], fps: [300, 1e5], war: [1e5, 1e6], zm: [1000, 1e6] };
 
 const memory = new Map(); // game -> Map(id -> entry)
 let cache = null, cacheAt = 0;

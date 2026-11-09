@@ -170,10 +170,11 @@ How it works: the host's browser runs the whole war, the same code as a game alo
 
 ## The scoreboard
 
-`src/scores.js` (the card on the title screen) and `server/scores.js`. One board for all three games, each player's best:
+`src/scores.js` (the card on the title screen) and `server/scores.js`. One board for all four games, each player's best:
 - **Skerry Light:** most voyages in one run (and voyages made in all).
 - **Wreckers' Night:** most kills in one round (and rounds won).
 - **The Drowned Reach:** wars won, alone or together (and the most land taken in one war).
+- **The Lighthouse:** most rounds held in one night (and the most kills in one night).
 
 Your bests are also kept in your browser, and only ever go up.
 
@@ -185,6 +186,23 @@ Your bests are also kept in your browser, and only ever go up.
   4. The server's log then says `Scoreboard: kept in Upstash Redis`.
 
   Without them the server keeps the board in memory, and it starts over whenever the server restarts. Players on the site choose the name shown beside their scores. Anyone can send a score, so the server only takes numbers the games can plausibly produce, one score every few seconds from each address, and one entry per browser per game; it's a board for honest players, not proof against a determined cheat.
+
+## The Lighthouse (rounds against the drowned)
+
+A fourth game, on its own card on the title screen (**Hold the Light**). First person, alone, indoors: the keeper's station at the Light, shut up for the night, and the drowned coming up out of the sea for it, round after round, in the manner of the old wave-survival "zombies" games. It uses Wreckers' Night's engine, weapons and weapon skins, and your outfit; its crates are the same weapon and outfit crates (a kill here counts a third of one there, and every fifth round held earns one of each).
+
+- **Rounds.** The drowned come across the yards and up the beach and tear the boards off the windows to climb in: 6 in the first round, 8, 13, 18, 24, then more every round, and tougher every round (gentle steps to round nine, then a tenth more each round). Shamblers at first; joggers from round three; runners from round six. Up to 24 at once. Clear a round and there's a ten-second breather.
+- **Points.** 10 a hit, 60 a kill, 100 through the head, 130 with the cutlass, 80 burned by the Fresnel Lamp. You start with 500 and a pepperbox. Nailing a window's boards back (hold Use) is 10 a board.
+- **Wall buys.** Weapons hang on boards on the walls with their names and prices chalked under them: Longarm and Blunderbuss (500) in the Keeper's Quarters, Pepperbox (250), Cutlass (750), Harpoon gun (1000), Avtomat (1200), another Blunderbuss in the Boathouse. Buy one again for half its price to fill its ammunition. You carry two; a third replaces the one in your hand. Each carries a reserve (reloads draw from it). Damage is scaled for the drowned: the longarm hits four times as hard and goes through three of them, the harpoon five times, the cutlass two and a half.
+- **Door buys.** Nine doors and heaps of wreckage between the rooms (750 to 1250).
+- **The wreck chest** (950): a random weapon, never one you're carrying. It stands on one of five plinths: the Fog-Signal House (where it starts), the East Passage, the Store Hall, the Wreck Store, and at the top of the tower, in the lantern room beside the great lens. A pale shaft of light stands over it. After three goes in one place, each go has a one-in-three chance of a gull taking it: your points come back, and the chest turns up on another plinth.
+- **The Fresnel Lamp** (only from the chest): a signal lantern with a stepped lighthouse lens in it. Hold the trigger and it throws a cone of the Light's own fire, thirty metres or to the first wall, ten bursts a second; whatever stands in it burns (about a third of a drowned man's strength each burst, whatever the round), and each one it burns throws a spark to the nearest that hasn't, and on. Sixty bursts to a reservoir; reloading unscrews the empty reservoir, screws in a full one and cranks the wick up.
+- **Tonics** (cabinets of glowing bottles): Second Wind (500, in the Quarters: get back up once, losing your tonics; three to a night), Fleet Foot (2000, the Boathouse), Stout Heart (2500, the Store Hall: six knocks instead of three), Quick Hands (3000, the Wreck Store: reload in half the time). You heal fully after three quiet seconds.
+- **Salvage**: up to four drops a round, about one kill in thirty: Powder Keg (all ammunition), Double Salvage (double points, 30 s), the Black Spot (one hit kills, 30 s), Lamp Flash (every one in the station burns, and 400 points).
+- **The map**: ten rooms round the tower: the Keeper's Quarters, the Oil Store, the Fog-Signal House, the East Passage, the Net Loft, the Store Hall, the Lamp Passage, the Boathouse and the Wreck Store, whitewashed and beamed, lit by hanging lanterns, and two walled yards between them open to the sky. The tower is fifteen metres square and nearly thirteen high: a stair of thirty steps winds up round its stone core (up the east side, along the south, up the west) to the lantern room on top of the core, with the great lens in the middle, an iron railing round the edge, and windows high in the tower walls looking out to sea.
+- **Keys**: as Wreckers' Night, with F (or E) to use and 1 / 2 for your two weapons; Tab shows the night so far; Esc pauses (alone, everything stops). Controller: B to use. Touch: a Use button by Fire takes the flare's place.
+
+How it's built (`src/zombies.js`): the station is laid out by the same island builder as Wreckers' Night's islands (`fpsIsleGen`, with an `indoor` kind that skips the shore), with a few new props (floors, ceilings, stair treads, the core, railings, the lens, tonic cabinets, plinths, hanging lanterns). Unlike the islands, some solids are **floors**: stair treads and the core carry a flag, and anything standing (you, the drowned) can step up onto one no more than 0.6 m above its feet, stands on the highest under it, steps down stairs, and falls off edges; the camera eases over each step. Heights carry through shooting (a body's height is its floor plus any jump). The drowned find their way on a half-metre grid laid over the station, with each cell's floor height, and a Dijkstra search out from wherever you stand four times a second; opening a door rebuilds the grid. The doors, window boards, wall weapons (the first-person models, hung on the wall), the chest, salvage, the beam and the drowned themselves (simple jointed figures with a shambling, lurching walk, a swing, a climb, a fall, and a burn) are drawn in their own group in the 3D scene; the station's lamps light the rooms, with the night dimmer than outdoors. Shots resolve straight against the drowned where they stand (there's nobody else's view to be fair to).
 
 ## Wreckers' Night (multiplayer FPS)
 
@@ -368,6 +386,7 @@ src/fps.js          Wreckers' Night, the multiplayer FPS mode
 src/fpsisle.js      Wreckers' Night: the six kinds of island, their props, cover and 3D ground
 src/fpsgun.js       Wreckers' Night: the 3D pistol, its hand and its reload
 src/wcrates.js      Wreckers' Night: weapon skin crates, kept apart from the boat crates
+src/zombies.js      The Lighthouse: the station, its rounds, the drowned, buying, the chest and the Fresnel Lamp
 src/main.js         starts the main loop
 assets/maren.png    Maren cutout
 assets/plimsoll.png Plimsoll cutout

@@ -51,6 +51,9 @@ const FPSW = {
   harpoon:     { n: 'Harpoon gun', code: 'h', mag: 1, rate: 0.6, reload: 2.9, dmg: 4, head: 4, speed: 72, drop: 5, range: 300, kick: 1.9 },
   cutlass:     { n: 'Cutlass',     code: 'c', mag: 0, rate: 0.48, reload: 1.6, dmg: 2, head: 2, reach: 2.7, arc: 0.8, melee: true, kick: 0 },
   avtomat:     { n: 'Avtomat',     code: 'a', mag: 25, rate: 0.085, reload: 3.9, dmg: 1, head: 2, auto: true, range: 380, hip: 0.03, ads: 1.45, kick: 0.75, climb: 0.019, sway: 0.011 },
+  // only in the Lighthouse (src/zombies.js), and only from the wreck chest: a lantern with a lighthouse lens in it,
+  // that throws a beam of the Light's own fire. Hold the trigger to burn whatever stands in it
+  fresnel:     { n: 'Fresnel Lamp', code: 'f', mag: 60, rate: 0.1, reload: 3.4, dmg: 0, head: 0, auto: true, beam: true, range: 30, kick: 0.12 },
 };
 const FPS_WORDER = ['pepperbox', 'blunderbuss', 'longarm', 'harpoon', 'cutlass', 'avtomat'];
 // how much closer the view comes when aiming (the longarm's telescope, the avtomat's iron sights)
@@ -58,7 +61,7 @@ const fpsZoom = () => { const w = fpsW(); return FPS.scoped ? (w.scope || w.ads 
 const FPSW_BY_CODE = {}; for (const id in FPSW) FPSW_BY_CODE[FPSW[id].code] = id;
 const fpsW = () => FPSW[FPS.weapon] || FPSW.pepperbox;
 const fpsWOf = code => FPSW[FPSW_BY_CODE[code] || 'pepperbox'];
-try { const w = localStorage.getItem('skerry-fps-weapon'); if (FPSW[w]) FPS.pick = w; } catch (e) {}
+try { const w = localStorage.getItem('skerry-fps-weapon'); if (FPSW[w] && FPS_WORDER.includes(w)) FPS.pick = w; } catch (e) {}
 // first person, or over the shoulder (V, the view button, or R3 to switch; remembered)
 try { FPS.third = localStorage.getItem('skerry-fps-view') === '3rd'; } catch (e) {}
 // over the shoulder, unless you're looking through the longarm's telescope or lying dead
@@ -71,15 +74,17 @@ function fpsToggleView() {
 }
 // jumping: only from the ground
 function fpsJump() {
-  const m = FPS.me; if (!m || m.dead > 0 || FPS.menu || (m.jz || 0) > 0.01 || (m.vz || 0) > 0) return;
-  m.vz = FPSC.JUMP; m.jz = 0.001; FPS.landed = 0;
+  const m = FPS.me; if (!m || m.dead > 0 || FPS.menu || (m.jz || 0) > (m.fl || 0) + 0.01 || (m.vz || 0) > 0) return;
+  m.vz = FPSC.JUMP; m.jz = (m.fl || 0) + 0.001; FPS.landed = 0;
   try { if (!soundOff()) noise('lowpass', 500, 1, 0.01, 0.08, 0.12); } catch (e) {}
 }
+// (m.fl: the height of the floor under you: the ground, or in the Lighthouse a stair or a floor above it)
 function fpsJumpTick(m, dt) {
-  if (!((m.jz || 0) > 0) && !((m.vz || 0) > 0)) { m.jz = 0; m.vz = 0; return; }
+  const fl = m.fl || 0;
+  if (!((m.jz || 0) > fl) && !((m.vz || 0) > 0)) { m.jz = fl; m.vz = 0; return; }
   m.vz -= FPSC.GRAV * dt; m.jz += m.vz * dt;
-  if (m.jz <= 0) {
-    const hard = Math.min(1, -m.vz / 9); m.jz = 0; m.vz = 0; FPS.landed = 0.25 * hard;
+  if (m.jz <= fl) {
+    const hard = Math.min(1, -m.vz / 9); m.jz = fl; m.vz = 0; FPS.landed = 0.25 * hard;
     try { if (!soundOff()) noise('lowpass', 320, 1, 0.005, 0.18 * hard, 0.16); } catch (e) {}
   }
 }
@@ -181,6 +186,7 @@ function fpsStart() {
 }
 function fpsStop() {
   if (!FPS.on) return;
+  if (FPS.zm && typeof zmStop === 'function') zmStop();
   FPS.on = false;
   try { document.exitPointerLock && document.exitPointerLock(); } catch (e) {}
   if (NET.room) NET.room.presence({ fps: null }).catch(() => {});
@@ -210,7 +216,7 @@ function fpsPeers() {
 }
 const fr1 = v => Math.round(v * 10) / 10, fr2 = v => Math.round(v * 100) / 100;
 function fpsSend(force) {
-  if (!NET.room) return;
+  if (!NET.room || FPS.zm) return;
   const m = FPS.me;
   const out = {
     id: NET.sid, n: FPS.nick, r: FPS.round, x: fr1(m.x), y: fr1(m.y), h: fr2(m.h), p: fr2(m.p), hp: m.hp, dead: m.dead > 0 ? 1 : 0,
@@ -383,6 +389,7 @@ function fpsSteer(m, h, step) {
 }
 // move with sliding along whatever is in the way
 function fpsMove(m, dx, dy) {
+  if (FPS.zm) return zmMove(m, dx, dy);
   if (!fpsBlocked(m.x + dx, m.y + dy, 0.5)) { m.x += dx; m.y += dy; return true; }
   if (!fpsBlocked(m.x + dx, m.y, 0.5)) { m.x += dx; return true; }
   if (!fpsBlocked(m.x, m.y + dy, 0.5)) { m.y += dy; return true; }
@@ -478,6 +485,7 @@ function fpsPublishShot(x, y, z, h, p, by, code, seed) {
 }
 // what a shot looks and sounds like, wherever it came from; and, if it's mine or I'm the host, its effect on the wreckers and the drowned
 function fpsResolveShot(sh, mine) {
+  if (FPS.zm) return zmResolveShot(sh, mine);
   const [, x, y, z, h, p, by, code] = sh, w = fpsWOf(code), m = FPS.me;
   const d = Math.hypot(x - m.x, y - m.y), pan = angDiff(bearingOf(x - m.x, y - m.y), m.h);
   const shooter = by === m.id ? null : FPS.remote.get(by) || FPS.bots.find(b => b.id === by);
@@ -503,7 +511,7 @@ function fpsResolveShot(sh, mine) {
   }
   if (FPS.host || !NET.room || !FPS.remote.size) {
     for (const b of FPS.bots) { if (b.id === by || b.dead > 0) continue; const hit = fpsShotHits(sh, b); if (hit) fpsBotHurt(b, hit.dmg, by); }
-    for (const dr of FPS.drowned) { if (dr.dead) continue; const hit = fpsShotHits(sh, dr); if (hit) fpsDrownedHurt(dr, hit.dmg); }
+    for (const dr of FPS.drowned) { if (dr.dead) continue; const hit = fpsShotHits(sh, dr); if (hit) fpsDrownedHurt(dr, hit.dmg, hit.head, code); }
   }
 }
 // someone else's shot arriving: what it looks like, and whether it hit me where I really was
@@ -516,8 +524,9 @@ function fpsIncoming(sh, f) {
 function fpsShoot() {
   const m = FPS.me, w = fpsW();
   if (m.dead > 0 || m.reload > 0 || m.cd > 0 || FPS.menu || FPS.drawT > 0) return;
-  if (!w.melee && m.ammo <= 0) { fpsReload(); return; }
+  if (!w.melee && m.ammo <= 0) { if (FPS.zm && !FPS.heldFire && !zmCanReload()) { FPS.heldFire = true; fpsClick(); return; } fpsReload(); return; }
   if (!w.auto && !w.melee && FPS.heldFire) return;          // single-shot guns: one pull, one shot
+  if (w.beam) { FPS.heldFire = true; m.cd = w.rate; m.protect = 0; m.ammo--; m.mags[FPS.weapon] = m.ammo; FPS.vmShots = (FPS.vmShots || 0) + 1; FPS.recoil = Math.min(1.6, w.kick); zmBeam(); if (m.ammo <= 0) setTimeout(fpsReload, 250); return; }
   // (holding the trigger of an automatic, the time past the last round carries over, so it keeps its rate on a slow screen)
   const carry = w.auto && FPS.heldFire && m.cd < 0 ? Math.max(-0.3, m.cd) : 0;
   FPS.heldFire = true;
@@ -529,6 +538,7 @@ function fpsShoot() {
   FPS.vmShots = (FPS.vmShots || 0) + 1;
   const z = FPSC.GROUND + FPSC.EYE + (m.jz || 0), seed = (Math.random() * 2147483647) | 0;
   const [ah, ap] = fpsAimFrom(m.x, m.y, z, w);
+  if (FPS.zm) FPS.zmShots = (FPS.zmShots || 0) + 1;
   const sh = fpsPublishShot(m.x, m.y, z, ah, ap, m.id, w.code, FPS.scoped ? 0 : seed);
   if (typeof fpsVerityShot === 'function') fpsVerityShot(m.x, m.y, ah);
   fpsResolveShot(sh, true);
@@ -584,7 +594,7 @@ function fpsHarpoonsTick(dt) {
         fpsPuff(r.x, r.y, r.z, '160,30,20', 12);
         if (o.me) fpsHurt(w.dmg, hp.by, fpsNameOf(hp.by));
         else if (o.bot && hostish) fpsBotHurt(o, w.dmg, hp.by);
-        else if (o.drowned && hostish) fpsDrownedHurt(o, w.dmg);
+        else if (o.drowned && hostish) fpsDrownedHurt(o, w.dmg, r.head, 'h');
         if (hp.mine) { FPS.hitT = 0.25; FPS.hitHead = true; fpsHitSound(true); }
         hp.stuck = 0.6;
       } else { hp.stuck = 8; fpsPuff(r.x, r.y, r.z, '190,190,180', 8); try { noise('bandpass', 900, 3, 0.002, 0.12, 0.15); } catch (e) {} }
@@ -596,19 +606,21 @@ function fpsHarpoonsTick(dt) {
 function fpsSwitch(id) {
   const m = FPS.me;
   if (!FPSW[id] || id === FPS.weapon || m.dead > 0) return;
+  if (FPS.zm && !ZM.own.includes(id)) return;   // in the Lighthouse, only what you carry
   m.mags[FPS.weapon] = m.ammo;
   FPS.last = FPS.weapon; FPS.weapon = id;
   m.ammo = m.mags[id]; m.reload = 0; m.cd = 0; FPS.drawT = 0.45; FPS.scoped = false; FPS.heldFire = false;
   try { tone(260, 'triangle', 0.002, 0.04, 0.08); noise('bandpass', 2400, 2, 0.002, 0.04, 0.1); } catch (e) {}
   fpsSend();
 }
-const fpsCycle = d => fpsSwitch(FPS_WORDER[(FPS_WORDER.indexOf(FPS.weapon) + d + FPS_WORDER.length) % FPS_WORDER.length]);
+const fpsCycle = d => { const L = FPS.zm ? ZM.own : FPS_WORDER; fpsSwitch(L[(L.indexOf(FPS.weapon) + d + L.length) % L.length]); };
 function fpsScope(on) { const w = fpsW(); FPS.scoped = !!on && !!(w.scope || w.ads) && !(FPS.me.reload > 0) && !(FPS.me.dead > 0); }
 function fpsReload() {
   const m = FPS.me, w = fpsW();
   // (the cutlass has nothing to load: R gives it a wipe and a look along the edge instead)
   if (m.dead > 0 || m.reload > 0 || FPS.drawT > 0 || (!w.melee && m.ammo >= w.mag)) return;
-  m.reload = w.reload; FPS.reloadOf = FPS.weapon; FPS.scoped = false; if (!w.melee) fpsClick();
+  if (FPS.zm && !w.melee && !zmCanReload()) return;
+  m.reload = FPS.reloadDur = w.reload * (FPS.zm ? zmReloadK() : 1); FPS.reloadOf = FPS.weapon; FPS.scoped = false; if (!w.melee) fpsClick();
 }
 function fpsHurt(n, fromId, fromName) {
   const m = FPS.me; if (m.dead > 0 || m.protect > 0) return;
@@ -617,6 +629,7 @@ function fpsHurt(n, fromId, fromName) {
   if (m.hp <= 0) fpsDie(fromId, fromName);
 }
 function fpsDie(fromId, fromName) {
+  if (FPS.zm) return zmDown();
   const m = FPS.me;
   m.hp = 0; m.dead = FPSC.RESPAWN; m.killer = fromName && fromName !== 'You' ? fromName : null;
   FPS.deaths++;
@@ -773,7 +786,8 @@ function fpsBotHurt(b, dmg, fromId) {
     fpsSend();
   }
 }
-function fpsDrownedHurt(d, dmg) {
+function fpsDrownedHurt(d, dmg, head, code) {
+  if (FPS.zm) return zmHurt(d, dmg, head, code);
   if (d.dead) return;
   d.hp -= dmg; d.hitT = 0.2;
   if (d.hp <= 0) { d.dead = 1; fpsFeed('A drowned man went back into the sea.'); fpsPuff(d.x, d.y, FPSC.GROUND + 1, '170,210,200', 14); }
@@ -809,6 +823,7 @@ function fpsDrownedTick(dt, now) {
 
 // ---------- each frame ----------
 function fpsFrame(dt) {
+  if (FPS.zm) return zmFrame(dt);
   FPS.dtLast = dt;
   const G = FPS.g, m = FPS.me;
   const saved = [g, ship];
@@ -901,7 +916,8 @@ function fpsInput(dt) {
     FPS.padFire = b(7);
     fpsScope(b(6));
     const tap = (i, fn) => { if (b(i) && !was[i]) fn(); };
-    tap(0, fpsJump); tap(11, fpsToggleView); tap(2, fpsReload); tap(5, () => fpsCycle(1)); tap(14, () => fpsCycle(-1)); tap(15, () => fpsCycle(1)); tap(3, fpsLantern); tap(1, fpsFlare); tap(4, fpsBell); tap(9, () => fpsSetMenu(!FPS.menu)); tap(8, () => { FPS.board = !FPS.board; });
+    tap(0, fpsJump); tap(11, fpsToggleView); tap(2, fpsReload); tap(5, () => fpsCycle(1)); tap(14, () => fpsCycle(-1)); tap(15, () => fpsCycle(1)); tap(3, fpsLantern); tap(1, FPS.zm ? zmUse : fpsFlare); if (!FPS.zm) tap(4, fpsBell); tap(9, () => fpsSetMenu(!FPS.menu)); tap(8, () => { FPS.board = !FPS.board; });
+    FPS.padUse = FPS.zm && b(1);
     FPS.padWas = {}; for (let i = 0; i < pad.buttons.length; i++) FPS.padWas[i] = b(i);
     FPS.padSprint = b(10);
   }
@@ -917,7 +933,7 @@ function fpsInput(dt) {
   const len = Math.hypot(fx, fz);
   m.walk = false;
   if (m.dead <= 0 && len > 0.05 && !FPS.menu) {
-    const sp = (K.ShiftLeft || K.ShiftRight || FPS.padSprint || (FPS.stick && FPS.stickRun) ? FPSC.SPRINT : FPSC.SPEED) * Math.min(1, len) / len * dt;
+    const sp = (K.ShiftLeft || K.ShiftRight || FPS.padSprint || (FPS.stick && FPS.stickRun) ? FPSC.SPRINT : FPSC.SPEED) * Math.min(1, len) / len * dt * (FPS.zm ? zmSpeedK() : 1);
     const s = Math.sin(m.h), c = Math.cos(m.h);
     m.walk = fpsMove(m, (s * fz + c * fx) * sp, (c * fz - s * fx) * sp);
     if (m.walk && !((m.jz || 0) > 0)) FPS.step += dt * (K.ShiftLeft || K.ShiftRight ? 11 : 8);
@@ -933,9 +949,10 @@ function fpsAssistTarget() {
     if (fpsSeeAt(o.x, o.y, o.lan) < 0.3) continue;
     const dh = angDiff(bearingOf(o.x - m.x, o.y - m.y), m.h), a = Math.abs(dh) * Math.max(1, d / 40);
     if (a > bestA) continue;
-    const ray = fpsRay(m.x, m.y, FPSC.GROUND + FPSC.EYE, m.h + dh, 0, m.id);
+    const dz = (o.jz || 0) - (m.jz || 0), pe = Math.atan2(FPSC.EYE * 0.6 - FPSC.EYE + dz, d);
+    const ray = fpsRay(m.x, m.y, FPSC.GROUND + FPSC.EYE + (m.jz || 0), m.h + dh, pe, m.id);
     if (ray.kind !== 'body' || ray.who.id !== o.id) continue;
-    bestA = a; best = { dh, dp: Math.atan2(FPSC.EYE * 0.6 - FPSC.EYE, d) - m.p };
+    bestA = a; best = { dh, dp: pe - m.p };
   }
   return best;
 }
@@ -951,12 +968,12 @@ function fpsDraw() {
   fpsDrawHands();
   drawAtmosphere();
   if (FPS.scoped && fpsW().scope) fpsDrawScope();
-  fpsHud();
+  if (FPS.zm) zmHud(); else fpsHud();
 }
 function fpsDrawScene() {
   const m = FPS.me;
   camX = m.x; camY = m.y; yaw = m.h;
-  const eye = FPSC.GROUND + FPSC.EYE + (m.jz || 0);
+  const eye = FPSC.GROUND + FPSC.EYE + (m.jz || 0) - (FPS.eyeLag || 0);
   camH = eye + (reduceMotion ? 0 : Math.sin(FPS.step) * 0.05 - (FPS.landed || 0) * 0.4) - (m.dead > 0 ? 1.2 * Math.min(1, (FPSC.RESPAWN - m.dead) * 2) : 0);
   const third = fpsThird();
   if (third) {
@@ -983,7 +1000,7 @@ function fpsDrawScene() {
   if (gl) ctx.clearRect(0, 0, W, H);
   ctx.save();
   ctx.translate(cx, hy); ctx.rotate(roll); ctx.translate(-cx, -hy);
-  const far = SK.BEAM_RANGE, beamOn = Math.abs(g.beam) < SK.SHADE + SK.HALF_BEAM;
+  const far = SK.BEAM_RANGE, beamOn = !FPS.zm && Math.abs(g.beam) < SK.SHADE + SK.HALF_BEAM;
   const fl = [Math.sin(g.beam - SK.HALF_BEAM) * far, Math.cos(g.beam - SK.HALF_BEAM) * far], fr = [Math.sin(g.beam + SK.HALF_BEAM) * far, Math.cos(g.beam + SK.HALF_BEAM) * far];
   let shown = 0;
   // over the shoulder with the 3D renderer, you're a 3D figure in the scene (src/fpsbody.js)
@@ -996,6 +1013,7 @@ function fpsDrawScene() {
   if (gl) {
     gl3dBackdrop(roll, 0, 0);
     { const main = ctx; ctx = bgx; ctx.save(); ctx.translate(cx, hy); ctx.rotate(roll); ctx.translate(-cx, -hy); try { fpsIsleSkyTint(bgx); } finally { ctx.restore(); ctx = main; } }
+    if (FPS.zm) zmScene3D();
     shown = gl3dRender(roll, 0, 0, beamOn);
     if (body) fpsBodyOccluder();
     drawSeaFx(curBiome()); gl3dLandGlows();
@@ -1013,12 +1031,12 @@ function fpsDrawScene() {
   if (!gl) {
     for (const o of g.rocks) add('rock', o, 0); for (const o of g.wrecks) add('wreck', o, 0);
     // the props, each block on its own so near and far sort properly
-    if (g.isle) for (const s of g.isle.solids) if (Math.hypot(s.x - camX, s.y - camY) < 200) add('solid', s, FPSC.GROUND);
+    if (g.isle) for (const s of g.isle.solids) if (Math.hypot(s.x - camX, s.y - camY) < 200 && !(FPS.zm && s.occ === false)) add('solid', s, FPSC.GROUND);
   }
-  if (g.isle) for (const l of g.isle.lights) add('glow', l, l.z);
+  if (g.isle && !(FPS.zm && gl)) for (const l of g.isle.lights) add('glow', l, l.z);
   for (const o of FPS.remote.values()) if (!o.dead) add('person', o);
   for (const o of FPS.bots) if (!(o.dead > 0)) add('person', o);
-  for (const d of FPS.drowned) add('drowned', d);
+  if (!FPS.zm || !gl) for (const d of FPS.drowned) add('drowned', d);
   if (typeof fpsVerityItems === 'function') fpsVerityItems(add);
   if (third && !body) add('person', Object.assign({}, m, { me: true, n: FPS.nick, c: fpsColours(), w: fpsW().code, flashT: FPS.meFlashT || 0, slashT: FPS.meSlashT || 0, hitT: 0 }));
   items.sort((a, b) => b.c.f - a.c.f);
@@ -1036,7 +1054,7 @@ function fpsDrawScene() {
       else if (it.kind === 'glow') fpsIsleDrawGlow(o, it.c);
     } finally { ctx.restore(); }
   }
-  if (gl) gl3dGlows(shown); else drawLighthouse(beamOn, fl, fr, far);
+  if (FPS.zm) { if (!gl) zmDrawFlat(); } else if (gl) gl3dGlows(shown); else drawLighthouse(beamOn, fl, fr, far);
   fpsIsleDrawBirds();
   drawFlares();
   // tracers and smoke
@@ -1044,8 +1062,9 @@ function fpsDrawScene() {
     const p = polyProj([t.a, t.b]); if (p.length < 2) continue;
     ctx.strokeStyle = `rgba(255,220,150,${t.t / 0.08 * 0.6})`; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(p[0].x, p[0].y); ctx.lineTo(p[1].x, p[1].y); ctx.stroke();
   }
-  for (const p of FPS.parts) { const c = cam(p.x, p.y, p.z); if (c.f < 0.6) continue; const q = proj(c); ctx.fillStyle = `rgba(${p.c},${p.t / 0.6})`; const s = Math.max(1.5, 0.12 * q.s); ctx.fillRect(q.x - s / 2, q.y - s / 2, s, s); }
+  for (const p of FPS.parts) { const c = cam(p.x, p.y, p.z); if (c.f < 0.6) continue; const q = proj(c); ctx.fillStyle = `rgba(${p.c},${p.t / 0.6})`; const s = Math.min(9, Math.max(1.5, 0.12 * q.s)); ctx.fillRect(q.x - s / 2, q.y - s / 2, s, s); }
   fpsDrawHarpoons();
+  if (FPS.zm) zmDrawOver();
   ctx.restore();
 }
 // harpoons: an iron shaft with a barbed head, trailing its line back to whoever fired it
@@ -1416,7 +1435,8 @@ addEventListener('keydown', e => {
   if (FPS.menu) return;
   if (e.code === 'Tab') { e.preventDefault(); FPS.board = true; return; }
   FPS.keys[e.code] = true;
-  if (!e.repeat && FPS_KEYS[e.code]) { e.preventDefault(); FPS_KEYS[e.code](); }
+  const keyFn = FPS.zm && e.code in ZM_KEYS ? ZM_KEYS[e.code] : FPS_KEYS[e.code];
+  if (!e.repeat && keyFn) { e.preventDefault(); keyFn(); }
   if (e.code.startsWith('Arrow') || e.code === 'Space') e.preventDefault();
 }, true);
 addEventListener('keyup', e => {

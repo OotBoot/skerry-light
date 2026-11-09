@@ -279,7 +279,7 @@ function buildCoast() {
   const room = new THREE.Mesh(new THREE.CylinderGeometry(2.85, 2.85, 4.4, 16, 1, true), GL3D.glass); room.position.y = 54.8; tower.add(room);
   for (let i = 0; i < 6; i++) { const a = i / 6 * Math.PI * 2, bar = new THREE.Mesh(new THREE.BoxGeometry(0.18, 4.4, 0.18), dark); bar.position.set(Math.cos(a) * 2.9, 54.8, Math.sin(a) * 2.9); tower.add(bar); }
   const cap = new THREE.Mesh(new THREE.ConeGeometry(3.45, 3.2, 20), lamb('#1a1714')); cap.position.y = 58.6; tower.add(cap);
-  grp.add(tower);
+  grp.add(tower); GL3D.tower = tower;
   buildLand(B, grp);
   GL3D.scene.add(grp);
 }
@@ -413,8 +413,8 @@ function gl3dRender(roll, sx, sy, beamOn) {
   GL3D.spot.visible = beamOn;
   GL3D.spot.target.position.set(Math.sin(g.beam) * far, 0, -Math.cos(g.beam) * far);
   GL3D.spot.color.set(glOver('#ffe2a8', `rgba(${B.beam},0.35)`));
-  GL3D.lantern.position.set(ship.x, (g.sky ? ship.z || 0 : 0) + 4, -ship.y); GL3D.lantern.distance = LR * 1.2;
-  GL3D.lantern.intensity = 0.8 + (reduceMotion ? 0 : 0.12 * Math.sin(g.t * 9) * Math.sin(g.t * 2.3));
+  GL3D.lantern.position.set(ship.x, (g.sky ? ship.z || 0 : 0) + (typeof FPS !== 'undefined' && FPS.on && FPS.zm ? (ship.jz || 0) - 1.4 : 0) + 4, -ship.y); GL3D.lantern.distance = LR * 1.2;
+  GL3D.lantern.intensity = (0.8 + (reduceMotion ? 0 : 0.12 * Math.sin(g.t * 9) * Math.sin(g.t * 2.3))) * (typeof FPS !== 'undefined' && FPS.on && FPS.zm ? 0.4 : 1);
   GL3D.beam.visible = beamOn; GL3D.beam.rotation.y = -g.beam;
   // the lantern room shines brighter as the beam swings round to face you
   const facing = 1 - Math.min(1, Math.abs(angDiff(g.beam, bearingOf(camX, camY))) / 0.5);

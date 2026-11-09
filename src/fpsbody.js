@@ -321,7 +321,7 @@ function fbPose(F, s) {
   const id = s.id, wp = fbWeapon(F, id, s.plain), wdef = FPSW[id] || FPSW.pepperbox;
   for (const k in F.wpn) F.wpn[k].root.visible = k === id;
   const rec = s.rec || 0, draw = s.draw || 0, rl = s.rl || 0;
-  const long = id === 'blunderbuss' || id === 'longarm' || id === 'harpoon' || id === 'avtomat';
+  const long = id === 'blunderbuss' || id === 'longarm' || id === 'harpoon' || id === 'avtomat' || id === 'fresnel';
   if (wdef.melee) {
     // the cutlass, point up and forward; each cut sweeps it across
     const sl = s.slash == null ? -1 : s.slash;
