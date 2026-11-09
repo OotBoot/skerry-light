@@ -796,7 +796,9 @@ function fpsFrame(dt) {
     // a new round: the scores go back to nothing, and the island moves to the next sea
     const rn = fpsRoundNow();
     if (rn !== FPS.round) {
-      const top = fpsScores()[0];
+      const all = fpsScores(), top = all[0], mine = all.find(p => p.me);
+      // the scoreboard (src/scores.js): your kills this round, and a round won if you finished on top
+      if (typeof scoreReport === 'function' && mine) { const won = top && top.me && top.k > 0; const m = BOARD.mine && BOARD.mine.fps; scoreReport('fps', mine.k, (m ? m.b : 0) + (won ? 1 : 0)); }
       FPS.roundMsg = { t: 6, text: top && top.k > 0 ? `${top.me ? 'You' : top.n} won the round with ${top.k} ${top.k === 1 ? 'kill' : 'kills'}.` : 'The round is over.' };
       if (typeof wcEarn === 'function') wcEarn('round');   // weapon crates (src/wcrates.js)
       FPS.round = rn; FPS.kb = {}; FPS.deaths = 0; FPS.wcK = 0; FPS.wcRound = rn;
@@ -806,6 +808,8 @@ function fpsFrame(dt) {
       if (FPS.host) { for (const b of FPS.bots) { fpsRespawn(b); b.protect = 0; b.goal = null; b.hist = []; } FPS.drowned = []; }
       fpsRespawn(m); fpsSend(true);
     }
+    FPS.scoreT = (FPS.scoreT || 0) + dt;
+    if (FPS.scoreT > 5) { FPS.scoreT = 0; const mine = fpsScores().find(p => p.me); if (mine && typeof scoreReport === 'function') scoreReport('fps', mine.k, 0); }
     if (FPS.roundMsg) { FPS.roundMsg.t -= dt; if (FPS.roundMsg.t <= 0) FPS.roundMsg = null; }
     if (!(FPS.vScare > 0)) fpsInput(dt); else { FPS.look = [0, 0]; m.walk = false; }
     if (typeof fpsVerityTick === 'function') fpsVerityTick(dt);

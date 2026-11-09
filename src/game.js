@@ -637,6 +637,7 @@ function arrive() {
   audioTick(0, 0);
   run.voyages++;
   if (run.voyages > best) { best = run.voyages; try { localStorage.setItem('skerry-helm-best', String(best)); } catch (e) {} }
+  if (typeof scoreVoyage === 'function') scoreVoyage(run.voyages);   // the scoreboard (src/scores.js)
   sfxChime();
   const page = g.backrooms ? SK.BACKROOMS_LOG : SK.SEA_LOG[g.biome] || SK.LOG[(run.voyages - 1) % SK.LOG.length];
   const seaPort = { nether: 'The lava thins to black water, the red roof lifts into ordinary cloud, and the pier lamps are dead ahead. Your paint is blistered. Plimsoll is steaming gently.',

@@ -867,6 +867,7 @@ function warFinish(how, by) {
   const me = WAR.nations[WAR.me], st = warLoadStats();
   st.games = (st.games || 0) + 1; if (how === 'won') st.wins = (st.wins || 0) + 1; st.bestTiles = Math.max(st.bestTiles || 0, me.taken); st.bestDays = Math.max(st.bestDays || 0, WAR.day);
   warSaveStats(st);
+  if (typeof scoreReport === 'function') scoreReport('war', st.wins || 0, st.bestTiles || 0);   // the scoreboard (src/scores.js)
   WAR.result = { how, by: by ? by.name : null, days: WAR.day, taken: me.taken, kills: me.kills, boats: WAR.stats.boats, tiles: me.tiles, share: me.tiles / WAR.landTiles };
   WAR.spectate = how !== 'won';
   if (typeof warShowResult === 'function') warShowResult(WAR.result);

@@ -16,6 +16,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { randomBytes } from 'node:crypto';
 import { attachWebSocket } from './ws-lite.js';
+import { scoresRoute, SCORE_STORE } from './scores.js';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const PORT = Number(process.env.PORT) || 8080;
@@ -36,6 +37,7 @@ const server = http.createServer((req, res) => {
     res.end('ok ' + clients.size + ' connected\n');
     return;
   }
+  if (scoresRoute(req, res)) return;
   if (url === '/' || url === '/index.html') {
     const body = page();
     if (!body) {
@@ -166,5 +168,6 @@ setInterval(() => {
 
 server.listen(PORT, () => {
   console.log('Skerry Light is running at http://localhost:' + PORT);
+  console.log('Scoreboard: ' + (SCORE_STORE === 'upstash' ? 'kept in Upstash Redis' : 'in memory only (set UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN to keep it)'));
   if (!page()) console.log('Warning: dist/skerry-light.html is missing. Run: npm run build');
 });

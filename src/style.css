@@ -876,3 +876,24 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 .warlobbylist li.me { color: var(--lamp); }
 .warmpbots { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; font-family: var(--log); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
 .warmpbots output { color: var(--ink); }
+
+/* The scoreboard card on the title screen */
+.boardcard { border-color: rgba(255,216,138,0.4); }
+.boardcard h1 { color: var(--lamp); }
+.boardcard .muted { font-size: 12px; margin: 0; }
+.boardcard [hidden] { display: none !important; }
+.boardtabs { display: flex; flex-wrap: wrap; gap: 4px; }
+.boardtabs button { flex: 1 1 auto; font-family: var(--log); font-size: 12px; letter-spacing: 0.04em; color: var(--muted); background: rgba(7,12,24,0.55); border: 1px solid var(--rule); padding: 10px 10px; min-height: 44px; cursor: pointer; }
+.boardtabs button.on { color: var(--night); background: var(--lamp); border-color: var(--lamp); }
+.boardtabs button:focus-visible { outline: 2px solid var(--lamp); outline-offset: 2px; }
+.boardhead, .boardlist li { display: grid; grid-template-columns: 2.2em minmax(0, 1fr) 6.5em 6.5em; gap: 8px; align-items: baseline; font-family: var(--log); font-size: 13px; }
+.boardhead { font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); border-bottom: 1px solid var(--rule); padding-bottom: 6px; }
+.boardlist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; max-height: 22em; overflow-y: auto; }
+.boardlist li { padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.05); color: var(--ink); }
+.boardlist li.me { color: var(--lamp); }
+.boardlist li.empty { display: block; color: var(--muted); font-size: 12px; }
+.boardlist .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.boardhead .sc, .boardhead .sb, .boardlist .sc, .boardlist .sb { text-align: right; font-variant-numeric: tabular-nums; }
+.boardlist .rk { color: var(--muted); }
+.boardcard p.boardmine { margin: 0; font-family: var(--log); font-size: 12px; color: var(--lamp); }
+@media (max-width: 480px) { .boardhead, .boardlist li { grid-template-columns: 1.8em minmax(0, 1fr) 5em 5em; font-size: 12px; } }

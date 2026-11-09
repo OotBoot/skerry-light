@@ -155,6 +155,24 @@ Keys: drag or arrows pan, wheel or +/- zoom, Q/E the share, H harbour, T tower, 
 
 How it works: the host's browser runs the whole war, the same code as a game alone. Everyone starts from the same seed and settings, so the map, names and the bots' first landings are built identically everywhere and never sent. The host streams what changes through its room presence (4 KiB at most, ten times a second): a header (clock, tide, beam, phase, pact offers, the end), the nations a chunk at a time, the map's owners as run-length-coded rows (changed rows first, then a slow sweep of the rest so anything missed is put right), the buildings a stretch of the map at a time, attacks, boats and flares, and log lines marked for everyone or for one player. The others only draw what they're sent, and send their orders back in their own presence as a short numbered list, so none is applied twice. On the self-hosted server, everyone in one war hears each other at full rate, and everyone else gets only the lobby listing, not the stream.
 
+## The scoreboard
+
+`src/scores.js` (the card on the title screen) and `server/scores.js`. One board for all three games, each player's best:
+- **Skerry Light:** most voyages in one run (and voyages made in all).
+- **Wreckers' Night:** most kills in one round (and rounds won).
+- **The Drowned Reach:** wars won, alone or together (and the most land taken in one war).
+
+Your bests are also kept in your browser, and only ever go up.
+
+- **On claude.ai** the artifact keeps the board in its own shared database: one document per player under `scores/`, readable by everyone who can open the page, written only by its own player (Contributor access or above). Names are shown as each viewer's claude.ai shows them.
+- **On your own server** the board is kept in a free [Upstash](https://upstash.com) Redis database, reached over its REST API (no driver to install). To set it up:
+  1. Sign up at upstash.com and create a Redis database (the free plan is plenty; pick the region nearest your Render service).
+  2. On the database's page, under **REST API**, copy `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN`.
+  3. In Render, open the service, then **Environment**, and add both as environment variables with exactly those names. Render redeploys by itself.
+  4. The server's log then says `Scoreboard: kept in Upstash Redis`.
+
+  Without them the server keeps the board in memory, and it starts over whenever the server restarts. Players on the site choose the name shown beside their scores. Anyone can send a score, so the server only takes numbers the games can plausibly produce, one score every few seconds from each address, and one entry per browser per game; it's a board for honest players, not proof against a determined cheat.
+
 ## Wreckers' Night (multiplayer FPS)
 
 A separate game with its own card on the title screen, below Skerry Light (a banner at the top of the title screen points to it). The card has the weapon picker (the pepperbox now, four slots waiting for more weapons), Go ashore, Settings, your name, who's on the island, and how to play. You go ashore on foot on a skerry at night with a six-shot pepperbox pistol and a lantern, and shoot it out with everyone else on the island. It never touches your voyages, crates, cosmetics or crew; your equipped skin only colours your coat and lantern.

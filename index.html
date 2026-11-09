@@ -184,6 +184,19 @@
         <p><b>Keys:</b> drag or arrows to pan · wheel or +/- to zoom · Q/E the share · C city · V factory · H harbour · T tower · G beacon · F flare · X fire-ship · B bell · Space pause · 1/2/3 speed · Enter land now · Tab the leaderboard on a phone · Esc menu. <b>Touch:</b> drag to pan, pinch to zoom, tap to order.</p>
       </details>
     </div>
+    <div class="card boardcard" id="boardCard" aria-labelledby="boardHead">
+      <div class="cardtop"><span class="eyebrow">Best on record · all three games</span><button class="tool closebtn" id="boardRefresh" type="button">Refresh</button></div>
+      <h1 id="boardHead">The Scoreboard</h1>
+      <div class="boardtabs" id="boardTabs" role="tablist" aria-label="Game">
+        <button type="button" role="tab" data-g="skerry">Skerry Light</button><button type="button" role="tab" data-g="fps">Wreckers’ Night</button><button type="button" role="tab" data-g="war">Drowned Reach</button>
+      </div>
+      <p class="muted" id="boardWhat"></p>
+      <div class="boardhead" aria-hidden="true"><span class="rk">#</span><span class="nm">Name</span><span class="sc" id="boardHeadS"></span><span class="sb" id="boardHeadB"></span></div>
+      <ol class="boardlist" id="boardList" aria-live="polite"></ol>
+      <p class="boardmine" id="boardMine"></p>
+      <div class="nickrow" id="boardNameRow" hidden><label for="boardName">Your name on the board</label><input id="boardName" type="text" maxlength="18" autocomplete="nickname" placeholder="your sailing name"></div>
+      <p class="muted" id="boardNote"></p>
+    </div>
   </div>
 
   <!-- The Drowned Reach: the panels round the map -->
@@ -493,6 +506,7 @@
 <script src="src/war.js"></script>
 <script src="src/warview.js"></script>
 <script src="src/warnet.js"></script>
+<script src="src/scores.js"></script>
 <script src="src/wcrates.js"></script>
 <script src="src/main.js"></script>
 </body>
