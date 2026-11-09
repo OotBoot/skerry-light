@@ -924,6 +924,10 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 .cratebox.rcbox { background: linear-gradient(#2a4640, #12221d); border-color: #78b4a0; box-shadow: inset 0 -8px 0 rgba(0,0,0,0.3), inset 0 0 0 3px rgba(120,180,160,0.25); }
 .skincard canvas.rcprev { display: block; margin-block: 4px 2px; image-rendering: pixelated; }
 .warcard .btnrow .rcrateBtn { align-self: center; }
+
+/* Wreckers' Night's outfit crates */
+.cratebox.ocbox { background: linear-gradient(#4a3a2c, #241a12); border-color: #c8a060; box-shadow: inset 0 -8px 0 rgba(0,0,0,0.3), inset 0 0 0 3px rgba(200,160,96,0.25); }
+.skincard canvas.ocprev { display: block; margin-block: 4px 2px; }
 </style>
 <div id="stage">
   <canvas id="bg" class="under" aria-hidden="true"></canvas>
@@ -1044,6 +1048,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
       <div class="btnrow">
         <button class="primary" id="fpsPlay" type="button">Go ashore</button>
         <button class="tool wcrateBtn" id="wcrateBtn" type="button">Weapon crates</button>
+        <button class="tool ocrateBtn" id="ocrateBtn" type="button">Outfit crates</button>
         <button class="tool" id="fpsSettings" type="button">Settings</button>
       </div>
       <section class="together" aria-labelledby="fpsTogetherHead">
@@ -1329,6 +1334,23 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
         </div>
         <p class="savemsg" id="wcSaveMsg" aria-live="polite"></p>
       </div>
+    </div>
+  </div>
+
+  <div class="overlay cratecard wcratecard ocratecard" id="ocrateCard" hidden role="dialog" aria-modal="true" aria-labelledby="ocrateHead">
+    <div class="card">
+      <div class="cardtop sticky"><span class="eyebrow">Wreckers' Night · the tailor</span><button class="tool closebtn" id="ocrateClose" type="button">✕ Close</button></div>
+      <h1 id="ocrateHead">Outfit Crates</h1>
+      <p>Outfits for your wrecker: the coat, its trim, the sash, the buttons and the hat, a tricorn, a bicorne, a sou'wester, a watch cap or a hood. Everyone on the island sees you in it. Mate outfits shimmer, Captain outfits glow and their eyes shine, and the Admirals' are alight from collar to hem, with a halo. You earn a Tailor's Crate for every 6 kills and one for each round you see out ashore. Same grades and odds as the other crates: if you see gold in the reel, it's yours.</p>
+      <div class="wcprogress"><span id="ocProgress"></span><i id="ocBar" aria-hidden="true"></i></div>
+      <h2 class="invh">Crate inventory</h2>
+      <div class="cratetypes" id="ocTypes"></div>
+      <div class="reel" id="ocReel"><div class="strip" id="ocStrip"></div><div class="marker" aria-hidden="true"></div></div>
+      <div class="result" id="ocResult" hidden aria-live="polite"></div>
+      <ul class="odds" id="ocOdds" aria-label="Chances for each grade"></ul>
+      <h2 class="invh">Your outfits</h2>
+      <span class="eyebrow" id="ocCollected"></span>
+      <div class="inv" id="ocInv"></div>
     </div>
   </div>
 
@@ -11999,7 +12021,8 @@ function fpsPlaceName() {
 }
 const fpsRoundNow = () => Math.floor(Date.now() / FPSC.ROUND);
 function fpsSkin() { try { return mySkin(); } catch (e) { return { hull: '#3a2a1e', sail: '#d8d0bc', rail: '#7a5a3a', lantern: '#ffd88a' }; } }
-function fpsColours() { const s = fpsSkin(); return [s.hull, s.sail, s.rail, s.lantern || '#ffd88a']; }
+// your colours: [coat, sash, trim, lantern], from your outfit when you wear one (ocrates.js), else from your boat skin
+function fpsColours() { const s = fpsSkin(), o = typeof ocOutfit === 'function' ? ocOutfit(ocEquippedId()) : null; return o ? [o.coat, o.sash, o.trim, s.lantern || '#ffd88a'] : [s.hull, s.sail, s.rail, s.lantern || '#ffd88a']; }
 
 // ---------- entering and leaving ----------
 // the Wreckers' Night card on the title screen: keep its count of players and its name box up to date
@@ -12074,6 +12097,7 @@ function fpsStop() {
   $('stage').classList.remove('fpsmode');
   $('fpsPad').hidden = true; $('fpsMenu').hidden = true;
   if (typeof fpsBodyHide === 'function') fpsBodyHide();
+  if (typeof fpsFiguresHide === 'function') fpsFiguresHide();
   if (FPS.vy) { FPS.vy.on = false; FPS.vScare = 0; } $('stage').classList.remove('scaring'); try { stopVerity(); } catch (e) {}
   state = FPS.saved ? FPS.saved.state : 'title';
   if (state !== 'title') state = 'title';
@@ -12101,7 +12125,7 @@ function fpsSend(force) {
   const out = {
     id: NET.sid, n: FPS.nick, r: FPS.round, x: fr1(m.x), y: fr1(m.y), h: fr2(m.h), p: fr2(m.p), hp: m.hp, dead: m.dead > 0 ? 1 : 0,
     lan: m.lan ? 1 : 0, sh: FPS.shots, kb: FPS.kb, d: FPS.deaths, bl: FPS.bell, fl: [FPS.flare, fr1(FPS.flareAt[0]), fr1(FPS.flareAt[1])],
-    c: fpsColours(), wk: m.walk ? 1 : 0, ai: null, w: fpsW().code, sc: FPS.scoped ? 1 : 0, jz: fr2(m.jz || 0), vy: typeof fpsVerityNet === 'function' ? fpsVerityNet() : null,
+    c: fpsColours(), o: typeof ocEquippedId === 'function' ? ocEquippedId() || null : null, wk: m.walk ? 1 : 0, ai: null, w: fpsW().code, sc: FPS.scoped ? 1 : 0, jz: fr2(m.jz || 0), vy: typeof fpsVerityNet === 'function' ? fpsVerityNet() : null,
   };
   // the host shares the wreckers and the drowned
   if (FPS.host) out.ai = {
@@ -12135,7 +12159,7 @@ function fpsNetTick(dt) {
       FPS.seenSeq[f.id] = Array.isArray(f.sh) && f.sh.length ? f.sh[f.sh.length - 1][0] : 0;
       fpsFeed(`${f.n || 'A wrecker'} came ashore.`);
     }
-    r.n = f.n || 'Wrecker'; r.w = typeof f.w === 'string' ? f.w : 'p'; r.tx = f.x; r.ty = f.y; r.th = f.h; r.p = f.p; r.hp = f.hp; r.lan = !!f.lan; r.c = Array.isArray(f.c) ? f.c : null; r.walk = !!f.wk; r.tjz = Math.max(0, Math.min(3, +f.jz || 0));
+    r.n = f.n || 'Wrecker'; r.w = typeof f.w === 'string' ? f.w : 'p'; r.tx = f.x; r.ty = f.y; r.th = f.h; r.p = f.p; r.hp = f.hp; r.lan = !!f.lan; r.c = Array.isArray(f.c) ? f.c : null; r.o = typeof f.o === 'string' ? f.o.slice(0, 24) : ''; r.walk = !!f.wk; r.tjz = Math.max(0, Math.min(3, +f.jz || 0));
     r.vy = Array.isArray(f.vy) && f.vy.length === 4 && f.vy.every(n => typeof n === 'number' && isFinite(n)) && Math.hypot(f.vy[0] - f.x, f.vy[1] - f.y) < 20 ? f.vy : null;
     r.kb = f.r === FPS.round && f.kb && typeof f.kb === 'object' ? f.kb : {};
     r.r = f.r;
@@ -12706,6 +12730,7 @@ function fpsFrame(dt) {
       if (typeof scoreReport === 'function' && mine) { const won = top && top.me && top.k > 0; const m = BOARD.mine && BOARD.mine.fps; scoreReport('fps', mine.k, (m ? m.b : 0) + (won ? 1 : 0)); }
       FPS.roundMsg = { t: 6, text: top && top.k > 0 ? `${top.me ? 'You' : top.n} won the round with ${top.k} ${top.k === 1 ? 'kill' : 'kills'}.` : 'The round is over.' };
       if (typeof wcEarn === 'function') wcEarn('round');   // weapon crates (src/wcrates.js)
+      if (typeof ocEarn === 'function') ocEarn('round');   // outfit crates (src/ocrates.js)
       FPS.round = rn; FPS.kb = {}; FPS.deaths = 0; FPS.wcK = 0; FPS.wcRound = rn;
       if (FPS.host) for (const b of FPS.bots) { b.kb = {}; b.d = 0; b.prevKb = {}; }
       for (const r of FPS.remote.values()) r.prevKb = {};
@@ -12745,7 +12770,7 @@ function fpsFrame(dt) {
     FPS.parts = FPS.parts.filter(p => p.t > 0);
     fpsNetTick(dt);
     // weapon crates: each new kill this round (kills only ever count up from the round's best so far)
-    if (typeof wcEarn === 'function') { const mine = fpsScores().find(p => p.me), k = mine ? mine.k : 0; while ((FPS.wcK || 0) < k) { FPS.wcK = (FPS.wcK || 0) + 1; wcEarn('kill'); } }
+    if (typeof wcEarn === 'function') { const mine = fpsScores().find(p => p.me), k = mine ? mine.k : 0; while ((FPS.wcK || 0) < k) { FPS.wcK = (FPS.wcK || 0) + 1; wcEarn('kill'); if (typeof ocEarn === 'function') ocEarn('kill'); } }
     fpsRemember(m, performance.now());
     fpsAiTick(dt);
     fpsDraw();
@@ -12868,6 +12893,9 @@ function fpsDrawScene() {
   let body = false;
   if (gl && third && typeof fpsBodySync === 'function') { try { body = fpsBodySync(true); } catch (e) { console.warn(e); body = false; } }
   else if (typeof fpsBodyHide === 'function') fpsBodyHide();
+  // and everyone else, as 3D figures too (src/fpsbody.js), so walls hide them and lanterns light them
+  if (gl && typeof fpsFiguresSync === 'function') { try { fpsFiguresSync(); } catch (e) { console.warn(e); } }
+  else if (typeof fpsFiguresHide === 'function') fpsFiguresHide();
   if (gl) {
     gl3dBackdrop(roll, 0, 0);
     { const main = ctx; ctx = bgx; ctx.save(); ctx.translate(cx, hy); ctx.rotate(roll); ctx.translate(-cx, -hy); try { fpsIsleSkyTint(bgx); } finally { ctx.restore(); ctx = main; } }
@@ -12904,7 +12932,7 @@ function fpsDrawScene() {
       if (gl) gl3dClip(it.c.f, it.kind === 'glow' ? { x0: q.x - 4, x1: q.x + 4, y0: q.y - 4, y1: q.y + 4 } : { x0: q.x - 1.6 * q.s, x1: q.x + 1.6 * q.s, y0: q.y - 2.6 * q.s, y1: q.y + 0.5 * q.s }, o);
       if (it.kind === 'rock') drawRockDetailed(o, q, Math.max(0.5, visibility(o.x, o.y)));
       else if (it.kind === 'wreck') drawWreck(o, q, Math.max(0.5, visibility(o.x, o.y)));
-      else if (it.kind === 'person') fpsDrawPerson(o, it.c);
+      else if (it.kind === 'person') { if (gl && !o.me && typeof FBR !== 'undefined' && FBR.has(o.id)) fpsDrawPersonOver(o, it.c); else fpsDrawPerson(o, it.c); }
       else if (it.kind === 'drowned') fpsDrawDrowned(o, it.c);
       else if (it.kind === 'verity') fpsDrawVerity(o, it.c);
       else if (it.kind === 'solid') fpsIsleDrawSolid(o);
@@ -13051,6 +13079,24 @@ function fpsDrawPerson(o, c) {
     ctx.font = `600 ${Math.round(Math.min(16, 9 + hgt * 0.04))}px "Courier Prime", monospace`; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
     ctx.fillStyle = `rgba(236,228,207,${Math.min(1, vis)})`; ctx.fillText(o.n || '', x, foot.y - hgt * 1.04);
     if (!o.me && o.hp != null) { for (let i = 0; i < FPSC.HP; i++) { ctx.fillStyle = i < o.hp ? 'rgba(228,108,79,0.9)' : 'rgba(80,70,60,0.6)'; ctx.fillRect(x - 14 + i * 7.5, foot.y - hgt * 1.04 + 2, 6, 3); } }
+  }
+}
+// over a 3D figure: what the flat drawing would add (their lantern's glow, seen from anywhere; a hit; their name)
+function fpsDrawPersonOver(o, c) {
+  const vis = Math.max(fpsSeeAt(o.x, o.y, o.lan), o.flashT > 0 ? 1 : 0);
+  const foot = proj(c), head = proj(cam(o.x, o.y, FPSC.GROUND + FPSC.TALL + (o.jz || 0))), hgt = foot.y - head.y, x = foot.x;
+  const col = o.c || ['#3a2a1e', '#d8d0bc', '#7a5a3a', '#ffd88a'];
+  if (o.lan && vis < 0.5) {
+    // (once they're well lit, the 3D lantern itself shows; until then its glow gives them away)
+    const facing = angDiff(o.h, bearingOf(camX - o.x, camY - o.y)), side = Math.sin(facing) >= 0 ? 1 : -1;
+    lamp(x - side * hgt * 0.2, foot.y - hgt * 0.42, String(col[3]).length === 7 ? col[3] : '#ffd88a', Math.max(2.2, hgt * 0.06));
+  }
+  if ((o.slashT || 0) > 0) o.slashT -= FPS.dtLast || 0.016;
+  if (o.hitT > 0) { ctx.globalAlpha = o.hitT * 2; ctx.fillStyle = '#ff6040'; ctx.beginPath(); ctx.arc(x, foot.y - hgt * 0.6, hgt * 0.12, 0, 6.28); ctx.fill(); ctx.globalAlpha = 1; }
+  if (vis > 0.45 && hgt > 22) {
+    ctx.font = `600 ${Math.round(Math.min(16, 9 + hgt * 0.04))}px "Courier Prime", monospace`; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+    ctx.fillStyle = `rgba(236,228,207,${Math.min(1, vis)})`; ctx.fillText(o.n || '', x, foot.y - hgt * 1.08);
+    if (o.hp != null) { for (let i = 0; i < FPSC.HP; i++) { ctx.fillStyle = i < o.hp ? 'rgba(228,108,79,0.9)' : 'rgba(80,70,60,0.6)'; ctx.fillRect(x - 14 + i * 7.5, foot.y - hgt * 1.08 + 2, 6, 3); } }
   }
 }
 function fpsDrawDrowned(d, c) {
@@ -14839,14 +14885,14 @@ const VM_PLAIN = {
   avtomat:     { metal: '#3a3d44', dark: '#1a1b20', wood: '#6a3e22', brass: '#8a6a2c', accent: '#b0a080', glow: null },
 };
 const vmHex = (c, d) => (typeof c === 'string' && /^#[0-9a-f]{6}$/i.test(c)) ? c : d;
-function vmSkinOf(id) {
+function vmSkinOf(id, plain) {
   let s = null;
-  try { if (typeof wcEquippedSkin === 'function') s = wcEquippedSkin(id); } catch (e) {}
+  try { if (!plain && typeof wcEquippedSkin === 'function') s = wcEquippedSkin(id); } catch (e) {}
   const P = VM_PLAIN[id];
   return { id: s && s.id || 'plain', metal: vmHex(s && s.metal, P.metal), dark: vmHex(s && s.dark, P.dark), wood: vmHex(s && s.wood, P.wood), brass: vmHex(s && s.brass, P.brass), accent: vmHex(s && s.accent, P.accent), glow: s && vmHex(s.glow, null) };
 }
-function vmMatsFor(id) {
-  const k = vmSkinOf(id);
+function vmMatsFor(id, plain) {
+  const k = vmSkinOf(id, plain);
   const glow = k.glow ? new THREE.Color(k.glow) : new THREE.Color(0);
   const M = {
     iron: new THREE.MeshPhongMaterial({ color: k.metal, specular: 0x8a8c96, shininess: 70 }),
@@ -15540,17 +15586,19 @@ VM_ANIM.avtomat = (w, S) => {
 };
 
 // ---- src/fpsbody.js ----
-// Wreckers' Night: your own wrecker, in 3D, seen over your shoulder.
+// Wreckers' Night: the wreckers, in 3D: your own, seen over your shoulder, and everyone else on the island
+// (the other players and the bots).
 //
-// A proper figure standing in the 3D island scene (so rocks hide it and the lighthouse beam and your
-// lantern light it), built from your boat skin's colours:
+// A proper figure standing in the 3D island scene (so walls and rocks hide it and the lighthouse beam and
+// lanterns light it), built from the wearer's colours (your boat skin's) and their outfit (ocrates.js):
 //  - a long open-fronted coat (the hull colour) with turned-back cuffs, a stand collar, lapels and brass
 //    buttons, and a skirt that swings out behind you as you run and flips up when you jump
 //  - a waistcoat, a shirt and cravat, a sash in your sail colour, a belt with a brass buckle, a
 //    bandolier across the back with cartridge pouches, a powder horn and a dirk at the hip
 //  - breeches, stockings and turned-down sea boots with soles and heels
-//  - a head with ears, hair tied back in a queue with a ribbon, and a tricorn with braided edges and a
-//    cockade
+//  - a head with ears, hair tied back in a queue with a ribbon, and a hat: a tricorn with braided edges and a
+//    cockade, or the outfit's own (bicorne, sou'wester, watch cap, hood); the finer outfits shimmer, glow,
+//    have glowing eyes, or a halo
 //  - the weapon you're holding, the same 3D model (and skin) as in first person, in your hands: the
 //    pepperbox held out in one hand, the long guns shouldered with the left hand on the barrel, the
 //    cutlass carried point-up and swung with each cut
@@ -15561,7 +15609,10 @@ VM_ANIM.avtomat = (w, S) => {
 // reload, your legs tuck when you jump and you sink a little when you land.
 //
 // Arms are placed by a small two-bone reach (shoulder, elbow, wrist) to wherever the hands are.
-// Without WebGL (the Classic renderer) the flat figure in fps.js is drawn instead.
+// Everyone else is posed from what's known of them: where they are and are facing, their aim, how fast they're
+// moving (for the stride), their weapon (in its plain finish), its flash, their lantern; they're hidden in the
+// dark exactly as they would be drawn flat, and their names and lantern glow are still painted over the top.
+// Without WebGL (the Classic renderer) the flat figures in fps.js are drawn instead.
 
 const FB = { tried: false, ok: false, root: null, key: '', mats: [], wpn: {}, cur: '', amp: 0, spd: 0, lx: null, ly: null, swing: 0 };
 const FB_UP = typeof THREE !== 'undefined' ? new THREE.Vector3(0, 1, 0) : null;
@@ -15569,7 +15620,7 @@ const FB_UP = typeof THREE !== 'undefined' ? new THREE.Vector3(0, 1, 0) : null;
 function fbCol(s, d) { try { if (typeof s === 'string' && /^#[0-9a-f]{3,8}$/i.test(s)) return new THREE.Color(s.slice(0, 7)); } catch (e) {} return new THREE.Color(d); }
 function fbMat(c, extra) {
   const m = new THREE.MeshLambertMaterial(Object.assign({ color: c, flatShading: true, transparent: true }, extra || {}));
-  m.userData.base = m.color.clone(); FB.mats.push(m); return m;
+  m.userData.base = m.color.clone(); (FB.building || FB).mats.push(m); return m;
 }
 function fbMesh(geo, mat, x, y, z, parent) { const m = new THREE.Mesh(geo, mat); m.position.set(x || 0, y || 0, z || 0); if (parent) parent.add(m); return m; }
 // a cylinder hanging down from y=0 to y=-h (for limbs and the coat skirt), optionally open at the front
@@ -15597,27 +15648,28 @@ function fbIK(S, T, L1, L2, pole) {
   return S.clone().add(dir.clone().multiplyScalar(a)).add(bend.multiplyScalar(h));
 }
 
-function fbBuild() {
-  const c = fpsColours();
-  if (FB.root) { GL3D.scene.remove(FB.root); FB.root.traverse(o => { if (o.geometry && !o.userData.keep) o.geometry.dispose(); }); }
-  for (const m of FB.mats) m.dispose();
-  FB.mats = []; FB.wpn = {}; FB.cur = ''; FB.key = JSON.stringify(c);
-  const coatC = fbCol(c[0], '#3a2a1e'), trimC = fbCol(c[2], '#7a5a3a'), sashC = fbCol(c[1], '#a03028');
-  const M = FB.M = {
+// one wrecker, built from their colours ([coat, sash, trim, lantern]) and their outfit (ocrates.js), if any
+function fbFigure(c, outfitId) {
+  const F = { mats: [], wpn: {}, key: JSON.stringify(c) + '|' + (outfitId || ''), amp: 0, spd: 0, lx: null, ly: null, swing: 0, ph: 0 };
+  F.building = F;
+  const oc = typeof ocOutfit === 'function' ? ocOutfit(outfitId) : null;
+  F.oc = oc;
+  const coatC = fbCol(oc ? oc.coat : c[0], '#3a2a1e'), trimC = fbCol(oc ? oc.trim : c[2], '#7a5a3a'), sashC = fbCol(oc ? oc.sash : c[1], '#a03028');
+  const M = F.M = {
     coat: fbMat(coatC, { side: THREE.DoubleSide }), lining: fbMat(coatC.clone().multiplyScalar(0.55), { side: THREE.DoubleSide }),
     trim: fbMat(trimC), sash: fbMat(sashC, { side: THREE.DoubleSide }),
-    waist: fbMat(sashC.clone().lerp(new THREE.Color('#2a2018'), 0.6)), shirt: fbMat('#d6cfbd'),
-    breeches: fbMat('#4a3f33'), stocking: fbMat('#c9c0aa'), leather: fbMat('#2a1c14'), tan: fbMat('#5c4028'),
-    brass: fbMat('#b8913c'), flesh: fbMat('#9a7058'), hair: fbMat('#2a1e16'), hat: fbMat('#1b1713', { side: THREE.DoubleSide }),
+    waist: fbMat(oc && oc.waist ? oc.waist : sashC.clone().lerp(new THREE.Color('#2a2018'), 0.6)), shirt: fbMat('#d6cfbd'),
+    breeches: fbMat(oc && oc.breeches ? oc.breeches : '#4a3f33'), stocking: fbMat('#c9c0aa'), leather: fbMat('#2a1c14'), tan: fbMat('#5c4028'),
+    brass: fbMat(oc && oc.brass ? oc.brass : '#b8913c'), flesh: fbMat('#9a7058'), hair: fbMat('#2a1e16'), hat: fbMat(oc && oc.hat ? oc.hat : '#1b1713', { side: THREE.DoubleSide }),
     iron: fbMat('#3a3a3e'), horn: fbMat('#d8c9a0'),
     glass: new THREE.MeshBasicMaterial({ color: 0xffd88a, transparent: true }),
   };
-  const root = FB.root = new THREE.Group(); root.visible = false;
+  const root = F.root = new THREE.Group(); root.visible = false;
 
   // ---- hips and legs ----
-  const hips = FB.hips = new THREE.Group(); hips.position.y = 0.95; root.add(hips);
+  const hips = F.hips = new THREE.Group(); hips.position.y = 0.95; root.add(hips);
   const pelvis = fbMesh(new THREE.SphereGeometry(0.17, 10, 8), M.breeches, 0, -0.04, 0, hips); pelvis.scale.set(1.05, 0.7, 0.75);
-  FB.legs = [];
+  F.legs = [];
   for (const s of [-1, 1]) {
     const leg = new THREE.Group(); leg.position.set(s * 0.095, 0, 0); hips.add(leg);
     leg.add(fbDown(0.088, 0.068, 0.45, M.breeches, 9));
@@ -15631,11 +15683,11 @@ function fbBuild() {
     foot.geometry.translate(0, 0, 0); foot.scale.set(1, 1, 1);
     fbMesh(new THREE.BoxGeometry(0.11, 0.025, 0.27), M.tan, 0, -0.485, -0.045, knee);                  // the sole
     fbMesh(new THREE.BoxGeometry(0.09, 0.04, 0.06), M.tan, 0, -0.47, 0.06, knee);                     // the heel
-    FB.legs.push({ leg, knee, s });
+    F.legs.push({ leg, knee, s });
   }
 
   // ---- the coat's skirt, swinging from the waist ----
-  const skirt = FB.skirt = new THREE.Group(); skirt.position.y = 0.06; hips.add(skirt);
+  const skirt = F.skirt = new THREE.Group(); skirt.position.y = 0.06; hips.add(skirt);
   const sk = fbDown(0.2, 0.29, 0.42, M.coat, 14, 1.0); sk.scale.z = 0.8; skirt.add(sk);
   const skl = fbDown(0.195, 0.285, 0.42, M.lining, 14, 1.0); skl.scale.z = 0.78; skl.material = M.lining; skirt.add(skl);
   // the back vent's two folds and their buttons
@@ -15646,7 +15698,7 @@ function fbBuild() {
   fbMesh(new THREE.TorusGeometry(0.29, 0.012, 4, 20, Math.PI * 2 - 1.0), M.trim, 0, -0.42, 0, skirt).rotation.set(Math.PI / 2, 0, Math.PI / 2 + 0.5);
 
   // ---- the body above the waist ----
-  const spine = FB.spine = new THREE.Group(); spine.position.y = 0.06; hips.add(spine);
+  const spine = F.spine = new THREE.Group(); spine.position.y = 0.06; hips.add(spine);
   const waist = fbUp(0.165, 0.185, 0.52, M.waist, 12); waist.scale.z = 0.72; spine.add(waist);
   for (let i = 0; i < 5; i++) fbMesh(new THREE.SphereGeometry(0.01, 6, 4), M.brass, 0, 0.1 + i * 0.075, -0.135, spine);
   const shirt = fbMesh(new THREE.BoxGeometry(0.1, 0.12, 0.03), M.shirt, 0, 0.5, -0.12, spine); shirt.rotation.x = -0.15;
@@ -15683,11 +15735,11 @@ function fbBuild() {
   const dirk = fbMesh(new THREE.BoxGeometry(0.03, 0.22, 0.02), M.leather, 0.17, -0.08, -0.06, spine); dirk.rotation.z = 0.25;
   fbMesh(new THREE.CylinderGeometry(0.014, 0.014, 0.07, 6), M.tan, 0.2, 0.06, -0.06, spine).rotation.z = 0.25;
   // shoulders
-  FB.shL = new THREE.Vector3(-0.215, 0.47, 0); FB.shR = new THREE.Vector3(0.215, 0.47, 0);
-  for (const sp of [FB.shL, FB.shR]) { const b = fbMesh(new THREE.SphereGeometry(0.088, 10, 8), M.coat, sp.x, sp.y, sp.z, spine); b.scale.set(1, 0.85, 0.95); }
+  F.shL = new THREE.Vector3(-0.215, 0.47, 0); F.shR = new THREE.Vector3(0.215, 0.47, 0);
+  for (const sp of [F.shL, F.shR]) { const b = fbMesh(new THREE.SphereGeometry(0.088, 10, 8), M.coat, sp.x, sp.y, sp.z, spine); b.scale.set(1, 0.85, 0.95); }
 
   // ---- head ----
-  const head = FB.head = new THREE.Group(); head.position.y = 0.58; spine.add(head);
+  const head = F.head = new THREE.Group(); head.position.y = 0.58; spine.add(head);
   fbMesh(new THREE.CylinderGeometry(0.05, 0.058, 0.08, 8), M.flesh, 0, 0.02, 0, head);
   const skull = fbMesh(new THREE.SphereGeometry(0.105, 14, 10), M.flesh, 0, 0.14, 0, head); skull.scale.set(0.9, 1.05, 1);
   const hair = fbMesh(new THREE.SphereGeometry(0.111, 14, 10, 0, Math.PI * 2, 0, Math.PI * 0.62), M.hair, 0, 0.145, 0.008, head); hair.scale.set(0.92, 1.05, 1.02);
@@ -15698,25 +15750,13 @@ function fbBuild() {
   fbMesh(new THREE.ConeGeometry(0.018, 0.045, 5), M.flesh, 0, 0.13, -0.105, head).rotation.x = -Math.PI / 2;
   for (const s of [-1, 1]) fbMesh(new THREE.SphereGeometry(0.01, 5, 4), M.leather, s * 0.035, 0.16, -0.093, head);
   fbMesh(new THREE.BoxGeometry(0.09, 0.03, 0.02), M.hair, 0, 0.065, -0.095, head);                   // a short beard along the jaw
-  // the tricorn: a crown and three upturned brims, edged with braid, a cockade on the left
-  const hat = FB.hat = new THREE.Group(); hat.position.set(0, 0.215, 0); hat.rotation.x = -0.08; head.add(hat);
-  const crown = fbUp(0.105, 0.098, 0.09, M.hat, 12); hat.add(crown);
-  fbMesh(new THREE.CylinderGeometry(0.098, 0.098, 0.012, 12), M.hat, 0, 0.09, 0, hat);
-  fbMesh(new THREE.CylinderGeometry(0.108, 0.108, 0.018, 12), M.trim, 0, 0.01, 0, hat);                 // the band
-  const brimR = 0.2;
-  for (let i = 0; i < 3; i++) {
-    const a = Math.PI + Math.PI / 3 + i * (Math.PI * 2 / 3);                                             // the corners point front, back-left, back-right
-    const mx = Math.sin(a) * brimR * 0.55, mz = Math.cos(a) * brimR * 0.55;
-    const side = new THREE.Group(); side.position.set(mx, 0.005, mz); side.rotation.y = a; hat.add(side);
-    const wall = fbMesh(new THREE.BoxGeometry(0.3, 0.09, 0.012), M.hat, 0, 0.035, 0, side); wall.rotation.x = 0.55;
-    const edge = fbMesh(new THREE.BoxGeometry(0.3, 0.012, 0.016), M.trim, 0, 0.075, 0.022, side); edge.rotation.x = 0.55;
-    fbMesh(new THREE.BoxGeometry(0.26, 0.012, 0.11), M.hat, 0, -0.002, -0.045, side);
-  }
-  const cock = fbMesh(new THREE.CylinderGeometry(0.025, 0.025, 0.01, 10), M.sash, -0.13, 0.06, -0.07, hat); cock.rotation.set(Math.PI / 2, 0, 0.9);
-  fbMesh(new THREE.SphereGeometry(0.008, 5, 4), M.brass, -0.135, 0.06, -0.075, hat);
+  // the hat (a tricorn unless the outfit says otherwise), and eyes that can glow
+  F.hat = fbHat(head, M, oc ? oc.style : 'tricorn');
+  F.eyes = [];
+  if (oc && oc.eyes) { const em = new THREE.MeshBasicMaterial({ color: oc.eyes, transparent: true }); F.eyeMat = em; for (const s of [-1, 1]) F.eyes.push(fbMesh(new THREE.SphereGeometry(0.014, 6, 4), em, s * 0.036, 0.16, -0.098, head)); }
 
   // ---- arms: shoulder → elbow → wrist, placed each frame ----
-  FB.arms = [];
+  F.arms = [];
   for (const s of [-1, 1]) {
     const up = new THREE.Mesh(fbBoneGeo(0.06, 0.052), M.coat), fore = new THREE.Mesh(fbBoneGeo(0.052, 0.045), M.coat);
     const elbow = new THREE.Mesh(new THREE.SphereGeometry(0.053, 8, 6), M.coat);
@@ -15725,160 +15765,289 @@ function fbBuild() {
     const hand = new THREE.Group(), palm = fbMesh(new THREE.BoxGeometry(0.07, 0.085, 0.035), M.flesh, 0, -0.04, 0, hand);
     fbMesh(new THREE.BoxGeometry(0.02, 0.05, 0.025), M.flesh, -s * 0.04, -0.03, -0.01, hand);
     spine.add(up, fore, elbow, cuff, ruffle, hand);
-    FB.arms.push({ s, up, fore, elbow, cuff, ruffle, hand, palm });
+    F.arms.push({ s, up, fore, elbow, cuff, ruffle, hand, palm });
   }
 
   // ---- the lantern ----
-  const lan = FB.lan = new THREE.Group(); spine.add(lan);
+  const lan = F.lan = new THREE.Group(); spine.add(lan);
   fbMesh(new THREE.TorusGeometry(0.035, 0.005, 4, 10, Math.PI), M.iron, 0, 0.0, 0, lan);
   const lb = new THREE.Group(); lb.position.y = -0.03; lan.add(lb);
   fbMesh(new THREE.ConeGeometry(0.06, 0.05, 6), M.iron, 0, -0.025, 0, lb);
   fbMesh(new THREE.CylinderGeometry(0.045, 0.045, 0.11, 6), M.glass, 0, -0.105, 0, lb);
   for (let i = 0; i < 6; i++) { const a = i / 6 * Math.PI * 2; fbMesh(new THREE.BoxGeometry(0.008, 0.12, 0.008), M.iron, Math.sin(a) * 0.05, -0.105, Math.cos(a) * 0.05, lb); }
   fbMesh(new THREE.CylinderGeometry(0.055, 0.06, 0.02, 6), M.iron, 0, -0.17, 0, lb);
-  FB.lanBody = lb;
+  F.lanBody = lb;
 
   // ---- the muzzle flash ----
   let tex = null; try { if (typeof VM !== 'undefined' && VM.softTex) tex = VM.softTex; } catch (e) {}
-  FB.flash = new THREE.Mesh(new THREE.PlaneGeometry(0.45, 0.45), new THREE.MeshBasicMaterial({ map: tex, color: tex ? 0xffffff : 0xffc060, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, opacity: 0.9 }));
-  FB.flash.visible = false; root.add(FB.flash);
+  F.flash = new THREE.Mesh(new THREE.PlaneGeometry(0.45, 0.45), new THREE.MeshBasicMaterial({ map: tex, color: tex ? 0xffffff : 0xffc060, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, opacity: 0.9 }));
+  F.flash.visible = false; root.add(F.flash);
 
+  // a soft halo behind the finest outfits
+  if (oc && oc.halo) { let tx = null; try { if (typeof VM !== 'undefined' && VM.softTex) tx = VM.softTex; } catch (e) {} F.halo = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 2.4), new THREE.MeshBasicMaterial({ map: tx, color: oc.halo, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, opacity: 0.4 })); F.halo.position.y = 1.0; root.add(F.halo); }
+  FB.building = null;
+  F.aim = new THREE.Group(); F.spine.add(F.aim);
   GL3D.scene.add(root);
+  return F;
+}
+// the hats: a tricorn (three upturned brims, braid and a cockade), a bicorne (two tall halves, front and back), a
+// sou'wester (a round crown and a wide brim, deepest at the back to shed the rain), a knitted watch cap with a
+// turned-up cuff, or a deep hood
+function fbHat(head, M, style) {
+  const hat = new THREE.Group(); hat.position.set(0, 0.215, 0); hat.rotation.x = -0.08; head.add(hat);
+  if (style === 'bicorne') {
+    hat.add(fbUp(0.1, 0.095, 0.07, M.hat, 12));
+    for (const zf of [-1, 1]) {
+      const half = new THREE.Group(); half.position.set(0, 0.0, zf * 0.035); half.rotation.x = zf * 0.12; hat.add(half);
+      const sh = new THREE.Shape(); sh.moveTo(-0.24, 0); sh.quadraticCurveTo(-0.2, 0.08, 0, 0.17); sh.quadraticCurveTo(0.2, 0.08, 0.24, 0); sh.lineTo(-0.24, 0);
+      const g = new THREE.ExtrudeGeometry(sh, { depth: 0.012, bevelEnabled: false }); g.translate(0, 0, -0.006);
+      half.add(new THREE.Mesh(g, M.hat));
+      const edge = new THREE.Mesh(new THREE.TorusGeometry(0.17, 0.007, 4, 18, Math.PI), M.trim); edge.scale.set(1.4, 1, 1); edge.position.z = zf * 0.008; half.add(edge);
+    }
+    const cock = fbMesh(new THREE.CylinderGeometry(0.03, 0.03, 0.01, 10), M.sash, 0, 0.07, -0.05, hat); cock.rotation.x = Math.PI / 2;
+    fbMesh(new THREE.SphereGeometry(0.01, 5, 4), M.brass, 0, 0.07, -0.056, hat);
+  } else if (style === 'souwester') {
+    const dome = fbMesh(new THREE.SphereGeometry(0.115, 14, 8, 0, Math.PI * 2, 0, Math.PI / 2), M.hat, 0, 0.0, 0, hat); dome.scale.set(1, 0.9, 1.05);
+    const brim = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.2, 0.05, 18, 1, true), M.hat); brim.position.set(0, -0.02, 0.03); brim.rotation.x = -0.25; hat.add(brim);
+    fbMesh(new THREE.TorusGeometry(0.195, 0.006, 4, 22), M.trim, 0, -0.045, 0.03, hat).rotation.set(Math.PI / 2 - 0.25, 0, 0);
+    for (const sx of [-1, 1]) { const tie = fbMesh(new THREE.BoxGeometry(0.008, 0.14, 0.008), M.trim, sx * 0.09, -0.11, -0.02, hat); tie.rotation.z = sx * 0.15; }
+  } else if (style === 'watchcap') {
+    const cap = fbMesh(new THREE.SphereGeometry(0.114, 14, 10, 0, Math.PI * 2, 0, Math.PI * 0.55), M.hat, 0, -0.04, 0.005, hat); cap.scale.set(0.95, 1.15, 1.02);
+    fbMesh(new THREE.CylinderGeometry(0.112, 0.112, 0.05, 14), M.trim, 0, -0.05, 0.005, hat);
+    for (let i = 0; i < 10; i++) { const a = i / 10 * Math.PI * 2; fbMesh(new THREE.BoxGeometry(0.008, 0.07, 0.008), M.hat, Math.sin(a) * 0.106, 0.03, Math.cos(a) * 0.106 + 0.005, hat); }   // its ribbing
+  } else if (style === 'hood') {
+    hat.position.y = 0.14; hat.rotation.x = 0;
+    const hood = fbMesh(new THREE.SphereGeometry(0.15, 14, 10, 0, Math.PI * 2, 0, Math.PI * 0.72), M.hat, 0, 0.0, 0.02, hat); hood.scale.set(0.95, 1.08, 1.05);
+    hood.material = M.hat;
+    // the opening round the face, in shadow, and the hood falling to the shoulders
+    const rim = fbMesh(new THREE.TorusGeometry(0.1, 0.018, 6, 16), M.hat, 0, -0.01, -0.125, hat); rim.scale.set(0.9, 1.15, 1);
+    const drape = fbDown(0.14, 0.2, 0.18, M.hat, 12, 1.2); drape.position.set(0, -0.06, 0.02); hat.add(drape);
+  } else {
+    const crown = fbUp(0.105, 0.098, 0.09, M.hat, 12); hat.add(crown);
+    fbMesh(new THREE.CylinderGeometry(0.098, 0.098, 0.012, 12), M.hat, 0, 0.09, 0, hat);
+    fbMesh(new THREE.CylinderGeometry(0.108, 0.108, 0.018, 12), M.trim, 0, 0.01, 0, hat);                 // the band
+    const brimR = 0.2;
+    for (let i = 0; i < 3; i++) {
+      const a = Math.PI + Math.PI / 3 + i * (Math.PI * 2 / 3);                                             // the corners point front, back-left, back-right
+      const mx = Math.sin(a) * brimR * 0.55, mz = Math.cos(a) * brimR * 0.55;
+      const side = new THREE.Group(); side.position.set(mx, 0.005, mz); side.rotation.y = a; hat.add(side);
+      const wall = fbMesh(new THREE.BoxGeometry(0.3, 0.09, 0.012), M.hat, 0, 0.035, 0, side); wall.rotation.x = 0.55;
+      const edge = fbMesh(new THREE.BoxGeometry(0.3, 0.012, 0.016), M.trim, 0, 0.075, 0.022, side); edge.rotation.x = 0.55;
+      fbMesh(new THREE.BoxGeometry(0.26, 0.012, 0.11), M.hat, 0, -0.002, -0.045, side);
+    }
+    const cock = fbMesh(new THREE.CylinderGeometry(0.025, 0.025, 0.01, 10), M.sash, -0.13, 0.06, -0.07, hat); cock.rotation.set(Math.PI / 2, 0, 0.9);
+    fbMesh(new THREE.SphereGeometry(0.008, 5, 4), M.brass, -0.135, 0.06, -0.075, hat);
+  }
+  return hat;
+}
+function fbDispose(F) {
+  if (!F || !F.root) return;
+  GL3D.scene.remove(F.root);
+  F.root.traverse(o => { if (o.geometry && !o.userData.keep) o.geometry.dispose(); });
+  for (const m of F.mats) m.dispose();
 }
 
-// the held weapon: the first-person model, with its forearm sleeves taken off (the figure has its own arms)
-function fbWeapon(id) {
-  const key = id + ':' + (typeof vmSkinOf === 'function' ? vmSkinOf(id).id : '');
-  let w = FB.wpn[id];
+
+// the held weapon: the first-person model, with its forearm sleeves taken off (the figure has its own arms).
+// Your own in your weapon skin; everyone else's in its plain finish
+function fbWeapon(F, id, plain) {
+  const key = id + ':' + (!plain && typeof vmSkinOf === 'function' ? vmSkinOf(id).id : 'plain');
+  let w = F.wpn[id];
   if (w && w.key === key) return w;
-  if (w) { FB.aim.remove(w.root); }
+  if (w) { F.aim.remove(w.root); }
   let built = null;
-  try { if (typeof vmInit === 'function' && vmInit() && VM_BUILD[id]) built = VM_BUILD[id](vmMatsFor(id)); } catch (e) { built = null; }
+  try { if (typeof vmInit === 'function' && vmInit() && VM_BUILD[id]) built = VM_BUILD[id](vmMatsFor(id, plain)); } catch (e) { built = null; }
   if (built) {
     for (const h of [built.hand, built.left]) if (h) { h.children[0].visible = false; h.children[1].visible = false; }
-    for (const k in built.M) { const m = built.M[k]; if (m && m.isMaterial) { m.transparent = true; FB.wmats = FB.wmats || new Set(); FB.wmats.add(m); } }
+    for (const k in built.M) { const m = built.M[k]; if (m && m.isMaterial) { m.transparent = true; F.wmats = F.wmats || new Set(); F.wmats.add(m); } }
+    for (const o of ['fresh', 'spent', 'old']) if (built[o] && built[o].parent && built[o].parent !== built.root) built[o].parent.remove(built[o]);
   } else {
     // no first-person models to borrow: a plain gun
     const root = new THREE.Group(), hand = new THREE.Object3D(); root.add(hand);
-    fbMesh(new THREE.BoxGeometry(0.04, 0.05, id === 'pepperbox' ? 0.3 : 0.9), FB.M.iron, 0, 0.03, -0.25, root);
+    fbMesh(new THREE.BoxGeometry(0.04, 0.05, id === 'pepperbox' ? 0.3 : 0.9), F.M.iron, 0, 0.03, -0.25, root);
     const muzzle = new THREE.Object3D(); muzzle.position.set(0, 0.03, id === 'pepperbox' ? -0.4 : -0.7); root.add(muzzle);
     built = { root, hand, muzzle, melee: id === 'cutlass' };
   }
-  w = FB.wpn[id] = Object.assign(built, { key, id });
-  FB.aim.add(w.root);
+  w = F.wpn[id] = Object.assign(built, { key, id });
+  F.aim.add(w.root);
   return w;
 }
 
 // a point in a weapon's space, in the spine's space
-const FB_V = new THREE.Vector3();
-function fbIn(obj) { obj.updateWorldMatrix(true, false); return FB.spine.worldToLocal(obj.getWorldPosition(new THREE.Vector3())); }
+function fbIn(F, obj) { obj.updateWorldMatrix(true, false); return F.spine.worldToLocal(obj.getWorldPosition(new THREE.Vector3())); }
 
-// each frame, from fpsDrawScene, before the 3D scene is drawn: show (or hide) your figure and pose it
-function fpsBodySync(show) {
-  if (!show || typeof GL3D === 'undefined' || !GL3D.scene) { if (FB.root) FB.root.visible = false; return false; }
-  if (!FB.root || FB.key !== JSON.stringify(fpsColours())) {
-    try { fbBuild(); FB.aim = new THREE.Group(); FB.spine.add(FB.aim); FB.ok = true; } catch (e) { console.warn('fps body', e); FB.ok = false; FB.root = null; return false; }
-  }
-  const m = FPS.me, dt = Math.min(0.05, FPS.dtLast || 0.016), w = fpsW(), id = FPS.weapon;
-  const root = FB.root; root.visible = true;
-  root.position.set(m.x, FPSC.GROUND + (m.jz || 0), -m.y);
-  root.rotation.y = -m.h;
-  // how fast you're going, from where you were
-  if (FB.lx != null) { const v = Math.hypot(m.x - FB.lx, m.y - FB.ly) / Math.max(0.001, dt); FB.spd += (Math.min(12, v) - FB.spd) * Math.min(1, dt * 10); }
-  FB.lx = m.x; FB.ly = m.y;
-  const air = (m.jz || 0) > 0.02, amp = air ? 0 : Math.min(1, FB.spd / FPSC.SPRINT);
-  FB.amp += (amp - FB.amp) * Math.min(1, dt * 8);
-  const A = FB.amp, ph = FPS.step || 0, run = A > 0.75;
+// pose a figure. s: where they are (x, y, jz, vz, h heading, p pitch), how fast they're going (spd), their stride
+// (ph), the weapon (id) and whether it's theirs to skin (plain), its kick (rec 0..1), being drawn (draw 0..1), a
+// reload's tip (rl 0..1), a cutlass cut (slash 0..1, or -1), the lantern (lan), how well they're lit (see) and
+// how solid they are (op), and the time (t)
+function fbPose(F, s) {
+  const dt = s.dt, root = F.root; root.visible = true;
+  root.position.set(s.x, FPSC.GROUND + (s.jz || 0), -s.y);
+  root.rotation.y = -s.h;
+  const air = (s.jz || 0) > 0.02, amp = air ? 0 : Math.min(1, s.spd / FPSC.SPRINT);
+  F.amp += (amp - F.amp) * Math.min(1, dt * 8);
+  const A = F.amp, ph = s.ph || 0, run = A > 0.75;
   // legs: a stride, the knee bending as the foot comes through; tucked up in the air
-  const tuck = air ? Math.min(1, (m.jz || 0) * 3) : 0;
-  for (const L of FB.legs) {
+  const tuck = air ? Math.min(1, (s.jz || 0) * 3) : 0;
+  for (const L of F.legs) {
     const sw = Math.sin(ph + (L.s < 0 ? 0 : Math.PI)) * A * (run ? 0.75 : 0.55);
     L.leg.rotation.x = sw * (1 - tuck) + tuck * (L.s < 0 ? 0.7 : 0.35);
     L.knee.rotation.x = -(Math.max(0, Math.cos(ph + (L.s < 0 ? 0 : Math.PI))) * A * (run ? 1.3 : 0.9) + 0.04) * (1 - tuck) - tuck * (L.s < 0 ? 1.2 : 0.8);
   }
-  FB.hips.position.y = 0.95 - Math.abs(Math.cos(ph)) * 0.035 * A + 0.02 * A - (FPS.landed || 0) * 0.35;
-  FB.hips.rotation.y = Math.sin(ph) * 0.08 * A;
-  // the coat skirt flares out behind you as you go, and up when you jump
-  const up = air ? Math.min(0.5, Math.max(0, -(m.vz || 0)) * 0.08 + 0.15) : 0;
-  FB.skirt.rotation.x = -(A * 0.32 + up) - Math.sin(ph * 2) * 0.04 * A;
-  // the body leans into a run and follows your aim; the head does the rest
-  const p = clamp(m.p || 0, -0.6, 0.6);
-  FB.spine.rotation.x = -A * 0.12 + p * 0.3;
-  FB.spine.rotation.y = -Math.sin(ph) * 0.1 * A;
-  FB.head.rotation.x = p * 0.45 - FB.spine.rotation.x * 0.3;
-  // the weapon: in the aim frame at the right shoulder, pitched the rest of the way to your aim
-  const aim = FB.aim; aim.position.set(0.2, 0.46, 0); aim.rotation.set(p * 0.7 - FB.spine.rotation.x * 0.0, -FB.spine.rotation.y, 0);
-  const wp = fbWeapon(id);
-  for (const k in FB.wpn) FB.wpn[k].root.visible = k === id;
-  const rec = Math.max(0, (FPS.meFlashT || 0) / 0.12), draw = Math.max(0, (FPS.drawT || 0) / 0.45);
-  const rl = m.reload > 0 ? Math.sin(Math.min(1, 1 - m.reload / w.reload) * Math.PI) : 0;
+  F.hips.position.y = 0.95 - Math.abs(Math.cos(ph)) * 0.035 * A + 0.02 * A - (s.landed || 0) * 0.35;
+  F.hips.rotation.y = Math.sin(ph) * 0.08 * A;
+  // the coat skirt flares out behind as they go, and up when they jump
+  const up = air ? Math.min(0.5, Math.max(0, -(s.vz || 0)) * 0.08 + 0.15) : 0;
+  F.skirt.rotation.x = -(A * 0.32 + up) - Math.sin(ph * 2) * 0.04 * A;
+  // the body leans into a run and follows the aim; the head does the rest
+  const p = clamp(s.p || 0, -0.6, 0.6);
+  F.spine.rotation.x = -A * 0.12 + p * 0.3;
+  F.spine.rotation.y = -Math.sin(ph) * 0.1 * A;
+  F.head.rotation.x = p * 0.45 - F.spine.rotation.x * 0.3;
+  // the weapon: in the aim frame at the right shoulder, pitched the rest of the way to the aim
+  const aim = F.aim; aim.position.set(0.2, 0.46, 0); aim.rotation.set(p * 0.7, -F.spine.rotation.y, 0);
+  const id = s.id, wp = fbWeapon(F, id, s.plain), wdef = FPSW[id] || FPSW.pepperbox;
+  for (const k in F.wpn) F.wpn[k].root.visible = k === id;
+  const rec = s.rec || 0, draw = s.draw || 0, rl = s.rl || 0;
   const long = id === 'blunderbuss' || id === 'longarm' || id === 'harpoon' || id === 'avtomat';
-  if (w.melee) {
+  if (wdef.melee) {
     // the cutlass, point up and forward; each cut sweeps it across
-    const s = (FPS.meSlashT || 0) > 0 ? 1 - FPS.meSlashT / 0.3 : -1;
-    if (s >= 0 && FB.swing === 0) FB.swing = 1;
-    if (s < 0) FB.swing = 0;
-    const cut = s >= 0 ? Math.sin(s * Math.PI) : 0, side = s >= 0 ? (s < 0.5 ? 1 : -1) : 0;
+    const sl = s.slash == null ? -1 : s.slash;
+    if (sl >= 0 && F.swing === 0) F.swing = 1;
+    if (sl < 0) F.swing = 0;
+    const cut = sl >= 0 ? Math.sin(sl * Math.PI) : 0, side = sl >= 0 ? (sl < 0.5 ? 1 : -1) : 0;
     wp.root.position.set(0.06 - cut * 0.3, -0.24 + cut * 0.12 - draw * 0.25, -0.3 - cut * 0.15);
     wp.root.rotation.set(-0.85 - cut * 0.7 + draw * 0.8 + rl * 0.5, cut * 0.9 * (side || 1), -0.25 - cut * 0.8 + rl * 0.6);
   } else {
     // where the right hand holds it, and from that, where the gun goes
-    // (out at the right shoulder's line rather than the middle, so from behind the gun shows past your arm)
+    // (out at the right shoulder's line rather than the middle, so from behind the gun shows past the arm)
     const grip = long ? new THREE.Vector3(0.02, -0.05, -0.23) : new THREE.Vector3(0.05, -0.03, -0.47);
     const hp = wp.hand ? wp.hand.position : new THREE.Vector3();
     wp.root.rotation.set(rec * 0.35 + rl * 0.9 - draw * 0.9, rl * 0.3, rl * 0.4);
     wp.root.position.copy(grip).sub(hp.clone().applyEuler(wp.root.rotation));
     wp.root.position.z += rec * 0.07; wp.root.position.y -= draw * 0.2 + rl * 0.05;
   }
-  // a flash at the muzzle when you fire
+  // a flash at the muzzle when they fire
   if (rec > 0 && wp.muzzle) {
-    FB.flash.visible = true; FB.root.updateMatrixWorld(true);
-    FB.flash.position.copy(FB.root.worldToLocal(wp.muzzle.getWorldPosition(new THREE.Vector3())));
-    FB.flash.quaternion.copy(FB.root.quaternion).invert().multiply(GL3D.camera.quaternion);
-    FB.flash.scale.setScalar(0.6 + rec * (id === 'blunderbuss' ? 1.4 : 0.8));
-    FB.flash.material.opacity = rec;
-  } else FB.flash.visible = false;
+    F.flash.visible = true; F.root.updateMatrixWorld(true);
+    F.flash.position.copy(F.root.worldToLocal(wp.muzzle.getWorldPosition(new THREE.Vector3())));
+    F.flash.quaternion.copy(F.root.quaternion).invert().multiply(GL3D.camera.quaternion);
+    F.flash.scale.setScalar(0.6 + rec * (id === 'blunderbuss' ? 1.4 : 0.8));
+    F.flash.material.opacity = rec;
+  } else F.flash.visible = false;
   // hands: the right on the grip; the left on the barrel of a long gun, else carrying the lantern
   root.updateMatrixWorld(true);
-  const right = wp.hand && wp.hand.isObject3D && wp.hand.parent ? fbIn(wp.hand) : FB.shR.clone().add(new THREE.Vector3(0, -0.4, -0.2));
+  const right = wp.hand && wp.hand.isObject3D && wp.hand.parent ? fbIn(F, wp.hand) : F.shR.clone().add(new THREE.Vector3(0, -0.4, -0.2));
   let left, lanAt, lanSwing = 0;
   if (long && wp.left) {
-    left = fbIn(wp.left);
+    left = fbIn(F, wp.left);
     lanAt = new THREE.Vector3(-0.2, 0.0, -0.05); lanSwing = Math.sin(ph * 2) * 0.15 * A;
   } else {
     const sw = Math.sin(ph + Math.PI) * A * 0.35;
     left = new THREE.Vector3(-0.25, 0.47 - 0.52 + Math.abs(sw) * 0.05, -0.04 - sw * 0.3 - 0.06);
-    lanAt = left.clone().add(new THREE.Vector3(0, -0.02, 0)); lanSwing = -sw * 0.8 + Math.sin(g.t * 1.7) * 0.05;
+    lanAt = left.clone().add(new THREE.Vector3(0, -0.02, 0)); lanSwing = -sw * 0.8 + Math.sin(s.t * 1.7) * 0.05;
   }
-  FB.lan.position.copy(lanAt); FB.lan.rotation.set(lanSwing, 0, Math.sin(ph) * 0.1 * A);
-  const lit = !!m.lan;
-  FB.M.glass.color.set(lit ? (reduceMotion ? 0xffd88a : new THREE.Color(1, 0.84 + 0.04 * Math.sin(g.t * 13), 0.55)) : 0x2a2622);
+  F.lan.position.copy(lanAt); F.lan.rotation.set(lanSwing, 0, Math.sin(ph) * 0.1 * A);
+  F.M.glass.color.set(s.lan ? (reduceMotion ? 0xffd88a : new THREE.Color(1, 0.84 + 0.04 * Math.sin(s.t * 13), 0.55)) : 0x2a2622);
   const poles = [new THREE.Vector3(-0.5, -0.6, 0.6), new THREE.Vector3(0.6, -0.7, 0.4)];
-  for (const a of FB.arms) {
-    const S = a.s < 0 ? FB.shL : FB.shR, T = a.s < 0 ? left : right;
+  for (const a of F.arms) {
+    const S = a.s < 0 ? F.shL : F.shR, T = a.s < 0 ? left : right;
     const E = fbIK(S, T, 0.29, 0.27, poles[a.s < 0 ? 0 : 1].normalize());
     fbBone(a.up, S, E); a.elbow.position.copy(E);
-    const W = E.clone().lerp(T, 0.82); fbBone(a.fore, E, W);
+    const Wr = E.clone().lerp(T, 0.82); fbBone(a.fore, E, Wr);
     const C = E.clone().lerp(T, 0.62); fbBone(a.cuff, C, E.clone().lerp(T, 0.86));
     fbBone(a.ruffle, E.clone().lerp(T, 0.84), E.clone().lerp(T, 0.94));
     // the figure's own hand shows where the weapon has none (the lantern hand, or a plain gun)
     const own = a.s < 0 ? !(long && wp.left) : !(wp.hand && wp.hand.parent && wp.hand.children && wp.hand.children.length);
     a.hand.visible = own; a.hand.position.copy(T); a.hand.quaternion.setFromUnitVectors(FB_UP, T.clone().sub(E).normalize().negate());
   }
-  // lit by the beam and your lantern like everything else; and see-through when the camera's squeezed up close
-  const see = clamp(0.5 + 0.5 * fpsSeeAt(m.x, m.y, m.lan), 0.45, 1);
-  const op = FPS.camPull == null ? 1 : clamp(0.3 + (FPS.camPull - 0.15) / 0.35 * 0.7, 0.3, 1);
-  for (const mt of FB.mats) { mt.color.copy(mt.userData.base).multiplyScalar(see); mt.opacity = op; }
-  FB.M.glass.opacity = op;
-  if (FB.wmats) for (const mt of FB.wmats) mt.opacity = op;
+  // lit as they're lit, and as solid as they're seen
+  const see = s.see, op = s.op;
+  for (const mt of F.mats) { mt.color.copy(mt.userData.base).multiplyScalar(see); mt.opacity = op; }
+  F.M.glass.opacity = op;
+  if (F.wmats) for (const mt of F.wmats) mt.opacity = op;
+  // an outfit's own light: a shimmer in the trim (Mate), a glow and glowing eyes (Captain), and for the Admirals
+  // the whole coat alight, and a halo
+  const oc = F.oc;
+  if (oc && oc.fx) {
+    const t = reduceMotion ? 0 : s.t, gcol = fbCol(oc.glow || oc.trim, '#ffffff');
+    const pulse = oc.fx === 'shimmer' ? 0.25 + 0.25 * Math.sin(t * 2.2) : oc.fx === 'glow' ? 0.55 + 0.25 * Math.sin(t * 1.8) : 0.75 + 0.25 * Math.sin(t * 2.6);
+    // (a hood stays dark: only its wearer's trim, sash and buttons are alight)
+    const keys = oc.fx === 'shimmer' ? ['trim'] : oc.fx === 'glow' ? ['trim', 'sash'] : ['trim', 'sash', 'brass'].concat(oc.style === 'hood' ? [] : ['hat']);
+    for (const k of keys) { const mt = F.M[k]; if (mt) { mt.emissive = mt.emissive || new THREE.Color(); mt.emissive.copy(gcol); mt.emissiveIntensity = pulse * op * (k === 'hat' ? 0.35 : 1); } }
+    if (oc.fx === 'aura') { const mt = F.M.coat; mt.emissive.copy(gcol); mt.emissiveIntensity = (0.12 + 0.1 * Math.sin(t * 1.3)) * op; }
+    if (F.eyeMat) F.eyeMat.opacity = op * (0.7 + 0.3 * Math.sin(t * 3));
+    if (F.halo) { F.halo.material.opacity = op * (0.28 + 0.14 * Math.sin(t * 1.6)); F.halo.quaternion.copy(F.root.quaternion).invert().multiply(GL3D.camera.quaternion); }
+  }
   return true;
 }
-function fpsBodyHide() { if (FB.root) FB.root.visible = false; }
+
+// your own figure, over your shoulder: built (again, when your colours or outfit change) and posed each frame
+function fpsBodySync(show) {
+  if (!show || typeof GL3D === 'undefined' || !GL3D.scene) { if (FB.fig) FB.fig.root.visible = false; return false; }
+  const outfit = typeof ocEquippedId === 'function' ? ocEquippedId() : '';
+  const key = JSON.stringify(fpsColours()) + '|' + outfit;
+  if (!FB.fig || FB.fig.key !== key) {
+    try { if (FB.fig) fbDispose(FB.fig); FB.fig = fbFigure(fpsColours(), outfit); FB.ok = true; } catch (e) { console.warn('fps body', e); FB.ok = false; FB.fig = null; return false; }
+  }
+  const F = FB.fig, m = FPS.me, dt = Math.min(0.05, FPS.dtLast || 0.016), w = fpsW();
+  if (F.lx != null) { const v = Math.hypot(m.x - F.lx, m.y - F.ly) / Math.max(0.001, dt); F.spd += (Math.min(12, v) - F.spd) * Math.min(1, dt * 10); }
+  F.lx = m.x; F.ly = m.y;
+  fbPose(F, {
+    dt, x: m.x, y: m.y, jz: m.jz, vz: m.vz, h: m.h, p: m.p, spd: F.spd, ph: FPS.step || 0, landed: FPS.landed,
+    id: FPS.weapon, plain: false, rec: Math.max(0, (FPS.meFlashT || 0) / 0.12), draw: Math.max(0, (FPS.drawT || 0) / 0.45),
+    rl: m.reload > 0 ? Math.sin(Math.min(1, 1 - m.reload / w.reload) * Math.PI) : 0,
+    slash: (FPS.meSlashT || 0) > 0 ? 1 - FPS.meSlashT / 0.3 : -1, lan: !!m.lan, t: g.t,
+    // lit by the beam and your lantern like everything else; and see-through when the camera's squeezed up close
+    see: clamp(0.5 + 0.5 * fpsSeeAt(m.x, m.y, m.lan), 0.45, 1),
+    op: FPS.camPull == null ? 1 : clamp(0.3 + (FPS.camPull - 0.15) / 0.35 * 0.7, 0.3, 1),
+  });
+  return true;
+}
+function fpsBodyHide() { if (FB.fig) FB.fig.root.visible = false; }
+
+// everyone else on the island, the other players and the wreckers (bots), as the same 3D figures, in their own
+// colours and outfits: built when first seen (up to the nearest ten), posed each frame, hidden in the dark
+const FBR = new Map();   // id -> figure
+const FB_MAX = 10;
+function fpsFiguresSync() {
+  if (typeof GL3D === 'undefined' || !GL3D.scene) return;
+  const dt = Math.min(0.05, FPS.dtLast || 0.016), m = FPS.me, used = new Set();
+  const all = [];
+  for (const o of FPS.remote.values()) if (!o.dead) all.push(o);
+  for (const o of FPS.bots) if (!(o.dead > 0)) all.push(o);
+  for (const o of all) o._d = Math.hypot(o.x - m.x, o.y - m.y);
+  all.sort((a, b) => a._d - b._d);
+  for (const o of all.slice(0, FB_MAX)) {
+    if (o._d > 160) continue;
+    const vis = Math.max(fpsSeeAt(o.x, o.y, o.lan), (o.flashT || 0) > 0 ? 1 : 0);
+    let F = FBR.get(o.id);
+    if (vis < 0.04) { if (F) F.root.visible = false; continue; }
+    const outfit = typeof ocOutfit === 'function' && ocOutfit(o.o) ? o.o : '';
+    const cols = Array.isArray(o.c) ? o.c : ['#3a2a1e', '#d8d0bc', '#7a5a3a', '#ffd88a'];
+    const key = JSON.stringify(cols) + '|' + outfit;
+    if (!F || F.key !== key) { if (F) fbDispose(F); try { F = fbFigure(cols, outfit); } catch (e) { console.warn('fps figure', e); continue; } FBR.set(o.id, F); }
+    used.add(o.id);
+    if (F.lx != null) { const v = Math.hypot(o.x - F.lx, o.y - F.ly) / Math.max(0.001, dt); F.spd += (Math.min(12, v) - F.spd) * Math.min(1, dt * 6); }
+    if (!o.walk) F.spd *= Math.pow(0.02, dt);
+    F.lx = o.x; F.ly = o.y;
+    F.ph += dt * F.spd * 8 / FPSC.SPEED;
+    const id = (typeof FPSW_BY_CODE !== 'undefined' && FPSW_BY_CODE[o.w]) || 'pepperbox';
+    fbPose(F, {
+      dt, x: o.x, y: o.y, jz: o.jz || 0, vz: 0, h: o.h || 0, p: o.p || 0, spd: F.spd, ph: F.ph,
+      id, plain: true, rec: Math.max(0, Math.min(1, (o.flashT || 0) / 0.12)), draw: 0, rl: 0,
+      slash: (o.slashT || 0) > 0 ? 1 - o.slashT / 0.3 : -1, lan: !!o.lan, t: g.t,
+      see: 0.25 + 0.75 * Math.min(1, vis), op: Math.min(1, vis * 1.2),
+    });
+  }
+  for (const [id, F] of FBR) if (!used.has(id)) { F.root.visible = false; if (!all.some(o => o.id === id)) { fbDispose(F); FBR.delete(id); } }
+}
+function fpsFiguresHide() { for (const F of FBR.values()) F.root.visible = false; }
 
 // your figure hides what's behind it among the flat things drawn over the 3D scene (other wreckers, the
 // drowned, Verity), the same way a rock does
 function fpsBodyOccluder() {
-  if (!FB.root || !FB.root.visible || !GL3D.occ) return;
+  if (!FB.fig || !FB.fig.root.visible || !GL3D.occ) return;
   const m = FPS.me, pts = [], P = [[-0.2, 0.05, 0], [0.2, 0.05, 0], [-0.26, 0.95, 0], [0.26, 0.95, 0], [-0.28, 1.5, 0], [0.28, 1.5, 0], [-0.15, 1.8, 0], [0.15, 1.8, 0], [0, 1.93, 0]];
   const c0 = cam(m.x, m.y, FPSC.GROUND + (m.jz || 0) + 1); if (c0.f < 0.7) return;
   const sh = Math.sin(m.h), ch = Math.cos(m.h);
@@ -19148,6 +19317,319 @@ addEventListener('keydown', e => {
   wcHide();
 }, true);
 wcRender();
+
+// ---- src/ocrates.js ----
+// Wreckers' Night: outfit crates, skins for your wrecker.
+//
+// A crate system of its own, beside the weapon crates (wcrates.js) and kept apart from them and from the boat and
+// banner crates: its own save (localStorage 'skerry-ocrates'), count and card, opened from Outfit crates on the
+// Wreckers' Night card. It borrows the boat crates' grades and odds (RARITIES), their card styles and the reel
+// sounds, without changing any of them.
+//
+// An outfit dresses your figure (fpsbody.js): the coat, its trim, the sash and waistcoat, the breeches, the
+// buttons, and the hat and its style (a tricorn, a bicorne, a sou'wester, a knitted watch cap, or a hood). It's
+// what everyone else on the island sees you in, too. The better the grade, the more it does:
+//   Deckhand  working clothes, in the colours of the sea's trades
+//   Bosun     uniforms and better cloth: a bicorne, gold buttons
+//   Mate      the trim shimmers
+//   Captain   trim and sash glow, pulsing, and the eyes glow
+//   Admiral   the whole coat alight, glowing eyes, and a halo
+// Without one you wear your boat skin's colours, as before.
+//
+// Earning: one crate for every 6 kills (the count carries over), and one for each round you see out ashore
+// (a minute or more of it). The first one is free.
+//
+// The global API, for the figures (fpsbody.js) and fps.js:
+//   ocEquippedId()  -> the outfit you wear ('' for none)
+//   ocOutfit(id)    -> an outfit by id (null for none or an unknown one)
+//   ocEarn(why)     -> 'kill' | 'round'
+
+const OC_KEY = 'skerry-ocrates';
+const OC_KILLS_PER_CRATE = 6;
+const OC_ROUND_MIN_SECONDS = 60;
+
+// [id, name, rarity, coat, trim, sash, hat, style, extra]
+const OC_ROWS = [
+  ['oc_oilskin', 'Oilskin Yellow',          'deckhand', '#d8b030', '#6a5010', '#2a2a2a', '#d8b030', 'souwester'],
+  ['oc_pea',     'Navy Pea Coat',           'deckhand', '#1e2a44', '#c8c0a0', '#8a1a1a', '#1e2a44', 'watchcap'],
+  ['oc_gansey',  'Fisher’s Gansey',         'deckhand', '#6a4a2a', '#c8b890', '#3a6a8a', '#8a2a1a', 'watchcap'],
+  ['oc_tar',     'Tarred Canvas',           'deckhand', '#2a2620', '#5a5040', '#a07030', '#141210', 'tricorn'],
+  ['oc_marsh',   'Saltmarsh Green',         'deckhand', '#3a5a3a', '#a0a070', '#d8c070', '#2a3a2a', 'tricorn'],
+  ['oc_brick',   'Brick Red Smock',         'deckhand', '#8a3020', '#e0c890', '#2a4060', '#e0c890', 'watchcap'],
+  ['oc_bosun',   'Bosun’s Blues',           'bosun',    '#24407a', '#e0c060', '#a02828', '#14203a', 'bicorne',   { brass: '#e0c060' }],
+  ['oc_customs', 'Customs Man',             'bosun',    '#2a2a30', '#c03030', '#c03030', '#18181c', 'bicorne'],
+  ['oc_whaler',  'Whaler',                  'bosun',    '#4a5a5a', '#d0c0a0', '#6a3a1a', '#3a4a4a', 'souwester'],
+  ['oc_harbour', 'Harbourmaster',           'bosun',    '#e8e0d0', '#2a3a5a', '#2a3a5a', '#e8e0d0', 'tricorn',   { breeches: '#e0d8c8', brass: '#d8b860' }],
+  ['oc_phos',    'Phosphor Watch',          'mate',     '#0c3a3c', '#62ffd4', '#1a6a5a', '#0a2a2a', 'watchcap',  { fx: 'shimmer' }],
+  ['oc_petrel',  'Storm Petrel',            'mate',     '#2a3040', '#b8f0ff', '#4a6a8a', '#1a1e28', 'souwester', { fx: 'shimmer' }],
+  ['oc_smuggler','Ember Smuggler',          'mate',     '#3a1208', '#ff8a30', '#ffb050', '#200a04', 'tricorn',   { fx: 'shimmer' }],
+  ['oc_corpse',  'The Corpse Light',        'captain',  '#1a2a20', '#7affb0', '#3a6a4a', '#121a16', 'hood',      { fx: 'glow', eyes: '#b8ffd8' }],
+  ['oc_gold',    'Admiralty Gold',          'captain',  '#142040', '#ffd34d', '#ffd34d', '#0e1630', 'bicorne',   { fx: 'glow', eyes: '#fff0b0', brass: '#ffd34d' }],
+  ['oc_herald',  'The Kraken’s Herald',     'captain',  '#2a0e3a', '#c06aff', '#8a3acc', '#1a0828', 'tricorn',   { fx: 'glow', eyes: '#e0a8ff' }],
+  ['oc_drowned', 'The Drowned Captain',     'admiral',  '#0e2a2a', '#7affe0', '#1aa08a', '#082020', 'hood',      { fx: 'aura', glow: '#7affe0', eyes: '#c8fff0', halo: '#4affd8' }],
+  ['oc_keeper',  'The Keeper of the Light', 'admiral',  '#e8d8a8', '#ffd34d', '#fff0b0', '#f4ecd0', 'tricorn',   { fx: 'aura', glow: '#ffd88a', eyes: '#fff4c8', halo: '#ffe08a', breeches: '#d8c8a0', brass: '#ffe08a' }],
+];
+const OC_OUTFITS = OC_ROWS.map(([id, name, rarity, coat, trim, sash, hat, style, x]) => Object.freeze(Object.assign({ id, name, rarity, coat, trim, sash, hat, style }, x || {})));
+const OC_BY_ID = Object.fromEntries(OC_OUTFITS.map(o => [o.id, o]));
+const ocOutfit = id => (typeof id === 'string' && OC_BY_ID[id]) || null;
+const ocRarityOf = o => RARITIES.find(r => r.id === o.rarity);
+const ocLevel = o => o && o.rarity ? RARITIES.findIndex(r => r.id === o.rarity) + 1 : 0;
+
+const OC = { crates: 0, opened: 0, kills: 0, owned: {}, equipped: '', pending: null, opening: false, opener: null, ashore: 0, wasOn: false };
+
+// ---------- saving ----------
+function ocLoad() {
+  let fresh = true;
+  try {
+    const raw = localStorage.getItem(OC_KEY);
+    if (raw) {
+      fresh = false;
+      const d = JSON.parse(raw) || {}, n = v => Math.max(0, Math.min(99999, v | 0));
+      OC.crates = n(d.crates); OC.opened = n(d.opened); OC.kills = n(d.kills) % OC_KILLS_PER_CRATE;
+      OC.owned = {}; if (d.owned && typeof d.owned === 'object') for (const [id, c] of Object.entries(d.owned)) if (OC_BY_ID[id] && n(c)) OC.owned[id] = n(c);
+      if (OC_BY_ID[d.pending]) OC.owned[d.pending] = (OC.owned[d.pending] | 0) + 1;
+      OC.equipped = OC_BY_ID[d.equipped] && OC.owned[d.equipped] ? d.equipped : '';
+    }
+  } catch (e) {}
+  if (fresh) OC.crates = 1;
+  OC.pending = null;
+  ocSave();
+}
+function ocSave() { try { localStorage.setItem(OC_KEY, JSON.stringify({ crates: OC.crates, opened: OC.opened, kills: OC.kills, owned: OC.owned, equipped: OC.equipped, pending: OC.pending })); } catch (e) {} }
+function ocEquippedId() { return OC.equipped && OC.owned[OC.equipped] ? OC.equipped : ''; }
+
+// ---------- earning ----------
+function ocGrant(n, why) {
+  OC.crates = Math.min(99999, OC.crates + n); ocSave(); ocRender();
+  const short = '+' + n + ' outfit crate' + (n > 1 ? 's' : '');
+  if (typeof FPS !== 'undefined' && FPS.on && typeof fpsFeed === 'function') fpsFeed(short + ' (' + why + ')');
+  else if (typeof toast === 'function') toast(short + ': ' + why + '. Open it from the Wreckers’ Night card.', short);
+}
+function ocEarn(why) {
+  if (why === 'kill') { OC.kills++; if (OC.kills >= OC_KILLS_PER_CRATE) { OC.kills = 0; ocGrant(1, OC_KILLS_PER_CRATE + ' kills'); } else { ocSave(); ocRender(); } }
+  else if (why === 'round') { const ok = OC.ashore >= OC_ROUND_MIN_SECONDS; OC.ashore = 0; if (ok) ocGrant(1, 'saw the round out'); }
+}
+setInterval(() => { const on = typeof FPS !== 'undefined' && !!FPS.on; if (on) OC.ashore++; else if (OC.wasOn) OC.ashore = 0; OC.wasOn = on; }, 1000);
+
+// ---------- rolling ----------
+function ocRoll() {
+  let r = Math.random(), rarity = RARITIES[0];
+  for (const ra of RARITIES) { if (r < ra.odds) { rarity = ra; break; } r -= ra.odds; }
+  const pool = OC_OUTFITS.filter(o => o.rarity === rarity.id);
+  return pool[(Math.random() * pool.length) | 0];
+}
+function ocFiller() { let o; do { o = ocRoll(); } while (o.rarity === 'admiral'); return o; }
+
+// ---------- pictures: the wrecker, from the front, in the outfit ----------
+function ocDrawPreview(cv, oc, t) {
+  const g = cv.getContext('2d'), Wd = cv.width, Hd = cv.height, k = Hd / 100;
+  g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, Wd, Hd);
+  g.fillStyle = '#121a28'; g.fillRect(0, 0, Wd, Hd);
+  const plain = { coat: '#3a2a1e', trim: '#7a5a3a', sash: '#a03028', hat: '#1b1713', style: 'tricorn' };
+  const o = oc || plain, cx = Wd / 2;
+  g.save(); g.translate(cx, 0); g.scale(k, k);
+  const tt = reduceMotion ? 0 : t;
+  const pulse = o.fx === 'shimmer' ? 0.35 + 0.3 * Math.sin(tt * 2.2) : o.fx === 'glow' ? 0.6 + 0.3 * Math.sin(tt * 1.8) : o.fx === 'aura' ? 0.75 + 0.25 * Math.sin(tt * 2.6) : 0;
+  // the halo
+  if (o.halo) { const gr = g.createRadialGradient(0, 50, 4, 0, 50, 46); gr.addColorStop(0, o.halo + 'aa'); gr.addColorStop(1, o.halo + '00'); g.globalAlpha = 0.5 + 0.3 * Math.sin(tt * 1.6); g.fillStyle = gr; g.fillRect(-50, 0, 100, 100); g.globalAlpha = 1; }
+  const glowOn = (col, f) => { if (!o.fx) return; g.shadowColor = col; g.shadowBlur = 4 + f * 10; };
+  const off = () => { g.shadowBlur = 0; };
+  // boots and breeches
+  g.fillStyle = '#2a1c14'; g.fillRect(-11, 80, 8, 16); g.fillRect(3, 80, 8, 16);
+  g.fillStyle = o.breeches || '#4a3f33'; g.fillRect(-11, 66, 8, 15); g.fillRect(3, 66, 8, 15);
+  // the coat, open at the front over the waistcoat
+  if (o.fx === 'aura') glowOn(o.glow || o.trim, pulse);
+  g.fillStyle = o.coat; g.beginPath(); g.moveTo(-17, 36); g.lineTo(17, 36); g.lineTo(21, 86); g.lineTo(-21, 86); g.closePath(); g.fill(); off();
+  g.fillStyle = o.waist || '#3a2e24'; g.beginPath(); g.moveTo(-6, 37); g.lineTo(6, 37); g.lineTo(5, 66); g.lineTo(-5, 66); g.closePath(); g.fill();
+  // trim, lapels, sash, buttons
+  glowOn(o.glow || o.trim, pulse);
+  g.fillStyle = o.trim; g.fillRect(-8, 37, 3, 48); g.fillRect(5, 37, 3, 48); g.fillRect(-21, 83, 42, 3);
+  g.fillStyle = o.sash; g.fillRect(-16, 58, 32, 4); g.fillRect(-18, 58, 4, 12);
+  off();
+  g.fillStyle = o.brass || '#b8913c'; for (let i = 0; i < 4; i++) { g.beginPath(); g.arc(-10, 42 + i * 9, 1.2, 0, 6.28); g.fill(); g.beginPath(); g.arc(10, 42 + i * 9, 1.2, 0, 6.28); g.fill(); }
+  // arms
+  g.fillStyle = o.coat; g.fillRect(-24, 38, 7, 30); g.fillRect(17, 38, 7, 30);
+  g.fillStyle = o.trim; g.fillRect(-24, 64, 7, 4); g.fillRect(17, 64, 7, 4);
+  g.fillStyle = '#9a7058'; g.fillRect(-23, 68, 5, 5); g.fillRect(18, 68, 5, 5);
+  // the head
+  g.fillStyle = '#9a7058'; g.beginPath(); g.ellipse(0, 26, 8, 9.5, 0, 0, 6.28); g.fill();
+  g.fillStyle = '#d6cfbd'; g.beginPath(); g.moveTo(-4, 35); g.lineTo(4, 35); g.lineTo(0, 41); g.closePath(); g.fill();
+  // eyes
+  if (o.eyes) { glowOn(o.eyes, pulse); g.fillStyle = o.eyes; g.fillRect(-4.5, 24, 2.4, 2); g.fillRect(2.1, 24, 2.4, 2); off(); }
+  else { g.fillStyle = '#2a1c14'; g.fillRect(-4, 24.5, 1.6, 1.6); g.fillRect(2.4, 24.5, 1.6, 1.6); }
+  // the hat
+  g.fillStyle = o.hat;
+  if (o.style === 'bicorne') { g.beginPath(); g.moveTo(-20, 19); g.quadraticCurveTo(-12, 3, 0, 1); g.quadraticCurveTo(12, 3, 20, 19); g.closePath(); g.fill(); glowOn(o.glow || o.trim, pulse); g.strokeStyle = o.trim; g.lineWidth = 1.2; g.stroke(); off(); g.fillStyle = o.sash; g.beginPath(); g.arc(0, 11, 2.5, 0, 6.28); g.fill(); }
+  else if (o.style === 'souwester') { g.beginPath(); g.ellipse(0, 18, 9.5, 8, 0, Math.PI, 0); g.fill(); g.beginPath(); g.moveTo(-16, 21); g.quadraticCurveTo(0, 13, 16, 21); g.lineTo(14, 23); g.quadraticCurveTo(0, 17, -14, 23); g.closePath(); g.fill(); g.strokeStyle = o.trim; g.lineWidth = 0.8; g.beginPath(); g.moveTo(-7, 22); g.lineTo(-6, 36); g.moveTo(7, 22); g.lineTo(6, 36); g.stroke(); }
+  else if (o.style === 'watchcap') { g.beginPath(); g.ellipse(0, 19, 8.6, 9, 0, Math.PI, 0); g.fill(); g.fillStyle = o.trim; g.fillRect(-8.8, 17, 17.6, 4); }
+  else if (o.style === 'hood') { g.beginPath(); g.moveTo(-12, 40); g.quadraticCurveTo(-14, 10, 0, 9); g.quadraticCurveTo(14, 10, 12, 40); g.lineTo(8, 40); g.quadraticCurveTo(10, 18, 0, 17); g.quadraticCurveTo(-10, 18, -8, 40); g.closePath(); g.fill(); g.fillStyle = 'rgba(0,0,0,0.35)'; g.fillRect(-8, 17, 16, 6); }
+  else { g.beginPath(); g.moveTo(-17, 18); g.lineTo(17, 18); g.lineTo(9, 9); g.lineTo(0, 11); g.lineTo(-9, 9); g.closePath(); g.fill(); g.fillRect(-8, 10, 16, 7); glowOn(o.glow || o.trim, pulse); g.strokeStyle = o.trim; g.lineWidth = 1; g.beginPath(); g.moveTo(-17, 18); g.lineTo(-9, 9); g.moveTo(17, 18); g.lineTo(9, 9); g.stroke(); off(); }
+  // sparkles on the Admirals'
+  if (o.fx === 'aura' && !reduceMotion) { g.fillStyle = '#ffffff'; for (let i = 0; i < 5; i++) { const a = tt * 0.8 + i * 1.26, r = 30 + 6 * Math.sin(tt * 2 + i); if (Math.sin(tt * 3 + i * 2) > 0.2) g.fillRect(Math.cos(a) * r * 0.7 - 0.8, 50 + Math.sin(a) * r - 0.8, 1.6, 1.6); } }
+  g.restore();
+}
+function ocPreview(oc, w) {
+  const cv = document.createElement('canvas'); cv.width = Math.round(w * 1.6); cv.height = Math.round(w * 1.2);
+  cv.style.width = Math.round(w * 0.95) + 'px'; cv.style.height = Math.round(w * 0.71) + 'px'; cv.className = 'ocprev';
+  cv._oc = oc; ocDrawPreview(cv, oc, 0);
+  return cv;
+}
+setInterval(() => {
+  const card = $('ocrateCard'); if (!card || card.hidden || reduceMotion) return;
+  const t = performance.now() / 1000;
+  for (const cv of card.querySelectorAll('canvas.ocprev')) if (cv._oc && cv._oc.fx) ocDrawPreview(cv, cv._oc, t);
+}, 100);
+
+function ocCard(oc, cls) {
+  const d = document.createElement('div'), ra = oc && oc.rarity ? ocRarityOf(oc) : null;
+  d.className = 'skincard ocskin r-' + (ra ? ra.id : 'standard') + (cls ? ' ' + cls : '');
+  d.style.setProperty('--rc', ra ? ra.color : '#8f98ab');
+  const level = ocLevel(oc);
+  if (level) { const pips = document.createElement('span'); pips.className = 'pips'; pips.setAttribute('aria-hidden', 'true'); for (let i = 0; i < level; i++) pips.appendChild(document.createElement('i')); d.appendChild(pips); }
+  d.appendChild(ocPreview(oc, 104));
+  const n = document.createElement('b'); n.textContent = oc ? oc.name : 'Your boat’s colours'; d.appendChild(n);
+  const r = document.createElement('small'); r.textContent = (ra ? ra.name : 'Standard') + ' · outfit'; d.appendChild(r);
+  return d;
+}
+
+// ---------- the card ----------
+function ocShow(e) {
+  try { audioInit(); } catch (err) {}
+  OC.opener = e && e.currentTarget || document.activeElement;
+  const card = $('ocrateCard'); card.hidden = false; ocRender(); card.scrollTop = 0;
+  $('ocrateClose').focus({ preventScroll: true });
+}
+function ocHide() {
+  if (OC.opening) return;
+  const card = $('ocrateCard'); if (card.hidden) return;
+  card.hidden = true;
+  const back = OC.opener && document.contains(OC.opener) && OC.opener.offsetParent ? OC.opener : $('ocrateBtn');
+  if (back) try { back.focus({ preventScroll: true }); } catch (err) {}
+}
+function ocEquip(id) {
+  if (id && !OC.owned[id]) return;
+  OC.equipped = id || ''; ocSave(); ocRender();
+  if (typeof FPS !== 'undefined' && FPS.on && typeof fpsSend === 'function') fpsSend();
+}
+function ocRender() {
+  for (const b of document.querySelectorAll('.ocrateBtn')) b.textContent = 'Outfit crates · ' + OC.crates;
+  const card = $('ocrateCard'); if (!card || card.hidden) return;
+  const ci = $('ocTypes'); ci.textContent = '';
+  const row = document.createElement('div'); row.className = 'cratetype viewing';
+  const box = document.createElement('span'); box.className = 'cratebox ocbox'; box.setAttribute('aria-hidden', 'true');
+  const nm = document.createElement('b'); nm.textContent = 'Tailor’s Crate';
+  const n = document.createElement('small'); n.textContent = (OC.crates === 1 ? '1 crate' : OC.crates + ' crates') + ' · an outfit for your wrecker';
+  const open = document.createElement('button'); open.type = 'button'; open.className = OC.crates > 0 ? 'primary small' : 'tool';
+  open.textContent = OC.opening ? 'Opening…' : OC.crates > 0 ? 'Open' : 'None yet'; open.disabled = OC.crates <= 0 || OC.opening; open.addEventListener('click', ocOpen);
+  const all = document.createElement('button'); all.type = 'button'; all.className = 'tool'; all.textContent = 'Open all'; all.hidden = OC.crates < 2; all.disabled = OC.opening; all.addEventListener('click', ocOpenAll);
+  row.append(box, nm, n, all, open); ci.appendChild(row);
+  $('ocrateClose').disabled = OC.opening;
+  const left = OC_KILLS_PER_CRATE - OC.kills;
+  $('ocProgress').textContent = 'Next crate in ' + left + (left === 1 ? ' kill' : ' kills') + ' (' + OC.kills + ' of ' + OC_KILLS_PER_CRATE + '), or see a round out on the island.';
+  $('ocBar').style.setProperty('--v', (OC.kills / OC_KILLS_PER_CRATE).toFixed(2));
+  const odds = $('ocOdds'); odds.textContent = '';
+  for (const ra of RARITIES) { const li = document.createElement('li'); li.style.setProperty('--rc', ra.color); li.textContent = ra.name + ' · ' + (ra.odds * 100).toFixed(ra.odds < 0.01 ? 2 : 1) + '%'; odds.appendChild(li); }
+  const inv = $('ocInv'); inv.textContent = '';
+  let owned = 0, lastGrade = null;
+  for (const oc of [null].concat(OC_OUTFITS)) {
+    const gr = oc ? oc.rarity : 'standard';
+    if (gr !== lastGrade) {
+      lastGrade = gr;
+      const ra = oc ? ocRarityOf(oc) : null, mine = OC_OUTFITS.filter(k => k.rarity === gr);
+      const sub = document.createElement('span'); sub.className = 'invsub';
+      sub.textContent = ra ? `${ra.name} · ${mine.filter(k => OC.owned[k.id]).length} of ${mine.length}` : 'Standard';
+      inv.appendChild(sub);
+    }
+    const id = oc ? oc.id : '', count = !oc ? 1 : (OC.owned[id] | 0), isOn = ocEquippedId() === id;
+    const c = ocCard(oc, (isOn ? 'equipped' : '') + (count ? '' : ' locked'));
+    if (count > 1) { const dd = document.createElement('span'); dd.className = 'dupes'; dd.textContent = '×' + count; c.appendChild(dd); }
+    if (count) {
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'tool'; b.textContent = isOn ? 'Wearing' : 'Wear'; b.disabled = isOn;
+      b.setAttribute('aria-label', (isOn ? 'Wearing: ' : 'Wear ') + (oc ? oc.name : 'your boat’s colours'));
+      b.addEventListener('click', () => ocEquip(id));
+      c.appendChild(b);
+      if (oc) owned++;
+    } else c.setAttribute('aria-label', oc.name + ', not found yet');
+    inv.appendChild(c);
+  }
+  $('ocCollected').textContent = owned + ' of ' + OC_OUTFITS.length + ' found';
+}
+
+// ---------- opening ----------
+function ocOpen() {
+  if (OC.opening || OC.crates <= 0) return;
+  OC.opening = true; OC.crates--; OC.opened++;
+  const prize = ocRoll(); OC.pending = prize.id; ocSave();
+  $('ocResult').hidden = true; ocRender();
+  ocSpin(prize, reduceMotion ? 600 : 6000, () => ocFinish(prize));
+}
+function ocSpin(prize, dur, done) {
+  requestAnimationFrame(() => {
+    const sheet = $('ocrateCard'), r = $('ocReel').getBoundingClientRect(), sr = sheet.getBoundingClientRect();
+    if (r.top < sr.top + 70 || r.bottom > sr.bottom - 10) sheet.scrollTo({ top: sheet.scrollTop + r.top - sr.top - sr.height * 0.25, behavior: reduceMotion ? 'auto' : 'smooth' });
+  });
+  const reel = $('ocReel'), strip = $('ocStrip'); strip.textContent = '';
+  const N = 56, WIN = 48;
+  for (let i = 0; i < N; i++) strip.appendChild(ocCard(i === WIN ? prize : ocFiller(), 'reelitem'));
+  const cardW = strip.firstChild.getBoundingClientRect().width + 8, viewW = reel.getBoundingClientRect().width;
+  const end = WIN * cardW + cardW / 2 - viewW / 2 + (Math.random() - 0.5) * cardW * 0.7, t0 = performance.now();
+  let lastIdx = -1;
+  const step = now => {
+    const t = Math.min(1, (now - t0) / dur), x = end * (1 - Math.pow(1 - t, 4));
+    strip.style.transform = 'translateX(' + (-x) + 'px)';
+    const idx = Math.floor((x + viewW / 2) / cardW);
+    if (idx !== lastIdx) { lastIdx = idx; try { sfxTick(); } catch (e) {} }
+    if (t < 1) requestAnimationFrame(step); else done();
+  };
+  strip.style.transform = 'translateX(0)'; requestAnimationFrame(step);
+}
+function ocFinish(prize) {
+  OC.opening = false; OC.owned[prize.id] = (OC.owned[prize.id] | 0) + 1; OC.pending = null; ocSave();
+  const ra = ocRarityOf(prize);
+  try { sfxReveal(RARITIES.indexOf(ra)); } catch (e) {}
+  const res = $('ocResult'); res.textContent = ''; res.style.setProperty('--rc', ra.color); res.className = 'result r-' + ra.id;
+  const h = document.createElement('p'); h.className = 'won'; h.textContent = (OC.owned[prize.id] > 1 ? 'Another ' : 'New: ') + prize.name;
+  const r = document.createElement('small'); r.textContent = ra.name + ' grade · outfit';
+  const on = ocEquippedId() === prize.id;
+  const eq = document.createElement('button'); eq.type = 'button'; eq.className = 'primary'; eq.textContent = on ? 'Wearing' : 'Wear it'; eq.disabled = on;
+  eq.addEventListener('click', () => { ocEquip(prize.id); eq.textContent = 'Wearing'; eq.disabled = true; });
+  res.append(h, r, eq); res.hidden = false; ocRender();
+  if (!on) eq.focus({ preventScroll: true });
+}
+function ocOpenAll() {
+  const count = OC.crates; if (OC.opening || count < 1) return;
+  const byGrade = {}, fresh = []; let best = null;
+  for (let i = 0; i < count; i++) {
+    const prize = ocRoll(), had = OC.owned[prize.id] | 0; OC.owned[prize.id] = had + 1;
+    if (!had && !fresh.includes(prize)) fresh.push(prize);
+    byGrade[prize.rarity] = (byGrade[prize.rarity] || 0) + 1;
+    if (!best || ocLevel(prize) > ocLevel(best)) best = prize;
+  }
+  OC.crates = 0; OC.opened += count; ocSave();
+  OC.opening = true; $('ocResult').hidden = true; ocRender();
+  ocSpin(best, reduceMotion ? 400 : 2600, () => {
+    OC.opening = false;
+    const bra = ocRarityOf(best); try { sfxReveal(RARITIES.indexOf(bra)); } catch (e) {}
+    const res = $('ocResult'); res.textContent = ''; res.style.setProperty('--rc', bra.color); res.className = 'result haul r-' + bra.id;
+    const h = document.createElement('p'); h.className = 'won'; h.textContent = 'Opened ' + count + (count === 1 ? ' crate' : ' crates');
+    const sub = document.createElement('small'); sub.textContent = (fresh.length ? fresh.length + (fresh.length === 1 ? ' new outfit' : ' new outfits') : 'Nothing new this time') + ' · best: ' + best.name;
+    const grades = document.createElement('ul'); grades.className = 'odds';
+    for (const ra of RARITIES) { if (!byGrade[ra.id]) continue; const li = document.createElement('li'); li.style.setProperty('--rc', ra.color); li.textContent = ra.name + ' × ' + byGrade[ra.id]; grades.appendChild(li); }
+    res.append(h, sub, grades);
+    if (fresh.length) { const strip = document.createElement('div'); strip.className = 'haulstrip'; for (const it of fresh.sort((a, b) => ocLevel(b) - ocLevel(a))) strip.appendChild(ocCard(it, 'reelitem')); res.appendChild(strip); }
+    res.hidden = false; ocRender();
+  });
+}
+
+ocLoad();
+for (const b of document.querySelectorAll('.ocrateBtn')) b.addEventListener('click', ocShow);
+if ($('ocrateClose')) $('ocrateClose').addEventListener('click', ocHide);
+addEventListener('keydown', e => {
+  if (e.key !== 'Escape') return;
+  const card = $('ocrateCard'); if (!card || card.hidden) return;
+  e.preventDefault(); e.stopPropagation(); ocHide();
+}, true);
+ocRender();
 
 // ---- src/main.js ----
 // Starts the game once every script has loaded.

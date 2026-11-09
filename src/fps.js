@@ -111,7 +111,8 @@ function fpsPlaceName() {
 }
 const fpsRoundNow = () => Math.floor(Date.now() / FPSC.ROUND);
 function fpsSkin() { try { return mySkin(); } catch (e) { return { hull: '#3a2a1e', sail: '#d8d0bc', rail: '#7a5a3a', lantern: '#ffd88a' }; } }
-function fpsColours() { const s = fpsSkin(); return [s.hull, s.sail, s.rail, s.lantern || '#ffd88a']; }
+// your colours: [coat, sash, trim, lantern], from your outfit when you wear one (ocrates.js), else from your boat skin
+function fpsColours() { const s = fpsSkin(), o = typeof ocOutfit === 'function' ? ocOutfit(ocEquippedId()) : null; return o ? [o.coat, o.sash, o.trim, s.lantern || '#ffd88a'] : [s.hull, s.sail, s.rail, s.lantern || '#ffd88a']; }
 
 // ---------- entering and leaving ----------
 // the Wreckers' Night card on the title screen: keep its count of players and its name box up to date
@@ -186,6 +187,7 @@ function fpsStop() {
   $('stage').classList.remove('fpsmode');
   $('fpsPad').hidden = true; $('fpsMenu').hidden = true;
   if (typeof fpsBodyHide === 'function') fpsBodyHide();
+  if (typeof fpsFiguresHide === 'function') fpsFiguresHide();
   if (FPS.vy) { FPS.vy.on = false; FPS.vScare = 0; } $('stage').classList.remove('scaring'); try { stopVerity(); } catch (e) {}
   state = FPS.saved ? FPS.saved.state : 'title';
   if (state !== 'title') state = 'title';
@@ -213,7 +215,7 @@ function fpsSend(force) {
   const out = {
     id: NET.sid, n: FPS.nick, r: FPS.round, x: fr1(m.x), y: fr1(m.y), h: fr2(m.h), p: fr2(m.p), hp: m.hp, dead: m.dead > 0 ? 1 : 0,
     lan: m.lan ? 1 : 0, sh: FPS.shots, kb: FPS.kb, d: FPS.deaths, bl: FPS.bell, fl: [FPS.flare, fr1(FPS.flareAt[0]), fr1(FPS.flareAt[1])],
-    c: fpsColours(), wk: m.walk ? 1 : 0, ai: null, w: fpsW().code, sc: FPS.scoped ? 1 : 0, jz: fr2(m.jz || 0), vy: typeof fpsVerityNet === 'function' ? fpsVerityNet() : null,
+    c: fpsColours(), o: typeof ocEquippedId === 'function' ? ocEquippedId() || null : null, wk: m.walk ? 1 : 0, ai: null, w: fpsW().code, sc: FPS.scoped ? 1 : 0, jz: fr2(m.jz || 0), vy: typeof fpsVerityNet === 'function' ? fpsVerityNet() : null,
   };
   // the host shares the wreckers and the drowned
   if (FPS.host) out.ai = {
@@ -247,7 +249,7 @@ function fpsNetTick(dt) {
       FPS.seenSeq[f.id] = Array.isArray(f.sh) && f.sh.length ? f.sh[f.sh.length - 1][0] : 0;
       fpsFeed(`${f.n || 'A wrecker'} came ashore.`);
     }
-    r.n = f.n || 'Wrecker'; r.w = typeof f.w === 'string' ? f.w : 'p'; r.tx = f.x; r.ty = f.y; r.th = f.h; r.p = f.p; r.hp = f.hp; r.lan = !!f.lan; r.c = Array.isArray(f.c) ? f.c : null; r.walk = !!f.wk; r.tjz = Math.max(0, Math.min(3, +f.jz || 0));
+    r.n = f.n || 'Wrecker'; r.w = typeof f.w === 'string' ? f.w : 'p'; r.tx = f.x; r.ty = f.y; r.th = f.h; r.p = f.p; r.hp = f.hp; r.lan = !!f.lan; r.c = Array.isArray(f.c) ? f.c : null; r.o = typeof f.o === 'string' ? f.o.slice(0, 24) : ''; r.walk = !!f.wk; r.tjz = Math.max(0, Math.min(3, +f.jz || 0));
     r.vy = Array.isArray(f.vy) && f.vy.length === 4 && f.vy.every(n => typeof n === 'number' && isFinite(n)) && Math.hypot(f.vy[0] - f.x, f.vy[1] - f.y) < 20 ? f.vy : null;
     r.kb = f.r === FPS.round && f.kb && typeof f.kb === 'object' ? f.kb : {};
     r.r = f.r;
@@ -818,6 +820,7 @@ function fpsFrame(dt) {
       if (typeof scoreReport === 'function' && mine) { const won = top && top.me && top.k > 0; const m = BOARD.mine && BOARD.mine.fps; scoreReport('fps', mine.k, (m ? m.b : 0) + (won ? 1 : 0)); }
       FPS.roundMsg = { t: 6, text: top && top.k > 0 ? `${top.me ? 'You' : top.n} won the round with ${top.k} ${top.k === 1 ? 'kill' : 'kills'}.` : 'The round is over.' };
       if (typeof wcEarn === 'function') wcEarn('round');   // weapon crates (src/wcrates.js)
+      if (typeof ocEarn === 'function') ocEarn('round');   // outfit crates (src/ocrates.js)
       FPS.round = rn; FPS.kb = {}; FPS.deaths = 0; FPS.wcK = 0; FPS.wcRound = rn;
       if (FPS.host) for (const b of FPS.bots) { b.kb = {}; b.d = 0; b.prevKb = {}; }
       for (const r of FPS.remote.values()) r.prevKb = {};
@@ -857,7 +860,7 @@ function fpsFrame(dt) {
     FPS.parts = FPS.parts.filter(p => p.t > 0);
     fpsNetTick(dt);
     // weapon crates: each new kill this round (kills only ever count up from the round's best so far)
-    if (typeof wcEarn === 'function') { const mine = fpsScores().find(p => p.me), k = mine ? mine.k : 0; while ((FPS.wcK || 0) < k) { FPS.wcK = (FPS.wcK || 0) + 1; wcEarn('kill'); } }
+    if (typeof wcEarn === 'function') { const mine = fpsScores().find(p => p.me), k = mine ? mine.k : 0; while ((FPS.wcK || 0) < k) { FPS.wcK = (FPS.wcK || 0) + 1; wcEarn('kill'); if (typeof ocEarn === 'function') ocEarn('kill'); } }
     fpsRemember(m, performance.now());
     fpsAiTick(dt);
     fpsDraw();
@@ -980,6 +983,9 @@ function fpsDrawScene() {
   let body = false;
   if (gl && third && typeof fpsBodySync === 'function') { try { body = fpsBodySync(true); } catch (e) { console.warn(e); body = false; } }
   else if (typeof fpsBodyHide === 'function') fpsBodyHide();
+  // and everyone else, as 3D figures too (src/fpsbody.js), so walls hide them and lanterns light them
+  if (gl && typeof fpsFiguresSync === 'function') { try { fpsFiguresSync(); } catch (e) { console.warn(e); } }
+  else if (typeof fpsFiguresHide === 'function') fpsFiguresHide();
   if (gl) {
     gl3dBackdrop(roll, 0, 0);
     { const main = ctx; ctx = bgx; ctx.save(); ctx.translate(cx, hy); ctx.rotate(roll); ctx.translate(-cx, -hy); try { fpsIsleSkyTint(bgx); } finally { ctx.restore(); ctx = main; } }
@@ -1016,7 +1022,7 @@ function fpsDrawScene() {
       if (gl) gl3dClip(it.c.f, it.kind === 'glow' ? { x0: q.x - 4, x1: q.x + 4, y0: q.y - 4, y1: q.y + 4 } : { x0: q.x - 1.6 * q.s, x1: q.x + 1.6 * q.s, y0: q.y - 2.6 * q.s, y1: q.y + 0.5 * q.s }, o);
       if (it.kind === 'rock') drawRockDetailed(o, q, Math.max(0.5, visibility(o.x, o.y)));
       else if (it.kind === 'wreck') drawWreck(o, q, Math.max(0.5, visibility(o.x, o.y)));
-      else if (it.kind === 'person') fpsDrawPerson(o, it.c);
+      else if (it.kind === 'person') { if (gl && !o.me && typeof FBR !== 'undefined' && FBR.has(o.id)) fpsDrawPersonOver(o, it.c); else fpsDrawPerson(o, it.c); }
       else if (it.kind === 'drowned') fpsDrawDrowned(o, it.c);
       else if (it.kind === 'verity') fpsDrawVerity(o, it.c);
       else if (it.kind === 'solid') fpsIsleDrawSolid(o);
@@ -1163,6 +1169,24 @@ function fpsDrawPerson(o, c) {
     ctx.font = `600 ${Math.round(Math.min(16, 9 + hgt * 0.04))}px "Courier Prime", monospace`; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
     ctx.fillStyle = `rgba(236,228,207,${Math.min(1, vis)})`; ctx.fillText(o.n || '', x, foot.y - hgt * 1.04);
     if (!o.me && o.hp != null) { for (let i = 0; i < FPSC.HP; i++) { ctx.fillStyle = i < o.hp ? 'rgba(228,108,79,0.9)' : 'rgba(80,70,60,0.6)'; ctx.fillRect(x - 14 + i * 7.5, foot.y - hgt * 1.04 + 2, 6, 3); } }
+  }
+}
+// over a 3D figure: what the flat drawing would add (their lantern's glow, seen from anywhere; a hit; their name)
+function fpsDrawPersonOver(o, c) {
+  const vis = Math.max(fpsSeeAt(o.x, o.y, o.lan), o.flashT > 0 ? 1 : 0);
+  const foot = proj(c), head = proj(cam(o.x, o.y, FPSC.GROUND + FPSC.TALL + (o.jz || 0))), hgt = foot.y - head.y, x = foot.x;
+  const col = o.c || ['#3a2a1e', '#d8d0bc', '#7a5a3a', '#ffd88a'];
+  if (o.lan && vis < 0.5) {
+    // (once they're well lit, the 3D lantern itself shows; until then its glow gives them away)
+    const facing = angDiff(o.h, bearingOf(camX - o.x, camY - o.y)), side = Math.sin(facing) >= 0 ? 1 : -1;
+    lamp(x - side * hgt * 0.2, foot.y - hgt * 0.42, String(col[3]).length === 7 ? col[3] : '#ffd88a', Math.max(2.2, hgt * 0.06));
+  }
+  if ((o.slashT || 0) > 0) o.slashT -= FPS.dtLast || 0.016;
+  if (o.hitT > 0) { ctx.globalAlpha = o.hitT * 2; ctx.fillStyle = '#ff6040'; ctx.beginPath(); ctx.arc(x, foot.y - hgt * 0.6, hgt * 0.12, 0, 6.28); ctx.fill(); ctx.globalAlpha = 1; }
+  if (vis > 0.45 && hgt > 22) {
+    ctx.font = `600 ${Math.round(Math.min(16, 9 + hgt * 0.04))}px "Courier Prime", monospace`; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+    ctx.fillStyle = `rgba(236,228,207,${Math.min(1, vis)})`; ctx.fillText(o.n || '', x, foot.y - hgt * 1.08);
+    if (o.hp != null) { for (let i = 0; i < FPSC.HP; i++) { ctx.fillStyle = i < o.hp ? 'rgba(228,108,79,0.9)' : 'rgba(80,70,60,0.6)'; ctx.fillRect(x - 14 + i * 7.5, foot.y - hgt * 1.08 + 2, 6, 3); } }
   }
 }
 function fpsDrawDrowned(d, c) {

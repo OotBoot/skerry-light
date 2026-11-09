@@ -65,14 +65,14 @@ const VM_PLAIN = {
   avtomat:     { metal: '#3a3d44', dark: '#1a1b20', wood: '#6a3e22', brass: '#8a6a2c', accent: '#b0a080', glow: null },
 };
 const vmHex = (c, d) => (typeof c === 'string' && /^#[0-9a-f]{6}$/i.test(c)) ? c : d;
-function vmSkinOf(id) {
+function vmSkinOf(id, plain) {
   let s = null;
-  try { if (typeof wcEquippedSkin === 'function') s = wcEquippedSkin(id); } catch (e) {}
+  try { if (!plain && typeof wcEquippedSkin === 'function') s = wcEquippedSkin(id); } catch (e) {}
   const P = VM_PLAIN[id];
   return { id: s && s.id || 'plain', metal: vmHex(s && s.metal, P.metal), dark: vmHex(s && s.dark, P.dark), wood: vmHex(s && s.wood, P.wood), brass: vmHex(s && s.brass, P.brass), accent: vmHex(s && s.accent, P.accent), glow: s && vmHex(s.glow, null) };
 }
-function vmMatsFor(id) {
-  const k = vmSkinOf(id);
+function vmMatsFor(id, plain) {
+  const k = vmSkinOf(id, plain);
   const glow = k.glow ? new THREE.Color(k.glow) : new THREE.Color(0);
   const M = {
     iron: new THREE.MeshPhongMaterial({ color: k.metal, specular: 0x8a8c96, shininess: 70 }),

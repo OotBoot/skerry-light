@@ -130,6 +130,7 @@
       <div class="btnrow">
         <button class="primary" id="fpsPlay" type="button">Go ashore</button>
         <button class="tool wcrateBtn" id="wcrateBtn" type="button">Weapon crates</button>
+        <button class="tool ocrateBtn" id="ocrateBtn" type="button">Outfit crates</button>
         <button class="tool" id="fpsSettings" type="button">Settings</button>
       </div>
       <section class="together" aria-labelledby="fpsTogetherHead">
@@ -418,6 +419,23 @@
     </div>
   </div>
 
+  <div class="overlay cratecard wcratecard ocratecard" id="ocrateCard" hidden role="dialog" aria-modal="true" aria-labelledby="ocrateHead">
+    <div class="card">
+      <div class="cardtop sticky"><span class="eyebrow">Wreckers' Night · the tailor</span><button class="tool closebtn" id="ocrateClose" type="button">✕ Close</button></div>
+      <h1 id="ocrateHead">Outfit Crates</h1>
+      <p>Outfits for your wrecker: the coat, its trim, the sash, the buttons and the hat, a tricorn, a bicorne, a sou'wester, a watch cap or a hood. Everyone on the island sees you in it. Mate outfits shimmer, Captain outfits glow and their eyes shine, and the Admirals' are alight from collar to hem, with a halo. You earn a Tailor's Crate for every 6 kills and one for each round you see out ashore. Same grades and odds as the other crates: if you see gold in the reel, it's yours.</p>
+      <div class="wcprogress"><span id="ocProgress"></span><i id="ocBar" aria-hidden="true"></i></div>
+      <h2 class="invh">Crate inventory</h2>
+      <div class="cratetypes" id="ocTypes"></div>
+      <div class="reel" id="ocReel"><div class="strip" id="ocStrip"></div><div class="marker" aria-hidden="true"></div></div>
+      <div class="result" id="ocResult" hidden aria-live="polite"></div>
+      <ul class="odds" id="ocOdds" aria-label="Chances for each grade"></ul>
+      <h2 class="invh">Your outfits</h2>
+      <span class="eyebrow" id="ocCollected"></span>
+      <div class="inv" id="ocInv"></div>
+    </div>
+  </div>
+
   <div class="overlay cratecard wcratecard rcratecard" id="rcrateCard" hidden role="dialog" aria-modal="true" aria-labelledby="rcrateHead">
     <div class="card">
       <div class="cardtop sticky"><span class="eyebrow">The Drowned Reach · the herald</span><button class="tool closebtn" id="rcrateClose" type="button">✕ Close</button></div>
@@ -529,6 +547,7 @@
 <script src="src/rcrates.js"></script>
 <script src="src/scores.js"></script>
 <script src="src/wcrates.js"></script>
+<script src="src/ocrates.js"></script>
 <script src="src/main.js"></script>
 </body>
 </html>
