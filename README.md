@@ -209,6 +209,8 @@ A fourth game, on its own card on the title screen (**Hold the Light**). First p
 - **The knife**: always to hand and never runs out: V, the middle mouse button, R3 on a controller, or the knife button on a phone; and with nothing left to fire, Fire slashes with it too. A short backhanded slash in reach of about two metres (130 points a kill), the weapon in hand dropping away while the other hand does it.
 - **Keys**: as Wreckers' Night, with F (or E) to use and 1 / 2 for your two weapons; Tab shows the night so far; Esc pauses (alone, everything stops). Controller: B to use. Touch: a Use button by Fire takes the flare's place.
 
+- **Something the keeper never wrote down.** The station keeps a secret from the winter of 1887. Nobody will tell you how it goes; the station itself might, if you look and listen. Whoever sees it through earns a **pirate token**, the Gannet's Doubloon (one a night, kept in this browser and in the save backup). Spend them on **The Gannet's locker**, on the Lighthouse's card: five things no crate holds, one token each (Captain of the Gannet and Maren's Oilskins, outfits; Doubloon Edge for the cutlass and Jolly Roger for the pepperbox; and The Gannet's Hoard, a banner for the Drowned Reach). What you unlock joins your other outfits, finishes and banners, in their own Pirate grade, to wear the usual way (`src/zmegg.js`).
+
 ### The Lighthouse, together
 
 Up to four in one night (`src/zmnet.js`). The **Play together** part of the Lighthouse's card lists the nights being hosted here; **Host a night** opens a lobby, and the others tap it to join. Nothing starts on its own: the lobby waits, showing who's in, until the host presses **Start the night** (alone, too, if they like). When the night ends everyone goes back to the same lobby, and the host can start another.
@@ -403,6 +405,7 @@ src/fpsisle.js      Wreckers' Night: the six kinds of island, their props, cover
 src/fpsgun.js       Wreckers' Night: the 3D pistol, its hand and its reload
 src/wcrates.js      Wreckers' Night: weapon skin crates, kept apart from the boat crates
 src/zombies.js      The Lighthouse: the station, its rounds, the drowned, buying, the chest and the Fresnel Lamp
+src/zmegg.js        The Lighthouse's secret, and the pirate tokens it pays (the Gannet's locker)
 src/main.js         starts the main loop
 assets/maren.png    Maren cutout
 assets/plimsoll.png Plimsoll cutout

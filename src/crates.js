@@ -15,6 +15,9 @@ const RARITIES = [
   { id: 'captain',  name: 'Captain',  color: '#ff4b3b', odds: 0.0064 },
   { id: 'admiral',  name: 'Admiral',  color: '#ffc234', odds: 0.0026 },
 ];
+// [pirate tokens] a grade of its own for the few things the Lighthouse's pirate tokens unlock (src/zmegg.js): no
+// crate ever rolls it, so it isn't one of the RARITIES above
+const RARITY_PIRATE = { id: 'pirate', name: 'Pirate', color: '#3ee0b4', odds: 0 };
 
 // hull: planks before she sinks; accel and turn multiply how fast she gathers way and answers the helm
 // deckW/tipY/rail shape the bow you see from the deck; len/masts shape the ship your crew sees
@@ -248,7 +251,8 @@ function loadCrates() {
   saveCrates();
 }
 function saveData() {
-  return { crates: CRATES.crates, opened: CRATES.opened, owned: CRATES.owned, equipped: CRATES.equipped, pennant: CRATES.pennant, flare: CRATES.flare, boat: CRATES.boat };
+  return { crates: CRATES.crates, opened: CRATES.opened, owned: CRATES.owned, equipped: CRATES.equipped, pennant: CRATES.pennant, flare: CRATES.flare, boat: CRATES.boat,
+    pt: typeof ptData === 'function' ? ptData() || undefined : undefined };   // [pirate tokens] src/zmegg.js
 }
 function saveCrates() {
   try { localStorage.setItem('skerry-crates', JSON.stringify(Object.assign(saveData(), { pending: CRATES.pending }))); } catch (e) {}
@@ -277,6 +281,7 @@ function mergeSave(d, takeLooks) {
   const opened = Math.max(CRATES.opened | 0, Math.max(0, d.opened | 0));
   const left = Math.min(99999, Math.max(0, earned - opened));
   if (left !== CRATES.crates.skerry || opened !== (CRATES.opened | 0)) { CRATES.crates.skerry = left; CRATES.opened = opened; changed = true; }
+  if (typeof ptMerge === 'function' && ptMerge(d.pt)) changed = true;   // [pirate tokens] src/zmegg.js
   if (takeLooks) {
     if (d.equipped && typeof d.equipped === 'object') for (const b of BOATS) {
       const sk = SKIN_BY_ID[d.equipped[b.id]];
@@ -293,7 +298,7 @@ function afterMerge() { saveCrates(); renderCrates(); updateCrateButtons(); rend
 // the save code: your save, packed into one line of text
 function saveCode() {
   const d = saveData();
-  const packed = { c: d.crates.skerry, n: d.opened | 0, o: d.owned, e: d.equipped, p: d.pennant, f: d.flare, b: d.boat };
+  const packed = { c: d.crates.skerry, n: d.opened | 0, o: d.owned, e: d.equipped, p: d.pennant, f: d.flare, b: d.boat, t: d.pt };   // [pirate tokens] src/zmegg.js
   return 'SKERRY-' + btoa(unescape(encodeURIComponent(JSON.stringify(packed)))).replace(/=+$/, '').replace(/\+/g, '-').replace(/\//g, '_');
 }
 function readSaveCode(text) {
@@ -303,7 +308,7 @@ function readSaveCode(text) {
   try {
     const b64 = m[1].replace(/-/g, '+').replace(/_/g, '/');
     const o = JSON.parse(decodeURIComponent(escape(atob(b64 + '==='.slice((b64.length + 3) % 4)))));
-    return { crates: o.c | 0, opened: o.n | 0, owned: o.o, equipped: o.e, pennant: o.p, flare: o.f, boat: o.b };
+    return { crates: o.c | 0, opened: o.n | 0, owned: o.o, equipped: o.e, pennant: o.p, flare: o.f, boat: o.b, pt: o.t };   // [pirate tokens] src/zmegg.js
   } catch (e) { return null; }
 }
 
@@ -346,7 +351,7 @@ function saveLink() {
   if (window.claude && typeof window.claude.use === 'function') return null;
   return location.origin + location.pathname + '#load=' + saveCode();
 }
-function lootSize() { return Object.values(CRATES.owned).reduce((a, v) => a + (v | 0), 0) + (CRATES.crates.skerry | 0); }
+function lootSize() { const pt = typeof ptData === 'function' && ptData(); return Object.values(CRATES.owned).reduce((a, v) => a + (v | 0), 0) + (CRATES.crates.skerry | 0) + (pt ? pt.e : 0); }   // [pirate tokens] src/zmegg.js
 function markBackedUp() { try { localStorage.setItem('skerry-backup', String(lootSize())); } catch (e) {} renderBackupDot(); }
 function needsBackup() { let b = 0; try { b = +localStorage.getItem('skerry-backup') || 0; } catch (e) {} return lootSize() > b && Object.keys(CRATES.owned).length > 0; }
 function renderBackupDot() { for (const b of document.querySelectorAll('.backupBtn')) b.classList.toggle('due', needsBackup()); }

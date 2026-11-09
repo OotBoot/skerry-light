@@ -61,13 +61,15 @@ const RC_ROWS = [
   ['rc_squall',  'Rainbow Squall',       'captain',  'rainbow', ['#30303a', '#e0e0e0', '#ffffff'], '#ffffff'],
   ['rc_crown',   'The Drowned Crown',    'admiral',  'ripples', ['#062a2a', '#1aa08a', '#c8fff0'], '#7affe0'],
   ['rc_prism',   'Prism of the Light',   'admiral',  'prism',   ['#202030', '#ffffff', '#ffffff'], '#ffffff'],
+  // [pirate tokens] src/zmegg.js: only ever unlocked with the Lighthouse's pirate tokens, never in a crate
+  ['rc_hoard',   'The Gannet’s Hoard',   'pirate',   'hoard',   ['#06070b', '#14302c', '#ffd34d'], '#3ee0b4'],
 ];
 const RC_BASE = { rainbow: '#e0a040', prism: '#d8c8ff' };
 const RC_SKINS = RC_ROWS.map(([id, name, rarity, kind, cols, glow]) => Object.freeze({ id, name, rarity, kind, cols, glow, base: RC_BASE[kind] || cols[cols.length > 2 ? 1 : 0] }));
 const RC_PLAIN = Object.freeze({ id: '', name: 'Your nation’s colour', rarity: null, kind: 'plain', cols: ['#c8b890'], glow: null, base: null });
 const RC_SKIN_BY_ID = Object.fromEntries(RC_SKINS.map(s => [s.id, s]));
-const rcRarityOf = s => RARITIES.find(r => r.id === s.rarity);
-const rcLevel = s => s && s.rarity ? RARITIES.findIndex(r => r.id === s.rarity) + 1 : 0;
+const rcRarityOf = s => RARITIES.find(r => r.id === s.rarity) || (s.rarity === 'pirate' ? RARITY_PIRATE : undefined);   // [pirate tokens]
+const rcLevel = s => s && s.rarity ? (s.rarity === 'pirate' ? 5 : RARITIES.findIndex(r => r.id === s.rarity) + 1) : 0;
 const rcSkin = id => (typeof id === 'string' && RC_SKIN_BY_ID[id]) || null;
 
 const RC = { crates: 0, opened: 0, tiles: 0, owned: {}, equipped: '', pending: null, opening: false, opener: null, lastTaken: null };
@@ -80,6 +82,7 @@ function rcHsv(h, sat, v, o) {
   const [r, g, b] = [[v, t, p], [q, v, p], [p, v, t], [p, q, v], [t, p, v], [v, p, q]][i % 6];
   o[0] = r * 255; o[1] = g * 255; o[2] = b * 255;
 }
+const RC_BONE = [232, 224, 200];   // [pirate tokens]
 const rcHash = (x, y) => (((x * 73856093) ^ (y * 19349663)) >>> 0) % 1024 / 1024;
 function rcPainter(skin) {
   if (!skin) return null;
@@ -159,15 +162,24 @@ function rcPainter(skin) {
       const h = rcHash(x, y); if (h > 0.97 && Math.sin(t * 6 + h * 300) > 0.5) mix(o, c, 0.95, o);
       if (bd) mix(o, G, 0.65, o);
     }; break;
+    case 'hoard': f = (x, y, t, bd, o) => {
+      // [pirate tokens] the Gannet's hoard: black water, gold coins winking in it, the black flag's bone-white saltire
+      mix(a, b, 0.3 + 0.25 * Math.sin(x * 0.11 - y * 0.07 + t * 0.5), o);
+      const S = 7, cx = Math.floor(x / S), cy = Math.floor(y / S), h = rcHash(cx, cy), dx = x - cx * S - 3, dy = y - cy * S - 3, r2 = dx * dx + dy * dy;
+      if (h > 0.4 && r2 <= 5) { const wink = Math.max(0, Math.sin(t * 1.4 + h * 40)); mix(o, c, 0.6 + 0.4 * wink, o); if (r2 <= 1 && wink > 0.92) { o[0] = o[1] = o[2] = 255; } }
+      const u = ((x + y) % 23 + 23) % 23, v = ((x - y) % 23 + 23) % 23;
+      if (u < 1 || v < 1) mix(o, RC_BONE, 0.4, o);
+      if (bd) mix(o, G, 0.7, o);
+    }; break;
     default: f = (x, y, t, bd, o) => { o[0] = a[0]; o[1] = a[1]; o[2] = a[2]; };
   }
-  f.glow = G; f.level = rcLevel(skin); f.moves = skin.rarity === 'mate' || skin.rarity === 'captain' || skin.rarity === 'admiral';
+  f.glow = G; f.level = rcLevel(skin); f.moves = skin.rarity === 'mate' || skin.rarity === 'captain' || skin.rarity === 'admiral' || skin.rarity === 'pirate';
   return f;
 }
 // how strongly a banner's border glows just now (0 for none)
 function rcGlowAt(skin, t) {
   if (!skin || !skin.glow) return 0;
-  return skin.rarity === 'admiral' ? 0.75 + 0.25 * Math.sin(t * 2.4) : 0.5 + 0.2 * Math.sin(t * 1.8);
+  return skin.rarity === 'admiral' || skin.rarity === 'pirate' ? 0.75 + 0.25 * Math.sin(t * 2.4) : 0.5 + 0.2 * Math.sin(t * 1.8);
 }
 
 // ---------- saving ----------
@@ -329,7 +341,7 @@ function rcRender() {
   const inv = $('rcInv'); inv.textContent = '';
   let owned = 0;
   let lastGrade = null;
-  for (const s of [RC_PLAIN].concat(RC_SKINS.slice().sort((p, q) => rcLevel(p) - rcLevel(q)))) {
+  for (const s of [RC_PLAIN].concat(RC_SKINS.filter(k => k.rarity !== 'pirate' || RC.owned[k.id]).sort((p, q) => rcLevel(p) - rcLevel(q)))) {   // [pirate tokens] shown once unlocked
     // a heading for each grade, with how many of it you've found
     const gr = s.rarity || 'standard';
     if (gr !== lastGrade) {
@@ -351,7 +363,7 @@ function rcRender() {
     } else c.setAttribute('aria-label', s.name + ', not found yet');
     inv.appendChild(c);
   }
-  $('rcCollected').textContent = owned + ' of ' + RC_SKINS.length + ' found';
+  $('rcCollected').textContent = owned + ' of ' + RC_SKINS.filter(k => k.rarity !== 'pirate' || RC.owned[k.id]).length + ' found';
 }
 
 // ---------- opening ----------
