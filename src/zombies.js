@@ -42,6 +42,8 @@ const ZMC = {
   // (BODY: how close one of the drowned and you can come, middle to middle; SPRINT: your run here, a touch
   //  slower than on Wreckers' Night)
   BODY: 0.5, SPRINT: 9.8,
+  // (IFRAME_HIT: after a knock, how long before the next can land; IFRAME_UP: untouchable that long once got up)
+  IFRAME_HIT: 0.5, IFRAME_UP: 3,
   RISE: 0.28, TREAD: 0.75, CEIL: 3.6, STEP: 0.6, START: 500, BREAK: 15, ALIVE: 24, NAV: 0.5, HP: 3, HP_STOUT: 6, BOX: 950,
 };
 // The tower: round, whitewashed with two red bands, fifteen metres wide inside and five floors high, a spiral stair
@@ -1328,6 +1330,7 @@ function zmFrame(dt) {
     if (FPS.menu) fpsMenuPad(dt);
     if (live) {
       if (m.protect > 0) m.protect -= dt;
+      if (m.iframe > 0) m.iframe -= dt;
       // patched up quickly, if they leave you alone for a few seconds
       FPS.calm = (FPS.calm || 0) + dt;
       const max = ZM.perks.stout ? ZMC.HP_STOUT : ZMC.HP;
@@ -1833,7 +1836,7 @@ function zmSwipe(z, dt) {
     const was = z.swing; z.swing += dt;
     if (was < 0.28 && z.swing >= 0.28) {
       const reach = z.st === 'tear' ? 1.6 : 1.55;
-      if (Math.hypot(m.x - z.x, m.y - z.y) < reach && Math.abs((m.jz || 0) - (z.jz || 0)) < 1.2 && !(m.dead > 0) && !(m.protect > 0) && !zmIsDown()) { fpsHurt(1, null, null); zmSound('hit'); }
+      if (Math.hypot(m.x - z.x, m.y - z.y) < reach && Math.abs((m.jz || 0) - (z.jz || 0)) < 1.2 && !(m.dead > 0) && !(m.protect > 0) && !(m.iframe > 0) && !zmIsDown()) { fpsHurt(1, null, null); zmSound('hit'); }
     }
     if (z.swing > 0.6) z.swing = -1;
   }
@@ -2171,7 +2174,7 @@ function zmDown() {
   ZM.downs++;
   if (ZM.perks.wind) {
     // Second Wind: back up, everything near you thrown back, and every tonic gone
-    ZM.perks = {}; m.hp = ZMC.HP; m.protect = 3; FPS.hurtT = 0.8;
+    ZM.perks = {}; m.hp = ZMC.HP; m.protect = 3; m.iframe = ZMC.IFRAME_UP; FPS.hurtT = 0.8;
     for (const z of ZM.z) { if (z.dead || z.st !== 'in') continue; const dx = z.x - m.x, dy = z.y - m.y, d = Math.hypot(dx, dy) || 1; if (d < 6) for (let k = 0; k < 6; k++) zmMove(z, dx / d * 0.5, dy / d * 0.5); z.atk = 1.5; }
     ZM.banner = { text: 'Second Wind', t: 2.5, col: ZM_PERKS.wind.c };
     zmSound('wind');
@@ -2243,7 +2246,7 @@ function zmBleedOut() {
 // up again (a friend got to you): your own weapons back in your hands
 function zmGetUp(by) {
   const m = FPS.me; if (!(ZM.downT > 0)) return;
-  ZM.downT = 0; m.dead = 0; m.hp = ZMC.HP; m.protect = 2;
+  ZM.downT = 0; m.dead = 0; m.hp = ZMC.HP; m.protect = 2; m.iframe = ZMC.IFRAME_UP;   // (three seconds no knock can land, firing or not)
   zmDownDisarm();
   ZM.banner = { text: 'Back on your feet', t: 2, small: true };
   if (by) fpsFeed(`${by} got you up.`);
@@ -2756,7 +2759,7 @@ function zmHud() {
     const a = Math.min(0.85, hurt * 0.7 + (FPS.hurtT || 0) * 0.5), gr = ctx.createRadialGradient(cx, H / 2, Math.min(W, H) * 0.25, cx, H / 2, Math.max(W, H) * 0.7);
     gr.addColorStop(0, 'rgba(140,10,8,0)'); gr.addColorStop(1, `rgba(140,10,8,${a})`); ctx.fillStyle = gr; ctx.fillRect(0, 0, W, H);
   }
-  if (m.protect > 0 && !ZM.over && !down) { ctx.fillStyle = `rgba(200,220,255,${0.05 + 0.03 * Math.sin(t * 10)})`; ctx.fillRect(0, 0, W, H); }
+  if ((m.protect > 0 || m.iframe > 1) && !ZM.over && !down) { ctx.fillStyle = `rgba(200,220,255,${0.05 + 0.03 * Math.sin(t * 10)})`; ctx.fillRect(0, 0, W, H); }
   if (ZM.insta > 0) { ctx.fillStyle = 'rgba(0,0,0,0.08)'; ctx.fillRect(0, 0, W, H); }
   // crosshair
   const cy = H / 2, w = fpsW();

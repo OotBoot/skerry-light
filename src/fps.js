@@ -648,8 +648,10 @@ function fpsReload() {
   m.reload = FPS.reloadDur = w.reload * (FPS.zm ? zmReloadK() : 1); FPS.reloadOf = FPS.weapon; FPS.scoped = false; if (!w.melee) fpsClick();
 }
 function fpsHurt(n, fromId, fromName) {
-  const m = FPS.me; if (m.dead > 0 || m.protect > 0) return;
+  const m = FPS.me; if (m.dead > 0 || m.protect > 0 || m.iframe > 0) return;
   m.hp -= n; FPS.hurtT = 0.5; FPS.calm = 0;
+  // (in the Lighthouse, a knock from the drowned buys half a second before the next can land: shooting doesn't end it)
+  if (FPS.zm) m.iframe = ZMC.IFRAME_HIT;
   try { sfxHit(); } catch (e) {}
   if (m.hp <= 0) fpsDie(fromId, fromName);
 }
