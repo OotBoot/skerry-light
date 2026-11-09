@@ -221,6 +221,14 @@ function rcRoll() {
   const pool = RC_SKINS.filter(s => s.rarity === rarity.id);
   return pool[(Math.random() * pool.length) | 0];
 }
+// a banner for a bot nation, from a seeded rng (so everyone in a war played together gives each bot the same):
+// a little under half fly one, rolled at the crate's own odds; or an Admiral's
+function rcRollWith(rng, admiral) {
+  let rarity = RARITIES[RARITIES.length - 1];
+  if (!admiral) { let r = rng(); rarity = RARITIES[0]; for (const ra of RARITIES) { if (r < ra.odds) { rarity = ra; break; } r -= ra.odds; } }
+  const pool = RC_SKINS.filter(s => s.rarity === rarity.id);
+  return pool[(rng() * pool.length) | 0];
+}
 // the cards that scroll past in the reel never include gold, so any gold you see is your prize
 function rcFiller() { let s; do { s = rcRoll(); } while (s.rarity === 'admiral'); return s; }
 

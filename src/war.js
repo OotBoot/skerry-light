@@ -218,6 +218,13 @@ function warStart(nBots, seed, diff, opts) {
   // banners (rcrates.js): each player's land in the colours of the banner they fly
   const skins = opts.skins || (typeof rcEquippedId === 'function' ? [rcEquippedId()] : []);
   for (let k = 0; k < H0; k++) { const sk = typeof rcSkin === 'function' ? rcSkin(skins[k]) : null; WAR.nations[k].skin = sk ? sk.id : null; if (sk) WAR.nations[k].col = sk.base; }
+  // the bot nations fly banners too: a little under half of them, and always one an Admiral's (from their own
+  // seeded roll, so the map and the landings are untouched, and everyone playing together sees the same)
+  if (typeof rcRollWith === 'function' && nBots > 0) {
+    const brng = seeded((WAR.seed ^ 0x5b4e7a1) >>> 0), fly = (k, sk) => { const n = WAR.nations[k]; n.skin = sk.id; n.col = sk.base; };
+    for (let k = H0; k < WAR.nations.length; k++) if (brng() < 0.45) fly(k, rcRollWith(brng));
+    if (!WAR.nations.slice(H0).some(n => rcSkin(n.skin) && rcSkin(n.skin).rarity === 'admiral')) fly(H0 + ((brng() * nBots) | 0), rcRollWith(brng, true));
+  }
   const N = WAR.nations.length;
   for (const n of WAR.nations) { n.rel = new Float32Array(N); for (let k = 0; k < N; k++) n.rel[k] = k === n.id ? 1 : (rng() - 0.5) * 0.4; }
   // the bots land now, spaced out; you choose yours (or get one when the time runs out)

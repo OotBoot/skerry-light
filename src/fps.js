@@ -18,7 +18,7 @@
 // the two never mix. Alone, a few wreckers (bots) keep you company.
 
 const FPSC = {
-  PLAYERS: 4, LAG: 0.35,
+  PLAYERS: 8, LAG: 0.35,   // (wreckers, the bots, fill the island up to this many)
   CX: 0, CY: 640, R: 88,   // (the island's radius: smaller now, so fights find you quicker)
   GROUND: 0.35, EYE: 1.7, BODY: 0.55, TALL: 1.85,
   SPEED: 6.5, SPRINT: 10, HP: 4, MAG: 6, RATE: 0.26, RELOAD: 2.2, RESPAWN: 3.5, FLARES: 2,
@@ -33,7 +33,7 @@ const FPS = {
   sendT: 0, hitT: 0, hurtT: 0, flash: 0, recoil: 0, step: 0, board: false, menu: false,
   roundMsg: null, drownT: 30, lastBoard: [], stick: null, lookTouch: null,
 };
-const FPS_BOT_NAMES = ['Wrecker Abe', 'Black Nell', 'Silas Crane', 'Old Tobias', 'Mother Carey', 'Jory Pengelly'];
+const FPS_BOT_NAMES = ['Wrecker Abe', 'Black Nell', 'Silas Crane', 'Old Tobias', 'Mother Carey', 'Jory Pengelly', 'Hester Vane', 'Ned Tregarthen', 'Widow Pascoe', 'Saul Kittow', 'Bess Polgrain', 'Long Amos'];
 const FPS_SEAS = ['skerry', 'fjord', 'ember', 'lagoon', 'barrows', 'shoals'];
 // the six weapons: you carry them all (1-6 to switch); the one picked on the title card is in your hand when you land
 //  pepperbox   six quick shots, one damage (two to the head)
@@ -219,7 +219,7 @@ function fpsSend(force) {
   };
   // the host shares the wreckers and the drowned
   if (FPS.host) out.ai = {
-    b: FPS.bots.map(b => [b.id, b.n, fr1(b.x), fr1(b.y), fr2(b.h), b.hp, b.dead > 0 ? 1 : 0, b.lan ? 1 : 0, b.ci, b.walk ? 1 : 0, b.d, b.kb]),
+    b: FPS.bots.map(b => [b.id, b.n, fr1(b.x), fr1(b.y), fr2(b.h), b.hp, b.dead > 0 ? 1 : 0, b.lan ? 1 : 0, b.ci, b.walk ? 1 : 0, b.d, b.kb, b.o || 0]),
     dr: FPS.drowned.map(d => [d.id, fr1(d.x), fr1(d.y), d.hp, fr2(d.rise)]),
   };
   NET.room.presence({ fps: out }).catch(() => {});
@@ -290,6 +290,8 @@ function fpsNetTick(dt) {
   FPS.sendT -= dt;
   if (FPS.sendT <= 0) { FPS.sendT = FPSC.SEND; fpsSend(); }
 }
+// a wrecker's colours follow their outfit, if they have one
+function fpsBotDress(b) { const o = typeof ocOutfit === 'function' ? ocOutfit(b.o) : null; b.c = o ? [o.coat, o.sash, o.trim, '#ffd88a'] : FPS_BOT_COLS[(b.ci || 0) % FPS_BOT_COLS.length]; }
 // the host's wreckers and drowned, shown here
 const FPS_BOT_COLS = [['#2a3a4a', '#c8c0aa', '#6a4a2a', '#ffd88a'], ['#4a2420', '#d8ccb4', '#8a6a3a', '#ffb070'], ['#25352a', '#cfc8b0', '#5a4a3a', '#d8f0ff'], ['#3a2a40', '#d0c4d8', '#6a5a7a', '#e8c8ff']];
 function fpsMirrorAi(ai) {
@@ -298,7 +300,7 @@ function fpsMirrorAi(ai) {
     if (!Array.isArray(a)) continue;
     let b = old.get(a[0]);
     if (!b) b = { id: a[0], bot: true, x: a[2], y: a[3], h: a[4], hitT: 0, flashT: 0, prevKb: {}, d: a[10] || 0 };
-    b.n = a[1]; b.tx = a[2]; b.ty = a[3]; b.th = a[4]; b.hp = a[5]; b.lan = !!a[7]; b.ci = a[8]; b.c = FPS_BOT_COLS[(a[8] || 0) % FPS_BOT_COLS.length]; b.walk = !!a[9];
+    b.n = a[1]; b.tx = a[2]; b.ty = a[3]; b.th = a[4]; b.hp = a[5]; b.lan = !!a[7]; b.ci = a[8]; b.o = typeof a[12] === 'string' ? a[12].slice(0, 24) : ''; fpsBotDress(b); b.walk = !!a[9];
     const dead = a[6] ? 1 : 0;
     if (!dead && b.dead > 0) { b.x = b.tx; b.y = b.ty; }
     b.dead = dead;
@@ -690,16 +692,20 @@ function fpsBites(dt) {
   if (FPS.drowned.some(d => !d.dead && (d.rise || 0) > 0.5 && Math.hypot(d.x - m.x, d.y - m.y) < 1.3)) { FPS.biteCd = 1.1; fpsHurt(1, null, null); }
 }
 function fpsBotsTick(dt, now) {
-  // enough wreckers to make four on the island, while there's room
+  // enough wreckers to make eight on the island, while there's room
   const humans = 1 + FPS.remote.size, want = Math.max(0, FPSC.PLAYERS - humans);
   while (FPS.bots.length < want) {
     const used = new Set(FPS.bots.map(b => b.n)), n = FPS_BOT_NAMES.find(x => !used.has(x)) || 'Wrecker';
     const ci = FPS_BOT_NAMES.indexOf(n) % FPS_BOT_COLS.length;
     const b = { id: 'bot-' + Math.random().toString(36).slice(2, 7), bot: true, n, ci, c: FPS_BOT_COLS[ci], x: 0, y: 0, h: 0, p: 0,
       kb: {}, d: 0, lan: Math.random() < 0.5, cd: 1, goal: null, flashT: 0, hitT: 0, walk: false, see: 0, hist: [] };
+    // some come ashore in outfits from the Tailor's Crate (ocrates.js)
+    if (typeof ocBotOutfit === 'function') { b.o = ocBotOutfit(); fpsBotDress(b); }
     fpsRespawn(b); b.protect = 0; FPS.bots.push(b);
   }
   while (FPS.bots.length > want) FPS.bots.pop();
+  // and there's always one in an Admiral's outfit
+  if (FPS.bots.length && typeof ocOutfit === 'function' && !FPS.bots.some(b => ocOutfit(b.o) && ocOutfit(b.o).rarity === 'admiral')) { const b = FPS.bots[(Math.random() * FPS.bots.length) | 0]; b.o = ocBotOutfit(true); fpsBotDress(b); }
   for (const b of FPS.bots) {
     if (b.flashT > 0) b.flashT -= dt; if (b.hitT > 0) b.hitT -= dt;
     fpsRemember(b, now);

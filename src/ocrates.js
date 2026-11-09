@@ -97,6 +97,11 @@ function ocRoll() {
   const pool = OC_OUTFITS.filter(o => o.rarity === rarity.id);
   return pool[(Math.random() * pool.length) | 0];
 }
+// a wrecker's outfit (the bots): about half come ashore in one, rolled at the crate's own odds; or an Admiral's
+function ocBotOutfit(admiral) {
+  if (admiral) { const pool = OC_OUTFITS.filter(o => o.rarity === 'admiral'); return pool[(Math.random() * pool.length) | 0].id; }
+  return Math.random() < 0.55 ? ocRoll().id : '';
+}
 function ocFiller() { let o; do { o = ocRoll(); } while (o.rarity === 'admiral'); return o; }
 
 // ---------- pictures: the wrecker, from the front, in the outfit ----------

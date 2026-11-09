@@ -160,7 +160,7 @@ Keys: drag or arrows pan, wheel or +/- zoom, Q/E the share, H harbour, T tower, 
 
 The grade's odds are the same however many banners it holds: more banners in a grade only means more to choose from within it.
 
-You earn one for every 400 tiles you take (the count carries over between wars), one for each war you see through (three minutes or more), and three for a win; the first is free. Kept in this browser (`skerry-rcrates`), apart from the boat and weapon crates. Playing together, each player's banner travels with them through the lobby.
+You earn one for every 400 tiles you take (the count carries over between wars), one for each war you see through (three minutes or more), and three for a win; the first is free. Kept in this browser (`skerry-rcrates`), apart from the boat and weapon crates. Playing together, each player's banner travels with them through the lobby. The bot nations fly banners too: a little under half of them, rolled at the crate's own odds, and in every war at least one flies an Admiral's (chosen from the map word's seed, so everyone in a war played together sees the same ones).
 
 ### The Drowned Reach, together
 
@@ -203,7 +203,7 @@ A separate game with its own card on the title screen, below Skerry Light (a ban
 - **Cover:** the skerries and old wrecks stop shots. Head shots do double damage. Four hits and you're down; you're back ashore 3.5 seconds later, somewhere away from everyone else, and patch yourself up after a few quiet seconds.
 - **The drowned crew** wade ashore now and then and go for whoever is nearest.
 - **Rounds** last five minutes on the clock, so everyone's round ends together; the scores reset and the island moves to the next of the six seas.
-- **Wreckers (bots)** fill the island up to four people, and step aside as players come ashore. They and the drowned crew are run by one player (whoever has the lowest id on the island) and shown the same to everyone; if that player leaves, the next one carries them on where they were.
+- **Wreckers (bots)** fill the island up to eight people (about half in outfits from the Tailor's Crate, and always one in an Admiral's), and step aside as players come ashore. They and the drowned crew are run by one player (whoever has the lowest id on the island) and shown the same to everyone; if that player leaves, the next one carries them on where they were.
 - **Fair hits:** a shot travels as an event (where it was fired from and which way). Whoever it was aimed at checks it against where they really were over the last third of a second, rocks included, so ducking into cover in time always counts. The host judges shots at the wreckers and the drowned the same way.
 - **Controls:** mouse and keyboard (click to aim, WASD, Shift to run, click to fire, R reload, Tab scores, Esc menu), a controller (sticks, RT fire, X reload, Y lantern, B flare, LB bell), or touch: put your left thumb down anywhere on the left to walk (a stick appears under it; push to the edge to run), drag on the right to aim and tap there to fire, or hold the big Fire button and drag it to aim and shoot with one thumb. Aiming eases onto anyone you can see near the crosshair. The phone layout keeps the screen clear: menu and scores top left, a small compass and clock, your score and the last two lines of the feed top right, and the lantern, flare, bell and reload buttons in an arc round Fire, which shows your ammo.
 
