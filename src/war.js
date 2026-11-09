@@ -23,7 +23,7 @@ const WARC = {
   SPAWN: 20,                      // seconds to choose a landing
   DAY: 240, NIGHT_FROM: 0.62, NIGHT_TO: 0.96,   // a day, and the part of it that's night
   TIDE: 180,                      // the tide turns twice in this
-  BEAM_TURN: 43, BEAM_HALF: 0.22, // the Light's sweep, lit only at night: one turn in this many seconds, this half-width (radians)
+  BEAM_TURN: 51, BEAM_HALF: 0.44, // the Light's sweep, lit only at night: one turn in this many seconds, this half-width (radians)
   COSTS: { harbour: [60, 30], tower: [50, 25], beacon: [80, 35], city: [150, 110], factory: [220, 150], flare: 45, fireship: 320 },
   CITY_POP: 250, CITY_GROW: 0.8, CITY_GOLD: 1.0, FACTORY_R: 16,   // a city: +250K people (people are counted in thousands), a little faster growth, gold; doubled on a factory's rails
   TOWER_R: 6, BEACON_R: 8, FLARE_R: 9, FLARE_T: 45, FIRE_R: 6, HARBOUR_R: 3,

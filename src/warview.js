@@ -132,7 +132,7 @@ function warDraw(dt) {
   const lx = wvSx(WARC.W / 2), ly = wvSy(WARC.H / 2), len = Math.hypot(W, H) * 1.2 + Math.hypot(WARC.W, WARC.H) * z;
   if (dark > 0.02) {
     ctx.save(); ctx.globalCompositeOperation = 'lighter';
-    const bg = ctx.createRadialGradient(lx, ly, 2 * z, lx, ly, len * 0.7); bg.addColorStop(0, `rgba(255,216,138,${0.5 * dark})`); bg.addColorStop(1, 'rgba(255,216,138,0)');
+    const bg = ctx.createRadialGradient(lx, ly, 2 * z, lx, ly, len * 0.7); bg.addColorStop(0, `rgba(255,216,138,${0.22 * dark})`); bg.addColorStop(1, 'rgba(255,216,138,0)');
     ctx.fillStyle = bg; ctx.beginPath(); ctx.moveTo(lx, ly); ctx.arc(lx, ly, len, WAR.beam - WARC.BEAM_HALF, WAR.beam + WARC.BEAM_HALF); ctx.closePath(); ctx.fill();
     ctx.restore();
   }
