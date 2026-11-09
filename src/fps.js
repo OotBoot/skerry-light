@@ -39,7 +39,8 @@ const FPS_SEAS = ['skerry', 'fjord', 'ember', 'lagoon', 'barrows', 'shoals'];
 //  pepperbox   six quick shots, one damage (two to the head)
 //  blunderbuss one shot of nine balls in a wide spread; deadly close, useless past fifty metres
 //  longarm     one heavy shot, three damage (a head shot kills); hold right mouse / Scope for the telescope
-//  harpoon     one barbed harpoon on a line, slow enough to see and to dodge, and it kills what it hits
+//  harpoon     one barbed harpoon on a line, slow enough to see, flying flat and true, and it kills what it hits
+//              (tol: how far past a body's edge it still catches; a heavy iron is forgiving)
 //  cutlass     no powder: swing it within arm's reach, two damage a cut, in a three-cut combination
 //  avtomat     an automatic rifle: twenty-five rounds as fast as you hold the trigger, one damage (two to the head);
 //              it climbs and kicks hard, sprays from the hip, and takes a long while to load; hold right mouse /
@@ -48,7 +49,7 @@ const FPSW = {
   pepperbox:   { n: 'Pepperbox',   code: 'p', mag: 6, rate: 0.26, reload: 2.2, dmg: 1, head: 2, auto: true, range: 420, kick: 1 },
   blunderbuss: { n: 'Blunderbuss', code: 'b', mag: 1, rate: 0.6, reload: 2.7, dmg: 1, head: 1, pellets: 9, spread: 0.085, range: 55, kick: 2.4 },
   longarm:     { n: 'Longarm',     code: 'l', mag: 1, rate: 0.5, reload: 2.6, dmg: 3, head: 5, range: 650, hip: 0.012, scope: 3.2, kick: 1.6 },
-  harpoon:     { n: 'Harpoon gun', code: 'h', mag: 1, rate: 0.6, reload: 2.9, dmg: 4, head: 4, speed: 72, drop: 5, range: 300, kick: 1.9 },
+  harpoon:     { n: 'Harpoon gun', code: 'h', mag: 1, rate: 0.6, reload: 2.2, dmg: 4, head: 4, speed: 100, drop: 2.4, tol: 0.2, range: 300, kick: 1.9 },
   cutlass:     { n: 'Cutlass',     code: 'c', mag: 0, rate: 0.48, reload: 1.6, dmg: 2, head: 2, reach: 2.7, arc: 0.8, melee: true, kick: 0 },
   avtomat:     { n: 'Avtomat',     code: 'a', mag: 25, rate: 0.085, reload: 3.9, dmg: 1, head: 2, auto: true, range: 380, hip: 0.03, ads: 1.45, kick: 0.75, climb: 0.019, sway: 0.011 },
   // only in the Lighthouse (src/zombies.js), and only from the wreck chest: a lantern with a lighthouse lens in it,
@@ -410,7 +411,8 @@ function fpsSeeAt(x, y, theirLantern) {
 // ---------- shooting ----------
 // the first thing along a ray from (x, y, z) heading h, pitched p: a person, a rock, a wreck or the ground
 // (targets: who can be hit; everyone on the island unless given)
-function fpsRay(x, y, z, h, p, skipId, targets, range) {
+// (tol: a little more body to hit, all round, for a forgiving projectile: the harpoon)
+function fpsRay(x, y, z, h, p, skipId, targets, range, tol) {
   const sx = Math.sin(h), sy = Math.cos(h), tp = Math.tan(p);
   let best = { t: range || FPSC.RANGE, kind: 'none' };
   if (p < -0.001) { const tg = (z - FPSC.GROUND) / -tp; if (tg < best.t) best = { t: tg, kind: 'ground' }; }
@@ -433,9 +435,9 @@ function fpsRay(x, y, z, h, p, skipId, targets, range) {
   for (const o of targets) {
     if (o.id === skipId) continue;
     // (a body can be bigger than most: rad, tall and headZ, for the Lighthouse's Diver)
-    const t = circle(o.x, o.y, o.rad || FPSC.BODY); if (t == null || t > best.t) continue;
+    const t = circle(o.x, o.y, (o.rad || FPSC.BODY) + (tol || 0)); if (t == null || t > best.t) continue;
     const hz = z + tp * t - FPSC.GROUND - (o.jz || 0);
-    if (hz < 0 || hz > (o.tall || FPSC.TALL) + 0.1) continue;
+    if (hz < -(tol || 0) || hz > (o.tall || FPSC.TALL) + 0.1 + (tol || 0)) continue;
     best = { t, kind: 'body', who: o, head: hz > (o.headZ || 1.5) };
   }
   best.x = x + sx * best.t; best.y = y + sy * best.t; best.z = z + tp * best.t;
@@ -447,9 +449,11 @@ function fpsRemember(o, now) {
   while (o.hist.length && now - o.hist[0].t > FPSC.LAG * 1000 + 100) o.hist.shift();
 }
 // the directions of the balls in a blunderbuss shot, the same on every screen (from the shot's seed)
+// (in the Lighthouse a weapon can load differently: ZM_SHOT in src/zombies.js, the blunderbuss's wider charge)
 function fpsPellets(sh) {
   const [, , , , h, p, , code, seed] = sh, w = fpsWOf(code), rng = seeded((seed || 1) >>> 0), out = [];
-  for (let i = 0; i < w.pellets; i++) { const a = rng() * 6.283, r = Math.sqrt(rng()) * w.spread; out.push([h + Math.cos(a) * r, p + Math.sin(a) * r * 0.7]); }
+  const o = FPS.zm && typeof ZM_SHOT !== 'undefined' && ZM_SHOT[code], n = (o && o.pellets) || w.pellets, sp = (o && o.spread) || w.spread;
+  for (let i = 0; i < n; i++) { const a = rng() * 6.283, r = Math.sqrt(rng()) * sp; out.push([h + Math.cos(a) * r, p + Math.sin(a) * r * 0.7]); }
   return out;
 }
 // the line(s) a shot travels: one for most guns, nine for the blunderbuss, a little wander from the hip for the longarm
@@ -592,7 +596,7 @@ function fpsHarpoonsTick(dt) {
       for (const b of FPS.bots) if (b.id !== hp.by && !(b.dead > 0)) people.push(b);
       for (const d of FPS.drowned) if (!d.dead && !((hp.skew || hp.thru) && zmpHarpoonSkip(hp, d))) people.push(d);   // ([pap] the Whale-Road passes through)
       if (hp.mine) for (const r of FPS.remote.values()) if (!r.dead) people.push(r);
-      const r = fpsRay(ox, oy, oz, hh, pp, hp.by, people, seg + 0.05);
+      const r = fpsRay(ox, oy, oz, hh, pp, hp.by, people, seg + 0.05, w.tol);
       if (r.kind === 'none') { if (hp.z < FPSC.GROUND || hp.t > 6 || Math.hypot(hp.x - FPSC.CX, hp.y - FPSC.CY) > FPSC.R + 200) { hp.done = true; hp.stuck = hp.z < FPSC.GROUND ? 8 : 0; if (hp.skew && typeof zmpHarpoonCarry === 'function') zmpHarpoonCarry(hp, true); } continue; }
       hp.x = r.x; hp.y = r.y; hp.z = r.z; hp.done = true;
       if (r.kind === 'body' && FPS.zm && typeof zmpHarpoonHit === 'function' && zmpHarpoonHit(hp, r)) { hp.done = false; continue; }   // [pap] the Whale-Road runs them through
@@ -603,6 +607,8 @@ function fpsHarpoonsTick(dt) {
         else if (o.bot && hostish) fpsBotHurt(o, w.dmg, hp.by);
         else if (o.drowned && hostish) fpsDrownedHurt(o, w.dmg, r.head, 'h');
         if (hp.mine) { FPS.hitT = 0.25; FPS.hitHead = true; fpsHitSound(true); }
+        // (in the Lighthouse, an iron that kills goes on through and into the next: zmHarpoonOn, src/zombies.js)
+        if (o.drowned && FPS.zm && typeof zmHarpoonOn === 'function' && zmHarpoonOn(hp, o)) { hp.done = false; continue; }
         hp.stuck = 0.6;
         if (hp.skew && typeof zmpHarpoonCarry === 'function') zmpHarpoonCarry(hp, true);
       } else { if (hp.skew && typeof zmpHarpoonCarry === 'function') zmpHarpoonCarry(hp, true); hp.stuck = 8; fpsPuff(r.x, r.y, r.z, '190,190,180', 8); try { noise('bandpass', 900, 3, 0.002, 0.12, 0.15); } catch (e) {} }
