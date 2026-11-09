@@ -44,7 +44,7 @@ function zbRounds(dt) {
 function zbWindow() {
   const N = ZM.nav, list = [];
   for (const w of ZM.windows) {
-    if (!zmOpen(w.zone) || w.z > 0) continue;   // (too big for the windows up the tower)
+    if (!zmOpen(w.zone) || w.z > 0 || w.hatch) continue;   // (too big for the windows up the tower)
     const d = zmNavDist(w.x - w.nx * 1.0, w.y - w.ny * 1.0, 0);
     list.push([w, d < 1e8 ? d : 9999]);
   }

@@ -17127,7 +17127,7 @@ Object.assign(FPI_K, {
   // a plinth where the wreck chest can stand (base: the floor it stands on)
   plinth: {
     col: FPI_C.stone3,
-    sol(p) { return [fpiBox(p, 0, 0, 0.85, 0.48, (p.base || 0) + 0.32)]; },
+    sol(p) { return [fpiBox(p, 0, 0, 0.85, 0.48, (p.base || 0) + 0.32, p.base ? { z0: p.base - 0.05 } : undefined)]; },   // (up the tower: only as tall as itself, not a column down through the floors below)
     b3(p, A) {
       const b = p.base || 0;
       A.box('#5a5650', 0, 0, b - 0.1, 1.7, 0.96, 0.42); A.box('#6a665e', 0, 0, b + 0.26, 1.78, 1.02, 0.06);
@@ -17515,7 +17515,11 @@ FPI_GEN.light = {
     // the south front, facing the sea
     wall(-44, -21, -26, -21, { mat: 'stone' }, [{ at: -35, k: 'win', out: -1, z: 'wreck' }]);
     wall(-26, -21, -10, -21, PL(ZM_ZONES.fog.wall), [{ at: -18, k: 'win', out: -1, z: 'fog' }]);
-    wall(-10, -21, 10, -21, PL(ZM_ZONES.quarters.wall), [{ at: -5, k: 'win', out: -1, z: 'quarters' }, { at: 2.6, k: 'door', cost: 1000, z: ['yard', 'quarters'] }, { at: 7.6, k: 'win', out: -1, z: 'quarters' }]);   // (the window well clear of the courtyard's door)
+    wall(-10, -21, 10, -21, PL(ZM_ZONES.quarters.wall), [{ at: 2.6, k: 'door', cost: 1000, z: ['yard', 'quarters'] }]);
+    // (the Quarters' south wall faces the courtyard now: no windows in it. The drowned come down into the room
+    // through two boarded hatches in its ceiling instead, out of the loft under the roof)
+    const hatch = (x, y) => { const [wx, wy] = W(x, y); Z.windows.push({ x: wx, y: wy, nx: 0, ny: 0, zone: 'quarters', z: 0, hatch: CE, boards: 6, id: Z.windows.length, q: [], hw: 0.8, th: 0.1 }); };
+    hatch(-6.2, -17.2); hatch(6.4, -14.2);
     wall(10, -21, 26, -21, PL(ZM_ZONES.oil.wall), [{ at: 18, k: 'win', out: -1, z: 'oil' }]);
     wall(26, -21, 44, -21, { mat: 'wood' }, [{ at: 35, k: 'win', out: -1, z: 'boat' }]);
     // the ends
@@ -17930,6 +17934,7 @@ function zmFloorAt(x, y, feet, pad) {
 function zmWinPen(x, y, pad, feet) {
   let pen = 0;
   for (const w of ZM.windows || []) {
+    if (w.hatch) continue;
     const wz = w.z || 0; if (feet < wz - 0.6 || feet > wz + 2.4) continue;
     const dx = x - w.x, dy = y - w.y, a = dx * w.nx + dy * w.ny, t = -dx * w.ny + dy * w.nx, in0 = (w.th || 0.3) + 0.05 + pad;
     if (a > -in0 && a < 1.2 && Math.abs(t) < (w.hw || 0.8) + 0.05) pen = Math.max(pen, a + in0);
@@ -18381,6 +18386,7 @@ function zmPickWindow() {
 function zmSpawnPoint(w) {
   const tx = -w.ny, ty = w.nx, T = ZM_TC, CX = FPSC.CX, CY = FPSC.CY;
   // (a ladder down the jetty, or a gap in the sea wall: out in the harbour, under the water, clear of the jetty)
+  if (w.hatch) return [w.x + (Math.random() - 0.5) * 0.4, w.y + (Math.random() - 0.5) * 0.4];
   if (w.sea || w.shore) {
     for (let i = 0; i < 16; i++) {
       const out = (w.sea ? 3.0 : 4.2) + Math.random() * 3, side = (Math.random() - 0.5) * 2.4, x = w.x + w.nx * out + tx * side, y = w.y + w.ny * out + ty * side;
@@ -18407,7 +18413,8 @@ function zmSpawn() {
     hp, max: hp, kind, sp: kind === 'run' ? 5.0 + Math.random() * 0.6 : kind === 'jog' ? 3.2 + Math.random() * 0.4 : 1.55 + Math.random() * 0.35,
     st: 'out', win: w, t: 0, ph: Math.random() * 6, hitT: 0, atk: 0.6, swing: -1, stuck: 0, h: 0, seed: (Math.random() * 1e6) | 0, rise: 1, hist: [],
   };
-  z.h = bearingOf(w.x - z.x, w.y - z.y);
+  z.h = w.hatch ? Math.random() * 6.28 : bearingOf(w.x - z.x, w.y - z.y);
+  if (w.hatch) z.jz = w.hatch + 0.25;   // (up in the loft, over the hatch)
   w.q.push(z);
   ZM.z.push(z); FPS.drowned = ZM.z;
   return true;
@@ -18463,6 +18470,22 @@ function zmZombies(dt) {
     if (z.boss && typeof zbTick === 'function') { zbTick(z, dt, nearest); continue; }   // [boss] he goes his own way (src/zmboss.js)
     const step = z.sp * dt * (z.slow > 0 && typeof zmpSlowK === 'function' ? zmpSlowK(z) : 1);   // [pap] (slowed by the Equinox Gale)
     const G = zmGait(z);
+    if (z.win && z.win.hatch && (z.st === 'out' || z.st === 'tear' || z.st === 'climb')) {
+      // a hatch in the ceiling: waiting up in the loft over it (each in turn), tearing its boards up, then dropping
+      // down through it into the room
+      const w = z.win, top = w.hatch + 0.25; z.walk = false; z.scaling = false;
+      if (z.st === 'out') { z.jz = top; z.x = w.x; z.y = w.y; if (w.q.indexOf(z) === 0) { z.st = 'tear'; z.t = 0; } continue; }
+      if (z.st === 'tear') {
+        z.jz = top; z.x = w.x; z.y = w.y;
+        if (w.boards > 0) { if (z.t > Math.max(0.55, 1.25 - ZM.round * 0.03)) { z.t = 0; w.boards--; w.fall.push({ i: w.boards, t: 0 }); zmSound('tear', Math.hypot(w.x - FPS.me.x, w.y - FPS.me.y)); } }
+        else { z.st = 'climb'; z.t = 0; zmSound('tear', Math.hypot(w.x - FPS.me.x, w.y - FPS.me.y)); }
+        continue;
+      }
+      const k = Math.min(1, z.t / 0.55);
+      z.x = w.x; z.y = w.y; z.jz = top * (1 - k * k);
+      if (k >= 1) { z.st = 'in'; z.jz = z.fl = 0; w.q = w.q.filter(q => q !== z); z.t = 0; z.lx = z.x; z.ly = z.y; z.stum = 0.4; }
+      continue;
+    }
     if (z.st === 'out' && z.win.sea) {
       // up out of the harbour: wading in under the jetty's ladder, head and shoulders out of the water, deeper the
       // further out (waiting behind any already at it); then up the ladder
@@ -18957,7 +18980,7 @@ function zmNearest() {
   if (typeof zmpConsider === 'function') zmpConsider(consider);   // [pap] the bench
   // someone down: you can get them up
   if (ZM.net) for (const r of FPS.remote.values()) if (r.down && !r.dead) consider({ k: 'rev', sid: r.id, n: r.n }, r.x, r.y, r.jz || 0, 1.8, false);
-  for (const w of ZM.windows) if (!w.sea && w.boards < 6 && zmOpen(w.zone)) consider({ k: 'win', w }, w.x - w.nx * 0.95, w.y - w.ny * 0.95, w.z || 0, 1.9, false);
+  for (const w of ZM.windows) if (!w.sea && w.boards < 6 && zmOpen(w.zone)) consider({ k: 'win', w }, w.x - w.nx * 0.95, w.y - w.ny * 0.95, w.z || 0, w.hatch ? 1.6 : 1.9, false);
   if (typeof zeNearest === 'function') zeNearest(consider);   // [egg hook] src/zmegg.js
   // (down on the floor, nothing's in reach but your pepperbox)
   ZM.near = zmIsDown() ? null : best;
@@ -19221,6 +19244,14 @@ function zm3dBuild() {
     g.rotation.y = Math.atan2(w.nx, -w.ny);
     const rnd = seeded(w.id * 131 + 7), list = [], out = 1;
     if (w.sea) return { g, list, out };
+    if (w.hatch) {
+      // (the group turned flat: its local y runs across the hatch, its local z up into the loft)
+      g.position.copy(z3v(w.x, w.y, G0 + w.hatch - 0.22)); g.rotation.set(-Math.PI / 2, 0, 0);
+      const hole = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 1.5), new THREE.MeshBasicMaterial({ color: 0x07090c, side: THREE.DoubleSide })); hole.position.z = 0.13; g.add(hole);
+      for (const [x, y, a, b] of [[0, 0.8, 1.7, 0.1], [0, -0.8, 1.7, 0.1], [0.8, 0, 0.1, 1.5], [-0.8, 0, 0.1, 1.5]]) { const f = new THREE.Mesh(new THREE.BoxGeometry(a, b, 0.24), boardM[2]); f.position.set(x, y, 0.1); g.add(f); }
+      for (let i = 0; i < 6; i++) { const b = new THREE.Mesh(new THREE.BoxGeometry(1.75, 0.2, 0.05), boardM[i % 3]); b.position.set(0, -0.62 + i * 0.25, 0); b.rotation.z = (rnd() - 0.5) * 0.12; g.add(b); list.push({ m: b, y: b.position.y, rz: b.rotation.z }); }
+      return { g, list, out: -1 };
+    }
     for (let i = 0; i < 6; i++) { const b = new THREE.Mesh(new THREE.BoxGeometry(1.95, 0.17, 0.06), boardM[i % 3]); b.position.set(0, 1.12 + i * 0.2, 0); b.rotation.z = (rnd() - 0.5) * 0.22; g.add(b); list.push({ m: b, y: b.position.y, rz: b.rotation.z }); }
     return { g, list, out };
   });
@@ -19484,7 +19515,8 @@ function zmScene3D() {
     const B = Z3.boards[i]; if (!B) return;
     B.list.forEach((b, j) => {
       const on = j < w.boards, f = w.fall.find(q => q.i === j);
-      if (f) { b.m.visible = true; const k = f.t / 1.2; b.m.position.set(0, b.y - k * k * 1.6, 0.9 * k * B.out); b.m.rotation.set(k * 2 * B.out, 0, b.rz + k * 1.5); }
+      if (f && w.hatch) { const k = Math.min(1, f.t / 0.7); b.m.visible = f.t < 1.15; b.m.position.set(0.1 * k, b.y, -k * k * (w.hatch - 0.1)); b.m.rotation.set(k * 1.2, 0, b.rz + k * 0.8); }   // (down onto the floor)
+      else if (f) { b.m.visible = true; const k = f.t / 1.2; b.m.position.set(0, b.y - k * k * 1.6, 0.9 * k * B.out); b.m.rotation.set(k * 2 * B.out, 0, b.rz + k * 1.5); }
       else { b.m.visible = on; b.m.position.set(0, b.y, 0); b.m.rotation.set(0, 0, b.rz); }
     });
   });
@@ -21912,7 +21944,7 @@ function zbRounds(dt) {
 function zbWindow() {
   const N = ZM.nav, list = [];
   for (const w of ZM.windows) {
-    if (!zmOpen(w.zone) || w.z > 0) continue;   // (too big for the windows up the tower)
+    if (!zmOpen(w.zone) || w.z > 0 || w.hatch) continue;   // (too big for the windows up the tower)
     const d = zmNavDist(w.x - w.nx * 1.0, w.y - w.ny * 1.0, 0);
     list.push([w, d < 1e8 ? d : 9999]);
   }
