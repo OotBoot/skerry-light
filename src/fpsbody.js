@@ -426,7 +426,7 @@ function fpsFiguresSync() {
   if (typeof GL3D === 'undefined' || !GL3D.scene) return;
   const dt = Math.min(0.05, FPS.dtLast || 0.016), m = FPS.me, used = new Set();
   const all = [];
-  for (const o of FPS.remote.values()) if (!o.dead) all.push(o);
+  for (const o of FPS.remote.values()) if (!o.dead && o.id !== FPS.specId) all.push(o);   // (not the one you're watching through: src/zombies.js)
   for (const o of FPS.bots) if (!(o.dead > 0)) all.push(o);
   for (const o of all) o._d = Math.hypot(o.x - m.x, o.y - m.y);
   all.sort((a, b) => a._d - b._d);

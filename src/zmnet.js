@@ -184,6 +184,8 @@ function znPresence() {
   // down: how long I've left on the floor (tenths); getting someone up: who, and how far along (hundredths)
   if (ZM.downT > 0) z.dn = Math.ceil(ZM.downT * 10);
   if (ZM.revOf && ZM.revT > 0) z.rv = [ZM.revOf, Math.round(ZM.revT / ZM_DOWN.REV * 100)];
+  // my health and the most I can have (Stout Heart), for the bar over my head and for anyone watching me
+  z.hp = FPS.me.dead > 0 || ZM.downT > 0 ? 0 : Math.max(0, Math.ceil(FPS.me.hp)); z.hm = ZM.perks && ZM.perks.stout ? ZMC.HP_STOUT : ZMC.HP;
   return z;
 }
 // my shots, for the others to see and hear
@@ -224,6 +226,7 @@ function znReadPlayers(dt) {
     r.pts = Math.max(0, z.pt | 0);
     r.dn = r.down ? clamp(+z.dn || 0, 0, ZM_DOWN.T * 10) / 10 : 0;
     r.rv = Array.isArray(z.rv) && typeof z.rv[0] === 'string' ? [z.rv[0], clamp(+z.rv[1] || 0, 0, 100) / 100] : null;
+    r.hm = clamp(z.hm | 0 || ZMC.HP, 1, 12); r.hp = z.hp == null ? null : clamp(+z.hp || 0, 0, r.hm);
     r.left = false;
     if (Array.isArray(z.sh)) {
       const last = ZN.lastShot[z.sid] || 0;

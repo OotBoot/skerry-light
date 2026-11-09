@@ -948,7 +948,7 @@ function zmStart(opts) {
 function zmStop() {
   if (ZM.net && typeof zmnStop === 'function') zmnStop();
   if (typeof zmpStop === 'function') zmpStop();   // [pap]
-  ZM.on = false; ZM.net = null; FPS.zm = false; FPS.eyeLag = 0; FPS.downEye = 0;
+  ZM.on = false; ZM.net = null; FPS.zm = false; FPS.eyeLag = 0; FPS.downEye = 0; ZM.spec = null; FPS.specId = null;
   $('stage').classList.remove('zmmode'); $('zmOver').hidden = true;
   { const e = document.querySelector('#fpsMenu .eyebrow'); if (e) e.textContent = "Wreckers' Night carries on without you"; $('fpsLeave').textContent = 'Leave the island'; $('fpsResume').textContent = 'Back to the fight'; }
   if (Z3.grp) Z3.grp.visible = false;
@@ -968,7 +968,8 @@ function zmFrame(dt) {
     G.mods.lantern = m.lan ? 1 : 0.3;
     // (alone, the menu holds everything still; together, the night goes on)
     const live = (!FPS.menu || ZM.net) && !ZM.over;
-    if (live && !FPS.menu) { const was = [m.x, m.y]; fpsInput(dt); if (zmIsDown()) zmCrawl(m, was, dt); }
+    if (live && !FPS.menu && zmSpecOn()) zmSpecInput();   // (out, watching someone: src below, zmSpecTick)
+    else if (live && !FPS.menu) { const was = [m.x, m.y]; fpsInput(dt); if (zmIsDown()) zmCrawl(m, was, dt); }
     else { FPS.look = [0, 0]; FPS.mlook = [0, 0]; m.walk = false; }
     if (FPS.menu) fpsMenuPad(dt);
     if (live) {
@@ -1003,6 +1004,7 @@ function zmFrame(dt) {
     FPS.parts = FPS.parts.filter(p => p.t > 0);
     if (FPS.parts.length > 400) FPS.parts.splice(0, FPS.parts.length - 400);
     if (ZM.over) { ZM.over.t += dt; if (ZM.over.t > 2.2 && $('zmOver').hidden) zmShowOver(); if (ZM.net === 'host') zmnHost(dt); }
+    zmSpecTick(dt);
     fpsDraw();
   } finally { g = saved[0]; ship = saved[1]; }
 }
@@ -2138,7 +2140,7 @@ function zmDrawFlat() {
 
 // ---------- what you see on top ----------
 function zmHud() {
-  const m = FPS.me, phone = FPS.touch, t = g.t, down = zmIsDown() && !ZM.over;
+  const m = FPS.me, phone = FPS.touch, t = g.t, down = zmIsDown() && !ZM.over, spec = zmSpecOn();
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   const mono = px => `600 ${px}px "Courier Prime", monospace`, fell = px => `400 ${px}px "IM Fell English SC", serif`;
   const max = ZM.perks.stout ? ZMC.HP_STOUT : ZMC.HP;
@@ -2183,7 +2185,8 @@ function zmHud() {
   for (const p of ZM.pops) { ctx.globalAlpha = Math.min(1, p.t * 1.5); ctx.font = mono(phone ? 12 : 14); ctx.fillStyle = p.v >= 60 ? '#ffd88a' : 'rgba(236,228,207,0.9)'; ctx.fillText('+' + p.v, L + (phone ? 140 : 190) + p.dx * 0.5, py - 8 - (1.1 - p.t) * 40); }
   ctx.globalAlpha = 1;
   // your health, over the points: a bar in as many parts as the knocks you can take, filling back up when you heal
-  {
+  // (not while you're out watching someone: theirs is in the band at the bottom)
+  if (!spec) {
     const bw = phone ? 120 : 168, bh = phone ? 9 : 11, by = py - (phone ? 30 : 36), n = max, gap = 3, seg = (bw - gap * (n - 1)) / n;
     const hp = m.dead > 0 || down ? 0 : clamp(m.hp, 0, n), low = hp <= 1 && !(m.dead > 0);
     ctx.fillStyle = 'rgba(8,10,14,0.55)'; ctx.fillRect(L - 3, by - 3, bw + 6, bh + 6);
@@ -2211,8 +2214,9 @@ function zmHud() {
     if (!blink) return;
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = mono(phone ? 11 : 13); ctx.fillStyle = ZM_DROPS[k].c; ctx.fillText(`${ZM_DROPS[k].n.toUpperCase()} ${Math.ceil(s)}`, x, y);
   });
-  // your weapons and ammunition, bottom right
-  if (!phone) {
+  // your weapons and ammunition, bottom right (none while you're out watching someone)
+  if (spec) { /* nothing in your hands */ }
+  else if (!phone) {
     const by = H - 22;
     ctx.textAlign = 'right'; ctx.textBaseline = 'alphabetic'; ctx.font = mono(24);
     ctx.fillStyle = w.melee || m.ammo ? 'rgba(236,228,207,0.92)' : '#e46c4f';
@@ -2264,6 +2268,7 @@ function zmHud() {
   }
   // down, waiting for a friend (your clock on the floor); or out until the next round
   if (down) zmHudDown(phone, mono, fell, t);
+  else if (spec) zmSpecHud(phone, mono, fell, t);
   else if (!ZM.over && ZM.ghost) {
     ctx.fillStyle = 'rgba(30,4,4,0.35)'; ctx.fillRect(0, 0, W, H);
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = fell(phone ? 24 : 34); ctx.fillStyle = '#e46c4f';
@@ -2335,6 +2340,104 @@ function zmHudReviving(phone, mono, t) {
   ctx.fillStyle = 'rgba(8,10,14,0.6)'; ctx.fillRect(cx - tw / 2, ty - 14, tw, 28);
   ctx.fillStyle = '#ffd88a'; ctx.fillText(text, cx, ty);
   if (r && r.dn > 0) { ctx.font = mono(phone ? 9 : 11); ctx.fillStyle = r.dn < 10 ? '#ff8a6a' : 'rgba(236,228,207,0.7)'; ctx.fillText(`Keep holding · ${Math.ceil(r.dn)} s before they bleed out`, cx, ty + (phone ? 20 : 24)); }
+}
+// ---------- watching, after bleeding out ----------
+// together, out until the next round: your view goes to someone still in the night, through their eyes (from their
+// presence: where they stand, their floor, which way they look, and how low they are if they're down). Click, Space,
+// RB (or A) or a tap moves on to the next; LB the one before. Your own inputs move nothing. Back next round, it's you
+const zmSpecOn = () => !!(ZM.net && ZM.ghost && !ZM.over && ZM.spec && ZM.spec.id && FPS.remote.get(ZM.spec.id));
+// who there is to watch: everyone still in the night (standing first, then any down), in the order they joined
+function zmSpecList() {
+  const out = [];
+  for (const [sid] of ZM.hum || []) { const r = FPS.remote.get(sid); if (r && !r.dead && !r.left && r.tx != null) out.push(r); }
+  return out.filter(r => !r.down).concat(out.filter(r => r.down));
+}
+function zmSpecNext(dir) {
+  const L = zmSpecList(), S = ZM.spec; if (!S || !L.length) return;
+  const i = L.findIndex(r => r.id === S.id);
+  const r = L[((i < 0 ? 0 : i + (dir || 1)) % L.length + L.length) % L.length];
+  if (r.id !== S.id) { S.id = r.id; S.snap = true; if (L.length > 1) zmSound('board'); }
+}
+// each frame (together): keep an eye on someone while you're out; you, moved along with them (unseen, since you're
+// out), so what you hear, what's lit and the room's name are theirs; nothing at all once you're back
+function zmSpecTick(dt) {
+  if (!(ZM.net && ZM.ghost && !ZM.over)) { if (ZM.spec) { ZM.spec = null; FPS.specId = null; } return; }
+  const S = ZM.spec = ZM.spec || { id: null, snap: true, x: 0, y: 0, z: 0, h: 0, p: 0, was: {} };
+  const L = zmSpecList();
+  // (the one you were watching bled out or left: on to someone else)
+  if (!L.some(r => r.id === S.id)) { S.id = L.length ? L[0].id : null; S.snap = true; }
+  FPS.specId = S.id;
+  if (!S.id) return;
+  const r = FPS.remote.get(S.id), m = FPS.me;
+  const eye = FPSC.GROUND + FPSC.EYE + (r.tjz || 0) - (r.down ? ZM_DOWN.EYE : 0), k = S.snap ? 1 : 1 - Math.exp(-dt * 14);
+  S.x = r.x; S.y = r.y;
+  S.z += (eye - S.z) * (S.snap ? 1 : 1 - Math.exp(-dt * 8));
+  S.h = wrapPi(S.h + angDiff(r.h, S.h) * k); S.p += (clamp(r.p || 0, -0.6, 0.6) - S.p) * k;
+  S.snap = false;
+  // (and facing their way, so you come back next round looking where you were looking)
+  m.x = r.x; m.y = r.y; m.jz = m.fl = r.tjz || 0; m.h = S.h; m.p = S.p;
+}
+// the view from the one you're watching, for fpsDrawScene (src/fps.js); null when you're not watching anyone
+function zmSpecView() {
+  if (!zmSpecOn()) return null;
+  const S = ZM.spec;
+  return { x: S.x, y: S.y, h: S.h, p: S.p, jz: S.z - FPSC.GROUND - FPSC.EYE, dead: 0 };
+}
+// while watching: nothing moves you; a click, Space, a tap, A or RB moves on to the next, LB back; Start the menu
+function zmSpecInput() {
+  const S = ZM.spec, was = S.was;
+  FPS.look = [0, 0]; FPS.mlook = [0, 0]; FPS.me.walk = false;
+  const edge = (k, on) => { const e = on && !was[k]; was[k] = on; return e; };
+  if (edge('mouse', !!FPS.mouseDown) | edge('space', !!FPS.keys.Space) | edge('fire', !!FPS.touchFire)) zmSpecNext(1);
+  const tch = FPS.lookTouch || FPS.stick || null;
+  if (tch && tch !== was.touch) zmSpecNext(1);
+  was.touch = tch;
+  const pad = navigator.getGamepads ? [...navigator.getGamepads()].find(p => p && p.connected) : null;
+  if (pad) {
+    const b = i => !!(pad.buttons[i] && pad.buttons[i].pressed), pw = FPS.padWas || {};
+    if ((b(5) && !pw[5]) || (b(0) && !pw[0]) || (b(15) && !pw[15])) zmSpecNext(1);
+    if ((b(4) && !pw[4]) || (b(14) && !pw[14])) zmSpecNext(-1);
+    if (b(9) && !pw[9]) fpsSetMenu(!FPS.menu);
+    if (b(8) && !pw[8]) FPS.board = !FPS.board;
+    FPS.padWas = {}; for (let i = 0; i < pad.buttons.length; i++) FPS.padWas[i] = b(i);
+  }
+}
+// a row of segments, one for each knock someone can take: green whole, amber hurt, red on the last; down, an empty
+// bar edged in red. Centred on x, its top at y
+function zmHpSegs(x, y, w, h, hp, max, down, a) {
+  max = Math.max(1, max | 0); const gap = Math.max(1, Math.round(h * 0.3)), seg = (w - gap * (max - 1)) / max, x0 = x - w / 2;
+  const n = down ? 0 : clamp(hp || 0, 0, max), low = n <= 1, t = g.t;
+  ctx.globalAlpha = a == null ? 1 : a;
+  ctx.fillStyle = 'rgba(8,10,14,0.6)'; ctx.fillRect(x0 - 2, y - 2, w + 4, h + 4);
+  for (let i = 0; i < max; i++) {
+    ctx.fillStyle = i < n ? (low ? `rgba(228,${60 + 40 * Math.sin(t * 8)},50,0.95)` : n < max ? '#e4a04f' : '#7ac46a') : down ? 'rgba(120,24,20,0.7)' : 'rgba(80,70,60,0.6)';
+    ctx.fillRect(x0 + i * (seg + gap), y, seg, h);
+  }
+  if (down) { ctx.strokeStyle = '#e0504a'; ctx.lineWidth = 1; ctx.strokeRect(x0 - 1.5, y - 1.5, w + 3, h + 3); }
+  ctx.globalAlpha = 1;
+}
+// watching: a band low in the middle, "Watching <name> — back next round", their health, and how to move on
+function zmSpecHud(phone, mono, fell, t) {
+  const r = FPS.remote.get(ZM.spec.id), n = zmSpecList().length; if (!r) return;
+  // (a little dark round the edges: you're only looking on)
+  const gr = ctx.createRadialGradient(cx, H / 2, Math.min(W, H) * 0.35, cx, H / 2, Math.max(W, H) * 0.7);
+  gr.addColorStop(0, 'rgba(10,14,22,0)'); gr.addColorStop(1, 'rgba(10,14,22,0.55)'); ctx.fillStyle = gr; ctx.fillRect(0, 0, W, H);
+  const y = H - (phone ? 96 : 104), bw = Math.min(W - 24, phone ? 340 : 560), bh = phone ? 78 : 88;
+  { const b = ctx.createLinearGradient(cx - bw / 2, 0, cx + bw / 2, 0);
+    b.addColorStop(0, 'rgba(8,8,10,0)'); b.addColorStop(0.2, 'rgba(8,8,10,0.65)'); b.addColorStop(0.8, 'rgba(8,8,10,0.65)'); b.addColorStop(1, 'rgba(8,8,10,0)');
+    ctx.fillStyle = b; ctx.fillRect(cx - bw / 2, y - bh / 2, bw, bh); }
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.font = fell(phone ? 18 : 24); ctx.fillStyle = 'rgba(236,228,207,0.95)';
+  ctx.fillText(`Watching ${r.n} — back next round`, cx, y - (phone ? 22 : 26), bw - 20);
+  const max = r.hm || ZMC.HP, hw = Math.min(phone ? 110 : 150, 26 * max);
+  zmHpSegs(cx, y - 4, hw, phone ? 7 : 9, r.hp, max, r.down);
+  ctx.font = mono(phone ? 10 : 12); ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillStyle = r.down ? '#ff8a6a' : 'rgba(236,228,207,0.7)';
+  ctx.fillText(r.down ? `${r.n} is down${r.dn > 0 ? ' — ' + Math.ceil(r.dn) + ' s' : ''}` : `HEALTH ${Math.ceil(clamp(r.hp || 0, 0, max))}/${max}`, cx, y + (phone ? 14 : 18));
+  if (n > 1) {
+    ctx.font = mono(phone ? 9 : 11); ctx.fillStyle = 'rgba(236,228,207,0.5)';
+    ctx.fillText(phone ? 'Tap to watch someone else' : FPS.padLast ? 'RB: watch someone else' : 'Click or Space: watch someone else', cx, y + (phone ? 30 : 36));
+  }
 }
 // the walking stick, where your thumb came down (as on the islands), with its outer circle for running
 function zmDrawStick() {

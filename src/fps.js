@@ -1012,7 +1012,8 @@ function fpsDraw() {
   } finally { focal = f0; }
 }
 function fpsDrawScene() {
-  const m = FPS.me;
+  // (in the Lighthouse, out and watching someone: the view is theirs, src/zombies.js)
+  const m = (FPS.zm && typeof zmSpecView === 'function' && zmSpecView()) || FPS.me;
   camX = m.x; camY = m.y; yaw = m.h;
   const eye = FPSC.GROUND + FPSC.EYE + (m.jz || 0) - (FPS.eyeLag || 0) - (FPS.downEye || 0);
   camH = eye + (reduceMotion ? 0 : Math.sin(FPS.step) * 0.05 - (FPS.landed || 0) * 0.4) - (m.dead > 0 ? 1.2 * Math.min(1, (FPSC.RESPAWN - m.dead) * 2) : 0);
@@ -1075,7 +1076,7 @@ function fpsDrawScene() {
     if (g.isle) for (const s of g.isle.solids) if (Math.hypot(s.x - camX, s.y - camY) < 200 && !(FPS.zm && s.occ === false)) add('solid', s, FPSC.GROUND);
   }
   if (g.isle && !(FPS.zm && gl)) for (const l of g.isle.lights) add('glow', l, l.z);
-  for (const o of FPS.remote.values()) if (!o.dead) add('person', o);
+  for (const o of FPS.remote.values()) if (!o.dead && o.id !== FPS.specId) add('person', o);
   for (const o of FPS.bots) if (!(o.dead > 0)) add('person', o);
   if (!FPS.zm || !gl) for (const d of FPS.drowned) add('drowned', d);
   if (typeof fpsVerityItems === 'function') fpsVerityItems(add);
@@ -1235,7 +1236,7 @@ function fpsDrawPerson(o, c) {
   if (vis > 0.45 && hgt > 22 && !o.me) {
     ctx.font = `600 ${Math.round(Math.min(16, 9 + hgt * 0.04))}px "Courier Prime", monospace`; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
     ctx.fillStyle = `rgba(236,228,207,${Math.min(1, vis)})`; ctx.fillText(o.n || '', x, foot.y - hgt * 1.04);
-    if (!o.me && o.hp != null) { for (let i = 0; i < FPSC.HP; i++) { ctx.fillStyle = i < o.hp ? 'rgba(228,108,79,0.9)' : 'rgba(80,70,60,0.6)'; ctx.fillRect(x - 14 + i * 7.5, foot.y - hgt * 1.04 + 2, 6, 3); } }
+    if (!o.me) fpsHpBar(o, x, foot.y - hgt * 1.04 + 3, hgt, Math.min(1, vis));
   }
 }
 // over a 3D figure: what the flat drawing would add (their lantern's glow, seen from anywhere; a hit; their name)
@@ -1253,8 +1254,18 @@ function fpsDrawPersonOver(o, c) {
   if (vis > 0.45 && hgt > 22) {
     ctx.font = `600 ${Math.round(Math.min(16, 9 + hgt * 0.04))}px "Courier Prime", monospace`; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
     ctx.fillStyle = `rgba(236,228,207,${Math.min(1, vis)})`; ctx.fillText(o.n || '', x, foot.y - hgt * 1.08);
-    if (o.hp != null) { for (let i = 0; i < FPSC.HP; i++) { ctx.fillStyle = i < o.hp ? 'rgba(228,108,79,0.9)' : 'rgba(80,70,60,0.6)'; ctx.fillRect(x - 14 + i * 7.5, foot.y - hgt * 1.08 + 2, 6, 3); } }
+    fpsHpBar(o, x, foot.y - hgt * 1.08 + 3, hgt, Math.min(1, vis));
   }
+}
+// a small health bar under someone's name: a segment for each hit they can take (in the Lighthouse, their knocks,
+// from their presence), green whole, amber hurt, red on the last; down, empty and edged in red. Its size goes with
+// how big they are on the screen
+function fpsHpBar(o, x, y, hgt, a) {
+  if (o.hp == null || o.drowned) return;
+  const max = o.hm || (FPS.zm ? (typeof ZMC !== 'undefined' ? ZMC.HP : 3) : FPSC.HP), w = clamp(hgt * 0.42, 18, 54), h = clamp(hgt * 0.035, 2.5, 5);
+  const segs = typeof zmHpSegs === 'function' ? zmHpSegs : null;
+  if (segs) { segs(x, y, w, h, o.hp, max, !!o.down, a); return; }
+  for (let i = 0; i < max; i++) { ctx.fillStyle = i < o.hp ? '#7ac46a' : 'rgba(80,70,60,0.6)'; ctx.fillRect(x - w / 2 + i * w / max, y, w / max - 1, h); }
 }
 function fpsDrawDrowned(d, c) {
   const foot = proj(c), hgt = (foot.y - proj(cam(d.x, d.y, FPSC.GROUND + FPSC.TALL * 0.95)).y) * (0.4 + 0.6 * d.rise);
