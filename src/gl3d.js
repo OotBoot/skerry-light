@@ -504,12 +504,14 @@ function findOccluders() {
 }
 // clip the canvas so that a thing at depth f is hidden wherever a nearer rock stands; false if nothing is in front
 // (box: where on screen the thing is drawn, if known, so rocks nowhere near it are skipped)
-function gl3dClip(f, box) {
+function gl3dClip(f, box, at) {
   const occ = GL3D.occ; if (!occ.length || occ[0].f >= f) return false;
   // one cut per rock (clips stack), so rocks that overlap on screen still both hide what's behind them
   for (const o of occ) {
     if (o.f >= f) break;
     if (box && (o.x1 < box.x0 || o.x0 > box.x1 || o.y1 < box.y0 || o.y0 > box.y1)) continue;
+    // an island solid (Wreckers' Night) hides a thing only if it's wholly nearer, or stands in the line of sight to it
+    if (o.solid && at && !(o.fmax < f) && !fpsIsleBehind(o.solid, at.x, at.y)) continue;
     const p = o.pts;
     ctx.beginPath(); ctx.rect(-W, -H, W * 3, H * 3);
     ctx.moveTo(p[0][0], p[0][1]);

@@ -484,7 +484,10 @@ function wvPointerDown(e) {
   e.preventDefault(); e.stopImmediatePropagation();
   const r = cv.getBoundingClientRect(), px = e.clientX - r.left, py = e.clientY - r.top;
   WV.touch = e.pointerType === 'touch';
-  WV.pts = WV.pts || new Map(); WV.pts.set(e.pointerId, { x: px, y: py });
+  // the first finger down means no other is: forget any the browser never told us were lifted (an iPhone's edge
+  // swipe, a notification, the app switcher), or every later touch reads as a pinch and the map won't move
+  if (e.isPrimary || !WV.pts) wvResetInput();
+  WV.pts.set(e.pointerId, { x: px, y: py });
   if (WV.pts.size === 2) { const [a, b] = [...WV.pts.values()]; WV.pinch = { d: Math.hypot(a.x - b.x, a.y - b.y), z: WV.cam.z }; WV.drag = null; return; }
   if (e.button === 2) { WV.mode = null; wvPanels(); return; }
   WV.drag = { x: px, y: py, cx: WV.cam.x, cy: WV.cam.y, id: e.pointerId }; WV.moved = false;
@@ -515,6 +518,7 @@ function wvPointerUp(e) {
     WV.drag = null;
   }
 }
+function wvResetInput() { WV.pts = new Map(); WV.pinch = null; WV.drag = null; WV.moved = false; }
 function wvWheel(e) { if (!WAR.on || e.target !== cv) return; e.preventDefault(); const r = cv.getBoundingClientRect(); wvZoomAt(e.clientX - r.left, e.clientY - r.top, e.deltaY < 0 ? 1.15 : 1 / 1.15); }
 function wvKey(e) {
   if (!WAR.on) return;
@@ -598,7 +602,14 @@ function warGo() {
 addEventListener('pointerdown', wvPointerDown, true);
 addEventListener('pointermove', wvPointerMove, true);
 addEventListener('pointerup', wvPointerUp, true);
-addEventListener('pointercancel', wvPointerUp, true);
+addEventListener('pointercancel', e => { if (!WAR.on) return; if (WV.pts) WV.pts.delete(e.pointerId); WV.pinch = null; WV.drag = null; }, true);
+// back from another page, the app switcher or an edge swipe: start the touches afresh
+addEventListener('pageshow', () => { if (WAR.on) wvResetInput(); });
+addEventListener('blur', () => { if (WAR.on) wvResetInput(); });
+document.addEventListener('visibilitychange', () => { if (WAR.on) wvResetInput(); });
+addEventListener('touchcancel', () => { if (WAR.on) wvResetInput(); }, true);
+// a swipe that starts at the left edge of the map is a pan, not the browser's back gesture (where the browser allows it)
+addEventListener('touchstart', e => { if (WAR.on && e.target === cv && e.touches.length === 1 && e.touches[0].clientX < 28) e.preventDefault(); }, { passive: false, capture: true });
 addEventListener('wheel', wvWheel, { passive: false, capture: true });
 addEventListener('keydown', wvKey, true);
 addEventListener('contextmenu', e => { if (WAR.on && e.target === cv) e.preventDefault(); }, true);

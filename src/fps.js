@@ -989,7 +989,7 @@ function fpsDrawScene() {
     ctx.save();
     try {
       const q = proj(it.c), o = it.o;
-      if (gl) gl3dClip(it.c.f, it.kind === 'glow' ? { x0: q.x - 4, x1: q.x + 4, y0: q.y - 4, y1: q.y + 4 } : { x0: q.x - 1.6 * q.s, x1: q.x + 1.6 * q.s, y0: q.y - 2.6 * q.s, y1: q.y + 0.5 * q.s });
+      if (gl) gl3dClip(it.c.f, it.kind === 'glow' ? { x0: q.x - 4, x1: q.x + 4, y0: q.y - 4, y1: q.y + 4 } : { x0: q.x - 1.6 * q.s, x1: q.x + 1.6 * q.s, y0: q.y - 2.6 * q.s, y1: q.y + 0.5 * q.s }, o);
       if (it.kind === 'rock') drawRockDetailed(o, q, Math.max(0.5, visibility(o.x, o.y)));
       else if (it.kind === 'wreck') drawWreck(o, q, Math.max(0.5, visibility(o.x, o.y)));
       else if (it.kind === 'person') fpsDrawPerson(o, it.c);

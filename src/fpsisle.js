@@ -1080,22 +1080,58 @@ function fpsIsleFrame3D() {
   S.glowM.color.setScalar(0.85 + 0.15 * Math.sin(t * 7.3));
 }
 // the painted outlines of the props, so the figures drawn over the 3D view hide behind them as behind rocks
+// Each solid's outline on screen, for hiding the people and lights painted over the 3D island. A solid that
+// reaches behind the camera (a wall you stand beside, the room you're in) is cut at a plane just in front of
+// it rather than left out; and what counts as behind it is decided in gl3dClip by whether your line of sight
+// to the thing actually crosses the solid (see fpsIsleBehind), not by comparing the solid's middle.
+const FPI_CUT = 0.25;
 function fpsIsleOccluders(out) {
   const I = g.isle; if (!I) return;
   for (const s of I.solids) {
     if (s.occ === false || (s.ray === false && s.occ !== true)) continue;
-    const c0 = cam(s.x, s.y, FPSC.GROUND); if (c0.f < SK.NEAR + 1 || c0.f > 260) continue;
-    const pts = fpiCorners(s), z0 = s.z0 != null ? s.z0 : FPSC.GROUND - 0.05, sc = [];
-    let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9, ok = true;
-    for (const [x, y] of pts) for (const z of [z0, s.z1]) {
-      const c = cam(x, y, z); if (c.f < SK.NEAR) { ok = false; break; }
-      const q = proj(c); sc.push([q.x, q.y]);
-      if (q.x < x0) x0 = q.x; if (q.x > x1) x1 = q.x; if (q.y < y0) y0 = q.y; if (q.y > y1) y1 = q.y;
+    const c0 = cam(s.x, s.y, FPSC.GROUND), reach = s.s === 'c' ? s.r : Math.hypot(s.hw, s.hd);
+    if (c0.f + reach < FPI_CUT || c0.f - reach > 260) continue;
+    const ring = fpiCorners(s), z0 = s.z0 != null ? s.z0 : FPSC.GROUND - 0.05, n = ring.length;
+    const V = []; for (const z of [z0, s.z1]) for (const [x, y] of ring) V.push([x, y, z]);
+    const E = []; for (let i = 0; i < n; i++) { const j = (i + 1) % n; E.push([i, j], [i + n, j + n], [i, i + n]); }
+    const C = V.map(v => cam(v[0], v[1], v[2])), sc = [];
+    let fmin = 1e9, fmax = -1e9;
+    const put = c => { const q = proj(c); sc.push([clamp(q.x, -1e5, 1e5), clamp(q.y, -1e5, 1e5)]); if (c.f < fmin) fmin = c.f; if (c.f > fmax) fmax = c.f; };
+    for (const c of C) if (c.f >= FPI_CUT) put(c);
+    for (const [a, b] of E) {
+      const A = C[a], B = C[b]; if ((A.f >= FPI_CUT) === (B.f >= FPI_CUT)) continue;
+      const t = (FPI_CUT - A.f) / (B.f - A.f);
+      put({ r: A.r + (B.r - A.r) * t, f: FPI_CUT, z: A.z + (B.z - A.z) * t });
     }
-    if (!ok || x1 < -50 || x0 > W + 50 || x1 - x0 < 2) continue;
+    if (sc.length < 3) continue;
+    let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9;
+    for (const [x, y] of sc) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+    if (x1 < -50 || x0 > W + 50 || y1 < -50 || y0 > H + 50 || x1 - x0 < 2) continue;
     const h = hull(sc), mx = (x0 + x1) / 2, my = (y0 + y1) / 2;
-    out.push({ f: c0.f - (s.s === 'c' ? s.r * 0.6 : Math.min(s.hw, s.hd)), pts: h.map(q => [mx + (q[0] - mx) * 0.97, my + (q[1] - my) * 0.98]), x0, x1, y0, y1 });
+    out.push({ f: Math.max(FPI_CUT, fmin), fmax, solid: s, pts: h.map(q => [mx + (q[0] - mx) * 0.985, my + (q[1] - my) * 0.99]), x0, x1, y0, y1 });
   }
+}
+// is (x, y) behind solid s, seen from the camera: does the line from the camera to it cross the solid's footprint
+// (and not end inside it, as a light on a crate's top does)?
+function fpsIsleBehind(s, x, y) {
+  if (s.s === 'c') {
+    const dx = x - camX, dy = y - camY, L2 = dx * dx + dy * dy || 1;
+    if (Math.hypot(x - s.x, y - s.y) < s.r + 0.3) return false;
+    const t = clamp(((s.x - camX) * dx + (s.y - camY) * dy) / L2, 0, 1);
+    return Math.hypot(camX + dx * t - s.x, camY + dy * t - s.y) < s.r;
+  }
+  // into the solid's own frame, then a slab test on the segment
+  const c = Math.cos(s.ang), n = Math.sin(s.ang);
+  const loc = (px, py) => { const u = px - s.x, v = py - s.y; return [u * c + v * n, -u * n + v * c]; };
+  const [ax, ay] = loc(camX, camY), [bx, by] = loc(x, y);
+  if (Math.abs(bx) < s.hw + 0.3 && Math.abs(by) < s.hd + 0.3) return false;
+  let t0 = 0, t1 = 1;
+  for (const [p, d, h] of [[ax, bx - ax, s.hw], [ay, by - ay, s.hd]]) {
+    if (Math.abs(d) < 1e-9) { if (Math.abs(p) > h) return false; continue; }
+    let ta = (-h - p) / d, tb = (h - p) / d; if (ta > tb) [ta, tb] = [tb, ta];
+    t0 = Math.max(t0, ta); t1 = Math.min(t1, tb); if (t0 > t1) return false;
+  }
+  return true;
 }
 function fpiCorners(s) {
   if (s.s === 'c') { const out = []; for (let i = 0; i < 8; i++) { const a = i / 8 * Math.PI * 2; out.push([s.x + Math.cos(a) * s.r, s.y + Math.sin(a) * s.r]); } return out; }
