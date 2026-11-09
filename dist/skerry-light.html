@@ -2248,6 +2248,31 @@ function sfxbAmbient() {
   }
 }
 
+// the announcer: a deep voice calling a power-up's name as it's taken. A recorded line ('vo_<key>' in SFX_FILES) if
+// there is one; otherwise the browser's own speech, slowed and pitched right down. Quietly nothing if neither exists.
+const SFXV = { voice: null, picked: false };
+function sfxbVoice() {
+  if (SFXV.picked || typeof speechSynthesis === 'undefined') return SFXV.voice;
+  const vs = speechSynthesis.getVoices().filter(v => /^en/i.test(v.lang));
+  if (!vs.length) return null;
+  SFXV.picked = true;
+  const deep = /david|george|daniel|guy|ryan|thomas|fred|ralph|james|mark|male|arthur|oliver/i;
+  SFXV.voice = vs.find(v => deep.test(v.name) && /GB|UK/i.test(v.lang)) || vs.find(v => deep.test(v.name)) || vs[0];
+  return SFXV.voice;
+}
+if (typeof speechSynthesis !== 'undefined') try { speechSynthesis.onvoiceschanged = () => { SFXV.picked = false; sfxbVoice(); }; } catch (e) {}
+function sfxAnnounce(key, text) {
+  if (sfxPlay('vo_' + key, { vol: 1, vary: 0, delay: 0.12 })) return;
+  if (soundOff() || typeof speechSynthesis === 'undefined' || typeof SpeechSynthesisUtterance === 'undefined') return;
+  try {
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    const v = sfxbVoice(); if (v) u.voice = v;
+    u.pitch = 0.15; u.rate = 0.78; u.volume = Math.max(0, Math.min(1, masterLevel() / 0.85));
+    setTimeout(() => speechSynthesis.speak(u), 150);
+  } catch (e) {}
+}
+
 // ---- src/world.js ----
 // Building each voyage: where you start, the skerries, the old wrecks, drifting timber,
 // and the safe channel Plimsoll knows through all of it.
@@ -19043,6 +19068,7 @@ function zmDropsTick(dt) {
 function zmTake(k, heard) {
   const D = ZM_DROPS[k]; ZM.banner = { text: D.n + '!', t: 2.6, col: D.c };
   zmSound('take');
+  if (typeof sfxAnnounce === 'function') sfxAnnounce(k, D.n + '!');
   if (k === 'keg') { if (ZM.downKit) ZM.downKit.keg = true;   // (down: what you really carry is filled when you're up)
     for (const id of ZM.own) ZM.res[id] = typeof zmpAmmo === 'function' ? zmpAmmo(id) : ZM_AMMO[id];   // [pap] (a reforged reserve)
     fpsFeed('A Powder Keg: everything you carry, full.'); }

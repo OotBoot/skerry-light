@@ -2065,6 +2065,7 @@ function zmDropsTick(dt) {
 function zmTake(k, heard) {
   const D = ZM_DROPS[k]; ZM.banner = { text: D.n + '!', t: 2.6, col: D.c };
   zmSound('take');
+  if (typeof sfxAnnounce === 'function') sfxAnnounce(k, D.n + '!');
   if (k === 'keg') { if (ZM.downKit) ZM.downKit.keg = true;   // (down: what you really carry is filled when you're up)
     for (const id of ZM.own) ZM.res[id] = typeof zmpAmmo === 'function' ? zmpAmmo(id) : ZM_AMMO[id];   // [pap] (a reforged reserve)
     fpsFeed('A Powder Keg: everything you carry, full.'); }

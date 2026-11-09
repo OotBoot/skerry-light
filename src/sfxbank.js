@@ -59,3 +59,28 @@ function sfxbAmbient() {
     if (k === 'wind' && AUD.windG) { AUD.windG.gain.setTargetAtTime(0.008, c.currentTime, 1.5); AUD.gustAmt.gain.setTargetAtTime(0.006, c.currentTime, 1.5); }
   }
 }
+
+// the announcer: a deep voice calling a power-up's name as it's taken. A recorded line ('vo_<key>' in SFX_FILES) if
+// there is one; otherwise the browser's own speech, slowed and pitched right down. Quietly nothing if neither exists.
+const SFXV = { voice: null, picked: false };
+function sfxbVoice() {
+  if (SFXV.picked || typeof speechSynthesis === 'undefined') return SFXV.voice;
+  const vs = speechSynthesis.getVoices().filter(v => /^en/i.test(v.lang));
+  if (!vs.length) return null;
+  SFXV.picked = true;
+  const deep = /david|george|daniel|guy|ryan|thomas|fred|ralph|james|mark|male|arthur|oliver/i;
+  SFXV.voice = vs.find(v => deep.test(v.name) && /GB|UK/i.test(v.lang)) || vs.find(v => deep.test(v.name)) || vs[0];
+  return SFXV.voice;
+}
+if (typeof speechSynthesis !== 'undefined') try { speechSynthesis.onvoiceschanged = () => { SFXV.picked = false; sfxbVoice(); }; } catch (e) {}
+function sfxAnnounce(key, text) {
+  if (sfxPlay('vo_' + key, { vol: 1, vary: 0, delay: 0.12 })) return;
+  if (soundOff() || typeof speechSynthesis === 'undefined' || typeof SpeechSynthesisUtterance === 'undefined') return;
+  try {
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    const v = sfxbVoice(); if (v) u.voice = v;
+    u.pitch = 0.15; u.rate = 0.78; u.volume = Math.max(0, Math.min(1, masterLevel() / 0.85));
+    setTimeout(() => speechSynthesis.speak(u), 150);
+  } catch (e) {}
+}
