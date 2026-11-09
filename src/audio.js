@@ -141,11 +141,9 @@ function distCurve(k) {
 
 // ---- sound effects ----
 function sfxBell() {
-  if (typeof sfxPlay === 'function' && sfxPlay('bell', { vol: 0.95, vary: 0.02 })) return;
   for (const [f, a, d] of [[392, 0.5, 3.6], [988, 0.28, 2.6], [1567, 0.16, 1.8], [2350, 0.08, 1.2], [196, 0.22, 4]]) tone(f, 'sine', 0.004, a, d);
 }
 function sfxBellFar(pan, vol) {
-  if (typeof sfxPlay === 'function' && sfxPlay('bellfar', { vol: 0.9 * (vol == null ? 1 : vol), pan, vary: 0.02 })) return;
   for (const [f, a, d] of [[392, 0.32, 3], [988, 0.16, 2], [1567, 0.08, 1.4]]) tone(f, 'sine', 0.004, a * vol, d, { pan });
 }
 function sfxSplash(pan, vol) {

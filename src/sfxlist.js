@@ -3,8 +3,6 @@ const SFX_FILES = {
   avtomat: ['assets/sfx/avtomat_1.mp3', 'assets/sfx/avtomat_2.mp3'],
   axechop: ['assets/sfx/axechop_1.mp3'],
   beam: ['assets/sfx/beam_1.mp3'],
-  bell: ['assets/sfx/bell_1.mp3'],
-  bellfar: ['assets/sfx/bellfar_1.mp3'],
   blunderbuss: ['assets/sfx/blunderbuss_1.mp3', 'assets/sfx/blunderbuss_2.mp3'],
   board: ['assets/sfx/board_1.mp3'],
   buy: ['assets/sfx/buy_1.mp3'],

@@ -29,6 +29,8 @@ LEN = {
 PEAK = {'hit': -4, 'board': -4, 'buy': -6, 'deny': -8, 'swish': -4, 'reload': -5, 'gull': -6, 'heartbeat': -3,
         'sea': -6, 'wind': -8, 'rain': -8, 'beam': -8, 'moan': -3, 'creak': -6}
 LOOPS = {'sea', 'wind', 'rain'}
+# kept synthesised by choice (the old bell stays the bell)
+SKIP = {'bell', 'bellfar'}
 # (keep the start: for these the swell is the point, not an attack)
 NOTRIM = LOOPS | {'roundstart', 'roundend', 'gameover', 'foghorn', 'thunder', 'forge', 'mooncusser', 'diver', 'creak'}
 
@@ -90,7 +92,7 @@ def main(src):
         if not m:
             continue
         name, k = m.group(1), int(m.group(2))
-        if name == 'test':
+        if name == 'test' or name in SKIP:
             continue
         x, why = process(name, read(os.path.join(src, f)))
         print(f'{name}_{k}: {why}')
