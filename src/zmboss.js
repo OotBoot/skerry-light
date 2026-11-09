@@ -113,6 +113,7 @@ function zbTick(z, dt, nearest) {
     // up out of the sea, and across to the window
     const w = z.win, ox = w.x + w.nx * 1.5, oy = w.y + w.ny * 1.5, dx = ox - z.x, dy = oy - z.y, d = Math.hypot(dx, dy);
     if (z.jz < 0) z.jz = Math.min(0, z.jz + dt * 1.1);
+    if (typeof zmSeaDepth === 'function') z.jz = Math.min(z.jz, -zmSeaDepth(z.x, z.y));   // (still in the harbour's water: wading up out of it)
     if (d > 0.08) { const s = Math.min(d, z.sp * dt); z.x += dx / d * s; z.y += dy / d * s; z.h += angDiff(bearingOf(dx, dy), z.h) * Math.min(1, dt * 4); z.walk = true; }
     else if (z.jz >= 0) { z.walk = false; z.h = bearingOf(-w.nx, -w.ny); zbStart(z, 'smash'); }
     return;

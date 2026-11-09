@@ -283,7 +283,7 @@ function znRequestFrom(sid, k, a) {
   if (k === 'door') { const d = ZM.doors[a | 0]; if (!d) return; if (d.open) credit(d.cost); else zmOpenDoor(d); return; }
   if (k === 'box') { zmBoxSpin(sid, String(a || '').split(',').filter(id => FPSW[id])); return; }
   if (k === 'take') { if (ZM.box.st === 'offer' && ZM.box.owner === sid) { ZM.box.st = 'idle'; ZM.box.t = 0; } return; }
-  if (k === 'board') { const w = ZM.windows[a | 0]; if (w && w.boards < 6 && !ZM.z.some(z => z.win === w && z.st === 'climb')) { w.boards++; zmBoardPay(sid); } return; }
+  if (k === 'board') { const w = ZM.windows[a | 0]; if (w && !w.sea && w.boards < 6 && !ZM.z.some(z => z.win === w && z.st === 'climb')) { w.boards++; zmBoardPay(sid); } return; }
   if (k === 'rev') { zmnRevive(String(a), sid); return; }
   if (k === 'unstick') { zmUnstick(sid); return; }   // the menu's Unstick a drowned (src/zombies.js)
   if (k === 'pst') { if (typeof zmpStatusFrom === 'function') zmpStatusFrom(sid, a); return; }   // [pap] what a reforged weapon did to them

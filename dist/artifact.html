@@ -1173,10 +1173,10 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
       </section>
       <details class="howto">
         <summary>How to play</summary>
-        <p><b>Rounds.</b> The drowned climb in through the windows, tearing the boards off as they come. Every round brings more, tougher (each takes more to put down, and after the ninth round a good deal more) and quicker: shamblers first, then joggers, then runners. Kill them all and you get a short breather before the next. If they drag you down, the night's over.</p>
-        <p><b>Points.</b> 10 a hit, 60 a kill, 100 for one through the head, 130 with the cutlass. You start in the Keeper's Quarters with 500 points and a pepperbox. Hold Use at a window to nail its boards back (10 points a board, up to 500 a round).</p>
+        <p><b>Rounds.</b> The drowned haul themselves up the jetty's ladders out of the sea, and climb in through the windows and over the courtyard walls, tearing the boards off as they come. Every round brings more, tougher (each takes more to put down, and after the ninth round a good deal more) and quicker: shamblers first, then joggers, then runners. Kill them all and you get a short breather before the next. If they drag you down, the night's over.</p>
+        <p><b>Points.</b> 10 a hit, 60 a kill, 100 for one through the head, 130 with the cutlass. You come ashore on the jetty below the station with 500 points and a pepperbox: buy the sea gate (750) into the courtyard, then the door into the Keeper's Quarters. Hold Use at a window to nail its boards back (10 points a board, up to 500 a round).</p>
         <p><b>Buying.</b> Weapons hang on the walls with their prices chalked under them: buy one, or its ammunition again for half. You carry two; a third replaces the one in your hand. Doors and fallen wreckage open the rest of the station: the Oil Store, the Fog-Signal House, the passages, the Store Hall, the Boathouse, the Wreck Store, and at last the Lamp Passage and the tower, where a stair winds up round its core to the lantern room. Four tonics on the shelves: Stout Heart (take twice the knocks), Quick Hands (reload in half the time), Fleet Foot (quicker on your feet) and Second Wind (get back up once).</p>
-        <p><b>The wreck chest</b> (950): a weapon you can't buy on any wall, maybe. It stands in one of five places, one of them at the very top beside the great lens. After a few goes a gull takes it (and gives you your points back), and it turns up somewhere else; look for the pale light over it. Only the chest has the <b>Fresnel Lamp</b>: a signal lantern with a lighthouse lens in it, that throws a beam of the Light's own fire. Hold the trigger, and whatever stands in the beam burns, and throws a spark to the next.</p>
+        <p><b>The wreck chest</b> (950): a weapon you can't buy on any wall, maybe. It stands in one of six places, one of them at the very top beside the great lens. After a few goes a gull takes it (and gives you your points back), and it turns up somewhere else; look for the pale light over it. Only the chest has the <b>Fresnel Lamp</b>: a signal lantern with a lighthouse lens in it, that throws a beam of the Light's own fire. Hold the trigger, and whatever stands in the beam burns, and throws a spark to the next.</p>
         <p>The chest has eight more of its own, washed up from the wrecks: the <b>Duck's-Foot</b> (four barrels splayed in a fan: a ball for each of a crowd), the <b>Bomb-Lance</b> (sticks in what it strikes, and a second later goes off), the <b>Grapnel Gun</b> (hooks one and hauls it off its feet to yours), the <b>Flare Pistol</b> (sets alight what it strikes, and leaves a ring of fire where it lands), the <b>Boarding Axe</b> (wide sweeps through all in front of you, and every third stroke a chop that knocks them down), the <b>Punt Gun</b> (one enormous load of shot through three at a time, and it kicks you back), the <b>Net Mortar</b> (lobs a net that holds everything under it) and the <b>Chain-Shot</b> (two balls on a chain that whirl out and cut through every one they pass). Each comes back from the Lampwright's Bench working a new way of its own.</p>
         <p><b>The Lampwright's Bench</b> (from 5000): somewhere up the tower, past more than one paid gate, the keepers' old bench for grinding the lens still has its fire lit. Hand it the weapon in yours and it goes behind the turning lens for a few seconds, and comes back reforged, under a new name: it hits far harder, holds more and carries more, and glows with the Light, and each one comes back working in a way of its own. It can go back into the fire again and again, dearer every time (5000, 8000, 12000, 17000...), and each time it hits harder and its new way of working grows. Not the knife; lose the weapon and you lose what was done to it, and its ammunition off the wall costs a good deal more.</p>
         <p><b>Salvage.</b> Now and then one drops something glowing: a Powder Keg (all your ammunition back), Double Salvage (double points for thirty seconds), the Black Spot (anything dies to one hit, for thirty seconds) or a Lamp Flash (every one of them in the station burns). Walk into it to take it.</p>
@@ -16849,20 +16849,23 @@ function fpsBodyOccluder() {
 //  - Door buys: the station is shut up. Open doors (and clear fallen wreckage) to reach the rest of it.
 //  - Windows: the drowned tear the boards off the windows to get in. Hold Use at a window to nail them back
 //    (10 points a board).
-//  - The wreck chest: 950 points for whatever's in it. It sits in one of five places round the station, one of
+//  - The wreck chest: 950 points for whatever's in it. It sits in one of six places round the station, one of
 //    them at the very top, in the lantern room beside the great lens; after a few goes a gull takes it, and it
 //    turns up somewhere else.
 //  - The Fresnel Lamp, only from the chest: a signal lantern with a lighthouse lens in it, that throws a beam of the
 //    Light's own fire. Hold the trigger and the beam burns whatever stands in it to ash, and each one it burns
 //    throws a spark to the next.
 //  - Tonics on the shelves: Stout Heart (take twice the knocks), Quick Hands (reload in half the time), Fleet Foot
-//    (quicker on your feet) and Second Wind (get back up once when they drag you down).
+//    (quicker on your feet), Second Wind (get back up once when they drag you down) and Grog Ration (patched up in
+//    half the time).
 //  - Salvage: now and then one of them drops something that floats, glowing: a Powder Keg (full ammunition), Double
 //    Salvage (double points for half a minute), the Black Spot (anything dies to one hit, for half a minute) or a
 //    Lamp Flash (every one of them in the station burns).
-// The map: the keeper's station at the Light. Ten rooms round the tower: the Keeper's Quarters (where you start),
-// the Oil Store, the Fog-Signal House, the East Passage, the Net Loft, the Store Hall, the Lamp Passage, the
-// Boathouse, the Wreck Store, and the tower itself, with a stair winding up round its core to the lantern room
+// The map: the keeper's station at the Light. You come ashore on the jetty out on the harbour (the drowned climb up
+// its ladders out of the water), and up through the sea gate into the courtyard (with the Coal Store and the
+// Signal Hut off it), open to the sky; from there a door into the station. Ten rooms round the tower: the Keeper's
+// Quarters, the Oil Store, the Fog-Signal House, the East Passage, the Net Loft, the Store Hall, the Lamp Passage,
+// the Boathouse, the Wreck Store, and the tower itself, with a stair winding up round its core to the lantern room
 // at the top. Between the buildings, two walled yards the drowned come across.
 // Built from the same props and solids as Wreckers' Night's islands (src/fpsisle.js), with a few new kinds of its
 // own (floors, ceilings, stairs, doors). Unlike the islands, here some solids are floors: stairs and the tower's
@@ -16911,6 +16914,7 @@ const ZM_PERKS = {
   quick: { n: 'Quick Hands', cost: 3000, c: '#5ac87a', what: 'reload in half the time' },
   fleet: { n: 'Fleet Foot', cost: 2000, c: '#e8c050', what: 'quicker on your feet' },
   wind: { n: 'Second Wind', cost: 500, c: '#6aa8f0', what: 'get back up once' },
+  grog: { n: 'Grog Ration', cost: 1500, c: '#d8903a', what: 'patched up in half the time' },
 };
 const ZM_DROPS = {
   keg: { n: 'Powder Keg', c: '#e0a050' }, double: { n: 'Double Salvage', c: '#f0d060' },
@@ -16931,7 +16935,25 @@ const ZM_ZONES = {
   tower: { n: 'the Tower Foot', r: [-10.3, 10.3, -8.8, 11.8], floor: 'flags' },
   boat: { n: 'the Boathouse', r: [26, 44, -21, 2], floor: 'boards', wall: null },
   wreck: { n: 'the Wreck Store', r: [-44, -26, -21, 2], floor: 'flags', wall: null },
+  // the way up from the sea: the jetty you land on (its pier and the T-head out on the water, r2), the courtyard
+  // inside the sea wall, and its two small rooms. Open to the sky (sky: no floor or ceiling laid by room())
+  dock: { n: 'the Jetty', r: [-3.3, 3.3, -60, -39.3], r2: [-12.3, 12.3, -66.3, -60], sky: true },
+  yard: { n: 'the Courtyard', r: [-13, 13, -39, -21], sky: true },
+  coal: { n: 'the Coal Store', r: [-21, -13, -37, -29], floor: 'flags', wall: null },
+  shed: { n: 'the Signal Hut', r: [13, 21, -37, -29], floor: 'boards', wall: null },
 };
+// the jetty and the courtyard (relative to the island's middle): the deck's height over the ground, where you come
+// ashore, and the sea wall's line. South of the shore (ZM_SHORE) the island lies under the harbour's water: nobody
+// walks there, the drowned wade up out of it (zmSeaDepth: how deep the seabed lies under the water there)
+const ZMD = { TOP: 0.9, START: [0, -56.5], WATER: 0.13 };
+const ZM_SHORE = lx => -41.5 + Math.max(0, Math.abs(lx) - 22) * 0.4;
+function zmSeaDepth(x, y) {
+  if (!(FPS.g && FPS.g.isle && FPS.g.isle.zm && FPS.g.isle.zm.bay)) return 0;
+  const lx = x - FPSC.CX, ly = y - FPSC.CY;
+  return clamp((ZM_SHORE(lx) - ly) * 0.6, 0, 2.2);
+}
+// out on the open air (the jetty, the courtyard), or under a roof?
+function zmOutdoors(x, y, z) { const k = zmZoneAt(x, y, z); return !!(k && ZM_ZONES[k] && ZM_ZONES[k].sky) || (!k && !(Math.hypot(x - FPSC.CX - ZMT.X, y - FPSC.CY - ZMT.Y) < ZMT.R)); }
 const ZM_TC = [ZMT.X, ZMT.Y];   // the middle of the tower
 
 FPS_ISLES.light = { name: 'the Lighthouse', ground: '#7a786e', ground2: '#5e5c54', wet: '#34363a', path: '#5c5a52', tint: 0.32, mound: 0, dune: 0,
@@ -17237,6 +17259,201 @@ Object.assign(FPI_K, {
   },
 });
 
+// the way up from the sea: the jetty and its gear, the courtyard's things, the coal store and the signal hut
+Object.assign(FPI_K, {
+  // a deck of planks on piles, top above the ground (a floor you walk on: anything comes up onto it from the steps);
+  // the planks run across its length, on stringers, on piles braced under it, weed and barnacles at the waterline
+  deck: {
+    noShadow: true, col: FPI_C.wood,
+    sol(p) { return [fpiBox(p, 0, 0, p.w / 2, p.d / 2, p.top, { z0: -1.5, fl: true, col: FPI_C.wood })]; },
+    b3(p, A) {
+      const T = p.top, along = p.w >= p.d, L = along ? p.w : p.d, S = along ? p.d : p.w;
+      const at = (a, c) => along ? [a, c] : [c, a];   // (a: along its length, c: across it)
+      const bx = (col, a, c, h0, la, lc, hh, tilt) => { const [u, v] = at(a, c); if (along) A.box(col, u, v, h0, la, lc, hh, tilt || 0); else A.box(col, u, v, h0, lc, la, hh, tilt || 0); };
+      const n = Math.round(L / 0.3);
+      for (let i = 0; i < n; i++) {
+        const a = -L / 2 + (i + 0.5) * L / n, r = A.r(), col = r < 0.1 ? '#3a2e24' : r < 0.2 ? '#6e5a44' : ZMP.boards[i % 3];
+        bx(col, a, (A.r() - 0.5) * 0.05, T - 0.09, L / n * 0.88, S - (A.r() < 0.15 ? 0.3 : 0), 0.09, (A.r() - 0.5) * 0.015);
+      }
+      // the stringers, and a fascia board down each side
+      for (const k of S > 4 ? [-0.45, -0.15, 0.15, 0.45] : [-0.42, 0, 0.42]) bx(FPI_C.wood3, 0, k * S, T - 0.36, L, 0.18, 0.27);
+      for (const s of [-1, 1]) bx('#3e3024', 0, s * (S / 2 + 0.03), T - 0.4, L + 0.06, 0.06, 0.34);
+      // the piles, braced across under the deck
+      const m = Math.max(1, Math.round(L / 2.4)), rows = S > 4 ? [-1, 0, 1] : [-1, 1];
+      for (let i = 0; i <= m; i++) {
+        const a = -L / 2 + 0.15 + i * (L - 0.3) / m;
+        for (const s of rows) {
+          const [u, v] = at(a, s * (S / 2 - 0.12));
+          A.cyl(FPI_C.wood3, u, v, -2.6, 0.15, T + 2.55, 0, 0, 0, 'cyl6');
+          A.cyl('#1e2a1c', u, v, -0.7, 0.165, 0.78, 0, 0, 0, 'cyl6');
+          A.cyl('#7a7a6e', u, v, 0.02, 0.17, 0.12, 0, 0, 0, 'cyl6');
+        }
+        bx(FPI_C.wood3, a, 0, T - 0.78, 0.14, S - 0.2, 0.14);
+        const [u, v] = at(a, 0), ang = Math.atan2(S - 0.3, T + 0.6);
+        if (along) A.part('box', '#3a2c20', u, v, T * 0.5 - 0.35, 0.1, Math.hypot(T + 0.6, S - 0.3), 0.1, 0, i % 2 ? ang : -ang, 0);
+        else A.part('box', '#3a2c20', u, v, T * 0.5 - 0.35, 0.1, Math.hypot(T + 0.6, S - 0.3), 0.1, 0, 0, i % 2 ? ang : -ang);
+      }
+    },
+  },
+  // the harbour's water round the jetty: nobody walks out onto it (only stands in the way; nothing to draw)
+  seaguard: { noShadow: true, sol(p) { return [fpiBox(p, 0, 0, p.w / 2, p.d / 2, 3.2, { z0: -2, ray: false, occ: false, col: '#14202a' })]; } },
+  // an iron ladder down the jetty's side into the water, where the drowned come up (v: out over the water)
+  ladder: {
+    noShadow: true, sol() { return []; },
+    b3(p, A) {
+      const T = p.top;
+      for (const s of [-1, 1]) {
+        A.box(ZMP.iron, s * 0.24, 0, -1.4, 0.05, 0.05, T + 1.4);
+        A.box(ZMP.iron, s * 0.24, 0, T - 0.02, 0.05, 0.05, 0.75); A.box(ZMP.iron, s * 0.24, -0.2, T + 0.7, 0.05, 0.45, 0.05);
+        A.box('#1e2a1c', s * 0.24, 0, -0.6, 0.07, 0.07, 0.7);
+      }
+      for (let h = -1.2; h < T - 0.1; h += 0.3) A.box(ZMP.iron, 0, 0, h, 0.5, 0.04, 0.04);
+    },
+  },
+  // a cast-iron bollard
+  bollard: {
+    col: ZMP.iron,
+    sol(p) { return [fpiCirc(p, 0, 0, 0.24, 0.6)]; },
+    b3(p, A) {
+      A.cyl('#24262a', 0, 0, -0.05, 0.17, 0.5, 0, 0, 0, 'cyl8'); A.cyl('#24262a', 0, 0, 0.42, 0.23, 0.08, 0, 0, 0, 'cyl8');
+      A.part('sph', '#2a2c30', 0, 0, 0.52, 0.36, 0.16, 0.36);
+      if (p.rope) for (let i = 0; i < 3; i++) A.part('torus', FPI_C.rope, 0, 0, 0.18 + i * 0.07, 0.5, 0.5, 0.5, 0, Math.PI / 2, 0);
+    },
+  },
+  // a rowing boat on the water, moored (u: her length)
+  rowboat: {
+    noShadow: true, sol() { return []; },
+    b3(p, A) {
+      const c = p.paint || '#34465a', L = p.len || 4.2, B = p.beam || 1.35;
+      A.part('half', c, 0, 0, 0.66, 1.0, L, B, 0, 0, -Math.PI / 2);
+      A.box('#2a2018', 0, 0, 0.17, L * 0.8, B * 0.56, 0.05);
+      for (const s of [-1, 1]) A.box('#e8e0cc', 0, s * B * 0.49, 0.62, L * 0.9, 0.06, 0.07);
+      for (const u of [-0.28, 0.1, 0.42]) A.box(FPI_C.wood2, u * L, 0, 0.46, 0.24, B * 0.92, 0.05);
+      A.log(FPI_C.wood2, -0.1, 0.18, 0.56, 0.035, L * 0.78, 0.04); A.log(FPI_C.wood2, 0.05, -0.15, 0.54, 0.035, L * 0.78, -0.05);
+      A.box(FPI_C.rope, L * 0.5 + 0.6, 0, 0.55, 1.3, 0.04, 0.04, p.rope || 0);
+    },
+  },
+  // the tide-signal mast at the end of the jetty: a white pole and its yard, a black ball and cone hoisted on it
+  mast: {
+    col: FPI_C.wood3,
+    sol(p) { return [fpiCirc(p, 0, 0, 0.32, 3.0)]; },
+    b3(p, A) {
+      const H = p.hh || 8, y = H * 0.78;
+      A.box(FPI_C.stone3, 0, 0, -0.1, 0.8, 0.8, 0.35);
+      A.cyl('#d8d0bc', 0, 0, 0, 0.12, H, 0, 0, 0, 'cyl8'); A.cyl('#2a2c30', 0, 0, H, 0.16, 0.12, 0, 0, 0, 'cyl8');
+      A.box(FPI_C.wood3, 0, 0, y, 2.8, 0.1, 0.1);
+      A.part('sph', '#101012', 1.15, 0, y - 0.62, 0.62, 0.62, 0.62); A.part('cone', '#101012', -1.15, 0, y - 0.66, 0.64, 0.62, 0.64, 0, 0, Math.PI);
+      for (const s of [-1, 1]) A.box('#8a7a5a', s * 1.15, 0, y - 0.3, 0.015, 0.015, 0.3);
+      A.box(FPI_C.rope, 0.16, 0, 0.6, 0.015, 0.015, H - 0.7);
+      for (const s of [-1, 1]) { const L = Math.hypot(1.7, H * 0.9); A.part('box', FPI_C.rope, s * 0.85, 0, H * 0.45, 0.02, L, 0.02, 0, 0, s * Math.asin(1.7 / L)); }
+      A.glow('#ff5a3a', 0, 0, H + 0.3, 0.22);
+    },
+  },
+  // a fog bell in its timber frame, a rope down from its wheel
+  bellframe: {
+    col: FPI_C.wood3,
+    sol(p) { return [fpiCirc(p, -1.05, 0, 0.2, 2.5), fpiCirc(p, 1.05, 0, 0.2, 2.5), fpiCirc(p, 0, 0, 0.45, 2.1, { z0: 1.0 })]; },
+    b3(p, A) {
+      for (const s of [-1, 1]) {
+        A.box(FPI_C.wood3, s * 1.05, 0, -0.1, 0.2, 0.2, 2.6); A.box(FPI_C.wood3, s * 1.05, 0, 0, 0.16, 1.1, 0.14);
+        for (const d of [-1, 1]) A.part('box', '#3a2c20', s * 1.05, d * 0.3, 0.45, 0.08, 0.95, 0.08, 0, d * 0.6, 0);
+      }
+      A.box(FPI_C.wood2, 0, 0, 2.4, 2.5, 0.22, 0.22); A.box(FPI_C.wood3, 0, 0, 2.08, 0.5, 0.26, 0.32);
+      A.part('cone', '#6e5226', 0, 0, 1.55, 0.92, 0.8, 0.92); A.part('sph', '#6e5226', 0, 0, 1.9, 0.56, 0.36, 0.56);
+      A.cyl('#5a4220', 0, 0, 1.12, 0.47, 0.07, 0, 0, 0, 'cyl8'); A.part('sph', '#222', 0, 0, 1.12, 0.14, 0.14, 0.14);
+      A.part('torus', '#3a2c20', 0.42, 0, 2.15, 0.7, 0.7, 0.7, 0, Math.PI / 2, 0); A.box(FPI_C.rope, 0.72, 0, 0.7, 0.025, 0.025, 1.4);
+    },
+  },
+  // a flagpole on a stone foot, the station's ensign at the top
+  flagpole: {
+    col: '#d8d0bc',
+    sol(p) { return [fpiCirc(p, 0, 0, 0.36, 0.5), fpiCirc(p, 0, 0, 0.12, 7)]; },
+    b3(p, A) {
+      A.box(FPI_C.stone3, 0, 0, -0.1, 0.75, 0.75, 0.5); A.cyl('#d8d0bc', 0, 0, 0.4, 0.08, 6.8, 0, 0, 0, 'cyl8'); A.part('sph', '#b8a050', 0, 0, 7.25, 0.2, 0.2, 0.2);
+      A.box('#8a2a24', 0.78, 0, 6.15, 1.5, 0.02, 0.9, 0.05, 0, -0.03); A.box('#26304e', 0.42, -0.012, 6.6, 0.68, 0.02, 0.44, 0.05, 0, -0.03);
+      A.box('#d8d0bc', 0.42, -0.016, 6.78, 0.68, 0.02, 0.06, 0.05); A.box('#d8d0bc', 0.42, -0.016, 6.6, 0.06, 0.02, 0.44, 0.05);
+      A.box(FPI_C.rope, 0.1, 0, 0.6, 0.015, 0.015, 6.1);
+    },
+  },
+  // a heap of coal against a wall (r: how far it spreads)
+  coalheap: {
+    col: '#18181a',
+    sol(p) { return [fpiCirc(p, 0, 0, p.r * 0.75, p.hh * 0.8)]; },
+    b3(p, A) {
+      A.part('cone', '#141416', 0, 0, p.hh / 2 - 0.05, p.r * 2, p.hh, p.r * 2);
+      for (let i = 0; i < 40; i++) { const a = A.r() * 6.283, d = Math.sqrt(A.r()) * p.r, h = Math.max(0, p.hh * (1 - d / p.r)); A.part('ico', A.r() < 0.5 ? '#1c1c20' : '#2a2a2e', Math.cos(a) * d, Math.sin(a) * d, h * 0.95, 0.14 + A.r() * 0.18, 0.1 + A.r() * 0.12, 0.14 + A.r() * 0.16, A.r() * 3, A.r() * 3, 0); }
+      if (p.shovel) { A.box(FPI_C.wood2, p.r * 0.5, -0.2, 0.55, 0.05, 0.05, 1.1, 0.4, 0.5); A.box('#3a3c40', p.r * 0.62, -0.3, 0.1, 0.26, 0.04, 0.3, 0.4, 0.5); }
+    },
+  },
+  // sacks: coal, or the keeper's potatoes
+  sacks: {
+    col: '#6a5a3e',
+    sol(p) { return [fpiBox(p, 0, 0, 0.8, 0.4, 0.75)]; },
+    b3(p, A) { for (let i = 0; i < 4; i++) { const u = -0.5 + (i % 3) * 0.5, up = i === 3; A.part('sph', A.r() < 0.5 ? (p.c || '#6a5a3e') : '#5a4a32', up ? 0 : u, (A.r() - 0.5) * 0.1, up ? 0.62 : 0.26, 0.5, 0.52, 0.42, A.r() * 0.6); } },
+  },
+  // a rock with the gulls' whitewash on it, and maybe a gull asleep on top
+  gullrock: {
+    col: '#5a5c58',
+    sol(p) { return [fpiBox(p, 0, 0, p.w / 2, p.d / 2, p.hh)]; },
+    b3(p, A) {
+      A.part('taper', '#55585a', 0, 0, p.hh / 2 - 0.4, p.w, p.hh + 0.8, p.d, 0, 0, p.lean || 0);
+      A.part('ico', '#62645f', 0, 0, p.hh - 0.05, p.w * 0.75, 0.32, p.d * 0.8, 0, 0, p.lean || 0);
+      for (let i = 0; i < 9; i++) A.part('ico', '#e4e2d8', (A.r() - 0.5) * p.w * 0.7, (A.r() - 0.5) * p.d * 0.7, p.hh * (0.55 + A.r() * 0.45), 0.12 + A.r() * 0.2, 0.05, 0.1 + A.r() * 0.16, A.r() * 3);
+      for (let i = 0; i < 4; i++) A.box('#d8d6cc', (A.r() - 0.5) * p.w * 0.8, -p.d / 2 - 0.01, p.hh * 0.3, 0.04, 0.02, p.hh * 0.5 * A.r());
+      if (p.gull) {
+        const z = p.hh + 0.1;
+        A.part('sph', '#ecece6', 0, 0, z + 0.12, 0.2, 0.2, 0.42); A.part('sph', '#ecece6', 0, 0.14, z + 0.27, 0.15, 0.15, 0.15);
+        for (const s of [-1, 1]) A.box('#8a9096', s * 0.09, -0.04, z + 0.12, 0.04, 0.4, 0.12);
+        A.part('cone', '#e0a030', 0, 0.27, z + 0.26, 0.05, 0.12, 0.05, 0, Math.PI / 2, 0);
+      }
+    },
+  },
+  // a lantern on an iron bracket out from a wall (v: out from the wall)
+  wlamp: {
+    noShadow: true, sol() { return []; },
+    b3(p, A) {
+      const z = p.z || 2.4;
+      A.box('#1a1a1c', 0, 0.06, z + 0.32, 0.12, 0.12, 0.3); A.box('#1a1a1c', 0, 0.24, z + 0.4, 0.03, 0.42, 0.03);
+      A.box('#1a1a1c', 0, 0.42, z + 0.22, 0.02, 0.02, 0.2);
+      A.box('#1a1a1c', 0, 0.42, z + 0.2, 0.22, 0.22, 0.04); A.box('#1a1a1c', 0, 0.42, z - 0.12, 0.2, 0.2, 0.04);
+      for (const [u, v] of [[-0.1, -0.1], [0.1, -0.1], [0.1, 0.1], [-0.1, 0.1]]) A.box('#1a1a1c', u, 0.42 + v, z - 0.1, 0.022, 0.022, 0.3);
+      A.part('cone', '#1a1a1c', 0, 0.42, z + 0.28, 0.26, 0.14, 0.26);
+      A.glow(p.c || '#ffc070', 0, 0.42, z + 0.04, 0.16);
+    },
+  },
+  // the little shed out on the jetty: planked walls, a door and a lit window, a tarred roof, a lifebuoy on the wall
+  shed: {
+    col: FPI_C.wood,
+    sol(p) { return [fpiBox(p, 0, 0, p.w / 2, p.d / 2, 2.5)]; },
+    b3(p, A) {
+      const W = p.w, D = p.d, H = 2.4;
+      for (const s of [-1, 1]) {
+        const n = Math.round(W / 0.22); for (let i = 0; i < n; i++) A.box(i % 2 ? FPI_C.wood : '#4e3e2e', -W / 2 + (i + 0.5) * W / n, s * D / 2, 0, W / n * 1.02, 0.08, H);
+        const m = Math.round(D / 0.22); for (let i = 0; i < m; i++) A.box(i % 2 ? FPI_C.wood : '#4e3e2e', s * W / 2, -D / 2 + (i + 0.5) * D / m, 0, 0.08, D / m * 1.02, H);
+      }
+      for (const s of [-1, 1]) A.part('box', '#1c1a18', 0, s * D / 4, H + 0.45, W + 0.5, 0.08, D / 2 * 1.25, 0, s * 0.62, 0);
+      A.box(FPI_C.wood3, 0, 0, H + 0.82, W + 0.5, 0.12, 0.12);
+      // the door in its front (+u), a window lit in the side (-v)
+      const dv = p.door || 0; A.box('#3a2a1e', W / 2 + 0.03, dv, 0, 0.06, 0.95, 1.95); A.box(FPI_C.iron, W / 2 + 0.07, dv + 0.3, 0.95, 0.04, 0.06, 0.06); A.box(FPI_C.wood3, W / 2 + 0.05, dv, 1.95, 0.08, 1.1, 0.1);
+      A.box('#2a2622', 0, -D / 2 - 0.03, 1.1, 0.8, 0.04, 0.6); A.part('box', '#ffcf80', 0, -D / 2 - 0.05, 1.4, 0.66, 0.46, 0.02, 0, 0, 0, 'glow');
+      A.part('torus', '#d8d0c0', -0.6, D / 2 + 0.07, 1.45, 0.6, 0.6, 2.8, 0, Math.PI / 2, 0);
+      for (const a of [0, 1.57, 3.14, 4.71]) A.box('#b03028', -0.6 + Math.cos(a) * 0.25, D / 2 + 0.09, 1.45 + Math.sin(a) * 0.25, 0.09, 0.03, 0.09);
+      A.box(FPI_C.net, W / 2 - 0.2, D / 2 + 0.05, 0.6, 0.6, 0.03, 1.4);
+    },
+  },
+  // the signal hut's flag locker: pigeonholes of rolled flags in every colour
+  signals: {
+    col: FPI_C.wood3,
+    sol(p) { return [fpiBox(p, 0, 0, 0.9, 0.3, 1.9)]; },
+    b3(p, A) {
+      A.box(FPI_C.wood3, 0, 0.04, -0.1, 1.8, 0.56, 2.0); A.box('#1a1612', 0, -0.2, 0.15, 1.66, 0.1, 1.6);
+      const cols = ['#b02a24', '#e8d040', '#26407a', '#e8e4d8', '#2a6a3a', '#d06a20', '#101012'];
+      for (let r = 0; r < 4; r++) for (let c = 0; c < 6; c++) A.part('cyl6', cols[(r * 3 + c * 5) % cols.length], -0.68 + c * 0.27, -0.22, 0.32 + r * 0.38, 0.17, 0.3, 0.17, 0, Math.PI / 2, 0);
+      for (let r = 0; r <= 4; r++) A.box(FPI_C.wood2, 0, -0.2, 0.13 + r * 0.38, 1.66, 0.12, 0.03);
+    },
+  },
+});
+
 // ---------- laying out the station ----------
 FPI_GEN.light = {
   built: true,
@@ -17262,13 +17479,13 @@ FPI_GEN.light = {
           lintel(2.5);
           const [wx, wy] = W(mx, my);
           const p = put('zdoor', mx, my, ang, { w: w + 0.1, d: TH * 0.8, hh: 2.5, lift });
-          Z.doors.push({ x: wx, y: wy, z: lift, ang, w, cost: op.cost, zones: op.z, kind: op.k, solids: p.sol.slice(), prop: p, open: false, id: Z.doors.length });
+          Z.doors.push({ x: wx, y: wy, z: lift, ang, w, cost: op.cost, zones: op.z, also: op.also, kind: op.k, solids: p.sol.slice(), prop: p, open: false, id: Z.doors.length });
         } else if (op.k === 'arch') lintel(2.9);
         else if (op.k === 'win') {
           lintel(2.35);
           put('block', mx, my, ang, { w: w + 0.04, d: TH, hh: 1.0, col: lc, trim: FPI_C.wood3 });
           const [wx, wy] = W(mx, my), [nx, ny] = horiz ? [0, op.out] : [op.out, 0];
-          Z.windows.push({ x: wx, y: wy, nx, ny, zone: op.z, boards: 6, id: Z.windows.length, q: [], hw: w / 2, th: TH / 2 });
+          Z.windows.push({ x: wx, y: wy, nx, ny, zone: op.z, boards: 6, id: Z.windows.length, q: [], hw: w / 2, th: TH / 2, shore: op.shore || undefined });
         } else if (op.k === 'high') {
           // a window high up in the tower: solid wall up to its sill, a lintel over it
           put('block', mx, my, ang, { w: w + 0.04, d: TH, hh: op.s0, col: FPI_C.stone3 });
@@ -17282,12 +17499,12 @@ FPI_GEN.light = {
       put('floor', cx, cy, 0, { w: w - 0.1, d: d - 0.1, style: Zr.floor });
       if (!extra || extra.ceil !== false) put('ceil', cx, cy, 0, { w: w + 0.4, d: d + 0.4, z0: (extra && extra.ceilZ) || CE, col: Zr.floor === 'boards' ? '#8a8270' : '#9a9484' });
     };
-    for (const k of Object.keys(ZM_ZONES)) if (k !== 'tower') room(k);
+    for (const k of Object.keys(ZM_ZONES)) if (k !== 'tower' && !ZM_ZONES[k].sky) room(k);
     const PL = c => ({ mat: 'plaster', col2: c });
     // the south front, facing the sea
     wall(-44, -21, -26, -21, { mat: 'stone' }, [{ at: -35, k: 'win', out: -1, z: 'wreck' }]);
     wall(-26, -21, -10, -21, PL(ZM_ZONES.fog.wall), [{ at: -18, k: 'win', out: -1, z: 'fog' }]);
-    wall(-10, -21, 10, -21, PL(ZM_ZONES.quarters.wall), [{ at: -5, k: 'win', out: -1, z: 'quarters' }, { at: 5, k: 'win', out: -1, z: 'quarters' }]);
+    wall(-10, -21, 10, -21, PL(ZM_ZONES.quarters.wall), [{ at: -5, k: 'win', out: -1, z: 'quarters' }, { at: 2.6, k: 'door', cost: 1000, z: ['yard', 'quarters'] }, { at: 5, k: 'win', out: -1, z: 'quarters' }]);
     wall(10, -21, 26, -21, PL(ZM_ZONES.oil.wall), [{ at: 18, k: 'win', out: -1, z: 'oil' }]);
     wall(26, -21, 44, -21, { mat: 'wood' }, [{ at: 35, k: 'win', out: -1, z: 'boat' }]);
     // the ends
@@ -17413,11 +17630,11 @@ FPI_GEN.light = {
       for (let t = 0; t < 2400 && n < 420; t++) {
         const x = (rr() - 0.5) * 120, y = (rr() - 0.5) * 90 - 0;
         const inYard = Math.abs(x) > 10.9 && Math.abs(x) < 15.7 && y > -9.2 && y < 13.7, inTowerYard = Math.abs(x) < 15.7 && y > -9.2 && y < 13.7 && Math.hypot(x - ZMT.X, y - ZMT.Y) > ZMT.R + 0.7 && Math.abs(x) > 2.8;
-        const outside = (x < -44.5 || x > 44.5 || y < -21.5 || y > 26.5) && Math.hypot(x, y) < FPSC.R - 4;
+        const outside = (x < -44.5 || x > 44.5 || y < -21.5 || y > 26.5) && Math.hypot(x, y) < FPSC.R - 4 && y > ZM_SHORE(x) + 0.6 && !(Math.abs(x) < 21.6 && y < -20.8);
         if (!(inYard || inTowerYard || outside)) continue;
         H.decor('tuft', OX + x, OY + y, { s: 0.7 + rr() * 0.8, c: rr() < 0.5 ? '#4e6a38' : '#5e7040' }); n++;
       }
-      for (let i = 0; i < 26; i++) { const a = rr() * 6.283, d = 52 + rr() * 26, x = Math.cos(a) * d, y = Math.sin(a) * d * 0.8; if (Math.hypot(x, y) < FPSC.R - 6) put('stone', x, y, rr() * 6.283, { w: 0.9 + rr(), d: 0.6 + rr() * 0.5, hh: 0.6 + rr() * 1.2, lean: (rr() - 0.5) * 0.3 }); }
+      for (let i = 0; i < 26; i++) { const a = rr() * 6.283, d = 52 + rr() * 26, x = Math.cos(a) * d, y = Math.sin(a) * d * 0.8; if (Math.hypot(x, y) < FPSC.R - 6 && !(Math.abs(x) < 17 && y < -36)) put('stone', x, y, rr() * 6.283, { w: 0.9 + rr(), d: 0.6 + rr() * 0.5, hh: 0.6 + rr() * 1.2, lean: (rr() - 0.5) * 0.3 }); }
     }
     // pot plants about the rooms below
     for (const [x, y, sz, fl] of [[8.8, -12.2, 1.2, '#d84050'], [-8.8, -20, 0.9, null], [24.5, -4, 1.0, null], [-24.4, 1.5, 1.1, '#e8e0d0'], [-24.8, 15.2, 1.3, null], [24.6, 24.6, 1.2, '#e8a0c0'], [1.6, 13.3, 0.9, null], [-1.6, 13.3, 0.9, null], [43, -19.8, 1.0, null], [-42.8, -19.8, 1.0, '#d84050']]) put('plant', x, y, 0, { s: sz, flowers: fl || undefined });
@@ -17516,7 +17733,7 @@ FPI_GEN.light = {
     // ---------- what's for sale ----------
     // wall buys: the weapon on its board on a wall (x, y: the wall's face; ang: the way the board faces)
     // (nx, ny: the way out from the wall, into the room)
-    const buy = (id, cost, x, y, nx, ny) => { put('board', x, y, ny ? 0 : Math.PI / 2, {}); const [wx, wy] = W(x, y); Z.buys.push({ id, cost, x: wx, y: wy, nx, ny, z: 0 }); };
+    const buy = (id, cost, x, y, nx, ny, z) => { put('board', x, y, ny ? 0 : Math.PI / 2, z ? { lift: z } : {}); const [wx, wy] = W(x, y); Z.buys.push({ id, cost, x: wx, y: wy, nx, ny, z: z || 0 }); };
     buy('longarm', 500, 0, -20.7, 0, 1);
     buy('blunderbuss', 500, -9.7, -11.8, 1, 0);
     buy('pepperbox', 250, 17.8, -9.8, 0, -1);
@@ -17542,6 +17759,104 @@ FPI_GEN.light = {
     // wall buys up the tower
     { const at = (a, k, id, cost) => { const r = ZMT.R - 0.07, x = ZMT.X + Math.cos(a) * r, y = ZMT.Y + Math.sin(a) * r; put('board', x, y, a + Math.PI / 2, { lift: ZMT.L[k] }); const [wx, wy] = W(x, y); Z.buys.push({ id, cost, x: wx, y: wy, nx: -Math.cos(a), ny: -Math.sin(a), z: ZMT.L[k] }); };
       at(Math.PI * 0.9, 2, 'avtomat', 1200); at(Math.PI * 0.12, 4, 'longarm', 500); at(-Math.PI * 0.12, 3, 'harpoon', 1000); }
+    // ---------- the way up from the sea: the jetty, the courtyard and its two rooms ----------
+    // You come ashore on the jetty, out on the harbour's water south of the station (its pier from the sea wall out
+    // to a T-head, the deck ZMD.TOP over the ground), up two steps to the sea gate (750) into the courtyard, and from
+    // the courtyard through the Keeper's Quarters' door (1000) into the station. Off the courtyard: the Coal Store
+    // (through an arch, open with the courtyard) and the Signal Hut (500), with the Grog Ration. The drowned come up
+    // the jetty's ladders out of the water, wade up the shingle to the gaps boarded up in the sea wall, and climb in
+    // over the courtyard's walls.
+    {
+      const DT = ZMD.TOP, YW = 2.6;
+      const lifted = (p, h) => { p.lift = h; for (const s of p.sol) { s.z1 += h; s.z0 = (s.z0 != null ? s.z0 : FPSC.GROUND) + h; } return p; };
+      const onDeck = (k, x, y, ang, o) => put(k, x, y, ang || 0, Object.assign({ lift: DT }, o || {}));
+      Z.bay = true; Z.decks = [];
+      const deck = (x0, x1, y0, y1) => { put('deck', (x0 + x1) / 2, (y0 + y1) / 2, 0, { w: x1 - x0, d: y1 - y0, top: DT }); Z.decks.push([OX + x0, OX + x1, OY + y0, OY + y1]); };
+      // the jetty: the pier, and the T-head across its end
+      deck(-3, 3, -60.2, -41.25); deck(-12, 12, -66, -60);
+      // up from the courtyard's sea gate: two stone steps between the quay's walls
+      put('step', 0, -39.75, 0, { w: 6.0, d: 1.0, hh: DT / 3 }); put('step', 0, -40.75, 0, { w: 6.0, d: 1.0, hh: DT * 2 / 3 });
+      for (const sx of [-1, 1]) put('wall', sx * 3.42, -40.3, Math.PI / 2, { len: 2.5, th: 0.6, hh: 1.75, mat: 'stone', cap: true, jag: 0 });
+      // the water round it: out of everyone's reach (the drowned in it come up by the ladders)
+      for (const [x0, x1, y0, y1] of [[-34, -3, -60, -41.25], [3, 34, -60, -41.25], [-34, -12, -66, -60], [12, 34, -66, -60], [-34, 34, -82, -66]]) put('seaguard', (x0 + x1) / 2, (y0 + y1) / 2, 0, { w: x1 - x0, d: y1 - y0 });
+      // where the drowned come up: a ladder down into the water at each (no boards: nothing to nail back)
+      const seaWin = (x, y, nx, ny) => { const [wx, wy] = W(x, y); Z.windows.push({ x: wx, y: wy, nx, ny, zone: 'dock', z: DT, boards: 0, sea: true, id: Z.windows.length, q: [], hw: 0.9, th: 0.1 }); put('ladder', x + nx * 0.07, y + ny * 0.07, Math.atan2(-nx, ny), { top: DT }); };
+      seaWin(-3, -51, -1, 0); seaWin(3, -46.5, 1, 0); seaWin(-8, -60, 0, 1); seaWin(8, -60, 0, 1);
+      seaWin(-6, -66, 0, -1); seaWin(0.5, -66, 0, -1); seaWin(6.5, -66, 0, -1); seaWin(12, -63, 1, 0);
+      // on the jetty: bollards, coiled ropes, lobster pots, fish boxes, lamps on posts, the shed and the tide mast
+      for (const [x, y, r] of [[-2.66, -45.2, 1], [2.66, -52.6, 0], [-2.66, -58.4, 1], [4.4, -60.36, 0], [-4.6, -60.36, 1], [-9.6, -65.64, 1], [3.2, -65.64, 0], [9.6, -65.64, 1]]) onDeck('bollard', x, y, 0, { rope: !!r });
+      // (kept clear of where they come up the ladders, and of the way along)
+      onDeck('coil', -1.8, -42.9, 0, {}); onDeck('coil', -1.6, -63.8, 0, {});
+      lifted(fpiPots(H, OX - 5.0, OY - 62.5), DT); lifted(fpiPots(H, OX + 4.6, OY - 62.7), DT);
+      lifted(fpiCrates(H, OX - 2.0, OY - 56.0, false), DT); lifted(fpiBarrels(H, OX - 1.9, OY - 48.4), DT);
+      onDeck('shed', -10.2, -63, 0, { w: 3.2, d: 4.0, door: 1.0 });
+      onDeck('mast', 10.6, -64.7, 0, { hh: 8 });
+      for (const [x, y, a] of [[2.62, -43.6, Math.PI], [-2.62, -53.5, 0], [11.6, -60.5, Math.PI], [-6.6, -65.62, Math.PI / 2], [2.62, -59.2, Math.PI]]) {
+        const pp = onDeck('post', x, y, a, { r: 0.13, hh: 2.5, lamp: true }), [lx, ly] = [x + Math.cos(a) * 0.5, y + Math.sin(a) * 0.5];
+        light(lx, ly, DT + 2.15, '#ffc070', 10, 'lantern'); I.lights[I.lights.length - 1].p = pp;
+      }
+      // boats moored alongside, and rocks out in the harbour, white with the gulls
+      put('rowboat', 5.5, -54.2, Math.PI / 2 + 0.08, { paint: '#2e4a3a', rope: 0.3 }); put('rowboat', -10.4, -68.4, 0.06, { paint: '#6a3428', len: 4.6 });
+      put('rowboat', -6.4, -45.6, -Math.PI / 2 - 0.12, { paint: '#34465a', len: 3.8, beam: 1.25 });
+      for (const [x, y, w, hh, gl] of [[-19, -55, 2.2, 1.5, 1], [17.5, -50.5, 1.8, 1.1, 0], [21, -70, 3.0, 2.0, 1], [-24, -72, 2.4, 1.3, 0], [26, -44.5, 1.6, 0.9, 1], [-15, -46, 1.4, 0.7, 0], [-30, -62, 2.0, 1.6, 1]]) put('gullrock', x, y, w * 2, { w, d: w * 0.8, hh, gull: !!gl, lean: (x % 3) * 0.05 });
+      // ---------- the courtyard: a sea wall with the gate in it, walls up either side to the station ----------
+      const ST = { mat: 'stone', hh: YW, cap: true };
+      wall(-13, -39, 13, -39, ST, [{ at: -9.5, k: 'win', out: -1, z: 'yard', shore: true }, { at: 0, k: 'door', cost: 750, z: ['dock', 'yard'], also: ['coal'] }, { at: 9.5, k: 'win', out: -1, z: 'yard', shore: true }]);
+      wall(-13, -39, -13, -37, ST); wall(-13, -29, -13, -21, ST, [{ at: -24.6, k: 'win', out: -1, z: 'yard' }]);
+      wall(13, -39, 13, -37, ST); wall(13, -29, 13, -21, ST, [{ at: -24.6, k: 'win', out: 1, z: 'yard' }]);
+      // the Coal Store, through an arch on the west side; the Signal Hut, through a door on the east
+      wall(-13, -37, -13, -29, { mat: 'stone' }, [{ at: -33, k: 'arch', w: 2.4 }]);
+      wall(-21, -37, -13, -37, { mat: 'stone' }); wall(-21, -29, -13, -29, { mat: 'stone' });
+      wall(-21, -37, -21, -29, { mat: 'stone' }, [{ at: -33, k: 'win', out: -1, z: 'coal' }]);
+      wall(13, -37, 13, -29, { mat: 'wood' }, [{ at: -33, k: 'door', cost: 500, z: ['yard', 'shed'] }]);
+      wall(13, -37, 21, -37, { mat: 'wood' }); wall(13, -29, 21, -29, { mat: 'wood' });
+      wall(21, -37, 21, -29, { mat: 'wood' }, [{ at: -33, k: 'win', out: 1, z: 'shed' }]);
+      put('roof', -17, -33, 0, { w: 8.8, d: 8.8, z0: CE + 0.3, rise: 1.6, mat: 'wood' }); put('roof', 17, -33, 0, { w: 8.8, d: 8.8, z0: CE + 0.3, rise: 1.6, mat: 'wood' });
+      // flagstones: a path from the gate to the Quarters' door, across from the Coal Store to the Signal Hut, and
+      // along the foot of the station; grass and beds between
+      put('floor', 0, -31.4, 0, { w: 3.0, d: 14.8, style: 'flags' }); put('floor', 0, -33, 0, { w: 25.4, d: 2.6, style: 'flags' }); put('floor', 0, -22.6, 0, { w: 25.4, d: 2.7, style: 'flags' });
+      { const rr = seeded(0x7a9d); let n = 0;
+        for (let t = 0; t < 900 && n < 150; t++) {
+          const x = (rr() - 0.5) * 25, y = -38.6 + rr() * 14.4;
+          if (Math.abs(x) < 1.7 || Math.abs(y + 33) < 1.5) continue;
+          if (I.solids.some(s => s.mv !== false && Math.abs(s.x - OX - x) < 6 && Math.abs(s.y - OY - y) < 6 && fpiDist(s, OX + x, OY + y) < 0.25)) continue;
+          H.decor('tuft', OX + x, OY + y, { s: 0.6 + rr() * 0.9, c: rr() < 0.5 ? '#4e6a38' : '#5e7040' }); n++;
+        }
+        // and the shingle outside the sea wall: tufts of thrift
+        for (let t = 0; t < 120; t++) { const x = (rr() - 0.5) * 60, y = -39.6 - rr() * 1.6; if (Math.abs(x) < 4 || y < ZM_SHORE(x) + 0.3) continue; H.decor('tuft', OX + x, OY + y, { s: 0.5 + rr() * 0.6, c: '#5a6a40' }); }
+      }
+      // the north-west: the well and its pump, a handcart, casks of lamp oil
+      put('well', -8.5, -28.3, 0.3, { r: 0.8, lamp: true }); light(-8.5 + 1.3 * Math.cos(0.3), -28.3 + 1.3 * Math.sin(0.3), 0.9, '#ffc070', 6, 'lantern');
+      put('cart', -4.6, -29.9, 0.25, {}); fpiBarrels(H, OX - 11.5, OY - 27.1);
+      put('bed', -11.9, -30.4, Math.PI / 2, { w: 2.0, d: 0.8, flowers: '#e8e0d0' });
+      // the north-east: the keeper's garden, in low drystone walls, cabbages and kale
+      const low = (x, y, len, ang) => put('wall', x, y, ang || 0, { len, th: 0.45, hh: 0.7, mat: 'stone', cap: true, jag: 0, moss: true });
+      low(9.3, -31.2, 5.4); low(9.3, -26.2, 5.4); low(11.8, -28.7, 4.6, Math.PI / 2); low(6.8, -30.3, 1.4, Math.PI / 2); low(6.8, -27.1, 1.4, Math.PI / 2);
+      put('bed', 9.4, -29.6, 0, { w: 4.0, d: 1.1, flowers: '#7aa048' }); put('bed', 9.4, -27.8, 0, { w: 4.0, d: 1.1, flowers: '#c8c060' });
+      // the south-west: the washing line, lobster pots stacked, a gull-stained rock in the corner
+      put('washline', -5.6, -35.9, 0, { len: 4.6 }); fpiPots(H, OX - 11.0, OY - 36.4); put('gullrock', -12.05, -38.15, 0.4, { w: 0.9, d: 0.8, hh: 0.8, gull: true });
+      // the south-east: the fog bell on its frame, the flagpole, lamp oil in crates and casks
+      put('bellframe', 5.4, -37.6, 0, {}); put('flagpole', 11.9, -34.9, 0, {}); fpiCrates(H, OX + 2.9, OY - 37.9, false); fpiBarrels(H, OX + 11.7, OY - 37.7);
+      put('bench', -1.7, -21.6, 0, { w: 1.8 }); put('plant', 7.8, -21.7, 0, { s: 1.1, flowers: '#d84050' }); put('plant', -12.2, -21.8, 0, { s: 0.9 });
+      // the lights: lanterns on the walls, two on posts
+      const wl = (x, y, nx, ny, z) => { put('wlamp', x, y, Math.atan2(-nx, ny), { z: z || 2.3 }); light(x + nx * 0.42, y + ny * 0.42, (z || 2.3) + 0.05, '#ffc070', 9, 'lantern'); };
+      wl(0.75, -21.25, 0, -1); wl(-7.4, -21.25, 0, -1); wl(-1.75, -38.75, 0, 1); wl(1.75, -38.75, 0, 1); wl(-12.75, -27, 1, 0); wl(12.75, -27.2, -1, 0);
+      fpiLanternPost(H, OX + 2.0, OY - 28.4, 0); fpiLanternPost(H, OX - 2.0, OY - 36.4, Math.PI);
+      // the Coal Store: the heaps, sacks, a shovel, a shelf
+      put('coalheap', -19.3, -35.5, 0, { r: 1.6, hh: 1.3, shovel: true }); put('coalheap', -19.4, -30.6, 0, { r: 1.0, hh: 0.8 });
+      put('sacks', -15.0, -36.3, 0.1, { c: '#4a4036' }); put('shelf', -16.6, -29.7, 0, { w: 2.0, goods: 'cans' }); put('bench', -14.0, -30.4, Math.PI / 2, { w: 1.4 });
+      lamp(-17, -33, 2.7);
+      // the Signal Hut: the flag locker, a table with the signal lamp and the log, a telescope at the window, the tonic
+      put('signals', 19.4, -36.4, Math.PI, {}); put('table', 15.4, -35.8, 0, { w: 1.7, d: 0.9, cloth: '#2e3e5a' }); put('telescope', 19.9, -30.4, -0.6, {});
+      put('picture', 15.4, -29.27, 0, { z: 1.5, w: 1.2, h: 0.8, c: '#d8ccaa', sea: true }); put('shelf', 13.7, -31.2, Math.PI / 2, { w: 1.6, goods: 'books' });
+      lamp(17, -33, 2.7);
+      // for sale: a blunderbuss on the sea wall, a pepperbox on the jetty's shed; the Grog Ration in the Signal Hut;
+      // and the wreck chest may turn up on a plinth at the foot of the station's wall
+      buy('blunderbuss', 500, -5, -38.72, 0, 1);
+      buy('pepperbox', 250, -8.56, -64.1, 1, 0, DT);
+      perk('grog', 17.6, -29.7, 0);
+      spot(-9, -21.75, 0, -1, 0, 'yard');
+    }
     if (typeof zmpPlace === 'function') zmpPlace(put, light, W, Z);   // [pap] the Lampwright's Bench (src/zmpap.js)
   },
   decor(H) {},
@@ -17566,7 +17881,10 @@ function zmZoneAt(x, y, z) {
     let k = 0; for (let i = 1; i < 6; i++) if ((z || 0) >= ZMT.L[i] - 0.6) k = i;
     return k === 0 ? 'tower' : k === 5 ? 'top' : 'tw' + k + (ty >= 0 ? 'n' : 's');
   }
-  for (const k in ZM_ZONES) { if (k === 'tower') continue; const [x0, x1, y0, y1] = ZM_ZONES[k].r; if (lx >= x0 && lx <= x1 && ly >= y0 && ly <= y1) return k; }
+  for (const k in ZM_ZONES) {
+    if (k === 'tower') continue;
+    for (const r of ZM_ZONES[k].r2 ? [ZM_ZONES[k].r, ZM_ZONES[k].r2] : [ZM_ZONES[k].r]) { const [x0, x1, y0, y1] = r; if (lx >= x0 && lx <= x1 && ly >= y0 && ly <= y1) return k; }
+  }
   return null;
 }
 const zmZoneName = k => ZM_TROOMS[k] || (ZM_ZONES[k] ? ZM_ZONES[k].n : '');
@@ -17651,7 +17969,8 @@ function zmCanReload() { const w = fpsW(); return w.melee || (ZM.res[FPS.weapon]
 // (the ground, a stair tread, each floor of the tower): each is a node, with its height. From wherever you are (all
 // of you, together), how far each node is from the nearest of you, walking round walls and up and down stairs.
 function zmNavBuild() {
-  const S = ZMC.NAV, x0 = FPSC.CX - 46, y0 = FPSC.CY - 23, nx = Math.ceil(92 / S), ny = Math.ceil(51 / S), nc = nx * ny;
+  // (from the Store Hall's north wall down to the end of the jetty, from the Wreck Store to the Boathouse)
+  const S = ZMC.NAV, x0 = FPSC.CX - 46, y0 = FPSC.CY - 68, nx = Math.ceil(92 / S), ny = Math.ceil(96 / S), nc = nx * ny;
   const first = new Int32Array(nc + 1), hs = [];
   for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) {
     const x = x0 + (i + 0.5) * S, y = y0 + (j + 0.5) * S, k = j * nx + i, near = zmNear(x, y);
@@ -17773,12 +18092,12 @@ function zmReset() {
   Object.assign(ZM, {
     on: true, own: ['pepperbox'], res: { pepperbox: 48 }, pts: ZMC.START, round: 0, phase: 'pre', t: 3, left: 0, spawnT: 0,
     z: [], drops: [], perks: {}, windBuys: 0, double: 0, insta: 0, dropsRound: 0, kills: 0, heads: 0, downs: 0, spent: 0, doorsOpened: 0,
-    open: new Set(['quarters']), zone: 'quarters', zoneT: 4, banner: null, pops: [], fx: [], sparks: [], over: null, earnK: 0, navT: 0,
+    open: new Set(['dock']), zone: 'dock', zoneT: 4, banner: null, pops: [], fx: [], sparks: [], over: null, earnK: 0, navT: 0,
     box: { at: 0, uses: 0, spins: 0, st: 'idle', t: 0, item: null, cyc: 0, show: 'avtomat', owner: null }, near: null, rebuildT: 0, groanT: 2,
     zc: 0, credit: {}, players: [], downT: 0, unstickAt: 0, unstickMine: 0, ghost: false, revT: 0, revOf: null, downKit: null, beat: 0, boardBy: {}, boardPts: 0,
     doors: Zd.doors, windows: Zd.windows, buys: Zd.buys, perksAt: Zd.perks, spawns: Zd.spawns, glass: Zd.glass || [],
   });
-  for (const w of ZM.windows) { w.boards = 6; w.q = []; w.fall = []; }
+  for (const w of ZM.windows) { w.boards = w.sea ? 0 : 6; w.q = []; w.fall = []; }
   if (typeof zmpReset === 'function') zmpReset();   // [pap]
   if (typeof zxReset === 'function') zxReset();   // [chest] src/zmchest.js
   if (typeof zeReset === 'function') zeReset();   // [egg hook] src/zmegg.js
@@ -17799,9 +18118,9 @@ function zmStart(opts) {
   { const e = document.querySelector('#fpsMenu .eyebrow'); if (e) e.textContent = 'The Lighthouse waits for you'; $('fpsLeave').textContent = 'Leave the Lighthouse'; $('fpsResume').textContent = 'Back to the Light'; }
   if ($('zmUnstick')) $('zmUnstick').hidden = false;
   FPS.g = zmArena();
-  const [sx, sy] = [FPSC.CX, FPSC.CY - 15];
+  const [sx, sy] = [FPSC.CX + ZMD.START[0], FPSC.CY + ZMD.START[1]];
   FPS.me = { id: (typeof NET !== 'undefined' && NET.sid) || 'me', x: sx, y: sy, h: 0, p: 0, v: 0, z: 0, rudder: 0, bob: 0, boat: 'brig', inv: 0, pitch: 0,
-    hp: ZMC.HP, ammo: 6, mags: {}, reload: 0, cd: 0, flares: 0, lan: true, dead: 0, protect: 2, killer: null, jz: 0, vz: 0, fl: 0, me: true };
+    hp: ZMC.HP, ammo: 6, mags: {}, reload: 0, cd: 0, flares: 0, lan: true, dead: 0, protect: 2, killer: null, jz: ZMD.TOP, vz: 0, fl: ZMD.TOP, me: true };
   for (const id in FPSW) FPS.me.mags[id] = FPSW[id].mag;
   FPS.kb = {}; FPS.deaths = 0; FPS.seq = 0; FPS.shots = []; FPS.seenSeq = {}; FPS.hist = []; FPS.host = true; FPS.joinedAt = performance.now(); FPS.ai = null;
   FPS.remote.clear(); FPS.feed = []; FPS.pings = []; FPS.tracers = []; FPS.parts = []; FPS.drowned = []; FPS.bots = [];
@@ -17809,13 +18128,13 @@ function zmStart(opts) {
   FPS.weapon = FPS.last = 'pepperbox'; FPS.harps = []; FPS.swings = []; FPS.scoped = false; FPS.reloadDur = 0; FPS.drawT = 0.45;
   zmReset();
   ZM.net = opts.net || null; ZM.hum = opts.hum || [[FPS.me.id, FPS.nick]];
-  // (together: each comes up in a different corner of the Quarters)
+  // (together: each steps off the boat at a different place along the jetty's pier)
   const slot = Math.max(0, ZM.hum.findIndex(h => h[0] === FPS.me.id));
-  if (ZM.net) { FPS.me.x += [0, 4, -4, 0][slot % 4]; FPS.me.y += [0, -2, -2, 3][slot % 4]; }
+  if (ZM.net) { FPS.me.x += [0, 1.5, -1.5, 0][slot % 4]; FPS.me.y += [0, -1.6, -1.6, 1.8][slot % 4]; }
   zmNavBuild();
   $('zmOver').hidden = true;
   $('zmAgain').textContent = ZM.net ? 'Back to the lobby' : 'Hold it again';
-  fpsFeed(ZM.net ? `You come up from the boat into the Keeper’s Quarters, ${ZM.hum.length} of you. Hold the Light.` : 'You come up from the boat into the Keeper’s Quarters. Hold the Light.');
+  fpsFeed(ZM.net ? `The boat leaves you on the jetty below the Light, ${ZM.hum.length} of you. Up through the sea gate, and hold the Light.` : 'The boat leaves you on the jetty below the Light. Up through the sea gate, and hold the Light.');
   try { cv.focus(); } catch (e) {}
 }
 function zmStop() {
@@ -17852,7 +18171,7 @@ function zmFrame(dt) {
       // patched up quickly, if they leave you alone for a few seconds
       FPS.calm = (FPS.calm || 0) + dt;
       const max = ZM.perks.stout ? ZMC.HP_STOUT : ZMC.HP;
-      if (m.dead <= 0 && !zmIsDown() && m.hp < max && FPS.calm > 3.2) m.hp = max;
+      if (m.dead <= 0 && !zmIsDown() && m.hp < max && FPS.calm > (ZM.perks.grog ? 1.6 : 3.2)) m.hp = max;
       if (ZM.downT > 0) zmDownTick(dt);
       if (m.cd > 0) m.cd -= dt;
       if (m.reload > 0) { m.reload -= dt; if (m.reload <= 0) { m.reload = 0; zmReloaded(); } }
@@ -18017,11 +18336,24 @@ function zmRoundBegins() {
   if (!ZM.ghost) return;
   const m = FPS.me, others = [...FPS.remote.values()].filter(r => !r.dead && !r.down && r.tx != null);
   const at = others[0];
-  if (at) { m.x = at.x; m.y = at.y; m.jz = at.jz || 0; m.fl = m.jz; zmSettle(m); }
+  // (beside them, on the grid at their height: not inside them, a wall or the stair; with nobody up, on the jetty)
+  if (at) { const [x, y] = zmBeside(at.x, at.y, at.jz || 0); m.x = x; m.y = y; m.jz = at.jz || 0; m.fl = m.jz; zmSettle(m); }
+  else { m.x = FPSC.CX + ZMD.START[0]; m.y = FPSC.CY + ZMD.START[1]; m.jz = m.fl = ZMD.TOP; zmSettle(m); }
   ZM.ghost = false; m.dead = 0; m.hp = ZMC.HP; m.protect = 3;
   ZM.own = ['pepperbox']; ZM.res = { pepperbox: 48 }; FPS.weapon = FPS.last = 'pepperbox'; m.ammo = 6; m.mags.pepperbox = 6; FPS.drawT = 0.45;
   fpsFeed('You’re back on your feet, with a pepperbox.');
 }
+// a place to stand next to (x, y, jz): a step or so off to one side, somewhere the drowned could walk (on the grid,
+// leading to you), clear of everything solid; else (x, y) itself
+function zmBeside(x, y, jz) {
+  for (const r of [1.1, 1.6, 0.8, 2.2]) for (let i = 0; i < 8; i++) {
+    const a = i / 8 * Math.PI * 2 + 0.4, px = x + Math.cos(a) * r, py = y + Math.sin(a) * r, n = zmNodeIn(zmCell(px, py), jz, 0.3);
+    if (n >= 0 && !zmBlockedAt(px, py, 0.5, jz) && zmWinPen(px, py, 0.5, jz) <= 0) return [px, py];
+  }
+  return [x, y];
+}
+// on the jetty's deck? (w: a margin round it)
+function zmOnDeck(x, y, w) { for (const [x0, x1, y0, y1] of (FPS.g.isle.zm.decks || [])) if (x > x0 - w && x < x1 + w && y > y0 - w && y < y1 + w) return true; return false; }
 // which window the next one climbs in at: one of the open rooms' windows nearest you (by the walk to you)
 function zmPickWindow() {
   const N = ZM.nav, list = [];
@@ -18039,6 +18371,14 @@ function zmPickWindow() {
 // window up the tower, at the foot of the wall below it, to climb
 function zmSpawnPoint(w) {
   const tx = -w.ny, ty = w.nx, T = ZM_TC, CX = FPSC.CX, CY = FPSC.CY;
+  // (a ladder down the jetty, or a gap in the sea wall: out in the harbour, under the water, clear of the jetty)
+  if (w.sea || w.shore) {
+    for (let i = 0; i < 16; i++) {
+      const out = (w.sea ? 3.0 : 4.2) + Math.random() * 3, side = (Math.random() - 0.5) * 2.4, x = w.x + w.nx * out + tx * side, y = w.y + w.ny * out + ty * side;
+      if (!zmOnDeck(x, y, 0.9)) return [x, y];
+    }
+    return [w.x + w.nx * 3.5, w.y + w.ny * 3.5];
+  }
   if ((w.z || 0) > 0) { const side = (Math.random() - 0.5) * 1.2; return [w.x + w.nx * 1.3 + tx * side, w.y + w.ny * 1.3 + ty * side]; }
   for (const out of [4 + Math.random() * 2.5, 3.2, 2.4, 1.6]) {
     const side = (Math.random() - 0.5) * Math.min(3, out * 0.6), x = w.x + w.nx * out + tx * side, y = w.y + w.ny * out + ty * side;
@@ -18114,6 +18454,22 @@ function zmZombies(dt) {
     if (z.boss && typeof zbTick === 'function') { zbTick(z, dt, nearest); continue; }   // [boss] he goes his own way (src/zmboss.js)
     const step = z.sp * dt * (z.slow > 0 && typeof zmpSlowK === 'function' ? zmpSlowK(z) : 1);   // [pap] (slowed by the Equinox Gale)
     const G = zmGait(z);
+    if (z.st === 'out' && z.win.sea) {
+      // up out of the harbour: wading in under the jetty's ladder, head and shoulders out of the water, deeper the
+      // further out (waiting behind any already at it); then up the ladder
+      const w = z.win, k = w.q.indexOf(z), lane = Math.max(0, k);
+      const ox = w.x + w.nx * (0.55 + lane * 0.85) + (-w.ny) * (lane % 2 ? 0.55 : -0.55) * Math.min(1, lane), oy = w.y + w.ny * (0.55 + lane * 0.85) + w.nx * (lane % 2 ? 0.55 : -0.55) * Math.min(1, lane);
+      const dx = ox - z.x, dy = oy - z.y, d = Math.hypot(dx, dy);
+      if (d > 0.05) {
+        const pace = zmPace(z, G, dt, d > 2.5) * 0.8, s = Math.min(d, step * pace), a = bearingOf(dx, dy) + zmSway(z, G) * 0.8 * clamp((d - 0.4) / 2.5, 0, 1);
+        if (s > 0) { z.x += Math.sin(a) * s; z.y += Math.cos(a) * s; z.walk = true; } else z.walk = false;
+        z.h += angDiff(a, z.h) * Math.min(1, dt * 5);
+      } else { z.walk = false; z.h = bearingOf(-w.nx, -w.ny); }
+      const off = (z.x - w.x) * w.nx + (z.y - w.y) * w.ny;
+      z.jz = -0.95 - clamp((off - 0.6) * 0.55, 0, 1.4); z.scaling = false;
+      if (k === 0 && d < 0.1) { z.st = 'climb'; z.t = 0; z.jz0 = z.jz; }
+      continue;
+    }
     if (z.st === 'out') {
       // across the yard (or up the beach) to the window, waiting behind any already at it; weaving as it comes, the
       // weave dying away as it reaches its place
@@ -18128,7 +18484,9 @@ function zmZombies(dt) {
       else { z.walk = false; z.h = bearingOf(-w.nx, -w.ny); }
       // (a window up the tower: up the outside of the wall they go, hand over hand)
       const wz = w.z || 0;
-      if (z.jz < wz) { z.jz = Math.min(wz, z.jz + dt * 2.4); z.scaling = true; z.h = bearingOf(-w.nx, -w.ny); } else z.scaling = false;
+      // (on the ground: up out of the harbour's water, if it came that way)
+      if (!wz) { z.jz = -zmSeaDepth(z.x, z.y); z.scaling = false; }
+      else if (z.jz < wz) { z.jz = Math.min(wz, z.jz + dt * 2.4); z.scaling = true; z.h = bearingOf(-w.nx, -w.ny); } else z.scaling = false;
       if (k === 0 && d < 0.1 && z.jz >= wz - 0.01) { z.st = 'tear'; z.t = 0; }
       continue;
     }
@@ -18140,6 +18498,15 @@ function zmZombies(dt) {
         // and a swipe through the gap at whoever's right there
         if (P.some(p => Math.hypot(p.x - w.x, p.y - w.y) < 1.5 && Math.abs(p.jz || 0) < 1)) zmSwipe(z, dt);
       } else { z.st = 'climb'; z.t = 0; }
+      continue;
+    }
+    if (z.st === 'climb' && z.win.sea) {
+      // hauling itself up the ladder, hand over hand, and over the edge onto the deck on its belly
+      const w = z.win, T = 1.7, k = Math.min(1, z.t / T), top = w.z, j0 = z.jz0 != null ? z.jz0 : -0.95;
+      if (k < 0.6) { const q = k / 0.6; z.x = w.x + w.nx * 0.55; z.y = w.y + w.ny * 0.55; z.jz = j0 + (top - 0.45 - j0) * q * q * (3 - 2 * q); z.scaling = true; }
+      else { const q = (k - 0.6) / 0.4; z.x = w.x + w.nx * (0.55 - 1.35 * q); z.y = w.y + w.ny * (0.55 - 1.35 * q); z.jz = top - 0.45 + 0.45 * Math.sin(q * Math.PI / 2) + 0.2 * Math.sin(q * Math.PI); z.scaling = false; }
+      z.h = bearingOf(-w.nx, -w.ny); z.walk = false;
+      if (k >= 1) { z.st = 'in'; z.jz = z.fl = top; w.q = w.q.filter(q => q !== z); z.t = 0; z.lx = z.x; z.ly = z.y; z.jz0 = null; }
       continue;
     }
     if (z.st === 'climb') {
@@ -18573,15 +18940,15 @@ function zmNearest() {
     if (facing && d > 0.6 && Math.abs(angDiff(bearingOf(x - m.x, y - m.y), m.h)) > 1.25) return;
     if (d < bd) { bd = d; best = o; }
   };
-  for (const b of ZM.buys) consider({ k: 'buy', b }, b.x + b.nx * 0.7, b.y + b.ny * 0.7, 0, 1.6, true);
-  for (const p of ZM.perksAt) consider({ k: 'perk', p }, p.x + p.nx * 0.9, p.y + p.ny * 0.9, 0, 1.7, true);
+  for (const b of ZM.buys) consider({ k: 'buy', b }, b.x + b.nx * 0.7, b.y + b.ny * 0.7, b.z || 0, 1.6, true);
+  for (const p of ZM.perksAt) consider({ k: 'perk', p }, p.x + p.nx * 0.9, p.y + p.ny * 0.9, p.z || 0, 1.7, true);
   for (const d of ZM.doors) if (!d.open) consider({ k: 'door', d }, d.x, d.y, d.z || 0, 2.3, false);
   const B = ZM.box, S = ZM.spawns[B.at];
   if (S && (B.st === 'idle' || (B.st === 'offer' && B.owner === m.id))) consider({ k: 'box' }, S.x + S.nx * 0.9, S.y + S.ny * 0.9, S.z - 0.32, 1.8, true);
   if (typeof zmpConsider === 'function') zmpConsider(consider);   // [pap] the bench
   // someone down: you can get them up
   if (ZM.net) for (const r of FPS.remote.values()) if (r.down && !r.dead) consider({ k: 'rev', sid: r.id, n: r.n }, r.x, r.y, r.jz || 0, 1.8, false);
-  for (const w of ZM.windows) if (w.boards < 6 && zmOpen(w.zone)) consider({ k: 'win', w }, w.x - w.nx * 0.95, w.y - w.ny * 0.95, w.z || 0, 1.9, false);
+  for (const w of ZM.windows) if (!w.sea && w.boards < 6 && zmOpen(w.zone)) consider({ k: 'win', w }, w.x - w.nx * 0.95, w.y - w.ny * 0.95, w.z || 0, 1.9, false);
   if (typeof zeNearest === 'function') zeNearest(consider);   // [egg hook] src/zmegg.js
   // (down on the floor, nothing's in reach but your pepperbox)
   ZM.near = zmIsDown() ? null : best;
@@ -18630,6 +18997,7 @@ function zmOpenDoor(d) {
   d.open = true; d.openT = 0; ZM.doorsOpened++;
   I.solids = I.solids.filter(s => !d.solids.includes(s)); fpiIndex(I);
   for (const k of d.zones) ZM.open.add(k);
+  for (const k of d.also || []) ZM.open.add(k);
   if (d.zones.includes('lamp')) ZM.open.add('tower');
   zmNavBuild(); ZM.navT = 0;
   zmSound(d.kind === 'debris' ? 'debris' : 'door');
@@ -18843,12 +19211,13 @@ function zm3dBuild() {
     // (turned so its boards run along the wall, and its local z points out of the window)
     g.rotation.y = Math.atan2(w.nx, -w.ny);
     const rnd = seeded(w.id * 131 + 7), list = [], out = 1;
+    if (w.sea) return { g, list, out };
     for (let i = 0; i < 6; i++) { const b = new THREE.Mesh(new THREE.BoxGeometry(1.95, 0.17, 0.06), boardM[i % 3]); b.position.set(0, 1.12 + i * 0.2, 0); b.rotation.z = (rnd() - 0.5) * 0.22; g.add(b); list.push({ m: b, y: b.position.y, rz: b.rotation.z }); }
     return { g, list, out };
   });
   // weapons on the walls, and their prices chalked under them
   for (const b of ZM.buys) {
-    const g = new THREE.Group(); g.position.copy(z3v(b.x + b.nx * 0.07, b.y + b.ny * 0.07, G0)); g.rotation.y = Math.atan2(b.ny, b.nx) - Math.PI / 2; grp.add(g);
+    const g = new THREE.Group(); g.position.copy(z3v(b.x + b.nx * 0.07, b.y + b.ny * 0.07, G0 + (b.z || 0))); g.rotation.y = Math.atan2(b.ny, b.nx) - Math.PI / 2; grp.add(g);
     const model = z3Weapon(b.id);
     if (model) { model.scale.setScalar(2.0); model.rotation.set(0, Math.PI / 2, 0); model.position.set(0.15, 1.62, -0.08); g.add(model); }
     const ch = z3Chalk([[FPSW[b.id].n.replace(' gun', '').toUpperCase(), 34], [String(b.cost), 44]], 1.5, 0.52); ch.position.set(0, 1.12, -0.01); ch.rotation.y = Math.PI; g.add(ch);
@@ -18899,6 +19268,47 @@ function zm3dBuild() {
   }
   if (typeof ze3dBuild === 'function') ze3dBuild(grp);   // [egg hook] src/zmegg.js
   zm3dLantern(grp);
+  zm3dWater(grp);
+}
+// The harbour: water laid over the island south of the shore (ZM_SHORE), round the jetty and out past the island's
+// edge, where it slopes down into the open sea. A grid a metre square, its height a hair over the ground (dipping
+// under it along the shore, so the ground cuts a clean waterline), swaying gently; a ripple in its light, so the
+// moon and the jetty's lamps glint on it
+const ZW = { t: { value: 0 } };
+function zm3dWater(grp) {
+  if (!FPS.g.isle.zm || !FPS.g.isle.zm.bay) return;
+  const OX = FPSC.CX, OY = FPSC.CY, G0 = FPSC.GROUND, IR = FPSC.R, X0 = -96, Y0 = -96, NX = 193, NY = 83;
+  const edge = a => IR * (1 + 0.035 * Math.sin(a * 5 + 1) + 0.02 * Math.sin(a * 13));
+  const pos = new Float32Array(NX * NY * 3), amp = new Float32Array(NX * NY), keep = new Uint8Array(NX * NY), idx = [];
+  for (let j = 0; j < NY; j++) for (let i = 0; i < NX; i++) {
+    const lx = X0 + i, ly = Y0 + j, v = j * NX + i, r = Math.hypot(lx, ly), e = edge(Math.atan2(ly, lx)), dIn = ZM_SHORE(lx) - ly;
+    const out = clamp((r - e) / 7, 0, 1), L = ZMD.WATER - (ZMD.WATER + FPSC.GROUND) * out;
+    pos[v * 3] = OX + lx; pos[v * 3 + 1] = G0 + (dIn >= 0 ? L : L + dIn * 0.6); pos[v * 3 + 2] = -(OY + ly);
+    amp[v] = clamp(dIn / 2.5, 0, 1) * (1 - out * 0.7);
+    keep[v] = dIn > -1.5 && r < e + 7.5 ? 1 : 0;
+  }
+  for (let j = 0; j < NY - 1; j++) for (let i = 0; i < NX - 1; i++) {
+    const a = j * NX + i, b = a + 1, c = a + NX, d = c + 1;
+    if (keep[a] && keep[b] && keep[c] && keep[d]) idx.push(a, c, b, b, c, d);
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(pos, 3)); geo.setAttribute('amp', new THREE.BufferAttribute(amp, 1));
+  geo.setIndex(idx); geo.computeVertexNormals(); geo.computeBoundingSphere();
+  const mat = new THREE.MeshPhongMaterial({ color: 0x06121a, specular: 0x9aaab8, shininess: 80, emissive: 0x02060a, side: THREE.DoubleSide });
+  mat.onBeforeCompile = sh => {
+    sh.uniforms.uT = ZW.t;
+    sh.vertexShader = 'uniform float uT;\nattribute float amp;\nvarying vec3 vWp;\n' + sh.vertexShader.replace('#include <begin_vertex>', `#include <begin_vertex>
+  { vec4 w0 = modelMatrix * vec4(position, 1.0);
+    transformed.y += amp * (0.022 * sin(w0.x * 0.45 + uT * 1.3) + 0.016 * sin(w0.z * 0.6 - uT * 1.1) + 0.01 * sin((w0.x + w0.z) * 1.1 + uT * 2.0)); }
+  vWp = (modelMatrix * vec4(transformed, 1.0)).xyz;`);
+    sh.fragmentShader = 'uniform float uT;\nvarying vec3 vWp;\n' + sh.fragmentShader.replace('#include <normal_fragment_begin>', `#include <normal_fragment_begin>
+  { vec2 p = vWp.xz;
+    vec2 gr = 0.06 * cos(dot(p, vec2(1.3, 0.9)) + uT * 1.9) * vec2(1.3, 0.9) + 0.05 * cos(dot(p, vec2(-0.8, 1.7)) + uT * 2.3) * vec2(-0.8, 1.7)
+            + 0.03 * cos(dot(p, vec2(2.9, -1.4)) - uT * 3.1) * vec2(2.9, -1.4) + 0.02 * cos(dot(p, vec2(-4.1, -2.6)) + uT * 3.7) * vec2(-4.1, -2.6);
+    normal = normalize((viewMatrix * vec4(normalize(vec3(-gr.x, 1.0, -gr.y)), 0.0)).xyz); }`);
+  };
+  const m = new THREE.Mesh(geo, mat); m.renderOrder = 0; grp.add(m);
+  Z3.water = m;
 }
 // the glazed windows of the tower, and the lantern on top: its ring of glass in brass astragals, the gallery rail, the
 // copper dome with its ventilator ball and lightning rod, and the Light itself, a great lens turning on the newel
@@ -19017,7 +19427,7 @@ function zmPose(z, M, dt) {
   // arms out in front; tearing at boards; a swing at you
   let ax = -1.35, bx = -1.35;
   if (z.st === 'tear') { ax = -1.6 + Math.sin(t * 9) * 0.5; bx = -1.6 - Math.sin(t * 9) * 0.5; }
-  if (z.scaling) { ax = -2.8 + Math.sin(t * 7) * 0.45; bx = -2.8 - Math.sin(t * 7) * 0.45; M.legs[0].rotation.x = Math.sin(t * 7) * 0.5; M.legs[1].rotation.x = -Math.sin(t * 7) * 0.5; }
+  if (z.scaling || (ZM.net === 'client' && z.st === 'climb' && z.win && z.win.sea && z.t < 1.0)) { ax = -2.8 + Math.sin(t * 7) * 0.45; bx = -2.8 - Math.sin(t * 7) * 0.45; M.legs[0].rotation.x = Math.sin(t * 7) * 0.5; M.legs[1].rotation.x = -Math.sin(t * 7) * 0.5; }
   if (z.swing >= 0) { const k = z.swing / 0.6; ax = -2.2 + Math.sin(k * Math.PI) * 1.6; }
   ax += Math.sin(ph * 0.5) * 0.12 * A; bx += Math.sin(ph * 0.5 + 1) * 0.12 * A;
   M.arms[0].rotation.x = ax; M.arms[1].rotation.x = bx;
@@ -19107,6 +19517,7 @@ function zmScene3D() {
   });
   for (const o of Z3.grp.children.slice()) if (o.userData.drop && !used.has(o)) Z3.grp.remove(o);
   for (const d of ZM.drops) d.g3.userData.drop = true;
+  ZW.t.value = reduceMotion ? 0 : t;
   // the Light turns, once every twelve seconds, its beams sweeping out over the sea and through the rooms' windows
   if (Z3.lens) { Z3.lens.lens.rotation.y = reduceMotion ? 0.6 : -g.t * Math.PI * 2 / 12; Z3.lens.L.intensity = 2.0 + (reduceMotion ? 0 : 0.2 * Math.sin(g.t * 3)); }
   // the beam
@@ -21561,6 +21972,7 @@ function zbTick(z, dt, nearest) {
     // up out of the sea, and across to the window
     const w = z.win, ox = w.x + w.nx * 1.5, oy = w.y + w.ny * 1.5, dx = ox - z.x, dy = oy - z.y, d = Math.hypot(dx, dy);
     if (z.jz < 0) z.jz = Math.min(0, z.jz + dt * 1.1);
+    if (typeof zmSeaDepth === 'function') z.jz = Math.min(z.jz, -zmSeaDepth(z.x, z.y));   // (still in the harbour's water: wading up out of it)
     if (d > 0.08) { const s = Math.min(d, z.sp * dt); z.x += dx / d * s; z.y += dy / d * s; z.h += angDiff(bearingOf(dx, dy), z.h) * Math.min(1, dt * 4); z.walk = true; }
     else if (z.jz >= 0) { z.walk = false; z.h = bearingOf(-w.nx, -w.ny); zbStart(z, 'smash'); }
     return;
@@ -22911,7 +23323,7 @@ function znRequestFrom(sid, k, a) {
   if (k === 'door') { const d = ZM.doors[a | 0]; if (!d) return; if (d.open) credit(d.cost); else zmOpenDoor(d); return; }
   if (k === 'box') { zmBoxSpin(sid, String(a || '').split(',').filter(id => FPSW[id])); return; }
   if (k === 'take') { if (ZM.box.st === 'offer' && ZM.box.owner === sid) { ZM.box.st = 'idle'; ZM.box.t = 0; } return; }
-  if (k === 'board') { const w = ZM.windows[a | 0]; if (w && w.boards < 6 && !ZM.z.some(z => z.win === w && z.st === 'climb')) { w.boards++; zmBoardPay(sid); } return; }
+  if (k === 'board') { const w = ZM.windows[a | 0]; if (w && !w.sea && w.boards < 6 && !ZM.z.some(z => z.win === w && z.st === 'climb')) { w.boards++; zmBoardPay(sid); } return; }
   if (k === 'rev') { zmnRevive(String(a), sid); return; }
   if (k === 'unstick') { zmUnstick(sid); return; }   // the menu's Unstick a drowned (src/zombies.js)
   if (k === 'pst') { if (typeof zmpStatusFrom === 'function') zmpStatusFrom(sid, a); return; }   // [pap] what a reforged weapon did to them
