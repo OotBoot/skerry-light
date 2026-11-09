@@ -17313,7 +17313,7 @@ Object.assign(FPI_K, {
   // a cast-iron bollard
   bollard: {
     col: ZMP.iron,
-    sol(p) { return [fpiCirc(p, 0, 0, 0.24, 0.6)]; },
+    sol(p) { return p.free ? [] : [fpiCirc(p, 0, 0, 0.24, 0.6)]; },
     b3(p, A) {
       A.cyl('#24262a', 0, 0, -0.05, 0.17, 0.5, 0, 0, 0, 'cyl8'); A.cyl('#24262a', 0, 0, 0.42, 0.23, 0.08, 0, 0, 0, 'cyl8');
       A.part('sph', '#2a2c30', 0, 0, 0.52, 0.36, 0.16, 0.36);
@@ -17504,7 +17504,7 @@ FPI_GEN.light = {
     // the south front, facing the sea
     wall(-44, -21, -26, -21, { mat: 'stone' }, [{ at: -35, k: 'win', out: -1, z: 'wreck' }]);
     wall(-26, -21, -10, -21, PL(ZM_ZONES.fog.wall), [{ at: -18, k: 'win', out: -1, z: 'fog' }]);
-    wall(-10, -21, 10, -21, PL(ZM_ZONES.quarters.wall), [{ at: -5, k: 'win', out: -1, z: 'quarters' }, { at: 2.6, k: 'door', cost: 1000, z: ['yard', 'quarters'] }, { at: 5, k: 'win', out: -1, z: 'quarters' }]);
+    wall(-10, -21, 10, -21, PL(ZM_ZONES.quarters.wall), [{ at: -5, k: 'win', out: -1, z: 'quarters' }, { at: 2.6, k: 'door', cost: 1000, z: ['yard', 'quarters'] }, { at: 7.6, k: 'win', out: -1, z: 'quarters' }]);   // (the window well clear of the courtyard's door)
     wall(10, -21, 26, -21, PL(ZM_ZONES.oil.wall), [{ at: 18, k: 'win', out: -1, z: 'oil' }]);
     wall(26, -21, 44, -21, { mat: 'wood' }, [{ at: 35, k: 'win', out: -1, z: 'boat' }]);
     // the ends
@@ -17690,7 +17690,7 @@ FPI_GEN.light = {
     put('stove', -7.6, -19.6, 0, {}); light(-7.85, -20.1, 0.5, '#ff8a30', 7, 'fire');
     put('table', -3, -14.5, 0, { w: 2.6, d: 1.3, cloth: '#7a2a24' });
     put('bench', -3, -15.6, 0, { w: 2.2 }); put('bench', -3, -13.4, 0, { w: 2.2 });
-    put('bunk', 7.6, -19.8, 0, {});
+    put('bunk', 9.45, -18.9, Math.PI / 2, {});   // (against the east wall, clear of the window)
     put('shelf', -9.5, -18.2, Math.PI / 2, { w: 2.2, goods: 'jars' });
     put('shelf', 3, -10.2, 0, { w: 2.0, goods: 'books' });
     lamp(-3, -14.5, 2.7); lamp(5, -17, 2.7);
@@ -17784,11 +17784,8 @@ FPI_GEN.light = {
       seaWin(-3, -51, -1, 0); seaWin(3, -46.5, 1, 0); seaWin(-8, -60, 0, 1); seaWin(8, -60, 0, 1);
       seaWin(-6, -66, 0, -1); seaWin(0.5, -66, 0, -1); seaWin(6.5, -66, 0, -1); seaWin(12, -63, 1, 0);
       // on the jetty: bollards, coiled ropes, lobster pots, fish boxes, lamps on posts, the shed and the tide mast
-      for (const [x, y, r] of [[-2.66, -45.2, 1], [2.66, -52.6, 0], [-2.66, -58.4, 1], [4.4, -60.36, 0], [-4.6, -60.36, 1], [-9.6, -65.64, 1], [3.2, -65.64, 0], [9.6, -65.64, 1]]) onDeck('bollard', x, y, 0, { rope: !!r });
-      // (kept clear of where they come up the ladders, and of the way along)
-      onDeck('coil', -1.8, -42.9, 0, {}); onDeck('coil', -1.6, -63.8, 0, {});
-      lifted(fpiPots(H, OX - 5.0, OY - 62.5), DT); lifted(fpiPots(H, OX + 4.6, OY - 62.7), DT);
-      lifted(fpiCrates(H, OX - 2.0, OY - 56.0, false), DT); lifted(fpiBarrels(H, OX - 1.9, OY - 48.4), DT);
+      for (const [x, y, r] of [[-2.66, -45.2, 1], [2.66, -52.6, 0], [-2.66, -58.4, 1], [4.4, -60.36, 0], [-4.6, -60.36, 1], [-9.6, -65.64, 1], [3.2, -65.64, 0], [9.6, -65.64, 1]]) onDeck('bollard', x, y, 0, { rope: !!r, free: true });
+      // (the deck itself is kept clear: nothing underfoot to catch on, the bollards at its edge only for show)
       onDeck('shed', -10.2, -63, 0, { w: 3.2, d: 4.0, door: 1.0 });
       onDeck('mast', 10.6, -64.7, 0, { hh: 8 });
       for (const [x, y, a] of [[2.62, -43.6, Math.PI], [-2.62, -53.5, 0], [11.6, -60.5, Math.PI], [-6.6, -65.62, Math.PI / 2], [2.62, -59.2, Math.PI]]) {
