@@ -13,7 +13,8 @@
 // minutes: at low water the shoals dry out into land bridges between islands, and at high water they
 // drown again, and whoever had marched across them is cut off. The bell rallies your people for a while.
 //
-// Many enemies: sixteen bot nations by default, up to forty, each with a temper of its own.
+// Many enemies: sixteen bot nations by default, up to fifty, each with a temper of its own. Up to ten people
+// can play one war together (warnet.js): the host's browser runs the game and streams it to the others.
 //
 // This file is the game itself (the map, the nations, the fighting, the bots). warview.js draws it and
 // takes your orders.
@@ -44,7 +45,7 @@ const WAR = {
   seed: 0, rng: Math.random, nBots: 16,
   map: null, owner: null, region: null, regions: [], landTiles: 0,
   nations: [], attacks: [], boats: [], flares: [], structs: new Map(), lit: null,
-  beam: 0, tideHigh: false, tideT: 0, day: 0, me: -1, log: [], prompts: [], events: [],
+  beam: 0, tideHigh: false, tideT: 0, day: 0, me: -1, log: [], prompts: [], events: [], net: null, netLog: [], tickNo: 0,
   spawnT: 0, spawnPick: -1, ratio: 0.4, result: null, stats: null, build: null, spectate: false,
 };
 
@@ -63,6 +64,20 @@ const warIsSea = i => !warIsLand(i);
 function warCoastal(i) { let c = false; warNeighbours(i, j => { if (warIsSea(j)) c = true; }); return c; }
 // the shore for a harbour: facing the sea or a shoal, whatever the tide (at low water the dry shoals would otherwise hide it)
 function warShore(i) { let c = false; warNeighbours(i, j => { if (WAR.map[j] <= 1) c = true; }); return c; }
+// each nation's tiles, listed once per tick (so a border is found by walking one nation's land, not the whole map)
+function warOwnTiles(id) {
+  const B = WAR.buckets;
+  if (!B || B.no !== WAR.tickNo || B.len !== WAR.map.length) {
+    const N = WAR.nations.length, cnt = new Int32Array(N + 1), own = WAR.owner, L = own.length;
+    for (let i = 0; i < L; i++) { const o = own[i]; if (o >= 0 && o < N) cnt[o + 1]++; }
+    for (let k = 1; k <= N; k++) cnt[k] += cnt[k - 1];
+    const start = cnt.slice(), list = (B && B.list.length === L) ? B.list : new Int32Array(L), fill = cnt.slice();
+    for (let i = 0; i < L; i++) { const o = own[i]; if (o >= 0 && o < N) list[fill[o]++] = i; }
+    WAR.buckets = { no: WAR.tickNo, len: L, list, start };
+  }
+  const b = WAR.buckets; if (id < 0 || id >= WAR.nations.length) return [];
+  return b.list.subarray(b.start[id], b.start[id + 1]);
+}
 function warLoadStats() { try { return JSON.parse(localStorage.getItem('skerry-war') || '{}'); } catch (e) { return {}; } }
 function warSaveStats(s) { try { localStorage.setItem('skerry-war', JSON.stringify(s)); } catch (e) {} }
 
@@ -140,10 +155,10 @@ function warColour(k, n) {
   const h = (k * 137.508) % 360, s = 55 + (k % 3) * 12, l = 48 + ((k * 7) % 3) * 8;
   return `hsl(${h.toFixed(0)},${s}%,${l}%)`;
 }
-function warNation(id, name, isMe, rng) {
+function warNation(id, name, human, rng) {
   return {
-    id, name, isMe, alive: true, col: warColour(id, 1), troops: 120, gold: 25, tiles: 0, maxTroops: 100,
-    bot: isMe ? null : { aggr: 0.25 + rng() * 0.7, naval: rng(), loyal: rng(), greed: rng(), next: rng() * 2, pactCd: 60 + rng() * 90 },
+    id, name, isMe: false, human, alive: true, col: warColour(id, 1), troops: 120, gold: 25, tiles: 0, maxTroops: 100,
+    bot: human ? null : { aggr: 0.25 + rng() * 0.7, naval: rng(), loyal: rng(), greed: rng(), next: rng() * 2, pactCd: 60 + rng() * 90 },
     reqCd: 0,
     rel: null, allies: new Map(), bell: 0, bellCd: 0, flareCd: 0, fireCd: 0, light: false, regionsHeld: 0,
     harbours: 0, towers: 0, beacons: 0, cities: 0, factories: 0, railCities: 0, kills: 0, taken: 0, lost: 0, lastHit: -1, lastHitT: -99, drownedT: -99, betrayed: 0, cx: 0, cy: 0,
@@ -170,12 +185,19 @@ function warGoodSpawn(i, taken) {
 // ---------- starting a game ----------
 function warMapSize(nBots) {
   // 200 x 124 tiles for 16 nations; the area grows (or shrinks) with the number of nations
-  const k = Math.sqrt(clamp((nBots + 1) / 17, 0.6, 2.5));
+  const k = Math.sqrt(clamp((nBots + 1) / 17, 0.6, 3.3));
   return [Math.round(200 * k), Math.round(124 * k)];
 }
-function warStart(nBots, seed, diff) {
+// opts (for a war played together): humans, the names of the people playing (nations 0..), me, which of them
+// this browser is, and net, 'host' or 'client'. Everyone starts from the same seed and settings, so the map,
+// the names and the bots' landings come out the same everywhere without being sent.
+function warStart(nBots, seed, diff, opts) {
+  opts = opts || {};
   WAR.diff = WAR_DIFF[diff] ? diff : 'normal'; WAR.D = WAR_DIFF[WAR.diff]; WAR.lastPromptT = -999;
-  [WARC.W, WARC.H] = warMapSize(nBots);
+  const humans = opts.humans && opts.humans.length ? opts.humans.slice(0, 10) : [(($('warNick') && $('warNick').value) || '').trim().slice(0, 18) || 'the Keeper’s Own'];
+  WAR.net = opts.net || null; WAR.netLog = []; WAR.netLogId = 0; WAR.over = null; WAR.tickNo = 0; WAR.buckets = null;
+  WAR.nHumans = humans.length; WAR.spawnPicks = {}; WAR.spawnReady = {};
+  [WARC.W, WARC.H] = warMapSize(nBots + humans.length - 1);
   WAR.frontSeen = null; WAR.pathPrev = null; WAR.frontScore = null; if (typeof WV !== 'undefined') WV.seen = null;
   WAR.on = true; WAR.phase = 'spawn'; WAR.t = 0; WAR.speed = 1; WAR.paused = false; WAR.spectate = false; WAR.result = null;
   WAR.nBots = nBots; WAR.seed = seed >>> 0;
@@ -186,17 +208,18 @@ function warStart(nBots, seed, diff) {
   WAR.attacks = []; WAR.boats = []; WAR.flares = []; WAR.structs = new Map(); WAR.log = []; WAR.prompts = []; WAR.events = [];
   WAR.lit = new Uint8Array(map.length); WAR.build = null; WAR.rails = []; WAR.railed = new Set(); WAR.ratio = 0.4;
   // nations: you, and the bots, each with a name of its own
-  const houses = WAR_HOUSES.slice(), names = new Set();
-  const pickName = () => { for (let k = 0; k < 20; k++) { const h = houses.splice((rng() * houses.length) | 0, 1)[0] || ('Clan ' + k); const f = WAR_FORMS[(rng() * WAR_FORMS.length) | 0]; const n = f.replace('%', h); if (!names.has(n)) { names.add(n); return n; } } return 'the Nameless'; };
+  let houses = WAR_HOUSES.slice(); const names = new Set();
+  const pickName = () => { for (let k = 0; k < 20; k++) { if (!houses.length) houses = WAR_HOUSES.slice(); const h = houses.splice((rng() * houses.length) | 0, 1)[0]; const f = WAR_FORMS[(rng() * WAR_FORMS.length) | 0]; const n = f.replace('%', h); if (!names.has(n)) { names.add(n); return n; } } return 'the Nameless'; };
   WAR.nations = [];
-  const myName = (($('warNick') && $('warNick').value) || '').trim().slice(0, 18) || 'the Keeper’s Own';
-  WAR.me = 0; WAR.nations.push(warNation(0, myName, true, rng));
-  for (let k = 1; k <= nBots; k++) WAR.nations.push(warNation(k, pickName(), false, rng));
+  const H0 = humans.length;
+  for (let k = 0; k < H0; k++) WAR.nations.push(warNation(k, String(humans[k]).slice(0, 18) || 'House ' + (k + 1), true, rng));
+  for (let k = 0; k < nBots; k++) WAR.nations.push(warNation(H0 + k, pickName(), false, rng));
+  WAR.me = clamp(opts.me | 0, 0, H0 - 1); WAR.nations[WAR.me].isMe = true;
   const N = WAR.nations.length;
   for (const n of WAR.nations) { n.rel = new Float32Array(N); for (let k = 0; k < N; k++) n.rel[k] = k === n.id ? 1 : (rng() - 0.5) * 0.4; }
   // the bots land now, spaced out; you choose yours (or get one when the time runs out)
   const taken = [];
-  for (let k = 1; k < N; k++) {
+  for (let k = H0; k < N; k++) {
     let best = -1;
     for (let tries = 0; tries < 400 && best < 0; tries++) { const i = (rng() * map.length) | 0; if (warGoodSpawn(i, taken)) best = i; }
     if (best < 0) for (let tries = 0; tries < 2000 && best < 0; tries++) { const i = (rng() * map.length) | 0; if (map[i] >= 2 && map[i] !== 4 && WAR.owner[i] === -1 && !WAR.regions[WAR.region[i]].light) best = i; }
@@ -204,27 +227,33 @@ function warStart(nBots, seed, diff) {
   }
   WAR.spawnTaken = taken; WAR.spawnT = WARC.SPAWN; WAR.spawnPick = -1;
   WAR.stats = { start: performance.now(), taken: 0, kills: 0, boats: 0, days: 0 };
-  warLog(`The Reach lies before you: ${WAR.regions.filter(r => r.bonus).length} great isles, ${nBots} nations, and the Light in the middle. Choose a landing.`);
+  warLog(`The Reach lies before you: ${WAR.regions.filter(r => r.bonus).length} great isles, ${N - 1} nations${H0 > 1 ? ` (${H0 - 1} of them played by people)` : ''}, and the Light in the middle. Choose a landing.`);
 }
 
 function warSpawnMe(i) {
   if (WAR.phase !== 'spawn' || i == null || !warGoodSpawn(i, WAR.spawnTaken)) return false;
   WAR.spawnPick = i; return true;
 }
+// everyone who plays lands: where they chose (if it is still free), or somewhere good
 function warBeginPlay() {
-  let i = WAR.spawnPick;
-  if (i < 0) { for (let tries = 0; tries < 4000 && i < 0; tries++) { const j = (WAR.rng() * WAR.map.length) | 0; if (warGoodSpawn(j, WAR.spawnTaken)) i = j; } }
-  if (i < 0) i = WAR.map.findIndex((v, j) => v >= 2 && v !== 4 && WAR.owner[j] === -1);
-  warClaimBlob(i, WAR.me, 2); WAR.nations[WAR.me].spawn = i;
+  if (WAR.phase !== 'spawn') return;
+  for (let h = 0; h < WAR.nHumans; h++) {
+    const n = WAR.nations[h];
+    let i = h === WAR.me ? WAR.spawnPick : (WAR.spawnPicks[h] != null ? WAR.spawnPicks[h] : -1);
+    if (i >= 0 && !warGoodSpawn(i, WAR.spawnTaken)) i = -1;
+    if (i < 0) { for (let tries = 0; tries < 4000 && i < 0; tries++) { const j = (WAR.rng() * WAR.map.length) | 0; if (warGoodSpawn(j, WAR.spawnTaken)) i = j; } }
+    if (i < 0) i = WAR.map.findIndex((v, j) => v >= 2 && v !== 4 && WAR.owner[j] === -1);
+    warClaimBlob(i, h, 2); n.spawn = i; n.cx = warX(i); n.cy = warY(i); WAR.spawnTaken.push(i);
+    warSay(n, `You land on ${warPlace(i)}. Your people are few; take the empty shore first.`);
+  }
   WAR.phase = 'play'; WAR.t = 0;
-  const r = WAR.regions[WAR.region[i]];
-  warLog(`You land on ${r.name}. Your people are few; take the empty shore first.`);
 }
 
 function warStop() {
   if (!WAR.on) return;
-  WAR.on = false; WAR.phase = 'off';
+  WAR.on = false; WAR.phase = 'off'; WAR.net = null;
   if (typeof warViewStop === 'function') warViewStop();
+  if (typeof wnAfterStop === 'function') wnAfterStop();
   state = 'title'; toTitle();
 }
 
@@ -239,7 +268,18 @@ function warFmt(v) {
 function warPlace(i) { const r = i >= 0 ? WAR.regions[WAR.region[i]] : null; return r ? r.name : 'the shoals'; }
 
 // ---------- the log ----------
-function warLog(text, kind) { WAR.log.push({ text, t: WAR.t, kind: kind || '' }); if (WAR.log.length > 60) WAR.log.shift(); WAR.logDirty = true; }
+// `to`: the nation it's meant for (-1, everyone); `not`: a nation that shouldn't see it. In a war played together the
+// host keeps every line for the stream, and each player sees the ones meant for them.
+function warLog(text, kind, to, not) {
+  if (to == null) to = -1; if (not == null) not = -1;
+  if (WAR.net === 'host') { WAR.netLogId = (WAR.netLogId || 0) + 1; WAR.netLog.push([WAR.netLogId, to, not, kind || '', String(text).slice(0, 180)]); if (WAR.netLog.length > 40) WAR.netLog.shift(); }
+  if ((to !== -1 && to !== WAR.me) || not === WAR.me) return;
+  WAR.log.push({ text, t: WAR.t, kind: kind || '' }); if (WAR.log.length > 60) WAR.log.shift(); WAR.logDirty = true;
+}
+// a line for one nation, if a person plays it
+function warSay(n, text, kind) { if (n && n.human) warLog(text, kind, n.id); }
+// a short notice for a person: on the map for this browser's player, in the log for the others
+function warTell(n, text) { if (!n || !n.human) return; if (n.isMe && typeof wvSay === 'function') wvSay(text); else warSay(n, text); }
 
 // ---------- structures ----------
 const WAR_COUNT = { harbour: 'harbours', tower: 'towers', beacon: 'beacons', city: 'cities', factory: 'factories' };
@@ -258,7 +298,7 @@ function warBuild(n, type, i) {
   WAR.structs.set(i, { type, owner: n.id, hp: 1, t: WAR.t });
   n[WAR_COUNT[type]] = (n[WAR_COUNT[type]] || 0) + 1;
   warRails();
-  if (n.isMe) warLog(type === 'city' ? `A city rises on ${warPlace(i)}: room for ${warFmt(WARC.CITY_POP)} more of your people.` : type === 'factory' ? `A factory opens on ${warPlace(i)}; its railroads run out to your cities.` : `You raise a ${type} on ${warPlace(i)}.`);
+  warSay(n, type === 'city' ? `A city rises on ${warPlace(i)}: room for ${warFmt(WARC.CITY_POP)} more of your people.` : type === 'factory' ? `A factory opens on ${warPlace(i)}; its railroads run out to your cities.` : `You raise a ${type} on ${warPlace(i)}.`);
   return '';
 }
 // railroads: each factory runs a line out to every one of its owner's cities within its reach, and the cities it
@@ -326,7 +366,7 @@ function warAttack(from, target, troops, landing, aim) {
   troops = Math.min(troops, a.troops); if (troops < 1) return null;
   if (target >= 0) {
     const d = WAR.nations[target]; if (!d || !d.alive) return null;
-    if (WAR.t < WARC.TRUCE) { if (a.isMe && typeof wvSay === 'function') wvSay(`The landing truce holds for ${Math.ceil(WARC.TRUCE - WAR.t)} s more.`); return null; }
+    if (WAR.t < WARC.TRUCE) { warTell(a, `The landing truce holds for ${Math.ceil(WARC.TRUCE - WAR.t)} s more.`); return null; }
     if (a.allies.has(target)) { warBreakPact(from, target, true); }
   }
   a.troops -= troops;
@@ -339,19 +379,20 @@ function warAttack(from, target, troops, landing, aim) {
     const d = WAR.nations[target];
     d.lastHit = from; d.lastHitT = WAR.t; d.rel[from] = Math.max(-1, d.rel[from] - 0.45);
     for (const n of WAR.nations) if (n.allies.has(target) && n.id !== from) n.rel[from] = Math.max(-1, n.rel[from] - 0.25);
-    if (a.isMe) warLog(`You march on ${d.name} with ${warFmt(troops)}.`); else if (d.isMe) warLog(`${a.name} attacks you with ${warFmt(troops)}.`, 'bad');
-  } else if (target === WARC.DR && a.isMe) warLog(`You go to take the drowned shore back (${warFmt(troops)}).`);
+    warSay(a, `You march on ${d.name} with ${warFmt(troops)}.`); warSay(d, `${a.name} attacks you with ${warFmt(troops)}.`, 'bad');
+  } else if (target === WARC.DR) warSay(a, `You go to take the drowned shore back (${warFmt(troops)}).`);
   return at;
 }
 // the tiles this attack can take next: the target's tiles next to the attacker's
 function warFrontier(at) {
-  const out = [], seen = WAR.frontSeen || (WAR.frontSeen = new Uint8Array(WAR.map.length)); seen.fill(0);
-  const own = at.from, tgt = at.target;
-  // walk the attacker's tiles along the border only: scan all tiles (25k, cheap enough at a few attacks)
-  for (let i = 0; i < WAR.map.length; i++) {
-    if (WAR.owner[i] !== own) continue;
+  const out = [], seen = WAR.frontSeen && WAR.frontSeen.length === WAR.map.length ? WAR.frontSeen : (WAR.frontSeen = new Uint8Array(WAR.map.length));
+  const own = at.from, tgt = at.target, mine = warOwnTiles(own);
+  // walk the attacker's own tiles (listed once a tick), and note the target's tiles beside them
+  for (let k = 0; k < mine.length; k++) {
+    const i = mine[k]; if (WAR.owner[i] !== own) continue;
     warNeighbours(i, j => { if (!seen[j] && warIsLand(j) && WAR.map[j] !== 4 && WAR.owner[j] === tgt) { seen[j] = 1; out.push(j); } });
   }
+  for (const j of out) seen[j] = 0;
   return out;
 }
 function warTileCost(at, j) {
@@ -381,8 +422,8 @@ function warTakeTile(j, to, from) {
       if (was) was[key] = Math.max(0, (was[key] || 0) - 1);
       now[key] = (now[key] || 0) + 1; s.owner = to; s.t = WAR.t;
       if (s.type === 'city' || s.type === 'factory') warRails();
-      if (now.isMe) warLog(`You take ${was ? was.name + '\u2019s' : 'a'} ${s.type} on ${warPlace(j)}. It is yours now.`, 'good');
-      else if (was && was.isMe) warLog(`${now.name} takes your ${s.type} on ${warPlace(j)}.`, 'bad');
+      warSay(now, `You take ${was ? was.name + '\u2019s' : 'a'} ${s.type} on ${warPlace(j)}. It is yours now.`, 'good');
+      warSay(was, `${now.name} takes your ${s.type} on ${warPlace(j)}.`, 'bad');
     } else warLoseStruct(j);   // fire, the drowned or the sea: gone
   }
 }
@@ -399,7 +440,7 @@ function warAttacksTick(dt) {
     at.prog += at.target === -1 ? dt * (2.2 + Math.sqrt(at.troops) * 0.4) * 9 : dt * (1.1 + Math.sqrt(at.troops) * 0.2) * (at.target === WARC.DR ? 1.5 : 1);
     let n = Math.floor(at.prog); if (n <= 0) continue; at.prog -= n;
     const front = warFrontier(at);
-    if (!front.length) { a.troops += at.troops * 0.9; WAR.attacks.splice(k, 1); if (a.isMe && at.taken > 0 && at.target >= 0) warLog(`No more of ${def.name}’s land within reach; your people fall back.`); continue; }
+    if (!front.length) { a.troops += at.troops * 0.9; WAR.attacks.splice(k, 1); if (at.taken > 0 && at.target >= 0) warSay(a, `No more of ${def.name}’s land within reach; your people fall back.`); continue; }
     // which border tiles go first: those nearest where the order was aimed (or, for a bot, nearest its middle, so it
     // grows round), and above all those already hemmed in by the attacker's land, so the border fills in
     // round instead of reaching out in thin lines
@@ -422,7 +463,7 @@ function warAttacksTick(dt) {
       const j = front[q], cost = warTileCost(at, j);
       // an advance into empty or drowned land keeps going on its own: it draws fresh people from the reserve
       // as it needs them, as long as more than a quarter of the cap is left at home
-      if (at.troops < cost && !def && a.isMe) {
+      if (at.troops < cost && !def && a.human) {
         const spare = a.troops - a.maxTroops * 0.12;
         if (spare > cost) { const top = Math.min(spare, Math.max(cost * 6, spare * 0.3)); a.troops -= top; at.troops += top; at.fed = (at.fed || 0) + top; at.waitT = 0; }
         else {
@@ -431,7 +472,7 @@ function warAttacksTick(dt) {
           if (at.waitT < 30) break;
         }
       }
-      if (at.troops < cost) { WAR.attacks.splice(k, 1); if (a.isMe) warLog(def ? `Your attack on ${def.name} is spent.` : at.fed ? 'Your advance halts: no one could be spared for half a minute.' : 'Your advance runs out of people.'); break; }
+      if (at.troops < cost) { WAR.attacks.splice(k, 1); warSay(a, def ? `Your attack on ${def.name} is spent.` : at.fed ? 'Your advance halts: no one could be spared for half a minute.' : 'Your advance runs out of people.'); break; }
       at.troops -= cost; at.taken++;
       if (def) def.troops = Math.max(0, def.troops - cost * 0.45);
       warTakeTile(j, at.from, at.target);
@@ -486,7 +527,8 @@ function warSendBoat(from, target, troops, kind) {
   else { troops = Math.min(troops, a.troops); if (troops < WARC.LANDING_MIN) return `A landing needs at least ${warFmt(WARC.LANDING_MIN)}.`; a.troops -= troops; }
   const s = path[0];
   WAR.boats.push({ from, target, troops, kind: kind || 'troops', path, i: 0, x: warX(s), y: warY(s), hp: 1, t: 0 });
-  if (a.isMe) { WAR.stats.boats++; warLog(kind === 'fire' ? 'A fire-ship puts out, low in the water.' : `A boat puts out with ${warFmt(troops)} aboard.`); }
+  if (a.isMe) WAR.stats.boats++;
+  { warSay(a, kind === 'fire' ? 'A fire-ship puts out, low in the water.' : `A boat puts out with ${warFmt(troops)} aboard.`); }
   return '';
 }
 function warBoatsTick(dt) {
@@ -500,12 +542,12 @@ function warBoatsTick(dt) {
       if (d <= step) { b.x = nx; b.y = ny; b.i++; step -= d; } else { b.x += (nx - b.x) / d * step; b.y += (ny - b.y) / d * step; step = 0; }
     }
     // the tide may have drowned or dried the road; and enemy watchtowers fire on passing boats
-    if (b.i < b.path.length - 1 && !warIsSea(b.path[b.i + 1])) { if (b.kind === 'troops') a.troops += b.troops * 0.8; WAR.boats.splice(k, 1); if (a.isMe) warLog('The tide has shut the channel; the boat turns back.', 'bad'); continue; }
+    if (b.i < b.path.length - 1 && !warIsSea(b.path[b.i + 1])) { if (b.kind === 'troops') a.troops += b.troops * 0.8; WAR.boats.splice(k, 1); warSay(a, 'The tide has shut the channel; the boat turns back.', 'bad'); continue; }
     for (const [i, s] of WAR.structs) {
       if (s.type !== 'tower' || s.owner === b.from || WAR.nations[s.owner].allies.has(b.from)) continue;
       if (Math.hypot(warX(i) - b.x, warY(i) - b.y) <= WARC.TOWER_R) { b.hp -= dt * (b.kind === 'fire' ? 0.3 : 0.12); b.troops *= 1 - dt * 0.1; b.hit = 0.3; }
     }
-    if (b.hp <= 0) { WAR.boats.splice(k, 1); if (a.isMe) warLog('Your boat is shot to pieces under a watchtower.', 'bad'); else if (WAR.owner[b.target] === WAR.me) warLog(`Your towers sink a boat of ${a.name}.`, 'good'); continue; }
+    if (b.hp <= 0) { WAR.boats.splice(k, 1); warSay(a, 'Your boat is shot to pieces under a watchtower.', 'bad'); warSay(WAR.nations[WAR.owner[b.target]], `Your towers sink a boat of ${a.name}.`, 'good'); continue; }
     if (b.i >= b.path.length - 1) {
       WAR.boats.splice(k, 1);
       const tgt = b.target, own = WAR.owner[tgt];
@@ -515,12 +557,12 @@ function warBoatsTick(dt) {
       if (!warIsLand(tgt)) { a.troops += b.troops * 0.8; continue; }
       // the landing: the shore tile is taken outright, and the fight spreads from it
       const cost = own >= 0 ? warTileCost({ target: own, from: b.from }, tgt) : 2;
-      if (b.troops < cost + 2) { if (a.isMe) warLog('The landing is thrown back into the sea.', 'bad'); continue; }
+      if (b.troops < cost + 2) { warSay(a, 'The landing is thrown back into the sea.', 'bad'); continue; }
       warTakeTile(tgt, b.from, own); b.troops -= cost;
-      if (own >= 0) { const d = WAR.nations[own]; d.troops = Math.max(0, d.troops - cost * 0.45); if (d.tiles <= 0) warEliminate(d, a); if (d.isMe) warLog(`${a.name} lands on your shore at ${warPlace(tgt)}!`, 'bad'); }
+      if (own >= 0) { const d = WAR.nations[own]; d.troops = Math.max(0, d.troops - cost * 0.45); if (d.tiles <= 0) warEliminate(d, a); warSay(d, `${a.name} lands on your shore at ${warPlace(tgt)}!`, 'bad'); }
       const at = warAttack(b.from, own, 0, tgt, tgt); a.troops -= 0;
       if (at) { at.troops += b.troops; at.sent += b.troops; } else a.troops += b.troops;
-      if (a.isMe) warLog(`Your people land on ${warPlace(tgt)}.`);
+      warSay(a, `Your people land on ${warPlace(tgt)}.`);
     }
   }
 }
@@ -533,10 +575,10 @@ function warFireship(b, a) {
     if (o >= 0) { hit.set(o, (hit.get(o) || 0) + 1); warTakeTile(j, -1, o); } else if (o === WARC.DR) WAR.owner[j] = -1;
     if (WAR.structs.has(j)) warLoseStruct(j);
   }
-  for (const [o, n] of hit) { const d = WAR.nations[o]; d.troops *= Math.max(0.2, 1 - n / Math.max(1, d.tiles + n) * 1.5); d.rel[a.id] = -1; if (d.tiles <= 0) warEliminate(d, a); if (d.isMe) warLog(`${a.name}’s fire-ship burns ${n} of your tiles at ${warPlace(b.target)}!`, 'bad'); }
+  for (const [o, n] of hit) { const d = WAR.nations[o]; d.troops *= Math.max(0.2, 1 - n / Math.max(1, d.tiles + n) * 1.5); d.rel[a.id] = -1; if (d.tiles <= 0) warEliminate(d, a); warSay(d, `${a.name}’s fire-ship burns ${n} of your tiles at ${warPlace(b.target)}!`, 'bad'); }
   WAR.flares.push({ x: x0, y: y0, t: WARC.FLARE_T * 0.6, fire: true, r: WARC.FIRE_R });
   WAR.events.push({ kind: 'boom', x: x0, y: y0, t: 1.2 });
-  if (a.isMe) warLog(`Your fire-ship goes up at ${warPlace(b.target)}: ${[...hit.values()].reduce((s, v) => s + v, 0)} tiles burnt.`, 'good');
+  warSay(a, `Your fire-ship goes up at ${warPlace(b.target)}: ${[...hit.values()].reduce((s, v) => s + v, 0)} tiles burnt.`, 'good');
 }
 
 // ---------- flares and the bell ----------
@@ -550,7 +592,7 @@ function warFlare(n, i) {
   for (let y = Math.max(0, y0 - WARC.FLARE_R); y <= Math.min(WARC.H - 1, y0 + WARC.FLARE_R); y++) for (let x = Math.max(0, x0 - WARC.FLARE_R); x <= Math.min(WARC.W - 1, x0 + WARC.FLARE_R); x++) {
     const j = warIdx(x, y); if (Math.hypot(x - x0, y - y0) <= WARC.FLARE_R && WAR.owner[j] === WARC.DR) WAR.owner[j] = -1;
   }
-  if (n.isMe) warLog('A flare bursts over the shore.');
+  warSay(n, 'A flare bursts over the shore.');
   return '';
 }
 function warBell(n) {
@@ -558,7 +600,7 @@ function warBell(n) {
   n.bell = WARC.BELL_T; n.bellCd = WARC.BELL_CD;
   // the rally: attacks on you lose heart (they pay more per tile while the bell is up), and your own forces at the front are heartened
   for (const at of WAR.attacks) if (at.from === n.id) at.troops *= 1.08;
-  if (n.isMe) warLog('The bell rings out over your land. Your people hold.');
+  warSay(n, 'The bell rings out over your land. Your people hold.');
   return '';
 }
 
@@ -574,7 +616,7 @@ function warBotWantsPact(n, bord, leader) {
   for (const [o, shared] of bord.out) {
     const e = WAR.nations[o]; if (!e.alive || n.allies.has(o) || (runaway && o === runaway.id) || fighting.includes(o)) continue;
     if (n.rel[o] < -0.25 || e.betrayed > 0 && n.rel[o] < 0.3) continue;
-    if (e.isMe && WAR.t - WAR.lastPromptT < 75) continue;
+    if (e.human && WAR.t - (e.lastPromptT == null ? -999 : e.lastPromptT) < 75) continue;
     let s = 0;
     if (fighting.length) s += 0.7 + Math.min(0.4, shared / 30);                         // cover the other border
     if (runaway && bord.out.has(runaway.id) && warBordersCached(o).has(runaway.id)) s += 0.8;   // stand together against the leader
@@ -608,16 +650,19 @@ function warBotAnswer(b, a) {
 }
 function warPropose(from, to) {
   const a = WAR.nations[from], b = WAR.nations[to]; if (!a.alive || !b.alive || a.allies.has(to)) return 'Already sworn.';
-  if (b.isMe) {
-    if (WAR.prompts.some(p => p.from === from) || WAR.t - WAR.lastPromptT < 75) return 'wait';
-    WAR.lastPromptT = WAR.t;
-    WAR.prompts.push({ from, t: 30, text: `${a.name} offers a pact: no war between you for four minutes.` });
-    warLog(`${a.name} offers you a pact.`);
+  if (b.human) {
+    // a person decides for themselves (a bot asks them at most every 75 s; another player whenever they like)
+    if (WAR.prompts.some(p => p.from === from && p.to === to)) return 'wait';
+    if (!a.human && WAR.t - (b.lastPromptT == null ? -999 : b.lastPromptT) < 75) return 'wait';
+    if (!a.human) b.lastPromptT = WAR.t;
+    WAR.prompts.push({ from, to, t: 30, text: `${a.name} offers a pact: no war between you for four minutes.` });
+    warSay(b, `${a.name} offers you a pact.`);
+    if (a.human) warSay(a, `Your offer goes to ${b.name}; they have half a minute to answer.`);
     return '';
   }
   const why = warBotAnswer(b, a);
   if (!why) { warMakePact(from, to); return ''; }
-  if (a.isMe) { b.rel[from] -= 0.05; warLog(`${b.name} refuses your pact: ${why}.`); }
+  if (a.human) { b.rel[from] -= 0.05; warSay(a, `${b.name} refuses your pact: ${why}.`); }
   return why;
 }
 function warMakePact(x, y) {
@@ -625,7 +670,7 @@ function warMakePact(x, y) {
   a.allies.set(y, until); b.allies.set(x, until);
   for (let k = WAR.attacks.length - 1; k >= 0; k--) { const at = WAR.attacks[k]; if ((at.from === x && at.target === y) || (at.from === y && at.target === x)) { WAR.nations[at.from].troops += at.troops; WAR.attacks.splice(k, 1); } }
   a.rel[y] = Math.min(1, a.rel[y] + 0.3); b.rel[x] = Math.min(1, b.rel[x] + 0.3);
-  if (a.isMe || b.isMe) warLog(`A pact is sworn with ${(a.isMe ? b : a).name}.`, 'good');
+  warSay(a, `A pact is sworn with ${b.name}.`, 'good'); warSay(b, `A pact is sworn with ${a.name}.`, 'good');
 }
 function warBreakPact(x, y, treachery) {
   const a = WAR.nations[x], b = WAR.nations[y];
@@ -633,13 +678,14 @@ function warBreakPact(x, y, treachery) {
   if (treachery) {
     a.betrayed++; b.rel[x] = -1;
     for (const n of WAR.nations) if (n.id !== x) n.rel[x] = Math.max(-1, n.rel[x] - 0.35);
-    warLog(a.isMe ? `You break your oath to ${b.name}. The Reach will remember.` : `${a.name} breaks its oath to ${b.name}.`, a.isMe ? 'bad' : '');
+    warSay(a, `You break your oath to ${b.name}. The Reach will remember.`, 'bad');
+    warLog(`${a.name} breaks its oath to ${b.name}.`, b.human ? 'bad' : '', -1, a.human ? a.id : -1);
   }
 }
 function warAnswerPrompt(p, yes) {
   const k = WAR.prompts.indexOf(p); if (k >= 0) WAR.prompts.splice(k, 1);
-  const a = WAR.nations[p.from]; if (!a.alive) return;
-  if (yes) warMakePact(p.from, WAR.me); else { a.rel[WAR.me] -= 0.15; warLog(`You turn ${a.name} away.`); }
+  const a = WAR.nations[p.from], to = p.to != null ? p.to : WAR.me, b = WAR.nations[to]; if (!a.alive || !b || !b.alive) return;
+  if (yes) warMakePact(p.from, to); else { a.rel[to] -= 0.15; warSay(b, `You turn ${a.name} away.`); warSay(a, `${b.name} turns your offer away.`); }
 }
 
 // ---------- the drowned and the tide ----------
@@ -657,7 +703,7 @@ function warDrownedTick(dt) {
       let sea = false, dr = false; warNeighbours(i, j => { if (warIsSea(j)) sea = true; if (WAR.owner[j] === WARC.DR) dr = true; });
       if (!(sea && WAR.rng() < 0.55) && !(dr && WAR.rng() < 0.35)) continue;
       if (WAR.lit[i] === 1 && WAR.rng() < 0.7) continue;
-      if (o >= 0) { const d = WAR.nations[o]; d.tiles--; d.lost++; d.troops = Math.max(0, d.troops - 1.5); if (WAR.t - d.drownedT > 25) { d.drownedT = WAR.t; if (d.isMe) warLog('The drowned are coming up on your dark shore.', 'bad'); } if (d.tiles <= 0) warEliminate(d, null); }
+      if (o >= 0) { const d = WAR.nations[o]; d.tiles--; d.lost++; d.troops = Math.max(0, d.troops - 1.5); if (WAR.t - d.drownedT > 25) { d.drownedT = WAR.t; warSay(d, 'The drowned are coming up on your dark shore.', 'bad'); } if (d.tiles <= 0) warEliminate(d, null); }
       WAR.owner[i] = WARC.DR; if (WAR.structs.has(i)) warLoseStruct(i);
     }
   } else {
@@ -676,7 +722,7 @@ function warTideTick(dt) {
     // the shoals drown: whoever stood on them loses them
     let lost = new Map();
     for (let i = 0; i < WAR.map.length; i++) if (WAR.map[i] === 1) { const o = WAR.owner[i]; if (o >= 0) { WAR.nations[o].tiles--; lost.set(o, (lost.get(o) || 0) + 1); } WAR.owner[i] = -1; if (WAR.structs.has(i)) warLoseStruct(i); }
-    for (const [o, n] of lost) { const d = WAR.nations[o]; if (d.isMe) warLog(`The tide comes in: ${n} tiles of shoal go under.`, 'bad'); if (d.tiles <= 0) warEliminate(d, null); }
+    for (const [o, n] of lost) { const d = WAR.nations[o]; warSay(d, `The tide comes in: ${n} tiles of shoal go under.`, 'bad'); if (d.tiles <= 0) warEliminate(d, null); }
     warLog('High water. The shoals are under the sea; the islands stand apart.');
   } else warLog('Low water. The shoals dry out: the islands are joined.');
   // boats whose road just closed turn back on their next step (handled in warBoatsTick)
@@ -697,7 +743,7 @@ function warGrowth(dt) {
     n.gold += (0.35 + n.tiles * 0.011 + n.harbours * 0.4 + (n.light ? 1.5 : 0) + n.regionsHeld * 0.3 + ((n.cities || 0) + (n.railCities || 0)) * WARC.CITY_GOLD) * dt * (n.bot ? WAR.D.gold : 1);
     if (n.reqCd > 0) n.reqCd -= dt; if (n.bot && n.bot.pactCd > 0) n.bot.pactCd -= dt;
     if (n.bell > 0) n.bell -= dt; if (n.bellCd > 0) n.bellCd -= dt; if (n.flareCd > 0) n.flareCd -= dt; if (n.fireCd > 0) n.fireCd -= dt;
-    for (const [k, until] of n.allies) if (WAR.t > until) { warBreakPact(n.id, k, false); if (n.isMe) warLog(`Your pact with ${WAR.nations[k].name} has run its course.`); }
+    for (const [k, until] of n.allies) if (WAR.t > until) { warBreakPact(n.id, k, false); warSay(n, `Your pact with ${WAR.nations[k].name} has run its course.`); }
     for (let k = 0; k < n.rel.length; k++) if (k !== n.id) n.rel[k] += (0 - n.rel[k]) * dt * 0.004;
   }
 }
@@ -713,9 +759,9 @@ function warSurvey() {
 // ---------- the bots ----------
 function warBorders(id) {
   // which nations' land touches this one's, and whether empty land or the drowned do
-  const out = new Map(); let neutral = 0, dr = 0;
-  for (let i = 0; i < WAR.map.length; i++) {
-    if (WAR.owner[i] !== id) continue;
+  const out = new Map(); let neutral = 0, dr = 0; const mine = warOwnTiles(id);
+  for (let k = 0; k < mine.length; k++) {
+    const i = mine[k]; if (WAR.owner[i] !== id) continue;
     warNeighbours(i, j => { if (!warIsLand(j) || WAR.map[j] === 4) return; const o = WAR.owner[j]; if (o === -1) neutral++; else if (o === WARC.DR) dr++; else if (o !== id) out.set(o, (out.get(o) || 0) + 1); });
   }
   return { out, neutral, dr };
@@ -745,7 +791,7 @@ function warBotTick(n, dt) {
       let s = (my / Math.max(20, e.troops)) * (0.6 - n.rel[o]) * (0.5 + b.aggr) * Math.min(1, shared / 6);
       if (leader && o === leader.id && leader.tiles > WAR.landTiles * 0.22) s *= 1.8;
       if (e.bell > 0) s *= 0.5;
-      if (e.isMe) s *= D.vsMe;
+      if (e.human) s *= D.vsMe;
       // the cleverer the bot, the more it weighs how thin the enemy's border is held, and whether they're busy elsewhere
       s *= 1 + D.smart * (Math.min(1.5, my / Math.max(20, e.troops)) - 0.5 + (WAR.attacks.some(a => a.from === e.id && a.target !== n.id) ? 0.4 : 0));
       if (s > bs) { bs = s; best = e; }
@@ -826,6 +872,14 @@ function warFinish(how, by) {
   if (typeof warShowResult === 'function') warShowResult(WAR.result);
 }
 
+// a war played together is over (WAR.over: the nation that won it): each player's own ending
+function warNetEnd() {
+  if (WAR.over == null || WAR.result) return;
+  const me = WAR.nations[WAR.me];
+  if (WAR.over === WAR.me) warFinish('won');
+  else if (me.alive) warFinish('beaten', WAR.nations[WAR.over]);
+}
+
 // ---------- the clock ----------
 function warTick(dt) {
   if (WAR.phase === 'spawn') {
@@ -834,7 +888,7 @@ function warTick(dt) {
     return;
   }
   if (WAR.phase !== 'play' || WAR.paused) return;
-  WAR.t += dt;
+  WAR.t += dt; WAR.tickNo++;
   const day = Math.floor(WAR.t / WARC.DAY) + 1; if (day !== WAR.day) { WAR.day = day; WAR.stats.days = day; if (day > 1) warLog(`Day ${day} breaks over the Reach.`); }
   WAR.beam += dt * 6.283 / WARC.BEAM_TURN;
   WAR.relT = (WAR.relT || 0) + dt; if (WAR.relT > 0.2) { WAR.relT = 0; warRelight(); }
@@ -845,16 +899,29 @@ function warTick(dt) {
   warDrownedTick(dt);
   for (let k = WAR.flares.length - 1; k >= 0; k--) { WAR.flares[k].t -= dt; if (WAR.flares[k].t <= 0) WAR.flares.splice(k, 1); }
   for (let k = WAR.events.length - 1; k >= 0; k--) { WAR.events[k].t -= dt; if (WAR.events[k].t <= 0) WAR.events.splice(k, 1); }
-  for (let k = WAR.prompts.length - 1; k >= 0; k--) { WAR.prompts[k].t -= dt; if (WAR.prompts[k].t <= 0) { const p = WAR.prompts.splice(k, 1)[0]; WAR.nations[p.from].rel[WAR.me] -= 0.05; } }
+  for (let k = WAR.prompts.length - 1; k >= 0; k--) { WAR.prompts[k].t -= dt; if (WAR.prompts[k].t <= 0) { const p = WAR.prompts.splice(k, 1)[0]; WAR.nations[p.from].rel[p.to != null ? p.to : WAR.me] -= 0.05; } }
   WAR.survT = (WAR.survT || 0) + dt; if (WAR.survT > 1) { WAR.survT = 0; warSurvey(); }
   for (const n of WAR.nations) if (n.alive && n.bot) warBotTick(n, dt);
   // the end: most of the Reach is yours, or you are the last standing
+  if (WAR.net === 'host') {
+    // played together: the war ends for everyone when one nation holds most of the Reach or stands alone, or when no one who plays is left
+    if (WAR.over == null) {
+      const alive = WAR.nations.filter(n => n.alive), top = alive.reduce((m, n) => !m || n.tiles > m.tiles ? n : m, null);
+      if (top && (top.tiles >= WAR.landTiles * 0.6 || alive.length === 1 || !alive.some(n => n.human))) { WAR.over = top.id; warLog(`${top.name} ${alive.length === 1 ? 'stand alone' : 'hold the Reach'}. The war is over.`, 'good'); }
+    }
+    warNetEnd();
+    return;
+  }
   const me = WAR.nations[WAR.me];
   if (!WAR.result && me.alive && (me.tiles >= WAR.landTiles * 0.6 || WAR.nations.every(n => n.isMe || !n.alive))) warFinish('won');
 }
 // several ticks per frame at speed; capped so a slow phone doesn't spiral
 function warFrame(dt) {
-  const steps = WAR.speed, h = Math.min(dt, 0.05);
-  for (let k = 0; k < steps; k++) warTick(h);
+  if (WAR.net === 'client') { if (typeof warNetClientTick === 'function') warNetClientTick(Math.min(dt, 0.1)); }
+  else {
+    const steps = WAR.net ? 1 : WAR.speed, h = Math.min(dt, 0.05);
+    for (let k = 0; k < steps; k++) warTick(h);
+    if (WAR.net === 'host' && typeof warNetHostTick === 'function') warNetHostTick(dt);
+  }
   if (typeof warDraw === 'function') warDraw(dt);
 }

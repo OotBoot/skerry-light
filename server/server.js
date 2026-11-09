@@ -69,19 +69,31 @@ function cleanPresence(p) {
 }
 
 const onIsland = c => !!(c.presence && c.presence.fps);
+// The Drowned Reach played together: everyone in one war hears everyone else in it at full rate
+const warRoom = c => (c.presence && c.presence.war && typeof c.presence.war.room === 'string' ? c.presence.war.room : null);
+// ...and everyone else only hears enough of a war to list it in the lobby, not the host's stream of the map
+function warLite(p) {
+  const w = p.war; if (!w || typeof w !== 'object') return p;
+  const lite = { room: w.room, sid: w.sid, nick: w.nick, at: w.at };
+  if (w.lob) lite.lob = w.lob; if (w.st && typeof w.st === 'object') lite.st = { g: w.st.g };
+  return Object.assign({}, p, { war: lite });
+}
 const crewOf = c => (c.presence && typeof c.presence.crew === 'string' ? c.presence.crew : null);
 
 function relay(from) {
   const msg = JSON.stringify({ t: 'state', peer: from.id, presence: from.presence });
+  const room = warRoom(from);
+  let liteMsg = null; const lite = () => liteMsg || (liteMsg = JSON.stringify({ t: 'state', peer: from.id, presence: warLite(from.presence) }));
   const crew = crewOf(from);
   const now = Date.now();
   for (const c of clients.values()) {
     if (c === from) continue;
     const mate = (crew && (crewOf(c) === crew || c.lastCrewSeen.get(from.id) === crew)) ||
       // Wreckers' Night: everyone on the island hears everyone else at full rate
-      (onIsland(from) && onIsland(c));
+      (onIsland(from) && onIsland(c)) ||
+      (room && warRoom(c) === room);
     if (mate || now - (c.lastLobbySend.get(from.id) || 0) >= LOBBY_INTERVAL_MS) {
-      send(c, msg);
+      send(c, mate || !room ? msg : lite());
       c.lastLobbySend.set(from.id, now);
       c.lastCrewSeen.set(from.id, crew);
       c.pending.delete(from.id);
@@ -99,7 +111,7 @@ setInterval(() => {
       const from = clients.get(id);
       if (!from) { c.pending.delete(id); continue; }
       if (now - (c.lastLobbySend.get(id) || 0) < LOBBY_INTERVAL_MS) continue;
-      send(c, { t: 'state', peer: id, presence: from.presence });
+      send(c, { t: 'state', peer: id, presence: warRoom(from) && warRoom(from) !== warRoom(c) ? warLite(from.presence) : from.presence });
       c.lastLobbySend.set(id, now);
       c.lastCrewSeen.set(id, crewOf(from));
       c.pending.delete(id);

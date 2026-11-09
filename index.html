@@ -148,9 +148,9 @@
     <div class="card warcard" id="warTitle" aria-labelledby="warHead">
       <div class="cardtop"><span class="eyebrow">A third game · one against many · a war for the islands</span></div>
       <h1 id="warHead">The Drowned Reach</h1>
-      <p>Land on an archipelago of skerries and take it. Your people grow with the land you hold; send a share of them against the empty shore, then against your neighbours, tile by tile. Boats carry landings to other islands. Gold raises cities, factories and their railroads, harbours, watchtowers and beacons, and buys flares and fire-ships. Sixteen nations (or up to forty) want the same islands, the tide opens and shuts the shoal roads between them, and at night the drowned come up on any shore the Light doesn’t reach.</p>
+      <p>Land on an archipelago of skerries and take it. Your people grow with the land you hold; send a share of them against the empty shore, then against your neighbours, tile by tile. Boats carry landings to other islands. Gold raises cities, factories and their railroads, harbours, watchtowers and beacons, and buys flares and fire-ships. Sixteen nations (or up to fifty) want the same islands, the tide opens and shuts the shoal roads between them, and at night the drowned come up on any shore the Light doesn’t reach.</p>
       <div class="warsetup">
-        <label>Nations against you <output id="warBotsOut">16</output><input id="warBots" type="range" min="4" max="40" value="16"></label>
+        <label>Nations against you <output id="warBotsOut">16</output><input id="warBots" type="range" min="1" max="50" value="16"></label>
         <label for="warDiff">How they play <select id="warDiff"><option value="easy">Easy: slow to grow, slow to anger</option><option value="normal" selected>Normal</option><option value="hard">Hard: quicker, richer, cleverer</option><option value="brutal">Brutal: they come for you</option></select></label>
         <div class="nickrow"><label for="warNick">Your house</label><input id="warNick" type="text" maxlength="18" autocomplete="off" placeholder="the Keeper’s Own"></div>
         <div class="nickrow"><label for="warSeed">Map word <small>(optional: the same word gives the same islands)</small></label><input id="warSeed" type="text" maxlength="24" autocomplete="off" placeholder="any word"></div>
@@ -159,12 +159,28 @@
         <button class="primary" id="warPlay" type="button">Make landfall</button>
       </div>
       <p class="muted" id="warRecord"></p>
+      <section class="warmp" id="warMp" aria-labelledby="warMpHead">
+        <h2 id="warMpHead">Play together</h2>
+        <p class="muted" id="warMpNote">Looking for other players…</p>
+        <div id="warMpOpen" hidden>
+          <div class="btnrow"><button class="tool" id="warMpHost" type="button">Host a war</button></div>
+          <div class="warlobbies" id="warLobbies"></div>
+        </div>
+        <div class="warlobby" id="warLobby" hidden>
+          <h3 id="warLobbyHead">Your war</h3>
+          <ol class="warlobbylist" id="warLobbyList"></ol>
+          <label class="warmpbots" id="warMpBotsRow">Bot nations <output id="warMpBotsOut">16</output><input id="warMpBots" type="range" min="0" max="50" value="16"></label>
+          <p class="muted" id="warLobbyMsg"></p>
+          <div class="btnrow"><button class="primary" id="warMpStart" type="button">Start the war</button><button class="tool" id="warMpLeave" type="button">Leave</button></div>
+        </div>
+      </section>
       <details class="howto">
         <summary>How to play</summary>
         <p><b>Land.</b> When the map opens, tap open land on a big island to mark your landing (or let the clock run and be put somewhere). Your people grow on their own; the more land you hold the faster, up to a limit the land sets. Gold comes in with land, harbours and whole islands.</p>
         <p><b>Fight.</b> The slider sets what share of your people an order sends. Tap empty land, drowned land or an enemy’s land that touches yours to march on it; the force spreads along the border and takes tiles until it is spent. Hills, watchtowers and a ringing bell make tiles dearer to take. Tap a shore across the water and a boat carries the force there instead (a landing needs at least 25). Enemy watchtowers fire on passing boats.</p>
         <p><b>Build.</b> City: room for 250K more people (people are counted in thousands), a little faster growth, and gold. Factory: lays railroads to every city of yours within 16 tiles and joins them; cities on a railroad pay double gold. Harbour: gold, light on the shore, and fire-ships. Watchtower: tiles near it cost attackers far more, and it fires on boats. Beacon: light that keeps the drowned off the shore round it. Flare: bursts over a spot, lights it for a while and clears the drowned there. Fire-ship: sails from a harbour and burns everything round where it lands, friend or foe. Bell: your people hold for a while, dearly.</p>
         <p><b>The Reach.</b> The Light’s beam sweeps the map; the nation holding the Light’s rock is the Keeper, and gets gold and safe shores. At night the drowned rise on dark shores and take the land into the dark; by day they sink back and leave it empty. The tide turns every ninety seconds: at low water the shoals dry into land bridges, at high water they drown and anyone on them loses them. Hold a whole great isle for a bonus (✦). Pacts last four minutes; break one and every nation remembers.</p>
+        <p><b>Together.</b> Host a war and the others here can join it, up to ten players, with none to fifty bot nations. The host starts it whenever they like. Everyone chooses a landing and taps Ready; you all land when everyone is ready or the clock runs out. Players can swear pacts with each other as with the bots (each offer waits half a minute for an answer). The war runs at one speed and doesn’t pause, and it ends for everyone when one nation holds most of the Reach or stands alone. If a player leaves, their nation fights on by itself; if the host leaves, the war ends.</p>
         <p><b>Keys:</b> drag or arrows to pan · wheel or +/- to zoom · Q/E the share · C city · V factory · H harbour · T tower · G beacon · F flare · X fire-ship · B bell · Space pause · 1/2/3 speed · Enter land now · Tab the leaderboard on a phone · Esc menu. <b>Touch:</b> drag to pan, pinch to zoom, tap to order.</p>
       </details>
     </div>
@@ -476,6 +492,7 @@
 <script src="src/fpsbody.js"></script>
 <script src="src/war.js"></script>
 <script src="src/warview.js"></script>
+<script src="src/warnet.js"></script>
 <script src="src/wcrates.js"></script>
 <script src="src/main.js"></script>
 </body>

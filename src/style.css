@@ -858,3 +858,21 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 .warpact.ally small { color: #a8dcc8; }
 @media (max-width: 720px) { #warUI .warpactsbtn span { display: none; } #warUI .warpactsbtn { padding: 0; width: 44px; justify-content: center; } .warpacts { max-height: calc(100dvh - 260px); } }
 @media (orientation: landscape) and (max-height: 520px) { .warpacts { max-height: calc(100dvh - 110px); top: calc(max(8px, env(safe-area-inset-top, 0px)) + 40px); } }
+
+/* The Drowned Reach, together: the lobby on the title card */
+.warspeed[hidden] { display: none; }
+.warmp { border-top: 1px solid var(--rule); padding-top: 12px; display: flex; flex-direction: column; gap: 10px; }
+.warmp h2 { margin: 0; font-family: var(--log); font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: #a8dcc8; font-weight: normal; }
+.warmp h3 { margin: 0; font-size: 16px; color: var(--ink); font-weight: normal; }
+.warmp [hidden] { display: none !important; }
+.warlobbies { display: flex; flex-direction: column; gap: 6px; }
+.warlobbyrow { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 12px; text-align: left; font: inherit; color: var(--ink); background: rgba(120,180,160,0.08); border: 1px solid rgba(120,180,160,0.35); padding: 10px 12px; cursor: pointer; min-height: 44px; }
+.warlobbyrow:hover:not(:disabled) { background: rgba(120,180,160,0.16); }
+.warlobbyrow:focus-visible { outline: 2px solid var(--lamp); outline-offset: 2px; }
+.warlobbyrow:disabled { opacity: 0.55; cursor: default; }
+.warlobbyrow small { font-family: var(--log); font-size: 11px; color: var(--muted); }
+.warlobby { display: flex; flex-direction: column; gap: 10px; }
+.warlobbylist { margin: 0; padding-left: 22px; font-family: var(--log); font-size: 13px; color: var(--muted); display: flex; flex-direction: column; gap: 3px; }
+.warlobbylist li.me { color: var(--lamp); }
+.warmpbots { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; font-family: var(--log); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.warmpbots output { color: var(--ink); }

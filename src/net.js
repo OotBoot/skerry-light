@@ -113,6 +113,7 @@ function onPeersChange(change) {
   NET.peers = out.concat([...bySid.values()]);
   syncMates();
   checkLaunch();
+  if (typeof warNetPeers === 'function') warNetPeers();
 }
 
 // ---------- crew bookkeeping ----------
