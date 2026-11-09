@@ -50,5 +50,9 @@ const SFX_FILES = {
   swish: ['assets/sfx/swish_1.mp3', 'assets/sfx/swish_2.mp3'],
   tear: ['assets/sfx/tear_1.mp3', 'assets/sfx/tear_2.mp3'],
   thunder: ['assets/sfx/thunder_1.mp3'],
+  vo_double: ['assets/sfx/vo_double_1.mp3'],
+  vo_flash: ['assets/sfx/vo_flash_1.mp3'],
+  vo_keg: ['assets/sfx/vo_keg_1.mp3'],
+  vo_spot: ['assets/sfx/vo_spot_1.mp3'],
   wind: ['assets/sfx/wind_1.mp3'],
 };
