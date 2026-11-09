@@ -289,9 +289,9 @@ function fbWeapon(F, id, plain) {
 function fbIn(F, obj) { obj.updateWorldMatrix(true, false); return F.spine.worldToLocal(obj.getWorldPosition(new THREE.Vector3())); }
 
 // pose a figure. s: where they are (x, y, jz, vz, h heading, p pitch), how fast they're going (spd), their stride
-// (ph), the weapon (id) and whether it's theirs to skin (plain), its kick (rec 0..1), being drawn (draw 0..1), a
-// reload's tip (rl 0..1), a cutlass cut (slash 0..1, or -1), the lantern (lan), how well they're lit (see) and
-// how solid they are (op), and the time (t)
+// (ph), the weapon (id) and whether it's theirs to skin (plain), how many times it's been reforged at the Lighthouse's
+// Bench (pap), its kick (rec 0..1), being drawn (draw 0..1), a reload's tip (rl 0..1), a cutlass cut (slash 0..1,
+// or -1), the lantern (lan), how well they're lit (see) and how solid they are (op), and the time (t)
 function fbPose(F, s) {
   const dt = s.dt, root = F.root; root.visible = true;
   root.position.set(s.x, FPSC.GROUND + (s.jz || 0), -s.y);
@@ -320,6 +320,7 @@ function fbPose(F, s) {
   const aim = F.aim; aim.position.set(0.2, 0.46, 0); aim.rotation.set(p * 0.7, -F.spine.rotation.y, 0);
   const id = s.id, wp = fbWeapon(F, id, s.plain), wdef = FPSW[id] || FPSW.pepperbox;
   for (const k in F.wpn) F.wpn[k].root.visible = k === id;
+  if (typeof zmpSkinFor === 'function') zmpSkinFor(wp, id, s.pap | 0);   // [pap] reforged at the Lampwright's Bench: the Light's fire
   const rec = s.rec || 0, draw = s.draw || 0, rl = s.rl || 0;
   const long = id === 'blunderbuss' || id === 'longarm' || id === 'harpoon' || id === 'avtomat' || id === 'fresnel';
   if (wdef.melee) {
@@ -407,7 +408,7 @@ function fpsBodySync(show) {
   F.lx = m.x; F.ly = m.y;
   fbPose(F, {
     dt, x: m.x, y: m.y, jz: m.jz, vz: m.vz, h: m.h, p: m.p, spd: F.spd, ph: FPS.step || 0, landed: FPS.landed,
-    id: FPS.weapon, plain: false, rec: Math.max(0, (FPS.meFlashT || 0) / 0.12), draw: Math.max(0, (FPS.drawT || 0) / 0.45),
+    id: FPS.weapon, plain: false, pap: typeof zmpTier === 'function' && ZM.on ? zmpTier(FPS.weapon) : 0, rec: Math.max(0, (FPS.meFlashT || 0) / 0.12), draw: Math.max(0, (FPS.drawT || 0) / 0.45),
     rl: m.reload > 0 ? Math.sin(Math.min(1, 1 - m.reload / w.reload) * Math.PI) : 0,
     slash: (FPS.meSlashT || 0) > 0 ? 1 - FPS.meSlashT / 0.3 : -1, lan: !!m.lan, t: g.t,
     // lit by the beam and your lantern like everything else; and see-through when the camera's squeezed up close
@@ -447,7 +448,7 @@ function fpsFiguresSync() {
     const id = (typeof FPSW_BY_CODE !== 'undefined' && FPSW_BY_CODE[o.w]) || 'pepperbox';
     fbPose(F, {
       dt, x: o.x, y: o.y, jz: o.jz || 0, vz: 0, h: o.h || 0, p: o.p || 0, spd: F.spd, ph: F.ph,
-      id, plain: true, rec: Math.max(0, Math.min(1, (o.flashT || 0) / 0.12)), draw: 0, rl: 0,
+      id, plain: true, pap: o.rf | 0, rec: Math.max(0, Math.min(1, (o.flashT || 0) / 0.12)), draw: 0, rl: 0,
       slash: (o.slashT || 0) > 0 ? 1 - o.slashT / 0.3 : -1, lan: !!o.lan, t: g.t,
       see: 0.25 + 0.75 * Math.min(1, vis), op: Math.min(1, vis * 1.2),
     });

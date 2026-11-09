@@ -20,7 +20,8 @@
 // Going down together: three-quarters of a minute on the floor (ZM_DOWN), still firing a pepperbox, where a friend
 // holding Use beside you gets you up; bleed out and you're back next round with a pepperbox. Each player's presence
 // carries their own clock on the floor (`dn`) and whom they're getting up and how far along (`rv`), so the one down,
-// the one helping and everyone else see the same. The night is over when nobody is left standing.
+// the one helping and everyone else see the same; and how many times the weapon in their hands has been reforged at
+// the Bench (`rf`), so the others see it alight. The night is over when nobody is left standing.
 
 const ZN = { code: null, at: 0, doneG: null, msg: '', g: null, sendT: 0, hseq: 0, seq: 0, q: [], hq: [], hits: new Map(), shots: [], shotSeq: 0,
   lastQ: {}, lastH: {}, lastShot: {}, seenT: {}, ev: [], eseq: 0, evSeen: 0, lastHseq: -1, hostT: 0, creditSeen: [0, 0, 0], lobT: 0 };
@@ -181,6 +182,8 @@ function znPresence() {
   z.g = ZN.g; z.p = znMe(); z.pt = ZM.pts;
   z.c = fpsColours(); z.o = typeof ocEquippedId === 'function' ? ocEquippedId() || '' : '';
   if (ZN.shots.length) z.sh = ZN.shots.slice(-4);
+  // the weapon in my hands reforged at the Bench: how many times (so the others see it alight)
+  { const rf = typeof zmpTier === 'function' ? zmpTier(FPS.weapon) : 0; if (rf) z.rf = rf; }
   // down: how long I've left on the floor (tenths); getting someone up: who, and how far along (hundredths)
   if (ZM.downT > 0) z.dn = Math.ceil(ZM.downT * 10);
   if (ZM.revOf && ZM.revT > 0) z.rv = [ZM.revOf, Math.round(ZM.revT / ZM_DOWN.REV * 100)];
@@ -224,6 +227,7 @@ function znReadPlayers(dt) {
     r.c = Array.isArray(z.c) ? z.c.slice(0, 4).map(c => typeof c === 'string' ? c.slice(0, 9) : '#3a2a1e') : null;
     r.o = typeof z.o === 'string' ? z.o.slice(0, 24) : '';
     r.pts = Math.max(0, z.pt | 0);
+    r.rf = clamp(z.rf | 0, 0, 99);
     r.dn = r.down ? clamp(+z.dn || 0, 0, ZM_DOWN.T * 10) / 10 : 0;
     r.rv = Array.isArray(z.rv) && typeof z.rv[0] === 'string' ? [z.rv[0], clamp(+z.rv[1] || 0, 0, 100) / 100] : null;
     r.hm = clamp(z.hm | 0 || ZMC.HP, 1, 12); r.hp = z.hp == null ? null : clamp(+z.hp || 0, 0, r.hm);
