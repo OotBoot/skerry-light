@@ -63,7 +63,7 @@ VM_BUILD.duckfoot = (M) => {
   const hand = vmHand(VM.H, false); hand.position.set(0.01, -0.035, 0.055); root.add(hand);
   const muzzle = new THREE.Object3D(); muzzle.position.set(0, 0.04, -0.25); root.add(muzzle);
   const fresh = zxvCharger(M); fresh.visible = false; root.add(fresh);
-  return { root, M, hand, hammer, trig, muzzle, fresh, barrels, pose: { x: 0.055, y: -0.14, z: -0.31, rx: 0.12, ry: 0.09, rz: -0.07 }, smoke: 6, flashK: 1.5 };
+  return { root, M, hand, hammer, trig, muzzle, fresh, barrels, pose: { x: 0.055, y: -0.14, z: -0.31, rx: 0.12, ry: 0.09, rz: -0.07 }, smoke: 2, flashK: 0.9 };
 };
 VM_ANIM.duckfoot = (w, S) => {
   const p = S.p;
@@ -112,7 +112,7 @@ VM_BUILD.bomblance = (M) => {
   const left = vmHand(VM.H, true); left.position.set(-0.02, 0.0, -0.27); left.rotation.set(0.3, 0, 0.5); root.add(left);
   const fresh = zxvLance(M); fresh.visible = false; root.add(fresh);
   const muzzle = new THREE.Object3D(); muzzle.position.set(0, 0.055, -0.45); root.add(muzzle);
-  return { root, M, hand, left, lance, fresh, hammer, trig, muzzle, pose: { x: 0.065, y: -0.18, z: -0.44, rx: 0.09, ry: 0.08, rz: -0.05 }, smoke: 4, flashK: 1.1 };
+  return { root, M, hand, left, lance, fresh, hammer, trig, muzzle, pose: { x: 0.065, y: -0.18, z: -0.44, rx: 0.09, ry: 0.08, rz: -0.05 }, smoke: 2, flashK: 0.8 };
 };
 VM_ANIM.bomblance = (w, S) => {
   const p = S.p;
@@ -176,7 +176,7 @@ VM_BUILD.grapnel = (M) => {
   const hand = vmHand(VM.H, false); hand.position.set(0.0, -0.05, 0.02); root.add(hand);
   const left = vmHand(VM.H, true); left.position.set(-0.02, -0.04, -0.2); left.rotation.set(0.3, 0, 0.5); root.add(left);
   const muzzle = new THREE.Object3D(); muzzle.position.set(0, 0.055, -0.33); root.add(muzzle);
-  return { root, M, hand, left, hook, drum, crank, lever, line, trig, muzzle, pose: { x: 0.07, y: -0.17, z: -0.4, rx: 0.08, ry: 0.08, rz: -0.05 }, smoke: 2, flashK: 0.6 };
+  return { root, M, hand, left, hook, drum, crank, lever, line, trig, muzzle, pose: { x: 0.07, y: -0.17, z: -0.4, rx: 0.08, ry: 0.08, rz: -0.05 }, smoke: 1, flashK: 0.5 };
 };
 VM_ANIM.grapnel = (w, S) => {
   const p = S.p;
@@ -235,7 +235,7 @@ VM_BUILD.flaregun = (M) => {
   const spent = zxvShell(M), fresh = zxvShell(M); spent.visible = fresh.visible = false; root.add(spent); root.add(fresh);
   spent.children[0].material = M.dark;
   const muzzle = new THREE.Object3D(); muzzle.position.set(0, 0.026, -0.17); brl.add(muzzle);
-  return { root, M, hand, brl, shell, hammer, trig, spent, fresh, muzzle, pose: { x: 0.05, y: -0.14, z: -0.29, rx: 0.12, ry: 0.1, rz: -0.07 }, smoke: 5, flashK: 1.7 };
+  return { root, M, hand, brl, shell, hammer, trig, spent, fresh, muzzle, pose: { x: 0.05, y: -0.14, z: -0.29, rx: 0.12, ry: 0.1, rz: -0.07 }, smoke: 1, flashK: 0.8 };
 };
 VM_ANIM.flaregun = (w, S) => {
   const p = S.p;
@@ -341,7 +341,7 @@ VM_BUILD.puntgun = (M) => {
   const left = vmHand(VM.H, true); left.position.set(-0.01, -0.01, -0.34); left.rotation.set(0.3, 0, 0.5); root.add(left);
   const muzzle = new THREE.Object3D(); muzzle.position.set(0, 0.05, -1.18); root.add(muzzle);
   const panAt = new THREE.Object3D(); panAt.position.set(0.03, 0.085, 0.0); root.add(panAt);
-  return { root, M, hand, left, hammer, cap, trig, rod, flask, bag, muzzle, panAt, pose: { x: 0.085, y: -0.19, z: -0.5, rx: 0.06, ry: 0.06, rz: -0.05 }, smoke: 10, flashK: 2.2 };
+  return { root, M, hand, left, hammer, cap, trig, rod, flask, bag, muzzle, panAt, pose: { x: 0.085, y: -0.19, z: -0.5, rx: 0.06, ry: 0.06, rz: -0.05 }, smoke: 4, flashK: 1.3 };
 };
 VM_ANIM.puntgun = (w, S) => {
   const p = S.p;
@@ -411,7 +411,7 @@ VM_BUILD.netmortar = (M) => {
   const left = vmHand(VM.H, true); left.position.set(-0.03, 0.0, -0.13); left.rotation.set(0.3, 0, 0.6); root.add(left);
   const fresh = zxvNet(M); fresh.visible = false; root.add(fresh);
   const muzzle = new THREE.Object3D(); muzzle.position.set(0, 0.0, -0.24); tube.add(muzzle);
-  return { root, M, hand, left, tube, net, lever, trig, fresh, muzzle, pose: { x: 0.07, y: -0.18, z: -0.4, rx: 0.06, ry: 0.08, rz: -0.05 }, smoke: 4, flashK: 0.9 };
+  return { root, M, hand, left, tube, net, lever, trig, fresh, muzzle, pose: { x: 0.1, y: -0.2, z: -0.42, rx: 0.06, ry: 0.08, rz: -0.05 }, smoke: 1, flashK: 0.6 };
 };
 VM_ANIM.netmortar = (w, S) => {
   const p = S.p;
@@ -469,7 +469,7 @@ VM_BUILD.chainshot = (M) => {
   const left = vmHand(VM.H, true); left.position.set(-0.04, 0.0, -0.22); left.rotation.set(0.3, 0, 0.5); root.add(left);
   const fresh = zxvPair(M); fresh.visible = false; root.add(fresh);
   const muzzle = new THREE.Object3D(); muzzle.position.set(0, 0.05, -0.34); root.add(muzzle);
-  return { root, M, hand, left, pair, fresh, hammer, trig, muzzle, pose: { x: 0.065, y: -0.18, z: -0.42, rx: 0.08, ry: 0.08, rz: -0.05 }, smoke: 8, flashK: 1.5 };
+  return { root, M, hand, left, pair, fresh, hammer, trig, muzzle, pose: { x: 0.065, y: -0.18, z: -0.42, rx: 0.08, ry: 0.08, rz: -0.05 }, smoke: 3, flashK: 1 };
 };
 VM_ANIM.chainshot = (w, S) => {
   const p = S.p;
