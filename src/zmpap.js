@@ -29,6 +29,15 @@ const ZM_PAP_W = {
   cutlass: { n: 'Keel-Splitter', mag: 0, res: 0, k: 3, fx: 'Every stroke throws a crescent of the sea on along the floor, cutting all it passes.' },
   avtomat: { n: 'Equinox Gale', mag: 50, res: 400, k: 3, fx: 'Held down, it spins up into a gale; at full gale its rounds run cold, and slow what they hit.' },
   fresnel: { n: 'First-Order Lamp', mag: 90, res: 450, k: 2, fx: 'Its beam breaks in each one it burns, like light in a prism, and burns the ones beside it.' },
+  // [chest] the wreck chest's own eight (src/zmchest.js, where each one's reforged way of working is done)
+  duckfoot: { n: 'Grey Skein', mag: 8, res: 96, k: 3, fx: 'More barrels, a wider fan, and a ball that would miss turns in flight onto the nearest of them.' },
+  bomblance: { n: 'Thunder-Pod', mag: 2, res: 24, k: 3, fx: 'Its blast throws a pod of smaller irons, and each goes off in turn where it falls.' },
+  grapnel: { n: 'Mooring Line', mag: 2, res: 40, k: 3, fx: 'The hook runs on through several of them, hauls them into a heap at your feet and lashes them there.' },
+  flaregun: { n: 'Star Shell', mag: 2, res: 36, k: 2, fx: 'It climbs and bursts into a shower of burning stars, and each burns where it falls.' },
+  axe: { n: 'Homeward Axe', mag: 0, res: 0, k: 3, fx: 'Every third stroke throws it spinning through all in its way, and it comes back to your hand.' },
+  puntgun: { n: 'Breakwater', mag: 2, res: 20, k: 3, fx: 'Its shot goes on through walls and floors and every one of them in its line, and hurls them down.' },
+  netmortar: { n: 'Barbed Trawl', mag: 2, res: 28, k: 3, fx: 'A wider net that holds longer, hauls shut, and bites those held in its barbs.' },
+  chainshot: { n: 'Reaping Chain', mag: 2, res: 36, k: 3, fx: 'A longer chain that cripples what it cuts, and rebounds off the walls to cut again.' },
 };
 // how many times a weapon of yours has been reforged (0: never), and what the next time costs (t: the time it'd be)
 const zmpTier = id => (ZM.pap && ZM.pap[id]) | 0;
@@ -299,6 +308,17 @@ function zmp3d(dt) {
 //  Equinox Gale (avtomat): held down, it spins up to a gale (two and a half times the rate); at full gale its rounds
 //    run cold, and what they hit is slowed.
 //  First-Order Lamp (fresnel): the beam breaks in each one it burns, like light in a prism, onto those beside it.
+//  [chest] and the wreck chest's own eight, done in src/zmchest.js (zxVolley, zxBlast, zxHaul, zxStarBurst, zxAxe,
+//  zxPunt, zxNetCatch, zxBounce), through the same zmpStatus:
+//  Grey Skein (Duck's-Foot): 4 + t barrels in a wider fan, and a ball that would miss turns onto the nearest by its line.
+//  Thunder-Pod (Bomb-Lance): the blast throws 1 + t smaller irons, each going off in turn where it falls.
+//  Mooring Line (Grapnel Gun): the hook runs on through 1 + t of them, hauls them into a heap at your feet and lashes
+//    them there (held 2.5 + t/2 s), each taking a blow for each other.
+//  Star Shell (Flare Pistol): it climbs and bursts into 3 + t burning stars, each a ring of fire where it falls.
+//  Homeward Axe (Boarding Axe): the third stroke throws it 14 + 2t m through all in its way, and back to your hand.
+//  Breakwater (Punt Gun): its shot goes through 1 + t walls and every one in its line, and hurls them across the room.
+//  Barbed Trawl (Net Mortar): a wider net (2.8 + 0.3t m), held longer, hauled shut, its barbs biting twice a second.
+//  Reaping Chain (Chain-Shot): a longer chain that cripples what it cuts (4 + t s), rebounding off t walls to cut again.
 // The Diver can be hurt, lit and slowed like the rest, but nothing moves him or holds him.
 // What happens to the drowned is done by whoever runs them: alone or hosting, here; joined, it's asked of the host
 // (zmnRequest 'pst'), with the hit itself, so everyone sees them swept, nailed and slowed.

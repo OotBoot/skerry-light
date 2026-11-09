@@ -197,6 +197,7 @@ function znShotFx(r, s) {
   const code = String(s[1]), w = fpsWOf(code), h = (+s[2] || 0) / 1000, p = (+s[3] || 0) / 1000, m = FPS.me;
   const x = r.x, y = r.y, z = FPSC.GROUND + FPSC.EYE + (r.jz || 0), d = Math.hypot(x - m.x, y - m.y), pan = angDiff(bearingOf(x - m.x, y - m.y), m.h);
   r.flashT = 0.12;
+  if (typeof zxShotFx === 'function' && zxShotFx(r, code, x, y, z, h, p, d, pan)) return;   // [chest] (src/zmchest.js: what they throw, to see)
   if (w.melee) { fpsSwishSound(d); r.slashT = 0.3; return; }
   if (w.beam) { if (d < 40 && Math.random() < 0.4) zmSound('beam'); }
   else fpsWeaponSound(code, d, pan);
