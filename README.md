@@ -211,8 +211,11 @@ It uses the same connection as crews (the claude.ai room, or the crew server), o
 
 ### The islands
 
-Each round the island is one of six kinds, as well as being in one of the six seas. Everything on it is laid out from the round number (`src/fpsisle.js`), so every player builds the same island and nothing extra is sent over the network.
+Each round the island is one of eight kinds, as well as being in one of the six seas. Everything on it is laid out from the round number (`src/fpsisle.js`), so every player builds the same island and nothing extra is sent over the network.
 
+- **Pilchard Row** (built for close fights, laid out like a little street): two fishermen's cottages face each other across a lane, each with a front door off the street, a back door to its garden, two rooms, and windows you can shoot through over the sill. A lugger lies beached on its side across the middle of the lane, the cover everyone fights over, with a handcart, barrels and pots about it and a lamp at each end of the row. Behind the houses are gardens inside low drystone walls, with fences down the sides and a shed in each, and beside the south cottage stands an open timber net loft. Low walls close each end of the row, with a gap for the road out.
+- **The Bonded Quay** (small, walled and quick): a customs yard shut in by the high backs of the warehouses, packed with a grid of long cargo stacks under tarpaulins, some two high to go round and some one high to shoot over, turned against each other so the lanes between are short and the corners blind. The middle is cleared round a crane on a stone plinth with a load hanging from its jib, low bales to duck behind, a customs hut in one corner and a lamp on each wall. No drowned come up here: there's no shore to wade up.
+- **More cover everywhere:** the other six islands each get two or three more buildings, cottages, huts and sheds with doorways and windows, some of them roofless ruins.
 - **The Shingle Skerry:** grey shingle and tide pools, boats drawn up and turned over, lobster pots, fish drying on a rack, driftwood, cairns, a half-fallen sheepfold, and a bonfire still glowing. Gulls overhead.
 - **Wreckers' Reef:** dark wet rock and weed, five broken hulks, timbers, spilled crates and barrels, old cannon, an anchor, a fallen mast, a salvage fire and a lantern on a spar.
 - **Chapel Islet:** turf, a roofless chapel with a tall gable and candles on the altar, a graveyard inside a low broken wall, headstones and a cross, a well with a lantern, a ring of standing stones, dead trees. Bats round the lights.

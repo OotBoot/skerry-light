@@ -12690,7 +12690,8 @@ function fpsDrownedHurt(d, dmg) {
 }
 function fpsDrownedTick(dt, now) {
   FPS.drownT -= dt;
-  if (FPS.drownT <= 0 && FPS.drowned.length < 3) {
+  // (none come up into the walled yard of the Bonded Quay: there's no shore to wade up)
+  if (FPS.drownT <= 0 && FPS.drowned.length < 3 && !(FPS.g && FPS.g.isle && FPS.g.isle.arena)) {
     FPS.drownT = 30 + Math.random() * 25;
     const a = Math.random() * 6.283;
     FPS.drowned.push({ drowned: true, id: 'dr-' + Math.random().toString(36).slice(2, 7), n: 'a drowned man', x: FPSC.CX + Math.cos(a) * (FPSC.R + 6), y: FPSC.CY + Math.sin(a) * (FPSC.R + 6), hp: 3, rise: 0, bite: 0, ph: Math.random() * 6, hitT: 0, hist: [] });
@@ -13434,7 +13435,7 @@ addEventListener('pagehide', () => { if (FPS.on && NET.room) NET.room.presence({
 // The Classic renderer draws each solid as a flat-shaded block (fpsIsleDrawSolid).
 
 const FPI_FORCE = (() => { try { const m = location.search.match(/[?&]isle=(\w+)/); return m ? m[1] : null; } catch (e) { return null; } })();
-const FPS_ISLE_ORDER = ['shingle', 'reef', 'chapel', 'cove', 'cliff', 'marsh'];
+const FPS_ISLE_ORDER = ['shingle', 'row', 'reef', 'chapel', 'quay', 'cove', 'cliff', 'marsh'];
 // ground colours are laid over the sea's own (so the island still belongs to its sea); rocks: [count, min r, max r, height]
 const FPS_ISLES = {
   shingle: { name: 'the Shingle Skerry', ground: '#a29e94', ground2: '#76736c', wet: '#3c3f44', path: '#6a665e', tint: 0.3, mound: 0.16, dune: 0.07,
@@ -13450,6 +13451,15 @@ const FPS_ISLES = {
   marsh: { name: 'the Salt Marsh', ground: '#7e7c4c', ground2: '#565a34', wet: '#2a2c22', path: '#5a5238', tint: 0.34, mound: -0.1, dune: 0.05,
     rocks: [4, 2, 4, 0.6], wrecks: [0], tintRock: ['#4a4a30', 0.3], sky: '130,150,100', skyA: 0.12, fog: ['#141810', 80, 760], mist: '70,80,60', mistA: 0.24, birds: ['bat', 8], tufts: ['#6a7040', 120], pebbles: 20, pools: 14, wrack: 0 },
 };
+// the two built-up stages: Pilchard Row (two cottages facing each other across a lane, gardens behind, a boat
+// beached on its side in the middle of the street) and the Bonded Quay (a small walled customs yard packed with a
+// grid of cargo stacks: close, quick and loud)
+Object.assign(FPS_ISLES, {
+  row: { name: 'Pilchard Row', ground: '#8e8a7c', ground2: '#6c6a5e', wet: '#3c3f44', path: '#5e5a50', tint: 0.3, mound: 0.04, dune: 0.03,
+    rocks: [0, 3, 6, 1], wrecks: [0], tintRock: null, sky: '160,150,170', skyA: 0.07, fog: ['#15161e', 180, 1500], mist: '70,70,86', mistA: 0.09, birds: ['gull', 6], tufts: ['#5a6a44', 80], pebbles: 120, pools: 0, wrack: 50 },
+  quay: { name: 'the Bonded Quay', ground: '#6e6a62', ground2: '#56534c', wet: '#33363a', path: '#5c5852', tint: 0.36, mound: 0, dune: 0.01,
+    rocks: [0, 3, 6, 1], wrecks: [0], tintRock: null, sky: '150,140,120', skyA: 0.08, fog: ['#16140f', 160, 1300], mist: '80,72,60', mistA: 0.1, birds: ['gull', 4], tufts: ['#4a5038', 0], pebbles: 30, pools: 0, wrack: 40, arena: true },
+});
 function fpsIsleFor(round) {
   if (FPI_FORCE && FPS_ISLES[FPI_FORCE]) return FPI_FORCE;
   return FPS_ISLE_ORDER[(round + Math.floor(round / 6)) % FPS_ISLE_ORDER.length];
@@ -13569,6 +13579,8 @@ function fpsIsleGen(G, round, rng) {
     rocks.push({ x: at[0], y: at[1], r, prof, ph: R(0, 6.28), rk: { h: T.rocks[3], tint } });
   }
   if (GEN.props) GEN.props(H);
+  if (!GEN.built) fpiExtraCover(H);
+  if (T.arena) I.arena = true;
   fpiCommonDecor(H);
   if (id === 'marsh') fpiMarshDecor(H);
   // shadows under things, and a few tracks across the island
@@ -13733,7 +13745,57 @@ function fpsIsleLightAt(x, y) {
   return b;
 }
 
-// ---------- the six kinds of island ----------
+// ---------- the kinds of island ----------
+// a building: walls with doorways and windows, an inside wall, a pitched roof, a lamp inside.
+// In its own frame: u along its length (w), v across (d), the front at v = -d/2.
+//   o.doors:   [[side, u], ...]  a doorway (2 m, room to pass) in a side: 'f' front, 'b' back, 'l' left end, 'r' right end
+//   o.windows: [[side, u0, u1], ...]  a window: a sill you can shoot over and a lintel above
+//   o.inner:   u of a wall across the inside, with a doorway in it
+//   o.roof (default true), o.mat 'stone' or 'wood', o.hh wall height, o.lamp (default true), o.opt
+function fpiCottage(H, cx, cy, ang, o) {
+  const w = o.w, d = o.d, hh = o.hh || 2.7, c = Math.cos(ang), sn = Math.sin(ang), opt = !!o.opt;
+  const L = (u, v) => [cx + u * c - v * sn, cy + u * sn + v * c];
+  const ww = { mat: o.mat || 'stone', hh, th: 0.45, jag: o.ruin ? 0.3 : 0, cap: !o.ruin && (o.mat || 'stone') === 'stone', opt, dark: o.dark };
+  const sides = { f: [[-w / 2, -d / 2], [w / 2, -d / 2]], b: [[-w / 2, d / 2], [w / 2, d / 2]], l: [[-w / 2, -d / 2], [-w / 2, d / 2]], r: [[w / 2, -d / 2], [w / 2, d / 2]] };
+  const lens = { f: w, b: w, l: d, r: d };
+  const lintel = (u, v, len, alongU, z0) => H.put('block', ...L(u, v), ang + (alongU ? 0 : Math.PI / 2), { w: len, d: 0.47, hh, z0, col: o.mat === 'wood' ? FPI_C.wood3 : FPI_C.stone3 }, opt);
+  for (const k of ['f', 'b', 'l', 'r']) {
+    const [[u0, v0], [u1, v1]] = sides[k], len = lens[k], gaps = [];
+    const along = k === 'f' || k === 'b';
+    for (const [sd, u] of o.doors || []) if (sd === k) gaps.push([(u - (along ? u0 : v0)) / len - 1.0 / len, (u - (along ? u0 : v0)) / len + 1.0 / len]);
+    for (const [sd, a, b] of o.windows || []) if (sd === k) gaps.push([(a - (along ? u0 : v0)) / len, (b - (along ? u0 : v0)) / len]);
+    H.wall(...L(u0, v0), ...L(u1, v1), ww, gaps);
+    // over each doorway a lintel; under and over each window, a sill and a lintel
+    for (const [sd, u] of o.doors || []) if (sd === k) lintel(along ? u : u0, along ? v0 : u, 2.0, along, 2.15);
+    for (const [sd, a, b] of o.windows || []) if (sd === k) {
+      const m = (a + b) / 2, len2 = b - a;
+      lintel(along ? m : u0, along ? v0 : m, len2, along, 2.0);
+      H.put('block', ...L(along ? m : u0, along ? v0 : m), ang + (along ? 0 : Math.PI / 2), { w: len2, d: 0.5, hh: 0.95, col: o.mat === 'wood' ? FPI_C.wood : FPI_C.stone3, trim: FPI_C.wood3 }, opt);
+    }
+  }
+  if (o.inner != null) H.wall(...L(o.inner, -d / 2), ...L(o.inner, d / 2), Object.assign({}, ww, { th: 0.3 }), [[0.5 - 1.0 / d, 0.5 + 1.0 / d]]);
+  if (o.roof !== false && !o.ruin) H.put('roof', cx, cy, ang + Math.PI / 2, { w: d + 0.8, d: w + 0.8, z0: hh, rise: o.rise || Math.min(2.2, d * 0.28), mat: o.mat === 'wood' ? 'wood' : (o.thatch ? 'straw' : 'wood') }, opt);
+  if (o.lamp !== false) { const [lx, ly] = L(o.inner != null ? (o.inner - w / 2) / 2 : 0, 0); H.light(lx, ly, 2.2, '#ffc070', 7, 'lantern'); }
+  return L;
+}
+// more cover on the open islands: a cottage or two and a shed, some of them roofless ruins
+function fpiExtraCover(H) {
+  const { R, IR, TAU, rng } = H;
+  const n = H.RI(2, 3);
+  for (let i = 0; i < n; i++) {
+    const big = i === 0, w = big ? R(8, 10) : R(4.5, 6), d = big ? R(5.5, 6.5) : R(3.6, 4.4), at = H.spot(Math.hypot(w, d) / 2 + 1, 12, IR - 18, 4);
+    if (!at) continue;
+    const ruin = rng() < 0.4, mat = big ? 'stone' : (rng() < 0.6 ? 'wood' : 'stone');
+    fpiCottage(H, at[0], at[1], R(0, TAU), { w, d, mat, ruin, opt: true, dark: !big,
+      doors: [['f', R(-w / 4, w / 4)]].concat(big ? [['b', R(-w / 3, w / 3)]] : []),
+      windows: big ? [['f', w / 4, w / 4 + 1.4], ['r', -0.8, 0.8]] : [['l', -0.6, 0.6]], inner: big && w > 8.5 ? R(-1, 1) : null, lamp: !ruin });
+  }
+}
+// a long stack of cargo (bales and chests under a tarpaulin and lashings), one or two high
+function fpiCargo(H, x, y, ang, len, two) {
+  return H.put('cargo', x, y, ang, { len, wd: 2.5, hh: two ? 5.0 : 2.5, two, tarp: H.pick(['#4a5a4a', '#5a4a3a', '#3a4a5a', '#6a5a3a', '#5a3a34']) });
+}
+
 // helpers for clusters of small things
 function fpiCrates(H, x, y, big) {
   const { R, rng } = H, items = [], n = big ? H.RI(3, 5) : H.RI(1, 3), s0 = R(0.85, 1.1);
@@ -13761,6 +13823,82 @@ function fpiLocal(p, u, v) { const c = Math.cos(p.ang), s = Math.sin(p.ang); ret
 function fpiScatter(H, n, r, dmin, dmax, gap, fn) { for (let i = 0; i < n; i++) { const at = H.spot(r, dmin, dmax, gap); if (at) fn(at[0], at[1]); } }
 
 const FPI_GEN = {
+  // Pilchard Row: a lane between two fishermen's cottages, their gardens behind them, a lugger beached on its side
+  // in the middle of the street, a handcart and barrels, lamps at each end, sheds and a net loft
+  row: {
+    built: true,
+    set(H) {
+      const { R, TAU, CX, CY } = H, a = R(0, TAU), c = Math.cos(a), sn = Math.sin(a);
+      const L = (u, v) => [CX + u * c - v * sn, CY + u * sn + v * c];
+      // the north cottage: front door off the lane, two rooms, windows on the lane and the garden, a back door
+      fpiCottage(H, ...L(-1, 11.5), a, { w: 18, d: 8, doors: [['f', -5.5], ['b', 4.5]], windows: [['f', 1, 3.2], ['f', 5, 7], ['b', -6, -3.8], ['r', -1.2, 1.2]], inner: -1, mat: 'stone' });
+      // the south cottage, across the lane and further along, its door and windows facing the other's
+      fpiCottage(H, ...L(4, -11.5), a + Math.PI, { w: 18, d: 8, doors: [['f', -6], ['b', 3]], windows: [['f', -2.5, -0.3], ['f', 2, 4.2], ['b', -4, -1.8], ['l', -1.2, 1.2]], inner: 1.5, mat: 'stone' });
+      // the net loft beside it, timber, open to the lane, and a garden shed behind each house
+      fpiCottage(H, ...L(-14.5, -11), a + Math.PI, { w: 7, d: 6, doors: [['f', 1.5], ['f', -1.5]], windows: [['r', -0.8, 0.8]], mat: 'wood', dark: true });
+      fpiCottage(H, ...L(-9, 21.5), a, { w: 4.5, d: 3.6, doors: [['r', 0]], mat: 'wood', dark: true, lamp: false });
+      fpiCottage(H, ...L(12, -21.5), a, { w: 4.5, d: 3.6, doors: [['l', 0]], mat: 'wood', dark: true, lamp: false });
+      // the gardens: drystone walls round the back, gaps to the shore, fences down the sides
+      const gw = { hh: 1.1, jag: 0.1, th: 0.6, cap: true };
+      H.wall(...L(-12, 26), ...L(14, 26), gw, [[0.42, 0.52]]);
+      H.wall(...L(-10, -26), ...L(16, -26), gw, [[0.5, 0.6]]);
+      for (const [u, v0, v1] of [[-12, 15.5, 26], [14, 15.5, 26], [-10, -15.5, -26], [16, -15.5, -26]]) { const [x0, y0] = L(u, v0), [x1, y1] = L(u, v1); H.put('fence', (x0 + x1) / 2, (y0 + y1) / 2, a + Math.PI / 2, { len: Math.abs(v1 - v0) }); }
+      // the lane: the lugger on its side across the middle (the cover everyone fights over), a handcart, barrels,
+      // pots, and a lamp at each end of the row
+      H.put('boat', ...L(-1, 0.6), a + Math.PI / 2 + 0.22, { len: 8, beam: 2.4, paint: FPI_C.paint[1] });
+      fpiCrates(H, ...L(10.5, 2.5), true);
+      fpiBarrels(H, ...L(-12.5, 3));
+      fpiPots(H, ...L(17, -4));
+      H.put('cart', ...L(7.5, -3.2), a + 0.3, {});
+      for (const [u, v] of [[-22, 5], [24, -5]]) fpiLanternPost(H, ...L(u, v), a);
+      // the ends of the row: low walls across, with the road out through a gap, and a rock or two beyond
+      H.wall(...L(-28, -9), ...L(-28, 9), gw, [[0.4, 0.6]]);
+      H.wall(...L(30, -9), ...L(30, 9), gw, [[0.4, 0.6]]);
+      for (const [u, v, r] of [[-40, 18, 5], [44, -16, 6], [-38, -22, 4.5], [40, 24, 5], [0, 40, 5], [-4, -40, 5.5]]) {
+        const [x, y] = L(u, v), prof = []; for (let k = 0; k < 7; k++) prof.push(R(0.4, 1)); prof[0] = R(0.2, 0.4); prof[6] = R(0.2, 0.4);
+        H.rocks.push({ x, y, r, prof, ph: R(0, 6.28), rk: { h: 1, tint: null } });
+      }
+      H.track([L(-34, 0), L(-8, -2), L(8, 2), L(34, 0)]);
+    },
+    props(H) {
+      const { R, IR, TAU } = H;
+      fpiScatter(H, 2, 2.6, IR - 26, IR - 8, 3, (x, y) => H.put('boat', x, y, Math.atan2(y - H.CY, x - H.CX) + R(-0.4, 0.4), { len: R(4.2, 5.2), beam: R(1.5, 1.8), paint: H.pick(FPI_C.paint) }, true));
+      fpiScatter(H, 2, 2.4, 40, IR - 12, 3, (x, y) => H.put('rack', x, y, R(0, TAU), { len: R(3.4, 4.4), nets: true }, true));
+      fpiScatter(H, 3, 2.5, 40, IR - 6, 3, (x, y) => H.put('log', x, y, R(0, TAU), { len: R(2.4, 4.5), rad: R(0.2, 0.32) }, true));
+    },
+  },
+  // the Bonded Quay: a walled customs yard, its cargo stacked in a grid of long stacks, a crane in the middle
+  quay: {
+    built: true,
+    set(H) {
+      const { R, TAU, CX, CY, rng } = H, a = R(0, TAU) * 0 + (Math.floor(R(0, 4)) * Math.PI / 2) + R(-0.3, 0.3), c = Math.cos(a), sn = Math.sin(a);
+      const L = (u, v) => [CX + u * c - v * sn, CY + u * sn + v * c];
+      const S = 22;   // half the yard's width
+      // the walls all round: the warehouses' backs, high, with their doors bricked up
+      const ww = { hh: 4.2, jag: 0.04, th: 0.9, mat: 'stone', cap: true };
+      H.wall(...L(-S, -S), ...L(S, -S), ww); H.wall(...L(-S, S), ...L(S, S), ww);
+      H.wall(...L(-S, -S), ...L(-S, S), ww); H.wall(...L(S, -S), ...L(S, S), ww);
+      // the stacks: a four by four grid with the middle four cleared round the crane, each long stack turned against
+      // its neighbours; some two high (you go round), some one high (you can shoot over): narrow lanes everywhere
+      const cells = [-15.5, -5.2, 5.2, 15.5];
+      for (let i = 0; i < 4; i++) for (let j = 0; j < 4; j++) {
+        const u = cells[i], v = cells[j];
+        if ((i === 1 || i === 2) && (j === 1 || j === 2)) continue;
+        if (i === 0 && j === 0) continue;   // (the customs hut's corner)
+        const along = (i + j) % 2 === 0, two = rng() < 0.55, [x, y] = L(u + R(-0.6, 0.6), v + R(-0.6, 0.6));
+        fpiCargo(H, x, y, a + (along ? 0 : Math.PI / 2) + R(-0.05, 0.05), R(4.8, 5.8), two);
+      }
+      // and round the crane, a few low bales to duck behind
+      for (const [u, v, ra] of [[-5, 0.5, Math.PI / 2], [5, -0.5, Math.PI / 2], [0.5, 5.5, 0], [-0.5, -5.5, 0]]) { const [x, y] = L(u, v); H.put('cargo', x, y, a + ra, { len: 2.6, wd: 1.3, hh: 1.15, tarp: '#4a4a3a' }); }
+      // the crane in the middle, on a stone plinth, its jib over the yard and a load hanging
+      H.put('crane', ...L(0, 0), a + R(0, TAU), {});
+      // the customs hut in one corner, a lamp on each wall, and odds and ends in the lanes
+      fpiCottage(H, ...L(-S + 4.2, -S + 3.5), a, { w: 6, d: 4.6, doors: [['b', 1.4]], windows: [['r', -0.8, 0.8], ['b', -2, -0.8]], mat: 'wood', dark: true });
+      for (const [u, v] of [[0, -S + 1.4], [0, S - 1.4], [-S + 1.4, 0], [S - 1.4, 0]]) fpiLanternPost(H, ...L(u, v), a);
+      for (const [u, v] of [[10.4, 10.4], [-10.4, -10.4], [10.4, -19.5], [-19.5, 10.4], [19.5, 19.5]]) { const [x, y] = L(u + R(-0.5, 0.5), v + R(-0.5, 0.5)); if (H.clear(x, y, 1.0, 0.8)) (rng() < 0.5 ? fpiBarrels(H, x, y) : fpiCrates(H, x, y, false)); }
+      H.track([L(-S + 3, -S + 8), L(-6.5, 0), L(6.5, 0), L(S - 3, S - 3)]);
+    },
+  },
   shingle: {
     props(H) {
       const { R, IR, TAU } = H;
@@ -13968,6 +14106,55 @@ function fpiMarshDecor(H) {
 // ---------- the kinds of prop: their solids, and how they're built in 3D ----------
 // b3(p, A): A builds in the prop's own frame: u along it, v across, h up from the ground
 const FPI_K = {
+  // a plain block of stone or timber (a sill, a lintel over a doorway: one with z0 is walked under)
+  block: {
+    col: FPI_C.stone3,
+    sol(p) { return [fpiBox(p, 0, 0, p.w / 2, p.d / 2, p.hh, Object.assign({ col: p.col || FPI_C.stone3 }, p.z0 ? { z0: p.z0, mv: false } : {}))]; },
+    b3(p, A) { const z0 = p.z0 || -0.2; A.box(p.col || FPI_C.stone3, 0, 0, z0, p.w, p.d, p.hh - z0); if (p.trim) A.box(p.trim, 0, 0, p.hh - 0.06, p.w * 1.01, p.d * 1.12, 0.1); },
+  },
+  // cargo, stacked long and lashed under a tarpaulin: one or two high
+  cargo: {
+    col: '#5a4a34',
+    sol(p) { return [fpiBox(p, 0, 0, p.len / 2, p.wd / 2, p.hh)]; },
+    b3(p, A) {
+      const lv = p.two ? 2 : 1, h = p.hh / lv;
+      for (let k = 0; k < lv; k++) {
+        const z = k * h, n = Math.max(2, Math.round(p.len / 1.3));
+        // bales and chests side by side, each a little different
+        for (let i = 0; i < n; i++) { const u = -p.len / 2 + (i + 0.5) * p.len / n; A.box(A.r() < 0.5 ? '#6a5438' : '#5a4630', u, (A.r() - 0.5) * 0.08, z, p.len / n * 0.96, p.wd * (0.94 + A.r() * 0.05), h * 0.97); A.box(FPI_C.wood3, u, 0, z + h * 0.48, p.len / n * 0.98, p.wd * 0.99, 0.08); }
+        A.box(FPI_C.wood3, 0, 0, z, p.len * 1.01, p.wd * 1.01, 0.1);
+      }
+      // the tarpaulin over the top and down the ends, and its lashings
+      A.box(p.tarp, 0, 0, p.hh - 0.02, p.len * 1.03, p.wd * 1.04, 0.1);
+      for (const e of [-1, 1]) A.box(p.tarp, e * (p.len / 2 + 0.03), 0, p.hh - Math.min(1.2, p.hh * 0.35), 0.06, p.wd * 1.04, Math.min(1.2, p.hh * 0.35));
+      for (let u = -p.len / 2 + 0.8; u < p.len / 2; u += 1.6) for (const s of [-1, 1]) A.box(FPI_C.rope, u, s * (p.wd / 2 + 0.02), 0.1, 0.06, 0.04, p.hh - 0.05);
+    },
+  },
+  // a handcart, tipped on its legs, with a load of fish boxes
+  cart: {
+    col: FPI_C.wood2,
+    sol(p) { return [fpiBox(p, 0, 0, 1.3, 0.75, 1.1)]; },
+    b3(p, A) {
+      A.box(FPI_C.wood2, 0, 0, 0.5, 2.6, 1.5, 0.12, 0, 0, 0.08);
+      for (const s of [-1, 1]) { A.box(FPI_C.wood3, 0, s * 0.72, 0.6, 2.6, 0.08, 0.4); A.cyl(FPI_C.wood3, 0.3, s * 0.85, 0.45, 0.45, 0.08, 0, 0, 0, 'cyl8'); }
+      for (const s of [-1, 1]) A.box(FPI_C.wood3, -1.9, s * 0.45, 0.5, 1.4, 0.08, 0.08, 0, 0, -0.25);
+      for (let i = 0; i < 3; i++) A.box(i % 2 ? '#7a6a50' : FPI_C.wood, -0.7 + i * 0.7, 0, 0.62, 0.6, 1.2, 0.35);
+    },
+  },
+  // the quay's crane: a stone plinth, a timber post, a long jib and a hanging load
+  crane: {
+    col: FPI_C.stone3,
+    sol(p) { return [fpiBox(p, 0, 0, 1.6, 1.6, 1.3), fpiCirc(p, 0, 0, 0.45, 7.5), fpiBox(p, 5.2, 0, 0.75, 0.75, 3.4, { z0: 2.0, col: FPI_C.wood2 })]; },
+    b3(p, A) {
+      A.box(FPI_C.stone, 0, 0, -0.2, 3.2, 3.2, 1.5); A.box(FPI_C.stone3, 0, 0, 1.25, 3.3, 3.3, 0.12);
+      A.cyl(FPI_C.wood3, 0, 0, 1.3, 0.4, 6.4, 0, 0, 0, 'cyl8');
+      A.box(FPI_C.wood3, 2.8, 0, 7.0, 6.6, 0.35, 0.35, 0, 0, -0.08);
+      A.box(FPI_C.wood3, 1.2, 0, 5.4, 3.0, 0.22, 0.22, 0, 0, 0.6);
+      A.box(FPI_C.rope, 5.2, 0, 3.4, 0.05, 0.05, 3.5);
+      A.box('#6a5438', 5.2, 0, 2.0, 1.4, 1.4, 1.4); A.box(FPI_C.rope, 5.2, 0, 2.0, 1.45, 0.06, 1.45); A.box(FPI_C.rope, 5.2, 0, 2.0, 0.06, 1.45, 1.45);
+      A.cyl(FPI_C.iron, 0.6, 0, 2.4, 0.3, 0.5, 0, 0, Math.PI / 2, 'cyl8');
+    },
+  },
   wall: {
     col: FPI_C.stone,
     gen(p) {

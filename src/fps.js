@@ -780,7 +780,8 @@ function fpsDrownedHurt(d, dmg) {
 }
 function fpsDrownedTick(dt, now) {
   FPS.drownT -= dt;
-  if (FPS.drownT <= 0 && FPS.drowned.length < 3) {
+  // (none come up into the walled yard of the Bonded Quay: there's no shore to wade up)
+  if (FPS.drownT <= 0 && FPS.drowned.length < 3 && !(FPS.g && FPS.g.isle && FPS.g.isle.arena)) {
     FPS.drownT = 30 + Math.random() * 25;
     const a = Math.random() * 6.283;
     FPS.drowned.push({ drowned: true, id: 'dr-' + Math.random().toString(36).slice(2, 7), n: 'a drowned man', x: FPSC.CX + Math.cos(a) * (FPSC.R + 6), y: FPSC.CY + Math.sin(a) * (FPSC.R + 6), hp: 3, rise: 0, bite: 0, ph: Math.random() * 6, hitT: 0, hist: [] });
