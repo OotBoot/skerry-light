@@ -270,7 +270,7 @@ function fpsBodySync(show) {
   for (const k in FB.wpn) FB.wpn[k].root.visible = k === id;
   const rec = Math.max(0, (FPS.meFlashT || 0) / 0.12), draw = Math.max(0, (FPS.drawT || 0) / 0.45);
   const rl = m.reload > 0 ? Math.sin(Math.min(1, 1 - m.reload / w.reload) * Math.PI) : 0;
-  const long = id === 'blunderbuss' || id === 'longarm' || id === 'harpoon';
+  const long = id === 'blunderbuss' || id === 'longarm' || id === 'harpoon' || id === 'avtomat';
   if (w.melee) {
     // the cutlass, point up and forward; each cut sweeps it across
     const s = (FPS.meSlashT || 0) > 0 ? 1 - FPS.meSlashT / 0.3 : -1;

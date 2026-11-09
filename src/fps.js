@@ -35,20 +35,26 @@ const FPS = {
 };
 const FPS_BOT_NAMES = ['Wrecker Abe', 'Black Nell', 'Silas Crane', 'Old Tobias', 'Mother Carey', 'Jory Pengelly'];
 const FPS_SEAS = ['skerry', 'fjord', 'ember', 'lagoon', 'barrows', 'shoals'];
-// the five weapons: you carry them all (1-5 to switch); the one picked on the title card is in your hand when you land
+// the six weapons: you carry them all (1-6 to switch); the one picked on the title card is in your hand when you land
 //  pepperbox   six quick shots, one damage (two to the head)
 //  blunderbuss one shot of nine balls in a wide spread; deadly close, useless past fifty metres
 //  longarm     one heavy shot, three damage (a head shot kills); hold right mouse / Scope for the telescope
 //  harpoon     one barbed harpoon on a line, slow enough to see and to dodge, and it kills what it hits
 //  cutlass     no powder: swing it within arm's reach, two damage a cut, in a three-cut combination
+//  avtomat     an automatic rifle: twenty-five rounds as fast as you hold the trigger, one damage (two to the head);
+//              it climbs and kicks hard, sprays from the hip, and takes a long while to load; hold right mouse /
+//              Aim to look down its iron sights (closer, steadier, and every round goes where the sights are)
 const FPSW = {
   pepperbox:   { n: 'Pepperbox',   code: 'p', mag: 6, rate: 0.26, reload: 2.2, dmg: 1, head: 2, auto: true, range: 420, kick: 1 },
   blunderbuss: { n: 'Blunderbuss', code: 'b', mag: 1, rate: 0.6, reload: 2.7, dmg: 1, head: 1, pellets: 9, spread: 0.085, range: 55, kick: 2.4 },
   longarm:     { n: 'Longarm',     code: 'l', mag: 1, rate: 0.5, reload: 2.6, dmg: 3, head: 5, range: 650, hip: 0.012, scope: 3.2, kick: 1.6 },
   harpoon:     { n: 'Harpoon gun', code: 'h', mag: 1, rate: 0.6, reload: 2.9, dmg: 4, head: 4, speed: 72, drop: 5, range: 300, kick: 1.9 },
   cutlass:     { n: 'Cutlass',     code: 'c', mag: 0, rate: 0.48, reload: 1.6, dmg: 2, head: 2, reach: 2.7, arc: 0.8, melee: true, kick: 0 },
+  avtomat:     { n: 'Avtomat',     code: 'a', mag: 25, rate: 0.085, reload: 3.9, dmg: 1, head: 2, auto: true, range: 380, hip: 0.03, ads: 1.45, kick: 0.75, climb: 0.019, sway: 0.011 },
 };
-const FPS_WORDER = ['pepperbox', 'blunderbuss', 'longarm', 'harpoon', 'cutlass'];
+const FPS_WORDER = ['pepperbox', 'blunderbuss', 'longarm', 'harpoon', 'cutlass', 'avtomat'];
+// how much closer the view comes when aiming (the longarm's telescope, the avtomat's iron sights)
+const fpsZoom = () => { const w = fpsW(); return FPS.scoped ? (w.scope || w.ads || 1) : 1; };
 const FPSW_BY_CODE = {}; for (const id in FPSW) FPSW_BY_CODE[FPSW[id].code] = id;
 const fpsW = () => FPSW[FPS.weapon] || FPSW.pepperbox;
 const fpsWOf = code => FPSW[FPSW_BY_CODE[code] || 'pepperbox'];
@@ -115,8 +121,8 @@ function fpsTitleTick() {
   fpsLobbyStatus();
 }
 setInterval(fpsTitleTick, 1000);
-// the weapon picker on the card: all five, in your equipped weapon skins; the one picked is in hand when you land
-const FPS_WSTAT = { pepperbox: '6 shots · quick', blunderbuss: '9 balls · close', longarm: '1 shot · scope', harpoon: 'harpoon · slow', cutlass: 'blade · reach' };
+// the weapon picker on the card: all six, in your equipped weapon skins; the one picked is in hand when you land
+const FPS_WSTAT = { pepperbox: '6 shots · quick', blunderbuss: '9 balls · close', longarm: '1 shot · scope', harpoon: 'harpoon · slow', cutlass: 'blade · reach', avtomat: '25 rounds · auto' };
 function fpsRenderPicks() {
   const box = $('weaponPick'); if (!box) return;
   if (box.childElementCount !== FPS_WORDER.length) {
@@ -508,10 +514,13 @@ function fpsShoot() {
   if (m.dead > 0 || m.reload > 0 || m.cd > 0 || FPS.menu || FPS.drawT > 0) return;
   if (!w.melee && m.ammo <= 0) { fpsReload(); return; }
   if (!w.auto && !w.melee && FPS.heldFire) return;          // single-shot guns: one pull, one shot
+  // (holding the trigger of an automatic, the time past the last round carries over, so it keeps its rate on a slow screen)
+  const carry = w.auto && FPS.heldFire && m.cd < 0 ? Math.max(-0.3, m.cd) : 0;
   FPS.heldFire = true;
-  m.cd = w.rate; m.protect = 0;
+  m.cd = w.rate + carry; m.protect = 0;
   if (w.melee) { FPS.swing = (FPS.swing || 0) + 1; }
   else { m.ammo--; m.mags[FPS.weapon] = m.ammo; FPS.flash = 0.07; FPS.recoil = Math.min(1.6, w.kick); FPS.meFlashT = 0.12; }
+  const climbNext = !!w.climb;
   if (w.melee) FPS.meSlashT = 0.3;
   FPS.vmShots = (FPS.vmShots || 0) + 1;
   const z = FPSC.GROUND + FPSC.EYE + (m.jz || 0), seed = (Math.random() * 2147483647) | 0;
@@ -519,6 +528,13 @@ function fpsShoot() {
   const sh = fpsPublishShot(m.x, m.y, z, ah, ap, m.id, w.code, FPS.scoped ? 0 : seed);
   if (typeof fpsVerityShot === 'function') fpsVerityShot(m.x, m.y, ah);
   fpsResolveShot(sh, true);
+  // a gun that climbs: each round throws the muzzle up and a little to one side, after the round has gone; less
+  // when aimed down the sights. Some of the climb settles back when you let go of the trigger (see fpsFrame)
+  if (climbNext) {
+    const k = FPS.scoped ? 0.62 : 1, up = w.climb * k * (0.8 + Math.random() * 0.45);
+    m.p = clamp(m.p + up, -0.6, 0.6); m.h = wrapPi(m.h + (Math.random() - 0.45) * w.sway * k * 2);
+    FPS.climb = Math.min(0.25, (FPS.climb || 0) + up * 0.55); FPS.sinceShot = 0;
+  }
   if (!w.melee && m.ammo <= 0) setTimeout(fpsReload, w.mag === 1 ? 420 : 250);
 }
 // which way a shot leaves your gun. In first person that's simply where you look. Over the shoulder the camera sits
@@ -583,7 +599,7 @@ function fpsSwitch(id) {
   fpsSend();
 }
 const fpsCycle = d => fpsSwitch(FPS_WORDER[(FPS_WORDER.indexOf(FPS.weapon) + d + FPS_WORDER.length) % FPS_WORDER.length]);
-function fpsScope(on) { FPS.scoped = !!on && FPS.weapon === 'longarm' && !(FPS.me.reload > 0) && !(FPS.me.dead > 0); }
+function fpsScope(on) { const w = fpsW(); FPS.scoped = !!on && !!(w.scope || w.ads) && !(FPS.me.reload > 0) && !(FPS.me.dead > 0); }
 function fpsReload() {
   const m = FPS.me, w = fpsW();
   // (the cutlass has nothing to load: R gives it a wipe and a look along the edge instead)
@@ -639,6 +655,7 @@ function fpsWeaponSound(code, d, pan) {
     const v = Math.max(0.05, 1 - d / 400), o = { pan: Math.max(-1, Math.min(1, pan || 0)) };
     if (code === 'b') { noise('lowpass', 900 * v + 250, 0.6, 0.002, 0.8 * v, 0.55 + (1 - v) * 0.3, o); tone(55, 'sawtooth', 0.002, 0.35 * v, 0.3, { to: 30 }); }
     else if (code === 'l') { noise('lowpass', 2200 * v + 300, 0.8, 0.001, 0.7 * v, 0.45 + (1 - v) * 0.5, o); tone(120, 'triangle', 0.001, 0.25 * v, 0.25, { to: 40 }); }
+    else if (code === 'a') { noise('lowpass', 2800 * v + 400, 0.9, 0.001, 0.42 * v, 0.12 + (1 - v) * 0.3, o); tone(160, 'square', 0.001, 0.1 * v, 0.05, { to: 70 }); }
     else if (code === 'h') { noise('lowpass', 500, 0.8, 0.003, 0.5 * v, 0.25, o); tone(70, 'triangle', 0.003, 0.4 * v, 0.2, { to: 35 }); noise('highpass', 3000, 0.7, 0.05, 0.12 * v, 0.6, o); }
     else fpsGunSound(d, pan);
   } catch (e) {}
@@ -830,6 +847,9 @@ function fpsFrame(dt) {
     if ((FPS.hintT || 0) > 0 && (FPS.stick || FPS.lookTouch)) FPS.hintT -= dt * 2; else if ((FPS.hintT || 0) > 0) FPS.hintT -= dt * 0.25;
     for (const k of ['flash', 'hitT', 'hurtT']) if (FPS[k] > 0) FPS[k] -= dt;
     FPS.recoil = Math.max(0, FPS.recoil - dt * 6);
+    // the avtomat's climb: once the trigger's let go, the muzzle settles back part of the way
+    FPS.sinceShot = (FPS.sinceShot || 0) + dt;
+    if ((FPS.climb || 0) > 0 && FPS.sinceShot > 0.14) { const d = Math.min(FPS.climb, dt * 0.4); m.p = clamp(m.p - d, -0.6, 0.6); FPS.climb -= d; }
     for (const p of FPS.pings) p.t -= dt; FPS.pings = FPS.pings.filter(p => p.t > 0);
     for (const t of FPS.tracers) t.t -= dt; FPS.tracers = FPS.tracers.filter(t => t.t > 0);
     for (const f of FPS.feed) f.t -= dt; FPS.feed = FPS.feed.filter(f => f.t > 0);
@@ -853,7 +873,7 @@ function fpsInput(dt) {
   const aiming = Math.abs(FPS.look[0]) + Math.abs(FPS.look[1]) > 0.5;
   const assist = FPS.touch && !FPS.scoped ? fpsAssistTarget() : null;
   if (assist) sens *= 0.8;
-  if (FPS.scoped) sens /= FPSW.longarm.scope;
+  if (FPS.scoped) sens /= fpsZoom();
   m.h = wrapPi(m.h + FPS.look[0] * sens); m.p = clamp(m.p - FPS.look[1] * sens, -0.6, 0.6);
   if (assist && aiming && !(m.dead > 0)) {
     m.h = wrapPi(m.h + clamp(assist.dh, -1, 1) * Math.min(1, dt * 1.1));
@@ -879,7 +899,11 @@ function fpsInput(dt) {
   if (K.KeyD) fx += 1; if (K.KeyA) fx -= 1;
   if (K.ArrowLeft) m.h = wrapPi(m.h - dt * 2.2); if (K.ArrowRight) m.h = wrapPi(m.h + dt * 2.2);
   if (FPS.stick) { fx += FPS.stick.dx; fz -= FPS.stick.dy; }
-  if (FPS.mouseDown || FPS.touchFire || fire) fpsShoot();
+  if (FPS.mouseDown || FPS.touchFire || fire) {
+    // a slow frame may owe an automatic more than one round
+    fpsShoot();
+    for (let k = 0; k < 3 && fpsW().auto && m.cd <= 0 && m.ammo > 0 && !(m.reload > 0) && FPS.heldFire; k++) fpsShoot();
+  }
   const len = Math.hypot(fx, fz);
   m.walk = false;
   if (m.dead <= 0 && len > 0.05 && !FPS.menu) {
@@ -912,11 +936,11 @@ function fpsDraw() {
   if (FPS.vScare > 0) { drawVerityScare(FPSV.SCARE - FPS.vScare); return; }
   // looking through the longarm's telescope: everything drawn with a longer focal length, then put back
   const f0 = focal;
-  if (FPS.scoped) focal = f0 * FPSW.longarm.scope;
+  if (FPS.scoped) focal = f0 * fpsZoom();
   try { fpsDrawScene(); } finally { focal = f0; }
   fpsDrawHands();
   drawAtmosphere();
-  if (FPS.scoped) fpsDrawScope();
+  if (FPS.scoped && fpsW().scope) fpsDrawScope();
   fpsHud();
 }
 function fpsDrawScene() {
@@ -1077,7 +1101,7 @@ function fpsDrawPerson(o, c) {
   if (o.me && (o.w || 'p') !== 'c') {
     const sh = Math.sin(o.h), ch = Math.cos(o.h), cp = Math.cos(o.p || 0), spp = Math.sin(o.p || 0), base = FPSC.GROUND + (o.jz || 0);
     const at = (fwd, right, up) => cam(o.x + sh * cp * fwd + ch * right, o.y + ch * cp * fwd - sh * right, base + up + spp * fwd);
-    const wc = o.w || 'p', glen = wc === 'l' ? 1.15 : wc === 'h' ? 0.95 : wc === 'b' ? 0.8 : 0.42, kick = (o.flashT || 0) > 0 ? -0.08 : 0;
+    const wc = o.w || 'p', glen = wc === 'l' ? 1.15 : wc === 'h' ? 0.95 : wc === 'a' ? 0.9 : wc === 'b' ? 0.8 : 0.42, kick = (o.flashT || 0) > 0 ? -0.08 : 0;
     const pts = [at(0, 0.26, 1.42), at(0.45 + kick, 0.3, 1.36), at(0.45 + kick + glen, 0.28, 1.4)];
     if (pts.every(q => q.f > 0.3)) {
       const [S, Hd, M] = pts.map(q => proj(q));
@@ -1212,10 +1236,14 @@ function fpsHud() {
   // crosshair, and a mark when you hit
   const cy = H / 2;
   if (m.dead <= 0) {
-    ctx.strokeStyle = 'rgba(236,228,207,0.75)'; ctx.lineWidth = 1.5; ctx.beginPath();
-    const gap = 5 + FPS.recoil * 6;
-    for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { ctx.moveTo(cx + dx * gap, cy + dy * gap); ctx.lineTo(cx + dx * (gap + 7), cy + dy * (gap + 7)); }
-    ctx.stroke();
+    // (down the avtomat's iron sights, the sights are the crosshair)
+    const wcur = fpsW();
+    if (!(FPS.scoped && wcur.ads)) {
+      ctx.strokeStyle = 'rgba(236,228,207,0.75)'; ctx.lineWidth = 1.5; ctx.beginPath();
+      const gap = 5 + FPS.recoil * (wcur.climb ? 14 : 6);
+      for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { ctx.moveTo(cx + dx * gap, cy + dy * gap); ctx.lineTo(cx + dx * (gap + 7), cy + dy * (gap + 7)); }
+      ctx.stroke();
+    }
     if (FPS.hitT > 0) { ctx.strokeStyle = FPS.hitHead ? 'rgba(255,90,60,0.95)' : 'rgba(255,240,200,0.95)'; ctx.lineWidth = 2; ctx.beginPath(); for (const [dx, dy] of [[1, 1], [-1, 1], [1, -1], [-1, -1]]) { ctx.moveTo(cx + dx * 6, cy + dy * 6); ctx.lineTo(cx + dx * 13, cy + dy * 13); } ctx.stroke(); }
   }
   // on a phone: less of everything, and nothing where your thumbs go
@@ -1281,7 +1309,7 @@ function fpsHud() {
     ctx.textAlign = 'right'; ctx.font = mono(22); ctx.fillStyle = m.ammo ? 'rgba(236,228,207,0.9)' : '#e46c4f';
     const w = fpsW();
     ctx.fillText(m.reload > 0 ? (w.melee ? 'WIPING' : 'RELOADING') : w.melee ? 'CUTLASS' : `${m.ammo} / ${w.mag}`, W - 16, by);
-    // the five weapons, the one in hand lit
+    // the six weapons, the one in hand lit
     ctx.font = mono(11); let wx = W - 16;
     for (let i = FPS_WORDER.length - 1; i >= 0; i--) {
       const id = FPS_WORDER[i], on = id === FPS.weapon, lab = `${i + 1} ${FPSW[id].n.toUpperCase()}`;
@@ -1328,7 +1356,7 @@ function fpsPadState() {
   set('fpsPadFire', (w.melee || m.ammo > 0) && !(m.reload > 0), m.reload > 0 ? '…' : w.melee ? '⚔' : String(m.ammo));
   { const f = $('fpsPadFire').querySelector('small'); if (f && f.textContent !== (w.melee ? 'SWING' : 'FIRE')) f.textContent = w.melee ? 'SWING' : 'FIRE'; }
   { const b = $('fpsPadWeapon'); if (b) { const c = b.querySelector('.wn'); if (c && c.textContent !== w.n) c.textContent = w.n; } }
-  { const b = $('fpsPadScope'); if (b) { b.hidden = FPS.weapon !== 'longarm'; b.classList.toggle('on', FPS.scoped); } }
+  { const b = $('fpsPadScope'); if (b) { const wc = fpsW(); b.hidden = !(wc.scope || wc.ads); b.classList.toggle('on', FPS.scoped); const lab = wc.ads ? 'Aim down the sights' : 'Look through the telescope'; if (b.getAttribute('aria-label') !== lab) b.setAttribute('aria-label', lab); } }
   set('fpsPadLantern', m.lan);
   set('fpsPadView', FPS.third);
   set('fpsPadJump', !((m.jz || 0) > 0) && !(m.dead > 0));
@@ -1348,7 +1376,7 @@ function fpsSafeArea() {
 
 // ---------- controls ----------
 const FPS_KEYS = { KeyR: fpsReload, KeyL: fpsLantern, KeyF: fpsFlare, KeyB: fpsBell, Space: fpsJump, KeyV: fpsToggleView, KeyC: fpsToggleView, KeyQ: () => fpsSwitch(FPS.last),
-  Digit1: () => fpsSwitch('pepperbox'), Digit2: () => fpsSwitch('blunderbuss'), Digit3: () => fpsSwitch('longarm'), Digit4: () => fpsSwitch('harpoon'), Digit5: () => fpsSwitch('cutlass') };
+  Digit1: () => fpsSwitch('pepperbox'), Digit2: () => fpsSwitch('blunderbuss'), Digit3: () => fpsSwitch('longarm'), Digit4: () => fpsSwitch('harpoon'), Digit5: () => fpsSwitch('cutlass'), Digit6: () => fpsSwitch('avtomat') };
 addEventListener('keydown', e => {
   if (!FPS.on) return;
   if (e.target && /INPUT|TEXTAREA/.test(e.target.tagName)) return;

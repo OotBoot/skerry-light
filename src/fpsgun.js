@@ -17,6 +17,12 @@
 //  - Cutlass: a curved blade with a fuller, a brass stirrup guard, a wire-bound grip. Swings come
 //    in threes (a forehand cut, a backhand cut, a thrust) with a pale trail through the air. R gives
 //    it a turn in the light and a wipe along the blade with your sleeve.
+//  - Avtomat: a short automatic rifle. A long receiver with a curved box magazine ahead of the pistol grip,
+//    a wooden handguard banded in brass, a muzzle brake, a notched rear sight and a hooded front post, and a
+//    charging handle on the left. Each round throws the handle back and the muzzle about. Aiming brings the
+//    rear notch and the front post up to your eye, lined up on the middle of the view. Reloading (long):
+//    tip it, thumb the catch, let the empty magazine drop, bring a full one up from the pouch, rock it in and
+//    slap it home, reach over and rack the handle.
 // Switching weapons brings the new one up from below.
 //
 // Colours come from the equipped weapon skin (wcEquippedSkin, from the weapon crates) when there is
@@ -56,6 +62,7 @@ const VM_PLAIN = {
   longarm:     { metal: '#30333a', dark: '#18191d', wood: '#56341e', brass: '#8a6a2c', accent: '#7aa0c8', glow: null },
   harpoon:     { metal: '#3e4046', dark: '#1e1f24', wood: '#5a3a22', brass: '#8a6a2c', accent: '#b8a070', glow: null },
   cutlass:     { metal: '#b8bcc4', dark: '#2a2b30', wood: '#2a1a10', brass: '#9a7a34', accent: '#c8a050', glow: null },
+  avtomat:     { metal: '#3a3d44', dark: '#1a1b20', wood: '#6a3e22', brass: '#8a6a2c', accent: '#b0a080', glow: null },
 };
 const vmHex = (c, d) => (typeof c === 'string' && /^#[0-9a-f]{6}$/i.test(c)) ? c : d;
 function vmSkinOf(id) {
@@ -346,6 +353,63 @@ VM_BUILD.cutlass = (M) => {
   return { root, M, sword, hand, tip, base, pose: { x: 0.15, y: -0.24, z: -0.46, rx: -0.75, ry: 0.0, rz: -0.45 }, melee: true };
 };
 
+// Avtomat ------------------------------------------------------------------------------------
+const VM_AVT_SIGHT = 0.083;   // the height of the sight line (the front post's tip) above the gun's origin
+function vmAvtMag(M) {
+  // a curved box magazine: three sections, each a touch further forward and tilted, and a base plate
+  const g = new THREE.Group();
+  for (let i = 0; i < 3; i++) { const b = box(0.024, 0.048, 0.05, M.dark, 0, -0.022 - i * 0.043, -i * 0.012); b.rotation.x = 0.13 * i; g.add(b); }
+  g.add(box(0.03, 0.008, 0.058, M.accent, 0, -0.152, -0.036));
+  g.add(box(0.026, 0.012, 0.03, M.iron, 0, 0.002, 0.01));   // the feed lips
+  return g;
+}
+VM_BUILD.avtomat = (M) => {
+  const root = new THREE.Group();
+  // receiver and its cover
+  root.add(box(0.044, 0.055, 0.28, M.iron, 0, 0.03, -0.06));
+  root.add(box(0.038, 0.008, 0.26, M.dark, 0, 0.061, -0.06));
+  root.add(box(0.046, 0.012, 0.03, M.brass, 0, 0.03, -0.19));   // the receiver's front ring
+  // rear sight: a base and two ears either side of the notch
+  root.add(box(0.03, 0.012, 0.024, M.dark, 0, 0.07, -0.03));
+  for (const sx of [-1, 1]) root.add(box(0.008, 0.012, 0.012, M.dark, sx * 0.0095, 0.082, -0.03));
+  // barrel, bands, brake
+  root.add(zcyl(0.011, 0.011, 0.44, M.iron, 14, -0.2, 0, 0.035));
+  root.add(zcyl(0.016, 0.015, 0.04, M.dark, 12, -0.62, 0, 0.035));
+  for (const z of [-0.632, -0.645]) root.add(box(0.034, 0.005, 0.004, M.bore, 0, 0.035, z));   // the brake's ports
+  const bore = new THREE.Mesh(new THREE.CircleGeometry(0.008, 12), M.bore); bore.position.set(0, 0.035, -0.661); root.add(bore);
+  // the wooden handguard, with an inlay, held by two brass bands
+  root.add(box(0.04, 0.042, 0.26, M.wood, 0, 0.027, -0.33));
+  root.add(box(0.0415, 0.004, 0.2, M.accent, 0, 0.03, -0.33));
+  for (const z of [-0.205, -0.455]) root.add(zcyl(0.025, 0.025, 0.012, M.brass, 16, z, 0, 0.028));
+  // front sight: a base on the barrel, the post, and a hood round it
+  root.add(box(0.012, 0.024, 0.016, M.dark, 0, 0.056, -0.598));
+  root.add(box(0.0035, 0.015, 0.004, M.dark, 0, VM_AVT_SIGHT - 0.0075, -0.6));
+  const hood = new THREE.Mesh(new THREE.TorusGeometry(0.014, 0.0022, 6, 18, Math.PI * 1.25), M.dark); hood.position.set(0, 0.074, -0.6); hood.rotation.z = -Math.PI * 0.125; root.add(hood);
+  // the magazine, ahead of the grip
+  const magHome = new THREE.Vector3(0, 0.004, -0.1);
+  const mag = vmAvtMag(M); mag.position.copy(magHome); root.add(mag);
+  const old = vmAvtMag(M); old.visible = false; root.add(old);
+  const fresh = vmAvtMag(M); fresh.visible = false; root.add(fresh);
+  root.add(box(0.03, 0.01, 0.06, M.iron, 0, 0.002, -0.1));   // the well
+  // pistol grip, trigger and guard
+  const grip = box(0.03, 0.095, 0.036, M.wood, 0, -0.04, 0.055); grip.rotation.x = -0.28; root.add(grip);
+  const guard = new THREE.Mesh(new THREE.TorusGeometry(0.022, 0.003, 6, 20, Math.PI), M.brass); guard.rotation.set(0, Math.PI / 2, Math.PI); guard.position.set(0, 0.004, 0.012); root.add(guard);
+  const trig = box(0.005, 0.022, 0.007, M.dark, 0, -0.004, 0.012); root.add(trig);
+  // the stock, its brass butt plate and a strap swivel
+  root.add(profile([[0.08, 0.056], [0.34, 0.036], [0.375, 0.036], [0.375, -0.078], [0.33, -0.072], [0.13, -0.006], [0.08, 0.004]], 0.036, M.wood, 0.004));
+  root.add(box(0.04, 0.116, 0.01, M.brass, 0, -0.021, 0.38));
+  root.add(box(0.006, 0.012, 0.01, M.brass, 0, -0.05, 0.25));
+  // the charging handle, on the left (the left hand racks it)
+  const handle = new THREE.Group(); handle.position.set(-0.024, 0.044, -0.13); root.add(handle);
+  handle.add(box(0.014, 0.008, 0.01, M.dark, -0.006, 0, 0)); { const knob = new THREE.Mesh(new THREE.SphereGeometry(0.0065, 8, 6), M.brass); knob.position.set(-0.015, 0, 0); handle.add(knob); }
+  // hands: the right on the grip, the left under the handguard
+  const hand = vmHand(VM.H, false); hand.position.set(0.0, -0.058, 0.07); hand.rotation.z = -0.2; root.add(hand);
+  const left = vmHand(VM.H, true); left.position.set(-0.012, -0.012, -0.34); left.rotation.set(0.3, 0, 0.5); root.add(left);
+  const muzzle = new THREE.Object3D(); muzzle.position.set(0, 0.035, -0.665); root.add(muzzle);
+  return { root, M, hand, left, mag, old, fresh, magHome, handle, trig, muzzle,
+    pose: { x: 0.075, y: -0.15, z: -0.36, rx: 0.06, ry: 0.07, rz: -0.04 }, smoke: 1 };
+};
+
 // ---------- each frame ----------
 const vmSeg = (p, a, b) => { const t = Math.max(0, Math.min(1, (p - a) / (b - a))); return t * t * (3 - 2 * t); };
 const vmLerp = (a, b, t) => a + (b - a) * t;
@@ -361,7 +425,7 @@ function vmDraw(dt) {
   const m = FPS.me;
   if (m.dead > 0) return true;
   if (!vmInit()) return false;
-  if (FPS.scoped) return true;   // looking through the telescope: the gun's out of sight
+  if (FPS.scoped && fpsW().scope) return true;   // looking through the telescope: the gun's out of sight
   // your coat changed: the sleeves follow
   const sk = JSON.stringify(fpsColours());
   if (sk !== VM.sleeve) { VM.sleeve = sk; const c = fpsColours(); VM.H.sleeve.color.set(vmHex(c[0], '#3a2a1e')); VM.H.cuff.color.set(vmHex(c[2], '#7a5a3a')); }
@@ -388,13 +452,13 @@ function vmDraw(dt) {
   if (S.reloading && wpn.steps) { for (const [x, fn] of wpn.steps) if (VM.lastP < x && S.p >= x) fn(); }
   VM.lastP = S.reloading ? S.p : 1;
   // the flash and the smoke at the muzzle
-  if (S.fired && !wpn.melee) { VM.flashT = id === 'blunderbuss' ? 0.09 : 0.06; vmPuff(wpn, wpn.smoke || 3); if (wpn.flint) VM.panT = 0.06; }
+  if (S.fired && !wpn.melee) { VM.flashT = id === 'blunderbuss' ? 0.09 : id === 'avtomat' ? 0.045 : 0.06; vmPuff(wpn, wpn.smoke || 3); if (wpn.flint) VM.panT = 0.06; }
   wpn.root.updateMatrixWorld(true);
   const mz = new THREE.Vector3(), mq = new THREE.Quaternion();
   if (wpn.muzzle) { wpn.muzzle.getWorldPosition(mz); wpn.muzzle.getWorldQuaternion(mq); VM.muzzle = mz.clone(); VM.muzzleQ = mq.clone(); }
   VM.flashT -= dt; VM.panT -= dt;
   VM.flash.visible = VM.flashT > 0 && !still && !!wpn.muzzle;
-  if (VM.flash.visible) { VM.flash.position.copy(mz); VM.flash.quaternion.copy(mq); VM.flash.rotateZ(Math.random() * 3); VM.flash.scale.setScalar((id === 'blunderbuss' ? 1.6 : id === 'harpoon' ? 0.7 : 1) * (0.8 + Math.random() * 0.5)); }
+  if (VM.flash.visible) { VM.flash.position.copy(mz); VM.flash.quaternion.copy(mq); VM.flash.rotateZ(Math.random() * 3); VM.flash.scale.setScalar((id === 'blunderbuss' ? 1.6 : id === 'harpoon' ? 0.7 : id === 'avtomat' ? 0.85 : 1) * (0.8 + Math.random() * 0.5)); }
   VM.pan.visible = VM.panT > 0 && !!wpn.panAt && !still;
   if (VM.pan.visible) { wpn.panAt.getWorldPosition(VM.pan.position); VM.pan.lookAt(VM.cam.position); VM.pan.scale.setScalar(1 + Math.random()); }
   VM.flashL.position.copy(mz); VM.flashL.intensity = VM.flashT > 0 ? (id === 'blunderbuss' ? 5 : 3) * flashK() : 0;
@@ -639,4 +703,56 @@ VM_ANIM.cutlass = (w, S) => {
     al.setX(i * 2, i < n ? f : 0); al.setX(i * 2 + 1, i < n ? f * 0.2 : 0);
   }
   pos.needsUpdate = true; al.needsUpdate = true;
+};
+VM_ANIM.avtomat = (w, S) => {
+  const p = S.p;
+  VM.lhand.visible = false;
+  // down the sights, or at the hip
+  const want = FPS.scoped && !S.reloading ? 1 : 0;
+  VM.ads = (VM.ads || 0) + (want - (VM.ads || 0)) * Math.min(1, S.dt * 14);
+  const a = VM.ads < 0.002 ? 0 : VM.ads;
+  // each round: the handle slams back, and the gun jumps a little this way and that
+  if (S.fired) { w.bolt = 1; w.jx = Math.random() - 0.5; w.jy = Math.random(); }
+  w.bolt = Math.max(0, (w.bolt || 0) - S.dt * 24);
+  // the reload, in its parts
+  const tip = vmSeg(p, 0, 0.1) - vmSeg(p, 0.88, 1);
+  const reachOld = vmSeg(p, 0.07, 0.17) - vmSeg(p, 0.22, 0.3);
+  const drop = S.reloading && p >= 0.19 && p < 0.42 ? (p - 0.19) / 0.23 : -1;
+  const bring = vmSeg(p, 0.38, 0.56), seat = vmSeg(p, 0.56, 0.63), slap = p > 0.63 && p < 0.69 ? Math.sin((p - 0.63) / 0.06 * Math.PI) : 0;
+  const toHandle = vmSeg(p, 0.69, 0.75) - vmSeg(p, 0.84, 0.9);
+  const pull = vmSeg(p, 0.75, 0.8) * (1 - vmSeg(p, 0.82, 0.835));
+  w.steps = w.steps || [[0.17, () => vmClick(650, 0.05)], [0.3, () => vmNoise(1500, 0.06, 0.12)], [0.4, () => vmNoise(900, 0.05, 0.2)], [0.62, () => vmClick(480, 0.08)], [0.66, () => vmNoise(700, 0.06, 0.06)], [0.79, () => vmClick(900, 0.06)], [0.83, () => { vmClick(560, 0.08); vmClick(1100, 0.04); }]];
+  // at the hip: the usual place, with a lighter kick (it's fired so fast), tipped over to show the magazine on a reload
+  const rec = S.rec, jx = w.jx || 0, jy = w.jy || 0;
+  const S2 = Object.assign({}, S, { rec: rec * 0.45 });
+  vmPlace(w, S2, 0, { x: -tip * 0.03 + jx * 0.006 * rec, y: -tip * 0.04 - slap * 0.012, z: -tip * 0.05, rx: tip * 0.3 + jy * 0.04 * rec, ry: -tip * 0.3 + jx * 0.03 * rec, rz: tip * 0.65 });
+  // down the sights: the rear notch near the eye, the post on the middle of the view; the kick shoves it back and up
+  if (a > 0) {
+    const L = vmLerp;
+    w.root.position.set(L(w.root.position.x, jx * 0.002 * rec, a), L(w.root.position.y, -VM_AVT_SIGHT - rec * 0.004, a), L(w.root.position.z, -0.19 + rec * 0.03, a));
+    w.root.rotation.set(L(w.root.rotation.x, rec * (0.035 + jy * 0.02), a), L(w.root.rotation.y, jx * rec * 0.025, a), L(w.root.rotation.z, jx * rec * 0.02, a));
+    w.root.scale.setScalar(L(S.sc, 1, a));
+  }
+  w.trig.rotation.x = S.trigger ? 0.35 : 0;
+  // the handle: back with every round, and racked by hand at the end of a reload
+  w.handle.position.z = -0.13 + Math.max(w.bolt * 0.045, pull * 0.07);
+  // magazines: the empty one drops away, a full one comes up and is rocked in
+  const out = S.reloading && p >= 0.19 && p < 0.63;
+  w.mag.visible = !out;
+  w.old.visible = drop >= 0 && drop < 1;
+  if (w.old.visible) { const f = drop; w.old.position.set(f * 0.02, w.magHome.y - f * f * 0.55, w.magHome.z + f * 0.05); w.old.rotation.set(f * 1.6, 0, f * 0.7); }
+  w.fresh.visible = S.reloading && p >= 0.38 && p < 0.63;
+  if (w.fresh.visible) {
+    const home = new THREE.Vector3(-0.2, -0.34, 0.04), under = new THREE.Vector3(0, w.magHome.y - 0.07, w.magHome.z - 0.02);
+    w.fresh.position.copy(home).lerp(under, bring).lerp(w.magHome, seat);
+    w.fresh.rotation.set((1 - bring) * 0.9 + (1 - seat) * 0.25 * bring, 0, (1 - bring) * -0.6);
+  }
+  // the left hand: to the catch, then with the full magazine, a slap, then over to the handle
+  if (S.reloading) {
+    if (reachOld > 0.01 && p < 0.3) vmLeftAt(w, new THREE.Vector3(-0.25, -0.35, 0.0).lerp(new THREE.Vector3(-0.02, -0.06, -0.1), reachOld), [0.4, 0, -0.5]);
+    else if (w.fresh.visible) vmLeftAt(w, w.fresh.position.clone().add(new THREE.Vector3(-0.02, -0.08, 0.0)), [0.3, 0, -0.4]);
+    else if (slap > 0.01) vmLeftAt(w, new THREE.Vector3(-0.01, -0.17 + slap * 0.02, -0.12), [0.2, 0, -0.3]);
+    else if (toHandle > 0.01) vmLeftAt(w, new THREE.Vector3(-0.2, -0.25, -0.2).lerp(new THREE.Vector3(-0.05, 0.04, -0.13 + pull * 0.07), toHandle), [0, -0.6, -1.2]);
+  }
+  w.left.visible = !VM.lhand.visible;
 };

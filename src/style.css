@@ -621,7 +621,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 .newgame .ng-go { flex: none; font-size: 16px; color: var(--lamp); }
 .fpscard { border-color: rgba(228,108,79,0.45); }
 .fpscard h1 { color: #f0b08e; }
-.weaponpick { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+.weaponpick { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; }
 .weaponpick .pick { display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 6px 4px 7px;
   background: rgba(255,255,255,0.03); border: 1px solid var(--rule); color: var(--ink); font-family: var(--log); }
 .weaponpick .pick b { font-size: 12px; letter-spacing: 0.06em; }
@@ -717,7 +717,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
   #titleCard > .newgame .ng-tag { font-size: 9px; padding: 2px 5px; }
   #titleCard > .card { max-width: none; width: auto; min-width: 0; }
   #titleCard .boatpick { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; }
-  #titleCard .weaponpick { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+  #titleCard .weaponpick { grid-template-columns: repeat(6, minmax(0, 1fr)); }
   #titleCard .pick { min-width: 0; overflow: hidden; }
   #titleCard .pick b { max-width: 100%; font-size: 9px; letter-spacing: 0; }
   #titleCard .pick small { display: none; }

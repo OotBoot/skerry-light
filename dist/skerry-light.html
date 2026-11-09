@@ -632,7 +632,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 .newgame .ng-go { flex: none; font-size: 16px; color: var(--lamp); }
 .fpscard { border-color: rgba(228,108,79,0.45); }
 .fpscard h1 { color: #f0b08e; }
-.weaponpick { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+.weaponpick { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; }
 .weaponpick .pick { display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 6px 4px 7px;
   background: rgba(255,255,255,0.03); border: 1px solid var(--rule); color: var(--ink); font-family: var(--log); }
 .weaponpick .pick b { font-size: 12px; letter-spacing: 0.06em; }
@@ -728,7 +728,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
   #titleCard > .newgame .ng-tag { font-size: 9px; padding: 2px 5px; }
   #titleCard > .card { max-width: none; width: auto; min-width: 0; }
   #titleCard .boatpick { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; }
-  #titleCard .weaponpick { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+  #titleCard .weaponpick { grid-template-columns: repeat(6, minmax(0, 1fr)); }
   #titleCard .pick { min-width: 0; overflow: hidden; }
   #titleCard .pick b { max-width: 100%; font-size: 9px; letter-spacing: 0; }
   #titleCard .pick small { display: none; }
@@ -1057,8 +1057,9 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
       <details class="howto">
         <summary>How to play</summary>
         <p>Light is everything. The lighthouse beam sweeps the island and shows anyone it crosses. Your lantern lets you see, and lets everyone see you. Flares light a wide circle for all. Ring the bell and everyone shows on your bearing strip, and you on theirs. The drowned crew wade ashore now and then. Keep out of trouble for a few seconds and you patch yourself up. Rounds last five minutes and the island moves to a new sea each round. Verity comes ashore too: if a small yellow thing sits down in front of you smiling, fire a flare before he stops. Bullets and the bell don’t bother him, and you can’t walk away from him. Wreckers (bots) fill the island up to four.</p>
-        <p><b>Keyboard and mouse:</b> click to aim · WASD walk · Shift run · Space jump · V over-the-shoulder view · click fire · right mouse: telescope (longarm) · 1-5, Q or the wheel: weapons · R reload · L lantern · F flare · B bell · Tab scores · Esc menu.</p>
-        <p><b>Controller:</b> sticks walk and aim · A jump · R3 (click the right stick) view · RT fire · LT telescope · RB or d-pad weapons · X reload · Y lantern · B flare · LB bell · Back scores · Start menu.</p>
+        <p><b>The avtomat</b> fires as long as you hold the trigger, twenty-five rounds a magazine, but it climbs and kicks with every round, sprays from the hip, and takes a long time to reload. Aim down its iron sights (right mouse, LT, or Aim on a phone) to bring the view closer and put every round where the front post sits; it still climbs, so pull down as you fire, and let go now and then.</p>
+        <p><b>Keyboard and mouse:</b> click to aim · WASD walk · Shift run · Space jump · V over-the-shoulder view · click fire · right mouse: telescope (longarm) or iron sights (avtomat) · 1-6, Q or the wheel: weapons · R reload · L lantern · F flare · B bell · Tab scores · Esc menu.</p>
+        <p><b>Controller:</b> sticks walk and aim · A jump · R3 (click the right stick) view · RT fire · LT telescope or sights · RB or d-pad weapons · X reload · Y lantern · B flare · LB bell · Back scores · Start menu.</p>
         <p><b>Touch:</b> put your left thumb down anywhere on the left to walk (push to the edge to run); drag on the right to aim, tap there to fire; or hold Fire and drag it to aim and shoot with one thumb. The arrow by Fire jumps; the camera button at the top switches between first person and over the shoulder. Aiming eases onto anyone you can see near the crosshair.</p>
       </details>
     </div>
@@ -11907,20 +11908,26 @@ const FPS = {
 };
 const FPS_BOT_NAMES = ['Wrecker Abe', 'Black Nell', 'Silas Crane', 'Old Tobias', 'Mother Carey', 'Jory Pengelly'];
 const FPS_SEAS = ['skerry', 'fjord', 'ember', 'lagoon', 'barrows', 'shoals'];
-// the five weapons: you carry them all (1-5 to switch); the one picked on the title card is in your hand when you land
+// the six weapons: you carry them all (1-6 to switch); the one picked on the title card is in your hand when you land
 //  pepperbox   six quick shots, one damage (two to the head)
 //  blunderbuss one shot of nine balls in a wide spread; deadly close, useless past fifty metres
 //  longarm     one heavy shot, three damage (a head shot kills); hold right mouse / Scope for the telescope
 //  harpoon     one barbed harpoon on a line, slow enough to see and to dodge, and it kills what it hits
 //  cutlass     no powder: swing it within arm's reach, two damage a cut, in a three-cut combination
+//  avtomat     an automatic rifle: twenty-five rounds as fast as you hold the trigger, one damage (two to the head);
+//              it climbs and kicks hard, sprays from the hip, and takes a long while to load; hold right mouse /
+//              Aim to look down its iron sights (closer, steadier, and every round goes where the sights are)
 const FPSW = {
   pepperbox:   { n: 'Pepperbox',   code: 'p', mag: 6, rate: 0.26, reload: 2.2, dmg: 1, head: 2, auto: true, range: 420, kick: 1 },
   blunderbuss: { n: 'Blunderbuss', code: 'b', mag: 1, rate: 0.6, reload: 2.7, dmg: 1, head: 1, pellets: 9, spread: 0.085, range: 55, kick: 2.4 },
   longarm:     { n: 'Longarm',     code: 'l', mag: 1, rate: 0.5, reload: 2.6, dmg: 3, head: 5, range: 650, hip: 0.012, scope: 3.2, kick: 1.6 },
   harpoon:     { n: 'Harpoon gun', code: 'h', mag: 1, rate: 0.6, reload: 2.9, dmg: 4, head: 4, speed: 72, drop: 5, range: 300, kick: 1.9 },
   cutlass:     { n: 'Cutlass',     code: 'c', mag: 0, rate: 0.48, reload: 1.6, dmg: 2, head: 2, reach: 2.7, arc: 0.8, melee: true, kick: 0 },
+  avtomat:     { n: 'Avtomat',     code: 'a', mag: 25, rate: 0.085, reload: 3.9, dmg: 1, head: 2, auto: true, range: 380, hip: 0.03, ads: 1.45, kick: 0.75, climb: 0.019, sway: 0.011 },
 };
-const FPS_WORDER = ['pepperbox', 'blunderbuss', 'longarm', 'harpoon', 'cutlass'];
+const FPS_WORDER = ['pepperbox', 'blunderbuss', 'longarm', 'harpoon', 'cutlass', 'avtomat'];
+// how much closer the view comes when aiming (the longarm's telescope, the avtomat's iron sights)
+const fpsZoom = () => { const w = fpsW(); return FPS.scoped ? (w.scope || w.ads || 1) : 1; };
 const FPSW_BY_CODE = {}; for (const id in FPSW) FPSW_BY_CODE[FPSW[id].code] = id;
 const fpsW = () => FPSW[FPS.weapon] || FPSW.pepperbox;
 const fpsWOf = code => FPSW[FPSW_BY_CODE[code] || 'pepperbox'];
@@ -11987,8 +11994,8 @@ function fpsTitleTick() {
   fpsLobbyStatus();
 }
 setInterval(fpsTitleTick, 1000);
-// the weapon picker on the card: all five, in your equipped weapon skins; the one picked is in hand when you land
-const FPS_WSTAT = { pepperbox: '6 shots · quick', blunderbuss: '9 balls · close', longarm: '1 shot · scope', harpoon: 'harpoon · slow', cutlass: 'blade · reach' };
+// the weapon picker on the card: all six, in your equipped weapon skins; the one picked is in hand when you land
+const FPS_WSTAT = { pepperbox: '6 shots · quick', blunderbuss: '9 balls · close', longarm: '1 shot · scope', harpoon: 'harpoon · slow', cutlass: 'blade · reach', avtomat: '25 rounds · auto' };
 function fpsRenderPicks() {
   const box = $('weaponPick'); if (!box) return;
   if (box.childElementCount !== FPS_WORDER.length) {
@@ -12380,10 +12387,13 @@ function fpsShoot() {
   if (m.dead > 0 || m.reload > 0 || m.cd > 0 || FPS.menu || FPS.drawT > 0) return;
   if (!w.melee && m.ammo <= 0) { fpsReload(); return; }
   if (!w.auto && !w.melee && FPS.heldFire) return;          // single-shot guns: one pull, one shot
+  // (holding the trigger of an automatic, the time past the last round carries over, so it keeps its rate on a slow screen)
+  const carry = w.auto && FPS.heldFire && m.cd < 0 ? Math.max(-0.3, m.cd) : 0;
   FPS.heldFire = true;
-  m.cd = w.rate; m.protect = 0;
+  m.cd = w.rate + carry; m.protect = 0;
   if (w.melee) { FPS.swing = (FPS.swing || 0) + 1; }
   else { m.ammo--; m.mags[FPS.weapon] = m.ammo; FPS.flash = 0.07; FPS.recoil = Math.min(1.6, w.kick); FPS.meFlashT = 0.12; }
+  const climbNext = !!w.climb;
   if (w.melee) FPS.meSlashT = 0.3;
   FPS.vmShots = (FPS.vmShots || 0) + 1;
   const z = FPSC.GROUND + FPSC.EYE + (m.jz || 0), seed = (Math.random() * 2147483647) | 0;
@@ -12391,6 +12401,13 @@ function fpsShoot() {
   const sh = fpsPublishShot(m.x, m.y, z, ah, ap, m.id, w.code, FPS.scoped ? 0 : seed);
   if (typeof fpsVerityShot === 'function') fpsVerityShot(m.x, m.y, ah);
   fpsResolveShot(sh, true);
+  // a gun that climbs: each round throws the muzzle up and a little to one side, after the round has gone; less
+  // when aimed down the sights. Some of the climb settles back when you let go of the trigger (see fpsFrame)
+  if (climbNext) {
+    const k = FPS.scoped ? 0.62 : 1, up = w.climb * k * (0.8 + Math.random() * 0.45);
+    m.p = clamp(m.p + up, -0.6, 0.6); m.h = wrapPi(m.h + (Math.random() - 0.45) * w.sway * k * 2);
+    FPS.climb = Math.min(0.25, (FPS.climb || 0) + up * 0.55); FPS.sinceShot = 0;
+  }
   if (!w.melee && m.ammo <= 0) setTimeout(fpsReload, w.mag === 1 ? 420 : 250);
 }
 // which way a shot leaves your gun. In first person that's simply where you look. Over the shoulder the camera sits
@@ -12455,7 +12472,7 @@ function fpsSwitch(id) {
   fpsSend();
 }
 const fpsCycle = d => fpsSwitch(FPS_WORDER[(FPS_WORDER.indexOf(FPS.weapon) + d + FPS_WORDER.length) % FPS_WORDER.length]);
-function fpsScope(on) { FPS.scoped = !!on && FPS.weapon === 'longarm' && !(FPS.me.reload > 0) && !(FPS.me.dead > 0); }
+function fpsScope(on) { const w = fpsW(); FPS.scoped = !!on && !!(w.scope || w.ads) && !(FPS.me.reload > 0) && !(FPS.me.dead > 0); }
 function fpsReload() {
   const m = FPS.me, w = fpsW();
   // (the cutlass has nothing to load: R gives it a wipe and a look along the edge instead)
@@ -12511,6 +12528,7 @@ function fpsWeaponSound(code, d, pan) {
     const v = Math.max(0.05, 1 - d / 400), o = { pan: Math.max(-1, Math.min(1, pan || 0)) };
     if (code === 'b') { noise('lowpass', 900 * v + 250, 0.6, 0.002, 0.8 * v, 0.55 + (1 - v) * 0.3, o); tone(55, 'sawtooth', 0.002, 0.35 * v, 0.3, { to: 30 }); }
     else if (code === 'l') { noise('lowpass', 2200 * v + 300, 0.8, 0.001, 0.7 * v, 0.45 + (1 - v) * 0.5, o); tone(120, 'triangle', 0.001, 0.25 * v, 0.25, { to: 40 }); }
+    else if (code === 'a') { noise('lowpass', 2800 * v + 400, 0.9, 0.001, 0.42 * v, 0.12 + (1 - v) * 0.3, o); tone(160, 'square', 0.001, 0.1 * v, 0.05, { to: 70 }); }
     else if (code === 'h') { noise('lowpass', 500, 0.8, 0.003, 0.5 * v, 0.25, o); tone(70, 'triangle', 0.003, 0.4 * v, 0.2, { to: 35 }); noise('highpass', 3000, 0.7, 0.05, 0.12 * v, 0.6, o); }
     else fpsGunSound(d, pan);
   } catch (e) {}
@@ -12702,6 +12720,9 @@ function fpsFrame(dt) {
     if ((FPS.hintT || 0) > 0 && (FPS.stick || FPS.lookTouch)) FPS.hintT -= dt * 2; else if ((FPS.hintT || 0) > 0) FPS.hintT -= dt * 0.25;
     for (const k of ['flash', 'hitT', 'hurtT']) if (FPS[k] > 0) FPS[k] -= dt;
     FPS.recoil = Math.max(0, FPS.recoil - dt * 6);
+    // the avtomat's climb: once the trigger's let go, the muzzle settles back part of the way
+    FPS.sinceShot = (FPS.sinceShot || 0) + dt;
+    if ((FPS.climb || 0) > 0 && FPS.sinceShot > 0.14) { const d = Math.min(FPS.climb, dt * 0.4); m.p = clamp(m.p - d, -0.6, 0.6); FPS.climb -= d; }
     for (const p of FPS.pings) p.t -= dt; FPS.pings = FPS.pings.filter(p => p.t > 0);
     for (const t of FPS.tracers) t.t -= dt; FPS.tracers = FPS.tracers.filter(t => t.t > 0);
     for (const f of FPS.feed) f.t -= dt; FPS.feed = FPS.feed.filter(f => f.t > 0);
@@ -12725,7 +12746,7 @@ function fpsInput(dt) {
   const aiming = Math.abs(FPS.look[0]) + Math.abs(FPS.look[1]) > 0.5;
   const assist = FPS.touch && !FPS.scoped ? fpsAssistTarget() : null;
   if (assist) sens *= 0.8;
-  if (FPS.scoped) sens /= FPSW.longarm.scope;
+  if (FPS.scoped) sens /= fpsZoom();
   m.h = wrapPi(m.h + FPS.look[0] * sens); m.p = clamp(m.p - FPS.look[1] * sens, -0.6, 0.6);
   if (assist && aiming && !(m.dead > 0)) {
     m.h = wrapPi(m.h + clamp(assist.dh, -1, 1) * Math.min(1, dt * 1.1));
@@ -12751,7 +12772,11 @@ function fpsInput(dt) {
   if (K.KeyD) fx += 1; if (K.KeyA) fx -= 1;
   if (K.ArrowLeft) m.h = wrapPi(m.h - dt * 2.2); if (K.ArrowRight) m.h = wrapPi(m.h + dt * 2.2);
   if (FPS.stick) { fx += FPS.stick.dx; fz -= FPS.stick.dy; }
-  if (FPS.mouseDown || FPS.touchFire || fire) fpsShoot();
+  if (FPS.mouseDown || FPS.touchFire || fire) {
+    // a slow frame may owe an automatic more than one round
+    fpsShoot();
+    for (let k = 0; k < 3 && fpsW().auto && m.cd <= 0 && m.ammo > 0 && !(m.reload > 0) && FPS.heldFire; k++) fpsShoot();
+  }
   const len = Math.hypot(fx, fz);
   m.walk = false;
   if (m.dead <= 0 && len > 0.05 && !FPS.menu) {
@@ -12784,11 +12809,11 @@ function fpsDraw() {
   if (FPS.vScare > 0) { drawVerityScare(FPSV.SCARE - FPS.vScare); return; }
   // looking through the longarm's telescope: everything drawn with a longer focal length, then put back
   const f0 = focal;
-  if (FPS.scoped) focal = f0 * FPSW.longarm.scope;
+  if (FPS.scoped) focal = f0 * fpsZoom();
   try { fpsDrawScene(); } finally { focal = f0; }
   fpsDrawHands();
   drawAtmosphere();
-  if (FPS.scoped) fpsDrawScope();
+  if (FPS.scoped && fpsW().scope) fpsDrawScope();
   fpsHud();
 }
 function fpsDrawScene() {
@@ -12949,7 +12974,7 @@ function fpsDrawPerson(o, c) {
   if (o.me && (o.w || 'p') !== 'c') {
     const sh = Math.sin(o.h), ch = Math.cos(o.h), cp = Math.cos(o.p || 0), spp = Math.sin(o.p || 0), base = FPSC.GROUND + (o.jz || 0);
     const at = (fwd, right, up) => cam(o.x + sh * cp * fwd + ch * right, o.y + ch * cp * fwd - sh * right, base + up + spp * fwd);
-    const wc = o.w || 'p', glen = wc === 'l' ? 1.15 : wc === 'h' ? 0.95 : wc === 'b' ? 0.8 : 0.42, kick = (o.flashT || 0) > 0 ? -0.08 : 0;
+    const wc = o.w || 'p', glen = wc === 'l' ? 1.15 : wc === 'h' ? 0.95 : wc === 'a' ? 0.9 : wc === 'b' ? 0.8 : 0.42, kick = (o.flashT || 0) > 0 ? -0.08 : 0;
     const pts = [at(0, 0.26, 1.42), at(0.45 + kick, 0.3, 1.36), at(0.45 + kick + glen, 0.28, 1.4)];
     if (pts.every(q => q.f > 0.3)) {
       const [S, Hd, M] = pts.map(q => proj(q));
@@ -13084,10 +13109,14 @@ function fpsHud() {
   // crosshair, and a mark when you hit
   const cy = H / 2;
   if (m.dead <= 0) {
-    ctx.strokeStyle = 'rgba(236,228,207,0.75)'; ctx.lineWidth = 1.5; ctx.beginPath();
-    const gap = 5 + FPS.recoil * 6;
-    for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { ctx.moveTo(cx + dx * gap, cy + dy * gap); ctx.lineTo(cx + dx * (gap + 7), cy + dy * (gap + 7)); }
-    ctx.stroke();
+    // (down the avtomat's iron sights, the sights are the crosshair)
+    const wcur = fpsW();
+    if (!(FPS.scoped && wcur.ads)) {
+      ctx.strokeStyle = 'rgba(236,228,207,0.75)'; ctx.lineWidth = 1.5; ctx.beginPath();
+      const gap = 5 + FPS.recoil * (wcur.climb ? 14 : 6);
+      for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { ctx.moveTo(cx + dx * gap, cy + dy * gap); ctx.lineTo(cx + dx * (gap + 7), cy + dy * (gap + 7)); }
+      ctx.stroke();
+    }
     if (FPS.hitT > 0) { ctx.strokeStyle = FPS.hitHead ? 'rgba(255,90,60,0.95)' : 'rgba(255,240,200,0.95)'; ctx.lineWidth = 2; ctx.beginPath(); for (const [dx, dy] of [[1, 1], [-1, 1], [1, -1], [-1, -1]]) { ctx.moveTo(cx + dx * 6, cy + dy * 6); ctx.lineTo(cx + dx * 13, cy + dy * 13); } ctx.stroke(); }
   }
   // on a phone: less of everything, and nothing where your thumbs go
@@ -13153,7 +13182,7 @@ function fpsHud() {
     ctx.textAlign = 'right'; ctx.font = mono(22); ctx.fillStyle = m.ammo ? 'rgba(236,228,207,0.9)' : '#e46c4f';
     const w = fpsW();
     ctx.fillText(m.reload > 0 ? (w.melee ? 'WIPING' : 'RELOADING') : w.melee ? 'CUTLASS' : `${m.ammo} / ${w.mag}`, W - 16, by);
-    // the five weapons, the one in hand lit
+    // the six weapons, the one in hand lit
     ctx.font = mono(11); let wx = W - 16;
     for (let i = FPS_WORDER.length - 1; i >= 0; i--) {
       const id = FPS_WORDER[i], on = id === FPS.weapon, lab = `${i + 1} ${FPSW[id].n.toUpperCase()}`;
@@ -13200,7 +13229,7 @@ function fpsPadState() {
   set('fpsPadFire', (w.melee || m.ammo > 0) && !(m.reload > 0), m.reload > 0 ? '…' : w.melee ? '⚔' : String(m.ammo));
   { const f = $('fpsPadFire').querySelector('small'); if (f && f.textContent !== (w.melee ? 'SWING' : 'FIRE')) f.textContent = w.melee ? 'SWING' : 'FIRE'; }
   { const b = $('fpsPadWeapon'); if (b) { const c = b.querySelector('.wn'); if (c && c.textContent !== w.n) c.textContent = w.n; } }
-  { const b = $('fpsPadScope'); if (b) { b.hidden = FPS.weapon !== 'longarm'; b.classList.toggle('on', FPS.scoped); } }
+  { const b = $('fpsPadScope'); if (b) { const wc = fpsW(); b.hidden = !(wc.scope || wc.ads); b.classList.toggle('on', FPS.scoped); const lab = wc.ads ? 'Aim down the sights' : 'Look through the telescope'; if (b.getAttribute('aria-label') !== lab) b.setAttribute('aria-label', lab); } }
   set('fpsPadLantern', m.lan);
   set('fpsPadView', FPS.third);
   set('fpsPadJump', !((m.jz || 0) > 0) && !(m.dead > 0));
@@ -13220,7 +13249,7 @@ function fpsSafeArea() {
 
 // ---------- controls ----------
 const FPS_KEYS = { KeyR: fpsReload, KeyL: fpsLantern, KeyF: fpsFlare, KeyB: fpsBell, Space: fpsJump, KeyV: fpsToggleView, KeyC: fpsToggleView, KeyQ: () => fpsSwitch(FPS.last),
-  Digit1: () => fpsSwitch('pepperbox'), Digit2: () => fpsSwitch('blunderbuss'), Digit3: () => fpsSwitch('longarm'), Digit4: () => fpsSwitch('harpoon'), Digit5: () => fpsSwitch('cutlass') };
+  Digit1: () => fpsSwitch('pepperbox'), Digit2: () => fpsSwitch('blunderbuss'), Digit3: () => fpsSwitch('longarm'), Digit4: () => fpsSwitch('harpoon'), Digit5: () => fpsSwitch('cutlass'), Digit6: () => fpsSwitch('avtomat') };
 addEventListener('keydown', e => {
   if (!FPS.on) return;
   if (e.target && /INPUT|TEXTAREA/.test(e.target.tagName)) return;
@@ -14747,6 +14776,12 @@ function fpsVerityHud(phone) {
 //  - Cutlass: a curved blade with a fuller, a brass stirrup guard, a wire-bound grip. Swings come
 //    in threes (a forehand cut, a backhand cut, a thrust) with a pale trail through the air. R gives
 //    it a turn in the light and a wipe along the blade with your sleeve.
+//  - Avtomat: a short automatic rifle. A long receiver with a curved box magazine ahead of the pistol grip,
+//    a wooden handguard banded in brass, a muzzle brake, a notched rear sight and a hooded front post, and a
+//    charging handle on the left. Each round throws the handle back and the muzzle about. Aiming brings the
+//    rear notch and the front post up to your eye, lined up on the middle of the view. Reloading (long):
+//    tip it, thumb the catch, let the empty magazine drop, bring a full one up from the pouch, rock it in and
+//    slap it home, reach over and rack the handle.
 // Switching weapons brings the new one up from below.
 //
 // Colours come from the equipped weapon skin (wcEquippedSkin, from the weapon crates) when there is
@@ -14786,6 +14821,7 @@ const VM_PLAIN = {
   longarm:     { metal: '#30333a', dark: '#18191d', wood: '#56341e', brass: '#8a6a2c', accent: '#7aa0c8', glow: null },
   harpoon:     { metal: '#3e4046', dark: '#1e1f24', wood: '#5a3a22', brass: '#8a6a2c', accent: '#b8a070', glow: null },
   cutlass:     { metal: '#b8bcc4', dark: '#2a2b30', wood: '#2a1a10', brass: '#9a7a34', accent: '#c8a050', glow: null },
+  avtomat:     { metal: '#3a3d44', dark: '#1a1b20', wood: '#6a3e22', brass: '#8a6a2c', accent: '#b0a080', glow: null },
 };
 const vmHex = (c, d) => (typeof c === 'string' && /^#[0-9a-f]{6}$/i.test(c)) ? c : d;
 function vmSkinOf(id) {
@@ -15076,6 +15112,63 @@ VM_BUILD.cutlass = (M) => {
   return { root, M, sword, hand, tip, base, pose: { x: 0.15, y: -0.24, z: -0.46, rx: -0.75, ry: 0.0, rz: -0.45 }, melee: true };
 };
 
+// Avtomat ------------------------------------------------------------------------------------
+const VM_AVT_SIGHT = 0.083;   // the height of the sight line (the front post's tip) above the gun's origin
+function vmAvtMag(M) {
+  // a curved box magazine: three sections, each a touch further forward and tilted, and a base plate
+  const g = new THREE.Group();
+  for (let i = 0; i < 3; i++) { const b = box(0.024, 0.048, 0.05, M.dark, 0, -0.022 - i * 0.043, -i * 0.012); b.rotation.x = 0.13 * i; g.add(b); }
+  g.add(box(0.03, 0.008, 0.058, M.accent, 0, -0.152, -0.036));
+  g.add(box(0.026, 0.012, 0.03, M.iron, 0, 0.002, 0.01));   // the feed lips
+  return g;
+}
+VM_BUILD.avtomat = (M) => {
+  const root = new THREE.Group();
+  // receiver and its cover
+  root.add(box(0.044, 0.055, 0.28, M.iron, 0, 0.03, -0.06));
+  root.add(box(0.038, 0.008, 0.26, M.dark, 0, 0.061, -0.06));
+  root.add(box(0.046, 0.012, 0.03, M.brass, 0, 0.03, -0.19));   // the receiver's front ring
+  // rear sight: a base and two ears either side of the notch
+  root.add(box(0.03, 0.012, 0.024, M.dark, 0, 0.07, -0.03));
+  for (const sx of [-1, 1]) root.add(box(0.008, 0.012, 0.012, M.dark, sx * 0.0095, 0.082, -0.03));
+  // barrel, bands, brake
+  root.add(zcyl(0.011, 0.011, 0.44, M.iron, 14, -0.2, 0, 0.035));
+  root.add(zcyl(0.016, 0.015, 0.04, M.dark, 12, -0.62, 0, 0.035));
+  for (const z of [-0.632, -0.645]) root.add(box(0.034, 0.005, 0.004, M.bore, 0, 0.035, z));   // the brake's ports
+  const bore = new THREE.Mesh(new THREE.CircleGeometry(0.008, 12), M.bore); bore.position.set(0, 0.035, -0.661); root.add(bore);
+  // the wooden handguard, with an inlay, held by two brass bands
+  root.add(box(0.04, 0.042, 0.26, M.wood, 0, 0.027, -0.33));
+  root.add(box(0.0415, 0.004, 0.2, M.accent, 0, 0.03, -0.33));
+  for (const z of [-0.205, -0.455]) root.add(zcyl(0.025, 0.025, 0.012, M.brass, 16, z, 0, 0.028));
+  // front sight: a base on the barrel, the post, and a hood round it
+  root.add(box(0.012, 0.024, 0.016, M.dark, 0, 0.056, -0.598));
+  root.add(box(0.0035, 0.015, 0.004, M.dark, 0, VM_AVT_SIGHT - 0.0075, -0.6));
+  const hood = new THREE.Mesh(new THREE.TorusGeometry(0.014, 0.0022, 6, 18, Math.PI * 1.25), M.dark); hood.position.set(0, 0.074, -0.6); hood.rotation.z = -Math.PI * 0.125; root.add(hood);
+  // the magazine, ahead of the grip
+  const magHome = new THREE.Vector3(0, 0.004, -0.1);
+  const mag = vmAvtMag(M); mag.position.copy(magHome); root.add(mag);
+  const old = vmAvtMag(M); old.visible = false; root.add(old);
+  const fresh = vmAvtMag(M); fresh.visible = false; root.add(fresh);
+  root.add(box(0.03, 0.01, 0.06, M.iron, 0, 0.002, -0.1));   // the well
+  // pistol grip, trigger and guard
+  const grip = box(0.03, 0.095, 0.036, M.wood, 0, -0.04, 0.055); grip.rotation.x = -0.28; root.add(grip);
+  const guard = new THREE.Mesh(new THREE.TorusGeometry(0.022, 0.003, 6, 20, Math.PI), M.brass); guard.rotation.set(0, Math.PI / 2, Math.PI); guard.position.set(0, 0.004, 0.012); root.add(guard);
+  const trig = box(0.005, 0.022, 0.007, M.dark, 0, -0.004, 0.012); root.add(trig);
+  // the stock, its brass butt plate and a strap swivel
+  root.add(profile([[0.08, 0.056], [0.34, 0.036], [0.375, 0.036], [0.375, -0.078], [0.33, -0.072], [0.13, -0.006], [0.08, 0.004]], 0.036, M.wood, 0.004));
+  root.add(box(0.04, 0.116, 0.01, M.brass, 0, -0.021, 0.38));
+  root.add(box(0.006, 0.012, 0.01, M.brass, 0, -0.05, 0.25));
+  // the charging handle, on the left (the left hand racks it)
+  const handle = new THREE.Group(); handle.position.set(-0.024, 0.044, -0.13); root.add(handle);
+  handle.add(box(0.014, 0.008, 0.01, M.dark, -0.006, 0, 0)); { const knob = new THREE.Mesh(new THREE.SphereGeometry(0.0065, 8, 6), M.brass); knob.position.set(-0.015, 0, 0); handle.add(knob); }
+  // hands: the right on the grip, the left under the handguard
+  const hand = vmHand(VM.H, false); hand.position.set(0.0, -0.058, 0.07); hand.rotation.z = -0.2; root.add(hand);
+  const left = vmHand(VM.H, true); left.position.set(-0.012, -0.012, -0.34); left.rotation.set(0.3, 0, 0.5); root.add(left);
+  const muzzle = new THREE.Object3D(); muzzle.position.set(0, 0.035, -0.665); root.add(muzzle);
+  return { root, M, hand, left, mag, old, fresh, magHome, handle, trig, muzzle,
+    pose: { x: 0.075, y: -0.15, z: -0.36, rx: 0.06, ry: 0.07, rz: -0.04 }, smoke: 1 };
+};
+
 // ---------- each frame ----------
 const vmSeg = (p, a, b) => { const t = Math.max(0, Math.min(1, (p - a) / (b - a))); return t * t * (3 - 2 * t); };
 const vmLerp = (a, b, t) => a + (b - a) * t;
@@ -15091,7 +15184,7 @@ function vmDraw(dt) {
   const m = FPS.me;
   if (m.dead > 0) return true;
   if (!vmInit()) return false;
-  if (FPS.scoped) return true;   // looking through the telescope: the gun's out of sight
+  if (FPS.scoped && fpsW().scope) return true;   // looking through the telescope: the gun's out of sight
   // your coat changed: the sleeves follow
   const sk = JSON.stringify(fpsColours());
   if (sk !== VM.sleeve) { VM.sleeve = sk; const c = fpsColours(); VM.H.sleeve.color.set(vmHex(c[0], '#3a2a1e')); VM.H.cuff.color.set(vmHex(c[2], '#7a5a3a')); }
@@ -15118,13 +15211,13 @@ function vmDraw(dt) {
   if (S.reloading && wpn.steps) { for (const [x, fn] of wpn.steps) if (VM.lastP < x && S.p >= x) fn(); }
   VM.lastP = S.reloading ? S.p : 1;
   // the flash and the smoke at the muzzle
-  if (S.fired && !wpn.melee) { VM.flashT = id === 'blunderbuss' ? 0.09 : 0.06; vmPuff(wpn, wpn.smoke || 3); if (wpn.flint) VM.panT = 0.06; }
+  if (S.fired && !wpn.melee) { VM.flashT = id === 'blunderbuss' ? 0.09 : id === 'avtomat' ? 0.045 : 0.06; vmPuff(wpn, wpn.smoke || 3); if (wpn.flint) VM.panT = 0.06; }
   wpn.root.updateMatrixWorld(true);
   const mz = new THREE.Vector3(), mq = new THREE.Quaternion();
   if (wpn.muzzle) { wpn.muzzle.getWorldPosition(mz); wpn.muzzle.getWorldQuaternion(mq); VM.muzzle = mz.clone(); VM.muzzleQ = mq.clone(); }
   VM.flashT -= dt; VM.panT -= dt;
   VM.flash.visible = VM.flashT > 0 && !still && !!wpn.muzzle;
-  if (VM.flash.visible) { VM.flash.position.copy(mz); VM.flash.quaternion.copy(mq); VM.flash.rotateZ(Math.random() * 3); VM.flash.scale.setScalar((id === 'blunderbuss' ? 1.6 : id === 'harpoon' ? 0.7 : 1) * (0.8 + Math.random() * 0.5)); }
+  if (VM.flash.visible) { VM.flash.position.copy(mz); VM.flash.quaternion.copy(mq); VM.flash.rotateZ(Math.random() * 3); VM.flash.scale.setScalar((id === 'blunderbuss' ? 1.6 : id === 'harpoon' ? 0.7 : id === 'avtomat' ? 0.85 : 1) * (0.8 + Math.random() * 0.5)); }
   VM.pan.visible = VM.panT > 0 && !!wpn.panAt && !still;
   if (VM.pan.visible) { wpn.panAt.getWorldPosition(VM.pan.position); VM.pan.lookAt(VM.cam.position); VM.pan.scale.setScalar(1 + Math.random()); }
   VM.flashL.position.copy(mz); VM.flashL.intensity = VM.flashT > 0 ? (id === 'blunderbuss' ? 5 : 3) * flashK() : 0;
@@ -15369,6 +15462,58 @@ VM_ANIM.cutlass = (w, S) => {
     al.setX(i * 2, i < n ? f : 0); al.setX(i * 2 + 1, i < n ? f * 0.2 : 0);
   }
   pos.needsUpdate = true; al.needsUpdate = true;
+};
+VM_ANIM.avtomat = (w, S) => {
+  const p = S.p;
+  VM.lhand.visible = false;
+  // down the sights, or at the hip
+  const want = FPS.scoped && !S.reloading ? 1 : 0;
+  VM.ads = (VM.ads || 0) + (want - (VM.ads || 0)) * Math.min(1, S.dt * 14);
+  const a = VM.ads < 0.002 ? 0 : VM.ads;
+  // each round: the handle slams back, and the gun jumps a little this way and that
+  if (S.fired) { w.bolt = 1; w.jx = Math.random() - 0.5; w.jy = Math.random(); }
+  w.bolt = Math.max(0, (w.bolt || 0) - S.dt * 24);
+  // the reload, in its parts
+  const tip = vmSeg(p, 0, 0.1) - vmSeg(p, 0.88, 1);
+  const reachOld = vmSeg(p, 0.07, 0.17) - vmSeg(p, 0.22, 0.3);
+  const drop = S.reloading && p >= 0.19 && p < 0.42 ? (p - 0.19) / 0.23 : -1;
+  const bring = vmSeg(p, 0.38, 0.56), seat = vmSeg(p, 0.56, 0.63), slap = p > 0.63 && p < 0.69 ? Math.sin((p - 0.63) / 0.06 * Math.PI) : 0;
+  const toHandle = vmSeg(p, 0.69, 0.75) - vmSeg(p, 0.84, 0.9);
+  const pull = vmSeg(p, 0.75, 0.8) * (1 - vmSeg(p, 0.82, 0.835));
+  w.steps = w.steps || [[0.17, () => vmClick(650, 0.05)], [0.3, () => vmNoise(1500, 0.06, 0.12)], [0.4, () => vmNoise(900, 0.05, 0.2)], [0.62, () => vmClick(480, 0.08)], [0.66, () => vmNoise(700, 0.06, 0.06)], [0.79, () => vmClick(900, 0.06)], [0.83, () => { vmClick(560, 0.08); vmClick(1100, 0.04); }]];
+  // at the hip: the usual place, with a lighter kick (it's fired so fast), tipped over to show the magazine on a reload
+  const rec = S.rec, jx = w.jx || 0, jy = w.jy || 0;
+  const S2 = Object.assign({}, S, { rec: rec * 0.45 });
+  vmPlace(w, S2, 0, { x: -tip * 0.03 + jx * 0.006 * rec, y: -tip * 0.04 - slap * 0.012, z: -tip * 0.05, rx: tip * 0.3 + jy * 0.04 * rec, ry: -tip * 0.3 + jx * 0.03 * rec, rz: tip * 0.65 });
+  // down the sights: the rear notch near the eye, the post on the middle of the view; the kick shoves it back and up
+  if (a > 0) {
+    const L = vmLerp;
+    w.root.position.set(L(w.root.position.x, jx * 0.002 * rec, a), L(w.root.position.y, -VM_AVT_SIGHT - rec * 0.004, a), L(w.root.position.z, -0.19 + rec * 0.03, a));
+    w.root.rotation.set(L(w.root.rotation.x, rec * (0.035 + jy * 0.02), a), L(w.root.rotation.y, jx * rec * 0.025, a), L(w.root.rotation.z, jx * rec * 0.02, a));
+    w.root.scale.setScalar(L(S.sc, 1, a));
+  }
+  w.trig.rotation.x = S.trigger ? 0.35 : 0;
+  // the handle: back with every round, and racked by hand at the end of a reload
+  w.handle.position.z = -0.13 + Math.max(w.bolt * 0.045, pull * 0.07);
+  // magazines: the empty one drops away, a full one comes up and is rocked in
+  const out = S.reloading && p >= 0.19 && p < 0.63;
+  w.mag.visible = !out;
+  w.old.visible = drop >= 0 && drop < 1;
+  if (w.old.visible) { const f = drop; w.old.position.set(f * 0.02, w.magHome.y - f * f * 0.55, w.magHome.z + f * 0.05); w.old.rotation.set(f * 1.6, 0, f * 0.7); }
+  w.fresh.visible = S.reloading && p >= 0.38 && p < 0.63;
+  if (w.fresh.visible) {
+    const home = new THREE.Vector3(-0.2, -0.34, 0.04), under = new THREE.Vector3(0, w.magHome.y - 0.07, w.magHome.z - 0.02);
+    w.fresh.position.copy(home).lerp(under, bring).lerp(w.magHome, seat);
+    w.fresh.rotation.set((1 - bring) * 0.9 + (1 - seat) * 0.25 * bring, 0, (1 - bring) * -0.6);
+  }
+  // the left hand: to the catch, then with the full magazine, a slap, then over to the handle
+  if (S.reloading) {
+    if (reachOld > 0.01 && p < 0.3) vmLeftAt(w, new THREE.Vector3(-0.25, -0.35, 0.0).lerp(new THREE.Vector3(-0.02, -0.06, -0.1), reachOld), [0.4, 0, -0.5]);
+    else if (w.fresh.visible) vmLeftAt(w, w.fresh.position.clone().add(new THREE.Vector3(-0.02, -0.08, 0.0)), [0.3, 0, -0.4]);
+    else if (slap > 0.01) vmLeftAt(w, new THREE.Vector3(-0.01, -0.17 + slap * 0.02, -0.12), [0.2, 0, -0.3]);
+    else if (toHandle > 0.01) vmLeftAt(w, new THREE.Vector3(-0.2, -0.25, -0.2).lerp(new THREE.Vector3(-0.05, 0.04, -0.13 + pull * 0.07), toHandle), [0, -0.6, -1.2]);
+  }
+  w.left.visible = !VM.lhand.visible;
 };
 
 // ---- src/fpsbody.js ----
@@ -15644,7 +15789,7 @@ function fpsBodySync(show) {
   for (const k in FB.wpn) FB.wpn[k].root.visible = k === id;
   const rec = Math.max(0, (FPS.meFlashT || 0) / 0.12), draw = Math.max(0, (FPS.drawT || 0) / 0.45);
   const rl = m.reload > 0 ? Math.sin(Math.min(1, 1 - m.reload / w.reload) * Math.PI) : 0;
-  const long = id === 'blunderbuss' || id === 'longarm' || id === 'harpoon';
+  const long = id === 'blunderbuss' || id === 'longarm' || id === 'harpoon' || id === 'avtomat';
   if (w.melee) {
     // the cutlass, point up and forward; each cut sweeps it across
     const s = (FPS.meSlashT || 0) > 0 ? 1 - FPS.meSlashT / 0.3 : -1;
@@ -17901,7 +18046,7 @@ function boardRender() {
 // ---- src/wcrates.js ----
 // Wreckers' Night: weapon skin crates.
 //
-// A crate system of its own for the five Wreckers' Night weapons, kept completely apart from the
+// A crate system of its own for the six Wreckers' Night weapons, kept completely apart from the
 // boat crates in crates.js: its own save (localStorage 'skerry-wcrates'), its own crate count, its
 // own card. It never reads or writes CRATES, voyages or crews. It borrows the boat crates' grades
 // and odds (RARITIES), their card styles, and the reel sounds, without changing any of them.
@@ -17929,6 +18074,7 @@ const WC_WEAPONS = [
   { id: 'longarm',     name: 'Longarm' },
   { id: 'harpoon',     name: 'Harpoon gun' },
   { id: 'cutlass',     name: 'Cutlass' },
+  { id: 'avtomat',     name: 'Avtomat' },
 ];
 const WC_WEAPON_BY_ID = Object.fromEntries(WC_WEAPONS.map(w => [w.id, w]));
 
@@ -17998,6 +18144,19 @@ const WC_SKIN_ROWS = {
     ['cl_dusk',     'Dusk at the Door',        'captain',  '#e8dce6', '#5a4a5e', '#221d26', '#ffd6c0', '#9a8098', '#ffcf9a'],
     ['cl_wrecker',  "Wrecker's Lantern",       'captain',  '#2a2a2e', '#0e0e10', '#4a1f18', '#e46c4f', '#86cfae', '#ff6b5a'],
     ['cl_lastlamp', 'The Last Lamp',           'admiral',  '#fff6dc', '#a37a12', '#1a1208', '#ffd34d', '#ffffff', '#fff3c4'],
+  ],
+  avtomat: [
+    ['av_plain',    'Avtomat, as stamped',     null,       '#4a4d54', '#202227', '#6a3e22', '#8a6a2c', '#c8bfa8', null],
+    ['av_rigging',  'Rigging Tar',             'deckhand', '#2c2e33', '#121316', '#2a1c12', '#5e4a2a', '#9a9286', null],
+    ['av_birch',    'Birch and Pewter',        'deckhand', '#8a8e94', '#3a3c40', '#d8c8a0', '#9a9a94', '#e8e4dc', null],
+    ['av_kelp',     'Kelp-Wrapped',            'deckhand', '#3e4a3a', '#1a2218', '#4a5a32', '#7a8a4a', '#b8d088', null],
+    ['av_frost',    'Hoarfrost',               'bosun',    '#c4d8e4', '#4a6274', '#eef4f8', '#a8c8dc', '#ffffff', null],
+    ['av_signal',   'Signal Red',              'bosun',    '#7a2a22', '#2a0e0c', '#3a1e14', '#d8a040', '#ffd8a0', null],
+    ['av_abyss',    'Abyssal Blue',            'mate',     '#1a3a6a', '#0a1428', '#14284a', '#5ab0ff', '#a8e0ff', null],
+    ['av_coral',    'Coral Reef',              'mate',     '#d86a5a', '#4a1a18', '#f2e0c8', '#ffb070', '#fff0d8', null],
+    ['av_storm',    'Stormglass',              'captain',  '#3a4250', '#12161c', '#2a3240', '#b8f0ff', '#e0f8ff', '#8ae8ff'],
+    ['av_bonfire',  "The Wreckers' Bonfire",   'captain',  '#2a1810', '#100804', '#3a1a0a', '#ff9a3a', '#ffd080', '#ff8a3a'],
+    ['av_ninth',    'The Ninth Wave',          'admiral',  '#e8f0f4', '#2a3a48', '#1a2630', '#ffe08a', '#ffffff', '#bfe8ff'],
   ],
 };
 const WC_SKINS = [];
@@ -18201,6 +18360,26 @@ function wcPreview(skin, size) {
     if (tier >= 2) L(36, 28.5, 74, 28.5, accent, 1);
     scroll(40, 35); scroll(10, 44);
     gem(112, 32);
+  } else if (w === 'avtomat') {
+    P('M3 34 C10 32 18 31 26 30 L28 36 L26 44 C18 44 10 46 4 48 Z', wood);           // stock
+    R(2, 33, 3, 15, brass, { rx: 1 });                                                 // butt plate
+    R(56, 27, 30, 8, wood, { rx: 1.5 });                                               // handguard
+    R(86, 28.5, 28, 3.5, metal);                                                       // barrel
+    R(113, 27, 7, 6.5, dark, { rx: 1 });                                               // muzzle brake
+    R(26, 25, 31, 11, metal, { rx: 1.5 });                                             // receiver
+    R(26, 23.5, 31, 3, dark);                                                          // its cover
+    for (const x of [56, 84]) R(x, 26, 2.5, 10, brass);                                // bands
+    R(29, 20.5, 6, 3.5, dark);                                                         // rear sight
+    L(109, 28.5, 109, 22.5, dark, 1.4);                                                // front post
+    P('M105 23 Q109 18 113 23', 'none', { stroke: dark, 'stroke-width': 1.2 });        // its hood
+    P('M44 36 L50 36 L47 49 L41 49 Z', wood);                                          // pistol grip
+    P('M37 36 Q40 43 45 37', 'none', { stroke: brass, 'stroke-width': 1.4 });         // trigger guard
+    P('M51 36 L59 36 Q61 46 66 53 L58 56 Q53 46 51 36 Z', dark);                      // curved magazine
+    L(58.5, 55.5, 66, 53, accent, 2);                                                  // its base plate
+    el('circle', { cx: 38, cy: 26.5, r: 1.8, fill: brass, stroke: line, 'stroke-width': 0.6 });   // charging handle
+    if (tier >= 2) L(59, 31, 82, 31, accent, 1);
+    scroll(68, 33); scroll(12, 42);
+    gem(32, 30);
   } else {   // cutlass
     el('circle', { cx: 6, cy: 32, r: 3.4, fill: brass, stroke: line, 'stroke-width': 0.8 });   // pommel
     R(8, 29, 20, 6, wood, { rx: 2 });                                                  // grip
@@ -18271,7 +18450,7 @@ function wcRender() {
   const row = document.createElement('div'); row.className = 'cratetype viewing';
   const box = document.createElement('span'); box.className = 'cratebox wcbox'; box.setAttribute('aria-hidden', 'true');
   const nm = document.createElement('b'); nm.textContent = 'Gunsmith’s Crate';
-  const n = document.createElement('small'); n.textContent = (WC.crates === 1 ? '1 crate' : WC.crates + ' crates') + ' · a skin for any of the five weapons';
+  const n = document.createElement('small'); n.textContent = (WC.crates === 1 ? '1 crate' : WC.crates + ' crates') + ' · a skin for any of the six weapons';
   const open = document.createElement('button'); open.type = 'button'; open.className = WC.crates > 0 ? 'primary small' : 'tool';
   open.textContent = WC.opening ? 'Opening…' : WC.crates > 0 ? 'Open' : 'None yet';
   open.disabled = WC.crates <= 0 || WC.opening;

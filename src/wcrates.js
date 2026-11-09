@@ -1,6 +1,6 @@
 // Wreckers' Night: weapon skin crates.
 //
-// A crate system of its own for the five Wreckers' Night weapons, kept completely apart from the
+// A crate system of its own for the six Wreckers' Night weapons, kept completely apart from the
 // boat crates in crates.js: its own save (localStorage 'skerry-wcrates'), its own crate count, its
 // own card. It never reads or writes CRATES, voyages or crews. It borrows the boat crates' grades
 // and odds (RARITIES), their card styles, and the reel sounds, without changing any of them.
@@ -28,6 +28,7 @@ const WC_WEAPONS = [
   { id: 'longarm',     name: 'Longarm' },
   { id: 'harpoon',     name: 'Harpoon gun' },
   { id: 'cutlass',     name: 'Cutlass' },
+  { id: 'avtomat',     name: 'Avtomat' },
 ];
 const WC_WEAPON_BY_ID = Object.fromEntries(WC_WEAPONS.map(w => [w.id, w]));
 
@@ -97,6 +98,19 @@ const WC_SKIN_ROWS = {
     ['cl_dusk',     'Dusk at the Door',        'captain',  '#e8dce6', '#5a4a5e', '#221d26', '#ffd6c0', '#9a8098', '#ffcf9a'],
     ['cl_wrecker',  "Wrecker's Lantern",       'captain',  '#2a2a2e', '#0e0e10', '#4a1f18', '#e46c4f', '#86cfae', '#ff6b5a'],
     ['cl_lastlamp', 'The Last Lamp',           'admiral',  '#fff6dc', '#a37a12', '#1a1208', '#ffd34d', '#ffffff', '#fff3c4'],
+  ],
+  avtomat: [
+    ['av_plain',    'Avtomat, as stamped',     null,       '#4a4d54', '#202227', '#6a3e22', '#8a6a2c', '#c8bfa8', null],
+    ['av_rigging',  'Rigging Tar',             'deckhand', '#2c2e33', '#121316', '#2a1c12', '#5e4a2a', '#9a9286', null],
+    ['av_birch',    'Birch and Pewter',        'deckhand', '#8a8e94', '#3a3c40', '#d8c8a0', '#9a9a94', '#e8e4dc', null],
+    ['av_kelp',     'Kelp-Wrapped',            'deckhand', '#3e4a3a', '#1a2218', '#4a5a32', '#7a8a4a', '#b8d088', null],
+    ['av_frost',    'Hoarfrost',               'bosun',    '#c4d8e4', '#4a6274', '#eef4f8', '#a8c8dc', '#ffffff', null],
+    ['av_signal',   'Signal Red',              'bosun',    '#7a2a22', '#2a0e0c', '#3a1e14', '#d8a040', '#ffd8a0', null],
+    ['av_abyss',    'Abyssal Blue',            'mate',     '#1a3a6a', '#0a1428', '#14284a', '#5ab0ff', '#a8e0ff', null],
+    ['av_coral',    'Coral Reef',              'mate',     '#d86a5a', '#4a1a18', '#f2e0c8', '#ffb070', '#fff0d8', null],
+    ['av_storm',    'Stormglass',              'captain',  '#3a4250', '#12161c', '#2a3240', '#b8f0ff', '#e0f8ff', '#8ae8ff'],
+    ['av_bonfire',  "The Wreckers' Bonfire",   'captain',  '#2a1810', '#100804', '#3a1a0a', '#ff9a3a', '#ffd080', '#ff8a3a'],
+    ['av_ninth',    'The Ninth Wave',          'admiral',  '#e8f0f4', '#2a3a48', '#1a2630', '#ffe08a', '#ffffff', '#bfe8ff'],
   ],
 };
 const WC_SKINS = [];
@@ -300,6 +314,26 @@ function wcPreview(skin, size) {
     if (tier >= 2) L(36, 28.5, 74, 28.5, accent, 1);
     scroll(40, 35); scroll(10, 44);
     gem(112, 32);
+  } else if (w === 'avtomat') {
+    P('M3 34 C10 32 18 31 26 30 L28 36 L26 44 C18 44 10 46 4 48 Z', wood);           // stock
+    R(2, 33, 3, 15, brass, { rx: 1 });                                                 // butt plate
+    R(56, 27, 30, 8, wood, { rx: 1.5 });                                               // handguard
+    R(86, 28.5, 28, 3.5, metal);                                                       // barrel
+    R(113, 27, 7, 6.5, dark, { rx: 1 });                                               // muzzle brake
+    R(26, 25, 31, 11, metal, { rx: 1.5 });                                             // receiver
+    R(26, 23.5, 31, 3, dark);                                                          // its cover
+    for (const x of [56, 84]) R(x, 26, 2.5, 10, brass);                                // bands
+    R(29, 20.5, 6, 3.5, dark);                                                         // rear sight
+    L(109, 28.5, 109, 22.5, dark, 1.4);                                                // front post
+    P('M105 23 Q109 18 113 23', 'none', { stroke: dark, 'stroke-width': 1.2 });        // its hood
+    P('M44 36 L50 36 L47 49 L41 49 Z', wood);                                          // pistol grip
+    P('M37 36 Q40 43 45 37', 'none', { stroke: brass, 'stroke-width': 1.4 });         // trigger guard
+    P('M51 36 L59 36 Q61 46 66 53 L58 56 Q53 46 51 36 Z', dark);                      // curved magazine
+    L(58.5, 55.5, 66, 53, accent, 2);                                                  // its base plate
+    el('circle', { cx: 38, cy: 26.5, r: 1.8, fill: brass, stroke: line, 'stroke-width': 0.6 });   // charging handle
+    if (tier >= 2) L(59, 31, 82, 31, accent, 1);
+    scroll(68, 33); scroll(12, 42);
+    gem(32, 30);
   } else {   // cutlass
     el('circle', { cx: 6, cy: 32, r: 3.4, fill: brass, stroke: line, 'stroke-width': 0.8 });   // pommel
     R(8, 29, 20, 6, wood, { rx: 2 });                                                  // grip
@@ -370,7 +404,7 @@ function wcRender() {
   const row = document.createElement('div'); row.className = 'cratetype viewing';
   const box = document.createElement('span'); box.className = 'cratebox wcbox'; box.setAttribute('aria-hidden', 'true');
   const nm = document.createElement('b'); nm.textContent = 'Gunsmith’s Crate';
-  const n = document.createElement('small'); n.textContent = (WC.crates === 1 ? '1 crate' : WC.crates + ' crates') + ' · a skin for any of the five weapons';
+  const n = document.createElement('small'); n.textContent = (WC.crates === 1 ? '1 crate' : WC.crates + ' crates') + ' · a skin for any of the six weapons';
   const open = document.createElement('button'); open.type = 'button'; open.className = WC.crates > 0 ? 'primary small' : 'tool';
   open.textContent = WC.opening ? 'Opening…' : WC.crates > 0 ? 'Open' : 'None yet';
   open.disabled = WC.crates <= 0 || WC.opening;
