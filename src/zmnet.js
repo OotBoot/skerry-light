@@ -17,8 +17,10 @@
 // night (`q`: open a door, a go at the chest, take what it offers, a board back on a window, get someone up). Points
 // are each player's own: what the host credits arrives as points, and buying spends them (a door or the chest
 // already taken by someone else gives them back).
-// Going down together: half a minute on the floor, where a friend holding Use beside you gets you up; bleed out and
-// you're back next round with a pepperbox. The night is over when nobody is left standing.
+// Going down together: three-quarters of a minute on the floor (ZM_DOWN), still firing a pepperbox, where a friend
+// holding Use beside you gets you up; bleed out and you're back next round with a pepperbox. Each player's presence
+// carries their own clock on the floor (`dn`) and whom they're getting up and how far along (`rv`), so the one down,
+// the one helping and everyone else see the same. The night is over when nobody is left standing.
 
 const ZN = { code: null, at: 0, doneG: null, msg: '', g: null, sendT: 0, hseq: 0, seq: 0, q: [], hq: [], hits: new Map(), shots: [], shotSeq: 0,
   lastQ: {}, lastH: {}, lastShot: {}, seenT: {}, ev: [], eseq: 0, evSeen: 0, lastHseq: -1, hostT: 0, creditSeen: [0, 0, 0], lobT: 0 };
@@ -179,6 +181,9 @@ function znPresence() {
   z.g = ZN.g; z.p = znMe(); z.pt = ZM.pts;
   z.c = fpsColours(); z.o = typeof ocEquippedId === 'function' ? ocEquippedId() || '' : '';
   if (ZN.shots.length) z.sh = ZN.shots.slice(-4);
+  // down: how long I've left on the floor (tenths); getting someone up: who, and how far along (hundredths)
+  if (ZM.downT > 0) z.dn = Math.ceil(ZM.downT * 10);
+  if (ZM.revOf && ZM.revT > 0) z.rv = [ZM.revOf, Math.round(ZM.revT / ZM_DOWN.REV * 100)];
   return z;
 }
 // my shots, for the others to see and hear
@@ -217,6 +222,8 @@ function znReadPlayers(dt) {
     r.c = Array.isArray(z.c) ? z.c.slice(0, 4).map(c => typeof c === 'string' ? c.slice(0, 9) : '#3a2a1e') : null;
     r.o = typeof z.o === 'string' ? z.o.slice(0, 24) : '';
     r.pts = Math.max(0, z.pt | 0);
+    r.dn = r.down ? clamp(+z.dn || 0, 0, ZM_DOWN.T * 10) / 10 : 0;
+    r.rv = Array.isArray(z.rv) && typeof z.rv[0] === 'string' ? [z.rv[0], clamp(+z.rv[1] || 0, 0, 100) / 100] : null;
     r.left = false;
     if (Array.isArray(z.sh)) {
       const last = ZN.lastShot[z.sid] || 0;
@@ -269,17 +276,23 @@ function znRequestFrom(sid, k, a) {
   if (k === 'box') { zmBoxSpin(sid, String(a || '').split(',').filter(id => FPSW[id])); return; }
   if (k === 'take') { if (ZM.box.st === 'offer' && ZM.box.owner === sid) { ZM.box.st = 'idle'; ZM.box.t = 0; } return; }
   if (k === 'board') { const w = ZM.windows[a | 0]; if (w && w.boards < 6 && !ZM.z.some(z => z.win === w && z.st === 'climb')) { w.boards++; zmBoardPay(sid); } return; }
-  if (k === 'rev') { zmnRevive(String(a)); return; }
+  if (k === 'rev') { zmnRevive(String(a), sid); return; }
   if (k === 'pst') { if (typeof zmpStatusFrom === 'function') zmpStatusFrom(sid, a); return; }   // [pap] what a reforged weapon did to them
   if (k === 'egg') { if (typeof zeRequest === 'function') zeRequest(sid, a); return; }   // [egg hook] src/zmegg.js
 }
-// someone gets someone up: everyone's told (and if it's me, up I get)
-function zmnRevive(sid) {
+// someone (by) gets someone (sid) up: everyone's told who got whom up (and if it's me, up I get)
+function zmnRevive(sid, by) {
   if (ZM.net === 'client') { zmnRequest('rev', sid); return; }
-  zmnEvent('rev', sid);
-  if (sid === FPS.me.id) zmGetUp();
+  by = by || FPS.me.id;
+  zmnEvent('rev', sid, by);
+  znRevived(sid, by);
 }
-function zmnEvent(k, a) { ZN.ev.push([++ZN.eseq, k, a]); if (ZN.ev.length > 8) ZN.ev.shift(); }
+function znRevived(sid, by) {
+  const nick = s => s === FPS.me.id ? 'You' : (ZM.hum.find(h => h[0] === s) || [])[1] || 'Someone';
+  if (sid === FPS.me.id) zmGetUp(by !== sid ? nick(by) : null);
+  else fpsFeed(`${nick(by)} got ${nick(sid)} up.`);
+}
+function zmnEvent(k, a, b) { ZN.ev.push(b == null ? [++ZN.eseq, k, a] : [++ZN.eseq, k, a, b]); if (ZN.ev.length > 8) ZN.ev.shift(); }
 const ZN_ST = { out: 0, tear: 1, climb: 2, in: 3 }, ZN_STN = ['out', 'tear', 'climb', 'in'], ZN_BOXST = ['idle', 'spin', 'offer', 'gull', 'gone'];
 const ZN_KIND = ['walk', 'jog', 'run'], ZN_PH = { pre: 0, round: 1, break: 2 };
 function znHostSend() {
@@ -395,7 +408,7 @@ function znApply(hz) {
     const was = z.swing;
     if (sw >= 0.28 && (was < 0.28 || was > sw) && !z.dead) {
       const reach = st === 'tear' ? 1.6 : 1.55;
-      if (Math.hypot(m.x - x, m.y - y) < reach && Math.abs((m.jz || 0) - jz) < 1.2 && !(m.dead > 0) && !(m.protect > 0)) { fpsHurt(1, null, null); zmSound('hit'); }
+      if (Math.hypot(m.x - x, m.y - y) < reach && Math.abs((m.jz || 0) - jz) < 1.2 && !(m.dead > 0) && !(m.protect > 0) && !zmIsDown()) { fpsHurt(1, null, null); zmSound('hit'); }
     }
     z.swing = sw;
     const fl = a[8];
@@ -433,7 +446,7 @@ function znApply(hz) {
     if (!Array.isArray(e) || !(e[0] > ZN.evSeen)) continue;
     ZN.evSeen = e[0];
     if (e[1] === 'take' && ZM_DROPS[e[2]]) zmTake(e[2], true);
-    else if (e[1] === 'rev' && e[2] === NET.sid) zmGetUp();
+    else if (e[1] === 'rev' && typeof e[2] === 'string') znRevived(e[2], typeof e[3] === 'string' ? e[3] : '');
     else if (e[1] === 'feed') fpsFeed(znClean(e[2], 120));
   }
 }

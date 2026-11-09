@@ -12152,7 +12152,7 @@ function fpsToggleView() {
 }
 // jumping: only from the ground
 function fpsJump() {
-  const m = FPS.me; if (!m || m.dead > 0 || FPS.menu || (m.jz || 0) > (m.fl || 0) + 0.01 || (m.vz || 0) > 0) return;
+  const m = FPS.me; if (!m || m.dead > 0 || FPS.menu || (m.jz || 0) > (m.fl || 0) + 0.01 || (m.vz || 0) > 0 || (FPS.zm && zmIsDown())) return;
   m.vz = FPSC.JUMP; m.jz = (m.fl || 0) + 0.001; FPS.landed = 0;
   try { if (!soundOff()) noise('lowpass', 500, 1, 0.01, 0.08, 0.12); } catch (e) {}
 }
@@ -12618,7 +12618,7 @@ function fpsShoot() {
   const climbNext = !!w.climb;
   if (w.melee) FPS.meSlashT = 0.3;
   FPS.vmShots = (FPS.vmShots || 0) + 1;
-  const z = FPSC.GROUND + FPSC.EYE + (m.jz || 0), seed = (Math.random() * 2147483647) | 0;
+  const z = FPSC.GROUND + FPSC.EYE + (m.jz || 0) - (FPS.downEye || 0), seed = (Math.random() * 2147483647) | 0;   // (FPS.downEye: down on the floor in the Lighthouse)
   const [ah, ap] = fpsAimFrom(m.x, m.y, z, w);
   if (FPS.zm) { FPS.zmShots = (FPS.zmShots || 0) + 1; if (typeof zmnShot === 'function') zmnShot(w.code, ah, ap); }
   const sh = fpsPublishShot(m.x, m.y, z, ah, ap, m.id, w.code, FPS.scoped ? 0 : seed);
@@ -13091,7 +13091,7 @@ function fpsDraw() {
 function fpsDrawScene() {
   const m = FPS.me;
   camX = m.x; camY = m.y; yaw = m.h;
-  const eye = FPSC.GROUND + FPSC.EYE + (m.jz || 0) - (FPS.eyeLag || 0);
+  const eye = FPSC.GROUND + FPSC.EYE + (m.jz || 0) - (FPS.eyeLag || 0) - (FPS.downEye || 0);
   camH = eye + (reduceMotion ? 0 : Math.sin(FPS.step) * 0.05 - (FPS.landed || 0) * 0.4) - (m.dead > 0 ? 1.2 * Math.min(1, (FPSC.RESPAWN - m.dead) * 2) : 0);
   const third = fpsThird();
   if (third) {
@@ -16763,6 +16763,9 @@ const ZM_DMG = { p: 1, b: 1, l: 4, h: 5, c: 2.5, a: 1.15, f: 1, k: 1 };
 // boarding windows pays 10 a board, up to this many points a round for each player (then the boards are free work)
 const ZM_BOARD_CAP = 500;
 const ZM_KNIFE = { reach: 2.1, arc: 0.95, dmg: 3, rate: 0.55 };
+// down on the floor (together): how long before you bleed out, how long a friend holds Use to get you up, how fast
+// you can drag yourself along, how far your eyes drop, and the reserve of the pepperbox you hold while you're down
+const ZM_DOWN = { T: 45, REV: 3, CRAWL: 0.6, EYE: 1.15, RES: 12 };
 const ZM_PIERCE = { l: 3 };
 const ZM_PERKS = {
   stout: { n: 'Stout Heart', cost: 2500, c: '#e0504a', what: 'take twice the knocks' },
@@ -17607,7 +17610,7 @@ function zmReset() {
     z: [], drops: [], perks: {}, windBuys: 0, double: 0, insta: 0, dropsRound: 0, kills: 0, heads: 0, downs: 0, spent: 0, doorsOpened: 0,
     open: new Set(['quarters']), zone: 'quarters', zoneT: 4, banner: null, pops: [], fx: [], sparks: [], over: null, earnK: 0, navT: 0,
     box: { at: 0, uses: 0, spins: 0, st: 'idle', t: 0, item: null, cyc: 0, show: 'avtomat', owner: null }, near: null, rebuildT: 0, groanT: 2,
-    zc: 0, credit: {}, players: [], downT: 0, ghost: false, revT: 0, revOf: null, boardBy: {}, boardPts: 0,
+    zc: 0, credit: {}, players: [], downT: 0, ghost: false, revT: 0, revOf: null, downKit: null, beat: 0, boardBy: {}, boardPts: 0,
     doors: Zd.doors, windows: Zd.windows, buys: Zd.buys, perksAt: Zd.perks, spawns: Zd.spawns, glass: Zd.glass || [],
   });
   for (const w of ZM.windows) { w.boards = 6; w.q = []; w.fall = []; }
@@ -17635,7 +17638,7 @@ function zmStart(opts) {
   for (const id in FPSW) FPS.me.mags[id] = FPSW[id].mag;
   FPS.kb = {}; FPS.deaths = 0; FPS.seq = 0; FPS.shots = []; FPS.seenSeq = {}; FPS.hist = []; FPS.host = true; FPS.joinedAt = performance.now(); FPS.ai = null;
   FPS.remote.clear(); FPS.feed = []; FPS.pings = []; FPS.tracers = []; FPS.parts = []; FPS.drowned = []; FPS.bots = [];
-  FPS.roundMsg = null; FPS.menu = false; $('fpsMenu').hidden = true; FPS.eyeLag = 0; FPS.landed = 0; FPS.calm = 0; FPS.climb = 0;
+  FPS.roundMsg = null; FPS.menu = false; $('fpsMenu').hidden = true; FPS.eyeLag = 0; FPS.downEye = 0; FPS.landed = 0; FPS.calm = 0; FPS.climb = 0;
   FPS.weapon = FPS.last = 'pepperbox'; FPS.harps = []; FPS.swings = []; FPS.scoped = false; FPS.reloadDur = 0; FPS.drawT = 0.45;
   zmReset();
   ZM.net = opts.net || null; ZM.hum = opts.hum || [[FPS.me.id, FPS.nick]];
@@ -17651,7 +17654,7 @@ function zmStart(opts) {
 function zmStop() {
   if (ZM.net && typeof zmnStop === 'function') zmnStop();
   if (typeof zmpStop === 'function') zmpStop();   // [pap]
-  ZM.on = false; ZM.net = null; FPS.zm = false; FPS.eyeLag = 0;
+  ZM.on = false; ZM.net = null; FPS.zm = false; FPS.eyeLag = 0; FPS.downEye = 0;
   $('stage').classList.remove('zmmode'); $('zmOver').hidden = true;
   { const e = document.querySelector('#fpsMenu .eyebrow'); if (e) e.textContent = "Wreckers' Night carries on without you"; $('fpsLeave').textContent = 'Leave the island'; $('fpsResume').textContent = 'Back to the fight'; }
   if (Z3.grp) Z3.grp.visible = false;
@@ -17671,15 +17674,16 @@ function zmFrame(dt) {
     G.mods.lantern = m.lan ? 1 : 0.3;
     // (alone, the menu holds everything still; together, the night goes on)
     const live = (!FPS.menu || ZM.net) && !ZM.over;
-    if (live && !FPS.menu) fpsInput(dt); else { FPS.look = [0, 0]; FPS.mlook = [0, 0]; m.walk = false; }
+    if (live && !FPS.menu) { const was = [m.x, m.y]; fpsInput(dt); if (zmIsDown()) zmCrawl(m, was, dt); }
+    else { FPS.look = [0, 0]; FPS.mlook = [0, 0]; m.walk = false; }
     if (FPS.menu) fpsMenuPad(dt);
     if (live) {
       if (m.protect > 0) m.protect -= dt;
       // patched up quickly, if they leave you alone for a few seconds
       FPS.calm = (FPS.calm || 0) + dt;
       const max = ZM.perks.stout ? ZMC.HP_STOUT : ZMC.HP;
-      if (m.dead <= 0 && m.hp < max && FPS.calm > 3.2) m.hp = max;
-      if (ZM.downT > 0) { ZM.downT -= dt; if (ZM.downT <= 0) zmBleedOut(); }
+      if (m.dead <= 0 && !zmIsDown() && m.hp < max && FPS.calm > 3.2) m.hp = max;
+      if (ZM.downT > 0) zmDownTick(dt);
       if (m.cd > 0) m.cd -= dt;
       if (m.reload > 0) { m.reload -= dt; if (m.reload <= 0) { m.reload = 0; zmReloaded(); } }
       if (FPS.drawT > 0) FPS.drawT -= dt;
@@ -17695,6 +17699,8 @@ function zmFrame(dt) {
       zmTick(dt);
     }
     FPS.eyeLag = (FPS.eyeLag || 0) * Math.pow(0.0005, dt);
+    // (down, your eyes sink to the floor; up again, they rise)
+    FPS.downEye = (FPS.downEye || 0) + ((zmIsDown() && !ZM.over ? ZM_DOWN.EYE : 0) - (FPS.downEye || 0)) * Math.min(1, dt * 5);
     if ((FPS.hintT || 0) > 0 && (FPS.stick || FPS.lookTouch)) FPS.hintT -= dt * 2; else if ((FPS.hintT || 0) > 0) FPS.hintT -= dt * 0.25;
     for (const k of ['flash', 'hitT', 'hurtT']) if (FPS[k] > 0) FPS[k] -= dt;
     for (const t of FPS.tracers) t.t -= dt; FPS.tracers = FPS.tracers.filter(t => t.t > 0);
@@ -17715,7 +17721,9 @@ function zmReloaded() {
 }
 
 function zmTick(dt) {
-  const m = FPS.me;
+  const m = FPS.me, down = zmIsDown();
+  // (down, nothing touches you: they've left you for the ones still standing)
+  if (down) m.protect = Math.max(m.protect || 0, 0.5);
   // where you are
   const zn = zmZoneAt(m.x, m.y, m.jz);
   if (zn && zn !== ZM.zone) { ZM.zone = zn; ZM.zoneT = 3.5; }
@@ -17746,7 +17754,7 @@ function zmTick(dt) {
   // holding Use at a window nails its boards back; beside someone who's down, gets them up
   const hold = FPS.keys.KeyF || FPS.keys.KeyE || FPS.touchUse || FPS.padUse;
   ZM.rebuildT -= dt;
-  if (hold && ZM.near && ZM.near.k === 'win' && ZM.rebuildT <= 0 && !(m.dead > 0)) {
+  if (hold && ZM.near && ZM.near.k === 'win' && ZM.rebuildT <= 0 && !(m.dead > 0) && !down) {
     const w = ZM.near.w;
     if (w.boards < 6 && !ZM.z.some(z => z.win === w && z.st === 'climb')) {
       ZM.rebuildT = 0.55; zmSound('board');
@@ -17754,10 +17762,10 @@ function zmTick(dt) {
       else { w.boards++; zmBoardPay(FPS.me.id); }
     }
   }
-  if (hold && ZM.near && ZM.near.k === 'rev' && !(m.dead > 0)) {
+  if (hold && ZM.near && ZM.near.k === 'rev' && !(m.dead > 0) && !down) {
     if (ZM.revOf !== ZM.near.sid) { ZM.revOf = ZM.near.sid; ZM.revT = 0; }
     ZM.revT += dt;
-    if (ZM.revT >= 3) { ZM.revT = 0; ZM.revOf = null; zmnRevive(ZM.near.sid); }
+    if (ZM.revT >= ZM_DOWN.REV) { ZM.revT = 0; ZM.revOf = null; zmnRevive(ZM.near.sid); }
   } else { ZM.revT = 0; ZM.revOf = null; }
 }
 // (hosting or alone) a board back on a window: 10 points to whoever did it, until they've had their round's worth
@@ -17771,7 +17779,7 @@ function zmBoardPay(sid) {
 // who's standing: you, and (hosting) everyone else not down
 function zmPlayers() {
   const m = FPS.me, out = [];
-  if (!(m.dead > 0)) out.push({ sid: m.id, x: m.x, y: m.y, jz: m.jz || 0, me: true });
+  if (!(m.dead > 0) && !zmIsDown()) out.push({ sid: m.id, x: m.x, y: m.y, jz: m.jz || 0, me: true });
   if (ZM.net === 'host') for (const r of FPS.remote.values()) if (!r.dead && !r.down && r.tx != null) out.push({ sid: r.id, x: r.x, y: r.y, jz: r.jz || 0 });
   return out;
 }
@@ -17779,7 +17787,7 @@ function zmPlayers() {
 function zmCheckOver() {
   if (!ZM.net || ZM.over) return;
   const m = FPS.me;
-  if (!(m.dead > 0)) return;
+  if (!(m.dead > 0) && !zmIsDown()) return;
   for (const r of FPS.remote.values()) if (!r.dead && !r.down && !r.left) return;
   zmEnd();
 }
@@ -17981,7 +17989,7 @@ function zmSwipe(z, dt) {
     const was = z.swing; z.swing += dt;
     if (was < 0.28 && z.swing >= 0.28) {
       const reach = z.st === 'tear' ? 1.6 : 1.55;
-      if (Math.hypot(m.x - z.x, m.y - z.y) < reach && Math.abs((m.jz || 0) - (z.jz || 0)) < 1.2 && !(m.dead > 0) && !(m.protect > 0)) { fpsHurt(1, null, null); zmSound('hit'); }
+      if (Math.hypot(m.x - z.x, m.y - z.y) < reach && Math.abs((m.jz || 0) - (z.jz || 0)) < 1.2 && !(m.dead > 0) && !(m.protect > 0) && !zmIsDown()) { fpsHurt(1, null, null); zmSound('hit'); }
     }
     if (z.swing > 0.6) z.swing = -1;
   }
@@ -18077,7 +18085,7 @@ function zmResolveShot(sh, mine) {
 // a slash with the knife: whatever's in front of you and in reach, whatever's in your hands
 function zmKnife() {
   const m = FPS.me;
-  if (!FPS.zm || m.dead > 0 || FPS.menu || ZM.over || (FPS.knifeT || 0) > 0) return;
+  if (!FPS.zm || m.dead > 0 || zmIsDown() || FPS.menu || ZM.over || (FPS.knifeT || 0) > 0) return;
   FPS.knifeT = ZM_KNIFE.rate; FPS.knifeN = (FPS.knifeN || 0) + 1; FPS.meSlashT = 0.3; m.protect = 0; FPS.scoped = false;
   fpsSwishSound(0);
   const z = FPSC.GROUND + FPSC.EYE + (m.jz || 0);
@@ -18149,7 +18157,8 @@ function zmDropsTick(dt) {
 function zmTake(k, heard) {
   const D = ZM_DROPS[k]; ZM.banner = { text: D.n + '!', t: 2.6, col: D.c };
   zmSound('take');
-  if (k === 'keg') { for (const id of ZM.own) ZM.res[id] = typeof zmpAmmo === 'function' ? zmpAmmo(id) : ZM_AMMO[id];   // [pap] (a reforged reserve)
+  if (k === 'keg') { if (ZM.downKit) ZM.downKit.keg = true;   // (down: what you really carry is filled when you're up)
+    for (const id of ZM.own) ZM.res[id] = typeof zmpAmmo === 'function' ? zmpAmmo(id) : ZM_AMMO[id];   // [pap] (a reforged reserve)
     fpsFeed('A Powder Keg: everything you carry, full.'); }
   else if (k === 'double') { if (!heard) ZM.double = 30; fpsFeed('Double Salvage: double points for thirty seconds.'); }
   else if (k === 'spot') { if (!heard) ZM.insta = 30; fpsFeed('The Black Spot: one hit kills, for thirty seconds.'); }
@@ -18245,8 +18254,9 @@ function zmNearest() {
   if (ZM.net) for (const r of FPS.remote.values()) if (r.down && !r.dead) consider({ k: 'rev', sid: r.id, n: r.n }, r.x, r.y, r.jz || 0, 1.8, false);
   for (const w of ZM.windows) if (w.boards < 6 && zmOpen(w.zone)) consider({ k: 'win', w }, w.x - w.nx * 0.95, w.y - w.ny * 0.95, w.z || 0, 1.9, false);
   if (typeof zeNearest === 'function') zeNearest(consider);   // [egg hook] src/zmegg.js
-  ZM.near = best;
-  ZM.prompt = best ? zmPrompt(best) : null;
+  // (down on the floor, nothing's in reach but your pepperbox)
+  ZM.near = zmIsDown() ? null : best;
+  ZM.prompt = ZM.near ? zmPrompt(ZM.near) : null;
 }
 function zmPrompt(o) {
   { const r = typeof zmpPrompt === 'function' && zmpPrompt(o); if (r) return r; }   // [pap] the bench, a reforged weapon's ammunition
@@ -18261,11 +18271,11 @@ function zmPrompt(o) {
   if (o.k === 'door') { const [a, b] = o.d.zones, to = zmOpen(a) ? b : a; return { text: `${o.d.kind === 'debris' ? 'Clear the wreckage to' : o.d.kind === 'gate' ? 'Unlock the gate up to' : 'Open the door to'} ${zmZoneName(to)}`, cost: o.d.cost }; }
   if (o.k === 'box') { const B = ZM.box; if (B.st === 'offer') return { text: `Take the ${FPSW[B.item].n}`, free: true }; return { text: 'The wreck chest', cost: ZMC.BOX }; }
   if (o.k === 'win') return { text: (ZM.boardPts || 0) >= ZM_BOARD_CAP ? 'Hold to nail the boards back (no more points for it this round)' : 'Hold to nail the boards back', hold: true };
-  if (o.k === 'rev') return { text: `Hold to get ${o.n || 'them'} up${ZM.revT > 0 ? ' ' + '▮'.repeat(Math.ceil(ZM.revT)) : ''}`, hold: true };
+  if (o.k === 'rev') return ZM.revT > 0 ? null : { text: `Hold to get ${o.n || 'them'} up`, hold: true };
   return null;
 }
 function zmUse() {
-  const o = ZM.near, m = FPS.me; if (!o || m.dead > 0 || ZM.over) return;
+  const o = ZM.near, m = FPS.me; if (!o || m.dead > 0 || zmIsDown() || ZM.over) return;
   if (typeof zmpUse === 'function' && zmpUse(o)) return;   // [pap]
   if (o.k === 'egg') { if (typeof zeUse === 'function') zeUse(o); return; }   // [egg hook] src/zmegg.js
   const pay = c => { if (ZM.pts < c) { zmSound('no'); fpsFeed('Not enough points.'); return false; } ZM.pts -= c; ZM.spent += c; return true; };
@@ -18300,6 +18310,7 @@ function zmOpenDoor(d) {
 // ---------- going down ----------
 function zmDown() {
   const m = FPS.me;
+  if (zmIsDown()) return;
   ZM.downs++;
   if (ZM.perks.wind) {
     // Second Wind: back up, everything near you thrown back, and every tonic gone
@@ -18310,24 +18321,75 @@ function zmDown() {
     return;
   }
   if (ZM.net) {
-    // together: down on the floor for half a minute; a friend can get you up (and your tonics are gone)
-    m.hp = 0; m.dead = FPSC.RESPAWN - 0.6; FPS.scoped = false; ZM.perks = {}; ZM.downT = 30;
+    // together: down on the floor, your tonics gone, with a pepperbox in your hand until a friend gets you up
+    m.hp = 0; FPS.scoped = false; ZM.perks = {}; ZM.downT = ZM_DOWN.T; ZM.beat = 0;
+    zmDownArm();
     ZM.banner = { text: 'You’re down', t: 3 };
+    fpsFeed('You’re down. Keep firing: someone can get you up by holding Use beside you.');
     zmSound('over');
     return;
   }
   zmEnd();
 }
-// half a minute down and nobody came: out until the next round
+// down (together), and no one's got you up yet
+const zmIsDown = () => ZM.downT > 0 && !ZM.ghost;
+// what you held, put by; a pepperbox to hold instead: a full cylinder and a couple more loads (a reforged one, if
+// yours is), whether you still carry one or not. Nothing to switch to while you're down
+function zmDownArm() {
+  const m = FPS.me;
+  m.mags[FPS.weapon] = m.ammo;
+  ZM.downKit = { own: ZM.own.slice(), res: Object.assign({}, ZM.res), mags: Object.assign({}, m.mags), weapon: FPS.weapon, last: FPS.last, keg: false,
+    pap: ZM.pap ? Object.assign({}, ZM.pap) : null };   // ([pap] what's been reforged, kept for when you're up)
+  ZM.own = ['pepperbox']; ZM.res = { pepperbox: ZM_DOWN.RES };
+  FPS.weapon = FPS.last = 'pepperbox';
+  m.ammo = m.mags.pepperbox = fpsW().mag; m.reload = 0; m.cd = 0; FPS.drawT = 0.45; FPS.beamT = 0; FPS.heldFire = true; FPS.knifeT = 0;
+}
+// up again: everything you carried back in your hands, as it was (filled, if a Powder Keg came while you were down)
+function zmDownDisarm() {
+  const m = FPS.me, K = ZM.downKit; if (!K) return;
+  ZM.downKit = null;
+  ZM.own = K.own; ZM.res = K.res; m.mags = K.mags;
+  if (K.pap) ZM.pap = Object.assign(ZM.pap || {}, K.pap);
+  if (K.keg) for (const id of ZM.own) { ZM.res[id] = typeof zmpAmmo === 'function' ? zmpAmmo(id) : ZM_AMMO[id]; }
+  FPS.weapon = ZM.own.includes(K.weapon) ? K.weapon : ZM.own[0] || 'pepperbox'; FPS.last = K.last;
+  m.ammo = m.mags[FPS.weapon] != null ? m.mags[FPS.weapon] : fpsW().mag; m.reload = 0; m.cd = 0; FPS.drawT = 0.45; FPS.scoped = false;
+}
+// dragging yourself along the floor: whatever fpsInput moved you, cut down to a crawl, and no running
+function zmCrawl(m, was, dt) {
+  FPS.runK = 0; FPS.padRun = false;
+  const dx = m.x - was[0], dy = m.y - was[1], d = Math.hypot(dx, dy), most = ZM_DOWN.CRAWL * dt;
+  if (d <= most) return;
+  m.x = was[0]; m.y = was[1];
+  fpsMove(m, dx / d * most, dy / d * most);
+}
+// the clock on the floor, and your heart in your ears: a double beat, quicker as the time runs out
+function zmDownTick(dt) {
+  ZM.downT -= dt;
+  if (ZM.downT <= 0) { zmBleedOut(); return; }
+  // ([pap] a weapon on the bench waits there until you're up)
+  if (ZM.forge && ZM.forge.st === 'work' && typeof ZM_PAP !== 'undefined') ZM.forge.t = Math.min(ZM.forge.t, ZM_PAP.TIME - 0.2);
+  const was = ZM.beat;
+  ZM.beat += dt * (0.9 + 1.5 * (1 - ZM.downT / ZM_DOWN.T));
+  if (Math.floor(was) !== Math.floor(ZM.beat)) zmSound('beat');
+}
+// who's getting me up just now, and how far along they are (from their presence: src/zmnet.js)
+function zmReviver() {
+  for (const r of FPS.remote.values()) if (r.rv && r.rv[0] === FPS.me.id && !r.dead && !r.down) return { n: r.n, k: r.rv[1] };
+  return null;
+}
+// the time on the floor ran out and nobody came: out until the next round
 function zmBleedOut() {
-  ZM.downT = 0; ZM.ghost = true;
+  const m = FPS.me;
+  ZM.downT = 0; ZM.ghost = true; ZM.downKit = null; m.dead = FPSC.RESPAWN - 0.6; m.reload = 0; FPS.scoped = false;
   fpsFeed('You bled out. You’ll be back next round, if anyone holds that long.');
 }
-// up again (a friend got to you)
-function zmGetUp() {
+// up again (a friend got to you): your own weapons back in your hands
+function zmGetUp(by) {
   const m = FPS.me; if (!(ZM.downT > 0)) return;
-  ZM.downT = 0; m.dead = 0; m.hp = ZMC.HP; m.protect = 2; FPS.drawT = 0.45;
+  ZM.downT = 0; m.dead = 0; m.hp = ZMC.HP; m.protect = 2;
+  zmDownDisarm();
   ZM.banner = { text: 'Back on your feet', t: 2, small: true };
+  if (by) fpsFeed(`${by} got you up.`);
   zmSound('wind');
 }
 function zmShowOver() {
@@ -18364,6 +18426,7 @@ function zmSound(k, d, pan, kind) {
     else if (k === 'drop') { tone(1500, 'sine', 0.01, 0.06, 0.5, { to: 1900 }); }
     else if (k === 'take') { tone(523, 'triangle', 0.005, 0.12, 0.2); tone(784, 'triangle', 0.005, 0.12, 0.3, { delay: 0.1 }); tone(1046, 'triangle', 0.005, 0.12, 0.5, { delay: 0.2 }); }
     else if (k === 'drink') { for (let i = 0; i < 3; i++) noise('bandpass', 300 + i * 40, 8, 0.02, 0.12, 0.1, { delay: i * 0.18 }); tone(330, 'triangle', 0.01, 0.08, 0.4, { delay: 0.6 }); }
+    else if (k === 'beat') { tone(58, 'sine', 0.005, 0.32, 0.16, { to: 42 }); tone(52, 'sine', 0.005, 0.22, 0.16, { to: 38, delay: 0.2 }); }
     else if (k === 'wind') { noise('bandpass', 900, 1, 0.3, 0.25, 1.0, { to: 300 }); }
     else if (k === 'over') { tone(196, 'sine', 0.2, 0.2, 3.0, { to: 98 }); sfxBellFar(0, 0.6); }
     else if (k === 'beam') { if (Math.random() < 0.5) noise('bandpass', 260 + Math.random() * 80, 2, 0.02, 0.09, 0.14); }
@@ -18737,14 +18800,7 @@ function zmScene3D() {
 }
 // painted over the 3D view: sparks between the burning, the chest's offer, and anyone down
 function zmDrawOver() {
-  if (ZM.net) for (const r of FPS.remote.values()) {
-    if (!r.down || r.dead) continue;
-    const c = cam(r.x, r.y, FPSC.GROUND + (r.tjz || 0) + 1.2); if (c.f < 0.8) continue;
-    const q = proj(c), pulse = 0.6 + 0.4 * Math.sin(g.t * 6);
-    ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = '600 13px "Courier Prime", monospace';
-    ctx.fillStyle = `rgba(228,108,79,${pulse})`; ctx.fillText(`${r.n} is down`, q.x, q.y - 14);
-    ctx.beginPath(); ctx.arc(q.x, q.y + 4, 6, 0, 6.283); ctx.fill();
-  }
+  if (ZM.net) for (const r of FPS.remote.values()) if (r.down && !r.dead) zmDownMarker(r);
   for (const s of ZM.sparks) {
     const pts = []; for (let i = 0; i <= 6; i++) { const k = i / 6, j = i && i < 6 ? 0.25 : 0; pts.push([s.a[0] + (s.b[0] - s.a[0]) * k + (Math.random() - 0.5) * j, s.a[1] + (s.b[1] - s.a[1]) * k + (Math.random() - 0.5) * j, s.a[2] + (s.b[2] - s.a[2]) * k + (Math.random() - 0.5) * j]); }
     const p = polyProj(pts); if (p.length < 2) continue;
@@ -18757,6 +18813,25 @@ function zmDrawOver() {
     if (c.f > 0.8 && c.f < 25) { const q = proj(c); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = `400 ${Math.round(clamp(q.s * 0.28, 12, 26))}px "IM Fell English SC", serif`; ctx.fillStyle = 'rgba(190,255,230,0.9)'; ctx.fillText(FPSW[B.item].n, q.x, q.y); }
   }
 }
+// someone down, marked over them wherever they are (seen through walls): their name, a ring draining with the time
+// they've left on the floor, inside it a gold one filling as someone gets them up, and how far off they are
+function zmDownMarker(r) {
+  const m = FPS.me, c = cam(r.x, r.y, FPSC.GROUND + (r.tjz || 0) + 1.0); if (c.f < 0.4) return;
+  const q = proj(c), x = clamp(q.x, 30, W - 30), y = clamp(q.y, 40, H - 40), t = g.t;
+  const left = r.dn || 0, k = clamp(left / ZM_DOWN.T, 0, 1), low = left > 0 && left < 10;
+  let rev = ZM.revOf === r.id ? ZM.revT / ZM_DOWN.REV : 0;
+  for (const o of FPS.remote.values()) if (o.rv && o.rv[0] === r.id) rev = Math.max(rev, o.rv[1]);
+  const pulse = 0.65 + 0.35 * Math.sin(t * (low ? 12 : 6)), rr = 13;
+  ctx.fillStyle = 'rgba(8,10,14,0.55)'; ctx.beginPath(); ctx.arc(x, y, rr + 4, 0, 6.2832); ctx.fill();
+  zmRing(x, y, rr, k || 1, `rgba(228,${low ? 60 : 90},${low ? 50 : 70},${pulse})`, 4);
+  if (rev > 0) zmRing(x, y, rr - 6, rev, '#ffd88a', 3);
+  else { ctx.fillStyle = `rgba(228,108,79,${pulse})`; ctx.fillRect(x - 1.5, y - 6, 3, 12); ctx.fillRect(x - 6, y - 1.5, 12, 3); }
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = '600 13px "Courier Prime", monospace';
+  ctx.fillStyle = rev > 0 ? '#ffd88a' : `rgba(236,140,110,${0.75 + 0.25 * pulse})`;
+  ctx.fillText(rev > 0 ? `${r.n} · getting up` : `${r.n} is down`, x, y - rr - 12);
+  ctx.font = '600 11px "Courier Prime", monospace'; ctx.fillStyle = 'rgba(236,228,207,0.8)';
+  ctx.fillText(`${left > 0 ? Math.ceil(left) + ' s · ' : ''}${Math.round(Math.hypot(r.x - m.x, r.y - m.y))} m`, x, y + rr + 12);
+}
 // the Classic renderer: just the doors still shut, as dark slabs (the drowned are painted as on the islands)
 function zmDrawFlat() {
   for (const d of ZM.doors) {
@@ -18768,17 +18843,18 @@ function zmDrawFlat() {
 
 // ---------- what you see on top ----------
 function zmHud() {
-  const m = FPS.me, phone = FPS.touch, t = g.t;
+  const m = FPS.me, phone = FPS.touch, t = g.t, down = zmIsDown() && !ZM.over;
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   const mono = px => `600 ${px}px "Courier Prime", monospace`, fell = px => `400 ${px}px "IM Fell English SC", serif`;
   const max = ZM.perks.stout ? ZMC.HP_STOUT : ZMC.HP;
   // hurt: red creeping in from the edges, the more the closer to going down
-  const hurt = clamp(1 - m.hp / max, 0, 1) * (m.dead > 0 ? 0 : 1);
+  const hurt = clamp(1 - m.hp / max, 0, 1) * (m.dead > 0 || down ? 0 : 1);
+  if (down) zmHudDownGlow(t);
   if (hurt > 0 || FPS.hurtT > 0) {
     const a = Math.min(0.85, hurt * 0.7 + (FPS.hurtT || 0) * 0.5), gr = ctx.createRadialGradient(cx, H / 2, Math.min(W, H) * 0.25, cx, H / 2, Math.max(W, H) * 0.7);
     gr.addColorStop(0, 'rgba(140,10,8,0)'); gr.addColorStop(1, `rgba(140,10,8,${a})`); ctx.fillStyle = gr; ctx.fillRect(0, 0, W, H);
   }
-  if (m.protect > 0 && !ZM.over) { ctx.fillStyle = `rgba(200,220,255,${0.05 + 0.03 * Math.sin(t * 10)})`; ctx.fillRect(0, 0, W, H); }
+  if (m.protect > 0 && !ZM.over && !down) { ctx.fillStyle = `rgba(200,220,255,${0.05 + 0.03 * Math.sin(t * 10)})`; ctx.fillRect(0, 0, W, H); }
   if (ZM.insta > 0) { ctx.fillStyle = 'rgba(0,0,0,0.08)'; ctx.fillRect(0, 0, W, H); }
   // crosshair
   const cy = H / 2, w = fpsW();
@@ -18814,7 +18890,7 @@ function zmHud() {
   // your health, over the points: a bar in as many parts as the knocks you can take, filling back up when you heal
   {
     const bw = phone ? 120 : 168, bh = phone ? 9 : 11, by = py - (phone ? 30 : 36), n = max, gap = 3, seg = (bw - gap * (n - 1)) / n;
-    const hp = m.dead > 0 ? 0 : clamp(m.hp, 0, n), low = hp <= 1 && !(m.dead > 0);
+    const hp = m.dead > 0 || down ? 0 : clamp(m.hp, 0, n), low = hp <= 1 && !(m.dead > 0);
     ctx.fillStyle = 'rgba(8,10,14,0.55)'; ctx.fillRect(L - 3, by - 3, bw + 6, bh + 6);
     for (let i = 0; i < n; i++) {
       const on = i < hp;
@@ -18848,7 +18924,7 @@ function zmHud() {
     ctx.fillText(m.reload > 0 ? (w.melee ? 'WIPING' : 'RELOADING') : w.melee ? 'CUTLASS' : `${m.ammo} / ${ZM.res[FPS.weapon] || 0}`, R, by);
     ctx.font = mono(11); let wx = R;
     for (let i = ZM.own.length - 1; i >= 0; i--) { const id = ZM.own[i], lab = `${i + 1} ${(typeof zmpName === 'function' ? zmpName(id) : FPSW[id].n).toUpperCase()}`; ctx.fillStyle = id === FPS.weapon ? '#ffd88a' : 'rgba(236,228,207,0.4)'; ctx.fillText(lab, wx, by - 30); wx -= ctx.measureText(lab).width + 14; }
-    if (!w.melee && (m.ammo === 0 || (m.ammo < w.mag && m.ammo <= Math.ceil(w.mag * 0.25))) && !(m.reload > 0) && !ZM.over) { ctx.textAlign = 'center'; ctx.font = mono(13); ctx.fillStyle = (ZM.res[FPS.weapon] || 0) > 0 ? 'rgba(236,228,207,0.8)' : '#e46c4f'; ctx.fillText((ZM.res[FPS.weapon] || 0) > 0 ? 'R TO RELOAD' : m.ammo ? 'LOW AMMUNITION' : 'NO AMMUNITION · V OR FIRE TO KNIFE', cx, cy + 46); }
+    if (!w.melee && (m.ammo === 0 || (m.ammo < w.mag && m.ammo <= Math.ceil(w.mag * 0.25))) && !(m.reload > 0) && !ZM.over) { ctx.textAlign = 'center'; ctx.font = mono(13); ctx.fillStyle = (ZM.res[FPS.weapon] || 0) > 0 ? 'rgba(236,228,207,0.8)' : '#e46c4f'; ctx.fillText((ZM.res[FPS.weapon] || 0) > 0 ? 'R TO RELOAD' : m.ammo ? 'LOW AMMUNITION' : down ? 'NO AMMUNITION' : 'NO AMMUNITION · V OR FIRE TO KNIFE', cx, cy + 46); }
   } else { zmPadState(); zmDrawStick(); }
   // together: everyone's points, down the right (yours lit), and anyone down marked
   let feedY = phone ? top + 48 : 16;
@@ -18891,17 +18967,79 @@ function zmHud() {
     ctx.textBaseline = 'middle'; ctx.textAlign = 'left'; ctx.font = fell(22); ctx.fillStyle = '#ffd88a'; ctx.fillText('The Lighthouse', bx + 14, by2 + 24);
     rows.forEach(([k, v], i) => { const yy = by2 + 58 + i * 24; ctx.font = mono(13); ctx.textAlign = 'left'; ctx.fillStyle = 'rgba(236,228,207,0.8)'; ctx.fillText(k, bx + 14, yy); ctx.textAlign = 'right'; ctx.fillStyle = '#ffd88a'; ctx.fillText(String(v), bx + bw - 14, yy); });
   }
-  // down, waiting for a friend; or out until the next round
-  if (!ZM.over && (ZM.downT > 0 || ZM.ghost)) {
+  // down, waiting for a friend (your clock on the floor); or out until the next round
+  if (down) zmHudDown(phone, mono, fell, t);
+  else if (!ZM.over && ZM.ghost) {
     ctx.fillStyle = 'rgba(30,4,4,0.35)'; ctx.fillRect(0, 0, W, H);
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = fell(phone ? 24 : 34); ctx.fillStyle = '#e46c4f';
-    ctx.fillText(ZM.ghost ? 'You bled out' : 'You’re down', cx, H * 0.42);
+    ctx.fillText('You bled out', cx, H * 0.42);
     ctx.font = mono(phone ? 11 : 13); ctx.fillStyle = 'rgba(236,228,207,0.85)';
-    ctx.fillText(ZM.ghost ? 'You’ll be back when the next round begins.' : `${Math.ceil(ZM.downT)}s: someone can get you up by holding Use beside you.`, cx, H * 0.42 + 34);
+    ctx.fillText('You’ll be back when the next round begins.', cx, H * 0.42 + 34);
   }
+  // getting someone up: a ring round the sights filling as you hold
+  if (ZM.revOf && ZM.revT > 0 && !ZM.over) zmHudReviving(phone, mono, t);
   if (ZM.over) { ctx.fillStyle = `rgba(20,2,2,${Math.min(0.6, ZM.over.t * 0.4)})`; ctx.fillRect(0, 0, W, H); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = fell(phone ? 28 : 40); ctx.fillStyle = `rgba(200,40,30,${Math.min(1, ZM.over.t)})`; ctx.fillText('They dragged you down', cx, H * 0.42); }
   if (!FPS.mouse && !phone && !FPS.menu && !ZM.over) { ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = mono(12); ctx.fillStyle = 'rgba(236,228,207,0.6)'; ctx.fillText('Click to aim with the mouse', cx, H * 0.5 + 40); }
   if (typeof zeHud === 'function') zeHud();   // [egg hook] src/zmegg.js
+}
+// down: the edges of the screen going red, thumping with your heart, deeper as the time runs out
+function zmHudDownGlow(t) {
+  const k = clamp(ZM.downT / ZM_DOWN.T, 0, 1), urg = 1 - k, ph = ZM.beat % 1;
+  const thump = Math.exp(-ph * 10) + (ph > 0.2 ? 0.7 * Math.exp(-(ph - 0.2) * 10) : 0);
+  const a = Math.min(0.95, 0.5 + urg * 0.35 + thump * (0.12 + urg * 0.18));
+  const gr = ctx.createRadialGradient(cx, H / 2, Math.min(W, H) * (0.3 - urg * 0.14), cx, H / 2, Math.max(W, H) * 0.62);
+  gr.addColorStop(0, 'rgba(120,6,6,0)'); gr.addColorStop(0.55, `rgba(120,6,6,${a * 0.55})`); gr.addColorStop(1, `rgba(90,0,0,${a})`);
+  ctx.fillStyle = gr; ctx.fillRect(0, 0, W, H);
+  // (and the colour going out of everything, a little)
+  ctx.fillStyle = `rgba(20,0,0,${0.08 + urg * 0.14})`; ctx.fillRect(0, 0, W, H);
+}
+// a ring: a dark track, then an arc from twelve o'clock round for the part k
+function zmRing(x, y, r, k, col, lw) {
+  ctx.lineWidth = lw; ctx.lineCap = 'butt';
+  ctx.strokeStyle = 'rgba(8,10,14,0.6)'; ctx.beginPath(); ctx.arc(x, y, r, 0, 6.2832); ctx.stroke();
+  if (k > 0) { ctx.strokeStyle = col; ctx.beginPath(); ctx.arc(x, y, r, -Math.PI / 2, -Math.PI / 2 + 6.2832 * clamp(k, 0, 1)); ctx.stroke(); }
+}
+// down: your clock on the floor, draining, high in the middle of the screen; who's getting you up, if anyone
+function zmHudDown(phone, mono, fell, t) {
+  const left = Math.max(0, ZM.downT), k = clamp(left / ZM_DOWN.T, 0, 1), low = left < 10, help = zmReviver();
+  const x = cx, y = H * (phone ? 0.2 : 0.22), r = phone ? 26 : 38, beat = 1 + (low ? 0.06 : 0.03) * Math.exp(-(ZM.beat % 1) * 8);
+  ctx.save(); ctx.translate(x, y); ctx.scale(beat, beat);
+  ctx.fillStyle = 'rgba(8,10,14,0.55)'; ctx.beginPath(); ctx.arc(0, 0, r + 6, 0, 6.2832); ctx.fill();
+  zmRing(0, 0, r, k, low ? `rgba(255,${70 + 50 * Math.sin(t * 10)},50,0.95)` : '#e0504a', phone ? 5 : 7);
+  if (help) zmRing(0, 0, r - (phone ? 8 : 11), help.k, '#ffd88a', phone ? 4 : 5);
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = mono(phone ? 18 : 26); ctx.fillStyle = low ? '#ff8a6a' : 'rgba(236,228,207,0.95)';
+  ctx.fillText(String(Math.ceil(left)), 0, 1);
+  ctx.restore();
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  // (a dark band behind the words, so they read over anything)
+  { const bw = Math.min(W - 24, phone ? 300 : 560), by = y + r + (phone ? 8 : 12), bh = phone ? 70 : 92, gr = ctx.createLinearGradient(x - bw / 2, 0, x + bw / 2, 0);
+    gr.addColorStop(0, 'rgba(8,4,4,0)'); gr.addColorStop(0.2, 'rgba(8,4,4,0.6)'); gr.addColorStop(0.8, 'rgba(8,4,4,0.6)'); gr.addColorStop(1, 'rgba(8,4,4,0)');
+    ctx.fillStyle = gr; ctx.fillRect(x - bw / 2, by, bw, bh); }
+  ctx.font = fell(phone ? 20 : 30); ctx.fillStyle = '#ff7a5c';
+  ctx.fillText(`You’re down — ${Math.ceil(left)} s`, x, y + r + (phone ? 22 : 32));
+  ctx.font = mono(phone ? 11 : 13);
+  const ly = y + r + (phone ? 42 : 60);
+  if (help) {
+    ctx.fillStyle = '#ffd88a'; ctx.fillText(`${help.n} is getting you up`, x, ly);
+    const bw = phone ? 140 : 200, bh = 6;
+    ctx.fillStyle = 'rgba(8,10,14,0.6)'; ctx.fillRect(x - bw / 2 - 2, ly + 12, bw + 4, bh + 4);
+    ctx.fillStyle = '#ffd88a'; ctx.fillRect(x - bw / 2, ly + 14, bw * help.k, bh);
+  } else {
+    ctx.fillStyle = low ? `rgba(255,140,110,${0.7 + 0.3 * Math.sin(t * 8)})` : 'rgba(236,228,207,0.85)';
+    ctx.fillText(low ? 'Hold on…' : 'Hold on… someone can get you up by holding Use beside you.', x, ly);
+    ctx.font = mono(phone ? 9 : 11); ctx.fillStyle = 'rgba(236,228,207,0.55)';
+    ctx.fillText('You can still fire your pepperbox.', x, ly + (phone ? 15 : 19));
+  }
+}
+// getting someone up: a ring round the sights filling over the time it takes, their name, and their clock
+function zmHudReviving(phone, mono, t) {
+  const r = FPS.remote.get(ZM.revOf), k = clamp(ZM.revT / ZM_DOWN.REV, 0, 1), y = H / 2, rr = phone ? 24 : 30;
+  zmRing(cx, y, rr, k, '#ffd88a', phone ? 5 : 6);
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = mono(phone ? 12 : 15);
+  const text = `Getting ${(r && r.n) || 'them'} up · ${Math.round(k * 100)}%`, tw = ctx.measureText(text).width + 24, ty = y + rr + (phone ? 22 : 30);
+  ctx.fillStyle = 'rgba(8,10,14,0.6)'; ctx.fillRect(cx - tw / 2, ty - 14, tw, 28);
+  ctx.fillStyle = '#ffd88a'; ctx.fillText(text, cx, ty);
+  if (r && r.dn > 0) { ctx.font = mono(phone ? 9 : 11); ctx.fillStyle = r.dn < 10 ? '#ff8a6a' : 'rgba(236,228,207,0.7)'; ctx.fillText(`Keep holding · ${Math.ceil(r.dn)} s before they bleed out`, cx, ty + (phone ? 20 : 24)); }
 }
 // the walking stick, where your thumb came down (as on the islands), with its outer circle for running
 function zmDrawStick() {
@@ -18919,11 +19057,11 @@ function zmPadState() {
   const dry = !w.melee && m.ammo <= 0 && !((ZM.res[FPS.weapon] || 0) > 0);
   set('fpsPadFire', (w.melee || m.ammo > 0 || dry) && !(m.reload > 0), m.reload > 0 ? '…' : w.melee || dry ? '⚔' : String(m.ammo));
   { const f = $('fpsPadFire').querySelector('small'); const lab = w.melee ? 'SWING' : dry ? 'KNIFE' : `/${ZM.res[FPS.weapon] || 0}`; if (f && f.textContent !== lab) f.textContent = lab; }
-  set('fpsPadKnife', !((FPS.knifeT || 0) > 0) && !(m.dead > 0));
+  set('fpsPadKnife', !((FPS.knifeT || 0) > 0) && !(m.dead > 0) && !zmIsDown());
   { const b = $('fpsPadWeapon'); if (b) { const c = b.querySelector('.wn'); if (c && c.textContent !== w.n) c.textContent = w.n; } }
   { const b = $('fpsPadScope'); if (b) { b.hidden = !(w.scope || w.ads); b.classList.toggle('on', FPS.scoped); } }
   set('fpsPadLantern', m.lan); set('fpsPadView', FPS.third);
-  set('fpsPadJump', !((m.jz || 0) > (m.fl || 0) + 0.02) && !(m.dead > 0));
+  set('fpsPadJump', !((m.jz || 0) > (m.fl || 0) + 0.02) && !(m.dead > 0) && !zmIsDown());
   set('fpsPadReload', !w.melee && m.ammo < w.mag && !(m.reload > 0) && (ZM.res[FPS.weapon] || 0) > 0);
   set('fpsPadUse', !!ZM.near);
 }
@@ -20700,8 +20838,10 @@ setTimeout(() => {
 // night (`q`: open a door, a go at the chest, take what it offers, a board back on a window, get someone up). Points
 // are each player's own: what the host credits arrives as points, and buying spends them (a door or the chest
 // already taken by someone else gives them back).
-// Going down together: half a minute on the floor, where a friend holding Use beside you gets you up; bleed out and
-// you're back next round with a pepperbox. The night is over when nobody is left standing.
+// Going down together: three-quarters of a minute on the floor (ZM_DOWN), still firing a pepperbox, where a friend
+// holding Use beside you gets you up; bleed out and you're back next round with a pepperbox. Each player's presence
+// carries their own clock on the floor (`dn`) and whom they're getting up and how far along (`rv`), so the one down,
+// the one helping and everyone else see the same. The night is over when nobody is left standing.
 
 const ZN = { code: null, at: 0, doneG: null, msg: '', g: null, sendT: 0, hseq: 0, seq: 0, q: [], hq: [], hits: new Map(), shots: [], shotSeq: 0,
   lastQ: {}, lastH: {}, lastShot: {}, seenT: {}, ev: [], eseq: 0, evSeen: 0, lastHseq: -1, hostT: 0, creditSeen: [0, 0, 0], lobT: 0 };
@@ -20862,6 +21002,9 @@ function znPresence() {
   z.g = ZN.g; z.p = znMe(); z.pt = ZM.pts;
   z.c = fpsColours(); z.o = typeof ocEquippedId === 'function' ? ocEquippedId() || '' : '';
   if (ZN.shots.length) z.sh = ZN.shots.slice(-4);
+  // down: how long I've left on the floor (tenths); getting someone up: who, and how far along (hundredths)
+  if (ZM.downT > 0) z.dn = Math.ceil(ZM.downT * 10);
+  if (ZM.revOf && ZM.revT > 0) z.rv = [ZM.revOf, Math.round(ZM.revT / ZM_DOWN.REV * 100)];
   return z;
 }
 // my shots, for the others to see and hear
@@ -20900,6 +21043,8 @@ function znReadPlayers(dt) {
     r.c = Array.isArray(z.c) ? z.c.slice(0, 4).map(c => typeof c === 'string' ? c.slice(0, 9) : '#3a2a1e') : null;
     r.o = typeof z.o === 'string' ? z.o.slice(0, 24) : '';
     r.pts = Math.max(0, z.pt | 0);
+    r.dn = r.down ? clamp(+z.dn || 0, 0, ZM_DOWN.T * 10) / 10 : 0;
+    r.rv = Array.isArray(z.rv) && typeof z.rv[0] === 'string' ? [z.rv[0], clamp(+z.rv[1] || 0, 0, 100) / 100] : null;
     r.left = false;
     if (Array.isArray(z.sh)) {
       const last = ZN.lastShot[z.sid] || 0;
@@ -20952,17 +21097,23 @@ function znRequestFrom(sid, k, a) {
   if (k === 'box') { zmBoxSpin(sid, String(a || '').split(',').filter(id => FPSW[id])); return; }
   if (k === 'take') { if (ZM.box.st === 'offer' && ZM.box.owner === sid) { ZM.box.st = 'idle'; ZM.box.t = 0; } return; }
   if (k === 'board') { const w = ZM.windows[a | 0]; if (w && w.boards < 6 && !ZM.z.some(z => z.win === w && z.st === 'climb')) { w.boards++; zmBoardPay(sid); } return; }
-  if (k === 'rev') { zmnRevive(String(a)); return; }
+  if (k === 'rev') { zmnRevive(String(a), sid); return; }
   if (k === 'pst') { if (typeof zmpStatusFrom === 'function') zmpStatusFrom(sid, a); return; }   // [pap] what a reforged weapon did to them
   if (k === 'egg') { if (typeof zeRequest === 'function') zeRequest(sid, a); return; }   // [egg hook] src/zmegg.js
 }
-// someone gets someone up: everyone's told (and if it's me, up I get)
-function zmnRevive(sid) {
+// someone (by) gets someone (sid) up: everyone's told who got whom up (and if it's me, up I get)
+function zmnRevive(sid, by) {
   if (ZM.net === 'client') { zmnRequest('rev', sid); return; }
-  zmnEvent('rev', sid);
-  if (sid === FPS.me.id) zmGetUp();
+  by = by || FPS.me.id;
+  zmnEvent('rev', sid, by);
+  znRevived(sid, by);
 }
-function zmnEvent(k, a) { ZN.ev.push([++ZN.eseq, k, a]); if (ZN.ev.length > 8) ZN.ev.shift(); }
+function znRevived(sid, by) {
+  const nick = s => s === FPS.me.id ? 'You' : (ZM.hum.find(h => h[0] === s) || [])[1] || 'Someone';
+  if (sid === FPS.me.id) zmGetUp(by !== sid ? nick(by) : null);
+  else fpsFeed(`${nick(by)} got ${nick(sid)} up.`);
+}
+function zmnEvent(k, a, b) { ZN.ev.push(b == null ? [++ZN.eseq, k, a] : [++ZN.eseq, k, a, b]); if (ZN.ev.length > 8) ZN.ev.shift(); }
 const ZN_ST = { out: 0, tear: 1, climb: 2, in: 3 }, ZN_STN = ['out', 'tear', 'climb', 'in'], ZN_BOXST = ['idle', 'spin', 'offer', 'gull', 'gone'];
 const ZN_KIND = ['walk', 'jog', 'run'], ZN_PH = { pre: 0, round: 1, break: 2 };
 function znHostSend() {
@@ -21078,7 +21229,7 @@ function znApply(hz) {
     const was = z.swing;
     if (sw >= 0.28 && (was < 0.28 || was > sw) && !z.dead) {
       const reach = st === 'tear' ? 1.6 : 1.55;
-      if (Math.hypot(m.x - x, m.y - y) < reach && Math.abs((m.jz || 0) - jz) < 1.2 && !(m.dead > 0) && !(m.protect > 0)) { fpsHurt(1, null, null); zmSound('hit'); }
+      if (Math.hypot(m.x - x, m.y - y) < reach && Math.abs((m.jz || 0) - jz) < 1.2 && !(m.dead > 0) && !(m.protect > 0) && !zmIsDown()) { fpsHurt(1, null, null); zmSound('hit'); }
     }
     z.swing = sw;
     const fl = a[8];
@@ -21116,7 +21267,7 @@ function znApply(hz) {
     if (!Array.isArray(e) || !(e[0] > ZN.evSeen)) continue;
     ZN.evSeen = e[0];
     if (e[1] === 'take' && ZM_DROPS[e[2]]) zmTake(e[2], true);
-    else if (e[1] === 'rev' && e[2] === NET.sid) zmGetUp();
+    else if (e[1] === 'rev' && typeof e[2] === 'string') znRevived(e[2], typeof e[3] === 'string' ? e[3] : '');
     else if (e[1] === 'feed') fpsFeed(znClean(e[2], 120));
   }
 }
