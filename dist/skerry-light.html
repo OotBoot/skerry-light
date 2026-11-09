@@ -21368,7 +21368,7 @@ VM_BUILD.netmortar = (M) => {
   const left = vmHand(VM.H, true); left.position.set(-0.03, 0.0, -0.13); left.rotation.set(0.3, 0, 0.6); root.add(left);
   const fresh = zxvNet(M); fresh.visible = false; root.add(fresh);
   const muzzle = new THREE.Object3D(); muzzle.position.set(0, 0.0, -0.24); tube.add(muzzle);
-  return { root, M, hand, left, tube, net, lever, trig, fresh, muzzle, pose: { x: 0.07, y: -0.18, z: -0.4, rx: 0.06, ry: 0.08, rz: -0.05 }, smoke: 1, flashK: 0.6 };
+  return { root, M, hand, left, tube, net, lever, trig, fresh, muzzle, pose: { x: 0.1, y: -0.2, z: -0.42, rx: 0.06, ry: 0.08, rz: -0.05 }, smoke: 1, flashK: 0.6 };
 };
 VM_ANIM.netmortar = (w, S) => {
   const p = S.p;
