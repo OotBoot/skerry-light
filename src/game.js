@@ -502,7 +502,6 @@ const SETTING_OPTS = {
   scares: [['full', 'Full'], ['soft', 'Softened']],
   flashes: [['normal', 'Normal'], ['reduced', 'Reduced']],
   motion: [['auto', 'Auto'], ['reduce', 'Reduce'], ['full', 'Full']],
-  renderer: [['3d', '3D'], ['2d', 'Classic']],
   aim: [['hold', 'Off'], ['toggle', 'On']],
 };
 function renderSettings() {
@@ -540,7 +539,6 @@ function applySettings() {
   lookSync(); fovSync();
   applyVolume(); refreshMotion();
   if (typeof gl3dRefresh === 'function') gl3dRefresh();
-  const n = $('glNote'); if (n) n.textContent = SETTINGS.renderer !== '2d' && GL3D.failed ? ' (3D isn\'t available on this device, so the classic view is used.)' : '';
 }
 
 // ---------- flow ----------
