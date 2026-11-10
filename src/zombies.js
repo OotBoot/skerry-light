@@ -1470,9 +1470,9 @@ FPI_GEN.wrack = {
       if (!vput('vlouvre', x, y, a, { w: 1.6, z0: F2, z1: F2 + 2.9 })) put('glasspane', x, y, a, { w: 1.6, z0: F2, z1: F2 + 2.9 });
     }
     // the first floor's boards, round the hole the stair comes up through; the Belfry's, round its own
-    for (const [x0, x1, y0, y1] of [[-11, 11, -9, -1.5], [-8.2, 11, -1.5, 5], [-11, 11, 5, 13]]) put('slab', (x0 + x1) / 2, (y0 + y1) / 2, 0, { w: x1 - x0, d: y1 - y0, top: F1 });
-    put('slab', 0, 10.725, 0, { w: 7, d: 4.05, top: F2 });   // (y 8.7 to 12.75: the stair comes up along its south side)
-    put('slab', -2.75, 7.85, 0, { w: 1.5, d: 1.7, top: F2 });   // (and the landing at its head, against the west wall)
+    for (const [x0, x1, y0, y1] of [[-11, 11, -9, -4], [-8.2, 11, -4, 5], [-11, 11, 5, 13]]) put('slab', (x0 + x1) / 2, (y0 + y1) / 2, 0, { w: x1 - x0, d: y1 - y0, top: F1 });
+    put('slab', 0, 11.025, 0, { w: 7, d: 3.45, top: F2 });   // (y 9.3 to 12.75: the stair comes up along its south side)
+    put('slab', -2.75, 8.15, 0, { w: 1.5, d: 2.3, top: F2 });   // (and the landing at its head, against the west wall)
     // the ceilings: the first floor's under the leads (not over the Belfry); the Belfry's under its spire
     for (const [x0, x1, y0, y1] of [[-11, 11, -9, 7], [-11, -3.5, 7, 13], [3.5, 11, 7, 13]]) put('ceil', (x0 + x1) / 2, (y0 + y1) / 2, 0, { w: x1 - x0 + 0.4, d: y1 - y0 + (y0 === 7 ? 0.2 : 0.4), z0: F2 - 0.3, col: '#a8a290' });
     put('ceil', 0, 10, 0, { w: 7.2, d: 6.2, z0: F2 + 3.3, col: '#6a5440' });
@@ -1481,20 +1481,20 @@ FPI_GEN.wrack = {
     // up into the Belfry (another)
     const RS = F1 / 16, stair = (x, y, a, n, base, w) => { const o = Object.assign({ w, d: 0.76, hh: n * RS }, base ? { lift: base } : {}); return vput('vstair', x, y, a, o) || put('step', x, y, a, o); };
     for (let n = 1; n <= 16; n++) stair(-9.55, -7 + (n - 0.5) * 0.75, 0, n, 0, 2.3);
-    for (let n = 1; n <= 15; n++) stair(3.25 - (n - 8.5) * 0.75, 7.95, Math.PI / 2, n, F1, 1.4);
+    for (let n = 1; n <= 15; n++) stair(3.25 - (n - 8.5) * 0.75, 8.15, Math.PI / 2, n, F1, 1.4);
     // (along the stairs' open sides, unseen, from the floor to well over a tread: nobody jumps up onto a flight past
     // its gate, from the floor or from a tread below it)
     const side = (x, y, a, base, h) => put('glasspane', x, y, a, { w: 0.78, z0: base, z1: base + h + 1.7 });
-    for (let n = 1; n <= 9; n++) { side(-8.35, -7 + (n - 0.5) * 0.75, Math.PI / 2, 0, n * RS); for (const y of [7.2, 8.7]) side(3.25 - (n - 8.5) * 0.75, y, 0, F1, n * RS); }
+    for (let n = 1; n <= 9; n++) { side(-8.35, -7 + (n - 0.5) * 0.75, Math.PI / 2, 0, n * RS); for (const y of [7.4, 8.9]) side(3.25 - (n - 8.5) * 0.75, y, 0, F1, n * RS); }
     const gate = (x, y, a, w, h, cost, zones) => { const p = put('zdoor', x, y, a, { w: w + 0.1, d: 0.16, hh: 2.6, lift: h - 0.3 }); const [gx, gy] = W(x, y); Z.doors.push({ x: gx, y: gy, z: h, ang: a, w, cost, zones, kind: 'gate', solids: p.sol.slice(), prop: p, open: false, id: Z.doors.length }); };
     gate(-9.55, -7 + 3 * 0.75, 0, 2.3, 3 * RS, 1500, ['moot', 'council']);
-    gate(3.25 - (3 - 8.5) * 0.75 - 0.375, 7.95, Math.PI / 2, 1.4, F1 + 3 * RS, 1500, ['council', 'belfry']);
+    gate(3.25 - (3 - 8.5) * 0.75 - 0.375, 8.15, Math.PI / 2, 1.4, F1 + 3 * RS, 1500, ['council', 'belfry']);
     // the rails round the stair holes, and the banisters up the flights
     // (only to look at: a fall into a stairwell lands you on the stair, past its gate, where you'd come from anyway)
-    vput('vbanister', -11, -1.5, -Math.PI / 2, { len: 2.8, rise: 0, base: F1 }); vput('vbanister', -8.2, -1.5, 0, { len: 6.5, rise: 0, base: F1 });
-    vput('vbanister', 3.25, 8.7, Math.PI / 2, { len: 4.5, rise: 0, base: F2 });
+    vput('vbanister', -11, -4, -Math.PI / 2, { len: 2.8, rise: 0, base: F1 }); vput('vbanister', -8.2, -4, 0, { len: 9, rise: 0, base: F1 });
+    vput('vbanister', 3.25, 9.3, Math.PI / 2, { len: 4.5, rise: 0, base: F2 });
     vput('vbanister', -8.4, -7, 0, { len: 12, rise: F1, base: 0 });
-    vput('vbanister', 9.25, 7.25, Math.PI / 2, { len: 11.25, rise: 15 * RS, base: F1 }); vput('vbanister', 9.25, 8.65, Math.PI / 2, { len: 7.5, rise: 10 * RS, base: F1 });
+    vput('vbanister', 9.25, 7.45, Math.PI / 2, { len: 11.25, rise: 15 * RS, base: F1 }); vput('vbanister', 9.25, 8.85, Math.PI / 2, { len: 7.5, rise: 10 * RS, base: F1 });
     // the portico on the Square: four columns, the entablature on them and a pediment over
     for (const x of [-4.6, -1.9, 1.9, 4.6]) { if (!vput('vcolumn', x, -10.6, 0, { r: 0.32, hh: F1 - 0.4 })) put('post', x, -10.6, 0, { r: 0.3, hh: F1 - 0.4 }); }
     put('block', 0, -10.4, 0, { w: 10.6, d: 1.4, hh: F1 + 0.3, z0: F1 - 0.4, col: '#9a968a' });
@@ -1561,7 +1561,7 @@ FPI_GEN.wrack = {
     vput('vbookcase', -5, -8.75, Math.PI, { w: 4, goods: 'books', lift: F1 }); vput('vbookcase', 5, -8.75, Math.PI, { w: 4, goods: 'books', lift: F1 });
     put('table', 3, -1, 0, { w: 3, d: 1.2, lift: F1 }); put('globe', 9, -1, 0, { lift: F1 });
     lamp(-3, -6, F1 + 3.0, '#ffc070', F2 - 0.3); lamp(5, -6, F1 + 3.0, '#ffc070', F2 - 0.3); lamp(3, -1, F1 + 3.0, '#ffc070', F2 - 0.3);
-    buy('harpoon', 1000, -10.7, -3, 1, 0, F1);
+    buy('harpoon', 1000, -10.7, -7.2, 1, 0, F1);
     spot(-6.5, 0.2, 0, -1, F1, 'records');
     if (typeof zmpPlace === 'function') zmpPlace(put, light, W, Z, { x: 10.25, y: -7.3, z: F1, nx: -1, ny: 0, zone: 'records' });   // [pap] up in the Records Room
     // ---------- the Council Chamber: the long table, the Grog Ration ----------
