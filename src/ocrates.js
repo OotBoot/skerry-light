@@ -12,7 +12,8 @@
 //   Bosun     uniforms and better cloth: a bicorne, gold buttons
 //   Mate      the trim shimmers
 //   Captain   trim and sash glow, pulsing, and the eyes glow
-//   Admiral   the whole coat alight, glowing eyes, and a halo
+//   Admiral   the whole coat alight, glowing eyes, and a halo; each its own living light (src/ocadmiral.js): the
+//             Drowned Captain deep water and ghost-fire, the Keeper of the Light gold filigree and the beam
 // Without one you wear your boat skin's colours, as before.
 //
 // Earning: one crate for every 6 kills (the count carries over), and one for each round you see out ashore
@@ -45,8 +46,8 @@ const OC_ROWS = [
   ['oc_corpse',  'The Corpse Light',        'captain',  '#1a2a20', '#7affb0', '#3a6a4a', '#121a16', 'hood',      { fx: 'glow', eyes: '#b8ffd8' }],
   ['oc_gold',    'Admiralty Gold',          'captain',  '#142040', '#ffd34d', '#ffd34d', '#0e1630', 'bicorne',   { fx: 'glow', eyes: '#fff0b0', brass: '#ffd34d' }],
   ['oc_herald',  'The Kraken’s Herald',     'captain',  '#2a0e3a', '#c06aff', '#8a3acc', '#1a0828', 'tricorn',   { fx: 'glow', eyes: '#e0a8ff' }],
-  ['oc_drowned', 'The Drowned Captain',     'admiral',  '#0e2a2a', '#7affe0', '#1aa08a', '#082020', 'hood',      { fx: 'aura', glow: '#7affe0', eyes: '#c8fff0', halo: '#4affd8' }],
-  ['oc_keeper',  'The Keeper of the Light', 'admiral',  '#e8d8a8', '#ffd34d', '#fff0b0', '#f4ecd0', 'tricorn',   { fx: 'aura', glow: '#ffd88a', eyes: '#fff4c8', halo: '#ffe08a', breeches: '#d8c8a0', brass: '#ffe08a' }],
+  ['oc_drowned', 'The Drowned Captain',     'admiral',  '#0e2a2a', '#7affe0', '#1aa08a', '#082020', 'hood',      { fx: 'aura', adm: 'drowned', glow: '#7affe0', eyes: '#c8fff0', halo: '#4affd8' }],
+  ['oc_keeper',  'The Keeper of the Light', 'admiral',  '#e8d8a8', '#ffd34d', '#fff0b0', '#f4ecd0', 'tricorn',   { fx: 'aura', adm: 'keeper', glow: '#ffd88a', eyes: '#fff4c8', halo: '#ffe08a', breeches: '#d8c8a0', brass: '#ffe08a' }],
   // [pirate tokens] src/zmegg.js: only ever unlocked with the Lighthouse's pirate tokens, never in a crate (no crate rolls 'pirate')
   ['oc_gannetcap','Captain of the Gannet',  'pirate',   '#141a22', '#e0b040', '#8a1a1a', '#0c0e12', 'bicorne',   { fx: 'aura', glow: '#7affd0', eyes: '#c8fff0', halo: '#3ee0b4', brass: '#ffd34d', waist: '#3a1410', breeches: '#2a2420' }],
   ['oc_marenoil', 'Maren’s Oilskins',       'pirate',   '#c8962a', '#fff0b0', '#2a4a6a', '#b8862a', 'souwester', { fx: 'glow', glow: '#ffd88a', eyes: '#fff4c8', halo: '#ffe0a0', breeches: '#3a3a3a', brass: '#e0c060' }],
@@ -131,8 +132,9 @@ function ocDrawPreview(cv, oc, t) {
   g.save(); g.translate(cx, 0); g.scale(k, k);
   const tt = reduceMotion ? 0 : t;
   const pulse = o.fx === 'shimmer' ? 0.35 + 0.3 * Math.sin(tt * 2.2) : o.fx === 'glow' ? 0.6 + 0.3 * Math.sin(tt * 1.8) : o.fx === 'aura' ? 0.75 + 0.25 * Math.sin(tt * 2.6) : 0;
+  if (o.adm) ocAdmDraw(g, o, tt, 0);
   // the halo
-  if (o.halo) { const gr = g.createRadialGradient(0, 50, 4, 0, 50, 46); gr.addColorStop(0, o.halo + 'aa'); gr.addColorStop(1, o.halo + '00'); g.globalAlpha = 0.5 + 0.3 * Math.sin(tt * 1.6); g.fillStyle = gr; g.fillRect(-50, 0, 100, 100); g.globalAlpha = 1; }
+  if (o.halo && !o.adm) { const gr = g.createRadialGradient(0, 50, 4, 0, 50, 46); gr.addColorStop(0, o.halo + 'aa'); gr.addColorStop(1, o.halo + '00'); g.globalAlpha = 0.5 + 0.3 * Math.sin(tt * 1.6); g.fillStyle = gr; g.fillRect(-50, 0, 100, 100); g.globalAlpha = 1; }
   const glowOn = (col, f) => { if (!o.fx) return; g.shadowColor = col; g.shadowBlur = 4 + f * 10; };
   const off = () => { g.shadowBlur = 0; };
   // boots and breeches
@@ -141,6 +143,7 @@ function ocDrawPreview(cv, oc, t) {
   // the coat, open at the front over the waistcoat
   if (o.fx === 'aura') glowOn(o.glow || o.trim, pulse);
   g.fillStyle = o.coat; g.beginPath(); g.moveTo(-17, 36); g.lineTo(17, 36); g.lineTo(21, 86); g.lineTo(-21, 86); g.closePath(); g.fill(); off();
+  if (o.adm) ocAdmDraw(g, o, tt, 1);
   g.fillStyle = o.waist || '#3a2e24'; g.beginPath(); g.moveTo(-6, 37); g.lineTo(6, 37); g.lineTo(5, 66); g.lineTo(-5, 66); g.closePath(); g.fill();
   // trim, lapels, sash, buttons
   glowOn(o.glow || o.trim, pulse);
@@ -165,8 +168,88 @@ function ocDrawPreview(cv, oc, t) {
   else if (o.style === 'watchcap') { g.beginPath(); g.ellipse(0, 19, 8.6, 9, 0, Math.PI, 0); g.fill(); g.fillStyle = o.trim; g.fillRect(-8.8, 17, 17.6, 4); }
   else if (o.style === 'hood') { g.beginPath(); g.moveTo(-12, 40); g.quadraticCurveTo(-14, 10, 0, 9); g.quadraticCurveTo(14, 10, 12, 40); g.lineTo(8, 40); g.quadraticCurveTo(10, 18, 0, 17); g.quadraticCurveTo(-10, 18, -8, 40); g.closePath(); g.fill(); g.fillStyle = 'rgba(0,0,0,0.35)'; g.fillRect(-8, 17, 16, 6); }
   else { g.beginPath(); g.moveTo(-17, 18); g.lineTo(17, 18); g.lineTo(9, 9); g.lineTo(0, 11); g.lineTo(-9, 9); g.closePath(); g.fill(); g.fillRect(-8, 10, 16, 7); glowOn(o.glow || o.trim, pulse); g.strokeStyle = o.trim; g.lineWidth = 1; g.beginPath(); g.moveTo(-17, 18); g.lineTo(-9, 9); g.moveTo(17, 18); g.lineTo(9, 9); g.stroke(); off(); }
-  // sparkles on the Admirals'
-  if (o.fx === 'aura' && !reduceMotion) { g.fillStyle = '#ffffff'; for (let i = 0; i < 5; i++) { const a = tt * 0.8 + i * 1.26, r = 30 + 6 * Math.sin(tt * 2 + i); if (Math.sin(tt * 3 + i * 2) > 0.2) g.fillRect(Math.cos(a) * r * 0.7 - 0.8, 50 + Math.sin(a) * r - 0.8, 1.6, 1.6); } }
+  // sparkles on the Admirals' (and the two Admirals' own: bubbles rising, or warm motes)
+  if (o.adm) ocAdmDraw(g, o, tt, 2);
+  else if (o.fx === 'aura' && !reduceMotion) { g.fillStyle = '#ffffff'; for (let i = 0; i < 5; i++) { const a = tt * 0.8 + i * 1.26, r = 30 + 6 * Math.sin(tt * 2 + i); if (Math.sin(tt * 3 + i * 2) > 0.2) g.fillRect(Math.cos(a) * r * 0.7 - 0.8, 50 + Math.sin(a) * r - 0.8, 1.6, 1.6); } }
+  g.restore();
+}
+// the Admirals' own light, in the picture (as on the figure, src/ocadmiral.js). step 0: behind the figure (the
+// halo, and the deep water's light or the lighthouse beam); 1: over the coat (veins, caustics and drips, or gold
+// filigree and the beam sweeping across); 2: in front (bubbles, or motes)
+function ocAdmDraw(g, o, t, step) {
+  const dr = o.adm === 'drowned', P = (n, k) => 0.5 + 0.5 * Math.sin(t * k + n);
+  g.save();
+  if (step === 0) {
+    g.globalCompositeOperation = 'lighter';
+    if (dr) {
+      // shafts of light down through the water
+      for (let i = 0; i < 4; i++) { const x = -60 + i * 34 + 10 * Math.sin(t * 0.4 + i * 2); g.globalAlpha = 0.07 + 0.06 * P(i * 1.7, 0.9); g.fillStyle = '#5affd8'; g.beginPath(); g.moveTo(x, 0); g.lineTo(x + 10, 0); g.lineTo(x + 28, 100); g.lineTo(x + 14, 100); g.closePath(); g.fill(); }
+      // the ghost-fire halo: tongues of green flame round the head
+      g.globalAlpha = 1; g.shadowColor = '#3affc8'; g.shadowBlur = 6;
+      for (let i = 0; i < 26; i++) {
+        const a = i / 26 * Math.PI * 2, up = 0.55 + 0.45 * Math.cos(a), len = (2 + 7 * up) * (0.5 + 0.5 * P(i * 2.3, 7 + (i % 3)));
+        const ca = Math.sin(a), sa = -Math.cos(a), r0 = 12;
+        g.fillStyle = i % 2 ? '#3affc8' : '#9affe6'; g.globalAlpha = 0.5 + 0.4 * P(i, 5);
+        g.beginPath(); g.moveTo(ca * r0 - sa * 1.6, 25 + sa * r0 + ca * 1.6); g.lineTo(ca * (r0 + len) + sa * Math.sin(t * 6 + i) * 1.2, 25 + sa * (r0 + len)); g.lineTo(ca * r0 + sa * 1.6, 25 + sa * r0 - ca * 1.6); g.closePath(); g.fill();
+      }
+      g.globalAlpha = 0.9; g.strokeStyle = '#c8fff4'; g.lineWidth = 1.2; g.beginPath(); g.arc(0, 25, 12, 0, 6.283); g.stroke();
+    } else {
+      // the lighthouse beam turning round behind, and its fainter twin
+      const b = t * 0.9;
+      for (const [off, al] of [[0, 0.3], [Math.PI, 0.14]]) {
+        const a = b + off; g.globalAlpha = al * (0.6 + 0.4 * Math.abs(Math.cos(a))); g.fillStyle = '#fff0b8';
+        g.beginPath(); g.moveTo(0, 25); g.lineTo(Math.cos(a - 0.13) * 90, 25 + Math.sin(a - 0.13) * 40); g.lineTo(Math.cos(a + 0.13) * 90, 25 + Math.sin(a + 0.13) * 40); g.closePath(); g.fill();
+      }
+      // the radiant halo: rays turning both ways, a ring, and jewels going round it
+      g.lineCap = 'round';
+      for (let i = 0; i < 16; i++) { const a = i / 16 * 6.283 + t * 0.35, l = i % 2 ? 7 : 11; g.globalAlpha = 0.35 + 0.3 * P(i, 2); g.strokeStyle = '#ffd34d'; g.lineWidth = i % 2 ? 0.7 : 1.1; g.beginPath(); g.moveTo(Math.cos(a) * 14, 25 + Math.sin(a) * 14); g.lineTo(Math.cos(a) * (14 + l), 25 + Math.sin(a) * (14 + l)); g.stroke(); }
+      for (let i = 0; i < 9; i++) { const a = i / 9 * 6.283 - t * 0.22; g.globalAlpha = 0.25; g.strokeStyle = '#fff6d8'; g.lineWidth = 0.6; g.beginPath(); g.moveTo(Math.cos(a) * 13, 25 + Math.sin(a) * 13); g.lineTo(Math.cos(a) * 25, 25 + Math.sin(a) * 25); g.stroke(); }
+      g.globalAlpha = 1; g.shadowColor = '#ffc23a'; g.shadowBlur = 6; g.strokeStyle = '#ffd34d'; g.lineWidth = 1.4; g.beginPath(); g.arc(0, 25, 13, 0, 6.283); g.stroke();
+      g.fillStyle = '#fff6d8'; for (let i = 0; i < 8; i++) { const a = i / 8 * 6.283 + t * 0.3; g.beginPath(); g.arc(Math.cos(a) * 13, 25 + Math.sin(a) * 13, 1, 0, 6.283); g.fill(); }
+    }
+  } else if (step === 1) {
+    g.beginPath(); g.moveTo(-17, 36); g.lineTo(17, 36); g.lineTo(21, 86); g.lineTo(-21, 86); g.closePath(); g.clip();
+    g.globalCompositeOperation = 'lighter'; g.lineCap = 'round';
+    if (dr) {
+      // caustics drifting over it
+      g.strokeStyle = '#5affd8'; g.lineWidth = 0.6;
+      for (let i = 0; i < 6; i++) { const y0 = 38 + i * 8 + 3 * Math.sin(t * 0.7 + i); g.globalAlpha = 0.14 + 0.1 * P(i, 1.3); g.beginPath(); for (let x = -22; x <= 22; x += 4) g.lineTo(x, y0 + 2.5 * Math.sin(x * 0.35 + t * 1.6 + i * 1.9)); g.stroke(); }
+      // veins, pulses of light climbing them
+      g.strokeStyle = '#7affe0'; g.lineWidth = 0.8;
+      for (let i = 0; i < 4; i++) {
+        const x0 = -13 + i * 8.5; g.beginPath(); for (let y = 86; y >= 36; y -= 3) g.lineTo(x0 + 2.4 * Math.sin(y * 0.22 + i * 1.7), y);
+        g.globalAlpha = 0.3; g.setLineDash([]); g.stroke();
+        g.globalAlpha = 1; g.shadowColor = '#3affc8'; g.shadowBlur = 4; g.setLineDash([5, 14]); g.lineDashOffset = t * 18 + i * 6; g.stroke(); g.shadowBlur = 0;
+      }
+      g.setLineDash([]);
+      // water running down it
+      g.fillStyle = '#c8fff4'; for (let i = 0; i < 3; i++) { const y = 36 + ((t * (14 + i * 5) + i * 17) % 52), x = -15 + i * 14; g.globalAlpha = 0.9; g.fillRect(x - 0.5, y, 1, 1.6); g.globalAlpha = 0.3; g.fillRect(x - 0.4, y - 5, 0.8, 5); }
+    } else {
+      // gold filigree, shimmering
+      g.strokeStyle = '#ffc23a'; g.lineWidth = 0.7; g.shadowColor = '#ffd34d'; g.shadowBlur = 3;
+      for (let i = 0; i < 6; i++) {
+        const sx = i % 2 ? 1 : -1, y = 44 + (i >> 1) * 14, x = sx * 13; g.globalAlpha = 0.55 + 0.45 * P(i * 1.3 + y * 0.1, 2.2);
+        g.beginPath(); g.arc(x, y, 3.2, 0, 4.7); g.stroke(); g.beginPath(); g.arc(x - sx * 3.5, y + 4.5, 2, 3.1, 7.5); g.stroke();
+        g.beginPath(); g.moveTo(x, y + 3.2); g.quadraticCurveTo(x + sx * 5, y + 7, x + sx * 2, y + 11); g.stroke();
+      }
+      g.shadowBlur = 0;
+      // the beam sweeping across
+      const bx = ((t * 16) % 70) - 35, gr = g.createLinearGradient(bx - 7, 0, bx + 7, 0);
+      gr.addColorStop(0, 'rgba(255,246,216,0)'); gr.addColorStop(0.5, 'rgba(255,246,216,0.55)'); gr.addColorStop(1, 'rgba(255,246,216,0)');
+      g.globalAlpha = 1; g.fillStyle = gr; g.fillRect(bx - 7, 36, 14, 50);
+    }
+  } else {
+    g.globalCompositeOperation = 'lighter';
+    if (dr) {
+      g.strokeStyle = '#c8fff4'; g.lineWidth = 0.6;
+      for (let i = 0; i < 10; i++) { const life = (t * (0.18 + i * 0.013) + i * 0.37) % 1, x = (i % 2 ? 1 : -1) * (24 + (i * 7) % 14) + 2 * Math.sin(t * 2.4 + i), y = 96 - life * 86, r = 0.8 + (i % 3) * 0.5;
+        g.globalAlpha = Math.min(1, life * 6, (1 - life) * 3); g.beginPath(); g.arc(x, y, r, 0, 6.283); g.stroke(); }
+    } else {
+      g.fillStyle = '#ffe08a';
+      for (let i = 0; i < 12; i++) { const life = (t * (0.12 + i * 0.01) + i * 0.29) % 1, a = i * 2.1 + life * 4, x = Math.cos(a) * (22 + (i % 4) * 4), y = 94 - life * 88;
+        g.globalAlpha = Math.min(1, life * 6, (1 - life) * 3) * (0.5 + 0.5 * P(i * 3, 6)); g.fillRect(x - 0.7, y - 0.7, 1.4, 1.4); }
+    }
+  }
   g.restore();
 }
 function ocPreview(oc, w) {
@@ -175,11 +258,13 @@ function ocPreview(oc, w) {
   cv._oc = oc; ocDrawPreview(cv, oc, 0);
   return cv;
 }
+// (the Admirals' twice as often as the rest, so they move smoothly)
+let ocTick = 0;
 setInterval(() => {
   const card = $('ocrateCard'); if (!card || card.hidden || reduceMotion) return;
-  const t = performance.now() / 1000;
-  for (const cv of card.querySelectorAll('canvas.ocprev')) if (cv._oc && cv._oc.fx) ocDrawPreview(cv, cv._oc, t);
-}, 100);
+  const t = performance.now() / 1000, all = ++ocTick % 2 === 0;
+  for (const cv of card.querySelectorAll('canvas.ocprev')) if (cv._oc && cv._oc.fx && (all || cv._oc.adm)) ocDrawPreview(cv, cv._oc, t);
+}, 50);
 
 function ocCard(oc, cls) {
   const d = document.createElement('div'), ra = oc && oc.rarity ? ocRarityOf(oc) : null;
