@@ -92,7 +92,7 @@ async function netInit() {
   if (typeof room.onConnection === 'function') room.onConnection(c => { NET.connected = c; renderNetBanner(); }, () => {});
   room.presence({ app: 'skerry', sid: NET.sid, crew: null, nick: NET.nick || null }).catch(() => {});
   renderTogether();
-  // an invite link no longer joins by itself: the title screen shows the invite and you tap Join
+  // an invite link (src/share.js) puts you straight into its crew once the crew is seen here
 }
 
 function onPeersChange(change) {
@@ -716,13 +716,13 @@ function renderCrewCard() {
   const title = $('crewTitle'), text = $('crewText'), page = $('crewLog');
   page.hidden = true;
   $('crewScore').hidden = true;
-  // invite: a link on our own site; on claude.ai friends pick the crew from the list
+  // invite: a link that drops a friend straight into this crew (on claude.ai, the page itself: they pick the crew from the list)
   const inv = $('inviteRow');
-  inv.hidden = !(NET.via === 'server' && (!NET.launch || r));
-  if (!inv.hidden) $('inviteLink').value = location.origin + location.pathname + '#' + NET.crew;
+  inv.hidden = !(!NET.launch || r);
+  if (!inv.hidden) $('inviteLink').value = shareUrl('sail', NET.crew);
   if (!NET.launch) {
     title.textContent = 'Crew Forming';
-    text.textContent = 'Send the invite to up to seven friends. They join from the title screen by picking crew ' + NET.crew.toUpperCase() + '. Everyone sails their own ship through the same skerries. Ships close together keep Maren back, and a bell rung near a crewmate drives her away from both of you.';
+    text.textContent = 'Send the invite to up to seven friends. The link puts them straight into crew ' + NET.crew.toUpperCase() + '. Everyone sails their own ship through the same skerries. Ships close together keep Maren back, and a bell rung near a crewmate drives her away from both of you.';
   } else if (!r) {
     title.textContent = statusWord(NET.st) === 'In harbour' ? 'Safe in Harbour' : 'Lost at Sea';
     const race = NET.race && NET.race.voy === voy && NET.st === 'port' ? (NET.race.first ? ' Fastest so far: if nobody beats your time, the +' + NET.race.bonus + ' crate bonus is yours when the voyage ends.' : ' A crewmate has a faster time.') : '';
@@ -818,17 +818,7 @@ $('chatForm').addEventListener('submit', e => {
   e.preventDefault();
   if (sendChat($('chatInput').value)) $('chatInput').value = '';
 });
-$('inviteCopy').addEventListener('click', () => {
-  const field = $('inviteLink'), btn = $('inviteCopy');
-  const done = () => { btn.textContent = 'Copied'; setTimeout(() => { btn.textContent = 'Copy link'; }, 1600); };
-  try {
-    const fail = () => {
-      if (navigator.share) { navigator.share({ url: field.value, title: 'Skerry Light crew' }).catch(() => {}); return; }
-      field.select(); btn.textContent = 'Copy it from the box'; setTimeout(() => { btn.textContent = 'Copy link'; }, 3000);
-    };
-    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(field.value).then(done, fail); else fail();
-  } catch (e) { field.select(); }
-});
+// (the invite button itself is wired up in src/share.js)
 // an invite link carries the crew name after the #
 try { const h = (location.hash || '').slice(1); if (/^[a-z]+-\d{1,4}$/.test(h)) NET.pendingJoin = h; } catch (e) {}
 // sound can only start after the first tap or click anywhere
