@@ -89,7 +89,7 @@ function raidAfterStart() {
   raidLoadout();
   RAID.st = {}; raidCall('enter');
 }
-const RAIDC = { ROUND: 4 };
+const RAIDC = { ROUND: 4, CALM: 0.7 };
 // what you carry down: a pepperbox and a blunderbuss, both full (and Maren's Lantern, which never leaves your hand)
 function raidLoadout() {
   const m = FPS.me;
@@ -828,7 +828,12 @@ RAID_STAGES.descent = {
         const up = Math.min(RSW.MEND * dt, S.dark || 0, max - m.hp); if (up > 0) { m.hp += up; S.dark -= up; }
         S.ammoT = (S.ammoT || 0) + dt;
         if (S.ammoT > 1) { S.ammoT = 0; for (const id of ZM.own) if (ZM_AMMO[id]) ZM.res[id] = Math.min(ZM_AMMO[id], (ZM.res[id] || 0) + Math.ceil(ZM_AMMO[id] * 0.12)); }
-      } else if (!(m.protect > 0)) {
+      }
+      // what the drowned (or the balls) took comes back by itself once nothing has hit you for a moment (RAIDC.CALM of
+      // the Lighthouse's wait), quickly; only up to what the dark has left you, since that part only the light gives back
+      const cap = max - (S.dark || 0);
+      if (m.hp < cap && FPS.calm > (ZM.perks.grog ? 1.6 : 3.2) * RAIDC.CALM) m.hp = Math.min(cap, m.hp + 2 * dt);
+      if (!S.inLight && !(m.protect > 0)) {
         const dn = Math.min(m.hp, RSW.DRAIN * dt); m.hp -= dn; S.dark = (S.dark || 0) + dn;
         if (m.hp <= 0) { m.hp = 0; fpsFeed('The dark took the last of you.'); fpsDie(null, null); }
       }
