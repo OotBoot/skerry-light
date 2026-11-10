@@ -3699,8 +3699,12 @@ function z3Geo() {
   Z3G.skirt = new THREE.BoxGeometry(0.5, 0.36, 0.3); Z3G.skirt.translate(0, -0.12, 0);
   Z3G.head = new THREE.SphereGeometry(0.13, 12, 10);
   Z3G.jaw = new THREE.BoxGeometry(0.15, 0.05, 0.12);
-  Z3G.arm = new THREE.CylinderGeometry(0.055, 0.045, 0.62, 8); Z3G.arm.translate(0, -0.31, 0);
+  // arms in two halves, an elbow between them, so they reach and club like arms and not like broom handles
+  Z3G.arm = new THREE.CylinderGeometry(0.068, 0.058, 0.33, 8); Z3G.arm.translate(0, -0.165, 0);
+  Z3G.fore = new THREE.CylinderGeometry(0.056, 0.044, 0.3, 8); Z3G.fore.translate(0, -0.15, 0);
+  Z3G.shoulder = new THREE.SphereGeometry(0.08, 10, 8); Z3G.elbow = new THREE.SphereGeometry(0.06, 8, 6);
   Z3G.hand = new THREE.SphereGeometry(0.06, 8, 6);
+  Z3G.finger = new THREE.BoxGeometry(0.018, 0.09, 0.018); Z3G.finger.translate(0, -0.045, 0);
   Z3G.eye = new THREE.SphereGeometry(0.022, 6, 5);
   Z3G.kelp = new THREE.BoxGeometry(0.035, 0.5, 0.01); Z3G.kelp.translate(0, -0.25, 0);
   Z3G.hat = new THREE.CylinderGeometry(0.2, 0.22, 0.12, 12);
@@ -3726,9 +3730,20 @@ function zmModel(z) {
     const jaw = new THREE.Mesh(Q.jaw, skin); jaw.position.set(0, -0.12, -0.03); head.add(jaw);
     for (const s of [-1, 1]) { const e = new THREE.Mesh(Q.eye, Q.eyeM); e.position.set(s * 0.045, 0.02, -0.115); head.add(e); }
     const hat = new THREE.Group(); hat.add(new THREE.Mesh(Q.hat, Q.hatM)); const brim = new THREE.Mesh(Q.brim, Q.hatM); brim.position.y = -0.05; hat.add(brim); hat.position.y = 0.13; head.add(hat);
-    const arms = [-1, 1].map(s => { const p = new THREE.Group(); p.position.set(s * 0.29, 0.56, 0); const a = new THREE.Mesh(Q.arm, coat); p.add(a); const h = new THREE.Mesh(Q.hand, skin); h.position.y = -0.64; p.add(h); const k = new THREE.Mesh(Q.kelp, Q.kelpM); k.position.set(s * 0.04, -0.3, 0.05); p.add(k); torso.add(p); return p; });
+    // (shoulder in at the coat's edge, upper arm, elbow, forearm, a bony hand with three long fingers)
+    const elbows = [];
+    const arms = [-1, 1].map(s => {
+      const p = new THREE.Group(); p.position.set(s * 0.265, 0.53, 0); torso.add(p);
+      p.add(new THREE.Mesh(Q.shoulder, coat)); p.add(new THREE.Mesh(Q.arm, coat));
+      const el = new THREE.Group(); el.position.y = -0.33; p.add(el); elbows.push(el);
+      el.add(new THREE.Mesh(Q.elbow, coat)); el.add(new THREE.Mesh(Q.fore, skin));
+      const h = new THREE.Mesh(Q.hand, skin); h.position.y = -0.33; h.scale.set(0.9, 1.15, 0.65); el.add(h);
+      for (let f = -1; f <= 1; f++) { const fg = new THREE.Mesh(Q.finger, skin); fg.position.set(f * 0.028, -0.37, -0.01); fg.rotation.set(-0.35, 0, f * 0.18); el.add(fg); }
+      const k = new THREE.Mesh(Q.kelp, Q.kelpM); k.position.set(s * 0.04, -0.12, 0.05); el.add(k);
+      return p;
+    });
     for (let i = 0; i < 4; i++) { const k = new THREE.Mesh(Q.kelp, Q.kelpM); k.position.set(-0.18 + i * 0.12, 0.55 - (i % 2) * 0.2, 0.14); k.rotation.z = (i - 1.5) * 0.15; torso.add(k); }
-    M = { root, hips, legs, arms, torso, head, hat, coat, skin, used: false };
+    M = { root, hips, legs, arms, elbows, torso, head, hat, jaw, coat, skin, used: false };
     Z3.pool.push(M); Z3.grp.add(root);
   }
   M.used = true; M.root.visible = true;
@@ -3759,13 +3774,36 @@ function zmPose(z, M, dt) {
   M.torso.rotation.z = Math.sin(ph * 0.5) * (run ? 0.05 : 0.14);
   M.head.rotation.z = Math.sin(t * 0.9 + z.seed) * 0.25; M.head.rotation.x = 0.15 + Math.sin(t * 1.3 + z.seed) * 0.1;
   // arms out in front; tearing at boards; a swing at you
-  let ax = -1.35, bx = -1.35;
-  if (z.st === 'tear') { ax = -1.6 + Math.sin(t * 9) * 0.5; bx = -1.6 - Math.sin(t * 9) * 0.5; }
+  let ax = -1.35, bx = -1.35, ea = -0.3 - Math.sin(t * 1.7 + z.seed) * 0.08, eb = -0.3 - Math.sin(t * 1.5 + z.seed + 2) * 0.08;
+  if (z.st === 'tear') { ax = -1.6 + Math.sin(t * 9) * 0.5; bx = -1.6 - Math.sin(t * 9) * 0.5; ea = -0.5 - Math.sin(t * 9) * 0.45; eb = -0.5 + Math.sin(t * 9) * 0.45; }
   if (z.scaling || (ZM.net === 'client' && z.st === 'climb' && z.win && z.win.sea && z.t < 1.0)) { ax = -2.8 + Math.sin(t * 7) * 0.45; bx = -2.8 - Math.sin(t * 7) * 0.45; M.legs[0].rotation.x = Math.sin(t * 7) * 0.5; M.legs[1].rotation.x = -Math.sin(t * 7) * 0.5; }
-  if (z.swing >= 0) { const k = z.swing / 0.6; ax = -2.2 + Math.sin(k * Math.PI) * 1.6; }
+  // the swing (zmSwipe: 0.6 s, the knock landing at 0.28): rear back with one arm up over its head, then lunge in and
+  // club it down and across, then stagger back. Drawn on a clock of its own (z.swv) that runs on smoothly between a
+  // joined player's word from the host, and plays out the stagger even after the host's swing has ended
+  if (z.swing >= 0 && (z.swv == null || z.swv < 0 || Math.abs(z.swv - z.swing) > 0.12)) { if (!(z.swv >= 0)) z.lead = z.lead ? 0 : 1; z.swv = z.swing; }
+  else if (z.swv >= 0) { z.swv += dt; if (z.swv > 0.6 || z.dead) z.swv = -1; }
+  let lean = 0, twist = 0, lunge = 0, drop = 0, jaw = 0, az = 0;
+  if (z.swv >= 0 && !z.dead) {
+    const k = z.swv, ease = x => x * x * (3 - 2 * x);
+    const wind = ease(Math.min(1, k / 0.2)), hit = ease(Math.min(1, Math.max(0, (k - 0.2) / 0.1))), back = ease(Math.min(1, Math.max(0, (k - 0.32) / 0.28)));
+    const up = wind * (1 - hit), down = hit * (1 - back), sh = back > 0 && back < 1 ? Math.sin(back * Math.PI * 3) * (1 - back) : 0;
+    // the lead arm: back and up, then down hard past the shoulder; the other claws in after it
+    const la = -1.35 - up * 1.6 + down * 0.45 + sh * 0.2, oa = -1.35 + up * 0.35 - down * 0.45;
+    const le = -0.3 - up * 1.2 + down * 0.3 + sh * 0.15, oe = -0.3 - down * 0.5;   // (the elbow cocked, then whipped straight)
+    if (z.lead) { bx = la; ax = oa; eb = le; ea = oe; } else { ax = la; bx = oa; ea = le; eb = oe; }
+    az = down * 0.55 - up * 0.15;                          // (across the body as it comes down)
+    lean = up * 0.32 - down * 0.5 + sh * 0.06;             // back as it winds up, right over into the blow
+    twist = (up * 0.35 - down * 0.4) * (z.lead ? -1 : 1);  // the shoulder turned back, then thrown round
+    lunge = down * 0.28 + up * -0.06; drop = down * 0.07; jaw = up * 0.5 + down;
+  }
   ax += Math.sin(ph * 0.5) * 0.12 * A; bx += Math.sin(ph * 0.5 + 1) * 0.12 * A;
-  M.arms[0].rotation.x = ax; M.arms[1].rotation.x = bx;
-  M.arms[0].rotation.z = -0.1; M.arms[1].rotation.z = 0.1;
+  // (the angles above are reckoned the old way round, which had the arms reaching out behind them; the model faces -z,
+  // so they're turned over here to put the arms out in front, and the elbows bending up, as they always should have)
+  M.arms[0].rotation.x = -ax; M.arms[1].rotation.x = -bx;
+  if (M.elbows) { M.elbows[0].rotation.x = Math.max(0, -ea); M.elbows[1].rotation.x = Math.max(0, -eb); }
+  M.arms[0].rotation.z = -0.1 + (z.lead ? 0 : az); M.arms[1].rotation.z = 0.1 - (z.lead ? az : 0);
+  M.torso.rotation.x += lean; M.torso.rotation.y = twist; M.hips.position.z = -lunge; M.hips.position.y -= drop;
+  M.head.rotation.x -= lean * 0.6; if (M.jaw) { M.jaw.position.y = -0.12 - jaw * 0.05; M.jaw.rotation.x = jaw * 0.5; }
   // hit: a pale flash; burning: alight and going to ash; dead: down they go, and sink
   const hot = z.burn ? 0.6 + 0.4 * Math.sin(t * 17 + z.seed) : (z.scorch || 0) * 0.7;
   const flash = z.hitT > 0 ? z.hitT / 0.15 : 0;
