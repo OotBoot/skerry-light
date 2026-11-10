@@ -17110,6 +17110,20 @@ const ZM_PERKS = {
   wind: { n: 'Second Wind', cost: 500, c: '#6aa8f0', what: 'get back up once' },
   grog: { n: 'Grog Ration', cost: 1500, c: '#d8903a', what: 'patched up in half the time' },
 };
+// how each tonic's cabinet is dressed (FPI_K.tonic, and its plate and bubbles in zm3dBuild): its wood or iron and
+// trim, the bottles on its shelves, the crest over it and the emblem on that, what's on its lower doors
+//   Stout Heart: a riveted cast-iron safe of a thing, brass bound, a heart on a gothic crest, round flasks
+//   Quick Hands: mahogany, a clock dial and a crank, a gear on a pediment, slim vials
+//   Fleet Foot: ivory paint on turned legs, gilt, wings on a stepped crest, tall tapered phials
+//   Second Wind: sea-green paint and nickel, a lifebuoy on a gothic crest, a barometer and a speaking horn, bulbs
+//   Grog Ration: a cask of a cabinet, staves and iron hoops, a little keg on its pediment, stoneware jugs
+const ZM_TONIC = {
+  stout: { body: '#34363b', body2: '#24262a', trim: '#a8843a', bottle: 'flask', crest: 'arch', emb: 'heart', low: 'rivets', dial: 'gauge', side: 'crank' },
+  quick: { body: '#6a2e20', body2: '#4a2018', trim: '#b08a3c', bottle: 'vial', crest: 'tri', emb: 'gear', low: 'panels', dial: 'clock', side: 'crank' },
+  fleet: { body: '#d8d0bc', body2: '#9a8e74', trim: '#d0a848', bottle: 'cone', crest: 'step', emb: 'wings', low: 'legs', dial: 'gauge', side: 'crank' },
+  wind: { body: '#2e5258', body2: '#203a40', trim: '#b8bab4', bottle: 'bulb', crest: 'arch', emb: 'buoy', low: 'panels', dial: 'baro', side: 'horn' },
+  grog: { body: '#4a3220', body2: '#32221a', trim: '#2a2c30', bottle: 'jug', crest: 'tri', emb: 'cask', low: 'staves', dial: 'gauge', side: 'tap2' },
+};
 const ZM_DROPS = {
   keg: { n: 'Powder Keg', c: '#e0a050' }, double: { n: 'Double Salvage', c: '#f0d060' },
   spot: { n: 'The Black Spot', c: '#d8d8e0' }, flash: { n: 'Lamp Flash', c: '#fff0b0' },
@@ -17296,15 +17310,137 @@ Object.assign(FPI_K, {
       A.part('sph', ZMP.brass, 0, 0, b + 2.85, 0.9, 0.35, 0.9);
     },
   },
-  // a tonic cabinet: shelves of glowing bottles under a painted sign
+  // a tonic cabinet (one for each tonic, dressed by ZM_TONIC): a plinth, lower doors with a tap, a dial and a crank,
+  // a glass case of glowing bottles round a bubbling column, a cornice with a lamp and a steam pipe, and a crest with
+  // the tonic's emblem. Its front is -v. (Its enamel name plate, the glass, the glow and the bubbles: zm3dBuild)
   tonic: {
     col: FPI_C.wood3,
     sol(p) { return [fpiBox(p, 0, 0, 0.65, 0.32, 2.1)]; },
     b3(p, A) {
-      A.box(FPI_C.wood3, 0, 0.05, -0.1, 1.3, 0.55, 2.15); A.box('#1a1612', 0, -0.2, 0.15, 1.15, 0.12, 1.6);
-      for (const h of [0.45, 0.95, 1.45]) { A.box(FPI_C.wood2, 0, -0.18, h - 0.05, 1.15, 0.2, 0.04); for (let i = 0; i < 6; i++) A.part('cyl6', p.c, -0.45 + i * 0.18, -0.2, h + 0.12, 0.1, 0.24, 0.1, 0, 0, 0, 'glow'); }
-      A.box(FPI_C.wood2, 0, -0.05, 2.08, 1.4, 0.12, 0.42); A.box(p.c, 0, -0.12, 2.16, 1.15, 0.03, 0.26, 0, 0, 0);
-      A.part('box', p.c, 0, -0.13, 2.29, 1.0, 0.18, 0.02, 0, 0, 0, 'glow');
+      const S = ZM_TONIC[p.pk] || ZM_TONIC.stout, c = p.c, B = S.body, B2 = S.body2, T = S.trim, BR = '#a8843a', CU = '#a8603a';
+      const mx = (a, b, k) => '#' + new THREE.Color(a).lerp(new THREE.Color(b), k).getHexString();
+      const lt = mx(c, '#ffffff', 0.5), dk = mx(c, '#000000', 0.35), blk = mx(B2, '#000000', 0.55), F = Math.PI / 2;
+      // a disc facing the front (centre u, h; radius r; just in front of v)
+      const face = (col, u, h, v, r, into) => A.part('cyl8', col, u, v, h, r * 2, 0.02, r * 2, 0, F, 0, into);
+      // ---- the base: a plinth (or, Fleet Foot, turned legs), the lower doors
+      const z0 = S.low === 'legs' ? 0.3 : 0.14;
+      if (S.low === 'legs') {
+        for (const su of [-1, 1]) for (const sv of [-1, 1]) { A.cyl(B2, su * 0.56, sv * 0.22 + 0.02, -0.1, 0.045, 0.42, 0, 0, 0, 'cyl6'); A.cyl(T, su * 0.56, sv * 0.22 + 0.02, 0.02, 0.05, 0.03, 0, 0, 0, 'cyl6'); A.part('sph', B2, su * 0.56, sv * 0.22 + 0.02, 0.2, 0.12, 0.08, 0.12); }
+        A.box(B2, 0, 0.02, 0.1, 1.1, 0.04, 0.03); A.box(B2, 0, 0.02, 0.22, 1.24, 0.56, 0.08);
+      } else {
+        A.box(B2, 0, 0.01, -0.1, 1.32, 0.62, 0.24); A.box(T, 0, -0.302, 0.03, 1.3, 0.02, 0.05);
+      }
+      A.box(B, 0, 0.02, z0, 1.26, 0.56, 0.96 - z0);
+      for (const s of [-1, 1]) A.box(T, s * 0.615, -0.25, z0, 0.045, 0.045, 0.96 - z0);
+      const ph = 0.96 - z0 - 0.16;   // (the doors' height)
+      if (S.low === 'staves') {
+        // a cask's staves across the front, two iron hoops, a brass bung
+        for (let i = 0; i < 9; i++) A.box(i % 2 ? B : B2, -0.52 + i * 0.13, -0.27 - 0.012 * Math.sin(i / 8 * Math.PI), z0 + 0.04, 0.122, 0.03, 0.96 - z0 - 0.08);
+        for (const h of [z0 + 0.14, 0.82]) { A.box(T, 0, -0.295, h, 1.22, 0.02, 0.05); for (let i = 0; i < 7; i++) A.box('#5a5c60', -0.48 + i * 0.16, -0.307, h + 0.015, 0.02, 0.01, 0.02); }
+      } else {
+        for (const s of [-1, 1]) {
+          A.box(B2, s * 0.3, -0.265, z0 + 0.08, 0.52, 0.02, ph); A.box(B, s * 0.3, -0.275, z0 + 0.12, 0.44, 0.02, ph - 0.08);
+          if (S.low !== 'rivets') A.box(T, s * 0.3, -0.288, z0 + 0.12 + ph - 0.1, 0.3, 0.008, 0.012);
+        }
+        if (S.low === 'rivets') {
+          // boiler plate: rows of rivets round the doors, and an iron strap across
+          for (const h of [z0 + 0.04, 0.9]) for (let i = 0; i < 11; i++) A.part('cyl6', '#6a6c70', -0.55 + i * 0.11, -0.272, h, 0.03, 0.02, 0.03, 0, F, 0);
+          A.box('#1c1e22', 0, -0.285, z0 + ph * 0.5 + 0.04, 1.2, 0.02, 0.06);
+          for (let i = 0; i < 6; i++) A.part('cyl6', BR, -0.5 + i * 0.2, -0.3, z0 + ph * 0.5 + 0.07, 0.03, 0.02, 0.03, 0, F, 0);
+        }
+      }
+      // the tap, in the middle, over a little brass grate
+      A.box(BR, 0, -0.27, 0.72, 0.1, 0.04, 0.12); A.log(BR, 0, -0.33, 0.78, 0.022, 0.12, F); A.cyl(BR, 0, -0.39, 0.66, 0.022, 0.12, 0, 0, 0, 'cyl6');
+      A.box(BR, 0, -0.39, 0.86, 0.1, 0.02, 0.02); A.cyl(BR, 0, -0.39, 0.79, 0.012, 0.07, 0, 0, 0, 'cyl6');
+      A.part('sph', c, 0, -0.39, 0.635, 0.03, 0.04, 0.03, 0, 0, 0, 'glow');
+      A.box(BR, 0, -0.33, z0 + 0.06, 0.18, 0.1, 0.02); A.box(blk, 0, -0.33, z0 + 0.075, 0.14, 0.08, 0.01);
+      // the dial on the left door: a pressure gauge, a clock (twelve marks), or a barometer (bigger, with a pointer)
+      {
+        const u = -0.3, h = 0.58, r = S.dial === 'baro' ? 0.14 : 0.11;
+        face(BR, u, h, -0.29, r + 0.02); face(S.dial === 'clock' ? '#d8cca8' : '#c8c0a0', u, h, -0.305, r, 'glow');
+        if (S.dial === 'clock') for (let i = 0; i < 12; i++) { const a = i / 12 * Math.PI * 2; A.box('#2a2622', u + Math.sin(a) * r * 0.8, -0.318, h + Math.cos(a) * r * 0.8 - 0.01, 0.012, 0.004, 0.025, 0, 0, -a); }
+        else for (let i = 0; i < 5; i++) { const a = -1.1 + i * 0.55; A.box(i === 4 ? '#a02a20' : '#2a2622', u + Math.sin(a) * r * 0.78, -0.318, h + Math.cos(a) * r * 0.78 - 0.01, 0.01, 0.004, 0.022, 0, 0, -a); }
+        A.box('#1a1614', u + 0.03, -0.322, h - 0.005, 0.012, 0.004, r * 0.8, 0, 0, -0.7); A.box('#1a1614', u - 0.01, -0.322, h - 0.005, 0.01, 0.004, r * 0.55, 0, 0, 2.3);
+        A.part('sph', BR, u, -0.325, h, 0.025, 0.025, 0.012);
+      }
+      // the right door: a crank, a speaking horn, or a second tap on its barrel
+      {
+        const u = 0.3, h = 0.58;
+        if (S.side === 'crank') {
+          face(BR, u, h, -0.29, 0.07); A.box(BR, u + 0.07, -0.31, h - 0.03, 0.18, 0.025, 0.05, 0, 0, -0.6);
+          A.log(B2, u + 0.14, -0.36, h + 0.09, 0.022, 0.1, F, 0, 'cyl6'); A.part('sph', BR, u, -0.31, h, 0.05, 0.05, 0.04);
+        } else if (S.side === 'horn') {
+          face(T, u, h, -0.29, 0.07); A.part('cone', T, u, -0.36, h, 0.17, 0.14, 0.17, 0, -F, 0); A.part('cyl8', '#141210', u, -0.432, h, 0.15, 0.005, 0.15, 0, F, 0);
+          A.part('torus', BR, u, -0.43, h, 0.34, 0.34, 0.5, 0, 0, 0);
+        } else {
+          A.cyl('#6a4628', u, -0.3, h - 0.1, 0.12, 0.2, 0, F, 0); for (const k of [-1, 1]) A.cyl(T, u, -0.3 + k * 0.07, h - 0.0125, 0.125, 0.025, 0, F, 0);
+          A.log(BR, u, -0.39, h - 0.02, 0.02, 0.1, F); A.cyl(BR, u, -0.44, h - 0.1, 0.018, 0.09, 0, 0, 0, 'cyl6'); A.box(BR, u, -0.44, h + 0.02, 0.09, 0.02, 0.02);
+        }
+      }
+      // ---- the counter, and the glass case on it
+      A.box(B2, 0, 0.01, 0.96, 1.34, 0.62, 0.06); A.box(T, 0, -0.305, 0.96, 1.34, 0.02, 0.06);
+      A.box(blk, 0, 0.25, 1.02, 1.14, 0.04, 0.84);                                                   // (the back, dark)
+      for (const s of [-1, 1]) { A.box(B, s * 0.6, 0.02, 1.02, 0.1, 0.56, 0.84); A.box(T, s * 0.555, -0.265, 1.02, 0.03, 0.03, 0.84); }
+      A.box(T, 0, -0.265, 1.02, 1.14, 0.03, 0.03); A.box(T, 0, -0.265, 1.83, 1.14, 0.03, 0.03);
+      A.box(T, -0.27, -0.27, 1.02, 0.015, 0.015, 0.84); A.box(T, 0.27, -0.27, 1.02, 0.015, 0.015, 0.84);   // (the glazing bars)
+      A.box(B2, 0, 0.03, 1.4, 1.1, 0.44, 0.03); A.box(T, 0, -0.195, 1.4, 1.1, 0.015, 0.035);
+      // the bottles: six on each shelf, either side of the column
+      for (const h0 of [1.02, 1.43]) for (const u of [-0.47, -0.35, -0.21, 0.21, 0.35, 0.47]) {
+        const v = -0.05 + (A.r() - 0.5) * 0.08, k = 0.9 + A.r() * 0.2, liq = A.r() < 0.3 ? lt : c;
+        if (S.bottle === 'flask') { A.part('sph', liq, u, v, h0 + 0.085, 0.15, 0.15, 0.15, 0, 0, 0, 'glow'); A.cyl(liq, u, v, h0 + 0.14, 0.022, 0.08, 0, 0, 0, 'cyl6'); A.cyl(BR, u, v, h0 + 0.22, 0.028, 0.03, 0, 0, 0, 'cyl6'); }
+        else if (S.bottle === 'vial') { A.cyl(liq, u, v, h0, 0.03, 0.3 * k, 0, 0, 0, 'cyl6'); A.cyl('#6a4a2a', u, v, h0 + 0.3 * k, 0.026, 0.035, 0, 0, 0, 'cyl6'); A.cyl(BR, u, v, h0 + 0.02, 0.034, 0.02, 0, 0, 0, 'cyl6'); }
+        else if (S.bottle === 'cone') { A.part('cone', liq, u, v, h0 + 0.13 * k, 0.12, 0.26 * k, 0.12, 0, 0, 0, 'glow'); A.cyl(T, u, v, h0 + 0.26 * k, 0.015, 0.06, 0, 0, 0, 'cyl6'); A.part('sph', T, u, v, h0 + 0.33 * k, 0.04, 0.04, 0.04); }
+        else if (S.bottle === 'bulb') { A.part('sph', liq, u, v, h0 + 0.07, 0.13, 0.12, 0.13, 0, 0, 0, 'glow'); A.cyl(liq, u, v, h0 + 0.12, 0.018, 0.14 * k, 0, 0, 0, 'cyl6'); A.cyl(T, u, v, h0 + 0.12 + 0.14 * k, 0.024, 0.025, 0, 0, 0, 'cyl6'); }
+        else { A.cyl('#b8ad90', u, v, h0, 0.06, 0.2 * k, 0, 0, 0, 'cyl8'); A.cyl(liq, u, v - 0.003, h0 + 0.08 * k, 0.062, 0.05, 0, 0, 0, 'cyl8'); A.cyl('#8a7a5a', u, v, h0 + 0.2 * k, 0.025, 0.05, 0, 0, 0, 'cyl6'); A.box('#8a7e64', u + 0.06, v, h0 + 0.08, 0.02, 0.02, 0.1); }
+        if ((S.bottle === 'flask' || S.bottle === 'bulb') && A.r() < 0.5) A.box('#d8ccaa', u, v - 0.078, h0 + 0.045, 0.06, 0.004, 0.05);   // (a paper label)
+      }
+      // the column in the middle: the tonic itself, standing in glass between brass caps, bubbling (bubbles: zm3dBuild)
+      A.cyl(BR, 0, -0.02, 1.02, 0.1, 0.07, 0, 0, 0, 'cyl8'); A.cyl(BR, 0, -0.02, 1.76, 0.1, 0.07, 0, 0, 0, 'cyl8');
+      A.part('cyl8', c, 0, -0.02, 1.34, 0.14, 0.5, 0.14, 0, 0, 0, 'glow'); A.part('cyl8', lt, 0, -0.02, 1.59, 0.142, 0.015, 0.142, 0, 0, 0, 'glow');
+      A.cyl(mx(c, '#000000', 0.7), 0, -0.02, 1.6, 0.07, 0.16, 0, 0, 0, 'cyl8');
+      for (const h of [1.2, 1.5]) A.cyl(BR, 0, -0.02, h, 0.082, 0.025, 0, 0, 0, 'cyl8');
+      A.cyl(CU, 0, -0.02, 1.83, 0.025, 0.12, 0, 0, 0, 'cyl6');
+      // ---- the cornice: a lamp on the left, a steam pipe and its valve on the right, the pipe down the back corner
+      A.box(B2, 0, 0.01, 1.86, 1.36, 0.62, 0.06); A.box(B, 0, 0.01, 1.92, 1.3, 0.58, 0.08); A.box(T, 0, -0.282, 1.94, 1.3, 0.02, 0.03);
+      for (let i = 0; i < 9; i++) A.box(B2, -0.6 + i * 0.15, -0.3, 1.88, 0.05, 0.03, 0.04);                // (dentils)
+      A.cyl(BR, -0.5, -0.12, 2.0, 0.07, 0.04, 0, 0, 0, 'cyl8'); A.cyl(lt, -0.5, -0.12, 2.04, 0.04, 0.13, 0, 0, 0, 'cyl6');
+      A.part('cyl6', mx(c, '#fff4d8', 0.7), -0.5, -0.12, 2.1, 0.06, 0.08, 0.06, 0, 0, 0, 'glow');
+      for (let i = 0; i < 4; i++) { const a = i / 4 * Math.PI * 2 + 0.78; A.box('#1e1c1a', -0.5 + Math.cos(a) * 0.055, -0.12 + Math.sin(a) * 0.055, 2.03, 0.012, 0.012, 0.16); }
+      A.part('cone', BR, -0.5, -0.12, 2.24, 0.15, 0.08, 0.15); A.part('torus', BR, -0.5, -0.12, 2.32, 0.08, 0.08, 0.2, 0, 0, 0);
+      A.cyl(CU, 0.57, 0.15, 2.0, 0.03, 0.3, 0, 0, 0, 'cyl6'); A.part('sph', CU, 0.57, 0.15, 2.3, 0.07, 0.07, 0.07);
+      A.part('torus', '#8a2a20', 0.57, 0.15, 2.36, 0.14, 0.14, 0.4, 0, F, 0); A.cyl(BR, 0.57, 0.15, 2.3, 0.012, 0.08, 0, 0, 0, 'cyl6');
+      A.cyl(BR, 0.57, 0.15, 2.12, 0.05, 0.06, 0, 0, 0, 'cyl8'); A.part('cyl8', '#c8c0a0', 0.57, 0.1, 2.15, 0.08, 0.01, 0.08, 0, F, 0, 'glow');
+      // ---- the crest, with the emblem on it (the name plate goes across its foot)
+      const cv = 0.05;
+      A.box(B, 0, cv, 2.0, 1.0, 0.1, 0.24); A.box(T, 0, cv - 0.052, 2.0, 1.0, 0.01, 0.02); A.box(T, 0, cv - 0.052, 2.22, 1.0, 0.01, 0.02);
+      for (const s of [-1, 1]) A.part('sph', T, s * 0.5, cv, 2.24, 0.08, 0.08, 0.08);
+      if (S.crest === 'arch') { A.part('cyl8', B, 0, cv, 2.22, 0.92, 0.08, 0.66, 0, F, 0); A.part('cyl8', T, 0, cv + 0.005, 2.22, 0.98, 0.07, 0.71, 0, F, 0); A.part('sph', T, 0, cv, 2.58, 0.08, 0.08, 0.08); }
+      else if (S.crest === 'tri') { A.part('tri', T, 0, cv + 0.005, 2.35, 1.24, 0.07, 0.56, 0, -F, 0); A.part('tri', B, 0, cv, 2.34, 1.12, 0.08, 0.5, 0, -F, 0); A.part('cone', T, 0, cv, 2.58, 0.06, 0.1, 0.06); }
+      else { A.box(B, 0, cv, 2.24, 0.72, 0.09, 0.14); A.box(T, 0, cv - 0.048, 2.37, 0.72, 0.01, 0.02); A.box(B, 0, cv, 2.38, 0.42, 0.09, 0.14); A.box(T, 0, cv, 2.52, 0.46, 0.1, 0.025); }
+      // the emblem
+      const eh = 2.38, ev = cv - 0.06;
+      if (S.emb === 'heart') {
+        A.part('torus', T, 0, ev + 0.01, eh, 0.34, 0.34, 0.6, 0, 0, 0);
+        for (const s of [-1, 1]) A.part('sph', c, s * 0.04, ev, eh + 0.025, 0.1, 0.1, 0.05, 0, 0, 0, 'glow');
+        A.box(c, 0, ev, eh - 0.08, 0.1, 0.05, 0.1, 0, 0, Math.PI / 4); A.part('box', c, 0, ev, eh - 0.03, 0.1, 0.1, 0.05, 0, 0, Math.PI / 4, 'glow');
+      } else if (S.emb === 'gear') {
+        A.part('torus', BR, 0, ev, eh, 0.3, 0.3, 0.8, 0, 0, 0);
+        for (let i = 0; i < 10; i++) { const a = i / 10 * Math.PI * 2; A.box(BR, Math.cos(a) * 0.16, ev, eh + Math.sin(a) * 0.16 - 0.02, 0.04, 0.04, 0.04, 0, 0, -a); }
+        A.part('cyl8', c, 0, ev + 0.005, eh, 0.18, 0.03, 0.18, 0, F, 0, 'glow');
+        A.box('#1a1614', 0, ev - 0.02, eh, 0.012, 0.01, 0.08, 0, 0, 0); A.box('#1a1614', 0.02, ev - 0.02, eh, 0.012, 0.01, 0.055, 0, 0, -1.6);
+      } else if (S.emb === 'wings') {
+        A.part('sph', c, 0, ev, eh, 0.12, 0.12, 0.06, 0, 0, 0, 'glow'); A.part('torus', T, 0, ev, eh, 0.14, 0.14, 0.5, 0, 0, 0);
+        // (a wing either side: five feathers fanning up from the hub, the topmost lit)
+        for (const s of [-1, 1]) for (let i = 0; i < 5; i++) { const th = -0.15 + i * 0.27, L = 0.3 - i * 0.04; A.part('box', i === 4 ? c : T, s * (0.06 + L / 2 * Math.cos(th)), ev + 0.01 - i * 0.002, eh + L / 2 * Math.sin(th), L, 0.035, 0.02, 0, 0, s * th, i === 4 ? 'glow' : undefined); }
+      } else if (S.emb === 'buoy') {
+        for (const r of [0.36, 0.32, 0.28]) A.part('torus', '#e8e2d2', 0, ev, eh, r, r, 0.6, 0, 0, 0);
+        for (let i = 0; i < 4; i++) { const a = i / 4 * Math.PI * 2 + 0.78; A.part('box', c, Math.cos(a) * 0.16, ev - 0.03, eh + Math.sin(a) * 0.16, 0.045, 0.085, 0.02, 0, 0, a, 'glow'); }
+        A.part('torus', '#a89a78', 0, ev - 0.005, eh, 0.42, 0.42, 0.5, 0, 0, 0);
+      } else {
+        A.log('#6a4628', 0, ev, eh, 0.1, 0.24, 0, 0, 'cyl8'); A.part('sph', '#6a4628', 0, ev, eh, 0.26, 0.21, 0.21);
+        for (const u of [-0.08, 0.08]) A.log('#2a2c30', u, ev, eh, 0.106, 0.025, 0, 0, 'cyl8');
+        A.part('cyl8', c, 0, ev - 0.105, eh, 0.05, 0.02, 0.05, 0, F, 0, 'glow'); A.log(BR, 0, ev - 0.12, eh - 0.05, 0.015, 0.06, F);
+      }
     },
   },
   // a plinth where the wreck chest can stand (base: the floor it stands on)
@@ -17967,7 +18103,7 @@ FPI_GEN.light = {
     buy('blunderbuss', 500, 43.7, -9, -1, 0);
     // tonics (x, y: the cabinet; face: the way its front looks)
     // (a cabinet's front faces (sin a, -cos a))
-    const perk = (k, x, y, a) => { put('tonic', x, y, a, { c: ZM_PERKS[k].c }); const [wx, wy] = W(x, y), nx = Math.round(Math.sin(a)), ny = Math.round(-Math.cos(a)); Z.perks.push({ k, x: wx, y: wy, nx, ny, z: 0 }); light(x + nx * 0.7, y + ny * 0.7, 1.5, ZM_PERKS[k].c, 5, 'lantern'); };
+    const perk = (k, x, y, a) => { put('tonic', x, y, a, { c: ZM_PERKS[k].c, pk: k }); const [wx, wy] = W(x, y), nx = Math.round(Math.sin(a)), ny = Math.round(-Math.cos(a)); Z.perks.push({ k, x: wx, y: wy, nx, ny, z: 0 }); light(x + nx * 0.7, y + ny * 0.7, 1.5, ZM_PERKS[k].c, 5, 'lantern'); };
     perk('wind', 5.4, -10.2, 0);   // (clear of the back window at 7.8)
     perk('stout', -10, 25.3, 0);
     perk('quick', -43.3, -9, Math.PI / 2);
@@ -19444,6 +19580,65 @@ function z3Chalk(lines, w, h) {
   const tex = new THREE.CanvasTexture(c);
   return new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false }));
 }
+// The tonic cabinets' living parts (their wood and brass and bottles are the island's, FPI_K.tonic): an enamel plate
+// with the tonic's name across the crest's foot, a faint tint and a highlight on the glass, a glow behind it that
+// slowly breathes, and bubbles rising up the column. Animated by zm3dTonicsTick
+function zm3dTonics(grp, G0) {
+  Z3.tonics = [];
+  const Zd = FPS.g.isle.zm; if (!Zd || !Zd.perks) return;
+  const halo = z3Soft('rgba(255,255,255,0.85)', 'rgba(255,255,255,0)'), bubG = new THREE.SphereGeometry(1, 6, 4);
+  const paneG = new THREE.PlaneGeometry(1.1, 0.8), streakG = new THREE.PlaneGeometry(0.07, 0.9);
+  for (const q of Zd.perks) {
+    const P = ZM_PERKS[q.k]; if (!P) continue;
+    const g = new THREE.Group(); grp.add(g);
+    g.position.copy(z3v(q.x, q.y, G0 + (q.z || 0) + (typeof fpsIsleH === 'function' ? fpsIsleH(FPS.g.isle, q.x, q.y) : 0) - 0.03));
+    g.rotation.y = Math.atan2(q.nx, -q.ny);
+    const C = new THREE.Color(P.c);
+    // the plate: dark enamel in a brass rim, the name in gilt, a small star either side
+    const cv = document.createElement('canvas'); cv.width = 512; cv.height = 96;
+    const x = cv.getContext('2d'), en = C.clone().multiplyScalar(0.22);
+    x.fillStyle = '#7a5e26'; x.fillRect(0, 0, 512, 96); x.fillStyle = '#c8a050'; x.fillRect(4, 4, 504, 88);
+    x.fillStyle = `rgb(${en.r * 255 | 0},${en.g * 255 | 0},${en.b * 255 | 0})`; x.fillRect(12, 12, 488, 72);
+    x.strokeStyle = 'rgba(220,190,120,0.7)'; x.lineWidth = 2; x.strokeRect(18, 18, 476, 60);
+    x.textAlign = 'center'; x.textBaseline = 'middle'; x.font = '48px "IM Fell English SC", Georgia, serif';
+    x.fillStyle = '#f0dca0'; x.shadowColor = P.c; x.shadowBlur = 10; x.fillText(P.n, 256, 51);
+    x.shadowBlur = 0; x.fillStyle = P.c; for (const sx of [40, 472]) { x.beginPath(); for (let i = 0; i < 8; i++) { const a = i / 8 * Math.PI * 2, r = i % 2 ? 5 : 12; x.lineTo(sx + Math.cos(a) * r, 48 + Math.sin(a) * r); } x.fill(); }
+    const tex = new THREE.CanvasTexture(cv); tex.anisotropy = 4;
+    const plate = new THREE.Mesh(new THREE.PlaneGeometry(0.86, 0.16), new THREE.MeshBasicMaterial({ map: tex, color: 0xb8b0a0, fog: true }));
+    plate.position.set(0, 2.115, 0.005); g.add(plate);
+    // the glass: a tint of the tonic's colour, and a highlight across it
+    const pane = new THREE.Mesh(paneG, new THREE.MeshBasicMaterial({ color: C, transparent: true, opacity: 0.06, depthWrite: false, blending: THREE.AdditiveBlending }));
+    pane.position.set(0, 1.43, 0.275); g.add(pane);
+    const streak = new THREE.Mesh(streakG, new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.07, depthWrite: false, blending: THREE.AdditiveBlending }));
+    streak.position.set(-0.32, 1.43, 0.278); streak.rotation.z = -0.5; g.add(streak);
+    // the glow in the case (it breathes), and a softer one on the floor in front
+    const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: halo, color: C, transparent: true, opacity: 0.4, depthWrite: false, blending: THREE.AdditiveBlending }));
+    glow.scale.set(1.3, 1.0, 1); glow.position.set(0, 1.42, 0.05); g.add(glow);
+    const pool = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 1.0), new THREE.MeshBasicMaterial({ map: halo, color: C, transparent: true, opacity: 0.22, depthWrite: false, blending: THREE.AdditiveBlending }));
+    pool.rotation.x = -Math.PI / 2; pool.position.set(0, 0.05, 0.6); g.add(pool);
+    // the bubbles, up the front of the column
+    const bm = new THREE.MeshBasicMaterial({ color: C.clone().lerp(new THREE.Color('#ffffff'), 0.6) }), bub = [];
+    for (let i = 0; i < 6; i++) { const b = new THREE.Mesh(bubG, bm); b.scale.setScalar(0.014 + (i % 3) * 0.004); b.position.set(((i * 37) % 7 - 3) * 0.012, 1.1 + i * 0.08, 0.1); g.add(b); bub.push({ m: b, k: i / 6, u: b.position.x, s: b.scale.x }); }
+    Z3.tonics.push({ g, glow, pool, bub, ph: Zd.perks.indexOf(q) * 1.7 });
+  }
+}
+function zm3dTonicsTick(t) {
+  if (!Z3.tonics) return;
+  const m = FPS.me;
+  for (const T of Z3.tonics) {
+    // (beyond a room or two away, none of it: the plate's unreadable there, and it spares the draws)
+    const p = T.g.position, near = Math.hypot(p.x - m.x, -p.z - m.y) < 30;
+    T.g.visible = near; if (!near) continue;
+    if (reduceMotion) { T.glow.material.opacity = 0.4; continue; }
+    const br = 0.5 + 0.5 * Math.sin(t * 1.3 + T.ph);
+    T.glow.material.opacity = 0.32 + 0.16 * br; T.pool.material.opacity = 0.17 + 0.08 * br;
+    for (const b of T.bub) {
+      const k = (t * 0.32 + b.k) % 1;
+      b.m.position.set(b.u + Math.sin(t * 3 + b.k * 9) * 0.008, 1.1 + k * 0.47, 0.1);
+      b.m.scale.setScalar(b.s * (0.6 + k * 0.6) * Math.min(1, (1 - k) * 8));
+    }
+  }
+}
 function zm3dBuild() {
   if (Z3.grp) { GL3D.scene.remove(Z3.grp); Z3.grp.traverse(o => { if (o.geometry) o.geometry.dispose(); }); }
   for (const z of ZM.z) z.mdl = null;
@@ -19545,6 +19740,7 @@ function zm3dBuild() {
     const L = new THREE.PointLight(0xffd890, 0, 14, 1.4); grp.add(L);
     Z3.beam = { g, outer, core, L };
   }
+  zm3dTonics(grp, G0);
   if (typeof ze3dBuild === 'function') ze3dBuild(grp);   // [egg hook] src/zmegg.js
   zm3dTower(grp);
   zm3dLantern(grp);
@@ -19948,6 +20144,7 @@ function zmScene3D() {
   for (const o of Z3.grp.children.slice()) if (o.userData.drop && !used.has(o)) Z3.grp.remove(o);
   for (const d of ZM.drops) d.g3.userData.drop = true;
   ZW.t.value = reduceMotion ? 0 : t;
+  zm3dTonicsTick(t);
   // the Light turns, once every twelve seconds, its beams sweeping out over the sea and through the rooms' windows
   if (Z3.lens) { Z3.lens.lens.rotation.y = reduceMotion ? 0.6 : -g.t * Math.PI * 2 / 12; Z3.lens.L.intensity = 2.0 + (reduceMotion ? 0 : 0.2 * Math.sin(g.t * 3)); }
   // the beam
