@@ -25,10 +25,12 @@ LEN = {
     'deny': 0.6, 'diver': 3.8, 'slam': 2.2, 'mooncusser': 2.8, 'keelback': 2.8, 'charge': 2.2, 'bell': 2.8,
     'bellfar': 3.8, 'splash': 1.8, 'foghorn': 4.8, 'cannon': 2.8, 'flare': 2.8, 'creak': 2.8, 'thunder': 4.8,
     'sea': 11.0, 'wind': 11.0, 'rain': 11.0,
+    # the bosses' themes (src/zmtheme.js): as long as they came, looped
+    'bossdiver': 120.0, 'bossmoon': 120.0, 'bosscrab': 120.0,
 }
 PEAK = {'hit': -4, 'board': -4, 'buy': -6, 'deny': -8, 'swish': -4, 'reload': -5, 'gull': -6, 'heartbeat': -3,
-        'sea': -6, 'wind': -8, 'rain': -8, 'beam': -8, 'moan': -3, 'creak': -6}
-LOOPS = {'sea', 'wind', 'rain'}
+        'sea': -6, 'wind': -8, 'rain': -8, 'bossdiver': -3, 'bossmoon': -3, 'bosscrab': -3, 'beam': -8, 'moan': -3, 'creak': -6}
+LOOPS = {'sea', 'wind', 'rain', 'bossdiver', 'bossmoon', 'bosscrab'}
 # kept synthesised by choice (the old bell stays the bell)
 SKIP = {'bell', 'bellfar'}
 # (keep the start: for these the swell is the point, not an attack)
@@ -46,8 +48,8 @@ def read(path, name=''):
     return np.frombuffer(raw, dtype=np.float32).copy()
 
 
-def write(path, x):
-    subprocess.run(['ffmpeg', '-v', 'error', '-y', '-f', 'f32le', '-ar', str(SR), '-ac', '1', '-i', '-', '-c:a', 'libmp3lame', '-b:a', '64k', path],
+def write(path, x, br='64k'):
+    subprocess.run(['ffmpeg', '-v', 'error', '-y', '-f', 'f32le', '-ar', str(SR), '-ac', '1', '-i', '-', '-c:a', 'libmp3lame', '-b:a', br, path],
                    input=np.clip(x, -1, 1).astype(np.float32).tobytes(), check=True)
 
 
@@ -72,7 +74,7 @@ def process(name, x):
             if e[i] < top * 0.1 and e[i + 1] < top * 0.1:
                 n = min(n, (i + 2) * w); break
     if name in LOOPS:
-        F = int(SR * 1.2)
+        F = int(SR * (2.5 if name.startswith('boss') else 1.2))
         if len(x) < n + F:
             n = len(x) - F
         body, tail = x[:n].copy(), x[n:n + F]
@@ -112,7 +114,7 @@ def main(src):
         if x is None:
             continue
         out = f'{name}_{k}.mp3'
-        write(os.path.join(OUT, out), x)
+        write(os.path.join(OUT, out), x, '112k' if name.startswith('boss') else '64k')
         takes.setdefault(name, []).append('assets/sfx/' + out)
     # every file in assets/sfx (earlier runs included), by name
     allf = {}

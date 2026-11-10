@@ -47,7 +47,7 @@ const zbHpOf = (kind, r, n) => zmHp(r) * ZBT[kind].hp * (1 + ZBC.HP_MORE * (Math
 const zbT = z => ZBT[z.bt] || ZBT.diver;
 const zbActT = z => (zbT(z).acts[z.act] || ZB_T.smash);
 const zbEnd = z => z.aEnd || zbActT(z).end;
-function zbNew() { if (ZB.g !== FPS.g) { ZB.g = FPS.g; ZB.round = 0; ZB.plan = []; ZB.seen = new Set(); ZB.bars = new Map(); ZB.lure = null; ZB.glare = 0; } }
+function zbNew() { if (ZB.g !== FPS.g) { ZB.g = FPS.g; ZB.round = 0; ZB.plan = []; ZB.seen = new Set(); ZB.bars = new Map(); ZB.lure = null; ZB.glare = 0; ZB.theme = null; ZB.themeRound = -1; ZB.planAll = []; } }
 
 // ---------- the schedule ----------
 // which of them come in round r (a list of kinds, in the order they come; rnd: a random source, for tests)
@@ -73,7 +73,7 @@ function zbPlan(r, rnd) {
 // rest of the drowned are all up already, so the round can't end before they've come)
 function zbRounds(dt) {
   zbNew();
-  if (ZB.round !== ZM.round) { ZB.round = ZM.round; ZB.plan = zbPlan(ZM.round); ZB.wait = 5 + Math.random() * 5; }
+  if (ZB.round !== ZM.round) { ZB.round = ZM.round; ZB.plan = zbPlan(ZM.round); ZB.planAll = ZB.plan.slice(); ZB.wait = 5 + Math.random() * 5; }
   if (ZB.plan.length) {
     ZB.wait -= dt;
     if (ZB.wait <= 0 || ZM.left <= 0) {
@@ -114,6 +114,7 @@ function zbSpawn(kind) {
   z.h = bearingOf(w.x - z.x, w.y - z.y);
   ZM.z.push(z); FPS.drowned = ZM.z;
   ZB.seen.add(zn);
+  if (typeof ztPick === 'function') ztPick(kind);   // [theme] the round's music (src/zmtheme.js)
   zbArrive(z);
   return true;
 }
@@ -322,12 +323,14 @@ function zbSpeedK() { return ZB.lure ? 0.45 : 1; }
 // (a count), where it'll land (the anchor's ring, the end of a charge), the kind, and where a charge set off from
 function zbHostSend(o) {
   const CX = FPSC.CX, CY = FPSC.CY, list = ZM.z.filter(q => q.boss && !q.gone);
+  if (ZB.theme && ZB.themeRound === ZM.round) o.bm = ZB_KINDS.indexOf(ZB.theme);   // [theme] which music everyone plays
   if (!list.length) return;
   o.bo = list.map(q => [q.zn, Math.round(clamp(q.hp / q.max, 0, 1) * 1000), ZB_ACT.indexOf(q.act || ''), Math.round((q.at || 0) * 100), q.aseq | 0, Math.round((q.ix - CX) * 10), Math.round((q.iy - CY) * 10), Math.max(0, ZB_KINDS.indexOf(q.bt)), Math.round(((q.ax || CX) - CX) * 10), Math.round(((q.ay || CY) - CY) * 10)]);
 }
 // (joined) what the host says of them: and a blow landing is judged here, on me
 function zbApply(hz) {
   zbNew();
+  if (hz.bm != null && typeof ztHeard === 'function') ztHeard(hz.bm);   // [theme]
   const CX = FPSC.CX, CY = FPSC.CY;
   if (Array.isArray(hz.bo)) for (const r of hz.bo) {
     if (!Array.isArray(r)) continue;

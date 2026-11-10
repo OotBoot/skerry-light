@@ -18360,6 +18360,7 @@ function zmStop() {
   if (ZM.net && typeof zmnStop === 'function') zmnStop();
   if (typeof zmpStop === 'function') zmpStop();   // [pap]
   if (typeof zxReset === 'function') zxReset();   // [chest]
+  if (typeof ztStop === 'function') ztStop(0.6);   // [theme]
   ZM.on = false; ZM.net = null; FPS.zm = false; FPS.eyeLag = 0; FPS.downEye = 0; ZM.spec = null; FPS.specId = null;
   $('stage').classList.remove('zmmode'); $('zmOver').hidden = true;
   { const e = document.querySelector('#fpsMenu .eyebrow'); if (e) e.textContent = "Wreckers' Night carries on without you"; $('fpsLeave').textContent = 'Leave the island'; $('fpsResume').textContent = 'Back to the fight'; }
@@ -18407,6 +18408,7 @@ function zmFrame(dt) {
       if ((FPS.climb || 0) > 0 && FPS.sinceShot > 0.14) { const d = Math.min(FPS.climb, dt * 0.4); m.p = clamp(m.p - d, -0.6, 0.6); FPS.climb -= d; }
       zmTick(dt);
     }
+    if (typeof ztTick === 'function') ztTick(dt);   // [theme] the bosses' music (src/zmtheme.js)
     FPS.eyeLag = (FPS.eyeLag || 0) * Math.pow(0.0005, dt);
     // (down, your eyes sink to the floor; up again, they rise)
     FPS.downEye = (FPS.downEye || 0) + ((zmIsDown() && !ZM.over ? ZM_DOWN.EYE : 0) - (FPS.downEye || 0)) * Math.min(1, dt * 5);
@@ -22337,7 +22339,7 @@ const zbHpOf = (kind, r, n) => zmHp(r) * ZBT[kind].hp * (1 + ZBC.HP_MORE * (Math
 const zbT = z => ZBT[z.bt] || ZBT.diver;
 const zbActT = z => (zbT(z).acts[z.act] || ZB_T.smash);
 const zbEnd = z => z.aEnd || zbActT(z).end;
-function zbNew() { if (ZB.g !== FPS.g) { ZB.g = FPS.g; ZB.round = 0; ZB.plan = []; ZB.seen = new Set(); ZB.bars = new Map(); ZB.lure = null; ZB.glare = 0; } }
+function zbNew() { if (ZB.g !== FPS.g) { ZB.g = FPS.g; ZB.round = 0; ZB.plan = []; ZB.seen = new Set(); ZB.bars = new Map(); ZB.lure = null; ZB.glare = 0; ZB.theme = null; ZB.themeRound = -1; ZB.planAll = []; } }
 
 // ---------- the schedule ----------
 // which of them come in round r (a list of kinds, in the order they come; rnd: a random source, for tests)
@@ -22363,7 +22365,7 @@ function zbPlan(r, rnd) {
 // rest of the drowned are all up already, so the round can't end before they've come)
 function zbRounds(dt) {
   zbNew();
-  if (ZB.round !== ZM.round) { ZB.round = ZM.round; ZB.plan = zbPlan(ZM.round); ZB.wait = 5 + Math.random() * 5; }
+  if (ZB.round !== ZM.round) { ZB.round = ZM.round; ZB.plan = zbPlan(ZM.round); ZB.planAll = ZB.plan.slice(); ZB.wait = 5 + Math.random() * 5; }
   if (ZB.plan.length) {
     ZB.wait -= dt;
     if (ZB.wait <= 0 || ZM.left <= 0) {
@@ -22404,6 +22406,7 @@ function zbSpawn(kind) {
   z.h = bearingOf(w.x - z.x, w.y - z.y);
   ZM.z.push(z); FPS.drowned = ZM.z;
   ZB.seen.add(zn);
+  if (typeof ztPick === 'function') ztPick(kind);   // [theme] the round's music (src/zmtheme.js)
   zbArrive(z);
   return true;
 }
@@ -22612,12 +22615,14 @@ function zbSpeedK() { return ZB.lure ? 0.45 : 1; }
 // (a count), where it'll land (the anchor's ring, the end of a charge), the kind, and where a charge set off from
 function zbHostSend(o) {
   const CX = FPSC.CX, CY = FPSC.CY, list = ZM.z.filter(q => q.boss && !q.gone);
+  if (ZB.theme && ZB.themeRound === ZM.round) o.bm = ZB_KINDS.indexOf(ZB.theme);   // [theme] which music everyone plays
   if (!list.length) return;
   o.bo = list.map(q => [q.zn, Math.round(clamp(q.hp / q.max, 0, 1) * 1000), ZB_ACT.indexOf(q.act || ''), Math.round((q.at || 0) * 100), q.aseq | 0, Math.round((q.ix - CX) * 10), Math.round((q.iy - CY) * 10), Math.max(0, ZB_KINDS.indexOf(q.bt)), Math.round(((q.ax || CX) - CX) * 10), Math.round(((q.ay || CY) - CY) * 10)]);
 }
 // (joined) what the host says of them: and a blow landing is judged here, on me
 function zbApply(hz) {
   zbNew();
+  if (hz.bm != null && typeof ztHeard === 'function') ztHeard(hz.bm);   // [theme]
   const CX = FPSC.CX, CY = FPSC.CY;
   if (Array.isArray(hz.bo)) for (const r of hz.bo) {
     if (!Array.isArray(r)) continue;
@@ -23598,6 +23603,66 @@ function zbPoseCrab(z, M, dt) {
     M.body.position.y = zbL(0.95, 0.45, k); M.body.rotation.set(0.1 * k, 0, 0.3 * k);
     M.root.position.y -= Math.max(0, (z.deadT || 0) - 1.2) * 0.9;
   }
+}
+
+// ---- src/zmtheme.js ----
+// The Lighthouse (Keeper's Last Light): the bosses' themes. Each of the three has a piece of music of its own,
+// made from its design (generated with Stable Audio 3 in ComfyUI, then looped and levelled: tools/sfx/process.py):
+//   the Diver       bossdiver: a deep sea-shanty dirge, slow and heavy as his boots, a brass horn like his helmet,
+//                   the creak of his air line and a great iron anchor-chain clank on the beat
+//   the Mooncusser  bossmoon: a wrecker's waltz, a lone fiddle and a squeezebox in a minor key, the false light's
+//                   rising shimmer over it, and the clink of his gibbet chains
+//   the Keelback    bosscrab: a scuttling, driving piece, rattling percussion like spars and oars on the rocks,
+//                   low timbers groaning, a deep ship's drum, and a bell for its sidelights
+// When the first boss of a round comes up, the round's theme is drawn at random from the kinds that round brings
+// (ztPick: so a round with the Diver and the Keelback plays one or the other); it plays, looped, while any of them is
+// up or still to come, and fades away once the last is down. Together, the host draws it and tells everyone (zbHostSend,
+// `bm`), so you all hear the same one. Nothing plays until its recording has loaded (src/sfxbank.js).
+const ZTH = { cur: null, src: null, gain: null, quiet: 0, vol: 0.55 };
+const ZTH_FILE = { diver: 'bossdiver', moon: 'bossmoon', crab: 'bosscrab' };
+
+// (hosting or alone, from zbSpawn) one is coming: if the round has no theme yet, draw it
+function ztPick(kind) {
+  if (ZB.theme && ZB.themeRound === ZM.round) return;
+  const kinds = [...new Set([kind].concat(ZB.round === ZM.round ? ZB.planAll || [] : []))].filter(k => ZTH_FILE[k]);
+  if (!kinds.length) return;
+  ZB.theme = kinds[(Math.random() * kinds.length) | 0]; ZB.themeRound = ZM.round;
+}
+// (joined, from zbApply) the host's draw
+function ztHeard(i) {
+  const k = ZB_KINDS[i | 0];
+  if (k && ZTH_FILE[k]) { ZB.theme = k; ZB.themeRound = ZM.round; }
+}
+
+// (every frame of a night) what should be playing, and is it
+function ztTick(dt) {
+  if (!AUD.ctx) return;
+  const mine = ZB.theme && ZB.themeRound === ZM.round;
+  const up = ZM.z.some(z => z.boss && !z.dead && !z.gone);
+  const coming = ZM.net !== 'client' && ZB.round === ZM.round && ZB.plan && ZB.plan.length > 0 && ZM.phase === 'round';
+  const want = mine && (up || coming) && !ZM.over ? ZB.theme : null;
+  if (want) ZTH.quiet = 0; else ZTH.quiet += dt;
+  if (want && want !== ZTH.cur) ztPlay(want);
+  else if (!want && ZTH.cur && ZTH.quiet > 1.5) ztStop(3);
+}
+function ztPlay(k) {
+  const L = typeof SFXB !== 'undefined' && SFXB.buf[ZTH_FILE[k]];
+  if (!L || !L.length) return;   // (not loaded yet: tried again next frame)
+  const c = AUD.ctx;
+  ztStop(1.2);
+  const s = c.createBufferSource(); s.buffer = L[0]; s.loop = true;
+  // (an MP3 carries a sliver of silence at each end: loop only the music between, so the seam doesn't gap)
+  const b = L[0]; if (!b.zt) { const d = b.getChannelData(0); let i = 0, j = d.length - 1; while (i < j && Math.abs(d[i]) < 1e-4) i++; while (j > i && Math.abs(d[j]) < 1e-4) j--; b.zt = [i / b.sampleRate, (j + 1) / b.sampleRate]; }
+  s.loopStart = b.zt[0]; s.loopEnd = b.zt[1];
+  const g = c.createGain(); g.gain.value = 0; g.gain.setTargetAtTime(ZTH.vol, c.currentTime, 0.8);
+  s.connect(g).connect(AUD.master); s.start(0, b.zt[0]);
+  ZTH.cur = k; ZTH.src = s; ZTH.gain = g;
+}
+function ztStop(fade) {
+  if (!ZTH.src) { ZTH.cur = null; return; }
+  const c = AUD.ctx, s = ZTH.src, g = ZTH.gain, f = Math.max(0.05, fade || 0.5);
+  try { g.gain.cancelScheduledValues(c.currentTime); g.gain.setValueAtTime(g.gain.value, c.currentTime); g.gain.linearRampToValueAtTime(0, c.currentTime + f); s.stop(c.currentTime + f + 0.05); } catch (e) {}
+  ZTH.src = null; ZTH.gain = null; ZTH.cur = null;
 }
 
 // ---- src/zmswarm.js ----

@@ -1334,6 +1334,7 @@ function zmStop() {
   if (ZM.net && typeof zmnStop === 'function') zmnStop();
   if (typeof zmpStop === 'function') zmpStop();   // [pap]
   if (typeof zxReset === 'function') zxReset();   // [chest]
+  if (typeof ztStop === 'function') ztStop(0.6);   // [theme]
   ZM.on = false; ZM.net = null; FPS.zm = false; FPS.eyeLag = 0; FPS.downEye = 0; ZM.spec = null; FPS.specId = null;
   $('stage').classList.remove('zmmode'); $('zmOver').hidden = true;
   { const e = document.querySelector('#fpsMenu .eyebrow'); if (e) e.textContent = "Wreckers' Night carries on without you"; $('fpsLeave').textContent = 'Leave the island'; $('fpsResume').textContent = 'Back to the fight'; }
@@ -1381,6 +1382,7 @@ function zmFrame(dt) {
       if ((FPS.climb || 0) > 0 && FPS.sinceShot > 0.14) { const d = Math.min(FPS.climb, dt * 0.4); m.p = clamp(m.p - d, -0.6, 0.6); FPS.climb -= d; }
       zmTick(dt);
     }
+    if (typeof ztTick === 'function') ztTick(dt);   // [theme] the bosses' music (src/zmtheme.js)
     FPS.eyeLag = (FPS.eyeLag || 0) * Math.pow(0.0005, dt);
     // (down, your eyes sink to the floor; up again, they rise)
     FPS.downEye = (FPS.downEye || 0) + ((zmIsDown() && !ZM.over ? ZM_DOWN.EYE : 0) - (FPS.downEye || 0)) * Math.min(1, dt * 5);
