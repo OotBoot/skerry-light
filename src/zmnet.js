@@ -291,6 +291,7 @@ function znRequestFrom(sid, k, a) {
   if (k === 'lamp') { if (typeof zmlRequest === 'function') zmlRequest(sid, a); return; }   // [lamp] the lever (src/zmlamp.js)
   if (k === 'pst') { if (typeof zmpStatusFrom === 'function') zmpStatusFrom(sid, a); return; }   // [pap] what a reforged weapon did to them
   if (k === 'egg') { if (typeof zeRequest === 'function') zeRequest(sid, a); return; }   // [egg hook] src/zmegg.js
+  if (k === 'egg2') { if (typeof zhRequest === 'function') zhRequest(sid, a); return; }   // [egg2 hook] src/zmegg2.js
 }
 // someone (by) gets someone (sid) up: everyone's told who got whom up (and if it's me, up I get)
 function zmnRevive(sid, by) {
@@ -323,6 +324,7 @@ function znHostSend() {
   z.ev = ZN.ev;
   if (typeof zbHostSend === 'function') zbHostSend(z);   // [boss] the bosses: their kinds, strength and blows (src/zmboss.js)
   if (typeof zeHostSend === 'function') zeHostSend(z);   // [egg hook] src/zmegg.js
+  if (typeof zhHostSend === 'function') zhHostSend(z);   // [egg2 hook] src/zmegg2.js
   if (typeof zmlHostSend === 'function') zmlHostSend(z);   // [lamp] the Light: lit or not, its beam, its price
   znSend(z);
 }
@@ -456,6 +458,7 @@ function znApply(hz) {
     ZN.creditSeen = c;
   }
   if (typeof zeApply === 'function') zeApply(hz);   // [egg hook] src/zmegg.js
+  if (typeof zhApply === 'function') zhApply(hz);   // [egg2 hook] src/zmegg2.js
   if (typeof zmlApply === 'function') zmlApply(hz);   // [lamp] src/zmlamp.js
   // things that happen once
   if (Array.isArray(hz.ev)) for (const e of hz.ev) {

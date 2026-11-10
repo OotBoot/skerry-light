@@ -1743,6 +1743,7 @@ function zmReset() {
   if (typeof zmlReset === 'function') zmlReset();   // [lamp] the Light dark again, the lever at its first price
   if (typeof zxReset === 'function') zxReset();   // [chest] src/zmchest.js
   if (typeof zeReset === 'function') zeReset();   // [egg hook] src/zmegg.js
+  if (typeof zhReset === 'function') zhReset();   // [egg2 hook] src/zmegg2.js
 }
 // opts: { map: which map (ZM_MAPS; else the one picked on the card) } and, playing together (src/zmnet.js),
 // { net: 'host' | 'client', hum: [[sid, nick], ...] }
@@ -1890,6 +1891,7 @@ function zmTick(dt) {
   if (typeof zmlTick === 'function') zmlTick(dt);   // [lamp] the Light, while it burns
   if (typeof zxTick === 'function') zxTick(dt);   // [chest] what the chest's weapons throw, and what they leave burning
   if (typeof zeTick === 'function') zeTick(dt);   // [egg hook] src/zmegg.js
+  if (typeof zhTick === 'function') zhTick(dt);   // [egg2 hook] src/zmegg2.js
   if (typeof zbMe === 'function') zbMe(dt);   // [boss] their blows running on (joined), and what they've done to me (src/zmboss.js)
   zmNearest();
   // holding Use at a window nails its boards back; beside someone who's down, gets them up
@@ -2385,6 +2387,7 @@ function zmKill(d, head, code, how, by) {
   if (d.skit && typeof zwKilled === 'function') zwKilled(d);   // [swarm] the last crab's Powder Keg
   if (d.boss && typeof zbKilled === 'function') zbKilled(d, how, by);   // [boss] its reward and its salvage
   if (typeof zeKill === 'function') zeKill(d, how, by);   // [egg hook] src/zmegg.js
+  if (typeof zhKill === 'function') zhKill(d, how, by);   // [egg2 hook] src/zmegg2.js
 }
 // crates (as for Wreckers' Night, every third kill here)
 function zmEarnKill() {
@@ -2440,6 +2443,7 @@ function zmResolveShot(sh, mine) {
     }
     FPS.tracers.push({ a: [x + Math.sin(lh) * 0.6, y + Math.cos(lh) * 0.6, z - 0.25], b: [last.x, last.y, last.z], t: w.pellets ? 0.06 : 0.08, k: w.code });
     if (typeof zeShot === 'function' && mine) zeShot(x, y, z, lh, lp, by);   // [egg hook] src/zmegg.js
+    if (typeof zhShot === 'function' && mine) zhShot(x, y, z, lh, lp, by);   // [egg2 hook] src/zmegg2.js
     if (last.kind !== 'body' && last.kind !== 'none') fpsPuff(last.x, last.y, last.z, last.kind === 'ground' ? '150,140,120' : '190,190,180', w.pellets ? 2 : 6);
   }
   if (mine && typeof zmpShot === 'function') zmpShot(sh, hits);   // [pap] what a reforged weapon does
@@ -2471,6 +2475,7 @@ function zmKnife() {
 function zmMelee(x, y, z, h, w, code) {
   code = code || 'c';
   if (typeof zeMelee === 'function') zeMelee(x, y, z, h, w, code);   // [egg hook] src/zmegg.js
+  if (typeof zhMelee === 'function') zhMelee(x, y, z, h, w, code);   // [egg2 hook] src/zmegg2.js
   if (code === 'c' && typeof zmpSwing === 'function') zmpSwing(x, y, z, h);   // [pap] the Keel-Splitter's crescent
   let any = false;
   for (const o of ZM.z) {
@@ -2632,6 +2637,7 @@ function zmNearest() {
   if (ZM.net) for (const r of FPS.remote.values()) if (r.down && !r.dead) consider({ k: 'rev', sid: r.id, n: r.n }, r.x, r.y, r.jz || 0, 1.8, false);
   for (const w of ZM.windows) if (!w.sea && w.boards < 6 && zmOpen(w.zone)) consider({ k: 'win', w }, w.x - w.nx * 0.95, w.y - w.ny * 0.95, w.z || 0, w.hatch ? 1.6 : 1.9, false);
   if (typeof zeNearest === 'function') zeNearest(consider);   // [egg hook] src/zmegg.js
+  if (typeof zhNearest === 'function') zhNearest(consider);   // [egg2 hook] src/zmegg2.js
   // (down on the floor, nothing's in reach but your pepperbox)
   ZM.near = zmIsDown() ? null : best;
   ZM.prompt = ZM.near ? zmPrompt(ZM.near) : null;
@@ -2640,6 +2646,7 @@ function zmPrompt(o) {
   { const r = typeof zmpPrompt === 'function' && zmpPrompt(o); if (r) return r; }   // [pap] the bench, a reforged weapon's ammunition
   { const r = typeof zmlPrompt === 'function' && zmlPrompt(o); if (r) return r; }   // [lamp] the lever
   if (o.k === 'egg') return typeof zePrompt === 'function' ? zePrompt(o) : null;   // [egg hook] src/zmegg.js
+  if (o.k === 'egg2') return typeof zhPrompt === 'function' ? zhPrompt(o) : null;   // [egg2 hook] src/zmegg2.js
   if (o.k === 'buy') {
     const w = FPSW[o.b.id], own = ZM.own.includes(o.b.id);
     if (own && w.melee) return { text: `${w.n}: in hand` };
@@ -2658,6 +2665,7 @@ function zmUse() {
   if (typeof zmpUse === 'function' && zmpUse(o)) return;   // [pap]
   if (typeof zmlUse === 'function' && zmlUse(o)) return;   // [lamp]
   if (o.k === 'egg') { if (typeof zeUse === 'function') zeUse(o); return; }   // [egg hook] src/zmegg.js
+  if (o.k === 'egg2') { if (typeof zhUse === 'function') zhUse(o); return; }   // [egg2 hook] src/zmegg2.js
   const pay = c => { if (ZM.pts < c) { zmSound('no'); fpsFeed('Not enough points.'); return false; } ZM.pts -= c; ZM.spent += c; return true; };
   if (o.k === 'buy') {
     const id = o.b.id, w = FPSW[id], own = ZM.own.includes(id);
@@ -3032,6 +3040,7 @@ function zm3dBuild() {
   }
   zm3dTonics(grp, G0);
   if (typeof ze3dBuild === 'function') ze3dBuild(grp);   // [egg hook] src/zmegg.js
+  if (typeof zh3dBuild === 'function') zh3dBuild(grp);   // [egg2 hook] src/zmegg2.js
   zm3dTower(grp);
   zm3dLantern(grp);
   zm3dWater(grp);
@@ -3524,6 +3533,7 @@ function zmScene3D() {
   if (typeof zml3d === 'function') zml3d(dt);   // [lamp] the lever
   if (typeof zx3d === 'function') zx3d(dt);   // [chest] the light of flares and blasts
   if (typeof ze3d === 'function') ze3d(dt);   // [egg hook] src/zmegg.js
+  if (typeof zh3d === 'function') zh3d(dt);   // [egg2 hook] src/zmegg2.js
 }
 // painted over the 3D view: sparks between the burning, the chest's offer, and anyone down
 function zmDrawOver() {
@@ -3714,6 +3724,7 @@ function zmHud() {
   if (ZM.over) { ctx.fillStyle = `rgba(20,2,2,${Math.min(0.6, ZM.over.t * 0.4)})`; ctx.fillRect(0, 0, W, H); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = fell(phone ? 28 : 40); ctx.fillStyle = `rgba(200,40,30,${Math.min(1, ZM.over.t)})`; ctx.fillText('They dragged you down', cx, H * 0.42); }
   if (!FPS.mouse && !phone && !FPS.menu && !ZM.over) { ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = mono(12); ctx.fillStyle = 'rgba(236,228,207,0.6)'; ctx.fillText('Click to aim with the mouse', cx, H * 0.5 + 40); }
   if (typeof zeHud === 'function') zeHud();   // [egg hook] src/zmegg.js
+  if (typeof zhHud === 'function') zhHud();   // [egg2 hook] src/zmegg2.js
 }
 // down: the edges of the screen going red, thumping with your heart, deeper as the time runs out
 function zmHudDownGlow(t) {
