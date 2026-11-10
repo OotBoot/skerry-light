@@ -389,7 +389,7 @@ function zmnClient(dt) {
   for (const z of ZM.z) if (z.dead && z.deadT > (z.burn ? 1.3 : 2.4) && z.mdl) zmFreeModel(z);
   // the chest's weapons turning over, here as there
   const B = ZM.box; B.t += dt;
-  if (B.st === 'spin') { B.cyc += dt * (14 - B.t * 3); if (B.cyc > 1) { B.cyc = 0; const ids = ZM_BOXW.map(a => a[0]); B.show = ids[(ids.indexOf(B.show) + 1 + ((Math.random() * 3) | 0)) % ids.length]; zmSound('tick'); } }
+  if (B.st === 'spin') { B.cyc += dt * (14 - B.t * 3); if (B.cyc > 1) { B.cyc = 0; const ids = zmBoxList().map(a => a[0]); B.show = ids[(ids.indexOf(B.show) + 1 + ((Math.random() * 3) | 0)) % ids.length]; zmSound('tick'); } }
   for (const d of ZM.drops) d.ph += dt;
   if (ZM.double > 0) ZM.double -= dt; if (ZM.insta > 0) ZM.insta -= dt;
   ZN.sendT -= dt;

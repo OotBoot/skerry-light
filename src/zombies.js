@@ -160,10 +160,10 @@ const ZM_TC = [ZMT.X, ZMT.Y];   // the middle of the tower
 // host's pick goes out with the start of the night (src/zmnet.js), and everyone lays out the same place.
 var ZM_MAP = 'light';
 const ZM_MAPS = {
-  light: { n: 'the Lighthouse', N: 'The Lighthouse', isle: 'light', tower: true, zones: Object.assign({}, ZM_ZONES), start: [0, -56.5], top: 0.9, seed: 0x11947,
+  light: { n: 'the Lighthouse', N: 'The Lighthouse', isle: 'light', tower: true, noBox: ['hermit'], zones: Object.assign({}, ZM_ZONES), start: [0, -56.5], top: 0.9, seed: 0x11947,
     blurb: 'The keeper\u2019s station at the Light: a tower five floors high, the lantern at its top.',
     land: n => `The boat leaves you on the jetty below the Light${n ? ', ' + n + ' of you' : ''}. Up through the sea gate, and hold the Light.` },
-  wrack: { n: 'Wrackhaven', N: 'Wrackhaven', isle: 'wrack', tower: false, start: [0, -46], top: 0.45, seed: 0x3a71d,
+  wrack: { n: 'Wrackhaven', N: 'Wrackhaven', isle: 'wrack', tower: false, noBox: ['fresnel'], start: [0, -46], top: 0.45, seed: 0x3a71d,
     blurb: 'A fishing village the sea took back: the quay, Fish Street, the inn, the smokehouse, the chapel.',
     land: n => `The boat leaves you on the quay at Wrackhaven${n ? ', ' + n + ' of you' : ''}. Up through the harbour gate, and hold the village.`,
     // [x0, x1, y0, y1] relative to the island's middle, as ZM_ZONES; the sea to the south, as at the Lighthouse
@@ -2601,8 +2601,11 @@ function zmTake(k, heard) {
 }
 
 // ---------- the wreck chest ----------
+// what this place's chest can give: the Lighthouse's has the Fresnel Lamp, Wrackhaven's the Hermit's Claw (noBox)
+// (ZM_BOXW itself stays whole, as co-op sends the chest's weapon by its place in it)
+const zmBoxList = () => { const no = (ZM_MAPS[ZM_MAP] && ZM_MAPS[ZM_MAP].noBox) || []; return ZM_BOXW.filter(([id]) => !no.includes(id)); };
 function zmBoxRoll(own) {
-  const pool = ZM_BOXW.filter(([id]) => !(own || ZM.own).includes(id)), list = pool.length ? pool : ZM_BOXW;
+  const all = zmBoxList(), pool = all.filter(([id]) => !(own || ZM.own).includes(id)), list = pool.length ? pool : all;
   let r = Math.random() * list.reduce((s, [, w]) => s + w, 0);
   for (const [id, w] of list) { r -= w; if (r <= 0) return id; }
   return list[0][0];
@@ -2612,7 +2615,7 @@ function zmBoxTick(dt) {
   if (B.st === 'spin') {
     // the weapons turn over above it, slower and slower
     B.cyc += dt * (14 - B.t * 3);
-    if (B.cyc > 1) { B.cyc = 0; const ids = ZM_BOXW.map(a => a[0]); B.show = ids[(ids.indexOf(B.show) + 1 + ((Math.random() * 3) | 0)) % ids.length]; zmSound('tick'); }
+    if (B.cyc > 1) { B.cyc = 0; const ids = zmBoxList().map(a => a[0]); B.show = ids[(ids.indexOf(B.show) + 1 + ((Math.random() * 3) | 0)) % ids.length]; zmSound('tick'); }
     if (B.t > 4) {
       B.t = 0; B.show = B.item;
       if (B.moving) { B.st = 'gull'; zmPoints(ZMC.BOX, true, B.owner); zmSound('gull'); fpsFeed('A gull takes the chest. The points are back; look for it somewhere else.'); if (ZM.net) zmnEvent('feed', 'A gull takes the chest. The points are back; look for it somewhere else.'); }

@@ -66,6 +66,9 @@ const FPSW = {
   puntgun:     { n: 'Punt Gun',     code: 'u', mag: 1, rate: 0.8, reload: 4.2, dmg: 1, head: 1.5, shot: 16, spread: 0.035, range: 90, kick: 3.2, shove: 2.4, long: true },
   netmortar:   { n: 'Net Mortar',   code: 'n', mag: 1, rate: 0.6, reload: 2.3, dmg: 2, head: 2, pv: 21, gr: 12, range: 120, kick: 1.6, long: true },
   chainshot:   { n: 'Chain-Shot',   code: 'y', mag: 1, rate: 0.6, reload: 2.6, dmg: 4, head: 4, pv: 36, gr: 0.6, range: 45, chainW: 1.3, kick: 2.2, long: true },
+  // [crab] only at Wrackhaven, only from its chest (in place of the Fresnel Lamp there): src/zmcrab.js. A crab's
+  // claw on a gauntlet: its snap knocks back what's near, and it throws hermit crabs that cling on and nip
+  hermit:      { n: "Hermit's Claw", code: 'r', mag: 3, rate: 0.55, reload: 2.5, dmg: 2, head: 2, pv: 15, gr: 13, range: 60, snap: 3.4, kick: 1.5 },
 };
 const FPS_WORDER = ['pepperbox', 'blunderbuss', 'longarm', 'harpoon', 'cutlass', 'avtomat'];
 // how much closer the view comes when aiming (the longarm's telescope, the avtomat's iron sights)
