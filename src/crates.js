@@ -797,6 +797,9 @@ function itemCard(skin, cls) {
   const ra = rarityOf(skin);
   d.className = 'skincard r-' + (ra ? ra.id : 'standard') + (cls ? ' ' + cls : '');
   d.style.setProperty('--rc', ra ? ra.color : '#8f98ab');
+  // an Admiral boat skin's card breathes in its own signature colour (src/admiralfx.js)
+  const adm = typeof admiralSig === 'function' ? admiralSig(skin) : null;
+  if (adm) { d.classList.add('adm', 'adm-' + adm.sig); d.style.setProperty('--ac', adm.glow); }
   // one to five pips for the grade, so it reads without relying on colour alone
   const level = ra ? RARITIES.indexOf(ra) + 1 : 0;
   if (level) {

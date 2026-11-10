@@ -114,6 +114,8 @@ function drawShip3D(o, skin, boat, vis, opts) {
   }
   faces.sort((a, b) => b.d - a.d);
   const lerp = (p, q, t) => [p[0] + (q[0] - p[0]) * t, p[1] + (q[1] - p[1]) * t, p[2] + (q[2] - p[2]) * t];
+  // a point on the face being drawn (s along it from aft, h up it from the waterline), for the Admiral looks
+  let curF = null; const atF = (s, h) => lerp(lerp(curF.wlA, curF.wlB, s), lerp(curF.deckA, curF.deckB, s), h);
   const hullC = skin.hull, railC = tier >= 5 ? '#e8c050' : skin.rail, bottomC = tier >= 3 ? '#7a3a22' : mix(skin.hull, '#000000', 0.55);
   for (const f of faces) {
     const band = (t0, t1, col) => fillPoly([lerp(f.wlA, f.deckA, t0), lerp(f.wlB, f.deckB, t0), lerp(f.wlB, f.deckB, t1), lerp(f.wlA, f.deckA, t1)], col);
@@ -149,6 +151,8 @@ function drawShip3D(o, skin, boat, vis, opts) {
     // flowing paint: a wave of the effect's colour travelling along the topsides
     const fa = f.side ? hullFlowAlpha(skin, f.i) : 0;
     if (fa > 0.02) { const ga = ctx.globalAlpha; ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = ga * fa; band(0.5, 0.84, fxColour(skin, fx, g.t + f.i * 0.4)); ctx.restore(); }
+    // an Admiral's own look on the hull (src/admiralfx.js), on close ships only
+    if (tier >= 5 && close) { curF = f; admiralHullFx(skin, f, atF, Lh); }
     // gunports on the brig and barque
     if (f.side && boat.id !== 'cutter' && f.i >= 1 && f.i <= 4 && f.d < 260) {
       for (const t of [0.3, 0.7]) {
@@ -256,6 +260,7 @@ function drawShip3D(o, skin, boat, vis, opts) {
     }
     if (tier >= 5) { // gold trim round the edge
       const p = polyProj(pts); if (p.length > 2) { ctx.strokeStyle = 'rgba(232,192,80,0.9)'; ctx.lineWidth = Math.max(0.8, 0.12 * p[0].s); ctx.beginPath(); p.forEach((q, i) => i ? ctx.lineTo(q.x, q.y) : ctx.moveTo(q.x, q.y)); ctx.closePath(); ctx.stroke(); }
+      if (close) admiralSailFx(skin, pts, stripes);   // and its own look in the cloth
     }
     ctx.globalAlpha = ga;
   } });

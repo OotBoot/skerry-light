@@ -4,6 +4,7 @@
 //   glow      a soft halo that breathes, and its reflection on the water    (Mate default)
 //   flow      paint that flows along the hull and sails                     (Captain default)
 //   sparkle   twinkling motes drifting round the rig, plus a gold sheen     (Admiral, always added)
+// and every Admiral skin also has a signature look of its own, from src/admiralfx.js
 // and some skins have their own:
 //   aurora    colour-cycling paint      ghost   flickering, see-through, with green wisps
 //   electric  lightning crackles        ember   sparks rising off the hull
@@ -24,6 +25,8 @@ function skinFx(skin) {
   return FX_BY_SKIN[skin.id] || (tier >= 5 ? 'sparkle' : tier === 4 ? 'flow' : 'glow');
 }
 function fxColour(skin, fx, t) {
+  const adm = typeof admiralSig === 'function' ? admiralSig(skin) : null;
+  if (adm) return adm.sig === 'aurora' ? auroraCol(t * 0.4) : adm.glow;
   if (fx === 'aurora') return 'hsl(' + Math.round((t * 50) % 360) + ',95%,62%)';
   if (fx === 'ghost') return '#8affc8';
   if (fx === 'electric') return '#b8e4ff';
@@ -51,12 +54,15 @@ const hash = (i, k) => { const v = Math.sin(i * 127.1 + k * 311.7) * 43758.5453;
 // ---------- on a 3D ship ----------
 // called by drawShip3D: `P(u, w, z)` projects a point on the ship, Lh / B / Zd / mastH are its size
 function shipFxBefore(skin, P, Lh, B, Zd, mastH) {
-  const fx = skinFx(skin); if (!fx || reduceMotion && fx !== 'glow') return;
-  const t = g.t, col = fxColour(skin, fx, t);
+  const fx = skinFx(skin), adm = skinTier(skin) >= 5;
+  if (adm) { const m = P(0, 0, Zd); if (m) admiralFxBefore(skin, P, Lh, B, Zd, mastH, m.s); }
+  if (!fx || reduceMotion && fx !== 'glow' && !adm) return;
+  const t = reduceMotion ? 0 : g.t, col = fxColour(skin, fx, t);
   const c = P(0, 0, Zd * 0.5); if (!c) return;
-  const r = Math.max(6, Lh * 1.5 * c.s);
-  const pulse = 0.75 + 0.25 * Math.sin(t * 2.2);
-  const strength = { glow: 0.35, flow: 0.3, sparkle: 0.4, aurora: 0.45, ghost: 0.5, electric: 0.3, ember: 0.35, frost: 0.35, void: 0.5, lantern: 0.55, wisp: 0.4 }[fx] || 0.3;
+  const r = Math.max(6, Lh * 1.5 * c.s) * (adm ? 1.25 : 1);
+  // admirals breathe deeper and brighter
+  const pulse = adm ? 0.6 + 0.4 * Math.sin(t * 2.2) : 0.75 + 0.25 * Math.sin(t * 2.2);
+  const strength = adm ? 0.62 : { glow: 0.35, flow: 0.3, sparkle: 0.4, aurora: 0.45, ghost: 0.5, electric: 0.3, ember: 0.35, frost: 0.35, void: 0.5, lantern: 0.55, wisp: 0.4 }[fx] || 0.3;
   fxGlow(c.x, c.y, r * (fx === 'lantern' ? 1.3 : 1), col, strength * pulse * (fx === 'lantern' ? 0.8 + 0.2 * Math.random() : 1));
   // its light on the water around the hull
   const w = P(0, 0, 0);
@@ -112,15 +118,17 @@ function sailFlow(skin) {
   return fx && !reduceMotion && ['flow', 'aurora', 'sparkle'].includes(fx) ? (g.t * 0.12) % 1 : 0;
 }
 function shipFxAfter(skin, P, Lh, B, Zd, mastH, ghostAlpha) {
-  const fx = skinFx(skin); if (!fx || reduceMotion) return;
-  const t = g.t, col = fxColour(skin, fx, t), tier = skinTier(skin);
+  const fx = skinFx(skin), tier = skinTier(skin);
   const top = P(0, 0, Zd + mastH), base = P(0, 0, Zd); if (!top || !base) return;
   const s = base.s;
+  if (tier >= 5) admiralFxAfter(skin, P, Lh, B, Zd, mastH, s);
+  if (!fx || reduceMotion) return;
+  const t = g.t, col = fxColour(skin, fx, t), adm = admiralSig(skin);
   ctx.save();
   ctx.globalCompositeOperation = 'lighter';
   // twinkling motes round the rig (admirals always, frost and void too)
   if (tier >= 5 || fx === 'sparkle' || fx === 'frost' || fx === 'void') {
-    const n = fx === 'frost' ? 14 : 18;
+    const n = fx === 'frost' ? 14 : tier >= 5 ? (s > 5 ? 26 : 12) : 18;
     for (let i = 0; i < n; i++) {
       const u = (hash(i, 1) * 2 - 1) * Lh * 0.9, w = (hash(i, 2) * 2 - 1) * B * 1.6;
       const z = Zd + hash(i, 3) * mastH * 0.95 + Math.sin(t * 0.8 + i) * 0.6;
@@ -129,7 +137,7 @@ function shipFxAfter(skin, P, Lh, B, Zd, mastH, ghostAlpha) {
       if (tw < 0.2) continue;
       const k = Math.max(1, 0.35 * p.s) * tw;
       ctx.globalAlpha = tw;
-      ctx.fillStyle = fx === 'void' ? (i % 2 ? '#7fe8ff' : '#b48cff') : fx === 'frost' ? '#ffffff' : '#fff0b0';
+      ctx.fillStyle = fx === 'void' ? (i % 2 ? '#7fe8ff' : '#b48cff') : fx === 'frost' ? '#ffffff' : adm && i % 2 ? adm.hi : '#fff0b0';
       ctx.fillRect(p.x - k * 1.6, p.y - k * 0.3, k * 3.2, k * 0.6);
       ctx.fillRect(p.x - k * 0.3, p.y - k * 1.6, k * 0.6, k * 3.2);
     }
@@ -180,7 +188,7 @@ function shipFxAfter(skin, P, Lh, B, Zd, mastH, ghostAlpha) {
   if (tier >= 5 || fx === 'aurora') {
     const k = ((t * 0.35) % 1.6) - 0.3;
     if (k > 0 && k < 1) {
-      const p = P(Lh * (1 - 2 * k), 0, Zd + mastH * 0.45); if (p) fxGlow(p.x, p.y, Math.max(8, mastH * 0.55 * p.s), fx === 'aurora' ? col : '#fff2c0', 0.25);
+      const p = P(Lh * (1 - 2 * k), 0, Zd + mastH * 0.45); if (p) fxGlow(p.x, p.y, Math.max(8, mastH * 0.55 * p.s), adm ? adm.sheen : fx === 'aurora' ? col : '#fff2c0', adm ? 0.38 : 0.25);
     }
   }
   ctx.restore();
@@ -188,7 +196,9 @@ function shipFxAfter(skin, P, Lh, B, Zd, mastH, ghostAlpha) {
 
 // ---------- on your deck, first person ----------
 function drawDeckFx(skin, tipY, DW, railT) {
-  const fx = skinFx(skin); if (!fx || reduceMotion) return;
+  const fx = skinFx(skin);
+  if (skinTier(skin) >= 5) admiralDeckFx(skin, tipY, DW, railT);
+  if (!fx || reduceMotion) return;
   const t = g.t, col = fxColour(skin, fx, t), tier = skinTier(skin);
   const rails = [-1, 1].map(sd => ({ x0: cx + sd * DW, y0: H - 4, x1: cx + sd * 6, y1: tipY + 2 }));
   const at = (r, k) => ({ x: r.x0 + (r.x1 - r.x0) * k, y: r.y0 + (r.y1 - r.y0) * k });
@@ -297,5 +307,6 @@ function previewFx(svg, skin, el, geo) {
   }
   // ghosts fade in and out
   if (fx === 'ghost') anim(svg, { attributeName: 'opacity', values: '1;0.55;1', dur: '3s', repeatCount: 'indefinite' });
+  if (tier >= 5) admiralPreviewFx(svg, skin, geo);
   if (el) el.classList.add('fx-' + fx);
 }
