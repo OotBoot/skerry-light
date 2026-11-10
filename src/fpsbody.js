@@ -323,6 +323,7 @@ function fbPose(F, s) {
   const id = s.id, wp = fbWeapon(F, id, s.plain), wdef = FPSW[id] || FPSW.pepperbox;
   for (const k in F.wpn) F.wpn[k].root.visible = k === id;
   if (typeof zmpSkinFor === 'function') zmpSkinFor(wp, id, s.pap | 0);   // [pap] reforged at the Lampwright's Bench: the Light's fire
+  if (typeof wcaSkin === 'function') wcaSkin(wp, id, s.plain);   // your own Admiral finish's moving light (after the Bench's: it gives way to it)
   const rec = s.rec || 0, draw = s.draw || 0, rl = s.rl || 0;
   const long = id === 'blunderbuss' || id === 'longarm' || id === 'harpoon' || id === 'avtomat' || id === 'fresnel' || !!(FPSW[id] && FPSW[id].long);
   if (wdef.melee) {

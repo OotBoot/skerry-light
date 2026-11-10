@@ -27,6 +27,7 @@
 //
 // Colours come from the equipped weapon skin (wcEquippedSkin, from the weapon crates) when there is
 // one, otherwise each weapon's plain finish. The sleeves are your boat skin's coat colour.
+// The six Admiral finishes also wear a moving shader of their own on top (wcaSkin, src/wcadmiral.js).
 //
 // Drawn by its own small WebGL renderer and copied onto the main canvas between the world and the
 // HUD, so it always sits over everything in the scene. Without WebGL the old flat drawing is used.
@@ -441,6 +442,7 @@ function vmWeapon(id) {
   let w = VM.weapons[id];
   if (!w) { w = VM.weapons[id] = VM_BUILD[id](vmMatsFor(id)); VM.scene.add(w.root); }
   else vmRecolour(id, w);
+  if (typeof wcaSkin === 'function') wcaSkin(w, id);   // an Admiral finish: its own moving light (src/wcadmiral.js)
   return w;
 }
 function vmDraw(dt) {
