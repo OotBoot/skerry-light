@@ -1470,9 +1470,9 @@ FPI_GEN.wrack = {
       if (!vput('vlouvre', x, y, a, { w: 1.6, z0: F2, z1: F2 + 2.9 })) put('glasspane', x, y, a, { w: 1.6, z0: F2, z1: F2 + 2.9 });
     }
     // the first floor's boards, round the hole the stair comes up through; the Belfry's, round its own
-    for (const [x0, x1, y0, y1] of [[-11, 11, -9, -1.5], [-8.2, 11, -1.5, 5], [-11, 11, 5, 13]]) put('slab', (x0 + x1) / 2, (y0 + y1) / 2, 0, { w: x1 - x0, d: y1 - y0, top: F1 });
-    put('slab', 0, 10.725, 0, { w: 7, d: 4.05, top: F2 });   // (y 8.7 to 12.75: the stair comes up along its south side)
-    put('slab', -2.75, 7.85, 0, { w: 1.5, d: 1.7, top: F2 });   // (and the landing at its head, against the west wall)
+    for (const [x0, x1, y0, y1] of [[-11, 11, -9, -4], [-8.2, 11, -4, 5], [-11, 11, 5, 13]]) put('slab', (x0 + x1) / 2, (y0 + y1) / 2, 0, { w: x1 - x0, d: y1 - y0, top: F1 });
+    put('slab', 0, 11.025, 0, { w: 7, d: 3.45, top: F2 });   // (y 9.3 to 12.75: the stair comes up along its south side)
+    put('slab', -2.75, 8.15, 0, { w: 1.5, d: 2.3, top: F2 });   // (and the landing at its head, against the west wall)
     // the ceilings: the first floor's under the leads (not over the Belfry); the Belfry's under its spire
     for (const [x0, x1, y0, y1] of [[-11, 11, -9, 7], [-11, -3.5, 7, 13], [3.5, 11, 7, 13]]) put('ceil', (x0 + x1) / 2, (y0 + y1) / 2, 0, { w: x1 - x0 + 0.4, d: y1 - y0 + (y0 === 7 ? 0.2 : 0.4), z0: F2 - 0.3, col: '#a8a290' });
     put('ceil', 0, 10, 0, { w: 7.2, d: 6.2, z0: F2 + 3.3, col: '#6a5440' });
@@ -1481,20 +1481,20 @@ FPI_GEN.wrack = {
     // up into the Belfry (another)
     const RS = F1 / 16, stair = (x, y, a, n, base, w) => { const o = Object.assign({ w, d: 0.76, hh: n * RS }, base ? { lift: base } : {}); return vput('vstair', x, y, a, o) || put('step', x, y, a, o); };
     for (let n = 1; n <= 16; n++) stair(-9.55, -7 + (n - 0.5) * 0.75, 0, n, 0, 2.3);
-    for (let n = 1; n <= 15; n++) stair(3.25 - (n - 8.5) * 0.75, 7.95, Math.PI / 2, n, F1, 1.4);
+    for (let n = 1; n <= 15; n++) stair(3.25 - (n - 8.5) * 0.75, 8.15, Math.PI / 2, n, F1, 1.4);
     // (along the stairs' open sides, unseen, from the floor to well over a tread: nobody jumps up onto a flight past
     // its gate, from the floor or from a tread below it)
     const side = (x, y, a, base, h) => put('glasspane', x, y, a, { w: 0.78, z0: base, z1: base + h + 1.7 });
-    for (let n = 1; n <= 9; n++) { side(-8.35, -7 + (n - 0.5) * 0.75, Math.PI / 2, 0, n * RS); for (const y of [7.2, 8.7]) side(3.25 - (n - 8.5) * 0.75, y, 0, F1, n * RS); }
+    for (let n = 1; n <= 9; n++) { side(-8.35, -7 + (n - 0.5) * 0.75, Math.PI / 2, 0, n * RS); for (const y of [7.4, 8.9]) side(3.25 - (n - 8.5) * 0.75, y, 0, F1, n * RS); }
     const gate = (x, y, a, w, h, cost, zones) => { const p = put('zdoor', x, y, a, { w: w + 0.1, d: 0.16, hh: 2.6, lift: h - 0.3 }); const [gx, gy] = W(x, y); Z.doors.push({ x: gx, y: gy, z: h, ang: a, w, cost, zones, kind: 'gate', solids: p.sol.slice(), prop: p, open: false, id: Z.doors.length }); };
     gate(-9.55, -7 + 3 * 0.75, 0, 2.3, 3 * RS, 1500, ['moot', 'council']);
-    gate(3.25 - (3 - 8.5) * 0.75 - 0.375, 7.95, Math.PI / 2, 1.4, F1 + 3 * RS, 1500, ['council', 'belfry']);
+    gate(3.25 - (3 - 8.5) * 0.75 - 0.375, 8.15, Math.PI / 2, 1.4, F1 + 3 * RS, 1500, ['council', 'belfry']);
     // the rails round the stair holes, and the banisters up the flights
     // (only to look at: a fall into a stairwell lands you on the stair, past its gate, where you'd come from anyway)
-    vput('vbanister', -11, -1.5, -Math.PI / 2, { len: 2.8, rise: 0, base: F1 }); vput('vbanister', -8.2, -1.5, 0, { len: 6.5, rise: 0, base: F1 });
-    vput('vbanister', 3.25, 8.7, Math.PI / 2, { len: 4.5, rise: 0, base: F2 });
+    vput('vbanister', -11, -4, -Math.PI / 2, { len: 2.8, rise: 0, base: F1 }); vput('vbanister', -8.2, -4, 0, { len: 9, rise: 0, base: F1 });
+    vput('vbanister', 3.25, 9.3, Math.PI / 2, { len: 4.5, rise: 0, base: F2 });
     vput('vbanister', -8.4, -7, 0, { len: 12, rise: F1, base: 0 });
-    vput('vbanister', 9.25, 7.25, Math.PI / 2, { len: 11.25, rise: 15 * RS, base: F1 }); vput('vbanister', 9.25, 8.65, Math.PI / 2, { len: 7.5, rise: 10 * RS, base: F1 });
+    vput('vbanister', 9.25, 7.45, Math.PI / 2, { len: 11.25, rise: 15 * RS, base: F1 }); vput('vbanister', 9.25, 8.85, Math.PI / 2, { len: 7.5, rise: 10 * RS, base: F1 });
     // the portico on the Square: four columns, the entablature on them and a pediment over
     for (const x of [-4.6, -1.9, 1.9, 4.6]) { if (!vput('vcolumn', x, -10.6, 0, { r: 0.32, hh: F1 - 0.4 })) put('post', x, -10.6, 0, { r: 0.3, hh: F1 - 0.4 }); }
     put('block', 0, -10.4, 0, { w: 10.6, d: 1.4, hh: F1 + 0.3, z0: F1 - 0.4, col: '#9a968a' });
@@ -1561,7 +1561,7 @@ FPI_GEN.wrack = {
     vput('vbookcase', -5, -8.75, Math.PI, { w: 4, goods: 'books', lift: F1 }); vput('vbookcase', 5, -8.75, Math.PI, { w: 4, goods: 'books', lift: F1 });
     put('table', 3, -1, 0, { w: 3, d: 1.2, lift: F1 }); put('globe', 9, -1, 0, { lift: F1 });
     lamp(-3, -6, F1 + 3.0, '#ffc070', F2 - 0.3); lamp(5, -6, F1 + 3.0, '#ffc070', F2 - 0.3); lamp(3, -1, F1 + 3.0, '#ffc070', F2 - 0.3);
-    buy('harpoon', 1000, -10.7, -3, 1, 0, F1);
+    buy('harpoon', 1000, -10.7, -7.2, 1, 0, F1);
     spot(-6.5, 0.2, 0, -1, F1, 'records');
     if (typeof zmpPlace === 'function') zmpPlace(put, light, W, Z, { x: 10.25, y: -7.3, z: F1, nx: -1, ny: 0, zone: 'records' });   // [pap] up in the Records Room
     // ---------- the Council Chamber: the long table, the Grog Ration ----------
@@ -2689,7 +2689,7 @@ function zmMaybeDrop(d, how) {
 function zmResolveShot(sh, mine) {
   const [, x, y, z, h, p, by, code] = sh, w = fpsWOf(code);
   if (typeof zxShot === 'function' && zxShot(sh, mine)) return;   // [chest] the wreck chest's own weapons (src/zmchest.js)
-  if (w.melee) { fpsSwishSound(0); zmMelee(x, y, z, h, w); return; }
+  if (w.melee) { fpsSwishSound(0); zmMelee(x, y, z, h, w, code); return; }   // (the weapon's own code: the Cutlass of Plimsoll's is 'P')
   fpsWeaponSound(code, 0, 0);
   if (w.speed) {
     const cp = Math.cos(p);
@@ -3077,6 +3077,7 @@ function zmGetUp(by) {
 function zmShowOver() {
   if ((typeof RAID !== 'undefined' && RAID.on)) return raidShowOver();   // [raid]
   const r = ZM.round, held = Math.max(0, r - 1);
+  if ($('zmOverEye')) $('zmOverEye').textContent = 'Keeper’s Last Light';
   $('zmOverHead').textContent = held ? `The light went out on round ${r}` : 'The light went out';
   $('zmOverStats').textContent = (ZM.net ? `${ZM.hum.length} of you. ` : '') + `You held ${held} ${held === 1 ? 'round' : 'rounds'}. ${ZM.kills} drowned sent back (${ZM.heads} through the head), ${ZM.doorsOpened} ${ZM.doorsOpened === 1 ? 'door' : 'doors'} opened, ${ZM.pts + ZM.spent} points earned.`;
   const best = typeof BOARD !== 'undefined' && BOARD.mine && BOARD.mine.zm;
@@ -3339,6 +3340,51 @@ function zm3dBuild() {
   zm3dTower(grp);
   zm3dLantern(grp);
   zm3dWater(grp);
+  zm3dFarLight(grp);
+}
+// Wrackhaven: out across the harbour, far off on its own skerry, the Lighthouse, lit and turning. Only to look at,
+// from the quay and anywhere with a view of the sea: a whitewashed tower with two red bands, the gallery and the
+// lantern on top, the lamp blazing in it and its beam sweeping round over the water; when it swings your way the
+// lantern flares. Its materials ignore the fog, darkened instead to the night, so it stands out against the dark.
+const ZFL = { X: -70, Y: -330, H: 34, R: 4.2, SPIN: 0.39 };
+function zm3dFarLight(grp) {
+  Z3.far = null;
+  const Z = FPS.g.isle.zm; if (!Z || Z.tower || !Z.bay) return;
+  const g = new THREE.Group(), M = (c, k) => new THREE.MeshBasicMaterial({ color: new THREE.Color(c).multiplyScalar(k == null ? 0.3 : k), fog: false });
+  g.position.copy(z3v(FPSC.CX + ZFL.X, FPSC.CY + ZFL.Y, 0));
+  const H = ZFL.H, R = ZFL.R, add = (geo, mat, y) => { const m = new THREE.Mesh(geo, mat); m.position.y = y; g.add(m); return m; };
+  // the skerry, the keeper's cottage at its foot, the tower (wider at the foot), its bands
+  add(new THREE.CylinderGeometry(R * 3.2, R * 4.6, 3.2, 10), M('#3a3c40', 0.35), -0.6);
+  { const c = add(new THREE.BoxGeometry(7, 3.2, 4.4), M('#d8d4c8', 0.22), 2.6); c.position.x = R * 2.1; const r = add(new THREE.ConeGeometry(4.6, 1.8, 4), M('#3a2a24', 0.25), 5.1); r.position.x = R * 2.1; r.rotation.y = Math.PI / 4; r.scale.z = 0.62; }
+  add(new THREE.CylinderGeometry(R * 0.72, R, H, 20), M('#e8e4d8', 0.34), H / 2 + 1);
+  for (const y of [H * 0.32, H * 0.62]) add(new THREE.CylinderGeometry(R * (1 - y / H * 0.28) + 0.03, R * (1 - (y - 3) / H * 0.28) + 0.03, 3, 20), M('#b03028', 0.32), y + 1);
+  // the gallery, the lantern room (glass, lit from inside), the dome and its vane
+  const T = H + 1, RT = R * 0.72;
+  add(new THREE.CylinderGeometry(RT + 1.1, RT + 0.6, 0.6, 20), M('#202224', 0.6), T + 0.3);
+  add(new THREE.CylinderGeometry(RT * 0.78, RT * 0.78, 3.4, 16), new THREE.MeshBasicMaterial({ color: 0xffe2a0, fog: false }), T + 2.3);
+  for (let i = 0; i < 8; i++) { const a = i / 8 * Math.PI * 2, b = add(new THREE.BoxGeometry(0.18, 3.4, 0.18), M('#202224', 0.6), T + 2.3); b.position.x = Math.cos(a) * RT * 0.8; b.position.z = Math.sin(a) * RT * 0.8; }
+  add(new THREE.ConeGeometry(RT * 0.95, 2.2, 16), M('#902a24', 0.3), T + 5.1);
+  add(new THREE.CylinderGeometry(0.08, 0.08, 1.6, 6), M('#202224', 0.6), T + 6.8);
+  // the glow round the lamp, and the flare when the beam faces you
+  const halo = z3Soft('rgba(255,236,180,0.95)', 'rgba(255,220,150,0)');
+  const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: halo, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false })); glow.scale.setScalar(14); glow.position.y = T + 2.3; g.add(glow);
+  const flare = new THREE.Sprite(new THREE.SpriteMaterial({ map: halo, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false, opacity: 0 })); flare.scale.setScalar(60); flare.position.y = T + 2.3; g.add(flare);
+  // the beam: two cones of light back to back from the lamp, out over the water
+  const fade = z3Fade([[0, 'rgba(255,236,180,0.5)'], [0.35, 'rgba(255,226,160,0.16)'], [1, 'rgba(255,220,150,0)']]);
+  const geo = new THREE.CylinderGeometry(1, 0.05, 1, 24, 1, true); geo.translate(0, 0.5, 0); geo.rotateX(-Math.PI / 2);
+  const beam = new THREE.Group(); beam.position.y = T + 2.3; g.add(beam);
+  for (const s of [1, -1]) { const b = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ map: fade, transparent: true, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending, fog: false })); b.scale.set(18, 4, 320); b.rotation.y = s > 0 ? 0 : Math.PI; b.frustumCulled = false; b.renderOrder = 9; beam.add(b); }
+  grp.add(g);
+  Z3.far = { g, beam, flare };
+}
+// (each frame) turn the beam, and flare as it passes over you
+function zm3dFarTick(t) {
+  const F = Z3.far; if (!F) return;
+  const a = (reduceMotion ? 0.6 : t * ZFL.SPIN) % (Math.PI * 2); F.beam.rotation.y = a;
+  const m = FPS.me, toMe = Math.atan2(m.x - (FPSC.CX + ZFL.X), m.y - (FPSC.CY + ZFL.Y));
+  // (turned by a, the beam's two ends point along the bearings -a and PI - a)
+  const off = Math.min(Math.abs(angDiff(-a, toMe)), Math.abs(angDiff(Math.PI - a, toMe)));
+  F.flare.material.opacity = clamp(1 - off / 0.22, 0, 1) * 0.9;
 }
 // The harbour: water laid over the island south of the shore (ZM_SHORE), round the jetty and out past the island's
 // edge, where it slopes down into the open sea. A grid a metre square, its height a hair over the ground (dipping
@@ -3728,6 +3774,7 @@ function zmScene3D() {
   if (!Z3.grp || Z3.key !== FPS.g.isle.key) zm3dBuild();
   Z3.grp.visible = true;
   if (GL3D.tower) GL3D.tower.visible = false;
+  zm3dFarTick(FPS.g.t);   // Wrackhaven's view of the Light, far off
   // indoors, at night: dimmer all over, so the lamps make pools of light
   GL3D.amb.intensity = 0.42; GL3D.moon.intensity = 0.12;
   const dt = Math.min(0.05, FPS.dtLast || 0.016), t = g.t, G0 = FPSC.GROUND, m = FPS.me;

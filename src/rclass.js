@@ -76,7 +76,7 @@ function rclChoose(k) {
   rclClosePick();
   rclApply();
   const C = rclC();
-  ZM.banner = { text: C.n, t: 3, small: true };
+  ZM.banner = { text: C.n, t: 3, small: true, col: C.c };
   fpsFeed(`${C.n}: G for ${C.gren[0]}, X for ${C.ult[0]} when it's full.`);
   try { zmSound('buy'); } catch (e) {}
 }
