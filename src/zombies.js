@@ -2530,7 +2530,7 @@ function zmZombies(dt) {
   const ins = all.filter(z => !z.dead && z.st === 'in');
   for (let i = 0; i < ins.length; i++) for (let j = i + 1; j < ins.length; j++) {
     const a = ins[i], b = ins[j], dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy);
-    const R0 = a.skit && b.skit ? 0.4 : 0.6, R1 = a.skit && b.skit ? 0.65 : 1.0;   // ([swarm] crabs pack closer)
+    const R0 = a.skit && b.skit ? 0.5 : 0.6, R1 = a.skit && b.skit ? 0.8 : 1.0;   // ([swarm] crabs pack closer)
     if (d < R1 && d > 0.001 && Math.abs((a.jz || 0) - (b.jz || 0)) < 1) {
       const push = d < R0 ? (R0 - d) * 0.5 + 0.4 * dt : (R1 - d) * 1.6 * dt;
       zmMove(a, -dx / d * push, -dy / d * push); zmMove(b, dx / d * push, dy / d * push);
@@ -2618,7 +2618,7 @@ function zmSwipe(z, dt) {
     const was = z.swing; z.swing += dt;
     if (was < 0.28 && z.swing >= 0.28) {
       const reach = z.skit ? ZWC.REACH : z.st === 'tear' ? 1.6 : 1.55;
-      if (Math.hypot(m.x - z.x, m.y - z.y) < reach && Math.abs((m.jz || 0) - (z.jz || 0)) < 1.2 && !(m.dead > 0) && !(m.protect > 0) && !(m.iframe > 0) && !zmIsDown()) { fpsHurt(z.skit ? ZWC.NIP : 1, null, null); zmSound('hit'); }   // ([swarm] a crab's nip: half a knock)
+      if ((z.skit ? zwCanNip(m, z.x, z.y, z.jz || 0) : Math.hypot(m.x - z.x, m.y - z.y) < reach && Math.abs((m.jz || 0) - (z.jz || 0)) < 1.2) && !(m.dead > 0) && !(m.protect > 0) && !(m.iframe > 0) && !zmIsDown()) { fpsHurt(z.skit ? ZWC.NIP : 1, null, null); zmSound('hit'); }   // ([swarm] a crab's nip: half a knock)
     }
     if (z.swing > 0.6) z.swing = -1;
   }

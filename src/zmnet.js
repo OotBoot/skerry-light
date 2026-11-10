@@ -480,7 +480,7 @@ function znApply(hz) {
     if (!z) {
       z = { drowned: true, zm: true, zn, id: 'z' + zn.toString(36), n: 'a drowned man', x, y, jz, h, st, kind, sp: kind === 'run' ? 5.2 : kind === 'jog' ? 3.4 : 1.7,
         t: 0, ph: Math.random() * 6, hitT: 0, swing: -1, seed: b[2], win: ZM.windows[b[1]] || null, dead: 0, hist: [] };
-      if (kind === 'skit' && typeof zwDress === 'function') { zwDress(z); z.sp = 4.7; }   // [swarm] a crab
+      if (kind === 'skit' && typeof zwDress === 'function') { zwDress(z); z.sp = 3.5; }   // [swarm] a crab
       ZM.z.push(z);
     }
     if (st !== z.st) { z.t = 0; z.st = st; }
@@ -490,7 +490,7 @@ function znApply(hz) {
     const was = z.swing;
     if (sw >= 0.28 && (was < 0.28 || was > sw) && !z.dead) {
       const reach = z.skit ? ZWC.REACH : st === 'tear' ? 1.6 : 1.55;
-      if (Math.hypot(m.x - x, m.y - y) < reach && Math.abs((m.jz || 0) - jz) < 1.2 && !(m.dead > 0) && !(m.protect > 0) && !(m.iframe > 0) && !zmIsDown()) { fpsHurt(z.skit ? ZWC.NIP : 1, null, null); zmSound('hit'); }   // ([swarm] a crab's nip: half a knock)
+      if ((z.skit ? zwCanNip(m, x, y, jz) : Math.hypot(m.x - x, m.y - y) < reach && Math.abs((m.jz || 0) - jz) < 1.2) && !(m.dead > 0) && !(m.protect > 0) && !(m.iframe > 0) && !zmIsDown()) { fpsHurt(z.skit ? ZWC.NIP : 1, null, null); zmSound('hit'); }   // ([swarm] a crab's nip: half a knock)
     }
     z.swing = sw;
     const fl = a[6];

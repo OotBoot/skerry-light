@@ -10,11 +10,14 @@ const ZWC = {
   FROM: 5, EVERY: 6,      // the crab rounds: 5, 11, 17, ...
   MANY: 1.125,            // how many, against that round's drowned (a quarter fewer than the 1.5 it was)
   HP: 0.42,               // how strong, against that round's drowned
-  SP: [4.3, 5.1],         // how quick (you sprint at 9.8)
+  SP: [3.2, 3.8],         // how quick (you sprint at 9.8): a quarter slower than the 4.3 to 5.1 it was
   ALIVE: 30,              // up at once, at most
   GAP: [0.16, 0.34],      // between one and the next, coming in
-  RAD: 0.45, TALL: 0.7, HEADZ: 0.42,   // its body, for being hit (the shell's top and the eyes are its "head")
+  BIG: 1.2,               // its size, against the dog-sized crab it was (a fifth bigger)
+  RAD: 0.54, TALL: 0.84, HEADZ: 0.5,   // its body, for being hit (the shell's top and the eyes are its "head")
+  PAD: 0.4,               // how near a wall its middle comes (the shell's half-width, so it doesn't sink into one)
   REACH: 1.25,            // its nip
+  UP: 0.65,               // how far above its feet yours can be for a nip to reach (a step or so: not up a stair)
   NIP: 0.5,               // what a nip takes off you: half a knock
   CLIMB: 0.45,            // through the window, in that long
 };
@@ -23,8 +26,19 @@ const zwCount = r => Math.round(zmCount(r) * ZWC.MANY);
 
 // what makes one a crab, here or on a joined screen
 function zwDress(z) {
-  Object.assign(z, { skit: true, kind: 'skit', n: 'a crab', rad: ZWC.RAD, tall: ZWC.TALL, headZ: ZWC.HEADZ, zpad: 0.22 });
+  Object.assign(z, { skit: true, kind: 'skit', n: 'a crab', rad: ZWC.RAD, tall: ZWC.TALL, headZ: ZWC.HEADZ, zpad: ZWC.PAD });
   return z;
+}
+
+// can its nip reach you, from a crab at x, y, its feet at jz? Near enough, your feet no more than a step above its
+// own (or below), and nothing solid between the two of you down at its height: so not through a stair, from under
+// it or beside it, nor through a wall or a rail
+function zwCanNip(m, x, y, jz) {
+  const dz = (m.jz || 0) - jz, d = Math.hypot(m.x - x, m.y - y);
+  if (d >= ZWC.REACH || dz > ZWC.UP || dz < -ZWC.UP) return false;
+  const n = Math.max(1, Math.ceil(d / 0.2));
+  for (let i = 1; i < n; i++) { const k = i / n; if (zmBlockedAt(x + (m.x - x) * k, y + (m.y - y) * k, 0.05, Math.max(jz, (m.jz || 0) - 0.05) + 0.05)) return false; }
+  return true;
 }
 
 // (from zmRounds, as a round begins: hosting or alone) true if it's a crab round, and the round is set up for it
@@ -168,7 +182,7 @@ function zwModel(z) {
   const rnd = seeded(z.seed);
   M.shell.color.set(ZW_SHELLS[(rnd() * ZW_SHELLS.length) | 0]).multiplyScalar(0.7); M.shell.emissive.set(0);
   M.leg.emissive.set(0);
-  M.root.scale.setScalar(0.85 + rnd() * 0.3);
+  M.root.scale.setScalar((0.85 + rnd() * 0.3) * ZWC.BIG);
   M.root.rotation.set(0, 0, 0); M.body.rotation.set(0, 0, 0);
   z.mdl = M;
   return M;
