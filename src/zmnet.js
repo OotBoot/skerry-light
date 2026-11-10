@@ -8,7 +8,8 @@
 // The host's browser runs the night: the rounds, the drowned and their way about the station, the windows and their
 // boards, the doors, the chest and the salvage. A few times a second it sends what changed:
 //   h   the round, its phase and clock, how many are still to come, Double Salvage and the Black Spot
-//   z   every one of the drowned: where, which way, what they're doing, a swing in progress, how they died
+//   z   every one of the drowned: where, which way, what they're doing, a swing in progress, how they died (zs: its
+//       kind, window and look, which don't change)
 //   b   each window's boards     dm  which doors are open     bx  the chest     dr  salvage lying about
 //   cr  the points, kills and headshots it has credited to each of the others
 //   lp  the Light (src/zmlamp.js): how often the lever's been thrown tonight, how long it has left to burn, its beam
@@ -30,6 +31,31 @@ const ZN_MAX = 4;
 const znClean = (v, n) => String(v == null ? '' : v).replace(/[\u0000-\u001f\u007f-\u009f​-‏‪-‮⁠-⁯<>&"]/g, '').trim().slice(0, n);
 const zb36 = v => Math.round(v || 0).toString(36);
 const zp36 = s => parseInt(s, 36) || 0;
+// Smoothing what's heard: each figure (the drowned, the other players) keeps the last few places it was said to be,
+// with when that word came, and is shown a little behind, sliding from one to the next. How far behind follows how
+// steadily the word has been coming (about one gap and a bit, more when it comes in fits and starts), so a late
+// message doesn't leave everyone standing and then jumping.
+function znEst() { return { last: 0, avg: 100, dev: 10 }; }
+function znHeard(e, now) {
+  if (e.last && now - e.last < 500) { const g = now - e.last; e.avg += (g - e.avg) * 0.1; e.dev += (Math.abs(g - e.avg) - e.dev) * 0.1; }
+  e.last = now;
+}
+const znDelay = e => clamp(e.avg + e.dev * 2, 90, 350);
+function znSample(o, now, x, y, jz, h) {
+  const b = o.nb || (o.nb = []);
+  if (b.length && now - b[b.length - 1][0] > 1500) b.length = 0;   // (not heard of for a while: start afresh from here)
+  b.push([now, x, y, jz, h]); if (b.length > 8) b.shift();
+}
+// where o is to be shown at time t: between the two samples either side of it (or the nearest end)
+function znAt(o, t) {
+  const b = o.nb; if (!b || !b.length) return null;
+  if (t <= b[0][0]) return b[0];
+  for (let i = b.length - 1; i > 0; i--) {
+    const s1 = b[i], s0 = b[i - 1];
+    if (t >= s0[0] && t < s1[0]) { const f = (t - s0[0]) / Math.max(1, s1[0] - s0[0]); return [t, s0[1] + (s1[1] - s0[1]) * f, s0[2] + (s1[2] - s0[2]) * f, s0[3] + (s1[3] - s0[3]) * f, s0[4] + angDiff(s1[4], s0[4]) * f]; }
+  }
+  return b[b.length - 1];
+}
 
 // ---------- the lobby ----------
 function znOnline() { return !!(typeof NET !== 'undefined' && NET.room && NET.status === 'ready'); }
@@ -135,7 +161,7 @@ function znStart() {
   znBegin(st, 'host');
 }
 function znBegin(st, role) {
-  Object.assign(ZN, { g: st.g, st, doneG: st.g, sendT: 0, hseq: 0, seq: 0, q: [], hq: [], shots: [], shotSeq: 0, lastQ: {}, lastH: {}, lastShot: {}, seenT: {}, ev: [], eseq: 0, evSeen: 0, lastHseq: -1, hostT: performance.now(), creditSeen: [0, 0, 0] });
+  Object.assign(ZN, { g: st.g, st, doneG: st.g, sendT: 0, hseq: 0, seq: 0, q: [], hq: [], shots: [], shotSeq: 0, lastQ: {}, lastH: {}, lastShot: {}, seenT: {}, ev: [], eseq: 0, evSeen: 0, lastHseq: -1, hostT: performance.now(), creditSeen: [0, 0, 0], est: null });
   ZN.hits.clear();
   zmStart({ net: role, hum: st.hum, map: st.map });
   for (const [sid] of st.hum) ZN.seenT[sid] = performance.now();
@@ -224,6 +250,8 @@ function znReadPlayers(dt) {
     if (!r) { r = { id: z.sid, x: CX + a[0] / 100, y: CY + a[1] / 100, h: a[3] / 1000, hitT: 0, flashT: 0, kb: {}, d: 0 }; FPS.remote.set(z.sid, r); }
     r.n = (ZM.hum.find(h => h[0] === z.sid) || [])[1] || 'A keeper';
     r.tx = CX + a[0] / 100; r.ty = CY + a[1] / 100; r.tjz = a[2] / 100; r.th = a[3] / 1000; r.p = a[4] / 1000;
+    // (a new place heard: kept, to slide between; only when it's actually changed, as nothing is sent while they stand still)
+    const pk = a.join(','); if (pk !== r.pk) { r.pk = pk; znHeard(r.est || (r.est = znEst()), now); znSample(r, now, r.tx, r.ty, 0, r.th); }
     r.w = typeof z.p[5] === 'string' ? z.p[5].slice(0, 1) : 'p';
     const fl = a[6] | 0;
     r.lan = !!(fl & 1); r.walk = !!(fl & 2); r.down = !!(fl & 4); r.dead = !!(fl & 8); r.beam = !!(fl & 32);
@@ -247,7 +275,8 @@ function znReadPlayers(dt) {
   }
   for (const r of FPS.remote.values()) {
     if (r.tx == null) continue;
-    r.x += (r.tx - r.x) * k; r.y += (r.ty - r.y) * k; r.h += angDiff(r.th, r.h) * k;
+    const at = r.est && znAt(r, now - znDelay(r.est));
+    if (at) { r.x = at[1]; r.y = at[2]; r.h = at[4]; } else { r.x += (r.tx - r.x) * k; r.y += (r.ty - r.y) * k; r.h += angDiff(r.th, r.h) * k; }
     r.jz = (r.jz || 0) + ((r.tjz - (r.down ? 0.75 : 0)) - (r.jz || 0)) * Math.min(1, k * 1.6);
     if (r.flashT > 0) r.flashT -= dt; if (r.slashT > 0) r.slashT -= dt;
     // not heard from for a long while: gone
@@ -318,9 +347,15 @@ function znHostSend() {
   const z = znPresence(), CX = FPSC.CX, CY = FPSC.CY, TAU = Math.PI * 2;
   z.st = ZN.st;
   z.h = [++ZN.hseq, ZM.round, ZM.over ? 3 : ZN_PH[ZM.phase] | 0, Math.round(ZM.t * 10), ZM.left, Math.round(Math.max(0, ZM.double) * 10), Math.round(Math.max(0, ZM.insta) * 10)];
-  // the drowned: id.x.y.jz.h.state.kind.swing.flags.window.seed.scorch, each in base 36
-  z.z = ZM.z.filter(q => !q.gone).slice(0, 40).map(q => [q.zn, (q.x - CX) * 10 + 9000, (q.y - CY) * 10 + 9000, (q.jz || 0) * 10, (((q.h % TAU) + TAU) % TAU) * 100, ZN_ST[q.st] | 0, ZN_KIND.indexOf(q.kind), q.swing < 0 ? 0 : q.swing * 100 + 1,
-    (q.dead ? 1 : 0) | (q.burn ? 2 : 0) | (q.head ? 4 : 0) | (q.walk ? 8 : 0) | (q.mark > 0 ? 16 : 0), q.win ? q.win.id : 0, q.seed % 1296, (q.scorch || 0) * 9].map(zb36).join('.')).join('~');
+  // the drowned, one entry each under its id (base 36), so a patch carries only those that moved or changed:
+  //   z  x.y.jz.h.state.swing.flags.scorch     zs  kind.window.seed (what doesn't change), each in base 36
+  z.z = {}; z.zs = {};
+  for (const q of ZM.z.filter(q => !q.gone).slice(0, 40)) {
+    const id = zb36(q.zn);
+    z.z[id] = [(q.x - CX) * 10 + 9000, (q.y - CY) * 10 + 9000, (q.jz || 0) * 10, (((q.h % TAU) + TAU) % TAU) * 100, ZN_ST[q.st] | 0, q.swing < 0 ? 0 : q.swing * 100 + 1,
+      (q.dead ? 1 : 0) | (q.burn ? 2 : 0) | (q.head ? 4 : 0) | (q.walk ? 8 : 0) | (q.mark > 0 ? 16 : 0), (q.scorch || 0) * 9].map(zb36).join('.');
+    z.zs[id] = [ZN_KIND.indexOf(q.kind), q.win ? q.win.id : 0, q.seed % 1296].map(zb36).join('.');
+  }
   z.b = ZM.windows.map(w => w.boards).join('');
   z.dm = ZM.doors.reduce((s, d, i) => s | (d.open ? 1 << i : 0), 0);
   const B = ZM.box;
@@ -340,16 +375,16 @@ function zmnClient(dt) {
   const seen = znReadPlayers(dt), host = ZM.hum[0] && ZM.hum[0][0];
   let hz = null;
   for (const p of NET.peers) { const z = znOf(p); if (z && z.room === ZN.code && z.g === ZN.g && z.sid === host) { hz = z; break; } }
-  if (hz && Array.isArray(hz.h) && hz.h[0] !== ZN.lastHseq) { ZN.lastHseq = hz.h[0]; ZN.hostT = performance.now(); znApply(hz); }
+  if (hz && Array.isArray(hz.h) && hz.h[0] !== ZN.lastHseq) { ZN.lastHseq = hz.h[0]; ZN.hostT = performance.now(); znHeard(ZN.est || (ZN.est = znEst()), ZN.hostT); znApply(hz); }
   if (!ZM.over && performance.now() - ZN.hostT > 12000) { fpsFeed('The host has gone, and the night with them.'); zmEnd(); }
-  // the drowned between the host's word: slide on towards where they were last said to be
-  const k = Math.min(1, dt * 10);
+  // the drowned between the host's word: shown a moment behind, sliding between where they were said to be
+  const rt = performance.now() - znDelay(ZN.est || (ZN.est = znEst()));
   for (const z of ZM.z) {
     if (z.hitT > 0) z.hitT -= dt;
     z.t += dt;
     if (z.dead) { z.deadT = (z.deadT || 0) + dt; continue; }
-    if (z.tx == null) continue;
-    z.x += (z.tx - z.x) * k; z.y += (z.ty - z.y) * k; z.jz += (z.tjz - z.jz) * k; z.h += angDiff(z.th, z.h) * k;
+    const at = znAt(z, rt); if (!at) continue;
+    z.x = at[1]; z.y = at[2]; z.jz = at[3]; z.h = at[4];
   }
   for (const z of ZM.z) if (z.dead && z.deadT > (z.burn ? 1.3 : 2.4) && z.mdl) zmFreeModel(z);
   // the chest's weapons turning over, here as there
@@ -361,15 +396,20 @@ function zmnClient(dt) {
   if (ZN.sendT <= 0) { ZN.sendT = 0.1; znClientSend(); }
 }
 function znClientSend() {
-  const z = znPresence();
+  const z = znPresence(), now = performance.now();
+  // (what I've asked and hit stays in what I send for three seconds, in case one goes astray, and then goes: the host
+  //  has long had it, and it would only be sent again with every new one)
+  const recent = a => { while (a.length && now - (a[0].at || 0) > 3000) a.shift(); };
+  recent(ZN.q);
   if (ZN.q.length) z.q = ZN.q.slice(-10);
-  // my hits since the last send, one entry per one of them, kept for a few sends in case one goes astray
-  if (ZN.hits.size) { for (const [zn, h] of ZN.hits) ZN.hq.push([++ZN.seq, zn, Math.round(h.dmg * 100), h.head ? 1 : 0, h.code, h.how === 'burn' ? 'b' : '']); ZN.hits.clear(); }
+  // my hits since the last send, one entry per one of them
+  if (ZN.hits.size) { for (const [zn, h] of ZN.hits) { const e = [++ZN.seq, zn, Math.round(h.dmg * 100), h.head ? 1 : 0, h.code, h.how === 'burn' ? 'b' : '']; e.at = now; ZN.hq.push(e); } ZN.hits.clear(); }
   if (ZN.hq.length > 30) ZN.hq.splice(0, ZN.hq.length - 30);
+  recent(ZN.hq);
   if (ZN.hq.length) z.hq = ZN.hq;
   znSend(z);
 }
-function zmnRequest(k, a) { ZN.q.push([++ZN.seq, k, a]); if (ZN.q.length > 10) ZN.q.shift(); }
+function zmnRequest(k, a) { const e = [++ZN.seq, k, a]; e.at = performance.now(); ZN.q.push(e); if (ZN.q.length > 10) ZN.q.shift(); }
 function zmnHit(d, dmg, head, code, how) {
   const h = ZN.hits.get(d.zn) || { dmg: 0, head: false, code, how };
   h.dmg += dmg; h.head = h.head || !!head; h.code = code; if (how) h.how = how;
@@ -411,22 +451,23 @@ function znApply(hz) {
     if (st === 'offer' || st === 'gull') B.show = B.item;
   }
   // the drowned
-  const list = typeof hz.z === 'string' && hz.z ? hz.z.split('~') : [], have = new Set();
-  for (const s of list) {
-    const a = s.split('.').map(zp36);
-    if (a.length < 12) continue;
-    const zn = a[0]; have.add(zn);
+  const list = hz.z && typeof hz.z === 'object' ? hz.z : {}, stat = hz.zs && typeof hz.zs === 'object' ? hz.zs : {}, have = new Set();
+  for (const id in list) {
+    if (typeof list[id] !== 'string' || typeof stat[id] !== 'string') continue;
+    const a = list[id].split('.').map(zp36), b = stat[id].split('.').map(zp36);
+    if (a.length < 8 || b.length < 3) continue;
+    const zn = zp36(id); have.add(zn);
     let z = ZM.z.find(q => q.zn === zn);
-    const x = CX + (a[1] - 9000) / 10, y = CY + (a[2] - 9000) / 10, jz = a[3] / 10, h = a[4] / 100, st = ZN_STN[a[5]] || 'in', kind = ZN_KIND[a[6]] || 'walk';
+    const x = CX + (a[0] - 9000) / 10, y = CY + (a[1] - 9000) / 10, jz = a[2] / 10, h = a[3] / 100, st = ZN_STN[a[4]] || 'in', kind = ZN_KIND[b[0]] || 'walk';
     if (!z) {
       z = { drowned: true, zm: true, zn, id: 'z' + zn.toString(36), n: 'a drowned man', x, y, jz, h, st, kind, sp: kind === 'run' ? 5.2 : kind === 'jog' ? 3.4 : 1.7,
-        t: 0, ph: Math.random() * 6, hitT: 0, swing: -1, seed: a[10], win: ZM.windows[a[9]] || null, dead: 0, hist: [] };
+        t: 0, ph: Math.random() * 6, hitT: 0, swing: -1, seed: b[2], win: ZM.windows[b[1]] || null, dead: 0, hist: [] };
       if (kind === 'skit' && typeof zwDress === 'function') { zwDress(z); z.sp = 4.7; }   // [swarm] a crab
       ZM.z.push(z);
     }
     if (st !== z.st) { z.t = 0; z.st = st; }
-    z.tx = x; z.ty = y; z.tjz = jz; z.th = h;
-    const sw = a[7] ? (a[7] - 1) / 100 : -1;
+    z.tx = x; z.ty = y; z.tjz = jz; z.th = h; znSample(z, ZN.hostT, x, y, jz, h);
+    const sw = a[5] ? (a[5] - 1) / 100 : -1;
     // a swing coming down: if I'm in reach, it's me it hits (the host only judges its own player)
     const was = z.swing;
     if (sw >= 0.28 && (was < 0.28 || was > sw) && !z.dead) {
@@ -434,8 +475,8 @@ function znApply(hz) {
       if (Math.hypot(m.x - x, m.y - y) < reach && Math.abs((m.jz || 0) - jz) < 1.2 && !(m.dead > 0) && !(m.protect > 0) && !(m.iframe > 0) && !zmIsDown()) { fpsHurt(z.skit ? ZWC.NIP : 1, null, null); zmSound('hit'); }   // ([swarm] a crab's nip: half a knock)
     }
     z.swing = sw;
-    const fl = a[8];
-    z.walk = !!(fl & 8); z.scorch = a[11] / 9;
+    const fl = a[6];
+    z.walk = !!(fl & 8); z.scorch = a[7] / 9;
     if (fl & 16) z.mark = Math.max(z.mark || 0, 0.3);   // [pap] lit by someone's Leading Light
     if ((fl & 1) && !z.dead) { z.dead = 1; z.deadT = 0; z.burn = !!(fl & 2); z.head = !!(fl & 4); zmKillFx(z); }
   }
