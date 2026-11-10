@@ -195,13 +195,13 @@ function zmpUse(o) {
   return true;
 }
 
-// ---------- the look of a reforged weapon: the Light's fire ----------
-// One family for every reforged weapon. Its metal goes to fire-blackened bronze with molten veins crawling through
-// it, slow bands of lantern-light run along it towards the muzzle, its brass runs molten, its inlay turns to
-// sea-glass with the light moving in it like light under water, embers wink in the grain, and its edges catch the
-// glow. Each weapon has its own colours (ZMP_LOOK; a weapon not listed there is given colours of its own from its
-// id), and it grows with each reforging (zmpLookK): brighter and quicker each time, a third colour running through
-// the bands from III, and the whole spectrum from V. With reduce motion it all stands still.
+// ---------- the look of a reforged weapon: a galaxy ----------
+// One family for every reforged weapon: its whole body becomes a window onto deep space, a swirl of blue, black and
+// purple, with glowing nebulae drifting through it and stars twinkling in it, its edges lit with the nebula's light.
+// Each reforging brings a nebula of a different colour (ZMP_GALAXY, by tier: cyan, magenta, emerald, gold, crimson,
+// lime, ultraviolet; from VIII the nebulae run through the whole spectrum), and each is brighter, livelier and fuller
+// than the last (zmpLookK): from II a second nebula of another colour twines through the first, the clouds drift
+// quicker, and their bright cores burn hotter. With reduce motion it all stands still.
 // It's a shader added onto the weapon's own materials, slot by slot (VM.weapons[id].M: iron, blade, dark, brass,
 // wood, accent, and any other lit one but a lens), so it suits any weapon's model; the pattern is laid out in the
 // weapon's own space (zmpRoot), so it stays on the metal as the weapon moves. It overrides the equipped weapon skin
@@ -209,27 +209,26 @@ function zmpUse(o) {
 // was. Worn in your hands (zmpTint, each tick), on your own figure over the shoulder and on the others' figures
 // playing together (fbPose, src/fpsbody.js, with how many times the weapon in their hands has been reforged: `rf`
 // in their presence, src/zmnet.js).
-// [metal, brass, wood, glass (the inlay), A molten fire, B the light in it (sea-glass, lantern), C the third colour]
-const ZMP_LOOK = {
-  pepperbox:   ['#30251f', '#c8902e', '#24140c', '#3fb8a4', '#ffa83a', '#5ff0d4', '#ff6a9a'],
-  blunderbuss: ['#2b2622', '#c09034', '#22140c', '#38c488', '#ff9636', '#5af0a0', '#8ad8ff'],
-  longarm:     ['#262830', '#d0a850', '#1e140e', '#7aa8e8', '#ffd27a', '#8ac8ff', '#c89aff'],
-  harpoon:     ['#2a2224', '#b87a3a', '#20120a', '#2a7ad0', '#ff7a3a', '#3ab0ff', '#a0ffe0'],
-  cutlass:     ['#201e1c', '#c8a050', '#1a100a', '#5ad8c8', '#ffe0a0', '#70ffe8', '#7a9aff'],
-  avtomat:     ['#2a2a30', '#c09040', '#24160c', '#8ac8e8', '#ffb050', '#a0e0ff', '#ff5a3a'],
-  fresnel:     ['#2a2a26', '#d0a040', '#24160c', '#ffe2a0', '#ffc860', '#fff0c0', '#ff70d0'],
-};
-function zmpLook(id) {
-  if (ZMP_LOOK[id]) return ZMP_LOOK[id];
-  let h = 0; for (const c of String(id)) h = (h * 31 + c.charCodeAt(0)) >>> 0;
-  const u = (h % 360) / 360, hsl = (a, s, l) => '#' + new THREE.Color().setHSL(((a % 1) + 1) % 1, s, l).getHexString();
-  return ZMP_LOOK[id] = ['#2c2624', '#c8963a', '#22140c', hsl(u, 0.6, 0.5), '#ffa838', hsl(u, 0.9, 0.68), hsl(u + 0.4, 0.9, 0.66)];
-}
-// by tier: [brightness, speed of flow, the third colour (0/1), the spectrum (0..1)]
-const zmpLookK = t => [Math.min(1.25, 0.6 + 0.15 * (t - 1)), Math.min(1.9, 0.55 + 0.25 * (t - 1)), t >= 3 ? 1 : 0, t >= 5 ? Math.min(1, 0.7 + 0.1 * (t - 5)) : 0];
-// each slot: how much of [veins, bands, sea-glass, embers] it shows, and what its own colour becomes
-const ZMP_ROLE = { iron: [1, 0.8, 0.3, 0.6, 0], blade: [0.8, 1, 0.35, 0.4, 0], dark: [0.55, 0.4, 0.15, 0.4, -1], brass: [0.45, 1, 0.2, 0.8, 1], wood: [0.9, 0.2, 0, 0.7, 2], accent: [0.25, 0.6, 1.2, 0.3, 3] };
-const ZMP_ROLE_ELSE = [0.5, 0.4, 0.15, 0.35, null];
+// by tier (I, II, ...): [the nebula, the second nebula twined through it, the starlight]
+const ZMP_GALAXY = [
+  ['#29e8ff', '#3a5cff', '#d8f4ff'],   // I     cyan, and a blue
+  ['#ff36d2', '#8a3cff', '#ffe0fb'],   // II    magenta, and violet
+  ['#26ff96', '#18c4ff', '#dcffee'],   // III   emerald, and teal
+  ['#ffb52a', '#ff3f7a', '#fff2d8'],   // IV    gold, and rose
+  ['#ff2e48', '#ff8c26', '#ffe2dc'],   // V     crimson, and ember
+  ['#c6ff2a', '#24ffd8', '#f4ffdc'],   // VI    lime, and aqua
+  ['#ff6aff', '#6af4ff', '#ffffff'],   // VII   ultraviolet, and ice
+];
+// its colours at tier t: { a: the nebula, c: the second, b: the starlight } (from VIII on, they turn through the
+// spectrum in the shader; these are where they start)
+function zmpGalaxy(t) { const G = ZMP_GALAXY[Math.max(0, Math.min(ZMP_GALAXY.length - 1, (t | 0) - 1))]; return { a: G[0], c: G[1], b: G[2] }; }
+// (the Twelve Bells' Light borrows its tier's colours: [.., .., .., .., the nebula, the starlight, the second])
+function zmpLook(id, t) { const G = zmpGalaxy(t || 1); return ['#07061a', '#07061a', '#07061a', '#07061a', G.a, G.b, G.c]; }
+// by tier: [brightness, speed of drift, the second nebula (0..1), the spectrum (0..1)]
+const zmpLookK = t => [Math.min(1.6, 1.0 + 0.09 * (t - 1)), Math.min(1.8, 0.6 + 0.15 * (t - 1)), t >= 2 ? Math.min(1, 0.55 + 0.15 * (t - 2)) : 0.25, t >= 8 ? Math.min(1, 0.6 + 0.1 * (t - 8)) : 0];
+// each slot: how much of [nebula, stars, edge glow, the cores' fire] it shows, and its own base (0 space, -1 deeper)
+const ZMP_ROLE = { iron: [1, 1, 1, 1, 0], blade: [1, 1.1, 1.2, 1, 0], dark: [0.75, 0.9, 0.8, 0.7, -1], brass: [1.1, 0.9, 1, 1.2, 0], wood: [0.85, 1, 0.8, 0.8, -1], accent: [1.25, 1.2, 1.2, 1.3, 0] };
+const ZMP_ROLE_ELSE = [0.8, 0.9, 0.8, 0.8, 0];
 const ZMP_SKIP = new Set(['bore', 'lens']);
 const ZMP_VERT = 'uniform mat4 zmpRoot;\nvarying vec3 zmpP;\n';
 const ZMP_FRAG = `uniform float zmpT; uniform vec4 zmpK; uniform vec4 zmpR; uniform vec3 zmpA; uniform vec3 zmpB; uniform vec3 zmpC;
@@ -238,27 +237,43 @@ float zmpH(vec3 p) { p = fract(p * 0.3183099 + 0.1); p *= 17.0; return fract(p.x
 float zmpN(vec3 x) { vec3 i = floor(x), f = fract(x); f = f * f * (3.0 - 2.0 * f);
   return mix(mix(mix(zmpH(i), zmpH(i + vec3(1, 0, 0)), f.x), mix(zmpH(i + vec3(0, 1, 0)), zmpH(i + vec3(1, 1, 0)), f.x), f.y),
              mix(mix(zmpH(i + vec3(0, 0, 1)), zmpH(i + vec3(1, 0, 1)), f.x), mix(zmpH(i + vec3(0, 1, 1)), zmpH(i + vec3(1, 1, 1)), f.x), f.y), f.z); }
+float zmpF(vec3 p) { float a = 0.5, s = 0.0; for (int i = 0; i < 4; i++) { s += a * zmpN(p); p = p * 2.03 + vec3(1.7, 9.2, 3.1); a *= 0.5; } return s; }
 vec3 zmpHue(float h) { return clamp(abs(mod(h * 6.0 + vec3(0.0, 4.0, 2.0), 6.0) - 3.0) - 1.0, 0.0, 1.0); }
+// one layer of stars: a cell lit now and then, a soft point in it, twinkling
+float zmpStar(vec3 p, float t, float dens) {
+  vec3 c = floor(p), f = fract(p); float h = zmpH(c);
+  if (h < dens) return 0.0;
+  vec3 o = vec3(zmpH(c + 3.1), zmpH(c + 7.7), zmpH(c + 1.3)) * 0.6 + 0.2;
+  float d = length(f - o), tw = 0.55 + 0.45 * sin(t * (2.0 + h * 5.0) + h * 60.0);
+  return pow(max(0.0, 1.0 - d * 2.6), 4.0) * tw;
+}
 vec3 zmpFire(vec3 n, vec3 v) {
-  vec3 p = zmpP * 40.0; float t = zmpT * zmpK.y;
-  // molten veins: the ridges of a slowly crawling, warped noise
-  vec3 q = p * 0.55 + vec3(0.0, 0.0, -t * 0.35);
-  float w = zmpN(q + zmpN(q * 1.7 + t * 0.2) * 1.5);
-  float vein = pow(1.0 - abs(w * 2.0 - 1.0), 9.0);
-  // bands of lantern-light running on towards the muzzle
-  float band = pow(0.5 + 0.5 * sin(p.z * 0.55 + t * 1.6 + zmpN(p * 0.3) * 2.2), 6.0);
-  // sea-glass: light moving as it does under water
-  vec3 c = p * 0.9 + vec3(t * 0.15, -t * 0.1, t * 0.2);
-  float cs = abs(sin(c.x + sin(c.y * 1.3 + t * 0.5)) * sin(c.y + sin(c.z * 1.1 - t * 0.4)) * sin(c.z + sin(c.x * 0.9)));
-  cs = pow(1.0 - cs, 7.0);
-  // embers winking in it, drifting up
-  vec3 ep = p * 1.6 + vec3(0.0, -t * 0.6, 0.0); float eh = zmpH(floor(ep));
-  float ember = step(0.955, eh) * pow(0.5 + 0.5 * sin(t * 3.0 + eh * 40.0), 3.0) * max(0.0, 1.0 - length(fract(ep) - 0.5) * 2.2);
-  float rim = pow(1.0 - abs(dot(n, v)), 2.5);
-  vec3 hot = mix(zmpA, zmpC, zmpK.z * band * 0.6);
-  if (zmpK.w > 0.0) hot = mix(hot, zmpHue(p.z * 0.04 + p.y * 0.03 + t * 0.07) * 1.15, zmpK.w * (0.25 + 0.35 * band));
-  vec3 col = hot * (vein * zmpR.x * 1.2 + band * zmpR.y * 0.5 + 0.03) + zmpB * (cs * zmpR.z * 0.75 + rim * (0.06 + 0.22 * zmpR.z))
-    + mix(zmpA, vec3(1.0, 0.96, 0.85), 0.55) * ember * zmpR.w * 2.2 + hot * rim * 0.18;
+  vec3 p = zmpP * 55.0; float t = zmpT * zmpK.y;
+  // deep space: a slow swirl of black, midnight blue and purple
+  vec3 sp = p * 0.22 + vec3(0.0, 0.0, t * 0.03);
+  float s1 = zmpF(sp + zmpF(sp * 1.4 - t * 0.02) * 1.2), s2 = zmpF(sp * 1.7 + 4.0);
+  vec3 space = mix(vec3(0.004, 0.004, 0.022), vec3(0.09, 0.02, 0.2), smoothstep(0.35, 0.78, s1));
+  space = mix(space, vec3(0.015, 0.05, 0.22), smoothstep(0.48, 0.8, s2) * 0.85);
+  // the nebulae: warped clouds drifting through it, glowing, with hot bright cores
+  vec3 q = p * 0.3 + vec3(t * 0.07, -t * 0.045, t * 0.055);
+  float w1 = zmpF(q + zmpF(q * 1.3 + t * 0.05) * 1.9);
+  float w2 = zmpF(q * 0.85 + vec3(5.2, 1.3, 8.1) - vec3(t * 0.04, t * 0.06, 0.0) + zmpF(q * 1.1 - t * 0.03) * 1.5);
+  float n1 = smoothstep(0.56, 0.86, w1), n2 = smoothstep(0.6, 0.9, w2) * zmpK.z;
+  float haze = smoothstep(0.4, 0.62, w1) * 0.18 + smoothstep(0.44, 0.66, w2) * 0.14 * zmpK.z;
+  vec3 ca = zmpA, cc = zmpC;
+  if (zmpK.w > 0.0) { ca = mix(ca, zmpHue(w1 * 0.6 + t * 0.05) * 1.1, zmpK.w); cc = mix(cc, zmpHue(w2 * 0.6 + t * 0.05 + 0.45) * 1.1, zmpK.w); }
+  vec3 neb = ca * (n1 * 1.5 + haze) + cc * (n2 * 1.35 + haze * 0.6);
+  float core = pow(n1, 4.0) + pow(n2, 4.0) * 0.8;
+  neb += mix(ca, vec3(1.0), 0.45) * core * 0.9 * zmpR.w;
+  // dust lanes: dark threads across the clouds
+  neb *= 1.0 - smoothstep(0.55, 0.7, zmpF(q * 2.6 + 11.0)) * 0.55;
+  // stars, near and far, and a few bright ones with a halo of the nebula's colour
+  float st = zmpStar(p * 1.3, zmpT, 0.8) + zmpStar(p * 2.6 + 17.0, zmpT, 0.78) * 0.75;
+  float big = zmpStar(p * 0.6 + 5.0, zmpT, 0.94);
+  vec3 stars = zmpB * (st * 2.2 + big * 3.2) + ca * big * 0.8;
+  // the edges lit with the nebula's light
+  float rim = pow(1.0 - abs(dot(n, v)), 2.2);
+  vec3 col = space + neb * zmpR.x + stars * zmpR.y + mix(ca, cc, 0.5 + 0.5 * sin(t * 0.7)) * pow(rim, 2.0) * 0.18 * zmpR.z;
   return col * zmpK.x;
 }
 `;
@@ -281,7 +296,7 @@ const ZMP_SK = new Set();   // the weapons (their builds: { root, M }) wearing i
 function zmpSkinFor(wp, id, t) {
   if (!wp || !wp.M || !wp.root || typeof THREE === 'undefined') return;
   if (!(t > 0)) { if (ZMP_SK.has(wp)) zmpSkinOff(wp); return; }
-  const L = zmpLook(id), K = zmpLookK(t);
+  const G = zmpGalaxy(t), K = zmpLookK(t);
   if (!ZMP_SK.has(wp) || wp.zmpT !== t || wp.zmpId !== id) {
     const fresh = !ZMP_SK.has(wp);
     ZMP_SK.add(wp); wp.zmpT = t; wp.zmpId = id;
@@ -299,7 +314,7 @@ function zmpSkinFor(wp, id, t) {
       }
       const u = mt.userData.zmpU;
       mt.userData.zmpOn = wp.root; u.zmpK.value.set(K[0], K[1], K[2], K[3]); u.zmpR.value.set(R[0], R[1], R[2], R[3]);
-      u.zmpA.value.set(L[4]); u.zmpB.value.set(L[5]); u.zmpC.value.set(L[6]);
+      u.zmpA.value.set(G.a); u.zmpB.value.set(G.b); u.zmpC.value.set(G.c);
       mt.userData.zmpRole = R[4];
       mats.add(mt);
     }
@@ -310,10 +325,11 @@ function zmpSkinFor(wp, id, t) {
   // its own colours (again each time: nothing else may paint over them while it's reforged)
   for (const mt of wp.zmpMats) {
     const r = mt.userData.zmpRole, S = mt.userData.zmpS;
-    if (r === 0) mt.color.set(L[0]); else if (r === -1) mt.color.set(L[0]).multiplyScalar(0.55); else if (r != null) mt.color.set(L[r]); else mt.color.copy(S.color);
-    mt.emissive.set(L[4]); mt.emissiveIntensity = 0.02 + 0.015 * Math.min(4, t);
-    if (mt.specular) mt.specular.set(r === 3 ? '#e8fff8' : r === 1 ? '#ffd8a0' : '#3a3028');
-    if (mt.shininess != null) mt.shininess = r === 2 ? 20 : r === 3 ? 110 : 80;
+    // (space underneath: near black, a deep blue-violet; polished, so the light glints off it like glass)
+    mt.color.set(r === -1 ? '#020108' : '#05040f');
+    mt.emissive.set(G.a); mt.emissiveIntensity = 0.03;
+    if (mt.specular) mt.specular.set('#8a8ad0');
+    if (mt.shininess != null) mt.shininess = 110;
   }
 }
 // back exactly as it was
@@ -698,14 +714,14 @@ function zmpSegProj(a, b) {
 // light running along it, a flare where it rang off each one; fading at the end. Its colours go with the reforging.
 function zmpDrawLasers(tm) {
   if (!ZMPX.lasers.length) return;
-  const L0 = zmpLook('pepperbox'), rgb = h => { const c = new THREE.Color(h); return `${c.r * 255 | 0},${c.g * 255 | 0},${c.b * 255 | 0}`; };
+  const rgb = h => { const c = new THREE.Color(h); return `${c.r * 255 | 0},${c.g * 255 | 0},${c.b * 255 | 0}`; };
   ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.lineCap = 'round';
   for (const L of ZMPX.lasers) {
     const fade = Math.min(1, (L.life - L.t) / 0.5) * Math.min(1, L.t / 0.05);
     if (fade <= 0) continue;
-    const t = L.tier, shim = reduceMotion ? 1 : 0.88 + 0.12 * Math.sin(tm * 21 + L.life * 7);
-    const outer = t >= 5 ? (() => { const c = new THREE.Color().setHSL((tm * 0.12) % 1, 1, 0.62); return `${c.r * 255 | 0},${c.g * 255 | 0},${c.b * 255 | 0}`; })() : rgb(L0[4]);
-    const mid = t >= 3 ? rgb(L0[6]) : '255,214,140', a = fade * shim;
+    const t = L.tier, L0 = zmpLook('pepperbox', t), shim = reduceMotion ? 1 : 0.88 + 0.12 * Math.sin(tm * 21 + L.life * 7);
+    const outer = t >= 8 ? (() => { const c = new THREE.Color().setHSL((tm * 0.12) % 1, 1, 0.62); return `${c.r * 255 | 0},${c.g * 255 | 0},${c.b * 255 | 0}`; })() : rgb(L0[4]);
+    const mid = t >= 2 ? rgb(L0[6]) : rgb(L0[5]), a = fade * shim;
     for (let i = 0; i + 1 < L.p.length; i++) {
       const s = zmpSegProj(L.p[i], L.p[i + 1]); if (!s) continue;
       const [p, q] = s, k = Math.min(400, (p.s + q.s) / 2);
