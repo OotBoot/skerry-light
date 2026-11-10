@@ -896,6 +896,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 .boardlist .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .boardhead .sc, .boardhead .sb, .boardlist .sc, .boardlist .sb { text-align: right; font-variant-numeric: tabular-nums; }
 .boardlist .rk { color: var(--muted); }
+.boardgame.three .boardhead, .boardgame.three .boardlist li { grid-template-columns: 2.2em minmax(0, 1fr) 5em 6em 4.5em; }
 .boardgames { display: grid; grid-template-columns: 1fr; gap: 14px; }
 
 .boardgame { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
@@ -966,3 +967,9 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 .lookrow .smoothrow input { width: 18px; height: 18px; accent-color: var(--lamp); }
 .lookrow .smoothrow small { flex: 1 1 100%; padding-left: 26px; text-transform: none; letter-spacing: 0; opacity: 0.8; }
 .lookrow .lookslider { flex: 1 1 200px; }
+/* Maren's End (src/raid.js): its card and its banner, lantern gold over the deep's cold blue */
+.rdcard { border-color: rgba(120,190,255,0.45); }
+.rdcard h1 { color: #ffe2a8; text-shadow: 0 0 28px rgba(120,190,255,0.35); }
+.newgame.rdbanner { border-color: rgba(120,190,255,0.5); background: linear-gradient(90deg, rgba(90,150,220,0.28), rgba(90,150,220,0.08)); }
+.newgame.rdbanner:hover, .newgame.rdbanner:focus-visible { background: linear-gradient(90deg, rgba(90,150,220,0.42), rgba(90,150,220,0.16)); }
+.newgame.rdbanner .ng-tag { background: #4a86c8; color: #f2f8ff; }

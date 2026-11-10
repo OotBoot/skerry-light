@@ -28,7 +28,9 @@ const TOP = 10;
 //   fps:    s = most kills in one round,        b = rounds won
 //   war:    s = wars won,                       b = most land taken in one war (tiles)
 //   zm:     s = most rounds held in one night,  b = most kills in one night
-const GAMES = { skerry: [1000, 1e6], fps: [300, 1e5], war: [1e5, 1e6], zm: [1000, 1e6] };
+//   raid:   s = best time through Maren's End, as 100000 less its seconds (so higher is better; 0: never through),
+//           b = most damage done to its bosses in one raid, c = the drowned sent back in all raids
+const GAMES = { skerry: [1000, 1e6], fps: [300, 1e5], war: [1e5, 1e6], zm: [1000, 1e6], raid: [1e5, 1e8, 1e7] };
 
 const memory = new Map(); // game -> Map(id -> entry)
 let cache = null, cacheAt = 0;
@@ -47,7 +49,7 @@ async function redis(commands) {
 }
 
 const cleanName = v => String(v || '').replace(/[\u0000-\u001f\u007f-\u009f​-‏‪-‮⁠-⁯<>&"]/g, '').trim().slice(0, 18) || 'A sailor';
-const sortKey = e => e.s * 1e7 + e.b;
+const sortKey = e => e.s * 1e9 + e.b;
 
 async function readAll() {
   const out = {};
@@ -59,7 +61,7 @@ async function readAll() {
       out[g] = list;
     });
   } else for (const g of Object.keys(GAMES)) out[g] = [...(memory.get(g) || new Map()).entries()].map(([id, e]) => Object.assign({ id }, e));
-  for (const g of Object.keys(out)) out[g] = out[g].filter(e => e && e.s + e.b > 0).sort((a, b) => sortKey(b) - sortKey(a)).slice(0, TOP).map(e => ({ id: e.id, n: cleanName(e.n), s: e.s | 0, b: e.b | 0 }));
+  for (const g of Object.keys(out)) out[g] = out[g].filter(e => e && e.s + e.b + (e.c | 0) > 0).sort((a, b) => sortKey(b) - sortKey(a)).slice(0, TOP).map(e => ({ id: e.id, n: cleanName(e.n), s: e.s | 0, b: e.b | 0, c: e.c | 0 }));
   return out;
 }
 
@@ -67,16 +69,16 @@ async function getBoard(me) {
   if (!cache || Date.now() - cacheAt >= 15000) { cache = { store: STORE, games: await readAll() }; cacheAt = Date.now(); }
   // (the ids stay here: each row goes out with only its name and numbers, and "me" for the asker's own)
   const games = {};
-  for (const [g, list] of Object.entries(cache.games)) games[g] = list.map(e => me && e.id === me ? { n: e.n, s: e.s, b: e.b, me: true } : { n: e.n, s: e.s, b: e.b });
+  for (const [g, list] of Object.entries(cache.games)) games[g] = list.map(e => me && e.id === me ? { n: e.n, s: e.s, b: e.b, c: e.c, me: true } : { n: e.n, s: e.s, b: e.b, c: e.c });
   return { store: STORE, games };
 }
 
 async function postScore(body, addr) {
   const { id, game } = body || {};
   if (typeof id !== 'string' || !/^[a-z0-9]{12,40}$/.test(id) || !GAMES[game]) return [400, { error: 'bad score' }];
-  const [maxS, maxB] = GAMES[game];
-  const s = Math.floor(Number(body.s)), b = Math.floor(Number(body.b));
-  if (!(s >= 0 && s <= maxS && b >= 0 && b <= maxB)) return [400, { error: 'out of range' }];
+  const [maxS, maxB, maxC] = GAMES[game];
+  const s = Math.floor(Number(body.s)), b = Math.floor(Number(body.b)), c = maxC ? Math.floor(Number(body.c) || 0) : 0;
+  if (!(s >= 0 && s <= maxS && b >= 0 && b <= maxB && c >= 0 && c <= (maxC || 0))) return [400, { error: 'out of range' }];
   const now = Date.now();
   if (now - (lastPost.get(addr) || 0) < 3000) return [429, { error: 'slow down' }];
   lastPost.set(addr, now);
@@ -90,10 +92,11 @@ async function postScore(body, addr) {
     try { old = was && w ? JSON.parse(w) : null; } catch (e) {}
   } else { const M = memory.get(game) || new Map(); prev = M.get(id) || null; old = was ? M.get(was) || null : null; }
   // (moving from an old id: its bests come along, and it goes)
-  if (old) prev = { n: prev ? prev.n : old.n, s: Math.max(prev ? prev.s | 0 : 0, old.s | 0), b: Math.max(prev ? prev.b | 0 : 0, old.b | 0) };
+  if (old) prev = { n: prev ? prev.n : old.n, s: Math.max(prev ? prev.s | 0 : 0, old.s | 0), b: Math.max(prev ? prev.b | 0 : 0, old.b | 0), c: Math.max(prev ? prev.c | 0 : 0, old.c | 0) };
   if (was) { if (STORE === 'upstash') await redis([['HDEL', KEY(game), was]]); else if (memory.has(game)) memory.get(game).delete(was); if (old) cache = null; }
   const e = { n: name, s: Math.max(s, prev ? prev.s | 0 : 0), b: Math.max(b, prev ? prev.b | 0 : 0), at: now };
-  if (prev && !old && prev.s === e.s && prev.b === e.b && prev.n === e.n) return [200, { ok: true, same: true }];
+  if (maxC) e.c = Math.max(c, prev ? prev.c | 0 : 0);
+  if (prev && !old && prev.s === e.s && prev.b === e.b && (prev.c | 0) === (e.c | 0) && prev.n === e.n) return [200, { ok: true, same: true }];
   if (STORE === 'upstash') await redis([['HSET', KEY(game), id, JSON.stringify(e)]]);
   else { if (!memory.has(game)) memory.set(game, new Map()); memory.get(game).set(id, e); }
   cache = null;

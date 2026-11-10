@@ -10,6 +10,8 @@
 //   fps     s: most kills in one round             b: rounds won
 //   war     s: wars won                            b: most land taken in one war (tiles)
 //   zm      s: most rounds held in one night        b: most kills in one night (the Lighthouse)
+//   raid    s: best time through Maren's End (kept as 100000 less its seconds, so higher is better; 0: never through)
+//           b: most damage done to its bosses in one raid    c: the drowned sent back in all raids, together
 //
 // Your bests are part of your save (src/crates.js saveData: `best`, merged by taking the higher of each), so they
 // follow your recovery code (src/cloudsave.js) to every device, and on the game's own site you're on the board once,
@@ -23,6 +25,8 @@ const BOARD = {
     fps: { name: 'Wreckers’ Night', s: 'Best round', b: 'Rounds won', what: 'Most kills in one round of Wreckers’ Night. Rounds won: rounds you finished on top.' },
     war: { name: 'Drowned Reach', s: 'Wars won', b: 'Most land', what: 'Wars of the Drowned Reach won, alone or together. Most land: the most tiles taken in one war.' },
     zm: { name: 'Keeper’s Last Light', s: 'Rounds held', b: 'Most kills', what: 'The most rounds held at the Lighthouse in one night. Most kills: the drowned sent back in one night.' },
+    raid: { name: 'Maren’s End', s: 'Best time', b: 'Boss damage', c: 'Kills', what: 'The quickest time through every part of Maren’s End. Boss damage: the most done to its bosses in one raid. Kills: the drowned sent back in all your raids.',
+      fs: v => v > 0 ? raidTimeOf(v) : '—' },
   },
   open: {}, mine: null, via: null, db: null, user: null, uid: null, data: null, loading: false, err: '', lastT: 0, sendT: 0, store: '',
 };
@@ -30,7 +34,7 @@ const BOARD = {
 // ---------- your bests, here ----------
 function boardLoadMine() {
   let m = {}; try { m = JSON.parse(localStorage.getItem('skerry-bests') || '{}') || {}; } catch (e) {}
-  for (const g of Object.keys(BOARD.games)) m[g] = { s: Math.max(0, (m[g] && m[g].s) | 0), b: Math.max(0, (m[g] && m[g].b) | 0) };
+  for (const g of Object.keys(BOARD.games)) { m[g] = { s: Math.max(0, (m[g] && m[g].s) | 0), b: Math.max(0, (m[g] && m[g].b) | 0) }; if (BOARD.games[g].c) m[g].c = Math.max(0, (m[g].c | 0) || 0); }
   // bests from before there was a board
   try { m.skerry.s = Math.max(m.skerry.s, parseInt(localStorage.getItem('skerry-helm-best') || '0', 10) || 0); } catch (e) {}
   if (typeof warLoadStats === 'function') { const st = warLoadStats(); m.war.s = Math.max(m.war.s, st.wins | 0); m.war.b = Math.max(m.war.b, st.bestTiles | 0); }
@@ -38,11 +42,12 @@ function boardLoadMine() {
 }
 function boardSaveMine() { try { localStorage.setItem('skerry-bests', JSON.stringify(BOARD.mine)); } catch (e) {} }
 // a new best (either number) goes on the board soon after
-function scoreReport(game, s, b) {
+// (c: a third number, for a game that has one: Maren's End's kills in all)
+function scoreReport(game, s, b, c) {
   const m = BOARD.mine && BOARD.mine[game]; if (!m) return;
-  s = Math.max(0, Math.floor(s || 0)); b = Math.max(0, Math.floor(b || 0));
-  if (s <= m.s && b <= m.b) return;
-  m.s = Math.max(m.s, s); m.b = Math.max(m.b, b); boardSaveMine();
+  s = Math.max(0, Math.floor(s || 0)); b = Math.max(0, Math.floor(b || 0)); c = Math.max(0, Math.floor(c || 0));
+  if (s <= m.s && b <= m.b && c <= (m.c | 0)) return;
+  m.s = Math.max(m.s, s); m.b = Math.max(m.b, b); if (BOARD.games[game].c) m.c = Math.max(m.c | 0, c); boardSaveMine();
   boardSendSoon(game);
 }
 // Skerry Light: a voyage made, and how many this run has made
@@ -57,7 +62,9 @@ function boardName() {
 }
 
 // ---------- your username: one for every game, kept on this device ----------
-const NICK_BOXES = ['nick', 'fpsNick', 'zmNick', 'boardName'];
+const NICK_BOXES = ['nick', 'fpsNick', 'zmNick', 'rdNick', 'boardName'];
+// Maren's End's best time, from its s (100000 less the seconds)
+function raidTimeOf(v) { const t = Math.max(0, 100000 - v); return `${Math.floor(t / 60)}:${String(t % 60).padStart(2, '0')}`; }
 function nickSet(v, from) {
   const n = typeof cleanNick === 'function' ? cleanNick(v || '') : String(v || '').trim().slice(0, 16);
   if (typeof NET !== 'undefined') NET.nick = n;
@@ -83,8 +90,8 @@ function boardMerge(best, nick, takeLooks) {
   let changed = false;
   if (best && typeof best === 'object' && BOARD.mine) for (const g of Object.keys(BOARD.games)) {
     const o = best[g]; if (!o) continue;
-    const m = BOARD.mine[g], s = Math.max(m.s, Math.max(0, o.s | 0)), b = Math.max(m.b, Math.max(0, o.b | 0));
-    if (s !== m.s || b !== m.b) { m.s = s; m.b = b; changed = true; }
+    const m = BOARD.mine[g], s = Math.max(m.s, Math.max(0, o.s | 0)), b = Math.max(m.b, Math.max(0, o.b | 0)), c = Math.max(m.c | 0, Math.max(0, o.c | 0));
+    if (s !== m.s || b !== m.b || (BOARD.games[g].c && c !== (m.c | 0))) { m.s = s; m.b = b; if (BOARD.games[g].c) m.c = c; changed = true; }
   }
   if (changed) { boardSaveMine(); boardSendSoon('all'); boardRender(); }
   const n = typeof cleanNick === 'function' ? cleanNick(nick || '') : '';
@@ -125,7 +132,7 @@ async function boardInit() {
       if (db && uid) {
         BOARD.via = 'claude'; BOARD.db = db; BOARD.user = user; BOARD.uid = uid;
         // what the board already has for you counts as your best too
-        try { const snap = await db.doc('scores/' + uid).get(); const d = snap.exists ? snap.data() : null; if (d) for (const g of Object.keys(BOARD.games)) { BOARD.mine[g].s = Math.max(BOARD.mine[g].s, d[g + '_s'] | 0); BOARD.mine[g].b = Math.max(BOARD.mine[g].b, d[g + '_b'] | 0); } } catch (e) {}
+        try { const snap = await db.doc('scores/' + uid).get(); const d = snap.exists ? snap.data() : null; if (d) for (const g of Object.keys(BOARD.games)) { BOARD.mine[g].s = Math.max(BOARD.mine[g].s, d[g + '_s'] | 0); BOARD.mine[g].c = Math.max(BOARD.mine[g].c | 0, d[g + '_c'] | 0); BOARD.mine[g].b = Math.max(BOARD.mine[g].b, d[g + '_b'] | 0); } } catch (e) {}
         boardSaveMine(); boardSendSoon('all');
       } else BOARD.err = 'Sign in to claude.ai to see the scoreboard.';
     } catch (e) { BOARD.err = 'The scoreboard isn’t available here.'; }
@@ -150,7 +157,7 @@ async function boardSend() {
   try {
     if (BOARD.via === 'claude') {
       const doc = { nick: boardName(), at: Date.now() };
-      for (const g of Object.keys(BOARD.games)) if (m[g].s + m[g].b > 0) { doc[g + '_s'] = m[g].s; doc[g + '_b'] = m[g].b; doc[g + '_k'] = m[g].s * 1e7 + m[g].b; }
+      for (const g of Object.keys(BOARD.games)) if (m[g].s + m[g].b + (m[g].c | 0) > 0) { doc[g + '_s'] = m[g].s; doc[g + '_b'] = m[g].b; doc[g + '_k'] = m[g].s * 1e9 + m[g].b + ((m[g].c | 0) > 0 && !m[g].s && !m[g].b ? 0.5 : 0); if (BOARD.games[g].c) doc[g + '_c'] = m[g].c | 0; }
       await BOARD.db.doc('scores/' + BOARD.uid).set(doc);
     } else {
       const id = await boardIdNow(); if (!id) { BOARD.sending = false; return; }
@@ -163,8 +170,8 @@ async function boardSend() {
       try { localStorage.setItem('skerry-board-used', JSON.stringify(used.slice(-6))); } catch (e) {}
       let all = true;
       for (const g of was ? Object.keys(BOARD.games) : games) {
-        if (m[g].s + m[g].b <= 0 && !was) continue;
-        const r = await fetch(boardApiUrl(), { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ id, name: boardName(), game: g, s: m[g].s, b: m[g].b, was: was || undefined }) });
+        if (m[g].s + m[g].b + (m[g].c | 0) <= 0 && !was) continue;
+        const r = await fetch(boardApiUrl(), { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ id, name: boardName(), game: g, s: m[g].s, b: m[g].b, c: BOARD.games[g].c ? m[g].c | 0 : undefined, was: was || undefined }) });
         if (!r.ok) { all = false; BOARD_PENDING.add(g); }
         await new Promise(res => setTimeout(res, 3200));   // the server takes one score every few seconds from each address
       }
@@ -195,7 +202,7 @@ async function boardFetch(force) {
       const data = {};
       for (const g of Object.keys(BOARD.games)) {
         const q = await BOARD.db.collection('scores').orderBy(g + '_k', 'desc').limit(10).get();
-        data[g] = q.docs.map(d => ({ id: d.id, d: d.data() || {} })).filter(e => (e.d[g + '_k'] || 0) > 0).map(e => ({ id: e.id, n: '', nick: String(e.d.nick || ''), s: e.d[g + '_s'] | 0, b: e.d[g + '_b'] | 0, me: e.id === BOARD.uid }));
+        data[g] = q.docs.map(d => ({ id: d.id, d: d.data() || {} })).filter(e => (e.d[g + '_k'] || 0) > 0).map(e => ({ id: e.id, n: '', nick: String(e.d.nick || ''), s: e.d[g + '_s'] | 0, b: e.d[g + '_b'] | 0, c: e.d[g + '_c'] | 0, me: e.id === BOARD.uid }));
       }
       // names, as this viewer's claude.ai shows them
       const ids = [...new Set(Object.values(data).flat().map(e => e.id))];
@@ -225,19 +232,20 @@ function boardRender() {
     }
     sec.append(top);
     const head = mk('div', 'boardhead'); head.setAttribute('aria-hidden', 'true'); head.title = G.what;
-    for (const [c, t] of [['rk', '#'], ['nm', 'Name'], ['sc', G.s], ['sb', G.b]]) head.append(mk('span', c, t));
+    for (const [c, t] of [['rk', '#'], ['nm', 'Name'], ['sc', G.s], ['sb', G.b]].concat(G.c ? [['sb', G.c]] : [])) head.append(mk('span', c, t));
+    if (G.c) sec.classList.add('three');
     sec.append(head);
     const ol = mk('ol', 'boardlist'); ol.setAttribute('aria-label', G.name + ': ' + G.what);
     if (!rows.length) ol.append(mk('li', 'empty', BOARD.loading && !BOARD.data ? 'Reading the board…' : BOARD.data ? 'No one yet. Be the first.' : BOARD.err ? '—' : 'Reading the board…'));
     let meShown = false;
     rows.slice(0, open ? 10 : 3).forEach((e, k) => {
       const li = mk('li', e.me ? 'me' : ''); if (e.me) meShown = true;
-      for (const [cls, txt] of [['rk', String(k + 1)], ['nm', e.n + (e.me ? ' (you)' : '')], ['sc', String(e.s)], ['sb', g === 'war' ? `${e.b} tiles` : String(e.b)]]) li.append(mk('span', cls, txt));
+      for (const [cls, txt] of [['rk', String(k + 1)], ['nm', e.n + (e.me ? ' (you)' : '')], ['sc', G.fs ? G.fs(e.s) : String(e.s)], ['sb', g === 'war' ? `${e.b} tiles` : String(e.b)]].concat(G.c ? [['sb', String(e.c | 0)]] : [])) li.append(mk('span', cls, txt));
       ol.append(li);
     });
     sec.append(ol);
     const m = BOARD.mine && BOARD.mine[g];
-    if (m && m.s + m.b > 0 && !meShown) sec.append(mk('p', 'boardmine', `Your best: ${m.s} · ${m.b}${g === 'war' ? ' tiles' : ''}`));
+    if (m && m.s + m.b + (m.c | 0) > 0 && !meShown) sec.append(mk('p', 'boardmine', `Your best: ${G.fs ? G.fs(m.s) : m.s} · ${m.b}${g === 'war' ? ' tiles' : ''}${G.c ? ' · ' + (m.c | 0) : ''}`));
     box.append(sec);
   }
   $('boardNameRow').hidden = BOARD.via === 'claude';

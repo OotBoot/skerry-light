@@ -59,7 +59,9 @@ function znAt(o, t) {
 
 // ---------- the lobby ----------
 function znOnline() { return !!(typeof NET !== 'undefined' && NET.room && NET.status === 'ready'); }
-function znNick() { return znClean(($('zmNick') && $('zmNick').value) || '', 16) || (NET.nick ? znClean(NET.nick, 16) : '') || 'Keeper ' + String(NET.sid || '').slice(0, 3).toUpperCase(); }
+// the map a lobby's for: the raid's, or the one picked on the Lighthouse's card
+const znMap = () => ZN.mode === 'raid' ? 'raid' : ZM_PICK;
+function znNick() { return znClean(($(ZN.mode === 'raid' ? 'rdNick' : 'zmNick') && $(ZN.mode === 'raid' ? 'rdNick' : 'zmNick').value) || '', 16) || (NET.nick ? znClean(NET.nick, 16) : '') || 'Keeper ' + String(NET.sid || '').slice(0, 3).toUpperCase(); }
 function znOf(p) { const z = p && p.presence && p.presence.zm; return z && typeof z === 'object' && typeof z.room === 'string' && typeof z.sid === 'string' ? z : null; }
 function znBase() { return { room: ZN.code, sid: NET.sid, nick: znNick(), at: ZN.at }; }
 function znPeers(code) {
@@ -75,16 +77,18 @@ function znSend(z) { if (NET.room) NET.room.presence({ zm: z }).catch(() => {});
 function znSendLobby() {
   if (!ZN.code) return;
   const z = znBase();
-  if (znAmHost()) z.lob = { n: znMembers().length, map: ZM_PICK };
+  if (znAmHost()) z.lob = { n: znMembers().length, map: znMap() };
   znSend(z);
 }
-function znHost() {
+function znHost(mode) {
   if (!znOnline() || FPS.on) return;
+  ZN.mode = mode === 'raid' ? 'raid' : 'zm';
   ZN.code = 'z' + Math.random().toString(36).slice(2, 8); ZN.at = Date.now(); ZN.msg = '';
   znSendLobby(); znRender();
 }
-function znJoin(code) {
+function znJoin(code, mode) {
   if (!znOnline() || !code || FPS.on) return;
+  ZN.mode = mode === 'raid' ? 'raid' : 'zm';
   if (znPeers(code).length >= ZN_MAX) { ZN.msg = 'That night is full (four players).'; znRender(); return; }
   ZN.code = code; ZN.at = Date.now(); ZN.msg = '';
   znSendLobby(); znRender();
@@ -111,44 +115,52 @@ function znOpenNights() {
   }
   return out;
 }
-function znRender() {
-  if (!$('zmMp')) return;
-  const on = znOnline();
-  $('zmMpNote').textContent = on ? 'Up to four in one night. One of you hosts; the others join, and the host starts the night when everyone’s in.' : (NET.status === 'connecting' ? 'Looking for other players…' : (NET.offReason || 'Playing together isn’t available here.'));
-  $('zmMpOpen').hidden = !on || !!ZN.code;
-  $('zmLobby').hidden = !ZN.code;
+// Two cards share the one lobby: the Lighthouse's (prefix zm) and Maren's End's (prefix rd, src/raid.js). Each lists
+// only its own: a night whose map is the raid is a raid. Whichever card you host or join from, the lobby shows there.
+const ZN_UI = [{ p: 'zm', raid: false, what: 'night', who: 'A keeper' }, { p: 'rd', raid: true, what: 'raid', who: 'A keeper' }];
+function znRender() { for (const U of ZN_UI) znRenderUI(U); }
+function znRenderUI(U) {
+  const q = id => $(U.p + id);
+  if (!q('Mp')) return;
+  const on = znOnline(), mine = !!ZN.code && ZN.mode === (U.raid ? 'raid' : 'zm'), W = U.what;
+  q('MpNote').textContent = on ? (ZN.code && !mine ? `You’re in a ${U.raid ? 'Lighthouse night' : 'raid'}’s lobby on the other card; leave it to ${U.raid ? 'host or join a raid' : 'host or join a night'} here.` : `Up to four in one ${W}. One of you hosts; the others join, and the host starts the ${W} when everyone’s in.`) : (NET.status === 'connecting' ? 'Looking for other players…' : (NET.offReason || 'Playing together isn’t available here.'));
+  q('MpOpen').hidden = !on || !!ZN.code;
+  q('Lobby').hidden = !mine;
   if (!on) return;
   if (!ZN.code) {
-    const nights = znOpenNights(), el = $('zmLobbies'), key = JSON.stringify(nights) + ZN.msg;
+    const nights = znOpenNights().filter(n => (n.map === 'raid') === U.raid), el = q('Lobbies'), key = JSON.stringify(nights) + ZN.msg;
     if (el.dataset.k === key) return; el.dataset.k = key;
     el.textContent = '';
     if (ZN.msg) { const p = document.createElement('p'); p.className = 'muted'; p.textContent = ZN.msg; el.append(p); }
-    if (!nights.length) { const p = document.createElement('p'); p.className = 'muted'; p.textContent = 'No one is hosting a night right now. Host one, and send the people you want to play with to this page.'; el.append(p); return; }
+    if (!nights.length) { const p = document.createElement('p'); p.className = 'muted'; p.textContent = `No one is hosting a ${W} right now. Host one, and send the people you want to play with to this page.`; el.append(p); return; }
     for (const n of nights) {
       const b = document.createElement('button'); b.type = 'button'; b.className = 'warlobbyrow';
-      const nm = document.createElement('span'); nm.className = 'nm'; nm.textContent = `${n.host}’s night`;
-      const sm = document.createElement('small'); sm.textContent = `${ZM_MAPS[n.map].N} · ` + (n.started ? 'under way' : `${n.n}/${ZN_MAX} players · tap to join`);
+      const nm = document.createElement('span'); nm.className = 'nm'; nm.textContent = `${n.host}’s ${W}`;
+      const sm = document.createElement('small'); sm.textContent = (U.raid ? '' : `${ZM_MAPS[n.map].N} · `) + (n.started ? 'under way' : `${n.n}/${ZN_MAX} players · tap to join`);
       b.append(nm, sm);
       b.disabled = n.started || n.n >= ZN_MAX;
-      b.addEventListener('click', () => znJoin(n.code));
+      b.addEventListener('click', () => znJoin(n.code, U.raid ? 'raid' : 'zm'));
       el.append(b);
     }
     return;
   }
+  if (!mine) return;
   const m = znMembers(), host = znAmHost(), hz = m.length ? znOf(m[0]) : null;
-  const key = m.map(p => znOf(p).sid + znOf(p).nick).join('|') + host + ZN.msg + ZM_PICK + (hz && hz.lob ? hz.lob.map : '');
-  $('zmMpStart').hidden = !host;
-  if ($('zmLobby').dataset.k === key) return; $('zmLobby').dataset.k = key;
-  $('zmLobbyHead').textContent = host ? 'Your night' : `${znClean(hz && hz.nick, 16) || 'Someone'}’s night`;
-  const ol = $('zmLobbyList'); ol.textContent = '';
+  const key = m.map(p => znOf(p).sid + znOf(p).nick).join('|') + host + ZN.msg + znMap() + (hz && hz.lob ? hz.lob.map : '');
+  q('MpStart').hidden = !host;
+  if (q('Lobby').dataset.k === key) return; q('Lobby').dataset.k = key;
+  q('LobbyHead').textContent = host ? `Your ${W}` : `${znClean(hz && hz.nick, 16) || 'Someone'}’s ${W}`;
+  const ol = q('LobbyList'); ol.textContent = '';
   m.forEach((p, k) => {
     const li = document.createElement('li'), z = znOf(p);
-    li.textContent = (znClean(z.nick, 16) || 'A keeper') + (p.isMe && p.sameTab ? ' (you)' : '') + (k === 0 ? ' · hosting' : '');
+    li.textContent = (znClean(z.nick, 16) || U.who) + (p.isMe && p.sameTab ? ' (you)' : '') + (k === 0 ? ' · hosting' : '');
     if (p.isMe && p.sameTab) li.className = 'me';
     ol.append(li);
   });
   const hm = hz && hz.lob && ZM_MAPS[hz.lob.map] ? hz.lob.map : 'light';
-  $('zmLobbyMsg').textContent = ZN.msg || (host
+  q('LobbyMsg').textContent = ZN.msg || (U.raid
+    ? (host ? (m.length > 1 ? `${m.length} of ${ZN_MAX} here. Start the raid when everyone’s in.` : 'Waiting for others to join. You can start alone, too, whenever you like.') : 'Waiting for the host to start the raid.')
+    : host
     ? (m.length > 1 ? `${m.length} of ${ZN_MAX} here, at ${ZM_MAPS[ZM_PICK].n}. Start the night when everyone’s in.` : `Waiting for others to join. You can start alone, too, whenever you like. Tonight: ${ZM_MAPS[ZM_PICK].n} (pick above).`)
     : `Waiting for the host to start the night, at ${ZM_MAPS[hm].n}.`);
 }
@@ -157,7 +169,7 @@ function znRender() {
 function znStart() {
   if (!znAmHost() || FPS.on) return;
   const m = znMembers();
-  const st = { g: Math.random().toString(36).slice(2, 9), hum: m.map(p => [znOf(p).sid, znClean(znOf(p).nick, 16) || 'A keeper']), map: ZM_PICK };
+  const st = { g: Math.random().toString(36).slice(2, 9), hum: m.map(p => [znOf(p).sid, znClean(znOf(p).nick, 16) || 'A keeper']), map: znMap() };
   znBegin(st, 'host');
 }
 function znBegin(st, role) {
@@ -187,7 +199,7 @@ function zmNetPeers() {
 // a night over (or left): back to the lobby on the title card, still in the same room
 function zmnBackToLobby() {
   setTimeout(() => {
-    if (ZN.code) { znSendLobby(); const c = $('zmTitle'); if (c) c.scrollIntoView({ block: 'start' }); }
+    if (ZN.code) { znSendLobby(); const c = $(ZN.mode === 'raid' ? 'rdTitle' : 'zmTitle'); if (c) c.scrollIntoView({ block: 'start' }); }
     znRender();
   }, 50);
 }
@@ -326,6 +338,7 @@ function znRequestFrom(sid, k, a) {
   if (k === 'pst') { if (typeof zmpStatusFrom === 'function') zmpStatusFrom(sid, a); return; }   // [pap] what a reforged weapon did to them
   if (k === 'egg') { if (typeof zeRequest === 'function') zeRequest(sid, a); return; }   // [egg hook] src/zmegg.js
   if (k === 'egg2') { if (typeof zhRequest === 'function') zhRequest(sid, a); return; }   // [egg2 hook] src/zmegg2.js
+  if (k === 'raid') { if (typeof raidRequest === 'function') raidRequest(sid, a); return; }   // [raid] src/raid.js
 }
 // someone (by) gets someone (sid) up: everyone's told who got whom up (and if it's me, up I get)
 function zmnRevive(sid, by) {
@@ -367,6 +380,7 @@ function znHostSend() {
   if (typeof zeHostSend === 'function') zeHostSend(z);   // [egg hook] src/zmegg.js
   if (typeof zhHostSend === 'function') zhHostSend(z);   // [egg2 hook] src/zmegg2.js
   if (typeof zmlHostSend === 'function') zmlHostSend(z);   // [lamp] the Light: lit or not, its beam, its price
+  if (typeof raidHostSend === 'function') raidHostSend(z);   // [raid] Maren's End: its part, and the part's own state
   znSend(z);
 }
 
@@ -418,6 +432,7 @@ function zmnHit(d, dmg, head, code, how) {
 function znApply(hz) {
   const CX = FPSC.CX, CY = FPSC.CY, m = FPS.me;
   const H = hz.h.map(v => +v || 0);
+  if (typeof raidApply === 'function') raidApply(hz);   // [raid] (first: a new part is laid out before anything in it)
   // the round and its phase
   const round = H[1] | 0, ph = H[2] | 0;
   if (round > ZM.round) {
@@ -519,9 +534,10 @@ function znApply(hz) {
 
 // ---------- buttons ----------
 {
-  $('zmMpHost').addEventListener('click', znHost);
+  $('zmMpHost').addEventListener('click', () => znHost('zm'));
   $('zmMpLeave').addEventListener('click', znLeave);
   $('zmMpStart').addEventListener('click', znStart);
+  if ($('rdMpHost')) { $('rdMpHost').addEventListener('click', () => znHost('raid')); $('rdMpLeave').addEventListener('click', znLeave); $('rdMpStart').addEventListener('click', znStart); }   // [raid] Maren's End's card
   setInterval(() => { if (!FPS.on && !$('zmTitle').closest('[hidden]')) { znRender(); if (ZN.code) znSendLobby(); } }, 1500);
   addEventListener('pagehide', () => { if (ZN.code && NET.room) NET.room.presence({ zm: null }).catch(() => {}); });
 }
