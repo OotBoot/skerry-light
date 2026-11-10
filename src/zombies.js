@@ -2080,7 +2080,7 @@ function zmFrame(dt) {
       // patched up quickly, if they leave you alone for a few seconds
       FPS.calm = (FPS.calm || 0) + dt;
       const max = ZM.perks.stout ? ZMC.HP_STOUT : ZMC.HP;
-      if (m.dead <= 0 && !zmIsDown() && m.hp < max && FPS.calm > (ZM.perks.grog ? 1.6 : 3.2) && !(typeof RAID !== 'undefined' && RAID.on)) m.hp = max;   // [raid] (there, only a lit brazier mends you)
+      if (m.dead <= 0 && !zmIsDown() && m.hp < max && FPS.calm > (ZM.perks.grog ? 1.6 : 3.2) && !(typeof RAID !== 'undefined' && RAID.on && !(raidStage() || {}).mend)) m.hp = max;   // [raid] (there, unless the part says so, only a lit brazier mends you)
       if (ZM.downT > 0) zmDownTick(dt);
       if (m.cd > 0) m.cd -= dt;
       if (m.reload > 0) { m.reload -= dt; if (m.reload <= 0) { m.reload = 0; zmReloaded(); } }
@@ -2714,6 +2714,7 @@ function zmResolveShot(sh, mine) {
     FPS.tracers.push({ a: [x + Math.sin(lh) * 0.6, y + Math.cos(lh) * 0.6, z - 0.25], b: [last.x, last.y, last.z], t: w.pellets ? 0.06 : 0.08, k: w.code });
     if (typeof zeShot === 'function' && mine) zeShot(x, y, z, lh, lp, by);   // [egg hook] src/zmegg.js
     if (typeof zhShot === 'function' && mine) zhShot(x, y, z, lh, lp, by);   // [egg2 hook] src/zmegg2.js
+    if (typeof raidShot === 'function' && mine) raidShot(x, y, z, lh, lp, by);   // [raid]
     if (last.kind !== 'body' && last.kind !== 'none') fpsPuff(last.x, last.y, last.z, last.kind === 'ground' ? '150,140,120' : '190,190,180', w.pellets ? 2 : 6);
   }
   if (mine && typeof zmpShot === 'function') zmpShot(sh, hits);   // [pap] what a reforged weapon does

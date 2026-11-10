@@ -1073,7 +1073,8 @@ function fpsDrawScene() {
   // the camera tilts with your look (render.js cam/proj, and gl3d's camera): hy is where the horizon falls
   setCamPitch(m.p); hy = H * 0.5 + pitchY;
   // indoors or out (where the camera is): eased over a quarter of a second or so, going through a door
-  { const want = (FPS.zm && typeof RAID !== 'undefined' && RAID.on) || fpsUnderRoof(FPS.g, camX, camY, camH) ? 1 : 0,   // ([raid] no weather in Maren's End) k = Math.min(1, (FPS.dtLast || 0.016) * 5);
+  // ([raid] no weather at all in Maren's End)
+  { const want = (FPS.zm && typeof RAID !== 'undefined' && RAID.on) || fpsUnderRoof(FPS.g, camX, camY, camH) ? 1 : 0, k = Math.min(1, (FPS.dtLast || 0.016) * 5);
     FPS.inK = FPS.inK == null || FPS.inKFor !== FPS.g ? want : FPS.inK + (want - FPS.inK) * k; FPS.inKFor = FPS.g;
     if (Math.abs(FPS.inK - want) < 0.01) FPS.inK = want; }
   const roll = m.dead > 0 ? 0.25 * Math.min(1, (FPSC.RESPAWN - m.dead) * 2) : 0;

@@ -27,6 +27,8 @@
 //   consider(c) / prompt(o) / use(o)   what's in front of you, as src/zombies.js's zmNearest, zmPrompt, zmUse
 //   hud(phone, mono, fell)  painted on top                       b3(grp) / f3(dt)  its 3D: built, and each frame
 //   players(P)  who the drowned can come after (default: all)     exit()  leaving it
+//   shot(x, y, z, lh, lp, by)  a shot of yours                   mend   true: you mend by yourself, as at the Lighthouse
+//   map.isle / map.shore  its own look (FPS_ISLES, FPI_GEN) and sea line, if not the cave's
 // And for any stage to call: raidNextStage() (hosting or alone: on to the next part; past the last, won), raidWin()
 // (won outright: the last boss down), raidBossDamage(n) (damage you did to a boss, counted on your own side, for the
 // scoreboard), raidSpawnAt(x, y, o) (hosting: one of the drowned, already in, rising out of the ground), raidAsk(k, a).
@@ -65,6 +67,8 @@ FPI_GEN.raid = {
 function raidMapFor(i) {
   const S = RAID_STAGES[RAID_ORDER[i]], D = ZM_MAPS.raid, M = S.map || {};
   D.zones = M.zones || {}; D.start = (M.start || [0, 0]).slice(); D.top = M.top || 0; D.nav = M.nav || [-80, 80, -80, 80];
+  // (its own look and sea, if it has them: a part out in the open lays itself out from its own FPI_GEN, as FPI_GEN.raid)
+  D.isle = M.isle || 'raid'; D.shore = M.shore || (() => -999);
   D.seed = 0x5a11c + i * 977;
 }
 
@@ -92,7 +96,7 @@ function raidLoadout() {
   ZM.own = ['pepperbox', 'blunderbuss']; ZM.res = { pepperbox: ZM_AMMO.pepperbox, blunderbuss: ZM_AMMO.blunderbuss };
   for (const id of ZM.own) m.mags[id] = FPSW[id].mag;
   FPS.weapon = 'pepperbox'; FPS.last = 'blunderbuss'; m.ammo = FPSW.pepperbox.mag; m.reload = 0; FPS.drawT = 0.45;
-  if (typeof rcApply === 'function') rcApply();   // [classes] src/rclass.js: your class's weapons and abilities instead
+  if (typeof rclApply === 'function') rclApply();   // [classes] src/rclass.js: your class's weapons and abilities instead
 }
 // anyone who bled out comes back (beside someone standing), with the raid's kit
 function raidRespawn() { if (!ZM.ghost) return; zmRoundBegins(); raidLoadout(); fpsFeed('You’re back on your feet.'); }
@@ -106,7 +110,7 @@ function raidHostTick(dt) { RAID.t += dt; raidCall('tick', dt); }
 // everyone, each frame
 function raidMe(dt) {
   raidCall('me', dt);
-  if (typeof rcTick === 'function') rcTick(dt);   // [classes] src/rclass.js
+  if (typeof rclTick === 'function') rclTick(dt);   // [classes] src/rclass.js
   // joined: the host's world has moved on to the next part
 }
 // who the drowned can come after
@@ -120,6 +124,8 @@ function raidBlock(x, y, pad, feet) { if (!RAID.on) return false; const S = raid
 function raidConsider(c) { if (RAID.on) raidCall('consider', c); }
 function raidPrompt(o) { return RAID.on ? raidCall('prompt', o) || null : null; }
 function raidUse(o) { return RAID.on ? !!raidCall('use', o) : false; }
+// (zmResolveShot) a shot of yours, along (lh, lp) from (x, y, z)
+function raidShot(x, y, z, lh, lp, by) { if (RAID.on) raidCall('shot', x, y, z, lh, lp, by); }
 
 // ---------- the parts, one after another ----------
 // alone or hosting: on to the next part, or (past the last) the raid is won
@@ -224,12 +230,15 @@ function raid3d(dt) {
   R3.lan.visible = show;
   const h = m.h, p = m.p, ez = G0 + FPSC.EYE + (m.jz || 0) - (FPS.eyeLag || 0) - (FPS.downEye || 0);
   const fx = Math.sin(h), fy = Math.cos(h), sw = reduceMotion ? 0 : Math.sin((FPS.step || 0) * 0.5) * 0.03;
-  const lx = m.x + fx * 0.72 - fy * 0.34 + fx * sw, ly = m.y + fy * 0.72 + fx * 0.34 + fy * sw, lz = ez - 0.48 + Math.sin(p) * 0.4 + Math.abs(sw);
-  R3.lan.position.copy(z3v(lx, ly, lz)); R3.lan.rotation.set(sw * 2, -h, 0);
+  // (held in the same place in your view, however you look: forward, left and down from your eye)
+  const cp = Math.cos(p), sp = Math.sin(p), F = [fx * cp, fy * cp, sp], Rt = [fy, -fx, 0], U = [-fx * sp, -fy * sp, cp];
+  const at = (f, r, u) => [m.x + F[0] * f + Rt[0] * r + U[0] * u, m.y + F[1] * f + Rt[1] * r + U[1] * u, ez + F[2] * f + U[2] * u];
+  const [lx, ly, lz] = at(0.78, -0.36 + sw, -0.3 + Math.abs(sw));
+  R3.lan.position.copy(z3v(lx, ly, lz)); R3.lan.rotation.set(0, -h, 0); R3.lan.rotateX(-p * 0.6 + sw * 2);
   const fl = reduceMotion ? 1 : 0.9 + 0.1 * Math.sin(t * 13) * Math.sin(t * 4.7);
   R3.flame.scale.set(fl, 1.8 * fl, fl); R3.halo.material.opacity = 0.8 * fl;
   // its light: from the lantern (or, while you're down, from where it lies)
-  R3.light.position.copy(z3v(m.x - fy * 0.3, m.y + fx * 0.3, ez - 0.2)); R3.light.intensity = (show ? 1.25 : 0.7) * fl;
+  R3.light.position.copy(z3v(m.x - fy * 0.3, m.y + fx * 0.3, ez - 0.2)); R3.light.intensity = (show ? 1.6 : 0.8) * fl; R3.light.distance = 16;
   // the others' lanterns
   const list = [...FPS.remote.values()].filter(r => !r.dead && r.x != null);
   while (R3.theirs.length < list.length) { const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: R3.glowTex, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending })); s.scale.setScalar(1.1); R3.grp.add(s); R3.theirs.push(s); }
@@ -426,7 +435,7 @@ FPI_K.rdshaft = {
         A.at(FPSC.CX + px, FPSC.CY + py, FPSC.GROUND, ang);
         A.box(RK[(R() * 4) | 0], 0, 0, z, cw + 0.3, 1.2, Math.min(6.2, RSW.SEA - z));
         if (R() < 0.18) A.box(RK[(R() * 4) | 0], (R() - 0.5) * cw * 0.6, -(0.6 + 0.25), z + R() * 4, 1 + R() * 2, 0.6, 0.35);
-        if (R() < 0.3) { const g = R() < 0.5 ? '#2a6a8a' : '#1e7266'; for (let j = 0, m = 2 + ((R() * 5) | 0); j < m; j++) A.glow(g, (R() - 0.5) * cw, -0.62, z + R() * 6, 0.09 + R() * 0.12); }
+        if (R() < 0.55) { const g = R() < 0.5 ? '#2a6a8a' : '#1e7266'; for (let j = 0, m = 3 + ((R() * 6) | 0); j < m; j++) A.glow(g, (R() - 0.5) * cw, -0.62, z + R() * 6, 0.1 + R() * 0.16); }
       }
     }
     // round the rim, up on the bed: broken slabs tipped in towards the hole
@@ -444,33 +453,33 @@ FPI_K.rdshaft = {
 FPI_K.rddock = {
   col: '#5a4430', noShadow: true,
   sol(p) {
-    const D = RSW.DECK, L = p.y1 - p.y0, mid = (p.y0 + p.y1) / 2 - p.y;
+    const D = RSW.DECK, L = (p.y1 - p.y0), mid = (p.y0 + p.y1) / 2;
     return [
       fpiBox(p, 0, mid, p.w / 2, L / 2, D, { z0: D - 0.35, fl: true }),
       fpiBox(p, -p.w / 2 - 0.08, mid + 1, 0.08, L / 2 - 1, D + 1.05, { z0: D }), fpiBox(p, p.w / 2 + 0.08, mid + 1, 0.08, L / 2 - 1, D + 1.05, { z0: D }),
-      fpiBox(p, 0, p.y0 - p.y - 4, 7, 4, D, { z0: RSW.SEA - 0.2, fl: true }),
+      fpiBox(p, 0, p.y0 - 4, 7, 4, D, { z0: RSW.SEA - 0.2, fl: true }),
     ];
   },
   b3(p, A) {
     const D = RSW.DECK, R = seeded(p.sd), PL = ['#5a4430', '#634b35', '#4e3b2a', '#6a5038'];
-    for (let y = p.y0; y < p.y1; y += 0.34) A.box(PL[(R() * 4) | 0], (R() - 0.5) * 0.06, y - p.y + 0.17, D - 0.14, p.w + 0.2, 0.31, 0.14);
+    for (let y = p.y0; y < p.y1; y += 0.34) A.box(PL[(R() * 4) | 0], (R() - 0.5) * 0.06, y + 0.17, D - 0.14, p.w + 0.2, 0.31, 0.14);
     for (const sx of [-1, 1]) {
-      A.box('#3c2e22', sx * (p.w / 2 - 0.15), (p.y0 + p.y1) / 2 - p.y, D - 0.4, 0.25, p.y1 - p.y0, 0.28);
-      A.box('#5c4632', sx * (p.w / 2 + 0.08), (p.y0 + p.y1) / 2 - p.y + 1, D + 0.95, 0.12, p.y1 - p.y0 - 2, 0.1);
-      for (let y = p.y0 + 1; y < p.y1 - 1; y += 2.2) A.box('#4e3c2a', sx * (p.w / 2 + 0.08), y - p.y, D, 0.12, 0.12, 1.0);
-      for (let y = p.y0 + 1; y < p.y1; y += 4) { A.cyl('#3a2e24', sx * (p.w / 2 - 0.3), y - p.y, RSW.SEA - 0.6, 0.22, D - RSW.SEA + 0.3); A.box('#9a9488', sx * (p.w / 2 - 0.3), y - p.y, RSW.SEA + 0.4, 0.5, 0.5, 0.25); }
+      A.box('#3c2e22', sx * (p.w / 2 - 0.15), (p.y0 + p.y1) / 2, D - 0.4, 0.25, (p.y1 - p.y0), 0.28);
+      A.box('#5c4632', sx * (p.w / 2 + 0.08), (p.y0 + p.y1) / 2 + 1, D + 0.95, 0.12, (p.y1 - p.y0) - 2, 0.1);
+      for (let y = p.y0 + 1; y < p.y1 - 1; y += 2.2) A.box('#4e3c2a', sx * (p.w / 2 + 0.08), y, D, 0.12, 0.12, 1.0);
+      for (let y = p.y0 + 1; y < p.y1; y += 4) { A.cyl('#3a2e24', sx * (p.w / 2 - 0.3), y, RSW.SEA - 0.6, 0.22, D - RSW.SEA + 0.3); A.box('#9a9488', sx * (p.w / 2 - 0.3), y, RSW.SEA + 0.4, 0.5, 0.5, 0.25); }
     }
     // braces under the deck between the piles
-    for (let y = p.y0 + 1; y < p.y1 - 4; y += 4) A.box('#3a2e24', 0, y - p.y + 2, RSW.SEA + 1.4, p.w - 0.4, 0.15, 0.2, 0, 0, 0.5);
+    for (let y = p.y0 + 1; y < p.y1 - 4; y += 4) A.box('#3a2e24', 0, y + 2, RSW.SEA + 1.4, p.w - 0.4, 0.15, 0.2, 0, 0, 0.5);
     // the lamp posts, every so far (their lights are laid with the pier: H.light)
     for (const [ly, sx] of p.lamps) {
-      A.box('#2a2622', sx * (p.w / 2 + 0.1), ly - p.y, D, 0.14, 0.14, 2.6);
-      A.box('#2a2622', sx * (p.w / 2 - 0.25), ly - p.y, D + 2.5, 0.7, 0.08, 0.08);
-      A.box('#1c1a18', sx * (p.w / 2 - 0.55), ly - p.y, D + 2.0, 0.22, 0.22, 0.34);
-      A.glow('#ffd88a', sx * (p.w / 2 - 0.55), ly - p.y, D + 2.17, 0.16);
+      A.box('#2a2622', sx * (p.w / 2 + 0.1), ly, D, 0.14, 0.14, 2.6);
+      A.box('#2a2622', sx * (p.w / 2 - 0.25), ly, D + 2.5, 0.7, 0.08, 0.08);
+      A.box('#1c1a18', sx * (p.w / 2 - 0.55), ly, D + 2.0, 0.22, 0.22, 0.34);
+      A.glow('#ffd88a', sx * (p.w / 2 - 0.55), ly, D + 2.17, 0.16);
     }
     // the quay: a stone landing, and the old shore rising behind it
-    const qy = p.y0 - p.y - 4;
+    const qy = p.y0 - 4;
     for (let i = -6; i <= 6; i += 1.5) for (let j = -3.5; j <= 3.5; j += 1.4) A.box(['#6c6a62', '#625f58', '#74716a'][(R() * 3) | 0], i, qy + j, D - 0.3, 1.45, 1.35, 0.32);
     A.box('#55524a', 0, qy, RSW.SEA - 0.2, 14.2, 8.2, D - RSW.SEA - 0.2);
     for (let i = 0; i < 26; i++) { const u = -60 + R() * 120, v = qy - 6 - R() * 26; A.box(['#4a463e', '#3e3b35', '#55504a'][(R() * 3) | 0], u, v, RSW.SEA - 1, 8 + R() * 18, 6 + R() * 10, D - RSW.SEA + 6 + R() * 40, R() * 0.6); }
@@ -556,8 +565,8 @@ function rswSet(H, K) {
   const N = RSG.N, TH = 3;
   const run = (a, b, side) => {
     const dx = b[0] - a[0], dy = b[1] - a[1], L = Math.hypot(dx, dy), ux = dx / L, uy = dy / L, nx = -uy, ny = ux;
-    // (the wall's middle half its thickness out from the path's side)
-    put('rdwall', (a[0] + b[0]) / 2 - side * nx * TH / 2, (a[1] + b[1]) / 2 - side * ny * TH / 2, Math.atan2(uy, ux), { len: L + 1.2, th: TH, side });
+    // (the wall's middle half its thickness out beyond the path's side: side +1, the path's left)
+    put('rdwall', (a[0] + b[0]) / 2 + side * nx * TH / 2, (a[1] + b[1]) / 2 + side * ny * TH / 2, Math.atan2(uy, ux), { len: L + 1.2, th: TH, side: -side });
   };
   for (let i = 1; i < N.length; i++) { run(N[i - 1].L, N[i].L, 1); run(N[i - 1].R, N[i].R, -1); }
   for (const p of N) { put('rdpillar', p.L[0], p.L[1], 0, { r: 1.2 }); put('rdpillar', p.R[0], p.R[1], 0, { r: 1.2 }); }
