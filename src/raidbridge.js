@@ -230,7 +230,8 @@ function rbMe(dt) {
 function rbLetGo() {
   const m = FPS.me; if (!ZM.own.includes('plimsoll')) return;
   const was = FPS.weapon === 'plimsoll'; ZM.own = ZM.own.filter(id => id !== 'plimsoll'); if (!ZM.own.length) ZM.own = ['pepperbox'];
-  if (was) { FPS.weapon = FPS.last && ZM.own.includes(FPS.last) ? FPS.last : ZM.own[0]; m.ammo = m.mags[FPS.weapon] || 0; FPS.drawT = 0.45; m.cd = 0; }
+  if (was) { FPS.weapon = FPS.last && ZM.own.includes(FPS.last) ? FPS.last : ZM.own[0]; m.ammo = m.mags[FPS.weapon] || 0; FPS.drawT = 0.45; m.cd = 0; m.reload = 0; FPS.scoped = false; }
+  if (typeof zmFixLast === 'function') zmFixLast();
 }
 // in the river: it carries you back down to the near bank, and knocks you about doing it
 function rbSwept() {

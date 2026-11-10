@@ -2881,18 +2881,27 @@ function zmBoxSpin(by, own) {
   B.moving = B.spins > 1 && B.uses > 3 && Math.random() < 0.35;
   zmSound('open');
 }
-// a weapon in hand: a third replaces the one you're holding
+// a weapon in hand. You carry two guns and, beside them, one blade (the cutlass, the Boarding Axe): a blade never
+// takes a gun's place, nor a gun a blade's. A third gun replaces the gun you're holding (or, with the blade out, the
+// one you held last); a second blade replaces the first. (It once took a gun's place, and with the gun gone the
+// cutlass was all you had left)
+const zmBlade = id => !!(FPSW[id] && FPSW[id].melee) && id !== 'plimsoll';
 function zmGive(id) {
-  const m = FPS.me, w = FPSW[id];
+  const m = FPS.me, w = FPSW[id], was = FPS.weapon;
   if (!ZM.own.includes(id)) {
-    if (ZM.own.length < 2) ZM.own.push(id);
-    else { const i = Math.max(0, ZM.own.indexOf(FPS.weapon)); ZM.own[i] = id; }
+    const blade = zmBlade(id), kin = ZM.own.filter(k => zmBlade(k) === blade && k !== 'plimsoll');
+    if (kin.length < (blade ? 1 : 2)) ZM.own.splice(blade ? ZM.own.length : ZM.own.filter(k => !zmBlade(k) && k !== 'plimsoll').length, 0, id);
+    else { const out = blade ? kin[0] : kin.includes(was) ? was : kin.includes(FPS.last) ? FPS.last : kin[kin.length - 1]; ZM.own[ZM.own.indexOf(out)] = id; }
   }
   m.mags[id] = w.mag; ZM.res[id] = ZM_AMMO[id];
-  if (FPS.weapon !== id) { m.mags[FPS.weapon] = m.ammo; FPS.last = ZM.own.includes(FPS.weapon) ? FPS.weapon : FPS.last; FPS.weapon = id; m.ammo = w.mag; m.reload = 0; m.cd = 0; FPS.drawT = 0.45; FPS.scoped = false; FPS.heldFire = true; }
+  if (was !== id) { m.mags[was] = m.ammo; FPS.weapon = id; m.ammo = w.mag; m.reload = 0; m.cd = 0; FPS.drawT = 0.45; FPS.scoped = false; FPS.heldFire = true; }
   else { m.ammo = w.mag; }
+  zmFixLast();
   zmSound('buy');
 }
+// (Q, the last weapon) always something you still carry, and never the one in your hands
+function zmFixLast() { if (!ZM.own.includes(FPS.last) || FPS.last === FPS.weapon) FPS.last = ZM.own.find(k => k !== FPS.weapon) || FPS.weapon; }
+function zmLastWeapon() { zmFixLast(); fpsSwitch(FPS.last); }
 function zmSlot(i) { const id = ZM.own[i]; if (id) fpsSwitch(id); }
 
 // ---------- buying things ----------
@@ -4292,7 +4301,7 @@ function zmPadState() {
 
 // ---------- controls ----------
 // E (or F) to use, V the knife, 1-3 your weapons; the rest as Wreckers' Night (FPS_KEYS in src/fps.js)
-const ZM_KEYS = { KeyF: () => zmUse(), KeyE: () => zmUse(), KeyV: () => zmKnife(), KeyB: null, Digit1: () => zmSlot(0), Digit2: () => zmSlot(1), Digit3: () => zmSlot(2), Digit4: null, Digit5: null, Digit6: null };
+const ZM_KEYS = { KeyF: () => zmUse(), KeyE: () => zmUse(), KeyV: () => zmKnife(), KeyB: null, Digit1: () => zmSlot(0), Digit2: () => zmSlot(1), Digit3: () => zmSlot(2), KeyQ: () => zmLastWeapon(), Digit4: null, Digit5: null, Digit6: null };
 {
   const kn = $('fpsPadKnife');
   if (kn) kn.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); zmKnife(); });

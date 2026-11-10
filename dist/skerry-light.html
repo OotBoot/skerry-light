@@ -21288,18 +21288,27 @@ function zmBoxSpin(by, own) {
   B.moving = B.spins > 1 && B.uses > 3 && Math.random() < 0.35;
   zmSound('open');
 }
-// a weapon in hand: a third replaces the one you're holding
+// a weapon in hand. You carry two guns and, beside them, one blade (the cutlass, the Boarding Axe): a blade never
+// takes a gun's place, nor a gun a blade's. A third gun replaces the gun you're holding (or, with the blade out, the
+// one you held last); a second blade replaces the first. (It once took a gun's place, and with the gun gone the
+// cutlass was all you had left)
+const zmBlade = id => !!(FPSW[id] && FPSW[id].melee) && id !== 'plimsoll';
 function zmGive(id) {
-  const m = FPS.me, w = FPSW[id];
+  const m = FPS.me, w = FPSW[id], was = FPS.weapon;
   if (!ZM.own.includes(id)) {
-    if (ZM.own.length < 2) ZM.own.push(id);
-    else { const i = Math.max(0, ZM.own.indexOf(FPS.weapon)); ZM.own[i] = id; }
+    const blade = zmBlade(id), kin = ZM.own.filter(k => zmBlade(k) === blade && k !== 'plimsoll');
+    if (kin.length < (blade ? 1 : 2)) ZM.own.splice(blade ? ZM.own.length : ZM.own.filter(k => !zmBlade(k) && k !== 'plimsoll').length, 0, id);
+    else { const out = blade ? kin[0] : kin.includes(was) ? was : kin.includes(FPS.last) ? FPS.last : kin[kin.length - 1]; ZM.own[ZM.own.indexOf(out)] = id; }
   }
   m.mags[id] = w.mag; ZM.res[id] = ZM_AMMO[id];
-  if (FPS.weapon !== id) { m.mags[FPS.weapon] = m.ammo; FPS.last = ZM.own.includes(FPS.weapon) ? FPS.weapon : FPS.last; FPS.weapon = id; m.ammo = w.mag; m.reload = 0; m.cd = 0; FPS.drawT = 0.45; FPS.scoped = false; FPS.heldFire = true; }
+  if (was !== id) { m.mags[was] = m.ammo; FPS.weapon = id; m.ammo = w.mag; m.reload = 0; m.cd = 0; FPS.drawT = 0.45; FPS.scoped = false; FPS.heldFire = true; }
   else { m.ammo = w.mag; }
+  zmFixLast();
   zmSound('buy');
 }
+// (Q, the last weapon) always something you still carry, and never the one in your hands
+function zmFixLast() { if (!ZM.own.includes(FPS.last) || FPS.last === FPS.weapon) FPS.last = ZM.own.find(k => k !== FPS.weapon) || FPS.weapon; }
+function zmLastWeapon() { zmFixLast(); fpsSwitch(FPS.last); }
 function zmSlot(i) { const id = ZM.own[i]; if (id) fpsSwitch(id); }
 
 // ---------- buying things ----------
@@ -22699,7 +22708,7 @@ function zmPadState() {
 
 // ---------- controls ----------
 // E (or F) to use, V the knife, 1-3 your weapons; the rest as Wreckers' Night (FPS_KEYS in src/fps.js)
-const ZM_KEYS = { KeyF: () => zmUse(), KeyE: () => zmUse(), KeyV: () => zmKnife(), KeyB: null, Digit1: () => zmSlot(0), Digit2: () => zmSlot(1), Digit3: () => zmSlot(2), Digit4: null, Digit5: null, Digit6: null };
+const ZM_KEYS = { KeyF: () => zmUse(), KeyE: () => zmUse(), KeyV: () => zmKnife(), KeyB: null, Digit1: () => zmSlot(0), Digit2: () => zmSlot(1), Digit3: () => zmSlot(2), KeyQ: () => zmLastWeapon(), Digit4: null, Digit5: null, Digit6: null };
 {
   const kn = $('fpsPadKnife');
   if (kn) kn.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); zmKnife(); });
@@ -24869,7 +24878,8 @@ function zxTick(dt) {
   for (const P of ZX.proj) zxProj(P, dt);
   ZX.proj = ZX.proj.filter(P => !P.done);
   ZX.axeOut = ZX.proj.some(P => P.k === 'X' && P.mine);
-  if (ZX.axeOut) m.cd = Math.max(m.cd, 0.05);
+  // (the Homeward Axe out of your hand: nothing to swing till it's back; a gun in your hand fires as ever)
+  if (ZX.axeOut && FPS.weapon === 'axe') m.cd = Math.max(m.cd, 0.05);
   zxPools(dt); zxNets(dt);
   if (typeof zrTick === 'function') zrTick(dt);   // [crab]
   // set alight by a flare: they burn on a while
@@ -30361,7 +30371,8 @@ function rbMe(dt) {
 function rbLetGo() {
   const m = FPS.me; if (!ZM.own.includes('plimsoll')) return;
   const was = FPS.weapon === 'plimsoll'; ZM.own = ZM.own.filter(id => id !== 'plimsoll'); if (!ZM.own.length) ZM.own = ['pepperbox'];
-  if (was) { FPS.weapon = FPS.last && ZM.own.includes(FPS.last) ? FPS.last : ZM.own[0]; m.ammo = m.mags[FPS.weapon] || 0; FPS.drawT = 0.45; m.cd = 0; }
+  if (was) { FPS.weapon = FPS.last && ZM.own.includes(FPS.last) ? FPS.last : ZM.own[0]; m.ammo = m.mags[FPS.weapon] || 0; FPS.drawT = 0.45; m.cd = 0; m.reload = 0; FPS.scoped = false; }
+  if (typeof zmFixLast === 'function') zmFixLast();
 }
 // in the river: it carries you back down to the near bank, and knocks you about doing it
 function rbSwept() {
@@ -32667,7 +32678,7 @@ function rclWells(dt) {
 
 // ---------- the controls ----------
 // G (or Q) the grenade, X the ultimate; Q is still the last weapon outside Maren's End
-Object.assign(ZM_KEYS, { KeyG: rclGrenade, KeyX: rclUlt, KeyQ: () => { if (rclOn()) rclGrenade(); else fpsSwitch(FPS.last); } });
+Object.assign(ZM_KEYS, { KeyG: rclGrenade, KeyX: rclUlt, KeyQ: () => { if (rclOn()) rclGrenade(); else zmLastWeapon(); } });
 // (fpsInput, a controller in the Lighthouse engine) LB the grenade, RB (or up on the D-pad) the ultimate
 function rclPad(b, was) { if (!rclOn()) return; if (b(4) && !was[4]) rclGrenade(); if ((b(5) && !was[5]) || (b(12) && !was[12])) rclUlt(); }
 {

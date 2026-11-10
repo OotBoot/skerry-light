@@ -223,7 +223,8 @@ function zxTick(dt) {
   for (const P of ZX.proj) zxProj(P, dt);
   ZX.proj = ZX.proj.filter(P => !P.done);
   ZX.axeOut = ZX.proj.some(P => P.k === 'X' && P.mine);
-  if (ZX.axeOut) m.cd = Math.max(m.cd, 0.05);
+  // (the Homeward Axe out of your hand: nothing to swing till it's back; a gun in your hand fires as ever)
+  if (ZX.axeOut && FPS.weapon === 'axe') m.cd = Math.max(m.cd, 0.05);
   zxPools(dt); zxNets(dt);
   if (typeof zrTick === 'function') zrTick(dt);   // [crab]
   // set alight by a flare: they burn on a while

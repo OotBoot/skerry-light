@@ -356,7 +356,7 @@ function rclWells(dt) {
 
 // ---------- the controls ----------
 // G (or Q) the grenade, X the ultimate; Q is still the last weapon outside Maren's End
-Object.assign(ZM_KEYS, { KeyG: rclGrenade, KeyX: rclUlt, KeyQ: () => { if (rclOn()) rclGrenade(); else fpsSwitch(FPS.last); } });
+Object.assign(ZM_KEYS, { KeyG: rclGrenade, KeyX: rclUlt, KeyQ: () => { if (rclOn()) rclGrenade(); else zmLastWeapon(); } });
 // (fpsInput, a controller in the Lighthouse engine) LB the grenade, RB (or up on the D-pad) the ultimate
 function rclPad(b, was) { if (!rclOn()) return; if (b(4) && !was[4]) rclGrenade(); if ((b(5) && !was[5]) || (b(12) && !was[12])) rclUlt(); }
 {
