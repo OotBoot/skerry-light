@@ -141,7 +141,9 @@ const ZM_ZONES = {
 // ashore, and the sea wall's line. South of the shore (ZM_SHORE) the island lies under the harbour's water: nobody
 // walks there, the drowned wade up out of it (zmSeaDepth: how deep the seabed lies under the water there)
 const ZMD = { TOP: 0.9, START: [0, -56.5], WATER: 0.13 };
-const ZM_SHORE = lx => -41.5 + Math.max(0, Math.abs(lx) - 22) * 0.4;
+// (a map can draw its own shore: ZM_MAPS[..].shore)
+const ZM_SHORE0 = lx => -41.5 + Math.max(0, Math.abs(lx) - 22) * 0.4;
+const ZM_SHORE = lx => ((typeof ZM_MAPS !== 'undefined' && ZM_MAPS[ZM_MAP] && ZM_MAPS[ZM_MAP].shore) || ZM_SHORE0)(lx);
 function zmSeaDepth(x, y) {
   if (!(FPS.g && FPS.g.isle && FPS.g.isle.zm && FPS.g.isle.zm.bay)) return 0;
   const lx = x - FPSC.CX, ly = y - FPSC.CY;
@@ -163,19 +165,36 @@ const ZM_MAPS = {
   light: { n: 'the Lighthouse', N: 'The Lighthouse', isle: 'light', tower: true, noBox: ['hermit'], zones: Object.assign({}, ZM_ZONES), start: [0, -56.5], top: 0.9, seed: 0x11947,
     blurb: 'The keeper\u2019s station at the Light: a tower five floors high, the lantern at its top.',
     land: n => `The boat leaves you on the jetty below the Light${n ? ', ' + n + ' of you' : ''}. Up through the sea gate, and hold the Light.` },
-  wrack: { n: 'Wrackhaven', N: 'Wrackhaven', isle: 'wrack', tower: false, noBox: ['fresnel'], start: [0, -46], top: 0.45, seed: 0x3a71d,
-    blurb: 'A fishing village the sea took back: the quay, Fish Street, the inn, the smokehouse, the chapel.',
+  wrack: { n: 'Wrackhaven', N: 'Wrackhaven', isle: 'wrack', tower: false, noBox: ['fresnel'], start: [0, -49], top: 0.45, seed: 0x3a71d,
+    blurb: 'A fishing village the sea took back: the quay, Fish Street, the houses round the Square, and the town hall in the middle of it, three floors up to the Belfry.',
     land: n => `The boat leaves you on the quay at Wrackhaven${n ? ', ' + n + ' of you' : ''}. Up through the harbour gate, and hold the village.`,
-    // [x0, x1, y0, y1] relative to the island's middle, as ZM_ZONES; the sea to the south, as at the Lighthouse
+    // (the harbour's edge, further out than at the Lighthouse; the grid the drowned walk by, over the whole village)
+    shore: lx => -45 + Math.max(0, Math.abs(lx) - 48) * 0.5, nav: [-44, 44, -57, 46],
+    // [x0, x1, y0, y1] relative to the island's middle, as ZM_ZONES; the sea to the south, as at the Lighthouse. The
+    // town hall's rooms come first (whichever matches first is the room you're in), each with zr, the height of its
+    // floor and of the one above: the Belfry at the top, the two rooms of the first floor, then the ground floor's
+    // two. Round the hall the Square, and round that a ring of houses, Fish Street running down from it to the quay.
     zones: {
-      dock: { n: 'the Quay', r: [-20, 20, -52, -39.25], sky: true },
-      street: { n: 'Fish Street', r: [-5, 5, -39, 20], sky: true },
-      chandler: { n: 'the Chandlery', r: [-26, -5, -39, -22], floor: 'boards', wall: '#b8ae96' },
-      inn: { n: 'the Drowned Man', r: [-26, -5, -22, -1], floor: 'boards', wall: '#b09a80' },
-      chapel: { n: 'the Seamen\u2019s Chapel', r: [-26, -5, -1, 20], floor: 'flags', wall: '#c4beae' },
-      market: { n: 'the Fish Market', r: [5, 26, -39, -22], floor: 'flags', wall: '#a8a898' },
-      smoke: { n: 'the Smokehouse', r: [5, 26, -22, -1], floor: 'flags', wall: '#8e8272' },
-      byard: { n: 'the Boatyard', r: [5, 26, -1, 20], sky: true },
+      belfry: { n: 'the Belfry', r: [-3.5, 3.5, 7, 13], zr: [8.8, 99] },
+      records: { n: 'the Records Room', r: [-11, 11, -9, 1], zr: [4.4, 8.8] },
+      council: { n: 'the Council Chamber', r: [-11, 11, 1, 13], zr: [4.4, 8.8] },
+      moot: { n: 'the Moot Hall', r: [-11, 11, -9, 7], zr: [0, 4.4], floor: 'flags', wall: '#c8c0aa' },
+      clerk: { n: 'the Clerk\u2019s Office', r: [-11, 11, 7, 13], zr: [0, 4.4], floor: 'boards', wall: '#b8ae96' },
+      dock: { n: 'the Quay', r: [-22, 22, -55, -42.25], sky: true },
+      street: { n: 'Fish Street', r: [-4, 4, -42, -16], sky: true },
+      square: { n: 'the Square', r: [-18, 18, -16, 20], sky: true },
+      chandler: { n: 'the Chandlery', r: [-18, -4, -42, -16], floor: 'boards', wall: '#b8ae96' },
+      market: { n: 'the Fish Market', r: [4, 18, -42, -16], floor: 'flags', wall: '#a8a898' },
+      smoke: { n: 'the Smokehouse', r: [-42, -18, -42, -16], floor: 'flags', wall: '#8e8272' },
+      cooper: { n: 'the Cooperage', r: [18, 42, -42, -16], floor: 'boards', wall: '#a49680' },
+      inn: { n: 'the Drowned Man', r: [-42, -18, -16, 6], floor: 'boards', wall: '#b09a80' },
+      kitchen: { n: 'the Inn Kitchen', r: [-42, -18, 6, 20], floor: 'flags', wall: '#b4a690' },
+      chapel: { n: 'the Seamen\u2019s Chapel', r: [18, 42, -16, 12], floor: 'flags', wall: '#c4beae' },
+      vestry: { n: 'the Vestry', r: [18, 42, 12, 20], floor: 'boards', wall: '#bcb4a0' },
+      byard: { n: 'the Boatyard', r: [-42, -18, 20, 44], sky: true },
+      forge: { n: 'the Forge', r: [-18, 0, 20, 44], floor: 'flags', wall: '#8a8274' },
+      school: { n: 'the School House', r: [0, 18, 20, 44], floor: 'boards', wall: '#c0b69e' },
+      yard: { n: 'the Churchyard', r: [18, 42, 20, 44], sky: true },
     } },
 };
 const ZM_MAP_IDS = Object.keys(ZM_MAPS);
@@ -904,9 +923,9 @@ function zmKit(H, Z) {
       } else if (op.k === 'arch') lintel(2.9);
       else if (op.k === 'win') {
         lintel(2.35);
-        put('block', mx, my, ang, { w: w + 0.04, d: TH, hh: 1.0, col: lc, trim: FPI_C.wood3 });
+        put('block', mx, my, ang, { w: w + 0.04, d: TH, hh: 1.0, col: lc, trim: FPI_C.wood3, lift });
         const [wx, wy] = W(mx, my), [nx, ny] = horiz ? [0, op.out] : [op.out, 0];
-        Z.windows.push({ x: wx, y: wy, nx, ny, zone: op.z, boards: 6, id: Z.windows.length, q: [], hw: w / 2, th: TH / 2, shore: op.shore || undefined });
+        Z.windows.push({ x: wx, y: wy, nx, ny, zone: op.z, z: lift || undefined, boards: 6, id: Z.windows.length, q: [], hw: w / 2, th: TH / 2, shore: op.shore || undefined });
       } else if (op.k === 'glass') {
         // a glazed window: sill, lintel, and a pane nobody comes through (drawn with the tower's glass)
         lintel(2.35);
@@ -927,7 +946,7 @@ function zmKit(H, Z) {
     if (!extra || extra.ceil !== false) put('ceil', cx, cy, 0, { w: w + 0.4, d: d + 0.4, z0: (extra && extra.ceilZ) || CE, col: Zr.floor === 'boards' ? '#8a8270' : '#9a9484' });
   };
   const buy = (id, cost, x, y, nx, ny, z) => { put('board', x, y, ny ? 0 : Math.PI / 2, z ? { lift: z } : {}); const [wx, wy] = W(x, y); Z.buys.push({ id, cost, x: wx, y: wy, nx, ny, z: z || 0 }); };
-  const perk = (k, x, y, a) => { put('tonic', x, y, a, { c: ZM_PERKS[k].c, pk: k }); const [wx, wy] = W(x, y), nx = Math.round(Math.sin(a)), ny = Math.round(-Math.cos(a)); Z.perks.push({ k, x: wx, y: wy, nx, ny, z: 0 }); light(x + nx * 0.7, y + ny * 0.7, 1.5, ZM_PERKS[k].c, 5, 'lantern'); };
+  const perk = (k, x, y, a, z) => { put('tonic', x, y, a, Object.assign({ c: ZM_PERKS[k].c, pk: k }, z ? { lift: z } : {})); const [wx, wy] = W(x, y), nx = Math.round(Math.sin(a)), ny = Math.round(-Math.cos(a)); Z.perks.push({ k, x: wx, y: wy, nx, ny, z: z || 0 }); light(x + nx * 0.7, y + ny * 0.7, (z || 0) + 1.5, ZM_PERKS[k].c, 5, 'lantern'); };
   const spot = (x, y, nx, ny, base, zone) => { put('plinth', x, y, ny ? 0 : Math.PI / 2, { base }); const [wx, wy] = W(x, y); Z.spawns.push({ x: wx, y: wy, nx, ny, z: (base || 0) + 0.32, zone }); };
   return { W, put, light, lamp, wall, room, buy, perk, spot };
 }
@@ -1350,13 +1369,16 @@ FPI_GEN.light = {
 };
 
 // ---------- Wrackhaven: the second map ----------
-// A fishing village on the harbour, gone under one winter night and given back by the sea: the stone quay you come
-// ashore on, the harbour gate in the sea wall, and Fish Street running up from it between the houses, open to the sky.
-// On the west side of the street the Chandlery, the Drowned Man (the inn) and the Seamen's Chapel at the top; on the
-// east, the Fish Market, the Smokehouse and the Boatyard (walled, open to the sky, a boat on the stocks). Each house
-// has a door onto the street and one through to its neighbour. The drowned come up the quay's ladders out of the
-// water, and in at the windows on the village's three landward sides. All on the ground: no tower, no lantern, no
-// Light to light; the Lampwright's Bench stands in the chapel where the altar was.
+// A fishing village on the harbour, gone under one winter night and given back by the sea, laid out round its Square.
+// You come ashore on the stone quay, through the harbour gate in the sea wall, and up Fish Street (the Chandlery on
+// one side of it, the Fish Market on the other) to the Square. In the middle of the Square stands the town hall, of
+// dressed stone, three floors high: the Moot Hall and the Clerk's Office on the ground, a stair up to the Records Room
+// and the Council Chamber, and another up into the Belfry in its clock tower over the flat leaded roof. Round the
+// Square a ring of houses, each with a door onto it and one through to its neighbours: the Smokehouse and the
+// Cooperage at the harbour corners, the Drowned Man (the inn) and its kitchen on the west side, the Seamen's Chapel
+// and its vestry on the east, and along the top the Forge and the School House, between the Boatyard and the
+// Churchyard (both walled, open to the sky). The drowned come up the quay's ladders out of the water, in at the
+// windows on the village's landward sides, and up the town hall's walls to its upper windows.
 FPS_ISLES.wrack = Object.assign({}, FPS_ISLES.light, { name: 'Wrackhaven' });
 FPI_GEN.wrack = {
   built: true,
@@ -1365,144 +1387,328 @@ FPI_GEN.wrack = {
     const Z = I.zm = { doors: [], windows: [], buys: [], perks: [], spawns: [], lights: [] };
     const { W, put, light, lamp, wall, room, buy, perk, spot } = zmKit(H, Z);
     const ZZ = ZM_MAPS.wrack.zones, PL = c => ({ mat: 'plaster', col2: c }), ST = { mat: 'stone' }, LOW = { mat: 'stone', hh: 2.6, cap: true };
-    for (const k of Object.keys(ZZ)) if (!ZZ[k].sky) room(k);
+    // (the town hall: its two floors, the height of each, and the Belfry's floor)
+    const F1 = 4.4, F2 = 8.8, HS = { mat: 'stone', hh: F1 }, HS1 = { mat: 'stone', hh: F1, lift: F1 }, HP1 = { mat: 'plaster', col2: '#d0c8b2', hh: F1, lift: F1 };
+    // (the new props of src/zmvillage.js, where they're loaded)
+    const vput = (k, x, y, a, o) => FPI_K[k] ? put(k, x, y, a, o) : null;
+    for (const k of Object.keys(ZZ)) if (!ZZ[k].sky && !ZZ[k].zr) room(k);
+    room('moot', { ceil: false }); room('clerk', { ceil: false });
     const wl = (x, y, nx, ny, z) => { put('wlamp', x, y, Math.atan2(-nx, ny), { z: z || 2.3 }); light(x + nx * 0.42, y + ny * 0.42, (z || 2.3) + 0.05, '#ffc070', 9, 'lantern'); };
-    // ---------- the walls ----------
-    // the front onto the quay: the Chandlery's and the Fish Market's glazed windows, the harbour gate between
-    wall(-26, -39, -5, -39, PL(ZZ.chandler.wall), [{ at: -20, k: 'glass' }, { at: -11, k: 'glass' }]);
-    wall(-5, -39, 5, -39, ST, [{ at: 0, k: 'door', cost: 750, z: ['dock', 'street'] }]);
-    wall(5, -39, 26, -39, ST, [{ at: 11, k: 'glass' }, { at: 20, k: 'glass' }]);
-    // the landward sides: windows the drowned climb in at
-    wall(-26, -39, -26, -22, ST, [{ at: -34, k: 'win', out: -1, z: 'chandler' }, { at: -27, k: 'win', out: -1, z: 'chandler' }]);
-    wall(-26, -22, -26, -1, ST, [{ at: -16, k: 'win', out: -1, z: 'inn' }, { at: -7, k: 'win', out: -1, z: 'inn' }]);
-    wall(-26, -1, -26, 20, ST, [{ at: 5, k: 'win', out: -1, z: 'chapel' }, { at: 14, k: 'win', out: -1, z: 'chapel' }]);
-    wall(26, -39, 26, -22, ST, [{ at: -34, k: 'win', out: 1, z: 'market' }, { at: -27, k: 'win', out: 1, z: 'market' }]);
-    wall(26, -22, 26, -1, ST, [{ at: -16, k: 'win', out: 1, z: 'smoke' }, { at: -6, k: 'win', out: 1, z: 'smoke' }]);
-    wall(26, -1, 26, 20, LOW, [{ at: 5, k: 'win', out: 1, z: 'byard' }, { at: 14, k: 'win', out: 1, z: 'byard' }]);
-    wall(-26, 20, -5, 20, ST, [{ at: -20.5, k: 'win', out: 1, z: 'chapel' }, { at: -10.5, k: 'win', out: 1, z: 'chapel' }]);
-    wall(-5, 20, 5, 20, LOW, [{ at: -2.4, k: 'win', out: 1, z: 'street' }, { at: 2.4, k: 'win', out: 1, z: 'street' }]);
-    wall(5, 20, 26, 20, LOW, [{ at: 11, k: 'win', out: 1, z: 'byard' }, { at: 20, k: 'win', out: 1, z: 'byard' }]);
-    // between the houses
-    wall(-26, -22, -5, -22, PL(ZZ.inn.wall), [{ at: -16, k: 'door', cost: 750, z: ['chandler', 'inn'] }]);
-    wall(-26, -1, -5, -1, PL(ZZ.chapel.wall), [{ at: -21, k: 'door', cost: 1000, z: ['inn', 'chapel'] }]);
-    wall(5, -22, 26, -22, ST, [{ at: 16, k: 'door', cost: 750, z: ['market', 'smoke'] }]);
-    wall(5, -1, 26, -1, ST, [{ at: 16, k: 'debris', cost: 1000, z: ['smoke', 'byard'] }]);
-    // the house fronts on Fish Street
-    wall(-5, -39, -5, -22, PL(ZZ.chandler.wall), [{ at: -30.5, k: 'door', cost: 750, z: ['street', 'chandler'] }]);
-    wall(-5, -22, -5, -1, PL(ZZ.inn.wall), [{ at: -16.5, k: 'door', cost: 1000, z: ['street', 'inn'] }]);
-    wall(-5, -1, -5, 20, ST, [{ at: 9.5, k: 'debris', cost: 1250, z: ['street', 'chapel'] }]);
-    wall(5, -39, 5, -22, ST, [{ at: -30.5, k: 'door', cost: 750, z: ['street', 'market'] }]);
-    wall(5, -22, 5, -1, ST, [{ at: -11.5, k: 'debris', cost: 1000, z: ['street', 'smoke'] }]);
-    wall(5, -1, 5, 20, LOW, [{ at: 9.5, k: 'door', cost: 1250, z: ['street', 'byard'] }]);
-    Z.glass = (Z.glassQ || []).slice();
-    // the roofs: slate on the houses, the chapel's steeper
-    for (const [cx, cy, d, rise] of [[-15.5, -30.5, 17, 3.2], [-15.5, -11.5, 21, 3.4], [-15.5, 9.5, 21, 5.2], [15.5, -30.5, 17, 3.0], [15.5, -11.5, 21, 3.2]]) put('roof', cx, cy, 0, { w: 21.8, d: d + 0.8, z0: CE + 0.3, rise, mat: 'wood' });
+    // ---------- the walls round the village ----------
+    // the front onto the harbour: the corner houses over the shingle (the drowned wade up out of the water to their
+    // windows), the Chandlery's and the Fish Market's glazed windows onto the quay, the harbour gate between
+    wall(-42, -42, -18, -42, ST, [{ at: -35, k: 'win', out: -1, z: 'smoke', shore: true }, { at: -27, k: 'win', out: -1, z: 'smoke', shore: true }]);
+    wall(-18, -42, -4, -42, PL(ZZ.chandler.wall), [{ at: -14, k: 'glass' }, { at: -8, k: 'glass' }]);
+    wall(-4, -42, 4, -42, ST, [{ at: 0, k: 'door', cost: 750, z: ['dock', 'street'] }]);
+    wall(4, -42, 18, -42, ST, [{ at: 8, k: 'glass' }, { at: 14, k: 'glass' }]);
+    wall(18, -42, 42, -42, PL(ZZ.cooper.wall), [{ at: 27, k: 'win', out: -1, z: 'cooper', shore: true }, { at: 35, k: 'win', out: -1, z: 'cooper', shore: true }]);
+    // the landward sides
+    wall(-42, -42, -42, -16, ST, [{ at: -36, k: 'win', out: -1, z: 'smoke' }, { at: -23, k: 'win', out: -1, z: 'smoke' }]);
+    wall(-42, -16, -42, 6, PL(ZZ.inn.wall), [{ at: -10, k: 'win', out: -1, z: 'inn' }, { at: 0, k: 'win', out: -1, z: 'inn' }]);
+    wall(-42, 6, -42, 20, PL(ZZ.kitchen.wall), [{ at: 13, k: 'win', out: -1, z: 'kitchen' }]);
+    wall(-42, 20, -42, 44, LOW, [{ at: 27, k: 'win', out: -1, z: 'byard' }, { at: 37, k: 'win', out: -1, z: 'byard' }]);
+    wall(42, -42, 42, -16, PL(ZZ.cooper.wall), [{ at: -35, k: 'win', out: 1, z: 'cooper' }, { at: -23, k: 'win', out: 1, z: 'cooper' }]);
+    wall(42, -16, 42, 12, ST, [{ at: -9, k: 'win', out: 1, z: 'chapel' }, { at: 6, k: 'win', out: 1, z: 'chapel' }]);
+    wall(42, 12, 42, 20, ST, [{ at: 16, k: 'win', out: 1, z: 'vestry' }]);
+    wall(42, 20, 42, 44, LOW, [{ at: 27, k: 'win', out: 1, z: 'yard' }, { at: 37, k: 'win', out: 1, z: 'yard' }]);
+    wall(-42, 44, -18, 44, LOW, [{ at: -36, k: 'win', out: 1, z: 'byard' }, { at: -24, k: 'win', out: 1, z: 'byard' }]);
+    wall(-18, 44, 0, 44, ST, [{ at: -14, k: 'win', out: 1, z: 'forge' }, { at: -4, k: 'win', out: 1, z: 'forge' }]);
+    wall(0, 44, 18, 44, PL(ZZ.school.wall), [{ at: 4, k: 'win', out: 1, z: 'school' }, { at: 14, k: 'win', out: 1, z: 'school' }]);
+    wall(18, 44, 42, 44, LOW, [{ at: 25, k: 'win', out: 1, z: 'yard' }, { at: 35, k: 'win', out: 1, z: 'yard' }]);
+    // ---------- round the ring, house to house ----------
+    wall(-18, -42, -18, -16, PL(ZZ.chandler.wall), [{ at: -29, k: 'door', cost: 1000, z: ['chandler', 'smoke'] }]);
+    wall(18, -42, 18, -16, ST, [{ at: -29, k: 'door', cost: 1000, z: ['market', 'cooper'] }]);
+    wall(-42, -16, -18, -16, ST, [{ at: -30, k: 'door', cost: 1000, z: ['smoke', 'inn'] }]);
+    wall(18, -16, 42, -16, PL(ZZ.cooper.wall), [{ at: 30, k: 'debris', cost: 1000, z: ['cooper', 'chapel'] }]);
+    wall(-42, 6, -18, 6, PL(ZZ.inn.wall), [{ at: -30, k: 'door', cost: 750, z: ['inn', 'kitchen'] }]);
+    wall(18, 12, 42, 12, PL(ZZ.vestry.wall), [{ at: 36, k: 'door', cost: 750, z: ['chapel', 'vestry'] }]);
+    wall(-42, 20, -18, 20, PL(ZZ.kitchen.wall), [{ at: -24, k: 'door', cost: 1000, z: ['kitchen', 'byard'] }]);
+    wall(18, 20, 42, 20, ST, [{ at: 30, k: 'door', cost: 1000, z: ['vestry', 'yard'] }]);
+    wall(-18, 20, -18, 44, ST, [{ at: 32, k: 'debris', cost: 1000, z: ['forge', 'byard'] }]);
+    wall(0, 20, 0, 44, PL(ZZ.school.wall), [{ at: 32, k: 'door', cost: 750, z: ['forge', 'school'] }]);
+    wall(18, 20, 18, 44, PL(ZZ.school.wall), [{ at: 32, k: 'debris', cost: 1000, z: ['school', 'yard'] }]);
+    // ---------- Fish Street's two sides, and the house fronts round the Square ----------
+    wall(-4, -42, -4, -16, PL(ZZ.chandler.wall), [{ at: -34, k: 'glass' }, { at: -28, k: 'door', cost: 750, z: ['street', 'chandler'] }, { at: -21, k: 'glass' }]);
+    wall(4, -42, 4, -16, ST, [{ at: -34, k: 'glass' }, { at: -28, k: 'door', cost: 750, z: ['street', 'market'] }, { at: -21, k: 'glass' }]);
+    wall(-18, -16, -4, -16, PL(ZZ.chandler.wall), [{ at: -14, k: 'glass' }, { at: -9, k: 'door', cost: 1000, z: ['chandler', 'square'] }]);
+    wall(-4, -16, 4, -16, LOW, [{ at: 0, k: 'debris', cost: 1000, z: ['street', 'square'] }]);
+    wall(4, -16, 18, -16, ST, [{ at: 9, k: 'glass' }, { at: 14, k: 'glass' }]);
+    wall(-18, -16, -18, 6, PL(ZZ.inn.wall), [{ at: -11, k: 'glass' }, { at: -4, k: 'door', cost: 1000, z: ['square', 'inn'] }, { at: 2, k: 'glass' }]);
+    wall(-18, 6, -18, 20, PL(ZZ.kitchen.wall), [{ at: 13, k: 'glass' }]);
+    wall(18, -16, 18, 12, ST, [{ at: -9, k: 'glass' }, { at: -2, k: 'door', cost: 1250, z: ['square', 'chapel'], w: 2.6 }, { at: 5, k: 'glass' }]);
+    wall(18, 12, 18, 20, ST, [{ at: 16, k: 'glass' }]);
+    wall(-18, 20, 0, 20, ST, [{ at: -13, k: 'glass' }, { at: -7, k: 'door', cost: 1000, z: ['square', 'forge'], w: 2.8 }]);
+    wall(0, 20, 18, 20, PL(ZZ.school.wall), [{ at: 7, k: 'door', cost: 1000, z: ['square', 'school'] }, { at: 13, k: 'glass' }]);
+    // ---------- the town hall ----------
+    // its ground floor: the front onto the Square with the great door between two windows, the Clerk's Office at the
+    // back with a door of its own
+    wall(-11, -9, 11, -9, HS, [{ at: -8, k: 'win', out: -1, z: 'moot' }, { at: -4, k: 'glass' }, { at: 0, k: 'door', cost: 1250, z: ['square', 'moot'], w: 2.6 }, { at: 4, k: 'glass' }, { at: 8, k: 'win', out: -1, z: 'moot' }]);
+    wall(-11, -9, -11, 7, HS);
+    wall(11, -9, 11, 7, HS, [{ at: -4, k: 'win', out: 1, z: 'moot' }, { at: 3, k: 'win', out: 1, z: 'moot' }]);
+    wall(-11, 7, -11, 13, HS, [{ at: 10, k: 'win', out: -1, z: 'clerk' }]);
+    wall(11, 7, 11, 13, HS, [{ at: 10, k: 'glass' }]);
+    wall(-11, 13, 11, 13, HS, [{ at: -6, k: 'win', out: 1, z: 'clerk' }, { at: 0, k: 'door', cost: 1000, z: ['square', 'clerk'] }, { at: 6, k: 'glass' }]);
+    wall(-11, 7, 11, 7, PL(ZZ.moot.wall), [{ at: 6, k: 'door', cost: 750, z: ['moot', 'clerk'] }]);
+    // its first floor (the drowned climb its walls to the windows)
+    wall(-11, -9, 11, -9, HS1, [{ at: -8, k: 'win', out: -1, z: 'records' }, { at: 0, k: 'glass' }, { at: 8, k: 'win', out: -1, z: 'records' }]);
+    wall(-11, -9, -11, 13, HS1, [{ at: -5, k: 'glass' }, { at: 9, k: 'win', out: -1, z: 'council' }]);
+    wall(11, -9, 11, 13, HS1, [{ at: -4, k: 'win', out: 1, z: 'records' }, { at: 4, k: 'glass' }, { at: 10, k: 'win', out: 1, z: 'council' }]);
+    wall(-11, 13, 11, 13, HS1, [{ at: -7, k: 'glass' }, { at: 7, k: 'glass' }]);
+    wall(-8.2, 1, 11, 1, HP1, [{ at: 5, k: 'door', cost: 1000, z: ['council', 'records'], lift: F1 }]);
+    // the parapet round the flat roof
+    for (const [x, y, a, len] of [[0, -9.25, 0, 22.5], [0, 13.25, Math.PI, 22.5], [-11.25, 2, -Math.PI / 2, 22.5], [11.25, 2, Math.PI / 2, 22.5]]) {
+      if (!vput('vparapet', x, y, a, { len, lift: F2 })) put('block', x - Math.sin(a) * 0.25, y + Math.cos(a) * 0.25, a, { w: len, d: 0.4, hh: 1.0, lift: F2 });
+    }
+    // the Belfry: the clock tower over the roof, louvred openings on three sides, on the fourth (over the Square's
+    // north side) two windows the drowned climb all the way up to
+    wall(-3.5, 7, 3.5, 7, { mat: 'stone', hh: 3.6, lift: F2 });
+    wall(-3.5, 7, -3.5, 13, { mat: 'stone', hh: 3.6, lift: F2 }, [{ at: 10, k: 'arch', w: 1.6 }]);
+    wall(3.5, 7, 3.5, 13, { mat: 'stone', hh: 3.6, lift: F2 }, [{ at: 10, k: 'arch', w: 1.6 }]);
+    wall(-3.5, 13, 3.5, 13, { mat: 'stone', hh: 3.6, lift: F2 }, [{ at: -1.6, k: 'win', out: 1, z: 'belfry' }, { at: 1.6, k: 'win', out: 1, z: 'belfry' }]);
+    // (the louvres in the arches: nobody goes out that way)
+    for (const [x, y, a] of [[-3.5, 10, Math.PI / 2], [3.5, 10, Math.PI / 2]]) {
+      if (!vput('vlouvre', x, y, a, { w: 1.6, z0: F2, z1: F2 + 2.9 })) put('glasspane', x, y, a, { w: 1.6, z0: F2, z1: F2 + 2.9 });
+    }
+    // the first floor's boards, round the hole the stair comes up through; the Belfry's, round its own
+    for (const [x0, x1, y0, y1] of [[-11, 11, -9, -1.5], [-8.2, 11, -1.5, 5], [-11, 11, 5, 13]]) put('slab', (x0 + x1) / 2, (y0 + y1) / 2, 0, { w: x1 - x0, d: y1 - y0, top: F1 });
+    put('slab', 0, 10.725, 0, { w: 7, d: 4.05, top: F2 });   // (y 8.7 to 12.75: the stair comes up along its south side)
+    // the ceilings: the first floor's under the leads (not over the Belfry); the Belfry's under its spire
+    for (const [x0, x1, y0, y1] of [[-11, 11, -9, 7], [-11, -3.5, 7, 13], [3.5, 11, 7, 13]]) put('ceil', (x0 + x1) / 2, (y0 + y1) / 2, 0, { w: x1 - x0 + 0.4, d: y1 - y0 + (y0 === 7 ? 0.2 : 0.4), z0: F2 - 0.3, col: '#a8a290' });
+    put('ceil', 0, 10, 0, { w: 7.2, d: 6.2, z0: F2 + 3.3, col: '#6a5440' });
+    vput('vpyramid', 0, 10, 0, { w: 8.2, d: 6.9, z0: F2 + 3.6, rise: 3.4 });
+    // the stairs: up the Moot Hall's west wall to the first floor (a gate across it), and from the Council Chamber
+    // up into the Belfry (another)
+    const RS = F1 / 16, stair = (x, y, a, n, base, w) => { const o = Object.assign({ w, d: 0.76, hh: n * RS }, base ? { lift: base } : {}); return vput('vstair', x, y, a, o) || put('step', x, y, a, o); };
+    for (let n = 1; n <= 16; n++) stair(-9.55, -7 + (n - 0.5) * 0.75, 0, n, 0, 2.3);
+    for (let n = 1; n <= 16; n++) stair(3.25 - (n - 8.5) * 0.75, 7.95, Math.PI / 2, n, F1, 1.4);
+    const gate = (x, y, a, w, h, cost, zones) => { const p = put('zdoor', x, y, a, { w: w + 0.1, d: 0.16, hh: 2.6, lift: h - 0.3 }); const [gx, gy] = W(x, y); Z.doors.push({ x: gx, y: gy, z: h, ang: a, w, cost, zones, kind: 'gate', solids: p.sol.slice(), prop: p, open: false, id: Z.doors.length }); };
+    gate(-9.55, -7 + 3 * 0.75, 0, 2.3, 3 * RS, 1500, ['moot', 'council']);
+    gate(3.25 - (3 - 8.5) * 0.75 - 0.375, 7.95, Math.PI / 2, 1.4, F1 + 3 * RS, 1500, ['council', 'belfry']);
+    // the rails round the stair holes, and the banisters up the flights
+    put('zrail', -9.6, -1.5, 0, { w: 2.8, base: F1 }); put('zrail', -8.2, 1.75, Math.PI / 2, { w: 6.5, base: F1 });
+    put('zrail', 1.0, 8.7, 0, { w: 4.5, base: F2 });
+    vput('vbanister', -8.4, -7, 0, { len: 12, rise: F1, base: 0 });
+    for (const y of [7.25, 8.65]) vput('vbanister', 9.25, y, Math.PI / 2, { len: 12, rise: F1, base: F1 });
+    // the portico on the Square: four columns, the entablature on them and a pediment over
+    for (const x of [-4.6, -1.9, 1.9, 4.6]) { if (!vput('vcolumn', x, -10.6, 0, { r: 0.32, hh: F1 - 0.4 })) put('post', x, -10.6, 0, { r: 0.3, hh: F1 - 0.4 }); }
+    put('block', 0, -10.4, 0, { w: 10.6, d: 1.4, hh: F1 + 0.3, z0: F1 - 0.4, col: '#9a968a' });
+    vput('vpediment', 0, -11.1, 0, { w: 10.8, rise: 1.7, lift: F1 + 0.3 });
+    put('step', 0, -10.2, 0, { w: 10.4, d: 2.0, hh: 0.12 });
     // ---------- the quay ----------
-    // a deck of stone setts on piles out over the water, DT above the ground, the sea wall at its back; ladders down
-    // its sides, where the drowned come up
     {
       const onDeck = (k, x, y, ang, o) => put(k, x, y, ang || 0, Object.assign({ lift: DT }, o || {}));
       Z.bay = true; Z.decks = [];
-      put('deck', 0, -45.625, 0, { w: 40, d: 12.75, top: DT }); Z.decks.push([OX - 20, OX + 20, OY - 52, OY - 39.25]);
-      for (const [x0, x1, y0, y1] of [[-46, -20, -62, -39.25], [20, 46, -62, -39.25], [-46, 46, -78, -52]]) put('seaguard', (x0 + x1) / 2, (y0 + y1) / 2, 0, { w: x1 - x0, d: y1 - y0 });
+      put('deck', 0, -48.625, 0, { w: 44, d: 12.75, top: DT }); Z.decks.push([OX - 22, OX + 22, OY - 55, OY - 42.25]);
+      for (const [x0, x1, y0, y1] of [[-56, -22, -66, -42.25], [22, 56, -66, -42.25], [-56, 56, -80, -55]]) put('seaguard', (x0 + x1) / 2, (y0 + y1) / 2, 0, { w: x1 - x0, d: y1 - y0 });
       const seaWin = (x, y, nx, ny) => { const [wx, wy] = W(x, y); Z.windows.push({ x: wx, y: wy, nx, ny, zone: 'dock', z: DT, boards: 0, sea: true, id: Z.windows.length, q: [], hw: 0.9, th: 0.1 }); put('ladder', x + nx * 0.07, y + ny * 0.07, Math.atan2(-nx, ny), { top: DT }); };
-      seaWin(-14, -52, 0, -1); seaWin(-4.5, -52, 0, -1); seaWin(5.5, -52, 0, -1); seaWin(14.5, -52, 0, -1); seaWin(-20, -45.5, -1, 0); seaWin(20, -45.5, 1, 0);
-      // a step down off the quay, through the gate, onto the street's cobbles
-      put('step', 0, -38.3, 0, { w: 9.4, d: 0.9, hh: DT * 0.5 });
-      // bollards along the edge, nets and pots, fish boxes, the harbourmaster's hut, a tide mast, lamps on posts
-      for (const [x, y, r] of [[-17.5, -51.66, 1], [-9.5, -51.66, 0], [0.5, -51.66, 1], [10, -51.66, 0], [18, -51.66, 1], [-19.66, -41.5, 0], [19.66, -50, 1]]) onDeck('bollard', x, y, 0, { rope: !!r, free: true });
-      onDeck('shed', -16.2, -42.4, 0, { w: 3.2, d: 3.4, door: 1.0 });
-      onDeck('mast', 17.2, -48.8, 0, { hh: 7 });
-      onDeck('coil', -6.5, -41, 0, {}); onDeck('coil', 9, -50.6, 0, {});
-      onDeck('crates', 7.5, -41.2, 0.2, { items: [{ u: 0, v: 0, s: 0.8, h0: 0, ry: 0.1 }, { u: 0.85, v: 0.1, s: 0.7, h0: 0, ry: -0.2 }, { u: 0.4, v: 0, s: 0.65, h0: 0.8, ry: 0.4 }] });
-      onDeck('crates', -10.5, -49.8, -0.3, { items: [{ u: 0, v: 0, s: 0.75, h0: 0, ry: 0 }] });
-      onDeck('rack', 12.5, -40.3, 0, { len: 3.4, nets: true });
-      for (const [x, y, a] of [[-12, -51.4, Math.PI / 2], [12.2, -51.4, Math.PI / 2], [-19.4, -47.2, 0], [19.4, -42.2, Math.PI]]) {
-        const pp = onDeck('post', x, y, a, { r: 0.13, hh: 2.5, lamp: true }), [lx, ly] = [x + Math.cos(a) * 0.5, y + Math.sin(a) * 0.5];
-        light(lx, ly, DT + 2.15, '#ffc070', 10, 'lantern'); I.lights[I.lights.length - 1].p = pp;
+      seaWin(-16, -55, 0, -1); seaWin(-5.5, -55, 0, -1); seaWin(5.5, -55, 0, -1); seaWin(16, -55, 0, -1); seaWin(-22, -48.5, -1, 0); seaWin(22, -48.5, 1, 0);
+      put('step', 0, -41.3, 0, { w: 7.4, d: 0.9, hh: DT * 0.5 });
+      for (const [x, y, r] of [[-19.5, -54.66, 1], [-11, -54.66, 0], [0, -54.66, 1], [11, -54.66, 0], [19.5, -54.66, 1], [-21.66, -44.5, 0], [21.66, -52, 1]]) onDeck('bollard', x, y, 0, { rope: !!r, free: true });
+      onDeck('shed', -17.6, -45.6, 0, { w: 3.2, d: 3.4, door: 1.0 });
+      onDeck('mast', 18.6, -51.6, 0, { hh: 7 });
+      onDeck('coil', -7.5, -44, 0, {}); onDeck('coil', 9, -53.6, 0, {});
+      onDeck('crates', 8, -44.2, 0.2, { items: [{ u: 0, v: 0, s: 0.8, h0: 0, ry: 0.1 }, { u: 0.85, v: 0.1, s: 0.7, h0: 0, ry: -0.2 }, { u: 0.4, v: 0, s: 0.65, h0: 0.8, ry: 0.4 }] });
+      onDeck('crates', -11.5, -52.8, -0.3, { items: [{ u: 0, v: 0, s: 0.75, h0: 0, ry: 0 }] });
+      onDeck('rack', 13.5, -43.3, 0, { len: 3.4, nets: true });
+      for (const [x, y, a] of [[-13, -54.4, Math.PI / 2], [13.2, -54.4, Math.PI / 2], [-21.4, -50.2, 0], [21.4, -45.2, Math.PI]]) {
+        const pp = onDeck('post', x, y, a, { r: 0.13, hh: 2.5, lamp: true });
+        light(x + Math.cos(a) * 0.5, y + Math.sin(a) * 0.5, DT + 2.15, '#ffc070', 10, 'lantern'); I.lights[I.lights.length - 1].p = pp;
       }
-      wl(-2.6, -39.3, 0, -1, DT + 2.2); wl(2.6, -39.3, 0, -1, DT + 2.2);
-      // boats moored off it, and rocks out in the harbour
-      put('rowboat', -7.5, -54.6, 0.05, { paint: '#5a3a28', rope: 0.2 }); put('rowboat', 9.5, -54.8, -0.08, { paint: '#2e4a3a', len: 4.6 }); put('rowboat', -22.8, -47, Math.PI / 2 + 0.1, { paint: '#34465a', len: 3.8, beam: 1.25 });
-      for (const [x, y, w, hh, gl] of [[-30, -58, 2.4, 1.6, 1], [24, -62, 2.8, 1.8, 1], [-12, -68, 2.0, 1.2, 0], [31, -48, 1.6, 0.9, 0], [8, -71, 2.2, 1.5, 1]]) put('gullrock', x, y, w * 2, { w, d: w * 0.8, hh, gull: !!gl, lean: (x % 3) * 0.05 });
-      buy('pepperbox', 250, -15.5, -39.3, 0, -1, DT);
+      wl(-2.6, -42.3, 0, -1, DT + 2.2); wl(2.6, -42.3, 0, -1, DT + 2.2);
+      put('rowboat', -8.5, -57.6, 0.05, { paint: '#5a3a28', rope: 0.2 }); put('rowboat', 10.5, -57.8, -0.08, { paint: '#2e4a3a', len: 4.6 }); put('rowboat', -24.8, -50, Math.PI / 2 + 0.1, { paint: '#34465a', len: 3.8, beam: 1.25 });
+      for (const [x, y, w, hh, gl] of [[-34, -61, 2.4, 1.6, 1], [28, -65, 2.8, 1.8, 1], [-12, -71, 2.0, 1.2, 0], [36, -51, 1.6, 0.9, 0], [8, -74, 2.2, 1.5, 1]]) put('gullrock', x, y, w * 2, { w, d: w * 0.8, hh, gull: !!gl, lean: (x % 3) * 0.05 });
+      buy('pepperbox', 250, -15.5, -42.3, 0, -1, DT);
     }
     // ---------- Fish Street ----------
-    put('floor', 0, -9.5, 0, { w: 9.5, d: 58.6, style: 'flags' });
-    put('well', 0, 3.5, 0.3, { r: 0.8, lamp: true }); light(1.3 * Math.cos(0.3), 3.5 + 1.3 * Math.sin(0.3), 0.9, '#ffc070', 6, 'lantern');
-    fpiLanternPost(H, OX - 4.1, OY - 22, 0); fpiLanternPost(H, OX + 4.1, OY - 4, Math.PI); fpiLanternPost(H, OX - 4.1, OY + 14, 0);
-    put('cart', 3.4, -25, 0.2, {}); fpiBarrels(H, OX + 3.9, OY - 36); fpiPots(H, OX - 3.8, OY - 35.5); put('bench', -4.3, 2.5, Math.PI / 2, { w: 1.8 });
-    put('plant', -4.2, -28.8, 0, { s: 1.0, flowers: '#d84050' }); put('plant', 4.2, -9.2, 0, { s: 0.9 }); put('plant', -4.2, 7.6, 0, { s: 1.1, flowers: '#e8e0d0' });
-    put('coil', 3.9, 16.5, 0, {}); fpiCrates(H, OX - 3.6, OY + 18.4, false);
-    // signs over the doors
-    put('picture', -4.7, -14.4, Math.PI / 2, { z: 2.55, w: 1.3, h: 0.75, c: '#6a3a24' }); put('picture', 4.7, -27.9, -Math.PI / 2, { z: 2.55, w: 1.3, h: 0.75, c: '#3e5a6a', sea: true });
-    wl(-4.75, -31.9, 1, 0); wl(4.75, -32.5, -1, 0); wl(-4.75, -18.3, 1, 0); wl(4.75, 11.2, -1, 0); wl(-4.75, 11.5, 1, 0);
-    buy('cutlass', 750, -4.7, -25.5, 1, 0);
-    spot(4.3, -16, -1, 0, 0, 'street');
+    put('floor', 0, -29, 0, { w: 7.5, d: 25.6, style: 'flags' });
+    fpiLanternPost(H, OX - 3.1, OY - 36, 0); fpiLanternPost(H, OX + 3.1, OY - 24, Math.PI); fpiLanternPost(H, OX - 3.1, OY - 18.5, 0);
+    put('cart', 2.4, -33, 0.2, {}); fpiBarrels(H, OX + 2.9, OY - 39.5); fpiPots(H, OX - 2.8, OY - 39); put('bench', -3.3, -31.5, Math.PI / 2, { w: 1.8 });
+    put('plant', -3.2, -25, 0, { s: 1.0, flowers: '#d84050' }); put('plant', 3.2, -19.5, 0, { s: 0.9 }); put('coil', 2.9, -17.5, 0, {});
+    buy('cutlass', 750, -3.7, -24, 1, 0);
+    wl(-3.75, -31, 1, 0); wl(3.75, -31, -1, 0); wl(-3.75, -19, 1, 0); wl(3.75, -36.5, -1, 0);
+    // ---------- the Square, round the town hall ----------
+    for (const [x0, x1, y0, y1] of [[-18, 18, -16, -9], [-18, 18, 13, 20], [-18, -11, -9, 13], [11, 18, -9, 13]]) put('floor', (x0 + x1) / 2, (y0 + y1) / 2, 0, { w: x1 - x0 - 0.3, d: y1 - y0 - 0.1, style: 'flags' });
+    put('well', -13.5, -12.5, 0.3, { r: 0.8, lamp: true }); light(-13.5 + 1.3 * Math.cos(0.3), -12.5 + 1.3 * Math.sin(0.3), 0.9, '#ffc070', 6, 'lantern');
+    put('cross', 13.5, -12.5, 0, {});
+    for (const [x, y, a] of [[-16.6, -14.6, 0], [16.6, -14.6, Math.PI], [-16.6, 18.6, 0], [16.6, 18.6, Math.PI], [-16.6, 2, 0], [16.6, 2, Math.PI]]) fpiLanternPost(H, OX + x, OY + y, a);
+    for (const [x, y] of [[-14.5, -4], [-14.5, 8], [14.5, -4], [14.5, 8]]) put('tree', x, y, 0, { hh: 5.5 });
+    put('bench', -12.3, 2, Math.PI / 2, { w: 2 }); put('bench', 12.3, 2, Math.PI / 2, { w: 2 }); put('bench', -12, 18.6, 0, { w: 2 }); put('bench', 12, 18.6, 0, { w: 2 });
+    put('flagpole', 0, 17.2, 0, {});
+    for (const [x, y] of [[-11.8, -9.6], [11.8, -9.6], [-11.8, 13.6], [11.8, 13.6]]) put('bush', x, y, 0, { s: 0.8, flowers: '#e8e0d0' });
+    spot(15.2, 16.5, -1, 0, 0, 'square');
+    // ---------- the Moot Hall: benches facing the dais, the Lampwright's Bench on it ----------
+    put('step', 2, 5.6, 0, { w: 13, d: 2.4, hh: 0.3 });
+    for (const y of [-5.5, -3, -0.5, 2]) for (const x of [-2.5, 6]) { if (!vput('vpew', x, y, Math.PI, { w: 4.2 })) put('bench', x, y, 0, { w: 4.2 }); }
+    put('rug', 1.8, -2.5, Math.PI / 2, { w: 11, d: 2.2, c: '#5a2a2a' });
+    for (const [x, y, a] of [[-10.7, -1.5, Math.PI / 2], [10.7, -0.5, -Math.PI / 2], [-4, 6.73, 0], [8, 6.73, 0]]) put('picture', x, y, a, { z: 2.2, w: 1.5, h: 1.0, c: '#b8a878' });
+    for (const [x, y] of [[-3, -5], [6, -5], [-3, 2], [6, 2]]) lamp(x, y, 3.3, '#ffc070', F1 - 0.3);
+    buy('longarm', 500, 10.7, -6.5, -1, 0);
+    if (typeof zmpPlace === 'function') zmpPlace(put, light, W, Z, { x: 2, y: 6.25, z: 0.3, nx: 0, ny: -1, zone: 'moot' });   // [pap]
+    // ---------- the Clerk's Office ----------
+    put('table', -6, 10, 0, { w: 2.2, d: 1.1 }); put('table', 6, 10, 0, { w: 2.2, d: 1.1 }); put('bench', -6, 9, 0, { w: 1.4 }); put('bench', 6, 9, 0, { w: 1.4 });
+    if (!vput('vbookcase', 3.4, 12.75, 0, { w: 2.6, goods: 'ledgers' })) put('shelf', 3.4, 12.4, 0, { w: 2.6, goods: 'jars' });
+    vput('vbookcase', 10.75, 10, -Math.PI / 2, { w: 2.4, goods: 'ledgers' });
+    put('shelf', -3, 7.5, Math.PI, { w: 2.4, goods: 'crates' }); fpiCrates(H, OX - 9.6, OY + 8.3, false);
+    lamp(-5, 10, 3.3, '#ffc070', F1 - 0.3); lamp(5, 10, 3.3, '#ffc070', F1 - 0.3);
+    // ---------- the Records Room (up the stair): shelves of the parish's books, the drowned's names in them ----------
+    for (const x of [-3, 1.5, 6]) { if (!vput('vbookcase', x, -4, 0, { w: 3.2, goods: 'ledgers', lift: F1 })) put('shelf', x, -4, 0, { w: 3.2, goods: 'jars', lift: F1 }); }
+    vput('vbookcase', -5, -8.75, Math.PI, { w: 4, goods: 'books', lift: F1 }); vput('vbookcase', 5, -8.75, Math.PI, { w: 4, goods: 'books', lift: F1 });
+    put('table', 3, -1, 0, { w: 3, d: 1.2, lift: F1 }); put('globe', 9, -1, 0, { lift: F1 });
+    lamp(-3, -6, F1 + 3.0, '#ffc070', F2 - 0.3); lamp(5, -6, F1 + 3.0, '#ffc070', F2 - 0.3); lamp(3, -1, F1 + 3.0, '#ffc070', F2 - 0.3);
+    buy('harpoon', 1000, -10.7, -3, 1, 0, F1);
+    spot(-6.5, 0.2, 0, -1, F1, 'records');
+    // ---------- the Council Chamber: the long table, the Grog Ration ----------
+    if (!vput('vcounciltable', -2.5, 4.2, 0, { w: 7, d: 1.8, lift: F1 })) put('table', -1.5, 3.6, 0, { w: 7, d: 1.8, lift: F1 });
+    put('rug', -2, 4.2, 0, { w: 10, d: 4, c: '#3e2a4a', lift: F1 });
+    for (const [x, y, a] of [[-10.7, 4, Math.PI / 2], [2, 12.73, 0], [10.7, 7, -Math.PI / 2]]) put('picture', x, y, a, { z: 2.0, w: 1.2, h: 1.5, c: '#a89070', lift: F1 });
+    lamp(-6, 5, F1 + 3.0, '#ffc070', F2 - 0.3); lamp(3, 4, F1 + 3.0, '#ffc070', F2 - 0.3); lamp(-6, 10.5, F1 + 3.0, '#ffc070', F2 - 0.3);
+    perk('grog', -5, 12.3, 0, F1);
+    // ---------- the Belfry: the old bell, hung again ----------
+    put('bellframe', 0.4, 11.0, 0, { lift: F2 });
+    lamp(-2.4, 9.4, F2 + 2.6, '#ffc070', F2 + 3.3);
     // ---------- the Chandlery: rope, nets, lamp oil, everything a boat wants ----------
-    put('shelf', -22.5, -22.5, 0, { w: 3, goods: 'cans' }); put('shelf', -9.5, -22.5, 0, { w: 3, goods: 'jars' });
-    put('table', -14, -31, 0, { w: 5, d: 1.1 }); put('shelf', -25.5, -24.6, Math.PI / 2, { w: 2.2, goods: 'crates' });
-    put('coil', -22, -25, 0, {}); put('coil', -23.5, -37.6, 0, {}); fpiCrates(H, OX - 8, OY - 37, false); fpiBarrels(H, OX - 24.2, OY - 36);
-    put('rack', -15.5, -37.9, 0, { len: 3, nets: true }); put('anchor', -8.5, -27, 0.4, {});
-    lamp(-20, -30.5); lamp(-10, -30.5);
-    buy('blunderbuss', 500, -5.3, -26, -1, 0);
-    perk('quick', -25.3, -30.5, Math.PI / 2);
-    // ---------- the Drowned Man: the tap room, the hearth, the bar ----------
-    put('stove', -12, -1.75, 0, {}); light(-12.25, -2.25, 0.5, '#ff8a30', 7, 'fire');
-    put('table', -8.2, -7, Math.PI / 2, { w: 5, d: 1.0 }); fpiBarrels(H, OX - 6.2, OY - 3.2); fpiBarrels(H, OX - 6.2, OY - 9.6);
-    for (const [x, y, c] of [[-21, -17, '#7a2a24'], [-21, -9, '#3e5a6a'], [-14, -12.5, '#7a2a24']]) { put('table', x, y, 0, { w: 2.2, d: 1.1, cloth: c }); put('bench', x, y - 0.95, 0, { w: 1.9 }); put('bench', x, y + 0.95, 0, { w: 1.9 }); }
-    put('shelf', -25.5, -12, Math.PI / 2, { w: 2.4, goods: 'jars' }); put('rug', -15, -5, 0, { w: 3.2, d: 2, c: '#5a2a2a' });
-    put('picture', -15.5, -1.27, 0, { z: 1.6, w: 1.4, h: 0.9, c: '#c8b890', sea: true });
-    lamp(-20, -13); lamp(-12, -15); lamp(-9, -4.5);
-    buy('avtomat', 1200, -9.5, -21.7, 0, 1);
-    perk('stout', -24, -21.3, Math.PI);
-    spot(-24.7, -4, 1, 0, 0, 'inn');
-    // ---------- the Seamen's Chapel: pews, the bell from the old tower, the Lampwright's Bench ----------
-    for (const y of [3, 6, 9, 12, 15]) for (const x of [-20, -11]) put('bench', x, y, 0, { w: 4 });
-    put('bellframe', -7.4, 17.2, 0, {}); put('rug', -15.5, 9, Math.PI / 2, { w: 14, d: 2.2, c: '#3e2a4a' });
-    for (const [x, y] of [[-25.4, 1.5], [-6, 1.6]]) put('plant', x, y, 0, { s: 1.2, flowers: '#e8e0d0' });
-    for (const [x, y, a] of [[-25.7, 10, Math.PI / 2], [-5.3, 4.5, -Math.PI / 2], [-5.3, 14.6, -Math.PI / 2]]) put('picture', x, y, a, { z: 1.6, w: 1.1, h: 0.8, c: '#b8a878' });
-    lamp(-15.5, 4); lamp(-15.5, 12); lamp(-20.5, 17.5); lamp(-10.5, 17.5);
-    buy('blunderbuss', 500, -25.7, 9.5, 1, 0);
-    perk('wind', -24, 19.3, 0);
-    spot(-8, 0, 0, 1, 0, 'chapel');
-    if (typeof zmpPlace === 'function') zmpPlace(put, light, W, Z, { x: -15.5, y: 19.25, z: 0, nx: 0, ny: -1, zone: 'chapel' });   // [pap]
+    put('table', -11, -33, 0, { w: 5, d: 1.1 });
+    put('shelf', -16.6, -16.6, 0, { w: 2.2, goods: 'cans' }); put('shelf', -17.4, -24, Math.PI / 2, { w: 2.4, goods: 'jars' }); put('shelf', -17.4, -37, Math.PI / 2, { w: 2.2, goods: 'crates' });
+    put('coil', -16, -27, 0, {}); put('coil', -16.5, -40.4, 0, {}); fpiCrates(H, OX - 6.5, OY - 40.5, false); fpiBarrels(H, OX - 16.4, OY - 35);
+    put('rack', -11, -41.3, 0, { len: 3, nets: true }); put('anchor', -6.5, -36.5, 0.4, {});
+    lamp(-11, -36); lamp(-11, -24);
+    buy('blunderbuss', 500, -4.3, -24, -1, 0);
     // ---------- the Fish Market: trestles, brine vats, boxes ----------
-    for (const [x, y] of [[11, -35], [19.5, -35], [11, -26], [19.5, -26]]) put('table', x, y, 0, { w: 4, d: 1.2 });
-    for (const [x, y] of [[23.8, -37.3], [23.8, -23.8]]) put('tank', x, y, 0, { r: 0.9, hh: 1.4, c: '#3a4a44' });
-    fpiBarrels(H, OX + 7.2, OY - 23.5); fpiCrates(H, OX + 11.8, OY - 23.3, true); fpiPots(H, OX + 21, OY - 30.5);
-    lamp(11, -30.5); lamp(19.5, -30.5);
-    buy('longarm', 500, 25.7, -30.5, -1, 0);
-    perk('grog', 15.5, -38.3, Math.PI);
-    spot(7.5, -38.2, 0, 1, 0, 'market');
+    for (const [x, y] of [[8.5, -36], [14, -36], [8.5, -27], [14, -27]]) put('table', x, y, 0, { w: 3.6, d: 1.2 });
+    for (const [x, y] of [[16.8, -40.6], [16.8, -17.6]]) put('tank', x, y, 0, { r: 0.85, hh: 1.4, c: '#3a4a44' });
+    fpiBarrels(H, OX + 5.3, OY - 17.4); fpiCrates(H, OX + 11, OY - 17.3, true); fpiPots(H, OX + 11, OY - 31.5);
+    lamp(11, -36); lamp(11, -24);
+    buy('longarm', 500, 17.7, -31.5, -1, 0);
     // ---------- the Smokehouse: the fish hanging over the fires ----------
-    for (const y of [-18, -14.5, -11, -7.5, -4]) put('herbs', 15.5, y, 0, { w: 15, z: 3.3 });
-    put('stove', 23.8, -20.9, 0, {}); light(23.55, -21.4, 0.5, '#ff8a30', 7, 'fire'); put('stove', 8.2, -1.8, 0, {}); light(7.95, -2.3, 0.5, '#ff8a30', 7, 'fire');
-    fpiBarrels(H, OX + 23.8, OY - 3); put('rack', 24.8, -9.2, Math.PI / 2, { len: 3 }); put('sacks', 7, -20.6, 0.2, { c: '#5a4a36' });
-    lamp(10.5, -11.5, 2.7, '#ffa060'); lamp(20.5, -11.5, 2.7, '#ffa060');
-    buy('harpoon', 1000, 10, -21.7, 0, 1);
-    spot(24.7, -13, -1, 0, 0, 'smoke');
+    for (const y of [-38, -34, -30, -26, -22, -18.5]) put('herbs', -28, y, 0, { w: 18, z: 3.3 });
+    put('stove', -39.6, -41.1, 0, {}); light(-39.85, -40.6, 0.5, '#ff8a30', 7, 'fire'); put('stove', -20.4, -41.1, 0, {}); light(-20.65, -40.6, 0.5, '#ff8a30', 7, 'fire');
+    fpiBarrels(H, OX - 40.6, OY - 17.6); put('rack', -19, -21, Math.PI / 2, { len: 3 }); put('sacks', -23, -17.2, 0.2, { c: '#5a4a36' });
+    lamp(-34, -30, 2.7, '#ffa060'); lamp(-24, -30, 2.7, '#ffa060');
+    buy('harpoon', 1000, -31, -41.7, 0, 1);
+    perk('quick', -41.3, -29.5, Math.PI / 2);
+    // ---------- the Cooperage: casks on the cradle, hoops and staves ----------
+    for (const [x, y, a] of [[24, -36, 0], [24, -31, 0.1], [36, -36, -0.1]]) { if (!vput('vcask', x, y, a, { s: 1 })) fpiBarrels(H, OX + x, OY + y); }
+    vput('vhoops', 36, -30, 0.3, {}); vput('vhoops', 22, -19, 0, {});
+    put('table', 30, -24, 0, { w: 4, d: 1.2 }); fpiBarrels(H, OX + 40.4, OY - 40.4); fpiBarrels(H, OX + 40.4, OY - 18); fpiBarrels(H, OX + 19.8, OY - 40.5);
+    put('rack', 41.3, -29, Math.PI / 2, { len: 3 }); put('sacks', 33, -17.3, 0.3, { c: '#6a5a40' });
+    lamp(24, -29); lamp(36, -24);
+    buy('avtomat', 1200, 24, -16.3, 0, -1);
+    spot(41.3, -38, -1, 0, 0, 'cooper');
+    // ---------- the Drowned Man: the tap room, the hearth, the bar ----------
+    put('stove', -36, 5.25, 0, {}); light(-36.25, 4.75, 0.5, '#ff8a30', 7, 'fire');
+    put('table', -21, -6, Math.PI / 2, { w: 6, d: 1.0 }); fpiBarrels(H, OX - 19.2, OY - 13.6); fpiBarrels(H, OX - 19.2, OY + 1.5);
+    for (const [x, y, c] of [[-36, -12, '#7a2a24'], [-36, -4, '#3e5a6a'], [-36, 2, '#7a2a24'], [-28, -11, '#3e5a6a'], [-28, -3, '#7a2a24']]) { put('table', x, y, 0, { w: 2.2, d: 1.1, cloth: c }); put('bench', x, y - 0.95, 0, { w: 1.9 }); put('bench', x, y + 0.95, 0, { w: 1.9 }); }
+    put('shelf', -24.5, -15.4, 0, { w: 2.4, goods: 'jars' }); put('rug', -35, 1.5, 0, { w: 3.2, d: 2, c: '#5a2a2a' });
+    put('picture', -24, 5.73, Math.PI, { z: 1.8, w: 1.4, h: 0.9, c: '#c8b890', sea: true });
+    lamp(-36, -8); lamp(-28, -7); lamp(-22, -2);
+    perk('stout', -41.3, -5, Math.PI / 2);
+    // ---------- the Inn Kitchen ----------
+    put('stove', -40.8, 9, Math.PI / 2, {}); light(-40.3, 9, 0.5, '#ff8a30', 6, 'fire');
+    put('table', -30, 13, 0, { w: 4, d: 1.4 }); put('shelf', -31, 19.4, 0, { w: 3, goods: 'jars' }); put('shelf', -37, 19.4, 0, { w: 3, goods: 'cans' });
+    put('sacks', -21, 7.2, 0.2, { c: '#6a5a40' }); fpiBarrels(H, OX - 19.4, OY + 18.4); fpiPots(H, OX - 24, OY + 9);
+    put('herbs', -30, 16, 0, { w: 6, z: 3.0 });
+    lamp(-30, 13);
+    spot(-19.3, 11, -1, 0, 0, 'kitchen');
+    // ---------- the Seamen's Chapel: pews, the altar, Second Wind ----------
+    for (const y of [-12, -9, -6, -3, 0, 3]) for (const x of [24, 35]) { if (!vput('vpew', x, y, Math.PI, { w: 6 })) put('bench', x, y, 0, { w: 6 }); }
+    put('table', 29.5, 9.6, 0, { w: 3.2, d: 1.1, cloth: '#e8e0d0' }); put('step', 29.5, 9.6, 0, { w: 7, d: 3.6, hh: 0.2 });
+    put('rug', 29.5, -2, Math.PI / 2, { w: 22, d: 2.2, c: '#3e2a4a' });
+    for (const [x, y] of [[19.2, 10.6], [40.8, 10.6]]) put('plant', x, y, 0, { s: 1.2, flowers: '#e8e0d0' });
+    for (const [x, y, a] of [[41.73, 0, -Math.PI / 2], [18.27, 9, Math.PI / 2], [29.5, 11.73, 0]]) put('picture', x, y, a, { z: 1.9, w: 1.1, h: 1.4, c: '#b8a878' });
+    lamp(24, -6); lamp(35, -6); lamp(29.5, 6); lamp(29.5, -12);
+    buy('blunderbuss', 500, 41.7, -13, -1, 0);
+    perk('wind', 41.3, -2, -Math.PI / 2);
+    // ---------- the Vestry ----------
+    put('table', 30, 16, 0, { w: 3, d: 1.2 }); vput('vbookcase', 21, 19.75, 0, { w: 2.4, goods: 'books' }); put('shelf', 38, 19.4, 0, { w: 2.4, goods: 'jars' });
+    put('picture', 41.73, 16, -Math.PI / 2, { z: 1.8, w: 1.0, h: 1.3, c: '#a89070' }); lamp(30, 16);
+    // ---------- the Forge: the hearth, the anvil, Fleet Foot ----------
+    if (!vput('vforge', -9, 43.75, 0, { w: 2.6, d: 1.8 })) put('stove', -9, 43, 0, {});
+    light(-9, 42.85, 1.0, '#ff7a2a', 9, 'fire');
+    if (!vput('vanvil', -7, 38.5, 0.3, {})) put('block', -7, 38.5, 0, { w: 0.6, d: 0.4, hh: 0.8 });
+    put('coalheap', -16, 42, 0, { r: 1.0, hh: 0.8, shovel: true }); fpiBarrels(H, OX - 1.5, OY + 42.4); put('rack', -17.4, 27, Math.PI / 2, { len: 3 }); put('table', -5, 31, 0, { w: 3, d: 1.2 });
+    lamp(-9, 26); lamp(-5, 37);
+    perk('fleet', -17.3, 38, Math.PI / 2);
+    spot(-1.3, 25, -1, 0, 0, 'forge');
+    // ---------- the School House: desks in rows, the slate, the master's desk ----------
+    for (const y of [26, 29, 32, 35]) for (const x of [5, 9, 13]) { if (!vput('vdesk', x, y, Math.PI, { w: 1.4 })) put('table', x, y, 0, { w: 1.3, d: 0.6 }); }
+    vput('vboard', 9, 43.73, 0, { w: 3.2 }); put('table', 9, 40, 0, { w: 2.4, d: 1.0 }); put('globe', 15.5, 40.5, 0, {});
+    vput('vbookcase', 17.75, 30, -Math.PI / 2, { w: 2.4, goods: 'books' }); put('shelf', 1.3, 38, Math.PI / 2, { w: 2.2, goods: 'jars' });
+    lamp(6, 30); lamp(12, 30); lamp(9, 39);
+    buy('avtomat', 1200, 0.3, 26, 1, 0);
     // ---------- the Boatyard: a boat on the stocks, timber, oars ----------
-    put('floor', 16, 9, 0, { w: 4.2, d: 10, style: 'boards' });
-    put('boat', 16, 9, 0, { len: 7.2, beam: 2.3, paint: '#6a3428', upright: true });
-    put('rack', 24.8, 10, Math.PI / 2, { len: 3, nets: true }); put('coil', 8, 2, 0, {}); fpiCrates(H, OX + 7.5, OY + 18, true); fpiBarrels(H, OX + 23.5, OY + 18.2);
-    put('anchor', 10, 15.5, 1.2, {}); put('bench', 21, 5, 0.3, { w: 2.2 });
-    fpiLanternPost(H, OX + 8.5, OY + 1.0, 0); fpiLanternPost(H, OX + 22.5, OY + 16.5, Math.PI);
-    buy('avtomat', 1200, 25.7, 9.5, -1, 0);
-    perk('fleet', 15.5, 19.3, 0);
-    spot(24.7, 1.5, -1, 0, 0, 'byard');
-    // ---------- grass in the boatyard and round the village; stones out on the hill ----------
+    put('floor', -30, 32, 0, { w: 4.2, d: 10, style: 'boards' });
+    put('boat', -30, 32, 0, { len: 7.2, beam: 2.3, paint: '#6a3428', upright: true });
+    put('rack', -41.2, 33, Math.PI / 2, { len: 3, nets: true }); put('coil', -21, 24, 0, {}); fpiCrates(H, OX - 40.5, OY + 42.5, true); fpiBarrels(H, OX - 20.5, OY + 42.5);
+    put('anchor', -36, 25, 1.2, {}); put('bench', -24, 38, 0.3, { w: 2.2 });
+    fpiLanternPost(H, OX - 34.5, OY + 22, 0); fpiLanternPost(H, OX - 22.5, OY + 41.5, Math.PI);
+    buy('blunderbuss', 500, -41.7, 40, 1, 0);
+    spot(-19, 30, -1, 0, 0, 'byard');
+    // ---------- the Churchyard: the village's graves, under the chapel's wall ----------
+    { const rr = seeded(0x6a5e);
+      for (let i = 0; i < 4; i++) for (let j = 0; j < 3; j++) {
+        const x = 22.5 + i * 5 + (rr() - 0.5), y = 25 + j * 6.5 + (rr() - 0.5), k = (i * 3 + j) % 5;
+        if (k === 4) { if (!vput('vtomb', x, y + 0.6, 0, { w: 1.0, d: 2.0 })) put('headstone', x, y, 0, { w: 0.9, hh: 1.0, style: 1 }); }
+        else if (!vput('vgrave', x, y, (rr() - 0.5) * 0.2, { kind: k })) put('headstone', x, y, (rr() - 0.5) * 0.2, { w: 0.7, hh: 0.9, style: k % 3, lean: (rr() - 0.5) * 0.2 });
+      }
+      put('cross', 39.5, 41.5, 0, {}); put('bush', 21, 42.4, 0, { s: 1.3 }); put('bush', 40.5, 22.5, 0, { s: 1.1, flowers: '#e8e0d0' });
+      fpiLanternPost(H, OX + 20, OY + 34, 0);
+    }
+    spot(40.6, 32, -1, 0, 0, 'yard');
+    // ---------- the roofs: slate on the houses, the chapel's steeper; chimneys ----------
+    for (const [cx, cy, w, d, rise, a] of [[-11, -29, 14, 26, 3.2, 0], [11, -29, 14, 26, 3.0, 0], [-30, -29, 24, 26, 4.0, 0], [30, -29, 24, 26, 3.8, 0], [-30, 2, 24, 36, 4.2, 0], [30, 2, 24, 36, 6.4, 0], [-9, 32, 18, 24, 3.4, 0], [9, 32, 18, 24, 3.6, 0]])
+      put('roof', cx, cy, a, { w: w + 0.8, d: d + 0.8, z0: CE + 0.3, rise, mat: 'wood' });
+    for (const [x, y, hh] of [[-36, -40, 4.2], [-30, 4.8, 4.8], [-38, 13, 4.6], [-9, 43.2, 4.4], [12, -40.6, 3.6], [36, -40.6, 4.4]]) vput('vchimney', x, y, 0, { w: 1.0, d: 0.8, z0: CE, hh });
+    // ---------- grass in the boatyard, the churchyard and round the village; stones out on the hill ----------
     { const rr = seeded(0x77ac); let n = 0;
-      for (let t = 0; t < 3000 && n < 420; t++) {
-        const x = (rr() - 0.5) * 140, y = (rr() - 0.5) * 120;
-        const inYard = x > 5.6 && x < 25.4 && y > -0.4 && y < 19.4 && !(Math.abs(x - 16) < 2.4 && Math.abs(y - 9) < 5.4);
-        const outside = (x < -26.6 || x > 26.6 || y > 20.6) && Math.hypot(x, y) < FPSC.R - 4 && y > ZM_SHORE(x) + 0.6;
+      for (let t = 0; t < 5000 && n < 560; t++) {
+        const x = (rr() - 0.5) * 170, y = (rr() - 0.5) * 150;
+        const inYard = ((x > -41.4 && x < -18.6) || (x > 18.6 && x < 41.4)) && y > 20.6 && y < 43.4 && !(Math.abs(x + 30) < 2.4 && Math.abs(y - 32) < 5.4);
+        const outside = (x < -42.6 || x > 42.6 || y > 44.6) && Math.hypot(x, y) < FPSC.R - 4 && y > ZM_SHORE(x) + 0.6;
         if (!(inYard || outside)) continue;
         if (inYard && I.solids.some(s => s.mv !== false && Math.abs(s.x - OX - x) < 6 && Math.abs(s.y - OY - y) < 6 && fpiDist(s, OX + x, OY + y) < 0.3)) continue;
         H.decor('tuft', OX + x, OY + y, { s: 0.7 + rr() * 0.8, c: rr() < 0.5 ? '#4e6a38' : '#5e7040' }); n++;
       }
-      for (let i = 0; i < 24; i++) { const a = rr() * 6.283, d = 40 + rr() * 34, x = Math.cos(a) * d, y = Math.sin(a) * d * 0.85; if (Math.hypot(x, y) < FPSC.R - 6 && y > ZM_SHORE(x) + 2 && !(Math.abs(x) < 33 && y < 27)) put('stone', x, y, rr() * 6.283, { w: 0.9 + rr(), d: 0.6 + rr() * 0.5, hh: 0.6 + rr() * 1.2, lean: (rr() - 0.5) * 0.3 }); }
+      for (let i = 0; i < 24; i++) { const a = rr() * 6.283, d = 56 + rr() * 26, x = Math.cos(a) * d, y = Math.sin(a) * d * 0.9; if (Math.hypot(x, y) < FPSC.R - 6 && y > ZM_SHORE(x) + 2 && !(Math.abs(x) < 47 && y < 49)) put('stone', x, y, rr() * 6.283, { w: 0.9 + rr(), d: 0.6 + rr() * 0.5, hh: 0.6 + rr() * 1.2, lean: (rr() - 0.5) * 0.3 }); }
     }
+    Z.glass = (Z.glassQ || []).slice();
+    // ---------- dressing the fronts ----------
+    // (a wall prop goes on a wall's face, its front out along (sin a, -cos a): fa gives that angle)
+    const fa = (nx, ny) => Math.atan2(nx, -ny), at0 = (x, y, z) => zmZoneAt(OX + x, OY + y, z || 0), out = k => !k || ZZ[k].sky;
+    // shutters at every window that looks out onto the street, the Square or the hills (not on the town hall), a box
+    // of flowers under some of them; a hood over each house door onto the street or the Square
+    { let i = 0;
+      const dress = (x, y, ang, z, door, w) => {
+        const nx = Math.round(Math.sin(ang)), ny = Math.round(-Math.cos(ang));
+        for (const s of [1, -1]) {
+          const ox = nx * s, oy = ny * s, k = at0(x + ox * 1.2, y + oy * 1.2, z);
+          if (!out(k) || (Math.abs(x) < 11.6 && y > -9.6 && y < 13.6)) continue;
+          if (!door && (z || 0) < 0.5 && (k || at0(x - ox * 1.2, y - oy * 1.2) !== 'dock')) { vput('vshutters', x + ox * 0.26, y + oy * 0.26, fa(ox, oy), { w: w || 1.6 }); if (i++ % 3 === 0 && k) vput('vwinbox', x + ox * 0.26, y + oy * 0.26, fa(ox, oy), { w: 1.4, flowers: ['#d84050', '#e8e0d0', '#e8c050'][i % 3] }); }
+          if (door && k && ZZ[k].sky && k !== 'dock') vput('vcanopy', x + ox * 0.26, y + oy * 0.26, fa(ox, oy), { w: (w || 2.2) + 0.5 });
+          break;
+        }
+      };
+      for (const g of Z.glassQ || []) { const x = g.x - OX, y = g.y - OY; dress(x, y, Math.abs(Math.sin(g.ang)) > 0.5 ? Math.PI / 2 : 0, g.z0 - 1.0, false, g.w); }
+      for (const w of Z.windows) if (!w.sea) dress(w.x - OX, w.y - OY, w.ny ? 0 : Math.PI / 2, w.z, false, 1.6);
+      for (const d of Z.doors) if (d.kind === 'door' && !d.z) dress(d.x - OX, d.y - OY, Math.abs(Math.sin(d.ang)) > 0.5 ? Math.PI / 2 : 0, 0, true, d.w);
+    }
+    // half-timbering on the plaster fronts onto the street and the Square
+    const G = (u, w) => ({ u, w: w || 1.6, z0: 1.0, z1: 2.35 }), DR = (u, w) => ({ u, w: w || 2.2, z0: 0, z1: 2.5 });
+    for (const [x, y, a, len, opens] of [
+      [-3.75, -29, Math.PI / 2, 26, [G(-5), DR(1), G(8)]], [-17.75, -5, Math.PI / 2, 22, [G(-6), DR(1), G(7)]], [-17.75, 13, Math.PI / 2, 14, [G(0)]],
+      [9, 19.75, 0, 18, [DR(-2), G(4)]], [-11, -15.75, Math.PI, 14, [G(3), DR(-2)]]]) vput('vtimber', x, y, a, { len, opens });
+    // trade signs over the doors
+    for (const [x, y, a, glyph] of [[-3.75, -26.4, Math.PI / 2, 'rope'], [3.75, -26.4, -Math.PI / 2, 'fish'], [-17.75, -1.8, Math.PI / 2, 'mug'], [-9.2, 19.75, 0, 'anvil'],
+      [9.2, 19.75, 0, 'book'], [17.75, 0.2, -Math.PI / 2, 'bell'], [-11.2, -15.75, Math.PI, 'key']]) vput('vsign', x, y, a, { glyph });
+    // dressed stone at the village's corners and the town hall's; the hall's plinth, its cornices and its clock
+    for (const [x, y, a, hh] of [[-42.25, -42.25, 0, CE], [42.25, -42.25, Math.PI / 2, CE], [42.25, 44.25, Math.PI, 2.6], [-42.25, 44.25, -Math.PI / 2, 2.6],
+      [-11.25, -9.25, 0, F2], [11.25, -9.25, Math.PI / 2, F2], [11.25, 13.25, Math.PI, F2], [-11.25, 13.25, -Math.PI / 2, F2]]) vput('vquoins', x, y, a, { hh });
+    for (const [x, y, a] of [[0, -9.25, 0], [0, 13.25, Math.PI], [-11.25, 2, -Math.PI / 2], [11.25, 2, Math.PI / 2]]) {
+      vput('vbase', x, y, a, { len: 22.5 });
+      vput('vcornice', x, y, a, { len: 22.5, lift: F2, e0: a === 0 || a === Math.PI, e1: a === 0 || a === Math.PI });
+      vput('vcornice', x, y, a, { len: 22.5, lift: F1, c: '#8e8a7e' });
+    }
+    vput('vclock', 0, 6.75, 0, { r: 0.95, z: 1.9, lift: F2 });
+    for (const [x, y, a] of [[-3.75, -41.75, 0], [17.75, -41.75, 0], [-41.75, 5.8, -Math.PI / 2], [41.75, 11.8, Math.PI / 2], [-0.25, 43.75, Math.PI]]) vput('vdownpipe', x, y, a, { hh: CE });
   },
   decor(H) {},
 };
@@ -1530,6 +1736,8 @@ function zmZoneAt(x, y, z) {
   }
   for (const k in ZM_ZONES) {
     if (k === 'tower') continue;
+    // (a room on an upper floor, or under one: zr, the height of its floor and of the next one up)
+    const zr = ZM_ZONES[k].zr; if (zr && ((z || 0) < zr[0] - 0.6 || (z || 0) >= zr[1] - 0.6)) continue;
     for (const r of ZM_ZONES[k].r2 ? [ZM_ZONES[k].r, ZM_ZONES[k].r2] : [ZM_ZONES[k].r]) { const [x0, x1, y0, y1] = r; if (lx >= x0 && lx <= x1 && ly >= y0 && ly <= y1) return k; }
   }
   return null;
@@ -1654,7 +1862,7 @@ function zmCanReload() { const w = fpsW(); return w.melee || (ZM.res[FPS.weapon]
 // of you, together), how far each node is from the nearest of you, walking round walls and up and down stairs.
 function zmNavBuild() {
   // (from the Store Hall's north wall down to the end of the jetty, from the Wreck Store to the Boathouse)
-  const S = ZMC.NAV, x0 = FPSC.CX - 46, y0 = FPSC.CY - 68, nx = Math.ceil(92 / S), ny = Math.ceil(96 / S), nc = nx * ny;
+  const B = ZM_MAPS[ZM_MAP].nav || [-46, 46, -68, 28], S = ZMC.NAV, x0 = FPSC.CX + B[0], y0 = FPSC.CY + B[2], nx = Math.ceil((B[1] - B[0]) / S), ny = Math.ceil((B[3] - B[2]) / S), nc = nx * ny;
   const first = new Int32Array(nc + 1), hs = [];
   for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) {
     const x = x0 + (i + 0.5) * S, y = y0 + (j + 0.5) * S, k = j * nx + i, near = zmNear(x, y);
