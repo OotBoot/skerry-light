@@ -881,6 +881,7 @@ function warFinish(how, by) {
   warSaveStats(st);
   if (typeof rcEarn === 'function') rcEarn('war', { won: how === 'won', t: WAR.t });   // banner crates (src/rcrates.js)
   if (typeof scoreReport === 'function') scoreReport('war', st.wins || 0, st.bestTiles || 0, 0, true);   // the scoreboard (src/scores.js)
+  if (typeof scoreRun === 'function') { scoreRun('war', how === 'won' ? 1 : 0, me.taken, 0, true); scoreRunEnd('war'); }   // (this war, an entry of its own)
   WAR.result = { how, by: by ? by.name : null, days: WAR.day, taken: me.taken, kills: me.kills, boats: WAR.stats.boats, tiles: me.tiles, share: me.tiles / WAR.landTiles };
   WAR.spectate = how !== 'won';
   if (typeof warShowResult === 'function') warShowResult(WAR.result);

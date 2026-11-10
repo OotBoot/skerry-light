@@ -2208,7 +2208,7 @@ function zmEnd() {
   ZM.over = { t: 0 };
   zmSound('over');
   if ((typeof RAID !== 'undefined' && RAID.on)) raidReport();   // [raid]
-  else if (typeof scoreReport === 'function') scoreReport('zm', Math.max(0, ZM.round - 1), ZM.kills, 0, true);
+  else if (typeof scoreReport === 'function') { scoreReport('zm', Math.max(0, ZM.round - 1), ZM.kills, 0, true); scoreRun('zm', Math.max(0, ZM.round - 1), ZM.kills, 0, true); scoreRunEnd('zm'); }
 }
 
 // ---------- rounds ----------
@@ -2250,7 +2250,7 @@ function zmRounds(dt) {
   }
 }
 function zmRoundHeld() {
-  if (typeof scoreReport === 'function') scoreReport('zm', ZM.round, ZM.kills);
+  if (typeof scoreReport === 'function') { scoreReport('zm', ZM.round, ZM.kills); scoreRun('zm', ZM.round, ZM.kills); }
   // crates: one of each for every five rounds held
   if (ZM.round % 5 === 0) { if (typeof wcEarn === 'function') wcEarn('round'); if (typeof ocEarn === 'function') ocEarn('round'); }
 }

@@ -174,6 +174,8 @@ function raidReport() {
   if (RAID.told || typeof scoreReport !== 'function' || typeof BOARD === 'undefined' || !BOARD.mine || !BOARD.mine.raid) return;
   RAID.told = true;
   scoreReport('raid', RAID.won ? Math.max(1, 100000 - Math.round(RAID.t)) : 0, Math.round(RAID.boss), (BOARD.mine.raid.c | 0) + ZM.kills, RAID.won);
+  // this raid, an entry of its own: incomplete unless it got through the door
+  if (typeof scoreRun === 'function') { scoreRun('raid', RAID.won ? Math.max(1, 100000 - Math.round(RAID.t)) : 0, Math.round(RAID.boss), ZM.kills, RAID.won); scoreRunEnd('raid'); }
 }
 function raidShowOver() {
   const S = RAID_STAGES[RAID_ORDER[RAID.stage]], cleared = RAID.won ? RAID_ORDER.length : RAID.stage;

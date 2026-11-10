@@ -1,5 +1,7 @@
-// The scoreboard for copies of the game hosted on your own server: each player's best in Skerry Light,
-// Wreckers' Night and the Drowned Reach.
+// The scoreboard for copies of the game hosted on your own server: every game each player plays is an entry of its
+// own (a run of Skerry Light, a round of Wreckers' Night, a war, a night at the Lighthouse, a raid), so one player can
+// be on a board many times. Before that it kept each player's best alone; those bests are still read, each as one
+// entry, so nobody's old scores went missing.
 //
 // Scores are kept in a free hosted Redis at Upstash (https://upstash.com), reached over its REST API, so the
 // server needs no database driver. Set two environment variables on the server (on Render: the service's
@@ -8,10 +10,12 @@
 //   UPSTASH_REDIS_REST_TOKEN   the long token
 // Without them, scores are kept in memory only and are lost whenever the server restarts.
 //
-// GET  /api/scores  -> { store, games: { skerry: [{n, s, b, f, me?}], fps: [...], war: [...], zm: [...] } }   (everyone on
-//                      each, best first, up to 500;
-//                      each; with an x-board-id header, that player's own rows are marked me: true)
-// POST /api/scores  <- { id, name, game, s, b, p?, f?, was? }   your bests; only ever raised, never lowered. p: 1 once
+// GET  /api/scores  -> { store, games: { skerry: [{n, s, b, c, f, me?}], fps: [...], war: [...], zm: [...], raid: [...] } }
+//                      every game's entries, best first, up to 500 (and at most 25 of one player's); f: 0 for a game
+//                      left or lost before its end; with an x-board-id header, that player's own are marked me: true
+// POST /api/scores  <- { id, rid, name, game, s, b, c?, f? }   one game (rid: its own random id, made when it began),
+//                      sent as it goes and once more at its end: each number only ever goes up, and f once set stays
+// POST /api/scores  <- { id, name, game, s, b, p?, f?, was? }   (from pages before every game was its own entry) your bests; only ever raised, never lowered. p: 1 once
 //                      you've played it (so you're on the board with nothing yet); f: 1 once you've finished a game of
 //                      it (until then, f: 0 and the board shows an asterisk by your name). `was`: the id
 //                      this player was on the board under before (a browser's own, before its save had a recovery
@@ -26,6 +30,14 @@ const TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN || '';
 const STORE = URL_ && TOKEN ? 'upstash' : 'memory';
 const KEY = game => 'skerry:scores:' + game;
 const TOP = 500;   // everyone (the card shows the top ten, and All for the rest)
+// every game played: a sorted set ranks them (by sortKey) and a hash holds each (field: "<player id>.<rid>")
+const RKEY = game => 'skerry:runs:' + game, DKEY = game => 'skerry:rund:' + game;
+const MAXRUNS = 4000, PER = 25;   // games kept for each board (the lowest let go), and most of one player's shown
+// what one game's numbers are (a run's, a round's...), within the same caps as the bests below
+//   skerry: s = voyages made, b = close shaves        fps: s = kills, b = 1 if you won the round
+//   war:    s = 1 if won, b = land taken (tiles)       zm:  s = rounds held, b = kills
+//   raid:   s = time through, as 100000 less its seconds (0: not through), b = damage to its bosses, c = kills
+const runsMem = new Map(); // game -> Map(field -> entry)
 // what each game's two numbers are, and the most each can sensibly be
 //   skerry: s = most voyages in one run,        b = voyages made in all
 //   fps:    s = most kills in one round,        b = rounds won
@@ -56,17 +68,36 @@ const sortKey = e => e.s * 1e9 + e.b;
 // finished a game of it? (an entry from before the mark: yes if it has anything, but Maren's End only with a time)
 const finished = (game, e) => !e ? 0 : 'f' in e ? (e.f ? 1 : 0) : (game === 'raid' ? e.s | 0 : (e.s | 0) + (e.b | 0) + (e.c | 0)) > 0 ? 1 : 0;
 
+// a best from before every game was its own entry, as one game: its numbers mean what a game's do, near enough
+// (Skerry Light's voyages in all and Wreckers' Night's rounds won don't, so they go; wars won becomes won)
+function oldAsRun(g, e) {
+  const r = { id: e.id, n: e.n, s: e.s | 0, b: e.b | 0, c: e.c | 0, f: finished(g, e) };
+  if (g === 'skerry' || g === 'fps') r.b = 0;
+  if (g === 'war') r.s = r.s > 0 ? 1 : 0;
+  return r;
+}
 async function readAll() {
-  const out = {};
+  const out = {}, games = Object.keys(GAMES);
   if (STORE === 'upstash') {
-    const games = Object.keys(GAMES), res = await redis(games.map(g => ['HGETALL', KEY(g)]));
+    const res = await redis(games.flatMap(g => [['HGETALL', KEY(g)], ['ZREVRANGE', RKEY(g), 0, TOP * 2 - 1]]));
+    const fields = games.map((g, k) => res[k * 2 + 1] || []);
+    const want = games.map((g, k) => fields[k].length ? ['HMGET', DKEY(g), ...fields[k]] : null);
+    const got = want.some(Boolean) ? await redis(want.filter(Boolean)) : [];
+    let j = 0;
     games.forEach((g, k) => {
-      const flat = res[k] || [], list = [];
-      for (let i = 0; i + 1 < flat.length; i += 2) { try { const e = JSON.parse(flat[i + 1]); e.id = flat[i]; list.push(e); } catch (err) {} }
+      const flat = res[k * 2] || [], list = [];
+      for (let i = 0; i + 1 < flat.length; i += 2) { try { const e = JSON.parse(flat[i + 1]); e.id = flat[i]; list.push(oldAsRun(g, e)); } catch (err) {} }
+      if (want[k]) { const vals = got[j++] || []; fields[k].forEach((f, i) => { try { if (vals[i]) { const e = JSON.parse(vals[i]); e.id = f.split('.')[0]; list.push(e); } } catch (err) {} }); }
       out[g] = list;
     });
-  } else for (const g of Object.keys(GAMES)) out[g] = [...(memory.get(g) || new Map()).entries()].map(([id, e]) => Object.assign({ id }, e));
-  for (const g of Object.keys(out)) out[g] = out[g].filter(e => e && (e.s + e.b + (e.c | 0) > 0 || e.p)).sort((a, b) => sortKey(b) - sortKey(a)).slice(0, TOP).map(e => ({ id: e.id, n: cleanName(e.n), s: e.s | 0, b: e.b | 0, c: e.c | 0, f: finished(g, e) }));
+  } else for (const g of games) out[g] = [...(memory.get(g) || new Map()).entries()].map(([id, e]) => oldAsRun(g, Object.assign({ id }, e)))
+    .concat([...(runsMem.get(g) || new Map()).entries()].map(([f, e]) => Object.assign({}, e, { id: f.split('.')[0] })));
+  for (const g of games) {
+    const per = new Map();
+    out[g] = out[g].filter(e => e && e.s + e.b + (e.c | 0) > 0).sort((a, b) => sortKey(b) - sortKey(a))
+      .filter(e => { const k = (per.get(e.id) || 0) + 1; per.set(e.id, k); return k <= PER; })
+      .slice(0, TOP).map(e => ({ id: e.id, n: cleanName(e.n), s: e.s | 0, b: e.b | 0, c: e.c | 0, f: e.f ? 1 : 0 }));
+  }
   return out;
 }
 
@@ -78,9 +109,41 @@ async function getBoard(me) {
   return { store: STORE, games };
 }
 
+// one game, as it goes: each number only goes up, and finished once set stays
+async function postRun(body, id, game, addr) {
+  const rid = body.rid;
+  if (typeof rid !== 'string' || !/^[a-z0-9]{6,24}$/.test(rid)) return [400, { error: 'bad game' }];
+  const [maxS, maxB, maxC] = GAMES[game];
+  const s = Math.floor(Number(body.s) || 0), b = Math.floor(Number(body.b) || 0), c = Math.floor(Number(body.c) || 0);
+  if (!(s >= 0 && s <= maxS && b >= 0 && b <= maxB && c >= 0 && c <= (maxC || 1e7))) return [400, { error: 'out of range' }];
+  const now = Date.now();
+  if (now - (lastPost.get(addr) || 0) < 3000) return [429, { error: 'slow down' }];
+  lastPost.set(addr, now);
+  const field = id + '.' + rid;
+  let prev = null;
+  if (STORE === 'upstash') { const [v] = await redis([['HGET', DKEY(game), field]]); try { prev = v ? JSON.parse(v) : null; } catch (e) {} }
+  else prev = (runsMem.get(game) || new Map()).get(field) || null;
+  const e = { n: cleanName(body.name), s: Math.max(s, prev ? prev.s | 0 : 0), b: Math.max(b, prev ? prev.b | 0 : 0), c: Math.max(c, prev ? prev.c | 0 : 0), f: body.f || (prev && prev.f) ? 1 : 0, at: now };
+  if (e.s + e.b + e.c <= 0) return [200, { ok: true, same: true }];
+  if (prev && prev.s === e.s && prev.b === e.b && prev.c === e.c && prev.f === e.f && prev.n === e.n) return [200, { ok: true, same: true }];
+  if (STORE === 'upstash') {
+    const r = await redis([['HSET', DKEY(game), field, JSON.stringify(e)], ['ZADD', RKEY(game), sortKey(e) + e.c * 1e-3, field], ['ZCARD', RKEY(game)]]);
+    // (too many: the lowest go)
+    const extra = (r[2] | 0) - MAXRUNS;
+    if (extra > 0) { const low = await redis([['ZRANGE', RKEY(game), 0, extra - 1]]); if (low[0] && low[0].length) await redis([['ZREMRANGEBYRANK', RKEY(game), 0, extra - 1], ['HDEL', DKEY(game), ...low[0]]]); }
+  } else {
+    if (!runsMem.has(game)) runsMem.set(game, new Map());
+    const M = runsMem.get(game); M.set(field, e);
+    if (M.size > MAXRUNS) { const low = [...M.entries()].sort((a, b) => sortKey(a[1]) - sortKey(b[1]))[0]; M.delete(low[0]); }
+  }
+  cache = null;
+  return [200, { ok: true }];
+}
+
 async function postScore(body, addr) {
   const { id, game } = body || {};
   if (typeof id !== 'string' || !/^[a-z0-9]{12,40}$/.test(id) || !GAMES[game]) return [400, { error: 'bad score' }];
+  if (body.rid != null) return postRun(body, id, game, addr);
   const [maxS, maxB, maxC] = GAMES[game];
   const s = Math.floor(Number(body.s)), b = Math.floor(Number(body.b)), c = maxC ? Math.floor(Number(body.c) || 0) : 0;
   if (!(s >= 0 && s <= maxS && b >= 0 && b <= maxB && c >= 0 && c <= (maxC || 0))) return [400, { error: 'out of range' }];

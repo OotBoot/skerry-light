@@ -1093,7 +1093,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
       <h1 id="boardHead">The Scoreboard</h1>
       <div class="nickrow" id="boardNameRow" hidden><label for="boardName">Your name</label><input id="boardName" type="text" maxlength="16" autocomplete="nickname" placeholder="your sailing name"></div>
       <div class="boardgames" id="boardGames" aria-live="polite"></div>
-      <p class="boardkey" id="boardKey" hidden><span class="inc">*</span> An incomplete game: their progress so far, from a game they haven’t yet finished.</p>
+      <p class="boardkey" id="boardKey" hidden><span class="inc">*</span> An incomplete game: left or lost before its end, logged as far as it got.</p>
       <p class="muted" id="boardNote"></p>
     </div>
     <div class="card">
@@ -10435,7 +10435,7 @@ function startRun() {
 
 function beginVoyage(n) {
   state = 'play';
-  if (typeof scorePlayed === 'function') scorePlayed('skerry');   // the scoreboard (src/scores.js)
+  if (n === 1 && typeof scorePlayed === 'function') scorePlayed('skerry');   // the scoreboard (src/scores.js): a new run
   newVoyage(n, false);
   hideCallout(); showHails();
   bellShown = -1; flareShown = -1;
@@ -10454,7 +10454,7 @@ function beginCrewVoyage(L, slot) {
   if (!$('crateCard').hidden && typeof hideCrates === 'function') hideCrates();
   if (L.voy === 1) run = { voyages: 0, hits: 0 };
   state = 'play';
-  if (typeof scorePlayed === 'function') scorePlayed('skerry');   // the scoreboard (src/scores.js)
+  if (L.voy === 1 && typeof scorePlayed === 'function') scorePlayed('skerry');   // the scoreboard (src/scores.js): a new run
   newVoyage(L.voy, false, L.seed, slot);
   g.launchAt = L.at; g.launchId = L.id;
   bellShown = -1; flareShown = -1;
@@ -10495,7 +10495,11 @@ function enteredBackrooms() {
   sfxLightsOut();
 }
 
-for (const b of document.querySelectorAll('.menuBtn')) b.addEventListener('click', () => { if (state === 'port' || state === 'over') toTitle(); });
+for (const b of document.querySelectorAll('.menuBtn')) b.addEventListener('click', () => {
+  // (ashore from harbour: the run ends there, played to its end)
+  if (state === 'port' && typeof scoreRun === 'function') { scoreRun('skerry', run.voyages, run.shaves || 0, 0, true); scoreRunEnd('skerry'); }
+  if (state === 'port' || state === 'over') toTitle();
+});
 
 function toTitle() {
   state = 'title';
@@ -10539,6 +10543,7 @@ function arrive() {
   run.voyages++;
   if (run.voyages > best) { best = run.voyages; try { localStorage.setItem('skerry-helm-best', String(best)); } catch (e) {} }
   if (typeof scoreVoyage === 'function') scoreVoyage(run.voyages);   // the scoreboard (src/scores.js)
+  if (typeof scoreRun === 'function') scoreRun('skerry', run.voyages, run.shaves || 0);
   sfxChime();
   const page = g.backrooms ? SK.BACKROOMS_LOG : SK.SEA_LOG[g.biome] || SK.LOG[(run.voyages - 1) % SK.LOG.length];
   const seaPort = { nether: 'The lava thins to black water, the red roof lifts into ordinary cloud, and the pier lamps are dead ahead. Your paint is blistered. Plimsoll is steaming gently.',
@@ -10593,6 +10598,8 @@ const SEA_END = {
   sky: ['Lost in the Clouds', 'She went down through the cloud floor and was never found. On clear nights you can still hear an engine up there.'],
 };
 function endRun(how) {
+  // the scoreboard (src/scores.js): the run's over, played to its end
+  if (typeof scoreRun === 'function' && state === 'play') { scoreRun('skerry', run.voyages, run.shaves || 0, 0, true); scoreRunEnd('skerry'); }
   hideBanner();
   hideCallout();
   state = 'over';
@@ -10686,7 +10693,12 @@ function toggleSound() {
 $('startBtn').addEventListener('click', startRun);
 $('resumeBtn').addEventListener('click', resumeGame);
 $('pauseSettings').addEventListener('click', openSettings);
-$('pauseMenu').addEventListener('click', () => { if (paused) { resumeGame(); state = 'over'; toTitle(); } });
+$('pauseMenu').addEventListener('click', () => {
+  if (!paused) return;
+  // (left at sea: the run counts as far as it got, with an asterisk)
+  if (state === 'play' && typeof scoreRun === 'function') { scoreRun('skerry', run.voyages, run.shaves || 0); scoreRunEnd('skerry'); }
+  resumeGame(); state = 'over'; toTitle();
+});
 $('settingsClose').addEventListener('click', closeSettings);
 $('titleSettings').addEventListener('click', openSettings);
 for (const b of document.querySelectorAll('#hailRow button')) b.addEventListener('click', e => { sendHail(+b.dataset.i); e.currentTarget.blur(); cv.focus({ preventScroll: true }); });
@@ -14286,7 +14298,8 @@ function fpsFrame(dt) {
     if (rn !== FPS.round) {
       const all = fpsScores(), top = all[0], mine = all.find(p => p.me);
       // the scoreboard (src/scores.js): your kills this round, and a round won if you finished on top
-      if (typeof scoreReport === 'function' && mine) { const won = top && top.me && top.k > 0; const m = BOARD.mine && BOARD.mine.fps; scoreReport('fps', mine.k, (m ? m.b : 0) + (won ? 1 : 0), 0, true); }
+      if (typeof scoreReport === 'function' && mine) { const won = top && top.me && top.k > 0; const m = BOARD.mine && BOARD.mine.fps; scoreReport('fps', mine.k, (m ? m.b : 0) + (won ? 1 : 0), 0, true); scoreRun('fps', mine.k, won ? 1 : 0, 0, true); }
+      if (typeof scoreRunStart === 'function') { scoreRunEnd('fps'); scoreRunStart('fps'); }   // (the next round: a new entry)
       FPS.roundMsg = { t: 6, text: top && top.k > 0 ? `${top.me ? 'You' : top.n} won the round with ${top.k} ${top.k === 1 ? 'kill' : 'kills'}.` : 'The round is over.' };
       if (typeof wcEarn === 'function') wcEarn('round');   // weapon crates (src/wcrates.js)
       if (typeof ocEarn === 'function') ocEarn('round');   // outfit crates (src/ocrates.js)
@@ -14298,7 +14311,7 @@ function fpsFrame(dt) {
       fpsRespawn(m); fpsSend(true);
     }
     FPS.scoreT = (FPS.scoreT || 0) + dt;
-    if (FPS.scoreT > 5) { FPS.scoreT = 0; const mine = fpsScores().find(p => p.me); if (mine && typeof scoreReport === 'function') scoreReport('fps', mine.k, 0); }
+    if (FPS.scoreT > 5) { FPS.scoreT = 0; const mine = fpsScores().find(p => p.me); if (mine && typeof scoreReport === 'function') { scoreReport('fps', mine.k, 0); scoreRun('fps', mine.k, 0); } }
     if (FPS.roundMsg) { FPS.roundMsg.t -= dt; if (FPS.roundMsg.t <= 0) FPS.roundMsg = null; }
     if (!(FPS.vScare > 0)) fpsInput(dt); else { FPS.look = [0, 0]; FPS.mlook = [0, 0]; m.walk = false; }
     if (FPS.menu) fpsMenuPad(dt);
@@ -20615,7 +20628,7 @@ function zmEnd() {
   ZM.over = { t: 0 };
   zmSound('over');
   if ((typeof RAID !== 'undefined' && RAID.on)) raidReport();   // [raid]
-  else if (typeof scoreReport === 'function') scoreReport('zm', Math.max(0, ZM.round - 1), ZM.kills, 0, true);
+  else if (typeof scoreReport === 'function') { scoreReport('zm', Math.max(0, ZM.round - 1), ZM.kills, 0, true); scoreRun('zm', Math.max(0, ZM.round - 1), ZM.kills, 0, true); scoreRunEnd('zm'); }
 }
 
 // ---------- rounds ----------
@@ -20657,7 +20670,7 @@ function zmRounds(dt) {
   }
 }
 function zmRoundHeld() {
-  if (typeof scoreReport === 'function') scoreReport('zm', ZM.round, ZM.kills);
+  if (typeof scoreReport === 'function') { scoreReport('zm', ZM.round, ZM.kills); scoreRun('zm', ZM.round, ZM.kills); }
   // crates: one of each for every five rounds held
   if (ZM.round % 5 === 0) { if (typeof wcEarn === 'function') wcEarn('round'); if (typeof ocEarn === 'function') ocEarn('round'); }
 }
@@ -29405,6 +29418,8 @@ function raidReport() {
   if (RAID.told || typeof scoreReport !== 'function' || typeof BOARD === 'undefined' || !BOARD.mine || !BOARD.mine.raid) return;
   RAID.told = true;
   scoreReport('raid', RAID.won ? Math.max(1, 100000 - Math.round(RAID.t)) : 0, Math.round(RAID.boss), (BOARD.mine.raid.c | 0) + ZM.kills, RAID.won);
+  // this raid, an entry of its own: incomplete unless it got through the door
+  if (typeof scoreRun === 'function') { scoreRun('raid', RAID.won ? Math.max(1, 100000 - Math.round(RAID.t)) : 0, Math.round(RAID.boss), ZM.kills, RAID.won); scoreRunEnd('raid'); }
 }
 function raidShowOver() {
   const S = RAID_STAGES[RAID_ORDER[RAID.stage]], cleared = RAID.won ? RAID_ORDER.length : RAID.stage;
@@ -34280,6 +34295,7 @@ function warFinish(how, by) {
   warSaveStats(st);
   if (typeof rcEarn === 'function') rcEarn('war', { won: how === 'won', t: WAR.t });   // banner crates (src/rcrates.js)
   if (typeof scoreReport === 'function') scoreReport('war', st.wins || 0, st.bestTiles || 0, 0, true);   // the scoreboard (src/scores.js)
+  if (typeof scoreRun === 'function') { scoreRun('war', how === 'won' ? 1 : 0, me.taken, 0, true); scoreRunEnd('war'); }   // (this war, an entry of its own)
   WAR.result = { how, by: by ? by.name : null, days: WAR.day, taken: me.taken, kills: me.kills, boats: WAR.stats.boats, tiles: me.tiles, share: me.tiles / WAR.landTiles };
   WAR.spectate = how !== 'won';
   if (typeof warShowResult === 'function') warShowResult(WAR.result);
@@ -35986,7 +36002,22 @@ addEventListener('keydown', e => {
 rcRender();
 
 // ---- src/scores.js ----
-// The scoreboard: everyone's best in all four games, kept where the game is hosted.
+// The scoreboard: every game everyone plays, in all five modes, kept where the game is hosted.
+//
+// Each game you play is an entry of its own (a run of Skerry Light, a round of Wreckers' Night, a war, a night at the
+// Lighthouse, a raid down Maren's End), logged by itself as it goes and once more at its end, so you can be on a board
+// many times. A game left or lost before its end keeps what it got to, with a yellow asterisk by the name. Each board
+// shows its top ten, and All for everyone (the server shows at most 25 of one player's). The per-game numbers:
+//   skerry  s: voyages made in the run      b: close shaves          (ends when the boat's lost, or ashore from harbour)
+//   fps     s: kills in the round           b: 1 if you won it       (ends when the round does)
+//   war     s: 1 if won                     b: land taken (tiles)    (ends won or lost)
+//   zm      s: rounds held in the night     b: kills                 (ends when the Lighthouse falls)
+//   raid    s: time through (100000 less its seconds; 0: not through)    b: damage to its bosses    c: kills
+//          (ends through the door; going down before it is incomplete)
+// Your own games are kept on this device too (`skerry-runs`, your best 25 of each and the one under way).
+//
+// Below, from before: your bests, kept in your save (they're no longer what the board shows, but the boards from
+// before showed them, and those entries are still read, each as one game).
 //
 // On claude.ai the artifact keeps it in its own shared database (a document per player under `scores/`, each
 // written only by its player, read by everyone; names are shown as each viewer's claude.ai sees them).
@@ -36013,15 +36044,51 @@ rcRender();
 
 const BOARD = {
   games: {
-    skerry: { name: 'Skerry Light', s: 'Best run', b: 'Voyages', what: 'Most voyages made in one run, without losing the boat. Voyages: made in all.' },
-    fps: { name: 'Wreckers’ Night', s: 'Best round', b: 'Rounds won', what: 'Most kills in one round of Wreckers’ Night. Rounds won: rounds you finished on top.' },
-    war: { name: 'Drowned Reach', s: 'Wars won', b: 'Most land', what: 'Wars of the Drowned Reach won, alone or together. Most land: the most tiles taken in one war.' },
-    zm: { name: 'Keeper’s Last Light', s: 'Rounds held', b: 'Most kills', what: 'The most rounds held at the Lighthouse in one night. Most kills: the drowned sent back in one night.' },
-    raid: { name: 'Maren’s End', s: 'Best time', b: 'Boss damage', c: 'Kills', what: 'The quickest time through every part of Maren’s End. Boss damage: the most done to its bosses in one raid. Kills: the drowned sent back in all your raids.',
+    skerry: { name: 'Skerry Light', s: 'Voyages', b: 'Close shaves', what: 'Each run: the voyages made before the boat was lost, and its close shaves.' },
+    fps: { name: 'Wreckers’ Night', s: 'Kills', b: 'Round', what: 'Each round of Wreckers’ Night: your kills, and whether you won it.', fb: v => v > 0 ? 'Won' : '—' },
+    war: { name: 'Drowned Reach', s: 'Result', b: 'Land', what: 'Each war of the Drowned Reach: won or not, and the land taken.', fs: v => v > 0 ? 'Won' : '—', fb: v => `${v} tiles` },
+    zm: { name: 'Keeper’s Last Light', s: 'Rounds held', b: 'Kills', what: 'Each night at the Lighthouse: the rounds held, and the drowned sent back.' },
+    raid: { name: 'Maren’s End', s: 'Time', b: 'Boss damage', c: 'Kills', what: 'Each raid down Maren’s End: the time through, the damage done to its bosses, and the drowned sent back.',
       fs: v => v > 0 ? raidTimeOf(v) : '—' },
   },
   open: {}, mine: null, via: null, db: null, user: null, uid: null, data: null, loading: false, err: '', lastT: 0, sendT: 0, store: '',
 };
+
+// ---------- your games: each one an entry on the board ----------
+// BOARD.runs[game]: [{ r: its id, s, b, c, f: played to its end, at, u: not yet on the board }]; BOARD.cur[game]: the
+// id of the one under way
+function runsLoad() {
+  let o = {}; try { o = JSON.parse(localStorage.getItem('skerry-runs') || '{}') || {}; } catch (e) {}
+  BOARD.runs = {}; BOARD.cur = {};
+  for (const g of Object.keys(BOARD.games)) BOARD.runs[g] = Array.isArray(o[g]) ? o[g].filter(r => r && typeof r.r === 'string') : [];
+}
+const runKey = r => (r.s | 0) * 1e9 + (r.b | 0) + (r.c | 0) * 1e-3;
+function runsSave() {
+  for (const g of Object.keys(BOARD.games)) {
+    // your best 25, the one under way, and any not on the board yet
+    const L = BOARD.runs[g].slice().sort((a, b) => runKey(b) - runKey(a));
+    BOARD.runs[g] = L.filter((r, k) => k < 25 || r.r === BOARD.cur[g] || r.u);
+  }
+  try { localStorage.setItem('skerry-runs', JSON.stringify(BOARD.runs)); } catch (e) {}
+}
+// a game begun: a new entry, from nothing
+function scoreRunStart(game) {
+  if (!BOARD.runs || !BOARD.runs[game]) return;
+  let r = ''; while (r.length < 12) r += Math.random().toString(36).slice(2); r = r.slice(0, 12);
+  BOARD.runs[game].push({ r, s: 0, b: 0, c: 0, f: 0, at: Date.now() }); BOARD.cur[game] = r; runsSave();
+}
+// the game under way, as it stands (each number only goes up; done: played to its end, so no asterisk)
+function scoreRun(game, s, b, c, done) {
+  if (!BOARD.runs || !BOARD.runs[game]) return;
+  if (!BOARD.cur[game]) return;   // (none under way: each mode begins one with scorePlayed)
+  const r = BOARD.runs[game].find(x => x.r === BOARD.cur[game]); if (!r) return;
+  s = Math.max(r.s, Math.floor(s || 0)); b = Math.max(r.b, Math.floor(b || 0)); c = Math.max(r.c | 0, Math.floor(c || 0));
+  if (s === r.s && b === r.b && c === (r.c | 0) && (r.f || !done)) return;
+  Object.assign(r, { s, b, c, at: Date.now(), u: 1 }); if (done) r.f = 1; runsSave();
+  boardSendSoon(game);
+}
+// that game's over: the next one's a new entry
+function scoreRunEnd(game) { if (BOARD.cur) BOARD.cur[game] = null; }
 
 // ---------- your bests, here ----------
 function boardLoadMine() {
@@ -36039,9 +36106,12 @@ function boardLoadMine() {
 }
 // an entry from before the marks: finished, if it has anything, but Maren's End only with a time
 function boardOldF(g, e) { return (g === 'raid' ? e.s | 0 : (e.s | 0) + (e.b | 0) + (e.c | 0)) > 0 ? 1 : 0; }
+// a best from before games were kept, as one game (as server/scores.js oldAsRun)
+function boardOldRun(g, e, f) { const r = { s: e.s | 0, b: e.b | 0, c: e.c | 0, f }; if (g === 'skerry' || g === 'fps') r.b = 0; if (g === 'war') r.s = r.s > 0 ? 1 : 0; return r; }
 // a claude.ai board document's finished mark for a game (one from before the marks: as boardOldF)
 function boardDocF(d, g) { return g + '_f' in d ? (d[g + '_f'] ? 1 : 0) : boardOldF(g, { s: d[g + '_s'], b: d[g + '_b'], c: d[g + '_c'] }); }
 function boardSaveMine() { try { localStorage.setItem('skerry-bests', JSON.stringify(BOARD.mine)); } catch (e) {} }
+// (your bests still go into your save, but the board is your games now)
 // a new best (either number) goes on the board soon after
 // (c: a third number, for a game that has one: Maren's End's kills in all; done: a game of it played to its end)
 function scoreReport(game, s, b, c, done) {
@@ -36049,21 +36119,21 @@ function scoreReport(game, s, b, c, done) {
   s = Math.max(0, Math.floor(s || 0)); b = Math.max(0, Math.floor(b || 0)); c = Math.max(0, Math.floor(c || 0));
   if (s <= m.s && b <= m.b && c <= (m.c | 0) && m.p && (m.f || !done)) return;
   m.s = Math.max(m.s, s); m.b = Math.max(m.b, b); if (BOARD.games[game].c) m.c = Math.max(m.c | 0, c); m.p = 1; if (done) m.f = 1; boardSaveMine();
-  boardSendSoon(game);
 }
 // Skerry Light: a voyage made, and how many this run has made
 function scoreVoyage(runVoyages) { const m = BOARD.mine && BOARD.mine.skerry; if (!m) return; scoreReport('skerry', runVoyages, m.b + 1, 0, true); }
 // a game begun: you're on its board from now, with an asterisk until you finish one
-function scorePlayed(game) { scoreReport(game, 0, 0, 0); }
+function scorePlayed(game) { scoreReport(game, 0, 0, 0); scoreRunStart(game); }
 // leaving a game before its end (or the page closing on one): what it got to so far counts
 function scoreLeaving() {
   try {
-    if (typeof FPS !== 'undefined' && FPS.on && !FPS.zm) { const mine = fpsScores().find(p => p.me); if (mine) scoreReport('fps', mine.k, 0); }
+    if (typeof FPS !== 'undefined' && FPS.on && !FPS.zm) { const mine = fpsScores().find(p => p.me); if (mine) { scoreReport('fps', mine.k, 0); scoreRun('fps', mine.k, 0); } scoreRunEnd('fps'); }
     if (typeof ZM !== 'undefined' && ZM.on && !ZM.over) {
       if (typeof RAID !== 'undefined' && RAID.on) { if (typeof raidReport === 'function') raidReport(); }
-      else scoreReport('zm', Math.max(0, ZM.round - 1), ZM.kills);
+      else { scoreReport('zm', Math.max(0, ZM.round - 1), ZM.kills); scoreRun('zm', Math.max(0, ZM.round - 1), ZM.kills); scoreRunEnd('zm'); }
     }
-    if (typeof WAR !== 'undefined' && WAR.on && WAR.phase === 'play' && !WAR.result && WAR.nations && WAR.nations[WAR.me]) { const st = warLoadStats(); scoreReport('war', st.wins || 0, Math.max(st.bestTiles || 0, WAR.nations[WAR.me].taken | 0)); }
+    if (typeof WAR !== 'undefined' && WAR.on && WAR.phase === 'play' && !WAR.result && WAR.nations && WAR.nations[WAR.me]) { const st = warLoadStats(), t = WAR.nations[WAR.me].taken | 0; scoreReport('war', st.wins || 0, Math.max(st.bestTiles || 0, t)); scoreRun('war', 0, t); scoreRunEnd('war'); }
+    if (typeof run !== 'undefined' && typeof state !== 'undefined' && state === 'play' && run) scoreRun('skerry', run.voyages, run.shaves || 0);
   } catch (e) {}
 }
 addEventListener('pagehide', scoreLeaving);   // (kept here, and sent next time if it can't go now)
@@ -36140,7 +36210,7 @@ function boardApiUrl() {
   return '';
 }
 async function boardInit() {
-  BOARD.mine = boardLoadMine(); boardSaveMine();
+  BOARD.mine = boardLoadMine(); boardSaveMine(); runsLoad();
   if (window.claude && typeof window.claude.use === 'function') {
     try {
       const [db, user] = await Promise.all([window.claude.use('db'), window.claude.use('user')]);
@@ -36157,10 +36227,11 @@ async function boardInit() {
   boardRender(); boardFetch();
 }
 
-// ---------- sending your bests ----------
+// ---------- sending your games ----------
+// (any game marked u goes; BOARD_PENDING just says there's something to look at)
 const BOARD_PENDING = new Set();
 function boardSendSoon(game) {
-  if (game === 'all') for (const g of Object.keys(BOARD.games)) BOARD_PENDING.add(g); else BOARD_PENDING.add(game);
+  BOARD_PENDING.add(game);
   clearTimeout(BOARD.sendT); BOARD.sendT = setTimeout(boardSend, 2500);
 }
 async function boardSend() {
@@ -36169,33 +36240,33 @@ async function boardSend() {
   if (BOARD.sending) { BOARD.sendAgain = true; return; }
   BOARD.sending = true;
   const games = [...BOARD_PENDING]; BOARD_PENDING.clear();
-  const m = BOARD.mine;
+  const m = BOARD.mine, R = BOARD.runs, has = r => r.s + r.b + (r.c | 0) > 0;
   try {
     if (BOARD.via === 'claude') {
+      // one document for you: your games (best 25 of each, as [id, s, b, c, f, at]), and your bests as the board from
+      // before kept them (so a page from before still shows you)
       const doc = { nick: boardName(), at: Date.now() };
-      for (const g of Object.keys(BOARD.games)) if (m[g].s + m[g].b + (m[g].c | 0) > 0 || m[g].p) { doc[g + '_s'] = m[g].s; doc[g + '_b'] = m[g].b; doc[g + '_k'] = m[g].s * 1e9 + m[g].b + ((m[g].c | 0) > 0 && !m[g].s && !m[g].b ? 0.5 : !m[g].s && !m[g].b ? 0.1 : 0); doc[g + '_f'] = m[g].f ? 1 : 0; if (BOARD.games[g].c) doc[g + '_c'] = m[g].c | 0; }
+      for (const g of Object.keys(BOARD.games)) {
+        if (m[g].s + m[g].b + (m[g].c | 0) > 0) { doc[g + '_s'] = m[g].s; doc[g + '_b'] = m[g].b; doc[g + '_k'] = m[g].s * 1e9 + m[g].b + ((m[g].c | 0) > 0 && !m[g].s && !m[g].b ? 0.5 : 0); doc[g + '_f'] = m[g].f ? 1 : 0; if (BOARD.games[g].c) doc[g + '_c'] = m[g].c | 0; }
+        doc[g + '_runs'] = R[g].filter(has).sort((a, b) => runKey(b) - runKey(a)).slice(0, 25).map(r => [r.r, r.s, r.b, r.c | 0, r.f ? 1 : 0, Math.floor(r.at || 0)]);
+      }
       await BOARD.db.doc('scores/' + BOARD.uid).set(doc);
+      for (const g of Object.keys(BOARD.games)) for (const r of R[g]) delete r.u;
+      runsSave();
     } else {
       const id = await boardIdNow(); if (!id) { BOARD.sending = false; return; }
-      // every id this browser has been on the board under: any but this one move across to it, one a pass, so no one
-      // is on the board twice (a browser's own id, before its save had a recovery code; a code since replaced)
-      let used = []; try { used = JSON.parse(localStorage.getItem('skerry-board-used') || '[]').filter(x => typeof x === 'string'); } catch (e) {}
-      const pid = boardId(); if (pid && pid !== id && !used.includes(pid)) used.push(pid);
-      const was = used.find(x => x !== id) || '';
-      if (!used.includes(id)) used.push(id);
-      try { localStorage.setItem('skerry-board-used', JSON.stringify(used.slice(-6))); } catch (e) {}
       let all = true;
-      for (const g of was ? Object.keys(BOARD.games) : games) {
-        if (m[g].s + m[g].b + (m[g].c | 0) <= 0 && !m[g].p && !was) continue;
-        const r = await fetch(boardApiUrl(), { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ id, name: boardName(), game: g, s: m[g].s, b: m[g].b, c: BOARD.games[g].c ? m[g].c | 0 : undefined, p: m[g].p ? 1 : 0, f: m[g].f ? 1 : 0, was: was || undefined }) });
-        if (!r.ok) { all = false; BOARD_PENDING.add(g); }
+      for (const g of Object.keys(BOARD.games)) for (const r of R[g].filter(x => x.u)) {
+        if (!has(r)) { delete r.u; continue; }
+        const sent = { s: r.s, b: r.b, c: r.c, f: r.f };
+        const res = await fetch(boardApiUrl(), { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ id, rid: r.r, name: boardName(), game: g, s: r.s, b: r.b, c: r.c | 0, f: r.f ? 1 : 0 }) });
+        if (!res.ok) all = false;
+        // (it may have gone up again meanwhile: then it goes again)
+        else if (r.s === sent.s && r.b === sent.b && r.c === sent.c && r.f === sent.f) delete r.u;
+        runsSave();
         await new Promise(res => setTimeout(res, 3200));   // the server takes one score every few seconds from each address
       }
-      if (was && all) {
-        used = used.filter(x => x !== was); try { localStorage.setItem('skerry-board-used', JSON.stringify(used)); } catch (e) {}
-        if (used.some(x => x !== id)) boardSendSoon('all');
-      }
-      if (!all) { clearTimeout(BOARD.sendT); BOARD.sendT = setTimeout(boardSend, 4000); }
+      if (!all || Object.values(R).some(L => L.some(r => r.u))) { clearTimeout(BOARD.sendT); BOARD.sendT = setTimeout(boardSend, 4000); }
     }
     BOARD.lastT = 0; boardFetch();
   } catch (e) {
@@ -36215,10 +36286,18 @@ async function boardFetch(force) {
   BOARD.loading = true; BOARD.lastT = Date.now(); boardRender();
   try {
     if (BOARD.via === 'claude') {
-      const data = {};
+      // everyone's document (the latest 500 players), and every game in each; one from before games were kept has
+      // its best, as one game
+      const data = {}, q = await BOARD.db.collection('scores').orderBy('at', 'desc').limit(500).get();
+      const docs = q.docs.map(d => ({ id: d.id, d: d.data() || {} }));
       for (const g of Object.keys(BOARD.games)) {
-        const q = await BOARD.db.collection('scores').orderBy(g + '_k', 'desc').limit(500).get();
-        data[g] = q.docs.map(d => ({ id: d.id, d: d.data() || {} })).filter(e => (e.d[g + '_k'] || 0) > 0).map(e => ({ id: e.id, n: '', nick: String(e.d.nick || ''), s: e.d[g + '_s'] | 0, b: e.d[g + '_b'] | 0, c: e.d[g + '_c'] | 0, f: boardDocF(e.d, g), me: e.id === BOARD.uid }));
+        const L = [];
+        for (const { id, d } of docs) {
+          const base = { id, n: '', nick: String(d.nick || ''), me: id === BOARD.uid };
+          if (Array.isArray(d[g + '_runs'])) { for (const a of d[g + '_runs']) if (Array.isArray(a)) L.push(Object.assign({ s: a[1] | 0, b: a[2] | 0, c: a[3] | 0, f: a[4] ? 1 : 0 }, base)); }
+          else if ((d[g + '_k'] || 0) > 0) L.push(Object.assign(boardOldRun(g, { s: d[g + '_s'] | 0, b: d[g + '_b'] | 0, c: d[g + '_c'] | 0 }, boardDocF(d, g)), base));
+        }
+        data[g] = L.filter(e => e.s + e.b + e.c > 0).sort((a, b) => runKey(b) - runKey(a)).slice(0, 500);
       }
       // names, as this viewer's claude.ai shows them
       const ids = [...new Set(Object.values(data).flat().map(e => e.id))];
@@ -36258,16 +36337,17 @@ function boardRender() {
       const li = mk('li', e.me ? 'me' : ''); if (e.me) meShown = true;
       // (no f: a server from before the marks; its rows count as finished)
       const inc = e.f === 0 || e.f === false; if (inc) anyInc = true;
-      for (const [cls, txt] of [['rk', String(k + 1)], ['nm', e.n + (e.me ? ' (you)' : '')], ['sc', G.fs ? G.fs(e.s) : String(e.s)], ['sb', g === 'war' ? `${e.b} tiles` : String(e.b)]].concat(G.c ? [['sb', String(e.c | 0)]] : [])) {
+      for (const [cls, txt] of [['rk', String(k + 1)], ['nm', e.n + (e.me ? ' (you)' : '')], ['sc', G.fs ? G.fs(e.s) : String(e.s)], ['sb', G.fb ? G.fb(e.b) : String(e.b)]].concat(G.c ? [['sb', String(e.c | 0)]] : [])) {
         const sp = mk('span', cls, txt); li.append(sp);
         if (cls === 'nm' && inc) { const a = mk('span', 'inc', '*'); a.title = 'An incomplete game'; a.setAttribute('aria-label', ' (an incomplete game)'); sp.append(a); }
       }
       ol.append(li);
     });
     sec.append(ol);
-    const m = BOARD.mine && BOARD.mine[g];
-    if (m && (m.s + m.b + (m.c | 0) > 0 || m.p) && !meShown) {
-      const p = mk('p', 'boardmine', `Your best: ${G.fs ? G.fs(m.s) : m.s} · ${m.b}${g === 'war' ? ' tiles' : ''}${G.c ? ' · ' + (m.c | 0) : ''}`);
+    // your best game, under a board you're not on as far as it shows
+    const m = BOARD.runs && BOARD.runs[g] && BOARD.runs[g].filter(r => r.s + r.b + (r.c | 0) > 0).sort((a, b) => runKey(b) - runKey(a))[0];
+    if (m && !meShown) {
+      const p = mk('p', 'boardmine', `Your best: ${G.fs ? G.fs(m.s) : m.s} · ${G.fb ? G.fb(m.b) : m.b}${G.c ? ' · ' + (m.c | 0) : ''}`);
       if (!m.f) { const a = mk('span', 'inc', '*'); a.title = 'An incomplete game'; p.append(a); anyInc = true; }
       sec.append(p);
     }

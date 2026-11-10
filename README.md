@@ -208,20 +208,20 @@ How it works: the host's browser runs the whole war, the same code as a game alo
 
 ## The scoreboard
 
-`src/scores.js` (the card on the title screen) and `server/scores.js`. One board for all five games, each player's best:
-- **Skerry Light:** most voyages in one run (and voyages made in all).
-- **Wreckers' Night:** most kills in one round (and rounds won).
-- **Drowned Reach:** wars won, alone or together (and the most land taken in one war).
-- **Keeper's Last Light:** most rounds held in one night (and the most kills in one night).
-- **Maren's End:** the best time through the raid, with the most boss damage and the kills made in all your raids beside it.
+`src/scores.js` (the card on the title screen) and `server/scores.js`. Every game you play goes on the board as an entry of its own, by itself, so you can be on a board many times:
+- **Skerry Light:** each run: the voyages made, and its close shaves.
+- **Wreckers' Night:** each round: your kills, and whether you won it.
+- **Drowned Reach:** each war: won or not, and the land taken.
+- **Keeper's Last Light:** each night: the rounds held, and the drowned sent back.
+- **Maren's End:** each raid: the time through, the damage done to its bosses, and the drowned sent back.
 
-It sits at the top of the title screen: the top ten of every game at once, each with an **All** button (once more than ten have played) to see everyone who has, and your own rows marked "(you)" (your best is shown under a game where you're not in the top few).
+It sits at the top of the title screen: the top ten of every game at once, each with an **All** button (once there are more than ten) to see every entry, and your own marked "(you)" (your best game is shown under a board where you're not in what it shows). A game is logged as it goes, and once more when it ends.
 
-**Incomplete games count too.** Start a game and you're on its board straight away, and if you leave it or lose before the end (or close the page), what you got to so far still counts: the kills, rounds, land, boss damage or kills you'd made. Until you've finished a game of that mode, your name has a yellow **\*** beside it, and a line under the board says the asterisk marks an incomplete game. Finishing means: making harbour on a voyage (Skerry Light), being there when a round ends (Wreckers' Night), a war to its end, won or lost (Drowned Reach), a night until the Lighthouse falls (Keeper's Last Light), and getting through the door (Maren's End; going down before it counts as incomplete). Once you've finished one, the asterisk goes for good.
+**Incomplete games count too.** Leave a game or lose it before its end (or close the page) and it's still logged, as far as it got, with a yellow **\*** by the name; a line under the board says the asterisk marks an incomplete game. A game's end: the boat lost, or coming ashore from harbour (Skerry Light; leaving from the pause menu at sea is incomplete), the round ending (Wreckers' Night), a war won or lost (Drowned Reach), the Lighthouse falling (Keeper's Last Light), and getting through the door (Maren's End; going down before it is incomplete).
 
-Your bests are kept in your browser, only ever go up, and are part of your save, so they follow your recovery code (cloud saves, below) to every device; your scores go on the board by themselves.
+The boards from before kept only each player's best; those are still shown, each as one game, so nobody's old scores went. The server keeps the best 4000 games of each mode, and shows at most 25 of one player's. Your bests are still kept in your browser and your save (cloud saves, below).
 
-**Your name** is one username for every game: type it in the board's box or any of the other name boxes (sailing together, Wreckers' Night, the Lighthouse) and the rest fill in. It's kept on the device (and in your save, so a new device that loads your recovery code gets it too), and it's your name on the board; with none chosen, you're "A sailor". The Drowned Reach's house name is kept on the device as well. On the game's own site you're on the board once, under an id made from your recovery code (never the code itself): a browser's own entry from before, or one from a code since replaced, moves across to it, keeping the higher scores, so no one is on the board twice.
+**Your name** is one username for every game: type it in the board's box or any of the other name boxes (sailing together, Wreckers' Night, the Lighthouse) and the rest fill in. It's kept on the device (and in your save, so a new device that loads your recovery code gets it too), and it's your name on the board; with none chosen, you're "A sailor". The Drowned Reach's house name is kept on the device as well. On the game's own site your games are marked as yours by an id made from your recovery code (never the code itself), so they're "(you)" on every device that has it.
 
 - **On claude.ai** the artifact keeps the board in its own shared database: one document per player under `scores/`, readable by everyone who can open the page, written only by its own player (Contributor access or above). Names are shown as each viewer's claude.ai shows them.
 - **On your own server** the board is kept in a free [Upstash](https://upstash.com) Redis database, reached over its REST API (no driver to install). To set it up:

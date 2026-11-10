@@ -912,7 +912,8 @@ function fpsFrame(dt) {
     if (rn !== FPS.round) {
       const all = fpsScores(), top = all[0], mine = all.find(p => p.me);
       // the scoreboard (src/scores.js): your kills this round, and a round won if you finished on top
-      if (typeof scoreReport === 'function' && mine) { const won = top && top.me && top.k > 0; const m = BOARD.mine && BOARD.mine.fps; scoreReport('fps', mine.k, (m ? m.b : 0) + (won ? 1 : 0), 0, true); }
+      if (typeof scoreReport === 'function' && mine) { const won = top && top.me && top.k > 0; const m = BOARD.mine && BOARD.mine.fps; scoreReport('fps', mine.k, (m ? m.b : 0) + (won ? 1 : 0), 0, true); scoreRun('fps', mine.k, won ? 1 : 0, 0, true); }
+      if (typeof scoreRunStart === 'function') { scoreRunEnd('fps'); scoreRunStart('fps'); }   // (the next round: a new entry)
       FPS.roundMsg = { t: 6, text: top && top.k > 0 ? `${top.me ? 'You' : top.n} won the round with ${top.k} ${top.k === 1 ? 'kill' : 'kills'}.` : 'The round is over.' };
       if (typeof wcEarn === 'function') wcEarn('round');   // weapon crates (src/wcrates.js)
       if (typeof ocEarn === 'function') ocEarn('round');   // outfit crates (src/ocrates.js)
@@ -924,7 +925,7 @@ function fpsFrame(dt) {
       fpsRespawn(m); fpsSend(true);
     }
     FPS.scoreT = (FPS.scoreT || 0) + dt;
-    if (FPS.scoreT > 5) { FPS.scoreT = 0; const mine = fpsScores().find(p => p.me); if (mine && typeof scoreReport === 'function') scoreReport('fps', mine.k, 0); }
+    if (FPS.scoreT > 5) { FPS.scoreT = 0; const mine = fpsScores().find(p => p.me); if (mine && typeof scoreReport === 'function') { scoreReport('fps', mine.k, 0); scoreRun('fps', mine.k, 0); } }
     if (FPS.roundMsg) { FPS.roundMsg.t -= dt; if (FPS.roundMsg.t <= 0) FPS.roundMsg = null; }
     if (!(FPS.vScare > 0)) fpsInput(dt); else { FPS.look = [0, 0]; FPS.mlook = [0, 0]; m.walk = false; }
     if (FPS.menu) fpsMenuPad(dt);

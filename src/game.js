@@ -555,7 +555,7 @@ function startRun() {
 
 function beginVoyage(n) {
   state = 'play';
-  if (typeof scorePlayed === 'function') scorePlayed('skerry');   // the scoreboard (src/scores.js)
+  if (n === 1 && typeof scorePlayed === 'function') scorePlayed('skerry');   // the scoreboard (src/scores.js): a new run
   newVoyage(n, false);
   hideCallout(); showHails();
   bellShown = -1; flareShown = -1;
@@ -574,7 +574,7 @@ function beginCrewVoyage(L, slot) {
   if (!$('crateCard').hidden && typeof hideCrates === 'function') hideCrates();
   if (L.voy === 1) run = { voyages: 0, hits: 0 };
   state = 'play';
-  if (typeof scorePlayed === 'function') scorePlayed('skerry');   // the scoreboard (src/scores.js)
+  if (L.voy === 1 && typeof scorePlayed === 'function') scorePlayed('skerry');   // the scoreboard (src/scores.js): a new run
   newVoyage(L.voy, false, L.seed, slot);
   g.launchAt = L.at; g.launchId = L.id;
   bellShown = -1; flareShown = -1;
@@ -615,7 +615,11 @@ function enteredBackrooms() {
   sfxLightsOut();
 }
 
-for (const b of document.querySelectorAll('.menuBtn')) b.addEventListener('click', () => { if (state === 'port' || state === 'over') toTitle(); });
+for (const b of document.querySelectorAll('.menuBtn')) b.addEventListener('click', () => {
+  // (ashore from harbour: the run ends there, played to its end)
+  if (state === 'port' && typeof scoreRun === 'function') { scoreRun('skerry', run.voyages, run.shaves || 0, 0, true); scoreRunEnd('skerry'); }
+  if (state === 'port' || state === 'over') toTitle();
+});
 
 function toTitle() {
   state = 'title';
@@ -659,6 +663,7 @@ function arrive() {
   run.voyages++;
   if (run.voyages > best) { best = run.voyages; try { localStorage.setItem('skerry-helm-best', String(best)); } catch (e) {} }
   if (typeof scoreVoyage === 'function') scoreVoyage(run.voyages);   // the scoreboard (src/scores.js)
+  if (typeof scoreRun === 'function') scoreRun('skerry', run.voyages, run.shaves || 0);
   sfxChime();
   const page = g.backrooms ? SK.BACKROOMS_LOG : SK.SEA_LOG[g.biome] || SK.LOG[(run.voyages - 1) % SK.LOG.length];
   const seaPort = { nether: 'The lava thins to black water, the red roof lifts into ordinary cloud, and the pier lamps are dead ahead. Your paint is blistered. Plimsoll is steaming gently.',
@@ -713,6 +718,8 @@ const SEA_END = {
   sky: ['Lost in the Clouds', 'She went down through the cloud floor and was never found. On clear nights you can still hear an engine up there.'],
 };
 function endRun(how) {
+  // the scoreboard (src/scores.js): the run's over, played to its end
+  if (typeof scoreRun === 'function' && state === 'play') { scoreRun('skerry', run.voyages, run.shaves || 0, 0, true); scoreRunEnd('skerry'); }
   hideBanner();
   hideCallout();
   state = 'over';
@@ -806,7 +813,12 @@ function toggleSound() {
 $('startBtn').addEventListener('click', startRun);
 $('resumeBtn').addEventListener('click', resumeGame);
 $('pauseSettings').addEventListener('click', openSettings);
-$('pauseMenu').addEventListener('click', () => { if (paused) { resumeGame(); state = 'over'; toTitle(); } });
+$('pauseMenu').addEventListener('click', () => {
+  if (!paused) return;
+  // (left at sea: the run counts as far as it got, with an asterisk)
+  if (state === 'play' && typeof scoreRun === 'function') { scoreRun('skerry', run.voyages, run.shaves || 0); scoreRunEnd('skerry'); }
+  resumeGame(); state = 'over'; toTitle();
+});
 $('settingsClose').addEventListener('click', closeSettings);
 $('titleSettings').addEventListener('click', openSettings);
 for (const b of document.querySelectorAll('#hailRow button')) b.addEventListener('click', e => { sendHail(+b.dataset.i); e.currentTarget.blur(); cv.focus({ preventScroll: true }); });
