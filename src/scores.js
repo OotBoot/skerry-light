@@ -228,7 +228,7 @@ function boardRender() {
     for (const [c, t] of [['rk', '#'], ['nm', 'Name'], ['sc', G.s], ['sb', G.b]]) head.append(mk('span', c, t));
     sec.append(head);
     const ol = mk('ol', 'boardlist'); ol.setAttribute('aria-label', G.name + ': ' + G.what);
-    if (!rows.length) ol.append(mk('li', 'empty', BOARD.loading && !BOARD.data ? 'Reading the board…' : BOARD.data ? 'No one yet. Be the first.' : (BOARD.err || 'Reading the board…')));
+    if (!rows.length) ol.append(mk('li', 'empty', BOARD.loading && !BOARD.data ? 'Reading the board…' : BOARD.data ? 'No one yet. Be the first.' : BOARD.err ? '—' : 'Reading the board…'));
     let meShown = false;
     rows.slice(0, open ? 10 : 3).forEach((e, k) => {
       const li = mk('li', e.me ? 'me' : ''); if (e.me) meShown = true;

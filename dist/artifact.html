@@ -1028,6 +1028,9 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
   </div>
 
   <div class="overlay" id="titleCard">
+    <button class="newgame" id="fpsBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">Try the new game, <b>Wreckers' Night</b>: a multiplayer shootout on the skerry</span><span class="ng-go" aria-hidden="true">↓</span></button>
+    <button class="newgame warbanner" id="warBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">And another, <b>Drowned Reach</b>: a war for the islands, alone or with up to ten players</span><span class="ng-go" aria-hidden="true">↓</span></button>
+    <button class="newgame zmbanner" id="zmBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">And a fourth, <b>Keeper's Last Light</b>: hold the keeper's station against the drowned, round after round</span><span class="ng-go" aria-hidden="true">↓</span></button>
     <div class="card boardcard" id="boardCard" aria-labelledby="boardHead">
       <div class="cardtop"><span class="eyebrow">Best on record · all four games</span><button class="tool closebtn" id="boardRefresh" type="button">Refresh</button></div>
       <h1 id="boardHead">The Scoreboard</h1>
@@ -1035,9 +1038,6 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
       <div class="boardgames" id="boardGames" aria-live="polite"></div>
       <p class="muted" id="boardNote"></p>
     </div>
-    <button class="newgame" id="fpsBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">Try the new game, <b>Wreckers' Night</b>: a multiplayer shootout on the skerry</span><span class="ng-go" aria-hidden="true">↓</span></button>
-    <button class="newgame warbanner" id="warBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">And another, <b>Drowned Reach</b>: a war for the islands, alone or with up to ten players</span><span class="ng-go" aria-hidden="true">↓</span></button>
-    <button class="newgame zmbanner" id="zmBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">And a fourth, <b>Keeper's Last Light</b>: hold the keeper's station against the drowned, round after round</span><span class="ng-go" aria-hidden="true">↓</span></button>
     <div class="card">
       <div class="cardtop"><span class="eyebrow">Master's orders · make harbour by night</span><button class="tool closebtn" id="soundBtn" type="button" aria-pressed="true">Sound on</button></div>
       <h1>Skerry Light</h1>
@@ -27672,7 +27672,7 @@ function boardRender() {
     for (const [c, t] of [['rk', '#'], ['nm', 'Name'], ['sc', G.s], ['sb', G.b]]) head.append(mk('span', c, t));
     sec.append(head);
     const ol = mk('ol', 'boardlist'); ol.setAttribute('aria-label', G.name + ': ' + G.what);
-    if (!rows.length) ol.append(mk('li', 'empty', BOARD.loading && !BOARD.data ? 'Reading the board…' : BOARD.data ? 'No one yet. Be the first.' : (BOARD.err || 'Reading the board…')));
+    if (!rows.length) ol.append(mk('li', 'empty', BOARD.loading && !BOARD.data ? 'Reading the board…' : BOARD.data ? 'No one yet. Be the first.' : BOARD.err ? '—' : 'Reading the board…'));
     let meShown = false;
     rows.slice(0, open ? 10 : 3).forEach((e, k) => {
       const li = mk('li', e.me ? 'me' : ''); if (e.me) meShown = true;
