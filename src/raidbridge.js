@@ -1,30 +1,31 @@
 // The raid, part two: the bridge. Through the glowing door at the end of the descent (src/raid.js) you come out on
-// the near bank of a black river underground, too wide to jump and too fast to swim. Across it, the stumps of an old
-// bridge's piers and nothing between them. Either side of the bridge's foot is a ring of old stones, a circle: kill
-// the drowned inside the circles and the bridge builds itself out across the water, plank by plank. But a circle
-// only works while someone stands in it: leave one empty and the bridge starts to fall back into the river, from
-// the far end in, plank after plank (anyone on a plank that goes is swept back to the near bank).
-// So two hold the circles while the third takes the Cutlass of Plimsoll from its stone at the bridge's foot and
-// crosses. On the far bank, one after another, three Divers come up out of the river. Nothing hurts them but the
-// Cutlass. Each one drops his brass helmet when he goes down; carry each to one of the three stands on the far bank.
-// With the third helmet on its stand the bridge sets fast for good: the circles can be left, everyone can cross, and
-// a door in the rock opens back on the near bank, on to the third part.
-// The crew's size (rbNeed): both circles have to be held with three or more of you (a fourth is free to guard the
-// circles, or cross too); with two, one of them; alone, the circle you leave holds for a minute and a half.
+// the near bank of a black river underground, too wide to jump and too fast to swim. Across it, the piles of an old
+// bridge and nothing between them. Either side of the bridge's foot is a ring of old stones on a raised platform, a
+// circle: kill the drowned inside the circles and the bridge builds itself out across the water, plank by plank. But
+// the bridge only stands while it's held: someone in the circles (as many as the crew's size needs, rbNeed), or
+// someone in the third ring, on its own platform at the far end. Leave it unheld and it starts to fall back into the
+// river, from the far end in, plank after plank (anyone on a plank that goes is swept back to the near bank).
+// The Cutlasses of Plimsoll: three times over the first eight minutes (RBC.SWT) a Diver comes up out of the river
+// on to the near bank with one in his fist instead of an anchor. Put him down (anything hurts him) and he drops it;
+// each of you who's to cross wants one (Use to take it up; it falls where you do if you go down). On the far bank,
+// once the bridge is across and someone carrying a Cutlass sets foot there, three more Divers come up out of the
+// river one after another; nothing but a Cutlass hurts those, and each drops his brass helmet. Set all three
+// helmets on the far bank's stands and a door in the rock opens back on the near bank, on to the third part.
+// The crew's size (rbNeed): both near circles have to be held with three or more of you; with two, one of them;
+// alone, the circle you leave holds for a minute and a half (and so does the far ring).
 //
 // The Cutlass of Plimsoll (FPSW.plimsoll, code 'P'): a heavy cutlass with a sea-blue blade, its edge set with a
-// row of the shark's own teeth and a grip of his skin. There is one: it lies on its stone until someone takes it
-// (Use), and goes back to the stone if its bearer goes down, leaves, or lays it back there. In hand it's quicker and
-// hits harder than the ordinary cutlass, and it's the only thing the Divers here can feel.
+// row of the shark's own teeth and a grip of his skin. In hand it's quicker and hits harder than the ordinary
+// cutlass, and it's the only thing the helmeted Divers here can feel.
 //
 // Laid out in the island's own frame (x east, y north, from its middle): the river runs east-west across the middle
 // (RBC.RY, RBC.RW wide), the bridge crosses it north at x = 0, the near bank is the south. Walls of rock all round.
 // Together it's all the host's (host-authoritative, as the rest of the Lighthouse's co-op, src/zmnet.js): what the
-// bridge has built, who holds the Cutlass, the Divers and the helmets go out in the stage's snapshot (rbPack /
-// rbApply: `rb`), and a joined player asks the host to take or lay down the Cutlass, pick up a helmet, set one on a
+// bridge has built, the rings held, the Cutlasses, the Divers and the helmets go out in the stage's snapshot
+// (rbPack / rbApply: `rb`), and a joined player asks the host to take up a Cutlass, pick up a helmet, set one on a
 // stand, or go through the door (rbReq). The Divers are the Lighthouse's own (src/zmboss.js), streamed with the
 // rest of the drowned. The river itself is a row of solids that don't stop shots or show (ray, occ false), with one
-// for each plank's span of the bridge that's taken away as the plank goes down and put back when it falls.
+// for each plank's span of the bridge that's swapped for the plank's deck as it's built, and back as it falls.
 
 const RBC = {
   RY: 0, RW: 18, X0: -44, X1: 44, Y0: -54, Y1: 40,   // the river's middle and width; the cavern's walls
@@ -32,7 +33,8 @@ const RBC = {
   CR: 3.2, CX: 6.8, CY: -13.5,                        // the circles: radius, either side of the bridge's foot
   KILLS: 22, KILLS1: 16,                               // kills in the circles to build the bridge (alone: fewer)
   GRACE: 1.2, SOLO: 90, FALL: 1.4,                     // a circle empty that long (alone: SOLO), then a plank goes every FALL s
-  STONE: [0, -19.5],                                   // the Cutlass's stone
+  FY: 18,                                              // the far ring's middle (x 0), on its platform
+  SWT: [45, 270, 480],                                 // when the Divers with the Cutlasses come up (s into the part)
   STANDS: [[-7, 27], [0, 30], [7, 27]],                // the helmets' stands, on the far bank
   DOOR: [0, -53.2],                                    // the way on, in the rock behind the near bank
   START: [0, -40],                                     // where you come out (from the descent's door)
@@ -60,7 +62,7 @@ const rbHumAt = i => ((ZM.hum || [])[i] || [])[0] || null;
 
 function rbReset() {
   Object.assign(RB, {
-    on: true, p: 0, kills: 0, held: [false, false], emptyT: 0, fallT: 0, done: false, open: false, cut: null, wait: 0,
+    on: true, p: 0, kills: 0, held: [false, false], far: false, emptyT: 0, fallT: 0, done: false, open: false, cuts: [], cseq: 0, sw: 0, t: 0, wait: 0,
     phase: 'build', dn: 0, dWait: 0, diver: null, helms: [], placed: [-1, -1, -1], carry: -1, hseq: 0, navT: 0, spawnT: 2,
     built: 0, falls: [], splash: [], crossed: false, warnT: 0, said: {},
   });
@@ -90,17 +92,19 @@ function rbSet(H, K, Z) {
     sol.push(S(cx, cy, w, w, RBC.PH, true));
     for (const k of [1, 2]) { const d = (3 - k) * 0.45; sol.push(S(cx, cy - w - d, w, d, RBC.PH * k / 3, true), S(cx + s * (w + d), cy - 0.6, d, 2.4, RBC.PH * k / 3, true)); }
   }
+  // the far ring's platform: steps up from the bridge (south) and from the stands (north)
+  { const w = RBC.PW, fy = RBC.FY; sol.push(S(0, fy, w, w, RBC.PH, true)); for (const k of [1, 2]) { const d = (3 - k) * 0.45; for (const e of [-1, 1]) sol.push(S(0, fy + e * (w + d), w, d, RBC.PH * k / 3, true)); } }
   for (const s of sol.concat(seg)) I.solids.push(s);
   I.rb = { seg, deck, on: 0 };
   // the piers' posts either side of the bridge's foot at each end
   for (const y of [RY - h, RY + h]) for (const s of [-1, 1]) P('block', s * (BW / 2 + 0.4), y, 0, { w: 0.6, d: 0.9, hh: 1.9, col: '#4a4842' });
   // the circles' stones, up on their platforms
-  for (const s of [-1, 1]) for (let i = 0; i < 7; i++) { const a = i / 7 * Math.PI * 2 + 0.3; P('stone', s * RBC.CX + Math.cos(a) * (RBC.CR + 0.45), RBC.CY + Math.sin(a) * (RBC.CR + 0.45), a, { w: 0.5, d: 0.4, hh: 0.9 + 0.3 * (i % 2), lift: RBC.PH }); }
+  for (const [cx, cy] of [[-RBC.CX, RBC.CY], [RBC.CX, RBC.CY], [0, RBC.FY]]) for (let i = 0; i < 7; i++) { const a = i / 7 * Math.PI * 2 + 0.3 + (cx ? 0 : Math.PI / 7); P('stone', cx + Math.cos(a) * (RBC.CR + 0.45), cy + Math.sin(a) * (RBC.CR + 0.45), a, { w: 0.5, d: 0.4, hh: 0.9 + 0.3 * (i % 2), lift: RBC.PH }); }
   // one old boat, upturned on the near bank (the rest of what lies about is only to look at: rb3dClutter)
   P('boat', -23, -27, 0.55, { len: 6.2, beam: 2.0, paint: '#3a4640' });
   // the far bank's stands, the near bank's door, rocks and the drowned's ways up out of the water
   for (const [x, y] of RBC.STANDS) L(x, y, 2.2, '#8affd0', 6);
-  L(0, RBC.STONE[1], 1.6, '#7fd8ff', 7);
+  L(0, RBC.FY, 2.4, '#ffb070', 9); for (const s of [-1, 1]) P('brazier', s * (RBC.PW + 0.9), RBC.FY - 3.0, 0, {});
   for (const s of [-1, 1]) { L(s * RBC.CX, RBC.CY, 2.4, '#ffb070', 9); P('brazier', s * (RBC.CX + RBC.PW + 0.9), RBC.CY + 3.0, 0, {}); }
   L(0, RBC.DOOR[1] + 2, 2.6, '#c8a0ff', 8);
   L(0, -36, 3, '#ffc070', 12); L(-24, -30, 3, '#ffb060', 10); L(24, -30, 3, '#ffb060', 10); L(0, 22, 3, '#8affd0', 12); L(-20, 20, 3, '#6ad8c0', 9); L(20, 20, 3, '#6ad8c0', 9);
@@ -133,21 +137,32 @@ const rbInRiver = (lx, ly) => Math.abs(ly - RBC.RY) < RBC.RW / 2 && lx > RBC.X0 
 const rbOnBridge = (lx, ly) => Math.abs(lx) < RBC.BW / 2 + 0.1 && rbInRiver(lx, ly);
 const rbSegAt = ly => Math.floor((ly - (RBC.RY - RBC.RW / 2)) / RBC.SL);
 const rbFar = ly => ly > RBC.RY + RBC.RW / 2;
-const rbInCircle = (i, lx, ly) => Math.hypot(lx - (i ? RBC.CX : -RBC.CX), ly - RBC.CY) < RBC.CR;
+const rbInCircle = (i, lx, ly) => i === 2 ? Math.hypot(lx, ly - RBC.FY) < RBC.CR : Math.hypot(lx - (i ? RBC.CX : -RBC.CX), ly - RBC.CY) < RBC.CR;
+const rbAt = sid => sid === FPS.me.id ? FPS.me : FPS.remote.get(sid);
+const rbGone = sid => sid === FPS.me.id ? (FPS.me.dead > 0 || zmIsDown()) : (() => { const r = FPS.remote.get(sid); return !r || r.left || r.dead || r.down; })();
+const rbHasCut = sid => RB.cuts.some(c => c.st === 1 && c.by === sid);
+// a thing laid on the ground: never in the river (put on whichever bank's nearer)
+function rbClampBank(o) {
+  const [lx, ly] = rbL(o.x, o.y), h = RBC.RW / 2;
+  const y = Math.abs(ly - RBC.RY) < h + 1.2 ? RBC.RY + (ly >= RBC.RY ? h + 1.2 : -h - 1.2) : ly;
+  [o.x, o.y] = rbW(clamp(lx, RBC.X0 + 2, RBC.X1 - 2), y);
+}
 
 // ---------- each tick (hosting, or alone) ----------
 function rbTick(dt) {
   if (!RB.on) return;
   const need = rbNeed(), pl = ZM.players || [];
   // who stands in the circles (only those on their feet)
-  RB.held = [0, 1].map(i => pl.some(p => { const [lx, ly] = rbL(p.x, p.y); return rbInCircle(i, lx, ly) && (p.jz || 0) < RBC.PH + 1; }));
-  const held = RB.held.filter(Boolean).length;
-  // the bridge: built by the kills; falling back while a circle's empty, until the helmets set it fast
+  RB.held = [0, 1, 2].map(i => pl.some(p => { const [lx, ly] = rbL(p.x, p.y); return rbInCircle(i, lx, ly) && (p.jz || 0) < RBC.PH + 1; }));
+  RB.far = RB.held[2]; RB.held.length = 2;
+  const held = RB.held.filter(Boolean).length, ok = held >= need || RB.far;
+  RB.t += dt;
+  // the bridge: built by the kills in the near circles; falling back while it's not held (near circles or far ring)
   if (!RB.done) {
     const total = (ZM.hum || []).length > 1 ? RBC.KILLS : RBC.KILLS1;
     const want = Math.min(RBC.SEG, RB.kills / total * RBC.SEG);
     if (want > RB.p) RB.p = want;
-    if (held < need && RB.p > 0) {
+    if (!ok && RB.p > 0) {
       RB.emptyT += dt;
       if (RB.emptyT > rbGrace()) {
         RB.fallT -= dt;
@@ -160,21 +175,19 @@ function rbTick(dt) {
       }
     } else { RB.emptyT = 0; RB.fallT = 0.4; }
   }
-  RB.falling = !RB.done && RB.p > 0 && held < need && RB.emptyT > rbGrace();
-  RB.holdT = !RB.done && RB.p > 0 && held < need && !RB.falling ? Math.ceil(rbGrace() - RB.emptyT) : 0;
+  RB.falling = !RB.done && RB.p > 0 && !ok && RB.emptyT > rbGrace();
+  RB.holdT = !RB.done && RB.p > 0 && !ok && !RB.falling ? Math.ceil(rbGrace() - RB.emptyT) : 0;
   const built = Math.floor(RB.p + 1e-6);
   if (built !== RB.built) { if (built > RB.built) rbEvent('plank', built); RB.built = built; rbSpans(built); }
-  // the Cutlass back on its stone if its bearer's gone down or away
-  if (RB.cut) {
-    const r = RB.cut === FPS.me.id ? null : FPS.remote.get(RB.cut);
-    const gone = RB.cut === FPS.me.id ? (FPS.me.dead > 0 || zmIsDown()) : (!r || r.left || r.dead || r.down);
-    if (gone) { RB.cut = null; rbEvent('stone'); }
+  // the Divers with the Cutlasses, on the clock
+  if (RB.sw < RBC.SWT.length && RB.t >= RBC.SWT[RB.sw]) rbSwordUp();
+  // a Cutlass falls where its bearer goes down (or leaves)
+  for (const c of RB.cuts) if (c.st === 1) {
+    const w = rbAt(c.by); if (w) { c.x = w.x; c.y = w.y; }
+    if (rbGone(c.by)) { c.st = 0; c.by = null; rbClampBank(c); rbEvent('cfall'); }
   }
-  // the Divers: once the bridge has first reached the far bank and the Cutlass has crossed it, one after another
-  if (RB.phase === 'build' && RB.cut && built >= RBC.SEG) {
-    const c = RB.cut === FPS.me.id ? FPS.me : FPS.remote.get(RB.cut);
-    if (c && rbFar(rbL(c.x, c.y)[1])) { RB.phase = 'divers'; RB.dWait = 2.5; rbEvent('divers'); }
-  }
+  // the helmeted Divers: once the bridge has first reached the far bank and a Cutlass has crossed it, one after another
+  if (RB.phase === 'build' && built >= RBC.SEG && rbFarCut()) { RB.phase = 'divers'; RB.dWait = 2.5; rbEvent('divers'); }
   if (RB.phase === 'divers') {
     if (RB.diver && (RB.diver.dead || !ZM.z.includes(RB.diver))) RB.diver = null;
     if (!RB.diver && RB.dn < 3) { RB.dWait -= dt; if (RB.dWait <= 0) rbDiverUp(); }
@@ -202,11 +215,11 @@ function rbMe(dt) {
     if (!onPlank) rbSwept();
   }
   // the Cutlass: in my hands while it's mine, gone from them when it isn't
-  const mine = RB.cut === FPS.me.id, have = ZM.own.includes('plimsoll');
-  if (mine && !have && !(m.dead > 0) && !zmIsDown()) { ZM.own.push('plimsoll'); m.mags.plimsoll = 0; fpsSwitch('plimsoll'); fpsFeed('You take up the Cutlass of Plimsoll. Nothing else will touch the Divers.'); }
+  const mine = rbHasCut(FPS.me.id), have = ZM.own.includes('plimsoll');
+  if (mine && !have && !(m.dead > 0) && !zmIsDown()) { ZM.own.push('plimsoll'); m.mags.plimsoll = 0; fpsSwitch('plimsoll'); fpsFeed('You take up a Cutlass of Plimsoll. Nothing else will touch the helmeted Divers.'); }
   else if (!mine && have) rbLetGo();
   // in a circle, the brazier's fire keeps your powder dry: your ammunition made up a little at a time
-  if (!RB.done && !(m.dead > 0) && (rbInCircle(0, lx, ly) || rbInCircle(1, lx, ly))) {
+  if (!RB.done && !(m.dead > 0) && (rbInCircle(0, lx, ly) || rbInCircle(1, lx, ly) || rbInCircle(2, lx, ly))) {
     RB.ammoT = (RB.ammoT || 0) + dt;
     if (RB.ammoT >= 1) { RB.ammoT = 0; for (const id of ZM.own) { const max = ZM_AMMO[id] || 0; if (max > 0) ZM.res[id] = Math.min(max, (ZM.res[id] || 0) + Math.ceil(max * 0.06)); } }
   }
@@ -259,27 +272,42 @@ function rbSpawnAt(x, y, rise) {
   const u = Math.random(), kind = u < 0.3 ? 'run' : u < 0.8 ? 'jog' : 'walk';
   return raidSpawnAt(x, y, { kind, hp: zmHp(RBC.LEVEL) * (0.9 + Math.random() * 0.2), rise: rise == null ? 0.8 : rise });
 }
-// a Diver up out of the river on the far bank, near whoever has the Cutlass
-function rbDiverUp() {
-  const c = RB.cut === FPS.me.id ? FPS.me : RB.cut ? FPS.remote.get(RB.cut) : null;
-  const near = c ? rbL(c.x, c.y)[0] : 0, lx = clamp(near + (Math.random() < 0.5 ? -1 : 1) * (8 + Math.random() * 8), RBC.X0 + 4, RBC.X1 - 4);
-  if (Math.abs(lx) < RBC.BW) return;
-  const [x, y] = rbW(lx, RBC.RY + RBC.RW / 2 + 1.6);
-  const T = ZBT.diver, zn = ++ZM.zc, hp = RBC.DHP;
-  const z = {
+// one of the Lighthouse's Divers (src/zmboss.js) up out of the river at (lx, ly), with o's flags on him
+function rbBoss(lx, ly, hp, o) {
+  const [x, y] = rbW(lx, ly), T = ZBT.diver, zn = ++ZM.zc;
+  const z = Object.assign({
     drowned: true, zm: true, boss: true, bt: 'diver', zn, id: 'z' + zn.toString(36), n: T.n, kind: 'boss', x, y, jz: 0, fl: 0,
     hp, max: hp, sp: T.sp(14), st: 'in', win: null, t: 0, ph: 0, hitT: 0, atk: 0, swing: -1, stuck: 0, lost: 0, h: 0, seed: (Math.random() * 1e6) | 0, rise: 1, hist: [],
-    act: null, at: 0, aseq: 0, slamCd: 4, swCd: 1, ix: 0, iy: 0, ax: 0, ay: 0, rbd: RB.dn + 1, lx: x, ly: y,
-  };
+    act: null, at: 0, aseq: 0, slamCd: 4, swCd: 1, ix: 0, iy: 0, ax: 0, ay: 0, lx: x, ly: y,
+  }, o);
   if (T.init) T.init(z);
   zbMake(z, 'diver');
-  z.hp = z.max = RBC.DHP * zbHurtK(z, ZM_DMG.P, null);   // (each cut of the Cutlass takes one of DHP off him: rbHurt)
   ZM.z.push(z); FPS.drowned = ZM.z;
   if (typeof ZB !== 'undefined' && ZB.seen) ZB.seen.add(zn);
-  RB.diver = z; RB.dn++;
-  rbSplash(x, y - 1, 40);
-  rbEvent('diver', RB.dn);
+  rbSplash(x, y + (ly < RBC.RY ? 1 : -1), 40);
   T.sound('arrive');
+  return z;
+}
+// someone carrying a Cutlass on the far bank (the first, if more)
+function rbFarCut() { for (const c of RB.cuts) if (c.st === 1) { const w = rbAt(c.by); if (w && rbFar(rbL(w.x, w.y)[1])) return w; } return null; }
+// a Diver up out of the river on the near bank, a Cutlass of Plimsoll in his fist: as tough as the Lighthouse's
+// Diver about round LEVEL (anything hurts him), away from the platforms and the bridge's foot
+function rbSwordUp() {
+  const lx = (Math.random() < 0.5 ? -1 : 1) * (14 + Math.random() * 20), n = (ZM.hum || []).length || 1;
+  const hp = typeof zbHpOf === 'function' ? zbHpOf('diver', RBC.LEVEL, n) : zmHp(RBC.LEVEL) * 20;
+  RB.sw++;
+  rbBoss(lx, RBC.RY - RBC.RW / 2 - 1.6, hp, { rbs: RB.sw, h: Math.PI });
+  rbEvent('sword', RB.sw);
+}
+// a helmeted Diver up out of the river on the far bank, near whoever's carried a Cutlass over
+function rbDiverUp() {
+  const c = rbFarCut();
+  const near = c ? rbL(c.x, c.y)[0] : 0, lx = clamp(near + (Math.random() < 0.5 ? -1 : 1) * (8 + Math.random() * 8), RBC.X0 + 4, RBC.X1 - 4);
+  if (Math.abs(lx) < RBC.PW + 1) return;
+  const z = rbBoss(lx, RBC.RY + RBC.RW / 2 + 1.6, RBC.DHP, { rbd: RB.dn + 1 });
+  z.hp = z.max = RBC.DHP * zbHurtK(z, ZM_DMG.P, null);   // (each cut of a Cutlass takes one of DHP off him: rbHurt)
+  RB.diver = z; RB.dn++;
+  rbEvent('diver', RB.dn);
 }
 // (the raid's hurt, on the shooter's side) the Divers here feel nothing but the Cutlass, and every cut of it the
 // same (one of RBC.DHP); everything else as it was
@@ -297,6 +325,11 @@ function rbHurt(d, dmg, code, by) {
 // (from zmKill, through the raid's kill hook) a kill in a circle builds the bridge; a Diver drops his helmet
 function rbKill(d, by) {
   if (!RB.on) return;
+  if (d.rbs) {
+    const c = { id: ++RB.cseq, st: 0, x: d.x, y: d.y, by: null }; rbClampBank(c); RB.cuts.push(c);
+    rbEvent('cdrop');
+    return;
+  }
   if (d.rbd) {
     const [lx, ly] = rbL(d.x, d.y), hm = { id: ++RB.hseq, st: 0, x: d.x, y: d.y, by: null, stand: -1 };
     rbClampHelm(hm); RB.helms.push(hm);
@@ -320,15 +353,14 @@ function rbClampHelm(hm) {
 // (from zmNearest) the Cutlass's stone, a helmet to pick up, a stand to set one on, the door
 function rbConsider(consider) {
   if (!RB.on) return;
-  const [sx, sy] = rbW(...RBC.STONE), mine = RB.cut === FPS.me.id;
-  if (!RB.cut || mine) consider({ k: 'rbcut' }, sx, sy, 0, 2.0, false);
+  if (!rbHasCut(FPS.me.id)) for (const c of RB.cuts) if (c.st === 0) consider({ k: 'rbcut', id: c.id }, c.x, c.y, 0, 2.0, false);
   const carrying = RB.helms.some(h => h.st === 1 && h.by === FPS.me.id);
   if (!carrying) for (const hm of RB.helms) if (hm.st === 0) consider({ k: 'rbhelm', id: hm.id }, hm.x, hm.y, 0, 1.9, false);
   if (carrying) RBC.STANDS.forEach(([x, y], i) => { if (RB.placed[i] < 0) { const [wx, wy] = rbW(x, y); consider({ k: 'rbstand', i }, wx, wy, 0, 2.0, false); } });
   if (RB.open) { const [dx, dy] = rbW(...RBC.DOOR); consider({ k: 'rbdoor' }, dx, dy - 1.2, 0, 2.6, false); }
 }
 function rbPrompt(o) {
-  if (o.k === 'rbcut') return RB.wait > 0 ? { text: '…' } : RB.cut === FPS.me.id ? { text: 'Lay the Cutlass of Plimsoll back on its stone', free: true } : { text: 'Take up the Cutlass of Plimsoll', free: true };
+  if (o.k === 'rbcut') return RB.wait > 0 ? { text: '…' } : { text: 'Take up the Cutlass of Plimsoll', free: true };
   if (o.k === 'rbhelm') return { text: 'Pick up the Diver’s helmet', free: true };
   if (o.k === 'rbstand') return { text: 'Set the helmet on its stand', free: true };
   if (o.k === 'rbdoor') return { text: 'Go through the door, all of you, to the third part', free: true };
@@ -338,7 +370,7 @@ function rbPrompt(o) {
 function rbUse(o) {
   if (!o || !/^rb/.test(o.k)) return false;
   if (RB.wait > 0) return true;
-  const a = o.k === 'rbcut' ? (RB.cut === FPS.me.id ? 'drop' : 'take') : o.k === 'rbhelm' ? 'h' + o.id : o.k === 'rbstand' ? 's' + o.i : 'door';
+  const a = o.k === 'rbcut' ? 'c' + o.id : o.k === 'rbhelm' ? 'h' + o.id : o.k === 'rbstand' ? 's' + o.i : 'door';
   if (ZM.net === 'client') { RB.wait = 0.6; rbSound('use'); }
   raidAsk(a);
   return true;
@@ -350,8 +382,7 @@ function rbReq(sid, a) {
   a = String(a || '');
   const who = sid === FPS.me.id ? FPS.me : FPS.remote.get(sid); if (!who) return;
   const nearTo = (x, y, r) => Math.hypot(who.x - x, who.y - y) < r;
-  if (a === 'take') { const [x, y] = rbW(...RBC.STONE); if (!RB.cut && nearTo(x, y, 3)) { RB.cut = sid; rbEvent('take', sid); } return; }
-  if (a === 'drop') { if (RB.cut === sid) { RB.cut = null; rbEvent('stone'); } return; }
+  if (a[0] === 'c') { const c = RB.cuts.find(c => c.id === (+a.slice(1) | 0)); if (c && c.st === 0 && !rbHasCut(sid) && nearTo(c.x, c.y, 3)) { c.st = 1; c.by = sid; rbEvent('take', sid); } return; }
   if (a[0] === 'h') { const hm = RB.helms.find(h => h.id === (+a.slice(1) | 0)); if (hm && hm.st === 0 && !RB.helms.some(h => h.st === 1 && h.by === sid) && nearTo(hm.x, hm.y, 2.6)) { hm.st = 1; hm.by = sid; rbEvent('pick', sid); } return; }
   if (a[0] === 's') {
     const i = clamp(+a.slice(1) | 0, 0, 2), hm = RB.helms.find(h => h.st === 1 && h.by === sid), [x, y] = rbW(...RBC.STANDS[i]);
@@ -364,10 +395,10 @@ function rbReq(sid, a) {
   }
   if (a === 'door') { if (RB.open) rbOnward(); return; }
 }
-// the third helmet: the bridge set fast, the door open
+// the third helmet: the door open (the bridge still has to be held to cross back by it)
 function rbHolds() {
-  RB.done = true; RB.open = true; RB.p = RBC.SEG; RB.phase = 'done';
-  rbSpans(RBC.SEG); rbDoorSolid(true);
+  RB.open = true; RB.phase = 'done';
+  rbDoorSolid(true);
   rbEvent('holds');
 }
 // through the door: on to the raid's next part (src/raid.js), or (with nothing past it yet) the raid's end
@@ -385,16 +416,18 @@ function rbEvent(k, a) {
 }
 function rbSay(k, a) {
   const nick = rbNick(rbHumAt(a));
-  if (k === 'plank') { rbSound('plank'); if (a >= RBC.SEG) { ZM.banner = { text: 'The bridge reaches the far bank', t: 3.2, small: true, col: '#ffd88a' }; fpsFeed('The bridge is across. Take the Cutlass of Plimsoll over, and keep the circles held.'); } }
+  if (k === 'plank') { rbSound('plank'); if (a >= RBC.SEG) { ZM.banner = { text: 'The bridge reaches the far bank', t: 3.2, small: true, col: '#ffd88a' }; fpsFeed('The bridge is across. Carry a Cutlass of Plimsoll over; hold the circles, or the far ring.'); } }
   else if (k === 'fall') { rbSound('fall'); RB.falls.push({ i: a, t: 0 }); if (!RB.said.fall || g.t - RB.said.fall > 6) { RB.said.fall = g.t; fpsFeed('A circle stands empty: the bridge is falling back into the river!'); } }
-  else if (k === 'take') { rbSound('cut'); if (nick !== 'You') fpsFeed(`${nick} takes up the Cutlass of Plimsoll.`); }
-  else if (k === 'stone') { rbSound('use'); fpsFeed('The Cutlass of Plimsoll lies back on its stone.'); }
-  else if (k === 'divers') { ZM.banner = { text: 'The Divers', t: 3.6, col: '#8affd0', sub: 'only the Cutlass of Plimsoll will hurt them' }; fpsFeed('Something heavy moves in the river by the far bank.'); }
+  else if (k === 'take') { rbSound('cut'); if (nick !== 'You') fpsFeed(`${nick} takes up a Cutlass of Plimsoll.`); }
+  else if (k === 'cfall') { rbSound('use'); fpsFeed('A Cutlass of Plimsoll falls from its bearer\'s hand. Someone take it up.'); }
+  else if (k === 'sword') { ZM.banner = { text: 'A Diver with a Cutlass', t: 3.6, col: '#7fd8ff', sub: 'put him down and take his sword' }; fpsFeed(`A Diver comes up out of the river on the near bank, a Cutlass of Plimsoll in his fist (${a} of ${RBC.SWT.length}).`); }
+  else if (k === 'cdrop') { rbSound('cut'); fpsFeed('The Diver goes down, and his Cutlass of Plimsoll falls free. Take it up.'); }
+  else if (k === 'divers') { ZM.banner = { text: 'The Divers', t: 3.6, col: '#8affd0', sub: 'only a Cutlass of Plimsoll will hurt them' }; fpsFeed('Something heavy moves in the river by the far bank.'); }
   else if (k === 'diver') { fpsFeed(`The ${['first', 'second', 'third'][clamp(a - 1, 0, 2)]} Diver comes up out of the river, dragging his anchor.`); }
   else if (k === 'helm') { rbSound('helm'); fpsFeed('The Diver goes down, and his brass helmet rolls free. Set it on a stand.'); }
   else if (k === 'pick') rbSound('use');
   else if (k === 'set') { rbSound('set'); ZM.banner = { text: `Helmet ${a} of 3`, t: 2.6, small: true, col: '#8affd0' }; }
-  else if (k === 'holds') { rbSound('holds'); ZM.banner = { text: 'The bridge holds', t: 4, col: '#ffd88a', sub: 'the circles can be left: a door has opened on the near bank' }; fpsFeed('The bridge sets fast. Behind the near bank, a door in the rock grinds open.'); }
+  else if (k === 'holds') { rbSound('holds'); ZM.banner = { text: 'The door is open', t: 4, col: '#ffd88a', sub: 'back over to the near bank, all of you' }; fpsFeed('The third helmet is set. Behind the near bank, a door in the rock grinds open.'); }
   else if (k === 'glance') { /* (someone else's shot off a Diver: they're told on their side) */ }
 }
 
@@ -404,7 +437,9 @@ function rbSay(k, a) {
 // y*10, bearer, stand], and what's just happened
 function rbPack(z) {
   if (!RB.on || !z) return;
-  z.rb = [Math.round(RB.p * 100), (RB.held[0] ? 1 : 0) | (RB.held[1] ? 2 : 0) | (RB.falling ? 4 : 0), RB.cut ? rbHumIx(RB.cut) : -1, RB.dn, ['build', 'divers', 'done'].indexOf(RB.phase), RB.open ? 1 : 0, Math.round(RB.kills)];
+  z.rb = [Math.round(RB.p * 100), (RB.held[0] ? 1 : 0) | (RB.held[1] ? 2 : 0) | (RB.falling ? 4 : 0) | (RB.far ? 8 : 0), RB.sw, RB.dn, ['build', 'divers', 'done'].indexOf(RB.phase), RB.open ? 1 : 0, Math.round(RB.kills), Math.round(RB.t), RB.holdT | 0];
+  z.rbc = RB.cuts.map(c => [c.id, c.st, Math.round(c.x * 10), Math.round(c.y * 10), c.by ? rbHumIx(c.by) : -1]);
+  z.rbz = ZM.z.filter(d => !d.dead && (d.rbs || d.rbd)).map(d => [d.id, d.rbs ? 1 : 2]);
   z.rbh = RB.helms.map(h => [h.id, h.st, Math.round(h.x * 10), Math.round(h.y * 10), h.by ? rbHumIx(h.by) : -1, h.stand]);
   if (RB.ev && RB.ev.length) z.rbe = RB.ev.slice(-6);
 }
@@ -412,10 +447,12 @@ function rbPack(z) {
 function rbApply(hz) {
   if (!RB.on || !Array.isArray(hz.rb)) return;
   const a = hz.rb.map(v => +v || 0);
-  RB.p = clamp(a[0] / 100, 0, RBC.SEG); RB.held = [!!(a[1] & 1), !!(a[1] & 2)]; RB.falling = !!(a[1] & 4); RB.holdT = 0;
-  RB.cut = a[2] >= 0 ? rbHumAt(a[2]) : null; RB.dn = a[3] | 0; RB.phase = ['build', 'divers', 'done'][a[4]] || 'build';
+  RB.p = clamp(a[0] / 100, 0, RBC.SEG); RB.held = [!!(a[1] & 1), !!(a[1] & 2)]; RB.falling = !!(a[1] & 4); RB.far = !!(a[1] & 8); RB.holdT = a[8] | 0;
+  RB.sw = a[2] | 0; RB.t = a[7] | 0; RB.dn = a[3] | 0;
+  if (Array.isArray(hz.rbc)) RB.cuts = hz.rbc.filter(Array.isArray).slice(0, 4).map(c => ({ id: c[0] | 0, st: c[1] | 0, x: c[2] / 10, y: c[3] / 10, by: c[4] >= 0 ? rbHumAt(c[4]) : null }));
+  if (Array.isArray(hz.rbz)) { const f = new Map(hz.rbz.filter(Array.isArray).map(e => [String(e[0]), e[1] | 0])); for (const d of ZM.z) { const k = f.get(d.id); d.rbs = k === 1; d.rbd = k === 2; } } RB.phase = ['build', 'divers', 'done'][a[4]] || 'build';
   RB.kills = a[6] | 0;
-  if (a[5] && !RB.open) { RB.open = true; RB.done = true; rbDoorSolid(true); }
+  if (a[5] && !RB.open) { RB.open = true; rbDoorSolid(true); }
   const built = Math.floor(RB.p + 1e-6); if (built !== RB.built) { RB.built = built; rbSpans(built); }
   if (Array.isArray(hz.rbh)) RB.helms = hz.rbh.filter(Array.isArray).slice(0, 3).map(h => ({ id: h[0] | 0, st: h[1] | 0, x: h[2] / 10, y: h[3] / 10, by: h[4] >= 0 ? rbHumAt(h[4]) : null, stand: h[5] | 0 }));
   RB.placed = [-1, -1, -1]; for (const h of RB.helms) if (h.st === 2 && h.stand >= 0) RB.placed[h.stand] = h.id;
@@ -439,19 +476,29 @@ function rbHud(phone0, mono0, fell0) {
     ctx.fillStyle = 'rgba(20,24,28,0.7)'; ctx.fillRect(x, y, pw, 10 * s);
     if (f > 0) { ctx.fillStyle = RB.done ? '#ffd88a' : f >= 1 ? '#b8905a' : 'rgba(184,144,90,0.55)'; ctx.fillRect(x, y, pw * f, 10 * s); }
   }
-  // the circles
+  // the circles: the near two either side, the far ring between them (held, it holds the bridge on its own)
   if (!RB.done && need > 0) {
-    for (let i = 0; i < 2; i++) {
-      const x = cx + (i ? 1 : -1) * 34 * s, yy = y + 30 * s, on = RB.held[i];
+    for (let i = 0; i < 3; i++) {
+      const x = cx + (i === 2 ? 0 : (i ? 1 : -1) * 40 * s), yy = y + 30 * s, on = i === 2 ? RB.far : RB.held[i];
       ctx.beginPath(); ctx.arc(x, yy, 9 * s, 0, 6.283); ctx.lineWidth = 3 * s;
-      ctx.strokeStyle = on ? '#ffb070' : 'rgba(255,110,80,0.8)'; ctx.stroke();
-      if (on) { ctx.fillStyle = 'rgba(255,176,112,0.5)'; ctx.fill(); }
+      ctx.strokeStyle = on ? '#ffb070' : i === 2 ? 'rgba(236,228,207,0.35)' : 'rgba(255,110,80,0.8)'; ctx.stroke();
+      if (i === 2) { ctx.beginPath(); ctx.arc(x, yy, 5 * s, 0, 6.283); ctx.lineWidth = 1.5 * s; ctx.stroke(); }
+      if (on) { ctx.beginPath(); ctx.arc(x, yy, 9 * s, 0, 6.283); ctx.fillStyle = 'rgba(255,176,112,0.5)'; ctx.fill(); }
     }
-    ctx.font = mono(11); ctx.fillStyle = 'rgba(236,228,207,0.7)'; ctx.fillText(need === 1 ? 'hold a circle' : 'hold both circles', cx, y + 54 * s);
+    ctx.font = mono(11); ctx.fillStyle = 'rgba(236,228,207,0.7)'; ctx.fillText((need === 1 ? 'hold a circle' : 'hold both circles') + ', or the far ring', cx, y + 54 * s);
+  }
+  // the Cutlasses: how many have come, and when the next
+  let cy2 = y + (need > 0 ? 72 : 30) * s;
+  if (RB.phase === 'build') {
+    const nx = RBC.SWT[RB.sw], held = RB.cuts.filter(c => c.st === 1).length, mine = rbHasCut(FPS.me.id);
+    const left = nx != null ? Math.max(0, Math.ceil(nx - RB.t)) : 0;
+    const lying = RB.cuts.length - held;
+    const txt = `Cutlass Divers ${RB.sw} of ${RBC.SWT.length}` + (nx != null ? ` · next in ${Math.floor(left / 60)}:${String(left % 60).padStart(2, '0')}` : '') + (mine ? ' · you have a Cutlass' : lying ? ` · ${lying} Cutlass${lying > 1 ? 'es' : ''} on the ground` : '');
+    ctx.font = mono(11); ctx.fillStyle = '#7fd8ff'; ctx.fillText(txt, cx, cy2); cy2 += 26 * s;
   }
   // the helmets
   if (RB.phase !== 'build' && !RB.done) {
-    const yy = y + (need > 0 ? 80 : 32) * s;
+    const yy = y + (need > 0 ? 80 : 32) * s;   // (the Cutlasses' line gives way to the helmets once the Divers are up)
     for (let i = 0; i < 3; i++) { const x = cx + (i - 1) * 26 * s; ctx.beginPath(); ctx.arc(x, yy, 8 * s, 0, 6.283); ctx.fillStyle = RB.placed[i] >= 0 ? '#c8a050' : 'rgba(20,24,28,0.7)'; ctx.fill(); ctx.strokeStyle = '#8affd0'; ctx.lineWidth = 1.5 * s; ctx.stroke(); }
     const mine = RB.helms.some(h => h.st === 1 && h.by === FPS.me.id);
     ctx.font = mono(11); ctx.fillStyle = '#8affd0'; ctx.fillText(mine ? 'carrying a helmet' : `Divers ${RB.dn} of 3`, cx, yy + 22 * s);
@@ -539,21 +586,24 @@ function rb3dBuild(grp) {
       const o = new THREE.Mesh(new THREE.BoxGeometry(d * 2, z, 4.8), k % 2 ? tread : tread2); o.position.copy(V(cx + s * (w + d), cy - 0.6, z / 2)); g.add(o);
     }
   }
+  { // the far ring's platform, steps up north and south
+    const w = RBC.PW, P0 = RBC.PH, fy = RBC.FY;
+    const b = new THREE.Mesh(new THREE.BoxGeometry(w * 2, P0, w * 2), dais); b.position.copy(V(0, fy, P0 / 2)); g.add(b);
+    for (const [ox, oy, sx, sy] of [[0, w, w * 2 + 0.1, 0.22], [0, -w, w * 2 + 0.1, 0.22], [w, 0, 0.22, w * 2], [-w, 0, 0.22, w * 2]]) { const l = new THREE.Mesh(new THREE.BoxGeometry(sx, 0.1, sy), lipM); l.position.copy(V(ox, fy + oy, P0 + 0.04)); g.add(l); }
+    for (const k of [1, 2]) for (const e of [-1, 1]) { const d = (3 - k) * 0.45, z = P0 * k / 3, a = new THREE.Mesh(new THREE.BoxGeometry(w * 2, z, d * 2), k % 2 ? tread : tread2); a.position.copy(V(0, fy + e * (w + d), z / 2)); g.add(a); }
+  }
   rb3dClutter(g, V);
   // the circles: a ring of fire-lit light on the ground, bright while someone stands in it
   RB3.rings = [];
-  for (const s of [-1, 1]) {
+  for (const s of [-1, 1, 0]) {
     const m = new THREE.MeshBasicMaterial({ color: 0xffb070, transparent: true, opacity: 0.5, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide });
-    const r = new THREE.Mesh(new THREE.RingGeometry(RBC.CR - 0.18, RBC.CR, 48), m); r.rotation.x = -Math.PI / 2; r.position.copy(V(s * RBC.CX, RBC.CY, RBC.PH + 0.04)); g.add(r);
+    const r = new THREE.Mesh(new THREE.RingGeometry(RBC.CR - 0.18, RBC.CR, 48), m); r.rotation.x = -Math.PI / 2; r.position.copy(V(s * RBC.CX, s ? RBC.CY : RBC.FY, RBC.PH + 0.04)); g.add(r);
     const fm = new THREE.MeshBasicMaterial({ color: 0xff9050, transparent: true, opacity: 0.08, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide });
-    const f = new THREE.Mesh(new THREE.CircleGeometry(RBC.CR - 0.18, 40), fm); f.rotation.x = -Math.PI / 2; f.position.copy(V(s * RBC.CX, RBC.CY, RBC.PH + 0.035)); g.add(f);
+    const f = new THREE.Mesh(new THREE.CircleGeometry(RBC.CR - 0.18, 40), fm); f.rotation.x = -Math.PI / 2; f.position.copy(V(s * RBC.CX, s ? RBC.CY : RBC.FY, RBC.PH + 0.035)); g.add(f);
     RB3.rings.push({ m, fm });
   }
-  // the Cutlass's stone, and the Cutlass in it, point down
-  const stone = new THREE.Mesh(new THREE.DodecahedronGeometry(0.75, 0), z3Lam('#4a4c50')); stone.scale.set(1.2, 0.7, 1); stone.position.copy(V(RBC.STONE[0], RBC.STONE[1], 0.35)); g.add(stone);
-  RB3.cut = rb3dCutlass(); RB3.cut.position.copy(V(RBC.STONE[0], RBC.STONE[1], 1.3)); RB3.cut.rotation.set(Math.PI, 0.6, 0); g.add(RB3.cut);
-  RB3.cutGlow = new THREE.Sprite(new THREE.SpriteMaterial({ map: z3Soft('rgba(127,216,255,0.8)', 'rgba(127,216,255,0)'), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: 0.6 }));
-  RB3.cutGlow.scale.setScalar(2.2); RB3.cutGlow.position.copy(V(RBC.STONE[0], RBC.STONE[1], 1.4)); g.add(RB3.cutGlow);
+  // the Cutlasses lying where their Divers fell: built as needed, point down in the ground, glowing
+  RB3.cuts = []; RB3.glowMap = z3Soft('rgba(127,216,255,0.8)', 'rgba(127,216,255,0)');
   // the stands: an iron post on a stone foot, a cradle on top
   const iron = z3Lam('#2a2e31'), sf = z3Lam('#5a5850');
   for (const [x, y] of RBC.STANDS) {
@@ -590,7 +640,7 @@ function rb3dClutter(g, V) {
     if (Math.abs(y) < RBC.RW / 2 + 1.2 || x < RBC.X0 + 1.5 || x > RBC.X1 - 1.5 || y < RBC.Y0 + 1.5 || y > RBC.Y1 - 1.5) return false;
     if (Math.abs(Math.abs(x) - RBC.CX) < RBC.PW + 2.6 && y > RBC.CY - RBC.PW - 2.8 && y < -8) return false;          // the platforms
     if (Math.abs(x) < 3.5 && Math.abs(y) < RBC.RW / 2 + 4.5) return false;                                         // the bridge's steps
-    if (Math.hypot(x - RBC.STONE[0], y - RBC.STONE[1]) < 3) return false;
+    if (Math.abs(x) < RBC.PW + 2.6 && Math.abs(y - RBC.FY) < RBC.PW + 2.8) return false;                          // the far ring
     if (Math.abs(x) < 4 && y < -36) return false;                                                                  // the way in and the door
     if (RBC.STANDS.some(([sx, sy]) => Math.hypot(x - sx, y - sy) < 3)) return false;
     if (Math.hypot(x + 23, y + 27) < 4.5) return false;                                                            // the boat
@@ -633,7 +683,16 @@ function rb3dClutter(g, V) {
   RB3.clut = [];
   for (const [mk, n] of lot) for (let i = 0; i < n; i++) { const p = spot(); if (p) { at(mk(), p[0], p[1], 0, rnd() * Math.PI * 2); RB3.clut.push([mk.name, p[0], p[1]]); } }
 }
-// the Cutlass of Plimsoll, as it lies on its stone and on the stands' bank (a simple model; the one in your hands is
+// a Diver's model with a great Cutlass of Plimsoll in his hands (on) or his own anchor (models are shared out
+// among the Divers as they come and go, so each is set every frame, and put back as it was when the part ends)
+function rb3dArm(M, on) {
+  if (on && !M.rbSword) { const sw = rb3dCutlass(); sw.scale.setScalar(2.3); sw.rotation.set(Math.PI, 0, 0); sw.position.set(0, 0.1, 0); M.anc.add(sw); M.rbSword = sw; }
+  if (!M.rbSword) return;
+  (RB3.armed = RB3.armed || new Set()).add(M);
+  M.rbSword.visible = on;
+  for (const c of M.anc.children) if (c !== M.rbSword) c.visible = !on;
+}
+// the Cutlass of Plimsoll, as it lies on the ground (and, scaled up, in a Diver's fist; the one in your hands is
 // VM_BUILD.plimsoll)
 function rb3dCutlass() {
   const g = new THREE.Group();
@@ -676,19 +735,29 @@ function rb3dTick(dt) {
   // the circles: bright and flickering while held, a slow red pulse while empty and needed
   const need = rbNeed();
   RB3.rings.forEach((r, i) => {
-    const on = RB.held[i], want = !RB.done && need > 0;
+    const on = i === 2 ? RB.far : RB.held[i], want = !RB.done && need > 0 && RB.p > 0;
     r.m.color.set(on || !want ? 0xffb070 : 0xff5040);
     r.m.opacity = RB.done ? 0.15 : on ? 0.75 + 0.15 * Math.sin(t * 9 + i) : 0.25 + 0.2 * Math.sin(t * 3);
     r.fm.opacity = on && !RB.done ? 0.16 : 0.04;
   });
-  // the Cutlass: on its stone while nobody has it
-  RB3.cut.visible = RB3.cutGlow.visible = !RB.cut;
-  RB3.cutGlow.material.opacity = 0.45 + 0.2 * Math.sin(t * 2.5);
+  // the Cutlasses on the ground
+  while (RB3.cuts.length < RB.cuts.length) {
+    const c = rb3dCutlass(), gl = new THREE.Sprite(new THREE.SpriteMaterial({ map: RB3.glowMap, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: 0.6 }));
+    c.rotation.set(Math.PI - 0.25, 0.6, 0.1); gl.scale.setScalar(2.2); RB3.g.add(c); RB3.g.add(gl); RB3.cuts.push({ c, gl });
+  }
+  RB3.cuts.forEach((o, i) => {
+    const c = RB.cuts[i], on = !!c && c.st === 0; o.c.visible = o.gl.visible = on; if (!on) return;
+    const fz = typeof zmFloorAt === 'function' ? zmFloorAt(c.x, c.y, 9) : 0;
+    o.c.position.copy(z3v(c.x, c.y, FPSC.GROUND + fz + 0.95)); o.gl.position.copy(z3v(c.x, c.y, FPSC.GROUND + fz + 1.0));
+    o.gl.material.opacity = 0.45 + 0.2 * Math.sin(t * 2.5 + i);
+  });
+  // the Divers with Cutlasses: the sword in his fist instead of the anchor
+  for (const z of ZM.z) if (z.mdl && z.mdl.anc && z.bt === 'diver') rb3dArm(z.mdl, !!z.rbs && !z.dead);
   // the helmets: on the ground, on a stand, or carried at the bearer's side
   while (RB3.helms.length < RB.helms.length) { const m = rb3dHelmet(); RB3.g.add(m); RB3.helms.push(m); }
   RB3.helms.forEach((m, i) => {
     const hm = RB.helms[i]; m.visible = !!hm; if (!hm) return;
-    let z = 0, x = hm.x, y = hm.y;
+    let x = hm.x, y = hm.y, z = typeof zmFloorAt === 'function' ? zmFloorAt(x, y, 9) : 0;
     if (hm.st === 2) z = 1.55;
     else if (hm.st === 1) { const c = hm.by === FPS.me.id ? null : FPS.remote.get(hm.by); if (!c) { m.visible = false; return; } x = c.x; y = c.y; z = (c.jz || 0) + 1.0; }
     m.position.copy(z3v(x, y, FPSC.GROUND + z)); m.rotation.y = hm.st === 2 ? Math.PI : t * 0.3 + i;
@@ -719,7 +788,7 @@ VM_ANIM.plimsoll = (w, S) => VM_ANIM.cutlass(w, S);
 // ---------- the raid's second part (src/raid.js) ----------
 RAID_STAGES.bridge = {
   n: 'The Black Water', mend: true, map: { start: RBC.START.slice(), top: 0, zones: {}, nav: [RBC.X0 + 1, RBC.X1 - 1, RBC.Y0 + 1, RBC.Y1 - 1] },
-  set: (H, K, Z) => rbSet(H, K, Z), enter() { rbReset(); }, exit() { RB.on = false; RB3.g = null; rbLetGo(); },
+  set: (H, K, Z) => rbSet(H, K, Z), enter() { rbReset(); }, exit() { RB.on = false; RB3.g = null; rbLetGo(); if (RB3.armed) for (const M of RB3.armed) rb3dArm(M, false); },
   tick: dt => rbTick(dt), me: dt => rbMe(dt), kill: (d, how, by) => rbKill(d, by), hurt: (d, dmg, code, by) => rbHurt(d, dmg, code, by),
   q: (sid, k) => rbReq(sid, k), pack: o => rbPack(o), apply: o => rbApply(o),
   consider: c => rbConsider(c), prompt: o => rbPrompt(o), use: o => rbUse(o),
