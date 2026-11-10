@@ -90,7 +90,10 @@ function fpsToggleView() {
 }
 // jumping: only from the ground
 function fpsJump() {
-  const m = FPS.me; if (!m || m.dead > 0 || FPS.menu || (m.jz || 0) > (m.fl || 0) + 0.01 || (m.vz || 0) > 0 || (FPS.zm && zmIsDown())) return;
+  const m = FPS.me; if (!m || m.dead > 0 || FPS.menu || (FPS.zm && zmIsDown())) return;
+  const air = (m.jz || 0) > (m.fl || 0) + 0.01 || (m.vz || 0) > 0;
+  if (FPS.zm && typeof rclJump === 'function' && rclJump(m, air)) return;   // [classes] each calling's own jump (src/rclass.js)
+  if (air) return;
   m.vz = FPSC.JUMP; m.jz = (m.fl || 0) + 0.001; FPS.landed = 0;
   try { if (!soundOff()) noise('lowpass', 500, 1, 0.01, 0.08, 0.12); } catch (e) {}
 }
@@ -554,6 +557,7 @@ function fpsIncoming(sh, f) {
   if (!(m.dead > 0) && !(m.protect > 0)) { const hit = fpsShotHits(sh, m); if (hit) fpsHurt(hit.dmg, by, fpsNameOf(by)); }
 }
 function fpsShoot() {
+  if (FPS.zm && typeof rclShoot === 'function' && rclShoot()) return;   // [classes] an ultimate in place of the weapon (src/rclass.js)
   const m = FPS.me, w = fpsW();
   if (m.dead > 0 || m.reload > 0 || m.cd > 0 || FPS.menu || FPS.drawT > 0) return;
   if (!w.melee && m.ammo <= 0) { if (FPS.zm && !zmCanReload()) { zmKnife(); return; } fpsReload(); return; }
@@ -661,6 +665,7 @@ function fpsReload() {
 }
 function fpsHurt(n, fromId, fromName) {
   const m = FPS.me; if (m.dead > 0 || m.protect > 0 || m.iframe > 0) return;
+  if (FPS.zm && typeof rclHurtK === 'function') { n = rclHurtK(n); if (!(n > 0)) return; }   // [classes] Bulwark, the Wellspring (src/rclass.js)
   m.hp -= n; FPS.hurtT = 0.5; FPS.calm = 0;
   // (in the Lighthouse, a knock from the drowned buys half a second before the next can land: shooting doesn't end it)
   if (FPS.zm) m.iframe = ZMC.IFRAME_HIT;
@@ -972,6 +977,7 @@ function fpsInput(dt) {
     // X reloads; in the Lighthouse, with something in front of you to use, it uses it instead (B uses too)
     const xUse = () => FPS.zm && ZM.near && !(FPS.me.dead > 0);
     tap(0, fpsJump); tap(11, FPS.zm ? zmKnife : fpsToggleView); if (FPS.zm) tap(13, fpsToggleView); tap(2, () => { if (xUse()) zmUse(); else fpsReload(); }); tap(5, () => fpsCycle(1)); tap(14, () => fpsCycle(-1)); tap(15, () => fpsCycle(1)); tap(3, fpsLantern); tap(1, FPS.zm ? zmUse : fpsFlare); if (!FPS.zm) tap(4, fpsBell); tap(9, () => fpsSetMenu(!FPS.menu)); tap(8, () => { FPS.board = !FPS.board; });
+    if (FPS.zm && typeof rclPad === 'function') rclPad(b, was);   // [classes] LB the grenade, D-pad up the ultimate (src/rclass.js)
     FPS.padUse = FPS.zm && (b(1) || (b(2) && ZM.near && (ZM.near.k === 'win' || ZM.near.k === 'rev')));
     // a click of the left stick sprints until you stop (or aim); holding it down does too
     if (b(10) && !was[10]) { FPS.padRun = !FPS.padRun; FPS.padStill = 0; }

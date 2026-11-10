@@ -973,3 +973,25 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 .newgame.rdbanner { border-color: rgba(120,190,255,0.5); background: linear-gradient(90deg, rgba(90,150,220,0.28), rgba(90,150,220,0.08)); }
 .newgame.rdbanner:hover, .newgame.rdbanner:focus-visible { background: linear-gradient(90deg, rgba(90,150,220,0.42), rgba(90,150,220,0.16)); }
 .newgame.rdbanner .ng-tag { background: #4a86c8; color: #f2f8ff; }
+
+/* Maren's End: the three callings (src/rclass.js): the picker, and the grenade and ultimate buttons on a touch screen */
+.rcpick .card { max-width: 60rem; width: min(60rem, calc(100vw - 32px)); max-height: calc(100vh - 32px); overflow-y: auto; }
+.rcpick h1 { color: #e8d6a0; margin-bottom: 4px; }
+.rcrow { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 14px; }
+@media (max-width: 720px) { .rcrow { grid-template-columns: minmax(0, 1fr); } }
+.rcclass { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; text-align: left; padding: 14px; border-radius: 10px; border: 1px solid rgba(var(--rcr), 0.45); background: linear-gradient(180deg, rgba(var(--rcr), 0.16), rgba(var(--rcr), 0.03)); color: var(--ink, #ece4cf); cursor: pointer; font: inherit; min-height: 44px; }
+.rcclass:hover, .rcclass:focus-visible { border-color: var(--rc); background: linear-gradient(180deg, rgba(var(--rcr), 0.3), rgba(var(--rcr), 0.08)); outline: none; box-shadow: 0 0 0 2px rgba(var(--rcr), 0.5); }
+.rcclass.last::after { content: 'Last time'; position: absolute; }
+.rcclass { position: relative; }
+.rcclass.last::after { top: 10px; right: 12px; font: 600 10px "Courier Prime", monospace; letter-spacing: 0.1em; text-transform: uppercase; color: var(--rc); }
+.rcclass svg { width: 34px; height: 34px; fill: none; stroke: var(--rc); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.rcclass .nm { font-family: "IM Fell English SC", serif; font-size: 24px; color: var(--rc); }
+.rcclass .tg { font-size: 13px; opacity: 0.85; }
+.rcclass ul { list-style: none; margin: 4px 0 0; padding: 0; display: grid; gap: 6px; font-size: 13px; }
+.rcclass li b { font: 600 10px "Courier Prime", monospace; letter-spacing: 0.1em; text-transform: uppercase; color: var(--rc); margin-right: 4px; }
+.rcclass li small { display: block; opacity: 0.7; font-size: 12px; }
+.rcpadbtn { display: none !important; }
+#stage.rcmode .rcpadbtn { display: grid !important; left: -54px; }
+#stage.rcmode #rcPadG { top: -14px; }
+#stage.rcmode #rcPadU { top: 46px; }
+.rcpadbtn svg { fill: none; stroke: currentColor; stroke-width: 1.8; }

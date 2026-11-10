@@ -3842,6 +3842,7 @@ function zmDrawOver() {
   }
   if (typeof zmpDrawOver === 'function') zmpDrawOver();   // [pap]
   if (typeof zxDrawOver === 'function') zxDrawOver();   // [chest]
+  if (typeof rclDrawOver === 'function') rclDrawOver();   // [classes] grenades, clouds, Wellsprings, the others' callings (src/rclass.js)
   const B = ZM.box, S = ZM.spawns[B.at];
   if (S && B.st === 'offer') {
     const c = cam(S.x, S.y, FPSC.GROUND + S.z + 1.9);
@@ -3974,6 +3975,7 @@ function zmHud() {
   // the feed, top right
   ctx.textAlign = 'right'; ctx.textBaseline = 'top'; ctx.font = mono(phone ? 10 : 12);
   FPS.feed.slice(phone ? -2 : -5).forEach((f, i) => { ctx.fillStyle = `rgba(236,228,207,${Math.min(1, f.t) * 0.85})`; ctx.fillText(f.text, R, feedY + i * (phone ? 13 : 17), W * (phone ? 0.5 : 0.45)); });
+  if (typeof rclHud === 'function') rclHud(phone, mono, fell);   // [classes] your calling's grenade and ultimate (src/rclass.js)
   if (typeof zbHud === 'function') zbHud(phone, top);   // [boss] their strength, top middle (and the false light's glare)
   // the room you've come into
   if (ZM.zoneT > 0) { ctx.textAlign = 'center'; ctx.textBaseline = 'top'; ctx.font = fell(phone ? 16 : 22); ctx.fillStyle = `rgba(236,228,207,${Math.min(1, ZM.zoneT) * 0.8})`; const nm = zmZoneName(ZM.zone); ctx.fillText(nm.charAt(0).toUpperCase() + nm.slice(1), cx, phone ? top + 30 : 18); }
