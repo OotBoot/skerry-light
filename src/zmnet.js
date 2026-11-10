@@ -303,7 +303,7 @@ function znRevived(sid, by) {
 }
 function zmnEvent(k, a, b) { ZN.ev.push(b == null ? [++ZN.eseq, k, a] : [++ZN.eseq, k, a, b]); if (ZN.ev.length > 8) ZN.ev.shift(); }
 const ZN_ST = { out: 0, tear: 1, climb: 2, in: 3 }, ZN_STN = ['out', 'tear', 'climb', 'in'], ZN_BOXST = ['idle', 'spin', 'offer', 'gull', 'gone'];
-const ZN_KIND = ['walk', 'jog', 'run'], ZN_PH = { pre: 0, round: 1, break: 2 };
+const ZN_KIND = ['walk', 'jog', 'run', 'skit'], ZN_PH = { pre: 0, round: 1, break: 2 };
 function znHostSend() {
   const z = znPresence(), CX = FPSC.CX, CY = FPSC.CY, TAU = Math.PI * 2;
   z.st = ZN.st;
@@ -370,6 +370,7 @@ function znApply(hz) {
   const round = H[1] | 0, ph = H[2] | 0;
   if (round > ZM.round) {
     ZM.round = round; ZM.boardPts = 0; ZM.banner = { text: 'Round ' + round, t: 4 }; zmSound('round'); zmRoundBegins();
+    ZM.swarm = typeof zwIsRound === 'function' && zwIsRound(round); if (ZM.swarm) zwAnnounce();   // [swarm]
     if (round > 1) fpsFeed(`Round ${round}.`);
   }
   const phase = ph === 3 ? 'over' : ['pre', 'round', 'break'][ph] || 'round';
@@ -408,6 +409,7 @@ function znApply(hz) {
     if (!z) {
       z = { drowned: true, zm: true, zn, id: 'z' + zn.toString(36), n: 'a drowned man', x, y, jz, h, st, kind, sp: kind === 'run' ? 5.2 : kind === 'jog' ? 3.4 : 1.7,
         t: 0, ph: Math.random() * 6, hitT: 0, swing: -1, seed: a[10], win: ZM.windows[a[9]] || null, dead: 0, hist: [] };
+      if (kind === 'skit' && typeof zwDress === 'function') { zwDress(z); z.sp = 4.7; }   // [swarm] a crab
       ZM.z.push(z);
     }
     if (st !== z.st) { z.t = 0; z.st = st; }
@@ -416,7 +418,7 @@ function znApply(hz) {
     // a swing coming down: if I'm in reach, it's me it hits (the host only judges its own player)
     const was = z.swing;
     if (sw >= 0.28 && (was < 0.28 || was > sw) && !z.dead) {
-      const reach = st === 'tear' ? 1.6 : 1.55;
+      const reach = z.skit ? ZWC.REACH : st === 'tear' ? 1.6 : 1.55;
       if (Math.hypot(m.x - x, m.y - y) < reach && Math.abs((m.jz || 0) - jz) < 1.2 && !(m.dead > 0) && !(m.protect > 0) && !(m.iframe > 0) && !zmIsDown()) { fpsHurt(1, null, null); zmSound('hit'); }
     }
     z.swing = sw;

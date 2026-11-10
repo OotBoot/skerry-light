@@ -1282,7 +1282,7 @@ function zmReset() {
   const I = FPS.g.isle, Zd = I.zm;
   Object.assign(ZM, {
     on: true, own: ['pepperbox'], res: { pepperbox: 48 }, pts: ZMC.START, round: 0, phase: 'pre', t: 3, left: 0, spawnT: 0,
-    z: [], drops: [], perks: {}, windBuys: 0, double: 0, insta: 0, dropsRound: 0, kills: 0, heads: 0, downs: 0, spent: 0, doorsOpened: 0,
+    z: [], drops: [], perks: {}, windBuys: 0, double: 0, insta: 0, dropsRound: 0, swarm: false, skitT: 0, kills: 0, heads: 0, downs: 0, spent: 0, doorsOpened: 0,
     open: new Set(['dock']), zone: 'dock', zoneT: 4, banner: null, pops: [], fx: [], sparks: [], over: null, earnK: 0, navT: 0,
     box: { at: 0, uses: 0, spins: 0, st: 'idle', t: 0, item: null, cyc: 0, show: 'avtomat', owner: null }, near: null, rebuildT: 0, groanT: 2,
     zc: 0, credit: {}, players: [], downT: 0, unstickAt: 0, unstickMine: 0, ghost: false, revT: 0, revOf: null, downKit: null, beat: 0, boardBy: {}, boardPts: 0,
@@ -1426,6 +1426,7 @@ function zmTick(dt) {
   }
   zmWindows(dt);
   zmMoans(dt);
+  if (typeof zwTick === 'function') zwTick(dt);   // [swarm] the crabs scuttling
   for (const p of ZM.pops) p.t -= dt; ZM.pops = ZM.pops.filter(p => p.t > 0);
   if (ZM.banner) { ZM.banner.t -= dt; if (ZM.banner.t <= 0) ZM.banner = null; }
   for (const s of ZM.sparks) s.t -= dt; ZM.sparks = ZM.sparks.filter(s => s.t > 0);
@@ -1500,16 +1501,18 @@ function zmRounds(dt) {
       zmRoundBegins();
       ZM.banner = { text: 'Round ' + ZM.round, t: 4 };
       zmSound('round');
-      if (ZM.round > 1) fpsFeed(`Round ${ZM.round}: ${ZM.left} of them.`);
+      const crabs = typeof zwBegin === 'function' && zwBegin();   // [swarm] a crab round (src/zmswarm.js)
+      if (ZM.round > 1 && !crabs) fpsFeed(`Round ${ZM.round}: ${ZM.left} of them.`);
     }
     return;
   }
   // round on: bring them up, a few at a time
-  if (typeof zbRounds === 'function') zbRounds(dt);   // [boss] the bosses, in their rounds (src/zmboss.js)
-  const alive = ZM.z.filter(z => !z.dead).length, cap = Math.min(ZMC.ALIVE, 6 + ZM.round * 2);
+  if (!ZM.swarm && typeof zbRounds === 'function') zbRounds(dt);   // [boss] the bosses, in their rounds (src/zmboss.js)
+  const alive = ZM.z.filter(z => !z.dead).length, cap = ZM.swarm ? ZWC.ALIVE : Math.min(ZMC.ALIVE, 6 + ZM.round * 2);
   ZM.spawnT -= dt;
   if (ZM.left > 0 && alive < cap && ZM.spawnT <= 0) {
-    if (zmSpawn()) { ZM.left--; ZM.spawnT = Math.max(0.35, 2.1 - ZM.round * 0.16) * (0.7 + Math.random() * 0.6); }
+    if (ZM.swarm) { if (zwSpawn()) { ZM.left--; ZM.spawnT = zwGap(); } else ZM.spawnT = 0.5; }   // [swarm] pouring in
+    else if (zmSpawn()) { ZM.left--; ZM.spawnT = Math.max(0.35, 2.1 - ZM.round * 0.16) * (0.7 + Math.random() * 0.6); }
     else ZM.spawnT = 0.5;
   }
   if (ZM.left <= 0 && alive === 0) {
@@ -1646,7 +1649,8 @@ function zmZombies(dt) {
     if (z.hitT > 0) z.hitT -= dt;
     z.t += dt;
     if (z.dead) { z.deadT = (z.deadT || 0) + dt; continue; }
-    if (z.boss && typeof zbTick === 'function') { zbTick(z, dt, nearest); continue; }   // [boss] each goes its own way (src/zmboss.js)
+    if (z.boss && typeof zbTick === 'function') { zbTick(z, dt, nearest); continue; }
+    if (z.skit && z.st === 'out') { zwOut(z, dt); continue; }   // [swarm] a crab, straight in at its window   // [boss] each goes its own way (src/zmboss.js)
     const step = z.sp * dt * (z.slow > 0 && typeof zmpSlowK === 'function' ? zmpSlowK(z) : 1);   // [pap] (slowed by the Equinox Gale)
     const G = zmGait(z);
     if (z.win && z.win.hatch && (z.st === 'out' || z.st === 'tear' || z.st === 'climb')) {
@@ -1721,8 +1725,9 @@ function zmZombies(dt) {
       continue;
     }
     if (z.st === 'climb') {
-      const w = z.win, k = Math.min(1, z.t / 1.0);
-      z.x = w.x + w.nx * 0.95 * (1 - 2 * k); z.y = w.y + w.ny * 0.95 * (1 - 2 * k); z.jz = (w.z || 0) + Math.sin(k * Math.PI) * 1.05;
+      // (a crab: quick, low, through between the boards)
+      const w = z.win, k = Math.min(1, z.t / (z.skit ? ZWC.CLIMB : 1.0));
+      z.x = w.x + w.nx * 0.95 * (1 - 2 * k); z.y = w.y + w.ny * 0.95 * (1 - 2 * k); z.jz = (w.z || 0) + Math.sin(k * Math.PI) * (z.skit ? 0.75 : 1.05);
       if (k >= 1) { z.st = 'in'; z.jz = z.fl = w.z || 0; w.q = w.q.filter(q => q !== z); z.t = 0; z.lx = z.x; z.ly = z.y; }
       continue;
     }
@@ -1797,8 +1802,9 @@ function zmZombies(dt) {
   const ins = all.filter(z => !z.dead && z.st === 'in');
   for (let i = 0; i < ins.length; i++) for (let j = i + 1; j < ins.length; j++) {
     const a = ins[i], b = ins[j], dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy);
-    if (d < 1.0 && d > 0.001 && Math.abs((a.jz || 0) - (b.jz || 0)) < 1) {
-      const push = d < 0.6 ? (0.6 - d) * 0.5 + 0.4 * dt : (1.0 - d) * 1.6 * dt;
+    const R0 = a.skit && b.skit ? 0.4 : 0.6, R1 = a.skit && b.skit ? 0.65 : 1.0;   // ([swarm] crabs pack closer)
+    if (d < R1 && d > 0.001 && Math.abs((a.jz || 0) - (b.jz || 0)) < 1) {
+      const push = d < R0 ? (R0 - d) * 0.5 + 0.4 * dt : (R1 - d) * 1.6 * dt;
       zmMove(a, -dx / d * push, -dy / d * push); zmMove(b, dx / d * push, dy / d * push);
     }
   }
@@ -1871,7 +1877,7 @@ function zmMoans(dt) {
   if (ZM.groanT <= 0) {
     ZM.groanT = 1.2 + Math.random() * 2.5;
     let best = null, bd = 30;
-    for (const z of ZM.z) { if (z.dead) continue; const d = Math.hypot(z.x - m.x, z.y - m.y) * (0.7 + Math.random() * 0.6); if (d < bd) { bd = d; best = z; } }
+    for (const z of ZM.z) { if (z.dead || z.skit) continue; const d = Math.hypot(z.x - m.x, z.y - m.y) * (0.7 + Math.random() * 0.6); if (d < bd) { bd = d; best = z; } }
     if (best) zmSound('moan', Math.hypot(best.x - m.x, best.y - m.y), angDiff(bearingOf(best.x - m.x, best.y - m.y), m.h), best.kind);
   }
 }
@@ -1883,7 +1889,7 @@ function zmSwipe(z, dt) {
   if (z.swing >= 0) {
     const was = z.swing; z.swing += dt;
     if (was < 0.28 && z.swing >= 0.28) {
-      const reach = z.st === 'tear' ? 1.6 : 1.55;
+      const reach = z.skit ? ZWC.REACH : z.st === 'tear' ? 1.6 : 1.55;
       if (Math.hypot(m.x - z.x, m.y - z.y) < reach && Math.abs((m.jz || 0) - (z.jz || 0)) < 1.2 && !(m.dead > 0) && !(m.protect > 0) && !(m.iframe > 0) && !zmIsDown()) { fpsHurt(1, null, null); zmSound('hit'); }
     }
     if (z.swing > 0.6) z.swing = -1;
@@ -1920,6 +1926,7 @@ function zmKill(d, head, code, how, by) {
   if (by && by !== FPS.me.id) { const c = ZM.credit[by] = ZM.credit[by] || [0, 0, 0]; c[1]++; if (head) c[2]++; }
   else if (how !== 'flash' || !ZM.net) { ZM.kills++; if (head) ZM.heads++; zmEarnKill(); }
   zmMaybeDrop(d, how);
+  if (d.skit && typeof zwKilled === 'function') zwKilled(d);   // [swarm] the last crab's Powder Keg
   if (d.boss && typeof zbKilled === 'function') zbKilled(d, how, by);   // [boss] its reward and its salvage
   if (typeof zeKill === 'function') zeKill(d, how, by);   // [egg hook] src/zmegg.js
 }
@@ -1930,13 +1937,18 @@ function zmEarnKill() {
 }
 // how one goes: burning to ash, or a burst of the sea
 function zmKillFx(d) {
+  if (d.skit) {   // [swarm] a crab: a crack of shell, and bits of it
+    if (typeof zwSound === 'function') zwSound('crunch', Math.hypot(d.x - FPS.me.x, d.y - FPS.me.y));
+    fpsPuff(d.x, d.y, FPSC.GROUND + (d.jz || 0) + 0.35, d.burn ? '255,170,80' : '150,60,40', 8);
+    return;
+  }
   if (!d.burn && typeof sfxPlay === 'function') sfxPlay('splat', { vol: 0.55 * Math.max(0.1, 1 - Math.hypot(d.x - FPS.me.x, d.y - FPS.me.y) / 35), gap: 0.04, vary: 0.2 });
   if (d.burn) for (let i = 0; i < 10; i++) FPS.parts.push({ x: d.x + (Math.random() - 0.5) * 0.6, y: d.y + (Math.random() - 0.5) * 0.6, z: FPSC.GROUND + (d.jz || 0) + Math.random() * 1.7, vx: (Math.random() - 0.5) * 1.2, vy: (Math.random() - 0.5) * 1.2, vz: Math.random() * 1.2, t: 1.2, c: '255,170,80', up: true });
   else fpsPuff(d.x, d.y, FPSC.GROUND + (d.jz || 0) + (d.head ? 1.6 : 1.1), d.head ? '120,150,140' : '70,100,90', d.head ? 12 : 6);
 }
 // salvage: now and then something floats free
 function zmMaybeDrop(d, how) {
-  if (ZM.dropsRound < 4 && Math.random() < 0.03 && how !== 'flash') {
+  if (ZM.dropsRound < 4 && !ZM.swarm && Math.random() < 0.03 && how !== 'flash') {
     ZM.dropsRound++;
     const r = Math.random(), k = r < 0.35 ? 'keg' : r < 0.6 ? 'double' : r < 0.8 ? 'spot' : 'flash';
     ZM.drops.push({ k, x: d.x, y: d.y, z: d.jz || 0, t: 26, ph: Math.random() * 6, id: ++ZM.zc });
@@ -2009,7 +2021,7 @@ function zmMelee(x, y, z, h, w, code) {
     if (o.dead) continue;
     const d = Math.hypot(o.x - x, o.y - y), b = bearingOf(o.x - x, o.y - y);
     if (d > w.reach + FPSC.BODY || Math.abs(angDiff(b, h)) > w.arc || Math.abs((o.jz || 0) - (FPS.me.jz || 0)) > 1.2) continue;
-    const r = fpsRay(x, y, z - 0.4, b, Math.atan2((o.jz || 0) + 1.2 - (z - FPSC.GROUND - 0.4), Math.max(0.3, d)), FPS.me.id, [o], w.reach + 1);
+    const r = fpsRay(x, y, z - 0.4, b, Math.atan2((o.jz || 0) + (o.tall ? Math.min(1.2, o.tall * 0.6) : 1.2) - (z - FPSC.GROUND - 0.4), Math.max(0.3, d)), FPS.me.id, [o], w.reach + 1);
     if (r.kind !== 'body') continue;
     zmHurt(o, w.dmg, false, code, FPS.me.id); o.hitT = 0.2; any = true;
   }
@@ -2761,7 +2773,8 @@ function z3Geo() {
 }
 const ZM_COATS = ['#3a4a50', '#4a3a30', '#2e3a44', '#4a4a40', '#3a2e2e', '#5a5040', '#2a3530'];
 function zmModel(z) {
-  if (z.boss && typeof zbModel === 'function') return zbModel(z);   // [boss] a model of its own (src/zmboss.js, src/zmboss2.js)
+  if (z.boss && typeof zbModel === 'function') return zbModel(z);
+  if (z.skit && typeof zwModel === 'function') return zwModel(z);   // [swarm]   // [boss] a model of its own (src/zmboss.js, src/zmboss2.js)
   let M = Z3.pool.find(p => !p.used);
   if (!M) {
     const Q = z3Geo(), root = new THREE.Group(), hips = new THREE.Group(); root.add(hips); hips.position.y = 0.95;
@@ -2793,6 +2806,7 @@ function zmModel(z) {
 function zmFreeModel(z) { if (z.mdl) { z.mdl.used = false; z.mdl.root.visible = false; z.mdl = null; } }
 function zmPose(z, M, dt) {
   if (z.boss && typeof zbPose === 'function') return zbPose(z, M, dt);   // [boss]
+  if (z.skit && typeof zwPose === 'function') return zwPose(z, M, dt);   // [swarm]
   const G0 = FPSC.GROUND;
   M.root.position.copy(z3v(z.x, z.y, G0 + (z.jz || 0)));
   M.root.rotation.y = -z.h;
