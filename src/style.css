@@ -941,6 +941,10 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 .zmover .card { border-color: rgba(200,60,48,0.6); }
 .zmover h1 { color: #e8a090; }
 .zmmp h2 { color: #e8a090; }
+.zmmaps { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 4px 0 2px; }
+.zmmapshead { font-family: var(--log); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-right: 4px; }
+.zmmaps [data-map] { min-height: 40px; }
+.zmmaps [data-map][aria-pressed="true"] { background: rgba(200,60,48,0.22); border-color: rgba(232,160,144,0.85); color: #f2d6cc; }
 .zmmp .warlobbyrow { background: rgba(200,60,48,0.08); border-color: rgba(200,60,48,0.35); }
 .zmmp .warlobbyrow:hover:not(:disabled) { background: rgba(200,60,48,0.16); }
 #fpsPadKnife { display: none; }

@@ -165,9 +165,10 @@ FPI_K.zmpap = {
     A.part('torus', CU, -0.97, 0.33, 2.2, 0.16, 0.16, 0.16); A.part('torus', CU, -0.97, 0.32, 2.2, 0.14, 0.14, 0.14);
   },
 };
-// (from FPI_GEN.light.set) put the bench in its room, with a lamp of its own
-function zmpPlace(put, light, W, Z) {
-  const P = ZM_PAP_AT, a = Math.atan2(P.nx, -P.ny);
+// (from FPI_GEN.light.set, and Wrackhaven's FPI_GEN.wrack.set with a place of its own, at) put the bench in its
+// room, with a lamp of its own
+function zmpPlace(put, light, W, Z, at) {
+  const P = at || ZM_PAP_AT, a = Math.atan2(P.nx, -P.ny);
   put('zmpap', P.x, P.y, a, { lift: P.z || 0 });
   light(P.x + P.nx * 1.2, P.y + P.ny * 1.2, (P.z || 0) + 1.9, '#ffc070', 6, 'lantern');
   const [wx, wy] = W(P.x, P.y);

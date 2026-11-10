@@ -49,7 +49,7 @@ function znSend(z) { if (NET.room) NET.room.presence({ zm: z }).catch(() => {});
 function znSendLobby() {
   if (!ZN.code) return;
   const z = znBase();
-  if (znAmHost()) z.lob = { n: znMembers().length };
+  if (znAmHost()) z.lob = { n: znMembers().length, map: ZM_PICK };
   znSend(z);
 }
 function znHost() {
@@ -81,7 +81,7 @@ function znOpenNights() {
     if (code === ZN.code) continue;
     list.sort((a, b) => (znOf(a).at || 0) - (znOf(b).at || 0));
     const h = znOf(list[0]);
-    out.push({ code, host: znClean(h.nick, 16) || 'Someone', n: list.length, started: !!(h.st && h.st.g) });
+    out.push({ code, host: znClean(h.nick, 16) || 'Someone', n: list.length, started: !!(h.st && h.st.g), map: h.lob && ZM_MAPS[h.lob.map] ? h.lob.map : 'light' });
   }
   return out;
 }
@@ -101,7 +101,7 @@ function znRender() {
     for (const n of nights) {
       const b = document.createElement('button'); b.type = 'button'; b.className = 'warlobbyrow';
       const nm = document.createElement('span'); nm.className = 'nm'; nm.textContent = `${n.host}’s night`;
-      const sm = document.createElement('small'); sm.textContent = n.started ? 'under way' : `${n.n}/${ZN_MAX} players · tap to join`;
+      const sm = document.createElement('small'); sm.textContent = `${ZM_MAPS[n.map].N} · ` + (n.started ? 'under way' : `${n.n}/${ZN_MAX} players · tap to join`);
       b.append(nm, sm);
       b.disabled = n.started || n.n >= ZN_MAX;
       b.addEventListener('click', () => znJoin(n.code));
@@ -110,7 +110,7 @@ function znRender() {
     return;
   }
   const m = znMembers(), host = znAmHost(), hz = m.length ? znOf(m[0]) : null;
-  const key = m.map(p => znOf(p).sid + znOf(p).nick).join('|') + host + ZN.msg;
+  const key = m.map(p => znOf(p).sid + znOf(p).nick).join('|') + host + ZN.msg + ZM_PICK + (hz && hz.lob ? hz.lob.map : '');
   $('zmMpStart').hidden = !host;
   if ($('zmLobby').dataset.k === key) return; $('zmLobby').dataset.k = key;
   $('zmLobbyHead').textContent = host ? 'Your night' : `${znClean(hz && hz.nick, 16) || 'Someone'}’s night`;
@@ -121,22 +121,23 @@ function znRender() {
     if (p.isMe && p.sameTab) li.className = 'me';
     ol.append(li);
   });
+  const hm = hz && hz.lob && ZM_MAPS[hz.lob.map] ? hz.lob.map : 'light';
   $('zmLobbyMsg').textContent = ZN.msg || (host
-    ? (m.length > 1 ? `${m.length} of ${ZN_MAX} here. Start the night when everyone’s in.` : 'Waiting for others to join. You can start alone, too, whenever you like.')
-    : 'Waiting for the host to start the night.');
+    ? (m.length > 1 ? `${m.length} of ${ZN_MAX} here, at ${ZM_MAPS[ZM_PICK].n}. Start the night when everyone’s in.` : `Waiting for others to join. You can start alone, too, whenever you like. Tonight: ${ZM_MAPS[ZM_PICK].n} (pick above).`)
+    : `Waiting for the host to start the night, at ${ZM_MAPS[hm].n}.`);
 }
 
 // the host starts the night, with everyone in the lobby
 function znStart() {
   if (!znAmHost() || FPS.on) return;
   const m = znMembers();
-  const st = { g: Math.random().toString(36).slice(2, 9), hum: m.map(p => [znOf(p).sid, znClean(znOf(p).nick, 16) || 'A keeper']) };
+  const st = { g: Math.random().toString(36).slice(2, 9), hum: m.map(p => [znOf(p).sid, znClean(znOf(p).nick, 16) || 'A keeper']), map: ZM_PICK };
   znBegin(st, 'host');
 }
 function znBegin(st, role) {
   Object.assign(ZN, { g: st.g, st, doneG: st.g, sendT: 0, hseq: 0, seq: 0, q: [], hq: [], shots: [], shotSeq: 0, lastQ: {}, lastH: {}, lastShot: {}, seenT: {}, ev: [], eseq: 0, evSeen: 0, lastHseq: -1, hostT: performance.now(), creditSeen: [0, 0, 0] });
   ZN.hits.clear();
-  zmStart({ net: role, hum: st.hum });
+  zmStart({ net: role, hum: st.hum, map: st.map });
   for (const [sid] of st.hum) ZN.seenT[sid] = performance.now();
 }
 // every change in the room: keep the lobby current, and start when the host does
@@ -148,7 +149,7 @@ function zmNetPeers() {
     const h = m[0], hz = h ? znOf(h) : null;
     if (h && !(h.isMe && h.sameTab) && hz.st && typeof hz.st.g === 'string' && hz.st.g !== ZN.doneG && Array.isArray(hz.st.hum) && !FPS.on) {
       if (hz.st.hum.some(x => Array.isArray(x) && x[0] === NET.sid)) {
-        const st = { g: hz.st.g, hum: hz.st.hum.slice(0, ZN_MAX).filter(x => Array.isArray(x)).map(x => [String(x[0]), znClean(x[1], 16) || 'A keeper']) };
+        const st = { g: hz.st.g, hum: hz.st.hum.slice(0, ZN_MAX).filter(x => Array.isArray(x)).map(x => [String(x[0]), znClean(x[1], 16) || 'A keeper']), map: ZM_MAPS[hz.st.map] ? hz.st.map : 'light' };
         znBegin(st, 'client'); return;
       }
       ZN.doneG = hz.st.g; ZN.msg = 'The night started without you. Host your own, or wait for the next.';
