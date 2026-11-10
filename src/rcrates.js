@@ -11,7 +11,8 @@
 //   Bosun     a richer pattern, and a lit edge along your borders
 //   Mate      the pattern moves (a running tide, a bloom of phosphor)
 //   Captain   it moves, and your borders glow, pulsing
-//   Admiral   the Keeper's Beam: gold that a beam of light sweeps across, sparkles, and the brightest glow
+//   Admiral   alive with light: each in its own way (the Keeper's Beam, the Drowned Crown, the Prism), with a soft bloom
+//             where its light is brightest, glints of light over the land, and the brightest glow
 //
 // Earning: one crate for each war you see through (three minutes or more), two more for a win, and one for
 // every 400 tiles you take (the count carries over between wars). The first one is free.
@@ -79,11 +80,14 @@ const rcHex = h => { const v = parseInt(String(h).slice(1), 16); return [(v >> 1
 // a colour round the wheel: h in 0..1, s and v 0..1, into out
 function rcHsv(h, sat, v, o) {
   h = ((h % 1) + 1) % 1; const i = Math.floor(h * 6), f = h * 6 - i, p = v * (1 - sat), q = v * (1 - f * sat), t = v * (1 - (1 - f) * sat);
-  const [r, g, b] = [[v, t, p], [q, v, p], [p, v, t], [p, q, v], [t, p, v], [v, p, q]][i % 6];
+  // (a switch, not a table, so nothing is made per tile)
+  let r, g, b; switch (i % 6) { case 0: r = v; g = t; b = p; break; case 1: r = q; g = v; b = p; break; case 2: r = p; g = v; b = t; break; case 3: r = p; g = q; b = v; break; case 4: r = t; g = p; b = v; break; default: r = v; g = p; b = q; }
   o[0] = r * 255; o[1] = g * 255; o[2] = b * 255;
 }
 const RC_BONE = [232, 224, 200];   // [pirate tokens]
 const rcHash = (x, y) => (((x * 73856093) ^ (y * 19349663)) >>> 0) % 1024 / 1024;
+// the Drowned Crown's crown, 7 wide and 5 high (bit u of row v), and its drowned gold
+const RC_CROWN = [0b1001001, 0b1101011, 0b1111111, 0b1111111, 0b0111110], RC_CROWN_C = [236, 230, 140];
 function rcPainter(skin) {
   if (!skin) return null;
   const C = skin.cols.map(rcHex), [a, b, c] = [C[0], C[1] || C[0], C[2] || C[1] || C[0]];
@@ -124,14 +128,21 @@ function rcPainter(skin) {
       mix(b, c, k, tmp); mix(a, tmp, 0.35 + lit * 0.65, o); if (bd) mix(o, G, 0.6, o);
     }; break;
     case 'beam': f = (x, y, t, bd, o) => {
-      mix(a, b, 0.55 + 0.45 * Math.sin((x + y) * 0.15 + t * 0.5), o);
-      // the Light's beam, sweeping across your land
-      let p = ((x * 0.8 + y * 0.6 - t * 14) % 70 + 70) % 70, d = Math.abs(p - 35);
-      if (d < 6) mix(o, c, (1 - d / 6) * 0.9, o);
-      const h = rcHash(x, y);
-      if (h > 0.975 && Math.sin(t * 5 + h * 200) > 0.6) mix(o, c, 0.95, o);   // sparkles
-      if (bd) mix(o, G, 0.7, o);
-    }; break;
+      // gold, rippling with light like beaten leaf
+      const sh = Math.sin((x + y) * 0.15 + t * 0.5) * 0.6 + Math.sin(x * 0.31 - y * 0.23 - t * 1.3) * 0.4;
+      mix(a, b, 0.42 + 0.3 * sh, o);
+      // the Light's beam sweeping across your land: a white-hot core, a soft wide bloom, and a fainter beam crossing it
+      const p = ((x * 0.8 + y * 0.6 - t * 12) % 48 + 48) % 48, d = Math.abs(p - 24);
+      let lit = 0;
+      if (d < 11) { const k = 1 - d / 11; lit = k * k; mix(o, b, k * 0.7, o); if (d < 3) mix(o, c, (1 - d / 3) * 0.95, o); }
+      const p2 = ((x * 0.55 - y * 0.85 - t * 9) % 95 + 95) % 95, d2 = Math.abs(p2 - 47);
+      if (d2 < 7) { const k = (1 - d2 / 7) * 0.45; mix(o, c, k, o); lit = Math.max(lit, k * 0.6); }
+      o[3] = lit > 0.3 ? lit : 0;
+      // sparkles: motes catching the light, thickest where the beam is
+      const h = rcHash(x, y), tw = Math.sin(t * 5 + h * 200);
+      if (h > 0.985 - lit * 0.05 && tw > 0.55) { mix(o, c, 0.95, o); o[4] = (tw - 0.55) * 2.2 * (0.4 + lit); o[5] = h > 0.993 ? 1 : 0; }
+      if (bd) mix(o, G, 0.75 + 0.25 * Math.sin((x - y) * 0.4 - t * 4), o);
+    }; f.glints = ['#fff0b0', '#ffffff']; break;
     case 'ink': f = (x, y, t, bd, o) => {
       // ink clouds curling through the water
       const n = Math.sin(x * 0.2 + Math.sin(y * 0.17 + t * 0.7) * 2 + t * 0.3) * Math.sin(y * 0.21 - t * 0.5 + Math.sin(x * 0.13 + t * 0.2) * 2);
@@ -144,24 +155,44 @@ function rcPainter(skin) {
       if (bd) mix(o, G, 0.55, o);
     }; break;
     case 'ripples': f = (x, y, t, bd, o) => {
-      // the deep, with rings spreading from drowned things below, and bubbles rising
-      mix(a, b, 0.35 + 0.25 * Math.sin(x * 0.08 + y * 0.06 + t * 0.4), o);
-      const S = 13, cx = Math.floor(x / S), cy = Math.floor(y / S), h = rcHash(cx, cy);
-      const r = Math.hypot(x - (cx * S + 6.5 + (h - 0.5) * 6), y - (cy * S + 6.5 + (rcHash(cy, cx) - 0.5) * 6));
-      const ring = Math.sin(r * 0.9 - t * 3 - h * 6);
-      if (ring > 0.7) mix(o, c, (ring - 0.7) * 2.2, o);
-      const bub = rcHash(x, y), up = (bub * 37 + t * 0.8) % 1;
-      if (bub > 0.97 && up > 0.6) mix(o, c, 0.9, o);
-      if (bd) mix(o, G, 0.7, o);
-    }; break;
+      // the deep, with the light coming down through it in a net of caustics
+      const ca = Math.sin(x * 0.42 + y * 0.17 + t * 0.7) + Math.sin(y * 0.38 - x * 0.13 - t * 0.5);
+      mix(a, b, 0.3 + 0.22 * Math.sin(x * 0.08 + y * 0.06 + t * 0.4) + Math.max(0, ca - 0.9) * 0.35, o);
+      // rings of water-light rising from drowned things below, spreading and fading
+      const S = 13, cx = Math.floor(x / S), cy = Math.floor(y / S), h = rcHash(cx, cy), h2 = rcHash(cy, cx);
+      const lx = x - cx * S - 6.5 - (h - 0.5) * 4, ly = y - cy * S - 6.5 - (h2 - 0.5) * 4, r = Math.sqrt(lx * lx + ly * ly);
+      const ring = Math.sin(r * 0.9 - t * 3 - h * 6), fade = Math.max(0, 1 - r / 11);
+      let lit = 0;
+      if (ring > 0.35) { lit = (ring - 0.35) * 1.6 * fade; mix(o, c, Math.min(1, lit * 1.3), o); }
+      // and in some of them the Crown itself, glowing gold-green under the water
+      if (h > 0.55) {
+        const u = Math.floor(lx + 3.5) | 0, v = Math.floor(ly + 2.5) | 0;
+        if (u >= 0 && u < 7 && v >= 0 && v < 5 && (RC_CROWN[v] >> u) & 1) { const pulse = 0.6 + 0.4 * Math.sin(t * 2 + h * 9); mix(o, RC_CROWN_C, 0.55 + 0.4 * pulse, o); lit = Math.max(lit, 0.7 * pulse); if (v === 0 && Math.sin(t * 3 + u + h * 20) > 0.8) { o[4] = 0.8; o[5] = 1; } }
+        else if (r < 5) lit = Math.max(lit, (1 - r / 5) * 0.35 * (0.6 + 0.4 * Math.sin(t * 2 + h * 9)));
+      }
+      o[3] = Math.min(1, lit);
+      // bubbles drifting up through it, winking as they go
+      const by = Math.floor(y + t * 2.4 + rcHash(x, 7) * 50), bub = rcHash(x + ((by >> 2) & 1), by);
+      if (bub > 0.975) { mix(o, c, 0.9, o); if (bub > 0.993) { o[4] = 0.7; o[5] = 0; } }
+      if (bd) mix(o, G, 0.7 + 0.3 * Math.sin((x + y) * 0.3 - t * 2.5), o);
+    }; f.glints = ['#c8fff0', '#fff0a0']; break;
     case 'prism': f = (x, y, t, bd, o) => {
-      // the Light split into all its colours, turning, with the beam itself sweeping through
-      rcHsv((x - y) * 0.022 + t * 0.08, 0.65, 0.92, o);
-      const p = ((x * 0.6 + y * 0.8 - t * 16) % 80 + 80) % 80, d = Math.abs(p - 40);
-      if (d < 5) mix(o, c, (1 - d / 5) * 0.85, o);
-      const h = rcHash(x, y); if (h > 0.97 && Math.sin(t * 6 + h * 300) > 0.5) mix(o, c, 0.95, o);
-      if (bd) mix(o, G, 0.65, o);
-    }; break;
+      // cut glass: facets, each turning through the spectrum a little apart from its neighbours and flashing
+      const F = 6, fx = Math.floor(x / F), fy = Math.floor(y / F), fh = rcHash(fx * 2 + ((x % F) > (y % F) ? 1 : 0), fy);
+      const fl = Math.sin(t * 2.2 + fh * 20);
+      rcHsv((x - y) * 0.022 + t * 0.08 + fh * 0.12, 0.6, 0.55 + 0.25 * fl, o);
+      // the Light's beam sweeping through it, white at its heart, split into a fan of colour either side
+      const p = ((x * 0.6 + y * 0.8 - t * 16) % 80 + 80) % 80, d = p - 40, ad = Math.abs(d);
+      let lit = fl > 0.92 ? (fl - 0.92) * 5 : 0;
+      if (ad < 22) {
+        if (ad < 6) { lit = 1 - ad / 6; mix(o, c, 0.55 + lit * 0.45, o); }
+        else { const k = 1 - (ad - 6) / 16; rcHsv((ad - 6) / 16 * 0.8, 0.9, 1, tmp); mix(o, tmp, 0.45 + k * 0.5, o); lit = Math.max(lit, k * k * 0.7); }
+      }
+      o[3] = lit;
+      const h = rcHash(x, y), tw = Math.sin(t * 6 + h * 300);
+      if (h > 0.975 && tw > 0.5) { mix(o, c, 0.95, o); o[4] = (tw - 0.5) * 2; o[5] = (h * 4000 | 0) % 7; }
+      if (bd) { rcHsv((x + y) * 0.03 - t * 0.3, 0.35, 1, tmp); mix(o, tmp, 0.75, o); }
+    }; f.glints = ['#ffffff', '#ff6a6a', '#ffc25a', '#fff36a', '#6aff8a', '#6ac8ff', '#c07aff']; break;
     case 'hoard': f = (x, y, t, bd, o) => {
       // [pirate tokens] the Gannet's hoard: black water, gold coins winking in it, the black flag's bone-white saltire
       mix(a, b, 0.3 + 0.25 * Math.sin(x * 0.11 - y * 0.07 + t * 0.5), o);
@@ -173,8 +204,22 @@ function rcPainter(skin) {
     }; break;
     default: f = (x, y, t, bd, o) => { o[0] = a[0]; o[1] = a[1]; o[2] = a[2]; };
   }
-  f.glow = G; f.level = rcLevel(skin); f.moves = skin.rarity === 'mate' || skin.rarity === 'captain' || skin.rarity === 'admiral' || skin.rarity === 'pirate';
+  f.glow = G; f.lit = !!f.glints; f.level = rcLevel(skin); f.moves = skin.rarity === 'mate' || skin.rarity === 'captain' || skin.rarity === 'admiral' || skin.rarity === 'pirate';
   return f;
+}
+// a glint for the Admiral banners: a soft dot of light with a four-pointed star through it, one small sprite per colour
+const RC_GLINTS = new Map();
+function rcGlint(col) {
+  let s = RC_GLINTS.get(col);
+  if (!s) {
+    s = document.createElement('canvas'); s.width = s.height = 32;
+    const q = s.getContext('2d'), gr = q.createRadialGradient(16, 16, 0, 16, 16, 16);
+    gr.addColorStop(0, col + 'ff'); gr.addColorStop(0.2, col + '80'); gr.addColorStop(1, col + '00');
+    q.fillStyle = gr; q.fillRect(0, 0, 32, 32);
+    q.fillStyle = '#ffffff'; q.beginPath(); q.moveTo(0, 16); q.lineTo(16, 14.6); q.lineTo(32, 16); q.lineTo(16, 17.4); q.closePath(); q.moveTo(16, 0); q.lineTo(17.4, 16); q.lineTo(16, 32); q.lineTo(14.6, 16); q.closePath(); q.fill();
+    RC_GLINTS.set(col, s);
+  }
+  return s;
 }
 // how strongly a banner's border glows just now (0 for none)
 function rcGlowAt(skin, t) {
@@ -272,13 +317,19 @@ const RC_MASK = (() => {
 function rcDrawPreview(cv, skin, t) {
   const g = cv.getContext('2d'), off = cv._off || (cv._off = document.createElement('canvas'));
   off.width = RC_PW; off.height = RC_PH;
-  const og = off.getContext('2d'), img = og.createImageData(RC_PW, RC_PH), d = img.data, out = [0, 0, 0];
-  const paint = rcPainter(skin), plain = [200, 184, 144];
+  const og = off.getContext('2d'), img = og.createImageData(RC_PW, RC_PH), d = img.data, out = [0, 0, 0, 0, 0, 0];
+  const paint = rcPainter(skin), plain = [200, 184, 144], lit = paint && paint.lit, glints = [];
+  // the Admiral banners' bloom, kept at half size so it comes out soft when drawn up
+  const bl = lit ? cv._bl || (cv._bl = document.createElement('canvas')) : null, BW = RC_PW >> 1, BH = RC_PH >> 1;
+  let bimg = null; if (bl) { bl.width = BW; bl.height = BH; bimg = bl.getContext('2d').createImageData(BW, BH); }
   for (let y = 0; y < RC_PH; y++) for (let x = 0; x < RC_PW; x++) {
     const i = y * RC_PW + x, k = i * 4; if (!RC_MASK[i]) { d[k + 3] = 0; continue; }
     const bd = x === 0 || y === 0 || x === RC_PW - 1 || y === RC_PH - 1 || !RC_MASK[i - 1] || !RC_MASK[i + 1] || !RC_MASK[i - RC_PW] || !RC_MASK[i + RC_PW];
+    out[3] = out[4] = 0;
     if (paint) paint(x, y, t, bd, out); else { out[0] = plain[0]; out[1] = plain[1]; out[2] = plain[2]; if (bd) { out[0] = 240; out[1] = 228; out[2] = 196; } }
     d[k] = out[0]; d[k + 1] = out[1]; d[k + 2] = out[2]; d[k + 3] = 255;
+    if (bimg && out[3] > 0) { const q = ((y >> 1) * BW + (x >> 1)) * 4, bd2 = bimg.data, al = out[3] * 220; if (al > bd2[q + 3]) { bd2[q] = out[0]; bd2[q + 1] = out[1]; bd2[q + 2] = out[2]; bd2[q + 3] = al; } }
+    if (lit && out[4] > 0 && glints.length < 60) glints.push(x, y, out[4], out[5] | 0);
   }
   og.putImageData(img, 0, 0);
   g.clearRect(0, 0, cv.width, cv.height);
@@ -288,6 +339,16 @@ function rcDrawPreview(cv, skin, t) {
   const glow = rcGlowAt(skin, t);
   if (glow) { g.save(); g.shadowColor = skin.glow; g.shadowBlur = 6 + glow * 10; g.globalAlpha = 0.5 + glow * 0.5; g.drawImage(off, 0, 0, cv.width, cv.height); g.restore(); }
   g.drawImage(off, 0, 0, cv.width, cv.height);
+  if (bl) {
+    // light over the top: the bloom, soft, and the glints
+    bl.getContext('2d').putImageData(bimg, 0, 0);
+    const sx = cv.width / RC_PW, sy = cv.height / RC_PH;
+    g.save(); g.globalCompositeOperation = 'lighter'; g.imageSmoothingEnabled = true;
+    g.globalAlpha = 0.32; g.drawImage(bl, -sx, -sy, cv.width + 2 * sx, cv.height + 2 * sy);
+    g.globalAlpha = 0.22; g.drawImage(bl, -4 * sx, -4 * sy, cv.width + 8 * sx, cv.height + 8 * sy);
+    for (let j = 0; j < glints.length; j += 4) { const R = sx * (2 + 3 * Math.min(1, glints[j + 2])); g.globalAlpha = Math.min(1, glints[j + 2] + 0.2); g.drawImage(rcGlint(paint.glints[glints[j + 3]] || '#ffffff'), (glints[j] + 0.5) * sx - R, (glints[j + 1] + 0.5) * sy - R, R * 2, R * 2); }
+    g.restore();
+  }
 }
 function rcPreview(skin, w) {
   const cv = document.createElement('canvas'); cv.width = w * 2; cv.height = Math.round(w * 2 * RC_PH / RC_PW);
@@ -299,8 +360,10 @@ function rcPreview(skin, w) {
 setInterval(() => {
   const card = $('rcrateCard'); if (!card || card.hidden || reduceMotion) return;
   const t = performance.now() / 1000;
-  for (const cv of card.querySelectorAll('canvas.rcprev')) { const s = cv._skin; if (s && s.rarity && s.rarity !== 'deckhand' && s.rarity !== 'bosun') rcDrawPreview(cv, s, t); }
-}, 100);
+  RC.tick = (RC.tick | 0) + 1;
+  // the Admiral banners every time (they're the brightest and quickest), the rest every other
+  for (const cv of card.querySelectorAll('canvas.rcprev')) { const s = cv._skin; if (s && s.rarity && s.rarity !== 'deckhand' && s.rarity !== 'bosun' && (s.rarity === 'admiral' || !(RC.tick & 1))) rcDrawPreview(cv, s, t); }
+}, 50);
 
 function rcCard(skin, cls) {
   const d = document.createElement('div'), ra = skin.rarity ? rcRarityOf(skin) : null;

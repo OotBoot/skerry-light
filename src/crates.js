@@ -201,7 +201,7 @@ const FLARES = [
   { id: 'f_gold',     kind: 'flare', name: 'Gold Rain',        rarity: 'mate',     glow: '#ffd34d', core: '#fff8d0', sparks: true },
   { id: 'f_maren',    kind: 'flare', name: "Maren's Lantern",  rarity: 'captain',  glow: '#9affd8', core: '#f0fff8', glow2: '#3a6b5c', flicker: true },
   { id: 'f_exit',     kind: 'flare', name: 'Exit Sign',        rarity: 'captain',  glow: '#3dff7a', core: '#d6ffe2', glow2: '#d9c25a' },
-  { id: 'f_aurora',   kind: 'flare', name: 'Aurora',           rarity: 'admiral',  glow: '#5cffb8', core: '#ffffff', cycle: true, sparks: true },
+  { id: 'f_aurora',   kind: 'flare', name: 'Aurora',           rarity: 'admiral',  glow: '#5cffb8', core: '#ffffff', cycle: true, sparks: true, aurora: true },
 ];
 const FLARE_BY_ID = Object.fromEntries(FLARES.map(f => [f.id, f]));
 // the colour a flare shows at a given age (seconds since it went up)
@@ -551,6 +551,125 @@ function rollFiller(crate) {
   return it;
 }
 
+// ---------- the Admiral pennants and flare: alive and glowing ----------
+// Soft light from a small sprite per colour (cheaper than a gradient every frame), a four-pointed glint, and
+// a palette of aurora colours made once, so nothing here builds strings or gradients while it draws.
+const ADM_GLOW = new Map();
+function admGlow(col) {
+  let s = ADM_GLOW.get(col);
+  if (!s) {
+    s = document.createElement('canvas'); s.width = s.height = 64;
+    const q = s.getContext('2d'), gr = q.createRadialGradient(32, 32, 0, 32, 32, 32);
+    gr.addColorStop(0, col + 'ff'); gr.addColorStop(0.25, col + '90'); gr.addColorStop(0.6, col + '28'); gr.addColorStop(1, col + '00');
+    q.fillStyle = gr; q.fillRect(0, 0, 64, 64); ADM_GLOW.set(col, s);
+  }
+  return s;
+}
+function admStar(c, x, y, r, col) {
+  const w = r * 0.2; c.fillStyle = col; c.beginPath();
+  c.moveTo(x - r, y); c.lineTo(x, y - w); c.lineTo(x + r, y); c.lineTo(x, y + w); c.closePath();
+  c.moveTo(x, y - r); c.lineTo(x + w, y); c.lineTo(x, y + r); c.lineTo(x - w, y); c.closePath(); c.fill();
+}
+const ADM_HUES = Array.from({ length: 48 }, (_, i) => { const h = i / 48 * 360, s = 100, l = 62, a = s * Math.min(l, 100 - l) / 10000, f = n => { const k = (n + h / 30) % 12, v = l / 100 - a * Math.max(-1, Math.min(k - 3, 9 - k, 1)); return Math.round(v * 255).toString(16).padStart(2, '0'); }; return '#' + f(0) + f(8) + f(4); });
+// the aurora's own band of the wheel: green, teal, blue, violet, rose, and back (an index into ADM_HUES by phase 0..1)
+const admAur = p => ADM_HUES[(Math.round((0.36 + 0.5 * (0.5 - 0.5 * Math.cos(((p % 1) + 1) % 1 * 6.2832))) * 48) % 48)];
+// Plimsoll's Laces: ice-blue light, a white shimmer running down the fly, the white checks twinkling, a trail of frost
+// Verity's Grin: a hot yellow glow, a gold-white shimmer, the black square's grin lit and flickering like an old sign, sparks
+const PEN_ADM = {
+  p_laces: { glow: '#5fd3ff', sweep: '#d8f6ff', sparks: ['#ffffff', '#bff0ff', '#5fd3ff'] },
+  p_verity: { glow: '#ffd21c', sweep: '#fff4b0', sparks: ['#fff6c0', '#ffd21c', '#ffb020'] },
+};
+function penAdmiral(c, x, y, size, pen, t, pts, n, outline, after) {
+  const A = PEN_ADM[pen.id] || PEN_ADM.p_laces, tt = reduceMotion ? 0.6 : t, a0 = c.globalAlpha;
+  c.save();
+  if (!after) {
+    // the light behind it, breathing
+    const br = 0.75 + 0.25 * Math.sin(tt * 2.6), G = admGlow(A.glow);
+    c.globalCompositeOperation = 'lighter'; c.globalAlpha = a0 * 0.8 * br;
+    for (let i = 0; i <= n; i += 2) { const [px, py, hw] = pts[i], R = hw * 1.7 + size * 0.07; c.drawImage(G, px - R, py - R, R * 2, R * 2); }
+    c.restore(); return;
+  }
+  // a band of brighter colour sweeping down the fly, clipped to the cloth
+  outline(); c.clip(); c.globalCompositeOperation = 'lighter';
+  const p = (tt * 0.55) % 1.5 - 0.25, bx = x + p * size;
+  c.fillStyle = A.sweep;
+  for (const [w, al] of [[0.34, 0.12], [0.18, 0.18], [0.07, 0.4]]) { c.globalAlpha = a0 * al; c.fillRect(bx - size * w / 2, y - size * 0.6, size * w, size * 1.2); }
+  if (pen.id === 'p_laces' && size > 9) {
+    // the white checks catch the light one by one
+    const q = size * 0.18;
+    for (let i = 0; i < 6; i++) for (let j = 0; j < 4; j++) if ((i + j) % 2) { const k = Math.sin(tt * 3.1 + i * 1.7 + j * 2.3); if (k > 0.6) { c.globalAlpha = a0 * (k - 0.6) * 1.6; c.fillStyle = '#ffffff'; c.fillRect(x + i * q, y - size * 0.36 + j * q, q, q); } }
+  }
+  c.restore(); c.save();
+  if (pen.id === 'p_verity' && size > 7) {
+    // the grin in the black square: two eyes and a wide smile, lit, and flickering now and then like a sign on the blink
+    const s = size * 0.2, sx = x + size * 0.12, sy = y - size * 0.1, blink = Math.sin(tt * 1.7) * Math.sin(tt * 2.9) > 0.82 ? 0.15 : 0.8 + 0.2 * Math.sin(tt * 23);
+    c.globalCompositeOperation = 'lighter'; c.globalAlpha = a0 * 0.6 * blink;
+    const G = admGlow('#ffd21c'), R = s * 1.1; c.drawImage(G, sx + s / 2 - R, sy + s / 2 - R, R * 2, R * 2);
+    c.globalCompositeOperation = 'source-over'; c.globalAlpha = a0 * Math.min(1, blink + 0.1);
+    c.fillStyle = '#ffe866'; c.fillRect(sx + s * 0.22, sy + s * 0.24, s * 0.14, s * 0.16); c.fillRect(sx + s * 0.64, sy + s * 0.24, s * 0.14, s * 0.16);
+    c.strokeStyle = '#ffe866'; c.lineWidth = Math.max(0.7, s * 0.1); c.lineCap = 'round';
+    c.beginPath(); c.arc(sx + s / 2, sy + s * 0.4, s * 0.3, 0.35, Math.PI - 0.35); c.stroke();
+  }
+  // a trail of sparks shed from the tip, drifting away behind and fading
+  if (size > 7) {
+    const [tx, ty] = pts[n], N = size > 20 ? 12 : 7;
+    c.globalCompositeOperation = 'lighter';
+    for (let i = 0; i < N; i++) {
+      const ph = (tt * 0.8 + i * 0.618) % 1, k = 1 - ph, tw = 0.6 + 0.4 * Math.sin(tt * 11 + i * 3);
+      const sx = tx - size * 0.15 + ph * size * 0.8, sy = ty + Math.sin(tt * 2.2 + i * 2.1) * size * 0.12 * ph + ph * size * 0.08;
+      c.globalAlpha = a0 * k * tw; admStar(c, sx, sy, Math.max(0.9, size * 0.075 * k), A.sparks[i % A.sparks.length]);
+    }
+    // and a glint where the sweep crosses the hoist
+    const gl = Math.max(0, Math.sin(tt * 1.3)); if (gl > 0.9) { c.globalAlpha = a0 * (gl - 0.9) * 10; admStar(c, x + 1, y - size * 0.3, size * 0.22, '#ffffff'); }
+  }
+  c.restore();
+}
+// Aurora, the Admiral flare: curtains of colour hung beneath the star, rippling and turning through the aurora's
+// greens and blues and violets, a long trail of colour back down its climb, and a spray of sparks.
+// (c: the canvas, x, y: the star on screen, s: pixels a metre or so across, age: seconds up, z: its height, up: a
+// function giving the screen y of the star at an earlier height, or null to hang the trail straight down)
+function drawAurora(c, x, y, s, age, up) {
+  const tt = reduceMotion ? 1.5 : age, a0 = c.globalAlpha, G = admGlow;
+  c.save(); c.globalCompositeOperation = 'lighter';
+  // the curtains: three ribbons, each a row of thin rays, bright at the hem and fading upward
+  const span = 46 * s, rays = 26;
+  for (let r = 0; r < 3; r++) {
+    const hem = y + (6 + r * 5) * s, w = span * (1 - r * 0.18), ph = r * 0.33;
+    for (let i = 0; i < rays; i++) {
+      const u = i / (rays - 1) - 0.5, rx = x + u * w + Math.sin(tt * 1.3 + u * 5 + r * 2) * 3 * s;
+      const fold = 0.5 + 0.5 * Math.sin(u * 9 - tt * 2.2 + r * 1.7), edge = 1 - Math.abs(u) * 1.9, hh = (10 + 12 * fold) * s;
+      if (edge <= 0) continue;
+      const hy = hem + Math.sin(tt * 1.7 + u * 6 + r) * 2.5 * s, col = admAur(ph + u * 0.5 + tt * 0.08), rw = Math.max(1, w / rays * 0.9);
+      c.fillStyle = col;
+      c.globalAlpha = a0 * 0.14 * edge * (0.5 + fold); c.fillRect(rx - rw / 2, hy - hh, rw, hh);
+      c.globalAlpha = a0 * 0.22 * edge * (0.5 + fold); c.fillRect(rx - rw / 2, hy - hh * 0.35, rw, hh * 0.35);
+      c.globalAlpha = a0 * 0.5 * edge * fold; c.fillRect(rx - rw / 2, hy - 1.5 * s, rw, 1.5 * s);
+    }
+  }
+  // the long trail: the colours it has been, laid back along its climb
+  for (let j = 1; j <= 24; j++) {
+    const ag = age - j * 0.06; if (ag < 0) break;
+    const ty = up ? up(ag) : y + j * 1.4 * s, k = 1 - j / 25, R = (1.6 + 2.6 * k) * s;
+    c.globalAlpha = a0 * 0.5 * k; c.drawImage(G(admAur(ag * 0.25)), x - R + Math.sin(ag * 7) * s, ty - R, R * 2, R * 2);
+  }
+  // the star's own light, turning
+  const R = 16 * s; c.globalAlpha = a0 * (0.75 + 0.25 * Math.sin(tt * 5)); c.drawImage(G(admAur(tt * 0.12)), x - R, y - R, R * 2, R * 2);
+  c.globalAlpha = a0 * 0.6; c.drawImage(G(admAur(tt * 0.12 + 0.3)), x - R * 0.5, y - R * 0.5, R, R);
+  // sparks: a ring thrown out and falling, twinkling
+  for (let i = 0; i < 20; i++) {
+    const an = i * 2.39996 + tt * 0.7, life = (tt * 0.45 + i * 0.137) % 1, d = (4 + life * 16) * s;
+    const sx = x + Math.cos(an) * d, sy = y + Math.sin(an) * d * 0.7 + life * life * 10 * s, tw = 0.5 + 0.5 * Math.sin(tt * 13 + i * 5);
+    c.globalAlpha = a0 * (1 - life) * tw; admStar(c, sx, sy, Math.max(1, (1.6 - life) * 1.6 * s), i % 3 ? admAur(i * 0.11 + tt * 0.1) : '#ffffff');
+  }
+  c.restore();
+}
+// the Admiral pennants' and flare's cards move while they're on screen (a few times a second is plenty)
+setInterval(() => {
+  if (reduceMotion) return;
+  const t = performance.now() / 1000;
+  for (const cv of document.querySelectorAll('canvas.admprev')) if (cv.offsetParent && cv._draw) cv._draw(t);
+}, 50);
+
 // a pennant, drawn on any canvas: pole top at (x, y), flying to the right, size = length
 function drawPennant(c, x, y, size, pen, t) {
   const n = 8, pts = [];
@@ -564,12 +683,15 @@ function drawPennant(c, x, y, size, pen, t) {
     for (let i = n; i >= 0; i--) { const [px, py, hw] = pts[i]; c.lineTo(px, py - hw + 2 * hw * to); }
     c.closePath(); c.fill();
   };
-  const [a, b] = pen.colors;
+  const [a, b] = pen.colors, adm = pen.rarity === 'admiral' && PEN_ADM[pen.id];
+  const outline = () => { c.beginPath(); for (let i = 0; i <= n; i++) { const [px, py, hw] = pts[i]; i ? c.lineTo(px, py - hw) : c.moveTo(px, py - hw); } for (let i = n; i >= 0; i--) { const [px, py, hw] = pts[i]; c.lineTo(px, py + hw); } c.closePath(); };
+  if (adm) penAdmiral(c, x, y, size, pen, t, pts, n, outline, false);
   if (pen.pattern === 'split') { strip(0, 0.5, a); strip(0.5, 1, b); }
   else if (pen.pattern === 'stripes') { for (let i = 0; i < 4; i++) strip(i / 4, (i + 1) / 4, i % 2 ? b : a); }
   else if (pen.pattern === 'check') { strip(0, 1, a); c.save(); c.beginPath(); for (let i = 0; i <= n; i++) { const [px, py, hw] = pts[i]; i ? c.lineTo(px, py - hw) : c.moveTo(px, py - hw); } for (let i = n; i >= 0; i--) { const [px, py, hw] = pts[i]; c.lineTo(px, py + hw); } c.closePath(); c.clip(); c.fillStyle = b; const q = size * 0.18; for (let i = 0; i < 6; i++) for (let j = 0; j < 4; j++) if ((i + j) % 2) c.fillRect(x + i * q, y - size * 0.36 + j * q, q, q); c.restore(); }
   else if (pen.pattern === 'square') { strip(0, 1, a); c.fillStyle = b; c.fillRect(x + size * 0.12, y - size * 0.1, size * 0.2, size * 0.2); }
   else strip(0, 1, a);
+  if (adm) penAdmiral(c, x, y, size, pen, t, pts, n, outline, true);
 }
 
 // ---------- UI ----------
@@ -640,8 +762,9 @@ function pennantPreview(pen, size) {
   cnv.style.width = size + 'px'; cnv.style.height = (size * 2 / 3) + 'px';
   cnv.setAttribute('aria-hidden', 'true');
   const c = cnv.getContext('2d'); c.scale(k, k);
-  c.fillStyle = '#5a4a3a'; c.fillRect(size * 0.2, size * 0.1, 2.5, size * 0.55);
-  drawPennant(c, size * 0.2 + 2.5, size * 0.22, size * 0.62, pen, 0.6);
+  const draw = t => { c.clearRect(0, 0, size, size); c.fillStyle = '#5a4a3a'; c.fillRect(size * 0.2, size * 0.1, 2.5, size * 0.55); drawPennant(c, size * 0.2 + 2.5, size * 0.22, size * 0.62, pen, t); };
+  draw(0.6);
+  if (pen.rarity === 'admiral') { cnv.className = 'admprev'; cnv._draw = draw; }
   return cnv;
 }
 function flarePreview(fs, size) {
@@ -650,6 +773,12 @@ function flarePreview(fs, size) {
   cnv.style.width = size + 'px'; cnv.style.height = (size * 2 / 3) + 'px';
   cnv.setAttribute('aria-hidden', 'true');
   const c = cnv.getContext('2d'); c.scale(k, k);
+  if (fs.aurora) {
+    // the Aurora: its curtains and sparks, turning, over a strip of sea
+    const draw = t => { c.clearRect(0, 0, size, size); const x = size / 2, y = size * 0.13; c.fillStyle = 'rgba(200,215,235,0.25)'; c.fillRect(size * 0.15, size * 0.62, size * 0.7, 1.5); drawAurora(c, x, y, size / 80, 2 + t % 60, null); c.fillStyle = fs.core; c.beginPath(); c.arc(x, y, 2.5, 0, 6.28); c.fill(); };
+    draw(1.5); cnv.className = 'admprev'; cnv._draw = draw;
+    return cnv;
+  }
   const x = size / 2, y = size * 0.24, col = fs.cycle ? 'hsl(150,100%,62%)' : fs.glow;
   // a smoky trail up from the water, the star, and its glow
   c.strokeStyle = 'rgba(220,220,230,0.25)'; c.lineWidth = 2;
