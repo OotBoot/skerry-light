@@ -19163,7 +19163,7 @@ function zmSettle(m) {
     m.jz = fl;
   }
 }
-function zmSpeedK() { return (ZM.perks.fleet ? 1.22 : 1) * (typeof zbSpeedK === 'function' ? zbSpeedK() : 1); }   // [boss] (dragged by the false light)
+function zmSpeedK() { return (ZM.perks.fleet ? 1.22 : 1) * (typeof zbSpeedK === 'function' ? zbSpeedK() : 1) * (typeof raidSpeedK === 'function' ? raidSpeedK() : 1); }   // [boss] (dragged by the false light)
 function zmReloadK() { return (ZM.perks.quick ? 0.5 : 1) * (typeof rclReloadK === 'function' ? rclReloadK() : 1); }   // [classes] (Maren's End: the blunderbuss quicker)
 function zmCanReload() { const w = fpsW(); return w.melee || (ZM.res[FPS.weapon] || 0) > 0; }
 
@@ -28148,7 +28148,11 @@ function raidStop() {
 // alone or hosting, each frame
 function raidHostTick(dt) { RAID.t += dt; raidCall('tick', dt); }
 // everyone, each frame
+// how fast you can go, as a share of your own pace (zmSpeedK): a stage's own say, Maren's Weight in the Swallow
+function raidSpeedK() { if (!RAID.on) return 1; const S = raidStage(); return S && S.speedK ? S.speedK() : 1; }
 function raidMe(dt) {
+  // (a joined player's own clock for the raid, between the host's words, so what swings on it swings smoothly)
+  RAID.ct = ZM.net === 'client' ? (Math.abs((RAID.ct || 0) + dt - RAID.t) > 0.4 ? RAID.t : (RAID.ct || 0) + dt) : RAID.t;
   raidCall('me', dt);
   if (typeof rclTick === 'function') rclTick(dt);   // [classes] src/rclass.js
   // joined: the host's world has moved on to the next part
@@ -28369,6 +28373,11 @@ function raidHud(phone, mono, fell) {
 // under the Swallow to the door. Falling in the Swallow you come down no quicker than FALL (so it takes about half a
 // minute). Braziers: LIT_R, how far a lit one's light reaches; in it you mend MEND a second and outside it (below) the
 // dark takes DRAIN a second. NEED of them sent back inside RING of the arena's middle open the door.
+// Maren's Weight: out of the light it settles on you, WGT_T seconds to the full of it, when you go at WGT_SLOW of your
+// pace; any brazier's light lifts it at once. The wrecking balls: hung from the cave's roof over the path between
+// braziers, BALL_R across, swinging across the path in BALL_T seconds or so; one that catches you knocks you BALL_DMG
+// and throws you aside
+const RSWX = { WGT_T: 22, WGT_SLOW: 0.45, BALL_R: 1.05, BALL_LOW: 1.3, BALL_T: 3.6, BALL_DMG: 1, BALL_CD: 1.2 };
 const RSW = { SEA: 250, DECK: 253, CEIL: 30, HOLE: [-11, 11, 13, 35], FALL: 8.4, LIT_R: 7.5, MEND: 1.2, DRAIN: 0.2, NEED: 20, RING: 13, USE: 1.1, GAP: 3.4 };
 // The path: [x, y, half its width, what's there] from the island's middle, from the cap behind where you land to the
 // cap with the door in it; b, a brazier; a, the arena before the door (two more braziers at its sides). Between each
@@ -28407,6 +28416,14 @@ const RSG = (function rswGeo() {
   const D = { x: E.x, y: E.y, f, c };
   return { N, S, B, A: { x: A.x, y: A.y }, D, land: N.find(p => p.t === 'land') };
 })();
+// the wrecking balls: one in each gap between braziers along the path (not the first, not the arena), hung over the
+// middle of the path and swinging across it; each with its own beat (BALLS[i].T) and where in it it starts (ph)
+const RSW_BALLS = [];
+// (where a ball is at time t: its centre, in the island's own coordinates, and its height over the floor)
+function rswBallAt(b, t) {
+  const th = b.th * Math.sin(t * 6.2832 / b.T + b.ph), L = b.L;
+  return { x: b.x + b.nx * L * Math.sin(th), y: b.y + b.ny * L * Math.sin(th), z: RSW.CEIL - L * Math.cos(th), th };
+}
 // along the path: how far along it a place is (its nearest point), and the place that far along
 function rswAlong(x, y) {
   const N = RSG.N; let best = 1e9, s = 0;
@@ -28425,6 +28442,16 @@ function rswAt(s) {
   return { x: N[0].x, y: N[0].y, w: N[0].w, dx: 0, dy: 1 };
 }
 const rswW = (x, y) => [FPSC.CX + x, FPSC.CY + y];
+(function rswBallsSet() {
+  const rnd = seeded(0xba11), B = RSG.B.filter(b => !b.arena).map(b => rswAlong(b.x, b.y)).sort((a, b) => a - b);
+  for (let i = 1; i < B.length - 1; i++) {
+    const n = (B[i + 1] - B[i]) > 30 ? 2 : 1;   // (only a very long gap gets two)
+    for (let k = 0; k < n; k++) {
+      const q = rswAt(B[i] + (B[i + 1] - B[i]) * (n === 1 ? 0.5 : 0.33 + 0.34 * k)), L = RSW.CEIL - RSWX.BALL_LOW;
+      RSW_BALLS.push({ x: q.x, y: q.y, nx: -q.dy, ny: q.dx, L, th: Math.asin(Math.min(0.9, (q.w + 0.6) / L)), T: RSWX.BALL_T * (0.85 + rnd() * 0.35), ph: rnd() * 6.2832 });
+    }
+  }
+})();
 const rswLocal = o => [o.x - FPSC.CX, o.y - FPSC.CY];
 
 // ---------- its props (src/fpsisle.js's kinds) ----------
@@ -28754,8 +28781,9 @@ function rswDiver(P) {
 
 RAID_STAGES.descent = {
   n: 'The Swallow', map: RSW_MAP, noBars: true, lantern: true,
+  speedK() { const w = RAID.st.weight || 0; return 1 - (1 - RSWX.WGT_SLOW) * w; },
   set(H, K) { rswSet(H, K); },
-  enter() { Object.assign(RAID.st, { lit: 0, door: 0, kills: 0, spawnT: 3, diverT: 40 + Math.random() * 20, useT: 0, useI: -1, pend: 0, landed: false, windT: 0, thru: false, flare: {}, landT: 0 }); },
+  enter() { Object.assign(RAID.st, { lit: 0, door: 0, kills: 0, spawnT: 3, weight: 0, ballCd: 0, shove: null, diverT: 40 + Math.random() * 20, useT: 0, useI: -1, pend: 0, landed: false, windT: 0, thru: false, flare: {}, landT: 0 }); },
   players(P) { return P.filter(p => rswBelow(p.jz)); },
   tick(dt) {
     const S = RAID.st, P = ZM.players;
@@ -28808,6 +28836,29 @@ RAID_STAGES.descent = {
     } else if (S.falling && below) { S.falling = false; if (!S.landed) { S.landed = true; ZM.banner = { text: 'The Deep Path', t: 3.5, sub: 'Light the braziers. Keep to their light.', col: '#bfe4ff' }; } }
     // the dark drains you; a lit brazier mends you, and makes up your ammunition
     S.inLight = below && rswInLight(m.x, m.y, m.jz);
+    // Maren's Weight: down here, out of the light, it settles on you; the light lifts it all at once
+    if (below && alive && !S.inLight) { if (!S.weight) fpsFeed('Maren’s Weight settles on you. Get to the light.'); S.weight = Math.min(1, (S.weight || 0) + dt / RSWX.WGT_T); }
+    else if (S.inLight && S.weight > 0) { if (S.weight > 0.15) fpsFeed('The light lifts Maren’s Weight.'); S.weight = 0; }
+    else if (!below || !alive) S.weight = 0;
+    // the wrecking balls: caught by one, knocked and thrown aside (each of us judges our own)
+    if (below && alive && S.ballCd <= 0) {
+      const bt = RAID.ct || 0;
+      for (const b of RSW_BALLS) {
+        const P = rswBallAt(b, bt), [bx, by] = rswW(P.x, P.y), d = Math.hypot(m.x - bx, m.y - by), jz = m.jz || 0;
+        if (d < RSWX.BALL_R + 0.35 && P.z - RSWX.BALL_R < jz + 1.8 && P.z + RSWX.BALL_R > jz) {
+          S.ballCd = RSWX.BALL_CD;
+          if (!(m.protect > 0)) fpsHurt(RSWX.BALL_DMG, null, null);
+          zmSound('hit'); FPS.hurtT = 0.9;
+          // thrown the way it's swinging (across the path), a little at a time so no wall is passed
+          const dir = Math.sign(Math.cos(bt * 6.2832 / b.T + b.ph)) || 1;
+          S.shove = [b.nx * dir * 7, b.ny * dir * 7, 0.35];
+          fpsFeed('A wrecking ball caught you.');
+          break;
+        }
+      }
+    }
+    if (S.ballCd > 0) S.ballCd -= dt;
+    if (S.shove && S.shove[2] > 0) { const k = dt / 0.35; zmMove(m, S.shove[0] * 0.35 * k, S.shove[1] * 0.35 * k); S.shove[2] -= dt; }
     if (below && alive) {
       const max = ZM.perks.stout ? ZMC.HP_STOUT : ZMC.HP;
       // (only what the dark took comes back in the light; what the drowned took stays taken)
@@ -28856,6 +28907,14 @@ RAID_STAGES.descent = {
       ctx.fillStyle = S.inLight ? '#ffd88a' : `rgba(150,200,255,${0.6 + 0.3 * Math.sin(t * 4)})`;
       ctx.fillText(S.inLight ? (S.dark > 0.005 ? 'IN THE LIGHT · MENDING WHAT THE DARK TOOK' : 'IN THE LIGHT') : 'IN THE DARK · IT DRAINS YOU', cx, H - (phone ? 150 : 96));
     }
+    // Maren's Weight: a bar under the light line while it's on you, heavier as it fills
+    if (below && S.weight > 0.01 && !(m.dead > 0)) {
+      const w = S.weight, bw = phone ? 120 : 180, x0 = cx - bw / 2, y0 = H - (phone ? 136 : 80);
+      ctx.fillStyle = 'rgba(10,16,28,0.6)'; ctx.fillRect(x0, y0, bw, 5);
+      ctx.fillStyle = `rgb(${110 + 60 * w},${150 - 40 * w},${210 - 60 * w})`; ctx.fillRect(x0, y0, bw * w, 5);
+      ctx.textAlign = 'center'; ctx.textBaseline = 'top'; ctx.font = mono(phone ? 9 : 11); ctx.fillStyle = 'rgba(190,210,240,0.85)';
+      ctx.fillText(`MAREN’S WEIGHT · ${Math.round((1 - this.speedK()) * 100)}% SLOWER`, cx, y0 + 8);
+    }
     // the ring's tally, big, while the door's awake
     if (S.door === 1) { ctx.textAlign = 'center'; ctx.textBaseline = 'top'; ctx.font = fell(phone ? 26 : 38); ctx.fillStyle = '#bfe4ff'; ctx.fillText(`${Math.min(S.kills, RSW.NEED)} / ${RSW.NEED}`, cx, phone ? top + 20 : 60); }
     // lighting a brazier: a ring round the sights filling
@@ -28888,9 +28947,28 @@ RAID_STAGES.descent = {
     const [ax, ay] = rswW(RSG.A.x, RSG.A.y); ring.position.copy(z3v(ax, ay, G0 + 0.05)); grp.add(ring);
     const doorL = new THREE.PointLight(0x9ad4ff, 0, 18, 1.3); doorL.position.copy(z3v(dx + D.f[0] * 2, dy + D.f[1] * 2, G0 + 2.4)); grp.add(doorL);
     R3.door = { leaf, leafM, halo, ring, ringM, doorL, open: 0 };
+    // the wrecking balls: an iron ball on a chain up into the dark, a faint cold sheen on it so you can see it coming
+    const iron = new THREE.MeshLambertMaterial({ color: 0x3a3c40, emissive: 0x0c1a26 }), chainM = new THREE.MeshLambertMaterial({ color: 0x2a2b2e, emissive: 0x081018 });
+    const ballG = new THREE.SphereGeometry(RSWX.BALL_R, 14, 10), spikeG = new THREE.ConeGeometry(0.16, 0.5, 6), chainG = new THREE.CylinderGeometry(0.06, 0.06, 1, 6);
+    R3.balls = RSW_BALLS.map(b => {
+      const ball = new THREE.Group(); grp.add(ball);
+      ball.add(new THREE.Mesh(ballG, iron));
+      for (let k = 0; k < 10; k++) { const a = k * 2.4, e = Math.acos(1 - 2 * (k + 0.5) / 10), d = new THREE.Vector3(Math.sin(e) * Math.cos(a), Math.cos(e), Math.sin(e) * Math.sin(a)); const sp = new THREE.Mesh(spikeG, iron); sp.position.copy(d.clone().multiplyScalar(RSWX.BALL_R + 0.18)); sp.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), d); ball.add(sp); }
+      const sheen = new THREE.Sprite(new THREE.SpriteMaterial({ map: R3.zTex || (R3.zTex = z3Soft('rgba(120,200,255,0.55)', 'rgba(120,200,255,0)')), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: 0.35 }));
+      sheen.scale.setScalar(RSWX.BALL_R * 3.2); ball.add(sheen);
+      const chain = new THREE.Mesh(chainG, chainM); grp.add(chain);
+      return { b, ball, chain };
+    });
   },
   f3(dt) {
     const S = RAID.st, t = g.t, m = FPS.me;
+    // the wrecking balls, swinging on the raid's clock (the same for all of us)
+    if (R3.balls) { const bt = RAID.ct || 0, G0 = FPSC.GROUND, up = new THREE.Vector3(0, 1, 0);
+      for (const B of R3.balls) {
+        const P = rswBallAt(B.b, bt), [x, y] = rswW(P.x, P.y), [px, py] = rswW(B.b.x, B.b.y), a = z3v(x, y, G0 + P.z), top = z3v(px, py, G0 + RSW.CEIL);
+        B.ball.position.copy(a); B.ball.rotation.z = P.th;
+        const d = top.clone().sub(a), len = d.length(); B.chain.position.copy(a).addScaledVector(d, 0.5); B.chain.scale.set(1, len, 1); B.chain.quaternion.setFromUnitVectors(up, d.normalize());
+      } }
     // the light and the fog, by how high you are: the dusk over the bed, black at the bottom
     const k = clamp(((m.jz || 0) - RSW.CEIL) / (RSW.SEA - RSW.CEIL), 0, 1), kk = k * k;
     GL3D.amb.intensity = 0.13 + 0.42 * kk; GL3D.moon.intensity = 0.3 * kk;
@@ -28912,7 +28990,7 @@ RAID_STAGES.descent = {
     Dr.ring.visible = S.door === 1; Dr.ringM.opacity = 0.3 + 0.3 * pulse;
     Dr.doorL.intensity = S.door === 0 ? 0.4 : S.door === 1 ? 0.8 + 0.6 * pulse : 2.2;
   },
-  exit() { R3.bz = null; R3.door = null; },
+  exit() { R3.bz = null; R3.door = null; R3.balls = null; },
 };
 
 // ---- src/raidbridge.js ----
