@@ -555,7 +555,7 @@ function rollFiller(crate) {
 // Soft light from a small sprite per colour (cheaper than a gradient every frame), a four-pointed glint, and
 // a palette of aurora colours made once, so nothing here builds strings or gradients while it draws.
 const ADM_GLOW = new Map();
-function admGlow(col) {
+function penGlow(col) {
   let s = ADM_GLOW.get(col);
   if (!s) {
     s = document.createElement('canvas'); s.width = s.height = 64;
@@ -584,7 +584,7 @@ function penAdmiral(c, x, y, size, pen, t, pts, n, outline, after) {
   c.save();
   if (!after) {
     // the light behind it, breathing
-    const br = 0.75 + 0.25 * Math.sin(tt * 2.6), G = admGlow(A.glow);
+    const br = 0.75 + 0.25 * Math.sin(tt * 2.6), G = penGlow(A.glow);
     c.globalCompositeOperation = 'lighter'; c.globalAlpha = a0 * 0.8 * br;
     for (let i = 0; i <= n; i += 2) { const [px, py, hw] = pts[i], R = hw * 1.7 + size * 0.07; c.drawImage(G, px - R, py - R, R * 2, R * 2); }
     c.restore(); return;
@@ -604,7 +604,7 @@ function penAdmiral(c, x, y, size, pen, t, pts, n, outline, after) {
     // the grin in the black square: two eyes and a wide smile, lit, and flickering now and then like a sign on the blink
     const s = size * 0.2, sx = x + size * 0.12, sy = y - size * 0.1, blink = Math.sin(tt * 1.7) * Math.sin(tt * 2.9) > 0.82 ? 0.15 : 0.8 + 0.2 * Math.sin(tt * 23);
     c.globalCompositeOperation = 'lighter'; c.globalAlpha = a0 * 0.6 * blink;
-    const G = admGlow('#ffd21c'), R = s * 1.1; c.drawImage(G, sx + s / 2 - R, sy + s / 2 - R, R * 2, R * 2);
+    const G = penGlow('#ffd21c'), R = s * 1.1; c.drawImage(G, sx + s / 2 - R, sy + s / 2 - R, R * 2, R * 2);
     c.globalCompositeOperation = 'source-over'; c.globalAlpha = a0 * Math.min(1, blink + 0.1);
     c.fillStyle = '#ffe866'; c.fillRect(sx + s * 0.22, sy + s * 0.24, s * 0.14, s * 0.16); c.fillRect(sx + s * 0.64, sy + s * 0.24, s * 0.14, s * 0.16);
     c.strokeStyle = '#ffe866'; c.lineWidth = Math.max(0.7, s * 0.1); c.lineCap = 'round';

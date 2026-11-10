@@ -39,7 +39,8 @@ function auroraCol(x) { const n = AURORA_COLS.length, i = ((Math.floor(x) % n) +
 // time for the effects: frozen with reduced motion
 function admT() { return reduceMotion ? 1.7 : g.t; }
 // a soft additive light from a cached sprite (colour must be #rrggbb); the caller sets 'lighter'
-function admGlow(x, y, col, r, a) { if (!(r > 0.3) || a <= 0.01) return; ctx.globalAlpha = Math.min(1, a); ctx.drawImage(lampSprite(col), x - r, y - r, r * 2, r * 2); }
+function admGlow(x, y, col, r, a) { if (!(r > 0.3) || a <= 0.01) return; if (r > 320) r = 320;   // (a cap: a glow filling the screen costs a lot to fill and adds little)
+  ctx.globalAlpha = Math.min(1, a); ctx.drawImage(lampSprite(col), x - r, y - r, r * 2, r * 2); }
 // half-width of a sailing hull (fraction of its beam) at k, -1 stern to +1 bow, from ship3d's STATIONS
 function admHullW(k) {
   for (let i = 0; i < STATIONS.length - 1; i++) { const a = STATIONS[i], b = STATIONS[i + 1]; if (k <= b.u) { const f = (k - a.u) / (b.u - a.u); return a.w + (b.w - a.w) * Math.max(0, f); } }

@@ -5532,7 +5532,8 @@ function auroraCol(x) { const n = AURORA_COLS.length, i = ((Math.floor(x) % n) +
 // time for the effects: frozen with reduced motion
 function admT() { return reduceMotion ? 1.7 : g.t; }
 // a soft additive light from a cached sprite (colour must be #rrggbb); the caller sets 'lighter'
-function admGlow(x, y, col, r, a) { if (!(r > 0.3) || a <= 0.01) return; ctx.globalAlpha = Math.min(1, a); ctx.drawImage(lampSprite(col), x - r, y - r, r * 2, r * 2); }
+function admGlow(x, y, col, r, a) { if (!(r > 0.3) || a <= 0.01) return; if (r > 320) r = 320;   // (a cap: a glow filling the screen costs a lot to fill and adds little)
+  ctx.globalAlpha = Math.min(1, a); ctx.drawImage(lampSprite(col), x - r, y - r, r * 2, r * 2); }
 // half-width of a sailing hull (fraction of its beam) at k, -1 stern to +1 bow, from ship3d's STATIONS
 function admHullW(k) {
   for (let i = 0; i < STATIONS.length - 1; i++) { const a = STATIONS[i], b = STATIONS[i + 1]; if (k <= b.u) { const f = (k - a.u) / (b.u - a.u); return a.w + (b.w - a.w) * Math.max(0, f); } }
@@ -12561,7 +12562,7 @@ function rollFiller(crate) {
 // Soft light from a small sprite per colour (cheaper than a gradient every frame), a four-pointed glint, and
 // a palette of aurora colours made once, so nothing here builds strings or gradients while it draws.
 const ADM_GLOW = new Map();
-function admGlow(col) {
+function penGlow(col) {
   let s = ADM_GLOW.get(col);
   if (!s) {
     s = document.createElement('canvas'); s.width = s.height = 64;
@@ -12590,7 +12591,7 @@ function penAdmiral(c, x, y, size, pen, t, pts, n, outline, after) {
   c.save();
   if (!after) {
     // the light behind it, breathing
-    const br = 0.75 + 0.25 * Math.sin(tt * 2.6), G = admGlow(A.glow);
+    const br = 0.75 + 0.25 * Math.sin(tt * 2.6), G = penGlow(A.glow);
     c.globalCompositeOperation = 'lighter'; c.globalAlpha = a0 * 0.8 * br;
     for (let i = 0; i <= n; i += 2) { const [px, py, hw] = pts[i], R = hw * 1.7 + size * 0.07; c.drawImage(G, px - R, py - R, R * 2, R * 2); }
     c.restore(); return;
@@ -12610,7 +12611,7 @@ function penAdmiral(c, x, y, size, pen, t, pts, n, outline, after) {
     // the grin in the black square: two eyes and a wide smile, lit, and flickering now and then like a sign on the blink
     const s = size * 0.2, sx = x + size * 0.12, sy = y - size * 0.1, blink = Math.sin(tt * 1.7) * Math.sin(tt * 2.9) > 0.82 ? 0.15 : 0.8 + 0.2 * Math.sin(tt * 23);
     c.globalCompositeOperation = 'lighter'; c.globalAlpha = a0 * 0.6 * blink;
-    const G = admGlow('#ffd21c'), R = s * 1.1; c.drawImage(G, sx + s / 2 - R, sy + s / 2 - R, R * 2, R * 2);
+    const G = penGlow('#ffd21c'), R = s * 1.1; c.drawImage(G, sx + s / 2 - R, sy + s / 2 - R, R * 2, R * 2);
     c.globalCompositeOperation = 'source-over'; c.globalAlpha = a0 * Math.min(1, blink + 0.1);
     c.fillStyle = '#ffe866'; c.fillRect(sx + s * 0.22, sy + s * 0.24, s * 0.14, s * 0.16); c.fillRect(sx + s * 0.64, sy + s * 0.24, s * 0.14, s * 0.16);
     c.strokeStyle = '#ffe866'; c.lineWidth = Math.max(0.7, s * 0.1); c.lineCap = 'round';
@@ -17213,6 +17214,9 @@ function vmDraw(dt) {
   const pr = Math.min(typeof gl3dPR === 'function' ? gl3dPR() : dpr, 1.5);
   if (VM.w !== W || VM.h !== H || VM.pr !== pr) { VM.w = W; VM.h = H; VM.pr = pr; VM.r.setPixelRatio(pr); VM.r.setSize(W, H, false); VM.cam.aspect = W / H; VM.cam.updateProjectionMatrix(); }
   const id = FPSW[FPS.weapon] ? FPS.weapon : 'pepperbox', wpn = vmWeapon(id);
+  // (the first time: every weapon built and its shader compiled now, so a first switch to one, or its Admiral finish,
+  // never stalls a frame mid-fight)
+  if (!VM.warm) { VM.warm = true; try { for (const k in VM_BUILD) vmWeapon(k).root.visible = true; VM.r.compile(VM.scene, VM.cam); } catch (e) { console.warn('vm warm', e); } }
   for (const k in VM.weapons) VM.weapons[k].root.visible = k === id;
   for (const k in VM.weapons) for (const o of ['fresh', 'spent']) if (VM.weapons[k][o] && k !== id) VM.weapons[k][o].visible = false;
   if (VM.cur !== id) { VM.cur = id; VM.lastP = 1; VM.hammer = 1; VM.trail = []; VM.swingT = 9; VM.swings = FPS.vmShots || 0; VM.shots = FPS.vmShots || 0; VM.lhand.visible = false; }
@@ -18109,6 +18113,7 @@ const FBR = new Map();   // id -> figure
 const FB_MAX = 10;
 function fpsFiguresSync() {
   if (typeof GL3D === 'undefined' || !GL3D.scene) return;
+  if (typeof ocaWarm === 'function') ocaWarm();
   const dt = Math.min(0.05, FPS.dtLast || 0.016), m = FPS.me, used = new Set();
   const all = [];
   for (const o of FPS.remote.values()) if (!o.dead && o.id !== FPS.specId) all.push(o);   // (not the one you're watching through: src/zombies.js)
@@ -18370,6 +18375,19 @@ function ocaPose(F, op) {
   F.halo.quaternion.copy(OCA.q).multiply(c.quaternion);
 }
 function ocaDispose(F) { if (F && F.ocaMats) for (const m of F.ocaMats) m.dispose(); }
+
+// (once, the first time the figures are drawn: a figure in each Admiral outfit is built and its shaders compiled
+// then, and kept, hidden, for good, so the first wrecker seen in one, or one coming back after being shot down,
+// never stalls a frame while its shaders compile: they stay compiled while anything still uses them)
+function ocaWarm() {
+  if (OCA.warm || typeof GL3D === 'undefined' || !GL3D.scene || !GL3D.r || !GL3D.camera || typeof OC_OUTFITS === 'undefined') return;
+  OCA.warm = [];
+  try {
+    for (const o of OC_OUTFITS) if (o.adm) { const F = fbFigure(['#3a2a1e', '#d8d0bc', '#7a5a3a', '#ffd88a'], o.id); F.root.position.set(0, -500, 0); OCA.warm.push(F); }
+    GL3D.r.compile(GL3D.scene, GL3D.camera);
+  } catch (e) { console.warn('outfit warm', e); }
+  for (const F of OCA.warm) F.root.visible = false;
+}
 
 // ---- src/zombies.js ----
 // The Lighthouse: a fourth game, on foot and indoors. You and the keeper's station against the drowned, round after

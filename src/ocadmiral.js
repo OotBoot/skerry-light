@@ -209,3 +209,16 @@ function ocaPose(F, op) {
   F.halo.quaternion.copy(OCA.q).multiply(c.quaternion);
 }
 function ocaDispose(F) { if (F && F.ocaMats) for (const m of F.ocaMats) m.dispose(); }
+
+// (once, the first time the figures are drawn: a figure in each Admiral outfit is built and its shaders compiled
+// then, and kept, hidden, for good, so the first wrecker seen in one, or one coming back after being shot down,
+// never stalls a frame while its shaders compile: they stay compiled while anything still uses them)
+function ocaWarm() {
+  if (OCA.warm || typeof GL3D === 'undefined' || !GL3D.scene || !GL3D.r || !GL3D.camera || typeof OC_OUTFITS === 'undefined') return;
+  OCA.warm = [];
+  try {
+    for (const o of OC_OUTFITS) if (o.adm) { const F = fbFigure(['#3a2a1e', '#d8d0bc', '#7a5a3a', '#ffd88a'], o.id); F.root.position.set(0, -500, 0); OCA.warm.push(F); }
+    GL3D.r.compile(GL3D.scene, GL3D.camera);
+  } catch (e) { console.warn('outfit warm', e); }
+  for (const F of OCA.warm) F.root.visible = false;
+}

@@ -458,6 +458,9 @@ function vmDraw(dt) {
   const pr = Math.min(typeof gl3dPR === 'function' ? gl3dPR() : dpr, 1.5);
   if (VM.w !== W || VM.h !== H || VM.pr !== pr) { VM.w = W; VM.h = H; VM.pr = pr; VM.r.setPixelRatio(pr); VM.r.setSize(W, H, false); VM.cam.aspect = W / H; VM.cam.updateProjectionMatrix(); }
   const id = FPSW[FPS.weapon] ? FPS.weapon : 'pepperbox', wpn = vmWeapon(id);
+  // (the first time: every weapon built and its shader compiled now, so a first switch to one, or its Admiral finish,
+  // never stalls a frame mid-fight)
+  if (!VM.warm) { VM.warm = true; try { for (const k in VM_BUILD) vmWeapon(k).root.visible = true; VM.r.compile(VM.scene, VM.cam); } catch (e) { console.warn('vm warm', e); } }
   for (const k in VM.weapons) VM.weapons[k].root.visible = k === id;
   for (const k in VM.weapons) for (const o of ['fresh', 'spent']) if (VM.weapons[k][o] && k !== id) VM.weapons[k][o].visible = false;
   if (VM.cur !== id) { VM.cur = id; VM.lastP = 1; VM.hammer = 1; VM.trail = []; VM.swingT = 9; VM.swings = FPS.vmShots || 0; VM.shots = FPS.vmShots || 0; VM.lhand.visible = false; }
