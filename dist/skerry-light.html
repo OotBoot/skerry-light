@@ -28954,7 +28954,9 @@ const RBC = {
   STANDS: [[-7, 27], [0, 30], [7, 27]],                // the helmets' stands, on the far bank
   DOOR: [0, -53.2],                                    // the way on, in the rock behind the near bank
   START: [0, -40],                                     // where you come out (from the descent's door)
-  LEVEL: 8, ALIVE: 8, ALIVE_MORE: 3,                   // the drowned here: as strong as round LEVEL's, how many at once
+  PH: 0.9, PW: 4.2,                                    // the circles' platforms: how high, half as wide (steps up the south and outer sides)
+  DH: 1.0,                                             // the bridge's deck over the water (steps up to it from either bank)
+  LEVEL: 8, ALIVE: 14, ALIVE_MORE: 4,                  // the drowned here: as strong as round LEVEL's, how many at once
   DHP: 14, DGAP: 5,                                    // a Diver: cuts of the Cutlass to put down; the wait between them
 };
 RBC.SL = RBC.RW / RBC.SEG;
@@ -28994,20 +28996,30 @@ function rbSet(H, K, Z) {
   H.wall(...rbW(X0, Y0), ...rbW(X1, Y0), rock); H.wall(...rbW(X0, Y1), ...rbW(X1, Y1), rock);
   H.wall(...rbW(X0, Y0), ...rbW(X0, Y1), rock); H.wall(...rbW(X1, Y0), ...rbW(X1, Y1), rock);
   // the river: solid to walk (not to shoot), all but the bridge's line; the bridge's line, one span to each plank
-  const sol = [], seg = [], S = (x, y, hw, hd) => { const [wx, wy] = rbW(x, y); return { s: 'b', x: wx, y: wy, ang: 0, hw, hd, z1: FPSC.GROUND + 1.6, br: Math.hypot(hw, hd), ray: false, occ: false, col: '#0a1418', rb: true }; };
-  const wL = (BW / 2 - X0) / 2, wR = (X1 - BW / 2) / 2;
+  // (high, so nobody jumps up on to the water from the bridge's deck; a floor of the same size for each span's deck)
+  const sol = [], seg = [], deck = [], S = (x, y, hw, hd, z, fl) => { const [wx, wy] = rbW(x, y); return { s: 'b', x: wx, y: wy, ang: 0, hw, hd, z1: FPSC.GROUND + (z == null ? 3.2 : z), br: Math.hypot(hw, hd), ray: false, occ: false, col: '#0a1418', rb: true, fl: !!fl }; };
+  const wL = (-BW / 2 - X0) / 2, wR = (X1 - BW / 2) / 2;
   sol.push(S(X0 + wL, RY, wL, h), S(BW / 2 + wR, RY, wR, h));
-  for (let i = 0; i < SEG; i++) seg.push(S(0, RY - h + (i + 0.5) * SL, BW / 2, SL / 2));
+  for (let i = 0; i < SEG; i++) { const y = RY - h + (i + 0.5) * SL; seg.push(S(0, y, BW / 2, SL / 2)); deck.push(S(0, y, BW / 2, SL / 2, RBC.DH, true)); }
+  // the steps up to the deck at either end, and the circles' platforms with their steps (all floors to walk up)
+  for (const e of [-1, 1]) for (let k = 1; k <= 3; k++) { const d = (4 - k) * 0.45; sol.push(S(0, e * (h + d), BW / 2, d, RBC.DH * k / 3, true)); }
+  for (const s of [-1, 1]) {
+    const cx = s * RBC.CX, cy = RBC.CY, w = RBC.PW;
+    sol.push(S(cx, cy, w, w, RBC.PH, true));
+    for (const k of [1, 2]) { const d = (3 - k) * 0.45; sol.push(S(cx, cy - w - d, w, d, RBC.PH * k / 3, true), S(cx + s * (w + d), cy - 0.6, d, 2.4, RBC.PH * k / 3, true)); }
+  }
   for (const s of sol.concat(seg)) I.solids.push(s);
-  I.rb = { seg, on: seg.slice() };
-  // the piers' stumps either side of the bridge's line, and the stone abutments at each end
-  for (const y of [RY - h, RY + h]) for (const s of [-1, 1]) P('block', s * (BW / 2 + 0.45), y, 0, { w: 0.8, d: 1.4, hh: 1.0, col: '#4a4842' });
-  // the circles' stones, the Cutlass's stone and the stands (their solids: low, round)
-  for (const s of [-1, 1]) for (let i = 0; i < 7; i++) { const a = i / 7 * Math.PI * 2 + 0.3; P('stone', s * RBC.CX + Math.cos(a) * (RBC.CR + 0.45), RBC.CY + Math.sin(a) * (RBC.CR + 0.45), a, { w: 0.5, d: 0.4, hh: 0.9 + 0.3 * (i % 2) }); }
+  I.rb = { seg, deck, on: 0 };
+  // the piers' posts either side of the bridge's foot at each end
+  for (const y of [RY - h, RY + h]) for (const s of [-1, 1]) P('block', s * (BW / 2 + 0.4), y, 0, { w: 0.6, d: 0.9, hh: 1.9, col: '#4a4842' });
+  // the circles' stones, up on their platforms
+  for (const s of [-1, 1]) for (let i = 0; i < 7; i++) { const a = i / 7 * Math.PI * 2 + 0.3; P('stone', s * RBC.CX + Math.cos(a) * (RBC.CR + 0.45), RBC.CY + Math.sin(a) * (RBC.CR + 0.45), a, { w: 0.5, d: 0.4, hh: 0.9 + 0.3 * (i % 2), lift: RBC.PH }); }
+  // one old boat, upturned on the near bank (the rest of what lies about is only to look at: rb3dClutter)
+  P('boat', -23, -27, 0.55, { len: 6.2, beam: 2.0, paint: '#3a4640' });
   // the far bank's stands, the near bank's door, rocks and the drowned's ways up out of the water
   for (const [x, y] of RBC.STANDS) L(x, y, 2.2, '#8affd0', 6);
   L(0, RBC.STONE[1], 1.6, '#7fd8ff', 7);
-  for (const s of [-1, 1]) { L(s * RBC.CX, RBC.CY, 2.4, '#ffb070', 9); P('brazier', s * (RBC.CX + RBC.CR + 1.6), RBC.CY + 1.5, 0, {}); }
+  for (const s of [-1, 1]) { L(s * RBC.CX, RBC.CY, 2.4, '#ffb070', 9); P('brazier', s * (RBC.CX + RBC.PW + 0.9), RBC.CY + 3.0, 0, {}); }
   L(0, RBC.DOOR[1] + 2, 2.6, '#c8a0ff', 8);
   L(0, -36, 3, '#ffc070', 12); L(-24, -30, 3, '#ffb060', 10); L(24, -30, 3, '#ffb060', 10); L(0, 22, 3, '#8affd0', 12); L(-20, 20, 3, '#6ad8c0', 9); L(20, 20, 3, '#6ad8c0', 9);
   for (const [x, y, r] of [[-30, -40, 2.2], [31, -44, 1.8], [-36, -20, 1.6], [37, -24, 2.0], [-18, -46, 1.4], [16, -48, 1.5], [-30, 30, 2.0], [28, 33, 2.4], [-38, 18, 1.6], [38, 14, 1.8], [-14, 34, 1.3], [17, 16, 1.2]]) P('stone', x, y, x * y, { w: r * 1.4, d: r, hh: r * 1.3 });
@@ -29021,9 +29033,10 @@ function rbSet(H, K, Z) {
 // the bridge's spans: solid where there's no plank, gone where there is (n built, from the near bank out)
 function rbSpans(n) {
   const I = FPS.g && FPS.g.isle; if (!I || !I.rb) return;
-  const want = I.rb.seg.slice(n), now = I.rb.on;
-  if (want.length === now.length) return;
-  I.solids = I.solids.filter(s => !I.rb.seg.includes(s)).concat(want); I.rb.on = want; fpiIndex(I);
+  if (n === I.rb.on) return;
+  // (a built span: its deck to walk on; one not built: the water, in the way)
+  const out = new Set(I.rb.seg.concat(I.rb.deck));
+  I.solids = I.solids.filter(s => !out.has(s)).concat(I.rb.seg.slice(n), I.rb.deck.slice(0, n)); I.rb.on = n; fpiIndex(I);
   if (typeof zmNavBuild === 'function') { zmNavBuild(); ZM.navT = 0; }
 }
 function rbDoorSolid(open) {
@@ -29045,7 +29058,7 @@ function rbTick(dt) {
   if (!RB.on) return;
   const need = rbNeed(), pl = ZM.players || [];
   // who stands in the circles (only those on their feet)
-  RB.held = [0, 1].map(i => pl.some(p => { const [lx, ly] = rbL(p.x, p.y); return rbInCircle(i, lx, ly) && (p.jz || 0) < 1; }));
+  RB.held = [0, 1].map(i => pl.some(p => { const [lx, ly] = rbL(p.x, p.y); return rbInCircle(i, lx, ly) && (p.jz || 0) < RBC.PH + 1; }));
   const held = RB.held.filter(Boolean).length;
   // the bridge: built by the kills; falling back while a circle's empty, until the helmets set it fast
   if (!RB.done) {
@@ -29094,7 +29107,7 @@ function rbTick(dt) {
   if (!RB.done) {
     const alive = ZM.z.filter(z => !z.dead && !z.boss).length, cap = RBC.ALIVE + RBC.ALIVE_MORE * Math.max(0, (ZM.hum || []).length - 1);
     RB.spawnT -= dt;
-    if (alive < cap && RB.spawnT <= 0) { RB.spawnT = rbSpawnOne() ? 1.1 + Math.random() * 0.9 : 0.5; }
+    if (alive < cap && RB.spawnT <= 0) { RB.spawnT = rbSpawnOne() ? 0.55 + Math.random() * 0.55 : 0.3; }
   }
   if (RB.warnT > 0) RB.warnT -= dt;
 }
@@ -29412,7 +29425,7 @@ function rb3dBuild(grp) {
   const wood = z3Lam('#6a4a2c'), wood2 = z3Lam('#4a3220'), rope = z3Lam('#8a7a5a');
   RB3.planks = [];
   for (let i = 0; i < RBC.SEG; i++) {
-    const p = new THREE.Group(), ly = RBC.RY - h + (i + 0.5) * RBC.SL; p.position.copy(V(0, ly, 0)); g.add(p);
+    const p = new THREE.Group(), ly = RBC.RY - h + (i + 0.5) * RBC.SL; p.position.copy(V(0, ly, RBC.DH)); g.add(p);
     for (let k = 0; k < 4; k++) { const b = new THREE.Mesh(new THREE.BoxGeometry(RBC.BW, 0.09, RBC.SL / 4 - 0.05), k % 2 ? wood : wood2); b.position.set(0, 0.05, (k - 1.5) * RBC.SL / 4); b.rotation.z = (k % 3 - 1) * 0.015; p.add(b); }
     for (const s of [-1, 1]) {
       const st = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.22, RBC.SL), wood2); st.position.set(s * (RBC.BW / 2 - 0.3), -0.1, 0); p.add(st);
@@ -29421,13 +29434,37 @@ function rb3dBuild(grp) {
     }
     RB3.planks.push(p);
   }
+  // the old piers' piles, standing up out of the water at every span's joint, whether there's a plank on them or not
+  const pile = z3Lam('#3a2a1c');
+  for (let i = 0; i <= RBC.SEG; i++) for (const s of [-1, 1]) {
+    const m = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.17, RBC.DH + 1.7, 7), pile); m.position.copy(V(s * (RBC.BW / 2 - 0.25), RBC.RY - h + i * RBC.SL, (RBC.DH - 1.7) / 2 - 0.12)); m.rotation.z = (i * 7 % 5 - 2) * 0.02; g.add(m);
+  }
+  // the steps up to the deck, at either end: stone treads
+  const tread = z3Lam('#4e4c46'), tread2 = z3Lam('#44423c');
+  for (const e of [-1, 1]) for (let k = 1; k <= 3; k++) {
+    const d = (4 - k) * 0.45, z = RBC.DH * k / 3, m = new THREE.Mesh(new THREE.BoxGeometry(RBC.BW, z, d * 2), k % 2 ? tread : tread2);
+    m.position.copy(V(0, e * (h + d), z / 2)); g.add(m);
+  }
+  // the circles' platforms: a dais of old dressed stone, a lip round its top, and steps up the south and outer sides
+  const dais = z3Lam('#55524a'), lipM = z3Lam('#6a665c');
+  for (const s of [-1, 1]) {
+    const cx = s * RBC.CX, cy = RBC.CY, w = RBC.PW, P0 = RBC.PH;
+    const b = new THREE.Mesh(new THREE.BoxGeometry(w * 2, P0, w * 2), dais); b.position.copy(V(cx, cy, P0 / 2)); g.add(b);
+    for (const [ox, oy, sx, sy] of [[0, w, w * 2 + 0.1, 0.22], [0, -w, w * 2 + 0.1, 0.22], [w, 0, 0.22, w * 2], [-w, 0, 0.22, w * 2]]) { const l = new THREE.Mesh(new THREE.BoxGeometry(sx, 0.1, sy), lipM); l.position.copy(V(cx + ox, cy + oy, P0 + 0.04)); g.add(l); }
+    for (const k of [1, 2]) {
+      const d = (3 - k) * 0.45, z = P0 * k / 3;
+      const a = new THREE.Mesh(new THREE.BoxGeometry(w * 2, z, d * 2), k % 2 ? tread : tread2); a.position.copy(V(cx, cy - w - d, z / 2)); g.add(a);
+      const o = new THREE.Mesh(new THREE.BoxGeometry(d * 2, z, 4.8), k % 2 ? tread : tread2); o.position.copy(V(cx + s * (w + d), cy - 0.6, z / 2)); g.add(o);
+    }
+  }
+  rb3dClutter(g, V);
   // the circles: a ring of fire-lit light on the ground, bright while someone stands in it
   RB3.rings = [];
   for (const s of [-1, 1]) {
     const m = new THREE.MeshBasicMaterial({ color: 0xffb070, transparent: true, opacity: 0.5, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide });
-    const r = new THREE.Mesh(new THREE.RingGeometry(RBC.CR - 0.18, RBC.CR, 48), m); r.rotation.x = -Math.PI / 2; r.position.copy(V(s * RBC.CX, RBC.CY, 0.04)); g.add(r);
+    const r = new THREE.Mesh(new THREE.RingGeometry(RBC.CR - 0.18, RBC.CR, 48), m); r.rotation.x = -Math.PI / 2; r.position.copy(V(s * RBC.CX, RBC.CY, RBC.PH + 0.04)); g.add(r);
     const fm = new THREE.MeshBasicMaterial({ color: 0xff9050, transparent: true, opacity: 0.08, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide });
-    const f = new THREE.Mesh(new THREE.CircleGeometry(RBC.CR - 0.18, 40), fm); f.rotation.x = -Math.PI / 2; f.position.copy(V(s * RBC.CX, RBC.CY, 0.035)); g.add(f);
+    const f = new THREE.Mesh(new THREE.CircleGeometry(RBC.CR - 0.18, 40), fm); f.rotation.x = -Math.PI / 2; f.position.copy(V(s * RBC.CX, RBC.CY, RBC.PH + 0.035)); g.add(f);
     RB3.rings.push({ m, fm });
   }
   // the Cutlass's stone, and the Cutlass in it, point down
@@ -29461,6 +29498,59 @@ function rb3dBuild(grp) {
   RB3.worms = new THREE.Points(pg, new THREE.PointsMaterial({ color: 0x7affd8, size: 0.12, transparent: true, opacity: 0.8, depthWrite: false, blending: THREE.AdditiveBlending, fog: false }));
   g.add(RB3.worms);
 }
+// What lies about the banks, only to look at (nothing of it in anyone's way, but the one boat rbSet puts down):
+// the bones of those the river threw up, upturned canoes, broken oars, crates and barrels, old nets and coils of
+// rope, scattered the same way every time, clear of the platforms, the bridge's steps, the stands and the paths
+function rb3dClutter(g, V) {
+  let sd = 9137; const rnd = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
+  const bone = z3Lam('#e8e0c8', { emissive: 0x1a1810 }), bone2 = z3Lam('#c0b69c', { emissive: 0x141208 }), wood = z3Lam('#5a4028'), wood2 = z3Lam('#3e2c1c'), hullC = ['#3a4a50', '#5a3a2a', '#44503a', '#2e3a44'].map(c => z3Lam(c)), iron = z3Lam('#2a2c2e'), net = z3Lam('#4a5040'), ropeM = z3Lam('#8a7a5a');
+  const clear = (x, y) => {
+    if (Math.abs(y) < RBC.RW / 2 + 1.2 || x < RBC.X0 + 1.5 || x > RBC.X1 - 1.5 || y < RBC.Y0 + 1.5 || y > RBC.Y1 - 1.5) return false;
+    if (Math.abs(Math.abs(x) - RBC.CX) < RBC.PW + 2.6 && y > RBC.CY - RBC.PW - 2.8 && y < -8) return false;          // the platforms
+    if (Math.abs(x) < 3.5 && Math.abs(y) < RBC.RW / 2 + 4.5) return false;                                         // the bridge's steps
+    if (Math.hypot(x - RBC.STONE[0], y - RBC.STONE[1]) < 3) return false;
+    if (Math.abs(x) < 4 && y < -36) return false;                                                                  // the way in and the door
+    if (RBC.STANDS.some(([sx, sy]) => Math.hypot(x - sx, y - sy) < 3)) return false;
+    if (Math.hypot(x + 23, y + 27) < 4.5) return false;                                                            // the boat
+    return true;
+  };
+  const spot = () => { for (let t = 0; t < 40; t++) { const x = RBC.X0 + rnd() * (RBC.X1 - RBC.X0), y = RBC.Y0 + rnd() * (RBC.Y1 - RBC.Y0); if (clear(x, y)) return [x, y]; } return null; };
+  const at = (o, x, y, z, a) => { o.position.copy(V(x, y, z || 0)); o.rotation.y = a || 0; g.add(o); return o; };
+  const M = (geo, mat, x, y, z, rx, ry, rz) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); m.rotation.set(rx || 0, ry || 0, rz || 0); return m; };
+  // a skeleton lying on its back, a little sprawled
+  const skeleton = () => {
+    const s = new THREE.Group(), lim = new THREE.CylinderGeometry(0.035, 0.03, 0.42, 5);
+    s.add(M(new THREE.SphereGeometry(0.12, 8, 6), bone, 0, 0.1, -0.78));
+    s.add(M(new THREE.BoxGeometry(0.06, 0.05, 0.6), bone2, 0, 0.05, -0.32));
+    for (let i = 0; i < 5; i++) { const r = M(new THREE.TorusGeometry(0.14 - i * 0.008, 0.015, 4, 10, Math.PI), bone, 0, 0.06, -0.55 + i * 0.07, -Math.PI / 2, 0, 0); s.add(r); }
+    s.add(M(new THREE.BoxGeometry(0.28, 0.06, 0.12), bone2, 0, 0.04, -0.02));
+    for (const d of [-1, 1]) {
+      const sp = rnd() * 0.6;
+      s.add(M(lim, bone, d * (0.2 + sp * 0.2), 0.04, -0.45, Math.PI / 2, 0, d * (0.4 + sp)));
+      s.add(M(lim, bone, d * (0.32 + sp * 0.35), 0.04, -0.12, Math.PI / 2, 0, d * (0.2 + sp * 0.5)));
+      s.add(M(lim, bone, d * 0.1, 0.04, 0.22, Math.PI / 2, 0, d * rnd() * 0.3));
+      s.add(M(lim, bone, d * (0.12 + rnd() * 0.15), 0.04, 0.62, Math.PI / 2, 0, d * rnd() * 0.4));
+    }
+    return s;
+  };
+  // a canoe upturned: a long shell, keel up, pointed at both ends, a little sunk in the mud
+  const canoe = () => {
+    const c = new THREE.Group(), mat = hullC[(rnd() * 4) | 0];
+    const h = M(new THREE.SphereGeometry(1, 14, 6, 0, Math.PI * 2, 0, Math.PI / 2), mat, 0, -0.04, 0); h.scale.set(0.46, 0.4, 2.0); c.add(h);
+    c.add(M(new THREE.BoxGeometry(0.05, 0.05, 3.7), wood2, 0, 0.36, 0));
+    c.add(M(new THREE.TorusGeometry(1, 0.03, 4, 24), wood2, 0, 0.0, 0, Math.PI / 2)); c.children[2].scale.set(0.47, 2.02, 1);
+    return c;
+  };
+  const oar = () => { const o = new THREE.Group(); o.add(M(new THREE.CylinderGeometry(0.03, 0.03, 1.6 + rnd(), 5), wood, 0, 0.03, 0, Math.PI / 2)); o.add(M(new THREE.BoxGeometry(0.22, 0.03, 0.55), wood, 0, 0.03, 1.0)); return o; };
+  const crate = () => { const c = new THREE.Group(), w = 0.6 + rnd() * 0.4; c.add(M(new THREE.BoxGeometry(w, w, w), wood, 0, w / 2, 0)); for (const z of [-1, 1]) c.add(M(new THREE.BoxGeometry(w * 1.02, 0.08, 0.08), wood2, 0, w * 0.5, z * w / 2)); return c; };
+  const barrel = () => { const b = new THREE.Group(), side = rnd() < 0.5; b.add(M(new THREE.CylinderGeometry(0.32, 0.36, 0.9, 10), wood, 0, side ? 0.34 : 0.45, 0, side ? Math.PI / 2 : 0)); for (const f of [-0.3, 0.3]) b.add(M(new THREE.CylinderGeometry(0.37, 0.37, 0.05, 10), iron, 0, side ? 0.34 : 0.45 + f, side ? f : 0, side ? Math.PI / 2 : 0)); return b; };
+  const netPile = () => { const n = new THREE.Group(); for (let i = 0; i < 4; i++) n.add(M(new THREE.SphereGeometry(0.5 + rnd() * 0.4, 7, 4, 0, Math.PI * 2, 0, Math.PI / 2), net, (rnd() - 0.5) * 0.9, 0, (rnd() - 0.5) * 0.9)); n.children.forEach(m => m.scale.y = 0.25); return n; };
+  const coil = () => { const c = new THREE.Group(); for (let i = 0; i < 3; i++) c.add(M(new THREE.TorusGeometry(0.32 - i * 0.03, 0.04, 5, 14), ropeM, 0, 0.04 + i * 0.06, 0, Math.PI / 2)); return c; };
+  const bones = () => { const b = new THREE.Group(); b.add(M(new THREE.SphereGeometry(0.12, 8, 6), bone, 0, 0.1, 0)); for (let i = 0; i < 6; i++) b.add(M(new THREE.CylinderGeometry(0.03, 0.025, 0.35 + rnd() * 0.2, 5), i % 2 ? bone : bone2, (rnd() - 0.5) * 0.6, 0.04, (rnd() - 0.5) * 0.6, Math.PI / 2, 0, rnd() * 3)); return b; };
+  const lot = [[skeleton, 14], [canoe, 7], [oar, 10], [crate, 9], [barrel, 9], [netPile, 6], [coil, 7], [bones, 12]];
+  RB3.clut = [];
+  for (const [mk, n] of lot) for (let i = 0; i < n; i++) { const p = spot(); if (p) { at(mk(), p[0], p[1], 0, rnd() * Math.PI * 2); RB3.clut.push([mk.name, p[0], p[1]]); } }
+}
 // the Cutlass of Plimsoll, as it lies on its stone and on the stands' bank (a simple model; the one in your hands is
 // VM_BUILD.plimsoll)
 function rb3dCutlass() {
@@ -29491,13 +29581,13 @@ function rb3dTick(dt) {
   RB3.planks.forEach((p, i) => {
     const f = i < built ? 1 : i === built ? part : 0;
     p.visible = f > 0.02;
-    p.scale.set(1, 1, Math.max(0.02, f)); p.position.y = FPSC.GROUND + (i < built ? 0 : -0.15 * (1 - f));
+    p.scale.set(1, 1, Math.max(0.02, f)); p.position.y = FPSC.GROUND + RBC.DH + (i < built ? 0 : -0.15 * (1 - f));
     p.rotation.x = 0; p.rotation.z = 0;
   });
   // the falling ones: a copy of the plank dropping into the water and away downstream
   for (const f of RB.falls) {
     if (!f.m) { const src = RB3.planks[clamp(f.i, 0, RBC.SEG - 1)]; f.m = src.clone(); f.m.scale.set(1, 1, 1); f.m.visible = true; RB3.g.add(f.m); f.y0 = src.position.y; f.x0 = src.position.x; RB3.fallen.push(f.m); }
-    const k = f.t; f.m.position.y = f.y0 - Math.min(1.8, k * k * 2.5); f.m.position.x = f.x0 + k * 3; f.m.rotation.z = k * 0.6; f.m.rotation.x = Math.sin(k * 2) * 0.3;
+    const k = f.t; f.m.position.y = f.y0 - Math.min(1.8 + RBC.DH, k * k * 2.5); f.m.position.x = f.x0 + k * 3; f.m.rotation.z = k * 0.6; f.m.rotation.x = Math.sin(k * 2) * 0.3;
     if (k > 2.4) f.m.visible = false;
   }
   while (RB3.fallen.length > 12) { const m = RB3.fallen.shift(); RB3.g.remove(m); }
