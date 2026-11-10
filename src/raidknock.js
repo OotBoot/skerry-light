@@ -10,6 +10,11 @@
 //      the cleave: the bat up over its head and down, and the floor splits in a line towards you (two knocks; step
 //        off the line);
 //      the throw: it hurls the bat at you end over end, and it comes back to its hand (one knock going, one coming).
+//  - Its song: at three quarters, half and a quarter of its strength it stands and sings, beating the bat into its
+//    other hand (15 s). While it sings a shot barely hurts it (a tenth), and a bar fills under its own: if the song is
+//    sung through, the whole squad is killed. Every hit fills a break meter instead; fill it and the song's broken and
+//    the Knock is knocked senseless for a moment. Its weight is set so a full squad, shooting well, breaks it about nine
+//    seconds in (RFK.BRK: 48 alone, 40 more for each of you after).
 // A boss kind on src/zmboss.js's framework (ZBT.knock), host-authoritative like the rest: each player judges its blows
 // on themselves (judge), from the blow and how far into it it is, and where it's aimed (ix, iy; ax, ay).
 
@@ -20,10 +25,12 @@ const RFK = {
   CLEAVE_L: 26, CLEAVE_W: 1.4, CLEAVE_V: 34,   // (the cleave's line: how long, how wide, how fast it splits)
   HURL_OUT: 0.85, HURL_R: 1.5, HURL_MAX: 30, HURL_H: 2.2,   // (the throw: each way's time, how near counts, how far, how high)
   AT: [0, 4], DEEP: -9.5,   // (where it comes up: local x, y; how far under the flagstones it starts)
+  SONG_AT: [0.75, 0.5, 0.25], SONG: 15, SONG_HURT: 0.1, BEAT: 0.5, DAZED: 3.2,   // (its song: at which strengths, how long, how little a shot hurts it meanwhile)
+  BRK: 48, BRK_MORE: 40,   // (what breaks the song: damage, alone; and for each of you after)
 };
-const RFK_T = { emerge: { hit: 99, end: 3.6 }, bat: { hit: 0.8, end: 1.6 }, knocks: { hit: 0.85, end: 2.9 }, cleave: { hit: 1.3, end: 2.6 }, hurl: { hit: 0.8, end: 0.8 + RFK.HURL_OUT * 2 + 0.45 }, smash: { hit: 0.8, end: 1.3 } };
+const RFK_T = { song: { hit: RFK.SONG, end: RFK.SONG + 0.4 }, dazed: { hit: 99, end: RFK.DAZED }, emerge: { hit: 99, end: 3.6 }, bat: { hit: 0.8, end: 1.6 }, knocks: { hit: 0.85, end: 2.9 }, cleave: { hit: 1.3, end: 2.6 }, hurl: { hit: 0.8, end: 0.8 + RFK.HURL_OUT * 2 + 0.45 }, smash: { hit: 0.8, end: 1.3 } };
 ZB_KINDS.push('knock');
-for (const a of ['emerge', 'bat', 'knocks', 'cleave', 'hurl']) if (!ZB_ACT.includes(a)) ZB_ACT.push(a);
+for (const a of ['emerge', 'bat', 'knocks', 'cleave', 'hurl', 'song', 'dazed']) if (!ZB_ACT.includes(a)) ZB_ACT.push(a);
 
 // where its thrown bat is at time t into the throw (null while it's in its hand): out to the mark and back
 function rfkBatAt(z, t) {
@@ -50,9 +57,11 @@ ZBT.knock = {
   arriveLine: () => 'Three knocks on wood, and up through the flagstones of the Plaza: the Knock, Maren’s bat. Put it down, and she comes.',
   smashLine: () => '',
   killLine: (who, pts) => `${who} split the Knock (+${pts}).`,
-  init(z) { z.kCd = 3; z.last = ''; },
-  cool(z, dt) { if (z.kCd > 0) z.kCd -= dt; },
+  init(z) { z.kCd = 3; z.last = ''; z.songN = 0; z.songCd = 0; z.brk = 0; z.brkMax = 1; },
+  cool(z, dt) { if (z.kCd > 0) z.kCd -= dt; if (z.songCd > 0) z.songCd -= dt; },
   think(z, p, d, dz, level) {
+    // (at three quarters, half and a quarter of its strength: its song)
+    if (z.songN < RFK.SONG_AT.length && z.songCd <= 0 && z.hp / z.max <= RFK.SONG_AT[z.songN]) return 'song';
     if (level && d < RFK.BAT - 0.6 && z.swCd <= 0) return 'bat';
     if (z.kCd > 0) return null;
     const can = [];
@@ -66,6 +75,8 @@ ZBT.knock = {
   start(z, act, p) {
     if (act === 'bat') { z.swCd = 2.2 + Math.random() * 0.6; return; }
     if (act === 'emerge') return;
+    if (act === 'song') { z.songN++; z.brk = 0; z.brkMax = RFK.BRK + RFK.BRK_MORE * (rfN() - 1); return; }
+    if (act === 'dazed') { z.swCd = Math.max(z.swCd, 1); z.kCd = Math.max(z.kCd, 2); return; }
     z.last = act; z.kCd = 3.2 + Math.random() * 2.2; z.swCd = Math.max(z.swCd, 1);
     z.ax = z.x; z.ay = z.y;
     if (act === 'knocks') { z.ix = z.x + Math.sin(z.h) * RFK.KNOCK_AT + Math.cos(z.h) * RFK.KNOCK_SIDE; z.iy = z.y + Math.cos(z.h) * RFK.KNOCK_AT - Math.sin(z.h) * RFK.KNOCK_SIDE; }
@@ -79,6 +90,9 @@ ZBT.knock = {
       if (Math.random() < dt * 40) { const a = Math.random() * 6.283, r = 1 + Math.random() * 2.6; fpsPuff(z.x + Math.cos(a) * r, z.y + Math.sin(a) * r, FPSC.GROUND + 0.2 + Math.random() * 1.5, '140,120,100', 3); }
       return;
     }
+    // (singing: broken once its break meter's full)
+    if (z.act === 'song') { ZBT.knock.judge(z, was, z.at); if (z.brk >= z.brkMax) { rfkBroken(z); zbStart(z, 'dazed'); } return; }
+    if (z.act === 'dazed') return;
     const p = nearest(z.x, z.y, z.jz), T = RFK_T[z.act];
     if (p && T) {
       if (z.act === 'bat' && z.at < T.hit * 0.7) z.h += angDiff(bearingOf(p.x - z.x, p.y - z.y), z.h) * Math.min(1, dt * 4);
@@ -90,8 +104,14 @@ ZBT.knock = {
   },
   // (on every screen, for its own player) what its blows did between at0 and at1
   judge(z, at0, at1) {
-    if (z.kSeq !== z.aseq) { z.kSeq = z.aseq; z.kh = 0; z.ks = 0; }
+    if (z.kSeq !== z.aseq) { z.kSeq = z.aseq; z.kh = 0; z.ks = 0; z.sb = -1; }
     const m = FPS.me, ok = zbOk(), G0 = FPSC.GROUND, dm = Math.hypot(z.x - m.x, z.y - m.y);
+    if (z.act === 'song') {
+      // (its song, beat by beat: a note, and the bat into its hand)
+      const b = Math.floor(at1 / RFK.BEAT);
+      if (b !== z.sb && b < RFK_SONG.length) { z.sb = b; rfkSing(b, dm); }
+      return;
+    }
     if (z.act === 'knocks') {
       const iz = zmFloorAt(z.ix, z.iy, 12, 0.3), d = Math.hypot(m.x - z.ix, m.y - z.iy);
       RFK.WAVES.forEach((ti, i) => {
@@ -125,6 +145,7 @@ ZBT.knock = {
   },
   strike(z) {
     const m = FPS.me, d = Math.hypot(z.x - m.x, z.y - m.y), G0 = FPSC.GROUND;
+    if (z.act === 'song') { rfkSongEnd(); return; }
     if (z.act === 'bat') {
       rfkSound('bat', d);
       if (zbOk() && d < RFK.BAT && Math.abs(angDiff(bearingOf(m.x - z.x, m.y - z.y), z.h)) < RFK.BAT_ARC && Math.abs((m.jz || 0) - (z.jz || 0)) < 1.6) { rfkHurt(1, z.x, z.y); rfkSound('thwack', 0); }
@@ -138,10 +159,23 @@ ZBT.knock = {
     }
     if (z.act === 'hurl') rfkSound('hurl', d);
   },
-  after(z, a) { if (a === 'emerge') { z.st = 'in'; z.jz = z.fl = 0; zmSettle(z); z.kCd = 1.5; } },
-  hurtK: (z, how) => how === 'burn' ? 0.6 : 1,
+  after(z, a) { if (a === 'dazed') z.songCd = 6; if (a === 'emerge') { z.st = 'in'; z.jz = z.fl = 0; zmSettle(z); z.kCd = 1.5; } },
+  // (singing, a shot barely hurts it and goes to its break meter instead)
+  hurtK(z, how, dmg) {
+    const k = how === 'burn' ? 0.6 : 1;
+    if (z.act !== 'song') return k;
+    if (dmg > 0 && how !== 'lamp') z.brk += dmg * k;
+    return k * RFK.SONG_HURT;
+  },
+  // (the bar under its own while it sings: the song, and how near it is to breaking)
+  songBar: z => z.act === 'song' && !z.dead ? { k: clamp((z.at || 0) / RFK.SONG, 0, 1), c: '#d0304a', b: clamp(RF.kbrk || 0, 0, 1), bc: '#ffe08a' } : null,
   endOf: (z, act) => RFK_T[act] ? RFK_T[act].end : 0,
-  actSound(z, act) { const d = Math.hypot(z.x - FPS.me.x, z.y - FPS.me.y); if (act === 'emerge') rfkSound('arrive', d); else if (act === 'cleave') rfkSound('raise', d); },
+  actSound(z, act) {
+    const d = Math.hypot(z.x - FPS.me.x, z.y - FPS.me.y);
+    if (act === 'emerge') rfkSound('arrive', d); else if (act === 'cleave') rfkSound('raise', d);
+    else if (act === 'song') { ZM.banner = { text: 'The Knock’s Song', t: 3, col: '#ff7a7a', sub: 'shoot it to break the song, or it’s the end of all of you' }; fpsFeed('The Knock begins to sing. Break its song before it ends.'); rfkSound('song', d); }
+    else if (act === 'dazed' && ZM.net === 'client') rfkBroken(z);
+  },
   sound: (k, d) => rfkSound(k, d),
   build: () => rfBuildKnock(),
   reset(z, M) { M.root.rotation.set(0, 0, 0); M.root.visible = true; M.bat.visible = true; },
@@ -166,6 +200,37 @@ function rfkSound(k, d) {
   if (k === 'raise') { play('creak', 0.9); return; }
   if (k === 'cleave') { play('slam', 1); play('debris', 1); play('explode', 0.35); return; }
   if (k === 'die') { play('debris', 1); play('board', 1); knock(0.9, 0.5); return; }
+  if (k === 'song') { knock(0.8, 0.22); return; }
+  if (k === 'broken') { play('board', 1); play('slam', 0.7); return; }
+  if (k === 'songend') { knock(1, 0.45); play('thunder', 1); try { if (typeof sfxSting === 'function') sfxSting(); } catch (e) {} return; }
+}
+
+// ---------- its song ----------
+// four lines, a beat each half second (MIDI notes; 0 a rest), and the words
+const RFK_SONG = [64, 64, 62, 60, 62, 64, 57, 0, 64, 64, 62, 60, 59, 57, 59, 0, 64, 67, 65, 64, 62, 60, 62, 0, 60, 59, 57, 59, 60, 57];
+const RFK_WORDS = ['Knock once for the lantern,', 'knock twice for the tide,', 'knock three for the sailor', 'who sleeps down inside.'];
+function rfkSing(b, d) {
+  const v = clamp(1 - (d || 0) / 70, 0.25, 1), n = RFK_SONG[b];
+  try {
+    if (typeof tone === 'function') {
+      if (n) { const f = 440 * Math.pow(2, (n - 69) / 12); tone(f, 'triangle', 0.02, 0.13 * v, 0.42); tone(f / 2, 'sine', 0.02, 0.08 * v, 0.45); tone(f * 1.005, 'sawtooth', 0.04, 0.02 * v, 0.35); }
+      // (the bat into its hand)
+      tone(150, 'triangle', 0.002, 0.22 * v, 0.1, { to: 90 }); if (typeof noise === 'function') noise('bandpass', 900, 3, 0.002, 0.12 * v, 0.06);
+    }
+  } catch (e) {}
+}
+// its song broken: it's knocked senseless (on every screen)
+function rfkBroken(z) {
+  ZM.banner = { text: 'The song is broken', t: 2.6, col: '#ffe08a', sub: 'the Knock reels', small: true };
+  fpsFeed('The Knock’s song is broken. It reels, senseless.');
+  rfkSound('broken', Math.hypot(z.x - FPS.me.x, z.y - FPS.me.y));
+}
+// its song sung through: the end of all of you (the host's word ends the night for everyone)
+function rfkSongEnd() {
+  ZM.banner = { text: 'Knock, knock, knock', t: 5, col: '#ff5a6a', sub: 'the Knock’s song is sung' };
+  fpsFeed('The Knock’s song is sung. Knock, knock, knock.');
+  rfkSound('songend', 0);
+  if (ZM.net !== 'client' && typeof zmEnd === 'function') { ZM.perks = {}; zmEnd(); }
 }
 
 // ---------- its model: built after its picture ----------
@@ -288,7 +353,22 @@ function rfPoseKnock(z, M, dt) {
   // arms: [shoulder x (forward), shoulder z (out), elbow x (bend)]; the bat in its right hand: [x, z] in the hand
   let crouch = 0, R = [0.2 - st * 0.2, 0.2, 0.25], L = [st * 0.35, -0.2, 0.25], B = [0.4, -0.6];   // (its bat hangs down across it, as in its picture)
   if (act === 'emerge') { R = [-0.4, 0.9, 0.6]; L = [-0.4, -0.9, 0.6]; B = [0.4, 0]; }
-  else if (act === 'bat') {
+  else if (act === 'song') {
+    // (singing: its bat beaten into its other hand on every beat, swaying, its mouth working)
+    const u = (at % RFK.BEAT) / RFK.BEAT, hit = u < 0.18 ? 1 - u / 0.18 : 0, lift = Math.sin(Math.min(1, u / 0.85) * Math.PI);
+    R = [1.0 + 0.35 * lift, 0.35, 0.9 - 0.3 * lift]; B = [1.3 + 0.5 * lift, 0.9];
+    L = [1.15, -0.35, 1.0 - 0.1 * hit];
+    M.torso.rotation.z += Math.sin(at * Math.PI / (RFK.BEAT * 2)) * 0.07 * sw;
+    M.torso.rotation.x = -0.05 * hit;
+    LR = [0.05, 0.05 + 0.1 * hit]; LL = [-0.05, 0.05 + 0.1 * hit];
+    M.mouth.scale.set(1, 1 + 0.9 * Math.abs(Math.sin(at * Math.PI / RFK.BEAT)), 1);
+  } else if (act === 'dazed') {
+    // (knocked senseless: slumped, arms hanging, the bat's point on the stones, swaying)
+    const k = zbE(Math.min(1, at / 0.4)) * (1 - zbE(clamp((at - RFK.DAZED + 0.6) / 0.6, 0, 1)));
+    R = [0.15, 0.25 * k + 0.2, 0.1]; L = [0.1, -0.3 * k - 0.2, 0.1]; B = [zbL(0.4, 0.1, k), zbL(-0.6, 0, k)];
+    M.torso.rotation.x = 0.25 * k; M.torso.rotation.z += Math.sin(at * 3) * 0.12 * k;
+    crouch = 0.3 * k;
+  } else if (act === 'bat') {
     // (wound back, then flat across, then through)
     const T = RFK_T.bat, wind = zbE(Math.min(1, at / (T.hit - 0.12))), go = zbE(clamp((at - T.hit + 0.12) / 0.3, 0, 1)), back = zbE(clamp((at - T.hit - 0.3) / (T.end - T.hit - 0.3), 0, 1));
     // (low, at the height of a man: bent at the knees, its arm out and down, its whole body turning)
@@ -326,7 +406,10 @@ function rfPoseKnock(z, M, dt) {
   for (const [i, A] of [LR, LL].entries()) { M.legs[i].hp.rotation.set(-A[0], 0, 0); M.legs[i].kn.rotation.set(A[1], 0, 0); M.legs[i].ft.rotation.set(-A[0] + A[1] * 0.4 - (A[1] * 0.0), 0, 0); }
   // its eyes: rolling about, and on you when it swings
   const look = act ? 0 : Math.sin(t * 0.9 + z.seed) * 0.008;
-  for (const e of M.eyes) e.ir.position.set(look, Math.sin(t * 0.6) * 0.004, -0.021);
+  if (act !== 'song') M.mouth.scale.set(1, 1, 1);
+  // (dazed: its eyes roll round)
+  if (act === 'dazed') M.eyes.forEach((e, i) => e.ir.position.set(Math.cos(t * 9 + i * 3) * 0.009, Math.sin(t * 9 + i * 3) * 0.009, -0.021));
+  else for (const e of M.eyes) e.ir.position.set(look, Math.sin(t * 0.6) * 0.004, -0.021);
   // a pale flash where a shot lands
   const flash = z.hitT > 0 ? Math.min(1, z.hitT / 0.15) : 0;
   M.wood.emissive.setRGB(flash * 0.35, flash * 0.25, flash * 0.15); M.limbM.emissive.setRGB(flash * 0.3, flash * 0.2, flash * 0.1);

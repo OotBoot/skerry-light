@@ -275,7 +275,7 @@ function zbMelee(z, reach, arc, dmg) {
 
 // ---------- hurting them, and putting them down (hosting, or alone) ----------
 // from zmHurt: what a hit does to one (the Black Spot doesn't kill outright; each takes the rest its own way)
-function zbHurtK(z, dmg, how) { return dmg * (ZM.insta > 0 ? 3 : 1) * zbT(z).hurtK(z, how); }
+function zbHurtK(z, dmg, how) { return dmg * (ZM.insta > 0 ? 3 : 1) * zbT(z).hurtK(z, how, dmg); }
 // a Lamp Flash only scorches them
 function zbFlash(z) { if (zbT(z).noFlash && zbT(z).noFlash(z)) return; z.hp = Math.max(1, z.hp - z.max * 0.2); z.scorch = 1; z.hitT = 0.3; }
 // from zmKill: its reward, and its salvage
@@ -405,6 +405,15 @@ function zbHud(phone, top) {
     ctx.fillStyle = gr; ctx.fillRect(x0, y0, bw * frac, bh);
     // (its big blow coming: the bar's edge burns)
     if (b.act && b.act === T.big && !b.dead && (b.at || 0) < (T.warnT || zbActT(b).hit)) { ctx.strokeStyle = `rgba(${T.warn},${0.5 + 0.5 * Math.sin(g.t * 20)})`; ctx.lineWidth = 2; ctx.strokeRect(x0 - 2, y0 - 2, bw + 4, bh + 4); }
+    // [raid3] a second bar under it (the Knock's song: how far it's sung; under that, how near it is to breaking)
+    const sb = T.songBar && T.songBar(b);
+    if (sb) {
+      const sy = y0 + bh + 5, sh = Math.max(4, Math.round(bh * 0.8));
+      ctx.fillStyle = 'rgba(8,10,14,0.75)'; ctx.fillRect(x0 - 2, sy - 2, bw + 4, sh + 9);
+      ctx.fillStyle = sb.c; ctx.fillRect(x0, sy, bw * sb.k, sh);
+      ctx.fillStyle = sb.bc; ctx.fillRect(x0, sy + sh + 2, bw * sb.b, 3);
+      y0 += sh + 14;
+    }
     y0 += bh + gap;
   }
   ctx.globalAlpha = 1;

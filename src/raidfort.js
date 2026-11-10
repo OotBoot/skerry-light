@@ -389,6 +389,7 @@ function rfTick(dt) {
   } else if (RF.st === 'knock') {
     // the Knock keeps to the Plaza and the Battery too
     const K = ZM.z.find(z => z.zn === RF.kz);
+    RF.kbrk = K && K.act === 'song' ? K.brk / K.brkMax : 0;
     if (K && !K.dead && K.act !== 'emerge') { const B = RFC.BOX; K.x = clamp(K.x, FPSC.CX + B[0], FPSC.CX + B[1]); K.y = clamp(K.y, FPSC.CY + B[2], FPSC.CY + B[3]); }
   } else if (RF.st === 'anger') {
     RF.wait -= dt; if (RF.wait <= 0) rfMaren();
@@ -533,7 +534,7 @@ function rfPack(o) {
   if (!RF.on) return;
   const CX = FPSC.CX, CY = FPSC.CY, r10 = v => Math.round(v * 10);
   o.f = [RF_ST.indexOf(RF.st), RF_APO_IDS.reduce((a, k, i) => a + (RF.apo[k] | 0) * Math.pow(3, i), 0), r10(RF.vul), RF.orbUp ? 1 : 0, r10(RF.orb[0] - CX), r10(RF.orb[1] - CY), r10(RF.orb[2]),
-    RF.tok ? 1 : 0, RF.tok ? r10(RF.tok[0] - CX) : 0, RF.tok ? r10(RF.tok[1] - CY) : 0, RF.tok ? r10(RF.tok[2]) : 0, RF.mz | 0].concat(RF_APO_IDS.map(k => RF.apoZ[k] | 0));
+    RF.tok ? 1 : 0, RF.tok ? r10(RF.tok[0] - CX) : 0, RF.tok ? r10(RF.tok[1] - CY) : 0, RF.tok ? r10(RF.tok[2]) : 0, RF.mz | 0].concat(RF_APO_IDS.map(k => RF.apoZ[k] | 0), [Math.round(clamp(RF.kbrk || 0, 0, 1) * 1000)]);
 }
 // (joined) the host's word of it: and what's changed is shown here as it would be there
 function rfApply(o) {
@@ -553,7 +554,7 @@ function rfApply(o) {
   RF.orbS = [CX + f[4] / 10, CY + f[5] / 10, f[6] / 10];
   if (!RF.orbUp) RF.orb = RF.orbS.slice();
   RF.tok = f[7] ? [CX + f[8] / 10, CY + f[9] / 10, f[10] / 10] : null;
-  RF.mz = f[11] | 0; RF.st = st;
+  RF.mz = f[11] | 0; RF.st = st; RF.kbrk = (f[15] || 0) / 1000;
 }
 
 // =====================================================================================================================
@@ -791,8 +792,16 @@ function rfHud(phone, mono, fell) {
     line(`The apothecaries’ keepers: ${down} of 3 put down`, top, 'rgba(255,214,140,0.9)');
     RF_APO_IDS.forEach((k, i) => line(`${RF.apo[k] === 2 ? '✓' : RF.apo[k] === 1 ? '•' : '◦'} ${RF_APOS[k].n.replace(/^the /, '')}${RF.apo[k] === 1 ? ' · awake' : ''}`, top + (i + 1) * (phone ? 13 : 16), RF.apo[k] === 2 ? 'rgba(236,228,207,0.4)' : RF_APOS[k].c));
   } else if (RF.st === 'knock') {
-    line('The Knock, Bat of Maren', top, 'rgba(240,180,110,0.95)', fell(phone ? 15 : 20));
-    line('Put it down, and Maren comes', top + (phone ? 20 : 26), 'rgba(240,200,150,0.8)');
+    const K = ZM.z.find(z => z.zn === RF.kz && !z.dead);
+    if (K && K.act === 'song') {
+      // (its song: the words, line by line, and what to do)
+      line('The Knock sings: shoot it to break its song', top, `rgba(255,120,130,${0.8 + 0.2 * Math.sin(t * 8)})`, fell(phone ? 15 : 20));
+      const li = Math.min(3, Math.floor((K.at || 0) / RFK.SONG * 4));
+      RFK_WORDS.forEach((w, i) => line(w, top + (phone ? 20 : 26) + i * (phone ? 13 : 17), i === li ? 'rgba(255,214,200,0.95)' : i < li ? 'rgba(255,214,200,0.4)' : 'rgba(255,214,200,0.15)', `italic ${phone ? 11 : 14}px "IM Fell English", serif`));
+    } else {
+      line('The Knock, Bat of Maren', top, 'rgba(240,180,110,0.95)', fell(phone ? 15 : 20));
+      line('Put it down, and Maren comes', top + (phone ? 20 : 26), 'rgba(240,200,150,0.8)');
+    }
   } else if (RF.st === 'anger') {
     if (RF.angered) line('Maren is angered', top, `rgba(255,110,120,${0.8 + 0.2 * Math.sin(t * 8)})`, fell(phone ? 15 : 20));
   } else if (RF.st === 'maren') {
