@@ -19390,7 +19390,7 @@ function zmFrame(dt) {
       // patched up quickly, if they leave you alone for a few seconds
       FPS.calm = (FPS.calm || 0) + dt;
       const max = ZM.perks.stout ? ZMC.HP_STOUT : ZMC.HP;
-      if (m.dead <= 0 && !zmIsDown() && m.hp < max && FPS.calm > (ZM.perks.grog ? 1.6 : 3.2) && !(typeof RAID !== 'undefined' && RAID.on && !(raidStage() || {}).mend)) m.hp = max;   // [raid] (there, unless the part says so, only a lit brazier mends you)
+      if (m.dead <= 0 && !zmIsDown() && m.hp < max && FPS.calm > (ZM.perks.grog ? 1.6 : 3.2) * (typeof RAID !== 'undefined' && RAID.on ? 0.7 : 1) && !(typeof RAID !== 'undefined' && RAID.on && !(raidStage() || {}).mend)) m.hp = max;   // [raid] (there, unless the part says so, only a lit brazier mends you)
       if (ZM.downT > 0) zmDownTick(dt);
       if (m.cd > 0) m.cd -= dt;
       if (m.reload > 0) { m.reload -= dt; if (m.reload <= 0) { m.reload = 0; zmReloaded(); } }
@@ -28369,7 +28369,7 @@ function raidHud(phone, mono, fell) {
 // under the Swallow to the door. Falling in the Swallow you come down no quicker than FALL (so it takes about half a
 // minute). Braziers: LIT_R, how far a lit one's light reaches; in it you mend MEND a second and outside it (below) the
 // dark takes DRAIN a second. NEED of them sent back inside RING of the arena's middle open the door.
-const RSW = { SEA: 250, DECK: 253, CEIL: 30, HOLE: [-11, 11, 13, 35], FALL: 8.4, LIT_R: 7.5, MEND: 0.9, DRAIN: 0.2, NEED: 20, RING: 13, USE: 1.1, GAP: 3.4 };
+const RSW = { SEA: 250, DECK: 253, CEIL: 30, HOLE: [-11, 11, 13, 35], FALL: 8.4, LIT_R: 7.5, MEND: 1.2, DRAIN: 0.2, NEED: 20, RING: 13, USE: 1.1, GAP: 3.4 };
 // The path: [x, y, half its width, what's there] from the island's middle, from the cap behind where you land to the
 // cap with the door in it; b, a brazier; a, the arena before the door (two more braziers at its sides). Between each
 // two, a narrower stretch a little off the straight line (laid in rswGeo).
@@ -30465,6 +30465,10 @@ const RCL = { cls: null, run: null, picking: false, gT: 0, uK: 0, ultT: 0, shots
   proj: [], clouds: [], wells: [], quakes: [], ev: [], eseq: 0, seen: {}, healT: 0, upT: 0, padWas: null, padCur: 0 };
 try { const c = localStorage.getItem('skerry-raid-class'); if (RCL_CLASSES[c]) RCL.last = c; } catch (e) {}
 Object.assign(ZM_DMG, { M: 1, B: 1, A: 1, U: 1, Q: 1 });
+// Maren's End: six knocks to go down instead of three (twelve with Stout Heart), wherever the game asks how many
+{ const raid = () => typeof RAID !== 'undefined' && RAID.on;
+  Object.defineProperty(ZMC, 'HP', { get: () => raid() ? 6 : 3, configurable: true });
+  Object.defineProperty(ZMC, 'HP_STOUT', { get: () => raid() ? 12 : 6, configurable: true }); }
 const rclOn = () => typeof RAID !== 'undefined' && RAID.on && FPS.on && FPS.zm;
 const rclC = () => RCL_CLASSES[RCL.cls] || null;
 const rclHp = () => typeof zmHp === 'function' ? zmHp(Math.max(1, ZM.round || 1)) : 4;

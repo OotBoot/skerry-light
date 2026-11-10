@@ -2080,7 +2080,7 @@ function zmFrame(dt) {
       // patched up quickly, if they leave you alone for a few seconds
       FPS.calm = (FPS.calm || 0) + dt;
       const max = ZM.perks.stout ? ZMC.HP_STOUT : ZMC.HP;
-      if (m.dead <= 0 && !zmIsDown() && m.hp < max && FPS.calm > (ZM.perks.grog ? 1.6 : 3.2) && !(typeof RAID !== 'undefined' && RAID.on && !(raidStage() || {}).mend)) m.hp = max;   // [raid] (there, unless the part says so, only a lit brazier mends you)
+      if (m.dead <= 0 && !zmIsDown() && m.hp < max && FPS.calm > (ZM.perks.grog ? 1.6 : 3.2) * (typeof RAID !== 'undefined' && RAID.on ? 0.7 : 1) && !(typeof RAID !== 'undefined' && RAID.on && !(raidStage() || {}).mend)) m.hp = max;   // [raid] (there, unless the part says so, only a lit brazier mends you)
       if (ZM.downT > 0) zmDownTick(dt);
       if (m.cd > 0) m.cd -= dt;
       if (m.reload > 0) { m.reload -= dt; if (m.reload <= 0) { m.reload = 0; zmReloaded(); } }

@@ -322,7 +322,7 @@ function raidHud(phone, mono, fell) {
 // under the Swallow to the door. Falling in the Swallow you come down no quicker than FALL (so it takes about half a
 // minute). Braziers: LIT_R, how far a lit one's light reaches; in it you mend MEND a second and outside it (below) the
 // dark takes DRAIN a second. NEED of them sent back inside RING of the arena's middle open the door.
-const RSW = { SEA: 250, DECK: 253, CEIL: 30, HOLE: [-11, 11, 13, 35], FALL: 8.4, LIT_R: 7.5, MEND: 0.9, DRAIN: 0.2, NEED: 20, RING: 13, USE: 1.1, GAP: 3.4 };
+const RSW = { SEA: 250, DECK: 253, CEIL: 30, HOLE: [-11, 11, 13, 35], FALL: 8.4, LIT_R: 7.5, MEND: 1.2, DRAIN: 0.2, NEED: 20, RING: 13, USE: 1.1, GAP: 3.4 };
 // The path: [x, y, half its width, what's there] from the island's middle, from the cap behind where you land to the
 // cap with the door in it; b, a brazier; a, the arena before the door (two more braziers at its sides). Between each
 // two, a narrower stretch a little off the straight line (laid in rswGeo).
