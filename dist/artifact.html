@@ -1131,6 +1131,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
         <button class="primary" id="fpsPlay" type="button">Go ashore</button>
         <button class="tool wcrateBtn" id="wcrateBtn" type="button">Weapon crates</button>
         <button class="tool ocrateBtn" id="ocrateBtn" type="button">Outfit crates</button>
+        <button class="tool shareBtn" id="fpsShare" type="button" data-mode="wreckers">Share invite</button>
         <button class="tool" id="fpsSettings" type="button">Settings</button>
       </div>
       <section class="together" aria-labelledby="fpsTogetherHead">
@@ -1175,7 +1176,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
           <ol class="warlobbylist" id="warLobbyList"></ol>
           <label class="warmpbots" id="warMpBotsRow">Bot nations <output id="warMpBotsOut">16</output><input id="warMpBots" type="range" min="0" max="50" value="16"></label>
           <p class="muted" id="warLobbyMsg"></p>
-          <div class="btnrow"><button class="primary" id="warMpStart" type="button">Start the war</button><button class="tool" id="warMpLeave" type="button">Leave</button></div>
+          <div class="btnrow"><button class="primary" id="warMpStart" type="button">Start the war</button><button class="tool shareBtn" id="warMpShare" type="button" data-mode="war">Share invite</button><button class="tool" id="warMpLeave" type="button">Leave</button></div>
         </div>
       </section>
       <details class="howto">
@@ -1218,7 +1219,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
           <h3 id="zmLobbyHead">Your night</h3>
           <ol class="warlobbylist" id="zmLobbyList"></ol>
           <p class="muted" id="zmLobbyMsg"></p>
-          <div class="btnrow"><button class="primary" id="zmMpStart" type="button">Start the night</button><button class="tool" id="zmMpLeave" type="button">Leave</button></div>
+          <div class="btnrow"><button class="primary" id="zmMpStart" type="button">Start the night</button><button class="tool shareBtn" id="zmMpShare" type="button" data-mode="lighthouse">Share invite</button><button class="tool" id="zmMpLeave" type="button">Leave</button></div>
         </div>
       </section>
       <details class="howto">
@@ -1260,7 +1261,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
           <h3 id="rdLobbyHead">Your raid</h3>
           <ol class="warlobbylist" id="rdLobbyList"></ol>
           <p class="muted" id="rdLobbyMsg"></p>
-          <div class="btnrow"><button class="primary" id="rdMpStart" type="button">Start the raid</button><button class="tool" id="rdMpLeave" type="button">Leave</button></div>
+          <div class="btnrow"><button class="primary" id="rdMpStart" type="button">Start the raid</button><button class="tool shareBtn" id="rdMpShare" type="button" data-mode="raid">Share invite</button><button class="tool" id="rdMpLeave" type="button">Leave</button></div>
         </div>
       </section>
       <details class="howto">
@@ -1365,7 +1366,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
         <label for="inviteLink">Invite link</label>
         <div class="inviterow">
           <input id="inviteLink" type="text" readonly>
-          <button class="tool" id="inviteCopy" type="button">Copy link</button>
+          <button class="tool" id="inviteCopy" type="button">Share invite</button>
         </div>
       </div>
       <div class="score" id="crewScore" hidden>
@@ -10240,7 +10241,7 @@ async function netInit() {
   if (typeof room.onConnection === 'function') room.onConnection(c => { NET.connected = c; renderNetBanner(); }, () => {});
   room.presence({ app: 'skerry', sid: NET.sid, crew: null, nick: NET.nick || null }).catch(() => {});
   renderTogether();
-  // an invite link no longer joins by itself: the title screen shows the invite and you tap Join
+  // an invite link (src/share.js) puts you straight into its crew once the crew is seen here
 }
 
 function onPeersChange(change) {
@@ -10864,13 +10865,13 @@ function renderCrewCard() {
   const title = $('crewTitle'), text = $('crewText'), page = $('crewLog');
   page.hidden = true;
   $('crewScore').hidden = true;
-  // invite: a link on our own site; on claude.ai friends pick the crew from the list
+  // invite: a link that drops a friend straight into this crew (on claude.ai, the page itself: they pick the crew from the list)
   const inv = $('inviteRow');
-  inv.hidden = !(NET.via === 'server' && (!NET.launch || r));
-  if (!inv.hidden) $('inviteLink').value = location.origin + location.pathname + '#' + NET.crew;
+  inv.hidden = !(!NET.launch || r);
+  if (!inv.hidden) $('inviteLink').value = shareUrl('sail', NET.crew);
   if (!NET.launch) {
     title.textContent = 'Crew Forming';
-    text.textContent = 'Send the invite to up to seven friends. They join from the title screen by picking crew ' + NET.crew.toUpperCase() + '. Everyone sails their own ship through the same skerries. Ships close together keep Maren back, and a bell rung near a crewmate drives her away from both of you.';
+    text.textContent = 'Send the invite to up to seven friends. The link puts them straight into crew ' + NET.crew.toUpperCase() + '. Everyone sails their own ship through the same skerries. Ships close together keep Maren back, and a bell rung near a crewmate drives her away from both of you.';
   } else if (!r) {
     title.textContent = statusWord(NET.st) === 'In harbour' ? 'Safe in Harbour' : 'Lost at Sea';
     const race = NET.race && NET.race.voy === voy && NET.st === 'port' ? (NET.race.first ? ' Fastest so far: if nobody beats your time, the +' + NET.race.bonus + ' crate bonus is yours when the voyage ends.' : ' A crewmate has a faster time.') : '';
@@ -10966,17 +10967,7 @@ $('chatForm').addEventListener('submit', e => {
   e.preventDefault();
   if (sendChat($('chatInput').value)) $('chatInput').value = '';
 });
-$('inviteCopy').addEventListener('click', () => {
-  const field = $('inviteLink'), btn = $('inviteCopy');
-  const done = () => { btn.textContent = 'Copied'; setTimeout(() => { btn.textContent = 'Copy link'; }, 1600); };
-  try {
-    const fail = () => {
-      if (navigator.share) { navigator.share({ url: field.value, title: 'Skerry Light crew' }).catch(() => {}); return; }
-      field.select(); btn.textContent = 'Copy it from the box'; setTimeout(() => { btn.textContent = 'Copy link'; }, 3000);
-    };
-    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(field.value).then(done, fail); else fail();
-  } catch (e) { field.select(); }
-});
+// (the invite button itself is wired up in src/share.js)
 // an invite link carries the crew name after the #
 try { const h = (location.hash || '').slice(1); if (/^[a-z]+-\d{1,4}$/.test(h)) NET.pendingJoin = h; } catch (e) {}
 // sound can only start after the first tap or click anywhere
@@ -13987,7 +13978,9 @@ function fpsHud() {
     const rx = W - Math.max(12, FPS.safeRight || 0);
     ctx.textAlign = 'right'; ctx.font = mono(12); ctx.fillStyle = 'rgba(236,228,207,0.85)'; ctx.fillText(`${mine.k} K · ${mine.d} D`, rx, top);
     ctx.font = mono(10);
-    FPS.feed.slice(-2).forEach((f, i) => { ctx.fillStyle = `rgba(236,228,207,${Math.min(1, f.t) * 0.75})`; ctx.fillText(f.text, rx, top + 18 + i * 13, W * 0.34); });
+    // (the feed goes under the buttons when, held upright, they reach across to it)
+    const fy = fpsHudBtnRight() > rx - W * 0.34 - 8 ? Math.max(top + 18, fpsHudTop()) : top + 18;
+    FPS.feed.slice(-2).forEach((f, i) => { ctx.fillStyle = `rgba(236,228,207,${Math.min(1, f.t) * 0.75})`; ctx.fillText(f.text, rx, fy + i * 13, W * 0.34); });
     // health: four small pips at top left, beside the menu
     const tops = document.querySelector('.fpstop'), lx = tops ? tops.getBoundingClientRect().right - cv.getBoundingClientRect().left + 10 : Math.max(12, FPS.safeLeft || 0) + 92;
     // (under the buttons, so they stay clear of the compass)
@@ -14085,6 +14078,20 @@ function fpsSafeArea() {
   FPS.safeTop = parseFloat(cs.top) || 0; FPS.safeLeft = parseFloat(cs.left) || 0; FPS.safeRight = parseFloat(cs.right) || 0;
   probe.remove();
 }
+
+// on a phone the round buttons sit at top left: the HUD's top-left column starts under them, never behind them
+function fpsHudTop() {
+  if (!FPS.touch) return 14;
+  const tb = document.querySelector('.fpstop'), t0 = Math.max(10, FPS.safeTop || 0);
+  if (!tb || !cv) return t0 + 46;
+  const r = tb.getBoundingClientRect(), r0 = cv.getBoundingClientRect();
+  return r.height ? Math.max(t0, r.bottom - r0.top + 8) : t0;
+}
+// (the right edge of those buttons, so the feed top right can tell whether it must go under them too)
+function fpsHudBtnRight() { const tb = document.querySelector('.fpstop'); if (!tb || !cv || !FPS.touch) return 0; const r = tb.getBoundingClientRect(); return r.width ? r.right - cv.getBoundingClientRect().left : 0; }
+// the lines of words down the top left (a part's name, what's to be done) note how far down they reach, so the
+// health and points under them, and anything top middle, keep clear (read a frame late, which nobody sees)
+function fpsHudNote(y) { FPS.hudL = Math.max(FPS.hudL || 0, y); }
 
 // ---------- controls ----------
 // the shooter layout: WASD, Space jump, C crouch, Shift run, R reload, E use, 1-6 or the wheel for weapons, Q the
@@ -19383,7 +19390,7 @@ function zmFrame(dt) {
       // patched up quickly, if they leave you alone for a few seconds
       FPS.calm = (FPS.calm || 0) + dt;
       const max = ZM.perks.stout ? ZMC.HP_STOUT : ZMC.HP;
-      if (m.dead <= 0 && !zmIsDown() && m.hp < max && FPS.calm > (ZM.perks.grog ? 1.6 : 3.2) * (typeof RAID !== 'undefined' && RAID.on ? 0.7 : 1) && !(typeof RAID !== 'undefined' && RAID.on && !(raidStage() || {}).mend)) m.hp = max;   // [raid] (there, unless the part says so, only a lit brazier mends you)
+      if (m.dead <= 0 && !zmIsDown() && m.hp < max && FPS.calm > (ZM.perks.grog ? 1.6 : 3.2) * (typeof RAID !== 'undefined' && RAID.on ? RAIDC.CALM : 1) && !(typeof RAID !== 'undefined' && RAID.on && !(raidStage() || {}).mend)) m.hp = max;   // [raid] (there, unless the part says so, only a lit brazier mends you)
       if (ZM.downT > 0) zmDownTick(dt);
       if (m.cd > 0) m.cd -= dt;
       if (m.reload > 0) { m.reload -= dt; if (m.reload <= 0) { m.reload = 0; zmReloaded(); } }
@@ -21229,8 +21236,15 @@ function zmDrawFlat() {
 }
 
 // ---------- what you see on top ----------
+// (on a phone) the foot of the column down the left (the round, points, health, tonics), low enough that its top
+// stays under the buttons and whatever words are top left
+function zmLeftRb() {
+  const perks = Object.keys(ZM_PERKS).some(k => ZM.perks[k]);
+  return Math.min(H - 40, Math.max(H * 0.36, Math.max(FPS.hudLPrev || 0, fpsHudTop()) + 100 + (perks ? 40 : 0)));
+}
 function zmHud() {
   const m = FPS.me, phone = FPS.touch, t = g.t, down = zmIsDown() && !ZM.over, spec = zmSpecOn();
+  FPS.hudLPrev = FPS.hudL || 0; FPS.hudL = 0;
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   const mono = px => `600 ${px}px "Courier Prime", monospace`, fell = px => `400 ${px}px "IM Fell English SC", serif`;
   const max = ZM.perks.stout ? ZMC.HP_STOUT : ZMC.HP;
@@ -21255,9 +21269,9 @@ function zmHud() {
     if (typeof zmpHud === 'function') zmpHud(cx, cy);   // [pap] the Equinox Gale
     if (FPS.hitT > 0) { ctx.strokeStyle = FPS.hitHead ? 'rgba(255,90,60,0.95)' : 'rgba(255,240,200,0.95)'; ctx.lineWidth = 2; ctx.beginPath(); for (const [dx, dy] of [[1, 1], [-1, 1], [1, -1], [-1, -1]]) { ctx.moveTo(cx + dx * 6, cy + dy * 6); ctx.lineTo(cx + dx * 13, cy + dy * 13); } ctx.stroke(); }
   }
-  const L = Math.max(14, FPS.safeLeft || 0), R = W - Math.max(14, FPS.safeRight || 0), top = phone ? Math.max(10, FPS.safeTop || 0) : 14;
+  const L = Math.max(14, FPS.safeLeft || 0), R = W - Math.max(14, FPS.safeRight || 0), top = phone ? Math.max(10, FPS.safeTop || 0) : 14, hudTop = phone ? fpsHudTop() : 14;
   // the round, bottom left: chalk tallies for the first five, then the number
-  const rb = phone ? H * 0.36 : H - 22, rs = phone ? 0.7 : 1;
+  const rb = phone ? zmLeftRb() : H - 22, rs = phone ? 0.7 : 1;
   ctx.save(); ctx.translate(L, rb); ctx.scale(rs, rs);
   const glowR = ZM.phase === 'break' ? 0.55 + 0.45 * Math.sin(t * 4) : 1;
   ctx.fillStyle = ctx.strokeStyle = `rgba(178,24,18,${glowR})`; ctx.lineCap = 'round';
@@ -21316,7 +21330,9 @@ function zmHud() {
     if (!w.melee && (m.ammo === 0 || (m.ammo < w.mag && m.ammo <= Math.ceil(w.mag * 0.25))) && !(m.reload > 0) && !ZM.over) { ctx.textAlign = 'center'; ctx.font = mono(13); ctx.fillStyle = (ZM.res[FPS.weapon] || 0) > 0 ? 'rgba(236,228,207,0.8)' : '#e46c4f'; ctx.fillText((ZM.res[FPS.weapon] || 0) > 0 ? 'R TO RELOAD' : m.ammo ? 'LOW AMMUNITION' : down ? 'NO AMMUNITION' : 'NO AMMUNITION · V OR FIRE TO KNIFE', cx, cy + 46); }
   } else { zmPadState(); zmDrawStick(); }
   // together: everyone's points, down the right (yours lit), and anyone down marked
-  let feedY = phone ? top + 48 : 16;
+  // (on a phone: under the buttons if they reach across to it, as they do held upright)
+  const feedW = W * (phone ? 0.42 : 0.45), feedUnder = phone && fpsHudBtnRight() > R - feedW - 8;
+  let feedY = phone ? (feedUnder ? hudTop : top + 4) : 16;
   if (ZM.net) {
     ctx.textAlign = 'right'; ctx.textBaseline = 'top'; ctx.font = mono(phone ? 10 : 12);
     const rows = ZM.hum.map(([sid, nick]) => { const me = sid === m.id, r = FPS.remote.get(sid); return { me, nick, pts: me ? ZM.pts : r ? r.pts || 0 : 0, down: me ? ZM.downT > 0 : r && r.down, out: me ? ZM.ghost : r && (r.dead || r.left) }; });
@@ -21325,11 +21341,16 @@ function zmHud() {
   }
   // the feed, top right
   ctx.textAlign = 'right'; ctx.textBaseline = 'top'; ctx.font = mono(phone ? 10 : 12);
-  FPS.feed.slice(phone ? -2 : -5).forEach((f, i) => { ctx.fillStyle = `rgba(236,228,207,${Math.min(1, f.t) * 0.85})`; ctx.fillText(f.text, R, feedY + i * (phone ? 13 : 17), W * (phone ? 0.5 : 0.45)); });
+  const feedN = FPS.feed.slice(phone ? -2 : -5);
+  feedN.forEach((f, i) => { ctx.fillStyle = `rgba(236,228,207,${Math.min(1, f.t) * 0.85})`; ctx.fillText(f.text, R, feedY + i * (phone ? 13 : 17), feedW); });
+  // anything top middle (a room's name, a boss's strength, the bridge) goes under the words top left, and under
+  // the feed when that's come down under the buttons too
+  const ctop = phone ? Math.max(hudTop, (FPS.hudLPrev || 0) + 8, feedUnder ? feedY + feedN.length * 13 + 6 : 0) : 14;
+  FPS.hudCtop = ctop;
   if (typeof rclHud === 'function') rclHud(phone, mono, fell);   // [classes] your calling's grenade and ultimate (src/rclass.js)
-  if (typeof zbHud === 'function') zbHud(phone, top);   // [boss] their strength, top middle (and the false light's glare)
+  if (typeof zbHud === 'function') zbHud(phone, phone ? ctop - 50 : top);   // [boss] their strength, top middle (and the false light's glare)
   // the room you've come into
-  if (ZM.zoneT > 0) { ctx.textAlign = 'center'; ctx.textBaseline = 'top'; ctx.font = fell(phone ? 16 : 22); ctx.fillStyle = `rgba(236,228,207,${Math.min(1, ZM.zoneT) * 0.8})`; const nm = zmZoneName(ZM.zone); ctx.fillText(nm.charAt(0).toUpperCase() + nm.slice(1), cx, phone ? top + 30 : 18); }
+  if (ZM.zoneT > 0) { ctx.textAlign = 'center'; ctx.textBaseline = 'top'; ctx.font = fell(phone ? 16 : 22); ctx.fillStyle = `rgba(236,228,207,${Math.min(1, ZM.zoneT) * 0.8})`; const nm = zmZoneName(ZM.zone); ctx.fillText(nm.charAt(0).toUpperCase() + nm.slice(1), cx, phone ? ctop : 18); }
   // a round beginning, salvage taken
   if (ZM.banner) {
     const b = ZM.banner, a = Math.min(1, b.t, 4 - b.t);
@@ -27405,10 +27426,10 @@ function zeDrawCoin(q, x, y, r, spin, t) {
   q.restore();
 }
 function zeHud() {
-  const phone = FPS.touch, L = Math.max(14, FPS.safeLeft || 0), top = phone ? Math.max(10, FPS.safeTop || 0) + 40 : 18;
+  const phone = FPS.touch, L = Math.max(14, FPS.safeLeft || 0), top = phone ? fpsHudTop() - 6 : 18;
   // what you carry: a small mark, top left
   if (zeMine() && (ZE.st === 2 || ZE.st === 5 || ZE.st === 6 || ZE.st === 9) && !(FPS.me.dead > 0)) {
-    ctx.save(); ctx.translate(L + 12, top + 14);
+    fpsHudNote(top + 30); ctx.save(); ctx.translate(L + 12, top + 14);
     if (ZE.st === 2) { ctx.fillStyle = '#5a7a68'; ctx.beginPath(); ctx.arc(0, 4, 6, 0, 6.2832); ctx.fill(); ctx.fillRect(-1.5, -10, 3, 12); }
     else {
       const lit = ZE.st !== 5, k = ZE.st === 9 ? 1 : 0;
@@ -28010,10 +28031,10 @@ function zhDrawCoin(q, x, y, r, spin, t) {
 }
 function zhHud() {
   if (!ZH.P) return;
-  const phone = FPS.touch, L = Math.max(14, FPS.safeLeft || 0), top = phone ? Math.max(10, FPS.safeTop || 0) + 40 : 18;
+  const phone = FPS.touch, L = Math.max(14, FPS.safeLeft || 0), top = phone ? fpsHudTop() - 6 : 18;
   // what you carry: a small mark, top left (the key, or her ring)
   if (zhMine() && (ZH.st === 5 || zhRing2(ZH.st)) && !(FPS.me.dead > 0)) {
-    ctx.save(); ctx.translate(L + 12, top + 14); ctx.lineWidth = 2.5;
+    fpsHudNote(top + 30); ctx.save(); ctx.translate(L + 12, top + 14); ctx.lineWidth = 2.5;
     if (ZH.st === 5) { ctx.strokeStyle = '#8a8e94'; ctx.beginPath(); ctx.arc(0, -6, 5, 0, 6.2832); ctx.stroke(); ctx.beginPath(); ctx.moveTo(0, -1); ctx.lineTo(0, 12); ctx.moveTo(0, 8); ctx.lineTo(5, 8); ctx.moveTo(0, 12); ctx.lineTo(4, 12); ctx.stroke(); }
     else { const gr = ctx.createRadialGradient(0, 0, 1, 0, 0, 16); gr.addColorStop(0, 'rgba(255,230,150,0.5)'); gr.addColorStop(1, 'rgba(255,230,150,0)'); ctx.fillStyle = gr; ctx.fillRect(-16, -16, 32, 32); ctx.strokeStyle = '#f0c850'; ctx.beginPath(); ctx.arc(0, 0, 6, 0, 6.2832); ctx.stroke(); }
     ctx.restore();
@@ -28129,7 +28150,7 @@ function raidAfterStart() {
   raidLoadout();
   RAID.st = {}; raidCall('enter');
 }
-const RAIDC = { ROUND: 4 };
+const RAIDC = { ROUND: 4, CALM: 0.7 };
 // what you carry down: a pepperbox and a blunderbuss, both full (and Maren's Lantern, which never leaves your hand)
 function raidLoadout() {
   const m = FPS.me;
@@ -28338,13 +28359,14 @@ function raidSpawnAt(x, y, o) {
 function raidHud(phone, mono, fell) {
   if (!RAID.on) return;
   const S = raidStage(); if (!S) return;
-  const top = phone ? Math.max(10, FPS.safeTop || 0) : 14;
+  const top = fpsHudTop();
   ctx.textAlign = 'left'; ctx.textBaseline = 'top';
   const L = Math.max(14, FPS.safeLeft || 0);
   ctx.font = fell(phone ? 15 : 19); ctx.fillStyle = 'rgba(236,228,207,0.85)';
-  ctx.fillText(`Maren’s End · ${raidNumeral(RAID.stage + 1)} · ${S.n}`, L, top);
+  ctx.fillText(`Maren’s End · ${raidNumeral(RAID.stage + 1)} · ${S.n}`, L, top, W * 0.5);
   ctx.font = mono(phone ? 10 : 12); ctx.fillStyle = 'rgba(236,228,207,0.55)';
-  ctx.fillText(raidClock(RAID.t), L, top + (phone ? 20 : 26));
+  ctx.fillText(raidClock(RAID.t), L, top + (phone ? 18 : 26));
+  fpsHudNote(top + (phone ? 30 : 40));
   raidCall('hud', phone, mono, fell);
 }
 
@@ -28375,9 +28397,9 @@ function raidHud(phone, mono, fell) {
 // dark takes DRAIN a second. NEED of them sent back inside RING of the arena's middle open the door.
 // Maren's Weight: out of the light it settles on you, WGT_T seconds to the full of it, when you go at WGT_SLOW of your
 // pace; any brazier's light lifts it at once. The wrecking balls: hung from the cave's roof over the path between
-// braziers, BALL_R across, swinging across the path in BALL_T seconds or so; one that catches you knocks you BALL_DMG
-// and throws you aside
-const RSWX = { WGT_T: 22, WGT_SLOW: 0.45, BALL_R: 1.05, BALL_LOW: 1.3, BALL_T: 3.6, BALL_DMG: 1, BALL_CD: 1.2 };
+// braziers, BALL_R across, swinging across the path in BALL_T seconds or so; one that catches you puts you straight
+// down (whatever your health, your class or your iframes), thrown aside
+const RSWX = { WGT_T: 20, WGT_SLOW: 0.25, BALL_R: 1.05, BALL_LOW: 1.3, BALL_T: 3.6, BALL_DMG: 1, BALL_CD: 1.2 };
 const RSW = { SEA: 250, DECK: 253, CEIL: 30, HOLE: [-11, 11, 13, 35], FALL: 8.4, LIT_R: 7.5, MEND: 1.2, DRAIN: 0.2, NEED: 20, RING: 13, USE: 1.1, GAP: 3.4 };
 // The path: [x, y, half its width, what's there] from the island's middle, from the cap behind where you land to the
 // cap with the door in it; b, a brazier; a, the arena before the door (two more braziers at its sides). Between each
@@ -28847,12 +28869,12 @@ RAID_STAGES.descent = {
         const P = rswBallAt(b, bt), [bx, by] = rswW(P.x, P.y), d = Math.hypot(m.x - bx, m.y - by), jz = m.jz || 0;
         if (d < RSWX.BALL_R + 0.35 && P.z - RSWX.BALL_R < jz + 1.8 && P.z + RSWX.BALL_R > jz) {
           S.ballCd = RSWX.BALL_CD;
-          if (!(m.protect > 0)) fpsHurt(RSWX.BALL_DMG, null, null);
+          if (!(m.protect > 0)) { m.hp = 0; m.iframe = 0; FPS.hurtT = 0.5; try { sfxHit(); } catch (e) {} fpsDie(null, null); }
           zmSound('hit'); FPS.hurtT = 0.9;
           // thrown the way it's swinging (across the path), a little at a time so no wall is passed
           const dir = Math.sign(Math.cos(bt * 6.2832 / b.T + b.ph)) || 1;
           S.shove = [b.nx * dir * 7, b.ny * dir * 7, 0.35];
-          fpsFeed('A wrecking ball caught you.');
+          fpsFeed('A wrecking ball caught you and put you down.');
           break;
         }
       }
@@ -28867,7 +28889,12 @@ RAID_STAGES.descent = {
         const up = Math.min(RSW.MEND * dt, S.dark || 0, max - m.hp); if (up > 0) { m.hp += up; S.dark -= up; }
         S.ammoT = (S.ammoT || 0) + dt;
         if (S.ammoT > 1) { S.ammoT = 0; for (const id of ZM.own) if (ZM_AMMO[id]) ZM.res[id] = Math.min(ZM_AMMO[id], (ZM.res[id] || 0) + Math.ceil(ZM_AMMO[id] * 0.12)); }
-      } else if (!(m.protect > 0)) {
+      }
+      // what the drowned (or the balls) took comes back by itself once nothing has hit you for a moment (RAIDC.CALM of
+      // the Lighthouse's wait), quickly; only up to what the dark has left you, since that part only the light gives back
+      const cap = max - (S.dark || 0);
+      if (m.hp < cap && FPS.calm > (ZM.perks.grog ? 1.6 : 3.2) * RAIDC.CALM) m.hp = Math.min(cap, m.hp + 2 * dt);
+      if (!S.inLight && !(m.protect > 0)) {
         const dn = Math.min(m.hp, RSW.DRAIN * dt); m.hp -= dn; S.dark = (S.dark || 0) + dn;
         if (m.hp <= 0) { m.hp = 0; fpsFeed('The dark took the last of you.'); fpsDie(null, null); }
       }
@@ -28887,7 +28914,7 @@ RAID_STAGES.descent = {
     }
   },
   hud(phone, mono, fell) {
-    const S = RAID.st, m = FPS.me, L = Math.max(14, FPS.safeLeft || 0), top = (phone ? Math.max(10, FPS.safeTop || 0) : 14) + (phone ? 34 : 44), t = g.t;
+    const S = RAID.st, m = FPS.me, L = Math.max(14, FPS.safeLeft || 0), top = fpsHudTop() + (phone ? 32 : 44), t = g.t;
     const below = rswBelow(m.jz);
     let line;
     if (m.jz >= RSW.SEA - 1) line = 'Walk the Long Pier to the Swallow, and step off the end.';
@@ -28896,7 +28923,7 @@ RAID_STAGES.descent = {
     else if (S.door === 1) line = `Sent back inside the ring: ${Math.min(S.kills, RSW.NEED)} of ${RSW.NEED}`;
     else line = 'The door is open. Go through.';
     ctx.textAlign = 'left'; ctx.textBaseline = 'top'; ctx.font = mono(phone ? 10 : 13); ctx.fillStyle = S.door === 1 ? '#bfe4ff' : 'rgba(236,228,207,0.8)';
-    ctx.fillText(line, L, top, W * 0.5);
+    ctx.fillText(line, L, top, W * 0.5); fpsHudNote(top + (phone ? 14 : 18));
     // in the light or in the dark
     if (below && !(m.dead > 0) && !zmIsDown() && !ZM.over) {
       if (!S.inLight) {
@@ -28916,7 +28943,7 @@ RAID_STAGES.descent = {
       ctx.fillText(`MAREN’S WEIGHT · ${Math.round((1 - this.speedK()) * 100)}% SLOWER`, cx, y0 + 8);
     }
     // the ring's tally, big, while the door's awake
-    if (S.door === 1) { ctx.textAlign = 'center'; ctx.textBaseline = 'top'; ctx.font = fell(phone ? 26 : 38); ctx.fillStyle = '#bfe4ff'; ctx.fillText(`${Math.min(S.kills, RSW.NEED)} / ${RSW.NEED}`, cx, phone ? top + 20 : 60); }
+    if (S.door === 1) { ctx.textAlign = 'center'; ctx.textBaseline = 'top'; ctx.font = fell(phone ? 26 : 38); ctx.fillStyle = '#bfe4ff'; ctx.fillText(`${Math.min(S.kills, RSW.NEED)} / ${RSW.NEED}`, cx, phone ? (FPS.hudCtop || top) + 2 : 60); }
     // lighting a brazier: a ring round the sights filling
     if (S.useI >= 0 && S.useT > 0) {
       const k = Math.min(1, S.useT / RSW.USE);
@@ -28995,32 +29022,33 @@ RAID_STAGES.descent = {
 
 // ---- src/raidbridge.js ----
 // The raid, part two: the bridge. Through the glowing door at the end of the descent (src/raid.js) you come out on
-// the near bank of a black river underground, too wide to jump and too fast to swim. Across it, the stumps of an old
-// bridge's piers and nothing between them. Either side of the bridge's foot is a ring of old stones, a circle: kill
-// the drowned inside the circles and the bridge builds itself out across the water, plank by plank. But a circle
-// only works while someone stands in it: leave one empty and the bridge starts to fall back into the river, from
-// the far end in, plank after plank (anyone on a plank that goes is swept back to the near bank).
-// So two hold the circles while the third takes the Cutlass of Plimsoll from its stone at the bridge's foot and
-// crosses. On the far bank, one after another, three Divers come up out of the river. Nothing hurts them but the
-// Cutlass. Each one drops his brass helmet when he goes down; carry each to one of the three stands on the far bank.
-// With the third helmet on its stand the bridge sets fast for good: the circles can be left, everyone can cross, and
-// a door in the rock opens back on the near bank, on to the third part.
-// The crew's size (rbNeed): both circles have to be held with three or more of you (a fourth is free to guard the
-// circles, or cross too); with two, one of them; alone, the circle you leave holds for a minute and a half.
+// the near bank of a black river underground, too wide to jump and too fast to swim. Across it, the piles of an old
+// bridge and nothing between them. Either side of the bridge's foot is a ring of old stones on a raised platform, a
+// circle: kill the drowned inside the circles and the bridge builds itself out across the water, plank by plank. But
+// the bridge only stands while it's held: someone in the circles (as many as the crew's size needs, rbNeed), or
+// someone in the third ring, on its own platform at the far end. Leave it unheld and it starts to fall back into the
+// river, from the far end in, plank after plank (anyone on a plank that goes is swept back to the near bank).
+// The Cutlasses of Plimsoll: three times over the first eight minutes (RBC.SWT) a Diver comes up out of the river
+// on to the near bank with one in his fist instead of an anchor. Put him down (anything hurts him) and he drops it;
+// each of you who's to cross wants one (Use to take it up; it falls where you do if you go down). On the far bank,
+// once the bridge is across and someone carrying a Cutlass sets foot there, three more Divers come up out of the
+// river one after another; nothing but a Cutlass hurts those, and each drops his brass helmet. Set all three
+// helmets on the far bank's stands and a door in the rock opens back on the near bank, on to the third part.
+// The crew's size (rbNeed): both near circles have to be held with three or more of you; with two, one of them;
+// alone, the circle you leave holds for a minute and a half (and so does the far ring).
 //
 // The Cutlass of Plimsoll (FPSW.plimsoll, code 'P'): a heavy cutlass with a sea-blue blade, its edge set with a
-// row of the shark's own teeth and a grip of his skin. There is one: it lies on its stone until someone takes it
-// (Use), and goes back to the stone if its bearer goes down, leaves, or lays it back there. In hand it's quicker and
-// hits harder than the ordinary cutlass, and it's the only thing the Divers here can feel.
+// row of the shark's own teeth and a grip of his skin. In hand it's quicker and hits harder than the ordinary
+// cutlass, and it's the only thing the helmeted Divers here can feel.
 //
 // Laid out in the island's own frame (x east, y north, from its middle): the river runs east-west across the middle
 // (RBC.RY, RBC.RW wide), the bridge crosses it north at x = 0, the near bank is the south. Walls of rock all round.
 // Together it's all the host's (host-authoritative, as the rest of the Lighthouse's co-op, src/zmnet.js): what the
-// bridge has built, who holds the Cutlass, the Divers and the helmets go out in the stage's snapshot (rbPack /
-// rbApply: `rb`), and a joined player asks the host to take or lay down the Cutlass, pick up a helmet, set one on a
+// bridge has built, the rings held, the Cutlasses, the Divers and the helmets go out in the stage's snapshot
+// (rbPack / rbApply: `rb`), and a joined player asks the host to take up a Cutlass, pick up a helmet, set one on a
 // stand, or go through the door (rbReq). The Divers are the Lighthouse's own (src/zmboss.js), streamed with the
 // rest of the drowned. The river itself is a row of solids that don't stop shots or show (ray, occ false), with one
-// for each plank's span of the bridge that's taken away as the plank goes down and put back when it falls.
+// for each plank's span of the bridge that's swapped for the plank's deck as it's built, and back as it falls.
 
 const RBC = {
   RY: 0, RW: 18, X0: -44, X1: 44, Y0: -54, Y1: 40,   // the river's middle and width; the cavern's walls
@@ -29028,7 +29056,8 @@ const RBC = {
   CR: 3.2, CX: 6.8, CY: -13.5,                        // the circles: radius, either side of the bridge's foot
   KILLS: 22, KILLS1: 16,                               // kills in the circles to build the bridge (alone: fewer)
   GRACE: 1.2, SOLO: 90, FALL: 1.4,                     // a circle empty that long (alone: SOLO), then a plank goes every FALL s
-  STONE: [0, -19.5],                                   // the Cutlass's stone
+  FY: 18,                                              // the far ring's middle (x 0), on its platform
+  SWT: [45, 270, 480],                                 // when the Divers with the Cutlasses come up (s into the part)
   STANDS: [[-7, 27], [0, 30], [7, 27]],                // the helmets' stands, on the far bank
   DOOR: [0, -53.2],                                    // the way on, in the rock behind the near bank
   START: [0, -40],                                     // where you come out (from the descent's door)
@@ -29056,7 +29085,7 @@ const rbHumAt = i => ((ZM.hum || [])[i] || [])[0] || null;
 
 function rbReset() {
   Object.assign(RB, {
-    on: true, p: 0, kills: 0, held: [false, false], emptyT: 0, fallT: 0, done: false, open: false, cut: null, wait: 0,
+    on: true, p: 0, kills: 0, held: [false, false], far: false, emptyT: 0, fallT: 0, done: false, open: false, cuts: [], cseq: 0, sw: 0, t: 0, wait: 0,
     phase: 'build', dn: 0, dWait: 0, diver: null, helms: [], placed: [-1, -1, -1], carry: -1, hseq: 0, navT: 0, spawnT: 2,
     built: 0, falls: [], splash: [], crossed: false, warnT: 0, said: {},
   });
@@ -29086,17 +29115,19 @@ function rbSet(H, K, Z) {
     sol.push(S(cx, cy, w, w, RBC.PH, true));
     for (const k of [1, 2]) { const d = (3 - k) * 0.45; sol.push(S(cx, cy - w - d, w, d, RBC.PH * k / 3, true), S(cx + s * (w + d), cy - 0.6, d, 2.4, RBC.PH * k / 3, true)); }
   }
+  // the far ring's platform: steps up from the bridge (south) and from the stands (north)
+  { const w = RBC.PW, fy = RBC.FY; sol.push(S(0, fy, w, w, RBC.PH, true)); for (const k of [1, 2]) { const d = (3 - k) * 0.45; for (const e of [-1, 1]) sol.push(S(0, fy + e * (w + d), w, d, RBC.PH * k / 3, true)); } }
   for (const s of sol.concat(seg)) I.solids.push(s);
   I.rb = { seg, deck, on: 0 };
   // the piers' posts either side of the bridge's foot at each end
   for (const y of [RY - h, RY + h]) for (const s of [-1, 1]) P('block', s * (BW / 2 + 0.4), y, 0, { w: 0.6, d: 0.9, hh: 1.9, col: '#4a4842' });
   // the circles' stones, up on their platforms
-  for (const s of [-1, 1]) for (let i = 0; i < 7; i++) { const a = i / 7 * Math.PI * 2 + 0.3; P('stone', s * RBC.CX + Math.cos(a) * (RBC.CR + 0.45), RBC.CY + Math.sin(a) * (RBC.CR + 0.45), a, { w: 0.5, d: 0.4, hh: 0.9 + 0.3 * (i % 2), lift: RBC.PH }); }
+  for (const [cx, cy] of [[-RBC.CX, RBC.CY], [RBC.CX, RBC.CY], [0, RBC.FY]]) for (let i = 0; i < 7; i++) { const a = i / 7 * Math.PI * 2 + 0.3 + (cx ? 0 : Math.PI / 7); P('stone', cx + Math.cos(a) * (RBC.CR + 0.45), cy + Math.sin(a) * (RBC.CR + 0.45), a, { w: 0.5, d: 0.4, hh: 0.9 + 0.3 * (i % 2), lift: RBC.PH }); }
   // one old boat, upturned on the near bank (the rest of what lies about is only to look at: rb3dClutter)
   P('boat', -23, -27, 0.55, { len: 6.2, beam: 2.0, paint: '#3a4640' });
   // the far bank's stands, the near bank's door, rocks and the drowned's ways up out of the water
   for (const [x, y] of RBC.STANDS) L(x, y, 2.2, '#8affd0', 6);
-  L(0, RBC.STONE[1], 1.6, '#7fd8ff', 7);
+  L(0, RBC.FY, 2.4, '#ffb070', 9); for (const s of [-1, 1]) P('brazier', s * (RBC.PW + 0.9), RBC.FY - 3.0, 0, {});
   for (const s of [-1, 1]) { L(s * RBC.CX, RBC.CY, 2.4, '#ffb070', 9); P('brazier', s * (RBC.CX + RBC.PW + 0.9), RBC.CY + 3.0, 0, {}); }
   L(0, RBC.DOOR[1] + 2, 2.6, '#c8a0ff', 8);
   L(0, -36, 3, '#ffc070', 12); L(-24, -30, 3, '#ffb060', 10); L(24, -30, 3, '#ffb060', 10); L(0, 22, 3, '#8affd0', 12); L(-20, 20, 3, '#6ad8c0', 9); L(20, 20, 3, '#6ad8c0', 9);
@@ -29129,21 +29160,32 @@ const rbInRiver = (lx, ly) => Math.abs(ly - RBC.RY) < RBC.RW / 2 && lx > RBC.X0 
 const rbOnBridge = (lx, ly) => Math.abs(lx) < RBC.BW / 2 + 0.1 && rbInRiver(lx, ly);
 const rbSegAt = ly => Math.floor((ly - (RBC.RY - RBC.RW / 2)) / RBC.SL);
 const rbFar = ly => ly > RBC.RY + RBC.RW / 2;
-const rbInCircle = (i, lx, ly) => Math.hypot(lx - (i ? RBC.CX : -RBC.CX), ly - RBC.CY) < RBC.CR;
+const rbInCircle = (i, lx, ly) => i === 2 ? Math.hypot(lx, ly - RBC.FY) < RBC.CR : Math.hypot(lx - (i ? RBC.CX : -RBC.CX), ly - RBC.CY) < RBC.CR;
+const rbAt = sid => sid === FPS.me.id ? FPS.me : FPS.remote.get(sid);
+const rbGone = sid => sid === FPS.me.id ? (FPS.me.dead > 0 || zmIsDown()) : (() => { const r = FPS.remote.get(sid); return !r || r.left || r.dead || r.down; })();
+const rbHasCut = sid => RB.cuts.some(c => c.st === 1 && c.by === sid);
+// a thing laid on the ground: never in the river (put on whichever bank's nearer)
+function rbClampBank(o) {
+  const [lx, ly] = rbL(o.x, o.y), h = RBC.RW / 2;
+  const y = Math.abs(ly - RBC.RY) < h + 1.2 ? RBC.RY + (ly >= RBC.RY ? h + 1.2 : -h - 1.2) : ly;
+  [o.x, o.y] = rbW(clamp(lx, RBC.X0 + 2, RBC.X1 - 2), y);
+}
 
 // ---------- each tick (hosting, or alone) ----------
 function rbTick(dt) {
   if (!RB.on) return;
   const need = rbNeed(), pl = ZM.players || [];
   // who stands in the circles (only those on their feet)
-  RB.held = [0, 1].map(i => pl.some(p => { const [lx, ly] = rbL(p.x, p.y); return rbInCircle(i, lx, ly) && (p.jz || 0) < RBC.PH + 1; }));
-  const held = RB.held.filter(Boolean).length;
-  // the bridge: built by the kills; falling back while a circle's empty, until the helmets set it fast
+  RB.held = [0, 1, 2].map(i => pl.some(p => { const [lx, ly] = rbL(p.x, p.y); return rbInCircle(i, lx, ly) && (p.jz || 0) < RBC.PH + 1; }));
+  RB.far = RB.held[2]; RB.held.length = 2;
+  const held = RB.held.filter(Boolean).length, ok = held >= need || RB.far;
+  RB.t += dt;
+  // the bridge: built by the kills in the near circles; falling back while it's not held (near circles or far ring)
   if (!RB.done) {
     const total = (ZM.hum || []).length > 1 ? RBC.KILLS : RBC.KILLS1;
     const want = Math.min(RBC.SEG, RB.kills / total * RBC.SEG);
     if (want > RB.p) RB.p = want;
-    if (held < need && RB.p > 0) {
+    if (!ok && RB.p > 0) {
       RB.emptyT += dt;
       if (RB.emptyT > rbGrace()) {
         RB.fallT -= dt;
@@ -29156,21 +29198,19 @@ function rbTick(dt) {
       }
     } else { RB.emptyT = 0; RB.fallT = 0.4; }
   }
-  RB.falling = !RB.done && RB.p > 0 && held < need && RB.emptyT > rbGrace();
-  RB.holdT = !RB.done && RB.p > 0 && held < need && !RB.falling ? Math.ceil(rbGrace() - RB.emptyT) : 0;
+  RB.falling = !RB.done && RB.p > 0 && !ok && RB.emptyT > rbGrace();
+  RB.holdT = !RB.done && RB.p > 0 && !ok && !RB.falling ? Math.ceil(rbGrace() - RB.emptyT) : 0;
   const built = Math.floor(RB.p + 1e-6);
   if (built !== RB.built) { if (built > RB.built) rbEvent('plank', built); RB.built = built; rbSpans(built); }
-  // the Cutlass back on its stone if its bearer's gone down or away
-  if (RB.cut) {
-    const r = RB.cut === FPS.me.id ? null : FPS.remote.get(RB.cut);
-    const gone = RB.cut === FPS.me.id ? (FPS.me.dead > 0 || zmIsDown()) : (!r || r.left || r.dead || r.down);
-    if (gone) { RB.cut = null; rbEvent('stone'); }
+  // the Divers with the Cutlasses, on the clock
+  if (RB.sw < RBC.SWT.length && RB.t >= RBC.SWT[RB.sw]) rbSwordUp();
+  // a Cutlass falls where its bearer goes down (or leaves)
+  for (const c of RB.cuts) if (c.st === 1) {
+    const w = rbAt(c.by); if (w) { c.x = w.x; c.y = w.y; }
+    if (rbGone(c.by)) { c.st = 0; c.by = null; rbClampBank(c); rbEvent('cfall'); }
   }
-  // the Divers: once the bridge has first reached the far bank and the Cutlass has crossed it, one after another
-  if (RB.phase === 'build' && RB.cut && built >= RBC.SEG) {
-    const c = RB.cut === FPS.me.id ? FPS.me : FPS.remote.get(RB.cut);
-    if (c && rbFar(rbL(c.x, c.y)[1])) { RB.phase = 'divers'; RB.dWait = 2.5; rbEvent('divers'); }
-  }
+  // the helmeted Divers: once the bridge has first reached the far bank and a Cutlass has crossed it, one after another
+  if (RB.phase === 'build' && built >= RBC.SEG && rbFarCut()) { RB.phase = 'divers'; RB.dWait = 2.5; rbEvent('divers'); }
   if (RB.phase === 'divers') {
     if (RB.diver && (RB.diver.dead || !ZM.z.includes(RB.diver))) RB.diver = null;
     if (!RB.diver && RB.dn < 3) { RB.dWait -= dt; if (RB.dWait <= 0) rbDiverUp(); }
@@ -29198,11 +29238,11 @@ function rbMe(dt) {
     if (!onPlank) rbSwept();
   }
   // the Cutlass: in my hands while it's mine, gone from them when it isn't
-  const mine = RB.cut === FPS.me.id, have = ZM.own.includes('plimsoll');
-  if (mine && !have && !(m.dead > 0) && !zmIsDown()) { ZM.own.push('plimsoll'); m.mags.plimsoll = 0; fpsSwitch('plimsoll'); fpsFeed('You take up the Cutlass of Plimsoll. Nothing else will touch the Divers.'); }
+  const mine = rbHasCut(FPS.me.id), have = ZM.own.includes('plimsoll');
+  if (mine && !have && !(m.dead > 0) && !zmIsDown()) { ZM.own.push('plimsoll'); m.mags.plimsoll = 0; fpsSwitch('plimsoll'); fpsFeed('You take up a Cutlass of Plimsoll. Nothing else will touch the helmeted Divers.'); }
   else if (!mine && have) rbLetGo();
   // in a circle, the brazier's fire keeps your powder dry: your ammunition made up a little at a time
-  if (!RB.done && !(m.dead > 0) && (rbInCircle(0, lx, ly) || rbInCircle(1, lx, ly))) {
+  if (!RB.done && !(m.dead > 0) && (rbInCircle(0, lx, ly) || rbInCircle(1, lx, ly) || rbInCircle(2, lx, ly))) {
     RB.ammoT = (RB.ammoT || 0) + dt;
     if (RB.ammoT >= 1) { RB.ammoT = 0; for (const id of ZM.own) { const max = ZM_AMMO[id] || 0; if (max > 0) ZM.res[id] = Math.min(max, (ZM.res[id] || 0) + Math.ceil(max * 0.06)); } }
   }
@@ -29255,27 +29295,42 @@ function rbSpawnAt(x, y, rise) {
   const u = Math.random(), kind = u < 0.3 ? 'run' : u < 0.8 ? 'jog' : 'walk';
   return raidSpawnAt(x, y, { kind, hp: zmHp(RBC.LEVEL) * (0.9 + Math.random() * 0.2), rise: rise == null ? 0.8 : rise });
 }
-// a Diver up out of the river on the far bank, near whoever has the Cutlass
-function rbDiverUp() {
-  const c = RB.cut === FPS.me.id ? FPS.me : RB.cut ? FPS.remote.get(RB.cut) : null;
-  const near = c ? rbL(c.x, c.y)[0] : 0, lx = clamp(near + (Math.random() < 0.5 ? -1 : 1) * (8 + Math.random() * 8), RBC.X0 + 4, RBC.X1 - 4);
-  if (Math.abs(lx) < RBC.BW) return;
-  const [x, y] = rbW(lx, RBC.RY + RBC.RW / 2 + 1.6);
-  const T = ZBT.diver, zn = ++ZM.zc, hp = RBC.DHP;
-  const z = {
+// one of the Lighthouse's Divers (src/zmboss.js) up out of the river at (lx, ly), with o's flags on him
+function rbBoss(lx, ly, hp, o) {
+  const [x, y] = rbW(lx, ly), T = ZBT.diver, zn = ++ZM.zc;
+  const z = Object.assign({
     drowned: true, zm: true, boss: true, bt: 'diver', zn, id: 'z' + zn.toString(36), n: T.n, kind: 'boss', x, y, jz: 0, fl: 0,
     hp, max: hp, sp: T.sp(14), st: 'in', win: null, t: 0, ph: 0, hitT: 0, atk: 0, swing: -1, stuck: 0, lost: 0, h: 0, seed: (Math.random() * 1e6) | 0, rise: 1, hist: [],
-    act: null, at: 0, aseq: 0, slamCd: 4, swCd: 1, ix: 0, iy: 0, ax: 0, ay: 0, rbd: RB.dn + 1, lx: x, ly: y,
-  };
+    act: null, at: 0, aseq: 0, slamCd: 4, swCd: 1, ix: 0, iy: 0, ax: 0, ay: 0, lx: x, ly: y,
+  }, o);
   if (T.init) T.init(z);
   zbMake(z, 'diver');
-  z.hp = z.max = RBC.DHP * zbHurtK(z, ZM_DMG.P, null);   // (each cut of the Cutlass takes one of DHP off him: rbHurt)
   ZM.z.push(z); FPS.drowned = ZM.z;
   if (typeof ZB !== 'undefined' && ZB.seen) ZB.seen.add(zn);
-  RB.diver = z; RB.dn++;
-  rbSplash(x, y - 1, 40);
-  rbEvent('diver', RB.dn);
+  rbSplash(x, y + (ly < RBC.RY ? 1 : -1), 40);
   T.sound('arrive');
+  return z;
+}
+// someone carrying a Cutlass on the far bank (the first, if more)
+function rbFarCut() { for (const c of RB.cuts) if (c.st === 1) { const w = rbAt(c.by); if (w && rbFar(rbL(w.x, w.y)[1])) return w; } return null; }
+// a Diver up out of the river on the near bank, a Cutlass of Plimsoll in his fist: as tough as the Lighthouse's
+// Diver about round LEVEL (anything hurts him), away from the platforms and the bridge's foot
+function rbSwordUp() {
+  const lx = (Math.random() < 0.5 ? -1 : 1) * (14 + Math.random() * 20), n = (ZM.hum || []).length || 1;
+  const hp = typeof zbHpOf === 'function' ? zbHpOf('diver', RBC.LEVEL, n) : zmHp(RBC.LEVEL) * 20;
+  RB.sw++;
+  rbBoss(lx, RBC.RY - RBC.RW / 2 - 1.6, hp, { rbs: RB.sw, h: Math.PI });
+  rbEvent('sword', RB.sw);
+}
+// a helmeted Diver up out of the river on the far bank, near whoever's carried a Cutlass over
+function rbDiverUp() {
+  const c = rbFarCut();
+  const near = c ? rbL(c.x, c.y)[0] : 0, lx = clamp(near + (Math.random() < 0.5 ? -1 : 1) * (8 + Math.random() * 8), RBC.X0 + 4, RBC.X1 - 4);
+  if (Math.abs(lx) < RBC.PW + 1) return;
+  const z = rbBoss(lx, RBC.RY + RBC.RW / 2 + 1.6, RBC.DHP, { rbd: RB.dn + 1 });
+  z.hp = z.max = RBC.DHP * zbHurtK(z, ZM_DMG.P, null);   // (each cut of a Cutlass takes one of DHP off him: rbHurt)
+  RB.diver = z; RB.dn++;
+  rbEvent('diver', RB.dn);
 }
 // (the raid's hurt, on the shooter's side) the Divers here feel nothing but the Cutlass, and every cut of it the
 // same (one of RBC.DHP); everything else as it was
@@ -29293,6 +29348,11 @@ function rbHurt(d, dmg, code, by) {
 // (from zmKill, through the raid's kill hook) a kill in a circle builds the bridge; a Diver drops his helmet
 function rbKill(d, by) {
   if (!RB.on) return;
+  if (d.rbs) {
+    const c = { id: ++RB.cseq, st: 0, x: d.x, y: d.y, by: null }; rbClampBank(c); RB.cuts.push(c);
+    rbEvent('cdrop');
+    return;
+  }
   if (d.rbd) {
     const [lx, ly] = rbL(d.x, d.y), hm = { id: ++RB.hseq, st: 0, x: d.x, y: d.y, by: null, stand: -1 };
     rbClampHelm(hm); RB.helms.push(hm);
@@ -29316,15 +29376,14 @@ function rbClampHelm(hm) {
 // (from zmNearest) the Cutlass's stone, a helmet to pick up, a stand to set one on, the door
 function rbConsider(consider) {
   if (!RB.on) return;
-  const [sx, sy] = rbW(...RBC.STONE), mine = RB.cut === FPS.me.id;
-  if (!RB.cut || mine) consider({ k: 'rbcut' }, sx, sy, 0, 2.0, false);
+  if (!rbHasCut(FPS.me.id)) for (const c of RB.cuts) if (c.st === 0) consider({ k: 'rbcut', id: c.id }, c.x, c.y, 0, 2.0, false);
   const carrying = RB.helms.some(h => h.st === 1 && h.by === FPS.me.id);
   if (!carrying) for (const hm of RB.helms) if (hm.st === 0) consider({ k: 'rbhelm', id: hm.id }, hm.x, hm.y, 0, 1.9, false);
   if (carrying) RBC.STANDS.forEach(([x, y], i) => { if (RB.placed[i] < 0) { const [wx, wy] = rbW(x, y); consider({ k: 'rbstand', i }, wx, wy, 0, 2.0, false); } });
   if (RB.open) { const [dx, dy] = rbW(...RBC.DOOR); consider({ k: 'rbdoor' }, dx, dy - 1.2, 0, 2.6, false); }
 }
 function rbPrompt(o) {
-  if (o.k === 'rbcut') return RB.wait > 0 ? { text: '…' } : RB.cut === FPS.me.id ? { text: 'Lay the Cutlass of Plimsoll back on its stone', free: true } : { text: 'Take up the Cutlass of Plimsoll', free: true };
+  if (o.k === 'rbcut') return RB.wait > 0 ? { text: '…' } : { text: 'Take up the Cutlass of Plimsoll', free: true };
   if (o.k === 'rbhelm') return { text: 'Pick up the Diver’s helmet', free: true };
   if (o.k === 'rbstand') return { text: 'Set the helmet on its stand', free: true };
   if (o.k === 'rbdoor') return { text: 'Go through the door, all of you, to the third part', free: true };
@@ -29334,7 +29393,7 @@ function rbPrompt(o) {
 function rbUse(o) {
   if (!o || !/^rb/.test(o.k)) return false;
   if (RB.wait > 0) return true;
-  const a = o.k === 'rbcut' ? (RB.cut === FPS.me.id ? 'drop' : 'take') : o.k === 'rbhelm' ? 'h' + o.id : o.k === 'rbstand' ? 's' + o.i : 'door';
+  const a = o.k === 'rbcut' ? 'c' + o.id : o.k === 'rbhelm' ? 'h' + o.id : o.k === 'rbstand' ? 's' + o.i : 'door';
   if (ZM.net === 'client') { RB.wait = 0.6; rbSound('use'); }
   raidAsk(a);
   return true;
@@ -29346,8 +29405,7 @@ function rbReq(sid, a) {
   a = String(a || '');
   const who = sid === FPS.me.id ? FPS.me : FPS.remote.get(sid); if (!who) return;
   const nearTo = (x, y, r) => Math.hypot(who.x - x, who.y - y) < r;
-  if (a === 'take') { const [x, y] = rbW(...RBC.STONE); if (!RB.cut && nearTo(x, y, 3)) { RB.cut = sid; rbEvent('take', sid); } return; }
-  if (a === 'drop') { if (RB.cut === sid) { RB.cut = null; rbEvent('stone'); } return; }
+  if (a[0] === 'c') { const c = RB.cuts.find(c => c.id === (+a.slice(1) | 0)); if (c && c.st === 0 && !rbHasCut(sid) && nearTo(c.x, c.y, 3)) { c.st = 1; c.by = sid; rbEvent('take', sid); } return; }
   if (a[0] === 'h') { const hm = RB.helms.find(h => h.id === (+a.slice(1) | 0)); if (hm && hm.st === 0 && !RB.helms.some(h => h.st === 1 && h.by === sid) && nearTo(hm.x, hm.y, 2.6)) { hm.st = 1; hm.by = sid; rbEvent('pick', sid); } return; }
   if (a[0] === 's') {
     const i = clamp(+a.slice(1) | 0, 0, 2), hm = RB.helms.find(h => h.st === 1 && h.by === sid), [x, y] = rbW(...RBC.STANDS[i]);
@@ -29360,10 +29418,10 @@ function rbReq(sid, a) {
   }
   if (a === 'door') { if (RB.open) rbOnward(); return; }
 }
-// the third helmet: the bridge set fast, the door open
+// the third helmet: the door open (the bridge still has to be held to cross back by it)
 function rbHolds() {
-  RB.done = true; RB.open = true; RB.p = RBC.SEG; RB.phase = 'done';
-  rbSpans(RBC.SEG); rbDoorSolid(true);
+  RB.open = true; RB.phase = 'done';
+  rbDoorSolid(true);
   rbEvent('holds');
 }
 // through the door: on to the raid's next part (src/raid.js), or (with nothing past it yet) the raid's end
@@ -29381,16 +29439,18 @@ function rbEvent(k, a) {
 }
 function rbSay(k, a) {
   const nick = rbNick(rbHumAt(a));
-  if (k === 'plank') { rbSound('plank'); if (a >= RBC.SEG) { ZM.banner = { text: 'The bridge reaches the far bank', t: 3.2, small: true, col: '#ffd88a' }; fpsFeed('The bridge is across. Take the Cutlass of Plimsoll over, and keep the circles held.'); } }
+  if (k === 'plank') { rbSound('plank'); if (a >= RBC.SEG) { ZM.banner = { text: 'The bridge reaches the far bank', t: 3.2, small: true, col: '#ffd88a' }; fpsFeed('The bridge is across. Carry a Cutlass of Plimsoll over; hold the circles, or the far ring.'); } }
   else if (k === 'fall') { rbSound('fall'); RB.falls.push({ i: a, t: 0 }); if (!RB.said.fall || g.t - RB.said.fall > 6) { RB.said.fall = g.t; fpsFeed('A circle stands empty: the bridge is falling back into the river!'); } }
-  else if (k === 'take') { rbSound('cut'); if (nick !== 'You') fpsFeed(`${nick} takes up the Cutlass of Plimsoll.`); }
-  else if (k === 'stone') { rbSound('use'); fpsFeed('The Cutlass of Plimsoll lies back on its stone.'); }
-  else if (k === 'divers') { ZM.banner = { text: 'The Divers', t: 3.6, col: '#8affd0', sub: 'only the Cutlass of Plimsoll will hurt them' }; fpsFeed('Something heavy moves in the river by the far bank.'); }
+  else if (k === 'take') { rbSound('cut'); if (nick !== 'You') fpsFeed(`${nick} takes up a Cutlass of Plimsoll.`); }
+  else if (k === 'cfall') { rbSound('use'); fpsFeed('A Cutlass of Plimsoll falls from its bearer\'s hand. Someone take it up.'); }
+  else if (k === 'sword') { ZM.banner = { text: 'A Diver with a Cutlass', t: 3.6, col: '#7fd8ff', sub: 'put him down and take his sword' }; fpsFeed(`A Diver comes up out of the river on the near bank, a Cutlass of Plimsoll in his fist (${a} of ${RBC.SWT.length}).`); }
+  else if (k === 'cdrop') { rbSound('cut'); fpsFeed('The Diver goes down, and his Cutlass of Plimsoll falls free. Take it up.'); }
+  else if (k === 'divers') { ZM.banner = { text: 'The Divers', t: 3.6, col: '#8affd0', sub: 'only a Cutlass of Plimsoll will hurt them' }; fpsFeed('Something heavy moves in the river by the far bank.'); }
   else if (k === 'diver') { fpsFeed(`The ${['first', 'second', 'third'][clamp(a - 1, 0, 2)]} Diver comes up out of the river, dragging his anchor.`); }
   else if (k === 'helm') { rbSound('helm'); fpsFeed('The Diver goes down, and his brass helmet rolls free. Set it on a stand.'); }
   else if (k === 'pick') rbSound('use');
   else if (k === 'set') { rbSound('set'); ZM.banner = { text: `Helmet ${a} of 3`, t: 2.6, small: true, col: '#8affd0' }; }
-  else if (k === 'holds') { rbSound('holds'); ZM.banner = { text: 'The bridge holds', t: 4, col: '#ffd88a', sub: 'the circles can be left: a door has opened on the near bank' }; fpsFeed('The bridge sets fast. Behind the near bank, a door in the rock grinds open.'); }
+  else if (k === 'holds') { rbSound('holds'); ZM.banner = { text: 'The door is open', t: 4, col: '#ffd88a', sub: 'back over to the near bank, all of you' }; fpsFeed('The third helmet is set. Behind the near bank, a door in the rock grinds open.'); }
   else if (k === 'glance') { /* (someone else's shot off a Diver: they're told on their side) */ }
 }
 
@@ -29400,7 +29460,9 @@ function rbSay(k, a) {
 // y*10, bearer, stand], and what's just happened
 function rbPack(z) {
   if (!RB.on || !z) return;
-  z.rb = [Math.round(RB.p * 100), (RB.held[0] ? 1 : 0) | (RB.held[1] ? 2 : 0) | (RB.falling ? 4 : 0), RB.cut ? rbHumIx(RB.cut) : -1, RB.dn, ['build', 'divers', 'done'].indexOf(RB.phase), RB.open ? 1 : 0, Math.round(RB.kills)];
+  z.rb = [Math.round(RB.p * 100), (RB.held[0] ? 1 : 0) | (RB.held[1] ? 2 : 0) | (RB.falling ? 4 : 0) | (RB.far ? 8 : 0), RB.sw, RB.dn, ['build', 'divers', 'done'].indexOf(RB.phase), RB.open ? 1 : 0, Math.round(RB.kills), Math.round(RB.t), RB.holdT | 0];
+  z.rbc = RB.cuts.map(c => [c.id, c.st, Math.round(c.x * 10), Math.round(c.y * 10), c.by ? rbHumIx(c.by) : -1]);
+  z.rbz = ZM.z.filter(d => !d.dead && (d.rbs || d.rbd)).map(d => [d.id, d.rbs ? 1 : 2]);
   z.rbh = RB.helms.map(h => [h.id, h.st, Math.round(h.x * 10), Math.round(h.y * 10), h.by ? rbHumIx(h.by) : -1, h.stand]);
   if (RB.ev && RB.ev.length) z.rbe = RB.ev.slice(-6);
 }
@@ -29408,10 +29470,12 @@ function rbPack(z) {
 function rbApply(hz) {
   if (!RB.on || !Array.isArray(hz.rb)) return;
   const a = hz.rb.map(v => +v || 0);
-  RB.p = clamp(a[0] / 100, 0, RBC.SEG); RB.held = [!!(a[1] & 1), !!(a[1] & 2)]; RB.falling = !!(a[1] & 4); RB.holdT = 0;
-  RB.cut = a[2] >= 0 ? rbHumAt(a[2]) : null; RB.dn = a[3] | 0; RB.phase = ['build', 'divers', 'done'][a[4]] || 'build';
+  RB.p = clamp(a[0] / 100, 0, RBC.SEG); RB.held = [!!(a[1] & 1), !!(a[1] & 2)]; RB.falling = !!(a[1] & 4); RB.far = !!(a[1] & 8); RB.holdT = a[8] | 0;
+  RB.sw = a[2] | 0; RB.t = a[7] | 0; RB.dn = a[3] | 0;
+  if (Array.isArray(hz.rbc)) RB.cuts = hz.rbc.filter(Array.isArray).slice(0, 4).map(c => ({ id: c[0] | 0, st: c[1] | 0, x: c[2] / 10, y: c[3] / 10, by: c[4] >= 0 ? rbHumAt(c[4]) : null }));
+  if (Array.isArray(hz.rbz)) { const f = new Map(hz.rbz.filter(Array.isArray).map(e => [String(e[0]), e[1] | 0])); for (const d of ZM.z) { const k = f.get(d.id); d.rbs = k === 1; d.rbd = k === 2; } } RB.phase = ['build', 'divers', 'done'][a[4]] || 'build';
   RB.kills = a[6] | 0;
-  if (a[5] && !RB.open) { RB.open = true; RB.done = true; rbDoorSolid(true); }
+  if (a[5] && !RB.open) { RB.open = true; rbDoorSolid(true); }
   const built = Math.floor(RB.p + 1e-6); if (built !== RB.built) { RB.built = built; rbSpans(built); }
   if (Array.isArray(hz.rbh)) RB.helms = hz.rbh.filter(Array.isArray).slice(0, 3).map(h => ({ id: h[0] | 0, st: h[1] | 0, x: h[2] / 10, y: h[3] / 10, by: h[4] >= 0 ? rbHumAt(h[4]) : null, stand: h[5] | 0 }));
   RB.placed = [-1, -1, -1]; for (const h of RB.helms) if (h.st === 2 && h.stand >= 0) RB.placed[h.stand] = h.id;
@@ -29423,7 +29487,7 @@ function rbApply(hz) {
 // the Divers are up, the three stands
 function rbHud(phone0, mono0, fell0) {
   if (!RB.on || ZM.over) return;
-  const phone = FPS.touch, s = phone ? 0.75 : 1, cx = W / 2, boss = ZM.z.some(z => z.boss && !z.dead), top = (phone ? Math.max(10, FPS.safeTop || 0) + 52 : 64) + (boss ? 46 * s : 0);
+  const phone = FPS.touch, s = phone ? 0.75 : 1, cx = W / 2, boss = ZM.z.some(z => z.boss && !z.dead), top = (phone ? (FPS.hudCtop || 60) + 18 : 64) + (boss ? 46 * s : 0);
   const fell = px => `400 ${px * s}px "IM Fell English SC", serif`, mono = px => `600 ${px * s}px "Courier Prime", monospace`;
   ctx.save(); ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
   const need = rbNeed(), falling = !!RB.falling;
@@ -29435,19 +29499,29 @@ function rbHud(phone0, mono0, fell0) {
     ctx.fillStyle = 'rgba(20,24,28,0.7)'; ctx.fillRect(x, y, pw, 10 * s);
     if (f > 0) { ctx.fillStyle = RB.done ? '#ffd88a' : f >= 1 ? '#b8905a' : 'rgba(184,144,90,0.55)'; ctx.fillRect(x, y, pw * f, 10 * s); }
   }
-  // the circles
+  // the circles: the near two either side, the far ring between them (held, it holds the bridge on its own)
   if (!RB.done && need > 0) {
-    for (let i = 0; i < 2; i++) {
-      const x = cx + (i ? 1 : -1) * 34 * s, yy = y + 30 * s, on = RB.held[i];
+    for (let i = 0; i < 3; i++) {
+      const x = cx + (i === 2 ? 0 : (i ? 1 : -1) * 40 * s), yy = y + 30 * s, on = i === 2 ? RB.far : RB.held[i];
       ctx.beginPath(); ctx.arc(x, yy, 9 * s, 0, 6.283); ctx.lineWidth = 3 * s;
-      ctx.strokeStyle = on ? '#ffb070' : 'rgba(255,110,80,0.8)'; ctx.stroke();
-      if (on) { ctx.fillStyle = 'rgba(255,176,112,0.5)'; ctx.fill(); }
+      ctx.strokeStyle = on ? '#ffb070' : i === 2 ? 'rgba(236,228,207,0.35)' : 'rgba(255,110,80,0.8)'; ctx.stroke();
+      if (i === 2) { ctx.beginPath(); ctx.arc(x, yy, 5 * s, 0, 6.283); ctx.lineWidth = 1.5 * s; ctx.stroke(); }
+      if (on) { ctx.beginPath(); ctx.arc(x, yy, 9 * s, 0, 6.283); ctx.fillStyle = 'rgba(255,176,112,0.5)'; ctx.fill(); }
     }
-    ctx.font = mono(11); ctx.fillStyle = 'rgba(236,228,207,0.7)'; ctx.fillText(need === 1 ? 'hold a circle' : 'hold both circles', cx, y + 54 * s);
+    ctx.font = mono(11); ctx.fillStyle = 'rgba(236,228,207,0.7)'; ctx.fillText((need === 1 ? 'hold a circle' : 'hold both circles') + ', or the far ring', cx, y + 54 * s);
+  }
+  // the Cutlasses: how many have come, and when the next
+  let cy2 = y + (need > 0 ? 72 : 30) * s;
+  if (RB.phase === 'build') {
+    const nx = RBC.SWT[RB.sw], held = RB.cuts.filter(c => c.st === 1).length, mine = rbHasCut(FPS.me.id);
+    const left = nx != null ? Math.max(0, Math.ceil(nx - RB.t)) : 0;
+    const lying = RB.cuts.length - held;
+    const txt = `Cutlass Divers ${RB.sw} of ${RBC.SWT.length}` + (nx != null ? ` · next in ${Math.floor(left / 60)}:${String(left % 60).padStart(2, '0')}` : '') + (mine ? ' · you have a Cutlass' : lying ? ` · ${lying} Cutlass${lying > 1 ? 'es' : ''} on the ground` : '');
+    ctx.font = mono(11); ctx.fillStyle = '#7fd8ff'; ctx.fillText(txt, cx, cy2); cy2 += 26 * s;
   }
   // the helmets
   if (RB.phase !== 'build' && !RB.done) {
-    const yy = y + (need > 0 ? 80 : 32) * s;
+    const yy = y + (need > 0 ? 80 : 32) * s;   // (the Cutlasses' line gives way to the helmets once the Divers are up)
     for (let i = 0; i < 3; i++) { const x = cx + (i - 1) * 26 * s; ctx.beginPath(); ctx.arc(x, yy, 8 * s, 0, 6.283); ctx.fillStyle = RB.placed[i] >= 0 ? '#c8a050' : 'rgba(20,24,28,0.7)'; ctx.fill(); ctx.strokeStyle = '#8affd0'; ctx.lineWidth = 1.5 * s; ctx.stroke(); }
     const mine = RB.helms.some(h => h.st === 1 && h.by === FPS.me.id);
     ctx.font = mono(11); ctx.fillStyle = '#8affd0'; ctx.fillText(mine ? 'carrying a helmet' : `Divers ${RB.dn} of 3`, cx, yy + 22 * s);
@@ -29535,21 +29609,24 @@ function rb3dBuild(grp) {
       const o = new THREE.Mesh(new THREE.BoxGeometry(d * 2, z, 4.8), k % 2 ? tread : tread2); o.position.copy(V(cx + s * (w + d), cy - 0.6, z / 2)); g.add(o);
     }
   }
+  { // the far ring's platform, steps up north and south
+    const w = RBC.PW, P0 = RBC.PH, fy = RBC.FY;
+    const b = new THREE.Mesh(new THREE.BoxGeometry(w * 2, P0, w * 2), dais); b.position.copy(V(0, fy, P0 / 2)); g.add(b);
+    for (const [ox, oy, sx, sy] of [[0, w, w * 2 + 0.1, 0.22], [0, -w, w * 2 + 0.1, 0.22], [w, 0, 0.22, w * 2], [-w, 0, 0.22, w * 2]]) { const l = new THREE.Mesh(new THREE.BoxGeometry(sx, 0.1, sy), lipM); l.position.copy(V(ox, fy + oy, P0 + 0.04)); g.add(l); }
+    for (const k of [1, 2]) for (const e of [-1, 1]) { const d = (3 - k) * 0.45, z = P0 * k / 3, a = new THREE.Mesh(new THREE.BoxGeometry(w * 2, z, d * 2), k % 2 ? tread : tread2); a.position.copy(V(0, fy + e * (w + d), z / 2)); g.add(a); }
+  }
   rb3dClutter(g, V);
   // the circles: a ring of fire-lit light on the ground, bright while someone stands in it
   RB3.rings = [];
-  for (const s of [-1, 1]) {
+  for (const s of [-1, 1, 0]) {
     const m = new THREE.MeshBasicMaterial({ color: 0xffb070, transparent: true, opacity: 0.5, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide });
-    const r = new THREE.Mesh(new THREE.RingGeometry(RBC.CR - 0.18, RBC.CR, 48), m); r.rotation.x = -Math.PI / 2; r.position.copy(V(s * RBC.CX, RBC.CY, RBC.PH + 0.04)); g.add(r);
+    const r = new THREE.Mesh(new THREE.RingGeometry(RBC.CR - 0.18, RBC.CR, 48), m); r.rotation.x = -Math.PI / 2; r.position.copy(V(s * RBC.CX, s ? RBC.CY : RBC.FY, RBC.PH + 0.04)); g.add(r);
     const fm = new THREE.MeshBasicMaterial({ color: 0xff9050, transparent: true, opacity: 0.08, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide });
-    const f = new THREE.Mesh(new THREE.CircleGeometry(RBC.CR - 0.18, 40), fm); f.rotation.x = -Math.PI / 2; f.position.copy(V(s * RBC.CX, RBC.CY, RBC.PH + 0.035)); g.add(f);
+    const f = new THREE.Mesh(new THREE.CircleGeometry(RBC.CR - 0.18, 40), fm); f.rotation.x = -Math.PI / 2; f.position.copy(V(s * RBC.CX, s ? RBC.CY : RBC.FY, RBC.PH + 0.035)); g.add(f);
     RB3.rings.push({ m, fm });
   }
-  // the Cutlass's stone, and the Cutlass in it, point down
-  const stone = new THREE.Mesh(new THREE.DodecahedronGeometry(0.75, 0), z3Lam('#4a4c50')); stone.scale.set(1.2, 0.7, 1); stone.position.copy(V(RBC.STONE[0], RBC.STONE[1], 0.35)); g.add(stone);
-  RB3.cut = rb3dCutlass(); RB3.cut.position.copy(V(RBC.STONE[0], RBC.STONE[1], 1.3)); RB3.cut.rotation.set(Math.PI, 0.6, 0); g.add(RB3.cut);
-  RB3.cutGlow = new THREE.Sprite(new THREE.SpriteMaterial({ map: z3Soft('rgba(127,216,255,0.8)', 'rgba(127,216,255,0)'), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: 0.6 }));
-  RB3.cutGlow.scale.setScalar(2.2); RB3.cutGlow.position.copy(V(RBC.STONE[0], RBC.STONE[1], 1.4)); g.add(RB3.cutGlow);
+  // the Cutlasses lying where their Divers fell: built as needed, point down in the ground, glowing
+  RB3.cuts = []; RB3.glowMap = z3Soft('rgba(127,216,255,0.8)', 'rgba(127,216,255,0)');
   // the stands: an iron post on a stone foot, a cradle on top
   const iron = z3Lam('#2a2e31'), sf = z3Lam('#5a5850');
   for (const [x, y] of RBC.STANDS) {
@@ -29586,7 +29663,7 @@ function rb3dClutter(g, V) {
     if (Math.abs(y) < RBC.RW / 2 + 1.2 || x < RBC.X0 + 1.5 || x > RBC.X1 - 1.5 || y < RBC.Y0 + 1.5 || y > RBC.Y1 - 1.5) return false;
     if (Math.abs(Math.abs(x) - RBC.CX) < RBC.PW + 2.6 && y > RBC.CY - RBC.PW - 2.8 && y < -8) return false;          // the platforms
     if (Math.abs(x) < 3.5 && Math.abs(y) < RBC.RW / 2 + 4.5) return false;                                         // the bridge's steps
-    if (Math.hypot(x - RBC.STONE[0], y - RBC.STONE[1]) < 3) return false;
+    if (Math.abs(x) < RBC.PW + 2.6 && Math.abs(y - RBC.FY) < RBC.PW + 2.8) return false;                          // the far ring
     if (Math.abs(x) < 4 && y < -36) return false;                                                                  // the way in and the door
     if (RBC.STANDS.some(([sx, sy]) => Math.hypot(x - sx, y - sy) < 3)) return false;
     if (Math.hypot(x + 23, y + 27) < 4.5) return false;                                                            // the boat
@@ -29629,7 +29706,16 @@ function rb3dClutter(g, V) {
   RB3.clut = [];
   for (const [mk, n] of lot) for (let i = 0; i < n; i++) { const p = spot(); if (p) { at(mk(), p[0], p[1], 0, rnd() * Math.PI * 2); RB3.clut.push([mk.name, p[0], p[1]]); } }
 }
-// the Cutlass of Plimsoll, as it lies on its stone and on the stands' bank (a simple model; the one in your hands is
+// a Diver's model with a great Cutlass of Plimsoll in his hands (on) or his own anchor (models are shared out
+// among the Divers as they come and go, so each is set every frame, and put back as it was when the part ends)
+function rb3dArm(M, on) {
+  if (on && !M.rbSword) { const sw = rb3dCutlass(); sw.scale.setScalar(2.3); sw.rotation.set(Math.PI, 0, 0); sw.position.set(0, 0.1, 0); M.anc.add(sw); M.rbSword = sw; }
+  if (!M.rbSword) return;
+  (RB3.armed = RB3.armed || new Set()).add(M);
+  M.rbSword.visible = on;
+  for (const c of M.anc.children) if (c !== M.rbSword) c.visible = !on;
+}
+// the Cutlass of Plimsoll, as it lies on the ground (and, scaled up, in a Diver's fist; the one in your hands is
 // VM_BUILD.plimsoll)
 function rb3dCutlass() {
   const g = new THREE.Group();
@@ -29672,19 +29758,29 @@ function rb3dTick(dt) {
   // the circles: bright and flickering while held, a slow red pulse while empty and needed
   const need = rbNeed();
   RB3.rings.forEach((r, i) => {
-    const on = RB.held[i], want = !RB.done && need > 0;
+    const on = i === 2 ? RB.far : RB.held[i], want = !RB.done && need > 0 && RB.p > 0;
     r.m.color.set(on || !want ? 0xffb070 : 0xff5040);
     r.m.opacity = RB.done ? 0.15 : on ? 0.75 + 0.15 * Math.sin(t * 9 + i) : 0.25 + 0.2 * Math.sin(t * 3);
     r.fm.opacity = on && !RB.done ? 0.16 : 0.04;
   });
-  // the Cutlass: on its stone while nobody has it
-  RB3.cut.visible = RB3.cutGlow.visible = !RB.cut;
-  RB3.cutGlow.material.opacity = 0.45 + 0.2 * Math.sin(t * 2.5);
+  // the Cutlasses on the ground
+  while (RB3.cuts.length < RB.cuts.length) {
+    const c = rb3dCutlass(), gl = new THREE.Sprite(new THREE.SpriteMaterial({ map: RB3.glowMap, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: 0.6 }));
+    c.rotation.set(Math.PI - 0.25, 0.6, 0.1); gl.scale.setScalar(2.2); RB3.g.add(c); RB3.g.add(gl); RB3.cuts.push({ c, gl });
+  }
+  RB3.cuts.forEach((o, i) => {
+    const c = RB.cuts[i], on = !!c && c.st === 0; o.c.visible = o.gl.visible = on; if (!on) return;
+    const fz = typeof zmFloorAt === 'function' ? zmFloorAt(c.x, c.y, 9) : 0;
+    o.c.position.copy(z3v(c.x, c.y, FPSC.GROUND + fz + 0.95)); o.gl.position.copy(z3v(c.x, c.y, FPSC.GROUND + fz + 1.0));
+    o.gl.material.opacity = 0.45 + 0.2 * Math.sin(t * 2.5 + i);
+  });
+  // the Divers with Cutlasses: the sword in his fist instead of the anchor
+  for (const z of ZM.z) if (z.mdl && z.mdl.anc && z.bt === 'diver') rb3dArm(z.mdl, !!z.rbs && !z.dead);
   // the helmets: on the ground, on a stand, or carried at the bearer's side
   while (RB3.helms.length < RB.helms.length) { const m = rb3dHelmet(); RB3.g.add(m); RB3.helms.push(m); }
   RB3.helms.forEach((m, i) => {
     const hm = RB.helms[i]; m.visible = !!hm; if (!hm) return;
-    let z = 0, x = hm.x, y = hm.y;
+    let x = hm.x, y = hm.y, z = typeof zmFloorAt === 'function' ? zmFloorAt(x, y, 9) : 0;
     if (hm.st === 2) z = 1.55;
     else if (hm.st === 1) { const c = hm.by === FPS.me.id ? null : FPS.remote.get(hm.by); if (!c) { m.visible = false; return; } x = c.x; y = c.y; z = (c.jz || 0) + 1.0; }
     m.position.copy(z3v(x, y, FPSC.GROUND + z)); m.rotation.y = hm.st === 2 ? Math.PI : t * 0.3 + i;
@@ -29715,7 +29811,7 @@ VM_ANIM.plimsoll = (w, S) => VM_ANIM.cutlass(w, S);
 // ---------- the raid's second part (src/raid.js) ----------
 RAID_STAGES.bridge = {
   n: 'The Black Water', mend: true, map: { start: RBC.START.slice(), top: 0, zones: {}, nav: [RBC.X0 + 1, RBC.X1 - 1, RBC.Y0 + 1, RBC.Y1 - 1] },
-  set: (H, K, Z) => rbSet(H, K, Z), enter() { rbReset(); }, exit() { RB.on = false; RB3.g = null; rbLetGo(); },
+  set: (H, K, Z) => rbSet(H, K, Z), enter() { rbReset(); }, exit() { RB.on = false; RB3.g = null; rbLetGo(); if (RB3.armed) for (const M of RB3.armed) rb3dArm(M, false); },
   tick: dt => rbTick(dt), me: dt => rbMe(dt), kill: (d, how, by) => rbKill(d, by), hurt: (d, dmg, code, by) => rbHurt(d, dmg, code, by),
   q: (sid, k) => rbReq(sid, k), pack: o => rbPack(o), apply: o => rbApply(o),
   consider: c => rbConsider(c), prompt: o => rbPrompt(o), use: o => rbUse(o),
@@ -29734,7 +29830,9 @@ if (!RAID_ORDER.includes('bridge')) RAID_ORDER.splice(Math.max(0, RAID_ORDER.ind
 // a gun terrace on top of the sea wall, its cannon pointing out to sea, a sentry box (garita) at each end.
 //  - The hunt: a Mooncusser keeps each apothecary. Step into one and he lifts his false light; put him down. The
 //    drowned come in at the fort's windows and up ladders out of the sea onto the Battery the whole time.
-//  - Maren: when the third Mooncusser falls, Maren Holm comes up out of the sea onto the Sea Battery, three times the
+//  - The Knock: when the third Mooncusser falls, her bat comes up through the Plaza's flagstones first (src/raidknock.js).
+//    Put it down and “Maren is angered”; a pause, and she rises.
+//  - Maren: when the Knock falls, Maren Holm comes up out of the sea onto the Sea Battery, three times the
 //    height of a man (her model is built after her picture, assets/maren.png: a drowned woman in a long dark dress,
 //    one arm raised, her face lost in shadow). She can't be hurt while her soul is out of her: a yellow light, Maren's
 //    Soul, drifting over the water beyond the sea wall. Shoot it and she can be hurt for 30 seconds; then the soul
@@ -29762,6 +29860,7 @@ const RFC = {
   RAD: 1.35, TALL: 6.3, HEADZ: 5.55, PAD: 0.9, SP: 2.5, S: 3.05,   // (her size: S times a woman's)
   SWEEP: 4.7, SWEEP_ARC: 1.15, CALL_R: 3.4, CALL_RANGE: 34,
   ALIVE: [8, 13], ALIVE_MORE: 3, BOSS_T: [32, 48],
+  ANGER: [1.2, 4.2],   // (from the Knock's fall to “Maren is angered”; from that to her rising)
   BOX: [-22.6, 22.6, -21.2, 28.6],   // (where she can go: the Plaza and the Battery)
 };
 const RF_APOS = {
@@ -29770,7 +29869,7 @@ const RF_APOS = {
   apoN: { n: 'the Apothecary of San Lázaro', c: '#7aff9a', at: [0, 41.5], h: Math.PI },
 };
 const RF_APO_IDS = Object.keys(RF_APOS);
-const RF_ST = ['hunt', 'rise', 'maren', 'won'];
+const RF_ST = ['hunt', 'rise', 'maren', 'won', 'knock', 'anger'];
 const RF_START = [-16, 40.5], RF_FACE = Math.PI;   // (where you come in, by the Sally Port's great door, facing the Plaza)
 const RF = { on: false, st: 'hunt', apo: {}, wait: 0, mz: 0, vul: 0, orbUp: false, orbGap: 0, orbT: 0, orb: [0, -40, 8], bossT: 30, tok: null, mine: false, won: 0, seen: {}, grab: 0, shot: 0 };
 
@@ -30071,7 +30170,7 @@ const rfBox = () => RF_ZONES;   // (for tests)
 // everyone, once the fort's laid out: its state made fresh; every room open to the drowned; you face the Plaza
 function rfEnter() {
   Object.assign(RF, { on: true, st: 'hunt', apo: { apoW: 0, apoE: 0, apoN: 0 }, apoZ: {}, wait: 0, mz: 0, vul: 0, orbUp: false, orbGap: 0, orbT: 0, orbPh: 0, orb: [FPSC.CX, FPSC.CY - 40, 8], orbS: null,
-    bossT: RFC.BOSS_T[0], tok: null, mine: false, wonT: 0, grab: 0, shot: 0, spawnT: 3, t: 0, seenSt: 'hunt', burst: 0, hintT: 9 });
+    bossT: RFC.BOSS_T[0], tok: null, mine: false, wonT: 0, kz: 0, angerT: 0, angered: false, grab: 0, shot: 0, spawnT: 3, t: 0, seenSt: 'hunt', burst: 0, hintT: 9 });
   ZM.open = new Set(['raid'].concat(Object.keys(RF_ZONES)));
   ZM.round = Math.max(ZM.round, RFC.ROUND);
   ZB.round = ZM.round; ZB.plan = [];
@@ -30108,7 +30207,13 @@ function rfTick(dt) {
   if (RF.st === 'hunt') {
     // stepping into an apothecary wakes its keeper
     for (const k of RF_APO_IDS) if (!RF.apo[k] && P.some(p => zmZoneAt(p.x, p.y, p.jz) === k)) rfWake(k);
-    if (RF_APO_IDS.every(k => RF.apo[k] === 2)) { RF.wait -= dt; if (RF.wait <= 0) rfMaren(); }
+    if (RF_APO_IDS.every(k => RF.apo[k] === 2)) { RF.wait -= dt; if (RF.wait <= 0) rfKnock(); }
+  } else if (RF.st === 'knock') {
+    // the Knock keeps to the Plaza and the Battery too
+    const K = ZM.z.find(z => z.zn === RF.kz);
+    if (K && !K.dead && K.act !== 'emerge') { const B = RFC.BOX; K.x = clamp(K.x, FPSC.CX + B[0], FPSC.CX + B[1]); K.y = clamp(K.y, FPSC.CY + B[2], FPSC.CY + B[3]); }
+  } else if (RF.st === 'anger') {
+    RF.wait -= dt; if (RF.wait <= 0) rfMaren();
   } else if (RF.st === 'maren') {
     const M = ZM.z.find(z => z.zn === RF.mz);
     // her soul over the water: up, shot, and up again
@@ -30144,7 +30249,21 @@ function rfArrive(k) {
   fpsFeed(`In ${RF_APOS[k].n} a false light opens: its Mooncusser.`);
   ZBT.moon.sound('arrive');
 }
-// all three keepers down: Maren comes up out of the sea onto the Battery
+// all three keepers down: first her bat, the Knock, up through the flagstones of the Plaza
+function rfKnock() {
+  const z = rfBoss('knock', RFK.AT[0], RFK.AT[1], Math.PI, RFK.DEEP);
+  RF.kz = z.zn; RF.st = 'knock';
+  zbStart(z, 'emerge');
+  zbArrive(z);
+}
+// the Knock down: Maren is angered (on every screen, a moment after it falls)
+function rfAngered() {
+  RF.angered = true;
+  ZM.banner = { text: 'Maren is angered', t: 4, col: '#ff6a7a', sub: 'out at sea, the water heaves' };
+  fpsFeed('Maren is angered. Out at sea, the water heaves.');
+  rfSound('anger', 0);
+}
+// the Knock down and her anger told: Maren comes up out of the sea onto the Battery
 function rfMaren() {
   const z = rfBoss('maren', 0, -30, 0, -7);
   RF.mz = z.zn; RF.st = 'maren'; RF.orbGap = 6; RF.bossT = 20;
@@ -30157,8 +30276,11 @@ function rfKill(d, how, by) {
   if (d.apo && RF.apo[d.apo] !== 2) {
     RF.apo[d.apo] = 2;
     const left = RF_APO_IDS.filter(k => RF.apo[k] !== 2).length;
-    rfLine(left ? `The keeper of ${RF_APOS[d.apo].n} is down. ${left === 1 ? 'One apothecary' : left + ' apothecaries'} still kept.` : 'The last false light goes out. Out at sea, something rises.');
+    rfLine(left ? `The keeper of ${RF_APOS[d.apo].n} is down. ${left === 1 ? 'One apothecary' : left + ' apothecaries'} still kept.` : 'The last false light goes out. Somewhere in the Plaza, three knocks on wood.');
     if (!left) RF.wait = 4.5;
+  }
+  if (d.bt === 'knock' && RF.st === 'knock') {
+    RF.st = 'anger'; RF.angerT = 0; RF.angered = false; RF.wait = RFC.ANGER[0] + RFC.ANGER[1];
   }
   if (d.bt === 'maren' && RF.st === 'maren') {
     RF.st = 'won'; RF.vul = 0; RF.orbUp = false; RF.wonT = 10;
@@ -30212,6 +30334,7 @@ function rfMe(dt) {
   if (!RF.on) return;
   const m = FPS.me;
   if (RF.shot > 0) RF.shot -= dt; if (RF.grab > 0) RF.grab -= dt; if (RF.hintT > 0) RF.hintT -= dt;
+  if (RF.st === 'anger') { RF.angerT += dt; if (!RF.angered && RF.angerT >= RFC.ANGER[0]) rfAngered(); }
   if (ZM.net === 'client' && RF.vul > 0) RF.vul = Math.max(0, RF.vul - dt);
   // joined: her soul glides between the host's words
   if (ZM.net === 'client' && RF.orbS) { const k = Math.min(1, dt * 8); for (let i = 0; i < 3; i++) RF.orb[i] += (RF.orbS[i] - RF.orb[i]) * k; }
@@ -30239,6 +30362,7 @@ function rfApply(o) {
   if (!RF.on || !o || !Array.isArray(o.f)) return;
   const f = o.f.map(v => +v || 0), CX = FPSC.CX, CY = FPSC.CY;
   const st = RF_ST[f[0] | 0] || 'hunt';
+  if (st === 'anger' && RF.st !== 'anger') { RF.angerT = 0; RF.angered = false; }
   RF_APO_IDS.forEach((k, i) => {
     const v = Math.floor(f[1] / Math.pow(3, i)) % 3, zn = f[12 + i] | 0;
     if (zn && !RF.apoZ[k]) { RF.apoZ[k] = zn; ZB.seen.add(zn); }   // (his coming is told here, not as one up out of the sea)
@@ -30320,7 +30444,16 @@ ZBT.maren = {
   // (while her soul's out of her nothing touches her; struck, the Lamp burns her at half the rate)
   hurtK: (z, how) => RF.vul > 0 ? (how === 'burn' ? 0.5 : 1) : 0,
   endOf: (z, act) => RFM_T[act] ? RFM_T[act].end : 0,
-  actSound(z, act) { const d = Math.hypot(z.x - FPS.me.x, z.y - FPS.me.y); if (act === 'call') rfSound('call', d); else if (act === 'rise') rfSound('rise', d); },
+  actSound(z, act) {
+    const d = Math.hypot(z.x - FPS.me.x, z.y - FPS.me.y);
+    if (act === 'call') rfSound('call', d);
+    else if (act === 'rise') {
+      rfSound('rise', d);
+      // (the sea bursts up where she comes)
+      const x = FPSC.CX + RF_RISE[0][0], y = FPSC.CY + RF_RISE[0][1];
+      for (let i = 0; i < 40; i++) { const a = Math.random() * 6.283, r = Math.random() * 3.5; fpsPuff(x + Math.cos(a) * r, y + Math.sin(a) * r, FPSC.GROUND + ZMD.WATER + Math.random() * 9, '150,220,210', 4); }
+    }
+  },
   sound: (k, d) => rfSound(k, d),
   build: () => rfBuildMaren(),
   reset(z, M) { M.root.rotation.set(0, 0, 0); M.root.scale.setScalar(1); M.root.visible = true; },
@@ -30338,6 +30471,7 @@ function rfSound(k, d) {
   if (k === 'call') { whisper(0.9); play('sea', 0.6); return; }
   if (k === 'erupt') { play('splash', 1); play('slam', 0.6); return; }
   if (k === 'die') { play('thunder', 1); sting(); whisper(1); return; }
+  if (k === 'anger') { play('thunder', 1); play('sea', 0.8); sting(); whisper(1); return; }
   if (k === 'orb') { play('powerup', 0.9); sting(); return; }
   if (k === 'token') { play('pickup', 1); play('chest', 0.6); return; }
 }
@@ -30470,14 +30604,19 @@ function rfPoseMaren(z, M, dt) {
 // ---------- on top: what's to be done, her soul's mark, the token ----------
 function rfHud(phone, mono, fell) {
   if (!RF.on) return;
-  const m = FPS.me, t = g.t, L = Math.max(14, FPS.safeLeft || 0), top = (phone ? Math.max(10, FPS.safeTop || 0) : 14) + (phone ? 36 : 46);
+  const m = FPS.me, t = g.t, L = Math.max(14, FPS.safeLeft || 0), top = fpsHudTop() + (phone ? 32 : 46);
   ctx.textAlign = 'left'; ctx.textBaseline = 'top';
-  const line = (s, y, c, f) => { ctx.font = f || mono(phone ? 10 : 12); ctx.fillStyle = c; ctx.fillText(s, L, y); };
+  const line = (s, y, c, f) => { ctx.font = f || mono(phone ? 10 : 12); ctx.fillStyle = c; ctx.fillText(s, L, y, W * 0.5); fpsHudNote(y + (f ? (phone ? 20 : 26) : (phone ? 14 : 17))); };
   ctx.shadowColor = 'rgba(0,0,0,0.9)'; ctx.shadowBlur = 6;
   if (RF.st === 'hunt') {
     const down = RF_APO_IDS.filter(k => RF.apo[k] === 2).length;
     line(`The apothecaries’ keepers: ${down} of 3 put down`, top, 'rgba(255,214,140,0.9)');
     RF_APO_IDS.forEach((k, i) => line(`${RF.apo[k] === 2 ? '✓' : RF.apo[k] === 1 ? '•' : '◦'} ${RF_APOS[k].n.replace(/^the /, '')}${RF.apo[k] === 1 ? ' · awake' : ''}`, top + (i + 1) * (phone ? 13 : 16), RF.apo[k] === 2 ? 'rgba(236,228,207,0.4)' : RF_APOS[k].c));
+  } else if (RF.st === 'knock') {
+    line('The Knock, Bat of Maren', top, 'rgba(240,180,110,0.95)', fell(phone ? 15 : 20));
+    line('Put it down, and Maren comes', top + (phone ? 20 : 26), 'rgba(240,200,150,0.8)');
+  } else if (RF.st === 'anger') {
+    if (RF.angered) line('Maren is angered', top, `rgba(255,110,120,${0.8 + 0.2 * Math.sin(t * 8)})`, fell(phone ? 15 : 20));
   } else if (RF.st === 'maren') {
     const M = ZM.z.find(z => z.zn === RF.mz);
     if (RF.vul > 0) line(`Maren can be hurt: ${Math.ceil(RF.vul)} s`, top, `rgba(255,120,130,${0.8 + 0.2 * Math.sin(t * 8)})`, fell(phone ? 15 : 20));
@@ -30524,6 +30663,7 @@ const RF3 = { orb: null };
 function rf3dBuild(grp) {
   RF3.orb = null;
   if (!RF.on) return;
+  if (typeof rfk3dBuild === 'function') rfk3dBuild(grp);
   const soft = (c0, c1) => new THREE.SpriteMaterial({ map: z3Soft(c0, c1), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false });
   // the soul: a hot core, a gold glow round it, a wider haze, and its light on the sea under it
   const orb = RF3.orb = new THREE.Group(); grp.add(orb); orb.visible = false;
@@ -30555,6 +30695,7 @@ function rf3dBuild(grp) {
 }
 function rf3d(dt) {
   if (!RF.on || !RF3.orb) return;
+  if (typeof rfk3d === 'function') rfk3d(dt);
   const t = g.t, G0 = FPSC.GROUND;
   // the soul
   const up = RF.st === 'maren' && RF.orbUp;
@@ -30580,6 +30721,391 @@ function rf3d(dt) {
   const tk = RF.tok && !RF.mine;
   RF3.tok.visible = !!tk;
   if (tk) { RF3.tok.position.copy(z3v(RF.tok[0], RF.tok[1], G0 + RF.tok[2] + 1.0 + 0.15 * Math.sin(t * 2.2))); RF3.tok.rotation.y = t * 1.8; }
+}
+
+// ---- src/raidknock.js ----
+// Maren's End: the Knock, Bat of Maren. When the third Mooncusser falls it comes before her: up through the
+// flagstones of the Plaza, a plank of driftwood half again as tall as Maren, with a face, thin bare limbs and a bat.
+// Put it down and Maren is angered: a pause, and she rises out of the sea (src/raidfort.js runs the stage).
+//  - Its model is built after its picture (assets/knock.png): a tall plank of orange wood for a body, big round eyes,
+//    a long nose and a wide grin on its upper end, thin arms and long thin legs, bare feet, a bat in its right hand.
+//  - Its blows, each its own:
+//      the swing: close in, a flat swing of the bat that knocks you back (one knock);
+//      three knocks: it raps the bat on the flagstones three times, and each rap sends a ring out across the floor
+//        (one knock each; jump over them);
+//      the cleave: the bat up over its head and down, and the floor splits in a line towards you (two knocks; step
+//        off the line);
+//      the throw: it hurls the bat at you end over end, and it comes back to its hand (one knock going, one coming).
+// A boss kind on src/zmboss.js's framework (ZBT.knock), host-authoritative like the rest: each player judges its blows
+// on themselves (judge), from the blow and how far into it it is, and where it's aimed (ix, iy; ax, ay).
+
+const RFK = {
+  HP: 40, PTS: 2000, RAD: 1.05, TALL: 9.2, HEADZ: 6.9, PAD: 0.9, SP: 2.9, S: 9.2,   // (its size: S is its height)
+  BAT: 6.2, BAT_ARC: 1.3, NEAR: 3.6,   // (the swing's reach and arc)
+  WAVES: [0.85, 1.45, 2.05], WAVE_V: 12, WAVE_R: 20, WAVE_W: 0.9, KNOCK_AT: 5, KNOCK_SIDE: 1.3,   // (three knocks: when each lands, how fast and far its ring runs)
+  CLEAVE_L: 26, CLEAVE_W: 1.4, CLEAVE_V: 34,   // (the cleave's line: how long, how wide, how fast it splits)
+  HURL_OUT: 0.85, HURL_R: 1.5, HURL_MAX: 30, HURL_H: 2.2,   // (the throw: each way's time, how near counts, how far, how high)
+  AT: [0, 4], DEEP: -9.5,   // (where it comes up: local x, y; how far under the flagstones it starts)
+};
+const RFK_T = { emerge: { hit: 99, end: 3.6 }, bat: { hit: 0.8, end: 1.6 }, knocks: { hit: 0.85, end: 2.9 }, cleave: { hit: 1.3, end: 2.6 }, hurl: { hit: 0.8, end: 0.8 + RFK.HURL_OUT * 2 + 0.45 }, smash: { hit: 0.8, end: 1.3 } };
+ZB_KINDS.push('knock');
+for (const a of ['emerge', 'bat', 'knocks', 'cleave', 'hurl']) if (!ZB_ACT.includes(a)) ZB_ACT.push(a);
+
+// where its thrown bat is at time t into the throw (null while it's in its hand): out to the mark and back
+function rfkBatAt(z, t) {
+  const T = RFK_T.hurl, u = (t - T.hit) / RFK.HURL_OUT;
+  if (!(u > 0) || u >= 2) return null;
+  const k = u < 1 ? 1 - (1 - u) * (1 - u) : 1 - (u - 1) * (u - 1);
+  return [zbL(z.ax, z.ix, k), zbL(z.ay, z.iy, k), (z.jz || 0) + RFK.HURL_H + Math.sin(k * Math.PI) * 1.4];
+}
+const rfkGrounded = m => (m.jz || 0) - (m.fl || 0) < 0.25 && !((m.vz || 0) > 0.5);
+function rfkHurt(n, px, py) {
+  const m = FPS.me;
+  fpsHurt(n, null, null); zmSound('hit'); FPS.hurtT = 0.9; FPS.eyeLag = clamp((FPS.eyeLag || 0) - 0.25, -0.8, 0.8);
+  // (knocked back, away from px, py)
+  if (px != null) { const dx = m.x - px, dy = m.y - py, l = Math.hypot(dx, dy) || 1; for (let i = 0; i < 6; i++) zmMove(m, dx / l * 0.32, dy / l * 0.32); }
+}
+
+ZBT.knock = {
+  n: 'The Knock', N: 'The Knock', sub: 'Bat of Maren', col: '#e0a060', warn: '255,190,110', big: 'cleave', puff: '170,120,70',
+  bar: ['#5a3418', '#e0a060'],
+  hp: RFK.HP, pts: RFK.PTS, rad: RFK.RAD, tall: RFK.TALL, headZ: RFK.HEADZ, pad: RFK.PAD, crowd: 1.5, near: RFK.NEAR, through: 1.6, scale: 1.6,
+  sp: () => RFK.SP,
+  win: () => false,
+  acts: RFK_T,
+  arriveLine: () => 'Three knocks on wood, and up through the flagstones of the Plaza: the Knock, Maren’s bat. Put it down, and she comes.',
+  smashLine: () => '',
+  killLine: (who, pts) => `${who} split the Knock (+${pts}).`,
+  init(z) { z.kCd = 3; z.last = ''; },
+  cool(z, dt) { if (z.kCd > 0) z.kCd -= dt; },
+  think(z, p, d, dz, level) {
+    if (level && d < RFK.BAT - 0.6 && z.swCd <= 0) return 'bat';
+    if (z.kCd > 0) return null;
+    const can = [];
+    if (d < RFK.WAVE_R - 4) can.push('knocks');
+    if (level && d < RFK.CLEAVE_L - 3) can.push('cleave');
+    if (d > 7 && d < RFK.HURL_MAX - 2) can.push('hurl');
+    const pick = can.filter(a => a !== z.last);
+    const L = pick.length ? pick : can;
+    return L.length ? L[(Math.random() * L.length) | 0] : null;
+  },
+  start(z, act, p) {
+    if (act === 'bat') { z.swCd = 2.2 + Math.random() * 0.6; return; }
+    if (act === 'emerge') return;
+    z.last = act; z.kCd = 3.2 + Math.random() * 2.2; z.swCd = Math.max(z.swCd, 1);
+    z.ax = z.x; z.ay = z.y;
+    if (act === 'knocks') { z.ix = z.x + Math.sin(z.h) * RFK.KNOCK_AT + Math.cos(z.h) * RFK.KNOCK_SIDE; z.iy = z.y + Math.cos(z.h) * RFK.KNOCK_AT - Math.sin(z.h) * RFK.KNOCK_SIDE; }
+    else if (p) rfkAim(z, p, act);
+  },
+  during(z, dt, nearest, was) {
+    if (z.act === 'emerge') {
+      // (up through the flagstones, the stone breaking round it)
+      const k = Math.min(1, z.at / RFK_T.emerge.end), e = zbE(k);
+      z.jz = zbL(RFK.DEEP, 0, e); z.fl = 0;
+      if (Math.random() < dt * 40) { const a = Math.random() * 6.283, r = 1 + Math.random() * 2.6; fpsPuff(z.x + Math.cos(a) * r, z.y + Math.sin(a) * r, FPSC.GROUND + 0.2 + Math.random() * 1.5, '140,120,100', 3); }
+      return;
+    }
+    const p = nearest(z.x, z.y, z.jz), T = RFK_T[z.act];
+    if (p && T) {
+      if (z.act === 'bat' && z.at < T.hit * 0.7) z.h += angDiff(bearingOf(p.x - z.x, p.y - z.y), z.h) * Math.min(1, dt * 4);
+      // (the cleave and the throw follow whoever they're for, for the first half of the wind-up; then they're set)
+      if ((z.act === 'cleave' || z.act === 'hurl') && z.at < T.hit * 0.55) rfkAim(z, p, z.act);
+      if (z.act === 'knocks' && z.at < T.hit * 0.5) { z.h += angDiff(bearingOf(p.x - z.x, p.y - z.y), z.h) * Math.min(1, dt * 3); z.ix = z.x + Math.sin(z.h) * RFK.KNOCK_AT + Math.cos(z.h) * RFK.KNOCK_SIDE; z.iy = z.y + Math.cos(z.h) * RFK.KNOCK_AT - Math.sin(z.h) * RFK.KNOCK_SIDE; }
+    }
+    ZBT.knock.judge(z, was, z.at);
+  },
+  // (on every screen, for its own player) what its blows did between at0 and at1
+  judge(z, at0, at1) {
+    if (z.kSeq !== z.aseq) { z.kSeq = z.aseq; z.kh = 0; z.ks = 0; }
+    const m = FPS.me, ok = zbOk(), G0 = FPSC.GROUND, dm = Math.hypot(z.x - m.x, z.y - m.y);
+    if (z.act === 'knocks') {
+      const iz = zmFloorAt(z.ix, z.iy, 12, 0.3), d = Math.hypot(m.x - z.ix, m.y - z.iy);
+      RFK.WAVES.forEach((ti, i) => {
+        const b = 1 << i;
+        if (at0 < ti && at1 >= ti && !(z.ks & b)) {
+          z.ks |= b; rfkSound('knock', dm);
+          for (let j = 0; j < 14; j++) { const a = j / 14 * 6.283; fpsPuff(z.ix + Math.cos(a) * 0.9, z.iy + Math.sin(a) * 0.9, G0 + iz + 0.2, '170,140,100', 2.5); }
+        }
+        const r0 = Math.max(0, (at0 - ti) * RFK.WAVE_V), r1 = (at1 - ti) * RFK.WAVE_V;
+        if (r1 <= 0 || r0 > RFK.WAVE_R || (z.kh & b)) return;
+        if (ok && d > r0 - RFK.WAVE_W && d < r1 + RFK.WAVE_W * 0.5 && Math.abs((m.jz || 0) - iz) < 1.3 && rfkGrounded(m)) { z.kh |= b; rfkHurt(1, z.ix, z.iy); }
+      });
+    } else if (z.act === 'cleave') {
+      const H = RFK_T.cleave.hit; if (at1 <= H) return;
+      const L = Math.hypot(z.ix - z.ax, z.iy - z.ay) || 1, ux = (z.ix - z.ax) / L, uy = (z.iy - z.ay) / L;
+      const s0 = Math.max(0, (at0 - H) * RFK.CLEAVE_V) - 0.6, s1 = Math.min(RFK.CLEAVE_L, (at1 - H) * RFK.CLEAVE_V) + 0.6;
+      const rx = m.x - z.ax, ry = m.y - z.ay, along = rx * ux + ry * uy, side = Math.abs(rx * uy - ry * ux);
+      if (!(z.kh & 8) && ok && along > Math.max(1.2, s0) && along < s1 && side < RFK.CLEAVE_W && Math.abs((m.jz || 0) - (z.jz || 0)) < 1.3 && rfkGrounded(m)) {
+        z.kh |= 8; fpsHurt(2, null, null); zmSound('hit'); FPS.hurtT = 1.0; FPS.eyeLag = clamp((FPS.eyeLag || 0) - 0.35, -0.8, 0.8);
+      }
+    } else if (z.act === 'hurl') {
+      // (the bat's way between at0 and at1, a few points along it: did it pass through me)
+      for (let i = 0; i <= 4; i++) {
+        const t = zbL(at0, at1, i / 4), q = rfkBatAt(z, t); if (!q) continue;
+        const b = t < RFK_T.hurl.hit + RFK.HURL_OUT ? 16 : 32;
+        if (!(z.kh & b) && ok && Math.hypot(q[0] - m.x, q[1] - m.y) < RFK.HURL_R && Math.abs(q[2] - ((m.jz || 0) + 1.1)) < 1.6) { z.kh |= b; rfkHurt(1, q[0], q[1]); }
+      }
+      const back = RFK_T.hurl.hit + RFK.HURL_OUT * 2;
+      if (at0 < back && at1 >= back) rfkSound('catch', dm);
+    }
+  },
+  strike(z) {
+    const m = FPS.me, d = Math.hypot(z.x - m.x, z.y - m.y), G0 = FPSC.GROUND;
+    if (z.act === 'bat') {
+      rfkSound('bat', d);
+      if (zbOk() && d < RFK.BAT && Math.abs(angDiff(bearingOf(m.x - z.x, m.y - z.y), z.h)) < RFK.BAT_ARC && Math.abs((m.jz || 0) - (z.jz || 0)) < 1.6) { rfkHurt(1, z.x, z.y); rfkSound('thwack', 0); }
+      return;
+    }
+    if (z.act === 'cleave') {
+      rfkSound('cleave', d);
+      const L = Math.hypot(z.ix - z.ax, z.iy - z.ay) || 1, ux = (z.ix - z.ax) / L, uy = (z.iy - z.ay) / L;
+      for (let s = 1.5; s < RFK.CLEAVE_L; s += 1.1) { const x = z.ax + ux * s, y = z.ay + uy * s, iz = zmFloorAt(x, y, 12, 0.3); fpsPuff(x + (Math.random() - 0.5), y + (Math.random() - 0.5), G0 + iz + 0.2 + Math.random(), '150,125,95', 3); }
+      return;
+    }
+    if (z.act === 'hurl') rfkSound('hurl', d);
+  },
+  after(z, a) { if (a === 'emerge') { z.st = 'in'; z.jz = z.fl = 0; zmSettle(z); z.kCd = 1.5; } },
+  hurtK: (z, how) => how === 'burn' ? 0.6 : 1,
+  endOf: (z, act) => RFK_T[act] ? RFK_T[act].end : 0,
+  actSound(z, act) { const d = Math.hypot(z.x - FPS.me.x, z.y - FPS.me.y); if (act === 'emerge') rfkSound('arrive', d); else if (act === 'cleave') rfkSound('raise', d); },
+  sound: (k, d) => rfkSound(k, d),
+  build: () => rfBuildKnock(),
+  reset(z, M) { M.root.rotation.set(0, 0, 0); M.root.visible = true; M.bat.visible = true; },
+  pose: (z, M, dt) => rfPoseKnock(z, M, dt),
+};
+// the cleave's line, or the throw's mark: at whoever it's for (the throw carries on a little past them)
+function rfkAim(z, p, act) {
+  z.h += angDiff(bearingOf(p.x - z.x, p.y - z.y), z.h) * 0.5;
+  const dx = p.x - z.x, dy = p.y - z.y, d = Math.hypot(dx, dy) || 1;
+  const L = act === 'hurl' ? Math.min(RFK.HURL_MAX, d + 3) : RFK.CLEAVE_L;
+  z.ax = z.x; z.ay = z.y; z.ix = z.x + dx / d * L; z.iy = z.y + dy / d * L;
+}
+// its sounds: wood (from the recordings where there's one, src/sfxbank.js), and its three knocks (src/audio.js)
+function rfkSound(k, d) {
+  const v = clamp(1 - (d || 0) / 70, 0.15, 1), play = (n, vol) => { try { return typeof sfxPlay === 'function' && sfxPlay(n, { vol: vol * v, vary: 0.06 }); } catch (e) { return false; } };
+  const knock = (vol, gap) => { try { if (typeof sfxKnock === 'function') sfxKnock(0, vol * v, gap); } catch (e) {} };
+  if (k === 'arrive') { knock(1, 0.34); play('debris', 1); play('thunder', 0.7); try { if (typeof sfxSting === 'function') sfxSting(); } catch (e) {} return; }
+  if (k === 'groan') { knock(0.55, 0.26); return; }
+  if (k === 'bat' || k === 'hurl') { play('swish', 1); return; }
+  if (k === 'thwack' || k === 'catch') { play('board', 1); return; }
+  if (k === 'knock') { play('slam', 0.8); play('board', 0.7); return; }
+  if (k === 'raise') { play('creak', 0.9); return; }
+  if (k === 'cleave') { play('slam', 1); play('debris', 1); play('explode', 0.35); return; }
+  if (k === 'die') { play('debris', 1); play('board', 1); knock(0.9, 0.5); return; }
+}
+
+// ---------- its model: built after its picture ----------
+// Everything is built to a height of 1 and scaled to RFK.S. Its front is -z (as all of them): its right hand is +x.
+const RFKG = {};
+function rfkGeo() {
+  if (RFKG.ok) return RFKG;
+  const Q = RFKG;
+  // the wood: orange-brown, with a grain running up it
+  const c = document.createElement('canvas'); c.width = 64; c.height = 256;
+  const x = c.getContext('2d'), rnd = seeded(0x6b0c);
+  x.fillStyle = '#b8743c'; x.fillRect(0, 0, 64, 256);
+  for (let i = 0; i < 40; i++) { const gx = rnd() * 64, w = 0.5 + rnd() * 2; x.strokeStyle = `rgba(${rnd() < 0.5 ? '120,64,24' : '214,150,90'},${0.25 + rnd() * 0.35})`; x.lineWidth = w; x.beginPath(); x.moveTo(gx, 0); for (let y = 0; y <= 256; y += 16) x.lineTo(gx + Math.sin(y * 0.03 + i) * 2.5, y); x.stroke(); }
+  for (let i = 0; i < 3; i++) { const kx = 10 + rnd() * 44, ky = 20 + rnd() * 216; x.strokeStyle = 'rgba(100,52,20,0.6)'; x.lineWidth = 1.5; x.beginPath(); x.ellipse(kx, ky, 3, 7, 0, 0, 6.283); x.stroke(); }
+  Q.tex = new THREE.CanvasTexture(c);
+  Q.plank = new THREE.BoxGeometry(0.21, 0.6, 0.1, 2, 6, 1); Q.plank.translate(0, 0.3, 0);
+  Q.cap = new THREE.CylinderGeometry(0.105, 0.105, 0.1, 16, 1, false, -Math.PI / 2, Math.PI); Q.cap.rotateX(-Math.PI / 2); Q.cap.scale(1, 0.32, 1);
+  Q.eye = new THREE.SphereGeometry(0.036, 16, 12);
+  Q.iris = new THREE.SphereGeometry(0.019, 12, 8);
+  Q.pupil = new THREE.SphereGeometry(0.01, 8, 6);
+  Q.lid = new THREE.SphereGeometry(0.039, 16, 8, 0, Math.PI * 2, 0, Math.PI * 0.42);
+  Q.brow = new THREE.BoxGeometry(0.05, 0.008, 0.012);
+  Q.nose = new THREE.SphereGeometry(0.02, 10, 8); Q.nose.scale(0.8, 1.8, 1.1);
+  Q.mouth = new THREE.TorusGeometry(0.042, 0.009, 6, 18, Math.PI); Q.mouth.rotateZ(Math.PI);
+  Q.teeth = new THREE.BoxGeometry(0.06, 0.012, 0.006);
+  Q.cheek = new THREE.SphereGeometry(0.02, 10, 8);
+  Q.limb = new THREE.CylinderGeometry(0.012, 0.01, 1, 8); Q.limb.translate(0, -0.5, 0);
+  Q.leg = new THREE.CylinderGeometry(0.017, 0.013, 1, 8); Q.leg.translate(0, -0.5, 0);
+  Q.joint = new THREE.SphereGeometry(0.019, 8, 6);
+  Q.hand = new THREE.SphereGeometry(0.018, 8, 6); Q.hand.scale(1, 1.3, 0.7);
+  Q.finger = new THREE.CylinderGeometry(0.004, 0.003, 0.03, 4); Q.finger.translate(0, -0.015, 0);
+  Q.foot = new THREE.BoxGeometry(0.04, 0.018, 0.075); Q.foot.translate(0, 0.009, -0.025);
+  Q.toe = new THREE.SphereGeometry(0.008, 6, 5);
+  // the bat: its knob, the handle, swelling to the barrel; from the grip (0) down along -y
+  Q.bat = new THREE.CylinderGeometry(0.007, 0.022, 0.3, 12); Q.bat.translate(0, -0.2, 0);
+  Q.handle = new THREE.CylinderGeometry(0.007, 0.007, 0.07, 8); Q.handle.translate(0, -0.015, 0);
+  Q.knob = new THREE.SphereGeometry(0.011, 8, 6); Q.knob.translate(0, 0.02, 0);
+  Q.batEnd = new THREE.SphereGeometry(0.022, 10, 6, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2); Q.batEnd.translate(0, -0.35, 0);
+  Q.ok = true;
+  return Q;
+}
+// a bat (a group, its grip at the origin, along -y)
+function rfkBat(Q, mat) {
+  const b = new THREE.Group();
+  for (const g of [Q.bat, Q.handle, Q.knob, Q.batEnd]) b.add(new THREE.Mesh(g, mat));
+  return b;
+}
+function rfBuildKnock() {
+  const Q = rfkGeo(), root = new THREE.Group(), body = new THREE.Group(); root.add(body); body.scale.setScalar(RFK.S);
+  const wood = new THREE.MeshPhongMaterial({ color: 0xffffff, map: Q.tex, specular: 0x302010, shininess: 14 });
+  const limbM = new THREE.MeshPhongMaterial({ color: 0xb87840, specular: 0x201008, shininess: 10 });
+  const white = new THREE.MeshPhongMaterial({ color: 0xf4efe6, specular: 0x666666, shininess: 60 });
+  const iris = new THREE.MeshPhongMaterial({ color: 0x5a3a1c, shininess: 40 });
+  const black = new THREE.MeshBasicMaterial({ color: 0x080604 });
+  const dark = new THREE.MeshLambertMaterial({ color: 0x5a2c12 });
+  const mouthM = new THREE.MeshLambertMaterial({ color: 0x3a0e08 });
+  const batM = new THREE.MeshPhongMaterial({ color: 0xc8925a, specular: 0x403020, shininess: 25 });
+  const mesh = (geo, mat, x, y, zz, parent) => { const o = new THREE.Mesh(geo, mat); o.position.set(x || 0, y || 0, zz || 0); parent.add(o); return o; };
+  const hips = new THREE.Group(); hips.position.y = 0.39; body.add(hips);
+  const torso = new THREE.Group(); hips.add(torso);
+  mesh(Q.plank, wood, 0, 0, 0, torso);
+  mesh(Q.cap, wood, 0, 0.6, 0, torso);
+  // its face, on the plank's upper end
+  const F = -0.052, eyes = [];
+  for (const s of [-1, 1]) {
+    const e = new THREE.Group(); e.position.set(s * 0.045, 0.47, F); torso.add(e);
+    mesh(Q.eye, white, 0, 0, 0, e).scale.set(1, 1.05, 0.7);
+    const ir = mesh(Q.iris, iris, 0, 0, -0.021, e); mesh(Q.pupil, black, 0, 0, -0.012, ir);
+    const lid = mesh(Q.lid, wood, 0, 0.002, 0, e); lid.rotation.x = -0.35; lid.scale.set(1, 1, 0.75);
+    const br = mesh(Q.brow, dark, 0, 0.045, -0.006, e); br.rotation.z = s * -0.18;
+    eyes.push({ e, ir });
+  }
+  const nose = mesh(Q.nose, wood, 0, 0.415, F - 0.012, torso); nose.rotation.x = 0.25;
+  const mouth = mesh(Q.mouth, mouthM, 0, 0.385, F + 0.002, torso);
+  mesh(Q.teeth, white, 0, 0.371, F - 0.002, torso);
+  for (const s of [-1, 1]) mesh(Q.cheek, wood, s * 0.058, 0.39, F + 0.006, torso);
+  // its arms: thin, from the plank's sides (each: the upper arm, the elbow, the forearm and hand)
+  const arm = s => {
+    const sh = new THREE.Group(); sh.position.set(s * 0.112, 0.37, 0); torso.add(sh);
+    mesh(Q.joint, limbM, 0, 0, 0, sh).scale.setScalar(0.8);
+    mesh(Q.limb, limbM, 0, 0, 0, sh).scale.y = 0.16;
+    const el = new THREE.Group(); el.position.y = -0.16; sh.add(el);
+    mesh(Q.joint, limbM, 0, 0, 0, el).scale.setScalar(0.7);
+    mesh(Q.limb, limbM, 0, 0, 0, el).scale.y = 0.15;
+    const hd = new THREE.Group(); hd.position.y = -0.16; el.add(hd);
+    mesh(Q.hand, limbM, 0, 0, 0, hd);
+    for (let i = 0; i < 4; i++) { const f = mesh(Q.finger, limbM, (i - 1.5) * 0.008, -0.018, -0.004, hd); f.rotation.x = 0.5; }
+    return { sh, el, hd };
+  };
+  const arms = [arm(1), arm(-1)];
+  const bat = rfkBat(Q, batM); arms[0].hd.add(bat);
+  // its legs: long and thin, knobbly knees, bare feet
+  const leg = s => {
+    const hp = new THREE.Group(); hp.position.set(s * 0.05, 0.005, 0); hips.add(hp);
+    mesh(Q.leg, limbM, 0, 0, 0, hp).scale.y = 0.19;
+    const kn = new THREE.Group(); kn.position.y = -0.19; hp.add(kn);
+    mesh(Q.joint, limbM, 0, 0, 0, kn);
+    mesh(Q.leg, limbM, 0, 0, 0, kn).scale.set(0.9, 0.18, 0.9);
+    const ft = new THREE.Group(); ft.position.y = -0.185; kn.add(ft);
+    mesh(Q.foot, limbM, 0, -0.005, 0, ft);
+    for (let i = 0; i < 5; i++) mesh(Q.toe, limbM, (i - 2) * 0.008, 0.004, -0.064 + Math.abs(i - 2) * 0.004, ft);
+    return { hp, kn, ft };
+  };
+  const legs = [leg(1), leg(-1)];
+  return { root, body, hips, torso, eyes, mouth, arms, legs, bat, wood, limbM };
+}
+// its pose: striding, its bat at its side; its blows; its fall
+function rfPoseKnock(z, M, dt) {
+  const G0 = FPSC.GROUND, t = g.t, act = z.dead ? null : z.act, at = z.at || 0, sw = reduceMotion ? 0 : 1;
+  M.root.position.copy(z3v(z.x, z.y, G0 + (z.jz || 0)));
+  M.root.rotation.set(0, -z.h, 0);
+  const moving = z.walk && !act && !z.dead;
+  z.ph = (z.ph || 0) + dt * (moving ? 3.2 : 0);
+  const st = Math.sin(z.ph), bob = moving ? Math.abs(Math.cos(z.ph)) * 0.012 : 0;
+  M.body.position.y = bob * RFK.S * sw;
+  M.torso.rotation.set(0, Math.sin(z.ph) * 0.06 * sw, Math.sin(t * 0.8 + z.seed) * 0.02 * sw);
+  // legs: [hip x (forward), knee x (bend)]
+  let LR = [st * 0.45, Math.max(0, -st) * 0.6], LL = [-st * 0.45, Math.max(0, st) * 0.6];
+  if (!moving) { LR = [0.06, 0.08]; LL = [-0.04, 0.05]; }
+  // arms: [shoulder x (forward), shoulder z (out), elbow x (bend)]; the bat in its right hand: [x, z] in the hand
+  let crouch = 0, R = [0.2 - st * 0.2, 0.2, 0.25], L = [st * 0.35, -0.2, 0.25], B = [0.4, -0.6];   // (its bat hangs down across it, as in its picture)
+  if (act === 'emerge') { R = [-0.4, 0.9, 0.6]; L = [-0.4, -0.9, 0.6]; B = [0.4, 0]; }
+  else if (act === 'bat') {
+    // (wound back, then flat across, then through)
+    const T = RFK_T.bat, wind = zbE(Math.min(1, at / (T.hit - 0.12))), go = zbE(clamp((at - T.hit + 0.12) / 0.3, 0, 1)), back = zbE(clamp((at - T.hit - 0.3) / (T.end - T.hit - 0.3), 0, 1));
+    // (low, at the height of a man: bent at the knees, its arm out and down, its whole body turning)
+    R = [zbL(0.2, 0.45, wind), zbL(0.2, 0.5, wind), zbL(0.25, 0.05, wind)]; B = [zbL(0.4, 0.5, wind), zbL(-0.6, 0.35, wind)];
+    M.torso.rotation.y += zbL(0, -1.1, wind) + zbL(0, 2.2, go) - zbL(0, 1.1, back);
+    crouch = 0.7 * wind * (1 - back);
+    if (back > 0) { R = [zbL(0.45, 0.2, back), zbL(0.5, 0.2, back), zbL(0.05, 0.25, back)]; B = [zbL(0.5, 0.4, back), zbL(0.35, -0.6, back)]; }
+  } else if (act === 'knocks') {
+    // (up, and down onto the flagstones: three times)
+    let dn = 0;
+    for (const ti of RFK.WAVES) { const u = at - ti; if (u > -0.32 && u < 0.28) dn = Math.max(dn, u < 0 ? zbE((u + 0.32) / 0.32) : 1 - zbE(u / 0.28) * 0.85); }
+    const raise = zbE(Math.min(1, at / 0.5)), done = zbE(clamp((at - RFK.WAVES[2] - 0.3) / 0.5, 0, 1));
+    const up = raise * (1 - done);
+    R = [zbL(0.35, zbL(2.6, 0.95, dn), up), zbL(0.22, 0.05, up), zbL(0.45, 0.1, up)]; B = [zbL(0.4, 0.2, up), zbL(-0.6, 0, up)];
+    L = [zbL(L[0], zbL(2.4, 0.95, dn), up), zbL(-0.2, -0.05, up), zbL(0.25, 0.1, up)];
+    crouch = dn * up;
+  } else if (act === 'cleave') {
+    // (up over its head, held, and down)
+    const T = RFK_T.cleave, up = zbE(Math.min(1, at / (T.hit - 0.2))), dn = zbE(clamp((at - T.hit + 0.12) / 0.14, 0, 1)), rec = zbE(clamp((at - T.hit - 0.4) / (T.end - T.hit - 0.4), 0, 1));
+    const a = zbL(zbL(0.2, 3.0, up), 0.95, dn);
+    R = [zbL(a, 0.2, rec), zbL(0.2, 0.08, 1 - rec), zbL(0.25, 0.05, 1 - rec)]; L = [zbL(zbL(0, 2.9, up), 0.95, dn) * (1 - rec), -0.08, 0.1];
+    B = [zbL(0.4, 0.2, 1 - rec), zbL(-0.6, 0, 1 - rec)];
+    M.torso.rotation.x = 0.12 * up * (1 - dn); crouch = dn * (1 - rec);
+  } else if (act === 'hurl') {
+    // (back, and over: the bat leaves its hand; its hand held out, until the bat comes back to it)
+    const T = RFK_T.hurl, wind = zbE(Math.min(1, at / T.hit)), thr = zbE(clamp((at - T.hit + 0.1) / 0.2, 0, 1)), rec = zbE(clamp((at - T.end + 0.45) / 0.45, 0, 1));
+    R = [zbL(zbL(0.35, -1.4, wind), 1.6, thr), 0.25, 0.3]; if (rec > 0) R = [zbL(1.6, 0.35, rec), 0.22, 0.45];
+    M.torso.rotation.y += zbL(0, -0.6, wind) + zbL(0, 0.9, thr) - zbL(0, 0.3, rec);
+  }
+  // (bent over at the hips and the knees, to bring the bat down onto the flagstones)
+  if (crouch > 0) { M.torso.rotation.x -= 0.55 * crouch; M.body.position.y -= 0.75 * crouch; LR = [0.45 * crouch, 0.9 * crouch]; LL = [0.45 * crouch, 0.9 * crouch]; }
+  M.bat.visible = !(act === 'hurl' && rfkBatAt(z, at));
+  for (const [i, A] of [R, L].entries()) { M.arms[i].sh.rotation.set(A[0], 0, A[1]); M.arms[i].el.rotation.set(A[2], 0, 0); }
+  M.bat.rotation.set(B[0], 0, B[1]);
+  for (const [i, A] of [LR, LL].entries()) { M.legs[i].hp.rotation.set(-A[0], 0, 0); M.legs[i].kn.rotation.set(A[1], 0, 0); M.legs[i].ft.rotation.set(-A[0] + A[1] * 0.4 - (A[1] * 0.0), 0, 0); }
+  // its eyes: rolling about, and on you when it swings
+  const look = act ? 0 : Math.sin(t * 0.9 + z.seed) * 0.008;
+  for (const e of M.eyes) e.ir.position.set(look, Math.sin(t * 0.6) * 0.004, -0.021);
+  // a pale flash where a shot lands
+  const flash = z.hitT > 0 ? Math.min(1, z.hitT / 0.15) : 0;
+  M.wood.emissive.setRGB(flash * 0.35, flash * 0.25, flash * 0.15); M.limbM.emissive.setRGB(flash * 0.3, flash * 0.2, flash * 0.1);
+  if (z.dead) {
+    // down: it topples over backwards like a felled plank, and sinks into the stone
+    const k = Math.min(1, (z.deadT || 0) / 1.3), s = Math.min(1, Math.max(0, (z.deadT || 0) - 2) / 2.5);
+    M.root.rotation.set(-zbE(k) * 1.5, -z.h, 0, 'YXZ');
+    M.root.position.y -= s * s * 3;
+    if (k >= 1 && !z.thud) { z.thud = true; rfkSound('die', Math.hypot(z.x - FPS.me.x, z.y - FPS.me.y)); for (let i = 0; i < 20; i++) { const r = Math.random() * 8; fpsPuff(z.x - Math.sin(z.h) * r, z.y - Math.cos(z.h) * r, G0 + (z.jz || 0) + 0.3, '160,130,100', 3); } }
+    M.root.visible = s < 1;
+  }
+}
+
+// ---------- in 3D: its thrown bat, its rings of knocks, the cleave's line ----------
+const RFK3 = {};
+function rfk3dBuild(grp) {
+  RFK3.ok = false;
+  if (!RF.on) return;
+  const Q = rfkGeo();
+  RFK3.bat = rfkBat(Q, new THREE.MeshPhongMaterial({ color: 0xc8925a, specular: 0x403020, shininess: 25 })); RFK3.bat.scale.setScalar(RFK.S); RFK3.bat.visible = false; grp.add(RFK3.bat);
+  const add = (geo, col, op) => { const o = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: op, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, fog: false })); o.visible = false; grp.add(o); return o; };
+  const ring = new THREE.RingGeometry(0.9, 1, 56); ring.rotateX(-Math.PI / 2);
+  RFK3.waves = RFK.WAVES.map(() => add(ring, 0xffb060, 0.8));
+  const strip = new THREE.PlaneGeometry(1, 1); strip.translate(0, 0.5, 0); strip.rotateX(-Math.PI / 2);
+  RFK3.line = add(strip, 0xff9040, 0.3); RFK3.crack = add(strip, 0xffd090, 0.8);
+  RFK3.ok = true;
+}
+function rfk3d(dt) {
+  if (!RF.on || !RFK3.ok) return;
+  const G0 = FPSC.GROUND, t = g.t;
+  const K = ZM.z.find(z => z.bt === 'knock' && !z.dead && z.act);
+  const act = K ? K.act : null, at = K ? K.at || 0 : 0;
+  // the bat in flight, end over end
+  const q = act === 'hurl' ? rfkBatAt(K, at) : null;
+  RFK3.bat.visible = !!q;
+  if (q) { RFK3.bat.position.copy(z3v(q[0], q[1], G0 + q[2])); RFK3.bat.rotation.set(t * 14, -K.h, Math.PI / 2, 'YXZ'); }
+  // the rings of its knocks
+  RFK3.waves.forEach((w, i) => {
+    const r = act === 'knocks' ? (at - RFK.WAVES[i]) * RFK.WAVE_V : -1;
+    w.visible = r > 0.2 && r < RFK.WAVE_R;
+    if (w.visible) { const iz = zmFloorAt(K.ix, K.iy, 12, 0.3); w.position.copy(z3v(K.ix, K.iy, G0 + iz + 0.07)); w.scale.set(r, 1, r); w.material.opacity = 0.85 * (1 - r / RFK.WAVE_R); }
+  });
+  // the cleave's line: glowing while the bat's up, then split along it
+  const cl = act === 'cleave', H = RFK_T.cleave.hit;
+  RFK3.line.visible = cl && at < H + 0.6; RFK3.crack.visible = cl && at > H;
+  if (cl) {
+    const L = Math.hypot(K.ix - K.ax, K.iy - K.ay) || 1, h = bearingOf(K.ix - K.ax, K.iy - K.ay), iz = zmFloorAt(K.ax, K.ay, 12, 0.3);
+    for (const o of [RFK3.line, RFK3.crack]) { o.position.copy(z3v(K.ax, K.ay, G0 + iz + 0.06)); o.rotation.set(0, -h, 0); }
+    const k = clamp(at / H, 0, 1);
+    RFK3.line.scale.set(RFK.CLEAVE_W * 2, 1, RFK.CLEAVE_L); RFK3.line.material.opacity = (0.1 + 0.35 * k * (0.7 + 0.3 * Math.sin(t * (8 + k * 16)))) * (at > H ? Math.max(0, 1 - (at - H) / 0.6) : 1);
+    const s = clamp((at - H) * RFK.CLEAVE_V, 0.01, RFK.CLEAVE_L);
+    RFK3.crack.scale.set(0.45, 1, s); RFK3.crack.material.opacity = 0.9 * Math.max(0, 1 - Math.max(0, at - H - 0.8) / 0.5);
+  }
 }
 
 // ---- src/rclass.js ----
@@ -31028,7 +31554,7 @@ function rclDrawOver() {
 // ---------- on top: the calling, its grenade and its ultimate (bottom left, where the rounds are elsewhere) ----------
 function rclHud(phone, mono, fell) {
   if (!rclOn() || !RCL.cls || zmSpecOn()) return;
-  const C = rclC(), t = g.t, L = Math.max(14, FPS.safeLeft || 0), rb = phone ? H * 0.36 : H - 22, r = phone ? 15 : 19;
+  const C = rclC(), t = g.t, L = Math.max(14, FPS.safeLeft || 0), rb = phone ? zmLeftRb() : H - 22, r = phone ? 15 : 19;
   // the ultimate running: the edges lit in its colour
   if (RCL.ultT > 0) {
     const gr = ctx.createRadialGradient(cx, H / 2, Math.min(W, H) * 0.3, cx, H / 2, Math.max(W, H) * 0.7);
@@ -35491,6 +36017,140 @@ function csInit() {
   document.addEventListener('visibilitychange', () => { if (!document.hidden && CS.on && Date.now() - CS.pullAt > 20000) csSync(true); });
 }
 csInit();
+
+// ---- src/share.js ----
+// Invite links: a "Share invite" button in every mode's lobby, and the link it shares drops a friend straight into that lobby.
+//
+// The link is the live site with the mode and the lobby's code in the query: ?mode=raid&lobby=zab12cd. The modes are
+//   sail        a Skerry Light crew (net.js; the code is the crew's name, gannet-12)
+//   wreckers    Wreckers' Night (fps.js: one shared island, so no code; the link opens its card)
+//   war         a Drowned Reach war (warnet.js, w...)
+//   lighthouse  a Keeper's Last Light night (zmnet.js, z...)
+//   raid        a Maren's End raid (the same lobby as the Lighthouse's, on the raid's own card)
+// On a phone or tablet the button opens the share sheet; on a computer it copies the text to the clipboard.
+// On claude.ai everyone plays in the artifact's own room, which the live site can't reach, so there the link is the
+// artifact itself: it can't carry a code, but the friend sees the lobby in the list and taps it.
+// Old crew links (#gannet-12) still work.
+
+const SHARE_SITE = 'https://skerry-light.onrender.com/';
+const SHARE_ARTIFACT = 'https://claude.ai/artifact/4abbzGK8dMDsPyR5KdssJv';
+const SHARE_TEXT = 'Join my game on Skerry Light!';
+const SHARE_MODES = ['sail', 'wreckers', 'war', 'lighthouse', 'raid'];
+const shareOnClaude = () => (typeof NET !== 'undefined' && NET.via === 'claude') || !!(window.claude && typeof window.claude.use === 'function');
+
+function shareUrl(mode, code) {
+  if (shareOnClaude()) return SHARE_ARTIFACT;
+  // our own site (the live one, or a local copy being tested); a page opened from a file shares the live site
+  const base = /^https?:$/.test(location.protocol) ? location.origin + location.pathname : SHARE_SITE;
+  const q = new URLSearchParams({ mode });
+  if (code) q.set('lobby', code);
+  return base + '?' + q.toString();
+}
+// the lobby the button is for, right now
+function shareCode(mode) {
+  if (mode === 'sail') return NET.crew;
+  if (mode === 'war') return typeof WN !== 'undefined' ? WN.code : null;
+  if (mode === 'lighthouse' || mode === 'raid') return typeof ZN !== 'undefined' && ZN.mode === (mode === 'raid' ? 'raid' : 'zm') ? ZN.code : null;
+  return null;
+}
+function shareIsPhone() {
+  try {
+    return matchMedia('(pointer: coarse)').matches || /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1);
+  } catch (e) { return false; }
+}
+function shareFlash(btn, text) {
+  if (!btn) return;
+  const was = btn.dataset.label || (btn.dataset.label = btn.textContent);
+  btn.textContent = text;
+  clearTimeout(btn._shareT); btn._shareT = setTimeout(() => { btn.textContent = was; }, 1800);
+}
+// copy without the clipboard API too (an iframe can be refused it)
+function shareCopyOld(text) {
+  try {
+    const t = document.createElement('textarea');
+    t.value = text; t.setAttribute('readonly', ''); t.style.cssText = 'position:fixed;left:-9999px;top:0;opacity:0';
+    document.body.appendChild(t); t.select(); t.setSelectionRange(0, text.length);
+    const ok = document.execCommand('copy'); t.remove(); return ok;
+  } catch (e) { return false; }
+}
+function shareCopy(text, btn) {
+  const done = () => { shareFlash(btn, 'Copied'); if (typeof toast === 'function') toast('Invite copied: ' + text, 'Invite copied'); };
+  const fail = () => { if (shareCopyOld(text)) done(); else { shareFlash(btn, 'Couldn’t copy'); try { window.prompt('Copy this invite:', text); } catch (e) {} } };
+  try { if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(text).then(done, fail); return; } } catch (e) {}
+  fail();
+}
+function shareInvite(mode, btn) {
+  const url = shareUrl(mode, shareCode(mode)), text = SHARE_TEXT + ' ' + url;
+  if (shareIsPhone() && navigator.share) {
+    // (text and url separately: the share sheet joins them, and a messaging app shows the link as a card)
+    navigator.share({ title: 'Skerry Light', text: SHARE_TEXT, url }).catch(e => { if (!e || e.name !== 'AbortError') shareCopy(text, btn); });
+    return;
+  }
+  shareCopy(text, btn);
+}
+for (const b of document.querySelectorAll('.shareBtn')) b.addEventListener('click', () => shareInvite(b.dataset.mode, b));
+{ const b = $('inviteCopy'); if (b) b.addEventListener('click', () => shareInvite('sail', b)); }
+
+// ---------- arriving from a link ----------
+const SHARE_JOIN = (() => {
+  try {
+    const q = new URLSearchParams(location.search), mode = q.get('mode'), code = (q.get('lobby') || '').trim();
+    if (SHARE_MODES.includes(mode) && (mode === 'wreckers' || /^[a-z0-9-]{2,20}$/i.test(code))) return { mode, code };
+    const h = (location.hash || '').slice(1);
+    if (/^[a-z]+-\d{1,4}$/.test(h)) return { mode: 'sail', code: h };
+  } catch (e) {}
+  return null;
+})();
+if (SHARE_JOIN && /[?&](mode|lobby)=/.test(location.search)) {
+  // tidy the address bar, so a reload later doesn't drag you back into an old lobby
+  try { const q = new URLSearchParams(location.search); q.delete('mode'); q.delete('lobby'); const s = q.toString(); history.replaceState(null, '', location.pathname + (s ? '?' + s : '') + location.hash); } catch (e) {}
+}
+const SHARE_CARD = { sail: 'together', wreckers: 'fpsTitle', war: 'warTitle', lighthouse: 'zmTitle', raid: 'rdTitle' };
+const SHARE_WHAT = { sail: 'crew', war: 'war', lighthouse: 'night', raid: 'raid' };
+function shareShow(mode) { const c = $(SHARE_CARD[mode]); if (c) c.scrollIntoView({ block: 'start' }); }
+function shareArrive() {
+  const J = SHARE_JOIN; if (!J) return;
+  if (J.mode === 'wreckers') {
+    shareShow('wreckers');
+    setTimeout(() => { const b = $('fpsPlay'); if (b) b.focus({ preventScroll: true }); }, 300);
+    if (typeof toast === 'function') toast('You’ve been invited to Wreckers’ Night. Tap Go ashore to join them on the island.', 'Tap Go ashore');
+    return;
+  }
+  let readyAt = 0;
+  const t0 = performance.now(), what = SHARE_WHAT[J.mode];
+  const give = msg => { clearInterval(iv); shareShow(J.mode); if (msg && typeof toast === 'function') toast(msg, 'Invite closed'); };
+  const iv = setInterval(() => {
+    if (typeof NET === 'undefined' || NET.status === 'off') return give('Couldn’t reach the other players, so the invite couldn’t be used.');
+    if (NET.status !== 'ready') { if (performance.now() - t0 > 20000) give('Couldn’t reach the other players, so the invite couldn’t be used.'); return; }
+    if (!readyAt) readyAt = performance.now();
+    if (typeof state !== 'undefined' && state !== 'title') return;
+    const waited = performance.now() - readyAt;
+    if (J.mode === 'sail') {
+      NET.pendingJoin = J.code;
+      if (NET.crew === J.code) return clearInterval(iv);
+      if (crewOf(J.code).some(p => !(p.isMe && p.sameTab))) { clearInterval(iv); joinCrew(J.code); return; }
+    } else if (J.mode === 'war') {
+      if (WN.code === J.code) return clearInterval(iv);
+      const w = wnOpenWars().find(x => x.code === J.code);
+      if (w) {
+        clearInterval(iv); shareShow('war');
+        if (w.started) toast('That war has already started.', 'Already started'); else wnJoin(J.code);
+        return;
+      }
+    } else {
+      if (ZN.code === J.code) return clearInterval(iv);
+      const n = znOpenNights().find(x => x.code === J.code);
+      if (n) {
+        clearInterval(iv); const mode = n.map === 'raid' ? 'raid' : 'lighthouse'; shareShow(mode);
+        if (n.started) toast(`That ${SHARE_WHAT[mode]} has already started.`, 'Already started'); else znJoin(J.code, mode === 'raid' ? 'raid' : 'zm');
+        return;
+      }
+    }
+    // give everyone in the room a few seconds to be heard from before calling the lobby gone
+    if (waited > 8000) give(`The ${what} you were invited to isn’t open any more. You can host your own here.`);
+  }, 400);
+}
+shareArrive();
 
 // ---- src/main.js ----
 // Starts the game once every script has loaded.

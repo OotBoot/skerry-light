@@ -89,7 +89,7 @@ function raidAfterStart() {
   raidLoadout();
   RAID.st = {}; raidCall('enter');
 }
-const RAIDC = { ROUND: 4 };
+const RAIDC = { ROUND: 4, CALM: 0.7 };
 // what you carry down: a pepperbox and a blunderbuss, both full (and Maren's Lantern, which never leaves your hand)
 function raidLoadout() {
   const m = FPS.me;
@@ -298,13 +298,14 @@ function raidSpawnAt(x, y, o) {
 function raidHud(phone, mono, fell) {
   if (!RAID.on) return;
   const S = raidStage(); if (!S) return;
-  const top = phone ? Math.max(10, FPS.safeTop || 0) : 14;
+  const top = fpsHudTop();
   ctx.textAlign = 'left'; ctx.textBaseline = 'top';
   const L = Math.max(14, FPS.safeLeft || 0);
   ctx.font = fell(phone ? 15 : 19); ctx.fillStyle = 'rgba(236,228,207,0.85)';
-  ctx.fillText(`Maren’s End · ${raidNumeral(RAID.stage + 1)} · ${S.n}`, L, top);
+  ctx.fillText(`Maren’s End · ${raidNumeral(RAID.stage + 1)} · ${S.n}`, L, top, W * 0.5);
   ctx.font = mono(phone ? 10 : 12); ctx.fillStyle = 'rgba(236,228,207,0.55)';
-  ctx.fillText(raidClock(RAID.t), L, top + (phone ? 20 : 26));
+  ctx.fillText(raidClock(RAID.t), L, top + (phone ? 18 : 26));
+  fpsHudNote(top + (phone ? 30 : 40));
   raidCall('hud', phone, mono, fell);
 }
 
@@ -335,9 +336,9 @@ function raidHud(phone, mono, fell) {
 // dark takes DRAIN a second. NEED of them sent back inside RING of the arena's middle open the door.
 // Maren's Weight: out of the light it settles on you, WGT_T seconds to the full of it, when you go at WGT_SLOW of your
 // pace; any brazier's light lifts it at once. The wrecking balls: hung from the cave's roof over the path between
-// braziers, BALL_R across, swinging across the path in BALL_T seconds or so; one that catches you knocks you BALL_DMG
-// and throws you aside
-const RSWX = { WGT_T: 22, WGT_SLOW: 0.45, BALL_R: 1.05, BALL_LOW: 1.3, BALL_T: 3.6, BALL_DMG: 1, BALL_CD: 1.2 };
+// braziers, BALL_R across, swinging across the path in BALL_T seconds or so; one that catches you puts you straight
+// down (whatever your health, your class or your iframes), thrown aside
+const RSWX = { WGT_T: 20, WGT_SLOW: 0.25, BALL_R: 1.05, BALL_LOW: 1.3, BALL_T: 3.6, BALL_DMG: 1, BALL_CD: 1.2 };
 const RSW = { SEA: 250, DECK: 253, CEIL: 30, HOLE: [-11, 11, 13, 35], FALL: 8.4, LIT_R: 7.5, MEND: 1.2, DRAIN: 0.2, NEED: 20, RING: 13, USE: 1.1, GAP: 3.4 };
 // The path: [x, y, half its width, what's there] from the island's middle, from the cap behind where you land to the
 // cap with the door in it; b, a brazier; a, the arena before the door (two more braziers at its sides). Between each
@@ -807,12 +808,12 @@ RAID_STAGES.descent = {
         const P = rswBallAt(b, bt), [bx, by] = rswW(P.x, P.y), d = Math.hypot(m.x - bx, m.y - by), jz = m.jz || 0;
         if (d < RSWX.BALL_R + 0.35 && P.z - RSWX.BALL_R < jz + 1.8 && P.z + RSWX.BALL_R > jz) {
           S.ballCd = RSWX.BALL_CD;
-          if (!(m.protect > 0)) fpsHurt(RSWX.BALL_DMG, null, null);
+          if (!(m.protect > 0)) { m.hp = 0; m.iframe = 0; FPS.hurtT = 0.5; try { sfxHit(); } catch (e) {} fpsDie(null, null); }
           zmSound('hit'); FPS.hurtT = 0.9;
           // thrown the way it's swinging (across the path), a little at a time so no wall is passed
           const dir = Math.sign(Math.cos(bt * 6.2832 / b.T + b.ph)) || 1;
           S.shove = [b.nx * dir * 7, b.ny * dir * 7, 0.35];
-          fpsFeed('A wrecking ball caught you.');
+          fpsFeed('A wrecking ball caught you and put you down.');
           break;
         }
       }
@@ -827,7 +828,12 @@ RAID_STAGES.descent = {
         const up = Math.min(RSW.MEND * dt, S.dark || 0, max - m.hp); if (up > 0) { m.hp += up; S.dark -= up; }
         S.ammoT = (S.ammoT || 0) + dt;
         if (S.ammoT > 1) { S.ammoT = 0; for (const id of ZM.own) if (ZM_AMMO[id]) ZM.res[id] = Math.min(ZM_AMMO[id], (ZM.res[id] || 0) + Math.ceil(ZM_AMMO[id] * 0.12)); }
-      } else if (!(m.protect > 0)) {
+      }
+      // what the drowned (or the balls) took comes back by itself once nothing has hit you for a moment (RAIDC.CALM of
+      // the Lighthouse's wait), quickly; only up to what the dark has left you, since that part only the light gives back
+      const cap = max - (S.dark || 0);
+      if (m.hp < cap && FPS.calm > (ZM.perks.grog ? 1.6 : 3.2) * RAIDC.CALM) m.hp = Math.min(cap, m.hp + 2 * dt);
+      if (!S.inLight && !(m.protect > 0)) {
         const dn = Math.min(m.hp, RSW.DRAIN * dt); m.hp -= dn; S.dark = (S.dark || 0) + dn;
         if (m.hp <= 0) { m.hp = 0; fpsFeed('The dark took the last of you.'); fpsDie(null, null); }
       }
@@ -847,7 +853,7 @@ RAID_STAGES.descent = {
     }
   },
   hud(phone, mono, fell) {
-    const S = RAID.st, m = FPS.me, L = Math.max(14, FPS.safeLeft || 0), top = (phone ? Math.max(10, FPS.safeTop || 0) : 14) + (phone ? 34 : 44), t = g.t;
+    const S = RAID.st, m = FPS.me, L = Math.max(14, FPS.safeLeft || 0), top = fpsHudTop() + (phone ? 32 : 44), t = g.t;
     const below = rswBelow(m.jz);
     let line;
     if (m.jz >= RSW.SEA - 1) line = 'Walk the Long Pier to the Swallow, and step off the end.';
@@ -856,7 +862,7 @@ RAID_STAGES.descent = {
     else if (S.door === 1) line = `Sent back inside the ring: ${Math.min(S.kills, RSW.NEED)} of ${RSW.NEED}`;
     else line = 'The door is open. Go through.';
     ctx.textAlign = 'left'; ctx.textBaseline = 'top'; ctx.font = mono(phone ? 10 : 13); ctx.fillStyle = S.door === 1 ? '#bfe4ff' : 'rgba(236,228,207,0.8)';
-    ctx.fillText(line, L, top, W * 0.5);
+    ctx.fillText(line, L, top, W * 0.5); fpsHudNote(top + (phone ? 14 : 18));
     // in the light or in the dark
     if (below && !(m.dead > 0) && !zmIsDown() && !ZM.over) {
       if (!S.inLight) {
@@ -876,7 +882,7 @@ RAID_STAGES.descent = {
       ctx.fillText(`MAREN’S WEIGHT · ${Math.round((1 - this.speedK()) * 100)}% SLOWER`, cx, y0 + 8);
     }
     // the ring's tally, big, while the door's awake
-    if (S.door === 1) { ctx.textAlign = 'center'; ctx.textBaseline = 'top'; ctx.font = fell(phone ? 26 : 38); ctx.fillStyle = '#bfe4ff'; ctx.fillText(`${Math.min(S.kills, RSW.NEED)} / ${RSW.NEED}`, cx, phone ? top + 20 : 60); }
+    if (S.door === 1) { ctx.textAlign = 'center'; ctx.textBaseline = 'top'; ctx.font = fell(phone ? 26 : 38); ctx.fillStyle = '#bfe4ff'; ctx.fillText(`${Math.min(S.kills, RSW.NEED)} / ${RSW.NEED}`, cx, phone ? (FPS.hudCtop || top) + 2 : 60); }
     // lighting a brazier: a ring round the sights filling
     if (S.useI >= 0 && S.useT > 0) {
       const k = Math.min(1, S.useT / RSW.USE);

@@ -443,7 +443,7 @@ function rclDrawOver() {
 // ---------- on top: the calling, its grenade and its ultimate (bottom left, where the rounds are elsewhere) ----------
 function rclHud(phone, mono, fell) {
   if (!rclOn() || !RCL.cls || zmSpecOn()) return;
-  const C = rclC(), t = g.t, L = Math.max(14, FPS.safeLeft || 0), rb = phone ? H * 0.36 : H - 22, r = phone ? 15 : 19;
+  const C = rclC(), t = g.t, L = Math.max(14, FPS.safeLeft || 0), rb = phone ? zmLeftRb() : H - 22, r = phone ? 15 : 19;
   // the ultimate running: the edges lit in its colour
   if (RCL.ultT > 0) {
     const gr = ctx.createRadialGradient(cx, H / 2, Math.min(W, H) * 0.3, cx, H / 2, Math.max(W, H) * 0.7);
