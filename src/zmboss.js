@@ -62,7 +62,7 @@ function zbPlan(r, rnd) {
   const n = zbCount(r), lead = ZB_KINDS[((r - ZBC.FROM) / ZBC.EVERY) % 3], out = [lead];
   let bag = [];
   while (out.length < n) {
-    if (!bag.length) bag = ZB_KINDS.filter(k => out.length >= 3 || !out.includes(k));
+    if (!bag.length) bag = ZB_KINDS.slice(0, 3).filter(k => out.length >= 3 || !out.includes(k));
     out.push(bag.splice((rnd() * bag.length) | 0, 1)[0]);
   }
   return out;
@@ -98,7 +98,7 @@ function zbSpawn(kind) {
   let w = zbWindow(kind);
   // (none that fits it open yet: once they've all been seen, another kind that does fit comes instead; the Diver's
   // first night, with only the jetty open, he doesn't come)
-  if (!w && ZM.round >= ZBC.FROM + 2 * ZBC.EVERY) for (const k of ZB_KINDS) if (k !== kind && (w = zbWindow(k))) { kind = k; break; }
+  if (!w && ZM.round >= ZBC.FROM + 2 * ZBC.EVERY) for (const k of ZB_KINDS.slice(0, 3)) if (k !== kind && (w = zbWindow(k))) { kind = k; break; }
   if (!w) return false;
   const T = ZBT[kind], hp = zbHpOf(kind, ZM.round, ZM.hum.length);
   const zn = ++ZM.zc, side = (Math.random() - 0.5) * 2 * ((w.z || 0) > 0 ? 0.4 : 1), out = w.sea ? 4.5 : (w.z || 0) > 0 ? 1.4 : ZBC.OUT;
@@ -277,7 +277,7 @@ function zbMelee(z, reach, arc, dmg) {
 // from zmHurt: what a hit does to one (the Black Spot doesn't kill outright; each takes the rest its own way)
 function zbHurtK(z, dmg, how) { return dmg * (ZM.insta > 0 ? 3 : 1) * zbT(z).hurtK(z, how); }
 // a Lamp Flash only scorches them
-function zbFlash(z) { z.hp = Math.max(1, z.hp - z.max * 0.2); z.scorch = 1; z.hitT = 0.3; }
+function zbFlash(z) { if (zbT(z).noFlash && zbT(z).noFlash(z)) return; z.hp = Math.max(1, z.hp - z.max * 0.2); z.scorch = 1; z.hitT = 0.3; }
 // from zmKill: its reward, and its salvage
 function zbKilled(z, how, by) {
   const T = zbT(z);

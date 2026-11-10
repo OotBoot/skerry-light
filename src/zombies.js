@@ -2639,6 +2639,7 @@ function zmHurt(d, dmg, head, code, by, how) {
   d.hitT = 0.15;
   if (typeof zmpDmg === 'function') dmg = zmpDmg(dmg, code, by);   // [pap] reforged weapons hit harder (the shooter's side)
   if (typeof raidHurtK === 'function') dmg = raidHurtK(d, dmg, code, by);   // [raid] the stage's say (the shooter's side)
+  if (!(dmg > 0)) return;   // [raid3] (nothing at all: Maren, while her soul's out of her)
   if (ZM.net === 'client') { zmnHit(d, dmg, head, code, how); return; }
   const k = (ZM_DMG[code] == null ? 1 : ZM_DMG[code]) * (d.mark > 0 ? 1.5 : 1);   // [pap] (lit by the Leading Light: hurt worse)
   d.hp -= d.boss && typeof zbHurtK === 'function' ? zbHurtK(d, dmg * k, how) : ZM.insta > 0 ? 1e9 : dmg * k;   // [boss] no one-hit kills on them
