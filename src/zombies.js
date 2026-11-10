@@ -871,7 +871,7 @@ Object.assign(FPI_K, {
         const n = Math.round(W / 0.22); for (let i = 0; i < n; i++) A.box(i % 2 ? FPI_C.wood : '#4e3e2e', -W / 2 + (i + 0.5) * W / n, s * D / 2, 0, W / n * 1.02, 0.08, H);
         const m = Math.round(D / 0.22); for (let i = 0; i < m; i++) A.box(i % 2 ? FPI_C.wood : '#4e3e2e', s * W / 2, -D / 2 + (i + 0.5) * D / m, 0, 0.08, D / m * 1.02, H);
       }
-      for (const s of [-1, 1]) A.part('box', '#1c1a18', 0, s * D / 4, H + 0.45, W + 0.5, 0.08, D / 2 * 1.25, 0, s * 0.62, 0);
+      for (const s of [-1, 1]) A.part('box', '#1c1a18', 0, s * D / 4, H + 0.45, W + 0.5, 0.08, D / 2 * 1.25, 0, -s * 0.62, 0);   // (each side sloping down and away from the ridge)
       A.box(FPI_C.wood3, 0, 0, H + 0.82, W + 0.5, 0.12, 0.12);
       // the door in its front (+u), a window lit in the side (-v)
       const dv = p.door || 0; A.box('#3a2a1e', W / 2 + 0.03, dv, 0, 0.06, 0.95, 1.95); A.box(FPI_C.iron, W / 2 + 0.07, dv + 0.3, 0.95, 0.04, 0.06, 0.06); A.box(FPI_C.wood3, W / 2 + 0.05, dv, 1.95, 0.08, 1.1, 0.1);

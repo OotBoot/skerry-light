@@ -942,7 +942,7 @@ const FPI_K = {
       for (let i = 0; i < 8; i++) { const a = i / 8 * Math.PI * 2; A.box(i % 2 ? FPI_C.stone3 : FPI_C.stone2, Math.cos(a) * p.r * 0.9, Math.sin(a) * p.r * 0.9, 0.82, 0.62, 0.36, 0.16, a + Math.PI / 2); }
       for (const s of [-1, 1]) A.box(FPI_C.wood3, s * (p.r + 0.05), 0, 0, 0.14, 0.14, 2.2);
       A.log(FPI_C.wood2, 0, 0, 1.75, 0.08, p.r * 2 + 0.4, 0);
-      for (const s of [-1, 1]) A.box(FPI_C.wood, 0, s * 0.42, 2.12, p.r * 2 + 0.6, 0.95, 0.06, 0, s * 0.55);
+      for (const s of [-1, 1]) A.box(FPI_C.wood, 0, s * 0.42, 2.12, p.r * 2 + 0.6, 0.95, 0.06, 0, -s * 0.55);   // (each side sloping down and away from the ridge)
       A.box(FPI_C.rope, 0, 0, 1.0, 0.02, 0.02, 0.75);
       A.cyl(FPI_C.wood2, 0, 0, 0.88, 0.14, 0.22, 0, 0, 0, 'cyl6');
       if (p.lamp) { A.box(FPI_C.iron, p.r + 0.5, 0, 0.6, 0.2, 0.2, 0.32); A.glow('#ffc070', p.r + 0.5, 0, 0.78, 0.17); }
