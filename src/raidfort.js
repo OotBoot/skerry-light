@@ -681,7 +681,7 @@ function rfBuildMaren() {
   const arms = [arm(1), arm(-1)];   // (her right, raised; her left)
   // the light about her while she can't be hurt: a shell over her dress, and a glow
   const shell = new THREE.Mesh(Q.skirt, aura); shell.scale.set(1.08, 1.03, 1.08); hips.add(shell);
-  const shell2 = new THREE.Mesh(Q.chest, aura); shell2.position.y = 1.42; shell2.scale.set(1.25, 1.6, 1.0); hips.add(shell2);
+  const shell2 = new THREE.Mesh(Q.chest, aura); shell2.position.y = 1.42; shell2.scale.set(1.12, 1.3, 0.92); hips.add(shell2);
   const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: Q.halo, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false }));
   glow.position.y = 1.0; glow.scale.set(1.8, 2.6, 1); body.add(glow);
   const foot = new THREE.Sprite(new THREE.SpriteMaterial({ map: Q.halo, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false }));
@@ -756,7 +756,7 @@ function rfHud(phone, mono, fell) {
     const M = ZM.z.find(z => z.zn === RF.mz);
     if (RF.vul > 0) line(`Maren can be hurt: ${Math.ceil(RF.vul)} s`, top, `rgba(255,120,130,${0.8 + 0.2 * Math.sin(t * 8)})`, fell(phone ? 15 : 20));
     else if (M && M.act === 'rise') line('Maren rises', top, 'rgba(160,240,220,0.9)', fell(phone ? 15 : 20));
-    else line(RF.orbUp ? 'Maren can’t be hurt: shoot her soul, the light over the water' : 'Maren can’t be hurt: her soul is under the sea', top, 'rgba(160,240,220,0.9)', fell(phone ? 14 : 18));
+    else { line('Maren can\u2019t be hurt', top, 'rgba(160,240,220,0.9)', fell(phone ? 15 : 20)); line(RF.orbUp ? 'Shoot her soul: the light over the water' : 'Her soul is under the sea', top + (phone ? 20 : 26), 'rgba(160,240,220,0.8)'); }
   } else if (RF.st === 'won') line(RF.mine ? 'Maren is laid to rest.' : 'Maren is laid to rest. Take her pirate token, where she fell.', top, 'rgba(255,214,140,0.95)', fell(phone ? 15 : 20));
   ctx.shadowBlur = 0; ctx.shadowColor = 'transparent';
   // her soul's mark: a gold diamond over it, wherever it is in front of you
