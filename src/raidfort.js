@@ -8,7 +8,9 @@
 // a gun terrace on top of the sea wall, its cannon pointing out to sea, a sentry box (garita) at each end.
 //  - The hunt: a Mooncusser keeps each apothecary. Step into one and he lifts his false light; put him down. The
 //    drowned come in at the fort's windows and up ladders out of the sea onto the Battery the whole time.
-//  - Maren: when the third Mooncusser falls, Maren Holm comes up out of the sea onto the Sea Battery, three times the
+//  - The Knock: when the third Mooncusser falls, her bat comes up through the Plaza's flagstones first (src/raidknock.js).
+//    Put it down and “Maren is angered”; a pause, and she rises.
+//  - Maren: when the Knock falls, Maren Holm comes up out of the sea onto the Sea Battery, three times the
 //    height of a man (her model is built after her picture, assets/maren.png: a drowned woman in a long dark dress,
 //    one arm raised, her face lost in shadow). She can't be hurt while her soul is out of her: a yellow light, Maren's
 //    Soul, drifting over the water beyond the sea wall. Shoot it and she can be hurt for 30 seconds; then the soul
@@ -36,6 +38,7 @@ const RFC = {
   RAD: 1.35, TALL: 6.3, HEADZ: 5.55, PAD: 0.9, SP: 2.5, S: 3.05,   // (her size: S times a woman's)
   SWEEP: 4.7, SWEEP_ARC: 1.15, CALL_R: 3.4, CALL_RANGE: 34,
   ALIVE: [8, 13], ALIVE_MORE: 3, BOSS_T: [32, 48],
+  ANGER: [1.2, 4.2],   // (from the Knock's fall to “Maren is angered”; from that to her rising)
   BOX: [-22.6, 22.6, -21.2, 28.6],   // (where she can go: the Plaza and the Battery)
 };
 const RF_APOS = {
@@ -44,7 +47,7 @@ const RF_APOS = {
   apoN: { n: 'the Apothecary of San Lázaro', c: '#7aff9a', at: [0, 41.5], h: Math.PI },
 };
 const RF_APO_IDS = Object.keys(RF_APOS);
-const RF_ST = ['hunt', 'rise', 'maren', 'won'];
+const RF_ST = ['hunt', 'rise', 'maren', 'won', 'knock', 'anger'];
 const RF_START = [-16, 40.5], RF_FACE = Math.PI;   // (where you come in, by the Sally Port's great door, facing the Plaza)
 const RF = { on: false, st: 'hunt', apo: {}, wait: 0, mz: 0, vul: 0, orbUp: false, orbGap: 0, orbT: 0, orb: [0, -40, 8], bossT: 30, tok: null, mine: false, won: 0, seen: {}, grab: 0, shot: 0 };
 
@@ -345,7 +348,7 @@ const rfBox = () => RF_ZONES;   // (for tests)
 // everyone, once the fort's laid out: its state made fresh; every room open to the drowned; you face the Plaza
 function rfEnter() {
   Object.assign(RF, { on: true, st: 'hunt', apo: { apoW: 0, apoE: 0, apoN: 0 }, apoZ: {}, wait: 0, mz: 0, vul: 0, orbUp: false, orbGap: 0, orbT: 0, orbPh: 0, orb: [FPSC.CX, FPSC.CY - 40, 8], orbS: null,
-    bossT: RFC.BOSS_T[0], tok: null, mine: false, wonT: 0, grab: 0, shot: 0, spawnT: 3, t: 0, seenSt: 'hunt', burst: 0, hintT: 9 });
+    bossT: RFC.BOSS_T[0], tok: null, mine: false, wonT: 0, kz: 0, angerT: 0, angered: false, grab: 0, shot: 0, spawnT: 3, t: 0, seenSt: 'hunt', burst: 0, hintT: 9 });
   ZM.open = new Set(['raid'].concat(Object.keys(RF_ZONES)));
   ZM.round = Math.max(ZM.round, RFC.ROUND);
   ZB.round = ZM.round; ZB.plan = [];
@@ -382,7 +385,13 @@ function rfTick(dt) {
   if (RF.st === 'hunt') {
     // stepping into an apothecary wakes its keeper
     for (const k of RF_APO_IDS) if (!RF.apo[k] && P.some(p => zmZoneAt(p.x, p.y, p.jz) === k)) rfWake(k);
-    if (RF_APO_IDS.every(k => RF.apo[k] === 2)) { RF.wait -= dt; if (RF.wait <= 0) rfMaren(); }
+    if (RF_APO_IDS.every(k => RF.apo[k] === 2)) { RF.wait -= dt; if (RF.wait <= 0) rfKnock(); }
+  } else if (RF.st === 'knock') {
+    // the Knock keeps to the Plaza and the Battery too
+    const K = ZM.z.find(z => z.zn === RF.kz);
+    if (K && !K.dead && K.act !== 'emerge') { const B = RFC.BOX; K.x = clamp(K.x, FPSC.CX + B[0], FPSC.CX + B[1]); K.y = clamp(K.y, FPSC.CY + B[2], FPSC.CY + B[3]); }
+  } else if (RF.st === 'anger') {
+    RF.wait -= dt; if (RF.wait <= 0) rfMaren();
   } else if (RF.st === 'maren') {
     const M = ZM.z.find(z => z.zn === RF.mz);
     // her soul over the water: up, shot, and up again
@@ -418,7 +427,21 @@ function rfArrive(k) {
   fpsFeed(`In ${RF_APOS[k].n} a false light opens: its Mooncusser.`);
   ZBT.moon.sound('arrive');
 }
-// all three keepers down: Maren comes up out of the sea onto the Battery
+// all three keepers down: first her bat, the Knock, up through the flagstones of the Plaza
+function rfKnock() {
+  const z = rfBoss('knock', RFK.AT[0], RFK.AT[1], Math.PI, RFK.DEEP);
+  RF.kz = z.zn; RF.st = 'knock';
+  zbStart(z, 'emerge');
+  zbArrive(z);
+}
+// the Knock down: Maren is angered (on every screen, a moment after it falls)
+function rfAngered() {
+  RF.angered = true;
+  ZM.banner = { text: 'Maren is angered', t: 4, col: '#ff6a7a', sub: 'out at sea, the water heaves' };
+  fpsFeed('Maren is angered. Out at sea, the water heaves.');
+  rfSound('anger', 0);
+}
+// the Knock down and her anger told: Maren comes up out of the sea onto the Battery
 function rfMaren() {
   const z = rfBoss('maren', 0, -30, 0, -7);
   RF.mz = z.zn; RF.st = 'maren'; RF.orbGap = 6; RF.bossT = 20;
@@ -431,8 +454,11 @@ function rfKill(d, how, by) {
   if (d.apo && RF.apo[d.apo] !== 2) {
     RF.apo[d.apo] = 2;
     const left = RF_APO_IDS.filter(k => RF.apo[k] !== 2).length;
-    rfLine(left ? `The keeper of ${RF_APOS[d.apo].n} is down. ${left === 1 ? 'One apothecary' : left + ' apothecaries'} still kept.` : 'The last false light goes out. Out at sea, something rises.');
+    rfLine(left ? `The keeper of ${RF_APOS[d.apo].n} is down. ${left === 1 ? 'One apothecary' : left + ' apothecaries'} still kept.` : 'The last false light goes out. Somewhere in the Plaza, three knocks on wood.');
     if (!left) RF.wait = 4.5;
+  }
+  if (d.bt === 'knock' && RF.st === 'knock') {
+    RF.st = 'anger'; RF.angerT = 0; RF.angered = false; RF.wait = RFC.ANGER[0] + RFC.ANGER[1];
   }
   if (d.bt === 'maren' && RF.st === 'maren') {
     RF.st = 'won'; RF.vul = 0; RF.orbUp = false; RF.wonT = 10;
@@ -486,6 +512,7 @@ function rfMe(dt) {
   if (!RF.on) return;
   const m = FPS.me;
   if (RF.shot > 0) RF.shot -= dt; if (RF.grab > 0) RF.grab -= dt; if (RF.hintT > 0) RF.hintT -= dt;
+  if (RF.st === 'anger') { RF.angerT += dt; if (!RF.angered && RF.angerT >= RFC.ANGER[0]) rfAngered(); }
   if (ZM.net === 'client' && RF.vul > 0) RF.vul = Math.max(0, RF.vul - dt);
   // joined: her soul glides between the host's words
   if (ZM.net === 'client' && RF.orbS) { const k = Math.min(1, dt * 8); for (let i = 0; i < 3; i++) RF.orb[i] += (RF.orbS[i] - RF.orb[i]) * k; }
@@ -513,6 +540,7 @@ function rfApply(o) {
   if (!RF.on || !o || !Array.isArray(o.f)) return;
   const f = o.f.map(v => +v || 0), CX = FPSC.CX, CY = FPSC.CY;
   const st = RF_ST[f[0] | 0] || 'hunt';
+  if (st === 'anger' && RF.st !== 'anger') { RF.angerT = 0; RF.angered = false; }
   RF_APO_IDS.forEach((k, i) => {
     const v = Math.floor(f[1] / Math.pow(3, i)) % 3, zn = f[12 + i] | 0;
     if (zn && !RF.apoZ[k]) { RF.apoZ[k] = zn; ZB.seen.add(zn); }   // (his coming is told here, not as one up out of the sea)
@@ -594,7 +622,16 @@ ZBT.maren = {
   // (while her soul's out of her nothing touches her; struck, the Lamp burns her at half the rate)
   hurtK: (z, how) => RF.vul > 0 ? (how === 'burn' ? 0.5 : 1) : 0,
   endOf: (z, act) => RFM_T[act] ? RFM_T[act].end : 0,
-  actSound(z, act) { const d = Math.hypot(z.x - FPS.me.x, z.y - FPS.me.y); if (act === 'call') rfSound('call', d); else if (act === 'rise') rfSound('rise', d); },
+  actSound(z, act) {
+    const d = Math.hypot(z.x - FPS.me.x, z.y - FPS.me.y);
+    if (act === 'call') rfSound('call', d);
+    else if (act === 'rise') {
+      rfSound('rise', d);
+      // (the sea bursts up where she comes)
+      const x = FPSC.CX + RF_RISE[0][0], y = FPSC.CY + RF_RISE[0][1];
+      for (let i = 0; i < 40; i++) { const a = Math.random() * 6.283, r = Math.random() * 3.5; fpsPuff(x + Math.cos(a) * r, y + Math.sin(a) * r, FPSC.GROUND + ZMD.WATER + Math.random() * 9, '150,220,210', 4); }
+    }
+  },
   sound: (k, d) => rfSound(k, d),
   build: () => rfBuildMaren(),
   reset(z, M) { M.root.rotation.set(0, 0, 0); M.root.scale.setScalar(1); M.root.visible = true; },
@@ -612,6 +649,7 @@ function rfSound(k, d) {
   if (k === 'call') { whisper(0.9); play('sea', 0.6); return; }
   if (k === 'erupt') { play('splash', 1); play('slam', 0.6); return; }
   if (k === 'die') { play('thunder', 1); sting(); whisper(1); return; }
+  if (k === 'anger') { play('thunder', 1); play('sea', 0.8); sting(); whisper(1); return; }
   if (k === 'orb') { play('powerup', 0.9); sting(); return; }
   if (k === 'token') { play('pickup', 1); play('chest', 0.6); return; }
 }
@@ -752,6 +790,11 @@ function rfHud(phone, mono, fell) {
     const down = RF_APO_IDS.filter(k => RF.apo[k] === 2).length;
     line(`The apothecaries’ keepers: ${down} of 3 put down`, top, 'rgba(255,214,140,0.9)');
     RF_APO_IDS.forEach((k, i) => line(`${RF.apo[k] === 2 ? '✓' : RF.apo[k] === 1 ? '•' : '◦'} ${RF_APOS[k].n.replace(/^the /, '')}${RF.apo[k] === 1 ? ' · awake' : ''}`, top + (i + 1) * (phone ? 13 : 16), RF.apo[k] === 2 ? 'rgba(236,228,207,0.4)' : RF_APOS[k].c));
+  } else if (RF.st === 'knock') {
+    line('The Knock, Bat of Maren', top, 'rgba(240,180,110,0.95)', fell(phone ? 15 : 20));
+    line('Put it down, and Maren comes', top + (phone ? 20 : 26), 'rgba(240,200,150,0.8)');
+  } else if (RF.st === 'anger') {
+    if (RF.angered) line('Maren is angered', top, `rgba(255,110,120,${0.8 + 0.2 * Math.sin(t * 8)})`, fell(phone ? 15 : 20));
   } else if (RF.st === 'maren') {
     const M = ZM.z.find(z => z.zn === RF.mz);
     if (RF.vul > 0) line(`Maren can be hurt: ${Math.ceil(RF.vul)} s`, top, `rgba(255,120,130,${0.8 + 0.2 * Math.sin(t * 8)})`, fell(phone ? 15 : 20));
@@ -798,6 +841,7 @@ const RF3 = { orb: null };
 function rf3dBuild(grp) {
   RF3.orb = null;
   if (!RF.on) return;
+  if (typeof rfk3dBuild === 'function') rfk3dBuild(grp);
   const soft = (c0, c1) => new THREE.SpriteMaterial({ map: z3Soft(c0, c1), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false });
   // the soul: a hot core, a gold glow round it, a wider haze, and its light on the sea under it
   const orb = RF3.orb = new THREE.Group(); grp.add(orb); orb.visible = false;
@@ -829,6 +873,7 @@ function rf3dBuild(grp) {
 }
 function rf3d(dt) {
   if (!RF.on || !RF3.orb) return;
+  if (typeof rfk3d === 'function') rfk3d(dt);
   const t = g.t, G0 = FPSC.GROUND;
   // the soul
   const up = RF.st === 'maren' && RF.orbUp;
