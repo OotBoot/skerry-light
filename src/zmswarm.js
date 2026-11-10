@@ -8,13 +8,14 @@
 // it as they take them; what's its own is here: how many, how strong, its size, its way in, its model and its sounds.
 const ZWC = {
   FROM: 5, EVERY: 6,      // the crab rounds: 5, 11, 17, ...
-  MANY: 1.5,              // how many, against that round's drowned
+  MANY: 1.125,            // how many, against that round's drowned (a quarter fewer than the 1.5 it was)
   HP: 0.42,               // how strong, against that round's drowned
   SP: [4.3, 5.1],         // how quick (you sprint at 9.8)
   ALIVE: 30,              // up at once, at most
   GAP: [0.16, 0.34],      // between one and the next, coming in
   RAD: 0.45, TALL: 0.7, HEADZ: 0.42,   // its body, for being hit (the shell's top and the eyes are its "head")
   REACH: 1.25,            // its nip
+  NIP: 0.5,               // what a nip takes off you: half a knock
   CLIMB: 0.45,            // through the window, in that long
 };
 const zwIsRound = r => r >= ZWC.FROM && (r - ZWC.FROM) % ZWC.EVERY === 0;

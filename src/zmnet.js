@@ -425,7 +425,7 @@ function znApply(hz) {
     const was = z.swing;
     if (sw >= 0.28 && (was < 0.28 || was > sw) && !z.dead) {
       const reach = z.skit ? ZWC.REACH : st === 'tear' ? 1.6 : 1.55;
-      if (Math.hypot(m.x - x, m.y - y) < reach && Math.abs((m.jz || 0) - jz) < 1.2 && !(m.dead > 0) && !(m.protect > 0) && !(m.iframe > 0) && !zmIsDown()) { fpsHurt(1, null, null); zmSound('hit'); }
+      if (Math.hypot(m.x - x, m.y - y) < reach && Math.abs((m.jz || 0) - jz) < 1.2 && !(m.dead > 0) && !(m.protect > 0) && !(m.iframe > 0) && !zmIsDown()) { fpsHurt(z.skit ? ZWC.NIP : 1, null, null); zmSound('hit'); }   // ([swarm] a crab's nip: half a knock)
     }
     z.swing = sw;
     const fl = a[8];

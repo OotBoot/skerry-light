@@ -19388,7 +19388,7 @@ function zmSwipe(z, dt) {
     const was = z.swing; z.swing += dt;
     if (was < 0.28 && z.swing >= 0.28) {
       const reach = z.skit ? ZWC.REACH : z.st === 'tear' ? 1.6 : 1.55;
-      if (Math.hypot(m.x - z.x, m.y - z.y) < reach && Math.abs((m.jz || 0) - (z.jz || 0)) < 1.2 && !(m.dead > 0) && !(m.protect > 0) && !(m.iframe > 0) && !zmIsDown()) { fpsHurt(1, null, null); zmSound('hit'); }
+      if (Math.hypot(m.x - z.x, m.y - z.y) < reach && Math.abs((m.jz || 0) - (z.jz || 0)) < 1.2 && !(m.dead > 0) && !(m.protect > 0) && !(m.iframe > 0) && !zmIsDown()) { fpsHurt(z.skit ? ZWC.NIP : 1, null, null); zmSound('hit'); }   // ([swarm] a crab's nip: half a knock)
     }
     if (z.swing > 0.6) z.swing = -1;
   }
@@ -19522,8 +19522,11 @@ function zmMelee(x, y, z, h, w, code) {
     if (o.dead) continue;
     const d = Math.hypot(o.x - x, o.y - y), b = bearingOf(o.x - x, o.y - y);
     if (d > w.reach + FPSC.BODY || Math.abs(angDiff(b, h)) > w.arc || Math.abs((o.jz || 0) - (FPS.me.jz || 0)) > 1.2) continue;
-    const r = fpsRay(x, y, z - 0.4, b, Math.atan2((o.jz || 0) + (o.tall ? Math.min(1.2, o.tall * 0.6) : 1.2) - (z - FPSC.GROUND - 0.4), Math.max(0.3, d)), FPS.me.id, [o], w.reach + 1);
-    if (r.kind !== 'body') continue;
+    // (aimed at the middle of its height where the blade meets its near side, not its centre: from up at your chest
+    // to a crab at your feet, a line to its centre passed over its shell; one right at your feet is struck anyway)
+    const rad = o.rad || FPSC.BODY, close = d < rad + 0.35;
+    const r = close ? null : fpsRay(x, y, z - 0.4, b, Math.atan2((o.jz || 0) + (o.tall ? Math.min(1.2, o.tall * 0.6) : 1.2) - (z - FPSC.GROUND - 0.4), Math.max(0.3, d - rad * 0.8)), FPS.me.id, [o], w.reach + 1);
+    if (r && r.kind !== 'body') continue;
     zmHurt(o, w.dmg, false, code, FPS.me.id); o.hitT = 0.2; any = true;
   }
   if (any) { FPS.hitT = 0.18; FPS.hitHead = false; fpsHitSound(false); }
@@ -20672,12 +20675,12 @@ function zmHud() {
     const hp = m.dead > 0 || down ? 0 : clamp(m.hp, 0, n), low = hp <= 1 && !(m.dead > 0);
     ctx.fillStyle = 'rgba(8,10,14,0.55)'; ctx.fillRect(L - 3, by - 3, bw + 6, bh + 6);
     for (let i = 0; i < n; i++) {
-      const on = i < hp;
-      ctx.fillStyle = on ? (low ? `rgba(228,${60 + 40 * Math.sin(t * 8)},50,0.95)` : hp < n ? '#e4a04f' : '#7ac46a') : 'rgba(80,70,60,0.6)';
-      ctx.fillRect(L + i * (seg + gap), by, seg, bh);
+      const on = clamp(hp - i, 0, 1);   // (a part can be half full: a crab's nip takes half a knock)
+      ctx.fillStyle = 'rgba(80,70,60,0.6)'; ctx.fillRect(L + i * (seg + gap), by, seg, bh);
+      if (on > 0) { ctx.fillStyle = low ? `rgba(228,${60 + 40 * Math.sin(t * 8)},50,0.95)` : hp < n ? '#e4a04f' : '#7ac46a'; ctx.fillRect(L + i * (seg + gap), by, seg * on, bh); }
     }
     ctx.font = mono(phone ? 9 : 10); ctx.textAlign = 'left'; ctx.textBaseline = 'bottom'; ctx.fillStyle = 'rgba(236,228,207,0.65)';
-    ctx.fillText(`HEALTH ${Math.ceil(hp)}/${n}`, L, by - 3);
+    ctx.fillText(`HEALTH ${hp % 1 ? hp.toFixed(1) : hp}/${n}`, L, by - 3);
     ctx.textBaseline = 'alphabetic';
   }
   // tonics drunk, over the health
@@ -24796,13 +24799,14 @@ function ztStop(fade) {
 // it as they take them; what's its own is here: how many, how strong, its size, its way in, its model and its sounds.
 const ZWC = {
   FROM: 5, EVERY: 6,      // the crab rounds: 5, 11, 17, ...
-  MANY: 1.5,              // how many, against that round's drowned
+  MANY: 1.125,            // how many, against that round's drowned (a quarter fewer than the 1.5 it was)
   HP: 0.42,               // how strong, against that round's drowned
   SP: [4.3, 5.1],         // how quick (you sprint at 9.8)
   ALIVE: 30,              // up at once, at most
   GAP: [0.16, 0.34],      // between one and the next, coming in
   RAD: 0.45, TALL: 0.7, HEADZ: 0.42,   // its body, for being hit (the shell's top and the eyes are its "head")
   REACH: 1.25,            // its nip
+  NIP: 0.5,               // what a nip takes off you: half a knock
   CLIMB: 0.45,            // through the window, in that long
 };
 const zwIsRound = r => r >= ZWC.FROM && (r - ZWC.FROM) % ZWC.EVERY === 0;
@@ -26801,7 +26805,7 @@ function znApply(hz) {
     const was = z.swing;
     if (sw >= 0.28 && (was < 0.28 || was > sw) && !z.dead) {
       const reach = z.skit ? ZWC.REACH : st === 'tear' ? 1.6 : 1.55;
-      if (Math.hypot(m.x - x, m.y - y) < reach && Math.abs((m.jz || 0) - jz) < 1.2 && !(m.dead > 0) && !(m.protect > 0) && !(m.iframe > 0) && !zmIsDown()) { fpsHurt(1, null, null); zmSound('hit'); }
+      if (Math.hypot(m.x - x, m.y - y) < reach && Math.abs((m.jz || 0) - jz) < 1.2 && !(m.dead > 0) && !(m.protect > 0) && !(m.iframe > 0) && !zmIsDown()) { fpsHurt(z.skit ? ZWC.NIP : 1, null, null); zmSound('hit'); }   // ([swarm] a crab's nip: half a knock)
     }
     z.swing = sw;
     const fl = a[8];
