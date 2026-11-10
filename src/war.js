@@ -247,6 +247,7 @@ function warSpawnMe(i) {
 // everyone who plays lands: where they chose (if it is still free), or somewhere good
 function warBeginPlay() {
   if (WAR.phase !== 'spawn') return;
+  if (typeof scorePlayed === 'function') scorePlayed('war');   // the scoreboard (src/scores.js)
   for (let h = 0; h < WAR.nHumans; h++) {
     const n = WAR.nations[h];
     let i = h === WAR.me ? WAR.spawnPick : (WAR.spawnPicks[h] != null ? WAR.spawnPicks[h] : -1);
@@ -261,6 +262,7 @@ function warBeginPlay() {
 
 function warStop() {
   if (!WAR.on) return;
+  if (typeof scoreLeaving === 'function') scoreLeaving();   // the scoreboard: a war left before its end still counts
   WAR.on = false; WAR.phase = 'off'; WAR.net = null;
   if (typeof warViewStop === 'function') warViewStop();
   if (typeof wnAfterStop === 'function') wnAfterStop();
@@ -878,7 +880,7 @@ function warFinish(how, by) {
   st.games = (st.games || 0) + 1; if (how === 'won') st.wins = (st.wins || 0) + 1; st.bestTiles = Math.max(st.bestTiles || 0, me.taken); st.bestDays = Math.max(st.bestDays || 0, WAR.day);
   warSaveStats(st);
   if (typeof rcEarn === 'function') rcEarn('war', { won: how === 'won', t: WAR.t });   // banner crates (src/rcrates.js)
-  if (typeof scoreReport === 'function') scoreReport('war', st.wins || 0, st.bestTiles || 0);   // the scoreboard (src/scores.js)
+  if (typeof scoreReport === 'function') scoreReport('war', st.wins || 0, st.bestTiles || 0, 0, true);   // the scoreboard (src/scores.js)
   WAR.result = { how, by: by ? by.name : null, days: WAR.day, taken: me.taken, kills: me.kills, boats: WAR.stats.boats, tiles: me.tiles, share: me.tiles / WAR.landTiles };
   WAR.spectate = how !== 'won';
   if (typeof warShowResult === 'function') warShowResult(WAR.result);

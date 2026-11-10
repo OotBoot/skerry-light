@@ -8,9 +8,11 @@
 //   UPSTASH_REDIS_REST_TOKEN   the long token
 // Without them, scores are kept in memory only and are lost whenever the server restarts.
 //
-// GET  /api/scores  -> { store, games: { skerry: [{n, s, b, me?}], fps: [...], war: [...], zm: [...] } }   (top 10 of
+// GET  /api/scores  -> { store, games: { skerry: [{n, s, b, f, me?}], fps: [...], war: [...], zm: [...] } }   (top 10 of
 //                      each; with an x-board-id header, that player's own rows are marked me: true)
-// POST /api/scores  <- { id, name, game, s, b, was? }   your bests; only ever raised, never lowered. `was`: the id
+// POST /api/scores  <- { id, name, game, s, b, p?, f?, was? }   your bests; only ever raised, never lowered. p: 1 once
+//                      you've played it (so you're on the board with nothing yet); f: 1 once you've finished a game of
+//                      it (until then, f: 0 and the board shows an asterisk by your name). `was`: the id
 //                      this player was on the board under before (a browser's own, before its save had a recovery
 //                      code): that entry goes, and its bests carry over, so no one is on the board twice
 //
@@ -50,6 +52,8 @@ async function redis(commands) {
 
 const cleanName = v => String(v || '').replace(/[\u0000-\u001f\u007f-\u009f​-‏‪-‮⁠-⁯<>&"]/g, '').trim().slice(0, 18) || 'A sailor';
 const sortKey = e => e.s * 1e9 + e.b;
+// finished a game of it? (an entry from before the mark: yes if it has anything, but Maren's End only with a time)
+const finished = (game, e) => !e ? 0 : 'f' in e ? (e.f ? 1 : 0) : (game === 'raid' ? e.s | 0 : (e.s | 0) + (e.b | 0) + (e.c | 0)) > 0 ? 1 : 0;
 
 async function readAll() {
   const out = {};
@@ -61,7 +65,7 @@ async function readAll() {
       out[g] = list;
     });
   } else for (const g of Object.keys(GAMES)) out[g] = [...(memory.get(g) || new Map()).entries()].map(([id, e]) => Object.assign({ id }, e));
-  for (const g of Object.keys(out)) out[g] = out[g].filter(e => e && e.s + e.b + (e.c | 0) > 0).sort((a, b) => sortKey(b) - sortKey(a)).slice(0, TOP).map(e => ({ id: e.id, n: cleanName(e.n), s: e.s | 0, b: e.b | 0, c: e.c | 0 }));
+  for (const g of Object.keys(out)) out[g] = out[g].filter(e => e && (e.s + e.b + (e.c | 0) > 0 || e.p)).sort((a, b) => sortKey(b) - sortKey(a)).slice(0, TOP).map(e => ({ id: e.id, n: cleanName(e.n), s: e.s | 0, b: e.b | 0, c: e.c | 0, f: finished(g, e) }));
   return out;
 }
 
@@ -69,7 +73,7 @@ async function getBoard(me) {
   if (!cache || Date.now() - cacheAt >= 15000) { cache = { store: STORE, games: await readAll() }; cacheAt = Date.now(); }
   // (the ids stay here: each row goes out with only its name and numbers, and "me" for the asker's own)
   const games = {};
-  for (const [g, list] of Object.entries(cache.games)) games[g] = list.map(e => me && e.id === me ? { n: e.n, s: e.s, b: e.b, c: e.c, me: true } : { n: e.n, s: e.s, b: e.b, c: e.c });
+  for (const [g, list] of Object.entries(cache.games)) games[g] = list.map(e => me && e.id === me ? { n: e.n, s: e.s, b: e.b, c: e.c, f: e.f, me: true } : { n: e.n, s: e.s, b: e.b, c: e.c, f: e.f });
   return { store: STORE, games };
 }
 
@@ -92,11 +96,14 @@ async function postScore(body, addr) {
     try { old = was && w ? JSON.parse(w) : null; } catch (e) {}
   } else { const M = memory.get(game) || new Map(); prev = M.get(id) || null; old = was ? M.get(was) || null : null; }
   // (moving from an old id: its bests come along, and it goes)
-  if (old) prev = { n: prev ? prev.n : old.n, s: Math.max(prev ? prev.s | 0 : 0, old.s | 0), b: Math.max(prev ? prev.b | 0 : 0, old.b | 0), c: Math.max(prev ? prev.c | 0 : 0, old.c | 0) };
+  if (old) prev = { n: prev ? prev.n : old.n, s: Math.max(prev ? prev.s | 0 : 0, old.s | 0), b: Math.max(prev ? prev.b | 0 : 0, old.b | 0), c: Math.max(prev ? prev.c | 0 : 0, old.c | 0), p: 1, f: Math.max(finished(game, prev), finished(game, old)) };
   if (was) { if (STORE === 'upstash') await redis([['HDEL', KEY(game), was]]); else if (memory.has(game)) memory.get(game).delete(was); if (old) cache = null; }
   const e = { n: name, s: Math.max(s, prev ? prev.s | 0 : 0), b: Math.max(b, prev ? prev.b | 0 : 0), at: now };
   if (maxC) e.c = Math.max(c, prev ? prev.c | 0 : 0);
-  if (prev && !old && prev.s === e.s && prev.b === e.b && (prev.c | 0) === (e.c | 0) && prev.n === e.n) return [200, { ok: true, same: true }];
+  // (played, and finished: once set, never taken back)
+  e.p = body.p || prev || s + b + c > 0 ? 1 : 0;
+  e.f = Math.max(body.f ? 1 : 0, finished(game, prev));
+  if (prev && !old && prev.s === e.s && prev.b === e.b && (prev.c | 0) === (e.c | 0) && prev.n === e.n && prev.p === e.p && prev.f === e.f) return [200, { ok: true, same: true }];
   if (STORE === 'upstash') await redis([['HSET', KEY(game), id, JSON.stringify(e)]]);
   else { if (!memory.has(game)) memory.set(game, new Map()); memory.get(game).set(id, e); }
   cache = null;

@@ -2041,9 +2041,11 @@ function zmStart(opts) {
   $('zmAgain').textContent = ZM.net ? 'Back to the lobby' : 'Hold it again';
   fpsFeed(MAP.land(ZM.net ? ZM.hum.length : 0));
   if (typeof raidAfterStart === 'function') raidAfterStart();   // [raid]
+  if (typeof scorePlayed === 'function') scorePlayed(typeof RAID !== 'undefined' && RAID.on ? 'raid' : 'zm');   // the scoreboard (src/scores.js)
   try { cv.focus(); } catch (e) {}
 }
 function zmStop() {
+  if (typeof scoreLeaving === 'function') scoreLeaving();   // the scoreboard: a night (or a raid) left before its end still counts
   if (ZM.net && typeof zmnStop === 'function') zmnStop();
   if (typeof zmpStop === 'function') zmpStop();   // [pap]
   if (typeof zxReset === 'function') zxReset();   // [chest]
@@ -2206,7 +2208,7 @@ function zmEnd() {
   ZM.over = { t: 0 };
   zmSound('over');
   if ((typeof RAID !== 'undefined' && RAID.on)) raidReport();   // [raid]
-  else if (typeof scoreReport === 'function') scoreReport('zm', Math.max(0, ZM.round - 1), ZM.kills);
+  else if (typeof scoreReport === 'function') scoreReport('zm', Math.max(0, ZM.round - 1), ZM.kills, 0, true);
 }
 
 // ---------- rounds ----------

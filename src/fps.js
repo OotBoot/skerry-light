@@ -212,6 +212,7 @@ function fpsStart() {
   FPS.touch = matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window && navigator.maxTouchPoints > 0;
   $('fpsPad').hidden = !FPS.touch; FPS.hintT = 8; if (FPS.touch) fpsSafeArea();
   FPS.round = fpsRoundNow();
+  if (typeof scorePlayed === 'function') scorePlayed('fps');   // the scoreboard (src/scores.js)
   FPS.g = fpsArena(FPS.round);
   FPS.me = { id: NET.sid, x: FPSC.CX, y: FPSC.CY, h: 0, p: 0, v: 0, z: 0, rudder: 0, bob: 0, boat: 'brig', inv: 0, pitch: 0,
     hp: FPSC.HP, ammo: 6, mags: {}, reload: 0, cd: 0, flares: FPSC.FLARES, lan: true, dead: 0, protect: 0, killer: null };
@@ -226,6 +227,7 @@ function fpsStart() {
 }
 function fpsStop() {
   if (!FPS.on) return;
+  if (typeof scoreLeaving === 'function') scoreLeaving();   // the scoreboard: a game left before its end still counts
   if (FPS.zm && typeof zmStop === 'function') zmStop();
   FPS.on = false; FPS.inK = 0;
   if (typeof audioOutdoors === 'function') audioOutdoors(1);
@@ -910,7 +912,7 @@ function fpsFrame(dt) {
     if (rn !== FPS.round) {
       const all = fpsScores(), top = all[0], mine = all.find(p => p.me);
       // the scoreboard (src/scores.js): your kills this round, and a round won if you finished on top
-      if (typeof scoreReport === 'function' && mine) { const won = top && top.me && top.k > 0; const m = BOARD.mine && BOARD.mine.fps; scoreReport('fps', mine.k, (m ? m.b : 0) + (won ? 1 : 0)); }
+      if (typeof scoreReport === 'function' && mine) { const won = top && top.me && top.k > 0; const m = BOARD.mine && BOARD.mine.fps; scoreReport('fps', mine.k, (m ? m.b : 0) + (won ? 1 : 0), 0, true); }
       FPS.roundMsg = { t: 6, text: top && top.k > 0 ? `${top.me ? 'You' : top.n} won the round with ${top.k} ${top.k === 1 ? 'kill' : 'kills'}.` : 'The round is over.' };
       if (typeof wcEarn === 'function') wcEarn('round');   // weapon crates (src/wcrates.js)
       if (typeof ocEarn === 'function') ocEarn('round');   // outfit crates (src/ocrates.js)

@@ -555,6 +555,7 @@ function startRun() {
 
 function beginVoyage(n) {
   state = 'play';
+  if (typeof scorePlayed === 'function') scorePlayed('skerry');   // the scoreboard (src/scores.js)
   newVoyage(n, false);
   hideCallout(); showHails();
   bellShown = -1; flareShown = -1;
@@ -573,6 +574,7 @@ function beginCrewVoyage(L, slot) {
   if (!$('crateCard').hidden && typeof hideCrates === 'function') hideCrates();
   if (L.voy === 1) run = { voyages: 0, hits: 0 };
   state = 'play';
+  if (typeof scorePlayed === 'function') scorePlayed('skerry');   // the scoreboard (src/scores.js)
   newVoyage(L.voy, false, L.seed, slot);
   g.launchAt = L.at; g.launchId = L.id;
   bellShown = -1; flareShown = -1;

@@ -905,6 +905,9 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 .boardlist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; max-height: 22em; overflow-y: auto; }
 .boardlist li { padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.05); color: var(--ink); }
 .boardlist li.me { color: var(--lamp); }
+/* an incomplete game's asterisk, by the name, and what it means under the board */
+.inc { color: #f2c94c; font-weight: 700; margin-left: 2px; }
+.boardkey { margin: 2px 0 0; font-size: 12px; color: var(--muted); }
 .boardlist li.empty { display: block; color: var(--muted); font-size: 12px; }
 .boardlist .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .boardhead .sc, .boardhead .sb, .boardlist .sc, .boardlist .sb { text-align: right; font-variant-numeric: tabular-nums; }
