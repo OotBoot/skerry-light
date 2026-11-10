@@ -201,6 +201,19 @@ function rcLoad() {
   rcSave();
 }
 function rcSave() { try { localStorage.setItem(RC_KEY, JSON.stringify({ crates: RC.crates, opened: RC.opened, tiles: RC.tiles, owned: RC.owned, equipped: RC.equipped, pending: RC.pending })); } catch (e) {} }
+// for the one save that carries everything (src/crates.js saveData / mergeSave), as for the outfits (ocMerge)
+function rcData() { return { crates: RC.crates, opened: RC.opened, owned: RC.owned, equipped: RC.equipped }; }
+function rcMerge(d, takeLooks) {
+  if (!d || typeof d !== 'object') return false;
+  let changed = false;
+  const n = v => Math.max(0, Math.min(99999, v | 0));
+  if (d.owned && typeof d.owned === 'object') for (const [id, c] of Object.entries(d.owned)) if (RC_SKIN_BY_ID[id] && n(c) > (RC.owned[id] | 0)) { RC.owned[id] = n(c); changed = true; }
+  const earned = Math.max(n(d.crates) + n(d.opened), RC.crates + RC.opened), opened = Math.max(RC.opened, n(d.opened)), left = Math.min(99999, Math.max(0, earned - opened));
+  if (left !== RC.crates || opened !== RC.opened) { RC.crates = left; RC.opened = opened; changed = true; }
+  if (takeLooks && RC_SKIN_BY_ID[d.equipped] && RC.owned[d.equipped] && RC.equipped !== d.equipped) { RC.equipped = d.equipped; changed = true; }
+  if (changed) rcSave();
+  return changed;
+}
 function rcEquippedId() { return RC.equipped && RC.owned[RC.equipped] ? RC.equipped : ''; }
 
 // ---------- earning ----------

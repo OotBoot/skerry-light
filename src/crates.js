@@ -252,8 +252,13 @@ function loadCrates() {
 }
 function saveData() {
   return { crates: CRATES.crates, opened: CRATES.opened, owned: CRATES.owned, equipped: CRATES.equipped, pennant: CRATES.pennant, flare: CRATES.flare, boat: CRATES.boat,
-    pt: typeof ptData === 'function' ? ptData() || undefined : undefined };   // [pirate tokens] src/zmegg.js
+    pt: typeof ptData === 'function' ? ptData() || undefined : undefined,   // [pirate tokens] src/zmegg.js
+    // and the other crates' loot, so one save (code, link, file, claude.ai account, cloud) carries everything:
+    // weapon skins (src/wcrates.js), outfits (src/ocrates.js) and banners (src/rcrates.js)
+    // (each only once its own file has run: the boat crates save while the page is still loading)
+    w: crOther('wcData'), oc: crOther('ocData'), rc: crOther('rcData') };
 }
+function crOther(f) { try { return typeof window[f] === 'function' ? window[f]() : undefined; } catch (e) { return undefined; } }
 function saveCrates() {
   try { localStorage.setItem('skerry-crates', JSON.stringify(Object.assign(saveData(), { pending: CRATES.pending }))); } catch (e) {}
   cloudSaveSoon();
@@ -282,6 +287,10 @@ function mergeSave(d, takeLooks) {
   const left = Math.min(99999, Math.max(0, earned - opened));
   if (left !== CRATES.crates.skerry || opened !== (CRATES.opened | 0)) { CRATES.crates.skerry = left; CRATES.opened = opened; changed = true; }
   if (typeof ptMerge === 'function' && ptMerge(d.pt)) changed = true;   // [pirate tokens] src/zmegg.js
+  // the other crates' loot (each merged by its own rules, and saved by itself if it changed)
+  if (d.w && typeof d.w === 'object' && typeof wcMerge === 'function' && wcMerge({ c: d.w.crates, n: d.w.opened, o: d.w.owned, e: takeLooks ? d.w.equipped : null })) { changed = true; wcSave(); }
+  if (typeof ocMerge === 'function' && ocMerge(d.oc, takeLooks)) changed = true;
+  if (typeof rcMerge === 'function' && rcMerge(d.rc, takeLooks)) changed = true;
   if (takeLooks) {
     if (d.equipped && typeof d.equipped === 'object') for (const b of BOATS) {
       const sk = SKIN_BY_ID[d.equipped[b.id]];
@@ -293,12 +302,12 @@ function mergeSave(d, takeLooks) {
   }
   return changed;
 }
-function afterMerge() { saveCrates(); renderCrates(); updateCrateButtons(); renderBackupDot(); if (typeof crewMode !== 'undefined' && crewMode) send(); }
+function afterMerge() { saveCrates(); renderCrates(); updateCrateButtons(); renderBackupDot(); for (const f of ['wcRender', 'ocRender', 'rcRender']) if (typeof window[f] === 'function') try { window[f](); } catch (e) {} if (typeof crewMode !== 'undefined' && crewMode) send(); }
 
 // the save code: your save, packed into one line of text
 function saveCode() {
   const d = saveData();
-  const packed = { c: d.crates.skerry, n: d.opened | 0, o: d.owned, e: d.equipped, p: d.pennant, f: d.flare, b: d.boat, t: d.pt };   // [pirate tokens] src/zmegg.js
+  const packed = { c: d.crates.skerry, n: d.opened | 0, o: d.owned, e: d.equipped, p: d.pennant, f: d.flare, b: d.boat, t: d.pt, w: d.w, q: d.oc, r: d.rc };   // [pirate tokens] src/zmegg.js
   return 'SKERRY-' + btoa(unescape(encodeURIComponent(JSON.stringify(packed)))).replace(/=+$/, '').replace(/\+/g, '-').replace(/\//g, '_');
 }
 function readSaveCode(text) {
@@ -308,7 +317,7 @@ function readSaveCode(text) {
   try {
     const b64 = m[1].replace(/-/g, '+').replace(/_/g, '/');
     const o = JSON.parse(decodeURIComponent(escape(atob(b64 + '==='.slice((b64.length + 3) % 4)))));
-    return { crates: o.c | 0, opened: o.n | 0, owned: o.o, equipped: o.e, pennant: o.p, flare: o.f, boat: o.b, pt: o.t };   // [pirate tokens] src/zmegg.js
+    return { crates: o.c | 0, opened: o.n | 0, owned: o.o, equipped: o.e, pennant: o.p, flare: o.f, boat: o.b, pt: o.t, w: o.w, oc: o.q, rc: o.r };   // [pirate tokens] src/zmegg.js
   } catch (e) { return null; }
 }
 
@@ -342,7 +351,7 @@ function cloudSaveSoon(delay) {
 
 function renderSaveBox() {
   const st = $('saveStatus'); if (!st) return;
-  st.textContent = CLOUD.ref ? CLOUD.status : 'Saved in this browser only. Back it up in one tap: you get a link that loads your save on any phone or browser.';
+  st.textContent = CLOUD.ref ? CLOUD.status : typeof CS !== 'undefined' && CS.on ? 'Or keep a copy yourself: a save link, code or file brings everything back too.' : 'Saved in this browser only. Back it up in one tap: you get a link that loads your save on any phone or browser.';
 }
 // ---------- one-tap backups ----------
 // A save link opens the game and loads your save, on any phone or browser. On claude.ai the page
@@ -351,7 +360,7 @@ function saveLink() {
   if (window.claude && typeof window.claude.use === 'function') return null;
   return location.origin + location.pathname + '#load=' + saveCode();
 }
-function lootSize() { const pt = typeof ptData === 'function' && ptData(); return Object.values(CRATES.owned).reduce((a, v) => a + (v | 0), 0) + (CRATES.crates.skerry | 0) + (pt ? pt.e : 0); }   // [pirate tokens] src/zmegg.js
+function lootSize() { const pt = typeof ptData === 'function' && ptData(), sum = o => o ? Object.values(o.owned || {}).reduce((a, v) => a + (v | 0), 0) + (o.crates | 0) : 0; return Object.values(CRATES.owned).reduce((a, v) => a + (v | 0), 0) + (CRATES.crates.skerry | 0) + (pt ? pt.e : 0) + sum(crOther('wcData')) + sum(crOther('ocData')) + sum(crOther('rcData')); }   // [pirate tokens] src/zmegg.js
 function markBackedUp() { try { localStorage.setItem('skerry-backup', String(lootSize())); } catch (e) {} renderBackupDot(); }
 function needsBackup() { let b = 0; try { b = +localStorage.getItem('skerry-backup') || 0; } catch (e) {} return lootSize() > b && Object.keys(CRATES.owned).length > 0; }
 function renderBackupDot() { for (const b of document.querySelectorAll('.backupBtn')) b.classList.toggle('due', needsBackup()); }
@@ -411,7 +420,8 @@ function setupSaveBox() {
   const copy = $('saveCopy'), load = $('saveLoad'), input = $('saveInput'), msg = $('saveMsg');
   if (!copy) return;
   copy.addEventListener('click', () => backupNow(msg));
-  load.addEventListener('click', () => loadSaveText(input.value, msg));
+  // (a recovery code: the cloud save, src/cloudsave.js; anything else: a save code, link or file's text)
+  load.addEventListener('click', () => { if (typeof csReadCode === 'function' && csReadCode(input.value) && !/SKERRY-/.test(input.value)) csUseCode(input.value, msg); else loadSaveText(input.value, msg); });
   $('saveFile').addEventListener('click', () => { downloadSave(); msg.textContent = 'Save file downloaded (skerry-light-save.txt). Keep it, and load it back with Load a save file.'; });
   $('saveFileIn').addEventListener('change', async e => {
     const f = e.target.files && e.target.files[0]; if (!f) return;

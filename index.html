@@ -409,12 +409,16 @@
       <ul class="odds" id="crateOdds" aria-label="Chances for each grade"></ul>
       <h2 class="invh">Keep your loot</h2>
       <div class="savebox">
+        <div class="cloudbox" id="cloudBox" hidden>
+          <p class="savestatus" id="cloudStatus"></p>
+          <div class="btnrow"><span class="cloudcode" id="cloudCode"></span><button class="tool" id="cloudCopy" type="button">Copy recovery code</button></div>
+        </div>
         <p class="savestatus" id="saveStatus"></p>
-        <label for="saveInput" class="sr">Save code</label>
-        <input id="saveInput" type="text" placeholder="Paste a save link or code (SKERRY-...)" autocomplete="off" spellcheck="false">
+        <label for="saveInput" class="sr">Save code or recovery code</label>
+        <input id="saveInput" type="text" placeholder="Paste a recovery code (SKR-...) or a save link or code" autocomplete="off" spellcheck="false">
         <div class="btnrow">
           <button class="primary small" id="saveCopy" type="button">Back up my save</button>
-          <button class="tool" id="saveLoad" type="button">Load a save code</button>
+          <button class="tool" id="saveLoad" type="button">Load</button>
         </div>
         <div class="btnrow">
           <button class="tool" id="saveFile" type="button">Download save file</button>
@@ -654,6 +658,7 @@
 <script src="src/scores.js"></script>
 <script src="src/wcrates.js"></script>
 <script src="src/ocrates.js"></script>
+<script src="src/cloudsave.js"></script>
 <script src="src/main.js"></script>
 </body>
 </html>

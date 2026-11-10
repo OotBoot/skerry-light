@@ -78,6 +78,20 @@ function ocLoad() {
   ocSave();
 }
 function ocSave() { try { localStorage.setItem(OC_KEY, JSON.stringify({ crates: OC.crates, opened: OC.opened, kills: OC.kills, owned: OC.owned, equipped: OC.equipped, pending: OC.pending })); } catch (e) {} }
+// for the one save that carries everything (src/crates.js saveData / mergeSave): what's yours, and folding another
+// save in (every outfit either side has, crates by everything ever earned; its outfit worn only if takeLooks)
+function ocData() { return { crates: OC.crates, opened: OC.opened, owned: OC.owned, equipped: OC.equipped }; }
+function ocMerge(d, takeLooks) {
+  if (!d || typeof d !== 'object') return false;
+  let changed = false;
+  const n = v => Math.max(0, Math.min(99999, v | 0));
+  if (d.owned && typeof d.owned === 'object') for (const [id, c] of Object.entries(d.owned)) if (OC_BY_ID[id] && n(c) > (OC.owned[id] | 0)) { OC.owned[id] = n(c); changed = true; }
+  const earned = Math.max(n(d.crates) + n(d.opened), OC.crates + OC.opened), opened = Math.max(OC.opened, n(d.opened)), left = Math.min(99999, Math.max(0, earned - opened));
+  if (left !== OC.crates || opened !== OC.opened) { OC.crates = left; OC.opened = opened; changed = true; }
+  if (takeLooks && OC_BY_ID[d.equipped] && OC.owned[d.equipped] && OC.equipped !== d.equipped) { OC.equipped = d.equipped; changed = true; }
+  if (changed) ocSave();
+  return changed;
+}
 function ocEquippedId() { return OC.equipped && OC.owned[OC.equipped] ? OC.equipped : ''; }
 
 // ---------- earning ----------
