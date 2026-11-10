@@ -21,6 +21,7 @@ const FPSC = {
   PLAYERS: 6, LAG: 0.35,   // (wreckers, the bots, fill the island up to this many)
   CX: 0, CY: 640, R: 88,   // (the island's radius: smaller now, so fights find you quicker)
   GROUND: 0.35, EYE: 1.7, BODY: 0.55, TALL: 1.85,
+  PMAX: 1.55,   // (how far you can look up or down: just short of straight up and straight down, so the view never flips)
   SPEED: 6.5, SPRINT: 11, HP: 4, MAG: 6, RATE: 0.26, RELOAD: 2.2, RESPAWN: 3.5, FLARES: 2,
   ROUND: 300000, PERIOD: 16, RANGE: 420, SEND: 0.1, BOTS: 3, PROTECT: 2,
   JUMP: 5.6, GRAV: 15,                       // a jump clears about a metre and lasts three-quarters of a second
@@ -566,7 +567,7 @@ function fpsShoot() {
   // when aimed down the sights. Some of the climb settles back when you let go of the trigger (see fpsFrame)
   if (climbNext) {
     const k = FPS.scoped ? 0.62 : 1, up = w.climb * k * (0.8 + Math.random() * 0.45);
-    m.p = clamp(m.p + up, -0.6, 0.6); m.h = wrapPi(m.h + (Math.random() - 0.45) * w.sway * k * 2);
+    m.p = clamp(m.p + up, -FPSC.PMAX, FPSC.PMAX); m.h = wrapPi(m.h + (Math.random() - 0.45) * w.sway * k * 2);
     FPS.climb = Math.min(0.25, (FPS.climb || 0) + up * 0.55); FPS.sinceShot = 0;
   }
   if (!w.melee && m.ammo <= 0) setTimeout(fpsReload, w.mag === 1 ? 420 : 250);
@@ -904,7 +905,7 @@ function fpsFrame(dt) {
     FPS.recoil = Math.max(0, FPS.recoil - dt * 6);
     // the avtomat's climb: once the trigger's let go, the muzzle settles back part of the way
     FPS.sinceShot = (FPS.sinceShot || 0) + dt;
-    if ((FPS.climb || 0) > 0 && FPS.sinceShot > 0.14) { const d = Math.min(FPS.climb, dt * 0.4); m.p = clamp(m.p - d, -0.6, 0.6); FPS.climb -= d; }
+    if ((FPS.climb || 0) > 0 && FPS.sinceShot > 0.14) { const d = Math.min(FPS.climb, dt * 0.4); m.p = clamp(m.p - d, -FPSC.PMAX, FPSC.PMAX); FPS.climb -= d; }
     for (const p of FPS.pings) p.t -= dt; FPS.pings = FPS.pings.filter(p => p.t > 0);
     for (const t of FPS.tracers) t.t -= dt; FPS.tracers = FPS.tracers.filter(t => t.t > 0);
     for (const f of FPS.feed) f.t -= dt; FPS.feed = FPS.feed.filter(f => f.t > 0);
@@ -921,8 +922,8 @@ function fpsFrame(dt) {
 function fpsInput(dt) {
   const m = FPS.me, K = FPS.keys;
   // looking: mouse (pointer lock), the right stick, or a finger on the right of the screen
-  // (the look sensitivity setting scales the mouse, the touch screen and the right stick alike)
-  let sens = 0.0031 * lookK();
+  // (the look sensitivity settings, across and up and down, scale the mouse and the touch screen; the controller has its own)
+  let sens = 0.0031;
   // on a touch screen, aiming slows a touch as the crosshair crosses someone you can see, and leans faintly
   // onto them, but only while your thumb is moving the aim: it helps hold a target, it doesn't find one for you
   // (and none at all through the telescope)
@@ -937,10 +938,10 @@ function fpsInput(dt) {
     FPS.look[0] += ax; FPS.look[1] += ay; FPS.mlook[0] -= ax; FPS.mlook[1] -= ay;
     if (Math.abs(FPS.mlook[0]) + Math.abs(FPS.mlook[1]) < 0.01) FPS.mlook = [0, 0];
   }
-  m.h = wrapPi(m.h + FPS.look[0] * sens); m.p = clamp(m.p - FPS.look[1] * sens, -0.6, 0.6);
+  m.h = wrapPi(m.h + FPS.look[0] * sens * lookKX()); m.p = clamp(m.p - FPS.look[1] * sens * lookKY(), -FPSC.PMAX, FPSC.PMAX);
   if (assist && aiming && !(m.dead > 0)) {
     m.h = wrapPi(m.h + clamp(assist.dh, -1, 1) * Math.min(1, dt * 1.1));
-    m.p = clamp(m.p + clamp(assist.dp, -1, 1) * Math.min(1, dt * 1.2), -0.6, 0.6);
+    m.p = clamp(m.p + clamp(assist.dp, -1, 1) * Math.min(1, dt * 1.2), -FPSC.PMAX, FPSC.PMAX);
   }
   FPS.lastLook = FPS.look; FPS.look = [0, 0];
   let fx = 0, fz = 0, fire = false;
@@ -951,7 +952,7 @@ function fpsInput(dt) {
     fx += dz(pad.axes[0] || 0); fz -= dz(pad.axes[1] || 0);
     // (the controller's own look sensitivity, and its own while aiming: the Controller page of the menu)
     const pk = FPS.padLookK * (FPS.scoped ? FPS.padAdsK / fpsZoom() : 1);
-    m.h = wrapPi(m.h + dz(pad.axes[2] || 0) * dt * 3.5 * pk); m.p = clamp(m.p - dz(pad.axes[3] || 0) * dt * 2.4 * pk, -0.6, 0.6);
+    m.h = wrapPi(m.h + dz(pad.axes[2] || 0) * dt * 3.5 * pk); m.p = clamp(m.p - dz(pad.axes[3] || 0) * dt * 2.4 * pk, -FPSC.PMAX, FPSC.PMAX);
     const b = i => pad.buttons[i] && pad.buttons[i].pressed, was = FPS.padWas || {};
     if (b(7)) fire = true;
     FPS.padFire = b(7);
@@ -1025,7 +1026,7 @@ function fpsDraw() {
   else if (FPS.runK > 0 && !reduceMotion) focal = fb * (1 - 0.08 * FPS.runK);
   else focal = fb;
   try {
-    try { fpsDrawScene(); } finally { focal = fb; }
+    try { fpsDrawScene(); } finally { focal = fb; setCamPitch(camPitch); hy = H * 0.5 + pitchY; }
     fpsDrawHands();
     // under a roof (src/fpsisle.js), the weather stays outside, and so, muffled, do the sea and the wind
     GFX.wx = 1 - FPS.inK;
@@ -1033,7 +1034,7 @@ function fpsDraw() {
     if (typeof audioOutdoors === 'function') audioOutdoors(1 - FPS.inK);
     if (FPS.scoped && fpsW().scope) fpsDrawScope();
     if (FPS.zm) zmHud(); else fpsHud();
-  } finally { focal = f0; }
+  } finally { focal = f0; setCamPitch(0); }
 }
 function fpsDrawScene() {
   // (in the Lighthouse, out and watching someone: the view is theirs, src/zombies.js)
@@ -1058,7 +1059,8 @@ function fpsDrawScene() {
     camH = Math.max(FPSC.GROUND + 0.4, eye + FPSC.TP_UP - sp * FPSC.TP_BACK * pull - (FPS.landed || 0) * 0.3);
     FPS.camAt = [camX, camY, camH];
   } else { FPS.camAt = null; FPS.camPull = null; }
-  hy = H * 0.5 + Math.tan(m.p) * focal;
+  // the camera tilts with your look (render.js cam/proj, and gl3d's camera): hy is where the horizon falls
+  setCamPitch(m.p); hy = H * 0.5 + pitchY;
   // indoors or out (where the camera is): eased over a quarter of a second or so, going through a door
   { const want = fpsUnderRoof(FPS.g, camX, camY, camH) ? 1 : 0, k = Math.min(1, (FPS.dtLast || 0.016) * 5);
     FPS.inK = FPS.inK == null || FPS.inKFor !== FPS.g ? want : FPS.inK + (want - FPS.inK) * k; FPS.inKFor = FPS.g;
@@ -1069,7 +1071,7 @@ function fpsDrawScene() {
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   if (gl) ctx.clearRect(0, 0, W, H);
   ctx.save();
-  ctx.translate(cx, hy); ctx.rotate(roll); ctx.translate(-cx, -hy);
+  ctx.translate(cx, H * 0.5); ctx.rotate(roll); ctx.translate(-cx, -H * 0.5);
   const far = SK.BEAM_RANGE, beamOn = !FPS.zm && Math.abs(g.beam) < SK.SHADE + SK.HALF_BEAM;
   const fl = [Math.sin(g.beam - SK.HALF_BEAM) * far, Math.cos(g.beam - SK.HALF_BEAM) * far], fr = [Math.sin(g.beam + SK.HALF_BEAM) * far, Math.cos(g.beam + SK.HALF_BEAM) * far];
   let shown = 0;
@@ -1082,7 +1084,7 @@ function fpsDrawScene() {
   else if (typeof fpsFiguresHide === 'function') fpsFiguresHide();
   if (gl) {
     gl3dBackdrop(roll, 0, 0);
-    { const main = ctx; ctx = bgx; ctx.save(); ctx.translate(cx, hy); ctx.rotate(roll); ctx.translate(-cx, -hy); try { fpsIsleSkyTint(bgx); } finally { ctx.restore(); ctx = main; } }
+    { const main = ctx; ctx = bgx; ctx.save(); ctx.translate(cx, H * 0.5); ctx.rotate(roll); ctx.translate(-cx, -H * 0.5); try { fpsIsleSkyTint(bgx); } finally { ctx.restore(); ctx = main; } }
     if (FPS.zm) zmScene3D();
     shown = gl3dRender(roll, 0, 0, beamOn);
     if (body) fpsBodyOccluder();

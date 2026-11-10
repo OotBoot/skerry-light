@@ -1868,7 +1868,7 @@ function zmFrame(dt) {
       fpsHarpoonsTick(dt);
       FPS.recoil = Math.max(0, FPS.recoil - dt * 6);
       FPS.sinceShot = (FPS.sinceShot || 0) + dt;
-      if ((FPS.climb || 0) > 0 && FPS.sinceShot > 0.14) { const d = Math.min(FPS.climb, dt * 0.4); m.p = clamp(m.p - d, -0.6, 0.6); FPS.climb -= d; }
+      if ((FPS.climb || 0) > 0 && FPS.sinceShot > 0.14) { const d = Math.min(FPS.climb, dt * 0.4); m.p = clamp(m.p - d, -FPSC.PMAX, FPSC.PMAX); FPS.climb -= d; }
       zmTick(dt);
     }
     if (typeof ztTick === 'function') ztTick(dt);   // [theme] the bosses' music (src/zmtheme.js)
@@ -3856,7 +3856,7 @@ function zmSpecTick(dt) {
   const eye = FPSC.GROUND + FPSC.EYE + (r.tjz || 0) - (r.down ? ZM_DOWN.EYE : 0), k = S.snap ? 1 : 1 - Math.exp(-dt * 14);
   S.x = r.x; S.y = r.y;
   S.z += (eye - S.z) * (S.snap ? 1 : 1 - Math.exp(-dt * 8));
-  S.h = wrapPi(S.h + angDiff(r.h, S.h) * k); S.p += (clamp(r.p || 0, -0.6, 0.6) - S.p) * k;
+  S.h = wrapPi(S.h + angDiff(r.h, S.h) * k); S.p += (clamp(r.p || 0, -FPSC.PMAX, FPSC.PMAX) - S.p) * k;
   S.snap = false;
   // (and facing their way, so you come back next round looking where you were looking)
   m.x = r.x; m.y = r.y; m.jz = m.fl = r.tjz || 0; m.h = S.h; m.p = S.p;

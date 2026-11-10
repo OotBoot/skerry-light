@@ -82,7 +82,7 @@ float isleEdge(vec2 g) {
   return length(d) - uIsle.z * (1.0 + 0.035 * sin(a * 5.0 + 1.0) + 0.02 * sin(a * 13.0));
 }`;
 const SEA_VS = `
-uniform float uT, uCap; uniform vec3 uCamPos;
+uniform float uT, uCap; uniform vec3 uCamPos; uniform vec2 uFwd;
 varying vec3 vW; varying float vF; varying float vAmp;
 ${SEA_ISLE}
 float wh(vec2 p, float t) {
@@ -99,7 +99,7 @@ void main() {
   w.y += h;
   vW = w.xyz;
   vec4 mv = viewMatrix * w;
-  vF = -mv.z;
+  vF = dot(w.xz - uCamPos.xz, uFwd);   // how far ahead along the level, whatever the camera's tilt
   gl_Position = projectionMatrix * mv;
 }`;
 const SEA_FS = `
@@ -170,7 +170,7 @@ function buildSea() {
   const u = {};
   for (const n of ['uSea0', 'uSea1', 'uSea2', 'uSea3', 'uBeamCol', 'uWaveCol', 'uMoonDir', 'uGlit', 'uCamPos']) u[n] = { value: new THREE.Vector3() };
   for (const n of ['uCamH', 'uFocal', 'uBelow', 'uBeam', 'uHalf', 'uShade', 'uRange', 'uBeamOn', 'uT', 'uLR', 'uLamp', 'uCoast']) u[n] = { value: 0 };
-  u.uShip = { value: new THREE.Vector2() }; u.uIsle = { value: new THREE.Vector4() }; u.uCap = { value: 1e3 };
+  u.uShip = { value: new THREE.Vector2() }; u.uFwd = { value: new THREE.Vector2(0, -1) }; u.uIsle = { value: new THREE.Vector4() }; u.uCap = { value: 1e3 };
   const mat = new THREE.ShaderMaterial({ uniforms: u, vertexShader: SEA_VS, fragmentShader: SEA_FS, side: THREE.DoubleSide });
   const m = new THREE.Mesh(geo, mat); m.frustumCulled = false; m.renderOrder = -10;
   GL3D.sea = m; GL3D.scene.add(m);
@@ -406,10 +406,10 @@ function gl3dRender(roll, sx, sy, beamOn) {
   cam3.fov = 2 * Math.atan((H / 2) / focal) * 180 / Math.PI;
   cam3.aspect = W / H;
   cam3.near = 0.5; cam3.far = 30000;
-  cam3.setViewOffset(W, H, -sx, H / 2 - hy - sy, W, H);
+  cam3.setViewOffset(W, H, -sx, H / 2 - (hy - pitchY) - sy, W, H);
   cam3.updateProjectionMatrix();
   cam3.position.set(camX, camH, -camY);
-  cam3.rotation.set(0, -yaw, roll, 'YXZ');
+  cam3.rotation.set(camPitch, -yaw, roll, 'YXZ');
   // the sea
   GL3D.sea.position.set(Math.round(camX / 4) * 4, 0, -Math.round(camY / 4) * 4);
   B.sea.forEach((c, i) => { const q = glCol(c)[0]; u['uSea' + i].value.set(q.r, q.g, q.b); });
@@ -418,7 +418,7 @@ function gl3dRender(roll, sx, sy, beamOn) {
   const me = MOON.e, mb = MOON.b;
   u.uMoonDir.value.set(Math.sin(mb) * Math.cos(me), Math.sin(me), -Math.cos(mb) * Math.cos(me)).normalize();
   u.uCamPos.value.set(camX, camH, -camY);
-  u.uCamH.value = camH; u.uFocal.value = focal; u.uBelow.value = Math.max(1, H - hy);
+  u.uCamH.value = camH; u.uFocal.value = focal; u.uBelow.value = Math.max(1, H - (hy - pitchY)); u.uFwd.value.set(Math.sin(yaw), -Math.cos(yaw));
   u.uBeam.value = g.beam; u.uHalf.value = SK.HALF_BEAM; u.uShade.value = SK.SHADE; u.uRange.value = SK.BEAM_RANGE; u.uBeamOn.value = beamOn ? 1 : 0;
   u.uT.value = reduceMotion ? 0 : g.t; u.uShip.value.set(ship.x, ship.y);
   const LR = SK.LANTERN * (g.mods ? g.mods.lantern : 1) * ((BOAT_BY_ID[ship.boat] || {}).lamp || 1);
@@ -818,8 +818,8 @@ function gl3dRooms(roll, sx, sy) {
   buildRooms();
   const cam3 = GL3D.camera, L = roomLevel();
   cam3.fov = 2 * Math.atan((H / 2) / focal) * 180 / Math.PI; cam3.aspect = W / H; cam3.near = 0.5; cam3.far = 2000;
-  cam3.setViewOffset(W, H, -sx, H / 2 - hy - sy, W, H); cam3.updateProjectionMatrix();
-  cam3.position.set(camX, camH, -camY); cam3.rotation.set(0, -yaw, roll, 'YXZ');
+  cam3.setViewOffset(W, H, -sx, H / 2 - (hy - pitchY) - sy, W, H); cam3.updateProjectionMatrix();
+  cam3.position.set(camX, camH, -camY); cam3.rotation.set(camPitch, -yaw, roll, 'YXZ');
   GL3D.rlight.position.set(ship.x, 6, -ship.y); GL3D.rlight.intensity = 0.75 * L;
   GL3D.rlant.position.set(ship.x, 4, -ship.y);
   GL3D.rlant.distance = SK.LANTERN * (g.mods ? g.mods.lantern : 1) * ((BOAT_BY_ID[ship.boat] || {}).lamp || 1);

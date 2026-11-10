@@ -76,13 +76,20 @@ function buildCaches() {
 // screen position of a direction in the sky (bearing, elevation), or null if out of view
 function skyPos(b, e) {
   const d = angDiff(b, yaw); if (Math.abs(d) > fov / 2 + 0.5) return null;
-  return { x: cx + Math.tan(d) * focal, y: hy - Math.tan(e) * focal };
+  if (!camPitch) return { x: cx + Math.tan(d) * focal, y: hy - Math.tan(e) * focal };
+  // first person, tilted: the direction turned into the camera's frame
+  const r = Math.cos(e) * Math.sin(d), fh = Math.cos(e) * Math.cos(d), u = Math.sin(e), f = fh * camCP + u * camSP;
+  if (f < 0.05) return null;
+  return { x: cx + r / f * focal, y: hy - pitchY - (u * camCP - fh * camSP) / f * focal };
 }
 
 function drawSky() {
   buildCaches();
   const B = curBiome();
-  ctx.drawImage(GFX.sky, -W * 0.15, hy - GFX.sky.height + H * 0.02, W * 1.3, GFX.sky.height);
+  const skyTop = hy - GFX.sky.height + H * 0.02;
+  ctx.drawImage(GFX.sky, -W * 0.15, skyTop, W * 1.3, GFX.sky.height);
+  // (looking a long way up in first person: the top of the sky carried on above the painting)
+  if (skyTop > -H) ctx.drawImage(GFX.sky, 0, 0, GFX.sky.width, 1, -W * 0.15, -H, W * 1.3, skyTop + H + 1);
   if (B.cavern) { drawCavernRoof(B); drawSkyExtras(B); return; }
   // Milky Way dust, then the stars
   // the Milky Way and the stars, batched into a few brightness levels so it's a handful of fills, not a thousand

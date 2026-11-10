@@ -15,6 +15,10 @@ try { motionMQ.addEventListener('change', refreshMotion); } catch (e) {}
 
 let W = 0, H = 0, dpr = 1, fov = 1.2, focal = 1, cx = 0, hy = 0;
 let camX = 0, camY = 0, yaw = 0, camH = 5;
+// the camera's own pitch (only first person tilts it; nought everywhere else): a true tilt, not a slide of the horizon,
+// so you can look all the way up and down. hy stays the horizon line; the middle of the view is hy - pitchY.
+let camPitch = 0, camCP = 1, camSP = 0, pitchY = 0;
+function setCamPitch(p) { camPitch = p || 0; camCP = Math.cos(camPitch); camSP = Math.sin(camPitch); pitchY = Math.tan(camPitch) * focal; }
 
 const waves = [], stars = [], town = [];
 for (let i = 0; i < 460; i++) waves.push({ x: rand(0, 600), y: rand(0, 600), len: rand(1.5, 4), ph: rand(0, 6.28) });
@@ -35,9 +39,12 @@ function resize() {
 // camera space: r = right, f = forward
 function cam(x, y, z) {
   const dx = x - camX, dy = y - camY, s = Math.sin(yaw), c = Math.cos(yaw);
-  return { r: dx * c - dy * s, f: dx * s + dy * c, z };
+  if (!camPitch) return { r: dx * c - dy * s, f: dx * s + dy * c, z };
+  // tilted: forward and up turned about the right-hand axis (z comes back as the height it would have untilted)
+  const fh = dx * s + dy * c, dz = z - camH;
+  return { r: dx * c - dy * s, f: fh * camCP + dz * camSP, z: camH + dz * camCP - fh * camSP };
 }
-function proj(c) { const k = focal / c.f; return { x: cx + c.r * k, y: hy + (camH - c.z) * k, s: k, f: c.f }; }
+function proj(c) { const k = focal / c.f; return { x: cx + c.r * k, y: hy - pitchY + (camH - c.z) * k, s: k, f: c.f }; }
 function polyProj(pts) {
   const c = pts.map(p => cam(p[0], p[1], p[2] || 0)), out = [];
   for (let i = 0; i < c.length; i++) {
@@ -389,6 +396,7 @@ function drawTimber(o, p, vis) {
 
 // ---------- the scene ----------
 function drawScene() {
+  setCamPitch(0);
   hy = H * (VIEW.third ? (W < 600 ? CHASE.phoneHorizon : CHASE.horizon) : 0.46) + Math.sin(ship.bob * 1.1) * H * 0.006;
   const third = VIEW.third;
   if (third) { const c = chaseCamera(ship); camX = c.x; camY = c.y; camH = c.z; if (c.horizon != null) hy = Math.max(H * 0.08, c.horizon) + Math.sin(ship.bob * 1.1) * H * 0.006; }

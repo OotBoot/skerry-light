@@ -99,7 +99,9 @@ The log goes on through 1888. The sea stops being one sea: some nights it freeze
 
 ## Look sensitivity
 
-How quickly the view turns in Wreckers' Night and the Lighthouse, for the mouse, the touch screen and a controller's right stick alike: a slider on the **Settings** card, and the same one under **Options** in the first-person menu (Esc, or the menu button on a phone), from 0.3 to 3 times the usual, with a Default button. Kept on this device. The usual (1.00) turns about a third faster than it used to.
+How quickly the view turns in Wreckers' Night and the Lighthouse, with the mouse and the touch screen, as two sliders: **across (X)** for turning left and right, and **up and down (Y)** for looking up and down. Both are on the **Settings** card, and the same two are under **Options** in the first-person menu (Esc, or the menu button on a phone), each from 0.3 to 3 times the usual, with a Default button that puts both back. Kept on this device; if you had set the old single slider, both start from what you had. A controller has its own look sensitivity on the menu's Controller page.
+
+In first person you can look all the way up at the sky and all the way down at your feet (to just short of straight up and down).
 
 ## Graphics: 3D and Classic
 

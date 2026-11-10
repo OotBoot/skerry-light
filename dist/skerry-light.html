@@ -1482,8 +1482,10 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
         <button class="tool" id="fpsLeave" type="button">Leave the island</button>
       </div>
       <div class="lookrow" id="fpsOpts">
-        <label for="fpsLook">Look sensitivity <output id="fpsLookOut">1.00</output></label>
-        <input id="fpsLook" class="lookslider" type="range" min="0.3" max="3" step="0.05" value="1">
+        <label for="fpsLookX">Look sensitivity, across (X) <output id="fpsLookXOut">1.00</output></label>
+        <input id="fpsLookX" class="lookslider" type="range" min="0.3" max="3" step="0.05" value="1">
+        <label for="fpsLookY">Look sensitivity, up and down (Y) <output id="fpsLookYOut">1.00</output></label>
+        <input id="fpsLookY" class="lookslider" type="range" min="0.3" max="3" step="0.05" value="1">
         <button class="tool" id="fpsLookReset" type="button">Default</button>
         <label for="fpsFov">Field of view <output id="fpsFovOut">69°</output></label>
         <input id="fpsFov" class="lookslider" type="range" min="60" max="110" step="1" value="69">
@@ -1569,7 +1571,8 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
       <div class="setrow"><span class="label" id="lbl-scares">Jumpscares</span><div class="loottabs" id="set-scares" role="group" aria-labelledby="lbl-scares"></div></div>
       <div class="setrow"><span class="label" id="lbl-flashes">Flashes</span><div class="loottabs" id="set-flashes" role="group" aria-labelledby="lbl-flashes"></div></div>
       <div class="setrow"><span class="label" id="lbl-motion">Motion</span><div class="loottabs" id="set-motion" role="group" aria-labelledby="lbl-motion"></div></div>
-      <div class="setrow"><label class="label" for="setLook">Look sensitivity <small>(Wreckers' Night and Keeper's Last Light)</small> <output id="setLookOut">1.00</output></label><input id="setLook" class="lookslider" type="range" min="0.3" max="3" step="0.05" value="1"></div>
+      <div class="setrow"><label class="label" for="setLookX">Look sensitivity, across (X) <small>(Wreckers' Night and Keeper's Last Light)</small> <output id="setLookXOut">1.00</output></label><input id="setLookX" class="lookslider" type="range" min="0.3" max="3" step="0.05" value="1"></div>
+      <div class="setrow"><label class="label" for="setLookY">Look sensitivity, up and down (Y) <small>(Wreckers' Night and Keeper's Last Light)</small> <output id="setLookYOut">1.00</output></label><input id="setLookY" class="lookslider" type="range" min="0.3" max="3" step="0.05" value="1"></div>
       <div class="setrow"><label class="label" for="setFov">Field of view <small>(Wreckers' Night and Keeper's Last Light)</small> <output id="setFovOut">69°</output></label><input id="setFov" class="lookslider" type="range" min="60" max="110" step="1" value="69"></div>
       <div class="setrow"><span class="label" id="lbl-aim">Toggle aim <small>(click right mouse or LT once to aim, again to stop)</small></span><div class="loottabs" id="set-aim" role="group" aria-labelledby="lbl-aim"></div></div>
       <div class="setrow"><span class="label" id="lbl-renderer">Graphics</span><div class="loottabs" id="set-renderer" role="group" aria-labelledby="lbl-renderer"></div></div>
@@ -1691,12 +1694,16 @@ const SK = {
 
 // The player's own settings (the Settings card), kept on this device. Loaded here, before anything
 // draws or makes a sound, because the sound, the jumpscares and the motion all read them.
-// (look: how quickly the view turns in Wreckers' Night and the Lighthouse, 1 the usual; from 0.3 to 3)
+// (lookX, lookY: how quickly the view turns across and up and down in Wreckers' Night and the Lighthouse, 1 the usual;
+//  from 0.3 to 3. They were one setting, look, once: an old saved look carries over into both)
 // (fov: the field of view across the screen in Wreckers' Night and the Lighthouse, in degrees, 60 to 110;
 //  aim: 'toggle' to click (or pull LT) once to aim and again to stop, 'hold' (the default) to aim while it's held)
-const SETTINGS = { vol: 1, scares: 'full', flashes: 'normal', motion: 'auto', renderer: '3d', look: 1, fov: 69, aim: 'hold' };
+const SETTINGS = { vol: 1, scares: 'full', flashes: 'normal', motion: 'auto', renderer: '3d', lookX: 1, lookY: 1, fov: 69, aim: 'hold' };
 try { Object.assign(SETTINGS, JSON.parse(localStorage.getItem('skerry-settings') || '{}') || {}); } catch (e) {}
-const lookK = () => { const v = +SETTINGS.look; return isFinite(v) ? Math.min(3, Math.max(0.3, v)) : 1; };
+{ let s = null; try { s = JSON.parse(localStorage.getItem('skerry-settings') || '{}'); } catch (e) {}
+  if (s && s.look != null) { if (s.lookX == null) SETTINGS.lookX = s.look; if (s.lookY == null) SETTINGS.lookY = s.look; } delete SETTINGS.look; }
+const lookAxisK = v => { v = +v; return isFinite(v) ? Math.min(3, Math.max(0.3, v)) : 1; };
+const lookKX = () => lookAxisK(SETTINGS.lookX), lookKY = () => lookAxisK(SETTINGS.lookY);
 const fovDeg = () => { const v = +SETTINGS.fov; return isFinite(v) ? Math.min(110, Math.max(60, v)) : 69; };
 const aimToggle = () => SETTINGS.aim === 'toggle';
 function saveSettings() { try { localStorage.setItem('skerry-settings', JSON.stringify(SETTINGS)); } catch (e) {} }
@@ -2604,6 +2611,10 @@ try { motionMQ.addEventListener('change', refreshMotion); } catch (e) {}
 
 let W = 0, H = 0, dpr = 1, fov = 1.2, focal = 1, cx = 0, hy = 0;
 let camX = 0, camY = 0, yaw = 0, camH = 5;
+// the camera's own pitch (only first person tilts it; nought everywhere else): a true tilt, not a slide of the horizon,
+// so you can look all the way up and down. hy stays the horizon line; the middle of the view is hy - pitchY.
+let camPitch = 0, camCP = 1, camSP = 0, pitchY = 0;
+function setCamPitch(p) { camPitch = p || 0; camCP = Math.cos(camPitch); camSP = Math.sin(camPitch); pitchY = Math.tan(camPitch) * focal; }
 
 const waves = [], stars = [], town = [];
 for (let i = 0; i < 460; i++) waves.push({ x: rand(0, 600), y: rand(0, 600), len: rand(1.5, 4), ph: rand(0, 6.28) });
@@ -2624,9 +2635,12 @@ function resize() {
 // camera space: r = right, f = forward
 function cam(x, y, z) {
   const dx = x - camX, dy = y - camY, s = Math.sin(yaw), c = Math.cos(yaw);
-  return { r: dx * c - dy * s, f: dx * s + dy * c, z };
+  if (!camPitch) return { r: dx * c - dy * s, f: dx * s + dy * c, z };
+  // tilted: forward and up turned about the right-hand axis (z comes back as the height it would have untilted)
+  const fh = dx * s + dy * c, dz = z - camH;
+  return { r: dx * c - dy * s, f: fh * camCP + dz * camSP, z: camH + dz * camCP - fh * camSP };
 }
-function proj(c) { const k = focal / c.f; return { x: cx + c.r * k, y: hy + (camH - c.z) * k, s: k, f: c.f }; }
+function proj(c) { const k = focal / c.f; return { x: cx + c.r * k, y: hy - pitchY + (camH - c.z) * k, s: k, f: c.f }; }
 function polyProj(pts) {
   const c = pts.map(p => cam(p[0], p[1], p[2] || 0)), out = [];
   for (let i = 0; i < c.length; i++) {
@@ -2978,6 +2992,7 @@ function drawTimber(o, p, vis) {
 
 // ---------- the scene ----------
 function drawScene() {
+  setCamPitch(0);
   hy = H * (VIEW.third ? (W < 600 ? CHASE.phoneHorizon : CHASE.horizon) : 0.46) + Math.sin(ship.bob * 1.1) * H * 0.006;
   const third = VIEW.third;
   if (third) { const c = chaseCamera(ship); camX = c.x; camY = c.y; camH = c.z; if (c.horizon != null) hy = Math.max(H * 0.08, c.horizon) + Math.sin(ship.bob * 1.1) * H * 0.006; }
@@ -3427,13 +3442,20 @@ function buildCaches() {
 // screen position of a direction in the sky (bearing, elevation), or null if out of view
 function skyPos(b, e) {
   const d = angDiff(b, yaw); if (Math.abs(d) > fov / 2 + 0.5) return null;
-  return { x: cx + Math.tan(d) * focal, y: hy - Math.tan(e) * focal };
+  if (!camPitch) return { x: cx + Math.tan(d) * focal, y: hy - Math.tan(e) * focal };
+  // first person, tilted: the direction turned into the camera's frame
+  const r = Math.cos(e) * Math.sin(d), fh = Math.cos(e) * Math.cos(d), u = Math.sin(e), f = fh * camCP + u * camSP;
+  if (f < 0.05) return null;
+  return { x: cx + r / f * focal, y: hy - pitchY - (u * camCP - fh * camSP) / f * focal };
 }
 
 function drawSky() {
   buildCaches();
   const B = curBiome();
-  ctx.drawImage(GFX.sky, -W * 0.15, hy - GFX.sky.height + H * 0.02, W * 1.3, GFX.sky.height);
+  const skyTop = hy - GFX.sky.height + H * 0.02;
+  ctx.drawImage(GFX.sky, -W * 0.15, skyTop, W * 1.3, GFX.sky.height);
+  // (looking a long way up in first person: the top of the sky carried on above the painting)
+  if (skyTop > -H) ctx.drawImage(GFX.sky, 0, 0, GFX.sky.width, 1, -W * 0.15, -H, W * 1.3, skyTop + H + 1);
   if (B.cavern) { drawCavernRoof(B); drawSkyExtras(B); return; }
   // Milky Way dust, then the stars
   // the Milky Way and the stars, batched into a few brightness levels so it's a handful of fills, not a thousand
@@ -8151,7 +8173,7 @@ float isleEdge(vec2 g) {
   return length(d) - uIsle.z * (1.0 + 0.035 * sin(a * 5.0 + 1.0) + 0.02 * sin(a * 13.0));
 }`;
 const SEA_VS = `
-uniform float uT, uCap; uniform vec3 uCamPos;
+uniform float uT, uCap; uniform vec3 uCamPos; uniform vec2 uFwd;
 varying vec3 vW; varying float vF; varying float vAmp;
 ${SEA_ISLE}
 float wh(vec2 p, float t) {
@@ -8168,7 +8190,7 @@ void main() {
   w.y += h;
   vW = w.xyz;
   vec4 mv = viewMatrix * w;
-  vF = -mv.z;
+  vF = dot(w.xz - uCamPos.xz, uFwd);   // how far ahead along the level, whatever the camera's tilt
   gl_Position = projectionMatrix * mv;
 }`;
 const SEA_FS = `
@@ -8239,7 +8261,7 @@ function buildSea() {
   const u = {};
   for (const n of ['uSea0', 'uSea1', 'uSea2', 'uSea3', 'uBeamCol', 'uWaveCol', 'uMoonDir', 'uGlit', 'uCamPos']) u[n] = { value: new THREE.Vector3() };
   for (const n of ['uCamH', 'uFocal', 'uBelow', 'uBeam', 'uHalf', 'uShade', 'uRange', 'uBeamOn', 'uT', 'uLR', 'uLamp', 'uCoast']) u[n] = { value: 0 };
-  u.uShip = { value: new THREE.Vector2() }; u.uIsle = { value: new THREE.Vector4() }; u.uCap = { value: 1e3 };
+  u.uShip = { value: new THREE.Vector2() }; u.uFwd = { value: new THREE.Vector2(0, -1) }; u.uIsle = { value: new THREE.Vector4() }; u.uCap = { value: 1e3 };
   const mat = new THREE.ShaderMaterial({ uniforms: u, vertexShader: SEA_VS, fragmentShader: SEA_FS, side: THREE.DoubleSide });
   const m = new THREE.Mesh(geo, mat); m.frustumCulled = false; m.renderOrder = -10;
   GL3D.sea = m; GL3D.scene.add(m);
@@ -8475,10 +8497,10 @@ function gl3dRender(roll, sx, sy, beamOn) {
   cam3.fov = 2 * Math.atan((H / 2) / focal) * 180 / Math.PI;
   cam3.aspect = W / H;
   cam3.near = 0.5; cam3.far = 30000;
-  cam3.setViewOffset(W, H, -sx, H / 2 - hy - sy, W, H);
+  cam3.setViewOffset(W, H, -sx, H / 2 - (hy - pitchY) - sy, W, H);
   cam3.updateProjectionMatrix();
   cam3.position.set(camX, camH, -camY);
-  cam3.rotation.set(0, -yaw, roll, 'YXZ');
+  cam3.rotation.set(camPitch, -yaw, roll, 'YXZ');
   // the sea
   GL3D.sea.position.set(Math.round(camX / 4) * 4, 0, -Math.round(camY / 4) * 4);
   B.sea.forEach((c, i) => { const q = glCol(c)[0]; u['uSea' + i].value.set(q.r, q.g, q.b); });
@@ -8487,7 +8509,7 @@ function gl3dRender(roll, sx, sy, beamOn) {
   const me = MOON.e, mb = MOON.b;
   u.uMoonDir.value.set(Math.sin(mb) * Math.cos(me), Math.sin(me), -Math.cos(mb) * Math.cos(me)).normalize();
   u.uCamPos.value.set(camX, camH, -camY);
-  u.uCamH.value = camH; u.uFocal.value = focal; u.uBelow.value = Math.max(1, H - hy);
+  u.uCamH.value = camH; u.uFocal.value = focal; u.uBelow.value = Math.max(1, H - (hy - pitchY)); u.uFwd.value.set(Math.sin(yaw), -Math.cos(yaw));
   u.uBeam.value = g.beam; u.uHalf.value = SK.HALF_BEAM; u.uShade.value = SK.SHADE; u.uRange.value = SK.BEAM_RANGE; u.uBeamOn.value = beamOn ? 1 : 0;
   u.uT.value = reduceMotion ? 0 : g.t; u.uShip.value.set(ship.x, ship.y);
   const LR = SK.LANTERN * (g.mods ? g.mods.lantern : 1) * ((BOAT_BY_ID[ship.boat] || {}).lamp || 1);
@@ -8887,8 +8909,8 @@ function gl3dRooms(roll, sx, sy) {
   buildRooms();
   const cam3 = GL3D.camera, L = roomLevel();
   cam3.fov = 2 * Math.atan((H / 2) / focal) * 180 / Math.PI; cam3.aspect = W / H; cam3.near = 0.5; cam3.far = 2000;
-  cam3.setViewOffset(W, H, -sx, H / 2 - hy - sy, W, H); cam3.updateProjectionMatrix();
-  cam3.position.set(camX, camH, -camY); cam3.rotation.set(0, -yaw, roll, 'YXZ');
+  cam3.setViewOffset(W, H, -sx, H / 2 - (hy - pitchY) - sy, W, H); cam3.updateProjectionMatrix();
+  cam3.position.set(camX, camH, -camY); cam3.rotation.set(camPitch, -yaw, roll, 'YXZ');
   GL3D.rlight.position.set(ship.x, 6, -ship.y); GL3D.rlight.intensity = 0.75 * L;
   GL3D.rlant.position.set(ship.x, 4, -ship.y);
   GL3D.rlant.distance = SK.LANTERN * (g.mods ? g.mods.lantern : 1) * ((BOAT_BY_ID[ship.boat] || {}).lamp || 1);
@@ -9549,13 +9571,16 @@ function renderSettings() {
     for (const b of box.children) { const on = b.dataset.v === String(SETTINGS[key]); b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on)); }
   }
 }
-// the look sensitivity sliders (the Settings card's, and the one in the first-person menu's Options): one setting
+// the look sensitivity sliders, across (X) and up and down (Y): the Settings card's pair, and the pair in the
+// first-person menu's Options, are the same two settings
 function lookSync() {
-  const v = lookK();
-  for (const [inp, out] of [['setLook', 'setLookOut'], ['fpsLook', 'fpsLookOut']]) { const i = $(inp), o = $(out); if (i && document.activeElement !== i) i.value = String(v); if (o) o.textContent = v.toFixed(2); }
+  for (const ax of ['X', 'Y']) {
+    const v = ax === 'X' ? lookKX() : lookKY();
+    for (const p of ['setLook', 'fpsLook']) { const i = $(p + ax), o = $(p + ax + 'Out'); if (i && document.activeElement !== i) i.value = String(v); if (o) o.textContent = v.toFixed(2); }
+  }
 }
-for (const id of ['setLook', 'fpsLook']) { const i = $(id); if (i) i.addEventListener('input', () => { SETTINGS.look = Math.round(+i.value * 100) / 100; saveSettings(); lookSync(); }); }
-{ const r = $('fpsLookReset'); if (r) r.addEventListener('click', () => { SETTINGS.look = 1; saveSettings(); lookSync(); }); }
+for (const ax of ['X', 'Y']) for (const p of ['setLook', 'fpsLook']) { const i = $(p + ax); if (i) i.addEventListener('input', () => { SETTINGS['look' + ax] = Math.round(+i.value * 100) / 100; saveSettings(); lookSync(); }); }
+{ const r = $('fpsLookReset'); if (r) r.addEventListener('click', () => { SETTINGS.lookX = SETTINGS.lookY = 1; saveSettings(); lookSync(); }); }
 setTimeout(lookSync, 0);
 // the field of view sliders (the Settings card's, and the first-person menu's): one setting
 function fovSync() {
@@ -12359,6 +12384,7 @@ const FPSC = {
   PLAYERS: 6, LAG: 0.35,   // (wreckers, the bots, fill the island up to this many)
   CX: 0, CY: 640, R: 88,   // (the island's radius: smaller now, so fights find you quicker)
   GROUND: 0.35, EYE: 1.7, BODY: 0.55, TALL: 1.85,
+  PMAX: 1.55,   // (how far you can look up or down: just short of straight up and straight down, so the view never flips)
   SPEED: 6.5, SPRINT: 11, HP: 4, MAG: 6, RATE: 0.26, RELOAD: 2.2, RESPAWN: 3.5, FLARES: 2,
   ROUND: 300000, PERIOD: 16, RANGE: 420, SEND: 0.1, BOTS: 3, PROTECT: 2,
   JUMP: 5.6, GRAV: 15,                       // a jump clears about a metre and lasts three-quarters of a second
@@ -12904,7 +12930,7 @@ function fpsShoot() {
   // when aimed down the sights. Some of the climb settles back when you let go of the trigger (see fpsFrame)
   if (climbNext) {
     const k = FPS.scoped ? 0.62 : 1, up = w.climb * k * (0.8 + Math.random() * 0.45);
-    m.p = clamp(m.p + up, -0.6, 0.6); m.h = wrapPi(m.h + (Math.random() - 0.45) * w.sway * k * 2);
+    m.p = clamp(m.p + up, -FPSC.PMAX, FPSC.PMAX); m.h = wrapPi(m.h + (Math.random() - 0.45) * w.sway * k * 2);
     FPS.climb = Math.min(0.25, (FPS.climb || 0) + up * 0.55); FPS.sinceShot = 0;
   }
   if (!w.melee && m.ammo <= 0) setTimeout(fpsReload, w.mag === 1 ? 420 : 250);
@@ -13242,7 +13268,7 @@ function fpsFrame(dt) {
     FPS.recoil = Math.max(0, FPS.recoil - dt * 6);
     // the avtomat's climb: once the trigger's let go, the muzzle settles back part of the way
     FPS.sinceShot = (FPS.sinceShot || 0) + dt;
-    if ((FPS.climb || 0) > 0 && FPS.sinceShot > 0.14) { const d = Math.min(FPS.climb, dt * 0.4); m.p = clamp(m.p - d, -0.6, 0.6); FPS.climb -= d; }
+    if ((FPS.climb || 0) > 0 && FPS.sinceShot > 0.14) { const d = Math.min(FPS.climb, dt * 0.4); m.p = clamp(m.p - d, -FPSC.PMAX, FPSC.PMAX); FPS.climb -= d; }
     for (const p of FPS.pings) p.t -= dt; FPS.pings = FPS.pings.filter(p => p.t > 0);
     for (const t of FPS.tracers) t.t -= dt; FPS.tracers = FPS.tracers.filter(t => t.t > 0);
     for (const f of FPS.feed) f.t -= dt; FPS.feed = FPS.feed.filter(f => f.t > 0);
@@ -13259,8 +13285,8 @@ function fpsFrame(dt) {
 function fpsInput(dt) {
   const m = FPS.me, K = FPS.keys;
   // looking: mouse (pointer lock), the right stick, or a finger on the right of the screen
-  // (the look sensitivity setting scales the mouse, the touch screen and the right stick alike)
-  let sens = 0.0031 * lookK();
+  // (the look sensitivity settings, across and up and down, scale the mouse and the touch screen; the controller has its own)
+  let sens = 0.0031;
   // on a touch screen, aiming slows a touch as the crosshair crosses someone you can see, and leans faintly
   // onto them, but only while your thumb is moving the aim: it helps hold a target, it doesn't find one for you
   // (and none at all through the telescope)
@@ -13275,10 +13301,10 @@ function fpsInput(dt) {
     FPS.look[0] += ax; FPS.look[1] += ay; FPS.mlook[0] -= ax; FPS.mlook[1] -= ay;
     if (Math.abs(FPS.mlook[0]) + Math.abs(FPS.mlook[1]) < 0.01) FPS.mlook = [0, 0];
   }
-  m.h = wrapPi(m.h + FPS.look[0] * sens); m.p = clamp(m.p - FPS.look[1] * sens, -0.6, 0.6);
+  m.h = wrapPi(m.h + FPS.look[0] * sens * lookKX()); m.p = clamp(m.p - FPS.look[1] * sens * lookKY(), -FPSC.PMAX, FPSC.PMAX);
   if (assist && aiming && !(m.dead > 0)) {
     m.h = wrapPi(m.h + clamp(assist.dh, -1, 1) * Math.min(1, dt * 1.1));
-    m.p = clamp(m.p + clamp(assist.dp, -1, 1) * Math.min(1, dt * 1.2), -0.6, 0.6);
+    m.p = clamp(m.p + clamp(assist.dp, -1, 1) * Math.min(1, dt * 1.2), -FPSC.PMAX, FPSC.PMAX);
   }
   FPS.lastLook = FPS.look; FPS.look = [0, 0];
   let fx = 0, fz = 0, fire = false;
@@ -13289,7 +13315,7 @@ function fpsInput(dt) {
     fx += dz(pad.axes[0] || 0); fz -= dz(pad.axes[1] || 0);
     // (the controller's own look sensitivity, and its own while aiming: the Controller page of the menu)
     const pk = FPS.padLookK * (FPS.scoped ? FPS.padAdsK / fpsZoom() : 1);
-    m.h = wrapPi(m.h + dz(pad.axes[2] || 0) * dt * 3.5 * pk); m.p = clamp(m.p - dz(pad.axes[3] || 0) * dt * 2.4 * pk, -0.6, 0.6);
+    m.h = wrapPi(m.h + dz(pad.axes[2] || 0) * dt * 3.5 * pk); m.p = clamp(m.p - dz(pad.axes[3] || 0) * dt * 2.4 * pk, -FPSC.PMAX, FPSC.PMAX);
     const b = i => pad.buttons[i] && pad.buttons[i].pressed, was = FPS.padWas || {};
     if (b(7)) fire = true;
     FPS.padFire = b(7);
@@ -13363,7 +13389,7 @@ function fpsDraw() {
   else if (FPS.runK > 0 && !reduceMotion) focal = fb * (1 - 0.08 * FPS.runK);
   else focal = fb;
   try {
-    try { fpsDrawScene(); } finally { focal = fb; }
+    try { fpsDrawScene(); } finally { focal = fb; setCamPitch(camPitch); hy = H * 0.5 + pitchY; }
     fpsDrawHands();
     // under a roof (src/fpsisle.js), the weather stays outside, and so, muffled, do the sea and the wind
     GFX.wx = 1 - FPS.inK;
@@ -13371,7 +13397,7 @@ function fpsDraw() {
     if (typeof audioOutdoors === 'function') audioOutdoors(1 - FPS.inK);
     if (FPS.scoped && fpsW().scope) fpsDrawScope();
     if (FPS.zm) zmHud(); else fpsHud();
-  } finally { focal = f0; }
+  } finally { focal = f0; setCamPitch(0); }
 }
 function fpsDrawScene() {
   // (in the Lighthouse, out and watching someone: the view is theirs, src/zombies.js)
@@ -13396,7 +13422,8 @@ function fpsDrawScene() {
     camH = Math.max(FPSC.GROUND + 0.4, eye + FPSC.TP_UP - sp * FPSC.TP_BACK * pull - (FPS.landed || 0) * 0.3);
     FPS.camAt = [camX, camY, camH];
   } else { FPS.camAt = null; FPS.camPull = null; }
-  hy = H * 0.5 + Math.tan(m.p) * focal;
+  // the camera tilts with your look (render.js cam/proj, and gl3d's camera): hy is where the horizon falls
+  setCamPitch(m.p); hy = H * 0.5 + pitchY;
   // indoors or out (where the camera is): eased over a quarter of a second or so, going through a door
   { const want = fpsUnderRoof(FPS.g, camX, camY, camH) ? 1 : 0, k = Math.min(1, (FPS.dtLast || 0.016) * 5);
     FPS.inK = FPS.inK == null || FPS.inKFor !== FPS.g ? want : FPS.inK + (want - FPS.inK) * k; FPS.inKFor = FPS.g;
@@ -13407,7 +13434,7 @@ function fpsDrawScene() {
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   if (gl) ctx.clearRect(0, 0, W, H);
   ctx.save();
-  ctx.translate(cx, hy); ctx.rotate(roll); ctx.translate(-cx, -hy);
+  ctx.translate(cx, H * 0.5); ctx.rotate(roll); ctx.translate(-cx, -H * 0.5);
   const far = SK.BEAM_RANGE, beamOn = !FPS.zm && Math.abs(g.beam) < SK.SHADE + SK.HALF_BEAM;
   const fl = [Math.sin(g.beam - SK.HALF_BEAM) * far, Math.cos(g.beam - SK.HALF_BEAM) * far], fr = [Math.sin(g.beam + SK.HALF_BEAM) * far, Math.cos(g.beam + SK.HALF_BEAM) * far];
   let shown = 0;
@@ -13420,7 +13447,7 @@ function fpsDrawScene() {
   else if (typeof fpsFiguresHide === 'function') fpsFiguresHide();
   if (gl) {
     gl3dBackdrop(roll, 0, 0);
-    { const main = ctx; ctx = bgx; ctx.save(); ctx.translate(cx, hy); ctx.rotate(roll); ctx.translate(-cx, -hy); try { fpsIsleSkyTint(bgx); } finally { ctx.restore(); ctx = main; } }
+    { const main = ctx; ctx = bgx; ctx.save(); ctx.translate(cx, H * 0.5); ctx.rotate(roll); ctx.translate(-cx, -H * 0.5); try { fpsIsleSkyTint(bgx); } finally { ctx.restore(); ctx = main; } }
     if (FPS.zm) zmScene3D();
     shown = gl3dRender(roll, 0, 0, beamOn);
     if (body) fpsBodyOccluder();
@@ -15330,7 +15357,7 @@ function fpsIsleOccluders(out) {
   for (const s of I.solids) {
     if (s.occ === false || (s.ray === false && s.occ !== true)) continue;
     const c0 = cam(s.x, s.y, FPSC.GROUND), reach = s.s === 'c' ? s.r : Math.hypot(s.hw, s.hd);
-    if (c0.f + reach < FPI_CUT || c0.f - reach > 260) continue;
+    if (c0.f + reach + (s.z1 - FPSC.GROUND) < FPI_CUT || c0.f - reach > 260) continue;
     const ring = fpiCorners(s), z0 = s.z0 != null ? s.z0 : FPSC.GROUND - 0.05, n = ring.length;
     const V = []; for (const z of [z0, s.z1]) for (const [x, y] of ring) V.push([x, y, z]);
     const E = []; for (let i = 0; i < n; i++) { const j = (i + 1) % n; E.push([i, j], [i + n, j + n], [i, i + n]); }
@@ -18908,7 +18935,7 @@ function zmFrame(dt) {
       fpsHarpoonsTick(dt);
       FPS.recoil = Math.max(0, FPS.recoil - dt * 6);
       FPS.sinceShot = (FPS.sinceShot || 0) + dt;
-      if ((FPS.climb || 0) > 0 && FPS.sinceShot > 0.14) { const d = Math.min(FPS.climb, dt * 0.4); m.p = clamp(m.p - d, -0.6, 0.6); FPS.climb -= d; }
+      if ((FPS.climb || 0) > 0 && FPS.sinceShot > 0.14) { const d = Math.min(FPS.climb, dt * 0.4); m.p = clamp(m.p - d, -FPSC.PMAX, FPSC.PMAX); FPS.climb -= d; }
       zmTick(dt);
     }
     if (typeof ztTick === 'function') ztTick(dt);   // [theme] the bosses' music (src/zmtheme.js)
@@ -20896,7 +20923,7 @@ function zmSpecTick(dt) {
   const eye = FPSC.GROUND + FPSC.EYE + (r.tjz || 0) - (r.down ? ZM_DOWN.EYE : 0), k = S.snap ? 1 : 1 - Math.exp(-dt * 14);
   S.x = r.x; S.y = r.y;
   S.z += (eye - S.z) * (S.snap ? 1 : 1 - Math.exp(-dt * 8));
-  S.h = wrapPi(S.h + angDiff(r.h, S.h) * k); S.p += (clamp(r.p || 0, -0.6, 0.6) - S.p) * k;
+  S.h = wrapPi(S.h + angDiff(r.h, S.h) * k); S.p += (clamp(r.p || 0, -FPSC.PMAX, FPSC.PMAX) - S.p) * k;
   S.snap = false;
   // (and facing their way, so you come back next round looking where you were looking)
   m.x = r.x; m.y = r.y; m.jz = m.fl = r.tjz || 0; m.h = S.h; m.p = S.p;

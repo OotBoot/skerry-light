@@ -517,13 +517,16 @@ function renderSettings() {
     for (const b of box.children) { const on = b.dataset.v === String(SETTINGS[key]); b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on)); }
   }
 }
-// the look sensitivity sliders (the Settings card's, and the one in the first-person menu's Options): one setting
+// the look sensitivity sliders, across (X) and up and down (Y): the Settings card's pair, and the pair in the
+// first-person menu's Options, are the same two settings
 function lookSync() {
-  const v = lookK();
-  for (const [inp, out] of [['setLook', 'setLookOut'], ['fpsLook', 'fpsLookOut']]) { const i = $(inp), o = $(out); if (i && document.activeElement !== i) i.value = String(v); if (o) o.textContent = v.toFixed(2); }
+  for (const ax of ['X', 'Y']) {
+    const v = ax === 'X' ? lookKX() : lookKY();
+    for (const p of ['setLook', 'fpsLook']) { const i = $(p + ax), o = $(p + ax + 'Out'); if (i && document.activeElement !== i) i.value = String(v); if (o) o.textContent = v.toFixed(2); }
+  }
 }
-for (const id of ['setLook', 'fpsLook']) { const i = $(id); if (i) i.addEventListener('input', () => { SETTINGS.look = Math.round(+i.value * 100) / 100; saveSettings(); lookSync(); }); }
-{ const r = $('fpsLookReset'); if (r) r.addEventListener('click', () => { SETTINGS.look = 1; saveSettings(); lookSync(); }); }
+for (const ax of ['X', 'Y']) for (const p of ['setLook', 'fpsLook']) { const i = $(p + ax); if (i) i.addEventListener('input', () => { SETTINGS['look' + ax] = Math.round(+i.value * 100) / 100; saveSettings(); lookSync(); }); }
+{ const r = $('fpsLookReset'); if (r) r.addEventListener('click', () => { SETTINGS.lookX = SETTINGS.lookY = 1; saveSettings(); lookSync(); }); }
 setTimeout(lookSync, 0);
 // the field of view sliders (the Settings card's, and the first-person menu's): one setting
 function fovSync() {

@@ -1325,7 +1325,7 @@ function fpsIsleOccluders(out) {
   for (const s of I.solids) {
     if (s.occ === false || (s.ray === false && s.occ !== true)) continue;
     const c0 = cam(s.x, s.y, FPSC.GROUND), reach = s.s === 'c' ? s.r : Math.hypot(s.hw, s.hd);
-    if (c0.f + reach < FPI_CUT || c0.f - reach > 260) continue;
+    if (c0.f + reach + (s.z1 - FPSC.GROUND) < FPI_CUT || c0.f - reach > 260) continue;
     const ring = fpiCorners(s), z0 = s.z0 != null ? s.z0 : FPSC.GROUND - 0.05, n = ring.length;
     const V = []; for (const z of [z0, s.z1]) for (const [x, y] of ring) V.push([x, y, z]);
     const E = []; for (let i = 0; i < n; i++) { const j = (i + 1) % n; E.push([i, j], [i + n, j + n], [i, i + n]); }
