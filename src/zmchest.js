@@ -120,7 +120,7 @@ function zxVolley(x, y, z, h, p, by, mine, t) {
     if (q) {
       // the Skein: the ball bends in flight onto the nearest by its line
       zxAdd(hits, q.o, w.dmg, false);
-      const tz = zxG(q.o) + 1.2, d = Math.hypot(q.o.x - x, q.o.y - y), mid = [x + Math.sin(lh) * d * 0.55, y + Math.cos(lh) * d * 0.55, z + Math.tan(p) * d * 0.55];
+      const tz = FPSC.GROUND + zmMid(q.o), d = Math.hypot(q.o.x - x, q.o.y - y), mid = [x + Math.sin(lh) * d * 0.55, y + Math.cos(lh) * d * 0.55, z + Math.tan(p) * d * 0.55];
       let prev = a;
       for (let k = 1; k <= 7; k++) {
         const u = k / 7, v = 1 - u, pt = [v * v * a[0] + 2 * v * u * mid[0] + u * u * q.o.x, v * v * a[1] + 2 * v * u * mid[1] + u * u * q.o.y, v * v * a[2] + 2 * v * u * mid[2] + u * u * tz];
@@ -141,7 +141,7 @@ function zxSeek(x, y, z, h, p, cone, range, hits) {
     const d = Math.hypot(o.x - x, o.y - y); if (d > range || d < 0.5) continue;
     const off = Math.abs(angDiff(bearingOf(o.x - x, o.y - y), h)); if (off > cone) continue;
     const s = off + (hits.has(o) ? 0.4 : 0) + d * 0.004; if (s >= bs) continue;
-    const r = fpsRay(x, y, z, bearingOf(o.x - x, o.y - y), Math.atan2(zxG(o) + 1.2 - z, d), FPS.me.id, [o], d + 2);
+    const r = fpsRay(x, y, z, bearingOf(o.x - x, o.y - y), Math.atan2(FPSC.GROUND + zmMid(o) - z, d), FPS.me.id, [o], d + 2);
     if (r.kind !== 'body') continue;
     bs = s; best = { o };
   }
@@ -189,8 +189,9 @@ function zxAxe(x, y, z, h, mine, t) {
     if (o.dead) continue;
     const d = Math.hypot(o.x - x, o.y - y), b = bearingOf(o.x - x, o.y - y);
     if (d > w.reach + FPSC.BODY + (o.rad ? o.rad - 0.3 : 0) || Math.abs(angDiff(b, h)) > (chop ? 0.62 : w.arc) || Math.abs((o.jz || 0) - (FPS.me.jz || 0)) > 1.2) continue;
-    const r = fpsRay(x, y, z - 0.4, b, Math.atan2((o.jz || 0) + 1.2 - (z - FPSC.GROUND - 0.4), Math.max(0.3, d)), FPS.me.id, [o], w.reach + 1.5);
-    if (r.kind !== 'body') continue;
+    // (at the middle of its near side, as the knife does; one right at your feet struck anyway: src/zombies.js zmMelee)
+    const rad = o.rad || FPSC.BODY, r = d < rad + 0.35 ? null : fpsRay(x, y, z - 0.4, b, Math.atan2(zmMid(o) - (z - FPSC.GROUND - 0.4), Math.max(0.3, d - rad * 0.8)), FPS.me.id, [o], w.reach + 1.5);
+    if (r && r.kind !== 'body') continue;
     zmHurt(o, w.dmg * (chop ? 1.6 : 1), false, 'x', FPS.me.id); o.hitT = 0.25; any = true;
     if (chop) zmpStatus(o, 'kb', Math.sin(b) * 0.8, Math.cos(b) * 0.8, 1.1);
     for (let i = 0; i < 5; i++) FPS.parts.push({ x: o.x, y: o.y, z: zxG(o) + 1 + Math.random() * 0.5, vx: (Math.random() - 0.5) * 3, vy: (Math.random() - 0.5) * 3, vz: Math.random() * 2, t: 0.45, c: '90,120,105' });

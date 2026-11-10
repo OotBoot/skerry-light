@@ -448,8 +448,16 @@ function fpsRay(x, y, z, h, p, skipId, targets, range, tol) {
     if (o.id === skipId) continue;
     // (a body can be bigger than most: rad, tall and headZ, for the Lighthouse's Diver)
     const t = circle(o.x, o.y, (o.rad || FPSC.BODY) + (tol || 0)); if (t == null || t > best.t) continue;
-    const hz = z + tp * t - FPSC.GROUND - (o.jz || 0);
-    if (hz < -(tol || 0) || hz > (o.tall || FPSC.TALL) + 0.1 + (tol || 0)) continue;
+    const hz = z + tp * t - FPSC.GROUND - (o.jz || 0), top = (o.tall || FPSC.TALL) + 0.1 + (tol || 0);
+    if (hz > top && FPS.zm && tp < 0) {
+      // (in the Lighthouse, a shot steeply down onto something short, a crab at your feet, comes in through its top,
+      // not its side: where the line drops to the top's height, if that's still over it)
+      const t2 = t + (hz - top) / -tp, ox = o.x - x, oy = o.y - y, along = ox * sx + oy * sy, R = (o.rad || FPSC.BODY) + (tol || 0);
+      const out = along + Math.sqrt(Math.max(0, R * R - (ox * ox + oy * oy - along * along)));
+      if (t2 <= out && t2 < best.t) best = { t: t2, kind: 'body', who: o, head: true };
+      continue;
+    }
+    if (hz < -(tol || 0) || hz > top) continue;
     best = { t, kind: 'body', who: o, head: hz > (o.headZ || 1.5) };
   }
   best.x = x + sx * best.t; best.y = y + sy * best.t; best.z = z + tp * best.t;

@@ -1538,6 +1538,10 @@ const zmZoneName = k => ZM_TROOMS[k] || (ZM_ZONES[k] ? ZM_ZONES[k].n : '');
 // is this room open to you yet (and so to them)?
 const zmOpen = k => ZM.open.has(k);
 
+// the middle of one of them, to aim a beam, a blade or a spark at (feet up): chest-high on the drowned, lower on
+// anything shorter (a crab's shell sits well under where a man's chest would be, and a line to there passed over it)
+const zmMid = o => (o.jz || 0) + (o.tall ? Math.min(1.2, o.tall * 0.6) : 1.2);
+
 // ---------- standing, walking and climbing ----------
 // the solids near a place (the index the islands use)
 function zmNear(x, y) { const I = FPS.g.isle; return I.sh.get(Math.floor(x / 6) * 65536 + Math.floor(y / 6)) || []; }
@@ -2526,7 +2530,7 @@ function zmMelee(x, y, z, h, w, code) {
     // (aimed at the middle of its height where the blade meets its near side, not its centre: from up at your chest
     // to a crab at your feet, a line to its centre passed over its shell; one right at your feet is struck anyway)
     const rad = o.rad || FPSC.BODY, close = d < rad + 0.35;
-    const r = close ? null : fpsRay(x, y, z - 0.4, b, Math.atan2((o.jz || 0) + (o.tall ? Math.min(1.2, o.tall * 0.6) : 1.2) - (z - FPSC.GROUND - 0.4), Math.max(0.3, d - rad * 0.8)), FPS.me.id, [o], w.reach + 1);
+    const r = close ? null : fpsRay(x, y, z - 0.4, b, Math.atan2(zmMid(o) - (z - FPSC.GROUND - 0.4), Math.max(0.3, d - rad * 0.8)), FPS.me.id, [o], w.reach + 1);
     if (r && r.kind !== 'body') continue;
     zmHurt(o, w.dmg, false, code, FPS.me.id); o.hitT = 0.2; any = true;
   }
@@ -2544,7 +2548,7 @@ function zmBeam() {
   let any = false; const lit = [];
   for (const o of ZM.z) {
     if (o.dead) continue;
-    const ox = o.x - ex, oy = o.y - ey, oz = FPSC.GROUND + (o.jz || 0) + 1.1 - ez, d = Math.hypot(ox, oy, oz);
+    const ox = o.x - ex, oy = o.y - ey, oz = FPSC.GROUND + Math.min(zmMid(o), (o.jz || 0) + 1.1) - ez, d = Math.hypot(ox, oy, oz);
     if (d > FPS.beamLen + 0.6) continue;
     const along = ox * sx + oy * sy + oz * sz; if (along < 0.3) continue;
     const off = Math.sqrt(Math.max(0, d * d - along * along)), rad = 0.45 + along * 0.06;
@@ -2564,7 +2568,7 @@ function zmChain(from, hops, by) {
   let best = null, bd = 7;
   for (const o of ZM.z) { if (o.dead || o === from) continue; const d = Math.hypot(o.x - from.x, o.y - from.y); if (d < bd && Math.abs((o.jz || 0) - (from.jz || 0)) < 2) { bd = d; best = o; } }
   if (!best) return;
-  ZM.sparks.push({ a: [from.x, from.y, FPSC.GROUND + (from.jz || 0) + 1.2], b: [best.x, best.y, FPSC.GROUND + (best.jz || 0) + 1.2], t: 0.25 });
+  ZM.sparks.push({ a: [from.x, from.y, FPSC.GROUND + zmMid(from)], b: [best.x, best.y, FPSC.GROUND + zmMid(best)], t: 0.25 });
   best.hitT = 0.2; best.scorch = 1;
   best.hp -= zmHp(Math.max(1, ZM.round)) * 0.6;
   if (best.hp <= 0) { zmKill(best, false, 'f', 'burn', by); if (hops > 1) zmChain(best, hops - 1, by); }

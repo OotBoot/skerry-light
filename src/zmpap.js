@@ -741,7 +741,7 @@ function zmpHeld(z, dt) {
 const zmpSlowK = z => z.slow > 0 ? 0.45 : 1;
 // a line of sight from one point to one of them
 function zmpSees(x, y, z, o) {
-  const tz = zmpG(o) + 1.2, d = Math.hypot(o.x - x, o.y - y);
+  const tz = FPSC.GROUND + zmMid(o), d = Math.hypot(o.x - x, o.y - y);
   const r = fpsRay(x, y, z, bearingOf(o.x - x, o.y - y), Math.atan2(tz - z, Math.max(0.05, d)), FPS.me.id, [o], d + 2);
   return r.kind === 'body';
 }
@@ -751,7 +751,7 @@ function zmpNextTo(x, y, z, r, skip) {
   for (const o of ZM.z) {
     if (o.dead || skip.has(o) || o.st === 'out') continue;
     const d = Math.hypot(o.x - x, o.y - y);
-    if (d < bd && Math.abs(zmpG(o) + 1.2 - z) < 2.4 && zmpSees(x, y, z, o)) { bd = d; best = o; }
+    if (d < bd && Math.abs(FPSC.GROUND + zmMid(o) - z) < 2.4 && zmpSees(x, y, z, o)) { bd = d; best = o; }
   }
   return best;
 }
@@ -881,11 +881,11 @@ function zmpBeam(lit, burn) {
   const skip = new Set(lit), per = Math.min(5, 1 + t), cols = ['255,120,110', '140,255,160', '150,170,255', '255,230,120', '230,140,255'];
   let n = 0;
   for (const o of lit.slice(0, 4)) {
-    const fz = zmpG(o) + 1.2;
+    const fz = FPSC.GROUND + zmMid(o);
     for (let i = 0; i < per; i++) {
       const q = zmpNextTo(o.x, o.y, fz, 6 + t, skip); if (!q) break;
       skip.add(q); q.hitT = 0.2; q.scorch = Math.min(1, (q.scorch || 0) + 0.4);
-      ZM.sparks.push({ a: [o.x, o.y, fz], b: [q.x, q.y, zmpG(q) + 1.2], t: 0.14, col: cols[(n++) % cols.length], beam: true });
+      ZM.sparks.push({ a: [o.x, o.y, fz], b: [q.x, q.y, FPSC.GROUND + zmMid(q)], t: 0.14, col: cols[(n++) % cols.length], beam: true });
       zmHurt(q, burn * 0.7, false, 'f', FPS.me.id, 'burn');
     }
   }
