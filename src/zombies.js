@@ -3077,6 +3077,7 @@ function zmGetUp(by) {
 function zmShowOver() {
   if ((typeof RAID !== 'undefined' && RAID.on)) return raidShowOver();   // [raid]
   const r = ZM.round, held = Math.max(0, r - 1);
+  if ($('zmOverEye')) $('zmOverEye').textContent = 'Keeper’s Last Light';
   $('zmOverHead').textContent = held ? `The light went out on round ${r}` : 'The light went out';
   $('zmOverStats').textContent = (ZM.net ? `${ZM.hum.length} of you. ` : '') + `You held ${held} ${held === 1 ? 'round' : 'rounds'}. ${ZM.kills} drowned sent back (${ZM.heads} through the head), ${ZM.doorsOpened} ${ZM.doorsOpened === 1 ? 'door' : 'doors'} opened, ${ZM.pts + ZM.spent} points earned.`;
   const best = typeof BOARD !== 'undefined' && BOARD.mine && BOARD.mine.zm;

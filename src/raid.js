@@ -171,6 +171,7 @@ function raidReport() {
 }
 function raidShowOver() {
   const S = RAID_STAGES[RAID_ORDER[RAID.stage]], cleared = RAID.won ? RAID_ORDER.length : RAID.stage;
+  if ($('zmOverEye')) $('zmOverEye').textContent = 'Maren’s End';
   $('zmOverHead').textContent = RAID.won ? 'Through the door' : `The dark took you in ${S ? S.n : 'the deep'}`;
   $('zmOverStats').textContent = (ZM.net ? `${ZM.hum.length} of you. ` : '') + `${cleared} of ${RAID_ORDER.length} ${RAID_ORDER.length === 1 ? 'part' : 'parts'} cleared, in ${raidClock(RAID.t)}. ${ZM.kills} of the drowned sent back (${ZM.heads} through the head)`
     + (RAID.boss > 0 ? `, ${Math.round(RAID.boss)} damage to its bosses.` : '.') + (RAID.won && RAID_ORDER.length < 3 ? ' The rest of Maren’s End is still to come.' : '');
@@ -233,7 +234,7 @@ function raid3d(dt) {
   // (held in the same place in your view, however you look: forward, left and down from your eye)
   const cp = Math.cos(p), sp = Math.sin(p), F = [fx * cp, fy * cp, sp], Rt = [fy, -fx, 0], U = [-fx * sp, -fy * sp, cp];
   const at = (f, r, u) => [m.x + F[0] * f + Rt[0] * r + U[0] * u, m.y + F[1] * f + Rt[1] * r + U[1] * u, ez + F[2] * f + U[2] * u];
-  const [lx, ly, lz] = at(0.78, -0.36 + sw, -0.3 + Math.abs(sw));
+  const [lx, ly, lz] = at(1.0, -0.5 + sw, -0.46 + Math.abs(sw));
   R3.lan.position.copy(z3v(lx, ly, lz)); R3.lan.rotation.set(0, -h, 0); R3.lan.rotateX(-p * 0.6 + sw * 2);
   const fl = reduceMotion ? 1 : 0.9 + 0.1 * Math.sin(t * 13) * Math.sin(t * 4.7);
   R3.flame.scale.set(fl, 1.8 * fl, fl); R3.halo.material.opacity = 0.8 * fl;
@@ -382,7 +383,7 @@ FPI_K.rdwall = {
   col: '#3a393c', noShadow: true,
   sol(p) { return [fpiBox(p, 0, 0, p.len / 2, p.th / 2, RSW.CEIL)]; },
   b3(p, A) {
-    const R = seeded(p.sd), RK = ['#3f3d40', '#353437', '#47423f', '#2f3034'];
+    const R = seeded(p.sd), RK = ['#57535a', '#4a484e', '#5e5853', '#44464c'];
     A.box(RK[0], 0, 0, -0.2, p.len, p.th, RSW.CEIL + 0.4);
     const face = p.side * p.th / 2;
     // the rock: lumps and shelves standing out of it, more of them low down
@@ -802,8 +803,8 @@ RAID_STAGES.descent = {
     const S = RAID.st, t = g.t, m = FPS.me;
     // the light and the fog, by how high you are: the dusk over the bed, black at the bottom
     const k = clamp(((m.jz || 0) - RSW.CEIL) / (RSW.SEA - RSW.CEIL), 0, 1), kk = k * k;
-    GL3D.amb.intensity = 0.05 + 0.5 * kk; GL3D.moon.intensity = 0.3 * kk;
-    if (GL3D.scene.fog) { const F = GL3D.scene.fog; F.color.setRGB(0.1 * kk, 0.11 * kk, 0.15 * kk); F.near = 3 + 60 * kk; F.far = 46 + 600 * kk; RAID.fog0 = true; }
+    GL3D.amb.intensity = 0.13 + 0.42 * kk; GL3D.moon.intensity = 0.3 * kk;
+    if (GL3D.scene.fog) { const F = GL3D.scene.fog; F.color.setRGB(0.02 + 0.08 * kk, 0.025 + 0.085 * kk, 0.04 + 0.11 * kk); F.near = 3 + 60 * kk; F.far = 46 + 600 * kk; RAID.fog0 = true; }
     // the braziers
     R3.bz.forEach((b, i) => {
       const lit = !!(S.lit & (1 << i)), fl = S.flare && S.flare[i] ? S.flare[i] : 0;

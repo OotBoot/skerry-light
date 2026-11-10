@@ -907,6 +907,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 .boardlist .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .boardhead .sc, .boardhead .sb, .boardlist .sc, .boardlist .sb { text-align: right; font-variant-numeric: tabular-nums; }
 .boardlist .rk { color: var(--muted); }
+.boardgame.three .boardhead, .boardgame.three .boardlist li { grid-template-columns: 2.2em minmax(0, 1fr) 5em 6em 4.5em; }
 .boardgames { display: grid; grid-template-columns: 1fr; gap: 14px; }
 
 .boardgame { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
@@ -977,6 +978,12 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 .lookrow .smoothrow input { width: 18px; height: 18px; accent-color: var(--lamp); }
 .lookrow .smoothrow small { flex: 1 1 100%; padding-left: 26px; text-transform: none; letter-spacing: 0; opacity: 0.8; }
 .lookrow .lookslider { flex: 1 1 200px; }
+/* Maren's End (src/raid.js): its card and its banner, lantern gold over the deep's cold blue */
+.rdcard { border-color: rgba(120,190,255,0.45); }
+.rdcard h1 { color: #ffe2a8; text-shadow: 0 0 28px rgba(120,190,255,0.35); }
+.newgame.rdbanner { border-color: rgba(120,190,255,0.5); background: linear-gradient(90deg, rgba(90,150,220,0.28), rgba(90,150,220,0.08)); }
+.newgame.rdbanner:hover, .newgame.rdbanner:focus-visible { background: linear-gradient(90deg, rgba(90,150,220,0.42), rgba(90,150,220,0.16)); }
+.newgame.rdbanner .ng-tag { background: #4a86c8; color: #f2f8ff; }
 </style>
 </head>
 <body>
@@ -1042,8 +1049,9 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
     <button class="newgame" id="fpsBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">Try the new game, <b>Wreckers' Night</b>: a multiplayer shootout on the skerry</span><span class="ng-go" aria-hidden="true">↓</span></button>
     <button class="newgame warbanner" id="warBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">And another, <b>Drowned Reach</b>: a war for the islands, alone or with up to ten players</span><span class="ng-go" aria-hidden="true">↓</span></button>
     <button class="newgame zmbanner" id="zmBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">And a fourth, <b>Keeper's Last Light</b>: hold the keeper's station against the drowned, round after round</span><span class="ng-go" aria-hidden="true">↓</span></button>
+    <button class="newgame rdbanner" id="rdBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">And a raid, <b>Maren's End</b>: down the Swallow, alone or with up to four</span><span class="ng-go" aria-hidden="true">↓</span></button>
     <div class="card boardcard" id="boardCard" aria-labelledby="boardHead">
-      <div class="cardtop"><span class="eyebrow">Best on record · all four games</span><button class="tool closebtn" id="boardRefresh" type="button">Refresh</button></div>
+      <div class="cardtop"><span class="eyebrow">Best on record · every game</span><button class="tool closebtn" id="boardRefresh" type="button">Refresh</button></div>
       <h1 id="boardHead">The Scoreboard</h1>
       <div class="nickrow" id="boardNameRow" hidden><label for="boardName">Your name</label><input id="boardName" type="text" maxlength="16" autocomplete="nickname" placeholder="your sailing name"></div>
       <div class="boardgames" id="boardGames" aria-live="polite"></div>
@@ -1211,6 +1219,43 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
         <p><b>Bosses.</b> From round 10, and every fourth round after, something bigger comes in with them (two at once from round 20, three from 30, and more later; tougher every time). They count towards the round, are worth hundreds of points and always drop salvage. <b>The Diver</b>, a drowned giant in a brass helmet, drags an anchor: when a ring glows on the floor in front of him, get out of it (or jump) before the anchor comes down. <b>The Mooncusser</b>, a wrecker in chains, carries a false light on a pole: when he lifts it and it swells, look away (or get behind something), or it blinds you and draws you in to him; but while he holds it up he's open to your shots. <b>The Keelback</b>, a crab made of wrecks, rears up and a lane glows on the floor through you: step out of it before it charges, and if it runs into a wall it reels, its soft belly showing.</p>
         <p><b>Together.</b> Host a night and up to three others here can join it from this card. Nothing starts until the host presses Start the night, with whoever has joined. More of you means more of them each round. Points are your own: share the doors, race for the chest. Go down and you have half a minute on the floor for someone to hold Use beside you and get you up; bleed out and you're back next round with a pepperbox. The night ends when nobody is left standing. The pause menu doesn't stop a night together.</p>
         <p><b>Keys:</b> as Wreckers' Night, and F (or E) to use: buy, open, take, and hold it at a window to board it up. V (or the middle mouse button) for the knife, which never runs out; and with nothing left to fire, Fire slashes with it too. C switches the view. 1 and 2 your weapons, Tab how the night's going, Esc pauses. <b>Controller:</b> B to use, R3 the knife, d-pad down the view. <b>Touch:</b> the Use and knife buttons by Fire. On a phone, push the stick out to the dotted outer circle to run. Kills here count towards weapon and outfit crates too, and your best goes on the scoreboard.</p>
+      </details>
+    </div>
+    <div class="card zmcard rdcard" id="rdTitle" aria-labelledby="rdHead">
+      <div class="cardtop"><span class="eyebrow">A fifth game · a raid in parts · alone or up to four</span></div>
+      <h1 id="rdHead">Maren's End</h1>
+      <p>The sea round the Light has drained away. Where it was is a dry bed of salt and wrecks, and a long pier running out over it to the Swallow, the hole the water went down. Take Maren's Lantern, the one she rowed out with in 1887, and go down after it.</p>
+      <p class="muted">Part I, the Swallow: walk the Long Pier, drop into the hole (a long way down), and follow the Deep Path. The dark drains you; light the braziers with the lantern and stand in their light to mend. At the end, a door that opens when twenty of the drowned have been sent back in front of it.</p>
+      <div class="btnrow">
+        <button class="primary" id="rdPlay" type="button">Go down alone</button>
+        <button class="tool" id="rdWcrate" type="button">Weapon crates</button>
+        <button class="tool" id="rdOcrate" type="button">Outfit crates</button>
+        <button class="tool" id="rdSettings" type="button">Settings</button>
+      </div>
+      <p class="muted" id="rdRecord"></p>
+      <section class="warmp zmmp" id="rdMp" aria-labelledby="rdMpHead">
+        <h2 id="rdMpHead">Play together · up to four</h2>
+        <p class="muted" id="rdMpNote">Looking for other players…</p>
+        <div class="nickrow"><label for="rdNick">Your name</label><input id="rdNick" type="text" maxlength="16" autocomplete="nickname" placeholder="Keeper"></div>
+        <div id="rdMpOpen" hidden>
+          <div class="btnrow"><button class="tool" id="rdMpHost" type="button">Host a raid</button></div>
+          <div class="warlobbies" id="rdLobbies"></div>
+        </div>
+        <div class="warlobby" id="rdLobby" hidden>
+          <h3 id="rdLobbyHead">Your raid</h3>
+          <ol class="warlobbylist" id="rdLobbyList"></ol>
+          <p class="muted" id="rdLobbyMsg"></p>
+          <div class="btnrow"><button class="primary" id="rdMpStart" type="button">Start the raid</button><button class="tool" id="rdMpLeave" type="button">Leave</button></div>
+        </div>
+      </section>
+      <details class="howto">
+        <summary>How to play</summary>
+        <p><b>The Long Pier.</b> You start at the landward end of a pier that runs out over the dry bed of the sea. At its far end is the Swallow. Walk off the end and you fall for about thirty seconds, down a shaft lit only by what glows in its walls.</p>
+        <p><b>Maren's Lantern.</b> Everyone carries one, in the left hand, and it lights a little way round you. Hold Use (F or E; X on a pad) beside a dark brazier to light it from the lantern.</p>
+        <p><b>The dark.</b> At the bottom, the dark drains your health a little at a time; nothing else mends you. Inside a lit brazier's light you mend quickly and your ammunition is made up. Push on from one to the next.</p>
+        <p><b>The drowned.</b> Down here they glow, a cold blue, and they climb up out of the rock to come for you. You carry a pepperbox and a blunderbuss, and the weapon and outfit crates are earned here as at the Lighthouse.</p>
+        <p><b>The door.</b> At the end of the Deep Path a door glows in the rock. Send back twenty of the drowned inside the ring in front of it and it opens; go through. Together, anyone who goes down gets up again when a friend holds Use beside them, and anyone who bleeds out comes back when the next brazier is lit.</p>
+        <p><b>The board.</b> Maren's End's line on the scoreboard keeps your best time through the whole raid, the most damage you've done to its bosses in one raid, and everyone you've sent back in all your raids.</p>
       </details>
     </div>
   </div>
@@ -1539,7 +1584,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 
   <div class="overlay pausecard zmover" id="zmOver" hidden role="dialog" aria-modal="true" aria-labelledby="zmOverHead">
     <div class="card">
-      <span class="eyebrow">Keeper's Last Light</span>
+      <span class="eyebrow" id="zmOverEye">Keeper's Last Light</span>
       <h1 id="zmOverHead">The light went out</h1>
       <p id="zmOverStats"></p>
       <p class="muted" id="zmOverBest"></p>
@@ -13537,7 +13582,8 @@ function fpsDrawScene() {
   // the camera tilts with your look (render.js cam/proj, and gl3d's camera): hy is where the horizon falls
   setCamPitch(m.p); hy = H * 0.5 + pitchY;
   // indoors or out (where the camera is): eased over a quarter of a second or so, going through a door
-  { const want = fpsUnderRoof(FPS.g, camX, camY, camH) ? 1 : 0, k = Math.min(1, (FPS.dtLast || 0.016) * 5);
+  // ([raid] no weather at all in Maren's End)
+  { const want = (FPS.zm && typeof RAID !== 'undefined' && RAID.on) || fpsUnderRoof(FPS.g, camX, camY, camH) ? 1 : 0, k = Math.min(1, (FPS.dtLast || 0.016) * 5);
     FPS.inK = FPS.inK == null || FPS.inKFor !== FPS.g ? want : FPS.inK + (want - FPS.inK) * k; FPS.inKFor = FPS.g;
     if (Math.abs(FPS.inK - want) < 0.01) FPS.inK = want; }
   const roll = m.dead > 0 ? 0.25 * Math.min(1, (FPSC.RESPAWN - m.dead) * 2) : 0;
@@ -18957,6 +19003,7 @@ function zmNear(x, y) { const I = FPS.g.isle; return I.sh.get(Math.floor(x / 6) 
 // in the way of something whose feet are at height feet? (stairs and floors low enough to step up onto aren't)
 function zmBlockedAt(x, y, pad, feet) {
   if (Math.hypot(x - FPSC.CX, y - FPSC.CY) > FPSC.R - 1.5) return true;
+  if (typeof raidBlock === 'function' && raidBlock(x, y, pad, feet)) return true;   // [raid] src/raid.js
   for (const s of zmNear(x, y)) {
     // (only what stands across the height of your body: not a floor above your head, nor one you can step up on,
     // nor anything below your feet)
@@ -19213,6 +19260,7 @@ function zmStart(opts) {
   $('fpsPad').hidden = !FPS.touch; FPS.hintT = 8; if (FPS.touch) fpsSafeArea();
   { const e = document.querySelector('#fpsMenu .eyebrow'); if (e) e.textContent = 'Keeper’s Last Light'; $('fpsLeave').textContent = 'Leave the Lighthouse'; $('fpsResume').textContent = 'Back to the Light'; }
   if ($('zmUnstick')) $('zmUnstick').hidden = false;
+  if (typeof raidBegin === 'function') raidBegin(opts.map || ZM_PICK);   // [raid] Maren's End (src/raid.js)
   const MAP = zmUseMap(opts.map || ZM_PICK);
   FPS.g = zmArena();
   const [sx, sy] = [FPSC.CX + ZMD.START[0], FPSC.CY + ZMD.START[1]];
@@ -19232,6 +19280,7 @@ function zmStart(opts) {
   $('zmOver').hidden = true;
   $('zmAgain').textContent = ZM.net ? 'Back to the lobby' : 'Hold it again';
   fpsFeed(MAP.land(ZM.net ? ZM.hum.length : 0));
+  if (typeof raidAfterStart === 'function') raidAfterStart();   // [raid]
   try { cv.focus(); } catch (e) {}
 }
 function zmStop() {
@@ -19239,6 +19288,7 @@ function zmStop() {
   if (typeof zmpStop === 'function') zmpStop();   // [pap]
   if (typeof zxReset === 'function') zxReset();   // [chest]
   if (typeof ztStop === 'function') ztStop(0.6);   // [theme]
+  if (typeof raidStop === 'function') raidStop();   // [raid]
   ZM.on = false; ZM.net = null; FPS.zm = false; FPS.eyeLag = 0; FPS.downEye = 0; ZM.spec = null; FPS.specId = null;
   $('stage').classList.remove('zmmode'); $('zmOver').hidden = true;
   { const e = document.querySelector('#fpsMenu .eyebrow'); if (e) e.textContent = "Wreckers' Night carries on without you"; $('fpsLeave').textContent = 'Leave the island'; $('fpsResume').textContent = 'Back to the fight'; }
@@ -19270,7 +19320,7 @@ function zmFrame(dt) {
       // patched up quickly, if they leave you alone for a few seconds
       FPS.calm = (FPS.calm || 0) + dt;
       const max = ZM.perks.stout ? ZMC.HP_STOUT : ZMC.HP;
-      if (m.dead <= 0 && !zmIsDown() && m.hp < max && FPS.calm > (ZM.perks.grog ? 1.6 : 3.2)) m.hp = max;
+      if (m.dead <= 0 && !zmIsDown() && m.hp < max && FPS.calm > (ZM.perks.grog ? 1.6 : 3.2) && !(typeof RAID !== 'undefined' && RAID.on && !(raidStage() || {}).mend)) m.hp = max;   // [raid] (there, unless the part says so, only a lit brazier mends you)
       if (ZM.downT > 0) zmDownTick(dt);
       if (m.cd > 0) m.cd -= dt;
       if (m.reload > 0) { m.reload -= dt; if (m.reload <= 0) { m.reload = 0; zmReloaded(); } }
@@ -19322,10 +19372,11 @@ function zmTick(dt) {
   else {
     if (ZM.net === 'host') zmnHost(dt);
     ZM.players = zmPlayers();
+    if ((typeof RAID !== 'undefined' && RAID.on)) ZM.players = raidPlayers(ZM.players);   // [raid] (who they can come after)
     // the grid's distances from everyone standing, a few times a second
     ZM.navT -= dt;
     if (ZM.navT <= 0) { ZM.navT = 0.25; zmNavFrom(ZM.players); }
-    zmRounds(dt);
+    if ((typeof RAID !== 'undefined' && RAID.on)) raidHostTick(dt); else zmRounds(dt);   // [raid] no rounds there: its parts instead
     zmZombies(dt);
     zmDropsTick(dt);
     zmBoxTick(dt);
@@ -19344,6 +19395,7 @@ function zmTick(dt) {
   if (typeof zxTick === 'function') zxTick(dt);   // [chest] what the chest's weapons throw, and what they leave burning
   if (typeof zeTick === 'function') zeTick(dt);   // [egg hook] src/zmegg.js
   if (typeof zhTick === 'function') zhTick(dt);   // [egg2 hook] src/zmegg2.js
+  if ((typeof RAID !== 'undefined' && RAID.on)) raidMe(dt);   // [raid] your own side of it
   if (typeof zbMe === 'function') zbMe(dt);   // [boss] their blows running on (joined), and what they've done to me (src/zmboss.js)
   zmNearest();
   // holding Use at a window nails its boards back; beside someone who's down, gets them up
@@ -19393,7 +19445,8 @@ function zmEnd() {
   FPS.me.dead = FPSC.RESPAWN - 0.6; FPS.scoped = false;
   ZM.over = { t: 0 };
   zmSound('over');
-  if (typeof scoreReport === 'function') scoreReport('zm', Math.max(0, ZM.round - 1), ZM.kills);
+  if ((typeof RAID !== 'undefined' && RAID.on)) raidReport();   // [raid]
+  else if (typeof scoreReport === 'function') scoreReport('zm', Math.max(0, ZM.round - 1), ZM.kills);
 }
 
 // ---------- rounds ----------
@@ -19561,6 +19614,7 @@ function zmZombies(dt) {
     if (z.hitT > 0) z.hitT -= dt;
     z.t += dt;
     if (z.dead) { z.deadT = (z.deadT || 0) + dt; continue; }
+    if (z.rr > 0 && typeof raidRise === 'function') { raidRise(z, dt); continue; }   // [raid] rising out of the ground
     if (z.boss && typeof zbTick === 'function') { zbTick(z, dt, nearest); continue; }
     if (z.skit && z.st === 'out') { zwOut(z, dt); continue; }   // [swarm] a crab, straight in at its window   // [boss] each goes its own way (src/zmboss.js)
     const step = z.sp * dt * (z.slow > 0 && typeof zmpSlowK === 'function' ? zmpSlowK(z) : 1);   // [pap] (slowed by the Equinox Gale)
@@ -19824,6 +19878,7 @@ function zmHurt(d, dmg, head, code, by, how) {
   if (!d || d.dead) return;
   d.hitT = 0.15;
   if (typeof zmpDmg === 'function') dmg = zmpDmg(dmg, code, by);   // [pap] reforged weapons hit harder (the shooter's side)
+  if (typeof raidHurtK === 'function') dmg = raidHurtK(d, dmg, code, by);   // [raid] the stage's say (the shooter's side)
   if (ZM.net === 'client') { zmnHit(d, dmg, head, code, how); return; }
   const k = (ZM_DMG[code] == null ? 1 : ZM_DMG[code]) * (d.mark > 0 ? 1.5 : 1);   // [pap] (lit by the Leading Light: hurt worse)
   d.hp -= d.boss && typeof zbHurtK === 'function' ? zbHurtK(d, dmg * k, how) : ZM.insta > 0 ? 1e9 : dmg * k;   // [boss] no one-hit kills on them
@@ -19842,6 +19897,7 @@ function zmKill(d, head, code, how, by) {
   if (d.boss && typeof zbKilled === 'function') zbKilled(d, how, by);   // [boss] its reward and its salvage
   if (typeof zeKill === 'function') zeKill(d, how, by);   // [egg hook] src/zmegg.js
   if (typeof zhKill === 'function') zhKill(d, how, by);   // [egg2 hook] src/zmegg2.js
+  if (typeof raidKill === 'function') raidKill(d, how, by);   // [raid]
 }
 // crates (as for Wreckers' Night, every third kill here)
 function zmEarnKill() {
@@ -19898,6 +19954,7 @@ function zmResolveShot(sh, mine) {
     FPS.tracers.push({ a: [x + Math.sin(lh) * 0.6, y + Math.cos(lh) * 0.6, z - 0.25], b: [last.x, last.y, last.z], t: w.pellets ? 0.06 : 0.08, k: w.code });
     if (typeof zeShot === 'function' && mine) zeShot(x, y, z, lh, lp, by);   // [egg hook] src/zmegg.js
     if (typeof zhShot === 'function' && mine) zhShot(x, y, z, lh, lp, by);   // [egg2 hook] src/zmegg2.js
+    if (typeof raidShot === 'function' && mine) raidShot(x, y, z, lh, lp, by);   // [raid]
     if (last.kind !== 'body' && last.kind !== 'none') fpsPuff(last.x, last.y, last.z, last.kind === 'ground' ? '150,140,120' : '190,190,180', w.pellets ? 2 : 6);
   }
   if (mine && typeof zmpShot === 'function') zmpShot(sh, hits);   // [pap] what a reforged weapon does
@@ -20098,6 +20155,7 @@ function zmNearest() {
   for (const w of ZM.windows) if (!w.sea && w.boards < 6 && zmOpen(w.zone)) consider({ k: 'win', w }, w.x - w.nx * 0.95, w.y - w.ny * 0.95, w.z || 0, w.hatch ? 1.6 : 1.9, false);
   if (typeof zeNearest === 'function') zeNearest(consider);   // [egg hook] src/zmegg.js
   if (typeof zhNearest === 'function') zhNearest(consider);   // [egg2 hook] src/zmegg2.js
+  if (typeof raidConsider === 'function') raidConsider(consider);   // [raid]
   // (down on the floor, nothing's in reach but your pepperbox)
   ZM.near = zmIsDown() ? null : best;
   ZM.prompt = ZM.near ? zmPrompt(ZM.near) : null;
@@ -20105,6 +20163,7 @@ function zmNearest() {
 function zmPrompt(o) {
   { const r = typeof zmpPrompt === 'function' && zmpPrompt(o); if (r) return r; }   // [pap] the bench, a reforged weapon's ammunition
   { const r = typeof zmlPrompt === 'function' && zmlPrompt(o); if (r) return r; }   // [lamp] the lever
+  { const r = typeof raidPrompt === 'function' && raidPrompt(o); if (r) return r; }   // [raid]
   if (o.k === 'egg') return typeof zePrompt === 'function' ? zePrompt(o) : null;   // [egg hook] src/zmegg.js
   if (o.k === 'egg2') return typeof zhPrompt === 'function' ? zhPrompt(o) : null;   // [egg2 hook] src/zmegg2.js
   if (o.k === 'buy') {
@@ -20124,6 +20183,7 @@ function zmUse() {
   const o = ZM.near, m = FPS.me; if (!o || m.dead > 0 || zmIsDown() || ZM.over) return;
   if (typeof zmpUse === 'function' && zmpUse(o)) return;   // [pap]
   if (typeof zmlUse === 'function' && zmlUse(o)) return;   // [lamp]
+  if (typeof raidUse === 'function' && raidUse(o)) return;   // [raid]
   if (o.k === 'egg') { if (typeof zeUse === 'function') zeUse(o); return; }   // [egg hook] src/zmegg.js
   if (o.k === 'egg2') { if (typeof zhUse === 'function') zhUse(o); return; }   // [egg2 hook] src/zmegg2.js
   const pay = c => { if (ZM.pts < c) { zmSound('no'); fpsFeed('Not enough points.'); return false; } ZM.pts -= c; ZM.spent += c; return true; };
@@ -20255,7 +20315,9 @@ function zmGetUp(by) {
   zmSound('wind');
 }
 function zmShowOver() {
+  if ((typeof RAID !== 'undefined' && RAID.on)) return raidShowOver();   // [raid]
   const r = ZM.round, held = Math.max(0, r - 1);
+  if ($('zmOverEye')) $('zmOverEye').textContent = 'Keeper’s Last Light';
   $('zmOverHead').textContent = held ? `The light went out on round ${r}` : 'The light went out';
   $('zmOverStats').textContent = (ZM.net ? `${ZM.hum.length} of you. ` : '') + `You held ${held} ${held === 1 ? 'round' : 'rounds'}. ${ZM.kills} drowned sent back (${ZM.heads} through the head), ${ZM.doorsOpened} ${ZM.doorsOpened === 1 ? 'door' : 'doors'} opened, ${ZM.pts + ZM.spent} points earned.`;
   const best = typeof BOARD !== 'undefined' && BOARD.mine && BOARD.mine.zm;
@@ -20514,6 +20576,7 @@ function zm3dBuild() {
   zm3dTonics(grp, G0);
   if (typeof ze3dBuild === 'function') ze3dBuild(grp);   // [egg hook] src/zmegg.js
   if (typeof zh3dBuild === 'function') zh3dBuild(grp);   // [egg2 hook] src/zmegg2.js
+  if (typeof raid3dBuild === 'function') raid3dBuild(grp);   // [raid]
   zm3dTower(grp);
   zm3dLantern(grp);
   zm3dWater(grp);
@@ -20893,6 +20956,7 @@ function zmPose(z, M, dt) {
   M.coat.emissive.setRGB(0.12 * flash + hot * 0.4, 0.12 * flash + hot * 0.14, 0.1 * flash);
   if (z.burn && !z.charred) { z.charred = true; M.skin.color.multiplyScalar(0.35); M.coat.color.multiplyScalar(0.35); }
   if (z.scorch > 0 && !z.burn) z.scorch = Math.max(0, z.scorch - dt * 0.8);
+  if (typeof raidPose === 'function') raidPose(z, M);   // [raid] they glow
   if (z.dead) {
     const k = Math.min(1, z.deadT / 0.6);
     if (z.burn) { const s = Math.max(0.01, 1 - z.deadT / 1.2); M.root.scale.set(s, s * (0.6 + 0.4 * s), s); }
@@ -21007,6 +21071,7 @@ function zmScene3D() {
   if (typeof zx3d === 'function') zx3d(dt);   // [chest] the light of flares and blasts
   if (typeof ze3d === 'function') ze3d(dt);   // [egg hook] src/zmegg.js
   if (typeof zh3d === 'function') zh3d(dt);   // [egg2 hook] src/zmegg2.js
+  if (typeof raid3d === 'function') raid3d(dt);   // [raid] (its own light and fog)
 }
 // painted over the 3D view: sparks between the burning, the chest's offer, and anyone down
 function zmDrawOver() {
@@ -21085,7 +21150,7 @@ function zmHud() {
   ctx.save(); ctx.translate(L, rb); ctx.scale(rs, rs);
   const glowR = ZM.phase === 'break' ? 0.55 + 0.45 * Math.sin(t * 4) : 1;
   ctx.fillStyle = ctx.strokeStyle = `rgba(178,24,18,${glowR})`; ctx.lineCap = 'round';
-  const r = ZM.round;
+  const r = (typeof RAID !== 'undefined' && RAID.on) ? 0 : ZM.round;   // [raid] (no rounds there)
   if (r > 0 && r <= 5) {
     ctx.lineWidth = 6;
     for (let i = 0; i < Math.min(r, 4); i++) { ctx.beginPath(); ctx.moveTo(8 + i * 18, -6); ctx.lineTo(4 + i * 18, -60); ctx.stroke(); }
@@ -21200,6 +21265,7 @@ function zmHud() {
   if (!FPS.mouse && !phone && !FPS.menu && !ZM.over) { ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = mono(12); ctx.fillStyle = 'rgba(236,228,207,0.6)'; ctx.fillText('Click to aim with the mouse', cx, H * 0.5 + 40); }
   if (typeof zeHud === 'function') zeHud();   // [egg hook] src/zmegg.js
   if (typeof zhHud === 'function') zhHud();   // [egg2 hook] src/zmegg2.js
+  if (typeof raidHud === 'function') raidHud(phone, mono, fell);   // [raid]
 }
 // down: the edges of the screen going red, thumping with your heart, deeper as the time runs out
 function zmHudDownGlow(t) {
@@ -27857,6 +27923,834 @@ function zhHud() {
   }
 }
 
+// ---- src/raid.js ----
+// Maren's End: a raid, a fifth game of its own (its own card on the title screen, its own lobby, its own line on the
+// scoreboard, and the weapon and outfit crates of Wreckers' Night and the Lighthouse), played alone or by up to four together on the Lighthouse's engine (src/zombies.js, and
+// src/zmnet.js for playing together: the host's browser runs it, as a night at the Lighthouse).
+//
+// The Hollow Sea: the sea round the Light has drained away. Where it was is a dry bed of cracked salt and old wrecks, and a long pier
+// running out over it to a hole: the Swallow, where the water went. The raid goes down it, in parts (stages):
+//  I.  The Swallow (RAID_STAGES.descent, here): along the Long Pier, off its end and down the Swallow (a fall of
+//      about thirty seconds), and along the Deep Path at the bottom: dark, and the dark drains you. Every one of you
+//      carries Maren's Lantern, the storm lantern she took out to the Gannet; hold Use at a brazier to light it with
+//      it. Inside a lit brazier's light you mend (and your ammunition is made up); outside it, the dark takes your
+//      health away a little at a time, until you're down. The drowned down here glow, and they come for you out of
+//      the black. At the end of the path a door glows in the rock: it opens once twenty of them have been sent back
+//      inside the ring in front of it. Through it, the next part.
+//  II. and on: their own files (each registers itself in RAID_STAGES and adds its key to RAID_ORDER).
+//
+// How a stage plugs in (RAID_STAGES[key], every hook optional but set):
+//   n          its name ('The Swallow')
+//   map        what src/zombies.js's ZM_MAPS needs: { start: [x, y] (from the island's middle), top (the height you
+//              start at), zones (as ZM_MAPS), nav ([x0, x1, y0, y1], the grid the drowned walk by) }
+//   set(H, K, Z)  lays out its world (H: src/fpsisle.js's laying-out tools; K: src/zombies.js's zmKit; Z: I.zm)
+//   enter()    its state made fresh (RAID.st), on everyone's side, once the world is laid out
+//   tick(dt)   alone or hosting: the drowned, its goals            me(dt)   everyone: your own side of it
+//   pack(o)    hosting: its state into the host's word (o)        apply(o) joined: the host's word of it
+//   q(sid, k, a)  hosting: what a joined player asked of it (they call raidAsk(k, a))
+//   kill(d, how, by)  hosting: one of the drowned sent back (d.x, d.y: where)
+//   hurt(d, dmg, code, by)  how much a hit does (return it)       block(x, y, pad, feet)  more in the way
+//   consider(c) / prompt(o) / use(o)   what's in front of you, as src/zombies.js's zmNearest, zmPrompt, zmUse
+//   hud(phone, mono, fell)  painted on top                       b3(grp) / f3(dt)  its 3D: built, and each frame
+//   players(P)  who the drowned can come after (default: all)     exit()  leaving it
+//   shot(x, y, z, lh, lp, by)  a shot of yours                   mend   true: you mend by yourself, as at the Lighthouse
+//   map.isle / map.shore  its own look (FPS_ISLES, FPI_GEN) and sea line, if not the cave's
+// And for any stage to call: raidNextStage() (hosting or alone: on to the next part; past the last, won), raidWin()
+// (won outright: the last boss down), raidBossDamage(n) (damage you did to a boss, counted on your own side, for the
+// scoreboard), raidSpawnAt(x, y, o) (hosting: one of the drowned, already in, rising out of the ground), raidAsk(k, a).
+// The scoreboard (src/scores.js, game 'raid'): the best time through every part (only when the raid is won), the most
+// damage done to its bosses in one raid, and the drowned sent back in all your raids.
+// The world of each stage is laid out afresh, centred on the island's middle (radius FPSC.R, 88 m): raidNextStage
+// (hosting or alone) lays out the next, and everyone follows the stage number in the host's word. Past the last, the
+// raid is won.
+
+const RAID = { on: false, stage: 0, won: false, st: {}, t: 0, boss: 0, told: false };
+const RAID_STAGES = {};
+const RAID_ORDER = ['descent'];
+const raidStage = () => RAID.on ? RAID_STAGES[RAID_ORDER[RAID.stage]] || null : null;
+const raidCall = (k, ...a) => { const S = raidStage(); return S && typeof S[k] === 'function' ? S[k](...a) : undefined; };
+// joined: ask the host something of the stage (k, and a with it); hosting or alone, it's done straight away
+function raidAsk(k, a) { if (ZM.net === 'client') zmnRequest('raid', [k, a]); else raidCall('q', FPS.me.id, k, a); }
+
+// ---------- the map, as src/zombies.js sees it ----------
+ZM_MAPS.raid = { n: 'Maren’s End', N: 'Maren’s End', isle: 'raid', tower: false, noBox: [], zones: {}, start: [0, -82], top: 0, seed: 0x5a11c, raid: true,
+  blurb: 'A raid in parts, alone or up to four: down the Swallow, where the sea went.',
+  land: n => `The Long Pier, out over the dry bed of the sea${n ? ', ' + n + ' of you' : ''}. At its end, the Swallow.`,
+  shore: () => -999, nav: [-80, 80, -80, 80] };
+FPS_ISLES.raid = { name: 'the Hollow Sea', ground: '#2a2826', ground2: '#1e1d1c', wet: '#161616', path: '#34312c', tint: 0.1, mound: 0, dune: 0,
+  rocks: [0, 3, 6, 1], wrecks: [0], tintRock: null, sky: '60,60,80', skyA: 0.04, fog: ['#050608', 6, 70], mist: '30,30,40', mistA: 0.02,
+  birds: ['bat', 0], tufts: ['#333', 0], pebbles: 0, pools: 0, wrack: 0, indoor: true, nLights: 8 };
+FPI_GEN.raid = {
+  built: true,
+  set(H) {
+    const S = RAID_STAGES[RAID_ORDER[RAID.stage]] || RAID_STAGES[RAID_ORDER[0]];
+    const Z = H.I.zm = { doors: [], windows: [], buys: [], perks: [], spawns: [], lights: [] };
+    S.set(H, zmKit(H, Z), Z);
+  },
+  decor() {},
+};
+// the stage's map into ZM_MAPS.raid (before src/zombies.js lays it out)
+function raidMapFor(i) {
+  const S = RAID_STAGES[RAID_ORDER[i]], D = ZM_MAPS.raid, M = S.map || {};
+  D.zones = M.zones || {}; D.start = (M.start || [0, 0]).slice(); D.top = M.top || 0; D.nav = M.nav || [-80, 80, -80, 80];
+  // (its own look and sea, if it has them: a part out in the open lays itself out from its own FPI_GEN, as FPI_GEN.raid)
+  D.isle = M.isle || 'raid'; D.shore = M.shore || (() => -999);
+  D.seed = 0x5a11c + i * 977;
+}
+
+// ---------- starting, and each frame ----------
+// (zmStart, before it lays out the map) is this the raid?
+function raidBegin(map) {
+  RAID.on = map === 'raid';
+  if (!RAID.on) return;
+  Object.assign(RAID, { stage: 0, won: false, st: {}, t: 0, boss: 0, told: false });
+  raidMapFor(0);
+}
+// (zmStart, once it's all laid out) your kit, and the stage's state
+function raidAfterStart() {
+  if (!RAID.on) return;
+  ZM.phase = 'raid'; ZM.t = 0; ZM.round = RAIDC.ROUND; ZM.open = new Set(['raid']);
+  { const e = document.querySelector('#fpsMenu .eyebrow'); if (e) e.textContent = 'Maren’s End'; $('fpsLeave').textContent = 'Leave the raid'; $('fpsResume').textContent = 'Back to the raid'; }
+  $('zmAgain').textContent = ZM.net ? 'Back to the lobby' : 'Go down again';
+  raidLoadout();
+  RAID.st = {}; raidCall('enter');
+}
+const RAIDC = { ROUND: 4 };
+// what you carry down: a pepperbox and a blunderbuss, both full (and Maren's Lantern, which never leaves your hand)
+function raidLoadout() {
+  const m = FPS.me;
+  ZM.own = ['pepperbox', 'blunderbuss']; ZM.res = { pepperbox: ZM_AMMO.pepperbox, blunderbuss: ZM_AMMO.blunderbuss };
+  for (const id of ZM.own) m.mags[id] = FPSW[id].mag;
+  FPS.weapon = 'pepperbox'; FPS.last = 'blunderbuss'; m.ammo = FPSW.pepperbox.mag; m.reload = 0; FPS.drawT = 0.45;
+  if (typeof rclApply === 'function') rclApply();   // [classes] src/rclass.js: your class's weapons and abilities instead
+}
+// anyone who bled out comes back (beside someone standing), with the raid's kit
+function raidRespawn() { if (!ZM.ghost) return; zmRoundBegins(); raidLoadout(); fpsFeed('You’re back on your feet.'); }
+function raidStop() {
+  if (RAID.on) raidCall('exit');
+  RAID.on = false;
+  if (typeof GL3D !== 'undefined' && GL3D.scene && RAID.fog0) { GL3D.scene.fog = null; RAID.fog0 = null; }
+}
+// alone or hosting, each frame
+function raidHostTick(dt) { RAID.t += dt; raidCall('tick', dt); }
+// everyone, each frame
+function raidMe(dt) {
+  raidCall('me', dt);
+  if (typeof rclTick === 'function') rclTick(dt);   // [classes] src/rclass.js
+  // joined: the host's world has moved on to the next part
+}
+// who the drowned can come after
+function raidPlayers(P) { const r = raidCall('players', P); return r || P; }
+// hosting: a joined player's ask
+function raidRequest(sid, a) { if (Array.isArray(a)) raidCall('q', sid, String(a[0]), a[1]); }
+// hosting: one sent back
+function raidKill(d, how, by) { if (RAID.on) raidCall('kill', d, how, by); }
+function raidHurtK(d, dmg, code, by) { if (!RAID.on) return dmg; const r = raidCall('hurt', d, dmg, code, by); return r == null ? dmg : r; }
+function raidBlock(x, y, pad, feet) { if (!RAID.on) return false; const S = raidStage(); return !!(S && S.block && S.block(x, y, pad, feet)); }
+function raidConsider(c) { if (RAID.on) raidCall('consider', c); }
+function raidPrompt(o) { return RAID.on ? raidCall('prompt', o) || null : null; }
+function raidUse(o) { return RAID.on ? !!raidCall('use', o) : false; }
+// (zmResolveShot) a shot of yours, along (lh, lp) from (x, y, z)
+function raidShot(x, y, z, lh, lp, by) { if (RAID.on) raidCall('shot', x, y, z, lh, lp, by); }
+
+// ---------- the parts, one after another ----------
+// alone or hosting: on to the next part, or (past the last) the raid is won
+function raidNextStage() {
+  if (!RAID.on || ZM.net === 'client' || ZM.over) return;
+  if (RAID.stage + 1 >= RAID_ORDER.length) { raidWin(); return; }
+  raidUseStage(RAID.stage + 1);
+}
+// lay out part i and put everyone at its start (everyone runs this: the host, then each joined player on its word)
+function raidUseStage(i) {
+  raidCall('exit');
+  for (const z of ZM.z) if (z.mdl) zmFreeModel(z);
+  ZM.z = []; FPS.drowned = ZM.z; ZM.drops = [];
+  RAID.stage = i; raidMapFor(i);
+  const MAP = zmUseMap('raid'), t = FPS.g ? FPS.g.t : 0;
+  FPS.g = zmArena(); FPS.g.t = t;
+  const Zd = FPS.g.isle.zm;
+  Object.assign(ZM, { doors: Zd.doors, windows: Zd.windows, buys: Zd.buys, perksAt: Zd.perks, spawns: Zd.spawns, glass: Zd.glass || [] });
+  for (const w of ZM.windows) { w.boards = 0; w.q = []; w.fall = []; }
+  zmNavBuild();
+  const m = FPS.me, slot = Math.max(0, ZM.hum.findIndex(h => h[0] === m.id));
+  m.x = FPSC.CX + ZMD.START[0] + [0, 1.5, -1.5, 0][slot % 4]; m.y = FPSC.CY + ZMD.START[1] + [0, -1.6, -1.6, 1.8][slot % 4];
+  m.jz = m.fl = ZMD.TOP; m.vz = 0; m.protect = 2;
+  if (ZM.ghost) { ZM.ghost = false; m.dead = 0; m.hp = ZMC.HP; raidLoadout(); }
+  RAID.st = {}; raidCall('enter');
+  ZM.banner = { text: RAID_STAGES[RAID_ORDER[i]].n, t: 4, sub: 'Part ' + raidNumeral(i + 1) };
+  fpsFeed(MAP.land(0));
+}
+const raidNumeral = n => ['', 'I', 'II', 'III', 'IV', 'V', 'VI'][n] || String(n);
+function raidWin() {
+  if (RAID.won) return;
+  RAID.won = true;
+  if (typeof wcEarn === 'function') { wcEarn('round'); wcEarn('round'); } if (typeof ocEarn === 'function') { ocEarn('round'); ocEarn('round'); }
+  zmEnd();
+}
+// damage you did to a boss (counted on your own side)
+function raidBossDamage(n) { if (RAID.on && n > 0) RAID.boss += n; }
+// (zmEnd) the scoreboard: the time, if won; the bosses' damage; and this raid's kills added to all the rest
+function raidReport() {
+  if (RAID.told || typeof scoreReport !== 'function' || typeof BOARD === 'undefined' || !BOARD.mine || !BOARD.mine.raid) return;
+  RAID.told = true;
+  scoreReport('raid', RAID.won ? Math.max(1, 100000 - Math.round(RAID.t)) : 0, Math.round(RAID.boss), (BOARD.mine.raid.c | 0) + ZM.kills);
+}
+function raidShowOver() {
+  const S = RAID_STAGES[RAID_ORDER[RAID.stage]], cleared = RAID.won ? RAID_ORDER.length : RAID.stage;
+  if ($('zmOverEye')) $('zmOverEye').textContent = 'Maren’s End';
+  $('zmOverHead').textContent = RAID.won ? 'Through the door' : `The dark took you in ${S ? S.n : 'the deep'}`;
+  $('zmOverStats').textContent = (ZM.net ? `${ZM.hum.length} of you. ` : '') + `${cleared} of ${RAID_ORDER.length} ${RAID_ORDER.length === 1 ? 'part' : 'parts'} cleared, in ${raidClock(RAID.t)}. ${ZM.kills} of the drowned sent back (${ZM.heads} through the head)`
+    + (RAID.boss > 0 ? `, ${Math.round(RAID.boss)} damage to its bosses.` : '.') + (RAID.won && RAID_ORDER.length < 3 ? ' The rest of Maren’s End is still to come.' : '');
+  const best = typeof BOARD !== 'undefined' && BOARD.mine && BOARD.mine.raid;
+  $('zmOverBest').textContent = best && (best.s || best.c) ? (best.s ? `Your best time: ${raidTimeOf(best.s)}. ` : '') + `${best.c | 0} sent back in all your raids.` : '';
+  $('zmOver').hidden = false;
+  try { document.exitPointerLock && document.exitPointerLock(); } catch (e) {}
+  setTimeout(() => $('zmAgain').focus(), 30);
+}
+const raidClock = s => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
+
+// ---------- playing together (src/zmnet.js) ----------
+// the host's word: rd = [stage, won, clock], and whatever the stage adds (rs)
+function raidHostSend(z) {
+  if (!RAID.on) return;
+  z.rd = [RAID.stage, RAID.won ? 1 : 0, Math.round(RAID.t)];
+  const o = {}; raidCall('pack', o); z.rs = o;
+}
+function raidApply(hz) {
+  if (!RAID.on || !Array.isArray(hz.rd)) return;
+  const st = clamp(hz.rd[0] | 0, 0, RAID_ORDER.length - 1);
+  if (st !== RAID.stage) raidUseStage(st);
+  RAID.won = !!hz.rd[1]; RAID.t = +hz.rd[2] || RAID.t;
+  if (hz.rs && typeof hz.rs === 'object') raidCall('apply', hz.rs);
+}
+
+// ---------- in 3D ----------
+// (zm3dBuild) the stage's own meshes, with the rest; (zmScene3D) each frame
+const R3 = { grp: null };
+function raid3dBuild(grp) {
+  R3.grp = null;
+  if (!RAID.on) return;
+  R3.grp = new THREE.Group(); grp.add(R3.grp);
+  // Maren's Lantern, in your left hand (drawn in the world, just in front of you), and its light
+  const L = R3.lan = new THREE.Group(); R3.grp.add(L);
+  const brass = z3Lam('#9a7a34'), iron = z3Lam('#2a2a2c');
+  const base = new THREE.Mesh(new THREE.CylinderGeometry(0.075, 0.085, 0.03, 10), brass); base.position.y = -0.1; L.add(base);
+  const cap = new THREE.Mesh(new THREE.ConeGeometry(0.08, 0.06, 10), brass); cap.position.y = 0.11; L.add(cap);
+  for (let i = 0; i < 4; i++) { const a = i / 4 * Math.PI * 2 + 0.4, b = new THREE.Mesh(new THREE.BoxGeometry(0.01, 0.2, 0.01), iron); b.position.set(Math.cos(a) * 0.07, 0, Math.sin(a) * 0.07); L.add(b); }
+  const glass = new THREE.Mesh(new THREE.CylinderGeometry(0.062, 0.062, 0.18, 12, 1, true), new THREE.MeshBasicMaterial({ color: 0xffe6a8, transparent: true, opacity: 0.55, side: THREE.DoubleSide, depthWrite: false }));
+  L.add(glass);
+  const flame = R3.flame = new THREE.Mesh(new THREE.SphereGeometry(0.03, 8, 6), new THREE.MeshBasicMaterial({ color: 0xfff4d0 })); flame.scale.set(1, 1.8, 1); L.add(flame);
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(0.05, 0.007, 6, 14), brass); ring.position.y = 0.17; L.add(ring);
+  const halo = R3.halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: z3Soft('rgba(255,226,160,0.55)', 'rgba(255,226,160,0)'), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }));
+  halo.scale.setScalar(0.6); L.add(halo);
+  R3.light = new THREE.PointLight(0xffe2a8, 1.2, 13, 1.3); R3.grp.add(R3.light);
+  // the others' lanterns: a glow each
+  R3.theirs = [];
+  R3.glowTex = z3Soft('rgba(255,226,160,0.9)', 'rgba(255,226,160,0)');
+  raidCall('b3', R3.grp);
+}
+function raid3d(dt) {
+  if (!RAID.on || !R3.grp) return;
+  const m = FPS.me, G0 = FPSC.GROUND, t = g.t;
+  // the lantern: down at your left, swinging a little as you walk; not while you're down or out
+  const show = !(m.dead > 0) && !zmIsDown() && !fpsThird() && !zmSpecOn();
+  R3.lan.visible = show;
+  const h = m.h, p = m.p, ez = G0 + FPSC.EYE + (m.jz || 0) - (FPS.eyeLag || 0) - (FPS.downEye || 0);
+  const fx = Math.sin(h), fy = Math.cos(h), sw = reduceMotion ? 0 : Math.sin((FPS.step || 0) * 0.5) * 0.03;
+  // (held in the same place in your view, however you look: forward, left and down from your eye)
+  const cp = Math.cos(p), sp = Math.sin(p), F = [fx * cp, fy * cp, sp], Rt = [fy, -fx, 0], U = [-fx * sp, -fy * sp, cp];
+  const at = (f, r, u) => [m.x + F[0] * f + Rt[0] * r + U[0] * u, m.y + F[1] * f + Rt[1] * r + U[1] * u, ez + F[2] * f + U[2] * u];
+  const [lx, ly, lz] = at(1.0, -0.5 + sw, -0.46 + Math.abs(sw));
+  R3.lan.position.copy(z3v(lx, ly, lz)); R3.lan.rotation.set(0, -h, 0); R3.lan.rotateX(-p * 0.6 + sw * 2);
+  const fl = reduceMotion ? 1 : 0.9 + 0.1 * Math.sin(t * 13) * Math.sin(t * 4.7);
+  R3.flame.scale.set(fl, 1.8 * fl, fl); R3.halo.material.opacity = 0.8 * fl;
+  // its light: from the lantern (or, while you're down, from where it lies)
+  R3.light.position.copy(z3v(m.x - fy * 0.3, m.y + fx * 0.3, ez - 0.2)); R3.light.intensity = (show ? 1.6 : 0.8) * fl; R3.light.distance = 16;
+  // the others' lanterns
+  const list = [...FPS.remote.values()].filter(r => !r.dead && r.x != null);
+  while (R3.theirs.length < list.length) { const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: R3.glowTex, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending })); s.scale.setScalar(1.1); R3.grp.add(s); R3.theirs.push(s); }
+  R3.theirs.forEach((s, i) => { const r = list[i]; s.visible = !!r; if (r) s.position.copy(z3v(r.x + Math.cos(r.h || 0) * -0.35, r.y + Math.sin(r.h || 0) * 0.35, G0 + (r.jz || 0) + 1.0)); });
+  raidCall('f3', dt);
+}
+// glowing drowned: a cold light in their skin, and a haze round them, so they're seen coming in the dark
+function raidPose(z, M) {
+  if (!M || !M.root) return;
+  if (!RAID.on) { if (M.rglow) M.rglow.visible = false; return; }
+  if (!M.rglow) {
+    M.rglow = new THREE.Sprite(new THREE.SpriteMaterial({ map: R3.zTex || (R3.zTex = z3Soft('rgba(120,200,255,0.55)', 'rgba(120,200,255,0)')), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }));
+    M.rglow.scale.set(1.6, 2.4, 1); M.rglow.position.y = 1.0; M.root.add(M.rglow);
+  }
+  const pulse = reduceMotion ? 1 : 0.85 + 0.15 * Math.sin(g.t * 2.3 + (z.seed || 0));
+  M.rglow.visible = !z.dead || z.deadT < 0.8; M.rglow.material.opacity = (z.dead ? Math.max(0, 1 - z.deadT / 0.8) : 1) * pulse;
+  const e = M.skin.emissive, c = M.coat.emissive;
+  e.setRGB(e.r + 0.18 * pulse, e.g + 0.5 * pulse, e.b + 0.72 * pulse);
+  c.setRGB(c.r + 0.03, c.g + 0.1 * pulse, c.b + 0.16 * pulse);
+}
+// (zmZombies) one rising out of the ground: up it comes, then after you
+function raidRise(z, dt) {
+  z.rr -= dt; z.walk = false;
+  z.jz = -1.9 * Math.max(0, z.rr) / (z.rr0 || 1.2);
+  if (z.rr <= 0) { z.rr = 0; z.jz = 0; z.fl = 0; }
+}
+// hosting or alone: one of them, already in, at (x, y), rising out of the ground. o: { kind, hp, rise (seconds) }
+function raidSpawnAt(x, y, o) {
+  o = o || {};
+  const kind = o.kind || 'jog', hp = o.hp || zmHp(ZM.round) * (0.9 + Math.random() * 0.2), zn = ++ZM.zc;
+  const rise = o.rise == null ? 1.2 : o.rise;
+  const z = {
+    drowned: true, zm: true, zn, id: 'z' + zn.toString(36), n: 'a drowned man', x, y, jz: rise ? -1.9 : 0, fl: 0, zpad: 0.27,
+    hp, max: hp, kind, sp: kind === 'run' ? 5.0 + Math.random() * 0.6 : kind === 'jog' ? 3.2 + Math.random() * 0.4 : 1.55 + Math.random() * 0.35,
+    st: 'in', win: null, t: 0, ph: Math.random() * 6, hitT: 0, atk: 0.6, swing: -1, stuck: 0, h: Math.random() * 6.28, seed: (Math.random() * 1e6) | 0, rise: 1, hist: [],
+    rr: rise, rr0: rise, lx: x, ly: y, raid: true,
+  };
+  ZM.z.push(z); FPS.drowned = ZM.z;
+  return z;
+}
+// (zmHud) the round's tally isn't drawn in the raid; this is
+function raidHud(phone, mono, fell) {
+  if (!RAID.on) return;
+  const S = raidStage(); if (!S) return;
+  const top = phone ? Math.max(10, FPS.safeTop || 0) : 14;
+  ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+  const L = Math.max(14, FPS.safeLeft || 0);
+  ctx.font = fell(phone ? 15 : 19); ctx.fillStyle = 'rgba(236,228,207,0.85)';
+  ctx.fillText(`Maren’s End · ${raidNumeral(RAID.stage + 1)} · ${S.n}`, L, top);
+  ctx.font = mono(phone ? 10 : 12); ctx.fillStyle = 'rgba(236,228,207,0.55)';
+  ctx.fillText(raidClock(RAID.t), L, top + (phone ? 20 : 26));
+  raidCall('hud', phone, mono, fell);
+}
+
+// ---------- its card on the title screen ----------
+(() => {
+  if (!$('rdTitle')) return;
+  $('rdPlay').addEventListener('click', () => { if (typeof ZN !== 'undefined' && ZN.code) return; zmStart({ map: 'raid' }); });
+  $('rdSettings').addEventListener('click', () => $('titleSettings').click());
+  $('rdWcrate').addEventListener('click', () => $('wcrateBtn').click());
+  $('rdOcrate').addEventListener('click', () => $('ocrateBtn').click());
+  $('rdBanner').addEventListener('click', () => { $('rdTitle').scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' }); setTimeout(() => $('rdPlay').focus({ preventScroll: true }), 400); });
+  // your bests, on the card
+  setInterval(() => {
+    const b = typeof BOARD !== 'undefined' && BOARD.mine && BOARD.mine.raid, el = $('rdRecord'); if (!el || !b) return;
+    const s = (b.s ? `Your best time: ${raidTimeOf(b.s)}. ` : '') + (b.b ? `Most boss damage: ${b.b}. ` : '') + (b.c ? `${b.c} sent back in all your raids.` : '');
+    if (el.textContent !== s) el.textContent = s;
+  }, 1500);
+})();
+
+// =====================================================================================================================
+// Part I: the Swallow (RAID_STAGES.descent)
+// =====================================================================================================================
+// Heights above the cave's floor: the dry bed of the sea at SEA, the pier's deck at DECK over it, the cave's roof at
+// CEIL. The bed is one thick slab (CEIL up to SEA) with the Swallow cut through it (HOLE: x0, x1, y0, y1 from the
+// island's middle); below it the Deep Path winds through the rock, a corridor between walls up to the roof, from
+// under the Swallow to the door. Falling in the Swallow you come down no quicker than FALL (so it takes about half a
+// minute). Braziers: LIT_R, how far a lit one's light reaches; in it you mend MEND a second and outside it (below) the
+// dark takes DRAIN a second. NEED of them sent back inside RING of the arena's middle open the door.
+const RSW = { SEA: 250, DECK: 253, CEIL: 30, HOLE: [-11, 11, 13, 35], FALL: 8.4, LIT_R: 7.5, MEND: 0.9, DRAIN: 0.1, NEED: 20, RING: 13, USE: 1.1, GAP: 3.4 };
+// The path: [x, y, half its width, what's there] from the island's middle, from the cap behind where you land to the
+// cap with the door in it; b, a brazier; a, the arena before the door (two more braziers at its sides). Between each
+// two, a narrower stretch a little off the straight line (laid in rswGeo).
+const RSW_KEYS = [[0, 9, 12, 'cap'], [0, 26, 12, 'land'], [5, 46, 7, 'b'], [26, 60, 7, 'b'], [50, 52, 7, 'b'], [64, 30, 7, 'b'], [66, 4, 7, 'b'], [56, -22, 7, 'b'],
+  [36, -40, 7, 'b'], [10, -52, 7, 'b'], [-18, -50, 7, 'b'], [-42, -36, 13, 'a'], [-56, -18, 13, 'end']];
+// everything about the path's shape, worked out once (the same for everyone)
+const RSG = (function rswGeo() {
+  const rnd = seeded(0x5a11d), N = [];
+  RSW_KEYS.forEach((k, i) => {
+    if (i > 1 && i < RSW_KEYS.length) {
+      const a = RSW_KEYS[i - 1], dx = k[0] - a[0], dy = k[1] - a[1], L = Math.hypot(dx, dy), j = (rnd() - 0.5) * 7;
+      N.push({ x: (a[0] + k[0]) / 2 - dy / L * j, y: (a[1] + k[1]) / 2 + dx / L * j, w: k[3] === 'a' || k[3] === 'end' ? 7 : 4.6 });
+    }
+    N.push({ x: k[0], y: k[1], w: k[2], t: k[3] });
+  });
+  // the walls' two sides: each node's point pushed out along the mitred normal
+  const n = N.length;
+  for (let i = 0; i < n; i++) {
+    const p = N[i], a = N[Math.max(0, i - 1)], b = N[Math.min(n - 1, i + 1)];
+    const d1 = i > 0 ? [p.x - a.x, p.y - a.y] : [b.x - p.x, b.y - p.y], d2 = i < n - 1 ? [b.x - p.x, b.y - p.y] : d1;
+    const l1 = Math.hypot(...d1), l2 = Math.hypot(...d2), n1 = [-d1[1] / l1, d1[0] / l1], n2 = [-d2[1] / l2, d2[0] / l2];
+    let mx = n1[0] + n2[0], my = n1[1] + n2[1]; const ml = Math.hypot(mx, my) || 1; mx /= ml; my /= ml;
+    const k = 1 / Math.max(0.5, mx * n1[0] + my * n1[1]);
+    p.L = [p.x + mx * p.w * k, p.y + my * p.w * k]; p.R = [p.x - mx * p.w * k, p.y - my * p.w * k]; p.dir = [d2[0] / l2, d2[1] / l2];
+  }
+  // how far along the path each node is (from the cap behind the landing)
+  let S = 0; N.forEach((p, i) => { if (i) S += Math.hypot(p.x - N[i - 1].x, p.y - N[i - 1].y); p.s = S; });
+  // the braziers: one on each b node, two at the arena's sides
+  const B = [];
+  N.forEach(p => { if (p.t === 'b') B.push({ x: p.x, y: p.y }); });
+  const A = N.find(p => p.t === 'a'), E = N[n - 1];
+  for (const sd of [1, -1]) { const nx = -A.dir[1], ny = A.dir[0]; B.push({ x: A.x + nx * sd * 10.5, y: A.y + ny * sd * 10.5, arena: true }); }
+  // the door: in the middle of the end cap, facing back down the path (f: its front, c: along it)
+  const f = [-E.dir[0], -E.dir[1]], c = [-f[1], f[0]];
+  const D = { x: E.x, y: E.y, f, c };
+  return { N, S, B, A: { x: A.x, y: A.y }, D, land: N.find(p => p.t === 'land') };
+})();
+// along the path: how far along it a place is (its nearest point), and the place that far along
+function rswAlong(x, y) {
+  const N = RSG.N; let best = 1e9, s = 0;
+  for (let i = 1; i < N.length; i++) {
+    const a = N[i - 1], b = N[i], dx = b.x - a.x, dy = b.y - a.y, L2 = dx * dx + dy * dy, t = clamp(((x - a.x) * dx + (y - a.y) * dy) / L2, 0, 1);
+    const d = Math.hypot(a.x + dx * t - x, a.y + dy * t - y); if (d < best) { best = d; s = a.s + Math.sqrt(L2) * t; }
+  }
+  return s;
+}
+function rswAt(s) {
+  const N = RSG.N;
+  for (let i = 1; i < N.length; i++) if (s <= N[i].s || i === N.length - 1) {
+    const a = N[i - 1], b = N[i], t = clamp((s - a.s) / (b.s - a.s), 0, 1);
+    return { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t, w: a.w + (b.w - a.w) * t, dx: (b.x - a.x) / (b.s - a.s), dy: (b.y - a.y) / (b.s - a.s) };
+  }
+  return { x: N[0].x, y: N[0].y, w: N[0].w, dx: 0, dy: 1 };
+}
+const rswW = (x, y) => [FPSC.CX + x, FPSC.CY + y];
+const rswLocal = o => [o.x - FPSC.CX, o.y - FPSC.CY];
+
+// ---------- its props (src/fpsisle.js's kinds) ----------
+// a stretch of the Deep Path's wall: len along it, th thick, up to the roof; side: which way the path is (+1: +v)
+FPI_K.rdwall = {
+  col: '#3a393c', noShadow: true,
+  sol(p) { return [fpiBox(p, 0, 0, p.len / 2, p.th / 2, RSW.CEIL)]; },
+  b3(p, A) {
+    const R = seeded(p.sd), RK = ['#57535a', '#4a484e', '#5e5853', '#44464c'];
+    A.box(RK[0], 0, 0, -0.2, p.len, p.th, RSW.CEIL + 0.4);
+    const face = p.side * p.th / 2;
+    // the rock: lumps and shelves standing out of it, more of them low down
+    for (let i = 0, n = Math.round(p.len / 1.6); i < n; i++) {
+      const u = -p.len / 2 + R() * p.len, h0 = Math.pow(R(), 1.8) * 14, w = 0.9 + R() * 2.2, d = 0.3 + R() * 0.7, hh = 0.6 + R() * 2.8;
+      A.box(RK[(R() * 4) | 0], u, face + p.side * (d / 2 - 0.15), h0, w, d, hh, (R() - 0.5) * 0.5, (R() - 0.5) * 0.3, (R() - 0.5) * 0.3);
+    }
+    // what glows on it: pale lichen along its foot, in clumps, and here and there a vein higher up
+    for (let i = 0, n = Math.round(p.len / 1.3); i < n; i++) {
+      const u = -p.len / 2 + R() * p.len, k = R();
+      const c = k < 0.6 ? '#1e6e62' : k < 0.85 ? '#24607a' : '#3a7a52';
+      A.glow(c, u, face + p.side * 0.12, 0.1 + R() * 0.9, 0.1 + R() * 0.16);
+      if (R() < 0.35) A.glow(c, u + 0.2, face + p.side * 0.1, 0.12 + R() * 0.3, 0.08 + R() * 0.1);
+      if (R() < 0.12) for (let j = 0; j < 5; j++) A.glow('#2a5a86', u + j * 0.18, face + p.side * 0.1, 3 + R() * 6 + j * 0.25, 0.07);
+    }
+  },
+};
+// a column of rock at a corner of the path's walls, so no gap is left where two stretches meet
+FPI_K.rdpillar = {
+  col: '#3a393c', noShadow: true,
+  sol(p) { return [fpiCirc(p, 0, 0, p.r, RSW.CEIL)]; },
+  b3(p, A) { A.cyl('#3a383b', 0, 0, -0.2, p.r, RSW.CEIL + 0.4, 0, 0, 0, 'cyl8'); },
+};
+// the dry bed of the sea, a slab from the cave's roof up to the bed: w by d. Drawn as its roof underneath and the bed
+// on top, in patches (the sides of the Swallow are rdshaft's)
+FPI_K.rdslab = {
+  col: '#6e675c', noShadow: true,
+  sol(p) { return [fpiBox(p, 0, 0, p.w / 2, p.d / 2, RSW.SEA, { z0: RSW.CEIL, fl: true })]; },
+  b3(p, A) {
+    A.box('#1a1918', 0, 0, RSW.CEIL, p.w, p.d, 1.5);
+    const R = seeded(p.sd), T = 9, nu = Math.max(1, Math.round(p.w / T)), nv = Math.max(1, Math.round(p.d / T)), su = p.w / nu, sv = p.d / nv;
+    const BED = ['#9a9282', '#a49c8a', '#8e8676', '#a8a294', '#968c78'];
+    for (let i = 0; i < nu; i++) for (let j = 0; j < nv; j++) A.box(BED[(R() * BED.length) | 0], -p.w / 2 + (i + 0.5) * su, -p.d / 2 + (j + 0.5) * sv, RSW.SEA - 2, su, sv, 2);
+  },
+};
+// the Swallow's sides: the slab's faces round the hole, in blocks a few metres across, some standing out, with glowing
+// veins and shelves to see them go by as you fall
+FPI_K.rdshaft = {
+  noShadow: true,
+  b3(p, A) {
+    const [x0, x1, y0, y1] = RSW.HOLE, R = seeded(p.sd), RK = ['#57514a', '#4c4741', '#625b52', '#45413c'];
+    const sides = [[x0, y0, x1, y0, 1], [x1, y0, x1, y1, 1], [x1, y1, x0, y1, 1], [x0, y1, x0, y0, 1]];
+    for (const [ax, ay, bx, by] of sides) {
+      const L = Math.hypot(bx - ax, by - ay), ux = (bx - ax) / L, uy = (by - ay) / L, ang = Math.atan2(uy, ux);
+      // (out of the hole, away from its middle: the wall's back)
+      const mx = (ax + bx) / 2, my = (ay + by) / 2, cx = (x0 + x1) / 2, cy = (y0 + y1) / 2, ox = mx - cx, oy = my - cy, ol = Math.hypot(ox, oy), nx = ox / ol, ny = oy / ol;
+      const cols = Math.round(L / 4.4), cw = L / cols;
+      for (let z = RSW.CEIL; z < RSW.SEA; z += 6) for (let c = 0; c < cols; c++) {
+        const u = (c + 0.5) * cw, inset = R() * 0.45, px = ax + ux * u + nx * (0.6 - inset), py = ay + uy * u + ny * (0.6 - inset);
+        A.at(FPSC.CX + px, FPSC.CY + py, FPSC.GROUND, ang);
+        A.box(RK[(R() * 4) | 0], 0, 0, z, cw + 0.3, 1.2, Math.min(6.2, RSW.SEA - z));
+        if (R() < 0.18) A.box(RK[(R() * 4) | 0], (R() - 0.5) * cw * 0.6, -(0.6 + 0.25), z + R() * 4, 1 + R() * 2, 0.6, 0.35);
+        if (R() < 0.55) { const g = R() < 0.5 ? '#2a6a8a' : '#1e7266'; for (let j = 0, m = 3 + ((R() * 6) | 0); j < m; j++) A.glow(g, (R() - 0.5) * cw, -0.62, z + R() * 6, 0.1 + R() * 0.16); }
+      }
+    }
+    // round the rim, up on the bed: broken slabs tipped in towards the hole
+    for (let i = 0; i < 40; i++) {
+      const a = R() * Math.PI * 2, rr = 12 + R() * 5, px = (x0 + x1) / 2 + Math.cos(a) * rr * 1.05, py = (y0 + y1) / 2 + Math.sin(a) * rr;
+      if (px > x0 - 0.5 && px < x1 + 0.5 && py > y0 - 0.5 && py < y1 + 0.5) continue;
+      if (Math.abs(px) < 3 && py < y0) continue;   // (not on the pier)
+      A.at(FPSC.CX + px, FPSC.CY + py, FPSC.GROUND, R() * 6.28);
+      A.box(RK[(R() * 4) | 0], 0, 0, RSW.SEA - 0.4, 1 + R() * 2.5, 0.8 + R() * 1.6, 0.4 + R() * 0.8, 0, (R() - 0.5) * 0.4, (R() - 0.5) * 0.4);
+    }
+  },
+};
+// the Long Pier: its deck (DECK high, from y0 to y1, w wide), the rails along it, its piles down to the bed, lamps on
+// posts; and the old quay it starts from, against the foot of the old shore's cliff
+FPI_K.rddock = {
+  col: '#5a4430', noShadow: true,
+  sol(p) {
+    const D = RSW.DECK, L = (p.y1 - p.y0), mid = (p.y0 + p.y1) / 2;
+    return [
+      fpiBox(p, 0, mid, p.w / 2, L / 2, D, { z0: D - 0.35, fl: true }),
+      fpiBox(p, -p.w / 2 - 0.08, mid + 1, 0.08, L / 2 - 1, D + 1.05, { z0: D }), fpiBox(p, p.w / 2 + 0.08, mid + 1, 0.08, L / 2 - 1, D + 1.05, { z0: D }),
+      fpiBox(p, 0, p.y0 - 4, 7, 4, D, { z0: RSW.SEA - 0.2, fl: true }),
+    ];
+  },
+  b3(p, A) {
+    const D = RSW.DECK, R = seeded(p.sd), PL = ['#5a4430', '#634b35', '#4e3b2a', '#6a5038'];
+    for (let y = p.y0; y < p.y1; y += 0.34) A.box(PL[(R() * 4) | 0], (R() - 0.5) * 0.06, y + 0.17, D - 0.14, p.w + 0.2, 0.31, 0.14);
+    for (const sx of [-1, 1]) {
+      A.box('#3c2e22', sx * (p.w / 2 - 0.15), (p.y0 + p.y1) / 2, D - 0.4, 0.25, (p.y1 - p.y0), 0.28);
+      A.box('#5c4632', sx * (p.w / 2 + 0.08), (p.y0 + p.y1) / 2 + 1, D + 0.95, 0.12, (p.y1 - p.y0) - 2, 0.1);
+      for (let y = p.y0 + 1; y < p.y1 - 1; y += 2.2) A.box('#4e3c2a', sx * (p.w / 2 + 0.08), y, D, 0.12, 0.12, 1.0);
+      for (let y = p.y0 + 1; y < p.y1; y += 4) { A.cyl('#3a2e24', sx * (p.w / 2 - 0.3), y, RSW.SEA - 0.6, 0.22, D - RSW.SEA + 0.3); A.box('#9a9488', sx * (p.w / 2 - 0.3), y, RSW.SEA + 0.4, 0.5, 0.5, 0.25); }
+    }
+    // braces under the deck between the piles
+    for (let y = p.y0 + 1; y < p.y1 - 4; y += 4) A.box('#3a2e24', 0, y + 2, RSW.SEA + 1.4, p.w - 0.4, 0.15, 0.2, 0, 0, 0.5);
+    // the lamp posts, every so far (their lights are laid with the pier: H.light)
+    for (const [ly, sx] of p.lamps) {
+      A.box('#2a2622', sx * (p.w / 2 + 0.1), ly, D, 0.14, 0.14, 2.6);
+      A.box('#2a2622', sx * (p.w / 2 - 0.25), ly, D + 2.5, 0.7, 0.08, 0.08);
+      A.box('#1c1a18', sx * (p.w / 2 - 0.55), ly, D + 2.0, 0.22, 0.22, 0.34);
+      A.glow('#ffd88a', sx * (p.w / 2 - 0.55), ly, D + 2.17, 0.16);
+    }
+    // the quay: a stone landing, and the old shore rising behind it
+    const qy = p.y0 - 4;
+    for (let i = -6; i <= 6; i += 1.5) for (let j = -3.5; j <= 3.5; j += 1.4) A.box(['#6c6a62', '#625f58', '#74716a'][(R() * 3) | 0], i, qy + j, D - 0.3, 1.45, 1.35, 0.32);
+    A.box('#55524a', 0, qy, RSW.SEA - 0.2, 14.2, 8.2, D - RSW.SEA - 0.2);
+    for (let i = 0; i < 26; i++) { const u = -60 + R() * 120, v = qy - 6 - R() * 26; A.box(['#4a463e', '#3e3b35', '#55504a'][(R() * 3) | 0], u, v, RSW.SEA - 1, 8 + R() * 18, 6 + R() * 10, D - RSW.SEA + 6 + R() * 40, R() * 0.6); }
+  },
+};
+// what lies about on the bed: the Long Pier's view. Hulks keeled over in the salt, boulders, cracks, salt pans; and
+// beyond the island's edge the bed going on to the haze, and far off the Light on its pillar of rock, still lit
+FPI_K.rdbed = {
+  noShadow: true,
+  b3(p, A) {
+    const R = seeded(p.sd), S = RSW.SEA;
+    const at = (x, y, a) => A.at(FPSC.CX + x, FPSC.CY + y, FPSC.GROUND, a || 0);
+    // salt pans and cracks
+    for (let i = 0; i < 70; i++) {
+      const x = (R() - 0.5) * 170, y = (R() - 0.5) * 170; if (Math.hypot(x, y - 24) < 17 || Math.abs(x) < 4) continue;
+      at(x, y, R() * 3.14);
+      if (R() < 0.5) A.box('#c8c2b2', 0, 0, S, 3 + R() * 8, 2 + R() * 6, 0.06);
+      else for (let j = 0, cx = 0, cy = 0, a = R() * 6.28; j < 5; j++) { const l = 2 + R() * 4; A.box('#4a463e', cx + Math.cos(a) * l / 2, cy + Math.sin(a) * l / 2, S, l, 0.12, 0.05, -a); cx += Math.cos(a) * l; cy += Math.sin(a) * l; a += (R() - 0.5) * 1.4; }
+    }
+    // boulders
+    for (let i = 0; i < 40; i++) { const x = (R() - 0.5) * 170, y = (R() - 0.5) * 170; if (Math.hypot(x, y - 24) < 18 || Math.abs(x) < 6) continue; at(x, y, R() * 6.28); A.box(['#5a554c', '#6a6458', '#4e4a42'][(R() * 3) | 0], 0, 0, S - 0.3, 1 + R() * 3, 1 + R() * 2.5, 0.6 + R() * 2.2, 0, (R() - 0.5) * 0.3, (R() - 0.5) * 0.3); }
+    // hulks: keel, ribs, a few strakes left, keeled over
+    for (const [x, y, a, L] of [[-34, -40, 0.7, 18], [42, -14, -0.4, 22], [-46, 52, 2.2, 15], [30, 66, 1.4, 12]]) {
+      at(x, y, a);
+      const lean = 0.5;
+      A.box('#3a2e24', 0, 0, S - 0.2, L, 0.5, 0.5);
+      for (let u = -L / 2 + 1; u < L / 2 - 1; u += 1.3) { const k = 1 - Math.pow(Math.abs(u) / (L / 2), 2) * 0.6; A.box('#463628', u, 0.9 * k, S, 0.25, 0.25, 3.2 * k, 0, lean, 0); A.box('#463628', u, -0.9 * k, S, 0.25, 0.25, 2.6 * k, 0, -lean * 0.6, 0); }
+      for (let j = 0; j < 4; j++) A.box('#53402e', (R() - 0.5) * 2, 1.2 + j * 0.5, S + 0.3 + j * 0.6, L * (0.4 + R() * 0.4), 0.12, 0.35, 0, lean, 0);
+    }
+    // beyond the edge: the bed on and on, in great sheets, to the haze
+    for (let i = -6; i <= 6; i++) for (let j = -6; j <= 6; j++) {
+      const x = i * 110, y = j * 110; if (Math.abs(x) < 100 && Math.abs(y) < 100) continue;
+      at(x, y, 0); A.box(['#8e8676', '#968e7e', '#888070'][(i * 7 + j * 3 + 21) % 3], 0, 0, S - 2 - R() * 0.4, 112, 112, 2);
+    }
+    // the old shore, south, behind the quay: cliffs along the whole way
+    at(0, -150, 0); A.box('#3e3b35', 0, 0, 0, 1400, 80, S + 45);
+    // the Light, far off to the north-west, on its skerry: a pillar of rock now, standing out of the bed
+    at(-260, 420, 0);
+    A.box('#3a3833', 0, 0, S - 2, 34, 30, 32); A.box('#44413a', 4, -3, S + 28, 22, 20, 12);
+    A.cyl('#d8d4c8', 0, 0, S + 40, 3.2, 26); A.cyl('#a8382c', 0, 0, S + 50, 3.25, 3); A.cyl('#1c1c1c', 0, 0, S + 66, 2.6, 3);
+    A.glow('#ffe8b0', 0, 0, S + 67.5, 3.4);
+  },
+};
+// a brazier: a stone drum, an iron bowl on it (its fire and its light are drawn in 3D: rsw3dBuild)
+FPI_K.rdbrazier = {
+  col: '#4a4640',
+  sol(p) { return [fpiCirc(p, 0, 0, 0.55, 1.1)]; },
+  b3(p, A) {
+    A.cyl('#4a4640', 0, 0, -0.1, 0.55, 0.75); A.cyl('#3e3a35', 0, 0, 0.62, 0.62, 0.12);
+    A.cyl('#2a2826', 0, 0, 0.74, 0.5, 0.12); A.cyl('#262422', 0, 0, 0.84, 0.7, 0.32);
+    for (let i = 0; i < 4; i++) { const a = i / 4 * 6.28; A.box('#22201e', Math.cos(a) * 0.68, Math.sin(a) * 0.68, 0.84, 0.08, 0.08, 0.42); }
+  },
+};
+// the door's frame: two pillars and a lintel in the end wall, cut round with old carving
+FPI_K.rddoorway = {
+  noShadow: true,
+  sol(p) { const G = RSW.GAP; return [fpiBox(p, -G / 2 - 0.6, 0, 0.6, 1.1, RSW.CEIL), fpiBox(p, G / 2 + 0.6, 0, 0.6, 1.1, RSW.CEIL)]; },
+  b3(p, A) {
+    const G = RSW.GAP;
+    for (const sx of [-1, 1]) { A.box('#5a564e', sx * (G / 2 + 0.6), 0, -0.1, 1.2, 2.2, 5.0); A.box('#4a463e', sx * (G / 2 + 0.6), 0, 5.0, 1.5, 2.4, 0.4); }
+    A.box('#5a564e', 0, 0, 4.3, G + 2.6, 2.2, 1.2);
+    for (let i = 0; i < 9; i++) A.glow('#7ac8ff', -G / 2 - 1 + i * (G + 2) / 8, -1.12, 4.9, 0.1);
+    for (let i = 0; i < 6; i++) for (const sx of [-1, 1]) A.glow('#7ac8ff', sx * (G / 2 + 0.6), -1.12, 0.6 + i * 0.7, 0.09);
+  },
+};
+
+// ---------- laying it out ----------
+function rswSet(H, K) {
+  const { put, light } = K, [x0, x1, y0, y1] = RSW.HOLE;
+  // the bed of the sea: four slabs round the Swallow
+  const E = 92;
+  put('rdslab', 0, (-E + y0) / 2, 0, { w: 2 * E, d: y0 + E });
+  put('rdslab', 0, (y1 + E) / 2, 0, { w: 2 * E, d: E - y1 });
+  put('rdslab', (-E + x0) / 2, (y0 + y1) / 2, 0, { w: x0 + E, d: y1 - y0 });
+  put('rdslab', (x1 + E) / 2, (y0 + y1) / 2, 0, { w: E - x1, d: y1 - y0 });
+  put('rdshaft', 0, 0, 0, {});
+  put('rdbed', 0, 0, 0, {});
+  // the Long Pier: from the quay to the Swallow's edge; lamps every so far on alternate sides, and their lights
+  const lamps = []; for (let y = -78, k = 0; y < y0 - 2; y += 13, k++) lamps.push([y, k % 2 ? 1 : -1]);
+  put('rddock', 0, 0, 0, { y0: -84, y1: y0, w: 4, lamps });
+  for (const [ly, sx] of lamps) light(sx * 1.45, ly, RSW.DECK + 2.1, '#ffd08a', 9, 'lantern');
+  // the Deep Path's walls: each side's stretches between the nodes' pushed-out points, a column at each corner
+  const N = RSG.N, TH = 3;
+  const run = (a, b, side) => {
+    const dx = b[0] - a[0], dy = b[1] - a[1], L = Math.hypot(dx, dy), ux = dx / L, uy = dy / L, nx = -uy, ny = ux;
+    // (the wall's middle half its thickness out beyond the path's side: side +1, the path's left)
+    put('rdwall', (a[0] + b[0]) / 2 + side * nx * TH / 2, (a[1] + b[1]) / 2 + side * ny * TH / 2, Math.atan2(uy, ux), { len: L + 1.2, th: TH, side: -side });
+  };
+  for (let i = 1; i < N.length; i++) { run(N[i - 1].L, N[i].L, 1); run(N[i - 1].R, N[i].R, -1); }
+  for (const p of N) { put('rdpillar', p.L[0], p.L[1], 0, { r: 1.2 }); put('rdpillar', p.R[0], p.R[1], 0, { r: 1.2 }); }
+  // the caps: behind where you land, and the end wall with the doorway in it
+  const cap = (p, back, gap) => {
+    const ax = p.L[0], ay = p.L[1], bx = p.R[0], by = p.R[1], L = Math.hypot(bx - ax, by - ay), ux = (bx - ax) / L, uy = (by - ay) / L, ang = Math.atan2(uy, ux);
+    const ox = back[0] * TH / 2, oy = back[1] * TH / 2;
+    if (!gap) { put('rdwall', (ax + bx) / 2 + ox, (ay + by) / 2 + oy, ang, { len: L + 2, th: TH, side: Math.sign(-back[0] * -uy + -back[1] * ux) || 1 }); return; }
+    const half = (L - gap) / 2 + 1;
+    for (const [sx, sy] of [[ax, ay], [bx, by]]) {
+      const mx = sx + (sx === ax ? ux : -ux) * (half / 2 - 1), my = sy + (sx === ax ? uy : -uy) * (half / 2 - 1);
+      put('rdwall', mx + ox, my + oy, ang, { len: half, th: TH, side: Math.sign(-back[0] * -uy + -back[1] * ux) || 1 });
+    }
+  };
+  cap(N[0], [-N[0].dir[0], -N[0].dir[1]]);
+  const En = N[N.length - 1];
+  cap(En, En.dir, RSW.GAP + 2.4);
+  const D = RSG.D;
+  put('rddoorway', D.x - D.f[0] * 0.2, D.y - D.f[1] * 0.2, Math.atan2(D.c[1], D.c[0]) + Math.PI, {});
+  light(D.x + D.f[0] * 1.5, D.y + D.f[1] * 1.5, 2.6, '#9ad4ff', 10, 'wisp');
+  // the braziers (dark: they're lit in play, rswLight)
+  for (const b of RSG.B) put('rdbrazier', b.x, b.y, 0, {});
+}
+// the map, for src/zombies.js
+const RSW_MAP = {
+  start: [0, -84], top: RSW.DECK, nav: [-74, 78, -64, 72],
+  zones: {
+    quay: { n: 'the Old Quay', r: [-8, 8, -92, -80], zr: [RSW.SEA + 1, 999], sky: true },
+    pier: { n: 'the Long Pier', r: [-3, 3, -80, RSW.HOLE[2]], zr: [RSW.SEA + 1, 999], sky: true },
+    bed: { n: 'the Dry Bed', r: [-95, 95, -95, 95], zr: [RSW.SEA - 1, 999], sky: true },
+    swallow: { n: 'the Swallow', r: [RSW.HOLE[0] - 1, RSW.HOLE[1] + 1, RSW.HOLE[2] - 1, RSW.HOLE[3] + 1], zr: [RSW.CEIL + 2, RSW.SEA - 1] },
+    door: { n: 'the Door', r: [RSG.A.x - 15, RSG.A.x + 15, RSG.A.y - 15, RSG.A.y + 15], zr: [-5, RSW.CEIL] },
+    deep: { n: 'the Deep Path', r: [-95, 95, -95, 95], zr: [-5, RSW.CEIL] },
+  },
+};
+
+// ---------- in play ----------
+const rswBelow = jz => (jz || 0) < RSW.CEIL - 1;
+const rswNick = sid => sid === FPS.me.id ? 'You' : ((ZM.hum || []).find(h => h[0] === sid) || [])[1] || 'Someone';
+// a brazier lit (everyone, as soon as they know): its light on the island, a roar, and anyone out comes back
+function rswLight(i, by) {
+  const S = RAID.st; if (S.lit & (1 << i)) return;
+  S.lit |= 1 << i; S.pend = 0;
+  const b = RSG.B[i], [x, y] = rswW(b.x, b.y), I = FPS.g.isle;
+  I.lights.push({ x, y, z: FPSC.GROUND + 1.6, c: '#ff9a48', r: RSW.LIT_R * 1.6, k: 'fire', ph: i * 1.7, rsw: i });
+  S.flare = S.flare || {}; S.flare[i] = 1;
+  const d = Math.hypot(x - FPS.me.x, y - FPS.me.y);
+  try { if (!soundOff()) { const v = Math.max(0.15, 1 - d / 45); noise('lowpass', 420, 1, 0.01, 0.55 * v, 0.9, { to: 140 }); noise('bandpass', 1400, 0.8, 0.05, 0.12 * v, 1.4); tone(196, 'triangle', 0.02, 0.1 * v, 1.6, { to: 220 }); } } catch (e) {}
+  const n = rswLitN();
+  if (by) fpsFeed(`${rswNick(by)} lit a brazier: ${n} of ${RSG.B.length}.`);
+  raidRespawn();
+}
+const rswLitN = () => { let n = 0, v = RAID.st.lit | 0; while (v) { n += v & 1; v >>= 1; } return n; };
+// in the light of a lit brazier?
+function rswInLight(x, y, jz) {
+  if (!rswBelow(jz)) return false;
+  const lit = RAID.st.lit | 0;
+  for (let i = 0; i < RSG.B.length; i++) if (lit & (1 << i)) { const [bx, by] = rswW(RSG.B[i].x, RSG.B[i].y); if (Math.hypot(bx - x, by - y) < RSW.LIT_R) return true; }
+  return false;
+}
+// the door's own frame: across it (a) and out of it into the arena (b), from its middle
+function rswDoorAt(x, y) { const D = RSG.D, [dx, dy] = rswW(D.x, D.y), px = x - dx, py = y - dy; return [px * D.c[0] + py * D.c[1], px * D.f[0] + py * D.f[1]]; }
+function rswOpenDoor() {
+  const S = RAID.st; if (S.door >= 2) return;
+  S.door = 2; ZM.banner = { text: 'The door is open', t: 3.5, small: true, col: '#bfe4ff' };
+  fpsFeed('The door opens. Go through.');
+  try { if (!soundOff()) { noise('lowpass', 160, 1, 0.3, 0.6, 2.2, { to: 60 }); tone(130, 'sine', 0.4, 0.2, 2.6, { to: 196 }); tone(392, 'triangle', 0.6, 0.06, 2.4); } } catch (e) {}
+}
+function rswWake() {
+  const S = RAID.st; if (S.door) return;
+  S.door = 1; ZM.banner = { text: 'Twenty, before the door', t: 4, sub: 'Send them back inside the ring', col: '#bfe4ff' };
+  fpsFeed(`The door wakes. Send back ${RSW.NEED} of them inside the ring in front of it.`);
+  try { if (!soundOff()) { tone(82, 'sine', 0.5, 0.25, 3, { to: 110 }); noise('bandpass', 600, 2, 0.4, 0.08, 2.5); } } catch (e) {}
+}
+// hosting or alone: bring them up out of the dark
+function rswSpawn(P) {
+  const S = RAID.st, n = Math.max(1, ZM.hum.length), lit = rswLitN();
+  const alive = ZM.z.filter(z => !z.dead).length, cap = S.door === 1 ? 9 + 3 * n : 4 + 2 * n + Math.floor(lit / 3);
+  if (alive >= cap) return;
+  const ss = P.map(p => rswAlong(p.x - FPSC.CX, p.y - FPSC.CY)), front = Math.max(...ss), back = Math.min(...ss);
+  for (let tries = 0; tries < 14; tries++) {
+    let x, y;
+    if (S.door === 1) { const a = Math.random() * Math.PI * 2, r = RSW.RING + 2 + Math.random() * 4; x = RSG.A.x + Math.cos(a) * r; y = RSG.A.y + Math.sin(a) * r; }
+    else {
+      const ahead = Math.random() < 0.72, s = clamp(ahead ? front + 15 + Math.random() * 14 : back - 12 - Math.random() * 10, RSG.land.s + 6, RSG.S - 4);
+      const q = rswAt(s), off = (Math.random() * 2 - 1) * Math.max(0.5, q.w - 1.6); x = q.x - q.dy * off; y = q.y + q.dx * off;
+    }
+    const [wx, wy] = rswW(x, y);
+    if (P.some(p => Math.hypot(p.x - wx, p.y - wy) < 7)) continue;
+    if (rswInLight(wx, wy, 0) || zmBlockedAt(wx, wy, 0.4, 0)) continue;
+    const a = zmNodeIn(zmCell(wx, wy), 0, 0.3); if (a < 0 || ZM.nav.d[a] >= 1e8) continue;
+    const u = Math.random(), kind = u < 0.15 + lit * 0.02 ? 'run' : u < 0.8 ? 'jog' : 'walk';
+    raidSpawnAt(wx, wy, { kind, hp: zmHp(RAIDC.ROUND + lit * 0.4) * (0.9 + Math.random() * 0.2) * (1 + 0.25 * (n - 1)) });
+    zmSound('moan', Math.hypot(wx - FPS.me.x, wy - FPS.me.y), 0, kind);
+    return;
+  }
+}
+
+RAID_STAGES.descent = {
+  n: 'The Swallow', map: RSW_MAP,
+  set(H, K) { rswSet(H, K); },
+  enter() { Object.assign(RAID.st, { lit: 0, door: 0, kills: 0, spawnT: 3, useT: 0, useI: -1, pend: 0, landed: false, windT: 0, thru: false, flare: {}, landT: 0 }); },
+  players(P) { return P.filter(p => rswBelow(p.jz)); },
+  tick(dt) {
+    const S = RAID.st, P = ZM.players;
+    if (!P.length) return;
+    // the door wakes when someone comes into the arena; opens with twenty sent back inside its ring
+    if (!S.door && P.some(p => Math.hypot(p.x - rswW(RSG.A.x, RSG.A.y)[0], p.y - rswW(RSG.A.x, RSG.A.y)[1]) < RSW.RING + 2)) rswWake();
+    if (S.door === 1 && S.kills >= RSW.NEED) rswOpenDoor();
+    S.landT += dt;
+    S.spawnT -= dt;
+    if (S.spawnT <= 0 && S.landT > 2.5 && S.door !== 2) { rswSpawn(P); S.spawnT = S.door === 1 ? 0.7 : Math.max(1.1, 2.6 - 0.12 * rswLitN()) * (0.7 + Math.random() * 0.6); }
+  },
+  kill(d) {
+    const S = RAID.st; if (S.door !== 1) return;
+    const [ax, ay] = rswW(RSG.A.x, RSG.A.y);
+    if (Math.hypot(d.x - ax, d.y - ay) < RSW.RING) S.kills++;
+  },
+  q(sid, k, a) {
+    const S = RAID.st;
+    if (k === 'lit') { const i = a | 0; if (i >= 0 && i < RSG.B.length) rswLight(i, sid); }
+    else if (k === 'thru') { if (S.door === 2) raidNextStage(); }
+  },
+  pack(o) { const S = RAID.st; o.l = S.lit | 0; o.d = S.door | 0; o.k = S.kills | 0; },
+  apply(o) {
+    const S = RAID.st, l = o.l | 0;
+    for (let i = 0; i < RSG.B.length; i++) if ((l & (1 << i)) && !(S.lit & (1 << i))) rswLight(i, null);
+    const d = o.d | 0; if (d === 1 && !S.door) rswWake(); if (d === 2 && S.door !== 2) rswOpenDoor();
+    S.kills = o.k | 0;
+  },
+  block(x, y, pad, feet) {
+    if (RAID.st.door >= 2 || feet > 3) return false;
+    const [a, b] = rswDoorAt(x, y);
+    return Math.abs(a) < RSW.GAP / 2 + 0.2 && b < pad && b > -3;
+  },
+  consider(c) {
+    const S = RAID.st, m = FPS.me; if (!rswBelow(m.jz)) return;
+    RSG.B.forEach((b, i) => { if (S.lit & (1 << i)) return; const [x, y] = rswW(b.x, b.y); c({ k: 'rdb', i }, x, y, 0, 2.4, false); });
+  },
+  prompt(o) { if (o.k !== 'rdb') return null; return { text: 'Hold to light the brazier with Maren’s Lantern', hold: true }; },
+  use(o) { return o.k === 'rdb'; },
+  me(dt) {
+    const S = RAID.st, m = FPS.me, below = rswBelow(m.jz), alive = !(m.dead > 0) && !zmIsDown() && !ZM.over;
+    // falling down the Swallow: no quicker than FALL, and the wind of it
+    if (m.jz < RSW.SEA - 0.5 && m.jz > 0.6 && (m.vz || 0) < 0) {
+      m.vz = Math.max(m.vz, -RSW.FALL);
+      S.windT -= dt;
+      if (S.windT <= 0) { S.windT = 0.55; try { if (!soundOff()) noise('bandpass', 300 + Math.random() * 300, 0.7, 0.25, 0.12, 0.9); } catch (e) {} }
+      S.falling = true;
+    } else if (S.falling && below) { S.falling = false; if (!S.landed) { S.landed = true; ZM.banner = { text: 'The Deep Path', t: 3.5, sub: 'Light the braziers. Keep to their light.', col: '#bfe4ff' }; } }
+    // the dark drains you; a lit brazier mends you, and makes up your ammunition
+    S.inLight = below && rswInLight(m.x, m.y, m.jz);
+    if (below && alive) {
+      const max = ZM.perks.stout ? ZMC.HP_STOUT : ZMC.HP;
+      if (S.inLight) {
+        m.hp = Math.min(max, m.hp + RSW.MEND * dt);
+        S.ammoT = (S.ammoT || 0) + dt;
+        if (S.ammoT > 1) { S.ammoT = 0; for (const id of ZM.own) if (ZM_AMMO[id]) ZM.res[id] = Math.min(ZM_AMMO[id], (ZM.res[id] || 0) + Math.ceil(ZM_AMMO[id] * 0.12)); }
+      } else if (!(m.protect > 0)) {
+        m.hp -= RSW.DRAIN * dt;
+        if (m.hp <= 0) { m.hp = 0; fpsFeed('The dark took the last of you.'); fpsDie(null, null); }
+      }
+    }
+    // holding Use at a dark brazier lights it from the lantern
+    const hold = FPS.keys.KeyF || FPS.keys.KeyE || FPS.touchUse || FPS.padUse, o = ZM.near;
+    if (hold && o && o.k === 'rdb' && alive && !(S.pend > 0)) {
+      if (S.useI !== o.i) { S.useI = o.i; S.useT = 0; }
+      S.useT += dt;
+      if (S.useT >= RSW.USE) { S.useT = 0; S.useI = -1; if (ZM.net === 'client') { raidAsk('lit', o.i); S.pend = 1.5; } else rswLight(o.i, FPS.me.id); }
+    } else { S.useT = 0; S.useI = -1; }
+    if (S.pend > 0) S.pend -= dt;
+    // through the open door: on to the next part
+    if (S.door === 2 && alive && below && !S.thru) {
+      const [a, b] = rswDoorAt(m.x, m.y);
+      if (Math.abs(a) < RSW.GAP / 2 + 0.5 && b < -0.4) { S.thru = true; setTimeout(() => { if (RAID.st === S) S.thru = false; }, 1500); raidAsk('thru'); }
+    }
+  },
+  hud(phone, mono, fell) {
+    const S = RAID.st, m = FPS.me, L = Math.max(14, FPS.safeLeft || 0), top = (phone ? Math.max(10, FPS.safeTop || 0) : 14) + (phone ? 34 : 44), t = g.t;
+    const below = rswBelow(m.jz);
+    let line;
+    if (m.jz >= RSW.SEA - 1) line = 'Walk the Long Pier to the Swallow, and step off the end.';
+    else if (!below) line = `Falling · ${Math.round(m.jz)} m to the bottom`;
+    else if (!S.door) line = `Braziers lit: ${rswLitN()} of ${RSG.B.length}. Hold Use at a dark one to light it from Maren’s Lantern.`;
+    else if (S.door === 1) line = `Sent back inside the ring: ${Math.min(S.kills, RSW.NEED)} of ${RSW.NEED}`;
+    else line = 'The door is open. Go through.';
+    ctx.textAlign = 'left'; ctx.textBaseline = 'top'; ctx.font = mono(phone ? 10 : 13); ctx.fillStyle = S.door === 1 ? '#bfe4ff' : 'rgba(236,228,207,0.8)';
+    ctx.fillText(line, L, top, W * 0.5);
+    // in the light or in the dark
+    if (below && !(m.dead > 0) && !zmIsDown() && !ZM.over) {
+      if (!S.inLight) {
+        const a = 0.18 + 0.06 * Math.sin(t * 2.2), gr = ctx.createRadialGradient(cx, H / 2, Math.min(W, H) * 0.3, cx, H / 2, Math.max(W, H) * 0.75);
+        gr.addColorStop(0, 'rgba(10,20,40,0)'); gr.addColorStop(1, `rgba(10,20,40,${a})`); ctx.fillStyle = gr; ctx.fillRect(0, 0, W, H);
+      }
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = mono(phone ? 10 : 12);
+      ctx.fillStyle = S.inLight ? '#ffd88a' : `rgba(150,200,255,${0.6 + 0.3 * Math.sin(t * 4)})`;
+      ctx.fillText(S.inLight ? 'IN THE LIGHT · MENDING' : 'IN THE DARK · IT DRAINS YOU', cx, H - (phone ? 150 : 96));
+    }
+    // the ring's tally, big, while the door's awake
+    if (S.door === 1) { ctx.textAlign = 'center'; ctx.textBaseline = 'top'; ctx.font = fell(phone ? 26 : 38); ctx.fillStyle = '#bfe4ff'; ctx.fillText(`${Math.min(S.kills, RSW.NEED)} / ${RSW.NEED}`, cx, phone ? top + 20 : 60); }
+    // lighting a brazier: a ring round the sights filling
+    if (S.useI >= 0 && S.useT > 0) {
+      const k = Math.min(1, S.useT / RSW.USE);
+      ctx.strokeStyle = 'rgba(255,216,138,0.25)'; ctx.lineWidth = 4; ctx.beginPath(); ctx.arc(cx, H / 2, 26, 0, 6.283); ctx.stroke();
+      ctx.strokeStyle = '#ffd88a'; ctx.beginPath(); ctx.arc(cx, H / 2, 26, -Math.PI / 2, -Math.PI / 2 + k * 6.283); ctx.stroke();
+    }
+  },
+  b3(grp) {
+    // the braziers' fires and embers, the door, the ring before it
+    const fireTex = z3Soft('rgba(255,190,90,1)', 'rgba(255,90,20,0)'), coreTex = z3Soft('rgba(255,250,220,1)', 'rgba(255,200,120,0)'), G0 = FPSC.GROUND;
+    R3.bz = RSG.B.map(b => {
+      const g3 = new THREE.Group(), [x, y] = rswW(b.x, b.y); g3.position.copy(z3v(x, y, G0 + 1.15)); grp.add(g3);
+      const mk = (tex, s, op) => { const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: op })); sp.scale.set(s, s * 1.5, 1); g3.add(sp); return sp; };
+      const fl = [mk(fireTex, 1.6, 0.9), mk(fireTex, 1.1, 0.9), mk(coreTex, 0.7, 1)];
+      const ember = mk(z3Soft('rgba(255,90,30,0.8)', 'rgba(255,60,10,0)'), 0.8, 0.5); ember.position.y = -0.15;
+      return { g3, fl, ember };
+    });
+    const D = RSG.D, [dx, dy] = rswW(D.x, D.y), ang = Math.atan2(D.c[1], D.c[0]);
+    const dg = new THREE.Group(); dg.position.copy(z3v(dx, dy, G0)); dg.rotation.y = ang; grp.add(dg);
+    const leafM = new THREE.MeshBasicMaterial({ color: 0x9ccff0, transparent: true, opacity: 0.85 });
+    const leaf = new THREE.Mesh(new THREE.BoxGeometry(RSW.GAP, 4.2, 0.25), leafM); leaf.position.y = 2.1; dg.add(leaf);
+    const seamM = new THREE.MeshBasicMaterial({ color: 0x3a5a78 });
+    for (const [w, h, x, y] of [[0.06, 4.0, 0, 2.1], [RSW.GAP * 0.8, 0.06, 0, 1.2], [RSW.GAP * 0.8, 0.06, 0, 3.0]]) { const s = new THREE.Mesh(new THREE.BoxGeometry(w, h, 0.3), seamM); s.position.set(x, y, 0); leaf.add(s); s.position.y -= 2.1; }
+    const beyond = new THREE.Mesh(new THREE.PlaneGeometry(RSW.GAP, 4.2), new THREE.MeshBasicMaterial({ color: 0xeaf6ff, fog: false })); beyond.position.set(0, 2.1, 1.4); beyond.rotation.y = Math.PI; dg.add(beyond);
+    const halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: z3Soft('rgba(150,210,255,0.7)', 'rgba(150,210,255,0)'), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending })); halo.scale.set(9, 9, 1); halo.position.set(0, 2.2, -0.6); dg.add(halo);
+    const ringM = new THREE.MeshBasicMaterial({ color: 0x7ac8ff, transparent: true, opacity: 0.5, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide });
+    const ring = new THREE.Mesh(new THREE.RingGeometry(RSW.RING - 0.25, RSW.RING, 72), ringM); ring.rotation.x = -Math.PI / 2;
+    const [ax, ay] = rswW(RSG.A.x, RSG.A.y); ring.position.copy(z3v(ax, ay, G0 + 0.05)); grp.add(ring);
+    const doorL = new THREE.PointLight(0x9ad4ff, 0, 18, 1.3); doorL.position.copy(z3v(dx + D.f[0] * 2, dy + D.f[1] * 2, G0 + 2.4)); grp.add(doorL);
+    R3.door = { leaf, leafM, halo, ring, ringM, doorL, open: 0 };
+  },
+  f3(dt) {
+    const S = RAID.st, t = g.t, m = FPS.me;
+    // the light and the fog, by how high you are: the dusk over the bed, black at the bottom
+    const k = clamp(((m.jz || 0) - RSW.CEIL) / (RSW.SEA - RSW.CEIL), 0, 1), kk = k * k;
+    GL3D.amb.intensity = 0.13 + 0.42 * kk; GL3D.moon.intensity = 0.3 * kk;
+    if (GL3D.scene.fog) { const F = GL3D.scene.fog; F.color.setRGB(0.02 + 0.08 * kk, 0.025 + 0.085 * kk, 0.04 + 0.11 * kk); F.near = 3 + 60 * kk; F.far = 46 + 600 * kk; RAID.fog0 = true; }
+    // the braziers
+    R3.bz.forEach((b, i) => {
+      const lit = !!(S.lit & (1 << i)), fl = S.flare && S.flare[i] ? S.flare[i] : 0;
+      if (fl > 0) S.flare[i] = Math.max(0, fl - dt * 0.8);
+      b.fl.forEach((s, j) => { s.visible = lit; if (lit) { const f = reduceMotion ? 1 : 0.8 + 0.25 * Math.sin(t * (9 + j * 3) + i) * Math.sin(t * (3.1 + j) + i * 2); const sc = (j === 0 ? 1.6 : j === 1 ? 1.1 : 0.7) * f * (1 + fl * 1.5); s.scale.set(sc, sc * 1.6, 1); s.position.y = 0.15 + j * 0.12 + (reduceMotion ? 0 : 0.05 * Math.sin(t * 7 + j)); } });
+      b.ember.material.opacity = lit ? 0.9 : 0.35 + 0.15 * Math.sin(t * 1.3 + i);
+    });
+    // the door: dim, then waking (pulsing, its ring alight), then open (down into the floor, and the light beyond)
+    const Dr = R3.door; if (!Dr) return;
+    const pulse = reduceMotion ? 0.5 : 0.5 + 0.5 * Math.sin(t * 2.4);
+    if (S.door >= 2) Dr.open = Math.min(1, Dr.open + dt * 0.5);
+    Dr.leaf.position.y = 2.1 - Dr.open * 4.3; Dr.leaf.visible = Dr.open < 1;
+    Dr.leafM.color.setRGB(0.35 + 0.3 * (S.door ? pulse : 0.2) + Dr.open * 0.3, 0.55 + 0.3 * (S.door ? pulse : 0.2), 0.75 + 0.2 * (S.door ? pulse : 0.2));
+    Dr.halo.material.opacity = S.door === 0 ? 0.25 : S.door === 1 ? 0.45 + 0.35 * pulse : 1;
+    Dr.ring.visible = S.door === 1; Dr.ringM.opacity = 0.3 + 0.3 * pulse;
+    Dr.doorL.intensity = S.door === 0 ? 0.4 : S.door === 1 ? 0.8 + 0.6 * pulse : 2.2;
+  },
+  exit() { R3.bz = null; R3.door = null; },
+};
+
 // ---- src/zmnet.js ----
 // The Lighthouse, played together: a lobby, and up to four in one night.
 //
@@ -27919,7 +28813,9 @@ function znAt(o, t) {
 
 // ---------- the lobby ----------
 function znOnline() { return !!(typeof NET !== 'undefined' && NET.room && NET.status === 'ready'); }
-function znNick() { return znClean(($('zmNick') && $('zmNick').value) || '', 16) || (NET.nick ? znClean(NET.nick, 16) : '') || 'Keeper ' + String(NET.sid || '').slice(0, 3).toUpperCase(); }
+// the map a lobby's for: the raid's, or the one picked on the Lighthouse's card
+const znMap = () => ZN.mode === 'raid' ? 'raid' : ZM_PICK;
+function znNick() { return znClean(($(ZN.mode === 'raid' ? 'rdNick' : 'zmNick') && $(ZN.mode === 'raid' ? 'rdNick' : 'zmNick').value) || '', 16) || (NET.nick ? znClean(NET.nick, 16) : '') || 'Keeper ' + String(NET.sid || '').slice(0, 3).toUpperCase(); }
 function znOf(p) { const z = p && p.presence && p.presence.zm; return z && typeof z === 'object' && typeof z.room === 'string' && typeof z.sid === 'string' ? z : null; }
 function znBase() { return { room: ZN.code, sid: NET.sid, nick: znNick(), at: ZN.at }; }
 function znPeers(code) {
@@ -27935,16 +28831,18 @@ function znSend(z) { if (NET.room) NET.room.presence({ zm: z }).catch(() => {});
 function znSendLobby() {
   if (!ZN.code) return;
   const z = znBase();
-  if (znAmHost()) z.lob = { n: znMembers().length, map: ZM_PICK };
+  if (znAmHost()) z.lob = { n: znMembers().length, map: znMap() };
   znSend(z);
 }
-function znHost() {
+function znHost(mode) {
   if (!znOnline() || FPS.on) return;
+  ZN.mode = mode === 'raid' ? 'raid' : 'zm';
   ZN.code = 'z' + Math.random().toString(36).slice(2, 8); ZN.at = Date.now(); ZN.msg = '';
   znSendLobby(); znRender();
 }
-function znJoin(code) {
+function znJoin(code, mode) {
   if (!znOnline() || !code || FPS.on) return;
+  ZN.mode = mode === 'raid' ? 'raid' : 'zm';
   if (znPeers(code).length >= ZN_MAX) { ZN.msg = 'That night is full (four players).'; znRender(); return; }
   ZN.code = code; ZN.at = Date.now(); ZN.msg = '';
   znSendLobby(); znRender();
@@ -27971,44 +28869,52 @@ function znOpenNights() {
   }
   return out;
 }
-function znRender() {
-  if (!$('zmMp')) return;
-  const on = znOnline();
-  $('zmMpNote').textContent = on ? 'Up to four in one night. One of you hosts; the others join, and the host starts the night when everyone’s in.' : (NET.status === 'connecting' ? 'Looking for other players…' : (NET.offReason || 'Playing together isn’t available here.'));
-  $('zmMpOpen').hidden = !on || !!ZN.code;
-  $('zmLobby').hidden = !ZN.code;
+// Two cards share the one lobby: the Lighthouse's (prefix zm) and Maren's End's (prefix rd, src/raid.js). Each lists
+// only its own: a night whose map is the raid is a raid. Whichever card you host or join from, the lobby shows there.
+const ZN_UI = [{ p: 'zm', raid: false, what: 'night', who: 'A keeper' }, { p: 'rd', raid: true, what: 'raid', who: 'A keeper' }];
+function znRender() { for (const U of ZN_UI) znRenderUI(U); }
+function znRenderUI(U) {
+  const q = id => $(U.p + id);
+  if (!q('Mp')) return;
+  const on = znOnline(), mine = !!ZN.code && ZN.mode === (U.raid ? 'raid' : 'zm'), W = U.what;
+  q('MpNote').textContent = on ? (ZN.code && !mine ? `You’re in a ${U.raid ? 'Lighthouse night' : 'raid'}’s lobby on the other card; leave it to ${U.raid ? 'host or join a raid' : 'host or join a night'} here.` : `Up to four in one ${W}. One of you hosts; the others join, and the host starts the ${W} when everyone’s in.`) : (NET.status === 'connecting' ? 'Looking for other players…' : (NET.offReason || 'Playing together isn’t available here.'));
+  q('MpOpen').hidden = !on || !!ZN.code;
+  q('Lobby').hidden = !mine;
   if (!on) return;
   if (!ZN.code) {
-    const nights = znOpenNights(), el = $('zmLobbies'), key = JSON.stringify(nights) + ZN.msg;
+    const nights = znOpenNights().filter(n => (n.map === 'raid') === U.raid), el = q('Lobbies'), key = JSON.stringify(nights) + ZN.msg;
     if (el.dataset.k === key) return; el.dataset.k = key;
     el.textContent = '';
     if (ZN.msg) { const p = document.createElement('p'); p.className = 'muted'; p.textContent = ZN.msg; el.append(p); }
-    if (!nights.length) { const p = document.createElement('p'); p.className = 'muted'; p.textContent = 'No one is hosting a night right now. Host one, and send the people you want to play with to this page.'; el.append(p); return; }
+    if (!nights.length) { const p = document.createElement('p'); p.className = 'muted'; p.textContent = `No one is hosting a ${W} right now. Host one, and send the people you want to play with to this page.`; el.append(p); return; }
     for (const n of nights) {
       const b = document.createElement('button'); b.type = 'button'; b.className = 'warlobbyrow';
-      const nm = document.createElement('span'); nm.className = 'nm'; nm.textContent = `${n.host}’s night`;
-      const sm = document.createElement('small'); sm.textContent = `${ZM_MAPS[n.map].N} · ` + (n.started ? 'under way' : `${n.n}/${ZN_MAX} players · tap to join`);
+      const nm = document.createElement('span'); nm.className = 'nm'; nm.textContent = `${n.host}’s ${W}`;
+      const sm = document.createElement('small'); sm.textContent = (U.raid ? '' : `${ZM_MAPS[n.map].N} · `) + (n.started ? 'under way' : `${n.n}/${ZN_MAX} players · tap to join`);
       b.append(nm, sm);
       b.disabled = n.started || n.n >= ZN_MAX;
-      b.addEventListener('click', () => znJoin(n.code));
+      b.addEventListener('click', () => znJoin(n.code, U.raid ? 'raid' : 'zm'));
       el.append(b);
     }
     return;
   }
+  if (!mine) return;
   const m = znMembers(), host = znAmHost(), hz = m.length ? znOf(m[0]) : null;
-  const key = m.map(p => znOf(p).sid + znOf(p).nick).join('|') + host + ZN.msg + ZM_PICK + (hz && hz.lob ? hz.lob.map : '');
-  $('zmMpStart').hidden = !host;
-  if ($('zmLobby').dataset.k === key) return; $('zmLobby').dataset.k = key;
-  $('zmLobbyHead').textContent = host ? 'Your night' : `${znClean(hz && hz.nick, 16) || 'Someone'}’s night`;
-  const ol = $('zmLobbyList'); ol.textContent = '';
+  const key = m.map(p => znOf(p).sid + znOf(p).nick).join('|') + host + ZN.msg + znMap() + (hz && hz.lob ? hz.lob.map : '');
+  q('MpStart').hidden = !host;
+  if (q('Lobby').dataset.k === key) return; q('Lobby').dataset.k = key;
+  q('LobbyHead').textContent = host ? `Your ${W}` : `${znClean(hz && hz.nick, 16) || 'Someone'}’s ${W}`;
+  const ol = q('LobbyList'); ol.textContent = '';
   m.forEach((p, k) => {
     const li = document.createElement('li'), z = znOf(p);
-    li.textContent = (znClean(z.nick, 16) || 'A keeper') + (p.isMe && p.sameTab ? ' (you)' : '') + (k === 0 ? ' · hosting' : '');
+    li.textContent = (znClean(z.nick, 16) || U.who) + (p.isMe && p.sameTab ? ' (you)' : '') + (k === 0 ? ' · hosting' : '');
     if (p.isMe && p.sameTab) li.className = 'me';
     ol.append(li);
   });
   const hm = hz && hz.lob && ZM_MAPS[hz.lob.map] ? hz.lob.map : 'light';
-  $('zmLobbyMsg').textContent = ZN.msg || (host
+  q('LobbyMsg').textContent = ZN.msg || (U.raid
+    ? (host ? (m.length > 1 ? `${m.length} of ${ZN_MAX} here. Start the raid when everyone’s in.` : 'Waiting for others to join. You can start alone, too, whenever you like.') : 'Waiting for the host to start the raid.')
+    : host
     ? (m.length > 1 ? `${m.length} of ${ZN_MAX} here, at ${ZM_MAPS[ZM_PICK].n}. Start the night when everyone’s in.` : `Waiting for others to join. You can start alone, too, whenever you like. Tonight: ${ZM_MAPS[ZM_PICK].n} (pick above).`)
     : `Waiting for the host to start the night, at ${ZM_MAPS[hm].n}.`);
 }
@@ -28017,7 +28923,7 @@ function znRender() {
 function znStart() {
   if (!znAmHost() || FPS.on) return;
   const m = znMembers();
-  const st = { g: Math.random().toString(36).slice(2, 9), hum: m.map(p => [znOf(p).sid, znClean(znOf(p).nick, 16) || 'A keeper']), map: ZM_PICK };
+  const st = { g: Math.random().toString(36).slice(2, 9), hum: m.map(p => [znOf(p).sid, znClean(znOf(p).nick, 16) || 'A keeper']), map: znMap() };
   znBegin(st, 'host');
 }
 function znBegin(st, role) {
@@ -28047,7 +28953,7 @@ function zmNetPeers() {
 // a night over (or left): back to the lobby on the title card, still in the same room
 function zmnBackToLobby() {
   setTimeout(() => {
-    if (ZN.code) { znSendLobby(); const c = $('zmTitle'); if (c) c.scrollIntoView({ block: 'start' }); }
+    if (ZN.code) { znSendLobby(); const c = $(ZN.mode === 'raid' ? 'rdTitle' : 'zmTitle'); if (c) c.scrollIntoView({ block: 'start' }); }
     znRender();
   }, 50);
 }
@@ -28186,6 +29092,7 @@ function znRequestFrom(sid, k, a) {
   if (k === 'pst') { if (typeof zmpStatusFrom === 'function') zmpStatusFrom(sid, a); return; }   // [pap] what a reforged weapon did to them
   if (k === 'egg') { if (typeof zeRequest === 'function') zeRequest(sid, a); return; }   // [egg hook] src/zmegg.js
   if (k === 'egg2') { if (typeof zhRequest === 'function') zhRequest(sid, a); return; }   // [egg2 hook] src/zmegg2.js
+  if (k === 'raid') { if (typeof raidRequest === 'function') raidRequest(sid, a); return; }   // [raid] src/raid.js
 }
 // someone (by) gets someone (sid) up: everyone's told who got whom up (and if it's me, up I get)
 function zmnRevive(sid, by) {
@@ -28227,6 +29134,7 @@ function znHostSend() {
   if (typeof zeHostSend === 'function') zeHostSend(z);   // [egg hook] src/zmegg.js
   if (typeof zhHostSend === 'function') zhHostSend(z);   // [egg2 hook] src/zmegg2.js
   if (typeof zmlHostSend === 'function') zmlHostSend(z);   // [lamp] the Light: lit or not, its beam, its price
+  if (typeof raidHostSend === 'function') raidHostSend(z);   // [raid] Maren's End: its part, and the part's own state
   znSend(z);
 }
 
@@ -28278,6 +29186,7 @@ function zmnHit(d, dmg, head, code, how) {
 function znApply(hz) {
   const CX = FPSC.CX, CY = FPSC.CY, m = FPS.me;
   const H = hz.h.map(v => +v || 0);
+  if (typeof raidApply === 'function') raidApply(hz);   // [raid] (first: a new part is laid out before anything in it)
   // the round and its phase
   const round = H[1] | 0, ph = H[2] | 0;
   if (round > ZM.round) {
@@ -28379,9 +29288,10 @@ function znApply(hz) {
 
 // ---------- buttons ----------
 {
-  $('zmMpHost').addEventListener('click', znHost);
+  $('zmMpHost').addEventListener('click', () => znHost('zm'));
   $('zmMpLeave').addEventListener('click', znLeave);
   $('zmMpStart').addEventListener('click', znStart);
+  if ($('rdMpHost')) { $('rdMpHost').addEventListener('click', () => znHost('raid')); $('rdMpLeave').addEventListener('click', znLeave); $('rdMpStart').addEventListener('click', znStart); }   // [raid] Maren's End's card
   setInterval(() => { if (!FPS.on && !$('zmTitle').closest('[hidden]')) { znRender(); if (ZN.code) znSendLobby(); } }, 1500);
   addEventListener('pagehide', () => { if (ZN.code && NET.room) NET.room.presence({ zm: null }).catch(() => {}); });
 }
@@ -30907,6 +31817,8 @@ rcRender();
 //   fps     s: most kills in one round             b: rounds won
 //   war     s: wars won                            b: most land taken in one war (tiles)
 //   zm      s: most rounds held in one night        b: most kills in one night (the Lighthouse)
+//   raid    s: best time through Maren's End (kept as 100000 less its seconds, so higher is better; 0: never through)
+//           b: most damage done to its bosses in one raid    c: the drowned sent back in all raids, together
 //
 // Your bests are part of your save (src/crates.js saveData: `best`, merged by taking the higher of each), so they
 // follow your recovery code (src/cloudsave.js) to every device, and on the game's own site you're on the board once,
@@ -30920,6 +31832,8 @@ const BOARD = {
     fps: { name: 'Wreckers’ Night', s: 'Best round', b: 'Rounds won', what: 'Most kills in one round of Wreckers’ Night. Rounds won: rounds you finished on top.' },
     war: { name: 'Drowned Reach', s: 'Wars won', b: 'Most land', what: 'Wars of the Drowned Reach won, alone or together. Most land: the most tiles taken in one war.' },
     zm: { name: 'Keeper’s Last Light', s: 'Rounds held', b: 'Most kills', what: 'The most rounds held at the Lighthouse in one night. Most kills: the drowned sent back in one night.' },
+    raid: { name: 'Maren’s End', s: 'Best time', b: 'Boss damage', c: 'Kills', what: 'The quickest time through every part of Maren’s End. Boss damage: the most done to its bosses in one raid. Kills: the drowned sent back in all your raids.',
+      fs: v => v > 0 ? raidTimeOf(v) : '—' },
   },
   open: {}, mine: null, via: null, db: null, user: null, uid: null, data: null, loading: false, err: '', lastT: 0, sendT: 0, store: '',
 };
@@ -30927,7 +31841,7 @@ const BOARD = {
 // ---------- your bests, here ----------
 function boardLoadMine() {
   let m = {}; try { m = JSON.parse(localStorage.getItem('skerry-bests') || '{}') || {}; } catch (e) {}
-  for (const g of Object.keys(BOARD.games)) m[g] = { s: Math.max(0, (m[g] && m[g].s) | 0), b: Math.max(0, (m[g] && m[g].b) | 0) };
+  for (const g of Object.keys(BOARD.games)) { m[g] = { s: Math.max(0, (m[g] && m[g].s) | 0), b: Math.max(0, (m[g] && m[g].b) | 0) }; if (BOARD.games[g].c) m[g].c = Math.max(0, (m[g].c | 0) || 0); }
   // bests from before there was a board
   try { m.skerry.s = Math.max(m.skerry.s, parseInt(localStorage.getItem('skerry-helm-best') || '0', 10) || 0); } catch (e) {}
   if (typeof warLoadStats === 'function') { const st = warLoadStats(); m.war.s = Math.max(m.war.s, st.wins | 0); m.war.b = Math.max(m.war.b, st.bestTiles | 0); }
@@ -30935,11 +31849,12 @@ function boardLoadMine() {
 }
 function boardSaveMine() { try { localStorage.setItem('skerry-bests', JSON.stringify(BOARD.mine)); } catch (e) {} }
 // a new best (either number) goes on the board soon after
-function scoreReport(game, s, b) {
+// (c: a third number, for a game that has one: Maren's End's kills in all)
+function scoreReport(game, s, b, c) {
   const m = BOARD.mine && BOARD.mine[game]; if (!m) return;
-  s = Math.max(0, Math.floor(s || 0)); b = Math.max(0, Math.floor(b || 0));
-  if (s <= m.s && b <= m.b) return;
-  m.s = Math.max(m.s, s); m.b = Math.max(m.b, b); boardSaveMine();
+  s = Math.max(0, Math.floor(s || 0)); b = Math.max(0, Math.floor(b || 0)); c = Math.max(0, Math.floor(c || 0));
+  if (s <= m.s && b <= m.b && c <= (m.c | 0)) return;
+  m.s = Math.max(m.s, s); m.b = Math.max(m.b, b); if (BOARD.games[game].c) m.c = Math.max(m.c | 0, c); boardSaveMine();
   boardSendSoon(game);
 }
 // Skerry Light: a voyage made, and how many this run has made
@@ -30954,7 +31869,9 @@ function boardName() {
 }
 
 // ---------- your username: one for every game, kept on this device ----------
-const NICK_BOXES = ['nick', 'fpsNick', 'zmNick', 'boardName'];
+const NICK_BOXES = ['nick', 'fpsNick', 'zmNick', 'rdNick', 'boardName'];
+// Maren's End's best time, from its s (100000 less the seconds)
+function raidTimeOf(v) { const t = Math.max(0, 100000 - v); return `${Math.floor(t / 60)}:${String(t % 60).padStart(2, '0')}`; }
 function nickSet(v, from) {
   const n = typeof cleanNick === 'function' ? cleanNick(v || '') : String(v || '').trim().slice(0, 16);
   if (typeof NET !== 'undefined') NET.nick = n;
@@ -30980,8 +31897,8 @@ function boardMerge(best, nick, takeLooks) {
   let changed = false;
   if (best && typeof best === 'object' && BOARD.mine) for (const g of Object.keys(BOARD.games)) {
     const o = best[g]; if (!o) continue;
-    const m = BOARD.mine[g], s = Math.max(m.s, Math.max(0, o.s | 0)), b = Math.max(m.b, Math.max(0, o.b | 0));
-    if (s !== m.s || b !== m.b) { m.s = s; m.b = b; changed = true; }
+    const m = BOARD.mine[g], s = Math.max(m.s, Math.max(0, o.s | 0)), b = Math.max(m.b, Math.max(0, o.b | 0)), c = Math.max(m.c | 0, Math.max(0, o.c | 0));
+    if (s !== m.s || b !== m.b || (BOARD.games[g].c && c !== (m.c | 0))) { m.s = s; m.b = b; if (BOARD.games[g].c) m.c = c; changed = true; }
   }
   if (changed) { boardSaveMine(); boardSendSoon('all'); boardRender(); }
   const n = typeof cleanNick === 'function' ? cleanNick(nick || '') : '';
@@ -31022,7 +31939,7 @@ async function boardInit() {
       if (db && uid) {
         BOARD.via = 'claude'; BOARD.db = db; BOARD.user = user; BOARD.uid = uid;
         // what the board already has for you counts as your best too
-        try { const snap = await db.doc('scores/' + uid).get(); const d = snap.exists ? snap.data() : null; if (d) for (const g of Object.keys(BOARD.games)) { BOARD.mine[g].s = Math.max(BOARD.mine[g].s, d[g + '_s'] | 0); BOARD.mine[g].b = Math.max(BOARD.mine[g].b, d[g + '_b'] | 0); } } catch (e) {}
+        try { const snap = await db.doc('scores/' + uid).get(); const d = snap.exists ? snap.data() : null; if (d) for (const g of Object.keys(BOARD.games)) { BOARD.mine[g].s = Math.max(BOARD.mine[g].s, d[g + '_s'] | 0); BOARD.mine[g].c = Math.max(BOARD.mine[g].c | 0, d[g + '_c'] | 0); BOARD.mine[g].b = Math.max(BOARD.mine[g].b, d[g + '_b'] | 0); } } catch (e) {}
         boardSaveMine(); boardSendSoon('all');
       } else BOARD.err = 'Sign in to claude.ai to see the scoreboard.';
     } catch (e) { BOARD.err = 'The scoreboard isn’t available here.'; }
@@ -31047,7 +31964,7 @@ async function boardSend() {
   try {
     if (BOARD.via === 'claude') {
       const doc = { nick: boardName(), at: Date.now() };
-      for (const g of Object.keys(BOARD.games)) if (m[g].s + m[g].b > 0) { doc[g + '_s'] = m[g].s; doc[g + '_b'] = m[g].b; doc[g + '_k'] = m[g].s * 1e7 + m[g].b; }
+      for (const g of Object.keys(BOARD.games)) if (m[g].s + m[g].b + (m[g].c | 0) > 0) { doc[g + '_s'] = m[g].s; doc[g + '_b'] = m[g].b; doc[g + '_k'] = m[g].s * 1e9 + m[g].b + ((m[g].c | 0) > 0 && !m[g].s && !m[g].b ? 0.5 : 0); if (BOARD.games[g].c) doc[g + '_c'] = m[g].c | 0; }
       await BOARD.db.doc('scores/' + BOARD.uid).set(doc);
     } else {
       const id = await boardIdNow(); if (!id) { BOARD.sending = false; return; }
@@ -31060,8 +31977,8 @@ async function boardSend() {
       try { localStorage.setItem('skerry-board-used', JSON.stringify(used.slice(-6))); } catch (e) {}
       let all = true;
       for (const g of was ? Object.keys(BOARD.games) : games) {
-        if (m[g].s + m[g].b <= 0 && !was) continue;
-        const r = await fetch(boardApiUrl(), { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ id, name: boardName(), game: g, s: m[g].s, b: m[g].b, was: was || undefined }) });
+        if (m[g].s + m[g].b + (m[g].c | 0) <= 0 && !was) continue;
+        const r = await fetch(boardApiUrl(), { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ id, name: boardName(), game: g, s: m[g].s, b: m[g].b, c: BOARD.games[g].c ? m[g].c | 0 : undefined, was: was || undefined }) });
         if (!r.ok) { all = false; BOARD_PENDING.add(g); }
         await new Promise(res => setTimeout(res, 3200));   // the server takes one score every few seconds from each address
       }
@@ -31092,7 +32009,7 @@ async function boardFetch(force) {
       const data = {};
       for (const g of Object.keys(BOARD.games)) {
         const q = await BOARD.db.collection('scores').orderBy(g + '_k', 'desc').limit(10).get();
-        data[g] = q.docs.map(d => ({ id: d.id, d: d.data() || {} })).filter(e => (e.d[g + '_k'] || 0) > 0).map(e => ({ id: e.id, n: '', nick: String(e.d.nick || ''), s: e.d[g + '_s'] | 0, b: e.d[g + '_b'] | 0, me: e.id === BOARD.uid }));
+        data[g] = q.docs.map(d => ({ id: d.id, d: d.data() || {} })).filter(e => (e.d[g + '_k'] || 0) > 0).map(e => ({ id: e.id, n: '', nick: String(e.d.nick || ''), s: e.d[g + '_s'] | 0, b: e.d[g + '_b'] | 0, c: e.d[g + '_c'] | 0, me: e.id === BOARD.uid }));
       }
       // names, as this viewer's claude.ai shows them
       const ids = [...new Set(Object.values(data).flat().map(e => e.id))];
@@ -31122,19 +32039,20 @@ function boardRender() {
     }
     sec.append(top);
     const head = mk('div', 'boardhead'); head.setAttribute('aria-hidden', 'true'); head.title = G.what;
-    for (const [c, t] of [['rk', '#'], ['nm', 'Name'], ['sc', G.s], ['sb', G.b]]) head.append(mk('span', c, t));
+    for (const [c, t] of [['rk', '#'], ['nm', 'Name'], ['sc', G.s], ['sb', G.b]].concat(G.c ? [['sb', G.c]] : [])) head.append(mk('span', c, t));
+    if (G.c) sec.classList.add('three');
     sec.append(head);
     const ol = mk('ol', 'boardlist'); ol.setAttribute('aria-label', G.name + ': ' + G.what);
     if (!rows.length) ol.append(mk('li', 'empty', BOARD.loading && !BOARD.data ? 'Reading the board…' : BOARD.data ? 'No one yet. Be the first.' : BOARD.err ? '—' : 'Reading the board…'));
     let meShown = false;
     rows.slice(0, open ? 10 : 3).forEach((e, k) => {
       const li = mk('li', e.me ? 'me' : ''); if (e.me) meShown = true;
-      for (const [cls, txt] of [['rk', String(k + 1)], ['nm', e.n + (e.me ? ' (you)' : '')], ['sc', String(e.s)], ['sb', g === 'war' ? `${e.b} tiles` : String(e.b)]]) li.append(mk('span', cls, txt));
+      for (const [cls, txt] of [['rk', String(k + 1)], ['nm', e.n + (e.me ? ' (you)' : '')], ['sc', G.fs ? G.fs(e.s) : String(e.s)], ['sb', g === 'war' ? `${e.b} tiles` : String(e.b)]].concat(G.c ? [['sb', String(e.c | 0)]] : [])) li.append(mk('span', cls, txt));
       ol.append(li);
     });
     sec.append(ol);
     const m = BOARD.mine && BOARD.mine[g];
-    if (m && m.s + m.b > 0 && !meShown) sec.append(mk('p', 'boardmine', `Your best: ${m.s} · ${m.b}${g === 'war' ? ' tiles' : ''}`));
+    if (m && m.s + m.b + (m.c | 0) > 0 && !meShown) sec.append(mk('p', 'boardmine', `Your best: ${G.fs ? G.fs(m.s) : m.s} · ${m.b}${g === 'war' ? ' tiles' : ''}${G.c ? ' · ' + (m.c | 0) : ''}`));
     box.append(sec);
   }
   $('boardNameRow').hidden = BOARD.via === 'claude';
