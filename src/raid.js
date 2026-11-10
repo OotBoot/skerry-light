@@ -298,13 +298,14 @@ function raidSpawnAt(x, y, o) {
 function raidHud(phone, mono, fell) {
   if (!RAID.on) return;
   const S = raidStage(); if (!S) return;
-  const top = phone ? Math.max(10, FPS.safeTop || 0) : 14;
+  const top = fpsHudTop();
   ctx.textAlign = 'left'; ctx.textBaseline = 'top';
   const L = Math.max(14, FPS.safeLeft || 0);
   ctx.font = fell(phone ? 15 : 19); ctx.fillStyle = 'rgba(236,228,207,0.85)';
-  ctx.fillText(`Maren’s End · ${raidNumeral(RAID.stage + 1)} · ${S.n}`, L, top);
+  ctx.fillText(`Maren’s End · ${raidNumeral(RAID.stage + 1)} · ${S.n}`, L, top, W * 0.5);
   ctx.font = mono(phone ? 10 : 12); ctx.fillStyle = 'rgba(236,228,207,0.55)';
-  ctx.fillText(raidClock(RAID.t), L, top + (phone ? 20 : 26));
+  ctx.fillText(raidClock(RAID.t), L, top + (phone ? 18 : 26));
+  fpsHudNote(top + (phone ? 30 : 40));
   raidCall('hud', phone, mono, fell);
 }
 
@@ -847,7 +848,7 @@ RAID_STAGES.descent = {
     }
   },
   hud(phone, mono, fell) {
-    const S = RAID.st, m = FPS.me, L = Math.max(14, FPS.safeLeft || 0), top = (phone ? Math.max(10, FPS.safeTop || 0) : 14) + (phone ? 34 : 44), t = g.t;
+    const S = RAID.st, m = FPS.me, L = Math.max(14, FPS.safeLeft || 0), top = fpsHudTop() + (phone ? 32 : 44), t = g.t;
     const below = rswBelow(m.jz);
     let line;
     if (m.jz >= RSW.SEA - 1) line = 'Walk the Long Pier to the Swallow, and step off the end.';
@@ -856,7 +857,7 @@ RAID_STAGES.descent = {
     else if (S.door === 1) line = `Sent back inside the ring: ${Math.min(S.kills, RSW.NEED)} of ${RSW.NEED}`;
     else line = 'The door is open. Go through.';
     ctx.textAlign = 'left'; ctx.textBaseline = 'top'; ctx.font = mono(phone ? 10 : 13); ctx.fillStyle = S.door === 1 ? '#bfe4ff' : 'rgba(236,228,207,0.8)';
-    ctx.fillText(line, L, top, W * 0.5);
+    ctx.fillText(line, L, top, W * 0.5); fpsHudNote(top + (phone ? 14 : 18));
     // in the light or in the dark
     if (below && !(m.dead > 0) && !zmIsDown() && !ZM.over) {
       if (!S.inLight) {
@@ -876,7 +877,7 @@ RAID_STAGES.descent = {
       ctx.fillText(`MAREN’S WEIGHT · ${Math.round((1 - this.speedK()) * 100)}% SLOWER`, cx, y0 + 8);
     }
     // the ring's tally, big, while the door's awake
-    if (S.door === 1) { ctx.textAlign = 'center'; ctx.textBaseline = 'top'; ctx.font = fell(phone ? 26 : 38); ctx.fillStyle = '#bfe4ff'; ctx.fillText(`${Math.min(S.kills, RSW.NEED)} / ${RSW.NEED}`, cx, phone ? top + 20 : 60); }
+    if (S.door === 1) { ctx.textAlign = 'center'; ctx.textBaseline = 'top'; ctx.font = fell(phone ? 26 : 38); ctx.fillStyle = '#bfe4ff'; ctx.fillText(`${Math.min(S.kills, RSW.NEED)} / ${RSW.NEED}`, cx, phone ? (FPS.hudCtop || top) + 2 : 60); }
     // lighting a brazier: a ring round the sights filling
     if (S.useI >= 0 && S.useT > 0) {
       const k = Math.min(1, S.useT / RSW.USE);

@@ -173,6 +173,8 @@ Verity, the small smiling yellow thing from the voyages, comes ashore in Wrecker
 
 Both games work with the phone turned sideways. On short landscape screens the title page puts Skerry Light and Wreckers' Night side by side, the voyage HUD shrinks (smaller labels, a two-line log, smaller sail and tool buttons), and the menus, settings and crate screens get wider and shorter so they fit without scrolling where possible. In Wreckers' Night the move stick stays under your left thumb and the fire cluster under your right, and the first-round hints move clear of the buttons. Phone notches are respected on both sides.
 
+In the first-person modes (Wreckers' Night, Keeper's Last Light and Maren's End) the round buttons at the top left of a phone come first, upright or sideways: the part's name, the clock and what's to be done start underneath them, your health, points and calling's meters sit under those words, and the feed and anything at the top middle (a room's name, a boss's strength, the bridge) move down out of the way whenever the buttons reach across to them.
+
 
 On foot (Wreckers' Night and the Lighthouse), the walking stick eases in: a small push is a slow walk, the edge of the ring a walk at four-fifths of the keyboard's pace (the same pace looks much quicker on a small screen), and you only run when you push out past the ring to the dotted outer circle (it lights up). The ring follows your thumb only beyond that.
 ## Drowned Reach (a war for the islands)

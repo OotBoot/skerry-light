@@ -1462,7 +1462,9 @@ function fpsHud() {
     const rx = W - Math.max(12, FPS.safeRight || 0);
     ctx.textAlign = 'right'; ctx.font = mono(12); ctx.fillStyle = 'rgba(236,228,207,0.85)'; ctx.fillText(`${mine.k} K · ${mine.d} D`, rx, top);
     ctx.font = mono(10);
-    FPS.feed.slice(-2).forEach((f, i) => { ctx.fillStyle = `rgba(236,228,207,${Math.min(1, f.t) * 0.75})`; ctx.fillText(f.text, rx, top + 18 + i * 13, W * 0.34); });
+    // (the feed goes under the buttons when, held upright, they reach across to it)
+    const fy = fpsHudBtnRight() > rx - W * 0.34 - 8 ? Math.max(top + 18, fpsHudTop()) : top + 18;
+    FPS.feed.slice(-2).forEach((f, i) => { ctx.fillStyle = `rgba(236,228,207,${Math.min(1, f.t) * 0.75})`; ctx.fillText(f.text, rx, fy + i * 13, W * 0.34); });
     // health: four small pips at top left, beside the menu
     const tops = document.querySelector('.fpstop'), lx = tops ? tops.getBoundingClientRect().right - cv.getBoundingClientRect().left + 10 : Math.max(12, FPS.safeLeft || 0) + 92;
     // (under the buttons, so they stay clear of the compass)
@@ -1560,6 +1562,20 @@ function fpsSafeArea() {
   FPS.safeTop = parseFloat(cs.top) || 0; FPS.safeLeft = parseFloat(cs.left) || 0; FPS.safeRight = parseFloat(cs.right) || 0;
   probe.remove();
 }
+
+// on a phone the round buttons sit at top left: the HUD's top-left column starts under them, never behind them
+function fpsHudTop() {
+  if (!FPS.touch) return 14;
+  const tb = document.querySelector('.fpstop'), t0 = Math.max(10, FPS.safeTop || 0);
+  if (!tb || !cv) return t0 + 46;
+  const r = tb.getBoundingClientRect(), r0 = cv.getBoundingClientRect();
+  return r.height ? Math.max(t0, r.bottom - r0.top + 8) : t0;
+}
+// (the right edge of those buttons, so the feed top right can tell whether it must go under them too)
+function fpsHudBtnRight() { const tb = document.querySelector('.fpstop'); if (!tb || !cv || !FPS.touch) return 0; const r = tb.getBoundingClientRect(); return r.width ? r.right - cv.getBoundingClientRect().left : 0; }
+// the lines of words down the top left (a part's name, what's to be done) note how far down they reach, so the
+// health and points under them, and anything top middle, keep clear (read a frame late, which nobody sees)
+function fpsHudNote(y) { FPS.hudL = Math.max(FPS.hudL || 0, y); }
 
 // ---------- controls ----------
 // the shooter layout: WASD, Space jump, C crouch, Shift run, R reload, E use, 1-6 or the wheel for weapons, Q the

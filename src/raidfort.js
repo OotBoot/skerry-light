@@ -744,9 +744,9 @@ function rfPoseMaren(z, M, dt) {
 // ---------- on top: what's to be done, her soul's mark, the token ----------
 function rfHud(phone, mono, fell) {
   if (!RF.on) return;
-  const m = FPS.me, t = g.t, L = Math.max(14, FPS.safeLeft || 0), top = (phone ? Math.max(10, FPS.safeTop || 0) : 14) + (phone ? 36 : 46);
+  const m = FPS.me, t = g.t, L = Math.max(14, FPS.safeLeft || 0), top = fpsHudTop() + (phone ? 32 : 46);
   ctx.textAlign = 'left'; ctx.textBaseline = 'top';
-  const line = (s, y, c, f) => { ctx.font = f || mono(phone ? 10 : 12); ctx.fillStyle = c; ctx.fillText(s, L, y); };
+  const line = (s, y, c, f) => { ctx.font = f || mono(phone ? 10 : 12); ctx.fillStyle = c; ctx.fillText(s, L, y, W * 0.5); fpsHudNote(y + (f ? (phone ? 20 : 26) : (phone ? 14 : 17))); };
   ctx.shadowColor = 'rgba(0,0,0,0.9)'; ctx.shadowBlur = 6;
   if (RF.st === 'hunt') {
     const down = RF_APO_IDS.filter(k => RF.apo[k] === 2).length;

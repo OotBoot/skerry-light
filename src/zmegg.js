@@ -792,10 +792,10 @@ function zeDrawCoin(q, x, y, r, spin, t) {
   q.restore();
 }
 function zeHud() {
-  const phone = FPS.touch, L = Math.max(14, FPS.safeLeft || 0), top = phone ? Math.max(10, FPS.safeTop || 0) + 40 : 18;
+  const phone = FPS.touch, L = Math.max(14, FPS.safeLeft || 0), top = phone ? fpsHudTop() - 6 : 18;
   // what you carry: a small mark, top left
   if (zeMine() && (ZE.st === 2 || ZE.st === 5 || ZE.st === 6 || ZE.st === 9) && !(FPS.me.dead > 0)) {
-    ctx.save(); ctx.translate(L + 12, top + 14);
+    fpsHudNote(top + 30); ctx.save(); ctx.translate(L + 12, top + 14);
     if (ZE.st === 2) { ctx.fillStyle = '#5a7a68'; ctx.beginPath(); ctx.arc(0, 4, 6, 0, 6.2832); ctx.fill(); ctx.fillRect(-1.5, -10, 3, 12); }
     else {
       const lit = ZE.st !== 5, k = ZE.st === 9 ? 1 : 0;

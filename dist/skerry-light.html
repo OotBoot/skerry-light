@@ -13985,7 +13985,9 @@ function fpsHud() {
     const rx = W - Math.max(12, FPS.safeRight || 0);
     ctx.textAlign = 'right'; ctx.font = mono(12); ctx.fillStyle = 'rgba(236,228,207,0.85)'; ctx.fillText(`${mine.k} K · ${mine.d} D`, rx, top);
     ctx.font = mono(10);
-    FPS.feed.slice(-2).forEach((f, i) => { ctx.fillStyle = `rgba(236,228,207,${Math.min(1, f.t) * 0.75})`; ctx.fillText(f.text, rx, top + 18 + i * 13, W * 0.34); });
+    // (the feed goes under the buttons when, held upright, they reach across to it)
+    const fy = fpsHudBtnRight() > rx - W * 0.34 - 8 ? Math.max(top + 18, fpsHudTop()) : top + 18;
+    FPS.feed.slice(-2).forEach((f, i) => { ctx.fillStyle = `rgba(236,228,207,${Math.min(1, f.t) * 0.75})`; ctx.fillText(f.text, rx, fy + i * 13, W * 0.34); });
     // health: four small pips at top left, beside the menu
     const tops = document.querySelector('.fpstop'), lx = tops ? tops.getBoundingClientRect().right - cv.getBoundingClientRect().left + 10 : Math.max(12, FPS.safeLeft || 0) + 92;
     // (under the buttons, so they stay clear of the compass)
@@ -14083,6 +14085,20 @@ function fpsSafeArea() {
   FPS.safeTop = parseFloat(cs.top) || 0; FPS.safeLeft = parseFloat(cs.left) || 0; FPS.safeRight = parseFloat(cs.right) || 0;
   probe.remove();
 }
+
+// on a phone the round buttons sit at top left: the HUD's top-left column starts under them, never behind them
+function fpsHudTop() {
+  if (!FPS.touch) return 14;
+  const tb = document.querySelector('.fpstop'), t0 = Math.max(10, FPS.safeTop || 0);
+  if (!tb || !cv) return t0 + 46;
+  const r = tb.getBoundingClientRect(), r0 = cv.getBoundingClientRect();
+  return r.height ? Math.max(t0, r.bottom - r0.top + 8) : t0;
+}
+// (the right edge of those buttons, so the feed top right can tell whether it must go under them too)
+function fpsHudBtnRight() { const tb = document.querySelector('.fpstop'); if (!tb || !cv || !FPS.touch) return 0; const r = tb.getBoundingClientRect(); return r.width ? r.right - cv.getBoundingClientRect().left : 0; }
+// the lines of words down the top left (a part's name, what's to be done) note how far down they reach, so the
+// health and points under them, and anything top middle, keep clear (read a frame late, which nobody sees)
+function fpsHudNote(y) { FPS.hudL = Math.max(FPS.hudL || 0, y); }
 
 // ---------- controls ----------
 // the shooter layout: WASD, Space jump, C crouch, Shift run, R reload, E use, 1-6 or the wheel for weapons, Q the
@@ -21227,8 +21243,15 @@ function zmDrawFlat() {
 }
 
 // ---------- what you see on top ----------
+// (on a phone) the foot of the column down the left (the round, points, health, tonics), low enough that its top
+// stays under the buttons and whatever words are top left
+function zmLeftRb() {
+  const perks = Object.keys(ZM_PERKS).some(k => ZM.perks[k]);
+  return Math.min(H - 40, Math.max(H * 0.36, Math.max(FPS.hudLPrev || 0, fpsHudTop()) + 100 + (perks ? 40 : 0)));
+}
 function zmHud() {
   const m = FPS.me, phone = FPS.touch, t = g.t, down = zmIsDown() && !ZM.over, spec = zmSpecOn();
+  FPS.hudLPrev = FPS.hudL || 0; FPS.hudL = 0;
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   const mono = px => `600 ${px}px "Courier Prime", monospace`, fell = px => `400 ${px}px "IM Fell English SC", serif`;
   const max = ZM.perks.stout ? ZMC.HP_STOUT : ZMC.HP;
@@ -21253,9 +21276,9 @@ function zmHud() {
     if (typeof zmpHud === 'function') zmpHud(cx, cy);   // [pap] the Equinox Gale
     if (FPS.hitT > 0) { ctx.strokeStyle = FPS.hitHead ? 'rgba(255,90,60,0.95)' : 'rgba(255,240,200,0.95)'; ctx.lineWidth = 2; ctx.beginPath(); for (const [dx, dy] of [[1, 1], [-1, 1], [1, -1], [-1, -1]]) { ctx.moveTo(cx + dx * 6, cy + dy * 6); ctx.lineTo(cx + dx * 13, cy + dy * 13); } ctx.stroke(); }
   }
-  const L = Math.max(14, FPS.safeLeft || 0), R = W - Math.max(14, FPS.safeRight || 0), top = phone ? Math.max(10, FPS.safeTop || 0) : 14;
+  const L = Math.max(14, FPS.safeLeft || 0), R = W - Math.max(14, FPS.safeRight || 0), top = phone ? Math.max(10, FPS.safeTop || 0) : 14, hudTop = phone ? fpsHudTop() : 14;
   // the round, bottom left: chalk tallies for the first five, then the number
-  const rb = phone ? H * 0.36 : H - 22, rs = phone ? 0.7 : 1;
+  const rb = phone ? zmLeftRb() : H - 22, rs = phone ? 0.7 : 1;
   ctx.save(); ctx.translate(L, rb); ctx.scale(rs, rs);
   const glowR = ZM.phase === 'break' ? 0.55 + 0.45 * Math.sin(t * 4) : 1;
   ctx.fillStyle = ctx.strokeStyle = `rgba(178,24,18,${glowR})`; ctx.lineCap = 'round';
@@ -21314,7 +21337,9 @@ function zmHud() {
     if (!w.melee && (m.ammo === 0 || (m.ammo < w.mag && m.ammo <= Math.ceil(w.mag * 0.25))) && !(m.reload > 0) && !ZM.over) { ctx.textAlign = 'center'; ctx.font = mono(13); ctx.fillStyle = (ZM.res[FPS.weapon] || 0) > 0 ? 'rgba(236,228,207,0.8)' : '#e46c4f'; ctx.fillText((ZM.res[FPS.weapon] || 0) > 0 ? 'R TO RELOAD' : m.ammo ? 'LOW AMMUNITION' : down ? 'NO AMMUNITION' : 'NO AMMUNITION · V OR FIRE TO KNIFE', cx, cy + 46); }
   } else { zmPadState(); zmDrawStick(); }
   // together: everyone's points, down the right (yours lit), and anyone down marked
-  let feedY = phone ? top + 48 : 16;
+  // (on a phone: under the buttons if they reach across to it, as they do held upright)
+  const feedW = W * (phone ? 0.42 : 0.45), feedUnder = phone && fpsHudBtnRight() > R - feedW - 8;
+  let feedY = phone ? (feedUnder ? hudTop : top + 4) : 16;
   if (ZM.net) {
     ctx.textAlign = 'right'; ctx.textBaseline = 'top'; ctx.font = mono(phone ? 10 : 12);
     const rows = ZM.hum.map(([sid, nick]) => { const me = sid === m.id, r = FPS.remote.get(sid); return { me, nick, pts: me ? ZM.pts : r ? r.pts || 0 : 0, down: me ? ZM.downT > 0 : r && r.down, out: me ? ZM.ghost : r && (r.dead || r.left) }; });
@@ -21323,11 +21348,16 @@ function zmHud() {
   }
   // the feed, top right
   ctx.textAlign = 'right'; ctx.textBaseline = 'top'; ctx.font = mono(phone ? 10 : 12);
-  FPS.feed.slice(phone ? -2 : -5).forEach((f, i) => { ctx.fillStyle = `rgba(236,228,207,${Math.min(1, f.t) * 0.85})`; ctx.fillText(f.text, R, feedY + i * (phone ? 13 : 17), W * (phone ? 0.5 : 0.45)); });
+  const feedN = FPS.feed.slice(phone ? -2 : -5);
+  feedN.forEach((f, i) => { ctx.fillStyle = `rgba(236,228,207,${Math.min(1, f.t) * 0.85})`; ctx.fillText(f.text, R, feedY + i * (phone ? 13 : 17), feedW); });
+  // anything top middle (a room's name, a boss's strength, the bridge) goes under the words top left, and under
+  // the feed when that's come down under the buttons too
+  const ctop = phone ? Math.max(hudTop, (FPS.hudLPrev || 0) + 8, feedUnder ? feedY + feedN.length * 13 + 6 : 0) : 14;
+  FPS.hudCtop = ctop;
   if (typeof rclHud === 'function') rclHud(phone, mono, fell);   // [classes] your calling's grenade and ultimate (src/rclass.js)
-  if (typeof zbHud === 'function') zbHud(phone, top);   // [boss] their strength, top middle (and the false light's glare)
+  if (typeof zbHud === 'function') zbHud(phone, phone ? ctop - 50 : top);   // [boss] their strength, top middle (and the false light's glare)
   // the room you've come into
-  if (ZM.zoneT > 0) { ctx.textAlign = 'center'; ctx.textBaseline = 'top'; ctx.font = fell(phone ? 16 : 22); ctx.fillStyle = `rgba(236,228,207,${Math.min(1, ZM.zoneT) * 0.8})`; const nm = zmZoneName(ZM.zone); ctx.fillText(nm.charAt(0).toUpperCase() + nm.slice(1), cx, phone ? top + 30 : 18); }
+  if (ZM.zoneT > 0) { ctx.textAlign = 'center'; ctx.textBaseline = 'top'; ctx.font = fell(phone ? 16 : 22); ctx.fillStyle = `rgba(236,228,207,${Math.min(1, ZM.zoneT) * 0.8})`; const nm = zmZoneName(ZM.zone); ctx.fillText(nm.charAt(0).toUpperCase() + nm.slice(1), cx, phone ? ctop : 18); }
   // a round beginning, salvage taken
   if (ZM.banner) {
     const b = ZM.banner, a = Math.min(1, b.t, 4 - b.t);
@@ -27403,10 +27433,10 @@ function zeDrawCoin(q, x, y, r, spin, t) {
   q.restore();
 }
 function zeHud() {
-  const phone = FPS.touch, L = Math.max(14, FPS.safeLeft || 0), top = phone ? Math.max(10, FPS.safeTop || 0) + 40 : 18;
+  const phone = FPS.touch, L = Math.max(14, FPS.safeLeft || 0), top = phone ? fpsHudTop() - 6 : 18;
   // what you carry: a small mark, top left
   if (zeMine() && (ZE.st === 2 || ZE.st === 5 || ZE.st === 6 || ZE.st === 9) && !(FPS.me.dead > 0)) {
-    ctx.save(); ctx.translate(L + 12, top + 14);
+    fpsHudNote(top + 30); ctx.save(); ctx.translate(L + 12, top + 14);
     if (ZE.st === 2) { ctx.fillStyle = '#5a7a68'; ctx.beginPath(); ctx.arc(0, 4, 6, 0, 6.2832); ctx.fill(); ctx.fillRect(-1.5, -10, 3, 12); }
     else {
       const lit = ZE.st !== 5, k = ZE.st === 9 ? 1 : 0;
@@ -28008,10 +28038,10 @@ function zhDrawCoin(q, x, y, r, spin, t) {
 }
 function zhHud() {
   if (!ZH.P) return;
-  const phone = FPS.touch, L = Math.max(14, FPS.safeLeft || 0), top = phone ? Math.max(10, FPS.safeTop || 0) + 40 : 18;
+  const phone = FPS.touch, L = Math.max(14, FPS.safeLeft || 0), top = phone ? fpsHudTop() - 6 : 18;
   // what you carry: a small mark, top left (the key, or her ring)
   if (zhMine() && (ZH.st === 5 || zhRing2(ZH.st)) && !(FPS.me.dead > 0)) {
-    ctx.save(); ctx.translate(L + 12, top + 14); ctx.lineWidth = 2.5;
+    fpsHudNote(top + 30); ctx.save(); ctx.translate(L + 12, top + 14); ctx.lineWidth = 2.5;
     if (ZH.st === 5) { ctx.strokeStyle = '#8a8e94'; ctx.beginPath(); ctx.arc(0, -6, 5, 0, 6.2832); ctx.stroke(); ctx.beginPath(); ctx.moveTo(0, -1); ctx.lineTo(0, 12); ctx.moveTo(0, 8); ctx.lineTo(5, 8); ctx.moveTo(0, 12); ctx.lineTo(4, 12); ctx.stroke(); }
     else { const gr = ctx.createRadialGradient(0, 0, 1, 0, 0, 16); gr.addColorStop(0, 'rgba(255,230,150,0.5)'); gr.addColorStop(1, 'rgba(255,230,150,0)'); ctx.fillStyle = gr; ctx.fillRect(-16, -16, 32, 32); ctx.strokeStyle = '#f0c850'; ctx.beginPath(); ctx.arc(0, 0, 6, 0, 6.2832); ctx.stroke(); }
     ctx.restore();
@@ -28336,13 +28366,14 @@ function raidSpawnAt(x, y, o) {
 function raidHud(phone, mono, fell) {
   if (!RAID.on) return;
   const S = raidStage(); if (!S) return;
-  const top = phone ? Math.max(10, FPS.safeTop || 0) : 14;
+  const top = fpsHudTop();
   ctx.textAlign = 'left'; ctx.textBaseline = 'top';
   const L = Math.max(14, FPS.safeLeft || 0);
   ctx.font = fell(phone ? 15 : 19); ctx.fillStyle = 'rgba(236,228,207,0.85)';
-  ctx.fillText(`Maren’s End · ${raidNumeral(RAID.stage + 1)} · ${S.n}`, L, top);
+  ctx.fillText(`Maren’s End · ${raidNumeral(RAID.stage + 1)} · ${S.n}`, L, top, W * 0.5);
   ctx.font = mono(phone ? 10 : 12); ctx.fillStyle = 'rgba(236,228,207,0.55)';
-  ctx.fillText(raidClock(RAID.t), L, top + (phone ? 20 : 26));
+  ctx.fillText(raidClock(RAID.t), L, top + (phone ? 18 : 26));
+  fpsHudNote(top + (phone ? 30 : 40));
   raidCall('hud', phone, mono, fell);
 }
 
@@ -28885,7 +28916,7 @@ RAID_STAGES.descent = {
     }
   },
   hud(phone, mono, fell) {
-    const S = RAID.st, m = FPS.me, L = Math.max(14, FPS.safeLeft || 0), top = (phone ? Math.max(10, FPS.safeTop || 0) : 14) + (phone ? 34 : 44), t = g.t;
+    const S = RAID.st, m = FPS.me, L = Math.max(14, FPS.safeLeft || 0), top = fpsHudTop() + (phone ? 32 : 44), t = g.t;
     const below = rswBelow(m.jz);
     let line;
     if (m.jz >= RSW.SEA - 1) line = 'Walk the Long Pier to the Swallow, and step off the end.';
@@ -28894,7 +28925,7 @@ RAID_STAGES.descent = {
     else if (S.door === 1) line = `Sent back inside the ring: ${Math.min(S.kills, RSW.NEED)} of ${RSW.NEED}`;
     else line = 'The door is open. Go through.';
     ctx.textAlign = 'left'; ctx.textBaseline = 'top'; ctx.font = mono(phone ? 10 : 13); ctx.fillStyle = S.door === 1 ? '#bfe4ff' : 'rgba(236,228,207,0.8)';
-    ctx.fillText(line, L, top, W * 0.5);
+    ctx.fillText(line, L, top, W * 0.5); fpsHudNote(top + (phone ? 14 : 18));
     // in the light or in the dark
     if (below && !(m.dead > 0) && !zmIsDown() && !ZM.over) {
       if (!S.inLight) {
@@ -28914,7 +28945,7 @@ RAID_STAGES.descent = {
       ctx.fillText(`MAREN’S WEIGHT · ${Math.round((1 - this.speedK()) * 100)}% SLOWER`, cx, y0 + 8);
     }
     // the ring's tally, big, while the door's awake
-    if (S.door === 1) { ctx.textAlign = 'center'; ctx.textBaseline = 'top'; ctx.font = fell(phone ? 26 : 38); ctx.fillStyle = '#bfe4ff'; ctx.fillText(`${Math.min(S.kills, RSW.NEED)} / ${RSW.NEED}`, cx, phone ? top + 20 : 60); }
+    if (S.door === 1) { ctx.textAlign = 'center'; ctx.textBaseline = 'top'; ctx.font = fell(phone ? 26 : 38); ctx.fillStyle = '#bfe4ff'; ctx.fillText(`${Math.min(S.kills, RSW.NEED)} / ${RSW.NEED}`, cx, phone ? (FPS.hudCtop || top) + 2 : 60); }
     // lighting a brazier: a ring round the sights filling
     if (S.useI >= 0 && S.useT > 0) {
       const k = Math.min(1, S.useT / RSW.USE);
@@ -29421,7 +29452,7 @@ function rbApply(hz) {
 // the Divers are up, the three stands
 function rbHud(phone0, mono0, fell0) {
   if (!RB.on || ZM.over) return;
-  const phone = FPS.touch, s = phone ? 0.75 : 1, cx = W / 2, boss = ZM.z.some(z => z.boss && !z.dead), top = (phone ? Math.max(10, FPS.safeTop || 0) + 52 : 64) + (boss ? 46 * s : 0);
+  const phone = FPS.touch, s = phone ? 0.75 : 1, cx = W / 2, boss = ZM.z.some(z => z.boss && !z.dead), top = (phone ? (FPS.hudCtop || 60) + 18 : 64) + (boss ? 46 * s : 0);
   const fell = px => `400 ${px * s}px "IM Fell English SC", serif`, mono = px => `600 ${px * s}px "Courier Prime", monospace`;
   ctx.save(); ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
   const need = rbNeed(), falling = !!RB.falling;
@@ -30468,9 +30499,9 @@ function rfPoseMaren(z, M, dt) {
 // ---------- on top: what's to be done, her soul's mark, the token ----------
 function rfHud(phone, mono, fell) {
   if (!RF.on) return;
-  const m = FPS.me, t = g.t, L = Math.max(14, FPS.safeLeft || 0), top = (phone ? Math.max(10, FPS.safeTop || 0) : 14) + (phone ? 36 : 46);
+  const m = FPS.me, t = g.t, L = Math.max(14, FPS.safeLeft || 0), top = fpsHudTop() + (phone ? 32 : 46);
   ctx.textAlign = 'left'; ctx.textBaseline = 'top';
-  const line = (s, y, c, f) => { ctx.font = f || mono(phone ? 10 : 12); ctx.fillStyle = c; ctx.fillText(s, L, y); };
+  const line = (s, y, c, f) => { ctx.font = f || mono(phone ? 10 : 12); ctx.fillStyle = c; ctx.fillText(s, L, y, W * 0.5); fpsHudNote(y + (f ? (phone ? 20 : 26) : (phone ? 14 : 17))); };
   ctx.shadowColor = 'rgba(0,0,0,0.9)'; ctx.shadowBlur = 6;
   if (RF.st === 'hunt') {
     const down = RF_APO_IDS.filter(k => RF.apo[k] === 2).length;
@@ -31026,7 +31057,7 @@ function rclDrawOver() {
 // ---------- on top: the calling, its grenade and its ultimate (bottom left, where the rounds are elsewhere) ----------
 function rclHud(phone, mono, fell) {
   if (!rclOn() || !RCL.cls || zmSpecOn()) return;
-  const C = rclC(), t = g.t, L = Math.max(14, FPS.safeLeft || 0), rb = phone ? H * 0.36 : H - 22, r = phone ? 15 : 19;
+  const C = rclC(), t = g.t, L = Math.max(14, FPS.safeLeft || 0), rb = phone ? zmLeftRb() : H - 22, r = phone ? 15 : 19;
   // the ultimate running: the edges lit in its colour
   if (RCL.ultT > 0) {
     const gr = ctx.createRadialGradient(cx, H / 2, Math.min(W, H) * 0.3, cx, H / 2, Math.max(W, H) * 0.7);

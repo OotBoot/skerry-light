@@ -414,10 +414,10 @@ function zhDrawCoin(q, x, y, r, spin, t) {
 }
 function zhHud() {
   if (!ZH.P) return;
-  const phone = FPS.touch, L = Math.max(14, FPS.safeLeft || 0), top = phone ? Math.max(10, FPS.safeTop || 0) + 40 : 18;
+  const phone = FPS.touch, L = Math.max(14, FPS.safeLeft || 0), top = phone ? fpsHudTop() - 6 : 18;
   // what you carry: a small mark, top left (the key, or her ring)
   if (zhMine() && (ZH.st === 5 || zhRing2(ZH.st)) && !(FPS.me.dead > 0)) {
-    ctx.save(); ctx.translate(L + 12, top + 14); ctx.lineWidth = 2.5;
+    fpsHudNote(top + 30); ctx.save(); ctx.translate(L + 12, top + 14); ctx.lineWidth = 2.5;
     if (ZH.st === 5) { ctx.strokeStyle = '#8a8e94'; ctx.beginPath(); ctx.arc(0, -6, 5, 0, 6.2832); ctx.stroke(); ctx.beginPath(); ctx.moveTo(0, -1); ctx.lineTo(0, 12); ctx.moveTo(0, 8); ctx.lineTo(5, 8); ctx.moveTo(0, 12); ctx.lineTo(4, 12); ctx.stroke(); }
     else { const gr = ctx.createRadialGradient(0, 0, 1, 0, 0, 16); gr.addColorStop(0, 'rgba(255,230,150,0.5)'); gr.addColorStop(1, 'rgba(255,230,150,0)'); ctx.fillStyle = gr; ctx.fillRect(-16, -16, 32, 32); ctx.strokeStyle = '#f0c850'; ctx.beginPath(); ctx.arc(0, 0, 6, 0, 6.2832); ctx.stroke(); }
     ctx.restore();

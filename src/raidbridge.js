@@ -427,7 +427,7 @@ function rbApply(hz) {
 // the Divers are up, the three stands
 function rbHud(phone0, mono0, fell0) {
   if (!RB.on || ZM.over) return;
-  const phone = FPS.touch, s = phone ? 0.75 : 1, cx = W / 2, boss = ZM.z.some(z => z.boss && !z.dead), top = (phone ? Math.max(10, FPS.safeTop || 0) + 52 : 64) + (boss ? 46 * s : 0);
+  const phone = FPS.touch, s = phone ? 0.75 : 1, cx = W / 2, boss = ZM.z.some(z => z.boss && !z.dead), top = (phone ? (FPS.hudCtop || 60) + 18 : 64) + (boss ? 46 * s : 0);
   const fell = px => `400 ${px * s}px "IM Fell English SC", serif`, mono = px => `600 ${px * s}px "Courier Prime", monospace`;
   ctx.save(); ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
   const need = rbNeed(), falling = !!RB.falling;
