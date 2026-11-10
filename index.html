@@ -73,8 +73,9 @@
     <button class="newgame" id="fpsBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">Try the new game, <b>Wreckers' Night</b>: a multiplayer shootout on the skerry</span><span class="ng-go" aria-hidden="true">↓</span></button>
     <button class="newgame warbanner" id="warBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">And another, <b>Drowned Reach</b>: a war for the islands, alone or with up to ten players</span><span class="ng-go" aria-hidden="true">↓</span></button>
     <button class="newgame zmbanner" id="zmBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">And a fourth, <b>Keeper's Last Light</b>: hold the keeper's station against the drowned, round after round</span><span class="ng-go" aria-hidden="true">↓</span></button>
+    <button class="newgame rdbanner" id="rdBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">And a raid, <b>Maren's End</b>: down the Swallow, alone or with up to four</span><span class="ng-go" aria-hidden="true">↓</span></button>
     <div class="card boardcard" id="boardCard" aria-labelledby="boardHead">
-      <div class="cardtop"><span class="eyebrow">Best on record · all four games</span><button class="tool closebtn" id="boardRefresh" type="button">Refresh</button></div>
+      <div class="cardtop"><span class="eyebrow">Best on record · every game</span><button class="tool closebtn" id="boardRefresh" type="button">Refresh</button></div>
       <h1 id="boardHead">The Scoreboard</h1>
       <div class="nickrow" id="boardNameRow" hidden><label for="boardName">Your name</label><input id="boardName" type="text" maxlength="16" autocomplete="nickname" placeholder="your sailing name"></div>
       <div class="boardgames" id="boardGames" aria-live="polite"></div>
@@ -242,6 +243,43 @@
         <p><b>Bosses.</b> From round 10, and every fourth round after, something bigger comes in with them (two at once from round 20, three from 30, and more later; tougher every time). They count towards the round, are worth hundreds of points and always drop salvage. <b>The Diver</b>, a drowned giant in a brass helmet, drags an anchor: when a ring glows on the floor in front of him, get out of it (or jump) before the anchor comes down. <b>The Mooncusser</b>, a wrecker in chains, carries a false light on a pole: when he lifts it and it swells, look away (or get behind something), or it blinds you and draws you in to him; but while he holds it up he's open to your shots. <b>The Keelback</b>, a crab made of wrecks, rears up and a lane glows on the floor through you: step out of it before it charges, and if it runs into a wall it reels, its soft belly showing.</p>
         <p><b>Together.</b> Host a night and up to three others here can join it from this card. Nothing starts until the host presses Start the night, with whoever has joined. More of you means more of them each round. Points are your own: share the doors, race for the chest. Go down and you have half a minute on the floor for someone to hold Use beside you and get you up; bleed out and you're back next round with a pepperbox. The night ends when nobody is left standing. The pause menu doesn't stop a night together.</p>
         <p><b>Keys:</b> as Wreckers' Night, and F (or E) to use: buy, open, take, and hold it at a window to board it up. V (or the middle mouse button) for the knife, which never runs out; and with nothing left to fire, Fire slashes with it too. C switches the view. 1 and 2 your weapons, Tab how the night's going, Esc pauses. <b>Controller:</b> B to use, R3 the knife, d-pad down the view. <b>Touch:</b> the Use and knife buttons by Fire. On a phone, push the stick out to the dotted outer circle to run. Kills here count towards weapon and outfit crates too, and your best goes on the scoreboard.</p>
+      </details>
+    </div>
+    <div class="card zmcard rdcard" id="rdTitle" aria-labelledby="rdHead">
+      <div class="cardtop"><span class="eyebrow">A fifth game · a raid in parts · alone or up to four</span></div>
+      <h1 id="rdHead">Maren's End</h1>
+      <p>The sea round the Light has drained away. Where it was is a dry bed of salt and wrecks, and a long pier running out over it to the Swallow, the hole the water went down. Take Maren's Lantern, the one she rowed out with in 1887, and go down after it.</p>
+      <p class="muted">Part I, the Swallow: walk the Long Pier, drop into the hole (a long way down), and follow the Deep Path. The dark drains you; light the braziers with the lantern and stand in their light to mend. At the end, a door that opens when twenty of the drowned have been sent back in front of it.</p>
+      <div class="btnrow">
+        <button class="primary" id="rdPlay" type="button">Go down alone</button>
+        <button class="tool" id="rdWcrate" type="button">Weapon crates</button>
+        <button class="tool" id="rdOcrate" type="button">Outfit crates</button>
+        <button class="tool" id="rdSettings" type="button">Settings</button>
+      </div>
+      <p class="muted" id="rdRecord"></p>
+      <section class="warmp zmmp" id="rdMp" aria-labelledby="rdMpHead">
+        <h2 id="rdMpHead">Play together · up to four</h2>
+        <p class="muted" id="rdMpNote">Looking for other players…</p>
+        <div class="nickrow"><label for="rdNick">Your name</label><input id="rdNick" type="text" maxlength="16" autocomplete="nickname" placeholder="Keeper"></div>
+        <div id="rdMpOpen" hidden>
+          <div class="btnrow"><button class="tool" id="rdMpHost" type="button">Host a raid</button></div>
+          <div class="warlobbies" id="rdLobbies"></div>
+        </div>
+        <div class="warlobby" id="rdLobby" hidden>
+          <h3 id="rdLobbyHead">Your raid</h3>
+          <ol class="warlobbylist" id="rdLobbyList"></ol>
+          <p class="muted" id="rdLobbyMsg"></p>
+          <div class="btnrow"><button class="primary" id="rdMpStart" type="button">Start the raid</button><button class="tool" id="rdMpLeave" type="button">Leave</button></div>
+        </div>
+      </section>
+      <details class="howto">
+        <summary>How to play</summary>
+        <p><b>The Long Pier.</b> You start at the landward end of a pier that runs out over the dry bed of the sea. At its far end is the Swallow. Walk off the end and you fall for about thirty seconds, down a shaft lit only by what glows in its walls.</p>
+        <p><b>Maren's Lantern.</b> Everyone carries one, in the left hand, and it lights a little way round you. Hold Use (F or E; X on a pad) beside a dark brazier to light it from the lantern.</p>
+        <p><b>The dark.</b> At the bottom, the dark drains your health a little at a time; nothing else mends you. Inside a lit brazier's light you mend quickly and your ammunition is made up. Push on from one to the next.</p>
+        <p><b>The drowned.</b> Down here they glow, a cold blue, and they climb up out of the rock to come for you. You carry a pepperbox and a blunderbuss, and the weapon and outfit crates are earned here as at the Lighthouse.</p>
+        <p><b>The door.</b> At the end of the Deep Path a door glows in the rock. Send back twenty of the drowned inside the ring in front of it and it opens; go through. Together, anyone who goes down gets up again when a friend holds Use beside them, and anyone who bleeds out comes back when the next brazier is lit.</p>
+        <p><b>The board.</b> Maren's End's line on the scoreboard keeps your best time through the whole raid, the most damage you've done to its bosses in one raid, and everyone you've sent back in all your raids.</p>
       </details>
     </div>
   </div>
@@ -658,6 +696,7 @@
 <script src="src/zmswarm.js"></script>
 <script src="src/zmegg.js"></script>
 <script src="src/zmegg2.js"></script>
+<script src="src/raid.js"></script>
 <script src="src/zmnet.js"></script>
 <script src="src/war.js"></script>
 <script src="src/warview.js"></script>

@@ -1763,6 +1763,7 @@ function zmNear(x, y) { const I = FPS.g.isle; return I.sh.get(Math.floor(x / 6) 
 // in the way of something whose feet are at height feet? (stairs and floors low enough to step up onto aren't)
 function zmBlockedAt(x, y, pad, feet) {
   if (Math.hypot(x - FPSC.CX, y - FPSC.CY) > FPSC.R - 1.5) return true;
+  if (typeof raidBlock === 'function' && raidBlock(x, y, pad, feet)) return true;   // [raid] src/raid.js
   for (const s of zmNear(x, y)) {
     // (only what stands across the height of your body: not a floor above your head, nor one you can step up on,
     // nor anything below your feet)
@@ -2019,6 +2020,7 @@ function zmStart(opts) {
   $('fpsPad').hidden = !FPS.touch; FPS.hintT = 8; if (FPS.touch) fpsSafeArea();
   { const e = document.querySelector('#fpsMenu .eyebrow'); if (e) e.textContent = 'Keeper’s Last Light'; $('fpsLeave').textContent = 'Leave the Lighthouse'; $('fpsResume').textContent = 'Back to the Light'; }
   if ($('zmUnstick')) $('zmUnstick').hidden = false;
+  if (typeof raidBegin === 'function') raidBegin(opts.map || ZM_PICK);   // [raid] Maren's End (src/raid.js)
   const MAP = zmUseMap(opts.map || ZM_PICK);
   FPS.g = zmArena();
   const [sx, sy] = [FPSC.CX + ZMD.START[0], FPSC.CY + ZMD.START[1]];
@@ -2038,6 +2040,7 @@ function zmStart(opts) {
   $('zmOver').hidden = true;
   $('zmAgain').textContent = ZM.net ? 'Back to the lobby' : 'Hold it again';
   fpsFeed(MAP.land(ZM.net ? ZM.hum.length : 0));
+  if (typeof raidAfterStart === 'function') raidAfterStart();   // [raid]
   try { cv.focus(); } catch (e) {}
 }
 function zmStop() {
@@ -2045,6 +2048,7 @@ function zmStop() {
   if (typeof zmpStop === 'function') zmpStop();   // [pap]
   if (typeof zxReset === 'function') zxReset();   // [chest]
   if (typeof ztStop === 'function') ztStop(0.6);   // [theme]
+  if (typeof raidStop === 'function') raidStop();   // [raid]
   ZM.on = false; ZM.net = null; FPS.zm = false; FPS.eyeLag = 0; FPS.downEye = 0; ZM.spec = null; FPS.specId = null;
   $('stage').classList.remove('zmmode'); $('zmOver').hidden = true;
   { const e = document.querySelector('#fpsMenu .eyebrow'); if (e) e.textContent = "Wreckers' Night carries on without you"; $('fpsLeave').textContent = 'Leave the island'; $('fpsResume').textContent = 'Back to the fight'; }
@@ -2076,7 +2080,7 @@ function zmFrame(dt) {
       // patched up quickly, if they leave you alone for a few seconds
       FPS.calm = (FPS.calm || 0) + dt;
       const max = ZM.perks.stout ? ZMC.HP_STOUT : ZMC.HP;
-      if (m.dead <= 0 && !zmIsDown() && m.hp < max && FPS.calm > (ZM.perks.grog ? 1.6 : 3.2)) m.hp = max;
+      if (m.dead <= 0 && !zmIsDown() && m.hp < max && FPS.calm > (ZM.perks.grog ? 1.6 : 3.2) && !(typeof RAID !== 'undefined' && RAID.on)) m.hp = max;   // [raid] (there, only a lit brazier mends you)
       if (ZM.downT > 0) zmDownTick(dt);
       if (m.cd > 0) m.cd -= dt;
       if (m.reload > 0) { m.reload -= dt; if (m.reload <= 0) { m.reload = 0; zmReloaded(); } }
@@ -2128,10 +2132,11 @@ function zmTick(dt) {
   else {
     if (ZM.net === 'host') zmnHost(dt);
     ZM.players = zmPlayers();
+    if ((typeof RAID !== 'undefined' && RAID.on)) ZM.players = raidPlayers(ZM.players);   // [raid] (who they can come after)
     // the grid's distances from everyone standing, a few times a second
     ZM.navT -= dt;
     if (ZM.navT <= 0) { ZM.navT = 0.25; zmNavFrom(ZM.players); }
-    zmRounds(dt);
+    if ((typeof RAID !== 'undefined' && RAID.on)) raidHostTick(dt); else zmRounds(dt);   // [raid] no rounds there: its parts instead
     zmZombies(dt);
     zmDropsTick(dt);
     zmBoxTick(dt);
@@ -2150,6 +2155,7 @@ function zmTick(dt) {
   if (typeof zxTick === 'function') zxTick(dt);   // [chest] what the chest's weapons throw, and what they leave burning
   if (typeof zeTick === 'function') zeTick(dt);   // [egg hook] src/zmegg.js
   if (typeof zhTick === 'function') zhTick(dt);   // [egg2 hook] src/zmegg2.js
+  if ((typeof RAID !== 'undefined' && RAID.on)) raidMe(dt);   // [raid] your own side of it
   if (typeof zbMe === 'function') zbMe(dt);   // [boss] their blows running on (joined), and what they've done to me (src/zmboss.js)
   zmNearest();
   // holding Use at a window nails its boards back; beside someone who's down, gets them up
@@ -2199,7 +2205,8 @@ function zmEnd() {
   FPS.me.dead = FPSC.RESPAWN - 0.6; FPS.scoped = false;
   ZM.over = { t: 0 };
   zmSound('over');
-  if (typeof scoreReport === 'function') scoreReport('zm', Math.max(0, ZM.round - 1), ZM.kills);
+  if ((typeof RAID !== 'undefined' && RAID.on)) raidReport();   // [raid]
+  else if (typeof scoreReport === 'function') scoreReport('zm', Math.max(0, ZM.round - 1), ZM.kills);
 }
 
 // ---------- rounds ----------
@@ -2367,6 +2374,7 @@ function zmZombies(dt) {
     if (z.hitT > 0) z.hitT -= dt;
     z.t += dt;
     if (z.dead) { z.deadT = (z.deadT || 0) + dt; continue; }
+    if (z.rr > 0 && typeof raidRise === 'function') { raidRise(z, dt); continue; }   // [raid] rising out of the ground
     if (z.boss && typeof zbTick === 'function') { zbTick(z, dt, nearest); continue; }
     if (z.skit && z.st === 'out') { zwOut(z, dt); continue; }   // [swarm] a crab, straight in at its window   // [boss] each goes its own way (src/zmboss.js)
     const step = z.sp * dt * (z.slow > 0 && typeof zmpSlowK === 'function' ? zmpSlowK(z) : 1);   // [pap] (slowed by the Equinox Gale)
@@ -2630,6 +2638,7 @@ function zmHurt(d, dmg, head, code, by, how) {
   if (!d || d.dead) return;
   d.hitT = 0.15;
   if (typeof zmpDmg === 'function') dmg = zmpDmg(dmg, code, by);   // [pap] reforged weapons hit harder (the shooter's side)
+  if (typeof raidHurtK === 'function') dmg = raidHurtK(d, dmg, code, by);   // [raid] the stage's say (the shooter's side)
   if (ZM.net === 'client') { zmnHit(d, dmg, head, code, how); return; }
   const k = (ZM_DMG[code] == null ? 1 : ZM_DMG[code]) * (d.mark > 0 ? 1.5 : 1);   // [pap] (lit by the Leading Light: hurt worse)
   d.hp -= d.boss && typeof zbHurtK === 'function' ? zbHurtK(d, dmg * k, how) : ZM.insta > 0 ? 1e9 : dmg * k;   // [boss] no one-hit kills on them
@@ -2648,6 +2657,7 @@ function zmKill(d, head, code, how, by) {
   if (d.boss && typeof zbKilled === 'function') zbKilled(d, how, by);   // [boss] its reward and its salvage
   if (typeof zeKill === 'function') zeKill(d, how, by);   // [egg hook] src/zmegg.js
   if (typeof zhKill === 'function') zhKill(d, how, by);   // [egg2 hook] src/zmegg2.js
+  if (typeof raidKill === 'function') raidKill(d, how, by);   // [raid]
 }
 // crates (as for Wreckers' Night, every third kill here)
 function zmEarnKill() {
@@ -2904,6 +2914,7 @@ function zmNearest() {
   for (const w of ZM.windows) if (!w.sea && w.boards < 6 && zmOpen(w.zone)) consider({ k: 'win', w }, w.x - w.nx * 0.95, w.y - w.ny * 0.95, w.z || 0, w.hatch ? 1.6 : 1.9, false);
   if (typeof zeNearest === 'function') zeNearest(consider);   // [egg hook] src/zmegg.js
   if (typeof zhNearest === 'function') zhNearest(consider);   // [egg2 hook] src/zmegg2.js
+  if (typeof raidConsider === 'function') raidConsider(consider);   // [raid]
   // (down on the floor, nothing's in reach but your pepperbox)
   ZM.near = zmIsDown() ? null : best;
   ZM.prompt = ZM.near ? zmPrompt(ZM.near) : null;
@@ -2911,6 +2922,7 @@ function zmNearest() {
 function zmPrompt(o) {
   { const r = typeof zmpPrompt === 'function' && zmpPrompt(o); if (r) return r; }   // [pap] the bench, a reforged weapon's ammunition
   { const r = typeof zmlPrompt === 'function' && zmlPrompt(o); if (r) return r; }   // [lamp] the lever
+  { const r = typeof raidPrompt === 'function' && raidPrompt(o); if (r) return r; }   // [raid]
   if (o.k === 'egg') return typeof zePrompt === 'function' ? zePrompt(o) : null;   // [egg hook] src/zmegg.js
   if (o.k === 'egg2') return typeof zhPrompt === 'function' ? zhPrompt(o) : null;   // [egg2 hook] src/zmegg2.js
   if (o.k === 'buy') {
@@ -2930,6 +2942,7 @@ function zmUse() {
   const o = ZM.near, m = FPS.me; if (!o || m.dead > 0 || zmIsDown() || ZM.over) return;
   if (typeof zmpUse === 'function' && zmpUse(o)) return;   // [pap]
   if (typeof zmlUse === 'function' && zmlUse(o)) return;   // [lamp]
+  if (typeof raidUse === 'function' && raidUse(o)) return;   // [raid]
   if (o.k === 'egg') { if (typeof zeUse === 'function') zeUse(o); return; }   // [egg hook] src/zmegg.js
   if (o.k === 'egg2') { if (typeof zhUse === 'function') zhUse(o); return; }   // [egg2 hook] src/zmegg2.js
   const pay = c => { if (ZM.pts < c) { zmSound('no'); fpsFeed('Not enough points.'); return false; } ZM.pts -= c; ZM.spent += c; return true; };
@@ -3061,6 +3074,7 @@ function zmGetUp(by) {
   zmSound('wind');
 }
 function zmShowOver() {
+  if ((typeof RAID !== 'undefined' && RAID.on)) return raidShowOver();   // [raid]
   const r = ZM.round, held = Math.max(0, r - 1);
   $('zmOverHead').textContent = held ? `The light went out on round ${r}` : 'The light went out';
   $('zmOverStats').textContent = (ZM.net ? `${ZM.hum.length} of you. ` : '') + `You held ${held} ${held === 1 ? 'round' : 'rounds'}. ${ZM.kills} drowned sent back (${ZM.heads} through the head), ${ZM.doorsOpened} ${ZM.doorsOpened === 1 ? 'door' : 'doors'} opened, ${ZM.pts + ZM.spent} points earned.`;
@@ -3320,6 +3334,7 @@ function zm3dBuild() {
   zm3dTonics(grp, G0);
   if (typeof ze3dBuild === 'function') ze3dBuild(grp);   // [egg hook] src/zmegg.js
   if (typeof zh3dBuild === 'function') zh3dBuild(grp);   // [egg2 hook] src/zmegg2.js
+  if (typeof raid3dBuild === 'function') raid3dBuild(grp);   // [raid]
   zm3dTower(grp);
   zm3dLantern(grp);
   zm3dWater(grp);
@@ -3699,6 +3714,7 @@ function zmPose(z, M, dt) {
   M.coat.emissive.setRGB(0.12 * flash + hot * 0.4, 0.12 * flash + hot * 0.14, 0.1 * flash);
   if (z.burn && !z.charred) { z.charred = true; M.skin.color.multiplyScalar(0.35); M.coat.color.multiplyScalar(0.35); }
   if (z.scorch > 0 && !z.burn) z.scorch = Math.max(0, z.scorch - dt * 0.8);
+  if (typeof raidPose === 'function') raidPose(z, M);   // [raid] they glow
   if (z.dead) {
     const k = Math.min(1, z.deadT / 0.6);
     if (z.burn) { const s = Math.max(0.01, 1 - z.deadT / 1.2); M.root.scale.set(s, s * (0.6 + 0.4 * s), s); }
@@ -3813,6 +3829,7 @@ function zmScene3D() {
   if (typeof zx3d === 'function') zx3d(dt);   // [chest] the light of flares and blasts
   if (typeof ze3d === 'function') ze3d(dt);   // [egg hook] src/zmegg.js
   if (typeof zh3d === 'function') zh3d(dt);   // [egg2 hook] src/zmegg2.js
+  if (typeof raid3d === 'function') raid3d(dt);   // [raid] (its own light and fog)
 }
 // painted over the 3D view: sparks between the burning, the chest's offer, and anyone down
 function zmDrawOver() {
@@ -3891,7 +3908,7 @@ function zmHud() {
   ctx.save(); ctx.translate(L, rb); ctx.scale(rs, rs);
   const glowR = ZM.phase === 'break' ? 0.55 + 0.45 * Math.sin(t * 4) : 1;
   ctx.fillStyle = ctx.strokeStyle = `rgba(178,24,18,${glowR})`; ctx.lineCap = 'round';
-  const r = ZM.round;
+  const r = (typeof RAID !== 'undefined' && RAID.on) ? 0 : ZM.round;   // [raid] (no rounds there)
   if (r > 0 && r <= 5) {
     ctx.lineWidth = 6;
     for (let i = 0; i < Math.min(r, 4); i++) { ctx.beginPath(); ctx.moveTo(8 + i * 18, -6); ctx.lineTo(4 + i * 18, -60); ctx.stroke(); }
@@ -4006,6 +4023,7 @@ function zmHud() {
   if (!FPS.mouse && !phone && !FPS.menu && !ZM.over) { ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = mono(12); ctx.fillStyle = 'rgba(236,228,207,0.6)'; ctx.fillText('Click to aim with the mouse', cx, H * 0.5 + 40); }
   if (typeof zeHud === 'function') zeHud();   // [egg hook] src/zmegg.js
   if (typeof zhHud === 'function') zhHud();   // [egg2 hook] src/zmegg2.js
+  if (typeof raidHud === 'function') raidHud(phone, mono, fell);   // [raid]
 }
 // down: the edges of the screen going red, thumping with your heart, deeper as the time runs out
 function zmHudDownGlow(t) {
