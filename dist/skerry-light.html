@@ -24231,58 +24231,359 @@ function zeSound(k, x, y, vol) {
 }
 
 // ---------- in 3D ----------
+// Each of the quest's things is made to be looked at twice: worked in more detail than the station's own props, and
+// a touch brighter, so it reads as something among the set dressing. Static parts are merged into one mesh a material.
 const Z3E = {};
+// a pile of shapes, each turned, scaled and moved into place, merged into one mesh a material when it's done
+function zeKit() {
+  const L = new Map(), m = new THREE.Matrix4(), e = new THREE.Euler(), q = new THREE.Quaternion(), p = new THREE.Vector3(), s = new THREE.Vector3(), up = new THREE.Vector3(0, 1, 0), d = new THREE.Vector3();
+  const push = (mat, geo) => { if (!L.has(mat)) L.set(mat, []); L.get(mat).push(geo); return geo; };
+  return {
+    // (x, y, z: three's own axes, in the group: x east, y up, z south; sc: a number or [x, y, z])
+    add(mat, geo, x, y, z, rx, ry, rz, sc) {
+      e.set(rx || 0, ry || 0, rz || 0); q.setFromEuler(e);
+      if (sc == null) s.set(1, 1, 1); else if (typeof sc === 'number') s.setScalar(sc); else s.set(sc[0], sc[1], sc[2]);
+      geo.applyMatrix4(m.compose(p.set(x || 0, y || 0, z || 0), q, s)); return push(mat, geo);
+    },
+    // a shape a unit tall, stood on its end and stretched from a to b (each [x, y, z]); sx, sz: its girth
+    along(mat, geo, a, b, sx, sz) {
+      d.set(b[0] - a[0], b[1] - a[1], b[2] - a[2]); const len = d.length() || 1e-4;
+      q.setFromUnitVectors(up, d.multiplyScalar(1 / len)); s.set(sx == null ? 1 : sx, len, sz == null ? (sx == null ? 1 : sx) : sz);
+      geo.applyMatrix4(m.compose(p.set((a[0] + b[0]) / 2, (a[1] + b[1]) / 2, (a[2] + b[2]) / 2), q, s)); return push(mat, geo);
+    },
+    // a rod (a thin cylinder) from a to b, or along a path of points
+    rod(mat, a, b, r, seg) { return this.along(mat, new THREE.CylinderGeometry(r, r, 1, seg || 5, 1, true), a, b, 1); },
+    path(mat, pts, r, seg) { for (let i = 0; i < pts.length - 1; i++) this.rod(mat, pts[i], pts[i + 1], r, seg); for (let i = 1; i < pts.length - 1; i++) this.add(mat, new THREE.SphereGeometry(r, seg || 5, 3), ...pts[i]); },
+    into(g) { for (const [mat, list] of L) { const geo = z3Merge(list); if (geo) g.add(new THREE.Mesh(geo, mat)); } L.clear(); return g; },
+  };
+}
+// the bell's tongue: the eye it hung by, the shank, the ball, its flight and the little eye for the lanyard, bronze
+// gone green (its origin at the eye; it hangs down -y)
+function zeTongue(M) {
+  const K = zeKit(), g = new THREE.Group();
+  K.add(M.bronze, new THREE.TorusGeometry(0.024, 0.008, 5, 12), 0, 0, 0);
+  K.add(M.bronze, new THREE.CylinderGeometry(0.011, 0.016, 0.25, 7), 0, -0.15, 0);
+  K.add(M.bronze, new THREE.CylinderGeometry(0.02, 0.012, 0.03, 7), 0, -0.04, 0);
+  K.add(M.bronze, new THREE.SphereGeometry(0.05, 12, 9), 0, -0.31, 0);
+  K.add(M.bronze, new THREE.CylinderGeometry(0.019, 0.013, 0.07, 7), 0, -0.385, 0);
+  K.add(M.bronze, new THREE.TorusGeometry(0.014, 0.005, 4, 8), 0, -0.432, 0, 0, Math.PI / 2, 0);
+  // the crust of the sea on it, in patches
+  K.add(M.verd, new THREE.SphereGeometry(0.0515, 10, 5, 0.3, 3.4, 1.1, 1.3), 0, -0.31, 0);
+  K.add(M.verd, new THREE.SphereGeometry(0.0515, 8, 4, 4.2, 1.6, 0.3, 0.9), 0, -0.31, 0);
+  K.add(M.verd, new THREE.CylinderGeometry(0.0125, 0.0165, 0.1, 7, 1, true, 1, 2.6), 0, -0.2, 0);
+  K.add(M.crust, new THREE.SphereGeometry(0.012, 5, 3), 0.035, -0.29, 0.03, 0, 0, 0, [1, 0.6, 1]);
+  K.add(M.crust, new THREE.SphereGeometry(0.01, 5, 3), -0.03, -0.33, -0.035, 0, 0, 0, [1, 0.6, 1]);
+  K.add(M.crust, new THREE.SphereGeometry(0.008, 5, 3), 0.012, -0.12, 0.01);
+  return K.into(g);
+}
 function ze3dBuild(grp) {
   const P = ZE.P; if (!P) return;
-  const G0 = FPSC.GROUND, soft = z3Soft('rgba(255,250,225,1)', 'rgba(255,250,225,0)');
-  const glint = c => { const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: soft, color: new THREE.Color(c || '#fff4d0'), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false })); s.scale.setScalar(0.3); s.visible = false; grp.add(s); return s; };
+  const G0 = FPSC.GROUND, soft = z3Soft('rgba(255,250,225,1)', 'rgba(255,250,225,0)'), PI = Math.PI;
+  const addSprite = (c, par, sc, add) => { const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: soft, color: new THREE.Color(c), transparent: true, depthWrite: false, blending: add === false ? THREE.NormalBlending : THREE.AdditiveBlending, fog: false })); s.scale.setScalar(sc || 1); (par || grp).add(s); return s; };
+  // glints: a bright point and a soft halo round it; one small light goes with whichever is showing
+  const glint = c => { const col = c || '#fff4d0', h = addSprite(col), s = addSprite(col); s.visible = h.visible = false; return { s, h }; };
   Z3E.glints = {
     log: glint(), net: glint('#d8fff0'), boat: glint(), tap: glint('#ffe0a0'), hook: glint('#ffd8a0'), top: glint('#fff0c0'),
   };
-  // the Gannet's bell, on its bracket
+  Z3E.glintL = new THREE.PointLight(0xfff0d0, 0, 2.6, 2); grp.add(Z3E.glintL);
+  // materials shared by the quest's things
+  const bronzeM = new THREE.MeshPhongMaterial({ color: 0x8a6a2c, specular: 0xa08040, shininess: 50, emissive: 0x1e1508 });
+  const TM = { bronze: new THREE.MeshPhongMaterial({ color: 0x5e5a38, specular: 0x50503a, shininess: 30, emissive: 0x0e100a }), verd: z3Lam('#5aa088', { emissive: 0x0c1a14 }), crust: z3Lam('#b8b8a0') };
+  const iron = z3Lam('#2a2c30'), rust = z3Lam('#7a4426'), rust2 = z3Lam('#4a2a1a'), rope = z3Lam('#9a8a64'), rope2 = z3Lam('#7a6a4a');
+
+  // ---- the keeper's log, lying open at the right-hand end of the shelf (the shelf's top at 1.24) ----
+  {
+    const g = new THREE.Group(); g.position.copy(z3v(P.log.x, P.log.y, G0 + 1.24)); grp.add(g);
+    const K = zeKit(), BZ = -0.07, PW = 0.15, PL = 0.22;
+    const leather = z3Lam('#7a3424', { emissive: 0x140604 }), leather2 = z3Lam('#4e1e14'), edge = z3Lam('#e0d0a8', { emissive: 0x1a1608 });
+    const brass = new THREE.MeshPhongMaterial({ color: 0x9a7a34, specular: 0xc0a060, shininess: 60, emissive: 0x1a1206 });
+    const inkM = new THREE.MeshPhongMaterial({ color: 0x141c26, specular: 0x506070, shininess: 60 }), quillM = z3Lam('#f0ece0', { emissive: 0x18160f }), wax = z3Lam('#f2e8d0', { emissive: 0x2a2416 }), ribbon = z3Lam('#a82a24', { emissive: 0x1a0404 });
+    // the boards, the spine between them, brass at the corners
+    for (const s of [-1, 1]) {
+      K.add(leather, new THREE.BoxGeometry(PW + 0.018, 0.01, PL + 0.016), s * (PW / 2 + 0.006), 0.005, BZ, 0, 0, s * 0.03);
+      for (const c of [-1, 1]) K.add(brass, new THREE.BoxGeometry(0.022, 0.012, 0.022), s * (PW + 0.006), 0.009, BZ + c * (PL / 2 + 0.002), 0, PI / 4, 0);
+      // the leaves under the open page, their edges showing
+      K.add(edge, new THREE.BoxGeometry(PW * 0.9, 0.012, PL - 0.004), s * (PW * 0.5 + 0.004), 0.016, BZ, 0, 0, s * 0.04);
+    }
+    K.add(leather2, new THREE.CylinderGeometry(0.014, 0.014, PL + 0.016, 8), 0, 0.002, BZ, PI / 2, 0, 0);
+    // the ribbon, from the gutter out over the shelf's edge
+    K.add(ribbon, new THREE.BoxGeometry(0.012, 0.002, 0.08), 0.004, 0.026, BZ + 0.08);
+    K.add(ribbon, new THREE.BoxGeometry(0.012, 0.11, 0.002), 0.004, -0.028, 0.053, 0.08, 0, 0.05);
+    K.add(ribbon, new THREE.BoxGeometry(0.012, 0.016, 0.002), 0.004, -0.088, 0.058, 0.4, 0, 0, [1, 1, 1]);
+    // the inkpot, and a quill in it
+    const ix = 0.255, iz = -0.07;
+    K.add(inkM, new THREE.CylinderGeometry(0.03, 0.034, 0.035, 10), ix, 0.0175, iz);
+    K.add(inkM, new THREE.CylinderGeometry(0.013, 0.03, 0.014, 10), ix, 0.042, iz);
+    K.add(brass, new THREE.CylinderGeometry(0.015, 0.015, 0.01, 8), ix, 0.053, iz);
+    K.rod(quillM, [ix, 0.03, iz], [ix + 0.06, 0.29, iz - 0.09], 0.0028, 4);
+    K.along(quillM, new THREE.SphereGeometry(0.5, 8, 6), [ix + 0.025, 0.14, iz - 0.04], [ix + 0.062, 0.3, iz - 0.093], 0.034, 0.004);
+    K.along(inkM, new THREE.ConeGeometry(0.5, 1, 4), [ix + 0.002, 0.04, iz - 0.003], [ix, 0.012, iz], 0.006, 0.006);
+    // a candle stub in a brass dish, behind the pot
+    const cx = 0.25, cz = -0.25;
+    K.add(brass, new THREE.CylinderGeometry(0.046, 0.04, 0.008, 12), cx, 0.004, cz);
+    K.add(brass, new THREE.CylinderGeometry(0.018, 0.022, 0.014, 8), cx, 0.014, cz);
+    K.add(brass, new THREE.TorusGeometry(0.014, 0.004, 4, 8), cx + 0.054, 0.012, cz, PI / 2, 0, 0);
+    K.add(wax, new THREE.CylinderGeometry(0.016, 0.017, 0.05, 9), cx, 0.046, cz);
+    for (const [a, h, l] of [[0.4, 0.06, 0.03], [2.5, 0.055, 0.04], [4.4, 0.065, 0.024]]) K.add(wax, new THREE.SphereGeometry(0.006, 5, 3), cx + Math.cos(a) * 0.016, h - l / 2, cz + Math.sin(a) * 0.016, 0, 0, 0, [1, l / 0.012, 1]);
+    K.add(wax, new THREE.SphereGeometry(0.02, 7, 3, 0, PI * 2, 0, PI / 2), cx + 0.01, 0.018, cz + 0.008, 0, 0, 0, [1, 0.3, 1]);
+    K.rod(inkM, [cx, 0.07, cz], [cx + 0.002, 0.082, cz], 0.0016, 3);
+    K.into(g);
+    // the open pages: bowed up from the gutter, written close in a hand you can't quite read
+    const cv = document.createElement('canvas'); cv.width = 256; cv.height = 192;
+    { const q = cv.getContext('2d'), rr = seeded(0x10c8);
+      q.fillStyle = '#f2e6c6'; q.fillRect(0, 0, 256, 192);
+      const gr = q.createLinearGradient(118, 0, 138, 0); gr.addColorStop(0, 'rgba(120,90,50,0)'); gr.addColorStop(0.5, 'rgba(120,90,50,0.35)'); gr.addColorStop(1, 'rgba(120,90,50,0)'); q.fillStyle = gr; q.fillRect(112, 0, 32, 192);
+      q.strokeStyle = 'rgba(120,140,170,0.25)'; q.lineWidth = 1; for (let y = 22; y < 184; y += 11) { q.beginPath(); q.moveTo(8, y + 0.5); q.lineTo(248, y + 0.5); q.stroke(); }
+      q.strokeStyle = 'rgba(170,60,50,0.35)'; for (const x of [26, 154]) { q.beginPath(); q.moveTo(x, 6); q.lineTo(x, 186); q.stroke(); }
+      const hand = (x0, x1, y, col, w, slant) => { q.strokeStyle = col; q.lineWidth = w; q.beginPath(); let x = x0, pen = false; while (x < x1) { if (rr() < 0.12) { x += 4 + rr() * 4; pen = false; continue; } const yy = y - 2 - rr() * 4; if (!pen) { q.moveTo(x, y); pen = true; } q.quadraticCurveTo(x + 1 + slant, yy, x + 2.5, y - rr() * 1.2); x += 2.5; } q.stroke(); };
+      for (let i = 0; i < 14; i++) hand(30, 120 - rr() * 8, 21 + i * 11, 'rgba(40,30,22,0.8)', 1, 0.6);
+      for (let i = 0; i < 9; i++) hand(158, 246 - rr() * 10, 21 + i * 11, 'rgba(40,30,22,0.8)', 1, 0.6);
+      // (and the last lines in another hand: darker, hurried, slanting hard)
+      for (let i = 0; i < 2; i++) hand(158, 236 - i * 40, 128 + i * 13, 'rgba(30,14,10,0.95)', 1.6, 2.2);
+      q.fillStyle = 'rgba(30,20,14,0.5)'; q.beginPath(); q.ellipse(214, 160, 3, 2, 0.4, 0, PI * 2); q.fill(); }
+    const tex = new THREE.CanvasTexture(cv), pageM = z3Lam('#ffffff', { map: tex, emissive: 0x18140c, side: THREE.DoubleSide });
+    for (const s of [-1, 1]) {
+      const pg = new THREE.PlaneGeometry(PW, PL, 8, 1); pg.rotateX(-PI / 2);
+      const pos = pg.attributes.position, uv = pg.attributes.uv;
+      for (let i = 0; i < pos.count; i++) {
+        const u = Math.max(0, Math.min(1, (pos.getX(i) + PW / 2) / PW)), out = s > 0 ? u : 1 - u;   // (0 at the gutter, 1 at the fore-edge)
+        pos.setY(i, 0.02 + 0.012 * Math.sin(PI * (0.2 + 0.7 * Math.pow(out, 0.7))) + 0.002 * out);
+        uv.setX(i, uv.getX(i) * 0.5 + (s > 0 ? 0.5 : 0));
+      }
+      pg.computeVertexNormals();
+      { const nn = pg.attributes.normal; for (let i = 0; i < nn.count; i++) nn.setXYZ(i, nn.getX(i) * 0.3, 1, nn.getZ(i) * 0.3); pg.normalizeNormals(); }   // (lit as nearly flat: the bow is for the eye)
+      const mp = new THREE.Mesh(pg, pageM); mp.position.set(s * PW / 2, 0.006, BZ); g.add(mp);
+    }
+    // the candle's small flame
+    const fl = addSprite('#ffc060', g, 1); fl.position.set(cx, 0.1, cz); fl.scale.set(0.035, 0.06, 1);
+    const fh = addSprite('#ff9a40', g, 0.16); fh.position.set(cx, 0.1, cz); fh.material.opacity = 0.35;
+    Z3E.log = { g, fl, fh };
+  }
+
+  // ---- in the nets on the rack: a bag of net drawn tight round something heavy, floats and weed caught in it ----
+  {
+    const g = new THREE.Group(); g.position.copy(z3v(P.net.x, P.net.y, G0 + P.net.z)); grp.add(g);
+    const bag = new THREE.Group(); bag.rotation.x = 0.55; g.add(bag);
+    const K = zeKit(), cord = z3Lam('#6e7a64', { emissive: 0x060805 }), cord2 = z3Lam('#56604e'), cork = z3Lam('#9a7444', { emissive: 0x100a04 }), weed = z3Lam('#4a6a34', { side: THREE.DoubleSide });
+    const floatM = new THREE.MeshPhongMaterial({ color: 0x3a8a6a, specular: 0xd0fff0, shininess: 90, emissive: 0x0a2018, transparent: true, opacity: 0.85 });
+    // (the bag: two families of cord winding round an egg, which makes the mesh's diamonds; pulled in at the top)
+    const rr = seeded(0x2e7), RX = 0.072, RY = 0.21, RZ = 0.105, at = (a, v) => { const w = 1 + 0.1 * Math.sin(a * 3 + v * 4) + 0.06 * Math.sin(a * 7 - v * 3); return [Math.cos(a) * RX * Math.sin(v) * w, -Math.cos(v) * RY, Math.sin(a) * RZ * Math.sin(v) * w]; };
+    for (let k = 0; k < 9; k++) for (const dir of [-1, 1]) {
+      const a0 = k / 9 * PI * 2 + (rr() - 0.5) * 0.3, tw = 1.1 + rr() * 0.4, pts = [];
+      for (let i = 0; i <= 10; i++) { const v = 0.18 + i / 10 * (PI - 0.3), q = at(a0 + dir * v * tw, v); pts.push([q[0] + (rr() - 0.5) * 0.008, q[1] + (rr() - 0.5) * 0.01, q[2] + (rr() - 0.5) * 0.008]); }
+      for (let i = 0; i < pts.length - 1; i++) K.rod(dir > 0 ? cord : cord2, pts[i], pts[i + 1], 0.0026, 3);
+    }
+    // knots where the cords cross, a few
+    for (let i = 0; i < 10; i++) K.add(cord2, new THREE.SphereGeometry(0.005, 4, 3), ...at(i * 1.7, 0.5 + (i % 5) * 0.5));
+    // gathered at the neck and up into the hanging net
+    K.add(cord, new THREE.TorusGeometry(0.03, 0.009, 4, 10), 0, RY * 0.95, 0, PI / 2, 0, 0);
+    for (let i = 0; i < 6; i++) { const a = i / 6 * PI * 2; K.path(cord2, [[Math.cos(a) * 0.02, RY * 0.95, Math.sin(a) * 0.02], [-0.03 + Math.cos(a) * 0.03, RY + 0.06, Math.sin(a) * 0.05], [-0.07, RY + 0.12, Math.sin(a) * 0.09]], 0.0028, 3); }
+    // loose ends hanging below, with a cork on one and a glass float caught in a sling of cord
+    K.path(cord2, [[0, -RY * 0.95, 0], [0.01, -RY - 0.08, 0.02], [0.0, -RY - 0.16, 0.03]], 0.0035, 3);
+    K.add(cork, new THREE.CylinderGeometry(0.026, 0.026, 0.05, 8), 0.0, -RY - 0.19, 0.03, 0.2, 0, 0.1);
+    K.path(cord2, [[0.03, -RY * 0.8, -0.04], [0.06, -RY - 0.04, -0.09], [0.07, -RY - 0.08, -0.12]], 0.0035, 3);
+    K.add(floatM, new THREE.SphereGeometry(0.045, 12, 9), 0.07, -RY - 0.12, -0.13);
+    for (const r of [0, PI / 2]) K.add(cord, new THREE.TorusGeometry(0.0465, 0.003, 3, 14), 0.07, -RY - 0.12, -0.13, 0, r, 0);
+    // weed dried on it
+    for (const [x, y, z, rz, l] of [[0.06, 0.06, 0.04, 0.4, 0.1], [0.065, -0.14, 0.07, 0.2, 0.08]]) K.add(weed, new THREE.PlaneGeometry(0.016, l, 1, 2), x, y, z, 0, PI / 2 - 0.3, rz);
+    K.add(cork, new THREE.CylinderGeometry(0.024, 0.024, 0.045, 8), 0.07, 0.12, -0.06, 0, 0, PI / 2 - 0.3);
+    K.into(bag);
+    // the tongue, caught in it on the slant
+    const tongue = zeTongue(TM); tongue.position.set(0.005, 0.2, 0.0); tongue.rotation.set(0, 0, 0.04); bag.add(tongue);
+    Z3E.net = { g, bag, tongue };
+  }
+
+  // ---- the Gannet's bell, on its bracket ----
   {
     const g = new THREE.Group(); g.position.copy(z3v(P.bell.x, P.bell.y, G0 + P.bell.z)); grp.add(g);
-    const iron = z3Lam('#26282c'), bronze = new THREE.MeshPhongMaterial({ color: 0x8a6a2c, specular: 0x806030, shininess: 40, emissive: 0x1a1206 }), green = z3Lam('#4a6a58');
-    // the bracket out from the wall (east: +x)
-    const arm = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.07, 0.07), iron); arm.position.set(0.28, 0.42, 0); g.add(arm);
-    const strut = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.42, 0.05), iron); strut.position.set(0.5, 0.2, 0); strut.rotation.z = 0.7; g.add(strut);
+    const K = zeKit();
+    // the bracket out from the wall (east: +x): a plate bolted to the wall, the arm, a scrolled strut under it
+    K.add(iron, new THREE.BoxGeometry(0.03, 0.42, 0.16), 0.585, 0.32, 0);
+    for (const [y, z] of [[0.48, 0.05], [0.48, -0.05], [0.16, 0.05], [0.16, -0.05]]) K.add(iron, new THREE.CylinderGeometry(0.013, 0.013, 0.02, 6), 0.565, y, z, 0, 0, PI / 2);
+    K.add(iron, new THREE.BoxGeometry(0.62, 0.05, 0.05), 0.27, 0.47, 0);
+    K.add(iron, new THREE.BoxGeometry(0.05, 0.02, 0.07), 0.02, 0.5, 0);
+    K.along(iron, new THREE.BoxGeometry(1, 1, 1), [0.57, 0.18, 0], [0.24, 0.46, 0], 0.035, 0.035);
+    K.add(iron, new THREE.TorusGeometry(0.075, 0.012, 4, 14, PI * 1.4), 0.43, 0.36, 0, 0, 0, 0.6);
+    K.add(iron, new THREE.TorusGeometry(0.04, 0.01, 4, 10, PI * 1.5), 0.33, 0.405, 0, 0, 0, 2.6);
+    K.add(iron, new THREE.SphereGeometry(0.025, 6, 4), 0.0, 0.47, 0);
+    // the yoke hanging off the arm's end: two cheeks and the pin the bell swings on
+    for (const z of [-0.045, 0.045]) K.add(iron, new THREE.BoxGeometry(0.05, 0.08, 0.012), 0, 0.42, z);
+    K.add(iron, new THREE.CylinderGeometry(0.01, 0.01, 0.12, 6), 0, 0.4, 0, PI / 2, 0, 0);
+    K.into(g);
     const swing = new THREE.Group(); swing.position.set(0, 0.4, 0); g.add(swing);
-    const pts = []; for (const [r, y] of [[0.02, 0], [0.12, -0.02], [0.15, -0.08], [0.16, -0.18], [0.19, -0.3], [0.25, -0.4], [0.26, -0.44], [0.0, -0.44]]) pts.push(new THREE.Vector2(r, y));
-    const body = new THREE.Mesh(new THREE.LatheGeometry(pts, 18), bronze); swing.add(body);
-    const verd = new THREE.Mesh(new THREE.TorusGeometry(0.25, 0.018, 6, 20), green); verd.rotation.x = Math.PI / 2; verd.position.y = -0.42; swing.add(verd);
-    const crown = new THREE.Mesh(new THREE.TorusGeometry(0.05, 0.015, 6, 12), iron); crown.position.y = 0.03; swing.add(crown);
-    const tongue = new THREE.Mesh(new THREE.SphereGeometry(0.05, 8, 6), iron); tongue.position.y = -0.38; swing.add(tongue);
-    const rope = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.5, 5), z3Lam('#8a7a5a')); rope.position.y = -0.62; swing.add(rope);
-    Z3E.bell = { g, swing, tongue, rope };
+    // the bell: a flared bronze lathe, darker inside, its waist and shoulder banded, gone green with the sea in
+    // drips and patches (vertex colours)
+    const prof = [[0.0, 0.0], [0.05, -0.002], [0.1, -0.016], [0.128, -0.04], [0.14, -0.075], [0.146, -0.13], [0.155, -0.2], [0.172, -0.28], [0.205, -0.35], [0.24, -0.4], [0.262, -0.43], [0.27, -0.448], [0.262, -0.458],
+      [0.244, -0.452], [0.22, -0.42], [0.18, -0.36], [0.148, -0.28], [0.13, -0.18], [0.118, -0.08], [0.09, -0.04], [0.0, -0.03]];
+    const bg = new THREE.LatheGeometry(prof.map(([r, y]) => new THREE.Vector2(r, y)), 26);
+    { const pos = bg.attributes.position, col = [], br = new THREE.Color(0x9a7434), gr = new THREE.Color(0x5aa088), dk = new THREE.Color(0x3a2c14), c = new THREE.Color();
+      for (let i = 0; i < pos.count; i++) {
+        const x = pos.getX(i), y = pos.getY(i), z = pos.getZ(i), a = Math.atan2(z, x), r = Math.hypot(x, z);
+        const inner = i % prof.length >= 13 && i % prof.length <= 19;
+        const drip = Math.max(0, Math.sin(a * 5 + 0.7) * Math.sin(a * 11 + 2.1)) * (0.4 + 0.6 * Math.min(1, -y / 0.3));
+        const g0 = Math.max(0, Math.min(1, (-y - 0.36) / 0.08)) * 0.8 + drip * 1.1 + 0.35 * Math.max(0, Math.sin(a * 3 + y * 20));
+        c.copy(br).lerp(gr, Math.min(1, g0)); if (inner) c.lerp(dk, 0.65); if (Math.abs(y + 0.075) < 0.012 || Math.abs(y + 0.24) < 0.01) c.multiplyScalar(1.12);
+        col.push(c.r, c.g, c.b);
+      }
+      bg.setAttribute('color', new THREE.Float32BufferAttribute(col, 3)); }
+    const bellM = new THREE.MeshPhongMaterial({ color: 0xffffff, vertexColors: true, specular: 0x907040, shininess: 45, emissive: 0x16100a, side: THREE.DoubleSide });
+    const body = new THREE.Mesh(bg, bellM); swing.add(body);
+    const B = zeKit();
+    // bands cast round it, and the crown: a boss and its loop over the pin
+    for (const [r, y, t] of [[0.144, -0.075, 0.007], [0.164, -0.245, 0.006], [0.2, -0.345, 0.005], [0.268, -0.442, 0.008]]) B.add(bronzeM, new THREE.TorusGeometry(r, t, 5, 26), 0, y, 0, PI / 2, 0, 0);
+    B.add(bronzeM, new THREE.CylinderGeometry(0.045, 0.06, 0.03, 12), 0, -0.002, 0);
+    B.add(bronzeM, new THREE.TorusGeometry(0.03, 0.011, 6, 12), 0, 0.006, 0);
+    // salt-crust here and there
+    const rAt = y => { for (let j = 0; j < 12; j++) { const [r0, y0] = prof[j], [r1, y1] = prof[j + 1]; if (y <= y0 && y >= y1) return r0 + (r1 - r0) * (y - y0) / (y1 - y0); } return 0.15; };
+    for (let i = 0; i < 9; i++) { const a = i * 2.4, y = -0.12 - (i % 4) * 0.08, r = rAt(y) - 0.003; B.add(TM.crust, new THREE.SphereGeometry(0.01 + (i % 3) * 0.004, 5, 3), Math.cos(a) * r, y, Math.sin(a) * r, 0, 0, 0, [1, 0.7, 1]); }
+    B.into(swing);
+    // her name round the waist
+    { const cv = document.createElement('canvas'); cv.width = 256; cv.height = 32; const q = cv.getContext('2d');
+      q.fillStyle = 'rgba(0,0,0,0)'; q.fillRect(0, 0, 256, 32);
+      q.font = '700 24px Georgia, serif'; q.textAlign = 'center'; q.textBaseline = 'middle'; q.fillStyle = '#3a2a10'; q.fillText('G A N N E T', 128, 17);
+      q.fillStyle = '#e8c878'; q.fillText('G A N N E T', 127, 16);
+      const nm = new THREE.Mesh(new THREE.CylinderGeometry(0.153, 0.16, 0.05, 20, 1, true, -PI / 2 - 0.85, 1.7), new THREE.MeshLambertMaterial({ map: new THREE.CanvasTexture(cv), transparent: true, depthWrite: false, alphaTest: 0.1 }));
+      nm.position.y = -0.18; swing.add(nm); }
+    // the tongue in it, and its lanyard (a braided rope, a knot, a tassel), when it's hung back
+    const tg = new THREE.Group(); swing.add(tg);
+    const t3 = zeTongue(TM); t3.position.y = -0.045; tg.add(t3);
+    const R = zeKit(), y0 = -0.48, y1 = -0.95;
+    R.rod(rope, [0, y0, 0], [0, y1, 0], 0.011, 6);
+    for (let y = y0 - 0.02; y > y1 + 0.13; y -= 0.028) R.add(rope2, new THREE.TorusGeometry(0.0115, 0.004, 3, 8), 0, y, 0, PI / 2 + 0.35, 0, 0);
+    R.add(rope2, new THREE.TorusGeometry(0.016, 0.009, 5, 10), 0, y1 + 0.1, 0, PI / 2, 0, 0);
+    R.add(rope2, new THREE.TorusGeometry(0.016, 0.009, 5, 10), 0, y1 + 0.085, 0, PI / 2, 0, 0);
+    R.add(rope, new THREE.ConeGeometry(0.026, 0.08, 8, 1, true), 0, y1 + 0.03, 0, PI, 0, 0);
+    for (let i = 0; i < 6; i++) { const a = i / 6 * PI * 2; R.rod(rope, [Math.cos(a) * 0.012, y1 + 0.06, Math.sin(a) * 0.012], [Math.cos(a) * 0.03, y1 - 0.03, Math.sin(a) * 0.03], 0.0035, 3); }
+    R.add(rope2, new THREE.TorusGeometry(0.012, 0.004, 3, 8), 0, y0 + 0.02, 0, 0, PI / 2, 0);
+    const rp = R.into(new THREE.Group()); tg.add(rp);
+    Z3E.bell = { g, swing, tongue: tg, rope: rp };
   }
-  // her storm lantern: an iron frame, glass, a cap and a ring, with its own light
+
+  // ---- her storm lantern: a brass fount, a burner and wick, a bowed glass globe (cracked) in a wire guard, the
+  // side tubes up to the hood, a bail to carry it by; its own flame and light, and the crew's lights inside ----
   {
     const g = new THREE.Group(); grp.add(g); g.visible = false;
-    const iron = z3Lam('#2a2622'), brass = z3Lam('#9a7a34');
-    const base = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.11, 0.05, 10), iron); base.position.y = 0.025; g.add(base);
-    const glassM = new THREE.MeshBasicMaterial({ color: 0x3a3e40, transparent: true, opacity: 0.85 });
-    const glass = new THREE.Mesh(new THREE.CylinderGeometry(0.075, 0.085, 0.2, 10), glassM); glass.position.y = 0.15; g.add(glass);
-    for (let i = 0; i < 4; i++) { const a = i / 4 * Math.PI * 2, b = new THREE.Mesh(new THREE.BoxGeometry(0.015, 0.22, 0.015), iron); b.position.set(Math.cos(a) * 0.09, 0.15, Math.sin(a) * 0.09); g.add(b); }
-    const cap = new THREE.Mesh(new THREE.ConeGeometry(0.1, 0.09, 10), iron); cap.position.y = 0.3; g.add(cap);
-    const band = new THREE.Mesh(new THREE.TorusGeometry(0.088, 0.008, 4, 14), brass); band.rotation.x = Math.PI / 2; band.position.y = 0.06; g.add(band);
-    const ring = new THREE.Mesh(new THREE.TorusGeometry(0.05, 0.008, 4, 12), iron); ring.position.y = 0.37; g.add(ring);
-    const halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: soft, color: new THREE.Color('#ffc870'), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false })); halo.position.y = 0.15; halo.scale.setScalar(0.9); g.add(halo);
+    const brass = new THREE.MeshPhongMaterial({ color: 0x9a7a3a, specular: 0xc8a868, shininess: 55, emissive: 0x161006 }), tin = z3Lam('#3a3630'), dark = z3Lam('#1a1816'), wood = z3Lam('#6a4a2c');
+    const K = zeKit();
+    K.add(brass, new THREE.CylinderGeometry(0.098, 0.108, 0.062, 16), 0, 0.031, 0);
+    K.add(brass, new THREE.TorusGeometry(0.106, 0.006, 4, 18), 0, 0.004, 0, PI / 2, 0, 0);
+    K.add(brass, new THREE.TorusGeometry(0.098, 0.005, 4, 18), 0, 0.062, 0, PI / 2, 0, 0);
+    K.add(tin, new THREE.CylinderGeometry(0.06, 0.098, 0.022, 16), 0, 0.073, 0);
+    K.add(brass, new THREE.CylinderGeometry(0.014, 0.014, 0.018, 8), 0.07, 0.066, 0.02);   // (the filler cap)
+    K.add(tin, new THREE.CylinderGeometry(0.03, 0.036, 0.022, 10), 0, 0.094, 0);           // (the burner)
+    K.add(brass, new THREE.CylinderGeometry(0.012, 0.012, 0.018, 8), 0, 0.094, 0.05, PI / 2, 0, 0);   // (the wick's knob)
+    K.add(dark, new THREE.BoxGeometry(0.022, 0.016, 0.004), 0, 0.113, 0);                    // (the wick)
+    // the guard: rods round the globe and two hoops
+    for (let i = 0; i < 6; i++) { const a = (i + 0.5) / 6 * PI * 2; K.path(tin, [[Math.cos(a) * 0.08, 0.084, Math.sin(a) * 0.08], [Math.cos(a) * 0.098, 0.17, Math.sin(a) * 0.098], [Math.cos(a) * 0.07, 0.262, Math.sin(a) * 0.07]], 0.0035, 3); }
+    for (const [r, y] of [[0.096, 0.14], [0.094, 0.2]]) K.add(tin, new THREE.TorusGeometry(r, 0.0035, 3, 16), 0, y, 0, PI / 2, 0, 0);
+    // the side tubes, up from the fount to the hood
+    for (const s of [-1, 1]) { K.add(brass, new THREE.CylinderGeometry(0.009, 0.009, 0.23, 6), s * 0.112, 0.17, 0); K.add(brass, new THREE.SphereGeometry(0.012, 6, 4), s * 0.112, 0.284, 0); K.rod(brass, [s * 0.112, 0.06, 0], [s * 0.09, 0.05, 0], 0.008, 6); }
+    // the hood: a collar, a cone with its vents, a cap
+    K.add(tin, new THREE.CylinderGeometry(0.075, 0.07, 0.022, 14), 0, 0.272, 0);
+    K.add(tin, new THREE.CylinderGeometry(0.03, 0.09, 0.05, 14), 0, 0.307, 0);
+    for (let i = 0; i < 6; i++) { const a = i / 6 * PI * 2; K.add(dark, new THREE.BoxGeometry(0.012, 0.022, 0.004), Math.cos(a) * 0.062, 0.306, Math.sin(a) * 0.062, 0, -a + PI / 2, 0.0); }
+    K.add(tin, new THREE.CylinderGeometry(0.03, 0.03, 0.02, 10), 0, 0.342, 0);
+    K.add(brass, new THREE.CylinderGeometry(0.038, 0.034, 0.008, 10), 0, 0.355, 0);
+    K.add(brass, new THREE.SphereGeometry(0.012, 6, 4), 0, 0.363, 0);
+    // the bail, and its wooden grip at the top
+    K.add(tin, new THREE.TorusGeometry(0.112, 0.004, 4, 16, PI), 0, 0.284, 0);
+    K.add(wood, new THREE.CylinderGeometry(0.011, 0.011, 0.05, 8), 0, 0.392, 0, 0, 0, PI / 2);
+    K.into(g);
+    // the globe, and the crack across it
+    const gp = [[0.05, 0.1], [0.07, 0.12], [0.084, 0.16], [0.086, 0.19], [0.078, 0.23], [0.062, 0.26]];
+    const glassM = new THREE.MeshBasicMaterial({ color: 0x3a3e40, transparent: true, opacity: 0.8, depthWrite: false, side: THREE.DoubleSide });
+    const glass = new THREE.Mesh(new THREE.LatheGeometry(gp.map(([r, y]) => new THREE.Vector2(r, y)), 14), glassM); g.add(glass);
+    const C = zeKit(), crackM = new THREE.MeshBasicMaterial({ color: 0xd8e0e0, transparent: true, opacity: 0.7 });
+    const onGlass = (a, y) => { const r = y < 0.12 ? 0.07 : y < 0.16 ? 0.084 : y < 0.23 ? 0.088 : 0.078; return [Math.cos(a) * r, y, Math.sin(a) * r]; };
+    C.path(crackM, [onGlass(-1.2, 0.13), onGlass(-1.05, 0.16), onGlass(-1.15, 0.19), onGlass(-0.95, 0.22)], 0.0012, 3);
+    C.path(crackM, [onGlass(-1.05, 0.16), onGlass(-0.8, 0.175)], 0.001, 3);
+    C.into(g);
+    // the flame, its glow, and the light it throws
+    const flame = addSprite('#ffd070', g, 1); flame.position.y = 0.15; flame.scale.set(0.06, 0.1, 1); flame.renderOrder = 3;
+    const halo = addSprite('#ffc870', g, 0.9); halo.position.y = 0.16; halo.renderOrder = 2;
     const light = new THREE.PointLight(0xffc070, 0, 9, 1.6); light.position.y = 0.2; g.add(light);
-    Z3E.lantern = { g, glassM, halo, light };
+    // the crew's lights, small and turning in the glass
+    const motes = []; for (let i = 0; i < ZE_SOULS; i++) { const s = addSprite(i % 2 ? '#aaffdc' : '#ffecaa', g, 0.04); s.renderOrder = 3; s.visible = false; motes.push(s); }
+    Z3E.lantern = { g, glassM, halo, light, flame, motes };
   }
-  // the tongue, when someone carries it (only the others see it in a hand)
-  { const m = new THREE.Mesh(new THREE.SphereGeometry(0.06, 8, 6), z3Lam('#3a4a40')); m.visible = false; grp.add(m); Z3E.tongue = m; }
+
+  // ---- the rusted hook by the south window: a plate on the wall, the arm out, the hook turned up at its end ----
+  {
+    const g = new THREE.Group(); g.position.copy(z3v(P.hook.x, P.hook.y, G0)); grp.add(g);
+    const K = zeKit(), wz = 0.36, top = P.hook.z + 0.392;   // (wz: the wall's face, south of the hook; top: where the bail rests)
+    K.add(rust2, new THREE.BoxGeometry(0.1, 0.2, 0.016), 0, top + 0.06, wz);
+    for (const y of [top + 0.13, top - 0.01]) K.add(rust, new THREE.SphereGeometry(0.011, 5, 3), 0, y, wz - 0.01, 0, 0, 0, [1, 1, 0.6]);
+    K.path(rust, [[0, top + 0.09, wz - 0.01], [0, top + 0.1, wz - 0.12], [0, top + 0.09, 0.08], [0, top + 0.055, 0.03], [0, top + 0.025, 0.02]], 0.0085, 5);
+    K.path(rust, [[0, top + 0.025, 0.02], [0, top, 0.019], [0, top - 0.018, 0.007], [0, top - 0.022, -0.008], [0, top - 0.014, -0.022], [0, top + 0.006, -0.03], [0, top + 0.022, -0.028]], 0.0085, 5);
+    K.add(rust, new THREE.SphereGeometry(0.011, 5, 4), 0, top + 0.022, -0.028);
+    K.path(rust2, [[0, top - 0.02, wz - 0.01], [0, top + 0.02, wz - 0.1], [0, top + 0.085, wz - 0.18]], 0.006, 4);
+    // rust flaking off it, and its stain down the plaster
+    const flake = z3Lam('#a85a2a', { emissive: 0x140804 });
+    for (const [y, z, s] of [[0.1, 0.2, 0.012], [0.095, 0.12, 0.009], [0.06, 0.05, 0.01], [-0.012, 0.0, 0.008]]) K.add(flake, new THREE.SphereGeometry(s, 4, 3), 0.004, top + y, z, 0, 0, 0, [1, 0.5, 1]);
+    const stain = new THREE.Mesh(new THREE.PlaneGeometry(0.07, 0.4), new THREE.MeshBasicMaterial({ map: z3Fade([[0, 'rgba(90,40,20,0)'], [0.7, 'rgba(90,40,20,0.35)'], [1, 'rgba(90,40,20,0.5)']]), transparent: true, depthWrite: false }));
+    stain.position.set(0, top - 0.24, wz - 0.009); stain.rotation.y = PI; g.add(stain);
+    K.into(g);
+  }
+
+  // ---- the oil tap between the tanks: a header from tank to tank, a gauge, the feed forward to a brass valve and its
+  // wheel, the spout, a drop of oil gathering, a bucket under it and a stain on the flags ----
+  {
+    const g = new THREE.Group(); g.position.copy(z3v(P.tap.x, P.tap.y, G0)); grp.add(g);
+    const K = zeKit(), y = P.tap.z, bz = 0.75;   // (bz: the line between the tanks' middles, behind the tap)
+    const brass = new THREE.MeshPhongMaterial({ color: 0xa08034, specular: 0xb09050, shininess: 60, emissive: 0x161006 }), pipe = z3Lam('#4a5450', { emissive: 0x080a0a }), red = z3Lam('#8a2a20', { emissive: 0x140404 });
+    K.rod(pipe, [-0.42, y, bz], [0.42, y, bz], 0.032, 8);
+    for (const x of [-0.29, 0.29]) { K.add(pipe, new THREE.CylinderGeometry(0.058, 0.058, 0.025, 10), x, y, bz, 0, 0, PI / 2); for (let i = 0; i < 4; i++) { const a = i / 4 * PI * 2 + 0.6; K.add(brass, new THREE.SphereGeometry(0.008, 4, 3), x, y + Math.cos(a) * 0.044, bz + Math.sin(a) * 0.044); } }
+    K.add(pipe, new THREE.SphereGeometry(0.045, 8, 6), 0, y, bz);
+    K.rod(pipe, [0, y, bz], [0, y, 0.06], 0.03, 8);
+    K.add(pipe, new THREE.CylinderGeometry(0.048, 0.048, 0.02, 10), 0, y, 0.07, PI / 2, 0, 0);
+    // the gauge, on a riser off the header
+    K.rod(pipe, [0.16, y, bz], [0.16, y + 0.2, bz], 0.012, 6);
+    K.add(brass, new THREE.CylinderGeometry(0.05, 0.05, 0.025, 14), 0.16, y + 0.25, bz - 0.01, PI / 2, 0, 0);
+    K.add(z3Lam('#e8e0c8', { emissive: 0x302c20 }), new THREE.CylinderGeometry(0.042, 0.042, 0.004, 14), 0.16, y + 0.25, bz - 0.024, PI / 2, 0, 0);
+    K.add(red, new THREE.BoxGeometry(0.004, 0.034, 0.003), 0.168, y + 0.258, bz - 0.027, 0, 0, -0.6);
+    // the valve, its spindle and wheel
+    K.add(brass, new THREE.SphereGeometry(0.055, 12, 9), 0, y, 0, 0, 0, 0, [1, 0.85, 1.1]);
+    K.add(brass, new THREE.CylinderGeometry(0.034, 0.034, 0.03, 10), 0, y + 0.05, 0);
+    K.add(brass, new THREE.CylinderGeometry(0.009, 0.009, 0.07, 6), 0, y + 0.09, 0);
+    K.add(red, new THREE.TorusGeometry(0.068, 0.008, 5, 18), 0, y + 0.125, 0, PI / 2, 0, 0);
+    for (let i = 0; i < 4; i++) K.add(red, new THREE.BoxGeometry(0.068, 0.008, 0.008), Math.cos(i * PI / 2) * 0.034, y + 0.125, Math.sin(i * PI / 2) * 0.034, 0, -i * PI / 2, 0);
+    K.add(brass, new THREE.SphereGeometry(0.013, 6, 4), 0, y + 0.13, 0);
+    // the spout, forward and down, flared at its mouth
+    K.path(brass, [[0, y - 0.01, -0.03], [0, y - 0.02, -0.1], [0, y - 0.07, -0.13]], 0.016, 8);
+    K.add(brass, new THREE.CylinderGeometry(0.02, 0.016, 0.02, 8), 0, y - 0.085, -0.13);
+    K.into(g);
+    // the bucket under it, oil in it, and the stain round it
+    const B = zeKit(), tin = z3Lam('#5a5e5c', { side: THREE.DoubleSide }), oilM = new THREE.MeshPhongMaterial({ color: 0x2a1c08, specular: 0xd0a860, shininess: 100 });
+    B.add(tin, new THREE.CylinderGeometry(0.13, 0.11, 0.24, 14, 1, true), 0, 0.12, -0.13);
+    B.add(tin, new THREE.CylinderGeometry(0.11, 0.11, 0.01, 14), 0, 0.005, -0.13);
+    B.add(tin, new THREE.TorusGeometry(0.13, 0.006, 4, 16), 0, 0.24, -0.13, PI / 2, 0, 0);
+    B.add(tin, new THREE.TorusGeometry(0.13, 0.004, 3, 12, PI), 0, 0.24, -0.13, 0.5, 0, 0);
+    B.add(oilM, new THREE.CylinderGeometry(0.122, 0.122, 0.004, 14), 0, 0.17, -0.13);
+    B.into(g);
+    const st0 = new THREE.Mesh(new THREE.CircleGeometry(0.36, 16), new THREE.MeshBasicMaterial({ map: z3Soft('rgba(10,6,2,0.55)', 'rgba(10,6,2,0)'), transparent: true, depthWrite: false }));
+    st0.rotation.x = -PI / 2; st0.position.set(0.05, 0.012, -0.12); g.add(st0);
+    const drop = new THREE.Mesh(new THREE.SphereGeometry(0.009, 6, 4), oilM); drop.position.set(0, y - 0.1, -0.13); g.add(drop);
+    Z3E.tap = { g, drop, y0: y - 0.1, y1: 0.17 };
+  }
+
+  // the tongue, when someone carries it (only the others see it in a hand): the same as it looks in the net
+  { const m = zeTongue(TM); m.visible = false; grp.add(m); Z3E.tongue = m; }
   // the lens flaring, at the end
   { const L = new THREE.PointLight(0xfff0c0, 0, 40, 1.2); grp.add(L); Z3E.flare = L; }
 }
 function ze3d(dt) {
-  const P = ZE.P; if (!P || !Z3E.glints || !Z3E.glints.log.parent) return;
+  const P = ZE.P; if (!P || !Z3E.glints || !Z3E.glints.log.s.parent) return;
   const t = g.t, G0 = FPSC.GROUND, st = ZE.st, m = FPS.me;
-  // glints: a brief twinkle now and then, as of something catching the light
-  const tw = (s, on, x, y, z, ph, big) => {
-    s.visible = on; if (!on) return;
-    const k = Math.pow(Math.max(0, Math.sin(t * 1.25 + ph)), 14);
-    s.position.copy(z3v(x, y, G0 + z)); s.material.opacity = 0.1 + 0.9 * k; s.scale.setScalar((big || 0.22) * (0.5 + k));
+  // glints: a soft pulse, and now and then a brighter twinkle, as of something catching the light; a faint halo
+  // round them and a little light on what's near
+  const GL = Z3E.glintL; let lit = false;
+  const tw = (G, on, x, y, z, ph, big) => {
+    G.s.visible = G.h.visible = on; if (!on) return;
+    const k = Math.pow(Math.max(0, Math.sin(t * 1.25 + ph)), 14), pu = reduceMotion ? 0.5 : 0.5 + 0.5 * Math.sin(t * 2.2 + ph), b = (big || 0.22) * 1.2;
+    const at = z3v(x, y, G0 + z);
+    G.s.position.copy(at); G.s.material.opacity = 0.3 + 0.15 * pu + 0.55 * k; G.s.scale.setScalar(b * (0.65 + 0.2 * pu + 0.55 * k));
+    G.h.position.copy(at); G.h.material.opacity = 0.09 + 0.06 * pu + 0.1 * k; G.h.scale.setScalar(b * 3.4 * (0.9 + 0.15 * pu));
+    GL.position.copy(at); GL.position.y += 0.3; GL.color.copy(G.s.material.color); GL.intensity = 0.14 + 0.08 * pu + 0.16 * k; lit = true;
   };
   const Gl = Z3E.glints, T = zeTop();
   tw(Gl.log, st === 0, P.log.x, P.log.y, P.log.z, 0.3);
@@ -24291,10 +24592,19 @@ function ze3d(dt) {
   tw(Gl.tap, st === 5 && zeMine(), P.tap.x, P.tap.y, P.tap.z, 0.9);
   tw(Gl.hook, st === 6 && zeMine(), P.hook.x, P.hook.y, P.hook.z + 0.4, 2.2);
   tw(Gl.top, st === 9 && zeMine() && !!T, T ? T.x : 0, T ? T.y : 0, T ? T.z + 1.4 : 0, 0.5, 0.45);
+  if (!lit) GL.intensity = 0;
+  // the candle by the log
+  { const L = Z3E.log, f = reduceMotion ? 1 : 0.85 + 0.15 * Math.sin(t * 11) * Math.sin(t * 6.7); L.fl.scale.set(0.035 * f, 0.06 * (0.9 + 0.2 * f), 1); L.fl.material.opacity = 0.9 * f; L.fh.material.opacity = 0.3 * f; }
+  // the net: the bag full and heavy while the tongue's in it, slack once it's cut free
+  { const N = Z3E.net, full = st < 2; N.tongue.visible = full; N.bag.scale.set(1, full ? 1 : 0.7, full ? 1 : 0.75); N.bag.position.y = full ? 0 : 0.06; }
+  // the oil, dripping from the tap into the bucket
+  { const D = Z3E.tap, c = reduceMotion ? 0 : (t % 1.7) / 1.7, fall = Math.max(0, (c - 0.75) / 0.25);
+    D.drop.position.y = D.y0 - (D.y0 - D.y1) * fall * fall; D.drop.scale.setScalar(fall > 0 ? 1 : 0.4 + 0.8 * Math.min(1, c / 0.75)); }
   // the bell: swinging when struck, its tongue in it or not
   const B = Z3E.bell;
   B.swing.rotation.z = Math.sin(t * 9) * 0.32 * ZE.swing; B.tongue.visible = B.rope.visible = st >= 3;
-  // the lantern: under the boat, carried, on its hook
+  if (B.tongue.visible) B.tongue.rotation.z = -Math.sin(t * 9 - 0.6) * 0.25 * ZE.swing;
+  // the lantern: under the boat, carried, on its hook, and at the last by the lens
   const Ln = Z3E.lantern, who = zeCarrierBody();
   let at = null, burn = 0, souls = 0;
   if (st === 4) at = [P.boat.x, P.boat.y, P.boat.z - 0.12, 0];
@@ -24306,17 +24616,30 @@ function ze3d(dt) {
     } else at = [who.x - Math.cos(who.h || 0) * 0.32, who.y + Math.sin(who.h || 0) * 0.32, (who.jz || 0) + 0.62, -(who.h || 0)];
     burn = st === 5 ? 0 : 1; souls = st === 9 ? ZE_SOULS : 0;
   } else if (st === 7 || st === 8) { at = [P.hook.x, P.hook.y, P.hook.z, 0]; burn = 1; souls = st === 8 ? ZE_SOULS : ZE.souls; }
+  else if (st === 10 && T) {
+    // (set down by the lens: blazing while the lens takes her light, then only an ember)
+    const f = Math.max(0, Math.min(1, ZE.flare / 1.5));
+    at = [T.x + 0.35, T.y - 1.3, T.z, 0.3]; burn = 0.22 + 0.78 * f; souls = Math.round(ZE_SOULS * f);
+  }
   Ln.g.visible = !!at;
   if (at) {
     Ln.g.position.copy(z3v(at[0], at[1], G0 + at[2] + (st === 7 || st === 8 ? Math.sin(t * 1.3) * 0.015 : 0))); Ln.g.rotation.y = at[3];
     const k = souls / ZE_SOULS, flick = reduceMotion ? 1 : 0.85 + 0.15 * Math.sin(t * 13) * Math.sin(t * 7.3);
-    Ln.glassM.color.setRGB(burn ? 1 - k * 0.4 : 0.23, burn ? 0.78 + k * 0.2 : 0.24, burn ? 0.42 + k * 0.4 : 0.25);
-    Ln.halo.visible = !!burn; Ln.halo.material.color.setRGB(1 - k * 0.35, 0.8 + k * 0.15, 0.45 + k * 0.4); Ln.halo.material.opacity = 0.55 * flick; Ln.halo.scale.setScalar(0.7 + k * 0.6);
-    Ln.light.intensity = burn ? (0.9 + k * 0.9) * flick : 0; Ln.light.color.setRGB(1 - k * 0.3, 0.78 + k * 0.17, 0.45 + k * 0.4);
+    const bb = Math.min(1, burn * 1.6), mix = (a, b) => a + (b - a) * bb;
+    Ln.glassM.color.setRGB(mix(0.23, 1 - k * 0.4), mix(0.24, 0.78 + k * 0.2), mix(0.25, 0.42 + k * 0.4));
+    Ln.glassM.opacity = burn ? 0.55 : 0.8;
+    Ln.halo.visible = !!burn; Ln.halo.material.color.setRGB(1 - k * 0.35, 0.8 + k * 0.15, 0.45 + k * 0.4); Ln.halo.material.opacity = 0.55 * flick * Math.min(1, burn); Ln.halo.scale.setScalar(0.7 + k * 0.6);
+    Ln.flame.visible = !!burn; Ln.flame.material.color.setRGB(1 - k * 0.3, 0.82 + k * 0.15, 0.5 + k * 0.35); Ln.flame.material.opacity = flick; Ln.flame.scale.set(0.05 * (0.6 + 0.4 * burn) * flick, 0.09 * (0.5 + 0.5 * burn) * (0.9 + 0.1 * flick), 1);
+    Ln.light.intensity = burn ? (0.9 + k * 0.9) * flick * burn : 0; Ln.light.color.setRGB(1 - k * 0.3, 0.78 + k * 0.17, 0.45 + k * 0.4);
+    for (let i = 0; i < Ln.motes.length; i++) {
+      const s = Ln.motes[i], on = i < souls; s.visible = on; if (!on) continue;
+      const a = (reduceMotion ? 0 : t * (0.9 + i * 0.07)) + i / ZE_SOULS * Math.PI * 2;
+      s.position.set(Math.cos(a) * 0.045, 0.15 + 0.06 * Math.sin(a * 1.7 + i), Math.sin(a) * 0.045); s.material.opacity = 0.7 + 0.3 * Math.sin(t * 4 + i * 2);
+    }
   } else Ln.light.intensity = 0;
   // the tongue in someone else's hand
   const tg = Z3E.tongue, tw2 = st === 2 && who && who !== m;
-  tg.visible = !!tw2; if (tw2) tg.position.copy(z3v(who.x + Math.cos(who.h || 0) * 0.3, who.y - Math.sin(who.h || 0) * 0.3, G0 + (who.jz || 0) + 0.85));
+  tg.visible = !!tw2; if (tw2) { tg.position.copy(z3v(who.x + Math.cos(who.h || 0) * 0.3, who.y - Math.sin(who.h || 0) * 0.3, G0 + (who.jz || 0) + 1.05)); tg.rotation.set(0, -(who.h || 0), 0.25); }
   // eight bells: the lens flares
   Z3E.flare.intensity = ZE.flare > 0 && T ? 3 * Math.min(1, ZE.flare) : 0;
   if (T) Z3E.flare.position.copy(z3v(T.x, T.y, G0 + T.z + 2.2));
