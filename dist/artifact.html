@@ -23941,7 +23941,7 @@ function zwPose(z, M, dt) {
     set0.call(this, H);
     const OX = FPSC.CX, OY = FPSC.CY, A = (x, y, z, ux, uy) => ({ x: OX + x, y: OY + y, z, ux: OX + (ux == null ? x : ux), uy: OY + (uy == null ? y : uy) });
     H.I.zm.egg = {
-      log: A(3.55, -10.38, 1.28, 3.55, -11.05),      // the Keeper's Quarters: on the bookshelf
+      log: A(3.05, -10.38, 1.28, 3.05, -11.05),      // the Keeper's Quarters: on the bookshelf (its right-hand end; the shelf is at x 2.5, 2 m wide)
       net: A(-24.42, -4.7, 1.3, -23.85, -4.7),       // the Net Loft: in the nets on the southern rack
       bell: A(-26.72, -3, 2.05, -27.65, -3),         // the Wreck Store: on its east wall
       boat: A(33.1, -9.2, 0.16, 33.1, -9.2),         // the Boathouse: on the floor beside the lifeboat
