@@ -672,7 +672,7 @@ FPI_GEN.light = {
           lintel(2.35);
           put('block', mx, my, ang, { w: w + 0.04, d: TH, hh: 1.0, col: lc, trim: FPI_C.wood3, lift });
           put('glasspane', mx, my, ang, { w, z0: (lift || 0) + 1.0, z1: (lift || 0) + 2.35 });
-          const [wx, wy] = W(mx, my); (Z.glassQ = Z.glassQ || []).push({ x: wx, y: wy, ang, w: w * 0.96, z0: (lift || 0) + 1.0, z1: (lift || 0) + 2.35, frame: true });
+          const [wx, wy] = W(mx, my); (Z.glassQ = Z.glassQ || []).push({ x: wx, y: wy, ang, w: w + 0.02, z0: (lift || 0) + 1.0, z1: (lift || 0) + 2.35, frame: true, flat: true });
         } else if (op.k === 'high') {
           // a window high up in the tower: solid wall up to its sill, a lintel over it
           put('block', mx, my, ang, { w: w + 0.04, d: TH, hh: op.s0, col: FPI_C.stone3 });
@@ -708,8 +708,10 @@ FPI_GEN.light = {
     wall(26, -21, 26, -9.5, { mat: 'wood' }, [{ at: -15, k: 'debris', cost: 1000, z: ['oil', 'boat'] }]);
     // the north sides of the south rooms: onto the passages, the yards and the tower
     wall(-26, -9.5, -16, -9.5, PL(ZM_ZONES.west.wall), [{ at: -21, k: 'door', cost: 1000, z: ['fog', 'west'] }]);
-    wall(-16, -9.5, -7.5, -9.5, PL(ZM_ZONES.fog.wall), [{ at: -13, k: 'win', out: 1, z: 'fog' }]);
-    wall(7.5, -9.5, 16, -9.5, PL(ZM_ZONES.oil.wall), [{ at: 13, k: 'win', out: 1, z: 'oil' }]);
+    // (they stop at the Quarters, whose own north wall carries on between: running on to ±7.5, as they did when the
+    // tower stood there, they'd fill in the Quarters' two back windows)
+    wall(-16, -9.5, -10, -9.5, PL(ZM_ZONES.fog.wall), [{ at: -13, k: 'win', out: 1, z: 'fog' }]);
+    wall(10, -9.5, 16, -9.5, PL(ZM_ZONES.oil.wall), [{ at: 13, k: 'win', out: 1, z: 'oil' }]);
     wall(16, -9.5, 26, -9.5, PL(ZM_ZONES.east.wall), [{ at: 21, k: 'door', cost: 1000, z: ['oil', 'east'] }]);
     // the passages
     wall(-26, -9.5, -26, 14, { mat: 'stone' });
@@ -885,7 +887,7 @@ FPI_GEN.light = {
     put('bench', -3, -15.6, 0, { w: 2.2 }); put('bench', -3, -13.4, 0, { w: 2.2 });
     put('bunk', 9.45, -18.9, Math.PI / 2, {});   // (against the east wall, clear of the window)
     put('shelf', -9.5, -18.2, Math.PI / 2, { w: 2.2, goods: 'jars' });
-    put('shelf', 3, -10.2, 0, { w: 2.0, goods: 'books' });
+    put('shelf', 2.5, -10.2, 0, { w: 2.0, goods: 'books' });
     lamp(-3, -14.5, 2.7); lamp(5, -17, 2.7);
     // the Oil Store: tanks, drums and cans
     for (const [x, y] of [[23.4, -19], [20.6, -19]]) put('tank', x, y, 0, { r: 1.1, hh: 2.3, c: '#3a4a44' });
@@ -937,7 +939,7 @@ FPI_GEN.light = {
     // tonics (x, y: the cabinet; face: the way its front looks)
     // (a cabinet's front faces (sin a, -cos a))
     const perk = (k, x, y, a) => { put('tonic', x, y, a, { c: ZM_PERKS[k].c }); const [wx, wy] = W(x, y), nx = Math.round(Math.sin(a)), ny = Math.round(-Math.cos(a)); Z.perks.push({ k, x: wx, y: wy, nx, ny, z: 0 }); light(x + nx * 0.7, y + ny * 0.7, 1.5, ZM_PERKS[k].c, 5, 'lantern'); };
-    perk('wind', 6.2, -10.2, 0);
+    perk('wind', 5.4, -10.2, 0);   // (clear of the back window at 7.8)
     perk('stout', -10, 25.3, 0);
     perk('quick', -43.3, -9, Math.PI / 2);
     perk('fleet', 30.5, 1.3, 0);
@@ -2695,9 +2697,10 @@ function zm3dLantern(grp) {
   const glassM = new THREE.MeshPhongMaterial({ color: 0x9ab8c8, specular: 0xffffff, shininess: 120, transparent: true, opacity: 0.22, depthWrite: false, side: THREE.DoubleSide });
   const frameM = z3Lam('#2e5a5a'), brassM = new THREE.MeshPhongMaterial({ color: 0x8a6a2c, specular: 0xb09060, shininess: 60 });
   for (const w of ZM.glass) {
-    // (set back in the skin's opening: as wide as the opening, a hand's breadth out from the plaster)
-    const nx = Math.cos(w.ang - Math.PI / 2), ny = Math.sin(w.ang - Math.PI / 2), ww = 2 * (ZMT.R + 0.42) * Math.tan(ZM_SKIN.HA);
-    const g = new THREE.Group(); g.position.copy(z3v(w.x + nx * 0.12, w.y + ny * 0.12, G0 + w.z0)); g.rotation.y = w.ang; grp.add(g);
+    // (set back in the skin's opening: as wide as the opening, a hand's breadth out from the plaster; in a flat wall,
+    // the Quarters', as wide as its own opening, and in the middle of the wall's thickness)
+    const nx = Math.cos(w.ang - Math.PI / 2), ny = Math.sin(w.ang - Math.PI / 2), ww = w.flat ? w.w : 2 * (ZMT.R + 0.42) * Math.tan(ZM_SKIN.HA);
+    const off = w.flat ? 0 : 0.12, g = new THREE.Group(); g.position.copy(z3v(w.x + nx * off, w.y + ny * off, G0 + w.z0)); g.rotation.y = w.ang; grp.add(g);
     const h = w.z1 - w.z0, pane = new THREE.Mesh(new THREE.PlaneGeometry(ww, h), glassM); pane.position.y = h / 2; g.add(pane);
     for (const x of [-ww / 2, 0, ww / 2]) { const b = new THREE.Mesh(new THREE.BoxGeometry(0.07, h, 0.08), frameM); b.position.set(x, h / 2, 0); g.add(b); }
     for (const y of [0.03, h / 2, h - 0.03]) { const b = new THREE.Mesh(new THREE.BoxGeometry(ww, 0.07, 0.08), frameM); b.position.set(0, y, 0); g.add(b); }
