@@ -188,7 +188,7 @@ function znPresence() {
   { const rf = typeof zmpTier === 'function' ? zmpTier(FPS.weapon) : 0; if (rf) z.rf = rf; }
   // down: how long I've left on the floor (tenths); getting someone up: who, and how far along (hundredths)
   if (ZM.downT > 0) z.dn = Math.ceil(ZM.downT * 10);
-  if (ZM.revOf && ZM.revT > 0) z.rv = [ZM.revOf, Math.round(ZM.revT / ZM_DOWN.REV * 100)];
+  if (ZM.revOf && ZM.revT > 0) z.rv = [ZM.revOf, Math.round(Math.min(1, ZM.revT / zmRevTime()) * 100)];
   // my health and the most I can have (Stout Heart), for the bar over my head and for anyone watching me
   z.hp = FPS.me.dead > 0 || ZM.downT > 0 ? 0 : Math.max(0, Math.ceil(FPS.me.hp)); z.hm = ZM.perks && ZM.perks.stout ? ZMC.HP_STOUT : ZMC.HP;
   return z;
@@ -227,6 +227,11 @@ function znReadPlayers(dt) {
     r.w = typeof z.p[5] === 'string' ? z.p[5].slice(0, 1) : 'p';
     const fl = a[6] | 0;
     r.lan = !!(fl & 1); r.walk = !!(fl & 2); r.down = !!(fl & 4); r.dead = !!(fl & 8); r.beam = !!(fl & 32);
+    // (just got up: word of it from them may still be on its way, so they stay up; once it's here, that's that)
+    if (ZM.upT && ZM.upT[z.sid] > 0) { if (r.down) r.down = false; else delete ZM.upT[z.sid]; }
+    // (gone down just now: everyone's told)
+    if (r.down && !r.wasDn && !r.dead && typeof zmDownNote === 'function') zmDownNote(r.n);
+    r.wasDn = r.down;
     r.c = Array.isArray(z.c) ? z.c.slice(0, 4).map(c => typeof c === 'string' ? c.slice(0, 9) : '#3a2a1e') : null;
     r.o = typeof z.o === 'string' ? z.o.slice(0, 24) : '';
     r.pts = Math.max(0, z.pt | 0);
@@ -302,6 +307,7 @@ function zmnRevive(sid, by) {
 }
 function znRevived(sid, by) {
   const nick = s => s === FPS.me.id ? 'You' : (ZM.hum.find(h => h[0] === s) || [])[1] || 'Someone';
+  if (sid !== FPS.me.id) zmUpNow(sid);
   if (sid === FPS.me.id) zmGetUp(by !== sid ? nick(by) : null);
   else fpsFeed(`${nick(by)} got ${nick(sid)} up.`);
 }

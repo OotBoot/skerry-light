@@ -20,7 +20,7 @@
 //    throws a spark to the next.
 //  - Tonics on the shelves: Stout Heart (take twice the knocks), Quick Hands (reload in half the time), Fleet Foot
 //    (quicker on your feet), Second Wind (get back up once when they drag you down) and Grog Ration (patched up in
-//    half the time).
+//    half the time, and getting others up in half the time too).
 //  - Salvage: now and then one of them drops something that floats, glowing: a Powder Keg (full ammunition), Double
 //    Salvage (double points for half a minute), the Black Spot (anything dies to one hit, for half a minute) or a
 //    Lamp Flash (every one of them in the station burns).
@@ -81,14 +81,16 @@ const ZM_BOARD_CAP = 500;
 const ZM_KNIFE = { reach: 2.1, arc: 0.95, dmg: 3, rate: 0.55 };
 // down on the floor (together): how long before you bleed out, how long a friend holds Use to get you up, how fast
 // you can drag yourself along, how far your eyes drop, and the reserve of the pepperbox you hold while you're down
-const ZM_DOWN = { T: 45, REV: 3, CRAWL: 0.6, EYE: 1.15, RES: 12 };
+const ZM_DOWN = { T: 45, REV: 3, CRAWL: 0.6, EYE: 1.15, RES: 12, UP: 2.5, NOTE: 4 };
+// how long it takes me to get someone up: half the time with the Grog Ration in me
+const zmRevTime = () => ZM_DOWN.REV * (ZM.perks && ZM.perks.grog ? 0.5 : 1);
 const ZM_PIERCE = { l: 3 };
 const ZM_PERKS = {
   stout: { n: 'Stout Heart', cost: 2500, c: '#e0504a', what: 'take twice the knocks' },
   quick: { n: 'Quick Hands', cost: 3000, c: '#5ac87a', what: 'reload in half the time' },
   fleet: { n: 'Fleet Foot', cost: 2000, c: '#e8c050', what: 'quicker on your feet' },
   wind: { n: 'Second Wind', cost: 500, c: '#6aa8f0', what: 'get back up once' },
-  grog: { n: 'Grog Ration', cost: 1500, c: '#d8903a', what: 'patched up in half the time' },
+  grog: { n: 'Grog Ration', cost: 1500, c: '#d8903a', what: 'patched up, and get others up, in half the time' },
 };
 // how each tonic's cabinet is dressed (FPI_K.tonic, and its plate and bubbles in zm3dBuild): its wood or iron and
 // trim, the bottles on its shelves, the crest over it and the emblem on that, what's on its lower doors
@@ -1735,7 +1737,7 @@ function zmReset() {
     z: [], drops: [], perks: {}, windBuys: 0, double: 0, insta: 0, dropsRound: 0, swarm: false, skitT: 0, kills: 0, heads: 0, downs: 0, spent: 0, doorsOpened: 0,
     open: new Set(['dock']), zone: 'dock', zoneT: 4, banner: null, pops: [], fx: [], sparks: [], over: null, earnK: 0, navT: 0,
     box: { at: 0, uses: 0, spins: 0, st: 'idle', t: 0, item: null, cyc: 0, show: 'avtomat', owner: null }, near: null, rebuildT: 0, groanT: 2,
-    zc: 0, credit: {}, players: [], downT: 0, unstickAt: 0, unstickMine: 0, ghost: false, revT: 0, revOf: null, downKit: null, beat: 0, boardBy: {}, boardPts: 0,
+    zc: 0, credit: {}, players: [], downT: 0, unstickAt: 0, unstickMine: 0, ghost: false, revT: 0, revOf: null, upT: {}, downNotes: [], downKit: null, beat: 0, boardBy: {}, boardPts: 0,
     doors: Zd.doors, windows: Zd.windows, buys: Zd.buys, perksAt: Zd.perks, spawns: Zd.spawns, glass: Zd.glass || [],
   });
   for (const w of ZM.windows) { w.boards = w.sea ? 0 : 6; w.q = []; w.fall = []; }
@@ -1908,8 +1910,10 @@ function zmTick(dt) {
   if (hold && ZM.near && ZM.near.k === 'rev' && !(m.dead > 0) && !down) {
     if (ZM.revOf !== ZM.near.sid) { ZM.revOf = ZM.near.sid; ZM.revT = 0; }
     ZM.revT += dt;
-    if (ZM.revT >= ZM_DOWN.REV) { ZM.revT = 0; ZM.revOf = null; zmnRevive(ZM.near.sid); }
+    if (ZM.revT >= zmRevTime()) { const sid = ZM.near.sid; zmUpNow(sid); zmnRevive(sid); }
   } else { ZM.revT = 0; ZM.revOf = null; }
+  for (const sid in ZM.upT) if ((ZM.upT[sid] -= dt) <= 0) delete ZM.upT[sid];
+  for (const n of ZM.downNotes) n.t -= dt; ZM.downNotes = ZM.downNotes.filter(n => n.t > 0);
 }
 // (hosting or alone) a board back on a window: 10 points to whoever did it, until they've had their round's worth
 function zmBoardPay(sid) {
@@ -2763,6 +2767,19 @@ function zmDownTick(dt) {
   const was = ZM.beat;
   ZM.beat += dt * (0.9 + 1.5 * (1 - ZM.downT / ZM_DOWN.T));
   if (Math.floor(was) !== Math.floor(ZM.beat)) zmSound('beat');
+}
+// someone's just been got up: they're up for everyone at once (no ring left filling, no marker over them, nobody
+// starting on them again), though their own word of it may be a moment behind; until it comes, or UP seconds pass
+function zmUpNow(sid) {
+  ZM.upT[sid] = ZM_DOWN.UP;
+  if (ZM.revOf === sid) { ZM.revT = 0; ZM.revOf = null; }
+  const r = FPS.remote.get(sid); if (r) { r.down = false; r.wasDn = false; r.dn = 0; }
+  if (ZM.near && ZM.near.k === 'rev' && ZM.near.sid === sid) { ZM.near = null; ZM.prompt = null; }
+}
+// someone else went down: their name across everyone's screen for a few seconds, and in the feed
+function zmDownNote(n) {
+  ZM.downNotes = (ZM.downNotes || []).filter(o => o.n !== n).concat([{ n, t: ZM_DOWN.NOTE }]).slice(-3);
+  fpsFeed(`${n} is down! Hold Use beside them to get them up.`);
 }
 // who's getting me up just now, and how far along they are (from their presence: src/zmnet.js)
 function zmReviver() {
@@ -3692,7 +3709,7 @@ function zmHud() {
     if (b.sub) { ctx.font = fell(phone ? 14 : 19); ctx.fillText(b.sub, cx, H * 0.3 + (phone ? 28 : 44)); }   // [boss] (what it is)
     ctx.globalAlpha = 1;
   }
-  if (ZM.phase === 'pre' && ZM.t > 0) { ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = mono(phone ? 11 : 13); ctx.fillStyle = 'rgba(236,228,207,0.7)'; ctx.fillText('They are coming up out of the sea…', cx, H * 0.3 + 40); }
+  if (ZM.phase === 'pre' && ZM.t > 0 && !(ZM.downNotes && ZM.downNotes.length)) { ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = mono(phone ? 11 : 13); ctx.fillStyle = 'rgba(236,228,207,0.7)'; ctx.fillText('They are coming up out of the sea…', cx, H * 0.3 + 40); }
   // what's in front of you
   const P = ZM.prompt;
   if (P && !(m.dead > 0)) {
@@ -3724,6 +3741,8 @@ function zmHud() {
   }
   // getting someone up: a ring round the sights filling as you hold
   if (ZM.revOf && ZM.revT > 0 && !ZM.over) zmHudReviving(phone, mono, t);
+  // someone else down: their name, big and red, for everyone
+  if (ZM.downNotes && ZM.downNotes.length && !ZM.over) zmHudDownNotes(phone, mono, fell, down);
   if (ZM.over) { ctx.fillStyle = `rgba(20,2,2,${Math.min(0.6, ZM.over.t * 0.4)})`; ctx.fillRect(0, 0, W, H); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = fell(phone ? 28 : 40); ctx.fillStyle = `rgba(200,40,30,${Math.min(1, ZM.over.t)})`; ctx.fillText('They dragged you down', cx, H * 0.42); }
   if (!FPS.mouse && !phone && !FPS.menu && !ZM.over) { ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = mono(12); ctx.fillStyle = 'rgba(236,228,207,0.6)'; ctx.fillText('Click to aim with the mouse', cx, H * 0.5 + 40); }
   if (typeof zeHud === 'function') zeHud();   // [egg hook] src/zmegg.js
@@ -3778,9 +3797,25 @@ function zmHudDown(phone, mono, fell, t) {
     ctx.fillText('You can still fire your pepperbox.', x, ly + (phone ? 15 : 19));
   }
 }
+// the others who've gone down: a line each, a little above the middle (below it, while you're down yourself)
+function zmHudDownNotes(phone, mono, fell, down) {
+  let y = H * (down ? 0.64 : 0.4);
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  for (const o of ZM.downNotes) {
+    const a = clamp(Math.min(o.t, (ZM_DOWN.NOTE - o.t) * 4), 0, 1), text = `${o.n} is down!`;
+    ctx.globalAlpha = a; ctx.font = fell(phone ? 20 : 28);
+    const tw = ctx.measureText(text).width + 40, bh = phone ? 46 : 60, gr = ctx.createLinearGradient(cx - tw / 2 - 30, 0, cx + tw / 2 + 30, 0);
+    gr.addColorStop(0, 'rgba(8,4,4,0)'); gr.addColorStop(0.2, 'rgba(8,4,4,0.6)'); gr.addColorStop(0.8, 'rgba(8,4,4,0.6)'); gr.addColorStop(1, 'rgba(8,4,4,0)');
+    ctx.fillStyle = gr; ctx.fillRect(cx - tw / 2 - 30, y - (phone ? 16 : 20), tw + 60, bh);
+    ctx.fillStyle = '#ff7a5c'; ctx.fillText(text, cx, y);
+    ctx.font = mono(phone ? 10 : 12); ctx.fillStyle = 'rgba(236,228,207,0.85)'; ctx.fillText('Hold Use beside them to get them up', cx, y + (phone ? 19 : 25));
+    y += bh + 4;
+  }
+  ctx.globalAlpha = 1;
+}
 // getting someone up: a ring round the sights filling over the time it takes, their name, and their clock
 function zmHudReviving(phone, mono, t) {
-  const r = FPS.remote.get(ZM.revOf), k = clamp(ZM.revT / ZM_DOWN.REV, 0, 1), y = H / 2, rr = phone ? 24 : 30;
+  const r = FPS.remote.get(ZM.revOf), k = clamp(ZM.revT / zmRevTime(), 0, 1), y = H / 2, rr = phone ? 24 : 30;
   zmRing(cx, y, rr, k, '#ffd88a', phone ? 5 : 6);
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = mono(phone ? 12 : 15);
   const text = `Getting ${(r && r.n) || 'them'} up · ${Math.round(k * 100)}%`, tw = ctx.measureText(text).width + 24, ty = y + rr + (phone ? 22 : 30);
