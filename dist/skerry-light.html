@@ -20517,6 +20517,51 @@ function zm3dBuild() {
   zm3dTower(grp);
   zm3dLantern(grp);
   zm3dWater(grp);
+  zm3dFarLight(grp);
+}
+// Wrackhaven: out across the harbour, far off on its own skerry, the Lighthouse, lit and turning. Only to look at,
+// from the quay and anywhere with a view of the sea: a whitewashed tower with two red bands, the gallery and the
+// lantern on top, the lamp blazing in it and its beam sweeping round over the water; when it swings your way the
+// lantern flares. Its materials ignore the fog, darkened instead to the night, so it stands out against the dark.
+const ZFL = { X: -70, Y: -330, H: 34, R: 4.2, SPIN: 0.39 };
+function zm3dFarLight(grp) {
+  Z3.far = null;
+  const Z = FPS.g.isle.zm; if (!Z || Z.tower || !Z.bay) return;
+  const g = new THREE.Group(), M = (c, k) => new THREE.MeshBasicMaterial({ color: new THREE.Color(c).multiplyScalar(k == null ? 0.3 : k), fog: false });
+  g.position.copy(z3v(FPSC.CX + ZFL.X, FPSC.CY + ZFL.Y, 0));
+  const H = ZFL.H, R = ZFL.R, add = (geo, mat, y) => { const m = new THREE.Mesh(geo, mat); m.position.y = y; g.add(m); return m; };
+  // the skerry, the keeper's cottage at its foot, the tower (wider at the foot), its bands
+  add(new THREE.CylinderGeometry(R * 3.2, R * 4.6, 3.2, 10), M('#3a3c40', 0.35), -0.6);
+  { const c = add(new THREE.BoxGeometry(7, 3.2, 4.4), M('#d8d4c8', 0.22), 2.6); c.position.x = R * 2.1; const r = add(new THREE.ConeGeometry(4.6, 1.8, 4), M('#3a2a24', 0.25), 5.1); r.position.x = R * 2.1; r.rotation.y = Math.PI / 4; r.scale.z = 0.62; }
+  add(new THREE.CylinderGeometry(R * 0.72, R, H, 20), M('#e8e4d8', 0.34), H / 2 + 1);
+  for (const y of [H * 0.32, H * 0.62]) add(new THREE.CylinderGeometry(R * (1 - y / H * 0.28) + 0.03, R * (1 - (y - 3) / H * 0.28) + 0.03, 3, 20), M('#b03028', 0.32), y + 1);
+  // the gallery, the lantern room (glass, lit from inside), the dome and its vane
+  const T = H + 1, RT = R * 0.72;
+  add(new THREE.CylinderGeometry(RT + 1.1, RT + 0.6, 0.6, 20), M('#202224', 0.6), T + 0.3);
+  add(new THREE.CylinderGeometry(RT * 0.78, RT * 0.78, 3.4, 16), new THREE.MeshBasicMaterial({ color: 0xffe2a0, fog: false }), T + 2.3);
+  for (let i = 0; i < 8; i++) { const a = i / 8 * Math.PI * 2, b = add(new THREE.BoxGeometry(0.18, 3.4, 0.18), M('#202224', 0.6), T + 2.3); b.position.x = Math.cos(a) * RT * 0.8; b.position.z = Math.sin(a) * RT * 0.8; }
+  add(new THREE.ConeGeometry(RT * 0.95, 2.2, 16), M('#902a24', 0.3), T + 5.1);
+  add(new THREE.CylinderGeometry(0.08, 0.08, 1.6, 6), M('#202224', 0.6), T + 6.8);
+  // the glow round the lamp, and the flare when the beam faces you
+  const halo = z3Soft('rgba(255,236,180,0.95)', 'rgba(255,220,150,0)');
+  const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: halo, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false })); glow.scale.setScalar(14); glow.position.y = T + 2.3; g.add(glow);
+  const flare = new THREE.Sprite(new THREE.SpriteMaterial({ map: halo, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false, opacity: 0 })); flare.scale.setScalar(60); flare.position.y = T + 2.3; g.add(flare);
+  // the beam: two cones of light back to back from the lamp, out over the water
+  const fade = z3Fade([[0, 'rgba(255,236,180,0.5)'], [0.35, 'rgba(255,226,160,0.16)'], [1, 'rgba(255,220,150,0)']]);
+  const geo = new THREE.CylinderGeometry(1, 0.05, 1, 24, 1, true); geo.translate(0, 0.5, 0); geo.rotateX(-Math.PI / 2);
+  const beam = new THREE.Group(); beam.position.y = T + 2.3; g.add(beam);
+  for (const s of [1, -1]) { const b = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ map: fade, transparent: true, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending, fog: false })); b.scale.set(18, 4, 320); b.rotation.y = s > 0 ? 0 : Math.PI; b.frustumCulled = false; b.renderOrder = 9; beam.add(b); }
+  grp.add(g);
+  Z3.far = { g, beam, flare };
+}
+// (each frame) turn the beam, and flare as it passes over you
+function zm3dFarTick(t) {
+  const F = Z3.far; if (!F) return;
+  const a = (reduceMotion ? 0.6 : t * ZFL.SPIN) % (Math.PI * 2); F.beam.rotation.y = a;
+  const m = FPS.me, toMe = Math.atan2(m.x - (FPSC.CX + ZFL.X), m.y - (FPSC.CY + ZFL.Y));
+  // (turned by a, the beam's two ends point along the bearings -a and PI - a)
+  const off = Math.min(Math.abs(angDiff(-a, toMe)), Math.abs(angDiff(Math.PI - a, toMe)));
+  F.flare.material.opacity = clamp(1 - off / 0.22, 0, 1) * 0.9;
 }
 // The harbour: water laid over the island south of the shore (ZM_SHORE), round the jetty and out past the island's
 // edge, where it slopes down into the open sea. A grid a metre square, its height a hair over the ground (dipping
@@ -20905,6 +20950,7 @@ function zmScene3D() {
   if (!Z3.grp || Z3.key !== FPS.g.isle.key) zm3dBuild();
   Z3.grp.visible = true;
   if (GL3D.tower) GL3D.tower.visible = false;
+  zm3dFarTick(FPS.g.t);   // Wrackhaven's view of the Light, far off
   // indoors, at night: dimmer all over, so the lamps make pools of light
   GL3D.amb.intensity = 0.42; GL3D.moon.intensity = 0.12;
   const dt = Math.min(0.05, FPS.dtLast || 0.016), t = g.t, G0 = FPSC.GROUND, m = FPS.me;
