@@ -52,8 +52,17 @@ const ZMC = {
 const ZMT = { X: 0, Y: 1.5, R: 10, TH: 0.6, N: 32, L: [0, 5, 10, 15, 20, 25], HOLE: 3.6, PER: 18, R0: 0.95, R1: 3.45, GLASS: 6.5 };
 ZMT.RISE = 5 / ZMT.PER;
 ZMC.HT = ZMT.L[5];   // the lantern room's floor
+// Over the lantern, the Roof Room: a windowless iron drum on the lantern's cornice under the red dome, its floor RF,
+// RW the inside of its wall, RH high. An iron stair (ST) climbs round the inside of the glass to it, against the
+// glass on the north side: N rises from the lantern's floor (the last is the Roof Room's floor), tread 1 at A0 and
+// each DA further round (clockwise, from beside the west door to beside the east), R0 to R1 out from the newel. It
+// comes up through SLOT, an opening in the Roof Room's floor along its wall (angles a0 to a1, from r out).
+ZMT.RF = ZMT.L[5] + 5; ZMT.RW = 6.35; ZMT.RH = 3.3;
+ZMT.ST = { N: 16, A0: 158 * Math.PI / 180, DA: 9 * Math.PI / 180, R0: 5.15, R1: 6.3, D: 1.0 };
+ZMT.ST.RISE = (ZMT.RF - ZMT.L[5]) / ZMT.ST.N;
+ZMT.SLOT = [26 * Math.PI / 180, 98 * Math.PI / 180, 4.8];
 const ZM_TROOMS = { tower: 'the Tower Foot', tw1n: 'the Watch Room', tw1s: 'the Oil Room', tw2n: 'the Chart Room', tw2s: 'the Bunk Room',
-  tw3n: 'the Clock Room', tw3s: 'the Lamp-Wright’s Store', tw4n: 'the Service Room', tw4s: 'the Keeper’s Study', top: 'the Lantern Room' };
+  tw3n: 'the Clock Room', tw3s: 'the Lamp-Wright’s Store', tw4n: 'the Service Room', tw4s: 'the Keeper’s Study', top: 'the Lantern Room', roof: 'the Roof Room' };
 const ZM = { on: false, own: ['pepperbox'], res: {}, pts: 0, round: 0, items: [], z: [], drops: [], perks: {}, fx: [] };
 // what each weapon carries in reserve, and how much harder it hits the drowned than a wrecker
 const ZM_AMMO = { pepperbox: 60, blunderbuss: 28, longarm: 36, harpoon: 30, avtomat: 225, cutlass: 0, fresnel: 240 };
@@ -511,6 +520,47 @@ Object.assign(FPI_K, {
   },
   // the lantern's glass (drawn with the mode's own glass; here only what stops you walking through it)
   glasspane: { noShadow: true, sol(p) { return [fpiBox(p, 0, 0, p.w / 2, 0.05, p.z1, { z0: p.z0, ray: false, col: '#a8c8d8' })]; } },
+  // a tread of the iron stair up from the lantern to the Roof Room (u: out from the newel, +v: down the stair): a
+  // chequered iron plate with a brass nosing, on curved stringers, its rail on the open (inner) side, and here and
+  // there a slender iron column down to the lantern's floor (base)
+  rtread: {
+    noShadow: true,
+    sol(p) {
+      const out = [fpiBox(p, 0, 0, p.w / 2, p.d / 2, p.hh, { z0: p.hh - 0.2, fl: true, col: ZMP.iron })];
+      // (the rail's solid stands a little inside the rail itself, so the stair is wide enough to climb between it and
+      // the glass: you can't step off, and you still brush the rail)
+      if (p.rail) out.push(fpiBox(p, -p.w / 2 - 0.2, 0, 0.05, p.d / 2, p.hh + 1.0, { z0: p.hh - 0.05, ray: false, col: ZMP.iron }));
+      if (p.post) out.push(fpiCirc(p, -p.w / 2 + 0.1, 0, 0.06, p.hh - 0.2, { z0: p.base, ray: false, col: ZMP.iron }));
+      return out;
+    },
+    b3(p, A) {
+      const S = ZMT.ST, IR = '#2a2e31', IR2 = '#3c4144', BR = '#c09040', h = p.hh, w = p.w, d = p.d;
+      // (the slope of the stair along its inner and outer edges)
+      const sIn = -Math.atan(S.RISE / (S.R0 * S.DA)), sOut = -Math.atan(S.RISE / (S.R1 * S.DA));
+      A.box(IR, 0, 0, h - 0.06, w, d * 0.97, 0.06);
+      for (let i = 0; i < 5; i++) A.box(IR2, -w / 2 + (i + 0.5) * w / 5, 0, h - 0.005, 0.03, d * 0.9, 0.012);
+      A.box(BR, 0, d * 0.485 - 0.03, h - 0.055, w * 0.99, 0.06, 0.06);
+      A.box(IR, -w / 2 + 0.03, 0, h - 0.24, 0.06, d * 1.06, 0.22, 0, sIn); A.box(IR, w / 2 - 0.03, 0, h - 0.24, 0.06, d * 1.06, 0.22, 0, sOut);
+      if (p.rail) {
+        A.box(IR, -w / 2 + 0.04, 0, h - 0.02, 0.035, 0.035, 0.96); A.box(IR, -w / 2 + 0.04, d * 0.33, h - 0.02 - S.RISE * 0.33, 0.025, 0.025, 0.96);
+        A.box(BR, -w / 2 + 0.04, 0, h + 0.92, 0.07, d * 1.08, 0.06, 0, sIn); A.box(IR, -w / 2 + 0.04, 0, h + 0.45, 0.025, d * 1.06, 0.025, 0, sIn);
+      }
+      if (p.post) { A.cyl(IR, -w / 2 + 0.1, 0, p.base, 0.05, h - 0.2 - p.base); A.cyl(BR, -w / 2 + 0.1, 0, p.base, 0.09, 0.1); A.box(IR, -w / 4, 0, h - 0.3, w / 2, 0.06, 0.08); }
+    },
+  },
+  // a strip of the Roof Room's floor (boards on iron plate: the plate is the lantern's ceiling, seen from below)
+  rfloor: {
+    noShadow: true,
+    sol(p) { return [fpiBox(p, 0, 0, p.w / 2, p.d / 2, p.top, { z0: p.top - 0.3, fl: true, col: '#5a4634' })]; },
+    b3(p, A) {
+      A.box('#262a2c', 0, 0, p.top - 0.3, p.w, p.d, 0.2);
+      A.box(ZMP.boards[p.i % 3], 0, 0, p.top - 0.1, p.w, p.d * 0.94, 0.1);
+    },
+  },
+  // the Roof Room's wall and ceiling: only what stops you (the drum and its ceiling are drawn by zm3dLantern)
+  rwall: { noShadow: true, sol(p) { return [fpiBox(p, 0, 0, p.len / 2, p.th / 2, p.z1, { z0: p.z0, col: '#2a2e30' })]; } },
+  rpipe: { noShadow: true, sol(p) { return [fpiCirc(p, 0, 0, p.r, p.z1, { z0: p.z0, col: ZMP.brass })]; } },
+  rceil: { noShadow: true, sol(p) { return [fpiCirc(p, 0, 0, p.r, p.z0 + 0.3, { z0: p.z0, mv: false, occ: false, col: '#5a4634' })]; } },
   // a pot plant: geraniums on a sill, a fern in a corner, a palm by the stair
   plant: {
     col: '#8a4a30',
@@ -922,7 +972,7 @@ FPI_GEN.light = {
       const n = k * ZMT.PER + 3, a = Math.PI / 2 + (n - 0.5) / ZMT.PER * Math.PI * 2, rm = (ZMT.R0 + ZMT.R1) / 2, h = (n - 1) * ZMT.RISE;
       const [gx, gy] = TW(Math.cos(a) * rm, Math.sin(a) * rm);
       const p = put('zdoor', gx, gy, a, { w: ZMT.R1 - ZMT.R0 + 0.1, d: 0.16, hh: 2.6, lift: h - 0.3 });
-      Z.doors.push({ x: OX + gx, y: OY + gy, z: h, ang: a, w: ZMT.R1 - ZMT.R0, cost: gateCost[k], zones: [k === 0 ? 'tower' : 'tw' + k + 'n', k === 4 ? 'top' : 'tw' + (k + 1) + 'n'], kind: 'gate', solids: p.sol.slice(), prop: p, open: false, id: Z.doors.length });
+      Z.doors.push({ x: OX + gx, y: OY + gy, z: h, ang: a, w: ZMT.R1 - ZMT.R0, cost: gateCost[k], zones: [k === 0 ? 'tower' : 'tw' + k + 'n', k === 4 ? 'top' : 'tw' + (k + 1) + 'n'], kind: 'gate', also: k === 4 ? ['roof'] : undefined, solids: p.sol.slice(), prop: p, open: false, id: Z.doors.length });
     }
     // each floor's two rooms: a wall across from the stairwell to the tower wall on each side, a door in the east one
     for (let k = 1; k <= 4; k++) {
@@ -938,6 +988,52 @@ FPI_GEN.light = {
       tput('glasspane', ca * GR, sa * GR, a + Math.PI / 2, { w, z0: L5 + 0.05, z1: L5 + 4.4 });
     }
     Z.top = { x: OX + TX, y: OY + TY, r: GR - 0.2, z: L5 };
+    // the iron stair round the inside of the glass, from beside the west door up over the head of the spiral stair
+    // to the Roof Room (each tread rises ZMT.ST.RISE; the last rise is onto the Roof Room's floor)
+    const RF = ZMT.RF, RW = ZMT.RW, RH = ZMT.RH, ST = ZMT.ST;
+    for (let n = 1; n < ST.N; n++) {
+      const a = ST.A0 - (n - 1) * ST.DA, rm = (ST.R0 + ST.R1) / 2, hh = L5 + n * ST.RISE;
+      tput('rtread', Math.cos(a) * rm, Math.sin(a) * rm, a, { w: ST.R1 - ST.R0, d: ST.D, hh, base: L5, rail: n >= 3, post: n % 4 === 0 && n < 13 });
+    }
+    // the Roof Room's floor, in strips across, cut to the circle and to the opening the stair comes up through
+    { const [a0, a1, rs] = ZMT.SLOT, R = RW + 0.15, SW = 0.2, DX = 0.05;
+      const slot = (x, y) => { const a = Math.atan2(y, x); return Math.hypot(x, y) > rs - 0.02 && a > a0 - 0.01 && a < a1 + 0.01; };
+      let i = 0;
+      for (let y0 = -R; y0 < R - 1e-6; y0 += SW) {
+        const y1 = Math.min(R, y0 + SW), ym = Math.max(Math.abs(y0), Math.abs(y1)) * (y0 < 0 && y1 > 0 ? 0 : 1), xm = Math.sqrt(Math.max(0, R * R - ym * ym));
+        let run = null; const runs = [];
+        for (let x = -xm; x <= xm + 1e-6; x += DX) {
+          const ok = !slot(x, y0) && !slot(x, y1) && !slot(x, (y0 + y1) / 2);
+          if (ok && !run) run = [x, x]; else if (ok) run[1] = x; else if (run) { runs.push(run); run = null; }
+        }
+        if (run) runs.push(run);
+        for (const [x0, x1] of runs) if (x1 - x0 > 0.1) tput('rfloor', (x0 + x1) / 2, (y0 + y1) / 2, 0, { w: x1 - x0 + DX, d: y1 - y0, top: RF, i: i++ });
+      }
+      // a rail round the opening, and across its low end
+      const NR = 7;
+      for (let k = 0; k < NR; k++) {
+        const b0 = a0 + (a1 - a0) * k / NR, b1 = a0 + (a1 - a0) * (k + 1) / NR, bm = (b0 + b1) / 2, r = rs - 0.06;
+        tput('zrail', Math.cos(bm) * r, Math.sin(bm) * r, bm + Math.PI / 2, { w: 2 * r * Math.sin((b1 - b0) / 2) + 0.04, base: RF });
+      }
+      { const r0 = rs - 0.06, r1 = RW - 0.05, rm = (r0 + r1) / 2, b = a1 + 0.012; tput('zrail', Math.cos(b) * rm, Math.sin(b) * rm, b, { w: r1 - r0, base: RF }); }
+    }
+    // its wall (no windows) and its ceiling, under the dome
+    { const NW = 32, RC = RW + 0.25, SEGW = 2 * RC * Math.sin(Math.PI / NW) * 1.06;
+      for (let i = 0; i < NW; i++) { const a = (i + 0.5) / NW * Math.PI * 2; tput('rwall', Math.cos(a) * RC, Math.sin(a) * RC, a + Math.PI / 2, { len: SEGW, th: 0.5, z0: RF, z1: RF + RH }); }
+      tput('rceil', 0, 0, 0, { r: RW + 0.3, z0: RF + RH });
+      tput('rpipe', 0, 0, 0, { r: 0.32, z0: RF, z1: RF + RH });   // (the lamp's flue, up through the middle)
+    }
+    // in it: two lanterns, the oil and the stores of a lamp room, and the lever that lights the lamp ([lamp] src/zmlamp.js)
+    lamp(...TW(-2.6, 1.6), RF + 2.45, '#ffc070', RF + RH); lamp(...TW(2.4, -2.4), RF + 2.45, '#ffc070', RF + RH);
+    { const onRoof = (kind, x, y, ang, o) => put(kind, x, y, ang || 0, Object.assign({ lift: RF }, o || {}));
+      const at = (a, r) => [TX + Math.cos(a) * r, TY + Math.sin(a) * r, a + Math.PI / 2];
+      { const [x, y, a] = at(Math.PI * 0.86, RW - 0.3); onRoof('shelf', x, y, a, { w: 1.8, goods: 'cans' }); }
+      { const [x, y, a] = at(-Math.PI * 0.86, RW - 0.3); onRoof('shelf', x, y, a, { w: 1.6, goods: 'jars' }); }
+      for (const [a, r] of [[Math.PI * 1.16, 5.3], [Math.PI * 1.25, 5.55]]) onRoof('tank', TX + Math.cos(a) * r, TY + Math.sin(a) * r, 0, { r: 0.42, hh: 1.1, c: '#4a3a2a' });
+      onRoof('coil', TX + Math.cos(-0.25) * 5.2, TY + Math.sin(-0.25) * 5.2, 0, {});
+      onRoof('crates', TX + Math.cos(Math.PI * 0.62) * 3.2, TY + Math.sin(Math.PI * 0.62) * 3.2, 0.4, { items: [{ u: 0, v: 0, s: 0.75, h0: 0, ry: 0.2 }] });
+      if (typeof zmlPlace === 'function') zmlPlace(put, light, W, Z, onRoof);   // [lamp] the lever that lights the lamp (src/zmlamp.js)
+    }
     // the lights: the Light itself, and a lamp in every room
     light(...TW(0, 0), L5 + 1.8, '#fff0c0', 20, 'lens');
     for (let k = 0; k <= 4; k++) {
@@ -1206,6 +1302,7 @@ function zmZoneAt(x, y, z) {
   const lx = x - FPSC.CX, ly = y - FPSC.CY, tx = lx - ZMT.X, ty = ly - ZMT.Y;
   // in the tower: which floor, and which half of it
   if (Math.hypot(tx, ty) < ZMT.R + 0.2) {
+    if ((z || 0) >= ZMT.RF - 0.6 && Math.hypot(tx, ty) < ZMT.RW + 0.5) return 'roof';
     let k = 0; for (let i = 1; i < 6; i++) if ((z || 0) >= ZMT.L[i] - 0.6) k = i;
     return k === 0 ? 'tower' : k === 5 ? 'top' : 'tw' + k + (ty >= 0 ? 'n' : 's');
   }
@@ -1428,6 +1525,7 @@ function zmReset() {
   });
   for (const w of ZM.windows) { w.boards = w.sea ? 0 : 6; w.q = []; w.fall = []; }
   if (typeof zmpReset === 'function') zmpReset();   // [pap]
+  if (typeof zmlReset === 'function') zmlReset();   // [lamp] the Light dark again, the lever at its first price
   if (typeof zxReset === 'function') zxReset();   // [chest] src/zmchest.js
   if (typeof zeReset === 'function') zeReset();   // [egg hook] src/zmegg.js
 }
@@ -1572,6 +1670,7 @@ function zmTick(dt) {
   for (const s of ZM.sparks) s.t -= dt; ZM.sparks = ZM.sparks.filter(s => s.t > 0);
   if (FPS.beamT > 0) FPS.beamT -= dt;
   if (typeof zmpTick === 'function') zmpTick(dt);   // [pap]
+  if (typeof zmlTick === 'function') zmlTick(dt);   // [lamp] the Light, while it burns
   if (typeof zxTick === 'function') zxTick(dt);   // [chest] what the chest's weapons throw, and what they leave burning
   if (typeof zeTick === 'function') zeTick(dt);   // [egg hook] src/zmegg.js
   if (typeof zbMe === 'function') zbMe(dt);   // [boss] their blows running on (joined), and what they've done to me (src/zmboss.js)
@@ -2059,7 +2158,7 @@ function zmHurt(d, dmg, head, code, by, how) {
 }
 function zmKill(d, head, code, how, by) {
   if (d.dead) return;
-  d.dead = 1; d.deadT = 0; d.burn = how === 'burn'; d.head = !!head;
+  d.dead = 1; d.deadT = 0; d.burn = how === 'burn' || how === 'lamp'; d.head = !!head;   // [lamp] (burned by the Light's beam)
   if (d.win) d.win.q = d.win.q.filter(q => q !== d);
   if (how !== 'flash') zmPoints(how === 'burn' ? 80 : head ? 100 : code === 'c' || code === 'k' ? 130 : 60, false, by);
   zmKillFx(d);
@@ -2311,6 +2410,7 @@ function zmNearest() {
   const B = ZM.box, S = ZM.spawns[B.at];
   if (S && (B.st === 'idle' || (B.st === 'offer' && B.owner === m.id))) consider({ k: 'box' }, S.x + S.nx * 0.9, S.y + S.ny * 0.9, S.z - 0.32, 1.8, true);
   if (typeof zmpConsider === 'function') zmpConsider(consider);   // [pap] the bench
+  if (typeof zmlConsider === 'function') zmlConsider(consider);   // [lamp] the lever that lights the lamp
   // someone down: you can get them up
   if (ZM.net) for (const r of FPS.remote.values()) if (r.down && !r.dead) consider({ k: 'rev', sid: r.id, n: r.n }, r.x, r.y, r.jz || 0, 1.8, false);
   for (const w of ZM.windows) if (!w.sea && w.boards < 6 && zmOpen(w.zone)) consider({ k: 'win', w }, w.x - w.nx * 0.95, w.y - w.ny * 0.95, w.z || 0, w.hatch ? 1.6 : 1.9, false);
@@ -2321,6 +2421,7 @@ function zmNearest() {
 }
 function zmPrompt(o) {
   { const r = typeof zmpPrompt === 'function' && zmpPrompt(o); if (r) return r; }   // [pap] the bench, a reforged weapon's ammunition
+  { const r = typeof zmlPrompt === 'function' && zmlPrompt(o); if (r) return r; }   // [lamp] the lever
   if (o.k === 'egg') return typeof zePrompt === 'function' ? zePrompt(o) : null;   // [egg hook] src/zmegg.js
   if (o.k === 'buy') {
     const w = FPSW[o.b.id], own = ZM.own.includes(o.b.id);
@@ -2338,6 +2439,7 @@ function zmPrompt(o) {
 function zmUse() {
   const o = ZM.near, m = FPS.me; if (!o || m.dead > 0 || zmIsDown() || ZM.over) return;
   if (typeof zmpUse === 'function' && zmpUse(o)) return;   // [pap]
+  if (typeof zmlUse === 'function' && zmlUse(o)) return;   // [lamp]
   if (o.k === 'egg') { if (typeof zeUse === 'function') zeUse(o); return; }   // [egg hook] src/zmegg.js
   const pay = c => { if (ZM.pts < c) { zmSound('no'); fpsFeed('Not enough points.'); return false; } ZM.pts -= c; ZM.spent += c; return true; };
   if (o.k === 'buy') {
@@ -2888,8 +2990,8 @@ function zm3dTower(grp) {
   grp.add(new THREE.Mesh(rg, new THREE.MeshLambertMaterial({ vertexColors: true })));
 }
 // the glazed windows of the tower, and the lantern on top: its ring of glass in brass astragals, the gallery rail, the
-// copper dome with its ventilator ball and lightning rod, and the Light itself, a great lens turning on the newel
-// with its two beams sweeping out over the sea
+// Roof Room over it (an iron drum) under the copper dome with its ventilator ball and lightning rod, and the Light
+// itself, a great lens on the newel, dark until it's lit, and then turning, its one beam sweeping out over the sea
 function zm3dLantern(grp) {
   const G0 = FPSC.GROUND, L5 = ZMT.L[5], T = ZM_TC, cx = FPSC.CX + T[0], cy = FPSC.CY + T[1];
   const glassM = new THREE.MeshPhongMaterial({ color: 0x9ab8c8, specular: 0xffffff, shininess: 120, transparent: true, opacity: 0.22, depthWrite: false, side: THREE.DoubleSide });
@@ -2925,32 +3027,87 @@ function zm3dLantern(grp) {
     for (const s of [-1, 1]) for (const a0 of [0, Math.PI]) { const a = a0 + s * DOOR, b = new THREE.BoxGeometry(0.16, HG, 0.16); b.translate(Math.cos(a) * R, HG / 2, -Math.sin(a) * R); bars.push(b); }
     const mg = z3Merge(bars); if (mg) top.add(new THREE.Mesh(mg, brassM));
   }
-  // the cornice, the dome (red, a little raised), the ventilator and its ball, and the lightning rod
+  // the cornice over the glass: a ring, open in the middle (inside, the lantern's ceiling is the Roof Room's floor:
+  // its iron plate, ribbed, with the stair's opening in it), and an iron band inside up to that floor
   const red = new THREE.MeshPhongMaterial({ color: 0x8a261c, specular: 0x503028, shininess: 25 }), dark = z3Lam('#22282a');
-  const corn = new THREE.Mesh(new THREE.CylinderGeometry(R + 0.55, R + 0.25, 0.55, 48), dark); corn.position.y = HG + 0.27; top.add(corn);
-  const DH = 0.55, dome = new THREE.Mesh(new THREE.SphereGeometry(R + 0.45, 40, 12, 0, Math.PI * 2, 0, Math.PI / 2), red); dome.scale.y = DH; dome.position.y = HG + 0.5; top.add(dome);
-  const dTop = HG + 0.5 + (R + 0.45) * DH;
+  const RF = ZMT.RF - L5, RH = ZMT.RH, RW = ZMT.RW, [sa0, sa1, srr] = ZMT.SLOT;
+  const corn = new THREE.Mesh(new THREE.CylinderGeometry(R + 0.55, R + 0.25, 0.55, 48, 1, true), dark); corn.position.y = HG + 0.27; top.add(corn);
+  { const cu = new THREE.RingGeometry(R - 0.1, R + 0.26, 48); cu.rotateX(Math.PI / 2); const m = new THREE.Mesh(cu, dark); m.position.y = HG; top.add(m); }
+  { const band = new THREE.Mesh(new THREE.CylinderGeometry(R - 0.07, R - 0.07, RF - 0.1 - HG, 48, 1, true), z3Lam('#1e2326', { side: THREE.DoubleSide })); band.position.y = (HG + RF - 0.1) / 2; top.add(band); }
+  { // (the ceiling's ribs, out from a boss over the lens, round the opening)
+    const ribs = [], inSlot = a => { const w = ((a % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2); return w > sa0 - 0.05 && w < sa1 + 0.05; };
+    for (let i = 0; i < 16; i++) {
+      const a = (i + 0.5) / 16 * Math.PI * 2, r1 = inSlot(a) ? srr - 0.05 : R - 0.1, len = r1 - 0.7;
+      const b = new THREE.BoxGeometry(len, 0.14, 0.08); b.translate(0.7 + len / 2, RF - 0.37, 0); b.rotateY(a); ribs.push(b);
+    }
+    const ring = new THREE.TorusGeometry(0.75, 0.07, 6, 20); ring.rotateX(Math.PI / 2); ring.translate(0, RF - 0.37, 0); ribs.push(ring);
+    const mg = z3Merge(ribs); if (mg) top.add(new THREE.Mesh(mg, ironM));
+  }
+  // the lamp's flue, from the top of the lens up through the Roof Room to the ventilator
+  { const flM = z3Lam('#33383a'), fl = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.2, RF + RH - 3.25, 12), flM); fl.position.y = 3.25 + (RF + RH - 3.25) / 2; top.add(fl);
+    const hood = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.55, 0.35, 14, 1, true), brassM); hood.position.y = 3.32; top.add(hood);
+    for (const y of [RF - 0.25, RF + 0.08, RF + 1.6, RF + RH - 0.1]) { const c = new THREE.Mesh(new THREE.CylinderGeometry(0.23, 0.23, 0.08, 12), z3Lam('#8a6a34')); c.position.y = y; top.add(c); } }
+  // the Roof Room: a windowless drum of cast-iron plates on the cornice, ribbed, between two brass bands; inside,
+  // boarded and varnished, a dado rail and a skirting, under a boarded ceiling on radial beams
+  const D0 = HG + 0.55, D1 = RF + RH + 0.02, DR = R + 0.24;
+  const drumM = new THREE.MeshPhongMaterial({ color: 0x1c2526, specular: 0x34403f, shininess: 18 });
+  { const d = new THREE.Mesh(new THREE.CylinderGeometry(DR, DR, D1 - D0, 48, 1, true), drumM); d.position.y = (D0 + D1) / 2; top.add(d);
+    const parts = [];
+    for (let i = 0; i < 24; i++) { const a = i / 24 * Math.PI * 2, b = new THREE.BoxGeometry(0.12, D1 - D0, 0.08); b.translate(DR + 0.03, (D0 + D1) / 2, 0); b.rotateY(a); parts.push(b); }
+    for (const y of [D0 + 0.55, D1 - 0.5]) { const t = new THREE.TorusGeometry(DR + 0.03, 0.03, 4, 48); t.rotateX(Math.PI / 2); t.translate(0, y, 0); parts.push(t); }
+    const mg = z3Merge(parts); if (mg) top.add(new THREE.Mesh(mg, drumM));
+    for (const y of [D0 + 0.08, D1 - 0.08]) { const t = new THREE.TorusGeometry(DR + 0.05, 0.07, 6, 48); t.rotateX(Math.PI / 2); const m = new THREE.Mesh(t, brassM); m.position.y = y; top.add(m); }
+  }
+  { // (below the dado rail, boards painted a dark lighthouse green; above it, boards painted stone; the ceiling dark)
+    const DADO = 1.05, lowM = z3Lam('#3e5a4c', { side: THREE.BackSide }), upM = z3Lam('#a49a86', { side: THREE.BackSide }), wood2 = z3Lam('#4e3826');
+    const lo = new THREE.Mesh(new THREE.CylinderGeometry(RW, RW, DADO + 0.15, 48, 1, true), lowM); lo.position.y = RF - 0.15 + (DADO + 0.15) / 2; top.add(lo);
+    const up = new THREE.Mesh(new THREE.CylinderGeometry(RW, RW, RH - DADO + 0.02, 48, 1, true), upM); up.position.y = RF + DADO + (RH - DADO + 0.02) / 2; top.add(up);
+    const parts = [], lines = [];
+    for (let i = 0; i < 72; i++) { const a = (i + 0.5) / 72 * Math.PI * 2, b = new THREE.BoxGeometry(0.015, DADO, 0.02); b.translate(RW - 0.005, RF + DADO / 2, 0); b.rotateY(a); lines.push(b); }
+    for (let i = 0; i < 48; i++) { const a = (i + 0.5) / 48 * Math.PI * 2, b = new THREE.BoxGeometry(0.012, RH - DADO, 0.015); b.translate(RW - 0.005, RF + DADO + (RH - DADO) / 2, 0); b.rotateY(a); parts.push(b); }
+    { const ml = z3Merge(lines); if (ml) top.add(new THREE.Mesh(ml, z3Lam('#2a3e34'))); const mp = z3Merge(parts); if (mp) top.add(new THREE.Mesh(mp, z3Lam('#7a705e'))); }
+    const trims = [];
+    for (const [y, hh, th] of [[RF + 0.1, 0.2, 0.05], [RF + DADO, 0.08, 0.07], [RF + RH - 0.12, 0.16, 0.06]]) { const c = new THREE.CylinderGeometry(RW - th / 2, RW - th / 2, hh, 48, 1, true); c.translate(0, y, 0); trims.push(c); }
+    const mt = z3Merge(trims); if (mt) top.add(new THREE.Mesh(mt, z3Lam('#3a2a1e', { side: THREE.DoubleSide })));
+    const ceil = new THREE.Mesh(new THREE.CircleGeometry(RW + 0.02, 48), z3Lam('#6a4e34')); ceil.rotation.x = Math.PI / 2; ceil.position.y = RF + RH; top.add(ceil);
+    const beams = [];
+    for (let i = 0; i < 8; i++) { const a = i / 8 * Math.PI * 2, b = new THREE.BoxGeometry(RW - 0.3, 0.2, 0.16); b.translate(0.3 + (RW - 0.3) / 2, RF + RH - 0.1, 0); b.rotateY(a); beams.push(b); }
+    const mb = z3Merge(beams); if (mb) top.add(new THREE.Mesh(mb, wood2));
+    // (the stair's opening: an iron kerb round its edge, on the floor)
+    const kt = new THREE.TorusGeometry(srr - 0.06, 0.04, 4, 20, sa1 - sa0); kt.rotateX(-Math.PI / 2); const k = new THREE.Mesh(kt, ironM); k.position.y = RF + 0.01; k.rotation.y = sa0; top.add(k);
+  }
+  // over it, the eaves, and the red dome with its ventilator and ball, and the lightning rod
+  const eave = new THREE.Mesh(new THREE.CylinderGeometry(R + 0.6, R + 0.32, 0.45, 48, 1, true), dark); eave.position.y = D1 + 0.175; top.add(eave);
+  for (const [y, r0, r1, up] of [[D1 - 0.05, DR - 0.02, R + 0.33, false], [D1 + 0.4, R + 0.3, R + 0.61, true]]) { const rg = new THREE.RingGeometry(r0, r1, 48); rg.rotateX(up ? -Math.PI / 2 : Math.PI / 2); const m = new THREE.Mesh(rg, dark); m.position.y = y; top.add(m); }
+  const DH = 0.55, dome = new THREE.Mesh(new THREE.SphereGeometry(R + 0.45, 40, 12, 0, Math.PI * 2, 0, Math.PI / 2), red); dome.scale.y = DH; dome.position.y = D1 + 0.4; top.add(dome);
+  const dTop = D1 + 0.4 + (R + 0.45) * DH;
   const vent = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.6, 0.7, 16), dark); vent.position.y = dTop + 0.25; top.add(vent);
   const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.85, 0.85, 0.08, 16), dark); cap.position.y = dTop + 0.64; top.add(cap);
   const ball = new THREE.Mesh(new THREE.SphereGeometry(0.55, 16, 10), dark); ball.position.y = dTop + 1.15; top.add(ball);
   const rod = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.06, 2.8, 6), brassM); rod.position.y = ball.position.y + 1.6; top.add(rod);
   // (the gallery's deck and its railing are the tower's skin: zm3dTower)
-  // the Light: a pedestal on the newel, a beehive of glass rings in a brass cage, turning
+  // the Light: a pedestal on the newel, a beehive of glass rings in a brass cage. Dark and still until the lamp is lit
+  // from the Roof Room (src/zmlamp.js); then it turns, its one beam sweeping out over the station and the sea
   const ped = new THREE.Mesh(new THREE.CylinderGeometry(0.7, 0.95, 0.9, 16), brassM); ped.position.y = 0.45; top.add(ped);
   const lens = new THREE.Group(); lens.position.y = 0.9; top.add(lens);
   const lensM = new THREE.MeshBasicMaterial({ color: 0xfff0c8, transparent: true, opacity: 0.85 });
   for (let i = 0; i < 11; i++) { const r = 0.95 - Math.abs(i - 5) * 0.07, t = new THREE.Mesh(new THREE.CylinderGeometry(r, r, 0.17, 24, 1, true), lensM); t.position.y = 0.15 + i * 0.2; lens.add(t); }
   for (let i = 0; i < 8; i++) { const a = i / 8 * Math.PI * 2, b = new THREE.Mesh(new THREE.BoxGeometry(0.06, 2.3, 0.06), brassM); b.position.set(Math.cos(a) * 1.0, 1.15, Math.sin(a) * 1.0); lens.add(b); }
-  const core = new THREE.Mesh(new THREE.SphereGeometry(0.42, 16, 12), new THREE.MeshBasicMaterial({ color: 0xffffff })); core.position.y = 1.15; lens.add(core);
+  const coreM = new THREE.MeshBasicMaterial({ color: 0xffffff }), core = new THREE.Mesh(new THREE.SphereGeometry(0.42, 16, 12), coreM); core.position.y = 1.15; lens.add(core);
   const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: z3Soft('rgba(255,236,180,0.95)', 'rgba(255,220,150,0)'), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false }));
   glow.scale.setScalar(5); glow.position.y = 1.15; lens.add(glow);
-  // two beams, opposite each other, out of the lens and across the sea
-  const fade = z3Fade([[0, 'rgba(255,240,190,0.5)'], [0.25, 'rgba(255,236,180,0.22)'], [1, 'rgba(255,230,170,0)']]);
-  const bgeo = new THREE.CylinderGeometry(9, 0.9, 140, 24, 1, true); bgeo.translate(0, 70, 0); bgeo.rotateZ(-Math.PI / 2);
+  // the beam: a wide soft cone out of the lens and a brighter core inside it, tilted a touch down over the station
+  const beam = new THREE.Group(); beam.position.y = 1.15; beam.rotation.z = -0.045; lens.add(beam);
+  const BL = 170, fade = z3Fade([[0, 'rgba(255,242,200,0.06)'], [0.04, 'rgba(255,242,200,0.2)'], [0.12, 'rgba(255,240,196,0.45)'], [0.3, 'rgba(255,236,184,0.24)'], [0.65, 'rgba(255,232,176,0.08)'], [1, 'rgba(255,230,170,0)']]);
+  const bgeo = new THREE.CylinderGeometry(BL * Math.tan(0.095), 0.95, BL, 24, 1, true); bgeo.translate(0, BL / 2, 0); bgeo.rotateZ(-Math.PI / 2);
   const beamM = new THREE.MeshBasicMaterial({ map: fade, transparent: true, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending, fog: false });
-  for (const s of [0, Math.PI]) { const b = new THREE.Mesh(bgeo, beamM); b.rotation.y = s; b.position.y = 1.15; lens.add(b); }
+  beam.add(new THREE.Mesh(bgeo, beamM));
+  const cfade = z3Fade([[0, 'rgba(255,250,225,0.12)'], [0.05, 'rgba(255,250,225,0.35)'], [0.15, 'rgba(255,250,225,0.75)'], [0.4, 'rgba(255,244,205,0.3)'], [1, 'rgba(255,240,200,0)']]);
+  const cgeo = new THREE.CylinderGeometry(BL * 0.75 * Math.tan(0.035), 0.55, BL * 0.75, 16, 1, true); cgeo.translate(0, BL * 0.75 / 2, 0); cgeo.rotateZ(-Math.PI / 2);
+  const coreBM = new THREE.MeshBasicMaterial({ map: cfade, transparent: true, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending, fog: false });
+  beam.add(new THREE.Mesh(cgeo, coreBM));
   const L = new THREE.PointLight(0xfff0c8, 2.2, 22, 1.2); L.position.y = 1.4; top.add(L);
-  Z3.lens = { lens, L, beamM };
+  Z3.lens = { lens, L, beamM, coreBM, lensM, coreM, glow, beam };
 }
 // the drowned: one model each (from a pool), coloured for the sea they came out of
 const Z3G = {};
@@ -3116,8 +3273,19 @@ function zmScene3D() {
   for (const d of ZM.drops) d.g3.userData.drop = true;
   ZW.t.value = reduceMotion ? 0 : t;
   zm3dTonicsTick(t);
-  // the Light turns, once every twelve seconds, its beams sweeping out over the sea and through the rooms' windows
-  if (Z3.lens) { Z3.lens.lens.rotation.y = reduceMotion ? 0.6 : -g.t * Math.PI * 2 / 12; Z3.lens.L.intensity = 2.0 + (reduceMotion ? 0 : 0.2 * Math.sin(g.t * 3)); }
+  // the Light: lit or dark, turning with its beam
+  if (Z3.lens) {
+    // ([lamp] dark and still, but for a faint glint in its glass, until the lamp is lit from the Roof Room; then it
+    // comes up, turns with the beam, and fades out again: src/zmlamp.js)
+    const Q = Z3.lens, B = typeof zmlBeam === 'function' ? zmlBeam() : { k: 0, ang: 0 }, k = B.k, on = k > 0.002;
+    const glint = reduceMotion ? 0.5 : 0.5 + 0.5 * Math.sin(g.t * 0.7);
+    Q.lens.rotation.y = Math.PI / 2 - B.ang;
+    Q.beam.visible = on; Q.beamM.opacity = k; Q.coreBM.opacity = k;
+    Q.glow.visible = on; Q.glow.material.opacity = k; Q.glow.scale.setScalar(2 + 4 * k);
+    Q.lensM.color.setRGB(0.3 + 0.7 * k, 0.34 + 0.6 * k, 0.38 + 0.4 * k); Q.lensM.opacity = 0.3 + 0.08 * glint * (1 - k) + 0.55 * k;
+    Q.coreM.color.setRGB(0.1 + 0.9 * k, 0.1 + 0.9 * k, 0.11 + 0.87 * k);
+    Q.L.intensity = 0.2 + (2.6 + (reduceMotion ? 0 : 0.2 * Math.sin(g.t * 3))) * k;
+  }
   // the beam
   const Bm = Z3.beam, on = FPS.beamT > 0 && FPS.weapon === 'fresnel' && !(m.dead > 0);
   Bm.g.visible = on; Bm.L.intensity = on ? 2.4 : 0;
@@ -3134,6 +3302,7 @@ function zmScene3D() {
     Bm.L.position.copy(z3v(ox + fx * Math.min(len, 5), oy + fy * Math.min(len, 5), oz + fz * Math.min(len, 5)));
   }
   if (typeof zmp3d === 'function') zmp3d(dt);   // [pap] the bench
+  if (typeof zml3d === 'function') zml3d(dt);   // [lamp] the lever
   if (typeof zx3d === 'function') zx3d(dt);   // [chest] the light of flares and blasts
   if (typeof ze3d === 'function') ze3d(dt);   // [egg hook] src/zmegg.js
 }

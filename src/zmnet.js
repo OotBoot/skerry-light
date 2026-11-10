@@ -11,12 +11,13 @@
 //   z   every one of the drowned: where, which way, what they're doing, a swing in progress, how they died
 //   b   each window's boards     dm  which doors are open     bx  the chest     dr  salvage lying about
 //   cr  the points, kills and headshots it has credited to each of the others
+//   lp  the Light (src/zmlamp.js): how often the lever's been thrown tonight, how long it has left to burn, its beam
 //   ev  things that happen once: salvage taken, someone got up, a line for the feed
 // Everyone moves and shoots for themselves, and sends where they are (`p`), their shots (`sh`, for the others to see
 // and hear), their hits on the drowned (`hq`, which the host applies and credits), and what they've asked of the
-// night (`q`: open a door, a go at the chest, take what it offers, a board back on a window, get someone up). Points
-// are each player's own: what the host credits arrives as points, and buying spends them (a door or the chest
-// already taken by someone else gives them back).
+// night (`q`: open a door, a go at the chest, take what it offers, a board back on a window, get someone up, throw
+// the Light's lever). Points are each player's own: what the host credits arrives as points, and buying spends them
+// (a door, the chest or the Light's lever already taken by someone else gives them back).
 // Going down together: three-quarters of a minute on the floor (ZM_DOWN), still firing a pepperbox, where a friend
 // holding Use beside you gets you up; bleed out and you're back next round with a pepperbox. Each player's presence
 // carries their own clock on the floor (`dn`) and whom they're getting up and how far along (`rv`), so the one down,
@@ -286,6 +287,7 @@ function znRequestFrom(sid, k, a) {
   if (k === 'board') { const w = ZM.windows[a | 0]; if (w && !w.sea && w.boards < 6 && !ZM.z.some(z => z.win === w && z.st === 'climb')) { w.boards++; zmBoardPay(sid); } return; }
   if (k === 'rev') { zmnRevive(String(a), sid); return; }
   if (k === 'unstick') { zmUnstick(sid); return; }   // the menu's Unstick a drowned (src/zombies.js)
+  if (k === 'lamp') { if (typeof zmlRequest === 'function') zmlRequest(sid, a); return; }   // [lamp] the lever (src/zmlamp.js)
   if (k === 'pst') { if (typeof zmpStatusFrom === 'function') zmpStatusFrom(sid, a); return; }   // [pap] what a reforged weapon did to them
   if (k === 'egg') { if (typeof zeRequest === 'function') zeRequest(sid, a); return; }   // [egg hook] src/zmegg.js
 }
@@ -320,6 +322,7 @@ function znHostSend() {
   z.ev = ZN.ev;
   if (typeof zbHostSend === 'function') zbHostSend(z);   // [boss] the bosses: their kinds, strength and blows (src/zmboss.js)
   if (typeof zeHostSend === 'function') zeHostSend(z);   // [egg hook] src/zmegg.js
+  if (typeof zmlHostSend === 'function') zmlHostSend(z);   // [lamp] the Light: lit or not, its beam, its price
   znSend(z);
 }
 
@@ -452,6 +455,7 @@ function znApply(hz) {
     ZN.creditSeen = c;
   }
   if (typeof zeApply === 'function') zeApply(hz);   // [egg hook] src/zmegg.js
+  if (typeof zmlApply === 'function') zmlApply(hz);   // [lamp] src/zmlamp.js
   // things that happen once
   if (Array.isArray(hz.ev)) for (const e of hz.ev) {
     if (!Array.isArray(e) || !(e[0] > ZN.evSeen)) continue;
