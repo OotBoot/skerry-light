@@ -214,7 +214,7 @@ function zmnStop() {
 // my own state: where I am and what I'm doing
 function znMe() {
   const m = FPS.me, CX = FPSC.CX, CY = FPSC.CY;
-  const fl = (m.lan ? 1 : 0) | (m.walk ? 2 : 0) | (ZM.downT > 0 ? 4 : 0) | (ZM.ghost ? 8 : 0) | ((FPS.meSlashT || 0) > 0 ? 16 : 0) | (FPS.beamT > 0 ? 32 : 0);
+  const fl = (m.lan ? 1 : 0) | (m.walk ? 2 : 0) | (ZM.downT > 0 ? 4 : 0) | (ZM.ghost ? 8 : 0) | ((FPS.meSlashT || 0) > 0 ? 16 : 0) | (FPS.beamT > 0 ? 32 : 0) | (FPS.crouch ? 64 : 0);   // (64: crouched)
   return [Math.round((m.x - CX) * 100), Math.round((m.y - CY) * 100), Math.round((m.jz || 0) * 100), Math.round(m.h * 1000), Math.round(m.p * 1000), fpsW().code, fl];
 }
 function znPresence() {
@@ -268,6 +268,7 @@ function znReadPlayers(dt) {
     r.w = typeof z.p[5] === 'string' ? z.p[5].slice(0, 1) : 'p';
     const fl = a[6] | 0;
     r.lan = !!(fl & 1); r.walk = !!(fl & 2); r.down = !!(fl & 4); r.dead = !!(fl & 8); r.beam = !!(fl & 32);
+    r.cr = fl & 64 ? 1 : 0; if (r.cr) { r.tall = FPS_CROUCH.TALL; r.headZ = FPS_CROUCH.HEAD; } else { delete r.tall; delete r.headZ; }
     // (just got up: word of it from them may still be on its way, so they stay up; once it's here, that's that)
     if (ZM.upT && ZM.upT[z.sid] > 0) { if (r.down) r.down = false; else delete ZM.upT[z.sid]; }
     // (gone down just now: everyone's told)

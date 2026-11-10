@@ -78,7 +78,7 @@ const FPSW_BY_CODE = {}; for (const id in FPSW) FPSW_BY_CODE[FPSW[id].code] = id
 const fpsW = () => (FPS.zm && typeof zmpW === 'function' && zmpW(FPS.weapon)) || FPSW[FPS.weapon] || FPSW.pepperbox;
 const fpsWOf = code => FPSW[FPSW_BY_CODE[code] || 'pepperbox'];
 try { const w = localStorage.getItem('skerry-fps-weapon'); if (FPSW[w] && FPS_WORDER.includes(w)) FPS.pick = w; } catch (e) {}
-// first person, or over the shoulder (V, the view button, or R3 to switch; remembered)
+// first person, or over the shoulder (T, the view button, or up on the D-pad to switch; remembered)
 try { FPS.third = localStorage.getItem('skerry-fps-view') === '3rd'; } catch (e) {}
 // over the shoulder, unless you're looking through the longarm's telescope or lying dead
 const fpsThird = () => FPS.third && !FPS.scoped && !(FPS.me && FPS.me.dead > 0);
@@ -86,16 +86,37 @@ function fpsToggleView() {
   FPS.third = !FPS.third; FPS.camPull = null;
   if (FPS.viewLabel) FPS.viewLabel();
   try { localStorage.setItem('skerry-fps-view', FPS.third ? '3rd' : '1st'); } catch (e) {}
-  fpsFeed(FPS.third ? 'Over the shoulder (V to switch back).' : 'First person (V for over the shoulder).');
+  fpsFeed(FPS.third ? 'Over the shoulder (T to switch back).' : 'First person (T for over the shoulder).');
 }
 // jumping: only from the ground
 function fpsJump() {
   const m = FPS.me; if (!m || m.dead > 0 || FPS.menu || (FPS.zm && zmIsDown())) return;
   const air = (m.jz || 0) > (m.fl || 0) + 0.01 || (m.vz || 0) > 0;
   if (FPS.zm && typeof rclJump === 'function' && rclJump(m, air)) return;   // [classes] each calling's own jump (src/rclass.js)
+  if (FPS.crouch) { fpsCrouch(false); return; }   // (from a crouch, Jump stands you up first, as in most shooters)
   if (air) return;
   m.vz = FPSC.JUMP; m.jz = (m.fl || 0) + 0.001; FPS.landed = 0;
   try { if (!soundOff()) noise('lowpass', 500, 1, 0.01, 0.08, 0.12); } catch (e) {}
+}
+// crouching (C, or B on a controller, toggles it): the view drops about half a metre and you make a smaller target
+// (your head lower, your body shorter: the fair-hit check knows), at a little over half the walking pace; running or
+// jumping stands you up. Everyone else sees you crouch (cr on Wreckers' Night, bit 64 in the Lighthouse)
+const FPS_CROUCH = { EYE: 0.55, TALL: 1.3, HEAD: 0.95, PACE: 0.55 };
+function fpsCrouch(on) {
+  const m = FPS.me; if (!m) return;
+  on = on == null ? !FPS.crouch : !!on;
+  if (on && (m.dead > 0 || FPS.menu || (FPS.zm && zmIsDown()))) return;
+  if (on === !!FPS.crouch) return;
+  FPS.crouch = on; FPS.padRun = false;
+  try { if (!soundOff()) noise('lowpass', 420, 1, 0.005, 0.06, 0.08); } catch (e) {}
+  if (!FPS.zm) fpsSend();
+}
+// each frame: ease the view down or up, and size your body to match
+function fpsCrouchTick(m, dt) {
+  if (FPS.crouch && (m.dead > 0 || (FPS.zm && zmIsDown()))) FPS.crouch = false;
+  FPS.crouchK = clamp((FPS.crouchK || 0) + (FPS.crouch ? dt * 7 : -dt * 7), 0, 1);
+  FPS.crouchEye = FPS_CROUCH.EYE * FPS.crouchK * (2 - FPS.crouchK);
+  if (FPS.crouch) { m.tall = FPS_CROUCH.TALL; m.headZ = FPS_CROUCH.HEAD; m.cr = 1; } else if (m.cr) { delete m.tall; delete m.headZ; m.cr = 0; }
 }
 // (m.fl: the height of the floor under you: the ground, or in the Lighthouse a stair or a floor above it)
 function fpsJumpTick(m, dt) {
@@ -194,7 +215,7 @@ function fpsStart() {
   FPS.g = fpsArena(FPS.round);
   FPS.me = { id: NET.sid, x: FPSC.CX, y: FPSC.CY, h: 0, p: 0, v: 0, z: 0, rudder: 0, bob: 0, boat: 'brig', inv: 0, pitch: 0,
     hp: FPSC.HP, ammo: 6, mags: {}, reload: 0, cd: 0, flares: FPSC.FLARES, lan: true, dead: 0, protect: 0, killer: null };
-  FPS.kb = {}; FPS.deaths = 0; FPS.seq = 0; FPS.shots = []; FPS.seenSeq = {}; FPS.hist = []; FPS.host = false; FPS.joinedAt = performance.now(); FPS.ai = null; FPS.remote.clear(); FPS.feed = []; FPS.pings = []; FPS.tracers = []; FPS.parts = []; FPS.drowned = [];
+  FPS.crouch = false; FPS.crouchK = 0; FPS.crouchEye = 0; FPS.kb = {}; FPS.deaths = 0; FPS.seq = 0; FPS.shots = []; FPS.seenSeq = {}; FPS.hist = []; FPS.host = false; FPS.joinedAt = performance.now(); FPS.ai = null; FPS.remote.clear(); FPS.feed = []; FPS.pings = []; FPS.tracers = []; FPS.parts = []; FPS.drowned = [];
   FPS.bots = []; FPS.drownT = 25; FPS.roundMsg = null; FPS.menu = false; if (FPS.wcRound !== FPS.round) { FPS.wcK = 0; FPS.wcRound = FPS.round; } $('fpsMenu').hidden = true;
   FPS.weapon = FPS.last = FPS.pick || 'pepperbox'; FPS.harps = []; FPS.swings = []; FPS.scoped = false;
   fpsRespawn(FPS.me);
@@ -244,7 +265,7 @@ function fpsSend(force) {
   const out = {
     id: NET.sid, n: FPS.nick, r: FPS.round, x: fr1(m.x), y: fr1(m.y), h: fr2(m.h), p: fr2(m.p), hp: m.hp, dead: m.dead > 0 ? 1 : 0,
     lan: m.lan ? 1 : 0, sh: FPS.shots, kb: FPS.kb, d: FPS.deaths, bl: FPS.bell, fl: [FPS.flare, fr1(FPS.flareAt[0]), fr1(FPS.flareAt[1])],
-    c: fpsColours(), o: typeof ocEquippedId === 'function' ? ocEquippedId() || null : null, wk: m.walk ? 1 : 0, ai: null, w: fpsW().code, sc: FPS.scoped ? 1 : 0, jz: fr2(m.jz || 0), vy: typeof fpsVerityNet === 'function' ? fpsVerityNet() : null,
+    c: fpsColours(), o: typeof ocEquippedId === 'function' ? ocEquippedId() || null : null, wk: m.walk ? 1 : 0, ai: null, w: fpsW().code, sc: FPS.scoped ? 1 : 0, jz: fr2(m.jz || 0), cr: FPS.crouch ? 1 : 0, vy: typeof fpsVerityNet === 'function' ? fpsVerityNet() : null,
   };
   // the host shares the wreckers and the drowned
   if (FPS.host) out.ai = {
@@ -279,6 +300,7 @@ function fpsNetTick(dt) {
       fpsFeed(`${f.n || 'A wrecker'} came ashore.`);
     }
     r.n = f.n || 'Wrecker'; r.w = typeof f.w === 'string' ? f.w : 'p'; r.tx = f.x; r.ty = f.y; r.th = f.h; r.p = f.p; r.hp = f.hp; r.lan = !!f.lan; r.c = Array.isArray(f.c) ? f.c : null; r.o = typeof f.o === 'string' ? f.o.slice(0, 24) : ''; r.walk = !!f.wk; r.tjz = Math.max(0, Math.min(3, +f.jz || 0));
+    r.cr = f.cr ? 1 : 0; if (r.cr) { r.tall = FPS_CROUCH.TALL; r.headZ = FPS_CROUCH.HEAD; } else { delete r.tall; delete r.headZ; }
     r.vy = Array.isArray(f.vy) && f.vy.length === 4 && f.vy.every(n => typeof n === 'number' && isFinite(n)) && Math.hypot(f.vy[0] - f.x, f.vy[1] - f.y) < 20 ? f.vy : null;
     r.kb = f.r === FPS.round && f.kb && typeof f.kb === 'object' ? f.kb : {};
     r.r = f.r;
@@ -471,7 +493,7 @@ function fpsRay(x, y, z, h, p, skipId, targets, range, tol) {
 }
 // where someone has been lately, for judging shots fairly
 function fpsRemember(o, now) {
-  (o.hist = o.hist || []).push({ t: now, x: o.x, y: o.y, jz: o.jz || 0 });
+  (o.hist = o.hist || []).push({ t: now, x: o.x, y: o.y, jz: o.jz || 0, cr: o.cr ? 1 : 0 });
   while (o.hist.length && now - o.hist[0].t > FPSC.LAG * 1000 + 100) o.hist.shift();
 }
 // the directions of the balls in a blunderbuss shot, the same on every screen (from the shot's seed)
@@ -492,10 +514,11 @@ function fpsLines(sh) {
 // did this shot (or cut) hit them, at any place they've been in the last few tenths of a second? → { dmg, head } or null
 function fpsShotHits(sh, o) {
   const [, x, y, z, h, p, by, code] = sh, w = fpsWOf(code);
-  const places = (o.hist || []).concat([{ x: o.x, y: o.y, jz: o.jz || 0 }]);
+  const places = (o.hist || []).concat([{ x: o.x, y: o.y, jz: o.jz || 0, cr: o.cr ? 1 : 0 }]);
   let best = null;
   for (let i = places.length - 1; i >= 0; i--) {
     const at = places[i], who = { id: o.id, x: at.x, y: at.y, jz: at.jz || 0 };
+    if (at.cr) { who.tall = FPS_CROUCH.TALL; who.headZ = FPS_CROUCH.HEAD; }   // (crouched then: a smaller target)
     let dmg = 0, head = false;
     if (w.melee) {
       const d = Math.hypot(at.x - x, at.y - y), b = bearingOf(at.x - x, at.y - y);
@@ -572,7 +595,7 @@ function fpsShoot() {
   const climbNext = !!w.climb;
   if (w.melee) FPS.meSlashT = 0.3;
   FPS.vmShots = (FPS.vmShots || 0) + 1;
-  const z = FPSC.GROUND + FPSC.EYE + (m.jz || 0) - (FPS.downEye || 0), seed = (Math.random() * 2147483647) | 0;   // (FPS.downEye: down on the floor in the Lighthouse)
+  const z = FPSC.GROUND + FPSC.EYE + (m.jz || 0) - (FPS.downEye || 0) - (FPS.crouchEye || 0), seed = (Math.random() * 2147483647) | 0;   // (FPS.downEye: down on the floor in the Lighthouse)
   const [ah, ap] = fpsAimFrom(m.x, m.y, z, w);
   if (FPS.zm) { FPS.zmShots = (FPS.zmShots || 0) + 1; if (typeof zmnShot === 'function') zmnShot(w.code, ah, ap); }
   const sh = fpsPublishShot(m.x, m.y, z, ah, ap, m.id, w.code, FPS.scoped ? 0 : seed);
@@ -697,6 +720,8 @@ function fpsBell() {
   for (const o of fpsEveryone()) if (!o.me && !(o.dead > 0)) FPS.pings.push({ x: o.x, y: o.y, t: 3, n: o.n });
   fpsSend();
 }
+// melee on Wreckers' Night: out comes the cutlass, and a second press goes back to what you had
+function fpsMelee() { if (FPS.weapon === 'cutlass') fpsSwitch(FPS.last !== 'cutlass' ? FPS.last : 'pepperbox'); else fpsSwitch('cutlass'); }
 function fpsLantern() { FPS.me.lan = !FPS.me.lan; try { sfxTick(); } catch (e) {} fpsSend(); }
 
 // ---------- sounds (made from the game's own noises) ----------
@@ -974,11 +999,20 @@ function fpsInput(dt) {
     FPS.padFire = b(7);
     if (aimToggle()) { if (b(6) && !was[6]) fpsScope(!FPS.scoped); } else fpsScope(b(6));   // (Settings: Toggle aim)
     const tap = (i, fn) => { if (b(i) && !was[i]) fn(); };
-    // X reloads; in the Lighthouse, with something in front of you to use, it uses it instead (B uses too)
+    // the shooter layout (as most console shooters have it): A jump, B crouch, X reload (and use, held, in the
+    // Lighthouse), Y next weapon, L3 sprint, R3 melee, LB the bell (or the grenade in Maren's End), RB the flare on
+    // Wreckers' Night (the lantern in the Lighthouse, the ultimate in Maren's End), D-pad left and right weapons,
+    // down the lantern, up the view (the ultimate in Maren's End), Start the menu, View the scores
+    // X reloads; in the Lighthouse, with something in front of you to use, it uses it instead
     const xUse = () => FPS.zm && ZM.near && !(FPS.me.dead > 0);
-    tap(0, fpsJump); tap(11, FPS.zm ? zmKnife : fpsToggleView); if (FPS.zm) tap(13, fpsToggleView); tap(2, () => { if (xUse()) zmUse(); else fpsReload(); }); tap(5, () => fpsCycle(1)); tap(14, () => fpsCycle(-1)); tap(15, () => fpsCycle(1)); tap(3, fpsLantern); tap(1, FPS.zm ? zmUse : fpsFlare); if (!FPS.zm) tap(4, fpsBell); tap(9, () => fpsSetMenu(!FPS.menu)); tap(8, () => { FPS.board = !FPS.board; });
-    if (FPS.zm && typeof rclPad === 'function') rclPad(b, was);   // [classes] LB the grenade, D-pad up the ultimate (src/rclass.js)
-    FPS.padUse = FPS.zm && (b(1) || (b(2) && ZM.near && (ZM.near.k === 'win' || ZM.near.k === 'rev')));
+    const raid = FPS.zm && typeof rclOn === 'function' && rclOn();
+    tap(0, fpsJump); tap(1, () => fpsCrouch()); tap(2, () => { if (xUse()) zmUse(); else fpsReload(); }); tap(3, () => fpsCycle(1));
+    tap(11, FPS.zm ? zmKnife : fpsMelee); tap(14, () => fpsCycle(-1)); tap(15, () => fpsCycle(1)); tap(13, fpsLantern);
+    if (!raid) { tap(12, fpsToggleView); tap(5, FPS.zm ? fpsLantern : fpsFlare); }
+    if (!FPS.zm) tap(4, fpsBell);
+    tap(9, () => fpsSetMenu(!FPS.menu)); tap(8, () => { FPS.board = !FPS.board; });
+    if (FPS.zm && typeof rclPad === 'function') rclPad(b, was);   // [classes] LB the grenade, RB or D-pad up the ultimate (src/rclass.js)
+    FPS.padUse = FPS.zm && b(2) && !!ZM.near;
     // a click of the left stick sprints until you stop (or aim); holding it down does too
     if (b(10) && !was[10]) { FPS.padRun = !FPS.padRun; FPS.padStill = 0; }
     const lm = Math.hypot(pad.axes[0] || 0, pad.axes[1] || 0);
@@ -1004,11 +1038,13 @@ function fpsInput(dt) {
   // (with Toggle aim on, breaking into a run lowers the sights)
   if (aimToggle() && FPS.scoped && len > 0.05 && (K.ShiftLeft || K.ShiftRight || (FPS.padSprint && !FPS.padSprintWas)) && !FPS.menu) FPS.scoped = false;
   FPS.padSprintWas = FPS.padSprint;
-  const run = !!(K.ShiftLeft || K.ShiftRight || FPS.padSprint || (FPS.stick && FPS.stickRun)) && m.dead <= 0 && len > 0.05 && !FPS.menu && !FPS.scoped;
+  if (FPS.crouch && len > 0.05 && (K.ShiftLeft || K.ShiftRight || FPS.padSprint) && !FPS.menu) fpsCrouch(false);   // (breaking into a run stands you up)
+  fpsCrouchTick(m, dt);
+  const run = !!(K.ShiftLeft || K.ShiftRight || FPS.padSprint || (FPS.stick && FPS.stickRun)) && m.dead <= 0 && len > 0.05 && !FPS.menu && !FPS.scoped && !FPS.crouch;
   FPS.runK = clamp((FPS.runK || 0) + (run ? dt * 4 : -dt * 5), 0, 1);
   if (m.dead <= 0 && len > 0.05 && !FPS.menu) {
     // (on a phone a little slower all round: on a small screen the same pace feels much quicker)
-    const sp = (run ? (FPS.zm ? ZMC.SPRINT : FPSC.SPRINT) : FPSC.SPEED) * Math.min(1, len) / len * dt * (FPS.zm ? zmSpeedK() : 1) * (FPS.stick ? 0.8 : 1);
+    const sp = (run ? (FPS.zm ? ZMC.SPRINT : FPSC.SPRINT) : FPSC.SPEED) * Math.min(1, len) / len * dt * (FPS.zm ? zmSpeedK() : 1) * (FPS.stick ? 0.8 : 1) * (FPS.crouch ? FPS_CROUCH.PACE : 1);
     const s = Math.sin(m.h), c = Math.cos(m.h);
     m.walk = fpsMove(m, (s * fz + c * fx) * sp, (c * fz - s * fx) * sp);
     if (m.walk && !((m.jz || 0) > 0)) FPS.step += dt * (run ? 11.5 : 8);
@@ -1057,7 +1093,7 @@ function fpsDrawScene() {
   // (in the Lighthouse, out and watching someone: the view is theirs, src/zombies.js)
   const m = (FPS.zm && typeof zmSpecView === 'function' && zmSpecView()) || FPS.me;
   camX = m.x; camY = m.y; yaw = m.h;
-  const eye = FPSC.GROUND + FPSC.EYE + (m.jz || 0) - (FPS.eyeLag || 0) - (FPS.downEye || 0);
+  const eye = FPSC.GROUND + FPSC.EYE + (m.jz || 0) - (FPS.eyeLag || 0) - (FPS.downEye || 0) - (FPS.crouchEye || 0);
   camH = eye + (reduceMotion ? 0 : Math.sin(FPS.step) * 0.05 - (FPS.landed || 0) * 0.4) - (m.dead > 0 ? 1.2 * Math.min(1, (FPSC.RESPAWN - m.dead) * 2) : 0);
   const third = fpsThird();
   if (third) {
@@ -1199,7 +1235,7 @@ function fpsDrawScope() {
 // a wrecker: boots, long coat in their colours, a hat, a pistol, and their lantern if it's lit
 function fpsDrawPerson(o, c) {
   let vis = o.me ? 1 : Math.max(fpsSeeAt(o.x, o.y, o.lan), o.flashT > 0 ? 1 : 0);
-  const foot = proj(c), head = proj(cam(o.x, o.y, FPSC.GROUND + FPSC.TALL + (o.jz || 0)));
+  const foot = proj(c), head = proj(cam(o.x, o.y, FPSC.GROUND + (o.tall || FPSC.TALL) + (o.jz || 0)));
   const hgt = foot.y - head.y, w = hgt * 0.3, x = foot.x;
   const col = o.c || ['#3a2a1e', '#d8d0bc', '#7a5a3a', '#ffd88a'];
   const dark = (hex, k) => { try { return mix(String(hex).length === 7 ? hex : '#444444', '#06080c', 1 - (0.25 + 0.75 * vis) * (k || 1)); } catch (e) { return '#222'; } };
@@ -1290,7 +1326,7 @@ function fpsDrawPerson(o, c) {
 // over a 3D figure: what the flat drawing would add (their lantern's glow, seen from anywhere; a hit; their name)
 function fpsDrawPersonOver(o, c) {
   const vis = Math.max(fpsSeeAt(o.x, o.y, o.lan), o.flashT > 0 ? 1 : 0);
-  const foot = proj(c), head = proj(cam(o.x, o.y, FPSC.GROUND + FPSC.TALL + (o.jz || 0))), hgt = foot.y - head.y, x = foot.x;
+  const foot = proj(c), head = proj(cam(o.x, o.y, FPSC.GROUND + (o.tall || FPSC.TALL) + (o.jz || 0))), hgt = foot.y - head.y, x = foot.x;
   const col = o.c || ['#3a2a1e', '#d8d0bc', '#7a5a3a', '#ffd88a'];
   if (o.lan && vis < 0.5) {
     // (once they're well lit, the 3D lantern itself shows; until then its glow gives them away)
@@ -1526,7 +1562,10 @@ function fpsSafeArea() {
 }
 
 // ---------- controls ----------
-const FPS_KEYS = { KeyR: fpsReload, KeyL: fpsLantern, KeyF: fpsFlare, KeyB: fpsBell, Space: fpsJump, KeyV: fpsToggleView, KeyC: fpsToggleView, KeyQ: () => fpsSwitch(FPS.last),
+// the shooter layout: WASD, Space jump, C crouch, Shift run, R reload, E use, 1-6 or the wheel for weapons, Q the
+// last one, V melee (the cutlass on Wreckers' Night), T the view; F flare, L lantern, B bell. (Not Ctrl for crouch:
+// Ctrl with W closes the browser tab, and no page can stop it)
+const FPS_KEYS = { KeyR: fpsReload, KeyL: fpsLantern, KeyF: fpsFlare, KeyB: fpsBell, Space: fpsJump, KeyT: fpsToggleView, KeyC: () => fpsCrouch(), KeyV: () => fpsMelee(), KeyQ: () => fpsSwitch(FPS.last),
   Digit1: () => fpsSwitch('pepperbox'), Digit2: () => fpsSwitch('blunderbuss'), Digit3: () => fpsSwitch('longarm'), Digit4: () => fpsSwitch('harpoon'), Digit5: () => fpsSwitch('cutlass'), Digit6: () => fpsSwitch('avtomat') };
 addEventListener('keydown', e => {
   if (!FPS.on) return;

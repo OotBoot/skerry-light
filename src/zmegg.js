@@ -718,7 +718,7 @@ function ze3d(dt) {
   else if ((st === 5 || st === 6 || st === 9) && who) {
     if (who === m) {
       // (yours: low in front of you, to your left, where the eye can just catch it)
-      const h = m.h, ez = FPSC.EYE + (m.jz || 0) - (FPS.eyeLag || 0);
+      const h = m.h, ez = FPSC.EYE + (m.jz || 0) - (FPS.eyeLag || 0) - (FPS.crouchEye || 0);
       at = [m.x + Math.sin(h) * 0.55 - Math.cos(h) * 0.32, m.y + Math.cos(h) * 0.55 + Math.sin(h) * 0.32, ez - 0.78, -h];
     } else at = [who.x - Math.cos(who.h || 0) * 0.32, who.y + Math.sin(who.h || 0) * 0.32, (who.jz || 0) + 0.62, -(who.h || 0)];
     burn = st === 5 ? 0 : 1; souls = st === 9 ? ZE_SOULS : 0;
