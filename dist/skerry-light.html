@@ -20937,7 +20937,7 @@ function zmZombies(dt) {
   const ins = all.filter(z => !z.dead && z.st === 'in');
   for (let i = 0; i < ins.length; i++) for (let j = i + 1; j < ins.length; j++) {
     const a = ins[i], b = ins[j], dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy);
-    const R0 = a.skit && b.skit ? 0.4 : 0.6, R1 = a.skit && b.skit ? 0.65 : 1.0;   // ([swarm] crabs pack closer)
+    const R0 = a.skit && b.skit ? 0.5 : 0.6, R1 = a.skit && b.skit ? 0.8 : 1.0;   // ([swarm] crabs pack closer)
     if (d < R1 && d > 0.001 && Math.abs((a.jz || 0) - (b.jz || 0)) < 1) {
       const push = d < R0 ? (R0 - d) * 0.5 + 0.4 * dt : (R1 - d) * 1.6 * dt;
       zmMove(a, -dx / d * push, -dy / d * push); zmMove(b, dx / d * push, dy / d * push);
@@ -21025,7 +21025,7 @@ function zmSwipe(z, dt) {
     const was = z.swing; z.swing += dt;
     if (was < 0.28 && z.swing >= 0.28) {
       const reach = z.skit ? ZWC.REACH : z.st === 'tear' ? 1.6 : 1.55;
-      if (Math.hypot(m.x - z.x, m.y - z.y) < reach && Math.abs((m.jz || 0) - (z.jz || 0)) < 1.2 && !(m.dead > 0) && !(m.protect > 0) && !(m.iframe > 0) && !zmIsDown()) { fpsHurt(z.skit ? ZWC.NIP : 1, null, null); zmSound('hit'); }   // ([swarm] a crab's nip: half a knock)
+      if ((z.skit ? zwCanNip(m, z.x, z.y, z.jz || 0) : Math.hypot(m.x - z.x, m.y - z.y) < reach && Math.abs((m.jz || 0) - (z.jz || 0)) < 1.2) && !(m.dead > 0) && !(m.protect > 0) && !(m.iframe > 0) && !zmIsDown()) { fpsHurt(z.skit ? ZWC.NIP : 1, null, null); zmSound('hit'); }   // ([swarm] a crab's nip: half a knock)
     }
     if (z.swing > 0.6) z.swing = -1;
   }
@@ -27593,11 +27593,14 @@ const ZWC = {
   FROM: 5, EVERY: 6,      // the crab rounds: 5, 11, 17, ...
   MANY: 1.125,            // how many, against that round's drowned (a quarter fewer than the 1.5 it was)
   HP: 0.42,               // how strong, against that round's drowned
-  SP: [4.3, 5.1],         // how quick (you sprint at 9.8)
+  SP: [3.2, 3.8],         // how quick (you sprint at 9.8): a quarter slower than the 4.3 to 5.1 it was
   ALIVE: 30,              // up at once, at most
   GAP: [0.16, 0.34],      // between one and the next, coming in
-  RAD: 0.45, TALL: 0.7, HEADZ: 0.42,   // its body, for being hit (the shell's top and the eyes are its "head")
+  BIG: 1.2,               // its size, against the dog-sized crab it was (a fifth bigger)
+  RAD: 0.54, TALL: 0.84, HEADZ: 0.5,   // its body, for being hit (the shell's top and the eyes are its "head")
+  PAD: 0.4,               // how near a wall its middle comes (the shell's half-width, so it doesn't sink into one)
   REACH: 1.25,            // its nip
+  UP: 0.65,               // how far above its feet yours can be for a nip to reach (a step or so: not up a stair)
   NIP: 0.5,               // what a nip takes off you: half a knock
   CLIMB: 0.45,            // through the window, in that long
 };
@@ -27606,8 +27609,19 @@ const zwCount = r => Math.round(zmCount(r) * ZWC.MANY);
 
 // what makes one a crab, here or on a joined screen
 function zwDress(z) {
-  Object.assign(z, { skit: true, kind: 'skit', n: 'a crab', rad: ZWC.RAD, tall: ZWC.TALL, headZ: ZWC.HEADZ, zpad: 0.22 });
+  Object.assign(z, { skit: true, kind: 'skit', n: 'a crab', rad: ZWC.RAD, tall: ZWC.TALL, headZ: ZWC.HEADZ, zpad: ZWC.PAD });
   return z;
+}
+
+// can its nip reach you, from a crab at x, y, its feet at jz? Near enough, your feet no more than a step above its
+// own (or below), and nothing solid between the two of you down at its height: so not through a stair, from under
+// it or beside it, nor through a wall or a rail
+function zwCanNip(m, x, y, jz) {
+  const dz = (m.jz || 0) - jz, d = Math.hypot(m.x - x, m.y - y);
+  if (d >= ZWC.REACH || dz > ZWC.UP || dz < -ZWC.UP) return false;
+  const n = Math.max(1, Math.ceil(d / 0.2));
+  for (let i = 1; i < n; i++) { const k = i / n; if (zmBlockedAt(x + (m.x - x) * k, y + (m.y - y) * k, 0.05, Math.max(jz, (m.jz || 0) - 0.05) + 0.05)) return false; }
+  return true;
 }
 
 // (from zmRounds, as a round begins: hosting or alone) true if it's a crab round, and the round is set up for it
@@ -27751,7 +27765,7 @@ function zwModel(z) {
   const rnd = seeded(z.seed);
   M.shell.color.set(ZW_SHELLS[(rnd() * ZW_SHELLS.length) | 0]).multiplyScalar(0.7); M.shell.emissive.set(0);
   M.leg.emissive.set(0);
-  M.root.scale.setScalar(0.85 + rnd() * 0.3);
+  M.root.scale.setScalar((0.85 + rnd() * 0.3) * ZWC.BIG);
   M.root.rotation.set(0, 0, 0); M.body.rotation.set(0, 0, 0);
   z.mdl = M;
   return M;
@@ -33317,7 +33331,7 @@ function znApply(hz) {
     if (!z) {
       z = { drowned: true, zm: true, zn, id: 'z' + zn.toString(36), n: 'a drowned man', x, y, jz, h, st, kind, sp: kind === 'run' ? 5.2 : kind === 'jog' ? 3.4 : 1.7,
         t: 0, ph: Math.random() * 6, hitT: 0, swing: -1, seed: b[2], win: ZM.windows[b[1]] || null, dead: 0, hist: [] };
-      if (kind === 'skit' && typeof zwDress === 'function') { zwDress(z); z.sp = 4.7; }   // [swarm] a crab
+      if (kind === 'skit' && typeof zwDress === 'function') { zwDress(z); z.sp = 3.5; }   // [swarm] a crab
       ZM.z.push(z);
     }
     if (st !== z.st) { z.t = 0; z.st = st; }
@@ -33327,7 +33341,7 @@ function znApply(hz) {
     const was = z.swing;
     if (sw >= 0.28 && (was < 0.28 || was > sw) && !z.dead) {
       const reach = z.skit ? ZWC.REACH : st === 'tear' ? 1.6 : 1.55;
-      if (Math.hypot(m.x - x, m.y - y) < reach && Math.abs((m.jz || 0) - jz) < 1.2 && !(m.dead > 0) && !(m.protect > 0) && !(m.iframe > 0) && !zmIsDown()) { fpsHurt(z.skit ? ZWC.NIP : 1, null, null); zmSound('hit'); }   // ([swarm] a crab's nip: half a knock)
+      if ((z.skit ? zwCanNip(m, x, y, jz) : Math.hypot(m.x - x, m.y - y) < reach && Math.abs((m.jz || 0) - jz) < 1.2) && !(m.dead > 0) && !(m.protect > 0) && !(m.iframe > 0) && !zmIsDown()) { fpsHurt(z.skit ? ZWC.NIP : 1, null, null); zmSound('hit'); }   // ([swarm] a crab's nip: half a knock)
     }
     z.swing = sw;
     const fl = a[6];
