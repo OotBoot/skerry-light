@@ -140,6 +140,7 @@
         <button class="primary" id="fpsPlay" type="button">Go ashore</button>
         <button class="tool wcrateBtn" id="wcrateBtn" type="button">Weapon crates</button>
         <button class="tool ocrateBtn" id="ocrateBtn" type="button">Outfit crates</button>
+        <button class="tool shareBtn" id="fpsShare" type="button" data-mode="wreckers">Share invite</button>
         <button class="tool" id="fpsSettings" type="button">Settings</button>
       </div>
       <section class="together" aria-labelledby="fpsTogetherHead">
@@ -184,7 +185,7 @@
           <ol class="warlobbylist" id="warLobbyList"></ol>
           <label class="warmpbots" id="warMpBotsRow">Bot nations <output id="warMpBotsOut">16</output><input id="warMpBots" type="range" min="0" max="50" value="16"></label>
           <p class="muted" id="warLobbyMsg"></p>
-          <div class="btnrow"><button class="primary" id="warMpStart" type="button">Start the war</button><button class="tool" id="warMpLeave" type="button">Leave</button></div>
+          <div class="btnrow"><button class="primary" id="warMpStart" type="button">Start the war</button><button class="tool shareBtn" id="warMpShare" type="button" data-mode="war">Share invite</button><button class="tool" id="warMpLeave" type="button">Leave</button></div>
         </div>
       </section>
       <details class="howto">
@@ -227,7 +228,7 @@
           <h3 id="zmLobbyHead">Your night</h3>
           <ol class="warlobbylist" id="zmLobbyList"></ol>
           <p class="muted" id="zmLobbyMsg"></p>
-          <div class="btnrow"><button class="primary" id="zmMpStart" type="button">Start the night</button><button class="tool" id="zmMpLeave" type="button">Leave</button></div>
+          <div class="btnrow"><button class="primary" id="zmMpStart" type="button">Start the night</button><button class="tool shareBtn" id="zmMpShare" type="button" data-mode="lighthouse">Share invite</button><button class="tool" id="zmMpLeave" type="button">Leave</button></div>
         </div>
       </section>
       <details class="howto">
@@ -269,7 +270,7 @@
           <h3 id="rdLobbyHead">Your raid</h3>
           <ol class="warlobbylist" id="rdLobbyList"></ol>
           <p class="muted" id="rdLobbyMsg"></p>
-          <div class="btnrow"><button class="primary" id="rdMpStart" type="button">Start the raid</button><button class="tool" id="rdMpLeave" type="button">Leave</button></div>
+          <div class="btnrow"><button class="primary" id="rdMpStart" type="button">Start the raid</button><button class="tool shareBtn" id="rdMpShare" type="button" data-mode="raid">Share invite</button><button class="tool" id="rdMpLeave" type="button">Leave</button></div>
         </div>
       </section>
       <details class="howto">
@@ -374,7 +375,7 @@
         <label for="inviteLink">Invite link</label>
         <div class="inviterow">
           <input id="inviteLink" type="text" readonly>
-          <button class="tool" id="inviteCopy" type="button">Copy link</button>
+          <button class="tool" id="inviteCopy" type="button">Share invite</button>
         </div>
       </div>
       <div class="score" id="crewScore" hidden>
@@ -710,6 +711,7 @@
 <script src="src/wcrates.js"></script>
 <script src="src/ocrates.js"></script>
 <script src="src/cloudsave.js"></script>
+<script src="src/share.js"></script>
 <script src="src/main.js"></script>
 </body>
 </html>

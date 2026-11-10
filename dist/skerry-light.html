@@ -1138,6 +1138,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
         <button class="primary" id="fpsPlay" type="button">Go ashore</button>
         <button class="tool wcrateBtn" id="wcrateBtn" type="button">Weapon crates</button>
         <button class="tool ocrateBtn" id="ocrateBtn" type="button">Outfit crates</button>
+        <button class="tool shareBtn" id="fpsShare" type="button" data-mode="wreckers">Share invite</button>
         <button class="tool" id="fpsSettings" type="button">Settings</button>
       </div>
       <section class="together" aria-labelledby="fpsTogetherHead">
@@ -1182,7 +1183,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
           <ol class="warlobbylist" id="warLobbyList"></ol>
           <label class="warmpbots" id="warMpBotsRow">Bot nations <output id="warMpBotsOut">16</output><input id="warMpBots" type="range" min="0" max="50" value="16"></label>
           <p class="muted" id="warLobbyMsg"></p>
-          <div class="btnrow"><button class="primary" id="warMpStart" type="button">Start the war</button><button class="tool" id="warMpLeave" type="button">Leave</button></div>
+          <div class="btnrow"><button class="primary" id="warMpStart" type="button">Start the war</button><button class="tool shareBtn" id="warMpShare" type="button" data-mode="war">Share invite</button><button class="tool" id="warMpLeave" type="button">Leave</button></div>
         </div>
       </section>
       <details class="howto">
@@ -1225,7 +1226,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
           <h3 id="zmLobbyHead">Your night</h3>
           <ol class="warlobbylist" id="zmLobbyList"></ol>
           <p class="muted" id="zmLobbyMsg"></p>
-          <div class="btnrow"><button class="primary" id="zmMpStart" type="button">Start the night</button><button class="tool" id="zmMpLeave" type="button">Leave</button></div>
+          <div class="btnrow"><button class="primary" id="zmMpStart" type="button">Start the night</button><button class="tool shareBtn" id="zmMpShare" type="button" data-mode="lighthouse">Share invite</button><button class="tool" id="zmMpLeave" type="button">Leave</button></div>
         </div>
       </section>
       <details class="howto">
@@ -1267,7 +1268,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
           <h3 id="rdLobbyHead">Your raid</h3>
           <ol class="warlobbylist" id="rdLobbyList"></ol>
           <p class="muted" id="rdLobbyMsg"></p>
-          <div class="btnrow"><button class="primary" id="rdMpStart" type="button">Start the raid</button><button class="tool" id="rdMpLeave" type="button">Leave</button></div>
+          <div class="btnrow"><button class="primary" id="rdMpStart" type="button">Start the raid</button><button class="tool shareBtn" id="rdMpShare" type="button" data-mode="raid">Share invite</button><button class="tool" id="rdMpLeave" type="button">Leave</button></div>
         </div>
       </section>
       <details class="howto">
@@ -1372,7 +1373,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
         <label for="inviteLink">Invite link</label>
         <div class="inviterow">
           <input id="inviteLink" type="text" readonly>
-          <button class="tool" id="inviteCopy" type="button">Copy link</button>
+          <button class="tool" id="inviteCopy" type="button">Share invite</button>
         </div>
       </div>
       <div class="score" id="crewScore" hidden>
@@ -10247,7 +10248,7 @@ async function netInit() {
   if (typeof room.onConnection === 'function') room.onConnection(c => { NET.connected = c; renderNetBanner(); }, () => {});
   room.presence({ app: 'skerry', sid: NET.sid, crew: null, nick: NET.nick || null }).catch(() => {});
   renderTogether();
-  // an invite link no longer joins by itself: the title screen shows the invite and you tap Join
+  // an invite link (src/share.js) puts you straight into its crew once the crew is seen here
 }
 
 function onPeersChange(change) {
@@ -10871,13 +10872,13 @@ function renderCrewCard() {
   const title = $('crewTitle'), text = $('crewText'), page = $('crewLog');
   page.hidden = true;
   $('crewScore').hidden = true;
-  // invite: a link on our own site; on claude.ai friends pick the crew from the list
+  // invite: a link that drops a friend straight into this crew (on claude.ai, the page itself: they pick the crew from the list)
   const inv = $('inviteRow');
-  inv.hidden = !(NET.via === 'server' && (!NET.launch || r));
-  if (!inv.hidden) $('inviteLink').value = location.origin + location.pathname + '#' + NET.crew;
+  inv.hidden = !(!NET.launch || r);
+  if (!inv.hidden) $('inviteLink').value = shareUrl('sail', NET.crew);
   if (!NET.launch) {
     title.textContent = 'Crew Forming';
-    text.textContent = 'Send the invite to up to seven friends. They join from the title screen by picking crew ' + NET.crew.toUpperCase() + '. Everyone sails their own ship through the same skerries. Ships close together keep Maren back, and a bell rung near a crewmate drives her away from both of you.';
+    text.textContent = 'Send the invite to up to seven friends. The link puts them straight into crew ' + NET.crew.toUpperCase() + '. Everyone sails their own ship through the same skerries. Ships close together keep Maren back, and a bell rung near a crewmate drives her away from both of you.';
   } else if (!r) {
     title.textContent = statusWord(NET.st) === 'In harbour' ? 'Safe in Harbour' : 'Lost at Sea';
     const race = NET.race && NET.race.voy === voy && NET.st === 'port' ? (NET.race.first ? ' Fastest so far: if nobody beats your time, the +' + NET.race.bonus + ' crate bonus is yours when the voyage ends.' : ' A crewmate has a faster time.') : '';
@@ -10973,17 +10974,7 @@ $('chatForm').addEventListener('submit', e => {
   e.preventDefault();
   if (sendChat($('chatInput').value)) $('chatInput').value = '';
 });
-$('inviteCopy').addEventListener('click', () => {
-  const field = $('inviteLink'), btn = $('inviteCopy');
-  const done = () => { btn.textContent = 'Copied'; setTimeout(() => { btn.textContent = 'Copy link'; }, 1600); };
-  try {
-    const fail = () => {
-      if (navigator.share) { navigator.share({ url: field.value, title: 'Skerry Light crew' }).catch(() => {}); return; }
-      field.select(); btn.textContent = 'Copy it from the box'; setTimeout(() => { btn.textContent = 'Copy link'; }, 3000);
-    };
-    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(field.value).then(done, fail); else fail();
-  } catch (e) { field.select(); }
-});
+// (the invite button itself is wired up in src/share.js)
 // an invite link carries the crew name after the #
 try { const h = (location.hash || '').slice(1); if (/^[a-z]+-\d{1,4}$/.test(h)) NET.pendingJoin = h; } catch (e) {}
 // sound can only start after the first tap or click anywhere
@@ -35498,6 +35489,140 @@ function csInit() {
   document.addEventListener('visibilitychange', () => { if (!document.hidden && CS.on && Date.now() - CS.pullAt > 20000) csSync(true); });
 }
 csInit();
+
+// ---- src/share.js ----
+// Invite links: a "Share invite" button in every mode's lobby, and the link it shares drops a friend straight into that lobby.
+//
+// The link is the live site with the mode and the lobby's code in the query: ?mode=raid&lobby=zab12cd. The modes are
+//   sail        a Skerry Light crew (net.js; the code is the crew's name, gannet-12)
+//   wreckers    Wreckers' Night (fps.js: one shared island, so no code; the link opens its card)
+//   war         a Drowned Reach war (warnet.js, w...)
+//   lighthouse  a Keeper's Last Light night (zmnet.js, z...)
+//   raid        a Maren's End raid (the same lobby as the Lighthouse's, on the raid's own card)
+// On a phone or tablet the button opens the share sheet; on a computer it copies the text to the clipboard.
+// On claude.ai everyone plays in the artifact's own room, which the live site can't reach, so there the link is the
+// artifact itself: it can't carry a code, but the friend sees the lobby in the list and taps it.
+// Old crew links (#gannet-12) still work.
+
+const SHARE_SITE = 'https://skerry-light.onrender.com/';
+const SHARE_ARTIFACT = 'https://claude.ai/artifact/4abbzGK8dMDsPyR5KdssJv';
+const SHARE_TEXT = 'Join my game on Skerry Light!';
+const SHARE_MODES = ['sail', 'wreckers', 'war', 'lighthouse', 'raid'];
+const shareOnClaude = () => (typeof NET !== 'undefined' && NET.via === 'claude') || !!(window.claude && typeof window.claude.use === 'function');
+
+function shareUrl(mode, code) {
+  if (shareOnClaude()) return SHARE_ARTIFACT;
+  // our own site (the live one, or a local copy being tested); a page opened from a file shares the live site
+  const base = /^https?:$/.test(location.protocol) ? location.origin + location.pathname : SHARE_SITE;
+  const q = new URLSearchParams({ mode });
+  if (code) q.set('lobby', code);
+  return base + '?' + q.toString();
+}
+// the lobby the button is for, right now
+function shareCode(mode) {
+  if (mode === 'sail') return NET.crew;
+  if (mode === 'war') return typeof WN !== 'undefined' ? WN.code : null;
+  if (mode === 'lighthouse' || mode === 'raid') return typeof ZN !== 'undefined' && ZN.mode === (mode === 'raid' ? 'raid' : 'zm') ? ZN.code : null;
+  return null;
+}
+function shareIsPhone() {
+  try {
+    return matchMedia('(pointer: coarse)').matches || /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1);
+  } catch (e) { return false; }
+}
+function shareFlash(btn, text) {
+  if (!btn) return;
+  const was = btn.dataset.label || (btn.dataset.label = btn.textContent);
+  btn.textContent = text;
+  clearTimeout(btn._shareT); btn._shareT = setTimeout(() => { btn.textContent = was; }, 1800);
+}
+// copy without the clipboard API too (an iframe can be refused it)
+function shareCopyOld(text) {
+  try {
+    const t = document.createElement('textarea');
+    t.value = text; t.setAttribute('readonly', ''); t.style.cssText = 'position:fixed;left:-9999px;top:0;opacity:0';
+    document.body.appendChild(t); t.select(); t.setSelectionRange(0, text.length);
+    const ok = document.execCommand('copy'); t.remove(); return ok;
+  } catch (e) { return false; }
+}
+function shareCopy(text, btn) {
+  const done = () => { shareFlash(btn, 'Copied'); if (typeof toast === 'function') toast('Invite copied: ' + text, 'Invite copied'); };
+  const fail = () => { if (shareCopyOld(text)) done(); else { shareFlash(btn, 'Couldn’t copy'); try { window.prompt('Copy this invite:', text); } catch (e) {} } };
+  try { if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(text).then(done, fail); return; } } catch (e) {}
+  fail();
+}
+function shareInvite(mode, btn) {
+  const url = shareUrl(mode, shareCode(mode)), text = SHARE_TEXT + ' ' + url;
+  if (shareIsPhone() && navigator.share) {
+    // (text and url separately: the share sheet joins them, and a messaging app shows the link as a card)
+    navigator.share({ title: 'Skerry Light', text: SHARE_TEXT, url }).catch(e => { if (!e || e.name !== 'AbortError') shareCopy(text, btn); });
+    return;
+  }
+  shareCopy(text, btn);
+}
+for (const b of document.querySelectorAll('.shareBtn')) b.addEventListener('click', () => shareInvite(b.dataset.mode, b));
+{ const b = $('inviteCopy'); if (b) b.addEventListener('click', () => shareInvite('sail', b)); }
+
+// ---------- arriving from a link ----------
+const SHARE_JOIN = (() => {
+  try {
+    const q = new URLSearchParams(location.search), mode = q.get('mode'), code = (q.get('lobby') || '').trim();
+    if (SHARE_MODES.includes(mode) && (mode === 'wreckers' || /^[a-z0-9-]{2,20}$/i.test(code))) return { mode, code };
+    const h = (location.hash || '').slice(1);
+    if (/^[a-z]+-\d{1,4}$/.test(h)) return { mode: 'sail', code: h };
+  } catch (e) {}
+  return null;
+})();
+if (SHARE_JOIN && /[?&](mode|lobby)=/.test(location.search)) {
+  // tidy the address bar, so a reload later doesn't drag you back into an old lobby
+  try { const q = new URLSearchParams(location.search); q.delete('mode'); q.delete('lobby'); const s = q.toString(); history.replaceState(null, '', location.pathname + (s ? '?' + s : '') + location.hash); } catch (e) {}
+}
+const SHARE_CARD = { sail: 'together', wreckers: 'fpsTitle', war: 'warTitle', lighthouse: 'zmTitle', raid: 'rdTitle' };
+const SHARE_WHAT = { sail: 'crew', war: 'war', lighthouse: 'night', raid: 'raid' };
+function shareShow(mode) { const c = $(SHARE_CARD[mode]); if (c) c.scrollIntoView({ block: 'start' }); }
+function shareArrive() {
+  const J = SHARE_JOIN; if (!J) return;
+  if (J.mode === 'wreckers') {
+    shareShow('wreckers');
+    setTimeout(() => { const b = $('fpsPlay'); if (b) b.focus({ preventScroll: true }); }, 300);
+    if (typeof toast === 'function') toast('You’ve been invited to Wreckers’ Night. Tap Go ashore to join them on the island.', 'Tap Go ashore');
+    return;
+  }
+  let readyAt = 0;
+  const t0 = performance.now(), what = SHARE_WHAT[J.mode];
+  const give = msg => { clearInterval(iv); shareShow(J.mode); if (msg && typeof toast === 'function') toast(msg, 'Invite closed'); };
+  const iv = setInterval(() => {
+    if (typeof NET === 'undefined' || NET.status === 'off') return give('Couldn’t reach the other players, so the invite couldn’t be used.');
+    if (NET.status !== 'ready') { if (performance.now() - t0 > 20000) give('Couldn’t reach the other players, so the invite couldn’t be used.'); return; }
+    if (!readyAt) readyAt = performance.now();
+    if (typeof state !== 'undefined' && state !== 'title') return;
+    const waited = performance.now() - readyAt;
+    if (J.mode === 'sail') {
+      NET.pendingJoin = J.code;
+      if (NET.crew === J.code) return clearInterval(iv);
+      if (crewOf(J.code).some(p => !(p.isMe && p.sameTab))) { clearInterval(iv); joinCrew(J.code); return; }
+    } else if (J.mode === 'war') {
+      if (WN.code === J.code) return clearInterval(iv);
+      const w = wnOpenWars().find(x => x.code === J.code);
+      if (w) {
+        clearInterval(iv); shareShow('war');
+        if (w.started) toast('That war has already started.', 'Already started'); else wnJoin(J.code);
+        return;
+      }
+    } else {
+      if (ZN.code === J.code) return clearInterval(iv);
+      const n = znOpenNights().find(x => x.code === J.code);
+      if (n) {
+        clearInterval(iv); const mode = n.map === 'raid' ? 'raid' : 'lighthouse'; shareShow(mode);
+        if (n.started) toast(`That ${SHARE_WHAT[mode]} has already started.`, 'Already started'); else znJoin(J.code, mode === 'raid' ? 'raid' : 'zm');
+        return;
+      }
+    }
+    // give everyone in the room a few seconds to be heard from before calling the lobby gone
+    if (waited > 8000) give(`The ${what} you were invited to isn’t open any more. You can host your own here.`);
+  }, 400);
+}
+shareArrive();
 
 // ---- src/main.js ----
 // Starts the game once every script has loaded.

@@ -449,7 +449,7 @@ Crates and loot are kept in your browser on that device.
 
 Up to eight people can sail as a crew. Each of you sails your own brig through the same skerries, and you can see each other's ships and lanterns, hulls and bells.
 
-- On the title screen, one person picks **Start a crew** and sends the **invite link** from the crew screen; opening it shows that crew highlighted at the top of the list, ready to tap **Join**. Others can also pick a crew from the list, or use **Find me a crew** to join any crew with a free berth.
+- On the title screen, one person picks **Start a crew** and taps **Share invite** on the crew screen; opening the link puts a friend straight into that crew (see Invite links, below). Others can also pick a crew from the list, or use **Find me a crew** to join any crew with a free berth.
 - The crew screen has a **chat** for planning between voyages, and messages also appear in the in-game log.
 - The host (whoever started the crew) sets sail when everyone is in. Anyone who joins later sails straight in on the current voyage.
 - **Ships within 55 m of each other keep Maren where she is**, the same way Plimsoll does.
@@ -469,6 +469,15 @@ Crews connect in one of two ways:
 - **On claude.ai**, through the artifact `room` capability, for people who are signed in and can see the artifact. Visitors from a public link get the solo game there.
 
 If neither is available (for example, the file opened straight from your computer), the game plays solo.
+
+## Invite links
+
+Every mode with a lobby has a **Share invite** button: the crew screen (Skerry Light), the war lobby (Drowned Reach), the night lobby (Keeper's Last Light) and the raid lobby (Maren's End). Wreckers' Night has one on its card, since everyone there shares one island.
+
+- On a phone or tablet it opens the share sheet; on a computer it copies the invite to the clipboard. Either way it reads "Join my game on Skerry Light!" followed by the link.
+- Opening the link takes your friend straight into your lobby, on the right game's card. If the lobby has closed or the game has already started, they're told so and can host their own. A Wreckers' Night link opens that card, ready to tap **Go ashore**.
+- On claude.ai the link is the game's page itself, as everyone there plays in the page's own room: your friend opens it and taps your lobby in the list.
+- Links look like `https://skerry-light.onrender.com/?mode=raid&lobby=z1ab2cd` (modes: sail, wreckers, war, lighthouse, raid). Old crew links ending in `#gannet-12` still work.
 
 ## Putting it on a website
 
@@ -539,6 +548,7 @@ src/gamepad.js      Xbox and other controllers
 src/game.js         game state, update step, input and screens
 src/transport.js    connects to the crew server outside claude.ai
 src/net.js          crews: lobby, shared voyages, crewmates' ships
+src/share.js        invite links: the Share invite button in every lobby, and joining from a link
 src/crates.js       boats, crates, skins and pennants
 src/fps.js          Wreckers' Night, the multiplayer FPS mode
 src/fpsisle.js      Wreckers' Night: the six kinds of island, their props, cover and 3D ground
