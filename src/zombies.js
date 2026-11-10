@@ -2689,7 +2689,7 @@ function zmMaybeDrop(d, how) {
 function zmResolveShot(sh, mine) {
   const [, x, y, z, h, p, by, code] = sh, w = fpsWOf(code);
   if (typeof zxShot === 'function' && zxShot(sh, mine)) return;   // [chest] the wreck chest's own weapons (src/zmchest.js)
-  if (w.melee) { fpsSwishSound(0); zmMelee(x, y, z, h, w); return; }
+  if (w.melee) { fpsSwishSound(0); zmMelee(x, y, z, h, w, code); return; }   // (the weapon's own code: the Cutlass of Plimsoll's is 'P')
   fpsWeaponSound(code, 0, 0);
   if (w.speed) {
     const cp = Math.cos(p);
