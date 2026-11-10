@@ -1861,7 +1861,7 @@ function zmSettle(m) {
   }
 }
 function zmSpeedK() { return (ZM.perks.fleet ? 1.22 : 1) * (typeof zbSpeedK === 'function' ? zbSpeedK() : 1); }   // [boss] (dragged by the false light)
-function zmReloadK() { return ZM.perks.quick ? 0.5 : 1; }
+function zmReloadK() { return (ZM.perks.quick ? 0.5 : 1) * (typeof rclReloadK === 'function' ? rclReloadK() : 1); }   // [classes] (Maren's End: the blunderbuss quicker)
 function zmCanReload() { const w = fpsW(); return w.melee || (ZM.res[FPS.weapon] || 0) > 0; }
 
 // ---------- the grid the drowned find their way by ----------

@@ -1003,8 +1003,8 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 .rcclass li small { display: block; opacity: 0.7; font-size: 12px; }
 .rcpadbtn { display: none !important; }
 #stage.rcmode .rcpadbtn { display: grid !important; left: -54px; }
-#stage.rcmode #rcPadG { top: -14px; }
-#stage.rcmode #rcPadU { top: 46px; }
+#stage.rcmode #rclPadG { top: -14px; }
+#stage.rcmode #rclPadU { top: -14px; left: -108px; }
 .rcpadbtn svg { fill: none; stroke: currentColor; stroke-width: 1.8; }
 </style>
 </head>
@@ -19171,7 +19171,7 @@ function zmSettle(m) {
   }
 }
 function zmSpeedK() { return (ZM.perks.fleet ? 1.22 : 1) * (typeof zbSpeedK === 'function' ? zbSpeedK() : 1); }   // [boss] (dragged by the false light)
-function zmReloadK() { return ZM.perks.quick ? 0.5 : 1; }
+function zmReloadK() { return (ZM.perks.quick ? 0.5 : 1) * (typeof rclReloadK === 'function' ? rclReloadK() : 1); }   // [classes] (Maren's End: the blunderbuss quicker)
 function zmCanReload() { const w = fpsW(); return w.melee || (ZM.res[FPS.weapon] || 0) > 0; }
 
 // ---------- the grid the drowned find their way by ----------
@@ -30746,6 +30746,8 @@ function rclShoot() {
   }
   return true;
 }
+// (zmReloadK) in Maren's End the blunderbuss loads 30% quicker, whoever carries it
+function rclReloadK() { return rclOn() && FPS.weapon === 'blunderbuss' ? 0.7 : 1; }
 // (fpsHurt) a knock coming: Bulwark stops it, a Wellspring halves it
 function rclHurtK(n) {
   if (!rclOn() || !RCL.cls) return n;

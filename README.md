@@ -344,7 +344,7 @@ The last part of the raid. The door at the end of the bridge lets you out in the
 
 ### Maren's End: the three callings
 
-When a raid in Maren's End starts, each player picks a calling from a card over the view (your last one is marked; on a controller, left and right, then A). Each goes down with two weapons of its own, a way of jumping, a grenade and an ultimate. **G** (or **Q**) throws the grenade, which comes back after a while; **X** calls the ultimate once its ring is full. The ring fills slowly by itself and faster with every kill. On a controller they're **LB** and **RB** (or up on the D-pad); on a touch screen, the two round buttons left of the fire cluster. Both meters sit bottom left.
+When a raid in Maren's End starts, each player picks a calling from a card over the view (your last one is marked; on a controller, left and right, then A). Each goes down with two weapons of its own, a way of jumping, a grenade and an ultimate. **G** (or **Q**) throws the grenade, which comes back after a while; **X** calls the ultimate once its ring is full. The ring fills slowly by itself and faster with every kill. On a controller they're **LB** and **RB** (or up on the D-pad); on a touch screen, the two round buttons side by side left of the fire cluster (the grenade nearer Fire, the ultimate beside it). Both meters sit bottom left.
 
 | | Mercenary | Brute | Apothecary |
 |---|---|---|---|
@@ -355,7 +355,7 @@ When a raid in Maren's End starts, each player picks a calling from a card over 
 | Grenade | **Powder Flask** (back in 16 s): a short fuse, and it bursts at once if it strikes one of them | **Scrap Keg** (22 s): a big, slow blast that throws them back | **Brimstone Vial** (20 s): breaks into a cloud of green fire for 7 s that burns and slows the drowned in it, and mends you and your friends standing in it |
 | Ultimate | **Dead Reckoning**: a heavy pistol for 12 s, six shots, each through every one of them in its line | **Bulwark**: 14 s when no knock lands on you, and every pull of the trigger is a quake that hurls back all in front of you | **Wellspring**: a ring of green light at your feet for 15 s: inside it everyone mends a knock every 0.6 s, knocks are halved, the drowned are slowed, and anyone down in it gets back up |
 
-The weapons are the ordinary ones, so the skins from your weapon crates and the outfit from your outfit crates go down with you, and kills in the raid count towards both kinds of crate. Together, everyone sees the others' grenades, Wellsprings and quakes, and a mark in each player's calling colour over their head (ringed while their ultimate is up).
+In Maren's End the Blunderbuss reloads 30% faster than elsewhere. The weapons are the ordinary ones, so the skins from your weapon crates and the outfit from your outfit crates go down with you, and kills in the raid count towards both kinds of crate. Together, everyone sees the others' grenades, Wellsprings and quakes, and a mark in each player's calling colour over their head (ringed while their ultimate is up).
 
 ## Wreckers' Night (multiplayer FPS)
 

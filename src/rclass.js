@@ -329,6 +329,8 @@ function rclShoot() {
   }
   return true;
 }
+// (zmReloadK) in Maren's End the blunderbuss loads 30% quicker, whoever carries it
+function rclReloadK() { return rclOn() && FPS.weapon === 'blunderbuss' ? 0.7 : 1; }
 // (fpsHurt) a knock coming: Bulwark stops it, a Wellspring halves it
 function rclHurtK(n) {
   if (!rclOn() || !RCL.cls) return n;
