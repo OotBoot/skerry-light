@@ -197,6 +197,8 @@ function fbFigure(c, outfitId) {
 
   // a soft halo behind the finest outfits
   if (oc && oc.halo) { let tx = null; try { if (typeof VM !== 'undefined' && VM.softTex) tx = VM.softTex; } catch (e) {} F.halo = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 2.4), new THREE.MeshBasicMaterial({ map: tx, color: oc.halo, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, opacity: 0.4 })); F.halo.position.y = 1.0; root.add(F.halo); }
+  // the Admirals' own light, as rich as a reforged weapon (src/ocadmiral.js)
+  if (oc && oc.adm && typeof ocaDress === 'function') F.adm = ocaDress(F);
   FB.building = null;
   F.aim = new THREE.Group(); F.spine.add(F.aim);
   GL3D.scene.add(root);
@@ -257,6 +259,7 @@ function fbDispose(F) {
   GL3D.scene.remove(F.root);
   F.root.traverse(o => { if (o.geometry && !o.userData.keep) o.geometry.dispose(); });
   for (const m of F.mats) m.dispose();
+  if (F.adm) ocaDispose(F);
 }
 
 
@@ -323,6 +326,7 @@ function fbPose(F, s) {
   const id = s.id, wp = fbWeapon(F, id, s.plain), wdef = FPSW[id] || FPSW.pepperbox;
   for (const k in F.wpn) F.wpn[k].root.visible = k === id;
   if (typeof zmpSkinFor === 'function') zmpSkinFor(wp, id, s.pap | 0);   // [pap] reforged at the Lampwright's Bench: the Light's fire
+  if (typeof wcaSkin === 'function') wcaSkin(wp, id, s.plain);   // your own Admiral finish's moving light (after the Bench's: it gives way to it)
   const rec = s.rec || 0, draw = s.draw || 0, rl = s.rl || 0;
   const long = id === 'blunderbuss' || id === 'longarm' || id === 'harpoon' || id === 'avtomat' || id === 'fresnel' || !!(FPSW[id] && FPSW[id].long);
   if (wdef.melee) {
@@ -384,7 +388,8 @@ function fbPose(F, s) {
   // an outfit's own light: a shimmer in the trim (Mate), a glow and glowing eyes (Captain), and for the Admirals
   // the whole coat alight, and a halo
   const oc = F.oc;
-  if (oc && oc.fx) {
+  if (F.adm) ocaPose(F, op);
+  else if (oc && oc.fx) {
     const t = reduceMotion ? 0 : s.t, gcol = fbCol(oc.glow || oc.trim, '#ffffff');
     const pulse = oc.fx === 'shimmer' ? 0.25 + 0.25 * Math.sin(t * 2.2) : oc.fx === 'glow' ? 0.55 + 0.25 * Math.sin(t * 1.8) : 0.75 + 0.25 * Math.sin(t * 2.6);
     // (a hood stays dark: only its wearer's trim, sash and buttons are alight)

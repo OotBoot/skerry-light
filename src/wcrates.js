@@ -9,6 +9,7 @@
 // 2 Captain and 1 Admiral. A skin gives the 3D gun its colours:
 //   metal (barrels, blade), dark (lock, hammer, sight tube), wood (stock, grip), brass (bands,
 //   guard, caps), accent (inlay, wire, rope) and glow (an emissive accent, Captain and Admiral only).
+// The Admiral finishes also move: a shader of their own on the 3D gun and an animated picture (src/wcadmiral.js).
 //
 // Earning: one crate for every 5 kills (the count carries over between rounds and visits), and one
 // for each round you see out on the island, if you were ashore for at least a minute of it.
@@ -253,6 +254,7 @@ function wcPreview(skin, size) {
     el('stop', { offset: '1', 'stop-color': glow, 'stop-opacity': 0 }, rg);
     el('ellipse', { cx: 62, cy: 31, rx: 58, ry: 24, fill: `url(#${uid}g)` });
   }
+  const gunFrom = svg.childNodes.length;   // (the gun's own shapes start here)
   const P = (d, fill, extra) => el('path', Object.assign({ d, fill, stroke: line, 'stroke-width': 0.9, 'stroke-linejoin': 'round' }, extra || {}));
   const L = (x1, y1, x2, y2, stroke, w, extra) => el('line', Object.assign({ x1, y1, x2, y2, stroke, 'stroke-width': w, 'stroke-linecap': 'round' }, extra || {}));
   const R = (x, y, w, h, fill, extra) => el('rect', Object.assign({ x, y, width: w, height: h, fill, stroke: line, 'stroke-width': 0.8 }, extra || {}));
@@ -350,8 +352,16 @@ function wcPreview(skin, size) {
     scroll(48, 31); scroll(70, 30);
     gem(29.5, 32);
   }
+  // an Admiral finish moves (src/wcadmiral.js): its shapes go in a group of their own for it to light
+  if (tier >= 5 && typeof wcaSvg === 'function') {
+    const gun = el('g', {});
+    while (svg.childNodes.length > gunFrom + 1) gun.appendChild(svg.childNodes[gunFrom]);
+    try { wcaSvg(svg, gun, skin, uid, el); } catch (e) {}
+  }
+  const still = typeof reduceMotion !== 'undefined' && reduceMotion;
   if (tier >= 5) for (const [sx, sy] of [[20, 14], [100, 48], [70, 10], [112, 8]]) {
-    el('path', { d: `M${sx} ${sy - 3} L${sx + 0.8} ${sy} L${sx} ${sy + 3} L${sx - 0.8} ${sy} Z M${sx - 3} ${sy} L${sx} ${sy + 0.8} L${sx + 3} ${sy} L${sx} ${sy - 0.8} Z`, fill: '#fff4c8' });
+    const st = el('path', { d: `M${sx} ${sy - 3} L${sx + 0.8} ${sy} L${sx} ${sy + 3} L${sx - 0.8} ${sy} Z M${sx - 3} ${sy} L${sx} ${sy + 0.8} L${sx + 3} ${sy} L${sx} ${sy - 0.8} Z`, fill: '#fff4c8' });
+    if (!still && svg.classList.contains('wcadm')) el('animate', { attributeName: 'opacity', values: '0.15;1;0.15', dur: (1.4 + (sx % 7) * 0.15) + 's', begin: (sy % 5) * 0.3 + 's', repeatCount: 'indefinite' }, st);
   }
   return svg;
 }

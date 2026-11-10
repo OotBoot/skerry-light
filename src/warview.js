@@ -69,13 +69,16 @@ function wvVision() {
 }
 // is a tile visible to you right now?
 const wvSees = i => !WV.fog || (i >= 0 && WV.vis && WV.vis[i] === 1);
+const WV_GLINTS = 400;
 function wvOwners() {
   const W = WARC.W, H = WARC.H, d = WV.ownImg.data, me = WAR.me;
-  const own = WV.fog ? WV.seen2 : WAR.owner, paint = WV.paint || [], P = [0, 0, 0];
+  const own = WV.fog ? WV.seen2 : WAR.owner, paint = WV.paint || [], P = WV.P || (WV.P = [0, 0, 0, 0, 0, 0]);
   const t = reduceMotion ? 0 : performance.now() / 1000;
   // the glow layers (only when someone flies a glowing banner): cleared, then each glowing border tile marks them
   const GA = WV.anyGlow ? WV.glowA : null, GB = WV.anyGlow ? WV.glowB : null;
   if (GA) { GA.img.data.fill(0); GB.img.data.fill(0); }
+  // the Admiral banners' glints: up to WV_GLINTS a frame, kept in one array (x, y, strength, nation, colour)
+  const GL = WV.glints || (WV.glints = new Float32Array(WV_GLINTS * 5)); let ng = 0;
   for (let i = 0; i < W * H; i++) {
     const o = own[i], k = i * 4;
     if (o === -1 || !warIsLand(i)) { d[k + 3] = 0; continue; }
@@ -85,8 +88,13 @@ function wvOwners() {
     const pf = paint[o];
     if (pf) {
       // a banner: its own colours, a little more solid than plain land so the pattern reads
-      pf(x, (i / W) | 0, t, border, P);
+      P[3] = P[4] = 0; pf(x, (i / W) | 0, t, border, P);
       d[k] = P[0]; d[k + 1] = P[1]; d[k + 2] = P[2]; d[k + 3] = border ? 245 : 185;
+      if (pf.lit) {
+        // an Admiral banner's light: its brightest tiles bloom into the soft glow layers, and its sparkles become glints
+        if (P[3] > 0.05 && GA) { const y = (i / W) | 0, al = P[3] * 150; for (const L of [GA, GB]) { const q = ((y / L.f | 0) * L.c.width + (x / L.f | 0)) * 4, gd = L.img.data; if (al > gd[q + 3]) { gd[q] = P[0]; gd[q + 1] = P[1]; gd[q + 2] = P[2]; gd[q + 3] = al; } } }
+        if (P[4] > 0 && ng < WV_GLINTS) { const q = ng * 5; GL[q] = x; GL[q + 1] = (i / W) | 0; GL[q + 2] = P[4]; GL[q + 3] = o; GL[q + 4] = P[5]; ng++; }
+      }
       if (border && GA && WV.glowSkins[o]) {
         const gs = WV.glowSkins[o], gc = pf.glow, y = (i / W) | 0;
         for (const L of [GA, GB]) { const q = ((y / L.f | 0) * L.c.width + (x / L.f | 0)) * 4, gd = L.img.data; gd[q] = gc[0]; gd[q + 1] = gc[1]; gd[q + 2] = gc[2]; gd[q + 3] = gs.rarity === 'admiral' ? 230 : 170; }
@@ -97,6 +105,7 @@ function wvOwners() {
     d[k] = c[0] * f; d[k + 1] = c[1] * f; d[k + 2] = c[2] * f; d[k + 3] = a;
     if (o === me && border) { d[k] = Math.min(255, c[0] * 1.15 + 20); d[k + 1] = Math.min(255, c[1] * 1.15 + 20); d[k + 2] = Math.min(255, c[2] * 1.15 + 20); }
   }
+  WV.nGlint = ng;
   WV.ownG.putImageData(WV.ownImg, 0, 0);
   if (GA) { GA.g.putImageData(GA.img, 0, 0); GB.g.putImageData(GB.img, 0, 0); }
 }
@@ -108,6 +117,13 @@ function wvDrawGlow(ox, oy, z) {
   ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.imageSmoothingEnabled = true;
   ctx.globalAlpha = 0.22 * k; ctx.drawImage(WV.glowB.c, ox - 1.5 * z, oy - 1.5 * z, WV.glowB.c.width * WV.glowB.f * z, WV.glowB.c.height * WV.glowB.f * z);
   ctx.globalAlpha = 0.38 * k; ctx.drawImage(WV.glowA.c, ox - z * 0.5, oy - z * 0.5, WV.glowA.c.width * WV.glowA.f * z, WV.glowA.c.height * WV.glowA.f * z);
+  // the Admiral banners' glints, each a little star of light over its tile
+  const GL = WV.glints, R0 = Math.max(2.5, z * 1.6);
+  if (GL && typeof rcGlint === 'function') for (let j = 0; j < (WV.nGlint | 0); j++) {
+    const q = j * 5, sx = ox + (GL[q] + 0.5) * z, sy = oy + (GL[q + 1] + 0.5) * z; if (sx < -20 || sy < -20 || sx > W + 20 || sy > H + 20) continue;
+    const pf = WV.paint[GL[q + 3]], st = Math.min(1, GL[q + 2]), R = R0 * (0.6 + 0.8 * st); if (!pf || !pf.glints) continue;
+    ctx.globalAlpha = Math.min(1, 0.3 + st); ctx.drawImage(rcGlint(pf.glints[GL[q + 4]] || '#ffffff'), sx - R, sy - R, R * 2, R * 2);
+  }
   ctx.restore();
 }
 function wvNight(dark) {

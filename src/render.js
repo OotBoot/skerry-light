@@ -374,6 +374,12 @@ function drawFlares() {
     const q = proj(c), a = Math.min(1, f.t / 1.5);
     ctx.globalAlpha = a;
     const fs = f.skin || FLARES[0], col = flareColour(fs, age);
+    if (fs.aurora && typeof drawAurora === 'function') {
+      // the Admiral's Aurora: curtains, a long trail back down its climb, sparks (src/crates.js)
+      const zAt = ag => ag < 1 ? 10 + ag * 50 : 60 - (ag - 1) * 5;
+      drawAurora(ctx, q.x, q.y, Math.max(2.4, 1.3 * Math.sqrt(q.s)) * (age < 1 ? 0.5 + age * 0.5 : 1), age, ag => { const e = cam(f.x, f.y, zAt(ag)); return e.f > SK.NEAR ? proj(e).y : q.y; });
+      ctx.fillStyle = fs.core; ctx.fillRect(q.x - 2, q.y - 2, 4, 4); ctx.globalAlpha = 1; continue;
+    }
     if (col.startsWith('#')) lamp(q.x, q.y, col, Math.max(3, 2.4 * Math.sqrt(q.s)) * (age < 1 ? 1.6 : 1));
     else { ctx.fillStyle = col; ctx.globalAlpha = a * 0.5; ctx.beginPath(); ctx.arc(q.x, q.y, Math.max(3, 2.4 * Math.sqrt(q.s)) * 4, 0, 6.28); ctx.fill(); ctx.globalAlpha = a; }
     if (fs.sparks && !reduceMotion) { ctx.fillStyle = fs.core; for (let i = 0; i < 8; i++) { const an = i * 0.8 + age * 2, d = (6 + (i % 3) * 4) * Math.sqrt(q.s); ctx.fillRect(q.x + Math.cos(an) * d, q.y + Math.sin(an) * d + age * 3, 2, 2); } }
