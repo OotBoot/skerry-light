@@ -36210,7 +36210,7 @@ async function boardFetch(force) {
     if (BOARD.via === 'claude') {
       const data = {};
       for (const g of Object.keys(BOARD.games)) {
-        const q = await BOARD.db.collection('scores').orderBy(g + '_k', 'desc').limit(10).get();
+        const q = await BOARD.db.collection('scores').orderBy(g + '_k', 'desc').limit(500).get();
         data[g] = q.docs.map(d => ({ id: d.id, d: d.data() || {} })).filter(e => (e.d[g + '_k'] || 0) > 0).map(e => ({ id: e.id, n: '', nick: String(e.d.nick || ''), s: e.d[g + '_s'] | 0, b: e.d[g + '_b'] | 0, c: e.d[g + '_c'] | 0, f: boardDocF(e.d, g), me: e.id === BOARD.uid }));
       }
       // names, as this viewer's claude.ai shows them
@@ -36227,7 +36227,7 @@ async function boardFetch(force) {
   } catch (e) { BOARD.err = 'Couldn’t reach the scoreboard just now. Try Refresh in a moment.'; }
   BOARD.loading = false; boardRender();
 }
-// all four games at once: the top three of each, and Top 10 to see more
+// every game at once: the top ten of each, and All to see everyone
 function boardRender() {
   const box = $('boardGames'); if (!box) return;
   box.innerHTML = ''; let anyInc = false;
@@ -36235,8 +36235,8 @@ function boardRender() {
   for (const [g, G] of Object.entries(BOARD.games)) {
     const rows = (BOARD.data && BOARD.data[g]) || [], open = !!BOARD.open[g], sec = mk('section', 'boardgame');
     const top = mk('div', 'bgtop'); top.append(mk('h2', '', G.name));
-    if (rows.length > 3) {
-      const t = mk('button', 'tool bgmore', open ? 'Top 3' : 'Top 10'); t.type = 'button'; t.setAttribute('aria-expanded', open ? 'true' : 'false');
+    if (rows.length > 10) {
+      const t = mk('button', 'tool bgmore', open ? 'Top 10' : `All ${rows.length}`); t.type = 'button'; t.setAttribute('aria-expanded', open ? 'true' : 'false');
       t.addEventListener('click', () => { BOARD.open[g] = !open; boardRender(); }); top.append(t);
     }
     sec.append(top);
@@ -36247,7 +36247,7 @@ function boardRender() {
     const ol = mk('ol', 'boardlist'); ol.setAttribute('aria-label', G.name + ': ' + G.what);
     if (!rows.length) ol.append(mk('li', 'empty', BOARD.loading && !BOARD.data ? 'Reading the board…' : BOARD.data ? 'No one yet. Be the first.' : BOARD.err ? '—' : 'Reading the board…'));
     let meShown = false;
-    rows.slice(0, open ? 10 : 3).forEach((e, k) => {
+    (open ? rows : rows.slice(0, 10)).forEach((e, k) => {
       const li = mk('li', e.me ? 'me' : ''); if (e.me) meShown = true;
       // (no f: a server from before the marks; its rows count as finished)
       const inc = e.f === 0 || e.f === false; if (inc) anyInc = true;

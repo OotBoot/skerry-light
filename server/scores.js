@@ -8,7 +8,8 @@
 //   UPSTASH_REDIS_REST_TOKEN   the long token
 // Without them, scores are kept in memory only and are lost whenever the server restarts.
 //
-// GET  /api/scores  -> { store, games: { skerry: [{n, s, b, f, me?}], fps: [...], war: [...], zm: [...] } }   (top 10 of
+// GET  /api/scores  -> { store, games: { skerry: [{n, s, b, f, me?}], fps: [...], war: [...], zm: [...] } }   (everyone on
+//                      each, best first, up to 500;
 //                      each; with an x-board-id header, that player's own rows are marked me: true)
 // POST /api/scores  <- { id, name, game, s, b, p?, f?, was? }   your bests; only ever raised, never lowered. p: 1 once
 //                      you've played it (so you're on the board with nothing yet); f: 1 once you've finished a game of
@@ -24,7 +25,7 @@ const URL_ = (process.env.UPSTASH_REDIS_REST_URL || '').replace(/\/+$/, '');
 const TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN || '';
 const STORE = URL_ && TOKEN ? 'upstash' : 'memory';
 const KEY = game => 'skerry:scores:' + game;
-const TOP = 10;
+const TOP = 500;   // everyone (the card shows the top ten, and All for the rest)
 // what each game's two numbers are, and the most each can sensibly be
 //   skerry: s = most voyages in one run,        b = voyages made in all
 //   fps:    s = most kills in one round,        b = rounds won

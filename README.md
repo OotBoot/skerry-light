@@ -215,7 +215,7 @@ How it works: the host's browser runs the whole war, the same code as a game alo
 - **Keeper's Last Light:** most rounds held in one night (and the most kills in one night).
 - **Maren's End:** the best time through the raid, with the most boss damage and the kills made in all your raids beside it.
 
-It sits at the top of the title screen: the top three of every game at once, each with a **Top 10** button to see more, and your own rows marked "(you)" (your best is shown under a game where you're not in the top few).
+It sits at the top of the title screen: the top ten of every game at once, each with an **All** button (once more than ten have played) to see everyone who has, and your own rows marked "(you)" (your best is shown under a game where you're not in the top few).
 
 **Incomplete games count too.** Start a game and you're on its board straight away, and if you leave it or lose before the end (or close the page), what you got to so far still counts: the kills, rounds, land, boss damage or kills you'd made. Until you've finished a game of that mode, your name has a yellow **\*** beside it, and a line under the board says the asterisk marks an incomplete game. Finishing means: making harbour on a voyage (Skerry Light), being there when a round ends (Wreckers' Night), a war to its end, won or lost (Drowned Reach), a night until the Lighthouse falls (Keeper's Last Light), and getting through the door (Maren's End; going down before it counts as incomplete). Once you've finished one, the asterisk goes for good.
 
