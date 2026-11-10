@@ -28152,7 +28152,9 @@ function raidUseStage(i) {
   const m = FPS.me, slot = Math.max(0, ZM.hum.findIndex(h => h[0] === m.id));
   m.x = FPSC.CX + ZMD.START[0] + [0, 1.5, -1.5, 0][slot % 4]; m.y = FPSC.CY + ZMD.START[1] + [0, -1.6, -1.6, 1.8][slot % 4];
   m.jz = m.fl = ZMD.TOP; m.vz = 0; m.protect = 2;
+  // everyone through the door is back up: the bled-out with their kit again, the downed on their feet
   if (ZM.ghost) { ZM.ghost = false; m.dead = 0; m.hp = ZMC.HP; raidLoadout(); }
+  if (zmIsDown()) zmGetUp();
   RAID.st = {}; raidCall('enter');
   ZM.banner = { text: RAID_STAGES[RAID_ORDER[i]].n, t: 4, sub: 'Part ' + raidNumeral(i + 1) };
   fpsFeed(MAP.land(0));

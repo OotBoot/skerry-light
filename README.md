@@ -286,7 +286,7 @@ A game of its own, with its own card on the title screen (the **Maren's End** bu
 - A path winds away through the dark, with braziers along it. Hold Use at a dark brazier (just over a second) to light it from the lantern.
 - Inside a lit brazier's light you get health back and your ammunition tops up. Out in the dark the dark drains your health, slowly, so get from one brazier to the next.
 - Glowing drowned climb up out of the ground and come after you as you go, more of them the further along you are.
-- At the end of the path is a glowing door. Kill twenty of the drowned inside the ring in front of it and it opens; go through to finish Part I. Anyone who bled out comes back at the next brazier lit.
+- At the end of the path is a glowing door. Kill twenty of the drowned inside the ring in front of it and it opens; go through to finish Part I. Anyone who bled out comes back at the next brazier lit. Going through the door takes the whole team on together, and everyone is revived: anyone down is back on their feet, and anyone who bled out comes back with their weapons.
 
 The scoreboard keeps your best time through the raid, the most damage you've done to its boss, and the drowned you've killed across all your raids. The later parts of the raid follow on from the door.
 
