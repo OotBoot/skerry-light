@@ -33,14 +33,27 @@
 
 const VM = { tried: false, ok: false, sway: [0, 0], turn: 0, turnTo: 0, shots: 0, hammer: 1, lastP: 1, smoke: [], flashT: 0, panT: 0, w: 0, h: 0, sleeve: '', weapons: {}, skinKey: {}, swingT: 9, swings: 0, trail: [] };
 
+// the gun's own renderer, on its own canvas. Smoothed edges only on screens that aren't already sharp (as the world's
+// 3D view). If its context is lost it waits, and if that doesn't come back in a couple of seconds it's made again
+function vmMakeRenderer() {
+  const c = VM.canvas = document.createElement('canvas');
+  const r = VM.r = new THREE.WebGLRenderer({ canvas: c, alpha: true, antialias: (window.devicePixelRatio || 1) < 2, premultipliedAlpha: true });
+  r.setClearColor(0x000000, 0);
+  c.addEventListener('webglcontextlost', e => { e.preventDefault(); if (VM.r === r) VM.lost = performance.now(); });
+  c.addEventListener('webglcontextrestored', () => { if (VM.r === r) { VM.lost = 0; VM.w = 0; } });
+  VM.w = 0;
+}
+function vmRecover() {
+  if (!VM.lost || performance.now() - VM.lost < 2500) return;
+  VM.lost = performance.now();
+  try { const old = VM.r; vmMakeRenderer(); VM.lost = 0; try { old.dispose(); } catch (e) {} } catch (e) { console.warn('gun: rebuild failed, trying again', e); }
+}
 function vmInit() {
   if (VM.tried) return VM.ok;
   VM.tried = true;
   if (typeof THREE === 'undefined') return false;
   try {
-    VM.canvas = document.createElement('canvas');
-    VM.r = new THREE.WebGLRenderer({ canvas: VM.canvas, alpha: true, antialias: true, premultipliedAlpha: true });
-    VM.r.setClearColor(0x000000, 0);
+    vmMakeRenderer();
   } catch (e) { return false; }
   const scene = VM.scene = new THREE.Scene();
   VM.cam = new THREE.PerspectiveCamera(48, 1, 0.01, 10);
@@ -438,7 +451,9 @@ function vmDraw(dt) {
   // your coat changed: the sleeves follow
   const sk = JSON.stringify(fpsColours());
   if (sk !== VM.sleeve) { VM.sleeve = sk; const c = fpsColours(); VM.H.sleeve.color.set(vmHex(c[0], '#3a2a1e')); VM.H.cuff.color.set(vmHex(c[2], '#7a5a3a')); }
-  const pr = Math.min(dpr, 1.5);
+  vmRecover();
+  // (as sharp as the world's 3D view is drawn just now, and no sharper than 1.5)
+  const pr = Math.min(typeof gl3dPR === 'function' ? gl3dPR() : dpr, 1.5);
   if (VM.w !== W || VM.h !== H || VM.pr !== pr) { VM.w = W; VM.h = H; VM.pr = pr; VM.r.setPixelRatio(pr); VM.r.setSize(W, H, false); VM.cam.aspect = W / H; VM.cam.updateProjectionMatrix(); }
   const id = FPSW[FPS.weapon] ? FPS.weapon : 'pepperbox', wpn = vmWeapon(id);
   for (const k in VM.weapons) VM.weapons[k].root.visible = k === id;

@@ -103,10 +103,12 @@ const SK = {
 //  from 0.3 to 3. They were one setting, look, once: an old saved look carries over into both)
 // (fov: the field of view across the screen in Wreckers' Night and the Lighthouse, in degrees, 60 to 110;
 //  aim: 'toggle' to click (or pull LT) once to aim and again to stop, 'hold' (the default) to aim while it's held)
-const SETTINGS = { vol: 1, scares: 'full', flashes: 'normal', motion: 'auto', renderer: '3d', lookX: 1, lookY: 1, fov: 69, aim: 'hold' };
+const SETTINGS = { vol: 1, scares: 'full', flashes: 'normal', motion: 'auto', lookX: 1, lookY: 1, fov: 69, aim: 'hold' };
 try { Object.assign(SETTINGS, JSON.parse(localStorage.getItem('skerry-settings') || '{}') || {}); } catch (e) {}
 { let s = null; try { s = JSON.parse(localStorage.getItem('skerry-settings') || '{}'); } catch (e) {}
-  if (s && s.look != null) { if (s.lookX == null) SETTINGS.lookX = s.look; if (s.lookY == null) SETTINGS.lookY = s.look; } delete SETTINGS.look; }
+  if (s && s.look != null) { if (s.lookX == null) SETTINGS.lookX = s.look; if (s.lookY == null) SETTINGS.lookY = s.look; } delete SETTINGS.look;
+  // (there was once a Graphics setting, 3D or Classic: the 3D view is always on now, and an old one is let go)
+  delete SETTINGS.renderer; }
 const lookAxisK = v => { v = +v; return isFinite(v) ? Math.min(3, Math.max(0.3, v)) : 1; };
 const lookKX = () => lookAxisK(SETTINGS.lookX), lookKY = () => lookAxisK(SETTINGS.lookY);
 const fovDeg = () => { const v = +SETTINGS.fov; return isFinite(v) ? Math.min(110, Math.max(60, v)) : 69; };

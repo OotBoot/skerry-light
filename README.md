@@ -103,7 +103,7 @@ How quickly the view turns in Wreckers' Night and the Lighthouse, with the mouse
 
 In first person you can look all the way up at the sky and all the way down at your feet (to just short of straight up and down).
 
-## Graphics: 3D and Classic
+## Graphics
 
 The world is drawn in real 3D with WebGL (three.js):
 
@@ -118,7 +118,7 @@ The sky is painted on a canvas behind the 3D view, and the creatures, ships, dec
 
 **Indoors and out, on foot.** The weather (drizzle, snow, ash, embers, fireflies, rolling fog) is drawn over the view, so on foot it stops under a roof: wherever there's a ceiling, a roof, the floor above or a stair overhead (any solid lifted off the ground over you and the ground round you; a lintel or a beam doesn't count), and in the Lighthouse's lantern room under its dome (the gallery outside it is out in the weather). It fades out as you go in through a door and back as you come out, the haze on the horizon goes with it, a lightning flash comes in dimmer through the windows, and the sea and the wind are muffled (`fpsUnderRoof` in `src/fpsisle.js`, `audioOutdoors` in `src/audio.js`). It goes by what's overhead rather than by room, so anything built with a roof, on any island or in the station, works the same.
 
-Settings → Graphics switches between **3D** and **Classic** (the original painted view, lighter on old devices). If WebGL isn't available the game uses Classic by itself.
+The 3D view is always on (the old Classic setting is gone; an old saved choice of it is simply ignored). Only a device with no WebGL at all gets the painted view instead. If frames start coming slowly, the 3D view quietly draws at a lower resolution until they're quick again, and then goes back up. If a tablet or phone drops the 3D view under strain (its graphics chip "loses the context"), the game waits for it to come back, and if it hasn't within a couple of seconds builds it afresh, so after a stutter you're straight back in the full 3D world, never the flat one.
 
 ## Wreckers' Night: over the shoulder, and jumping
 
@@ -137,7 +137,7 @@ Over the shoulder with the 3D renderer, you see your own wrecker as a full 3D fi
 - **Movement:** legs and arms swing as you walk and run, the body leans and follows your aim, and the gun kicks when you fire and tips up to reload. You tuck in a jump and sink a little on landing.
 - **Close camera:** the figure turns see-through when the camera is squeezed up close against a rock.
 
-With the Classic renderer the flat figure is used instead.
+On a device with no WebGL the flat figure is used instead.
 
 ## Verity on the island
 

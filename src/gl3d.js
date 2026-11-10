@@ -6,12 +6,15 @@
 // creatures, ships, the deck and every effect are painted over it by the classic renderer. The
 // 3D camera is set up to project exactly as the 2D one does, so the two line up.
 //
-// If WebGL is missing or fails, or the player picks "Classic 2D" in Settings, nothing here runs
-// and the classic renderer draws everything, as before.
+// It is always on. Only a device with no WebGL at all gets the old painted view instead. If the graphics chip drops
+// the 3D view mid-game (a "lost context": a tablet short of memory does this after a heavy stutter), the game waits
+// for it to come back, and if it doesn't within a couple of seconds builds a fresh one: it never falls back to the
+// painted view. And when frames come slowly, the 3D view draws at a lower resolution until they're quick again.
 
-const bgCv = document.getElementById('bg'), glCv = document.getElementById('gl');
+const bgCv = document.getElementById('bg');
+let glCv = document.getElementById('gl');
 const bgx = bgCv ? bgCv.getContext('2d') : null;
-const GL3D = { ok: false, tried: false, failed: false, r: null, scene: null, camera: null, coastKey: '', objs: new Map(), frame: 0, shown: null, wins: [], surf: [] };
+const GL3D = { ok: false, tried: false, failed: false, lost: 0, pr: 0, slow: 0, quick: 0, lastT: 0, r: null, scene: null, camera: null, coastKey: '', objs: new Map(), frame: 0, shown: null, wins: [], surf: [] };
 
 // a stable pseudo-random number from a few numbers (never touches the seeded world RNG)
 function glDispose(o) { if (o.geometry) o.geometry.dispose(); if (o.material) [].concat(o.material).forEach(m => m.dispose()); }
@@ -25,18 +28,42 @@ const glRGB = s => { const p = s.split(',').map(Number); return new THREE.Color(
 // a colour laid over another at some alpha, as the 2D painter would
 function glOver(base, top) { const [b] = glCol(base), [t, a] = glCol(top); return b.clone().lerp(t, a); }
 
-function gl3dWanted() { return SETTINGS.renderer !== '2d'; }
+function gl3dWanted() { return true; }
+// the WebGL renderer on the 3D canvas (made again on a fresh canvas when the old one's context is lost for good)
+function gl3dMakeRenderer() {
+  const r = new THREE.WebGLRenderer({ canvas: glCv, alpha: true, antialias: (window.devicePixelRatio || 1) < 2, powerPreference: 'high-performance' });
+  r.setClearColor(0x000000, 0);
+  r.sortObjects = true;
+  GL3D.r = r;
+  // (lost: three.js stops drawing and waits; restored: three.js sets itself up again and re-uploads everything)
+  glCv.addEventListener('webglcontextlost', e => { e.preventDefault(); if (GL3D.r === r) { GL3D.lost = performance.now(); console.warn('3D: context lost, waiting for it'); } });
+  glCv.addEventListener('webglcontextrestored', () => { if (GL3D.r === r) { GL3D.lost = 0; GL3D.pr = 0; gl3dResize(); console.warn('3D: context restored'); } });
+}
+// the context lost and not back after a couple of seconds: a fresh canvas and renderer in its place (the scene, its
+// meshes and textures are all kept, and simply uploaded again)
+function gl3dRecover() {
+  if (!GL3D.lost || performance.now() - GL3D.lost < 2500) return;
+  GL3D.lost = performance.now();   // (and if this fails too, try again a while later)
+  try {
+    const old = GL3D.r, nc = glCv.cloneNode(false);
+    glCv.replaceWith(nc); glCv = nc; GL3D.shownKey = null;
+    try { old.dispose(); } catch (e) {}
+    gl3dMakeRenderer(); GL3D.lost = 0; GL3D.pr = 0; gl3dResize();
+    console.warn('3D: rebuilt on a fresh canvas');
+  } catch (e) { console.warn('3D: rebuild failed, trying again', e); }
+}
 function gl3dInit() {
   if (GL3D.tried) return GL3D.ok;
   GL3D.tried = true;
   if (typeof THREE === 'undefined' || !glCv || !bgx) { GL3D.failed = true; return false; }
-  try {
-    const r = new THREE.WebGLRenderer({ canvas: glCv, alpha: true, antialias: (window.devicePixelRatio || 1) < 2, powerPreference: 'high-performance' });
-    r.setClearColor(0x000000, 0);
-    r.sortObjects = true;
-    GL3D.r = r;
-  } catch (e) { GL3D.failed = true; return false; }
-  glCv.addEventListener('webglcontextlost', e => { e.preventDefault(); GL3D.ok = false; GL3D.failed = true; gl3dShow(false); });
+  try { gl3dMakeRenderer(); }
+  catch (e) {
+    // (no WebGL just now: try again in a few seconds, a few times, before settling for the painted view)
+    GL3D.failed = true; GL3D.tries = (GL3D.tries || 0) + 1;
+    if (GL3D.tries < 4) setTimeout(() => { if (!GL3D.ok) { GL3D.tried = false; GL3D.failed = false; } }, 4000);
+    return false;
+  }
+  GL3D.failed = false;
   const scene = GL3D.scene = new THREE.Scene();
   GL3D.camera = new THREE.PerspectiveCamera(50, 1, 0.5, 30000);
   GL3D.camera.rotation.order = 'YXZ';
@@ -51,12 +78,24 @@ function gl3dInit() {
   gl3dResize();
   return true;
 }
+// (the 3D view's resolution: the screen's own, less when frames have been coming slowly (gl3dPace), down to 1)
+function gl3dPR() { return GL3D.pr ? Math.min(GL3D.pr, dpr) : dpr; }
 function gl3dResize() {
   if (!bgCv) return;
   bgCv.width = Math.round(W * dpr); bgCv.height = Math.round(H * dpr);
-  if (GL3D.r) { GL3D.r.setPixelRatio(dpr); GL3D.r.setSize(W, H, false); }
+  if (GL3D.r) { GL3D.r.setPixelRatio(gl3dPR()); GL3D.r.setSize(W, H, false); }
 }
-// is the 3D renderer drawing this frame? (the Backrooms and the Open Sky stay with the classic one)
+// once a frame: slow frames (under about 25 a second, for a second and a half) step the resolution down a quarter;
+// quick ones (over about 50, for five seconds) step it back up. Pauses and hidden tabs don't count
+function gl3dPace() {
+  const t = performance.now(), d = t - (GL3D.lastT || t); GL3D.lastT = t;
+  if (!(d > 0) || d > 1000) return;
+  const pr = gl3dPR();
+  if (d > 40) { GL3D.slow += d; GL3D.quick = 0; } else { GL3D.slow = Math.max(0, GL3D.slow - d * 0.5); if (d < 21) GL3D.quick += d; }
+  if (GL3D.slow > 1500 && pr > 1) { GL3D.pr = Math.max(1, pr - 0.25); GL3D.slow = 0; gl3dResize(); }
+  else if (GL3D.quick > 5000 && pr < dpr) { GL3D.pr = Math.min(dpr, pr + 0.25); GL3D.quick = 0; gl3dResize(); }
+}
+// is the 3D renderer drawing this frame?
 function gl3dActive() {
   const want = gl3dWanted() && !!g;
   return want && (GL3D.ok || (!GL3D.tried && gl3dInit()));
@@ -398,7 +437,7 @@ function dropThing(o, m) {
 // ---------- each frame ----------
 function gl3dRender(roll, sx, sy, beamOn) {
   const B = curBiome(), cam3 = GL3D.camera, u = GL3D.sea.material.uniforms;
-  GL3D.frame++;
+  GL3D.frame++; gl3dRecover(); gl3dPace();
   buildCoast();
   syncIsland(B);
   if (g.isle && typeof fpsIsleFrame3D === 'function') fpsIsleFrame3D();
@@ -815,7 +854,7 @@ function buildRooms() {
   tubes.frustumCulled = false; scene.add(tubes); GL3D.tubes = tg;
 }
 function gl3dRooms(roll, sx, sy) {
-  buildRooms();
+  buildRooms(); gl3dRecover(); gl3dPace();
   const cam3 = GL3D.camera, L = roomLevel();
   cam3.fov = 2 * Math.atan((H / 2) / focal) * 180 / Math.PI; cam3.aspect = W / H; cam3.near = 0.5; cam3.far = 2000;
   cam3.setViewOffset(W, H, -sx, H / 2 - (hy - pitchY) - sy, W, H); cam3.updateProjectionMatrix();

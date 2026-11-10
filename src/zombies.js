@@ -3373,7 +3373,7 @@ function zm3dLantern(grp) {
   // (the gallery's deck and its railing are the tower's skin: zm3dTower)
   // the Light: a pedestal on the newel, a beehive of glass rings in a brass cage. Dark and still until the lamp is lit
   // from the Roof Room (src/zmlamp.js); then it turns, its one beam sweeping out over the station and the sea
-  const ped = new THREE.Mesh(new THREE.CylinderGeometry(0.95, ZMT.NEWEL + 0.04, 0.9, 16), brassM);   // (flaring out from the newel to hold the lens) ped.position.y = 0.45; top.add(ped);
+  const ped = new THREE.Mesh(new THREE.CylinderGeometry(0.95, ZMT.NEWEL + 0.04, 0.9, 16), brassM); ped.position.y = 0.45; top.add(ped);   // (flaring out from the newel to hold the lens)
   const lens = new THREE.Group(); lens.position.y = 0.9; top.add(lens);
   const lensM = new THREE.MeshBasicMaterial({ color: 0xfff0c8, transparent: true, opacity: 0.85 });
   for (let i = 0; i < 11; i++) { const r = 0.95 - Math.abs(i - 5) * 0.07, t = new THREE.Mesh(new THREE.CylinderGeometry(r, r, 0.17, 24, 1, true), lensM); t.position.y = 0.15 + i * 0.2; lens.add(t); }
