@@ -20418,30 +20418,117 @@ const ZM_PAP_GLOW = 0xffa838;
 FPI_K.zmpap = {
   col: FPI_C.wood3,
   sol(p) { return [fpiBox(p, 0, 0, 1.15, 0.5, 2.5)]; },
-  // (the prop's front is -v; the lens wheel, the furnace's mouth and the tray are drawn by zmp3d)
+  // (the prop's front is -v; the lens wheel and its gears, the firebox's glow, the bellows, the crucible's melt, the
+  // gauge's needle and the weapon on the tray are drawn by zmp3d)
+  // An 1880s lampwright's bench: an oak bench, a little cast-iron furnace on it with its firebox door swung open, the
+  // great lens wheel turning over the fire in an iron frame, the flue running up into the ceiling, a crucible on its
+  // trivet, an anvil and a vice, the bellows and the tools on their rack. Everything stays inside the bench's solid,
+  // and nothing reaches back further than the old bench did (the curved wall is close behind it).
   b3(p, A) {
-    // the bench: a heavy oak top on four legs, a shelf under it with ingots of brass and a box of prisms
+    const T = 0.96, IR = '#3e3a36', IR2 = '#24211e', BR = '#e0b058', BR2 = '#b08438', CU = '#c8783c', LTH = '#5a3a24';
+    // a part turned to face the front (its axis along v), and a rod along u
+    const face = (c, u, v, hc, r, t, tpl) => A.part(tpl || 'cyl8', c, u, v, hc, r * 2, t, r * 2, 0, Math.PI / 2, 0);
+    const rodU = (c, u, v, hc, r, len) => A.part('cyl6', c, u, v, hc, r * 2, len, r * 2, 0, 0, Math.PI / 2);
+    // ---- the bench: a heavy oak top with a brass-shod edge, an apron of three drawers, turned legs on brass feet
     A.box(FPI_C.wood2, 0, 0, 0.86, 2.3, 0.95, 0.1);
-    for (const su of [-1, 1]) for (const sv of [-1, 1]) A.box(FPI_C.wood3, su * 1.06, sv * 0.4, -0.1, 0.1, 0.1, 0.98);
+    A.box(BR2, 0, -0.478, 0.855, 2.3, 0.014, 0.03);
+    A.box(FPI_C.wood3, 0, -0.43, 0.66, 2.14, 0.05, 0.2);
+    for (const s of [-1, 0, 1]) { A.box(FPI_C.wood, s * 0.7, -0.458, 0.685, 0.6, 0.02, 0.15); face(BR, s * 0.7, -0.475, 0.76, 0.024, 0.03); }
+    for (const su of [-1, 1]) for (const sv of [-1, 1]) {
+      A.cyl(BR2, su * 1.06, sv * 0.4, -0.04, 0.06, 0.08);
+      A.cyl(FPI_C.wood3, su * 1.06, sv * 0.4, 0.04, 0.048, 0.84);
+      A.part('sph', FPI_C.wood3, su * 1.06, sv * 0.4, 0.45, 0.13, 0.16, 0.13);
+      A.part('sph', FPI_C.wood3, su * 1.06, sv * 0.4, 0.2, 0.11, 0.1, 0.11);
+    }
+    // the shelf: ingots of brass, a box of prisms, a heap of coal and a quench bucket
     A.box(FPI_C.wood3, 0, 0, 0.22, 2.12, 0.86, 0.05);
-    for (let i = 0; i < 4; i++) A.box(ZMP.brass, -0.8 + i * 0.13, -0.1, 0.27, 0.1, 0.32, 0.06);
+    for (let i = 0; i < 4; i++) A.box(BR, -0.8 + i * 0.13, -0.1, 0.27, 0.1, 0.32, 0.06);
     A.box(FPI_C.wood, 0.55, 0, 0.27, 0.6, 0.5, 0.22);
     for (let i = 0; i < 4; i++) A.part('ico', '#cfe0e8', 0.35 + i * 0.13, -0.05, 0.52, 0.12, 0.14, 0.1, i, 0, 0, 'glow');
-    // the furnace on the bench: a brick firebox under the lens, a brass lid, and its flue back into the wall
-    A.box('#4a2e24', 0, 0.12, 0.96, 1.0, 0.6, 0.42);
-    A.box('#2a1c18', 0, -0.19, 1.02, 0.5, 0.02, 0.24);
-    A.box(ZMP.brass, 0, 0.12, 1.38, 1.06, 0.66, 0.05);
-    A.part('cyl8', ZMP.iron, 0.36, 0.42, 1.2, 0.16, 0.3, 0.16, 0, Math.PI / 2, 0);
-    // the frame the lens wheel turns in: two iron uprights and a brass crossbar, a sign board over it
-    for (const s of [-1, 1]) { A.box(ZMP.iron, s * 0.82, 0.18, 0.96, 0.1, 0.12, 1.66); A.cyl(ZMP.brass, s * 0.82, 0.18, 2.6, 0.08, 0.1); }
-    A.box(ZMP.brass, 0, 0.18, 2.36, 1.74, 0.12, 0.1);
-    A.box('#2a2622', 0, 0.36, 2.66, 1.9, 0.06, 0.5); A.box(FPI_C.wood3, 0, 0.36, 2.62, 2.0, 0.08, 0.05); A.box(FPI_C.wood3, 0, 0.36, 3.15, 2.0, 0.08, 0.05);
-    // a grindstone on its frame at one end, the bellows at the other
-    A.part('cyl8', '#8a8478', 0.92, -0.18, 1.22, 0.55, 0.09, 0.55, 0, 0, Math.PI / 2);
-    A.box(FPI_C.wood3, 0.92, -0.18, 0.96, 0.06, 0.06, 0.28);
-    A.box('#5a3a24', -0.9, -0.05, 0.96, 0.32, 0.5, 0.16, 0.2); A.box(FPI_C.wood3, -0.9, -0.35, 0.98, 0.06, 0.25, 0.04, 0.2);
-    // two small lamps at the front corners
-    for (const s of [-1, 1]) { A.cyl(ZMP.iron, s * 1.0, -0.36, 0.96, 0.05, 0.18); A.glow('#ffc070', s * 1.0, -0.36, 1.22, 0.11); }
+    for (let i = 0; i < 7; i++) A.part('ico', '#1a1816', -0.12 + (i % 4) * 0.09, 0.05 + (i > 3 ? 0.1 : -0.04), 0.31 + (i > 3 ? 0.05 : 0), 0.12, 0.09, 0.11, i);
+    A.cyl(FPI_C.wood, 0.98, 0.1, 0.27, 0.11, 0.2); A.cyl(IR, 0.98, 0.1, 0.3, 0.113, 0.02); A.cyl(IR, 0.98, 0.1, 0.43, 0.113, 0.02); A.cyl('#2c4a52', 0.98, 0.1, 0.45, 0.1, 0.01);
+
+    // ---- the furnace: cast iron on a plinth, fluted corner columns with brass caps, a moulded cornice studded with rivets
+    A.box(IR2, 0, 0.12, T, 1.1, 0.7, 0.06);
+    A.box(IR, 0, 0.12, T + 0.06, 1.0, 0.6, 0.3);
+    for (const su of [-1, 1]) for (const sv of [-1, 1]) { A.cyl(IR2, su * 0.5, 0.12 + sv * 0.3, T + 0.06, 0.05, 0.3); A.cyl(BR2, su * 0.5, 0.12 + sv * 0.3, T + 0.33, 0.062, 0.03); A.cyl(BR2, su * 0.5, 0.12 + sv * 0.3, T + 0.06, 0.062, 0.03); }
+    A.box(IR2, 0, 0.12, T + 0.36, 1.12, 0.72, 0.05);
+    A.box(BR2, 0, 0.12, T + 0.41, 1.04, 0.64, 0.025);
+    for (let i = 0; i < 11; i++) A.box(BR, -0.5 + i * 0.1, -0.243, T + 0.375, 0.022, 0.012, 0.022);
+    // the firebox: a brass-framed mouth with its grate, and the door swung open on its hinge (the glow is zmp3d's)
+    A.box('#0e0806', 0, -0.183, 1.05, 0.5, 0.02, 0.24);
+    A.box(BR, 0, -0.192, 1.025, 0.6, 0.025, 0.03); A.box(BR, 0, -0.192, 1.285, 0.6, 0.025, 0.035);
+    for (const s of [-1, 1]) A.box(BR, s * 0.285, -0.192, 1.025, 0.03, 0.025, 0.295);
+    for (let i = 0; i < 6; i++) A.box(IR2, -0.2 + i * 0.08, -0.232, 1.05, 0.022, 0.02, 0.24);
+    A.box(IR2, 0, -0.232, 1.115, 0.5, 0.02, 0.018); A.box(IR2, 0, -0.232, 1.205, 0.5, 0.02, 0.018);
+    { const a = 1.2, hu = 0.3, hv = -0.205, cu = hu + 0.14 * Math.cos(a), cv = hv - 0.14 * Math.sin(a), nu = -Math.sin(a), nv = -Math.cos(a);
+      for (const hc of [1.08, 1.24]) A.cyl(BR2, hu, hv, hc - 0.03, 0.018, 0.06);
+      A.box(IR, cu, cv, 1.035, 0.28, 0.03, 0.27, -a);
+      A.box(IR2, cu + nu * 0.016, cv + nv * 0.016, 1.06, 0.22, 0.008, 0.22, -a);
+      A.part('cyl8', BR, cu + nu * 0.024, cv + nv * 0.024, 1.17, 0.13, 0.012, 0.13, -a, Math.PI / 2, 0);
+      A.part('cyl6', IR, cu + nu * 0.034, cv + nv * 0.034, 1.17, 0.05, 0.02, 0.05, -a, Math.PI / 2, 0);
+      A.box(BR2, cu + nu * 0.04 + Math.cos(a) * 0.1, cv + nv * 0.04 - Math.sin(a) * 0.1, 1.15, 0.025, 0.02, 0.05, -a); }
+    // vents along its sides, glowing, and the gauge on its face (the needle is zmp3d's)
+    for (const s of [-1, 1]) for (let i = 0; i < 3; i++) A.box('#ff7a30', s * 0.505, 0.0 + i * 0.12, 1.1, 0.012, 0.07, 0.025, 0, 0, 0);
+    for (const s of [-1, 1]) for (let i = 0; i < 3; i++) A.part('box', '#ff8a3a', s * 0.507, 0.0 + i * 0.12, 1.112, 0.008, 0.012, 0.06, 0, 0, 0, 'glow');
+    face(BR, -0.4, -0.19, 1.17, 0.085, 0.03); face('#e8dcc0', -0.4, -0.206, 1.17, 0.07, 0.006);
+    A.box('#a02818', -0.4 + 0.045, -0.211, 1.17, 0.03, 0.004, 0.014);
+    // the tray the weapon rides in on: two brass rails out over the firebox, and a rest across their ends
+    for (const s of [-1, 1]) { A.part('cyl6', BR, s * 0.3, -0.36, 1.395, 0.03, 0.27, 0.03, 0, Math.PI / 2, 0); A.box(BR2, s * 0.3, -0.25, 1.34, 0.04, 0.03, 0.06); }
+    rodU(BR, 0, -0.49, 1.395, 0.018, 0.64); for (const s of [-1, 1]) A.part('sph', BR, s * 0.33, -0.49, 1.395, 0.05, 0.05, 0.05);
+    // the flue: out of its back, up beside the frame to the ceiling, banded in brass, with its damper and a second gauge
+    A.box(IR, 0.56, 0.3, 1.12, 0.14, 0.14, 0.14);
+    A.cyl(IR2, 0.63, 0.3, 1.05, 0.085, 0.24);
+    A.cyl(IR, 0.63, 0.3, 1.25, 0.07, 3.45);
+    for (const hc of [1.5, 2.3, 3.1, 3.9]) A.cyl(BR2, 0.63, 0.3, hc, 0.082, 0.04);
+    A.cyl(IR2, 0.63, 0.3, 4.58, 0.12, 0.14);
+    face(BR2, 0.63, 0.2, 1.8, 0.012, 0.1); A.part('torus', BR, 0.63, 0.15, 1.8, 0.13, 0.13, 0.13); rodU(BR, 0.63, 0.15, 1.8, 0.008, 0.12); A.part('cyl6', BR, 0.63, 0.15, 1.8, 0.016, 0.12, 0.016);
+    face(BR, 0.63, 0.2, 2.62, 0.08, 0.04); face('#e8dcc0', 0.63, 0.178, 2.62, 0.064, 0.006); A.box('#201818', 0.63 + 0.012, 0.174, 2.62, 0.05, 0.004, 0.008, 0, 0, 0.5);
+    A.box(BR2, 0.63, 0.25, 2.6, 0.03, 0.06, 0.04);
+    // ---- the frame the lens wheel turns in: two cast-iron columns on plinths, brass collars and bearings, an arch over it
+    for (const s of [-1, 1]) {
+      A.box(IR2, s * 0.82, 0.18, T, 0.2, 0.22, 0.1); A.box(BR2, s * 0.82, 0.18, T + 0.1, 0.16, 0.18, 0.025);
+      A.cyl(IR, s * 0.82, 0.18, T + 0.12, 0.05, 1.68);
+      for (const hc of [1.3, 1.62, 2.42]) A.cyl(BR2, s * 0.82, 0.18, hc, 0.064, 0.035);
+      A.box(BR, s * 0.82, 0.14, 1.93, 0.14, 0.2, 0.18); A.box(IR2, s * 0.82, 0.03, 1.95, 0.15, 0.02, 0.14);
+      A.box(IR2, s * 0.82, 0.18, 2.78, 0.17, 0.2, 0.06); A.box(BR2, s * 0.82, 0.18, 2.84, 0.13, 0.16, 0.03);
+      // a scrolled bracket from each column to the furnace
+      A.box(IR2, s * 0.66, 0.18, 1.42, 0.3, 0.04, 0.03, 0, 0, s * 0.5);
+    }
+    for (let i = 0; i < 10; i++) {
+      const a0 = i / 10 * Math.PI, a1 = (i + 1) / 10 * Math.PI, u0 = 0.82 * Math.cos(a0), u1 = 0.82 * Math.cos(a1), h0 = 2.84 + 0.24 * Math.sin(a0), h1 = 2.84 + 0.24 * Math.sin(a1);
+      const L = Math.hypot(u1 - u0, h1 - h0) + 0.02, rz = Math.atan2(h1 - h0, u1 - u0);
+      A.part('box', IR2, (u0 + u1) / 2, 0.18, (h0 + h1) / 2, L, 0.07, 0.1, 0, 0, rz);
+      A.part('box', BR2, (u0 + u1) / 2, 0.12, (h0 + h1) / 2 + 0.04 * Math.cos(rz), L, 0.02, 0.02, 0, 0, rz);
+    }
+    A.part('sph', BR, 0, 0.16, 3.1, 0.12, 0.12, 0.12);
+    // the sign board over it all (its chalk is zmp3d's)
+    A.box('#2a2622', 0, 0.36, 3.22, 1.9, 0.06, 0.5); A.box(FPI_C.wood3, 0, 0.36, 3.18, 2.0, 0.08, 0.05); A.box(FPI_C.wood3, 0, 0.36, 3.71, 2.0, 0.08, 0.05);
+    for (const s of [-1, 1]) A.box(BR2, s * 0.6, 0.36, 3.75, 0.02, 0.02, 0.9);
+    // ---- the crucible's corner: a three-legged trivet over a bed of charcoal, the clay crucible on it, the tongs by it
+    for (let i = 0; i < 3; i++) { const a = i / 3 * Math.PI * 2 + 0.3; A.box(IR2, 0.66 + Math.cos(a) * 0.1, -0.2 + Math.sin(a) * 0.1, T, 0.02, 0.02, 0.12); }
+    A.cyl(IR2, 0.66, -0.2, T + 0.1, 0.13, 0.04); A.part('torus', IR, 0.66, -0.2, T + 0.14, 0.27, 0.27, 0.12, 0, Math.PI / 2, 0);
+    for (let i = 0; i < 5; i++) A.part('ico', i % 2 ? '#ff6a20' : '#c83a10', 0.66 + Math.cos(i * 1.3) * 0.08, -0.2 + Math.sin(i * 1.3) * 0.08, T + 0.15, 0.06, 0.04, 0.06, i, 0, 0, 'glow');
+    A.part('trunk', '#8a5638', 0.66, -0.2, T + 0.24, 0.2, 0.18, 0.2, 0, Math.PI, 0);
+    A.part('torus', '#6a4028', 0.66, -0.2, T + 0.33, 0.21, 0.21, 0.14, 0, Math.PI / 2, 0);
+    A.box(IR, 0.78, -0.36, T + 0.005, 0.03, 0.34, 0.012, 0.25); A.box(IR, 0.8, -0.35, T + 0.02, 0.03, 0.32, 0.012, 0.15);
+    // the anvil (a bick iron, its horn toward the fire) and a hammer laid by it, and the vice on the bench's front edge
+    A.box(IR2, 1.0, 0.08, T, 0.16, 0.18, 0.05); A.box(IR, 1.0, 0.08, T + 0.05, 0.09, 0.1, 0.08); A.box('#4a4642', 1.0, 0.08, T + 0.13, 0.24, 0.13, 0.06);
+    A.part('cone', '#4a4642', 0.83, 0.08, T + 0.16, 0.08, 0.16, 0.06, 0, 0, Math.PI / 2);
+    A.box(FPI_C.wood, 0.98, -0.2, T, 0.28, 0.03, 0.025, 0.2); A.box(IR, 0.86, -0.22, T, 0.04, 0.09, 0.04, 0.2);
+    A.box(IR, 0.95, -0.42, T, 0.16, 0.08, 0.14); A.box(IR2, 0.95, -0.49, T + 0.03, 0.16, 0.04, 0.11);
+    A.box(IR, 0.95, -0.5, 0.78, 0.07, 0.06, 0.12);
+    A.part('cyl6', BR2, 0.95, -0.52, T + 0.06, 0.025, 0.12, 0.025, 0, Math.PI / 2, 0); rodU(BR2, 0.95, -0.58, T + 0.06, 0.012, 0.2);
+    // ---- the bellows' corner (the bellows themselves are zmp3d's), and the tool rack on the wall-side of the column
+    A.box(FPI_C.wood3, -0.86, -0.13, T, 0.5, 0.26, 0.03);
+    A.box(FPI_C.wood2, -1.02, 0.36, 1.35, 0.26, 0.03, 1.15);
+    A.box(BR2, -1.02, 0.34, 2.38, 0.28, 0.03, 0.03); A.box(BR2, -1.02, 0.34, 1.82, 0.28, 0.03, 0.03);
+    // a hammer, tongs, a file and callipers hanging on it, and a coil of brass wire
+    A.box(FPI_C.wood, -1.1, 0.32, 1.95, 0.025, 0.025, 0.42); A.box(IR, -1.1, 0.32, 1.93, 0.12, 0.04, 0.045);
+    A.box(IR, -1.03, 0.32, 1.85, 0.015, 0.015, 0.52, 0, 0, 0.06); A.box(IR, -1.0, 0.32, 1.85, 0.015, 0.015, 0.52, 0, 0, -0.06);
+    A.box('#5a5a5a', -0.95, 0.32, 1.42, 0.03, 0.01, 0.38); A.box(FPI_C.wood, -0.95, 0.32, 1.8, 0.035, 0.03, 0.1);
+    A.box(BR, -1.07, 0.33, 1.45, 0.012, 0.01, 0.3, 0, 0, 0.15); A.box(BR, -1.03, 0.33, 1.45, 0.012, 0.01, 0.3, 0, 0, -0.15);
+    A.part('torus', CU, -0.97, 0.33, 2.2, 0.16, 0.16, 0.16); A.part('torus', CU, -0.97, 0.32, 2.2, 0.14, 0.14, 0.14);
   },
 };
 // (from FPI_GEN.light.set) put the bench in its room, with a lamp of its own
@@ -20747,47 +20834,173 @@ function zmpSound(k, i) {
   } catch (e) {}
 }
 
-// ---------- in 3D: the lens wheel turning in its frame, the furnace's mouth, the weapon on the tray ----------
+// ---------- in 3D: the lens wheel turning in its frame, its gears and governor, the firebox's glow, the bellows, ----------
+// the crucible's melt, the gauge, the sparks and embers, and the weapon on the tray.
+// Its states read in the fire and the wheel: idle, the wheel turns slowly, the firebox and crucible smoulder, a few
+// embers drift up, the governor's balls hang low and the gauge sits low; at work, the bellows pump, the firebox and the
+// melt blaze white-hot, the wheel races and its prisms flare, the governor's balls fly out, the needle climbs into the
+// red, a heat haze shimmers over the furnace and sparks fly; done, the lens flashes as the weapon comes back out, and
+// it all cools back down. With reduce motion the bellows, haze, embers, sparks and flicker are still.
 const ZMP3 = { grp: null };
+// (static parts of one moving piece merged into one geometry: [geometry, x, y, z, rx, ry, rz, sx, sy, sz] each)
+function zmpMerge(list) {
+  const pos = [], M = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler(), v = new THREE.Vector3(), s = new THREE.Vector3();
+  for (const [geo, x, y, z, rx, ry, rz, sx, sy, sz] of list) {
+    const n = geo.index ? geo.toNonIndexed() : geo;
+    n.applyMatrix4(M.compose(v.set(x || 0, y || 0, z || 0), q.setFromEuler(e.set(rx || 0, ry || 0, rz || 0)), s.set(sx || 1, sy || sx || 1, sz || sx || 1)));
+    const P = n.attributes.position.array; for (let i = 0; i < P.length; i++) pos.push(P[i]);
+    if (n !== geo) n.dispose(); geo.dispose();
+  }
+  const out = new THREE.BufferGeometry(); out.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); out.computeVertexNormals();
+  return out;
+}
+// a toothed brass gear of radius r and n teeth, its axis along x, with a hub and spokes
+function zmpGearGeo(r, n, th) {
+  const L = [[new THREE.CylinderGeometry(r * 0.86, r * 0.86, th * 0.6, 20, 1, true), 0, 0, 0, 0, 0, Math.PI / 2], [new THREE.CylinderGeometry(r * 0.25, r * 0.25, th * 1.6, 8), 0, 0, 0, 0, 0, Math.PI / 2]];
+  L.push([new THREE.TorusGeometry(r * 0.8, th * 0.35, 4, 20), 0, 0, 0, 0, Math.PI / 2, 0]);
+  for (let i = 0; i < 4; i++) L.push([new THREE.BoxGeometry(th * 0.5, r * 1.6, th * 0.5), 0, 0, 0, i / 4 * Math.PI, 0, 0]);
+  for (let i = 0; i < n; i++) { const a = i / n * Math.PI * 2; L.push([new THREE.BoxGeometry(th, r * 0.22, Math.PI * 2 * r / n * 0.5), 0, Math.cos(a) * r * 0.95, Math.sin(a) * r * 0.95, a, 0, 0]); }
+  return zmpMerge(L);
+}
 function zmp3dBuild() {
   const P = zmpAt(); if (!P) return null;
   const g = new THREE.Group(); g.position.copy(z3v(P.x, P.y, FPSC.GROUND + (P.z || 0))); g.rotation.y = Math.atan2(P.ny, P.nx) - Math.PI / 2; Z3.grp.add(g);
-  // (in the group, -z is the bench's front)
-  const brass = z3Lam('#b08a3a', { emissive: 0x201004 }), iron = z3Lam('#24262a');
-  const add = (glow, a) => new THREE.MeshBasicMaterial({ color: glow, transparent: true, opacity: a, depthWrite: false, blending: THREE.AdditiveBlending, fog: false });
-  const wheel = new THREE.Group(); wheel.position.set(0, 1.86, 0.12); g.add(wheel);
-  const rings = [];
-  for (let i = 0; i < 5; i++) { const r = 0.14 + i * 0.1, ring = new THREE.Mesh(new THREE.TorusGeometry(r, 0.035, 6, 28), add(0xffe0a0, 0.55 - i * 0.06)); wheel.add(ring); rings.push(ring); }
-  const rim = new THREE.Mesh(new THREE.TorusGeometry(0.6, 0.045, 6, 32), brass); wheel.add(rim);
-  for (let i = 0; i < 6; i++) { const s = new THREE.Mesh(new THREE.BoxGeometry(0.03, 1.18, 0.03), brass); s.rotation.z = i / 6 * Math.PI; wheel.add(s); }
-  const bull = new THREE.Mesh(new THREE.SphereGeometry(0.1, 12, 8), add(0xfff2c8, 0.9)); bull.scale.z = 0.5; wheel.add(bull);
-  const axle = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 1.75, 8), iron); axle.rotation.z = Math.PI / 2; axle.position.copy(wheel.position); g.add(axle);
-  // the furnace's mouth, under the lens
-  const mouth = new THREE.Mesh(new THREE.PlaneGeometry(0.46, 0.22), add(0xff8a30, 0.8)); mouth.position.set(0, 1.14, -0.215); mouth.rotation.y = Math.PI; g.add(mouth);
-  const halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: z3Soft('rgba(255,190,90,0.9)', 'rgba(255,190,90,0)'), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false }));
-  halo.position.set(0, 1.86, -0.05); halo.scale.setScalar(1.6); g.add(halo);
+  // (in the group, -z is the bench's front, and x is the prop's -u)
+  const T = 0.96, WY = 2.02, WZ = 0.12, WR = 0.64;
+  const brass = z3Lam('#c89a40', { emissive: 0x2a1606 }), iron = z3Lam('#2a2c30'), wood = z3Lam('#6a4a30'), leather = z3Lam('#5a3420');
+  const add = (glow, a, vc) => new THREE.MeshBasicMaterial({ color: glow, transparent: true, opacity: a, depthWrite: false, blending: THREE.AdditiveBlending, fog: false, vertexColors: !!vc, side: THREE.DoubleSide });
+  const soft = (c0, c1) => z3Soft(c0, c1);
+  const sprite = (tex, x, y, z, s) => { const m = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false })); m.position.set(x, y, z); m.scale.setScalar(s); g.add(m); return m; };
+  // ---- the lens wheel: a first-order Fresnel panel in miniature: a bull's-eye at its heart, concentric prism rings
+  // (each a three-sided glass ring), brass astragals dividing it into eight panels, a brass rim
+  // and, outside it, a ring of catadioptric prisms in an outer hoop
+  const wheel = new THREE.Group(); wheel.position.set(0, WY, WZ); g.add(wheel);
+  const B3 = [[new THREE.TorusGeometry(WR, 0.045, 6, 40)], [new THREE.TorusGeometry(WR - 0.07, 0.016, 4, 36)], [new THREE.TorusGeometry(0.17, 0.02, 4, 20)], [new THREE.CylinderGeometry(0.07, 0.07, 0.1, 10), 0, 0, 0, Math.PI / 2]];
+  for (let i = 0; i < 8; i++) B3.push([new THREE.BoxGeometry(0.022, WR - 0.17, 0.035), Math.cos(i / 8 * Math.PI * 2) * (WR + 0.17) / 2, Math.sin(i / 8 * Math.PI * 2) * (WR + 0.17) / 2, 0, 0, 0, i / 8 * Math.PI * 2 - Math.PI / 2]);
+  // an outer hoop, the ring of catadioptric prisms set between it and the rim on brass clips
+  B3.push([new THREE.TorusGeometry(WR + 0.09, 0.016, 4, 40)]);
+  for (let i = 0; i < 16; i++) { const a = (i + 0.5) / 16 * Math.PI * 2; B3.push([new THREE.BoxGeometry(0.02, 0.11, 0.03), Math.cos(a) * (WR + 0.05), Math.sin(a) * (WR + 0.05), 0, 0, 0, a - Math.PI / 2]); }
+  wheel.add(new THREE.Mesh(zmpMerge(B3), brass));
+  // the prism rings: their glass catches the light in eight bright panels, so the wheel flashes as it turns
+  const rp = [], rc = [];
+  for (let i = 0; i < 6; i++) {
+    const r = 0.22 + i * 0.07, geo = new THREE.TorusGeometry(r, 0.03, 3, 48).toNonIndexed(), Pp = geo.attributes.position;
+    for (let j = 0; j < Pp.count; j++) {
+      const x = Pp.getX(j), y = Pp.getY(j), z = Pp.getZ(j), a = Math.atan2(y, x), f = Math.pow(0.5 + 0.5 * Math.cos(a * 8 + i * 0.5), 3), fz = z < -0.005 ? 0.55 : 1;
+      rp.push(x, y, z); const b = (0.3 + 0.7 * f) * fz * (1 - i * 0.06); rc.push(b, b * 0.92, b * 0.7);
+    }
+    geo.dispose();
+  }
+  const rg = new THREE.BufferGeometry(); rg.setAttribute('position', new THREE.Float32BufferAttribute(rp, 3)); rg.setAttribute('color', new THREE.Float32BufferAttribute(rc, 3));
+  const rings = new THREE.Mesh(rg, add(0xffe6b0, 0.6, true)); wheel.add(rings);
+  const prisms = [];
+  for (let i = 0; i < 16; i++) { const a = i / 16 * Math.PI * 2, gg = new THREE.CylinderGeometry(0.03, 0.03, 0.2, 3); gg.rotateY(Math.PI / 6); gg.rotateZ(a); gg.translate(Math.cos(a) * (WR + 0.05), Math.sin(a) * (WR + 0.05), 0); prisms.push(gg); }
+  const cata = new THREE.Mesh(zmpMerge(prisms.map(q => [q])), add(0xffd8a0, 0.5)); wheel.add(cata);
+  // the glass itself, smoky amber, so the bright prism rings stand out against it
+  const glass = new THREE.Mesh(new THREE.CircleGeometry(WR - 0.02, 40), new THREE.MeshBasicMaterial({ color: 0x3a2410, transparent: true, opacity: 0.45, depthWrite: false, side: THREE.DoubleSide })); glass.position.z = 0.045; wheel.add(glass);
+  const gl2 = new THREE.Mesh(new THREE.CircleGeometry(WR - 0.02, 40), add(0xff8a30, 0.1)); gl2.position.z = 0.04; wheel.add(gl2);
+  const bull = new THREE.Mesh(new THREE.SphereGeometry(0.15, 14, 8), add(0xfff2c8, 0.9)); bull.scale.z = 0.45; wheel.add(bull);
+  const axle = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 2.0, 8), iron); axle.rotation.z = Math.PI / 2; axle.position.set(0, WY, WZ); g.add(axle);
+  // a glint over the glass, still while the wheel turns under it (where the furnace's light catches)
+  const glint = sprite(soft('rgba(255,250,230,1)', 'rgba(255,220,160,0)'), 0.22, WY + 0.26, WZ - 0.06, 0.5);
+  // ---- the gear train on the anvil's side: a big gear on the axle, a pinion under it, and the hand crank
+  const gear = new THREE.Mesh(zmpGearGeo(0.21, 18, 0.04), brass); gear.position.set(-0.95, WY, WZ); g.add(gear);
+  const pin = new THREE.Group(); pin.position.set(-0.95, WY - 0.315, WZ); g.add(pin);
+  pin.add(new THREE.Mesh(zmpGearGeo(0.1, 9, 0.04), brass));
+  const crank = new THREE.Mesh(zmpMerge([[new THREE.BoxGeometry(0.02, 0.2, 0.03), -0.04, -0.09, 0], [new THREE.CylinderGeometry(0.018, 0.018, 0.1, 6), -0.09, -0.18, 0, 0, 0, Math.PI / 2]]), wood);
+  pin.add(crank);
+  const pinAx = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.16, 6), iron); pinAx.rotation.z = Math.PI / 2; pinAx.position.set(-0.88, WY - 0.315, WZ); g.add(pinAx);
+  // ---- the governor on the column's head: its balls fly out the faster the wheel turns
+  const gov = new THREE.Group(); gov.position.set(-0.82, 2.87, 0.18); g.add(gov);
+  gov.add(new THREE.Mesh(zmpMerge([[new THREE.CylinderGeometry(0.012, 0.012, 0.34, 6), 0, 0.17, 0], [new THREE.CylinderGeometry(0.035, 0.035, 0.03, 8), 0, 0.34, 0], [new THREE.SphereGeometry(0.03, 8, 6), 0, 0.37, 0]]), brass));
+  const arms = [];
+  for (const s of [-1, 1]) { const a = new THREE.Group(); a.position.y = 0.32; a.rotation.y = s > 0 ? 0 : Math.PI; gov.add(a); const arm = new THREE.Group(); a.add(arm); arm.add(new THREE.Mesh(zmpMerge([[new THREE.BoxGeometry(0.01, 0.16, 0.01), 0, -0.08, 0], [new THREE.SphereGeometry(0.035, 8, 6), 0, -0.17, 0]]), brass)); arms.push(arm); }
+  // ---- the bellows: the bottom board and the nozzle into the furnace's side; the top board lifts on its hinge
+  const bel = new THREE.Group(); bel.position.set(0.62, T + 0.055, -0.13); g.add(bel);
+  bel.add(new THREE.Mesh(zmpMerge([[new THREE.BoxGeometry(0.48, 0.025, 0.24), 0.26, -0.012, 0], [new THREE.BoxGeometry(0.08, 0.02, 0.04), 0.54, -0.012, 0]]), wood));
+  bel.add(new THREE.Mesh(zmpMerge([[new THREE.CylinderGeometry(0.012, 0.035, 0.12, 8), -0.06, 0, 0, 0, 0, -Math.PI / 2], [new THREE.CylinderGeometry(0.045, 0.045, 0.04, 8), 0.02, 0, 0, 0, 0, Math.PI / 2]]), brass));
+  const lid = new THREE.Group(); bel.add(lid);
+  lid.add(new THREE.Mesh(zmpMerge([[new THREE.BoxGeometry(0.48, 0.025, 0.24), 0.26, 0.012, 0], [new THREE.BoxGeometry(0.08, 0.02, 0.04), 0.54, 0.012, 0], [new THREE.CylinderGeometry(0.03, 0.03, 0.01, 8), 0.3, 0.03, 0]]), wood));
+  // the leather between them, a wedge from the hinge out
+  const wp = []; const W = (x0, y0, z0) => wp.push(x0, y0, z0);
+  { const Lw = 0.5, h = 0.11; // a unit wedge, top rising with x: scaled in y each frame
+    const V = [[0.02, 0, -h], [Lw, 0, -h], [Lw, 1, -h], [0.02, 0, h], [Lw, 0, h], [Lw, 1, h]];
+    for (const [a, b, c] of [[0, 2, 1], [3, 4, 5], [1, 2, 5], [1, 5, 4], [0, 3, 5], [0, 5, 2]]) { W(...V[a]); W(...V[b]); W(...V[c]); } }
+  const lg = new THREE.BufferGeometry(); lg.setAttribute('position', new THREE.Float32BufferAttribute(wp, 3)); lg.computeVertexNormals();
+  const leath = new THREE.Mesh(lg, new THREE.MeshLambertMaterial({ color: leather.color, side: THREE.DoubleSide })); bel.add(leath);
+  // ---- the firebox: its coals behind the grate, the flames over them, and the light it throws on the bench
+  const fireTex = soft('rgba(255,236,170,1)', 'rgba(255,90,20,0.0)');
+  const mouthBack = new THREE.Mesh(new THREE.PlaneGeometry(0.48, 0.22), add(0xff6a20, 0.9)); mouthBack.position.set(0, 1.17, -0.196); mouthBack.rotation.y = Math.PI; g.add(mouthBack);
+  const mouth = new THREE.Mesh(new THREE.PlaneGeometry(0.52, 0.3), new THREE.MeshBasicMaterial({ map: fireTex, color: 0xffc070, transparent: true, opacity: 0.8, depthWrite: false, blending: THREE.AdditiveBlending, fog: false })); mouth.position.set(0, 1.17, -0.2); mouth.rotation.y = Math.PI; g.add(mouth);
+  const spill = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 0.42), new THREE.MeshBasicMaterial({ map: fireTex, color: 0xff9040, transparent: true, opacity: 0.3, depthWrite: false, blending: THREE.AdditiveBlending, fog: false }));
+  spill.rotation.x = -Math.PI / 2; spill.position.set(0, T + 0.006, -0.38); g.add(spill);
+  const fhalo = sprite(soft('rgba(255,150,60,0.9)', 'rgba(255,120,40,0)'), 0, 1.17, -0.32, 0.8);
+  // the needle of the gauge on the furnace's face
+  const needle = new THREE.Mesh(new THREE.BoxGeometry(0.008, 0.06, 0.004), new THREE.MeshBasicMaterial({ color: 0x1a1210 })); needle.geometry.translate(0, 0.026, 0);
+  needle.position.set(0.4, 1.17, -0.212); g.add(needle);
+  // ---- the crucible's melt, and the haze of heat over the furnace
+  const melt = new THREE.Mesh(new THREE.CircleGeometry(0.085, 14), add(0xffa040, 0.9)); melt.rotation.x = -Math.PI / 2; melt.position.set(-0.66, T + 0.322, -0.2); g.add(melt);
+  const mhalo = sprite(soft('rgba(255,170,70,0.9)', 'rgba(255,140,50,0)'), -0.66, T + 0.4, -0.2, 0.45);
+  const haze = sprite(soft('rgba(255,170,90,0.35)', 'rgba(255,140,60,0)'), 0, 1.62, -0.02, 0.9);
+  // the great glow behind the lens
+  const halo = sprite(soft('rgba(255,190,90,0.9)', 'rgba(255,190,90,0)'), 0, WY, WZ - 0.06, 1.6);
   // the weapon, on its way in and out
   const show = new THREE.Group(); g.add(show);
   // its name and price, chalked on the board over it
-  const ch = z3Chalk([["LAMPWRIGHT'S BENCH", 21], [ZM_PAP.COST + ' +', 40]], 1.8, 0.46); ch.position.set(0, 2.9, 0.32); ch.rotation.y = Math.PI; g.add(ch);
-  const light = new THREE.PointLight(0xffb860, 0.8, 8, 1.5); light.position.set(0, 1.7, -0.9); g.add(light);
-  // sparks thrown off the wheel while it works
-  const sparks = [];
-  for (let i = 0; i < 10; i++) { const s = new THREE.Mesh(new THREE.SphereGeometry(0.018, 4, 3), add(0xffd080, 1)); s.visible = false; g.add(s); sparks.push({ m: s, t: 0, v: new THREE.Vector3() }); }
-  return { grp: Z3.grp, g, wheel, rings, bull, mouth, halo, show, light, sparks, wpn: {}, spin: 0 };
+  const ch = z3Chalk([["LAMPWRIGHT'S BENCH", 21], [ZM_PAP.COST + ' +', 40]], 1.8, 0.46); ch.position.set(0, 3.47, 0.32); ch.rotation.y = Math.PI; g.add(ch);
+  const light = new THREE.PointLight(0xffb060, 0.8, 8, 1.5); light.position.set(0, 1.6, -0.9); g.add(light);
+  // sparks thrown off the wheel and the tray while it works, embers drifting up off the fire always
+  const sparks = [], embers = [], sg = new THREE.SphereGeometry(0.018, 4, 3);
+  for (let i = 0; i < 16; i++) { const s = new THREE.Mesh(sg, add(0xffd080, 1)); s.visible = false; g.add(s); sparks.push({ m: s, t: 0, v: new THREE.Vector3() }); }
+  for (let i = 0; i < 12; i++) { const s = new THREE.Mesh(sg, add(0xff8a30, 0.9)); s.visible = false; s.scale.setScalar(0.7); g.add(s); embers.push({ m: s, t: 0, v: new THREE.Vector3() }); }
+  return { grp: Z3.grp, g, wheel, rings, glass, gl2, cata, bull, glint, gear, pin, arms, lid, leath, mouth, mouthBack, spill, fhalo, needle, melt, mhalo, haze, halo, show, light, sparks, embers, wpn: {}, spin: 0, heat: 0, gauge: 0.1, flash: 0, was: false, bel: 0 };
 }
 // (from zmScene3D) each frame
 function zmp3d(dt) {
   if (!ZMP3.b || ZMP3.b.grp !== Z3.grp) ZMP3.b = zmp3dBuild();
   const B = ZMP3.b; if (!B) return;
   const F = ZM.forge || { st: 'idle', t: 0 }, t = g.t, work = F.st === 'work', k = work ? Math.min(1, F.t / 0.8) * Math.min(1, (ZM_PAP.TIME - F.t) / 0.6 + 0.3) : 0;
-  B.spin += dt * (0.4 + k * 9);
+  const mo = reduceMotion ? 0 : 1;
+  // done: the lens flashes as the weapon comes out, and the fire cools back down over a few seconds
+  if (B.was && !work) B.flash = 1;
+  B.was = work; B.flash = Math.max(0, B.flash - dt * 0.9);
+  B.heat += ((work ? 1 : 0) - B.heat) * Math.min(1, dt * (work ? 2.5 : 0.6));
+  const h = Math.max(k, B.heat * 0.85), fl = B.flash * B.flash;
+  const flick = mo ? 0.82 + 0.1 * Math.sin(t * 7.3) + 0.08 * Math.sin(t * 17.1 + 1.3) : 0.9;
+  B.spin += dt * (0.4 + k * 9 + B.heat * 1.5);
+  const spd = 0.4 + k * 9 + B.heat * 1.5;
   B.wheel.rotation.z = B.spin;
-  B.rings.forEach((r, i) => { r.material.opacity = (0.35 - i * 0.05) + k * 0.3 + 0.05 * Math.sin(t * 2 + i); });
-  B.bull.material.opacity = 0.6 + 0.4 * k;
-  B.mouth.material.opacity = 0.55 + 0.25 * Math.sin(t * 7) * (reduceMotion ? 0 : 1) + k * 0.2;
-  B.halo.material.opacity = 0.25 + k * 0.35; B.halo.scale.setScalar(1.3 + k * 0.7);
-  B.light.intensity = 0.45 + k * 1.1 + (work && !reduceMotion ? 0.15 * Math.sin(t * 23) : 0);
+  B.gear.rotation.x = -B.spin; B.pin.rotation.x = B.spin * 2;
+  // the governor: its balls lift with the wheel's speed
+  B.arms[0].parent.parent.rotation.y = B.spin * 2.5;
+  const ga = 0.28 + Math.min(1, spd / 9) * 0.85;
+  for (const a of B.arms) a.rotation.z = ga;
+  // the glass: brighter and hotter as it works, its panels flaring
+  B.rings.material.opacity = 0.5 + h * 0.25 + fl * 0.5;
+  B.rings.material.color.setRGB(1, 0.9 - h * 0.1 + fl * 0.1, 0.7 - h * 0.25 + fl * 0.3);
+  B.glass.material.opacity = 0.45 - h * 0.1 - fl * 0.2; B.gl2.material.opacity = 0.06 + h * 0.2 + fl * 0.3; B.cata.material.opacity = 0.3 + h * 0.4 + fl * 0.5;
+  B.bull.material.opacity = 0.6 + 0.4 * h; B.bull.scale.set(1 + fl * 0.5, 1 + fl * 0.5, 0.45);
+  B.glint.material.opacity = (0.35 + 0.25 * h) * (mo ? 0.75 + 0.25 * Math.sin(B.spin * 8) : 1) + fl * 0.6; B.glint.scale.setScalar(0.45 + h * 0.25 + fl * 0.6);
+  B.halo.material.opacity = 0.1 + h * 0.25 + fl * 0.6; B.halo.scale.setScalar(1.3 + h * 0.8 + fl * 1.2);
+  // the fire: smouldering red, or white-hot under the bellows
+  B.mouth.material.opacity = (0.45 + h * 0.45) * flick;
+  B.mouth.material.color.setRGB(1, 0.5 + h * 0.3, 0.2 + h * 0.2);
+  B.mouthBack.material.color.setRGB(0.8 + h * 0.2, 0.28 + h * 0.34, 0.06 + h * 0.14);
+  B.mouthBack.material.opacity = 0.7 + 0.3 * h;
+  B.spill.material.opacity = (0.18 + h * 0.5) * flick;
+  B.fhalo.material.opacity = (0.25 + h * 0.55) * flick; B.fhalo.scale.setScalar(0.7 + h * 0.6);
+  B.melt.material.color.setRGB(1, 0.45 + h * 0.35, 0.12 + h * 0.3); B.melt.material.opacity = 0.75 + 0.25 * h;
+  B.mhalo.material.opacity = (0.2 + h * 0.5) * flick; B.mhalo.scale.setScalar(0.35 + h * 0.35);
+  B.haze.visible = !!mo; if (mo) { B.haze.material.opacity = 0.15 + h * 0.55; B.haze.scale.set(0.8 + h * 0.4 + 0.06 * Math.sin(t * 9), 0.9 + h * 0.5 + 0.08 * Math.sin(t * 6.3), 1); B.haze.position.y = 1.62 + h * 0.12; }
+  // the gauge's needle climbs into the red as it works
+  B.gauge += ((0.1 + h * 0.8) - B.gauge) * Math.min(1, dt * 1.5);
+  B.needle.rotation.z = 2.2 - B.gauge * 4.4 + (work && mo ? 0.04 * Math.sin(t * 31) : 0);
+  // the bellows: still at rest, pumping while it works
+  B.bel = work && mo ? B.bel + dt * 5.5 : B.bel;
+  const la = 0.16 + (work && mo ? 0.12 * (0.5 + 0.5 * Math.sin(B.bel)) : 0.04);
+  B.lid.rotation.z = la; B.leath.scale.y = 0.5 * Math.tan(la);
+  B.light.intensity = 0.5 + h * 1.2 + fl * 1.2 + (work && mo ? 0.15 * Math.sin(t * 23) : 0);
+  B.light.color.setRGB(1, 0.66 + h * 0.12 + fl * 0.2, 0.36 + h * 0.1 + fl * 0.4);
   // the weapon: on the tray, slid in under the lens, turned in the fire, and out again glowing
   for (const id in B.wpn) if (B.wpn[id]) B.wpn[id].visible = false;
   if (work && F.id) {
@@ -20801,9 +21014,18 @@ function zmp3d(dt) {
       w.traverse(o => { if (o.isMesh) { const ms = Array.isArray(o.material) ? o.material : [o.material]; for (const mt of ms) if (mt && mt.emissive) mt.emissiveIntensity = Math.min(1, p * 1.6); } });
     }
   }
+  // sparks off the wheel's rim while it works; embers rising off the firebox and the crucible
   for (const s of B.sparks) {
     if (s.t > 0) { s.t -= dt; s.m.position.addScaledVector(s.v, dt); s.v.y -= dt * 4; s.m.visible = s.t > 0; continue; }
-    if (work && !reduceMotion && Math.random() < dt * 14) { const a = Math.random() * Math.PI * 2; s.t = 0.5 + Math.random() * 0.4; s.m.position.set(Math.cos(a) * 0.6, 1.86 + Math.sin(a) * 0.6, 0.05); s.v.set(Math.cos(a) * 1.5, Math.sin(a) * 1.5 + 0.8, -0.8 - Math.random()); s.m.visible = true; }
+    if (work && mo && Math.random() < dt * 16) { const a = Math.random() * Math.PI * 2; s.t = 0.5 + Math.random() * 0.4; s.m.position.set(Math.cos(a) * 0.66, 2.02 + Math.sin(a) * 0.66, 0.05); s.v.set(Math.cos(a) * 1.5, Math.sin(a) * 1.5 + 0.8, -0.8 - Math.random()); s.m.visible = true; }
+  }
+  for (const s of B.embers) {
+    if (s.t > 0) { s.t -= dt; s.m.position.addScaledVector(s.v, dt); s.v.x += (Math.random() - 0.5) * dt * 0.6; s.m.visible = s.t > 0 && !!mo; s.m.material.opacity = Math.min(1, s.t * 1.5); continue; }
+    if (mo && Math.random() < dt * (0.8 + h * 10)) {
+      const c = Math.random() < 0.35; s.t = 1 + Math.random() * 1.2;
+      if (c) s.m.position.set(-0.66 + (Math.random() - 0.5) * 0.1, 1.3, -0.2 + (Math.random() - 0.5) * 0.1); else s.m.position.set((Math.random() - 0.5) * 0.4, 1.12 + Math.random() * 0.1, -0.25);
+      s.v.set((Math.random() - 0.5) * 0.15, 0.25 + Math.random() * 0.35 + h * 0.5, c ? 0 : -0.05 - Math.random() * 0.1); s.m.visible = true;
+    }
   }
 }
 
