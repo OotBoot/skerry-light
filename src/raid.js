@@ -231,7 +231,7 @@ function raid3d(dt) {
   // the lantern: down at your left, swinging a little as you walk; not while you're down or out
   const show = !(m.dead > 0) && !zmIsDown() && !fpsThird() && !zmSpecOn();
   R3.lan.visible = show;
-  const h = m.h, p = m.p, ez = G0 + FPSC.EYE + (m.jz || 0) - (FPS.eyeLag || 0) - (FPS.downEye || 0);
+  const h = m.h, p = m.p, ez = G0 + FPSC.EYE + (m.jz || 0) - (FPS.eyeLag || 0) - (FPS.downEye || 0) - (FPS.crouchEye || 0);
   const fx = Math.sin(h), fy = Math.cos(h), sw = reduceMotion ? 0 : Math.sin((FPS.step || 0) * 0.5) * 0.03;
   // (held in the same place in your view, however you look: forward, left and down from your eye)
   const cp = Math.cos(p), sp = Math.sin(p), F = [fx * cp, fy * cp, sp], Rt = [fy, -fx, 0], U = [-fx * sp, -fy * sp, cp];

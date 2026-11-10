@@ -2029,7 +2029,7 @@ function zmStart(opts) {
   for (const id in FPSW) FPS.me.mags[id] = FPSW[id].mag;
   FPS.kb = {}; FPS.deaths = 0; FPS.seq = 0; FPS.shots = []; FPS.seenSeq = {}; FPS.hist = []; FPS.host = true; FPS.joinedAt = performance.now(); FPS.ai = null;
   FPS.remote.clear(); FPS.feed = []; FPS.pings = []; FPS.tracers = []; FPS.parts = []; FPS.drowned = []; FPS.bots = [];
-  FPS.roundMsg = null; FPS.menu = false; $('fpsMenu').hidden = true; FPS.eyeLag = 0; FPS.downEye = 0; FPS.landed = 0; FPS.calm = 0; FPS.climb = 0;
+  FPS.roundMsg = null; FPS.menu = false; $('fpsMenu').hidden = true; FPS.eyeLag = 0; FPS.downEye = 0; FPS.crouch = false; FPS.crouchK = 0; FPS.crouchEye = 0; FPS.landed = 0; FPS.calm = 0; FPS.climb = 0;
   FPS.weapon = FPS.last = 'pepperbox'; FPS.harps = []; FPS.swings = []; FPS.scoped = false; FPS.reloadDur = 0; FPS.drawT = 0.45;
   zmReset();
   ZM.net = opts.net || null; ZM.hum = opts.hum || [[FPS.me.id, FPS.nick]];
@@ -3862,7 +3862,7 @@ function zmScene3D() {
   const Bm = Z3.beam, on = FPS.beamT > 0 && FPS.weapon === 'fresnel' && !(m.dead > 0);
   Bm.g.visible = on; Bm.L.intensity = on ? 2.4 : 0;
   if (on) {
-    const len = FPS.beamLen || 10, h = m.h, p = m.p, ez = G0 + FPSC.EYE + (m.jz || 0) - (FPS.eyeLag || 0);
+    const len = FPS.beamLen || 10, h = m.h, p = m.p, ez = G0 + FPSC.EYE + (m.jz || 0) - (FPS.eyeLag || 0) - (FPS.crouchEye || 0);
     const fx = Math.sin(h) * Math.cos(p), fy = Math.cos(h) * Math.cos(p), fz = Math.sin(p);
     const third = fpsThird();
     const ox = m.x + fx * 0.5 + Math.cos(h) * (third ? 0.25 : 0.1), oy = m.y + fy * 0.5 - Math.sin(h) * (third ? 0.25 : 0.1), oz = ez + fz * 0.5 - (third ? 0.3 : 0.12);
@@ -4040,7 +4040,7 @@ function zmHud() {
   // what's in front of you
   const P = ZM.prompt;
   if (P && !(m.dead > 0)) {
-    const key = phone ? 'USE' : FPS.padLast ? 'X' : 'F';
+    const key = phone ? 'USE' : FPS.padLast ? 'X' : 'E';
     const can = P.cost == null || ZM.pts >= P.cost;
     const text = P.hold ? `Hold ${key}: ${P.text.replace(/^Hold to /, '')}` : P.cost != null ? `${key}: ${P.text} — ${P.cost.toLocaleString('en')}` : P.free ? `${key}: ${P.text}` : P.text;
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = mono(phone ? 12 : 15);
@@ -4275,6 +4275,7 @@ function zmPadState() {
 }
 
 // ---------- controls ----------
+// E (or F) to use, V the knife, 1-3 your weapons; the rest as Wreckers' Night (FPS_KEYS in src/fps.js)
 const ZM_KEYS = { KeyF: () => zmUse(), KeyE: () => zmUse(), KeyV: () => zmKnife(), KeyB: null, Digit1: () => zmSlot(0), Digit2: () => zmSlot(1), Digit3: () => zmSlot(2), Digit4: null, Digit5: null, Digit6: null };
 {
   const kn = $('fpsPadKnife');

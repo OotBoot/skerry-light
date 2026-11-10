@@ -349,9 +349,10 @@ function rclWells(dt) {
 }
 
 // ---------- the controls ----------
-Object.assign(ZM_KEYS, { KeyG: rclGrenade, KeyX: rclUlt });
-// (fpsInput, a controller in the Lighthouse engine) LB the grenade, up on the D-pad the ultimate
-function rclPad(b, was) { if (!rclOn()) return; if (b(4) && !was[4]) rclGrenade(); if (b(12) && !was[12]) rclUlt(); }
+// G (or Q) the grenade, X the ultimate; Q is still the last weapon outside Maren's End
+Object.assign(ZM_KEYS, { KeyG: rclGrenade, KeyX: rclUlt, KeyQ: () => { if (rclOn()) rclGrenade(); else fpsSwitch(FPS.last); } });
+// (fpsInput, a controller in the Lighthouse engine) LB the grenade, RB (or up on the D-pad) the ultimate
+function rclPad(b, was) { if (!rclOn()) return; if (b(4) && !was[4]) rclGrenade(); if ((b(5) && !was[5]) || (b(12) && !was[12])) rclUlt(); }
 {
   const cl = document.querySelector('#fpsPad .fpsfirecluster');
   if (cl) for (const [id, cls, lab, fn, svg] of [['rclPadG', 'g', 'Throw your grenade', rclGrenade, '<circle cx="12" cy="14" r="6"/><path d="M12 8V5M10 5h4M15 6l3-2"/>'], ['rclPadU', 'u', 'Call your ultimate', rclUlt, '<path d="M12 3l2.6 5.6 6 .7-4.5 4.1 1.2 6L12 16.4 6.7 19.4l1.2-6L3.4 9.3l6-.7z"/>']]) {

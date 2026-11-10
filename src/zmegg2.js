@@ -363,7 +363,7 @@ function zh3d(dt) {
   // the chain on the bell
   Z3H.chain.visible = st < 6;
   // the key and the ring, in hand or set down
-  const who = zhCarrierBody(), held = (o, z) => { if (who === m) { const h = m.h, ez = FPSC.EYE + (m.jz || 0) - (FPS.eyeLag || 0); o.position.copy(z3v(m.x + Math.sin(h) * 0.5 - Math.cos(h) * 0.28, m.y + Math.cos(h) * 0.5 + Math.sin(h) * 0.28, G0 + ez - 0.55)); o.rotation.set(0, -h, 0.3); } else { o.position.copy(z3v(who.x + Math.cos(who.h || 0) * 0.3, who.y - Math.sin(who.h || 0) * 0.3, G0 + (who.jz || 0) + z)); o.rotation.set(0, -(who.h || 0), 0.25); } };
+  const who = zhCarrierBody(), held = (o, z) => { if (who === m) { const h = m.h, ez = FPSC.EYE + (m.jz || 0) - (FPS.eyeLag || 0) - (FPS.crouchEye || 0); o.position.copy(z3v(m.x + Math.sin(h) * 0.5 - Math.cos(h) * 0.28, m.y + Math.cos(h) * 0.5 + Math.sin(h) * 0.28, G0 + ez - 0.55)); o.rotation.set(0, -h, 0.3); } else { o.position.copy(z3v(who.x + Math.cos(who.h || 0) * 0.3, who.y - Math.sin(who.h || 0) * 0.3, G0 + (who.jz || 0) + z)); o.rotation.set(0, -(who.h || 0), 0.25); } };
   Z3H.key.visible = st === 5 && !!who; if (Z3H.key.visible) held(Z3H.key, 1.0);
   { const R = Z3H.ring; R.g.visible = (zhRing2(st) && !!who) || st === ZH_END;
     if (zhRing2(st) && who) held(R.g, 1.05); else if (st === ZH_END) { R.g.position.copy(z3v(P.boat.x, P.boat.y, G0 + P.boat.z)); R.g.rotation.set(0, reduceMotion ? 0 : t * 0.8, 0); }

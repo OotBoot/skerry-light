@@ -296,6 +296,8 @@ function fbPose(F, s) {
   const dt = s.dt, root = F.root; root.visible = true;
   root.position.set(s.x, FPSC.GROUND + (s.jz || 0), -s.y);
   root.rotation.y = -s.h;
+  // crouched (s.cr, 0 to 1): the whole figure sits lower, a little squat
+  F.cr = (F.cr || 0) + ((s.cr || 0) - (F.cr || 0)) * Math.min(1, dt * 8); root.scale.y = 1 - 0.3 * F.cr;
   const air = (s.jz || 0) > 0.02, amp = air ? 0 : Math.min(1, s.spd / FPSC.SPRINT);
   F.amp += (amp - F.amp) * Math.min(1, dt * 8);
   const A = F.amp, ph = s.ph || 0, run = A > 0.75;
@@ -408,7 +410,7 @@ function fpsBodySync(show) {
   F.lx = m.x; F.ly = m.y;
   fbPose(F, {
     dt, x: m.x, y: m.y, jz: m.jz, vz: m.vz, h: m.h, p: m.p, spd: F.spd, ph: FPS.step || 0, landed: FPS.landed,
-    id: FPS.weapon, plain: false, pap: typeof zmpTier === 'function' && ZM.on ? zmpTier(FPS.weapon) : 0, rec: Math.max(0, (FPS.meFlashT || 0) / 0.12), draw: Math.max(0, (FPS.drawT || 0) / 0.45),
+    cr: FPS.crouchK || 0, id: FPS.weapon, plain: false, pap: typeof zmpTier === 'function' && ZM.on ? zmpTier(FPS.weapon) : 0, rec: Math.max(0, (FPS.meFlashT || 0) / 0.12), draw: Math.max(0, (FPS.drawT || 0) / 0.45),
     rl: m.reload > 0 ? Math.sin(Math.min(1, 1 - m.reload / w.reload) * Math.PI) : 0,
     slash: (FPS.meSlashT || 0) > 0 ? 1 - FPS.meSlashT / 0.3 : -1, lan: !!m.lan, t: g.t,
     // lit by the beam and your lantern like everything else; and see-through when the camera's squeezed up close
@@ -448,7 +450,7 @@ function fpsFiguresSync() {
     const id = (typeof FPSW_BY_CODE !== 'undefined' && FPSW_BY_CODE[o.w]) || 'pepperbox';
     fbPose(F, {
       dt, x: o.x, y: o.y, jz: o.jz || 0, vz: 0, h: o.h || 0, p: o.p || 0, spd: F.spd, ph: F.ph,
-      id, plain: true, pap: o.rf | 0, rec: Math.max(0, Math.min(1, (o.flashT || 0) / 0.12)), draw: 0, rl: 0,
+      cr: o.cr ? 1 : 0, id, plain: true, pap: o.rf | 0, rec: Math.max(0, Math.min(1, (o.flashT || 0) / 0.12)), draw: 0, rl: 0,
       slash: (o.slashT || 0) > 0 ? 1 - o.slashT / 0.3 : -1, lan: !!o.lan, t: g.t,
       see: 0.25 + 0.75 * Math.min(1, vis), op: Math.min(1, vis * 1.2),
     });
