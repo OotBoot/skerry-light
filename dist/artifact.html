@@ -29033,7 +29033,7 @@ RAID_STAGES.descent = {
 // each of you who's to cross wants one (Use to take it up; it falls where you do if you go down). On the far bank,
 // once the bridge is across and someone carrying a Cutlass sets foot there, three more Divers come up out of the
 // river one after another; nothing but a Cutlass hurts those, and each drops his brass helmet. Set all three
-// helmets on the far bank's stands and a door in the rock opens back on the near bank, on to the third part.
+// helmets on the stands at the back of the far bank and the door in the rock behind them opens, on to the third part.
 // The crew's size (rbNeed): both near circles have to be held with three or more of you; with two, one of them;
 // alone, the circle you leave holds for a minute and a half (and so does the far ring).
 //
@@ -29058,8 +29058,8 @@ const RBC = {
   GRACE: 1.2, SOLO: 90, FALL: 1.4,                     // a circle empty that long (alone: SOLO), then a plank goes every FALL s
   FY: 18,                                              // the far ring's middle (x 0), on its platform
   SWT: [45, 270, 480],                                 // when the Divers with the Cutlasses come up (s into the part)
-  STANDS: [[-7, 27], [0, 30], [7, 27]],                // the helmets' stands, on the far bank
-  DOOR: [0, -53.2],                                    // the way on, in the rock behind the near bank
+  STANDS: [[-7, 35.5], [0, 32], [7, 35.5]],            // the helmets' stands, before the door on the far bank
+  DOOR: [0, 39.2],                                     // the way on, in the rock at the back of the far bank
   START: [0, -40],                                     // where you come out (from the descent's door)
   PH: 0.9, PW: 4.2,                                    // the circles' platforms: how high, half as wide (steps up the south and outer sides)
   DH: 1.0,                                             // the bridge's deck over the water (steps up to it from either bank)
@@ -29125,17 +29125,17 @@ function rbSet(H, K, Z) {
   for (const [cx, cy] of [[-RBC.CX, RBC.CY], [RBC.CX, RBC.CY], [0, RBC.FY]]) for (let i = 0; i < 7; i++) { const a = i / 7 * Math.PI * 2 + 0.3 + (cx ? 0 : Math.PI / 7); P('stone', cx + Math.cos(a) * (RBC.CR + 0.45), cy + Math.sin(a) * (RBC.CR + 0.45), a, { w: 0.5, d: 0.4, hh: 0.9 + 0.3 * (i % 2), lift: RBC.PH }); }
   // one old boat, upturned on the near bank (the rest of what lies about is only to look at: rb3dClutter)
   P('boat', -23, -27, 0.55, { len: 6.2, beam: 2.0, paint: '#3a4640' });
-  // the far bank's stands, the near bank's door, rocks and the drowned's ways up out of the water
+  // the far bank's stands, the door behind them, rocks and the drowned's ways up out of the water
   for (const [x, y] of RBC.STANDS) L(x, y, 2.2, '#8affd0', 6);
   L(0, RBC.FY, 2.4, '#ffb070', 9); for (const s of [-1, 1]) P('brazier', s * (RBC.PW + 0.9), RBC.FY - 3.0, 0, {});
   for (const s of [-1, 1]) { L(s * RBC.CX, RBC.CY, 2.4, '#ffb070', 9); P('brazier', s * (RBC.CX + RBC.PW + 0.9), RBC.CY + 3.0, 0, {}); }
-  L(0, RBC.DOOR[1] + 2, 2.6, '#c8a0ff', 8);
+  L(0, RBC.DOOR[1] - 2, 2.6, '#c8a0ff', 8);
   L(0, -36, 3, '#ffc070', 12); L(-24, -30, 3, '#ffb060', 10); L(24, -30, 3, '#ffb060', 10); L(0, 22, 3, '#8affd0', 12); L(-20, 20, 3, '#6ad8c0', 9); L(20, 20, 3, '#6ad8c0', 9);
   for (const [x, y, r] of [[-30, -40, 2.2], [31, -44, 1.8], [-36, -20, 1.6], [37, -24, 2.0], [-18, -46, 1.4], [16, -48, 1.5], [-30, 30, 2.0], [28, 33, 2.4], [-38, 18, 1.6], [38, 14, 1.8], [-14, 34, 1.3], [17, 16, 1.2]]) P('stone', x, y, x * y, { w: r * 1.4, d: r, hh: r * 1.3 });
   // the door in the rock: its frame (the door itself is drawn and solid while it's shut: rbDoorSolid)
   for (const s of [-1, 1]) P('block', s * 2.1, RBC.DOOR[1], 0, { w: 1.0, d: 1.2, hh: 3.6, col: '#3a3640' });
   P('block', 0, RBC.DOOR[1], 0, { w: 5.2, d: 1.2, hh: 0.8, z0: 3.4, col: '#3a3640' });
-  const [dx, dy] = rbW(...RBC.DOOR), door = { s: 'b', x: dx, y: dy + 0.2, ang: 0, hw: 1.6, hd: 0.3, z1: FPSC.GROUND + 3.4, br: 1.7, col: '#2a2430', rb: true };
+  const [dx, dy] = rbW(...RBC.DOOR), door = { s: 'b', x: dx, y: dy - 0.2, ang: 0, hw: 1.6, hd: 0.3, z1: FPSC.GROUND + 3.4, br: 1.7, col: '#2a2430', rb: true };
   I.solids.push(door); I.rb.door = door;
   Z.decks = Z.decks || [];
 }
@@ -29450,7 +29450,7 @@ function rbSay(k, a) {
   else if (k === 'helm') { rbSound('helm'); fpsFeed('The Diver goes down, and his brass helmet rolls free. Set it on a stand.'); }
   else if (k === 'pick') rbSound('use');
   else if (k === 'set') { rbSound('set'); ZM.banner = { text: `Helmet ${a} of 3`, t: 2.6, small: true, col: '#8affd0' }; }
-  else if (k === 'holds') { rbSound('holds'); ZM.banner = { text: 'The door is open', t: 4, col: '#ffd88a', sub: 'back over to the near bank, all of you' }; fpsFeed('The third helmet is set. Behind the near bank, a door in the rock grinds open.'); }
+  else if (k === 'holds') { rbSound('holds'); ZM.banner = { text: 'The door is open', t: 4, col: '#ffd88a', sub: 'behind the stands: all of you, over the bridge' }; fpsFeed('The third helmet is set. Behind the stands, a door in the rock grinds open.'); }
   else if (k === 'glance') { /* (someone else's shot off a Diver: they're told on their side) */ }
 }
 
@@ -29637,7 +29637,7 @@ function rb3dBuild(grp) {
   // the helmets: built as needed
   RB3.helms = [];
   // the door: a slab of dark iron, studded, with a glow at its seams; it sinks into the floor when it opens
-  const dm = z3Lam('#2a2430'), dg = new THREE.Group(); dg.position.copy(V(RBC.DOOR[0], RBC.DOOR[1] + 0.2, 0)); g.add(dg);
+  const dm = z3Lam('#2a2430'), dg = new THREE.Group(); dg.position.copy(V(RBC.DOOR[0], RBC.DOOR[1] - 0.2, 0)); g.add(dg);
   const slab = new THREE.Mesh(new THREE.BoxGeometry(3.2, 3.4, 0.4), dm); slab.position.y = 1.7; dg.add(slab);
   for (let i = 0; i < 4; i++) for (let j = 0; j < 3; j++) { const st = new THREE.Mesh(new THREE.SphereGeometry(0.07, 6, 4), iron); st.position.set(-1.1 + j * 1.1, 0.6 + i * 0.8, 0.21); dg.add(st); }
   RB3.doorGlowM = new THREE.MeshBasicMaterial({ color: 0xc8a0ff, transparent: true, opacity: 0.25, depthWrite: false, blending: THREE.AdditiveBlending });
@@ -29664,7 +29664,7 @@ function rb3dClutter(g, V) {
     if (Math.abs(Math.abs(x) - RBC.CX) < RBC.PW + 2.6 && y > RBC.CY - RBC.PW - 2.8 && y < -8) return false;          // the platforms
     if (Math.abs(x) < 3.5 && Math.abs(y) < RBC.RW / 2 + 4.5) return false;                                         // the bridge's steps
     if (Math.abs(x) < RBC.PW + 2.6 && Math.abs(y - RBC.FY) < RBC.PW + 2.8) return false;                          // the far ring
-    if (Math.abs(x) < 4 && y < -36) return false;                                                                  // the way in and the door
+    if (Math.abs(x) < 4 && (y < -36 || y > 28)) return false;                                                      // the way in, and the door
     if (RBC.STANDS.some(([sx, sy]) => Math.hypot(x - sx, y - sy) < 3)) return false;
     if (Math.hypot(x + 23, y + 27) < 4.5) return false;                                                            // the boat
     return true;
