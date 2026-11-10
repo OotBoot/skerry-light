@@ -147,7 +147,7 @@ Both games work with the phone turned sideways. On short landscape screens the t
 
 
 On foot (Wreckers' Night and the Lighthouse), the walking stick eases in: a small push is a slow walk, the edge of the ring a walk at four-fifths of the keyboard's pace (the same pace looks much quicker on a small screen), and you only run when you push out past the ring to the dotted outer circle (it lights up). The ring follows your thumb only beyond that.
-## The Drowned Reach (a war for the islands)
+## Drowned Reach (a war for the islands)
 
 A third game, on its own card below Wreckers' Night (`src/war.js` is the game, `src/warview.js` draws it). It plays like the territory games: you land on an archipelago of skerries and take it, one against sixteen bot nations (one to fifty, your choice), or together with up to nine other people, each with a temper of its own. Nothing here touches the voyages or Wreckers' Night.
 
@@ -170,7 +170,7 @@ The grade's odds are the same however many banners it holds: more banners in a g
 
 You earn one for every 400 tiles you take (the count carries over between wars), one for each war you see through (three minutes or more), and three for a win; the first is free. Kept in this browser (`skerry-rcrates`), apart from the boat and weapon crates. Playing together, each player's banner travels with them through the lobby. The bot nations fly banners too: a little under half of them, rolled at the crate's own odds, and in every war at least one flies an Admiral's (chosen from the map word's seed, so everyone in a war played together sees the same ones).
 
-### The Drowned Reach, together
+### Drowned Reach, together
 
 `src/warnet.js`. Under the solo setup on the title card is **Play together**: host a war, and anyone else with the page open sees it listed and can join, up to ten players. The host picks how many bot nations (none to fifty) and how they play, and starts whenever they like, alone or with everyone in the lobby. Everyone chooses a landing and taps Ready; all land together when everyone is ready or the clock runs out. Players can offer each other pacts (each offer waits half a minute for an answer) as well as the bots. The war runs at 1× and doesn't pause, and it ends for everyone when one nation holds six tenths of the land or stands alone (or no player is left). A player who leaves for more than 25 seconds hands their nation to a bot; if the host leaves, the war ends.
 
@@ -181,8 +181,8 @@ How it works: the host's browser runs the whole war, the same code as a game alo
 `src/scores.js` (the card on the title screen) and `server/scores.js`. One board for all four games, each player's best:
 - **Skerry Light:** most voyages in one run (and voyages made in all).
 - **Wreckers' Night:** most kills in one round (and rounds won).
-- **The Drowned Reach:** wars won, alone or together (and the most land taken in one war).
-- **The Lighthouse:** most rounds held in one night (and the most kills in one night).
+- **Drowned Reach:** wars won, alone or together (and the most land taken in one war).
+- **Keeper's Last Light:** most rounds held in one night (and the most kills in one night).
 
 It sits at the top of the title screen: the top three of every game at once, each with a **Top 10** button to see more, and your own rows marked "(you)" (your best is shown under a game where you're not in the top few). Your bests are kept in your browser, only ever go up, and are part of your save, so they follow your recovery code (cloud saves, below) to every device; your scores go on the board by themselves.
 
@@ -197,7 +197,7 @@ It sits at the top of the title screen: the top three of every game at once, eac
 
   Without them the server keeps the board in memory, and it starts over whenever the server restarts. Players on the site choose the name shown beside their scores. Anyone can send a score, so the server only takes numbers the games can plausibly produce, one score every few seconds from each address, and one entry per browser per game; it's a board for honest players, not proof against a determined cheat.
 
-## The Lighthouse (rounds against the drowned)
+## Keeper's Last Light (rounds against the drowned; called the Lighthouse in the code and below)
 
 A fourth game, on its own card on the title screen (**Hold the Light**). First person: the keeper's station at the Light, shut up for the night, and the drowned coming up out of the sea for it; you land on its jetty and fight your way up through the courtyard and into it, round after round, in the manner of the old wave-survival "zombies" games. It uses Wreckers' Night's engine, weapons and weapon skins, and your outfit; its crates are the same weapon and outfit crates (a kill here counts a third of one there, and every fifth round held earns one of each).
 
@@ -253,7 +253,7 @@ A fourth game, on its own card on the title screen (**Hold the Light**). First p
 
 - **Something the keeper never wrote down.** The station keeps a secret from the winter of 1887. Nobody will tell you how it goes; the station itself might, if you look and listen. Whoever sees it through earns a **pirate token**, the Gannet's Doubloon (one a night, kept in this browser and in the save backup). Spend them on **The Gannet's locker**, on the Lighthouse's card: five things no crate holds, one token each (Captain of the Gannet and Maren's Oilskins, outfits; Doubloon Edge for the cutlass and Jolly Roger for the pepperbox; and The Gannet's Hoard, a banner for the Drowned Reach). What you unlock joins your other outfits, finishes and banners, in their own Pirate grade, to wear the usual way (`src/zmegg.js`).
 
-### The Lighthouse, together
+### Keeper's Last Light, together
 
 Up to four in one night (`src/zmnet.js`). The **Play together** part of the Lighthouse's card lists the nights being hosted here; **Host a night** opens a lobby, and the others tap it to join. Nothing starts on its own: the lobby waits, showing who's in, until the host presses **Start the night** (alone, too, if they like). When the night ends everyone goes back to the same lobby, and the host can start another.
 

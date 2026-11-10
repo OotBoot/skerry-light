@@ -21,8 +21,8 @@ const BOARD = {
   games: {
     skerry: { name: 'Skerry Light', s: 'Best run', b: 'Voyages', what: 'Most voyages made in one run, without losing the boat. Voyages: made in all.' },
     fps: { name: 'Wreckers’ Night', s: 'Best round', b: 'Rounds won', what: 'Most kills in one round of Wreckers’ Night. Rounds won: rounds you finished on top.' },
-    war: { name: 'The Drowned Reach', s: 'Wars won', b: 'Most land', what: 'Wars of the Drowned Reach won, alone or together. Most land: the most tiles taken in one war.' },
-    zm: { name: 'The Lighthouse', s: 'Rounds held', b: 'Most kills', what: 'The most rounds held at the Lighthouse in one night. Most kills: the drowned sent back in one night.' },
+    war: { name: 'Drowned Reach', s: 'Wars won', b: 'Most land', what: 'Wars of the Drowned Reach won, alone or together. Most land: the most tiles taken in one war.' },
+    zm: { name: 'Keeper’s Last Light', s: 'Rounds held', b: 'Most kills', what: 'The most rounds held at the Lighthouse in one night. Most kills: the drowned sent back in one night.' },
   },
   open: {}, mine: null, via: null, db: null, user: null, uid: null, data: null, loading: false, err: '', lastT: 0, sendT: 0, store: '',
 };

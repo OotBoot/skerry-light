@@ -498,7 +498,7 @@ function zeHud() {
       ctx.font = `400 ${phone ? 22 : 34}px "IM Fell English SC", serif`; ctx.fillStyle = '#ffe9a8';
       ctx.fillText('The Gannet’s Doubloon', cx, H * 0.42 + r + (phone ? 26 : 38));
       ctx.font = `600 ${phone ? 11 : 13}px "Courier Prime", monospace`; ctx.fillStyle = 'rgba(236,228,207,0.9)';
-      ctx.fillText(`A pirate token: yours to keep (${ptTokens()} to spend on the Lighthouse’s card)`, cx, H * 0.42 + r + (phone ? 48 : 68), W * 0.9);
+      ctx.fillText(`A pirate token: yours to keep (${ptTokens()} to spend on the Keeper’s Last Light card)`, cx, H * 0.42 + r + (phone ? 48 : 68), W * 0.9);
       ctx.restore();
     }
   }
@@ -592,7 +592,7 @@ function ptBuildCard() {
   ov.className = 'overlay cratecard wcratecard ptcard'; ov.id = 'ptCard'; ov.hidden = true;
   ov.setAttribute('role', 'dialog'); ov.setAttribute('aria-modal', 'true'); ov.setAttribute('aria-labelledby', 'ptHead');
   ov.innerHTML = `<div class="card">
-      <div class="cardtop sticky"><span class="eyebrow">The Lighthouse · what the sea kept back</span><button class="tool closebtn" id="ptClose" type="button">✕ Close</button></div>
+      <div class="cardtop sticky"><span class="eyebrow">Keeper’s Last Light · what the sea kept back</span><button class="tool closebtn" id="ptClose" type="button">✕ Close</button></div>
       <h1 id="ptHead">The Gannet’s Locker</h1>
       <p>The brig Gannet went down off the Light in the winter of 1887 with her crew and everything they carried. Some of it the sea keeps for whoever brings her crew home: pay a pirate token for each. No crate holds any of these. What you take shows up with your other outfits, weapon finishes and banners, to wear the usual way.</p>
       <div class="ptcoinrow"><canvas id="ptCoin" width="128" height="128" aria-hidden="true"></canvas><div><b id="ptCount"></b><p class="muted" id="ptNote"></p></div></div>

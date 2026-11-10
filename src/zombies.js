@@ -1308,7 +1308,7 @@ function zmStart(opts) {
   $('stage').classList.add('fpsmode', 'zmmode');
   FPS.touch = matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window && navigator.maxTouchPoints > 0;
   $('fpsPad').hidden = !FPS.touch; FPS.hintT = 8; if (FPS.touch) fpsSafeArea();
-  { const e = document.querySelector('#fpsMenu .eyebrow'); if (e) e.textContent = 'The Lighthouse waits for you'; $('fpsLeave').textContent = 'Leave the Lighthouse'; $('fpsResume').textContent = 'Back to the Light'; }
+  { const e = document.querySelector('#fpsMenu .eyebrow'); if (e) e.textContent = 'Keeper’s Last Light'; $('fpsLeave').textContent = 'Leave the Lighthouse'; $('fpsResume').textContent = 'Back to the Light'; }
   if ($('zmUnstick')) $('zmUnstick').hidden = false;
   FPS.g = zmArena();
   const [sx, sy] = [FPSC.CX + ZMD.START[0], FPSC.CY + ZMD.START[1]];
@@ -3109,7 +3109,7 @@ function zmHud() {
     const rows = [['Round', ZM.round], ['Points', ZM.pts.toLocaleString('en')], ['Kills', ZM.kills], ['Through the head', ZM.heads], ['Doors opened', ZM.doorsOpened], ['Second winds', ZM.downs]];
     const bw = Math.min(380, W - 32), bh = 60 + rows.length * 24, bx = cx - bw / 2, by2 = H * 0.18;
     ctx.fillStyle = 'rgba(8,10,14,0.85)'; ctx.fillRect(bx, by2, bw, bh); ctx.strokeStyle = 'rgba(236,228,207,0.25)'; ctx.strokeRect(bx + 0.5, by2 + 0.5, bw - 1, bh - 1);
-    ctx.textBaseline = 'middle'; ctx.textAlign = 'left'; ctx.font = fell(22); ctx.fillStyle = '#ffd88a'; ctx.fillText('The Lighthouse', bx + 14, by2 + 24);
+    ctx.textBaseline = 'middle'; ctx.textAlign = 'left'; ctx.font = fell(22); ctx.fillStyle = '#ffd88a'; ctx.fillText('Keeper’s Last Light', bx + 14, by2 + 24);
     rows.forEach(([k, v], i) => { const yy = by2 + 58 + i * 24; ctx.font = mono(13); ctx.textAlign = 'left'; ctx.fillStyle = 'rgba(236,228,207,0.8)'; ctx.fillText(k, bx + 14, yy); ctx.textAlign = 'right'; ctx.fillStyle = '#ffd88a'; ctx.fillText(String(v), bx + bw - 14, yy); });
   }
   // down, waiting for a friend (your clock on the floor); or out until the next round

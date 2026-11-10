@@ -78,8 +78,8 @@
       <p class="muted" id="boardNote"></p>
     </div>
     <button class="newgame" id="fpsBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">Try the new game, <b>Wreckers' Night</b>: a multiplayer shootout on the skerry</span><span class="ng-go" aria-hidden="true">↓</span></button>
-    <button class="newgame warbanner" id="warBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">And another, <b>The Drowned Reach</b>: a war for the islands, alone or with up to ten players</span><span class="ng-go" aria-hidden="true">↓</span></button>
-    <button class="newgame zmbanner" id="zmBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">And a fourth, <b>The Lighthouse</b>: hold the keeper's station against the drowned, round after round</span><span class="ng-go" aria-hidden="true">↓</span></button>
+    <button class="newgame warbanner" id="warBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">And another, <b>Drowned Reach</b>: a war for the islands, alone or with up to ten players</span><span class="ng-go" aria-hidden="true">↓</span></button>
+    <button class="newgame zmbanner" id="zmBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">And a fourth, <b>Keeper's Last Light</b>: hold the keeper's station against the drowned, round after round</span><span class="ng-go" aria-hidden="true">↓</span></button>
     <div class="card">
       <div class="cardtop"><span class="eyebrow">Master's orders · make harbour by night</span><button class="tool closebtn" id="soundBtn" type="button" aria-pressed="true">Sound on</button></div>
       <h1>Skerry Light</h1>
@@ -158,7 +158,7 @@
 
     <div class="card warcard" id="warTitle" aria-labelledby="warHead">
       <div class="cardtop"><span class="eyebrow">A third game · one against many · a war for the islands</span></div>
-      <h1 id="warHead">The Drowned Reach</h1>
+      <h1 id="warHead">Drowned Reach</h1>
       <p>Land on an archipelago of skerries and take it. Your people grow with the land you hold; send a share of them against the empty shore, then against your neighbours, tile by tile. Boats carry landings to other islands. Gold raises cities, factories and their railroads, harbours, watchtowers and beacons, and buys flares and fire-ships. Sixteen nations (or up to fifty) want the same islands, the tide opens and shuts the shoal roads between them, and at night the drowned come up on any shore the Light doesn’t reach.</p>
       <div class="warsetup">
         <label>Nations against you <output id="warBotsOut">16</output><input id="warBots" type="range" min="1" max="50" value="16"></label>
@@ -198,7 +198,7 @@
     </div>
     <div class="card zmcard" id="zmTitle" aria-labelledby="zmHead">
       <div class="cardtop"><span class="eyebrow">A fourth game · first person · round after round</span></div>
-      <h1 id="zmHead">The Lighthouse</h1>
+      <h1 id="zmHead">Keeper's Last Light</h1>
       <p>The keeper's station at the Light, shut up for the night, and the drowned coming up out of the sea for it. Hold it as long as you can. Points for every one you put down buy weapons off the walls, open the doors to the rest of the station, and pay for a go at the wreck chest, wherever it's turned up tonight. Wreckers' Night's weapons, with your skins on them, and your outfit; and one weapon you'll only find in the chest.</p>
       <div class="btnrow">
         <button class="primary" id="zmPlay" type="button">Hold the Light</button>
@@ -239,7 +239,7 @@
     </div>
   </div>
 
-  <!-- The Drowned Reach: the panels round the map -->
+  <!-- Drowned Reach: the panels round the map -->
   <div id="warUI" hidden>
     <div class="wartop">
       <button class="fpsico" id="warMenuBtn" type="button" aria-label="Menu"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
@@ -275,7 +275,7 @@
     </div>
     <div class="overlay pausecard" id="warMenu" hidden role="dialog" aria-modal="true" aria-labelledby="warMenuHead">
       <div class="card">
-        <h1 id="warMenuHead">The Drowned Reach</h1>
+        <h1 id="warMenuHead">Drowned Reach</h1>
         <p>The war is paused.</p>
         <div class="btnrow">
           <button class="primary" id="warResume" type="button">Back to the map</button>
@@ -478,7 +478,7 @@
 
   <div class="overlay cratecard wcratecard rcratecard" id="rcrateCard" hidden role="dialog" aria-modal="true" aria-labelledby="rcrateHead">
     <div class="card">
-      <div class="cardtop sticky"><span class="eyebrow">The Drowned Reach · the herald</span><button class="tool closebtn" id="rcrateClose" type="button">✕ Close</button></div>
+      <div class="cardtop sticky"><span class="eyebrow">Drowned Reach · the herald</span><button class="tool closebtn" id="rcrateClose" type="button">✕ Close</button></div>
       <h1 id="rcrateHead">Banner Crates</h1>
       <p>Banners for your land: the colours your nation's land shows on the map, to you and to everyone you play with. The better the grade, the more it does: Mate banners move, Captain banners move and glow along your borders, and the Admiral's banner has the Light's own beam sweeping over it. You earn a Herald's Crate for every 400 tiles you take, one for each war you see through, and three for a win. Same grades and odds as the other crates: if you see gold in the reel, it's yours.</p>
       <div class="wcprogress"><span id="rcProgress"></span><i id="rcBar" aria-hidden="true"></i></div>
@@ -529,9 +529,9 @@
         </div>
         <ul class="padmap" aria-label="Controller buttons">
           <li><b>Left stick</b> move · <b>click it</b> to sprint (until you stop)</li>
-          <li><b>Right stick</b> look · <b>click it</b> knife (the Lighthouse) or view</li>
+          <li><b>Right stick</b> look · <b>click it</b> knife (Keeper's Last Light) or view</li>
           <li><b>RT</b> fire · <b>LT</b> aim · <b>A</b> jump</li>
-          <li><b>X</b> reload; in the Lighthouse, use what's in front of you (hold to board up a window or get someone up) · <b>B</b> use too (a flare on Wreckers' Night)</li>
+          <li><b>X</b> reload; in Keeper's Last Light, use what's in front of you (hold to board up a window or get someone up) · <b>B</b> use too (a flare on Wreckers' Night)</li>
           <li><b>Y</b> lantern · <b>RB</b>, <b>D-pad</b> weapons · <b>Start</b> menu</li>
           <li>In the menu: <b>D-pad</b> or <b>left stick</b> to move, <b>left/right</b> to slide, <b>A</b> to choose, <b>B</b> back</li>
         </ul>
@@ -561,7 +561,7 @@
 
   <div class="overlay pausecard zmover" id="zmOver" hidden role="dialog" aria-modal="true" aria-labelledby="zmOverHead">
     <div class="card">
-      <span class="eyebrow">The Lighthouse</span>
+      <span class="eyebrow">Keeper's Last Light</span>
       <h1 id="zmOverHead">The light went out</h1>
       <p id="zmOverStats"></p>
       <p class="muted" id="zmOverBest"></p>
@@ -593,8 +593,8 @@
       <div class="setrow"><span class="label" id="lbl-scares">Jumpscares</span><div class="loottabs" id="set-scares" role="group" aria-labelledby="lbl-scares"></div></div>
       <div class="setrow"><span class="label" id="lbl-flashes">Flashes</span><div class="loottabs" id="set-flashes" role="group" aria-labelledby="lbl-flashes"></div></div>
       <div class="setrow"><span class="label" id="lbl-motion">Motion</span><div class="loottabs" id="set-motion" role="group" aria-labelledby="lbl-motion"></div></div>
-      <div class="setrow"><label class="label" for="setLook">Look sensitivity <small>(Wreckers' Night and the Lighthouse)</small> <output id="setLookOut">1.00</output></label><input id="setLook" class="lookslider" type="range" min="0.3" max="3" step="0.05" value="1"></div>
-      <div class="setrow"><label class="label" for="setFov">Field of view <small>(Wreckers' Night and the Lighthouse)</small> <output id="setFovOut">69°</output></label><input id="setFov" class="lookslider" type="range" min="60" max="110" step="1" value="69"></div>
+      <div class="setrow"><label class="label" for="setLook">Look sensitivity <small>(Wreckers' Night and Keeper's Last Light)</small> <output id="setLookOut">1.00</output></label><input id="setLook" class="lookslider" type="range" min="0.3" max="3" step="0.05" value="1"></div>
+      <div class="setrow"><label class="label" for="setFov">Field of view <small>(Wreckers' Night and Keeper's Last Light)</small> <output id="setFovOut">69°</output></label><input id="setFov" class="lookslider" type="range" min="60" max="110" step="1" value="69"></div>
       <div class="setrow"><span class="label" id="lbl-aim">Toggle aim <small>(click right mouse or LT once to aim, again to stop)</small></span><div class="loottabs" id="set-aim" role="group" aria-labelledby="lbl-aim"></div></div>
       <div class="setrow"><span class="label" id="lbl-renderer">Graphics</span><div class="loottabs" id="set-renderer" role="group" aria-labelledby="lbl-renderer"></div></div>
       <p class="setnote">Softened jumpscares are smaller and quieter, with no shaking or black frames. Fewer flashes dims the camera flash, the beam's glare, the bell and lightning. Auto motion follows your device's setting. 3D graphics draw the sea, coast, lighthouse and rocks in real 3D; Classic is the original painted view, lighter on old devices.<span id="glNote"></span></p>
