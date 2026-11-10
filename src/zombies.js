@@ -42,6 +42,9 @@ const ZMC = {
   // (BODY: how close one of the drowned and you can come, middle to middle; SPRINT: your run here, a touch
   //  slower than on Wreckers' Night)
   BODY: 0.5, SPRINT: 9.8,
+  // (PAD: how close your middle comes to a wall, a rail or the newel: a little under the drowned's 0.5 of old, so
+  //  the stairs and doorways leave you room)
+  PAD: 0.4,
   // (IFRAME_HIT: after a knock, how long before the next can land; IFRAME_UP: untouchable that long once got up)
   IFRAME_HIT: 0.5, IFRAME_UP: 3,
   RISE: 0.28, TREAD: 0.75, CEIL: 3.6, STEP: 0.6, START: 500, BREAK: 15, ALIVE: 24, NAV: 0.5, HP: 3, HP_STOUT: 6, BOX: 950,
@@ -49,7 +52,9 @@ const ZMC = {
 // The tower: round, whitewashed with two red bands, fifteen metres wide inside and five floors high, a spiral stair
 // of ninety steps round a stone newel up through the middle, one turn to a floor, and the lantern room of glass on
 // top. Floors (heights above the ground): 0 the Tower Foot, 5, 10, 15, 20 two rooms each, 25 the lantern.
-const ZMT = { X: 0, Y: 1.5, R: 10, TH: 0.6, N: 32, L: [0, 5, 10, 15, 20, 25], HOLE: 3.6, PER: 18, R0: 0.95, R1: 3.45, GLASS: 6.5 };
+// (R0 to R1: the spiral's treads, out from the middle, round a newel NEWEL across; the stairwell's square hole is HOLE
+// from the middle each way, so R1 stays a little inside it)
+const ZMT = { X: 0, Y: 1.5, R: 10, TH: 0.6, N: 32, L: [0, 5, 10, 15, 20, 25], HOLE: 3.6, PER: 18, NEWEL: 0.6, R0: 0.65, R1: 3.52, GLASS: 6.5 };
 ZMT.RISE = 5 / ZMT.PER;
 ZMC.HT = ZMT.L[5];   // the lantern room's floor
 // Over the lantern, the Roof Room: a windowless iron drum on the lantern's cornice under the red dome, its floor RF,
@@ -58,7 +63,7 @@ ZMC.HT = ZMT.L[5];   // the lantern room's floor
 // each DA further round (clockwise, from beside the west door to beside the east), R0 to R1 out from the newel. It
 // comes up through SLOT, an opening in the Roof Room's floor along its wall (angles a0 to a1, from r out).
 ZMT.RF = ZMT.L[5] + 5; ZMT.RW = 6.35; ZMT.RH = 3.3;
-ZMT.ST = { N: 16, A0: 158 * Math.PI / 180, DA: 9 * Math.PI / 180, R0: 5.15, R1: 6.3, D: 1.0 };
+ZMT.ST = { N: 16, A0: 158 * Math.PI / 180, DA: 9 * Math.PI / 180, R0: 4.95, R1: 6.3, D: 1.0 };
 ZMT.ST.RISE = (ZMT.RF - ZMT.L[5]) / ZMT.ST.N;
 ZMT.SLOT = [26 * Math.PI / 180, 98 * Math.PI / 180, 4.8];
 const ZM_TROOMS = { tower: 'the Tower Foot', tw1n: 'the Watch Room', tw1s: 'the Oil Room', tw2n: 'the Chart Room', tw2s: 'the Bunk Room',
@@ -1019,7 +1024,7 @@ FPI_GEN.light = {
       for (const sx of [-1, 1]) tput('zrail', sx * (HO + 1.3) / 2, HO, 0, { w: HO - 1.3, base: top });
     }
     // the newel, and the spiral round it: eighteen treads a turn, a turn a floor, each floor's landing on the north side
-    tput('newel', 0, 0, 0, { r: 0.9, hh: L5 + 0.9 });
+    tput('newel', 0, 0, 0, { r: ZMT.NEWEL, hh: L5 + 0.9 });
     const nT = ZMT.PER * 5;
     for (let n = 1; n <= nT; n++) {
       const a = Math.PI / 2 + n / ZMT.PER * Math.PI * 2, rm = (ZMT.R0 + ZMT.R1) / 2, near = n % ZMT.PER;
@@ -1546,6 +1551,16 @@ function zmBlockedAt(x, y, pad, feet) {
   }
   return false;
 }
+// how much room there is round a place (the nearest solid in the way, less pad: below 0 is in it), for sliding along
+function zmRoom(x, y, pad, feet) {
+  let d = 9;
+  for (const s of zmNear(x, y)) {
+    const bot = s.z0 != null ? s.z0 - FPSC.GROUND : 0, top = s.z1 - FPSC.GROUND;
+    if (bot >= feet + 1.9 || top <= feet + (s.fl ? ZMC.STEP : 0.05)) continue;
+    d = Math.min(d, fpiDist(s, x, y) - pad);
+  }
+  return d;
+}
 // the height of the floor under a place, for something standing at feet
 function zmFloorAt(x, y, feet, pad) {
   let fl = 0;
@@ -1571,12 +1586,34 @@ function zmWinPen(x, y, pad, feet) {
 }
 // move with sliding, then stand on whatever's underneath: step up onto it, step down a stair, or fall
 function zmMove(m, dx, dy) {
-  const feet = m.jz || 0, pad = m.zpad || 0.5;
+  const me = m === FPS.me, feet = m.jz || 0, pad = m.zpad || (me ? ZMC.PAD : 0.5);
   // (you can't walk through them: the drowned crowd you in; nor out through a window: only further back from one)
   const pen0 = m === FPS.me ? zmWinPen(m.x, m.y, pad, feet) : 0;
   const free = m === FPS.me ? (x, y) => !zmBlockedAt(x, y, pad, feet) && !zmCrowd(m, x, y) && (pen0 => { const p = zmWinPen(x, y, pad, feet); return p <= 0 || p < pen0 - 1e-6; })(pen0) : (x, y) => !zmBlockedAt(x, y, pad, feet);
   let ok = true;
+  let sx = 0, sy = 0;
+  // (you, against something: slide along it rather than stop, whichever way it runs: the wall's lie from how the room
+  // round you changes, and whatever of the step goes into it taken off)
+  if (me && !free(m.x + dx, m.y + dy)) {
+    const e = 0.04, gx = zmRoom(m.x + e, m.y, pad, feet) - zmRoom(m.x - e, m.y, pad, feet), gy = zmRoom(m.x, m.y + e, pad, feet) - zmRoom(m.x, m.y - e, pad, feet), g = Math.hypot(gx, gy);
+    if (g > 1e-6) {
+      const nx = gx / g, ny = gy / g, into = Math.min(0, dx * nx + dy * ny); sx = dx - nx * into; sy = dy - ny * into;
+      // (in a corner, or along a rail of short straight lengths, that can run straight into the next: turn the step
+      // further away from the wall, a little at a time, shorter as it turns)
+      if (!free(m.x + sx, m.y + sy)) {
+        let done = false;
+        for (let k = 1; k <= 6 && !done; k++) for (const side of [1, -1]) {
+          const t = side * k * 0.25, c = Math.cos(t), sn = Math.sin(t), f = Math.max(0.3, Math.cos(k * 0.25));
+          const rx = (dx * c - dy * sn) * f, ry = (dx * sn + dy * c) * f;
+          // (only a way that doesn't go further into the wall than the slide does)
+          if (rx * nx + ry * ny >= -1e-4 && free(m.x + rx, m.y + ry)) { sx = rx; sy = ry; done = true; break; }
+        }
+      }
+    }
+  }
   if (free(m.x + dx, m.y + dy)) { m.x += dx; m.y += dy; }
+  else if ((sx || sy) && free(m.x + sx, m.y + sy)) { m.x += sx; m.y += sy; }
+  else if ((sx || sy) && free(m.x + sx * 0.5, m.y + sy * 0.5)) { m.x += sx * 0.5; m.y += sy * 0.5; }
   else if (free(m.x + dx, m.y)) m.x += dx;
   else if (free(m.x, m.y + dy)) m.y += dy;
   else ok = false;
@@ -3319,7 +3356,7 @@ function zm3dLantern(grp) {
   // (the gallery's deck and its railing are the tower's skin: zm3dTower)
   // the Light: a pedestal on the newel, a beehive of glass rings in a brass cage. Dark and still until the lamp is lit
   // from the Roof Room (src/zmlamp.js); then it turns, its one beam sweeping out over the station and the sea
-  const ped = new THREE.Mesh(new THREE.CylinderGeometry(0.7, 0.95, 0.9, 16), brassM); ped.position.y = 0.45; top.add(ped);
+  const ped = new THREE.Mesh(new THREE.CylinderGeometry(0.95, ZMT.NEWEL + 0.04, 0.9, 16), brassM);   // (flaring out from the newel to hold the lens) ped.position.y = 0.45; top.add(ped);
   const lens = new THREE.Group(); lens.position.y = 0.9; top.add(lens);
   const lensM = new THREE.MeshBasicMaterial({ color: 0xfff0c8, transparent: true, opacity: 0.85 });
   for (let i = 0; i < 11; i++) { const r = 0.95 - Math.abs(i - 5) * 0.07, t = new THREE.Mesh(new THREE.CylinderGeometry(r, r, 0.17, 24, 1, true), lensM); t.position.y = 0.15 + i * 0.2; lens.add(t); }
