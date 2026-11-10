@@ -284,8 +284,9 @@ A game of its own, with its own card on the title screen (the **Maren's End** bu
 **Part I · The Swallow.** You start on a quay at the top of a long pier that runs out over the dry bed of a sea that's gone. The pier stops just short of the Swallow, a great hole in the sea bed. Jump in: it's about thirty seconds down a dark shaft, the wind roaring past, before you land softly at the bottom. Down there it's black but for pale lichen on the rock and the light of **Maren's Lantern**, which every raider carries in their left hand.
 
 - A path winds away through the dark, with braziers along it. Hold Use at a dark brazier (just over a second) to light it from the lantern.
-- Inside a lit brazier's light you get health back and your ammunition tops up. Out in the dark the dark drains your health, slowly, so get from one brazier to the next.
-- Glowing drowned climb up out of the ground and come after you as you go, more of them the further along you are.
+- Out in the dark the dark drains your health (from full to nothing in about fifteen seconds), so get from one brazier to the next. Inside a lit brazier's light you get back what the dark took, and your ammunition tops up; what the drowned took from you doesn't come back there.
+- Glowing drowned climb up out of the ground and come after you as you go, plenty of them, more the further along you are, and always inside the path's walls.
+- Every minute or so a glowing Diver comes up out of the dark as well, one at a time. Down here there's no bar for his strength, so you can't tell how close he is to falling.
 - At the end of the path is a glowing door. Kill twenty of the drowned inside the ring in front of it and it opens; go through to finish Part I. Anyone who bled out comes back at the next brazier lit. Going through the door takes the whole team on together, and everyone is revived: anyone down is back on their feet, and anyone who bled out comes back with their weapons.
 
 The scoreboard keeps your best time through the raid, the most damage you've done to its boss, and the drowned you've killed across all your raids. The later parts of the raid follow on from the door.

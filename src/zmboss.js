@@ -368,6 +368,7 @@ function zbModel(z) {
 function zbPose(z, M, dt) {
   if (M.bt !== z.bt) { zmFreeModel(z); return; }
   zbT(z).pose(z, M, dt);
+  if (typeof raidPose === 'function' && typeof RAID !== 'undefined' && RAID.on && raidStage() && raidStage().noBars) raidPose(z, M);   // [raid] the Swallow's Divers glow too
   // a groan now and then
   z.groanT = (z.groanT || 3) - dt;
   if (z.groanT <= 0 && !z.dead) { z.groanT = 4 + Math.random() * 5; zbT(z).sound('groan', Math.hypot(z.x - FPS.me.x, z.y - FPS.me.y)); }
@@ -383,7 +384,7 @@ function zbHud(phone, top) {
     gr.addColorStop(0, `rgba(255,252,236,${a})`); gr.addColorStop(0.35, `rgba(255,236,180,${a * 0.95})`); gr.addColorStop(1, `rgba(255,190,90,${a * 0.85})`);
     ctx.fillStyle = gr; ctx.fillRect(0, 0, W, H);
   }
-  const live = ZM.z.filter(q => q.boss && !q.gone && (!q.dead || (q.deadT || 0) < 2));
+  const live = (typeof RAID !== 'undefined' && RAID.on && raidStage() && raidStage().noBars) ? [] : ZM.z.filter(q => q.boss && !q.gone && (!q.dead || (q.deadT || 0) < 2));   // [raid] no bars in the Swallow
   for (const q of live) ZB.bars.set(q.zn, Math.min(1, (ZB.bars.get(q.zn) || 0) + dt * 3));
   for (const [zn, v] of ZB.bars) if (!live.some(q => q.zn === zn)) { if (v - dt * 3 <= 0) ZB.bars.delete(zn); else ZB.bars.set(zn, v - dt * 3); }
   if (!live.length) return;

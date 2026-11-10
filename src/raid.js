@@ -254,10 +254,11 @@ function raidPose(z, M) {
   if (!RAID.on) { if (M.rglow) M.rglow.visible = false; return; }
   if (!M.rglow) {
     M.rglow = new THREE.Sprite(new THREE.SpriteMaterial({ map: R3.zTex || (R3.zTex = z3Soft('rgba(120,200,255,0.55)', 'rgba(120,200,255,0)')), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }));
-    M.rglow.scale.set(1.6, 2.4, 1); M.rglow.position.y = 1.0; M.root.add(M.rglow);
+    M.rglow.scale.set(z.boss ? 2.6 : 1.6, z.boss ? 3.6 : 2.4, 1); M.rglow.position.y = z.boss ? 1.4 : 1.0; M.root.add(M.rglow);
   }
   const pulse = reduceMotion ? 1 : 0.85 + 0.15 * Math.sin(g.t * 2.3 + (z.seed || 0));
   M.rglow.visible = !z.dead || z.deadT < 0.8; M.rglow.material.opacity = (z.dead ? Math.max(0, 1 - z.deadT / 0.8) : 1) * pulse;
+  if (!M.skin) { if (M.suit) { const e = M.suit.emissive; e.setRGB(e.r + 0.14 * pulse, e.g + 0.42 * pulse, e.b + 0.62 * pulse); } return; }
   const e = M.skin.emissive, c = M.coat.emissive;
   e.setRGB(e.r + 0.18 * pulse, e.g + 0.5 * pulse, e.b + 0.72 * pulse);
   c.setRGB(c.r + 0.03, c.g + 0.1 * pulse, c.b + 0.16 * pulse);
@@ -321,7 +322,7 @@ function raidHud(phone, mono, fell) {
 // under the Swallow to the door. Falling in the Swallow you come down no quicker than FALL (so it takes about half a
 // minute). Braziers: LIT_R, how far a lit one's light reaches; in it you mend MEND a second and outside it (below) the
 // dark takes DRAIN a second. NEED of them sent back inside RING of the arena's middle open the door.
-const RSW = { SEA: 250, DECK: 253, CEIL: 30, HOLE: [-11, 11, 13, 35], FALL: 8.4, LIT_R: 7.5, MEND: 0.9, DRAIN: 0.1, NEED: 20, RING: 13, USE: 1.1, GAP: 3.4 };
+const RSW = { SEA: 250, DECK: 253, CEIL: 30, HOLE: [-11, 11, 13, 35], FALL: 8.4, LIT_R: 7.5, MEND: 0.9, DRAIN: 0.2, NEED: 20, RING: 13, USE: 1.1, GAP: 3.4 };
 // The path: [x, y, half its width, what's there] from the island's middle, from the cap behind where you land to the
 // cap with the door in it; b, a brazier; a, the arena before the door (two more braziers at its sides). Between each
 // two, a narrower stretch a little off the straight line (laid in rswGeo).
@@ -645,33 +646,69 @@ function rswWake() {
   try { if (!soundOff()) { tone(82, 'sine', 0.5, 0.25, 3, { to: 110 }); noise('bandpass', 600, 2, 0.4, 0.08, 2.5); } } catch (e) {}
 }
 // hosting or alone: bring them up out of the dark
-function rswSpawn(P) {
-  const S = RAID.st, n = Math.max(1, ZM.hum.length), lit = rswLitN();
-  const alive = ZM.z.filter(z => !z.dead).length, cap = S.door === 1 ? 9 + 3 * n : 4 + 2 * n + Math.floor(lit / 3);
-  if (alive >= cap) return;
-  const ss = P.map(p => rswAlong(p.x - FPSC.CX, p.y - FPSC.CY)), front = Math.max(...ss), back = Math.min(...ss);
-  for (let tries = 0; tries < 14; tries++) {
-    let x, y;
-    if (S.door === 1) { const a = Math.random() * Math.PI * 2, r = RSW.RING + 2 + Math.random() * 4; x = RSG.A.x + Math.cos(a) * r; y = RSG.A.y + Math.sin(a) * r; }
-    else {
-      const ahead = Math.random() < 0.72, s = clamp(ahead ? front + 15 + Math.random() * 14 : back - 12 - Math.random() * 10, RSG.land.s + 6, RSG.S - 4);
-      const q = rswAt(s), off = (Math.random() * 2 - 1) * Math.max(0.5, q.w - 1.6); x = q.x - q.dy * off; y = q.y + q.dx * off;
-    }
+// is a place (local) inside the path's walls, with room to stand: within its width of the middle, less a margin
+function rswInside(x, y, pad) {
+  const N = RSG.N; let best = 1e9, w = 0;
+  for (let i = 1; i < N.length; i++) {
+    const a = N[i - 1], b = N[i], dx = b.x - a.x, dy = b.y - a.y, L2 = dx * dx + dy * dy, t = clamp(((x - a.x) * dx + (y - a.y) * dy) / L2, 0, 1);
+    const d = Math.hypot(a.x + dx * t - x, a.y + dy * t - y); if (d < best) { best = d; w = a.w + (b.w - a.w) * t; }
+  }
+  return best < w - (pad == null ? 1.2 : pad);
+}
+// somewhere for one of them to come up: on the path, inside its walls, out of the light, not on top of anyone, and
+// somewhere the walking grid reaches. While the door's awake, round the ring (along the path either side of it)
+function rswPlace(P) {
+  const S = RAID.st, ss = P.map(p => rswAlong(p.x - FPSC.CX, p.y - FPSC.CY)), front = Math.max(...ss), back = Math.min(...ss);
+  const sA = rswAlong(RSG.A.x, RSG.A.y), sE = RSG.S - 3;
+  for (let tries = 0; tries < 18; tries++) {
+    let s;
+    if (S.door === 1) s = Math.random() < 0.65 ? sA - RSW.RING - 1 - Math.random() * 9 : Math.min(sE, sA + RSW.RING * 0.5 + Math.random() * (sE - sA - RSW.RING * 0.5));
+    else { const ahead = Math.random() < 0.72; s = ahead ? front + 13 + Math.random() * 14 : back - 11 - Math.random() * 10; }
+    s = clamp(s, RSG.land.s + 6, sE);
+    const q = rswAt(s), off = (Math.random() * 2 - 1) * Math.max(0.3, q.w - 1.8), x = q.x - q.dy * off, y = q.y + q.dx * off;
+    if (!rswInside(x, y)) continue;
     const [wx, wy] = rswW(x, y);
     if (P.some(p => Math.hypot(p.x - wx, p.y - wy) < 7)) continue;
     if (rswInLight(wx, wy, 0) || zmBlockedAt(wx, wy, 0.4, 0)) continue;
     const a = zmNodeIn(zmCell(wx, wy), 0, 0.3); if (a < 0 || ZM.nav.d[a] >= 1e8) continue;
-    const u = Math.random(), kind = u < 0.15 + lit * 0.02 ? 'run' : u < 0.8 ? 'jog' : 'walk';
-    raidSpawnAt(wx, wy, { kind, hp: zmHp(RAIDC.ROUND + lit * 0.4) * (0.9 + Math.random() * 0.2) * (1 + 0.25 * (n - 1)) });
-    zmSound('moan', Math.hypot(wx - FPS.me.x, wy - FPS.me.y), 0, kind);
-    return;
+    return [wx, wy];
   }
+  return null;
+}
+function rswSpawn(P) {
+  const S = RAID.st, n = Math.max(1, ZM.hum.length), lit = rswLitN();
+  const alive = ZM.z.filter(z => !z.dead && !z.boss).length, cap = S.door === 1 ? 16 + 5 * n : 8 + 3 * n + Math.floor(lit / 2);
+  if (alive >= cap) return;
+  const at = rswPlace(P); if (!at) return;
+  const [wx, wy] = at, u = Math.random(), kind = u < 0.2 + lit * 0.025 ? 'run' : u < 0.82 ? 'jog' : 'walk';
+  raidSpawnAt(wx, wy, { kind, hp: zmHp(RAIDC.ROUND + lit * 0.4) * (0.9 + Math.random() * 0.2) * (1 + 0.25 * (n - 1)) });
+  zmSound('moan', Math.hypot(wx - FPS.me.x, wy - FPS.me.y), 0, kind);
+}
+// now and then a Diver comes up out of the dark as well, glowing like the rest; no bar for his strength down here
+// (RAID_STAGES.descent.noBars), so you can't tell how much he's got left
+function rswDiver(P) {
+  if (typeof ZBT === 'undefined' || !ZBT.diver) return false;
+  if (ZM.z.some(z => z.boss && !z.dead)) return false;
+  const at = rswPlace(P); if (!at) return false;
+  const [x, y] = at, T = ZBT.diver, zn = ++ZM.zc, n = Math.max(1, ZM.hum.length), hp = zbHpOf('diver', RAIDC.ROUND + rswLitN() * 0.5, n) * 0.55;
+  const z = {
+    drowned: true, zm: true, boss: true, bt: 'diver', zn, id: 'z' + zn.toString(36), n: T.n, kind: 'boss', x, y, jz: 0, fl: 0,
+    hp, max: hp, sp: T.sp(RAIDC.ROUND + 4), st: 'in', win: null, t: 0, ph: 0, hitT: 0, atk: 0, swing: -1, stuck: 0, lost: 0, h: 0, seed: (Math.random() * 1e6) | 0, rise: 1, hist: [],
+    act: null, at: 0, aseq: 0, slamCd: 4, swCd: 1, ix: 0, iy: 0, ax: 0, ay: 0, lx: x, ly: y, raid: true,
+  };
+  if (T.init) T.init(z);
+  zbMake(z, 'diver');
+  ZM.z.push(z); FPS.drowned = ZM.z;
+  if (typeof ZB !== 'undefined' && ZB.seen) ZB.seen.add(zn);
+  fpsFeed('Something heavier is coming up out of the dark.');
+  T.sound('arrive');
+  return true;
 }
 
 RAID_STAGES.descent = {
-  n: 'The Swallow', map: RSW_MAP,
+  n: 'The Swallow', map: RSW_MAP, noBars: true,
   set(H, K) { rswSet(H, K); },
-  enter() { Object.assign(RAID.st, { lit: 0, door: 0, kills: 0, spawnT: 3, useT: 0, useI: -1, pend: 0, landed: false, windT: 0, thru: false, flare: {}, landT: 0 }); },
+  enter() { Object.assign(RAID.st, { lit: 0, door: 0, kills: 0, spawnT: 3, diverT: 40 + Math.random() * 20, useT: 0, useI: -1, pend: 0, landed: false, windT: 0, thru: false, flare: {}, landT: 0 }); },
   players(P) { return P.filter(p => rswBelow(p.jz)); },
   tick(dt) {
     const S = RAID.st, P = ZM.players;
@@ -681,7 +718,9 @@ RAID_STAGES.descent = {
     if (S.door === 1 && S.kills >= RSW.NEED) rswOpenDoor();
     S.landT += dt;
     S.spawnT -= dt;
-    if (S.spawnT <= 0 && S.landT > 2.5 && S.door !== 2) { rswSpawn(P); S.spawnT = S.door === 1 ? 0.7 : Math.max(1.1, 2.6 - 0.12 * rswLitN()) * (0.7 + Math.random() * 0.6); }
+    if (S.spawnT <= 0 && S.landT > 2.5 && S.door !== 2) { rswSpawn(P); S.spawnT = S.door === 1 ? 0.45 : Math.max(0.7, 1.7 - 0.09 * rswLitN()) * (0.7 + Math.random() * 0.6); }
+    // a Diver, every minute or so, one at a time
+    if (S.landT > 10 && S.door !== 2) { S.diverT -= dt; if (S.diverT <= 0) S.diverT = rswDiver(P) ? 50 + Math.random() * 30 : 5; }
   },
   kill(d) {
     const S = RAID.st; if (S.door !== 1) return;
@@ -724,12 +763,14 @@ RAID_STAGES.descent = {
     S.inLight = below && rswInLight(m.x, m.y, m.jz);
     if (below && alive) {
       const max = ZM.perks.stout ? ZMC.HP_STOUT : ZMC.HP;
+      // (only what the dark took comes back in the light; what the drowned took stays taken)
+      if (m.hp >= max) S.dark = 0;
       if (S.inLight) {
-        m.hp = Math.min(max, m.hp + RSW.MEND * dt);
+        const up = Math.min(RSW.MEND * dt, S.dark || 0, max - m.hp); if (up > 0) { m.hp += up; S.dark -= up; }
         S.ammoT = (S.ammoT || 0) + dt;
         if (S.ammoT > 1) { S.ammoT = 0; for (const id of ZM.own) if (ZM_AMMO[id]) ZM.res[id] = Math.min(ZM_AMMO[id], (ZM.res[id] || 0) + Math.ceil(ZM_AMMO[id] * 0.12)); }
       } else if (!(m.protect > 0)) {
-        m.hp -= RSW.DRAIN * dt;
+        const dn = Math.min(m.hp, RSW.DRAIN * dt); m.hp -= dn; S.dark = (S.dark || 0) + dn;
         if (m.hp <= 0) { m.hp = 0; fpsFeed('The dark took the last of you.'); fpsDie(null, null); }
       }
     }
@@ -766,7 +807,7 @@ RAID_STAGES.descent = {
       }
       ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = mono(phone ? 10 : 12);
       ctx.fillStyle = S.inLight ? '#ffd88a' : `rgba(150,200,255,${0.6 + 0.3 * Math.sin(t * 4)})`;
-      ctx.fillText(S.inLight ? 'IN THE LIGHT · MENDING' : 'IN THE DARK · IT DRAINS YOU', cx, H - (phone ? 150 : 96));
+      ctx.fillText(S.inLight ? (S.dark > 0.005 ? 'IN THE LIGHT · MENDING WHAT THE DARK TOOK' : 'IN THE LIGHT') : 'IN THE DARK · IT DRAINS YOU', cx, H - (phone ? 150 : 96));
     }
     // the ring's tally, big, while the door's awake
     if (S.door === 1) { ctx.textAlign = 'center'; ctx.textBaseline = 'top'; ctx.font = fell(phone ? 26 : 38); ctx.fillStyle = '#bfe4ff'; ctx.fillText(`${Math.min(S.kills, RSW.NEED)} / ${RSW.NEED}`, cx, phone ? top + 20 : 60); }
