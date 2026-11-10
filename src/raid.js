@@ -335,9 +335,9 @@ function raidHud(phone, mono, fell) {
 // dark takes DRAIN a second. NEED of them sent back inside RING of the arena's middle open the door.
 // Maren's Weight: out of the light it settles on you, WGT_T seconds to the full of it, when you go at WGT_SLOW of your
 // pace; any brazier's light lifts it at once. The wrecking balls: hung from the cave's roof over the path between
-// braziers, BALL_R across, swinging across the path in BALL_T seconds or so; one that catches you knocks you BALL_DMG
-// and throws you aside
-const RSWX = { WGT_T: 22, WGT_SLOW: 0.45, BALL_R: 1.05, BALL_LOW: 1.3, BALL_T: 3.6, BALL_DMG: 1, BALL_CD: 1.2 };
+// braziers, BALL_R across, swinging across the path in BALL_T seconds or so; one that catches you puts you straight
+// down (whatever your health, your class or your iframes), thrown aside
+const RSWX = { WGT_T: 20, WGT_SLOW: 0.25, BALL_R: 1.05, BALL_LOW: 1.3, BALL_T: 3.6, BALL_DMG: 1, BALL_CD: 1.2 };
 const RSW = { SEA: 250, DECK: 253, CEIL: 30, HOLE: [-11, 11, 13, 35], FALL: 8.4, LIT_R: 7.5, MEND: 1.2, DRAIN: 0.2, NEED: 20, RING: 13, USE: 1.1, GAP: 3.4 };
 // The path: [x, y, half its width, what's there] from the island's middle, from the cap behind where you land to the
 // cap with the door in it; b, a brazier; a, the arena before the door (two more braziers at its sides). Between each
@@ -807,12 +807,12 @@ RAID_STAGES.descent = {
         const P = rswBallAt(b, bt), [bx, by] = rswW(P.x, P.y), d = Math.hypot(m.x - bx, m.y - by), jz = m.jz || 0;
         if (d < RSWX.BALL_R + 0.35 && P.z - RSWX.BALL_R < jz + 1.8 && P.z + RSWX.BALL_R > jz) {
           S.ballCd = RSWX.BALL_CD;
-          if (!(m.protect > 0)) fpsHurt(RSWX.BALL_DMG, null, null);
+          if (!(m.protect > 0)) { m.hp = 0; m.iframe = 0; FPS.hurtT = 0.5; try { sfxHit(); } catch (e) {} fpsDie(null, null); }
           zmSound('hit'); FPS.hurtT = 0.9;
           // thrown the way it's swinging (across the path), a little at a time so no wall is passed
           const dir = Math.sign(Math.cos(bt * 6.2832 / b.T + b.ph)) || 1;
           S.shove = [b.nx * dir * 7, b.ny * dir * 7, 0.35];
-          fpsFeed('A wrecking ball caught you.');
+          fpsFeed('A wrecking ball caught you and put you down.');
           break;
         }
       }
