@@ -11,7 +11,9 @@
 //   npm start            (PORT defaults to 8080)
 
 import http from 'node:http';
-import { readFileSync, existsSync } from 'node:fs';
+import { readFileSync, existsSync, statSync } from 'node:fs';
+import { gzipSync, brotliCompressSync, constants as Z } from 'node:zlib';
+import { createHash } from 'node:crypto';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { randomBytes } from 'node:crypto';
@@ -26,9 +28,23 @@ const MAX_PRESENCE_BYTES = 4096;
 const LOBBY_INTERVAL_MS = 1000;
 
 const pagePath = join(root, 'dist', 'skerry-light.html');
+// The page, read once (and again only if the file changes), with its fingerprint (ETag) and its compressed copies,
+// so a browser gets it Brotli- or gzip-compressed, and one that already has this version gets a 304 and nothing
+// more: on Render's free plan, outbound bandwidth is what runs out first.
+let pageCache = null;
 function page() {
   if (!existsSync(pagePath)) return null;
-  return readFileSync(pagePath);
+  const mt = statSync(pagePath).mtimeMs;
+  if (pageCache && pageCache.mt === mt) return pageCache;
+  const raw = readFileSync(pagePath);
+  pageCache = {
+    mt, raw,
+    etag: '"' + createHash('sha1').update(raw).digest('base64url').slice(0, 20) + '"',
+    gz: gzipSync(raw, { level: 9 }),
+    br: brotliCompressSync(raw, { params: { [Z.BROTLI_PARAM_QUALITY]: 9, [Z.BROTLI_PARAM_SIZE_HINT]: raw.length } }),
+  };
+  console.log(`Page: ${(raw.length / 1e6).toFixed(2)} MB, ${(pageCache.br.length / 1e6).toFixed(2)} MB with Brotli, ${(pageCache.gz.length / 1e6).toFixed(2)} MB with gzip`);
+  return pageCache;
 }
 
 const server = http.createServer((req, res) => {
@@ -41,14 +57,22 @@ const server = http.createServer((req, res) => {
   if (scoresRoute(req, res)) return;
   if (savesRoute(req, res)) return;
   if (url === '/' || url === '/index.html') {
-    const body = page();
-    if (!body) {
+    const P = page();
+    if (!P) {
       res.writeHead(500, { 'content-type': 'text/plain' });
       res.end('The game has not been built yet. Run: npm run build\n');
       return;
     }
-    res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-cache' });
-    res.end(body);
+    // (no-cache: the browser keeps its copy but asks each time whether it's still current, so a new deploy shows at once)
+    const head = { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-cache', etag: P.etag, vary: 'Accept-Encoding' };
+    const seen = String(req.headers['if-none-match'] || '').split(',').map(t => t.trim().replace(/^W\//, ''));
+    if (seen.includes(P.etag)) { res.writeHead(304, head); res.end(); return; }
+    const ae = String(req.headers['accept-encoding'] || '');
+    const [body, enc] = /\bbr\b/.test(ae) ? [P.br, 'br'] : /\bgzip\b/.test(ae) ? [P.gz, 'gzip'] : [P.raw, null];
+    if (enc) head['content-encoding'] = enc;
+    head['content-length'] = body.length;
+    res.writeHead(200, head);
+    res.end(req.method === 'HEAD' ? undefined : body);
     return;
   }
   res.writeHead(404, { 'content-type': 'text/plain' });
@@ -184,6 +208,7 @@ setInterval(() => {
   }
 }, 10000);
 
+page();   // (compressed now, before the first visitor)
 server.listen(PORT, () => {
   console.log('Skerry Light is running at http://localhost:' + PORT);
   console.log('Cloud saves: ' + (SAVE_STORE === 'upstash' ? 'kept in Upstash Redis' : 'in memory only (set UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN to keep them)'));

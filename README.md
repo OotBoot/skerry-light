@@ -195,6 +195,8 @@ It sits at the top of the title screen: the top three of every game at once, eac
   3. In Render, open the service, then **Environment**, and add both as environment variables with exactly those names. Render redeploys by itself.
   4. The server's log then says `Scoreboard: kept in Upstash Redis`.
 
+  The server sends the page compressed (Brotli, or gzip for browsers without it: about 3.9 MB instead of 7) and with an ETag, so a browser that already has the current version gets a 304 and downloads nothing; the page is compressed once, when the server starts. On Render's free plan outbound bandwidth (5 GB a month) is the limit that runs out first.
+
   Without them the server keeps the board in memory, and it starts over whenever the server restarts. Players on the site choose the name shown beside their scores. Anyone can send a score, so the server only takes numbers the games can plausibly produce, one score every few seconds from each address, and one entry per browser per game; it's a board for honest players, not proof against a determined cheat.
 
 ## Keeper's Last Light (rounds against the drowned; called the Lighthouse in the code and below)
