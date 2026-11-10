@@ -24015,8 +24015,8 @@ const zrvV = (x, y, z) => new THREE.Vector3(x, y, z);
 // The schedule (zbPlan): boss rounds from round 10, every fourth round (10, 14, 18, 22, ...): the Diver first, the
 // Mooncusser at 14, the Keelback at 18, then any of the three; one at a time to round 19, two from 20, three from 30,
 // four from 40, five from 50; and from round 25 a stray one now and then in the rounds between. Each is
-//   zmHp(round) x its own multiplier x (1 + 0.75 for each more player) x (1 + 0.06 per round past 10)
-// so at round 10 the Diver is as he always was, and later they outgrow the drowned (zbHpOf).
+//   zmHp(round) x its own multiplier x 1.25 (BOOST: every boss a quarter stronger) x (1 + 0.75 for each more player)
+//   x (1 + 0.06 per round past 10), so later they outgrow the drowned (zbHpOf).
 // Each comes up out of the sea outside a window it fits (zbWindow: the Diver only by the ground's windows and the
 // sea wall; the Mooncusser up the jetty's ladders and the tower's walls too; the Keelback up over the jetty's edge),
 // takes all its boards in at once and climbs through; inside, it goes after the nearest of you by the walk,
@@ -24031,7 +24031,7 @@ const zrvV = (x, y, z) => new THREE.Vector3(x, y, z);
 // and src/zmnet.js (znHostSend, znApply) are single lines marked [boss]; fpsRay (src/fps.js) reads a body's own size.
 
 const ZBC = {
-  FROM: 10, EVERY: 4, HP: 12, HP_MORE: 0.75, LATE: 0.06, MAX: 5, STRAY_FROM: 25, STRAY: 0.3,
+  FROM: 10, EVERY: 4, HP: 12, BOOST: 1.25, HP_MORE: 0.75, LATE: 0.06, MAX: 5, STRAY_FROM: 25, STRAY: 0.3,
   DMG: 2, PTS: 500, PAD: 0.45, RAD: 0.85, TALL: 2.75, HEADZ: 2.15,
   REACH: 2.6, NEAR: 2.0, SLAM_R: 4.2, SLAM_AT: 2.0, SLAM_RANGE: 6.5, OUT: 6,
 };
@@ -24049,7 +24049,7 @@ const zbCount = r => r < ZBC.FROM ? 0 : Math.min(ZBC.MAX, Math.max(1, Math.floor
 // how much more there is to them, the later it gets (1 at round 10)
 const zbLate = r => 1 + ZBC.LATE * Math.max(0, r - ZBC.FROM);
 // one of a kind's strength, that round, with n of you
-const zbHpOf = (kind, r, n) => zmHp(r) * ZBT[kind].hp * (1 + ZBC.HP_MORE * (Math.max(1, n) - 1)) * zbLate(r);
+const zbHpOf = (kind, r, n) => zmHp(r) * ZBT[kind].hp * ZBC.BOOST * (1 + ZBC.HP_MORE * (Math.max(1, n) - 1)) * zbLate(r);
 const zbT = z => ZBT[z.bt] || ZBT.diver;
 const zbActT = z => (zbT(z).acts[z.act] || ZB_T.smash);
 const zbEnd = z => z.aEnd || zbActT(z).end;
