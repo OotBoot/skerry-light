@@ -48,6 +48,10 @@ const RCL = { cls: null, run: null, picking: false, gT: 0, uK: 0, ultT: 0, shots
   proj: [], clouds: [], wells: [], quakes: [], ev: [], eseq: 0, seen: {}, healT: 0, upT: 0, padWas: null, padCur: 0 };
 try { const c = localStorage.getItem('skerry-raid-class'); if (RCL_CLASSES[c]) RCL.last = c; } catch (e) {}
 Object.assign(ZM_DMG, { M: 1, B: 1, A: 1, U: 1, Q: 1 });
+// Maren's End: six knocks to go down instead of three (twelve with Stout Heart), wherever the game asks how many
+{ const raid = () => typeof RAID !== 'undefined' && RAID.on;
+  Object.defineProperty(ZMC, 'HP', { get: () => raid() ? 6 : 3, configurable: true });
+  Object.defineProperty(ZMC, 'HP_STOUT', { get: () => raid() ? 12 : 6, configurable: true }); }
 const rclOn = () => typeof RAID !== 'undefined' && RAID.on && FPS.on && FPS.zm;
 const rclC = () => RCL_CLASSES[RCL.cls] || null;
 const rclHp = () => typeof zmHp === 'function' ? zmHp(Math.max(1, ZM.round || 1)) : 4;
@@ -329,6 +333,8 @@ function rclShoot() {
   }
   return true;
 }
+// (zmReloadK) in Maren's End the blunderbuss loads 30% quicker, whoever carries it
+function rclReloadK() { return rclOn() && FPS.weapon === 'blunderbuss' ? 0.7 : 1; }
 // (fpsHurt) a knock coming: Bulwark stops it, a Wellspring halves it
 function rclHurtK(n) {
   if (!rclOn() || !RCL.cls) return n;

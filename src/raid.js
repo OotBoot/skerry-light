@@ -229,23 +229,30 @@ function raid3d(dt) {
   if (!RAID.on || !R3.grp) return;
   const m = FPS.me, G0 = FPSC.GROUND, t = g.t;
   // the lantern: down at your left, swinging a little as you walk; not while you're down or out
-  const show = !(m.dead > 0) && !zmIsDown() && !fpsThird() && !zmSpecOn();
+  // (only in a part that asks for it: Part I's lantern stage; gone once you're through its door)
+  const St = raidStage(), has = !!(St && St.lantern);
+  const show = has && !(m.dead > 0) && !zmIsDown() && !fpsThird() && !zmSpecOn();
   R3.lan.visible = show;
   const h = m.h, p = m.p, ez = G0 + FPSC.EYE + (m.jz || 0) - (FPS.eyeLag || 0) - (FPS.downEye || 0) - (FPS.crouchEye || 0);
   const fx = Math.sin(h), fy = Math.cos(h), sw = reduceMotion ? 0 : Math.sin((FPS.step || 0) * 0.5) * 0.03;
   // (held in the same place in your view, however you look: forward, left and down from your eye)
   const cp = Math.cos(p), sp = Math.sin(p), F = [fx * cp, fy * cp, sp], Rt = [fy, -fx, 0], U = [-fx * sp, -fy * sp, cp];
   const at = (f, r, u) => [m.x + F[0] * f + Rt[0] * r + U[0] * u, m.y + F[1] * f + Rt[1] * r + U[1] * u, ez + F[2] * f + U[2] * u];
-  const [lx, ly, lz] = at(0.92, -0.42 + sw, -0.37 + Math.abs(sw));
+  // (in the bottom-left corner of the view, whatever the field of view and the screen's shape: the corner's place at
+  // this distance from the camera's own angles, then in by the lantern's size)
+  const C = GL3D.camera, D = 0.9, hh = D * Math.tan((C.fov || 50) * Math.PI / 360), hw = hh * (C.aspect || 1.6);
+  const sc = hh / 0.345 * 0.6;   // (the same share of the screen at any field of view)
+  const [lx, ly, lz] = at(D, -hw + (0.15 + sw) * sc, -hh + (0.15 + Math.abs(sw)) * sc);
+  R3.lan.scale.setScalar(sc);
   R3.lan.position.copy(z3v(lx, ly, lz)); R3.lan.rotation.set(0, -h, 0); R3.lan.rotateX(-p * 0.6 + sw * 2);
   const fl = reduceMotion ? 1 : 0.9 + 0.1 * Math.sin(t * 13) * Math.sin(t * 4.7);
   R3.flame.scale.set(fl, 1.8 * fl, fl); R3.halo.material.opacity = 0.8 * fl;
   // its light: from the lantern (or, while you're down, from where it lies)
-  R3.light.position.copy(z3v(m.x - fy * 0.3, m.y + fx * 0.3, ez - 0.2)); R3.light.intensity = (show ? 1.6 : 0.8) * fl; R3.light.distance = 16;
+  R3.light.position.copy(z3v(m.x - fy * 0.3, m.y + fx * 0.3, ez - 0.2)); R3.light.intensity = has ? (show ? 1.6 : 0.8) * fl : 0; R3.light.distance = 16;
   // the others' lanterns
   const list = [...FPS.remote.values()].filter(r => !r.dead && r.x != null);
   while (R3.theirs.length < list.length) { const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: R3.glowTex, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending })); s.scale.setScalar(1.1); R3.grp.add(s); R3.theirs.push(s); }
-  R3.theirs.forEach((s, i) => { const r = list[i]; s.visible = !!r; if (r) s.position.copy(z3v(r.x + Math.cos(r.h || 0) * -0.35, r.y + Math.sin(r.h || 0) * 0.35, G0 + (r.jz || 0) + 1.0)); });
+  R3.theirs.forEach((s, i) => { const r = list[i]; s.visible = !!r && has; if (r) s.position.copy(z3v(r.x + Math.cos(r.h || 0) * -0.35, r.y + Math.sin(r.h || 0) * 0.35, G0 + (r.jz || 0) + 1.0)); });
   raidCall('f3', dt);
 }
 // glowing drowned: a cold light in their skin, and a haze round them, so they're seen coming in the dark
@@ -322,7 +329,7 @@ function raidHud(phone, mono, fell) {
 // under the Swallow to the door. Falling in the Swallow you come down no quicker than FALL (so it takes about half a
 // minute). Braziers: LIT_R, how far a lit one's light reaches; in it you mend MEND a second and outside it (below) the
 // dark takes DRAIN a second. NEED of them sent back inside RING of the arena's middle open the door.
-const RSW = { SEA: 250, DECK: 253, CEIL: 30, HOLE: [-11, 11, 13, 35], FALL: 8.4, LIT_R: 7.5, MEND: 0.9, DRAIN: 0.2, NEED: 20, RING: 13, USE: 1.1, GAP: 3.4 };
+const RSW = { SEA: 250, DECK: 253, CEIL: 30, HOLE: [-11, 11, 13, 35], FALL: 8.4, LIT_R: 7.5, MEND: 1.2, DRAIN: 0.2, NEED: 20, RING: 13, USE: 1.1, GAP: 3.4 };
 // The path: [x, y, half its width, what's there] from the island's middle, from the cap behind where you land to the
 // cap with the door in it; b, a brazier; a, the arena before the door (two more braziers at its sides). Between each
 // two, a narrower stretch a little off the straight line (laid in rswGeo).
@@ -706,7 +713,7 @@ function rswDiver(P) {
 }
 
 RAID_STAGES.descent = {
-  n: 'The Swallow', map: RSW_MAP, noBars: true,
+  n: 'The Swallow', map: RSW_MAP, noBars: true, lantern: true,
   set(H, K) { rswSet(H, K); },
   enter() { Object.assign(RAID.st, { lit: 0, door: 0, kills: 0, spawnT: 3, diverT: 40 + Math.random() * 20, useT: 0, useI: -1, pend: 0, landed: false, windT: 0, thru: false, flare: {}, landT: 0 }); },
   players(P) { return P.filter(p => rswBelow(p.jz)); },

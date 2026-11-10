@@ -307,7 +307,7 @@ How it's built (`src/zombies.js`): the station is laid out by the same island bu
 
 A game of its own, with its own card on the title screen (the **Maren's End** button at the top takes you there) and its own column on the scoreboard. It's built on Keeper's Last Light: the same drowned, the same way of playing together (host a raid, the others join from the card's **Play together** list, and the host starts it). You go in with a pepperbox and a blunderbuss, and your weapon and outfit crates open from the raid's own card.
 
-**Part I · The Swallow.** You start on a quay at the top of a long pier that runs out over the dry bed of a sea that's gone. The pier stops just short of the Swallow, a great hole in the sea bed. Jump in: it's about thirty seconds down a dark shaft, the wind roaring past, before you land softly at the bottom. Down there it's black but for pale lichen on the rock and the light of **Maren's Lantern**, which every raider carries in their left hand.
+**Part I · The Swallow.** You start on a quay at the top of a long pier that runs out over the dry bed of a sea that's gone. The pier stops just short of the Swallow, a great hole in the sea bed. Jump in: it's about thirty seconds down a dark shaft, the wind roaring past, before you land softly at the bottom. Down there it's black but for pale lichen on the rock and the light of **Maren's Lantern**, which every raider carries in their left hand (low in the bottom-left corner of the screen, kept there whatever your field of view). It's only for Part I: it's gone once you're through the door.
 
 - A path winds away through the dark, with braziers along it. Hold Use at a dark brazier (just over a second) to light it from the lantern.
 - Out in the dark the dark drains your health (from full to nothing in about fifteen seconds), so get from one brazier to the next. Inside a lit brazier's light you get back what the dark took, and your ammunition tops up; what the drowned took from you doesn't come back there.
@@ -344,7 +344,7 @@ The last part of the raid. The door at the end of the bridge lets you out in the
 
 ### Maren's End: the three callings
 
-When a raid in Maren's End starts, each player picks a calling from a card over the view (your last one is marked; on a controller, left and right, then A). Each goes down with two weapons of its own, a way of jumping, a grenade and an ultimate. **G** (or **Q**) throws the grenade, which comes back after a while; **X** calls the ultimate once its ring is full. The ring fills slowly by itself and faster with every kill. On a controller they're **LB** and **RB** (or up on the D-pad); on a touch screen, the two round buttons left of the fire cluster. Both meters sit bottom left.
+When a raid in Maren's End starts, each player picks a calling from a card over the view (your last one is marked; on a controller, left and right, then A). Each goes down with two weapons of its own, a way of jumping, a grenade and an ultimate. **G** (or **Q**) throws the grenade, which comes back after a while; **X** calls the ultimate once its ring is full. The ring fills slowly by itself and faster with every kill. On a controller they're **LB** and **RB** (or up on the D-pad); on a touch screen, the two round buttons side by side left of the fire cluster (the grenade nearer Fire, the ultimate beside it). Both meters sit bottom left.
 
 | | Mercenary | Brute | Apothecary |
 |---|---|---|---|
@@ -355,7 +355,7 @@ When a raid in Maren's End starts, each player picks a calling from a card over 
 | Grenade | **Powder Flask** (back in 16 s): a short fuse, and it bursts at once if it strikes one of them | **Scrap Keg** (22 s): a big, slow blast that throws them back | **Brimstone Vial** (20 s): breaks into a cloud of green fire for 7 s that burns and slows the drowned in it, and mends you and your friends standing in it |
 | Ultimate | **Dead Reckoning**: a heavy pistol for 12 s, six shots, each through every one of them in its line | **Bulwark**: 14 s when no knock lands on you, and every pull of the trigger is a quake that hurls back all in front of you | **Wellspring**: a ring of green light at your feet for 15 s: inside it everyone mends a knock every 0.6 s, knocks are halved, the drowned are slowed, and anyone down in it gets back up |
 
-The weapons are the ordinary ones, so the skins from your weapon crates and the outfit from your outfit crates go down with you, and kills in the raid count towards both kinds of crate. Together, everyone sees the others' grenades, Wellsprings and quakes, and a mark in each player's calling colour over their head (ringed while their ultimate is up).
+In Maren's End you can take six knocks before you go down (twelve with Stout Heart), not three; where you mend by yourself (Parts II and III) it starts after 2.2 seconds left alone instead of 3.2, and a lit brazier in Part I mends you a third faster (1.2 a second). The Blunderbuss reloads 30% faster there than elsewhere. The weapons are the ordinary ones, so the skins from your weapon crates and the outfit from your outfit crates go down with you, and kills in the raid count towards both kinds of crate. Together, everyone sees the others' grenades, Wellsprings and quakes, and a mark in each player's calling colour over their head (ringed while their ultimate is up).
 
 ## Wreckers' Night (multiplayer FPS)
 
