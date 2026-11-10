@@ -256,7 +256,9 @@ function saveData() {
     // and the other crates' loot, so one save (code, link, file, claude.ai account, cloud) carries everything:
     // weapon skins (src/wcrates.js), outfits (src/ocrates.js) and banners (src/rcrates.js)
     // (each only once its own file has run: the boat crates save while the page is still loading)
-    w: crOther('wcData'), oc: crOther('ocData'), rc: crOther('rcData') };
+    w: crOther('wcData'), oc: crOther('ocData'), rc: crOther('rcData'),
+    // and your bests for the scoreboard and your username (src/scores.js)
+    best: crOther('boardBests'), nick: crOther('boardNick') || undefined };
 }
 function crOther(f) { try { return typeof window[f] === 'function' ? window[f]() : undefined; } catch (e) { return undefined; } }
 function saveCrates() {
@@ -291,6 +293,7 @@ function mergeSave(d, takeLooks) {
   if (d.w && typeof d.w === 'object' && typeof wcMerge === 'function' && wcMerge({ c: d.w.crates, n: d.w.opened, o: d.w.owned, e: takeLooks ? d.w.equipped : null })) { changed = true; wcSave(); }
   if (typeof ocMerge === 'function' && ocMerge(d.oc, takeLooks)) changed = true;
   if (typeof rcMerge === 'function' && rcMerge(d.rc, takeLooks)) changed = true;
+  try { if (typeof boardMerge === 'function' && boardMerge(d.best, d.nick, takeLooks)) changed = true; } catch (e) {}
   if (takeLooks) {
     if (d.equipped && typeof d.equipped === 'object') for (const b of BOATS) {
       const sk = SKIN_BY_ID[d.equipped[b.id]];
@@ -307,7 +310,7 @@ function afterMerge() { saveCrates(); renderCrates(); updateCrateButtons(); rend
 // the save code: your save, packed into one line of text
 function saveCode() {
   const d = saveData();
-  const packed = { c: d.crates.skerry, n: d.opened | 0, o: d.owned, e: d.equipped, p: d.pennant, f: d.flare, b: d.boat, t: d.pt, w: d.w, q: d.oc, r: d.rc };   // [pirate tokens] src/zmegg.js
+  const packed = { c: d.crates.skerry, n: d.opened | 0, o: d.owned, e: d.equipped, p: d.pennant, f: d.flare, b: d.boat, t: d.pt, w: d.w, q: d.oc, r: d.rc, s: d.best, u: d.nick };   // [pirate tokens] src/zmegg.js
   return 'SKERRY-' + btoa(unescape(encodeURIComponent(JSON.stringify(packed)))).replace(/=+$/, '').replace(/\+/g, '-').replace(/\//g, '_');
 }
 function readSaveCode(text) {
@@ -317,7 +320,7 @@ function readSaveCode(text) {
   try {
     const b64 = m[1].replace(/-/g, '+').replace(/_/g, '/');
     const o = JSON.parse(decodeURIComponent(escape(atob(b64 + '==='.slice((b64.length + 3) % 4)))));
-    return { crates: o.c | 0, opened: o.n | 0, owned: o.o, equipped: o.e, pennant: o.p, flare: o.f, boat: o.b, pt: o.t, w: o.w, oc: o.q, rc: o.r };   // [pirate tokens] src/zmegg.js
+    return { crates: o.c | 0, opened: o.n | 0, owned: o.o, equipped: o.e, pennant: o.p, flare: o.f, boat: o.b, pt: o.t, w: o.w, oc: o.q, rc: o.r, best: o.s, nick: o.u };   // [pirate tokens] src/zmegg.js
   } catch (e) { return null; }
 }
 

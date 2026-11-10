@@ -70,6 +70,13 @@
   </div>
 
   <div class="overlay" id="titleCard">
+    <div class="card boardcard" id="boardCard" aria-labelledby="boardHead">
+      <div class="cardtop"><span class="eyebrow">Best on record · all four games</span><button class="tool closebtn" id="boardRefresh" type="button">Refresh</button></div>
+      <h1 id="boardHead">The Scoreboard</h1>
+      <div class="nickrow" id="boardNameRow" hidden><label for="boardName">Your name</label><input id="boardName" type="text" maxlength="16" autocomplete="nickname" placeholder="your sailing name"></div>
+      <div class="boardgames" id="boardGames" aria-live="polite"></div>
+      <p class="muted" id="boardNote"></p>
+    </div>
     <button class="newgame" id="fpsBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">Try the new game, <b>Wreckers' Night</b>: a multiplayer shootout on the skerry</span><span class="ng-go" aria-hidden="true">↓</span></button>
     <button class="newgame warbanner" id="warBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">And another, <b>The Drowned Reach</b>: a war for the islands, alone or with up to ten players</span><span class="ng-go" aria-hidden="true">↓</span></button>
     <button class="newgame zmbanner" id="zmBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">And a fourth, <b>The Lighthouse</b>: hold the keeper's station against the drowned, round after round</span><span class="ng-go" aria-hidden="true">↓</span></button>
@@ -229,19 +236,6 @@
         <p><b>Together.</b> Host a night and up to three others here can join it from this card. Nothing starts until the host presses Start the night, with whoever has joined. More of you means more of them each round. Points are your own: share the doors, race for the chest. Go down and you have half a minute on the floor for someone to hold Use beside you and get you up; bleed out and you're back next round with a pepperbox. The night ends when nobody is left standing. The pause menu doesn't stop a night together.</p>
         <p><b>Keys:</b> as Wreckers' Night, and F (or E) to use: buy, open, take, and hold it at a window to board it up. V (or the middle mouse button) for the knife, which never runs out; and with nothing left to fire, Fire slashes with it too. C switches the view. 1 and 2 your weapons, Tab how the night's going, Esc pauses. <b>Controller:</b> B to use, R3 the knife, d-pad down the view. <b>Touch:</b> the Use and knife buttons by Fire. On a phone, push the stick out to the dotted outer circle to run. Kills here count towards weapon and outfit crates too, and your best goes on the scoreboard.</p>
       </details>
-    </div>
-    <div class="card boardcard" id="boardCard" aria-labelledby="boardHead">
-      <div class="cardtop"><span class="eyebrow">Best on record · all four games</span><button class="tool closebtn" id="boardRefresh" type="button">Refresh</button></div>
-      <h1 id="boardHead">The Scoreboard</h1>
-      <div class="boardtabs" id="boardTabs" role="tablist" aria-label="Game">
-        <button type="button" role="tab" data-g="skerry">Skerry Light</button><button type="button" role="tab" data-g="fps">Wreckers’ Night</button><button type="button" role="tab" data-g="war">Drowned Reach</button><button type="button" role="tab" data-g="zm">The Lighthouse</button>
-      </div>
-      <p class="muted" id="boardWhat"></p>
-      <div class="boardhead" aria-hidden="true"><span class="rk">#</span><span class="nm">Name</span><span class="sc" id="boardHeadS"></span><span class="sb" id="boardHeadB"></span></div>
-      <ol class="boardlist" id="boardList" aria-live="polite"></ol>
-      <p class="boardmine" id="boardMine"></p>
-      <div class="nickrow" id="boardNameRow" hidden><label for="boardName">Your name on the board</label><input id="boardName" type="text" maxlength="18" autocomplete="nickname" placeholder="your sailing name"></div>
-      <p class="muted" id="boardNote"></p>
     </div>
   </div>
 

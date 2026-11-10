@@ -184,7 +184,9 @@ How it works: the host's browser runs the whole war, the same code as a game alo
 - **The Drowned Reach:** wars won, alone or together (and the most land taken in one war).
 - **The Lighthouse:** most rounds held in one night (and the most kills in one night).
 
-Your bests are also kept in your browser, and only ever go up.
+It sits at the top of the title screen: the top three of every game at once, each with a **Top 10** button to see more, and your own rows marked "(you)" (your best is shown under a game where you're not in the top few). Your bests are kept in your browser, only ever go up, and are part of your save, so they follow your recovery code (cloud saves, below) to every device; your scores go on the board by themselves.
+
+**Your name** is one username for every game: type it in the board's box or any of the other name boxes (sailing together, Wreckers' Night, the Lighthouse) and the rest fill in. It's kept on the device (and in your save, so a new device that loads your recovery code gets it too), and it's your name on the board; with none chosen, you're "A sailor". The Drowned Reach's house name is kept on the device as well. On the game's own site you're on the board once, under an id made from your recovery code (never the code itself): a browser's own entry from before, or one from a code since replaced, moves across to it, keeping the higher scores, so no one is on the board twice.
 
 - **On claude.ai** the artifact keeps the board in its own shared database: one document per player under `scores/`, readable by everyone who can open the page, written only by its own player (Contributor access or above). Names are shown as each viewer's claude.ai shows them.
 - **On your own server** the board is kept in a free [Upstash](https://upstash.com) Redis database, reached over its REST API (no driver to install). To set it up:

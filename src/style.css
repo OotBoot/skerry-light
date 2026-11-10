@@ -887,10 +887,6 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 .boardcard h1 { color: var(--lamp); }
 .boardcard .muted { font-size: 12px; margin: 0; }
 .boardcard [hidden] { display: none !important; }
-.boardtabs { display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px; }
-.boardtabs button { flex: 1 1 auto; font-family: var(--log); font-size: 12px; letter-spacing: 0.04em; color: var(--muted); background: rgba(7,12,24,0.55); border: 1px solid var(--rule); padding: 10px 10px; min-height: 44px; cursor: pointer; }
-.boardtabs button.on { color: var(--night); background: var(--lamp); border-color: var(--lamp); }
-.boardtabs button:focus-visible { outline: 2px solid var(--lamp); outline-offset: 2px; }
 .boardhead, .boardlist li { display: grid; grid-template-columns: 2.2em minmax(0, 1fr) 6.5em 6.5em; gap: 8px; align-items: baseline; font-family: var(--log); font-size: 13px; }
 .boardhead { font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); border-bottom: 1px solid var(--rule); padding-bottom: 6px; }
 .boardlist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; max-height: 22em; overflow-y: auto; }
@@ -900,6 +896,13 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 .boardlist .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .boardhead .sc, .boardhead .sb, .boardlist .sc, .boardlist .sb { text-align: right; font-variant-numeric: tabular-nums; }
 .boardlist .rk { color: var(--muted); }
+.boardgames { display: grid; grid-template-columns: 1fr; gap: 14px; }
+
+.boardgame { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.boardgame .bgtop { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.boardgame h2 { font-size: 15px; margin: 0; color: var(--ink); }
+.boardgame .bgmore { font-size: 11px; padding: 6px 10px; min-height: 32px; }
+.boardgame .boardlist { max-height: none; }
 .boardcard p.boardmine { margin: 0; font-family: var(--log); font-size: 12px; color: var(--lamp); }
 @media (max-width: 480px) { .boardhead, .boardlist li { grid-template-columns: 1.8em minmax(0, 1fr) 5em 5em; font-size: 12px; } }
 
@@ -912,8 +915,6 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
   #titleCard > .newgame, #titleCard > .newgame + .newgame { margin: 0; }
   /* buttons a thumb can still hit */
   .card .tool, .card .loottabs button { min-height: 36px; }
-  .boardtabs { grid-template-columns: repeat(4, 1fr); }
-  .boardtabs button { flex: 1 1 0; min-width: 0; min-height: 36px; padding: 6px 4px; font-size: 11px; letter-spacing: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .boardlist { max-height: none; }
 }
 /* the Drowned Reach's banner crates */

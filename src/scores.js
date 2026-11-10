@@ -10,6 +10,12 @@
 //   fps     s: most kills in one round             b: rounds won
 //   war     s: wars won                            b: most land taken in one war (tiles)
 //   zm      s: most rounds held in one night        b: most kills in one night (the Lighthouse)
+//
+// Your bests are part of your save (src/crates.js saveData: `best`, merged by taking the higher of each), so they
+// follow your recovery code (src/cloudsave.js) to every device, and on the game's own site you're on the board once,
+// under an id made from that code (not the code itself): a browser's own entry from before moves across to it.
+// Your name on the board is your username: one name for every game, kept on this device (and in your save), typed
+// in any of the name boxes (the board's, the crew's, Wreckers' Night's, the Lighthouse's) and filled into the rest.
 
 const BOARD = {
   games: {
@@ -18,7 +24,7 @@ const BOARD = {
     war: { name: 'The Drowned Reach', s: 'Wars won', b: 'Most land', what: 'Wars of the Drowned Reach won, alone or together. Most land: the most tiles taken in one war.' },
     zm: { name: 'The Lighthouse', s: 'Rounds held', b: 'Most kills', what: 'The most rounds held at the Lighthouse in one night. Most kills: the drowned sent back in one night.' },
   },
-  tab: 'skerry', mine: null, via: null, db: null, user: null, uid: null, data: null, loading: false, err: '', lastT: 0, sendT: 0, store: '',
+  open: {}, mine: null, via: null, db: null, user: null, uid: null, data: null, loading: false, err: '', lastT: 0, sendT: 0, store: '',
 };
 
 // ---------- your bests, here ----------
@@ -46,8 +52,58 @@ function boardId() {
   catch (e) { return null; }
 }
 function boardName() {
-  const v = ($('boardName') && $('boardName').value || '').trim() || (typeof NET !== 'undefined' && NET.nick) || ($('fpsNick') && $('fpsNick').value) || ($('warNick') && $('warNick').value) || '';
-  return String(v).replace(/[\u0000-\u001f\u007f-\u009f<>&"]/g, '').trim().slice(0, 18) || 'A sailor';
+  const v = (typeof NET !== 'undefined' && NET.nick) || ($('warNick') && $('warNick').value) || '';
+  return String(v).replace(/[\u0000-\u001f\u007f-\u009f<>&"]/g, '').trim().slice(0, 16) || 'A sailor';
+}
+
+// ---------- your username: one for every game, kept on this device ----------
+const NICK_BOXES = ['nick', 'fpsNick', 'zmNick', 'boardName'];
+function nickSet(v, from) {
+  const n = typeof cleanNick === 'function' ? cleanNick(v || '') : String(v || '').trim().slice(0, 16);
+  if (typeof NET !== 'undefined') NET.nick = n;
+  try { localStorage.setItem('skerry-nick', n); } catch (e) {}
+  for (const id of NICK_BOXES) { const el = $(id); if (el && el !== from && document.activeElement !== el && el.value !== n) el.value = n; }
+  if (BOARD.mine) { clearTimeout(BOARD.nickT); BOARD.nickT = setTimeout(() => boardSendSoon('all'), 1500); }
+  return n;
+}
+function nickSetup() {
+  // (from before there was one name: the board's own, if the crew's was never set)
+  let n = typeof NET !== 'undefined' ? NET.nick : '';
+  if (!n) { try { n = localStorage.getItem('skerry-board-name') || ''; } catch (e) {} }
+  nickSet(n);
+  for (const id of NICK_BOXES) { const el = $(id); if (el) el.addEventListener('input', () => nickSet(el.value, el)); }
+  // the Drowned Reach's house name: kept here too
+  const h = $('warNick');
+  if (h) { try { const v = localStorage.getItem('skerry-war-house'); if (v && !h.value) h.value = v; } catch (e) {} h.addEventListener('input', () => { try { localStorage.setItem('skerry-war-house', h.value.trim().slice(0, 18)); } catch (e) {} }); }
+}
+// for the save (src/crates.js): your bests and your name, and folding another save's in
+function boardBests() { return BOARD.mine; }
+function boardNick() { return (typeof NET !== 'undefined' && NET.nick) || ''; }
+function boardMerge(best, nick, takeLooks) {
+  let changed = false;
+  if (best && typeof best === 'object' && BOARD.mine) for (const g of Object.keys(BOARD.games)) {
+    const o = best[g]; if (!o) continue;
+    const m = BOARD.mine[g], s = Math.max(m.s, Math.max(0, o.s | 0)), b = Math.max(m.b, Math.max(0, o.b | 0));
+    if (s !== m.s || b !== m.b) { m.s = s; m.b = b; changed = true; }
+  }
+  if (changed) { boardSaveMine(); boardSendSoon('all'); boardRender(); }
+  const n = typeof cleanNick === 'function' ? cleanNick(nick || '') : '';
+  if (n && n !== boardNick() && (takeLooks || !boardNick())) { nickSet(n); changed = true; }
+  return changed;
+}
+
+// ---------- who you are on the board (the game's own site) ----------
+// with a recovery code: an id made from it (so every device with your code is the one entry); else this browser's
+async function boardIdNow() {
+  const code = typeof CS !== 'undefined' && CS.on && CS.code;
+  if (code && window.crypto && crypto.subtle) {
+    if (BOARD.cidFor !== code) {
+      const h = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('skerry-board:' + code));
+      BOARD.cid = [...new Uint8Array(h)].map(x => x.toString(16).padStart(2, '0')).join('').slice(0, 24); BOARD.cidFor = code;
+    }
+    return BOARD.cid;
+  }
+  return boardId();
 }
 
 // ---------- where the board lives ----------
@@ -86,6 +142,9 @@ function boardSendSoon(game) {
 }
 async function boardSend() {
   if (!BOARD.via || !BOARD_PENDING.size) return;
+  // (one at a time: another asked for meanwhile goes after this one)
+  if (BOARD.sending) { BOARD.sendAgain = true; return; }
+  BOARD.sending = true;
   const games = [...BOARD_PENDING]; BOARD_PENDING.clear();
   const m = BOARD.mine;
   try {
@@ -94,20 +153,36 @@ async function boardSend() {
       for (const g of Object.keys(BOARD.games)) if (m[g].s + m[g].b > 0) { doc[g + '_s'] = m[g].s; doc[g + '_b'] = m[g].b; doc[g + '_k'] = m[g].s * 1e7 + m[g].b; }
       await BOARD.db.doc('scores/' + BOARD.uid).set(doc);
     } else {
-      const id = boardId(); if (!id) return;
-      for (const g of games) {
-        if (m[g].s + m[g].b <= 0) continue;
-        const r = await fetch(boardApiUrl(), { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ id, name: boardName(), game: g, s: m[g].s, b: m[g].b }) });
-        if (r.status === 429) { BOARD_PENDING.add(g); clearTimeout(BOARD.sendT); BOARD.sendT = setTimeout(boardSend, 4000); }
+      const id = await boardIdNow(); if (!id) { BOARD.sending = false; return; }
+      // every id this browser has been on the board under: any but this one move across to it, one a pass, so no one
+      // is on the board twice (a browser's own id, before its save had a recovery code; a code since replaced)
+      let used = []; try { used = JSON.parse(localStorage.getItem('skerry-board-used') || '[]').filter(x => typeof x === 'string'); } catch (e) {}
+      const pid = boardId(); if (pid && pid !== id && !used.includes(pid)) used.push(pid);
+      const was = used.find(x => x !== id) || '';
+      if (!used.includes(id)) used.push(id);
+      try { localStorage.setItem('skerry-board-used', JSON.stringify(used.slice(-6))); } catch (e) {}
+      let all = true;
+      for (const g of was ? Object.keys(BOARD.games) : games) {
+        if (m[g].s + m[g].b <= 0 && !was) continue;
+        const r = await fetch(boardApiUrl(), { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ id, name: boardName(), game: g, s: m[g].s, b: m[g].b, was: was || undefined }) });
+        if (!r.ok) { all = false; BOARD_PENDING.add(g); }
         await new Promise(res => setTimeout(res, 3200));   // the server takes one score every few seconds from each address
       }
+      if (was && all) {
+        used = used.filter(x => x !== was); try { localStorage.setItem('skerry-board-used', JSON.stringify(used)); } catch (e) {}
+        if (used.some(x => x !== id)) boardSendSoon('all');
+      }
+      if (!all) { clearTimeout(BOARD.sendT); BOARD.sendT = setTimeout(boardSend, 4000); }
     }
     BOARD.lastT = 0; boardFetch();
   } catch (e) {
     // (a Viewer on claude.ai can read the board but not write to it; a server that's asleep wakes for the next try)
     if (BOARD.via === 'claude') BOARD.err = 'You can see the board, but your scores can’t be added from here (the page’s owner can give you Contributor access).';
+    else { for (const g of games) BOARD_PENDING.add(g); clearTimeout(BOARD.sendT); BOARD.sendT = setTimeout(boardSend, 8000); }
     boardRender();
   }
+  BOARD.sending = false;
+  if (BOARD.sendAgain) { BOARD.sendAgain = false; if (BOARD_PENDING.size) setTimeout(boardSend, 500); }
 }
 
 // ---------- reading the board ----------
@@ -119,7 +194,7 @@ async function boardFetch(force) {
     if (BOARD.via === 'claude') {
       const data = {};
       for (const g of Object.keys(BOARD.games)) {
-        const q = await BOARD.db.collection('scores').orderBy(g + '_k', 'desc').limit(25).get();
+        const q = await BOARD.db.collection('scores').orderBy(g + '_k', 'desc').limit(10).get();
         data[g] = q.docs.map(d => ({ id: d.id, d: d.data() || {} })).filter(e => (e.d[g + '_k'] || 0) > 0).map(e => ({ id: e.id, n: '', nick: String(e.d.nick || ''), s: e.d[g + '_s'] | 0, b: e.d[g + '_b'] | 0, me: e.id === BOARD.uid }));
       }
       // names, as this viewer's claude.ai shows them
@@ -128,43 +203,55 @@ async function boardFetch(force) {
       for (const e of Object.values(data).flat()) e.n = (ps[e.id] && ps[e.id].name) || e.nick || 'Someone';
       BOARD.data = data; BOARD.store = 'claude'; BOARD.err = BOARD.err && /Contributor/.test(BOARD.err) ? BOARD.err : '';
     } else {
-      const r = await fetch(boardApiUrl(), { cache: 'no-store' });
+      const id = await boardIdNow();
+      const r = await fetch(boardApiUrl(), { cache: 'no-store', headers: id ? { 'x-board-id': id } : {} });
       if (!r.ok) throw new Error(r.status);
       const j = await r.json(); BOARD.data = j.games || {}; BOARD.store = j.store || ''; BOARD.err = '';
-      const me = boardName();
-      for (const g of Object.keys(BOARD.data)) for (const e of BOARD.data[g]) e.me = e.n === me && BOARD.mine[g] && e.s === BOARD.mine[g].s && e.b === BOARD.mine[g].b;
     }
   } catch (e) { BOARD.err = 'Couldn’t reach the scoreboard just now. Try Refresh in a moment.'; }
   BOARD.loading = false; boardRender();
 }
+// all four games at once: the top three of each, and Top 10 to see more
 function boardRender() {
-  const list = $('boardList'); if (!list) return;
-  const G = BOARD.games[BOARD.tab], rows = BOARD.data && BOARD.data[BOARD.tab] || [];
-  for (const b of document.querySelectorAll('#boardTabs button')) { const on = b.dataset.g === BOARD.tab; b.classList.toggle('on', on); b.setAttribute('aria-selected', on ? 'true' : 'false'); }
-  $('boardWhat').textContent = G.what;
-  $('boardHeadS').textContent = G.s; $('boardHeadB').textContent = G.b;
-  list.innerHTML = '';
-  if (!rows.length) { const li = document.createElement('li'); li.className = 'empty'; li.textContent = BOARD.loading ? 'Reading the board…' : BOARD.data ? 'No one is on this board yet. Be the first.' : (BOARD.err || 'Reading the board…'); list.append(li); }
-  rows.forEach((e, k) => {
-    const li = document.createElement('li'); if (e.me) li.className = 'me';
-    for (const [cls, txt] of [['rk', String(k + 1)], ['nm', e.n + (e.me ? ' (you)' : '')], ['sc', String(e.s)], ['sb', BOARD.tab === 'war' ? `${e.b} tiles` : String(e.b)]]) { const sp = document.createElement('span'); sp.className = cls; sp.textContent = txt; li.append(sp); }
-    list.append(li);
-  });
-  const m = BOARD.mine && BOARD.mine[BOARD.tab];
-  $('boardMine').textContent = m ? `Your best: ${G.s.toLowerCase()} ${m.s} · ${G.b.toLowerCase()} ${m.b}${BOARD.tab === 'war' ? ' tiles' : ''}` : '';
-  $('boardNameRow').hidden = BOARD.via !== 'server';
-  $('boardNote').textContent = BOARD.err && rows.length ? BOARD.err
+  const box = $('boardGames'); if (!box) return;
+  box.innerHTML = '';
+  const mk = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; };
+  for (const [g, G] of Object.entries(BOARD.games)) {
+    const rows = (BOARD.data && BOARD.data[g]) || [], open = !!BOARD.open[g], sec = mk('section', 'boardgame');
+    const top = mk('div', 'bgtop'); top.append(mk('h2', '', G.name));
+    if (rows.length > 3) {
+      const t = mk('button', 'tool bgmore', open ? 'Top 3' : 'Top 10'); t.type = 'button'; t.setAttribute('aria-expanded', open ? 'true' : 'false');
+      t.addEventListener('click', () => { BOARD.open[g] = !open; boardRender(); }); top.append(t);
+    }
+    sec.append(top);
+    const head = mk('div', 'boardhead'); head.setAttribute('aria-hidden', 'true'); head.title = G.what;
+    for (const [c, t] of [['rk', '#'], ['nm', 'Name'], ['sc', G.s], ['sb', G.b]]) head.append(mk('span', c, t));
+    sec.append(head);
+    const ol = mk('ol', 'boardlist'); ol.setAttribute('aria-label', G.name + ': ' + G.what);
+    if (!rows.length) ol.append(mk('li', 'empty', BOARD.loading && !BOARD.data ? 'Reading the board…' : BOARD.data ? 'No one yet. Be the first.' : (BOARD.err || 'Reading the board…')));
+    let meShown = false;
+    rows.slice(0, open ? 10 : 3).forEach((e, k) => {
+      const li = mk('li', e.me ? 'me' : ''); if (e.me) meShown = true;
+      for (const [cls, txt] of [['rk', String(k + 1)], ['nm', e.n + (e.me ? ' (you)' : '')], ['sc', String(e.s)], ['sb', g === 'war' ? `${e.b} tiles` : String(e.b)]]) li.append(mk('span', cls, txt));
+      ol.append(li);
+    });
+    sec.append(ol);
+    const m = BOARD.mine && BOARD.mine[g];
+    if (m && m.s + m.b > 0 && !meShown) sec.append(mk('p', 'boardmine', `Your best: ${m.s} · ${m.b}${g === 'war' ? ' tiles' : ''}`));
+    box.append(sec);
+  }
+  $('boardNameRow').hidden = BOARD.via === 'claude';
+  $('boardNote').textContent = BOARD.err && BOARD.data ? BOARD.err
     : BOARD.via === 'claude' ? 'Names are as claude.ai shows them. Everyone who opens this page shares the board.'
     : BOARD.store === 'memory' ? 'This server keeps the board in memory only, so it starts over when the server restarts.'
-    : BOARD.via === 'server' ? 'Everyone who plays on this site shares the board. Your name is whatever you put above.' : '';
+    : BOARD.via === 'server' ? 'Everyone who plays on this site shares the board. Your scores go on it by themselves, under your name, and follow your save to every device.'
+    : BOARD.err || '';
 }
 
 (() => {
   if (!$('boardCard')) return;
-  for (const b of document.querySelectorAll('#boardTabs button')) b.addEventListener('click', () => { BOARD.tab = b.dataset.g; try { localStorage.setItem('skerry-board-tab', BOARD.tab); } catch (e) {} boardRender(); });
-  try { const t = localStorage.getItem('skerry-board-tab'); if (BOARD.games[t]) BOARD.tab = t; const n = localStorage.getItem('skerry-board-name'); if (n) $('boardName').value = n; } catch (e) {}
+  nickSetup();
   $('boardRefresh').addEventListener('click', () => boardFetch(true));
-  $('boardName').addEventListener('change', () => { try { localStorage.setItem('skerry-board-name', $('boardName').value.trim()); } catch (e) {} boardSendSoon('all'); });
   // keep it fresh while the title screen is up
   setInterval(() => { if (!$('titleCard').hidden) boardFetch(); }, 10000);
   boardInit();

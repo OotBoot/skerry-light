@@ -8,8 +8,11 @@
 //   UPSTASH_REDIS_REST_TOKEN   the long token
 // Without them, scores are kept in memory only and are lost whenever the server restarts.
 //
-// GET  /api/scores  -> { store, games: { skerry: [{n, s, b}], fps: [...], war: [...] } }   (top 25 of each)
-// POST /api/scores  <- { id, name, game, s, b }   your bests; only ever raised, never lowered
+// GET  /api/scores  -> { store, games: { skerry: [{n, s, b, me?}], fps: [...], war: [...], zm: [...] } }   (top 10 of
+//                      each; with an x-board-id header, that player's own rows are marked me: true)
+// POST /api/scores  <- { id, name, game, s, b, was? }   your bests; only ever raised, never lowered. `was`: the id
+//                      this player was on the board under before (a browser's own, before its save had a recovery
+//                      code): that entry goes, and its bests carry over, so no one is on the board twice
 //
 // `id` is a random secret each browser makes for itself; it is never shown. Anyone can send a score, so
 // this is an honest-players board: the numbers are capped at what the games can plausibly produce, each
@@ -19,7 +22,7 @@ const URL_ = (process.env.UPSTASH_REDIS_REST_URL || '').replace(/\/+$/, '');
 const TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN || '';
 const STORE = URL_ && TOKEN ? 'upstash' : 'memory';
 const KEY = game => 'skerry:scores:' + game;
-const TOP = 25;
+const TOP = 10;
 // what each game's two numbers are, and the most each can sensibly be
 //   skerry: s = most voyages in one run,        b = voyages made in all
 //   fps:    s = most kills in one round,        b = rounds won
@@ -52,18 +55,20 @@ async function readAll() {
     const games = Object.keys(GAMES), res = await redis(games.map(g => ['HGETALL', KEY(g)]));
     games.forEach((g, k) => {
       const flat = res[k] || [], list = [];
-      for (let i = 0; i + 1 < flat.length; i += 2) { try { const e = JSON.parse(flat[i + 1]); list.push(e); } catch (err) {} }
+      for (let i = 0; i + 1 < flat.length; i += 2) { try { const e = JSON.parse(flat[i + 1]); e.id = flat[i]; list.push(e); } catch (err) {} }
       out[g] = list;
     });
-  } else for (const g of Object.keys(GAMES)) out[g] = [...(memory.get(g) || new Map()).values()];
-  for (const g of Object.keys(out)) out[g] = out[g].filter(e => e && e.s + e.b > 0).sort((a, b) => sortKey(b) - sortKey(a)).slice(0, TOP).map(e => ({ n: cleanName(e.n), s: e.s | 0, b: e.b | 0 }));
+  } else for (const g of Object.keys(GAMES)) out[g] = [...(memory.get(g) || new Map()).entries()].map(([id, e]) => Object.assign({ id }, e));
+  for (const g of Object.keys(out)) out[g] = out[g].filter(e => e && e.s + e.b > 0).sort((a, b) => sortKey(b) - sortKey(a)).slice(0, TOP).map(e => ({ id: e.id, n: cleanName(e.n), s: e.s | 0, b: e.b | 0 }));
   return out;
 }
 
-async function getBoard() {
-  if (cache && Date.now() - cacheAt < 15000) return cache;
-  cache = { store: STORE, games: await readAll() }; cacheAt = Date.now();
-  return cache;
+async function getBoard(me) {
+  if (!cache || Date.now() - cacheAt >= 15000) { cache = { store: STORE, games: await readAll() }; cacheAt = Date.now(); }
+  // (the ids stay here: each row goes out with only its name and numbers, and "me" for the asker's own)
+  const games = {};
+  for (const [g, list] of Object.entries(cache.games)) games[g] = list.map(e => me && e.id === me ? { n: e.n, s: e.s, b: e.b, me: true } : { n: e.n, s: e.s, b: e.b });
+  return { store: STORE, games };
 }
 
 async function postScore(body, addr) {
@@ -77,11 +82,18 @@ async function postScore(body, addr) {
   lastPost.set(addr, now);
   if (lastPost.size > 5000) for (const [k, t] of lastPost) if (now - t > 60000) lastPost.delete(k);
   const name = cleanName(body.name);
-  let prev = null;
-  if (STORE === 'upstash') { const [v] = await redis([['HGET', KEY(game), id]]); try { prev = v ? JSON.parse(v) : null; } catch (e) {} }
-  else prev = (memory.get(game) || new Map()).get(id) || null;
+  let prev = null, old = null;
+  const was = typeof body.was === 'string' && /^[a-z0-9]{12,40}$/.test(body.was) && body.was !== id ? body.was : null;
+  if (STORE === 'upstash') {
+    const [v, w] = await redis([['HGET', KEY(game), id], ['HGET', KEY(game), was || '-']]);
+    try { prev = v ? JSON.parse(v) : null; } catch (e) {}
+    try { old = was && w ? JSON.parse(w) : null; } catch (e) {}
+  } else { const M = memory.get(game) || new Map(); prev = M.get(id) || null; old = was ? M.get(was) || null : null; }
+  // (moving from an old id: its bests come along, and it goes)
+  if (old) prev = { n: prev ? prev.n : old.n, s: Math.max(prev ? prev.s | 0 : 0, old.s | 0), b: Math.max(prev ? prev.b | 0 : 0, old.b | 0) };
+  if (was) { if (STORE === 'upstash') await redis([['HDEL', KEY(game), was]]); else if (memory.has(game)) memory.get(game).delete(was); if (old) cache = null; }
   const e = { n: name, s: Math.max(s, prev ? prev.s | 0 : 0), b: Math.max(b, prev ? prev.b | 0 : 0), at: now };
-  if (prev && prev.s === e.s && prev.b === e.b && prev.n === e.n) return [200, { ok: true, same: true }];
+  if (prev && !old && prev.s === e.s && prev.b === e.b && prev.n === e.n) return [200, { ok: true, same: true }];
   if (STORE === 'upstash') await redis([['HSET', KEY(game), id, JSON.stringify(e)]]);
   else { if (!memory.has(game)) memory.set(game, new Map()); memory.get(game).set(id, e); }
   cache = null;
@@ -92,10 +104,11 @@ async function postScore(body, addr) {
 export function scoresRoute(req, res) {
   const url = (req.url || '/').split('?')[0];
   if (url !== '/api/scores') return false;
-  const headers = { 'content-type': 'application/json', 'access-control-allow-origin': '*', 'access-control-allow-headers': 'content-type', 'cache-control': 'no-store' };
+  const headers = { 'content-type': 'application/json', 'access-control-allow-origin': '*', 'access-control-allow-headers': 'content-type, x-board-id', 'cache-control': 'no-store' };
   const reply = (code, obj) => { res.writeHead(code, headers); res.end(JSON.stringify(obj)); };
   if (req.method === 'OPTIONS') { res.writeHead(204, headers); res.end(); return true; }
-  if (req.method === 'GET') { getBoard().then(b => reply(200, b), err => { console.error('scores:', err.message); reply(503, { error: 'scores unavailable' }); }); return true; }
+  const me = String(req.headers['x-board-id'] || ''), meOk = /^[a-z0-9]{12,40}$/.test(me) ? me : '';
+  if (req.method === 'GET') { getBoard(meOk).then(b => reply(200, b), err => { console.error('scores:', err.message); reply(503, { error: 'scores unavailable' }); }); return true; }
   if (req.method === 'POST') {
     let body = '', big = false;
     req.on('data', c => { body += c; if (body.length > 2000) { big = true; req.destroy(); } });

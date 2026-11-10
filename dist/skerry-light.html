@@ -898,10 +898,6 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 .boardcard h1 { color: var(--lamp); }
 .boardcard .muted { font-size: 12px; margin: 0; }
 .boardcard [hidden] { display: none !important; }
-.boardtabs { display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px; }
-.boardtabs button { flex: 1 1 auto; font-family: var(--log); font-size: 12px; letter-spacing: 0.04em; color: var(--muted); background: rgba(7,12,24,0.55); border: 1px solid var(--rule); padding: 10px 10px; min-height: 44px; cursor: pointer; }
-.boardtabs button.on { color: var(--night); background: var(--lamp); border-color: var(--lamp); }
-.boardtabs button:focus-visible { outline: 2px solid var(--lamp); outline-offset: 2px; }
 .boardhead, .boardlist li { display: grid; grid-template-columns: 2.2em minmax(0, 1fr) 6.5em 6.5em; gap: 8px; align-items: baseline; font-family: var(--log); font-size: 13px; }
 .boardhead { font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); border-bottom: 1px solid var(--rule); padding-bottom: 6px; }
 .boardlist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; max-height: 22em; overflow-y: auto; }
@@ -911,6 +907,13 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 .boardlist .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .boardhead .sc, .boardhead .sb, .boardlist .sc, .boardlist .sb { text-align: right; font-variant-numeric: tabular-nums; }
 .boardlist .rk { color: var(--muted); }
+.boardgames { display: grid; grid-template-columns: 1fr; gap: 14px; }
+
+.boardgame { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.boardgame .bgtop { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.boardgame h2 { font-size: 15px; margin: 0; color: var(--ink); }
+.boardgame .bgmore { font-size: 11px; padding: 6px 10px; min-height: 32px; }
+.boardgame .boardlist { max-height: none; }
 .boardcard p.boardmine { margin: 0; font-family: var(--log); font-size: 12px; color: var(--lamp); }
 @media (max-width: 480px) { .boardhead, .boardlist li { grid-template-columns: 1.8em minmax(0, 1fr) 5em 5em; font-size: 12px; } }
 
@@ -923,8 +926,6 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
   #titleCard > .newgame, #titleCard > .newgame + .newgame { margin: 0; }
   /* buttons a thumb can still hit */
   .card .tool, .card .loottabs button { min-height: 36px; }
-  .boardtabs { grid-template-columns: repeat(4, 1fr); }
-  .boardtabs button { flex: 1 1 0; min-width: 0; min-height: 36px; padding: 6px 4px; font-size: 11px; letter-spacing: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .boardlist { max-height: none; }
 }
 /* the Drowned Reach's banner crates */
@@ -1034,6 +1035,13 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
   </div>
 
   <div class="overlay" id="titleCard">
+    <div class="card boardcard" id="boardCard" aria-labelledby="boardHead">
+      <div class="cardtop"><span class="eyebrow">Best on record · all four games</span><button class="tool closebtn" id="boardRefresh" type="button">Refresh</button></div>
+      <h1 id="boardHead">The Scoreboard</h1>
+      <div class="nickrow" id="boardNameRow" hidden><label for="boardName">Your name</label><input id="boardName" type="text" maxlength="16" autocomplete="nickname" placeholder="your sailing name"></div>
+      <div class="boardgames" id="boardGames" aria-live="polite"></div>
+      <p class="muted" id="boardNote"></p>
+    </div>
     <button class="newgame" id="fpsBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">Try the new game, <b>Wreckers' Night</b>: a multiplayer shootout on the skerry</span><span class="ng-go" aria-hidden="true">↓</span></button>
     <button class="newgame warbanner" id="warBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">And another, <b>The Drowned Reach</b>: a war for the islands, alone or with up to ten players</span><span class="ng-go" aria-hidden="true">↓</span></button>
     <button class="newgame zmbanner" id="zmBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">And a fourth, <b>The Lighthouse</b>: hold the keeper's station against the drowned, round after round</span><span class="ng-go" aria-hidden="true">↓</span></button>
@@ -1193,19 +1201,6 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
         <p><b>Together.</b> Host a night and up to three others here can join it from this card. Nothing starts until the host presses Start the night, with whoever has joined. More of you means more of them each round. Points are your own: share the doors, race for the chest. Go down and you have half a minute on the floor for someone to hold Use beside you and get you up; bleed out and you're back next round with a pepperbox. The night ends when nobody is left standing. The pause menu doesn't stop a night together.</p>
         <p><b>Keys:</b> as Wreckers' Night, and F (or E) to use: buy, open, take, and hold it at a window to board it up. V (or the middle mouse button) for the knife, which never runs out; and with nothing left to fire, Fire slashes with it too. C switches the view. 1 and 2 your weapons, Tab how the night's going, Esc pauses. <b>Controller:</b> B to use, R3 the knife, d-pad down the view. <b>Touch:</b> the Use and knife buttons by Fire. On a phone, push the stick out to the dotted outer circle to run. Kills here count towards weapon and outfit crates too, and your best goes on the scoreboard.</p>
       </details>
-    </div>
-    <div class="card boardcard" id="boardCard" aria-labelledby="boardHead">
-      <div class="cardtop"><span class="eyebrow">Best on record · all four games</span><button class="tool closebtn" id="boardRefresh" type="button">Refresh</button></div>
-      <h1 id="boardHead">The Scoreboard</h1>
-      <div class="boardtabs" id="boardTabs" role="tablist" aria-label="Game">
-        <button type="button" role="tab" data-g="skerry">Skerry Light</button><button type="button" role="tab" data-g="fps">Wreckers’ Night</button><button type="button" role="tab" data-g="war">Drowned Reach</button><button type="button" role="tab" data-g="zm">The Lighthouse</button>
-      </div>
-      <p class="muted" id="boardWhat"></p>
-      <div class="boardhead" aria-hidden="true"><span class="rk">#</span><span class="nm">Name</span><span class="sc" id="boardHeadS"></span><span class="sb" id="boardHeadB"></span></div>
-      <ol class="boardlist" id="boardList" aria-live="polite"></ol>
-      <p class="boardmine" id="boardMine"></p>
-      <div class="nickrow" id="boardNameRow" hidden><label for="boardName">Your name on the board</label><input id="boardName" type="text" maxlength="18" autocomplete="nickname" placeholder="your sailing name"></div>
-      <p class="muted" id="boardNote"></p>
     </div>
   </div>
 
@@ -11363,7 +11358,9 @@ function saveData() {
     // and the other crates' loot, so one save (code, link, file, claude.ai account, cloud) carries everything:
     // weapon skins (src/wcrates.js), outfits (src/ocrates.js) and banners (src/rcrates.js)
     // (each only once its own file has run: the boat crates save while the page is still loading)
-    w: crOther('wcData'), oc: crOther('ocData'), rc: crOther('rcData') };
+    w: crOther('wcData'), oc: crOther('ocData'), rc: crOther('rcData'),
+    // and your bests for the scoreboard and your username (src/scores.js)
+    best: crOther('boardBests'), nick: crOther('boardNick') || undefined };
 }
 function crOther(f) { try { return typeof window[f] === 'function' ? window[f]() : undefined; } catch (e) { return undefined; } }
 function saveCrates() {
@@ -11398,6 +11395,7 @@ function mergeSave(d, takeLooks) {
   if (d.w && typeof d.w === 'object' && typeof wcMerge === 'function' && wcMerge({ c: d.w.crates, n: d.w.opened, o: d.w.owned, e: takeLooks ? d.w.equipped : null })) { changed = true; wcSave(); }
   if (typeof ocMerge === 'function' && ocMerge(d.oc, takeLooks)) changed = true;
   if (typeof rcMerge === 'function' && rcMerge(d.rc, takeLooks)) changed = true;
+  try { if (typeof boardMerge === 'function' && boardMerge(d.best, d.nick, takeLooks)) changed = true; } catch (e) {}
   if (takeLooks) {
     if (d.equipped && typeof d.equipped === 'object') for (const b of BOATS) {
       const sk = SKIN_BY_ID[d.equipped[b.id]];
@@ -11414,7 +11412,7 @@ function afterMerge() { saveCrates(); renderCrates(); updateCrateButtons(); rend
 // the save code: your save, packed into one line of text
 function saveCode() {
   const d = saveData();
-  const packed = { c: d.crates.skerry, n: d.opened | 0, o: d.owned, e: d.equipped, p: d.pennant, f: d.flare, b: d.boat, t: d.pt, w: d.w, q: d.oc, r: d.rc };   // [pirate tokens] src/zmegg.js
+  const packed = { c: d.crates.skerry, n: d.opened | 0, o: d.owned, e: d.equipped, p: d.pennant, f: d.flare, b: d.boat, t: d.pt, w: d.w, q: d.oc, r: d.rc, s: d.best, u: d.nick };   // [pirate tokens] src/zmegg.js
   return 'SKERRY-' + btoa(unescape(encodeURIComponent(JSON.stringify(packed)))).replace(/=+$/, '').replace(/\+/g, '-').replace(/\//g, '_');
 }
 function readSaveCode(text) {
@@ -11424,7 +11422,7 @@ function readSaveCode(text) {
   try {
     const b64 = m[1].replace(/-/g, '+').replace(/_/g, '/');
     const o = JSON.parse(decodeURIComponent(escape(atob(b64 + '==='.slice((b64.length + 3) % 4)))));
-    return { crates: o.c | 0, opened: o.n | 0, owned: o.o, equipped: o.e, pennant: o.p, flare: o.f, boat: o.b, pt: o.t, w: o.w, oc: o.q, rc: o.r };   // [pirate tokens] src/zmegg.js
+    return { crates: o.c | 0, opened: o.n | 0, owned: o.o, equipped: o.e, pennant: o.p, flare: o.f, boat: o.b, pt: o.t, w: o.w, oc: o.q, rc: o.r, best: o.s, nick: o.u };   // [pirate tokens] src/zmegg.js
   } catch (e) { return null; }
 }
 
@@ -27463,6 +27461,12 @@ rcRender();
 //   fps     s: most kills in one round             b: rounds won
 //   war     s: wars won                            b: most land taken in one war (tiles)
 //   zm      s: most rounds held in one night        b: most kills in one night (the Lighthouse)
+//
+// Your bests are part of your save (src/crates.js saveData: `best`, merged by taking the higher of each), so they
+// follow your recovery code (src/cloudsave.js) to every device, and on the game's own site you're on the board once,
+// under an id made from that code (not the code itself): a browser's own entry from before moves across to it.
+// Your name on the board is your username: one name for every game, kept on this device (and in your save), typed
+// in any of the name boxes (the board's, the crew's, Wreckers' Night's, the Lighthouse's) and filled into the rest.
 
 const BOARD = {
   games: {
@@ -27471,7 +27475,7 @@ const BOARD = {
     war: { name: 'The Drowned Reach', s: 'Wars won', b: 'Most land', what: 'Wars of the Drowned Reach won, alone or together. Most land: the most tiles taken in one war.' },
     zm: { name: 'The Lighthouse', s: 'Rounds held', b: 'Most kills', what: 'The most rounds held at the Lighthouse in one night. Most kills: the drowned sent back in one night.' },
   },
-  tab: 'skerry', mine: null, via: null, db: null, user: null, uid: null, data: null, loading: false, err: '', lastT: 0, sendT: 0, store: '',
+  open: {}, mine: null, via: null, db: null, user: null, uid: null, data: null, loading: false, err: '', lastT: 0, sendT: 0, store: '',
 };
 
 // ---------- your bests, here ----------
@@ -27499,8 +27503,58 @@ function boardId() {
   catch (e) { return null; }
 }
 function boardName() {
-  const v = ($('boardName') && $('boardName').value || '').trim() || (typeof NET !== 'undefined' && NET.nick) || ($('fpsNick') && $('fpsNick').value) || ($('warNick') && $('warNick').value) || '';
-  return String(v).replace(/[\u0000-\u001f\u007f-\u009f<>&"]/g, '').trim().slice(0, 18) || 'A sailor';
+  const v = (typeof NET !== 'undefined' && NET.nick) || ($('warNick') && $('warNick').value) || '';
+  return String(v).replace(/[\u0000-\u001f\u007f-\u009f<>&"]/g, '').trim().slice(0, 16) || 'A sailor';
+}
+
+// ---------- your username: one for every game, kept on this device ----------
+const NICK_BOXES = ['nick', 'fpsNick', 'zmNick', 'boardName'];
+function nickSet(v, from) {
+  const n = typeof cleanNick === 'function' ? cleanNick(v || '') : String(v || '').trim().slice(0, 16);
+  if (typeof NET !== 'undefined') NET.nick = n;
+  try { localStorage.setItem('skerry-nick', n); } catch (e) {}
+  for (const id of NICK_BOXES) { const el = $(id); if (el && el !== from && document.activeElement !== el && el.value !== n) el.value = n; }
+  if (BOARD.mine) { clearTimeout(BOARD.nickT); BOARD.nickT = setTimeout(() => boardSendSoon('all'), 1500); }
+  return n;
+}
+function nickSetup() {
+  // (from before there was one name: the board's own, if the crew's was never set)
+  let n = typeof NET !== 'undefined' ? NET.nick : '';
+  if (!n) { try { n = localStorage.getItem('skerry-board-name') || ''; } catch (e) {} }
+  nickSet(n);
+  for (const id of NICK_BOXES) { const el = $(id); if (el) el.addEventListener('input', () => nickSet(el.value, el)); }
+  // the Drowned Reach's house name: kept here too
+  const h = $('warNick');
+  if (h) { try { const v = localStorage.getItem('skerry-war-house'); if (v && !h.value) h.value = v; } catch (e) {} h.addEventListener('input', () => { try { localStorage.setItem('skerry-war-house', h.value.trim().slice(0, 18)); } catch (e) {} }); }
+}
+// for the save (src/crates.js): your bests and your name, and folding another save's in
+function boardBests() { return BOARD.mine; }
+function boardNick() { return (typeof NET !== 'undefined' && NET.nick) || ''; }
+function boardMerge(best, nick, takeLooks) {
+  let changed = false;
+  if (best && typeof best === 'object' && BOARD.mine) for (const g of Object.keys(BOARD.games)) {
+    const o = best[g]; if (!o) continue;
+    const m = BOARD.mine[g], s = Math.max(m.s, Math.max(0, o.s | 0)), b = Math.max(m.b, Math.max(0, o.b | 0));
+    if (s !== m.s || b !== m.b) { m.s = s; m.b = b; changed = true; }
+  }
+  if (changed) { boardSaveMine(); boardSendSoon('all'); boardRender(); }
+  const n = typeof cleanNick === 'function' ? cleanNick(nick || '') : '';
+  if (n && n !== boardNick() && (takeLooks || !boardNick())) { nickSet(n); changed = true; }
+  return changed;
+}
+
+// ---------- who you are on the board (the game's own site) ----------
+// with a recovery code: an id made from it (so every device with your code is the one entry); else this browser's
+async function boardIdNow() {
+  const code = typeof CS !== 'undefined' && CS.on && CS.code;
+  if (code && window.crypto && crypto.subtle) {
+    if (BOARD.cidFor !== code) {
+      const h = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('skerry-board:' + code));
+      BOARD.cid = [...new Uint8Array(h)].map(x => x.toString(16).padStart(2, '0')).join('').slice(0, 24); BOARD.cidFor = code;
+    }
+    return BOARD.cid;
+  }
+  return boardId();
 }
 
 // ---------- where the board lives ----------
@@ -27539,6 +27593,9 @@ function boardSendSoon(game) {
 }
 async function boardSend() {
   if (!BOARD.via || !BOARD_PENDING.size) return;
+  // (one at a time: another asked for meanwhile goes after this one)
+  if (BOARD.sending) { BOARD.sendAgain = true; return; }
+  BOARD.sending = true;
   const games = [...BOARD_PENDING]; BOARD_PENDING.clear();
   const m = BOARD.mine;
   try {
@@ -27547,20 +27604,36 @@ async function boardSend() {
       for (const g of Object.keys(BOARD.games)) if (m[g].s + m[g].b > 0) { doc[g + '_s'] = m[g].s; doc[g + '_b'] = m[g].b; doc[g + '_k'] = m[g].s * 1e7 + m[g].b; }
       await BOARD.db.doc('scores/' + BOARD.uid).set(doc);
     } else {
-      const id = boardId(); if (!id) return;
-      for (const g of games) {
-        if (m[g].s + m[g].b <= 0) continue;
-        const r = await fetch(boardApiUrl(), { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ id, name: boardName(), game: g, s: m[g].s, b: m[g].b }) });
-        if (r.status === 429) { BOARD_PENDING.add(g); clearTimeout(BOARD.sendT); BOARD.sendT = setTimeout(boardSend, 4000); }
+      const id = await boardIdNow(); if (!id) { BOARD.sending = false; return; }
+      // every id this browser has been on the board under: any but this one move across to it, one a pass, so no one
+      // is on the board twice (a browser's own id, before its save had a recovery code; a code since replaced)
+      let used = []; try { used = JSON.parse(localStorage.getItem('skerry-board-used') || '[]').filter(x => typeof x === 'string'); } catch (e) {}
+      const pid = boardId(); if (pid && pid !== id && !used.includes(pid)) used.push(pid);
+      const was = used.find(x => x !== id) || '';
+      if (!used.includes(id)) used.push(id);
+      try { localStorage.setItem('skerry-board-used', JSON.stringify(used.slice(-6))); } catch (e) {}
+      let all = true;
+      for (const g of was ? Object.keys(BOARD.games) : games) {
+        if (m[g].s + m[g].b <= 0 && !was) continue;
+        const r = await fetch(boardApiUrl(), { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ id, name: boardName(), game: g, s: m[g].s, b: m[g].b, was: was || undefined }) });
+        if (!r.ok) { all = false; BOARD_PENDING.add(g); }
         await new Promise(res => setTimeout(res, 3200));   // the server takes one score every few seconds from each address
       }
+      if (was && all) {
+        used = used.filter(x => x !== was); try { localStorage.setItem('skerry-board-used', JSON.stringify(used)); } catch (e) {}
+        if (used.some(x => x !== id)) boardSendSoon('all');
+      }
+      if (!all) { clearTimeout(BOARD.sendT); BOARD.sendT = setTimeout(boardSend, 4000); }
     }
     BOARD.lastT = 0; boardFetch();
   } catch (e) {
     // (a Viewer on claude.ai can read the board but not write to it; a server that's asleep wakes for the next try)
     if (BOARD.via === 'claude') BOARD.err = 'You can see the board, but your scores can’t be added from here (the page’s owner can give you Contributor access).';
+    else { for (const g of games) BOARD_PENDING.add(g); clearTimeout(BOARD.sendT); BOARD.sendT = setTimeout(boardSend, 8000); }
     boardRender();
   }
+  BOARD.sending = false;
+  if (BOARD.sendAgain) { BOARD.sendAgain = false; if (BOARD_PENDING.size) setTimeout(boardSend, 500); }
 }
 
 // ---------- reading the board ----------
@@ -27572,7 +27645,7 @@ async function boardFetch(force) {
     if (BOARD.via === 'claude') {
       const data = {};
       for (const g of Object.keys(BOARD.games)) {
-        const q = await BOARD.db.collection('scores').orderBy(g + '_k', 'desc').limit(25).get();
+        const q = await BOARD.db.collection('scores').orderBy(g + '_k', 'desc').limit(10).get();
         data[g] = q.docs.map(d => ({ id: d.id, d: d.data() || {} })).filter(e => (e.d[g + '_k'] || 0) > 0).map(e => ({ id: e.id, n: '', nick: String(e.d.nick || ''), s: e.d[g + '_s'] | 0, b: e.d[g + '_b'] | 0, me: e.id === BOARD.uid }));
       }
       // names, as this viewer's claude.ai shows them
@@ -27581,43 +27654,55 @@ async function boardFetch(force) {
       for (const e of Object.values(data).flat()) e.n = (ps[e.id] && ps[e.id].name) || e.nick || 'Someone';
       BOARD.data = data; BOARD.store = 'claude'; BOARD.err = BOARD.err && /Contributor/.test(BOARD.err) ? BOARD.err : '';
     } else {
-      const r = await fetch(boardApiUrl(), { cache: 'no-store' });
+      const id = await boardIdNow();
+      const r = await fetch(boardApiUrl(), { cache: 'no-store', headers: id ? { 'x-board-id': id } : {} });
       if (!r.ok) throw new Error(r.status);
       const j = await r.json(); BOARD.data = j.games || {}; BOARD.store = j.store || ''; BOARD.err = '';
-      const me = boardName();
-      for (const g of Object.keys(BOARD.data)) for (const e of BOARD.data[g]) e.me = e.n === me && BOARD.mine[g] && e.s === BOARD.mine[g].s && e.b === BOARD.mine[g].b;
     }
   } catch (e) { BOARD.err = 'Couldn’t reach the scoreboard just now. Try Refresh in a moment.'; }
   BOARD.loading = false; boardRender();
 }
+// all four games at once: the top three of each, and Top 10 to see more
 function boardRender() {
-  const list = $('boardList'); if (!list) return;
-  const G = BOARD.games[BOARD.tab], rows = BOARD.data && BOARD.data[BOARD.tab] || [];
-  for (const b of document.querySelectorAll('#boardTabs button')) { const on = b.dataset.g === BOARD.tab; b.classList.toggle('on', on); b.setAttribute('aria-selected', on ? 'true' : 'false'); }
-  $('boardWhat').textContent = G.what;
-  $('boardHeadS').textContent = G.s; $('boardHeadB').textContent = G.b;
-  list.innerHTML = '';
-  if (!rows.length) { const li = document.createElement('li'); li.className = 'empty'; li.textContent = BOARD.loading ? 'Reading the board…' : BOARD.data ? 'No one is on this board yet. Be the first.' : (BOARD.err || 'Reading the board…'); list.append(li); }
-  rows.forEach((e, k) => {
-    const li = document.createElement('li'); if (e.me) li.className = 'me';
-    for (const [cls, txt] of [['rk', String(k + 1)], ['nm', e.n + (e.me ? ' (you)' : '')], ['sc', String(e.s)], ['sb', BOARD.tab === 'war' ? `${e.b} tiles` : String(e.b)]]) { const sp = document.createElement('span'); sp.className = cls; sp.textContent = txt; li.append(sp); }
-    list.append(li);
-  });
-  const m = BOARD.mine && BOARD.mine[BOARD.tab];
-  $('boardMine').textContent = m ? `Your best: ${G.s.toLowerCase()} ${m.s} · ${G.b.toLowerCase()} ${m.b}${BOARD.tab === 'war' ? ' tiles' : ''}` : '';
-  $('boardNameRow').hidden = BOARD.via !== 'server';
-  $('boardNote').textContent = BOARD.err && rows.length ? BOARD.err
+  const box = $('boardGames'); if (!box) return;
+  box.innerHTML = '';
+  const mk = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; };
+  for (const [g, G] of Object.entries(BOARD.games)) {
+    const rows = (BOARD.data && BOARD.data[g]) || [], open = !!BOARD.open[g], sec = mk('section', 'boardgame');
+    const top = mk('div', 'bgtop'); top.append(mk('h2', '', G.name));
+    if (rows.length > 3) {
+      const t = mk('button', 'tool bgmore', open ? 'Top 3' : 'Top 10'); t.type = 'button'; t.setAttribute('aria-expanded', open ? 'true' : 'false');
+      t.addEventListener('click', () => { BOARD.open[g] = !open; boardRender(); }); top.append(t);
+    }
+    sec.append(top);
+    const head = mk('div', 'boardhead'); head.setAttribute('aria-hidden', 'true'); head.title = G.what;
+    for (const [c, t] of [['rk', '#'], ['nm', 'Name'], ['sc', G.s], ['sb', G.b]]) head.append(mk('span', c, t));
+    sec.append(head);
+    const ol = mk('ol', 'boardlist'); ol.setAttribute('aria-label', G.name + ': ' + G.what);
+    if (!rows.length) ol.append(mk('li', 'empty', BOARD.loading && !BOARD.data ? 'Reading the board…' : BOARD.data ? 'No one yet. Be the first.' : (BOARD.err || 'Reading the board…')));
+    let meShown = false;
+    rows.slice(0, open ? 10 : 3).forEach((e, k) => {
+      const li = mk('li', e.me ? 'me' : ''); if (e.me) meShown = true;
+      for (const [cls, txt] of [['rk', String(k + 1)], ['nm', e.n + (e.me ? ' (you)' : '')], ['sc', String(e.s)], ['sb', g === 'war' ? `${e.b} tiles` : String(e.b)]]) li.append(mk('span', cls, txt));
+      ol.append(li);
+    });
+    sec.append(ol);
+    const m = BOARD.mine && BOARD.mine[g];
+    if (m && m.s + m.b > 0 && !meShown) sec.append(mk('p', 'boardmine', `Your best: ${m.s} · ${m.b}${g === 'war' ? ' tiles' : ''}`));
+    box.append(sec);
+  }
+  $('boardNameRow').hidden = BOARD.via === 'claude';
+  $('boardNote').textContent = BOARD.err && BOARD.data ? BOARD.err
     : BOARD.via === 'claude' ? 'Names are as claude.ai shows them. Everyone who opens this page shares the board.'
     : BOARD.store === 'memory' ? 'This server keeps the board in memory only, so it starts over when the server restarts.'
-    : BOARD.via === 'server' ? 'Everyone who plays on this site shares the board. Your name is whatever you put above.' : '';
+    : BOARD.via === 'server' ? 'Everyone who plays on this site shares the board. Your scores go on it by themselves, under your name, and follow your save to every device.'
+    : BOARD.err || '';
 }
 
 (() => {
   if (!$('boardCard')) return;
-  for (const b of document.querySelectorAll('#boardTabs button')) b.addEventListener('click', () => { BOARD.tab = b.dataset.g; try { localStorage.setItem('skerry-board-tab', BOARD.tab); } catch (e) {} boardRender(); });
-  try { const t = localStorage.getItem('skerry-board-tab'); if (BOARD.games[t]) BOARD.tab = t; const n = localStorage.getItem('skerry-board-name'); if (n) $('boardName').value = n; } catch (e) {}
+  nickSetup();
   $('boardRefresh').addEventListener('click', () => boardFetch(true));
-  $('boardName').addEventListener('change', () => { try { localStorage.setItem('skerry-board-name', $('boardName').value.trim()); } catch (e) {} boardSendSoon('all'); });
   // keep it fresh while the title screen is up
   setInterval(() => { if (!$('titleCard').hidden) boardFetch(); }, 10000);
   boardInit();
