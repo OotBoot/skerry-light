@@ -1677,7 +1677,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 // ---- src/config.js ----
 'use strict';
 // The game's version, shown at the top of the main menu. Bump it by one with every change pushed to main.
-var VERSION = 105;
+var VERSION = 106;
 // Skerry Light: tuning, asset paths and lore.
 // World units are metres. The lighthouse stands at the origin on the shoreline (y = 0);
 // north (+y) is open sea. Bearings: 0 = north, positive = east.
@@ -26491,7 +26491,9 @@ const zbCount = r => r < ZBC.FROM ? 0 : Math.min(ZBC.MAX, Math.max(1, Math.floor
 // how much more there is to them, the later it gets (1 at round 10)
 const zbLate = r => 1 + ZBC.LATE * Math.max(0, r - ZBC.FROM);
 // one of a kind's strength, that round, with n of you
-const zbHpOf = (kind, r, n) => zmHp(r) * ZBT[kind].hp * ZBC.BOOST * (1 + ZBC.HP_MORE * (Math.max(1, n) - 1)) * zbLate(r);
+const zbHpOf = (kind, r, n) => zmHp(r) * ZBT[kind].hp * ZBC.BOOST * (1 + ZBC.HP_MORE * (Math.max(1, n) - 1)) * zbLate(r) * zbRaidK();
+// [raid] in Maren's End every boss is a little tougher (RAIDC.BOSS_HP, before the share for each of you)
+const zbRaidK = () => typeof RAID !== 'undefined' && RAID.on && typeof RAIDC !== 'undefined' ? RAIDC.BOSS_HP : 1;
 const zbT = z => ZBT[z.bt] || ZBT.diver;
 const zbActT = z => (zbT(z).acts[z.act] || ZB_T.smash);
 const zbEnd = z => z.aEnd || zbActT(z).end;
@@ -29574,7 +29576,7 @@ function raidAfterStart() {
   raidLoadout();
   RAID.st = {}; raidCall('enter');
 }
-const RAIDC = { ROUND: 4, CALM: 0.7 };
+const RAIDC = { ROUND: 4, CALM: 0.7, BOSS_HP: 1.15 };   // (BOSS_HP: every boss's strength here, against the Lighthouse's)
 // what you carry down: a pepperbox and a blunderbuss, both full (and Maren's Lantern, which never leaves your hand)
 function raidLoadout() {
   const m = FPS.me;
@@ -30613,7 +30615,7 @@ const RBC = {
   PH: 0.9, PW: 4.2,                                    // the circles' platforms: how high, half as wide (steps up the south and outer sides)
   DH: 1.0,                                             // the bridge's deck over the water (steps up to it from either bank)
   LEVEL: 8, ALIVE: 14, ALIVE_MORE: 4,                  // the drowned here: as strong as round LEVEL's, how many at once
-  DHP: 14, DGAP: 5,                                    // a Diver: cuts of the Cutlass to put down; the wait between them
+  DHP: 16, DGAP: 5,                                    // a Diver: cuts of the Cutlass to put down; the wait between them
 };
 RBC.SL = RBC.RW / RBC.SEG;
 // the Cutlass of Plimsoll
@@ -31726,7 +31728,7 @@ function rfEnter() {
 const rfN = () => Math.max(1, ZM.hum.length);
 // one of the bosses, already inside at (x, y) (a local place), facing h
 function rfBoss(kind, x, y, h, jz) {
-  const T = ZBT[kind], hp = kind === 'maren' ? zmHp(ZM.round) * RFC.HP * RFC.BOOST * (1 + RFC.HP_MORE * (rfN() - 1)) : zbHpOf(kind, ZM.round, rfN());
+  const T = ZBT[kind], hp = kind === 'maren' ? zmHp(ZM.round) * RFC.HP * RFC.BOOST * (1 + RFC.HP_MORE * (rfN() - 1)) * zbRaidK() : zbHpOf(kind, ZM.round, rfN());
   const zn = ++ZM.zc, wx = FPSC.CX + x, wy = FPSC.CY + y;
   const z = {
     drowned: true, zm: true, boss: true, bt: kind, zn, id: 'z' + zn.toString(36), n: T.n, kind: 'boss',

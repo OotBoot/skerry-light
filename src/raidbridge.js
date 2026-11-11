@@ -41,7 +41,7 @@ const RBC = {
   PH: 0.9, PW: 4.2,                                    // the circles' platforms: how high, half as wide (steps up the south and outer sides)
   DH: 1.0,                                             // the bridge's deck over the water (steps up to it from either bank)
   LEVEL: 8, ALIVE: 14, ALIVE_MORE: 4,                  // the drowned here: as strong as round LEVEL's, how many at once
-  DHP: 14, DGAP: 5,                                    // a Diver: cuts of the Cutlass to put down; the wait between them
+  DHP: 16, DGAP: 5,                                    // a Diver: cuts of the Cutlass to put down; the wait between them
 };
 RBC.SL = RBC.RW / RBC.SEG;
 // the Cutlass of Plimsoll

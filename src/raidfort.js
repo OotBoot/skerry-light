@@ -354,7 +354,7 @@ function rfEnter() {
 const rfN = () => Math.max(1, ZM.hum.length);
 // one of the bosses, already inside at (x, y) (a local place), facing h
 function rfBoss(kind, x, y, h, jz) {
-  const T = ZBT[kind], hp = kind === 'maren' ? zmHp(ZM.round) * RFC.HP * RFC.BOOST * (1 + RFC.HP_MORE * (rfN() - 1)) : zbHpOf(kind, ZM.round, rfN());
+  const T = ZBT[kind], hp = kind === 'maren' ? zmHp(ZM.round) * RFC.HP * RFC.BOOST * (1 + RFC.HP_MORE * (rfN() - 1)) * zbRaidK() : zbHpOf(kind, ZM.round, rfN());
   const zn = ++ZM.zc, wx = FPSC.CX + x, wy = FPSC.CY + y;
   const z = {
     drowned: true, zm: true, boss: true, bt: kind, zn, id: 'z' + zn.toString(36), n: T.n, kind: 'boss',

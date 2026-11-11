@@ -89,7 +89,7 @@ function raidAfterStart() {
   raidLoadout();
   RAID.st = {}; raidCall('enter');
 }
-const RAIDC = { ROUND: 4, CALM: 0.7 };
+const RAIDC = { ROUND: 4, CALM: 0.7, BOSS_HP: 1.15 };   // (BOSS_HP: every boss's strength here, against the Lighthouse's)
 // what you carry down: a pepperbox and a blunderbuss, both full (and Maren's Lantern, which never leaves your hand)
 function raidLoadout() {
   const m = FPS.me;

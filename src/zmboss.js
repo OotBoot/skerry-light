@@ -43,7 +43,9 @@ const zbCount = r => r < ZBC.FROM ? 0 : Math.min(ZBC.MAX, Math.max(1, Math.floor
 // how much more there is to them, the later it gets (1 at round 10)
 const zbLate = r => 1 + ZBC.LATE * Math.max(0, r - ZBC.FROM);
 // one of a kind's strength, that round, with n of you
-const zbHpOf = (kind, r, n) => zmHp(r) * ZBT[kind].hp * ZBC.BOOST * (1 + ZBC.HP_MORE * (Math.max(1, n) - 1)) * zbLate(r);
+const zbHpOf = (kind, r, n) => zmHp(r) * ZBT[kind].hp * ZBC.BOOST * (1 + ZBC.HP_MORE * (Math.max(1, n) - 1)) * zbLate(r) * zbRaidK();
+// [raid] in Maren's End every boss is a little tougher (RAIDC.BOSS_HP, before the share for each of you)
+const zbRaidK = () => typeof RAID !== 'undefined' && RAID.on && typeof RAIDC !== 'undefined' ? RAIDC.BOSS_HP : 1;
 const zbT = z => ZBT[z.bt] || ZBT.diver;
 const zbActT = z => (zbT(z).acts[z.act] || ZB_T.smash);
 const zbEnd = z => z.aEnd || zbActT(z).end;
