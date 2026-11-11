@@ -71,12 +71,13 @@ const ZM_TROOMS = { tower: 'the Tower Foot', tw1n: 'the Watch Room', tw1s: 'the 
 const ZM = { on: false, own: ['pepperbox'], res: {}, pts: 0, round: 0, items: [], z: [], drops: [], perks: {}, fx: [] };
 // what each weapon carries in reserve, and how much harder it hits the drowned than a wrecker
 const ZM_AMMO = { pepperbox: 60, blunderbuss: 40, longarm: 36, harpoon: 30, avtomat: 225, cutlass: 0, fresnel: 240 };
-const ZM_DMG = { p: 1, b: 3, l: 4, h: 10, c: 2.5, a: 1.15, f: 1, k: 1 };
+const ZM_DMG = { p: 1, b: 6, l: 4, h: 10, c: 2.5, a: 1.15, f: 1, k: 1 };
 // how a weapon loads here, where it differs from Wreckers' Night (FPSW is shared, and left as it is there): the
-// blunderbuss takes a heavier charge of shot in a wider cone. Each ball is its own hit (and can find a different one
-// of them), at full weight out to near, falling away to far (times ZM_DMG) by ZM_FALL; a harpoon that kills goes on
-// through, into up to thru more
-const ZM_SHOT = { b: { pellets: 18, spread: 0.12, near: 9, far: 30, min: 0.3 } };
+// blunderbuss takes a heavier charge of shot and throws it in a wide flat fan, side to side, sweeping everything in a
+// broad arc in front of you (spread: half the fan's width; fan: how much a ball rises or falls at most). Each ball is
+// its own hit (and can find a different one of them), at full weight out to near, falling away to far (times ZM_DMG)
+// by ZM_FALL; a harpoon that kills goes on through, into up to thru more
+const ZM_SHOT = { b: { pellets: 28, spread: 0.4, fan: 0.03, near: 9, far: 30, min: 0.3 } };
 // and how a weapon is loaded here, where that differs too (fpsW): mag, the shots to a load (never fewer than a
 // reforged one's); rk, how long the load takes against Wreckers' Night's. The blunderbuss holds two charges and
 // loads them in three quarters of the time

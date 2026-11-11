@@ -1716,7 +1716,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 // ---- src/config.js ----
 'use strict';
 // The game's version, shown at the top of the main menu. Bump it by one with every change pushed to main.
-var VERSION = 143;
+var VERSION = 145;
 // Skerry Light: tuning, asset paths and lore.
 // World units are metres. The lighthouse stands at the origin on the shoreline (y = 0);
 // north (+y) is open sea. Bearings: 0 = north, positive = east.
@@ -1845,6 +1845,11 @@ const flashK = () => SETTINGS.flashes === 'reduced' ? 0.3 : 1;
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Never give away a secret here (the Easter egg's steps, where the secret boss hides).
 var PATCH_NOTES = [
+  { v: 145, date: '2026-11-11', title: 'Blunderbuss fan', Changes: [
+    "Keeper's Last Light and Maren's End: the Blunderbuss now fires its shot in a wide, flat fan from side to side, so one blast sweeps across a whole line of them.",
+    "It fires more balls (28) and each one hits harder, so a single target in front of you still takes about as much as before: about 60 up close and 29 at 8 m. Five of them standing abreast at 8 m now take 23 to 30 each." ] },
+  { v: 144, date: '2026-11-11', title: 'Verity speaks up', Sound: [
+    "Verity's Grin: while you wear it in a game, every second there's a 1 in 50 chance Verity's voice plays." ] },
   { v: 143, date: '2026-11-11', title: 'Verity’s Wardrobe', New: [
     "Maren's End: Verity now drops his whole wardrobe the first time you take his Piece of Eight: 12 cosmetics no crate holds, in their own yellow grade.",
     "Outfit: Verity's Grin. His smiling head on your shoulders, blinking and grinning, with three little Veritys circling you.",
@@ -14503,10 +14508,13 @@ function fpsRemember(o, now) {
   while (o.hist.length && now - o.hist[0].t > FPSC.LAG * 1000 + 100) o.hist.shift();
 }
 // the directions of the balls in a blunderbuss shot, the same on every screen (from the shot's seed)
-// (in the Lighthouse a weapon can load differently: ZM_SHOT in src/zombies.js, the blunderbuss's wider charge)
+// (in the Lighthouse a weapon can load differently: ZM_SHOT in src/zombies.js, the blunderbuss's wide flat fan)
 function fpsPellets(sh) {
   const [, , , , h, p, , code, seed] = sh, w = fpsWOf(code), rng = seeded((seed || 1) >>> 0), out = [];
   const o = FPS.zm && typeof ZM_SHOT !== 'undefined' && ZM_SHOT[code], n = (o && o.pellets) || w.pellets, sp = (o && o.spread) || w.spread;
+  // (o.fan: a flat fan instead, the balls laid evenly side to side across sp either way, a little wander in each, and
+  // barely any rise or fall)
+  if (o && o.fan) { for (let i = 0; i < n; i++) { const u = (i + 0.2 + rng() * 0.6) / n * 2 - 1; out.push([h + u * sp, p + (rng() - 0.5) * o.fan]); } return out; }
   for (let i = 0; i < n; i++) { const a = rng() * 6.283, r = Math.sqrt(rng()) * sp; out.push([h + Math.cos(a) * r, p + Math.sin(a) * r * 0.7]); }
   return out;
 }
@@ -19322,12 +19330,13 @@ const ZM_TROOMS = { tower: 'the Tower Foot', tw1n: 'the Watch Room', tw1s: 'the 
 const ZM = { on: false, own: ['pepperbox'], res: {}, pts: 0, round: 0, items: [], z: [], drops: [], perks: {}, fx: [] };
 // what each weapon carries in reserve, and how much harder it hits the drowned than a wrecker
 const ZM_AMMO = { pepperbox: 60, blunderbuss: 40, longarm: 36, harpoon: 30, avtomat: 225, cutlass: 0, fresnel: 240 };
-const ZM_DMG = { p: 1, b: 3, l: 4, h: 10, c: 2.5, a: 1.15, f: 1, k: 1 };
+const ZM_DMG = { p: 1, b: 6, l: 4, h: 10, c: 2.5, a: 1.15, f: 1, k: 1 };
 // how a weapon loads here, where it differs from Wreckers' Night (FPSW is shared, and left as it is there): the
-// blunderbuss takes a heavier charge of shot in a wider cone. Each ball is its own hit (and can find a different one
-// of them), at full weight out to near, falling away to far (times ZM_DMG) by ZM_FALL; a harpoon that kills goes on
-// through, into up to thru more
-const ZM_SHOT = { b: { pellets: 18, spread: 0.12, near: 9, far: 30, min: 0.3 } };
+// blunderbuss takes a heavier charge of shot and throws it in a wide flat fan, side to side, sweeping everything in a
+// broad arc in front of you (spread: half the fan's width; fan: how much a ball rises or falls at most). Each ball is
+// its own hit (and can find a different one of them), at full weight out to near, falling away to far (times ZM_DMG)
+// by ZM_FALL; a harpoon that kills goes on through, into up to thru more
+const ZM_SHOT = { b: { pellets: 28, spread: 0.4, fan: 0.03, near: 9, far: 30, min: 0.3 } };
 // and how a weapon is loaded here, where that differs too (fpsW): mag, the shots to a load (never fewer than a
 // reforged one's); rk, how long the load takes against Wreckers' Night's. The blunderbuss holds two charges and
 // loads them in three quarters of the time
@@ -41785,7 +41794,8 @@ ocRender();
 // the backups and the cloud keep them like anything else. Every one of them moves, and every one of them makes a sound:
 //   Verity's Grin      (outfit)  his own head on your shoulders: the smiling yellow egg, blinking, its grin widening,
 //                                 his yellow alight in the coat's trim, and three little Veritys circling you, smiling
-//                                 your way. You giggle when you take a knock.
+//                                 your way. You giggle when you take a knock, and in a game, each second, there's
+//                                 a 1 in 50 chance his voice plays.
 //   The finishes       (weapons) his faces set all over the gun, blinking in their own time and grinning wider, and his
 //                                 giggle running down it as a ripple of light every three seconds; each weapon its own
 //                                 touch (src/wcadmiral.js, theme 7): Little Helper (pepperbox: more faces), Big Grin (a
@@ -42253,6 +42263,14 @@ setInterval(() => {
     VYA.amb = 25 + Math.random() * 35;
     const sig = VY_SIG[s.id];
     if (sig === 'helper') vyBoing(); else if (sig === 'room') vyBuzz(); else if (sig === 'faces') { vyPop(); setTimeout(() => vyVoice(1.4, 0.3), 300); } else vyVoice(1.2 + Math.random() * 0.2, 0.35);
+  } catch (e) {}
+}, 1000);
+// his outfit, in a game: a 1 in 50 chance each second that he speaks up (his voice, as in his room)
+setInterval(() => {
+  try {
+    if (typeof FPS === 'undefined' || !FPS.on || (typeof document !== 'undefined' && document.hidden) || !vyWearing()) return;
+    if (typeof loadVerityVoice === 'function') loadVerityVoice();
+    if (Math.random() < 1 / 50) vyVoice(1, 0.6);
   } catch (e) {}
 }, 1000);
 
