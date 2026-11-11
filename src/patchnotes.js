@@ -6,6 +6,10 @@
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Never give away a secret here (the Easter egg's steps, where the secret boss hides).
 var PATCH_NOTES = [
+  { v: 149, date: '2026-11-11', title: 'Blunderbuss toned down', Changes: [
+    "Keeper's Last Light and Maren's End: the Blunderbuss hits much less hard and its shot falls away far sooner (full strength only out to 4 m, nearly nothing past 14 m). It keeps its wide fan.",
+    "Its damage over time is now in line with the other guns: about 7 a second on one target at 4 m and 4 at 6 m, against the Avtomat's 5 (10 with head shots) and the Longarm's 4 (6.5).",
+    "Maren's End: back to 3 shots a load (about 3 seconds to load all three)." ] },
   { v: 148, date: '2026-11-11', title: 'The Gannet’s Wake gets its music', Sound: [
     "The Gannet's Wake: The Skerries now has its own music, a tense sea shanty at night over low strings, a creaking hull and a far-off bell.",
     "The Gannet's Wake: Below Decks has its own music too: creaking timbers, dripping water and slow, knocking suspense.",

@@ -337,7 +337,7 @@ function rclShoot() {
 // Maren's End: the guns that load one round at a time take more there (and a little longer to load them all):
 // mag, the rounds to a load (never fewer than a reforged one's); rk, how much longer the load takes. The Punt Gun stays
 // one enormous load.
-const RCL_MAG = { blunderbuss: { mag: 4, rk: 1.25 }, longarm: { mag: 2, rk: 1.15 }, harpoon: { mag: 2, rk: 1.2 }, flaregun: { mag: 2, rk: 1.2 },
+const RCL_MAG = { blunderbuss: { mag: 3, rk: 1.6 }, longarm: { mag: 2, rk: 1.15 }, harpoon: { mag: 2, rk: 1.2 }, flaregun: { mag: 2, rk: 1.2 },
   bomblance: { mag: 2, rk: 1.2 }, grapnel: { mag: 2, rk: 1.15 }, netmortar: { mag: 2, rk: 1.2 }, chainshot: { mag: 2, rk: 1.2 },
   duckfoot: { mag: 6, rk: 0.67 } };
 // (the Apothecary's Duck's-Foot) six volleys a load, loaded in a third less time, and 72 in reserve, down here only

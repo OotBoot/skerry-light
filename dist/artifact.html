@@ -1716,7 +1716,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 // ---- src/config.js ----
 'use strict';
 // The game's version, shown at the top of the main menu. Bump it by one with every change pushed to main.
-var VERSION = 148;
+var VERSION = 149;
 // Skerry Light: tuning, asset paths and lore.
 // World units are metres. The lighthouse stands at the origin on the shoreline (y = 0);
 // north (+y) is open sea. Bearings: 0 = north, positive = east.
@@ -1845,6 +1845,10 @@ const flashK = () => SETTINGS.flashes === 'reduced' ? 0.3 : 1;
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Never give away a secret here (the Easter egg's steps, where the secret boss hides).
 var PATCH_NOTES = [
+  { v: 149, date: '2026-11-11', title: 'Blunderbuss toned down', Changes: [
+    "Keeper's Last Light and Maren's End: the Blunderbuss hits much less hard and its shot falls away far sooner (full strength only out to 4 m, nearly nothing past 14 m). It keeps its wide fan.",
+    "Its damage over time is now in line with the other guns: about 7 a second on one target at 4 m and 4 at 6 m, against the Avtomat's 5 (10 with head shots) and the Longarm's 4 (6.5).",
+    "Maren's End: back to 3 shots a load (about 3 seconds to load all three)." ] },
   { v: 148, date: '2026-11-11', title: 'The Gannet’s Wake gets its music', Sound: [
     "The Gannet's Wake: The Skerries now has its own music, a tense sea shanty at night over low strings, a creaking hull and a far-off bell.",
     "The Gannet's Wake: Below Decks has its own music too: creaking timbers, dripping water and slow, knocking suspense.",
@@ -19354,13 +19358,13 @@ const ZM_TROOMS = { tower: 'the Tower Foot', tw1n: 'the Watch Room', tw1s: 'the 
 const ZM = { on: false, own: ['pepperbox'], res: {}, pts: 0, round: 0, items: [], z: [], drops: [], perks: {}, fx: [] };
 // what each weapon carries in reserve, and how much harder it hits the drowned than a wrecker
 const ZM_AMMO = { pepperbox: 60, blunderbuss: 40, longarm: 36, harpoon: 30, avtomat: 225, cutlass: 0, fresnel: 240 };
-const ZM_DMG = { p: 1, b: 6, l: 4, h: 10, c: 2.5, a: 1.15, f: 1, k: 1 };
+const ZM_DMG = { p: 1, b: 1.2, l: 4, h: 10, c: 2.5, a: 1.15, f: 1, k: 1 };
 // how a weapon loads here, where it differs from Wreckers' Night (FPSW is shared, and left as it is there): the
 // blunderbuss takes a heavier charge of shot and throws it in a wide flat fan, side to side, sweeping everything in a
 // broad arc in front of you (spread: half the fan's width; fan: how much a ball rises or falls at most). Each ball is
 // its own hit (and can find a different one of them), at full weight out to near, falling away to far (times ZM_DMG)
 // by ZM_FALL; a harpoon that kills goes on through, into up to thru more
-const ZM_SHOT = { b: { pellets: 28, spread: 0.4, fan: 0.03, near: 9, far: 30, min: 0.3 } };
+const ZM_SHOT = { b: { pellets: 28, spread: 0.4, fan: 0.03, near: 4, far: 16, min: 0.1 } };
 // and how a weapon is loaded here, where that differs too (fpsW): mag, the shots to a load (never fewer than a
 // reforged one's); rk, how long the load takes against Wreckers' Night's. The blunderbuss holds two charges and
 // loads them in three quarters of the time
@@ -37792,7 +37796,7 @@ function rclShoot() {
 // Maren's End: the guns that load one round at a time take more there (and a little longer to load them all):
 // mag, the rounds to a load (never fewer than a reforged one's); rk, how much longer the load takes. The Punt Gun stays
 // one enormous load.
-const RCL_MAG = { blunderbuss: { mag: 4, rk: 1.25 }, longarm: { mag: 2, rk: 1.15 }, harpoon: { mag: 2, rk: 1.2 }, flaregun: { mag: 2, rk: 1.2 },
+const RCL_MAG = { blunderbuss: { mag: 3, rk: 1.6 }, longarm: { mag: 2, rk: 1.15 }, harpoon: { mag: 2, rk: 1.2 }, flaregun: { mag: 2, rk: 1.2 },
   bomblance: { mag: 2, rk: 1.2 }, grapnel: { mag: 2, rk: 1.15 }, netmortar: { mag: 2, rk: 1.2 }, chainshot: { mag: 2, rk: 1.2 },
   duckfoot: { mag: 6, rk: 0.67 } };
 // (the Apothecary's Duck's-Foot) six volleys a load, loaded in a third less time, and 72 in reserve, down here only
