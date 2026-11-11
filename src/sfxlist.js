@@ -47,6 +47,7 @@ const SFX_FILES = {
   raidfort: ['assets/sfx/raidfort_1.mp3'],
   raidknock: ['assets/sfx/raidknock_1.mp3'],
   raidmaren: ['assets/sfx/raidmaren_1.mp3'],
+  raidmaren2: ['assets/sfx/raidmaren2_1.mp3'],
   raidpier: ['assets/sfx/raidpier_1.mp3'],
   raidsong: ['assets/sfx/raidsong_1.mp3'],
   raidwin: ['assets/sfx/raidwin_1.mp3'],

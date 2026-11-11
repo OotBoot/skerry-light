@@ -15,6 +15,8 @@
 //               fifteen seconds, until it's sung or broken
 //   raidmaren   Maren: a ghostly boss fight, wailing choir, war drums, a shanty fiddle and a foghorn (from “Maren is
 //               angered” until she's down)
+//   raidmaren2  her second phase (from a third of her strength, src/raidfort.js RF.p2): her fury, faster and harder, a
+//               screaming choir, war drums and a flooding storm tide; it swells as her tide floods in (RF.tide)
 //   raidwin     Maren down: bittersweet, a sunset over the sea after a hard fight, a slow shanty on fiddle and
 //               concertina over warm strings, a far-off ship's horn, the waves (played once, on into the end card)
 // Once it's over otherwise (all of you down, or left), nothing plays. While the raid's on, the Lighthouse's boss
@@ -34,7 +36,8 @@ function rmWant() {
   RM.fell = false;
   if (k === 'bridge') return 'raidbridge';
   if (k === 'fort' && typeof RF !== 'undefined') {
-    if (RF.st === 'maren' || (RF.st === 'anger' && RF.angered)) return 'raidmaren';
+    if (RF.st === 'maren') { const z = ZM.z.find(z => z.bt === 'maren' && !z.dead); return (RF.p2 != null ? RF.p2 : z && z.hp / z.max <= 1 / 3) ? 'raidmaren2' : 'raidmaren'; }
+    if (RF.st === 'anger' && RF.angered) return 'raidmaren';
     if (RF.st === 'knock') { const z = ZM.z.find(z => z.bt === 'knock' && !z.dead); return z && z.act === 'song' ? 'raidsong' : 'raidknock'; }
     return 'raidfort';
   }
@@ -46,7 +49,9 @@ function rmTick(dt) {
   // (the fall's track played through before you landed: on to the cave's, early)
   if (RM.cur === 'raidfall' && RM.done) RM.fell = true;
   const want = rmWant();
-  if (want !== RM.cur) { if (want) rmPlay(want, want === 'raidwin' ? 3 : want === 'raidcave' && RM.cur === 'raidfall' ? RM_TAIL : want === 'raidfall' ? 1.5 : want === 'raidsong' || RM.cur === 'raidsong' ? 0.6 : 2); else rmStop(3); }
+  if (want !== RM.cur) { if (want) rmPlay(want, want === 'raidwin' ? 3 : want === 'raidmaren2' ? 1.2 : want === 'raidcave' && RM.cur === 'raidfall' ? RM_TAIL : want === 'raidfall' ? 1.5 : want === 'raidsong' || RM.cur === 'raidsong' ? 0.6 : 2); else rmStop(3); }
+  // Maren's second phase: the music swells as her tide comes up the fort (RF.tide, 0 to 1)
+  if (RM.cur === 'raidmaren2' && RM.gain && typeof RF !== 'undefined') RM.gain.gain.setTargetAtTime(RM.vol * (1 + 0.45 * clamp(RF.tide || 0, 0, 1)), AUD.ctx.currentTime, 0.4);
   // the song: quicker and quicker, from its first beat to its last
   if (RM.cur === 'raidsong' && RM.src) {
     const z = ZM.z.find(z => z.bt === 'knock' && !z.dead), p = z ? clamp((z.at || 0) / RFK.SONG, 0, 1) : 0;

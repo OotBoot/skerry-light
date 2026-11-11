@@ -119,7 +119,7 @@ def main(src):
     # every file in assets/sfx (earlier runs included), by name
     allf = {}
     for f in sorted(os.listdir(OUT)):
-        m = re.match(r'^([a-z_]+)_(\d+)\.mp3$', f)
+        m = re.match(r'^([a-z0-9_]+?)_(\d+)\.mp3$', f)
         if m:
             allf.setdefault(m.group(1), []).append('assets/sfx/' + f)
     lines = ['// The recorded sound effects (written by tools/sfx/process.py; see src/sfxbank.js): each name and its takes.',

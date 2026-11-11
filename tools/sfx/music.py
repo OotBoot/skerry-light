@@ -126,7 +126,7 @@ def main(src, every=None):
     os.makedirs(OUT, exist_ok=True)
     takes = {}
     for f in sorted(os.listdir(src)):
-        m = re.match(r'^((?:boss|raid)[a-z]+)_(\d+)_\d+_?\.(?:flac|wav|mp3|ogg)$', f)
+        m = re.match(r'^((?:boss|raid)[a-z0-9]+)_(\d+)_\d+_?\.(?:flac|wav|mp3|ogg)$', f)
         if m: takes.setdefault(m.group(1), []).append(os.path.join(src, f))
     for name, files in sorted(takes.items()):
         res = []
@@ -138,7 +138,7 @@ def main(src, every=None):
         rate = '96k' if name.startswith('raid') else '112k'
         if every:
             os.makedirs(every, exist_ok=True)
-            for _, b, f in res: mp3(b, os.path.join(every, f'{name}_{re.match(r"^[a-z]+_(\d+)", os.path.basename(f)).group(1)}.mp3'), rate)
+            for _, b, f in res: mp3(b, os.path.join(every, f'{name}_{re.match(r"^[a-z0-9]+_(\d+)", os.path.basename(f)).group(1)}.mp3'), rate)
         pick = PICK.get(name)
         score, body, f = next((r for r in res if pick and re.match(rf'^{name}_{pick}_', os.path.basename(r[2]))), None) or max(res, key=lambda r: r[0])
         out = os.path.join(OUT, f'{name}_1.mp3')
