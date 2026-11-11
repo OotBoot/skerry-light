@@ -41,7 +41,7 @@ function rmWant() {
   if (!RAID.on) RM.fell = RM.wonDone = false;
   // Maren down: the sunset, played once through (on to the end card), then quiet
   // (the Gannet's Wake has its own: dawn after the Captain goes down, gwwin)
-  const WIN = RAID.map === 'gannet' ? 'gwwin' : 'raidwin';
+  const WIN = RAID.map === 'gannet' || RAID.map === 'fogrun' ? 'gwwin' : 'raidwin';   // [fogrun] (dawn, until it has its own)
   if (RAID.on && (RAID.won || (RAID_ORDER[RAID.stage] === 'fort' && typeof RF !== 'undefined' && RF.st === 'won') || (RAID_ORDER[RAID.stage] === 'gwcapt' && typeof GCW !== 'undefined' && GCW.st === 'won'))) { if (RM.cur === WIN && RM.done) RM.wonDone = true; return RM.wonDone ? null : WIN; }
   if (!RAID.on || ZM.over) return null;
   { const v = typeof rvMusic === 'function' ? rvMusic() : undefined; if (v !== undefined) return v; }   // [verity] (src/raidverity.js)

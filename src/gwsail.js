@@ -47,18 +47,31 @@
 // Hooks in shared files, each marked [gannet]: src/fps.js (at the helm the move keys steer: gwsHelm; the sea's sound
 // out here), src/gl3d.js (the sea in the cutter's frame: gwsGL, and its shader's frame uniforms), src/gfx.js (the stars
 // turn with her: GFX.skyTurn), src/fpsisle.js (no ground under the deck: T.noGround).
+// [fogrun] Fog Run's sailing legs (src/frsail.js) are this same stage with a few things changed, through GWS_LEG (below):
+// where she sets out from and the island she's to beach on, the rocks from the run's seed, the fog, and no Maren or
+// Plimsoll. Her sailing is never touched: her top speed and how quick she gathers way are the Brig's, always.
 
 const GWS = {
   D: 1.3, HB: 3.3, STERN: -11, BOW: 11.4, SPRIT: 15.6,   // (the deck's height over the ground; her half beam, stern, stem and bowsprit's end)
   MAST: [0, 3.2], MAST_H: 13.5, WHEEL: [0, -8.2], STAND: [0, -9.2], LOCKER: [2.0, -10.1], BELL: [0, 3.62],
   START: [30, 62], H0: 0.05, SAIL0: 0.36,                  // (where she sets out from, the Light's foot; her sail to begin with)
   MARK: [-150, 1680], MARK_R: 32, MARK_IN: 70, RISE: 14,   // (the Gannet's mark: its spars' ring, the ring to hold her in while she rises)
-  BOARD_T: 25, LADDER: [-3.05, 0.6],                       // (after the first of you is aboard, the rest have this long)
+  BOARD_T: 25, LADDER: [-3.05, 0.6], BEACH: 2.6,            // ([fogrun] BEACH: run up on an island's beach, this long before you're ashore)                       // (after the first of you is aboard, the rest have this long)
   PLANKS: 4, FLOOD: 1 / 42, PUMP: 1 / 55, PATCH: 2.2, SINK: 3.2,
   BELL_CD: 16, BELL_PUSH: 3, BELL_SINK: 26, FLARE_CD: 35, FLARE_T: 7, FLARE_R: 350,
   LANT_R: 26, SPEC: 1.2,                                   // (how far the deck lantern shows a rock, dimly)
   ROCKS: 150, IMPACT: 5,
 };
+// [fogrun] A leg of Fog Run's (src/frsail.js), or null for the Gannet's Wake. Set as the leg is laid out, before anything
+// of the sea is made, and dropped when it's left. Its say: start [x, y] and h0 (where she sets out from, and her heading),
+// mark [x, y] (the island she's to beach on, isleR across; markIn: how near counts as there), seed and rocks (the rocks,
+// from the run's seed, that many, along the way), fog (m: a rock shows inside it, as well as in the beam or a flare),
+// maren and plim (false: neither of them out there), line(S, dm) (the HUD's line), landSay, arrive() (hosting or
+// alone: once she's run up on the beach), b3(SG, GW3) and f3(dt, V) (the island's own 3D, in the sea's group).
+var GWS_LEG = null;
+const gwsMark = () => GWS_LEG ? GWS_LEG.mark : GWS.MARK;
+const gwsMaren = () => !GWS_LEG || !!GWS_LEG.maren;
+const gwsPlim = () => !GWS_LEG || !!GWS_LEG.plim;
 // where a hole can open in her deck (local u, v)
 const GWS_HOLES = [[-1.7, 7.2], [1.5, 5.6], [-2.0, 1.2], [1.9, -0.6], [-1.6, -3.9], [1.7, -5.3], [0.9, 8.9], [-1.2, -6.7]];
 // the low places along her rails where the drowned come in over the side: [u, v, nx, ny] (outward)
@@ -75,13 +88,14 @@ function gwsHw(v) {
 }
 const gwsW = (u, v) => [FPSC.CX + u, FPSC.CY + v];
 const gwsL = (x, y) => [x - FPSC.CX, y - FPSC.CY];
-const gwsOn = () => RAID.on && RAID_ORDER[RAID.stage] === 'gwsail' && !!RAID.st.B;
+const gwsOn = () => RAID.on && !!(raidStage() || {}).gws && !!RAID.st.B;   // [fogrun] (this stage, or one made from it: S.gws)
 const gwsNick = sid => sid === FPS.me.id ? 'You' : ((ZM.hum || []).find(h => h[0] === sid) || [])[1] || 'Someone';
 // the Brig's own numbers (src/crates.js BOATS): the cutter is never slower than she is
 const gwsBrig = () => (typeof BOAT_BY_ID !== 'undefined' && BOAT_BY_ID.brig) || { accel: 1.3, turn: 1.2, top: 1 };
 
 // ---------- the sea: its rocks, Plimsoll's channel, the mark (the same on every side, from the seed) ----------
 function gwsSea() {
+  if (GWS_LEG) return gwsLegSea(GWS_LEG);   // [fogrun]
   const R = seeded(0x6a77e + 977), rnd = (a, b) => a + R() * (b - a);
   const [sx, sy] = GWS.START, [mx, my] = GWS.MARK, rocks = [];
   const ok = (x, y, r) => y > 120 && Math.hypot(x - sx, y - sy) > 90 && Math.hypot(x - mx, y - my) > GWS.MARK_R + r + 30 && !rocks.some(o => Math.hypot(o.x - x, o.y - y) < o.r + r + 26);
@@ -102,8 +116,21 @@ function gwsSea() {
   for (let i = 0; i < 15; i++) { const a = i / 15 * 6.283 + rnd(-0.12, 0.12), d = GWS.MARK_R + rnd(-4, 4); spars.push({ x: mx + Math.sin(a) * d, y: my + Math.cos(a) * d, h: rnd(3, 12), r: rnd(0.18, 0.42), lx: rnd(-0.35, 0.35), ly: rnd(-0.35, 0.35), yard: R() < 0.4, ph: rnd(0, 6.28) }); }
   return { rocks, path, spars, len: Math.hypot(mx - sx, my - sy) };
 }
+// [fogrun] a leg's sea: rocks thick along the way from where she sets out to the island and thinner off it, none close
+// round either end; no spars, and the way straight there (nobody walks it)
+function gwsLegSea(L) {
+  const R = seeded(L.seed), rnd = (a, b) => a + R() * (b - a), [sx, sy] = L.start, [mx, my] = L.mark, rocks = [];
+  const len = Math.hypot(mx - sx, my - sy), ux = (mx - sx) / len, uy = (my - sy) / len;
+  const ok = (x, y, r) => y > 110 && Math.hypot(x - sx, y - sy) > 60 + r && Math.hypot(x - mx, y - my) > L.isleR + r + 30 && !rocks.some(o => Math.hypot(o.x - x, o.y - y) < o.r + r + 20);
+  const add = (x, y, r) => { const prof = []; for (let i = 0; i < 7; i++) prof.push(rnd(0.35, 1)); prof[0] = rnd(0.15, 0.45); prof[6] = rnd(0.15, 0.45); rocks.push({ x, y, r, prof, ph: rnd(0, 6.28), seen: -99, lit: 0, i: rocks.length }); };
+  const at = (t, side) => [sx + ux * len * t - uy * side, sy + uy * len * t + ux * side];
+  for (let n = 0; n < 6000 && rocks.length < L.rocks * 0.6; n++) { const [x, y] = at(rnd(0.05, 1.05), rnd(-70, 70)), r = rnd(4, 12); if (ok(x, y, r)) add(x, y, r); }
+  for (let n = 0; n < 6000 && rocks.length < L.rocks; n++) { const [x, y] = at(rnd(-0.15, 1.3), rnd(-300, 300)), r = rnd(5, 16); if (ok(x, y, r)) add(x, y, r); }
+  const path = []; for (let i = 0; i <= Math.ceil(len / 12); i++) { const t = i / Math.ceil(len / 12); path.push({ x: sx + (mx - sx) * t, y: sy + (my - sy) * t }); }
+  return { rocks, path, spars: [], len };
+}
 let GWS_SEA = null;
-const gwsSeaOf = () => GWS_SEA || (GWS_SEA = gwsSea());
+const gwsSeaOf = () => GWS_LEG ? GWS_LEG.sea || (GWS_LEG.sea = gwsSea()) : GWS_SEA || (GWS_SEA = gwsSea());   // [fogrun] (each leg its own)
 
 // ---------- her sailing (the Brig's, src/game.js update) ----------
 function gwsBoat(x, y, h) { return { x, y, h, v: 3 + GWS.SAIL0 * 12, sail: GWS.SAIL0, rudder: 0, held: 0, inv: 0 }; }
@@ -263,8 +290,8 @@ function gwsSpawn(S) {
   try { if (!soundOff()) sfxSplash(gwsPan(sx - FPSC.CX, sy - FPSC.CY, true), Math.max(0.1, 1 - Math.hypot(sx - FPS.me.x, sy - FPS.me.y) / 30)); } catch (e) {}
 }
 // how far out she's come, 0 at the Light's foot to 1 at the mark
-function gwsProg() { const B = RAID.st.B, sea = gwsSeaOf(); return B ? clamp(1 - Math.hypot(GWS.MARK[0] - B.x, GWS.MARK[1] - B.y) / sea.len, 0, 1) : 0; }
-const gwsToMark = B => Math.hypot(GWS.MARK[0] - B.x, GWS.MARK[1] - B.y);
+function gwsProg() { const B = RAID.st.B, sea = gwsSeaOf(), M = gwsMark(); return B ? clamp(1 - Math.hypot(M[0] - B.x, M[1] - B.y) / sea.len, 0, 1) : 0; }
+const gwsToMark = B => { const M = gwsMark(); return Math.hypot(M[0] - B.x, M[1] - B.y); };
 
 // ---------- the props: the cutter (src/fpsisle.js's kinds) ----------
 // all of her that never moves, as one prop at the deck's middle: her deck and its floor, the hull's sides down into the
@@ -399,13 +426,13 @@ function gwsFlareFx(S) {
 
 // ---------- the stage ----------
 RAID_STAGES.gwsail = {
-  n: 'The Skerries', map: GWS_MAP, mend: true, zSpeed: 1, open: true,
+  n: 'The Skerries', map: GWS_MAP, mend: true, zSpeed: 1, open: true, gws: true,
   music: () => 'gwsail',   // (its own: a tense shanty at night, low strings, the hull creaking, a far-off bell)
   set(H, K, Z) { gwsLay(H, K, Z); },
   enter() {
-    const sea = gwsSeaOf(), B = gwsBoat(GWS.START[0], GWS.START[1], GWS.H0);
+    const L = GWS_LEG, st0 = L ? L.start : GWS.START, sea = gwsSeaOf(), B = gwsBoat(st0[0], st0[1], L ? L.h0 : GWS.H0);   // [fogrun] (a leg's own start)
     for (const r of sea.rocks) { r.seen = -99; r.flare = 0; }
-    const k0 = Math.max(0, sea.path.findIndex(q => Math.hypot(q.x - GWS.START[0], q.y - GWS.START[1]) >= 80)), p0 = sea.path[k0];
+    const k0 = Math.max(0, sea.path.findIndex(q => Math.hypot(q.x - st0[0], q.y - st0[1]) >= 80)), p0 = sea.path[k0] || sea.path[sea.path.length - 1];
     Object.assign(RAID.st, {
       B, V: Object.assign({}, B), G: null, in: [0, 0], inT: 0, helm: null, myIn: [0, 0], sentIn: null, sentT: 0, ph: 'sail',
       holes: [], flood: 0, hitN: 0, scrN: 0, mar: { st: 0, rb: 0.1, heldT: -99, x: 0, y: 0 }, turn: 0, tellT: 0,
@@ -416,6 +443,7 @@ RAID_STAGES.gwsail = {
     });
     { const [mx, my] = gwsMarenAt(RAID.st, B); RAID.st.mar.x = mx; RAID.st.mar.y = my; }
     FPS.helm = false;
+    if (L) return;   // [fogrun] (a leg says its own)
     ZM.banner = { text: 'The Skerries', t: 4.5, sub: 'Part I · out through the rocks to the Gannet’s mark', col: '#d8e6ff' };
     fpsFeed('The keeper’s cutter, at the foot of the Light. Take the wheel (Use) to sail her: the rocks only show in the beam.');
   },
@@ -450,16 +478,18 @@ function gwsTick(dt) {
   if (S.helm === FPS.me.id) S.in = S.myIn.slice(); else if (!S.helm) S.in = [0, 0];
   else { S.inT += dt; if (S.inT > 3.5) S.in = [0, 0]; }
   if (S.ph === 'sunk') { S.sinkT += dt; if (S.sinkT >= GWS.SINK && !ZM.over) zmEnd(); return; }
+  // [fogrun] run up on the island's beach: a moment, and ashore
+  if (S.ph === 'beach') { S.beachT = (S.beachT || 0) + dt; if (S.beachT >= GWS.BEACH && GWS_LEG && GWS_LEG.arrive) { const f = GWS_LEG.arrive; GWS_LEG.arrive = null; f(); } return; }
   gwsSail(B, S.in[0], S.in[1], dt, true);
   // the sea coming in at every open hole; the pumps getting it out again when there's none
   S.flood = clamp(S.flood + (S.holes.length ? S.holes.length * GWS.FLOOD : -GWS.PUMP) * dt, 0, 1);
   if (S.flood >= 1) { S.ph = 'sunk'; S.sinkT = 0; gwsSay('She’s going down. The sea has her.', true); return; }
   // Maren: one stage nearer every turn of the beam (a swell a moment before)
   const turn = Math.floor((RAID.t || 0) / GW.PERIOD);
-  if (turn > S.turn) { S.turn = turn; gwsMarenTurn(S); }
+  if (turn > S.turn) { S.turn = turn; if (gwsMaren()) gwsMarenTurn(S); }
   const M = S.mar, [mx, my] = gwsMarenAt(S, B), k = Math.min(1, dt * (0.12 + M.st * 0.06));
   M.x += (mx - M.x) * k; M.y += (my - M.y) * k;
-  gwsPlimTick(S, dt);
+  if (gwsPlim()) gwsPlimTick(S, dt);
   // the drowned: up over the rail all the way out, quicker the further out, quicker again while the Gannet comes up
   if (S.ph === 'sail' || S.ph === 'rise') {
     S.spT -= dt;
@@ -467,6 +497,7 @@ function gwsTick(dt) {
   }
   // the mark: hold her inside the ring of spars while the Gannet comes up; then up her side
   const dm = gwsToMark(B);
+  if (GWS_LEG) { if (S.ph === 'sail' && dm < GWS_LEG.markIn) { S.ph = 'beach'; S.beachT = 0; gwsSay(GWS_LEG.landSay || 'She runs up on the beach.', true); } return; }   // [fogrun] the island, not the mark
   if (S.ph === 'sail' && dm < GWS.MARK_IN) { S.ph = 'rise'; gwsSay('The Gannet’s mark. Hold her inside the ring of spars: something is coming up.', true); }
   if (S.ph === 'rise') { if (dm < GWS.MARK_IN + 20) S.riseT += dt; if (S.riseT >= GWS.RISE) { S.ph = 'ladder'; gwsSay('The Gannet is alongside, her bell ringing. Climb her side: Use at her ladder, by the port rail.', true); } }
   if (S.ph === 'ladder') {
@@ -496,7 +527,7 @@ function gwsPack(o) {
   o.gm = [S.mar.st, Math.round(S.mar.x), Math.round(S.mar.y), Math.round(S.mar.rb * 100)]; o.gtk = S.take;
   o.gl = [Math.round(S.pl.x * 10) / 10, Math.round(S.pl.y * 10) / 10, S.pl.w | 0, Math.round(S.pl.dx * 100) / 100, Math.round(S.pl.dy * 100) / 100];
   o.gb = [S.bellN | 0, Math.round(S.bellCd * 10) / 10, S.bellBy || '', S.bellSay || '']; o.gF = [S.flN | 0, S.flAt[0], S.flAt[1], Math.round(S.flareCd * 10) / 10, S.flBy || ''];
-  o.gs = ['sail', 'rise', 'ladder', 'sunk'].indexOf(S.ph); o.gr = Math.round(S.riseT * 10) / 10; o.gab = S.ab.slice(); o.gk = Math.round(S.sinkT * 10) / 10; o.gsy = S.say;
+  o.gs = ['sail', 'rise', 'ladder', 'sunk', 'beach'].indexOf(S.ph);   // ([fogrun] beach) o.gr = Math.round(S.riseT * 10) / 10; o.gab = S.ab.slice(); o.gk = Math.round(S.sinkT * 10) / 10; o.gsy = S.say;
 }
 // joined: the host's word of it
 function gwsApply(o) {
@@ -516,7 +547,7 @@ function gwsApply(o) {
   if (Array.isArray(o.gl)) { const P = S.pl; P.x = +o.gl[0]; P.y = +o.gl[1]; P.w = o.gl[2] | 0; P.dx = +o.gl[3] || 0; P.dy = +o.gl[4] || 1; }
   if (Array.isArray(o.gb)) { const n = o.gb[0] | 0; S.bellCd = +o.gb[1] || 0; if (n > S.seenBell) { S.bellBy = String(o.gb[2] || ''); S.bellSay = String(o.gb[3] || ''); if (S.seenBell || n === 1) gwsBellFx(S); S.seenBell = n; } }
   if (Array.isArray(o.gF)) { const n = o.gF[0] | 0; S.flareCd = +o.gF[3] || 0; if (n > S.seenFl) { S.flAt = [+o.gF[1], +o.gF[2]]; S.flBy = String(o.gF[4] || ''); if (S.seenFl || n === 1) gwsFlareFx(S); S.seenFl = n; } }
-  const ph = ['sail', 'rise', 'ladder', 'sunk'][o.gs | 0] || 'sail'; S.ph = ph;
+  const ph = ['sail', 'rise', 'ladder', 'sunk', 'beach'][o.gs | 0] || 'sail'; S.ph = ph;
   S.riseT = +o.gr || 0; if (Array.isArray(o.gab)) S.ab = o.gab.map(String); S.sinkT = +o.gk || 0;
   if (Array.isArray(o.gsy)) { const n = o.gsy[0] | 0; if (n > S.seenSay) { if (S.seenSay || n === 1) gwsHear(String(o.gsy[1] || ''), !!o.gsy[2]); S.seenSay = n; } }
 }
@@ -562,6 +593,7 @@ function gwsMe(dt) {
     const lan = Math.hypot(dx, dy) < GWS.LANT_R + r.r;
     if (inBeam || r.flare > now) r.seen = now;
     r.lit = Math.max(inBeam || r.flare > now ? 1 : clamp(1 - (now - r.seen - SK.SEEN_HOLD) / SK.SEEN_FADE, 0, 1), lan ? 0.32 : 0);
+    if (GWS_LEG && GWS_LEG.fog) { const f = GWS_LEG.fog, e = Math.hypot(dx, dy) - r.r; if (e < f) r.lit = Math.max(r.lit, clamp((f - e) / (f * 0.35), 0, 1)); }   // [fogrun] inside the fog, seen
   }
   // the flares: up from the stern, and slowly down again
   for (const f of S.flares) f.t += dt;
@@ -569,16 +601,16 @@ function gwsMe(dt) {
   // Maren's tells: a swell from her side a moment before she steps nearer (only while she isn't held); her whisper the
   // first time you see her at each stage; oars when she's close and out of sight; sometimes, on the bowsprit
   const M = S.mar, tellAt = GW.PERIOD - 1.5, into = ((RAID.ct || 0) % GW.PERIOD), turnN = Math.floor((RAID.ct || 0) / GW.PERIOD);
-  const held = gwsGuarded(S, V);
-  if (into >= tellAt && S.tellSeen !== turnN && (S.ph === 'sail' || S.ph === 'rise')) {
+  const held = gwsGuarded(S, V), mOn = gwsMaren();   // [fogrun] (no Maren out there: none of her tells)
+  if (mOn && into >= tellAt && S.tellSeen !== turnN && (S.ph === 'sail' || S.ph === 'rise')) {
     S.tellSeen = turnN;
     if (!held) { S.tellT = 1.5; try { if (!soundOff()) sfxSwell(gwsPan(M.x, M.y)); } catch (e) {} }
   }
   if (S.tellT > 0) S.tellT -= dt;
   const mb = bearingOf(M.x - V.x, M.y - V.y) - V.h, look = Math.abs(angDiff(mb, m.h)) < 0.65;
-  if (look && S.mSeen !== M.st && (S.ph === 'sail' || S.ph === 'rise')) { S.mSeen = M.st; try { if (!soundOff()) sfxWhisper(gwsPan(M.x, M.y), 0.6 + M.st * 0.15); } catch (e) {} }
-  if (M.st >= 3 && !look) { S.oarT -= dt; if (S.oarT <= 0) { S.oarT = 2.5 + Math.random() * 1.5; try { if (!soundOff()) sfxRowlock(gwsPan(M.x, M.y)); } catch (e) {} } }
-  { const lb = bearingOf(V.x, V.y); if (M.st >= 1 && Math.abs(angDiff(beam, lb)) < 0.06 && S.appSeen !== turnN) { S.appSeen = turnN; if (Math.random() < 0.3 && Math.abs(m.h) < 0.8) { S.appT = 0.9; try { if (!soundOff()) sfxSting(); } catch (e) {} fpsFeed('Something was standing on the bowsprit.'); } } }
+  if (mOn && look && S.mSeen !== M.st && (S.ph === 'sail' || S.ph === 'rise')) { S.mSeen = M.st; try { if (!soundOff()) sfxWhisper(gwsPan(M.x, M.y), 0.6 + M.st * 0.15); } catch (e) {} }
+  if (mOn && M.st >= 3 && !look) { S.oarT -= dt; if (S.oarT <= 0) { S.oarT = 2.5 + Math.random() * 1.5; try { if (!soundOff()) sfxRowlock(gwsPan(M.x, M.y)); } catch (e) {} } }
+  { const lb = bearingOf(V.x, V.y); if (mOn && M.st >= 1 && Math.abs(angDiff(beam, lb)) < 0.06 && S.appSeen !== turnN) { S.appSeen = turnN; if (Math.random() < 0.3 && Math.abs(m.h) < 0.8) { S.appT = 0.9; try { if (!soundOff()) sfxSting(); } catch (e) {} fpsFeed('Something was standing on the bowsprit.'); } } }
   if (S.appT > 0) S.appT -= dt;
   if (S.abT > 0) S.abT -= dt;
   if (S.bellSwing > 0) S.bellSwing = Math.max(0, S.bellSwing - dt / 3);
@@ -586,9 +618,9 @@ function gwsMe(dt) {
   // she creaks and works as she goes, more the faster; the Gannet's bell comes over the water, louder nearer the mark
   S.creakT -= dt * (0.6 + Math.min(2, V.v / 12));
   if (S.creakT <= 0) { S.creakT = 3 + Math.random() * 5; try { if (!soundOff()) sfxCreak(); } catch (e) {} }
-  { const dm = gwsToMark(V); S.gBellT -= dt; if (S.gBellT <= 0 && dm < 1300 && S.ph !== 'sunk') { S.gBellT = S.ph === 'sail' ? 5 + dm / 250 : 2.2; try { if (!soundOff()) sfxBellFar(gwsPan(GWS.MARK[0], GWS.MARK[1]), S.ph === 'sail' ? clamp(1 - dm / 1300, 0.08, 0.7) : 0.9); } catch (e) {} } }
+  if (!GWS_LEG) { const dm = gwsToMark(V); S.gBellT -= dt; if (S.gBellT <= 0 && dm < 1300 && S.ph !== 'sunk') { S.gBellT = S.ph === 'sail' ? 5 + dm / 250 : 2.2; try { if (!soundOff()) sfxBellFar(gwsPan(GWS.MARK[0], GWS.MARK[1]), S.ph === 'sail' ? clamp(1 - dm / 1300, 0.08, 0.7) : 0.9); } catch (e) {} } }
   // Plimsoll's squeaking shoes, as he walks
-  if (S.pl.w) { S.pl.ph += dt * Math.min(30, 9 + V.v * 0.15); const st = Math.floor(S.pl.ph / Math.PI); if (st !== S.pl.step) { S.pl.step = st; const d = Math.hypot(S.pl.x - V.x, S.pl.y - V.y); if (d < 260) try { if (!soundOff()) sfxSqueak(gwsPan(S.pl.x, S.pl.y), Math.max(0, 1 - d / 260)); } catch (e) {} } } else S.pl.ph += dt * 1.5;
+  if (gwsPlim() && S.pl.w) { S.pl.ph += dt * Math.min(30, 9 + V.v * 0.15); const st = Math.floor(S.pl.ph / Math.PI); if (st !== S.pl.step) { S.pl.step = st; const d = Math.hypot(S.pl.x - V.x, S.pl.y - V.y); if (d < 260) try { if (!soundOff()) sfxSqueak(gwsPan(S.pl.x, S.pl.y), Math.max(0, 1 - d / 260)); } catch (e) {} } } else S.pl.ph += dt * 1.5;
   // holding Use at a hole patches it
   const hold = FPS.keys.KeyF || FPS.keys.KeyE || FPS.touchUse || FPS.padUse, o = ZM.near;
   if (hold && o && o.k === 'gwhole' && alive && !(S.pend > 0) && S.holes.includes(o.i)) {
@@ -806,7 +838,8 @@ function gws3dBuild(grp) {
       const tip = new THREE.Mesh(new THREE.CylinderGeometry(s.r * 0.72, s.r * 0.72, 0.4, 7), wh); tip.position.y = s.h - 0.8; g0.add(tip);
       const w = new THREE.Mesh(new THREE.CylinderGeometry(s.r * 1.08, s.r * 1.12, 0.9, 7), wd); w.position.y = 0.2; g0.add(w);
       if (s.yard) { const y = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, s.h * 0.6, 6).rotateZ(Math.PI / 2 - 0.3), sp); y.position.y = s.h * 0.7; g0.add(y); } }
-    GW3.markGlow = glowSp(0x9affc8, 70, { opacity: 0 }); GW3.markGlow.position.copy(gsv(GWS.MARK[0], GWS.MARK[1], 3)); SG.add(GW3.markGlow); }
+    GW3.markGlow = glowSp(0x9affc8, 70, { opacity: 0 }); GW3.markGlow.position.copy(gsv(gwsMark()[0], gwsMark()[1], 3)); SG.add(GW3.markGlow); }
+  if (GWS_LEG && GWS_LEG.b3) GWS_LEG.b3(SG, GW3);   // [fogrun] the island she's to beach on
   // Plimsoll: his drawing, walking upright on the water, his blue shoes glowing; and his ring, faint on the sea
   { const P = GW3.plim = new THREE.Group(); SG.add(P);
     GW3.plimS = new THREE.Sprite(new THREE.SpriteMaterial({ transparent: true, depthWrite: false, fog: false })); GW3.plimS.scale.set(3.4 * SK.PLIM_ASPECT, 3.4, 1); GW3.plimS.position.y = 1.7; P.add(GW3.plimS);
@@ -880,11 +913,12 @@ function gws3d(dt) {
     for (const mt of R.M.mats) { mt.opacity = k; mt.emissive.setRGB(0.22 * k * warm, 0.19 * k * warm, 0.13 * k * warm); }
     R.M.foamM.opacity = 0.3 * k;
   }
-  GW3.markGlow.material.opacity = S.ph === 'sail' ? clamp(1 - gwsToMark(V) / 900, 0, 1) * 0.22 * (0.7 + 0.3 * Math.sin(t * 1.3)) : S.ph === 'rise' ? 0.35 : 0;
+  if (GWS_LEG && GWS_LEG.f3) GWS_LEG.f3(dt, V);   // [fogrun]
+  GW3.markGlow.material.opacity = GWS_LEG ? 0 : S.ph === 'sail' ? clamp(1 - gwsToMark(V) / 900, 0, 1) * 0.22 * (0.7 + 0.3 * Math.sin(t * 1.3)) : S.ph === 'rise' ? 0.35 : 0;
   // Plimsoll (turned to walk the way he's going, across your view) and his ring while he's keeping her off you
   { if (!GW3.T.plim) { GW3.T.plim = gwsImgTex(IMG.plim, false); GW3.T.plimF = gwsImgTex(IMG.plim, false, true); if (GW3.T.plim) { GW3.plimS.material.map = GW3.T.plim; GW3.plimS.material.needsUpdate = true; } }
     const P = S.pl, bob = P.w ? Math.abs(Math.sin(P.ph)) * 0.25 : Math.sin(P.ph) * 0.05;
-    GW3.plim.position.set(P.x, bob, -P.y);
+    GW3.plim.position.set(P.x, bob, -P.y); GW3.plim.visible = gwsPlim();   // [fogrun]
     // (the picture faces left: flipped when he's walking to the right across where you're looking)
     if (GW3.T.plim) { const dirL = (P.dx || 0) * c - (P.dy || 1) * sn, dirLy = (P.dx || 0) * sn + (P.dy || 1) * c, look = m.h, right = dirL * Math.cos(look) - dirLy * Math.sin(look);
       const want = right > 0 ? GW3.T.plimF : GW3.T.plim; if (GW3.plimS.material.map !== want) { GW3.plimS.material.map = want; GW3.plimS.material.needsUpdate = true; } }
@@ -892,9 +926,9 @@ function gws3d(dt) {
     const d = Math.hypot(P.x - V.x, P.y - V.y), vis = clamp(1.25 - d / 700, 0.35, 1); GW3.plimS.material.opacity = vis;
     GW3.shoes.forEach((s, i) => { s.material.opacity = 0.75 + 0.25 * Math.sin(t * 4 + i); s.position.y = 0.15 + (P.w ? Math.max(0, Math.sin(P.ph + i * Math.PI)) * 0.25 : 0); });
     const guard = gwsGuarded(S, V), R = gwsGuardR(V.v);
-    GW3.ring.visible = guard && (S.ph === 'sail' || S.ph === 'rise'); GW3.ring.position.set(P.x, 0.4, -P.y); GW3.ring.scale.set(R, 1, R); GW3.ring.material.opacity = reduceMotion ? 0.16 : 0.14 + 0.05 * Math.sin(t * 2.4); }
+    GW3.ring.visible = guard && gwsPlim() && (S.ph === 'sail' || S.ph === 'rise'); GW3.ring.position.set(P.x, 0.4, -P.y); GW3.ring.scale.set(R, 1, R); GW3.ring.material.opacity = reduceMotion ? 0.16 : 0.14 + 0.05 * Math.sin(t * 2.4); }
   // Maren, out on the water (pale, swaying, a flicker to her as she comes close)
-  { const M = S.mar; GW3.mar.position.set(M.x, 0, -M.y); GW3.mar.visible = !!GW3.T.maren && S.ph !== 'ladder' && S.ph !== 'sunk' && !(S.abT > 0);
+  { const M = S.mar; GW3.mar.position.set(M.x, 0, -M.y); GW3.mar.visible = gwsMaren() && !!GW3.T.maren && S.ph !== 'ladder' && S.ph !== 'sunk' && !(S.abT > 0);
     const sway = reduceMotion ? 0 : Math.sin(t * 1.3) * 0.035 + (M.st >= 3 ? Math.sin(t * 17) * 0.012 : 0);
     let a = 0.85; if (M.st >= 3 && !reduceMotion && Math.random() < 0.12) a *= 0.35;
     GW3.marS.material.rotation = sway; GW3.marS.material.opacity = a; GW3.marR.material.opacity = a * 0.18; GW3.marG.material.opacity = 0.22 + 0.1 * Math.sin(t * 1.7);
@@ -958,7 +992,8 @@ function gwsHud(phone, mono, fell) {
   const L = Math.max(14, FPS.safeLeft || 0), top = fpsHudTop() + (phone ? 32 : 44), t = g.t;
   const dm = gwsToMark(V);
   let line;
-  if (S.ph === 'sail') line = `Out through the skerries to the Gannet’s mark: ${Math.round(dm).toLocaleString('en')} m`;
+  if (GWS_LEG && GWS_LEG.line) line = GWS_LEG.line(S, dm);   // [fogrun]
+  else if (S.ph === 'sail') line = `Out through the skerries to the Gannet’s mark: ${Math.round(dm).toLocaleString('en')} m`;
   else if (S.ph === 'rise') line = `Hold her inside the ring of spars: the Gannet is coming up (${Math.round(S.riseT / GWS.RISE * 100)}%)`;
   else if (S.ph === 'ladder') { const n = (ZM.net === 'client' ? ZM.hum.length : (ZM.players || []).length) || 1; line = S.ab.includes(m.id) ? `Aboard the Gannet: ${S.ab.length} of ${n}. Waiting for the others${S.firstAb || S.ab.length ? '' : ''}` : `The Gannet is alongside: climb her side (Use at her ladder, port rail) · ${S.ab.length} of ${n} aboard`; }
   else line = 'She’s going down.';
@@ -980,8 +1015,9 @@ function gwsHud(phone, mono, fell) {
     yy += rh; lab('FLARE', yy); val(S.flareCd > 0 ? `${Math.ceil(S.flareCd)} s` : 'READY · THE LOCKER AFT', yy, S.flareCd > 0 ? 'rgba(236,228,207,0.55)' : '#ff9a7a');
     // Maren
     yy += rh; const M = S.mar, md = Math.round(Math.hypot(M.x - V.x, M.y - V.y)), held = gwsGuarded(S, V);
+    if (!gwsMaren()) { lab('FOG', yy); val(`YOU CAN SEE ${Math.round(GWS_LEG.fog)} m`, yy, '#c8d4e0'); } else {   // [fogrun] (no Maren: how far the fog lets you see)
     lab('MAREN', yy, M.st >= 3 ? `rgba(216,230,255,${0.7 + 0.3 * Math.sin(t * 5)})` : null);
-    val(S.abT > 0 ? 'ABOARD' : `${md} m ${gwsSide(S, md)}${held ? ' · HELD' : ''}`, yy, M.st >= 3 ? '#d8e6ff' : held ? '#8fd8ff' : 'rgba(236,228,207,0.85)');
+    val(S.abT > 0 ? 'ABOARD' : `${md} m ${gwsSide(S, md)}${held ? ' · HELD' : ''}`, yy, M.st >= 3 ? '#d8e6ff' : held ? '#8fd8ff' : 'rgba(236,228,207,0.85)'); }
     // her speed and sail, and who has the helm
     yy += rh; lab('HELM', yy); val(`${S.helm ? gwsNick(S.helm).toUpperCase() : 'NOBODY'} · ${V.v.toFixed(1)} m/s`, yy, S.helm ? 'rgba(236,228,207,0.9)' : '#e8b080');
     ctx.textBaseline = 'alphabetic'; }
@@ -999,16 +1035,16 @@ function gwsHud(phone, mono, fell) {
     // the Light
     { const d = lb(bearingOf(-V.x, -V.y)); if (inS(d)) { const f = 1 - Math.min(1, Math.abs(angDiff(wrapPi(gwBeam()), bearingOf(V.x, V.y))) / 0.6); ctx.fillStyle = `rgba(255,216,138,${0.5 + 0.5 * f})`; const xx = xb(d); ctx.beginPath(); ctx.moveTo(xx, sy + 4); ctx.lineTo(xx + 3.5, sy + 14); ctx.lineTo(xx - 3.5, sy + 14); ctx.closePath(); ctx.fill(); } }
     // the mark
-    { const d = lb(bearingOf(GWS.MARK[0] - V.x, GWS.MARK[1] - V.y)); if (inS(d)) { const xx = xb(d); ctx.fillStyle = '#86cfae'; ctx.fillRect(xx - 5, sy + 7, 10, 6); if (!phone) { ctx.font = mono(9); ctx.fillText(`${Math.round(dm)} m`, xx, sy + sh + (inS(angDiff(0, m.h)) && Math.abs(xx - xb(angDiff(0, m.h))) < 30 ? 18 : 7)); ctx.font = mono(10); } } else edge(d, '#86cfae'); }
+    { const MK = gwsMark(), d = lb(bearingOf(MK[0] - V.x, MK[1] - V.y)); if (inS(d)) { const xx = xb(d); ctx.fillStyle = '#86cfae'; ctx.fillRect(xx - 5, sy + 7, 10, 6); if (!phone) { ctx.font = mono(9); ctx.fillText(`${Math.round(dm)} m`, xx, sy + sh + (inS(angDiff(0, m.h)) && Math.abs(xx - xb(angDiff(0, m.h))) < 30 ? 18 : 7)); ctx.font = mono(10); } } else edge(d, '#86cfae'); }
     // Plimsoll, and his ring while he's keeping her off you
-    { const P = S.pl, d = lb(bearingOf(P.x - V.x, P.y - V.y)), py = sy + sh * 0.68;
+    if (gwsPlim()) { const P = S.pl, d = lb(bearingOf(P.x - V.x, P.y - V.y)), py = sy + sh * 0.68;
       if (inS(d)) { const xx = xb(d); ctx.fillStyle = '#5fd3ff'; ctx.beginPath(); ctx.arc(xx, py, 3, 0, 6.28); ctx.fill();
         const dd = Math.hypot(P.x - V.x, P.y - V.y), R = gwsGuardR(V.v);
         if (dd < R) { ctx.fillStyle = 'rgba(95,211,255,0.35)'; ctx.beginPath(); ctx.arc(xx, py, 6, 0, 6.28); ctx.fill(); ctx.strokeStyle = 'rgba(95,211,255,0.9)'; ctx.stroke(); }
         else if (dd < R * 1.5) { ctx.strokeStyle = 'rgba(95,211,255,0.6)'; ctx.beginPath(); ctx.arc(xx, py, 6, 0, 6.28); ctx.stroke(); } }
       else edge(d, '#5fd3ff'); }
     // Maren
-    { const M = S.mar, d = lb(bearingOf(M.x - V.x, M.y - V.y)); if (inS(d)) { const xx = xb(d), a = M.st >= 3 ? 0.7 + 0.3 * Math.sin(t * 6) : 0.75; ctx.fillStyle = `rgba(216,230,255,${a})`; ctx.fillRect(xx - 1.5, sy + 5, 3, sh - 12); ctx.beginPath(); ctx.arc(xx, sy + 5, 2.5, 0, 6.28); ctx.fill(); } else if (M.st >= 2) edge(d, 'rgba(216,230,255,0.8)'); }
+    if (gwsMaren()) { const M = S.mar, d = lb(bearingOf(M.x - V.x, M.y - V.y)); if (inS(d)) { const xx = xb(d), a = M.st >= 3 ? 0.7 + 0.3 * Math.sin(t * 6) : 0.75; ctx.fillStyle = `rgba(216,230,255,${a})`; ctx.fillRect(xx - 1.5, sy + 5, 3, sh - 12); ctx.beginPath(); ctx.arc(xx, sy + 5, 2.5, 0, 6.28); ctx.fill(); } else if (M.st >= 2) edge(d, 'rgba(216,230,255,0.8)'); }
     ctx.textBaseline = 'alphabetic'; }
   // ---------- at the wheel ----------
   if (FPS.helm) {

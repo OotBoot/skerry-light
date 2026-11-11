@@ -31,6 +31,9 @@
 // they stood, how hurt, down or not, their calling) comes back from what this browser kept of it (znRjSnap); what
 // the host credited them while they were gone is added on top. The host's browser is the night, so if the host
 // drops out the night ends as before.
+// [fogrun] Fog Run (src/frrun.js) has a lobby of its own on its own card (ZN.mode 'fr', prefix fr), kept apart from
+// nights and raids the same way the raids are kept from nights: by the map its host has picked (ZM_MAPS.fogrun.fr).
+// Its seed goes out once, in the start (st.fs); each player's lives go in their presence (frp).
 
 const ZN = { code: null, at: 0, doneG: null, msg: '', g: null, sendT: 0, hseq: 0, seq: 0, q: [], hq: [], hits: new Map(), shots: [], shotSeq: 0,
   lastQ: {}, lastH: {}, lastShot: {}, seenT: {}, ev: [], eseq: 0, evSeen: 0, lastHseq: -1, hostT: 0, creditSeen: [0, 0, 0], lobT: 0, j: '', rj: null };
@@ -67,9 +70,13 @@ function znAt(o, t) {
 // ---------- the lobby ----------
 function znOnline() { return !!(typeof NET !== 'undefined' && NET.room && NET.status === 'ready'); }
 // the map a lobby's for: the raid's, or the one picked on the Lighthouse's card
-const znMap = () => ZN.mode === 'raid' ? (typeof RD_PICK !== 'undefined' ? RD_PICK : 'raid') : ZM_PICK;   // [raid] (which raid: src/raid.js)
+const znMap = () => ZN.mode === 'fr' ? 'fogrun' : ZN.mode === 'raid' ? (typeof RD_PICK !== 'undefined' ? RD_PICK : 'raid') : ZM_PICK;   // [raid] (which raid: src/raid.js) [fogrun]
 const znIsRaid = m => !!(ZM_MAPS[m] && ZM_MAPS[m].raid);
-function znNick() { return znClean(($(ZN.mode === 'raid' ? 'rdNick' : 'zmNick') && $(ZN.mode === 'raid' ? 'rdNick' : 'zmNick').value) || '', 16) || (NET.nick ? znClean(NET.nick, 16) : '') || 'Keeper ' + String(NET.sid || '').slice(0, 3).toUpperCase(); }
+// [fogrun] which card a map's lobby belongs on: 'fr' (Fog Run), 'raid' or 'zm'; and a mode from what's asked
+const znKind = m => ZM_MAPS[m] && ZM_MAPS[m].fr ? 'fr' : znIsRaid(m) ? 'raid' : 'zm';
+const znModeOf = mode => mode === 'raid' || mode === 'fr' ? mode : 'zm';
+const ZN_NICK = { zm: 'zmNick', raid: 'rdNick', fr: 'frNick' }, ZN_CARD = { zm: 'zmTitle', raid: 'rdTitle', fr: 'frTitle' };
+function znNick() { const b = $(ZN_NICK[ZN.mode] || 'zmNick'); return znClean((b && b.value) || '', 16) || (NET.nick ? znClean(NET.nick, 16) : '') || 'Keeper ' + String(NET.sid || '').slice(0, 3).toUpperCase(); }
 function znOf(p) { const z = p && p.presence && p.presence.zm; return z && typeof z === 'object' && typeof z.room === 'string' && typeof z.sid === 'string' ? z : null; }
 function znBase() { return { room: ZN.code, sid: NET.sid, nick: znNick(), at: ZN.at }; }
 function znPeers(code) {
@@ -90,13 +97,13 @@ function znSendLobby() {
 }
 function znHost(mode) {
   if (!znOnline() || FPS.on) return;
-  ZN.mode = mode === 'raid' ? 'raid' : 'zm';
+  ZN.mode = znModeOf(mode);
   ZN.code = 'z' + Math.random().toString(36).slice(2, 8); ZN.at = Date.now(); ZN.msg = '';
   znSendLobby(); znRender();
 }
 function znJoin(code, mode) {
   if (!znOnline() || !code || FPS.on) return;
-  ZN.mode = mode === 'raid' ? 'raid' : 'zm';
+  ZN.mode = znModeOf(mode);
   if (znPeers(code).length >= ZN_MAX) { ZN.msg = 'That night is full (four players).'; znRender(); return; }
   ZN.code = code; ZN.at = Date.now(); ZN.msg = '';
   znSendLobby(); znRender();
@@ -125,18 +132,19 @@ function znOpenNights() {
 }
 // Two cards share the one lobby: the Lighthouse's (prefix zm) and Maren's End's (prefix rd, src/raid.js). Each lists
 // only its own: a night whose map is the raid is a raid. Whichever card you host or join from, the lobby shows there.
-const ZN_UI = [{ p: 'zm', raid: false, what: 'night', who: 'A keeper' }, { p: 'rd', raid: true, what: 'raid', who: 'A keeper' }];
+// [fogrun] and a third, Fog Run's (prefix fr): mode, which ZN.mode is its; each lists only nights of its own kind (znKind)
+const ZN_UI = [{ p: 'zm', mode: 'zm', raid: false, what: 'night', who: 'A keeper' }, { p: 'rd', mode: 'raid', raid: true, what: 'raid', who: 'A keeper' }, { p: 'fr', mode: 'fr', raid: true, fr: true, what: 'run', who: 'A keeper' }];
 function znRender() { for (const U of ZN_UI) znRenderUI(U); }
 function znRenderUI(U) {
   const q = id => $(U.p + id);
   if (!q('Mp')) return;
-  const on = znOnline(), mine = !!ZN.code && ZN.mode === (U.raid ? 'raid' : 'zm'), W = U.what;
-  q('MpNote').textContent = on ? (ZN.code && !mine ? `You’re in a ${U.raid ? 'Lighthouse night' : 'raid'}’s lobby on the other card; leave it to ${U.raid ? 'host or join a raid' : 'host or join a night'} here.` : `Up to four in one ${W}. One of you hosts; the others join, and the host starts the ${W} when everyone’s in.`) : (NET.status === 'connecting' ? 'Looking for other players…' : (NET.offReason || 'Playing together isn’t available here.'));
+  const on = znOnline(), mine = !!ZN.code && ZN.mode === U.mode, W = U.what;
+  q('MpNote').textContent = on ? (ZN.code && !mine ? `You’re in a ${{ zm: 'Lighthouse night', raid: 'raid', fr: 'fog run' }[ZN.mode] || 'game'}’s lobby on another card; leave it to host or join a ${W} here.` : `Up to four in one ${W}. One of you hosts; the others join, and the host starts the ${W} when everyone’s in.`) : (NET.status === 'connecting' ? 'Looking for other players…' : (NET.offReason || 'Playing together isn’t available here.'));
   q('MpOpen').hidden = !on || !!ZN.code;
   q('Lobby').hidden = !mine;
   if (!on) return;
   if (!ZN.code) {
-    const nights = znOpenNights().filter(n => znIsRaid(n.map) === U.raid), el = q('Lobbies'), key = JSON.stringify(nights) + ZN.msg;
+    const nights = znOpenNights().filter(n => znKind(n.map) === U.mode), el = q('Lobbies'), key = JSON.stringify(nights) + ZN.msg;
     if (el.dataset.k === key) return; el.dataset.k = key;
     el.textContent = '';
     if (ZN.msg) { const p = document.createElement('p'); p.className = 'muted'; p.textContent = ZN.msg; el.append(p); }
@@ -148,7 +156,7 @@ function znRenderUI(U) {
       const sm = document.createElement('small'); sm.textContent = `${ZM_MAPS[n.map].N} · ` + (back ? 'under way · tap to rejoin' : n.started ? 'under way' : `${n.n}/${ZN_MAX} players · tap to join`);
       b.append(nm, sm);
       b.disabled = back ? false : n.started || n.n >= ZN_MAX;
-      b.addEventListener('click', () => back ? znRejoin(back) : znJoin(n.code, U.raid ? 'raid' : 'zm'));
+      b.addEventListener('click', () => back ? znRejoin(back) : znJoin(n.code, U.mode));
       el.append(b);
     }
     return;
@@ -167,7 +175,9 @@ function znRenderUI(U) {
     ol.append(li);
   });
   const hm = hz && hz.lob && ZM_MAPS[hz.lob.map] ? hz.lob.map : 'light';
-  q('LobbyMsg').textContent = ZN.msg || (U.raid
+  q('LobbyMsg').textContent = ZN.msg || (U.fr   // [fogrun]
+    ? (host ? (m.length > 1 ? `${m.length} of ${ZN_MAX} here. Set out when everyone’s in.` : 'Waiting for others to join. You can set out alone, too, whenever you like.') : 'Waiting for the host to set out.')
+    : U.raid
     ? (host ? (m.length > 1 ? `${m.length} of ${ZN_MAX} here, for ${ZM_MAPS[znMap()].N}. Start the raid when everyone’s in.` : `Waiting for others to join. You can start alone, too, whenever you like. The raid: ${ZM_MAPS[znMap()].N} (pick above).`) : `Waiting for the host to start the raid: ${ZM_MAPS[hm].N}.`)
     : host
     ? (m.length > 1 ? `${m.length} of ${ZN_MAX} here, at ${ZM_MAPS[ZM_PICK].n}. Start the night when everyone’s in.` : `Waiting for others to join. You can start alone, too, whenever you like. Tonight: ${ZM_MAPS[ZM_PICK].n} (pick above).`)
@@ -179,12 +189,14 @@ function znStart() {
   if (!znAmHost() || FPS.on) return;
   const m = znMembers();
   const st = { g: Math.random().toString(36).slice(2, 9), hum: m.map(p => [znOf(p).sid, znClean(znOf(p).nick, 16) || 'A keeper']), map: znMap() };
+  if (ZM_MAPS[st.map] && ZM_MAPS[st.map].fr && typeof frSeedNew === 'function') st.fs = frSeedNew();   // [fogrun] the run's seed, drawn here and sent the once
   znBegin(st, 'host');
 }
 function znBegin(st, role) {
   const rj = role === 'client' && ZN.rjWant && ZN.rjWant.g === st.g ? ZN.rjWant.snap || {} : null; ZN.rjWant = null;
   Object.assign(ZN, { j: Math.random().toString(36).slice(2, 6), rj, g: st.g, st, doneG: st.g, sendT: 0, hseq: 0, seq: 0, q: [], hq: [], shots: [], shotSeq: 0, lastQ: {}, lastH: {}, lastShot: {}, seenT: {}, ev: [], eseq: 0, evSeen: 0, lastHseq: -1, hostT: performance.now(), creditSeen: [0, 0, 0], est: null });
   ZN.hits.clear();
+  if (typeof frSeedFrom === 'function') frSeedFrom(st);   // [fogrun]
   zmStart({ net: role, hum: st.hum, map: st.map });
   for (const [sid] of st.hum) ZN.seenT[sid] = performance.now();
 }
@@ -198,6 +210,7 @@ function zmNetPeers() {
     if (h && !(h.isMe && h.sameTab) && hz.st && typeof hz.st.g === 'string' && hz.st.g !== ZN.doneG && Array.isArray(hz.st.hum) && !FPS.on) {
       if (hz.st.hum.some(x => Array.isArray(x) && x[0] === NET.sid)) {
         const st = { g: hz.st.g, hum: hz.st.hum.slice(0, ZN_MAX).filter(x => Array.isArray(x)).map(x => [String(x[0]), znClean(x[1], 16) || 'A keeper']), map: ZM_MAPS[hz.st.map] ? hz.st.map : 'light' };
+        if (hz.st.fs) st.fs = hz.st.fs >>> 0;   // [fogrun] the run's seed
         znBegin(st, 'client'); return;
       }
       ZN.doneG = hz.st.g; ZN.msg = 'The night started without you. Host your own, or wait for the next.'; ZN.rjWant = null;
@@ -209,7 +222,7 @@ function zmNetPeers() {
 // a night over (or left): back to the lobby on the title card, still in the same room
 function zmnBackToLobby() {
   setTimeout(() => {
-    if (ZN.code) { znSendLobby(); const c = $(ZN.mode === 'raid' ? 'rdTitle' : 'zmTitle'); if (c) c.scrollIntoView({ block: 'start' }); }
+    if (ZN.code) { znSendLobby(); const c = $(ZN_CARD[ZN.mode] || 'zmTitle'); if (c) c.scrollIntoView({ block: 'start' }); }   // [fogrun]
     znRender();
   }, 50);
 }
@@ -241,6 +254,7 @@ function znPresence() {
   z.hp = FPS.me.dead > 0 || ZM.downT > 0 ? 0 : Math.max(0, Math.ceil(FPS.me.hp)); z.hm = ZM.perks && ZM.perks.stout ? ZMC.HP_STOUT : ZMC.HP;
   if (typeof rclPresence === 'function') rclPresence(z);   // [classes] my calling, my ultimate, what I've just thrown (src/rclass.js)
   if (typeof rmvPresence === 'function') rmvPresence(z);   // [mvp] once Maren's down: what I did, and her token taken (src/raidmvp.js)
+  if (typeof frPresence === 'function') frPresence(z);   // [fogrun] my lives (src/frrun.js)
   return z;
 }
 // my shots, for the others to see and hear
@@ -300,6 +314,7 @@ function znReadPlayers(dt) {
     r.left = false;
     if (typeof rclHeard === 'function') rclHeard(r, z);   // [classes] src/rclass.js
     if (typeof rmvHeard === 'function') rmvHeard(r, z);   // [mvp] src/raidmvp.js
+    if (typeof frHeard === 'function') frHeard(r, z);   // [fogrun] their lives
     if (Array.isArray(z.sh)) {
       const last = ZN.lastShot[z.sid] || 0;
       for (const s of z.sh) if (Array.isArray(s) && s[0] > last) { ZN.lastShot[z.sid] = s[0]; znShotFx(r, s); }
@@ -568,7 +583,8 @@ function znRjSnap() {
   return { pts: ZM.pts, own: ZM.own.slice(), res: cp(ZM.res), mags, w: FPS.weapon, l: FPS.last, ammo: m.ammo, perks: cp(ZM.perks), wb: ZM.windBuys | 0, pap: cp(ZM.pap),
     spent: ZM.spent | 0, doors: ZM.doorsOpened | 0, downs: ZM.downs | 0, cr: ZN.creditSeen.slice(), x: m.x - FPSC.CX, y: m.y - FPSC.CY, jz: m.jz || 0, fl: m.fl, h: m.h, p: m.p,
     hp: m.hp, dead: m.dead || 0, dn: ZM.downT || 0, gh: !!ZM.ghost, kit: cp(ZM.downKit), st: typeof RAID !== 'undefined' && RAID.on ? RAID.stage : -1,
-    cls: typeof RCL !== 'undefined' ? RCL.cls : null, uK: typeof RCL !== 'undefined' ? RCL.uK || 0 : 0, mvp: typeof RMV !== 'undefined' ? cp(RMV.s) : null };
+    cls: typeof RCL !== 'undefined' ? RCL.cls : null, uK: typeof RCL !== 'undefined' ? RCL.uK || 0 : 0, mvp: typeof RMV !== 'undefined' ? cp(RMV.s) : null,
+    fr: typeof frRjSnap === 'function' ? frRjSnap() : null };   // [fogrun] the run's seed and stage, my lives
 }
 // the record src/rejoin.js keeps: a night I've joined (null: in none; false: hosting it, which can't be come back to)
 function znRjRecord() {
@@ -584,7 +600,7 @@ const znRjFor = code => { const r = typeof rjGet === 'function' ? rjGet() : null
 // that names me arrives (zmNetPeers)
 function znRejoin(r) {
   if (!znOnline() || FPS.on || !r) return false;
-  ZN.mode = r.mode === 'raid' ? 'raid' : 'zm'; ZN.code = r.code; ZN.at = +r.at || Date.now(); ZN.msg = ''; ZN.doneG = null; ZN.rjWant = r;
+  ZN.mode = znModeOf(r.mode); ZN.code = r.code;   // [fogrun] ZN.at = +r.at || Date.now(); ZN.msg = ''; ZN.doneG = null; ZN.rjWant = r;
   znSendLobby(); znRender();
   setTimeout(() => { if (ZN.rjWant === r) { ZN.rjWant = null; if (typeof rjClear === 'function') rjClear(); ZN.msg = 'That night has ended.'; znLeave(); } }, 10000);
   return true;
@@ -623,6 +639,7 @@ function znRjAfter(rj, gained) {
   else if (rj.dn > 0) { ZM.downT = Math.min(ZM_DOWN.T, rj.dn); m.hp = 0; ZM.downKit = rj.kit && Array.isArray(rj.kit.own) ? rj.kit : null; }
   else if (!(m.hp > 0)) m.hp = 1;
   m.protect = Math.max(m.protect || 0, 2);
+  if (typeof frRjAfter === 'function') frRjAfter(rj.fr);   // [fogrun] my lives, as they were
   fpsFeed('You’re back in.');
 }
 
@@ -632,6 +649,7 @@ function znRjAfter(rj, gained) {
   $('zmMpLeave').addEventListener('click', znLeave);
   $('zmMpStart').addEventListener('click', znStart);
   if ($('rdMpHost')) { $('rdMpHost').addEventListener('click', () => znHost('raid')); $('rdMpLeave').addEventListener('click', znLeave); $('rdMpStart').addEventListener('click', znStart); }   // [raid] Maren's End's card
+  if ($('frMpHost')) { $('frMpHost').addEventListener('click', () => znHost('fr')); $('frMpLeave').addEventListener('click', znLeave); $('frMpStart').addEventListener('click', znStart); }   // [fogrun] Fog Run's card
   setInterval(() => { if (!FPS.on && !$('zmTitle').closest('[hidden]')) { znRender(); if (ZN.code) znSendLobby(); } }, 1500);
   addEventListener('pagehide', () => { if (ZN.code && NET.room) NET.room.presence({ zm: null }).catch(() => {}); });
 }

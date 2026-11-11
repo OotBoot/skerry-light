@@ -2214,6 +2214,7 @@ function zmPlayers() {
 // everyone down at once, or gone: the night is over
 function zmCheckOver() {
   if (!ZM.net || ZM.over) return;
+  if (typeof frCheckOver === 'function' && typeof FR !== 'undefined' && FR.on) { frCheckOver(); return; }   // [fogrun] (there it's over when everyone's lost in the fog)
   const m = FPS.me;
   if (!(m.dead > 0) && !zmIsDown()) return;
   for (const r of FPS.remote.values()) if (!r.dead && !r.down && !r.left) return;
@@ -3098,8 +3099,9 @@ function zmReviver() {
 }
 // the time on the floor ran out and nobody came: out until the next round
 function zmBleedOut() {
-  const m = FPS.me;
+  const m = FPS.me, kit = ZM.downKit;
   ZM.downT = 0; ZM.ghost = true; ZM.downKit = null; m.dead = FPSC.RESPAWN - 0.6; m.reload = 0; FPS.scoped = false;
+  if (typeof frBledOut === 'function' && typeof FR !== 'undefined' && FR.on) { frBledOut(kit); return; }   // [fogrun] an extra life, or lost in the fog (src/frrun.js)
   fpsFeed('You bled out. You’ll be back next round, if anyone holds that long.');
 }
 // up again (a friend got to you): your own weapons back in your hands

@@ -76,6 +76,7 @@
     <button class="newgame warbanner" id="warBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">And another, <b>Drowned Reach</b>: a war for the islands, alone or with up to ten players</span><span class="ng-go" aria-hidden="true">↓</span></button>
     <button class="newgame zmbanner" id="zmBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">And a fourth, <b>Keeper's Last Light</b>: hold the keeper's station against the drowned, round after round</span><span class="ng-go" aria-hidden="true">↓</span></button>
     <button class="newgame rdbanner" id="rdBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">And raids, alone or with up to four: <b>Maren's End</b>, and new, <b>The Gannet's Wake</b></span><span class="ng-go" aria-hidden="true">↓</span></button>
+    <button class="newgame frbanner" id="frBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">And <b>Fog Run</b>: sail the keeper's cutter out into the haar and light the islands, alone or with up to four</span><span class="ng-go" aria-hidden="true">↓</span></button>
     <button class="tool notesbtn" id="notesBtn" type="button">Patch notes</button>
     <div class="card boardcard" id="boardCard" aria-labelledby="boardHead">
       <div class="cardtop"><span class="eyebrow">Best on record · every game</span><button class="tool closebtn" id="boardRefresh" type="button">Refresh</button></div>
@@ -296,6 +297,39 @@
         <p><b>The drowned.</b> Down here they glow, a cold blue, and they climb up out of the rock to come for you. You carry a pepperbox and a blunderbuss, and the weapon and outfit crates are earned here as at the Lighthouse.</p>
         <p><b>The door.</b> At the end of the Deep Path a door glows in the rock. Send back twenty of the drowned inside the ring in front of it and it opens; go through. Together, anyone who goes down gets up again when a friend holds Use beside them, and anyone who bleeds out comes back when the next brazier is lit.</p>
         <p><b>The board.</b> Each raid's line on the scoreboard keeps your best time through the whole raid, the most damage you've done to its bosses in one raid, and everyone you've sent back in all your raids.</p>
+      </details>
+    </div>
+    <div class="card zmcard frcard" id="frTitle" aria-labelledby="frHead"><!-- [fogrun] its own card (src/frrun.js) -->
+      <div class="cardtop"><span class="eyebrow">A sixth game · a voyage through the haar · alone or up to four</span></div>
+      <h1 id="frHead">Fog Run</h1>
+      <p>On the fogbound nights of 1889 the Light can't reach past the skerries, and something out in the haar has been putting out the lights of the outer rocks one by one. Take the keeper's cutter out into the fog and light them again.</p>
+      <p class="muted">Sail through the rocks to an island, beach her and go ashore. Light the island's beacon and hold the drowned off it for a minute; its light goes up through the fog, and you're back aboard for the next. The fog gets thicker the further out you go, and every run is different. Alone, going down ends the run. Together, each of you has one extra life, and then you're lost in the fog until the next light is lit.</p>
+      <div class="btnrow">
+        <button class="primary" id="frPlay" type="button">Set out</button>
+        <button class="tool" id="frWcrate" type="button">Weapon crates</button>
+        <button class="tool" id="frOcrate" type="button">Outfit crates</button>
+        <button class="tool" id="frSettings" type="button">Settings</button>
+      </div>
+      <section class="warmp zmmp" id="frMp" aria-labelledby="frMpHead">
+        <h2 id="frMpHead">Play together · up to four</h2>
+        <p class="muted" id="frMpNote">Looking for other players…</p>
+        <div class="nickrow"><label for="frNick">Your name</label><input id="frNick" type="text" maxlength="16" autocomplete="nickname" placeholder="Keeper"></div>
+        <div id="frMpOpen" hidden>
+          <div class="btnrow"><button class="tool" id="frMpHost" type="button">Host a run</button></div>
+          <div class="warlobbies" id="frLobbies"></div>
+        </div>
+        <div class="warlobby" id="frLobby" hidden>
+          <h3 id="frLobbyHead">Your run</h3>
+          <ol class="warlobbylist" id="frLobbyList"></ol>
+          <p class="muted" id="frLobbyMsg"></p>
+          <div class="btnrow"><button class="primary" id="frMpStart" type="button">Set out together</button><button class="tool shareBtn" id="frMpShare" type="button" data-mode="fogrun">Share invite</button><button class="tool" id="frMpLeave" type="button">Leave</button></div>
+        </div>
+      </section>
+      <details class="howto">
+        <summary>How to play</summary>
+        <p><b>The sail.</b> One of you takes the wheel (Use at it): A and D steer, W makes sail, S shortens it. The rocks only show inside the fog, in the Light's beam and under a flare from the locker aft. Hit one and a plank stoves in: hold Use at the hole to patch it before she floods. The ship's bell at the mast sinks the drowned climbing her side. The next island is the mark on the strip at the top of the screen; she runs up on its beach once you're close.</p>
+        <p><b>The island.</b> Light its beacon (hold Use at it, near the middle) and hold the drowned off it for a minute. If they crowd it they put it out: light it again, and the clock carries on from where it stopped. Once it's held, its light goes up through the fog and you're back aboard.</p>
+        <p><b>Lives.</b> Alone, going down ends the run. Together, someone holding Use beside you gets you up; bleed out and your extra life (the lamp by your stamina) brings you back on your feet ten seconds later. After that you're lost in the fog, watching the others, until the island's light is lit. If everyone is lost at once, or the cutter goes down, the run is over.</p>
       </details>
     </div>
   </div>
@@ -739,6 +773,9 @@
 <script src="src/gwhold.js"></script>
 <script src="src/gwcapt.js"></script>
 <script src="src/rclass.js"></script>
+<script src="src/frrun.js"></script><!-- [fogrun] the run: its state, its stage order, lives -->
+<script src="src/frsail.js"></script><!-- [fogrun] the sail -->
+<script src="src/frisle.js"></script><!-- [fogrun] the islands -->
 <script src="src/zmnet.js"></script>
 <script src="src/war.js"></script>
 <script src="src/warview.js"></script>

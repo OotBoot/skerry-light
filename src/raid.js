@@ -38,6 +38,8 @@
 // (hosting or alone) lays out the next, and everyone follows the stage number in the host's word. Past the last, the
 // raid is won.
 
+// [fogrun] the islands' own size (src/frisle.js: map.R), put back to this once the part's done
+var FPSC_R0 = FPSC.R;
 const RAID = { on: false, map: 'raid', stage: 0, won: false, st: {}, t: 0, boss: 0, told: false, sta: 1, tired: false };
 const RAID_STAGES = {};
 // RAID_ORDER is the raid being played's parts, in order. Maren's End's own files push theirs straight into it as they
@@ -87,11 +89,14 @@ FPI_GEN.raid = {
 };
 // the stage's map into ZM_MAPS.raid (before src/zombies.js lays it out)
 function raidMapFor(i) {
-  const S = RAID_STAGES[RAID_ORDER[i]], D = ZM_MAPS[RAID.map] || ZM_MAPS.raid, M = S.map || {};
+  const S = RAID_STAGES[RAID_ORDER[i]], D = ZM_MAPS[RAID.map] || ZM_MAPS.raid;
+  if (S.prep) S.prep(i);   // [fogrun] (a part laid out from the run's plan reads its entry first: src/frrun.js)
+  const M = S.map || {};
   D.zones = M.zones || {}; D.start = (M.start || [0, 0]).slice(); D.top = M.top || 0; D.nav = M.nav || [-80, 80, -80, 80];
   // (its own look and sea, if it has them: a part out in the open lays itself out from its own FPI_GEN, as FPI_GEN.raid)
   D.isle = M.isle || 'raid'; D.shore = M.shore || (() => -999);
-  D.seed = (RAID.map === 'raid' ? 0x5a11c : 0x6a77e) + i * 977;
+  D.seed = RAID.map === 'fogrun' && typeof frSeedOf === 'function' ? frSeedOf(i) : (RAID.map === 'raid' ? 0x5a11c : 0x6a77e) + i * 977;   // [fogrun] (from the run's seed)
+  FPSC.R = M.R || FPSC_R0;   // [fogrun] (an island of its own size)
 }
 
 // ---------- starting, and each frame ----------
@@ -103,6 +108,7 @@ function raidBegin(map) {
   if (!RAIDS.raid.order) RAIDS.raid.order = RAID_ORDER.slice();
   RAID.map = RAIDS[map] && RAIDS[map].order.length ? map : 'raid';
   RAID_ORDER.length = 0; RAID_ORDER.push(...raidInfo().order);
+  if (typeof frBegin === 'function') frBegin();   // [fogrun] its seed, and its first stop (src/frrun.js)
   Object.assign(RAID, { stage: 0, won: false, st: {}, t: 0, boss: 0, told: false, sta: 1, tired: false, tiredN: 0, runNow: false, practice: 0 });   // (practice: src/raidmaren2.js rf2Practice)
   if (typeof rmvReset === 'function') rmvReset();   // [mvp] src/raidmvp.js
   raidMapFor(0);
@@ -116,6 +122,7 @@ function raidAfterStart() {
   raidLoadout();
   if ($('rclEye')) $('rclEye').textContent = raidName();   // (the callings' picker: which raid)
   RAID.st = {}; raidCall('enter');
+  if (typeof frAfterStart === 'function' && FR.on) frAfterStart();   // [fogrun]
 }
 const RAIDC = { ROUND: 4, CALM: 0.7, BOSS_HP: 1.15 };   // (BOSS_HP: every boss's strength here, against the Lighthouse's)
 // what you carry down: a pepperbox and a blunderbuss, both full (and Maren's Lantern, which never leaves your hand)
@@ -130,7 +137,8 @@ function raidLoadout() {
 function raidRespawn() { if (!ZM.ghost) return; zmRoundBegins(); raidLoadout(); fpsFeed('You’re back on your feet.'); }
 function raidStop() {
   if (RAID.on) raidCall('exit');
-  RAID.on = false;
+  RAID.on = false; FPSC.R = FPSC_R0;   // [fogrun]
+  if (typeof frStop === 'function') frStop();   // [fogrun]
   if (typeof GL3D !== 'undefined' && GL3D.scene && RAID.fog0) { GL3D.scene.fog = null; RAID.fog0 = null; }
 }
 // alone or hosting, each frame
@@ -166,6 +174,7 @@ function raidStaminaHud(x, by, bw, bh, phone, mono) {
   ctx.font = mono(phone ? 9 : 10); ctx.textAlign = 'left'; ctx.textBaseline = 'bottom'; ctx.fillStyle = tired ? '#e8a080' : 'rgba(236,228,207,0.65)';
   ctx.fillText(tired ? 'OUT OF BREATH' : 'STAMINA', x, by - 3);
   ctx.textBaseline = 'alphabetic';
+  if (typeof frLifeHud === 'function') frLifeHud(x + bw + 10, by, bh, phone, mono);   // [fogrun] the extra life, a lamp
 }
 // how fast you can go, as a share of your own pace (zmSpeedK): a stage's own say, Maren's Weight in the Swallow
 function raidSpeedK() { if (!RAID.on) return 1; const S = raidStage(); return S && S.speedK ? S.speedK() : 1; }
@@ -176,6 +185,7 @@ function raidMe(dt) {
   if (ZM.net === 'client') { const est = RAID.t + Math.min(1, Math.max(0, performance.now() / 1000 - (RAID.tAt || 0))), e = est - ((RAID.ct || 0) + dt);
     RAID.ct = Math.abs(e) > 2 ? est : (RAID.ct || 0) + dt + e * Math.min(1, dt * 1.5); } else RAID.ct = RAID.t;
   raidCall('me', dt);
+  if (typeof frMe === 'function' && FR.on) frMe(dt);   // [fogrun] the wait for your extra life
   if (typeof rclTick === 'function') rclTick(dt);   // [classes] src/rclass.js
   if (typeof rmvTick === 'function') rmvTick(dt);   // [mvp] src/raidmvp.js: what each of you did, counted
   // joined: the host's world has moved on to the next part
@@ -198,6 +208,7 @@ function raidShot(x, y, z, lh, lp, by, dmg) { if (RAID.on) raidCall('shot', x, y
 // alone or hosting: on to the next part, or (past the last) the raid is won
 function raidNextStage() {
   if (!RAID.on || ZM.net === 'client' || ZM.over) return;
+  if (typeof frGrow === 'function' && FR.on && RAID.stage + 1 >= RAID_ORDER.length) frGrow();   // [fogrun] the next stage, chosen now
   if (RAID.stage + 1 >= RAID_ORDER.length) { raidWin(); return; }
   raidUseStage(RAID.stage + 1);
 }
@@ -217,10 +228,10 @@ function raidUseStage(i) {
   m.x = FPSC.CX + ZMD.START[0] + [0, 1.5, -1.5, 0][slot % 4]; m.y = FPSC.CY + ZMD.START[1] + [0, -1.6, -1.6, 1.8][slot % 4];
   m.jz = m.fl = ZMD.TOP; m.vz = 0; m.protect = 2;
   // everyone through the door is back up: the bled-out with their kit again, the downed on their feet
-  if (ZM.ghost) { ZM.ghost = false; m.dead = 0; m.hp = ZMC.HP; raidLoadout(); }
+  if (ZM.ghost && !(typeof frStageGhost === 'function' && frStageGhost())) { ZM.ghost = false; m.dead = 0; m.hp = ZMC.HP; raidLoadout(); }   // [fogrun] (there, the lost stay lost)
   if (zmIsDown()) zmGetUp();
   RAID.st = {}; raidCall('enter');
-  ZM.banner = { text: RAID_STAGES[RAID_ORDER[i]].n, t: 4, sub: 'Part ' + raidNumeral(i + 1) };
+  { const S = RAID_STAGES[RAID_ORDER[i]]; ZM.banner = S.banner ? S.banner() : { text: S.n, t: 4, sub: 'Part ' + raidNumeral(i + 1) }; }   // [fogrun] (a part can say its own)
   if (i === 0 || RAID.map === 'raid') fpsFeed(MAP.land(0));   // (the Gannet's Wake: each part says its own as it begins)
 }
 const raidNumeral = n => ['', 'I', 'II', 'III', 'IV', 'V', 'VI'][n] || String(n);
@@ -249,6 +260,7 @@ function raidShowOver() {
   $('zmOverStats').textContent = (ZM.net ? `${ZM.hum.length} of you. ` : '') + `${cleared} of ${RAID_ORDER.length} ${RAID_ORDER.length === 1 ? 'part' : 'parts'} cleared, in ${raidClock(RAID.t)}. ${ZM.kills} of the drowned sent back (${ZM.heads} through the head)`
     + (RAID.boss > 0 ? `, ${Math.round(RAID.boss)} damage to its bosses.` : '.') + (RAID.won && RAID_ORDER.length < 3 ? ` The rest of ${raidName()} is still to come.` : '');
   const best = typeof BOARD !== 'undefined' && BOARD.mine && BOARD.mine[RAID.map];
+  if (typeof frOverStats === 'function' && FR.on) $('zmOverStats').textContent = frOverStats();   // [fogrun]
   $('zmOverBest').textContent = best && (best.s || best.c) ? (best.s ? `Your best time: ${raidTimeOf(best.s)}. ` : '') + `${best.c | 0} sent back in all your raids.` : '';
   $('zmOver').hidden = false;
   try { document.exitPointerLock && document.exitPointerLock(); } catch (e) {}
@@ -262,10 +274,12 @@ function raidHostSend(z) {
   if (!RAID.on) return;
   z.rd = [RAID.stage, RAID.won ? 1 : 0, Math.round(RAID.t * 20) / 20];   // (to a twentieth: what swings on it is timed by it)
   const o = {}; raidCall('pack', o); z.rs = o;
+  if (typeof frPack === 'function' && FR.on) frPack(z);   // [fogrun] the run: its plan, its events
   if (typeof rmvPack === 'function') rmvPack(z);   // [mvp]
 }
 function raidApply(hz) {
   if (!RAID.on || !Array.isArray(hz.rd)) return;
+  if (typeof frApplyRun === 'function' && FR.on) frApplyRun(hz);   // [fogrun] (first: the plan, so the stage number below lays out what the host has)
   const st = clamp(hz.rd[0] | 0, 0, RAID_ORDER.length - 1);
   if (st !== RAID.stage) raidUseStage(st);
   RAID.won = !!hz.rd[1]; RAID.t = +hz.rd[2] || RAID.t; RAID.tAt = performance.now() / 1000;
@@ -373,18 +387,19 @@ function raidHud(phone, mono, fell) {
   ctx.textAlign = 'left'; ctx.textBaseline = 'top';
   const L = Math.max(14, FPS.safeLeft || 0);
   ctx.font = fell(phone ? 15 : 19); ctx.fillStyle = 'rgba(236,228,207,0.85)';
-  ctx.fillText(`${raidName()} · ${raidNumeral(RAID.stage + 1)} · ${S.n}`, L, top, W * 0.5);
+  ctx.fillText(typeof frHudTitle === 'function' && FR.on ? frHudTitle(S) : `${raidName()} · ${raidNumeral(RAID.stage + 1)} · ${S.n}`, L, top, W * 0.5);   // [fogrun]
   ctx.font = mono(phone ? 10 : 12); ctx.fillStyle = 'rgba(236,228,207,0.55)';
   ctx.fillText(raidClock(RAID.t), L, top + (phone ? 18 : 26));
   fpsHudNote(top + (phone ? 30 : 40));
   raidCall('hud', phone, mono, fell);
+  if (typeof frHud === 'function' && FR.on) frHud(phone, mono, fell);   // [fogrun] lost, or waiting on your extra life
 }
 
 // ---------- its card on the title screen ----------
 // Which raid: the picker at the top of the card. Each raid's own words on the card are in [data-raid] blocks, shown
 // for the one picked; together, the host's pick goes out with its lobby (src/zmnet.js znMap), as the Lighthouse's map.
 function raidPick(id) {
-  if (!RAIDS[id] || (typeof ZN !== 'undefined' && ZN.code && !znAmHost())) return;
+  if (!RAIDS[id] || RAIDS[id].own || (typeof ZN !== 'undefined' && ZN.code && !znAmHost())) return;   // [fogrun] (a raid that's a game of its own, Fog Run, isn't on this card)
   RD_PICK = id; try { localStorage.setItem('skerry-rd-raid', id); } catch (e) {}
   raidCard();
   if (typeof ZN !== 'undefined' && ZN.code && typeof znSendLobby === 'function') znSendLobby();
