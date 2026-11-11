@@ -33,6 +33,7 @@
 // themes (src/zmtheme.js) keep quiet: this is the music. Nothing plays until its recording has loaded.
 const RM = { WIND: 0.1, wind: null, bolt: null, fell: false, cur: null, src: null, gain: null, vol: 0.55, rate: 1 };
 const RM_LOOP = { raidfall: false, raidwin: false, gwwin: false };
+const RM_FALLK = 1.3;   // (the fall's track played this much quicker, the fall being that much quicker than it was made for)
 const RM_TAIL = 2.5;   // (the fall's track runs on this long after its climax: tools/sfx/music.py TAIL)
 
 // what should be playing now
@@ -108,7 +109,8 @@ function rmPlay(k, fade) {
   const g = c.createGain(); g.gain.value = 0; g.gain.setTargetAtTime(RM.vol, c.currentTime, Math.max(0.1, (fade || 1) / 3));
   // (the fall: started so far in that its climax comes as you land, from how far there is to fall at FALL a second)
   let at = b.zt[0], wait = 0;
-  if (k === 'raidfall') { const T = Math.max(0, (FPS.me.jz || 0) - 0.6) / RSW.FALL + 0.5, peak = b.zt[1] - b.zt[0] - RM_TAIL; at += Math.max(0, peak - T); wait = Math.max(0, T - peak); }
+  // (and played quicker, RM_FALLK, as the fall itself is: so T seconds of falling is T * RM_FALLK of the track)
+  if (k === 'raidfall') { const T = (Math.max(0, (FPS.me.jz || 0) - 0.6) / RSW.FALL + 0.5) * RM_FALLK, peak = b.zt[1] - b.zt[0] - RM_TAIL; at += Math.max(0, peak - T); wait = Math.max(0, T - peak) / RM_FALLK; s.playbackRate.value = RM_FALLK; }
   s.connect(g).connect(AUD.master); s.start(c.currentTime + wait, at);
   RM.done = false; s.onended = () => { if (RM.src === s) RM.done = true; };
   RM.cur = k; RM.src = s; RM.gain = g;

@@ -5,7 +5,7 @@
 // The Hollow Sea: the sea round the Light has drained away. Where it was is a dry bed of cracked salt and old wrecks, and a long pier
 // running out over it to a hole: the Swallow, where the water went. The raid goes down it, in parts (stages):
 //  I.  The Swallow (RAID_STAGES.descent, here): along the Long Pier, off its end and down the Swallow (a fall of
-//      about thirty seconds), and along the Deep Path at the bottom: dark, and the dark drains you. Every one of you
+//      about twenty seconds), and along the Deep Path at the bottom: dark, and the dark drains you. Every one of you
 //      carries Maren's Lantern, the storm lantern she took out to the Gannet; hold Use at a brazier to light it with
 //      it. Inside a lit brazier's light you mend (and your ammunition is made up); outside it, the dark takes your
 //      health away a little at a time, until you're down. The drowned down here glow, and they come for you out of
@@ -433,7 +433,7 @@ const RSWX = { WGT_T: 15.4, WGT_SLOW: 0.25, WGT_BURST: 0.1, BALL_R: 1.05, BALL_L
 // stands on the platform, PNEED of them sent back (anywhere, while one of you is on it) and the platform falls away
 const RSWP = { PW: 7, PC: [0, 24], PR: 4.5, PSTEP: 0.35, PHALF: -30, PNEED: 30, PRING: 12, ZK: 1.3 / 0.9 };
 // (the Swallow is a funnel: TOP, its mouth up on the bed, twice HOLE, its throat where it opens into the cave)
-const RSW = { SEA: 250, DECK: 253, CEIL: 30, HOLE: [-11, 11, 13, 35], TOP: [-22, 22, 2, 46], FALL: 8.4, LIT_R: 9, MEND: 1.2, DRAIN: 0.2, NEED: 20, RING: 15.6, USE: 1.1, GAP: 3.4 };
+const RSW = { SEA: 250, DECK: 253, CEIL: 30, HOLE: [-11, 11, 13, 35], TOP: [-22, 22, 2, 46], FALL: 10.92, LIT_R: 9, MEND: 1.2, DRAIN: 0.2, NEED: 20, RING: 15.6, USE: 1.1, GAP: 3.4 };
 // The path: [x, y, half its width, what's there] from the island's middle, from the cap behind where you land to the
 // cap with the door in it; b, a brazier; a, the arena before the door (two more braziers at its sides). Between each
 // two, a narrower stretch a little off the straight line (laid in rswGeo).
