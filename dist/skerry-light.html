@@ -1684,7 +1684,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 // ---- src/config.js ----
 'use strict';
 // The game's version, shown at the top of the main menu. Bump it by one with every change pushed to main.
-var VERSION = 99;
+var VERSION = 100;
 // Skerry Light: tuning, asset paths and lore.
 // World units are metres. The lighthouse stands at the origin on the shoreline (y = 0);
 // north (+y) is open sea. Bearings: 0 = north, positive = east.
@@ -32821,7 +32821,7 @@ function rclShoot() {
 // Maren's End: the guns that load one round at a time take more there (and a little longer to load them all):
 // mag, the rounds to a load (never fewer than a reforged one's); rk, how much longer the load takes. The Punt Gun stays
 // one enormous load.
-const RCL_MAG = { blunderbuss: { mag: 3, rk: 1 }, longarm: { mag: 2, rk: 1.15 }, harpoon: { mag: 2, rk: 1.2 }, flaregun: { mag: 2, rk: 1.2 },
+const RCL_MAG = { blunderbuss: { mag: 3, rk: 1.6 }, longarm: { mag: 2, rk: 1.15 }, harpoon: { mag: 2, rk: 1.2 }, flaregun: { mag: 2, rk: 1.2 },
   bomblance: { mag: 2, rk: 1.2 }, grapnel: { mag: 2, rk: 1.15 }, netmortar: { mag: 2, rk: 1.2 }, chainshot: { mag: 2, rk: 1.2 } };
 const RCL_WC = new WeakMap();
 function rclW(w, id) {
