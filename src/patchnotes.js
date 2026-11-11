@@ -6,13 +6,20 @@
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
-  { v: 163, date: '2026-11-11', title: "Fog Run: the salvage", New: [
+  { v: 164, date: '2026-11-11', title: "Fog Run: the salvage", New: [
     "Fog Run: after every island you light, each of you is dealt three salvage cards of your own. Keep one. You have 20 seconds, then the left-hand card is taken for you.",
     "Fog Run: guns from the wreck (any wall gun or wreck-chest gun), the Lampwright's Spark (reforge the gun in your hand), and a Rum Tot (your ultimate and grenade ready now).",
     "Fog Run: relics, kept to the end of the run and shown beside your stamina: Keeper's Oilcan, Gull Feather, Drowned Man's Ring, Salt in the Wound, Plimsoll's Tooth, a cork for each tonic, and more to find.",
     "Fog Run: crew cards that help everyone aboard: Fresh Planks, A Second Lamp, Fair Wind, The Haar Lifts and, together, Call Them Home. Only one crew card in any hand.",
     "Fog Run: together, Maren's Ribbon gives you back your extra life.",
     "Fog Run: cards come in three rarities, Deckhand, Bosun and Captain. Rarer cards turn up more the further out you sail, and new cards join the salvage as you collect chart fragments." ] },
+  { v: 163, date: '2026-11-11', title: "The Fog-Keeper", New: [
+    "Fog Run: Lantern Rock, the last stop of every run. A bare rock in the thickest of the fog, the stump of a dead lighthouse in its middle and three lamp braziers round it.",
+    "Fog Run: a new boss, the Fog-Keeper, the drowned keeper who has been putting the lights out. Only light hurts him: a burning brazier's ring, the flare from the stand by the landing, or the Light's beam as it sweeps over the rock.",
+    "Fog Run: his fog puts the braziers out one at a time. Hold Use at a dark brazier to light it again.",
+    "Fog Run: watch his lantern. When it goes black, get out of its swing.",
+    "Fog Run: at half strength he climbs his tower and puts out the Light's beam. After that you need two braziers burning for their light to count.",
+    "Fog Run: bring him down and the dead light burns again, the fog lifts, and the run is won." ] },
   { v: 162, date: '2026-11-11', title: "Fog Run: the chart", New: [
     "Fog Run: the run now follows a chart. Seven islands across three reaches of sea, with two or three to choose between at every stop and the ways between them branching, like a map in a roguelike. Every run's chart is different.",
     "Fog Run: as each sail begins the chart opens and the crew votes on the next island. Five seconds after the first vote it's settled: the most votes wins, and the host breaks a tie. Alone, your pick is the course.",
