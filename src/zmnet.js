@@ -24,9 +24,16 @@
 // carries their own clock on the floor (`dn`) and whom they're getting up and how far along (`rv`), so the one down,
 // the one helping and everyone else see the same; and how many times the weapon in their hands has been reforged at
 // the Bench (`rf`), so the others see it alight. The night is over when nobody is left standing.
+// Dropping out and coming back (src/rejoin.js): a joined player who reloads, crashes or loses the connection keeps
+// their id, finds the night still in the host's presence (its `st` names them) and steps back into it. Each time a
+// player begins a night they pick a fresh mark (`j`): when it changes everyone starts counting that player's shots,
+// hits and asks from nought again, and the host says they're back. What was theirs (points, weapons, tonics, where
+// they stood, how hurt, down or not, their calling) comes back from what this browser kept of it (znRjSnap); what
+// the host credited them while they were gone is added on top. The host's browser is the night, so if the host
+// drops out the night ends as before.
 
 const ZN = { code: null, at: 0, doneG: null, msg: '', g: null, sendT: 0, hseq: 0, seq: 0, q: [], hq: [], hits: new Map(), shots: [], shotSeq: 0,
-  lastQ: {}, lastH: {}, lastShot: {}, seenT: {}, ev: [], eseq: 0, evSeen: 0, lastHseq: -1, hostT: 0, creditSeen: [0, 0, 0], lobT: 0 };
+  lastQ: {}, lastH: {}, lastShot: {}, seenT: {}, ev: [], eseq: 0, evSeen: 0, lastHseq: -1, hostT: 0, creditSeen: [0, 0, 0], lobT: 0, j: '', rj: null };
 const ZN_MAX = 4;
 const znClean = (v, n) => String(v == null ? '' : v).replace(/[\u0000-\u001f\u007f-\u009f​-‏‪-‮⁠-⁯<>&"]/g, '').trim().slice(0, n);
 const zb36 = v => Math.round(v || 0).toString(36);
@@ -112,7 +119,7 @@ function znOpenNights() {
     if (code === ZN.code) continue;
     list.sort((a, b) => (znOf(a).at || 0) - (znOf(b).at || 0));
     const h = znOf(list[0]);
-    out.push({ code, host: znClean(h.nick, 16) || 'Someone', n: list.length, started: !!(h.st && h.st.g), map: h.lob && ZM_MAPS[h.lob.map] ? h.lob.map : 'light' });
+    out.push({ code, host: znClean(h.nick, 16) || 'Someone', n: list.length, started: !!(h.st && h.st.g), g: h.st && h.st.g, map: h.lob && ZM_MAPS[h.lob.map] ? h.lob.map : 'light' });
   }
   return out;
 }
@@ -137,10 +144,11 @@ function znRenderUI(U) {
     for (const n of nights) {
       const b = document.createElement('button'); b.type = 'button'; b.className = 'warlobbyrow';
       const nm = document.createElement('span'); nm.className = 'nm'; nm.textContent = `${n.host}’s ${W}`;
-      const sm = document.createElement('small'); sm.textContent = `${ZM_MAPS[n.map].N} · ` + (n.started ? 'under way' : `${n.n}/${ZN_MAX} players · tap to join`);
+      const back = n.started && znRjFor(n.code);   // (one I dropped out of: back into it)
+      const sm = document.createElement('small'); sm.textContent = `${ZM_MAPS[n.map].N} · ` + (back ? 'under way · tap to rejoin' : n.started ? 'under way' : `${n.n}/${ZN_MAX} players · tap to join`);
       b.append(nm, sm);
-      b.disabled = n.started || n.n >= ZN_MAX;
-      b.addEventListener('click', () => znJoin(n.code, U.raid ? 'raid' : 'zm'));
+      b.disabled = back ? false : n.started || n.n >= ZN_MAX;
+      b.addEventListener('click', () => back ? znRejoin(back) : znJoin(n.code, U.raid ? 'raid' : 'zm'));
       el.append(b);
     }
     return;
@@ -174,7 +182,8 @@ function znStart() {
   znBegin(st, 'host');
 }
 function znBegin(st, role) {
-  Object.assign(ZN, { g: st.g, st, doneG: st.g, sendT: 0, hseq: 0, seq: 0, q: [], hq: [], shots: [], shotSeq: 0, lastQ: {}, lastH: {}, lastShot: {}, seenT: {}, ev: [], eseq: 0, evSeen: 0, lastHseq: -1, hostT: performance.now(), creditSeen: [0, 0, 0], est: null });
+  const rj = role === 'client' && ZN.rjWant && ZN.rjWant.g === st.g ? ZN.rjWant.snap || {} : null; ZN.rjWant = null;
+  Object.assign(ZN, { j: Math.random().toString(36).slice(2, 6), rj, g: st.g, st, doneG: st.g, sendT: 0, hseq: 0, seq: 0, q: [], hq: [], shots: [], shotSeq: 0, lastQ: {}, lastH: {}, lastShot: {}, seenT: {}, ev: [], eseq: 0, evSeen: 0, lastHseq: -1, hostT: performance.now(), creditSeen: [0, 0, 0], est: null });
   ZN.hits.clear();
   zmStart({ net: role, hum: st.hum, map: st.map });
   for (const [sid] of st.hum) ZN.seenT[sid] = performance.now();
@@ -191,7 +200,7 @@ function zmNetPeers() {
         const st = { g: hz.st.g, hum: hz.st.hum.slice(0, ZN_MAX).filter(x => Array.isArray(x)).map(x => [String(x[0]), znClean(x[1], 16) || 'A keeper']), map: ZM_MAPS[hz.st.map] ? hz.st.map : 'light' };
         znBegin(st, 'client'); return;
       }
-      ZN.doneG = hz.st.g; ZN.msg = 'The night started without you. Host your own, or wait for the next.';
+      ZN.doneG = hz.st.g; ZN.msg = 'The night started without you. Host your own, or wait for the next.'; ZN.rjWant = null;
     }
     if (znAmHost() && performance.now() - ZN.lobT > 3000) { ZN.lobT = performance.now(); znSendLobby(); }
   }
@@ -220,7 +229,7 @@ function znMe() {
 }
 function znPresence() {
   const z = znBase();
-  z.g = ZN.g; z.p = znMe(); z.pt = ZM.pts;
+  z.g = ZN.g; z.j = ZN.j; z.p = znMe(); z.pt = ZM.pts;
   z.c = fpsColours(); z.o = typeof ocEquippedId === 'function' ? ocEquippedId() || '' : '';
   if (ZN.shots.length) z.sh = ZN.shots.slice(-4);
   // the weapon in my hands reforged at the Bench: how many times (so the others see it alight)
@@ -264,6 +273,11 @@ function znReadPlayers(dt) {
     const a = z.p.map(v => typeof v === 'number' && isFinite(v) ? v : 0);
     if (!r) { r = { id: z.sid, x: CX + a[0] / 100, y: CY + a[1] / 100, h: a[3] / 1000, hitT: 0, flashT: 0, kb: {}, d: 0 }; FPS.remote.set(z.sid, r); }
     r.n = (ZM.hum.find(h => h[0] === z.sid) || [])[1] || 'A keeper';
+    // (a new mark: they've dropped out and come back, so their shots, hits and asks count from nought again)
+    if (typeof z.j === 'string' && z.j !== r.j) {
+      if (r.j) { ZN.lastShot[z.sid] = 0; ZN.lastQ[z.sid] = 0; ZN.lastH[z.sid] = 0; r.wasDn = false; fpsFeed(`${r.n} is back.`); }
+      r.j = z.j;
+    }
     r.tx = CX + a[0] / 100; r.ty = CY + a[1] / 100; r.tjz = a[2] / 100; r.th = a[3] / 1000; r.p = a[4] / 1000;
     // (a new place heard: kept, to slide between; only when it's actually changed, as nothing is sent while they stand still)
     const pk = a.join(','); if (pk !== r.pk) { r.pk = pk; znHeard(r.est || (r.est = znEst()), now); znSample(r, now, r.tx, r.ty, 0, r.th); }
@@ -396,7 +410,14 @@ function zmnClient(dt) {
   const seen = znReadPlayers(dt), host = ZM.hum[0] && ZM.hum[0][0];
   let hz = null;
   for (const p of NET.peers) { const z = znOf(p); if (z && z.room === ZN.code && z.g === ZN.g && z.sid === host) { hz = z; break; } }
-  if (hz && Array.isArray(hz.h) && hz.h[0] !== ZN.lastHseq) { ZN.lastHseq = hz.h[0]; ZN.hostT = performance.now(); znHeard(ZN.est || (ZN.est = znEst()), ZN.hostT); znApply(hz); }
+  if (hz && Array.isArray(hz.h) && hz.h[0] !== ZN.lastHseq) {
+    ZN.lastHseq = hz.h[0]; ZN.hostT = performance.now(); znHeard(ZN.est || (ZN.est = znEst()), ZN.hostT);
+    const rj = ZN.rj; ZN.rj = null;
+    if (rj) znRjBefore(hz, rj);
+    const pts0 = ZM.pts;
+    znApply(hz);
+    if (rj) znRjAfter(rj, ZM.pts - pts0);
+  }
   if (!ZM.over && performance.now() - ZN.hostT > 12000) { fpsFeed('The host has gone, and the night with them.'); zmEnd(); }
   // the drowned between the host's word: shown a moment behind, sliding between where they were said to be
   const rt = performance.now() - znDelay(ZN.est || (ZN.est = znEst()));
@@ -537,6 +558,72 @@ function znApply(hz) {
     else if (e[1] === 'rev' && typeof e[2] === 'string') znRevived(e[2], typeof e[3] === 'string' ? e[3] : '');
     else if (e[1] === 'feed') fpsFeed(znClean(e[2], 120));
   }
+}
+
+// ---------- dropping out and coming back (src/rejoin.js) ----------
+// what's mine in the night, kept by this browser every couple of seconds while I'm a joined player in it
+function znRjSnap() {
+  const m = FPS.me, mags = Object.assign({}, m.mags); mags[FPS.weapon] = m.ammo;
+  const cp = o => o && typeof o === 'object' ? JSON.parse(JSON.stringify(o)) : null;
+  return { pts: ZM.pts, own: ZM.own.slice(), res: cp(ZM.res), mags, w: FPS.weapon, l: FPS.last, ammo: m.ammo, perks: cp(ZM.perks), wb: ZM.windBuys | 0, pap: cp(ZM.pap),
+    spent: ZM.spent | 0, doors: ZM.doorsOpened | 0, downs: ZM.downs | 0, cr: ZN.creditSeen.slice(), x: m.x - FPSC.CX, y: m.y - FPSC.CY, jz: m.jz || 0, fl: m.fl, h: m.h, p: m.p,
+    hp: m.hp, dead: m.dead || 0, dn: ZM.downT || 0, gh: !!ZM.ghost, kit: cp(ZM.downKit), st: typeof RAID !== 'undefined' && RAID.on ? RAID.stage : -1,
+    cls: typeof RCL !== 'undefined' ? RCL.cls : null, uK: typeof RCL !== 'undefined' ? RCL.uK || 0 : 0, mvp: typeof RMV !== 'undefined' ? cp(RMV.s) : null };
+}
+// the record src/rejoin.js keeps: a night I've joined (null: in none; false: hosting it, which can't be come back to)
+function znRjRecord() {
+  if (!FPS.on || !FPS.zm || !ZM.on || !ZM.net || !ZN.g || !ZN.code || ZM.over) return null;
+  if (ZM.net !== 'client') return false;
+  const host = (ZM.hum[0] || [])[1] || 'Someone', raid = typeof RAID !== 'undefined' && RAID.on;
+  return { k: 'zm', mode: ZN.mode, code: ZN.code, at: ZN.at, g: ZN.g, label: raid && typeof raidName === 'function' ? `${raidName()} with ${host}` : `${host}’s night at the Lighthouse`, snap: znRjSnap() };
+}
+// is that night still going? (its host still here, on the same night)
+function znRjLive(r) { return NET.peers.some(p => { const z = znOf(p); return z && z.room === r.code && z.st && z.st.g === r.g && fresh(p) && !(p.isMe && p.sameTab); }); }
+const znRjFor = code => { const r = typeof rjGet === 'function' ? rjGet() : null; return r && r.k === 'zm' && r.code === code && r.sid === NET.sid ? r : null; };
+// back into it: into its room as before (same place in the list), and the night begins again here once the host's word
+// that names me arrives (zmNetPeers)
+function znRejoin(r) {
+  if (!znOnline() || FPS.on || !r) return false;
+  ZN.mode = r.mode === 'raid' ? 'raid' : 'zm'; ZN.code = r.code; ZN.at = +r.at || Date.now(); ZN.msg = ''; ZN.doneG = null; ZN.rjWant = r;
+  znSendLobby(); znRender();
+  setTimeout(() => { if (ZN.rjWant === r) { ZN.rjWant = null; if (typeof rjClear === 'function') rjClear(); ZN.msg = 'That night has ended.'; znLeave(); } }, 10000);
+  return true;
+}
+// the first word from the host after coming back: credit counted from where it was, and the feed's old lines not
+// played again
+function znRjBefore(hz, rj) {
+  if (Array.isArray(rj.cr) && rj.cr.length === 3) ZN.creditSeen = rj.cr.map(v => Math.max(0, +v || 0));
+  if (Array.isArray(hz.ev)) for (const e of hz.ev) if (Array.isArray(e) && e[0] > ZN.evSeen) ZN.evSeen = e[0];
+}
+// ...and once the night's laid out as the host has it: what was mine, back (plus what was credited me meanwhile)
+function znRjAfter(rj, gained) {
+  const m = FPS.me, CX = FPSC.CX, CY = FPSC.CY, num = (v, d) => typeof v === 'number' && isFinite(v) ? v : d;
+  const nums = o => { const out = {}; if (o && typeof o === 'object') for (const k in o) if (FPSW[k] && typeof o[k] === 'number' && isFinite(o[k])) out[k] = Math.max(0, o[k]); return out; };
+  if (Array.isArray(rj.own) && rj.own.length && rj.own.every(id => FPSW[id])) ZM.own = rj.own.slice(0, 8);
+  if (rj.res) ZM.res = nums(rj.res);
+  if (rj.mags) Object.assign(m.mags, nums(rj.mags));
+  FPS.weapon = ZM.own.includes(rj.w) ? rj.w : ZM.own[0]; FPS.last = FPSW[rj.l] ? rj.l : FPS.weapon;
+  m.ammo = Math.max(0, num(rj.ammo, m.mags[FPS.weapon] || 0)); m.reload = 0; m.cd = 0; FPS.drawT = 0.45;
+  if (rj.perks && typeof rj.perks === 'object') { ZM.perks = {}; for (const k in rj.perks) if (ZM_PERKS[k] && rj.perks[k]) ZM.perks[k] = true; }
+  ZM.windBuys = clamp(rj.wb | 0, 0, 3);
+  if (rj.pap && typeof rj.pap === 'object') { ZM.pap = {}; for (const k in rj.pap) if (FPSW[k]) ZM.pap[k] = clamp(rj.pap[k] | 0, 0, 99); }
+  ZM.pts = Math.max(0, num(rj.pts, ZM.pts)) + Math.max(0, gained || 0);
+  ZM.spent = Math.max(0, rj.spent | 0); ZM.doorsOpened = Math.max(0, rj.doors | 0); ZM.downs = Math.max(0, rj.downs | 0);
+  if (typeof RCL !== 'undefined' && RCL_CLASSES[rj.cls]) {
+    RCL.cls = RCL.last = rj.cls; RCL.run = FPS.joinedAt; RCL.uK = clamp(num(rj.uK, 0), 0, 1);
+    if (RCL.picking) { const keep = [ZM.own, ZM.res, FPS.weapon, FPS.last, m.ammo]; rclClosePick(); [ZM.own, ZM.res, FPS.weapon, FPS.last, m.ammo] = keep; }
+  }
+  if (typeof RMV !== 'undefined' && rj.mvp && typeof rj.mvp === 'object') { RMV.s = {}; for (const k in rj.mvp) if (typeof rj.mvp[k] === 'number' && isFinite(rj.mvp[k])) RMV.s[k] = rj.mvp[k]; }
+  // where I stood (if it's still the same part of a raid), and how I was
+  if (rj.st === (typeof RAID !== 'undefined' && RAID.on ? RAID.stage : -1) && isFinite(rj.x) && isFinite(rj.y)) {
+    m.x = CX + rj.x; m.y = CY + rj.y; m.jz = num(rj.jz, m.jz); if (isFinite(rj.fl)) m.fl = rj.fl; m.h = num(rj.h, m.h); m.p = num(rj.p, 0);
+  }
+  m.hp = clamp(num(rj.hp, m.hp), 0, ZM.perks.stout ? ZMC.HP_STOUT : ZMC.HP);
+  if (rj.gh) { ZM.ghost = true; ZM.downT = 0; m.dead = Math.max(0.1, num(rj.dead, 0.1)); }
+  else if (rj.dn > 0) { ZM.downT = Math.min(ZM_DOWN.T, rj.dn); m.hp = 0; ZM.downKit = rj.kit && Array.isArray(rj.kit.own) ? rj.kit : null; }
+  else if (!(m.hp > 0)) m.hp = 1;
+  m.protect = Math.max(m.protect || 0, 2);
+  fpsFeed('You’re back in.');
 }
 
 // ---------- buttons ----------

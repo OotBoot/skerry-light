@@ -579,6 +579,7 @@ function beginCrewVoyage(L, slot) {
   if (L.voy === 1 && typeof scorePlayed === 'function') scorePlayed('skerry');   // the scoreboard (src/scores.js): a new run
   newVoyage(L.voy, false, L.seed, slot);
   g.launchAt = L.at; g.launchId = L.id;
+  if (typeof netRjVoyage === 'function') netRjVoyage(L);   // (coming back to a voyage I dropped out of: src/net.js)
   bellShown = -1; flareShown = -1;
   hideCallout(); showHails(); $('crewRecap').hidden = true;
   stopSpectating();

@@ -44,7 +44,10 @@ const MAX_CREW = 8;
 // connection while the old one can linger for a while; the shared id lets everyone (and the server)
 // see they're the same sailor and drop the stale copy, so it can't hold the host's place or look at sea.
 NET.sid = (() => {
-  try { let s = sessionStorage.getItem('skerry-sid'); if (!s) { s = Math.random().toString(36).slice(2, 12); sessionStorage.setItem('skerry-sid', s); } return s; }
+  // (a new tab after the last one closed or crashed in the middle of a game takes that tab's id back, so it can
+  //  rejoin the game as the same player: src/rejoin.js. If that tab is in fact still open, the check below sees it
+  //  and this one takes a fresh id.)
+  try { let s = sessionStorage.getItem('skerry-sid'); if (!s) { try { const r = JSON.parse(localStorage.getItem('skerry-rejoin') || 'null'); if (r && typeof r.sid === 'string' && /^[a-z0-9]{6,12}$/.test(r.sid) && Date.now() - r.t < 15 * 60 * 1000) s = r.sid; } catch (e) {} } if (!s) s = Math.random().toString(36).slice(2, 12); sessionStorage.setItem('skerry-sid', s); return s; }
   catch (e) { return Math.random().toString(36).slice(2, 12); }
 })();
 try {
@@ -620,6 +623,45 @@ setInterval(() => { if (state === 'title' && !$('titleCard').hidden) renderToget
 setInterval(() => { if (NET.crew) send({ beat: Date.now() % 100000 }); }, 4000);
 // and the crew screen notices when someone drops out, even if nothing else changes
 setInterval(() => { if (NET.crew && !$('crewCard').hidden) { checkLaunch(); renderCrewCard(); } }, 2000);
+
+// ---------- dropping out and coming back (src/rejoin.js) ----------
+// A crew is a list of who's in it, and each ship sails its own voyage from the host's launch, so coming back is joining
+// the crew again in your old place (your joinedAt, so a host is still the host) and, if the voyage you were on is still
+// being sailed, back out onto it where you were: the same ship's place on the sea, its hull and the voyage's tally.
+function netRjRecord() {
+  if (!NET.crew || NET.status !== 'ready') return null;
+  const sailing = state === 'play' && NET.launch && NET.st === 'sail' && g && g.launchId === NET.launch.id && ship;
+  return { k: 'crew', code: NET.crew, joinedAt: NET.joinedAt, label: 'Crew ' + NET.crew.toUpperCase() + (sailing ? ', voyage ' + NET.launch.voy : ''),
+    snap: sailing ? { launch: Object.assign({}, NET.launch), x: ship.x, y: ship.y, h: ship.h, hull: ship.hull, stats: Object.assign({}, g.stats), run: Object.assign({}, run) } : null };
+}
+const netRjLive = r => crewSummaries().some(c => c.code === r.code);
+function netRejoin(r) {
+  if (!r || NET.status !== 'ready' || typeof r.code !== 'string') return false;
+  try { if (Number.isFinite(r.joinedAt)) sessionStorage.setItem('skerry-crew', JSON.stringify({ crew: r.code, joinedAt: r.joinedAt })); } catch (e) {}
+  const S = r.snap, L = S && S.launch;
+  NET.rj = L && typeof L.id === 'string' ? S : null;
+  joinCrew(r.code);
+  // the host, back: nobody else has the launch to follow, so put it back as it was (if anyone's still out on it)
+  if (NET.crew === r.code && NET.rj && !NET.launch && Number.isFinite(L.seed) && Number.isFinite(L.voy) && Number.isFinite(L.at)) {
+    const others = crewOf(r.code).filter(p => p.peer !== NET.myPeer);
+    if (others.every(p => (p.presence.joinedAt || 0) > NET.joinedAt) && others.some(p => p.presence.st === 'sail' && p.presence.voy === L.voy)) {
+      NET.launch = { id: L.id, seed: L.seed | 0, voy: Math.max(1, Math.min(99, L.voy | 0)), at: L.at }; NET.myHostFlag = true; checkLaunch();
+    }
+  }
+  return true;
+}
+// (beginCrewVoyage, just laid out) the voyage I dropped out of: back where I was on it
+function netRjVoyage(L) {
+  const S = NET.rj; NET.rj = null;
+  if (!S || !S.launch || S.launch.id !== L.id || !ship || !g) return;
+  if (isFinite(S.x) && isFinite(S.y)) { ship.x = S.x; ship.y = S.y; ship.h = +S.h || 0; }
+  ship.hull = clamp(S.hull | 0, 1, ship.maxHull);
+  if (S.stats && typeof S.stats === 'object') for (const k in g.stats) if (Number.isFinite(S.stats[k])) g.stats[k] = S.stats[k];
+  if (S.run && typeof S.run === 'object' && typeof run === 'object') for (const k of ['voyages', 'hits']) if (Number.isFinite(S.run[k])) run[k] = S.run[k];
+  ship.inv = 2;
+  renderHud();
+  addLog('Back with your crew, where you left off.', 'p');
+}
 
 // ---------- watching a crewmate ----------
 function startSpectating(peer) {

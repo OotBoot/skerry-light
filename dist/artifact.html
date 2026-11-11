@@ -633,6 +633,12 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 /* the title screen: a banner for Wreckers' Night above Skerry Light, and its own card below */
 #titleCard { row-gap: 16px; }
 #titleCard > .card { margin-block: 0; }
+/* coming back to a game in progress (src/rejoin.js) */
+.rejoinbar { max-width: 34rem; width: 100%; box-sizing: border-box; display: flex; align-items: center; flex-wrap: wrap; gap: 8px 10px; padding: 10px 14px; margin-bottom: 10px;
+  background: linear-gradient(90deg, rgba(111,211,200,0.26), rgba(111,211,200,0.07)); border: 1px solid rgba(111,211,200,0.7); color: var(--ink); font-family: var(--log); font-size: 13px; }
+.rejoinbar[hidden] { display: none; }
+.rejoinbar .rj-text { flex: 1 1 14rem; min-width: 0; }
+.rejoinbar .rj-go { background: #6fd3c8; color: #0b1a19; border-color: #6fd3c8; font-weight: 700; }
 .newgame { max-width: 34rem; width: 100%; display: flex; align-items: center; gap: 10px; padding: 10px 14px; cursor: pointer; text-align: left;
   background: linear-gradient(90deg, rgba(228,108,79,0.28), rgba(228,108,79,0.08)); border: 1px solid rgba(228,108,79,0.65); color: var(--ink); font-family: var(--log); font-size: 13px; }
 .newgame:hover, .newgame:focus-visible { background: linear-gradient(90deg, rgba(228,108,79,0.4), rgba(228,108,79,0.14)); outline: none; }
@@ -734,6 +740,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
   #titleCard { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-rows: max-content; align-content: start; column-gap: 12px; row-gap: 12px; align-items: start; place-items: start stretch; }
   /* the two new-game banners side by side, slim, one over each column */
   #titleCard > .newgame { max-width: none; width: auto; min-width: 0; font-size: 11px; padding: 6px 10px; gap: 8px; margin-bottom: 8px; }
+  #titleCard > .rejoinbar { grid-column: 1 / -1; max-width: none; margin-bottom: 4px; }
   #titleCard > .newgame .ng-text { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   #titleCard > .newgame .ng-tag { font-size: 9px; padding: 2px 5px; }
   #titleCard > .card { max-width: none; width: auto; min-width: 0; }
@@ -1099,6 +1106,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 
   <div class="overlay" id="titleCard">
     <p class="verline" id="verLine" aria-label="Game version"></p>
+    <div class="rejoinbar" id="rejoinBar" role="status" hidden><span class="rj-text" id="rejoinText"></span><button class="tool rj-go" id="rejoinGo" type="button">Rejoin</button><button class="tool rj-no" id="rejoinNo" type="button">Not now</button></div>
     <button class="newgame" id="fpsBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">Try the new game, <b>Wreckers' Night</b>: a multiplayer shootout on the skerry</span><span class="ng-go" aria-hidden="true">↓</span></button>
     <button class="newgame warbanner" id="warBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">And another, <b>Drowned Reach</b>: a war for the islands, alone or with up to ten players</span><span class="ng-go" aria-hidden="true">↓</span></button>
     <button class="newgame zmbanner" id="zmBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">And a fourth, <b>Keeper's Last Light</b>: hold the keeper's station against the drowned, round after round</span><span class="ng-go" aria-hidden="true">↓</span></button>
@@ -1716,7 +1724,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 // ---- src/config.js ----
 'use strict';
 // The game's version, shown at the top of the main menu. Bump it by one with every change pushed to main.
-var VERSION = 154;
+var VERSION = 155;
 // Skerry Light: tuning, asset paths and lore.
 // World units are metres. The lighthouse stands at the origin on the shoreline (y = 0);
 // north (+y) is open sea. Bearings: 0 = north, positive = east.
@@ -1845,6 +1853,14 @@ const flashK = () => SETTINGS.flashes === 'reduced' ? 0.3 : 1;
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Never give away a secret here (the Easter egg's steps, where the secret boss hides).
 var PATCH_NOTES = [
+  { v: 155, date: '2026-11-11', title: 'Rejoin a game in progress', New: [
+    "Every mode played together: drop out of a game (a reload, a crash, a phone that slept or lost signal) and you can rejoin it as the same player. Open the game again within fifteen minutes and a Rejoin bar at the top of the main menu takes you back in while the game is still going.",
+    "The lobby list marks a game you dropped out of \"tap to rejoin\", and your old invite link takes you back in too.",
+    "Keeper's Last Light and the raids: you come back with your points (plus anything earned for you while you were gone), weapons, ammunition, tonics, reforged weapons, calling, ultimate charge and health, where you stood, and down or out if you were.",
+    "Drowned Reach: you get your nation back, even if a bot had taken it over, and the whole map is sent to you again.",
+    "Wreckers' Night: within the same round your deaths, weapon, health, flares and place on the island come back, and kills already paid in crate keys aren't paid twice.",
+    "Skerry Light crews: back in your old place in the crew (the host stays the host), and out on the same voyage where your ship was, with its hull." ], Changes: [
+    "Everyone else sees when a player is back. If the host of a Lighthouse night, a raid or a war drops out, that game still ends for everyone." ] },
   { v: 154, date: '2026-11-11', title: 'Skerry Raids', Changes: [
     "Raids: the raid card on the main menu is now called Skerry Raids, since it holds both raids. Maren's End keeps its name as a raid." ] },
   { v: 153, date: '2026-11-11', title: 'A faster fall', Balance: [
@@ -11084,6 +11100,7 @@ function beginCrewVoyage(L, slot) {
   if (L.voy === 1 && typeof scorePlayed === 'function') scorePlayed('skerry');   // the scoreboard (src/scores.js): a new run
   newVoyage(L.voy, false, L.seed, slot);
   g.launchAt = L.at; g.launchId = L.id;
+  if (typeof netRjVoyage === 'function') netRjVoyage(L);   // (coming back to a voyage I dropped out of: src/net.js)
   bellShown = -1; flareShown = -1;
   hideCallout(); showHails(); $('crewRecap').hidden = true;
   stopSpectating();
@@ -11558,7 +11575,10 @@ const MAX_CREW = 8;
 // connection while the old one can linger for a while; the shared id lets everyone (and the server)
 // see they're the same sailor and drop the stale copy, so it can't hold the host's place or look at sea.
 NET.sid = (() => {
-  try { let s = sessionStorage.getItem('skerry-sid'); if (!s) { s = Math.random().toString(36).slice(2, 12); sessionStorage.setItem('skerry-sid', s); } return s; }
+  // (a new tab after the last one closed or crashed in the middle of a game takes that tab's id back, so it can
+  //  rejoin the game as the same player: src/rejoin.js. If that tab is in fact still open, the check below sees it
+  //  and this one takes a fresh id.)
+  try { let s = sessionStorage.getItem('skerry-sid'); if (!s) { try { const r = JSON.parse(localStorage.getItem('skerry-rejoin') || 'null'); if (r && typeof r.sid === 'string' && /^[a-z0-9]{6,12}$/.test(r.sid) && Date.now() - r.t < 15 * 60 * 1000) s = r.sid; } catch (e) {} } if (!s) s = Math.random().toString(36).slice(2, 12); sessionStorage.setItem('skerry-sid', s); return s; }
   catch (e) { return Math.random().toString(36).slice(2, 12); }
 })();
 try {
@@ -12134,6 +12154,45 @@ setInterval(() => { if (state === 'title' && !$('titleCard').hidden) renderToget
 setInterval(() => { if (NET.crew) send({ beat: Date.now() % 100000 }); }, 4000);
 // and the crew screen notices when someone drops out, even if nothing else changes
 setInterval(() => { if (NET.crew && !$('crewCard').hidden) { checkLaunch(); renderCrewCard(); } }, 2000);
+
+// ---------- dropping out and coming back (src/rejoin.js) ----------
+// A crew is a list of who's in it, and each ship sails its own voyage from the host's launch, so coming back is joining
+// the crew again in your old place (your joinedAt, so a host is still the host) and, if the voyage you were on is still
+// being sailed, back out onto it where you were: the same ship's place on the sea, its hull and the voyage's tally.
+function netRjRecord() {
+  if (!NET.crew || NET.status !== 'ready') return null;
+  const sailing = state === 'play' && NET.launch && NET.st === 'sail' && g && g.launchId === NET.launch.id && ship;
+  return { k: 'crew', code: NET.crew, joinedAt: NET.joinedAt, label: 'Crew ' + NET.crew.toUpperCase() + (sailing ? ', voyage ' + NET.launch.voy : ''),
+    snap: sailing ? { launch: Object.assign({}, NET.launch), x: ship.x, y: ship.y, h: ship.h, hull: ship.hull, stats: Object.assign({}, g.stats), run: Object.assign({}, run) } : null };
+}
+const netRjLive = r => crewSummaries().some(c => c.code === r.code);
+function netRejoin(r) {
+  if (!r || NET.status !== 'ready' || typeof r.code !== 'string') return false;
+  try { if (Number.isFinite(r.joinedAt)) sessionStorage.setItem('skerry-crew', JSON.stringify({ crew: r.code, joinedAt: r.joinedAt })); } catch (e) {}
+  const S = r.snap, L = S && S.launch;
+  NET.rj = L && typeof L.id === 'string' ? S : null;
+  joinCrew(r.code);
+  // the host, back: nobody else has the launch to follow, so put it back as it was (if anyone's still out on it)
+  if (NET.crew === r.code && NET.rj && !NET.launch && Number.isFinite(L.seed) && Number.isFinite(L.voy) && Number.isFinite(L.at)) {
+    const others = crewOf(r.code).filter(p => p.peer !== NET.myPeer);
+    if (others.every(p => (p.presence.joinedAt || 0) > NET.joinedAt) && others.some(p => p.presence.st === 'sail' && p.presence.voy === L.voy)) {
+      NET.launch = { id: L.id, seed: L.seed | 0, voy: Math.max(1, Math.min(99, L.voy | 0)), at: L.at }; NET.myHostFlag = true; checkLaunch();
+    }
+  }
+  return true;
+}
+// (beginCrewVoyage, just laid out) the voyage I dropped out of: back where I was on it
+function netRjVoyage(L) {
+  const S = NET.rj; NET.rj = null;
+  if (!S || !S.launch || S.launch.id !== L.id || !ship || !g) return;
+  if (isFinite(S.x) && isFinite(S.y)) { ship.x = S.x; ship.y = S.y; ship.h = +S.h || 0; }
+  ship.hull = clamp(S.hull | 0, 1, ship.maxHull);
+  if (S.stats && typeof S.stats === 'object') for (const k in g.stats) if (Number.isFinite(S.stats[k])) g.stats[k] = S.stats[k];
+  if (S.run && typeof S.run === 'object' && typeof run === 'object') for (const k of ['voyages', 'hits']) if (Number.isFinite(S.run[k])) run[k] = S.run[k];
+  ship.inv = 2;
+  renderHud();
+  addLog('Back with your crew, where you left off.', 'p');
+}
 
 // ---------- watching a crewmate ----------
 function startSpectating(peer) {
@@ -15811,6 +15870,35 @@ for (const [id, fn] of [['fpsPadWeapon', () => fpsCycle(1)], ['fpsPadScope', () 
 }
 // leaving the page: off the island
 addEventListener('pagehide', () => { if (FPS.on && NET.room) NET.room.presence({ fps: null }).catch(() => {}); });
+
+// ---------- dropping out and coming back (src/rejoin.js) ----------
+// Anyone can come ashore at any time, so coming back is just that; but within the same round you come back as you
+// were: the same tally (deaths, and who took them, which is where everyone's kills are counted from), the same weapon,
+// where you stood and how hurt, and the shots numbered on from where they'd got to.
+function fpsRjRecord() {
+  if (!FPS.on || FPS.zm || !NET.room) return null;
+  const m = FPS.me;
+  return { k: 'fps', r: FPS.round, nick: FPS.nick, label: `Wreckers' Night, ${FPS.g && FPS.g.isle ? FPS.g.isle.name : 'on the skerry'}`,
+    snap: { kb: Object.assign({}, FPS.kb), d: FPS.deaths, wcK: FPS.wcK || 0, seq: FPS.seq, w: FPS.weapon, l: FPS.last, x: m.x, y: m.y, h: m.h, p: m.p, jz: m.jz || 0, hp: m.hp, dead: m.dead > 0 ? 1 : 0, fl: m.flares } };
+}
+const fpsRjLive = r => r.r === fpsRoundNow();
+function fpsRejoin(r) {
+  if (FPS.on || !r || !r.snap) return false;
+  const S = r.snap, same = r.r === fpsRoundNow();
+  if (typeof r.nick === 'string' && $('fpsNick')) $('fpsNick').value = r.nick.slice(0, 16);
+  if (same) { FPS.wcK = Math.max(0, S.wcK | 0); FPS.wcRound = r.r; }   // (kills already paid out in crate keys aren't paid again)
+  fpsStart();
+  if (!same || FPS.round !== r.r) return true;
+  const m = FPS.me;
+  if (S.kb && typeof S.kb === 'object') for (const k in S.kb) if (typeof k === 'string' && k.length < 40) FPS.kb[k] = Math.max(0, S.kb[k] | 0);
+  FPS.deaths = Math.max(0, S.d | 0); FPS.seq = Math.max(0, S.seq | 0);
+  if (FPSW[S.w] && FPS_WORDER.includes(S.w)) { FPS.weapon = S.w; if (FPSW[S.l]) FPS.last = S.l; m.ammo = fpsW().mag; }
+  if (!S.dead && isFinite(S.x) && isFinite(S.y) && Math.hypot(S.x - FPSC.CX, S.y - FPSC.CY) < FPSC.R + 20) { m.x = S.x; m.y = S.y; m.h = +S.h || 0; m.p = +S.p || 0; m.jz = Math.max(0, +S.jz || 0); m.hp = clamp(S.hp | 0, 1, FPSC.HP); }
+  if (isFinite(S.fl)) m.flares = clamp(S.fl | 0, 0, FPSC.FLARES);
+  fpsFeed('You’re back ashore, as you were.');
+  fpsSend(true);
+  return true;
+}
 
 // ---- src/fpsisle.js ----
 // Wreckers' Night: the island itself.
@@ -39239,9 +39327,16 @@ setInterval(() => { if (RCL.picking && !(FPS.on && FPS.zm && rclOn())) rclCloseP
 // carries their own clock on the floor (`dn`) and whom they're getting up and how far along (`rv`), so the one down,
 // the one helping and everyone else see the same; and how many times the weapon in their hands has been reforged at
 // the Bench (`rf`), so the others see it alight. The night is over when nobody is left standing.
+// Dropping out and coming back (src/rejoin.js): a joined player who reloads, crashes or loses the connection keeps
+// their id, finds the night still in the host's presence (its `st` names them) and steps back into it. Each time a
+// player begins a night they pick a fresh mark (`j`): when it changes everyone starts counting that player's shots,
+// hits and asks from nought again, and the host says they're back. What was theirs (points, weapons, tonics, where
+// they stood, how hurt, down or not, their calling) comes back from what this browser kept of it (znRjSnap); what
+// the host credited them while they were gone is added on top. The host's browser is the night, so if the host
+// drops out the night ends as before.
 
 const ZN = { code: null, at: 0, doneG: null, msg: '', g: null, sendT: 0, hseq: 0, seq: 0, q: [], hq: [], hits: new Map(), shots: [], shotSeq: 0,
-  lastQ: {}, lastH: {}, lastShot: {}, seenT: {}, ev: [], eseq: 0, evSeen: 0, lastHseq: -1, hostT: 0, creditSeen: [0, 0, 0], lobT: 0 };
+  lastQ: {}, lastH: {}, lastShot: {}, seenT: {}, ev: [], eseq: 0, evSeen: 0, lastHseq: -1, hostT: 0, creditSeen: [0, 0, 0], lobT: 0, j: '', rj: null };
 const ZN_MAX = 4;
 const znClean = (v, n) => String(v == null ? '' : v).replace(/[\u0000-\u001f\u007f-\u009f​-‏‪-‮⁠-⁯<>&"]/g, '').trim().slice(0, n);
 const zb36 = v => Math.round(v || 0).toString(36);
@@ -39327,7 +39422,7 @@ function znOpenNights() {
     if (code === ZN.code) continue;
     list.sort((a, b) => (znOf(a).at || 0) - (znOf(b).at || 0));
     const h = znOf(list[0]);
-    out.push({ code, host: znClean(h.nick, 16) || 'Someone', n: list.length, started: !!(h.st && h.st.g), map: h.lob && ZM_MAPS[h.lob.map] ? h.lob.map : 'light' });
+    out.push({ code, host: znClean(h.nick, 16) || 'Someone', n: list.length, started: !!(h.st && h.st.g), g: h.st && h.st.g, map: h.lob && ZM_MAPS[h.lob.map] ? h.lob.map : 'light' });
   }
   return out;
 }
@@ -39352,10 +39447,11 @@ function znRenderUI(U) {
     for (const n of nights) {
       const b = document.createElement('button'); b.type = 'button'; b.className = 'warlobbyrow';
       const nm = document.createElement('span'); nm.className = 'nm'; nm.textContent = `${n.host}’s ${W}`;
-      const sm = document.createElement('small'); sm.textContent = `${ZM_MAPS[n.map].N} · ` + (n.started ? 'under way' : `${n.n}/${ZN_MAX} players · tap to join`);
+      const back = n.started && znRjFor(n.code);   // (one I dropped out of: back into it)
+      const sm = document.createElement('small'); sm.textContent = `${ZM_MAPS[n.map].N} · ` + (back ? 'under way · tap to rejoin' : n.started ? 'under way' : `${n.n}/${ZN_MAX} players · tap to join`);
       b.append(nm, sm);
-      b.disabled = n.started || n.n >= ZN_MAX;
-      b.addEventListener('click', () => znJoin(n.code, U.raid ? 'raid' : 'zm'));
+      b.disabled = back ? false : n.started || n.n >= ZN_MAX;
+      b.addEventListener('click', () => back ? znRejoin(back) : znJoin(n.code, U.raid ? 'raid' : 'zm'));
       el.append(b);
     }
     return;
@@ -39389,7 +39485,8 @@ function znStart() {
   znBegin(st, 'host');
 }
 function znBegin(st, role) {
-  Object.assign(ZN, { g: st.g, st, doneG: st.g, sendT: 0, hseq: 0, seq: 0, q: [], hq: [], shots: [], shotSeq: 0, lastQ: {}, lastH: {}, lastShot: {}, seenT: {}, ev: [], eseq: 0, evSeen: 0, lastHseq: -1, hostT: performance.now(), creditSeen: [0, 0, 0], est: null });
+  const rj = role === 'client' && ZN.rjWant && ZN.rjWant.g === st.g ? ZN.rjWant.snap || {} : null; ZN.rjWant = null;
+  Object.assign(ZN, { j: Math.random().toString(36).slice(2, 6), rj, g: st.g, st, doneG: st.g, sendT: 0, hseq: 0, seq: 0, q: [], hq: [], shots: [], shotSeq: 0, lastQ: {}, lastH: {}, lastShot: {}, seenT: {}, ev: [], eseq: 0, evSeen: 0, lastHseq: -1, hostT: performance.now(), creditSeen: [0, 0, 0], est: null });
   ZN.hits.clear();
   zmStart({ net: role, hum: st.hum, map: st.map });
   for (const [sid] of st.hum) ZN.seenT[sid] = performance.now();
@@ -39406,7 +39503,7 @@ function zmNetPeers() {
         const st = { g: hz.st.g, hum: hz.st.hum.slice(0, ZN_MAX).filter(x => Array.isArray(x)).map(x => [String(x[0]), znClean(x[1], 16) || 'A keeper']), map: ZM_MAPS[hz.st.map] ? hz.st.map : 'light' };
         znBegin(st, 'client'); return;
       }
-      ZN.doneG = hz.st.g; ZN.msg = 'The night started without you. Host your own, or wait for the next.';
+      ZN.doneG = hz.st.g; ZN.msg = 'The night started without you. Host your own, or wait for the next.'; ZN.rjWant = null;
     }
     if (znAmHost() && performance.now() - ZN.lobT > 3000) { ZN.lobT = performance.now(); znSendLobby(); }
   }
@@ -39435,7 +39532,7 @@ function znMe() {
 }
 function znPresence() {
   const z = znBase();
-  z.g = ZN.g; z.p = znMe(); z.pt = ZM.pts;
+  z.g = ZN.g; z.j = ZN.j; z.p = znMe(); z.pt = ZM.pts;
   z.c = fpsColours(); z.o = typeof ocEquippedId === 'function' ? ocEquippedId() || '' : '';
   if (ZN.shots.length) z.sh = ZN.shots.slice(-4);
   // the weapon in my hands reforged at the Bench: how many times (so the others see it alight)
@@ -39479,6 +39576,11 @@ function znReadPlayers(dt) {
     const a = z.p.map(v => typeof v === 'number' && isFinite(v) ? v : 0);
     if (!r) { r = { id: z.sid, x: CX + a[0] / 100, y: CY + a[1] / 100, h: a[3] / 1000, hitT: 0, flashT: 0, kb: {}, d: 0 }; FPS.remote.set(z.sid, r); }
     r.n = (ZM.hum.find(h => h[0] === z.sid) || [])[1] || 'A keeper';
+    // (a new mark: they've dropped out and come back, so their shots, hits and asks count from nought again)
+    if (typeof z.j === 'string' && z.j !== r.j) {
+      if (r.j) { ZN.lastShot[z.sid] = 0; ZN.lastQ[z.sid] = 0; ZN.lastH[z.sid] = 0; r.wasDn = false; fpsFeed(`${r.n} is back.`); }
+      r.j = z.j;
+    }
     r.tx = CX + a[0] / 100; r.ty = CY + a[1] / 100; r.tjz = a[2] / 100; r.th = a[3] / 1000; r.p = a[4] / 1000;
     // (a new place heard: kept, to slide between; only when it's actually changed, as nothing is sent while they stand still)
     const pk = a.join(','); if (pk !== r.pk) { r.pk = pk; znHeard(r.est || (r.est = znEst()), now); znSample(r, now, r.tx, r.ty, 0, r.th); }
@@ -39611,7 +39713,14 @@ function zmnClient(dt) {
   const seen = znReadPlayers(dt), host = ZM.hum[0] && ZM.hum[0][0];
   let hz = null;
   for (const p of NET.peers) { const z = znOf(p); if (z && z.room === ZN.code && z.g === ZN.g && z.sid === host) { hz = z; break; } }
-  if (hz && Array.isArray(hz.h) && hz.h[0] !== ZN.lastHseq) { ZN.lastHseq = hz.h[0]; ZN.hostT = performance.now(); znHeard(ZN.est || (ZN.est = znEst()), ZN.hostT); znApply(hz); }
+  if (hz && Array.isArray(hz.h) && hz.h[0] !== ZN.lastHseq) {
+    ZN.lastHseq = hz.h[0]; ZN.hostT = performance.now(); znHeard(ZN.est || (ZN.est = znEst()), ZN.hostT);
+    const rj = ZN.rj; ZN.rj = null;
+    if (rj) znRjBefore(hz, rj);
+    const pts0 = ZM.pts;
+    znApply(hz);
+    if (rj) znRjAfter(rj, ZM.pts - pts0);
+  }
   if (!ZM.over && performance.now() - ZN.hostT > 12000) { fpsFeed('The host has gone, and the night with them.'); zmEnd(); }
   // the drowned between the host's word: shown a moment behind, sliding between where they were said to be
   const rt = performance.now() - znDelay(ZN.est || (ZN.est = znEst()));
@@ -39752,6 +39861,72 @@ function znApply(hz) {
     else if (e[1] === 'rev' && typeof e[2] === 'string') znRevived(e[2], typeof e[3] === 'string' ? e[3] : '');
     else if (e[1] === 'feed') fpsFeed(znClean(e[2], 120));
   }
+}
+
+// ---------- dropping out and coming back (src/rejoin.js) ----------
+// what's mine in the night, kept by this browser every couple of seconds while I'm a joined player in it
+function znRjSnap() {
+  const m = FPS.me, mags = Object.assign({}, m.mags); mags[FPS.weapon] = m.ammo;
+  const cp = o => o && typeof o === 'object' ? JSON.parse(JSON.stringify(o)) : null;
+  return { pts: ZM.pts, own: ZM.own.slice(), res: cp(ZM.res), mags, w: FPS.weapon, l: FPS.last, ammo: m.ammo, perks: cp(ZM.perks), wb: ZM.windBuys | 0, pap: cp(ZM.pap),
+    spent: ZM.spent | 0, doors: ZM.doorsOpened | 0, downs: ZM.downs | 0, cr: ZN.creditSeen.slice(), x: m.x - FPSC.CX, y: m.y - FPSC.CY, jz: m.jz || 0, fl: m.fl, h: m.h, p: m.p,
+    hp: m.hp, dead: m.dead || 0, dn: ZM.downT || 0, gh: !!ZM.ghost, kit: cp(ZM.downKit), st: typeof RAID !== 'undefined' && RAID.on ? RAID.stage : -1,
+    cls: typeof RCL !== 'undefined' ? RCL.cls : null, uK: typeof RCL !== 'undefined' ? RCL.uK || 0 : 0, mvp: typeof RMV !== 'undefined' ? cp(RMV.s) : null };
+}
+// the record src/rejoin.js keeps: a night I've joined (null: in none; false: hosting it, which can't be come back to)
+function znRjRecord() {
+  if (!FPS.on || !FPS.zm || !ZM.on || !ZM.net || !ZN.g || !ZN.code || ZM.over) return null;
+  if (ZM.net !== 'client') return false;
+  const host = (ZM.hum[0] || [])[1] || 'Someone', raid = typeof RAID !== 'undefined' && RAID.on;
+  return { k: 'zm', mode: ZN.mode, code: ZN.code, at: ZN.at, g: ZN.g, label: raid && typeof raidName === 'function' ? `${raidName()} with ${host}` : `${host}’s night at the Lighthouse`, snap: znRjSnap() };
+}
+// is that night still going? (its host still here, on the same night)
+function znRjLive(r) { return NET.peers.some(p => { const z = znOf(p); return z && z.room === r.code && z.st && z.st.g === r.g && fresh(p) && !(p.isMe && p.sameTab); }); }
+const znRjFor = code => { const r = typeof rjGet === 'function' ? rjGet() : null; return r && r.k === 'zm' && r.code === code && r.sid === NET.sid ? r : null; };
+// back into it: into its room as before (same place in the list), and the night begins again here once the host's word
+// that names me arrives (zmNetPeers)
+function znRejoin(r) {
+  if (!znOnline() || FPS.on || !r) return false;
+  ZN.mode = r.mode === 'raid' ? 'raid' : 'zm'; ZN.code = r.code; ZN.at = +r.at || Date.now(); ZN.msg = ''; ZN.doneG = null; ZN.rjWant = r;
+  znSendLobby(); znRender();
+  setTimeout(() => { if (ZN.rjWant === r) { ZN.rjWant = null; if (typeof rjClear === 'function') rjClear(); ZN.msg = 'That night has ended.'; znLeave(); } }, 10000);
+  return true;
+}
+// the first word from the host after coming back: credit counted from where it was, and the feed's old lines not
+// played again
+function znRjBefore(hz, rj) {
+  if (Array.isArray(rj.cr) && rj.cr.length === 3) ZN.creditSeen = rj.cr.map(v => Math.max(0, +v || 0));
+  if (Array.isArray(hz.ev)) for (const e of hz.ev) if (Array.isArray(e) && e[0] > ZN.evSeen) ZN.evSeen = e[0];
+}
+// ...and once the night's laid out as the host has it: what was mine, back (plus what was credited me meanwhile)
+function znRjAfter(rj, gained) {
+  const m = FPS.me, CX = FPSC.CX, CY = FPSC.CY, num = (v, d) => typeof v === 'number' && isFinite(v) ? v : d;
+  const nums = o => { const out = {}; if (o && typeof o === 'object') for (const k in o) if (FPSW[k] && typeof o[k] === 'number' && isFinite(o[k])) out[k] = Math.max(0, o[k]); return out; };
+  if (Array.isArray(rj.own) && rj.own.length && rj.own.every(id => FPSW[id])) ZM.own = rj.own.slice(0, 8);
+  if (rj.res) ZM.res = nums(rj.res);
+  if (rj.mags) Object.assign(m.mags, nums(rj.mags));
+  FPS.weapon = ZM.own.includes(rj.w) ? rj.w : ZM.own[0]; FPS.last = FPSW[rj.l] ? rj.l : FPS.weapon;
+  m.ammo = Math.max(0, num(rj.ammo, m.mags[FPS.weapon] || 0)); m.reload = 0; m.cd = 0; FPS.drawT = 0.45;
+  if (rj.perks && typeof rj.perks === 'object') { ZM.perks = {}; for (const k in rj.perks) if (ZM_PERKS[k] && rj.perks[k]) ZM.perks[k] = true; }
+  ZM.windBuys = clamp(rj.wb | 0, 0, 3);
+  if (rj.pap && typeof rj.pap === 'object') { ZM.pap = {}; for (const k in rj.pap) if (FPSW[k]) ZM.pap[k] = clamp(rj.pap[k] | 0, 0, 99); }
+  ZM.pts = Math.max(0, num(rj.pts, ZM.pts)) + Math.max(0, gained || 0);
+  ZM.spent = Math.max(0, rj.spent | 0); ZM.doorsOpened = Math.max(0, rj.doors | 0); ZM.downs = Math.max(0, rj.downs | 0);
+  if (typeof RCL !== 'undefined' && RCL_CLASSES[rj.cls]) {
+    RCL.cls = RCL.last = rj.cls; RCL.run = FPS.joinedAt; RCL.uK = clamp(num(rj.uK, 0), 0, 1);
+    if (RCL.picking) { const keep = [ZM.own, ZM.res, FPS.weapon, FPS.last, m.ammo]; rclClosePick(); [ZM.own, ZM.res, FPS.weapon, FPS.last, m.ammo] = keep; }
+  }
+  if (typeof RMV !== 'undefined' && rj.mvp && typeof rj.mvp === 'object') { RMV.s = {}; for (const k in rj.mvp) if (typeof rj.mvp[k] === 'number' && isFinite(rj.mvp[k])) RMV.s[k] = rj.mvp[k]; }
+  // where I stood (if it's still the same part of a raid), and how I was
+  if (rj.st === (typeof RAID !== 'undefined' && RAID.on ? RAID.stage : -1) && isFinite(rj.x) && isFinite(rj.y)) {
+    m.x = CX + rj.x; m.y = CY + rj.y; m.jz = num(rj.jz, m.jz); if (isFinite(rj.fl)) m.fl = rj.fl; m.h = num(rj.h, m.h); m.p = num(rj.p, 0);
+  }
+  m.hp = clamp(num(rj.hp, m.hp), 0, ZM.perks.stout ? ZMC.HP_STOUT : ZMC.HP);
+  if (rj.gh) { ZM.ghost = true; ZM.downT = 0; m.dead = Math.max(0.1, num(rj.dead, 0.1)); }
+  else if (rj.dn > 0) { ZM.downT = Math.min(ZM_DOWN.T, rj.dn); m.hp = 0; ZM.downKit = rj.kit && Array.isArray(rj.kit.own) ? rj.kit : null; }
+  else if (!(m.hp > 0)) m.hp = 1;
+  m.protect = Math.max(m.protect || 0, 2);
+  fpsFeed('You’re back in.');
 }
 
 // ---------- buttons ----------
@@ -41416,6 +41591,11 @@ addEventListener('resize', () => { if (WAR.on) wvFit(); });
 //   l  the war's log, each line marked for everyone or for one player
 // The others don't run the war: they draw what the host sends and send their orders back in their own presence
 // (`q`, the last few, numbered, so none is applied twice). Speed and pause are the host's alone, and stay at 1x.
+// Dropping out and coming back (src/rejoin.js): a joined player who reloads or loses the connection keeps their id,
+// finds the war still in the host's presence (its `st` names them) and takes their nation back. Each time they begin
+// they pick a fresh mark (`j`); when the host sees it change it counts their orders from nought again, hands their
+// nation back to them if it had been left to fight on alone, and sends the whole map again so they have all of it.
+// The host's browser is the war, so if the host drops out the war ends as before.
 
 const WN = {
   code: null, at: 0, role: null, g: null, st: null, hum: [], doneG: null, msg: '',
@@ -41423,6 +41603,7 @@ const WN = {
   sendT: 0, tick: 0, hseq: 0, sent: null, rowPtr: 0, sweepPtr: 0, nPtr: 0, sPtr: 0, lastSeq: [], seenT: [], logSentId: 0,
   // client
   seq: 0, q: [], lastH: -1, lastHostT: 0, logId: 0, relT: 0, survT: 0, ready: false, gone: false,
+  j: '', jSeen: [], lost: [], rjWant: null,
 };
 const WN_MAX = 10;
 const WN_ALPHA = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz!#$%&()*+-;=?@^_{|}~';
@@ -41485,7 +41666,7 @@ function wnOpenWars() {
     if (code === WN.code) continue;
     list.sort((a, b) => (wnWar(a).at || 0) - (wnWar(b).at || 0));
     const h = wnWar(list[0]);
-    out.push({ code, host: wnClean(h.nick || '').slice(0, 18) || 'Someone', n: list.length, b: h.lob ? h.lob.b : '?', d: h.lob ? h.lob.d : '', started: !!h.st });
+    out.push({ code, host: wnClean(h.nick || '').slice(0, 18) || 'Someone', n: list.length, b: h.lob ? h.lob.b : '?', d: h.lob ? h.lob.d : '', started: !!h.st, g: h.st && h.st.g });
   }
   return out;
 }
@@ -41508,9 +41689,10 @@ function wnRender() {
       const diff = WAR_DIFF[w.d] ? WAR_DIFF[w.d].name : '';
       b.innerHTML = '<span class="nm"></span><small></small>';
       b.querySelector('.nm').textContent = `${w.host}’s war`;
-      b.querySelector('small').textContent = w.started ? 'under way' : `${w.n}/${WN_MAX} players · ${w.b} bots${diff ? ' · ' + diff : ''} · tap to join`;
-      b.disabled = w.started || w.n >= WN_MAX;
-      b.addEventListener('click', () => wnJoin(w.code));
+      const back = w.started && wnRjFor(w.code);   // (one I dropped out of: back into it)
+      b.querySelector('small').textContent = back ? 'under way · tap to rejoin' : w.started ? 'under way' : `${w.n}/${WN_MAX} players · ${w.b} bots${diff ? ' · ' + diff : ''} · tap to join`;
+      b.disabled = back ? false : w.started || w.n >= WN_MAX;
+      b.addEventListener('click', () => back ? wnRejoin(back) : wnJoin(w.code));
       el.append(b);
     }
     return;
@@ -41549,6 +41731,7 @@ function wnBegin(st, me, role) {
   WN.sendT = 0; WN.tick = 0; WN.hseq = 0; WN.sent = null; WN.rowPtr = 0; WN.sweepPtr = 0; WN.nPtr = 0; WN.sPtr = 0; WN.logSentId = 0;
   WN.lastSeq = st.hum.map(() => 0); WN.seenT = st.hum.map(() => performance.now());
   WN.seq = 0; WN.q = []; WN.lastH = -1; WN.lastHostT = performance.now(); WN.logId = 0; WN.ready = false; WN.gone = false; WN.relT = 0; WN.survT = 0;
+  WN.j = Math.random().toString(36).slice(2, 6); WN.jSeen = st.hum.map(() => ''); WN.lost = st.hum.map(() => false); WN.rjWant = null;
   warEnter();
   warStart(st.b, st.seed, st.d, { humans: st.hum.map(h => h[1]), skins: st.hum.map(h => h[2] || ''), me, net: role });
   warViewStart();
@@ -41569,7 +41752,7 @@ function warNetPeers() {
         const st = { g: String(hw.st.g), seed: hw.st.seed >>> 0, b: clamp(hw.st.b | 0, 0, 50), d: WAR_DIFF[hw.st.d] ? hw.st.d : 'normal', hum: hw.st.hum.slice(0, WN_MAX).map(x => [String(x[0]), wnClean(String(x[1] || '')).slice(0, 18) || 'A house', typeof rcSkin === 'function' && rcSkin(x[2]) ? x[2] : '']) };
         wnBegin(st, k, 'client'); return;
       }
-      WN.doneG = hw.st.g; WN.msg = 'The war started without you. Host your own, or wait for the next.';
+      WN.doneG = hw.st.g; WN.msg = 'The war started without you. Host your own, or wait for the next.'; WN.rjWant = null;
     }
     // the host's lobby settings follow the sliders; refresh what we publish now and then
     if (wnAmHost() && performance.now() - (WN.lobT || 0) > 3000) { WN.lobT = performance.now(); wnSendLobby(); }
@@ -41613,7 +41796,7 @@ function warApply(id, o) {
 }
 function wnSendClient() {
   if (!WN.code || WAR.net !== 'client') return;
-  const w = wnBase(); w.g = WN.g; w.q = WN.q.slice(-12); wnSend(w);
+  const w = wnBase(); w.g = WN.g; w.j = WN.j; w.q = WN.q.slice(-12); wnSend(w);
 }
 
 // ---------- the host ----------
@@ -41629,13 +41812,20 @@ function warNetHostTick(dt) {
     const n = WAR.nations[h], p = wnPeerBySid(WN.hum[h]), w = p ? wnWar(p) : null;
     if (w && w.g === WN.g && fresh(p)) {
       WN.seenT[h] = now;
+      // (a new mark: they've dropped out and come back. Their orders count from nought again, the map goes again
+      //  whole, and a nation left to fight on alone is theirs again)
+      if (typeof w.j === 'string' && w.j !== WN.jSeen[h]) {
+        if (WN.jSeen[h] || WN.lost[h]) { WN.lastSeq[h] = 0; WN.sent = null; WN.sweepPtr = 0; if (!WN.lost[h]) warLog(`${n.name}'s player is back.`); }
+        WN.jSeen[h] = w.j;
+      }
+      if (WN.lost[h]) { WN.lost[h] = false; if (n.alive) { n.human = true; delete n.bot; warLog(`${n.name}'s player is back, and has the helm again.`); } }
       if (Array.isArray(w.q)) {
         const qs = w.q.filter(o => Array.isArray(o) && Number.isInteger(o[0]) && o[0] > WN.lastSeq[h]).sort((x, y) => x[0] - y[0]);
         for (const o of qs) { WN.lastSeq[h] = o[0]; if (!n.human) continue; const why = warApply(h, o); if (why) warSay(n, why); }
       }
     } else if (n.human && now - WN.seenT[h] > 25000) {
       // gone for good: their nation carries on under its own steam
-      n.human = false; n.bot = { aggr: 0.45, naval: 0.5, loyal: 0.6, greed: 0.5, next: 1, pactCd: 60 };
+      n.human = false; n.bot = { aggr: 0.45, naval: 0.5, loyal: 0.6, greed: 0.5, next: 1, pactCd: 60 }; WN.lost[h] = true;
       for (let k = WAR.prompts.length - 1; k >= 0; k--) if (WAR.prompts[k].to === h) WAR.prompts.splice(k, 1);
       warLog(`${n.name} ${n.alive ? 'has lost its player; its people fight on alone' : 'has gone'}.`);
     }
@@ -41814,6 +42004,24 @@ function wnRegions() {
   const N = WAR.nations.length, cnt = new Int32Array(WAR.regions.length * N);
   for (let i = 0; i < WAR.map.length; i++) { const o = WAR.owner[i]; if (o >= 0 && o < N && WAR.region[i] >= 0) cnt[WAR.region[i] * N + o]++; }
   for (const r of WAR.regions) { r.owner = -1; if (!r.bonus) continue; for (let o = 0; o < N; o++) if (cnt[r.id * N + o] >= r.tiles * 0.97) r.owner = o; }
+}
+
+// ---------- dropping out and coming back (src/rejoin.js) ----------
+// the record src/rejoin.js keeps: a war I've joined (null: in none; false: hosting it, which can't be come back to)
+function wnRjRecord() {
+  if (!WAR.on || !WAR.net || !WN.code || !WN.g || WAR.result) return null;
+  if (WAR.net !== 'client') return false;
+  return { k: 'war', code: WN.code, at: WN.at, g: WN.g, label: `${wnClean((WN.st && WN.st.hum[0] && WN.st.hum[0][1]) || 'Someone').slice(0, 18)}’s war (Drowned Reach)` };
+}
+function wnRjLive(r) { return NET.peers.some(p => { const w = wnWar(p); return w && w.room === r.code && w.st && w.st.g === r.g && fresh(p) && !(p.isMe && p.sameTab); }); }
+const wnRjFor = code => { const r = typeof rjGet === 'function' ? rjGet() : null; return r && r.k === 'war' && r.code === code && r.sid === NET.sid ? r : null; };
+// back into the war's room, in the same place; warNetPeers takes it from there once the host's word arrives
+function wnRejoin(r) {
+  if (!wnOnline() || WAR.on || !r) return false;
+  WN.code = r.code; WN.at = +r.at || Date.now(); WN.msg = ''; WN.doneG = null; WN.rjWant = r;
+  wnSendLobby(); wnRender();
+  setTimeout(() => { if (WN.rjWant === r && !WAR.on) { WN.rjWant = null; if (typeof rjClear === 'function') rjClear(); WN.msg = 'That war has ended.'; wnLeave(); } }, 10000);
+  return true;
 }
 
 // leaving a war (or its end): out of the room as well
@@ -44994,13 +45202,20 @@ function shareArrive() {
     if (J.mode === 'sail') {
       NET.pendingJoin = J.code;
       if (NET.crew === J.code) return clearInterval(iv);
-      if (crewOf(J.code).some(p => !(p.isMe && p.sameTab))) { clearInterval(iv); joinCrew(J.code); return; }
+      if (crewOf(J.code).some(p => !(p.isMe && p.sameTab))) {
+        clearInterval(iv);
+        // (a crew I dropped out of: back in my old place, and on to the voyage where I was: src/rejoin.js)
+        const r = typeof rjGet === 'function' ? rjGet() : null;
+        if (r && r.k === 'crew' && r.code === J.code && r.sid === NET.sid && typeof netRejoin === 'function') netRejoin(r); else joinCrew(J.code);
+        return;
+      }
     } else if (J.mode === 'war') {
       if (WN.code === J.code) return clearInterval(iv);
       const w = wnOpenWars().find(x => x.code === J.code);
       if (w) {
         clearInterval(iv); shareShow('war');
-        if (w.started) toast('That war has already started.', 'Already started'); else wnJoin(J.code);
+        if (w.started && typeof wnRjFor === 'function' && wnRjFor(J.code)) wnRejoin(wnRjFor(J.code));   // (one I dropped out of: back in)
+        else if (w.started) toast('That war has already started.', 'Already started'); else wnJoin(J.code);
         return;
       }
     } else {
@@ -45008,7 +45223,8 @@ function shareArrive() {
       const n = znOpenNights().find(x => x.code === J.code);
       if (n) {
         clearInterval(iv); const mode = ZM_MAPS[n.map] && ZM_MAPS[n.map].raid ? 'raid' : 'lighthouse'; shareShow(mode);
-        if (n.started) toast(`That ${SHARE_WHAT[mode]} has already started.`, 'Already started'); else znJoin(J.code, mode === 'raid' ? 'raid' : 'zm');
+        if (n.started && typeof znRjFor === 'function' && znRjFor(J.code)) znRejoin(znRjFor(J.code));   // (one I dropped out of: back in)
+        else if (n.started) toast(`That ${SHARE_WHAT[mode]} has already started.`, 'Already started'); else znJoin(J.code, mode === 'raid' ? 'raid' : 'zm');
         return;
       }
     }
@@ -45049,6 +45265,85 @@ function closeNotes() {
   // Esc shuts the page before anything else hears it
   addEventListener('keydown', e => { if (e.key === 'Escape' && !document.getElementById('notesCard').hidden) { e.preventDefault(); e.stopImmediatePropagation(); closeNotes(); } }, true);
 })();
+
+// ---- src/rejoin.js ----
+// Coming back to a game in progress, in every mode played together.
+//
+// Drop out of a game with others (a reload, a crash, a phone that slept, a lost connection) and you can get back into
+// the same one, as the same player, with what was yours. While you're in a game, this browser keeps a note of it
+// every couple of seconds and as the page closes (localStorage `skerry-rejoin`): which game, its room, and your own
+// state in it, as each mode's own file says (netRjRecord in src/net.js, fpsRjRecord in src/fps.js, wnRjRecord in
+// src/warnet.js, znRjRecord in src/zmnet.js, which covers the Lighthouse and both raids). The note carries your id
+// (NET.sid), and a new tab opened after the old one closed takes that id back (src/net.js), so the others' browsers
+// know you for the one who left.
+// Back on the title screen, while that game is still going, a bar at the top offers to rejoin it; the lobby's list
+// marks it too ("tap to rejoin"), and a crew's invite link does the same. Leaving a game yourself, or its end, drops
+// the note. A game's host can't come back to it in the Lighthouse, the raids or the Drowned Reach: the host's browser
+// is that game, and it ends when they go (Wreckers' Night and crews have no such host, so anyone can come back).
+
+const RJ = { KEY: 'skerry-rejoin', TTL: 15 * 60 * 1000, was: false, busy: null, shown: '' };
+function rjGet() {
+  try { const r = JSON.parse(localStorage.getItem(RJ.KEY) || 'null'); return r && typeof r === 'object' && typeof r.k === 'string' && Date.now() - (+r.t || 0) < RJ.TTL ? r : null; } catch (e) { return null; }
+}
+function rjClear() { try { localStorage.removeItem(RJ.KEY); } catch (e) {} rjRender(); }
+// what this page is in now: a record to keep, false (in a game that can't be come back to) or null (in none)
+function rjNow() {
+  for (const f of [typeof znRjRecord === 'function' && znRjRecord, typeof wnRjRecord === 'function' && wnRjRecord, typeof fpsRjRecord === 'function' && fpsRjRecord, typeof netRjRecord === 'function' && netRjRecord]) {
+    if (!f) continue;
+    let r = null; try { r = f(); } catch (e) { r = null; }
+    if (r !== null) return r;
+  }
+  return null;
+}
+function rjKeep() {
+  if (typeof NET === 'undefined' || !NET.sid) return;
+  const r = rjNow();
+  if (r) { r.sid = NET.sid; r.t = Date.now(); try { localStorage.setItem(RJ.KEY, JSON.stringify(r)); } catch (e) {} RJ.was = true; return; }
+  // was in a game this time round and now isn't (left it, or it ended), or hosting one: nothing to come back to
+  if (r === false || RJ.was) { RJ.was = r === false; const old = rjGet(); if (old && old.sid === NET.sid) rjClear(); }
+}
+// still going? (and so worth offering)
+function rjLive(r) {
+  if (!r || typeof NET === 'undefined' || NET.status !== 'ready' || r.sid !== NET.sid) return false;
+  try {
+    if (r.k === 'zm') return typeof znRjLive === 'function' && znRjLive(r);
+    if (r.k === 'war') return typeof wnRjLive === 'function' && wnRjLive(r);
+    if (r.k === 'fps') return typeof fpsRjLive === 'function' && fpsRjLive(r);
+    if (r.k === 'crew') return typeof netRjLive === 'function' && netRjLive(r) && NET.crew !== r.code;
+  } catch (e) {}
+  return false;
+}
+function rjGo() {
+  const r = rjGet(); if (!rjLive(r)) { rjRender(); return; }
+  try { audioInit(); } catch (e) {}
+  let ok = false;
+  if (r.k === 'zm') ok = znRejoin(r);
+  else if (r.k === 'war') ok = wnRejoin(r);
+  else if (r.k === 'fps') ok = fpsRejoin(r);
+  else if (r.k === 'crew') ok = netRejoin(r);
+  if (ok && (r.k === 'zm' || r.k === 'war')) { RJ.busy = r; setTimeout(() => { if (RJ.busy === r) { RJ.busy = null; rjRender(); } }, 10000); }
+  rjRender();
+}
+function rjRender() {
+  const bar = $('rejoinBar'); if (!bar) return;
+  const r = rjGet(), on = !RJ.busy && rjLive(r) && (typeof state === 'undefined' || state === 'title');
+  bar.hidden = !(on || RJ.busy);
+  if (bar.hidden) return;
+  const txt = RJ.busy ? `Getting you back into ${RJ.busy.label || 'your game'}…` : `You dropped out of ${r.label || 'a game'}. It’s still going.`;
+  if (RJ.shown !== txt) { RJ.shown = txt; $('rejoinText').textContent = txt; }
+  $('rejoinGo').hidden = $('rejoinNo').hidden = !!RJ.busy;
+}
+{
+  if ($('rejoinGo')) $('rejoinGo').addEventListener('click', rjGo);
+  if ($('rejoinNo')) $('rejoinNo').addEventListener('click', rjClear);
+  setInterval(() => {
+    rjKeep();
+    if (RJ.busy && ((typeof FPS !== 'undefined' && FPS.on) || (typeof WAR !== 'undefined' && WAR.on))) RJ.busy = null;
+    rjRender();
+  }, 2000);
+  addEventListener('pagehide', rjKeep);
+  setTimeout(rjRender, 1500);
+}
 
 // ---- src/main.js ----
 // Starts the game once every script has loaded.

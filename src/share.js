@@ -107,13 +107,20 @@ function shareArrive() {
     if (J.mode === 'sail') {
       NET.pendingJoin = J.code;
       if (NET.crew === J.code) return clearInterval(iv);
-      if (crewOf(J.code).some(p => !(p.isMe && p.sameTab))) { clearInterval(iv); joinCrew(J.code); return; }
+      if (crewOf(J.code).some(p => !(p.isMe && p.sameTab))) {
+        clearInterval(iv);
+        // (a crew I dropped out of: back in my old place, and on to the voyage where I was: src/rejoin.js)
+        const r = typeof rjGet === 'function' ? rjGet() : null;
+        if (r && r.k === 'crew' && r.code === J.code && r.sid === NET.sid && typeof netRejoin === 'function') netRejoin(r); else joinCrew(J.code);
+        return;
+      }
     } else if (J.mode === 'war') {
       if (WN.code === J.code) return clearInterval(iv);
       const w = wnOpenWars().find(x => x.code === J.code);
       if (w) {
         clearInterval(iv); shareShow('war');
-        if (w.started) toast('That war has already started.', 'Already started'); else wnJoin(J.code);
+        if (w.started && typeof wnRjFor === 'function' && wnRjFor(J.code)) wnRejoin(wnRjFor(J.code));   // (one I dropped out of: back in)
+        else if (w.started) toast('That war has already started.', 'Already started'); else wnJoin(J.code);
         return;
       }
     } else {
@@ -121,7 +128,8 @@ function shareArrive() {
       const n = znOpenNights().find(x => x.code === J.code);
       if (n) {
         clearInterval(iv); const mode = ZM_MAPS[n.map] && ZM_MAPS[n.map].raid ? 'raid' : 'lighthouse'; shareShow(mode);
-        if (n.started) toast(`That ${SHARE_WHAT[mode]} has already started.`, 'Already started'); else znJoin(J.code, mode === 'raid' ? 'raid' : 'zm');
+        if (n.started && typeof znRjFor === 'function' && znRjFor(J.code)) znRejoin(znRjFor(J.code));   // (one I dropped out of: back in)
+        else if (n.started) toast(`That ${SHARE_WHAT[mode]} has already started.`, 'Already started'); else znJoin(J.code, mode === 'raid' ? 'raid' : 'zm');
         return;
       }
     }

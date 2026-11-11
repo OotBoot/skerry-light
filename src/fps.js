@@ -1775,3 +1775,32 @@ for (const [id, fn] of [['fpsPadWeapon', () => fpsCycle(1)], ['fpsPadScope', () 
 }
 // leaving the page: off the island
 addEventListener('pagehide', () => { if (FPS.on && NET.room) NET.room.presence({ fps: null }).catch(() => {}); });
+
+// ---------- dropping out and coming back (src/rejoin.js) ----------
+// Anyone can come ashore at any time, so coming back is just that; but within the same round you come back as you
+// were: the same tally (deaths, and who took them, which is where everyone's kills are counted from), the same weapon,
+// where you stood and how hurt, and the shots numbered on from where they'd got to.
+function fpsRjRecord() {
+  if (!FPS.on || FPS.zm || !NET.room) return null;
+  const m = FPS.me;
+  return { k: 'fps', r: FPS.round, nick: FPS.nick, label: `Wreckers' Night, ${FPS.g && FPS.g.isle ? FPS.g.isle.name : 'on the skerry'}`,
+    snap: { kb: Object.assign({}, FPS.kb), d: FPS.deaths, wcK: FPS.wcK || 0, seq: FPS.seq, w: FPS.weapon, l: FPS.last, x: m.x, y: m.y, h: m.h, p: m.p, jz: m.jz || 0, hp: m.hp, dead: m.dead > 0 ? 1 : 0, fl: m.flares } };
+}
+const fpsRjLive = r => r.r === fpsRoundNow();
+function fpsRejoin(r) {
+  if (FPS.on || !r || !r.snap) return false;
+  const S = r.snap, same = r.r === fpsRoundNow();
+  if (typeof r.nick === 'string' && $('fpsNick')) $('fpsNick').value = r.nick.slice(0, 16);
+  if (same) { FPS.wcK = Math.max(0, S.wcK | 0); FPS.wcRound = r.r; }   // (kills already paid out in crate keys aren't paid again)
+  fpsStart();
+  if (!same || FPS.round !== r.r) return true;
+  const m = FPS.me;
+  if (S.kb && typeof S.kb === 'object') for (const k in S.kb) if (typeof k === 'string' && k.length < 40) FPS.kb[k] = Math.max(0, S.kb[k] | 0);
+  FPS.deaths = Math.max(0, S.d | 0); FPS.seq = Math.max(0, S.seq | 0);
+  if (FPSW[S.w] && FPS_WORDER.includes(S.w)) { FPS.weapon = S.w; if (FPSW[S.l]) FPS.last = S.l; m.ammo = fpsW().mag; }
+  if (!S.dead && isFinite(S.x) && isFinite(S.y) && Math.hypot(S.x - FPSC.CX, S.y - FPSC.CY) < FPSC.R + 20) { m.x = S.x; m.y = S.y; m.h = +S.h || 0; m.p = +S.p || 0; m.jz = Math.max(0, +S.jz || 0); m.hp = clamp(S.hp | 0, 1, FPSC.HP); }
+  if (isFinite(S.fl)) m.flares = clamp(S.fl | 0, 0, FPSC.FLARES);
+  fpsFeed('You’re back ashore, as you were.');
+  fpsSend(true);
+  return true;
+}

@@ -6,6 +6,14 @@
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Never give away a secret here (the Easter egg's steps, where the secret boss hides).
 var PATCH_NOTES = [
+  { v: 155, date: '2026-11-11', title: 'Rejoin a game in progress', New: [
+    "Every mode played together: drop out of a game (a reload, a crash, a phone that slept or lost signal) and you can rejoin it as the same player. Open the game again within fifteen minutes and a Rejoin bar at the top of the main menu takes you back in while the game is still going.",
+    "The lobby list marks a game you dropped out of \"tap to rejoin\", and your old invite link takes you back in too.",
+    "Keeper's Last Light and the raids: you come back with your points (plus anything earned for you while you were gone), weapons, ammunition, tonics, reforged weapons, calling, ultimate charge and health, where you stood, and down or out if you were.",
+    "Drowned Reach: you get your nation back, even if a bot had taken it over, and the whole map is sent to you again.",
+    "Wreckers' Night: within the same round your deaths, weapon, health, flares and place on the island come back, and kills already paid in crate keys aren't paid twice.",
+    "Skerry Light crews: back in your old place in the crew (the host stays the host), and out on the same voyage where your ship was, with its hull." ], Changes: [
+    "Everyone else sees when a player is back. If the host of a Lighthouse night, a raid or a war drops out, that game still ends for everyone." ] },
   { v: 154, date: '2026-11-11', title: 'Skerry Raids', Changes: [
     "Raids: the raid card on the main menu is now called Skerry Raids, since it holds both raids. Maren's End keeps its name as a raid." ] },
   { v: 153, date: '2026-11-11', title: 'A faster fall', Balance: [

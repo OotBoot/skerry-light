@@ -12,6 +12,11 @@
 //   l  the war's log, each line marked for everyone or for one player
 // The others don't run the war: they draw what the host sends and send their orders back in their own presence
 // (`q`, the last few, numbered, so none is applied twice). Speed and pause are the host's alone, and stay at 1x.
+// Dropping out and coming back (src/rejoin.js): a joined player who reloads or loses the connection keeps their id,
+// finds the war still in the host's presence (its `st` names them) and takes their nation back. Each time they begin
+// they pick a fresh mark (`j`); when the host sees it change it counts their orders from nought again, hands their
+// nation back to them if it had been left to fight on alone, and sends the whole map again so they have all of it.
+// The host's browser is the war, so if the host drops out the war ends as before.
 
 const WN = {
   code: null, at: 0, role: null, g: null, st: null, hum: [], doneG: null, msg: '',
@@ -19,6 +24,7 @@ const WN = {
   sendT: 0, tick: 0, hseq: 0, sent: null, rowPtr: 0, sweepPtr: 0, nPtr: 0, sPtr: 0, lastSeq: [], seenT: [], logSentId: 0,
   // client
   seq: 0, q: [], lastH: -1, lastHostT: 0, logId: 0, relT: 0, survT: 0, ready: false, gone: false,
+  j: '', jSeen: [], lost: [], rjWant: null,
 };
 const WN_MAX = 10;
 const WN_ALPHA = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz!#$%&()*+-;=?@^_{|}~';
@@ -81,7 +87,7 @@ function wnOpenWars() {
     if (code === WN.code) continue;
     list.sort((a, b) => (wnWar(a).at || 0) - (wnWar(b).at || 0));
     const h = wnWar(list[0]);
-    out.push({ code, host: wnClean(h.nick || '').slice(0, 18) || 'Someone', n: list.length, b: h.lob ? h.lob.b : '?', d: h.lob ? h.lob.d : '', started: !!h.st });
+    out.push({ code, host: wnClean(h.nick || '').slice(0, 18) || 'Someone', n: list.length, b: h.lob ? h.lob.b : '?', d: h.lob ? h.lob.d : '', started: !!h.st, g: h.st && h.st.g });
   }
   return out;
 }
@@ -104,9 +110,10 @@ function wnRender() {
       const diff = WAR_DIFF[w.d] ? WAR_DIFF[w.d].name : '';
       b.innerHTML = '<span class="nm"></span><small></small>';
       b.querySelector('.nm').textContent = `${w.host}’s war`;
-      b.querySelector('small').textContent = w.started ? 'under way' : `${w.n}/${WN_MAX} players · ${w.b} bots${diff ? ' · ' + diff : ''} · tap to join`;
-      b.disabled = w.started || w.n >= WN_MAX;
-      b.addEventListener('click', () => wnJoin(w.code));
+      const back = w.started && wnRjFor(w.code);   // (one I dropped out of: back into it)
+      b.querySelector('small').textContent = back ? 'under way · tap to rejoin' : w.started ? 'under way' : `${w.n}/${WN_MAX} players · ${w.b} bots${diff ? ' · ' + diff : ''} · tap to join`;
+      b.disabled = back ? false : w.started || w.n >= WN_MAX;
+      b.addEventListener('click', () => back ? wnRejoin(back) : wnJoin(w.code));
       el.append(b);
     }
     return;
@@ -145,6 +152,7 @@ function wnBegin(st, me, role) {
   WN.sendT = 0; WN.tick = 0; WN.hseq = 0; WN.sent = null; WN.rowPtr = 0; WN.sweepPtr = 0; WN.nPtr = 0; WN.sPtr = 0; WN.logSentId = 0;
   WN.lastSeq = st.hum.map(() => 0); WN.seenT = st.hum.map(() => performance.now());
   WN.seq = 0; WN.q = []; WN.lastH = -1; WN.lastHostT = performance.now(); WN.logId = 0; WN.ready = false; WN.gone = false; WN.relT = 0; WN.survT = 0;
+  WN.j = Math.random().toString(36).slice(2, 6); WN.jSeen = st.hum.map(() => ''); WN.lost = st.hum.map(() => false); WN.rjWant = null;
   warEnter();
   warStart(st.b, st.seed, st.d, { humans: st.hum.map(h => h[1]), skins: st.hum.map(h => h[2] || ''), me, net: role });
   warViewStart();
@@ -165,7 +173,7 @@ function warNetPeers() {
         const st = { g: String(hw.st.g), seed: hw.st.seed >>> 0, b: clamp(hw.st.b | 0, 0, 50), d: WAR_DIFF[hw.st.d] ? hw.st.d : 'normal', hum: hw.st.hum.slice(0, WN_MAX).map(x => [String(x[0]), wnClean(String(x[1] || '')).slice(0, 18) || 'A house', typeof rcSkin === 'function' && rcSkin(x[2]) ? x[2] : '']) };
         wnBegin(st, k, 'client'); return;
       }
-      WN.doneG = hw.st.g; WN.msg = 'The war started without you. Host your own, or wait for the next.';
+      WN.doneG = hw.st.g; WN.msg = 'The war started without you. Host your own, or wait for the next.'; WN.rjWant = null;
     }
     // the host's lobby settings follow the sliders; refresh what we publish now and then
     if (wnAmHost() && performance.now() - (WN.lobT || 0) > 3000) { WN.lobT = performance.now(); wnSendLobby(); }
@@ -209,7 +217,7 @@ function warApply(id, o) {
 }
 function wnSendClient() {
   if (!WN.code || WAR.net !== 'client') return;
-  const w = wnBase(); w.g = WN.g; w.q = WN.q.slice(-12); wnSend(w);
+  const w = wnBase(); w.g = WN.g; w.j = WN.j; w.q = WN.q.slice(-12); wnSend(w);
 }
 
 // ---------- the host ----------
@@ -225,13 +233,20 @@ function warNetHostTick(dt) {
     const n = WAR.nations[h], p = wnPeerBySid(WN.hum[h]), w = p ? wnWar(p) : null;
     if (w && w.g === WN.g && fresh(p)) {
       WN.seenT[h] = now;
+      // (a new mark: they've dropped out and come back. Their orders count from nought again, the map goes again
+      //  whole, and a nation left to fight on alone is theirs again)
+      if (typeof w.j === 'string' && w.j !== WN.jSeen[h]) {
+        if (WN.jSeen[h] || WN.lost[h]) { WN.lastSeq[h] = 0; WN.sent = null; WN.sweepPtr = 0; if (!WN.lost[h]) warLog(`${n.name}'s player is back.`); }
+        WN.jSeen[h] = w.j;
+      }
+      if (WN.lost[h]) { WN.lost[h] = false; if (n.alive) { n.human = true; delete n.bot; warLog(`${n.name}'s player is back, and has the helm again.`); } }
       if (Array.isArray(w.q)) {
         const qs = w.q.filter(o => Array.isArray(o) && Number.isInteger(o[0]) && o[0] > WN.lastSeq[h]).sort((x, y) => x[0] - y[0]);
         for (const o of qs) { WN.lastSeq[h] = o[0]; if (!n.human) continue; const why = warApply(h, o); if (why) warSay(n, why); }
       }
     } else if (n.human && now - WN.seenT[h] > 25000) {
       // gone for good: their nation carries on under its own steam
-      n.human = false; n.bot = { aggr: 0.45, naval: 0.5, loyal: 0.6, greed: 0.5, next: 1, pactCd: 60 };
+      n.human = false; n.bot = { aggr: 0.45, naval: 0.5, loyal: 0.6, greed: 0.5, next: 1, pactCd: 60 }; WN.lost[h] = true;
       for (let k = WAR.prompts.length - 1; k >= 0; k--) if (WAR.prompts[k].to === h) WAR.prompts.splice(k, 1);
       warLog(`${n.name} ${n.alive ? 'has lost its player; its people fight on alone' : 'has gone'}.`);
     }
@@ -410,6 +425,24 @@ function wnRegions() {
   const N = WAR.nations.length, cnt = new Int32Array(WAR.regions.length * N);
   for (let i = 0; i < WAR.map.length; i++) { const o = WAR.owner[i]; if (o >= 0 && o < N && WAR.region[i] >= 0) cnt[WAR.region[i] * N + o]++; }
   for (const r of WAR.regions) { r.owner = -1; if (!r.bonus) continue; for (let o = 0; o < N; o++) if (cnt[r.id * N + o] >= r.tiles * 0.97) r.owner = o; }
+}
+
+// ---------- dropping out and coming back (src/rejoin.js) ----------
+// the record src/rejoin.js keeps: a war I've joined (null: in none; false: hosting it, which can't be come back to)
+function wnRjRecord() {
+  if (!WAR.on || !WAR.net || !WN.code || !WN.g || WAR.result) return null;
+  if (WAR.net !== 'client') return false;
+  return { k: 'war', code: WN.code, at: WN.at, g: WN.g, label: `${wnClean((WN.st && WN.st.hum[0] && WN.st.hum[0][1]) || 'Someone').slice(0, 18)}’s war (Drowned Reach)` };
+}
+function wnRjLive(r) { return NET.peers.some(p => { const w = wnWar(p); return w && w.room === r.code && w.st && w.st.g === r.g && fresh(p) && !(p.isMe && p.sameTab); }); }
+const wnRjFor = code => { const r = typeof rjGet === 'function' ? rjGet() : null; return r && r.k === 'war' && r.code === code && r.sid === NET.sid ? r : null; };
+// back into the war's room, in the same place; warNetPeers takes it from there once the host's word arrives
+function wnRejoin(r) {
+  if (!wnOnline() || WAR.on || !r) return false;
+  WN.code = r.code; WN.at = +r.at || Date.now(); WN.msg = ''; WN.doneG = null; WN.rjWant = r;
+  wnSendLobby(); wnRender();
+  setTimeout(() => { if (WN.rjWant === r && !WAR.on) { WN.rjWant = null; if (typeof rjClear === 'function') rjClear(); WN.msg = 'That war has ended.'; wnLeave(); } }, 10000);
+  return true;
 }
 
 // leaving a war (or its end): out of the room as well

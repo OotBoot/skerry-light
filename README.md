@@ -204,7 +204,7 @@ You earn one for every 400 tiles you take (the count carries over between wars),
 
 ### Drowned Reach, together
 
-`src/warnet.js`. Under the solo setup on the title card is **Play together**: host a war, and anyone else with the page open sees it listed and can join, up to ten players. The host picks how many bot nations (none to fifty) and how they play, and starts whenever they like, alone or with everyone in the lobby. Everyone chooses a landing and taps Ready; all land together when everyone is ready or the clock runs out. Players can offer each other pacts (each offer waits half a minute for an answer) as well as the bots. The war runs at 1× and doesn't pause, and it ends for everyone when one nation holds six tenths of the land or stands alone (or no player is left). A player who leaves for more than 25 seconds hands their nation to a bot; if the host leaves, the war ends.
+`src/warnet.js`. Under the solo setup on the title card is **Play together**: host a war, and anyone else with the page open sees it listed and can join, up to ten players. The host picks how many bot nations (none to fifty) and how they play, and starts whenever they like, alone or with everyone in the lobby. Everyone chooses a landing and taps Ready; all land together when everyone is ready or the clock runs out. Players can offer each other pacts (each offer waits half a minute for an answer) as well as the bots. The war runs at 1× and doesn't pause, and it ends for everyone when one nation holds six tenths of the land or stands alone (or no player is left). A player who leaves for more than 25 seconds hands their nation to a bot; if the host leaves, the war ends. A player who drops out can rejoin and take their nation back (see Rejoining a game in progress).
 
 How it works: the host's browser runs the whole war, the same code as a game alone. Everyone starts from the same seed and settings, so the map, names and the bots' first landings are built identically everywhere and never sent. The host streams what changes through its room presence (4 KiB at most, ten times a second): a header (clock, tide, beam, phase, pact offers, the end), the nations a chunk at a time, the map's owners as run-length-coded rows (changed rows first, then a slow sweep of the rest so anything missed is put right), the buildings a stretch of the map at a time, attacks, boats and flares, and log lines marked for everyone or for one player. The others only draw what they're sent, and send their orders back in their own presence as a short numbered list, so none is applied twice. On the self-hosted server, everyone in one war hears each other at full rate, and everyone else gets only the lobby listing, not the stream.
 
@@ -593,6 +593,20 @@ Every mode with a lobby has a **Share invite** button: the crew screen (Skerry L
 - On claude.ai the link is the game's page itself, as everyone there plays in the page's own room: your friend opens it and taps your lobby in the list.
 - Links look like `https://skerry-light.onrender.com/?mode=raid&lobby=z1ab2cd` (modes: sail, wreckers, war, lighthouse, raid). Old crew links ending in `#gannet-12` still work.
 
+## Rejoining a game in progress
+
+Drop out of a game you're playing with others (you reload the page, the browser crashes, your phone sleeps or loses signal) and you can get back into the same game as the same player. This works in every mode you can play together: crews in Skerry Light, Wreckers' Night, Drowned Reach, Keeper's Last Light and both raids (Maren's End and The Gannet's Wake).
+
+- **The Rejoin bar.** Open the game again, in the same browser, within fifteen minutes. While the game you left is still going, a bar at the top of the main menu says so; tap **Rejoin** to go straight back in, or **Not now** to forget it. It works after a reload or in a new tab, as long as the old tab is closed (a tab that's still open keeps its own place).
+- **From the lobby or a link.** The lobby list marks a game you dropped out of "under way · tap to rejoin", and your old invite link takes you back in too.
+- **What comes back.**
+  - Keeper's Last Light and the raids: your points (and anything the host credited you while you were gone), your weapons and ammunition, your tonics, reforged weapons, your calling and your ultimate's charge, your MVP numbers, where you stood (if it's still the same part of the raid), your health, and whether you were down or out until the next round.
+  - Drowned Reach: your nation, as it is now. If you were gone long enough for a bot to take it over, it's handed back to you, and the host sends you the whole map again.
+  - Wreckers' Night: within the same round, your deaths and who took them (which is where everyone's kills are counted from), your weapon, where you stood, your health and your flares. Kills already paid out in crate keys aren't paid again.
+  - Skerry Light crews: your old place in the crew (a host is still the host) and, if the voyage is still being sailed, back out on it where your ship was, with its hull and the voyage's tally.
+- **Everyone else** sees "<name> is back." in the feed or the war's log.
+- **The host.** In Keeper's Last Light, the raids and Drowned Reach the host's browser runs the game, so if the host drops out the game ends for everyone, as before. Wreckers' Night and crews have no such host, so anyone can come back, the crew's host included.
+
 ## Putting it on a website
 
 ### Game and crews together (recommended)
@@ -674,6 +688,7 @@ src/game.js         game state, update step, input and screens
 src/transport.js    connects to the crew server outside claude.ai
 src/net.js          crews: lobby, shared voyages, crewmates' ships
 src/share.js        invite links: the Share invite button in every lobby, and joining from a link
+src/rejoin.js       rejoining a game in progress: the note kept while you play, and the Rejoin bar on the main menu
 src/crates.js       boats, crates, skins and pennants
 src/fps.js          Wreckers' Night, the multiplayer FPS mode
 src/fpsisle.js      Wreckers' Night: the islands (three in the rotation), their props, cover, floors and 3D ground
