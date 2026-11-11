@@ -76,9 +76,10 @@ function rmvMine() {
   return RMV_KEYS.map(k => Math.max(0, Math.round((s[k] || 0) * (k === 'air' || k === 'br' ? 10 : 1))));
 }
 const rmvUnpack = a => Object.fromEntries(RMV_KEYS.map((k, i) => [k, (+(a && a[i]) || 0) / (k === 'air' || k === 'br' ? 10 : 1)]));
-const rmvEnded = () => (typeof RF !== 'undefined' && RF.on && (RF.st === 'won' || ZM.over)) || (typeof GCW !== 'undefined' && GCW.on && (GCW.st === 'won' || ZM.over));   // [gannet] (or Captain Crane down)
+const rmvEnded = () => (typeof RF !== 'undefined' && RF.on && (RF.st === 'won' || ZM.over)) || (typeof GCW !== 'undefined' && GCW.on && (GCW.st === 'won' || ZM.over))   // [gannet] (or Captain Crane down)
+  || (typeof FR !== 'undefined' && FR.on && (FR.won || ZM.over));   // [fogrun] (or a fog run won)
 // (have I taken the last boss's token: Maren's, or the Captain's) [gannet]
-const rmvTook = () => typeof GCW !== 'undefined' && GCW.on ? !!GCW.mine : !!RF.mine;
+const rmvTook = () => typeof FR !== 'undefined' && FR.on ? true : typeof GCW !== 'undefined' && GCW.on ? !!GCW.mine : !!RF.mine;   // [fogrun] (no token to take there yet)
 
 // ---------- together ----------
 function rmvPresence(z) { if (typeof RAID !== 'undefined' && RAID.on && rmvEnded()) { z.ms = rmvMine(); z.mt = rmvTook() ? 1 : 0; } }   // [gannet]
@@ -232,8 +233,8 @@ function rmvRender() {
   RMV.key = JSON.stringify(L);
   const P = RMV.P = rmvRank(L), me = FPS.me.id;
   const n = P.length, tok = typeof ptTokens === 'function' ? ptTokens() : 0;
-  { const ey = document.querySelector('#rmvOver .rmvhead .eyebrow'); if (ey) ey.textContent = `${typeof raidName === 'function' ? raidName() : 'Maren’s End'} · won`; $('rmvHead').textContent = typeof RAID !== 'undefined' && RAID.map === 'gannet' ? 'Captain Crane goes down with his ship' : 'Maren is laid to rest'; }   // [gannet] (each raid its own words)
-  $('rmvSub').textContent = `${n > 1 ? n + ' of you, ' : ''}all three parts in ${typeof raidClock === 'function' ? raidClock(RAID.t) : Math.round(RAID.t) + ' s'}. ${P[0] ? (P[0].id === me ? 'You were the best of the night.' : P[0].n + ' was the best of the night.') : ''}`;
+  { const ey = document.querySelector('#rmvOver .rmvhead .eyebrow'); if (ey) ey.textContent = `${typeof raidName === 'function' ? raidName() : 'Maren’s End'} · won`; $('rmvHead').textContent = typeof RAID !== 'undefined' && RAID.map === 'fogrun' ? 'The lights are lit again' : typeof RAID !== 'undefined' && RAID.map === 'gannet' ? 'Captain Crane goes down with his ship' : 'Maren is laid to rest'; }   // [gannet] (each raid its own words) [fogrun]
+  $('rmvSub').textContent = `${n > 1 ? n + ' of you, ' : ''}${typeof FR !== 'undefined' && FR.on ? (FR.lit | 0) + ' islands lit' : 'all three parts'} in ${typeof raidClock === 'function' ? raidClock(RAID.t) : Math.round(RAID.t) + ' s'}. ${P[0] ? (P[0].id === me ? 'You were the best of the night.' : P[0].n + ' was the best of the night.') : ''}`;
   $('rmvToken').textContent = tok > 0 ? `Spend your pirate token (${tok})` : 'The Gannet’s Locker';
   $('rmvAgain').textContent = ZM.net ? 'Play again (to the lobby)' : 'Play again';
   const box = $('rmvCards'); box.textContent = '';

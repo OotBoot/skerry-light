@@ -1007,6 +1007,12 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 .newgame.rdbanner { border-color: rgba(120,190,255,0.5); background: linear-gradient(90deg, rgba(90,150,220,0.28), rgba(90,150,220,0.08)); }
 .newgame.rdbanner:hover, .newgame.rdbanner:focus-visible { background: linear-gradient(90deg, rgba(90,150,220,0.42), rgba(90,150,220,0.16)); }
 .newgame.rdbanner .ng-tag { background: #4a86c8; color: #f2f8ff; }
+/* [fogrun] Fog Run (src/frrun.js): its card and its banner, a beacon's warm light in the haar's grey */
+.frcard { border-color: rgba(190,200,210,0.45); }
+.frcard h1 { color: #ffd8a0; text-shadow: 0 0 28px rgba(200,212,224,0.4); }
+.newgame.frbanner { border-color: rgba(190,200,210,0.5); background: linear-gradient(90deg, rgba(150,165,180,0.28), rgba(150,165,180,0.08)); }
+.newgame.frbanner:hover, .newgame.frbanner:focus-visible { background: linear-gradient(90deg, rgba(150,165,180,0.42), rgba(150,165,180,0.16)); }
+.newgame.frbanner .ng-tag { background: #8a9aaa; color: #f6f8fa; }
 
 /* Maren's End: the three callings (src/rclass.js): the picker, and the grenade and ultimate buttons on a touch screen */
 .rcpick .card { max-width: 60rem; width: min(60rem, calc(100vw - 32px)); max-height: calc(100vh - 32px); overflow-y: auto; }
@@ -1118,6 +1124,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
     <button class="newgame warbanner" id="warBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">And another, <b>Drowned Reach</b>: a war for the islands, alone or with up to ten players</span><span class="ng-go" aria-hidden="true">↓</span></button>
     <button class="newgame zmbanner" id="zmBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">And a fourth, <b>Keeper's Last Light</b>: hold the keeper's station against the drowned, round after round</span><span class="ng-go" aria-hidden="true">↓</span></button>
     <button class="newgame rdbanner" id="rdBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">And raids, alone or with up to four: <b>Maren's End</b>, and new, <b>The Gannet's Wake</b></span><span class="ng-go" aria-hidden="true">↓</span></button>
+    <button class="newgame frbanner" id="frBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">And <b>Fog Run</b>: sail the keeper's cutter out into the haar and light the islands, alone or with up to four</span><span class="ng-go" aria-hidden="true">↓</span></button>
     <button class="tool notesbtn" id="notesBtn" type="button">Patch notes</button>
     <div class="card boardcard" id="boardCard" aria-labelledby="boardHead">
       <div class="cardtop"><span class="eyebrow">Best on record · every game</span><button class="tool closebtn" id="boardRefresh" type="button">Refresh</button></div>
@@ -1338,6 +1345,39 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
         <p><b>The drowned.</b> Down here they glow, a cold blue, and they climb up out of the rock to come for you. You carry a pepperbox and a blunderbuss, and the weapon and outfit crates are earned here as at the Lighthouse.</p>
         <p><b>The door.</b> At the end of the Deep Path a door glows in the rock. Send back twenty of the drowned inside the ring in front of it and it opens; go through. Together, anyone who goes down gets up again when a friend holds Use beside them, and anyone who bleeds out comes back when the next brazier is lit.</p>
         <p><b>The board.</b> Each raid's line on the scoreboard keeps your best time through the whole raid, the most damage you've done to its bosses in one raid, and everyone you've sent back in all your raids.</p>
+      </details>
+    </div>
+    <div class="card zmcard frcard" id="frTitle" aria-labelledby="frHead"><!-- [fogrun] its own card (src/frrun.js) -->
+      <div class="cardtop"><span class="eyebrow">A sixth game · a voyage through the haar · alone or up to four</span></div>
+      <h1 id="frHead">Fog Run</h1>
+      <p>On the fogbound nights of 1889 the Light can't reach past the skerries, and something out in the haar has been putting out the lights of the outer rocks one by one. Take the keeper's cutter out into the fog and light them again.</p>
+      <p class="muted">Sail through the rocks to an island, beach her and go ashore. Light the island's beacon and hold the drowned off it for a minute; its light goes up through the fog, and you're back aboard for the next. The fog gets thicker the further out you go, and every run is different. Alone, going down ends the run. Together, each of you has one extra life, and then you're lost in the fog until the next light is lit.</p>
+      <div class="btnrow">
+        <button class="primary" id="frPlay" type="button">Set out</button>
+        <button class="tool" id="frWcrate" type="button">Weapon crates</button>
+        <button class="tool" id="frOcrate" type="button">Outfit crates</button>
+        <button class="tool" id="frSettings" type="button">Settings</button>
+      </div>
+      <section class="warmp zmmp" id="frMp" aria-labelledby="frMpHead">
+        <h2 id="frMpHead">Play together · up to four</h2>
+        <p class="muted" id="frMpNote">Looking for other players…</p>
+        <div class="nickrow"><label for="frNick">Your name</label><input id="frNick" type="text" maxlength="16" autocomplete="nickname" placeholder="Keeper"></div>
+        <div id="frMpOpen" hidden>
+          <div class="btnrow"><button class="tool" id="frMpHost" type="button">Host a run</button></div>
+          <div class="warlobbies" id="frLobbies"></div>
+        </div>
+        <div class="warlobby" id="frLobby" hidden>
+          <h3 id="frLobbyHead">Your run</h3>
+          <ol class="warlobbylist" id="frLobbyList"></ol>
+          <p class="muted" id="frLobbyMsg"></p>
+          <div class="btnrow"><button class="primary" id="frMpStart" type="button">Set out together</button><button class="tool shareBtn" id="frMpShare" type="button" data-mode="fogrun">Share invite</button><button class="tool" id="frMpLeave" type="button">Leave</button></div>
+        </div>
+      </section>
+      <details class="howto">
+        <summary>How to play</summary>
+        <p><b>The sail.</b> One of you takes the wheel (Use at it): A and D steer, W makes sail, S shortens it. The rocks only show inside the fog, in the Light's beam and under a flare from the locker aft. Hit one and a plank stoves in: hold Use at the hole to patch it before she floods. The ship's bell at the mast sinks the drowned climbing her side. The next island is the mark on the strip at the top of the screen; she runs up on its beach once you're close.</p>
+        <p><b>The island.</b> Light its beacon (hold Use at it, near the middle) and hold the drowned off it for a minute. If they crowd it they put it out: light it again, and the clock carries on from where it stopped. Once it's held, its light goes up through the fog and you're back aboard.</p>
+        <p><b>Lives.</b> Alone, going down ends the run. Together, someone holding Use beside you gets you up; bleed out and your extra life (the lamp by your stamina) brings you back on your feet ten seconds later. After that you're lost in the fog, watching the others, until the island's light is lit. If everyone is lost at once, or the cutter goes down, the run is over.</p>
       </details>
     </div>
   </div>
@@ -21596,6 +21636,7 @@ function zmPlayers() {
 // everyone down at once, or gone: the night is over
 function zmCheckOver() {
   if (!ZM.net || ZM.over) return;
+  if (typeof frCheckOver === 'function' && typeof FR !== 'undefined' && FR.on) { frCheckOver(); return; }   // [fogrun] (there it's over when everyone's lost in the fog)
   const m = FPS.me;
   if (!(m.dead > 0) && !zmIsDown()) return;
   for (const r of FPS.remote.values()) if (!r.dead && !r.down && !r.left) return;
@@ -22480,8 +22521,9 @@ function zmReviver() {
 }
 // the time on the floor ran out and nobody came: out until the next round
 function zmBleedOut() {
-  const m = FPS.me;
+  const m = FPS.me, kit = ZM.downKit;
   ZM.downT = 0; ZM.ghost = true; ZM.downKit = null; m.dead = FPSC.RESPAWN - 0.6; m.reload = 0; FPS.scoped = false;
+  if (typeof frBledOut === 'function' && typeof FR !== 'undefined' && FR.on) { frBledOut(kit); return; }   // [fogrun] an extra life, or lost in the fog (src/frrun.js)
   fpsFeed('You bled out. You’ll be back next round, if anyone holds that long.');
 }
 // up again (a friend got to you): your own weapons back in your hands
@@ -30395,6 +30437,8 @@ function zhHud() {
 // (hosting or alone) lays out the next, and everyone follows the stage number in the host's word. Past the last, the
 // raid is won.
 
+// [fogrun] the islands' own size (src/frisle.js: map.R), put back to this once the part's done
+var FPSC_R0 = FPSC.R;
 const RAID = { on: false, map: 'raid', stage: 0, won: false, st: {}, t: 0, boss: 0, told: false, sta: 1, tired: false };
 const RAID_STAGES = {};
 // RAID_ORDER is the raid being played's parts, in order. Maren's End's own files push theirs straight into it as they
@@ -30444,11 +30488,14 @@ FPI_GEN.raid = {
 };
 // the stage's map into ZM_MAPS.raid (before src/zombies.js lays it out)
 function raidMapFor(i) {
-  const S = RAID_STAGES[RAID_ORDER[i]], D = ZM_MAPS[RAID.map] || ZM_MAPS.raid, M = S.map || {};
+  const S = RAID_STAGES[RAID_ORDER[i]], D = ZM_MAPS[RAID.map] || ZM_MAPS.raid;
+  if (S.prep) S.prep(i);   // [fogrun] (a part laid out from the run's plan reads its entry first: src/frrun.js)
+  const M = S.map || {};
   D.zones = M.zones || {}; D.start = (M.start || [0, 0]).slice(); D.top = M.top || 0; D.nav = M.nav || [-80, 80, -80, 80];
   // (its own look and sea, if it has them: a part out in the open lays itself out from its own FPI_GEN, as FPI_GEN.raid)
   D.isle = M.isle || 'raid'; D.shore = M.shore || (() => -999);
-  D.seed = (RAID.map === 'raid' ? 0x5a11c : 0x6a77e) + i * 977;
+  D.seed = RAID.map === 'fogrun' && typeof frSeedOf === 'function' ? frSeedOf(i) : (RAID.map === 'raid' ? 0x5a11c : 0x6a77e) + i * 977;   // [fogrun] (from the run's seed)
+  FPSC.R = M.R || FPSC_R0;   // [fogrun] (an island of its own size)
 }
 
 // ---------- starting, and each frame ----------
@@ -30460,6 +30507,7 @@ function raidBegin(map) {
   if (!RAIDS.raid.order) RAIDS.raid.order = RAID_ORDER.slice();
   RAID.map = RAIDS[map] && RAIDS[map].order.length ? map : 'raid';
   RAID_ORDER.length = 0; RAID_ORDER.push(...raidInfo().order);
+  if (typeof frBegin === 'function') frBegin();   // [fogrun] its seed, and its first stop (src/frrun.js)
   Object.assign(RAID, { stage: 0, won: false, st: {}, t: 0, boss: 0, told: false, sta: 1, tired: false, tiredN: 0, runNow: false, practice: 0 });   // (practice: src/raidmaren2.js rf2Practice)
   if (typeof rmvReset === 'function') rmvReset();   // [mvp] src/raidmvp.js
   raidMapFor(0);
@@ -30473,6 +30521,7 @@ function raidAfterStart() {
   raidLoadout();
   if ($('rclEye')) $('rclEye').textContent = raidName();   // (the callings' picker: which raid)
   RAID.st = {}; raidCall('enter');
+  if (typeof frAfterStart === 'function' && FR.on) frAfterStart();   // [fogrun]
 }
 const RAIDC = { ROUND: 4, CALM: 0.7, BOSS_HP: 1.15 };   // (BOSS_HP: every boss's strength here, against the Lighthouse's)
 // what you carry down: a pepperbox and a blunderbuss, both full (and Maren's Lantern, which never leaves your hand)
@@ -30487,7 +30536,8 @@ function raidLoadout() {
 function raidRespawn() { if (!ZM.ghost) return; zmRoundBegins(); raidLoadout(); fpsFeed('You’re back on your feet.'); }
 function raidStop() {
   if (RAID.on) raidCall('exit');
-  RAID.on = false;
+  RAID.on = false; FPSC.R = FPSC_R0;   // [fogrun]
+  if (typeof frStop === 'function') frStop();   // [fogrun]
   if (typeof GL3D !== 'undefined' && GL3D.scene && RAID.fog0) { GL3D.scene.fog = null; RAID.fog0 = null; }
 }
 // alone or hosting, each frame
@@ -30523,6 +30573,7 @@ function raidStaminaHud(x, by, bw, bh, phone, mono) {
   ctx.font = mono(phone ? 9 : 10); ctx.textAlign = 'left'; ctx.textBaseline = 'bottom'; ctx.fillStyle = tired ? '#e8a080' : 'rgba(236,228,207,0.65)';
   ctx.fillText(tired ? 'OUT OF BREATH' : 'STAMINA', x, by - 3);
   ctx.textBaseline = 'alphabetic';
+  if (typeof frLifeHud === 'function') frLifeHud(x + bw + 10, by, bh, phone, mono);   // [fogrun] the extra life, a lamp
 }
 // how fast you can go, as a share of your own pace (zmSpeedK): a stage's own say, Maren's Weight in the Swallow
 function raidSpeedK() { if (!RAID.on) return 1; const S = raidStage(); return S && S.speedK ? S.speedK() : 1; }
@@ -30533,6 +30584,7 @@ function raidMe(dt) {
   if (ZM.net === 'client') { const est = RAID.t + Math.min(1, Math.max(0, performance.now() / 1000 - (RAID.tAt || 0))), e = est - ((RAID.ct || 0) + dt);
     RAID.ct = Math.abs(e) > 2 ? est : (RAID.ct || 0) + dt + e * Math.min(1, dt * 1.5); } else RAID.ct = RAID.t;
   raidCall('me', dt);
+  if (typeof frMe === 'function' && FR.on) frMe(dt);   // [fogrun] the wait for your extra life
   if (typeof rclTick === 'function') rclTick(dt);   // [classes] src/rclass.js
   if (typeof rmvTick === 'function') rmvTick(dt);   // [mvp] src/raidmvp.js: what each of you did, counted
   // joined: the host's world has moved on to the next part
@@ -30555,6 +30607,7 @@ function raidShot(x, y, z, lh, lp, by, dmg) { if (RAID.on) raidCall('shot', x, y
 // alone or hosting: on to the next part, or (past the last) the raid is won
 function raidNextStage() {
   if (!RAID.on || ZM.net === 'client' || ZM.over) return;
+  if (typeof frGrow === 'function' && FR.on && RAID.stage + 1 >= RAID_ORDER.length) frGrow();   // [fogrun] the next stage, chosen now
   if (RAID.stage + 1 >= RAID_ORDER.length) { raidWin(); return; }
   raidUseStage(RAID.stage + 1);
 }
@@ -30574,10 +30627,10 @@ function raidUseStage(i) {
   m.x = FPSC.CX + ZMD.START[0] + [0, 1.5, -1.5, 0][slot % 4]; m.y = FPSC.CY + ZMD.START[1] + [0, -1.6, -1.6, 1.8][slot % 4];
   m.jz = m.fl = ZMD.TOP; m.vz = 0; m.protect = 2;
   // everyone through the door is back up: the bled-out with their kit again, the downed on their feet
-  if (ZM.ghost) { ZM.ghost = false; m.dead = 0; m.hp = ZMC.HP; raidLoadout(); }
+  if (ZM.ghost && !(typeof frStageGhost === 'function' && frStageGhost())) { ZM.ghost = false; m.dead = 0; m.hp = ZMC.HP; raidLoadout(); }   // [fogrun] (there, the lost stay lost)
   if (zmIsDown()) zmGetUp();
   RAID.st = {}; raidCall('enter');
-  ZM.banner = { text: RAID_STAGES[RAID_ORDER[i]].n, t: 4, sub: 'Part ' + raidNumeral(i + 1) };
+  { const S = RAID_STAGES[RAID_ORDER[i]]; ZM.banner = S.banner ? S.banner() : { text: S.n, t: 4, sub: 'Part ' + raidNumeral(i + 1) }; }   // [fogrun] (a part can say its own)
   if (i === 0 || RAID.map === 'raid') fpsFeed(MAP.land(0));   // (the Gannet's Wake: each part says its own as it begins)
 }
 const raidNumeral = n => ['', 'I', 'II', 'III', 'IV', 'V', 'VI'][n] || String(n);
@@ -30606,6 +30659,7 @@ function raidShowOver() {
   $('zmOverStats').textContent = (ZM.net ? `${ZM.hum.length} of you. ` : '') + `${cleared} of ${RAID_ORDER.length} ${RAID_ORDER.length === 1 ? 'part' : 'parts'} cleared, in ${raidClock(RAID.t)}. ${ZM.kills} of the drowned sent back (${ZM.heads} through the head)`
     + (RAID.boss > 0 ? `, ${Math.round(RAID.boss)} damage to its bosses.` : '.') + (RAID.won && RAID_ORDER.length < 3 ? ` The rest of ${raidName()} is still to come.` : '');
   const best = typeof BOARD !== 'undefined' && BOARD.mine && BOARD.mine[RAID.map];
+  if (typeof frOverStats === 'function' && FR.on) $('zmOverStats').textContent = frOverStats();   // [fogrun]
   $('zmOverBest').textContent = best && (best.s || best.c) ? (best.s ? `Your best time: ${raidTimeOf(best.s)}. ` : '') + `${best.c | 0} sent back in all your raids.` : '';
   $('zmOver').hidden = false;
   try { document.exitPointerLock && document.exitPointerLock(); } catch (e) {}
@@ -30619,10 +30673,12 @@ function raidHostSend(z) {
   if (!RAID.on) return;
   z.rd = [RAID.stage, RAID.won ? 1 : 0, Math.round(RAID.t * 20) / 20];   // (to a twentieth: what swings on it is timed by it)
   const o = {}; raidCall('pack', o); z.rs = o;
+  if (typeof frPack === 'function' && FR.on) frPack(z);   // [fogrun] the run: its plan, its events
   if (typeof rmvPack === 'function') rmvPack(z);   // [mvp]
 }
 function raidApply(hz) {
   if (!RAID.on || !Array.isArray(hz.rd)) return;
+  if (typeof frApplyRun === 'function' && FR.on) frApplyRun(hz);   // [fogrun] (first: the plan, so the stage number below lays out what the host has)
   const st = clamp(hz.rd[0] | 0, 0, RAID_ORDER.length - 1);
   if (st !== RAID.stage) raidUseStage(st);
   RAID.won = !!hz.rd[1]; RAID.t = +hz.rd[2] || RAID.t; RAID.tAt = performance.now() / 1000;
@@ -30730,18 +30786,19 @@ function raidHud(phone, mono, fell) {
   ctx.textAlign = 'left'; ctx.textBaseline = 'top';
   const L = Math.max(14, FPS.safeLeft || 0);
   ctx.font = fell(phone ? 15 : 19); ctx.fillStyle = 'rgba(236,228,207,0.85)';
-  ctx.fillText(`${raidName()} · ${raidNumeral(RAID.stage + 1)} · ${S.n}`, L, top, W * 0.5);
+  ctx.fillText(typeof frHudTitle === 'function' && FR.on ? frHudTitle(S) : `${raidName()} · ${raidNumeral(RAID.stage + 1)} · ${S.n}`, L, top, W * 0.5);   // [fogrun]
   ctx.font = mono(phone ? 10 : 12); ctx.fillStyle = 'rgba(236,228,207,0.55)';
   ctx.fillText(raidClock(RAID.t), L, top + (phone ? 18 : 26));
   fpsHudNote(top + (phone ? 30 : 40));
   raidCall('hud', phone, mono, fell);
+  if (typeof frHud === 'function' && FR.on) frHud(phone, mono, fell);   // [fogrun] lost, or waiting on your extra life
 }
 
 // ---------- its card on the title screen ----------
 // Which raid: the picker at the top of the card. Each raid's own words on the card are in [data-raid] blocks, shown
 // for the one picked; together, the host's pick goes out with its lobby (src/zmnet.js znMap), as the Lighthouse's map.
 function raidPick(id) {
-  if (!RAIDS[id] || (typeof ZN !== 'undefined' && ZN.code && !znAmHost())) return;
+  if (!RAIDS[id] || RAIDS[id].own || (typeof ZN !== 'undefined' && ZN.code && !znAmHost())) return;   // [fogrun] (a raid that's a game of its own, Fog Run, isn't on this card)
   RD_PICK = id; try { localStorage.setItem('skerry-rd-raid', id); } catch (e) {}
   raidCard();
   if (typeof ZN !== 'undefined' && ZN.code && typeof znSendLobby === 'function') znSendLobby();
@@ -34944,7 +35001,7 @@ function rmWant() {
   if (!RAID.on) RM.fell = RM.wonDone = false;
   // Maren down: the sunset, played once through (on to the end card), then quiet
   // (the Gannet's Wake has its own: dawn after the Captain goes down, gwwin)
-  const WIN = RAID.map === 'gannet' ? 'gwwin' : 'raidwin';
+  const WIN = RAID.map === 'gannet' || RAID.map === 'fogrun' ? 'gwwin' : 'raidwin';   // [fogrun] (dawn, until it has its own)
   if (RAID.on && (RAID.won || (RAID_ORDER[RAID.stage] === 'fort' && typeof RF !== 'undefined' && RF.st === 'won') || (RAID_ORDER[RAID.stage] === 'gwcapt' && typeof GCW !== 'undefined' && GCW.st === 'won'))) { if (RM.cur === WIN && RM.done) RM.wonDone = true; return RM.wonDone ? null : WIN; }
   if (!RAID.on || ZM.over) return null;
   { const v = typeof rvMusic === 'function' ? rvMusic() : undefined; if (v !== undefined) return v; }   // [verity] (src/raidverity.js)
@@ -35104,9 +35161,10 @@ function rmvMine() {
   return RMV_KEYS.map(k => Math.max(0, Math.round((s[k] || 0) * (k === 'air' || k === 'br' ? 10 : 1))));
 }
 const rmvUnpack = a => Object.fromEntries(RMV_KEYS.map((k, i) => [k, (+(a && a[i]) || 0) / (k === 'air' || k === 'br' ? 10 : 1)]));
-const rmvEnded = () => (typeof RF !== 'undefined' && RF.on && (RF.st === 'won' || ZM.over)) || (typeof GCW !== 'undefined' && GCW.on && (GCW.st === 'won' || ZM.over));   // [gannet] (or Captain Crane down)
+const rmvEnded = () => (typeof RF !== 'undefined' && RF.on && (RF.st === 'won' || ZM.over)) || (typeof GCW !== 'undefined' && GCW.on && (GCW.st === 'won' || ZM.over))   // [gannet] (or Captain Crane down)
+  || (typeof FR !== 'undefined' && FR.on && (FR.won || ZM.over));   // [fogrun] (or a fog run won)
 // (have I taken the last boss's token: Maren's, or the Captain's) [gannet]
-const rmvTook = () => typeof GCW !== 'undefined' && GCW.on ? !!GCW.mine : !!RF.mine;
+const rmvTook = () => typeof FR !== 'undefined' && FR.on ? true : typeof GCW !== 'undefined' && GCW.on ? !!GCW.mine : !!RF.mine;   // [fogrun] (no token to take there yet)
 
 // ---------- together ----------
 function rmvPresence(z) { if (typeof RAID !== 'undefined' && RAID.on && rmvEnded()) { z.ms = rmvMine(); z.mt = rmvTook() ? 1 : 0; } }   // [gannet]
@@ -35260,8 +35318,8 @@ function rmvRender() {
   RMV.key = JSON.stringify(L);
   const P = RMV.P = rmvRank(L), me = FPS.me.id;
   const n = P.length, tok = typeof ptTokens === 'function' ? ptTokens() : 0;
-  { const ey = document.querySelector('#rmvOver .rmvhead .eyebrow'); if (ey) ey.textContent = `${typeof raidName === 'function' ? raidName() : 'Maren’s End'} · won`; $('rmvHead').textContent = typeof RAID !== 'undefined' && RAID.map === 'gannet' ? 'Captain Crane goes down with his ship' : 'Maren is laid to rest'; }   // [gannet] (each raid its own words)
-  $('rmvSub').textContent = `${n > 1 ? n + ' of you, ' : ''}all three parts in ${typeof raidClock === 'function' ? raidClock(RAID.t) : Math.round(RAID.t) + ' s'}. ${P[0] ? (P[0].id === me ? 'You were the best of the night.' : P[0].n + ' was the best of the night.') : ''}`;
+  { const ey = document.querySelector('#rmvOver .rmvhead .eyebrow'); if (ey) ey.textContent = `${typeof raidName === 'function' ? raidName() : 'Maren’s End'} · won`; $('rmvHead').textContent = typeof RAID !== 'undefined' && RAID.map === 'fogrun' ? 'The lights are lit again' : typeof RAID !== 'undefined' && RAID.map === 'gannet' ? 'Captain Crane goes down with his ship' : 'Maren is laid to rest'; }   // [gannet] (each raid its own words) [fogrun]
+  $('rmvSub').textContent = `${n > 1 ? n + ' of you, ' : ''}${typeof FR !== 'undefined' && FR.on ? (FR.lit | 0) + ' islands lit' : 'all three parts'} in ${typeof raidClock === 'function' ? raidClock(RAID.t) : Math.round(RAID.t) + ' s'}. ${P[0] ? (P[0].id === me ? 'You were the best of the night.' : P[0].n + ' was the best of the night.') : ''}`;
   $('rmvToken').textContent = tok > 0 ? `Spend your pirate token (${tok})` : 'The Gannet’s Locker';
   $('rmvAgain').textContent = ZM.net ? 'Play again (to the lobby)' : 'Play again';
   const box = $('rmvCards'); box.textContent = '';
@@ -35458,18 +35516,31 @@ function gwGo(key) { if (!RAID.on || RAID.map !== 'gannet' || ZM.net === 'client
 // Hooks in shared files, each marked [gannet]: src/fps.js (at the helm the move keys steer: gwsHelm; the sea's sound
 // out here), src/gl3d.js (the sea in the cutter's frame: gwsGL, and its shader's frame uniforms), src/gfx.js (the stars
 // turn with her: GFX.skyTurn), src/fpsisle.js (no ground under the deck: T.noGround).
+// [fogrun] Fog Run's sailing legs (src/frsail.js) are this same stage with a few things changed, through GWS_LEG (below):
+// where she sets out from and the island she's to beach on, the rocks from the run's seed, the fog, and no Maren or
+// Plimsoll. Her sailing is never touched: her top speed and how quick she gathers way are the Brig's, always.
 
 const GWS = {
   D: 1.3, HB: 3.3, STERN: -11, BOW: 11.4, SPRIT: 15.6,   // (the deck's height over the ground; her half beam, stern, stem and bowsprit's end)
   MAST: [0, 3.2], MAST_H: 13.5, WHEEL: [0, -8.2], STAND: [0, -9.2], LOCKER: [2.0, -10.1], BELL: [0, 3.62],
   START: [30, 62], H0: 0.05, SAIL0: 0.36,                  // (where she sets out from, the Light's foot; her sail to begin with)
   MARK: [-150, 1680], MARK_R: 32, MARK_IN: 70, RISE: 14,   // (the Gannet's mark: its spars' ring, the ring to hold her in while she rises)
-  BOARD_T: 25, LADDER: [-3.05, 0.6],                       // (after the first of you is aboard, the rest have this long)
+  BOARD_T: 25, LADDER: [-3.05, 0.6], BEACH: 2.6,            // ([fogrun] BEACH: run up on an island's beach, this long before you're ashore)                       // (after the first of you is aboard, the rest have this long)
   PLANKS: 4, FLOOD: 1 / 42, PUMP: 1 / 55, PATCH: 2.2, SINK: 3.2,
   BELL_CD: 16, BELL_PUSH: 3, BELL_SINK: 26, FLARE_CD: 35, FLARE_T: 7, FLARE_R: 350,
   LANT_R: 26, SPEC: 1.2,                                   // (how far the deck lantern shows a rock, dimly)
   ROCKS: 150, IMPACT: 5,
 };
+// [fogrun] A leg of Fog Run's (src/frsail.js), or null for the Gannet's Wake. Set as the leg is laid out, before anything
+// of the sea is made, and dropped when it's left. Its say: start [x, y] and h0 (where she sets out from, and her heading),
+// mark [x, y] (the island she's to beach on, isleR across; markIn: how near counts as there), seed and rocks (the rocks,
+// from the run's seed, that many, along the way), fog (m: a rock shows inside it, as well as in the beam or a flare),
+// maren and plim (false: neither of them out there), line(S, dm) (the HUD's line), landSay, arrive() (hosting or
+// alone: once she's run up on the beach), b3(SG, GW3) and f3(dt, V) (the island's own 3D, in the sea's group).
+var GWS_LEG = null;
+const gwsMark = () => GWS_LEG ? GWS_LEG.mark : GWS.MARK;
+const gwsMaren = () => !GWS_LEG || !!GWS_LEG.maren;
+const gwsPlim = () => !GWS_LEG || !!GWS_LEG.plim;
 // where a hole can open in her deck (local u, v)
 const GWS_HOLES = [[-1.7, 7.2], [1.5, 5.6], [-2.0, 1.2], [1.9, -0.6], [-1.6, -3.9], [1.7, -5.3], [0.9, 8.9], [-1.2, -6.7]];
 // the low places along her rails where the drowned come in over the side: [u, v, nx, ny] (outward)
@@ -35486,13 +35557,14 @@ function gwsHw(v) {
 }
 const gwsW = (u, v) => [FPSC.CX + u, FPSC.CY + v];
 const gwsL = (x, y) => [x - FPSC.CX, y - FPSC.CY];
-const gwsOn = () => RAID.on && RAID_ORDER[RAID.stage] === 'gwsail' && !!RAID.st.B;
+const gwsOn = () => RAID.on && !!(raidStage() || {}).gws && !!RAID.st.B;   // [fogrun] (this stage, or one made from it: S.gws)
 const gwsNick = sid => sid === FPS.me.id ? 'You' : ((ZM.hum || []).find(h => h[0] === sid) || [])[1] || 'Someone';
 // the Brig's own numbers (src/crates.js BOATS): the cutter is never slower than she is
 const gwsBrig = () => (typeof BOAT_BY_ID !== 'undefined' && BOAT_BY_ID.brig) || { accel: 1.3, turn: 1.2, top: 1 };
 
 // ---------- the sea: its rocks, Plimsoll's channel, the mark (the same on every side, from the seed) ----------
 function gwsSea() {
+  if (GWS_LEG) return gwsLegSea(GWS_LEG);   // [fogrun]
   const R = seeded(0x6a77e + 977), rnd = (a, b) => a + R() * (b - a);
   const [sx, sy] = GWS.START, [mx, my] = GWS.MARK, rocks = [];
   const ok = (x, y, r) => y > 120 && Math.hypot(x - sx, y - sy) > 90 && Math.hypot(x - mx, y - my) > GWS.MARK_R + r + 30 && !rocks.some(o => Math.hypot(o.x - x, o.y - y) < o.r + r + 26);
@@ -35513,8 +35585,21 @@ function gwsSea() {
   for (let i = 0; i < 15; i++) { const a = i / 15 * 6.283 + rnd(-0.12, 0.12), d = GWS.MARK_R + rnd(-4, 4); spars.push({ x: mx + Math.sin(a) * d, y: my + Math.cos(a) * d, h: rnd(3, 12), r: rnd(0.18, 0.42), lx: rnd(-0.35, 0.35), ly: rnd(-0.35, 0.35), yard: R() < 0.4, ph: rnd(0, 6.28) }); }
   return { rocks, path, spars, len: Math.hypot(mx - sx, my - sy) };
 }
+// [fogrun] a leg's sea: rocks thick along the way from where she sets out to the island and thinner off it, none close
+// round either end; no spars, and the way straight there (nobody walks it)
+function gwsLegSea(L) {
+  const R = seeded(L.seed), rnd = (a, b) => a + R() * (b - a), [sx, sy] = L.start, [mx, my] = L.mark, rocks = [];
+  const len = Math.hypot(mx - sx, my - sy), ux = (mx - sx) / len, uy = (my - sy) / len;
+  const ok = (x, y, r) => y > 110 && Math.hypot(x - sx, y - sy) > 60 + r && Math.hypot(x - mx, y - my) > L.isleR + r + 30 && !rocks.some(o => Math.hypot(o.x - x, o.y - y) < o.r + r + 20);
+  const add = (x, y, r) => { const prof = []; for (let i = 0; i < 7; i++) prof.push(rnd(0.35, 1)); prof[0] = rnd(0.15, 0.45); prof[6] = rnd(0.15, 0.45); rocks.push({ x, y, r, prof, ph: rnd(0, 6.28), seen: -99, lit: 0, i: rocks.length }); };
+  const at = (t, side) => [sx + ux * len * t - uy * side, sy + uy * len * t + ux * side];
+  for (let n = 0; n < 6000 && rocks.length < L.rocks * 0.6; n++) { const [x, y] = at(rnd(0.05, 1.05), rnd(-70, 70)), r = rnd(4, 12); if (ok(x, y, r)) add(x, y, r); }
+  for (let n = 0; n < 6000 && rocks.length < L.rocks; n++) { const [x, y] = at(rnd(-0.15, 1.3), rnd(-300, 300)), r = rnd(5, 16); if (ok(x, y, r)) add(x, y, r); }
+  const path = []; for (let i = 0; i <= Math.ceil(len / 12); i++) { const t = i / Math.ceil(len / 12); path.push({ x: sx + (mx - sx) * t, y: sy + (my - sy) * t }); }
+  return { rocks, path, spars: [], len };
+}
 let GWS_SEA = null;
-const gwsSeaOf = () => GWS_SEA || (GWS_SEA = gwsSea());
+const gwsSeaOf = () => GWS_LEG ? GWS_LEG.sea || (GWS_LEG.sea = gwsSea()) : GWS_SEA || (GWS_SEA = gwsSea());   // [fogrun] (each leg its own)
 
 // ---------- her sailing (the Brig's, src/game.js update) ----------
 function gwsBoat(x, y, h) { return { x, y, h, v: 3 + GWS.SAIL0 * 12, sail: GWS.SAIL0, rudder: 0, held: 0, inv: 0 }; }
@@ -35674,8 +35759,8 @@ function gwsSpawn(S) {
   try { if (!soundOff()) sfxSplash(gwsPan(sx - FPSC.CX, sy - FPSC.CY, true), Math.max(0.1, 1 - Math.hypot(sx - FPS.me.x, sy - FPS.me.y) / 30)); } catch (e) {}
 }
 // how far out she's come, 0 at the Light's foot to 1 at the mark
-function gwsProg() { const B = RAID.st.B, sea = gwsSeaOf(); return B ? clamp(1 - Math.hypot(GWS.MARK[0] - B.x, GWS.MARK[1] - B.y) / sea.len, 0, 1) : 0; }
-const gwsToMark = B => Math.hypot(GWS.MARK[0] - B.x, GWS.MARK[1] - B.y);
+function gwsProg() { const B = RAID.st.B, sea = gwsSeaOf(), M = gwsMark(); return B ? clamp(1 - Math.hypot(M[0] - B.x, M[1] - B.y) / sea.len, 0, 1) : 0; }
+const gwsToMark = B => { const M = gwsMark(); return Math.hypot(M[0] - B.x, M[1] - B.y); };
 
 // ---------- the props: the cutter (src/fpsisle.js's kinds) ----------
 // all of her that never moves, as one prop at the deck's middle: her deck and its floor, the hull's sides down into the
@@ -35810,13 +35895,13 @@ function gwsFlareFx(S) {
 
 // ---------- the stage ----------
 RAID_STAGES.gwsail = {
-  n: 'The Skerries', map: GWS_MAP, mend: true, zSpeed: 1, open: true,
+  n: 'The Skerries', map: GWS_MAP, mend: true, zSpeed: 1, open: true, gws: true,
   music: () => 'gwsail',   // (its own: a tense shanty at night, low strings, the hull creaking, a far-off bell)
   set(H, K, Z) { gwsLay(H, K, Z); },
   enter() {
-    const sea = gwsSeaOf(), B = gwsBoat(GWS.START[0], GWS.START[1], GWS.H0);
+    const L = GWS_LEG, st0 = L ? L.start : GWS.START, sea = gwsSeaOf(), B = gwsBoat(st0[0], st0[1], L ? L.h0 : GWS.H0);   // [fogrun] (a leg's own start)
     for (const r of sea.rocks) { r.seen = -99; r.flare = 0; }
-    const k0 = Math.max(0, sea.path.findIndex(q => Math.hypot(q.x - GWS.START[0], q.y - GWS.START[1]) >= 80)), p0 = sea.path[k0];
+    const k0 = Math.max(0, sea.path.findIndex(q => Math.hypot(q.x - st0[0], q.y - st0[1]) >= 80)), p0 = sea.path[k0] || sea.path[sea.path.length - 1];
     Object.assign(RAID.st, {
       B, V: Object.assign({}, B), G: null, in: [0, 0], inT: 0, helm: null, myIn: [0, 0], sentIn: null, sentT: 0, ph: 'sail',
       holes: [], flood: 0, hitN: 0, scrN: 0, mar: { st: 0, rb: 0.1, heldT: -99, x: 0, y: 0 }, turn: 0, tellT: 0,
@@ -35827,6 +35912,7 @@ RAID_STAGES.gwsail = {
     });
     { const [mx, my] = gwsMarenAt(RAID.st, B); RAID.st.mar.x = mx; RAID.st.mar.y = my; }
     FPS.helm = false;
+    if (L) return;   // [fogrun] (a leg says its own)
     ZM.banner = { text: 'The Skerries', t: 4.5, sub: 'Part I · out through the rocks to the Gannet’s mark', col: '#d8e6ff' };
     fpsFeed('The keeper’s cutter, at the foot of the Light. Take the wheel (Use) to sail her: the rocks only show in the beam.');
   },
@@ -35861,16 +35947,18 @@ function gwsTick(dt) {
   if (S.helm === FPS.me.id) S.in = S.myIn.slice(); else if (!S.helm) S.in = [0, 0];
   else { S.inT += dt; if (S.inT > 3.5) S.in = [0, 0]; }
   if (S.ph === 'sunk') { S.sinkT += dt; if (S.sinkT >= GWS.SINK && !ZM.over) zmEnd(); return; }
+  // [fogrun] run up on the island's beach: a moment, and ashore
+  if (S.ph === 'beach') { S.beachT = (S.beachT || 0) + dt; if (S.beachT >= GWS.BEACH && GWS_LEG && GWS_LEG.arrive) { const f = GWS_LEG.arrive; GWS_LEG.arrive = null; f(); } return; }
   gwsSail(B, S.in[0], S.in[1], dt, true);
   // the sea coming in at every open hole; the pumps getting it out again when there's none
   S.flood = clamp(S.flood + (S.holes.length ? S.holes.length * GWS.FLOOD : -GWS.PUMP) * dt, 0, 1);
   if (S.flood >= 1) { S.ph = 'sunk'; S.sinkT = 0; gwsSay('She’s going down. The sea has her.', true); return; }
   // Maren: one stage nearer every turn of the beam (a swell a moment before)
   const turn = Math.floor((RAID.t || 0) / GW.PERIOD);
-  if (turn > S.turn) { S.turn = turn; gwsMarenTurn(S); }
+  if (turn > S.turn) { S.turn = turn; if (gwsMaren()) gwsMarenTurn(S); }
   const M = S.mar, [mx, my] = gwsMarenAt(S, B), k = Math.min(1, dt * (0.12 + M.st * 0.06));
   M.x += (mx - M.x) * k; M.y += (my - M.y) * k;
-  gwsPlimTick(S, dt);
+  if (gwsPlim()) gwsPlimTick(S, dt);
   // the drowned: up over the rail all the way out, quicker the further out, quicker again while the Gannet comes up
   if (S.ph === 'sail' || S.ph === 'rise') {
     S.spT -= dt;
@@ -35878,6 +35966,7 @@ function gwsTick(dt) {
   }
   // the mark: hold her inside the ring of spars while the Gannet comes up; then up her side
   const dm = gwsToMark(B);
+  if (GWS_LEG) { if (S.ph === 'sail' && dm < GWS_LEG.markIn) { S.ph = 'beach'; S.beachT = 0; gwsSay(GWS_LEG.landSay || 'She runs up on the beach.', true); } return; }   // [fogrun] the island, not the mark
   if (S.ph === 'sail' && dm < GWS.MARK_IN) { S.ph = 'rise'; gwsSay('The Gannet’s mark. Hold her inside the ring of spars: something is coming up.', true); }
   if (S.ph === 'rise') { if (dm < GWS.MARK_IN + 20) S.riseT += dt; if (S.riseT >= GWS.RISE) { S.ph = 'ladder'; gwsSay('The Gannet is alongside, her bell ringing. Climb her side: Use at her ladder, by the port rail.', true); } }
   if (S.ph === 'ladder') {
@@ -35907,7 +35996,7 @@ function gwsPack(o) {
   o.gm = [S.mar.st, Math.round(S.mar.x), Math.round(S.mar.y), Math.round(S.mar.rb * 100)]; o.gtk = S.take;
   o.gl = [Math.round(S.pl.x * 10) / 10, Math.round(S.pl.y * 10) / 10, S.pl.w | 0, Math.round(S.pl.dx * 100) / 100, Math.round(S.pl.dy * 100) / 100];
   o.gb = [S.bellN | 0, Math.round(S.bellCd * 10) / 10, S.bellBy || '', S.bellSay || '']; o.gF = [S.flN | 0, S.flAt[0], S.flAt[1], Math.round(S.flareCd * 10) / 10, S.flBy || ''];
-  o.gs = ['sail', 'rise', 'ladder', 'sunk'].indexOf(S.ph); o.gr = Math.round(S.riseT * 10) / 10; o.gab = S.ab.slice(); o.gk = Math.round(S.sinkT * 10) / 10; o.gsy = S.say;
+  o.gs = ['sail', 'rise', 'ladder', 'sunk', 'beach'].indexOf(S.ph);   // ([fogrun] beach) o.gr = Math.round(S.riseT * 10) / 10; o.gab = S.ab.slice(); o.gk = Math.round(S.sinkT * 10) / 10; o.gsy = S.say;
 }
 // joined: the host's word of it
 function gwsApply(o) {
@@ -35927,7 +36016,7 @@ function gwsApply(o) {
   if (Array.isArray(o.gl)) { const P = S.pl; P.x = +o.gl[0]; P.y = +o.gl[1]; P.w = o.gl[2] | 0; P.dx = +o.gl[3] || 0; P.dy = +o.gl[4] || 1; }
   if (Array.isArray(o.gb)) { const n = o.gb[0] | 0; S.bellCd = +o.gb[1] || 0; if (n > S.seenBell) { S.bellBy = String(o.gb[2] || ''); S.bellSay = String(o.gb[3] || ''); if (S.seenBell || n === 1) gwsBellFx(S); S.seenBell = n; } }
   if (Array.isArray(o.gF)) { const n = o.gF[0] | 0; S.flareCd = +o.gF[3] || 0; if (n > S.seenFl) { S.flAt = [+o.gF[1], +o.gF[2]]; S.flBy = String(o.gF[4] || ''); if (S.seenFl || n === 1) gwsFlareFx(S); S.seenFl = n; } }
-  const ph = ['sail', 'rise', 'ladder', 'sunk'][o.gs | 0] || 'sail'; S.ph = ph;
+  const ph = ['sail', 'rise', 'ladder', 'sunk', 'beach'][o.gs | 0] || 'sail'; S.ph = ph;
   S.riseT = +o.gr || 0; if (Array.isArray(o.gab)) S.ab = o.gab.map(String); S.sinkT = +o.gk || 0;
   if (Array.isArray(o.gsy)) { const n = o.gsy[0] | 0; if (n > S.seenSay) { if (S.seenSay || n === 1) gwsHear(String(o.gsy[1] || ''), !!o.gsy[2]); S.seenSay = n; } }
 }
@@ -35973,6 +36062,7 @@ function gwsMe(dt) {
     const lan = Math.hypot(dx, dy) < GWS.LANT_R + r.r;
     if (inBeam || r.flare > now) r.seen = now;
     r.lit = Math.max(inBeam || r.flare > now ? 1 : clamp(1 - (now - r.seen - SK.SEEN_HOLD) / SK.SEEN_FADE, 0, 1), lan ? 0.32 : 0);
+    if (GWS_LEG && GWS_LEG.fog) { const f = GWS_LEG.fog, e = Math.hypot(dx, dy) - r.r; if (e < f) r.lit = Math.max(r.lit, clamp((f - e) / (f * 0.35), 0, 1)); }   // [fogrun] inside the fog, seen
   }
   // the flares: up from the stern, and slowly down again
   for (const f of S.flares) f.t += dt;
@@ -35980,16 +36070,16 @@ function gwsMe(dt) {
   // Maren's tells: a swell from her side a moment before she steps nearer (only while she isn't held); her whisper the
   // first time you see her at each stage; oars when she's close and out of sight; sometimes, on the bowsprit
   const M = S.mar, tellAt = GW.PERIOD - 1.5, into = ((RAID.ct || 0) % GW.PERIOD), turnN = Math.floor((RAID.ct || 0) / GW.PERIOD);
-  const held = gwsGuarded(S, V);
-  if (into >= tellAt && S.tellSeen !== turnN && (S.ph === 'sail' || S.ph === 'rise')) {
+  const held = gwsGuarded(S, V), mOn = gwsMaren();   // [fogrun] (no Maren out there: none of her tells)
+  if (mOn && into >= tellAt && S.tellSeen !== turnN && (S.ph === 'sail' || S.ph === 'rise')) {
     S.tellSeen = turnN;
     if (!held) { S.tellT = 1.5; try { if (!soundOff()) sfxSwell(gwsPan(M.x, M.y)); } catch (e) {} }
   }
   if (S.tellT > 0) S.tellT -= dt;
   const mb = bearingOf(M.x - V.x, M.y - V.y) - V.h, look = Math.abs(angDiff(mb, m.h)) < 0.65;
-  if (look && S.mSeen !== M.st && (S.ph === 'sail' || S.ph === 'rise')) { S.mSeen = M.st; try { if (!soundOff()) sfxWhisper(gwsPan(M.x, M.y), 0.6 + M.st * 0.15); } catch (e) {} }
-  if (M.st >= 3 && !look) { S.oarT -= dt; if (S.oarT <= 0) { S.oarT = 2.5 + Math.random() * 1.5; try { if (!soundOff()) sfxRowlock(gwsPan(M.x, M.y)); } catch (e) {} } }
-  { const lb = bearingOf(V.x, V.y); if (M.st >= 1 && Math.abs(angDiff(beam, lb)) < 0.06 && S.appSeen !== turnN) { S.appSeen = turnN; if (Math.random() < 0.3 && Math.abs(m.h) < 0.8) { S.appT = 0.9; try { if (!soundOff()) sfxSting(); } catch (e) {} fpsFeed('Something was standing on the bowsprit.'); } } }
+  if (mOn && look && S.mSeen !== M.st && (S.ph === 'sail' || S.ph === 'rise')) { S.mSeen = M.st; try { if (!soundOff()) sfxWhisper(gwsPan(M.x, M.y), 0.6 + M.st * 0.15); } catch (e) {} }
+  if (mOn && M.st >= 3 && !look) { S.oarT -= dt; if (S.oarT <= 0) { S.oarT = 2.5 + Math.random() * 1.5; try { if (!soundOff()) sfxRowlock(gwsPan(M.x, M.y)); } catch (e) {} } }
+  { const lb = bearingOf(V.x, V.y); if (mOn && M.st >= 1 && Math.abs(angDiff(beam, lb)) < 0.06 && S.appSeen !== turnN) { S.appSeen = turnN; if (Math.random() < 0.3 && Math.abs(m.h) < 0.8) { S.appT = 0.9; try { if (!soundOff()) sfxSting(); } catch (e) {} fpsFeed('Something was standing on the bowsprit.'); } } }
   if (S.appT > 0) S.appT -= dt;
   if (S.abT > 0) S.abT -= dt;
   if (S.bellSwing > 0) S.bellSwing = Math.max(0, S.bellSwing - dt / 3);
@@ -35997,9 +36087,9 @@ function gwsMe(dt) {
   // she creaks and works as she goes, more the faster; the Gannet's bell comes over the water, louder nearer the mark
   S.creakT -= dt * (0.6 + Math.min(2, V.v / 12));
   if (S.creakT <= 0) { S.creakT = 3 + Math.random() * 5; try { if (!soundOff()) sfxCreak(); } catch (e) {} }
-  { const dm = gwsToMark(V); S.gBellT -= dt; if (S.gBellT <= 0 && dm < 1300 && S.ph !== 'sunk') { S.gBellT = S.ph === 'sail' ? 5 + dm / 250 : 2.2; try { if (!soundOff()) sfxBellFar(gwsPan(GWS.MARK[0], GWS.MARK[1]), S.ph === 'sail' ? clamp(1 - dm / 1300, 0.08, 0.7) : 0.9); } catch (e) {} } }
+  if (!GWS_LEG) { const dm = gwsToMark(V); S.gBellT -= dt; if (S.gBellT <= 0 && dm < 1300 && S.ph !== 'sunk') { S.gBellT = S.ph === 'sail' ? 5 + dm / 250 : 2.2; try { if (!soundOff()) sfxBellFar(gwsPan(GWS.MARK[0], GWS.MARK[1]), S.ph === 'sail' ? clamp(1 - dm / 1300, 0.08, 0.7) : 0.9); } catch (e) {} } }
   // Plimsoll's squeaking shoes, as he walks
-  if (S.pl.w) { S.pl.ph += dt * Math.min(30, 9 + V.v * 0.15); const st = Math.floor(S.pl.ph / Math.PI); if (st !== S.pl.step) { S.pl.step = st; const d = Math.hypot(S.pl.x - V.x, S.pl.y - V.y); if (d < 260) try { if (!soundOff()) sfxSqueak(gwsPan(S.pl.x, S.pl.y), Math.max(0, 1 - d / 260)); } catch (e) {} } } else S.pl.ph += dt * 1.5;
+  if (gwsPlim() && S.pl.w) { S.pl.ph += dt * Math.min(30, 9 + V.v * 0.15); const st = Math.floor(S.pl.ph / Math.PI); if (st !== S.pl.step) { S.pl.step = st; const d = Math.hypot(S.pl.x - V.x, S.pl.y - V.y); if (d < 260) try { if (!soundOff()) sfxSqueak(gwsPan(S.pl.x, S.pl.y), Math.max(0, 1 - d / 260)); } catch (e) {} } } else S.pl.ph += dt * 1.5;
   // holding Use at a hole patches it
   const hold = FPS.keys.KeyF || FPS.keys.KeyE || FPS.touchUse || FPS.padUse, o = ZM.near;
   if (hold && o && o.k === 'gwhole' && alive && !(S.pend > 0) && S.holes.includes(o.i)) {
@@ -36217,7 +36307,8 @@ function gws3dBuild(grp) {
       const tip = new THREE.Mesh(new THREE.CylinderGeometry(s.r * 0.72, s.r * 0.72, 0.4, 7), wh); tip.position.y = s.h - 0.8; g0.add(tip);
       const w = new THREE.Mesh(new THREE.CylinderGeometry(s.r * 1.08, s.r * 1.12, 0.9, 7), wd); w.position.y = 0.2; g0.add(w);
       if (s.yard) { const y = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, s.h * 0.6, 6).rotateZ(Math.PI / 2 - 0.3), sp); y.position.y = s.h * 0.7; g0.add(y); } }
-    GW3.markGlow = glowSp(0x9affc8, 70, { opacity: 0 }); GW3.markGlow.position.copy(gsv(GWS.MARK[0], GWS.MARK[1], 3)); SG.add(GW3.markGlow); }
+    GW3.markGlow = glowSp(0x9affc8, 70, { opacity: 0 }); GW3.markGlow.position.copy(gsv(gwsMark()[0], gwsMark()[1], 3)); SG.add(GW3.markGlow); }
+  if (GWS_LEG && GWS_LEG.b3) GWS_LEG.b3(SG, GW3);   // [fogrun] the island she's to beach on
   // Plimsoll: his drawing, walking upright on the water, his blue shoes glowing; and his ring, faint on the sea
   { const P = GW3.plim = new THREE.Group(); SG.add(P);
     GW3.plimS = new THREE.Sprite(new THREE.SpriteMaterial({ transparent: true, depthWrite: false, fog: false })); GW3.plimS.scale.set(3.4 * SK.PLIM_ASPECT, 3.4, 1); GW3.plimS.position.y = 1.7; P.add(GW3.plimS);
@@ -36291,11 +36382,12 @@ function gws3d(dt) {
     for (const mt of R.M.mats) { mt.opacity = k; mt.emissive.setRGB(0.22 * k * warm, 0.19 * k * warm, 0.13 * k * warm); }
     R.M.foamM.opacity = 0.3 * k;
   }
-  GW3.markGlow.material.opacity = S.ph === 'sail' ? clamp(1 - gwsToMark(V) / 900, 0, 1) * 0.22 * (0.7 + 0.3 * Math.sin(t * 1.3)) : S.ph === 'rise' ? 0.35 : 0;
+  if (GWS_LEG && GWS_LEG.f3) GWS_LEG.f3(dt, V);   // [fogrun]
+  GW3.markGlow.material.opacity = GWS_LEG ? 0 : S.ph === 'sail' ? clamp(1 - gwsToMark(V) / 900, 0, 1) * 0.22 * (0.7 + 0.3 * Math.sin(t * 1.3)) : S.ph === 'rise' ? 0.35 : 0;
   // Plimsoll (turned to walk the way he's going, across your view) and his ring while he's keeping her off you
   { if (!GW3.T.plim) { GW3.T.plim = gwsImgTex(IMG.plim, false); GW3.T.plimF = gwsImgTex(IMG.plim, false, true); if (GW3.T.plim) { GW3.plimS.material.map = GW3.T.plim; GW3.plimS.material.needsUpdate = true; } }
     const P = S.pl, bob = P.w ? Math.abs(Math.sin(P.ph)) * 0.25 : Math.sin(P.ph) * 0.05;
-    GW3.plim.position.set(P.x, bob, -P.y);
+    GW3.plim.position.set(P.x, bob, -P.y); GW3.plim.visible = gwsPlim();   // [fogrun]
     // (the picture faces left: flipped when he's walking to the right across where you're looking)
     if (GW3.T.plim) { const dirL = (P.dx || 0) * c - (P.dy || 1) * sn, dirLy = (P.dx || 0) * sn + (P.dy || 1) * c, look = m.h, right = dirL * Math.cos(look) - dirLy * Math.sin(look);
       const want = right > 0 ? GW3.T.plimF : GW3.T.plim; if (GW3.plimS.material.map !== want) { GW3.plimS.material.map = want; GW3.plimS.material.needsUpdate = true; } }
@@ -36303,9 +36395,9 @@ function gws3d(dt) {
     const d = Math.hypot(P.x - V.x, P.y - V.y), vis = clamp(1.25 - d / 700, 0.35, 1); GW3.plimS.material.opacity = vis;
     GW3.shoes.forEach((s, i) => { s.material.opacity = 0.75 + 0.25 * Math.sin(t * 4 + i); s.position.y = 0.15 + (P.w ? Math.max(0, Math.sin(P.ph + i * Math.PI)) * 0.25 : 0); });
     const guard = gwsGuarded(S, V), R = gwsGuardR(V.v);
-    GW3.ring.visible = guard && (S.ph === 'sail' || S.ph === 'rise'); GW3.ring.position.set(P.x, 0.4, -P.y); GW3.ring.scale.set(R, 1, R); GW3.ring.material.opacity = reduceMotion ? 0.16 : 0.14 + 0.05 * Math.sin(t * 2.4); }
+    GW3.ring.visible = guard && gwsPlim() && (S.ph === 'sail' || S.ph === 'rise'); GW3.ring.position.set(P.x, 0.4, -P.y); GW3.ring.scale.set(R, 1, R); GW3.ring.material.opacity = reduceMotion ? 0.16 : 0.14 + 0.05 * Math.sin(t * 2.4); }
   // Maren, out on the water (pale, swaying, a flicker to her as she comes close)
-  { const M = S.mar; GW3.mar.position.set(M.x, 0, -M.y); GW3.mar.visible = !!GW3.T.maren && S.ph !== 'ladder' && S.ph !== 'sunk' && !(S.abT > 0);
+  { const M = S.mar; GW3.mar.position.set(M.x, 0, -M.y); GW3.mar.visible = gwsMaren() && !!GW3.T.maren && S.ph !== 'ladder' && S.ph !== 'sunk' && !(S.abT > 0);
     const sway = reduceMotion ? 0 : Math.sin(t * 1.3) * 0.035 + (M.st >= 3 ? Math.sin(t * 17) * 0.012 : 0);
     let a = 0.85; if (M.st >= 3 && !reduceMotion && Math.random() < 0.12) a *= 0.35;
     GW3.marS.material.rotation = sway; GW3.marS.material.opacity = a; GW3.marR.material.opacity = a * 0.18; GW3.marG.material.opacity = 0.22 + 0.1 * Math.sin(t * 1.7);
@@ -36369,7 +36461,8 @@ function gwsHud(phone, mono, fell) {
   const L = Math.max(14, FPS.safeLeft || 0), top = fpsHudTop() + (phone ? 32 : 44), t = g.t;
   const dm = gwsToMark(V);
   let line;
-  if (S.ph === 'sail') line = `Out through the skerries to the Gannet’s mark: ${Math.round(dm).toLocaleString('en')} m`;
+  if (GWS_LEG && GWS_LEG.line) line = GWS_LEG.line(S, dm);   // [fogrun]
+  else if (S.ph === 'sail') line = `Out through the skerries to the Gannet’s mark: ${Math.round(dm).toLocaleString('en')} m`;
   else if (S.ph === 'rise') line = `Hold her inside the ring of spars: the Gannet is coming up (${Math.round(S.riseT / GWS.RISE * 100)}%)`;
   else if (S.ph === 'ladder') { const n = (ZM.net === 'client' ? ZM.hum.length : (ZM.players || []).length) || 1; line = S.ab.includes(m.id) ? `Aboard the Gannet: ${S.ab.length} of ${n}. Waiting for the others${S.firstAb || S.ab.length ? '' : ''}` : `The Gannet is alongside: climb her side (Use at her ladder, port rail) · ${S.ab.length} of ${n} aboard`; }
   else line = 'She’s going down.';
@@ -36391,8 +36484,9 @@ function gwsHud(phone, mono, fell) {
     yy += rh; lab('FLARE', yy); val(S.flareCd > 0 ? `${Math.ceil(S.flareCd)} s` : 'READY · THE LOCKER AFT', yy, S.flareCd > 0 ? 'rgba(236,228,207,0.55)' : '#ff9a7a');
     // Maren
     yy += rh; const M = S.mar, md = Math.round(Math.hypot(M.x - V.x, M.y - V.y)), held = gwsGuarded(S, V);
+    if (!gwsMaren()) { lab('FOG', yy); val(`YOU CAN SEE ${Math.round(GWS_LEG.fog)} m`, yy, '#c8d4e0'); } else {   // [fogrun] (no Maren: how far the fog lets you see)
     lab('MAREN', yy, M.st >= 3 ? `rgba(216,230,255,${0.7 + 0.3 * Math.sin(t * 5)})` : null);
-    val(S.abT > 0 ? 'ABOARD' : `${md} m ${gwsSide(S, md)}${held ? ' · HELD' : ''}`, yy, M.st >= 3 ? '#d8e6ff' : held ? '#8fd8ff' : 'rgba(236,228,207,0.85)');
+    val(S.abT > 0 ? 'ABOARD' : `${md} m ${gwsSide(S, md)}${held ? ' · HELD' : ''}`, yy, M.st >= 3 ? '#d8e6ff' : held ? '#8fd8ff' : 'rgba(236,228,207,0.85)'); }
     // her speed and sail, and who has the helm
     yy += rh; lab('HELM', yy); val(`${S.helm ? gwsNick(S.helm).toUpperCase() : 'NOBODY'} · ${V.v.toFixed(1)} m/s`, yy, S.helm ? 'rgba(236,228,207,0.9)' : '#e8b080');
     ctx.textBaseline = 'alphabetic'; }
@@ -36410,16 +36504,16 @@ function gwsHud(phone, mono, fell) {
     // the Light
     { const d = lb(bearingOf(-V.x, -V.y)); if (inS(d)) { const f = 1 - Math.min(1, Math.abs(angDiff(wrapPi(gwBeam()), bearingOf(V.x, V.y))) / 0.6); ctx.fillStyle = `rgba(255,216,138,${0.5 + 0.5 * f})`; const xx = xb(d); ctx.beginPath(); ctx.moveTo(xx, sy + 4); ctx.lineTo(xx + 3.5, sy + 14); ctx.lineTo(xx - 3.5, sy + 14); ctx.closePath(); ctx.fill(); } }
     // the mark
-    { const d = lb(bearingOf(GWS.MARK[0] - V.x, GWS.MARK[1] - V.y)); if (inS(d)) { const xx = xb(d); ctx.fillStyle = '#86cfae'; ctx.fillRect(xx - 5, sy + 7, 10, 6); if (!phone) { ctx.font = mono(9); ctx.fillText(`${Math.round(dm)} m`, xx, sy + sh + (inS(angDiff(0, m.h)) && Math.abs(xx - xb(angDiff(0, m.h))) < 30 ? 18 : 7)); ctx.font = mono(10); } } else edge(d, '#86cfae'); }
+    { const MK = gwsMark(), d = lb(bearingOf(MK[0] - V.x, MK[1] - V.y)); if (inS(d)) { const xx = xb(d); ctx.fillStyle = '#86cfae'; ctx.fillRect(xx - 5, sy + 7, 10, 6); if (!phone) { ctx.font = mono(9); ctx.fillText(`${Math.round(dm)} m`, xx, sy + sh + (inS(angDiff(0, m.h)) && Math.abs(xx - xb(angDiff(0, m.h))) < 30 ? 18 : 7)); ctx.font = mono(10); } } else edge(d, '#86cfae'); }
     // Plimsoll, and his ring while he's keeping her off you
-    { const P = S.pl, d = lb(bearingOf(P.x - V.x, P.y - V.y)), py = sy + sh * 0.68;
+    if (gwsPlim()) { const P = S.pl, d = lb(bearingOf(P.x - V.x, P.y - V.y)), py = sy + sh * 0.68;
       if (inS(d)) { const xx = xb(d); ctx.fillStyle = '#5fd3ff'; ctx.beginPath(); ctx.arc(xx, py, 3, 0, 6.28); ctx.fill();
         const dd = Math.hypot(P.x - V.x, P.y - V.y), R = gwsGuardR(V.v);
         if (dd < R) { ctx.fillStyle = 'rgba(95,211,255,0.35)'; ctx.beginPath(); ctx.arc(xx, py, 6, 0, 6.28); ctx.fill(); ctx.strokeStyle = 'rgba(95,211,255,0.9)'; ctx.stroke(); }
         else if (dd < R * 1.5) { ctx.strokeStyle = 'rgba(95,211,255,0.6)'; ctx.beginPath(); ctx.arc(xx, py, 6, 0, 6.28); ctx.stroke(); } }
       else edge(d, '#5fd3ff'); }
     // Maren
-    { const M = S.mar, d = lb(bearingOf(M.x - V.x, M.y - V.y)); if (inS(d)) { const xx = xb(d), a = M.st >= 3 ? 0.7 + 0.3 * Math.sin(t * 6) : 0.75; ctx.fillStyle = `rgba(216,230,255,${a})`; ctx.fillRect(xx - 1.5, sy + 5, 3, sh - 12); ctx.beginPath(); ctx.arc(xx, sy + 5, 2.5, 0, 6.28); ctx.fill(); } else if (M.st >= 2) edge(d, 'rgba(216,230,255,0.8)'); }
+    if (gwsMaren()) { const M = S.mar, d = lb(bearingOf(M.x - V.x, M.y - V.y)); if (inS(d)) { const xx = xb(d), a = M.st >= 3 ? 0.7 + 0.3 * Math.sin(t * 6) : 0.75; ctx.fillStyle = `rgba(216,230,255,${a})`; ctx.fillRect(xx - 1.5, sy + 5, 3, sh - 12); ctx.beginPath(); ctx.arc(xx, sy + 5, 2.5, 0, 6.28); ctx.fill(); } else if (M.st >= 2) edge(d, 'rgba(216,230,255,0.8)'); }
     ctx.textBaseline = 'alphabetic'; }
   // ---------- at the wheel ----------
   if (FPS.helm) {
@@ -39325,6 +39419,645 @@ function rclHud(phone, mono, fell) {
 addEventListener('pagehide', () => rclClosePick());
 setInterval(() => { if (RCL.picking && !(FPS.on && FPS.zm && rclOn())) rclClosePick(); const s = $('stage'); if (s) s.classList.toggle('rcmode', !!(rclOn() && RCL.cls)); }, 500);
 
+// ---- src/frrun.js ----
+// Fog Run: a roguelike voyage through the haar, a game of its own (its own card on the title screen, its own lobby, a
+// line of its own on the scoreboard to come), alone or up to four together. The crew sails the keeper's cutter out from
+// Skerry Light into a fog that thickens with every reach; each island is a short fight (or, later, a puzzle) on foot;
+// light its light, go back aboard, and on to the next. The design: /fogrun/design.md (Ryan's decisions at its foot).
+//
+// How it's built. It's a raid (src/raid.js): its own map, ZM_MAPS.fogrun, its own entry in RAIDS (kept off the raid
+// card's picker: RAIDS.fogrun.own), the callings (src/rclass.js), going down and getting up, the raids' victory
+// screen (src/raidmvp.js), and playing together through the Lighthouse's lobby (src/zmnet.js, its own mode 'fr', kept
+// apart from nights and raids). What's its own:
+//  - The run's state, FR (below): the seed (drawn at random by the host for every run and sent once, in the start of
+//    the run, st.fs, src/zmnet.js znStart), the reach (I, II, III) and how far the fog lets you see in it, the stop
+//    (how many islands so far), the plan, and each player's lives.
+//  - A stage order built as the run is played. RAID_ORDER starts as one sail; each time a stage ends (raidNextStage)
+//    frGrow adds the next: after a sail, the island it sailed to; after an island, a sail to the next stop that
+//    frNextStop picks, or nothing (past the last stop: won). FR.plan runs alongside RAID_ORDER, one entry a stage:
+//      { key: its RAID_STAGES key, n: the stop it's for (1, 2...), reach, kind: the island's kind, rule, look }
+//    The host sends the plan in its word (frw); a joined player's RAID_ORDER is rebuilt from it before the stage
+//    number in the same word is followed, so everyone lays out the same thing.
+//  - Lives (Ryan's rule). Alone, going down ends the run (as in every raid alone). Together, everyone has one extra
+//    life: the first time you bleed out it goes, and you're back on your feet FRC.BACK seconds later at the stage's
+//    start (the landing, or the deck), with what you carried. After that a bleed-out leaves you lost in the fog,
+//    watching the others, until someone brings you back. The run ends when everyone is lost at once, or the cutter
+//    sinks (src/gwsail.js), or (alone) when you go down. Each player keeps their own lives (FR.life, FR.lost,
+//    FR.backT) and says them in their presence (frp), so the host knows when everyone's lost.
+//
+// The hook API, for the parts still to come:
+//  - A new island kind (step 4): frKind(kind, def, stage). def: { n: its name on the chart, mark: its mark (a short
+//    word or glyph), weight: how often the chart offers it } and stage: a RAID_STAGES-style object (src/raid.js's
+//    hooks, plus prep(i) to read FR.plan[i] before its world is laid out). It's registered as RAID_STAGES['fr_' +
+//    kind]. src/frisle.js has the shared island tools: frIsleLook (a small FPS_ISLES island, FRI.R across, fog pulled
+//    in by the reach), the landing, the beacon prop, and frIsleLit (the island's light lit: everyone lost is brought
+//    back, the fog pushed back, and after FRI.AWAY seconds back aboard). An island stage ends with frIslandDone().
+//  - The chart (step 2): replace frNextStop() (below). It's asked, hosting or alone, for the stop after the one just
+//    finished, and returns { kind, rule, look, n, reach } or null when there's nothing left (the run is won). The vote
+//    can run during the sail before it (the chart table on the deck, raidAsk 'vote'): set FR.next and the sail's
+//    island follows it. FR_SKEL is today's hard-coded route; frRng(k) is the run's own random numbers, for anything
+//    that has to be the same on every screen.
+//  - Rewards (step 3): frAfterIsland(done) runs, hosting, between an island's end and the sail after it. Open the
+//    salvage there and call done() once the picks are in (or the 20 s are up); the sail begins after it. Crew cards
+//    can call frBringBack() and frRestoreLife() below.
+//  - The boss (step 5): a stop of kind 'boss' (frKind('boss', ...)), made the last by frNextStop; its stage ends the
+//    run with frWin() (the victory screen, as the raids).
+//  - Anyone can bring the lost back or give an extra life back (hosting or alone; a joined player asks the stage,
+//    which calls these on the host): frBringBack(sid) (sid left out: everyone lost) and frRestoreLife(sid).
+//  - frFog(): how far you can see now (by the reach, plus what lit islands have pushed it back); frFogPush(m).
+//  - frDebug(stageKey, seed): straight to a stage ('frsail', 'fr_fight' or 'win') with a fixed seed, for tests.
+// Hooks in shared files are marked [fogrun]: src/raid.js (raidBegin frBegin, raidAfterStart frAfterStart,
+// raidMapFor prep and FPSC.R, raidNextStage frGrow, raidUseStage frStageGhost and a stage's banner, raidHostSend frPack,
+// raidApply frApplyRun, raidMe frMe, raidHud, raidStaminaHud frLifeHud, raidShowOver frOverStats, raidStop frStop,
+// raidPick), src/zombies.js (zmCheckOver frCheckOver, zmBleedOut frBledOut), src/zmnet.js (the lobby's third card,
+// the seed in the start, presence frp, rejoin), src/gwsail.js (GWS_LEG), src/raidmvp.js, src/raidmusic.js,
+// src/share.js (?mode=fogrun&lobby=...), index.html (its card).
+
+// FRC: BACK, seconds from bleeding out (with an extra life) to back on your feet; LIVES, the extra lives each player
+// starts with together (none alone)
+const FRC = { BACK: 10, LIVES: 1 };
+// the reaches: their names, how far you can see in each (m), and how many stops each has (the chart's, later)
+const FR_REACH = [null, { n: 'The Near Skerries', fog: 140, stops: 2 }, { n: 'The Grey Reach', fog: 90, stops: 3 }, { n: 'The Haar', fog: 50, stops: 2 }];
+// what each lit island pushes the fog back, for the rest of its reach (m)
+const FR_PUSH = 10;
+// the island looks (FPS_ISLES) an island can be laid out in, small
+const FR_LOOKS = ['shingle', 'reef', 'chapel', 'cove', 'cliff', 'marsh'];
+// the route for now (step 1): two Fight islands (Hold the Light), then won. The chart (step 2) takes over frNextStop.
+const FR_SKEL = [{ kind: 'fight', rule: 'hold', reach: 1 }, { kind: 'fight', rule: 'hold', reach: 1 }];
+// the music each part plays, until the run has its own (step 7: src/raidmusic.js keys frsail, frisle and so on)
+var FR_MUSIC = { sail: 'gwsail', isle: null };
+// the island kinds, by name (frKind)
+var FR_KINDS = {};
+var FR = { on: false, seed: 0, want: null, debug: null, reach: 1, stop: 0, push: 0, pushR: 1, plan: [], next: null, life: 0, lost: false, backT: 0, kit: null,
+  ev: [], eseq: 0, evSeen: -1, won: false, lit: 0, leaving: false };
+
+// ---------- the map, as src/zombies.js and src/raid.js see it ----------
+ZM_MAPS.fogrun = Object.assign({}, ZM_MAPS.raid, { n: 'Fog Run', N: 'Fog Run', seed: 0xf06, fr: true,
+  blurb: 'A voyage through the haar, alone or up to four: sail, land, light the islands’ lights.',
+  land: n => `The keeper’s cutter, at the foot of the Light${n ? ', ' + n + ' of you aboard' : ''}. Out there, the haar.` });
+RAIDS.fogrun = { n: 'Fog Run', own: true, order: ['frsail'], at: {},
+  // (the victory screen shows whenever the run is won, whatever its last stage)
+  get mvp() { return FR.won ? RAID_ORDER[RAID_ORDER.length - 1] : '-'; },
+  lost: n => `Lost in the fog, at ${n}`, won: 'The lights are lit again', again: 'Set out again' };
+function frKind(kind, def, stage) { def.kind = kind; def.key = def.key || 'fr_' + kind; FR_KINDS[kind] = def; stage.fr = kind; RAID_STAGES[def.key] = stage; return def; }
+
+// ---------- the run's own random numbers ----------
+const frSeedNew = () => ((Math.random() * 4294967296) >>> 0) || 1;
+// (k: what they're for, so each thing draws its own and the order things are asked in doesn't matter)
+const frRng = k => seeded(((FR.seed ^ Math.imul((k | 0) + 1, 0x9e3779b1)) >>> 0) || 1);
+function frSeedOf(i) { return ((FR.seed >>> 1) + i * 977) & 0x7fffffff; }
+// (src/zmnet.js znBegin) the seed the host drew, before the run begins on this side
+function frSeedFrom(st) { if (st && ZM_MAPS[st.map] && ZM_MAPS[st.map].fr && st.fs) FR.want = st.fs >>> 0; }
+
+// ---------- the fog ----------
+function frFog(reach) { const r = reach || FR.reach, R = FR_REACH[r] || FR_REACH[1]; return R.fog + (r === FR.pushR ? FR.push : 0); }
+function frFogPush(m) { if (FR.pushR !== FR.reach) { FR.pushR = FR.reach; FR.push = 0; } FR.push += m; }
+
+// ---------- the route ----------
+// [chart] the stop after the one just finished (hosting or alone): { kind, rule, look, n, reach }, or null (won)
+function frNextStop() {
+  const n = FR.stop + 1, def = FR_SKEL[n - 1]; if (!def) return null;
+  const R = frRng(100 + n);
+  return { kind: def.kind, rule: def.rule, look: FR_LOOKS[(R() * FR_LOOKS.length) | 0], n, reach: def.reach };
+}
+// [cards] between an island and the sail after it (hosting or alone): the salvage goes here; call done() when it's over
+function frAfterIsland(done) { done(); }
+// a stage's entry in the plan: a sail to a stop, or the stop itself
+const frSailTo = s => ({ key: 'frsail', n: s.n, reach: s.reach, kind: s.kind, rule: s.rule, look: s.look });
+const frIsleOf = s => ({ key: (FR_KINDS[s.kind] || FR_KINDS.fight).key, n: s.n, reach: s.reach, kind: s.kind, rule: s.rule, look: s.look });
+const frPlanNow = () => FR.plan[RAID.stage] || null;
+function frOrderFromPlan() { RAID_ORDER.length = 0; for (const p of FR.plan) RAID_ORDER.push(p.key); }
+// (raidNextStage, hosting or alone, with nothing after this stage yet) what comes next
+function frGrow() {
+  const cur = frPlanNow(); if (!cur) return;
+  if (cur.key === 'frsail') FR.plan.push(frIsleOf(cur));
+  else { const nx = frNextStop(); if (!nx) { FR.won = true; return; } FR.next = nx; FR.plan.push(frSailTo(nx)); }   // (no stop left: won)
+  frOrderFromPlan();
+}
+// (an island stage, hosting or alone) its light is lit and everyone's had time to get back aboard: the salvage, then on
+function frIslandDone() {
+  if (!FR.on || ZM.net === 'client' || FR.leaving || ZM.over) return;
+  FR.leaving = true;
+  frAfterIsland(() => { FR.leaving = false; if (FR.on && !ZM.over) raidNextStage(); });
+}
+// (hosting or alone) the run is won: the victory screen
+function frWin() { if (!FR.on || ZM.net === 'client' || FR.won) return; FR.won = true; raidWin(); }
+
+// ---------- starting, and stopping ----------
+// (raidBegin, with RAID.map set) is this a fog run? Its seed, its first stop, the first sail
+function frBegin() {
+  FR.on = RAID.map === 'fogrun';
+  if (!FR.on) return;
+  FR.seed = FR.want != null ? FR.want >>> 0 : frSeedNew(); FR.want = null;
+  Object.assign(FR, { reach: 1, stop: 0, push: 0, pushR: 1, plan: [], next: null, life: 0, lost: false, backT: 0, kit: null, ev: [], eseq: 0, evSeen: -1, won: false, lit: 0, leaving: false });
+  const first = frNextStop(); FR.next = first; FR.reach = first.reach;
+  FR.plan = [frSailTo(first)]; frOrderFromPlan();
+}
+// (raidAfterStart) once the run's laid out and we know who's in it: the lives, and a test's jump
+function frAfterStart() {
+  FR.life = ZM.net ? FRC.LIVES : 0;
+  if (FR.debug) { const k = FR.debug; FR.debug = null; if (typeof RCL !== 'undefined' && RCL.picking) rclChoose(RCL.last || 'merc'); if (k !== 'frsail') frJump(k); }
+}
+function frStop() { FR.on = false; FR.leaving = false; FR.backT = 0; FR.lost = false; }
+// (raidUseStage) entering a stage: which reach and stop it is
+function frEnterStage() { const p = frPlanNow(); if (!p) return; FR.stop = p.key === 'frsail' ? p.n - 1 : p.n; if (p.reach !== FR.reach) { FR.reach = p.reach; } }
+
+// ---------- lives ----------
+// (zmBleedOut, together) the time on the floor ran out: your extra life, if you have it, or lost in the fog
+function frBledOut(kit) {
+  FR.kit = kit || null;
+  if (FR.life > 0) {
+    FR.life--; FR.backT = FRC.BACK;
+    ZM.banner = { text: 'Your extra life is spent', t: 3, sub: `Back on your feet in ${FRC.BACK} seconds`, col: '#ffe2a8' };
+    fpsFeed(`You bled out. Your extra life goes: you’re back on your feet in ${FRC.BACK} seconds.`);
+  } else {
+    FR.lost = true; FR.backT = 0;
+    ZM.banner = { text: 'Lost in the fog', t: 3.5, sub: 'Watching the others until the island’s light is lit', col: '#c8d4e0' };
+    fpsFeed('You bled out, and you’re lost in the fog. When the island’s light is lit, you’re brought back.');
+  }
+}
+// back on your feet, at the stage's start, with what you carried (how: 'life', 'call' or 'stage')
+function frBack(how) {
+  if (!ZM.ghost) { FR.lost = false; FR.backT = 0; return; }
+  const m = FPS.me;
+  ZM.ghost = false; ZM.downT = 0; m.dead = 0; m.hp = ZMC.HP; m.protect = 3; m.iframe = ZMC.IFRAME_UP; FR.lost = false; FR.backT = 0;
+  if (FR.kit) { ZM.downKit = FR.kit; FR.kit = null; zmDownDisarm(); } else raidLoadout();
+  frPlaceAtStart();
+  ZM.banner = { text: 'Back on your feet', t: 2.5, small: true, col: '#ffe2a8' };
+  fpsFeed(how === 'call' ? 'The light brought you back out of the fog.' : 'You’re back on your feet.');
+  try { zmSound('wind'); } catch (e) {}
+}
+function frPlaceAtStart() {
+  const m = FPS.me, slot = Math.max(0, ZM.hum.findIndex(h => h[0] === m.id));
+  m.x = FPSC.CX + ZMD.START[0] + [0, 1.5, -1.5, 0][slot % 4]; m.y = FPSC.CY + ZMD.START[1] + [0, -1.6, -1.6, 1.8][slot % 4];
+  m.jz = m.fl = ZMD.TOP; m.vz = 0;
+}
+// (raidUseStage, bled out at the change of stage) waiting on an extra life: back now, at its start; lost: still lost
+function frStageGhost() { if (!FR.on) return false; if (!FR.lost) frBack('stage'); return true; }
+// (zmCheckOver, hosting) the run's over when everyone is lost at once (waiting on an extra life isn't lost)
+function frCheckOver() {
+  if (!(ZM.ghost && FR.lost)) return;
+  for (const r of FPS.remote.values()) { if (r.left) continue; if (!r.dead || r.frLost === false) return; }
+  fpsFeed('Everyone is lost in the fog.');
+  zmEnd();
+}
+// things the host says to everyone once: [seq, kind, who ('' everyone)]: 'back' (the lost brought back), 'life' (an
+// extra life given back)
+function frRunEvent(k, who) {
+  if (ZM.net === 'client') return;
+  FR.ev.push([++FR.eseq, k, who || '']); if (FR.ev.length > 8) FR.ev.shift();
+  frRunEventHere(k, who || '');
+}
+function frRunEventHere(k, who) {
+  if (who && who !== FPS.me.id) return;
+  if (k === 'back' && ZM.ghost && FR.lost) frBack('call');
+  else if (k === 'life' && ZM.net && FR.life < FRC.LIVES) { FR.life = FRC.LIVES; fpsFeed('Your extra life is back.'); }
+}
+// (hosting or alone) everyone lost in the fog brought back (or only sid)
+function frBringBack(sid) { frRunEvent('back', sid); }
+// (hosting or alone) an extra life given back to everyone (or only sid); together only, as alone there are none
+function frRestoreLife(sid) { frRunEvent('life', sid); }
+// (raidMe) each frame, everyone: the wait for your extra life
+function frMe(dt) {
+  if (FR.backT > 0 && !ZM.over) { FR.backT -= dt; if (FR.backT <= 0) { FR.backT = 0; frBack('life'); } }
+}
+
+// ---------- playing together (src/zmnet.js) ----------
+// the host's word for the run: frw = [reach, stop, push, the plan, the run's events, won, the reach pushed, islands lit]
+const frPlanPack = p => [p.key, p.kind || '', p.rule || '', p.look || '', p.n | 0, p.reach | 0];
+function frPack(z) { z.frw = [FR.reach, FR.stop, FR.push, FR.plan.map(frPlanPack), FR.ev, FR.won ? 1 : 0, FR.pushR, FR.lit | 0]; }
+// (raidApply, first of all) joined: the plan, so the stage number that follows lays out what the host has
+function frApplyRun(hz) {
+  const a = hz.frw; if (!Array.isArray(a)) return;
+  FR.reach = clamp(a[0] | 0, 1, 3); FR.stop = Math.max(0, a[1] | 0); FR.push = Math.max(0, +a[2] || 0); FR.pushR = clamp(a[6] | 0 || 1, 1, 3); FR.won = !!a[5]; FR.lit = Math.max(0, a[7] | 0);
+  if (Array.isArray(a[3]) && a[3].length) {
+    const plan = a[3].filter(e => Array.isArray(e) && RAID_STAGES[e[0]]).map(e => ({ key: String(e[0]), kind: String(e[1] || ''), rule: String(e[2] || ''), look: FR_LOOKS.includes(e[3]) ? e[3] : 'shingle', n: e[4] | 0, reach: clamp(e[5] | 0 || 1, 1, 3) }));
+    if (plan.length) { FR.plan = plan; if (plan.map(p => p.key).join() !== RAID_ORDER.join()) frOrderFromPlan(); }
+  }
+  if (Array.isArray(a[4])) {
+    // (the first word heard: what's already happened isn't done again)
+    if (FR.evSeen < 0) { FR.evSeen = 0; for (const e of a[4]) if (Array.isArray(e)) FR.evSeen = Math.max(FR.evSeen, e[0] | 0); }
+    for (const e of a[4]) { if (!Array.isArray(e) || !((e[0] | 0) > FR.evSeen)) continue; FR.evSeen = e[0] | 0; frRunEventHere(String(e[1]), String(e[2] || '')); }
+  }
+}
+// my lives, in my presence: [extra lives, lost, waiting to come back]
+function frPresence(z) { if (FR.on) z.frp = [FR.life, FR.lost ? 1 : 0, FR.backT > 0 ? 1 : 0]; }
+function frHeard(r, z) { if (Array.isArray(z.frp)) { r.frLife = z.frp[0] | 0; r.frLost = !!z.frp[1]; r.frBack = !!z.frp[2]; } }
+// dropping out and coming back (src/rejoin.js, through src/zmnet.js znRjSnap and znRjAfter): the run's seed and stage
+// (for the record), and my lives
+function frRjSnap() { return FR.on ? { seed: FR.seed, st: RAID.stage, life: FR.life, lost: FR.lost ? 1 : 0, back: Math.ceil(FR.backT) } : null; }
+function frRjAfter(fr) {
+  if (!FR.on || !fr || typeof fr !== 'object') return;
+  FR.life = clamp(fr.life | 0, 0, FRC.LIVES);
+  if (ZM.ghost) { FR.lost = !!fr.lost; FR.backT = FR.lost ? 0 : Math.max(1, Math.min(FRC.BACK, +fr.back || FRC.BACK)); }
+}
+
+// ---------- painted on top ----------
+function frHudTitle(S) { const p = frPlanNow(), R = FR_REACH[FR.reach] || FR_REACH[1]; return `Fog Run · ${R.n} · ${p && p.key === 'frsail' ? 'at sea, to stop ' + p.n : (S.n || 'an island')}`; }
+// (raidHud) lost, or waiting on your extra life
+function frHud(phone, mono, fell) {
+  if (!(ZM.ghost && !ZM.over)) return;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'top'; ctx.font = fell(phone ? 18 : 26);
+  ctx.fillStyle = FR.lost ? 'rgba(200,212,224,0.92)' : '#ffe2a8';
+  ctx.fillText(FR.lost ? 'Lost in the fog' : `Back on your feet in ${Math.ceil(FR.backT)} s`, cx, H * 0.22);
+  ctx.font = mono(phone ? 10 : 12); ctx.fillStyle = 'rgba(236,228,207,0.7)';
+  if (FR.lost) ctx.fillText('When the island’s light is lit, everyone lost is brought back', cx, H * 0.22 + (phone ? 24 : 34));
+  ctx.textBaseline = 'alphabetic';
+}
+// (raidStaminaHud) the extra life: a little lamp after the stamina bar, lit while you still have it (together only)
+function frLifeHud(x, y, h, phone, mono) {
+  if (!FR.on || !ZM.net) return;
+  const on = FR.life > 0, s = h + 6, X = x + 4, t = g.t;
+  ctx.fillStyle = 'rgba(8,10,14,0.55)'; ctx.fillRect(X - 3, y - 3, s + 6, h + 6);
+  ctx.fillStyle = on ? `rgba(255,214,140,${0.8 + 0.2 * Math.sin(t * 3)})` : 'rgba(120,110,96,0.6)';
+  ctx.beginPath(); ctx.arc(X + s / 2, y + h / 2, Math.max(2, h / 2 - 1), 0, 6.283); ctx.fill();
+  ctx.fillRect(X + s / 2 - 2, y - 2, 4, 2);
+  ctx.font = mono(phone ? 9 : 10); ctx.textAlign = 'left'; ctx.textBaseline = 'bottom'; ctx.fillStyle = on ? 'rgba(255,226,168,0.75)' : 'rgba(236,228,207,0.45)';
+  ctx.fillText(on ? 'EXTRA LIFE' : 'NO EXTRA LIFE', X - 3, y - 3); ctx.textBaseline = 'alphabetic';
+}
+// (raidShowOver) the end card's line
+function frOverStats() {
+  const lit = FR.lit | 0, R = FR_REACH[FR.reach] || FR_REACH[1];
+  return (ZM.net ? `${ZM.hum.length} of you. ` : '') + `${lit} ${lit === 1 ? 'island' : 'islands'} lit, out as far as ${R.n}, in ${raidClock(RAID.t)}. ${ZM.kills} of the drowned sent back (${ZM.heads} through the head).`;
+}
+
+// ---------- for tests ----------
+// frDebug(stageKey, seed): straight to a stage ('frsail', 'fr_fight', or 'win'), with a fixed seed. Not in a run: a run
+// alone is begun with that seed (the calling picked for you) and then on to the stage. In one (alone or hosting):
+// straight there.
+function frDebug(key, seed) {
+  key = key || 'frsail';
+  if (!(FPS.on && FR.on && RAID.on)) {
+    if (FPS.on) return false;
+    FR.want = seed == null ? 0x5eed : seed >>> 0; FR.debug = key;
+    zmStart({ map: 'fogrun' });
+    return true;
+  }
+  if (ZM.net === 'client') return false;
+  if (seed != null) FR.seed = seed >>> 0;
+  if (key === 'win') { frWin(); return true; }
+  frJump(key);
+  return true;
+}
+// (alone or hosting) on to a stage of that key now, for the next stop (or the one this stage is for)
+function frJump(key) {
+  if (!RAID_STAGES[key]) return false;
+  const cur = frPlanNow(), stop = cur && cur.key === 'frsail' ? FR.next : frNextStop() || FR.next;
+  const s = Object.assign({}, stop || { kind: 'fight', rule: 'hold', look: 'shingle', n: 1, reach: 1 });
+  if (key !== 'frsail') { const k = Object.keys(FR_KINDS).find(k => FR_KINDS[k].key === key); if (k) s.kind = k; }
+  FR.next = s;
+  FR.plan.length = RAID.stage + 1; FR.plan.push(key === 'frsail' ? frSailTo(s) : frIsleOf(s)); frOrderFromPlan();
+  raidUseStage(RAID.stage + 1);
+  return true;
+}
+
+// ---------- its card on the title screen ----------
+(() => {
+  if (!$('frTitle')) return;
+  $('frPlay').addEventListener('click', () => { if (typeof ZN !== 'undefined' && ZN.code) return; zmStart({ map: 'fogrun' }); });
+  $('frSettings').addEventListener('click', () => $('titleSettings').click());
+  $('frWcrate').addEventListener('click', () => $('wcrateBtn').click());
+  $('frOcrate').addEventListener('click', () => $('ocrateBtn').click());
+  if ($('frBanner')) $('frBanner').addEventListener('click', () => { $('frTitle').scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' }); setTimeout(() => $('frPlay').focus({ preventScroll: true }), 400); });
+})();
+
+// ---- src/frsail.js ----
+// Fog Run: the sail (RAID_STAGES.frsail). The Gannet's Wake's Part I (src/gwsail.js) out of its own shed: the same
+// cutter, deck, helm, holes and flood, bell, flare locker, and the drowned over the rail, on a shorter leg (FRS.LEN,
+// 400 to 600 m) to the next island instead of the Gannet's mark, with no Maren and no Plimsoll out there.
+//  - The way. Each leg sets out from the far side of the last island (the first from the foot of the Light), and its
+//    island lies a little either side of north (frLegGeo, from the run's seed: the same on every screen). The island
+//    shows on the bearing strip, with how far it is.
+//  - The rocks, from the run's seed: thick along the way, thinner off it. They show inside the fog's distance (frFog:
+//    140 m in the first reach, 90 in the second, 50 in the last), and in the Light's beam and a flare's, as in the
+//    Gannet's Wake; past it there's only the fog. The fog only cuts how far you see. Her speed is the Brig's, always.
+//  - She runs up on the island's beach once she's within FRS.IN of it (its radius and a little), and a moment after
+//    you're all ashore: the island's stage (src/frisle.js).
+// It's done through gwsail's GWS_LEG: this file's prep (from src/raid.js raidMapFor, before the world's laid out)
+// fills it in from the run's plan, and its exit clears it. Together it's the Gannet's Wake's word (g* keys), as is.
+
+const FRS = { LEN: [400, 600], SWING: 0.42, IN: 18, ROCKS: 70, FOGC: '#0e131a' };
+// leg n (from 1): where she sets out from (start, and her heading h0, straight at the island) and the island (mark)
+function frLegGeo(n) {
+  let sx = GWS.START[0], sy = GWS.START[1];
+  for (let k = 1; ; k++) {
+    const R = frRng(1000 + k), len = FRS.LEN[0] + R() * (FRS.LEN[1] - FRS.LEN[0]), b = (R() - 0.5) * 2 * FRS.SWING;
+    const mx = sx + Math.sin(b) * len, my = sy + Math.cos(b) * len;
+    if (k >= n) return { start: [sx, sy], h0: b, mark: [mx, my], len };
+    // (the next leg sets out from the far side of this island)
+    sx = mx + Math.sin(b) * (FRI.R + 30); sy = my + Math.cos(b) * (FRI.R + 30);
+  }
+}
+// (prep) the leg for plan entry i, into GWS_LEG; and the fog on the sea, before the world's laid out
+function frsLeg(i) {
+  const p = FR.plan[i] || { n: 1, reach: 1, look: 'shingle' }, G = frLegGeo(p.n), fog = frFog(p.reach), T = FPS_ISLES[p.look] || FPS_ISLES.shingle;
+  GWS_LEG = { key: 'frsail', n: p.n, seed: frSeedOf(i) ^ 0x51a, start: G.start, h0: G.h0, mark: G.mark, isleR: FRI.R, markIn: FRI.R + FRS.IN, rocks: FRS.ROCKS, fog, maren: false, plim: false,
+    look: p.look, ground: T.ground, ground2: T.ground2, sea: null,
+    landSay: `She runs up on the beach of ${T.name}. Ashore!`,
+    line: (S, dm) => S.ph === 'beach' ? `She’s run up on the beach of ${T.name}. Ashore…` : S.ph === 'sunk' ? 'She’s going down.' : `Through the fog to the next island (${T.name}): ${Math.round(Math.max(0, dm - FRI.R)).toLocaleString('en')} m`,
+    arrive: () => raidNextStage(), b3: frs3dBuild, f3: frs3d };
+  FPS_ISLES.frsail.fog = [FRS.FOGC, Math.round(fog * 0.25), Math.round(fog)];
+}
+FPS_ISLES.frsail = Object.assign({}, FPS_ISLES.gwsail, { name: 'the haar', fog: [FRS.FOGC, 35, 140] });
+FPI_GEN.frsail = FPI_GEN.gwsail;
+const FRS_MAP = Object.assign({}, GWS_MAP, { isle: 'frsail' });
+
+RAID_STAGES.frsail = Object.assign({}, RAID_STAGES.gwsail, {
+  n: 'At sea', map: FRS_MAP, gws: true,
+  music: () => FR_MUSIC.sail,
+  prep(i) { frsLeg(i); },
+  enter() {
+    if (!GWS_LEG) frsLeg(RAID.stage);
+    frEnterStage();
+    RAID_STAGES.gwsail.enter();
+    const T = FPS_ISLES[GWS_LEG.look] || FPS_ISLES.shingle;
+    ZM.banner = this.banner();
+    fpsFeed(RAID.stage === 0 ? 'The keeper’s cutter, at the foot of the Light. Take the wheel (Use) and sail her out into the fog.' : 'Back aboard. Take the wheel (Use): the next island is out there in the fog.');
+    fpsFeed(`The fog lets you see ${Math.round(GWS_LEG.fog)} m. Beach her on ${T.name} (its mark is on the strip at the top).`);
+  },
+  banner() { const p = frPlanNow() || { n: 1 }, R = FR_REACH[FR.reach] || FR_REACH[1]; return { text: 'Into the fog', t: 4.5, sub: `${R.n} · to stop ${p.n}`, col: '#c8d4e0' }; },
+  exit() { gwsExit(); GWS_LEG = null; if (typeof GL3D !== 'undefined' && GL3D.scene) GL3D.scene.fog = null; },
+});
+
+// ---------- the island out there, in 3D (in the sea's group: GWS_LEG.b3 and f3) ----------
+function frs3dBuild(SG, G) {
+  const L = GWS_LEG, [mx, my] = L.mark, lam = c => z3Lam(c);
+  const I = G.frI = new THREE.Group(); I.position.set(mx, 0, -my); SG.add(I);
+  // a low hump of the island's own ground, a beach round it, a few rocks
+  const mound = new THREE.Mesh(new THREE.SphereGeometry(1, 28, 10), lam(L.ground)); mound.scale.set(L.isleR, 3.2, L.isleR); mound.position.y = -0.8; I.add(mound);
+  const beach = new THREE.Mesh(new THREE.CylinderGeometry(L.isleR + 3, L.isleR + 6, 0.8, 32), lam(L.ground2)); beach.position.y = -0.2; I.add(beach);
+  const R = seeded(L.seed ^ 0x15e);
+  for (let i = 0; i < 9; i++) { const a = R() * 6.283, d = L.isleR * (0.3 + R() * 0.75), r = 1.5 + R() * 3; const k = new THREE.Mesh(new THREE.DodecahedronGeometry(r, 0), lam('#4e5052')); k.position.set(Math.cos(a) * d, r * 0.3 + 1.2, Math.sin(a) * d); k.rotation.set(R() * 3, R() * 3, R() * 3); I.add(k); }
+  // its beacon in the middle, dark: a cairn and its iron cresset
+  const cairn = new THREE.Mesh(new THREE.CylinderGeometry(0.9, 1.4, 2.2, 7), lam('#5a5c58')); cairn.position.y = 3.2; I.add(cairn);
+  const post = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 2.2, 6), lam('#2e3034')); post.position.y = 5.2; I.add(post);
+  const cres = new THREE.Mesh(new THREE.ConeGeometry(0.7, 0.8, 8, 1, true), lam('#2e3034')); cres.rotation.x = Math.PI; cres.position.y = 6.4; I.add(cres);
+  // a faint cold glow where it stands, so there's something to steer for once it's in sight
+  G.frGlow = G.glowSp(0xa8c0d8, 14, { opacity: 0 }); G.frGlow.position.y = 6.5; I.add(G.frGlow);
+}
+function frs3d(dt, V) {
+  const L = GWS_LEG, G = GW3; if (!L || !G.frI) return;
+  const d = Math.hypot(L.mark[0] - V.x, L.mark[1] - V.y) - L.isleR;
+  if (G.frGlow) G.frGlow.material.opacity = clamp(1.3 - d / Math.max(30, L.fog * 1.4), 0, 0.5) * (0.8 + 0.2 * Math.sin(g.t * 1.4));
+  // the fog: as far as the reach lets you see (pushed back by what's been lit)
+  if (GL3D.scene && GL3D.scene.fog) { const F = GL3D.scene.fog; F.near = L.fog * 0.25; F.far = L.fog; }
+}
+
+// ---- src/frisle.js ----
+// Fog Run: the islands (RAID_STAGES['fr_' + kind], registered with frKind, src/frrun.js), and the tools they share.
+//
+// Each island is a small one (FRI.R, 40 m, across its radius) in one of Wreckers' Night's island looks (FPS_ISLES:
+// the Shingle Skerry, Wreckers' Reef, Chapel Islet, Smugglers' Cove, Signal Head, the Salt Marsh), drawn from the run's
+// seed, with its own rocks, wrecks and props as that look lays them out, only fewer. The fog on land is the look's own
+// fog pulled in to the reach's (frFog). The cutter is run up on its beach: you land at the clearest stretch of shore on
+// the side you came from (the landing, the stage's start), and the island's light (its beacon, for a Fight) stands near
+// the middle.
+//
+// The tools (for any island kind):
+//   frIsleLook(i)      (prep) the look for plan entry i, into FPS_ISLES.frisle, and the map (FRI_MAP) at its size
+//   FPI_GEN.frisle     lays it out: the look's set piece, the landing (a boat drawn up, a lamp on a post), the
+//                      beacon (FPI_K.frbeacon) near the middle, then the stage's own set(H, K, Z) and the look's props;
+//                      where the landing and the beacon ended up: FPS.g.isle.zm.fr { land: [x, y], bea: [x, y] }
+//   frIsleLit()        (hosting or alone) the island's light is lit: everyone lost in the fog is brought back
+//                      (frBringBack), the fog pushed back FR_PUSH for the rest of the reach, the drowned on it sink
+//                      away, and it's counted (FR.lit)
+//   frIsleSpawn(o)     (hosting or alone) one of the drowned rising out of the shore, away from all of you
+//   frIsleSay(text, warn)  a line for everyone (the host's, in the stage's word)
+//
+// One kind so far: the Fight (RAID_STAGES.fr_fight), with one rule of its three, Hold the Light (FRI_RULES.hold):
+//  - Light the beacon: hold Use at it for FRI.USE seconds (anyone).
+//  - Then hold the drowned off it for FRI.HOLD seconds. They come up out of the shore all the while, more of them
+//    the more of you there are, and while it burns they go for it as well as for you: let them crowd it for FRI.DOUSE
+//    seconds' worth (two at once count twice) and they put it out. The clock stops until it's lit again (and keeps
+//    what it had).
+//  - Held: the beacon's beam goes up through the fog (frIsleLit), and FRI.AWAY seconds later you're back aboard
+//    (frIslandDone: the salvage, step 3, then the next sail).
+// Its other rules (Clear the Shore, the Crab Tide) go in FRI_RULES beside it; the plan's entry names the rule.
+// Together it's host-authoritative: the host runs the beacon, its clock and the drowned and sends them in the stage's
+// word (fi: phase, clock, how near it is to being put out, how often lit and put out, who lit it last; fsy: a line); a
+// joined player asks the host to light it (raidAsk 'light').
+
+const FRI = { R: 40, USE: 4, HOLD: 60, DOUSE: 2.5, DOUSE_R: 2.3, AWAY: 7, FOGC: '#10151b', TOP: 3.2 };
+const FRI_PH = ['dark', 'burn', 'out', 'lit'];
+
+// ---------- the island's look, small ----------
+function frIsleLook(i) {
+  const p = FR.plan[i] || { look: 'shingle', reach: 1 }, B = FPS_ISLES[p.look] || FPS_ISLES.shingle, fog = frFog(p.reach);
+  FPS_ISLES.frisle = Object.assign({}, B, {
+    look: FPS_ISLES[p.look] ? p.look : 'shingle',
+    rocks: [Math.ceil(B.rocks[0] * 0.35), B.rocks[1], Math.min(B.rocks[2], 5), B.rocks[3]],
+    wrecks: [Math.min(1, B.wrecks[0]), B.wrecks[1] || 6, Math.min(B.wrecks[2] || 8, 7)],
+    fog: [FRI.FOGC, Math.round(fog * 0.2), Math.round(Math.min(B.fog[2], fog))],
+    birds: [B.birds[0], Math.min(3, B.birds[1])], pebbles: Math.round(B.pebbles * 0.3), tufts: [B.tufts[0], Math.round(B.tufts[1] * 0.3)], pools: Math.round(B.pools * 0.3), wrack: Math.round(B.wrack * 0.5),
+    indoor: false, keep: false, arena: false, noGround: false,
+  });
+  FRI_MAP.zones.isle.n = B.name;
+}
+FPS_ISLES.frisle = Object.assign({}, FPS_ISLES.shingle, { look: 'shingle' });
+const FRI_MAP = { start: [0, -(FRI.R - 7)], top: 0, R: FRI.R, isle: 'frisle', shore: () => -999, nav: [-FRI.R, FRI.R, -FRI.R, FRI.R], zones: { isle: { n: 'the island', r: [-FRI.R, FRI.R, -FRI.R, FRI.R], sky: true } } };
+FPI_GEN.frisle = {
+  built: true,
+  set(H) {
+    const T = H.I.T, L = FPI_GEN[T.look] || {}, S = raidStage() || {}, { R, CX, CY, IR } = H;
+    const Z = H.I.zm = { doors: [], windows: [], buys: [], perks: [], spawns: [], lights: [] };
+    // the look's own set piece first (the chapel, the signal tower, the jetty and boathouse)
+    if (L.set) L.set(H);
+    // the landing: the clearest stretch of shore on the south side (where she came in from), a boat drawn up, a lamp
+    let land = null;
+    for (let k = 0; k < 24 && !land; k++) { const a = -Math.PI / 2 + (k % 2 ? 1 : -1) * Math.ceil(k / 2) * 0.22, [x, y] = H.polar(a, IR - 7); if (H.clear(x, y, 3, 1)) land = [x, y, a]; }
+    if (!land) { const [x, y] = H.polar(-Math.PI / 2, IR - 7); land = [x, y, -Math.PI / 2]; }
+    { const [bx, by] = H.polar(land[2] + 0.12, IR - 2.5); H.put('boat', bx, by, land[2] + Math.PI / 2 + 0.3, { len: 4.6, beam: 1.6, paint: '#34465a' }); }
+    { const [lx, ly] = H.polar(land[2] - 0.1, IR - 5); fpiLanternPost(H, lx, ly, land[2]); }
+    // the beacon: near the middle, wherever's clear
+    const at = H.spot(2.2, 0, 10, 2.4, 200) || H.spot(2.2, 0, 22, 2, 200) || [CX, CY];
+    H.put('frbeacon', at[0], at[1], R(0, H.TAU), {});
+    H.track([[land[0], land[1]], [(land[0] + at[0]) / 2 + R(-3, 3), (land[1] + at[1]) / 2 + R(-3, 3)], [at[0], at[1]]]);
+    Z.fr = { land: [land[0] - CX, land[1] - CY], landA: land[2], bea: [at[0] - CX, at[1] - CY] };
+    // (where you come ashore: the landing, a little up the beach)
+    ZMD.START = Z.fr.land.slice(); FRI_MAP.start = Z.fr.land.slice();
+    if (S.set) S.set(H, zmKit(H, Z), Z);
+  },
+  props(H) { const L = FPI_GEN[H.I.T.look] || {}; if (L.props) L.props(H); },
+  decor() {},
+};
+// the beacon: a cairn of stones, an iron post up out of it and the cresset on top, full of tarred wood (its fire and
+// its beam are the stage's 3D)
+FPI_K.frbeacon = {
+  col: FPI_C.stone,
+  sol(p) { return [fpiCirc(p, 0, 0, 1.15, 1.4)]; },
+  b3(p, A) {
+    for (let i = 0; i < 11; i++) { const a = i / 11 * Math.PI * 2 + A.r() * 0.3, d = 0.75 + A.r() * 0.35; A.part('ico', i % 3 ? FPI_C.stone : FPI_C.stone2, Math.cos(a) * d, Math.sin(a) * d, 0.2 + A.r() * 0.3, 0.55, 0.45, 0.5, A.r() * 3); }
+    A.cyl(FPI_C.stone3, 0, 0, 0, 0.85, 1.2, 0, 0, 0, 'cyl8');
+    A.cyl(FPI_C.iron, 0, 0, 1.1, 0.09, 1.8, 0, 0, 0, 'cyl6');
+    for (let i = 0; i < 4; i++) { const a = i / 4 * Math.PI * 2; A.part('cyl6', FPI_C.iron, Math.cos(a) * 0.32, Math.sin(a) * 0.32, 2.75, 0.05, 0.7, 0.05, a, 0, 0.45); }
+    A.part('cone', FPI_C.iron, 0, 0, 3.05, 0.85, -0.5, 0.85);
+    for (let i = 0; i < 5; i++) A.log(FPI_C.tar, (A.r() - 0.5) * 0.35, (A.r() - 0.5) * 0.35, 3.0, 0.07, 0.8, i * 0.7, (A.r() - 0.5) * 0.5);
+  },
+};
+const friLand = () => { const F = FPS.g && FPS.g.isle && FPS.g.isle.zm && FPS.g.isle.zm.fr; return F ? [FPSC.CX + F.land[0], FPSC.CY + F.land[1]] : [FPSC.CX, FPSC.CY - FRI.R + 7]; };
+const friBeacon = () => { const F = FPS.g && FPS.g.isle && FPS.g.isle.zm && FPS.g.isle.zm.fr; return F ? [FPSC.CX + F.bea[0], FPSC.CY + F.bea[1]] : [FPSC.CX, FPSC.CY]; };
+const friNick = sid => sid === FPS.me.id ? 'You' : ((ZM.hum || []).find(h => h[0] === sid) || [])[1] || 'Someone';
+
+// ---------- what every island stage does alike ----------
+function frIsleSay(text, warn) { if (ZM.net !== 'client') { const S = RAID.st; S.say = [((S.say || [0])[0] | 0) + 1, text, warn ? 1 : 0]; } frIsleHear(text, warn); }
+function frIsleHear(text, warn) { fpsFeed(text); if (warn) ZM.banner = { text, t: 2.8, small: true, col: '#ffe2a8' }; }
+// (hosting or alone) the island's light is lit
+function frIsleLit() {
+  FR.lit = (FR.lit | 0) + 1; frFogPush(FR_PUSH);
+  frBringBack();
+  for (const z of ZM.z) if (!z.dead) { z.dead = 1; z.deadT = 0; z.burn = true; if (typeof zmKillFx === 'function') zmKillFx(z); }
+}
+// (hosting or alone) one of the drowned up out of the shore, at least 12 m from everyone; o: raidSpawnAt's
+function frIsleSpawn(o) {
+  const P = ZM.players || [];
+  for (let t = 0; t < 20; t++) {
+    const a = Math.random() * 6.283, d = FRI.R - 3 - Math.random() * 5, x = FPSC.CX + Math.cos(a) * d, y = FPSC.CY + Math.sin(a) * d;
+    if (P.some(p => !p.beacon && Math.hypot(p.x - x, p.y - y) < 12)) continue;
+    if (zmBlockedAt(x, y, 0.5, 0)) continue;
+    return raidSpawnAt(x, y, o);
+  }
+  return null;
+}
+// what kind comes up: more runners the further out you are
+function frIsleKindOf() { const u = Math.random(), run = 0.08 + 0.06 * (FR.stop | 0) + 0.05 * (FR.reach - 1); return u < run ? 'run' : u < run + 0.55 ? 'jog' : 'walk'; }
+// the island's fog: the look's, pulled in to the reach's (and pushed back as the lights are lit)
+function frIsleFog() { if (typeof GL3D === 'undefined' || !GL3D.scene || !GL3D.scene.fog) return; const F = GL3D.scene.fog, far = Math.min(FPS_ISLES.frisle.fog[2] + FR_PUSH * 4, frFog()); F.far += (far - F.far) * 0.04; F.near = F.far * 0.2; }
+
+// ---------- the rules of a Fight ----------
+const FRI_RULES = {};
+FRI_RULES.hold = {
+  n: 'Hold the Light',
+  enter() {
+    Object.assign(RAID.st, { ph: 'dark', holdT: 0, douse: 0, lightN: 0, outN: 0, by: '', awayT: 0, spT: 4, useT: 0, pend: 0, say: [0, '', 0], seenSay: 0, phSeen: 'dark' });
+    fpsFeed('Ashore. Light the beacon (hold Use at it, in the middle of the island), then hold the drowned off it for a minute.');
+  },
+  tick(dt) {
+    const S = RAID.st, n = Math.max(1, ZM.hum.length), [bx, by] = friBeacon();
+    // the drowned, up out of the shore: a few while it's dark, a steady stream while it burns
+    if (S.ph !== 'lit') {
+      S.spT -= dt;
+      const alive = ZM.z.filter(z => !z.dead).length, prog = S.holdT / FRI.HOLD, cap = S.ph === 'dark' ? 2 + n : Math.round((4 + 2 * n + prog * 4) * (1 + 0.5 * (n - 1)) / (1 + 0.25 * (n - 1)));
+      if (S.spT <= 0) {
+        if (alive < cap) frIsleSpawn({ kind: frIsleKindOf(), hp: zmHp(RAIDC.ROUND + (FR.stop | 0) + (FR.reach - 1) * 2) * (0.9 + Math.random() * 0.2) * (1 + 0.25 * (n - 1)) });
+        S.spT = (S.ph === 'dark' ? 6 : 2.6 - 1.2 * prog) * (0.75 + Math.random() * 0.5) / Math.sqrt(1 + 0.5 * (n - 1));
+      }
+    }
+    if (S.ph === 'burn') {
+      S.holdT += dt;
+      // crowding it: two at once count twice
+      let k = 0; for (const z of ZM.z) if (!z.dead && !(z.rr > 0) && Math.hypot(z.x - bx, z.y - by) < FRI.DOUSE_R) k++;
+      S.douse = k ? S.douse + dt * k : Math.max(0, S.douse - dt * 0.6);
+      if (S.douse >= FRI.DOUSE) { S.ph = 'out'; S.outN++; S.douse = 0; frIsleSay('They’ve put the beacon out! Light it again.', true); }
+      else if (S.holdT >= FRI.HOLD) { S.ph = 'lit'; S.awayT = 0; frIsleLit(); frIsleSay(`The beacon is lit, and its light goes up through the fog. Back aboard in ${FRI.AWAY} seconds.`, true); }
+    }
+    if (S.ph === 'lit') { S.awayT += dt; if (S.awayT >= FRI.AWAY) frIslandDone(); }
+  },
+  q(sid, k) {
+    const S = RAID.st;
+    if (k === 'light' && (S.ph === 'dark' || S.ph === 'out')) { const again = S.ph === 'out'; S.ph = 'burn'; S.lightN++; S.by = sid; S.douse = 0; frIsleSay(`${friNick(sid)} ${again ? 'lit the beacon again' : 'lit the beacon'}. Hold them off it: ${Math.ceil(FRI.HOLD - S.holdT)} s.`, true); }
+  },
+  players(P) { const S = RAID.st; if (S.ph !== 'burn') return P; const [x, y] = friBeacon(); return P.concat([{ sid: '', x, y, jz: 0, beacon: true }]); },
+  pack(o) { const S = RAID.st; o.fi = [FRI_PH.indexOf(S.ph), Math.round(S.holdT * 10), Math.round(S.douse * 10), S.lightN, S.outN, S.by || '', Math.round(S.awayT * 10)]; o.fsy = S.say; },
+  apply(o) {
+    const S = RAID.st;
+    if (Array.isArray(o.fi)) { const a = o.fi; if (!(S.pend > 0) || FRI_PH[a[0] | 0] !== 'dark') S.ph = FRI_PH[a[0] | 0] || 'dark'; S.holdT = (a[1] | 0) / 10; S.douse = (a[2] | 0) / 10; S.lightN = a[3] | 0; S.outN = a[4] | 0; S.by = String(a[5] || ''); S.awayT = (a[6] | 0) / 10; }
+    if (Array.isArray(o.fsy)) { const n = o.fsy[0] | 0; if (n > S.seenSay) { if (S.seenSay || n === 1) frIsleHear(String(o.fsy[1] || ''), !!o.fsy[2]); S.seenSay = n; } }
+  },
+  me(dt) {
+    const S = RAID.st, m = FPS.me, alive = !(m.dead > 0) && !zmIsDown() && !ZM.over;
+    if (S.pend > 0) S.pend -= dt;
+    // the sound of it catching, going out, going up
+    if (S.ph !== S.phSeen) { const was = S.phSeen; S.phSeen = S.ph; try { if (!soundOff()) { if (S.ph === 'burn') sfxFlare(); else if (S.ph === 'lit') { zmSound('round'); sfxBell(); } else if (S.ph === 'out' && was === 'burn') zmSound('over'); } } catch (e) {} }
+    // holding Use at the beacon lights it
+    const hold = FPS.keys.KeyF || FPS.keys.KeyE || FPS.touchUse || FPS.padUse, o = ZM.near;
+    if (hold && o && o.k === 'frbeacon' && alive && !(S.pend > 0) && (S.ph === 'dark' || S.ph === 'out')) {
+      S.useT += dt;
+      if (S.useT >= FRI.USE) { S.useT = 0; S.pend = 1.2; raidAsk('light'); }
+    } else S.useT = 0;
+  },
+  consider(c) { const S = RAID.st; if (S.ph === 'dark' || S.ph === 'out') { const [x, y] = friBeacon(); c({ k: 'frbeacon' }, x, y, 0, 2.6, false); } },
+  prompt(o) { if (o.k === 'frbeacon') return { text: RAID.st.ph === 'out' ? 'Hold to light the beacon again' : 'Hold to light the beacon', hold: true }; return null; },
+  use(o) { return o.k === 'frbeacon'; },
+  hud(phone, mono, fell) {
+    const S = RAID.st, L = Math.max(14, FPS.safeLeft || 0), top = fpsHudTop() + (phone ? 32 : 44), t = g.t;
+    const line = S.ph === 'dark' ? 'Light the beacon: hold Use at it, near the middle of the island'
+      : S.ph === 'burn' ? `Hold the Light: keep the drowned off the beacon · ${Math.ceil(FRI.HOLD - S.holdT)} s`
+      : S.ph === 'out' ? `They put it out! Light the beacon again · ${Math.ceil(FRI.HOLD - S.holdT)} s still to hold`
+      : `The beacon is lit. Back aboard in ${Math.max(0, Math.ceil(FRI.AWAY - S.awayT))} s`;
+    ctx.textAlign = 'left'; ctx.textBaseline = 'top'; ctx.font = mono(phone ? 10 : 13); ctx.fillStyle = S.ph === 'out' ? `rgba(255,150,110,${0.75 + 0.25 * Math.sin(t * 6)})` : S.ph === 'lit' ? '#ffe2a8' : 'rgba(236,228,207,0.85)';
+    ctx.fillText(line, L, top, W * 0.6); fpsHudNote(top + (phone ? 14 : 18));
+    // the hold: a bar of how long it's burned, and under it how near they are to putting it out
+    if (S.ph !== 'dark') {
+      const x = L, y = top + (phone ? 20 : 26), w = phone ? 150 : 214, h = phone ? 6 : 8;
+      ctx.fillStyle = 'rgba(8,10,14,0.55)'; ctx.fillRect(x - 4, y - 4, w + 8, h * 2 + 14);
+      ctx.fillStyle = 'rgba(80,70,60,0.6)'; ctx.fillRect(x, y, w, h); ctx.fillStyle = '#ffc070'; ctx.fillRect(x, y, w * clamp(S.holdT / FRI.HOLD, 0, 1), h);
+      ctx.fillStyle = 'rgba(80,70,60,0.6)'; ctx.fillRect(x, y + h + 6, w, h * 0.6); ctx.fillStyle = S.douse > FRI.DOUSE * 0.5 ? `rgba(220,90,70,${0.75 + 0.25 * Math.sin(t * 8)})` : '#6a8aa0'; ctx.fillRect(x, y + h + 6, w * clamp(S.douse / FRI.DOUSE, 0, 1), h * 0.6);
+      fpsHudNote(y + h * 2 + 12);
+    }
+    // lighting it: a ring round the sights filling
+    if (S.useT > 0) {
+      const k = Math.min(1, S.useT / FRI.USE);
+      ctx.strokeStyle = 'rgba(255,192,112,0.25)'; ctx.lineWidth = 4; ctx.beginPath(); ctx.arc(cx, H / 2, 26, 0, 6.283); ctx.stroke();
+      ctx.strokeStyle = '#ffc070'; ctx.beginPath(); ctx.arc(cx, H / 2, 26, -Math.PI / 2, -Math.PI / 2 + k * 6.283); ctx.stroke();
+    }
+    ctx.textBaseline = 'alphabetic';
+  },
+};
+
+// ---------- the Fight's stage ----------
+const friRule = () => FRI_RULES[(frPlanNow() || {}).rule] || FRI_RULES.hold;
+const friCall = (k, ...a) => { const R = friRule(); return typeof R[k] === 'function' ? R[k](...a) : undefined; };
+frKind('fight', { n: 'Fight', mark: '⚔', weight: 3 }, {
+  get n() { return (FPS_ISLES.frisle && FPS_ISLES.frisle.name) || 'an island'; },
+  map: FRI_MAP, mend: true, open: true,
+  music: () => FR_MUSIC.isle,
+  prep(i) { frIsleLook(i); },
+  enter() { frEnterStage(); friCall('enter'); },
+  banner() { const R = FR_REACH[FR.reach] || FR_REACH[1]; return { text: FPS_ISLES.frisle.name, t: 4.5, sub: `${R.n} · stop ${FR.stop} · ${friRule().n}`, col: '#ffe2a8' }; },
+  tick(dt) { friCall('tick', dt); },
+  me(dt) { friCall('me', dt); },
+  q(sid, k, a) { friCall('q', sid, k, a); },
+  pack(o) { friCall('pack', o); },
+  apply(o) { friCall('apply', o); },
+  players(P) { return friCall('players', P) || P; },
+  consider(c) { friCall('consider', c); },
+  prompt(o) { return friCall('prompt', o) || null; },
+  use(o) { return !!friCall('use', o); },
+  hud(phone, mono, fell) { friCall('hud', phone, mono, fell); },
+  b3(grp) { fri3dBuild(grp); },
+  f3(dt) { fri3d(dt); },
+  exit() { FRI3.on = false; },
+});
+
+// ---------- in 3D: the beacon's fire, and its beam up through the fog ----------
+const FRI3 = { on: false };
+function fri3dBuild(grp) {
+  const [bx, by] = friBeacon(), Z = FPSC.GROUND + fpsIsleH(FPS.g.isle, bx, by);
+  const soft = z3Soft('rgba(255,210,150,0.95)', 'rgba(255,170,90,0)');
+  FRI3.on = true;
+  FRI3.fire = new THREE.Sprite(new THREE.SpriteMaterial({ map: soft, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false }));
+  FRI3.fire.position.copy(z3v(bx, by, Z + FRI.TOP + 0.3)); FRI3.fire.scale.set(1.6, 2.2, 1); grp.add(FRI3.fire);
+  FRI3.halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: soft, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: 0.4, fog: false }));
+  FRI3.halo.position.copy(FRI3.fire.position); FRI3.halo.scale.setScalar(9); grp.add(FRI3.halo);
+  FRI3.light = new THREE.PointLight(0xffb060, 0, 26, 1.3); FRI3.light.position.copy(z3v(bx, by, Z + FRI.TOP + 0.6)); grp.add(FRI3.light);
+  // the beam: a tall pale column of light, up through the fog
+  const bm = new THREE.MeshBasicMaterial({ color: 0xffe6b8, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, fog: false });
+  FRI3.beam = new THREE.Mesh(new THREE.CylinderGeometry(1.1, 4.5, 260, 20, 1, true), bm); FRI3.beam.position.copy(z3v(bx, by, Z + FRI.TOP + 130)); grp.add(FRI3.beam);
+  FRI3.core = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 1.2, 260, 12, 1, true), bm.clone()); FRI3.core.position.copy(FRI3.beam.position); grp.add(FRI3.core);
+  FRI3.beamK = 0;
+}
+function fri3d(dt) {
+  if (!FRI3.on || !FRI3.fire) return;
+  const S = RAID.st, t = g.t, lit = S.ph === 'burn' || S.ph === 'lit', fl = reduceMotion ? 1 : 0.85 + 0.15 * Math.sin(t * 17) * Math.sin(t * 5.3);
+  FRI3.fire.visible = FRI3.halo.visible = lit;
+  FRI3.fire.scale.set(1.6 * fl, 2.3 * (2 - fl), 1); FRI3.halo.material.opacity = 0.35 * fl * (S.ph === 'lit' ? 1.6 : 1);
+  FRI3.light.intensity = lit ? 2.2 * fl : 0;
+  FRI3.beamK += ((S.ph === 'lit' ? 1 : 0) - FRI3.beamK) * Math.min(1, dt * 1.2);
+  FRI3.beam.visible = FRI3.core.visible = FRI3.beamK > 0.01;
+  FRI3.beam.material.opacity = 0.22 * FRI3.beamK; FRI3.core.material.opacity = 0.5 * FRI3.beamK;
+  frIsleFog();
+}
+
 // ---- src/zmnet.js ----
 // The Lighthouse, played together: a lobby, and up to four in one night.
 //
@@ -39359,6 +40092,9 @@ setInterval(() => { if (RCL.picking && !(FPS.on && FPS.zm && rclOn())) rclCloseP
 // they stood, how hurt, down or not, their calling) comes back from what this browser kept of it (znRjSnap); what
 // the host credited them while they were gone is added on top. The host's browser is the night, so if the host
 // drops out the night ends as before.
+// [fogrun] Fog Run (src/frrun.js) has a lobby of its own on its own card (ZN.mode 'fr', prefix fr), kept apart from
+// nights and raids the same way the raids are kept from nights: by the map its host has picked (ZM_MAPS.fogrun.fr).
+// Its seed goes out once, in the start (st.fs); each player's lives go in their presence (frp).
 
 const ZN = { code: null, at: 0, doneG: null, msg: '', g: null, sendT: 0, hseq: 0, seq: 0, q: [], hq: [], hits: new Map(), shots: [], shotSeq: 0,
   lastQ: {}, lastH: {}, lastShot: {}, seenT: {}, ev: [], eseq: 0, evSeen: 0, lastHseq: -1, hostT: 0, creditSeen: [0, 0, 0], lobT: 0, j: '', rj: null };
@@ -39395,9 +40131,13 @@ function znAt(o, t) {
 // ---------- the lobby ----------
 function znOnline() { return !!(typeof NET !== 'undefined' && NET.room && NET.status === 'ready'); }
 // the map a lobby's for: the raid's, or the one picked on the Lighthouse's card
-const znMap = () => ZN.mode === 'raid' ? (typeof RD_PICK !== 'undefined' ? RD_PICK : 'raid') : ZM_PICK;   // [raid] (which raid: src/raid.js)
+const znMap = () => ZN.mode === 'fr' ? 'fogrun' : ZN.mode === 'raid' ? (typeof RD_PICK !== 'undefined' ? RD_PICK : 'raid') : ZM_PICK;   // [raid] (which raid: src/raid.js) [fogrun]
 const znIsRaid = m => !!(ZM_MAPS[m] && ZM_MAPS[m].raid);
-function znNick() { return znClean(($(ZN.mode === 'raid' ? 'rdNick' : 'zmNick') && $(ZN.mode === 'raid' ? 'rdNick' : 'zmNick').value) || '', 16) || (NET.nick ? znClean(NET.nick, 16) : '') || 'Keeper ' + String(NET.sid || '').slice(0, 3).toUpperCase(); }
+// [fogrun] which card a map's lobby belongs on: 'fr' (Fog Run), 'raid' or 'zm'; and a mode from what's asked
+const znKind = m => ZM_MAPS[m] && ZM_MAPS[m].fr ? 'fr' : znIsRaid(m) ? 'raid' : 'zm';
+const znModeOf = mode => mode === 'raid' || mode === 'fr' ? mode : 'zm';
+const ZN_NICK = { zm: 'zmNick', raid: 'rdNick', fr: 'frNick' }, ZN_CARD = { zm: 'zmTitle', raid: 'rdTitle', fr: 'frTitle' };
+function znNick() { const b = $(ZN_NICK[ZN.mode] || 'zmNick'); return znClean((b && b.value) || '', 16) || (NET.nick ? znClean(NET.nick, 16) : '') || 'Keeper ' + String(NET.sid || '').slice(0, 3).toUpperCase(); }
 function znOf(p) { const z = p && p.presence && p.presence.zm; return z && typeof z === 'object' && typeof z.room === 'string' && typeof z.sid === 'string' ? z : null; }
 function znBase() { return { room: ZN.code, sid: NET.sid, nick: znNick(), at: ZN.at }; }
 function znPeers(code) {
@@ -39418,13 +40158,13 @@ function znSendLobby() {
 }
 function znHost(mode) {
   if (!znOnline() || FPS.on) return;
-  ZN.mode = mode === 'raid' ? 'raid' : 'zm';
+  ZN.mode = znModeOf(mode);
   ZN.code = 'z' + Math.random().toString(36).slice(2, 8); ZN.at = Date.now(); ZN.msg = '';
   znSendLobby(); znRender();
 }
 function znJoin(code, mode) {
   if (!znOnline() || !code || FPS.on) return;
-  ZN.mode = mode === 'raid' ? 'raid' : 'zm';
+  ZN.mode = znModeOf(mode);
   if (znPeers(code).length >= ZN_MAX) { ZN.msg = 'That night is full (four players).'; znRender(); return; }
   ZN.code = code; ZN.at = Date.now(); ZN.msg = '';
   znSendLobby(); znRender();
@@ -39453,18 +40193,19 @@ function znOpenNights() {
 }
 // Two cards share the one lobby: the Lighthouse's (prefix zm) and Maren's End's (prefix rd, src/raid.js). Each lists
 // only its own: a night whose map is the raid is a raid. Whichever card you host or join from, the lobby shows there.
-const ZN_UI = [{ p: 'zm', raid: false, what: 'night', who: 'A keeper' }, { p: 'rd', raid: true, what: 'raid', who: 'A keeper' }];
+// [fogrun] and a third, Fog Run's (prefix fr): mode, which ZN.mode is its; each lists only nights of its own kind (znKind)
+const ZN_UI = [{ p: 'zm', mode: 'zm', raid: false, what: 'night', who: 'A keeper' }, { p: 'rd', mode: 'raid', raid: true, what: 'raid', who: 'A keeper' }, { p: 'fr', mode: 'fr', raid: true, fr: true, what: 'run', who: 'A keeper' }];
 function znRender() { for (const U of ZN_UI) znRenderUI(U); }
 function znRenderUI(U) {
   const q = id => $(U.p + id);
   if (!q('Mp')) return;
-  const on = znOnline(), mine = !!ZN.code && ZN.mode === (U.raid ? 'raid' : 'zm'), W = U.what;
-  q('MpNote').textContent = on ? (ZN.code && !mine ? `You’re in a ${U.raid ? 'Lighthouse night' : 'raid'}’s lobby on the other card; leave it to ${U.raid ? 'host or join a raid' : 'host or join a night'} here.` : `Up to four in one ${W}. One of you hosts; the others join, and the host starts the ${W} when everyone’s in.`) : (NET.status === 'connecting' ? 'Looking for other players…' : (NET.offReason || 'Playing together isn’t available here.'));
+  const on = znOnline(), mine = !!ZN.code && ZN.mode === U.mode, W = U.what;
+  q('MpNote').textContent = on ? (ZN.code && !mine ? `You’re in a ${{ zm: 'Lighthouse night', raid: 'raid', fr: 'fog run' }[ZN.mode] || 'game'}’s lobby on another card; leave it to host or join a ${W} here.` : `Up to four in one ${W}. One of you hosts; the others join, and the host starts the ${W} when everyone’s in.`) : (NET.status === 'connecting' ? 'Looking for other players…' : (NET.offReason || 'Playing together isn’t available here.'));
   q('MpOpen').hidden = !on || !!ZN.code;
   q('Lobby').hidden = !mine;
   if (!on) return;
   if (!ZN.code) {
-    const nights = znOpenNights().filter(n => znIsRaid(n.map) === U.raid), el = q('Lobbies'), key = JSON.stringify(nights) + ZN.msg;
+    const nights = znOpenNights().filter(n => znKind(n.map) === U.mode), el = q('Lobbies'), key = JSON.stringify(nights) + ZN.msg;
     if (el.dataset.k === key) return; el.dataset.k = key;
     el.textContent = '';
     if (ZN.msg) { const p = document.createElement('p'); p.className = 'muted'; p.textContent = ZN.msg; el.append(p); }
@@ -39476,7 +40217,7 @@ function znRenderUI(U) {
       const sm = document.createElement('small'); sm.textContent = `${ZM_MAPS[n.map].N} · ` + (back ? 'under way · tap to rejoin' : n.started ? 'under way' : `${n.n}/${ZN_MAX} players · tap to join`);
       b.append(nm, sm);
       b.disabled = back ? false : n.started || n.n >= ZN_MAX;
-      b.addEventListener('click', () => back ? znRejoin(back) : znJoin(n.code, U.raid ? 'raid' : 'zm'));
+      b.addEventListener('click', () => back ? znRejoin(back) : znJoin(n.code, U.mode));
       el.append(b);
     }
     return;
@@ -39495,7 +40236,9 @@ function znRenderUI(U) {
     ol.append(li);
   });
   const hm = hz && hz.lob && ZM_MAPS[hz.lob.map] ? hz.lob.map : 'light';
-  q('LobbyMsg').textContent = ZN.msg || (U.raid
+  q('LobbyMsg').textContent = ZN.msg || (U.fr   // [fogrun]
+    ? (host ? (m.length > 1 ? `${m.length} of ${ZN_MAX} here. Set out when everyone’s in.` : 'Waiting for others to join. You can set out alone, too, whenever you like.') : 'Waiting for the host to set out.')
+    : U.raid
     ? (host ? (m.length > 1 ? `${m.length} of ${ZN_MAX} here, for ${ZM_MAPS[znMap()].N}. Start the raid when everyone’s in.` : `Waiting for others to join. You can start alone, too, whenever you like. The raid: ${ZM_MAPS[znMap()].N} (pick above).`) : `Waiting for the host to start the raid: ${ZM_MAPS[hm].N}.`)
     : host
     ? (m.length > 1 ? `${m.length} of ${ZN_MAX} here, at ${ZM_MAPS[ZM_PICK].n}. Start the night when everyone’s in.` : `Waiting for others to join. You can start alone, too, whenever you like. Tonight: ${ZM_MAPS[ZM_PICK].n} (pick above).`)
@@ -39507,12 +40250,14 @@ function znStart() {
   if (!znAmHost() || FPS.on) return;
   const m = znMembers();
   const st = { g: Math.random().toString(36).slice(2, 9), hum: m.map(p => [znOf(p).sid, znClean(znOf(p).nick, 16) || 'A keeper']), map: znMap() };
+  if (ZM_MAPS[st.map] && ZM_MAPS[st.map].fr && typeof frSeedNew === 'function') st.fs = frSeedNew();   // [fogrun] the run's seed, drawn here and sent the once
   znBegin(st, 'host');
 }
 function znBegin(st, role) {
   const rj = role === 'client' && ZN.rjWant && ZN.rjWant.g === st.g ? ZN.rjWant.snap || {} : null; ZN.rjWant = null;
   Object.assign(ZN, { j: Math.random().toString(36).slice(2, 6), rj, g: st.g, st, doneG: st.g, sendT: 0, hseq: 0, seq: 0, q: [], hq: [], shots: [], shotSeq: 0, lastQ: {}, lastH: {}, lastShot: {}, seenT: {}, ev: [], eseq: 0, evSeen: 0, lastHseq: -1, hostT: performance.now(), creditSeen: [0, 0, 0], est: null });
   ZN.hits.clear();
+  if (typeof frSeedFrom === 'function') frSeedFrom(st);   // [fogrun]
   zmStart({ net: role, hum: st.hum, map: st.map });
   for (const [sid] of st.hum) ZN.seenT[sid] = performance.now();
 }
@@ -39526,6 +40271,7 @@ function zmNetPeers() {
     if (h && !(h.isMe && h.sameTab) && hz.st && typeof hz.st.g === 'string' && hz.st.g !== ZN.doneG && Array.isArray(hz.st.hum) && !FPS.on) {
       if (hz.st.hum.some(x => Array.isArray(x) && x[0] === NET.sid)) {
         const st = { g: hz.st.g, hum: hz.st.hum.slice(0, ZN_MAX).filter(x => Array.isArray(x)).map(x => [String(x[0]), znClean(x[1], 16) || 'A keeper']), map: ZM_MAPS[hz.st.map] ? hz.st.map : 'light' };
+        if (hz.st.fs) st.fs = hz.st.fs >>> 0;   // [fogrun] the run's seed
         znBegin(st, 'client'); return;
       }
       ZN.doneG = hz.st.g; ZN.msg = 'The night started without you. Host your own, or wait for the next.'; ZN.rjWant = null;
@@ -39537,7 +40283,7 @@ function zmNetPeers() {
 // a night over (or left): back to the lobby on the title card, still in the same room
 function zmnBackToLobby() {
   setTimeout(() => {
-    if (ZN.code) { znSendLobby(); const c = $(ZN.mode === 'raid' ? 'rdTitle' : 'zmTitle'); if (c) c.scrollIntoView({ block: 'start' }); }
+    if (ZN.code) { znSendLobby(); const c = $(ZN_CARD[ZN.mode] || 'zmTitle'); if (c) c.scrollIntoView({ block: 'start' }); }   // [fogrun]
     znRender();
   }, 50);
 }
@@ -39569,6 +40315,7 @@ function znPresence() {
   z.hp = FPS.me.dead > 0 || ZM.downT > 0 ? 0 : Math.max(0, Math.ceil(FPS.me.hp)); z.hm = ZM.perks && ZM.perks.stout ? ZMC.HP_STOUT : ZMC.HP;
   if (typeof rclPresence === 'function') rclPresence(z);   // [classes] my calling, my ultimate, what I've just thrown (src/rclass.js)
   if (typeof rmvPresence === 'function') rmvPresence(z);   // [mvp] once Maren's down: what I did, and her token taken (src/raidmvp.js)
+  if (typeof frPresence === 'function') frPresence(z);   // [fogrun] my lives (src/frrun.js)
   return z;
 }
 // my shots, for the others to see and hear
@@ -39628,6 +40375,7 @@ function znReadPlayers(dt) {
     r.left = false;
     if (typeof rclHeard === 'function') rclHeard(r, z);   // [classes] src/rclass.js
     if (typeof rmvHeard === 'function') rmvHeard(r, z);   // [mvp] src/raidmvp.js
+    if (typeof frHeard === 'function') frHeard(r, z);   // [fogrun] their lives
     if (Array.isArray(z.sh)) {
       const last = ZN.lastShot[z.sid] || 0;
       for (const s of z.sh) if (Array.isArray(s) && s[0] > last) { ZN.lastShot[z.sid] = s[0]; znShotFx(r, s); }
@@ -39896,7 +40644,8 @@ function znRjSnap() {
   return { pts: ZM.pts, own: ZM.own.slice(), res: cp(ZM.res), mags, w: FPS.weapon, l: FPS.last, ammo: m.ammo, perks: cp(ZM.perks), wb: ZM.windBuys | 0, pap: cp(ZM.pap),
     spent: ZM.spent | 0, doors: ZM.doorsOpened | 0, downs: ZM.downs | 0, cr: ZN.creditSeen.slice(), x: m.x - FPSC.CX, y: m.y - FPSC.CY, jz: m.jz || 0, fl: m.fl, h: m.h, p: m.p,
     hp: m.hp, dead: m.dead || 0, dn: ZM.downT || 0, gh: !!ZM.ghost, kit: cp(ZM.downKit), st: typeof RAID !== 'undefined' && RAID.on ? RAID.stage : -1,
-    cls: typeof RCL !== 'undefined' ? RCL.cls : null, uK: typeof RCL !== 'undefined' ? RCL.uK || 0 : 0, mvp: typeof RMV !== 'undefined' ? cp(RMV.s) : null };
+    cls: typeof RCL !== 'undefined' ? RCL.cls : null, uK: typeof RCL !== 'undefined' ? RCL.uK || 0 : 0, mvp: typeof RMV !== 'undefined' ? cp(RMV.s) : null,
+    fr: typeof frRjSnap === 'function' ? frRjSnap() : null };   // [fogrun] the run's seed and stage, my lives
 }
 // the record src/rejoin.js keeps: a night I've joined (null: in none; false: hosting it, which can't be come back to)
 function znRjRecord() {
@@ -39912,7 +40661,7 @@ const znRjFor = code => { const r = typeof rjGet === 'function' ? rjGet() : null
 // that names me arrives (zmNetPeers)
 function znRejoin(r) {
   if (!znOnline() || FPS.on || !r) return false;
-  ZN.mode = r.mode === 'raid' ? 'raid' : 'zm'; ZN.code = r.code; ZN.at = +r.at || Date.now(); ZN.msg = ''; ZN.doneG = null; ZN.rjWant = r;
+  ZN.mode = znModeOf(r.mode); ZN.code = r.code;   // [fogrun] ZN.at = +r.at || Date.now(); ZN.msg = ''; ZN.doneG = null; ZN.rjWant = r;
   znSendLobby(); znRender();
   setTimeout(() => { if (ZN.rjWant === r) { ZN.rjWant = null; if (typeof rjClear === 'function') rjClear(); ZN.msg = 'That night has ended.'; znLeave(); } }, 10000);
   return true;
@@ -39951,6 +40700,7 @@ function znRjAfter(rj, gained) {
   else if (rj.dn > 0) { ZM.downT = Math.min(ZM_DOWN.T, rj.dn); m.hp = 0; ZM.downKit = rj.kit && Array.isArray(rj.kit.own) ? rj.kit : null; }
   else if (!(m.hp > 0)) m.hp = 1;
   m.protect = Math.max(m.protect || 0, 2);
+  if (typeof frRjAfter === 'function') frRjAfter(rj.fr);   // [fogrun] my lives, as they were
   fpsFeed('You’re back in.');
 }
 
@@ -39960,6 +40710,7 @@ function znRjAfter(rj, gained) {
   $('zmMpLeave').addEventListener('click', znLeave);
   $('zmMpStart').addEventListener('click', znStart);
   if ($('rdMpHost')) { $('rdMpHost').addEventListener('click', () => znHost('raid')); $('rdMpLeave').addEventListener('click', znLeave); $('rdMpStart').addEventListener('click', znStart); }   // [raid] Maren's End's card
+  if ($('frMpHost')) { $('frMpHost').addEventListener('click', () => znHost('fr')); $('frMpLeave').addEventListener('click', znLeave); $('frMpStart').addEventListener('click', znStart); }   // [fogrun] Fog Run's card
   setInterval(() => { if (!FPS.on && !$('zmTitle').closest('[hidden]')) { znRender(); if (ZN.code) znSendLobby(); } }, 1500);
   addEventListener('pagehide', () => { if (ZN.code && NET.room) NET.room.presence({ zm: null }).catch(() => {}); });
 }
@@ -45126,6 +45877,7 @@ csInit();
 //   war         a Drowned Reach war (warnet.js, w...)
 //   lighthouse  a Keeper's Last Light night (zmnet.js, z...)
 //   raid        a Maren's End raid (the same lobby as the Lighthouse's, on the raid's own card)
+//   fogrun      a Fog Run (the same lobby again, on its own card: src/frrun.js) [fogrun]
 // On a phone or tablet the button opens the share sheet; on a computer it copies the text to the clipboard.
 // On claude.ai everyone plays in the artifact's own room, which the live site can't reach, so there the link is the
 // artifact itself: it can't carry a code, but the friend sees the lobby in the list and taps it.
@@ -45134,7 +45886,9 @@ csInit();
 const SHARE_SITE = 'https://skerry-light.onrender.com/';
 const SHARE_ARTIFACT = 'https://claude.ai/artifact/4abbzGK8dMDsPyR5KdssJv';
 const SHARE_TEXT = 'Join my game on Skerry Light!';
-const SHARE_MODES = ['sail', 'wreckers', 'war', 'lighthouse', 'raid'];
+const SHARE_MODES = ['sail', 'wreckers', 'war', 'lighthouse', 'raid', 'fogrun'];   // [fogrun]
+// the Lighthouse's lobby's own word for each of the modes it serves (src/zmnet.js ZN.mode) [fogrun]
+var SHARE_ZN = { lighthouse: 'zm', raid: 'raid', fogrun: 'fr' };
 const shareOnClaude = () => (typeof NET !== 'undefined' && NET.via === 'claude') || !!(window.claude && typeof window.claude.use === 'function');
 
 function shareUrl(mode, code) {
@@ -45149,7 +45903,7 @@ function shareUrl(mode, code) {
 function shareCode(mode) {
   if (mode === 'sail') return NET.crew;
   if (mode === 'war') return typeof WN !== 'undefined' ? WN.code : null;
-  if (mode === 'lighthouse' || mode === 'raid') return typeof ZN !== 'undefined' && ZN.mode === (mode === 'raid' ? 'raid' : 'zm') ? ZN.code : null;
+  if (mode === 'lighthouse' || mode === 'raid' || mode === 'fogrun') return typeof ZN !== 'undefined' && ZN.mode === SHARE_ZN[mode] ? ZN.code : null;   // [fogrun]
   return null;
 }
 function shareIsPhone() {
@@ -45204,8 +45958,8 @@ if (SHARE_JOIN && /[?&](mode|lobby)=/.test(location.search)) {
   // tidy the address bar, so a reload later doesn't drag you back into an old lobby
   try { const q = new URLSearchParams(location.search); q.delete('mode'); q.delete('lobby'); const s = q.toString(); history.replaceState(null, '', location.pathname + (s ? '?' + s : '') + location.hash); } catch (e) {}
 }
-const SHARE_CARD = { sail: 'together', wreckers: 'fpsTitle', war: 'warTitle', lighthouse: 'zmTitle', raid: 'rdTitle' };
-const SHARE_WHAT = { sail: 'crew', war: 'war', lighthouse: 'night', raid: 'raid' };
+const SHARE_CARD = { sail: 'together', wreckers: 'fpsTitle', war: 'warTitle', lighthouse: 'zmTitle', raid: 'rdTitle', fogrun: 'frTitle' };
+const SHARE_WHAT = { sail: 'crew', war: 'war', lighthouse: 'night', raid: 'raid', fogrun: 'run' };
 function shareShow(mode) { const c = $(SHARE_CARD[mode]); if (c) c.scrollIntoView({ block: 'start' }); }
 function shareArrive() {
   const J = SHARE_JOIN; if (!J) return;
@@ -45247,9 +46001,9 @@ function shareArrive() {
       if (ZN.code === J.code) return clearInterval(iv);
       const n = znOpenNights().find(x => x.code === J.code);
       if (n) {
-        clearInterval(iv); const mode = ZM_MAPS[n.map] && ZM_MAPS[n.map].raid ? 'raid' : 'lighthouse'; shareShow(mode);
+        clearInterval(iv); const mode = ZM_MAPS[n.map] && ZM_MAPS[n.map].fr ? 'fogrun' : ZM_MAPS[n.map] && ZM_MAPS[n.map].raid ? 'raid' : 'lighthouse'; shareShow(mode);   // [fogrun]
         if (n.started && typeof znRjFor === 'function' && znRjFor(J.code)) znRejoin(znRjFor(J.code));   // (one I dropped out of: back in)
-        else if (n.started) toast(`That ${SHARE_WHAT[mode]} has already started.`, 'Already started'); else znJoin(J.code, mode === 'raid' ? 'raid' : 'zm');
+        else if (n.started) toast(`That ${SHARE_WHAT[mode]} has already started.`, 'Already started'); else znJoin(J.code, SHARE_ZN[mode]);
         return;
       }
     }
@@ -45444,5 +46198,8 @@ requestAnimationFrame(frame);
 
 </script>
 <!-- [gannet] Part I, The Skerries -->
+<!-- [fogrun] the run: its state, its stage order, lives -->
+<!-- [fogrun] the sail -->
+<!-- [fogrun] the islands -->
 </body>
 </html>
