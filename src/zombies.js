@@ -3045,9 +3045,11 @@ function zmCrawl(m, was, dt) {
   m.x = was[0]; m.y = was[1];
   fpsMove(m, dx / d * most, dy / d * most);
 }
-// the clock on the floor, and your heart in your ears: a double beat, quicker as the time runs out
+// the clock on the floor, and your heart in your ears: a double beat, quicker as the time runs out. While someone
+// holds Use beside you the clock stops where it is, and runs on again if they let go (each of you keeps your own
+// clock, and who's getting you up comes in their presence, so it's the same for everyone, the host included)
 function zmDownTick(dt) {
-  ZM.downT -= dt;
+  if (!zmReviver()) ZM.downT -= dt;
   if (ZM.downT <= 0) { zmBleedOut(); return; }
   // ([pap] a weapon on the bench waits there until you're up)
   if (ZM.forge && ZM.forge.st === 'work' && typeof ZM_PAP !== 'undefined') ZM.forge.t = Math.min(ZM.forge.t, ZM_PAP.TIME - 0.2);
@@ -4184,7 +4186,7 @@ function zmHudDown(phone, mono, fell, t) {
   ctx.font = mono(phone ? 11 : 13);
   const ly = y + r + (phone ? 42 : 60);
   if (help) {
-    ctx.fillStyle = '#ffd88a'; ctx.fillText(`${help.n} is getting you up`, x, ly);
+    ctx.fillStyle = '#ffd88a'; ctx.fillText(`${help.n} is getting you up · the clock has stopped`, x, ly);
     const bw = phone ? 140 : 200, bh = 6;
     ctx.fillStyle = 'rgba(8,10,14,0.6)'; ctx.fillRect(x - bw / 2 - 2, ly + 12, bw + 4, bh + 4);
     ctx.fillStyle = '#ffd88a'; ctx.fillRect(x - bw / 2, ly + 14, bw * help.k, bh);
@@ -4219,7 +4221,7 @@ function zmHudReviving(phone, mono, t) {
   const text = `Getting ${(r && r.n) || 'them'} up · ${Math.round(k * 100)}%`, tw = ctx.measureText(text).width + 24, ty = y + rr + (phone ? 22 : 30);
   ctx.fillStyle = 'rgba(8,10,14,0.6)'; ctx.fillRect(cx - tw / 2, ty - 14, tw, 28);
   ctx.fillStyle = '#ffd88a'; ctx.fillText(text, cx, ty);
-  if (r && r.dn > 0) { ctx.font = mono(phone ? 9 : 11); ctx.fillStyle = r.dn < 10 ? '#ff8a6a' : 'rgba(236,228,207,0.7)'; ctx.fillText(`Keep holding · ${Math.ceil(r.dn)} s before they bleed out`, cx, ty + (phone ? 20 : 24)); }
+  if (r && r.dn > 0) { ctx.font = mono(phone ? 9 : 11); ctx.fillStyle = r.dn < 10 ? '#ff8a6a' : 'rgba(236,228,207,0.7)'; ctx.fillText(`Keep holding · their clock has stopped at ${Math.ceil(r.dn)} s`, cx, ty + (phone ? 20 : 24)); }
 }
 // ---------- watching, after bleeding out ----------
 // together, out until the next round: your view goes to someone still in the night, through their eyes (from their
