@@ -2054,7 +2054,7 @@ function zmStart(opts) {
   $('zmAgain').textContent = ZM.net ? 'Back to the lobby' : 'Hold it again';
   fpsFeed(MAP.land(ZM.net ? ZM.hum.length : 0));
   if (typeof raidAfterStart === 'function') raidAfterStart();   // [raid]
-  if (typeof scorePlayed === 'function') scorePlayed(typeof RAID !== 'undefined' && RAID.on ? 'raid' : 'zm');   // the scoreboard (src/scores.js)
+  if (typeof scorePlayed === 'function') scorePlayed(typeof RAID !== 'undefined' && RAID.on ? RAID.map : 'zm');   // the scoreboard (src/scores.js)
   try { cv.focus(); } catch (e) {}
 }
 function zmStop() {

@@ -36,6 +36,7 @@ function rmWant() {
   if (!RAID.on || ZM.over) return null;
   { const v = typeof rvMusic === 'function' ? rvMusic() : undefined; if (v !== undefined) return v; }   // [verity] (src/raidverity.js)
   const k = RAID_ORDER[RAID.stage];
+  { const S = raidStage(); if (S && typeof S.music === 'function') return S.music(); }   // (a part with its own say: The Gannet's Wake's)
   if (k === 'descent') { const S = RAID.st || {}; return S.landed || RM.fell ? 'raidcave' : S.falling || RM.cur === 'raidfall' ? 'raidfall' : 'raidpier'; }
   RM.fell = false;
   if (k === 'bridge') return 'raidbridge';

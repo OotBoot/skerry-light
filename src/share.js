@@ -120,7 +120,7 @@ function shareArrive() {
       if (ZN.code === J.code) return clearInterval(iv);
       const n = znOpenNights().find(x => x.code === J.code);
       if (n) {
-        clearInterval(iv); const mode = n.map === 'raid' ? 'raid' : 'lighthouse'; shareShow(mode);
+        clearInterval(iv); const mode = ZM_MAPS[n.map] && ZM_MAPS[n.map].raid ? 'raid' : 'lighthouse'; shareShow(mode);
         if (n.started) toast(`That ${SHARE_WHAT[mode]} has already started.`, 'Already started'); else znJoin(J.code, mode === 'raid' ? 'raid' : 'zm');
         return;
       }

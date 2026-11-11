@@ -1031,3 +1031,4 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 .pn-ver ul { margin: 0; padding-left: 18px; font-family: var(--log); font-size: 12.5px; line-height: 1.5; }
 .pn-ver li + li { margin-top: 3px; }
 .pn-ver li b { color: var(--lamp); font-weight: 700; }
+.zmmaps .ng-tag { font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; padding: 1px 4px; margin-left: 4px; background: #e46c4f; color: #1a0d08; font-weight: 700; vertical-align: 1px; }

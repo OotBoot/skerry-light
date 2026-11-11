@@ -1037,6 +1037,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 .pn-ver ul { margin: 0; padding-left: 18px; font-family: var(--log); font-size: 12.5px; line-height: 1.5; }
 .pn-ver li + li { margin-top: 3px; }
 .pn-ver li b { color: var(--lamp); font-weight: 700; }
+.zmmaps .ng-tag { font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; padding: 1px 4px; margin-left: 4px; background: #e46c4f; color: #1a0d08; font-weight: 700; vertical-align: 1px; }
 </style>
 <div id="stage">
   <canvas id="bg" class="under" aria-hidden="true"></canvas>
@@ -1279,8 +1280,19 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
     <div class="card zmcard rdcard" id="rdTitle" aria-labelledby="rdHead">
       <div class="cardtop"><span class="eyebrow">A fifth game · a raid in parts · alone or up to four</span></div>
       <h1 id="rdHead">Maren's End</h1>
+      <div class="zmmaps" id="rdRaids" role="group" aria-label="Which raid">
+        <span class="zmmapshead">Raid</span>
+        <button class="tool" type="button" data-raid="raid" aria-pressed="true">Maren's End</button>
+        <button class="tool" type="button" data-raid="gannet" aria-pressed="false">The Gannet's Wake <span class="ng-tag">New</span></button>
+      </div>
+      <div data-for="raid">
       <p>The sea round the Light has drained away. Where it was is a dry bed of salt and wrecks, and a long pier running out over it to the Swallow, the hole the water went down. Take Maren's Lantern, the one she rowed out with in 1887, and go down after it.</p>
       <p class="muted">Part I, the Swallow: walk the Long Pier, drop into the hole (a long way down), and follow the Deep Path. The dark drains you; light the braziers with the lantern and stand in their light to mend. At the end, a door that opens when twenty of the drowned have been sent back in front of it.</p>
+      </div>
+      <div data-for="gannet" hidden>
+      <p>A year to the night after she broke up, the Gannet's bell was heard again off the skerries. Take the keeper's cutter out through the rocks under the beam, with Maren on the water behind you, and find what's ringing it.</p>
+      <p class="muted">Part I, the Skerries: one of you at the helm, the rest on deck. The rocks only show in the beam. Ring the bell to drive Maren back, fire flares, patch the planks and throw the drowned back over the rail.</p>
+      </div>
       <div class="btnrow">
         <button class="primary" id="rdPlay" type="button">Go down alone</button>
         <button class="tool" id="rdWcrate" type="button">Weapon crates</button>
@@ -21283,7 +21295,7 @@ function zmStart(opts) {
   $('zmAgain').textContent = ZM.net ? 'Back to the lobby' : 'Hold it again';
   fpsFeed(MAP.land(ZM.net ? ZM.hum.length : 0));
   if (typeof raidAfterStart === 'function') raidAfterStart();   // [raid]
-  if (typeof scorePlayed === 'function') scorePlayed(typeof RAID !== 'undefined' && RAID.on ? 'raid' : 'zm');   // the scoreboard (src/scores.js)
+  if (typeof scorePlayed === 'function') scorePlayed(typeof RAID !== 'undefined' && RAID.on ? RAID.map : 'zm');   // the scoreboard (src/scores.js)
   try { cv.focus(); } catch (e) {}
 }
 function zmStop() {
@@ -30241,9 +30253,26 @@ function zhHud() {
 // (hosting or alone) lays out the next, and everyone follows the stage number in the host's word. Past the last, the
 // raid is won.
 
-const RAID = { on: false, stage: 0, won: false, st: {}, t: 0, boss: 0, told: false, sta: 1, tired: false };
+const RAID = { on: false, map: 'raid', stage: 0, won: false, st: {}, t: 0, boss: 0, told: false, sta: 1, tired: false };
 const RAID_STAGES = {};
+// RAID_ORDER is the raid being played's parts, in order. Maren's End's own files push theirs straight into it as they
+// load (src/raidbridge.js, src/raidfort.js); once the raid begins, it's swapped for the raid picked's (RAIDS[map].order).
 const RAID_ORDER = ['descent'];
+// The raids: each a map of its own in ZM_MAPS (its key is the scoreboard's game too), picked on the raid card (RD_PICK).
+//   n: its name   order: its parts (null: Maren's End's, taken from RAID_ORDER as it stood once everything loaded)
+//   mvp: won, it ends on the victory screen (src/raidmvp.js)   lost: what the card says when it ends short
+// A later raid's parts add themselves with raidAdd(map, key, at): at, its place in the order (they're sorted by it).
+const RAIDS = {
+  raid: { n: 'Maren’s End', order: null, mvp: true, lost: n => `The dark took you in ${n}`, won: 'Through the door', again: 'Go down again' },
+  gannet: { n: 'The Gannet’s Wake', order: [], at: {}, mvp: true, lost: n => `The sea took you in ${n}`, won: 'The Gannet is gone', again: 'Sail out again' },
+};
+function raidAdd(map, key, at) { const R = RAIDS[map]; if (!R || R.order.includes(key)) return; R.at[key] = at; R.order.push(key); R.order.sort((a, b) => R.at[a] - R.at[b]); }
+const raidInfo = () => RAIDS[RAID.map] || RAIDS.raid;
+const raidName = () => raidInfo().n;
+const raidIsMap = m => !!(m && ZM_MAPS[m] && ZM_MAPS[m].raid);
+// the raid picked on the card (kept on the device)
+var RD_PICK = 'raid';
+try { const v = localStorage.getItem('skerry-rd-raid'); if (v && RAIDS[v]) RD_PICK = v; } catch (e) {}
 const raidStage = () => RAID.on ? RAID_STAGES[RAID_ORDER[RAID.stage]] || null : null;
 const raidCall = (k, ...a) => { const S = raidStage(); return S && typeof S[k] === 'function' ? S[k](...a) : undefined; };
 // joined: ask the host something of the stage (k, and a with it); hosting or alone, it's done straight away
@@ -30254,6 +30283,11 @@ ZM_MAPS.raid = { n: 'Maren’s End', N: 'Maren’s End', isle: 'raid', tower: fa
   blurb: 'A raid in parts, alone or up to four: down the Swallow, where the sea went.',
   land: n => `The Long Pier, out over the dry bed of the sea${n ? ', ' + n + ' of you' : ''}. At its end, the Swallow.`,
   shore: () => -999, nav: [-80, 80, -80, 80] };
+// The Gannet's Wake (its parts: src/gw*.js): the same engine, its own map key, so the lobby, the start of it and the
+// scoreboard all know which raid it is
+ZM_MAPS.gannet = Object.assign({}, ZM_MAPS.raid, { n: 'The Gannet’s Wake', N: 'The Gannet’s Wake', seed: 0x6a77e,
+  blurb: 'A raid in parts, alone or up to four: out through the skerries in the keeper’s cutter, to where the Gannet went down.',
+  land: n => `The keeper’s cutter, at the foot of the Light${n ? ', ' + n + ' of you aboard' : ''}. Out there, past the skerries, the Gannet.` });
 FPS_ISLES.raid = { name: 'the Hollow Sea', ground: '#2a2826', ground2: '#1e1d1c', wet: '#161616', path: '#34312c', tint: 0.1, mound: 0, dune: 0,
   rocks: [0, 3, 6, 1], wrecks: [0], tintRock: null, sky: '60,60,80', skyA: 0.04, fog: ['#050608', 6, 70], mist: '30,30,40', mistA: 0.02,
   birds: ['bat', 0], tufts: ['#333', 0], pebbles: 0, pools: 0, wrack: 0, indoor: true, nLights: 8 };
@@ -30268,18 +30302,22 @@ FPI_GEN.raid = {
 };
 // the stage's map into ZM_MAPS.raid (before src/zombies.js lays it out)
 function raidMapFor(i) {
-  const S = RAID_STAGES[RAID_ORDER[i]], D = ZM_MAPS.raid, M = S.map || {};
+  const S = RAID_STAGES[RAID_ORDER[i]], D = ZM_MAPS[RAID.map] || ZM_MAPS.raid, M = S.map || {};
   D.zones = M.zones || {}; D.start = (M.start || [0, 0]).slice(); D.top = M.top || 0; D.nav = M.nav || [-80, 80, -80, 80];
   // (its own look and sea, if it has them: a part out in the open lays itself out from its own FPI_GEN, as FPI_GEN.raid)
   D.isle = M.isle || 'raid'; D.shore = M.shore || (() => -999);
-  D.seed = 0x5a11c + i * 977;
+  D.seed = (RAID.map === 'raid' ? 0x5a11c : 0x6a77e) + i * 977;
 }
 
 // ---------- starting, and each frame ----------
 // (zmStart, before it lays out the map) is this the raid?
 function raidBegin(map) {
-  RAID.on = map === 'raid';
+  RAID.on = raidIsMap(map);
   if (!RAID.on) return;
+  // (this raid's parts into RAID_ORDER: Maren's End's as its files left it, the first time)
+  if (!RAIDS.raid.order) RAIDS.raid.order = RAID_ORDER.slice();
+  RAID.map = RAIDS[map] && RAIDS[map].order.length ? map : 'raid';
+  RAID_ORDER.length = 0; RAID_ORDER.push(...raidInfo().order);
   Object.assign(RAID, { stage: 0, won: false, st: {}, t: 0, boss: 0, told: false, sta: 1, tired: false, tiredN: 0, runNow: false, practice: 0 });   // (practice: src/raidmaren2.js rf2Practice)
   if (typeof rmvReset === 'function') rmvReset();   // [mvp] src/raidmvp.js
   raidMapFor(0);
@@ -30288,8 +30326,8 @@ function raidBegin(map) {
 function raidAfterStart() {
   if (!RAID.on) return;
   ZM.phase = 'raid'; ZM.t = 0; ZM.round = RAIDC.ROUND; ZM.open = new Set(['raid']);
-  { const e = document.querySelector('#fpsMenu .eyebrow'); if (e) e.textContent = 'Maren’s End'; $('fpsLeave').textContent = 'Leave the raid'; $('fpsResume').textContent = 'Back to the raid'; }
-  $('zmAgain').textContent = ZM.net ? 'Back to the lobby' : 'Go down again';
+  { const e = document.querySelector('#fpsMenu .eyebrow'); if (e) e.textContent = raidName(); $('fpsLeave').textContent = 'Leave the raid'; $('fpsResume').textContent = 'Back to the raid'; }
+  $('zmAgain').textContent = ZM.net ? 'Back to the lobby' : raidInfo().again;
   raidLoadout();
   RAID.st = {}; raidCall('enter');
 }
@@ -30383,7 +30421,7 @@ function raidUseStage(i) {
   for (const z of ZM.z) if (z.mdl) zmFreeModel(z);
   ZM.z = []; FPS.drowned = ZM.z; ZM.drops = [];
   RAID.stage = i; raidMapFor(i);
-  const MAP = zmUseMap('raid'), t = FPS.g ? FPS.g.t : 0;
+  const MAP = zmUseMap(RAID.map), t = FPS.g ? FPS.g.t : 0;
   FPS.g = zmArena(); FPS.g.t = t;
   const Zd = FPS.g.isle.zm;
   Object.assign(ZM, { doors: Zd.doors, windows: Zd.windows, buys: Zd.buys, perksAt: Zd.perks, spawns: Zd.spawns, glass: Zd.glass || [] });
@@ -30410,20 +30448,21 @@ function raidWin() {
 function raidBossDamage(n) { if (RAID.on && n > 0) RAID.boss += n; }
 // (zmEnd) the scoreboard: the time, if won; the bosses' damage; and this raid's kills added to all the rest
 function raidReport() {
-  if (RAID.told || typeof scoreReport !== 'function' || typeof BOARD === 'undefined' || !BOARD.mine || !BOARD.mine.raid) return;
+  const G = RAID.map;   // (each raid its own game on the board)
+  if (RAID.told || typeof scoreReport !== 'function' || typeof BOARD === 'undefined' || !BOARD.mine || !BOARD.mine[G]) return;
   RAID.told = true;
-  scoreReport('raid', RAID.won ? Math.max(1, 100000 - Math.round(RAID.t)) : 0, Math.round(RAID.boss), (BOARD.mine.raid.c | 0) + ZM.kills, RAID.won);
+  scoreReport(G, RAID.won ? Math.max(1, 100000 - Math.round(RAID.t)) : 0, Math.round(RAID.boss), (BOARD.mine[G].c | 0) + ZM.kills, RAID.won);
   // this raid, an entry of its own: incomplete unless it got through the door
-  if (typeof scoreRun === 'function') { scoreRun('raid', RAID.won ? Math.max(1, 100000 - Math.round(RAID.t)) : 0, Math.round(RAID.boss), ZM.kills, RAID.won); scoreRunEnd('raid'); }
+  if (typeof scoreRun === 'function') { scoreRun(G, RAID.won ? Math.max(1, 100000 - Math.round(RAID.t)) : 0, Math.round(RAID.boss), ZM.kills, RAID.won); scoreRunEnd(G); }
 }
 function raidShowOver() {
   if (RAID.won && typeof rmvShow === 'function' && rmvShow()) return;   // [mvp] won at the very end: everyone together (src/raidmvp.js)
   const S = RAID_STAGES[RAID_ORDER[RAID.stage]], cleared = RAID.won ? RAID_ORDER.length : RAID.stage;
-  if ($('zmOverEye')) $('zmOverEye').textContent = 'Maren’s End';
-  $('zmOverHead').textContent = RAID.won ? 'Through the door' : `The dark took you in ${S ? S.n : 'the deep'}`;
+  if ($('zmOverEye')) $('zmOverEye').textContent = raidName();
+  $('zmOverHead').textContent = RAID.won ? raidInfo().won : raidInfo().lost(S ? S.n : 'the deep');
   $('zmOverStats').textContent = (ZM.net ? `${ZM.hum.length} of you. ` : '') + `${cleared} of ${RAID_ORDER.length} ${RAID_ORDER.length === 1 ? 'part' : 'parts'} cleared, in ${raidClock(RAID.t)}. ${ZM.kills} of the drowned sent back (${ZM.heads} through the head)`
-    + (RAID.boss > 0 ? `, ${Math.round(RAID.boss)} damage to its bosses.` : '.') + (RAID.won && RAID_ORDER.length < 3 ? ' The rest of Maren’s End is still to come.' : '');
-  const best = typeof BOARD !== 'undefined' && BOARD.mine && BOARD.mine.raid;
+    + (RAID.boss > 0 ? `, ${Math.round(RAID.boss)} damage to its bosses.` : '.') + (RAID.won && RAID_ORDER.length < 3 ? ` The rest of ${raidName()} is still to come.` : '');
+  const best = typeof BOARD !== 'undefined' && BOARD.mine && BOARD.mine[RAID.map];
   $('zmOverBest').textContent = best && (best.s || best.c) ? (best.s ? `Your best time: ${raidTimeOf(best.s)}. ` : '') + `${best.c | 0} sent back in all your raids.` : '';
   $('zmOver').hidden = false;
   try { document.exitPointerLock && document.exitPointerLock(); } catch (e) {}
@@ -30547,7 +30586,7 @@ function raidHud(phone, mono, fell) {
   ctx.textAlign = 'left'; ctx.textBaseline = 'top';
   const L = Math.max(14, FPS.safeLeft || 0);
   ctx.font = fell(phone ? 15 : 19); ctx.fillStyle = 'rgba(236,228,207,0.85)';
-  ctx.fillText(`Maren’s End · ${raidNumeral(RAID.stage + 1)} · ${S.n}`, L, top, W * 0.5);
+  ctx.fillText(`${raidName()} · ${raidNumeral(RAID.stage + 1)} · ${S.n}`, L, top, W * 0.5);
   ctx.font = mono(phone ? 10 : 12); ctx.fillStyle = 'rgba(236,228,207,0.55)';
   ctx.fillText(raidClock(RAID.t), L, top + (phone ? 18 : 26));
   fpsHudNote(top + (phone ? 30 : 40));
@@ -30555,16 +30594,34 @@ function raidHud(phone, mono, fell) {
 }
 
 // ---------- its card on the title screen ----------
+// Which raid: the picker at the top of the card. Each raid's own words on the card are in [data-raid] blocks, shown
+// for the one picked; together, the host's pick goes out with its lobby (src/zmnet.js znMap), as the Lighthouse's map.
+function raidPick(id) {
+  if (!RAIDS[id] || (typeof ZN !== 'undefined' && ZN.code && !znAmHost())) return;
+  RD_PICK = id; try { localStorage.setItem('skerry-rd-raid', id); } catch (e) {}
+  raidCard();
+  if (typeof ZN !== 'undefined' && ZN.code && typeof znSendLobby === 'function') znSendLobby();
+  if (typeof znRender === 'function') znRender();
+}
+function raidCard() {
+  for (const b of document.querySelectorAll('#rdRaids [data-raid]')) b.setAttribute('aria-pressed', String(b.dataset.raid === RD_PICK));
+  for (const d of document.querySelectorAll('#rdTitle [data-for]')) d.hidden = d.dataset.for !== RD_PICK;
+  const h = $('rdHead'); if (h) h.textContent = RAIDS[RD_PICK].n.replace('’', "'");
+  const pl = $('rdPlay'); if (pl) pl.textContent = RD_PICK === 'raid' ? 'Go down alone' : 'Sail out alone';
+  const r = $('rdRecord'); if (r) r.textContent = '';
+}
 (() => {
   if (!$('rdTitle')) return;
-  $('rdPlay').addEventListener('click', () => { if (typeof ZN !== 'undefined' && ZN.code) return; zmStart({ map: 'raid' }); });
+  $('rdPlay').addEventListener('click', () => { if (typeof ZN !== 'undefined' && ZN.code) return; zmStart({ map: RD_PICK }); });
+  for (const el of document.querySelectorAll('#rdRaids [data-raid]')) el.addEventListener('click', () => raidPick(el.dataset.raid));
+  raidCard();
   $('rdSettings').addEventListener('click', () => $('titleSettings').click());
   $('rdWcrate').addEventListener('click', () => $('wcrateBtn').click());
   $('rdOcrate').addEventListener('click', () => $('ocrateBtn').click());
   $('rdBanner').addEventListener('click', () => { $('rdTitle').scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' }); setTimeout(() => $('rdPlay').focus({ preventScroll: true }), 400); });
   // your bests, on the card
   setInterval(() => {
-    const b = typeof BOARD !== 'undefined' && BOARD.mine && BOARD.mine.raid, el = $('rdRecord'); if (!el || !b) return;
+    const b = typeof BOARD !== 'undefined' && BOARD.mine && BOARD.mine[RD_PICK], el = $('rdRecord'); if (!el || !b) return;
     const s = (b.s ? `Your best time: ${raidTimeOf(b.s)}. ` : '') + (b.b ? `Most boss damage: ${b.b}. ` : '') + (b.c ? `${b.c} sent back in all your raids.` : '');
     if (el.textContent !== s) el.textContent = s;
   }, 1500);
@@ -34692,6 +34749,7 @@ function rmWant() {
   if (!RAID.on || ZM.over) return null;
   { const v = typeof rvMusic === 'function' ? rvMusic() : undefined; if (v !== undefined) return v; }   // [verity] (src/raidverity.js)
   const k = RAID_ORDER[RAID.stage];
+  { const S = raidStage(); if (S && typeof S.music === 'function') return S.music(); }   // (a part with its own say: The Gannet's Wake's)
   if (k === 'descent') { const S = RAID.st || {}; return S.landed || RM.fell ? 'raidcave' : S.falling || RM.cur === 'raidfall' ? 'raidfall' : 'raidpier'; }
   RM.fell = false;
   if (k === 'bridge') return 'raidbridge';
@@ -34972,7 +35030,7 @@ function rmvBuild() {
 }
 // (raidShowOver) won, at the very end: this screen instead of the card. True if it's up
 function rmvShow() {
-  if (!RAID.won || RAID_ORDER[RAID_ORDER.length - 1] !== 'fort') return false;
+  if (!RAID.won || !(typeof raidInfo === 'function' && raidInfo().mvp && (RAID.map !== 'raid' || RAID_ORDER[RAID_ORDER.length - 1] === 'fort'))) return false;
   if (RMV.on) return true;   // (already up: zmTick asks again while the plain card stays hidden)
   rmvBuild();
   if (!RMV.snap) RMV.snap = rmvGather();
@@ -35116,6 +35174,32 @@ function rmvFrame(now) {
   }
   RMV.raf = requestAnimationFrame(rmvFrame);
 }
+
+// ---- src/gannet.js ----
+// The Gannet's Wake: the second raid (map key 'gannet'; RAIDS.gannet in src/raid.js), on the same engine as Maren's
+// End: one to four of you, the three callings (src/rclass.js), down and got up, stamina, the MVP screen at the end
+// (src/raidmvp.js) and a pirate token from its last boss. Its own column on the scoreboard (game 'gannet').
+//
+// A year to the night after the Gannet broke up on the skerries, her bell is heard again off Skerry Light. The keeper's
+// cutter goes out to find what's ringing it. Its parts (each a stage in its own file, added with raidAdd):
+//  I.   The Skerries (gwsail, src/gwsail.js): out through the rocks in the keeper's cutter, the deck your map and the sea
+//       moving past: one of you at the helm, the rocks only in the Light's beam, Maren on the water behind and the bell
+//       to drive her back, Plimsoll walking ahead, flares, holes to patch, and the drowned over the rail. At the end
+//       the Gannet comes up out of the sea alongside.
+//  II.  Below Decks (gwhold, src/gwhold.js): inside the risen Gannet, Knock loose below (he moves only while none of
+//       you can see him), and the three keys to the captain's cabin.
+//  III. The Quarterdeck (gwcapt, src/gwcapt.js): Captain Absalom Crane on his own deck, hurt only in light (the beam
+//       crossing the deck, or a flare), the ship's bell to stagger him; at half strength she founders.
+// What's here: what the parts share. The Light's beam (one clock for every part, from the raid's own: RAID.ct, the
+// host's time on every side), and a quick way to a part for trying it out.
+
+const GW = { PERIOD: 6.5, HALF: 0.15 };
+// the beam's bearing now (radians, 0 north, clockwise), on everyone's side alike
+const gwBeam = () => ((RAID.ct || RAID.t || 0) / GW.PERIOD % 1) * Math.PI * 2;
+// is bearing a (radians) inside the beam now? (w: how wide either side, if not the Light's own)
+const gwInBeam = (a, w) => Math.abs(angDiff(a, gwBeam())) < (w || GW.HALF);
+// (for trying a part out: alone, straight to it)  gwGo('gwhold')
+function gwGo(key) { if (!RAID.on || RAID.map !== 'gannet' || ZM.net === 'client') return false; const i = RAID_ORDER.indexOf(key); if (i < 0) return false; raidUseStage(i); return true; }
 
 // ---- src/rclass.js ----
 // Maren's End: the three callings. Once a raid starts (src/raid.js), each player picks one, over the view: the
@@ -35673,7 +35757,8 @@ function znAt(o, t) {
 // ---------- the lobby ----------
 function znOnline() { return !!(typeof NET !== 'undefined' && NET.room && NET.status === 'ready'); }
 // the map a lobby's for: the raid's, or the one picked on the Lighthouse's card
-const znMap = () => ZN.mode === 'raid' ? 'raid' : ZM_PICK;
+const znMap = () => ZN.mode === 'raid' ? (typeof RD_PICK !== 'undefined' ? RD_PICK : 'raid') : ZM_PICK;   // [raid] (which raid: src/raid.js)
+const znIsRaid = m => !!(ZM_MAPS[m] && ZM_MAPS[m].raid);
 function znNick() { return znClean(($(ZN.mode === 'raid' ? 'rdNick' : 'zmNick') && $(ZN.mode === 'raid' ? 'rdNick' : 'zmNick').value) || '', 16) || (NET.nick ? znClean(NET.nick, 16) : '') || 'Keeper ' + String(NET.sid || '').slice(0, 3).toUpperCase(); }
 function znOf(p) { const z = p && p.presence && p.presence.zm; return z && typeof z === 'object' && typeof z.room === 'string' && typeof z.sid === 'string' ? z : null; }
 function znBase() { return { room: ZN.code, sid: NET.sid, nick: znNick(), at: ZN.at }; }
@@ -35741,7 +35826,7 @@ function znRenderUI(U) {
   q('Lobby').hidden = !mine;
   if (!on) return;
   if (!ZN.code) {
-    const nights = znOpenNights().filter(n => (n.map === 'raid') === U.raid), el = q('Lobbies'), key = JSON.stringify(nights) + ZN.msg;
+    const nights = znOpenNights().filter(n => znIsRaid(n.map) === U.raid), el = q('Lobbies'), key = JSON.stringify(nights) + ZN.msg;
     if (el.dataset.k === key) return; el.dataset.k = key;
     el.textContent = '';
     if (ZN.msg) { const p = document.createElement('p'); p.className = 'muted'; p.textContent = ZN.msg; el.append(p); }
@@ -35749,7 +35834,7 @@ function znRenderUI(U) {
     for (const n of nights) {
       const b = document.createElement('button'); b.type = 'button'; b.className = 'warlobbyrow';
       const nm = document.createElement('span'); nm.className = 'nm'; nm.textContent = `${n.host}’s ${W}`;
-      const sm = document.createElement('small'); sm.textContent = (U.raid ? '' : `${ZM_MAPS[n.map].N} · `) + (n.started ? 'under way' : `${n.n}/${ZN_MAX} players · tap to join`);
+      const sm = document.createElement('small'); sm.textContent = `${ZM_MAPS[n.map].N} · ` + (n.started ? 'under way' : `${n.n}/${ZN_MAX} players · tap to join`);
       b.append(nm, sm);
       b.disabled = n.started || n.n >= ZN_MAX;
       b.addEventListener('click', () => znJoin(n.code, U.raid ? 'raid' : 'zm'));
@@ -35772,7 +35857,7 @@ function znRenderUI(U) {
   });
   const hm = hz && hz.lob && ZM_MAPS[hz.lob.map] ? hz.lob.map : 'light';
   q('LobbyMsg').textContent = ZN.msg || (U.raid
-    ? (host ? (m.length > 1 ? `${m.length} of ${ZN_MAX} here. Start the raid when everyone’s in.` : 'Waiting for others to join. You can start alone, too, whenever you like.') : 'Waiting for the host to start the raid.')
+    ? (host ? (m.length > 1 ? `${m.length} of ${ZN_MAX} here, for ${ZM_MAPS[znMap()].N}. Start the raid when everyone’s in.` : `Waiting for others to join. You can start alone, too, whenever you like. The raid: ${ZM_MAPS[znMap()].N} (pick above).`) : `Waiting for the host to start the raid: ${ZM_MAPS[hm].N}.`)
     : host
     ? (m.length > 1 ? `${m.length} of ${ZN_MAX} here, at ${ZM_MAPS[ZM_PICK].n}. Start the night when everyone’s in.` : `Waiting for others to join. You can start alone, too, whenever you like. Tonight: ${ZM_MAPS[ZM_PICK].n} (pick above).`)
     : `Waiting for the host to start the night, at ${ZM_MAPS[hm].n}.`);
@@ -38802,6 +38887,8 @@ const BOARD = {
     zm: { name: 'Keeper’s Last Light', s: 'Rounds held', b: 'Kills', what: 'Each night at the Lighthouse: the rounds held, and the drowned sent back.' },
     raid: { name: 'Maren’s End', s: 'Time', b: 'Boss damage', c: 'Kills', what: 'Each raid down Maren’s End: the time through, the damage done to its bosses, and the drowned sent back.',
       fs: v => v > 0 ? raidTimeOf(v) : '—' },
+    gannet: { name: 'The Gannet’s Wake', s: 'Time', b: 'Boss damage', c: 'Kills', what: 'Each raid out to the Gannet: the time through, the damage done to its bosses, and the drowned sent back.',
+      fs: v => v > 0 ? raidTimeOf(v) : '—' },
   },
   open: {}, mine: null, via: null, db: null, user: null, uid: null, data: null, loading: false, err: '', lastT: 0, sendT: 0, store: '',
 };
@@ -38857,7 +38944,7 @@ function boardLoadMine() {
   return m;
 }
 // an entry from before the marks: finished, if it has anything, but Maren's End only with a time
-function boardOldF(g, e) { return (g === 'raid' ? e.s | 0 : (e.s | 0) + (e.b | 0) + (e.c | 0)) > 0 ? 1 : 0; }
+function boardOldF(g, e) { return (g === 'raid' || g === 'gannet' ? e.s | 0 : (e.s | 0) + (e.b | 0) + (e.c | 0)) > 0 ? 1 : 0; }
 // a best from before games were kept, as one game (as server/scores.js oldAsRun)
 function boardOldRun(g, e, f) { const r = { s: e.s | 0, b: e.b | 0, c: e.c | 0, f }; if (g === 'skerry' || g === 'fps') r.b = 0; if (g === 'war') r.s = r.s > 0 ? 1 : 0; return r; }
 // a claude.ai board document's finished mark for a game (one from before the marks: as boardOldF)
@@ -41391,7 +41478,7 @@ function shareArrive() {
       if (ZN.code === J.code) return clearInterval(iv);
       const n = znOpenNights().find(x => x.code === J.code);
       if (n) {
-        clearInterval(iv); const mode = n.map === 'raid' ? 'raid' : 'lighthouse'; shareShow(mode);
+        clearInterval(iv); const mode = ZM_MAPS[n.map] && ZM_MAPS[n.map].raid ? 'raid' : 'lighthouse'; shareShow(mode);
         if (n.started) toast(`That ${SHARE_WHAT[mode]} has already started.`, 'Already started'); else znJoin(J.code, mode === 'raid' ? 'raid' : 'zm');
         return;
       }

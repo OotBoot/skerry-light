@@ -45,7 +45,8 @@ const runsMem = new Map(); // game -> Map(field -> entry)
 //   zm:     s = most rounds held in one night,  b = most kills in one night
 //   raid:   s = best time through Maren's End, as 100000 less its seconds (so higher is better; 0: never through),
 //           b = most damage done to its bosses in one raid, c = the drowned sent back in all raids
-const GAMES = { skerry: [1000, 1e6], fps: [300, 1e5], war: [1e5, 1e6], zm: [1000, 1e6], raid: [1e5, 1e8, 1e7] };
+//   gannet: the same, for the second raid, The Gannet's Wake
+const GAMES = { skerry: [1000, 1e6], fps: [300, 1e5], war: [1e5, 1e6], zm: [1000, 1e6], raid: [1e5, 1e8, 1e7], gannet: [1e5, 1e8, 1e7] };
 
 const memory = new Map(); // game -> Map(id -> entry)
 let cache = null, cacheAt = 0;
@@ -66,7 +67,7 @@ async function redis(commands) {
 const cleanName = v => String(v || '').replace(/[\u0000-\u001f\u007f-\u009f​-‏‪-‮⁠-⁯<>&"]/g, '').trim().slice(0, 18) || 'A sailor';
 const sortKey = e => e.s * 1e9 + e.b;
 // finished a game of it? (an entry from before the mark: yes if it has anything, but Maren's End only with a time)
-const finished = (game, e) => !e ? 0 : 'f' in e ? (e.f ? 1 : 0) : (game === 'raid' ? e.s | 0 : (e.s | 0) + (e.b | 0) + (e.c | 0)) > 0 ? 1 : 0;
+const finished = (game, e) => !e ? 0 : 'f' in e ? (e.f ? 1 : 0) : (game === 'raid' || game === 'gannet' ? e.s | 0 : (e.s | 0) + (e.b | 0) + (e.c | 0)) > 0 ? 1 : 0;
 
 // a best from before every game was its own entry, as one game: its numbers mean what a game's do, near enough
 // (Skerry Light's voyages in all and Wreckers' Night's rounds won don't, so they go; wars won becomes won)

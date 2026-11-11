@@ -38,9 +38,26 @@
 // (hosting or alone) lays out the next, and everyone follows the stage number in the host's word. Past the last, the
 // raid is won.
 
-const RAID = { on: false, stage: 0, won: false, st: {}, t: 0, boss: 0, told: false, sta: 1, tired: false };
+const RAID = { on: false, map: 'raid', stage: 0, won: false, st: {}, t: 0, boss: 0, told: false, sta: 1, tired: false };
 const RAID_STAGES = {};
+// RAID_ORDER is the raid being played's parts, in order. Maren's End's own files push theirs straight into it as they
+// load (src/raidbridge.js, src/raidfort.js); once the raid begins, it's swapped for the raid picked's (RAIDS[map].order).
 const RAID_ORDER = ['descent'];
+// The raids: each a map of its own in ZM_MAPS (its key is the scoreboard's game too), picked on the raid card (RD_PICK).
+//   n: its name   order: its parts (null: Maren's End's, taken from RAID_ORDER as it stood once everything loaded)
+//   mvp: won, it ends on the victory screen (src/raidmvp.js)   lost: what the card says when it ends short
+// A later raid's parts add themselves with raidAdd(map, key, at): at, its place in the order (they're sorted by it).
+const RAIDS = {
+  raid: { n: 'Maren’s End', order: null, mvp: true, lost: n => `The dark took you in ${n}`, won: 'Through the door', again: 'Go down again' },
+  gannet: { n: 'The Gannet’s Wake', order: [], at: {}, mvp: true, lost: n => `The sea took you in ${n}`, won: 'The Gannet is gone', again: 'Sail out again' },
+};
+function raidAdd(map, key, at) { const R = RAIDS[map]; if (!R || R.order.includes(key)) return; R.at[key] = at; R.order.push(key); R.order.sort((a, b) => R.at[a] - R.at[b]); }
+const raidInfo = () => RAIDS[RAID.map] || RAIDS.raid;
+const raidName = () => raidInfo().n;
+const raidIsMap = m => !!(m && ZM_MAPS[m] && ZM_MAPS[m].raid);
+// the raid picked on the card (kept on the device)
+var RD_PICK = 'raid';
+try { const v = localStorage.getItem('skerry-rd-raid'); if (v && RAIDS[v]) RD_PICK = v; } catch (e) {}
 const raidStage = () => RAID.on ? RAID_STAGES[RAID_ORDER[RAID.stage]] || null : null;
 const raidCall = (k, ...a) => { const S = raidStage(); return S && typeof S[k] === 'function' ? S[k](...a) : undefined; };
 // joined: ask the host something of the stage (k, and a with it); hosting or alone, it's done straight away
@@ -51,6 +68,11 @@ ZM_MAPS.raid = { n: 'Maren’s End', N: 'Maren’s End', isle: 'raid', tower: fa
   blurb: 'A raid in parts, alone or up to four: down the Swallow, where the sea went.',
   land: n => `The Long Pier, out over the dry bed of the sea${n ? ', ' + n + ' of you' : ''}. At its end, the Swallow.`,
   shore: () => -999, nav: [-80, 80, -80, 80] };
+// The Gannet's Wake (its parts: src/gw*.js): the same engine, its own map key, so the lobby, the start of it and the
+// scoreboard all know which raid it is
+ZM_MAPS.gannet = Object.assign({}, ZM_MAPS.raid, { n: 'The Gannet’s Wake', N: 'The Gannet’s Wake', seed: 0x6a77e,
+  blurb: 'A raid in parts, alone or up to four: out through the skerries in the keeper’s cutter, to where the Gannet went down.',
+  land: n => `The keeper’s cutter, at the foot of the Light${n ? ', ' + n + ' of you aboard' : ''}. Out there, past the skerries, the Gannet.` });
 FPS_ISLES.raid = { name: 'the Hollow Sea', ground: '#2a2826', ground2: '#1e1d1c', wet: '#161616', path: '#34312c', tint: 0.1, mound: 0, dune: 0,
   rocks: [0, 3, 6, 1], wrecks: [0], tintRock: null, sky: '60,60,80', skyA: 0.04, fog: ['#050608', 6, 70], mist: '30,30,40', mistA: 0.02,
   birds: ['bat', 0], tufts: ['#333', 0], pebbles: 0, pools: 0, wrack: 0, indoor: true, nLights: 8 };
@@ -65,18 +87,22 @@ FPI_GEN.raid = {
 };
 // the stage's map into ZM_MAPS.raid (before src/zombies.js lays it out)
 function raidMapFor(i) {
-  const S = RAID_STAGES[RAID_ORDER[i]], D = ZM_MAPS.raid, M = S.map || {};
+  const S = RAID_STAGES[RAID_ORDER[i]], D = ZM_MAPS[RAID.map] || ZM_MAPS.raid, M = S.map || {};
   D.zones = M.zones || {}; D.start = (M.start || [0, 0]).slice(); D.top = M.top || 0; D.nav = M.nav || [-80, 80, -80, 80];
   // (its own look and sea, if it has them: a part out in the open lays itself out from its own FPI_GEN, as FPI_GEN.raid)
   D.isle = M.isle || 'raid'; D.shore = M.shore || (() => -999);
-  D.seed = 0x5a11c + i * 977;
+  D.seed = (RAID.map === 'raid' ? 0x5a11c : 0x6a77e) + i * 977;
 }
 
 // ---------- starting, and each frame ----------
 // (zmStart, before it lays out the map) is this the raid?
 function raidBegin(map) {
-  RAID.on = map === 'raid';
+  RAID.on = raidIsMap(map);
   if (!RAID.on) return;
+  // (this raid's parts into RAID_ORDER: Maren's End's as its files left it, the first time)
+  if (!RAIDS.raid.order) RAIDS.raid.order = RAID_ORDER.slice();
+  RAID.map = RAIDS[map] && RAIDS[map].order.length ? map : 'raid';
+  RAID_ORDER.length = 0; RAID_ORDER.push(...raidInfo().order);
   Object.assign(RAID, { stage: 0, won: false, st: {}, t: 0, boss: 0, told: false, sta: 1, tired: false, tiredN: 0, runNow: false, practice: 0 });   // (practice: src/raidmaren2.js rf2Practice)
   if (typeof rmvReset === 'function') rmvReset();   // [mvp] src/raidmvp.js
   raidMapFor(0);
@@ -85,8 +111,8 @@ function raidBegin(map) {
 function raidAfterStart() {
   if (!RAID.on) return;
   ZM.phase = 'raid'; ZM.t = 0; ZM.round = RAIDC.ROUND; ZM.open = new Set(['raid']);
-  { const e = document.querySelector('#fpsMenu .eyebrow'); if (e) e.textContent = 'Maren’s End'; $('fpsLeave').textContent = 'Leave the raid'; $('fpsResume').textContent = 'Back to the raid'; }
-  $('zmAgain').textContent = ZM.net ? 'Back to the lobby' : 'Go down again';
+  { const e = document.querySelector('#fpsMenu .eyebrow'); if (e) e.textContent = raidName(); $('fpsLeave').textContent = 'Leave the raid'; $('fpsResume').textContent = 'Back to the raid'; }
+  $('zmAgain').textContent = ZM.net ? 'Back to the lobby' : raidInfo().again;
   raidLoadout();
   RAID.st = {}; raidCall('enter');
 }
@@ -180,7 +206,7 @@ function raidUseStage(i) {
   for (const z of ZM.z) if (z.mdl) zmFreeModel(z);
   ZM.z = []; FPS.drowned = ZM.z; ZM.drops = [];
   RAID.stage = i; raidMapFor(i);
-  const MAP = zmUseMap('raid'), t = FPS.g ? FPS.g.t : 0;
+  const MAP = zmUseMap(RAID.map), t = FPS.g ? FPS.g.t : 0;
   FPS.g = zmArena(); FPS.g.t = t;
   const Zd = FPS.g.isle.zm;
   Object.assign(ZM, { doors: Zd.doors, windows: Zd.windows, buys: Zd.buys, perksAt: Zd.perks, spawns: Zd.spawns, glass: Zd.glass || [] });
@@ -207,20 +233,21 @@ function raidWin() {
 function raidBossDamage(n) { if (RAID.on && n > 0) RAID.boss += n; }
 // (zmEnd) the scoreboard: the time, if won; the bosses' damage; and this raid's kills added to all the rest
 function raidReport() {
-  if (RAID.told || typeof scoreReport !== 'function' || typeof BOARD === 'undefined' || !BOARD.mine || !BOARD.mine.raid) return;
+  const G = RAID.map;   // (each raid its own game on the board)
+  if (RAID.told || typeof scoreReport !== 'function' || typeof BOARD === 'undefined' || !BOARD.mine || !BOARD.mine[G]) return;
   RAID.told = true;
-  scoreReport('raid', RAID.won ? Math.max(1, 100000 - Math.round(RAID.t)) : 0, Math.round(RAID.boss), (BOARD.mine.raid.c | 0) + ZM.kills, RAID.won);
+  scoreReport(G, RAID.won ? Math.max(1, 100000 - Math.round(RAID.t)) : 0, Math.round(RAID.boss), (BOARD.mine[G].c | 0) + ZM.kills, RAID.won);
   // this raid, an entry of its own: incomplete unless it got through the door
-  if (typeof scoreRun === 'function') { scoreRun('raid', RAID.won ? Math.max(1, 100000 - Math.round(RAID.t)) : 0, Math.round(RAID.boss), ZM.kills, RAID.won); scoreRunEnd('raid'); }
+  if (typeof scoreRun === 'function') { scoreRun(G, RAID.won ? Math.max(1, 100000 - Math.round(RAID.t)) : 0, Math.round(RAID.boss), ZM.kills, RAID.won); scoreRunEnd(G); }
 }
 function raidShowOver() {
   if (RAID.won && typeof rmvShow === 'function' && rmvShow()) return;   // [mvp] won at the very end: everyone together (src/raidmvp.js)
   const S = RAID_STAGES[RAID_ORDER[RAID.stage]], cleared = RAID.won ? RAID_ORDER.length : RAID.stage;
-  if ($('zmOverEye')) $('zmOverEye').textContent = 'Maren’s End';
-  $('zmOverHead').textContent = RAID.won ? 'Through the door' : `The dark took you in ${S ? S.n : 'the deep'}`;
+  if ($('zmOverEye')) $('zmOverEye').textContent = raidName();
+  $('zmOverHead').textContent = RAID.won ? raidInfo().won : raidInfo().lost(S ? S.n : 'the deep');
   $('zmOverStats').textContent = (ZM.net ? `${ZM.hum.length} of you. ` : '') + `${cleared} of ${RAID_ORDER.length} ${RAID_ORDER.length === 1 ? 'part' : 'parts'} cleared, in ${raidClock(RAID.t)}. ${ZM.kills} of the drowned sent back (${ZM.heads} through the head)`
-    + (RAID.boss > 0 ? `, ${Math.round(RAID.boss)} damage to its bosses.` : '.') + (RAID.won && RAID_ORDER.length < 3 ? ' The rest of Maren’s End is still to come.' : '');
-  const best = typeof BOARD !== 'undefined' && BOARD.mine && BOARD.mine.raid;
+    + (RAID.boss > 0 ? `, ${Math.round(RAID.boss)} damage to its bosses.` : '.') + (RAID.won && RAID_ORDER.length < 3 ? ` The rest of ${raidName()} is still to come.` : '');
+  const best = typeof BOARD !== 'undefined' && BOARD.mine && BOARD.mine[RAID.map];
   $('zmOverBest').textContent = best && (best.s || best.c) ? (best.s ? `Your best time: ${raidTimeOf(best.s)}. ` : '') + `${best.c | 0} sent back in all your raids.` : '';
   $('zmOver').hidden = false;
   try { document.exitPointerLock && document.exitPointerLock(); } catch (e) {}
@@ -344,7 +371,7 @@ function raidHud(phone, mono, fell) {
   ctx.textAlign = 'left'; ctx.textBaseline = 'top';
   const L = Math.max(14, FPS.safeLeft || 0);
   ctx.font = fell(phone ? 15 : 19); ctx.fillStyle = 'rgba(236,228,207,0.85)';
-  ctx.fillText(`Maren’s End · ${raidNumeral(RAID.stage + 1)} · ${S.n}`, L, top, W * 0.5);
+  ctx.fillText(`${raidName()} · ${raidNumeral(RAID.stage + 1)} · ${S.n}`, L, top, W * 0.5);
   ctx.font = mono(phone ? 10 : 12); ctx.fillStyle = 'rgba(236,228,207,0.55)';
   ctx.fillText(raidClock(RAID.t), L, top + (phone ? 18 : 26));
   fpsHudNote(top + (phone ? 30 : 40));
@@ -352,16 +379,34 @@ function raidHud(phone, mono, fell) {
 }
 
 // ---------- its card on the title screen ----------
+// Which raid: the picker at the top of the card. Each raid's own words on the card are in [data-raid] blocks, shown
+// for the one picked; together, the host's pick goes out with its lobby (src/zmnet.js znMap), as the Lighthouse's map.
+function raidPick(id) {
+  if (!RAIDS[id] || (typeof ZN !== 'undefined' && ZN.code && !znAmHost())) return;
+  RD_PICK = id; try { localStorage.setItem('skerry-rd-raid', id); } catch (e) {}
+  raidCard();
+  if (typeof ZN !== 'undefined' && ZN.code && typeof znSendLobby === 'function') znSendLobby();
+  if (typeof znRender === 'function') znRender();
+}
+function raidCard() {
+  for (const b of document.querySelectorAll('#rdRaids [data-raid]')) b.setAttribute('aria-pressed', String(b.dataset.raid === RD_PICK));
+  for (const d of document.querySelectorAll('#rdTitle [data-for]')) d.hidden = d.dataset.for !== RD_PICK;
+  const h = $('rdHead'); if (h) h.textContent = RAIDS[RD_PICK].n.replace('’', "'");
+  const pl = $('rdPlay'); if (pl) pl.textContent = RD_PICK === 'raid' ? 'Go down alone' : 'Sail out alone';
+  const r = $('rdRecord'); if (r) r.textContent = '';
+}
 (() => {
   if (!$('rdTitle')) return;
-  $('rdPlay').addEventListener('click', () => { if (typeof ZN !== 'undefined' && ZN.code) return; zmStart({ map: 'raid' }); });
+  $('rdPlay').addEventListener('click', () => { if (typeof ZN !== 'undefined' && ZN.code) return; zmStart({ map: RD_PICK }); });
+  for (const el of document.querySelectorAll('#rdRaids [data-raid]')) el.addEventListener('click', () => raidPick(el.dataset.raid));
+  raidCard();
   $('rdSettings').addEventListener('click', () => $('titleSettings').click());
   $('rdWcrate').addEventListener('click', () => $('wcrateBtn').click());
   $('rdOcrate').addEventListener('click', () => $('ocrateBtn').click());
   $('rdBanner').addEventListener('click', () => { $('rdTitle').scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' }); setTimeout(() => $('rdPlay').focus({ preventScroll: true }), 400); });
   // your bests, on the card
   setInterval(() => {
-    const b = typeof BOARD !== 'undefined' && BOARD.mine && BOARD.mine.raid, el = $('rdRecord'); if (!el || !b) return;
+    const b = typeof BOARD !== 'undefined' && BOARD.mine && BOARD.mine[RD_PICK], el = $('rdRecord'); if (!el || !b) return;
     const s = (b.s ? `Your best time: ${raidTimeOf(b.s)}. ` : '') + (b.b ? `Most boss damage: ${b.b}. ` : '') + (b.c ? `${b.c} sent back in all your raids.` : '');
     if (el.textContent !== s) el.textContent = s;
   }, 1500);

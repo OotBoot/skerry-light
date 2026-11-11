@@ -203,7 +203,7 @@ function rmvBuild() {
 }
 // (raidShowOver) won, at the very end: this screen instead of the card. True if it's up
 function rmvShow() {
-  if (!RAID.won || RAID_ORDER[RAID_ORDER.length - 1] !== 'fort') return false;
+  if (!RAID.won || !(typeof raidInfo === 'function' && raidInfo().mvp && (RAID.map !== 'raid' || RAID_ORDER[RAID_ORDER.length - 1] === 'fort'))) return false;
   if (RMV.on) return true;   // (already up: zmTick asks again while the plain card stays hidden)
   rmvBuild();
   if (!RMV.snap) RMV.snap = rmvGather();

@@ -250,10 +250,21 @@
       </details>
     </div>
     <div class="card zmcard rdcard" id="rdTitle" aria-labelledby="rdHead">
-      <div class="cardtop"><span class="eyebrow">A fifth game · a raid in parts · alone or up to four</span></div>
+      <div class="cardtop"><span class="eyebrow">A fifth game · raids in parts · alone or up to four</span></div>
       <h1 id="rdHead">Maren's End</h1>
+      <div class="zmmaps" id="rdRaids" role="group" aria-label="Which raid">
+        <span class="zmmapshead">Raid</span>
+        <button class="tool" type="button" data-raid="raid" aria-pressed="true">Maren's End</button>
+        <button class="tool" type="button" data-raid="gannet" aria-pressed="false">The Gannet's Wake <span class="ng-tag">New</span></button>
+      </div>
+      <div data-for="raid">
       <p>The sea round the Light has drained away. Where it was is a dry bed of salt and wrecks, and a long pier running out over it to the Swallow, the hole the water went down. Take Maren's Lantern, the one she rowed out with in 1887, and go down after it.</p>
       <p class="muted">Part I, the Swallow: walk the Long Pier, drop into the hole (a long way down), and follow the Deep Path. The dark drains you; light the braziers with the lantern and stand in their light to mend. At the end, a door that opens when twenty of the drowned have been sent back in front of it.</p>
+      </div>
+      <div data-for="gannet" hidden>
+      <p>A year to the night after she broke up, the Gannet's bell was heard again off the skerries. Take the keeper's cutter out through the rocks under the beam, with Maren on the water behind you, and find what's ringing it.</p>
+      <p class="muted">Part I, the Skerries: one of you at the helm, the rest on deck. The rocks only show in the beam. Ring the bell to drive Maren back, fire flares, patch the planks and throw the drowned back over the rail.</p>
+      </div>
       <div class="btnrow">
         <button class="primary" id="rdPlay" type="button">Go down alone</button>
         <button class="tool" id="rdWcrate" type="button">Weapon crates</button>
@@ -722,6 +733,7 @@
 <script src="src/raidverity.js"></script>
 <script src="src/raidmusic.js"></script>
 <script src="src/raidmvp.js"></script>
+<script src="src/gannet.js"></script>
 <script src="src/rclass.js"></script>
 <script src="src/zmnet.js"></script>
 <script src="src/war.js"></script>

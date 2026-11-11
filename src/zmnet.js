@@ -60,7 +60,8 @@ function znAt(o, t) {
 // ---------- the lobby ----------
 function znOnline() { return !!(typeof NET !== 'undefined' && NET.room && NET.status === 'ready'); }
 // the map a lobby's for: the raid's, or the one picked on the Lighthouse's card
-const znMap = () => ZN.mode === 'raid' ? 'raid' : ZM_PICK;
+const znMap = () => ZN.mode === 'raid' ? (typeof RD_PICK !== 'undefined' ? RD_PICK : 'raid') : ZM_PICK;   // [raid] (which raid: src/raid.js)
+const znIsRaid = m => !!(ZM_MAPS[m] && ZM_MAPS[m].raid);
 function znNick() { return znClean(($(ZN.mode === 'raid' ? 'rdNick' : 'zmNick') && $(ZN.mode === 'raid' ? 'rdNick' : 'zmNick').value) || '', 16) || (NET.nick ? znClean(NET.nick, 16) : '') || 'Keeper ' + String(NET.sid || '').slice(0, 3).toUpperCase(); }
 function znOf(p) { const z = p && p.presence && p.presence.zm; return z && typeof z === 'object' && typeof z.room === 'string' && typeof z.sid === 'string' ? z : null; }
 function znBase() { return { room: ZN.code, sid: NET.sid, nick: znNick(), at: ZN.at }; }
@@ -128,7 +129,7 @@ function znRenderUI(U) {
   q('Lobby').hidden = !mine;
   if (!on) return;
   if (!ZN.code) {
-    const nights = znOpenNights().filter(n => (n.map === 'raid') === U.raid), el = q('Lobbies'), key = JSON.stringify(nights) + ZN.msg;
+    const nights = znOpenNights().filter(n => znIsRaid(n.map) === U.raid), el = q('Lobbies'), key = JSON.stringify(nights) + ZN.msg;
     if (el.dataset.k === key) return; el.dataset.k = key;
     el.textContent = '';
     if (ZN.msg) { const p = document.createElement('p'); p.className = 'muted'; p.textContent = ZN.msg; el.append(p); }
@@ -136,7 +137,7 @@ function znRenderUI(U) {
     for (const n of nights) {
       const b = document.createElement('button'); b.type = 'button'; b.className = 'warlobbyrow';
       const nm = document.createElement('span'); nm.className = 'nm'; nm.textContent = `${n.host}’s ${W}`;
-      const sm = document.createElement('small'); sm.textContent = (U.raid ? '' : `${ZM_MAPS[n.map].N} · `) + (n.started ? 'under way' : `${n.n}/${ZN_MAX} players · tap to join`);
+      const sm = document.createElement('small'); sm.textContent = `${ZM_MAPS[n.map].N} · ` + (n.started ? 'under way' : `${n.n}/${ZN_MAX} players · tap to join`);
       b.append(nm, sm);
       b.disabled = n.started || n.n >= ZN_MAX;
       b.addEventListener('click', () => znJoin(n.code, U.raid ? 'raid' : 'zm'));
@@ -159,7 +160,7 @@ function znRenderUI(U) {
   });
   const hm = hz && hz.lob && ZM_MAPS[hz.lob.map] ? hz.lob.map : 'light';
   q('LobbyMsg').textContent = ZN.msg || (U.raid
-    ? (host ? (m.length > 1 ? `${m.length} of ${ZN_MAX} here. Start the raid when everyone’s in.` : 'Waiting for others to join. You can start alone, too, whenever you like.') : 'Waiting for the host to start the raid.')
+    ? (host ? (m.length > 1 ? `${m.length} of ${ZN_MAX} here, for ${ZM_MAPS[znMap()].N}. Start the raid when everyone’s in.` : `Waiting for others to join. You can start alone, too, whenever you like. The raid: ${ZM_MAPS[znMap()].N} (pick above).`) : `Waiting for the host to start the raid: ${ZM_MAPS[hm].N}.`)
     : host
     ? (m.length > 1 ? `${m.length} of ${ZN_MAX} here, at ${ZM_MAPS[ZM_PICK].n}. Start the night when everyone’s in.` : `Waiting for others to join. You can start alone, too, whenever you like. Tonight: ${ZM_MAPS[ZM_PICK].n} (pick above).`)
     : `Waiting for the host to start the night, at ${ZM_MAPS[hm].n}.`);

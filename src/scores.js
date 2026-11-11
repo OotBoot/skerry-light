@@ -46,6 +46,8 @@ const BOARD = {
     zm: { name: 'Keeper’s Last Light', s: 'Rounds held', b: 'Kills', what: 'Each night at the Lighthouse: the rounds held, and the drowned sent back.' },
     raid: { name: 'Maren’s End', s: 'Time', b: 'Boss damage', c: 'Kills', what: 'Each raid down Maren’s End: the time through, the damage done to its bosses, and the drowned sent back.',
       fs: v => v > 0 ? raidTimeOf(v) : '—' },
+    gannet: { name: 'The Gannet’s Wake', s: 'Time', b: 'Boss damage', c: 'Kills', what: 'Each raid out to the Gannet: the time through, the damage done to its bosses, and the drowned sent back.',
+      fs: v => v > 0 ? raidTimeOf(v) : '—' },
   },
   open: {}, mine: null, via: null, db: null, user: null, uid: null, data: null, loading: false, err: '', lastT: 0, sendT: 0, store: '',
 };
@@ -101,7 +103,7 @@ function boardLoadMine() {
   return m;
 }
 // an entry from before the marks: finished, if it has anything, but Maren's End only with a time
-function boardOldF(g, e) { return (g === 'raid' ? e.s | 0 : (e.s | 0) + (e.b | 0) + (e.c | 0)) > 0 ? 1 : 0; }
+function boardOldF(g, e) { return (g === 'raid' || g === 'gannet' ? e.s | 0 : (e.s | 0) + (e.b | 0) + (e.c | 0)) > 0 ? 1 : 0; }
 // a best from before games were kept, as one game (as server/scores.js oldAsRun)
 function boardOldRun(g, e, f) { const r = { s: e.s | 0, b: e.b | 0, c: e.c | 0, f }; if (g === 'skerry' || g === 'fps') r.b = 0; if (g === 'war') r.s = r.s > 0 ? 1 : 0; return r; }
 // a claude.ai board document's finished mark for a game (one from before the marks: as boardOldF)
