@@ -31115,7 +31115,8 @@ RAID_STAGES.descent = {
 const RBC = {
   RY: 0, RW: 18, X0: -44, X1: 44, Y0: -54, Y1: 40,   // the river's middle and width; the cavern's walls
   BW: 3.4, SEG: 9,                                    // the bridge: its width, its planks' spans (each RW / SEG)
-  CR: 3.2, CX: 6.8, CY: -13.5,                        // the circles: radius, either side of the bridge's foot
+  CR: 6.4, CX: 16, CY: -19,                           // the near circles: radius, either side of the bridge's foot, well apart
+  FR: 3.2, FW: 4.2,                                    // the far ring: radius, and its platform's half width
   KILLS: 22, KILLS1: 16,                               // kills in the circles to build the bridge (alone: fewer)
   GRACE: 1.2, SOLO: 90, FALL: 1.4,                     // a circle empty that long (alone: SOLO), then a plank goes every FALL s
   FY: 18,                                              // the far ring's middle (x 0), on its platform
@@ -31123,7 +31124,7 @@ const RBC = {
   STANDS: [[-7, 35.5], [0, 32], [7, 35.5]],            // the helmets' stands, before the door on the far bank
   DOOR: [0, 39.2],                                     // the way on, in the rock at the back of the far bank
   START: [0, -40],                                     // where you come out (from the descent's door)
-  PH: 0.9, PW: 4.2,                                    // the circles' platforms: how high, half as wide (steps up the south and outer sides)
+  PH: 0.9, PW: 7.4,                                    // the near circles' platforms: how high, half as wide (steps up the south and outer sides)
   DH: 1.0,                                             // the bridge's deck over the water (steps up to it from either bank)
   LEVEL: 8, ALIVE: 14, ALIVE_MORE: 4,                  // the drowned here: as strong as round LEVEL's, how many at once
   DHP: 16, DGAP: 5,                                    // a Diver: cuts of the Cutlass to put down; the wait between them
@@ -31178,19 +31179,19 @@ function rbSet(H, K, Z) {
     for (const k of [1, 2]) { const d = (3 - k) * 0.45; sol.push(S(cx, cy - w - d, w, d, RBC.PH * k / 3, true), S(cx + s * (w + d), cy - 0.6, d, 2.4, RBC.PH * k / 3, true)); }
   }
   // the far ring's platform: steps up from the bridge (south) and from the stands (north)
-  { const w = RBC.PW, fy = RBC.FY; sol.push(S(0, fy, w, w, RBC.PH, true)); for (const k of [1, 2]) { const d = (3 - k) * 0.45; for (const e of [-1, 1]) sol.push(S(0, fy + e * (w + d), w, d, RBC.PH * k / 3, true)); } }
+  { const w = RBC.FW, fy = RBC.FY; sol.push(S(0, fy, w, w, RBC.PH, true)); for (const k of [1, 2]) { const d = (3 - k) * 0.45; for (const e of [-1, 1]) sol.push(S(0, fy + e * (w + d), w, d, RBC.PH * k / 3, true)); } }
   for (const s of sol.concat(seg)) I.solids.push(s);
   I.rb = { seg, deck, on: 0 };
   // the piers' posts either side of the bridge's foot at each end
   for (const y of [RY - h, RY + h]) for (const s of [-1, 1]) P('block', s * (BW / 2 + 0.4), y, 0, { w: 0.6, d: 0.9, hh: 1.9, col: '#4a4842' });
   // the circles' stones, up on their platforms
-  for (const [cx, cy] of [[-RBC.CX, RBC.CY], [RBC.CX, RBC.CY], [0, RBC.FY]]) for (let i = 0; i < 7; i++) { const a = i / 7 * Math.PI * 2 + 0.3 + (cx ? 0 : Math.PI / 7); P('stone', cx + Math.cos(a) * (RBC.CR + 0.45), cy + Math.sin(a) * (RBC.CR + 0.45), a, { w: 0.5, d: 0.4, hh: 0.9 + 0.3 * (i % 2), lift: RBC.PH }); }
+  for (const [cx, cy] of [[-RBC.CX, RBC.CY], [RBC.CX, RBC.CY], [0, RBC.FY]]) { const n = cx ? 12 : 7, r = (cx ? RBC.CR : RBC.FR) + 0.45; for (let i = 0; i < n; i++) { const a = i / n * Math.PI * 2 + 0.3 + (cx ? 0 : Math.PI / 7); P('stone', cx + Math.cos(a) * r, cy + Math.sin(a) * r, a, { w: 0.5, d: 0.4, hh: 0.9 + 0.3 * (i % 2), lift: RBC.PH }); } }
   // one old boat, upturned on the near bank (the rest of what lies about is only to look at: rb3dClutter)
-  P('boat', -23, -27, 0.55, { len: 6.2, beam: 2.0, paint: '#3a4640' });
+  P('boat', -22, -36, 0.55, { len: 6.2, beam: 2.0, paint: '#3a4640' });
   // the far bank's stands, the door behind them, rocks and the drowned's ways up out of the water
   for (const [x, y] of RBC.STANDS) L(x, y, 2.2, '#8affd0', 6);
-  L(0, RBC.FY, 2.4, '#ffb070', 9); for (const s of [-1, 1]) P('brazier', s * (RBC.PW + 0.9), RBC.FY - 3.0, 0, {});
-  for (const s of [-1, 1]) { L(s * RBC.CX, RBC.CY, 2.4, '#ffb070', 9); P('brazier', s * (RBC.CX + RBC.PW + 0.9), RBC.CY + 3.0, 0, {}); }
+  L(0, RBC.FY, 2.4, '#ffb070', 9); for (const s of [-1, 1]) P('brazier', s * (RBC.FW + 0.9), RBC.FY - 3.0, 0, {});
+  for (const s of [-1, 1]) { L(s * RBC.CX, RBC.CY, 3.0, '#ffb070', 13); P('brazier', s * (RBC.CX + RBC.PW + 0.9), RBC.CY + 4.5, 0, {}); }
   L(0, RBC.DOOR[1] - 2, 2.6, '#c8a0ff', 8);
   L(0, -36, 3, '#ffc070', 12); L(-24, -30, 3, '#ffb060', 10); L(24, -30, 3, '#ffb060', 10); L(0, 22, 3, '#8affd0', 12); L(-20, 20, 3, '#6ad8c0', 9); L(20, 20, 3, '#6ad8c0', 9);
   for (const [x, y, r] of [[-30, -40, 2.2], [31, -44, 1.8], [-36, -20, 1.6], [37, -24, 2.0], [-18, -46, 1.4], [16, -48, 1.5], [-30, 30, 2.0], [28, 33, 2.4], [-38, 18, 1.6], [38, 14, 1.8], [-14, 34, 1.3], [17, 16, 1.2]]) P('stone', x, y, x * y, { w: r * 1.4, d: r, hh: r * 1.3 });
@@ -31222,7 +31223,7 @@ const rbInRiver = (lx, ly) => Math.abs(ly - RBC.RY) < RBC.RW / 2 && lx > RBC.X0 
 const rbOnBridge = (lx, ly) => Math.abs(lx) < RBC.BW / 2 + 0.1 && rbInRiver(lx, ly);
 const rbSegAt = ly => Math.floor((ly - (RBC.RY - RBC.RW / 2)) / RBC.SL);
 const rbFar = ly => ly > RBC.RY + RBC.RW / 2;
-const rbInCircle = (i, lx, ly) => i === 2 ? Math.hypot(lx, ly - RBC.FY) < RBC.CR : Math.hypot(lx - (i ? RBC.CX : -RBC.CX), ly - RBC.CY) < RBC.CR;
+const rbInCircle = (i, lx, ly) => i === 2 ? Math.hypot(lx, ly - RBC.FY) < RBC.FR : Math.hypot(lx - (i ? RBC.CX : -RBC.CX), ly - RBC.CY) < RBC.CR;
 const rbAt = sid => sid === FPS.me.id ? FPS.me : FPS.remote.get(sid);
 const rbGone = sid => sid === FPS.me.id ? (FPS.me.dead > 0 || zmIsDown()) : (() => { const r = FPS.remote.get(sid); return !r || r.left || r.dead || r.down; })();
 const rbHasCut = sid => RB.cuts.some(c => c.st === 1 && c.by === sid);
@@ -31379,7 +31380,7 @@ function rbFarCut() { for (const c of RB.cuts) if (c.st === 1) { const w = rbAt(
 // a Diver up out of the river on the near bank, a Cutlass of Plimsoll in his fist: as tough as the Lighthouse's
 // Diver about round LEVEL (anything hurts him), away from the platforms and the bridge's foot
 function rbSwordUp() {
-  const lx = (Math.random() < 0.5 ? -1 : 1) * (14 + Math.random() * 20), n = (ZM.hum || []).length || 1;
+  const lx = (Math.random() < 0.5 ? -1 : 1) * (27 + Math.random() * 12), n = (ZM.hum || []).length || 1;
   const hp = typeof zbHpOf === 'function' ? zbHpOf('diver', RBC.LEVEL, n) : zmHp(RBC.LEVEL) * 20;
   RB.sw++;
   rbBoss(lx, RBC.RY - RBC.RW / 2 - 1.6, hp, { rbs: RB.sw, h: Math.PI });
@@ -31389,7 +31390,7 @@ function rbSwordUp() {
 function rbDiverUp() {
   const c = rbFarCut();
   const near = c ? rbL(c.x, c.y)[0] : 0, lx = clamp(near + (Math.random() < 0.5 ? -1 : 1) * (8 + Math.random() * 8), RBC.X0 + 4, RBC.X1 - 4);
-  if (Math.abs(lx) < RBC.PW + 1) return;
+  if (Math.abs(lx) < RBC.FW + 1) return;
   const z = rbBoss(lx, RBC.RY + RBC.RW / 2 + 1.6, RBC.DHP, { rbd: RB.dn + 1 });
   z.hp = z.max = RBC.DHP * zbHurtK(z, ZM_DMG.P, null);   // (each cut of a Cutlass takes one of DHP off him: rbHurt)
   RB.diver = z; RB.dn++;
@@ -31425,7 +31426,9 @@ function rbKill(d, by) {
   }
   if (RB.done || d.boss) return;
   const [lx, ly] = rbL(d.x, d.y);
-  let inC = rbInCircle(0, lx, ly) || rbInCircle(1, lx, ly);
+  // (as on the Long Pier in the first part: while the circles are held, every kill counts, wherever it falls; and a
+  // kill inside a circle, or by someone standing in one, always does)
+  let inC = RB.held.filter(Boolean).length >= rbNeed() || rbInCircle(0, lx, ly) || rbInCircle(1, lx, ly);
   if (!inC && by) { const k = by === FPS.me.id ? FPS.me : FPS.remote.get(by); if (k) { const [kx, ky] = rbL(k.x, k.y); inC = rbInCircle(0, kx, ky) || rbInCircle(1, kx, ky); } }
   if (inC) { RB.kills++; for (let i = 0; i < 10; i++) FPS.parts.push({ x: d.x, y: d.y, z: FPSC.GROUND + 0.5 + Math.random(), vx: (Math.random() - 0.5) * 1.2, vy: (Math.random() - 0.5) * 1.2, vz: 1 + Math.random() * 2, t: 0.9, c: '255,190,110', up: true }); }
 }
@@ -31673,7 +31676,7 @@ function rb3dBuild(grp) {
     }
   }
   { // the far ring's platform, steps up north and south
-    const w = RBC.PW, P0 = RBC.PH, fy = RBC.FY;
+    const w = RBC.FW, P0 = RBC.PH, fy = RBC.FY;
     const b = new THREE.Mesh(new THREE.BoxGeometry(w * 2, P0, w * 2), dais); b.position.copy(V(0, fy, P0 / 2)); g.add(b);
     for (const [ox, oy, sx, sy] of [[0, w, w * 2 + 0.1, 0.22], [0, -w, w * 2 + 0.1, 0.22], [w, 0, 0.22, w * 2], [-w, 0, 0.22, w * 2]]) { const l = new THREE.Mesh(new THREE.BoxGeometry(sx, 0.1, sy), lipM); l.position.copy(V(ox, fy + oy, P0 + 0.04)); g.add(l); }
     for (const k of [1, 2]) for (const e of [-1, 1]) { const d = (3 - k) * 0.45, z = P0 * k / 3, a = new THREE.Mesh(new THREE.BoxGeometry(w * 2, z, d * 2), k % 2 ? tread : tread2); a.position.copy(V(0, fy + e * (w + d), z / 2)); g.add(a); }
@@ -31683,9 +31686,9 @@ function rb3dBuild(grp) {
   RB3.rings = [];
   for (const s of [-1, 1, 0]) {
     const m = new THREE.MeshBasicMaterial({ color: 0xffb070, transparent: true, opacity: 0.5, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide });
-    const r = new THREE.Mesh(new THREE.RingGeometry(RBC.CR - 0.18, RBC.CR, 48), m); r.rotation.x = -Math.PI / 2; r.position.copy(V(s * RBC.CX, s ? RBC.CY : RBC.FY, RBC.PH + 0.04)); g.add(r);
+    const r = new THREE.Mesh(new THREE.RingGeometry((s ? RBC.CR : RBC.FR) - (s ? 0.3 : 0.18), s ? RBC.CR : RBC.FR, 64), m); r.rotation.x = -Math.PI / 2; r.position.copy(V(s * RBC.CX, s ? RBC.CY : RBC.FY, RBC.PH + 0.04)); g.add(r);
     const fm = new THREE.MeshBasicMaterial({ color: 0xff9050, transparent: true, opacity: 0.08, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide });
-    const f = new THREE.Mesh(new THREE.CircleGeometry(RBC.CR - 0.18, 40), fm); f.rotation.x = -Math.PI / 2; f.position.copy(V(s * RBC.CX, s ? RBC.CY : RBC.FY, RBC.PH + 0.035)); g.add(f);
+    const f = new THREE.Mesh(new THREE.CircleGeometry((s ? RBC.CR - 0.3 : RBC.FR - 0.18), 48), fm); f.rotation.x = -Math.PI / 2; f.position.copy(V(s * RBC.CX, s ? RBC.CY : RBC.FY, RBC.PH + 0.035)); g.add(f);
     RB3.rings.push({ m, fm });
   }
   // the Cutlasses lying where their Divers fell: built as needed, point down in the ground, glowing
@@ -31726,10 +31729,10 @@ function rb3dClutter(g, V) {
     if (Math.abs(y) < RBC.RW / 2 + 1.2 || x < RBC.X0 + 1.5 || x > RBC.X1 - 1.5 || y < RBC.Y0 + 1.5 || y > RBC.Y1 - 1.5) return false;
     if (Math.abs(Math.abs(x) - RBC.CX) < RBC.PW + 2.6 && y > RBC.CY - RBC.PW - 2.8 && y < -8) return false;          // the platforms
     if (Math.abs(x) < 3.5 && Math.abs(y) < RBC.RW / 2 + 4.5) return false;                                         // the bridge's steps
-    if (Math.abs(x) < RBC.PW + 2.6 && Math.abs(y - RBC.FY) < RBC.PW + 2.8) return false;                          // the far ring
+    if (Math.abs(x) < RBC.FW + 2.6 && Math.abs(y - RBC.FY) < RBC.FW + 2.8) return false;                          // the far ring
     if (Math.abs(x) < 4 && (y < -36 || y > 28)) return false;                                                      // the way in, and the door
     if (RBC.STANDS.some(([sx, sy]) => Math.hypot(x - sx, y - sy) < 3)) return false;
-    if (Math.hypot(x + 23, y + 27) < 4.5) return false;                                                            // the boat
+    if (Math.hypot(x + 22, y + 36) < 4.5) return false;                                                            // the boat
     return true;
   };
   const spot = () => { for (let t = 0; t < 40; t++) { const x = RBC.X0 + rnd() * (RBC.X1 - RBC.X0), y = RBC.Y0 + rnd() * (RBC.Y1 - RBC.Y0); if (clear(x, y)) return [x, y]; } return null; };
