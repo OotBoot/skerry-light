@@ -393,7 +393,7 @@ function raidPick(id) {
 function raidCard() {
   for (const b of document.querySelectorAll('#rdRaids [data-raid]')) b.setAttribute('aria-pressed', String(b.dataset.raid === RD_PICK));
   for (const d of document.querySelectorAll('#rdTitle [data-for]')) d.hidden = d.dataset.for !== RD_PICK;
-  const h = $('rdHead'); if (h) h.textContent = RAIDS[RD_PICK].n.replace('’', "'");
+  // (the card's heading stays Skerry Raids: the buttons under it show which raid is picked)
   const pl = $('rdPlay'); if (pl) pl.textContent = RD_PICK === 'raid' ? 'Go down alone' : 'Sail out alone';
   const r = $('rdRecord'); if (r) r.textContent = '';
 }

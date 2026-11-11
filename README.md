@@ -319,7 +319,7 @@ How it's built (`src/zombies.js`): the station is laid out by the same island bu
 
 ## Maren's End (a raid, for one to four)
 
-A game of its own, with its own card on the title screen (the **Maren's End** button at the top takes you there) and its own column on the scoreboard. It's built on Keeper's Last Light: the same drowned, the same way of playing together (host a raid, the others join from the card's **Play together** list, and the host starts it). You go in with a pepperbox and a blunderbuss, and your weapon and outfit crates open from the raid's own card.
+A game of its own, with its own card on the title screen, **Skerry Raids**, which holds both raids (the raids banner at the top takes you there) and its own column on the scoreboard. It's built on Keeper's Last Light: the same drowned, the same way of playing together (host a raid, the others join from the card's **Play together** list, and the host starts it). You go in with a pepperbox and a blunderbuss, and your weapon and outfit crates open from the raid's own card.
 
 **Stamina.** In Maren's End sprinting tires you. A stamina bar sits beside your health bar: full, it's ten seconds of sprinting, and it fills back up from empty in fifteen seconds whenever you aren't sprinting. Run it dry and you're out of breath (the bar goes red and says so): you can't sprint again until it's back to a quarter. It works the same for all three callings and under Maren's Weight (the Weight slows your pace; stamina is how long you can sprint at it). The other modes are unchanged.
 
@@ -404,7 +404,7 @@ In Maren's End you can take six knocks before you go down (twelve with Stout Hea
 
 ## The Gannet's Wake (a second raid, for one to four)
 
-A second raid, picked at the top of the raid card (**Raid: Maren's End / The Gannet's Wake**; the pick is kept on this device, and together the host's pick goes out with the lobby, so the lobby list shows which raid each one is). It runs on the same engine as Maren's End: the three callings, going down and getting each other up, stamina, bottomless reserves, crates from kills, and its own column on the scoreboard (best time through, most boss damage in one raid, the drowned sent back in all your raids).
+A second raid, picked at the top of the Skerry Raids card (**Raid: Maren's End / The Gannet's Wake**; the pick is kept on this device, and together the host's pick goes out with the lobby, so the lobby list shows which raid each one is). It runs on the same engine as Maren's End: the three callings, going down and getting each other up, stamina, bottomless reserves, crates from kills, and its own column on the scoreboard (best time through, most boss damage in one raid, the drowned sent back in all your raids).
 
 A year to the night after the *Gannet* broke up on the skerries, her bell is heard again off Skerry Light. The keeper's cutter goes out to find what's ringing it. Part I brings the sailing game itself into the raid: you sail the cutter out together. Part II takes you below decks in the risen *Gannet*, and Part III up on to her quarterdeck against her captain. When he falls he leaves a pirate token for each of you, and the raid ends on the same victory screen as Maren's End (MVP in the middle, three best stats each, with flares fired and the bell rung counted too), to its own dawn music.
 

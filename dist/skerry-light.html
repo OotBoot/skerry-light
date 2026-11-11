@@ -1286,7 +1286,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
     </div>
     <div class="card zmcard rdcard" id="rdTitle" aria-labelledby="rdHead">
       <div class="cardtop"><span class="eyebrow">A fifth game · raids in parts · alone or up to four</span></div>
-      <h1 id="rdHead">Maren's End</h1>
+      <h1 id="rdHead">Skerry Raids</h1>
       <div class="zmmaps" id="rdRaids" role="group" aria-label="Which raid">
         <span class="zmmapshead">Raid</span>
         <button class="tool" type="button" data-raid="raid" aria-pressed="true">Maren's End</button>
@@ -1329,7 +1329,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
         <p><b>The dark.</b> At the bottom, the dark drains your health a little at a time; nothing else mends you. Inside a lit brazier's light you mend quickly and your ammunition is made up. Push on from one to the next.</p>
         <p><b>The drowned.</b> Down here they glow, a cold blue, and they climb up out of the rock to come for you. You carry a pepperbox and a blunderbuss, and the weapon and outfit crates are earned here as at the Lighthouse.</p>
         <p><b>The door.</b> At the end of the Deep Path a door glows in the rock. Send back twenty of the drowned inside the ring in front of it and it opens; go through. Together, anyone who goes down gets up again when a friend holds Use beside them, and anyone who bleeds out comes back when the next brazier is lit.</p>
-        <p><b>The board.</b> Maren's End's line on the scoreboard keeps your best time through the whole raid, the most damage you've done to its bosses in one raid, and everyone you've sent back in all your raids.</p>
+        <p><b>The board.</b> Each raid's line on the scoreboard keeps your best time through the whole raid, the most damage you've done to its bosses in one raid, and everyone you've sent back in all your raids.</p>
       </details>
     </div>
   </div>
@@ -1723,7 +1723,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 // ---- src/config.js ----
 'use strict';
 // The game's version, shown at the top of the main menu. Bump it by one with every change pushed to main.
-var VERSION = 153;
+var VERSION = 154;
 // Skerry Light: tuning, asset paths and lore.
 // World units are metres. The lighthouse stands at the origin on the shoreline (y = 0);
 // north (+y) is open sea. Bearings: 0 = north, positive = east.
@@ -1852,6 +1852,8 @@ const flashK = () => SETTINGS.flashes === 'reduced' ? 0.3 : 1;
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Never give away a secret here (the Easter egg's steps, where the secret boss hides).
 var PATCH_NOTES = [
+  { v: 154, date: '2026-11-11', title: 'Skerry Raids', Changes: [
+    "Raids: the raid card on the main menu is now called Skerry Raids, since it holds both raids. Maren's End keeps its name as a raid." ] },
   { v: 153, date: '2026-11-11', title: 'A faster fall', Balance: [
     "Maren's End: you fall down the Swallow 30% faster, about twenty seconds from the platform to the floor." ], Sound: [
     "Maren's End: the falling chant plays 30% faster to keep up, and still peaks just as you land." ] },
@@ -30677,7 +30679,7 @@ function raidPick(id) {
 function raidCard() {
   for (const b of document.querySelectorAll('#rdRaids [data-raid]')) b.setAttribute('aria-pressed', String(b.dataset.raid === RD_PICK));
   for (const d of document.querySelectorAll('#rdTitle [data-for]')) d.hidden = d.dataset.for !== RD_PICK;
-  const h = $('rdHead'); if (h) h.textContent = RAIDS[RD_PICK].n.replace('’', "'");
+  // (the card's heading stays Skerry Raids: the buttons under it show which raid is picked)
   const pl = $('rdPlay'); if (pl) pl.textContent = RD_PICK === 'raid' ? 'Go down alone' : 'Sail out alone';
   const r = $('rdRecord'); if (r) r.textContent = '';
 }

@@ -6,6 +6,8 @@
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Never give away a secret here (the Easter egg's steps, where the secret boss hides).
 var PATCH_NOTES = [
+  { v: 154, date: '2026-11-11', title: 'Skerry Raids', Changes: [
+    "Raids: the raid card on the main menu is now called Skerry Raids, since it holds both raids. Maren's End keeps its name as a raid." ] },
   { v: 153, date: '2026-11-11', title: 'A faster fall', Balance: [
     "Maren's End: you fall down the Swallow 30% faster, about twenty seconds from the platform to the floor." ], Sound: [
     "Maren's End: the falling chant plays 30% faster to keep up, and still peaks just as you land." ] },
