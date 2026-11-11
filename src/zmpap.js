@@ -47,7 +47,8 @@ const zmpTitle = (id, t) => ZM_PAP_W[id].n + (t > 1 ? ' ' + zmpRoman(t) : '');
 // [raid] in Maren's End reforging gives only the look and the weapon's own trick: no harder hits, no bigger loads
 const zmpRaid = () => typeof RAID !== 'undefined' && RAID.on;
 const zmpRes = (id, t) => zmpRaid() && ZM_AMMO[id] != null ? ZM_AMMO[id] : Math.round(ZM_PAP_W[id].res * (1 + 0.25 * (t - 1)));
-const zmpK = (id, t) => zmpRaid() ? 1 : ZM_PAP_W[id].k * Math.pow(1.5, t - 1);
+const zmpK0 = (id, t) => ZM_PAP_W[id].k * Math.pow(1.5, t - 1);
+const zmpK = (id, t) => zmpRaid() ? 1 : zmpK0(id, t);
 const ZM_PAP_GLOW = 0xffa838;
 
 // ---------- the bench itself (a prop: its solid and its static parts) ----------
@@ -191,12 +192,14 @@ function zmpW(id) {
 const zmpName = id => (zmpW(id) || FPSW[id]).n;
 const zmpMag = id => (zmpW(id) || FPSW[id]).mag;
 const zmpAmmo = id => zmpTier(id) && ZM_PAP_W[id] ? zmpRes(id, zmpTier(id)) : ZM_AMMO[id];
-// (from zmHurt) my own hit with a reforged weapon hits harder; anyone else's was scaled where they made it
-function zmpDmg(dmg, code, by) {
+// (from zmHurt) my own hit with a reforged weapon hits harder; anyone else's was scaled where they made it. In the
+// raid only on the drowned themselves (d): its bosses take the weapon's plain damage
+function zmpDmg(dmg, code, by, d) {
   if (by && by !== FPS.me.id) return dmg;
   if (!ZM.pap || code === 'k') return dmg;
   const id = FPSW_BY_CODE[code];
-  return id && zmpTier(id) && ZM_PAP_W[id] ? dmg * zmpK(id, zmpTier(id)) : dmg;
+  if (!(id && zmpTier(id) && ZM_PAP_W[id])) return dmg;
+  return dmg * (zmpRaid() ? (d && !d.boss ? zmpK0(id, zmpTier(id)) : 1) : zmpK(id, zmpTier(id)));
 }
 
 // ---------- each tick ----------

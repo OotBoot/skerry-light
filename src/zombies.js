@@ -2640,7 +2640,7 @@ function zmPoints(n, raw, by) {
 function zmHurt(d, dmg, head, code, by, how) {
   if (!d || d.dead) return;
   d.hitT = 0.15;
-  if (typeof zmpDmg === 'function') dmg = zmpDmg(dmg, code, by);   // [pap] reforged weapons hit harder (the shooter's side)
+  if (typeof zmpDmg === 'function') dmg = zmpDmg(dmg, code, by, d);   // [pap] reforged weapons hit harder (the shooter's side)
   if (typeof raidHurtK === 'function') dmg = raidHurtK(d, dmg, code, by);   // [raid] the stage's say (the shooter's side)
   if (!(dmg > 0)) return;   // [raid3] (nothing at all: Maren, while her soul's out of her)
   if (ZM.net === 'client') { zmnHit(d, dmg, head, code, how); return; }
@@ -2732,7 +2732,7 @@ function zmResolveShot(sh, mine) {
 // say, so here it's judged against the round's strength
 function zmHarpoonOn(hp, o) {
   if (!o || !o.zm || o.boss || !hp.mine || (hp.thruN || 0) >= ZM_HARPOON_THRU) return false;
-  const hit = (typeof zmpDmg === 'function' ? zmpDmg(FPSW.harpoon.dmg, 'h', FPS.me.id) : FPSW.harpoon.dmg) * ZM_DMG.h * (o.mark > 0 ? 1.5 : 1);
+  const hit = (typeof zmpDmg === 'function' ? zmpDmg(FPSW.harpoon.dmg, 'h', FPS.me.id, o) : FPSW.harpoon.dmg) * ZM_DMG.h * (o.mark > 0 ? 1.5 : 1);
   if (!(o.dead || (ZM.net === 'client' && (ZM.insta > 0 || hit >= zmHp(ZM.round) * 1.1)))) return false;
   hp.thruN = (hp.thruN || 0) + 1; (hp.thru = hp.thru || new Set()).add(o);
   hp.vx *= 0.9; hp.vy *= 0.9; hp.stuck = 0;

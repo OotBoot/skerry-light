@@ -1685,7 +1685,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 // ---- src/config.js ----
 'use strict';
 // The game's version, shown at the top of the main menu. Bump it by one with every change pushed to main.
-var VERSION = 125;
+var VERSION = 126;
 // Skerry Light: tuning, asset paths and lore.
 // World units are metres. The lighthouse stands at the origin on the shoreline (y = 0);
 // north (+y) is open sea. Bearings: 0 = north, positive = east.
@@ -21693,7 +21693,7 @@ function zmPoints(n, raw, by) {
 function zmHurt(d, dmg, head, code, by, how) {
   if (!d || d.dead) return;
   d.hitT = 0.15;
-  if (typeof zmpDmg === 'function') dmg = zmpDmg(dmg, code, by);   // [pap] reforged weapons hit harder (the shooter's side)
+  if (typeof zmpDmg === 'function') dmg = zmpDmg(dmg, code, by, d);   // [pap] reforged weapons hit harder (the shooter's side)
   if (typeof raidHurtK === 'function') dmg = raidHurtK(d, dmg, code, by);   // [raid] the stage's say (the shooter's side)
   if (!(dmg > 0)) return;   // [raid3] (nothing at all: Maren, while her soul's out of her)
   if (ZM.net === 'client') { zmnHit(d, dmg, head, code, how); return; }
@@ -21785,7 +21785,7 @@ function zmResolveShot(sh, mine) {
 // say, so here it's judged against the round's strength
 function zmHarpoonOn(hp, o) {
   if (!o || !o.zm || o.boss || !hp.mine || (hp.thruN || 0) >= ZM_HARPOON_THRU) return false;
-  const hit = (typeof zmpDmg === 'function' ? zmpDmg(FPSW.harpoon.dmg, 'h', FPS.me.id) : FPSW.harpoon.dmg) * ZM_DMG.h * (o.mark > 0 ? 1.5 : 1);
+  const hit = (typeof zmpDmg === 'function' ? zmpDmg(FPSW.harpoon.dmg, 'h', FPS.me.id, o) : FPSW.harpoon.dmg) * ZM_DMG.h * (o.mark > 0 ? 1.5 : 1);
   if (!(o.dead || (ZM.net === 'client' && (ZM.insta > 0 || hit >= zmHp(ZM.round) * 1.1)))) return false;
   hp.thruN = (hp.thruN || 0) + 1; (hp.thru = hp.thru || new Set()).add(o);
   hp.vx *= 0.9; hp.vy *= 0.9; hp.stuck = 0;
@@ -24094,7 +24094,8 @@ const zmpTitle = (id, t) => ZM_PAP_W[id].n + (t > 1 ? ' ' + zmpRoman(t) : '');
 // [raid] in Maren's End reforging gives only the look and the weapon's own trick: no harder hits, no bigger loads
 const zmpRaid = () => typeof RAID !== 'undefined' && RAID.on;
 const zmpRes = (id, t) => zmpRaid() && ZM_AMMO[id] != null ? ZM_AMMO[id] : Math.round(ZM_PAP_W[id].res * (1 + 0.25 * (t - 1)));
-const zmpK = (id, t) => zmpRaid() ? 1 : ZM_PAP_W[id].k * Math.pow(1.5, t - 1);
+const zmpK0 = (id, t) => ZM_PAP_W[id].k * Math.pow(1.5, t - 1);
+const zmpK = (id, t) => zmpRaid() ? 1 : zmpK0(id, t);
 const ZM_PAP_GLOW = 0xffa838;
 
 // ---------- the bench itself (a prop: its solid and its static parts) ----------
@@ -24238,12 +24239,14 @@ function zmpW(id) {
 const zmpName = id => (zmpW(id) || FPSW[id]).n;
 const zmpMag = id => (zmpW(id) || FPSW[id]).mag;
 const zmpAmmo = id => zmpTier(id) && ZM_PAP_W[id] ? zmpRes(id, zmpTier(id)) : ZM_AMMO[id];
-// (from zmHurt) my own hit with a reforged weapon hits harder; anyone else's was scaled where they made it
-function zmpDmg(dmg, code, by) {
+// (from zmHurt) my own hit with a reforged weapon hits harder; anyone else's was scaled where they made it. In the
+// raid only on the drowned themselves (d): its bosses take the weapon's plain damage
+function zmpDmg(dmg, code, by, d) {
   if (by && by !== FPS.me.id) return dmg;
   if (!ZM.pap || code === 'k') return dmg;
   const id = FPSW_BY_CODE[code];
-  return id && zmpTier(id) && ZM_PAP_W[id] ? dmg * zmpK(id, zmpTier(id)) : dmg;
+  if (!(id && zmpTier(id) && ZM_PAP_W[id])) return dmg;
+  return dmg * (zmpRaid() ? (d && !d.boss ? zmpK0(id, zmpTier(id)) : 1) : zmpK(id, zmpTier(id)));
 }
 
 // ---------- each tick ----------
