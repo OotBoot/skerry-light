@@ -348,6 +348,7 @@ const rfBox = () => RF_ZONES;   // (for tests)
 function rfEnter() {
   Object.assign(RF, { on: true, st: 'hunt', apo: { apoW: 0, apoE: 0, apoN: 0 }, apoZ: {}, wait: 0, mz: 0, vul: 0, orbUp: false, orbGap: 0, orbT: 0, orbPh: 0, orb: [FPSC.CX, FPSC.CY - 40, 8], orbS: null, orbHp: RFC.ORB_HP, orbAcc: 0,
     bossT: RFC.BOSS_T[0], tok: null, mine: false, wonT: 0, kz: 0, angerT: 0, angered: false, grab: 0, shot: 0, spawnT: 3, t: 0, seenSt: 'hunt', burst: 0, hintT: 9 });
+  if (typeof rf2Reset === 'function') rf2Reset();   // [p2] her second phase (src/raidmaren2.js)
   ZM.open = new Set(['raid'].concat(Object.keys(RF_ZONES)));
   ZM.round = Math.max(ZM.round, RFC.ROUND);
   ZB.round = ZM.round; ZB.plan = [];
@@ -394,6 +395,7 @@ function rfTick(dt) {
     RF.wait -= dt; if (RF.wait <= 0) rfMaren();
   } else if (RF.st === 'maren') {
     const M = ZM.z.find(z => z.zn === RF.mz);
+    if (typeof rf2Host === 'function') rf2Host(M, dt);   // [p2] at a third of her health, the storm; then the bell
     // her soul over the water: up, shot, and up again
     if (RF.vul > 0) { RF.vul -= dt; if (RF.vul <= 0) { RF.vul = 0; RF.orbGap = RFC.ORB_GAP; rfLine('Maren’s soul sinks back into the sea. She can’t be hurt again until it’s shot.'); } }
     else if (!RF.orbUp && M && !(M.act === 'rise')) { RF.orbGap -= dt; if (RF.orbGap <= 0) { RF.orbUp = true; RF.orbPh = Math.random() * 60; RF.orbHp = RFC.ORB_HP; } }
@@ -524,6 +526,7 @@ function rfMe(dt) {
   const m = FPS.me;
   if (RF.shot > 0) RF.shot -= dt; if (RF.orbAcc > 0 && RF.shot <= 0) { RF.shot = RFC.ORB_SEND; raidAsk('orb', RF.orbAcc); RF.orbAcc = 0; }
   if (RF.grab > 0) RF.grab -= dt; if (RF.hintT > 0) RF.hintT -= dt;
+  if (typeof rf2Me === 'function' && RF.bell) rf2Me(dt);   // [p2]
   if (RF.st === 'anger') { RF.angerT += dt; if (!RF.angered && RF.angerT >= RFC.ANGER[0]) rfAngered(); }
   if (ZM.net === 'client' && RF.vul > 0) RF.vul = Math.max(0, RF.vul - dt);
   // joined: her soul glides between the host's words
@@ -545,7 +548,7 @@ function rfPack(o) {
   if (!RF.on) return;
   const CX = FPSC.CX, CY = FPSC.CY, r10 = v => Math.round(v * 10);
   o.f = [RF_ST.indexOf(RF.st), RF_APO_IDS.reduce((a, k, i) => a + (RF.apo[k] | 0) * Math.pow(3, i), 0), r10(RF.vul), RF.orbUp ? 1 : 0, r10(RF.orb[0] - CX), r10(RF.orb[1] - CY), r10(RF.orb[2]),
-    RF.tok ? 1 : 0, RF.tok ? r10(RF.tok[0] - CX) : 0, RF.tok ? r10(RF.tok[1] - CY) : 0, RF.tok ? r10(RF.tok[2]) : 0, RF.mz | 0].concat(RF_APO_IDS.map(k => RF.apoZ[k] | 0), [Math.round(clamp(RF.kbrk || 0, 0, 1) * 1000), r10(RF.orbHp || 0)]);
+    RF.tok ? 1 : 0, RF.tok ? r10(RF.tok[0] - CX) : 0, RF.tok ? r10(RF.tok[1] - CY) : 0, RF.tok ? r10(RF.tok[2]) : 0, RF.mz | 0].concat(RF_APO_IDS.map(k => RF.apoZ[k] | 0), [Math.round(clamp(RF.kbrk || 0, 0, 1) * 1000), r10(RF.orbHp || 0)], rf2Pack());   // [p2] (and her second phase's: src/raidmaren2.js)
 }
 // (joined) the host's word of it: and what's changed is shown here as it would be there
 function rfApply(o) {
@@ -568,6 +571,7 @@ function rfApply(o) {
   RF.mz = f[11] | 0; RF.st = st; RF.kbrk = (f[15] || 0) / 1000;
   // (her soul's health: the host's, less what I've hit it for and not yet sent)
   if (f[16] != null) RF.orbHp = Math.max(0, f[16] / 10 - (RF.orbAcc || 0));
+  if (f[17] != null) rf2Apply(f, 17);   // [p2]
 }
 
 // =====================================================================================================================
@@ -578,9 +582,9 @@ function rfApply(o) {
 // comes up through it
 // (each of her blows takes half your health: rfHalf)
 const rfHalf = () => Math.max(1, Math.ceil((ZM.perks && ZM.perks.stout ? ZMC.HP_STOUT : ZMC.HP) / 2));
-const RFM_T = { rise: { hit: 99, end: 4.2 }, sweep: { hit: 0.62, end: 1.1 }, call: { hit: 1.6, end: 2.1 }, smash: { hit: 0.8, end: 1.3 } };
+const RFM_T = { rise: { hit: 99, end: 4.2 }, sweep: { hit: 0.62, end: 1.1 }, call: { hit: 1.6, end: 2.1 }, smash: { hit: 0.8, end: 1.3 }, wrath: { hit: 99, end: 4.6 } };   // (wrath: her storm call, src/raidmaren2.js)
 ZB_KINDS.push('maren');
-for (const a of ['sweep', 'call', 'rise']) if (!ZB_ACT.includes(a)) ZB_ACT.push(a);
+for (const a of ['sweep', 'call', 'rise', 'wrath']) if (!ZB_ACT.includes(a)) ZB_ACT.push(a);
 const RF_RISE = [[0, -30, -7], [0, -24.5, 2.2], [0, -18.5, RFC.RT]];   // (where she comes up: local x, y, height)
 ZBT.maren = {
   n: 'Maren Holm', N: 'Maren Holm', sub: 'drowned, and not at rest', col: '#9ae8d8', warn: '120,255,220', big: 'call', puff: '120,200,190',
@@ -601,11 +605,14 @@ ZBT.maren = {
     return null;
   },
   start(z, act, p) {
-    if (act === 'sweep') z.swCd = 0.9 + Math.random() * 0.4;
-    if (act === 'call') { z.callCd = (RF.vul > 0 ? 2.2 : 3) + Math.random() * 1.2; z.swCd = Math.max(z.swCd, 0.5); if (p) { z.ix = p.x; z.iy = p.y; } }
+    const q = RF.p2 ? RF2.CD : 1;   // [p2] (quicker, in her second phase)
+    if (act === 'sweep') z.swCd = (0.9 + Math.random() * 0.4) * q;
+    if (act === 'call') { z.callCd = ((RF.vul > 0 ? 2.2 : 3) + Math.random() * 1.2) * q; z.swCd = Math.max(z.swCd, 0.5); if (p) { z.ix = p.x; z.iy = p.y; } }
   },
   during(z, dt, nearest) {
     const T = RFM_T[z.act];
+    // [p2] her storm call: up off the floor, arms raised, and down again at the end
+    if (z.act === 'wrath') { const k = Math.min(1, z.at / T.end), w0 = z.wj0 != null ? z.wj0 : z.fl || 0; z.jz = w0 + RF2.LIFT * Math.sin(Math.min(1, k * 2.5) * Math.PI / 2) * (k > 0.85 ? (1 - k) / 0.15 : 1); return; }
     if (z.act === 'rise') {
       // (up out of the water, over the wall, and down onto the Battery)
       const k = Math.min(1, z.at / T.end), i = k < 0.6 ? 0 : 1, q = i ? (k - 0.6) / 0.4 : k / 0.6, e = zbE(q), a = RF_RISE[i], b = RF_RISE[i + 1];
@@ -634,13 +641,15 @@ ZBT.maren = {
     const grounded = (m.jz || 0) - (m.fl || 0) < 0.25 && !((m.vz || 0) > 0.5);
     if (zbOk() && dm < RFC.CALL_R && Math.abs((m.jz || 0) - iz) < 1.3 && grounded) { fpsHurt(rfHalf(), null, null); zmSound('hit'); FPS.hurtT = 0.9; FPS.eyeLag = clamp((FPS.eyeLag || 0) - 0.25, -0.8, 0.8); }
   },
-  after(z, a) { if (a === 'rise') { z.st = 'in'; z.jz = z.fl = RFC.RT; zmSettle(z); } },
+  after(z, a) { if (a === 'rise') { z.st = 'in'; z.jz = z.fl = RFC.RT; zmSettle(z); } if (a === 'wrath') z.jz = z.fl || 0; },
   // (while her soul's out of her nothing touches her; struck, the Lamp burns her at half the rate)
-  hurtK: (z, how) => RF.vul > 0 ? (how === 'burn' ? 0.5 : 1) : 0,
+  // (and in her second phase: nothing while she calls the storm, then three quarters of every hit) [p2]
+  hurtK: (z, how) => RF.vul > 0 && z.act !== 'wrath' ? (how === 'burn' ? 0.5 : 1) * (RF.p2 ? RF2.RESIST : 1) : 0,
   endOf: (z, act) => RFM_T[act] ? RFM_T[act].end : 0,
   actSound(z, act) {
     const d = Math.hypot(z.x - FPS.me.x, z.y - FPS.me.y);
     if (act === 'call') rfSound('call', d);
+    else if (act === 'wrath') { rfSound('wrath', d); for (let i = 0; i < 40; i++) { const a = Math.random() * 6.283, r = 1 + Math.random() * 4; fpsPuff(z.x + Math.cos(a) * r, z.y + Math.sin(a) * r, FPSC.GROUND + (z.jz || 0) + Math.random() * 6, '140,215,255', 4); } }   // [p2]
     else if (act === 'rise') {
       rfSound('rise', d);
       // (the sea bursts up where she comes)
@@ -665,6 +674,7 @@ function rfSound(k, d) {
   if (k === 'call') { whisper(0.9); play('sea', 0.6); return; }
   if (k === 'erupt') { play('splash', 1); play('slam', 0.6); return; }
   if (k === 'die') { play('thunder', 1); sting(); whisper(1); return; }
+  if (k === 'wrath') { play('sea', 1); sting(); whisper(1); return; }
   if (k === 'anger') { play('thunder', 1); play('sea', 0.8); sting(); whisper(1); return; }
   if (k === 'orb') { play('powerup', 0.9); sting(); return; }
   if (k === 'token') { play('pickup', 1); play('chest', 0.6); return; }
@@ -763,8 +773,8 @@ function rfPoseMaren(z, M, dt) {
     if (at < T.hit - 0.15) { const k = zbE(at / (T.hit - 0.15)); R = [zbL(-0.15, -0.6, k), zbL(2.35, 2.9, k), zbL(-1.25, -0.4, k)]; }
     else if (at < T.hit + 0.2) { const k = zbE((at - T.hit + 0.15) / 0.35); R = [zbL(-0.6, 1.5, k), zbL(2.9, 0.4, k), zbL(-0.4, -0.2, k)]; M.torso.rotation.y += zbL(0.3, -0.5, k); }
     else { const k = zbE((at - T.hit - 0.2) / (T.end - T.hit - 0.2)); R = [zbL(1.5, -0.15, k), zbL(0.4, 2.35, k), zbL(-0.2, -1.25, k)]; M.torso.rotation.y += zbL(-0.5, 0, k); }
-  } else if (act === 'call' || act === 'rise') {
-    const T = RFM_T[act], up = act === 'rise' ? 1 : zbE(Math.min(1, at / 0.6)), down = act === 'call' && at > T.hit ? zbE(Math.min(1, (at - T.hit) / 0.3)) : 0;
+  } else if (act === 'call' || act === 'rise' || act === 'wrath') {
+    const T = RFM_T[act], up = act !== 'call' ? 1 : zbE(Math.min(1, at / 0.6)), down = act === 'call' && at > T.hit ? zbE(Math.min(1, (at - T.hit) / 0.3)) : 0;
     R = [zbL(-0.15, -0.2, up), zbL(2.35, 2.95, up), zbL(-1.25, -0.25, up)]; L = [zbL(0.1, -0.2, up), zbL(-0.16, -2.95, up), zbL(0.2, 0.25, up)];
     if (down) { R = [zbL(R[0], 1.2, down), zbL(R[1], 0.6, down), R[2]]; L = [zbL(L[0], 1.2, down), zbL(L[1], -0.6, down), L[2]]; }
     M.head.rotation.x = zbL(0.28, -0.35, up) + down * 0.6;
@@ -775,9 +785,10 @@ function rfPoseMaren(z, M, dt) {
   const vul = RF.vul > 0, flash = z.hitT > 0 ? Math.min(1, z.hitT / 0.15) : 0, ward = z.ward > 0 ? z.ward / 0.35 : 0;
   if (z.ward > 0) z.ward -= dt;
   const pulse = 0.5 + 0.5 * Math.sin(t * (vul ? 7 : 2.2));
-  M.aura.opacity = vul ? 0 : 0.1 + 0.08 * pulse + ward * 0.25;
-  M.shell.visible = M.shell2.visible = !vul && !z.dead;
-  M.glow.material.opacity = z.dead ? 0 : vul ? 0.25 + 0.2 * pulse : 0.55 + 0.25 * pulse;
+  const lit = 1 - (RF.storm || 0) * 0.97;   // [p2] (in the dark, nothing of her shows but her eyes)
+  M.aura.opacity = (vul ? 0 : 0.1 + 0.08 * pulse + ward * 0.25) * lit;
+  M.shell.visible = M.shell2.visible = !vul && !z.dead && lit > 0.2;
+  M.glow.material.opacity = (z.dead ? 0 : vul ? 0.25 + 0.2 * pulse : 0.55 + 0.25 * pulse) * lit;
   M.glow.material.color.setRGB(vul ? 1 : 0.6, vul ? 0.4 : 1, vul ? 0.45 : 0.9);
   M.foot.material.opacity = z.dead ? 0 : 0.5;
   M.dress.emissive.setRGB((vul ? 0.22 * pulse : 0) + flash * 0.25, flash * 0.2 + (vul ? 0 : 0.03), flash * 0.2 + (vul ? 0.02 : 0.05));
@@ -821,9 +832,11 @@ function rfHud(phone, mono, fell) {
     if (RF.angered) line('Maren is angered', top, `rgba(255,110,120,${0.8 + 0.2 * Math.sin(t * 8)})`, fell(phone ? 15 : 20));
   } else if (RF.st === 'maren') {
     const M = ZM.z.find(z => z.zn === RF.mz);
-    if (RF.vul > 0) line(`Maren can be hurt: ${Math.ceil(RF.vul)} s`, top, `rgba(255,120,130,${0.8 + 0.2 * Math.sin(t * 8)})`, fell(phone ? 15 : 20));
-    else if (M && M.act === 'rise') line('Maren rises', top, 'rgba(160,240,220,0.9)', fell(phone ? 15 : 20));
-    else { line('Maren can\u2019t be hurt', top, 'rgba(160,240,220,0.9)', fell(phone ? 15 : 20)); line(RF.orbUp ? 'Shoot her soul: the light over the water' : 'Her soul is under the sea', top + (phone ? 20 : 26), 'rgba(160,240,220,0.8)'); }
+    const t2 = typeof rf2Hud === 'function' ? rf2Hud(phone, mono, fell, line, top) : top;   // [p2] the storm call, the bell
+    if (RF.p2i) { /* (her storm call says it all) */ }
+    else if (RF.vul > 0) line(`Maren can be hurt: ${Math.ceil(RF.vul)} s`, t2, `rgba(255,120,130,${0.8 + 0.2 * Math.sin(t * 8)})`, fell(phone ? 15 : 20));
+    else if (M && M.act === 'rise') line('Maren rises', t2, 'rgba(160,240,220,0.9)', fell(phone ? 15 : 20));
+    else { line('Maren can\u2019t be hurt', t2, 'rgba(160,240,220,0.9)', fell(phone ? 15 : 20)); line(RF.orbUp ? 'Shoot her soul: the light over the water' : 'Her soul is under the sea', t2 + (phone ? 20 : 26), 'rgba(160,240,220,0.8)'); }
   } else if (RF.st === 'won') line(RF.mine ? 'Maren is laid to rest.' : 'Maren is laid to rest. Take her pirate token, where she fell.', top, 'rgba(255,214,140,0.95)', fell(phone ? 15 : 20));
   ctx.shadowBlur = 0; ctx.shadowColor = 'transparent';
   // her soul's mark: a gold diamond over it, wherever it is in front of you
@@ -870,6 +883,7 @@ function rf3dBuild(grp) {
   RF3.orb = null;
   if (!RF.on) return;
   if (typeof rfk3dBuild === 'function') rfk3dBuild(grp);
+  if (typeof rf2Build3d === 'function') rf2Build3d(grp);   // [p2]
   const soft = (c0, c1) => new THREE.SpriteMaterial({ map: z3Soft(c0, c1), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false });
   // the soul: a hot core, a gold glow round it, a wider haze, and its light on the sea under it
   const orb = RF3.orb = new THREE.Group(); grp.add(orb); orb.visible = false;
@@ -902,6 +916,7 @@ function rf3dBuild(grp) {
 function rf3d(dt) {
   if (!RF.on || !RF3.orb) return;
   if (typeof rfk3d === 'function') rfk3d(dt);
+  if (typeof rf2Frame3d === 'function') rf2Frame3d(dt);   // [p2]
   const t = g.t, G0 = FPSC.GROUND;
   // the soul
   const up = RF.st === 'maren' && RF.orbUp;

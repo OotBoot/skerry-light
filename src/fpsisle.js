@@ -1506,11 +1506,11 @@ function fpsIsleFrame3D() {
     const l = near[i]; if (!l) { L.intensity = 0; L.visible = false; return; }
     L.visible = true; L.color.set(l.c); L.distance = l.r * 1.5;
     const fl = l.k === 'fire' ? 0.8 + 0.2 * Math.sin(t * 11 + l.ph) * Math.sin(t * 3.7 + l.ph) : l.k === 'wisp' ? 0.6 + 0.3 * Math.sin(t * 1.3 + l.ph) : 0.95 + 0.05 * Math.sin(t * 8 + l.ph);
-    L.intensity = (l.k === 'fire' ? 1.6 : l.k === 'wisp' ? 0.9 : 1.2) * fl;
+    L.intensity = (l.k === 'fire' ? 1.6 : l.k === 'wisp' ? 0.9 : 1.2) * fl * (typeof rfLampsK === 'function' ? rfLampsK() : 1);   // [p2] (Maren's storm puts them out)
     L.position.set(l.x, l.z + (l.k === 'wisp' ? 0.3 * Math.sin(t * 0.9 + l.ph) : 0.1), -l.y);
   });
   S.foamM.color.setScalar(0.22 + 0.1 * Math.sin(t * 1.25));
-  S.glowM.color.setScalar(0.85 + 0.15 * Math.sin(t * 7.3));
+  S.glowM.color.setScalar((0.85 + 0.15 * Math.sin(t * 7.3)) * (typeof rfLampsK === 'function' ? rfLampsK() : 1));
 }
 // the painted outlines of the props, so the figures drawn over the 3D view hide behind them as behind rocks
 // Each solid's outline on screen, for hiding the people and lights painted over the 3D island. A solid that
