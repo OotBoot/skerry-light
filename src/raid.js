@@ -342,6 +342,10 @@ function raidHud(phone, mono, fell) {
 // braziers, BALL_R across, swinging across the path in BALL_T seconds or so; one that catches you puts you straight
 // down (whatever your health, your class or your iframes), thrown aside
 const RSWX = { WGT_T: 20, WGT_SLOW: 0.25, BALL_R: 1.05, BALL_LOW: 1.3, BALL_T: 3.6, BALL_DMG: 1, BALL_CD: 1.2 };
+// The pier's end: the Long Pier (PW wide) runs on out over the Swallow to a round platform (PR across, its middle at
+// PC) a step above the deck. Once someone's halfway along (PHALF) the drowned come up the pier behind; once someone
+// stands on the platform, PNEED of them sent back within PRING of its middle and the platform falls away
+const RSWP = { PW: 7, PC: [0, 24], PR: 4.5, PSTEP: 0.35, PHALF: -30, PNEED: 30, PRING: 12 };
 const RSW = { SEA: 250, DECK: 253, CEIL: 30, HOLE: [-11, 11, 13, 35], FALL: 8.4, LIT_R: 9, MEND: 1.2, DRAIN: 0.2, NEED: 20, RING: 15.6, USE: 1.1, GAP: 3.4 };
 // The path: [x, y, half its width, what's there] from the island's middle, from the cap behind where you land to the
 // cap with the door in it; b, a brazier; a, the arena before the door (two more braziers at its sides). Between each
@@ -603,8 +607,9 @@ function rswSet(H, K) {
   put('rdbed', 0, 0, 0, {});
   // the Long Pier: from the quay to the Swallow's edge; lamps every so far on alternate sides, and their lights
   const lamps = []; for (let y = -78, k = 0; y < y0 - 2; y += 13, k++) lamps.push([y, k % 2 ? 1 : -1]);
-  put('rddock', 0, 0, 0, { y0: -84, y1: y0, w: 4, lamps });
-  for (const [ly, sx] of lamps) light(sx * 1.45, ly, RSW.DECK + 2.1, '#ffd08a', 9, 'lantern');
+  put('rddock', 0, 0, 0, { y0: -84, y1: RSWP.PC[1] - RSWP.PR + 0.6, w: RSWP.PW, lamps });
+  for (const [ly, sx] of lamps) light(sx * (RSWP.PW / 2 - 0.55), ly, RSW.DECK + 2.1, '#ffd08a', 9, 'lantern');
+  put('rdplat', RSWP.PC[0], RSWP.PC[1], 0, {});
   // the Deep Path's walls: each side's stretches between the nodes' pushed-out points, a column at each corner
   const N = RSG.N, TH = 3;
   const run = (a, b, side) => {
@@ -634,12 +639,19 @@ function rswSet(H, K) {
   // the braziers (dark: they're lit in play, rswLight)
   for (const b of RSG.B) put('rdbrazier', b.x, b.y, 0, {});
 }
+// the round platform at the pier's end, over the middle of the Swallow: only its footing here (it's drawn by the stage,
+// so it can fall away; rswDropPlat)
+FPI_K.rdplat = {
+  noShadow: true,
+  sol(p) { return [fpiCirc(p, 0, 0, RSWP.PR, RSW.DECK + RSWP.PSTEP, { z0: RSW.DECK - 0.4, fl: true, rdPlat: true })]; },
+  b3() {},
+};
 // the map, for src/zombies.js
 const RSW_MAP = {
-  start: [0, -84], top: RSW.DECK, nav: [-82, 84, -70, 78],
+  start: [0, -84], top: RSW.DECK, nav: [-82, 84, -90, 78],
   zones: {
     quay: { n: 'the Old Quay', r: [-8, 8, -92, -80], zr: [RSW.SEA + 1, 999], sky: true },
-    pier: { n: 'the Long Pier', r: [-3, 3, -80, RSW.HOLE[2]], zr: [RSW.SEA + 1, 999], sky: true },
+    pier: { n: 'the Long Pier', r: [-RSWP.PW / 2 - 1, RSWP.PW / 2 + 1, -80, RSWP.PC[1] + RSWP.PR + 1], zr: [RSW.SEA + 1, 999], sky: true },
     bed: { n: 'the Dry Bed', r: [-95, 95, -95, 95], zr: [RSW.SEA - 1, 999], sky: true },
     swallow: { n: 'the Swallow', r: [RSW.HOLE[0] - 1, RSW.HOLE[1] + 1, RSW.HOLE[2] - 1, RSW.HOLE[3] + 1], zr: [RSW.CEIL + 2, RSW.SEA - 1] },
     door: { n: 'the Door', r: [RSG.A.x - 15, RSG.A.x + 15, RSG.A.y - 15, RSG.A.y + 15], zr: [-5, RSW.CEIL] },
@@ -763,14 +775,49 @@ function rswWind(on, k) {
   const v = clamp(k || 0, 0, 1);
   W.g.gain.setTargetAtTime(0.03 + 0.07 * v, t, 0.3); W.f.frequency.setTargetAtTime(500 + 600 * v, t, 0.3);
 }
+// ---- the pier's end ----
+const rswOnPier = p => !rswBelow(p.jz) && (p.jz || 0) > RSW.SEA;
+const rswOnPlat = (x, y) => Math.hypot(x - FPSC.CX - RSWP.PC[0], y - FPSC.CY - RSWP.PC[1]) < RSWP.PR;
+// hosting or alone: one of them up the pier from the quay end, behind you
+function rswPierSpawn() {
+  const n = Math.max(1, ZM.hum.length), alive = ZM.z.filter(z => !z.dead && (z.jz || 0) > RSW.SEA).length;
+  if (alive >= 10 + 4 * n) return;
+  const x = FPSC.CX + (Math.random() * 2 - 1) * (RSWP.PW / 2 - 0.8), y = FPSC.CY - 80 + Math.random() * 6;
+  const u = Math.random(), kind = u < 0.25 ? 'run' : 'jog';
+  const z = raidSpawnAt(x, y, { kind, rise: 0, hp: zmHp(RAIDC.ROUND) * (0.9 + Math.random() * 0.2) * (1 + 0.25 * (n - 1)) });
+  if (z) { z.jz = z.fl = RSW.DECK; z.lx = x; z.ly = y; }
+  zmSound('moan', Math.hypot(x - FPS.me.x, y - FPS.me.y), 0, kind);
+}
+// everyone: the platform's held; it falls away (its footing gone, its boards dropping), and whoever's on it with it.
+// Hosting: any of the drowned still up on the pier go over too
+function rswDropPlat() {
+  const S = RAID.st; if (S.pier === 3) return;
+  S.pier = 3; S.platT = 0;
+  const I = FPS.g && FPS.g.isle;
+  if (I && I.sh) for (const l of I.sh.values()) for (const q of l) if (q.rdPlat) { q.z1 = FPSC.GROUND - 300; q.z0 = FPSC.GROUND - 301; q.fl = false; }
+  const m = FPS.me; if (rswOnPier(m) && rswOnPlat(m.x, m.y)) { m.fl = 0; m.vz = Math.min(m.vz || 0, -0.5); }
+  if (ZM.net !== 'client') for (const z of ZM.z) if (!z.dead && (z.jz || 0) > RSW.SEA) { z.dead = 1; z.deadT = 0; }
+  ZM.banner = { text: 'The platform gives way', t: 3, sub: 'Down into the Swallow', col: '#bfe4ff' };
+  fpsFeed('Thirty sent back. The platform gives way under you.');
+  try { if (!soundOff()) { noise('lowpass', 220, 1, 0.02, 0.6, 1.6, { to: 60 }); noise('bandpass', 900, 0.8, 0.01, 0.25, 0.8); } } catch (e) {}
+}
+// hosting or alone, each tick, while anyone's still up on the pier
+function rswPierTick(dt, Pd) {
+  const S = RAID.st; if (S.pier === 3 || !Pd.length) return;
+  if (!S.pier && Pd.some(p => p.y - FPSC.CY > RSWP.PHALF)) { S.pier = 1; fpsFeed('Behind you, on the pier: the drowned, coming up out of the dry sea.'); }
+  if (S.pier === 1 && Pd.some(p => rswOnPlat(p.x, p.y))) { S.pier = 2; ZM.banner = { text: 'Thirty, on the platform', t: 3.5, sub: 'Hold it: send back thirty of them', col: '#bfe4ff' }; fpsFeed(`Hold the platform: send back ${RSWP.PNEED} of them.`); }
+  if (S.pier === 2 && S.pk >= RSWP.PNEED) { rswDropPlat(); return; }
+  if (S.pier >= 1) { S.pspawnT = (S.pspawnT || 0) - dt; if (S.pspawnT <= 0) { rswPierSpawn(); S.pspawnT = S.pier === 2 ? 0.55 : 1.1; } }
+}
 RAID_STAGES.descent = {
   n: 'The Swallow', map: RSW_MAP, noBars: true, lantern: true, zSpeed: 0.9,
   speedK() { const w = RAID.st.weight || 0; return 1 - (1 - RSWX.WGT_SLOW) * w; },
   set(H, K) { rswSet(H, K); },
-  enter() { Object.assign(RAID.st, { lit: 0, door: 0, kills: 0, spawnT: 3, weight: 0, ballCd: 0, shove: null, diverT: 40 + Math.random() * 20, useT: 0, useI: -1, pend: 0, landed: false, windT: 0, thru: false, flare: {}, landT: 0 }); },
-  players(P) { return P.filter(p => rswBelow(p.jz)); },
+  enter() { Object.assign(RAID.st, { lit: 0, door: 0, kills: 0, spawnT: 3, pier: 0, pk: 0, pspawnT: 0, platT: 0, weight: 0, ballCd: 0, shove: null, diverT: 40 + Math.random() * 20, useT: 0, useI: -1, pend: 0, landed: false, windT: 0, thru: false, flare: {}, landT: 0 }); },
+  players(P) { return P.filter(p => rswBelow(p.jz) || rswOnPier(p)); },
   tick(dt) {
-    const S = RAID.st, P = ZM.players;
+    const S = RAID.st, P0 = ZM.players, P = P0.filter(p => rswBelow(p.jz));
+    rswPierTick(dt, P0.filter(rswOnPier));
     if (!P.length) return;
     // the door wakes when someone comes into the arena; opens with twenty sent back inside its ring
     if (!S.door && P.some(p => Math.hypot(p.x - rswW(RSG.A.x, RSG.A.y)[0], p.y - rswW(RSG.A.x, RSG.A.y)[1]) < RSW.RING + 2)) rswWake();
@@ -782,7 +829,9 @@ RAID_STAGES.descent = {
     if (S.landT > 10 && S.door !== 2) { S.diverT -= dt; if (S.diverT <= 0) S.diverT = rswDiver(P) ? 50 + Math.random() * 30 : 5; }
   },
   kill(d) {
-    const S = RAID.st; if (S.door !== 1) return;
+    const S = RAID.st;
+    if (S.pier === 2 && (d.jz || 0) > RSW.SEA && Math.hypot(d.x - FPSC.CX - RSWP.PC[0], d.y - FPSC.CY - RSWP.PC[1]) < RSWP.PRING) { S.pk++; return; }
+    if (S.door !== 1) return;
     const [ax, ay] = rswW(RSG.A.x, RSG.A.y);
     if (Math.hypot(d.x - ax, d.y - ay) < RSW.RING) S.kills++;
   },
@@ -791,14 +840,24 @@ RAID_STAGES.descent = {
     if (k === 'lit') { const i = a | 0; if (i >= 0 && i < RSG.B.length) rswLight(i, sid); }
     else if (k === 'thru') { if (S.door === 2) raidNextStage(); }
   },
-  pack(o) { const S = RAID.st; o.l = S.lit | 0; o.d = S.door | 0; o.k = S.kills | 0; },
+  pack(o) { const S = RAID.st; o.l = S.lit | 0; o.d = S.door | 0; o.k = S.kills | 0; o.p = S.pier | 0; o.pk = S.pk | 0; },
   apply(o) {
     const S = RAID.st, l = o.l | 0;
     for (let i = 0; i < RSG.B.length; i++) if ((l & (1 << i)) && !(S.lit & (1 << i))) rswLight(i, null);
     const d = o.d | 0; if (d === 1 && !S.door) rswWake(); if (d === 2 && S.door !== 2) rswOpenDoor();
     S.kills = o.k | 0;
+    if ((o.p | 0) === 3) rswDropPlat(); else if (S.pier !== 3) S.pier = o.p | 0;
+    S.pk = o.pk | 0;
   },
   block(x, y, pad, feet) {
+    // up on the pier, until the platform's held: over the Swallow, nowhere but the pier and the platform
+    if (feet > RSW.SEA - 1) {
+      if (RAID.st.pier === 3) return false;
+      const lx = x - FPSC.CX, ly = y - FPSC.CY, [x0, x1, y0, y1] = RSW.HOLE;
+      if (lx < x0 - 0.4 || lx > x1 + 0.4 || ly < y0 - 0.4 || ly > y1 + 0.4) return false;
+      const onPier = Math.abs(lx) <= RSWP.PW / 2 && ly <= RSWP.PC[1], onPlat = Math.hypot(lx - RSWP.PC[0], ly - RSWP.PC[1]) <= RSWP.PR - Math.min(pad, 0.3);
+      return !(onPier || onPlat);
+    }
     if (RAID.st.door >= 2 || feet > 3) return false;
     const [a, b] = rswDoorAt(x, y);
     return Math.abs(a) < RSW.GAP / 2 + 0.2 && b < pad && b > -3;
@@ -878,7 +937,7 @@ RAID_STAGES.descent = {
     const S = RAID.st, m = FPS.me, L = Math.max(14, FPS.safeLeft || 0), top = fpsHudTop() + (phone ? 32 : 44), t = g.t;
     const below = rswBelow(m.jz);
     let line;
-    if (m.jz >= RSW.SEA - 1) line = 'Walk the Long Pier to the Swallow, and step off the end.';
+    if (m.jz >= RSW.SEA - 1) line = S.pier === 2 ? `Hold the platform. Sent back: ${Math.min(S.pk, RSWP.PNEED)} of ${RSWP.PNEED}` : S.pier === 3 ? 'The platform has fallen. Step off the pier into the Swallow.' : 'Walk the Long Pier out over the Swallow, to the round platform at its end.';
     else if (!below) line = `Falling · ${Math.round(m.jz)} m to the bottom`;
     else if (!S.door) line = `Braziers lit: ${rswLitN()} of ${RSG.B.length}. Hold Use at a dark one to light it from Maren’s Lantern.`;
     else if (S.door === 1) line = `Sent back inside the ring: ${Math.min(S.kills, RSW.NEED)} of ${RSW.NEED}`;
@@ -903,6 +962,8 @@ RAID_STAGES.descent = {
       ctx.textAlign = 'center'; ctx.textBaseline = 'top'; ctx.font = mono(phone ? 9 : 11); ctx.fillStyle = 'rgba(190,210,240,0.85)';
       ctx.fillText(`MAREN’S WEIGHT · ${Math.round((1 - this.speedK()) * 100)}% SLOWER`, cx, y0 + 8);
     }
+    // the platform's tally, big, while it's being held
+    if (S.pier === 2 && !below) { ctx.textAlign = 'center'; ctx.textBaseline = 'top'; ctx.font = fell(phone ? 26 : 38); ctx.fillStyle = '#bfe4ff'; ctx.fillText(`${Math.min(S.pk, RSWP.PNEED)} / ${RSWP.PNEED}`, cx, phone ? top + 20 : 60); }
     // the ring's tally, big, while the door's awake
     if (S.door === 1) { ctx.textAlign = 'center'; ctx.textBaseline = 'top'; ctx.font = fell(phone ? 26 : 38); ctx.fillStyle = '#bfe4ff'; ctx.fillText(`${Math.min(S.kills, RSW.NEED)} / ${RSW.NEED}`, cx, phone ? (FPS.hudCtop || top) + 2 : 60); }
     // lighting a brazier: a ring round the sights filling
@@ -935,6 +996,15 @@ RAID_STAGES.descent = {
     const [ax, ay] = rswW(RSG.A.x, RSG.A.y); ring.position.copy(z3v(ax, ay, G0 + 0.05)); grp.add(ring);
     const doorL = new THREE.PointLight(0x9ad4ff, 0, 18, 1.3); doorL.position.copy(z3v(dx + D.f[0] * 2, dy + D.f[1] * 2, G0 + 2.4)); grp.add(doorL);
     R3.door = { leaf, leafM, halo, ring, ringM, doorL, open: 0 };
+    // the pier's round platform: planks on a ring of beams, a step above the deck, a cold rim that wakes while it's held
+    { const P = new THREE.Group(), [px, py] = rswW(RSWP.PC[0], RSWP.PC[1]), G0 = FPSC.GROUND, top = RSW.DECK + RSWP.PSTEP; P.position.copy(z3v(px, py, G0 + top)); grp.add(P);
+      const wood = new THREE.MeshLambertMaterial({ color: 0x5c4632 }), dark = new THREE.MeshLambertMaterial({ color: 0x3a2e24 });
+      const disc = new THREE.Mesh(new THREE.CylinderGeometry(RSWP.PR, RSWP.PR, 0.3, 28), wood); disc.position.y = -0.15; P.add(disc);
+      for (let k = -RSWP.PR + 0.4; k < RSWP.PR; k += 0.8) { const w = 2 * Math.sqrt(Math.max(0, RSWP.PR * RSWP.PR - k * k)) - 0.2; const b = new THREE.Mesh(new THREE.BoxGeometry(w, 0.04, 0.05), dark); b.position.set(0, 0.01, k); P.add(b); }
+      const under = new THREE.Mesh(new THREE.CylinderGeometry(RSWP.PR * 0.95, RSWP.PR * 0.6, 0.9, 20), dark); under.position.y = -0.75; P.add(under);
+      const rimM = new THREE.MeshBasicMaterial({ color: 0x9ad4ff, transparent: true, opacity: 0.25, side: THREE.DoubleSide, depthWrite: false, blending: THREE.AdditiveBlending });
+      const rim = new THREE.Mesh(new THREE.RingGeometry(RSWP.PR - 0.35, RSWP.PR - 0.05, 48), rimM); rim.rotation.x = -Math.PI / 2; rim.position.y = 0.03; P.add(rim);
+      R3.plat = { P, rimM, y0: P.position.y, v: 0 }; }
     // the wrecking balls: an iron ball on a chain up into the dark, a faint cold sheen on it so you can see it coming
     const iron = new THREE.MeshLambertMaterial({ color: 0x3a3c40, emissive: 0x0c1a26 }), chainM = new THREE.MeshLambertMaterial({ color: 0x2a2b2e, emissive: 0x081018 });
     const ballG = new THREE.SphereGeometry(RSWX.BALL_R, 14, 10), spikeG = new THREE.ConeGeometry(0.16, 0.5, 6), chainG = new THREE.CylinderGeometry(0.06, 0.06, 1, 6);
@@ -950,6 +1020,10 @@ RAID_STAGES.descent = {
   },
   f3(dt) {
     const S = RAID.st, t = g.t, m = FPS.me;
+    // the platform: its rim alight while it's held; once it's fallen, down it goes into the dark, turning
+    if (R3.plat) { const Pl = R3.plat, pulse = reduceMotion ? 0.5 : 0.5 + 0.5 * Math.sin(t * 3);
+      Pl.rimM.opacity = S.pier === 2 ? 0.45 + 0.4 * pulse : S.pier === 1 ? 0.3 : 0.15;
+      if (S.pier === 3 && Pl.P.visible) { Pl.v += 9.8 * dt; Pl.P.position.y -= Pl.v * dt; Pl.P.rotation.x += dt * 0.4; Pl.P.rotation.z += dt * 0.25; if (Pl.y0 - Pl.P.position.y > 120) Pl.P.visible = false; } }
     // the wrecking balls, swinging on the raid's clock (the same for all of us)
     if (R3.balls) { const bt = RAID.ct || 0, G0 = FPSC.GROUND, up = new THREE.Vector3(0, 1, 0);
       for (const B of R3.balls) {
@@ -978,5 +1052,5 @@ RAID_STAGES.descent = {
     Dr.ring.visible = S.door === 1; Dr.ringM.opacity = 0.3 + 0.3 * pulse;
     Dr.doorL.intensity = S.door === 0 ? 0.4 : S.door === 1 ? 0.8 + 0.6 * pulse : 2.2;
   },
-  exit() { R3.bz = null; R3.door = null; R3.balls = null; rswWind(false); },
+  exit() { R3.bz = null; R3.door = null; R3.balls = null; R3.plat = null; rswWind(false); },
 };
