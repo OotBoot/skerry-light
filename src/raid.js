@@ -377,7 +377,7 @@ function raidHud(phone, mono, fell) {
 // pace; any brazier's light lifts it at once. The wrecking balls: hung from the cave's roof over the path between
 // braziers, BALL_R across, swinging across the path in BALL_T seconds or so; one that catches you puts you straight
 // down (whatever your health, your class or your iframes), thrown aside
-const RSWX = { WGT_T: 20, WGT_SLOW: 0.25, BALL_R: 1.05, BALL_LOW: 1.3, BALL_T: 3.6, BALL_DMG: 1, BALL_CD: 1.2 };
+const RSWX = { WGT_T: 15.4, WGT_SLOW: 0.25, BALL_R: 1.05, BALL_LOW: 1.3, BALL_T: 3.6, BALL_DMG: 1, BALL_CD: 1.2 };
 // The pier's end: the Long Pier (PW wide) runs on out over the Swallow to a round platform (PR across, its middle at
 // PC) a step above the deck. Once someone's halfway along (PHALF) the drowned come up the pier behind; once someone
 // stands on the platform, PNEED of them sent back (anywhere, while one of you is on it) and the platform falls away
