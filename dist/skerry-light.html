@@ -1272,6 +1272,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
       <p class="muted">Part I, the Swallow: walk the Long Pier, drop into the hole (a long way down), and follow the Deep Path. The dark drains you; light the braziers with the lantern and stand in their light to mend. At the end, a door that opens when twenty of the drowned have been sent back in front of it.</p>
       <div class="btnrow">
         <button class="primary" id="rdPlay" type="button">Go down alone</button>
+        <button class="tool" id="rdPractice" type="button">Practise: Maren's storm</button>
         <button class="tool" id="rdWcrate" type="button">Weapon crates</button>
         <button class="tool" id="rdOcrate" type="button">Outfit crates</button>
         <button class="tool" id="rdSettings" type="button">Settings</button>
@@ -1684,7 +1685,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 // ---- src/config.js ----
 'use strict';
 // The game's version, shown at the top of the main menu. Bump it by one with every change pushed to main.
-var VERSION = 117;
+var VERSION = 118;
 // Skerry Light: tuning, asset paths and lore.
 // World units are metres. The lighthouse stands at the origin on the shoreline (y = 0);
 // north (+y) is open sea. Bearings: 0 = north, positive = east.
@@ -30053,7 +30054,7 @@ function raidMapFor(i) {
 function raidBegin(map) {
   RAID.on = map === 'raid';
   if (!RAID.on) return;
-  Object.assign(RAID, { stage: 0, won: false, st: {}, t: 0, boss: 0, told: false, sta: 1, tired: false, tiredN: 0, runNow: false });
+  Object.assign(RAID, { stage: 0, won: false, st: {}, t: 0, boss: 0, told: false, sta: 1, tired: false, tiredN: 0, runNow: false, practice: 0 });   // (practice: src/raidmaren2.js rf2Practice)
   if (typeof rmvReset === 'function') rmvReset();   // [mvp] src/raidmvp.js
   raidMapFor(0);
 }
@@ -32267,6 +32268,7 @@ function rfBoss(kind, x, y, h, jz) {
 function rfTick(dt) {
   if (!RF.on) return;
   RF.t += dt;
+  if (RF.practice && typeof rf2PracticeTick === 'function') rf2PracticeTick();   // [p2] practice: straight to her storm
   const P = ZM.players || [], n = rfN();
   // the drowned keep coming, in at the windows and up out of the sea (more of them once she's up)
   const alive = ZM.z.filter(z => !z.dead && !z.boss).length, cap = RFC.ALIVE[RF.st === 'hunt' ? 0 : 1] + RFC.ALIVE_MORE * (n - 1);
@@ -32302,7 +32304,7 @@ function rfTick(dt) {
   } else if (RF.st === 'won' && RF.wonT > 0) {
     RF.wonT -= dt;
     if (typeof rmvAllTook === 'function' && rmvAllTook()) RF.wonT = Math.min(RF.wonT, 2.5);   // [mvp] everyone has her token: on to the end (src/raidmvp.js)
-    if (RF.wonT <= 0 && typeof raidWin === 'function') raidWin();
+    if (RF.wonT <= 0) { if (RF.practice) zmEnd(); else if (typeof raidWin === 'function') raidWin(); }   // [p2] (practice: no win, no rewards)
   }
 }
 // where her soul is at time t: drifting over the water beyond the sea wall, rising and falling
@@ -32360,8 +32362,9 @@ function rfKill(d, how, by) {
   }
   if (d.bt === 'maren' && RF.st === 'maren') {
     RF.st = 'won'; RF.vul = 0; RF.orbUp = false; RF.wonT = 45;   // (at most: sooner once you've all taken her token)
-    RF.tok = [d.x, d.y, d.jz || 0];
-    rfLine('Maren Holm is laid to rest. She leaves a pirate token where she fell: one for each of you.');
+    RF.tok = RF.practice ? null : [d.x, d.y, d.jz || 0];   // [p2] (no token from practice)
+    rfLine(RF.practice ? 'Maren Holm is laid to rest. (Practice: no token, no score.)' : 'Maren Holm is laid to rest. She leaves a pirate token where she fell: one for each of you.');
+    if (RF.practice) RF.wonT = 5;
     // the rest of them go back into the sea with her
     for (const z of ZM.z) if (!z.dead && !z.boss) zmKill(z, false, '', 'flash');
   }
@@ -33332,7 +33335,7 @@ const RF2_STORM = { amb: 0.035, moon: 0, fog: [0.006, 0.008, 0.012], near: 2, fa
 
 // everyone's part of the state, laid fresh with the fort's (rfEnter)
 function rf2Reset() {
-  Object.assign(RF, { p2: 0, p2i: 0, storm: 0, tide: 0, bolt: 0, lt: 0, lt2: 0, ltT: 1, bell: { ph: 0, t: 0, n: 0, c: [], seq: 0 }, bs: { seq: -1, n: 0 }, p2Seen: 0, fog0: null, under: 0 });
+  Object.assign(RF, { practice: typeof RAID !== 'undefined' && RAID.practice ? 1 : 0, p2: 0, p2i: 0, storm: 0, tide: 0, bolt: 0, lt: 0, lt2: 0, ltT: 1, bell: { ph: 0, t: 0, n: 0, c: [], seq: 0 }, bs: { seq: -1, n: 0 }, p2Seen: 0, fog0: null, under: 0 });
 }
 
 // ---------- the host ----------
@@ -33343,7 +33346,6 @@ function rf2Host(M, dt) {
     RF.p2 = 1; M.sp *= RF2.SP; M.wj0 = M.fl || 0;
     zbStart(M, 'wrath');
     RF.bell = { ph: 0, t: -RF2.BELL.FIRST, n: 0, c: [], seq: (RF.bell.seq || 0) + 1 };
-    rfLine('Maren calls up the storm. Every light in the fort goes out.');
   }
   if (!RF.p2 || M.act === 'wrath') return;
   const B = RF.bell, C = RF2.BELL; B.t += dt;
@@ -33608,6 +33610,31 @@ function rf2Apply(f, i) {
   B.ph = f[i + 1] | 0; B.n = f[i + 2] | 0; B.t = f[i + 3] / 10; B.seq = f[i + 4] | 0;
   B.c = []; for (let k = 0; k < n; k++) B.c.push([f[i + 6 + k * 2] / 10, f[i + 7 + k * 2] / 10]);
 }
+
+// ---------- practice ----------
+// The raid card's "Practise: Maren's storm": alone, straight to the fort and Maren, already down to a third, so her
+// storm begins as soon as she's up. No pirate token, no score, no raid won.
+function rf2Practice() {
+  if (typeof ZN !== 'undefined' && ZN.code) return;
+  zmStart({ map: 'raid' });
+  RAID.practice = 1; RAID.told = true;
+  const go = (n) => { if (!RAID.on || !FPS.g) { if (n < 40) setTimeout(() => go(n + 1), 100); return; } raidUseStage(RAID_ORDER.indexOf('fort')); RF.practice = 1; };
+  setTimeout(() => go(0), 150);
+}
+// (alone, each frame) once your calling's chosen: Maren comes; once she's up, a third of her health is gone
+function rf2PracticeTick() {
+  if (RF.practice === 1 && RF.st === 'hunt' && !FPS.menu) {
+    RF.practice = 2;
+    for (const k of RF_APO_IDS) RF.apo[k] = 2;
+    ZM.banner = { text: 'Practice: Maren\u2019s storm', t: 3.5, col: '#8fd8ff', sub: 'no token, no score', small: true };
+    rfMaren();
+  }
+  if (RF.practice === 2 && RF.st === 'maren') {
+    const M = ZM.z.find(z => z.zn === RF.mz && !z.dead);
+    if (M && M.act !== 'rise') { M.hp = Math.min(M.hp, M.max * RF2.AT * 0.99); RF.practice = 3; }
+  }
+}
+try { const b = document.getElementById('rdPractice'); if (b) b.addEventListener('click', () => rf2Practice()); } catch (e) {}
 
 // ---- src/raidmusic.js ----
 // Maren's End: the raid's music. Each part has its own, made with Stable Audio 3 in ComfyUI (three takes of each, the

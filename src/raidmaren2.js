@@ -26,7 +26,7 @@ const RF2_STORM = { amb: 0.035, moon: 0, fog: [0.006, 0.008, 0.012], near: 2, fa
 
 // everyone's part of the state, laid fresh with the fort's (rfEnter)
 function rf2Reset() {
-  Object.assign(RF, { p2: 0, p2i: 0, storm: 0, tide: 0, bolt: 0, lt: 0, lt2: 0, ltT: 1, bell: { ph: 0, t: 0, n: 0, c: [], seq: 0 }, bs: { seq: -1, n: 0 }, p2Seen: 0, fog0: null, under: 0 });
+  Object.assign(RF, { practice: typeof RAID !== 'undefined' && RAID.practice ? 1 : 0, p2: 0, p2i: 0, storm: 0, tide: 0, bolt: 0, lt: 0, lt2: 0, ltT: 1, bell: { ph: 0, t: 0, n: 0, c: [], seq: 0 }, bs: { seq: -1, n: 0 }, p2Seen: 0, fog0: null, under: 0 });
 }
 
 // ---------- the host ----------
@@ -37,7 +37,6 @@ function rf2Host(M, dt) {
     RF.p2 = 1; M.sp *= RF2.SP; M.wj0 = M.fl || 0;
     zbStart(M, 'wrath');
     RF.bell = { ph: 0, t: -RF2.BELL.FIRST, n: 0, c: [], seq: (RF.bell.seq || 0) + 1 };
-    rfLine('Maren calls up the storm. Every light in the fort goes out.');
   }
   if (!RF.p2 || M.act === 'wrath') return;
   const B = RF.bell, C = RF2.BELL; B.t += dt;
@@ -302,3 +301,28 @@ function rf2Apply(f, i) {
   B.ph = f[i + 1] | 0; B.n = f[i + 2] | 0; B.t = f[i + 3] / 10; B.seq = f[i + 4] | 0;
   B.c = []; for (let k = 0; k < n; k++) B.c.push([f[i + 6 + k * 2] / 10, f[i + 7 + k * 2] / 10]);
 }
+
+// ---------- practice ----------
+// The raid card's "Practise: Maren's storm": alone, straight to the fort and Maren, already down to a third, so her
+// storm begins as soon as she's up. No pirate token, no score, no raid won.
+function rf2Practice() {
+  if (typeof ZN !== 'undefined' && ZN.code) return;
+  zmStart({ map: 'raid' });
+  RAID.practice = 1; RAID.told = true;
+  const go = (n) => { if (!RAID.on || !FPS.g) { if (n < 40) setTimeout(() => go(n + 1), 100); return; } raidUseStage(RAID_ORDER.indexOf('fort')); RF.practice = 1; };
+  setTimeout(() => go(0), 150);
+}
+// (alone, each frame) once your calling's chosen: Maren comes; once she's up, a third of her health is gone
+function rf2PracticeTick() {
+  if (RF.practice === 1 && RF.st === 'hunt' && !FPS.menu) {
+    RF.practice = 2;
+    for (const k of RF_APO_IDS) RF.apo[k] = 2;
+    ZM.banner = { text: 'Practice: Maren\u2019s storm', t: 3.5, col: '#8fd8ff', sub: 'no token, no score', small: true };
+    rfMaren();
+  }
+  if (RF.practice === 2 && RF.st === 'maren') {
+    const M = ZM.z.find(z => z.zn === RF.mz && !z.dead);
+    if (M && M.act !== 'rise') { M.hp = Math.min(M.hp, M.max * RF2.AT * 0.99); RF.practice = 3; }
+  }
+}
+try { const b = document.getElementById('rdPractice'); if (b) b.addEventListener('click', () => rf2Practice()); } catch (e) {}

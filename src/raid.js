@@ -77,7 +77,7 @@ function raidMapFor(i) {
 function raidBegin(map) {
   RAID.on = map === 'raid';
   if (!RAID.on) return;
-  Object.assign(RAID, { stage: 0, won: false, st: {}, t: 0, boss: 0, told: false, sta: 1, tired: false, tiredN: 0, runNow: false });
+  Object.assign(RAID, { stage: 0, won: false, st: {}, t: 0, boss: 0, told: false, sta: 1, tired: false, tiredN: 0, runNow: false, practice: 0 });   // (practice: src/raidmaren2.js rf2Practice)
   if (typeof rmvReset === 'function') rmvReset();   // [mvp] src/raidmvp.js
   raidMapFor(0);
 }

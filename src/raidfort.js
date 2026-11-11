@@ -377,6 +377,7 @@ function rfBoss(kind, x, y, h, jz) {
 function rfTick(dt) {
   if (!RF.on) return;
   RF.t += dt;
+  if (RF.practice && typeof rf2PracticeTick === 'function') rf2PracticeTick();   // [p2] practice: straight to her storm
   const P = ZM.players || [], n = rfN();
   // the drowned keep coming, in at the windows and up out of the sea (more of them once she's up)
   const alive = ZM.z.filter(z => !z.dead && !z.boss).length, cap = RFC.ALIVE[RF.st === 'hunt' ? 0 : 1] + RFC.ALIVE_MORE * (n - 1);
@@ -412,7 +413,7 @@ function rfTick(dt) {
   } else if (RF.st === 'won' && RF.wonT > 0) {
     RF.wonT -= dt;
     if (typeof rmvAllTook === 'function' && rmvAllTook()) RF.wonT = Math.min(RF.wonT, 2.5);   // [mvp] everyone has her token: on to the end (src/raidmvp.js)
-    if (RF.wonT <= 0 && typeof raidWin === 'function') raidWin();
+    if (RF.wonT <= 0) { if (RF.practice) zmEnd(); else if (typeof raidWin === 'function') raidWin(); }   // [p2] (practice: no win, no rewards)
   }
 }
 // where her soul is at time t: drifting over the water beyond the sea wall, rising and falling
@@ -470,8 +471,9 @@ function rfKill(d, how, by) {
   }
   if (d.bt === 'maren' && RF.st === 'maren') {
     RF.st = 'won'; RF.vul = 0; RF.orbUp = false; RF.wonT = 45;   // (at most: sooner once you've all taken her token)
-    RF.tok = [d.x, d.y, d.jz || 0];
-    rfLine('Maren Holm is laid to rest. She leaves a pirate token where she fell: one for each of you.');
+    RF.tok = RF.practice ? null : [d.x, d.y, d.jz || 0];   // [p2] (no token from practice)
+    rfLine(RF.practice ? 'Maren Holm is laid to rest. (Practice: no token, no score.)' : 'Maren Holm is laid to rest. She leaves a pirate token where she fell: one for each of you.');
+    if (RF.practice) RF.wonT = 5;
     // the rest of them go back into the sea with her
     for (const z of ZM.z) if (!z.dead && !z.boss) zmKill(z, false, '', 'flash');
   }
