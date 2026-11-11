@@ -29,6 +29,9 @@ function ztHeard(i) {
 // (every frame of a night) what should be playing, and is it
 function ztTick(dt) {
   if (!AUD.ctx) return;
+  // (in Maren's End the raid has music of its own, src/raidmusic.js)
+  if (typeof RAID !== 'undefined' && RAID.on) { if (ZTH.cur) ztStop(1); if (typeof rmTick === 'function') rmTick(dt); return; }
+  if (typeof rmStop === 'function' && RM.cur) rmStop(2);
   const mine = ZB.theme && ZB.themeRound === ZM.round;
   const up = ZM.z.some(z => z.boss && !z.dead && !z.gone);
   const coming = ZM.net !== 'client' && ZB.round === ZM.round && ZB.plan && ZB.plan.length > 0 && ZM.phase === 'round';

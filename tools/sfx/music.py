@@ -1,7 +1,11 @@
 #!/usr/bin/env python3
-"""The bosses' themes: from Stable Audio's takes (ComfyUI, FLAC), a seamless loop of each.
+"""The bosses' themes and the raid's music: from Stable Audio's takes (ComfyUI, FLAC), a seamless loop of each.
 
-    python3 tools/sfx/music.py <folder of bossdiver_N_00001.flac, bossmoon_..., bosscrab_...>
+    python3 tools/sfx/music.py <folder of bossdiver_N_00001.flac, bossmoon_..., raidcave_..., ...> [folder for every take]
+
+The raid's (raid*, src/raidmusic.js) go the same way, at 96 kbit/s, except raidfall, which plays once: it's kept
+whole, faded in and out, not looped; and raidsong, the Knock's song, loops in about 16 s. Given a second folder,
+every take's cut is written there too (<name>_<take>.mp3), to hear them side by side.
 
 A take has an intro and an ending, and its loudness comes and goes, so it isn't looped whole. For each take: its beat
 is found (the onsets' autocorrelation, 60-180 bpm), a loop a whole number of bars long (about 40 s) is cut from its
@@ -18,6 +22,9 @@ ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..')
 OUT = os.path.join(ROOT, 'assets', 'sfx')
 BAR = {'bossmoon': 3}   # beats to the bar (a waltz); the rest are in four
 TARGET = 40.0           # the loop, about this long (s)
+TARGETS = {'raidsong': 16.0}
+ONCE = {'raidfall'}     # played once, not looped
+PICK = {'raidfall': 3}              # a take chosen by ear (its number), over the one that loops best
 FADE = 1.5              # its seam's crossfade (s)
 
 
@@ -51,7 +58,7 @@ def spec(seg):
 def best_loop(name, x):
     p = beat(x)
     bar = p * BAR.get(name, 4)
-    L = round(TARGET / bar) * bar
+    L = max(1, round(TARGETS.get(name, TARGET) / bar)) * bar
     n, F = int(L * SR), int(FADE * SR)
     w = int(1.0 * SR)
     best = None
@@ -74,26 +81,45 @@ def best_loop(name, x):
     return body, dict(score=score, bpm=60 / p, start=i / SR, length=n / SR, seam=seam, wobble=wob)
 
 
-def main(src):
+def once(x):
+    # (played once: kept whole, the silence either end trimmed, a short fade in and a longer one out)
+    e = np.abs(x) > 1e-3
+    i, j = int(np.argmax(e)), len(x) - int(np.argmax(e[::-1]))
+    body = x[i:j].copy()
+    a, b = int(0.05 * SR), int(3.0 * SR)
+    body[:a] *= np.linspace(0, 1, a); body[-b:] *= np.linspace(1, 0, b)
+    return body, dict(score=0.0, length=len(body) / SR)
+
+
+def mp3(body, out, rate):
+    body = body - body.mean()
+    body = body / (np.max(np.abs(body)) or 1) * 10 ** (-3 / 20)
+    subprocess.run(['ffmpeg', '-v', 'error', '-y', '-f', 'f32le', '-ar', str(SR), '-ac', '1', '-i', '-', '-c:a', 'libmp3lame', '-b:a', rate, out],
+                   input=np.clip(body, -1, 1).astype(np.float32).tobytes(), check=True)
+
+
+def main(src, every=None):
     os.makedirs(OUT, exist_ok=True)
     takes = {}
     for f in sorted(os.listdir(src)):
-        m = re.match(r'^(boss[a-z]+)_(\d+)_\d+_?\.flac$', f)
+        m = re.match(r'^((?:boss|raid)[a-z]+)_(\d+)_\d+_?\.(?:flac|wav|mp3|ogg)$', f)
         if m: takes.setdefault(m.group(1), []).append(os.path.join(src, f))
     for name, files in sorted(takes.items()):
         res = []
         for f in files:
-            body, info = best_loop(name, read(f))
+            body, info = once(read(f)) if name in ONCE else best_loop(name, read(f))
             print(f'{os.path.basename(f)}: ' + ', '.join(f'{k} {v:.2f}' for k, v in info.items()))
             res.append((info['score'], body, f))
-        score, body, f = max(res, key=lambda r: r[0])
-        body = body - body.mean()
-        body = body / (np.max(np.abs(body)) or 1) * 10 ** (-3 / 20)
+        rate = '96k' if name.startswith('raid') else '112k'
+        if every:
+            os.makedirs(every, exist_ok=True)
+            for _, b, f in res: mp3(b, os.path.join(every, f'{name}_{re.match(r"^[a-z]+_(\d+)", os.path.basename(f)).group(1)}.mp3'), rate)
+        pick = PICK.get(name)
+        score, body, f = next((r for r in res if pick and re.match(rf'^{name}_{pick}_', os.path.basename(r[2]))), None) or max(res, key=lambda r: r[0])
         out = os.path.join(OUT, f'{name}_1.mp3')
-        subprocess.run(['ffmpeg', '-v', 'error', '-y', '-f', 'f32le', '-ar', str(SR), '-ac', '1', '-i', '-', '-c:a', 'libmp3lame', '-b:a', '112k', out],
-                       input=np.clip(body, -1, 1).astype(np.float32).tobytes(), check=True)
+        mp3(body, out, rate)
         print(f'  -> {name}: {os.path.basename(f)}, {len(body) / SR:.1f} s, {os.path.getsize(out) // 1024} KB')
 
 
 if __name__ == '__main__':
-    main(sys.argv[1])
+    main(sys.argv[1], sys.argv[2] if len(sys.argv) > 2 else None)
