@@ -1685,7 +1685,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 // ---- src/config.js ----
 'use strict';
 // The game's version, shown at the top of the main menu. Bump it by one with every change pushed to main.
-var VERSION = 123;
+var VERSION = 124;
 // Skerry Light: tuning, asset paths and lore.
 // World units are metres. The lighthouse stands at the origin on the shoreline (y = 0);
 // north (+y) is open sea. Bearings: 0 = north, positive = east.
@@ -27168,6 +27168,7 @@ function zbMe(dt) {
   }
   if (ZB.glare > 0) ZB.glare = Math.max(0, ZB.glare - dt);
   if (ZB.lure && typeof zbLureTick === 'function') zbLureTick(dt);
+  if (typeof zbStareTick === 'function') zbStareTick(dt);
 }
 // how quick on my feet I am, for their part (dragged by the false light: half pace)
 function zbSpeedK() { return ZB.lure ? 0.45 : 1; }
@@ -27572,6 +27573,8 @@ function zbPoseDiver(z, M, dt) {
 //    35 degrees of straight at it), with nothing solid between, is dazzled white for three seconds and dragged
 //    towards him for 1.7 s (nearly five metres) at half pace (no knock: he means to finish you with the pole). Look away (or get behind
 //    something) and it's only a flash. But he's open while he holds it up: a hit then is worth 1.6 times as much.
+//  - Staring into the open light burns: half a second of looking straight at it while he holds it up costs a knock,
+//    and another every second more (zbStareTick).
 //  - Close in he swings the pole round at you (two knocks).
 //  - He carries his own fire: the Lamp's burn hurts him at a quarter the rate.
 // The Keelback (from round 18): a great crab made of wrecks fused together, its back the upturned hull of a boat,
@@ -27658,6 +27661,22 @@ ZBT.moon = {
   reset(z, M) { M.coat.emissive.set(0); M.root.rotation.set(0, 0, 0); M.root.scale.setScalar(1); M.glass.color.set(0xffc860); },
   pose: (z, M, dt) => zbPoseMoon(z, M, dt),
 };
+// (each frame, on my screen) staring into an open false light burns: once you've looked straight at it for half a
+// second while he holds it up, a knock, and another for every second more you keep looking (look away and it starts over)
+const ZBM_STARE = { AFTER: 0.5, EVERY: 1.0 };
+function zbStareTick(dt) {
+  const m = FPS.me, ez = FPSC.GROUND + FPSC.EYE + (m.jz || 0);
+  const looking = zbOk() && !(typeof zmIsDown === 'function' && zmIsDown()) && ZM.z.some(z => {
+    if (z.bt !== 'moon' || z.dead || z.gone || z.act !== 'lure' || (z.at || 0) >= ZBM_T.lure.hit) return false;
+    const [lx, ly, lz] = zbmLantern(z), dh = Math.hypot(lx - m.x, ly - m.y);
+    if (dh > ZBM.LURE_SEE || Math.abs(angDiff(bearingOf(lx - m.x, ly - m.y), m.h)) >= ZBM.FACE || Math.abs(Math.atan2(lz - ez, dh) - (m.p || 0)) >= 0.75) return false;
+    return zbmSees(z, m.x, m.y, ez);
+  });
+  if (!looking) { ZB.stare = 0; ZB.stareNext = ZBM_STARE.AFTER; return; }
+  ZB.stare = (ZB.stare || 0) + dt;
+  if (ZB.stareNext == null) ZB.stareNext = ZBM_STARE.AFTER;
+  if (ZB.stare >= ZB.stareNext) { ZB.stareNext += ZBM_STARE.EVERY; fpsHurt(1, null, null); zmSound('hit'); ZB.glare = Math.max(ZB.glare, 0.6); }
+}
 // (each frame, on my screen) dragged towards his light while it has me
 function zbLureTick(dt) {
   const L = ZB.lure, m = FPS.me, z = ZM.z.find(q => q.zn === L.zn && q.boss && !q.dead && !q.gone);

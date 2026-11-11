@@ -316,6 +316,7 @@ function zbMe(dt) {
   }
   if (ZB.glare > 0) ZB.glare = Math.max(0, ZB.glare - dt);
   if (ZB.lure && typeof zbLureTick === 'function') zbLureTick(dt);
+  if (typeof zbStareTick === 'function') zbStareTick(dt);
 }
 // how quick on my feet I am, for their part (dragged by the false light: half pace)
 function zbSpeedK() { return ZB.lure ? 0.45 : 1; }
