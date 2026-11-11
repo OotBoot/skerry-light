@@ -19,6 +19,7 @@ const RF2 = {
   STORM_IN: 3.8, STORM_OUT: 3,   // (seconds for the sky to close over, and to clear when she's dead)
   LT: [0.8, 2.4], LT_CALL: [0.25, 0.7],   // (seconds between flashes: in the fight, and while she calls the storm)
   LAMP: 13,   // (how far your lantern lights)
+  FEWER: 0.8,   // (how many of the drowned at once in her storm, against before it)
   BELL: { R: 7.8, N: 3, FIRST: 2.5, GAP: 2.2, TOLL: 3.6, HOLD: 0.9, SEP: 2, SLOW: 0.6 },   // (circle radius, how many, before the
   // first, between rounds, between tolls, how long the circles stay after the third, the least gap between circles,
   // how fast the drowned go inside one)
@@ -37,6 +38,10 @@ function rf2Host(M, dt) {
   if (!RF.p2 && M.act !== 'rise' && M.hp <= M.max * RF2.AT) {
     RF.p2 = 1; M.sp *= RF2.SP; M.wj0 = M.fl || 0;
     zbStart(M, 'wrath');
+    // (the sea takes back a fifth of the drowned as the storm comes: the farthest from any of you)
+    { const P = (ZM.players || []).filter(p => p && p.x != null), far = z => Math.min(...P.map(p => Math.hypot(z.x - p.x, z.y - p.y)), 1e9);
+      const live = ZM.z.filter(z => !z.dead && !z.boss).sort((a, b) => far(b) - far(a)), cap = Math.round((RFC.ALIVE[1] + RFC.ALIVE_MORE * (rfN() - 1)) * RF2.FEWER);
+      for (let i = 0; i < live.length - cap; i++) zmKill(live[i], false, '', 'flash'); }
     RF.bell = { ph: 0, t: -RF2.BELL.FIRST, n: 0, c: [], seq: (RF.bell.seq || 0) + 1 };
   }
   if (!RF.p2 || M.act === 'wrath') return;

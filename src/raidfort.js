@@ -381,9 +381,10 @@ function rfTick(dt) {
   if (RF.practice && typeof rf2PracticeTick === 'function') rf2PracticeTick();   // [p2] practice: straight to her storm
   const P = ZM.players || [], n = rfN();
   // the drowned keep coming, in at the windows and up out of the sea (more of them once she's up)
-  const alive = ZM.z.filter(z => !z.dead && !z.boss).length, cap = RFC.ALIVE[RF.st === 'hunt' ? 0 : 1] + RFC.ALIVE_MORE * (n - 1);
+  const alive = ZM.z.filter(z => !z.dead && !z.boss).length, cap0 = RFC.ALIVE[RF.st === 'hunt' ? 0 : 1] + RFC.ALIVE_MORE * (n - 1);
+  const p2k = RF.p2 && RF.st === 'maren' && typeof RF2 !== 'undefined' ? RF2.FEWER : 1, cap = Math.round(cap0 * p2k);   // [p2] (a fifth fewer in her storm, and coming a fifth slower)
   RF.spawnT -= dt;
-  if (RF.st !== 'won' && alive < cap && RF.spawnT <= 0) RF.spawnT = (zmSpawn() ? (RF.st === 'hunt' ? 1.7 : 1.05) : 0.5) * (0.7 + Math.random() * 0.6);
+  if (RF.st !== 'won' && alive < cap && RF.spawnT <= 0) RF.spawnT = (zmSpawn() ? (RF.st === 'hunt' ? 1.7 : 1.05) / p2k : 0.5) * (0.7 + Math.random() * 0.6);
   if (RF.st === 'hunt') {
     // stepping into an apothecary wakes its keeper
     for (const k of RF_APO_IDS) if (!RF.apo[k] && P.some(p => zmZoneAt(p.x, p.y, p.jz) === k)) rfWake(k);
