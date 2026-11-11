@@ -70,13 +70,25 @@ const ZM_TROOMS = { tower: 'the Tower Foot', tw1n: 'the Watch Room', tw1s: 'the 
   tw3n: 'the Clock Room', tw3s: 'the Lamp-Wright’s Store', tw4n: 'the Service Room', tw4s: 'the Keeper’s Study', top: 'the Lantern Room', roof: 'the Roof Room' };
 const ZM = { on: false, own: ['pepperbox'], res: {}, pts: 0, round: 0, items: [], z: [], drops: [], perks: {}, fx: [] };
 // what each weapon carries in reserve, and how much harder it hits the drowned than a wrecker
-const ZM_AMMO = { pepperbox: 60, blunderbuss: 28, longarm: 36, harpoon: 30, avtomat: 225, cutlass: 0, fresnel: 240 };
-const ZM_DMG = { p: 1, b: 2, l: 4, h: 10, c: 2.5, a: 1.15, f: 1, k: 1 };
+const ZM_AMMO = { pepperbox: 60, blunderbuss: 40, longarm: 36, harpoon: 30, avtomat: 225, cutlass: 0, fresnel: 240 };
+const ZM_DMG = { p: 1, b: 3, l: 4, h: 10, c: 2.5, a: 1.15, f: 1, k: 1 };
 // how a weapon loads here, where it differs from Wreckers' Night (FPSW is shared, and left as it is there): the
 // blunderbuss takes a heavier charge of shot in a wider cone. Each ball is its own hit (and can find a different one
 // of them), at full weight out to near, falling away to far (times ZM_DMG) by ZM_FALL; a harpoon that kills goes on
 // through, into up to thru more
-const ZM_SHOT = { b: { pellets: 15, spread: 0.15, near: 6, far: 24, min: 0.15 } };
+const ZM_SHOT = { b: { pellets: 18, spread: 0.12, near: 9, far: 30, min: 0.3 } };
+// and how a weapon is loaded here, where that differs too (fpsW): mag, the shots to a load (never fewer than a
+// reforged one's); rk, how long the load takes against Wreckers' Night's. The blunderbuss holds two charges and
+// loads them in three quarters of the time
+const ZM_LOAD = { blunderbuss: { mag: 2, rk: 0.75 } };
+const ZM_LOAD_C = new WeakMap();
+function zmLoadW(w, id) {
+  const L = ZM_LOAD[id]; if (!L || w.melee || !FPS.zm) return w;
+  let o = ZM_LOAD_C.get(w); if (!o) { o = Object.assign({}, w, { mag: Math.max(w.mag, L.mag), reload: w.reload * L.rk }); ZM_LOAD_C.set(w, o); }
+  return o;
+}
+// (a weapon's whole load, as it is in your hands here: reforged, loaded as here, and as in Maren's End)
+function zmMag(id) { const w = zmLoadW((typeof zmpW === 'function' && zmpW(id)) || FPSW[id], id); return (typeof rclW === 'function' ? rclW(w, id) : w).mag; }
 const ZM_HARPOON_THRU = 4;
 // (a ball's weight at d metres: whole to near, then down in a line to min at far, and no less)
 const ZM_FALL = (code, d) => { const o = ZM_SHOT[code]; return o && o.far ? clamp(1 - (d - o.near) / (o.far - o.near) * (1 - o.min), o.min, 1) : 1; };
@@ -89,7 +101,7 @@ const ZM_KNIFE = { reach: 2.1, arc: 0.95, dmg: 3, rate: 0.55 };
 const ZM_DOWN = { T: 45, REV: 3, CRAWL: 0.6, EYE: 1.15, RES: 12, UP: 2.5, NOTE: 4 };
 // how long it takes me to get someone up: half the time with the Grog Ration in me
 const zmRevTime = () => ZM_DOWN.REV * (ZM.perks && ZM.perks.grog ? 0.5 : 1);
-const ZM_PIERCE = { l: 3 };
+const ZM_PIERCE = { l: 3, b: 2 };   // (how many of them a shot can go through: the longarm three, each blunderbuss ball the one behind too)
 const ZM_PERKS = {
   stout: { n: 'Stout Heart', cost: 2500, c: '#e0504a', what: 'take twice the knocks' },
   quick: { n: 'Quick Hands', cost: 3000, c: '#5ac87a', what: 'reload in half the time' },
@@ -2026,7 +2038,7 @@ function zmStart(opts) {
   const [sx, sy] = [FPSC.CX + ZMD.START[0], FPSC.CY + ZMD.START[1]];
   FPS.me = { id: (typeof NET !== 'undefined' && NET.sid) || 'me', x: sx, y: sy, h: 0, p: 0, v: 0, z: 0, rudder: 0, bob: 0, boat: 'brig', inv: 0, pitch: 0,
     hp: ZMC.HP, ammo: 6, mags: {}, reload: 0, cd: 0, flares: 0, lan: true, dead: 0, protect: 2, killer: null, jz: ZMD.TOP, vz: 0, fl: ZMD.TOP, me: true };
-  for (const id in FPSW) FPS.me.mags[id] = FPSW[id].mag;
+  for (const id in FPSW) FPS.me.mags[id] = zmLoadW(FPSW[id], id).mag;
   FPS.kb = {}; FPS.deaths = 0; FPS.seq = 0; FPS.shots = []; FPS.seenSeq = {}; FPS.hist = []; FPS.host = true; FPS.joinedAt = performance.now(); FPS.ai = null;
   FPS.remote.clear(); FPS.feed = []; FPS.pings = []; FPS.tracers = []; FPS.parts = []; FPS.drowned = []; FPS.bots = [];
   FPS.roundMsg = null; FPS.menu = false; $('fpsMenu').hidden = true; FPS.eyeLag = 0; FPS.downEye = 0; FPS.crouch = false; FPS.crouchK = 0; FPS.crouchEye = 0; FPS.landed = 0; FPS.calm = 0; FPS.climb = 0;
@@ -2897,9 +2909,9 @@ function zmGive(id) {
     if (kin.length < (blade ? 1 : 2)) ZM.own.splice(blade ? ZM.own.length : ZM.own.filter(k => !zmBlade(k) && k !== 'plimsoll').length, 0, id);
     else { const out = blade ? kin[0] : kin.includes(was) ? was : kin.includes(FPS.last) ? FPS.last : kin[kin.length - 1]; ZM.own[ZM.own.indexOf(out)] = id; }
   }
-  m.mags[id] = w.mag; ZM.res[id] = ZM_AMMO[id];
-  if (was !== id) { m.mags[was] = m.ammo; FPS.weapon = id; m.ammo = w.mag; m.reload = 0; m.cd = 0; FPS.drawT = 0.45; FPS.scoped = false; FPS.heldFire = true; }
-  else { m.ammo = w.mag; }
+  m.mags[id] = zmMag(id); ZM.res[id] = ZM_AMMO[id];
+  if (was !== id) { m.mags[was] = m.ammo; FPS.weapon = id; m.ammo = zmMag(id); m.reload = 0; m.cd = 0; FPS.drawT = 0.45; FPS.scoped = false; FPS.heldFire = true; }
+  else { m.ammo = zmMag(id); }
   zmFixLast();
   zmSound('buy');
 }
@@ -2966,7 +2978,7 @@ function zmUse() {
   if (o.k === 'buy') {
     const id = o.b.id, w = FPSW[id], own = ZM.own.includes(id);
     if (own && w.melee) return;
-    if (own) { if ((ZM.res[id] || 0) >= ZM_AMMO[id] && (FPS.weapon !== id || m.ammo >= w.mag)) { fpsFeed('You can’t carry any more.'); return; } if (!pay(Math.round(o.b.cost / 2))) return; ZM.res[id] = ZM_AMMO[id]; if (FPS.weapon === id) { m.ammo = w.mag; } m.mags[id] = w.mag; zmSound('buy'); return; }
+    if (own) { if ((ZM.res[id] || 0) >= ZM_AMMO[id] && (FPS.weapon !== id || m.ammo >= zmMag(id))) { fpsFeed('You can’t carry any more.'); return; } if (!pay(Math.round(o.b.cost / 2))) return; ZM.res[id] = ZM_AMMO[id]; if (FPS.weapon === id) { m.ammo = zmMag(id); } m.mags[id] = zmMag(id); zmSound('buy'); return; }
     if (!pay(o.b.cost)) return; zmGive(id); return;
   }
   if (o.k === 'perk') {

@@ -1678,7 +1678,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 // ---- src/config.js ----
 'use strict';
 // The game's version, shown at the top of the main menu. Bump it by one with every change pushed to main.
-var VERSION = 137;
+var VERSION = 138;
 // Skerry Light: tuning, asset paths and lore.
 // World units are metres. The lighthouse stands at the origin on the shoreline (y = 0);
 // north (+y) is open sea. Bearings: 0 = north, positive = east.
@@ -13873,7 +13873,7 @@ const FPS_WORDER = ['pepperbox', 'blunderbuss', 'longarm', 'harpoon', 'cutlass',
 const fpsZoom = () => { const w = fpsW(); return FPS.scoped ? (w.scope || w.ads || 1) : 1; };
 const FPSW_BY_CODE = {}; for (const id in FPSW) FPSW_BY_CODE[FPSW[id].code] = id;
 // ([pap] in the Lighthouse, a weapon reforged at the Lampwright's Bench has its own copy: src/zmpap.js)
-const fpsW = () => { const w = (FPS.zm && typeof zmpW === 'function' && zmpW(FPS.weapon)) || FPSW[FPS.weapon] || FPSW.pepperbox; return FPS.zm && typeof rclW === 'function' ? rclW(w, FPS.weapon) : w; };   // [classes] (Maren's End: more rounds to a load, src/rclass.js)
+const fpsW = () => { const w = (FPS.zm && typeof zmpW === 'function' && zmpW(FPS.weapon)) || FPSW[FPS.weapon] || FPSW.pepperbox; const z = FPS.zm && typeof zmLoadW === 'function' ? zmLoadW(w, FPS.weapon) : w; return FPS.zm && typeof rclW === 'function' ? rclW(z, FPS.weapon) : z; };   // [classes] (Maren's End: more rounds to a load, src/rclass.js)
 const fpsWOf = code => FPSW[FPSW_BY_CODE[code] || 'pepperbox'];
 try { const w = localStorage.getItem('skerry-fps-weapon'); if (FPSW[w] && FPS_WORDER.includes(w)) FPS.pick = w; } catch (e) {}
 // first person, or over the shoulder (T, the view button, or up on the D-pad to switch; remembered)
@@ -19130,13 +19130,25 @@ const ZM_TROOMS = { tower: 'the Tower Foot', tw1n: 'the Watch Room', tw1s: 'the 
   tw3n: 'the Clock Room', tw3s: 'the Lamp-Wright’s Store', tw4n: 'the Service Room', tw4s: 'the Keeper’s Study', top: 'the Lantern Room', roof: 'the Roof Room' };
 const ZM = { on: false, own: ['pepperbox'], res: {}, pts: 0, round: 0, items: [], z: [], drops: [], perks: {}, fx: [] };
 // what each weapon carries in reserve, and how much harder it hits the drowned than a wrecker
-const ZM_AMMO = { pepperbox: 60, blunderbuss: 28, longarm: 36, harpoon: 30, avtomat: 225, cutlass: 0, fresnel: 240 };
-const ZM_DMG = { p: 1, b: 2, l: 4, h: 10, c: 2.5, a: 1.15, f: 1, k: 1 };
+const ZM_AMMO = { pepperbox: 60, blunderbuss: 40, longarm: 36, harpoon: 30, avtomat: 225, cutlass: 0, fresnel: 240 };
+const ZM_DMG = { p: 1, b: 3, l: 4, h: 10, c: 2.5, a: 1.15, f: 1, k: 1 };
 // how a weapon loads here, where it differs from Wreckers' Night (FPSW is shared, and left as it is there): the
 // blunderbuss takes a heavier charge of shot in a wider cone. Each ball is its own hit (and can find a different one
 // of them), at full weight out to near, falling away to far (times ZM_DMG) by ZM_FALL; a harpoon that kills goes on
 // through, into up to thru more
-const ZM_SHOT = { b: { pellets: 15, spread: 0.15, near: 6, far: 24, min: 0.15 } };
+const ZM_SHOT = { b: { pellets: 18, spread: 0.12, near: 9, far: 30, min: 0.3 } };
+// and how a weapon is loaded here, where that differs too (fpsW): mag, the shots to a load (never fewer than a
+// reforged one's); rk, how long the load takes against Wreckers' Night's. The blunderbuss holds two charges and
+// loads them in three quarters of the time
+const ZM_LOAD = { blunderbuss: { mag: 2, rk: 0.75 } };
+const ZM_LOAD_C = new WeakMap();
+function zmLoadW(w, id) {
+  const L = ZM_LOAD[id]; if (!L || w.melee || !FPS.zm) return w;
+  let o = ZM_LOAD_C.get(w); if (!o) { o = Object.assign({}, w, { mag: Math.max(w.mag, L.mag), reload: w.reload * L.rk }); ZM_LOAD_C.set(w, o); }
+  return o;
+}
+// (a weapon's whole load, as it is in your hands here: reforged, loaded as here, and as in Maren's End)
+function zmMag(id) { const w = zmLoadW((typeof zmpW === 'function' && zmpW(id)) || FPSW[id], id); return (typeof rclW === 'function' ? rclW(w, id) : w).mag; }
 const ZM_HARPOON_THRU = 4;
 // (a ball's weight at d metres: whole to near, then down in a line to min at far, and no less)
 const ZM_FALL = (code, d) => { const o = ZM_SHOT[code]; return o && o.far ? clamp(1 - (d - o.near) / (o.far - o.near) * (1 - o.min), o.min, 1) : 1; };
@@ -19149,7 +19161,7 @@ const ZM_KNIFE = { reach: 2.1, arc: 0.95, dmg: 3, rate: 0.55 };
 const ZM_DOWN = { T: 45, REV: 3, CRAWL: 0.6, EYE: 1.15, RES: 12, UP: 2.5, NOTE: 4 };
 // how long it takes me to get someone up: half the time with the Grog Ration in me
 const zmRevTime = () => ZM_DOWN.REV * (ZM.perks && ZM.perks.grog ? 0.5 : 1);
-const ZM_PIERCE = { l: 3 };
+const ZM_PIERCE = { l: 3, b: 2 };   // (how many of them a shot can go through: the longarm three, each blunderbuss ball the one behind too)
 const ZM_PERKS = {
   stout: { n: 'Stout Heart', cost: 2500, c: '#e0504a', what: 'take twice the knocks' },
   quick: { n: 'Quick Hands', cost: 3000, c: '#5ac87a', what: 'reload in half the time' },
@@ -21086,7 +21098,7 @@ function zmStart(opts) {
   const [sx, sy] = [FPSC.CX + ZMD.START[0], FPSC.CY + ZMD.START[1]];
   FPS.me = { id: (typeof NET !== 'undefined' && NET.sid) || 'me', x: sx, y: sy, h: 0, p: 0, v: 0, z: 0, rudder: 0, bob: 0, boat: 'brig', inv: 0, pitch: 0,
     hp: ZMC.HP, ammo: 6, mags: {}, reload: 0, cd: 0, flares: 0, lan: true, dead: 0, protect: 2, killer: null, jz: ZMD.TOP, vz: 0, fl: ZMD.TOP, me: true };
-  for (const id in FPSW) FPS.me.mags[id] = FPSW[id].mag;
+  for (const id in FPSW) FPS.me.mags[id] = zmLoadW(FPSW[id], id).mag;
   FPS.kb = {}; FPS.deaths = 0; FPS.seq = 0; FPS.shots = []; FPS.seenSeq = {}; FPS.hist = []; FPS.host = true; FPS.joinedAt = performance.now(); FPS.ai = null;
   FPS.remote.clear(); FPS.feed = []; FPS.pings = []; FPS.tracers = []; FPS.parts = []; FPS.drowned = []; FPS.bots = [];
   FPS.roundMsg = null; FPS.menu = false; $('fpsMenu').hidden = true; FPS.eyeLag = 0; FPS.downEye = 0; FPS.crouch = false; FPS.crouchK = 0; FPS.crouchEye = 0; FPS.landed = 0; FPS.calm = 0; FPS.climb = 0;
@@ -21957,9 +21969,9 @@ function zmGive(id) {
     if (kin.length < (blade ? 1 : 2)) ZM.own.splice(blade ? ZM.own.length : ZM.own.filter(k => !zmBlade(k) && k !== 'plimsoll').length, 0, id);
     else { const out = blade ? kin[0] : kin.includes(was) ? was : kin.includes(FPS.last) ? FPS.last : kin[kin.length - 1]; ZM.own[ZM.own.indexOf(out)] = id; }
   }
-  m.mags[id] = w.mag; ZM.res[id] = ZM_AMMO[id];
-  if (was !== id) { m.mags[was] = m.ammo; FPS.weapon = id; m.ammo = w.mag; m.reload = 0; m.cd = 0; FPS.drawT = 0.45; FPS.scoped = false; FPS.heldFire = true; }
-  else { m.ammo = w.mag; }
+  m.mags[id] = zmMag(id); ZM.res[id] = ZM_AMMO[id];
+  if (was !== id) { m.mags[was] = m.ammo; FPS.weapon = id; m.ammo = zmMag(id); m.reload = 0; m.cd = 0; FPS.drawT = 0.45; FPS.scoped = false; FPS.heldFire = true; }
+  else { m.ammo = zmMag(id); }
   zmFixLast();
   zmSound('buy');
 }
@@ -22026,7 +22038,7 @@ function zmUse() {
   if (o.k === 'buy') {
     const id = o.b.id, w = FPSW[id], own = ZM.own.includes(id);
     if (own && w.melee) return;
-    if (own) { if ((ZM.res[id] || 0) >= ZM_AMMO[id] && (FPS.weapon !== id || m.ammo >= w.mag)) { fpsFeed('You can’t carry any more.'); return; } if (!pay(Math.round(o.b.cost / 2))) return; ZM.res[id] = ZM_AMMO[id]; if (FPS.weapon === id) { m.ammo = w.mag; } m.mags[id] = w.mag; zmSound('buy'); return; }
+    if (own) { if ((ZM.res[id] || 0) >= ZM_AMMO[id] && (FPS.weapon !== id || m.ammo >= zmMag(id))) { fpsFeed('You can’t carry any more.'); return; } if (!pay(Math.round(o.b.cost / 2))) return; ZM.res[id] = ZM_AMMO[id]; if (FPS.weapon === id) { m.ammo = zmMag(id); } m.mags[id] = zmMag(id); zmSound('buy'); return; }
     if (!pay(o.b.cost)) return; zmGive(id); return;
   }
   if (o.k === 'perk') {
@@ -24081,7 +24093,7 @@ const ZM_PAP = { COST: 5000, AMMO_COST: 4500, TIME: 4.6, NAME: "the Lampwright's
 // what each weapon becomes: its new name, magazine and reserve, and how much harder it hits the drowned
 const ZM_PAP_W = {
   pepperbox: { n: 'Twelve Bells', mag: 12, res: 120, k: 3, fx: 'Every ball that strikes one of them rings off it to the next, and the next.' },
-  blunderbuss: { n: 'Spring Tide', mag: 2, res: 48, k: 3, fx: 'Each blast is a wall of green water: it sweeps them off their feet and back down the room.' },
+  blunderbuss: { n: 'Spring Tide', mag: 3, res: 64, k: 3, fx: 'Each blast is a wall of green water: it sweeps them off their feet and back down the room.' },
   longarm: { n: 'Leading Light', mag: 3, res: 60, k: 3, fx: 'The ball goes through all of them in its line, and lights each one: seen through walls, and hurt worse by everyone.' },
   harpoon: { n: 'Whale-Road', mag: 3, res: 40, k: 3, fx: 'The iron runs them through and carries them on, and nails them to the wall it stops in.' },
   cutlass: { n: 'Keel-Splitter', mag: 0, res: 0, k: 3, fx: 'Every stroke throws a crescent of the sea on along the floor, cutting all it passes.' },
@@ -24289,8 +24301,8 @@ function zmpDone() {
   }
   const was = zmpTier(id), t = ZM.pap[id] = was + 1;
   const w = zmpW(id);
-  if (!w.melee) { m.mags[id] = w.mag; ZM.res[id] = zmpRes(id, t); }
-  if (FPS.weapon === id) { if (!w.melee) m.ammo = w.mag; m.reload = 0; m.cd = 0; FPS.drawT = 0.45; }
+  if (!w.melee) { m.mags[id] = zmMag(id); ZM.res[id] = zmpRes(id, t); }
+  if (FPS.weapon === id) { if (!w.melee) m.ammo = zmMag(id); m.reload = 0; m.cd = 0; FPS.drawT = 0.45; }
   else if (!(m.dead > 0)) fpsSwitch(id);
   ZM.banner = { text: w.n, t: 3, col: '#ffc070' };
   if (was) fpsFeed(`Back out of the fire, hotter than before: the ${w.n}.`);
@@ -24325,9 +24337,9 @@ function zmpUse(o) {
   if (o.k === 'buy' && ZM.pap && ZM.pap[o.b.id] && ZM.own.includes(o.b.id)) {
     const id = o.b.id, w = zmpW(id), full = zmpRes(id, zmpTier(id));
     if (w.melee) return true;
-    if ((ZM.res[id] || 0) >= full && (FPS.weapon !== id || m.ammo >= w.mag)) { fpsFeed('You can’t carry any more.'); return true; }
+    if ((ZM.res[id] || 0) >= full && (FPS.weapon !== id || m.ammo >= zmMag(id))) { fpsFeed('You can’t carry any more.'); return true; }
     if (!pay(ZM_PAP.AMMO_COST)) return true;
-    ZM.res[id] = full; m.mags[id] = w.mag; if (FPS.weapon === id) m.ammo = w.mag;
+    ZM.res[id] = full; m.mags[id] = zmMag(id); if (FPS.weapon === id) m.ammo = zmMag(id);
     zmSound('buy');
     return true;
   }
@@ -30111,7 +30123,7 @@ const RAIDC = { ROUND: 4, CALM: 0.7, BOSS_HP: 1.15 };   // (BOSS_HP: every boss'
 function raidLoadout() {
   const m = FPS.me;
   ZM.own = ['pepperbox', 'blunderbuss']; ZM.res = { pepperbox: ZM_AMMO.pepperbox, blunderbuss: ZM_AMMO.blunderbuss };
-  for (const id of ZM.own) m.mags[id] = FPSW[id].mag;
+  for (const id of ZM.own) m.mags[id] = zmMag(id);
   FPS.weapon = 'pepperbox'; FPS.last = 'blunderbuss'; m.ammo = FPSW.pepperbox.mag; m.reload = 0; FPS.drawT = 0.45;
   if (typeof rclApply === 'function') rclApply();   // [classes] src/rclass.js: your class's weapons and abilities instead
 }
@@ -35266,7 +35278,7 @@ function rclShoot() {
 // Maren's End: the guns that load one round at a time take more there (and a little longer to load them all):
 // mag, the rounds to a load (never fewer than a reforged one's); rk, how much longer the load takes. The Punt Gun stays
 // one enormous load.
-const RCL_MAG = { blunderbuss: { mag: 3, rk: 1.6 }, longarm: { mag: 2, rk: 1.15 }, harpoon: { mag: 2, rk: 1.2 }, flaregun: { mag: 2, rk: 1.2 },
+const RCL_MAG = { blunderbuss: { mag: 4, rk: 1.25 }, longarm: { mag: 2, rk: 1.15 }, harpoon: { mag: 2, rk: 1.2 }, flaregun: { mag: 2, rk: 1.2 },
   bomblance: { mag: 2, rk: 1.2 }, grapnel: { mag: 2, rk: 1.15 }, netmortar: { mag: 2, rk: 1.2 }, chainshot: { mag: 2, rk: 1.2 },
   duckfoot: { mag: 6, rk: 0.67 } };
 // (the Apothecary's Duck's-Foot) six volleys a load, loaded in a third less time, and 72 in reserve, down here only
@@ -35277,7 +35289,7 @@ function rclW(w, id) {
   let o = RCL_WC.get(w); if (!o) { o = Object.assign({}, w, { mag: Math.max(w.mag, M.mag), reload: w.reload * M.rk }); RCL_WC.set(w, o); }
   return o;
 }
-const rclMag = id => rclW((typeof zmpW === 'function' && zmpW(id)) || FPSW[id], id).mag;
+const rclMag = id => zmMag(id);
 // (zmReloadK) in Maren's End the blunderbuss loads 30% quicker, whoever carries it
 function rclReloadK() { return rclOn() && FPS.weapon === 'blunderbuss' ? 0.7 : 1; }
 // (fpsHurt) a knock coming: Bulwark stops it, a Wellspring halves it

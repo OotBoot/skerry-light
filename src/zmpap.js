@@ -23,7 +23,7 @@ const ZM_PAP = { COST: 5000, AMMO_COST: 4500, TIME: 4.6, NAME: "the Lampwright's
 // what each weapon becomes: its new name, magazine and reserve, and how much harder it hits the drowned
 const ZM_PAP_W = {
   pepperbox: { n: 'Twelve Bells', mag: 12, res: 120, k: 3, fx: 'Every ball that strikes one of them rings off it to the next, and the next.' },
-  blunderbuss: { n: 'Spring Tide', mag: 2, res: 48, k: 3, fx: 'Each blast is a wall of green water: it sweeps them off their feet and back down the room.' },
+  blunderbuss: { n: 'Spring Tide', mag: 3, res: 64, k: 3, fx: 'Each blast is a wall of green water: it sweeps them off their feet and back down the room.' },
   longarm: { n: 'Leading Light', mag: 3, res: 60, k: 3, fx: 'The ball goes through all of them in its line, and lights each one: seen through walls, and hurt worse by everyone.' },
   harpoon: { n: 'Whale-Road', mag: 3, res: 40, k: 3, fx: 'The iron runs them through and carries them on, and nails them to the wall it stops in.' },
   cutlass: { n: 'Keel-Splitter', mag: 0, res: 0, k: 3, fx: 'Every stroke throws a crescent of the sea on along the floor, cutting all it passes.' },
@@ -231,8 +231,8 @@ function zmpDone() {
   }
   const was = zmpTier(id), t = ZM.pap[id] = was + 1;
   const w = zmpW(id);
-  if (!w.melee) { m.mags[id] = w.mag; ZM.res[id] = zmpRes(id, t); }
-  if (FPS.weapon === id) { if (!w.melee) m.ammo = w.mag; m.reload = 0; m.cd = 0; FPS.drawT = 0.45; }
+  if (!w.melee) { m.mags[id] = zmMag(id); ZM.res[id] = zmpRes(id, t); }
+  if (FPS.weapon === id) { if (!w.melee) m.ammo = zmMag(id); m.reload = 0; m.cd = 0; FPS.drawT = 0.45; }
   else if (!(m.dead > 0)) fpsSwitch(id);
   ZM.banner = { text: w.n, t: 3, col: '#ffc070' };
   if (was) fpsFeed(`Back out of the fire, hotter than before: the ${w.n}.`);
@@ -267,9 +267,9 @@ function zmpUse(o) {
   if (o.k === 'buy' && ZM.pap && ZM.pap[o.b.id] && ZM.own.includes(o.b.id)) {
     const id = o.b.id, w = zmpW(id), full = zmpRes(id, zmpTier(id));
     if (w.melee) return true;
-    if ((ZM.res[id] || 0) >= full && (FPS.weapon !== id || m.ammo >= w.mag)) { fpsFeed('You can’t carry any more.'); return true; }
+    if ((ZM.res[id] || 0) >= full && (FPS.weapon !== id || m.ammo >= zmMag(id))) { fpsFeed('You can’t carry any more.'); return true; }
     if (!pay(ZM_PAP.AMMO_COST)) return true;
-    ZM.res[id] = full; m.mags[id] = w.mag; if (FPS.weapon === id) m.ammo = w.mag;
+    ZM.res[id] = full; m.mags[id] = zmMag(id); if (FPS.weapon === id) m.ammo = zmMag(id);
     zmSound('buy');
     return true;
   }

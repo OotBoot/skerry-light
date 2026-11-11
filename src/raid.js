@@ -95,7 +95,7 @@ const RAIDC = { ROUND: 4, CALM: 0.7, BOSS_HP: 1.15 };   // (BOSS_HP: every boss'
 function raidLoadout() {
   const m = FPS.me;
   ZM.own = ['pepperbox', 'blunderbuss']; ZM.res = { pepperbox: ZM_AMMO.pepperbox, blunderbuss: ZM_AMMO.blunderbuss };
-  for (const id of ZM.own) m.mags[id] = FPSW[id].mag;
+  for (const id of ZM.own) m.mags[id] = zmMag(id);
   FPS.weapon = 'pepperbox'; FPS.last = 'blunderbuss'; m.ammo = FPSW.pepperbox.mag; m.reload = 0; FPS.drawT = 0.45;
   if (typeof rclApply === 'function') rclApply();   // [classes] src/rclass.js: your class's weapons and abilities instead
 }

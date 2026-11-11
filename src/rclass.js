@@ -337,7 +337,7 @@ function rclShoot() {
 // Maren's End: the guns that load one round at a time take more there (and a little longer to load them all):
 // mag, the rounds to a load (never fewer than a reforged one's); rk, how much longer the load takes. The Punt Gun stays
 // one enormous load.
-const RCL_MAG = { blunderbuss: { mag: 3, rk: 1.6 }, longarm: { mag: 2, rk: 1.15 }, harpoon: { mag: 2, rk: 1.2 }, flaregun: { mag: 2, rk: 1.2 },
+const RCL_MAG = { blunderbuss: { mag: 4, rk: 1.25 }, longarm: { mag: 2, rk: 1.15 }, harpoon: { mag: 2, rk: 1.2 }, flaregun: { mag: 2, rk: 1.2 },
   bomblance: { mag: 2, rk: 1.2 }, grapnel: { mag: 2, rk: 1.15 }, netmortar: { mag: 2, rk: 1.2 }, chainshot: { mag: 2, rk: 1.2 },
   duckfoot: { mag: 6, rk: 0.67 } };
 // (the Apothecary's Duck's-Foot) six volleys a load, loaded in a third less time, and 72 in reserve, down here only
@@ -348,7 +348,7 @@ function rclW(w, id) {
   let o = RCL_WC.get(w); if (!o) { o = Object.assign({}, w, { mag: Math.max(w.mag, M.mag), reload: w.reload * M.rk }); RCL_WC.set(w, o); }
   return o;
 }
-const rclMag = id => rclW((typeof zmpW === 'function' && zmpW(id)) || FPSW[id], id).mag;
+const rclMag = id => zmMag(id);
 // (zmReloadK) in Maren's End the blunderbuss loads 30% quicker, whoever carries it
 function rclReloadK() { return rclOn() && FPS.weapon === 'blunderbuss' ? 0.7 : 1; }
 // (fpsHurt) a knock coming: Bulwark stops it, a Wellspring halves it
