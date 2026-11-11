@@ -13,7 +13,7 @@
 //  - Maren: when the Knock falls, Maren Holm comes up out of the sea onto the Sea Battery, three times the
 //    height of a man (her model is built after her picture, assets/maren.png: a drowned woman in a long dark dress,
 //    one arm raised, her face lost in shadow). She can't be hurt while her soul is out of her: a yellow light, Maren's
-//    Soul, darting and jinking over the water beyond the sea wall. It takes 30 (weak-spot hits) to burst, and then she can be hurt for 30 seconds; then the soul
+//    Soul, drifting high over the water beyond the sea wall (in sight over it from the Plaza). It takes 30 (weak-spot hits) to burst, and then she can be hurt for 30 seconds; then the soul
 //    rises out of the sea again somewhere else, and she's untouchable until it's shot again. Over and over, until
 //    she's dead. All through the fight the drowned keep coming, and now and then another boss (the Diver, a
 //    Mooncusser or the Keelback) climbs in too.
@@ -33,7 +33,8 @@
 const RFC = {
   RT: 3.2, WH: 5.4,   // (the Sea Battery's height over the Plaza; the height of the fort's walls)
   ROUND: 10,   // (how strong the drowned are here, as a Lighthouse round, at the least)
-  VUL: 30, ORB_GAP: 3.5, ORB_R: 1.25, ORB_HP: 30, ORB_SEND: 0.15,   // (how long she can be hurt once her soul's shot; before it's back; how big it is to hit;
+  VUL: 30, ORB_GAP: 3.5, ORB_R: 2, ORB_Z: 15, ORB_K: 1.6, ORB_HP: 30, ORB_SEND: 0.15,   // (how long she can be hurt once her soul's shot; before it's back; how big it is to hit,
+  // how high over the sea, how much bigger it's drawn than it was;
   // how much it takes to burst it, as weak-spot hits; how often a joined player's hits on it go to the host)
   HP: 64, PTS: 2500, BOOST: 1.25, HP_MORE: 0.75,
   RAD: 1.35, TALL: 6.3, HEADZ: 5.55, PAD: 0.9, SP: 3.2, S: 3.05,   // (her size: S times a woman's)
@@ -417,13 +418,9 @@ function rfTick(dt) {
   }
 }
 // where her soul is at time t: drifting over the water beyond the sea wall, rising and falling
-// (a third quicker than it was, and jinking: quicker wobbles laid over the long drift, so it darts and doubles back;
-// the same sums on every screen)
+// (high enough, RFC.ORB_Z, to be seen and shot over the sea wall from the Plaza)
 function rfOrbAt(t) {
-  const q = t * 1.35;
-  return [FPSC.CX + 19 * Math.sin(q * 0.19) + 4 * Math.sin(q * 0.53) + 2.6 * Math.sin(t * 1.9 + Math.sin(t * 0.8) * 2) + 1.2 * Math.sin(t * 3.7),
-    FPSC.CY - 37 - 5 * Math.sin(q * 0.27 + 1) + 1.8 * Math.sin(t * 2.3 + 0.7) * Math.sin(t * 0.61),
-    FPSC.GROUND + 7.6 + 1.3 * Math.sin(q * 0.7) + 0.9 * Math.sin(t * 2.9 + Math.sin(t * 1.3) * 1.5)];
+  return [FPSC.CX + 19 * Math.sin(t * 0.19) + 4 * Math.sin(t * 0.53), FPSC.CY - 37 - 5 * Math.sin(t * 0.27 + 1), FPSC.GROUND + RFC.ORB_Z + 1.3 * Math.sin(t * 0.7)];
 }
 // a Mooncusser wakes in an apothecary
 function rfWake(k) {
@@ -889,7 +886,7 @@ function rf3dBuild(grp) {
   const soft = (c0, c1) => new THREE.SpriteMaterial({ map: z3Soft(c0, c1), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false });
   // the soul: a hot core, a gold glow round it, a wider haze, and its light on the sea under it
   const orb = RF3.orb = new THREE.Group(); grp.add(orb); orb.visible = false;
-  orb.add(new THREE.Mesh(new THREE.SphereGeometry(0.42, 16, 12), new THREE.MeshBasicMaterial({ color: 0xfff2b0, fog: false })));
+  orb.add(new THREE.Mesh(new THREE.SphereGeometry(0.42 * RFC.ORB_K, 16, 12), new THREE.MeshBasicMaterial({ color: 0xfff2b0, fog: false })));
   const g1 = RF3.g1 = new THREE.Sprite(soft('rgba(255,230,120,1)', 'rgba(255,200,60,0)')); g1.scale.setScalar(3.2); orb.add(g1);
   const g2 = RF3.g2 = new THREE.Sprite(soft('rgba(255,220,110,0.45)', 'rgba(255,190,60,0)')); g2.scale.setScalar(9); orb.add(g2);
   const refl = RF3.refl = new THREE.Sprite(soft('rgba(255,220,120,0.55)', 'rgba(255,200,80,0)')); refl.scale.set(6, 1.4, 1); grp.add(refl); refl.visible = false;
@@ -926,7 +923,7 @@ function rf3d(dt) {
   RF3.light.intensity = up ? 2.2 + 0.4 * Math.sin(t * 6) : 0;
   if (up) {
     const [ox, oy, oz] = RF.orb, p = 1 + 0.12 * Math.sin(t * 6) + 0.06 * Math.sin(t * 17);
-    RF3.orb.position.copy(z3v(ox, oy, oz)); RF3.g1.scale.setScalar(3.2 * p); RF3.g2.scale.setScalar(9 * (2 - p));
+    RF3.orb.position.copy(z3v(ox, oy, oz)); RF3.g1.scale.setScalar(3.2 * RFC.ORB_K * p); RF3.g2.scale.setScalar(9 * RFC.ORB_K * (2 - p));
     RF3.refl.position.copy(z3v(ox, oy, G0 + ZMD.WATER + 0.05)); RF3.light.position.copy(z3v(ox, oy, oz - 1));
   }
   // her call's rings
