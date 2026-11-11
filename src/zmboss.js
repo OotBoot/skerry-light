@@ -387,7 +387,7 @@ function zbHud(phone, top) {
     gr.addColorStop(0, `rgba(255,252,236,${a})`); gr.addColorStop(0.35, `rgba(255,236,180,${a * 0.95})`); gr.addColorStop(1, `rgba(255,190,90,${a * 0.85})`);
     ctx.fillStyle = gr; ctx.fillRect(0, 0, W, H);
   }
-  const live = (typeof RAID !== 'undefined' && RAID.on && raidStage() && raidStage().noBars) ? [] : ZM.z.filter(q => q.boss && !q.gone && (!q.dead || (q.deadT || 0) < 2));   // [raid] no bars in the Swallow
+  const nob = typeof RAID !== 'undefined' && RAID.on && raidStage() && raidStage().noBars, live = ZM.z.filter(q => q.boss && !q.gone && (!q.dead || (q.deadT || 0) < 2) && (!nob || q.bt === 'verity'));   // [raid] no bars in the Swallow ([verity] but his)
   for (const q of live) ZB.bars.set(q.zn, Math.min(1, (ZB.bars.get(q.zn) || 0) + dt * 3));
   for (const [zn, v] of ZB.bars) if (!live.some(q => q.zn === zn)) { if (v - dt * 3 <= 0) ZB.bars.delete(zn); else ZB.bars.set(zn, v - dt * 3); }
   if (!live.length) return;

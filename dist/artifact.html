@@ -1678,7 +1678,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 // ---- src/config.js ----
 'use strict';
 // The game's version, shown at the top of the main menu. Bump it by one with every change pushed to main.
-var VERSION = 130;
+var VERSION = 131;
 // Skerry Light: tuning, asset paths and lore.
 // World units are metres. The lighthouse stands at the origin on the shoreline (y = 0);
 // north (+y) is open sea. Bearings: 0 = north, positive = east.
@@ -27235,7 +27235,7 @@ function zbHud(phone, top) {
     gr.addColorStop(0, `rgba(255,252,236,${a})`); gr.addColorStop(0.35, `rgba(255,236,180,${a * 0.95})`); gr.addColorStop(1, `rgba(255,190,90,${a * 0.85})`);
     ctx.fillStyle = gr; ctx.fillRect(0, 0, W, H);
   }
-  const live = (typeof RAID !== 'undefined' && RAID.on && raidStage() && raidStage().noBars) ? [] : ZM.z.filter(q => q.boss && !q.gone && (!q.dead || (q.deadT || 0) < 2));   // [raid] no bars in the Swallow
+  const nob = typeof RAID !== 'undefined' && RAID.on && raidStage() && raidStage().noBars, live = ZM.z.filter(q => q.boss && !q.gone && (!q.dead || (q.deadT || 0) < 2) && (!nob || q.bt === 'verity'));   // [raid] no bars in the Swallow ([verity] but his)
   for (const q of live) ZB.bars.set(q.zn, Math.min(1, (ZB.bars.get(q.zn) || 0) + dt * 3));
   for (const [zn, v] of ZB.bars) if (!live.some(q => q.zn === zn)) { if (v - dt * 3 <= 0) ZB.bars.delete(zn); else ZB.bars.set(zn, v - dt * 3); }
   if (!live.length) return;
@@ -33696,13 +33696,17 @@ try {
 'use strict';
 // Maren's End, Part III: Verity, a secret boss. The README doesn't say where he is, and nor should the chat or a
 // commit message; here in the code it's fine to say:
-//  - The way in: under the altar table in the Chapel of Our Lady of the Sea, on the altar step, sits a little Verity,
-//    the size of a cat, smiling, a candle stub either side of him. His eyes follow you, he glows softly, and he
-//    giggles the first time you come near. Face him close up and the prompt shows: Use, and the room you're in is gone
-//    and you're in his. Only while the apothecaries are still being hunted (RF.st 'hunt'), and not once he's down.
-//  - His room: the Yellow Room, a low room of damp yellow wallpaper, wet carpet and buzzing strip lights, out past the
-//    fort's north wall where nobody can walk to it (RVC.ROOM; off the drowned's walking grid, so none follow you in).
-//    The door you came by won't open while he's smiling; once he's down it takes you back to the chapel.
+//  - The way in: a little Verity, the size of a cat, smiling, a candle stub either side of him, sits in one of nine
+//    places, three in each part of the raid (RV_SPOTS), picked at random as each raid begins (the host's pick, for
+//    everyone): in the Swallow, on the Long Pier against its rail, or in a corner of the Deep Path's wall at one of
+//    two braziers; at the Black Water, in a corner of the near bank or of the far bank; in the fort, under the
+//    chapel's altar, on the Officers' Mess table or on the Cookhouse table. His eyes follow you, he glows softly, and he
+//    giggles the first time you come near. Face him close up and the prompt shows: Use, and you're in his room. Only
+//    in his own part (and in the fort, only while the apothecaries are still being hunted, RF.st 'hunt'); once a raid.
+//  - His room: the Yellow Room, a low room of damp yellow wallpaper, wet carpet and buzzing strip lights, laid out
+//    with each part somewhere nobody can walk to it (RV_ROOMS: past the fort's north wall, behind the Black Water's
+//    near wall, in the rock between the Deep Path's loops; off the drowned's walking grid, so none follow you in).
+//    The door you came by won't open while he's smiling; once he's down it takes you back to where he sat.
 //  - The fight, in two phases, built after his two pictures (assets/verity.png, assets/verity2.png):
 //      I.  the orb: the smiling yellow egg. He hops after you; close in he bumps you (a knock); further off he rolls
 //          at you, straight and fast, along a line that glows on the carpet first (half your health; get out of the
@@ -33716,14 +33720,14 @@ try {
 //    same tokens as Maren's and the Lighthouse's, src/zmegg.js ptGrant). Anyone who bled out is back on their feet.
 // A boss kind of his own on src/zmboss.js's framework (ZBT.verity), host-authoritative like the rest: the host runs
 // him and the room's state (packed into the fort's word as `rv`); each player judges his blows on themselves.
-// Hooks: the fort stage's hooks wrapped here (tick, me, pack, apply, q, kill, hurt, hud, b3, f3, consider, prompt,
+// Hooks: each part's stage hooks wrapped here (set, enter, me, pack, apply, q, kill, hud, b3, f3, consider, prompt,
 // use), src/raidfort.js rfLay (rvLay, and the headland's grass kept out of the room) and src/raidmusic.js rmWant
-// (rvMusic), each a single line marked [verity]; rfLampsK (src/raidmaren2.js) wrapped for his flickering lights.
+// (rvMusic), each a single line marked [verity]; rfLampsK (src/raidmaren2.js) wrapped for his flickering lights, and
+// rswInLight (src/raid.js) so his room counts as lit in the Swallow (the dark doesn't drain you in there); and in
+// src/zmboss.js zbHud, his bar shown in the Swallow, where no other boss's is.
 
 const RVC = {
-  ROOM: [-10, 10, 56, 74], IN: [0, 57.8], BOSS: [0, 70], DOOR: [0, 56.3],   // (his room, local; where you come in; where he waits; its door)
-  SEAT: [-32, 27.75], SEAT_Z: 0.2, SEAT_H: Math.PI, LITTLE: 0.19,   // (the little one: under the chapel's altar, facing the nave; his size against the boss's)
-  OUT: [-32, 25.6], OUT_H: 0,   // (where the door puts you back: in front of the altar, facing it)
+  LITTLE: 0.19,   // (the little one's size against the boss's)
   HP: 34, PTS: 1500, P2: 0.5,
   O: { RAD: 0.85, TALL: 1.9, HEADZ: 1.3, SP: 3.4 },   // (the orb: his size for shots, and his pace)
   T: { RAD: 0.6, TALL: 3.25, HEADZ: 3.0, SP: 4.7, S: 3.3 },   // (stood up: the same, and his model's height)
@@ -33735,34 +33739,70 @@ const RV_T = { wake: { hit: 99, end: 2.6 }, bump: { hit: 0.42, end: 0.9 }, roll:
   stand: { hit: 99, end: 3.4 }, reach: { hit: 0.48, end: 0.95 }, lunge: { hit: 1.15, end: 1.7 }, blink: { hit: 0.75, end: 0.8 }, smash: { hit: 0.8, end: 1.3 } };
 ZB_KINDS.push('verity');
 for (const a of ['wake', 'bump', 'roll', 'grin', 'stand', 'reach', 'lunge', 'blink']) if (!ZB_ACT.includes(a)) ZB_ACT.push(a);
-// his room among the fort's (its floor and ceiling laid with the rest; its name shown as you come in)
-RF_ZONES.vroom = { n: 'the Yellow Room', r: RVC.ROOM.slice(), floor: 'boards', wall: '#c2b25c' };
+// his room in each part ([x0, x1, y0, y1], local, on the ground: you come in at its south end, he waits at its north)
+const RV_ROOMS = { descent: [28, 48, 3, 21], bridge: [-10, 10, -76, -58], fort: [-10, 10, 56, 74] };
+// the nine places the little one can sit: the part, where (local), how high (what he sits on), which way he faces,
+// and where the door puts you back (and how high that floor is)
+const RV_SPOTS = (function () {
+  const out = [], add = (stage, x, y, z, h, fz) => out.push({ stage, at: [x, y], z, h, out: [x + Math.sin(h) * 1.6, y + Math.cos(h) * 1.6], fz: fz == null ? 0 : fz });
+  // the Swallow: on the Long Pier against its west rail between two lamps; in a corner of the Deep Path's wall by a
+  // brazier on its outside loop (east) and on its inside loop (west)
+  add('descent', -RSWP.PW / 2 + 0.55, -45.5, RSW.DECK, Math.PI / 2, RSW.DECK);
+  const wallBy = (bx, by) => { const p = RSG.N.find(q => q.x === bx && q.y === by), f = (p.w - 2) / p.w, sx = p.x + (p.L[0] - p.x) * f, sy = p.y + (p.L[1] - p.y) * f; add('descent', sx, sy, 0, bearingOf(p.x - sx, p.y - sy)); };
+  wallBy(72, 10); wallBy(-46, -8);
+  // the Black Water: the near bank's two far corners, and the far bank's west corner
+  add('bridge', RBC.X0 + 1.4, RBC.Y0 + 1.4, 0, Math.PI / 4);
+  add('bridge', RBC.X1 - 1.4, RBC.Y0 + 1.4, 0, -Math.PI / 4);
+  add('bridge', RBC.X0 + 1.4, RBC.Y1 - 1.4, 0, Math.PI * 3 / 4);
+  // the fort: under the chapel's altar (on its step, facing the nave), on the Officers' Mess table, on the Cookhouse table
+  add('fort', -32, 27.75, 0.2, Math.PI); out[out.length - 1].out = [-32, 25.6];
+  add('fort', 34.1, 37, 0.84, -Math.PI / 2); out[out.length - 1].out = [34.1, 34.6];
+  add('fort', 32.6, 18.2, 0.84, Math.PI); out[out.length - 1].out = [32.6, 16.2];
+  return out;
+})();
+// his room among each part's rooms (its name shown as you come in; in the fort its floor and ceiling laid with the rest)
+const rvZone = r => ({ n: 'the Yellow Room', r: r.slice(), zr: [-1, 6], floor: 'boards', wall: '#c2b25c' });
+RF_ZONES.vroom = rvZone(RV_ROOMS.fort);
+RSW_MAP.zones = Object.assign({ vroom: rvZone(RV_ROOMS.descent) }, RSW_MAP.zones);
+RAID_STAGES.bridge.map.zones.vroom = rvZone(RV_ROOMS.bridge);
 
-const RV = { fight: false, done: false, zn: 0, tok: null, mine: false, grab: 0, fade: 0, giggle: false, doneSeen: false, wait: 0 };
+const RV = { pick: 0, fight: false, done: false, zn: 0, tok: null, mine: false, grab: 0, fade: 0, giggle: false, doneSeen: false, wait: 0 };
 const rvW = (x, y) => [FPSC.CX + x, FPSC.CY + y];
-const rvInRoom = (x, y) => { const R = RVC.ROOM, lx = x - FPSC.CX, ly = y - FPSC.CY; return lx > R[0] && lx < R[1] && ly > R[2] && ly < R[3]; };
-const rvMeIn = () => RF.on && rvInRoom(FPS.me.x, FPS.me.y);
+const rvKey = () => typeof RAID !== 'undefined' && RAID.on ? RAID_ORDER[RAID.stage] : null;
+const rvRoom = () => RV_ROOMS[rvKey()] || null;
+const rvSpot = () => RV_SPOTS[RV.pick] || RV_SPOTS[0];
+// where his room is in this part: its door, where you come in, where he waits
+const rvAt = () => { const R = rvRoom(), cx = (R[0] + R[1]) / 2; return { door: [cx, R[2] + 0.3], in: [cx, R[2] + 1.8], boss: [cx, R[3] - 4] }; };
+const rvInRoom = (x, y, jz) => { const R = rvRoom(); if (!R || (jz || 0) > 6) return false; const lx = x - FPSC.CX, ly = y - FPSC.CY; return lx > R[0] && lx < R[1] && ly > R[2] && ly < R[3]; };
+const rvMeIn = () => rvInRoom(FPS.me.x, FPS.me.y, FPS.me.jz);
+// the little one sits in this part, and can still be found
+const rvSeatHere = () => !RV.done && rvSpot().stage === rvKey() && (rvKey() !== 'fort' || RF.st === 'hunt');
 // a place kept inside his room's walls (pad in from them)
-function rvClampIn(x, y, pad) { const R = RVC.ROOM, p = (pad || 1) + 0.25; return [clamp(x, FPSC.CX + R[0] + p, FPSC.CX + R[1] - p), clamp(y, FPSC.CY + R[2] + p, FPSC.CY + R[3] - p)]; }
+function rvClampIn(x, y, pad) { const R = rvRoom() || RV_ROOMS.fort, p = (pad || 1) + 0.25; return [clamp(x, FPSC.CX + R[0] + p, FPSC.CX + R[1] - p), clamp(y, FPSC.CY + R[2] + p, FPSC.CY + R[3] - p)]; }
 const rvBoss = () => ZM.z.find(z => z.bt === 'verity' && !z.dead) || null;
-function rvReset() { Object.assign(RV, { fight: false, done: false, zn: 0, tok: null, mine: false, grab: 0, fade: 0, giggle: false, doneSeen: false, wait: 0 }); }
+// (each part) his fight made fresh; (a new raid) where the little one sits, picked again, and he's to be found again
+function rvReset() { Object.assign(RV, { fight: false, zn: 0, tok: null, mine: false, grab: 0, fade: 0, giggle: false, doneSeen: RV.done, wait: 0 }); }
+function rvNewRaid() { RV.pick = (Math.random() * RV_SPOTS.length) | 0; RV.done = false; RV.doneSeen = false; }
 
 // ---------- the room, laid out with the fort (src/raidfort.js rfLay) ----------
-function rvLay(H, K, Z) {
-  const { put, light, wall } = K, R = RVC.ROOM, WH = ZMC.CEIL, PAP = { mat: 'plaster', col2: '#c2b25c', hh: WH + 0.2 };
+function rvLay(H, K, Z, key) {
+  key = key || 'fort'; const R = RV_ROOMS[key]; if (!R) return;
+  const { put, light, wall } = K, WH = ZMC.CEIL, PAP = { mat: 'plaster', col2: '#c2b25c', hh: WH + 0.2 }, cx = (R[0] + R[1]) / 2, cy = (R[2] + R[3]) / 2;
+  // (out of the fort, its floor and ceiling, as the fort's own rooms are given theirs)
+  if (key !== 'fort') { put('floor', cx, cy, 0, { w: R[1] - R[0] - 0.1, d: R[3] - R[2] - 0.1, style: 'boards' }); put('ceil', cx, cy, 0, { w: R[1] - R[0] + 0.4, d: R[3] - R[2] + 0.4, z0: WH, col: '#8a8270' }); }
   wall(R[0], R[2], R[1], R[2], PAP); wall(R[0], R[3], R[1], R[3], PAP); wall(R[0], R[2], R[0], R[3], PAP); wall(R[1], R[2], R[1], R[3], PAP);
   // over the room's own floor, the wet carpet; on its walls, the wallpaper; the door you came by
-  put('rvcarpet', 0, (R[2] + R[3]) / 2, 0, { w: R[1] - R[0] - 0.5, d: R[3] - R[2] - 0.5 });
-  put('rvpaper', 0, R[3] - 0.26, 0, { len: R[1] - R[0] - 0.5 }); put('rvpaper', 0, R[2] + 0.26, Math.PI, { len: R[1] - R[0] - 0.5 });
-  put('rvpaper', R[0] + 0.26, (R[2] + R[3]) / 2, Math.PI / 2, { len: R[3] - R[2] - 0.5 }); put('rvpaper', R[1] - 0.26, (R[2] + R[3]) / 2, -Math.PI / 2, { len: R[3] - R[2] - 0.5 });
-  put('rvdoor', RVC.DOOR[0], R[2] + 0.27, Math.PI, {});
+  put('rvcarpet', cx, cy, 0, { w: R[1] - R[0] - 0.5, d: R[3] - R[2] - 0.5 });
+  put('rvpaper', cx, R[3] - 0.26, 0, { len: R[1] - R[0] - 0.5 }); put('rvpaper', cx, R[2] + 0.26, Math.PI, { len: R[1] - R[0] - 0.5 });
+  put('rvpaper', R[0] + 0.26, cy, Math.PI / 2, { len: R[3] - R[2] - 0.5 }); put('rvpaper', R[1] - 0.26, cy, -Math.PI / 2, { len: R[3] - R[2] - 0.5 });
+  put('rvdoor', cx, R[2] + 0.27, Math.PI, {});
   // four pillars to hide behind (his roll stops at them)
-  for (const [x, y] of [[-4.5, 62], [4.5, 62], [-4.5, 68.5], [4.5, 68.5]]) { put('block', x, y, 0, { w: 1.1, d: 1.1, hh: WH, col: '#c4b25e', trim: '#8a7a3e' }); put('rvpaper', x, y - 0.56, 0, { len: 1.1, low: true }); }
+  for (const [x, y] of [[-4.5, -3], [4.5, -3], [-4.5, 3.5], [4.5, 3.5]]) { put('block', cx + x, cy + y, 0, { w: 1.1, d: 1.1, hh: WH, col: '#c4b25e', trim: '#8a7a3e' }); put('rvpaper', cx + x, cy + y - 0.56, 0, { len: 1.1, low: true }); }
   // the strip lights in the ceiling, buzzing
-  for (const x of [-6.5, 0, 6.5]) for (const y of [59.5, 65.2, 71]) put('rvstrip', x, y, 0, { z: WH });
-  for (const [x, y] of [[-6.5, 59.5], [6.5, 59.5], [0, 65.2], [-6.5, 71], [6.5, 71], [0, 71]]) light(x, y, WH - 0.35, '#fff0c0', 11, 'lantern');
-  // and the little one's place under the chapel's altar: two candle stubs and their wax, a saucer
-  put('rvshrine', RVC.SEAT[0], RVC.SEAT[1], 0, { z: RVC.SEAT_Z });
+  for (const x of [-6.5, 0, 6.5]) for (const y of [-5.5, 0.2, 6]) put('rvstrip', cx + x, cy + y, 0, { z: WH });
+  for (const [x, y] of [[-6.5, -5.5], [6.5, -5.5], [0, 0.2], [-6.5, 6], [6.5, 6], [0, 6]]) light(cx + x, cy + y, WH - 0.35, '#fff0c0', 11, 'lantern');
+  // and the little one's place, if he sits in this part: two candle stubs and their wax, a saucer
+  for (const S of RV_SPOTS) if (S.stage === key) put('rvshrine', S.at[0], S.at[1], S.h + Math.PI, { z: S.z });
 }
 const RVP = { paper: '#c2b25c', stripe: '#b2a24c', damp: '#9c8c48', base: '#7e6e38', carpet: '#8e7e42', wet: '#6e6232' };
 Object.assign(FPI_K, {
@@ -33817,10 +33857,9 @@ Object.assign(FPI_K, {
 
 // ---------- the way in, and out ----------
 function rvConsider(consider) {
-  if (!RF.on) return;
-  const m = FPS.me;
-  if (RF.st === 'hunt' && !RV.done && !rvMeIn()) { const [x, y] = rvW(...RVC.SEAT); consider({ k: 'rvseat' }, x, y - 0.25, RVC.SEAT_Z, 1.7, true); }
-  if (rvMeIn()) { const [x, y] = rvW(...RVC.DOOR); consider({ k: 'rvdoor' }, x, y + 0.5, 0, 2.2, false); }
+  if (!rvRoom()) return;
+  if (rvSeatHere() && !rvMeIn()) { const S = rvSpot(), [x, y] = rvW(S.at[0] + Math.sin(S.h) * 0.25, S.at[1] + Math.cos(S.h) * 0.25); consider({ k: 'rvseat' }, x, y, S.fz != null ? Math.max(S.fz, S.z - 0.6) : S.z, 1.7, true); }
+  if (rvMeIn()) { const [x, y] = rvW(...rvAt().door); consider({ k: 'rvdoor' }, x, y + 0.5, 0, 2.2, false); }
 }
 function rvPrompt(o) {
   if (o.k === 'rvseat') return { text: 'Something small is smiling at you. Let it help', free: true };
@@ -33831,24 +33870,35 @@ function rvUse(o) {
   if (!o || (o.k !== 'rvseat' && o.k !== 'rvdoor')) return false;
   if (RV.wait > 0) return true;
   RV.wait = 1;
-  if (o.k === 'rvseat') { rvGo(RVC.IN, 0); fpsFeed('The chapel is gone. A low yellow room, buzzing lights, and something at the far end, smiling.'); rvSound('enter', 0); raidAsk('vin'); }
-  else if (!(RV.fight && !RV.done)) { rvGo(RVC.OUT, RVC.OUT_H); fpsFeed('Back in the chapel. Under the altar, nothing.'); rvSound('out', 0); }
+  if (o.k === 'rvseat') { rvGo(rvAt().in, 0, 0); fpsFeed('Everything round you is gone. A low yellow room, buzzing lights, and something at the far end, smiling.'); rvSound('enter', 0); raidAsk('vin'); }
+  else if (!(RV.fight && !RV.done)) { const S = rvSpot(); if (S.stage === rvKey()) rvGo(S.out, S.h + Math.PI, S.fz); else rvGo(ZMD.START, 0, ZMD.TOP); fpsFeed('Back where he sat. There\u2019s nothing there now.'); rvSound('out', 0); }
   else rvSound('locked', 0);
   return true;
 }
 // you, somewhere else, at once (a moment's yellow glare over it)
-function rvGo(at, h) {
+function rvGo(at, h, jz) {
   const m = FPS.me, [x, y] = rvW(...at);
-  m.x = x; m.y = y; m.jz = m.fl = 0; m.vz = 0; m.h = h; m.p = 0; m.protect = Math.max(m.protect || 0, 1.2); zmSettle(m);
+  m.x = x; m.y = y; m.jz = m.fl = jz || 0; m.vz = 0; m.h = h; m.p = 0; m.protect = Math.max(m.protect || 0, 1.2); zmSettle(m);
   RV.fade = 1.2;
 }
 // (hosting or alone) someone came in: he's there waiting, once
 function rvReq(sid, k) {
-  if (k !== 'vin' || RV.fight || RV.done || !RF.on) return;
-  const z = rfBoss('verity', RVC.BOSS[0], RVC.BOSS[1], Math.PI, 0);
+  if (k !== 'vin' || RV.fight || RV.done || !rvRoom()) return;
+  const z = rvSpawn(...rvAt().boss);
   RV.fight = true; RV.zn = z.zn;
   zbStart(z, 'wake');
   zbArrive(z);
+}
+// (hosting or alone) him, already inside his room at (x, y) (local), facing the door: as strong as at the fort, whichever
+// part he's in (src/raidfort.js rfBoss, for the rest)
+function rvSpawn(x, y) {
+  const T = ZBT.verity, hp = zbHpOf('verity', Math.max(ZM.round, RFC.ROUND), rfN()), zn = ++ZM.zc, wx = FPSC.CX + x, wy = FPSC.CY + y;
+  const z = { drowned: true, zm: true, boss: true, bt: 'verity', zn, id: 'z' + zn.toString(36), n: T.n, kind: 'boss', x: wx, y: wy, jz: 0, fl: 0, hp, max: hp, sp: T.sp(),
+    st: 'in', win: null, t: 0, ph: 0, hitT: 0, atk: 0, swing: -1, stuck: 0, lost: 0, h: Math.PI, seed: (Math.random() * 1e6) | 0, rise: 1, hist: [],
+    act: null, at: 0, aseq: 0, slamCd: 3, swCd: 0.5, ix: wx, iy: wy, ax: 0, ay: 0, lx: wx, ly: wy };
+  T.init(z); zbMake(z, 'verity');
+  ZM.z.push(z); FPS.drowned = ZM.z; ZB.seen.add(zn);
+  return z;
 }
 // (hosting or alone) his fall: his token where he fell
 function rvKill(d) {
@@ -33859,12 +33909,12 @@ function rvKill(d) {
 
 // ---------- each frame ----------
 function rvMe(dt) {
-  if (!RF.on) return;
+  if (!rvRoom()) return;
   const m = FPS.me;
   if (RV.wait > 0) RV.wait -= dt; if (RV.fade > 0) RV.fade -= dt; if (RV.grab > 0) RV.grab -= dt;
   try { loadVerityVoice(); } catch (e) {}
   // the little one giggles the first time you come near him
-  if (!RV.giggle && RF.st === 'hunt' && !RV.done) { const [x, y] = rvW(...RVC.SEAT); if (Math.hypot(m.x - x, m.y - y) < 3.2) { RV.giggle = true; rvSound('giggle', 0); } }
+  if (!RV.giggle && rvSeatHere()) { const S = rvSpot(), [x, y] = rvW(...S.at); if (Math.hypot(m.x - x, m.y - y) < 3.2 && Math.abs((m.jz || 0) - S.z) < 2.5) { RV.giggle = true; rvSound('giggle', 0); } }
   // down: everyone who bled out is back
   if (RV.done && !RV.doneSeen) { RV.doneSeen = true; if (typeof raidRespawn === 'function') raidRespawn(); }
   // his token: walk over it and it's yours
@@ -33876,13 +33926,13 @@ function rvMe(dt) {
     rvSound('token', 0);
   }
 }
-// on the wire: [fighting, down, his number, token?, its place (tenths, from the island's middle)]
-function rvPack(o) { const r10 = v => Math.round(v * 10); o.rv = [RV.fight ? 1 : 0, RV.done ? 1 : 0, RV.zn | 0, RV.tok ? 1 : 0].concat(RV.tok ? [r10(RV.tok[0] - FPSC.CX), r10(RV.tok[1] - FPSC.CY), r10(RV.tok[2])] : []); }
+// on the wire: [fighting, down, his number, where the little one sits, token?, its place (tenths, from the island's middle)]
+function rvPack(o) { const r10 = v => Math.round(v * 10); o.rv = [RV.fight ? 1 : 0, RV.done ? 1 : 0, RV.zn | 0, RV.pick | 0, RV.tok ? 1 : 0].concat(RV.tok ? [r10(RV.tok[0] - FPSC.CX), r10(RV.tok[1] - FPSC.CY), r10(RV.tok[2])] : []); }
 function rvApply(o) {
   if (!o || !Array.isArray(o.rv)) return;
   const f = o.rv.map(v => +v || 0);
-  RV.fight = !!f[0]; RV.done = !!f[1]; RV.zn = f[2] | 0;
-  RV.tok = f[3] ? [FPSC.CX + f[4] / 10, FPSC.CY + f[5] / 10, f[6] / 10] : null;
+  RV.fight = !!f[0]; RV.done = !!f[1]; RV.zn = f[2] | 0; RV.pick = clamp(f[3] | 0, 0, RV_SPOTS.length - 1);
+  RV.tok = f[4] ? [FPSC.CX + f[5] / 10, FPSC.CY + f[6] / 10, f[7] / 10] : null;
 }
 // his lights: in his room, while he's stood up they stutter, and when he blinks they go out
 function rvLampsK() {
@@ -33894,10 +33944,12 @@ function rvLampsK() {
   return 1;
 }
 if (typeof rfLampsK === 'function') { const rfLampsK0 = rfLampsK; rfLampsK = function () { return rfLampsK0() * rvLampsK(); }; }
+// (the Swallow) his room's lit: the dark doesn't drain you in there, nor Maren's Weight settle on you
+if (typeof rswInLight === 'function') { const rswInLight0 = rswInLight; rswInLight = function (x, y, jz) { return rvInRoom(x, y, jz) || rswInLight0(x, y, jz); }; }
 // (src/raidmusic.js) what plays in his room: the dark of the caves before, the Knock's suspense while he's an orb,
 // the wailing choir once he's stood up
 function rvMusic() {
-  if (!rvMeIn() || RF.st !== 'hunt') return undefined;
+  if (!rvMeIn()) return undefined;
   const z = rvBoss();
   return z ? (z.p2 ? 'raidmaren' : 'raidknock') : 'raidcave';
 }
@@ -34274,13 +34326,12 @@ function rvPose(z, M, dt) {
 const RV3 = { ok: false };
 function rv3dBuild(grp) {
   RV3.ok = false;
-  if (!RF.on) return;
+  if (!rvRoom()) return;
   const add = (geo, col, op) => { const o = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: op, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, fog: false })); o.visible = false; grp.add(o); return o; };
   const soft = (c0, c1) => new THREE.SpriteMaterial({ map: z3Soft(c0, c1), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false });
   // the little one, sat on the altar step
   const L = RV3.little = rvBuildLittle(); L.o.scale.setScalar(RVC.LITTLE); grp.add(L.o);
-  const [sx, sy] = rvW(...RVC.SEAT); L.o.position.copy(z3v(sx, sy, FPSC.GROUND + RVC.SEAT_Z)); L.o.rotation.set(0, -RVC.SEAT_H, 0);
-  RV3.halo = new THREE.Sprite(soft('rgba(255,226,90,0.55)', 'rgba(255,210,60,0)')); RV3.halo.scale.setScalar(0.9); RV3.halo.position.copy(z3v(sx, sy, FPSC.GROUND + RVC.SEAT_Z + 0.2)); grp.add(RV3.halo);
+  RV3.halo = new THREE.Sprite(soft('rgba(255,226,90,0.55)', 'rgba(255,210,60,0)')); RV3.halo.scale.setScalar(0.9); grp.add(RV3.halo);
   // his roll's line on the carpet, his rings, the ring where he'll come down
   const strip = new THREE.PlaneGeometry(1, 1); strip.translate(0, 0.5, 0); strip.rotateX(-Math.PI / 2);
   RV3.line = add(strip, 0xffe060, 0.35);
@@ -34301,17 +34352,18 @@ function rv3dBuild(grp) {
   RV3.ok = true;
 }
 function rv3d(dt) {
-  if (!RF.on || !RV3.ok) return;
+  if (!rvRoom() || !RV3.ok) return;
   const G0 = FPSC.GROUND, t = g.t, m = FPS.me;
-  // the little one: there while the hunt's on and he's not been put down, breathing his glow, his eyes on you
-  const L = RV3.little, lit = RF.st === 'hunt' && !RV.done;
-  L.o.visible = !RV.done; RV3.halo.visible = lit;
+  // the little one: there (in his own part) while he can be found, breathing his glow, his eyes on you
+  const L = RV3.little, S = rvSpot(), lit = rvSeatHere();
+  L.o.visible = RV3.halo.visible = lit;
   if (lit) {
-    const [sx, sy] = rvW(...RVC.SEAT), d = Math.hypot(m.x - sx, m.y - sy), near = clamp(1 - d / 6, 0, 1), b = 0.5 + 0.5 * Math.sin(t * 1.7);
+    const [sx, sy] = rvW(...S.at), d = Math.hypot(m.x - sx, m.y - sy), near = clamp(1 - d / 6, 0, 1), b = 0.5 + 0.5 * Math.sin(t * 1.7);
+    L.o.position.copy(z3v(sx, sy, G0 + S.z)); L.o.rotation.set(0, -S.h, 0); RV3.halo.position.copy(z3v(sx, sy, G0 + S.z + 0.2));
     RV3.halo.material.opacity = 0.35 + 0.35 * b + 0.3 * near;
     L.body.position.y = Math.sin(t * 2.1) * 0.03;
     // (his eyes, and his whole face a little, turned to you)
-    const rel = angDiff(bearingOf(m.x - sx, m.y - sy), RVC.SEAT_H);
+    const rel = angDiff(bearingOf(m.x - sx, m.y - sy), S.h);
     L.face.rotation.y = clamp(-rel, -0.6, 0.6) * 0.5; L.body.rotation.z = Math.sin(t * 0.9) * 0.06;
     for (const e of L.eyes) e.position.x = Math.sign(e.position.x) * 0.2 + clamp(-rel * 0.04, -0.05, 0.05);
   }
@@ -34346,7 +34398,7 @@ function rv3d(dt) {
 
 // ---------- on top: the glare as you go, his token taken ----------
 function rvHud(phone, mono, fell) {
-  if (!RF.on) return;
+  if (!rvRoom()) return;
   if (RV.fade > 0) { ctx.fillStyle = `rgba(255,236,140,${clamp(RV.fade / 1.2, 0, 1) * 0.9})`; ctx.fillRect(0, 0, W, H); }
   const K = rvBoss();
   if (K && K.act === 'blink' && rvMeIn()) { ctx.fillStyle = `rgba(0,0,0,${0.75 * Math.sin(clamp((K.at || 0) / RV_T.blink.end, 0, 1) * Math.PI)})`; ctx.fillRect(0, 0, W, H); }
@@ -34370,14 +34422,16 @@ function rvHud(phone, mono, fell) {
 }
 
 // ---------- into the fort's stage (src/raidfort.js): its hooks, with his ----------
-{
-  const S = RAID_STAGES.fort, wrap = (k, f) => { const o = S[k]; S[k] = (...a) => { const r = o ? o(...a) : undefined; const r2 = f(...a); return r === undefined ? r2 : r; }; };
-  wrap('enter', () => rvReset());
+for (const key of ['descent', 'bridge', 'fort']) {
+  const S = RAID_STAGES[key]; if (!S) continue;
+  const wrap = (k, f) => { const o = S[k]; S[k] = function (...a) { const r = o ? o.apply(this, a) : undefined; const r2 = f(...a); return r === undefined ? r2 : r; }; };
+  if (key !== 'fort') wrap('set', (H, K, Z) => rvLay(H, K, Z, key));   // (the fort lays his room out in rfLay)
+  wrap('enter', () => { if (key === 'descent' && RAID.stage === 0 && ZM.net !== 'client') rvNewRaid(); rvReset(); });
   wrap('me', dt => rvMe(dt));
-  wrap('pack', o => { if (RF.on) rvPack(o); });
-  wrap('apply', o => { if (RF.on) rvApply(o); });
+  wrap('pack', o => rvPack(o));
+  wrap('apply', o => rvApply(o));
   wrap('q', (sid, k) => rvReq(sid, k));
-  wrap('kill', d => { if (RF.on && d && d.boss) rvKill(d); });
+  wrap('kill', d => { if (d && d.boss) rvKill(d); });
   wrap('hud', (phone, mono, fell) => rvHud(phone, mono, fell));
   wrap('b3', grp => rv3dBuild(grp));
   wrap('f3', dt => rv3d(dt));
@@ -34423,12 +34477,12 @@ function rmWant() {
   // Maren down: the sunset, played once through (on to the end card), then quiet
   if (RAID.on && (RAID.won || (RAID_ORDER[RAID.stage] === 'fort' && typeof RF !== 'undefined' && RF.st === 'won'))) { if (RM.cur === 'raidwin' && RM.done) RM.wonDone = true; return RM.wonDone ? null : 'raidwin'; }
   if (!RAID.on || ZM.over) return null;
+  { const v = typeof rvMusic === 'function' ? rvMusic() : undefined; if (v !== undefined) return v; }   // [verity] (src/raidverity.js)
   const k = RAID_ORDER[RAID.stage];
   if (k === 'descent') { const S = RAID.st || {}; return S.landed || RM.fell ? 'raidcave' : S.falling || RM.cur === 'raidfall' ? 'raidfall' : 'raidpier'; }
   RM.fell = false;
   if (k === 'bridge') return 'raidbridge';
   if (k === 'fort' && typeof RF !== 'undefined') {
-    { const v = typeof rvMusic === 'function' ? rvMusic() : undefined; if (v !== undefined) return v; }   // [verity] (src/raidverity.js)
     if (RF.st === 'maren') { const z = ZM.z.find(z => z.bt === 'maren' && !z.dead); return (RF.p2 != null ? RF.p2 : z && z.hp / z.max <= 1 / 3) ? 'raidmaren2' : 'raidmaren'; }
     if (RF.st === 'anger' && RF.angered) return 'raidmaren';
     if (RF.st === 'knock') { const z = ZM.z.find(z => z.bt === 'knock' && !z.dead); return z && z.act === 'song' ? 'raidsong' : 'raidknock'; }

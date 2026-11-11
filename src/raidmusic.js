@@ -34,12 +34,12 @@ function rmWant() {
   // Maren down: the sunset, played once through (on to the end card), then quiet
   if (RAID.on && (RAID.won || (RAID_ORDER[RAID.stage] === 'fort' && typeof RF !== 'undefined' && RF.st === 'won'))) { if (RM.cur === 'raidwin' && RM.done) RM.wonDone = true; return RM.wonDone ? null : 'raidwin'; }
   if (!RAID.on || ZM.over) return null;
+  { const v = typeof rvMusic === 'function' ? rvMusic() : undefined; if (v !== undefined) return v; }   // [verity] (src/raidverity.js)
   const k = RAID_ORDER[RAID.stage];
   if (k === 'descent') { const S = RAID.st || {}; return S.landed || RM.fell ? 'raidcave' : S.falling || RM.cur === 'raidfall' ? 'raidfall' : 'raidpier'; }
   RM.fell = false;
   if (k === 'bridge') return 'raidbridge';
   if (k === 'fort' && typeof RF !== 'undefined') {
-    { const v = typeof rvMusic === 'function' ? rvMusic() : undefined; if (v !== undefined) return v; }   // [verity] (src/raidverity.js)
     if (RF.st === 'maren') { const z = ZM.z.find(z => z.bt === 'maren' && !z.dead); return (RF.p2 != null ? RF.p2 : z && z.hp / z.max <= 1 / 3) ? 'raidmaren2' : 'raidmaren'; }
     if (RF.st === 'anger' && RF.angered) return 'raidmaren';
     if (RF.st === 'knock') { const z = ZM.z.find(z => z.bt === 'knock' && !z.dead); return z && z.act === 'song' ? 'raidsong' : 'raidknock'; }
