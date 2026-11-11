@@ -22023,9 +22023,13 @@ function zm3dBuild() {
 const ZFL = { X: -70, Y: -330, H: 34, R: 4.2, SPIN: 0.39 };
 function zm3dFarLight(grp) {
   Z3.far = null;
-  const Z = FPS.g.isle.zm; if (!Z || Z.tower || !Z.bay) return;
+  // (or wherever a map asks for it: Z.far, as Maren's End's fort does, on a shore far across the sea)
+  const Z = FPS.g.isle.zm; if (!Z || (!Z.far && (Z.tower || !Z.bay))) return;
+  const P = Z.far || ZFL;
   const g = new THREE.Group(), M = (c, k) => new THREE.MeshBasicMaterial({ color: new THREE.Color(c).multiplyScalar(k == null ? 0.3 : k), fog: false });
-  g.position.copy(z3v(FPSC.CX + ZFL.X, FPSC.CY + ZFL.Y, 0));
+  g.position.copy(z3v(FPSC.CX + P.X, FPSC.CY + P.Y, 0));
+  // (on a shore: a long low headland under it, running off along the coast)
+  if (P.shore) for (const [dx, dz, sx, sy, sz] of [[0, 0, 70, 7, 26], [-90, 12, 80, 5, 22], [95, 8, 70, 4.5, 20], [180, 20, 60, 3, 16]]) { const h = new THREE.Mesh(new THREE.SphereGeometry(1, 16, 8), M('#2c2e30', 0.3)); h.scale.set(sx, sy, sz); h.position.set(dx, -1.5, dz); g.add(h); }
   const H = ZFL.H, R = ZFL.R, add = (geo, mat, y) => { const m = new THREE.Mesh(geo, mat); m.position.y = y; g.add(m); return m; };
   // the skerry, the keeper's cottage at its foot, the tower (wider at the foot), its bands
   add(new THREE.CylinderGeometry(R * 3.2, R * 4.6, 3.2, 10), M('#3a3c40', 0.35), -0.6);
@@ -22049,13 +22053,13 @@ function zm3dFarLight(grp) {
   const beam = new THREE.Group(); beam.position.y = T + 2.3; g.add(beam);
   for (const s of [1, -1]) { const b = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ map: fade, transparent: true, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending, fog: false })); b.scale.set(18, 4, 320); b.rotation.y = s > 0 ? 0 : Math.PI; b.frustumCulled = false; b.renderOrder = 9; beam.add(b); }
   grp.add(g);
-  Z3.far = { g, beam, flare };
+  Z3.far = { g, beam, flare, X: P.X, Y: P.Y };
 }
 // (each frame) turn the beam, and flare as it passes over you
 function zm3dFarTick(t) {
   const F = Z3.far; if (!F) return;
   const a = (reduceMotion ? 0.6 : t * ZFL.SPIN) % (Math.PI * 2); F.beam.rotation.y = a;
-  const m = FPS.me, toMe = Math.atan2(m.x - (FPSC.CX + ZFL.X), m.y - (FPSC.CY + ZFL.Y));
+  const m = FPS.me, toMe = Math.atan2(m.x - (FPSC.CX + F.X), m.y - (FPSC.CY + F.Y));
   // (turned by a, the beam's two ends point along the bearings -a and PI - a)
   const off = Math.min(Math.abs(angDiff(-a, toMe)), Math.abs(angDiff(Math.PI - a, toMe)));
   F.flare.material.opacity = clamp(1 - off / 0.22, 0, 1) * 0.9;
@@ -31556,6 +31560,8 @@ FPS_ISLES.fort = Object.assign({}, FPS_ISLES.light, { name: 'Maren\u2019s End' }
 FPI_GEN.fort = { built: true, set(H) { const Z = H.I.zm = { doors: [], windows: [], buys: [], perks: [], spawns: [], lights: [] }; rfLay(H, zmKit(H, Z), Z); }, decor() {} };
 function rfLay(H, K, Z) {
   {
+    // far off over the sea, on the shore across the water, the Lighthouse, lit and turning (seen from the Battery)
+    Z.far = { X: 120, Y: -330, shore: true };
     const { I } = H, OX = FPSC.CX, OY = FPSC.CY, RT = RFC.RT, WH = RFC.WH;
     const { W, put, light, lamp, wall, room, buy, perk, spot } = K;
     const ZZ = RF_ZONES, ST = { mat: 'stone', hh: WH, cap: true }, PL = k => ({ mat: 'plaster', col2: ZZ[k].wall, hh: WH });

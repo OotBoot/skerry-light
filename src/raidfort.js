@@ -175,6 +175,8 @@ FPS_ISLES.fort = Object.assign({}, FPS_ISLES.light, { name: 'Maren\u2019s End' }
 FPI_GEN.fort = { built: true, set(H) { const Z = H.I.zm = { doors: [], windows: [], buys: [], perks: [], spawns: [], lights: [] }; rfLay(H, zmKit(H, Z), Z); }, decor() {} };
 function rfLay(H, K, Z) {
   {
+    // far off over the sea, on the shore across the water, the Lighthouse, lit and turning (seen from the Battery)
+    Z.far = { X: 120, Y: -330, shore: true };
     const { I } = H, OX = FPSC.CX, OY = FPSC.CY, RT = RFC.RT, WH = RFC.WH;
     const { W, put, light, lamp, wall, room, buy, perk, spot } = K;
     const ZZ = RF_ZONES, ST = { mat: 'stone', hh: WH, cap: true }, PL = k => ({ mat: 'plaster', col2: ZZ[k].wall, hh: WH });
