@@ -1026,6 +1026,17 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 #stage.rcmode #rclPadU { top: -14px; left: -108px; }
 .rcpadbtn svg { fill: none; stroke: currentColor; stroke-width: 1.8; }
 
+/* Fog Run: the salvage (src/frcards.js), on the callings' cards */
+.frcpick h1 { color: #ffd8a0; }
+.frcc { min-height: 12rem; }
+.frcc .frcr { font: 600 10px "Courier Prime", monospace; letter-spacing: 0.1em; text-transform: uppercase; color: var(--rc); opacity: 0.9; }
+.frcc.r2 { box-shadow: 0 0 18px rgba(255,192,112,0.25); }
+.frcc .frck { position: absolute; top: 10px; right: 12px; font: 600 11px "Courier Prime", monospace; opacity: 0.6; }
+.frcc .tg { font-size: 14px; line-height: 1.35; }
+.frcc:disabled { opacity: 0.4; cursor: default; }
+.frcc.kept { opacity: 1; border-color: var(--rc); box-shadow: 0 0 0 2px rgba(var(--rcr), 0.6), 0 0 24px rgba(var(--rcr), 0.35); }
+.frct { margin-top: 12px; text-align: center; }
+
 /* Version number at the top of the main menu */
 .verline { margin: 0 auto; width: max-content; padding: 4px 12px; background: rgba(6,10,20,0.85); position: relative; z-index: 1; font-variant-numeric: lining-nums; text-align: center; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--lamp); opacity: 0.75; }
 

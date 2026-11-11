@@ -175,6 +175,7 @@ function raidStaminaHud(x, by, bw, bh, phone, mono) {
   ctx.fillText(tired ? 'OUT OF BREATH' : 'STAMINA', x, by - 3);
   ctx.textBaseline = 'alphabetic';
   if (typeof frLifeHud === 'function') frLifeHud(x + bw + 10, by, bh, phone, mono);   // [fogrun] the extra life, a lamp
+  if (typeof frcHud === 'function' && FR.on) frcHud(x + bw + 10 + (ZM.net ? bh + 26 : 0), by, bh, phone, mono);   // [fogrun cards] my relics
 }
 // how fast you can go, as a share of your own pace (zmSpeedK): a stage's own say, Maren's Weight in the Swallow
 function raidSpeedK() { if (!RAID.on) return 1; const S = raidStage(); return S && S.speedK ? S.speedK() : 1; }
@@ -193,7 +194,7 @@ function raidMe(dt) {
 // who the drowned can come after
 function raidPlayers(P) { const r = raidCall('players', P); return r || P; }
 // hosting: a joined player's ask
-function raidRequest(sid, a) { if (Array.isArray(a)) raidCall('q', sid, String(a[0]), a[1]); }
+function raidRequest(sid, a) { if (!Array.isArray(a)) return; if (typeof frcQ === 'function' && FR.on && /^frc/.test(String(a[0]))) { frcQ(sid, String(a[0]), a[1]); return; } raidCall('q', sid, String(a[0]), a[1]); }   // [fogrun cards] (the salvage's picks: src/frcards.js)
 // hosting: one sent back
 function raidKill(d, how, by) { if (RAID.on) raidCall('kill', d, how, by); }
 function raidHurtK(d, dmg, code, by) { if (!RAID.on) return dmg; const r = raidCall('hurt', d, dmg, code, by); return r == null ? dmg : r; }

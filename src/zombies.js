@@ -2659,6 +2659,7 @@ function zmHurt(d, dmg, head, code, by, how) {
   d.hitT = 0.15;
   if (typeof zmpDmg === 'function') dmg = zmpDmg(dmg, code, by, d);   // [pap] reforged weapons hit harder (the shooter's side)
   if (typeof raidHurtK === 'function') dmg = raidHurtK(d, dmg, code, by);   // [raid] the stage's say (the shooter's side)
+  if (typeof frcHurt === 'function') dmg = frcHurt(d, dmg, code, by);   // [fogrun cards] a relic's say (the shooter's side)
   if (!(dmg > 0)) return;   // [raid3] (nothing at all: Maren, while her soul's out of her)
   if (ZM.net === 'client') { zmnHit(d, dmg, head, code, how); return; }
   const k = (ZM_DMG[code] == null ? 1 : ZM_DMG[code]) * (d.mark > 0 ? 1.5 : 1);   // [pap] (lit by the Leading Light: hurt worse)
@@ -2679,6 +2680,7 @@ function zmKill(d, head, code, how, by) {
   if (typeof zeKill === 'function') zeKill(d, how, by);   // [egg hook] src/zmegg.js
   if (typeof zhKill === 'function') zhKill(d, how, by);   // [egg2 hook] src/zmegg2.js
   if (typeof raidKill === 'function') raidKill(d, how, by);   // [raid]
+  if (typeof frcKill === 'function') frcKill(d, head, code, how, by);   // [fogrun cards] the relics a kill sets off
 }
 // crates (as for Wreckers' Night, every third kill here)
 function zmEarnKill() {
