@@ -20,7 +20,8 @@ let loggedError = false;
 function frame(now) {
   const dt = Math.min(0.05, (now - last) / 1000); last = now;
   try {
-    // Wreckers' Night runs its own loop
+    // Wreckers' Night runs its own loop (and the menu cursor never stays over a game)
+    if (state === 'fps' || state === 'war') hideCursor();
     if (state === 'fps') { fpsFrame(dt); requestAnimationFrame(frame); return; }
     // and so does The Drowned Reach
     if (state === 'war') { warFrame(dt); requestAnimationFrame(frame); return; }

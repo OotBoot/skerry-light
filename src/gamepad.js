@@ -107,7 +107,10 @@ function pollPad(dt) {
     PAD.steer = PAD.sail = 0;
     // the analog sticks drive an on-screen cursor in menus: left stick moves it, right stick scrolls
     const rx = dz(p.axes[2] || 0), ry = dz(p.axes[3] || 0);
-    const usedCursor = moveCursor(ax, ay, rx, ry, dt);
+    // (no menu up and nobody to watch: it's a game screen, so the cursor goes away)
+    const menuUp = activeOverlay() !== null || (typeof NET !== 'undefined' && NET.watch);
+    if (!menuUp) hideCursor();
+    const usedCursor = menuUp && moveCursor(ax, ay, rx, ry, dt);
     if (usedCursor && down(0)) { cursorClick(); PAD.prev = now; return; }
     // watching a crewmate: RB for the next ship, A rings your one bell for them
     if (typeof NET !== 'undefined' && NET.watch) {
