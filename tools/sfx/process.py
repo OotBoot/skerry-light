@@ -27,6 +27,8 @@ LEN = {
     'sea': 11.0, 'wind': 11.0, 'rain': 11.0, 'stormbolt': 6.5, 'stormwind': 30.0,
     # Verity's Wardrobe (src/verityfx.js): the toy squeak on each shot, the Helper's boing, the strip lights, a balloon
     'vysqueak': 0.45, 'vyboing': 1.3, 'vybuzz': 3.5, 'vypop': 0.5,
+    # Fog Run (src/fr*.js): the fog horn of the Bell Buoys puzzle's tune, one note
+    'frhorn': 4.0,
     # the bosses' themes (src/zmtheme.js): as long as they came, looped
     'bossdiver': 120.0, 'bossmoon': 120.0, 'bosscrab': 120.0,
 }
@@ -36,7 +38,7 @@ LOOPS = {'sea', 'wind', 'rain', 'stormwind', 'bossdiver', 'bossmoon', 'bosscrab'
 # kept synthesised by choice (the old bell stays the bell)
 SKIP = {'bell', 'bellfar'}
 # (keep the start: for these the swell is the point, not an attack)
-NOTRIM = LOOPS | {'roundstart', 'roundend', 'gameover', 'foghorn', 'thunder', 'stormbolt', 'forge', 'mooncusser', 'diver', 'creak'}
+NOTRIM = LOOPS | {'roundstart', 'roundend', 'gameover', 'foghorn', 'frhorn', 'thunder', 'stormbolt', 'forge', 'mooncusser', 'diver', 'creak'}
 
 
 # sounds that must stay low (the boards: a deep thud like a knock on a door, nothing high): filtered as they're read
