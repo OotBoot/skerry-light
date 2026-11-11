@@ -23,7 +23,8 @@ OUT = os.path.join(ROOT, 'assets', 'sfx')
 BAR = {'bossmoon': 3}   # beats to the bar (a waltz); the rest are in four
 TARGET = 40.0           # the loop, about this long (s)
 TARGETS = {'raidsong': 16.0}
-ONCE = {'raidfall'}     # played once, not looped
+ONCE = {'raidfall'}
+WHOLE = {'raidwin'}     # played once, kept whole (only faded in and out)     # played once, not looped
 TAIL = 2.5              # (its tail after the climax, s)
 RAMP = 14.0             # (its swell, dB)
 PITCH = {'raidfall': 2 ** (-3 / 12)}   # taken down (and slowed) this much: three semitones
@@ -105,6 +106,15 @@ def once(x):
     return body, dict(score=float(rms[half:].max() / (rms[:half].mean() + 1e-9)), length=len(body) / SR, climax=(pk - i) / SR)
 
 
+def whole(x):
+    e = np.abs(x) > 1e-3
+    i, j = int(np.argmax(e)), len(x) - int(np.argmax(e[::-1]))
+    body = x[i:j].copy()
+    a, b = int(0.3 * SR), int(4.0 * SR)
+    body[:a] *= np.linspace(0, 1, a); body[-b:] *= np.linspace(1, 0, b) ** 2
+    return body, dict(score=0.0, length=len(body) / SR)
+
+
 def mp3(body, out, rate):
     body = body - body.mean()
     body = body / (np.max(np.abs(body)) or 1) * 10 ** (-3 / 20)
@@ -122,7 +132,7 @@ def main(src, every=None):
         res = []
         for f in files:
             x = read(f, PITCH.get(name, 1.0))
-            body, info = once(x) if name in ONCE else best_loop(name, x)
+            body, info = whole(x) if name in WHOLE else once(x) if name in ONCE else best_loop(name, x)
             print(f'{os.path.basename(f)}: ' + ', '.join(f'{k} {v:.2f}' for k, v in info.items()))
             res.append((info['score'], body, f))
         rate = '96k' if name.startswith('raid') else '112k'
