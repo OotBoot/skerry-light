@@ -1677,7 +1677,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 // ---- src/config.js ----
 'use strict';
 // The game's version, shown at the top of the main menu. Bump it by one with every change pushed to main.
-var VERSION = 97;
+var VERSION = 98;
 // Skerry Light: tuning, asset paths and lore.
 // World units are metres. The lighthouse stands at the origin on the shoreline (y = 0);
 // north (+y) is open sea. Bearings: 0 = north, positive = east.
@@ -14997,18 +14997,26 @@ addEventListener('keyup', e => {
   FPS.keys[e.code] = false;
   if (e.code === 'Tab') FPS.board = false;
 }, true);
-addEventListener('blur', () => { FPS.keys = {}; FPS.mouseDown = false; });
+addEventListener('blur', () => { FPS.keys = {}; FPS.mouseDown = false; FPS.mbWas = 0; });
 // the mouse: click to lock it to the view, then it aims; hold the button to fire
+// (the buttons are read from e.buttons, not e.button: a second button pressed or let go while another is held down
+// comes as a pointermove, not a pointerdown or pointerup, so aiming and firing at once would otherwise be lost)
+function fpsMouseButtons(e) {
+  const now = e.buttons | 0, was = FPS.mbWas | 0; FPS.mbWas = now;
+  const down = bit => (now & bit) && !(was & bit), up = bit => !(now & bit) && (was & bit);
+  if (down(1)) FPS.mouseDown = true; if (up(1)) FPS.mouseDown = false;
+  if (down(2)) fpsScope(aimToggle() ? !FPS.scoped : true); if (up(2) && !aimToggle()) fpsScope(false);
+  if (down(4) && FPS.zm) zmKnife();
+}
 addEventListener('pointerdown', e => {
   if (!FPS.on || e.target !== cv || e.pointerType === 'touch') return;
   e.stopImmediatePropagation(); e.preventDefault();
-  if (FPS.menu) return;
-  if (document.pointerLockElement !== cv) { try { cv.requestPointerLock(); } catch (err) {} return; }
-  if (e.button === 0) FPS.mouseDown = true;
-  if (e.button === 2) fpsScope(aimToggle() ? !FPS.scoped : true);
-  if (e.button === 1 && FPS.zm) zmKnife();
+  if (FPS.menu) { FPS.mbWas = e.buttons | 0; return; }
+  if (document.pointerLockElement !== cv) { FPS.mbWas = e.buttons | 0; try { cv.requestPointerLock(); } catch (err) {} return; }
+  fpsMouseButtons(e);
 }, true);
-addEventListener('pointerup', e => { if (FPS.on && e.pointerType !== 'touch') { if (e.button === 2) { if (!aimToggle()) fpsScope(false); } else FPS.mouseDown = false; } }, true);
+addEventListener('pointermove', e => { if (FPS.on && e.pointerType === 'mouse' && document.pointerLockElement === cv && !FPS.menu && (e.buttons | 0) !== (FPS.mbWas | 0)) fpsMouseButtons(e); }, true);
+addEventListener('pointerup', e => { if (FPS.on && e.pointerType !== 'touch') fpsMouseButtons(e); }, true);
 // (a trackpad's two-finger scroll runs on after the fingers stop: one weapon per swipe, not a whole run of them)
 addEventListener('wheel', e => { if (FPS.on && document.pointerLockElement === cv) { e.preventDefault(); const now = performance.now(); if (now < (FPS.wheelHold || 0)) { FPS.wheelHold = now + 180; return; } FPS.wheel = (FPS.wheel || 0) + e.deltaY; if (Math.abs(FPS.wheel) > 60) { fpsCycle(FPS.wheel > 0 ? 1 : -1); FPS.wheel = 0; FPS.wheelHold = now + 180; } } }, { passive: false });
 addEventListener('contextmenu', e => { if (FPS.on && e.target === cv) e.preventDefault(); }, true);
@@ -15057,7 +15065,7 @@ function fpsMenuPad(dt) {
   if (down(1)) { if (onPad) FPS.menuPage(false); else fpsSetMenu(false); }
   if (down(9)) fpsSetMenu(false);
 }
-document.addEventListener('pointerlockchange', () => { FPS.mouse = document.pointerLockElement === cv; if (FPS.on && !FPS.mouse) FPS.mouseDown = false; });
+document.addEventListener('pointerlockchange', () => { FPS.mouse = document.pointerLockElement === cv; if (FPS.on && !FPS.mouse) { FPS.mouseDown = false; FPS.mbWas = 0; } });
 // touch: the left half of the screen is a stick to walk with, the right half drags to look
 addEventListener('touchstart', e => {
   if (!FPS.on || e.target !== cv) return;
