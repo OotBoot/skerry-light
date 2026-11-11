@@ -348,7 +348,7 @@ const rfBox = () => RF_ZONES;   // (for tests)
 // everyone, once the fort's laid out: its state made fresh; every room open to the drowned; you face the Plaza
 function rfEnter() {
   Object.assign(RF, { on: true, st: 'hunt', apo: { apoW: 0, apoE: 0, apoN: 0 }, apoZ: {}, wait: 0, mz: 0, vul: 0, orbUp: false, orbGap: 0, orbT: 0, orbPh: 0, orb: [FPSC.CX, FPSC.CY - 40, 8], orbS: null, orbHp: RFC.ORB_HP, orbAcc: 0,
-    bossT: RFC.BOSS_T[0], tok: null, mine: false, wonT: 0, kz: 0, angerT: 0, angered: false, grab: 0, shot: 0, spawnT: 3, t: 0, seenSt: 'hunt', burst: 0, hintT: 9 });
+    bossT: RFC.BOSS_T[0], tok: null, mine: false, wonT: 0, kz: 0, angerT: 0, angered: false, grab: 0, shot: 0, spawnT: 3, t: 0, seenSt: 'hunt', burst: 0, hintT: 9, mile: 0, vulWas: false });
   if (typeof rf2Reset === 'function') rf2Reset();   // [p2] her second phase (src/raidmaren2.js)
   ZM.open = new Set(['raid'].concat(Object.keys(RF_ZONES)));
   ZM.round = Math.max(ZM.round, RFC.ROUND);
@@ -391,7 +391,7 @@ function rfTick(dt) {
   } else if (RF.st === 'knock') {
     // the Knock keeps to the Plaza and the Battery too
     const K = ZM.z.find(z => z.zn === RF.kz);
-    RF.kbrk = K && K.act === 'song' ? K.brk / K.brkMax : 0;
+    RF.kbrk = K && K.act === 'song' ? K.brk / rfkBrkNeed(K) : 0;
     if (K && !K.dead && K.act !== 'emerge') { const B = RFC.BOX; K.x = clamp(K.x, FPSC.CX + B[0], FPSC.CX + B[1]); K.y = clamp(K.y, FPSC.CY + B[2], FPSC.CY + B[3]); }
   } else if (RF.st === 'anger') {
     RF.wait -= dt; if (RF.wait <= 0) rfMaren();
@@ -407,7 +407,7 @@ function rfTick(dt) {
     if (RF.bossT <= 0) {
       RF.bossT = RFC.BOSS_T[0] + Math.random() * (RFC.BOSS_T[1] - RFC.BOSS_T[0]);
       const live = ZM.z.filter(z => z.boss && !z.dead && z.bt !== 'maren').length;
-      if (live < 1 + Math.floor(n / 2)) zbSpawn(['diver', 'moon', 'crab'][(Math.random() * 3) | 0]);
+      if (live < Math.ceil(n / 2)) zbSpawn(['diver', 'moon', 'crab'][(Math.random() * 3) | 0]);
     }
     // she keeps to the Plaza and the Battery
     if (M && !M.dead && M.act !== 'rise') { const B = RFC.BOX; M.x = clamp(M.x, FPSC.CX + B[0], FPSC.CX + B[1]); M.y = clamp(M.y, FPSC.CY + B[2], FPSC.CY + B[3]); }
@@ -526,6 +526,12 @@ function rfMe(dt) {
   if (RF.shot > 0) RF.shot -= dt; if (RF.orbAcc > 0 && RF.shot <= 0) { RF.shot = RFC.ORB_SEND; raidAsk('orb', RF.orbAcc); RF.orbAcc = 0; }
   if (RF.grab > 0) RF.grab -= dt; if (RF.hintT > 0) RF.hintT -= dt;
   if (typeof rf2Me === 'function' && RF.bell) rf2Me(dt);   // [p2]
+  // anyone who bled out is back on their feet at each step: a keeper down, the Knock down, her soul shot, and Maren laid
+  // to rest (so a pair is never left one alone against the rest for long, and everyone can take her token)
+  { const mile = RF_APO_IDS.filter(k => RF.apo[k] === 2).length + (/^(anger|maren|won)$/.test(RF.st) ? 1 : 0) + (RF.st === 'won' ? 1 : 0), vul = RF.vul > 0;
+    if (mile > (RF.mile | 0) || (vul && !RF.vulWas)) raidRespawn();
+    RF.mile = Math.max(RF.mile | 0, mile); RF.vulWas = vul;
+    if (RF.st === 'won' && zmIsDown()) zmGetUp(); }
   if (RF.st === 'anger') { RF.angerT += dt; if (!RF.angered && RF.angerT >= RFC.ANGER[0]) rfAngered(); }
   if (ZM.net === 'client' && RF.vul > 0) RF.vul = Math.max(0, RF.vul - dt);
   // joined: her soul glides between the host's words

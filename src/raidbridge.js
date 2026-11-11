@@ -52,9 +52,11 @@ ZM_AMMO.plimsoll = 0; ZM_DMG.P = 2.5;
 
 const RB = { on: false };
 // how many of the circles have to be held, for a crew this size
-const rbNeed = () => ((ZM.hum || []).length || 1) >= 3 ? 2 : 1;
-// (alone, the circle you leave holds a good while before the bridge starts to go)
-const rbGrace = () => ((ZM.hum || []).length || 1) > 1 ? RBC.GRACE : RBC.SOLO;
+// (counted by who's on their feet, RB.up, the host's count, so a pair with one of them down plays as one alone)
+const rbUp = () => RB.up || (ZM.hum || []).length || 1;
+const rbNeed = () => rbUp() >= 3 ? 2 : 1;
+// (alone, or the only one still standing, the circle you leave holds a good while before the bridge starts to go)
+const rbGrace = () => rbUp() > 1 ? RBC.GRACE : RBC.SOLO;
 const rbW = (x, y) => [FPSC.CX + x, FPSC.CY + y];
 const rbL = (x, y) => [x - FPSC.CX, y - FPSC.CY];
 const rbNick = sid => sid === FPS.me.id ? 'You' : ((ZM.hum || []).find(h => h[0] === sid) || [])[1] || 'Someone';
@@ -152,7 +154,8 @@ function rbClampBank(o) {
 // ---------- each tick (hosting, or alone) ----------
 function rbTick(dt) {
   if (!RB.on) return;
-  const need = rbNeed(), pl = ZM.players || [];
+  const pl = ZM.players || []; RB.up = Math.max(1, pl.length);
+  const need = rbNeed();
   // who stands in the circles (only those on their feet)
   RB.held = [0, 1, 2].map(i => pl.some(p => { const [lx, ly] = rbL(p.x, p.y); return rbInCircle(i, lx, ly) && (p.jz || 0) < RBC.PH + 1; }));
   RB.far = RB.held[2]; RB.held.length = 2;
@@ -420,6 +423,8 @@ function rbEvent(k, a) {
 }
 function rbSay(k, a) {
   const nick = rbNick(rbHumAt(a));
+  // (anyone who bled out is back on their feet at each step: a Cutlass won, the bridge across, a helmet won or set)
+  if (k === 'cdrop' || k === 'helm' || k === 'set' || (k === 'plank' && a >= RBC.SEG)) raidRespawn();
   if (k === 'plank') { rbSound('plank'); if (a >= RBC.SEG) { ZM.banner = { text: 'The bridge reaches the far bank', t: 3.2, small: true, col: '#ffd88a' }; fpsFeed('The bridge is across. Carry a Cutlass of Plimsoll over; hold the circles, or the far ring.'); } }
   else if (k === 'fall') { rbSound('fall'); RB.falls.push({ i: a, t: 0 }); if (!RB.said.fall || g.t - RB.said.fall > 6) { RB.said.fall = g.t; fpsFeed('A circle stands empty: the bridge is falling back into the river!'); } }
   else if (k === 'take') { rbSound('cut'); if (nick !== 'You') fpsFeed(`${nick} takes up a Cutlass of Plimsoll.`); }
@@ -441,7 +446,7 @@ function rbSay(k, a) {
 // y*10, bearer, stand], and what's just happened
 function rbPack(z) {
   if (!RB.on || !z) return;
-  z.rb = [Math.round(RB.p * 100), (RB.held[0] ? 1 : 0) | (RB.held[1] ? 2 : 0) | (RB.falling ? 4 : 0) | (RB.far ? 8 : 0), RB.sw, RB.dn, ['build', 'divers', 'done'].indexOf(RB.phase), RB.open ? 1 : 0, Math.round(RB.kills), Math.round(RB.t), RB.holdT | 0];
+  z.rb = [Math.round(RB.p * 100), (RB.held[0] ? 1 : 0) | (RB.held[1] ? 2 : 0) | (RB.falling ? 4 : 0) | (RB.far ? 8 : 0), RB.sw, RB.dn, ['build', 'divers', 'done'].indexOf(RB.phase), RB.open ? 1 : 0, Math.round(RB.kills), Math.round(RB.t), RB.holdT | 0, RB.up | 0];
   z.rbc = RB.cuts.map(c => [c.id, c.st, Math.round(c.x * 10), Math.round(c.y * 10), c.by ? rbHumIx(c.by) : -1]);
   z.rbz = ZM.z.filter(d => !d.dead && (d.rbs || d.rbd)).map(d => [d.id, d.rbs ? 1 : 2]);
   z.rbh = RB.helms.map(h => [h.id, h.st, Math.round(h.x * 10), Math.round(h.y * 10), h.by ? rbHumIx(h.by) : -1, h.stand]);
@@ -451,7 +456,7 @@ function rbPack(z) {
 function rbApply(hz) {
   if (!RB.on || !Array.isArray(hz.rb)) return;
   const a = hz.rb.map(v => +v || 0);
-  RB.p = clamp(a[0] / 100, 0, RBC.SEG); RB.held = [!!(a[1] & 1), !!(a[1] & 2)]; RB.falling = !!(a[1] & 4); RB.far = !!(a[1] & 8); RB.holdT = a[8] | 0;
+  RB.p = clamp(a[0] / 100, 0, RBC.SEG); RB.held = [!!(a[1] & 1), !!(a[1] & 2)]; RB.falling = !!(a[1] & 4); RB.far = !!(a[1] & 8); RB.holdT = a[8] | 0; RB.up = a[9] | 0;
   RB.sw = a[2] | 0; RB.t = a[7] | 0; RB.dn = a[3] | 0;
   if (Array.isArray(hz.rbc)) RB.cuts = hz.rbc.filter(Array.isArray).slice(0, 4).map(c => ({ id: c[0] | 0, st: c[1] | 0, x: c[2] / 10, y: c[3] / 10, by: c[4] >= 0 ? rbHumAt(c[4]) : null }));
   if (Array.isArray(hz.rbz)) { const f = new Map(hz.rbz.filter(Array.isArray).map(e => [String(e[0]), e[1] | 0])); for (const d of ZM.z) { const k = f.get(d.id); d.rbs = k === 1; d.rbd = k === 2; } } RB.phase = ['build', 'divers', 'done'][a[4]] || 'build';
@@ -474,7 +479,7 @@ function rbHud(phone0, mono0, fell0) {
   const need = rbNeed(), falling = !!RB.falling;
   const pw = 22 * s, gap = 3 * s, n = RBC.SEG, x0 = cx - (n * pw + (n - 1) * gap) / 2, y = top;
   ctx.font = fell(18); ctx.fillStyle = falling ? `rgba(255,110,80,${0.7 + 0.3 * Math.sin(g.t * 10)})` : 'rgba(236,228,207,0.92)';
-  ctx.fillText(RB.done ? 'The bridge holds' : falling ? 'The bridge is falling!' : RB.holdT > 3 && (ZM.hum || []).length <= 1 ? `The circle holds ${RB.holdT} s` : RB.p >= n ? 'The bridge is across' : 'Kill them in the circles', cx, y - 8 * s);
+  ctx.fillText(RB.done ? 'The bridge holds' : falling ? 'The bridge is falling!' : RB.holdT > 3 && rbUp() <= 1 ? `The circle holds ${RB.holdT} s` : RB.p >= n ? 'The bridge is across' : 'Kill them in the circles', cx, y - 8 * s);
   for (let i = 0; i < n; i++) {
     const f = clamp(RB.p - i, 0, 1), x = x0 + i * (pw + gap);
     ctx.fillStyle = 'rgba(20,24,28,0.7)'; ctx.fillRect(x, y, pw, 10 * s);

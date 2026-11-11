@@ -29,6 +29,9 @@ const RFK = {
   SONG_AT: [0.75, 0.5, 0.25], SONG: 15, SONG_HURT: 0.1, BEAT: 0.5, DAZED: 3.2,   // (its song: at which strengths, how long, how little a shot hurts it meanwhile)
   BRK: 48, BRK_MORE: 40,   // (what breaks the song: damage, alone; and for each of you after)
 };
+// what breaks this song: set by the squad's size when it starts, and less as any of you go down while it's sung (so
+// a pair with one down need only break it as one alone would); the most it can be is what it started at
+const rfkBrkNeed = z => Math.min(z.brkMax || 1, RFK.BRK + RFK.BRK_MORE * (Math.max(1, (ZM.players || []).length) - 1));
 const RFK_T = { song: { hit: RFK.SONG, end: RFK.SONG + 0.4 }, dazed: { hit: 99, end: RFK.DAZED }, emerge: { hit: 99, end: 3.6 }, bat: { hit: 0.55, end: 1.05 }, knocks: { hit: 0.6, end: 2.0 }, cleave: { hit: 0.9, end: 1.75 }, hurl: { hit: 0.55, end: 0.55 + RFK.HURL_OUT * 2 + 0.35 }, smash: { hit: 0.8, end: 1.3 } };
 ZB_KINDS.push('knock');
 for (const a of ['emerge', 'bat', 'knocks', 'cleave', 'hurl', 'song', 'dazed']) if (!ZB_ACT.includes(a)) ZB_ACT.push(a);
@@ -92,7 +95,7 @@ ZBT.knock = {
       return;
     }
     // (singing: broken once its break meter's full)
-    if (z.act === 'song') { ZBT.knock.judge(z, was, z.at); if (z.brk >= z.brkMax) { rfkBroken(z); zbStart(z, 'dazed'); } return; }
+    if (z.act === 'song') { ZBT.knock.judge(z, was, z.at); if (z.brk >= rfkBrkNeed(z)) { rfkBroken(z); zbStart(z, 'dazed'); } return; }
     if (z.act === 'dazed') return;
     const p = nearest(z.x, z.y, z.jz), T = RFK_T[z.act];
     if (p && T) {
