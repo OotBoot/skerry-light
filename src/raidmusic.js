@@ -20,12 +20,19 @@
 //               each bell toll and lightning flash (RF.tide)
 //   raidwin     Maren down: bittersweet, a sunset over the sea after a hard fight, a slow shanty on fiddle and
 //               concertina over warm strings, a far-off ship's horn, the waves (played once, on into the end card)
+// The Gannet's Wake has its own (made the same way; each part's RAID_STAGES[key].music picks it):
+//   gwsail      the Skerries (part one): a tense, driving shanty at night, low strings, the hull creaking, waves, a
+//               far-off bell
+//   gwhold      below decks (part two): creaking timbers, dripping water, slow suspense, knocks on wood far off
+//   gwcapt      Captain Crane on the quarterdeck: heavy drums, low brass, his drowned crew chanting, the ship's bell
+//   gwcapt2     as she founders (from half his strength): quicker, rushing water, the storm, the bell tolling
+//   gwwin       Crane down: dawn over a calm sea, a hopeful shanty on fiddle and concertina, gulls (played once)
 // And in her second phase, her storm (sounds, not music): a thunder crack with each lightning flash (stormbolt, from
 // RF.bolt) and a high swirling wind (stormwind, looped, gusting with RF.tide) until she's down.
 // Once it's over otherwise (all of you down, or left), nothing plays. While the raid's on, the Lighthouse's boss
 // themes (src/zmtheme.js) keep quiet: this is the music. Nothing plays until its recording has loaded.
 const RM = { WIND: 0.1, wind: null, bolt: null, fell: false, cur: null, src: null, gain: null, vol: 0.55, rate: 1 };
-const RM_LOOP = { raidfall: false, raidwin: false };
+const RM_LOOP = { raidfall: false, raidwin: false, gwwin: false };
 const RM_TAIL = 2.5;   // (the fall's track runs on this long after its climax: tools/sfx/music.py TAIL)
 
 // what should be playing now

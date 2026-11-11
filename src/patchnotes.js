@@ -6,6 +6,11 @@
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Never give away a secret here (the Easter egg's steps, where the secret boss hides).
 var PATCH_NOTES = [
+  { v: 148, date: '2026-11-11', title: 'The Gannet’s Wake gets its music', Sound: [
+    "The Gannet's Wake: The Skerries now has its own music, a tense sea shanty at night over low strings, a creaking hull and a far-off bell.",
+    "The Gannet's Wake: Below Decks has its own music too: creaking timbers, dripping water and slow, knocking suspense.",
+    "The Gannet's Wake: music for the captain's fight, his ship foundering, and dawn after the raid is in, ready for the last part.",
+    "Verity's Wardrobe: the finishes' toy squeak, the Little Helper's boing, the Yellow Room's buzzing strip lights and the Many Happy Faces balloon pop are now real recordings." ] },
   { v: 147, date: '2026-11-11', title: 'The Gannet’s Wake: Below Decks', New: [
     "The Gannet's Wake, Part II, Below Decks: climb aboard the risen Gannet and go down through her gun deck, hold, cable tier and forecastle.",
     "Knock is loose below. He only moves while none of you can see him, and three knocks on wood warn you he's coming. If he reaches you, you're down.",

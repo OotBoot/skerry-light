@@ -55,13 +55,14 @@ function vyVoice(rate, vol) {
   try { if (typeof loadVerityVoice === 'function') loadVerityVoice(); if (typeof sfxVerity === 'function') sfxVerity(rate, vol); } catch (e) {}
 }
 // a squeak, as from a rubber toy (each a little different)
-function vySqueak(k) { try { const f = 950 + Math.random() * 350; tone(f, 'sine', 0.004, 0.07 * k, 0.07, { to: f * 1.6 }); tone(f * 1.5, 'triangle', 0.004, 0.025 * k, 0.05, { delay: 0.05, to: f * 1.1 }); } catch (e) {} }
+// (each a recording where one's been made, src/sfxbank.js; else the old synthesised one)
+function vySqueak(k) { try { if (sfxPlay('vysqueak', { vol: 0.55 * k, vary: 0.25 })) return; const f = 950 + Math.random() * 350; tone(f, 'sine', 0.004, 0.07 * k, 0.07, { to: f * 1.6 }); tone(f * 1.5, 'triangle', 0.004, 0.025 * k, 0.05, { delay: 0.05, to: f * 1.1 }); } catch (e) {} }
 // the Helper landing: a boing and a splash
-function vyBoing() { try { tone(220, 'sine', 0.005, 0.16, 0.35, { to: 620 }); tone(330, 'triangle', 0.005, 0.05, 0.3, { to: 880, delay: 0.02 }); noise('lowpass', 900, 1, 0.01, 0.12, 0.4, { delay: 0.3 }); } catch (e) {} }
+function vyBoing() { try { if (sfxPlay('vyboing', { vol: 0.7 })) return; tone(220, 'sine', 0.005, 0.16, 0.35, { to: 620 }); tone(330, 'triangle', 0.005, 0.05, 0.3, { to: 880, delay: 0.02 }); noise('lowpass', 900, 1, 0.01, 0.12, 0.4, { delay: 0.3 }); } catch (e) {} }
 // the strip lights: a buzz that catches and stutters
-function vyBuzz() { try { for (let i = 0; i < 4; i++) tone(118 + (i % 2) * 2, 'sawtooth', 0.01, 0.03, 0.18, { delay: i * 0.22 + Math.random() * 0.08 }); noise('bandpass', 2400, 6, 0.005, 0.02, 0.6); } catch (e) {} }
+function vyBuzz() { try { if (sfxPlay('vybuzz', { vol: 0.45, vary: 0.04 })) return; for (let i = 0; i < 4; i++) tone(118 + (i % 2) * 2, 'sawtooth', 0.01, 0.03, 0.18, { delay: i * 0.22 + Math.random() * 0.08 }); noise('bandpass', 2400, 6, 0.005, 0.02, 0.6); } catch (e) {} }
 // (when a balloon bobs up against another)
-function vyPop() { try { tone(700, 'sine', 0.002, 0.08, 0.06, { to: 300 }); } catch (e) {} }
+function vyPop() { try { if (sfxPlay('vypop', { vol: 0.6 })) return; tone(700, 'sine', 0.002, 0.08, 0.06, { to: 300 }); } catch (e) {} }
 // is the gun in your hands wearing one of his
 function vyArmed() {
   try { return typeof FPS !== 'undefined' && FPS.on && typeof WC !== 'undefined' && vyIs(WC.equipped[FPS.weapon]); } catch (e) { return false; }

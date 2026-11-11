@@ -3,7 +3,7 @@
 
     python3 tools/sfx/music.py <folder of bossdiver_N_00001.flac, bossmoon_..., raidcave_..., ...> [folder for every take]
 
-The raid's (raid*, src/raidmusic.js) go the same way, at 96 kbit/s, except raidfall, which plays once: it's kept
+The raids' (raid* for Maren's End, gw* for The Gannet's Wake; src/raidmusic.js) go the same way, at 96 kbit/s, except raidfall, which plays once, and the victories (raidwin, gwwin), kept whole: it's kept
 whole, faded in and out, not looped; and raidsong, the Knock's song, loops in about 16 s. Given a second folder,
 every take's cut is written there too (<name>_<take>.mp3), to hear them side by side.
 
@@ -24,7 +24,7 @@ BAR = {'bossmoon': 3}   # beats to the bar (a waltz); the rest are in four
 TARGET = 40.0           # the loop, about this long (s)
 TARGETS = {'raidsong': 16.0}
 ONCE = {'raidfall'}
-WHOLE = {'raidwin'}     # played once, kept whole (only faded in and out)     # played once, not looped
+WHOLE = {'raidwin', 'gwwin'}   # played once, kept whole (only faded in and out)
 TAIL = 2.5              # (its tail after the climax, s)
 RAMP = 14.0             # (its swell, dB)
 PITCH = {'raidfall': 2 ** (-3 / 12)}   # taken down (and slowed) this much: three semitones
@@ -126,7 +126,7 @@ def main(src, every=None):
     os.makedirs(OUT, exist_ok=True)
     takes = {}
     for f in sorted(os.listdir(src)):
-        m = re.match(r'^((?:boss|raid)[a-z0-9]+)_(\d+)_\d+_?\.(?:flac|wav|mp3|ogg)$', f)
+        m = re.match(r'^((?:boss|raid|gw)[a-z0-9]+)_(\d+)_\d+_?\.(?:flac|wav|mp3|ogg)$', f)
         if m: takes.setdefault(m.group(1), []).append(os.path.join(src, f))
     for name, files in sorted(takes.items()):
         res = []
@@ -135,7 +135,7 @@ def main(src, every=None):
             body, info = whole(x) if name in WHOLE else once(x) if name in ONCE else best_loop(name, x)
             print(f'{os.path.basename(f)}: ' + ', '.join(f'{k} {v:.2f}' for k, v in info.items()))
             res.append((info['score'], body, f))
-        rate = '96k' if name.startswith('raid') else '112k'
+        rate = '96k' if name.startswith(('raid', 'gw')) else '112k'
         if every:
             os.makedirs(every, exist_ok=True)
             for _, b, f in res: mp3(b, os.path.join(every, f'{name}_{re.match(r"^[a-z0-9]+_(\d+)", os.path.basename(f)).group(1)}.mp3'), rate)

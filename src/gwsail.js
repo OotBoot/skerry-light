@@ -400,7 +400,7 @@ function gwsFlareFx(S) {
 // ---------- the stage ----------
 RAID_STAGES.gwsail = {
   n: 'The Skerries', map: GWS_MAP, mend: true, zSpeed: 1, open: true,
-  music: () => 'raidbridge',
+  music: () => 'gwsail',   // (its own: a tense shanty at night, low strings, the hull creaking, a far-off bell)
   set(H, K, Z) { gwsLay(H, K, Z); },
   enter() {
     const sea = gwsSeaOf(), B = gwsBoat(GWS.START[0], GWS.START[1], GWS.H0);

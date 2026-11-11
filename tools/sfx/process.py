@@ -25,11 +25,13 @@ LEN = {
     'deny': 0.6, 'diver': 3.8, 'slam': 2.2, 'mooncusser': 2.8, 'keelback': 2.8, 'charge': 2.2, 'bell': 2.8,
     'bellfar': 3.8, 'splash': 1.8, 'foghorn': 4.8, 'cannon': 2.8, 'flare': 2.8, 'creak': 2.8, 'thunder': 4.8,
     'sea': 11.0, 'wind': 11.0, 'rain': 11.0, 'stormbolt': 6.5, 'stormwind': 30.0,
+    # Verity's Wardrobe (src/verityfx.js): the toy squeak on each shot, the Helper's boing, the strip lights, a balloon
+    'vysqueak': 0.45, 'vyboing': 1.3, 'vybuzz': 3.5, 'vypop': 0.5,
     # the bosses' themes (src/zmtheme.js): as long as they came, looped
     'bossdiver': 120.0, 'bossmoon': 120.0, 'bosscrab': 120.0,
 }
 PEAK = {'hit': -4, 'board': -4, 'buy': -6, 'deny': -8, 'swish': -4, 'reload': -5, 'gull': -6, 'heartbeat': -3,
-        'sea': -6, 'wind': -8, 'rain': -8, 'bossdiver': -3, 'bossmoon': -3, 'bosscrab': -3, 'beam': -8, 'moan': -3, 'creak': -6, 'stormwind': -6}
+        'sea': -6, 'wind': -8, 'rain': -8, 'bossdiver': -3, 'bossmoon': -3, 'bosscrab': -3, 'beam': -8, 'moan': -3, 'creak': -6, 'stormwind': -6, 'vysqueak': -5, 'vybuzz': -6}
 LOOPS = {'sea', 'wind', 'rain', 'stormwind', 'bossdiver', 'bossmoon', 'bosscrab'}
 # kept synthesised by choice (the old bell stays the bell)
 SKIP = {'bell', 'bellfar'}

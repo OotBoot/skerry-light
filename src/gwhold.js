@@ -745,7 +745,7 @@ function gwSay(k, a, b) {
 RAID_STAGES.gwhold = {
   n: 'Below Decks', mend: true,
   map: { start: GWH.START.slice(), top: GWH.GZ, zones: GW_ZONES, nav: [-7, 7, -28, 32], isle: 'gwhold' },
-  music: () => 'raidcave',   // (a placeholder: the Deep Path's own, dripping and underground)
+  music: () => 'gwhold',   // (its own: creaking timbers, dripping water, slow suspense, far-off knocks on wood)
   set: (H, K, Z) => gwSet(H, K, Z),
   enter() {
     const S = RAID.st, [kx, ky] = gwW(...GWH.KNOCK), [cx, cy] = gwW(...GWH.KEY);
