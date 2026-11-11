@@ -558,7 +558,7 @@ const friEliteRule = (kind, n) => friLit({
 });
 function friEliteDown() { const S = RAID.st; if (S.down) return; S.down = 1; friRare(); frlReady('It’s down: a rare card in the salvage. Light the beacon (hold Use at it) and go back aboard.'); }
 const FRI_ELITE = { diver: friEliteRule('diver', 'The Diver'), moon: friEliteRule('moon', 'The Mooncusser'), crab: friEliteRule('crab', 'The Keelback') };
-frKind('elite', { n: 'Elite', mark: '☠', weight: 1 }, friStage(FRI_ELITE));
+frKind('elite', { n: 'Elite', mark: '☠', weight: 1, rules: Object.keys(FRI_ELITE), rn: r => (FRI_ELITE[r] || {}).n || '' }, friStage(FRI_ELITE));
 
 // ---------- the Wreck: a chest from the wrecks, each of you your own ----------
 // A wreck drawn up on the beach, and its sea chest beside it. Hold Use at the chest (FRW.OPEN s) and it gives you a
@@ -614,7 +614,7 @@ const friWreckRule = guarded => friLit({
 // (a guarded wreck: no lighting the beacon and leaving while the Keelback's up)
 const FRI_WRECK = { open: Object.assign(friWreckRule(false), { w: 2 }), guarded: friWreckRule(true) };
 { const G = FRI_WRECK.guarded, q0 = G.q; G.q = (sid, k, a) => { if (k === 'light' && RAID.st.gd === 2) return; q0(sid, k, a); }; }
-frKind('wreck', { n: 'Wreck', mark: '⚓', weight: 1 }, friStage(FRI_WRECK));
+frKind('wreck', { n: 'Wreck', mark: '⚓', weight: 1, rules: ['open', 'open', 'guarded'], rn: () => 'A Wreck' }, friStage(FRI_WRECK));
 
 // ---------- the Chapel: a rest ----------
 // Always Chapel Islet's look. Everyone back to full health as you come ashore; everyone lost in the fog is brought
@@ -632,7 +632,7 @@ const FRI_CHAPEL = { rest: friLit({
   me() { const S = RAID.st, m = FPS.me; if (!S.healed && !(m.dead > 0) && !zmIsDown()) { S.healed = 1; m.hp = ZM.perks.stout ? ZMC.HP_STOUT : ZMC.HP; try { zmSound('drink'); } catch (e) {} } },
   readyLine: () => 'A rest. Light the beacon (hold Use at it) when you’re ready to go on',
 }) };
-frKind('chapel', { n: 'Chapel', mark: '🕯', weight: 1 }, friStage(FRI_CHAPEL));
+frKind('chapel', { n: 'Chapel', mark: '🕯', weight: 1, look: 'chapel', rules: ['rest'], rn: () => 'A Rest' }, friStage(FRI_CHAPEL));
 
 // ---------- the Unknown: one of a handful of things out in the fog ----------
 // Its rule is drawn from the seed like any other, and you only learn which as you land:
@@ -766,4 +766,4 @@ const FRI_UNKNOWN = {
   fight: FRI_RULES.clear,
 };
 const FRU3 = { on: false };
-frKind('unknown', { n: 'Unknown', mark: '?', weight: 1 }, friStage(FRI_UNKNOWN));
+frKind('unknown', { n: 'Unknown', mark: '?', weight: 1, rules: Object.keys(FRI_UNKNOWN), rn: () => 'Who knows' }, friStage(FRI_UNKNOWN));
