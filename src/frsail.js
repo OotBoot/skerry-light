@@ -32,6 +32,7 @@ function frsLeg(i) {
     landSay: `She runs up on the beach of ${T.name}. Ashore!`,
     line: (S, dm) => S.ph === 'beach' ? `She’s run up on the beach of ${T.name}. Ashore…` : S.ph === 'sunk' ? 'She’s going down.' : `Through the fog to the next island (${T.name}): ${Math.round(Math.max(0, dm - FRI.R)).toLocaleString('en')} m`,
     arrive: () => raidNextStage(), b3: frs3dBuild, f3: frs3d };
+  if (typeof frcLeg === 'function') frcLeg(GWS_LEG, p);   // [fogrun cards] a fair wind: half as far to go
   FPS_ISLES.frsail.fog = [FRS.FOGC, Math.round(fog * 0.25), Math.round(fog)];
 }
 FPS_ISLES.frsail = Object.assign({}, FPS_ISLES.gwsail, { name: 'the haar', fog: [FRS.FOGC, 35, 140] });

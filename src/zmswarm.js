@@ -34,6 +34,7 @@ function zwDress(z) {
 // own (or below), and nothing solid between the two of you down at its height: so not through a stair, from under
 // it or beside it, nor through a wall or a rail
 function zwCanNip(m, x, y, jz) {
+  if (typeof frcNoNip === 'function' && frcNoNip(m)) return false;   // [fogrun cards] Plimsoll's Tooth
   const dz = (m.jz || 0) - jz, d = Math.hypot(m.x - x, m.y - y);
   if (d >= ZWC.REACH || dz > ZWC.UP || dz < -ZWC.UP) return false;
   const n = Math.max(1, Math.ceil(d / 0.2));

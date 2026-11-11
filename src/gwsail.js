@@ -186,6 +186,7 @@ function gwsCollide(B) {
 function gwsStove(off, side) {
   const S = RAID.st;
   S.hitN = (S.hitN | 0) + 1;
+  if (typeof frcSpare === 'function' && frcSpare()) { gwsHitFx(); return; }   // [fogrun cards] Fresh Planks: a spare plank takes it
   const free = GWS_HOLES.map((h, i) => i).filter(i => !S.holes.includes(i));
   if (free.length) {
     free.sort((a, b) => Math.hypot(GWS_HOLES[a][0] - side * 1.5, GWS_HOLES[a][1] - off * 0.8) - Math.hypot(GWS_HOLES[b][0] - side * 1.5, GWS_HOLES[b][1] - off * 0.8));
@@ -253,7 +254,7 @@ function gwsBell(sid) {
 // (hosting) a flare from the locker
 function gwsFlare(sid) {
   const S = RAID.st; if (S.flareCd > 0) return;
-  S.flareCd = GWS.FLARE_CD; S.flN = (S.flN | 0) + 1; S.flAt = [Math.round(S.B.x), Math.round(S.B.y)]; S.flBy = sid || '';
+  S.flareCd = GWS.FLARE_CD * (typeof frcFlareK === 'function' ? frcFlareK() : 1); S.flN = (S.flN | 0) + 1; S.flAt = [Math.round(S.B.x), Math.round(S.B.y)]; S.flBy = sid || '';
   gwsFlareFx(S);
 }
 // (hosting) Plimsoll walks his channel ahead of her, as at sea (src/creatures.js updatePlimsoll)
@@ -592,7 +593,7 @@ function gwsMe(dt) {
     const d = Math.hypot(r.x, r.y), b = bearingOf(r.x, r.y), inBeam = Math.abs(b) < SK.SHADE && Math.abs(angDiff(b, beam)) < SK.HALF_BEAM + r.r / Math.max(30, d) && d < SK.BEAM_RANGE;
     const lan = Math.hypot(dx, dy) < GWS.LANT_R + r.r;
     if (inBeam || r.flare > now) r.seen = now;
-    r.lit = Math.max(inBeam || r.flare > now ? 1 : clamp(1 - (now - r.seen - SK.SEEN_HOLD) / SK.SEEN_FADE, 0, 1), lan ? 0.32 : 0);
+    r.lit = Math.max(inBeam || r.flare > now ? 1 : clamp(1 - (now - r.seen - SK.SEEN_HOLD - (typeof frcSpy === 'function' ? frcSpy() : 0)) / SK.SEEN_FADE, 0, 1), lan ? 0.32 : 0);
     if (GWS_LEG && GWS_LEG.fog) { const f = GWS_LEG.fog, e = Math.hypot(dx, dy) - r.r; if (e < f) r.lit = Math.max(r.lit, clamp((f - e) / (f * 0.35), 0, 1)); }   // [fogrun] inside the fog, seen
   }
   // the flares: up from the stern, and slowly down again

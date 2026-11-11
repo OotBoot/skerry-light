@@ -36,7 +36,7 @@ const FRI_PH = ['dark', 'burn', 'out', 'lit'];
 
 // ---------- the island's look, small ----------
 function frIsleLook(i) {
-  const p = FR.plan[i] || { look: 'shingle', reach: 1 }, B = FPS_ISLES[p.look] || FPS_ISLES.shingle, fog = frFog(p.reach);
+  const p = FR.plan[i] || { look: 'shingle', reach: 1 }, B = FPS_ISLES[p.look] || FPS_ISLES.shingle, fog = frFog(typeof frcFogReach === 'function' ? frcFogReach(p) : p.reach) * (typeof frcSee === 'function' ? frcSee() : 1);   // [fogrun cards] (the haar lifted; the Keeper's Oilcan)
   FPS_ISLES.frisle = Object.assign({}, B, {
     look: FPS_ISLES[p.look] ? p.look : 'shingle',
     rocks: [Math.ceil(B.rocks[0] * 0.35), B.rocks[1], Math.min(B.rocks[2], 5), B.rocks[3]],
@@ -116,7 +116,7 @@ function frIsleSpawn(o) {
 // what kind comes up: more runners the further out you are
 function frIsleKindOf() { const u = Math.random(), run = 0.08 + 0.06 * (FR.stop | 0) + 0.05 * (FR.reach - 1); return u < run ? 'run' : u < run + 0.55 ? 'jog' : 'walk'; }
 // the island's fog: the look's, pulled in to the reach's (and pushed back as the lights are lit)
-function frIsleFog() { if (typeof GL3D === 'undefined' || !GL3D.scene || !GL3D.scene.fog) return; const F = GL3D.scene.fog, far = Math.min(FPS_ISLES.frisle.fog[2] + FR_PUSH * 4, frFog()); F.far += (far - F.far) * 0.04; F.near = F.far * 0.2; }
+function frIsleFog() { if (typeof GL3D === 'undefined' || !GL3D.scene || !GL3D.scene.fog) return; const F = GL3D.scene.fog, far = Math.min(FPS_ISLES.frisle.fog[2] + FR_PUSH * 4, frFog(typeof frcFogReach === 'function' ? frcFogReach(frPlanNow()) : FR.reach) * (typeof frcSee === 'function' ? frcSee() : 1)); F.far += (far - F.far) * 0.04; F.near = F.far * 0.2; }   // [fogrun cards] (the haar lifted; the Keeper's Oilcan)
 
 // ---------- the rules of a Fight ----------
 const FRI_RULES = {};

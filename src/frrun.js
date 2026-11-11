@@ -95,7 +95,7 @@ function frFogPush(m) { if (FR.pushR !== FR.reach) { FR.pushR = FR.reach; FR.pus
 // [chart] the stop after the one just finished (hosting or alone): { kind, rule, look, n, reach }, or null (won)
 function frNextStop() { return frChartNext(); }   // [chart] src/frchart.js: the route, drawn from the seed, and the crew's vote
 // [cards] between an island and the sail after it (hosting or alone): the salvage goes here; call done() when it's over
-function frAfterIsland(done) { done(); }
+function frAfterIsland(done) { if (typeof frcSalvage === 'function') frcSalvage(done); else done(); }   // [fogrun cards] src/frcards.js
 // a stage's entry in the plan: a sail to a stop, or the stop itself
 const frSailTo = s => ({ key: 'frsail', n: s.n, reach: s.reach, kind: s.kind, rule: s.rule, look: s.look });
 const frIsleOf = s => ({ key: (FR_KINDS[s.kind] || FR_KINDS.fight).key, n: s.n, reach: s.reach, kind: s.kind, rule: s.rule, look: s.look });
@@ -124,6 +124,7 @@ function frBegin() {
   if (!FR.on) return;
   FR.seed = FR.want != null ? FR.want >>> 0 : frSeedNew(); FR.want = null;
   Object.assign(FR, { reach: 1, stop: 0, push: 0, pushR: 1, plan: [], next: null, life: 0, lost: false, backT: 0, kit: null, ev: [], eseq: 0, evSeen: -1, won: false, lit: 0, leaving: false });
+  if (typeof frcBegin === 'function') frcBegin();   // [fogrun cards] nothing held yet
   const first = frNextStop(); FR.next = first; FR.reach = first.reach;
   FR.plan = [frSailTo(first)]; frOrderFromPlan();
 }
@@ -134,7 +135,7 @@ function frAfterStart() {
 }
 function frStop() { FR.on = false; FR.leaving = false; FR.backT = 0; FR.lost = false; }
 // (raidUseStage) entering a stage: which reach and stop it is
-function frEnterStage() { const p = frPlanNow(); if (!p) return; FR.stop = p.key === 'frsail' ? p.n - 1 : p.n; if (p.reach !== FR.reach) { FR.reach = p.reach; } }
+function frEnterStage() { const p = frPlanNow(); if (!p) return; FR.stop = p.key === 'frsail' ? p.n - 1 : p.n; if (p.reach !== FR.reach) { FR.reach = p.reach; } if (typeof frcEnter === 'function') frcEnter(p); }   // [fogrun cards]
 
 // ---------- lives ----------
 // (zmBleedOut, together) the time on the floor ran out: your extra life, if you have it, or lost in the fog
@@ -194,15 +195,17 @@ function frRestoreLife(sid) { frRunEvent('life', sid); }
 // (raidMe) each frame, everyone: the wait for your extra life
 function frMe(dt) {
   if (FR.backT > 0 && !ZM.over) { FR.backT -= dt; if (FR.backT <= 0) { FR.backT = 0; frBack('life'); } }
+  if (typeof frcMe === 'function') frcMe(dt);   // [fogrun cards] the relics, Call Them Home, Light the Way
 }
 
 // ---------- playing together (src/zmnet.js) ----------
 // the host's word for the run: frw = [reach, stop, push, the plan, the run's events, won, the reach pushed, islands lit]
 const frPlanPack = p => [p.key, p.kind || '', p.rule || '', p.look || '', p.n | 0, p.reach | 0];
-function frPack(z) { frChartPack(z); z.frw = [FR.reach, FR.stop, FR.push, FR.plan.map(frPlanPack), FR.ev, FR.won ? 1 : 0, FR.pushR, FR.lit | 0]; }
+function frPack(z) { frChartPack(z); z.frw = [FR.reach, FR.stop, FR.push, FR.plan.map(frPlanPack), FR.ev, FR.won ? 1 : 0, FR.pushR, FR.lit | 0]; if (typeof frcPack === 'function') frcPack(z); }   // [fogrun cards] the salvage, the crew's cards
 // (raidApply, first of all) joined: the plan, so the stage number that follows lays out what the host has
 function frApplyRun(hz) {
   const a = hz.frw; if (!Array.isArray(a)) return;
+  if (typeof frcApply === 'function') frcApply(hz);   // [fogrun cards] the crew's cards first (the next leg's laid out by them), and the salvage
   FR.reach = clamp(a[0] | 0, 1, 3); FR.stop = Math.max(0, a[1] | 0); FR.push = Math.max(0, +a[2] || 0); FR.pushR = clamp(a[6] | 0 || 1, 1, 3); FR.won = !!a[5]; FR.lit = Math.max(0, a[7] | 0);
   if (Array.isArray(a[3]) && a[3].length) {
     const plan = a[3].filter(e => Array.isArray(e) && RAID_STAGES[e[0]]).map(e => ({ key: String(e[0]), kind: String(e[1] || ''), rule: String(e[2] || ''), look: FR_LOOKS.includes(e[3]) ? e[3] : 'shingle', n: e[4] | 0, reach: clamp(e[5] | 0 || 1, 1, 3) }));
@@ -216,14 +219,15 @@ function frApplyRun(hz) {
   frChartApply(hz);   // [chart]
 }
 // my lives, in my presence: [extra lives, lost, waiting to come back]
-function frPresence(z) { if (FR.on) z.frp = [FR.life, FR.lost ? 1 : 0, FR.backT > 0 ? 1 : 0]; }
-function frHeard(r, z) { if (Array.isArray(z.frp)) { r.frLife = z.frp[0] | 0; r.frLost = !!z.frp[1]; r.frBack = !!z.frp[2]; } }
+function frPresence(z) { if (FR.on) z.frp = [FR.life, FR.lost ? 1 : 0, FR.backT > 0 ? 1 : 0]; if (typeof frcPresence === 'function') frcPresence(z); }   // [fogrun cards] my relics
+function frHeard(r, z) { if (Array.isArray(z.frp)) { r.frLife = z.frp[0] | 0; r.frLost = !!z.frp[1]; r.frBack = !!z.frp[2]; } if (typeof frcHeard === 'function') frcHeard(r, z); }
 // dropping out and coming back (src/rejoin.js, through src/zmnet.js znRjSnap and znRjAfter): the run's seed and stage
 // (for the record), and my lives
-function frRjSnap() { return FR.on ? { seed: FR.seed, st: RAID.stage, life: FR.life, lost: FR.lost ? 1 : 0, back: Math.ceil(FR.backT) } : null; }
+function frRjSnap() { return FR.on ? { seed: FR.seed, st: RAID.stage, life: FR.life, lost: FR.lost ? 1 : 0, back: Math.ceil(FR.backT), rel: (FR.rel || []).slice() } : null; }   // [fogrun cards] (rel: my relics)
 function frRjAfter(fr) {
   if (!FR.on || !fr || typeof fr !== 'object') return;
   FR.life = clamp(fr.life | 0, 0, FRC.LIVES);
+  if (typeof frcRjAfter === 'function') frcRjAfter(fr);   // [fogrun cards] my relics back
   if (ZM.ghost) { FR.lost = !!fr.lost; FR.backT = FR.lost ? 0 : Math.max(1, Math.min(FRC.BACK, +fr.back || FRC.BACK)); }
 }
 

@@ -197,6 +197,7 @@ function rclJump(m, air) {
     m.vz = FPSC.JUMP * 1.22; m.jz = (m.fl || 0) + 0.001; FPS.landed = 0; rclTone('jump');
     return true;
   }
+  if (typeof frcJump === 'function' && frcJump(m, k)) return true;   // [fogrun cards] the Gull Feather
   if (k === 'merc' && RCL.air < 1) { RCL.air++; m.vz = FPSC.JUMP * 0.95; fpsPuff(m.x, m.y, FPSC.GROUND + (m.jz || 0), '200,230,225', 8); rclTone('jump2'); return true; }
   if (k === 'brute' && !RCL.slam && RCL.slamCd <= 0) { RCL.slam = true; m.vz = -16; rclTone('dive'); return true; }
   if (k === 'apo') { if (RCL.drift > 0) RCL.drift = 0; else if (!RCL.air) { RCL.air = 1; RCL.drift = RCLC.DRIFT; m.vz = Math.max(m.vz, 0.6); rclTone('drift'); } return true; }
