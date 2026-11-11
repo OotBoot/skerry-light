@@ -25,12 +25,16 @@ TARGET = 40.0           # the loop, about this long (s)
 TARGETS = {'raidsong': 16.0}
 ONCE = {'raidfall'}     # played once, not looped
 TAIL = 2.5              # (its tail after the climax, s)
-PICK = {'raidfall': 2}             # a take chosen by ear (its number), over the one that loops best
+RAMP = 14.0             # (its swell, dB)
+PITCH = {'raidfall': 2 ** (-3 / 12)}   # taken down (and slowed) this much: three semitones
+PICK = {'raidfall': 1}             # a take chosen by ear (its number), over the one that loops best
 FADE = 1.5              # its seam's crossfade (s)
 
 
-def read(path):
-    raw = subprocess.run(['ffmpeg', '-v', 'error', '-i', path, '-ac', '1', '-ar', str(SR), '-f', 'f32le', '-'], capture_output=True, check=True).stdout
+def read(path, k=1.0):
+    # (k below 1: played slower, and so lower, by that much: tape-style, as PITCH)
+    af = ['-af', f'asetrate={SR * k:.0f},aresample={SR}'] if k != 1.0 else []
+    raw = subprocess.run(['ffmpeg', '-v', 'error', '-i', path, '-ac', '1', '-ar', str(SR)] + af + ['-f', 'f32le', '-'], capture_output=True, check=True).stdout
     return np.frombuffer(raw, dtype=np.float32).copy()
 
 
@@ -95,6 +99,9 @@ def once(x):
     body = x[i:j].copy()
     a, b = int(0.05 * SR), int(TAIL * SR)
     body[:a] *= np.linspace(0, 1, a); body[-b:] *= np.linspace(1, 0, b) ** 2
+    # (and a swell put on it: RAMP dB quieter at its start, rising to full at its climax, so it builds however it came)
+    t = np.arange(len(body)) / SR
+    body *= 10 ** (-RAMP / 20 * np.clip(1 - t / ((pk - i) / SR), 0, 1))
     return body, dict(score=float(rms[half:].max() / (rms[:half].mean() + 1e-9)), length=len(body) / SR, climax=(pk - i) / SR)
 
 
@@ -114,7 +121,8 @@ def main(src, every=None):
     for name, files in sorted(takes.items()):
         res = []
         for f in files:
-            body, info = once(read(f)) if name in ONCE else best_loop(name, read(f))
+            x = read(f, PITCH.get(name, 1.0))
+            body, info = once(x) if name in ONCE else best_loop(name, x)
             print(f'{os.path.basename(f)}: ' + ', '.join(f'{k} {v:.2f}' for k, v in info.items()))
             res.append((info['score'], body, f))
         rate = '96k' if name.startswith('raid') else '112k'

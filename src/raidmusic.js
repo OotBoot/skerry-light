@@ -2,8 +2,8 @@
 // best looping one kept; tools/sfx/music.py), and each player's own game picks what's playing from what they see:
 //   raidpier    along the Long Pier, over the dry bed of the sea: sad and ghostly, a slow cello, a far-off voice,
 //               the wind over the salt and old wrecks creaking
-//   raidfall    off the end of the pier and down the Swallow: a ghostly wail, faint at first, that grows and grows as
-//               you go down, timed (from how far there is to fall) so its climax comes as you hit the floor (played
+//   raidfall    off the end of the pier and down the Swallow: a dark, deep chant of low voices (taken down three
+//               semitones), far off at first, swelling with drums and low brass as you go down, timed (from how far there is to fall) so its climax comes as you hit the floor (played
 //               once, not looped)
 //   raidcave    the Deep Path at the bottom: eerie and underground, drones, dripping water, a lonely concertina's slow
 //               shanty and creaking timbers (the fall track hands over to it as you land)
