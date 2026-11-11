@@ -10,6 +10,8 @@
 //   zm      s: rounds held in the night     b: kills                 (ends when the Lighthouse falls)
 //   raid    s: time through (100000 less its seconds; 0: not through)    b: damage to its bosses    c: kills
 //          (ends through the door; going down before it is incomplete)
+//   fogrun  s: the furthest island reached   b: time through, as raid (0: not won)   c: islands lit   (src/frkeep.js;
+//          ends won, lost in the fog or sunk; left before then is incomplete)
 // Your own games are kept on this device too (`skerry-runs`, your best 25 of each and the one under way).
 //
 // Below, from before: your bests, kept in your save (they're no longer what the board shows, but the boards from
@@ -27,6 +29,7 @@
 //   zm      s: most rounds held in one night        b: most kills in one night (the Lighthouse)
 //   raid    s: best time through Maren's End (kept as 100000 less its seconds, so higher is better; 0: never through)
 //           b: most damage done to its bosses in one raid    c: the drowned sent back in all raids, together
+//   fogrun  s: the furthest island reached    b: the fastest won run (as raid)    c: islands lit in all runs
 // And two marks: p, you've played it; f, you've finished a game of it (a voyage to harbour, a round of Wreckers'
 // Night to its end, a war to its end, a night at the Lighthouse until it fell, Maren's End to the door). A game left
 // or lost before its end still counts what it got to; until one's finished, your name has a yellow asterisk by it.
@@ -48,6 +51,9 @@ const BOARD = {
       fs: v => v > 0 ? raidTimeOf(v) : '—' },
     gannet: { name: 'The Gannet’s Wake', s: 'Time', b: 'Boss damage', c: 'Kills', what: 'Each raid out to the Gannet: the time through, the damage done to its bosses, and the drowned sent back.',
       fs: v => v > 0 ? raidTimeOf(v) : '—' },
+    // [fogrun] src/frkeep.js
+    fogrun: { name: 'Fog Run', s: 'Furthest', b: 'Time', c: 'Lit', what: 'Each fog run: the furthest island reached, the time through if it was won, and the islands lit.',
+      fs: v => v > 0 ? 'Island ' + v : '—', fb: v => v > 0 ? raidTimeOf(v) : '—' },
   },
   open: {}, mine: null, via: null, db: null, user: null, uid: null, data: null, loading: false, err: '', lastT: 0, sendT: 0, store: '',
 };
