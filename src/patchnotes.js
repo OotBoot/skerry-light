@@ -6,6 +6,8 @@
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 166, date: '2026-11-11', title: "Fog Run: the chart closes ashore", Fixes: [
+    "Fog Run: if the chart was still open when the cutter beached, it now closes as you land instead of staying over the island." ] },
   { v: 165, date: '2026-11-11', title: "Fog Run: new islands and puzzles", New: [
     "Fog Run: two new Fight rules. Clear the Shore: send back every drowned man as they come up in waves. The Crab Tide: a crab swarm while the tide comes in and the beach shrinks every 15 seconds. Stay out of the water.",
     "Fog Run: Elite islands. One of the Lighthouse's bosses (the Diver, the Mooncusser or the Keelback), a little weaker, plus the drowned. Put it down for a Captain's card in everyone's salvage.",

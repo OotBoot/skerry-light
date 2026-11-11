@@ -135,7 +135,7 @@ function frAfterStart() {
 }
 function frStop() { FR.on = false; FR.leaving = false; FR.backT = 0; FR.lost = false; }
 // (raidUseStage) entering a stage: which reach and stop it is
-function frEnterStage() { const p = frPlanNow(); if (!p) return; FR.stop = p.key === 'frsail' ? p.n - 1 : p.n; if (p.reach !== FR.reach) { FR.reach = p.reach; } if (typeof frcEnter === 'function') frcEnter(p); }   // [fogrun cards]
+function frEnterStage() { const p = frPlanNow(); if (!p) return; FR.stop = p.key === 'frsail' ? p.n - 1 : p.n; if (p.reach !== FR.reach) { FR.reach = p.reach; } if (typeof frcEnter === 'function') frcEnter(p); if (p.key !== 'frsail' && typeof frChartClose === 'function' && typeof FRV !== 'undefined' && FRV.open) frChartClose(false); }   // [fogrun cards]
 
 // ---------- lives ----------
 // (zmBleedOut, together) the time on the floor ran out: your extra life, if you have it, or lost in the fog
