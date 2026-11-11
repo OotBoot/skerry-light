@@ -1684,7 +1684,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 // ---- src/config.js ----
 'use strict';
 // The game's version, shown at the top of the main menu. Bump it by one with every change pushed to main.
-var VERSION = 114;
+var VERSION = 115;
 // Skerry Light: tuning, asset paths and lore.
 // World units are metres. The lighthouse stands at the origin on the shoreline (y = 0);
 // north (+y) is open sea. Bearings: 0 = north, positive = east.
@@ -30353,7 +30353,7 @@ function raidHud(phone, mono, fell) {
 // pace; any brazier's light lifts it at once. The wrecking balls: hung from the cave's roof over the path between
 // braziers, BALL_R across, swinging across the path in BALL_T seconds or so; one that catches you puts you straight
 // down (whatever your health, your class or your iframes), thrown aside
-const RSWX = { WGT_T: 15.4, WGT_SLOW: 0.25, BALL_R: 1.05, BALL_LOW: 1.3, BALL_T: 3.6, BALL_DMG: 1, BALL_CD: 1.2 };
+const RSWX = { WGT_T: 15.4, WGT_SLOW: 0.25, WGT_BURST: 0.1, BALL_R: 1.05, BALL_LOW: 1.3, BALL_T: 3.6, BALL_DMG: 1, BALL_CD: 1.2 };
 // The pier's end: the Long Pier (PW wide) runs on out over the Swallow to a round platform (PR across, its middle at
 // PC) a step above the deck. Once someone's halfway along (PHALF) the drowned come up the pier behind; once someone
 // stands on the platform, PNEED of them sent back (anywhere, while one of you is on it) and the platform falls away
@@ -30908,7 +30908,7 @@ RAID_STAGES.descent = {
     // the dark drains you; a lit brazier mends you, and makes up your ammunition
     S.inLight = below && rswInLight(m.x, m.y, m.jz);
     // Maren's Weight: down here, out of the light, it settles on you; the light lifts it all at once
-    if (below && alive && !S.inLight) { if (!S.weight) fpsFeed('Maren’s Weight settles on you. Get to the light.'); S.weight = Math.min(1, (S.weight || 0) + dt / RSWX.WGT_T); }
+    if (below && alive && !S.inLight) { if (!S.weight) { fpsFeed('Maren’s Weight settles on you. Get to the light.'); S.weight = RSWX.WGT_BURST / (1 - RSWX.WGT_SLOW); } S.weight = Math.min(1, S.weight + dt / RSWX.WGT_T); }   // it lands at once as a 10% slow, then builds
     else if (S.inLight && S.weight > 0) { if (S.weight > 0.15) fpsFeed('The light lifts Maren’s Weight.'); S.weight = 0; }
     else if (!below || !alive) S.weight = 0;
     // the wrecking balls: caught by one, knocked and thrown aside (each of us judges our own)
