@@ -1685,7 +1685,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 // ---- src/config.js ----
 'use strict';
 // The game's version, shown at the top of the main menu. Bump it by one with every change pushed to main.
-var VERSION = 127;
+var VERSION = 128;
 // Skerry Light: tuning, asset paths and lore.
 // World units are metres. The lighthouse stands at the origin on the shoreline (y = 0);
 // north (+y) is open sea. Bearings: 0 = north, positive = east.
@@ -32304,7 +32304,8 @@ function rfTick(dt) {
   const alive = ZM.z.filter(z => !z.dead && !z.boss).length, cap0 = RFC.ALIVE[RF.st === 'hunt' ? 0 : 1] + RFC.ALIVE_MORE * (n - 1);
   const p2k = RF.p2 && RF.st === 'maren' && typeof RF2 !== 'undefined' ? RF2.FEWER : 1, cap = Math.round(cap0 * p2k);   // [p2] (a fifth fewer in her storm, and coming a fifth slower)
   RF.spawnT -= dt;
-  if (RF.st !== 'won' && alive < cap && RF.spawnT <= 0) RF.spawnT = (zmSpawn() ? (RF.st === 'hunt' ? 1.7 : 1.05) / p2k : 0.5) * (0.7 + Math.random() * 0.6);
+  if (RF.st !== 'won' && !RF.p2i && alive < cap && RF.spawnT <= 0)   // [p2] (none while she calls the storm)
+    RF.spawnT = (zmSpawn() ? (RF.st === 'hunt' ? 1.7 : 1.05) / p2k : 0.5) * (0.7 + Math.random() * 0.6);
   if (RF.st === 'hunt') {
     // stepping into an apothecary wakes its keeper
     for (const k of RF_APO_IDS) if (!RF.apo[k] && P.some(p => zmZoneAt(p.x, p.y, p.jz) === k)) rfWake(k);
@@ -32324,7 +32325,7 @@ function rfTick(dt) {
     else if (!RF.orbUp && M && !(M.act === 'rise')) { RF.orbGap -= dt; if (RF.orbGap <= 0) { RF.orbUp = true; RF.orbPh = Math.random() * 60; RF.orbHp = RFC.ORB_HP; } }
     if (RF.orbUp) { RF.orbT += dt; RF.orb = rfOrbAt(RF.orbT + RF.orbPh); }
     // now and then another of them climbs in too
-    RF.bossT -= dt;
+    if (!RF.p2i) RF.bossT -= dt;   // [p2] (nor another boss)
     if (RF.bossT <= 0) {
       RF.bossT = RFC.BOSS_T[0] + Math.random() * (RFC.BOSS_T[1] - RFC.BOSS_T[0]);
       const live = ZM.z.filter(z => z.boss && !z.dead && z.bt !== 'maren').length;
@@ -33383,10 +33384,8 @@ function rf2Host(M, dt) {
   if (!RF.p2 && M.act !== 'rise' && M.hp <= M.max * RF2.AT) {
     RF.p2 = 1; M.sp *= RF2.SP; M.wj0 = M.fl || 0;
     zbStart(M, 'wrath');
-    // (the sea takes back a fifth of the drowned as the storm comes: the farthest from any of you)
-    { const P = (ZM.players || []).filter(p => p && p.x != null), far = z => Math.min(...P.map(p => Math.hypot(z.x - p.x, z.y - p.y)), 1e9);
-      const live = ZM.z.filter(z => !z.dead && !z.boss).sort((a, b) => far(b) - far(a)), cap = Math.round((RFC.ALIVE[1] + RFC.ALIVE_MORE * (rfN() - 1)) * RF2.FEWER);
-      for (let i = 0; i < live.length - cap; i++) zmKill(live[i], false, '', 'flash'); }
+    // (as the storm comes the sea takes back every one of the drowned, and every other boss: only she and her soul stay)
+    for (const z of ZM.z) if (!z.dead && z.bt !== 'maren') zmKill(z, false, '', 'flash');
     RF.bell = { ph: 0, t: -RF2.BELL.FIRST, n: 0, c: [], seq: (RF.bell.seq || 0) + 1 };
   }
   if (!RF.p2 || M.act === 'wrath') return;

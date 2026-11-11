@@ -38,10 +38,8 @@ function rf2Host(M, dt) {
   if (!RF.p2 && M.act !== 'rise' && M.hp <= M.max * RF2.AT) {
     RF.p2 = 1; M.sp *= RF2.SP; M.wj0 = M.fl || 0;
     zbStart(M, 'wrath');
-    // (the sea takes back a fifth of the drowned as the storm comes: the farthest from any of you)
-    { const P = (ZM.players || []).filter(p => p && p.x != null), far = z => Math.min(...P.map(p => Math.hypot(z.x - p.x, z.y - p.y)), 1e9);
-      const live = ZM.z.filter(z => !z.dead && !z.boss).sort((a, b) => far(b) - far(a)), cap = Math.round((RFC.ALIVE[1] + RFC.ALIVE_MORE * (rfN() - 1)) * RF2.FEWER);
-      for (let i = 0; i < live.length - cap; i++) zmKill(live[i], false, '', 'flash'); }
+    // (as the storm comes the sea takes back every one of the drowned, and every other boss: only she and her soul stay)
+    for (const z of ZM.z) if (!z.dead && z.bt !== 'maren') zmKill(z, false, '', 'flash');
     RF.bell = { ph: 0, t: -RF2.BELL.FIRST, n: 0, c: [], seq: (RF.bell.seq || 0) + 1 };
   }
   if (!RF.p2 || M.act === 'wrath') return;

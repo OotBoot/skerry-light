@@ -384,7 +384,8 @@ function rfTick(dt) {
   const alive = ZM.z.filter(z => !z.dead && !z.boss).length, cap0 = RFC.ALIVE[RF.st === 'hunt' ? 0 : 1] + RFC.ALIVE_MORE * (n - 1);
   const p2k = RF.p2 && RF.st === 'maren' && typeof RF2 !== 'undefined' ? RF2.FEWER : 1, cap = Math.round(cap0 * p2k);   // [p2] (a fifth fewer in her storm, and coming a fifth slower)
   RF.spawnT -= dt;
-  if (RF.st !== 'won' && alive < cap && RF.spawnT <= 0) RF.spawnT = (zmSpawn() ? (RF.st === 'hunt' ? 1.7 : 1.05) / p2k : 0.5) * (0.7 + Math.random() * 0.6);
+  if (RF.st !== 'won' && !RF.p2i && alive < cap && RF.spawnT <= 0)   // [p2] (none while she calls the storm)
+    RF.spawnT = (zmSpawn() ? (RF.st === 'hunt' ? 1.7 : 1.05) / p2k : 0.5) * (0.7 + Math.random() * 0.6);
   if (RF.st === 'hunt') {
     // stepping into an apothecary wakes its keeper
     for (const k of RF_APO_IDS) if (!RF.apo[k] && P.some(p => zmZoneAt(p.x, p.y, p.jz) === k)) rfWake(k);
@@ -404,7 +405,7 @@ function rfTick(dt) {
     else if (!RF.orbUp && M && !(M.act === 'rise')) { RF.orbGap -= dt; if (RF.orbGap <= 0) { RF.orbUp = true; RF.orbPh = Math.random() * 60; RF.orbHp = RFC.ORB_HP; } }
     if (RF.orbUp) { RF.orbT += dt; RF.orb = rfOrbAt(RF.orbT + RF.orbPh); }
     // now and then another of them climbs in too
-    RF.bossT -= dt;
+    if (!RF.p2i) RF.bossT -= dt;   // [p2] (nor another boss)
     if (RF.bossT <= 0) {
       RF.bossT = RFC.BOSS_T[0] + Math.random() * (RFC.BOSS_T[1] - RFC.BOSS_T[0]);
       const live = ZM.z.filter(z => z.boss && !z.dead && z.bt !== 'maren').length;
