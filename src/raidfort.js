@@ -33,7 +33,7 @@
 const RFC = {
   RT: 3.2, WH: 5.4,   // (the Sea Battery's height over the Plaza; the height of the fort's walls)
   ROUND: 10,   // (how strong the drowned are here, as a Lighthouse round, at the least)
-  VUL: 30, ORB_GAP: 3.5, ORB_R: 2, ORB_Z: 15, ORB_K: 1.6, ORB_HP: 30, ORB_SEND: 0.15,   // (how long she can be hurt once her soul's shot; before it's back; how big it is to hit,
+  VUL: 30, ORB_GAP: 3.5, ORB_R: 2, ORB_Z: 15, ORB_K: 1.6, ORB_HP: 30, ORB_VY: 1.15, ORB_SEND: 0.15,   // (how long she can be hurt once her soul's shot; before it's back; how big it is to hit,
   // how high over the sea, how much bigger it's drawn than it was;
   // how much it takes to burst it, as weak-spot hits; how often a joined player's hits on it go to the host)
   HP: 64, PTS: 2500, BOOST: 1.25, HP_MORE: 0.75,
@@ -348,7 +348,7 @@ const rfBox = () => RF_ZONES;   // (for tests)
 
 // everyone, once the fort's laid out: its state made fresh; every room open to the drowned; you face the Plaza
 function rfEnter() {
-  Object.assign(RF, { on: true, st: 'hunt', apo: { apoW: 0, apoE: 0, apoN: 0 }, apoZ: {}, wait: 0, mz: 0, vul: 0, orbUp: false, orbGap: 0, orbT: 0, orbPh: 0, orb: [FPSC.CX, FPSC.CY - 40, 8], orbS: null, orbHp: RFC.ORB_HP, orbAcc: 0,
+  Object.assign(RF, { on: true, st: 'hunt', apo: { apoW: 0, apoE: 0, apoN: 0 }, apoZ: {}, wait: 0, mz: 0, vul: 0, orbUp: false, orbGap: 0, orbT: 0, orbPh: 0, orb: [FPSC.CX, FPSC.CY - 40, 8], orbS: null, orbHp: RFC.ORB_HP, orbAcc: 0, noSoulSaid: false,
     bossT: RFC.BOSS_T[0], tok: null, mine: false, wonT: 0, kz: 0, angerT: 0, angered: false, grab: 0, shot: 0, spawnT: 3, t: 0, seenSt: 'hunt', burst: 0, hintT: 9, mile: 0, vulWas: false });
   if (typeof rf2Reset === 'function') rf2Reset();   // [p2] her second phase (src/raidmaren2.js)
   ZM.open = new Set(['raid'].concat(Object.keys(RF_ZONES)));
@@ -401,8 +401,9 @@ function rfTick(dt) {
   } else if (RF.st === 'maren') {
     const M = ZM.z.find(z => z.zn === RF.mz);
     if (typeof rf2Host === 'function') rf2Host(M, dt);   // [p2] at a third of her health, the storm; then the bell
-    // her soul over the water: up, shot, and up again
-    if (RF.vul > 0) { RF.vul -= dt; if (RF.vul <= 0) { RF.vul = 0; RF.orbGap = RFC.ORB_GAP; rfLine('Maren’s soul sinks back into the sea. She can’t be hurt again until it’s shot.'); } }
+    // her soul over the water: up, shot, and up again (unless Verity was put down this raid: then she has none, and can always be hurt)
+    if (rfSoulless()) { RF.vul = RFC.VUL; RF.orbUp = false; if (!RF.noSoulSaid) { RF.noSoulSaid = true; rfLine('Verity took Maren’s soul with him. She has none: she can be hurt the whole fight.'); } }
+    else if (RF.vul > 0) { RF.vul -= dt; if (RF.vul <= 0) { RF.vul = 0; RF.orbGap = RFC.ORB_GAP; rfLine('Maren’s soul sinks back into the sea. She can’t be hurt again until it’s shot.'); } }
     else if (!RF.orbUp && M && !(M.act === 'rise')) { RF.orbGap -= dt; if (RF.orbGap <= 0) { RF.orbUp = true; RF.orbPh = Math.random() * 60; RF.orbHp = RFC.ORB_HP; } }
     if (RF.orbUp) { RF.orbT += dt; RF.orb = rfOrbAt(RF.orbT + RF.orbPh); }
     // now and then another of them climbs in too
@@ -420,6 +421,8 @@ function rfTick(dt) {
     if (RF.wonT <= 0) { if (RF.practice) zmEnd(); else if (typeof raidWin === 'function') raidWin(); }   // [p2] (practice: no win, no rewards)
   }
 }
+// Verity is down this raid (src/raidverity.js): he was her soul, so she has none
+const rfSoulless = () => typeof RV !== 'undefined' && RV.done && RF.st === 'maren';
 // where her soul is at time t: drifting over the water beyond the sea wall, rising and falling
 // (high enough, RFC.ORB_Z, to be seen and shot over the sea wall from the Plaza)
 function rfOrbAt(t) {
@@ -842,6 +845,7 @@ function rfHud(phone, mono, fell) {
     const M = ZM.z.find(z => z.zn === RF.mz);
     const t2 = typeof rf2Hud === 'function' ? rf2Hud(phone, mono, fell, line, top) : top;   // [p2] the storm call, the bell
     if (RF.p2i) { /* (her storm call says it all) */ }
+    else if (rfSoulless()) line('Maren has no soul: she can always be hurt', t2, `rgba(255,120,130,${0.8 + 0.2 * Math.sin(t * 8)})`, fell(phone ? 15 : 20));
     else if (RF.vul > 0) line(`Maren can be hurt: ${Math.ceil(RF.vul)} s`, t2, `rgba(255,120,130,${0.8 + 0.2 * Math.sin(t * 8)})`, fell(phone ? 15 : 20));
     else if (M && M.act === 'rise') line('Maren rises', t2, 'rgba(160,240,220,0.9)', fell(phone ? 15 : 20));
     else { line('Maren can\u2019t be hurt', t2, 'rgba(160,240,220,0.9)', fell(phone ? 15 : 20)); line(RF.orbUp ? 'Shoot her soul: the light over the water' : 'Her soul is under the sea', t2 + (phone ? 20 : 26), 'rgba(160,240,220,0.8)'); }
@@ -893,10 +897,14 @@ function rf3dBuild(grp) {
   if (typeof rfk3dBuild === 'function') rfk3dBuild(grp);
   if (typeof rf2Build3d === 'function') rf2Build3d(grp);   // [p2]
   const soft = (c0, c1) => new THREE.SpriteMaterial({ map: z3Soft(c0, c1), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false });
-  // the soul: a hot core, a gold glow round it, a wider haze, and its light on the sea under it
+  // the soul: Verity, the smiling yellow egg (src/raidverity.js), lit from within, a gold glow round him, a wider
+  // haze, and his light on the sea under him
   const orb = RF3.orb = new THREE.Group(); grp.add(orb); orb.visible = false;
-  orb.add(new THREE.Mesh(new THREE.SphereGeometry(0.42 * RFC.ORB_K, 16, 12), new THREE.MeshBasicMaterial({ color: 0xfff2b0, fog: false })));
-  const g1 = RF3.g1 = new THREE.Sprite(soft('rgba(255,230,120,1)', 'rgba(255,200,60,0)')); g1.scale.setScalar(3.2); orb.add(g1);
+  if (typeof rvBuildLittle === 'function') {
+    const V = RF3.vy = rvBuildLittle(), k = RFC.ORB_VY; V.o.scale.setScalar(k); V.o.position.y = -RVO.Y * k; orb.add(V.o);
+    V.o.traverse(o => { if (o.material) o.material.fog = false; if (o.material && o.material.emissive && o.material.color.getHex() === 0xe8d41a) o.material.emissive.setHex(0x7a6a08); });
+  } else orb.add(new THREE.Mesh(new THREE.SphereGeometry(0.42 * RFC.ORB_K, 16, 12), new THREE.MeshBasicMaterial({ color: 0xfff2b0, fog: false })));
+  const g1 = RF3.g1 = new THREE.Sprite(soft('rgba(255,230,120,0.5)', 'rgba(255,200,60,0)')); g1.scale.setScalar(3.2); orb.add(g1);
   const g2 = RF3.g2 = new THREE.Sprite(soft('rgba(255,220,110,0.45)', 'rgba(255,190,60,0)')); g2.scale.setScalar(9); orb.add(g2);
   const refl = RF3.refl = new THREE.Sprite(soft('rgba(255,220,120,0.55)', 'rgba(255,200,80,0)')); refl.scale.set(6, 1.4, 1); grp.add(refl); refl.visible = false;
   RF3.light = new THREE.PointLight(0xffd880, 0, 30, 1.4); grp.add(RF3.light);
@@ -932,7 +940,10 @@ function rf3d(dt) {
   RF3.light.intensity = up ? 2.2 + 0.4 * Math.sin(t * 6) : 0;
   if (up) {
     const [ox, oy, oz] = RF.orb, p = 1 + 0.12 * Math.sin(t * 6) + 0.06 * Math.sin(t * 17);
-    RF3.orb.position.copy(z3v(ox, oy, oz)); RF3.g1.scale.setScalar(3.2 * RFC.ORB_K * p); RF3.g2.scale.setScalar(9 * RFC.ORB_K * (2 - p));
+    RF3.orb.position.copy(z3v(ox, oy, oz));
+    // (Verity turns to face you, his eyes on you, bobbing and swaying as the little one does)
+    if (RF3.vy) { const V = RF3.vy; RF3.orb.rotation.set(0, -bearingOf(FPS.me.x - ox, FPS.me.y - oy), 0); V.body.position.y = Math.sin(t * 2.1) * 0.05; V.body.rotation.z = Math.sin(t * 0.9) * 0.08; }
+    RF3.g1.scale.setScalar(3.2 * RFC.ORB_K * p); RF3.g2.scale.setScalar(9 * RFC.ORB_K * (2 - p));
     RF3.refl.position.copy(z3v(ox, oy, G0 + ZMD.WATER + 0.05)); RF3.light.position.copy(z3v(ox, oy, oz - 1));
   }
   // her call's rings
