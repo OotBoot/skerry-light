@@ -6,13 +6,19 @@
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
-  { v: 162, date: '2026-11-11', title: "Fog Run: the salvage", New: [
+  { v: 163, date: '2026-11-11', title: "Fog Run: the salvage", New: [
     "Fog Run: after every island you light, each of you is dealt three salvage cards of your own. Keep one. You have 20 seconds, then the left-hand card is taken for you.",
     "Fog Run: guns from the wreck (any wall gun or wreck-chest gun), the Lampwright's Spark (reforge the gun in your hand), and a Rum Tot (your ultimate and grenade ready now).",
     "Fog Run: relics, kept to the end of the run and shown beside your stamina: Keeper's Oilcan, Gull Feather, Drowned Man's Ring, Salt in the Wound, Plimsoll's Tooth, a cork for each tonic, and more to find.",
     "Fog Run: crew cards that help everyone aboard: Fresh Planks, A Second Lamp, Fair Wind, The Haar Lifts and, together, Call Them Home. Only one crew card in any hand.",
     "Fog Run: together, Maren's Ribbon gives you back your extra life.",
     "Fog Run: cards come in three rarities, Deckhand, Bosun and Captain. Rarer cards turn up more the further out you sail, and new cards join the salvage as you collect chart fragments." ] },
+  { v: 162, date: '2026-11-11', title: "Fog Run: the chart", New: [
+    "Fog Run: the run now follows a chart. Seven islands across three reaches of sea, with two or three to choose between at every stop and the ways between them branching, like a map in a roguelike. Every run's chart is different.",
+    "Fog Run: as each sail begins the chart opens and the crew votes on the next island. Five seconds after the first vote it's settled: the most votes wins, and the host breaks a tie. Alone, your pick is the course.",
+    "Fog Run: a chart table on deck, port side aft of the hatch, shows the route so far. Use it to open the chart again.",
+    "Fog Run: each island on the chart shows what kind it is, its island and where it leads. More kinds of island are on the way." ], Changes: [
+    "Fog Run: the cutter never waits for the vote. She sails on while you choose, and if nobody votes in time (or she comes in sight of the islands) the chart picks one." ] },
   { v: 161, date: '2026-11-11', title: "Fog Run: what you keep", New: [
     "Fog Run: runs now pay out. You get a weapon or outfit crate for every two islands lit, and three more for a win.",
     "Fog Run: every beacon you light gives you a chart fragment, kept for good. The Fog Run card shows how many you have.",
