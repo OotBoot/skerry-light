@@ -999,6 +999,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 /* [fogrun] Fog Run (src/frrun.js): its card and its banner, a beacon's warm light in the haar's grey */
 .frcard { border-color: rgba(190,200,210,0.45); }
 .frcard h1 { color: #ffd8a0; text-shadow: 0 0 28px rgba(200,212,224,0.4); }
+.frcard .frkeep { color: #c8d4e0; font-size: 13px; }   /* [fogrun] chart fragments (src/frkeep.js) */
 .newgame.frbanner { border-color: rgba(190,200,210,0.5); background: linear-gradient(90deg, rgba(150,165,180,0.28), rgba(150,165,180,0.08)); }
 .newgame.frbanner:hover, .newgame.frbanner:focus-visible { background: linear-gradient(90deg, rgba(150,165,180,0.42), rgba(150,165,180,0.16)); }
 .newgame.frbanner .ng-tag { background: #8a9aaa; color: #f6f8fa; }

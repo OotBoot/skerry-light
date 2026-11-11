@@ -234,7 +234,7 @@ function rmvRender() {
   const P = RMV.P = rmvRank(L), me = FPS.me.id;
   const n = P.length, tok = typeof ptTokens === 'function' ? ptTokens() : 0;
   { const ey = document.querySelector('#rmvOver .rmvhead .eyebrow'); if (ey) ey.textContent = `${typeof raidName === 'function' ? raidName() : 'Maren’s End'} · won`; $('rmvHead').textContent = typeof RAID !== 'undefined' && RAID.map === 'fogrun' ? 'The lights are lit again' : typeof RAID !== 'undefined' && RAID.map === 'gannet' ? 'Captain Crane goes down with his ship' : 'Maren is laid to rest'; }   // [gannet] (each raid its own words) [fogrun]
-  $('rmvSub').textContent = `${n > 1 ? n + ' of you, ' : ''}${typeof FR !== 'undefined' && FR.on ? (FR.lit | 0) + ' islands lit' : 'all three parts'} in ${typeof raidClock === 'function' ? raidClock(RAID.t) : Math.round(RAID.t) + ' s'}. ${P[0] ? (P[0].id === me ? 'You were the best of the night.' : P[0].n + ' was the best of the night.') : ''}`;
+  $('rmvSub').textContent = `${n > 1 ? n + ' of you, ' : ''}${typeof FR !== 'undefined' && FR.on ? (FR.lit | 0) + ' islands lit' : 'all three parts'} in ${typeof raidClock === 'function' ? raidClock(RAID.t) : Math.round(RAID.t) + ' s'}. ${P[0] ? (P[0].id === me ? 'You were the best of the night.' : P[0].n + ' was the best of the night.') : ''}` + (typeof frKeepLine === 'function' && typeof FR !== 'undefined' && FR.on ? ' ' + frKeepLine() : '');   // [fogrun] what the run kept
   $('rmvToken').textContent = tok > 0 ? `Spend your pirate token (${tok})` : 'The Gannet’s Locker';
   $('rmvAgain').textContent = ZM.net ? 'Play again (to the lobby)' : 'Play again';
   const box = $('rmvCards'); box.textContent = '';
