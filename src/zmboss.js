@@ -284,7 +284,7 @@ function zbFlash(z) { if (zbT(z).noFlash && zbT(z).noFlash(z)) return; z.hp = Ma
 function zbKilled(z, how, by) {
   const T = zbT(z);
   zmPoints(T.pts, false, by);
-  const r = Math.random(), k = r < 0.35 ? 'keg' : r < 0.6 ? 'double' : r < 0.8 ? 'spot' : 'flash';
+  const r = Math.random(), k = typeof zmInfRes === 'function' && zmInfRes() ? 'double' : r < 0.35 ? 'keg' : r < 0.6 ? 'double' : r < 0.8 ? 'spot' : 'flash';
   ZM.drops.push({ k, x: z.x, y: z.y, z: z.jz || 0, t: 30, ph: Math.random() * 6, id: ++ZM.zc });
   zmSound('drop');
   const who = !by || by === FPS.me.id ? 'You' : ((ZM.hum.find(h => h[0] === by) || [])[1] || 'Someone');

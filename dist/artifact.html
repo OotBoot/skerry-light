@@ -1678,7 +1678,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 // ---- src/config.js ----
 'use strict';
 // The game's version, shown at the top of the main menu. Bump it by one with every change pushed to main.
-var VERSION = 136;
+var VERSION = 137;
 // Skerry Light: tuning, asset paths and lore.
 // World units are metres. The lighthouse stands at the origin on the shoreline (y = 0);
 // north (+y) is open sea. Bearings: 0 = north, positive = east.
@@ -20922,7 +20922,7 @@ function zmSettle(m) {
 }
 function zmSpeedK() { return (ZM.perks.fleet ? 1.22 : 1) * (typeof zbSpeedK === 'function' ? zbSpeedK() : 1) * (typeof raidSpeedK === 'function' ? raidSpeedK() : 1); }   // [boss] (dragged by the false light)
 function zmReloadK() { return (ZM.perks.quick ? 0.5 : 1) * (typeof rclReloadK === 'function' ? rclReloadK() : 1); }   // [classes] (Maren's End: the blunderbuss quicker)
-function zmCanReload() { const w = fpsW(); return w.melee || (ZM.res[FPS.weapon] || 0) > 0; }
+function zmCanReload() { const w = fpsW(); return w.melee || zmInfRes() || (ZM.res[FPS.weapon] || 0) > 0; }
 
 // ---------- the grid the drowned find their way by ----------
 // Cells half a metre across over the whole station. A cell can have several places to stand, one above another
@@ -21175,12 +21175,14 @@ function zmFrame(dt) {
     fpsDraw();
   } finally { g = saved[0]; ship = saved[1]; }
 }
+// in the raid what you carry never runs out: you still reload, but the reserve is bottomless
+function zmInfRes() { return typeof RAID !== 'undefined' && RAID.on; }
 // a reload finished: the magazine filled from what you carry
 function zmReloaded() {
   const m = FPS.me, w = fpsW(), id = FPS.weapon;
   if (w.melee) return;
-  const take = Math.min(w.mag - m.ammo, ZM.res[id] || 0);
-  m.ammo += take; ZM.res[id] = (ZM.res[id] || 0) - take; m.mags[id] = m.ammo;
+  const inf = zmInfRes(), take = inf ? w.mag - m.ammo : Math.min(w.mag - m.ammo, ZM.res[id] || 0);
+  m.ammo += take; if (!inf) ZM.res[id] = (ZM.res[id] || 0) - take; m.mags[id] = m.ammo;
 }
 
 function zmTick(dt) {
@@ -21743,7 +21745,7 @@ function zmKillFx(d) {
 function zmMaybeDrop(d, how) {
   if (ZM.dropsRound < 4 && !ZM.swarm && Math.random() < 0.03 && how !== 'flash') {
     ZM.dropsRound++;
-    const r = Math.random(), k = r < 0.35 ? 'keg' : r < 0.6 ? 'double' : r < 0.8 ? 'spot' : 'flash';
+    const r = Math.random(), k = zmInfRes() ? 'double' : r < 0.35 ? 'keg' : r < 0.6 ? 'double' : r < 0.8 ? 'spot' : 'flash';   // [raid] (there, only Double Points)
     ZM.drops.push({ k, x: d.x, y: d.y, z: d.jz || 0, t: 26, ph: Math.random() * 6, id: ++ZM.zc });
     zmSound('drop');
   }
@@ -23132,10 +23134,10 @@ function zmHud() {
     const by = H - 22;
     ctx.textAlign = 'right'; ctx.textBaseline = 'alphabetic'; ctx.font = mono(24);
     ctx.fillStyle = w.melee || m.ammo ? 'rgba(236,228,207,0.92)' : '#e46c4f';
-    ctx.fillText(m.reload > 0 ? (w.melee ? 'WIPING' : 'RELOADING') : w.melee ? (FPS.weapon === 'cutlass' ? 'CUTLASS' : FPSW[FPS.weapon].n.toUpperCase()) : `${m.ammo} / ${ZM.res[FPS.weapon] || 0}`, R, by);
+    ctx.fillText(m.reload > 0 ? (w.melee ? 'WIPING' : 'RELOADING') : w.melee ? (FPS.weapon === 'cutlass' ? 'CUTLASS' : FPSW[FPS.weapon].n.toUpperCase()) : `${m.ammo} / ${zmInfRes() ? '∞' : ZM.res[FPS.weapon] || 0}`, R, by);
     ctx.font = mono(11); let wx = R;
     for (let i = ZM.own.length - 1; i >= 0; i--) { const id = ZM.own[i], lab = `${i + 1} ${(typeof zmpName === 'function' ? zmpName(id) : FPSW[id].n).toUpperCase()}`; ctx.fillStyle = id === FPS.weapon ? '#ffd88a' : 'rgba(236,228,207,0.4)'; ctx.fillText(lab, wx, by - 30); wx -= ctx.measureText(lab).width + 14; }
-    if (!w.melee && (m.ammo === 0 || (m.ammo < w.mag && m.ammo <= Math.ceil(w.mag * 0.25))) && !(m.reload > 0) && !ZM.over) { ctx.textAlign = 'center'; ctx.font = mono(13); ctx.fillStyle = (ZM.res[FPS.weapon] || 0) > 0 ? 'rgba(236,228,207,0.8)' : '#e46c4f'; ctx.fillText((ZM.res[FPS.weapon] || 0) > 0 ? 'R TO RELOAD' : m.ammo ? 'LOW AMMUNITION' : down ? 'NO AMMUNITION' : 'NO AMMUNITION · V OR FIRE TO KNIFE', cx, cy + 46); }
+    if (!w.melee && (m.ammo === 0 || (m.ammo < w.mag && m.ammo <= Math.ceil(w.mag * 0.25))) && !(m.reload > 0) && !ZM.over) { ctx.textAlign = 'center'; ctx.font = mono(13); ctx.fillStyle = zmInfRes() || (ZM.res[FPS.weapon] || 0) > 0 ? 'rgba(236,228,207,0.8)' : '#e46c4f'; ctx.fillText(zmInfRes() || (ZM.res[FPS.weapon] || 0) > 0 ? 'R TO RELOAD' : m.ammo ? 'LOW AMMUNITION' : down ? 'NO AMMUNITION' : 'NO AMMUNITION · V OR FIRE TO KNIFE', cx, cy + 46); }
   } else { zmPadState(); zmDrawStick(); }
   // together: everyone's points, down the right (yours lit), and anyone down marked
   // (on a phone: under the buttons if they reach across to it, as they do held upright)
@@ -23394,15 +23396,15 @@ function zmDrawStick() {
 function zmPadState() {
   const m = FPS.me, w = fpsW(), set = (id, on, text) => { const el = $(id); if (!el) return; el.classList.toggle('on', !!on); if (text != null && el.dataset.t !== text) { el.dataset.t = text; const c = el.querySelector('.cnt'); if (c) c.textContent = text; } };
   // (nothing left at all: Fire is the knife)
-  const dry = !w.melee && m.ammo <= 0 && !((ZM.res[FPS.weapon] || 0) > 0);
+  const dry = !w.melee && m.ammo <= 0 && !zmInfRes() && !((ZM.res[FPS.weapon] || 0) > 0);
   set('fpsPadFire', (w.melee || m.ammo > 0 || dry) && !(m.reload > 0), m.reload > 0 ? '…' : w.melee || dry ? '⚔' : String(m.ammo));
-  { const f = $('fpsPadFire').querySelector('small'); const lab = w.melee ? 'SWING' : dry ? 'KNIFE' : `/${ZM.res[FPS.weapon] || 0}`; if (f && f.textContent !== lab) f.textContent = lab; }
+  { const f = $('fpsPadFire').querySelector('small'); const lab = w.melee ? 'SWING' : dry ? 'KNIFE' : `/${zmInfRes() ? '∞' : ZM.res[FPS.weapon] || 0}`; if (f && f.textContent !== lab) f.textContent = lab; }
   set('fpsPadKnife', !((FPS.knifeT || 0) > 0) && !(m.dead > 0) && !zmIsDown());
   { const b = $('fpsPadWeapon'); if (b) { const c = b.querySelector('.wn'); if (c && c.textContent !== w.n) c.textContent = w.n; } }
   { const b = $('fpsPadScope'); if (b) { b.hidden = !(w.scope || w.ads); b.classList.toggle('on', FPS.scoped); } }
   set('fpsPadLantern', m.lan); set('fpsPadView', FPS.third);
   set('fpsPadJump', !((m.jz || 0) > (m.fl || 0) + 0.02) && !(m.dead > 0) && !zmIsDown());
-  set('fpsPadReload', !w.melee && m.ammo < w.mag && !(m.reload > 0) && (ZM.res[FPS.weapon] || 0) > 0);
+  set('fpsPadReload', !w.melee && m.ammo < w.mag && !(m.reload > 0) && (zmInfRes() || (ZM.res[FPS.weapon] || 0) > 0));
   set('fpsPadUse', !!ZM.near);
 }
 
@@ -27152,7 +27154,7 @@ function zbFlash(z) { if (zbT(z).noFlash && zbT(z).noFlash(z)) return; z.hp = Ma
 function zbKilled(z, how, by) {
   const T = zbT(z);
   zmPoints(T.pts, false, by);
-  const r = Math.random(), k = r < 0.35 ? 'keg' : r < 0.6 ? 'double' : r < 0.8 ? 'spot' : 'flash';
+  const r = Math.random(), k = typeof zmInfRes === 'function' && zmInfRes() ? 'double' : r < 0.35 ? 'keg' : r < 0.6 ? 'double' : r < 0.8 ? 'spot' : 'flash';
   ZM.drops.push({ k, x: z.x, y: z.y, z: z.jz || 0, t: 30, ph: Math.random() * 6, id: ++ZM.zc });
   zmSound('drop');
   const who = !by || by === FPS.me.id ? 'You' : ((ZM.hum.find(h => h[0] === by) || [])[1] || 'Someone');
@@ -28379,7 +28381,7 @@ function zwOut(z, dt) {
 
 // (from zmKill) one gone: the last of the swarm leaves a Powder Keg behind
 function zwKilled(d) {
-  if (!ZM.swarm || ZM.net === 'client') return;
+  if (!ZM.swarm || ZM.net === 'client' || (typeof RAID !== 'undefined' && RAID.on)) return;   // [raid] (no drops there but Double Points)
   if (ZM.left > 0 || ZM.z.some(q => q !== d && !q.dead && q.skit)) return;
   ZM.drops.push({ k: 'keg', x: d.x, y: d.y, z: d.jz || 0, t: 30, ph: Math.random() * 6, id: ++ZM.zc });
   zmSound('drop');

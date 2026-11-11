@@ -101,7 +101,7 @@ function zwOut(z, dt) {
 
 // (from zmKill) one gone: the last of the swarm leaves a Powder Keg behind
 function zwKilled(d) {
-  if (!ZM.swarm || ZM.net === 'client') return;
+  if (!ZM.swarm || ZM.net === 'client' || (typeof RAID !== 'undefined' && RAID.on)) return;   // [raid] (no drops there but Double Points)
   if (ZM.left > 0 || ZM.z.some(q => q !== d && !q.dead && q.skit)) return;
   ZM.drops.push({ k: 'keg', x: d.x, y: d.y, z: d.jz || 0, t: 30, ph: Math.random() * 6, id: ++ZM.zc });
   zmSound('drop');
