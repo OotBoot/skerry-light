@@ -310,11 +310,12 @@ function rfLay(H, K, Z) {
     { const rr = seeded(0x51a3); let n = 0;
       for (let t = 0; t < 4000 && n < 420; t++) {
         const x = (rr() - 0.5) * 170, y = (rr() - 0.5) * 150;
-        if ((Math.abs(x) < 41 && y > -23 && y < 45) || Math.hypot(x, y) > FPSC.R - 4 || y < ZM_SHORE(x) + 1) continue;
+        if ((Math.abs(x) < 41 && y > -23 && y < 45) || (Math.abs(x) < 12 && y > 54 && y < 76) || Math.hypot(x, y) > FPSC.R - 4 || y < ZM_SHORE(x) + 1) continue;   // [verity] (none in his room)
         H.decor('tuft', OX + x, OY + y, { s: 0.7 + rr() * 0.8, c: rr() < 0.5 ? '#4e6a38' : '#5e7040' }); n++;
       }
-      for (let i = 0; i < 18; i++) { const a = rr() * 6.283, d = 50 + rr() * 30, x = Math.cos(a) * d, y = Math.sin(a) * d * 0.9; if (Math.hypot(x, y) < FPSC.R - 6 && y > ZM_SHORE(x) + 2 && !(Math.abs(x) < 44 && y < 48)) put('stone', x, y, rr() * 6.283, { w: 0.6 + rr() * 0.8, d: 0.5 + rr() * 0.6, hh: 0.3 + rr() * 0.5 }); }
+      for (let i = 0; i < 18; i++) { const a = rr() * 6.283, d = 50 + rr() * 30, x = Math.cos(a) * d, y = Math.sin(a) * d * 0.9; if (Math.hypot(x, y) < FPSC.R - 6 && y > ZM_SHORE(x) + 2 && !(Math.abs(x) < 44 && y < 48) && !(Math.abs(x) < 13 && y > 53 && y < 77)) put('stone', x, y, rr() * 6.283, { w: 0.6 + rr() * 0.8, d: 0.5 + rr() * 0.6, hh: 0.3 + rr() * 0.5 }); }
     }
+    if (typeof rvLay === 'function') rvLay(H, K, Z);   // [verity] (src/raidverity.js)
     Z.glass = (Z.glassQ || []).slice();
   }
 }

@@ -39,6 +39,7 @@ function rmWant() {
   RM.fell = false;
   if (k === 'bridge') return 'raidbridge';
   if (k === 'fort' && typeof RF !== 'undefined') {
+    { const v = typeof rvMusic === 'function' ? rvMusic() : undefined; if (v !== undefined) return v; }   // [verity] (src/raidverity.js)
     if (RF.st === 'maren') { const z = ZM.z.find(z => z.bt === 'maren' && !z.dead); return (RF.p2 != null ? RF.p2 : z && z.hp / z.max <= 1 / 3) ? 'raidmaren2' : 'raidmaren'; }
     if (RF.st === 'anger' && RF.angered) return 'raidmaren';
     if (RF.st === 'knock') { const z = ZM.z.find(z => z.bt === 'knock' && !z.dead); return z && z.act === 'song' ? 'raidsong' : 'raidknock'; }
