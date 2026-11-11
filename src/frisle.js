@@ -220,7 +220,7 @@ function friStage(rules, o) {
     get n() { return (FPS_ISLES.frisle && FPS_ISLES.frisle.name) || 'an island'; },
     map: FRI_MAP, mend: true, open: true,
     music: () => call('music') || o.music || FR_MUSIC.isle,
-    prep(i) { const p = FR.plan[i]; if (p && !rules[p.rule]) p.rule = friPick(rules, p.n); frIsleLook(i); call('prep', i); },
+    prep(i) { const p = FR.plan[i]; if (p && !rules[p.rule]) p.rule = friPick(rules, p.n); frIsleLook(i); const R = p && rules[p.rule]; if (R && R.prep) R.prep(i); },
     set(H, K, Z) { friBellSet(H); call('set', H, K, Z); },
     enter() { frEnterStage(); friBellEnter(); call('enter'); },
     banner() { const R = FR_REACH[FR.reach] || FR_REACH[1]; return { text: FPS_ISLES.frisle.name, t: 4.5, sub: `${R.n} · stop ${FR.stop} · ${(rule() || {}).n || ''}`, col: '#ffe2a8' }; },
@@ -303,17 +303,10 @@ function friBellHud(phone) {
 // in 3D: the bell on its frame, rising out of the ground while it's up, and a pale light on it
 const FRIB3 = { on: false, k: 0 };
 function friBell3dBuild(grp) {
-  const [bx, by] = friBellAt(), Z = FPSC.GROUND + fpsIsleH(FPS.g.isle, bx, by), G = new THREE.Group();
-  const wood = new THREE.MeshLambertMaterial({ color: 0x4a3a2a }), brass = new THREE.MeshLambertMaterial({ color: 0x9a7a40, emissive: 0x2a2010 });
-  for (const s of [-1, 1]) { const p = new THREE.Mesh(new THREE.BoxGeometry(0.18, 2.6, 0.18), wood); p.position.set(s * 0.8, 1.3, 0); G.add(p); }
-  const bar = new THREE.Mesh(new THREE.BoxGeometry(1.9, 0.2, 0.22), wood); bar.position.set(0, 2.6, 0); G.add(bar);
-  const bell = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.48, 0.75, 14, 1, true), brass); bell.material.side = THREE.DoubleSide; bell.position.set(0, 2.1, 0); G.add(bell);
-  const top = new THREE.Mesh(new THREE.SphereGeometry(0.22, 10, 6, 0, 6.283, 0, Math.PI / 2), brass); top.position.set(0, 2.47, 0); G.add(top);
-  G.position.copy(z3v(bx, by, Z)); G.userData.z = Z; grp.add(G);
-  const soft = z3Soft('rgba(210,230,255,0.9)', 'rgba(160,190,230,0)');
-  const halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: soft, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: 0, fog: false }));
+  const [bx, by] = friBellAt(), G = friBellMesh(bx, by); grp.add(G);
+  const halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: z3Soft('rgba(210,230,255,0.9)', 'rgba(160,190,230,0)'), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: 0, fog: false }));
   halo.position.set(0, 2.2, 0); halo.scale.setScalar(5); G.add(halo);
-  Object.assign(FRIB3, { on: true, G, bell, halo, k: 0, Z, bx, by });
+  Object.assign(FRIB3, { on: true, G, bell: G.userData.bell, halo, k: 0, Z: G.userData.Z, bx, by });
 }
 function friBell3d(dt) {
   if (!FRIB3.on || !FRIB3.G) return;
@@ -352,3 +345,425 @@ function fri3d(dt) {
   FRI3.beam.material.opacity = 0.22 * FRI3.beamK; FRI3.core.material.opacity = 0.5 * FRI3.beamK;
   frIsleFog();
 }
+
+// ---------- the light, for every rule but Hold the Light: lit once the island's job is done ----------
+// RAID.st.ph: 'wait' (the job's still to do), 'ready' (hold Use at the beacon, FRL.USE seconds, to light it: anyone),
+// 'lit' (its beam goes up: frIsleLit, and FRI.AWAY seconds later back aboard). friLit(rule) wraps a rule's own hooks
+// round these; the rule calls FRL.ready(line) when its job's done (or is ready from the start), and can give line()
+// (its HUD line while waiting) and bar() (how far along: 0 to 1).
+const FRL = { USE: 2, PH: ['wait', 'ready', 'lit'] };
+function frlEnter(ph) { Object.assign(RAID.st, { ph: ph || 'wait', awayT: 0, useT: 0, pend: 0, by: '', say: [0, '', 0], seenSay: 0, phSeen: ph || 'wait' }); }
+function frlReady(text) { const S = RAID.st; if (S.ph !== 'wait' || ZM.net === 'client') return; S.ph = 'ready'; frIsleSay(text || 'The way’s clear. Light the beacon (hold Use at it) and go back aboard.', true); }
+function friLit(R) {
+  const X = Object.assign({}, R), S = () => RAID.st;
+  X.enter = () => { frlEnter(R.ready0 ? 'ready' : 'wait'); if (R.enter) R.enter(); };
+  X.tick = dt => { if (R.tick) R.tick(dt); const s = S(); if (s.ph === 'lit') { s.awayT += dt; if (s.awayT >= FRI.AWAY) frIslandDone(); } };
+  X.q = (sid, k, a) => {
+    const s = S();
+    if (k === 'light') { if (s.ph === 'ready') { s.ph = 'lit'; s.awayT = 0; s.by = sid; frIsleLit(); if (R.lit) R.lit(); frIsleSay(`${friNick(sid)} lit the beacon, and its light goes up through the fog. Back aboard in ${FRI.AWAY} seconds.`, true); } return; }
+    if (R.q) R.q(sid, k, a);
+  };
+  X.pack = o => { const s = S(); o.fl = [FRL.PH.indexOf(s.ph), Math.round(s.awayT * 10)]; o.fsy = s.say; if (R.pack) R.pack(o); };
+  X.apply = o => {
+    const s = S();
+    if (Array.isArray(o.fl)) { const ph = FRL.PH[o.fl[0] | 0] || 'wait'; if (!(s.pend > 0) || ph === 'lit') s.ph = ph; s.awayT = (o.fl[1] | 0) / 10; }
+    if (Array.isArray(o.fsy)) { const n = o.fsy[0] | 0; if (n > s.seenSay) { if (s.seenSay || n === 1) frIsleHear(String(o.fsy[1] || ''), !!o.fsy[2]); s.seenSay = n; } }
+    if (R.apply) R.apply(o);
+  };
+  X.me = dt => {
+    const s = S(), m = FPS.me, alive = !(m.dead > 0) && !zmIsDown() && !ZM.over;
+    if (s.pend > 0) s.pend -= dt;
+    if (s.ph !== s.phSeen) { s.phSeen = s.ph; try { if (!soundOff()) { if (s.ph === 'lit') { sfxFlare(); zmSound('round'); sfxBell(); } else if (s.ph === 'ready') zmSound('round'); } } catch (e) {} }
+    const hold = FPS.keys.KeyF || FPS.keys.KeyE || FPS.touchUse || FPS.padUse, o = ZM.near;
+    if (hold && o && o.k === 'frbeacon' && alive && !(s.pend > 0) && s.ph === 'ready') { s.useT += dt; if (s.useT >= FRL.USE) { s.useT = 0; s.pend = 1.2; raidAsk('light'); } }
+    else s.useT = 0;
+    if (R.me) R.me(dt);
+  };
+  X.consider = c => { if (S().ph === 'ready') { const [x, y] = friBeacon(); c({ k: 'frbeacon' }, x, y, 0, 2.6, false); } if (R.consider) R.consider(c); };
+  X.prompt = o => o.k === 'frbeacon' ? { text: R.lightText || 'Hold to light the beacon', hold: true } : R.prompt ? R.prompt(o) : null;
+  X.use = o => o.k === 'frbeacon' || !!(R.use && R.use(o));
+  X.hud = (phone, mono, fell) => {
+    const s = S(), L = Math.max(14, FPS.safeLeft || 0), top = fpsHudTop() + (phone ? 32 : 44), t = g.t;
+    const line = s.ph === 'wait' ? (R.line ? R.line() : '') : s.ph === 'ready' ? (R.readyLine ? R.readyLine() : 'Light the beacon: hold Use at it, and go back aboard') : `The beacon is lit. Back aboard in ${Math.max(0, Math.ceil(FRI.AWAY - s.awayT))} s`;
+    ctx.textAlign = 'left'; ctx.textBaseline = 'top'; ctx.font = mono(phone ? 10 : 13); ctx.fillStyle = s.ph === 'lit' ? '#ffe2a8' : 'rgba(236,228,207,0.85)';
+    ctx.fillText(line, L, top, W * 0.6); fpsHudNote(top + (phone ? 14 : 18));
+    const b = s.ph === 'wait' && R.bar ? R.bar() : null;
+    if (b != null) {
+      const x = L, y = top + (phone ? 20 : 26), w = phone ? 150 : 214, h = phone ? 6 : 8;
+      ctx.fillStyle = 'rgba(8,10,14,0.55)'; ctx.fillRect(x - 4, y - 4, w + 8, h + 8);
+      ctx.fillStyle = 'rgba(80,70,60,0.6)'; ctx.fillRect(x, y, w, h); ctx.fillStyle = '#ffc070'; ctx.fillRect(x, y, w * clamp(b, 0, 1), h);
+      fpsHudNote(y + h + 6);
+    }
+    if (s.useT > 0) {
+      const k = Math.min(1, s.useT / FRL.USE);
+      ctx.strokeStyle = 'rgba(255,192,112,0.25)'; ctx.lineWidth = 4; ctx.beginPath(); ctx.arc(cx, H / 2, 26, 0, 6.283); ctx.stroke();
+      ctx.strokeStyle = '#ffc070'; ctx.beginPath(); ctx.arc(cx, H / 2, 26, -Math.PI / 2, -Math.PI / 2 + k * 6.283); ctx.stroke();
+    }
+    ctx.textBaseline = 'alphabetic';
+    if (R.hud) R.hud(phone, mono, fell);
+  };
+  return X;
+}
+
+// ---------- shared: the drowned coming up, a boss already in, a chest's gift ----------
+const friN = () => Math.max(1, ZM.hum.length);
+// how strong the drowned are out here: the stop and the reach
+const friHp = () => zmHp(RAIDC.ROUND + (FR.stop | 0) + (FR.reach - 1) * 2) * (0.9 + Math.random() * 0.2) * (1 + 0.25 * (friN() - 1));
+// (hosting or alone) a few drowned all the while: up to cap alive, one every gap seconds or so
+function friTrickle(dt, cap, gap) {
+  const S = RAID.st; S.trT = (S.trT == null ? 3 : S.trT) - dt; if (S.trT > 0) return;
+  S.trT = gap * (0.75 + Math.random() * 0.5) / Math.sqrt(1 + 0.5 * (friN() - 1));
+  if (ZM.z.filter(z => !z.dead && !z.boss).length < cap) frIsleSpawn({ kind: frIsleKindOf(), hp: friHp() });
+}
+// (hosting or alone) one of the Lighthouse's bosses, already in at (x, y), at strength k of its own
+function friBoss(kind, x, y, k) {
+  const T = ZBT[kind], hp = zbHpOf(kind, RAIDC.ROUND + (FR.stop | 0) + FR.reach * 2, friN()) * k, zn = ++ZM.zc;
+  const z = {
+    drowned: true, zm: true, boss: true, bt: kind, zn, id: 'z' + zn.toString(36), n: T.n, kind: 'boss',
+    x, y, jz: 0, fl: 0, hp, max: hp, sp: T.sp(ZM.round),
+    st: 'in', win: null, t: 0, ph: 0, hitT: 0, atk: 0, swing: -1, stuck: 0, lost: 0, h: Math.random() * 6.28, seed: (Math.random() * 1e6) | 0, rise: 1, hist: [],
+    act: null, at: 0, aseq: 0, slamCd: 3, swCd: 0.5, ix: x, iy: y, ax: 0, ay: 0, lx: x, ly: y,
+  };
+  if (T.init) T.init(z);
+  zbMake(z, kind);
+  ZM.z.push(z); FPS.drowned = ZM.z;
+  if (ZB.seen) ZB.seen.add(zn);
+  ZM.banner = { text: T.N, t: 3.6, col: T.col, sub: T.sub };
+  try { T.sound('arrive'); } catch (e) {}
+  return z;
+}
+// (each of us, our own) what a wreck's chest (or a sunk hoard) gives you: a gun from the wreck chest's odds, or, one
+// time in four (with a gun in hand that can be), your gun reforged a tier
+function friGift(why) {
+  const id = FPS.weapon;
+  if (Math.random() < 0.25 && ZM_PAP_W[id] && ZM.own.includes(id)) { ZM.forge.id = id; ZM.forge.cost = 0; zmpDone(); fpsFeed(`${why}: a lampwright’s spark, and your gun’s reforged.`); return; }
+  const g2 = zmBoxRoll(ZM.own); zmGive(g2);
+  ZM.banner = { text: FPSW[g2].n, t: 3, col: '#ffc070', sub: why }; fpsFeed(`${why}: the ${FPSW[g2].n}.`);
+}
+// (hosting or alone) a rare card earned (an Elite down, the drowned man's bell rung in time): the salvage's to pay
+function friRare(sid) { if (typeof frRareEarned === 'function') frRareEarned(sid); else FR.rare = (FR.rare | 0) + 1; }
+
+// ---------- the Fight's other rules ----------
+// Clear the Shore: a fixed number of the drowned (FRI_CLEAR by the reach, half as many again for each of you after
+// the first) come up in waves; send them all back, then light the beacon.
+const FRI_CLEAR = [0, 20, 30, 40];
+FRI_RULES.clear = friLit({
+  n: 'Clear the Shore',
+  enter() {
+    const n = friN(); Object.assign(RAID.st, { need: Math.round(FRI_CLEAR[FR.reach] * (1 + 0.5 * (n - 1))), killed: 0, spawned: 0, waveN: 0, spT: 3, lull: 0 });
+    fpsFeed(`Ashore. The drowned are coming up out of the shore in waves: send back all ${RAID.st.need}, then light the beacon.`);
+  },
+  tick(dt) {
+    const S = RAID.st; if (S.ph !== 'wait') return;
+    const alive = ZM.z.filter(z => !z.dead).length, wave = Math.ceil(S.need / 4);
+    if (S.spawned >= Math.min(S.need, wave * (S.waveN + 1)) && S.spawned < S.need) { if (alive <= 2) { S.lull += dt; if (S.lull > 3) { S.waveN++; S.lull = 0; frIsleSay(`Another wave comes up out of the shore: ${S.need - S.killed} still to send back.`, true); } } return; }
+    S.spT -= dt;
+    if (S.spT <= 0 && S.spawned < S.need) { if (frIsleSpawn({ kind: frIsleKindOf(), hp: friHp() })) S.spawned++; S.spT = (0.5 + Math.random() * 0.5) / Math.sqrt(friN()); }
+  },
+  kill(d) { const S = RAID.st; if (S.ph !== 'wait' || d.boss) return; S.killed++; if (S.killed >= S.need) frlReady('The shore is clear. Light the beacon (hold Use at it) and go back aboard.'); },
+  line() { const S = RAID.st; return `Clear the Shore: ${Math.max(0, S.need - S.killed)} of the drowned still to send back`; },
+  bar() { const S = RAID.st; return S.need ? S.killed / S.need : 0; },
+  pack(o) { const S = RAID.st; o.fc = [S.need | 0, S.killed | 0]; },
+  apply(o) { const S = RAID.st; if (Array.isArray(o.fc)) { S.need = o.fc[0] | 0; S.killed = o.fc[1] | 0; } },
+});
+// The Crab Tide: a swarm of crabs (src/zmswarm.js's) up out of the waterline, and the tide coming in: every
+// FRT.EVERY seconds the beach shrinks (the water's edge comes FRT.STEP m nearer the middle, never past FRT.MIN).
+// Standing in the tide drags at you (a knock every FRT.WET seconds). Send back the swarm, then light the beacon; the
+// tide goes out as it's lit.
+const FRT = { NEED: [0, 24, 36, 48], EVERY: 15, STEP: 4, MIN: 14, START: FRI.R - 3, WET: 1.6, ALIVE: 10 };
+FRI_RULES.crabs = friLit({
+  n: 'The Crab Tide',
+  enter() {
+    const n = friN(); Object.assign(RAID.st, { need: Math.round(FRT.NEED[FR.reach] * (1 + 0.5 * (n - 1))), killed: 0, spT: 3, tideR: FRT.START, tideT: FRT.EVERY, wetT: 0 });
+    fpsFeed(`Ashore, and the tide is coming in. Crabs, up out of the water’s edge: send back all ${RAID.st.need}, and keep out of the sea.`);
+  },
+  tick(dt) {
+    const S = RAID.st;
+    if (S.ph === 'lit') { S.tideR = Math.min(FRT.START, S.tideR + dt * 3); return; }
+    if (S.ph !== 'wait') return;
+    S.tideT -= dt;
+    if (S.tideT <= 0) { S.tideT = FRT.EVERY; if (S.tideR > FRT.MIN) { S.tideR = Math.max(FRT.MIN, S.tideR - FRT.STEP); frIsleSay('The tide comes in: the beach is smaller.', true); } }
+    S.spT -= dt;
+    const alive = ZM.z.filter(z => !z.dead).length, left = S.need - S.killed - alive;
+    if (S.spT <= 0 && left > 0 && alive < FRT.ALIVE + 4 * (friN() - 1)) { friCrab(S.tideR); S.spT = (0.35 + Math.random() * 0.4) / Math.sqrt(friN()); }
+  },
+  kill(d) { const S = RAID.st; if (S.ph !== 'wait' || d.boss) return; S.killed++; if (S.killed >= S.need) frlReady('The swarm is gone. Light the beacon (hold Use at it), and the tide goes out.'); },
+  me(dt) {
+    const S = RAID.st, m = FPS.me, alive = !(m.dead > 0) && !zmIsDown() && !ZM.over;
+    if (alive && S.ph === 'wait' && Math.hypot(m.x - FPSC.CX, m.y - FPSC.CY) > S.tideR + 0.5 && !(m.protect > 0)) {
+      S.wetT += dt; if (S.wetT >= FRT.WET) { S.wetT = 0; fpsHurt(1, null, null); zmSound('hit'); fpsFeed('The tide drags at you. Get up the beach.'); }
+    } else S.wetT = Math.max(0, S.wetT - dt);
+  },
+  line() { const S = RAID.st; return `The Crab Tide: ${Math.max(0, S.need - S.killed)} crabs still to send back · the tide rises in ${Math.ceil(S.tideT)} s`; },
+  bar() { const S = RAID.st; return S.need ? S.killed / S.need : 0; },
+  pack(o) { const S = RAID.st; o.ft = [S.need | 0, S.killed | 0, Math.round(S.tideR * 10), Math.round(S.tideT)]; },
+  apply(o) { const S = RAID.st; if (Array.isArray(o.ft)) { S.need = o.ft[0] | 0; S.killed = o.ft[1] | 0; S.tideR = (o.ft[2] | 0) / 10; S.tideT = o.ft[3] | 0; } },
+  b3(grp) { friTide3dBuild(grp); },
+  f3(dt) { friTide3d(dt); },
+  exit() { FRT3.on = false; FRT3.mesh = null; },
+});
+// (hosting or alone) one crab, up out of the water's edge, away from all of you
+function friCrab(r) {
+  const P = ZM.players || [];
+  for (let t = 0; t < 20; t++) {
+    const a = Math.random() * 6.283, d = r + 0.5 + Math.random() * 2, x = FPSC.CX + Math.cos(a) * d, y = FPSC.CY + Math.sin(a) * d;
+    if (P.some(p => !p.beacon && Math.hypot(p.x - x, p.y - y) < 7)) continue;
+    if (zmBlockedAt(x, y, 0.5, 0)) continue;
+    const z = raidSpawnAt(x, y, { kind: 'jog', hp: friHp() * ZWC.HP, rise: 0.5 });
+    zwDress(z); z.sp = ZWC.SP[0] + Math.random() * (ZWC.SP[1] - ZWC.SP[0]);
+    return z;
+  }
+  return null;
+}
+// in 3D: the tide, a flat sheet of grey water from its edge out past the shore
+const FRT3 = { on: false };
+function friTide3dBuild(grp) {
+  const mat = new THREE.MeshLambertMaterial({ color: 0x2a3a46, transparent: true, opacity: 0.82, depthWrite: false });
+  const foam = new THREE.MeshBasicMaterial({ color: 0xc8d4dc, transparent: true, opacity: 0.35, depthWrite: false, side: THREE.DoubleSide });
+  Object.assign(FRT3, { on: true, grp, mat, foam, r: -1, mesh: null, edge: null });
+}
+function friTide3d() {
+  if (!FRT3.on) return;
+  const r = RAID.st.tideR || FRT.START; if (Math.abs(r - FRT3.r) < 0.04) return;
+  FRT3.r = r;
+  if (FRT3.mesh) { FRT3.grp.remove(FRT3.mesh); FRT3.mesh.geometry.dispose(); FRT3.grp.remove(FRT3.edge); FRT3.edge.geometry.dispose(); }
+  // (the water's height: the island's ground just inside its edge, on average, and a little over it)
+  let h = 0; for (let i = 0; i < 16; i++) { const a = i / 16 * 6.283; h += fpsIsleH(FPS.g.isle, FPSC.CX + Math.cos(a) * r, FPSC.CY + Math.sin(a) * r); }
+  const Z = FPSC.GROUND + h / 16 + 0.18;
+  FRT3.mesh = new THREE.Mesh(new THREE.RingGeometry(r, FRI.R + 60, 72, 1), FRT3.mat); FRT3.mesh.rotation.x = -Math.PI / 2;
+  FRT3.mesh.position.copy(z3v(FPSC.CX, FPSC.CY, Z)); FRT3.grp.add(FRT3.mesh);
+  FRT3.edge = new THREE.Mesh(new THREE.RingGeometry(r - 0.25, r + 0.6, 72, 1), FRT3.foam); FRT3.edge.rotation.x = -Math.PI / 2;
+  FRT3.edge.position.copy(z3v(FPSC.CX, FPSC.CY, Z + 0.02)); FRT3.grp.add(FRT3.edge);
+}
+
+// ---------- the Elite: one of the Lighthouse's bosses, weaker, and the drowned ----------
+// Its rule is the boss (the Diver, the Mooncusser or the Keelback, ZBT's diver, moon and crab), at FRE.K of its
+// strength by the reach (zbHpOf, with the players). It comes up a few seconds after you land, on the far side of the
+// beacon; put it down and light the beacon. It pays a rare card (friRare).
+const FRE = { K: [0, 0.6, 0.8, 1], WAKE: 4, CAP: 2, GAP: 5 };
+const friEliteRule = (kind, n) => friLit({
+  n,
+  enter() { Object.assign(RAID.st, { bz: 0, wake: FRE.WAKE, down: 0 }); fpsFeed(`Ashore. Something big is waiting on this one: ${n}.`); },
+  tick(dt) {
+    const S = RAID.st; if (S.ph !== 'wait') return;
+    if (!S.bz) { S.wake -= dt; if (S.wake <= 0) { const [bx, by] = friBeacon(), [lx, ly] = friLand(), a = bearingOf(bx - lx, by - ly), x = bx + Math.sin(a) * 8, y = by + Math.cos(a) * 8; const z = friBoss(kind, x, y, FRE.K[FR.reach]); S.bz = z.zn; frIsleSay(`${ZBT[kind].N} comes up out of the island. Put it down.`, true); } return; }
+    friTrickle(dt, FRE.CAP + friN(), FRE.GAP);
+    // (lost in the sea somehow: counted as down)
+    if (!ZM.z.some(z => z.zn === S.bz && !z.dead)) friEliteDown();
+  },
+  kill(d) { if (d.boss && d.zn === RAID.st.bz) friEliteDown(); },
+  line() { const S = RAID.st; return S.bz ? `Put down ${ZBT[kind].n}` : `Something stirs under the island…`; },
+  pack(o) { o.fe = [RAID.st.bz | 0]; },
+  apply(o) { if (Array.isArray(o.fe)) RAID.st.bz = o.fe[0] | 0; },
+});
+function friEliteDown() { const S = RAID.st; if (S.down) return; S.down = 1; friRare(); frlReady('It’s down: a rare card in the salvage. Light the beacon (hold Use at it) and go back aboard.'); }
+const FRI_ELITE = { diver: friEliteRule('diver', 'The Diver'), moon: friEliteRule('moon', 'The Mooncusser'), crab: friEliteRule('crab', 'The Keelback') };
+frKind('elite', { n: 'Elite', mark: '☠', weight: 1 }, friStage(FRI_ELITE));
+
+// ---------- the Wreck: a chest from the wrecks, each of you your own ----------
+// A wreck drawn up on the beach, and its sea chest beside it. Hold Use at the chest (FRW.OPEN s) and it gives you a
+// gun (the wreck chest's odds) or, one time in four, reforges the gun in your hand (friGift): once each. No fight,
+// unless it's guarded (one wreck in three: FRI_WRECK.guarded): then come within FRW.WAKE m of it and the Keelback
+// comes up out of the sand, and the chest won't open till it's down. The beacon can be lit whenever you're ready.
+const FRW = { OPEN: 1.5, WAKE: 9, K: [0, 0.4, 0.55, 0.7] };
+FPI_K.frchest = {
+  col: FPI_C.wood2,
+  sol(p) { return [fpiBox(p, 0, 0, 0.55, 0.36, 0.7)]; },
+  b3(p, A) {
+    A.box('#5a3e26', 0, 0, 0, 1.1, 0.72, 0.5);
+    A.box('#6a4a2c', 0, 0, 0.5, 1.14, 0.76, 0.2);
+    for (const u of [-0.38, 0, 0.38]) A.box(FPI_C.iron, u, 0, 0, 0.07, 0.78, 0.72);
+    A.box('#c8a050', 0, -0.39, 0.42, 0.14, 0.04, 0.16);
+  },
+};
+function friWreckSet(H) {
+  const Z = H.I.zm, F = Z.fr; if (!F) return;
+  const a0 = F.landA + Math.PI * 0.35;
+  let at = null; for (let k = 0; k < 20 && !at; k++) { const [x, y] = H.polar(a0 + (k % 2 ? 1 : -1) * Math.ceil(k / 2) * 0.18, H.IR - 10); if (H.clear(x, y, 4, 1)) at = [x, y, a0]; }
+  if (!at) { const [x, y] = H.polar(a0, H.IR - 10); at = [x, y, a0]; }
+  H.put('boat', at[0], at[1], at[2] + 0.4, { len: 7.5, beam: 2.6, paint: '#2a2620' });
+  const [cx2, cy2] = [at[0] - Math.cos(at[2]) * 3.2, at[1] - Math.sin(at[2]) * 3.2];
+  H.put('frchest', cx2, cy2, at[2] + Math.PI / 2, {});
+  H.put('barrels', cx2 + 1.8 * Math.cos(at[2] + 1.6), cy2 + 1.8 * Math.sin(at[2] + 1.6), 0, { items: [{ u: 0, v: 0, r: 0.4, hh: 1.0 }, { u: 0.9, v: 0.2, r: 0.4, hh: 1.0, lie: true, ry: 0.6 }] });
+  F.chest = [cx2 - H.CX, cy2 - H.CY];
+}
+const friChest = () => { const F = FPS.g.isle.zm.fr; return F && F.chest ? [FPSC.CX + F.chest[0], FPSC.CY + F.chest[1]] : friLand(); };
+const friWreckRule = guarded => friLit({
+  n: guarded ? 'A Guarded Wreck' : 'A Wreck', ready0: true,
+  set(H) { friWreckSet(H); },
+  enter() { Object.assign(RAID.st, { gd: guarded ? 1 : 0, bz: 0, mine: 0, openT: 0 }); fpsFeed(guarded ? 'A wreck on the beach, and her sea chest. The sand round it looks disturbed.' : 'A wreck on the beach, and her sea chest: something in it for each of you. Light the beacon when you’re ready.'); },
+  tick() {
+    const S = RAID.st;
+    if (S.gd === 1) { const [x, y] = friChest(); if ((ZM.players || []).some(p => !p.beacon && Math.hypot(p.x - x, p.y - y) < FRW.WAKE)) { S.gd = 2; const z = friBoss('crab', x + 4, y + 4, FRW.K[FR.reach]); S.bz = z.zn; frIsleSay('The sand heaves: the Keelback was sleeping under her. Put it down, and the chest is yours.', true); } }
+    else if (S.gd === 2 && !ZM.z.some(z => z.zn === S.bz && !z.dead)) { S.gd = 3; frIsleSay('The Keelback is down. The chest is yours: something in it for each of you.', true); }
+  },
+  kill(d) { if (d.boss && d.zn === RAID.st.bz && RAID.st.gd === 2) { RAID.st.gd = 3; frIsleSay('The Keelback is down. The chest is yours: something in it for each of you.', true); } },
+  me(dt) {
+    const S = RAID.st, hold = FPS.keys.KeyF || FPS.keys.KeyE || FPS.touchUse || FPS.padUse, o = ZM.near, m = FPS.me;
+    if (hold && o && o.k === 'frchest' && !S.mine && (S.gd === 0 || S.gd === 3) && !(m.dead > 0) && !zmIsDown()) { S.openT += dt; if (S.openT >= FRW.OPEN) { S.openT = 0; S.mine = 1; zmSound('open'); friGift('From the wreck’s chest'); } }
+    else S.openT = 0;
+  },
+  consider(c) { if (!RAID.st.mine) { const [x, y] = friChest(); c({ k: 'frchest' }, x, y, 0, 2.2, false); } },
+  prompt(o) { if (o.k !== 'frchest') return null; const g2 = RAID.st.gd; return g2 === 1 || g2 === 2 ? { text: 'The chest won’t open: something’s guarding it' } : { text: 'Hold to open the wreck’s chest', hold: true }; },
+  use(o) { return o.k === 'frchest'; },
+  readyLine() { const S = RAID.st; return S.gd === 2 ? 'Put down the Keelback' : S.mine ? 'Light the beacon (hold Use at it) when you’re ready to go' : 'Open the wreck’s chest, then light the beacon (hold Use at it)'; },
+  hud() { const S = RAID.st; if (S.openT > 0) { const k = Math.min(1, S.openT / FRW.OPEN); ctx.strokeStyle = '#ffc070'; ctx.lineWidth = 4; ctx.beginPath(); ctx.arc(cx, H / 2, 26, -Math.PI / 2, -Math.PI / 2 + k * 6.283); ctx.stroke(); } },
+  pack(o) { const S = RAID.st; o.fw = [S.gd | 0, S.bz | 0]; },
+  apply(o) { const S = RAID.st; if (Array.isArray(o.fw)) { S.gd = o.fw[0] | 0; S.bz = o.fw[1] | 0; } },
+});
+// (a guarded wreck: no lighting the beacon and leaving while the Keelback's up)
+const FRI_WRECK = { open: Object.assign(friWreckRule(false), { w: 2 }), guarded: friWreckRule(true) };
+{ const G = FRI_WRECK.guarded, q0 = G.q; G.q = (sid, k, a) => { if (k === 'light' && RAID.st.gd === 2) return; q0(sid, k, a); }; }
+frKind('wreck', { n: 'Wreck', mark: '⚓', weight: 1 }, friStage(FRI_WRECK));
+
+// ---------- the Chapel: a rest ----------
+// Always Chapel Islet's look. Everyone back to full health as you come ashore; everyone lost in the fog is brought
+// back, and every extra life given back (frBringBack, frRestoreLife). Light the candles at the beacon to go on. A
+// hook for the salvage's card swap: frChapelCard() (src/frcards.js), if it's there, as you land.
+const FRI_CHAPEL = { rest: friLit({
+  n: 'A Rest', ready0: true, lightText: 'Hold to light the chapel’s beacon',
+  prep(i) { const p = FR.plan[i]; if (p) { p.look = 'chapel'; frIsleLook(i); } },
+  enter() {
+    Object.assign(RAID.st, { healed: 0 });
+    if (ZM.net !== 'client') { frBringBack(); frRestoreLife(); }
+    fpsFeed('Chapel Islet. A rest: you’re mended, the lost come home, and every extra life is given back. Light the beacon when you’re ready to go on.');
+    if (typeof frChapelCard === 'function') try { frChapelCard(); } catch (e) {}
+  },
+  me() { const S = RAID.st, m = FPS.me; if (!S.healed && !(m.dead > 0) && !zmIsDown()) { S.healed = 1; m.hp = ZM.perks.stout ? ZMC.HP_STOUT : ZMC.HP; try { zmSound('drink'); } catch (e) {} } },
+  readyLine: () => 'A rest. Light the beacon (hold Use at it) when you’re ready to go on',
+}) };
+frKind('chapel', { n: 'Chapel', mark: '🕯', weight: 1 }, friStage(FRI_CHAPEL));
+
+// ---------- the Unknown: one of a handful of things out in the fog ----------
+// Its rule is drawn from the seed like any other, and you only learn which as you land:
+//  - stranger: a stranger in a rowing boat, drawn up on the beach. Each of you can trade with him once: a card (frTradeCard(),
+//    src/frcards.js, if it's there; otherwise FRU.PRICE points) for your health back in full and a tonic you haven't got.
+//  - bellman: a drowned man stands at the water's edge and asks you to ring his bell. Speak to him (Use) and a bell
+//    rises on the far side of the island: ring it (hold Use) inside FRU.BELL seconds for a rare card (friRare). The
+//    drowned come while the clock runs.
+//  - hoard: a sunk hoard in a deep pool by the shore. Each of you can dive for it once: hold Use in the pool for FRU.DIVE
+//    seconds, before your breath (FRU.BREATH) runs out, and it gives you what a wreck's chest would (friGift).
+//  - fight: Clear the Shore.
+// The beacon can be lit whenever you're ready (but for the fight, once it's won).
+const FRU = { PRICE: 750, BELL: 30, DIVE: 5, BREATH: 9, POOL: 2.6 };
+// a figure (the stranger, the drowned man): a dark coat and a head, built in 3D at (x, y), facing h
+function friFigure(grp, x, y, h, col, skin) {
+  const G = new THREE.Group(), Z = FPSC.GROUND + fpsIsleH(FPS.g.isle, x, y);
+  const coat = new THREE.MeshLambertMaterial({ color: col }), face = new THREE.MeshLambertMaterial({ color: skin });
+  const body = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.38, 1.45, 10), coat); body.position.y = 0.72; G.add(body);
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.17, 10, 8), face); head.position.y = 1.62; G.add(head);
+  const hood = new THREE.Mesh(new THREE.ConeGeometry(0.24, 0.42, 10), coat); hood.position.y = 1.8; G.add(hood);
+  G.position.copy(z3v(x, y, Z)); G.rotation.y = h; grp.add(G); return G;
+}
+// a ship's bell on a frame, as a group at (x, y) (the Lost Man's and the drowned man's)
+function friBellMesh(x, y) {
+  const G = new THREE.Group(), Z = FPSC.GROUND + fpsIsleH(FPS.g.isle, x, y);
+  const wood = new THREE.MeshLambertMaterial({ color: 0x4a3a2a }), brass = new THREE.MeshLambertMaterial({ color: 0x9a7a40, emissive: 0x2a2010, side: THREE.DoubleSide });
+  for (const s of [-1, 1]) { const p = new THREE.Mesh(new THREE.BoxGeometry(0.18, 2.6, 0.18), wood); p.position.set(s * 0.8, 1.3, 0); G.add(p); }
+  const bar = new THREE.Mesh(new THREE.BoxGeometry(1.9, 0.2, 0.22), wood); bar.position.set(0, 2.6, 0); G.add(bar);
+  const bell = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.48, 0.75, 14, 1, true), brass); bell.position.set(0, 2.1, 0); G.add(bell);
+  const top = new THREE.Mesh(new THREE.SphereGeometry(0.22, 10, 6, 0, 6.283, 0, Math.PI / 2), brass); top.position.set(0, 2.47, 0); G.add(top);
+  G.position.copy(z3v(x, y, Z)); G.userData = { Z, bell }; return G;
+}
+// where the Unknown's things stand (laid out with the island): the stranger's boat or the drowned man by the landing,
+// the bell or the pool across the island
+function friUnknownSet(H) {
+  const F = H.I.zm.fr; if (!F) return;
+  const a0 = F.landA + 0.55, [x, y] = H.polar(a0, H.IR - 6); F.who = [x - H.CX, y - H.CY, a0];
+  const far = H.spot(1.6, 12, H.IR - 10, 3, 300) || [H.CX - F.land[0] * 0.5, H.CY - F.land[1] * 0.5];
+  F.far = [far[0] - H.CX, far[1] - H.CY];
+  if (H.I.T && raidStage() && (frPlanNow() || {}).rule === 'stranger') H.put('boat', x + Math.cos(a0) * 2.5, y + Math.sin(a0) * 2.5, a0 + Math.PI / 2, { len: 4.2, beam: 1.5, paint: '#3a2e24', upright: true });
+}
+const friWho = () => { const F = FPS.g.isle.zm.fr; return F && F.who ? [FPSC.CX + F.who[0], FPSC.CY + F.who[1], F.who[2]] : [...friLand(), 0]; };
+const friFar = () => { const F = FPS.g.isle.zm.fr; return F && F.far ? [FPSC.CX + F.far[0], FPSC.CY + F.far[1]] : friBeacon(); };
+const friHold = () => FPS.keys.KeyF || FPS.keys.KeyE || FPS.touchUse || FPS.padUse;
+const friAble = () => { const m = FPS.me; return !(m.dead > 0) && !zmIsDown() && !ZM.over; };
+function friRing(t, k, col) { if (!(t > 0)) return; ctx.strokeStyle = col || '#ffc070'; ctx.lineWidth = 4; ctx.beginPath(); ctx.arc(cx, H / 2, 26, -Math.PI / 2, -Math.PI / 2 + Math.min(1, t / k) * 6.283); ctx.stroke(); }
+
+const FRI_UNKNOWN = {
+  stranger: friLit({
+    n: 'A Stranger', ready0: true,
+    set(H) { friUnknownSet(H); },
+    enter() { Object.assign(RAID.st, { done: 0 }); fpsFeed('A stranger in a rowing boat, drawn up on the beach, hood up. He’ll trade, once each.'); },
+    consider(c) { if (!RAID.st.done) { const [x, y] = friWho(); c({ k: 'frwho' }, x, y, 0, 2.4, false); } },
+    prompt(o) { if (o.k !== 'frwho') return null; const card = typeof frTradeCard === 'function'; return { text: card ? 'Trade the stranger a card: your health back, and a tonic' : `Trade with the stranger (${FRU.PRICE} points): your health back, and a tonic`, cost: card ? undefined : FRU.PRICE }; },
+    use(o) {
+      if (o.k !== 'frwho') return false;
+      const S = RAID.st, m = FPS.me; if (S.done) return true;
+      if (typeof frTradeCard === 'function') { if (!frTradeCard()) { zmSound('no'); return true; } }
+      else { if (ZM.pts < FRU.PRICE) { zmSound('no'); fpsFeed('Not enough points.'); return true; } ZM.pts -= FRU.PRICE; ZM.spent += FRU.PRICE; }
+      S.done = 1; m.hp = ZM.perks.stout ? ZMC.HP_STOUT : ZMC.HP;
+      const ks = Object.keys(ZM_PERKS).filter(k => k !== 'wind' && !ZM.perks[k]), k = ks[(Math.random() * ks.length) | 0];
+      if (k) { ZM.perks[k] = true; if (k === 'stout') m.hp = ZMC.HP_STOUT; fpsFeed(`The stranger mends you, and leaves you a tonic: ${ZM_PERKS[k].n} (${ZM_PERKS[k].what}).`); } else fpsFeed('The stranger mends you.');
+      zmSound('drink'); return true;
+    },
+    readyLine: () => RAID.st.done ? 'Light the beacon (hold Use at it) when you’re ready to go' : 'Trade with the stranger if you like, then light the beacon (hold Use at it)',
+    b3(grp) { const [x, y, a] = friWho(); friFigure(grp, x, y, -a + Math.PI / 2, 0x1c1a22, 0x8a7a6a); },
+  }),
+  bellman: friLit({
+    n: 'The Drowned Man’s Bell', ready0: true,
+    set(H) { friUnknownSet(H); },
+    enter() { Object.assign(RAID.st, { bm: 0, bmT: 0, ringT: 0, pend2: 0 }); fpsFeed('A drowned man stands at the water’s edge, quite still. He isn’t coming for you. He wants something.'); },
+    tick(dt) {
+      const S = RAID.st; if (S.bm !== 1) return;
+      S.bmT -= dt; friTrickle(dt, 3 + friN(), 3.2);
+      if (S.bmT <= 0) { S.bm = 3; frIsleSay('Too late: his bell sinks back into the ground, unrung. He turns away into the fog.', true); }
+    },
+    q(sid, k) {
+      const S = RAID.st;
+      if (k === 'bmtalk' && !S.bm) { S.bm = 1; S.bmT = FRU.BELL; frIsleSay(`“Ring my bell,” says the drowned man, “before they take me.” A bell rises across the island: ${FRU.BELL} seconds.`, true); }
+      else if (k === 'bmring' && S.bm === 1) { S.bm = 2; friRare(sid); frIsleSay(`${friNick(sid)} rang the drowned man’s bell. He’s gone home, and he’s left you a rare card.`, true); }
+    },
+    me(dt) {
+      const S = RAID.st, o = ZM.near; if (S.pend2 > 0) S.pend2 -= dt;
+      if (S.bm === 2 && !S.rung) { S.rung = 1; try { if (!soundOff()) sfxBell(); } catch (e) {} }
+      if (friHold() && o && o.k === 'frbm' && friAble() && S.bm === 1 && !(S.pend2 > 0)) { S.ringT += dt; if (S.ringT >= 1) { S.ringT = 0; S.pend2 = 1.2; raidAsk('bmring'); } } else S.ringT = 0;
+    },
+    consider(c) { const S = RAID.st; if (!S.bm) { const [x, y] = friWho(); c({ k: 'frwho' }, x, y, 0, 2.4, false); } else if (S.bm === 1) { const [x, y] = friFar(); c({ k: 'frbm' }, x, y, 0, 2.4, false); } },
+    prompt(o) { return o.k === 'frwho' ? { text: 'Speak to the drowned man' } : o.k === 'frbm' ? { text: 'Hold to ring the drowned man’s bell', hold: true } : null; },
+    use(o) { if (o.k === 'frwho') { raidAsk('bmtalk'); return true; } return o.k === 'frbm'; },
+    readyLine() { const S = RAID.st; return S.bm === 1 ? `Ring the drowned man’s bell, across the island · ${Math.ceil(S.bmT)} s` : S.bm ? 'Light the beacon (hold Use at it) when you’re ready to go' : 'Speak to the drowned man by the water, or light the beacon (hold Use at it) and go'; },
+    hud() { friRing(RAID.st.ringT, 1); },
+    pack(o) { const S = RAID.st; o.fu = [S.bm | 0, Math.round(S.bmT)]; },
+    apply(o) { const S = RAID.st; if (Array.isArray(o.fu)) { if (!(S.pend2 > 0)) S.bm = o.fu[0] | 0; S.bmT = o.fu[1] | 0; } },
+    b3(grp) { const [x, y, a] = friWho(); FRU3.who = friFigure(grp, x, y, -a + Math.PI / 2, 0x26302c, 0x5a6a62); const [fx, fy] = friFar(); FRU3.bell = friBellMesh(fx, fy); FRU3.bk = 0; grp.add(FRU3.bell); FRU3.on = true; },
+    f3(dt) {
+      if (!FRU3.on) return; const S = RAID.st, up = S.bm === 1 || S.bm === 2 ? 1 : 0, B = FRU3.bell; FRU3.bk += (up - FRU3.bk) * Math.min(1, dt * 1.5);
+      B.visible = FRU3.bk > 0.01; const [fx, fy] = friFar(); B.position.copy(z3v(fx, fy, B.userData.Z - 3.2 * (1 - FRU3.bk)));
+      B.userData.bell.rotation.z = S.bm === 2 && !reduceMotion ? Math.sin(g.t * 6) * 0.3 : 0;
+      if (FRU3.who) FRU3.who.visible = S.bm < 2;
+    },
+    exit() { FRU3.on = false; },
+  }),
+  hoard: friLit({
+    n: 'A Sunk Hoard', ready0: true,
+    set(H) { friUnknownSet(H); },
+    enter() { Object.assign(RAID.st, { mine: 0, diveT: 0, breath: FRU.BREATH }); fpsFeed('A deep pool by the shore, and something glinting at the bottom of it: a sunk hoard. Each of you can dive for it once.'); },
+    me(dt) {
+      const S = RAID.st, o = ZM.near;
+      if (friHold() && o && o.k === 'frpool' && friAble() && !S.mine) {
+        S.diveT += dt; S.breath -= dt;
+        if (S.diveT >= FRU.DIVE) { S.mine = 1; S.diveT = 0; zmSound('open'); friGift('Up from the sunk hoard'); }
+        else if (S.breath <= 0) { S.diveT = 0; S.breath = FRU.BREATH; fpsHurt(1, null, null); zmSound('hit'); fpsFeed('Your breath gave out. Up, gasping: try again.'); }
+      } else { S.diveT = Math.max(0, S.diveT - dt * 2); S.breath = Math.min(FRU.BREATH, S.breath + dt * 2); }
+    },
+    tick(dt) { friTrickle(dt, 2 + friN(), 6); },
+    consider(c) { if (!RAID.st.mine) { const [x, y] = friFar(); c({ k: 'frpool' }, x, y, 0, FRU.POOL + 0.6, false); } },
+    prompt(o) { return o.k === 'frpool' ? { text: 'Hold to dive for the hoard', hold: true } : null; },
+    use(o) { return o.k === 'frpool'; },
+    readyLine: () => RAID.st.mine ? 'Light the beacon (hold Use at it) when you’re ready to go' : 'Dive for the sunk hoard (hold Use in the pool), then light the beacon',
+    hud(phone, mono) {
+      const S = RAID.st; friRing(S.diveT, FRU.DIVE, '#9ad0e8');
+      if (S.diveT > 0) { const w = 160, x = cx - w / 2, y = H / 2 + 40; ctx.fillStyle = 'rgba(8,10,14,0.55)'; ctx.fillRect(x - 3, y - 3, w + 6, 12); ctx.fillStyle = S.breath < 3 ? '#e06a50' : '#9ad0e8'; ctx.fillRect(x, y, w * clamp(S.breath / FRU.BREATH, 0, 1), 6); ctx.font = mono(10); ctx.textAlign = 'center'; ctx.fillStyle = 'rgba(236,228,207,0.8)'; ctx.fillText('BREATH', cx, y + 20); }
+    },
+    b3(grp) {
+      const [x, y] = friFar(), Z = FPSC.GROUND + fpsIsleH(FPS.g.isle, x, y) + 0.06;
+      const m = new THREE.Mesh(new THREE.CircleGeometry(FRU.POOL, 28), new THREE.MeshLambertMaterial({ color: 0x0c1a22, emissive: 0x051018 })); m.rotation.x = -Math.PI / 2; m.position.copy(z3v(x, y, Z)); grp.add(m);
+      const rim = new THREE.Mesh(new THREE.RingGeometry(FRU.POOL - 0.1, FRU.POOL + 0.5, 28), new THREE.MeshLambertMaterial({ color: 0x4a4a44 })); rim.rotation.x = -Math.PI / 2; rim.position.copy(z3v(x, y, Z + 0.01)); grp.add(rim);
+      const glint = new THREE.Sprite(new THREE.SpriteMaterial({ map: z3Soft('rgba(255,220,140,0.9)', 'rgba(255,200,100,0)'), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending })); glint.position.copy(z3v(x + 0.4, y - 0.3, Z + 0.05)); glint.scale.setScalar(0.9); grp.add(glint);
+    },
+  }),
+  fight: FRI_RULES.clear,
+};
+const FRU3 = { on: false };
+frKind('unknown', { n: 'Unknown', mark: '?', weight: 1 }, friStage(FRI_UNKNOWN));

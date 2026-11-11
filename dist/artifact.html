@@ -40116,131 +40116,30 @@ FRI_RULES.hold = {
   },
 };
 
-// ---------- the stage every island kind is built on ----------
-// friStage(rules, o): a RAID_STAGES-style stage for an island kind whose ways of playing are its rules (FRI_RULES for
-// the Fight; src/frpuzzle.js's for the Puzzle...). The plan's entry names the rule; if it names none this kind has,
-// one's drawn from the run's seed (the same on every screen). A rule has any of the stage's hooks (enter, tick, me,
-// q, pack, apply, players, consider, prompt, use, hud, kill, hurt, block, shot, set (laying out its own things, from
-// the island's set), b3, f3, exit, music), plus n (its name on the banner) and w (how often it's drawn: 1). What every
-// island has alike is done here round the rule's own: the beacon's fire and beam (RAID.st.ph 'burn' or 'lit' light
-// them), the fog, and the Lost Man's Bell (below). o: { music } (the kind's music, unless the rule says).
-function friPick(rules, n) {
-  const ks = Object.keys(rules), tot = ks.reduce((a, k) => a + (rules[k].w == null ? 1 : rules[k].w), 0);
-  let u = frRng(300 + (n | 0))() * tot;
-  for (const k of ks) { u -= rules[k].w == null ? 1 : rules[k].w; if (u < 0) return k; }
-  return ks[0];
-}
-function friStage(rules, o) {
-  o = o || {};
-  const rule = () => { const p = frPlanNow() || {}; return rules[p.rule] || rules[friPick(rules, p.n)]; };
-  const call = (k, ...a) => { const R = rule(); return R && typeof R[k] === 'function' ? R[k](...a) : undefined; };
-  return {
-    get n() { return (FPS_ISLES.frisle && FPS_ISLES.frisle.name) || 'an island'; },
-    map: FRI_MAP, mend: true, open: true,
-    music: () => call('music') || o.music || FR_MUSIC.isle,
-    prep(i) { const p = FR.plan[i]; if (p && !rules[p.rule]) p.rule = friPick(rules, p.n); frIsleLook(i); call('prep', i); },
-    set(H, K, Z) { friBellSet(H); call('set', H, K, Z); },
-    enter() { frEnterStage(); friBellEnter(); call('enter'); },
-    banner() { const R = FR_REACH[FR.reach] || FR_REACH[1]; return { text: FPS_ISLES.frisle.name, t: 4.5, sub: `${R.n} · stop ${FR.stop} · ${(rule() || {}).n || ''}`, col: '#ffe2a8' }; },
-    tick(dt) { call('tick', dt); friBellTick(dt); },
-    me(dt) { call('me', dt); friBellMe(dt); },
-    q(sid, k, a) { if (k === 'bell') friBellQ(sid); else call('q', sid, k, a); },
-    pack(x) { call('pack', x); friBellPack(x); },
-    apply(x) { call('apply', x); friBellApply(x); },
-    players(P) { return friBellPlayers(call('players', P) || P); },
-    consider(c) { call('consider', c); friBellConsider(c); },
-    prompt(x) { return friBellPrompt(x) || call('prompt', x) || null; },
-    use(x) { return x.k === 'frbell' || !!call('use', x); },
-    hud(phone, mono, fell) { call('hud', phone, mono, fell); friBellHud(phone, mono, fell); },
-    kill(d, how, by) { call('kill', d, how, by); },
-    hurt(d, dmg, code, by) { const r = call('hurt', d, dmg, code, by); return r == null ? dmg : r; },
-    block(x, y, pad, feet) { return !!call('block', x, y, pad, feet); },
-    shot(...a) { call('shot', ...a); },
-    b3(grp) { fri3dBuild(grp); friBell3dBuild(grp); call('b3', grp); },
-    f3(dt) { fri3d(dt); friBell3d(dt); call('f3', dt); },
-    exit() { FRI3.on = false; FRIB3.on = false; call('exit'); },
-  };
-}
-// the rule playing now (for any island stage)
-const friRule = () => { const S = raidStage(), p = frPlanNow() || {}; return S && S.fr === 'fight' ? FRI_RULES[p.rule] || FRI_RULES.hold : null; };
-frKind('fight', { n: 'Fight', mark: '⚔', weight: 3 }, friStage(FRI_RULES));
-
-// ---------- the Lost Man's Bell ----------
-// Once any of you is lost in the fog, an old ship's bell on a frame rises out of the ground somewhere on the island,
-// in the open (where it stands is laid out with the island: Z.fr.bell). Hold Use at it for FRIB.USE seconds and its
-// ring brings everyone lost back (frBringBack). While it's up the drowned are drawn to it as to one of you. It sinks
-// again once rung, and rises again if anyone else is lost. Host-authoritative: the host sees who's lost (FR.lost, and
-// each joined player's frp), raises it, and is asked to ring it (raidAsk 'bell'); its word is fb: [up, rung].
-const FRIB = { USE: 5, RISE: 2.5, R: 2.4 };
-function friBellSet(H) {
-  const Z = H.I.zm, F = Z.fr; if (!F) return;
-  const at = H.spot(1.4, 14, FRI.R - 12, 3, 200) || H.spot(1.4, 6, FRI.R - 8, 2, 200) || [H.CX + 8, H.CY + 8];
-  F.bell = [at[0] - H.CX, at[1] - H.CY];
-}
-const friBellAt = () => { const F = FPS.g && FPS.g.isle && FPS.g.isle.zm && FPS.g.isle.zm.fr; return F && F.bell ? [FPSC.CX + F.bell[0], FPSC.CY + F.bell[1]] : [FPSC.CX + 8, FPSC.CY + 8]; };
-function friBellEnter() { Object.assign(RAID.st, { lb: 0, lbN: 0, lbUseT: 0, lbPend: 0, lbSeen: 0 }); }
-// (hosting or alone) is anyone lost in the fog?
-function friAnyLost() {
-  if (ZM.ghost && FR.lost) return true;
-  if (typeof FPS.remote !== 'undefined') for (const r of FPS.remote.values()) if (!r.left && r.dead && r.frLost) return true;
-  return false;
-}
-function friBellTick() {
-  const S = RAID.st; if (ZM.net === 'client' || S.ph === 'lit') return;
-  if (!S.lb && friAnyLost()) { S.lb = 1; frIsleSay('A bell rises out of the fog: the Lost Man’s Bell. Ring it (hold Use) to bring back the lost.', true); }
-}
-function friBellQ(sid) {
-  const S = RAID.st; if (!S.lb) return;
-  S.lb = 0; S.lbN++; frBringBack();
-  frIsleSay(`${friNick(sid)} rang the Lost Man’s Bell. The lost come back out of the fog.`, true);
-}
-function friBellPack(o) { const S = RAID.st; o.fb = [S.lb | 0, S.lbN | 0]; }
-function friBellApply(o) { const S = RAID.st; if (Array.isArray(o.fb)) { if (!(S.lbPend > 0)) S.lb = o.fb[0] | 0; S.lbN = o.fb[1] | 0; } }
-function friBellPlayers(P) { if (!RAID.st.lb) return P; const [x, y] = friBellAt(); return P.concat([{ sid: '', x, y, jz: 0, beacon: true }]); }
-function friBellConsider(c) { if (RAID.st.lb) { const [x, y] = friBellAt(); c({ k: 'frbell' }, x, y, 0, FRIB.R, false); } }
-function friBellPrompt(o) { return o.k === 'frbell' ? { text: 'Hold to ring the Lost Man’s Bell', hold: true } : null; }
-function friBellMe(dt) {
-  const S = RAID.st, m = FPS.me, alive = !(m.dead > 0) && !zmIsDown() && !ZM.over;
-  if (S.lbPend > 0) S.lbPend -= dt;
-  if (S.lbN !== S.lbSeen) { S.lbSeen = S.lbN; try { if (!soundOff()) sfxBell(); } catch (e) {} }
-  const hold = FPS.keys.KeyF || FPS.keys.KeyE || FPS.touchUse || FPS.padUse, o = ZM.near;
-  if (hold && o && o.k === 'frbell' && alive && S.lb && !(S.lbPend > 0)) {
-    S.lbUseT += dt;
-    if (S.lbUseT >= FRIB.USE) { S.lbUseT = 0; S.lbPend = 1.2; S.lb = 0; raidAsk('bell'); }
-  } else S.lbUseT = 0;
-}
-function friBellHud(phone) {
-  const S = RAID.st;
-  if (S.lbUseT > 0) {
-    const k = Math.min(1, S.lbUseT / FRIB.USE);
-    ctx.strokeStyle = 'rgba(200,220,240,0.25)'; ctx.lineWidth = 4; ctx.beginPath(); ctx.arc(cx, H / 2, 30, 0, 6.283); ctx.stroke();
-    ctx.strokeStyle = '#d8e8f4'; ctx.beginPath(); ctx.arc(cx, H / 2, 30, -Math.PI / 2, -Math.PI / 2 + k * 6.283); ctx.stroke();
-  }
-  if (S.lb && !(ZM.ghost)) { ctx.textAlign = 'center'; ctx.textBaseline = 'top'; ctx.font = (phone ? '10px' : '12px') + ' monospace'; ctx.fillStyle = `rgba(200,220,240,${0.7 + 0.3 * Math.sin(g.t * 4)})`; ctx.fillText('The Lost Man’s Bell is up: ring it to bring the lost back', cx, H * 0.14); ctx.textBaseline = 'alphabetic'; }
-}
-// in 3D: the bell on its frame, rising out of the ground while it's up, and a pale light on it
-const FRIB3 = { on: false, k: 0 };
-function friBell3dBuild(grp) {
-  const [bx, by] = friBellAt(), Z = FPSC.GROUND + fpsIsleH(FPS.g.isle, bx, by), G = new THREE.Group();
-  const wood = new THREE.MeshLambertMaterial({ color: 0x4a3a2a }), brass = new THREE.MeshLambertMaterial({ color: 0x9a7a40, emissive: 0x2a2010 });
-  for (const s of [-1, 1]) { const p = new THREE.Mesh(new THREE.BoxGeometry(0.18, 2.6, 0.18), wood); p.position.set(s * 0.8, 1.3, 0); G.add(p); }
-  const bar = new THREE.Mesh(new THREE.BoxGeometry(1.9, 0.2, 0.22), wood); bar.position.set(0, 2.6, 0); G.add(bar);
-  const bell = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.48, 0.75, 14, 1, true), brass); bell.material.side = THREE.DoubleSide; bell.position.set(0, 2.1, 0); G.add(bell);
-  const top = new THREE.Mesh(new THREE.SphereGeometry(0.22, 10, 6, 0, 6.283, 0, Math.PI / 2), brass); top.position.set(0, 2.47, 0); G.add(top);
-  G.position.copy(z3v(bx, by, Z)); G.userData.z = Z; grp.add(G);
-  const soft = z3Soft('rgba(210,230,255,0.9)', 'rgba(160,190,230,0)');
-  const halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: soft, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: 0, fog: false }));
-  halo.position.set(0, 2.2, 0); halo.scale.setScalar(5); G.add(halo);
-  Object.assign(FRIB3, { on: true, G, bell, halo, k: 0, Z, bx, by });
-}
-function friBell3d(dt) {
-  if (!FRIB3.on || !FRIB3.G) return;
-  const up = RAID.st.lb ? 1 : 0; FRIB3.k += (up - FRIB3.k) * Math.min(1, dt / FRIB.RISE * 3);
-  const k = FRIB3.k; FRIB3.G.visible = k > 0.01;
-  FRIB3.G.position.copy(z3v(FRIB3.bx, FRIB3.by, FRIB3.Z - 3.2 * (1 - k)));
-  FRIB3.bell.rotation.z = reduceMotion ? 0 : Math.sin(g.t * 1.7) * 0.12 * k;
-  FRIB3.halo.material.opacity = 0.45 * k * (0.8 + 0.2 * Math.sin(g.t * 3));
-}
+// ---------- the Fight's stage ----------
+const friRule = () => FRI_RULES[(frPlanNow() || {}).rule] || FRI_RULES.hold;
+const friCall = (k, ...a) => { const R = friRule(); return typeof R[k] === 'function' ? R[k](...a) : undefined; };
+frKind('fight', { n: 'Fight', mark: '⚔', weight: 3 }, {
+  get n() { return (FPS_ISLES.frisle && FPS_ISLES.frisle.name) || 'an island'; },
+  map: FRI_MAP, mend: true, open: true,
+  music: () => FR_MUSIC.isle,
+  prep(i) { frIsleLook(i); },
+  enter() { frEnterStage(); friCall('enter'); },
+  banner() { const R = FR_REACH[FR.reach] || FR_REACH[1]; return { text: FPS_ISLES.frisle.name, t: 4.5, sub: `${R.n} · stop ${FR.stop} · ${friRule().n}`, col: '#ffe2a8' }; },
+  tick(dt) { friCall('tick', dt); },
+  me(dt) { friCall('me', dt); },
+  q(sid, k, a) { friCall('q', sid, k, a); },
+  pack(o) { friCall('pack', o); },
+  apply(o) { friCall('apply', o); },
+  players(P) { return friCall('players', P) || P; },
+  consider(c) { friCall('consider', c); },
+  prompt(o) { return friCall('prompt', o) || null; },
+  use(o) { return !!friCall('use', o); },
+  hud(phone, mono, fell) { friCall('hud', phone, mono, fell); },
+  b3(grp) { fri3dBuild(grp); },
+  f3(dt) { fri3d(dt); },
+  exit() { FRI3.on = false; },
+});
 
 // ---------- in 3D: the beacon's fire, and its beam up through the fog ----------
 const FRI3 = { on: false };
