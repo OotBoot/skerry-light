@@ -409,6 +409,7 @@ function rfTick(dt) {
     if (M && !M.dead && M.act !== 'rise') { const B = RFC.BOX; M.x = clamp(M.x, FPSC.CX + B[0], FPSC.CX + B[1]); M.y = clamp(M.y, FPSC.CY + B[2], FPSC.CY + B[3]); }
   } else if (RF.st === 'won' && RF.wonT > 0) {
     RF.wonT -= dt;
+    if (typeof rmvAllTook === 'function' && rmvAllTook()) RF.wonT = Math.min(RF.wonT, 2.5);   // [mvp] everyone has her token: on to the end (src/raidmvp.js)
     if (RF.wonT <= 0 && typeof raidWin === 'function') raidWin();
   }
 }
@@ -466,7 +467,7 @@ function rfKill(d, how, by) {
     RF.st = 'anger'; RF.angerT = 0; RF.angered = false; RF.wait = RFC.ANGER[0] + RFC.ANGER[1];
   }
   if (d.bt === 'maren' && RF.st === 'maren') {
-    RF.st = 'won'; RF.vul = 0; RF.orbUp = false; RF.wonT = 10;
+    RF.st = 'won'; RF.vul = 0; RF.orbUp = false; RF.wonT = 45;   // (at most: sooner once you've all taken her token)
     RF.tok = [d.x, d.y, d.jz || 0];
     rfLine('Maren Holm is laid to rest. She leaves a pirate token where she fell: one for each of you.');
     // the rest of them go back into the sea with her
@@ -503,6 +504,7 @@ function rfShot(x, y, z, lh, lp, dmg) {
   const r = fpsRay(x, y, z, lh, lp, FPS.me.id, [], t);
   if (r.kind !== 'none' && r.t < t - 0.6) return;
   FPS.hitT = 0.25; FPS.hitHead = true; fpsHitSound(true);
+  if (typeof rmvAdd === 'function') rmvAdd('so');   // [mvp]
   dmg = dmg == null ? 1 : dmg;
   // (joined: what I've done to it gathers here and goes to the host every few frames; meanwhile it shows here at once)
   if (ZM.net === 'client') { RF.orbAcc = (RF.orbAcc || 0) + dmg; RF.orbHp = Math.max(0, RF.orbHp - dmg); }

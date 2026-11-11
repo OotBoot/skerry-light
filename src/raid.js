@@ -77,7 +77,8 @@ function raidMapFor(i) {
 function raidBegin(map) {
   RAID.on = map === 'raid';
   if (!RAID.on) return;
-  Object.assign(RAID, { stage: 0, won: false, st: {}, t: 0, boss: 0, told: false, sta: 1, tired: false });
+  Object.assign(RAID, { stage: 0, won: false, st: {}, t: 0, boss: 0, told: false, sta: 1, tired: false, tiredN: 0, runNow: false });
+  if (typeof rmvReset === 'function') rmvReset();   // [mvp] src/raidmvp.js
   raidMapFor(0);
 }
 // (zmStart, once it's all laid out) your kit, and the stage's state
@@ -114,10 +115,12 @@ function raidHostTick(dt) { RAID.t += dt; raidCall('tick', dt); }
 const RSTA = { RUN: 10, FILL: 15, BACK: 0.25 };
 function raidStamina(run, dt) {
   if (!RAID.on) return run;
+  RAID.runNow = false;
   if (RAID.sta == null) RAID.sta = 1;
   if (run && !RAID.tired) {
     RAID.sta = Math.max(0, RAID.sta - dt / RSTA.RUN);
-    if (RAID.sta <= 0) { RAID.tired = true; FPS.padRun = false; fpsFeed('Out of breath. You can’t sprint until you get it back.'); }
+    if (RAID.sta <= 0) { RAID.tired = true; RAID.tiredN = (RAID.tiredN | 0) + 1; FPS.padRun = false; fpsFeed('Out of breath. You can’t sprint until you get it back.'); }
+    RAID.runNow = true;   // [mvp] (metres sprinted)
     return true;
   }
   RAID.sta = Math.min(1, RAID.sta + dt / RSTA.FILL);
@@ -144,6 +147,7 @@ function raidMe(dt) {
   RAID.ct = ZM.net === 'client' ? (Math.abs((RAID.ct || 0) + dt - RAID.t) > 0.4 ? RAID.t : (RAID.ct || 0) + dt) : RAID.t;
   raidCall('me', dt);
   if (typeof rclTick === 'function') rclTick(dt);   // [classes] src/rclass.js
+  if (typeof rmvTick === 'function') rmvTick(dt);   // [mvp] src/raidmvp.js: what each of you did, counted
   // joined: the host's world has moved on to the next part
 }
 // who the drowned can come after
@@ -207,6 +211,7 @@ function raidReport() {
   if (typeof scoreRun === 'function') { scoreRun('raid', RAID.won ? Math.max(1, 100000 - Math.round(RAID.t)) : 0, Math.round(RAID.boss), ZM.kills, RAID.won); scoreRunEnd('raid'); }
 }
 function raidShowOver() {
+  if (RAID.won && typeof rmvShow === 'function' && rmvShow()) return;   // [mvp] won at the very end: everyone together (src/raidmvp.js)
   const S = RAID_STAGES[RAID_ORDER[RAID.stage]], cleared = RAID.won ? RAID_ORDER.length : RAID.stage;
   if ($('zmOverEye')) $('zmOverEye').textContent = 'Maren’s End';
   $('zmOverHead').textContent = RAID.won ? 'Through the door' : `The dark took you in ${S ? S.n : 'the deep'}`;
@@ -226,6 +231,7 @@ function raidHostSend(z) {
   if (!RAID.on) return;
   z.rd = [RAID.stage, RAID.won ? 1 : 0, Math.round(RAID.t)];
   const o = {}; raidCall('pack', o); z.rs = o;
+  if (typeof rmvPack === 'function') rmvPack(z);   // [mvp]
 }
 function raidApply(hz) {
   if (!RAID.on || !Array.isArray(hz.rd)) return;
@@ -233,6 +239,7 @@ function raidApply(hz) {
   if (st !== RAID.stage) raidUseStage(st);
   RAID.won = !!hz.rd[1]; RAID.t = +hz.rd[2] || RAID.t;
   if (hz.rs && typeof hz.rs === 'object') raidCall('apply', hz.rs);
+  if (typeof rmvApply === 'function') rmvApply(hz);   // [mvp]
 }
 
 // ---------- in 3D ----------

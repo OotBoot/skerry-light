@@ -230,6 +230,7 @@ function znPresence() {
   // my health and the most I can have (Stout Heart), for the bar over my head and for anyone watching me
   z.hp = FPS.me.dead > 0 || ZM.downT > 0 ? 0 : Math.max(0, Math.ceil(FPS.me.hp)); z.hm = ZM.perks && ZM.perks.stout ? ZMC.HP_STOUT : ZMC.HP;
   if (typeof rclPresence === 'function') rclPresence(z);   // [classes] my calling, my ultimate, what I've just thrown (src/rclass.js)
+  if (typeof rmvPresence === 'function') rmvPresence(z);   // [mvp] once Maren's down: what I did, and her token taken (src/raidmvp.js)
   return z;
 }
 // my shots, for the others to see and hear
@@ -283,6 +284,7 @@ function znReadPlayers(dt) {
     r.hm = clamp(z.hm | 0 || ZMC.HP, 1, 12); r.hp = z.hp == null ? null : clamp(+z.hp || 0, 0, r.hm);
     r.left = false;
     if (typeof rclHeard === 'function') rclHeard(r, z);   // [classes] src/rclass.js
+    if (typeof rmvHeard === 'function') rmvHeard(r, z);   // [mvp] src/raidmvp.js
     if (Array.isArray(z.sh)) {
       const last = ZN.lastShot[z.sid] || 0;
       for (const s of z.sh) if (Array.isArray(s) && s[0] > last) { ZN.lastShot[z.sid] = s[0]; znShotFx(r, s); }
@@ -345,6 +347,7 @@ function znRequestFrom(sid, k, a) {
 }
 // someone (by) gets someone (sid) up: everyone's told who got whom up (and if it's me, up I get)
 function zmnRevive(sid, by) {
+  if ((!by || by === FPS.me.id) && typeof rmvAdd === 'function') rmvAdd('rv');   // [mvp] (I got them up)
   if (ZM.net === 'client') { zmnRequest('rev', sid); return; }
   by = by || FPS.me.id;
   zmnEvent('rev', sid, by);

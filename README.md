@@ -366,7 +366,8 @@ The last part of the raid. The door at the end of the bridge lets you out in the
 - **How hard they hit:** every blow of the Knock's and Maren's takes **half your health** (three of your six knocks, six of twelve with Stout Heart), so two hits put you down. Both strike quickly and often: the Knock's wind-ups are about a third shorter than they were and it's ready again in one to two and a half seconds; Maren's sweep comes in 0.6 s and her ring erupts after 1.6 s, and both move faster.
 - **Her blows:** close in she sweeps her arm through you. Further off she raises her arms and a sea-green ring about 8 m across glows on the floor round one of you; after a moment the sea erupts through it. Get out of the ring, or jump. She keeps to the Plaza and the Battery: she's too big for the doors.
 - **All through the fight** the drowned keep climbing in at the windows and up the ladders out of the sea onto the Battery, and every half minute or so another boss comes too (the Diver, a Mooncusser or the Keelback).
-- **Her pirate token:** she drops one where she falls. Walk over it and it's yours: **one for each of you**. It's a pirate token like the Lighthouse's, spent on the Keeper's Last Light card. A few seconds later the raid is won.
+- **Her pirate token:** she drops one where she falls. Walk over it and it's yours: **one for each of you**. It's a pirate token like the Lighthouse's, spent on the Keeper's Last Light card. Once everyone standing has taken theirs (or after 45 seconds), the raid is won.
+- **The victory screen:** all of you stand together on the sea wall at sunset, in your own outfits with your calling's weapon in hand. The player with the best night overall (the MVP: kills, headshots, boss damage, Maren's soul shot, friends got up, less every time you went down) stands in the middle on a gold step, and the rest stand out to either side in order. Under each player are the three things they did best compared with the others (a star marks the most of anyone). These can be any of: drowned sent back, through the head, damage to the bosses, hits on Maren's soul, friends got back up, metres sprinted, metres walked, time in the air, time by a brazier's light, shots fired, shots that hit, most hit with one shot, grenades thrown, ultimates called, or times out of breath. Playing together, the host gathers everyone's numbers, so every screen shows the same people in the same order. The buttons: **Spend your pirate token** (opens the Gannet's Locker), **Play again** (together, back to the lobby) and **Main menu** (`src/raidmvp.js`). The sunset music plays on under it.
 - Together it's run by the host, as at the Lighthouse; everyone's hits on her soul add up.
 
 ### Maren's End: the music
@@ -606,6 +607,7 @@ src/zmswarm.js      The Lighthouse: the crab rounds (a swarm in at the windows, 
 src/zmboss.js       The Lighthouse: the bosses (their schedule, coming in, walking, bars, together) and the Diver
 src/raidbridge.js   Maren's End, Part II: the Black Water (the river, the circles, the bridge, the Cutlass of Plimsoll, the Divers' helmets)
 src/zmboss2.js      The Lighthouse: the Mooncusser (the false light) and the Keelback (the charge)
+src/raidmvp.js      Maren's End, won: everyone together, the MVP in the middle, three best stats each
 src/zmegg.js        The Lighthouse's secret, and the pirate tokens it pays (the Gannet's locker)
 src/main.js         starts the main loop
 assets/maren.png    Maren cutout
