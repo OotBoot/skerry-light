@@ -90,7 +90,8 @@ FPI_K.frbeacon = {
 };
 const friLand = () => { const F = FPS.g && FPS.g.isle && FPS.g.isle.zm && FPS.g.isle.zm.fr; return F ? [FPSC.CX + F.land[0], FPSC.CY + F.land[1]] : [FPSC.CX, FPSC.CY - FRI.R + 7]; };
 const friBeacon = () => { const F = FPS.g && FPS.g.isle && FPS.g.isle.zm && FPS.g.isle.zm.fr; return F ? [FPSC.CX + F.bea[0], FPSC.CY + F.bea[1]] : [FPSC.CX, FPSC.CY]; };
-const friNick = sid => sid === FPS.me.id ? 'You' : ((ZM.hum || []).find(h => h[0] === sid) || [])[1] || 'Someone';
+// (alone, 'You'; together, the lobby name, since the line goes to everyone as the host wrote it)
+const friNick = sid => !ZM.net ? 'You' : ((ZM.hum || []).find(h => h[0] === sid) || [])[1] || (sid === FPS.me.id ? 'The host' : 'Someone');
 
 // ---------- what every island stage does alike ----------
 function frIsleSay(text, warn) { if (ZM.net !== 'client') { const S = RAID.st; S.say = [((S.say || [0])[0] | 0) + 1, text, warn ? 1 : 0]; } frIsleHear(text, warn); }
