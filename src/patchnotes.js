@@ -6,6 +6,8 @@
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 157, date: '2026-11-11', title: "Menu tidy", Changes: [
+    "Main menu: small tidy-up." ] },
   { v: 156, date: '2026-11-11', title: "Tidier patch notes", Changes: [
     "Patch notes: older entries trimmed down to what matters for everyday play." ] },
   { v: 155, date: '2026-11-11', title: "Rejoin a game in progress", New: [
