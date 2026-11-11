@@ -238,13 +238,14 @@ const raidNumeral = n => ['', 'I', 'II', 'III', 'IV', 'V', 'VI'][n] || String(n)
 function raidWin() {
   if (RAID.won) return;
   RAID.won = true;
-  if (typeof wcEarn === 'function') { wcEarn('round'); wcEarn('round'); } if (typeof ocEarn === 'function') { ocEarn('round'); ocEarn('round'); }
+  if (!(typeof FR !== 'undefined' && FR.on)) { if (typeof wcEarn === 'function') { wcEarn('round'); wcEarn('round'); } if (typeof ocEarn === 'function') { ocEarn('round'); ocEarn('round'); } }   // [fogrun] (a fog run pays its own: src/frkeep.js frPay)
   zmEnd();
 }
 // damage you did to a boss (counted on your own side)
 function raidBossDamage(n) { if (RAID.on && n > 0) RAID.boss += n; }
 // (zmEnd) the scoreboard: the time, if won; the bosses' damage; and this raid's kills added to all the rest
 function raidReport() {
+  if (typeof frReport === 'function' && FR.on && !RAID.told) { frReport(); return; }   // [fogrun] its own board and what it pays (src/frkeep.js)
   const G = RAID.map;   // (each raid its own game on the board)
   if (RAID.told || typeof scoreReport !== 'function' || typeof BOARD === 'undefined' || !BOARD.mine || !BOARD.mine[G]) return;
   RAID.told = true;
@@ -262,6 +263,7 @@ function raidShowOver() {
   const best = typeof BOARD !== 'undefined' && BOARD.mine && BOARD.mine[RAID.map];
   if (typeof frOverStats === 'function' && FR.on) $('zmOverStats').textContent = frOverStats();   // [fogrun]
   $('zmOverBest').textContent = best && (best.s || best.c) ? (best.s ? `Your best time: ${raidTimeOf(best.s)}. ` : '') + `${best.c | 0} sent back in all your raids.` : '';
+  if (typeof frKeepOver === 'function' && FR.on) frKeepOver();   // [fogrun] what the run kept
   $('zmOver').hidden = false;
   try { document.exitPointerLock && document.exitPointerLock(); } catch (e) {}
   setTimeout(() => $('zmAgain').focus(), 30);

@@ -1005,6 +1005,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 /* [fogrun] Fog Run (src/frrun.js): its card and its banner, a beacon's warm light in the haar's grey */
 .frcard { border-color: rgba(190,200,210,0.45); }
 .frcard h1 { color: #ffd8a0; text-shadow: 0 0 28px rgba(200,212,224,0.4); }
+.frcard .frkeep { color: #c8d4e0; font-size: 13px; }   /* [fogrun] chart fragments (src/frkeep.js) */
 .newgame.frbanner { border-color: rgba(190,200,210,0.5); background: linear-gradient(90deg, rgba(150,165,180,0.28), rgba(150,165,180,0.08)); }
 .newgame.frbanner:hover, .newgame.frbanner:focus-visible { background: linear-gradient(90deg, rgba(150,165,180,0.42), rgba(150,165,180,0.16)); }
 .newgame.frbanner .ng-tag { background: #8a9aaa; color: #f6f8fa; }
@@ -1389,6 +1390,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
       <h1 id="frHead">Fog Run</h1>
       <p>On the fogbound nights of 1889 the Light can't reach past the skerries, and something out in the haar has been putting out the lights of the outer rocks one by one. Take the keeper's cutter out into the fog and light them again.</p>
       <p class="muted">Sail through the rocks to an island, beach her and go ashore. Light the island's beacon and hold the drowned off it for a minute; its light goes up through the fog, and you're back aboard for the next. The fog gets thicker the further out you go, and every run is different. Alone, going down ends the run. Together, each of you has one extra life, and then you're lost in the fog until the next light is lit.</p>
+      <p class="muted frkeep" id="frKeep">Chart fragments: 0.</p><!-- [fogrun] src/frkeep.js -->
       <div class="btnrow">
         <button class="primary" id="frPlay" type="button">Set out</button>
         <button class="tool" id="frWcrate" type="button">Weapon crates</button>
@@ -1808,7 +1810,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 // ---- src/config.js ----
 'use strict';
 // The game's version, shown at the top of the main menu. Bump it by one with every change pushed to main.
-var VERSION = 161;
+var VERSION = 162;
 // Skerry Light: tuning, asset paths and lore.
 // World units are metres. The lighthouse stands at the origin on the shoreline (y = 0);
 // north (+y) is open sea. Bearings: 0 = north, positive = east.
@@ -1937,12 +1939,16 @@ const flashK = () => SETTINGS.flashes === 'reduced' ? 0.3 : 1;
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
-  { v: 161, date: '2026-11-11', title: "Fog Run: the chart", New: [
+  { v: 162, date: '2026-11-11', title: "Fog Run: the chart", New: [
     "Fog Run: the run now follows a chart. Seven islands across three reaches of sea, with two or three to choose between at every stop and the ways between them branching, like a map in a roguelike. Every run's chart is different.",
     "Fog Run: as each sail begins the chart opens and the crew votes on the next island. Five seconds after the first vote it's settled: the most votes wins, and the host breaks a tie. Alone, your pick is the course.",
     "Fog Run: a chart table on deck, port side aft of the hatch, shows the route so far. Use it to open the chart again.",
     "Fog Run: each island on the chart shows what kind it is, its island and where it leads. More kinds of island are on the way." ], Changes: [
     "Fog Run: the cutter never waits for the vote. She sails on while you choose, and if nobody votes in time (or she comes in sight of the islands) the chart picks one." ] },
+  { v: 161, date: '2026-11-11', title: "Fog Run: what you keep", New: [
+    "Fog Run: runs now pay out. You get a weapon or outfit crate for every two islands lit, and three more for a win.",
+    "Fog Run: every beacon you light gives you a chart fragment, kept for good. The Fog Run card shows how many you have.",
+    "Scoreboard: Fog Run has its own column, showing the furthest island reached, the time through a won run, and the islands lit." ] },
   { v: 160, date: '2026-11-11', title: "Aim down the sights with every gun", New: [
     "Every gun can now aim down its sights, not just the Longarm and the Avtomat: right mouse, LT on a controller, or Aim on a phone. Works in Wreckers' Night, Keeper's Last Light, the raids and Fog Run, including every gun from the wreck chest.",
     "Aiming brings the gun up to the middle of the screen with a small dot for a crosshair, zooms in a little (more for the harpoon gun and pistols, less for the blunderbuss and punt gun) and slows your look to match." ], Changes: [
@@ -13090,7 +13096,8 @@ function saveData() {
     // (each only once its own file has run: the boat crates save while the page is still loading)
     w: crOther('wcData'), oc: crOther('ocData'), rc: crOther('rcData'),
     // and your bests for the scoreboard and your username (src/scores.js)
-    best: crOther('boardBests'), nick: crOther('boardNick') || undefined };
+    best: crOther('boardBests'), nick: crOther('boardNick') || undefined,
+    fr: crOther('frData') };   // [fogrun] chart fragments (src/frkeep.js)
 }
 function crOther(f) { try { return typeof window[f] === 'function' ? window[f]() : undefined; } catch (e) { return undefined; } }
 function saveCrates() {
@@ -13126,6 +13133,7 @@ function mergeSave(d, takeLooks) {
   if (typeof ocMerge === 'function' && ocMerge(d.oc, takeLooks)) changed = true;
   if (typeof rcMerge === 'function' && rcMerge(d.rc, takeLooks)) changed = true;
   try { if (typeof boardMerge === 'function' && boardMerge(d.best, d.nick, takeLooks)) changed = true; } catch (e) {}
+  if (typeof frMerge === 'function' && frMerge(d.fr)) changed = true;   // [fogrun] chart fragments (src/frkeep.js)
   if (takeLooks) {
     if (d.equipped && typeof d.equipped === 'object') for (const b of BOATS) {
       const sk = SKIN_BY_ID[d.equipped[b.id]];
@@ -13142,7 +13150,7 @@ function afterMerge() { saveCrates(); renderCrates(); updateCrateButtons(); rend
 // the save code: your save, packed into one line of text
 function saveCode() {
   const d = saveData();
-  const packed = { c: d.crates.skerry, n: d.opened | 0, o: d.owned, e: d.equipped, p: d.pennant, f: d.flare, b: d.boat, t: d.pt, w: d.w, q: d.oc, r: d.rc, s: d.best, u: d.nick };   // [pirate tokens] src/zmegg.js
+  const packed = { c: d.crates.skerry, n: d.opened | 0, o: d.owned, e: d.equipped, p: d.pennant, f: d.flare, b: d.boat, t: d.pt, w: d.w, q: d.oc, r: d.rc, s: d.best, u: d.nick, g: d.fr };   // [pirate tokens] src/zmegg.js [fogrun] g: chart fragments
   return 'SKERRY-' + btoa(unescape(encodeURIComponent(JSON.stringify(packed)))).replace(/=+$/, '').replace(/\+/g, '-').replace(/\//g, '_');
 }
 function readSaveCode(text) {
@@ -13152,7 +13160,7 @@ function readSaveCode(text) {
   try {
     const b64 = m[1].replace(/-/g, '+').replace(/_/g, '/');
     const o = JSON.parse(decodeURIComponent(escape(atob(b64 + '==='.slice((b64.length + 3) % 4)))));
-    return { crates: o.c | 0, opened: o.n | 0, owned: o.o, equipped: o.e, pennant: o.p, flare: o.f, boat: o.b, pt: o.t, w: o.w, oc: o.q, rc: o.r, best: o.s, nick: o.u };   // [pirate tokens] src/zmegg.js
+    return { crates: o.c | 0, opened: o.n | 0, owned: o.o, equipped: o.e, pennant: o.p, flare: o.f, boat: o.b, pt: o.t, w: o.w, oc: o.q, rc: o.r, best: o.s, nick: o.u, fr: o.g };   // [pirate tokens] src/zmegg.js [fogrun]
   } catch (e) { return null; }
 }
 
@@ -13195,7 +13203,7 @@ function saveLink() {
   if (window.claude && typeof window.claude.use === 'function') return null;
   return location.origin + location.pathname + '#load=' + saveCode();
 }
-function lootSize() { const pt = typeof ptData === 'function' && ptData(), sum = o => o ? Object.values(o.owned || {}).reduce((a, v) => a + (v | 0), 0) + (o.crates | 0) : 0; return Object.values(CRATES.owned).reduce((a, v) => a + (v | 0), 0) + (CRATES.crates.skerry | 0) + (pt ? pt.e : 0) + sum(crOther('wcData')) + sum(crOther('ocData')) + sum(crOther('rcData')); }   // [pirate tokens] src/zmegg.js
+function lootSize() { const pt = typeof ptData === 'function' && ptData(), sum = o => o ? Object.values(o.owned || {}).reduce((a, v) => a + (v | 0), 0) + (o.crates | 0) : 0; return Object.values(CRATES.owned).reduce((a, v) => a + (v | 0), 0) + (CRATES.crates.skerry | 0) + (pt ? pt.e : 0) + sum(crOther('wcData')) + sum(crOther('ocData')) + sum(crOther('rcData')) + ((crOther('frData') || {}).f | 0); }   // [pirate tokens] src/zmegg.js [fogrun] chart fragments
 function markBackedUp() { try { localStorage.setItem('skerry-backup', String(lootSize())); } catch (e) {} renderBackupDot(); }
 function needsBackup() { let b = 0; try { b = +localStorage.getItem('skerry-backup') || 0; } catch (e) {} return lootSize() > b && Object.keys(CRATES.owned).length > 0; }
 function renderBackupDot() { for (const b of document.querySelectorAll('.backupBtn')) b.classList.toggle('due', needsBackup()); }
@@ -30729,13 +30737,14 @@ const raidNumeral = n => ['', 'I', 'II', 'III', 'IV', 'V', 'VI'][n] || String(n)
 function raidWin() {
   if (RAID.won) return;
   RAID.won = true;
-  if (typeof wcEarn === 'function') { wcEarn('round'); wcEarn('round'); } if (typeof ocEarn === 'function') { ocEarn('round'); ocEarn('round'); }
+  if (!(typeof FR !== 'undefined' && FR.on)) { if (typeof wcEarn === 'function') { wcEarn('round'); wcEarn('round'); } if (typeof ocEarn === 'function') { ocEarn('round'); ocEarn('round'); } }   // [fogrun] (a fog run pays its own: src/frkeep.js frPay)
   zmEnd();
 }
 // damage you did to a boss (counted on your own side)
 function raidBossDamage(n) { if (RAID.on && n > 0) RAID.boss += n; }
 // (zmEnd) the scoreboard: the time, if won; the bosses' damage; and this raid's kills added to all the rest
 function raidReport() {
+  if (typeof frReport === 'function' && FR.on && !RAID.told) { frReport(); return; }   // [fogrun] its own board and what it pays (src/frkeep.js)
   const G = RAID.map;   // (each raid its own game on the board)
   if (RAID.told || typeof scoreReport !== 'function' || typeof BOARD === 'undefined' || !BOARD.mine || !BOARD.mine[G]) return;
   RAID.told = true;
@@ -30753,6 +30762,7 @@ function raidShowOver() {
   const best = typeof BOARD !== 'undefined' && BOARD.mine && BOARD.mine[RAID.map];
   if (typeof frOverStats === 'function' && FR.on) $('zmOverStats').textContent = frOverStats();   // [fogrun]
   $('zmOverBest').textContent = best && (best.s || best.c) ? (best.s ? `Your best time: ${raidTimeOf(best.s)}. ` : '') + `${best.c | 0} sent back in all your raids.` : '';
+  if (typeof frKeepOver === 'function' && FR.on) frKeepOver();   // [fogrun] what the run kept
   $('zmOver').hidden = false;
   try { document.exitPointerLock && document.exitPointerLock(); } catch (e) {}
   setTimeout(() => $('zmAgain').focus(), 30);
@@ -35424,7 +35434,7 @@ function rmvRender() {
   const P = RMV.P = rmvRank(L), me = FPS.me.id;
   const n = P.length, tok = typeof ptTokens === 'function' ? ptTokens() : 0;
   { const ey = document.querySelector('#rmvOver .rmvhead .eyebrow'); if (ey) ey.textContent = `${typeof raidName === 'function' ? raidName() : 'Maren’s End'} · won`; $('rmvHead').textContent = typeof RAID !== 'undefined' && RAID.map === 'fogrun' ? 'The lights are lit again' : typeof RAID !== 'undefined' && RAID.map === 'gannet' ? 'Captain Crane goes down with his ship' : 'Maren is laid to rest'; }   // [gannet] (each raid its own words) [fogrun]
-  $('rmvSub').textContent = `${n > 1 ? n + ' of you, ' : ''}${typeof FR !== 'undefined' && FR.on ? (FR.lit | 0) + ' islands lit' : 'all three parts'} in ${typeof raidClock === 'function' ? raidClock(RAID.t) : Math.round(RAID.t) + ' s'}. ${P[0] ? (P[0].id === me ? 'You were the best of the night.' : P[0].n + ' was the best of the night.') : ''}`;
+  $('rmvSub').textContent = `${n > 1 ? n + ' of you, ' : ''}${typeof FR !== 'undefined' && FR.on ? (FR.lit | 0) + ' islands lit' : 'all three parts'} in ${typeof raidClock === 'function' ? raidClock(RAID.t) : Math.round(RAID.t) + ' s'}. ${P[0] ? (P[0].id === me ? 'You were the best of the night.' : P[0].n + ' was the best of the night.') : ''}` + (typeof frKeepLine === 'function' && typeof FR !== 'undefined' && FR.on ? ' ' + frKeepLine() : '');   // [fogrun] what the run kept
   $('rmvToken').textContent = tok > 0 ? `Spend your pirate token (${tok})` : 'The Gannet’s Locker';
   $('rmvAgain').textContent = ZM.net ? 'Play again (to the lobby)' : 'Play again';
   const box = $('rmvCards'); box.textContent = '';
@@ -39587,7 +39597,7 @@ const FR_REACH = [null, { n: 'The Near Skerries', fog: 140, stops: 2 }, { n: 'Th
 const FR_PUSH = 10;
 // the island looks (FPS_ISLES) an island can be laid out in, small
 const FR_LOOKS = ['shingle', 'reef', 'chapel', 'cove', 'cliff', 'marsh'];
-// the route for now (step 1): two Fight islands (Hold the Light), then won. The chart (step 2) takes over frNextStop.
+// the route of step 1 (two Fight islands, then won), kept for reference: the chart (src/frchart.js) has taken over frNextStop
 const FR_SKEL = [{ kind: 'fight', rule: 'hold', reach: 1 }, { kind: 'fight', rule: 'hold', reach: 1 }];
 // the music each part plays (src/raidmusic.js; the fog horn, frhorn, is a sound for the Bell Buoys' tune)
 var FR_MUSIC = { sail: 'frsail', isle: 'frisle', puzzle: 'frpuzzle', boss: 'frboss', boss2: 'frboss2', win: 'frwin', horn: 'frhorn' };
@@ -40159,6 +40169,131 @@ function fri3d(dt) {
   FRI3.beam.material.opacity = 0.22 * FRI3.beamK; FRI3.core.material.opacity = 0.5 * FRI3.beamK;
   frIsleFog();
 }
+
+// ---- src/frkeep.js ----
+// Fog Run: what you keep between runs (design.md, "What you keep"; step 6). Nothing in here touches the boat or the run
+// itself: it watches the run from outside (every half second, frKeepTick) and settles up when it ends.
+//  - Crates. When a run ends (won, lost, or left: src/raid.js raidReport calls frReport), one crate for every two
+//    islands lit, and three more for a win: the same weapon and outfit crates the raids pay out (src/wcrates.js
+//    wcGrant, src/ocrates.js ocGrant), taken in turn, a weapon crate first. Only what a run hasn't already paid goes
+//    out, kept by the run's seed, so leaving a run and rejoining it never pays twice. (A fog run doesn't also get the
+//    raids' own win crates: raidWin leaves them out.)
+//  - The scoreboard, game 'fogrun' (src/scores.js BOARD.games, server/scores.js GAMES). Each run is an entry:
+//      s: the furthest island reached (its stop number)    b: the time through, for a won run (as the raids keep it,
+//      100000 less its seconds; 0: not won)    c: the islands lit in it
+//    and your bests: the furthest, the fastest win, and the islands lit in all your runs. Logged as it goes (each new
+//    island reached or lit) and once more at the end; a run left before its end keeps a yellow asterisk.
+//  - Chart fragments: one for each island lit, kept in this browser for good (localStorage 'skerry-frkeep', also in
+//    the one save: src/crates.js saveData `fr`, the save code's `g`, merged by taking the larger). Counted here as
+//    FR.lit goes up, on every screen, host or joined, and once more at the end. At 10, 25, 50 and 100 in all, new cards
+//    join the salvage for good: frFrags() is the count and frFragTier() how many of those marks you've passed (0 to 4),
+//    for the card pool (src/frcards.js). The Fog Run card shows the count and the next mark (frKeepRender).
+// Hooks in shared files, marked [fogrun]: src/raid.js (raidReport frReport, raidWin, raidShowOver frKeepOver),
+// src/raidmvp.js (the victory screen's line, frKeepLine), src/scores.js (BOARD.games.fogrun), src/crates.js (saveData,
+// mergeSave, the save code, lootSize), server/scores.js (GAMES.fogrun), index.html (the card's line, #frKeep).
+
+// FRK: the fragment marks; a crate for every PER islands lit; WIN, the crates more for a win
+const FRK = { AT: [10, 25, 50, 100], PER: 2, WIN: 3, KEY: 'skerry-frkeep' };
+// f: chart fragments in all; r: this run's record [seed, islands counted, crates paid]; far, lit: what's been logged
+// to the board this run; last: what the run just ended paid (for the end card)
+var FK = { f: 0, r: [0, 0, 0], far: 0, lit: 0, last: null };
+function frKeepLoad() {
+  let o = {}; try { o = JSON.parse(localStorage.getItem(FRK.KEY) || '{}') || {}; } catch (e) {}
+  FK.f = Math.max(0, Math.min(1e6, o.f | 0)); if (Array.isArray(o.r) && o.r.length === 3) FK.r = o.r.map(v => Math.max(0, v >>> 0));
+}
+function frKeepSave() {
+  try { localStorage.setItem(FRK.KEY, JSON.stringify({ f: FK.f, r: FK.r })); } catch (e) {}
+  if (typeof cloudSaveSoon === 'function') try { cloudSaveSoon(); } catch (e) {}
+  if (typeof renderBackupDot === 'function') try { renderBackupDot(); } catch (e) {}
+}
+
+// ---------- chart fragments ----------
+function frFrags() { return FK.f; }
+function frFragTier() { let t = 0; for (const a of FRK.AT) if (FK.f >= a) t++; return t; }
+const frFragNext = () => FRK.AT.find(a => FK.f < a) || 0;
+// for the one save (src/crates.js): what's here, and another save folded in (the larger; fragments are never spent)
+function frData() { return FK.f > 0 ? { f: FK.f } : undefined; }
+function frMerge(d) {
+  if (!d || typeof d !== 'object') return false;
+  const f = Math.max(0, Math.min(1e6, d.f | 0)); if (f <= FK.f) return false;
+  FK.f = f; frKeepSave(); frKeepRender(); return true;
+}
+// this run's record, by its seed (a new seed, or fewer islands lit than counted: a run of its own)
+function frRunRec() {
+  const L = FR.lit | 0;
+  if (FK.r[0] !== (FR.seed >>> 0) || L < FK.r[1]) { FK.r = [FR.seed >>> 0, 0, 0]; FK.far = 0; FK.lit = 0; }
+  return FK.r;
+}
+// a fragment for each island lit since last counted
+function frCountLit() {
+  const R = frRunRec(), L = FR.lit | 0; if (L <= R[1]) return;
+  const n = L - R[1]; R[1] = L; FK.f = Math.min(1e6, FK.f + n); frKeepSave(); frKeepRender();
+  if (typeof fpsFeed === 'function' && typeof FPS !== 'undefined' && FPS.on) fpsFeed(`+${n} chart ${n === 1 ? 'fragment' : 'fragments'} (${FK.f} in all)`);
+}
+
+// ---------- the scoreboard ----------
+const frRunWon = () => !!(FR.won || RAID.won);
+// furthest island reached: the stop of the island you're on (on a sail, the one before it), the most this run
+const frFarNow = () => { const p = typeof frPlanNow === 'function' ? frPlanNow() : null; return Math.max(FK.far, p && p.key !== 'frsail' ? p.n | 0 : FR.stop | 0); };
+const frTimeB = () => frRunWon() ? Math.max(1, 100000 - Math.round(RAID.t)) : 0;
+// (every half second) fragments, and the board as it goes
+function frKeepTick() {
+  if (typeof FR === 'undefined' || !FR.on || typeof RAID === 'undefined' || !RAID.on || RAID.map !== 'fogrun' || RAID.told) return;
+  frCountLit();
+  const far = frFarNow(), lit = FR.lit | 0;
+  if (far === FK.far && lit === FK.lit) return;
+  FK.far = far; FK.lit = lit;
+  if (typeof scoreReport === 'function') { scoreReport('fogrun', far, 0, 0); scoreRun('fogrun', far, 0, lit); }
+}
+// (src/raid.js raidReport: the run's end, or leaving it, or the page closing on it) the board once more, and what
+// it pays. done: played to its end (won, or everyone lost, or the cutter gone down), so no asterisk
+function frReport() {
+  RAID.told = true;
+  frCountLit();
+  const done = !!ZM.over, far = frFarNow(), lit = FR.lit | 0, b = frTimeB(), M = typeof BOARD !== 'undefined' && BOARD.mine && BOARD.mine.fogrun;
+  if (M && typeof scoreReport === 'function') scoreReport('fogrun', far, b, (M.c | 0) + lit, done);
+  if (typeof scoreRun === 'function') { scoreRun('fogrun', far, b, lit, done); scoreRunEnd('fogrun'); }
+  frPay(lit);
+}
+
+// ---------- crates ----------
+function frPay(lit) {
+  const R = frRunRec(), due = Math.floor(lit / FRK.PER) + (frRunWon() ? FRK.WIN : 0), n = Math.max(0, due - R[2]);
+  // (in turn, carrying on from what this run already paid: a weapon crate on the even ones)
+  let w = 0, o = 0; for (let k = R[2]; k < R[2] + n; k++) { if (k % 2 === 0) w++; else o++; }
+  R[2] = due; frKeepSave();
+  const why = frRunWon() ? `the lights lit again, ${lit} ${lit === 1 ? 'island' : 'islands'}` : `${lit} ${lit === 1 ? 'island' : 'islands'} lit in the fog`;
+  if (w && typeof wcGrant === 'function') wcGrant(w, why);
+  if (o && typeof ocGrant === 'function') ocGrant(o, why);
+  FK.last = { w, o, frags: lit };
+}
+// what this run kept, in a line (the end card, the victory screen)
+function frKeepLine() {
+  const L = FK.last; if (!L) return '';
+  const p = (n, one, many) => `${n} ${n === 1 ? one : many}`, bits = [];
+  if (L.w) bits.push(p(L.w, 'weapon crate', 'weapon crates')); if (L.o) bits.push(p(L.o, 'outfit crate', 'outfit crates'));
+  if (L.frags) bits.push(p(L.frags, 'chart fragment', 'chart fragments'));
+  const nx = frFragNext(), tail = `${FK.f} ${FK.f === 1 ? 'fragment' : 'fragments'} in all` + (nx ? `; ${nx - FK.f} more to ${nx}` : '');
+  return (bits.length ? 'Kept: ' + (bits.length > 1 ? bits.slice(0, -1).join(', ') + ' and ' + bits[bits.length - 1] : bits[0]) : 'Nothing kept this time') + ` (${tail}).`;
+}
+// (raidShowOver) the end card's under-line: what was kept, and your bests
+function frKeepOver() {
+  const el = $('zmOverBest'); if (!el) return;
+  const M = typeof BOARD !== 'undefined' && BOARD.mine && BOARD.mine.fogrun;
+  el.textContent = frKeepLine() + (M && M.s ? ` Furthest: island ${M.s}${M.b ? ', fastest through ' + raidTimeOf(M.b) : ''}; ${M.c | 0} lit in all.` : '');
+}
+
+// ---------- on the card ----------
+function frKeepRender() {
+  const el = $('frKeep'); if (!el) return;
+  const nx = frFragNext(), f = FK.f;
+  el.textContent = `Chart fragments: ${f}. ` + (nx ? `${nx - f} more to ${nx}, and new cards join the salvage for good.` : 'Every card is in the salvage.');
+  el.title = 'One for every island lit. At 10, 25, 50 and 100, new cards join the salvage for good.';
+}
+
+frKeepLoad();
+frKeepRender();
+setInterval(frKeepTick, 500);
 
 // ---- src/frchart.js ----
 // Fog Run: the chart (step 2 of the design, /fogrun/design.md). The route through the haar, drawn from the run's
@@ -43853,6 +43988,8 @@ rcRender();
 //   zm      s: rounds held in the night     b: kills                 (ends when the Lighthouse falls)
 //   raid    s: time through (100000 less its seconds; 0: not through)    b: damage to its bosses    c: kills
 //          (ends through the door; going down before it is incomplete)
+//   fogrun  s: the furthest island reached   b: time through, as raid (0: not won)   c: islands lit   (src/frkeep.js;
+//          ends won, lost in the fog or sunk; left before then is incomplete)
 // Your own games are kept on this device too (`skerry-runs`, your best 25 of each and the one under way).
 //
 // Below, from before: your bests, kept in your save (they're no longer what the board shows, but the boards from
@@ -43870,6 +44007,7 @@ rcRender();
 //   zm      s: most rounds held in one night        b: most kills in one night (the Lighthouse)
 //   raid    s: best time through Maren's End (kept as 100000 less its seconds, so higher is better; 0: never through)
 //           b: most damage done to its bosses in one raid    c: the drowned sent back in all raids, together
+//   fogrun  s: the furthest island reached    b: the fastest won run (as raid)    c: islands lit in all runs
 // And two marks: p, you've played it; f, you've finished a game of it (a voyage to harbour, a round of Wreckers'
 // Night to its end, a war to its end, a night at the Lighthouse until it fell, Maren's End to the door). A game left
 // or lost before its end still counts what it got to; until one's finished, your name has a yellow asterisk by it.
@@ -43891,6 +44029,9 @@ const BOARD = {
       fs: v => v > 0 ? raidTimeOf(v) : '—' },
     gannet: { name: 'The Gannet’s Wake', s: 'Time', b: 'Boss damage', c: 'Kills', what: 'Each raid out to the Gannet: the time through, the damage done to its bosses, and the drowned sent back.',
       fs: v => v > 0 ? raidTimeOf(v) : '—' },
+    // [fogrun] src/frkeep.js
+    fogrun: { name: 'Fog Run', s: 'Furthest', b: 'Time', c: 'Lit', what: 'Each fog run: the furthest island reached, the time through if it was won, and the islands lit.',
+      fs: v => v > 0 ? 'Island ' + v : '—', fb: v => v > 0 ? raidTimeOf(v) : '—' },
   },
   open: {}, mine: null, via: null, db: null, user: null, uid: null, data: null, loading: false, err: '', lastT: 0, sendT: 0, store: '',
 };
@@ -46701,4 +46842,5 @@ requestAnimationFrame(frame);
 <!-- [fogrun] the run: its state, its stage order, lives -->
 <!-- [fogrun] the sail -->
 <!-- [fogrun] the islands -->
+<!-- [fogrun] what you keep: crates, its board, chart fragments -->
 <!-- [fogrun] the chart, and the vote -->

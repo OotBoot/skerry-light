@@ -304,6 +304,7 @@
       <h1 id="frHead">Fog Run</h1>
       <p>On the fogbound nights of 1889 the Light can't reach past the skerries, and something out in the haar has been putting out the lights of the outer rocks one by one. Take the keeper's cutter out into the fog and light them again.</p>
       <p class="muted">Sail through the rocks to an island, beach her and go ashore. Light the island's beacon and hold the drowned off it for a minute; its light goes up through the fog, and you're back aboard for the next. The fog gets thicker the further out you go, and every run is different. Alone, going down ends the run. Together, each of you has one extra life, and then you're lost in the fog until the next light is lit.</p>
+      <p class="muted frkeep" id="frKeep">Chart fragments: 0.</p><!-- [fogrun] src/frkeep.js -->
       <div class="btnrow">
         <button class="primary" id="frPlay" type="button">Set out</button>
         <button class="tool" id="frWcrate" type="button">Weapon crates</button>
@@ -776,6 +777,7 @@
 <script src="src/frrun.js"></script><!-- [fogrun] the run: its state, its stage order, lives -->
 <script src="src/frsail.js"></script><!-- [fogrun] the sail -->
 <script src="src/frisle.js"></script><!-- [fogrun] the islands -->
+<script src="src/frkeep.js"></script><!-- [fogrun] what you keep: crates, its board, chart fragments -->
 <script src="src/frchart.js"></script><!-- [fogrun] the chart, and the vote -->
 <script src="src/zmnet.js"></script>
 <script src="src/war.js"></script>

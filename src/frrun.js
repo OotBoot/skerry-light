@@ -60,7 +60,7 @@ const FR_REACH = [null, { n: 'The Near Skerries', fog: 140, stops: 2 }, { n: 'Th
 const FR_PUSH = 10;
 // the island looks (FPS_ISLES) an island can be laid out in, small
 const FR_LOOKS = ['shingle', 'reef', 'chapel', 'cove', 'cliff', 'marsh'];
-// the route for now (step 1): two Fight islands (Hold the Light), then won. The chart (step 2) takes over frNextStop.
+// the route of step 1 (two Fight islands, then won), kept for reference: the chart (src/frchart.js) has taken over frNextStop
 const FR_SKEL = [{ kind: 'fight', rule: 'hold', reach: 1 }, { kind: 'fight', rule: 'hold', reach: 1 }];
 // the music each part plays (src/raidmusic.js; the fog horn, frhorn, is a sound for the Bell Buoys' tune)
 var FR_MUSIC = { sail: 'frsail', isle: 'frisle', puzzle: 'frpuzzle', boss: 'frboss', boss2: 'frboss2', win: 'frwin', horn: 'frhorn' };

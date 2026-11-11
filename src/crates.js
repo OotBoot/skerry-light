@@ -277,7 +277,8 @@ function saveData() {
     // (each only once its own file has run: the boat crates save while the page is still loading)
     w: crOther('wcData'), oc: crOther('ocData'), rc: crOther('rcData'),
     // and your bests for the scoreboard and your username (src/scores.js)
-    best: crOther('boardBests'), nick: crOther('boardNick') || undefined };
+    best: crOther('boardBests'), nick: crOther('boardNick') || undefined,
+    fr: crOther('frData') };   // [fogrun] chart fragments (src/frkeep.js)
 }
 function crOther(f) { try { return typeof window[f] === 'function' ? window[f]() : undefined; } catch (e) { return undefined; } }
 function saveCrates() {
@@ -313,6 +314,7 @@ function mergeSave(d, takeLooks) {
   if (typeof ocMerge === 'function' && ocMerge(d.oc, takeLooks)) changed = true;
   if (typeof rcMerge === 'function' && rcMerge(d.rc, takeLooks)) changed = true;
   try { if (typeof boardMerge === 'function' && boardMerge(d.best, d.nick, takeLooks)) changed = true; } catch (e) {}
+  if (typeof frMerge === 'function' && frMerge(d.fr)) changed = true;   // [fogrun] chart fragments (src/frkeep.js)
   if (takeLooks) {
     if (d.equipped && typeof d.equipped === 'object') for (const b of BOATS) {
       const sk = SKIN_BY_ID[d.equipped[b.id]];
@@ -329,7 +331,7 @@ function afterMerge() { saveCrates(); renderCrates(); updateCrateButtons(); rend
 // the save code: your save, packed into one line of text
 function saveCode() {
   const d = saveData();
-  const packed = { c: d.crates.skerry, n: d.opened | 0, o: d.owned, e: d.equipped, p: d.pennant, f: d.flare, b: d.boat, t: d.pt, w: d.w, q: d.oc, r: d.rc, s: d.best, u: d.nick };   // [pirate tokens] src/zmegg.js
+  const packed = { c: d.crates.skerry, n: d.opened | 0, o: d.owned, e: d.equipped, p: d.pennant, f: d.flare, b: d.boat, t: d.pt, w: d.w, q: d.oc, r: d.rc, s: d.best, u: d.nick, g: d.fr };   // [pirate tokens] src/zmegg.js [fogrun] g: chart fragments
   return 'SKERRY-' + btoa(unescape(encodeURIComponent(JSON.stringify(packed)))).replace(/=+$/, '').replace(/\+/g, '-').replace(/\//g, '_');
 }
 function readSaveCode(text) {
@@ -339,7 +341,7 @@ function readSaveCode(text) {
   try {
     const b64 = m[1].replace(/-/g, '+').replace(/_/g, '/');
     const o = JSON.parse(decodeURIComponent(escape(atob(b64 + '==='.slice((b64.length + 3) % 4)))));
-    return { crates: o.c | 0, opened: o.n | 0, owned: o.o, equipped: o.e, pennant: o.p, flare: o.f, boat: o.b, pt: o.t, w: o.w, oc: o.q, rc: o.r, best: o.s, nick: o.u };   // [pirate tokens] src/zmegg.js
+    return { crates: o.c | 0, opened: o.n | 0, owned: o.o, equipped: o.e, pennant: o.p, flare: o.f, boat: o.b, pt: o.t, w: o.w, oc: o.q, rc: o.r, best: o.s, nick: o.u, fr: o.g };   // [pirate tokens] src/zmegg.js [fogrun]
   } catch (e) { return null; }
 }
 
@@ -382,7 +384,7 @@ function saveLink() {
   if (window.claude && typeof window.claude.use === 'function') return null;
   return location.origin + location.pathname + '#load=' + saveCode();
 }
-function lootSize() { const pt = typeof ptData === 'function' && ptData(), sum = o => o ? Object.values(o.owned || {}).reduce((a, v) => a + (v | 0), 0) + (o.crates | 0) : 0; return Object.values(CRATES.owned).reduce((a, v) => a + (v | 0), 0) + (CRATES.crates.skerry | 0) + (pt ? pt.e : 0) + sum(crOther('wcData')) + sum(crOther('ocData')) + sum(crOther('rcData')); }   // [pirate tokens] src/zmegg.js
+function lootSize() { const pt = typeof ptData === 'function' && ptData(), sum = o => o ? Object.values(o.owned || {}).reduce((a, v) => a + (v | 0), 0) + (o.crates | 0) : 0; return Object.values(CRATES.owned).reduce((a, v) => a + (v | 0), 0) + (CRATES.crates.skerry | 0) + (pt ? pt.e : 0) + sum(crOther('wcData')) + sum(crOther('ocData')) + sum(crOther('rcData')) + ((crOther('frData') || {}).f | 0); }   // [pirate tokens] src/zmegg.js [fogrun] chart fragments
 function markBackedUp() { try { localStorage.setItem('skerry-backup', String(lootSize())); } catch (e) {} renderBackupDot(); }
 function needsBackup() { let b = 0; try { b = +localStorage.getItem('skerry-backup') || 0; } catch (e) {} return lootSize() > b && Object.keys(CRATES.owned).length > 0; }
 function renderBackupDot() { for (const b of document.querySelectorAll('.backupBtn')) b.classList.toggle('due', needsBackup()); }

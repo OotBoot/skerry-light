@@ -216,6 +216,7 @@ How it works: the host's browser runs the whole war, the same code as a game alo
 - **Drowned Reach:** each war: won or not, and the land taken.
 - **Keeper's Last Light:** each night: the rounds held, and the drowned sent back.
 - **Maren's End:** each raid: the time through, the damage done to its bosses, and the drowned sent back.
+- **Fog Run:** each run: the furthest island reached, the time through if won, and the islands lit.
 
 It sits at the top of the title screen: the top ten of every game at once, each with an **All** button (once there are more than ten) to see every entry, and your own marked "(you)" (your best game is shown under a board where you're not in what it shows). A game is logged as it goes, and once more when it ends.
 
@@ -481,6 +482,7 @@ A sixth game, on its own card on the title screen (**Set out**). On the fogbound
 - **Lives.** Alone, going down ends the run. Together, each of you has one extra life: the first time you bleed out you're back on your feet ten seconds later. After that you're lost in the fog, watching the others, until the crew lights the next beacon. The run ends when everyone is lost at once, or the cutter goes down.
 - **Every run is different**: the legs, the rocks and the islands come from a seed drawn fresh for each run, the same for the whole crew.
 - **Together**: the card's own lobby (host a run, join one, Share invite: `?mode=fogrun&lobby=...`), host-run like the raids, and you can rejoin a run in progress.
+- **What you keep.** When a run ends, whether it's won, lost or left, you get a crate for every two islands lit: the same weapon and outfit crates as the raids, a weapon crate first. A win gives three more. Every island you light also gives you a chart fragment, kept for good in your browser and your save. At 10, 25, 50 and 100 in all, new cards join the salvage. The Fog Run card shows how many you have and the next mark. Fog Run has its own column on the scoreboard: the furthest island reached, the time through a won run, and the islands lit (in all, on your bests). A run left before its end gets the yellow asterisk (`src/frkeep.js`: `frFrags()`, `frFragTier()`).
 - More is coming: rewards between islands, more kinds of island and a boss on Lantern Rock.
 
 How it's built: `src/frrun.js` (the run, its lives and the order of its parts, which grows as you go), `src/frsail.js` (the sailing legs, on src/gwsail.js through `GWS_LEG`), `src/frisle.js` (the islands), `src/frchart.js` (the chart, drawn from the run's seed, its table on deck, and the vote), on the raids' stage system (src/raid.js, `ZM_MAPS.fogrun`). Its music: `frsail`, `frisle`, `frpuzzle`, `frboss`, `frboss2`, `frwin` and the fog horn `frhorn` (src/raidmusic.js).
