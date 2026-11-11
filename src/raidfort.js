@@ -13,7 +13,7 @@
 //  - Maren: when the Knock falls, Maren Holm comes up out of the sea onto the Sea Battery, three times the
 //    height of a man (her model is built after her picture, assets/maren.png: a drowned woman in a long dark dress,
 //    one arm raised, her face lost in shadow). She can't be hurt while her soul is out of her: a yellow light, Maren's
-//    Soul, drifting over the water beyond the sea wall. Shoot it and she can be hurt for 30 seconds; then the soul
+//    Soul, darting and jinking over the water beyond the sea wall. It takes 30 (weak-spot hits) to burst, and then she can be hurt for 30 seconds; then the soul
 //    rises out of the sea again somewhere else, and she's untouchable until it's shot again. Over and over, until
 //    she's dead. All through the fight the drowned keep coming, and now and then another boss (the Diver, a
 //    Mooncusser or the Keelback) climbs in too.
@@ -33,10 +33,11 @@
 const RFC = {
   RT: 3.2, WH: 5.4,   // (the Sea Battery's height over the Plaza; the height of the fort's walls)
   ROUND: 10,   // (how strong the drowned are here, as a Lighthouse round, at the least)
-  VUL: 30, ORB_GAP: 3.5, ORB_R: 1.25,   // (how long she can be hurt once her soul's shot; before it's back; how big it is to hit)
+  VUL: 30, ORB_GAP: 3.5, ORB_R: 1.25, ORB_HP: 30, ORB_SEND: 0.15,   // (how long she can be hurt once her soul's shot; before it's back; how big it is to hit;
+  // how much it takes to burst it, as weak-spot hits; how often a joined player's hits on it go to the host)
   HP: 64, PTS: 2500, BOOST: 1.25, HP_MORE: 0.75,
   RAD: 1.35, TALL: 6.3, HEADZ: 5.55, PAD: 0.9, SP: 3.2, S: 3.05,   // (her size: S times a woman's)
-  SWEEP: 4.7, SWEEP_ARC: 1.15, CALL_R: 3.4, CALL_RANGE: 34,
+  SWEEP: 4.7, SWEEP_ARC: 1.15, CALL_R: 4.08, CALL_RANGE: 34,
   ALIVE: [8, 13], ALIVE_MORE: 3, BOSS_T: [32, 48],
   ANGER: [1.2, 4.2],   // (from the Knock's fall to “Maren is angered”; from that to her rising)
   BOX: [-22.6, 22.6, -21.2, 28.6],   // (where she can go: the Plaza and the Battery)
@@ -331,10 +332,10 @@ RAID_STAGES.fort = {
   me: dt => rfMe(dt),
   pack: o => rfPack(o),
   apply: o => rfApply(o),
-  q: (sid, k) => { if (k === 'orb') rfOrbHit(sid); },
+  q: (sid, k, a) => { if (k === 'orb') rfOrbHit(sid, a); },
   kill: (d, how, by) => rfKill(d, how, by),
   hurt: (d, dmg, code) => rfHurt(d, dmg, code),
-  shot: (x, y, z, lh, lp) => rfShot(x, y, z, lh, lp),
+  shot: (x, y, z, lh, lp, by, dmg) => rfShot(x, y, z, lh, lp, dmg),
   hud: (phone, mono, fell) => rfHud(phone, mono, fell),
   b3: grp => rf3dBuild(grp),
   f3: dt => rf3d(dt),
@@ -345,7 +346,7 @@ const rfBox = () => RF_ZONES;   // (for tests)
 
 // everyone, once the fort's laid out: its state made fresh; every room open to the drowned; you face the Plaza
 function rfEnter() {
-  Object.assign(RF, { on: true, st: 'hunt', apo: { apoW: 0, apoE: 0, apoN: 0 }, apoZ: {}, wait: 0, mz: 0, vul: 0, orbUp: false, orbGap: 0, orbT: 0, orbPh: 0, orb: [FPSC.CX, FPSC.CY - 40, 8], orbS: null,
+  Object.assign(RF, { on: true, st: 'hunt', apo: { apoW: 0, apoE: 0, apoN: 0 }, apoZ: {}, wait: 0, mz: 0, vul: 0, orbUp: false, orbGap: 0, orbT: 0, orbPh: 0, orb: [FPSC.CX, FPSC.CY - 40, 8], orbS: null, orbHp: RFC.ORB_HP, orbAcc: 0,
     bossT: RFC.BOSS_T[0], tok: null, mine: false, wonT: 0, kz: 0, angerT: 0, angered: false, grab: 0, shot: 0, spawnT: 3, t: 0, seenSt: 'hunt', burst: 0, hintT: 9 });
   ZM.open = new Set(['raid'].concat(Object.keys(RF_ZONES)));
   ZM.round = Math.max(ZM.round, RFC.ROUND);
@@ -395,7 +396,7 @@ function rfTick(dt) {
     const M = ZM.z.find(z => z.zn === RF.mz);
     // her soul over the water: up, shot, and up again
     if (RF.vul > 0) { RF.vul -= dt; if (RF.vul <= 0) { RF.vul = 0; RF.orbGap = RFC.ORB_GAP; rfLine('Maren’s soul sinks back into the sea. She can’t be hurt again until it’s shot.'); } }
-    else if (!RF.orbUp && M && !(M.act === 'rise')) { RF.orbGap -= dt; if (RF.orbGap <= 0) { RF.orbUp = true; RF.orbPh = Math.random() * 60; } }
+    else if (!RF.orbUp && M && !(M.act === 'rise')) { RF.orbGap -= dt; if (RF.orbGap <= 0) { RF.orbUp = true; RF.orbPh = Math.random() * 60; RF.orbHp = RFC.ORB_HP; } }
     if (RF.orbUp) { RF.orbT += dt; RF.orb = rfOrbAt(RF.orbT + RF.orbPh); }
     // now and then another of them climbs in too
     RF.bossT -= dt;
@@ -412,8 +413,13 @@ function rfTick(dt) {
   }
 }
 // where her soul is at time t: drifting over the water beyond the sea wall, rising and falling
+// (a third quicker than it was, and jinking: quicker wobbles laid over the long drift, so it darts and doubles back;
+// the same sums on every screen)
 function rfOrbAt(t) {
-  return [FPSC.CX + 19 * Math.sin(t * 0.19) + 4 * Math.sin(t * 0.53), FPSC.CY - 37 - 5 * Math.sin(t * 0.27 + 1), FPSC.GROUND + 7.6 + 1.3 * Math.sin(t * 0.7)];
+  const q = t * 1.35;
+  return [FPSC.CX + 19 * Math.sin(q * 0.19) + 4 * Math.sin(q * 0.53) + 2.6 * Math.sin(t * 1.9 + Math.sin(t * 0.8) * 2) + 1.2 * Math.sin(t * 3.7),
+    FPSC.CY - 37 - 5 * Math.sin(q * 0.27 + 1) + 1.8 * Math.sin(t * 2.3 + 0.7) * Math.sin(t * 0.61),
+    FPSC.GROUND + 7.6 + 1.3 * Math.sin(q * 0.7) + 0.9 * Math.sin(t * 2.9 + Math.sin(t * 1.3) * 1.5)];
 }
 // a Mooncusser wakes in an apothecary
 function rfWake(k) {
@@ -476,16 +482,18 @@ function rfHurt(d, dmg, code) {
   if (typeof raidBossDamage === 'function') raidBossDamage(dmg * (ZM_DMG[code] == null ? 1 : ZM_DMG[code]));
   return dmg;
 }
-// hosting or alone: someone shot her soul
-function rfOrbHit(sid) {
+// hosting or alone: someone's shots hit her soul (dmg of its thirty); burst, she can be hurt
+function rfOrbHit(sid, dmg) {
   if (RF.st !== 'maren' || !RF.orbUp) return;
-  RF.orbUp = false; RF.vul = RFC.VUL; RF.burst = 1;
+  RF.orbHp -= clamp(+dmg || 0, 0, 40);
+  if (RF.orbHp > 0) return;
+  RF.orbHp = 0; RF.orbUp = false; RF.vul = RFC.VUL; RF.burst = 1;
   const who = sid === FPS.me.id ? 'You' : ((ZM.hum.find(h => h[0] === sid) || [])[1] || 'Someone');
   rfLine(`${who} shot Maren’s soul. She can be hurt: thirty seconds.`);
   rfBurst();
 }
 // my own shot: through her soul? (the line from the muzzle, against a ball round it, with nothing solid between)
-function rfShot(x, y, z, lh, lp) {
+function rfShot(x, y, z, lh, lp, dmg) {
   if (RF.st !== 'maren' || !RF.orbUp) return;
   const [ox, oy, oz] = RF.orb, cp = Math.cos(lp), dx = Math.sin(lh) * cp, dy = Math.cos(lh) * cp, dz = Math.sin(lp);
   const qx = ox - x, qy = oy - y, qz = oz - z, t = qx * dx + qy * dy + qz * dz;
@@ -495,8 +503,10 @@ function rfShot(x, y, z, lh, lp) {
   const r = fpsRay(x, y, z, lh, lp, FPS.me.id, [], t);
   if (r.kind !== 'none' && r.t < t - 0.6) return;
   FPS.hitT = 0.25; FPS.hitHead = true; fpsHitSound(true);
-  if (ZM.net === 'client') { if (RF.shot <= 0) { RF.shot = 0.6; raidAsk('orb'); } }
-  else rfOrbHit(FPS.me.id);
+  dmg = dmg == null ? 1 : dmg;
+  // (joined: what I've done to it gathers here and goes to the host every few frames; meanwhile it shows here at once)
+  if (ZM.net === 'client') { RF.orbAcc = (RF.orbAcc || 0) + dmg; RF.orbHp = Math.max(0, RF.orbHp - dmg); }
+  else rfOrbHit(FPS.me.id, dmg);
 }
 // her soul bursting: gold sparks, and the sea flaring under it
 function rfBurst() {
@@ -510,7 +520,8 @@ function rfBurst() {
 function rfMe(dt) {
   if (!RF.on) return;
   const m = FPS.me;
-  if (RF.shot > 0) RF.shot -= dt; if (RF.grab > 0) RF.grab -= dt; if (RF.hintT > 0) RF.hintT -= dt;
+  if (RF.shot > 0) RF.shot -= dt; if (RF.orbAcc > 0 && RF.shot <= 0) { RF.shot = RFC.ORB_SEND; raidAsk('orb', RF.orbAcc); RF.orbAcc = 0; }
+  if (RF.grab > 0) RF.grab -= dt; if (RF.hintT > 0) RF.hintT -= dt;
   if (RF.st === 'anger') { RF.angerT += dt; if (!RF.angered && RF.angerT >= RFC.ANGER[0]) rfAngered(); }
   if (ZM.net === 'client' && RF.vul > 0) RF.vul = Math.max(0, RF.vul - dt);
   // joined: her soul glides between the host's words
@@ -532,7 +543,7 @@ function rfPack(o) {
   if (!RF.on) return;
   const CX = FPSC.CX, CY = FPSC.CY, r10 = v => Math.round(v * 10);
   o.f = [RF_ST.indexOf(RF.st), RF_APO_IDS.reduce((a, k, i) => a + (RF.apo[k] | 0) * Math.pow(3, i), 0), r10(RF.vul), RF.orbUp ? 1 : 0, r10(RF.orb[0] - CX), r10(RF.orb[1] - CY), r10(RF.orb[2]),
-    RF.tok ? 1 : 0, RF.tok ? r10(RF.tok[0] - CX) : 0, RF.tok ? r10(RF.tok[1] - CY) : 0, RF.tok ? r10(RF.tok[2]) : 0, RF.mz | 0].concat(RF_APO_IDS.map(k => RF.apoZ[k] | 0), [Math.round(clamp(RF.kbrk || 0, 0, 1) * 1000)]);
+    RF.tok ? 1 : 0, RF.tok ? r10(RF.tok[0] - CX) : 0, RF.tok ? r10(RF.tok[1] - CY) : 0, RF.tok ? r10(RF.tok[2]) : 0, RF.mz | 0].concat(RF_APO_IDS.map(k => RF.apoZ[k] | 0), [Math.round(clamp(RF.kbrk || 0, 0, 1) * 1000), r10(RF.orbHp || 0)]);
 }
 // (joined) the host's word of it: and what's changed is shown here as it would be there
 function rfApply(o) {
@@ -553,6 +564,8 @@ function rfApply(o) {
   if (!RF.orbUp) RF.orb = RF.orbS.slice();
   RF.tok = f[7] ? [CX + f[8] / 10, CY + f[9] / 10, f[10] / 10] : null;
   RF.mz = f[11] | 0; RF.st = st; RF.kbrk = (f[15] || 0) / 1000;
+  // (her soul's health: the host's, less what I've hit it for and not yet sent)
+  if (f[16] != null) RF.orbHp = Math.max(0, f[16] / 10 - (RF.orbAcc || 0));
 }
 
 // =====================================================================================================================
@@ -819,6 +832,10 @@ function rfHud(phone, mono, fell) {
       ctx.fillStyle = `rgba(255,226,120,${a})`; ctx.beginPath(); ctx.moveTo(x, y - s); ctx.lineTo(x + s, y); ctx.lineTo(x, y + s); ctx.lineTo(x - s, y); ctx.closePath(); ctx.fill();
       ctx.textAlign = 'center'; ctx.textBaseline = 'bottom'; ctx.font = mono(phone ? 10 : 11); ctx.fillStyle = `rgba(255,226,140,${a})`;
       ctx.fillText(`Maren’s Soul · ${Math.round(Math.hypot(ox - m.x, oy - m.y))} m`, x, y - s - 4);
+      // (and how much it has left: a thin gold bar under the diamond)
+      const bw = phone ? 44 : 60, bh = 4, k = clamp((RF.orbHp == null ? RFC.ORB_HP : RF.orbHp) / RFC.ORB_HP, 0, 1);
+      ctx.fillStyle = 'rgba(0,0,0,0.55)'; ctx.fillRect(x - bw / 2 - 1, y + s + 5, bw + 2, bh + 2);
+      ctx.fillStyle = `rgba(255,226,120,${0.6 + 0.4 * a})`; ctx.fillRect(x - bw / 2, y + s + 6, bw * k, bh);
     }
   }
   // the token, taken: a gold coin, and what it is

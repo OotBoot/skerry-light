@@ -158,7 +158,7 @@ function raidConsider(c) { if (RAID.on) raidCall('consider', c); }
 function raidPrompt(o) { return RAID.on ? raidCall('prompt', o) || null : null; }
 function raidUse(o) { return RAID.on ? !!raidCall('use', o) : false; }
 // (zmResolveShot) a shot of yours, along (lh, lp) from (x, y, z)
-function raidShot(x, y, z, lh, lp, by) { if (RAID.on) raidCall('shot', x, y, z, lh, lp, by); }
+function raidShot(x, y, z, lh, lp, by, dmg) { if (RAID.on) raidCall('shot', x, y, z, lh, lp, by, dmg); }
 
 // ---------- the parts, one after another ----------
 // alone or hosting: on to the next part, or (past the last) the raid is won
