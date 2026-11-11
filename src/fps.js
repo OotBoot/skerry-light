@@ -75,7 +75,7 @@ const FPS_WORDER = ['pepperbox', 'blunderbuss', 'longarm', 'harpoon', 'cutlass',
 const fpsZoom = () => { const w = fpsW(); return FPS.scoped ? (w.scope || w.ads || 1) : 1; };
 const FPSW_BY_CODE = {}; for (const id in FPSW) FPSW_BY_CODE[FPSW[id].code] = id;
 // ([pap] in the Lighthouse, a weapon reforged at the Lampwright's Bench has its own copy: src/zmpap.js)
-const fpsW = () => (FPS.zm && typeof zmpW === 'function' && zmpW(FPS.weapon)) || FPSW[FPS.weapon] || FPSW.pepperbox;
+const fpsW = () => { const w = (FPS.zm && typeof zmpW === 'function' && zmpW(FPS.weapon)) || FPSW[FPS.weapon] || FPSW.pepperbox; return FPS.zm && typeof rclW === 'function' ? rclW(w, FPS.weapon) : w; };   // [classes] (Maren's End: more rounds to a load, src/rclass.js)
 const fpsWOf = code => FPSW[FPSW_BY_CODE[code] || 'pepperbox'];
 try { const w = localStorage.getItem('skerry-fps-weapon'); if (FPSW[w] && FPS_WORDER.includes(w)) FPS.pick = w; } catch (e) {}
 // first person, or over the shoulder (T, the view button, or up on the D-pad to switch; remembered)

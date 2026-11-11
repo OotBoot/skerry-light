@@ -66,8 +66,8 @@ function rclApply() {
   if (!RCL.cls) { rclOpenPick(); return; }
   const C = rclC(), m = FPS.me;
   ZM.own = C.w.slice(); ZM.res = {};
-  for (const id of ZM.own) { ZM.res[id] = typeof zmpAmmo === 'function' ? zmpAmmo(id) : ZM_AMMO[id] || 0; m.mags[id] = FPSW[id].mag; }
-  FPS.weapon = ZM.own[0]; FPS.last = ZM.own[1]; m.ammo = FPSW[FPS.weapon].mag; m.reload = 0; m.cd = 0; FPS.drawT = 0.45; FPS.scoped = false;
+  for (const id of ZM.own) { ZM.res[id] = typeof zmpAmmo === 'function' ? zmpAmmo(id) : ZM_AMMO[id] || 0; m.mags[id] = rclMag(id); }
+  FPS.weapon = ZM.own[0]; FPS.last = ZM.own[1]; m.ammo = rclMag(FPS.weapon); m.reload = 0; m.cd = 0; FPS.drawT = 0.45; FPS.scoped = false;
 }
 function rclReset() {
   Object.assign(RCL, { gT: 0, uK: 0, ultT: 0, shots: 0, air: 0, drift: 0, slam: false, slamCd: 0, kills: ZM.kills || 0, proj: [], clouds: [], wells: [], quakes: [], ev: [], seen: {}, healT: 0, upT: 0 });
@@ -333,6 +333,18 @@ function rclShoot() {
   }
   return true;
 }
+// Maren's End: the guns that load one round at a time take more there (and a little longer to load them all):
+// mag, the rounds to a load (never fewer than a reforged one's); rk, how much longer the load takes. The Punt Gun stays
+// one enormous load.
+const RCL_MAG = { blunderbuss: { mag: 3, rk: 1 }, longarm: { mag: 2, rk: 1.15 }, harpoon: { mag: 2, rk: 1.2 }, flaregun: { mag: 2, rk: 1.2 },
+  bomblance: { mag: 2, rk: 1.2 }, grapnel: { mag: 2, rk: 1.15 }, netmortar: { mag: 2, rk: 1.2 }, chainshot: { mag: 2, rk: 1.2 } };
+const RCL_WC = new WeakMap();
+function rclW(w, id) {
+  const M = RCL_MAG[id]; if (!M || w.melee || !rclOn()) return w;
+  let o = RCL_WC.get(w); if (!o) { o = Object.assign({}, w, { mag: Math.max(w.mag, M.mag), reload: w.reload * M.rk }); RCL_WC.set(w, o); }
+  return o;
+}
+const rclMag = id => rclW((typeof zmpW === 'function' && zmpW(id)) || FPSW[id], id).mag;
 // (zmReloadK) in Maren's End the blunderbuss loads 30% quicker, whoever carries it
 function rclReloadK() { return rclOn() && FPS.weapon === 'blunderbuss' ? 0.7 : 1; }
 // (fpsHurt) a knock coming: Bulwark stops it, a Wellspring halves it
