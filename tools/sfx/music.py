@@ -24,7 +24,8 @@ BAR = {'bossmoon': 3}   # beats to the bar (a waltz); the rest are in four
 TARGET = 40.0           # the loop, about this long (s)
 TARGETS = {'raidsong': 16.0}
 ONCE = {'raidfall'}     # played once, not looped
-PICK = {'raidfall': 3}              # a take chosen by ear (its number), over the one that loops best
+TAIL = 2.5              # (its tail after the climax, s)
+PICK = {'raidfall': 2}             # a take chosen by ear (its number), over the one that loops best
 FADE = 1.5              # its seam's crossfade (s)
 
 
@@ -82,13 +83,19 @@ def best_loop(name, x):
 
 
 def once(x):
-    # (played once: kept whole, the silence either end trimmed, a short fade in and a longer one out)
+    # (played once, the fall: from its first sound to its climax, the loudest second of its second half, and a short
+    # tail after it; the game starts it so the climax lands as you hit the floor, src/raidmusic.js RM_TAIL)
     e = np.abs(x) > 1e-3
-    i, j = int(np.argmax(e)), len(x) - int(np.argmax(e[::-1]))
+    i = int(np.argmax(e))
+    w = SR // 2
+    rms = np.array([np.sqrt(np.mean(x[k:k + SR] ** 2)) for k in range(0, len(x) - SR, w)])
+    half = len(rms) // 2
+    pk = (half + int(np.argmax(rms[half:]))) * w + SR // 2
+    j = min(len(x), pk + int(TAIL * SR))
     body = x[i:j].copy()
-    a, b = int(0.05 * SR), int(3.0 * SR)
-    body[:a] *= np.linspace(0, 1, a); body[-b:] *= np.linspace(1, 0, b)
-    return body, dict(score=0.0, length=len(body) / SR)
+    a, b = int(0.05 * SR), int(TAIL * SR)
+    body[:a] *= np.linspace(0, 1, a); body[-b:] *= np.linspace(1, 0, b) ** 2
+    return body, dict(score=float(rms[half:].max() / (rms[:half].mean() + 1e-9)), length=len(body) / SR, climax=(pk - i) / SR)
 
 
 def mp3(body, out, rate):

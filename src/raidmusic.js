@@ -1,7 +1,10 @@
 // Maren's End: the raid's music. Each part has its own, made with Stable Audio 3 in ComfyUI (three takes of each, the
 // best looping one kept; tools/sfx/music.py), and each player's own game picks what's playing from what they see:
-//   raidfall    off the end of the Long Pier and down the Swallow: an intrepid orchestral plunge, rushing strings
-//               and horns on a sea-shanty figure, the danger building as you go down (played once, not looped)
+//   raidpier    along the Long Pier, over the dry bed of the sea: sad and ghostly, a slow cello, a far-off voice,
+//               the wind over the salt and old wrecks creaking
+//   raidfall    off the end of the pier and down the Swallow: a ghostly wail, faint at first, that grows and grows as
+//               you go down, timed (from how far there is to fall) so its climax comes as you hit the floor (played
+//               once, not looped)
 //   raidcave    the Deep Path at the bottom: eerie and underground, drones, dripping water, a lonely concertina's slow
 //               shanty and creaking timbers (the fall track hands over to it as you land)
 //   raidbridge  the black river (part two): another eerie underground piece, rushing water, a hurdy-gurdy drone,
@@ -12,17 +15,18 @@
 //               fifteen seconds, until it's sung or broken
 //   raidmaren   Maren: a ghostly boss fight, wailing choir, war drums, a shanty fiddle and a foghorn (from “Maren is
 //               angered” until she's down)
-// On the pier, before the fall, and once the raid's over, nothing plays. While the raid's on, the Lighthouse's boss
+// Once the raid's over, nothing plays. While the raid's on, the Lighthouse's boss
 // themes (src/zmtheme.js) keep quiet: this is the music. Nothing plays until its recording has loaded.
 const RM = { fell: false, cur: null, src: null, gain: null, vol: 0.55, rate: 1 };
 const RM_LOOP = { raidfall: false };
+const RM_TAIL = 2.5;   // (the fall's track runs on this long after its climax: tools/sfx/music.py TAIL)
 
 // what should be playing now
 function rmWant() {
   if (!RAID.on) RM.fell = false;
   if (!RAID.on || ZM.over || RAID.won) return null;
   const k = RAID_ORDER[RAID.stage];
-  if (k === 'descent') { const S = RAID.st || {}; return S.landed || RM.fell ? 'raidcave' : S.falling || RM.cur === 'raidfall' ? 'raidfall' : null; }
+  if (k === 'descent') { const S = RAID.st || {}; return S.landed || RM.fell ? 'raidcave' : S.falling || RM.cur === 'raidfall' ? 'raidfall' : 'raidpier'; }
   RM.fell = false;
   if (k === 'bridge') return 'raidbridge';
   if (k === 'fort' && typeof RF !== 'undefined') {
@@ -39,7 +43,7 @@ function rmTick(dt) {
   // (the fall's track played through before you landed: on to the cave's, early)
   if (RM.cur === 'raidfall' && RM.done) RM.fell = true;
   const want = rmWant();
-  if (want !== RM.cur) { if (want) rmPlay(want, want === 'raidcave' && RM.cur === 'raidfall' ? 4 : want === 'raidsong' || RM.cur === 'raidsong' ? 0.6 : 2); else rmStop(3); }
+  if (want !== RM.cur) { if (want) rmPlay(want, want === 'raidcave' && RM.cur === 'raidfall' ? RM_TAIL : want === 'raidfall' ? 1.5 : want === 'raidsong' || RM.cur === 'raidsong' ? 0.6 : 2); else rmStop(3); }
   // the song: quicker and quicker, from its first beat to its last
   if (RM.cur === 'raidsong' && RM.src) {
     const z = ZM.z.find(z => z.bt === 'knock' && !z.dead), p = z ? clamp((z.at || 0) / RFK.SONG, 0, 1) : 0;
@@ -56,7 +60,10 @@ function rmPlay(k, fade) {
   if (!b.zt) { const d = b.getChannelData(0); let i = 0, j = d.length - 1; while (i < j && Math.abs(d[i]) < 1e-4) i++; while (j > i && Math.abs(d[j]) < 1e-4) j--; b.zt = [i / b.sampleRate, (j + 1) / b.sampleRate]; }
   if (RM_LOOP[k] !== false) { s.loop = true; s.loopStart = b.zt[0]; s.loopEnd = b.zt[1]; }
   const g = c.createGain(); g.gain.value = 0; g.gain.setTargetAtTime(RM.vol, c.currentTime, Math.max(0.1, (fade || 1) / 3));
-  s.connect(g).connect(AUD.master); s.start(0, b.zt[0]);
+  // (the fall: started so far in that its climax comes as you land, from how far there is to fall at FALL a second)
+  let at = b.zt[0], wait = 0;
+  if (k === 'raidfall') { const T = Math.max(0, (FPS.me.jz || 0) - 0.6) / RSW.FALL + 0.5, peak = b.zt[1] - b.zt[0] - RM_TAIL; at += Math.max(0, peak - T); wait = Math.max(0, T - peak); }
+  s.connect(g).connect(AUD.master); s.start(c.currentTime + wait, at);
   RM.done = false; s.onended = () => { if (RM.src === s) RM.done = true; };
   RM.cur = k; RM.src = s; RM.gain = g;
 }
