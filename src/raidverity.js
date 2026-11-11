@@ -746,3 +746,38 @@ for (const key of ['descent', 'bridge', 'fort']) {
   wrap('prompt', o => rvPrompt(o) || undefined);
   wrap('use', o => rvUse(o) || undefined);
 }
+
+// ---------- a way straight to him, from the main menu ----------
+// A tiny smiling Verity, faint, down in the bottom-right corner of the title screen (fixed there, under everything
+// else on the menu): hover and he grows and lights up; click and you're alone in Maren's End, choose your calling,
+// and you're in his room in the Swallow, with him waiting. The fight's the real one: his token and his wardrobe as
+// ever, and the door out takes you back to one of his places on Part I, the raid going on from there.
+function rvDirect() {
+  if (typeof ZN !== 'undefined' && ZN.code) return;
+  zmStart({ map: 'raid' });
+  let n = 0, seen = 0;
+  const go = () => {
+    if (++n > 600) return;
+    if (!RAID.on || !FPS.g || !FPS.on || rvKey() !== 'descent' || (typeof RCL !== 'undefined' && (RCL.picking || !RCL.cls))) { seen = 0; setTimeout(go, 100); return; }
+    if (++seen < 4) { setTimeout(go, 100); return; }
+    // (one of his three places on Part I, so the door out goes somewhere there)
+    RV.pick = RV_SPOTS.findIndex(S => S.stage === 'descent') + ((Math.random() * 3) | 0); RV.done = false;
+    rvGo(rvAt().in, 0, 0); RV.wait = 1;
+    fpsFeed('Everything round you is gone. A low yellow room, buzzing lights, and something at the far end, smiling.');
+    rvSound('enter', 0); raidAsk('vin');
+  };
+  setTimeout(go, 150);
+}
+setTimeout(() => {
+  const card = document.getElementById('titleCard'); if (!card || document.getElementById('rvDoorBtn')) return;
+  const st = document.createElement('style');
+  st.textContent = `#rvDoorBtn { position: fixed; right: 10px; bottom: 10px; width: 16px; height: 16px; padding: 0; border: 0; background: none; cursor: pointer; opacity: 0.14; z-index: 5; transition: opacity 0.4s, transform 0.4s, filter 0.4s; transform-origin: 100% 100%; }
+#rvDoorBtn:hover, #rvDoorBtn:focus-visible { opacity: 1; transform: scale(2.4); filter: drop-shadow(0 0 4px #ffe24a); outline: none; }
+#rvDoorBtn svg { width: 100%; height: 100%; display: block; }
+@media (prefers-reduced-motion: reduce) { #rvDoorBtn { transition: none; } }`;
+  document.head.appendChild(st);
+  const b = document.createElement('button'); b.type = 'button'; b.id = 'rvDoorBtn'; b.setAttribute('aria-label', 'Something small, smiling');
+  b.innerHTML = '<svg viewBox="0 0 20 22" aria-hidden="true"><ellipse cx="10" cy="11.5" rx="8.4" ry="10" fill="#e8d41a"/><ellipse cx="7.6" cy="8.4" rx="0.8" ry="1.6" fill="#060504"/><ellipse cx="12.4" cy="8.4" rx="0.8" ry="1.6" fill="#060504"/><path d="M5.4 12 Q10 13.4 14.6 12 Q10 18.6 5.4 12 Z" fill="#060504"/><ellipse cx="10" cy="15.4" rx="1.7" ry="0.8" fill="#f0e070"/></svg>';
+  b.addEventListener('click', () => { try { if (typeof audioInit === 'function') audioInit(); } catch (e) {} rvDirect(); });
+  card.appendChild(b);
+}, 0);

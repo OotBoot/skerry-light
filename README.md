@@ -654,7 +654,7 @@ The version shown at the top of the main menu is `VERSION` at the top of `src/co
 
 ### Patch notes
 
-Every change pushed to `main` also adds an entry for its new version at the top of `PATCH_NOTES` in `src/patchnotes.js` (the file's top comment shows the shape: `v`, `date`, `title` and any of `New`, `Balance`, `Changes`, `Fixes`, `Sound`). `src/patchnotesui.js` draws the page. Write them like real patch notes, from the player's side, and never give away a secret there.
+Every change pushed to `main` also adds an entry for its new version at the top of `PATCH_NOTES` in `src/patchnotes.js` (the file's top comment shows the shape: `v`, `date`, `title` and any of `New`, `Balance`, `Changes`, `Fixes`, `Sound`). `src/patchnotesui.js` draws the page. Write them like real patch notes, from the player's side, and leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 
 ## Project layout
 
