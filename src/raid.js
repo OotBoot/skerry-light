@@ -45,11 +45,11 @@ const RAID_STAGES = {};
 const RAID_ORDER = ['descent'];
 // The raids: each a map of its own in ZM_MAPS (its key is the scoreboard's game too), picked on the raid card (RD_PICK).
 //   n: its name   order: its parts (null: Maren's End's, taken from RAID_ORDER as it stood once everything loaded)
-//   mvp: won, it ends on the victory screen (src/raidmvp.js)   lost: what the card says when it ends short
+//   mvp: won with this part last, it ends on the victory screen (src/raidmvp.js)   lost: what the card says when it ends short
 // A later raid's parts add themselves with raidAdd(map, key, at): at, its place in the order (they're sorted by it).
 const RAIDS = {
-  raid: { n: 'Maren’s End', order: null, mvp: true, lost: n => `The dark took you in ${n}`, won: 'Through the door', again: 'Go down again' },
-  gannet: { n: 'The Gannet’s Wake', order: [], at: {}, mvp: true, lost: n => `The sea took you in ${n}`, won: 'The Gannet is gone', again: 'Sail out again' },
+  raid: { n: 'Maren’s End', order: null, mvp: 'fort', lost: n => `The dark took you in ${n}`, won: 'Through the door', again: 'Go down again' },
+  gannet: { n: 'The Gannet’s Wake', order: [], at: {}, mvp: 'gwcapt', lost: n => `The sea took you in ${n}`, get won() { return RAID_ORDER.includes('gwcapt') ? 'Captain Crane is down' : 'Aboard the Gannet'; }, again: 'Sail out again' },
 };
 function raidAdd(map, key, at) { const R = RAIDS[map]; if (!R || R.order.includes(key)) return; R.at[key] = at; R.order.push(key); R.order.sort((a, b) => R.at[a] - R.at[b]); }
 const raidInfo = () => RAIDS[RAID.map] || RAIDS.raid;

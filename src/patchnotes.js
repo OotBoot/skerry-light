@@ -6,6 +6,11 @@
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Never give away a secret here (the Easter egg's steps, where the secret boss hides).
 var PATCH_NOTES = [
+  { v: 146, date: '2026-11-11', title: 'A second raid: The Gannet’s Wake', New: [
+    "Raids: a second raid, The Gannet's Wake. Pick it at the top of the raid card; the lobby shows which raid each one is, and it has its own column on the scoreboard.",
+    "The Gannet's Wake, Part I, The Skerries: sail the keeper's cutter out through the rocks together. One of you takes the wheel, the rest work the deck. The rocks only show in the Light's beam.",
+    "Ring the ship's bell to drive Maren back, fire flares from the locker aft, patch the holes before the flood sinks her, keep inside Plimsoll's ring, and throw the drowned back over the rail.",
+    "At the Gannet's mark she rises out of the sea alongside. The rest of the raid, aboard her, is coming soon." ] },
   { v: 145, date: '2026-11-11', title: 'Blunderbuss fan', Changes: [
     "Keeper's Last Light and Maren's End: the Blunderbuss now fires its shot in a wide, flat fan from side to side, so one blast sweeps across a whole line of them.",
     "It fires more balls (28) and each one hits harder, so a single target in front of you still takes about as much as before: about 60 up close and 29 at 8 m. Five of them standing abreast at 8 m now take 23 to 30 each." ] },
