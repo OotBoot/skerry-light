@@ -6,6 +6,8 @@
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Never give away a secret here (the Easter egg's steps, where the secret boss hides).
 var PATCH_NOTES = [
+  { v: 142, date: '2026-11-11', title: 'Knife when down', Changes: [
+    "Keeper's Last Light: when you're down and your pepperbox is empty with nothing left to load, Fire (or the knife key or button) slashes with your knife from the floor." ] },
   { v: 141, date: '2026-11-11', title: 'Patch notes', New: [
     "Main menu: a Patch Notes button under the game banners opens this page, listing every recent update. Each update from now on adds its notes here." ] },
   { v: 140, date: '2026-11-11', title: 'Fresnel Lamp fix', Fixes: [

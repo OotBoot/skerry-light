@@ -1704,7 +1704,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 // ---- src/config.js ----
 'use strict';
 // The game's version, shown at the top of the main menu. Bump it by one with every change pushed to main.
-var VERSION = 141;
+var VERSION = 142;
 // Skerry Light: tuning, asset paths and lore.
 // World units are metres. The lighthouse stands at the origin on the shoreline (y = 0);
 // north (+y) is open sea. Bearings: 0 = north, positive = east.
@@ -1833,6 +1833,8 @@ const flashK = () => SETTINGS.flashes === 'reduced' ? 0.3 : 1;
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Never give away a secret here (the Easter egg's steps, where the secret boss hides).
 var PATCH_NOTES = [
+  { v: 142, date: '2026-11-11', title: 'Knife when down', Changes: [
+    "Keeper's Last Light: when you're down and your pepperbox is empty with nothing left to load, Fire (or the knife key or button) slashes with your knife from the floor." ] },
   { v: 141, date: '2026-11-11', title: 'Patch notes', New: [
     "Main menu: a Patch Notes button under the game banners opens this page, listing every recent update. Each update from now on adds its notes here." ] },
   { v: 140, date: '2026-11-11', title: 'Fresnel Lamp fix', Fixes: [
@@ -19298,7 +19300,8 @@ function zmMag(id) { const w = zmLoadW((typeof zmpW === 'function' && zmpW(id)) 
 const ZM_HARPOON_THRU = 4;
 // (a ball's weight at d metres: whole to near, then down in a line to min at far, and no less)
 const ZM_FALL = (code, d) => { const o = ZM_SHOT[code]; return o && o.far ? clamp(1 - (d - o.near) / (o.far - o.near) * (1 - o.min), o.min, 1) : 1; };
-// the knife: always to hand, never runs out (V, middle mouse, R3, the knife button; or Fire with nothing left to fire)
+// the knife: always to hand, never runs out (V, middle mouse, R3, the knife button; or Fire with nothing left to fire);
+// down on the floor, only once the gun you hold there is empty
 // boarding windows pays 10 a board, up to this many points a round for each player (then the boards are free work)
 const ZM_BOARD_CAP = 500;
 const ZM_KNIFE = { reach: 2.1, arc: 0.95, dmg: 3, rate: 0.55 };
@@ -21959,12 +21962,14 @@ function zmHarpoonOn(hp, o) {
   return true;
 }
 // a slash with the knife: whatever's in front of you and in reach, whatever's in your hands
+// (down on the floor too, once the gun in your hand has nothing left in it or to load)
+const zmDry = () => { const w = fpsW(); return !w.melee && FPS.me.ammo <= 0 && !zmInfRes() && !((ZM.res[FPS.weapon] || 0) > 0); };
 function zmKnife() {
   const m = FPS.me;
-  if (!FPS.zm || m.dead > 0 || zmIsDown() || FPS.menu || ZM.over || (FPS.knifeT || 0) > 0) return;
+  if (!FPS.zm || m.dead > 0 || (zmIsDown() && !zmDry()) || FPS.menu || ZM.over || (FPS.knifeT || 0) > 0) return;
   FPS.knifeT = ZM_KNIFE.rate; FPS.knifeN = (FPS.knifeN || 0) + 1; FPS.meSlashT = 0.3; m.protect = 0; FPS.scoped = false;
   fpsSwishSound(0);
-  const z = FPSC.GROUND + FPSC.EYE + (m.jz || 0);
+  const z = FPSC.GROUND + FPSC.EYE + (m.jz || 0) - (FPS.downEye || 0);
   zmMelee(m.x, m.y, z, m.h, ZM_KNIFE, 'k');
   if (typeof zmnShot === 'function') zmnShot('c', m.h, m.p);
 }
@@ -22231,7 +22236,7 @@ function zmDown() {
     m.hp = 0; FPS.scoped = false; ZM.perks = {}; ZM.downT = ZM_DOWN.T; ZM.beat = 0;
     zmDownArm();
     ZM.banner = { text: 'You’re down', t: 3 };
-    fpsFeed('You’re down. Keep firing: someone can get you up by holding Use beside you.');
+    fpsFeed('You’re down. Keep firing (and when it’s empty, the knife): someone can get you up by holding Use beside you.');
     zmSound('over');
     return;
   }
@@ -23417,7 +23422,7 @@ function zmHudDown(phone, mono, fell, t) {
     ctx.fillStyle = low ? `rgba(255,140,110,${0.7 + 0.3 * Math.sin(t * 8)})` : 'rgba(236,228,207,0.85)';
     ctx.fillText(low ? 'Hold on…' : 'Hold on… someone can get you up by holding Use beside you.', x, ly);
     ctx.font = mono(phone ? 9 : 11); ctx.fillStyle = 'rgba(236,228,207,0.55)';
-    ctx.fillText('You can still fire your pepperbox.', x, ly + (phone ? 15 : 19));
+    ctx.fillText(zmDry() ? 'It’s empty: Fire to use your knife.' : 'You can still fire your pepperbox.', x, ly + (phone ? 15 : 19));
   }
 }
 // the others who've gone down: a line each, a little above the middle (below it, while you're down yourself)
@@ -23560,7 +23565,7 @@ function zmPadState() {
   const dry = !w.melee && m.ammo <= 0 && !zmInfRes() && !((ZM.res[FPS.weapon] || 0) > 0);
   set('fpsPadFire', (w.melee || m.ammo > 0 || dry) && !(m.reload > 0), m.reload > 0 ? '…' : w.melee || dry ? '⚔' : String(m.ammo));
   { const f = $('fpsPadFire').querySelector('small'); const lab = w.melee ? 'SWING' : dry ? 'KNIFE' : `/${zmInfRes() ? '∞' : ZM.res[FPS.weapon] || 0}`; if (f && f.textContent !== lab) f.textContent = lab; }
-  set('fpsPadKnife', !((FPS.knifeT || 0) > 0) && !(m.dead > 0) && !zmIsDown());
+  set('fpsPadKnife', !((FPS.knifeT || 0) > 0) && !(m.dead > 0) && (!zmIsDown() || dry));
   { const b = $('fpsPadWeapon'); if (b) { const c = b.querySelector('.wn'); if (c && c.textContent !== w.n) c.textContent = w.n; } }
   { const b = $('fpsPadScope'); if (b) { b.hidden = !(w.scope || w.ads); b.classList.toggle('on', FPS.scoped); } }
   set('fpsPadLantern', m.lan); set('fpsPadView', FPS.third);
