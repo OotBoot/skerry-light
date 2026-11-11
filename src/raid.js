@@ -144,7 +144,10 @@ function raidStaminaHud(x, by, bw, bh, phone, mono) {
 function raidSpeedK() { if (!RAID.on) return 1; const S = raidStage(); return S && S.speedK ? S.speedK() : 1; }
 function raidMe(dt) {
   // (a joined player's own clock for the raid, between the host's words, so what swings on it swings smoothly)
-  RAID.ct = ZM.net === 'client' ? (Math.abs((RAID.ct || 0) + dt - RAID.t) > 0.4 ? RAID.t : (RAID.ct || 0) + dt) : RAID.t;
+  // (the host's clock as it stands now: its last word, and the time since it came; ours runs on by itself and is eased
+  // towards that, never jumped, unless it's far out)
+  if (ZM.net === 'client') { const est = RAID.t + Math.min(1, Math.max(0, performance.now() / 1000 - (RAID.tAt || 0))), e = est - ((RAID.ct || 0) + dt);
+    RAID.ct = Math.abs(e) > 2 ? est : (RAID.ct || 0) + dt + e * Math.min(1, dt * 1.5); } else RAID.ct = RAID.t;
   raidCall('me', dt);
   if (typeof rclTick === 'function') rclTick(dt);   // [classes] src/rclass.js
   if (typeof rmvTick === 'function') rmvTick(dt);   // [mvp] src/raidmvp.js: what each of you did, counted
@@ -229,7 +232,7 @@ const raidClock = s => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padSt
 // the host's word: rd = [stage, won, clock], and whatever the stage adds (rs)
 function raidHostSend(z) {
   if (!RAID.on) return;
-  z.rd = [RAID.stage, RAID.won ? 1 : 0, Math.round(RAID.t)];
+  z.rd = [RAID.stage, RAID.won ? 1 : 0, Math.round(RAID.t * 20) / 20];   // (to a twentieth: what swings on it is timed by it)
   const o = {}; raidCall('pack', o); z.rs = o;
   if (typeof rmvPack === 'function') rmvPack(z);   // [mvp]
 }
@@ -237,7 +240,7 @@ function raidApply(hz) {
   if (!RAID.on || !Array.isArray(hz.rd)) return;
   const st = clamp(hz.rd[0] | 0, 0, RAID_ORDER.length - 1);
   if (st !== RAID.stage) raidUseStage(st);
-  RAID.won = !!hz.rd[1]; RAID.t = +hz.rd[2] || RAID.t;
+  RAID.won = !!hz.rd[1]; RAID.t = +hz.rd[2] || RAID.t; RAID.tAt = performance.now() / 1000;
   if (hz.rs && typeof hz.rs === 'object') raidCall('apply', hz.rs);
   if (typeof rmvApply === 'function') rmvApply(hz);   // [mvp]
 }
@@ -388,12 +391,11 @@ const RSW = { SEA: 250, DECK: 253, CEIL: 30, HOLE: [-11, 11, 13, 35], TOP: [-22,
 // cap with the door in it; b, a brazier; a, the arena before the door (two more braziers at its sides). Between each
 // two, a narrower stretch a little off the straight line (laid in rswGeo).
 const RSW_KEYS = [[0, 9, 12, 'cap'], [0, 26, 12, 'land'], [0, 50, 7, 'b'],
-  // (round the outside, clockwise, nearly all the way)
+  // (round the outside, clockwise, most of the way)
   [0, 73, 7, 'b'], [26, 68, 7, 'b'], [48, 55, 7, 'b'], [64, 34, 7, 'b'], [72, 10, 7, 'b'], [71, -17, 7, 'b'], [61, -41, 7, 'b'], [43, -59, 7, 'b'],
-  [19, -71, 7, 'b'], [-7, -73, 7, 'b'], [-32, -65, 7, 'b'], [-53, -50, 7, 'b'], [-67, -28, 7, 'b'], [-73, -2, 7, 'b'], [-69, 23, 7, 'b'], [-56, 46, 7, 'b'],
-  // (in, and back round the inside the other way, then into the middle)
-  [-30, 36, 7, 'b'], [-44, 16, 7, 'b'], [-46, -8, 7, 'b'], [-36, -30, 7, 'b'], [-16, -44, 7, 'b'], [8, -46, 7, 'b'], [30, -36, 7, 'b'],
-  [8, -14, 13, 'a'], [-8, -14, 13, 'end']];
+  [19, -71, 7, 'b'], [-7, -73, 7, 'b'], [-32, -65, 7, 'b'], [-53, -50, 7, 'b'], [-67, -28, 7, 'b'], [-73, -2, 7, 'b'], [-69, 23, 7, 'b'],
+  // (then in, and down to the door in the middle)
+  [-48, 24, 7, 'b'], [-40, 0, 7, 'b'], [-22, -16, 13, 'a'], [-6, -16, 13, 'end']];
 // (how much wider the path is than its keys say: the whole cave, its arena and its braziers' reach, together)
 const RSW_WIDE = 1.2;
 // everything about the path's shape, worked out once (the same for everyone)

@@ -10,7 +10,7 @@
 //    in his own part (and in the fort, only while the apothecaries are still being hunted, RF.st 'hunt'); once a raid.
 //  - His room: the Yellow Room, a low room of damp yellow wallpaper, wet carpet and buzzing strip lights, laid out
 //    with each part somewhere nobody can walk to it (RV_ROOMS: past the fort's north wall, behind the Black Water's
-//    near wall, in the rock between the Deep Path's loops; off the drowned's walking grid, so none follow you in).
+//    near wall, in the rock inside the Deep Path's loop; off the drowned's walking grid, so none follow you in).
 //    The door you came by won't open while he's smiling; once he's down it takes you back to where he sat.
 //  - The fight, in two phases, built after his two pictures (assets/verity.png, assets/verity2.png):
 //      I.  the orb: the smiling yellow egg. He hops after you; close in he bumps you (a knock); further off he rolls
@@ -51,10 +51,10 @@ const RV_ROOMS = { descent: [28, 48, 3, 21], bridge: [-10, 10, -76, -58], fort: 
 const RV_SPOTS = (function () {
   const out = [], add = (stage, x, y, z, h, fz) => out.push({ stage, at: [x, y], z, h, out: [x + Math.sin(h) * 1.6, y + Math.cos(h) * 1.6], fz: fz == null ? 0 : fz });
   // the Swallow: on the Long Pier against its west rail between two lamps; in a corner of the Deep Path's wall by a
-  // brazier on its outside loop (east) and on its inside loop (west)
+  // brazier on its outside loop (east) and on its last stretch in (west)
   add('descent', -RSWP.PW / 2 + 0.55, -45.5, RSW.DECK, Math.PI / 2, RSW.DECK);
   const wallBy = (bx, by) => { const p = RSG.N.find(q => q.x === bx && q.y === by), f = (p.w - 2) / p.w, sx = p.x + (p.L[0] - p.x) * f, sy = p.y + (p.L[1] - p.y) * f; add('descent', sx, sy, 0, bearingOf(p.x - sx, p.y - sy)); };
-  wallBy(72, 10); wallBy(-46, -8);
+  wallBy(72, 10); wallBy(-40, 0);
   // the Black Water: the near bank's two far corners, and the far bank's west corner
   add('bridge', RBC.X0 + 1.4, RBC.Y0 + 1.4, 0, Math.PI / 4);
   add('bridge', RBC.X1 - 1.4, RBC.Y0 + 1.4, 0, -Math.PI / 4);
