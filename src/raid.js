@@ -293,6 +293,7 @@ function raidSpawnAt(x, y, o) {
     st: 'in', win: null, t: 0, ph: Math.random() * 6, hitT: 0, atk: 0.6, swing: -1, stuck: 0, h: Math.random() * 6.28, seed: (Math.random() * 1e6) | 0, rise: 1, hist: [],
     rr: rise, rr0: rise, lx: x, ly: y, raid: true,
   };
+  z.sp *= (raidStage() || {}).zSpeed || 1;   // (a part can have them slower: the Swallow's are)
   ZM.z.push(z); FPS.drowned = ZM.z;
   return z;
 }
@@ -341,21 +342,23 @@ function raidHud(phone, mono, fell) {
 // braziers, BALL_R across, swinging across the path in BALL_T seconds or so; one that catches you puts you straight
 // down (whatever your health, your class or your iframes), thrown aside
 const RSWX = { WGT_T: 20, WGT_SLOW: 0.25, BALL_R: 1.05, BALL_LOW: 1.3, BALL_T: 3.6, BALL_DMG: 1, BALL_CD: 1.2 };
-const RSW = { SEA: 250, DECK: 253, CEIL: 30, HOLE: [-11, 11, 13, 35], FALL: 8.4, LIT_R: 7.5, MEND: 1.2, DRAIN: 0.2, NEED: 20, RING: 13, USE: 1.1, GAP: 3.4 };
+const RSW = { SEA: 250, DECK: 253, CEIL: 30, HOLE: [-11, 11, 13, 35], FALL: 8.4, LIT_R: 9, MEND: 1.2, DRAIN: 0.2, NEED: 20, RING: 15.6, USE: 1.1, GAP: 3.4 };
 // The path: [x, y, half its width, what's there] from the island's middle, from the cap behind where you land to the
 // cap with the door in it; b, a brazier; a, the arena before the door (two more braziers at its sides). Between each
 // two, a narrower stretch a little off the straight line (laid in rswGeo).
 const RSW_KEYS = [[0, 9, 12, 'cap'], [0, 26, 12, 'land'], [5, 46, 7, 'b'], [26, 60, 7, 'b'], [50, 52, 7, 'b'], [64, 30, 7, 'b'], [66, 4, 7, 'b'], [56, -22, 7, 'b'],
   [36, -40, 7, 'b'], [10, -52, 7, 'b'], [-18, -50, 7, 'b'], [-42, -36, 13, 'a'], [-56, -18, 13, 'end']];
+// (how much wider the path is than its keys say: the whole cave, its arena and its braziers' reach, together)
+const RSW_WIDE = 1.2;
 // everything about the path's shape, worked out once (the same for everyone)
 const RSG = (function rswGeo() {
   const rnd = seeded(0x5a11d), N = [];
   RSW_KEYS.forEach((k, i) => {
     if (i > 1 && i < RSW_KEYS.length) {
       const a = RSW_KEYS[i - 1], dx = k[0] - a[0], dy = k[1] - a[1], L = Math.hypot(dx, dy), j = (rnd() - 0.5) * 7;
-      N.push({ x: (a[0] + k[0]) / 2 - dy / L * j, y: (a[1] + k[1]) / 2 + dx / L * j, w: k[3] === 'a' || k[3] === 'end' ? 7 : 4.6 });
+      N.push({ x: (a[0] + k[0]) / 2 - dy / L * j, y: (a[1] + k[1]) / 2 + dx / L * j, w: (k[3] === 'a' || k[3] === 'end' ? 7 : 4.6) * RSW_WIDE });
     }
-    N.push({ x: k[0], y: k[1], w: k[2], t: k[3] });
+    N.push({ x: k[0], y: k[1], w: k[2] * RSW_WIDE, t: k[3] });
   });
   // the walls' two sides: each node's point pushed out along the mitred normal
   const n = N.length;
@@ -373,7 +376,7 @@ const RSG = (function rswGeo() {
   const B = [];
   N.forEach(p => { if (p.t === 'b') B.push({ x: p.x, y: p.y }); });
   const A = N.find(p => p.t === 'a'), E = N[n - 1];
-  for (const sd of [1, -1]) { const nx = -A.dir[1], ny = A.dir[0]; B.push({ x: A.x + nx * sd * 10.5, y: A.y + ny * sd * 10.5, arena: true }); }
+  for (const sd of [1, -1]) { const nx = -A.dir[1], ny = A.dir[0]; B.push({ x: A.x + nx * sd * 10.5 * RSW_WIDE, y: A.y + ny * sd * 10.5 * RSW_WIDE, arena: true }); }
   // the door: in the middle of the end cap, facing back down the path (f: its front, c: along it)
   const f = [-E.dir[0], -E.dir[1]], c = [-f[1], f[0]];
   const D = { x: E.x, y: E.y, f, c };
@@ -633,7 +636,7 @@ function rswSet(H, K) {
 }
 // the map, for src/zombies.js
 const RSW_MAP = {
-  start: [0, -84], top: RSW.DECK, nav: [-74, 78, -64, 72],
+  start: [0, -84], top: RSW.DECK, nav: [-82, 84, -70, 78],
   zones: {
     quay: { n: 'the Old Quay', r: [-8, 8, -92, -80], zr: [RSW.SEA + 1, 999], sky: true },
     pier: { n: 'the Long Pier', r: [-3, 3, -80, RSW.HOLE[2]], zr: [RSW.SEA + 1, 999], sky: true },
@@ -730,7 +733,7 @@ function rswDiver(P) {
   const [x, y] = at, T = ZBT.diver, zn = ++ZM.zc, n = Math.max(1, ZM.hum.length), hp = zbHpOf('diver', RAIDC.ROUND + rswLitN() * 0.5, n) * 0.55;
   const z = {
     drowned: true, zm: true, boss: true, bt: 'diver', zn, id: 'z' + zn.toString(36), n: T.n, kind: 'boss', x, y, jz: 0, fl: 0,
-    hp, max: hp, sp: T.sp(RAIDC.ROUND + 4), st: 'in', win: null, t: 0, ph: 0, hitT: 0, atk: 0, swing: -1, stuck: 0, lost: 0, h: 0, seed: (Math.random() * 1e6) | 0, rise: 1, hist: [],
+    hp, max: hp, sp: T.sp(RAIDC.ROUND + 4) * RAID_STAGES.descent.zSpeed, st: 'in', win: null, t: 0, ph: 0, hitT: 0, atk: 0, swing: -1, stuck: 0, lost: 0, h: 0, seed: (Math.random() * 1e6) | 0, rise: 1, hist: [],
     act: null, at: 0, aseq: 0, slamCd: 4, swCd: 1, ix: 0, iy: 0, ax: 0, ay: 0, lx: x, ly: y, raid: true,
   };
   if (T.init) T.init(z);
@@ -761,7 +764,7 @@ function rswWind(on, k) {
   W.g.gain.setTargetAtTime(0.03 + 0.07 * v, t, 0.3); W.f.frequency.setTargetAtTime(500 + 600 * v, t, 0.3);
 }
 RAID_STAGES.descent = {
-  n: 'The Swallow', map: RSW_MAP, noBars: true, lantern: true,
+  n: 'The Swallow', map: RSW_MAP, noBars: true, lantern: true, zSpeed: 0.9,
   speedK() { const w = RAID.st.weight || 0; return 1 - (1 - RSWX.WGT_SLOW) * w; },
   set(H, K) { rswSet(H, K); },
   enter() { Object.assign(RAID.st, { lit: 0, door: 0, kills: 0, spawnT: 3, weight: 0, ballCd: 0, shove: null, diverT: 40 + Math.random() * 20, useT: 0, useI: -1, pend: 0, landed: false, windT: 0, thru: false, flare: {}, landT: 0 }); },
