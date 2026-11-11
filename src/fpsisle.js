@@ -1,6 +1,7 @@
 // Wreckers' Night: the island itself.
 //
-// Each round the island is one of eight kinds, picked from the round number, and everything on it is
+// Each round the island is the next of three (Pilchard Row, the Bonded Quay, the Flensing Yard; the other six are
+// still here, for ?isle=... and the Lighthouse's builder), picked from the round number, and everything on it is
 // laid out from the round's seed, so every player builds the very same island without anything being
 // sent over the network:
 //  - the Shingle Skerry: grey shingle, tide pools, upturned boats, lobster pots, a fish-drying rack,
@@ -17,6 +18,8 @@
 //    fences, a punt, and marsh lights over the water
 //  - Pilchard Row: two cottages facing across a lane, gardens behind, a lugger beached across the street
 //  - the Bonded Quay: a small walled customs yard packed with a grid of cargo stacks, a crane in the middle
+//  - the Flensing Yard: a derelict whaling station's fenced yard on the sand, oil tanks, pipes on trestles, sheds,
+//    the try-works, and a timber lookout in the middle whose stair and platform are floors you can stand on
 // and on the first six, two or three more buildings (cottages, huts, sheds, some roofless) for cover
 // Props are made of simple solids (boxes and upright cylinders). The same solids block walking
 // (fpsBlocked), stop shots (fpsRay) and hide the painted figures behind them (the occluders that
@@ -29,7 +32,9 @@
 // The Classic renderer draws each solid as a flat-shaded block (fpsIsleDrawSolid).
 
 const FPI_FORCE = (() => { try { const m = location.search.match(/[?&]isle=(\w+)/); return m ? m[1] : null; } catch (e) { return null; } })();
-const FPS_ISLE_ORDER = ['shingle', 'row', 'reef', 'chapel', 'quay', 'cove', 'cliff', 'marsh'];
+// the rotation: every round is the next of these three, in turn (the other six islands are still laid out for
+// ?isle=..., and by the Lighthouse, which builds its station with the same builder)
+const FPS_ISLE_ORDER = ['quay', 'row', 'yard'];
 // ground colours are laid over the sea's own (so the island still belongs to its sea); rocks: [count, min r, max r, height]
 const FPS_ISLES = {
   shingle: { name: 'the Shingle Skerry', ground: '#a29e94', ground2: '#76736c', wet: '#3c3f44', path: '#6a665e', tint: 0.3, mound: 0.16, dune: 0.07,
@@ -53,10 +58,16 @@ Object.assign(FPS_ISLES, {
     rocks: [0, 3, 6, 1], wrecks: [0], tintRock: null, sky: '160,150,170', skyA: 0.07, fog: ['#15161e', 180, 1500], mist: '70,70,86', mistA: 0.09, birds: ['gull', 6], tufts: ['#5a6a44', 80], pebbles: 120, pools: 0, wrack: 50 },
   quay: { name: 'the Bonded Quay', ground: '#6e6a62', ground2: '#56534c', wet: '#33363a', path: '#5c5852', tint: 0.36, mound: 0, dune: 0.01,
     rocks: [0, 3, 6, 1], wrecks: [0], tintRock: null, sky: '150,140,120', skyA: 0.08, fog: ['#16140f', 160, 1300], mist: '80,72,60', mistA: 0.1, birds: ['gull', 4], tufts: ['#4a5038', 0], pebbles: 30, pools: 0, wrack: 40, arena: true },
+  // the Flensing Yard: a derelict whaling station's fenced yard on a spit of sand, a climbable lookout in the middle
+  // (floors: the stair and the platform can be stood on, src/fps.js fpsMove)
+  yard: { name: 'the Flensing Yard', ground: '#bca57a', ground2: '#9a8660', wet: '#4e4638', path: '#7a6a50', tint: 0.3, mound: 0, dune: 0.05,
+    rocks: [0, 3, 6, 1], wrecks: [0], tintRock: null, sky: '175,140,110', skyA: 0.08, fog: ['#1c1714', 170, 1500], mist: '90,78,66', mistA: 0.1, birds: ['gull', 6], tufts: ['#7a7a4a', 40], pebbles: 60, pools: 0, wrack: 30, arena: true, floors: true, keep: true },
 });
 function fpsIsleFor(round) {
   if (FPI_FORCE && FPS_ISLES[FPI_FORCE]) return FPI_FORCE;
-  return FPS_ISLE_ORDER[(round + Math.floor(round / 6)) % FPS_ISLE_ORDER.length];
+  // (shifted one every six rounds, so each map comes round in every one of the six seas in turn)
+  const n = FPS_ISLE_ORDER.length, k = (round | 0) + Math.floor((round | 0) / 6);
+  return FPS_ISLE_ORDER[((k % n) + n) % n];
 }
 const FPI_C = {
   stone: '#62645f', stone2: '#4e504c', stone3: '#73716a', moss: '#3e4c30', wood: '#4a3a2b', wood2: '#5e4a34', wood3: '#35281d', drift: '#7c7464',
@@ -105,7 +116,7 @@ function fpsIsleGen(G, round, rng, id) {
   id = id || fpsIsleFor(round); const T = FPS_ISLES[id];
   const CX = FPSC.CX, CY = FPSC.CY, IR = FPSC.R, TAU = Math.PI * 2;
   const R = (a, b) => a + rng() * (b - a), RI = (a, b) => Math.floor(R(a, b + 0.999)), pick = a => a[Math.floor(rng() * a.length)];
-  const I = { id, T, name: T.name, seed: (round * 7919) & 0xfffff, props: [], solids: [], decor: [], lights: [], tracks: [], birds: [], key: id + ':' + round };
+  const I = { id, T, name: T.name, seed: (round * 7919) & 0xfffff, props: [], solids: [], decor: [], lights: [], tracks: [], birds: [], key: id + ':' + round, floors: !!T.floors };
   G.isle = I;
   const rocks = G.rocks = [], wrecks = G.wrecks = [];
   const polar = (a, d) => [CX + Math.cos(a) * d, CY + Math.sin(a) * d];
@@ -223,7 +234,9 @@ function fpiFinish(G, H) {
   }
   fpiIndex(I);
   // can you walk everywhere? Thin out the extras until at least 60% of the island is reachable
+  // (not in the Flensing Yard: its fence shuts out most of the island on purpose, and it keeps its barrels)
   for (let it = 0; it < 12 && !I.T.indoor; it++) {
+    if (I.T.keep) { fpiReach(G); break; }
     fpiReach(G);
     if (I.reach.nReach >= I.reach.nDisc * 0.6) break;
     const extra = I.props.filter(p => p.opt);
@@ -253,14 +266,31 @@ function fpiIndex(I) {
     for (let i = i0; i <= i1; i++) for (let j = j0; j <= j1; j++) { const k = i * 65536 + j; let l = sh.get(k); if (!l) sh.set(k, l = []); l.push(s); }
   }
 }
-function fpsIsleBlocked(G, x, y, pad, z) {
+// (feet: on an island with floors, the height of the feet over the ground: whatever is lifted clear over your head
+// is walked under, and whatever is no higher than your feet is walked over; with climb, so is a floor no more than a
+// step above them, to step up onto)
+const FPI_STEP = 0.6;
+function fpsIsleBlocked(G, x, y, pad, z, feet, climb) {
   const I = G && G.isle; if (!I || !I.sh) return false;
   const l = I.sh.get(Math.floor(x / 6) * 65536 + Math.floor(y / 6)); if (!l) return false;
   for (const s of l) {
     if (z != null && s.z1 < z - 0.15) continue;
+    if (feet != null) { const bot = s.z0 != null ? s.z0 - FPSC.GROUND : 0, top = s.z1 - FPSC.GROUND; if (bot >= feet + 1.9 || top <= feet + (climb && s.fl ? FPI_STEP : 0.05)) continue; }
     if (fpiDist(s, x, y) < pad) return true;
   }
   return false;
+}
+// the height of the floor under a place, for someone standing at feet (the Flensing Yard's stair and lookout)
+function fpsIsleFloorAt(G, x, y, feet, pad) {
+  const I = G && G.isle; if (!I || !I.sh) return 0;
+  const l = I.sh.get(Math.floor(x / 6) * 65536 + Math.floor(y / 6)); if (!l) return 0;
+  let fl = 0;
+  for (const s of l) {
+    if (!s.fl) continue;
+    const top = s.z1 - FPSC.GROUND;
+    if (top > fl && top <= feet + FPI_STEP && fpiDist(s, x, y) < (pad == null ? 0.22 : pad)) fl = top;
+  }
+  return fl;
 }
 // ---------- under a roof ----------
 // Indoors is wherever there's a roof or a ceiling over you: solids lifted off the ground (z0 set: a roof, a
@@ -304,7 +334,7 @@ function fpiReach(G) {
     const x = x0 + i * S, y = y0 + j * S, d = Math.hypot(x - FPSC.CX, y - FPSC.CY);
     if (d > FPSC.R - 1.5) continue;
     nDisc++;
-    if (fpsBlockedIn(G, x, y, 0.5)) continue;
+    if (fpsBlockedIn(G, x, y, 0.5, null, I.floors ? 0 : null, false)) continue;
     free[j * N + i] = 1; nFree++;
     if (d < sd) { sd = d; start = j * N + i; }
   }
@@ -332,7 +362,7 @@ function fpsReachable(x, y, G) {
 // a random place that can be walked to
 function fpsIsleSpot(rand) {
   rand = rand || Math.random;
-  for (let i = 0; i < 60; i++) {
+  for (let i = 0; i < 300; i++) {
     const a = rand() * 6.283, d = Math.sqrt(rand()) * (FPSC.R - 20), x = FPSC.CX + Math.cos(a) * d, y = FPSC.CY + Math.sin(a) * d;
     if (fpsReachable(x, y) && !fpsBlocked(x, y, 1)) return [x, y];
   }
@@ -528,6 +558,47 @@ const FPI_GEN = {
       for (const [u, v] of [[0, -S + 1.4], [0, S - 1.4], [-S + 1.4, 0], [S - 1.4, 0]]) fpiLanternPost(H, ...L(u, v), a);
       for (const [u, v] of [[10.4, 10.4], [-10.4, -10.4], [10.4, -19.5], [-19.5, 10.4], [19.5, 19.5]]) { const [x, y] = L(u + R(-0.5, 0.5), v + R(-0.5, 0.5)); if (H.clear(x, y, 1.0, 0.8)) (rng() < 0.5 ? fpiBarrels(H, x, y) : fpiCrates(H, x, y, false)); }
       H.track([L(-S + 3, -S + 8), L(-6.5, 0), L(6.5, 0), L(S - 3, S - 3)]);
+    },
+  },
+  // the Flensing Yard: a derelict whaling station's yard on a spit of sand, fenced in. In the middle the old lookout,
+  // a timber tower you can climb by its stair, with a boarded rail round the top; round it the oil tanks, pipes on
+  // trestles (low ones to crouch behind and shoot over, high ones to walk under), the flensing shed, the boiler
+  // house, the try-works, a whaleboat on blocks, and the jawbone arch at the gate
+  yard: {
+    built: true,
+    set(H) {
+      const { R, CX, CY, rng } = H, a = Math.floor(R(0, 4)) * Math.PI / 2 + R(-0.25, 0.25), c = Math.cos(a), sn = Math.sin(a);
+      const L = (u, v) => [CX + u * c - v * sn, CY + u * sn + v * c];
+      const S = 27;   // half the yard's width
+      // round it: the boiling sheds' stone backs on one side, a timber palisade down two, a fence (you can shoot
+      // through it) along the shore side
+      H.wall(...L(-S, S), ...L(S, S), { hh: 3.2, jag: 0.05, th: 0.9, mat: 'stone', cap: true });
+      for (const u of [-S, S]) H.wall(...L(u, -S), ...L(u, S), { hh: 2.6, jag: 0.08, th: 0.4, mat: 'wood', dark: true });
+      { const [x0, y0] = L(-S, -S), [x1, y1] = L(S, -S); H.put('fence', (x0 + x1) / 2, (y0 + y1) / 2, a, { len: 2 * S }); }
+      // the lookout in the middle, its stair coming down to the east
+      const tw = H.put('tower', ...L(0, 0), a, { top: 4.5, half: 2.4, n: 10, tread: 0.75, sw: 0.8 });
+      { const [lx, ly] = fpiLocal(tw, -2.2, -2.2); H.light(lx, ly, 4.5 + 2.1, '#ffc070', 11, 'lantern'); H.I.lights[H.I.lights.length - 1].p = tw; }
+      // the oil tanks, and their pipes: low runs along the ground, high ones over the lanes to the tower
+      H.put('tank', ...L(-17, 16), a, { r: 3.4, hh: 6 });
+      H.put('tank', ...L(16, -17), a, { r: 3.0, hh: 5.2 });
+      const pipe = (u0, v0, u1, v1, h, r) => { const [x0, y0] = L(u0, v0), [x1, y1] = L(u1, v1); return H.put('pipe', (x0 + x1) / 2, (y0 + y1) / 2, Math.atan2(y1 - y0, x1 - x0), { len: Math.hypot(x1 - x0, y1 - y0), h, r }); };
+      pipe(-13.3, 15.6, -3.5, 15.6, 0.8, 0.36);
+      pipe(15.6, -13.8, 15.6, -4.5, 0.75, 0.32);
+      pipe(-14.6, 13.6, -2.6, 2.6, 3.5, 0.25);
+      pipe(12.4, 11.6, 2.6, 2.6, 3.9, 0.22);
+      // the flensing shed (long and timber, open at both ends) and the stone boiler house
+      fpiCottage(H, ...L(-15, -15), a, { w: 12, d: 7.5, doors: [['f', -3.5], ['b', 3.5], ['l', 0], ['r', 0]], windows: [['f', 1.5, 3.5], ['b', -4.5, -2.5]], mat: 'wood', dark: true });
+      fpiCottage(H, ...L(17, 15.5), a, { w: 8, d: 6, doors: [['f', -1.5], ['l', 0]], windows: [['f', 1.4, 2.8], ['r', -0.8, 0.8]], mat: 'stone' });
+      // the try-works (a brick furnace with two great iron pots, still smouldering), the whaleboat, a handcart
+      { const p = H.put('trypot', ...L(-8.5, 1.5), a + Math.PI / 2, {}); const [lx, ly] = fpiLocal(p, 0, -1.3); H.light(lx, ly, 0.5, '#ff8a3a', 7, 'fire'); H.I.lights[H.I.lights.length - 1].p = p; }
+      H.put('boat', ...L(6.5, -12), a + 0.12, { len: 6.2, beam: 1.9, paint: FPI_C.paint[0], upright: true });
+      H.put('cart', ...L(10.5, -4.6), a - 0.25, {});
+      // the jawbone arch inside the gate, and a lamp on each side of the yard
+      H.put('jawbone', ...L(0, -S + 2.6), a, {});
+      for (const [u, v] of [[0, S - 1.4], [-S + 1.2, 2], [S - 1.2, -2], [-4.5, -S + 1.6]]) fpiLanternPost(H, ...L(u, v), a);
+      // odds and ends in the lanes: barrels of oil, crates, more barrels
+      for (const [u, v] of [[8, 8.5], [-5.5, 9.5], [-21.5, 1], [21.5, 3.5], [4, -21.5], [-22.5, -23], [22.5, -23], [-8, -6]]) { const [x, y] = L(u + R(-0.5, 0.5), v + R(-0.5, 0.5)); if (H.clear(x, y, 1.0, 0.9)) (rng() < 0.6 ? fpiBarrels(H, x, y) : fpiCrates(H, x, y, false)); }
+      H.track([L(0, -S + 1), L(0, -6), L(-5, 0)]); H.track([L(-14, -10), L(-4, -3)]); H.track([L(10, 0), L(17, 11)]);
     },
   },
   shingle: {
@@ -737,6 +808,133 @@ function fpiMarshDecor(H) {
 // ---------- the kinds of prop: their solids, and how they're built in 3D ----------
 // b3(p, A): A builds in the prop's own frame: u along it, v across, h up from the ground
 const FPI_K = {
+  // the Flensing Yard's lookout: four legs, a planked platform (a floor: you stand on it) with a boarded rail round
+  // it, open where the stair comes up, and a straight stair (each tread a floor) down one side; a lamp and a flag
+  tower: {
+    col: FPI_C.wood2, noShadow: true,
+    sol(p) {
+      const T = p.top, h = p.half, n = p.n, rise = T / n, out = [];
+      out.push(fpiBox(p, 0, 0, h, h, T, { z0: T - 0.3, fl: true, col: FPI_C.wood2 }));
+      for (const [u, v] of [[-h + 0.3, -h + 0.3], [h - 0.3, -h + 0.3], [-h + 0.3, h - 0.3], [h - 0.3, h - 0.3]]) out.push(fpiCirc(p, u, v, 0.24, T - 0.3, { col: FPI_C.wood3 }));
+      // the rail: three sides whole, the stair's side in two pieces either side of the top of the stair
+      const rail = (u, v, hw, hd) => out.push(fpiBox(p, u, v, hw, hd, T + 1.05, { z0: T, col: FPI_C.wood3 }));
+      rail(-h + 0.08, 0, 0.08, h); rail(0, -h + 0.08, h, 0.08); rail(0, h - 0.08, h, 0.08);
+      const gap = p.sw + 0.15, seg = (h - gap) / 2;
+      rail(h - 0.08, -(gap + seg), 0.08, seg); rail(h - 0.08, gap + seg, 0.08, seg);
+      for (let i = 0; i < n; i++) out.push(fpiBox(p, h + (n - i - 0.5) * p.tread, 0, p.tread / 2, p.sw, (i + 1) * rise, { fl: true, col: FPI_C.wood }));
+      return out;
+    },
+    b3(p, A) {
+      const T = p.top, h = p.half, n = p.n, rise = T / n, W = FPI_C.wood, W2 = FPI_C.wood2, W3 = FPI_C.wood3;
+      const beam = (col, u0, v0, z0, u1, v1, z1, t) => { const du = u1 - u0, dv = v1 - v0, dz = z1 - z0, hz = Math.hypot(du, dv); A.part('box', col, (u0 + u1) / 2, (v0 + v1) / 2, (z0 + z1) / 2, Math.hypot(hz, dz), t, t, Math.atan2(dv, du), 0, Math.atan2(dz, hz)); };
+      const k = h - 0.3;
+      for (const [u, v] of [[-k, -k], [k, -k], [-k, k], [k, k]]) A.cyl(W3, u, v, -0.3, 0.22, T, 0, 0, 0, 'cyl8');
+      // cross-bracing on every side, in two storeys, and a ring of beams under the platform and half way up
+      for (const s of [-1, 1]) for (const [z0, z1] of [[0.3, T / 2], [T / 2, T - 0.4]]) {
+        beam(W3, -k, s * k, z0, k, s * k, z1, 0.14); beam(W3, k, s * k, z0, -k, s * k, z1, 0.14);
+        beam(W3, s * k, -k, z0, s * k, k, z1, 0.14); beam(W3, s * k, k, z0, s * k, -k, z1, 0.14);
+      }
+      for (const z of [T / 2, T - 0.4]) for (const s of [-1, 1]) { A.box(W3, 0, s * k, z - 0.1, 2 * k + 0.4, 0.2, 0.2); A.box(W3, s * k, 0, z - 0.1, 0.2, 2 * k + 0.4, 0.2); }
+      // the platform: planks, each a little different
+      const np = Math.round(2 * h / 0.32);
+      for (let i = 0; i < np; i++) A.box(i % 3 ? W : W2, -h + (i + 0.5) * 2 * h / np, (A.r() - 0.5) * 0.04, T - 0.12, 2 * h / np * 0.92, 2 * h + 0.1, 0.12);
+      A.box(W3, 0, 0, T - 0.3, 2 * h, 2 * h, 0.18);
+      // the boarded rail, on posts
+      const rail = (u, v, len, along) => {
+        const nb = Math.max(1, Math.round(len / 0.5));
+        for (let i = 0; i < nb; i++) { const o = -len / 2 + (i + 0.5) * len / nb; A.box(i % 2 ? W3 : W, along ? u + o : u, along ? v : v + o, T, along ? len / nb * 0.94 : 0.1, along ? 0.1 : len / nb * 0.94, 0.9 - A.r() * 0.12); }
+        A.box(W3, u, v, T + 0.92, along ? len + 0.1 : 0.16, along ? 0.16 : len + 0.1, 0.12);
+      };
+      rail(0, -h + 0.08, 2 * h, true); rail(0, h - 0.08, 2 * h, true); rail(-h + 0.08, 0, 2 * h, false);
+      const gap = p.sw + 0.15, seg = (h - gap) / 2;
+      rail(h - 0.08, -(gap + seg), 2 * seg, false); rail(h - 0.08, gap + seg, 2 * seg, false);
+      for (const [u, v] of [[-h, -h], [h, -h], [-h, h], [h, h], [h, -gap], [h, gap]]) A.cyl(W3, u * 0.97, v * 0.97, T - 0.1, 0.09, 1.2, 0, 0, 0, 'cyl6');
+      // the stair: treads on a timber crib, stringers either side and a hand rope
+      for (let i = 0; i < n; i++) {
+        const u = h + (n - i - 0.5) * p.tread, z = (i + 1) * rise;
+        A.box(i % 2 ? W2 : W, u, 0, z - 0.1, p.tread * 1.02, p.sw * 2, 0.1);
+        A.box(W3, u, 0, -0.2, p.tread * 0.98, p.sw * 2 - 0.1, z + 0.1);
+      }
+      for (const s of [-1, 1]) {
+        beam(W3, h + n * p.tread + 0.1, s * (p.sw + 0.06), 0.05, h, s * (p.sw + 0.06), T, 0.18);
+        A.cyl(W3, h + n * p.tread - 0.2, s * (p.sw + 0.1), -0.2, 0.07, 1.2, 0, 0, 0, 'cyl6');
+        beam(FPI_C.rope, h + n * p.tread - 0.2, s * (p.sw + 0.1), 0.95, h, s * (p.sw + 0.1), T + 0.95, 0.05);
+      }
+      // the lamp on a post at one corner, and a flag on a pole at the other
+      A.cyl(W3, -h + 0.2, -h + 0.2, T, 0.08, 2.4, 0, 0, 0, 'cyl6');
+      A.box(W3, -h + 0.2, -h + 0.2, T + 2.3, 0.08, 0.08, 0.08);
+      A.box(FPI_C.iron, -h + 0.2, -h + 0.2, T + 1.92, 0.26, 0.26, 0.05); A.part('cone', FPI_C.iron, -h + 0.2, -h + 0.2, T + 2.42, 0.3, 0.16, 0.3);
+      A.glow('#ffd08a', -h + 0.2, -h + 0.2, T + 2.12, 0.24);
+      A.cyl(W3, -h + 0.2, h - 0.2, T, 0.06, 4.2, 0, 0, 0, 'cyl6');
+      A.box('#7a2a22', -h + 0.75, h - 0.2, T + 3.55, 1.1, 0.03, 0.6, 0, 0, -0.08);
+    },
+  },
+  // an oil tank: riveted iron, rusted, with bands, a shallow roof, a ladder up its side and a valve at its foot
+  tank: {
+    col: '#5a4434',
+    sol(p) { return [fpiCirc(p, 0, 0, p.r, p.hh)]; },
+    b3(p, A) {
+      const r = p.r, rust = ['#5a4434', '#4e3c2e', '#6a4a34'];
+      A.cyl('#3a3634', 0, 0, -0.2, r + 0.25, 0.45, 0, 0, 0, 'cyl8');
+      const nr = Math.round(p.hh / 1.2);
+      for (let i = 0; i < nr; i++) A.part('cyl8', A.r() < 0.5 ? rust[0] : rust[1 + (i % 2)], 0, 0, (i + 0.5) * p.hh / nr, r * 2, p.hh / nr * 1.01, r * 2, 0.39 * (i % 2));
+      for (let i = 1; i < nr; i++) A.cyl('#2e2a28', 0, 0, i * p.hh / nr - 0.04, r + 0.04, 0.08, 0.2, 0, 0, 'cyl8');
+      A.part('cone', '#4a3a2e', 0, 0, p.hh + 0.35, r * 2.06, 0.7, r * 2.06, 0.2);
+      // rust streaks down the side
+      for (let i = 0; i < 6; i++) { const t = A.r() * 6.28, len = 1 + A.r() * p.hh * 0.5; A.box('#7a4a2a', Math.cos(t) * (r + 0.01), Math.sin(t) * (r + 0.01), p.hh - len, 0.12, 0.12, len, -t); }
+      // the ladder
+      for (const s of [-1, 1]) A.box(FPI_C.iron, r + 0.18, s * 0.26, 0, 0.06, 0.06, p.hh + 0.6);
+      for (let z = 0.3; z < p.hh + 0.4; z += 0.4) A.box(FPI_C.iron, r + 0.18, 0, z, 0.05, 0.52, 0.04);
+      A.cyl(FPI_C.iron, -r - 0.1, 0, 0.5, 0.28, 0.5, 0, 0, Math.PI / 2, 'cyl8');
+      A.cyl(FPI_C.brass, -r - 0.45, 0, 0.95, 0.22, 0.06, 0, 0, 0, 'cyl8');
+    },
+  },
+  // a pipe on trestles: low ones block you and stop a shot at the body (crouch behind them, shoot over them), high
+  // ones carry over a lane (walk under them; they stop shots)
+  pipe: {
+    col: '#4a3e34', noShadow: true,
+    sol(p) {
+      const high = p.h - p.r > 2.0;
+      return [fpiBox(p, 0, 0, p.len / 2, p.r + 0.08, p.h + p.r, high ? { z0: p.h - p.r, mv: false } : {})];
+    },
+    b3(p, A) {
+      A.log('#4a3e34', 0, 0, p.h, p.r, p.len, 0);
+      for (let u = -p.len / 2 + 0.4; u <= p.len / 2 - 0.3; u += 2.4) A.log('#2e2a26', u, 0, p.h, p.r + 0.06, 0.16, 0);
+      for (let u = -p.len / 2 + 1.0; u < p.len / 2 - 0.4; u += 3.2) {
+        for (const s of [-1, 1]) A.box(FPI_C.wood3, u, s * (p.r + 0.12), -0.2, 0.14, 0.14, p.h - p.r + 0.2);
+        A.box(FPI_C.wood3, u, 0, p.h - p.r - 0.12, 0.18, p.r * 2 + 0.5, 0.14);
+      }
+    },
+  },
+  // the try-works: a brick furnace with two great iron pots set in it, its fire-holes still glowing
+  trypot: {
+    col: '#6a3e30',
+    sol(p) { return [fpiBox(p, 0, 0, 2.2, 1.15, 1.3)]; },
+    b3(p, A) {
+      for (let z = 0; z < 1.2; z += 0.3) for (let i = 0; i < 6; i++) A.box(A.r() < 0.5 ? '#6a3e30' : '#5a342a', -1.85 + i * 0.74 + (z * 3.3 % 2 ? 0.2 : 0), 0, z - 0.1, 0.72, 2.3, 0.3);
+      A.box('#4a3a32', 0, 0, 1.2, 4.5, 2.4, 0.12);
+      for (const s of [-1, 1]) {
+        A.part('sph', FPI_C.iron, s * 1.1, 0, 1.3, 1.9, 0.9, 1.9);
+        A.cyl('#1a1612', s * 1.1, 0, 1.55, 0.82, 0.04, 0, 0, 0, 'cyl8');
+        A.box('#140e0a', s * 1.1, -1.16, 0.15, 0.6, 0.06, 0.45);
+        A.glow('#ff7a30', s * 1.1, -1.2, 0.35, 0.3);
+      }
+      A.cyl('#3a2a22', 1.9, 0.8, 1.3, 0.25, 1.6, 0, 0, 0, 'cyl8');
+    },
+  },
+  // the jawbone arch: two great whale's jawbones, set in the sand and leaning in to meet over the way through
+  jawbone: {
+    col: FPI_C.bone,
+    sol(p) { return [fpiCirc(p, -1.9, 0, 0.32, 5), fpiCirc(p, 1.9, 0, 0.32, 5)]; },
+    b3(p, A) {
+      const beam = (col, u0, z0, u1, z1, t) => { const du = u1 - u0, dz = z1 - z0; A.part('box', col, (u0 + u1) / 2, 0, (z0 + z1) / 2, Math.hypot(du, dz), t, t * 0.8, 0, 0, Math.atan2(dz, du)); };
+      for (const s of [-1, 1]) {
+        let pu = s * 1.9, pz = -0.2;
+        for (let i = 1; i <= 6; i++) { const t = i / 6 * Math.PI / 2, u = s * (1.9 * Math.cos(t) + 0.12), z = 5.4 * Math.sin(t); beam(i % 2 ? FPI_C.bone : '#988f7a', pu, pz, u, z, 0.42 - i * 0.03); pu = u; pz = z; }
+        A.part('ico', '#988f7a', s * 1.9, 0, 0.1, 0.9, 0.5, 0.8, A.r() * 3);
+      }
+    },
+  },
   // a plain block of stone or timber (a sill, a lintel over a doorway: one with z0 is walked under)
   block: {
     col: FPI_C.stone3,

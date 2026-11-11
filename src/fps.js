@@ -9,7 +9,7 @@
 //  - The skerries and old wrecks are cover; the drowned crew wade ashore now and then.
 //  - Your colours are your equipped skin's.
 // Rounds last five minutes on the wall clock, so everyone's round turns over together, and each
-// round the island moves to the next of the six seas.
+// round the island moves to the next of the three maps (src/fpsisle.js), and the next of the six seas.
 // Fair hits: a shot travels as an event (where it was fired from, which way). Whoever it's aimed at
 // checks it against where they really were over the last few tenths of a second, rocks included,
 // so ducking behind cover in time always counts. The wreckers (bots) and the drowned crew are run
@@ -130,7 +130,7 @@ function fpsJumpTick(m, dt) {
 }
 
 // ---------- the island ----------
-// Each round's island is laid out from the round number (src/fpsisle.js): one of six kinds of island,
+// Each round's island is laid out from the round number (src/fpsisle.js): the next of the three maps in turn,
 // its rocks, wrecks and props all from the same seed, so everyone on it builds the same one.
 function fpsArena(round) {
   const rng = seeded((0x5ee7 + 17 + Math.imul(round | 0, 0x9e3779b1)) >>> 0);
@@ -301,7 +301,7 @@ function fpsNetTick(dt) {
       FPS.seenSeq[f.id] = Array.isArray(f.sh) && f.sh.length ? f.sh[f.sh.length - 1][0] : 0;
       fpsFeed(`${f.n || 'A wrecker'} came ashore.`);
     }
-    r.n = f.n || 'Wrecker'; r.w = typeof f.w === 'string' ? f.w : 'p'; r.tx = f.x; r.ty = f.y; r.th = f.h; r.p = f.p; r.hp = f.hp; r.lan = !!f.lan; r.c = Array.isArray(f.c) ? f.c : null; r.o = typeof f.o === 'string' ? f.o.slice(0, 24) : ''; r.walk = !!f.wk; r.tjz = Math.max(0, Math.min(3, +f.jz || 0));
+    r.n = f.n || 'Wrecker'; r.w = typeof f.w === 'string' ? f.w : 'p'; r.tx = f.x; r.ty = f.y; r.th = f.h; r.p = f.p; r.hp = f.hp; r.lan = !!f.lan; r.c = Array.isArray(f.c) ? f.c : null; r.o = typeof f.o === 'string' ? f.o.slice(0, 24) : ''; r.walk = !!f.wk; r.tjz = Math.max(0, Math.min(8, +f.jz || 0));   // (up to the top of the Flensing Yard's lookout, and a jump)
     r.cr = f.cr ? 1 : 0; if (r.cr) { r.tall = FPS_CROUCH.TALL; r.headZ = FPS_CROUCH.HEAD; } else { delete r.tall; delete r.headZ; }
     r.vy = Array.isArray(f.vy) && f.vy.length === 4 && f.vy.every(n => typeof n === 'number' && isFinite(n)) && Math.hypot(f.vy[0] - f.x, f.vy[1] - f.y) < 20 ? f.vy : null;
     r.kb = f.r === FPS.round && f.kb && typeof f.kb === 'object' ? f.kb : {};
@@ -397,11 +397,14 @@ function fpsEveryone() {
 function fpsRespawn(m) {
   // somewhere clear of rocks, as far as can be from everyone else
   const others = fpsEveryone().filter(o => o.id !== m.id && !(o.dead > 0));
+  // (forty good places to choose from, out of as many tries as it takes: on the walled yards most of the island is
+  // outside the walls, where nobody can walk, and too few tries used to put you outside them)
   let best = null, bestD = -1;
-  for (let i = 0; i < 40; i++) {
+  for (let i = 0, n = 0; i < 600 && n < 40; i++) {
     const a = Math.random() * 6.283, d = Math.sqrt(Math.random()) * (FPSC.R - 20);
     const x = FPSC.CX + Math.cos(a) * d, y = FPSC.CY + Math.sin(a) * d;
     if (fpsBlocked(x, y, 1.5) || !fpsReachable(x, y)) continue;
+    n++;
     const near = others.reduce((s, o) => Math.min(s, Math.hypot(o.x - x, o.y - y)), 1e9);
     if (near > bestD) { bestD = near; best = [x, y]; }
   }
@@ -409,19 +412,20 @@ function fpsRespawn(m) {
   m.x = best[0]; m.y = best[1]; m.h = bearingOf(FPSC.CX - m.x, FPSC.CY - m.y); m.p = 0;
   m.hp = FPSC.HP; m.reload = 0;
   m.mags = {}; for (const id in FPSW) m.mags[id] = FPSW[id].mag;
-  if (m === FPS.me) { m.ammo = m.mags[FPS.weapon]; FPS.scoped = false; } else m.ammo = 6; m.cd = 0; m.flares = FPSC.FLARES; m.dead = 0; m.protect = FPSC.PROTECT; m.jz = 0; m.vz = 0;
+  if (m === FPS.me) { m.ammo = m.mags[FPS.weapon]; FPS.scoped = false; } else m.ammo = 6; m.cd = 0; m.flares = FPSC.FLARES; m.dead = 0; m.protect = FPSC.PROTECT; m.jz = 0; m.vz = 0; m.fl = 0;
 }
 // (z: only what stands taller than that height counts, for the over-the-shoulder camera)
+// (feet, climb: on an island with floors, see fpsIsleBlocked)
 function fpsBlocked(x, y, pad, z) { return fpsBlockedIn(FPS.g, x, y, pad, z); }
-function fpsBlockedIn(G, x, y, pad, z) {
+function fpsBlockedIn(G, x, y, pad, z, feet, climb) {
   if (Math.hypot(x - FPSC.CX, y - FPSC.CY) > FPSC.R - 1.5) return true;
-  return fpsSolidAt(G, x, y, pad, z);
+  return fpsSolidAt(G, x, y, pad, z, feet, climb);
 }
 // rocks, wrecks and the island's props (walls, crates, boats...), without the shore
-function fpsSolidAt(G, x, y, pad, z) {
+function fpsSolidAt(G, x, y, pad, z, feet, climb) {
   for (const o of G.rocks) if (Math.hypot(o.x - x, o.y - y) < o.r * 1.02 + pad) return true;
   for (const o of G.wrecks) if (Math.hypot(o.x - x, o.y - y) < o.r * 0.75 + pad) return true;
-  return fpsIsleBlocked(G, x, y, pad, z);
+  return fpsIsleBlocked(G, x, y, pad, z, feet, climb);
 }
 // walk towards a heading, and if something's in the way, try turning a little either side
 // (the side that worked last is tried first, so wreckers slide along a wall instead of dithering)
@@ -435,12 +439,26 @@ function fpsSteer(m, h, step) {
   return false;
 }
 // move with sliding along whatever is in the way
+// (on an island with floors, the Flensing Yard's lookout: you walk by the height of your feet, up the stair and onto
+// the platform and off its edge, and under it; the wreckers keep to the ground, and walk under it but not up it)
 function fpsMove(m, dx, dy) {
   if (FPS.zm) return zmMove(m, dx, dy);
-  if (!fpsBlocked(m.x + dx, m.y + dy, 0.5)) { m.x += dx; m.y += dy; return true; }
-  if (!fpsBlocked(m.x + dx, m.y, 0.5)) { m.x += dx; return true; }
-  if (!fpsBlocked(m.x, m.y + dy, 0.5)) { m.y += dy; return true; }
-  return false;
+  const I = FPS.g && FPS.g.isle, fl = !!(I && I.floors), climb = fl && m === FPS.me, feet = fl ? (climb ? m.jz || 0 : 0) : null;
+  const free = (x, y) => !fpsBlockedIn(FPS.g, x, y, 0.5, null, feet, climb);
+  let ok = true;
+  if (free(m.x + dx, m.y + dy)) { m.x += dx; m.y += dy; }
+  else if (free(m.x + dx, m.y)) m.x += dx;
+  else if (free(m.x, m.y + dy)) m.y += dy;
+  else ok = false;
+  if (climb) fpsSettle(m);
+  return ok;
+}
+// stand on whatever floor is under you: step up onto it, down a stair, or walk off its edge and fall
+function fpsSettle(m) {
+  const jz = m.jz || 0, fl = fpsIsleFloorAt(FPS.g, m.x, m.y, jz), air = (m.vz || 0) !== 0 || jz > (m.fl || 0) + 0.02;
+  m.fl = fl;
+  if (air) return;
+  if (fl > jz || jz - fl <= FPI_STEP + 0.05) { FPS.eyeLag = clamp((FPS.eyeLag || 0) + (fl - jz), -0.8, 0.8); m.jz = fl; }
 }
 // how well I can see a point: the beam, flares, my lantern (or the moon close by), their own lantern
 function fpsSeeAt(x, y, theirLantern) {
@@ -939,6 +957,7 @@ function fpsFrame(dt) {
     if (m.reload > 0) { m.reload -= dt; if (m.reload <= 0) { m.reload = 0; const w = fpsW(); if (!w.melee) { m.ammo = w.mag; m.mags[FPS.weapon] = m.ammo; } } }
     if (FPS.drawT > 0) FPS.drawT -= dt;
     fpsJumpTick(m, dt);
+    if (FPS.eyeLag && !FPS.zm) FPS.eyeLag *= Math.pow(0.0005, dt);   // (the view eases over each step of a stair)
     if (FPS.landed > 0) FPS.landed -= dt;
     if (FPS.meFlashT > 0) FPS.meFlashT -= dt; if (FPS.meSlashT > 0) FPS.meSlashT -= dt;
     if (!FPS.mouseDown && !FPS.touchFire && !FPS.padFire) FPS.heldFire = false;
