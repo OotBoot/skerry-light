@@ -1022,6 +1022,9 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 #stage.rcmode #rclPadG { top: -14px; }
 #stage.rcmode #rclPadU { top: -14px; left: -108px; }
 .rcpadbtn svg { fill: none; stroke: currentColor; stroke-width: 1.8; }
+
+/* Version number at the top of the main menu */
+.verline { margin: 0 auto; width: max-content; padding: 4px 12px; background: rgba(6,10,20,0.85); position: relative; z-index: 1; font-variant-numeric: lining-nums; text-align: center; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--lamp); opacity: 0.75; }
 </style>
 </head>
 <body>
@@ -1084,6 +1087,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
   </div>
 
   <div class="overlay" id="titleCard">
+    <p class="verline" id="verLine" aria-label="Game version"></p>
     <button class="newgame" id="fpsBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">Try the new game, <b>Wreckers' Night</b>: a multiplayer shootout on the skerry</span><span class="ng-go" aria-hidden="true">↓</span></button>
     <button class="newgame warbanner" id="warBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">And another, <b>Drowned Reach</b>: a war for the islands, alone or with up to ten players</span><span class="ng-go" aria-hidden="true">↓</span></button>
     <button class="newgame zmbanner" id="zmBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">And a fourth, <b>Keeper's Last Light</b>: hold the keeper's station against the drowned, round after round</span><span class="ng-go" aria-hidden="true">↓</span></button>
@@ -1679,6 +1683,8 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 
 // ---- src/config.js ----
 'use strict';
+// The game's version, shown at the top of the main menu. Bump it by one with every change pushed to main.
+var VERSION = 97;
 // Skerry Light: tuning, asset paths and lore.
 // World units are metres. The lighthouse stands at the origin on the shoreline (y = 0);
 // north (+y) is open sea. Bearings: 0 = north, positive = east.
@@ -9888,6 +9894,7 @@ function syncIsland(B) {
 // Game state, the update step, voyages, input and the main loop.
 
 const $ = id => document.getElementById(id);
+if ($('verLine')) $('verLine').textContent = 'Version ' + VERSION;
 let state = 'title', g = null, ship = null;
 let run = { voyages: 0, hits: 0 };
 let best = 0;

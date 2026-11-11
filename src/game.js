@@ -1,6 +1,7 @@
 // Game state, the update step, voyages, input and the main loop.
 
 const $ = id => document.getElementById(id);
+if ($('verLine')) $('verLine').textContent = 'Version ' + VERSION;
 let state = 'title', g = null, ship = null;
 let run = { voyages: 0, hits: 0 };
 let best = 0;

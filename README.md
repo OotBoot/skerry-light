@@ -12,6 +12,8 @@ The only thing she will not go near is **Plimsoll**, the shark who walked up out
 
 The log goes on through 1888. The sea stops being one sea: some nights it freezes, some nights the hills burn, some nights the water is warm and green, or full of fog and gravestones, or the rocks are glass. Stranger things than Maren start turning up on the water, and a small yellow thing called **Verity** sits on decks offering to help. Now and then a ship sails through a ring of black stone into a sea of fire, or onto the wine-dark sea of an older story, or into a place at dusk where doors stand in the water. And one night an iron ship with no sails comes into the harbour, from a year the keeper will not write down. Those far seas each have their own page.
 
+The version number sits at the top of the main menu, so you can tell which build you're playing.
+
 ## How to play
 
 | | |
@@ -537,6 +539,10 @@ Upload `dist/skerry-light.html` anywhere that serves static files. Everything it
 ### Working on the source
 
 `index.html` loads the files in `src/` separately, so you can edit them and reload. Serve the folder (for example `python3 -m http.server 8000`) and open it in a browser; crews won't connect there, since that server has no `/ws`. After changing anything in `src/` or `assets/`, run `npm run build` to update `dist/`.
+
+### Version number
+
+The version shown at the top of the main menu is `VERSION` at the top of `src/config.js`. Every change pushed to `main` bumps it by one: pull the latest `main` first, add one to `VERSION`, then build, so two changes never ship the same number. It started at 97, the count of commits on `main` when it was added.
 
 ## Project layout
 
