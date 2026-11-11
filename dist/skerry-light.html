@@ -1685,7 +1685,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 // ---- src/config.js ----
 'use strict';
 // The game's version, shown at the top of the main menu. Bump it by one with every change pushed to main.
-var VERSION = 134;
+var VERSION = 135;
 // Skerry Light: tuning, asset paths and lore.
 // World units are metres. The lighthouse stands at the origin on the shoreline (y = 0);
 // north (+y) is open sea. Bearings: 0 = north, positive = east.
@@ -34933,6 +34933,7 @@ function rmvFrame(now) {
 // its own way of jumping, a grenade that comes back after a while, and an ultimate that fills as you fight (with
 // time, and faster with every kill). G throws the grenade, X calls the ultimate (a controller: LB and up on the
 // D-pad; a touch screen: the two round buttons over the jump).
+// The grenades hit twice as hard and twice as wide as they first did, and the Wellspring is twice as wide.
 //  - Mercenary: quick and sharp-eyed. Avtomat and Longarm. Second Step: jump again in mid-air. Powder Flask: a
 //    short fuse, and it goes off at once if it strikes one of them. Dead Reckoning: a heavy pistol for twelve
 //    seconds, six shots, each going through every one of them in its line and dropping most of them.
@@ -34940,7 +34941,7 @@ function rmvFrame(now) {
 //    the air to plunge straight down and shake the ground where you land. Scrap Keg: a big, slow blast of nails and
 //    scrap that throws them back. Bulwark: fourteen seconds when no knock lands on you, and every pull of the trigger
 //    is a quake that hurls back everything in front of you.
-//  - Apothecary: keeps the others standing. Pepperbox and Flare Pistol. Drift: jump again in the air to float down
+//  - Apothecary: keeps the others standing. Duck's-Foot and Flare Pistol. Drift: jump again in the air to float down
 //    slowly (for up to three seconds). Brimstone Vial: it bursts into a cloud of green fire that burns and slows the
 //    drowned in it, and mends you and your friends standing in it. Wellspring: a ring of green light on the floor
 //    for fifteen seconds: inside it you mend quickly, knocks are halved, and anyone down in it gets back up.
@@ -34955,7 +34956,7 @@ function rmvFrame(now) {
 // fpsHurt (rclHurtK), the controller (rclPad), zmHud (rclHud), zmDrawOver (rclDrawOver), znPresence (rclPresence) and
 // znReadPlayers (rclHeard).
 
-const RCLC = { UFILL: 1 / 150, UKILL: 0.025, U_MERC: 12, U_BRUTE: 14, U_APO: 15, SHOTS: 6, WELL_R: 4.5, CLOUD_R: 3.4, CLOUD_T: 7, DRIFT: 3, SLAM_CD: 3 };
+const RCLC = { UFILL: 1 / 150, UKILL: 0.025, U_MERC: 12, U_BRUTE: 14, U_APO: 15, SHOTS: 6, WELL_R: 9, CLOUD_R: 6.8, CLOUD_T: 7, DRIFT: 3, SLAM_CD: 3 };
 const RCL_ORDER = ['merc', 'brute', 'apo'];
 const RCL_CLASSES = {
   merc: { n: 'Mercenary', c: '#6fd3c8', rgb: '111,211,200', tag: 'Quick and sharp-eyed: hits hard from far off, and never where they expect.',
@@ -34969,7 +34970,7 @@ const RCL_CLASSES = {
     gren: ['Scrap Keg', 'A big, slow blast of nails and scrap that throws them back.'],
     ult: ['Bulwark', 'Fourteen seconds when no knock lands, and every shot is a quake that hurls them back.'] },
   apo: { n: 'Apothecary', c: '#b6d66a', rgb: '182,214,106', tag: 'Keeps the others standing: burns them where they gather, and mends friends.',
-    w: ['pepperbox', 'flaregun'], gcd: 20,
+    w: ['duckfoot', 'flaregun'], gcd: 20,
     jump: ['Drift', 'Jump again in the air to float down slowly.'],
     gren: ['Brimstone Vial', 'A cloud of green fire: it burns and slows them, and mends friends in it.'],
     ult: ['Wellspring', 'A ring of light for fifteen seconds: mend fast, half the knocks, and the fallen get up.'] },
@@ -35197,8 +35198,8 @@ function rclProjTick(P, dt) {
 function rclBurst(P) {
   P.done = true;
   const fz = rclFloor(P.x, P.y, P.z - FPSC.GROUND);
-  if (P.k === 'merc') zxBoom(P.x, P.y, P.z + 0.2, 3.6, rclHp() * 1.6, 'M', P.mine, 0.8);
-  else if (P.k === 'brute') zxBoom(P.x, P.y, P.z + 0.3, 5.2, rclHp() * 1.3, 'B', P.mine, 2.4);
+  if (P.k === 'merc') zxBoom(P.x, P.y, P.z + 0.2, 7.2, rclHp() * 3.2, 'M', P.mine, 0.8);
+  else if (P.k === 'brute') zxBoom(P.x, P.y, P.z + 0.3, 10.4, rclHp() * 2.6, 'B', P.mine, 2.4);
   else {
     RCL.clouds.push({ x: P.x, y: P.y, fz, r: RCLC.CLOUD_R, t: RCLC.CLOUD_T, k: 0.1, mine: P.mine, seed: Math.random() * 100 });
     fpsPuff(P.x, P.y, P.z, '170,230,100', 16);
@@ -35214,7 +35215,7 @@ function rclClouds(dt) {
     c.k = 0.4;
     for (const o of ZM.z) {
       if (o.dead || Math.abs((o.jz || 0) - c.fz) > 1.4 || Math.hypot(o.x - c.x, o.y - c.y) > c.r + 0.25) continue;
-      o.hitT = 0.12; zmHurt(o, rclHp() * 0.09, false, 'A', FPS.me.id);
+      o.hitT = 0.12; zmHurt(o, rclHp() * 0.18, false, 'A', FPS.me.id);
       if (typeof zmpStatus === 'function') zmpStatus(o, 'slow', 0.6);
     }
   }
@@ -35267,7 +35268,10 @@ function rclShoot() {
 // mag, the rounds to a load (never fewer than a reforged one's); rk, how much longer the load takes. The Punt Gun stays
 // one enormous load.
 const RCL_MAG = { blunderbuss: { mag: 3, rk: 1.6 }, longarm: { mag: 2, rk: 1.15 }, harpoon: { mag: 2, rk: 1.2 }, flaregun: { mag: 2, rk: 1.2 },
-  bomblance: { mag: 2, rk: 1.2 }, grapnel: { mag: 2, rk: 1.15 }, netmortar: { mag: 2, rk: 1.2 }, chainshot: { mag: 2, rk: 1.2 } };
+  bomblance: { mag: 2, rk: 1.2 }, grapnel: { mag: 2, rk: 1.15 }, netmortar: { mag: 2, rk: 1.2 }, chainshot: { mag: 2, rk: 1.2 },
+  duckfoot: { mag: 6, rk: 0.67 } };
+// (the Apothecary's Duck's-Foot) six volleys a load, loaded in a third less time, and 72 in reserve, down here only
+{ const df = ZM_AMMO.duckfoot; Object.defineProperty(ZM_AMMO, 'duckfoot', { get: () => typeof RAID !== 'undefined' && RAID.on ? 72 : df, enumerable: true, configurable: true }); }
 const RCL_WC = new WeakMap();
 function rclW(w, id) {
   const M = RCL_MAG[id]; if (!M || w.melee || !rclOn()) return w;
