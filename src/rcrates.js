@@ -70,7 +70,7 @@ const RC_SKINS = RC_ROWS.map(([id, name, rarity, kind, cols, glow]) => Object.fr
 const RC_PLAIN = Object.freeze({ id: '', name: 'Your nation’s colour', rarity: null, kind: 'plain', cols: ['#c8b890'], glow: null, base: null });
 const RC_SKIN_BY_ID = Object.fromEntries(RC_SKINS.map(s => [s.id, s]));
 const rcRarityOf = s => RARITIES.find(r => r.id === s.rarity) || (s.rarity === 'pirate' ? RARITY_PIRATE : undefined);   // [pirate tokens]
-const rcLevel = s => s && s.rarity ? (s.rarity === 'pirate' ? 5 : RARITIES.findIndex(r => r.id === s.rarity) + 1) : 0;
+const rcLevel = s => s && s.rarity ? (s.rarity === 'pirate' ? 6 : RARITIES.findIndex(r => r.id === s.rarity) + 1) : 0;
 const rcSkin = id => (typeof id === 'string' && RC_SKIN_BY_ID[id]) || null;
 
 const RC = { crates: 0, opened: 0, tiles: 0, owned: {}, equipped: '', pending: null, opening: false, opener: null, lastTaken: null };

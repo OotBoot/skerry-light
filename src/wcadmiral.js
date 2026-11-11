@@ -1,6 +1,7 @@
 // Wreckers' Night: the Admiral weapon skins, alive.
 //
-// The six Admiral finishes from the Gunsmith's Crate (src/wcrates.js) each get a finish of their own that moves, in
+// The six Admiral finishes from the Gunsmith's Crate (src/wcrates.js) each get a finish of their own that moves (and the
+// six Gannet's Locker finishes share a seventh, a step above them: the locker theme at the end), in
 // the manner of the Lighthouse's reforged look (src/zmpap.js) but each in its own theme and colours:
 //   pb_skerry     The Skerry Light     the Light's beam sweeping along the gun, and gold filigree lit as it passes
 //   bb_charybdis  Mouth of Charybdis   a whirlpool of violet and gold twisting down the barrel into the bell
@@ -30,6 +31,15 @@ const WCA_THEMES = {
   hp_leviathan: { th: 3, a: '#ffb020', b: '#fff0a0', c: '#8a4004', dim: 0.45, k: 0.75, sp: 0.5 },
   cl_lastlamp:  { th: 4, a: '#ffc23a', b: '#fff3c4', c: '#ff5a0a', dim: 0.22, k: 1.1, sp: 0.12 },
   av_ninth:     { th: 5, a: '#1f7fe0', b: '#f0faff', c: '#ffe08a', dim: 0.18, k: 1.1, sp: 0.25 },
+  // [pirate tokens] the Gannet's Locker's finishes (src/zmegg.js) all share one theme, a step above the Admiral's: the
+  // drowned crew's cold green fire, the hoard's doubloons glinting in the metal, and the locker's pulse; v is each
+  // weapon's own touch (more coins, deeper water)
+  pb_jolly:     { th: 6, v: 0, a: '#3ee0b4', b: '#ffe9a8', c: '#06302a', dim: 0.4, k: 0.8, sp: 0.3 },
+  bb_maw:       { th: 6, v: 1, a: '#3ee0b4', b: '#ffd34d', c: '#04261f', dim: 0.28, k: 1.05, sp: 0.3 },
+  la_fathom:    { th: 6, v: 2, a: '#5affd0', b: '#ffe07a', c: '#0a3a44', dim: 0.4, k: 1.0, sp: 0.5 },
+  hp_due:       { th: 6, v: 3, a: '#3ee0b4', b: '#ffd34d', c: '#06302a', dim: 0.3, k: 1.0, sp: 0.35 },
+  cl_doubloon:  { th: 6, v: 4, a: '#3ee0b4', b: '#ffd34d', c: '#04261f', dim: 0.12, k: 0.9, sp: 0.04 },
+  av_eight:     { th: 6, v: 5, a: '#5affb8', b: '#ffd34d', c: '#062a22', dim: 0.25, k: 1.05, sp: 0.3 },
 };
 // per weapon, in its root's space: [length along y (1) or z (0), where its length starts, where it ends (the
 // muzzle or point), the axis's middle across (x), and up (y, or z for the cutlass)]
@@ -162,7 +172,7 @@ vec3 wcaFire(vec3 n, vec3 v, inout vec3 dif) {
     vec3 ep = vec3(wcaP.x * 80.0, wcaP.y * 60.0 - t * 2.2, wcaP.z * 80.0 + sin(wcaP.y * 30.0 + t) * 0.4);
     col += mix(wcaC, wcaB, 0.4) * (wcaStar(ep, t * 4.0, 0.84) * 3.0 + wcaStar(ep * 1.7 + 9.0, t * 5.0, 0.86) * 2.0);
     col += mix(wcaC, wcaA, 0.5) * rim * (0.5 + 0.5 * fl) * wcaR.y;
-  } else {
+  } else if (th < 5.5) {
     // ---- the Ninth Wave: seas rolling along the gun, each with a breaking crest of foam and spray off it, and every
     // ninth one a great sea, whiter and wider, with gold in its spray
     float wob = sin(cr.x * 70.0 + cr.y * 50.0 + t * 0.9) * 0.18 + (wcaF(vec3(cr.x * 40.0, cr.y * 40.0, s * 6.0 + t * 0.2)) - 0.5) * 0.6;
@@ -179,6 +189,29 @@ vec3 wcaFire(vec3 n, vec3 v, inout vec3 dif) {
     vec3 sp = vec3(s * 70.0 - t * 2.5, cr.x * 70.0 - t * 0.6, cr.y * 70.0 + t * 1.4);
     col += mix(wcaB, wcaC, big * 0.6) * wcaStar(sp, t * 3.0, 0.84) * (1.0 + brk * 3.0 + big * 1.5);
     col += mix(wcaA, wcaB, 0.6) * rim * 0.75 * wcaR.y;
+  } else {
+    // ---- the Gannet's Locker: cold green ghost-fire creeping along the gun, light through deep water over it, gold
+    // doubloons set in the metal each catching the light in its own time, bubbles rising, and every four seconds the
+    // locker's pulse, a ring of green and gold running from the breech (or hilt) to the muzzle (or point)
+    float v = wcaS.w;
+    float fl = 0.8 + 0.2 * wcaN(vec3(t * 6.0, v, 0.0));
+    vec3 q = vec3(wcaP.x * 46.0, wcaP.y * 46.0 - t * 1.2, wcaP.z * 46.0 + t * 0.6);
+    float fire = wcaF(q + wcaF(q * 1.7 - t * 0.3) * 1.3);
+    float gf = smoothstep(0.42, 0.85, fire + 0.18 * sin(s * 10.0 - t * 2.0));
+    col += mix(wcaC, wcaA, gf) * (gf * 1.0 + 0.06) * fl;
+    float cs = wcaCaus(vec2(s * 3.0 + wcaP.x * 5.0, ang * 0.5 + wcaP.y * 6.0), t * 0.45);
+    col += wcaA * cs * (abs(v - 2.0) < 0.5 ? 0.55 : 0.2);
+    vec2 cg = vec2(s * (v > 3.5 ? 26.0 : 16.0), ang * 1.6 + (wcaS.x > 0.5 ? wcaP.z * 40.0 : 0.0));
+    vec2 cf = fract(cg) - 0.5; float ch = wcaH2(floor(cg)), cd = length(cf), on = step(v > 3.5 ? 0.62 : 0.74, ch);
+    float coin = (1.0 - smoothstep(0.2, 0.25, cd)) * on, crim = smoothstep(0.15, 0.19, cd) * (1.0 - smoothstep(0.2, 0.25, cd)) * on;
+    float glint = pow(max(0.0, sin(t * (1.2 + ch * 2.0) + ch * 40.0)), 8.0);
+    col += wcaB * (coin * (0.12 + glint * 1.3) + crim * 0.4);
+    float pd = (s - (fract(t * 0.25) * 1.6 - 0.3)) / 0.04, pulse = exp(-pd * pd);
+    col += (wcaA * 1.4 + wcaB * 0.6) * pulse * (0.7 + 0.3 * sin(ang * 6.0 + t * 8.0));
+    vec3 bp = vec3(wcaP.x * 90.0, wcaP.y * 90.0 - t * 3.0, wcaP.z * 90.0);
+    col += mix(wcaA, vec3(1.0), 0.5) * wcaStar(bp, t * 3.0, 0.86) * 2.2;
+    col += wcaB * wcaStar(wcaP * 150.0 + 7.0, t * 2.4, 0.9) * (1.5 + pulse * 4.0);
+    col += mix(wcaA, wcaB, 0.25 + 0.25 * sin(t * 1.3)) * rim * (0.55 + pulse * 0.8) * wcaR.y;
   }
   return col * wcaK.y * wcaR.x;
 }
@@ -222,7 +255,7 @@ function wcaSkin(wp, id, plain) {
     const R = WCA_ROLE[k] || [0.8, 0.8];
     // (its uniforms are kept for good once made, as the compiled program keeps them)
     const u = mt.userData.wcaU || (mt.userData.wcaU = { wcaT: { value: 0 }, wcaK: { value: new THREE.Vector4() }, wcaS: { value: new THREE.Vector4() }, wcaO: { value: new THREE.Vector2() }, wcaR: { value: new THREE.Vector2() }, wcaA: { value: new THREE.Color() }, wcaB: { value: new THREE.Color() }, wcaC: { value: new THREE.Color() }, wcaRoot: { value: new THREE.Matrix4() } });
-    u.wcaK.value.set(T.th, T.k, T.dim, T.sp); u.wcaS.value.set(S[0], S[1], S[2], 0); u.wcaO.value.set(S[3], S[4]); u.wcaR.value.set(R[0], R[1]);
+    u.wcaK.value.set(T.th, T.k, T.dim, T.sp); u.wcaS.value.set(S[0], S[1], S[2], T.v || 0); u.wcaO.value.set(S[3], S[4]); u.wcaR.value.set(R[0], R[1]);
     u.wcaA.value.set(T.a); u.wcaB.value.set(T.b); u.wcaC.value.set(T.c);
     mt.userData.wcaOn = wp.root;
     if (mt.onBeforeCompile !== WCA_OBC || mt.userData.wcaTh !== T.th) { mt.userData.wcaTh = T.th; mt.onBeforeCompile = WCA_OBC; mt.customProgramCacheKey = WCA_KEY; mt.needsUpdate = true; }
@@ -321,6 +354,25 @@ function wcaSvg(svg, gun, skin, uid, el) {
       const x = 30 + i * 9 + (i % 3) * 2, e = el('circle', { cx: x, cy: 34, r: 0.9 + (i % 3) * 0.3, fill: i % 2 ? T.b : '#ffb040' }, svg);
       anim(e, { attributeName: 'cy', values: '34;4', dur: (1.6 + (i % 4) * 0.35) + 's', begin: (i * 0.23) + 's' });
       anim(e, { attributeName: 'opacity', values: '0;1;0', dur: (1.6 + (i % 4) * 0.35) + 's', begin: (i * 0.23) + 's' });
+    }
+  } else if (th === 6) {
+    // the Gannet's Locker: green ghost-fire rising through the gun, doubloons turning in it, bubbles, and the pulse
+    for (let i = 0; i < 6; i++) {
+      const x = 14 + i * 18, f = el('path', { d: `M${x - 6} 60 Q${x - 4} 34 ${x} 22 Q${x + 4} 34 ${x + 6} 60 Z`, fill: i % 2 ? T.a : '#d0fff0', opacity: 0.55 }, over);
+      anim(f, { attributeName: 'd', values: `M${x - 6} 60 Q${x - 4} 34 ${x} 22 Q${x + 4} 34 ${x + 6} 60 Z;M${x - 6} 60 Q${x - 1} 30 ${x + 3} 14 Q${x + 5} 34 ${x + 6} 60 Z;M${x - 6} 60 Q${x - 4} 34 ${x} 22 Q${x + 4} 34 ${x + 6} 60 Z`, dur: (0.7 + (i % 3) * 0.15) + 's' });
+    }
+    grad('p', [[0, T.a, 0], [0.5, '#ffffff', 1], [1, T.b, 0]], 'linearGradient', { x1: 0, x2: 1 });
+    const band = el('rect', { x: -30, y: 0, width: 18, height: 60, fill: `url(#${uid}p)` }, over);
+    anim(band, { type: 'translate', values: '0 0;170 0', dur: '2.4s' });
+    for (let i = 0; i < 4; i++) {
+      const c = el('ellipse', { cx: 30 + i * 20, cy: 30 + (i % 2) * 4, rx: 2.6, ry: 2.6, fill: '#e8b830', stroke: '#8a6010', 'stroke-width': 0.5 }, svg);
+      anim(c, { attributeName: 'rx', values: '2.6;0.4;2.6', dur: (1.6 + i * 0.3) + 's' });
+      anim(c, { attributeName: 'cy', values: `${30 + (i % 2) * 4};${10 - i};${30 + (i % 2) * 4}`, dur: (2.6 + i * 0.4) + 's' });
+    }
+    for (let i = 0; i < 8; i++) {
+      const b = el('circle', { cx: 18 + i * 12, cy: 46, r: 0.6 + (i % 3) * 0.35, fill: 'none', stroke: '#d0fff0', 'stroke-width': 0.5 }, svg);
+      anim(b, { attributeName: 'cy', values: '48;4', dur: (1.8 + (i % 4) * 0.3) + 's', begin: (i * 0.25) + 's' });
+      anim(b, { attributeName: 'opacity', values: '0;1;0', dur: (1.8 + (i % 4) * 0.3) + 's', begin: (i * 0.25) + 's' });
     }
   } else {
     // the Ninth Wave: a sea rolling along under foam, and spray

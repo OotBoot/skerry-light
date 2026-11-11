@@ -5,7 +5,9 @@
 // in someone else's voice, a word over Use only when you're standing in just the right place.
 // What it pays is a pirate token, the Gannet's Doubloon, kept in this browser for good (localStorage
 // 'skerry-pirate', and in the save backup with the boat crates), one for every night it's done, to be spent on the
-// Lighthouse's card on five things no crate holds: two outfits, two weapon finishes and a banner, one token each.
+// Lighthouse's card on the things no crate holds, one token each: two outfits, a finish for each of the six weapons,
+// a skin for each of the four boats, and a banner. The finishes and boat skins are the Locker's own grade, a step above
+// the Admiral's (their looks in src/wcadmiral.js and src/lockerfx.js), and taking one has a moment of its own (ptReveal).
 //
 // ---------------------------------------------------------------------------------------------------------------
 // THE SOLUTION (spoilers; kept to this comment on purpose). "Maren's Watch": the story is the 1887 wreck. The lamp
@@ -834,9 +836,11 @@ const PT_KEY = 'skerry-pirate';
 // what a token buys: [id, which store]
 const PT_ITEMS = [
   ['oc_gannetcap', 'outfit'], ['oc_marenoil', 'outfit'],
-  ['cl_doubloon', 'weapon'], ['pb_jolly', 'weapon'],
+  ['pb_jolly', 'weapon'], ['bb_maw', 'weapon'], ['la_fathom', 'weapon'], ['hp_due', 'weapon'], ['cl_doubloon', 'weapon'], ['av_eight', 'weapon'],
+  ['gannetghost', 'boat'], ['c_crossing', 'boat'], ['b_doubloon', 'boat'], ['k_drowned', 'boat'],
   ['rc_hoard', 'banner'],
 ];
+const PT_GROUPS = [['outfit', 'Outfits'], ['weapon', 'Weapon finishes · Wreckers’ Night and the Lighthouse'], ['boat', 'Boat skins · Skerry Light'], ['banner', 'Banner · the Drowned Reach']];
 function ptLoad() {
   PT = { earned: 0, unlocked: [] };
   try {
@@ -874,6 +878,7 @@ function ptApply() {
       if (kind === 'outfit' && typeof OC !== 'undefined' && !OC.owned[id]) { OC.owned[id] = 1; ocSave(); ocRender(); }
       else if (kind === 'weapon' && typeof WC !== 'undefined' && !WC.owned[id]) { WC.owned[id] = 1; wcSave(); wcRender(); }
       else if (kind === 'banner' && typeof RC !== 'undefined' && !RC.owned[id]) { RC.owned[id] = 1; rcSave(); rcRender(); }
+      else if (kind === 'boat' && typeof CRATES !== 'undefined' && !CRATES.owned[id]) { CRATES.owned[id] = 1; saveCrates(); renderCrates(); }
     } catch (e) {}
   }
 }
@@ -881,6 +886,7 @@ function ptUnlock(id) {
   if (!PT || ptTokens() < 1 || PT.unlocked.includes(id) || !PT_ITEMS.some(it => it[0] === id)) return false;
   PT.unlocked.push(id); ptSave(); ptApply(); ptRender();
   try { sfxReveal(4); } catch (e) {}
+  ptReveal(id);
   return true;
 }
 function ptItem(id) {
@@ -888,6 +894,7 @@ function ptItem(id) {
   if (kind === 'outfit') return { kind, it: OC_BY_ID[id], on: () => ocEquippedId() === id, equip: () => ocEquip(id), card: () => ocCard(OC_BY_ID[id]), verb: ['Wear', 'Wearing'] };
   if (kind === 'weapon') { const s = WC_SKIN_BY_ID[id]; return { kind, it: s, on: () => WC.equipped[s.weapon] === id, equip: () => wcEquip(s), card: () => wcCard(s), verb: ['Equip', 'Equipped'] }; }
   if (kind === 'banner') return { kind, it: RC_SKIN_BY_ID[id], on: () => rcEquippedId() === id, equip: () => rcEquip(id), card: () => rcCard(RC_SKIN_BY_ID[id]), verb: ['Fly', 'Flying'] };
+  if (kind === 'boat') { const s = SKIN_BY_ID[id]; return { kind, it: s, on: () => CRATES.equipped[s.boat] === id, equip: () => equip(s), card: () => itemCard(s), verb: ['Equip', 'Equipped'] }; }
   return null;
 }
 
@@ -896,7 +903,7 @@ function ptStyle() {
   if ($('ptStyle')) return;
   const st = document.createElement('style'); st.id = 'ptStyle';
   st.textContent = `
-.skincard.r-pirate { background: linear-gradient(180deg, rgba(6,14,16,0.96) 35%, color-mix(in srgb, var(--rc) 24%, rgba(6,12,18,0.96))); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--rc) 60%, transparent), 0 0 16px -6px var(--rc); }
+.skincard.r-pirate { background: #06100f; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--rc) 60%, transparent), 0 0 18px -4px var(--rc); }
 .skincard.r-pirate b { color: #d0fff0; }
 .zmtokens { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 6px 0 0; }
 .zmtokens canvas { width: 26px; height: 26px; flex: none; }
@@ -905,6 +912,47 @@ function ptStyle() {
 .ptcoinrow canvas { width: 64px; height: 64px; flex: none; }
 .ptcoinrow b { font-family: "IM Fell English SC", serif; font-size: 20px; color: #ffe9a8; font-weight: 400; }
 .ptcard .inv { grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); }
+/* the Locker's grade, wherever its cards show: a border of green and gold turning round the card, and the crew's
+   lights rising through it (one pseudo-element each; the boat skins' own breathing glow sits under them) */
+.skincard.r-pirate { overflow: hidden; isolation: isolate; }
+.skincard.r-pirate::after { content: ""; position: absolute; inset: -60%; z-index: -2; pointer-events: none;
+  background: conic-gradient(from 0deg, transparent 0 20%, #3ee0b4 28%, transparent 36% 52%, #ffd34d 60%, transparent 68% 100%);
+  animation: ptTurn 4.5s linear infinite; opacity: 0.55; }
+.skincard.r-pirate { --ptbg: linear-gradient(180deg, rgba(6,14,16,0.97) 35%, color-mix(in srgb, var(--rc) 26%, rgba(6,12,18,0.97))); }
+.skincard.r-pirate .pips i { background: linear-gradient(180deg, #ffd34d, #3ee0b4); box-shadow: 0 0 4px #3ee0b4; }
+.skincard.r-pirate small { color: #7affd0; text-shadow: 0 0 6px rgba(62,224,180,0.6); }
+.skincard.r-pirate::before { content: ""; position: absolute; inset: 2px; z-index: -1; pointer-events: none; border-radius: inherit; background: var(--ptbg); }
+.skincard.r-pirate.adm::before { animation: none; opacity: 1; background: radial-gradient(ellipse at 50% 36%, color-mix(in srgb, var(--ac) 45%, transparent), transparent 62%), var(--ptbg); }
+@keyframes ptTurn { to { transform: rotate(360deg); } }
+/* taking something from the Locker */
+.ptreveal { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; background: radial-gradient(ellipse at 50% 55%, rgba(8,60,48,0.92), rgba(2,8,10,0.97) 70%); overflow: hidden; }
+.ptreveal .ptrays { position: absolute; left: 50%; top: 56%; width: 160vmax; height: 160vmax; margin: -80vmax 0 0 -80vmax; pointer-events: none; opacity: 0;
+  background: repeating-conic-gradient(from 0deg, rgba(62,224,180,0.22) 0 6deg, transparent 6deg 18deg, rgba(255,211,77,0.16) 18deg 22deg, transparent 22deg 30deg);
+  -webkit-mask: radial-gradient(circle, #000 8%, transparent 55%); mask: radial-gradient(circle, #000 8%, transparent 55%);
+  animation: ptRays 1s 1.1s ease-out forwards, ptTurn 22s 1.1s linear infinite; }
+.ptreveal .ptchest { position: absolute; left: 50%; top: 56%; width: 220px; height: 170px; margin: -85px 0 0 -110px; animation: ptChestIn 0.9s cubic-bezier(.2,1.4,.4,1) both, ptChestOut 0.5s 2.1s ease-in forwards; }
+.ptreveal .ptchest svg { width: 100%; height: 100%; overflow: visible; }
+.ptreveal .ptlid { transform-origin: 20px 70px; transform-box: view-box; animation: ptLid 0.6s 0.9s cubic-bezier(.3,1.6,.5,1) forwards; }
+.ptreveal .ptcoin { position: absolute; left: 50%; top: 56%; width: 16px; height: 16px; margin: -8px; border-radius: 50%; pointer-events: none; opacity: 0;
+  background: radial-gradient(circle at 35% 30%, #fff3c4, #ffd34d 40%, #b88a18 75%); box-shadow: 0 0 8px #ffd34d;
+  animation: ptCoin 1.6s calc(1.05s + var(--d)) cubic-bezier(.2,.7,.4,1) forwards; }
+.ptreveal .ptsoul { position: absolute; left: 50%; top: 56%; width: 10px; height: 10px; margin: -5px; border-radius: 50%; pointer-events: none; opacity: 0;
+  background: #d0fff0; box-shadow: 0 0 10px 4px #3ee0b4, 0 0 26px 10px rgba(62,224,180,0.4);
+  animation: ptSoul 2.6s calc(1.1s + var(--d)) ease-out forwards; }
+.ptreveal .ptgot { position: relative; display: grid; justify-items: center; gap: 12px; opacity: 0; animation: ptGot 0.8s 2.2s cubic-bezier(.2,1.3,.4,1) forwards; text-align: center; padding: 16px; }
+.ptreveal .ptgot .eyebrow { color: #7affd0; letter-spacing: 0.2em; }
+.ptreveal .ptgot h2 { margin: 0; font: 400 clamp(24px, 5vw, 38px) "IM Fell English SC", serif; color: #ffe9a8; text-shadow: 0 0 18px rgba(255,211,77,0.7), 0 0 40px rgba(62,224,180,0.5); }
+.ptreveal .ptgot .skincard { transform: scale(1.7); transform-origin: 50% 50%; margin: 52px 0 46px; width: 150px; pointer-events: none; }
+.ptreveal .ptgot .skincard button { display: none; }
+.ptreveal .ptbtns { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+@keyframes ptRays { to { opacity: 1; } }
+@keyframes ptChestIn { from { transform: translateY(60vh) scale(0.6); } to { transform: none; } }
+@keyframes ptChestOut { to { transform: translateY(26vh) scale(0.8); opacity: 0.25; } }
+@keyframes ptLid { to { transform: rotate(-58deg); } }
+@keyframes ptCoin { 0% { opacity: 1; transform: translate(0, 0) scaleX(1); } 30% { transform: translate(calc(var(--x) * 0.6), calc(var(--y) * 1.1)) scaleX(0.2); } 60% { transform: translate(calc(var(--x) * 0.9), calc(var(--y) * 0.9)) scaleX(1); opacity: 1; } 100% { opacity: 0; transform: translate(var(--x), calc(var(--y) * 0.2 + 40vh)) scaleX(0.3); } }
+@keyframes ptSoul { 0% { opacity: 0; transform: translate(0, 0); } 15% { opacity: 1; } 100% { opacity: 0; transform: translate(var(--x), -60vh); } }
+@keyframes ptGot { from { opacity: 0; transform: translateY(40px) scale(0.7); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .skincard.r-pirate::after { animation: none; } .ptreveal *, .ptreveal { animation-duration: 0.01s !important; animation-delay: 0s !important; } .ptreveal .ptchest { display: none; } }
 `;
   document.head.appendChild(st);
 }
@@ -917,7 +965,7 @@ function ptBuildCard() {
   ov.innerHTML = `<div class="card">
       <div class="cardtop sticky"><span class="eyebrow">Keeper’s Last Light · what the sea kept back</span><button class="tool closebtn" id="ptClose" type="button">✕ Close</button></div>
       <h1 id="ptHead">The Gannet’s Locker</h1>
-      <p>The brig Gannet went down off the Light in the winter of 1887 with her crew and everything they carried. Some of it the sea keeps for whoever brings her crew home: pay a pirate token for each. No crate holds any of these. What you take shows up with your other outfits, weapon finishes and banners, to wear the usual way.</p>
+      <p>The brig Gannet went down off the Light in the winter of 1887 with her crew and everything they carried. Some of it the sea keeps for whoever brings her crew home: pay a pirate token for each. No crate holds any of these, and nothing in a crate is their equal: a finish for every weapon and a skin for every boat, each lit with the drowned crew’s green fire and the hoard’s gold. What you take shows up with your other outfits, weapon finishes, boat skins and banners, to wear the usual way.</p>
       <div class="ptcoinrow"><canvas id="ptCoin" width="128" height="128" aria-hidden="true"></canvas><div><b id="ptCount"></b><p class="muted" id="ptNote"></p></div></div>
       <div class="inv" id="ptInv"></div>
     </div>`;
@@ -933,6 +981,7 @@ function ptShow(e) {
 }
 function ptHide() {
   const card = $('ptCard'); if (!card || card.hidden) return;
+  ptRevealClose();
   card.hidden = true;
   const back = PT_UI.opener && document.contains(PT_UI.opener) ? PT_UI.opener : $('zmLocker');
   if (back) try { back.focus({ preventScroll: true }); } catch (err) {}
@@ -947,7 +996,10 @@ function ptRender() {
   $('ptCount').textContent = n === 1 ? '1 pirate token' : n + ' pirate tokens';
   $('ptNote').textContent = (PT.earned ? `${PT.earned} found in all, ${PT.unlocked.length} spent.` : 'None found yet. The Light keeps its secrets.') + ' Kept in this browser, and in your save backup.';
   const inv = $('ptInv'); inv.textContent = '';
-  for (const [id] of PT_ITEMS) {
+  for (const [gk, gname] of PT_GROUPS) {
+  const sub = document.createElement('span'); sub.className = 'invsub'; sub.textContent = gname; inv.appendChild(sub);
+  for (const [id, kind] of PT_ITEMS) {
+    if (kind !== gk) continue;
     const I = ptItem(id); if (!I || !I.it) continue;
     const have = PT.unlocked.includes(id), on = have && I.on();
     const c = I.card(); if (!have) c.classList.add('locked'); if (on) c.classList.add('equipped');
@@ -958,7 +1010,43 @@ function ptRender() {
     c.appendChild(b);
     inv.appendChild(c);
   }
+  }
 }
+// ---------- taking something from the Locker: its own moment ----------
+// The chest comes up out of the dark water, its lid flies open, gold and the crew's lights burst out of it, and what you
+// took rises in their light. All CSS animation on a handful of elements, made once per unlock and gone when closed.
+function ptReveal(id) {
+  const I = ptItem(id), card = $('ptCard'); if (!I || !I.it || !card) return;
+  ptRevealClose();
+  const ov = document.createElement('div'); ov.className = 'ptreveal'; ov.id = 'ptReveal';
+  ov.setAttribute('role', 'dialog'); ov.setAttribute('aria-modal', 'true'); ov.setAttribute('aria-label', 'From the Gannet’s Locker: ' + I.it.name);
+  let bits = '<div class="ptrays"></div>';
+  for (let i = 0; i < 26; i++) { const a = -Math.PI * (0.1 + 0.8 * Math.random()), d = 120 + Math.random() * 240; bits += `<i class="ptcoin" style="--x:${(Math.cos(a) * d).toFixed(0)}px;--y:${(Math.sin(a) * d * 1.3).toFixed(0)}px;--d:${(Math.random() * 0.35).toFixed(2)}s"></i>`; }
+  for (let i = 0; i < 8; i++) bits += `<i class="ptsoul" style="--x:${((i - 3.5) * 9).toFixed(0)}vw;--d:${(i * 0.12).toFixed(2)}s"></i>`;
+  ov.innerHTML = bits + `<div class="ptchest" aria-hidden="true"><svg viewBox="0 0 220 170">
+      <defs><linearGradient id="ptWood" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#4a2e18"/><stop offset="1" stop-color="#1e120a"/></linearGradient>
+      <radialGradient id="ptIn"><stop offset="0" stop-color="#fff3c4"/><stop offset="0.4" stop-color="#7affd0" stop-opacity="0.8"/><stop offset="1" stop-color="#3ee0b4" stop-opacity="0"/></radialGradient></defs>
+      <ellipse cx="110" cy="72" rx="110" ry="46" fill="url(#ptIn)"/>
+      <path d="M20 72 H200 V150 Q200 158 192 158 H28 Q20 158 20 150 Z" fill="url(#ptWood)" stroke="#0c0806" stroke-width="3"/>
+      <path d="M20 96 H200 M20 128 H200" stroke="#a37a12" stroke-width="5"/><rect x="98" y="84" width="24" height="30" rx="3" fill="#ffd34d" stroke="#6a4a0a" stroke-width="2"/><circle cx="110" cy="99" r="4" fill="#2a1a08"/>
+      <path d="M40 158 v-86 M180 158 v-86" stroke="#a37a12" stroke-width="5"/>
+      <g fill="#3ee0b4" opacity="0.6"><circle cx="34" cy="146" r="3"/><circle cx="44" cy="152" r="2"/><circle cx="188" cy="140" r="2.5"/></g>
+      <g class="ptlid"><path d="M20 72 Q20 22 110 22 Q200 22 200 72 Z" fill="url(#ptWood)" stroke="#0c0806" stroke-width="3"/><path d="M40 70 Q40 30 60 26 M180 70 Q180 30 160 26" stroke="#a37a12" stroke-width="5" fill="none"/><path d="M20 72 H200" stroke="#a37a12" stroke-width="6"/></g>
+    </svg></div>
+    <div class="ptgot"><span class="eyebrow">From the Gannet’s Locker</span><h2></h2><div class="ptslot"></div>
+      <div class="ptbtns"><button class="tool" type="button" data-k="use"></button><button class="tool" type="button" data-k="close">Close</button></div></div>`;
+  ov.querySelector('h2').textContent = I.it.name;
+  const c = I.card(); c.classList.remove('locked'); ov.querySelector('.ptslot').appendChild(c);
+  const use = ov.querySelector('[data-k="use"]'); use.textContent = I.verb[0] + ' it now';
+  use.addEventListener('click', () => { I.equip(); ptRender(); ptRevealClose(); ptFocus(id); });
+  ov.querySelector('[data-k="close"]').addEventListener('click', () => { ptRevealClose(); ptFocus(id); });
+  ov.addEventListener('click', e => { if (e.target === ov && ov.querySelector('.ptgot').getAnimations().every(a => a.playState === 'finished')) { ptRevealClose(); ptFocus(id); } });
+  card.appendChild(ov);
+  setTimeout(() => { if (ov.isConnected) use.focus({ preventScroll: true }); }, reduceMotion ? 0 : 2300);
+  // a second chime as the lid flies open
+  setTimeout(() => { if (ov.isConnected) try { sfxReveal(4); } catch (e) {} }, reduceMotion ? 0 : 1000);
+}
+function ptRevealClose() { const o = $('ptReveal'); if (o) o.remove(); }
 function ptFocus(id) { const c = [...document.querySelectorAll('#ptInv .skincard')].find(k => k.dataset.id === id); const b = c && c.querySelector('button'); if (b) b.focus({ preventScroll: true }); }
 // the coin turning, and the moving things moving, while the locker's open
 setInterval(() => {
@@ -975,7 +1063,7 @@ ptLoad();
 setTimeout(() => {
   ptStyle(); ptApply(); ptRender();
   const b = $('zmLocker'); if (b) b.addEventListener('click', ptShow);
-  addEventListener('keydown', e => { if (e.key !== 'Escape') return; const c = $('ptCard'); if (!c || c.hidden) return; e.preventDefault(); e.stopPropagation(); ptHide(); }, true);
+  addEventListener('keydown', e => { if (e.key !== 'Escape') return; const c = $('ptCard'); if (!c || c.hidden) return; e.preventDefault(); e.stopPropagation(); if ($('ptReveal')) ptRevealClose(); else ptHide(); }, true);
   // another tab earned or spent one
   addEventListener('storage', e => { if (e.key === PT_KEY) { ptLoad(); ptApply(); ptRender(); } });
 }, 0);

@@ -18,7 +18,8 @@ function setThirdPerson(on) {
 function toggleView() { setThirdPerson(!VIEW.third); }
 
 // how a skin dresses up with its grade: 0 standard ... 5 admiral
-function skinTier(skin) { const i = RARITIES.findIndex(r => r.id === skin.rarity); return i < 0 ? 0 : i + 1; }
+// (the Gannet's Locker's pirate grade is a step above the Admiral: src/lockerfx.js)
+function skinTier(skin) { if (skin.rarity === 'pirate') return 6; const i = RARITIES.findIndex(r => r.id === skin.rarity); return i < 0 ? 0 : i + 1; }
 
 // where the chase camera sits: behind and above, pulled in if a wall in the rooms is in the way
 const CHASE = { back: 44, horizon: 0.16, bottom: 0.97, phoneHorizon: 0.3 };   // horizon and ship's waterline as fractions of the screen height   // horizon: where the skyline sits on screen (looking down a little)

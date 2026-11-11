@@ -17,7 +17,7 @@ const RARITIES = [
 ];
 // [pirate tokens] a grade of its own for the few things the Lighthouse's pirate tokens unlock (src/zmegg.js): no
 // crate ever rolls it, so it isn't one of the RARITIES above
-const RARITY_PIRATE = { id: 'pirate', name: 'Pirate', color: '#3ee0b4', odds: 0 };
+const RARITY_PIRATE = { id: 'pirate', name: 'Gannet’s Locker', color: '#3ee0b4', odds: 0 };
 
 // hull: planks before she sinks; accel and turn multiply how fast she gathers way and answers the helm
 // deckW/tipY/rail shape the bow you see from the deck; len/masts shape the ship your crew sees
@@ -81,6 +81,8 @@ const BRIG_SKINS = [
   { id: 'siren',      name: 'Siren Song',          rarity: 'mate',     deck: ['#1a1222', '#0a060e'], rail: '#f2d27a', wood: '#5a4a6a', lantern: '#ffe0a8', hull: '#4a3c58', sail: '#f2e8d8' },
   { id: 'portal',     name: 'Through the Portal',  rarity: 'captain',  deck: ['#140a20', '#06030c'], rail: '#b060ff', wood: '#1c1030', lantern: '#d090ff', hull: '#170d24', sail: '#7a3ad0' },
   { id: 'lavaforged', name: 'Lava-Forged',         rarity: 'admiral',  deck: ['#1c0a06', '#0a0302'], rail: '#ffb030', wood: '#3a120a', lantern: '#ffd070', hull: '#5a1a0c', sail: '#ff8a30' },
+  // [pirate tokens] the Gannet's Locker (src/zmegg.js, its look in src/lockerfx.js): never in a crate
+  { id: 'gannetghost', name: 'The Gannet’s Ghost', rarity: 'pirate',  deck: ['#0c1a18', '#040a09'], rail: '#3ee0b4', wood: '#1a3a34', lantern: '#9affd8', hull: '#1c3a36', sail: '#8fe8cc' },
 ];
 const CUTTER_SKINS = [
   { id: 'c_plain',    name: 'Cutter, as built',    rarity: null,       deck: ['#1d1610', '#0d0907'], rail: '#2a1d12', wood: '#1a120b', lantern: '#ffcf86', hull: '#5a4330', sail: '#ddd2b6' },
@@ -107,6 +109,8 @@ const CUTTER_SKINS = [
   { id: 'c_kite',     name: 'Cinder Kite',         rarity: 'mate',     deck: ['#1c0e0a', '#0a0504'], rail: '#ff7a2a', wood: '#2c1612', lantern: '#ffa050', hull: '#2a1512', sail: '#1c1110' },
   { id: 'c_aurora',   name: 'Fjord Aurora',        rarity: 'captain',  deck: ['#0a1820', '#030a0f'], rail: '#50ffaa', wood: '#123a4a', lantern: '#a0fff0', hull: '#0e3040', sail: '#7affd0' },
   { id: 'c_sleeper',  name: "The Sleeper's Eye",   rarity: 'admiral',  deck: ['#24202c', '#0e0c12'], rail: '#fff8ff', wood: '#7a7088', lantern: '#f6f0ff', hull: '#e6e0f0', sail: '#fffaff' },
+  // [pirate tokens]
+  { id: 'c_crossing', name: 'Maren’s Crossing',    rarity: 'pirate',   deck: ['#1a160e', '#0a0805'], rail: '#ffd34d', wood: '#3a2c14', lantern: '#ffe9a8', hull: '#16302c', sail: '#e8f6ee' },
 ];
 const BARQUE_SKINS = [
   { id: 'b_plain',    name: 'Barque, as built',    rarity: null,       deck: ['#17110c', '#0a0705'], rail: '#1b120b', wood: '#120c07', lantern: '#ffcf86', hull: '#3f3125', sail: '#d4c9ab' },
@@ -133,6 +137,8 @@ const BARQUE_SKINS = [
   { id: 'b_moth',     name: 'Furnace Moth',        rarity: 'mate',     deck: ['#1e0e08', '#0c0503'], rail: '#ffc860', wood: '#3a0c06', lantern: '#ffb040', hull: '#d0461a', sail: '#ffa040' },
   { id: 'b_cyclops',  name: "The Cyclops' Eye",    rarity: 'captain',  deck: ['#1c140c', '#0a0705'], rail: '#ffb040', wood: '#5a4232', lantern: '#ffc860', hull: '#4a3628', sail: '#e8d8c0' },
   { id: 'b_fleece',   name: 'Golden Fleece',       rarity: 'admiral',  deck: ['#241a0a', '#100b04'], rail: '#ffe07a', wood: '#8a6a1a', lantern: '#fff4c8', hull: '#e8c040', sail: '#fff8dc' },
+  // [pirate tokens]
+  { id: 'b_doubloon', name: 'The Black Doubloon',  rarity: 'pirate',   deck: ['#0a0a0c', '#030304'], rail: '#ffd34d', wood: '#1a1410', lantern: '#7affd0', hull: '#0c0d10', sail: '#18181c' },
 ];
 // the carrier: deck is the flight deck (near, far), rail the deck markings, wood the island and
 // superstructure, lantern her lights, hull the hull, sail the accent stripe
@@ -154,6 +160,8 @@ const CARRIER_SKINS = [
   { id: 'k_ghost',    name: 'Ghost Fleet',         rarity: 'captain',  deck: ['#2a3436', '#121819'], rail: '#c8fff0', wood: '#7a9a96', lantern: '#c8fff0', hull: '#8aa8a4', sail: '#e0fff8' },
   { id: 'k_admiral',  name: 'Admiral of the Fleet', rarity: 'admiral', deck: ['#24282e', '#10121a'], rail: '#ffd34d', wood: '#1e2a48', lantern: '#fff0c0', hull: '#1a2440', sail: '#ffd34d' },
   { id: 'k_aurora',   name: 'Aurora Flagship',     rarity: 'admiral',  deck: ['#10181e', '#060a0e'], rail: '#7affd8', wood: '#203a5a', lantern: '#b8a0ff', hull: '#1a3048', sail: '#7affd8' },
+  // [pirate tokens]
+  { id: 'k_drowned',  name: 'The Drowned Fleet',   rarity: 'pirate',   deck: ['#0e1a1a', '#050c0c'], rail: '#3ee0b4', wood: '#1e3a38', lantern: '#9affd8', hull: '#143030', sail: '#ffd34d' },
 ];
 
 const SKINS = BRIG_SKINS.map(s => Object.assign({ boat: 'brig' }, s))
@@ -214,7 +222,7 @@ function flareColour(fs, age) {
 const PENNANT_BY_ID = Object.fromEntries(PENNANTS.map(p => [p.id, p]));
 const LOOT_BY_ID = Object.assign({}, SKIN_BY_ID, PENNANT_BY_ID, FLARE_BY_ID);
 const lootFor = () => SKINS.filter(s => s.rarity).concat(PENNANTS, FLARES.filter(f => f.rarity));
-const rarityOf = s => RARITIES.find(r => r.id === s.rarity);
+const rarityOf = s => RARITIES.find(r => r.id === s.rarity) || (s.rarity === 'pirate' ? RARITY_PIRATE : undefined);   // [pirate tokens]
 
 const CRATES = {
   crates: { skerry: 0 },
@@ -801,7 +809,7 @@ function itemCard(skin, cls) {
   const adm = typeof admiralSig === 'function' ? admiralSig(skin) : null;
   if (adm) { d.classList.add('adm', 'adm-' + adm.sig); d.style.setProperty('--ac', adm.glow); }
   // one to five pips for the grade, so it reads without relying on colour alone
-  const level = ra ? RARITIES.indexOf(ra) + 1 : 0;
+  const level = ra ? (ra === RARITY_PIRATE ? 6 : RARITIES.indexOf(ra) + 1) : 0;
   if (level) {
     const pips = document.createElement('span'); pips.className = 'pips'; pips.setAttribute('aria-hidden', 'true');
     for (let i = 0; i < level; i++) pips.appendChild(document.createElement('i'));
@@ -945,7 +953,7 @@ function renderCrates() {
   if (view === 'skins') {
     for (const b of BOATS) {
       sub(b.name + (CRATES.boat === b.id ? ' · sailing' : ''));
-      for (const s of SKINS.filter(s => s.boat === b.id)) {
+      for (const s of SKINS.filter(s => s.boat === b.id && (s.rarity !== 'pirate' || CRATES.owned[s.id]))) {   // [pirate tokens] shown once unlocked
         const count = !s.rarity ? 1 : (CRATES.owned[s.id] | 0);
         addCard(s, count, CRATES.equipped[b.id] === s.id, !count);
         total++; if (count) owned++;

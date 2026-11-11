@@ -6,7 +6,7 @@
 // and odds (RARITIES), their card styles, and the reel sounds, without changing any of them.
 //
 // Each weapon has a plain finish everyone owns, and ten skins to find: 3 Deckhand, 2 Bosun, 2 Mate,
-// 2 Captain and 1 Admiral. A skin gives the 3D gun its colours:
+// 2 Captain and 1 Admiral; and one more no crate holds, from the Gannet's Locker (src/zmegg.js). A skin gives the 3D gun its colours:
 //   metal (barrels, blade), dark (lock, hammer, sight tube), wood (stock, grip), brass (bands,
 //   guard, caps), accent (inlay, wire, rope) and glow (an emissive accent, Captain and Admiral only).
 // The Admiral finishes also move: a shader of their own on the 3D gun and an animated picture (src/wcadmiral.js).
@@ -62,6 +62,8 @@ const WC_SKIN_ROWS = {
     ['bb_furnace',  'Furnace Mouth',           'captain',  '#3a120a', '#1a0604', '#1c0a06', '#ffb030', '#ff8a30', '#ff7a2a'],
     ['bb_bowchaser',"The Gannet's Bow Chaser", 'captain',  '#f4efe3', '#4a4030', '#7a5620', '#f2d27a', '#ffffff', '#ffe9a8'],
     ['bb_charybdis','Mouth of Charybdis',      'admiral',  '#1a1030', '#08040e', '#2a1d3e', '#ffe07a', '#d8d0f0', '#b8a0ff'],
+    // [pirate tokens] src/zmegg.js
+    ['bb_maw',      "The Locker's Maw",        'pirate',   '#16201f', '#070b0b', '#2a1810', '#ffd34d', '#7affd0', '#3ee0b4'],
   ],
   longarm: [
     ['la_plain',    'Longarm, as issued',      null,       '#4c5058', '#22252a', '#5e4126', '#8a6a2c', '#c8bfa8', null],
@@ -75,6 +77,8 @@ const WC_SKIN_ROWS = {
     ['la_keeper',   "The Keeper's Glass",      'captain',  '#2a3a5a', '#0e1424', '#6b4a2a', '#ffd34d', '#fff0c0', '#ffe9a8'],
     ['la_between',  'The Door Between',        'captain',  '#cfc8d6', '#3a3442', '#8a7088', '#ffd6a0', '#f8f4fc', '#ffcf9a'],
     ['la_plimsoll', "Plimsoll's Eye",          'admiral',  '#2fb1e8', '#0d2433', '#1b6f96', '#ffffff', '#9ff0ff', '#5fd3ff'],
+    // [pirate tokens] src/zmegg.js
+    ['la_fathom',   'Fathom Glass',            'pirate',   '#1a3a3a', '#081414', '#2a1c14', '#e8c860', '#c8fff0', '#5affd0'],
   ],
   harpoon: [
     ['hp_plain',    'Harpoon gun, as rigged',  null,       '#5a5650', '#26241f', '#5a3d22', '#8a6a2c', '#c9b08a', null],
@@ -88,6 +92,8 @@ const WC_SKIN_ROWS = {
     ['hp_cyclops',  "The Cyclops' Eye",        'captain',  '#4a3628', '#1c140c', '#5a4232', '#ffb040', '#e8d8c0', '#ffc860'],
     ['hp_angler',   'Anglerfish Lure',         'captain',  '#0e1a1c', '#040a0b', '#12302c', '#2a8a7a', '#7affd8', '#7affd8'],
     ['hp_leviathan','Golden Leviathan',        'admiral',  '#e8c040', '#4a3810', '#8a6a1a', '#fff4c8', '#ffe07a', '#fff0a0'],
+    // [pirate tokens] src/zmegg.js
+    ['hp_due',      "The Sea's Due",           'pirate',   '#22302c', '#0a100e', '#3a2416', '#ffd34d', '#3ee0b4', '#7affd0'],
   ],
   cutlass: [
     ['cl_plain',    'Cutlass, as ground',      null,       '#9aa0a8', '#4a4e54', '#2a1d12', '#3a3c40', '#8a7a5a', null],
@@ -116,6 +122,8 @@ const WC_SKIN_ROWS = {
     ['av_storm',    'Stormglass',              'captain',  '#3a4250', '#12161c', '#2a3240', '#b8f0ff', '#e0f8ff', '#8ae8ff'],
     ['av_bonfire',  "The Wreckers' Bonfire",   'captain',  '#2a1810', '#100804', '#3a1a0a', '#ff9a3a', '#ffd080', '#ff8a3a'],
     ['av_ninth',    'The Ninth Wave',          'admiral',  '#e8f0f4', '#2a3a48', '#1a2630', '#ffe08a', '#ffffff', '#bfe8ff'],
+    // [pirate tokens] src/zmegg.js
+    ['av_eight',    'Pieces of Eight',         'pirate',   '#1c1c22', '#08080a', '#3a1610', '#ffd34d', '#e8e0c8', '#ffd34d'],
   ],
 };
 const WC_SKINS = [];
@@ -124,7 +132,7 @@ for (const w of WC_WEAPONS) for (const [id, name, rarity, metal, dark, wood, bra
 const WC_SKIN_BY_ID = Object.fromEntries(WC_SKINS.map(s => [s.id, s]));
 const WC_PLAIN = Object.fromEntries(WC_WEAPONS.map(w => [w.id, WC_SKINS.find(s => s.weapon === w.id && !s.rarity).id]));
 const wcRarityOf = s => RARITIES.find(r => r.id === s.rarity) || (s.rarity === 'pirate' ? RARITY_PIRATE : undefined);   // [pirate tokens]
-const wcLevel = s => s && s.rarity ? (s.rarity === 'pirate' ? 5 : RARITIES.findIndex(r => r.id === s.rarity) + 1) : 0;
+const wcLevel = s => s && s.rarity ? (s.rarity === 'pirate' ? 6 : RARITIES.findIndex(r => r.id === s.rarity) + 1) : 0;
 
 const WC = {
   crates: 0, opened: 0, kills: 0, owned: {}, equipped: Object.assign({}, WC_PLAIN),

@@ -32,7 +32,8 @@ const ADMIRAL_SIG = {
   k_admiral:  { sig: 'braid',     glow: '#ffd34d', hi: '#fff0c0', sheen: '#fff2c0' },
   k_aurora:   { sig: 'aurora',    glow: '#7affd8', hi: '#e0fff6', sheen: '#b8a0ff' },
 };
-function admiralSig(skin) { return skin && skin.rarity === 'admiral' ? ADMIRAL_SIG[skin.id] || null : null; }
+// (the Gannet's Locker skins answer too, with their own look: src/lockerfx.js)
+function admiralSig(skin) { return skin && skin.rarity === 'admiral' ? ADMIRAL_SIG[skin.id] || null : skin && skin.rarity === 'pirate' && typeof LOCKER_SIG !== 'undefined' ? LOCKER_SIG[skin.id] || null : null; }
 // the aurora's colour, drifting green to teal to violet and back
 const AURORA_COLS = ['#7affd8', '#5cffa0', '#7ad8ff', '#b8a0ff', '#e07aff'];
 function auroraCol(x) { const n = AURORA_COLS.length, i = ((Math.floor(x) % n) + n) % n; return AURORA_COLS[i]; }
@@ -51,6 +52,7 @@ function admMasts(skin, Lh) { const b = BOAT_BY_ID[skin.boat] || BOATS[0]; retur
 // ---------- on a 3D ship, behind it (drawn before the hull) ----------
 function admiralFxBefore(skin, P, Lh, B, Zd, mastH, s) {
   const a = admiralSig(skin); if (!a || g.sky) return;
+  if (a.locker) return lockerFxBefore(skin, a, P, Lh, B, Zd, mastH, s);
   const t = admT(), full = s > 5;
   ctx.save(); ctx.globalCompositeOperation = 'lighter';
   if (a.sig === 'waterline' && full) {
@@ -144,6 +146,7 @@ function admDisc(P, Lh, B, Zd, mastH, t, half) {
 // at(s, h): a point on the face, s along it (0 aft, 1 forward), h up it (0 waterline, 1 deck)
 function admiralHullFx(skin, f, at, Lh) {
   const a = admiralSig(skin); if (!a) return;
+  if (a.locker) return lockerHullFx(skin, a, f, at, Lh);
   const t = admT();
   const quad = (s0, s1, h0, h1, col) => fillPoly([at(s0, h0), at(s1, h0), at(s1, h1), at(s0, h1)], col);
   const ga = ctx.globalAlpha;
@@ -198,6 +201,7 @@ function admiralHullFx(skin, f, at, Lh) {
 // ---------- on a sail (ship3d calls this for each sail of a near ship; `main` is a striped sail) ----------
 function admiralSailFx(skin, pts, main) {
   const a = admiralSig(skin); if (!a || pts.length < 3) return;
+  if (a.locker) return lockerSailFx(skin, a, pts, main);
   const q = polyProj(pts); if (q.length < 3) return;
   const t = admT();
   let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9;
@@ -286,6 +290,7 @@ function admEye(x, y, r, t, ga) {
 // ---------- on a 3D ship, in front (drawn after the rig) ----------
 function admiralFxAfter(skin, P, Lh, B, Zd, mastH, s) {
   const a = admiralSig(skin); if (!a || g.sky) return;
+  if (a.locker) return lockerFxAfter(skin, a, P, Lh, B, Zd, mastH, s);
   const t = admT(), full = s > 5, carrier = skin.boat === 'carrier';
   ctx.save(); ctx.globalCompositeOperation = 'lighter';
   const sig = a.sig;
@@ -444,6 +449,7 @@ function admiralFxAfter(skin, P, Lh, B, Zd, mastH, s) {
 // ---------- on your deck, first person ----------
 function admiralDeckFx(skin, tipY, DW, railT) {
   const a = admiralSig(skin); if (!a) return;
+  if (a.locker) return lockerDeckFx(skin, a, tipY, DW, railT);
   const t = admT(), sig = a.sig;
   const rx = (sd, k) => cx + sd * DW + (sd * 6 - sd * DW) * k, ry = k => (H - 4) + (tipY + 2 - (H - 4)) * k;
   ctx.save(); ctx.globalCompositeOperation = 'lighter';
@@ -573,10 +579,11 @@ function admiralPreviewFx(svg, skin, geo) {
   // behind the ship: just after the halo that previewFx puts first
   const behind = (node) => { const d = svg.querySelector('defs'), ref = d && d.nextSibling ? d.nextSibling.nextSibling : svg.firstChild; svg.insertBefore(node, ref); return node; };
   const { sternX = 12, bowX = 104, deckY = 54 } = geo || {};
-  const mid = (sternX + bowX) / 2, sig = a.sig;
+  const mid = (sternX + bowX) / 2, sig = a.locker ? '' : a.sig;
+  if (a.locker) lockerPreviewFx(svg, skin, a, geo);   // (the Gannet's Locker's own; the defs below it uses too)
   // the shared base: a bright gold sheen sweeping across the whole picture
-  const sheen = el('rect', { x: -30, y: 0, width: 14, height: 80, fill: a.sheen, opacity: 0.2, transform: 'skewX(-18)', filter: 'url(#fxblur2)' });
-  anim(sheen, { attributeName: 'x', values: '-30;150', dur: '2.8s' });
+  const sheen = a.locker ? null : el('rect', { x: -30, y: 0, width: 14, height: 80, fill: a.sheen, opacity: 0.2, transform: 'skewX(-18)', filter: 'url(#fxblur2)' });
+  if (sheen) anim(sheen, { attributeName: 'x', values: '-30;150', dur: '2.8s' });
   if (sig === 'waterline') {
     const l = el('path', { d: `M${sternX + 6} ${deckY + 8} Q${mid} ${deckY + 9} ${bowX - 7} ${deckY + 6}`, stroke: '#5fd3ff', 'stroke-width': 1.8, fill: 'none', 'stroke-dasharray': '6 3', filter: 'url(#fxblur2)' });
     anim(l, { attributeName: 'stroke-dashoffset', values: '0;-18', dur: '0.8s' });

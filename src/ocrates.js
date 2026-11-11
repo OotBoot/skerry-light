@@ -56,7 +56,7 @@ const OC_OUTFITS = OC_ROWS.map(([id, name, rarity, coat, trim, sash, hat, style,
 const OC_BY_ID = Object.fromEntries(OC_OUTFITS.map(o => [o.id, o]));
 const ocOutfit = id => (typeof id === 'string' && OC_BY_ID[id]) || null;
 const ocRarityOf = o => RARITIES.find(r => r.id === o.rarity) || (o.rarity === 'pirate' ? RARITY_PIRATE : undefined);   // [pirate tokens]
-const ocLevel = o => o && o.rarity ? (o.rarity === 'pirate' ? 5 : RARITIES.findIndex(r => r.id === o.rarity) + 1) : 0;
+const ocLevel = o => o && o.rarity ? (o.rarity === 'pirate' ? 6 : RARITIES.findIndex(r => r.id === o.rarity) + 1) : 0;
 
 const OC = { crates: 0, opened: 0, kills: 0, owned: {}, equipped: '', pending: null, opening: false, opener: null, ashore: 0, wasOn: false };
 
