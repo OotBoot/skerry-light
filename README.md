@@ -406,7 +406,7 @@ In Maren's End you can take six knocks before you go down (twelve with Stout Hea
 
 A second raid, picked at the top of the raid card (**Raid: Maren's End / The Gannet's Wake**; the pick is kept on this device, and together the host's pick goes out with the lobby, so the lobby list shows which raid each one is). It runs on the same engine as Maren's End: the three callings, going down and getting each other up, stamina, bottomless reserves, crates from kills, and its own column on the scoreboard (best time through, most boss damage in one raid, the drowned sent back in all your raids).
 
-A year to the night after the *Gannet* broke up on the skerries, her bell is heard again off Skerry Light. The keeper's cutter goes out to find what's ringing it. Part I brings the sailing game itself into the raid: you sail the cutter out together. Part II takes you below decks in the risen *Gannet*. The last part, her captain, is still to come; for now the raid ends when the captain's cabin opens.
+A year to the night after the *Gannet* broke up on the skerries, her bell is heard again off Skerry Light. The keeper's cutter goes out to find what's ringing it. Part I brings the sailing game itself into the raid: you sail the cutter out together. Part II takes you below decks in the risen *Gannet*, and Part III up on to her quarterdeck against her captain. When he falls he leaves a pirate token for each of you, and the raid ends on the same victory screen as Maren's End (MVP in the middle, three best stats each, with flares fired and the bell rung counted too), to its own dawn music.
 
 How it's built: the raid is its own map (`ZM_MAPS.gannet`, `RAIDS.gannet` in `src/raid.js`), with its parts added by `raidAdd`; what the parts share (the Light's beam, on one clock for everyone) is in `src/gannet.js`.
 
@@ -440,6 +440,36 @@ Up her side from the cutter and down the hatch off her weather deck, you come ou
 - **The drowned.** They keep coming the whole time, up out of the bilge and through the decks wherever you aren't, with more for each extra player. You mend by yourself if they leave you alone for a few seconds.
 - **Music.** Below decks has its own: creaking timbers, dripping water, slow suspense and knocking far off.
 - **Together.** The host runs all of it: Knock (where he is, whether he's moving, and who's watching him), the keys, the Bosun and the drowned. The host judges what each player can see from where they stand and which way they're looking. A joined player asks the host to take up a key, take Knock's key, set keys in the door, or go through.
+
+### The Gannet's Wake, Part III: The Quarterdeck
+
+Through the captain's cabin door and up the companion, you come out on the Gannet's open weather deck under the night sky (`src/gwcapt.js`). She's an 1880s brig, risen off the bottom a year to the night after she broke up on the skerries. Her two masts stand over you, with the yards crossed, the sails hanging in rags, and the shrouds and ratlines black against the stars. Weed hangs from her rails and yards, and sea-water stands in pools on her planking.
+
+- **The deck:**
+  - **Aft**, up a short ladder each side, is the quarterdeck, with the wheel, the binnacle, a skylight and the stern lantern.
+  - **Forward** is the forecastle, with the ship's bell in its belfry.
+  - **The waist** lies between them. It holds the main and fore hatches, the capstan, her guns run out along both rails, casks and coiled rope, and the two flare lockers.
+  - **All round her** is the sea. A way off to the west, on its rock, **Skerry Light** turns its beam, and once each sweep it crosses her deck. The beam is on the same clock on every screen and in every part of the raid.
+  - You mend by yourself again here, as at the Lighthouse.
+- **Captain Absalom Crane.** Her master drowned with her and hasn't let her go. He comes up through his own deck aft, by the wheel. He's more than twice the height of a man, in a rotted greatcoat with a cape and a wide sagging hat, with sea-water running off him all the while. He carries a brass speaking trumpet in his left hand and a boat hook in his right.
+  - **He can only be hurt while there's light on him.** That means the Light's beam crossing the deck, for about a second and a half each sweep (the deck brightens and his coat flushes gold), or a flare.
+  - **In the dark a shot does nothing at all.** It throws sparks off him, and the top left says **He's in the dark: no shot touches him**, with a count of how long until the beam comes round.
+- **The flare lockers:** one on each side of the waist, port and starboard. Use one to fire a flare. It goes up over the deck and hangs there, lighting the whole deck (and him) for **7 seconds**. The locker then takes **35 seconds** to reload. Fire them one after the other, or both together for a short, bright burst.
+- **The ship's bell:** on the forecastle. Use it to ring it; it can be rung again after **15 seconds**. At the sound of it:
+  - Crane **staggers** where he stands, his hand to his head, for a couple of seconds.
+  - Every one of the drowned on deck goes back over the side.
+- **His blows:**
+  - **The boat hook:** close in, he winds the hook back over his shoulder and sweeps it across in front of him. It takes **half your health**.
+  - **The bellow:** he puts the trumpet to his mouth, and a pale cone shows on the deck in front of him. The screen warns you to **get out of its line**. When it blows, anyone in the cone takes a knock and is thrown back down the deck and off their feet.
+  - **All hands!** He raises the trumpet to the sky and calls his crew. His drowned come up over the rails, more for each extra player, and a few more keep climbing aboard between calls.
+- **Phase 2, the black sail.** At half his strength, he stops and hauls a black sail up her port side, between the deck and the Light.
+  - From then on, **the beam never reaches the deck**, and only the flares light him.
+  - The lockers reload quicker (**22 seconds**), so you'll want to take it in turns to fire them and keep him lit.
+  - The Gannet **starts to founder**. She lists to starboard, more and more, so the horizon leans. The sea comes in over the waist and pushes you towards the low side, and her timbers groan.
+  - Anyone who bled out gets back up as she starts to founder.
+- **His pirate token.** When he falls, he leaves **the Captain's Doubloon** where he fell. Walk over it and it's yours, **one for each of you**. It's a pirate token like the Lighthouse's, spent on the Keeper's Last Light card. Anyone down gets back up when he falls, so everyone can take theirs. Once everyone standing has taken theirs (or after 45 seconds), the raid is won.
+- **The victory screen:** as at the end of Maren's End, *Captain Crane goes down with his ship*. All of you stand together, with the MVP on the gold step. Two more things can come up under each player: **flares fired** and **times the bell rung**.
+- **Together.** The host runs all of it: Crane, his crew, the lockers, the bell, the black sail and her foundering. Each screen works out for itself whether he's lit, from the same clock for the beam and the host's word for the flares. A hit that crossed the wire just as the light went off him still counts. A joined player asks the host to fire a flare or ring the bell, and everyone's hits on him add up.
 
 ## Wreckers' Night (multiplayer FPS)
 
@@ -667,6 +697,7 @@ src/raidmvp.js      Maren's End, won: everyone together, the MVP in the middle, 
 src/gannet.js       The Gannet's Wake, the second raid: what its parts share (the Light's beam)
 src/gwsail.js       The Gannet's Wake, Part I: the Skerries (the cutter's deck, the helm, rocks in the beam, holes, Maren, the bell, Plimsoll, flares)
 src/gwhold.js       The Gannet's Wake, Part II: Below Decks (the risen Gannet, Knock who moves only unseen, the Bosun, the cable tier, the three keys)
+src/gwcapt.js       The Gannet's Wake, Part III: the Quarterdeck (Captain Absalom Crane, hurt only in light; flares, the bell, the black sail and the foundering; his token)
 src/raidverity.js   Maren's End: a secret, and the pirate token it pays
 src/verityfx.js     Verity's Wardrobe: the twelve cosmetics he drops, their looks and their sounds
 src/zmegg.js        The Lighthouse's secret, and the pirate tokens it pays (the Gannet's locker)

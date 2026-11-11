@@ -6,6 +6,14 @@
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Never give away a secret here (the Easter egg's steps, where the secret boss hides).
 var PATCH_NOTES = [
+  { v: 151, date: '2026-11-11', title: 'The Gannet’s Wake: Captain Crane', New: [
+    "The Gannet's Wake, Part III, The Quarterdeck: the whole raid is in. Through the captain's cabin and up on to the Gannet's deck, where Captain Absalom Crane is waiting.",
+    "He can only be hurt while light is on him: the Light's beam as it sweeps across the deck, or a flare fired from one of the two flare lockers. Shots in the dark do nothing.",
+    "Ring the ship's bell at the forecastle to stagger him and throw his crew over the side. Watch for his boat hook, the bellow through his speaking trumpet, and his call for all hands.",
+    "At half strength he hoists a black sail that cuts off the Light, and the Gannet starts to founder. From then on only flares light him, so take turns at the lockers.",
+    "He drops a pirate token for each of you, and the raid ends on the victory screen. Flares fired and times the bell was rung now count among the MVP stats." ], Changes: [
+    "Raids: the callings picker names the raid you're in." ], Sound: [
+    "The Gannet's Wake: Captain Crane's fight and his second phase use the new raid music, with its own dawn theme when he goes down." ] },
   { v: 149, date: '2026-11-11', title: 'Blunderbuss toned down', Changes: [
     "Keeper's Last Light and Maren's End: the Blunderbuss hits much less hard and its shot falls away far sooner (full strength only out to 4 m, nearly nothing past 14 m). It keeps its wide fan.",
     "Its damage over time is now in line with the other guns: about 7 a second on one target at 4 m and 4 at 6 m, against the Avtomat's 5 (10 with head shots) and the Longarm's 4 (6.5).",
