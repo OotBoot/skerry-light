@@ -1265,7 +1265,6 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
       <p class="muted">Part I, the Swallow: walk the Long Pier, drop into the hole (a long way down), and follow the Deep Path. The dark drains you; light the braziers with the lantern and stand in their light to mend. At the end, a door that opens when twenty of the drowned have been sent back in front of it.</p>
       <div class="btnrow">
         <button class="primary" id="rdPlay" type="button">Go down alone</button>
-        <button class="tool" id="rdPractice" type="button">Practise: Maren's storm</button>
         <button class="tool" id="rdWcrate" type="button">Weapon crates</button>
         <button class="tool" id="rdOcrate" type="button">Outfit crates</button>
         <button class="tool" id="rdSettings" type="button">Settings</button>
@@ -1659,6 +1658,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
       <div class="setrow"><label class="label" for="setLookY">Look sensitivity, up and down (Y) <small>(Wreckers' Night and Keeper's Last Light)</small> <output id="setLookYOut">1.00</output></label><input id="setLookY" class="lookslider" type="range" min="0.3" max="3" step="0.05" value="1"></div>
       <div class="setrow"><label class="label" for="setFov">Field of view <small>(Wreckers' Night and Keeper's Last Light)</small> <output id="setFovOut">69°</output></label><input id="setFov" class="lookslider" type="range" min="60" max="110" step="1" value="69"></div>
       <div class="setrow"><span class="label" id="lbl-aim">Toggle aim <small>(click right mouse or LT once to aim, again to stop)</small></span><div class="loottabs" id="set-aim" role="group" aria-labelledby="lbl-aim"></div></div>
+      <div class="btnrow" id="rdPracticeRow" hidden><button class="tool" id="rdPractice" type="button">Practise: Maren's storm</button></div>
       <p class="setnote">Softened jumpscares are smaller and quieter, with no shaking or black frames. Fewer flashes dims the camera flash, the beam's glare, the bell and lightning. Auto motion follows your device's setting.</p>
     </div>
   </div>
@@ -1678,7 +1678,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 // ---- src/config.js ----
 'use strict';
 // The game's version, shown at the top of the main menu. Bump it by one with every change pushed to main.
-var VERSION = 121;
+var VERSION = 122;
 // Skerry Light: tuning, asset paths and lore.
 // World units are metres. The lighthouse stands at the origin on the shoreline (y = 0);
 // north (+y) is open sea. Bearings: 0 = north, positive = east.
@@ -10764,6 +10764,7 @@ function openSettings() {
   setTimeout(() => $('settingsClose').focus({ preventScroll: true }), 30);
 }
 function closeSettings() {
+  if ($('rdPracticeRow')) $('rdPracticeRow').hidden = true;
   $('settingsCard').hidden = true;
   if (paused) $('resumeBtn').focus({ preventScroll: true });
   else if (state === 'play') cv.focus({ preventScroll: true });
@@ -33604,7 +33605,7 @@ function rf2Apply(f, i) {
 }
 
 // ---------- practice ----------
-// The raid card's "Practise: Maren's storm": alone, straight to the fort and Maren, already down to a third, so her
+// The hidden "Practise: Maren's storm": alone, straight to the fort and Maren, already down to a third, so her
 // storm begins as soon as she's up. No pirate token, no score, no raid won.
 function rf2Practice() {
   if (typeof ZN !== 'undefined' && ZN.code) return;
@@ -33626,7 +33627,17 @@ function rf2PracticeTick() {
     if (M && M.act !== 'rise') { M.hp = Math.min(M.hp, M.max * RF2.AT * 0.99); RF.practice = 3; }
   }
 }
-try { const b = document.getElementById('rdPractice'); if (b) b.addEventListener('click', () => rf2Practice()); } catch (e) {}
+// Tucked away in Settings rather than on the raid card: five quick taps on the "Kept on this device" line, from the
+// title screen only, show the button; closeSettings hides it again.
+try {
+  const b = document.getElementById('rdPractice'), row = document.getElementById('rdPracticeRow'), eb = document.querySelector('#settingsCard .eyebrow');
+  let taps = 0, last = 0;
+  if (eb && row) eb.addEventListener('click', () => {
+    const now = performance.now(); taps = now - last < 1500 ? taps + 1 : 1; last = now;
+    if (taps >= 5 && !document.getElementById('titleCard').hidden) { row.hidden = false; taps = 0; }
+  });
+  if (b) b.addEventListener('click', () => { if (row) row.hidden = true; document.getElementById('settingsCard').hidden = true; rf2Practice(); });
+} catch (e) {}
 
 // ---- src/raidmusic.js ----
 // Maren's End: the raid's music. Each part has its own, made with Stable Audio 3 in ComfyUI (three takes of each, the

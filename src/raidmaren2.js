@@ -304,7 +304,7 @@ function rf2Apply(f, i) {
 }
 
 // ---------- practice ----------
-// The raid card's "Practise: Maren's storm": alone, straight to the fort and Maren, already down to a third, so her
+// The hidden "Practise: Maren's storm": alone, straight to the fort and Maren, already down to a third, so her
 // storm begins as soon as she's up. No pirate token, no score, no raid won.
 function rf2Practice() {
   if (typeof ZN !== 'undefined' && ZN.code) return;
@@ -326,4 +326,14 @@ function rf2PracticeTick() {
     if (M && M.act !== 'rise') { M.hp = Math.min(M.hp, M.max * RF2.AT * 0.99); RF.practice = 3; }
   }
 }
-try { const b = document.getElementById('rdPractice'); if (b) b.addEventListener('click', () => rf2Practice()); } catch (e) {}
+// Tucked away in Settings rather than on the raid card: five quick taps on the "Kept on this device" line, from the
+// title screen only, show the button; closeSettings hides it again.
+try {
+  const b = document.getElementById('rdPractice'), row = document.getElementById('rdPracticeRow'), eb = document.querySelector('#settingsCard .eyebrow');
+  let taps = 0, last = 0;
+  if (eb && row) eb.addEventListener('click', () => {
+    const now = performance.now(); taps = now - last < 1500 ? taps + 1 : 1; last = now;
+    if (taps >= 5 && !document.getElementById('titleCard').hidden) { row.hidden = false; taps = 0; }
+  });
+  if (b) b.addEventListener('click', () => { if (row) row.hidden = true; document.getElementById('settingsCard').hidden = true; rf2Practice(); });
+} catch (e) {}

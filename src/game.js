@@ -494,6 +494,7 @@ function openSettings() {
   setTimeout(() => $('settingsClose').focus({ preventScroll: true }), 30);
 }
 function closeSettings() {
+  if ($('rdPracticeRow')) $('rdPracticeRow').hidden = true;
   $('settingsCard').hidden = true;
   if (paused) $('resumeBtn').focus({ preventScroll: true });
   else if (state === 'play') cv.focus({ preventScroll: true });
