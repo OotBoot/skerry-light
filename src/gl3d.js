@@ -143,7 +143,8 @@ void main() {
 }`;
 const SEA_FS = `
 uniform vec3 uSea0, uSea1, uSea2, uSea3, uBeamCol, uWaveCol, uMoonDir, uGlit, uCamPos;
-uniform float uCamH, uFocal, uBelow, uBeam, uHalf, uShade, uRange, uBeamOn, uT, uLR, uLamp, uCoast;
+uniform float uCamH, uFocal, uBelow, uBeam, uHalf, uShade, uRange, uBeamOn, uT, uLR, uLamp, uCoast, uHaze;
+uniform vec3 uHazeCol;
 uniform vec2 uShip;
 varying vec3 vW; varying float vF; varying float vAmp;
 ${SEA_ISLE}
@@ -187,6 +188,9 @@ void main() {
   // your own lantern's pool on the water
   float ld = length(vec2(gx, gy) - uShip);
   col += vec3(1.0, 0.72, 0.38) * 0.09 * uLamp * pow(max(0.0, 1.0 - ld / uLR), 2.0);
+  // [Wreckers' Night, the Lighthouse] the haze where the sea meets the sky (gfx.js drawSeaFx), drawn here so walls hide it
+  float pb = uCamH * uFocal / max(vF, 0.01);
+  col = mix(col, uHazeCol, uHaze * 0.22 * (pb < 1.1 ? 0.94 + 0.06 * pb / 1.1 : max(0.0, 1.0 - (pb - 1.1) / 20.9)));
   gl_FragColor = vec4(col, 1.0);
 }`;
 function buildSea() {
@@ -207,8 +211,8 @@ function buildSea() {
   geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
   geo.setIndex(idx);
   const u = {};
-  for (const n of ['uSea0', 'uSea1', 'uSea2', 'uSea3', 'uBeamCol', 'uWaveCol', 'uMoonDir', 'uGlit', 'uCamPos']) u[n] = { value: new THREE.Vector3() };
-  for (const n of ['uCamH', 'uFocal', 'uBelow', 'uBeam', 'uHalf', 'uShade', 'uRange', 'uBeamOn', 'uT', 'uLR', 'uLamp', 'uCoast']) u[n] = { value: 0 };
+  for (const n of ['uSea0', 'uSea1', 'uSea2', 'uSea3', 'uBeamCol', 'uWaveCol', 'uMoonDir', 'uGlit', 'uCamPos', 'uHazeCol']) u[n] = { value: new THREE.Vector3() };
+  for (const n of ['uCamH', 'uFocal', 'uBelow', 'uBeam', 'uHalf', 'uShade', 'uRange', 'uBeamOn', 'uT', 'uLR', 'uLamp', 'uCoast', 'uHaze']) u[n] = { value: 0 };
   u.uShip = { value: new THREE.Vector2() }; u.uFwd = { value: new THREE.Vector2(0, -1) }; u.uIsle = { value: new THREE.Vector4() }; u.uCap = { value: 1e3 };
   const mat = new THREE.ShaderMaterial({ uniforms: u, vertexShader: SEA_VS, fragmentShader: SEA_FS, side: THREE.DoubleSide });
   const m = new THREE.Mesh(geo, mat); m.frustumCulled = false; m.renderOrder = -10;
@@ -454,6 +458,7 @@ function gl3dRender(roll, sx, sy, beamOn) {
   B.sea.forEach((c, i) => { const q = glCol(c)[0]; u['uSea' + i].value.set(q.r, q.g, q.b); });
   const bc = glRGB(B.beam), wc = glRGB(B.waves), gc = glRGB(B.glitter);
   u.uBeamCol.value.set(bc.r, bc.g, bc.b); u.uWaveCol.value.set(wc.r, wc.g, wc.b); u.uGlit.value.set(gc.r, gc.g, gc.b);
+  { const hc = glRGB(B.haze); u.uHazeCol.value.set(hc.r, hc.g, hc.b); u.uHaze.value = GL3D.seaHaze || 0; }
   const me = MOON.e, mb = MOON.b;
   u.uMoonDir.value.set(Math.sin(mb) * Math.cos(me), Math.sin(me), -Math.cos(mb) * Math.cos(me)).normalize();
   u.uCamPos.value.set(camX, camH, -camY);

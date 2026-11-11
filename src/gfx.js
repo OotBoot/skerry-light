@@ -159,12 +159,16 @@ function drawSeaFx(B, opt) {
     }
     ctx.globalAlpha = 1;
   }
-  // haze where the sea meets the sky
-  const hz = ctx.createLinearGradient(0, hy - 16, 0, hy + 22);
-  hz.addColorStop(0, `rgba(${B.haze},0)`); hz.addColorStop(0.45, `rgba(${B.haze},0.22)`); hz.addColorStop(1, `rgba(${B.haze},0)`);
-  ctx.fillStyle = hz; ctx.globalAlpha = k; ctx.fillRect(-W, hy - 16, W * 3, 38);
+  // haze where the sea meets the sky (on foot in 3D, it's drawn behind the walls instead: drawSeaHaze, and the 3D sea)
+  if (!(opt && opt.haze === false)) drawSeaHaze(B, k);
+  ctx.globalAlpha = k;
   drawBiolum(B); drawLavaSea(B);
   ctx.globalAlpha = 1;
+}
+function drawSeaHaze(B, k) {
+  const hz = ctx.createLinearGradient(0, hy - 16, 0, hy + 22);
+  hz.addColorStop(0, `rgba(${B.haze},0)`); hz.addColorStop(0.45, `rgba(${B.haze},0.22)`); hz.addColorStop(1, `rgba(${B.haze},0)`);
+  ctx.fillStyle = hz; ctx.globalAlpha = k; ctx.fillRect(-W, hy - 16, W * 3, 38); ctx.globalAlpha = 1;
 }
 // on foot, is this point on the island (inside its shore, the same wobbly edge its ground is built with)? The sea's
 // painted effects aren't drawn there, so they never show through the ground

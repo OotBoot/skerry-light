@@ -1678,7 +1678,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 // ---- src/config.js ----
 'use strict';
 // The game's version, shown at the top of the main menu. Bump it by one with every change pushed to main.
-var VERSION = 133;
+var VERSION = 134;
 // Skerry Light: tuning, asset paths and lore.
 // World units are metres. The lighthouse stands at the origin on the shoreline (y = 0);
 // north (+y) is open sea. Bearings: 0 = north, positive = east.
@@ -3631,12 +3631,16 @@ function drawSeaFx(B, opt) {
     }
     ctx.globalAlpha = 1;
   }
-  // haze where the sea meets the sky
-  const hz = ctx.createLinearGradient(0, hy - 16, 0, hy + 22);
-  hz.addColorStop(0, `rgba(${B.haze},0)`); hz.addColorStop(0.45, `rgba(${B.haze},0.22)`); hz.addColorStop(1, `rgba(${B.haze},0)`);
-  ctx.fillStyle = hz; ctx.globalAlpha = k; ctx.fillRect(-W, hy - 16, W * 3, 38);
+  // haze where the sea meets the sky (on foot in 3D, it's drawn behind the walls instead: drawSeaHaze, and the 3D sea)
+  if (!(opt && opt.haze === false)) drawSeaHaze(B, k);
+  ctx.globalAlpha = k;
   drawBiolum(B); drawLavaSea(B);
   ctx.globalAlpha = 1;
+}
+function drawSeaHaze(B, k) {
+  const hz = ctx.createLinearGradient(0, hy - 16, 0, hy + 22);
+  hz.addColorStop(0, `rgba(${B.haze},0)`); hz.addColorStop(0.45, `rgba(${B.haze},0.22)`); hz.addColorStop(1, `rgba(${B.haze},0)`);
+  ctx.fillStyle = hz; ctx.globalAlpha = k; ctx.fillRect(-W, hy - 16, W * 3, 38); ctx.globalAlpha = 1;
 }
 // on foot, is this point on the island (inside its shore, the same wobbly edge its ground is built with)? The sea's
 // painted effects aren't drawn there, so they never show through the ground
@@ -9411,7 +9415,8 @@ void main() {
 }`;
 const SEA_FS = `
 uniform vec3 uSea0, uSea1, uSea2, uSea3, uBeamCol, uWaveCol, uMoonDir, uGlit, uCamPos;
-uniform float uCamH, uFocal, uBelow, uBeam, uHalf, uShade, uRange, uBeamOn, uT, uLR, uLamp, uCoast;
+uniform float uCamH, uFocal, uBelow, uBeam, uHalf, uShade, uRange, uBeamOn, uT, uLR, uLamp, uCoast, uHaze;
+uniform vec3 uHazeCol;
 uniform vec2 uShip;
 varying vec3 vW; varying float vF; varying float vAmp;
 ${SEA_ISLE}
@@ -9455,6 +9460,9 @@ void main() {
   // your own lantern's pool on the water
   float ld = length(vec2(gx, gy) - uShip);
   col += vec3(1.0, 0.72, 0.38) * 0.09 * uLamp * pow(max(0.0, 1.0 - ld / uLR), 2.0);
+  // [Wreckers' Night, the Lighthouse] the haze where the sea meets the sky (gfx.js drawSeaFx), drawn here so walls hide it
+  float pb = uCamH * uFocal / max(vF, 0.01);
+  col = mix(col, uHazeCol, uHaze * 0.22 * (pb < 1.1 ? 0.94 + 0.06 * pb / 1.1 : max(0.0, 1.0 - (pb - 1.1) / 20.9)));
   gl_FragColor = vec4(col, 1.0);
 }`;
 function buildSea() {
@@ -9475,8 +9483,8 @@ function buildSea() {
   geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
   geo.setIndex(idx);
   const u = {};
-  for (const n of ['uSea0', 'uSea1', 'uSea2', 'uSea3', 'uBeamCol', 'uWaveCol', 'uMoonDir', 'uGlit', 'uCamPos']) u[n] = { value: new THREE.Vector3() };
-  for (const n of ['uCamH', 'uFocal', 'uBelow', 'uBeam', 'uHalf', 'uShade', 'uRange', 'uBeamOn', 'uT', 'uLR', 'uLamp', 'uCoast']) u[n] = { value: 0 };
+  for (const n of ['uSea0', 'uSea1', 'uSea2', 'uSea3', 'uBeamCol', 'uWaveCol', 'uMoonDir', 'uGlit', 'uCamPos', 'uHazeCol']) u[n] = { value: new THREE.Vector3() };
+  for (const n of ['uCamH', 'uFocal', 'uBelow', 'uBeam', 'uHalf', 'uShade', 'uRange', 'uBeamOn', 'uT', 'uLR', 'uLamp', 'uCoast', 'uHaze']) u[n] = { value: 0 };
   u.uShip = { value: new THREE.Vector2() }; u.uFwd = { value: new THREE.Vector2(0, -1) }; u.uIsle = { value: new THREE.Vector4() }; u.uCap = { value: 1e3 };
   const mat = new THREE.ShaderMaterial({ uniforms: u, vertexShader: SEA_VS, fragmentShader: SEA_FS, side: THREE.DoubleSide });
   const m = new THREE.Mesh(geo, mat); m.frustumCulled = false; m.renderOrder = -10;
@@ -9722,6 +9730,7 @@ function gl3dRender(roll, sx, sy, beamOn) {
   B.sea.forEach((c, i) => { const q = glCol(c)[0]; u['uSea' + i].value.set(q.r, q.g, q.b); });
   const bc = glRGB(B.beam), wc = glRGB(B.waves), gc = glRGB(B.glitter);
   u.uBeamCol.value.set(bc.r, bc.g, bc.b); u.uWaveCol.value.set(wc.r, wc.g, wc.b); u.uGlit.value.set(gc.r, gc.g, gc.b);
+  { const hc = glRGB(B.haze); u.uHazeCol.value.set(hc.r, hc.g, hc.b); u.uHaze.value = GL3D.seaHaze || 0; }
   const me = MOON.e, mb = MOON.b;
   u.uMoonDir.value.set(Math.sin(mb) * Math.cos(me), Math.sin(me), -Math.cos(mb) * Math.cos(me)).normalize();
   u.uCamPos.value.set(camX, camH, -camY);
@@ -14950,11 +14959,13 @@ function fpsDrawScene() {
   else if (typeof fpsFiguresHide === 'function') fpsFiguresHide();
   if (gl) {
     gl3dBackdrop(roll, 0, 0);
-    { const main = ctx; ctx = bgx; ctx.save(); ctx.translate(cx, H * 0.5); ctx.rotate(roll); ctx.translate(-cx, -H * 0.5); try { fpsIsleSkyTint(bgx); } finally { ctx.restore(); ctx = main; } }
+    // the haze along the horizon goes on the sky canvas behind the 3D view (and into the 3D sea), so walls hide it
+    { const main = ctx; ctx = bgx; ctx.save(); ctx.translate(cx, H * 0.5); ctx.rotate(roll); ctx.translate(-cx, -H * 0.5); try { fpsIsleSkyTint(bgx); drawSeaHaze(curBiome(), 1 - FPS.inK); } finally { ctx.restore(); ctx = main; } }
     if (FPS.zm) zmScene3D();
-    shown = gl3dRender(roll, 0, 0, beamOn);
+    GL3D.seaHaze = 1 - FPS.inK;
+    try { shown = gl3dRender(roll, 0, 0, beamOn); } finally { GL3D.seaHaze = 0; }
     if (body) fpsBodyOccluder();
-    drawSeaFx(curBiome(), { glitter: false, k: 1 - FPS.inK }); gl3dLandGlows();
+    drawSeaFx(curBiome(), { glitter: false, haze: false, k: 1 - FPS.inK }); gl3dLandGlows();
   } else {
     drawSky(); fpsIsleSkyTint(ctx); drawSea(); drawCoast();
     // the island, a low disc coloured for its kind, with its pools and boardwalks

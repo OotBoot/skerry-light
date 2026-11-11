@@ -1161,11 +1161,13 @@ function fpsDrawScene() {
   else if (typeof fpsFiguresHide === 'function') fpsFiguresHide();
   if (gl) {
     gl3dBackdrop(roll, 0, 0);
-    { const main = ctx; ctx = bgx; ctx.save(); ctx.translate(cx, H * 0.5); ctx.rotate(roll); ctx.translate(-cx, -H * 0.5); try { fpsIsleSkyTint(bgx); } finally { ctx.restore(); ctx = main; } }
+    // the haze along the horizon goes on the sky canvas behind the 3D view (and into the 3D sea), so walls hide it
+    { const main = ctx; ctx = bgx; ctx.save(); ctx.translate(cx, H * 0.5); ctx.rotate(roll); ctx.translate(-cx, -H * 0.5); try { fpsIsleSkyTint(bgx); drawSeaHaze(curBiome(), 1 - FPS.inK); } finally { ctx.restore(); ctx = main; } }
     if (FPS.zm) zmScene3D();
-    shown = gl3dRender(roll, 0, 0, beamOn);
+    GL3D.seaHaze = 1 - FPS.inK;
+    try { shown = gl3dRender(roll, 0, 0, beamOn); } finally { GL3D.seaHaze = 0; }
     if (body) fpsBodyOccluder();
-    drawSeaFx(curBiome(), { glitter: false, k: 1 - FPS.inK }); gl3dLandGlows();
+    drawSeaFx(curBiome(), { glitter: false, haze: false, k: 1 - FPS.inK }); gl3dLandGlows();
   } else {
     drawSky(); fpsIsleSkyTint(ctx); drawSea(); drawCoast();
     // the island, a low disc coloured for its kind, with its pools and boardwalks
