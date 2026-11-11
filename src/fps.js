@@ -1047,8 +1047,9 @@ function fpsInput(dt) {
   }
   if (K.KeyW || K.ArrowUp) fz += 1; if (K.KeyS || K.ArrowDown) fz -= 1;
   if (K.KeyD) fx += 1; if (K.KeyA) fx -= 1;
-  if (K.ArrowLeft) m.h = wrapPi(m.h - dt * 2.2); if (K.ArrowRight) m.h = wrapPi(m.h + dt * 2.2);
+  if (!FPS.helm) { if (K.ArrowLeft) m.h = wrapPi(m.h - dt * 2.2); if (K.ArrowRight) m.h = wrapPi(m.h + dt * 2.2); }   // [gannet] (at the cutter's wheel the arrows steer her)
   if (FPS.stick) { fx += FPS.stick.dx; fz -= FPS.stick.dy; }
+  if (FPS.helm && typeof gwsHelm === 'function' && gwsHelm(fx + (K.ArrowRight ? 1 : 0) - (K.ArrowLeft ? 1 : 0), fz)) fx = fz = 0;   // [gannet] at the wheel your move keys sail her instead (src/gwsail.js)
   if (FPS.mouseDown || FPS.touchFire || fire) {
     // a slow frame may owe an automatic more than one round
     fpsShoot();
@@ -1139,7 +1140,7 @@ function fpsDrawScene() {
   setCamPitch(m.p); hy = H * 0.5 + pitchY;
   // indoors or out (where the camera is): eased over a quarter of a second or so, going through a door
   // ([raid] no weather at all in Maren's End)
-  { const want = (FPS.zm && typeof RAID !== 'undefined' && RAID.on) || fpsUnderRoof(FPS.g, camX, camY, camH) ? 1 : 0, k = Math.min(1, (FPS.dtLast || 0.016) * 5);
+  { const want = (FPS.zm && typeof RAID !== 'undefined' && RAID.on && !(raidStage() || {}).open) || fpsUnderRoof(FPS.g, camX, camY, camH) ? 1 : 0, k = Math.min(1, (FPS.dtLast || 0.016) * 5);   // [gannet] (an open stage is out in the weather)
     FPS.inK = FPS.inK == null || FPS.inKFor !== FPS.g ? want : FPS.inK + (want - FPS.inK) * k; FPS.inKFor = FPS.g;
     if (Math.abs(FPS.inK - want) < 0.01) FPS.inK = want; }
   const roll = m.dead > 0 ? 0.25 * Math.min(1, (FPSC.RESPAWN - m.dead) * 2) : 0;

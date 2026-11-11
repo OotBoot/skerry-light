@@ -116,6 +116,10 @@ function gl3dRefresh() { gl3dShow(gl3dActive()); }
 // uCap is the highest a crest may reach (a little under the ground; very high when sailing), approached smoothly.
 const SEA_ISLE = `
 uniform vec4 uIsle;
+// [gannet] the sea's own frame, when it isn't the world's (The Gannet's Wake, out on the cutter: src/gwsail.js gwsGL):
+// uGw her heading's cos and sin and the deck's middle, uGp her place on her sea; the identity by default
+uniform vec4 uGw; uniform vec2 uGp;
+vec2 gwS(vec2 g) { vec2 r = g - uGw.zw; return uGp + vec2(r.x * uGw.x + r.y * uGw.y, -r.x * uGw.y + r.y * uGw.x); }
 float isleEdge(vec2 g) {
   vec2 d = g - uIsle.xy; float a = atan(d.y, d.x);
   return length(d) - uIsle.z * (1.0 + 0.035 * sin(a * 5.0 + 1.0) + 0.02 * sin(a * 13.0));
@@ -133,7 +137,8 @@ void main() {
   float d = length(w.xz - uCamPos.xz);
   vAmp = 1.0 - smoothstep(60.0, 420.0, d);
   if (uIsle.w > 0.5) vAmp *= mix(0.45, 1.0, smoothstep(4.0, 40.0, isleEdge(vec2(w.x, -w.z))));
-  float h = wh(w.xz, uT) * vAmp;
+  vec2 sp = gwS(vec2(w.x, -w.z));   // [gannet]
+  float h = wh(vec2(sp.x, -sp.y), uT) * vAmp;
   if (h > 0.0) { float e = exp(-2.0 * h / uCap); h = uCap * (1.0 - e) / (1.0 + e); }
   w.y += h;
   vW = w.xyz;
@@ -145,7 +150,7 @@ const SEA_FS = `
 uniform vec3 uSea0, uSea1, uSea2, uSea3, uBeamCol, uWaveCol, uMoonDir, uGlit, uCamPos;
 uniform float uCamH, uFocal, uBelow, uBeam, uHalf, uShade, uRange, uBeamOn, uT, uLR, uLamp, uCoast, uHaze;
 uniform vec3 uHazeCol;
-uniform vec2 uShip;
+uniform vec2 uShip, uLt;
 varying vec3 vW; varying float vF; varying float vAmp;
 ${SEA_ISLE}
 vec2 dwh(vec2 p, float t) {
@@ -167,16 +172,18 @@ void main() {
   float t = clamp(uCamH * uFocal / (max(vF, 0.01) * uBelow), 0.0, 1.0);
   vec3 col = t < 0.04 ? mix(uSea0, uSea1, t / 0.04) : t < 0.5 ? mix(uSea1, uSea2, (t - 0.04) / 0.46) : mix(uSea2, uSea3, (t - 0.5) / 0.5);
   float near = 1.0 - smoothstep(30.0, 900.0, vF);
-  vec2 sl = dwh(vW.xz, uT) * vAmp + ripple(vW.xz, uT) * near;
+  vec2 gsp = gwS(vec2(gx, gy)), sq = vec2(gsp.x, -gsp.y);   // [gannet] (waves and beam in the sea's own frame, turned back)
+  vec2 sl = dwh(sq, uT) * vAmp + ripple(sq, uT) * near;
+  sl = vec2(uGw.x * sl.x + uGw.y * sl.y, -uGw.y * sl.x + uGw.x * sl.y);
   vec3 N = normalize(vec3(-sl.x, 1.0, -sl.y));
   vec3 V = normalize(uCamPos - vW);
   // the beam: a hard-edged wedge of light across the water, with glints where the swell catches it
-  float b = atan(gx, gy), r = length(vec2(gx, gy));
+  float b = atan(gsp.x, gsp.y), r = length(gsp);
   float db = abs(mod(b - uBeam + 3.14159265, 6.2831853) - 3.14159265);
   float inb = uBeamOn * step(abs(b), uShade) * (1.0 - smoothstep(uHalf * 0.9, uHalf, db)) * step(r, uRange);
   float lit = inb * max(0.0, 1.0 - r / (uRange * 1.3));
   col += uBeamCol * 0.16 * inb;
-  vec3 L = normalize(vec3(0.0, 54.0, 0.0) - vW);
+  vec3 L = normalize(vec3(uLt.x, 54.0, -uLt.y) - vW);
   float sp = pow(max(dot(reflect(-L, N), V), 0.0), 48.0);
   col += vec3(1.0, 0.88, 0.62) * sp * lit * 1.4;
   // crests catching what light there is
@@ -213,7 +220,7 @@ function buildSea() {
   const u = {};
   for (const n of ['uSea0', 'uSea1', 'uSea2', 'uSea3', 'uBeamCol', 'uWaveCol', 'uMoonDir', 'uGlit', 'uCamPos', 'uHazeCol']) u[n] = { value: new THREE.Vector3() };
   for (const n of ['uCamH', 'uFocal', 'uBelow', 'uBeam', 'uHalf', 'uShade', 'uRange', 'uBeamOn', 'uT', 'uLR', 'uLamp', 'uCoast', 'uHaze']) u[n] = { value: 0 };
-  u.uShip = { value: new THREE.Vector2() }; u.uFwd = { value: new THREE.Vector2(0, -1) }; u.uIsle = { value: new THREE.Vector4() }; u.uCap = { value: 1e3 };
+  u.uShip = { value: new THREE.Vector2() }; u.uGw = { value: new THREE.Vector4(1, 0, 0, 0) }; u.uGp = { value: new THREE.Vector2() }; u.uLt = { value: new THREE.Vector2() }; u.uFwd = { value: new THREE.Vector2(0, -1) }; u.uIsle = { value: new THREE.Vector4() }; u.uCap = { value: 1e3 };   // [gannet] (uGw, uGp, uLt)
   const mat = new THREE.ShaderMaterial({ uniforms: u, vertexShader: SEA_VS, fragmentShader: SEA_FS, side: THREE.DoubleSide });
   const m = new THREE.Mesh(geo, mat); m.frustumCulled = false; m.renderOrder = -10;
   GL3D.sea = m; GL3D.scene.add(m);
@@ -492,6 +499,7 @@ function gl3dRender(roll, sx, sy, beamOn) {
   syncThings(g.timber, timberMesh, B);
   findOccluders();
   for (const [o, m] of GL3D.objs) if (m.seen !== GL3D.frame) dropThing(o, m);
+  if (typeof gwsGL === 'function') gwsGL(u);   // [gannet] out on the cutter: the sea in her frame (src/gwsail.js)
   GL3D.r.render(GL3D.scene, cam3);
   return shown;
 }

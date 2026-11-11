@@ -1464,7 +1464,7 @@ function fpsIsle3D(grp, B) {
   const M = { solid: new FpiMerge(), leaf: new FpiMerge(), glow: new FpiMerge(), water: new FpiMerge(), decal: new FpiMerge(), wet: new FpiMerge() };
   const A = fpiBuilder(M, I), Z = FPSC.GROUND;
   const { ground, foam, foamM } = fpsIsleGround(I, B);
-  grp.add(ground); grp.add(foam);
+  if (!I.T.noGround) { grp.add(ground); grp.add(foam); }   // [gannet] (out at sea on the cutter's deck: no island under it)
   for (const p of I.props) {
     const K = FPI_K[p.k]; if (!K || !K.b3) continue;
     A.at(p.x, p.y, Z + fpsIsleH(I, p.x, p.y) - 0.03 + (p.lift || 0), p.ang);

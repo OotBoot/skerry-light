@@ -75,6 +75,7 @@ function buildCaches() {
 
 // screen position of a direction in the sky (bearing, elevation), or null if out of view
 function skyPos(b, e) {
+  if (GFX.skyTurn) b -= GFX.skyTurn;   // [gannet] (the stars turn round the cutter's deck as she turns: src/gwsail.js)
   const d = angDiff(b, yaw); if (Math.abs(d) > fov / 2 + 0.5) return null;
   if (!camPitch) return { x: cx + Math.tan(d) * focal, y: hy - Math.tan(e) * focal };
   // first person, tilted: the direction turned into the camera's frame
