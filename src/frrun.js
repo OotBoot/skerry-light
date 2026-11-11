@@ -66,7 +66,7 @@ const FR_SKEL = [{ kind: 'fight', rule: 'hold', reach: 1 }, { kind: 'fight', rul
 var FR_MUSIC = { sail: 'frsail', isle: 'frisle', puzzle: 'frpuzzle', boss: 'frboss', boss2: 'frboss2', win: 'frwin', horn: 'frhorn' };
 // the island kinds, by name (frKind)
 var FR_KINDS = {};
-var FR = { on: false, seed: 0, want: null, debug: null, reach: 1, stop: 0, push: 0, pushR: 1, plan: [], next: null, life: 0, lost: false, backT: 0, kit: null,
+var FR = { at: -1, on: false, seed: 0, want: null, debug: null, reach: 1, stop: 0, push: 0, pushR: 1, plan: [], next: null, life: 0, lost: false, backT: 0, kit: null,
   ev: [], eseq: 0, evSeen: -1, won: false, lit: 0, leaving: false };
 
 // ---------- the map, as src/zombies.js and src/raid.js see it ----------
@@ -93,11 +93,7 @@ function frFogPush(m) { if (FR.pushR !== FR.reach) { FR.pushR = FR.reach; FR.pus
 
 // ---------- the route ----------
 // [chart] the stop after the one just finished (hosting or alone): { kind, rule, look, n, reach }, or null (won)
-function frNextStop() {
-  const n = FR.stop + 1, def = FR_SKEL[n - 1]; if (!def) return null;
-  const R = frRng(100 + n);
-  return { kind: def.kind, rule: def.rule, look: FR_LOOKS[(R() * FR_LOOKS.length) | 0], n, reach: def.reach };
-}
+function frNextStop() { return frChartNext(); }   // [chart] src/frchart.js: the route, drawn from the seed, and the crew's vote
 // [cards] between an island and the sail after it (hosting or alone): the salvage goes here; call done() when it's over
 function frAfterIsland(done) { done(); }
 // a stage's entry in the plan: a sail to a stop, or the stop itself
@@ -108,7 +104,7 @@ function frOrderFromPlan() { RAID_ORDER.length = 0; for (const p of FR.plan) RAI
 // (raidNextStage, hosting or alone, with nothing after this stage yet) what comes next
 function frGrow() {
   const cur = frPlanNow(); if (!cur) return;
-  if (cur.key === 'frsail') FR.plan.push(frIsleOf(cur));
+  if (cur.key === 'frsail') { frChartEnsure(); FR.plan.push(frIsleOf(frPlanNow())); }   // [chart] (the vote settled first)
   else { const nx = frNextStop(); if (!nx) { FR.won = true; return; } FR.next = nx; FR.plan.push(frSailTo(nx)); }   // (no stop left: won)
   frOrderFromPlan();
 }
@@ -203,7 +199,7 @@ function frMe(dt) {
 // ---------- playing together (src/zmnet.js) ----------
 // the host's word for the run: frw = [reach, stop, push, the plan, the run's events, won, the reach pushed, islands lit]
 const frPlanPack = p => [p.key, p.kind || '', p.rule || '', p.look || '', p.n | 0, p.reach | 0];
-function frPack(z) { z.frw = [FR.reach, FR.stop, FR.push, FR.plan.map(frPlanPack), FR.ev, FR.won ? 1 : 0, FR.pushR, FR.lit | 0]; }
+function frPack(z) { frChartPack(z); z.frw = [FR.reach, FR.stop, FR.push, FR.plan.map(frPlanPack), FR.ev, FR.won ? 1 : 0, FR.pushR, FR.lit | 0]; }
 // (raidApply, first of all) joined: the plan, so the stage number that follows lays out what the host has
 function frApplyRun(hz) {
   const a = hz.frw; if (!Array.isArray(a)) return;
@@ -217,6 +213,7 @@ function frApplyRun(hz) {
     if (FR.evSeen < 0) { FR.evSeen = 0; for (const e of a[4]) if (Array.isArray(e)) FR.evSeen = Math.max(FR.evSeen, e[0] | 0); }
     for (const e of a[4]) { if (!Array.isArray(e) || !((e[0] | 0) > FR.evSeen)) continue; FR.evSeen = e[0] | 0; frRunEventHere(String(e[1]), String(e[2] || '')); }
   }
+  frChartApply(hz);   // [chart]
 }
 // my lives, in my presence: [extra lives, lost, waiting to come back]
 function frPresence(z) { if (FR.on) z.frp = [FR.life, FR.lost ? 1 : 0, FR.backT > 0 ? 1 : 0]; }

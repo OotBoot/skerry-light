@@ -1045,3 +1045,47 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 .pn-ver li + li { margin-top: 3px; }
 .pn-ver li b { color: var(--lamp); font-weight: 700; }
 .zmmaps .ng-tag { font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; padding: 1px 4px; margin-left: 4px; background: #e46c4f; color: #1a0d08; font-weight: 700; vertical-align: 1px; }
+/* [fogrun] the chart, and the vote (src/frchart.js) */
+.frchart { background: rgba(6, 9, 13, 0.5); }
+.frchart .card { max-width: 64rem; width: min(64rem, calc(100vw - 32px)); max-height: calc(100vh - 32px); overflow-y: auto; }
+.frchart h1 { color: #e8d6a0; margin: 0 0 4px; }
+.frchtop { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.frchmap svg { width: 100%; height: auto; display: block; margin: 8px 0 4px; }
+.frchband { fill: rgba(200, 212, 224, 0.04); stroke: rgba(200, 212, 224, 0.12); }
+.frchband.b2 { fill: rgba(200, 212, 224, 0.07); } .frchband.b3 { fill: rgba(200, 212, 224, 0.11); }
+.frchreach { fill: rgba(200, 212, 224, 0.6); font: 600 12px "Courier Prime", monospace; letter-spacing: 0.08em; text-anchor: middle; text-transform: uppercase; }
+.frchlight { fill: #ffe2a8; filter: drop-shadow(0 0 6px #ffd890); }
+.frchway { stroke: rgba(200, 212, 224, 0.22); stroke-width: 2; stroke-dasharray: 4 5; }
+.frchway.next { stroke: rgba(232, 214, 160, 0.65); stroke-dasharray: none; }
+.frchway.took { stroke: #ffd890; stroke-width: 3.5; stroke-dasharray: none; }
+.frchnode circle { fill: #1a222c; stroke: rgba(200, 212, 224, 0.45); stroke-width: 2; }
+.frchnode text { fill: #c8d4e0; font-size: 15px; text-anchor: middle; dominant-baseline: middle; pointer-events: none; }
+.frchnode.gone { opacity: 0.3; }
+.frchnode.been circle { fill: #3a2e18; stroke: #ffd890; }
+.frchnode.opt { cursor: pointer; } .frchnode.opt circle { stroke: #e8d6a0; stroke-width: 3; fill: #2a2a22; }
+.frchnode.opt:hover circle { fill: #3e3826; }
+.frchnode.pick circle { fill: #6a5426; stroke: #ffe2a8; stroke-width: 4; }
+.frchnode.k-boss circle { stroke: #ff9a7a; } .frchnode.k-elite text { fill: #ff9a7a; } .frchnode.k-chapel text { fill: #ffe2a8; } .frchnode.k-puzzle text { fill: #9ad0ff; }
+@media (prefers-reduced-motion: no-preference) { .frchnode.opt circle { animation: frchpulse 1.6s ease-in-out infinite; } }
+@keyframes frchpulse { 50% { stroke-opacity: 0.45; } }
+.frchopts { display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: 10px; margin-top: 8px; }
+.frchopt { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; text-align: left; padding: 12px 14px; border-radius: 10px; border: 1px solid rgba(232, 214, 160, 0.35); background: linear-gradient(180deg, rgba(232, 214, 160, 0.12), rgba(232, 214, 160, 0.02)); color: var(--ink, #ece4cf); cursor: pointer; font: inherit; min-height: 44px; }
+.frchopt:hover:not(:disabled), .frchopt:focus-visible { border-color: #e8d6a0; outline: none; box-shadow: 0 0 0 2px rgba(232, 214, 160, 0.45); }
+.frchopt.mine { border-color: #ffd890; background: linear-gradient(180deg, rgba(255, 216, 144, 0.26), rgba(255, 216, 144, 0.06)); }
+.frchopt.pick { border-color: #ffe2a8; box-shadow: 0 0 0 2px rgba(255, 226, 168, 0.6); }
+.frchopt.lost { opacity: 0.45; } .frchopt:disabled { cursor: default; }
+.frchopt .mk { font-size: 22px; line-height: 1; color: #e8d6a0; }
+.frchopt .nm { font-family: "IM Fell English SC", serif; font-size: 22px; color: #e8d6a0; }
+.frchopt .tg { font-size: 13px; opacity: 0.85; }
+.frchopt .on { font-size: 12px; opacity: 0.6; }
+.frchopt .vt { font: 600 11px "Courier Prime", monospace; letter-spacing: 0.06em; text-transform: uppercase; color: #ffd890; min-height: 1em; }
+.frchhint { margin-top: 10px; font-size: 13px; }
+@media (max-width: 720px), (max-height: 520px) {
+  .frchart .card { padding: 14px; }
+  .frchart h1 { font-size: 26px; }
+  .frchart .card > p.muted { font-size: 13px; margin: 2px 0; }
+  .frchopts { grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr)); gap: 6px; }
+  .frchopt { padding: 8px 10px; gap: 2px; }
+  .frchopt .mk { display: none; } .frchopt .on { display: none; }
+  .frchopt .nm { font-size: 18px; } .frchopt .tg { font-size: 12px; }
+}

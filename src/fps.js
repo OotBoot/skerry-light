@@ -1616,6 +1616,7 @@ addEventListener('keydown', e => {
   if (!FPS.on) return;
   if (e.target && /INPUT|TEXTAREA/.test(e.target.tagName)) return;
   e.stopImmediatePropagation();
+  if (typeof frChartKey === 'function' && frChartKey(e)) return;   // [fogrun] the chart, open (src/frchart.js)
   if (e.code === 'Escape' || e.code === 'KeyP') { e.preventDefault(); fpsSetMenu(!FPS.menu); return; }
   if (FPS.menu) return;
   if (e.code === 'Tab') { e.preventDefault(); FPS.board = true; return; }
