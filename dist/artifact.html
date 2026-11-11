@@ -33629,7 +33629,7 @@ function rf2Apply(f, i) {
 // RF.bolt) and a high swirling wind (stormwind, looped, gusting with RF.tide) until she's down.
 // Once it's over otherwise (all of you down, or left), nothing plays. While the raid's on, the Lighthouse's boss
 // themes (src/zmtheme.js) keep quiet: this is the music. Nothing plays until its recording has loaded.
-const RM = { WIND: 0.35, wind: null, bolt: null, fell: false, cur: null, src: null, gain: null, vol: 0.55, rate: 1 };
+const RM = { WIND: 0.1, wind: null, bolt: null, fell: false, cur: null, src: null, gain: null, vol: 0.55, rate: 1 };
 const RM_LOOP = { raidfall: false, raidwin: false };
 const RM_TAIL = 2.5;   // (the fall's track runs on this long after its climax: tools/sfx/music.py TAIL)
 
@@ -33678,12 +33678,14 @@ function rmWind(on, dt) {
     const L = typeof SFXB !== 'undefined' && SFXB.buf.stormwind; if (!L || !L.length) return;
     const s = c.createBufferSource(); s.buffer = L[0]; s.loop = true;
     const g = c.createGain(); g.gain.value = 0;
-    s.connect(g).connect(AUD.master); s.start(0, Math.random() * L[0].duration * 0.8);
+    // (kept low and softened, a lowpass taking the shriek off it: background, under the music)
+    const f = c.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 2400;
+    s.connect(f).connect(g).connect(AUD.master); s.start(0, Math.random() * L[0].duration * 0.8);
     RM.wind = { s, g };
   }
   if (!RM.wind) return;
   // (it gusts up with each toll and flash, RF.tide; and dies away over a few seconds once the storm's over)
-  RM.wind.g.gain.setTargetAtTime(on ? RM.WIND * (1 + 0.6 * clamp(RF.tide || 0, 0, 1)) : 0, c.currentTime, on ? 0.6 : 1.2);
+  RM.wind.g.gain.setTargetAtTime(on ? RM.WIND * (1 + 0.3 * clamp(RF.tide || 0, 0, 1)) : 0, c.currentTime, on ? 0.6 : 1.2);
   if (!on) { RM.windOff = (RM.windOff || 0) + dt; if (RM.windOff > 6) { try { RM.wind.s.stop(); } catch (e) {} RM.wind = null; RM.windOff = 0; } } else RM.windOff = 0;
 }
 // (leaving the raid) everything off
