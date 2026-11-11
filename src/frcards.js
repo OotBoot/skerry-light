@@ -90,7 +90,8 @@ function frcEnter(p) {
 
 // ---------- dealing ----------
 function frcDeal(sid, slot, c) {
-  const p = frPlanNow() || {}, R = frRng(7000 + (FR.stop | 0) * 16 + slot), hand = [], elite = p.kind === 'elite', far = (FR.reach - 1) * 0.06 + (FR.stop | 0) * 0.01;
+  const p = frPlanNow() || {}, R = frRng(7000 + (FR.stop | 0) * 16 + slot), hand = [], elite = p.kind === 'elite' || (FR.rareAt != null && FR.rareAt === (FR.stop | 0)),   // [fogrun isles] (a rare card earned on the island: src/frisle.js friRare)
+    far = (FR.reach - 1) * 0.06 + (FR.stop | 0) * 0.01;
   const tier = typeof frFragTier === 'function' ? frFragTier() : 4;
   const okFor = (k, C) => (C.u | 0) <= tier && (!C.co || c.co) && (!C.ok || C.ok(c)) && !hand.some(h => h.split(':')[0] === k) && !(C.t === 'crew' && hand.some(h => FRC_CARDS[h.split(':')[0]].t === 'crew'));
   for (let i = 0; i < 3; i++) {

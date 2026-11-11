@@ -123,7 +123,7 @@ function frBegin() {
   FR.on = RAID.map === 'fogrun';
   if (!FR.on) return;
   FR.seed = FR.want != null ? FR.want >>> 0 : frSeedNew(); FR.want = null;
-  Object.assign(FR, { reach: 1, stop: 0, push: 0, pushR: 1, plan: [], next: null, life: 0, lost: false, backT: 0, kit: null, ev: [], eseq: 0, evSeen: -1, won: false, lit: 0, leaving: false });
+  Object.assign(FR, { reach: 1, stop: 0, rareAt: null, push: 0, pushR: 1, plan: [], next: null, life: 0, lost: false, backT: 0, kit: null, ev: [], eseq: 0, evSeen: -1, won: false, lit: 0, leaving: false });
   if (typeof frcBegin === 'function') frcBegin();   // [fogrun cards] nothing held yet
   const first = frNextStop(); FR.next = first; FR.reach = first.reach;
   FR.plan = [frSailTo(first)]; frOrderFromPlan();

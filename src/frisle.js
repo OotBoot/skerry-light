@@ -441,8 +441,9 @@ function friGift(why) {
   const g2 = zmBoxRoll(ZM.own); zmGive(g2);
   ZM.banner = { text: FPSW[g2].n, t: 3, col: '#ffc070', sub: why }; fpsFeed(`${why}: the ${FPSW[g2].n}.`);
 }
-// (hosting or alone) a rare card earned (an Elite down, the drowned man's bell rung in time): the salvage's to pay
-function friRare(sid) { if (typeof frRareEarned === 'function') frRareEarned(sid); else FR.rare = (FR.rare | 0) + 1; }
+// (hosting or alone) a rare card earned (an Elite down, the drowned man's bell rung in time)
+// (src/frcards.js frcDeal: that stop's hands each lead with a Captain's card, as an Elite's do)
+function friRare() { FR.rareAt = FR.stop | 0; }
 
 // ---------- the Fight's other rules ----------
 // Clear the Shore: a fixed number of the drowned (FRI_CLEAR by the reach, half as many again for each of you after

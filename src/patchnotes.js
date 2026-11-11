@@ -6,6 +6,15 @@
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 165, date: '2026-11-11', title: "Fog Run: new islands and puzzles", New: [
+    "Fog Run: two new Fight rules. Clear the Shore: send back every drowned man as they come up in waves. The Crab Tide: a crab swarm while the tide comes in and the beach shrinks every 15 seconds. Stay out of the water.",
+    "Fog Run: Elite islands. One of the Lighthouse's bosses (the Diver, the Mooncusser or the Keelback), a little weaker, plus the drowned. Put it down for a Captain's card in everyone's salvage.",
+    "Fog Run: Puzzle islands, four of them: Bend the Beam (turn mirror posts to carry a beam to the beacon), Knock's Garden (figureheads that only move when nobody's watching), the Bell Buoys (ring the bells in the fog horn's tune) and the Tide Stones (hold four plates down at once to raise the causeway).",
+    "Fog Run: Wreck islands. A wreck's sea chest with a gun or a reforge in it for each of you. Some wrecks are guarded.",
+    "Fog Run: Chapel islands. A rest: everyone's mended, the lost come home and every extra life is given back.",
+    "Fog Run: Unknown islands. You only find out what's there when you land.",
+    "Fog Run: the Lost Man's Bell. Together, once someone is lost in the fog, a bell rises on the island. Ring it to bring them back." ], Fixes: [
+    "Fog Run: island messages now name the right player when playing together." ] },
   { v: 164, date: '2026-11-11', title: "Fog Run: the salvage", New: [
     "Fog Run: after every island you light, each of you is dealt three salvage cards of your own. Keep one. You have 20 seconds, then the left-hand card is taken for you.",
     "Fog Run: guns from the wreck (any wall gun or wreck-chest gun), the Lampwright's Spark (reforge the gun in your hand), and a Rum Tot (your ultimate and grenade ready now).",
