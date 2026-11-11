@@ -1685,7 +1685,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 // ---- src/config.js ----
 'use strict';
 // The game's version, shown at the top of the main menu. Bump it by one with every change pushed to main.
-var VERSION = 120;
+var VERSION = 121;
 // Skerry Light: tuning, asset paths and lore.
 // World units are metres. The lighthouse stands at the origin on the shoreline (y = 0);
 // north (+y) is open sea. Bearings: 0 = north, positive = east.
@@ -32492,7 +32492,7 @@ ZBT.maren = {
   cool(z, dt) { if (z.callCd > 0) z.callCd -= dt; },
   think(z, p, d, dz, level) {
     if (level && d < RFC.SWEEP - 0.4 && z.swCd <= 0) return 'sweep';
-    if (d < RFC.CALL_RANGE && z.callCd <= 0) return 'call';
+    if (d < RFC.CALL_RANGE && z.callCd <= 0 && !(RF.p2 && RF.bell && RF.bell.ph === 1)) return 'call';   // [p2] (no rings while the bell tolls)
     return null;
   },
   start(z, act, p) {
@@ -33347,7 +33347,8 @@ function rf2Host(M, dt) {
   }
   if (!RF.p2 || M.act === 'wrath') return;
   const B = RF.bell, C = RF2.BELL; B.t += dt;
-  if (B.ph === 0) { if (B.t >= C.GAP) { B.ph = 1; B.t = 0; B.n = 0; B.c = rf2Spots(); B.seq++; } }
+  // (the bell waits for a ring she's calling to erupt: never the two at once)
+  if (B.ph === 0) { if (B.t >= C.GAP && M.act !== 'call') { B.ph = 1; B.t = 0; B.n = 0; B.c = rf2Spots(); B.seq++; } }
   else {
     B.n = Math.max(B.n, Math.min(3, Math.floor(B.t / C.TOLL)));
     if (B.t >= C.TOLL * 3 + C.HOLD) { B.ph = 0; B.t = 0; B.n = 0; }

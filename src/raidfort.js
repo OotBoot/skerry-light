@@ -600,7 +600,7 @@ ZBT.maren = {
   cool(z, dt) { if (z.callCd > 0) z.callCd -= dt; },
   think(z, p, d, dz, level) {
     if (level && d < RFC.SWEEP - 0.4 && z.swCd <= 0) return 'sweep';
-    if (d < RFC.CALL_RANGE && z.callCd <= 0) return 'call';
+    if (d < RFC.CALL_RANGE && z.callCd <= 0 && !(RF.p2 && RF.bell && RF.bell.ph === 1)) return 'call';   // [p2] (no rings while the bell tolls)
     return null;
   },
   start(z, act, p) {

@@ -40,7 +40,8 @@ function rf2Host(M, dt) {
   }
   if (!RF.p2 || M.act === 'wrath') return;
   const B = RF.bell, C = RF2.BELL; B.t += dt;
-  if (B.ph === 0) { if (B.t >= C.GAP) { B.ph = 1; B.t = 0; B.n = 0; B.c = rf2Spots(); B.seq++; } }
+  // (the bell waits for a ring she's calling to erupt: never the two at once)
+  if (B.ph === 0) { if (B.t >= C.GAP && M.act !== 'call') { B.ph = 1; B.t = 0; B.n = 0; B.c = rf2Spots(); B.seq++; } }
   else {
     B.n = Math.max(B.n, Math.min(3, Math.floor(B.t / C.TOLL)));
     if (B.t >= C.TOLL * 3 + C.HOLD) { B.ph = 0; B.t = 0; B.n = 0; }
