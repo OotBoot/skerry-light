@@ -1685,7 +1685,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 // ---- src/config.js ----
 'use strict';
 // The game's version, shown at the top of the main menu. Bump it by one with every change pushed to main.
-var VERSION = 128;
+var VERSION = 129;
 // Skerry Light: tuning, asset paths and lore.
 // World units are metres. The lighthouse stands at the origin on the shoreline (y = 0);
 // north (+y) is open sea. Bearings: 0 = north, positive = east.
@@ -30388,8 +30388,13 @@ const RSW = { SEA: 250, DECK: 253, CEIL: 30, HOLE: [-11, 11, 13, 35], TOP: [-22,
 // The path: [x, y, half its width, what's there] from the island's middle, from the cap behind where you land to the
 // cap with the door in it; b, a brazier; a, the arena before the door (two more braziers at its sides). Between each
 // two, a narrower stretch a little off the straight line (laid in rswGeo).
-const RSW_KEYS = [[0, 9, 12, 'cap'], [0, 26, 12, 'land'], [5, 46, 7, 'b'], [26, 60, 7, 'b'], [50, 52, 7, 'b'], [64, 30, 7, 'b'], [66, 4, 7, 'b'], [56, -22, 7, 'b'],
-  [36, -40, 7, 'b'], [10, -52, 7, 'b'], [-18, -50, 7, 'b'], [-42, -36, 13, 'a'], [-56, -18, 13, 'end']];
+const RSW_KEYS = [[0, 9, 12, 'cap'], [0, 26, 12, 'land'], [0, 50, 7, 'b'],
+  // (round the outside, clockwise, nearly all the way)
+  [0, 73, 7, 'b'], [26, 68, 7, 'b'], [48, 55, 7, 'b'], [64, 34, 7, 'b'], [72, 10, 7, 'b'], [71, -17, 7, 'b'], [61, -41, 7, 'b'], [43, -59, 7, 'b'],
+  [19, -71, 7, 'b'], [-7, -73, 7, 'b'], [-32, -65, 7, 'b'], [-53, -50, 7, 'b'], [-67, -28, 7, 'b'], [-73, -2, 7, 'b'], [-69, 23, 7, 'b'], [-56, 46, 7, 'b'],
+  // (in, and back round the inside the other way, then into the middle)
+  [-30, 36, 7, 'b'], [-44, 16, 7, 'b'], [-46, -8, 7, 'b'], [-36, -30, 7, 'b'], [-16, -44, 7, 'b'], [8, -46, 7, 'b'], [30, -36, 7, 'b'],
+  [8, -14, 13, 'a'], [-8, -14, 13, 'end']];
 // (how much wider the path is than its keys say: the whole cave, its arena and its braziers' reach, together)
 const RSW_WIDE = 1.2;
 // everything about the path's shape, worked out once (the same for everyone)
@@ -30692,7 +30697,7 @@ FPI_K.rdplat = {
 };
 // the map, for src/zombies.js
 const RSW_MAP = {
-  start: [0, -84], top: RSW.DECK, nav: [-82, 84, -90, 78],
+  start: [0, -84], top: RSW.DECK, nav: [-88, 88, -90, 88],
   zones: {
     quay: { n: 'the Old Quay', r: [-8, 8, -92, -80], zr: [RSW.SEA + 1, 999], sky: true },
     pier: { n: 'the Long Pier', r: [-RSWP.PW / 2 - 1, RSWP.PW / 2 + 1, -80, RSWP.PC[1] + RSWP.PR + 1], zr: [RSW.SEA + 1, 999], sky: true },
