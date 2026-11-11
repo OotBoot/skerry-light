@@ -6,6 +6,10 @@
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 160, date: '2026-11-11', title: "Aim down the sights with every gun", New: [
+    "Every gun can now aim down its sights, not just the Longarm and the Avtomat: right mouse, LT on a controller, or Aim on a phone. Works in Wreckers' Night, Keeper's Last Light, the raids and Fog Run, including every gun from the wreck chest.",
+    "Aiming brings the gun up to the middle of the screen with a small dot for a crosshair, zooms in a little (more for the harpoon gun and pistols, less for the blunderbuss and punt gun) and slows your look to match." ], Changes: [
+    "Shotguns keep their full spread while aiming. Blades still can't aim." ] },
   { v: 159, date: '2026-11-11', title: "Fog Run music on claude.ai", Fixes: [
     "Fog Run: its music now plays in the claude.ai version of the game too." ] },
   { v: 158, date: '2026-11-11', title: "Fog Run", New: [

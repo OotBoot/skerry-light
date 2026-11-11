@@ -481,6 +481,7 @@ function vmDraw(dt) {
   if ((FPS.vmShots || 0) !== VM.shots) { S.fired = true; S.nFired = (FPS.vmShots || 0) - VM.shots; VM.shots = FPS.vmShots || 0; }
   // the weapon's own movements
   VM_ANIM[id](wpn, S);
+  vmAds(id, wpn, S);
   vmKnife(wpn, S);
   if (id !== 'cutlass' && !wpn.trail) VM.trailMesh.visible = false;
   // sounds as reload steps happen
@@ -561,6 +562,26 @@ function vmLeftAt(wpn, pos, rot) {
   VM.lhand.scale.setScalar(S_SCALE(wpn));
 }
 const S_SCALE = wpn => wpn.root.scale.x;
+// down the sights, for every gun but the avtomat (it has its own) and the longarm (the telescope): eased in to the
+// middle, the line of the barrel's top just under the centre of the view, square on, the kick shoving it back
+// (where the muzzle sits in the gun's own space is measured once, the gun at rest; w.adsAt overrides it)
+function vmAds(id, w, S) {
+  const want = FPS.scoped && !S.reloading && !w.melee && id !== 'avtomat' && w.muzzle ? 1 : 0;
+  w.adsK = (w.adsK || 0) + (want - (w.adsK || 0)) * Math.min(1, S.dt * 14);
+  if (w.adsK < 0.002) { w.adsK = 0; return; }
+  const a = w.adsK * w.adsK * (3 - 2 * w.adsK), r = w.root, L = vmLerp;
+  if (!w.adsAt) {
+    const p = r.position.clone(), q = r.quaternion.clone(), k = r.scale.x;
+    r.position.set(0, 0, 0); r.quaternion.identity(); r.scale.setScalar(1); r.updateMatrixWorld(true);
+    w.adsAt = w.muzzle.getWorldPosition(new THREE.Vector3());
+    r.position.copy(p); r.quaternion.copy(q); r.scale.setScalar(k);
+  }
+  // (the grip a forearm out and the barrel a hand below the eye, so the sight line runs just over its top)
+  const m = w.adsAt, rec = S.rec, k = H < 520 ? 0.9 : 1;
+  r.position.set(L(r.position.x, -m.x, a), L(r.position.y, (-m.y - 0.062 - rec * 0.004) * k, a), L(r.position.z, -0.32 * k + rec * 0.03, a));
+  r.rotation.set(L(r.rotation.x, rec * 0.05, a), L(r.rotation.y, 0, a), L(r.rotation.z, 0, a));
+  r.scale.setScalar(L(r.scale.x, 1, a));
+}
 
 const VM_ANIM = {};
 VM_ANIM.pepperbox = (w, S) => {

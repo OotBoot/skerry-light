@@ -46,29 +46,32 @@ const FPS_SEAS = ['skerry', 'fjord', 'ember', 'lagoon', 'barrows', 'shoals'];
 //  avtomat     an automatic rifle: twenty-five rounds as fast as you hold the trigger, one damage (two to the head);
 //              it climbs and kicks hard, sprays from the hip, and takes a long while to load; hold right mouse /
 //              Aim to look down its iron sights (closer, steadier, and every round goes where the sights are)
+// every other gun aims down its sights too (right mouse / left trigger / Aim, its ads: how much closer the view
+// comes): the gun brought up to the middle and the look slowed (a shot of balls still spreads as wide); only the
+// blades can't
 const FPSW = {
-  pepperbox:   { n: 'Pepperbox',   code: 'p', mag: 6, rate: 0.26, reload: 2.2, dmg: 1, head: 2, auto: true, range: 420, kick: 1 },
-  blunderbuss: { n: 'Blunderbuss', code: 'b', mag: 1, rate: 0.6, reload: 2.7, dmg: 1, head: 1, pellets: 9, spread: 0.085, range: 55, kick: 2.4 },
+  pepperbox:   { n: 'Pepperbox',   code: 'p', mag: 6, rate: 0.26, reload: 2.2, dmg: 1, head: 2, auto: true, range: 420, ads: 1.25, kick: 1 },
+  blunderbuss: { n: 'Blunderbuss', code: 'b', mag: 1, rate: 0.6, reload: 2.7, dmg: 1, head: 1, pellets: 9, spread: 0.085, range: 55, ads: 1.15, kick: 2.4 },
   longarm:     { n: 'Longarm',     code: 'l', mag: 1, rate: 0.5, reload: 2.6, dmg: 3, head: 5, range: 650, hip: 0.012, scope: 3.2, kick: 1.6 },
-  harpoon:     { n: 'Harpoon gun', code: 'h', mag: 1, rate: 0.6, reload: 2.2, dmg: 4, head: 4, speed: 100, drop: 2.4, tol: 0.2, range: 300, kick: 1.9 },
+  harpoon:     { n: 'Harpoon gun', code: 'h', mag: 1, rate: 0.6, reload: 2.2, dmg: 4, head: 4, speed: 100, drop: 2.4, tol: 0.2, range: 300, ads: 1.35, kick: 1.9 },
   cutlass:     { n: 'Cutlass',     code: 'c', mag: 0, rate: 0.48, reload: 1.6, dmg: 2, head: 2, reach: 2.7, arc: 0.8, melee: true, kick: 0 },
-  avtomat:     { n: 'Avtomat',     code: 'a', mag: 25, rate: 0.085, reload: 3.9, dmg: 1, head: 2, auto: true, range: 380, hip: 0.03, ads: 1.45, kick: 0.75, climb: 0.019, sway: 0.011 },
+  avtomat:     { n: 'Avtomat',     code: 'a', mag: 25, rate: 0.085, reload: 3.9, dmg: 1, head: 2, auto: true, range: 380, hip: 0.03, ads: 1.45, irons: true, kick: 0.75, climb: 0.019, sway: 0.011 },
   // only in the Lighthouse (src/zombies.js), and only from the wreck chest: a lantern with a lighthouse lens in it,
   // that throws a beam of the Light's own fire. Hold the trigger to burn whatever stands in it
-  fresnel:     { n: 'Fresnel Lamp', code: 'f', mag: 60, rate: 0.1, reload: 3.4, dmg: 0, head: 0, auto: true, beam: true, range: 30, kick: 0.12 },
+  fresnel:     { n: 'Fresnel Lamp', code: 'f', mag: 60, rate: 0.1, reload: 3.4, dmg: 0, head: 0, auto: true, beam: true, range: 30, ads: 1.15, kick: 0.12 },
   // [chest] eight more, also only in the Lighthouse and only from the wreck chest; how each one works is in
   // src/zmchest.js (pv: how fast what it throws flies, gr: how fast that falls; long: held like a long gun)
-  duckfoot:    { n: "Duck's-Foot",  code: 'd', mag: 4, rate: 0.32, reload: 2.4, dmg: 1, head: 2, range: 120, fan: 4, fanW: 0.2, kick: 1.3 },
-  bomblance:   { n: 'Bomb-Lance',   code: 'w', mag: 1, rate: 0.6, reload: 2.8, dmg: 4, head: 4, pv: 46, gr: 4, range: 200, fuse: 1.1, blast: 16, br: 4, kick: 2.0, long: true },
-  grapnel:     { n: 'Grapnel Gun',  code: 'g', mag: 1, rate: 0.5, reload: 1.6, dmg: 3, head: 3, pv: 60, gr: 2, range: 22, kick: 1.2, long: true },
-  flaregun:    { n: 'Flare Pistol', code: 's', mag: 1, rate: 0.5, reload: 1.4, dmg: 3, head: 3, pv: 50, gr: 7, range: 200, kick: 1.4 },
+  duckfoot:    { n: "Duck's-Foot",  code: 'd', mag: 4, rate: 0.32, reload: 2.4, dmg: 1, head: 2, range: 120, fan: 4, fanW: 0.2, ads: 1.2, kick: 1.3 },
+  bomblance:   { n: 'Bomb-Lance',   code: 'w', mag: 1, rate: 0.6, reload: 2.8, dmg: 4, head: 4, pv: 46, gr: 4, range: 200, fuse: 1.1, blast: 16, br: 4, ads: 1.3, kick: 2.0, long: true },
+  grapnel:     { n: 'Grapnel Gun',  code: 'g', mag: 1, rate: 0.5, reload: 1.6, dmg: 3, head: 3, pv: 60, gr: 2, range: 22, ads: 1.25, kick: 1.2, long: true },
+  flaregun:    { n: 'Flare Pistol', code: 's', mag: 1, rate: 0.5, reload: 1.4, dmg: 3, head: 3, pv: 50, gr: 7, range: 200, ads: 1.25, kick: 1.4 },
   axe:         { n: 'Boarding Axe', code: 'x', mag: 0, rate: 0.72, reload: 1.6, dmg: 3, head: 3, reach: 3.0, arc: 1.2, melee: true, kick: 0 },
-  puntgun:     { n: 'Punt Gun',     code: 'u', mag: 1, rate: 0.8, reload: 4.2, dmg: 1, head: 1.5, shot: 16, spread: 0.035, range: 90, kick: 3.2, shove: 2.4, long: true },
-  netmortar:   { n: 'Net Mortar',   code: 'n', mag: 1, rate: 0.6, reload: 2.3, dmg: 2, head: 2, pv: 21, gr: 12, range: 120, kick: 1.6, long: true },
-  chainshot:   { n: 'Chain-Shot',   code: 'y', mag: 1, rate: 0.6, reload: 2.6, dmg: 4, head: 4, pv: 36, gr: 0.6, range: 45, chainW: 1.3, kick: 2.2, long: true },
+  puntgun:     { n: 'Punt Gun',     code: 'u', mag: 1, rate: 0.8, reload: 4.2, dmg: 1, head: 1.5, shot: 16, spread: 0.035, range: 90, ads: 1.2, kick: 3.2, shove: 2.4, long: true },
+  netmortar:   { n: 'Net Mortar',   code: 'n', mag: 1, rate: 0.6, reload: 2.3, dmg: 2, head: 2, pv: 21, gr: 12, range: 120, ads: 1.25, kick: 1.6, long: true },
+  chainshot:   { n: 'Chain-Shot',   code: 'y', mag: 1, rate: 0.6, reload: 2.6, dmg: 4, head: 4, pv: 36, gr: 0.6, range: 45, chainW: 1.3, ads: 1.2, kick: 2.2, long: true },
   // [crab] only at Wrackhaven, only from its chest (in place of the Fresnel Lamp there): src/zmcrab.js. A crab's
   // claw on a gauntlet: its snap knocks back what's near, and it throws hermit crabs that cling on and nip
-  hermit:      { n: "Hermit's Claw", code: 'r', mag: 3, rate: 0.55, reload: 2.5, dmg: 2, head: 2, pv: 15, gr: 13, range: 60, snap: 3.4, kick: 1.5 },
+  hermit:      { n: "Hermit's Claw", code: 'r', mag: 3, rate: 0.55, reload: 2.5, dmg: 2, head: 2, pv: 15, gr: 13, range: 60, snap: 3.4, ads: 1.15, kick: 1.5 },
 };
 const FPS_WORDER = ['pepperbox', 'blunderbuss', 'longarm', 'harpoon', 'cutlass', 'avtomat'];
 // how much closer the view comes when aiming (the longarm's telescope, the avtomat's iron sights)
@@ -621,7 +624,7 @@ function fpsShoot() {
   const z = FPSC.GROUND + FPSC.EYE + (m.jz || 0) - (FPS.downEye || 0) - (FPS.crouchEye || 0), seed = (Math.random() * 2147483647) | 0;   // (FPS.downEye: down on the floor in the Lighthouse)
   const [ah, ap] = fpsAimFrom(m.x, m.y, z, w);
   if (FPS.zm) { FPS.zmShots = (FPS.zmShots || 0) + 1; if (typeof zmnShot === 'function') zmnShot(w.code, ah, ap); }
-  const sh = fpsPublishShot(m.x, m.y, z, ah, ap, m.id, w.code, FPS.scoped ? 0 : seed);
+  const sh = fpsPublishShot(m.x, m.y, z, ah, ap, m.id, w.code, FPS.scoped && !w.pellets && !w.shot ? 0 : seed);   // (a shot of balls keeps its own pattern)
   if (typeof fpsVerityShot === 'function') fpsVerityShot(m.x, m.y, ah);
   fpsResolveShot(sh, true);
   // a gun that climbs: each round throws the muzzle up and a little to one side, after the round has gone; less
@@ -1451,9 +1454,10 @@ function fpsHud() {
   // crosshair, and a mark when you hit
   const cy = H / 2;
   if (m.dead <= 0) {
-    // (down the avtomat's iron sights, the sights are the crosshair)
+    // (down the avtomat's iron sights, the sights are the crosshair; down any other gun's, a small dot)
     const wcur = fpsW();
-    if (!(FPS.scoped && wcur.ads)) {
+    if (FPS.scoped && !wcur.irons) { ctx.fillStyle = 'rgba(236,228,207,0.85)'; ctx.beginPath(); ctx.arc(cx, cy, 1.8, 0, 6.283); ctx.fill(); }
+    else if (!(FPS.scoped && wcur.ads)) {
       ctx.strokeStyle = 'rgba(236,228,207,0.75)'; ctx.lineWidth = 1.5; ctx.beginPath();
       const gap = 5 + FPS.recoil * (wcur.climb ? 14 : 6);
       for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { ctx.moveTo(cx + dx * gap, cy + dy * gap); ctx.lineTo(cx + dx * (gap + 7), cy + dy * (gap + 7)); }

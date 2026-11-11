@@ -4030,7 +4030,8 @@ function zmHud() {
   // crosshair
   const cy = H / 2, w = fpsW();
   if (!(m.dead > 0)) {
-    if (!(FPS.scoped && w.ads)) {
+    if (FPS.scoped && !w.irons) { ctx.fillStyle = 'rgba(236,228,207,0.85)'; ctx.beginPath(); ctx.arc(cx, cy, 1.8, 0, 6.283); ctx.fill(); }   // (down a gun's sights: a small dot)
+    else if (!(FPS.scoped && w.ads)) {
       ctx.strokeStyle = 'rgba(236,228,207,0.75)'; ctx.lineWidth = 1.5; ctx.beginPath();
       if (w.beam) { ctx.arc(cx, cy, 9, 0, 6.283); }
       else { const gap = 5 + FPS.recoil * (w.climb ? 14 : 6); for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { ctx.moveTo(cx + dx * gap, cy + dy * gap); ctx.lineTo(cx + dx * (gap + 7), cy + dy * (gap + 7)); } }
