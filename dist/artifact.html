@@ -23687,8 +23687,10 @@ const zmpTier = id => (ZM.pap && ZM.pap[id]) | 0;
 const zmpCost = t => ZM_PAP.COST + 2000 * (t - 1) + 500 * (t - 1) * t;   // 5000, 8000, 12000, 17000, 23000, ...
 function zmpRoman(n) { let s = ''; for (const [v, c] of [[1000, 'M'], [900, 'CM'], [500, 'D'], [400, 'CD'], [100, 'C'], [90, 'XC'], [50, 'L'], [40, 'XL'], [10, 'X'], [9, 'IX'], [5, 'V'], [4, 'IV'], [1, 'I']]) while (n >= v) { s += c; n -= v; } return s; }
 const zmpTitle = (id, t) => ZM_PAP_W[id].n + (t > 1 ? ' ' + zmpRoman(t) : '');
-const zmpRes = (id, t) => Math.round(ZM_PAP_W[id].res * (1 + 0.25 * (t - 1)));
-const zmpK = (id, t) => ZM_PAP_W[id].k * Math.pow(1.5, t - 1);
+// [raid] in Maren's End reforging gives only the look and the weapon's own trick: no harder hits, no bigger loads
+const zmpRaid = () => typeof RAID !== 'undefined' && RAID.on;
+const zmpRes = (id, t) => zmpRaid() && ZM_AMMO[id] != null ? ZM_AMMO[id] : Math.round(ZM_PAP_W[id].res * (1 + 0.25 * (t - 1)));
+const zmpK = (id, t) => zmpRaid() ? 1 : ZM_PAP_W[id].k * Math.pow(1.5, t - 1);
 const ZM_PAP_GLOW = 0xffa838;
 
 // ---------- the bench itself (a prop: its solid and its static parts) ----------
@@ -23826,7 +23828,7 @@ const ZM_PAP_CACHE = {};
 function zmpW(id) {
   if (!ZM.on || !ZM.pap || !ZM.pap[id] || !ZM_PAP_W[id] || !FPSW[id]) return null;
   let w = ZM_PAP_CACHE[id]; const t = zmpTier(id);
-  if (!w || w.base !== FPSW[id] || w.tier !== t) { const U = ZM_PAP_W[id]; w = ZM_PAP_CACHE[id] = Object.assign({}, FPSW[id], { n: zmpTitle(id, t), mag: FPSW[id].melee ? FPSW[id].mag : U.mag, pap: true, base: FPSW[id], tier: t }); }
+  if (!w || w.base !== FPSW[id] || w.tier !== t || w.raid !== zmpRaid()) { const U = ZM_PAP_W[id]; w = ZM_PAP_CACHE[id] = Object.assign({}, FPSW[id], { n: zmpTitle(id, t), mag: FPSW[id].melee || zmpRaid() ? FPSW[id].mag : U.mag, pap: true, base: FPSW[id], tier: t, raid: zmpRaid() }); }
   return w;
 }
 const zmpName = id => (zmpW(id) || FPSW[id]).n;
@@ -31648,20 +31650,17 @@ function rfLay(H, K, Z) {
     put('table', -32, 27.6, 0, { w: 3, d: 1.0, cloth: '#e8e0d0' }); put('step', -32, 27.6, 0, { w: 6, d: 3.2, hh: 0.2 });
     put('cross', -32, 29.3, 0, {}); put('rug', -32, 19, Math.PI / 2, { w: 16, d: 2, c: '#5a2a2a' });
     light(-33, 27.6, 1.3, '#ffd090', 6, 'lantern'); light(-31, 27.6, 1.3, '#ffd090', 6, 'lantern'); lamp(-32, 16, 3.2);
-    perk('wind', -36.2, 29.3, 0);
     spot(-39.2, 20, 1, 0, 0, 'chapel');
     // ---------- the Cookhouse ----------
     put('stove', 39.2, 20, -Math.PI / 2, {}); light(38.7, 20, 0.5, '#ff8a30', 7, 'fire');
     put('table', 31, 18, 0, { w: 4, d: 1.4 }); put('shelf', 31, 10.6, Math.PI, { w: 3, goods: 'jars' }); fpiPots(H, OX + 26, OY + 12); put('sacks', 26, 27.5, 0.2, { c: '#6a5a40' });
     put('herbs', 31, 22, 0, { w: 6, z: 3.0 }); lamp(31, 18, 3.2);
-    perk('grog', 36.2, 29.3, 0);
     spot(39.2, 26, -1, 0, 0, 'cook');
     // ---------- the Governor's Rooms ----------
     put('rug', -32, 37, 0, { w: 7, d: 4, c: '#3e2a4a' }); put('table', -32, 37.5, 0, { w: 2.6, d: 1.2 }); put('globe', -26, 42.6, 0, {});
     vput('vbookcase', -36.5, 43.75, 0, { w: 3, goods: 'books' });
     put('picture', -39.73, 41, Math.PI / 2, { z: 2.0, w: 1.4, h: 1.0, c: '#b8a878', sea: true });
     lamp(-32, 37, 3.2);
-    perk('stout', -39.3, 33, Math.PI / 2);
     if (typeof zmpPlace === 'function') zmpPlace(put, light, W, Z, { x: -28, y: 43.25, z: 0, nx: 0, ny: -1, zone: 'gov' });   // [pap] the Lampwright's Bench
     // ---------- the Sally Port: the great door you came in by, shut behind you ----------
     put('rfgreatdoor', -16, 43.6, 0, { w: 3.2 });
@@ -31671,11 +31670,10 @@ function rfLay(H, K, Z) {
     // ---------- the Barracks ----------
     for (const x of [11, 15, 19]) { put('table', x, 41.8, 0, { w: 1.1, d: 2.2 }); put('table', x, 33.5, 0, { w: 1.1, d: 2.2 }); }
     put('rack', 23.3, 37, -Math.PI / 2, { len: 3 }); lamp(16, 37.5, 3.2);
-    perk('fleet', 16, 43.3, 0);
     // ---------- the Officers' Mess ----------
     put('table', 32, 37, 0, { w: 5, d: 1.4, cloth: '#5a2a2a' }); put('bench', 32, 35.8, 0, { w: 4.4 }); put('bench', 32, 38.2, 0, { w: 4.4 });
     put('picture', 39.73, 37, -Math.PI / 2, { z: 2.0, w: 1.6, h: 1.1, c: '#a89070' }); lamp(32, 37, 3.2);
-    perk('quick', 39.3, 41.5, -Math.PI / 2);
+    // (no tonics here: in Maren's End you go without)
     // ---------- the headland round the fort: grass and stones ----------
     { const rr = seeded(0x51a3); let n = 0;
       for (let t = 0; t < 4000 && n < 420; t++) {

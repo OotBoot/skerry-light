@@ -44,8 +44,10 @@ const zmpTier = id => (ZM.pap && ZM.pap[id]) | 0;
 const zmpCost = t => ZM_PAP.COST + 2000 * (t - 1) + 500 * (t - 1) * t;   // 5000, 8000, 12000, 17000, 23000, ...
 function zmpRoman(n) { let s = ''; for (const [v, c] of [[1000, 'M'], [900, 'CM'], [500, 'D'], [400, 'CD'], [100, 'C'], [90, 'XC'], [50, 'L'], [40, 'XL'], [10, 'X'], [9, 'IX'], [5, 'V'], [4, 'IV'], [1, 'I']]) while (n >= v) { s += c; n -= v; } return s; }
 const zmpTitle = (id, t) => ZM_PAP_W[id].n + (t > 1 ? ' ' + zmpRoman(t) : '');
-const zmpRes = (id, t) => Math.round(ZM_PAP_W[id].res * (1 + 0.25 * (t - 1)));
-const zmpK = (id, t) => ZM_PAP_W[id].k * Math.pow(1.5, t - 1);
+// [raid] in Maren's End reforging gives only the look and the weapon's own trick: no harder hits, no bigger loads
+const zmpRaid = () => typeof RAID !== 'undefined' && RAID.on;
+const zmpRes = (id, t) => zmpRaid() && ZM_AMMO[id] != null ? ZM_AMMO[id] : Math.round(ZM_PAP_W[id].res * (1 + 0.25 * (t - 1)));
+const zmpK = (id, t) => zmpRaid() ? 1 : ZM_PAP_W[id].k * Math.pow(1.5, t - 1);
 const ZM_PAP_GLOW = 0xffa838;
 
 // ---------- the bench itself (a prop: its solid and its static parts) ----------
@@ -183,7 +185,7 @@ const ZM_PAP_CACHE = {};
 function zmpW(id) {
   if (!ZM.on || !ZM.pap || !ZM.pap[id] || !ZM_PAP_W[id] || !FPSW[id]) return null;
   let w = ZM_PAP_CACHE[id]; const t = zmpTier(id);
-  if (!w || w.base !== FPSW[id] || w.tier !== t) { const U = ZM_PAP_W[id]; w = ZM_PAP_CACHE[id] = Object.assign({}, FPSW[id], { n: zmpTitle(id, t), mag: FPSW[id].melee ? FPSW[id].mag : U.mag, pap: true, base: FPSW[id], tier: t }); }
+  if (!w || w.base !== FPSW[id] || w.tier !== t || w.raid !== zmpRaid()) { const U = ZM_PAP_W[id]; w = ZM_PAP_CACHE[id] = Object.assign({}, FPSW[id], { n: zmpTitle(id, t), mag: FPSW[id].melee || zmpRaid() ? FPSW[id].mag : U.mag, pap: true, base: FPSW[id], tier: t, raid: zmpRaid() }); }
   return w;
 }
 const zmpName = id => (zmpW(id) || FPSW[id]).n;
