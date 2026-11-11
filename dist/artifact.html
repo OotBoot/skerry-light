@@ -1678,7 +1678,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 // ---- src/config.js ----
 'use strict';
 // The game's version, shown at the top of the main menu. Bump it by one with every change pushed to main.
-var VERSION = 139;
+var VERSION = 140;
 // Skerry Light: tuning, asset paths and lore.
 // World units are metres. The lighthouse stands at the origin on the shoreline (y = 0);
 // north (+y) is open sea. Bearings: 0 = north, positive = east.
@@ -21853,10 +21853,13 @@ function zmBeam() {
   let any = false; const lit = [];
   for (const o of ZM.z) {
     if (o.dead) continue;
-    const ox = o.x - ex, oy = o.y - ey, oz = FPSC.GROUND + Math.min(zmMid(o), (o.jz || 0) + 1.1) - ez, d = Math.hypot(ox, oy, oz);
-    if (d > FPS.beamLen + 0.6) continue;
+    // (aimed at the height on it the beam passes, between its feet and its crown: a fixed spot at a man's waist was
+    // below Maren's knees, so a beam on her body went over that spot and burned nothing; and a broad one is wider)
+    const ox = o.x - ex, oy = o.y - ey, hd = Math.hypot(ox, oy), cp = Math.max(0.05, Math.cos(m.p)), foot = FPSC.GROUND + (o.jz || 0), tall = o.tall || FPSC.TALL;
+    const oz = clamp(ez + Math.tan(m.p) * (ox * sx + oy * sy) / cp, foot + Math.min(0.5, tall * 0.3), foot + tall * 0.85) - ez, d = Math.hypot(ox, oy, oz);
+    if (d > FPS.beamLen + 0.6 + Math.max(0, (o.rad || FPSC.BODY) - FPSC.BODY) || hd < 0.01) continue;
     const along = ox * sx + oy * sy + oz * sz; if (along < 0.3) continue;
-    const off = Math.sqrt(Math.max(0, d * d - along * along)), rad = 0.45 + along * 0.06;
+    const off = Math.sqrt(Math.max(0, d * d - along * along)), rad = 0.45 + along * 0.06 + Math.max(0, (o.rad || FPSC.BODY) - FPSC.BODY);
     if (off > rad + 0.35) continue;
     const ray = fpsRay(ex, ey, ez, bearingOf(ox, oy), Math.atan2(oz, Math.hypot(ox, oy)), m.id, [o], w.range + 2);
     if (ray.kind !== 'body') continue;
