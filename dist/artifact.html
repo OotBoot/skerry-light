@@ -913,6 +913,12 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 .boardcard h1 { color: var(--lamp); }
 .boardcard .muted { font-size: 12px; margin: 0; }
 .boardcard [hidden] { display: none !important; }
+/* the minimise button shrinks the card to its top bar; the choice is kept on this device (src/scores.js) */
+.boardcard .boardbtns { display: flex; gap: 6px; flex: none; }
+.boardcard .boardminititle { display: none; font-family: var(--log); font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--lamp); min-width: 0; }
+.boardcard.mini { padding-top: 10px; padding-bottom: 10px; gap: 0; }
+.boardcard.mini > :not(.cardtop), .boardcard.mini .eyebrow, .boardcard.mini #boardRefresh { display: none !important; }
+.boardcard.mini .boardminititle { display: inline; }
 .boardhead, .boardlist li { display: grid; grid-template-columns: 2.2em minmax(0, 1fr) 6.5em 6.5em; gap: 8px; align-items: baseline; font-family: var(--log); font-size: 13px; }
 .boardhead { font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); border-bottom: 1px solid var(--rule); padding-bottom: 6px; }
 .boardlist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; max-height: 22em; overflow-y: auto; }
@@ -1176,7 +1182,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
     <button class="newgame frbanner" id="frBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">And <b>Fog Run</b>: sail the keeper's cutter out into the haar and light the islands, alone or with up to four</span><span class="ng-go" aria-hidden="true">↓</span></button>
     <button class="tool notesbtn" id="notesBtn" type="button">Patch notes</button>
     <div class="card boardcard" id="boardCard" aria-labelledby="boardHead">
-      <div class="cardtop"><span class="eyebrow">Best on record · every game</span><button class="tool closebtn" id="boardRefresh" type="button">Refresh</button></div>
+      <div class="cardtop"><span class="eyebrow">Best on record · every game</span><span class="boardminititle">The Scoreboard</span><span class="boardbtns"><button class="tool closebtn" id="boardRefresh" type="button">Refresh</button><button class="tool closebtn" id="boardMin" type="button" aria-expanded="true" aria-controls="boardCard" title="Make the scoreboard small">– Minimise</button></span></div>
       <h1 id="boardHead">The Scoreboard</h1>
       <div class="nickrow" id="boardNameRow" hidden><label for="boardName">Your name</label><input id="boardName" type="text" maxlength="16" autocomplete="nickname" placeholder="your sailing name"></div>
       <div class="boardgames" id="boardGames" aria-live="polite"></div>
@@ -1821,7 +1827,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 // ---- src/config.js ----
 'use strict';
 // The game's version, shown at the top of the main menu. Bump it by one with every change pushed to main.
-var VERSION = 166;
+var VERSION = 167;
 // Skerry Light: tuning, asset paths and lore.
 // World units are metres. The lighthouse stands at the origin on the shoreline (y = 0);
 // north (+y) is open sea. Bearings: 0 = north, positive = east.
@@ -1950,6 +1956,8 @@ const flashK = () => SETTINGS.flashes === 'reduced' ? 0.3 : 1;
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 167, date: '2026-11-11', title: "A smaller scoreboard", New: [
+    "Main menu: the scoreboard has a Minimise button at its top. It shrinks the board down to a small bar, and Show opens it again. The game remembers which you picked on this device." ] },
   { v: 166, date: '2026-11-11', title: "Fog Run: the chart closes ashore", Fixes: [
     "Fog Run: if the chart was still open when the cutter beached, it now closes as you land instead of staying over the island." ] },
   { v: 165, date: '2026-11-11', title: "Fog Run: new islands and puzzles", New: [
@@ -46882,6 +46890,11 @@ function boardRender() {
   if (!$('boardCard')) return;
   nickSetup();
   $('boardRefresh').addEventListener('click', () => boardFetch(true));
+  // the minimise button: the card shrinks to a small bar with just its name, and back; kept in this browser
+  const mb = $('boardMin'), setMini = on => { $('boardCard').classList.toggle('mini', on); mb.textContent = on ? '+ Show' : '– Minimise'; mb.setAttribute('aria-expanded', on ? 'false' : 'true'); mb.title = on ? 'Show the whole scoreboard' : 'Make the scoreboard small'; };
+  let mini = false; try { mini = localStorage.getItem('skerry-board-mini') === '1'; } catch (e) {}
+  setMini(mini);
+  mb.addEventListener('click', () => { mini = !mini; setMini(mini); try { localStorage.setItem('skerry-board-mini', mini ? '1' : '0'); } catch (e) {} if (!mini) boardFetch(true); });
   // keep it fresh while the title screen is up
   setInterval(() => { if (!$('titleCard').hidden) boardFetch(); }, 10000);
   boardInit();
