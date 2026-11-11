@@ -49,7 +49,7 @@ const RAID_ORDER = ['descent'];
 // A later raid's parts add themselves with raidAdd(map, key, at): at, its place in the order (they're sorted by it).
 const RAIDS = {
   raid: { n: 'Maren’s End', order: null, mvp: 'fort', lost: n => `The dark took you in ${n}`, won: 'Through the door', again: 'Go down again' },
-  gannet: { n: 'The Gannet’s Wake', order: [], at: {}, mvp: 'gwcapt', lost: n => `The sea took you in ${n}`, get won() { return RAID_ORDER.includes('gwcapt') ? 'Captain Crane is down' : 'Aboard the Gannet'; }, again: 'Sail out again' },
+  gannet: { n: 'The Gannet’s Wake', order: [], at: {}, mvp: 'gwcapt', lost: n => `The sea took you in ${n}`, get won() { return RAID_ORDER.includes('gwcapt') ? 'Captain Crane is down' : RAID_ORDER.includes('gwhold') ? 'The cabin door is open' : 'Aboard the Gannet'; }, again: 'Sail out again' },
 };
 function raidAdd(map, key, at) { const R = RAIDS[map]; if (!R || R.order.includes(key)) return; R.at[key] = at; R.order.push(key); R.order.sort((a, b) => R.at[a] - R.at[b]); }
 const raidInfo = () => RAIDS[RAID.map] || RAIDS.raid;

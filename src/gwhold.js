@@ -817,7 +817,7 @@ RAID_STAGES.gwhold = {
   hud: (phone, mono, fell) => gwHud(phone, mono, fell),
   b3: grp => gw3dBuild(grp),
   f3: dt => gw3d(dt),
-  exit() { GW3.ok = false; GW3.kn = null; if (typeof GL3D !== 'undefined' && GL3D.scene && GL3D.scene.fog) RAID.fog0 = true; },
+  exit() { GH3.ok = false; GH3.kn = null; if (typeof GL3D !== 'undefined' && GL3D.scene && GL3D.scene.fog) RAID.fog0 = true; },
 };
 raidAdd('gannet', 'gwhold', 2);
 
@@ -886,7 +886,7 @@ function gwBuildBosun() {
 }
 
 // ---------- in 3D: Knock, the keys, the cabin door, the lanterns swinging, the water ----------
-const GW3 = { ok: false, kn: null };
+const GH3 = { ok: false, kn: null };
 // a key: its bow, its shank, its bit (along -y from the bow; s: its size)
 function gwKeyMesh(col, s) {
   const k = new THREE.Group(), m = new THREE.MeshLambertMaterial({ color: col, emissive: new THREE.Color(col).multiplyScalar(0.18) });
@@ -897,21 +897,21 @@ function gwKeyMesh(col, s) {
   return k;
 }
 function gw3dBuild(grp) {
-  GW3.ok = false; GW3.kn = null;
+  GH3.ok = false; GH3.kn = null;
   if (!RAID.on || !RAID.st || !RAID.st.kn) return;
   const G0 = FPSC.GROUND, S = RAID.st, soft = (a, b) => z3Soft(a, b);
   // Knock: src/raidknock.js's model, at a figurehead's size, his key on a cord at his chest
-  const M = rfBuildKnock(); M.body.scale.setScalar(KN.S); grp.add(M.root); GW3.kn = M;
+  const M = rfBuildKnock(); M.body.scale.setScalar(KN.S); grp.add(M.root); GH3.kn = M;
   M.wood.color.setScalar(0.62); M.limbM.color.multiplyScalar(0.7); M.wood.shininess = 6;   // (old paint, a year under the sea: duller than in the Plaza's daylight)
   const cordM = new THREE.MeshLambertMaterial({ color: 0x2a2018 }), nk = new THREE.Group(); M.torso.add(nk);
   for (const s of [-1, 1]) { const a = new THREE.Vector3(s * 0.108, 0.36, 0), b = new THREE.Vector3(0, 0.285, -0.056), d = b.clone().sub(a), c = new THREE.Mesh(new THREE.CylinderGeometry(0.0022, 0.0022, d.length(), 4), cordM); c.position.copy(a).addScaledVector(d, 0.5); c.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), d.normalize()); nk.add(c); }
   const back = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.004, 0.004), cordM); back.position.set(0, 0.36, 0.052); nk.add(back);
   const kk = gwKeyMesh(GW_KEYS[2].c, 0.62 / KN.S); kk.position.set(0, 0.28, -0.062); nk.add(kk);
-  GW3.nk = nk; GW3.knHit = 0; GW3.knPh = 0;
+  GH3.nk = nk; GH3.knHit = 0; GH3.knPh = 0;
   // his eyes catch the light: a faint gleam, so you see them before him in the dark
-  GW3.gleam = M.eyes.map(e => { const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: soft('rgba(255,236,200,0.7)', 'rgba(255,236,200,0)'), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: 0.35 })); s.scale.setScalar(0.06); s.position.z = -0.03; e.e.add(s); return s; });
+  GH3.gleam = M.eyes.map(e => { const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: soft('rgba(255,236,200,0.7)', 'rgba(255,236,200,0)'), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: 0.35 })); s.scale.setScalar(0.06); s.position.z = -0.03; e.e.add(s); return s; });
   // the keys, lying where they are (and carried: at the bearer's side), each with a glimmer
-  GW3.keys = GW_KEYS.map(K => { const g3 = new THREE.Group(); grp.add(g3); g3.add(gwKeyMesh(K.c, 1.5)); const gl = new THREE.Sprite(new THREE.SpriteMaterial({ map: soft('rgba(255,230,170,0.8)', 'rgba(255,230,170,0)'), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: 0.6, fog: false })); gl.scale.setScalar(0.9); g3.add(gl); return { g3, gl }; });
+  GH3.keys = GW_KEYS.map(K => { const g3 = new THREE.Group(); grp.add(g3); g3.add(gwKeyMesh(K.c, 1.5)); const gl = new THREE.Sprite(new THREE.SpriteMaterial({ map: soft('rgba(255,230,170,0.8)', 'rgba(255,230,170,0)'), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: 0.6, fog: false })); gl.scale.setScalar(0.9); g3.add(gl); return { g3, gl }; });
   // the cabin door: its leaf on its hinge, three locks down its edge, each key in its lock once set
   { const [dx, dy] = gwW(0, GWH.AFT), dg = new THREE.Group(); dg.position.copy(z3v(dx, dy, G0 + GWH.GZ)); grp.add(dg);
     const wood = z3Lam('#5a4029'), dark = z3Lam('#2e2016'), brass = z3Lam('#8a6a30', { emissive: 0x0a0602 });
@@ -923,11 +923,11 @@ function gw3dBuild(grp) {
     const locks = [1.55, 1.2, 0.85].map((y, i) => { const pl = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.22, 0.03), brass); pl.position.set(0.52, y, -0.07); leaf.add(pl); const hole = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.08, 0.01), new THREE.MeshBasicMaterial({ color: 0x080604 })); hole.position.set(0.52, y - 0.02, -0.088); leaf.add(hole); const k = gwKeyMesh(GW_KEYS[i].c, 1.1); k.rotation.set(-Math.PI / 2, 0, 0); k.position.set(0.52, y - 0.02, -0.25); k.visible = false; leaf.add(k); const gl = new THREE.Sprite(new THREE.SpriteMaterial({ map: soft('rgba(255,210,140,0.9)', 'rgba(255,210,140,0)'), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: 0 })); gl.scale.setScalar(0.45); gl.position.set(0.52, y, -0.12); leaf.add(gl); return { k, gl }; });
     // (the light of the cabin, beyond, once it's open)
     const glow = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 2.3), new THREE.MeshBasicMaterial({ color: 0xffc070, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending, fog: false })); glow.position.set(0, 1.15, 0.6); dg.add(glow);
-    GW3.door = { hinge, locks, glow, a: S.door ? 1 : 0 }; }
+    GH3.door = { hinge, locks, glow, a: S.door ? 1 : 0 }; }
   // the lanterns: each on its cord from the beam, swinging as she rolls (their lights go with them)
   { const brass = z3Lam('#8a6a2e'), cage = z3Lam('#2a2622'), glassM = new THREE.MeshBasicMaterial({ color: 0xffd080, transparent: true, opacity: 0.85 }), flameM = new THREE.MeshBasicMaterial({ color: 0xfff0c0 }), halo = soft('rgba(255,190,110,0.55)', 'rgba(255,170,80,0)'), cordG = new THREE.CylinderGeometry(0.008, 0.008, 1, 4);
     cordG.translate(0, -0.5, 0);
-    GW3.lamps = GWL.lamps.map(L => {
+    GH3.lamps = GWL.lamps.map(L => {
       const l = L.l, len = Math.max(0.35, L.hook - L.z), piv = new THREE.Group(); piv.position.set(l.x, l.z + len, -l.y); grp.add(piv);
       const cord = new THREE.Mesh(cordG, cage); cord.scale.y = len - 0.2; piv.add(cord);
       const lan = new THREE.Group(); lan.position.y = -len; piv.add(lan);
@@ -944,28 +944,28 @@ function gw3dBuild(grp) {
     const geo = new THREE.PlaneGeometry(w, d, 18, 30); geo.rotateX(-Math.PI / 2);
     const mat = new THREE.MeshPhongMaterial({ color: 0x03100f, specular: 0xb0b8a8, shininess: 110, transparent: true, opacity: 0.8, side: THREE.DoubleSide, depthWrite: false });
     const water = new THREE.Mesh(geo, mat); water.position.copy(z3v(tx, ty, G0 + GWH.WZ)); water.renderOrder = 1; grp.add(water);
-    GW3.water = { water, geo, mat, base: Float32Array.from(geo.attributes.position.array) };
+    GH3.water = { water, geo, mat, base: Float32Array.from(geo.attributes.position.array) };
     // (flotsam on it: a stave, a bit of grating, a hank of weed, riding the ripples)
-    GW3.flot = [[-1.6, 21.5, 0.9, 0.12, 0.3, '#3a2c20'], [1.9, 24.8, 0.7, 0.6, 0.9, '#2e241a'], [-0.6, 27.0, 0.8, 0.25, 2.1, '#1e3a26'], [1.2, 19.4, 0.5, 0.12, 1.2, '#3a2c20']].map(([x, y, w, d, a, c], i) => { const o = new THREE.Mesh(new THREE.BoxGeometry(w, 0.05, d), z3Lam(c)); const [wx, wy] = gwW(x, y); o.position.copy(z3v(wx, wy, G0 + GWH.WZ)); o.rotation.y = a; grp.add(o); return { o, y0: o.position.y, i }; });
+    GH3.flot = [[-1.6, 21.5, 0.9, 0.12, 0.3, '#3a2c20'], [1.9, 24.8, 0.7, 0.6, 0.9, '#2e241a'], [-0.6, 27.0, 0.8, 0.25, 2.1, '#1e3a26'], [1.2, 19.4, 0.5, 0.12, 1.2, '#3a2c20']].map(([x, y, w, d, a, c], i) => { const o = new THREE.Mesh(new THREE.BoxGeometry(w, 0.05, d), z3Lam(c)); const [wx, wy] = gwW(x, y); o.position.copy(z3v(wx, wy, G0 + GWH.WZ)); o.rotation.y = a; grp.add(o); return { o, y0: o.position.y, i }; });
     const [hx, hy] = gwW(0, (GWH.HAFT + GWH.TIER) / 2), bilge = new THREE.Mesh(new THREE.PlaneGeometry(2 * GWH.HB, GWH.TIER - GWH.HAFT), new THREE.MeshPhongMaterial({ color: 0x1a2622, specular: 0x4a5a56, shininess: 80, transparent: true, opacity: 0.55, depthWrite: false }));
-    bilge.rotation.order = 'YXZ'; bilge.rotation.x = -Math.PI / 2; bilge.position.copy(z3v(hx, hy, G0 + GWH.HZ + 0.03)); bilge.renderOrder = 1; grp.add(bilge); GW3.bilge = bilge; }
+    bilge.rotation.order = 'YXZ'; bilge.rotation.x = -Math.PI / 2; bilge.position.copy(z3v(hx, hy, G0 + GWH.HZ + 0.03)); bilge.renderOrder = 1; grp.add(bilge); GH3.bilge = bilge; }
   // motes of dust and damp, hanging in the lantern light round you
   { const n = 260, pos = new Float32Array(n * 3); for (let i = 0; i < n * 3; i++) pos[i] = (Math.random() - 0.5) * 16;
     const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-    const pts = new THREE.Points(geo, new THREE.PointsMaterial({ color: 0xc8b090, size: 0.03, transparent: true, opacity: 0.45, depthWrite: false })); grp.add(pts); GW3.motes = { pts, pos, n }; }
-  GW3.ok = true;
+    const pts = new THREE.Points(geo, new THREE.PointsMaterial({ color: 0xc8b090, size: 0.03, transparent: true, opacity: 0.45, depthWrite: false })); grp.add(pts); GH3.motes = { pts, pos, n }; }
+  GH3.ok = true;
 }
 // each frame
 function gw3d(dt) {
-  if (!GW3.ok || !RAID.st || !RAID.st.kn) return;
-  const S = RAID.st, K = S.kn, M = GW3.kn, m = FPS.me, G0 = FPSC.GROUND, t = g.t, sw = reduceMotion ? 0 : 1;
+  if (!GH3.ok || !RAID.st || !RAID.st.kn) return;
+  const S = RAID.st, K = S.kn, M = GH3.kn, m = FPS.me, G0 = FPSC.GROUND, t = g.t, sw = reduceMotion ? 0 : 1;
   // ---- Knock ----
   if (M) {
     M.root.position.copy(z3v(K.x, K.y, G0 + K.jz)); M.root.rotation.set(0, -K.h, 0);
     // (mid-stride when he moves; caught, he holds whatever pose he was in, which is worse)
     const lunge = K.lunge > 0;
-    if (K.mv && !lunge) GW3.knPh += dt * 4.2;
-    const ph = GW3.knPh, st = Math.sin(ph);
+    if (K.mv && !lunge) GH3.knPh += dt * 4.2;
+    const ph = GH3.knPh, st = Math.sin(ph);
     let LR = [st * 0.5, Math.max(0, -st) * 0.7], LL = [-st * 0.5, Math.max(0, st) * 0.7], R = [0.25 - st * 0.35, 0.18, 0.3], L = [st * 0.45, -0.18, 0.35], lean = 0.08, mouth = 1;
     if (lunge) { R = [1.55, 0.25, 0.15]; L = [1.6, -0.25, 0.15]; LR = [0.55, 0.3]; LL = [-0.3, 0.2]; lean = 0.32; mouth = 2.2; }
     M.body.position.y = K.mv ? Math.abs(Math.cos(ph)) * 0.03 * KN.S * sw : 0;
@@ -977,30 +977,30 @@ function gw3d(dt) {
     // his eyes: on you, wherever you are, still or not
     const d = angDiff(bearingOf(m.x - K.x, m.y - K.y), K.h), ex = clamp(d, -1.2, 1.2) * 0.009, ey = clamp(((m.jz || 0) + 1.6 - K.jz - KN.S * 0.88) / Math.max(1, Math.hypot(m.x - K.x, m.y - K.y)), -1, 1) * 0.006;
     for (const e of M.eyes) e.ir.position.set(Math.abs(d) < 2 ? ex : 0, Math.abs(d) < 2 ? ey : 0, -0.021);
-    if (GW3.gleam) for (const gl of GW3.gleam) gl.material.opacity = 0.25 + 0.15 * Math.sin(t * 1.7);
-    GW3.knHit = Math.max(0, GW3.knHit - dt); const fl = GW3.knHit / 0.15;
+    if (GH3.gleam) for (const gl of GH3.gleam) gl.material.opacity = 0.25 + 0.15 * Math.sin(t * 1.7);
+    GH3.knHit = Math.max(0, GH3.knHit - dt); const fl = GH3.knHit / 0.15;
     M.wood.emissive.setRGB(fl * 0.3, fl * 0.2, fl * 0.1); M.limbM.emissive.setRGB(fl * 0.25, fl * 0.16, fl * 0.08);
-    GW3.nk.visible = S.keys[2].st === 0;
+    GH3.nk.visible = S.keys[2].st === 0;
   }
   // ---- the keys ----
   S.keys.forEach((k, i) => {
-    const o = GW3.keys[i]; if (!o) return;
+    const o = GH3.keys[i]; if (!o) return;
     const mine = k.st === 2 && k.by === m.id, show = k.st === 1 || (k.st === 2 && !mine);
     o.g3.visible = show; if (!show) return;
     if (k.st === 1) { o.g3.position.copy(z3v(k.x, k.y, G0 + (k.z || 0) + 0.32 + 0.06 * Math.sin(t * 2 + i))); o.g3.rotation.set(0, t * 1.4 + i, 0); o.gl.material.opacity = 0.55 + 0.25 * Math.sin(t * 3 + i); o.gl.visible = true; }
     else { const r = FPS.remote.get(k.by); if (!r) { o.g3.visible = false; return; } o.g3.position.copy(z3v(r.x + Math.cos(r.h || 0) * 0.35, r.y - Math.sin(r.h || 0) * 0.35, G0 + (r.jz || 0) + 0.95)); o.g3.rotation.set(0, -(r.h || 0), 0.3); o.gl.material.opacity = 0.3; }
   });
   // ---- the cabin door ----
-  if (GW3.door) {
-    const D = GW3.door; D.a = S.door ? Math.min(1, D.a + dt * 0.6) : 0;
+  if (GH3.door) {
+    const D = GH3.door; D.a = S.door ? Math.min(1, D.a + dt * 0.6) : 0;
     D.hinge.rotation.y = -zbE(D.a) * 1.9;
     D.locks.forEach((L, i) => { const set = S.keys[i].st === 3; L.k.visible = set; L.gl.material.opacity = set ? 0.3 + 0.12 * Math.sin(t * 2 + i) : 0; });
     D.glow.material.opacity = 0.35 * zbE(D.a);
   }
   // ---- the lanterns swinging: all together as she rolls, and each a little on its own ----
-  if (GW3.lamps) {
+  if (GH3.lamps) {
     const roll = Math.sin(t * 0.55) * 0.09 * sw, pitch = Math.sin(t * 0.37 + 1.2) * 0.04 * sw;
-    for (const A of GW3.lamps) {
+    for (const A of GH3.lamps) {
       const ax = roll + Math.sin(t * 1.3 + A.L.ph) * 0.03 * sw, ay = pitch + Math.sin(t * 1.1 + A.L.ph * 1.3) * 0.025 * sw;
       A.piv.rotation.set(ay, 0, ax);
       const l = A.L.l; l.x = A.bx + Math.sin(ax) * A.len; l.y = A.by + Math.sin(ay) * A.len; l.z = A.bz + A.len * (1 - Math.cos(ax) * Math.cos(ay));
@@ -1008,16 +1008,16 @@ function gw3d(dt) {
     }
   }
   // ---- the water ----
-  if (GW3.water) {
-    const W3 = GW3.water, P = W3.geo.attributes.position, a = P.array, b = W3.base;
+  if (GH3.water) {
+    const W3 = GH3.water, P = W3.geo.attributes.position, a = P.array, b = W3.base;
     for (let i = 0; i < a.length; i += 3) { const x = b[i], z = b[i + 2]; a[i + 1] = sw * (0.035 * Math.sin(x * 1.7 + t * 1.3) + 0.03 * Math.sin(z * 1.3 - t * 1.1) + 0.015 * Math.sin((x + z) * 3.1 + t * 2.3)); }
     P.needsUpdate = true; W3.geo.computeVertexNormals();
-    if (GW3.flot) for (const F of GW3.flot) { F.o.position.y = F.y0 + 0.03 * Math.sin(t * 1.3 + F.i * 2) * sw; F.o.rotation.z = 0.06 * Math.sin(t * 1.1 + F.i) * sw; }
+    if (GH3.flot) for (const F of GH3.flot) { F.o.position.y = F.y0 + 0.03 * Math.sin(t * 1.3 + F.i * 2) * sw; F.o.rotation.z = 0.06 * Math.sin(t * 1.1 + F.i) * sw; }
   }
-  if (GW3.bilge) GW3.bilge.rotation.y = Math.sin(t * 0.55) * 0.012 * sw;
+  if (GH3.bilge) GH3.bilge.rotation.y = Math.sin(t * 0.55) * 0.012 * sw;
   // ---- the motes, drifting round you ----
-  if (GW3.motes) {
-    const Mo = GW3.motes, p = Mo.pos, ex = m.x, ey = m.y, ez = G0 + (m.jz || 0) + 1.6;
+  if (GH3.motes) {
+    const Mo = GH3.motes, p = Mo.pos, ex = m.x, ey = m.y, ez = G0 + (m.jz || 0) + 1.6;
     for (let i = 0; i < Mo.n; i++) { const j = i * 3; p[j] += Math.sin(t * 0.3 + i) * dt * 0.05; p[j + 1] -= dt * 0.04; p[j + 2] += Math.cos(t * 0.27 + i * 1.7) * dt * 0.05;
       // (kept in a box round you: wrapped from one side to the other)
       for (const [o, c] of [[0, ex], [1, ez], [2, -ey]]) { const r = p[j + o] - c; if (r > 7) p[j + o] -= 14; else if (r < -7) p[j + o] += 14; } }
@@ -1139,7 +1139,7 @@ function gwShot(x, y, z, lh, lp) {
   if (tt < 0.3 || tt > 60 || perp > 0.32) return;
   const hz = z + Math.tan(lp) * tt - FPSC.GROUND - K.jz; if (hz < 0 || hz > KN.S) return;
   if (!gwClear(x, y, z - FPSC.GROUND, K.x, K.y, K.jz + hz)) return;
-  GW3.knHit = 0.15;
+  GH3.knHit = 0.15;
   fpsPuff(K.x - sx * 0.25, K.y - sy * 0.25, FPSC.GROUND + K.jz + hz, '170,120,70', 4);
   try { if (!soundOff()) { tone(190 + Math.random() * 40, 'triangle', 0.002, 0.22, 0.09, { to: 120 }); noise('bandpass', 1400, 5, 0.002, 0.12, 0.05); } } catch (e) {}
   const S = RAID.st; if (!S.saidWood) { S.saidWood = 1; fpsFeed('Your shot thuds into Knock like into a mast. Nothing hurts him.'); }

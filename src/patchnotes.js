@@ -6,6 +6,11 @@
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Never give away a secret here (the Easter egg's steps, where the secret boss hides).
 var PATCH_NOTES = [
+  { v: 147, date: '2026-11-11', title: 'The Gannet’s Wake: Below Decks', New: [
+    "The Gannet's Wake, Part II, Below Decks: climb aboard the risen Gannet and go down through her gun deck, hold, cable tier and forecastle.",
+    "Knock is loose below. He only moves while none of you can see him, and three knocks on wood warn you he's coming. If he reaches you, you're down.",
+    "The captain's cabin is locked on three keys: one on the Bosun in the hold, one under the black water of the flooded cable tier (hold your breath), and one round Knock's own neck, taken only while someone keeps him still.",
+    "The raid now ends at the open cabin door. The last part, her captain, is coming soon." ] },
   { v: 146, date: '2026-11-11', title: 'A second raid: The Gannet’s Wake', New: [
     "Raids: a second raid, The Gannet's Wake. Pick it at the top of the raid card; the lobby shows which raid each one is, and it has its own column on the scoreboard.",
     "The Gannet's Wake, Part I, The Skerries: sail the keeper's cutter out through the rocks together. One of you takes the wheel, the rest work the deck. The rocks only show in the Light's beam.",
