@@ -2050,7 +2050,7 @@ function zmStop() {
   if (typeof zmpStop === 'function') zmpStop();   // [pap]
   if (typeof zxReset === 'function') zxReset();   // [chest]
   if (typeof ztStop === 'function') ztStop(0.6);   // [theme]
-  if (typeof rmStop === 'function') rmStop(0.6);   // [raid music]
+  if (typeof rmQuiet === 'function') rmQuiet(0.6);   // [raid music]
   if (typeof raidStop === 'function') raidStop();   // [raid]
   ZM.on = false; ZM.net = null; FPS.zm = false; FPS.eyeLag = 0; FPS.downEye = 0; ZM.spec = null; FPS.specId = null;
   $('stage').classList.remove('zmmode'); $('zmOver').hidden = true;

@@ -60,6 +60,8 @@ const SFX_FILES = {
   snarl: ['assets/sfx/snarl_1.mp3', 'assets/sfx/snarl_2.mp3', 'assets/sfx/snarl_3.mp3', 'assets/sfx/snarl_4.mp3', 'assets/sfx/snarl_5.mp3'],
   splash: ['assets/sfx/splash_1.mp3'],
   splat: ['assets/sfx/splat_1.mp3', 'assets/sfx/splat_2.mp3'],
+  stormbolt: ['assets/sfx/stormbolt_1.mp3', 'assets/sfx/stormbolt_2.mp3', 'assets/sfx/stormbolt_3.mp3'],
+  stormwind: ['assets/sfx/stormwind_1.mp3'],
   swish: ['assets/sfx/swish_1.mp3', 'assets/sfx/swish_2.mp3'],
   tear: ['assets/sfx/tear_1.mp3', 'assets/sfx/tear_2.mp3', 'assets/sfx/tear_3.mp3'],
   thunder: ['assets/sfx/thunder_1.mp3'],

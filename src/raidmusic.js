@@ -15,13 +15,16 @@
 //               fifteen seconds, until it's sung or broken
 //   raidmaren   Maren: a ghostly boss fight, wailing choir, war drums, a shanty fiddle and a foghorn (from “Maren is
 //               angered” until she's down)
-//   raidmaren2  her second phase (from a third of her strength, src/raidfort.js RF.p2): her fury, faster and harder, a
-//               screaming choir, war drums and a flooding storm tide; it swells as her tide floods in (RF.tide)
+//   raidmaren2  her second phase (from a third of her strength, src/raidfort.js RF.p2): her last stand in the storm, a
+//               great iron bell tolling, a screaming choir, war drums; low while she summons the storm (RF.p2i), then full, swelling on
+//               each bell toll and lightning flash (RF.tide)
 //   raidwin     Maren down: bittersweet, a sunset over the sea after a hard fight, a slow shanty on fiddle and
 //               concertina over warm strings, a far-off ship's horn, the waves (played once, on into the end card)
+// And in her second phase, her storm (sounds, not music): a thunder crack with each lightning flash (stormbolt, from
+// RF.bolt) and a high swirling wind (stormwind, looped, gusting with RF.tide) until she's down.
 // Once it's over otherwise (all of you down, or left), nothing plays. While the raid's on, the Lighthouse's boss
 // themes (src/zmtheme.js) keep quiet: this is the music. Nothing plays until its recording has loaded.
-const RM = { fell: false, cur: null, src: null, gain: null, vol: 0.55, rate: 1 };
+const RM = { WIND: 0.35, wind: null, bolt: null, fell: false, cur: null, src: null, gain: null, vol: 0.55, rate: 1 };
 const RM_LOOP = { raidfall: false, raidwin: false };
 const RM_TAIL = 2.5;   // (the fall's track runs on this long after its climax: tools/sfx/music.py TAIL)
 
@@ -49,15 +52,37 @@ function rmTick(dt) {
   // (the fall's track played through before you landed: on to the cave's, early)
   if (RM.cur === 'raidfall' && RM.done) RM.fell = true;
   const want = rmWant();
-  if (want !== RM.cur) { if (want) rmPlay(want, want === 'raidwin' ? 3 : want === 'raidmaren2' ? 1.2 : want === 'raidcave' && RM.cur === 'raidfall' ? RM_TAIL : want === 'raidfall' ? 1.5 : want === 'raidsong' || RM.cur === 'raidsong' ? 0.6 : 2); else rmStop(3); }
+  if (want !== RM.cur) { if (want) rmPlay(want, want === 'raidwin' ? 3 : want === 'raidmaren2' ? 0.4 : want === 'raidcave' && RM.cur === 'raidfall' ? RM_TAIL : want === 'raidfall' ? 1.5 : want === 'raidsong' || RM.cur === 'raidsong' ? 0.6 : 2); else rmStop(3); }
   // Maren's second phase: the music swells as her tide comes up the fort (RF.tide, 0 to 1)
-  if (RM.cur === 'raidmaren2' && RM.gain && typeof RF !== 'undefined') RM.gain.gain.setTargetAtTime(RM.vol * (1 + 0.45 * clamp(RF.tide || 0, 0, 1)), AUD.ctx.currentTime, 0.4);
+  // (while she summons the storm, RF.p2i, it comes up from quiet; then full, and it swells on each bell toll and
+  //  lightning flash, RF.tide, 0 to 1)
+  if (RM.cur === 'raidmaren2' && RM.gain && typeof RF !== 'undefined') RM.gain.gain.setTargetAtTime(RM.vol * (RF.p2i ? 0.35 : 1 + 0.45 * clamp(RF.tide || 0, 0, 1)), AUD.ctx.currentTime, RF.p2i ? 1.2 : 0.25);
+  // her storm: a thunder crack with each lightning flash (RF.bolt counts them), and a high swirling wind under it all
+  const storm = typeof RF !== 'undefined' && RAID.on && RAID_ORDER[RAID.stage] === 'fort' && RF.st === 'maren' && !!RF.p2 && !ZM.over;
+  if (typeof RF !== 'undefined') { if (storm && RM.bolt != null && RF.bolt !== RM.bolt) sfxPlay('stormbolt', { vol: 0.95, vary: 0.1, pan: (Math.random() - 0.5) * 0.8 }); RM.bolt = RF.bolt; }
+  rmWind(storm, dt);
   // the song: quicker and quicker, from its first beat to its last
   if (RM.cur === 'raidsong' && RM.src) {
     const z = ZM.z.find(z => z.bt === 'knock' && !z.dead), p = z ? clamp((z.at || 0) / RFK.SONG, 0, 1) : 0;
     RM.src.playbackRate.setTargetAtTime(1 + 0.65 * Math.pow(p, 1.4), AUD.ctx.currentTime, 0.1);
   }
 }
+function rmWind(on, dt) {
+  const c = AUD.ctx;
+  if (on && !RM.wind) {
+    const L = typeof SFXB !== 'undefined' && SFXB.buf.stormwind; if (!L || !L.length) return;
+    const s = c.createBufferSource(); s.buffer = L[0]; s.loop = true;
+    const g = c.createGain(); g.gain.value = 0;
+    s.connect(g).connect(AUD.master); s.start(0, Math.random() * L[0].duration * 0.8);
+    RM.wind = { s, g };
+  }
+  if (!RM.wind) return;
+  // (it gusts up with each toll and flash, RF.tide; and dies away over a few seconds once the storm's over)
+  RM.wind.g.gain.setTargetAtTime(on ? RM.WIND * (1 + 0.6 * clamp(RF.tide || 0, 0, 1)) : 0, c.currentTime, on ? 0.6 : 1.2);
+  if (!on) { RM.windOff = (RM.windOff || 0) + dt; if (RM.windOff > 6) { try { RM.wind.s.stop(); } catch (e) {} RM.wind = null; RM.windOff = 0; } } else RM.windOff = 0;
+}
+// (leaving the raid) everything off
+function rmQuiet(fade) { rmStop(fade); if (RM.wind) { try { RM.wind.g.gain.setTargetAtTime(0, AUD.ctx.currentTime, 0.2); RM.wind.s.stop(AUD.ctx.currentTime + 1); } catch (e) {} RM.wind = null; } RM.bolt = null; }
 function rmPlay(k, fade) {
   const L = typeof SFXB !== 'undefined' && SFXB.buf[k];
   if (!L || !L.length) return;   // (not loaded yet: tried again next frame)
