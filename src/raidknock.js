@@ -4,12 +4,13 @@
 //  - Its model is built after its picture (assets/knock.png): a tall plank of orange wood for a body, big round eyes,
 //    a long nose and a wide grin on its upper end, thin arms and long thin legs, bare feet, a bat in its right hand.
 //  - Its blows, each its own:
-//      the swing: close in, a flat swing of the bat that knocks you back (one knock);
+// Every blow of its takes half your health (rfHalf, src/raidfort.js), as Maren's do.
+//      the swing: close in, a flat swing of the bat that knocks you back;
 //      three knocks: it raps the bat on the flagstones three times, and each rap sends a ring out across the floor
-//        (one knock each; jump over them);
-//      the cleave: the bat up over its head and down, and the floor splits in a line towards you (two knocks; step
+//        (jump over them);
+//      the cleave: the bat up over its head and down, and the floor splits in a line towards you (step
 //        off the line);
-//      the throw: it hurls the bat at you end over end, and it comes back to its hand (one knock going, one coming).
+//      the throw: it hurls the bat at you end over end, and it comes back to its hand (going and coming).
 //  - Its song: at three quarters, half and a quarter of its strength it stands and sings, beating the bat into its
 //    other hand (15 s). While it sings a shot barely hurts it (a tenth), and a bar fills under its own: if the song is
 //    sung through, the whole squad is killed. Every hit fills a break meter instead; fill it and the song's broken and
@@ -19,16 +20,16 @@
 // on themselves (judge), from the blow and how far into it it is, and where it's aimed (ix, iy; ax, ay).
 
 const RFK = {
-  HP: 40, PTS: 2000, RAD: 1.05, TALL: 9.2, HEADZ: 6.9, PAD: 0.9, SP: 2.9, S: 9.2,   // (its size: S is its height)
+  HP: 40, PTS: 2000, RAD: 1.05, TALL: 9.2, HEADZ: 6.9, PAD: 0.9, SP: 3.6, S: 9.2,   // (its size: S is its height)
   BAT: 6.2, BAT_ARC: 1.3, NEAR: 3.6,   // (the swing's reach and arc)
-  WAVES: [0.85, 1.45, 2.05], WAVE_V: 12, WAVE_R: 20, WAVE_W: 0.9, KNOCK_AT: 5, KNOCK_SIDE: 1.3,   // (three knocks: when each lands, how fast and far its ring runs)
+  WAVES: [0.6, 1.0, 1.4], WAVE_V: 12, WAVE_R: 20, WAVE_W: 0.9, KNOCK_AT: 5, KNOCK_SIDE: 1.3,   // (three knocks: when each lands, how fast and far its ring runs)
   CLEAVE_L: 26, CLEAVE_W: 1.4, CLEAVE_V: 34,   // (the cleave's line: how long, how wide, how fast it splits)
-  HURL_OUT: 0.85, HURL_R: 1.5, HURL_MAX: 30, HURL_H: 2.2,   // (the throw: each way's time, how near counts, how far, how high)
+  HURL_OUT: 0.65, HURL_R: 1.5, HURL_MAX: 30, HURL_H: 2.2,   // (the throw: each way's time, how near counts, how far, how high)
   AT: [0, 4], DEEP: -9.5,   // (where it comes up: local x, y; how far under the flagstones it starts)
   SONG_AT: [0.75, 0.5, 0.25], SONG: 15, SONG_HURT: 0.1, BEAT: 0.5, DAZED: 3.2,   // (its song: at which strengths, how long, how little a shot hurts it meanwhile)
   BRK: 48, BRK_MORE: 40,   // (what breaks the song: damage, alone; and for each of you after)
 };
-const RFK_T = { song: { hit: RFK.SONG, end: RFK.SONG + 0.4 }, dazed: { hit: 99, end: RFK.DAZED }, emerge: { hit: 99, end: 3.6 }, bat: { hit: 0.8, end: 1.6 }, knocks: { hit: 0.85, end: 2.9 }, cleave: { hit: 1.3, end: 2.6 }, hurl: { hit: 0.8, end: 0.8 + RFK.HURL_OUT * 2 + 0.45 }, smash: { hit: 0.8, end: 1.3 } };
+const RFK_T = { song: { hit: RFK.SONG, end: RFK.SONG + 0.4 }, dazed: { hit: 99, end: RFK.DAZED }, emerge: { hit: 99, end: 3.6 }, bat: { hit: 0.55, end: 1.05 }, knocks: { hit: 0.6, end: 2.0 }, cleave: { hit: 0.9, end: 1.75 }, hurl: { hit: 0.55, end: 0.55 + RFK.HURL_OUT * 2 + 0.35 }, smash: { hit: 0.8, end: 1.3 } };
 ZB_KINDS.push('knock');
 for (const a of ['emerge', 'bat', 'knocks', 'cleave', 'hurl', 'song', 'dazed']) if (!ZB_ACT.includes(a)) ZB_ACT.push(a);
 
@@ -57,7 +58,7 @@ ZBT.knock = {
   arriveLine: () => 'Three knocks on wood, and up through the flagstones of the Plaza: the Knock, Maren’s bat. Put it down, and she comes.',
   smashLine: () => '',
   killLine: (who, pts) => `${who} split the Knock (+${pts}).`,
-  init(z) { z.kCd = 3; z.last = ''; z.songN = 0; z.songCd = 0; z.brk = 0; z.brkMax = 1; },
+  init(z) { z.kCd = 1.5; z.last = ''; z.songN = 0; z.songCd = 0; z.brk = 0; z.brkMax = 1; },
   cool(z, dt) { if (z.kCd > 0) z.kCd -= dt; if (z.songCd > 0) z.songCd -= dt; },
   think(z, p, d, dz, level) {
     // (at three quarters, half and a quarter of its strength: its song)
@@ -73,11 +74,11 @@ ZBT.knock = {
     return L.length ? L[(Math.random() * L.length) | 0] : null;
   },
   start(z, act, p) {
-    if (act === 'bat') { z.swCd = 2.2 + Math.random() * 0.6; return; }
+    if (act === 'bat') { z.swCd = 1.0 + Math.random() * 0.4; return; }
     if (act === 'emerge') return;
     if (act === 'song') { z.songN++; z.brk = 0; z.brkMax = RFK.BRK + RFK.BRK_MORE * (rfN() - 1); return; }
     if (act === 'dazed') { z.swCd = Math.max(z.swCd, 1); z.kCd = Math.max(z.kCd, 2); return; }
-    z.last = act; z.kCd = 3.2 + Math.random() * 2.2; z.swCd = Math.max(z.swCd, 1);
+    z.last = act; z.kCd = 1.4 + Math.random() * 1.0; z.swCd = Math.max(z.swCd, 0.6);
     z.ax = z.x; z.ay = z.y;
     if (act === 'knocks') { z.ix = z.x + Math.sin(z.h) * RFK.KNOCK_AT + Math.cos(z.h) * RFK.KNOCK_SIDE; z.iy = z.y + Math.cos(z.h) * RFK.KNOCK_AT - Math.sin(z.h) * RFK.KNOCK_SIDE; }
     else if (p) rfkAim(z, p, act);
@@ -122,7 +123,7 @@ ZBT.knock = {
         }
         const r0 = Math.max(0, (at0 - ti) * RFK.WAVE_V), r1 = (at1 - ti) * RFK.WAVE_V;
         if (r1 <= 0 || r0 > RFK.WAVE_R || (z.kh & b)) return;
-        if (ok && d > r0 - RFK.WAVE_W && d < r1 + RFK.WAVE_W * 0.5 && Math.abs((m.jz || 0) - iz) < 1.3 && rfkGrounded(m)) { z.kh |= b; rfkHurt(1, z.ix, z.iy); }
+        if (ok && d > r0 - RFK.WAVE_W && d < r1 + RFK.WAVE_W * 0.5 && Math.abs((m.jz || 0) - iz) < 1.3 && rfkGrounded(m)) { z.kh |= b; rfkHurt(rfHalf(), z.ix, z.iy); }
       });
     } else if (z.act === 'cleave') {
       const H = RFK_T.cleave.hit; if (at1 <= H) return;
@@ -130,14 +131,14 @@ ZBT.knock = {
       const s0 = Math.max(0, (at0 - H) * RFK.CLEAVE_V) - 0.6, s1 = Math.min(RFK.CLEAVE_L, (at1 - H) * RFK.CLEAVE_V) + 0.6;
       const rx = m.x - z.ax, ry = m.y - z.ay, along = rx * ux + ry * uy, side = Math.abs(rx * uy - ry * ux);
       if (!(z.kh & 8) && ok && along > Math.max(1.2, s0) && along < s1 && side < RFK.CLEAVE_W && Math.abs((m.jz || 0) - (z.jz || 0)) < 1.3 && rfkGrounded(m)) {
-        z.kh |= 8; fpsHurt(2, null, null); zmSound('hit'); FPS.hurtT = 1.0; FPS.eyeLag = clamp((FPS.eyeLag || 0) - 0.35, -0.8, 0.8);
+        z.kh |= 8; fpsHurt(rfHalf(), null, null); zmSound('hit'); FPS.hurtT = 1.0; FPS.eyeLag = clamp((FPS.eyeLag || 0) - 0.35, -0.8, 0.8);
       }
     } else if (z.act === 'hurl') {
       // (the bat's way between at0 and at1, a few points along it: did it pass through me)
       for (let i = 0; i <= 4; i++) {
         const t = zbL(at0, at1, i / 4), q = rfkBatAt(z, t); if (!q) continue;
         const b = t < RFK_T.hurl.hit + RFK.HURL_OUT ? 16 : 32;
-        if (!(z.kh & b) && ok && Math.hypot(q[0] - m.x, q[1] - m.y) < RFK.HURL_R && Math.abs(q[2] - ((m.jz || 0) + 1.1)) < 1.6) { z.kh |= b; rfkHurt(1, q[0], q[1]); }
+        if (!(z.kh & b) && ok && Math.hypot(q[0] - m.x, q[1] - m.y) < RFK.HURL_R && Math.abs(q[2] - ((m.jz || 0) + 1.1)) < 1.6) { z.kh |= b; rfkHurt(rfHalf(), q[0], q[1]); }
       }
       const back = RFK_T.hurl.hit + RFK.HURL_OUT * 2;
       if (at0 < back && at1 >= back) rfkSound('catch', dm);
@@ -148,7 +149,7 @@ ZBT.knock = {
     if (z.act === 'song') { rfkSongEnd(); return; }
     if (z.act === 'bat') {
       rfkSound('bat', d);
-      if (zbOk() && d < RFK.BAT && Math.abs(angDiff(bearingOf(m.x - z.x, m.y - z.y), z.h)) < RFK.BAT_ARC && Math.abs((m.jz || 0) - (z.jz || 0)) < 1.6) { rfkHurt(1, z.x, z.y); rfkSound('thwack', 0); }
+      if (zbOk() && d < RFK.BAT && Math.abs(angDiff(bearingOf(m.x - z.x, m.y - z.y), z.h)) < RFK.BAT_ARC && Math.abs((m.jz || 0) - (z.jz || 0)) < 1.6) { rfkHurt(rfHalf(), z.x, z.y); rfkSound('thwack', 0); }
       return;
     }
     if (z.act === 'cleave') {

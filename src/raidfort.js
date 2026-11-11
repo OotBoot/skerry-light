@@ -17,9 +17,9 @@
 //    rises out of the sea again somewhere else, and she's untouchable until it's shot again. Over and over, until
 //    she's dead. All through the fight the drowned keep coming, and now and then another boss (the Diver, a
 //    Mooncusser or the Keelback) climbs in too.
-//  - Her blows: close in she sweeps her arm through you (one knock); further off she raises her arm (as in her
+//  - Her blows: close in she sweeps her arm through you; further off she raises her arm (as in her
 //    picture) and the sea answers: a ring glows sea-green on the floor round one of you and erupts 2.4 seconds later
-//    (two knocks; jump, or get out of the ring). She keeps to the Plaza and the Battery: she's too big for the doors.
+//    (jump, or get out of the ring; each of her blows takes half your health). She keeps to the Plaza and the Battery: she's too big for the doors.
 //  - Her death: she drops a pirate token (Maren's Piece of Eight): walk over it and it's yours, one for each of you
 //    (the same pirate tokens as the Lighthouse's, src/zmegg.js ptGrant, spent on the Keeper's Last Light card).
 // Built on the Lighthouse's engine: the fort is a map of its own (ZM_MAPS.fort, FPI_GEN.fort, laid out with zmKit),
@@ -35,7 +35,7 @@ const RFC = {
   ROUND: 10,   // (how strong the drowned are here, as a Lighthouse round, at the least)
   VUL: 30, ORB_GAP: 3.5, ORB_R: 1.25,   // (how long she can be hurt once her soul's shot; before it's back; how big it is to hit)
   HP: 64, PTS: 2500, BOOST: 1.25, HP_MORE: 0.75,
-  RAD: 1.35, TALL: 6.3, HEADZ: 5.55, PAD: 0.9, SP: 2.5, S: 3.05,   // (her size: S times a woman's)
+  RAD: 1.35, TALL: 6.3, HEADZ: 5.55, PAD: 0.9, SP: 3.2, S: 3.05,   // (her size: S times a woman's)
   SWEEP: 4.7, SWEEP_ARC: 1.15, CALL_R: 3.4, CALL_RANGE: 34,
   ALIVE: [8, 13], ALIVE_MORE: 3, BOSS_T: [32, 48],
   ANGER: [1.2, 4.2],   // (from the Knock's fall to “Maren is angered”; from that to her rising)
@@ -563,7 +563,9 @@ function rfApply(o) {
 // rise: up out of the sea and over the sea wall onto the Battery (4 s, nothing hurts her blows yet); sweep: her arm
 // through whoever's close; call: her arm raised as in her picture, a ring on the floor round one of you, and the sea
 // comes up through it
-const RFM_T = { rise: { hit: 99, end: 4.2 }, sweep: { hit: 0.95, end: 1.75 }, call: { hit: 2.4, end: 3.2 }, smash: { hit: 0.8, end: 1.3 } };
+// (each of her blows takes half your health: rfHalf)
+const rfHalf = () => Math.max(1, Math.ceil((ZM.perks && ZM.perks.stout ? ZMC.HP_STOUT : ZMC.HP) / 2));
+const RFM_T = { rise: { hit: 99, end: 4.2 }, sweep: { hit: 0.62, end: 1.1 }, call: { hit: 1.6, end: 2.1 }, smash: { hit: 0.8, end: 1.3 } };
 ZB_KINDS.push('maren');
 for (const a of ['sweep', 'call', 'rise']) if (!ZB_ACT.includes(a)) ZB_ACT.push(a);
 const RF_RISE = [[0, -30, -7], [0, -24.5, 2.2], [0, -18.5, RFC.RT]];   // (where she comes up: local x, y, height)
@@ -578,7 +580,7 @@ ZBT.maren = {
   arriveLine: () => 'Out of the sea and over the wall onto the Sea Battery: Maren Holm. Shoot her soul, the light over the water, and she can be hurt.',
   smashLine: () => '',
   killLine: (who, pts) => `${who} laid Maren Holm to rest (+${pts}).`,
-  init(z) { z.callCd = 5; },
+  init(z) { z.callCd = 3; },
   cool(z, dt) { if (z.callCd > 0) z.callCd -= dt; },
   think(z, p, d, dz, level) {
     if (level && d < RFC.SWEEP - 0.4 && z.swCd <= 0) return 'sweep';
@@ -586,8 +588,8 @@ ZBT.maren = {
     return null;
   },
   start(z, act, p) {
-    if (act === 'sweep') z.swCd = 1.9 + Math.random() * 0.6;
-    if (act === 'call') { z.callCd = (RF.vul > 0 ? 4.2 : 6) + Math.random() * 2; z.swCd = Math.max(z.swCd, 0.8); if (p) { z.ix = p.x; z.iy = p.y; } }
+    if (act === 'sweep') z.swCd = 0.9 + Math.random() * 0.4;
+    if (act === 'call') { z.callCd = (RF.vul > 0 ? 2.2 : 3) + Math.random() * 1.2; z.swCd = Math.max(z.swCd, 0.5); if (p) { z.ix = p.x; z.iy = p.y; } }
   },
   during(z, dt, nearest) {
     const T = RFM_T[z.act];
@@ -610,14 +612,14 @@ ZBT.maren = {
   },
   strike(z) {
     const m = FPS.me, G0 = FPSC.GROUND;
-    if (z.act === 'sweep') { rfSound('sweep', Math.hypot(z.x - m.x, z.y - m.y)); zbMelee(z, RFC.SWEEP, RFC.SWEEP_ARC, 1); return; }
+    if (z.act === 'sweep') { rfSound('sweep', Math.hypot(z.x - m.x, z.y - m.y)); zbMelee(z, RFC.SWEEP, RFC.SWEEP_ARC, rfHalf()); return; }
     if (z.act !== 'call') return;
     const ix = z.ix, iy = z.iy, iz = zmFloorAt(ix, iy, 12, 0.3), dm = Math.hypot(ix - m.x, iy - m.y);
     rfSound('erupt', dm);
     for (let i = 0; i < 26; i++) { const a = i / 26 * 6.283, r = RFC.CALL_R * (0.2 + Math.random() * 0.8); fpsPuff(ix + Math.cos(a) * r, iy + Math.sin(a) * r, G0 + iz + 0.2 + Math.random() * 1.6, '150,220,210', 3); }
     z.wave = 0.01;
     const grounded = (m.jz || 0) - (m.fl || 0) < 0.25 && !((m.vz || 0) > 0.5);
-    if (zbOk() && dm < RFC.CALL_R && Math.abs((m.jz || 0) - iz) < 1.3 && grounded) { fpsHurt(2, null, null); zmSound('hit'); FPS.hurtT = 0.9; FPS.eyeLag = clamp((FPS.eyeLag || 0) - 0.25, -0.8, 0.8); }
+    if (zbOk() && dm < RFC.CALL_R && Math.abs((m.jz || 0) - iz) < 1.3 && grounded) { fpsHurt(rfHalf(), null, null); zmSound('hit'); FPS.hurtT = 0.9; FPS.eyeLag = clamp((FPS.eyeLag || 0) - 0.25, -0.8, 0.8); }
   },
   after(z, a) { if (a === 'rise') { z.st = 'in'; z.jz = z.fl = RFC.RT; zmSettle(z); } },
   // (while her soul's out of her nothing touches her; struck, the Lamp burns her at half the rate)
