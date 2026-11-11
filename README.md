@@ -12,6 +12,8 @@ The only thing she will not go near is **Plimsoll**, the shark who walked up out
 
 The log goes on through 1888. The sea stops being one sea: some nights it freezes, some nights the hills burn, some nights the water is warm and green, or full of fog and gravestones, or the rocks are glass. Stranger things than Maren start turning up on the water, and a small yellow thing called **Verity** sits on decks offering to help. Now and then a ship sails through a ring of black stone into a sea of fire, or onto the wine-dark sea of an older story, or into a place at dusk where doors stand in the water. And one night an iron ship with no sails comes into the harbour, from a year the keeper will not write down. Those far seas each have their own page.
 
+**The Skerry Compendium.** Beside Patch notes on the main menu, **Lore compendium** opens the game's lore book, laid out like a wiki: the whole history of the Light in one place, tying every game into one story. The seven tales, in the order they happened: the voyages of 1888 (Skerry Light), Wreckers' Night, The Gannet's Wake (14 December 1888), Keeper's Last Light (the winter after), Fog Run (1889), Maren's End (the Dry Night of 1890) and Drowned Reach (the years after). Around them, 70 articles in eight categories (Chronicles, Characters, Creatures, Places, Factions, Events, Ships, Objects), each with an infobox, links to the rest, See also, What links here and its categories at the foot; a timeline of the Skerries from the first fire on Lantern Rock; search as you type (Enter for full results); Random article and All pages; and on the main page a featured article and a page from the keeper's log that change each day. ‹ Back (or Backspace) goes to the last page read; ✕, Esc or B on a controller closes it. Its text is in `src/lore.js` (the file's top comment shows the shape of an article) and `src/loreui.js` draws it. Where the game says nothing the gaps are filled with lore that fits, and the keeper's log (`SK.LOG`) is never contradicted. Keep secrets out of it entirely.
+
 The version number sits at the top of the main menu, so you can tell which build you're playing. Under the game banners, **Patch notes** opens a page listing every recent update, newest first, sorted into New, Balance, Changes, Fixes and Sound. Close it with the ✕, Esc, or B on a controller.
 
 ## How to play
@@ -691,6 +693,10 @@ The version shown at the top of the main menu is `VERSION` at the top of `src/co
 ### Patch notes
 
 Every change pushed to `main` also adds an entry for its new version at the top of `PATCH_NOTES` in `src/patchnotes.js` (the file's top comment shows the shape: `v`, `date`, `title` and any of `New`, `Balance`, `Changes`, `Fixes`, `Sound`). `src/patchnotesui.js` draws the page. Write them like real patch notes, from the player's side, and leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
+
+### Lore compendium
+
+Every new character, place, boss or story beat gets a page (or a line) in `src/lore.js`, linked with `[[id]]` or `[[id|words]]` from the pages it touches, so the compendium keeps up with the game. Leave secrets out of it, as from the patch notes.
 
 ## Project layout
 

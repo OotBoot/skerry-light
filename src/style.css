@@ -1048,7 +1048,9 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 
 /* Patch Notes: the button under the game banners and its page */
 .notesbtn { justify-self: center; margin: -4px auto 0; padding: 5px 14px; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; }
-@media (orientation: landscape) and (max-height: 520px) { #titleCard > .notesbtn { grid-column: 1 / -1; width: max-content; } }
+@media (orientation: landscape) and (max-height: 520px) { #titleCard > .menulinks { grid-column: 1 / -1; width: max-content; } }
+.menulinks { justify-self: center; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: -4px auto 0; }
+.menulinks .notesbtn { margin: 0; }
 .notescard { z-index: 23; }
 .notescard .card { max-width: 40rem; }
 .pnlist { display: grid; gap: 18px; margin-top: 6px; }
@@ -1106,4 +1108,91 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
   .frchopt { padding: 8px 10px; gap: 2px; }
   .frchopt .mk { display: none; } .frchopt .on { display: none; }
   .frchopt .nm { font-size: 18px; } .frchopt .tg { font-size: 12px; }
+}
+
+/* The Skerry Compendium (src/loreui.js): the lore book, laid out like a wiki on parchment, with a sidebar, infoboxes and categories */
+.lorecard { z-index: 24; padding-block: 12px; place-items: stretch center; }
+.lw { --pg: #f4eedf; --pg2: #e9e0c8; --pgline: #c9bb98; --tx: #22201b; --tx2: #5f5848; --ln: #2c5591; --lnh: #a2381f;
+  width: 100%; max-width: 72rem; height: calc(100dvh - 24px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)); min-height: 0;
+  display: grid; grid-template-columns: 11.5rem minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr);
+  background: var(--pg); color: var(--tx); border: 1px solid var(--pgline); box-shadow: 0 10px 50px rgba(0,0,0,0.6);
+  font-family: Georgia, "Iowan Old Style", "Times New Roman", serif; -webkit-user-select: text; user-select: text; }
+.lw a { color: var(--ln); text-decoration: none; } .lw a:hover, .lw a:focus-visible { color: var(--lnh); text-decoration: underline; }
+.lw-top { grid-column: 1 / -1; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; padding: 10px 16px; background: var(--pg2); border-bottom: 1px solid var(--pgline); }
+.lw-logo { display: flex; align-items: center; gap: 10px; color: var(--tx) !important; text-decoration: none !important; }
+.lw-logo b { display: block; font-family: var(--display); font-weight: 400; font-size: 1.35rem; line-height: 1; letter-spacing: 0.01em; }
+.lw-logo small { display: block; font-family: var(--log); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--tx2); margin-top: 3px; }
+.lw-mark { width: 34px; height: 34px; border-radius: 50%; flex: none; background: radial-gradient(circle at 50% 50%, #ffe2a0 0 18%, #e6a74a 19% 30%, transparent 31%), conic-gradient(from -20deg, rgba(230,167,74,0.75) 0 40deg, transparent 40deg 360deg), #1c2540; border: 2px solid #8a7a55; }
+.lw-search { position: relative; flex: 1 1 14rem; max-width: 26rem; display: flex; margin-left: auto; }
+.lw-search input { flex: 1; min-width: 0; font: 15px Georgia, serif; padding: 7px 10px; border: 1px solid #a89a77; border-right: 0; background: #fffdf6; color: var(--tx); border-radius: 0; }
+.lw-search input:focus { outline: 2px solid var(--ln); outline-offset: -2px; }
+.lw-go { font: 13px Georgia, serif; padding: 0 12px; border: 1px solid #a89a77; background: #f8f3e6; color: var(--tx); cursor: pointer; }
+.lw-sug { position: absolute; top: 100%; left: 0; right: 0; z-index: 3; margin: 0; padding: 4px 0; list-style: none; background: #fffdf6; border: 1px solid #a89a77; box-shadow: 0 6px 18px rgba(0,0,0,0.25); }
+.lw-sug a { display: block; padding: 5px 10px; } .lw-sugall { border-top: 1px solid var(--pg2); font-size: 13px; }
+.lw-tools { display: flex; gap: 6px; }
+.lw-tools .closebtn { background: #2a2f40; }
+.lw-side { padding: 14px 12px 20px 16px; background: var(--pg2); border-right: 1px solid var(--pgline); overflow-y: auto; font-size: 14px; }
+.lw-side h4 { margin: 14px 0 6px; font: 700 10px var(--log); letter-spacing: 0.16em; text-transform: uppercase; color: var(--tx2); border-bottom: 1px solid var(--pgline); padding-bottom: 3px; }
+.lw-side h4:first-child { margin-top: 0; }
+.lw-side ul { list-style: none; margin: 0; padding: 0; } .lw-side li { margin: 4px 0; }
+.lw-side .on { font-weight: 700; color: var(--tx); }
+.lw-main { overflow-y: auto; padding: 18px 26px 40px; font-size: 15.5px; line-height: 1.6; overscroll-behavior: contain; }
+.lw-main::after { content: ""; display: table; clear: both; }
+.lw-h1 { font-family: Georgia, "Times New Roman", serif; font-weight: 400; font-size: 1.9rem; line-height: 1.2; margin: 0; padding-bottom: 4px; border-bottom: 1px solid var(--pgline); color: var(--tx); }
+.lw-from { margin: 4px 0 14px; font-size: 12.5px; color: var(--tx2); font-style: italic; }
+.lw-main h2 { font-family: Georgia, serif; font-weight: 400; font-size: 1.35rem; margin: 22px 0 8px; padding-bottom: 3px; border-bottom: 1px solid var(--pgline); color: var(--tx); }
+.lw-main h3 { font-size: 1rem; margin: 12px 0 4px; }
+.lw-main p { margin: 0 0 10px; }
+.lw-sum { font-size: 16px; }
+.lw-red { color: #ba3a2a; }
+.lw-muted { color: var(--tx2); font-size: 0.9em; }
+.lw-box { float: right; clear: right; width: 17.5rem; max-width: 100%; margin: 0 0 14px 20px; background: #f9f5ea; border: 1px solid #b8aa86; font-size: 13.5px; line-height: 1.4; }
+.lw-boxhead { background: #2b3550; color: #ffe2a0; text-align: center; font-family: var(--display); font-size: 1.15rem; padding: 6px 8px; }
+.lw-boximg { background: radial-gradient(ellipse at 50% 45%, #c9d3e0, #7d8ca6 80%); display: grid; place-items: center; padding: 12px; }
+.lw-boximg img { max-width: 100%; max-height: 14rem; display: block; }
+.lw-box table { width: 100%; border-collapse: collapse; }
+.lw-box th, .lw-box td { text-align: left; vertical-align: top; padding: 5px 8px; border-top: 1px solid #e2d8bf; }
+.lw-box th { width: 38%; font-weight: 700; color: var(--tx2); }
+.lw-toc { display: inline-block; min-width: 13rem; margin: 4px 0 12px; padding: 8px 14px 8px 12px; background: #f9f5ea; border: 1px solid #b8aa86; font-size: 14px; }
+.lw-toc b { display: block; text-align: center; margin-bottom: 4px; } .lw-toc ol { margin: 0; padding-left: 20px; }
+.lw-list { margin: 0 0 10px; padding-left: 20px; }
+.lw-what { margin: 16px 0 6px; font-size: 14px; } .lw-what summary { cursor: pointer; color: var(--ln); }
+.lw-catbar { clear: both; margin-top: 26px; padding: 6px 10px; border: 1px solid #b8aa86; background: #f9f5ea; font-size: 13.5px; }
+.lw-catbar a { display: inline-block; margin-right: 4px; padding-right: 8px; border-right: 1px solid #c9bb98; } .lw-catbar a:last-child { border-right: 0; }
+.lw-cols { columns: 2 16rem; column-gap: 28px; } .lw-cols h3 { break-after: avoid; } .lw-cols ul { break-inside: avoid-column; }
+.lw-results { list-style: none; padding: 0; margin: 0; } .lw-results li { margin-bottom: 12px; } .lw-results li > a { font-size: 1.08rem; }
+.lw-results p { margin: 2px 0 0; font-size: 13.5px; color: var(--tx2); } .lw-results mark { background: #f2dc8e; color: inherit; }
+.lw-gal { display: grid; grid-template-columns: repeat(auto-fill, minmax(7.5rem, 1fr)); gap: 10px; }
+.lw-gal figure { margin: 0; background: radial-gradient(ellipse at 50% 60%, #34436e, #0d1324 80%); border: 1px solid #b8aa86; padding: 6px; text-align: center; }
+.lw-gal img { width: 100%; height: 6.5rem; object-fit: contain; display: block; }
+.lw-gal figcaption { font-size: 12px; color: #f0e6cc; margin-top: 4px; }
+.lw-welcome { text-align: center; font-family: var(--display); font-size: 2.1rem; border-bottom: 0; }
+.lw-welcome + .lw-from { text-align: center; font-style: normal; }
+.lw-mp { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.lw-panel { border: 1px solid #b8aa86; background: #f9f5ea; padding: 0 14px 10px; min-width: 0; }
+.lw-panel h2 { margin: 0 -14px 10px; padding: 5px 14px; font-size: 1.05rem; background: var(--pg2); border-bottom: 1px solid #b8aa86; }
+.lw-wide { grid-column: 1 / -1; }
+.lw-chron { list-style: none; counter-reset: ch; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr)); gap: 8px; }
+.lw-chron a { display: block; counter-increment: ch; padding: 8px 10px 8px 34px; position: relative; background: #fffdf6; border: 1px solid #d8ccae; height: 100%; }
+.lw-chron a::before { content: counter(ch); position: absolute; left: 9px; top: 8px; width: 18px; height: 18px; border-radius: 50%; background: #2b3550; color: #ffe2a0; font: 700 11px/18px var(--log); text-align: center; }
+.lw-chron b { display: block; } .lw-chron span { display: block; font-size: 12.5px; color: var(--tx2); }
+.lw-feat { float: right; width: 6.5rem; margin: 0 0 6px 10px; background: radial-gradient(ellipse at 50% 60%, #34436e, #0d1324 80%); padding: 4px; border: 1px solid #b8aa86; }
+.lw-logdate { font-family: var(--log); font-size: 12px; color: var(--tx2); margin-bottom: 4px !important; }
+.lw-panel blockquote { margin: 0 0 8px; padding-left: 10px; border-left: 3px solid #c9bb98; font-style: italic; }
+@media (max-width: 760px) {
+  .lorecard { padding: 0; }
+  .lw { height: 100dvh; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto minmax(0, 1fr); border: 0; }
+  .lw-top { padding: 8px 12px; gap: 8px; } .lw-logo b { font-size: 1.1rem; } .lw-mark { width: 26px; height: 26px; }
+  .lw-logo small { display: none; } .lw-tools .closebtn { padding: 6px 9px; font-size: 10px; }
+  .lw-tools { margin-left: auto; } .lw-search { order: 3; flex-basis: 100%; max-width: none; }
+  .lw-side { border-right: 0; border-bottom: 1px solid var(--pgline); padding: 6px 12px; display: flex; gap: 4px 12px; flex-wrap: wrap; overflow-x: auto; font-size: 13px; }
+  .lw-side h4 { display: none; } .lw-side ul { display: contents; } .lw-side li { margin: 0; white-space: nowrap; }
+  .lw-main { padding: 12px 16px 30px; font-size: 15px; }
+  .lw-box { float: none; width: auto; margin: 0 0 14px; }
+  .lw-mp { grid-template-columns: minmax(0, 1fr); }
+  .lw-h1 { font-size: 1.55rem; }
+}
+@media (orientation: landscape) and (max-height: 520px) {
+  .lorecard { padding: 0; } .lw { height: 100dvh; }
+  .lw-side { font-size: 13px; }
 }

@@ -77,7 +77,7 @@
     <button class="newgame zmbanner" id="zmBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">And a fourth, <b>Keeper's Last Light</b>: hold the keeper's station against the drowned, round after round</span><span class="ng-go" aria-hidden="true">↓</span></button>
     <button class="newgame rdbanner" id="rdBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">And raids, alone or with up to four: <b>Maren's End</b>, and new, <b>The Gannet's Wake</b></span><span class="ng-go" aria-hidden="true">↓</span></button>
     <button class="newgame frbanner" id="frBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">And <b>Fog Run</b>: sail the keeper's cutter out into the haar and light the islands, alone or with up to four</span><span class="ng-go" aria-hidden="true">↓</span></button>
-    <button class="tool notesbtn" id="notesBtn" type="button">Patch notes</button>
+    <div class="menulinks"><button class="tool notesbtn" id="notesBtn" type="button">Patch notes</button><button class="tool notesbtn lorebtn" id="loreBtn" type="button">Lore compendium</button></div>
     <div class="card boardcard" id="boardCard" aria-labelledby="boardHead">
       <div class="cardtop"><span class="eyebrow">Best on record · every game</span><span class="boardminititle">The Scoreboard</span><span class="boardbtns"><button class="tool closebtn" id="boardRefresh" type="button">Refresh</button><button class="tool closebtn" id="boardMin" type="button" aria-expanded="true" aria-controls="boardCard" title="Make the scoreboard small">– Minimise</button></span></div>
       <h1 id="boardHead">The Scoreboard</h1>
@@ -709,6 +709,23 @@
     </div>
   </div>
 
+  <div class="overlay lorecard" id="loreCard" hidden role="dialog" aria-modal="true" aria-labelledby="loreHead">
+    <div class="lw">
+      <header class="lw-top">
+        <a href="#" class="lw-logo" data-nav="main" aria-label="The Skerry Compendium, main page"><span class="lw-mark" aria-hidden="true"></span><span><b>The Skerry Compendium</b><small>The record of the Light</small></span></a>
+        <form class="lw-search" id="loreForm" role="search"><input id="loreQ" type="search" placeholder="Search the Compendium" aria-label="Search the Compendium" autocomplete="off" spellcheck="false"><button class="lw-go" type="submit" aria-label="Search">Search</button><ul class="lw-sug" id="loreSug" hidden></ul></form>
+        <div class="lw-tools"><button class="tool closebtn" id="loreBack" type="button" disabled>‹ Back</button><button class="tool closebtn" id="loreClose" type="button">✕ Close</button></div>
+      </header>
+      <nav class="lw-side" id="loreSide" aria-label="Compendium">
+        <h4>Navigation</h4>
+        <ul><li><a href="#" data-nav="main">Main page</a></li><li><a href="#" data-nav="timeline">Timeline</a></li><li><a href="#" data-nav="all">All pages</a></li><li><a href="#" data-nav="random">Random article</a></li></ul>
+        <h4>Categories</h4>
+        <ul id="loreCats"></ul>
+      </nav>
+      <main class="lw-main" id="loreMain"></main>
+    </div>
+  </div>
+
   <div class="toast" id="toast" hidden role="status"></div>
 </div>
 
@@ -795,6 +812,8 @@
 <script src="src/cloudsave.js"></script>
 <script src="src/share.js"></script>
 <script src="src/patchnotesui.js"></script>
+<script src="src/lore.js"></script>
+<script src="src/loreui.js"></script>
 <script src="src/rejoin.js"></script>
 <script src="src/main.js"></script>
 </body>

@@ -6,6 +6,11 @@
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 168, date: '2026-11-11', title: "The Skerry Compendium", New: [
+    "Main menu: a new Lore compendium button, beside Patch notes, opens the Skerry Compendium: the whole story of the Light in one place, laid out like a wiki.",
+    "Lore: 70 articles tying every game into one history, from the first fire on Lantern Rock, through the wreck of the Gannet and the voyages of 1888, to Maren's End and the wars of the Drowned Reach. Characters, creatures, places, factions, ships, objects and events, each with an infobox and links to the rest.",
+    "Lore: a single timeline of the Skerries, and a page for each of the seven tales (Skerry Light, Wreckers' Night, The Gannet's Wake, Keeper's Last Light, Fog Run, Maren's End and Drowned Reach) saying where it fits.",
+    "Lore: search as you type, a Random article button, a featured article and a page from the keeper's log on the main page each day, and a Back button. Esc or B on a controller closes it." ] },
   { v: 167, date: '2026-11-11', title: "A smaller scoreboard", New: [
     "Main menu: the scoreboard has a Minimise button at its top. It shrinks the board down to a small bar, and Show opens it again. The game remembers which you picked on this device." ] },
   { v: 166, date: '2026-11-11', title: "Fog Run: the chart closes ashore", Fixes: [
