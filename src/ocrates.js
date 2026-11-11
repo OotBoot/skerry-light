@@ -51,11 +51,13 @@ const OC_ROWS = [
   // [pirate tokens] src/zmegg.js: only ever unlocked with the Lighthouse's pirate tokens, never in a crate (no crate rolls 'pirate')
   ['oc_gannetcap','Captain of the Gannet',  'pirate',   '#141a22', '#e0b040', '#8a1a1a', '#0c0e12', 'bicorne',   { fx: 'aura', glow: '#7affd0', eyes: '#c8fff0', halo: '#3ee0b4', brass: '#ffd34d', waist: '#3a1410', breeches: '#2a2420' }],
   ['oc_marenoil', 'Maren’s Oilskins',       'pirate',   '#c8962a', '#fff0b0', '#2a4a6a', '#b8862a', 'souwester', { fx: 'glow', glow: '#ffd88a', eyes: '#fff4c8', halo: '#ffe0a0', breeches: '#3a3a3a', brass: '#e0c060' }],
+  // [verity] Verity's Wardrobe (src/verityfx.js): only ever dropped by Verity, in Maren's End, never in a crate
+  ['vy_grin',    'Verity’s Grin',          'pirate',   '#e8d41a', '#1a1406', '#060504', '#e8d41a', 'verity',    { fx: 'aura', vy: 1, glow: '#ffe24a', halo: '#ffd820', brass: '#060504', waist: '#2a2208', breeches: '#b8a414' }],
 ];
 const OC_OUTFITS = OC_ROWS.map(([id, name, rarity, coat, trim, sash, hat, style, x]) => Object.freeze(Object.assign({ id, name, rarity, coat, trim, sash, hat, style }, x || {})));
 const OC_BY_ID = Object.fromEntries(OC_OUTFITS.map(o => [o.id, o]));
 const ocOutfit = id => (typeof id === 'string' && OC_BY_ID[id]) || null;
-const ocRarityOf = o => RARITIES.find(r => r.id === o.rarity) || (o.rarity === 'pirate' ? RARITY_PIRATE : undefined);   // [pirate tokens]
+const ocRarityOf = o => RARITIES.find(r => r.id === o.rarity) || (o.rarity === 'pirate' ? rarityPirate(o) : undefined);   // [pirate tokens] ([verity] his own grade's name)
 const ocLevel = o => o && o.rarity ? (o.rarity === 'pirate' ? 6 : RARITIES.findIndex(r => r.id === o.rarity) + 1) : 0;
 
 const OC = { crates: 0, opened: 0, kills: 0, owned: {}, equipped: '', pending: null, opening: false, opener: null, ashore: 0, wasOn: false };

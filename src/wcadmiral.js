@@ -40,6 +40,16 @@ const WCA_THEMES = {
   hp_due:       { th: 6, v: 3, a: '#3ee0b4', b: '#ffd34d', c: '#06302a', dim: 0.3, k: 1.0, sp: 0.35 },
   cl_doubloon:  { th: 6, v: 4, a: '#3ee0b4', b: '#ffd34d', c: '#04261f', dim: 0.12, k: 0.9, sp: 0.04 },
   av_eight:     { th: 6, v: 5, a: '#5affb8', b: '#ffd34d', c: '#062a22', dim: 0.25, k: 1.05, sp: 0.3 },
+  // [verity] Verity's Wardrobe (src/verityfx.js) all share an eighth theme: his yellow, his smiling faces set all over the
+  // gun, blinking in their own time and grinning wider, and his giggle running down it; v is each weapon's own touch
+  // (0 the pepperbox's barrels each a face; 1 a great grin round the blunderbuss's bell; 2 his eye in the longarm's
+  // scope; 3 his tongue down the harpoon gun; 4 a row of teeth along the cutlass's edge; 5 faces that roll round the avtomat)
+  vy_pb:        { th: 7, v: 0, a: '#ffe24a', b: '#fff6c8', c: '#5a4a00', dim: 0.55, k: 0.95, sp: 0.4 },
+  vy_bb:        { th: 7, v: 1, a: '#ffe24a', b: '#fff6c8', c: '#5a4a00', dim: 0.5, k: 0.95, sp: 0.4 },
+  vy_la:        { th: 7, v: 2, a: '#ffe24a', b: '#fff6c8', c: '#5a4a00', dim: 0.55, k: 0.9, sp: 0.5 },
+  vy_hp:        { th: 7, v: 3, a: '#ffe24a', b: '#fff6c8', c: '#5a4a00', dim: 0.5, k: 0.95, sp: 0.4 },
+  vy_cl:        { th: 7, v: 4, a: '#ffe24a', b: '#fff6c8', c: '#5a4a00', dim: 0.4, k: 0.9, sp: 0.1 },
+  vy_av:        { th: 7, v: 5, a: '#ffe24a', b: '#fff6c8', c: '#5a4a00', dim: 0.5, k: 0.95, sp: 0.4 },
 };
 // per weapon, in its root's space: [length along y (1) or z (0), where its length starts, where it ends (the
 // muzzle or point), the axis's middle across (x), and up (y, or z for the cutlass)]
@@ -189,7 +199,7 @@ vec3 wcaFire(vec3 n, vec3 v, inout vec3 dif) {
     vec3 sp = vec3(s * 70.0 - t * 2.5, cr.x * 70.0 - t * 0.6, cr.y * 70.0 + t * 1.4);
     col += mix(wcaB, wcaC, big * 0.6) * wcaStar(sp, t * 3.0, 0.84) * (1.0 + brk * 3.0 + big * 1.5);
     col += mix(wcaA, wcaB, 0.6) * rim * 0.75 * wcaR.y;
-  } else {
+  } else if (th < 6.5) {
     // ---- the Gannet's Locker: cold green ghost-fire creeping along the gun, light through deep water over it, gold
     // doubloons set in the metal each catching the light in its own time, bubbles rising, and every four seconds the
     // locker's pulse, a ring of green and gold running from the breech (or hilt) to the muzzle (or point)
@@ -212,6 +222,37 @@ vec3 wcaFire(vec3 n, vec3 v, inout vec3 dif) {
     col += mix(wcaA, vec3(1.0), 0.5) * wcaStar(bp, t * 3.0, 0.86) * 2.2;
     col += wcaB * wcaStar(wcaP * 150.0 + 7.0, t * 2.4, 0.9) * (1.5 + pulse * 4.0);
     col += mix(wcaA, wcaB, 0.25 + 0.25 * sin(t * 1.3)) * rim * (0.55 + pulse * 0.8) * wcaR.y;
+  } else {
+    // ---- [verity] Verity's: his yellow over the metal, his smiling faces set all over it (each in a cell about three
+    // centimetres across, laid along the gun and round it), each blinking in its own time and its grin widening, and
+    // every three seconds his giggle, a ripple of light, running from the breech (or hilt) to the muzzle (or point)
+    float v = wcaS.w, L = abs(wcaS.z - wcaS.y);
+    float rl = v > 4.5 ? t * 0.35 : 0.0;   // (the avtomat's faces roll round it)
+    vec2 fg = vec2(s * L / 0.032, (ang + rl) * max(rad, 0.012) / 0.032 + (wcaS.x > 0.5 ? wcaP.z * 30.0 : 0.0));
+    vec2 c = floor(fg), f = fract(fg) - 0.5; float h = wcaH2(c);
+    float on = step(v < 0.5 ? 0.3 : 0.52, h), d = length(f);
+    float face = (1.0 - smoothstep(0.34, 0.4, d)) * on;
+    float open = smoothstep(0.02, 0.07, abs(fract(t * (0.17 + h * 0.08) + h * 7.0) - 0.5));
+    vec2 e1 = (f - vec2(-0.13, 0.09)) / vec2(0.055, mix(0.012, 0.09, open)), e2 = (f - vec2(0.13, 0.09)) / vec2(0.055, mix(0.012, 0.09, open));
+    float eye = (1.0 - smoothstep(0.8, 1.1, length(e1))) + (1.0 - smoothstep(0.8, 1.1, length(e2)));
+    float gw = 0.19 + 0.05 * sin(t * 1.7 + h * 30.0), md = length(f - vec2(0.0, 0.07));
+    float mouth = (1.0 - smoothstep(0.025, 0.05, abs(md - gw))) * step(f.y, 0.0);
+    float feat = clamp(eye + mouth, 0.0, 1.0) * face;
+    // (each weapon's own: a great grin round the bell, his eye in the scope, his tongue, a row of teeth)
+    float sp = 0.0;
+    if (v > 0.5 && v < 1.5) { float gr = abs(s - 0.92 - 0.03 * sin(ang * 2.0)); feat = max(feat, (1.0 - smoothstep(0.012, 0.025, gr)) * step(-0.2, -sin(ang))); sp = (1.0 - smoothstep(0.0, 0.05, abs(s - 0.86))) * step(0.5, fract(ang * 4.0 + t)); }
+    if (v > 1.5 && v < 2.5) { vec2 e = vec2(wcaP.x, wcaP.y - 0.098); float ez = smoothstep(0.014, 0.0, abs(wcaP.z - 0.06)), er = length(e);
+      float lid = step(abs(e.y), 0.0145 * smoothstep(0.0, 0.06, abs(fract(t * 0.21) - 0.5) - 0.02));
+      feat = max(feat, ez * lid * smoothstep(0.0055, 0.004, length(e - vec2(0.004 * sin(t * 0.8), 0.002 * sin(t * 0.5)))));
+      sp = ez * lid * smoothstep(0.015, 0.012, er); }
+    if (v > 2.5 && v < 3.5) sp = (1.0 - smoothstep(0.0, 0.006, abs(cr.x + 0.004 * sin(s * 30.0 - t * 4.0)))) * step(0.0, cr.y) * smoothstep(0.2, 0.5, s);
+    if (v > 3.5 && v < 4.5) { float tooth = step(0.35, fract(s * 40.0)) * step(abs(wcaP.x - wcaO.x), 0.002) * step(0.3, s); sp = tooth * (0.6 + 0.4 * sin(t * 6.0 - s * 30.0)); }
+    float gl = 0.5 + 0.5 * sin(t * 1.4 + s * 5.0);
+    float gp = (s - (fract(t / 3.0) * 1.6 - 0.3)) / 0.06, rip = exp(-gp * gp) * (0.65 + 0.35 * sin(ang * 8.0 + t * 20.0));
+    vec3 lit = wcaC * 0.3 + wcaA * (0.18 + 0.12 * gl) + wcaA * face * (0.6 + 0.3 * sin(t * 2.0 + h * 20.0)) + wcaB * rip * 1.3 + wcaB * sp * 1.4;
+    lit += mix(wcaA, wcaB, 0.4) * rim * (0.6 + rip) * wcaR.y + wcaB * wcaStar(wcaP * 140.0, t * 2.0, 0.9) * 1.4;
+    dif = mix(dif, vec3(0.015, 0.012, 0.004), feat * 0.95);
+    col += lit * (1.0 - feat * 0.97);
   }
   return col * wcaK.y * wcaR.x;
 }
@@ -355,6 +396,8 @@ function wcaSvg(svg, gun, skin, uid, el) {
       anim(e, { attributeName: 'cy', values: '34;4', dur: (1.6 + (i % 4) * 0.35) + 's', begin: (i * 0.23) + 's' });
       anim(e, { attributeName: 'opacity', values: '0;1;0', dur: (1.6 + (i % 4) * 0.35) + 's', begin: (i * 0.23) + 's' });
     }
+  } else if (th === 7) {
+    if (typeof vyWcaSvg === 'function') vyWcaSvg(svg, over, back, T, uid, el, anim, grad);   // [verity] src/verityfx.js
   } else if (th === 6) {
     // the Gannet's Locker: green ghost-fire rising through the gun, doubloons turning in it, bubbles, and the pulse
     for (let i = 0; i < 6; i++) {

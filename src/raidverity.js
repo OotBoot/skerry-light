@@ -226,6 +226,7 @@ function rvMe(dt) {
   if (RV.tok && !RV.mine && !(m.dead > 0) && Math.hypot(m.x - RV.tok[0], m.y - RV.tok[1]) < 1.9 && Math.abs((m.jz || 0) - RV.tok[2]) < 1.5) {
     RV.mine = true; RV.grab = 6;
     if (typeof ptGrant === 'function') ptGrant();
+    RV.suite = typeof vyGrant === 'function' ? vyGrant() : 0;   // [verity] and his whole wardrobe, the first time (src/verityfx.js)
     if (typeof cloudSaveSoon === 'function') try { cloudSaveSoon(); } catch (e) {}
     fpsFeed('You take Verity’s pirate token: yours to keep.');
     rvSound('token', 0);
@@ -722,6 +723,7 @@ function rvHud(phone, mono, fell) {
     ctx.fillStyle = 'rgba(236,228,207,0.9)'; ctx.font = mono(phone ? 10 : 13);
     const n = typeof ptTokens === 'function' ? ptTokens() : 1;
     ctx.fillText(`A pirate token: yours to keep (${n} to spend on the Keeper’s Last Light card)`, cx, y + r + (phone ? 40 : 58), W * 0.9);
+    if (RV.suite) { ctx.fillStyle = '#ffe24a'; ctx.font = fell(phone ? 14 : 19); ctx.fillText('And Verity’s Wardrobe, all of it: ' + RV.suite + ' things no crate holds', cx, y + r + (phone ? 60 : 86), W * 0.9); ctx.fillStyle = 'rgba(236,228,207,0.85)'; ctx.font = mono(phone ? 9 : 12); ctx.fillText('His outfit, a finish for every weapon, a skin for every boat and a banner, with your others', cx, y + r + (phone ? 76 : 106), W * 0.9); }
     ctx.shadowBlur = 0; ctx.shadowColor = 'transparent'; ctx.globalAlpha = 1;
   }
 }

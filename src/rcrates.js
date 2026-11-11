@@ -64,12 +64,14 @@ const RC_ROWS = [
   ['rc_prism',   'Prism of the Light',   'admiral',  'prism',   ['#202030', '#ffffff', '#ffffff'], '#ffffff'],
   // [pirate tokens] src/zmegg.js: only ever unlocked with the Lighthouse's pirate tokens, never in a crate
   ['rc_hoard',   'The Gannet’s Hoard',   'pirate',   'hoard',   ['#06070b', '#14302c', '#ffd34d'], '#3ee0b4'],
+  // [verity] Verity's Wardrobe (src/verityfx.js): only ever dropped by Verity, in Maren's End, never in a crate
+  ['vy_banner',  'Verity’s Smile',       'pirate',   'verity',  ['#d8c418', '#8a7a10', '#fff6b0'], '#ffe24a'],
 ];
 const RC_BASE = { rainbow: '#e0a040', prism: '#d8c8ff' };
 const RC_SKINS = RC_ROWS.map(([id, name, rarity, kind, cols, glow]) => Object.freeze({ id, name, rarity, kind, cols, glow, base: RC_BASE[kind] || cols[cols.length > 2 ? 1 : 0] }));
 const RC_PLAIN = Object.freeze({ id: '', name: 'Your nation’s colour', rarity: null, kind: 'plain', cols: ['#c8b890'], glow: null, base: null });
 const RC_SKIN_BY_ID = Object.fromEntries(RC_SKINS.map(s => [s.id, s]));
-const rcRarityOf = s => RARITIES.find(r => r.id === s.rarity) || (s.rarity === 'pirate' ? RARITY_PIRATE : undefined);   // [pirate tokens]
+const rcRarityOf = s => RARITIES.find(r => r.id === s.rarity) || (s.rarity === 'pirate' ? rarityPirate(s) : undefined);   // [pirate tokens] ([verity] his own grade's name)
 const rcLevel = s => s && s.rarity ? (s.rarity === 'pirate' ? 6 : RARITIES.findIndex(r => r.id === s.rarity) + 1) : 0;
 const rcSkin = id => (typeof id === 'string' && RC_SKIN_BY_ID[id]) || null;
 

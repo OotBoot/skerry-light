@@ -1711,7 +1711,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 // ---- src/config.js ----
 'use strict';
 // The game's version, shown at the top of the main menu. Bump it by one with every change pushed to main.
-var VERSION = 142;
+var VERSION = 143;
 // Skerry Light: tuning, asset paths and lore.
 // World units are metres. The lighthouse stands at the origin on the shoreline (y = 0);
 // north (+y) is open sea. Bearings: 0 = north, positive = east.
@@ -1840,6 +1840,14 @@ const flashK = () => SETTINGS.flashes === 'reduced' ? 0.3 : 1;
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Never give away a secret here (the Easter egg's steps, where the secret boss hides).
 var PATCH_NOTES = [
+  { v: 143, date: '2026-11-11', title: 'Verity’s Wardrobe', New: [
+    "Maren's End: Verity now drops his whole wardrobe the first time you take his Piece of Eight: 12 cosmetics no crate holds, in their own yellow grade.",
+    "Outfit: Verity's Grin. His smiling head on your shoulders, blinking and grinning, with three little Veritys circling you.",
+    "Weapon finishes for all six weapons, covered in his blinking, grinning faces, with a ripple of light running down the gun every few seconds. Each weapon has its own touch: a grin round the blunderbuss's bell, his eye in the longarm's scope, his tongue down the harpoon gun, teeth along the cutlass.",
+    "Boat skins for all four boats: Verity's Smile (Brig), The Little Helper (Cutter), The Yellow Room (Barque) and Many Happy Faces (Carrier), each with its own moving look on the ship and from the deck.",
+    "Drowned Reach: Verity's Smile banner, with his faces blinking across your land.",
+    "Verity's Wardrobe also shows in the Gannet's Locker, so you can see what you have and equip it there." ], Sound: [
+    "Verity's Wardrobe: he giggles when you equip any of it. His finishes squeak with every shot and giggle at every kill, his outfit giggles when you take a knock, and his boats giggle at every crate and now and then at sea. The Little Helper boings, The Yellow Room's lights buzz, and Many Happy Faces' balloons pop." ] },
   { v: 142, date: '2026-11-11', title: 'Knife when down', Changes: [
     "Keeper's Last Light: when you're down and your pepperbox is empty with nothing left to load, Fire (or the knife key or button) slashes with your knife from the floor." ] },
   { v: 141, date: '2026-11-11', title: 'Patch notes', New: [
@@ -12605,6 +12613,9 @@ const RARITIES = [
 // [pirate tokens] a grade of its own for the few things the Lighthouse's pirate tokens unlock (src/zmegg.js): no
 // crate ever rolls it, so it isn't one of the RARITIES above
 const RARITY_PIRATE = { id: 'pirate', name: 'Gannet’s Locker', color: '#3ee0b4', odds: 0 };
+// [verity] Verity's Wardrobe (src/verityfx.js): the same grade as the Locker's, under his own name and colour
+const RARITY_VERITY = { id: 'verity', name: 'Verity’s', color: '#f2d21c', odds: 0 };
+const rarityPirate = s => s && typeof s.id === 'string' && s.id.slice(0, 3) === 'vy_' ? RARITY_VERITY : RARITY_PIRATE;
 
 // hull: planks before she sinks; accel and turn multiply how fast she gathers way and answers the helm
 // deckW/tipY/rail shape the bow you see from the deck; len/masts shape the ship your crew sees
@@ -12670,6 +12681,8 @@ const BRIG_SKINS = [
   { id: 'lavaforged', name: 'Lava-Forged',         rarity: 'admiral',  deck: ['#1c0a06', '#0a0302'], rail: '#ffb030', wood: '#3a120a', lantern: '#ffd070', hull: '#5a1a0c', sail: '#ff8a30' },
   // [pirate tokens] the Gannet's Locker (src/zmegg.js, its look in src/lockerfx.js): never in a crate
   { id: 'gannetghost', name: 'The Gannet’s Ghost', rarity: 'pirate',  deck: ['#0c1a18', '#040a09'], rail: '#3ee0b4', wood: '#1a3a34', lantern: '#9affd8', hull: '#1c3a36', sail: '#8fe8cc' },
+  // [verity] Verity's Wardrobe (src/verityfx.js): only ever dropped by Verity, in Maren's End, never in a crate
+  { id: 'vy_brig',    name: 'Verity’s Smile',      rarity: 'pirate',  deck: ['#2a2408', '#141004'], rail: '#060504', wood: '#3a3008', lantern: '#fff6b0', hull: '#e8d41a', sail: '#f4e04a' },
 ];
 const CUTTER_SKINS = [
   { id: 'c_plain',    name: 'Cutter, as built',    rarity: null,       deck: ['#1d1610', '#0d0907'], rail: '#2a1d12', wood: '#1a120b', lantern: '#ffcf86', hull: '#5a4330', sail: '#ddd2b6' },
@@ -12698,6 +12711,8 @@ const CUTTER_SKINS = [
   { id: 'c_sleeper',  name: "The Sleeper's Eye",   rarity: 'admiral',  deck: ['#24202c', '#0e0c12'], rail: '#fff8ff', wood: '#7a7088', lantern: '#f6f0ff', hull: '#e6e0f0', sail: '#fffaff' },
   // [pirate tokens]
   { id: 'c_crossing', name: 'Maren’s Crossing',    rarity: 'pirate',   deck: ['#1a160e', '#0a0805'], rail: '#ffd34d', wood: '#3a2c14', lantern: '#ffe9a8', hull: '#16302c', sail: '#e8f6ee' },
+  // [verity] Verity's Wardrobe (src/verityfx.js): only ever dropped by Verity, in Maren's End, never in a crate
+  { id: 'vy_cutter', name: 'The Little Helper',   rarity: 'pirate',   deck: ['#2a2408', '#141004'], rail: '#e8d41a', wood: '#3a3008', lantern: '#fff6b0', hull: '#d8c418', sail: '#fff6b0' },
 ];
 const BARQUE_SKINS = [
   { id: 'b_plain',    name: 'Barque, as built',    rarity: null,       deck: ['#17110c', '#0a0705'], rail: '#1b120b', wood: '#120c07', lantern: '#ffcf86', hull: '#3f3125', sail: '#d4c9ab' },
@@ -12726,6 +12741,8 @@ const BARQUE_SKINS = [
   { id: 'b_fleece',   name: 'Golden Fleece',       rarity: 'admiral',  deck: ['#241a0a', '#100b04'], rail: '#ffe07a', wood: '#8a6a1a', lantern: '#fff4c8', hull: '#e8c040', sail: '#fff8dc' },
   // [pirate tokens]
   { id: 'b_doubloon', name: 'The Black Doubloon',  rarity: 'pirate',   deck: ['#0a0a0c', '#030304'], rail: '#ffd34d', wood: '#1a1410', lantern: '#7affd0', hull: '#0c0d10', sail: '#18181c' },
+  // [verity] Verity's Wardrobe (src/verityfx.js): only ever dropped by Verity, in Maren's End, never in a crate
+  { id: 'vy_barque', name: 'The Yellow Room',     rarity: 'pirate',   deck: ['#3a3412', '#1a1606'], rail: '#c2b25c', wood: '#5a4e1e', lantern: '#fff0c0', hull: '#b8a44a', sail: '#c2b25c' },
 ];
 // the carrier: deck is the flight deck (near, far), rail the deck markings, wood the island and
 // superstructure, lantern her lights, hull the hull, sail the accent stripe
@@ -12749,6 +12766,8 @@ const CARRIER_SKINS = [
   { id: 'k_aurora',   name: 'Aurora Flagship',     rarity: 'admiral',  deck: ['#10181e', '#060a0e'], rail: '#7affd8', wood: '#203a5a', lantern: '#b8a0ff', hull: '#1a3048', sail: '#7affd8' },
   // [pirate tokens]
   { id: 'k_drowned',  name: 'The Drowned Fleet',   rarity: 'pirate',   deck: ['#0e1a1a', '#050c0c'], rail: '#3ee0b4', wood: '#1e3a38', lantern: '#9affd8', hull: '#143030', sail: '#ffd34d' },
+  // [verity] Verity's Wardrobe (src/verityfx.js): only ever dropped by Verity, in Maren's End, never in a crate
+  { id: 'vy_carrier', name: 'Many Happy Faces',   rarity: 'pirate',   deck: ['#2a2408', '#141004'], rail: '#ffe24a', wood: '#3a3008', lantern: '#fff6b0', hull: '#c8b418', sail: '#e8d41a' },
 ];
 
 const SKINS = BRIG_SKINS.map(s => Object.assign({ boat: 'brig' }, s))
@@ -12809,7 +12828,7 @@ function flareColour(fs, age) {
 const PENNANT_BY_ID = Object.fromEntries(PENNANTS.map(p => [p.id, p]));
 const LOOT_BY_ID = Object.assign({}, SKIN_BY_ID, PENNANT_BY_ID, FLARE_BY_ID);
 const lootFor = () => SKINS.filter(s => s.rarity).concat(PENNANTS, FLARES.filter(f => f.rarity));
-const rarityOf = s => RARITIES.find(r => r.id === s.rarity) || (s.rarity === 'pirate' ? RARITY_PIRATE : undefined);   // [pirate tokens]
+const rarityOf = s => RARITIES.find(r => r.id === s.rarity) || (s.rarity === 'pirate' ? rarityPirate(s) : undefined);   // [pirate tokens] ([verity] his own grade's name)
 
 const CRATES = {
   crates: { skerry: 0 },
@@ -13396,7 +13415,7 @@ function itemCard(skin, cls) {
   const adm = typeof admiralSig === 'function' ? admiralSig(skin) : null;
   if (adm) { d.classList.add('adm', 'adm-' + adm.sig); d.style.setProperty('--ac', adm.glow); }
   // one to five pips for the grade, so it reads without relying on colour alone
-  const level = ra ? (ra === RARITY_PIRATE ? 6 : RARITIES.indexOf(ra) + 1) : 0;
+  const level = ra ? (ra === RARITY_PIRATE || ra === RARITY_VERITY ? 6 : RARITIES.indexOf(ra) + 1) : 0;
   if (level) {
     const pips = document.createElement('span'); pips.className = 'pips'; pips.setAttribute('aria-hidden', 'true');
     for (let i = 0; i < level; i++) pips.appendChild(document.createElement('i'));
@@ -18703,6 +18722,7 @@ function fbFigure(c, outfitId) {
   if (oc && oc.halo) { let tx = null; try { if (typeof VM !== 'undefined' && VM.softTex) tx = VM.softTex; } catch (e) {} F.halo = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 2.4), new THREE.MeshBasicMaterial({ map: tx, color: oc.halo, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, opacity: 0.4 })); F.halo.position.y = 1.0; root.add(F.halo); }
   // the Admirals' own light, as rich as a reforged weapon (src/ocadmiral.js)
   if (oc && oc.adm && typeof ocaDress === 'function') F.adm = ocaDress(F);
+  if (oc && oc.vy && typeof vyDress === 'function') F.vy = vyDress(F);   // [verity] his head on your shoulders (src/verityfx.js)
   FB.building = null;
   F.aim = new THREE.Group(); F.spine.add(F.aim);
   GL3D.scene.add(root);
@@ -18903,6 +18923,7 @@ function fbPose(F, s) {
     if (F.eyeMat) F.eyeMat.opacity = op * (0.7 + 0.3 * Math.sin(t * 3));
     if (F.halo) { F.halo.material.opacity = op * (0.28 + 0.14 * Math.sin(t * 1.6)); F.halo.quaternion.copy(F.root.quaternion).invert().multiply(GL3D.camera.quaternion); }
   }
+  if (F.vy) vyPose(F, s);   // [verity]
   return true;
 }
 
@@ -34118,6 +34139,7 @@ function rvMe(dt) {
   if (RV.tok && !RV.mine && !(m.dead > 0) && Math.hypot(m.x - RV.tok[0], m.y - RV.tok[1]) < 1.9 && Math.abs((m.jz || 0) - RV.tok[2]) < 1.5) {
     RV.mine = true; RV.grab = 6;
     if (typeof ptGrant === 'function') ptGrant();
+    RV.suite = typeof vyGrant === 'function' ? vyGrant() : 0;   // [verity] and his whole wardrobe, the first time (src/verityfx.js)
     if (typeof cloudSaveSoon === 'function') try { cloudSaveSoon(); } catch (e) {}
     fpsFeed('You take Verity’s pirate token: yours to keep.');
     rvSound('token', 0);
@@ -34614,6 +34636,7 @@ function rvHud(phone, mono, fell) {
     ctx.fillStyle = 'rgba(236,228,207,0.9)'; ctx.font = mono(phone ? 10 : 13);
     const n = typeof ptTokens === 'function' ? ptTokens() : 1;
     ctx.fillText(`A pirate token: yours to keep (${n} to spend on the Keeper’s Last Light card)`, cx, y + r + (phone ? 40 : 58), W * 0.9);
+    if (RV.suite) { ctx.fillStyle = '#ffe24a'; ctx.font = fell(phone ? 14 : 19); ctx.fillText('And Verity’s Wardrobe, all of it: ' + RV.suite + ' things no crate holds', cx, y + r + (phone ? 60 : 86), W * 0.9); ctx.fillStyle = 'rgba(236,228,207,0.85)'; ctx.font = mono(phone ? 9 : 12); ctx.fillText('His outfit, a finish for every weapon, a skin for every boat and a banner, with your others', cx, y + r + (phone ? 76 : 106), W * 0.9); }
     ctx.shadowBlur = 0; ctx.shadowColor = 'transparent'; ctx.globalAlpha = 1;
   }
 }
@@ -38281,12 +38304,14 @@ const RC_ROWS = [
   ['rc_prism',   'Prism of the Light',   'admiral',  'prism',   ['#202030', '#ffffff', '#ffffff'], '#ffffff'],
   // [pirate tokens] src/zmegg.js: only ever unlocked with the Lighthouse's pirate tokens, never in a crate
   ['rc_hoard',   'The Gannet’s Hoard',   'pirate',   'hoard',   ['#06070b', '#14302c', '#ffd34d'], '#3ee0b4'],
+  // [verity] Verity's Wardrobe (src/verityfx.js): only ever dropped by Verity, in Maren's End, never in a crate
+  ['vy_banner',  'Verity’s Smile',       'pirate',   'verity',  ['#d8c418', '#8a7a10', '#fff6b0'], '#ffe24a'],
 ];
 const RC_BASE = { rainbow: '#e0a040', prism: '#d8c8ff' };
 const RC_SKINS = RC_ROWS.map(([id, name, rarity, kind, cols, glow]) => Object.freeze({ id, name, rarity, kind, cols, glow, base: RC_BASE[kind] || cols[cols.length > 2 ? 1 : 0] }));
 const RC_PLAIN = Object.freeze({ id: '', name: 'Your nation’s colour', rarity: null, kind: 'plain', cols: ['#c8b890'], glow: null, base: null });
 const RC_SKIN_BY_ID = Object.fromEntries(RC_SKINS.map(s => [s.id, s]));
-const rcRarityOf = s => RARITIES.find(r => r.id === s.rarity) || (s.rarity === 'pirate' ? RARITY_PIRATE : undefined);   // [pirate tokens]
+const rcRarityOf = s => RARITIES.find(r => r.id === s.rarity) || (s.rarity === 'pirate' ? rarityPirate(s) : undefined);   // [pirate tokens] ([verity] his own grade's name)
 const rcLevel = s => s && s.rarity ? (s.rarity === 'pirate' ? 6 : RARITIES.findIndex(r => r.id === s.rarity) + 1) : 0;
 const rcSkin = id => (typeof id === 'string' && RC_SKIN_BY_ID[id]) || null;
 
@@ -39158,6 +39183,8 @@ const WC_SKIN_ROWS = {
     ['pb_skerry',   'The Skerry Light',        'admiral',  '#f2e6c4', '#3a2a10', '#1a120a', '#ffd34d', '#ffffff', '#fff3c4'],
     // [pirate tokens] src/zmegg.js: only ever unlocked with the Lighthouse's pirate tokens, never in a crate
     ['pb_jolly',    'Jolly Roger',             'pirate',   '#1c1c22', '#0a0a0c', '#3a1610', '#e8e0c8', '#ffffff', '#7affd0'],
+    // [verity] Verity's Wardrobe (src/verityfx.js): only ever dropped by Verity, in Maren's End, never in a crate
+    ['vy_pb',       'Little Helper',           'pirate',   '#e8d41a', '#2a2208', '#1a1406', '#fff6b0', '#060504', '#ffe24a'],
   ],
   blunderbuss: [
     ['bb_plain',    'Blunderbuss, as forged',  null,       '#7a6a50', '#2e2a26', '#4a2e1a', '#a8823a', '#d8c8a0', null],
@@ -39173,6 +39200,8 @@ const WC_SKIN_ROWS = {
     ['bb_charybdis','Mouth of Charybdis',      'admiral',  '#1a1030', '#08040e', '#2a1d3e', '#ffe07a', '#d8d0f0', '#b8a0ff'],
     // [pirate tokens] src/zmegg.js
     ['bb_maw',      "The Locker's Maw",        'pirate',   '#16201f', '#070b0b', '#2a1810', '#ffd34d', '#7affd0', '#3ee0b4'],
+    // [verity] Verity's Wardrobe (src/verityfx.js): only ever dropped by Verity, in Maren's End, never in a crate
+    ['vy_bb',       'Big Grin',                'pirate',   '#e8d41a', '#2a2208', '#1a1406', '#fff6b0', '#060504', '#ffe24a'],
   ],
   longarm: [
     ['la_plain',    'Longarm, as issued',      null,       '#4c5058', '#22252a', '#5e4126', '#8a6a2c', '#c8bfa8', null],
@@ -39188,6 +39217,8 @@ const WC_SKIN_ROWS = {
     ['la_plimsoll', "Plimsoll's Eye",          'admiral',  '#2fb1e8', '#0d2433', '#1b6f96', '#ffffff', '#9ff0ff', '#5fd3ff'],
     // [pirate tokens] src/zmegg.js
     ['la_fathom',   'Fathom Glass',            'pirate',   '#1a3a3a', '#081414', '#2a1c14', '#e8c860', '#c8fff0', '#5affd0'],
+    // [verity] Verity's Wardrobe (src/verityfx.js): only ever dropped by Verity, in Maren's End, never in a crate
+    ['vy_la',       'He’s Watching',           'pirate',   '#e8d41a', '#2a2208', '#1a1406', '#fff6b0', '#060504', '#ffe24a'],
   ],
   harpoon: [
     ['hp_plain',    'Harpoon gun, as rigged',  null,       '#5a5650', '#26241f', '#5a3d22', '#8a6a2c', '#c9b08a', null],
@@ -39203,6 +39234,8 @@ const WC_SKIN_ROWS = {
     ['hp_leviathan','Golden Leviathan',        'admiral',  '#e8c040', '#4a3810', '#8a6a1a', '#fff4c8', '#ffe07a', '#fff0a0'],
     // [pirate tokens] src/zmegg.js
     ['hp_due',      "The Sea's Due",           'pirate',   '#22302c', '#0a100e', '#3a2416', '#ffd34d', '#3ee0b4', '#7affd0'],
+    // [verity] Verity's Wardrobe (src/verityfx.js): only ever dropped by Verity, in Maren's End, never in a crate
+    ['vy_hp',       'Tongue Out',              'pirate',   '#e8d41a', '#2a2208', '#1a1406', '#fff6b0', '#060504', '#ffe24a'],
   ],
   cutlass: [
     ['cl_plain',    'Cutlass, as ground',      null,       '#9aa0a8', '#4a4e54', '#2a1d12', '#3a3c40', '#8a7a5a', null],
@@ -39218,6 +39251,8 @@ const WC_SKIN_ROWS = {
     ['cl_lastlamp', 'The Last Lamp',           'admiral',  '#fff6dc', '#a37a12', '#1a1208', '#ffd34d', '#ffffff', '#fff3c4'],
     // [pirate tokens] src/zmegg.js
     ['cl_doubloon', 'Doubloon Edge',           'pirate',   '#e8c860', '#5a3a10', '#1a0e08', '#fff0a0', '#8a1a1a', '#ffd34d'],
+    // [verity] Verity's Wardrobe (src/verityfx.js): only ever dropped by Verity, in Maren's End, never in a crate
+    ['vy_cl',       'All Teeth',               'pirate',   '#e8d41a', '#2a2208', '#1a1406', '#fff6b0', '#060504', '#ffe24a'],
   ],
   avtomat: [
     ['av_plain',    'Avtomat, as stamped',     null,       '#4a4d54', '#202227', '#6a3e22', '#8a6a2c', '#c8bfa8', null],
@@ -39233,6 +39268,8 @@ const WC_SKIN_ROWS = {
     ['av_ninth',    'The Ninth Wave',          'admiral',  '#e8f0f4', '#2a3a48', '#1a2630', '#ffe08a', '#ffffff', '#bfe8ff'],
     // [pirate tokens] src/zmegg.js
     ['av_eight',    'Pieces of Eight',         'pirate',   '#1c1c22', '#08080a', '#3a1610', '#ffd34d', '#e8e0c8', '#ffd34d'],
+    // [verity] Verity's Wardrobe (src/verityfx.js): only ever dropped by Verity, in Maren's End, never in a crate
+    ['vy_av',       'Giggle Box',              'pirate',   '#e8d41a', '#2a2208', '#1a1406', '#fff6b0', '#060504', '#ffe24a'],
   ],
 };
 const WC_SKINS = [];
@@ -39240,7 +39277,7 @@ for (const w of WC_WEAPONS) for (const [id, name, rarity, metal, dark, wood, bra
   WC_SKINS.push(Object.freeze({ id, weapon: w.id, name, rarity, metal, dark, wood, brass, accent, glow }));
 const WC_SKIN_BY_ID = Object.fromEntries(WC_SKINS.map(s => [s.id, s]));
 const WC_PLAIN = Object.fromEntries(WC_WEAPONS.map(w => [w.id, WC_SKINS.find(s => s.weapon === w.id && !s.rarity).id]));
-const wcRarityOf = s => RARITIES.find(r => r.id === s.rarity) || (s.rarity === 'pirate' ? RARITY_PIRATE : undefined);   // [pirate tokens]
+const wcRarityOf = s => RARITIES.find(r => r.id === s.rarity) || (s.rarity === 'pirate' ? rarityPirate(s) : undefined);   // [pirate tokens] ([verity] his own grade's name)
 const wcLevel = s => s && s.rarity ? (s.rarity === 'pirate' ? 6 : RARITIES.findIndex(r => r.id === s.rarity) + 1) : 0;
 
 const WC = {
@@ -39789,6 +39826,16 @@ const WCA_THEMES = {
   hp_due:       { th: 6, v: 3, a: '#3ee0b4', b: '#ffd34d', c: '#06302a', dim: 0.3, k: 1.0, sp: 0.35 },
   cl_doubloon:  { th: 6, v: 4, a: '#3ee0b4', b: '#ffd34d', c: '#04261f', dim: 0.12, k: 0.9, sp: 0.04 },
   av_eight:     { th: 6, v: 5, a: '#5affb8', b: '#ffd34d', c: '#062a22', dim: 0.25, k: 1.05, sp: 0.3 },
+  // [verity] Verity's Wardrobe (src/verityfx.js) all share an eighth theme: his yellow, his smiling faces set all over the
+  // gun, blinking in their own time and grinning wider, and his giggle running down it; v is each weapon's own touch
+  // (0 the pepperbox's barrels each a face; 1 a great grin round the blunderbuss's bell; 2 his eye in the longarm's
+  // scope; 3 his tongue down the harpoon gun; 4 a row of teeth along the cutlass's edge; 5 faces that roll round the avtomat)
+  vy_pb:        { th: 7, v: 0, a: '#ffe24a', b: '#fff6c8', c: '#5a4a00', dim: 0.55, k: 0.95, sp: 0.4 },
+  vy_bb:        { th: 7, v: 1, a: '#ffe24a', b: '#fff6c8', c: '#5a4a00', dim: 0.5, k: 0.95, sp: 0.4 },
+  vy_la:        { th: 7, v: 2, a: '#ffe24a', b: '#fff6c8', c: '#5a4a00', dim: 0.55, k: 0.9, sp: 0.5 },
+  vy_hp:        { th: 7, v: 3, a: '#ffe24a', b: '#fff6c8', c: '#5a4a00', dim: 0.5, k: 0.95, sp: 0.4 },
+  vy_cl:        { th: 7, v: 4, a: '#ffe24a', b: '#fff6c8', c: '#5a4a00', dim: 0.4, k: 0.9, sp: 0.1 },
+  vy_av:        { th: 7, v: 5, a: '#ffe24a', b: '#fff6c8', c: '#5a4a00', dim: 0.5, k: 0.95, sp: 0.4 },
 };
 // per weapon, in its root's space: [length along y (1) or z (0), where its length starts, where it ends (the
 // muzzle or point), the axis's middle across (x), and up (y, or z for the cutlass)]
@@ -39938,7 +39985,7 @@ vec3 wcaFire(vec3 n, vec3 v, inout vec3 dif) {
     vec3 sp = vec3(s * 70.0 - t * 2.5, cr.x * 70.0 - t * 0.6, cr.y * 70.0 + t * 1.4);
     col += mix(wcaB, wcaC, big * 0.6) * wcaStar(sp, t * 3.0, 0.84) * (1.0 + brk * 3.0 + big * 1.5);
     col += mix(wcaA, wcaB, 0.6) * rim * 0.75 * wcaR.y;
-  } else {
+  } else if (th < 6.5) {
     // ---- the Gannet's Locker: cold green ghost-fire creeping along the gun, light through deep water over it, gold
     // doubloons set in the metal each catching the light in its own time, bubbles rising, and every four seconds the
     // locker's pulse, a ring of green and gold running from the breech (or hilt) to the muzzle (or point)
@@ -39961,6 +40008,37 @@ vec3 wcaFire(vec3 n, vec3 v, inout vec3 dif) {
     col += mix(wcaA, vec3(1.0), 0.5) * wcaStar(bp, t * 3.0, 0.86) * 2.2;
     col += wcaB * wcaStar(wcaP * 150.0 + 7.0, t * 2.4, 0.9) * (1.5 + pulse * 4.0);
     col += mix(wcaA, wcaB, 0.25 + 0.25 * sin(t * 1.3)) * rim * (0.55 + pulse * 0.8) * wcaR.y;
+  } else {
+    // ---- [verity] Verity's: his yellow over the metal, his smiling faces set all over it (each in a cell about three
+    // centimetres across, laid along the gun and round it), each blinking in its own time and its grin widening, and
+    // every three seconds his giggle, a ripple of light, running from the breech (or hilt) to the muzzle (or point)
+    float v = wcaS.w, L = abs(wcaS.z - wcaS.y);
+    float rl = v > 4.5 ? t * 0.35 : 0.0;   // (the avtomat's faces roll round it)
+    vec2 fg = vec2(s * L / 0.032, (ang + rl) * max(rad, 0.012) / 0.032 + (wcaS.x > 0.5 ? wcaP.z * 30.0 : 0.0));
+    vec2 c = floor(fg), f = fract(fg) - 0.5; float h = wcaH2(c);
+    float on = step(v < 0.5 ? 0.3 : 0.52, h), d = length(f);
+    float face = (1.0 - smoothstep(0.34, 0.4, d)) * on;
+    float open = smoothstep(0.02, 0.07, abs(fract(t * (0.17 + h * 0.08) + h * 7.0) - 0.5));
+    vec2 e1 = (f - vec2(-0.13, 0.09)) / vec2(0.055, mix(0.012, 0.09, open)), e2 = (f - vec2(0.13, 0.09)) / vec2(0.055, mix(0.012, 0.09, open));
+    float eye = (1.0 - smoothstep(0.8, 1.1, length(e1))) + (1.0 - smoothstep(0.8, 1.1, length(e2)));
+    float gw = 0.19 + 0.05 * sin(t * 1.7 + h * 30.0), md = length(f - vec2(0.0, 0.07));
+    float mouth = (1.0 - smoothstep(0.025, 0.05, abs(md - gw))) * step(f.y, 0.0);
+    float feat = clamp(eye + mouth, 0.0, 1.0) * face;
+    // (each weapon's own: a great grin round the bell, his eye in the scope, his tongue, a row of teeth)
+    float sp = 0.0;
+    if (v > 0.5 && v < 1.5) { float gr = abs(s - 0.92 - 0.03 * sin(ang * 2.0)); feat = max(feat, (1.0 - smoothstep(0.012, 0.025, gr)) * step(-0.2, -sin(ang))); sp = (1.0 - smoothstep(0.0, 0.05, abs(s - 0.86))) * step(0.5, fract(ang * 4.0 + t)); }
+    if (v > 1.5 && v < 2.5) { vec2 e = vec2(wcaP.x, wcaP.y - 0.098); float ez = smoothstep(0.014, 0.0, abs(wcaP.z - 0.06)), er = length(e);
+      float lid = step(abs(e.y), 0.0145 * smoothstep(0.0, 0.06, abs(fract(t * 0.21) - 0.5) - 0.02));
+      feat = max(feat, ez * lid * smoothstep(0.0055, 0.004, length(e - vec2(0.004 * sin(t * 0.8), 0.002 * sin(t * 0.5)))));
+      sp = ez * lid * smoothstep(0.015, 0.012, er); }
+    if (v > 2.5 && v < 3.5) sp = (1.0 - smoothstep(0.0, 0.006, abs(cr.x + 0.004 * sin(s * 30.0 - t * 4.0)))) * step(0.0, cr.y) * smoothstep(0.2, 0.5, s);
+    if (v > 3.5 && v < 4.5) { float tooth = step(0.35, fract(s * 40.0)) * step(abs(wcaP.x - wcaO.x), 0.002) * step(0.3, s); sp = tooth * (0.6 + 0.4 * sin(t * 6.0 - s * 30.0)); }
+    float gl = 0.5 + 0.5 * sin(t * 1.4 + s * 5.0);
+    float gp = (s - (fract(t / 3.0) * 1.6 - 0.3)) / 0.06, rip = exp(-gp * gp) * (0.65 + 0.35 * sin(ang * 8.0 + t * 20.0));
+    vec3 lit = wcaC * 0.3 + wcaA * (0.18 + 0.12 * gl) + wcaA * face * (0.6 + 0.3 * sin(t * 2.0 + h * 20.0)) + wcaB * rip * 1.3 + wcaB * sp * 1.4;
+    lit += mix(wcaA, wcaB, 0.4) * rim * (0.6 + rip) * wcaR.y + wcaB * wcaStar(wcaP * 140.0, t * 2.0, 0.9) * 1.4;
+    dif = mix(dif, vec3(0.015, 0.012, 0.004), feat * 0.95);
+    col += lit * (1.0 - feat * 0.97);
   }
   return col * wcaK.y * wcaR.x;
 }
@@ -40104,6 +40182,8 @@ function wcaSvg(svg, gun, skin, uid, el) {
       anim(e, { attributeName: 'cy', values: '34;4', dur: (1.6 + (i % 4) * 0.35) + 's', begin: (i * 0.23) + 's' });
       anim(e, { attributeName: 'opacity', values: '0;1;0', dur: (1.6 + (i % 4) * 0.35) + 's', begin: (i * 0.23) + 's' });
     }
+  } else if (th === 7) {
+    if (typeof vyWcaSvg === 'function') vyWcaSvg(svg, over, back, T, uid, el, anim, grad);   // [verity] src/verityfx.js
   } else if (th === 6) {
     // the Gannet's Locker: green ghost-fire rising through the gun, doubloons turning in it, bubbles, and the pulse
     for (let i = 0; i < 6; i++) {
@@ -40194,11 +40274,13 @@ const OC_ROWS = [
   // [pirate tokens] src/zmegg.js: only ever unlocked with the Lighthouse's pirate tokens, never in a crate (no crate rolls 'pirate')
   ['oc_gannetcap','Captain of the Gannet',  'pirate',   '#141a22', '#e0b040', '#8a1a1a', '#0c0e12', 'bicorne',   { fx: 'aura', glow: '#7affd0', eyes: '#c8fff0', halo: '#3ee0b4', brass: '#ffd34d', waist: '#3a1410', breeches: '#2a2420' }],
   ['oc_marenoil', 'Maren’s Oilskins',       'pirate',   '#c8962a', '#fff0b0', '#2a4a6a', '#b8862a', 'souwester', { fx: 'glow', glow: '#ffd88a', eyes: '#fff4c8', halo: '#ffe0a0', breeches: '#3a3a3a', brass: '#e0c060' }],
+  // [verity] Verity's Wardrobe (src/verityfx.js): only ever dropped by Verity, in Maren's End, never in a crate
+  ['vy_grin',    'Verity’s Grin',          'pirate',   '#e8d41a', '#1a1406', '#060504', '#e8d41a', 'verity',    { fx: 'aura', vy: 1, glow: '#ffe24a', halo: '#ffd820', brass: '#060504', waist: '#2a2208', breeches: '#b8a414' }],
 ];
 const OC_OUTFITS = OC_ROWS.map(([id, name, rarity, coat, trim, sash, hat, style, x]) => Object.freeze(Object.assign({ id, name, rarity, coat, trim, sash, hat, style }, x || {})));
 const OC_BY_ID = Object.fromEntries(OC_OUTFITS.map(o => [o.id, o]));
 const ocOutfit = id => (typeof id === 'string' && OC_BY_ID[id]) || null;
-const ocRarityOf = o => RARITIES.find(r => r.id === o.rarity) || (o.rarity === 'pirate' ? RARITY_PIRATE : undefined);   // [pirate tokens]
+const ocRarityOf = o => RARITIES.find(r => r.id === o.rarity) || (o.rarity === 'pirate' ? rarityPirate(o) : undefined);   // [pirate tokens] ([verity] his own grade's name)
 const ocLevel = o => o && o.rarity ? (o.rarity === 'pirate' ? 6 : RARITIES.findIndex(r => r.id === o.rarity) + 1) : 0;
 
 const OC = { crates: 0, opened: 0, kills: 0, owned: {}, equipped: '', pending: null, opening: false, opener: null, ashore: 0, wasOn: false };
@@ -40559,6 +40641,487 @@ addEventListener('keydown', e => {
   e.preventDefault(); e.stopPropagation(); ocHide();
 }, true);
 ocRender();
+
+// ---- src/verityfx.js ----
+'use strict';
+// Verity's Wardrobe: twelve cosmetics only Verity drops (src/raidverity.js), the first time you take his Piece of Eight.
+//
+// The whole suite, one of everything: an outfit, a finish for each of the six weapons, a skin for each of the four boats
+// and a banner. They're in the Gannet's Locker's grade (rarity 'pirate', six pips, never in a crate) under his own name
+// and colour (RARITY_VERITY, src/crates.js), and they live in their own stores' tables (marked [verity]) so the saves,
+// the backups and the cloud keep them like anything else. Every one of them moves, and every one of them makes a sound:
+//   Verity's Grin      (outfit)  his own head on your shoulders: the smiling yellow egg, blinking, its grin widening,
+//                                 his yellow alight in the coat's trim, and three little Veritys circling you, smiling
+//                                 your way. You giggle when you take a knock.
+//   The finishes       (weapons) his faces set all over the gun, blinking in their own time and grinning wider, and his
+//                                 giggle running down it as a ripple of light every three seconds; each weapon its own
+//                                 touch (src/wcadmiral.js, theme 7): Little Helper (pepperbox: more faces), Big Grin (a
+//                                 great grin round the blunderbuss's bell), He's Watching (his eye in the longarm's
+//                                 scope), Tongue Out (his tongue down the harpoon gun), All Teeth (a row of teeth along
+//                                 the cutlass's edge), Giggle Box (the avtomat's faces roll round it). Every shot
+//                                 squeaks like a toy; every kill, he giggles.
+//   The boat skins     (boats)   his yellow breathing in her topsides with a grin along her side, his giggle running
+//                                 bow to stern, little smiling faces bobbing up in her wake to watch her go, and smiling
+//                                 orbs at her mastheads; and each its own: Verity's Smile (brig: his great face on the
+//                                 mainsail, its eyes looking about; from her deck his face rises over the horizon like a
+//                                 moon), The Little Helper (cutter: a little Verity hopping over the waves beside her),
+//                                 The Yellow Room (barque: his room's damp wallpaper on her sails and strip lights along
+//                                 her rails, buzzing, flickering, going out), Many Happy Faces (carrier: Verity balloons
+//                                 tethered over her flight deck, bobbing). At sea now and then he giggles (or the Helper
+//                                 boings, or the strip lights buzz), and he giggles at every crate you haul aboard.
+//   Verity's Smile     (banner)  his yellow over your land, damp-stained, with his faces in it, blinking in waves and
+//                                 grinning, giggles rippling out across it and his room's strip lights flickering on
+//                                 your borders.
+// Equipping any of them, he giggles.
+//
+// Hooks (each a line marked [verity]): src/crates.js, ocrates.js, wcrates.js and rcrates.js (the items, and the grade's
+// name); src/wcadmiral.js (the finishes' shader branch, and its card pictures here, vyWcaSvg); src/fpsbody.js (vyDress,
+// vyPose); src/raidverity.js (vyGrant, as his token's taken). Everything else is wrapped from here: the Locker's boat
+// skin functions (src/lockerfx.js, for the entries with vy), rcPainter, ocDrawPreview, the four equips, ptRender (his
+// items shown in the Gannet's Locker too), fpsShoot, fpsHurt, wcEarn, zmEarnKill and collectPickup (the sounds).
+
+const VYC = { Y: '#f2d21c', HI: '#fff6c8', GLOW: '#ffe24a', DEEP: '#5a4a00', BLACK: '#060504', TONGUE: '#f0e070', PAPER: '#c2b25c' };
+// what he drops: [id, which store]
+const VY_ITEMS = [
+  ['vy_grin', 'outfit'],
+  ['vy_pb', 'weapon'], ['vy_bb', 'weapon'], ['vy_la', 'weapon'], ['vy_hp', 'weapon'], ['vy_cl', 'weapon'], ['vy_av', 'weapon'],
+  ['vy_brig', 'boat'], ['vy_cutter', 'boat'], ['vy_barque', 'boat'], ['vy_carrier', 'boat'],
+  ['vy_banner', 'banner'],
+];
+const vyIs = s => { const id = s && typeof s === 'object' ? s.id : s; return typeof id === 'string' && id.slice(0, 3) === 'vy_'; };
+// (a face's blink: shut for a moment now and then, each in its own time; 1 open)
+const vyBlink = (t, i) => { const p = ((t * 0.27 + i * 0.137) % 1 + 1) % 1; return p < 0.035 ? 0.12 : 1; };
+
+// ---------- his voice, and the rest of the sounds ----------
+const VYA = { kill: 0, hurt: 0, amb: 25, gig: 0 };
+function vyVoice(rate, vol) {
+  const now = performance.now(); if (now - VYA.gig < 900) return; VYA.gig = now;
+  try { if (typeof loadVerityVoice === 'function') loadVerityVoice(); if (typeof sfxVerity === 'function') sfxVerity(rate, vol); } catch (e) {}
+}
+// a squeak, as from a rubber toy (each a little different)
+function vySqueak(k) { try { const f = 950 + Math.random() * 350; tone(f, 'sine', 0.004, 0.07 * k, 0.07, { to: f * 1.6 }); tone(f * 1.5, 'triangle', 0.004, 0.025 * k, 0.05, { delay: 0.05, to: f * 1.1 }); } catch (e) {} }
+// the Helper landing: a boing and a splash
+function vyBoing() { try { tone(220, 'sine', 0.005, 0.16, 0.35, { to: 620 }); tone(330, 'triangle', 0.005, 0.05, 0.3, { to: 880, delay: 0.02 }); noise('lowpass', 900, 1, 0.01, 0.12, 0.4, { delay: 0.3 }); } catch (e) {} }
+// the strip lights: a buzz that catches and stutters
+function vyBuzz() { try { for (let i = 0; i < 4; i++) tone(118 + (i % 2) * 2, 'sawtooth', 0.01, 0.03, 0.18, { delay: i * 0.22 + Math.random() * 0.08 }); noise('bandpass', 2400, 6, 0.005, 0.02, 0.6); } catch (e) {} }
+// (when a balloon bobs up against another)
+function vyPop() { try { tone(700, 'sine', 0.002, 0.08, 0.06, { to: 300 }); } catch (e) {} }
+// is the gun in your hands wearing one of his
+function vyArmed() {
+  try { return typeof FPS !== 'undefined' && FPS.on && typeof WC !== 'undefined' && vyIs(WC.equipped[FPS.weapon]); } catch (e) { return false; }
+}
+const vyWearing = () => { try { return typeof ocEquippedId === 'function' && vyIs(ocEquippedId()); } catch (e) { return false; } };
+const vyBoatSkin = () => { try { const s = typeof mySkin === 'function' ? mySkin() : null; return vyIs(s) ? s : null; } catch (e) { return null; } };
+function vyKillGiggle() { const now = performance.now(); if (now - VYA.kill < 2500) return; VYA.kill = now; vyVoice(1.3 + Math.random() * 0.15, 0.4); }
+
+// ---------- his face, in 2D: the yellow egg, his eyes (shut for a moment now and then), the grin and its tongue ----------
+// (q a canvas context; r its half-height; i its own time; look how far its eyes look aside, -1 to 1)
+function vyFace(q, x, y, r, t, i, a, look) {
+  if (!(r > 0.8) || a <= 0.02) return;
+  q.save(); q.globalCompositeOperation = 'source-over'; q.globalAlpha = Math.min(1, a);
+  q.fillStyle = '#e8d41a'; q.beginPath(); q.ellipse(x, y, r * 0.82, r, 0, 0, 6.2832); q.fill();
+  if (r > 3) { q.fillStyle = 'rgba(255,250,210,0.45)'; q.beginPath(); q.ellipse(x - r * 0.3, y - r * 0.5, r * 0.22, r * 0.14, -0.5, 0, 6.2832); q.fill(); q.fillStyle = 'rgba(90,70,0,0.3)'; q.beginPath(); q.ellipse(x + r * 0.1, y + r * 0.55, r * 0.6, r * 0.35, 0, 0, Math.PI); q.fill(); }
+  if (r > 1.6) {
+    const bl = vyBlink(t, i), lk = (look || 0) * r * 0.06, gw = 1 + 0.1 * Math.sin(t * 1.7 + i * 2.3);
+    q.fillStyle = VYC.BLACK;
+    for (const s of [-1, 1]) { q.beginPath(); q.ellipse(x + s * r * 0.22 + lk, y - r * 0.28, Math.max(0.5, r * 0.07), Math.max(0.4, r * 0.15 * bl), 0, 0, 6.2832); q.fill(); }
+    const mw = r * 0.44 * gw, my = y + r * 0.04;
+    q.beginPath(); q.moveTo(x - mw, my); q.quadraticCurveTo(x, my + r * 0.14, x + mw, my); q.quadraticCurveTo(x, my + r * 0.66, x - mw, my); q.fill();
+    if (r > 5) { q.fillStyle = VYC.TONGUE; q.beginPath(); q.ellipse(x, my + r * 0.36, r * 0.17, r * 0.08, 0, 0, 6.2832); q.fill(); q.fillStyle = VYC.BLACK; q.beginPath(); q.arc(x - r * 0.24, y + r * 0.55, Math.max(0.4, r * 0.025), 0, 6.2832); q.fill(); }
+  }
+  q.restore();
+}
+const vyGlow = (x, y, col, r, a) => admGlow(x, y, col, Math.min(r, 150), a);
+
+// ---------- the boat skins: on a 3D ship, behind it ----------
+const VY_SIG = { vy_brig: 'smile', vy_cutter: 'helper', vy_barque: 'room', vy_carrier: 'faces' };
+for (const id in VY_SIG) LOCKER_SIG[id] = { sig: VY_SIG[id], glow: VYC.Y, hi: VYC.HI, sheen: VYC.GLOW, locker: true, vy: true };
+function vyFxBefore(skin, a, P, Lh, B, Zd, mastH, s) {
+  const t = admT(), full = s > 5;
+  ctx.save(); ctx.globalCompositeOperation = 'lighter';
+  // his yellow on the water round her
+  const c0 = P(0, 0, 0); if (c0) { ctx.save(); ctx.translate(c0.x, c0.y); ctx.scale(1, 0.3); vyGlow(0, 0, VYC.Y, Math.max(8, Lh * 1.5 * c0.s), 0.22 + 0.08 * Math.sin(t * 1.9)); ctx.restore(); }
+  // little faces bobbing up in her wake, watching her go, and sinking again
+  const n = full ? 6 : 3;
+  for (let i = 0; i < n; i++) {
+    const life = (t * 0.16 + i / n) % 1, p = P(-Lh * (1.15 + life * 4), (hash(i, 301) - 0.5) * B * 3.2, -0.7 + Math.sin(life * Math.PI) * 1.0); if (!p) continue;
+    const r = Math.min(26, Math.max(1.2, p.s * 0.7)), al = Math.sin(life * Math.PI);
+    vyGlow(p.x, p.y, VYC.GLOW, r * 2.4, al * 0.35);
+    vyFace(ctx, p.x, p.y, r, t, i + 3, al * 0.95, Math.sin(t * 0.8 + i));
+  }
+  ctx.restore();
+}
+// ---------- on one face of the hull ----------
+function vyHullFx(skin, a, f, at, Lh) {
+  const t = admT(), sig = a.sig, ga = ctx.globalAlpha;
+  const quad = (s0, s1, h0, h1, col) => fillPoly([at(s0, h0), at(s1, h0), at(s1, h1), at(s0, h1)], col);
+  ctx.save(); ctx.globalCompositeOperation = 'lighter';
+  const pos = f.side ? (f.i + 0.5) / 6 : -0.05;
+  ctx.globalAlpha = ga * (0.18 + 0.1 * Math.sin(t * 1.9 + pos * 4)); quad(0, 1, 0.3, 0.8, VYC.GLOW);
+  // his giggle: a bright band running bow to stern every three seconds
+  const sw = 1.25 - ((t / 3) % 1) * 1.6, sh = Math.exp(-((pos - sw) * (pos - sw)) * 30);
+  if (sh > 0.03) { ctx.globalAlpha = ga * sh * 0.55; quad(0, 1, 0.2, 0.86, VYC.HI); }
+  ctx.globalCompositeOperation = 'source-over';
+  if (sig === 'room') {
+    // his room's wallpaper, its stripes and its damp
+    for (let k = 0; k < 6; k++) { ctx.globalAlpha = ga * 0.16; quad(k / 6 + 0.03, k / 6 + 0.07, 0.2, 0.84, '#6a5a18'); }
+    ctx.globalAlpha = ga * 0.22; quad(0.2 + 0.3 * hash(f.i, 311), 0.45 + 0.3 * hash(f.i, 311), 0.2, 0.42, '#5a4a14');
+  } else if (f.side) {
+    // a grin along her side, ear to ear, with its teeth chattering
+    const u0 = f.i / 6, y = u => 0.66 - 0.2 * Math.sin(Math.PI * Math.min(1, Math.max(0, (u - 0.12) / 0.76)));
+    for (let k = 0; k < 4; k++) {
+      const s0 = k / 4, s1 = (k + 1) / 4, u = u0 + (s0 + s1) / 12; if (u < 0.12 || u > 0.88) continue;
+      const yy = y(u);
+      ctx.globalAlpha = ga * 0.85; fillPoly([at(s0, y(u0 + s0 / 6) - 0.06), at(s1, y(u0 + s1 / 6) - 0.06), at(s1, y(u0 + s1 / 6) + 0.03), at(s0, y(u0 + s0 / 6) + 0.03)], VYC.BLACK);
+      const ch = 0.02 * Math.max(0, Math.sin(t * 9 + k + f.i * 4));
+      ctx.globalAlpha = ga * 0.9; quad(s0 + 0.05, s1 - 0.05, yy - 0.005 - ch, yy + 0.028, '#f4f0e0');
+    }
+  }
+  ctx.restore();
+}
+// ---------- on a sail ----------
+function vySailFx(skin, a, pts, main) {
+  const q = polyProj(pts); if (q.length < 3) return;
+  const t = admT(), sig = a.sig;
+  let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9;
+  for (const p of q) { if (p.x < x0) x0 = p.x; if (p.x > x1) x1 = p.x; if (p.y < y0) y0 = p.y; if (p.y > y1) y1 = p.y; }
+  const w = x1 - x0, h = y1 - y0; if (w < 3 || h < 3) return;
+  const mx = (x0 + x1) / 2, my = (y0 + y1) / 2, ga = ctx.globalAlpha;
+  ctx.save();
+  ctx.beginPath(); q.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)); ctx.closePath(); ctx.clip();
+  ctx.globalCompositeOperation = 'lighter';
+  ctx.globalAlpha = ga * (0.12 + 0.06 * Math.sin(t * 1.5 + mx * 0.01)); ctx.fillStyle = VYC.GLOW; ctx.fillRect(x0, y0, w, h);
+  if (sig === 'smile' && main) {
+    // his great face on the mainsail, its eyes looking about
+    vyGlow(mx, my, VYC.GLOW, Math.min(w, h) * 0.9, ga * 0.45);
+    vyFace(ctx, mx, my, Math.min(w * 0.55, h * 0.42), t, 0, Math.min(1, ga * 1.8), Math.sin(t * 0.6) * 1.2);
+  } else if (sig === 'room') {
+    // his room's damp wallpaper, and the light going out now and then
+    ctx.globalCompositeOperation = 'source-over';
+    for (let k = 0; k < 8; k++) { ctx.globalAlpha = ga * 0.18; ctx.fillStyle = '#7a6a20'; ctx.fillRect(x0 + w * (k + 0.4) / 8, y0, w * 0.04, h); }
+    ctx.globalAlpha = ga * 0.25; ctx.fillStyle = '#5a4a14'; ctx.beginPath(); ctx.ellipse(mx - w * 0.15, y1 - h * 0.12, w * 0.3, h * 0.18, 0, 0, 6.2832); ctx.fill();
+    const fl = hash(Math.floor(t * 7), 321); if (fl > 0.85) { ctx.globalAlpha = ga * 0.35; ctx.fillStyle = '#000000'; ctx.fillRect(x0, y0, w, h); }
+  } else if (sig === 'faces' || (sig === 'helper' && main)) {
+    // his smile printed on the cloth, blinking
+    const n = sig === 'faces' && w > 30 ? 2 : 1;
+    for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) vyFace(ctx, x0 + w * (i + 0.5) / n, y0 + h * (j + 0.5) / n, Math.min(w, h) * 0.3 / n, t, i * 2 + j + 1, ga * 0.9, 0);
+  }
+  ctx.restore();
+}
+// ---------- on a 3D ship, in front ----------
+function vyFxAfter(skin, a, P, Lh, B, Zd, mastH, s) {
+  const t = admT(), full = s > 5, sig = a.sig, carrier = skin.boat === 'carrier';
+  ctx.save(); ctx.globalCompositeOperation = 'lighter';
+  // little smiling orbs at her mastheads, bobbing
+  const heads = carrier ? [[-Lh * 0.2, B * 0.6, Zd + mastH]] : admMasts(skin, Lh).map(u => [u, 0, Zd + mastH * 1.06]);
+  heads.forEach(([u, w, z], i) => { const p = P(u, w, z + Math.abs(Math.sin(t * 2.4 + i)) * 0.6); if (!p) return; const r = Math.min(18, Math.max(1.5, p.s * 0.55)); vyGlow(p.x, p.y, VYC.GLOW, r * 3, 0.5); vyFace(ctx, p.x, p.y, r, t, i + 7, 1, Math.sin(t * 0.7 + i)); });
+  if (sig === 'helper') {
+    // the Little Helper: hopping over the waves beside her, a splash where he lands
+    const ph = (t * 0.55) % 1, hop = Math.sin(ph * Math.PI), u = Lh * (0.15 + 0.25 * Math.sin(t * 0.21)), w = B * 2.4;
+    const p = P(u, w, 0.9 + hop * 2.4), pw = P(u, w, 0);
+    if (pw && ph > 0.9) { ctx.save(); ctx.translate(pw.x, pw.y); ctx.scale(1, 0.3); vyGlow(0, 0, '#d8f0ff', Math.max(4, pw.s * 2.4 * (1 - ph) * 8), 0.6); ctx.restore(); }
+    if (p) { const r = Math.min(40, Math.max(2, p.s * 1.0)); vyGlow(p.x, p.y, VYC.GLOW, r * 2.6, 0.45); ctx.save(); ctx.translate(p.x, p.y); ctx.scale(1 + (1 - hop) * 0.12, 1 - (1 - hop) * 0.12); vyFace(ctx, 0, 0, r, t, 11, 1, 0.8); ctx.restore(); }
+  } else if (sig === 'room') {
+    // his room's strip lights along both rails, buzzing, one going out now and then
+    const n = full ? 7 : 3;
+    for (const sd of [-1, 1]) for (let i = 0; i < n; i++) {
+      const u0 = Lh * (-0.8 + 1.6 * (i + 0.2) / n), u1 = u0 + Lh * 1.6 * 0.5 / n, pa = P(u0, sd * B * 0.9, Zd + 1.9), pb = P(u1, sd * B * 0.9, Zd + 1.9);
+      if (!pa || !pb) continue;
+      const out = hash(Math.floor(t * 6) + i * 7 + (sd > 0 ? 3 : 0), 331) > 0.9, fl = out ? 0.08 : 0.85 + 0.15 * Math.sin(t * 50 + i);
+      vyGlow((pa.x + pb.x) / 2, (pa.y + pb.y) / 2, '#fff0c0', Math.min(60, Math.max(4, pa.s * 1.6)), 0.4 * fl);
+      ctx.globalAlpha = fl; ctx.strokeStyle = '#fffbe8'; ctx.lineWidth = Math.max(1, pa.s * 0.12); ctx.beginPath(); ctx.moveTo(pa.x, pa.y); ctx.lineTo(pb.x, pb.y); ctx.stroke();
+    }
+  } else if (sig === 'faces') {
+    // Verity balloons tethered over her flight deck, bobbing and drifting on their strings
+    const n = full ? 6 : 3;
+    for (let i = 0; i < n; i++) {
+      const u = Lh * (-0.7 + 1.4 * (i + 0.5) / n), w = (i % 2 ? 1 : -1) * B * 0.35, z = Zd + mastH * (0.5 + 0.18 * Math.sin(t * 1.1 + i * 1.7)), sway = Math.sin(t * 0.9 + i) * B * 0.25;
+      const p = P(u, w + sway, z), base = P(u, w, Zd); if (!p || !base) continue;
+      ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 0.7; ctx.strokeStyle = '#2a2208'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(base.x, base.y); ctx.quadraticCurveTo((base.x + p.x) / 2 + Math.sin(t * 2 + i) * 4, (base.y + p.y) / 2, p.x, p.y); ctx.stroke();
+      ctx.globalCompositeOperation = 'lighter';
+      const r = Math.min(36, Math.max(2, p.s * 1.1)); vyGlow(p.x, p.y, VYC.GLOW, r * 2.2, 0.35); vyFace(ctx, p.x, p.y, r, t, i + 13, 1, Math.sin(t * 0.5 + i));
+    }
+  }
+  ctx.restore();
+}
+// ---------- on your deck, first person ----------
+function vyDeckFx(skin, a, tipY, DW, railT) {
+  const t = admT(), sig = a.sig, hz = hy - pitchY;
+  const rx = (sd, k) => cx + sd * DW + (sd * 6 - sd * DW) * k, ry = k => (H - 4) + (tipY + 2 - (H - 4)) * k;
+  ctx.save(); ctx.globalCompositeOperation = 'lighter';
+  // his giggle running up both rails, and his yellow at the bow
+  { const k = ((t / 3) % 1) * 1.3; if (k < 1) for (const sd of [-1, 1]) vyGlow(rx(sd, k), ry(k) - railT * 0.5, VYC.GLOW, railT * 4 * (1.2 - k * 0.7), 0.7 * Math.sin(k * Math.PI)); }
+  vyGlow(cx, tipY, VYC.GLOW, Math.min(W, H) * 0.12, 0.3 + 0.1 * Math.sin(t * 1.9));
+  if (sig === 'smile') {
+    // his face rising over the horizon ahead, like a moon, its eyes on you
+    const r = Math.min(W, H) * 0.13, y = hz - r * (0.35 + 0.08 * Math.sin(t * 0.3));
+    vyGlow(cx, y, VYC.GLOW, r * 2.4, 0.35);
+    ctx.save(); ctx.beginPath(); ctx.rect(0, 0, W, hz); ctx.clip(); vyFace(ctx, cx, y, r, t, 0, 0.75, Math.sin(t * 0.4) * 0.6); ctx.restore();
+  } else if (sig === 'helper') {
+    // the Little Helper hopping over the waves ahead of the bow
+    const ph = (t * 0.55) % 1, hop = Math.sin(ph * Math.PI), x = cx + Math.sin(t * 0.37) * W * 0.18, base = tipY + (hz - tipY) * 0.45, r = Math.min(W, H) * 0.035;
+    if (ph > 0.9) { ctx.save(); ctx.translate(x, base + r); ctx.scale(1, 0.25); vyGlow(0, 0, '#d8f0ff', r * 3 * (1 - ph) * 8, 0.6); ctx.restore(); }
+    vyGlow(x, base - hop * r * 2.5, VYC.GLOW, r * 2.5, 0.45); vyFace(ctx, x, base - hop * r * 2.5, r, t, 11, 1, Math.sin(t * 0.5));
+  } else if (sig === 'room') {
+    // his room's strip lights overhead, buzzing and stuttering, and his yellow over everything
+    ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 0.06; ctx.fillStyle = VYC.Y; ctx.fillRect(0, 0, W, H);
+    for (let i = 0; i < 3; i++) {
+      const out = hash(Math.floor(t * 6) + i * 5, 341) > 0.88, fl = out ? 0.05 : 0.85 + 0.15 * Math.sin(t * 50 + i), x = W * (0.2 + i * 0.3), y = H * 0.06, w = W * 0.14;
+      ctx.globalCompositeOperation = 'lighter'; vyGlow(x, y, '#fff0c0', w * 0.9, 0.45 * fl);
+      ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 0.5 + 0.5 * fl; ctx.fillStyle = out ? '#5a5440' : '#fffbe8'; ctx.fillRect(x - w / 2, y - 4, w, 8);
+    }
+  } else if (sig === 'faces') {
+    // his balloons drifting up past you, one after another
+    for (let i = 0; i < 5; i++) {
+      const life = (t * 0.07 + i / 5) % 1, x = W * (0.12 + 0.76 * hash(i, 351)) + Math.sin(t * 0.8 + i) * 20, y = H * 1.05 - life * H * 1.2, r = Math.min(W, H) * (0.03 + 0.02 * hash(i, 352));
+      ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 0.6; ctx.strokeStyle = '#2a2208'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(x, y + r); ctx.quadraticCurveTo(x + Math.sin(t * 2 + i) * 8, y + r * 3, x, y + r * 5); ctx.stroke();
+      ctx.globalCompositeOperation = 'lighter'; vyGlow(x, y, VYC.GLOW, r * 2.2, 0.3); vyFace(ctx, x, y, r, t, i + 13, 1, Math.sin(t * 0.5 + i));
+    }
+  }
+  ctx.restore();
+}
+// ---------- in a crate preview (SVG, animated with SMIL) ----------
+function vySvgFace(el, parent, x, y, r, k, still) {
+  const f = el('g', {}, parent);
+  el('ellipse', { cx: x, cy: y, rx: r * 0.82, ry: r, fill: '#e8d41a' }, f);
+  el('ellipse', { cx: x - r * 0.3, cy: y - r * 0.5, rx: r * 0.22, ry: r * 0.14, fill: '#fffbe0', opacity: 0.5 }, f);
+  for (const s of [-1, 1]) {
+    const e = el('ellipse', { cx: x + s * r * 0.22, cy: y - r * 0.28, rx: r * 0.07, ry: r * 0.15, fill: VYC.BLACK }, f);
+    if (!still) el('animate', { attributeName: 'ry', values: `${r * 0.15};${r * 0.15};${r * 0.02};${r * 0.15}`, keyTimes: '0;0.9;0.94;1', dur: (3.4 + k * 0.7) + 's', repeatCount: 'indefinite' }, e);
+  }
+  const my = y + r * 0.04, mw = r * 0.44;
+  el('path', { d: `M${x - mw} ${my} Q${x} ${my + r * 0.14} ${x + mw} ${my} Q${x} ${my + r * 0.66} ${x - mw} ${my} Z`, fill: VYC.BLACK }, f);
+  el('ellipse', { cx: x, cy: my + r * 0.36, rx: r * 0.17, ry: r * 0.08, fill: VYC.TONGUE }, f);
+  return f;
+}
+function vyPreviewFx(svg, skin, a, geo) {
+  const NS = 'http://www.w3.org/2000/svg', still = typeof reduceMotion !== 'undefined' && reduceMotion;
+  const el = (tag, attrs, parent) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); (parent || svg).appendChild(e); return e; };
+  const anim = (node, attrs, tag) => { if (still) return node; const e = document.createElementNS(NS, tag || 'animate'); for (const k in attrs) e.setAttribute(k, attrs[k]); if (!e.getAttribute('repeatCount')) e.setAttribute('repeatCount', 'indefinite'); node.appendChild(e); return node; };
+  const behind = node => { const d = svg.querySelector('defs'), ref = d && d.nextSibling ? d.nextSibling.nextSibling : svg.firstChild; svg.insertBefore(node, ref); return node; };
+  const { sternX = 12, bowX = 104, deckY = 54 } = geo || {}, mid = (sternX + bowX) / 2, sig = a.sig;
+  const bt = BOAT_BY_ID[skin.boat] || BOATS[0], half = 46 * bt.len / 27, top = deckY - 44 * Math.min(1, bt.len / 22) * (bt.id === 'cutter' ? 1.05 : 1);
+  // his yellow behind her, breathing, and his giggle running across the picture
+  behind(anim(el('ellipse', { cx: mid, cy: 46, rx: 54, ry: 30, fill: VYC.Y, opacity: 0.3, filter: 'url(#fxblur)' }), { attributeName: 'opacity', values: '0.18;0.5;0.18', dur: '2.8s' }));
+  anim(el('rect', { x: -30, y: 0, width: 16, height: 80, fill: VYC.HI, opacity: 0.25, transform: 'skewX(-18)', filter: 'url(#fxblur2)' }), { attributeName: 'x', values: '-30;150', dur: '3s' });
+  // little faces bobbing up in her wake
+  for (let i = 0; i < 3; i++) { const g = vySvgFace(el, svg, sternX - 4 - i * 9, deckY + 12, 3, i, still); anim(g, { attributeName: 'opacity', values: '0;1;1;0', dur: '3s', begin: (i * 1) + 's' }); anim(g, { attributeName: 'transform', type: 'translate', values: '0 4;0 0;0 4', dur: '3s', begin: (i * 1) + 's' }, 'animateTransform'); }
+  // smiling orbs at her mastheads
+  const heads = bt.masts.length ? bt.masts.map(m => [58 + m * half * 1.6, top - 3]) : [[44, deckY - 36]];
+  heads.forEach(([hx, hyy], i) => anim(vySvgFace(el, svg, hx, hyy, 2.6, i + 4, still), { attributeName: 'transform', type: 'translate', values: '0 0;0 -1.5;0 0', dur: (0.9 + i * 0.1) + 's' }, 'animateTransform'));
+  if (sig === 'smile') {
+    const m = bt.masts[Math.floor(bt.masts.length / 2)] || 0, mxp = 58 + m * half * 1.6;
+    vySvgFace(el, svg, mxp, deckY - 24, 9, 0, still);
+  } else if (sig === 'helper') {
+    const g = vySvgFace(el, svg, bowX - 8, deckY + 6, 5, 9, still);
+    anim(g, { attributeName: 'transform', type: 'translate', values: '0 0;-8 -12;-16 0;-8 -12;0 0', keyTimes: '0;0.25;0.5;0.75;1', dur: '1.8s' }, 'animateTransform');
+  } else if (sig === 'room') {
+    for (let i = 0; i < 5; i++) { const x = sternX + 10 + i * (bowX - sternX - 20) / 4, l = el('rect', { x: x - 5, y: deckY - 12, width: 10, height: 2, fill: '#fffbe8' }); el('rect', { x: x - 8, y: deckY - 14, width: 16, height: 6, fill: '#fff0c0', opacity: 0.35, filter: 'url(#fxblur2)' }); anim(l, { attributeName: 'opacity', values: '1;1;0.1;1;0.2;1', keyTimes: '0;0.6;0.62;0.66;0.68;1', dur: (2 + i * 0.37) + 's' }); }
+  } else if (sig === 'faces') {
+    for (let i = 0; i < 4; i++) {
+      const x = sternX + 18 + i * (bowX - sternX - 36) / 3, y = deckY - 26 - (i % 2) * 6;
+      el('line', { x1: x, y1: deckY - 2, x2: x, y2: y + 4, stroke: '#2a2208', 'stroke-width': 0.4 });
+      anim(vySvgFace(el, svg, x, y, 4, i + 2, still), { attributeName: 'transform', type: 'translate', values: '0 0;1 -2;0 0', dur: (1.6 + i * 0.3) + 's' }, 'animateTransform');
+    }
+  }
+}
+// (the Locker's functions hand his boats to the ones above)
+{
+  const wrapLk = (orig, mine) => function (skin, a, ...r) { return a && a.vy ? mine(skin, a, ...r) : orig.call(this, skin, a, ...r); };
+  lockerFxBefore = wrapLk(lockerFxBefore, vyFxBefore);
+  lockerHullFx = wrapLk(lockerHullFx, vyHullFx);
+  lockerSailFx = wrapLk(lockerSailFx, vySailFx);
+  lockerFxAfter = wrapLk(lockerFxAfter, vyFxAfter);
+  lockerDeckFx = wrapLk(lockerDeckFx, vyDeckFx);
+  lockerPreviewFx = (o => function (svg, skin, a, geo) { return a && a.vy ? vyPreviewFx(svg, skin, a, geo) : o.call(this, svg, skin, a, geo); })(lockerPreviewFx);
+}
+
+// ---------- the weapon finishes' card pictures (src/wcadmiral.js wcaSvg, theme 7) ----------
+function vyWcaSvg(svg, over, back, T, uid, el, anim, grad) {
+  const still = typeof reduceMotion !== 'undefined' && reduceMotion;
+  // his faces over the gun, blinking, and his giggle running down it
+  for (let i = 0; i < 5; i++) vySvgFace(el, over, 20 + i * 20, 26 + (i % 2) * 8, 5.5, i, still);
+  grad('g', [[0, T.a, 0], [0.5, '#ffffff', 1], [1, T.a, 0]], 'linearGradient', { x1: 0, x2: 1 });
+  const band = el('rect', { x: -30, y: 0, width: 18, height: 60, fill: `url(#${uid}g)` }, over);
+  anim(band, { type: 'translate', values: '0 0;170 0', dur: '3s' });
+  // and a little one peeping over the gun, hopping
+  const g = vySvgFace(el, svg, 100, 12, 6, 7, still);
+  anim(g, { type: 'translate', values: '0 0;0 -4;0 0', dur: '0.9s' });
+}
+
+// ---------- the outfit: his head on your shoulders (src/fpsbody.js) ----------
+function vyDress(F) {
+  if (typeof rvGeo !== 'function' || typeof rvOrb !== 'function') return null;
+  const Q = rvGeo(), H0 = F.head;
+  // the wrecker's own head goes, and the hat and neck: his egg sits down in the collar
+  H0.children.forEach(o => { o.visible = false; });
+  const yellow = fbMat('#e8d41a', { flatShading: false }), black = fbMat('#060504', { flatShading: false, side: THREE.DoubleSide }), tongue = fbMat('#f0e070', { flatShading: false, side: THREE.DoubleSide });
+  yellow.emissive = new THREE.Color('#3a3200');
+  const keep = o => o.traverse(m => { m.userData.keep = true; });
+  const S = 0.135, orb = rvOrb(Q, yellow, black, tongue); orb.o.scale.setScalar(S); orb.o.position.set(0, 0.11 - S * RVO.Y, 0.005); H0.add(orb.o); keep(orb.o);
+  // three little ones circling you, smiling the way you look
+  const minis = [];
+  for (let i = 0; i < 3; i++) { const m = rvOrb(Q, yellow, black, tongue); m.o.scale.setScalar(0.07); F.root.add(m.o); keep(m.o); minis.push(m); }
+  return { orb, minis, yellow };
+}
+function vyPose(F, s) {
+  const V = F.vy, t = reduceMotion ? 0 : s.t, op = s.op;
+  const bl = vyBlink(t, 0);
+  for (const e of V.orb.eyes) e.scale.y = 0.1 * bl;
+  V.orb.face.scale.x = 1 + 0.08 * Math.sin(t * 1.7);
+  V.orb.body.rotation.z = Math.sin(t * 0.9) * 0.1; V.orb.body.position.y = Math.abs(Math.sin(t * 2.1)) * 0.04;
+  V.yellow.emissive.setRGB(0.24 + 0.08 * Math.sin(t * 2.2), 0.2 + 0.07 * Math.sin(t * 2.2), 0.0);
+  V.minis.forEach((m, i) => {
+    const an = t * 0.9 + i * 2.094, hop = Math.abs(Math.sin(t * 2.6 + i * 1.3));
+    m.o.visible = op > 0.05;
+    m.o.position.set(Math.cos(an) * 0.6, 0.95 + 0.35 * Math.sin(t * 1.1 + i * 2) + hop * 0.12, Math.sin(an) * 0.6);
+    m.o.rotation.y = Math.sin(an) * 0.7;   // (facing the way you face, turning a little as they go round)
+    for (const e of m.eyes) e.scale.y = 0.1 * vyBlink(t, i + 1);
+  });
+}
+// the crate card's picture: his face for a head, and the little ones circling
+{
+  const o0 = ocDrawPreview;
+  ocDrawPreview = function (cv, oc, t) {
+    o0.call(this, cv, oc, t);
+    if (!oc || !oc.vy) return;
+    const q = cv.getContext('2d'), k = cv.height / 100, tt = reduceMotion ? 0 : t;
+    q.save(); q.translate(cv.width / 2, 0); q.scale(k, k);
+    // (his head over the wrecker's, and his hat)
+    q.fillStyle = '#121a28'; q.fillRect(-20, 0, 40, 34);
+    q.fillStyle = oc.coat; q.beginPath(); q.moveTo(-17, 36); q.lineTo(17, 36); q.lineTo(15, 33); q.lineTo(-15, 33); q.fill();
+    const gr = q.createRadialGradient(0, 22, 2, 0, 22, 22); gr.addColorStop(0, 'rgba(255,226,74,0.6)'); gr.addColorStop(1, 'rgba(255,226,74,0)'); q.fillStyle = gr; q.fillRect(-24, 0, 48, 44);
+    vyFace(q, 0, 21 + Math.abs(Math.sin(tt * 2.1)) * -1, 13, tt, 0, 1, Math.sin(tt * 0.6));
+    for (let i = 0; i < 3; i++) { const an = tt * 0.9 + i * 2.094, x = Math.cos(an) * 30, y = 52 + Math.sin(an) * 9; if (Math.sin(an) < 0) q.globalAlpha = 0.55; vyFace(q, x, y, 4.2, tt, i + 1, Math.sin(an) < 0 ? 0.55 : 1, 0); q.globalAlpha = 1; }
+    q.restore();
+  };
+}
+
+// ---------- the banner (src/rcrates.js rcPainter) ----------
+const vyRgb = h => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
+function vyPainter(skin) {
+  const A = vyRgb(skin.cols[0]), Bc = vyRgb(skin.cols[1]), C = vyRgb(skin.cols[2]), G = vyRgb(skin.glow), K = [8, 6, 4], T = vyRgb(VYC.TONGUE);
+  const mix = (p, q, k, o) => { o[0] = p[0] + (q[0] - p[0]) * k; o[1] = p[1] + (q[1] - p[1]) * k; o[2] = p[2] + (q[2] - p[2]) * k; };
+  const f = (x, y, t, bd, o) => {
+    // his yellow, damp-stained
+    const damp = Math.sin(x * 0.09 + Math.sin(y * 0.07) * 2) * Math.sin(y * 0.11 - x * 0.03);
+    mix(A, Bc, Math.max(0, damp) * 0.45, o); o[3] = 0;
+    // his faces in it (one in each cell, eleven across), blinking in waves and grinning, giggles rippling out round them
+    const S = 11, cx0 = Math.floor(x / S), cy0 = Math.floor(y / S), h = rcHash(cx0, cy0), lx = x - cx0 * S - 5, ly = y - cy0 * S - 5, r2 = lx * lx + ly * ly;
+    const ring = Math.sin(Math.sqrt(r2) * 1.1 - t * 3 - h * 6);
+    if (h > 0.3 && r2 <= 21) {
+      mix(o, C, 0.35 + 0.15 * Math.sin(t * 2 + h * 9), o);
+      const blink = Math.sin(t * 0.9 - (cx0 + cy0) * 0.6 + h * 3) > 0.93, wide = Math.sin(t * 1.4 + h * 20) > 0.5;
+      const eye = (lx === -2 || lx === 2) && (blink ? ly === -1 : (ly === -2 || ly === -1));
+      const mouth = (ly === 1 && Math.abs(lx) === 3) || (ly === 2 && Math.abs(lx) <= 2) || (wide && ly === 3 && Math.abs(lx) <= 1);
+      if (eye || mouth) { o[0] = K[0]; o[1] = K[1]; o[2] = K[2]; if (wide && ly === 3 && lx === 0) mix(o, T, 0.8, o); }
+      else if (lx === -2 && ly === -3) { mix(o, [255, 255, 240], 0.5, o); }
+      o[3] = 0.08 + 0.1 * Math.max(0, ring);
+    } else if (r2 < 42 && ring > 0.6) { mix(o, C, (ring - 0.6) * 1.2, o); o[3] = (ring - 0.6) * 0.35; }
+    // now and then a glint on a face
+    const g2 = rcHash(x, y); if (g2 > 0.993 && Math.sin(t * 5 + g2 * 300) > 0.6) { mix(o, C, 0.9, o); o[4] = 0.8; o[5] = 0; }
+    // his room's strip lights flickering along your borders
+    if (bd) { const out = rcHash(Math.floor((x + y) / 6), Math.floor(t * 6)) > 0.9; mix(o, out ? K : G, out ? 0.5 : 0.75 + 0.25 * Math.sin(t * 40 + x), o); }
+  };
+  f.glints = ['#fff6c8', '#ffffff']; f.glow = G; f.lit = true; f.level = 6; f.moves = true;
+  return f;
+}
+{ const o0 = rcPainter; rcPainter = function (skin) { return skin && skin.kind === 'verity' ? vyPainter(skin) : o0.call(this, skin); }; }
+
+// ---------- getting them: everything at once, the first time his token's taken (src/raidverity.js rvMe) ----------
+// (how many were new: 0 if you had them all)
+function vyGrant() {
+  let n = 0; const touched = new Set();
+  for (const [id, kind] of VY_ITEMS) {
+    try {
+      if (kind === 'outfit' && typeof OC !== 'undefined' && !OC.owned[id]) { OC.owned[id] = 1; touched.add('oc'); n++; }
+      else if (kind === 'weapon' && typeof WC !== 'undefined' && !WC.owned[id]) { WC.owned[id] = 1; touched.add('wc'); n++; }
+      else if (kind === 'banner' && typeof RC !== 'undefined' && !RC.owned[id]) { RC.owned[id] = 1; touched.add('rc'); n++; }
+      else if (kind === 'boat' && typeof CRATES !== 'undefined' && !CRATES.owned[id]) { CRATES.owned[id] = 1; touched.add('bt'); n++; }
+    } catch (e) {}
+  }
+  try { if (touched.has('oc')) { ocSave(); ocRender(); } } catch (e) {}
+  try { if (touched.has('wc')) { wcSave(); wcRender(); } } catch (e) {}
+  try { if (touched.has('rc')) { rcSave(); rcRender(); } } catch (e) {}
+  try { if (touched.has('bt')) { saveCrates(); renderCrates(); } } catch (e) {}
+  try { if (n && typeof cloudSaveSoon === 'function') cloudSaveSoon(); } catch (e) {}
+  if (n) setTimeout(() => vyVoice(1.2, 0.8), 1500);
+  return n;
+}
+// one of his, in its own store
+function vyItem(id) {
+  const kind = (VY_ITEMS.find(it => it[0] === id) || [])[1];
+  if (kind === 'outfit') return { kind, it: OC_BY_ID[id], have: () => !!OC.owned[id], on: () => ocEquippedId() === id, equip: () => ocEquip(id), card: () => ocCard(OC_BY_ID[id]), verb: ['Wear', 'Wearing'] };
+  if (kind === 'weapon') { const s = WC_SKIN_BY_ID[id]; return { kind, it: s, have: () => !!WC.owned[id], on: () => WC.equipped[s.weapon] === id, equip: () => wcEquip(s), card: () => wcCard(s), verb: ['Equip', 'Equipped'] }; }
+  if (kind === 'banner') return { kind, it: RC_SKIN_BY_ID[id], have: () => !!RC.owned[id], on: () => rcEquippedId() === id, equip: () => rcEquip(id), card: () => rcCard(RC_SKIN_BY_ID[id]), verb: ['Fly', 'Flying'] };
+  if (kind === 'boat') { const s = SKIN_BY_ID[id]; return { kind, it: s, have: () => !!CRATES.owned[id], on: () => CRATES.equipped[s.boat] === id, equip: () => equip(s), card: () => itemCard(s), verb: ['Equip', 'Equipped'] }; }
+  return null;
+}
+// his wardrobe in the Gannet's Locker too, under the Locker's own (not for tokens: he drops it)
+{
+  const o0 = ptRender;
+  ptRender = function () {
+    o0.apply(this, arguments);
+    const card = typeof $ === 'function' && $('ptCard'), inv = card && !card.hidden && $('ptInv'); if (!inv) return;
+    const sub = document.createElement('span'); sub.className = 'invsub'; sub.textContent = 'Verity’s Wardrobe · dropped by Verity, in Maren’s End'; inv.appendChild(sub);
+    for (const [id] of VY_ITEMS) {
+      const I = vyItem(id); if (!I || !I.it) continue;
+      const have = I.have(), on = have && I.on(), c = I.card(); if (!have) c.classList.add('locked'); if (on) c.classList.add('equipped'); c.dataset.id = id;
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'tool';
+      if (!have) { b.textContent = 'Verity drops it'; b.disabled = true; }
+      else { b.textContent = on ? I.verb[1] : I.verb[0]; b.disabled = on; b.setAttribute('aria-label', (on ? I.verb[1] + ': ' : I.verb[0] + ' ') + I.it.name); b.addEventListener('click', () => { I.equip(); ptRender(); }); }
+      c.appendChild(b); inv.appendChild(c);
+    }
+  };
+}
+// his grade on the cards: the Locker's, in his yellow, with his smile
+(function vyStyle() {
+  const st = document.createElement('style'); st.id = 'vyStyle';
+  st.textContent = `
+.skincard.r-verity { overflow: hidden; isolation: isolate; background: #141004; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--rc) 60%, transparent), 0 0 18px -4px var(--rc); }
+.skincard.r-verity b { color: #fff6c8; }
+.skincard.r-verity::after { content: ""; position: absolute; inset: -60%; z-index: -2; pointer-events: none;
+  background: conic-gradient(from 0deg, transparent 0 18%, #f2d21c 26%, transparent 34% 52%, #fff6c8 58%, transparent 64% 100%);
+  animation: vyTurn 3.2s linear infinite; opacity: 0.6; }
+.skincard.r-verity::before { content: ""; position: absolute; inset: 2px; z-index: -1; pointer-events: none; border-radius: inherit;
+  background: radial-gradient(circle at 50% 118%, rgba(6,5,4,0.9) 0 18%, transparent 19%), linear-gradient(180deg, rgba(24,20,6,0.97) 35%, rgba(70,58,8,0.97)); }
+.skincard.r-verity .pips i { background: linear-gradient(180deg, #fff6c8, #f2d21c); box-shadow: 0 0 4px #f2d21c; }
+.skincard.r-verity small { color: #ffe24a; text-shadow: 0 0 6px rgba(242,210,28,0.6); }
+@keyframes vyTurn { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .skincard.r-verity::after { animation: none; } }
+`;
+  document.head.appendChild(st);
+})();
+
+// ---------- the sounds ----------
+{
+  // equipping any of his: he giggles
+  const gig = () => { try { if (typeof loadVerityVoice === 'function') loadVerityVoice(); } catch (e) {} setTimeout(() => vyVoice(1.3, 0.5), 60); };
+  const o1 = ocEquip; ocEquip = function (id) { const r = o1.apply(this, arguments); if (vyIs(id)) gig(); return r; };
+  const o2 = wcEquip; wcEquip = function (s) { const r = o2.apply(this, arguments); if (vyIs(s)) gig(); return r; };
+  const o3 = rcEquip; rcEquip = function (id) { const r = o3.apply(this, arguments); if (vyIs(id)) gig(); return r; };
+  const o4 = equip; equip = function (s) { const r = o4.apply(this, arguments); if (vyIs(s)) gig(); return r; };
+  // his finishes: every shot squeaks, every kill he giggles
+  const o5 = fpsShoot; fpsShoot = function () { const n0 = FPS.vmShots || 0, r = o5.apply(this, arguments); if ((FPS.vmShots || 0) !== n0 && vyArmed()) vySqueak(fpsW().melee ? 0.6 : 1); return r; };
+  const o6 = zmEarnKill; zmEarnKill = function () { const r = o6.apply(this, arguments); if (vyArmed()) vyKillGiggle(); return r; };
+  const o7 = wcEarn; wcEarn = function (why) { const r = o7.apply(this, arguments); if (why === 'kill' && typeof FPS !== 'undefined' && FPS.on && !FPS.zm && vyArmed()) vyKillGiggle(); return r; };
+  // his outfit: you giggle when you take a knock
+  const o8 = fpsHurt; fpsHurt = function () { const r = o8.apply(this, arguments); const now = performance.now(); if (vyWearing() && now - VYA.hurt > 5000) { VYA.hurt = now; vyVoice(1.15 + Math.random() * 0.2, 0.35); } return r; };
+  // his boats: a giggle for every crate hauled aboard
+  const o9 = collectPickup; collectPickup = function () { const r = o9.apply(this, arguments); if (vyBoatSkin()) setTimeout(() => vyVoice(1.35, 0.45), 250); return r; };
+}
+// and at sea, now and then: his giggle (Verity's Smile), the Helper's boing, the strip lights' buzz, or a balloon's pop
+setInterval(() => {
+  try {
+    if (typeof state === 'undefined' || state !== 'play' || !g || g.attract || (typeof document !== 'undefined' && document.hidden)) return;
+    const s = vyBoatSkin(); if (!s) return;
+    if (typeof loadVerityVoice === 'function') loadVerityVoice();
+    if (--VYA.amb > 0) return;
+    VYA.amb = 25 + Math.random() * 35;
+    const sig = VY_SIG[s.id];
+    if (sig === 'helper') vyBoing(); else if (sig === 'room') vyBuzz(); else if (sig === 'faces') { vyPop(); setTimeout(() => vyVoice(1.4, 0.3), 300); } else vyVoice(1.2 + Math.random() * 0.2, 0.35);
+  } catch (e) {}
+}, 1000);
 
 // ---- src/cloudsave.js ----
 // Cloud saves, on the game's own server (server/saves.js, in the same free Upstash Redis as the scoreboard).

@@ -6,6 +6,14 @@
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Never give away a secret here (the Easter egg's steps, where the secret boss hides).
 var PATCH_NOTES = [
+  { v: 143, date: '2026-11-11', title: 'Verity’s Wardrobe', New: [
+    "Maren's End: Verity now drops his whole wardrobe the first time you take his Piece of Eight: 12 cosmetics no crate holds, in their own yellow grade.",
+    "Outfit: Verity's Grin. His smiling head on your shoulders, blinking and grinning, with three little Veritys circling you.",
+    "Weapon finishes for all six weapons, covered in his blinking, grinning faces, with a ripple of light running down the gun every few seconds. Each weapon has its own touch: a grin round the blunderbuss's bell, his eye in the longarm's scope, his tongue down the harpoon gun, teeth along the cutlass.",
+    "Boat skins for all four boats: Verity's Smile (Brig), The Little Helper (Cutter), The Yellow Room (Barque) and Many Happy Faces (Carrier), each with its own moving look on the ship and from the deck.",
+    "Drowned Reach: Verity's Smile banner, with his faces blinking across your land.",
+    "Verity's Wardrobe also shows in the Gannet's Locker, so you can see what you have and equip it there." ], Sound: [
+    "Verity's Wardrobe: he giggles when you equip any of it. His finishes squeak with every shot and giggle at every kill, his outfit giggles when you take a knock, and his boats giggle at every crate and now and then at sea. The Little Helper boings, The Yellow Room's lights buzz, and Many Happy Faces' balloons pop." ] },
   { v: 142, date: '2026-11-11', title: 'Knife when down', Changes: [
     "Keeper's Last Light: when you're down and your pepperbox is empty with nothing left to load, Fire (or the knife key or button) slashes with your knife from the floor." ] },
   { v: 141, date: '2026-11-11', title: 'Patch notes', New: [

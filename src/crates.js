@@ -18,6 +18,9 @@ const RARITIES = [
 // [pirate tokens] a grade of its own for the few things the Lighthouse's pirate tokens unlock (src/zmegg.js): no
 // crate ever rolls it, so it isn't one of the RARITIES above
 const RARITY_PIRATE = { id: 'pirate', name: 'Gannet’s Locker', color: '#3ee0b4', odds: 0 };
+// [verity] Verity's Wardrobe (src/verityfx.js): the same grade as the Locker's, under his own name and colour
+const RARITY_VERITY = { id: 'verity', name: 'Verity’s', color: '#f2d21c', odds: 0 };
+const rarityPirate = s => s && typeof s.id === 'string' && s.id.slice(0, 3) === 'vy_' ? RARITY_VERITY : RARITY_PIRATE;
 
 // hull: planks before she sinks; accel and turn multiply how fast she gathers way and answers the helm
 // deckW/tipY/rail shape the bow you see from the deck; len/masts shape the ship your crew sees
@@ -83,6 +86,8 @@ const BRIG_SKINS = [
   { id: 'lavaforged', name: 'Lava-Forged',         rarity: 'admiral',  deck: ['#1c0a06', '#0a0302'], rail: '#ffb030', wood: '#3a120a', lantern: '#ffd070', hull: '#5a1a0c', sail: '#ff8a30' },
   // [pirate tokens] the Gannet's Locker (src/zmegg.js, its look in src/lockerfx.js): never in a crate
   { id: 'gannetghost', name: 'The Gannet’s Ghost', rarity: 'pirate',  deck: ['#0c1a18', '#040a09'], rail: '#3ee0b4', wood: '#1a3a34', lantern: '#9affd8', hull: '#1c3a36', sail: '#8fe8cc' },
+  // [verity] Verity's Wardrobe (src/verityfx.js): only ever dropped by Verity, in Maren's End, never in a crate
+  { id: 'vy_brig',    name: 'Verity’s Smile',      rarity: 'pirate',  deck: ['#2a2408', '#141004'], rail: '#060504', wood: '#3a3008', lantern: '#fff6b0', hull: '#e8d41a', sail: '#f4e04a' },
 ];
 const CUTTER_SKINS = [
   { id: 'c_plain',    name: 'Cutter, as built',    rarity: null,       deck: ['#1d1610', '#0d0907'], rail: '#2a1d12', wood: '#1a120b', lantern: '#ffcf86', hull: '#5a4330', sail: '#ddd2b6' },
@@ -111,6 +116,8 @@ const CUTTER_SKINS = [
   { id: 'c_sleeper',  name: "The Sleeper's Eye",   rarity: 'admiral',  deck: ['#24202c', '#0e0c12'], rail: '#fff8ff', wood: '#7a7088', lantern: '#f6f0ff', hull: '#e6e0f0', sail: '#fffaff' },
   // [pirate tokens]
   { id: 'c_crossing', name: 'Maren’s Crossing',    rarity: 'pirate',   deck: ['#1a160e', '#0a0805'], rail: '#ffd34d', wood: '#3a2c14', lantern: '#ffe9a8', hull: '#16302c', sail: '#e8f6ee' },
+  // [verity] Verity's Wardrobe (src/verityfx.js): only ever dropped by Verity, in Maren's End, never in a crate
+  { id: 'vy_cutter', name: 'The Little Helper',   rarity: 'pirate',   deck: ['#2a2408', '#141004'], rail: '#e8d41a', wood: '#3a3008', lantern: '#fff6b0', hull: '#d8c418', sail: '#fff6b0' },
 ];
 const BARQUE_SKINS = [
   { id: 'b_plain',    name: 'Barque, as built',    rarity: null,       deck: ['#17110c', '#0a0705'], rail: '#1b120b', wood: '#120c07', lantern: '#ffcf86', hull: '#3f3125', sail: '#d4c9ab' },
@@ -139,6 +146,8 @@ const BARQUE_SKINS = [
   { id: 'b_fleece',   name: 'Golden Fleece',       rarity: 'admiral',  deck: ['#241a0a', '#100b04'], rail: '#ffe07a', wood: '#8a6a1a', lantern: '#fff4c8', hull: '#e8c040', sail: '#fff8dc' },
   // [pirate tokens]
   { id: 'b_doubloon', name: 'The Black Doubloon',  rarity: 'pirate',   deck: ['#0a0a0c', '#030304'], rail: '#ffd34d', wood: '#1a1410', lantern: '#7affd0', hull: '#0c0d10', sail: '#18181c' },
+  // [verity] Verity's Wardrobe (src/verityfx.js): only ever dropped by Verity, in Maren's End, never in a crate
+  { id: 'vy_barque', name: 'The Yellow Room',     rarity: 'pirate',   deck: ['#3a3412', '#1a1606'], rail: '#c2b25c', wood: '#5a4e1e', lantern: '#fff0c0', hull: '#b8a44a', sail: '#c2b25c' },
 ];
 // the carrier: deck is the flight deck (near, far), rail the deck markings, wood the island and
 // superstructure, lantern her lights, hull the hull, sail the accent stripe
@@ -162,6 +171,8 @@ const CARRIER_SKINS = [
   { id: 'k_aurora',   name: 'Aurora Flagship',     rarity: 'admiral',  deck: ['#10181e', '#060a0e'], rail: '#7affd8', wood: '#203a5a', lantern: '#b8a0ff', hull: '#1a3048', sail: '#7affd8' },
   // [pirate tokens]
   { id: 'k_drowned',  name: 'The Drowned Fleet',   rarity: 'pirate',   deck: ['#0e1a1a', '#050c0c'], rail: '#3ee0b4', wood: '#1e3a38', lantern: '#9affd8', hull: '#143030', sail: '#ffd34d' },
+  // [verity] Verity's Wardrobe (src/verityfx.js): only ever dropped by Verity, in Maren's End, never in a crate
+  { id: 'vy_carrier', name: 'Many Happy Faces',   rarity: 'pirate',   deck: ['#2a2408', '#141004'], rail: '#ffe24a', wood: '#3a3008', lantern: '#fff6b0', hull: '#c8b418', sail: '#e8d41a' },
 ];
 
 const SKINS = BRIG_SKINS.map(s => Object.assign({ boat: 'brig' }, s))
@@ -222,7 +233,7 @@ function flareColour(fs, age) {
 const PENNANT_BY_ID = Object.fromEntries(PENNANTS.map(p => [p.id, p]));
 const LOOT_BY_ID = Object.assign({}, SKIN_BY_ID, PENNANT_BY_ID, FLARE_BY_ID);
 const lootFor = () => SKINS.filter(s => s.rarity).concat(PENNANTS, FLARES.filter(f => f.rarity));
-const rarityOf = s => RARITIES.find(r => r.id === s.rarity) || (s.rarity === 'pirate' ? RARITY_PIRATE : undefined);   // [pirate tokens]
+const rarityOf = s => RARITIES.find(r => r.id === s.rarity) || (s.rarity === 'pirate' ? rarityPirate(s) : undefined);   // [pirate tokens] ([verity] his own grade's name)
 
 const CRATES = {
   crates: { skerry: 0 },
@@ -809,7 +820,7 @@ function itemCard(skin, cls) {
   const adm = typeof admiralSig === 'function' ? admiralSig(skin) : null;
   if (adm) { d.classList.add('adm', 'adm-' + adm.sig); d.style.setProperty('--ac', adm.glow); }
   // one to five pips for the grade, so it reads without relying on colour alone
-  const level = ra ? (ra === RARITY_PIRATE ? 6 : RARITIES.indexOf(ra) + 1) : 0;
+  const level = ra ? (ra === RARITY_PIRATE || ra === RARITY_VERITY ? 6 : RARITIES.indexOf(ra) + 1) : 0;
   if (level) {
     const pips = document.createElement('span'); pips.className = 'pips'; pips.setAttribute('aria-hidden', 'true');
     for (let i = 0; i < level; i++) pips.appendChild(document.createElement('i'));

@@ -49,6 +49,8 @@ const WC_SKIN_ROWS = {
     ['pb_skerry',   'The Skerry Light',        'admiral',  '#f2e6c4', '#3a2a10', '#1a120a', '#ffd34d', '#ffffff', '#fff3c4'],
     // [pirate tokens] src/zmegg.js: only ever unlocked with the Lighthouse's pirate tokens, never in a crate
     ['pb_jolly',    'Jolly Roger',             'pirate',   '#1c1c22', '#0a0a0c', '#3a1610', '#e8e0c8', '#ffffff', '#7affd0'],
+    // [verity] Verity's Wardrobe (src/verityfx.js): only ever dropped by Verity, in Maren's End, never in a crate
+    ['vy_pb',       'Little Helper',           'pirate',   '#e8d41a', '#2a2208', '#1a1406', '#fff6b0', '#060504', '#ffe24a'],
   ],
   blunderbuss: [
     ['bb_plain',    'Blunderbuss, as forged',  null,       '#7a6a50', '#2e2a26', '#4a2e1a', '#a8823a', '#d8c8a0', null],
@@ -64,6 +66,8 @@ const WC_SKIN_ROWS = {
     ['bb_charybdis','Mouth of Charybdis',      'admiral',  '#1a1030', '#08040e', '#2a1d3e', '#ffe07a', '#d8d0f0', '#b8a0ff'],
     // [pirate tokens] src/zmegg.js
     ['bb_maw',      "The Locker's Maw",        'pirate',   '#16201f', '#070b0b', '#2a1810', '#ffd34d', '#7affd0', '#3ee0b4'],
+    // [verity] Verity's Wardrobe (src/verityfx.js): only ever dropped by Verity, in Maren's End, never in a crate
+    ['vy_bb',       'Big Grin',                'pirate',   '#e8d41a', '#2a2208', '#1a1406', '#fff6b0', '#060504', '#ffe24a'],
   ],
   longarm: [
     ['la_plain',    'Longarm, as issued',      null,       '#4c5058', '#22252a', '#5e4126', '#8a6a2c', '#c8bfa8', null],
@@ -79,6 +83,8 @@ const WC_SKIN_ROWS = {
     ['la_plimsoll', "Plimsoll's Eye",          'admiral',  '#2fb1e8', '#0d2433', '#1b6f96', '#ffffff', '#9ff0ff', '#5fd3ff'],
     // [pirate tokens] src/zmegg.js
     ['la_fathom',   'Fathom Glass',            'pirate',   '#1a3a3a', '#081414', '#2a1c14', '#e8c860', '#c8fff0', '#5affd0'],
+    // [verity] Verity's Wardrobe (src/verityfx.js): only ever dropped by Verity, in Maren's End, never in a crate
+    ['vy_la',       'He’s Watching',           'pirate',   '#e8d41a', '#2a2208', '#1a1406', '#fff6b0', '#060504', '#ffe24a'],
   ],
   harpoon: [
     ['hp_plain',    'Harpoon gun, as rigged',  null,       '#5a5650', '#26241f', '#5a3d22', '#8a6a2c', '#c9b08a', null],
@@ -94,6 +100,8 @@ const WC_SKIN_ROWS = {
     ['hp_leviathan','Golden Leviathan',        'admiral',  '#e8c040', '#4a3810', '#8a6a1a', '#fff4c8', '#ffe07a', '#fff0a0'],
     // [pirate tokens] src/zmegg.js
     ['hp_due',      "The Sea's Due",           'pirate',   '#22302c', '#0a100e', '#3a2416', '#ffd34d', '#3ee0b4', '#7affd0'],
+    // [verity] Verity's Wardrobe (src/verityfx.js): only ever dropped by Verity, in Maren's End, never in a crate
+    ['vy_hp',       'Tongue Out',              'pirate',   '#e8d41a', '#2a2208', '#1a1406', '#fff6b0', '#060504', '#ffe24a'],
   ],
   cutlass: [
     ['cl_plain',    'Cutlass, as ground',      null,       '#9aa0a8', '#4a4e54', '#2a1d12', '#3a3c40', '#8a7a5a', null],
@@ -109,6 +117,8 @@ const WC_SKIN_ROWS = {
     ['cl_lastlamp', 'The Last Lamp',           'admiral',  '#fff6dc', '#a37a12', '#1a1208', '#ffd34d', '#ffffff', '#fff3c4'],
     // [pirate tokens] src/zmegg.js
     ['cl_doubloon', 'Doubloon Edge',           'pirate',   '#e8c860', '#5a3a10', '#1a0e08', '#fff0a0', '#8a1a1a', '#ffd34d'],
+    // [verity] Verity's Wardrobe (src/verityfx.js): only ever dropped by Verity, in Maren's End, never in a crate
+    ['vy_cl',       'All Teeth',               'pirate',   '#e8d41a', '#2a2208', '#1a1406', '#fff6b0', '#060504', '#ffe24a'],
   ],
   avtomat: [
     ['av_plain',    'Avtomat, as stamped',     null,       '#4a4d54', '#202227', '#6a3e22', '#8a6a2c', '#c8bfa8', null],
@@ -124,6 +134,8 @@ const WC_SKIN_ROWS = {
     ['av_ninth',    'The Ninth Wave',          'admiral',  '#e8f0f4', '#2a3a48', '#1a2630', '#ffe08a', '#ffffff', '#bfe8ff'],
     // [pirate tokens] src/zmegg.js
     ['av_eight',    'Pieces of Eight',         'pirate',   '#1c1c22', '#08080a', '#3a1610', '#ffd34d', '#e8e0c8', '#ffd34d'],
+    // [verity] Verity's Wardrobe (src/verityfx.js): only ever dropped by Verity, in Maren's End, never in a crate
+    ['vy_av',       'Giggle Box',              'pirate',   '#e8d41a', '#2a2208', '#1a1406', '#fff6b0', '#060504', '#ffe24a'],
   ],
 };
 const WC_SKINS = [];
@@ -131,7 +143,7 @@ for (const w of WC_WEAPONS) for (const [id, name, rarity, metal, dark, wood, bra
   WC_SKINS.push(Object.freeze({ id, weapon: w.id, name, rarity, metal, dark, wood, brass, accent, glow }));
 const WC_SKIN_BY_ID = Object.fromEntries(WC_SKINS.map(s => [s.id, s]));
 const WC_PLAIN = Object.fromEntries(WC_WEAPONS.map(w => [w.id, WC_SKINS.find(s => s.weapon === w.id && !s.rarity).id]));
-const wcRarityOf = s => RARITIES.find(r => r.id === s.rarity) || (s.rarity === 'pirate' ? RARITY_PIRATE : undefined);   // [pirate tokens]
+const wcRarityOf = s => RARITIES.find(r => r.id === s.rarity) || (s.rarity === 'pirate' ? rarityPirate(s) : undefined);   // [pirate tokens] ([verity] his own grade's name)
 const wcLevel = s => s && s.rarity ? (s.rarity === 'pirate' ? 6 : RARITIES.findIndex(r => r.id === s.rarity) + 1) : 0;
 
 const WC = {

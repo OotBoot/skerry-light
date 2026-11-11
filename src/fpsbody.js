@@ -199,6 +199,7 @@ function fbFigure(c, outfitId) {
   if (oc && oc.halo) { let tx = null; try { if (typeof VM !== 'undefined' && VM.softTex) tx = VM.softTex; } catch (e) {} F.halo = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 2.4), new THREE.MeshBasicMaterial({ map: tx, color: oc.halo, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, opacity: 0.4 })); F.halo.position.y = 1.0; root.add(F.halo); }
   // the Admirals' own light, as rich as a reforged weapon (src/ocadmiral.js)
   if (oc && oc.adm && typeof ocaDress === 'function') F.adm = ocaDress(F);
+  if (oc && oc.vy && typeof vyDress === 'function') F.vy = vyDress(F);   // [verity] his head on your shoulders (src/verityfx.js)
   FB.building = null;
   F.aim = new THREE.Group(); F.spine.add(F.aim);
   GL3D.scene.add(root);
@@ -399,6 +400,7 @@ function fbPose(F, s) {
     if (F.eyeMat) F.eyeMat.opacity = op * (0.7 + 0.3 * Math.sin(t * 3));
     if (F.halo) { F.halo.material.opacity = op * (0.28 + 0.14 * Math.sin(t * 1.6)); F.halo.quaternion.copy(F.root.quaternion).invert().multiply(GL3D.camera.quaternion); }
   }
+  if (F.vy) vyPose(F, s);   // [verity]
   return true;
 }
 
