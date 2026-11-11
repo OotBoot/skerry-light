@@ -25,7 +25,7 @@ let js = scripts.map(m => `// ---- ${m[1]} ----\n` + read(m[1])).join('\n');
 const foeAssets = readdirSync(join(root, 'assets/foes')).filter(f => f.endsWith('.webp')).map(f => 'assets/foes/' + f);
 // the recorded sound effects (src/sfxlist.js names each one)
 let sfxAssets = []; try { sfxAssets = readdirSync(join(root, 'assets/sfx')).filter(f => f.endsWith('.mp3')).map(f => 'assets/sfx/' + f); } catch (e) {}
-const MUSIC = a => /^assets\/sfx\/(boss|raid|gw)[a-z0-9]*_\d+\.mp3$/.test(a);
+const MUSIC = a => /^assets\/sfx\/(boss|raid|gw|fr(?!horn))[a-z0-9]*_\d+\.mp3$/.test(a);
 let jsArt = null;
 for (const asset of [...foeAssets, ...sfxAssets, 'assets/maren.png', 'assets/plimsoll.png', 'assets/knock.png', 'assets/verity.png', 'assets/verity2.png', 'assets/verity.mp3']) {
   if (!js.includes(`'${asset}'`)) throw new Error('asset path not found in scripts: ' + asset);
