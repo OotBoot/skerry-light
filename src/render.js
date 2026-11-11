@@ -639,6 +639,7 @@ function hudBox() {
   return HUD_BOX;
 }
 function drawCompass() {
+  if (state === 'title') return;   // not on the main menu, only out at sea
   // phones get a slimmer strip right under the HUD, with only what matters most on it
   const phone = W <= 520;
   if (phone && NET.watch) return;   // the spectator bar sits there
