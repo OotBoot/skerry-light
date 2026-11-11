@@ -8,7 +8,7 @@
 //   Verity's Grin      (outfit)  his own head on your shoulders: the smiling yellow egg, blinking, its grin widening,
 //                                 his yellow alight in the coat's trim, and three little Veritys circling you, smiling
 //                                 your way. You giggle when you take a knock, and in a game, each second, there's
-//                                 a 1 in 50 chance his voice plays.
+//                                 a 1 in 150 chance his voice plays.
 //   The finishes       (weapons) his faces set all over the gun, blinking in their own time and grinning wider, and his
 //                                 giggle running down it as a ripple of light every three seconds; each weapon its own
 //                                 touch (src/wcadmiral.js, theme 7): Little Helper (pepperbox: more faces), Big Grin (a
@@ -49,7 +49,7 @@ const vyIs = s => { const id = s && typeof s === 'object' ? s.id : s; return typ
 const vyBlink = (t, i) => { const p = ((t * 0.27 + i * 0.137) % 1 + 1) % 1; return p < 0.035 ? 0.12 : 1; };
 
 // ---------- his voice, and the rest of the sounds ----------
-const VYA = { kill: 0, hurt: 0, amb: 25, gig: 0 };
+const VYA = { kill: 0, hurt: 0, amb: 90, gig: 0 };
 function vyVoice(rate, vol) {
   const now = performance.now(); if (now - VYA.gig < 900) return; VYA.gig = now;
   try { if (typeof loadVerityVoice === 'function') loadVerityVoice(); if (typeof sfxVerity === 'function') sfxVerity(rate, vol); } catch (e) {}
@@ -69,7 +69,8 @@ function vyArmed() {
 }
 const vyWearing = () => { try { return typeof ocEquippedId === 'function' && vyIs(ocEquippedId()); } catch (e) { return false; } };
 const vyBoatSkin = () => { try { const s = typeof mySkin === 'function' ? mySkin() : null; return vyIs(s) ? s : null; } catch (e) { return null; } };
-function vyKillGiggle() { const now = performance.now(); if (now - VYA.kill < 2500) return; VYA.kill = now; vyVoice(1.3 + Math.random() * 0.15, 0.4); }
+// (rarer: one kill in five, at most every 15 s)
+function vyKillGiggle() { const now = performance.now(); if (now - VYA.kill < 15000 || Math.random() > 0.2) return; VYA.kill = now; vyVoice(1.3 + Math.random() * 0.15, 0.4); }
 
 // ---------- his face, in 2D: the yellow egg, his eyes (shut for a moment now and then), the grin and its tongue ----------
 // (q a canvas context; r its half-height; i its own time; look how far its eyes look aside, -1 to 1)
@@ -453,19 +454,19 @@ function vyItem(id) {
 // ---------- the sounds ----------
 {
   // equipping any of his: he giggles
-  const gig = () => { try { if (typeof loadVerityVoice === 'function') loadVerityVoice(); } catch (e) {} setTimeout(() => vyVoice(1.3, 0.5), 60); };
+  const gig = () => { try { if (typeof loadVerityVoice === 'function') loadVerityVoice(); } catch (e) {} if (Math.random() < 0.5) setTimeout(() => vyVoice(1.3, 0.5), 60); };   // (half the time)
   const o1 = ocEquip; ocEquip = function (id) { const r = o1.apply(this, arguments); if (vyIs(id)) gig(); return r; };
   const o2 = wcEquip; wcEquip = function (s) { const r = o2.apply(this, arguments); if (vyIs(s)) gig(); return r; };
   const o3 = rcEquip; rcEquip = function (id) { const r = o3.apply(this, arguments); if (vyIs(id)) gig(); return r; };
   const o4 = equip; equip = function (s) { const r = o4.apply(this, arguments); if (vyIs(s)) gig(); return r; };
   // his finishes: every shot squeaks, every kill he giggles
-  const o5 = fpsShoot; fpsShoot = function () { const n0 = FPS.vmShots || 0, r = o5.apply(this, arguments); if ((FPS.vmShots || 0) !== n0 && vyArmed()) vySqueak(fpsW().melee ? 0.6 : 1); return r; };
+  const o5 = fpsShoot; fpsShoot = function () { const n0 = FPS.vmShots || 0, r = o5.apply(this, arguments); if ((FPS.vmShots || 0) !== n0 && vyArmed() && Math.random() < 1 / 6) vySqueak(fpsW().melee ? 0.6 : 1); return r; };
   const o6 = zmEarnKill; zmEarnKill = function () { const r = o6.apply(this, arguments); if (vyArmed()) vyKillGiggle(); return r; };
   const o7 = wcEarn; wcEarn = function (why) { const r = o7.apply(this, arguments); if (why === 'kill' && typeof FPS !== 'undefined' && FPS.on && !FPS.zm && vyArmed()) vyKillGiggle(); return r; };
   // his outfit: you giggle when you take a knock
-  const o8 = fpsHurt; fpsHurt = function () { const r = o8.apply(this, arguments); const now = performance.now(); if (vyWearing() && now - VYA.hurt > 5000) { VYA.hurt = now; vyVoice(1.15 + Math.random() * 0.2, 0.35); } return r; };
+  const o8 = fpsHurt; fpsHurt = function () { const r = o8.apply(this, arguments); const now = performance.now(); if (vyWearing() && now - VYA.hurt > 20000 && Math.random() < 1 / 3) { VYA.hurt = now; vyVoice(1.15 + Math.random() * 0.2, 0.35); } return r; };
   // his boats: a giggle for every crate hauled aboard
-  const o9 = collectPickup; collectPickup = function () { const r = o9.apply(this, arguments); if (vyBoatSkin()) setTimeout(() => vyVoice(1.35, 0.45), 250); return r; };
+  const o9 = collectPickup; collectPickup = function () { const r = o9.apply(this, arguments); if (vyBoatSkin() && Math.random() < 1 / 3) setTimeout(() => vyVoice(1.35, 0.45), 250); return r; };
 }
 // and at sea, now and then: his giggle (Verity's Smile), the Helper's boing, the strip lights' buzz, or a balloon's pop
 setInterval(() => {
@@ -474,16 +475,16 @@ setInterval(() => {
     const s = vyBoatSkin(); if (!s) return;
     if (typeof loadVerityVoice === 'function') loadVerityVoice();
     if (--VYA.amb > 0) return;
-    VYA.amb = 25 + Math.random() * 35;
+    VYA.amb = 90 + Math.random() * 90;
     const sig = VY_SIG[s.id];
     if (sig === 'helper') vyBoing(); else if (sig === 'room') vyBuzz(); else if (sig === 'faces') { vyPop(); setTimeout(() => vyVoice(1.4, 0.3), 300); } else vyVoice(1.2 + Math.random() * 0.2, 0.35);
   } catch (e) {}
 }, 1000);
-// his outfit, in a game: a 1 in 50 chance each second that he speaks up (his voice, as in his room)
+// his outfit, in a game: a 1 in 150 chance each second that he speaks up (his voice, as in his room)
 setInterval(() => {
   try {
     if (typeof FPS === 'undefined' || !FPS.on || (typeof document !== 'undefined' && document.hidden) || !vyWearing()) return;
     if (typeof loadVerityVoice === 'function') loadVerityVoice();
-    if (Math.random() < 1 / 50) vyVoice(1, 0.6);
+    if (Math.random() < 1 / 150) vyVoice(1, 0.6);
   } catch (e) {}
 }, 1000);

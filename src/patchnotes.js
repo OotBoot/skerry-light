@@ -6,6 +6,10 @@
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Never give away a secret here (the Easter egg's steps, where the secret boss hides).
 var PATCH_NOTES = [
+  { v: 152, date: '2026-11-11', title: 'Quieter Verity', Sound: [
+    "Verity's Wardrobe: all its sounds are rarer. Equipping one giggles half the time. His finishes squeak on about one shot in six and giggle on about one kill in five, at most every 15 s.",
+    "Verity's Grin: the giggle when you're hit is a 1 in 3 chance, at most every 20 s, and the random voice is now a 1 in 150 chance each second (was 1 in 50).",
+    "Verity's boats: the sounds at sea come every 1.5 to 3 minutes (was every 25 to 60 s), and a crate giggles one time in three." ] },
   { v: 151, date: '2026-11-11', title: 'The Gannet’s Wake: Captain Crane', New: [
     "The Gannet's Wake, Part III, The Quarterdeck: the whole raid is in. Through the captain's cabin and up on to the Gannet's deck, where Captain Absalom Crane is waiting.",
     "He can only be hurt while light is on him: the Light's beam as it sweeps across the deck, or a flare fired from one of the two flare lockers. Shots in the dark do nothing.",
