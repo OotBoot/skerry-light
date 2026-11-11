@@ -6,6 +6,8 @@
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Never give away a secret here (the Easter egg's steps, where the secret boss hides).
 var PATCH_NOTES = [
+  { v: 144, date: '2026-11-11', title: 'Verity speaks up', Sound: [
+    "Verity's Grin: while you wear it in a game, every second there's a 1 in 50 chance Verity's voice plays." ] },
   { v: 143, date: '2026-11-11', title: 'Verity’s Wardrobe', New: [
     "Maren's End: Verity now drops his whole wardrobe the first time you take his Piece of Eight: 12 cosmetics no crate holds, in their own yellow grade.",
     "Outfit: Verity's Grin. His smiling head on your shoulders, blinking and grinning, with three little Veritys circling you.",

@@ -7,7 +7,8 @@
 // the backups and the cloud keep them like anything else. Every one of them moves, and every one of them makes a sound:
 //   Verity's Grin      (outfit)  his own head on your shoulders: the smiling yellow egg, blinking, its grin widening,
 //                                 his yellow alight in the coat's trim, and three little Veritys circling you, smiling
-//                                 your way. You giggle when you take a knock.
+//                                 your way. You giggle when you take a knock, and in a game, each second, there's
+//                                 a 1 in 50 chance his voice plays.
 //   The finishes       (weapons) his faces set all over the gun, blinking in their own time and grinning wider, and his
 //                                 giggle running down it as a ripple of light every three seconds; each weapon its own
 //                                 touch (src/wcadmiral.js, theme 7): Little Helper (pepperbox: more faces), Big Grin (a
@@ -475,5 +476,13 @@ setInterval(() => {
     VYA.amb = 25 + Math.random() * 35;
     const sig = VY_SIG[s.id];
     if (sig === 'helper') vyBoing(); else if (sig === 'room') vyBuzz(); else if (sig === 'faces') { vyPop(); setTimeout(() => vyVoice(1.4, 0.3), 300); } else vyVoice(1.2 + Math.random() * 0.2, 0.35);
+  } catch (e) {}
+}, 1000);
+// his outfit, in a game: a 1 in 50 chance each second that he speaks up (his voice, as in his room)
+setInterval(() => {
+  try {
+    if (typeof FPS === 'undefined' || !FPS.on || (typeof document !== 'undefined' && document.hidden) || !vyWearing()) return;
+    if (typeof loadVerityVoice === 'function') loadVerityVoice();
+    if (Math.random() < 1 / 50) vyVoice(1, 0.6);
   } catch (e) {}
 }, 1000);
