@@ -1677,7 +1677,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 // ---- src/config.js ----
 'use strict';
 // The game's version, shown at the top of the main menu. Bump it by one with every change pushed to main.
-var VERSION = 115;
+var VERSION = 116;
 // Skerry Light: tuning, asset paths and lore.
 // World units are metres. The lighthouse stands at the origin on the shoreline (y = 0);
 // north (+y) is open sea. Bearings: 0 = north, positive = east.
@@ -27562,7 +27562,7 @@ function zbPoseDiver(z, M, dt) {
 //    35 degrees of straight at it), with nothing solid between, is dazzled white for three seconds and dragged
 //    towards him for 1.7 s (nearly five metres) at half pace (no knock: he means to finish you with the pole). Look away (or get behind
 //    something) and it's only a flash. But he's open while he holds it up: a hit then is worth 1.6 times as much.
-//  - Close in he swings the pole round at you (one knock).
+//  - Close in he swings the pole round at you (two knocks).
 //  - He carries his own fire: the Lamp's burn hurts him at a quarter the rate.
 // The Keelback (from round 18): a great crab made of wrecks fused together, its back the upturned hull of a boat,
 // planked and ribbed and crusted with barnacles, a stub of mast and its keel along the top; six legs of spars and
@@ -27626,7 +27626,7 @@ ZBT.moon = {
   },
   strike(z) {
     const m = FPS.me;
-    if (z.act === 'pole') { zbmSound('whoosh', Math.hypot(z.x - m.x, z.y - m.y)); zbMelee(z, ZBM.REACH, 1.1, 1); return; }
+    if (z.act === 'pole') { zbmSound('whoosh', Math.hypot(z.x - m.x, z.y - m.y)); zbMelee(z, ZBM.REACH, 1.1, 2); return; }
     if (z.act !== 'lure') return;
     // the light flares: whoever's looking into it, with nothing between, is dazzled and drawn in
     const [lx, ly, lz] = zbmLantern(z), ez = FPSC.GROUND + FPSC.EYE + (m.jz || 0), dh = Math.hypot(lx - m.x, ly - m.y);
