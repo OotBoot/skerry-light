@@ -517,10 +517,13 @@ function fpsRemember(o, now) {
   while (o.hist.length && now - o.hist[0].t > FPSC.LAG * 1000 + 100) o.hist.shift();
 }
 // the directions of the balls in a blunderbuss shot, the same on every screen (from the shot's seed)
-// (in the Lighthouse a weapon can load differently: ZM_SHOT in src/zombies.js, the blunderbuss's wider charge)
+// (in the Lighthouse a weapon can load differently: ZM_SHOT in src/zombies.js, the blunderbuss's wide flat fan)
 function fpsPellets(sh) {
   const [, , , , h, p, , code, seed] = sh, w = fpsWOf(code), rng = seeded((seed || 1) >>> 0), out = [];
   const o = FPS.zm && typeof ZM_SHOT !== 'undefined' && ZM_SHOT[code], n = (o && o.pellets) || w.pellets, sp = (o && o.spread) || w.spread;
+  // (o.fan: a flat fan instead, the balls laid evenly side to side across sp either way, a little wander in each, and
+  // barely any rise or fall)
+  if (o && o.fan) { for (let i = 0; i < n; i++) { const u = (i + 0.2 + rng() * 0.6) / n * 2 - 1; out.push([h + u * sp, p + (rng() - 0.5) * o.fan]); } return out; }
   for (let i = 0; i < n; i++) { const a = rng() * 6.283, r = Math.sqrt(rng()) * sp; out.push([h + Math.cos(a) * r, p + Math.sin(a) * r * 0.7]); }
   return out;
 }

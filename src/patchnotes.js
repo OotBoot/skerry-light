@@ -6,6 +6,9 @@
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Never give away a secret here (the Easter egg's steps, where the secret boss hides).
 var PATCH_NOTES = [
+  { v: 145, date: '2026-11-11', title: 'Blunderbuss fan', Changes: [
+    "Keeper's Last Light and Maren's End: the Blunderbuss now fires its shot in a wide, flat fan from side to side, so one blast sweeps across a whole line of them.",
+    "It fires more balls (28) and each one hits harder, so a single target in front of you still takes about as much as before: about 60 up close and 29 at 8 m. Five of them standing abreast at 8 m now take 23 to 30 each." ] },
   { v: 144, date: '2026-11-11', title: 'Verity speaks up', Sound: [
     "Verity's Grin: while you wear it in a game, every second there's a 1 in 50 chance Verity's voice plays." ] },
   { v: 143, date: '2026-11-11', title: 'Verity’s Wardrobe', New: [
