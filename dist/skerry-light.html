@@ -1685,7 +1685,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 // ---- src/config.js ----
 'use strict';
 // The game's version, shown at the top of the main menu. Bump it by one with every change pushed to main.
-var VERSION = 118;
+var VERSION = 119;
 // Skerry Light: tuning, asset paths and lore.
 // World units are metres. The lighthouse stands at the origin on the shoreline (y = 0);
 // north (+y) is open sea. Bearings: 0 = north, positive = east.
@@ -3341,6 +3341,7 @@ function hudBox() {
   return HUD_BOX;
 }
 function drawCompass() {
+  if (state === 'title') return;   // not on the main menu, only out at sea
   // phones get a slimmer strip right under the HUD, with only what matters most on it
   const phone = W <= 520;
   if (phone && NET.watch) return;   // the spectator bar sits there
