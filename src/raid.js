@@ -114,6 +114,7 @@ function raidAfterStart() {
   { const e = document.querySelector('#fpsMenu .eyebrow'); if (e) e.textContent = raidName(); $('fpsLeave').textContent = 'Leave the raid'; $('fpsResume').textContent = 'Back to the raid'; }
   $('zmAgain').textContent = ZM.net ? 'Back to the lobby' : raidInfo().again;
   raidLoadout();
+  if ($('rclEye')) $('rclEye').textContent = raidName();   // (the callings' picker: which raid)
   RAID.st = {}; raidCall('enter');
 }
 const RAIDC = { ROUND: 4, CALM: 0.7, BOSS_HP: 1.15 };   // (BOSS_HP: every boss's strength here, against the Lighthouse's)
@@ -220,7 +221,7 @@ function raidUseStage(i) {
   if (zmIsDown()) zmGetUp();
   RAID.st = {}; raidCall('enter');
   ZM.banner = { text: RAID_STAGES[RAID_ORDER[i]].n, t: 4, sub: 'Part ' + raidNumeral(i + 1) };
-  fpsFeed(MAP.land(0));
+  if (i === 0 || RAID.map === 'raid') fpsFeed(MAP.land(0));   // (the Gannet's Wake: each part says its own as it begins)
 }
 const raidNumeral = n => ['', 'I', 'II', 'III', 'IV', 'V', 'VI'][n] || String(n);
 function raidWin() {

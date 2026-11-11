@@ -98,7 +98,7 @@ function rclBuildPick() {
   o.className = 'overlay pausecard rcpick'; o.id = 'rclPick'; o.hidden = true;
   o.setAttribute('role', 'dialog'); o.setAttribute('aria-modal', 'true'); o.setAttribute('aria-labelledby', 'rclPickHead');
   const card = document.createElement('div'); card.className = 'card';
-  const eb = document.createElement('p'); eb.className = 'eyebrow'; eb.textContent = 'Maren’s End';
+  const eb = document.createElement('p'); eb.className = 'eyebrow'; eb.id = 'rclEye'; eb.textContent = 'Maren’s End';
   const h = document.createElement('h1'); h.id = 'rclPickHead'; h.textContent = 'Choose your calling';
   const sub = document.createElement('p'); sub.className = 'muted'; sub.textContent = 'Your weapon skins and your outfit go down with you.';
   const row = document.createElement('div'); row.className = 'rcrow';

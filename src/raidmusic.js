@@ -39,7 +39,9 @@ const RM_TAIL = 2.5;   // (the fall's track runs on this long after its climax: 
 function rmWant() {
   if (!RAID.on) RM.fell = RM.wonDone = false;
   // Maren down: the sunset, played once through (on to the end card), then quiet
-  if (RAID.on && (RAID.won || (RAID_ORDER[RAID.stage] === 'fort' && typeof RF !== 'undefined' && RF.st === 'won'))) { if (RM.cur === 'raidwin' && RM.done) RM.wonDone = true; return RM.wonDone ? null : 'raidwin'; }
+  // (the Gannet's Wake has its own: dawn after the Captain goes down, gwwin)
+  const WIN = RAID.map === 'gannet' ? 'gwwin' : 'raidwin';
+  if (RAID.on && (RAID.won || (RAID_ORDER[RAID.stage] === 'fort' && typeof RF !== 'undefined' && RF.st === 'won') || (RAID_ORDER[RAID.stage] === 'gwcapt' && typeof GCW !== 'undefined' && GCW.st === 'won'))) { if (RM.cur === WIN && RM.done) RM.wonDone = true; return RM.wonDone ? null : WIN; }
   if (!RAID.on || ZM.over) return null;
   { const v = typeof rvMusic === 'function' ? rvMusic() : undefined; if (v !== undefined) return v; }   // [verity] (src/raidverity.js)
   const k = RAID_ORDER[RAID.stage];
@@ -61,7 +63,7 @@ function rmTick(dt) {
   // (the fall's track played through before you landed: on to the cave's, early)
   if (RM.cur === 'raidfall' && RM.done) RM.fell = true;
   const want = rmWant();
-  if (want !== RM.cur) { if (want) rmPlay(want, want === 'raidwin' ? 3 : want === 'raidmaren2' ? 0.4 : want === 'raidcave' && RM.cur === 'raidfall' ? RM_TAIL : want === 'raidfall' ? 1.5 : want === 'raidsong' || RM.cur === 'raidsong' ? 0.6 : 2); else rmStop(3); }
+  if (want !== RM.cur) { if (want) rmPlay(want, want === 'raidwin' || want === 'gwwin' ? 3 : want === 'raidmaren2' ? 0.4 : want === 'raidcave' && RM.cur === 'raidfall' ? RM_TAIL : want === 'raidfall' ? 1.5 : want === 'raidsong' || RM.cur === 'raidsong' ? 0.6 : 2); else rmStop(3); }
   // Maren's second phase: the music swells as her tide comes up the fort (RF.tide, 0 to 1)
   // (while she summons the storm, RF.p2i, it comes up from quiet; then full, and it swells on each bell toll and
   //  lightning flash, RF.tide, 0 to 1)
