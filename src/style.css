@@ -1014,3 +1014,20 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 
 /* Version number at the top of the main menu */
 .verline { margin: 0 auto; width: max-content; padding: 4px 12px; background: rgba(6,10,20,0.85); position: relative; z-index: 1; font-variant-numeric: lining-nums; text-align: center; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--lamp); opacity: 0.75; }
+
+/* Patch Notes: the button under the game banners and its page */
+.notesbtn { justify-self: center; margin: -4px auto 0; padding: 5px 14px; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; }
+@media (orientation: landscape) and (max-height: 520px) { #titleCard > .notesbtn { grid-column: 1 / -1; width: max-content; } }
+.notescard { z-index: 23; }
+.notescard .card { max-width: 40rem; }
+.pnlist { display: grid; gap: 18px; margin-top: 6px; }
+.pn-ver { border-top: 1px solid var(--rule); padding-top: 12px; }
+.pn-ver h2 { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin: 0; font-size: 1.15rem; color: var(--lamp); }
+.pn-ver .pn-date { margin-left: auto; font-family: var(--log); font-size: 11px; letter-spacing: 0.08em; color: var(--muted); }
+.pn-ver .pn-latest { font-family: var(--log); font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; padding: 2px 6px; background: #e46c4f; color: #1a0d08; font-weight: 700; }
+.card .pn-title { margin: 2px 0 4px; font-style: italic; color: var(--ink); }
+.pn-sec { margin: 10px 0 4px; font-family: var(--log); font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); }
+.pn-sec.pn-new { color: #e46c4f; } .pn-sec.pn-balance { color: #7fbfa8; } .pn-sec.pn-changes { color: #8fb1e6; } .pn-sec.pn-fixes { color: #d9c27a; } .pn-sec.pn-sound { color: #b79ad8; }
+.pn-ver ul { margin: 0; padding-left: 18px; font-family: var(--log); font-size: 12.5px; line-height: 1.5; }
+.pn-ver li + li { margin-top: 3px; }
+.pn-ver li b { color: var(--lamp); font-weight: 700; }

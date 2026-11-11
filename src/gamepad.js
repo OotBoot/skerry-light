@@ -26,7 +26,7 @@ function padRumble(strong, weak, ms) {
 
 // the overlay currently on top, and the buttons on it you can move between
 function activeOverlay() {
-  for (const id of ['settingsCard', 'pauseCard', 'crateCard', 'wcrateCard', 'crewCard', 'portCard', 'endCard', 'titleCard']) { const el = $(id); if (el && !el.hidden) return el; }
+  for (const id of ['notesCard', 'settingsCard', 'pauseCard', 'crateCard', 'wcrateCard', 'crewCard', 'portCard', 'endCard', 'titleCard']) { const el = $(id); if (el && !el.hidden) return el; }
   return null;
 }
 function focusables(root) {
@@ -149,7 +149,8 @@ function pollPad(dt) {
         }
         if (down(9)) { const el = mainButton(root); if (el) el.click(); }
         if (down(1)) {
-          if (root.id === 'settingsCard') closeSettings();
+          if (root.id === 'notesCard') closeNotes();
+          else if (root.id === 'settingsCard') closeSettings();
           else if (root.id === 'pauseCard') resumeGame();
           else if (root.id === 'crateCard') $('crateClose').click();
           else if (root.id === 'wcrateCard') $('wcrateClose').click();

@@ -75,6 +75,7 @@
     <button class="newgame warbanner" id="warBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">And another, <b>Drowned Reach</b>: a war for the islands, alone or with up to ten players</span><span class="ng-go" aria-hidden="true">↓</span></button>
     <button class="newgame zmbanner" id="zmBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">And a fourth, <b>Keeper's Last Light</b>: hold the keeper's station against the drowned, round after round</span><span class="ng-go" aria-hidden="true">↓</span></button>
     <button class="newgame rdbanner" id="rdBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">And a raid, <b>Maren's End</b>: down the Swallow, alone or with up to four</span><span class="ng-go" aria-hidden="true">↓</span></button>
+    <button class="tool notesbtn" id="notesBtn" type="button">Patch notes</button>
     <div class="card boardcard" id="boardCard" aria-labelledby="boardHead">
       <div class="cardtop"><span class="eyebrow">Best on record · every game</span><button class="tool closebtn" id="boardRefresh" type="button">Refresh</button></div>
       <h1 id="boardHead">The Scoreboard</h1>
@@ -653,11 +654,20 @@
     </div>
   </div>
 
+  <div class="overlay settingscard notescard" id="notesCard" hidden role="dialog" aria-modal="true" aria-labelledby="notesHead">
+    <div class="card">
+      <div class="cardtop sticky"><span class="eyebrow" id="notesEyebrow">What's changed</span><button class="tool closebtn" id="notesClose" type="button">✕ Close</button></div>
+      <h1 id="notesHead">Patch Notes</h1>
+      <div class="pnlist" id="notesList"></div>
+    </div>
+  </div>
+
   <div class="toast" id="toast" hidden role="status"></div>
 </div>
 
 <script src="vendor/three.min.js"></script>
 <script src="src/config.js"></script>
+<script src="src/patchnotes.js"></script>
 <script src="src/audio.js"></script>
 <script src="src/sfxlist.js"></script>
 <script src="src/sfxbank.js"></script>
@@ -724,6 +734,7 @@
 <script src="src/ocrates.js"></script>
 <script src="src/cloudsave.js"></script>
 <script src="src/share.js"></script>
+<script src="src/patchnotesui.js"></script>
 <script src="src/main.js"></script>
 </body>
 </html>

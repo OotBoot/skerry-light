@@ -12,7 +12,7 @@ The only thing she will not go near is **Plimsoll**, the shark who walked up out
 
 The log goes on through 1888. The sea stops being one sea: some nights it freezes, some nights the hills burn, some nights the water is warm and green, or full of fog and gravestones, or the rocks are glass. Stranger things than Maren start turning up on the water, and a small yellow thing called **Verity** sits on decks offering to help. Now and then a ship sails through a ring of black stone into a sea of fire, or onto the wine-dark sea of an older story, or into a place at dusk where doors stand in the water. And one night an iron ship with no sails comes into the harbour, from a year the keeper will not write down. Those far seas each have their own page.
 
-The version number sits at the top of the main menu, so you can tell which build you're playing.
+The version number sits at the top of the main menu, so you can tell which build you're playing. Under the game banners, **Patch notes** opens a page listing every recent update, newest first, sorted into New, Balance, Changes, Fixes and Sound. Close it with the ✕, Esc, or B on a controller.
 
 ## How to play
 
@@ -564,12 +564,18 @@ Upload `dist/skerry-light.html` anywhere that serves static files. Everything it
 
 The version shown at the top of the main menu is `VERSION` at the top of `src/config.js`. Every change pushed to `main` bumps it by one: pull the latest `main` first, add one to `VERSION`, then build, so two changes never ship the same number. It started at 97, the count of commits on `main` when it was added.
 
+### Patch notes
+
+Every change pushed to `main` also adds an entry for its new version at the top of `PATCH_NOTES` in `src/patchnotes.js` (the file's top comment shows the shape: `v`, `date`, `title` and any of `New`, `Balance`, `Changes`, `Fixes`, `Sound`). `src/patchnotesui.js` draws the page. Write them like real patch notes, from the player's side, and never give away a secret there.
+
 ## Project layout
 
 ```
 index.html          page markup; loads the stylesheet and scripts below
 src/style.css       HUD, cards and buttons
 src/config.js       tuning numbers, asset paths and the keeper's log
+src/patchnotes.js   the patch notes log (one entry per version, newest first)
+src/patchnotesui.js the main menu's Patch Notes page
 src/audio.js        sound, made with the Web Audio API (plus Verity's voice clip)
 src/biomes.js       the seas: palettes, landscapes, rock skins, weather, the Nether portal
 src/nether.js       the Nether's three enemies
