@@ -471,6 +471,19 @@ Through the captain's cabin door and up the companion, you come out on the Ganne
 - **The victory screen:** as at the end of Maren's End, *Captain Crane goes down with his ship*. All of you stand together, with the MVP on the gold step. Two more things can come up under each player: **flares fired** and **times the bell rung**.
 - **Together.** The host runs all of it: Crane, his crew, the lockers, the bell, the black sail and her foundering. Each screen works out for itself whether he's lit, from the same clock for the beam and the host's word for the flares. A hit that crossed the wire just as the light went off him still counts. A joined player asks the host to fire a flare or ring the bell, and everyone's hits on him add up.
 
+## Fog Run (a voyage through the haar, alone or up to four)
+
+A sixth game, on its own card on the title screen (**Set out**). On the fogbound nights of 1889 something out in the haar has been putting out the lights of the outer rocks, and you take the keeper's cutter out to light them again.
+
+- **At sea.** The cutter's deck, as in The Gannet's Wake: one of you at the helm, the rest on deck. Rocks show in the fog, the beam and the flares; hitting one stoves a hole to patch, and a full flood bar sinks her and ends the run. The bell and the flare locker work as there. The fog cuts how far you see (140 m out in the Near Skerries, thicker further out), never how fast she sails.
+- **The islands.** Each leg ends on an island's beach. Go ashore, hold Use at the island's beacon for four seconds to light it, then keep the drowned off it for a minute; if they crowd it, it goes out and you light it again. Once it's held, its light goes up through the fog, the fog draws back a little, and you're back aboard for the next.
+- **Lives.** Alone, going down ends the run. Together, each of you has one extra life: the first time you bleed out you're back on your feet ten seconds later. After that you're lost in the fog, watching the others, until the crew lights the next beacon. The run ends when everyone is lost at once, or the cutter goes down.
+- **Every run is different**: the legs, the rocks and the islands come from a seed drawn fresh for each run, the same for the whole crew.
+- **Together**: the card's own lobby (host a run, join one, Share invite: `?mode=fogrun&lobby=...`), host-run like the raids, and you can rejoin a run in progress.
+- More is coming: a chart to choose your route, rewards between islands, puzzle islands and a boss on Lantern Rock.
+
+How it's built: `src/frrun.js` (the run, its lives and the order of its parts, which grows as you go), `src/frsail.js` (the sailing legs, on src/gwsail.js through `GWS_LEG`), `src/frisle.js` (the islands), on the raids' stage system (src/raid.js, `ZM_MAPS.fogrun`). Its music: `frsail`, `frisle`, `frpuzzle`, `frboss`, `frboss2`, `frwin` and the fog horn `frhorn` (src/raidmusic.js).
+
 ## Wreckers' Night (multiplayer FPS)
 
 A separate game with its own card on the title screen, below Skerry Light (a banner at the top of the title screen points to it). The card has the weapon picker (the pepperbox now, four slots waiting for more weapons), Go ashore, Settings, your name, who's on the island, and how to play. You go ashore on foot on a skerry at night with a six-shot pepperbox pistol and a lantern, and shoot it out with everyone else on the island. It never touches your voyages, crates, cosmetics or crew; your equipped skin only colours your coat and lantern.

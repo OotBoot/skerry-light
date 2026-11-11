@@ -62,8 +62,8 @@ const FR_PUSH = 10;
 const FR_LOOKS = ['shingle', 'reef', 'chapel', 'cove', 'cliff', 'marsh'];
 // the route for now (step 1): two Fight islands (Hold the Light), then won. The chart (step 2) takes over frNextStop.
 const FR_SKEL = [{ kind: 'fight', rule: 'hold', reach: 1 }, { kind: 'fight', rule: 'hold', reach: 1 }];
-// the music each part plays, until the run has its own (step 7: src/raidmusic.js keys frsail, frisle and so on)
-var FR_MUSIC = { sail: 'gwsail', isle: null };
+// the music each part plays (src/raidmusic.js; the fog horn, frhorn, is a sound for the Bell Buoys' tune)
+var FR_MUSIC = { sail: 'frsail', isle: 'frisle', puzzle: 'frpuzzle', boss: 'frboss', boss2: 'frboss2', win: 'frwin', horn: 'frhorn' };
 // the island kinds, by name (frKind)
 var FR_KINDS = {};
 var FR = { on: false, seed: 0, want: null, debug: null, reach: 1, stop: 0, push: 0, pushR: 1, plan: [], next: null, life: 0, lost: false, backT: 0, kit: null,

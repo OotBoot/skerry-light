@@ -6,6 +6,13 @@
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 158, date: '2026-11-11', title: "Fog Run", New: [
+    "Fog Run: a new game, alone or up to four together, with its own card on the main menu. Something out in the haar has been putting out the lights of the outer rocks; take the keeper's cutter out and light them again.",
+    "Fog Run: sail the cutter through the rocks to an island, beach her and go ashore. Light the island's beacon and keep the drowned off it for a minute. If they put it out, light it again.",
+    "Fog Run: the fog gets thicker the further out you sail, and every run is different.",
+    "Fog Run: alone, going down ends the run. Together, each of you has one extra life. After that you're lost in the fog until the crew lights the next beacon, and the run ends if everyone is lost at once or the cutter sinks.",
+    "Fog Run: its own lobby, invite links and rejoin. More islands, rewards between them and a boss at the end are on the way." ], Sound: [
+    "Fog Run: its own music at sea, ashore and for the win." ] },
   { v: 157, date: '2026-11-11', title: "Menu tidy", Changes: [
     "Main menu: small tidy-up." ] },
   { v: 156, date: '2026-11-11', title: "Tidier patch notes", Changes: [

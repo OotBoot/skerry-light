@@ -27,12 +27,16 @@
 //   gwcapt      Captain Crane on the quarterdeck: heavy drums, low brass, his drowned crew chanting, the ship's bell
 //   gwcapt2     as she founders (from half his strength): quicker, rushing water, the storm, the bell tolling
 //   gwwin       Crane down: dawn over a calm sea, a hopeful shanty on fiddle and concertina, gulls (played once)
+// Fog Run's own (src/frrun.js FR_MUSIC; each part's music() says which):
+//   frsail      at sea in the haar: a slow foggy shanty with a fog horn under it
+//   frisle      ashore: a tense fight on the beach        frpuzzle   a puzzle island: quiet, ticking, a music box
+//   frboss / frboss2   the Fog-Keeper, and his second half          frwin   the last light lit (played once)
 // And in her second phase, her storm (sounds, not music): a thunder crack with each lightning flash (stormbolt, from
 // RF.bolt) and a high swirling wind (stormwind, looped, gusting with RF.tide) until she's down.
 // Once it's over otherwise (all of you down, or left), nothing plays. While the raid's on, the Lighthouse's boss
 // themes (src/zmtheme.js) keep quiet: this is the music. Nothing plays until its recording has loaded.
 const RM = { WIND: 0.1, wind: null, bolt: null, fell: false, cur: null, src: null, gain: null, vol: 0.55, rate: 1 };
-const RM_LOOP = { raidfall: false, raidwin: false, gwwin: false };
+const RM_LOOP = { raidfall: false, raidwin: false, gwwin: false, frwin: false };
 const RM_FALLK = 1.3;   // (the fall's track played this much quicker, the fall being that much quicker than it was made for)
 const RM_TAIL = 2.5;   // (the fall's track runs on this long after its climax: tools/sfx/music.py TAIL)
 
@@ -41,7 +45,7 @@ function rmWant() {
   if (!RAID.on) RM.fell = RM.wonDone = false;
   // Maren down: the sunset, played once through (on to the end card), then quiet
   // (the Gannet's Wake has its own: dawn after the Captain goes down, gwwin)
-  const WIN = RAID.map === 'gannet' || RAID.map === 'fogrun' ? 'gwwin' : 'raidwin';   // [fogrun] (dawn, until it has its own)
+  const WIN = RAID.map === 'fogrun' ? 'frwin' : RAID.map === 'gannet' ? 'gwwin' : 'raidwin';   // [fogrun]
   if (RAID.on && (RAID.won || (RAID_ORDER[RAID.stage] === 'fort' && typeof RF !== 'undefined' && RF.st === 'won') || (RAID_ORDER[RAID.stage] === 'gwcapt' && typeof GCW !== 'undefined' && GCW.st === 'won'))) { if (RM.cur === WIN && RM.done) RM.wonDone = true; return RM.wonDone ? null : WIN; }
   if (!RAID.on || ZM.over) return null;
   { const v = typeof rvMusic === 'function' ? rvMusic() : undefined; if (v !== undefined) return v; }   // [verity] (src/raidverity.js)
@@ -64,7 +68,7 @@ function rmTick(dt) {
   // (the fall's track played through before you landed: on to the cave's, early)
   if (RM.cur === 'raidfall' && RM.done) RM.fell = true;
   const want = rmWant();
-  if (want !== RM.cur) { if (want) rmPlay(want, want === 'raidwin' || want === 'gwwin' ? 3 : want === 'raidmaren2' ? 0.4 : want === 'raidcave' && RM.cur === 'raidfall' ? RM_TAIL : want === 'raidfall' ? 1.5 : want === 'raidsong' || RM.cur === 'raidsong' ? 0.6 : 2); else rmStop(3); }
+  if (want !== RM.cur) { if (want) rmPlay(want, want === 'raidwin' || want === 'gwwin' || want === 'frwin' ? 3 : want === 'raidmaren2' ? 0.4 : want === 'raidcave' && RM.cur === 'raidfall' ? RM_TAIL : want === 'raidfall' ? 1.5 : want === 'raidsong' || RM.cur === 'raidsong' ? 0.6 : 2); else rmStop(3); }
   // Maren's second phase: the music swells as her tide comes up the fort (RF.tide, 0 to 1)
   // (while she summons the storm, RF.p2i, it comes up from quiet; then full, and it swells on each bell toll and
   //  lightning flash, RF.tide, 0 to 1)
