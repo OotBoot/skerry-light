@@ -345,8 +345,9 @@ function raidPose(z, M) {
 // (zmZombies) one rising out of the ground: up it comes, then after you
 function raidRise(z, dt) {
   z.rr -= dt; z.walk = false;
-  z.jz = -1.9 * Math.max(0, z.rr) / (z.rr0 || 1.2);
-  if (z.rr <= 0) { z.rr = 0; z.jz = 0; z.fl = 0; }
+  const b = z.rb || 0;   // [gannet] (rb: the floor it comes up through, if not the ground: a ship's deck, src/gwhold.js)
+  z.jz = b - 1.9 * Math.max(0, z.rr) / (z.rr0 || 1.2);
+  if (z.rr <= 0) { z.rr = 0; z.jz = b; z.fl = b; }
 }
 // hosting or alone: one of them, already in, at (x, y), rising out of the ground. o: { kind, hp, rise (seconds) }
 function raidSpawnAt(x, y, o) {
