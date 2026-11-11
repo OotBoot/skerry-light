@@ -1808,7 +1808,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 // ---- src/config.js ----
 'use strict';
 // The game's version, shown at the top of the main menu. Bump it by one with every change pushed to main.
-var VERSION = 160;
+var VERSION = 161;
 // Skerry Light: tuning, asset paths and lore.
 // World units are metres. The lighthouse stands at the origin on the shoreline (y = 0);
 // north (+y) is open sea. Bearings: 0 = north, positive = east.
@@ -1937,6 +1937,12 @@ const flashK = () => SETTINGS.flashes === 'reduced' ? 0.3 : 1;
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 161, date: '2026-11-11', title: "Fog Run: the chart", New: [
+    "Fog Run: the run now follows a chart. Seven islands across three reaches of sea, with two or three to choose between at every stop and the ways between them branching, like a map in a roguelike. Every run's chart is different.",
+    "Fog Run: as each sail begins the chart opens and the crew votes on the next island. Five seconds after the first vote it's settled: the most votes wins, and the host breaks a tie. Alone, your pick is the course.",
+    "Fog Run: a chart table on deck, port side aft of the hatch, shows the route so far. Use it to open the chart again.",
+    "Fog Run: each island on the chart shows what kind it is, its island and where it leads. More kinds of island are on the way." ], Changes: [
+    "Fog Run: the cutter never waits for the vote. She sails on while you choose, and if nobody votes in time (or she comes in sight of the islands) the chart picks one." ] },
   { v: 160, date: '2026-11-11', title: "Aim down the sights with every gun", New: [
     "Every gun can now aim down its sights, not just the Longarm and the Avtomat: right mouse, LT on a controller, or Aim on a phone. Works in Wreckers' Night, Keeper's Last Light, the raids and Fog Run, including every gun from the wreck chest.",
     "Aiming brings the gun up to the middle of the screen with a small dot for a crosshair, zooms in a little (more for the harpoon gun and pistols, less for the blunderbuss and punt gun) and slows your look to match." ], Changes: [
@@ -40481,7 +40487,7 @@ function frChartPaint() {
     box.append(b);
   });
   if (!opts.length) box.innerHTML = `<p class="muted">${p && p.key !== 'frsail' ? 'Ashore. The chart opens again at sea.' : 'Nothing more to choose.'}</p>`;
-  $('frChartHint').textContent = FRV.done ? '' : (FRV.first >= 0 || FRV.left < FRCH.WAIT - 0.5 ? `Settled in ${Math.ceil(FRV.left)} s. ` : '') + (FPS.touch ? 'Tap ✕ to put it away; the chart table on deck opens it again.' : 'Esc puts it away; Use at the chart table on deck opens it again.');
+  $('frChartHint').textContent = FRV.done ? '' : (FRV.first >= 0 ? `Settled in ${Math.ceil(FRV.left)} s. ` : '') + (FPS.touch ? 'Tap ✕ to put it away; the chart table on deck opens it again.' : 'Esc puts it away; Use at the chart table on deck opens it again.');
 }
 
 // ---------- each frame, everyone ----------
