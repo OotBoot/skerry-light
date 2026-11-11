@@ -129,7 +129,7 @@ Every first-person mode uses the same layout as most modern console and PC shoot
 | | Keyboard and mouse | Controller |
 |---|---|---|
 | Move / look | WASD (or the arrows) / mouse | Left stick / right stick |
-| Aim / fire | Right mouse / left mouse | LT / RT |
+| Aim / fire | Right mouse / left mouse (hold both at once to fire while aiming) | LT / RT |
 | Jump | Space | A |
 | Crouch | C (press again to stand) | B |
 | Sprint | Hold Shift | L3 (click the left stick; you keep running until you stop) |
