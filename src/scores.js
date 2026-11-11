@@ -371,6 +371,11 @@ function boardRender() {
   if (!$('boardCard')) return;
   nickSetup();
   $('boardRefresh').addEventListener('click', () => boardFetch(true));
+  // the minimise button: the card shrinks to a small bar with just its name, and back; kept in this browser
+  const mb = $('boardMin'), setMini = on => { $('boardCard').classList.toggle('mini', on); mb.textContent = on ? '+ Show' : '– Minimise'; mb.setAttribute('aria-expanded', on ? 'false' : 'true'); mb.title = on ? 'Show the whole scoreboard' : 'Make the scoreboard small'; };
+  let mini = false; try { mini = localStorage.getItem('skerry-board-mini') === '1'; } catch (e) {}
+  setMini(mini);
+  mb.addEventListener('click', () => { mini = !mini; setMini(mini); try { localStorage.setItem('skerry-board-mini', mini ? '1' : '0'); } catch (e) {} if (!mini) boardFetch(true); });
   // keep it fresh while the title screen is up
   setInterval(() => { if (!$('titleCard').hidden) boardFetch(); }, 10000);
   boardInit();

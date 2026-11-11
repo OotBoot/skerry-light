@@ -907,6 +907,12 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 .boardcard h1 { color: var(--lamp); }
 .boardcard .muted { font-size: 12px; margin: 0; }
 .boardcard [hidden] { display: none !important; }
+/* the minimise button shrinks the card to its top bar; the choice is kept on this device (src/scores.js) */
+.boardcard .boardbtns { display: flex; gap: 6px; flex: none; }
+.boardcard .boardminititle { display: none; font-family: var(--log); font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--lamp); min-width: 0; }
+.boardcard.mini { padding-top: 10px; padding-bottom: 10px; gap: 0; }
+.boardcard.mini > :not(.cardtop), .boardcard.mini .eyebrow, .boardcard.mini #boardRefresh { display: none !important; }
+.boardcard.mini .boardminititle { display: inline; }
 .boardhead, .boardlist li { display: grid; grid-template-columns: 2.2em minmax(0, 1fr) 6.5em 6.5em; gap: 8px; align-items: baseline; font-family: var(--log); font-size: 13px; }
 .boardhead { font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); border-bottom: 1px solid var(--rule); padding-bottom: 6px; }
 .boardlist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; max-height: 22em; overflow-y: auto; }

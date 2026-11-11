@@ -6,6 +6,8 @@
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 167, date: '2026-11-11', title: "A smaller scoreboard", New: [
+    "Main menu: the scoreboard has a Minimise button at its top. It shrinks the board down to a small bar, and Show opens it again. The game remembers which you picked on this device." ] },
   { v: 166, date: '2026-11-11', title: "Fog Run: the chart closes ashore", Fixes: [
     "Fog Run: if the chart was still open when the cutter beached, it now closes as you land instead of staying over the island." ] },
   { v: 165, date: '2026-11-11', title: "Fog Run: new islands and puzzles", New: [

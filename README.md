@@ -210,7 +210,7 @@ How it works: the host's browser runs the whole war, the same code as a game alo
 
 ## The scoreboard
 
-`src/scores.js` (the card on the title screen) and `server/scores.js`. Every game you play goes on the board as an entry of its own, by itself, so you can be on a board many times:
+`src/scores.js` (the card on the title screen) and `server/scores.js`. The **Minimise** button at the top of the card shrinks it to a small bar with just its name; **Show** opens it again, and the choice is kept on this device. Every game you play goes on the board as an entry of its own, by itself, so you can be on a board many times:
 - **Skerry Light:** each run: the voyages made, and its close shaves.
 - **Wreckers' Night:** each round: your kills, and whether you won it.
 - **Drowned Reach:** each war: won or not, and the land taken.
