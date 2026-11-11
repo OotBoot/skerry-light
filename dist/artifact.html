@@ -1677,7 +1677,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 // ---- src/config.js ----
 'use strict';
 // The game's version, shown at the top of the main menu. Bump it by one with every change pushed to main.
-var VERSION = 113;
+var VERSION = 114;
 // Skerry Light: tuning, asset paths and lore.
 // World units are metres. The lighthouse stands at the origin on the shoreline (y = 0);
 // north (+y) is open sea. Bearings: 0 = north, positive = east.
@@ -30348,7 +30348,7 @@ const RSWX = { WGT_T: 15.4, WGT_SLOW: 0.25, BALL_R: 1.05, BALL_LOW: 1.3, BALL_T:
 // The pier's end: the Long Pier (PW wide) runs on out over the Swallow to a round platform (PR across, its middle at
 // PC) a step above the deck. Once someone's halfway along (PHALF) the drowned come up the pier behind; once someone
 // stands on the platform, PNEED of them sent back (anywhere, while one of you is on it) and the platform falls away
-const RSWP = { PW: 7, PC: [0, 24], PR: 4.5, PSTEP: 0.35, PHALF: -30, PNEED: 30, PRING: 12 };
+const RSWP = { PW: 7, PC: [0, 24], PR: 4.5, PSTEP: 0.35, PHALF: -30, PNEED: 30, PRING: 12, ZK: 1.3 / 0.9 };
 // (the Swallow is a funnel: TOP, its mouth up on the bed, twice HOLE, its throat where it opens into the cave)
 const RSW = { SEA: 250, DECK: 253, CEIL: 30, HOLE: [-11, 11, 13, 35], TOP: [-22, 22, 2, 46], FALL: 8.4, LIT_R: 9, MEND: 1.2, DRAIN: 0.2, NEED: 20, RING: 15.6, USE: 1.1, GAP: 3.4 };
 // The path: [x, y, half its width, what's there] from the island's middle, from the cap behind where you land to the
@@ -30797,7 +30797,7 @@ function rswPierSpawn() {
   const x = FPSC.CX + (Math.random() * 2 - 1) * (RSWP.PW / 2 - 0.8), y = FPSC.CY - 80 + Math.random() * 6;
   const u = Math.random(), kind = u < 0.25 ? 'run' : 'jog';
   const z = raidSpawnAt(x, y, { kind, rise: 0, hp: zmHp(RAIDC.ROUND) * (0.9 + Math.random() * 0.2) * (1 + 0.25 * (n - 1)) });
-  if (z) { z.jz = z.fl = RSW.DECK; z.lx = x; z.ly = y; }
+  if (z) { z.sp *= RSWP.ZK; z.jz = z.fl = RSW.DECK; z.lx = x; z.ly = y; }   // the pier's drowned are 30% quicker; the cave's stay slowed
   zmSound('moan', Math.hypot(x - FPS.me.x, y - FPS.me.y), 0, kind);
 }
 // everyone: the platform's held; it falls away (its footing gone, its boards dropping), and whoever's on it with it.
@@ -30822,7 +30822,7 @@ function rswPierTick(dt, Pd) {
   if (S.pier >= 1) { S.pspawnT = (S.pspawnT || 0) - dt; if (S.pspawnT <= 0) { rswPierSpawn(); S.pspawnT = S.pier === 2 ? 0.55 : 1.1; } }
 }
 RAID_STAGES.descent = {
-  n: 'The Swallow', map: RSW_MAP, noBars: true, lantern: true, zSpeed: 1.17,
+  n: 'The Swallow', map: RSW_MAP, noBars: true, lantern: true, zSpeed: 0.9,
   speedK() { const w = RAID.st.weight || 0; return 1 - (1 - RSWX.WGT_SLOW) * w; },
   set(H, K) { rswSet(H, K); },
   enter() { Object.assign(RAID.st, { lit: 0, door: 0, kills: 0, spawnT: 3, pier: 0, pk: 0, pspawnT: 0, platT: 0, weight: 0, ballCd: 0, shove: null, diverT: 40 + Math.random() * 20, useT: 0, useI: -1, pend: 0, landed: false, windT: 0, thru: false, flare: {}, landT: 0 }); },
