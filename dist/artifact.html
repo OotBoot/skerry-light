@@ -1677,7 +1677,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 // ---- src/config.js ----
 'use strict';
 // The game's version, shown at the top of the main menu. Bump it by one with every change pushed to main.
-var VERSION = 99;
+var VERSION = 100;
 // Skerry Light: tuning, asset paths and lore.
 // World units are metres. The lighthouse stands at the origin on the shoreline (y = 0);
 // north (+y) is open sea. Bearings: 0 = north, positive = east.
@@ -30005,6 +30005,24 @@ function rswDiver(P) {
   return true;
 }
 
+// the wind of the fall: one long steady rush of air (a looped hiss through a soft band), rising as you fall faster and
+// fading out when you land, instead of gusts one after another (which, coming every half-second, thudded)
+const RSW_WIND = { src: null, g: null, f: null };
+function rswWind(on, k) {
+  const c = typeof AUD !== 'undefined' && AUD.ctx; if (!c) return;
+  const W = RSW_WIND, t = c.currentTime;
+  if (!on || soundOff()) { if (W.g) { const g = W.g, s = W.src; g.gain.cancelScheduledValues(t); g.gain.setTargetAtTime(0, t, 0.25); setTimeout(() => { try { s.stop(); s.disconnect(); g.disconnect(); } catch (e) {} }, 1500); W.src = W.g = W.f = null; } return; }
+  if (!W.src) {
+    try {
+      const s = c.createBufferSource(); s.buffer = AUD.white; s.loop = true;
+      const f = c.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 700; f.Q.value = 0.5;
+      const g = c.createGain(); g.gain.value = 0; s.connect(f).connect(g).connect(outNode()); s.start();
+      Object.assign(W, { src: s, g, f });
+    } catch (e) { return; }
+  }
+  const v = clamp(k || 0, 0, 1);
+  W.g.gain.setTargetAtTime(0.03 + 0.07 * v, t, 0.3); W.f.frequency.setTargetAtTime(500 + 600 * v, t, 0.3);
+}
 RAID_STAGES.descent = {
   n: 'The Swallow', map: RSW_MAP, noBars: true, lantern: true,
   speedK() { const w = RAID.st.weight || 0; return 1 - (1 - RSWX.WGT_SLOW) * w; },
@@ -30056,10 +30074,9 @@ RAID_STAGES.descent = {
     // falling down the Swallow: no quicker than FALL, and the wind of it
     if (m.jz < RSW.SEA - 0.5 && m.jz > 0.6 && (m.vz || 0) < 0) {
       m.vz = Math.max(m.vz, -RSW.FALL);
-      S.windT -= dt;
-      if (S.windT <= 0) { S.windT = 0.55; try { if (!soundOff()) noise('bandpass', 300 + Math.random() * 300, 0.7, 0.25, 0.12, 0.9); } catch (e) {} }
+      rswWind(true, -(m.vz || 0) / RSW.FALL);
       S.falling = true;
-    } else if (S.falling && below) { S.falling = false; if (!S.landed) { S.landed = true; ZM.banner = { text: 'The Deep Path', t: 3.5, sub: 'Light the braziers. Keep to their light.', col: '#bfe4ff' }; } }
+    } else if (S.falling && below) { rswWind(false); S.falling = false; if (!S.landed) { S.landed = true; ZM.banner = { text: 'The Deep Path', t: 3.5, sub: 'Light the braziers. Keep to their light.', col: '#bfe4ff' }; } }
     // the dark drains you; a lit brazier mends you, and makes up your ammunition
     S.inLight = below && rswInLight(m.x, m.y, m.jz);
     // Maren's Weight: down here, out of the light, it settles on you; the light lifts it all at once
@@ -30221,7 +30238,7 @@ RAID_STAGES.descent = {
     Dr.ring.visible = S.door === 1; Dr.ringM.opacity = 0.3 + 0.3 * pulse;
     Dr.doorL.intensity = S.door === 0 ? 0.4 : S.door === 1 ? 0.8 + 0.6 * pulse : 2.2;
   },
-  exit() { R3.bz = null; R3.door = null; R3.balls = null; },
+  exit() { R3.bz = null; R3.door = null; R3.balls = null; rswWind(false); },
 };
 
 // ---- src/raidbridge.js ----
