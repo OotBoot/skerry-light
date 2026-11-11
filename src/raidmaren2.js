@@ -19,8 +19,9 @@ const RF2 = {
   STORM_IN: 3.8, STORM_OUT: 3,   // (seconds for the sky to close over, and to clear when she's dead)
   LT: [0.8, 2.4], LT_CALL: [0.25, 0.7],   // (seconds between flashes: in the fight, and while she calls the storm)
   LAMP: 13,   // (how far your lantern lights)
-  BELL: { R: 5.2, N: 3, FIRST: 2.5, GAP: 2.2, TOLL: 3.6, HOLD: 0.9, SEP: 4 },   // (circle radius, how many, before the
-  // first, between rounds, between tolls, how long the circles stay after the third, the least gap between circles)
+  BELL: { R: 7.8, N: 3, FIRST: 2.5, GAP: 2.2, TOLL: 3.6, HOLD: 0.9, SEP: 2, SLOW: 0.6 },   // (circle radius, how many, before the
+  // first, between rounds, between tolls, how long the circles stay after the third, the least gap between circles,
+  // how fast the drowned go inside one)
 };
 const RF2_STORM = { amb: 0.035, moon: 0, fog: [0.006, 0.008, 0.012], near: 2, far: 32 };
 
@@ -287,6 +288,11 @@ function rf2Frame3d(dt) {
     r.marks.rotation.y = reduceMotion ? 0 : t * 0.6 * (i % 2 ? -1 : 1);
     for (const mk of r.marks.children) mk.material.opacity = 0.7 * k;
   });
+}
+// (src/zombies.js, src/zmboss.js) the drowned wade slowly through the bell's circles (all but Maren herself)
+function rf2SlowK(z) {
+  if (typeof RF === 'undefined' || !RF.on || !RF.p2 || !RF.bell || RF.bell.ph !== 1 || z.bt === 'maren') return 1;
+  return rf2In(z.x, z.y, z.jz) ? RF2.BELL.SLOW : 1;
 }
 // (src/fpsisle.js) the fort's lamps, dying as the storm comes
 function rfLampsK() { return typeof RF !== 'undefined' && RF.on && RF.storm > 0 ? 1 - 0.98 * RF.storm : 1; }

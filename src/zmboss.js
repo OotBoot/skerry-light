@@ -169,7 +169,7 @@ function zbTick(z, dt, nearest) {
   let tx = p.x, ty = p.y;
   if (!(d < 3 && Math.abs(dz) < 0.8)) { const nx = zmNavNext(z.x, z.y, z.jz || 0); if (nx) { tx = nx[0]; ty = nx[1]; } }
   const hx = tx - z.x, hy = ty - z.y, hl = Math.hypot(hx, hy), near = d < T.near && level;
-  const step = z.sp * dt * (z.slow > 0 && typeof zmpSlowK === 'function' ? zmpSlowK(z) : 1);   // [pap] (slowed by the Equinox Gale)
+  const step = z.sp * dt * (z.slow > 0 && typeof zmpSlowK === 'function' ? zmpSlowK(z) : 1) * (typeof rf2SlowK === 'function' ? rf2SlowK(z) : 1);   // [pap] (slowed by the Equinox Gale) [p2] (and in the bell's circles)
   const x0 = z.x, y0 = z.y;
   z.walk = false;
   if (hl > 0.05 && !near) {

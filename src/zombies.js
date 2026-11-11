@@ -2380,7 +2380,7 @@ function zmZombies(dt) {
     if (z.rr > 0 && typeof raidRise === 'function') { raidRise(z, dt); continue; }   // [raid] rising out of the ground
     if (z.boss && typeof zbTick === 'function') { zbTick(z, dt, nearest); continue; }
     if (z.skit && z.st === 'out') { zwOut(z, dt); continue; }   // [swarm] a crab, straight in at its window   // [boss] each goes its own way (src/zmboss.js)
-    const step = z.sp * dt * (z.slow > 0 && typeof zmpSlowK === 'function' ? zmpSlowK(z) : 1);   // [pap] (slowed by the Equinox Gale)
+    const step = z.sp * dt * (z.slow > 0 && typeof zmpSlowK === 'function' ? zmpSlowK(z) : 1) * (typeof rf2SlowK === 'function' ? rf2SlowK(z) : 1);   // [pap] (slowed by the Equinox Gale) [p2] (and in the bell's circles)
     const G = zmGait(z);
     if (z.win && z.win.hatch && (z.st === 'out' || z.st === 'tear' || z.st === 'climb')) {
       // a hatch in the ceiling: waiting up in the loft over it (each in turn), tearing its boards up, then dropping
