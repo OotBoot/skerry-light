@@ -4042,6 +4042,7 @@ function zmHud() {
     ctx.font = mono(phone ? 9 : 10); ctx.textAlign = 'left'; ctx.textBaseline = 'bottom'; ctx.fillStyle = 'rgba(236,228,207,0.65)';
     ctx.fillText(`HEALTH ${hp % 1 ? hp.toFixed(1) : hp}/${n}`, L, by - 3);
     ctx.textBaseline = 'alphabetic';
+    if (typeof raidStaminaHud === 'function') raidStaminaHud(L + bw + (phone ? 14 : 18), by, phone ? 80 : 110, bh, phone, mono);   // [raid] stamina, beside it
   }
   // tonics drunk, over the health
   let px = L; py -= phone ? 34 : 42;

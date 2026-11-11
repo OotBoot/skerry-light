@@ -1062,7 +1062,8 @@ function fpsInput(dt) {
   FPS.padSprintWas = FPS.padSprint;
   if (FPS.crouch && len > 0.05 && (K.ShiftLeft || K.ShiftRight || FPS.padSprint) && !FPS.menu) fpsCrouch(false);   // (breaking into a run stands you up)
   fpsCrouchTick(m, dt);
-  const run = !!(K.ShiftLeft || K.ShiftRight || FPS.padSprint || (FPS.stick && FPS.stickRun)) && m.dead <= 0 && len > 0.05 && !FPS.menu && !FPS.scoped && !FPS.crouch;
+  let run = !!(K.ShiftLeft || K.ShiftRight || FPS.padSprint || (FPS.stick && FPS.stickRun)) && m.dead <= 0 && len > 0.05 && !FPS.menu && !FPS.scoped && !FPS.crouch;
+  if (FPS.zm && typeof raidStamina === 'function') run = raidStamina(run, dt);   // [raid] Maren's End: sprinting spends stamina
   FPS.runK = clamp((FPS.runK || 0) + (run ? dt * 4 : -dt * 5), 0, 1);
   if (m.dead <= 0 && len > 0.05 && !FPS.menu) {
     // (on a phone a little slower all round: on a small screen the same pace feels much quicker)

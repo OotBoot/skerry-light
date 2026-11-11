@@ -1677,7 +1677,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 // ---- src/config.js ----
 'use strict';
 // The game's version, shown at the top of the main menu. Bump it by one with every change pushed to main.
-var VERSION = 104;
+var VERSION = 105;
 // Skerry Light: tuning, asset paths and lore.
 // World units are metres. The lighthouse stands at the origin on the shoreline (y = 0);
 // north (+y) is open sea. Bearings: 0 = north, positive = east.
@@ -14456,7 +14456,8 @@ function fpsInput(dt) {
   FPS.padSprintWas = FPS.padSprint;
   if (FPS.crouch && len > 0.05 && (K.ShiftLeft || K.ShiftRight || FPS.padSprint) && !FPS.menu) fpsCrouch(false);   // (breaking into a run stands you up)
   fpsCrouchTick(m, dt);
-  const run = !!(K.ShiftLeft || K.ShiftRight || FPS.padSprint || (FPS.stick && FPS.stickRun)) && m.dead <= 0 && len > 0.05 && !FPS.menu && !FPS.scoped && !FPS.crouch;
+  let run = !!(K.ShiftLeft || K.ShiftRight || FPS.padSprint || (FPS.stick && FPS.stickRun)) && m.dead <= 0 && len > 0.05 && !FPS.menu && !FPS.scoped && !FPS.crouch;
+  if (FPS.zm && typeof raidStamina === 'function') run = raidStamina(run, dt);   // [raid] Maren's End: sprinting spends stamina
   FPS.runK = clamp((FPS.runK || 0) + (run ? dt * 4 : -dt * 5), 0, 1);
   if (m.dead <= 0 && len > 0.05 && !FPS.menu) {
     // (on a phone a little slower all round: on a small screen the same pace feels much quicker)
@@ -22695,6 +22696,7 @@ function zmHud() {
     ctx.font = mono(phone ? 9 : 10); ctx.textAlign = 'left'; ctx.textBaseline = 'bottom'; ctx.fillStyle = 'rgba(236,228,207,0.65)';
     ctx.fillText(`HEALTH ${hp % 1 ? hp.toFixed(1) : hp}/${n}`, L, by - 3);
     ctx.textBaseline = 'alphabetic';
+    if (typeof raidStaminaHud === 'function') raidStaminaHud(L + bw + (phone ? 14 : 18), by, phone ? 80 : 110, bh, phone, mono);   // [raid] stamina, beside it
   }
   // tonics drunk, over the health
   let px = L; py -= phone ? 34 : 42;
@@ -29519,7 +29521,7 @@ function zhHud() {
 // (hosting or alone) lays out the next, and everyone follows the stage number in the host's word. Past the last, the
 // raid is won.
 
-const RAID = { on: false, stage: 0, won: false, st: {}, t: 0, boss: 0, told: false };
+const RAID = { on: false, stage: 0, won: false, st: {}, t: 0, boss: 0, told: false, sta: 1, tired: false };
 const RAID_STAGES = {};
 const RAID_ORDER = ['descent'];
 const raidStage = () => RAID.on ? RAID_STAGES[RAID_ORDER[RAID.stage]] || null : null;
@@ -29558,7 +29560,7 @@ function raidMapFor(i) {
 function raidBegin(map) {
   RAID.on = map === 'raid';
   if (!RAID.on) return;
-  Object.assign(RAID, { stage: 0, won: false, st: {}, t: 0, boss: 0, told: false });
+  Object.assign(RAID, { stage: 0, won: false, st: {}, t: 0, boss: 0, told: false, sta: 1, tired: false });
   raidMapFor(0);
 }
 // (zmStart, once it's all laid out) your kit, and the stage's state
@@ -29589,6 +29591,35 @@ function raidStop() {
 // alone or hosting, each frame
 function raidHostTick(dt) { RAID.t += dt; raidCall('tick', dt); }
 // everyone, each frame
+// Stamina: a full bar is RUN seconds of sprinting, and an empty one fills again in FILL seconds (it fills whenever
+// you're not sprinting). Run it dry and you're out of breath: no sprinting until it's back to BACK of the bar.
+// fpsInput asks raidStamina each frame whether you may sprint; the bar sits beside your health (zmHud, raidStaminaHud).
+const RSTA = { RUN: 10, FILL: 15, BACK: 0.25 };
+function raidStamina(run, dt) {
+  if (!RAID.on) return run;
+  if (RAID.sta == null) RAID.sta = 1;
+  if (run && !RAID.tired) {
+    RAID.sta = Math.max(0, RAID.sta - dt / RSTA.RUN);
+    if (RAID.sta <= 0) { RAID.tired = true; FPS.padRun = false; fpsFeed('Out of breath. You can’t sprint until you get it back.'); }
+    return true;
+  }
+  RAID.sta = Math.min(1, RAID.sta + dt / RSTA.FILL);
+  if (RAID.tired && RAID.sta >= RSTA.BACK) RAID.tired = false;
+  return false;
+}
+// (zmHud) the stamina bar, to the right of the health bar and the same size, with its name over it as health has
+function raidStaminaHud(x, by, bw, bh, phone, mono) {
+  if (!RAID.on) return;
+  const k = clamp(RAID.sta == null ? 1 : RAID.sta, 0, 1), tired = RAID.tired, t = g.t;
+  ctx.fillStyle = 'rgba(8,10,14,0.55)'; ctx.fillRect(x - 3, by - 3, bw + 6, bh + 6);
+  ctx.fillStyle = 'rgba(80,70,60,0.6)'; ctx.fillRect(x, by, bw, bh);
+  ctx.fillStyle = tired ? `rgba(200,120,90,${0.7 + 0.25 * Math.sin(t * 7)})` : k < 0.25 ? '#e4c46a' : '#8fc8e8'; ctx.fillRect(x, by, bw * k, bh);
+  // (a notch where you get your breath back)
+  if (tired) { ctx.fillStyle = 'rgba(236,228,207,0.7)'; ctx.fillRect(x + bw * RSTA.BACK - 1, by - 2, 2, bh + 4); }
+  ctx.font = mono(phone ? 9 : 10); ctx.textAlign = 'left'; ctx.textBaseline = 'bottom'; ctx.fillStyle = tired ? '#e8a080' : 'rgba(236,228,207,0.65)';
+  ctx.fillText(tired ? 'OUT OF BREATH' : 'STAMINA', x, by - 3);
+  ctx.textBaseline = 'alphabetic';
+}
 // how fast you can go, as a share of your own pace (zmSpeedK): a stage's own say, Maren's Weight in the Swallow
 function raidSpeedK() { if (!RAID.on) return 1; const S = raidStage(); return S && S.speedK ? S.speedK() : 1; }
 function raidMe(dt) {
