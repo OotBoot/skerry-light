@@ -316,7 +316,7 @@ function rf2Apply(f, i) {
 // The hidden "Practise: Maren's storm": alone, straight to the fort and Maren, already down to a third, so her
 // storm begins as soon as she's up. No pirate token, no score, no raid won.
 function rf2Practice() {
-  if (typeof ZN !== 'undefined' && ZN.code) return;
+  if (typeof znSoloOk === 'function' && !znSoloOk('raid')) return;
   zmStart({ map: 'raid' });
   RAID.practice = 1; RAID.told = true;
   const go = (n) => { if (!RAID.on || !FPS.g) { if (n < 40) setTimeout(() => go(n + 1), 100); return; } raidUseStage(RAID_ORDER.indexOf('fort')); RF.practice = 1; };

@@ -293,7 +293,7 @@ function frJump(key) {
 // ---------- its card on the title screen ----------
 (() => {
   if (!$('frTitle')) return;
-  $('frPlay').addEventListener('click', () => { if (typeof ZN !== 'undefined' && ZN.code) return; zmStart({ map: 'fogrun' }); });
+  $('frPlay').addEventListener('click', () => { if (typeof znSoloOk === 'function' && !znSoloOk('fr')) return; zmStart({ map: 'fogrun' }); });
   $('frSettings').addEventListener('click', () => $('titleSettings').click());
   $('frWcrate').addEventListener('click', () => $('wcrateBtn').click());
   $('frOcrate').addEventListener('click', () => $('ocrateBtn').click());

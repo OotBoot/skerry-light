@@ -1980,7 +1980,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 // ---- src/config.js ----
 'use strict';
 // The game's version, shown at the top of the main menu. Bump it by one with every change pushed to main.
-var VERSION = 170;
+var VERSION = 171;
 // Skerry Light: tuning, asset paths and lore.
 // World units are metres. The lighthouse stands at the origin on the shoreline (y = 0);
 // north (+y) is open sea. Bearings: 0 = north, positive = east.
@@ -2109,6 +2109,10 @@ const flashK = () => SETTINGS.flashes === 'reduced' ? 0.3 : 1;
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 171, date: '2026-11-12', title: "Playing together after a win", Fixes: [
+    "Keeper's Last Light, Skerry Raids and Fog Run: after a game together you can now host or join a different one straight away. Hosting or joining from another game's card takes you out of the old lobby for you, instead of leaving the buttons missing.",
+    "Skerry Raids and Fog Run: playing alone from a card no longer does nothing while you're still in another game's lobby.",
+    "Skerry Raids and Fog Run: winning no longer knocks you down just before the victory screen. Everyone standing stays standing, anyone down gets back up, the screen turns gold with the win instead of red with \"They dragged you down\", and you hear the round-won sound instead of the game-over knell." ] },
   { v: 170, date: '2026-11-12', title: "Fog Run: a broader Light", Balance: [
     "Fog Run: the Light's beam is three times as wide. At sea it shows the rocks for three times as long on each sweep.",
     "Fog Run: on Lantern Rock the beam lights the Fog-Keeper for about four seconds each sweep, up from just over one." ] },
@@ -21956,9 +21960,13 @@ function zmCheckOver() {
 }
 function zmEnd() {
   if (ZM.over) return;
-  FPS.me.dead = FPSC.RESPAWN - 0.6; FPS.scoped = false;
-  ZM.over = { t: 0 };
-  zmSound('over');
+  // won (a raid or a fog run, through to its end): everyone still standing stays standing, the downed get up, and
+  // no knell; only a loss drops you where you are (it used to drop the winners too, just before their victory screen)
+  const won = typeof RAID !== 'undefined' && RAID.on && RAID.won;
+  if (won) { const m = FPS.me; if (ZM.downT > 0) { ZM.downT = 0; m.dead = 0; m.hp = ZMC.HP; zmDownDisarm(); } m.protect = 99; m.iframe = 99; FPS.scoped = false; }
+  else { FPS.me.dead = FPSC.RESPAWN - 0.6; FPS.scoped = false; }
+  ZM.over = { t: 0, won };
+  zmSound(won ? 'end' : 'over');
   if ((typeof RAID !== 'undefined' && RAID.on)) raidReport();   // [raid]
   else if (typeof scoreReport === 'function') { scoreReport('zm', Math.max(0, ZM.round - 1), ZM.kills, 0, true); scoreRun('zm', Math.max(0, ZM.round - 1), ZM.kills, 0, true); scoreRunEnd('zm'); }
 }
@@ -23902,7 +23910,8 @@ function zmHud() {
   if (ZM.revOf && ZM.revT > 0 && !ZM.over) zmHudReviving(phone, mono, t);
   // someone else down: their name, big and red, for everyone
   if (ZM.downNotes && ZM.downNotes.length && !ZM.over) zmHudDownNotes(phone, mono, fell, down);
-  if (ZM.over) { ctx.fillStyle = `rgba(20,2,2,${Math.min(0.6, ZM.over.t * 0.4)})`; ctx.fillRect(0, 0, W, H); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = fell(phone ? 28 : 40); ctx.fillStyle = `rgba(200,40,30,${Math.min(1, ZM.over.t)})`; ctx.fillText('They dragged you down', cx, H * 0.42); }
+  if (ZM.over && ZM.over.won) { const t = ZM.over.t; ctx.fillStyle = `rgba(40,26,6,${Math.min(0.45, t * 0.3)})`; ctx.fillRect(0, 0, W, H); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = fell(phone ? 28 : 40); ctx.fillStyle = `rgba(255,214,130,${Math.min(1, t)})`; ctx.fillText(typeof raidInfo === 'function' ? raidInfo().won : 'Won', cx, H * 0.42); }   // won: a warm gold, not the red of a loss
+  else if (ZM.over) { ctx.fillStyle = `rgba(20,2,2,${Math.min(0.6, ZM.over.t * 0.4)})`; ctx.fillRect(0, 0, W, H); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = fell(phone ? 28 : 40); ctx.fillStyle = `rgba(200,40,30,${Math.min(1, ZM.over.t)})`; ctx.fillText('They dragged you down', cx, H * 0.42); }
   if (!FPS.mouse && !phone && !FPS.menu && !ZM.over) { ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = mono(12); ctx.fillStyle = 'rgba(236,228,207,0.6)'; ctx.fillText('Click to aim with the mouse', cx, H * 0.5 + 40); }
   if (typeof zeHud === 'function') zeHud();   // [egg hook] src/zmegg.js
   if (typeof zhHud === 'function') zhHud();   // [egg2 hook] src/zmegg2.js
@@ -24117,7 +24126,7 @@ const ZM_KEYS = { KeyF: () => zmUse(), KeyE: () => zmUse(), KeyV: () => zmKnife(
     use.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); FPS.touchUse = true; zmUse(); try { use.setPointerCapture(e.pointerId); } catch (err) {} });
     for (const ev of ['pointerup', 'pointercancel']) use.addEventListener(ev, () => { FPS.touchUse = false; });
   }
-  $('zmPlay').addEventListener('click', () => zmStart());
+  $('zmPlay').addEventListener('click', () => { if (typeof ZN !== 'undefined' && ZN.code && ZN.mode !== 'zm' && typeof znLeave === 'function') znLeave(); zmStart(); });
   for (const b of document.querySelectorAll('#zmMaps [data-map]')) b.addEventListener('click', () => zmPickMap(b.dataset.map));
   zmMapCard();
   $('zmSettings').addEventListener('click', () => $('titleSettings').click());
@@ -31132,7 +31141,7 @@ function raidCard() {
 }
 (() => {
   if (!$('rdTitle')) return;
-  $('rdPlay').addEventListener('click', () => { if (typeof ZN !== 'undefined' && ZN.code) return; zmStart({ map: RD_PICK }); });
+  $('rdPlay').addEventListener('click', () => { if (typeof znSoloOk === 'function' && !znSoloOk('raid')) return; zmStart({ map: RD_PICK }); });
   for (const el of document.querySelectorAll('#rdRaids [data-raid]')) el.addEventListener('click', () => raidPick(el.dataset.raid));
   raidCard();
   $('rdSettings').addEventListener('click', () => $('titleSettings').click());
@@ -34460,7 +34469,7 @@ function rf2Apply(f, i) {
 // The hidden "Practise: Maren's storm": alone, straight to the fort and Maren, already down to a third, so her
 // storm begins as soon as she's up. No pirate token, no score, no raid won.
 function rf2Practice() {
-  if (typeof ZN !== 'undefined' && ZN.code) return;
+  if (typeof znSoloOk === 'function' && !znSoloOk('raid')) return;
   zmStart({ map: 'raid' });
   RAID.practice = 1; RAID.told = true;
   const go = (n) => { if (!RAID.on || !FPS.g) { if (n < 40) setTimeout(() => go(n + 1), 100); return; } raidUseStage(RAID_ORDER.indexOf('fort')); RF.practice = 1; };
@@ -35247,7 +35256,7 @@ for (const key of ['descent', 'bridge', 'fort']) {
 // and you're in his room in the Swallow, with him waiting. The fight's the real one: his token and his wardrobe as
 // ever, and the door out takes you back to one of his places on Part I, the raid going on from there.
 function rvDirect() {
-  if (typeof ZN !== 'undefined' && ZN.code) return;
+  if (typeof znSoloOk === 'function' && !znSoloOk('raid')) return;
   zmStart({ map: 'raid' });
   let n = 0, seen = 0;
   const go = () => {
@@ -40054,7 +40063,7 @@ function frJump(key) {
 // ---------- its card on the title screen ----------
 (() => {
   if (!$('frTitle')) return;
-  $('frPlay').addEventListener('click', () => { if (typeof ZN !== 'undefined' && ZN.code) return; zmStart({ map: 'fogrun' }); });
+  $('frPlay').addEventListener('click', () => { if (typeof znSoloOk === 'function' && !znSoloOk('fr')) return; zmStart({ map: 'fogrun' }); });
   $('frSettings').addEventListener('click', () => $('titleSettings').click());
   $('frWcrate').addEventListener('click', () => $('wcrateBtn').click());
   $('frOcrate').addEventListener('click', () => $('ocrateBtn').click());
@@ -43505,16 +43514,24 @@ function znSendLobby() {
   if (znAmHost()) z.lob = { n: znMembers().length, map: znMap() };
   znSend(z);
 }
+// still in another lobby (most often the one a game just ended back into, a win or a loss): out of it first, so a
+// game of another kind can be hosted or joined straight from its own card
+function znOutOfOther() { if (ZN.code) { ZN.code = null; ZN.g = null; ZN.st = null; ZN.rjWant = null; } }
+// (a solo game from a card) in a lobby of this card's own kind: not now (the lobby's game is played from it); in one
+// of another kind, out of it, and on with the solo game
+function znSoloOk(mode) { if (!ZN.code) return true; if (ZN.mode === znModeOf(mode)) return false; znLeave(); return true; }
 function znHost(mode) {
   if (!znOnline() || FPS.on) return;
+  znOutOfOther();
   ZN.mode = znModeOf(mode);
   ZN.code = 'z' + Math.random().toString(36).slice(2, 8); ZN.at = Date.now(); ZN.msg = '';
   znSendLobby(); znRender();
 }
 function znJoin(code, mode) {
   if (!znOnline() || !code || FPS.on) return;
-  ZN.mode = znModeOf(mode);
   if (znPeers(code).length >= ZN_MAX) { ZN.msg = 'That night is full (four players).'; znRender(); return; }
+  if (ZN.code && ZN.code !== code) znOutOfOther();
+  ZN.mode = znModeOf(mode);
   ZN.code = code; ZN.at = Date.now(); ZN.msg = '';
   znSendLobby(); znRender();
 }
@@ -43549,11 +43566,11 @@ function znRenderUI(U) {
   const q = id => $(U.p + id);
   if (!q('Mp')) return;
   const on = znOnline(), mine = !!ZN.code && ZN.mode === U.mode, W = U.what;
-  q('MpNote').textContent = on ? (ZN.code && !mine ? `You’re in a ${{ zm: 'Lighthouse night', raid: 'raid', fr: 'fog run' }[ZN.mode] || 'game'}’s lobby on another card; leave it to host or join a ${W} here.` : `Up to four in one ${W}. One of you hosts; the others join, and the host starts the ${W} when everyone’s in.`) : (NET.status === 'connecting' ? 'Looking for other players…' : (NET.offReason || 'Playing together isn’t available here.'));
-  q('MpOpen').hidden = !on || !!ZN.code;
+  q('MpNote').textContent = on ? (ZN.code && !mine ? `You’re in a ${{ zm: 'Lighthouse night', raid: 'raid', fr: 'fog run' }[ZN.mode] || 'game'}’s lobby on another card. Host or join a ${W} here and you’ll leave it.` : `Up to four in one ${W}. One of you hosts; the others join, and the host starts the ${W} when everyone’s in.`) : (NET.status === 'connecting' ? 'Looking for other players…' : (NET.offReason || 'Playing together isn’t available here.'));
+  q('MpOpen').hidden = !on || mine;
   q('Lobby').hidden = !mine;
   if (!on) return;
-  if (!ZN.code) {
+  if (!mine) {
     const nights = znOpenNights().filter(n => znKind(n.map) === U.mode), el = q('Lobbies'), key = JSON.stringify(nights) + ZN.msg;
     if (el.dataset.k === key) return; el.dataset.k = key;
     el.textContent = '';
@@ -43571,7 +43588,6 @@ function znRenderUI(U) {
     }
     return;
   }
-  if (!mine) return;
   const m = znMembers(), host = znAmHost(), hz = m.length ? znOf(m[0]) : null;
   const key = m.map(p => znOf(p).sid + znOf(p).nick).join('|') + host + ZN.msg + znMap() + (hz && hz.lob ? hz.lob.map : '');
   q('MpStart').hidden = !host;

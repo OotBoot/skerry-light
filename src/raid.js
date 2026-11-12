@@ -417,7 +417,7 @@ function raidCard() {
 }
 (() => {
   if (!$('rdTitle')) return;
-  $('rdPlay').addEventListener('click', () => { if (typeof ZN !== 'undefined' && ZN.code) return; zmStart({ map: RD_PICK }); });
+  $('rdPlay').addEventListener('click', () => { if (typeof znSoloOk === 'function' && !znSoloOk('raid')) return; zmStart({ map: RD_PICK }); });
   for (const el of document.querySelectorAll('#rdRaids [data-raid]')) el.addEventListener('click', () => raidPick(el.dataset.raid));
   raidCard();
   $('rdSettings').addEventListener('click', () => $('titleSettings').click());

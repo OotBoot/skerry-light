@@ -6,6 +6,10 @@
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 171, date: '2026-11-12', title: "Playing together after a win", Fixes: [
+    "Keeper's Last Light, Skerry Raids and Fog Run: after a game together you can now host or join a different one straight away. Hosting or joining from another game's card takes you out of the old lobby for you, instead of leaving the buttons missing.",
+    "Skerry Raids and Fog Run: playing alone from a card no longer does nothing while you're still in another game's lobby.",
+    "Skerry Raids and Fog Run: winning no longer knocks you down just before the victory screen. Everyone standing stays standing, anyone down gets back up, the screen turns gold with the win instead of red with \"They dragged you down\", and you hear the round-won sound instead of the game-over knell." ] },
   { v: 170, date: '2026-11-12', title: "Fog Run: a broader Light", Balance: [
     "Fog Run: the Light's beam is three times as wide. At sea it shows the rocks for three times as long on each sweep.",
     "Fog Run: on Lantern Rock the beam lights the Fog-Keeper for about four seconds each sweep, up from just over one." ] },

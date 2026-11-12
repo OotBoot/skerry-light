@@ -753,7 +753,7 @@ for (const key of ['descent', 'bridge', 'fort']) {
 // and you're in his room in the Swallow, with him waiting. The fight's the real one: his token and his wardrobe as
 // ever, and the door out takes you back to one of his places on Part I, the raid going on from there.
 function rvDirect() {
-  if (typeof ZN !== 'undefined' && ZN.code) return;
+  if (typeof znSoloOk === 'function' && !znSoloOk('raid')) return;
   zmStart({ map: 'raid' });
   let n = 0, seen = 0;
   const go = () => {

@@ -2222,9 +2222,13 @@ function zmCheckOver() {
 }
 function zmEnd() {
   if (ZM.over) return;
-  FPS.me.dead = FPSC.RESPAWN - 0.6; FPS.scoped = false;
-  ZM.over = { t: 0 };
-  zmSound('over');
+  // won (a raid or a fog run, through to its end): everyone still standing stays standing, the downed get up, and
+  // no knell; only a loss drops you where you are (it used to drop the winners too, just before their victory screen)
+  const won = typeof RAID !== 'undefined' && RAID.on && RAID.won;
+  if (won) { const m = FPS.me; if (ZM.downT > 0) { ZM.downT = 0; m.dead = 0; m.hp = ZMC.HP; zmDownDisarm(); } m.protect = 99; m.iframe = 99; FPS.scoped = false; }
+  else { FPS.me.dead = FPSC.RESPAWN - 0.6; FPS.scoped = false; }
+  ZM.over = { t: 0, won };
+  zmSound(won ? 'end' : 'over');
   if ((typeof RAID !== 'undefined' && RAID.on)) raidReport();   // [raid]
   else if (typeof scoreReport === 'function') { scoreReport('zm', Math.max(0, ZM.round - 1), ZM.kills, 0, true); scoreRun('zm', Math.max(0, ZM.round - 1), ZM.kills, 0, true); scoreRunEnd('zm'); }
 }
@@ -4168,7 +4172,8 @@ function zmHud() {
   if (ZM.revOf && ZM.revT > 0 && !ZM.over) zmHudReviving(phone, mono, t);
   // someone else down: their name, big and red, for everyone
   if (ZM.downNotes && ZM.downNotes.length && !ZM.over) zmHudDownNotes(phone, mono, fell, down);
-  if (ZM.over) { ctx.fillStyle = `rgba(20,2,2,${Math.min(0.6, ZM.over.t * 0.4)})`; ctx.fillRect(0, 0, W, H); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = fell(phone ? 28 : 40); ctx.fillStyle = `rgba(200,40,30,${Math.min(1, ZM.over.t)})`; ctx.fillText('They dragged you down', cx, H * 0.42); }
+  if (ZM.over && ZM.over.won) { const t = ZM.over.t; ctx.fillStyle = `rgba(40,26,6,${Math.min(0.45, t * 0.3)})`; ctx.fillRect(0, 0, W, H); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = fell(phone ? 28 : 40); ctx.fillStyle = `rgba(255,214,130,${Math.min(1, t)})`; ctx.fillText(typeof raidInfo === 'function' ? raidInfo().won : 'Won', cx, H * 0.42); }   // won: a warm gold, not the red of a loss
+  else if (ZM.over) { ctx.fillStyle = `rgba(20,2,2,${Math.min(0.6, ZM.over.t * 0.4)})`; ctx.fillRect(0, 0, W, H); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = fell(phone ? 28 : 40); ctx.fillStyle = `rgba(200,40,30,${Math.min(1, ZM.over.t)})`; ctx.fillText('They dragged you down', cx, H * 0.42); }
   if (!FPS.mouse && !phone && !FPS.menu && !ZM.over) { ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = mono(12); ctx.fillStyle = 'rgba(236,228,207,0.6)'; ctx.fillText('Click to aim with the mouse', cx, H * 0.5 + 40); }
   if (typeof zeHud === 'function') zeHud();   // [egg hook] src/zmegg.js
   if (typeof zhHud === 'function') zhHud();   // [egg2 hook] src/zmegg2.js
@@ -4383,7 +4388,7 @@ const ZM_KEYS = { KeyF: () => zmUse(), KeyE: () => zmUse(), KeyV: () => zmKnife(
     use.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); FPS.touchUse = true; zmUse(); try { use.setPointerCapture(e.pointerId); } catch (err) {} });
     for (const ev of ['pointerup', 'pointercancel']) use.addEventListener(ev, () => { FPS.touchUse = false; });
   }
-  $('zmPlay').addEventListener('click', () => zmStart());
+  $('zmPlay').addEventListener('click', () => { if (typeof ZN !== 'undefined' && ZN.code && ZN.mode !== 'zm' && typeof znLeave === 'function') znLeave(); zmStart(); });
   for (const b of document.querySelectorAll('#zmMaps [data-map]')) b.addEventListener('click', () => zmPickMap(b.dataset.map));
   zmMapCard();
   $('zmSettings').addEventListener('click', () => $('titleSettings').click());

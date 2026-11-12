@@ -95,16 +95,24 @@ function znSendLobby() {
   if (znAmHost()) z.lob = { n: znMembers().length, map: znMap() };
   znSend(z);
 }
+// still in another lobby (most often the one a game just ended back into, a win or a loss): out of it first, so a
+// game of another kind can be hosted or joined straight from its own card
+function znOutOfOther() { if (ZN.code) { ZN.code = null; ZN.g = null; ZN.st = null; ZN.rjWant = null; } }
+// (a solo game from a card) in a lobby of this card's own kind: not now (the lobby's game is played from it); in one
+// of another kind, out of it, and on with the solo game
+function znSoloOk(mode) { if (!ZN.code) return true; if (ZN.mode === znModeOf(mode)) return false; znLeave(); return true; }
 function znHost(mode) {
   if (!znOnline() || FPS.on) return;
+  znOutOfOther();
   ZN.mode = znModeOf(mode);
   ZN.code = 'z' + Math.random().toString(36).slice(2, 8); ZN.at = Date.now(); ZN.msg = '';
   znSendLobby(); znRender();
 }
 function znJoin(code, mode) {
   if (!znOnline() || !code || FPS.on) return;
-  ZN.mode = znModeOf(mode);
   if (znPeers(code).length >= ZN_MAX) { ZN.msg = 'That night is full (four players).'; znRender(); return; }
+  if (ZN.code && ZN.code !== code) znOutOfOther();
+  ZN.mode = znModeOf(mode);
   ZN.code = code; ZN.at = Date.now(); ZN.msg = '';
   znSendLobby(); znRender();
 }
@@ -139,11 +147,11 @@ function znRenderUI(U) {
   const q = id => $(U.p + id);
   if (!q('Mp')) return;
   const on = znOnline(), mine = !!ZN.code && ZN.mode === U.mode, W = U.what;
-  q('MpNote').textContent = on ? (ZN.code && !mine ? `You’re in a ${{ zm: 'Lighthouse night', raid: 'raid', fr: 'fog run' }[ZN.mode] || 'game'}’s lobby on another card; leave it to host or join a ${W} here.` : `Up to four in one ${W}. One of you hosts; the others join, and the host starts the ${W} when everyone’s in.`) : (NET.status === 'connecting' ? 'Looking for other players…' : (NET.offReason || 'Playing together isn’t available here.'));
-  q('MpOpen').hidden = !on || !!ZN.code;
+  q('MpNote').textContent = on ? (ZN.code && !mine ? `You’re in a ${{ zm: 'Lighthouse night', raid: 'raid', fr: 'fog run' }[ZN.mode] || 'game'}’s lobby on another card. Host or join a ${W} here and you’ll leave it.` : `Up to four in one ${W}. One of you hosts; the others join, and the host starts the ${W} when everyone’s in.`) : (NET.status === 'connecting' ? 'Looking for other players…' : (NET.offReason || 'Playing together isn’t available here.'));
+  q('MpOpen').hidden = !on || mine;
   q('Lobby').hidden = !mine;
   if (!on) return;
-  if (!ZN.code) {
+  if (!mine) {
     const nights = znOpenNights().filter(n => znKind(n.map) === U.mode), el = q('Lobbies'), key = JSON.stringify(nights) + ZN.msg;
     if (el.dataset.k === key) return; el.dataset.k = key;
     el.textContent = '';
@@ -161,7 +169,6 @@ function znRenderUI(U) {
     }
     return;
   }
-  if (!mine) return;
   const m = znMembers(), host = znAmHost(), hz = m.length ? znOf(m[0]) : null;
   const key = m.map(p => znOf(p).sid + znOf(p).nick).join('|') + host + ZN.msg + znMap() + (hz && hz.lob ? hz.lob.map : '');
   q('MpStart').hidden = !host;
