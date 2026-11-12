@@ -99,10 +99,10 @@ const FV_PLAN = {}, FV_ACT = {};
 function fvIslePlan(i) {
   if (FV_PLAN[i]) return FV_PLAN[i];
   const I = FB_ISLES[i], R = seeded((I.seed ^ 0xf5d1) >>> 0), IR = FBI.R;
-  const a = R() * 6.2832, d = 12 + R() * (IR - 30), x = Math.cos(a) * d, y = Math.sin(a) * d;
+  const a = R() * 6.2832, d = 8 + R() * (IR - 28), x = Math.cos(a) * d, y = Math.sin(a) * d;
   const kinds = (FV_LOOKLM[I.look] || FV_LOOKLM.shingle).slice(); for (let k = kinds.length - 1; k > 0; k--) { const j = (R() * (k + 1)) | 0; [kinds[k], kinds[j]] = [kinds[j], kinds[k]]; }
   const lm = [], a0 = R() * 6.2832;
-  for (let k = 0; k < 3; k++) { const b = a0 + k * 2.094 + (R() - 0.5) * 0.6, e = 5 + R() * 4.5; let lx = x + Math.cos(b) * e, ly = y + Math.sin(b) * e; const r = Math.hypot(lx, ly); if (r > IR - 8) { lx *= (IR - 8) / r; ly *= (IR - 8) / r; } lm.push({ k: kinds[k], x: lx, y: ly }); }
+  for (let k = 0; k < 3; k++) { const b = a0 + k * 2.094 + (R() - 0.5) * 0.5, e = 8.5 + R() * 5.5; let lx = x + Math.cos(b) * e, ly = y + Math.sin(b) * e; const r = Math.hypot(lx, ly); if (r > IR - 7) { lx *= (IR - 7) / r; ly *= (IR - 7) / r; } lm.push({ k: kinds[k], x: lx, y: ly }); }
   return FV_PLAN[i] = { x, y, lm };
 }
 // where it really is (as laid out here, once it has been), else as planned
@@ -452,7 +452,7 @@ function fvDiveMe(dt) {
   if (on) {
     if (FV.snag > 0) { FV.snag -= dt; FV.haul = Math.max(0, FV.haul - dt * 0.5); FV.breath -= dt * 2; }
     else { FV.haul += dt / FVC.HAUL; FV.breath -= dt; FV.snagT -= dt; if (FV.snagT <= 0) { FV.snag = FVC.SNAG; FV.snagT = 1.1 + Math.random() * 1.6; try { if (!soundOff()) tone(140, 'sawtooth', 0.01, 0.2, 0.06, { to: 90 }); } catch (e) {} } }
-    if (FV.haul >= 1) { FV.haul = 0; FV.snagT = 1 + Math.random() * 1.5; S.fvPend = 1.1; FV.upT = 1.2; raidAsk('dive', 'crate'); fpsFeed('Up she comes: a cargo crate over the rail, and into the hold.'); try { zmSound('open'); } catch (e) {} }
+    if (FV.haul >= 1) { FV.haul = 0; FV.breath = FVC.BREATH; FV.snagT = 1 + Math.random() * 1.5; S.fvPend = 1.1; FV.upT = 1.2; raidAsk('dive', 'crate'); fpsFeed('Up she comes: a cargo crate over the rail, and into the hold.'); try { zmSound('open'); } catch (e) {} }
     else if (FV.breath <= 0) { FV.haul = 0; FV.breath = FVC.BREATH; FV.snag = 0; S.fvPend = 1.5; try { fpsHurt(1, null, null); } catch (e) {} fpsFeed('Your breath gave out: up the line, gasping. Let go while the line’s snagged.'); }
   } else {
     // (the line's snag frees itself while you're not pulling on it)
@@ -474,7 +474,10 @@ function fvSeaHud(phone, mono, fell) {
   }
   if (FV.diving || FV.haul > 0.01 && ZM.near && ZM.near.k === 'fvdive') {
     // under the water: the green dark closes in, bubbles, the haul and your breath
-    if (FV.diving) { const g0 = ctx.createRadialGradient(cx, H / 2, Math.min(W, H) * 0.15, cx, H / 2, Math.max(W, H) * 0.7); g0.addColorStop(0, 'rgba(10,40,50,0.35)'); g0.addColorStop(1, 'rgba(2,14,20,0.92)'); ctx.fillStyle = g0; ctx.fillRect(0, 0, W, H);
+    if (FV.diving) { const g0 = ctx.createRadialGradient(cx, H / 2, Math.min(W, H) * 0.15, cx, H / 2, Math.max(W, H) * 0.7); g0.addColorStop(0, 'rgba(14,52,58,0.62)'); g0.addColorStop(0.6, 'rgba(6,30,36,0.85)'); g0.addColorStop(1, 'rgba(2,12,16,0.97)'); ctx.fillStyle = g0; ctx.fillRect(0, 0, W, H);
+      // (shafts of the Light's glow down through the water, and the wreck's dark shape below)
+      ctx.fillStyle = 'rgba(150,200,200,0.06)'; for (let k = 0; k < 4; k++) { const x0 = cx + (k - 1.5) * W * 0.18 + Math.sin(g.t * 0.3 + k) * 30; ctx.beginPath(); ctx.moveTo(x0 - 20, 0); ctx.lineTo(x0 + 20, 0); ctx.lineTo(x0 + 90, H); ctx.lineTo(x0 - 10, H); ctx.fill(); }
+      ctx.fillStyle = 'rgba(4,10,12,0.75)'; ctx.beginPath(); ctx.ellipse(cx, H * 0.86, W * 0.32, H * 0.08, -0.06, 0, 6.283); ctx.fill(); ctx.fillRect(cx - W * 0.05, H * 0.62, 10, H * 0.25);
       ctx.fillStyle = 'rgba(200,230,240,0.35)'; for (let k = 0; k < 14; k++) { const ph = (g.t * (0.4 + (k % 5) * 0.12) + k * 0.37) % 1; ctx.beginPath(); ctx.arc(cx + Math.sin(k * 7.1) * W * 0.3 + Math.sin(g.t * 2 + k) * 6, H * (1 - ph), 2 + (k % 3), 0, 6.283); ctx.fill(); } }
     const w = Math.min(260, W * 0.5), x = cx - w / 2, y = H / 2 - 110;
     ctx.fillStyle = 'rgba(8,10,14,0.6)'; ctx.fillRect(x - 4, y - 4, w + 8, 36);
@@ -780,7 +783,7 @@ function fvDrawIsle(cvs, i, c, j) {
   x.restore();
   const sp = fvIsleSpot(i), P = (u, v) => [ox + u * s, oy - v * s];
   // the landmarks, the camp, the X
-  for (const L of sp.lm) { const [lx, ly] = P(L.x, L.y); fvGlyph(x, L.k, lx, ly, 2.1); x.font = 'italic 400 18px "IM Fell English", "IM Fell English SC", serif'; x.fillStyle = FV_INK; x.textAlign = 'center'; x.textBaseline = 'top'; x.fillText(FV_LM[L.k].n, lx, ly + 18); }
+  for (const L of sp.lm) { const [lx, ly] = P(L.x, L.y); fvGlyph(x, L.k, lx, ly, 2.1); x.font = 'italic 400 18px "IM Fell English", "IM Fell English SC", serif'; x.fillStyle = FV_INK; x.textAlign = 'center'; x.textBaseline = 'top'; x.fillText(FV_LM[L.k].n, lx, ly + 22); }
   const got = c && j != null ? c.got[j] : 0;
   if (c && c.k === 'bounty') {
     const F = fvIdx() === i ? fbiFb() : null, cp = F && F.fvCamp ? F.fvCamp : [sp.x * -0.6, sp.y * -0.6], [kx, ky] = P(cp[0], cp[1]);
@@ -865,7 +868,7 @@ function fvDrawWreck(cvs, c) {
 // =====================================================================================================================
 const FV3 = { grp: null, holes: new Map(), dirt: [], spade: null, mats: null };
 function fv3Reset() { FV3.grp = null; FV3.holes = new Map(); FV3.dirt = []; FV3.spade = null; }
-function fv3Mats() { if (!FV3.mats) FV3.mats = { pit: new THREE.MeshLambertMaterial({ color: 0x1c1610 }), dirt: z3Lam('#6a543a'), wood: z3Lam('#5a4630'), iron: z3Lam('#6a6c70'), geo: new THREE.DodecahedronGeometry(0.07, 0) }; return FV3.mats; }
+function fv3Mats() { if (!FV3.mats) FV3.mats = { pit: new THREE.MeshLambertMaterial({ color: 0x1c1610 }), dirt: z3Lam('#6a543a'), wood: z3Lam('#8a6a44', { emissive: 0x2a1e12 }), iron: z3Lam('#a8acb0', { emissive: 0x24262a }), geo: new THREE.DodecahedronGeometry(0.07, 0) }; return FV3.mats; }
 function fv3Build(grp) {
   fv3Reset(); FV3.grp = new THREE.Group(); grp.add(FV3.grp);
   const M = fv3Mats(), sp = new THREE.Group();
@@ -901,7 +904,7 @@ function fv3Isle(dt) {
     if (sp.visible) {
       const ph = FV.digT * 2.6 % 1, dip = Math.sin(ph * Math.PI) * 0.35, at = FV.digAt || fvDigPoint();
       if (fpsThird() || zmSpecOn()) { sp.position.copy(z3v(m.x + Math.sin(m.h) * 0.6, m.y + Math.cos(m.h) * 0.6, fbiGround(m.x, m.y) + 0.35 - dip)); sp.rotation.set(0, -m.h, 0.5); }
-      else { const ez = FPSC.GROUND + FPSC.EYE + (m.jz || 0) - (FPS.crouchEye || 0), f = 0.85 + dip * 0.3, r = 0.22; sp.position.copy(z3v(m.x + Math.sin(m.h) * f + Math.cos(m.h) * r, m.y + Math.cos(m.h) * f - Math.sin(m.h) * r, ez - 1.05 - dip * 0.9)); sp.rotation.set(0, -m.h, 0); sp.rotateX(0.75 - dip * 0.8); sp.rotateZ(0.15); }
+      else { const ez = FPSC.GROUND + FPSC.EYE + (m.jz || 0) - (FPS.crouchEye || 0), f = 0.95 + dip * 0.3, r = 0.16; sp.position.copy(z3v(m.x + Math.sin(m.h) * f + Math.cos(m.h) * r, m.y + Math.cos(m.h) * f - Math.sin(m.h) * r, ez - 0.95 - dip * 0.9)); sp.rotation.set(0, -m.h, 0); sp.rotateX(0.75 - dip * 0.8); sp.rotateZ(0.15); }
     }
   }
   // a chest coming up: out of the ground, the dirt thrown off it
@@ -923,15 +926,16 @@ function fv3Sea() {
   const cd = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 0.14, 8), lam('#e8dcc0')); cd.position.set(0.46, 1.04, -0.3); T.add(cd);
   if (GW3.glowSp) { const f = GW3.glowSp(0xffd890, 0.35); f.position.set(0.46, 1.14, -0.3); T.add(f); }
   // the wreck's mast, out of the water, a yard across it and rags of sail, and wreckage about it
-  const wk = new THREE.Group(), wood = lam('#3e3226'), rag = lam('#8a8270');
+  const wk = new THREE.Group(), wood = z3Lam('#4a3e30', { emissive: 0x1a1612 }), rag = z3Lam('#b0a890', { emissive: 0x3a382e });
   const mast = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.32, 12, 8), wood); mast.position.y = 3.5; wk.add(mast);
   const yard = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 7, 6), wood); yard.rotation.z = Math.PI / 2 + 0.18; yard.position.y = 7.2; wk.add(yard);
   const top2 = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.2, 1.4), wood); top2.position.y = 8.8; wk.add(top2);
-  const sl = new THREE.Mesh(new THREE.PlaneGeometry(3.2, 3.4), new THREE.MeshLambertMaterial({ color: 0x6a6456, side: THREE.DoubleSide, transparent: true, opacity: 0.85 })); sl.position.set(1.0, 5.4, 0.1); sl.rotation.set(0, 0.2, 0.15); wk.add(sl);
+  const sl = new THREE.Mesh(new THREE.PlaneGeometry(3.2, 3.4), new THREE.MeshLambertMaterial({ color: 0x9a9480, emissive: 0x3a382e, side: THREE.DoubleSide, transparent: true, opacity: 0.88 })); sl.position.set(1.0, 5.4, 0.1); sl.rotation.set(0, 0.2, 0.15); wk.add(sl);
   for (let k = 0; k < 4; k++) { const r = new THREE.Mesh(new THREE.BoxGeometry(0.3, 1.6 + k * 0.4, 0.04), rag); r.position.set(-1.6 + k * 0.5, 6.1 - k * 0.2, 0); r.rotation.z = (k - 1.5) * 0.15; wk.add(r); }
   for (let k = 0; k < 6; k++) { const p = new THREE.Mesh(new THREE.BoxGeometry(2 + Math.random() * 2, 0.15, 0.35), wood); const a = Math.random() * 6.28, d = 3 + Math.random() * 9; p.position.set(Math.cos(a) * d, 0.05, Math.sin(a) * d); p.rotation.y = Math.random() * 3; wk.add(p); }
   for (let k = 0; k < 3; k++) { const b = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 1, 10), lam('#5a4630')); const a = Math.random() * 6.28, d = 4 + Math.random() * 6; b.position.set(Math.cos(a) * d, 0.1, Math.sin(a) * d); b.rotation.x = Math.PI / 2; b.rotation.z = Math.random() * 3; wk.add(b); }
-  if (GW3.glowSp) { const g1 = GW3.glowSp(0xc8f0ff, 5, { opacity: 0.3 }); g1.position.y = 0.6; wk.add(g1); wk.userData.g = g1; }
+  // (a pale corposant flickers at her masthead, so she's found at night)
+  if (GW3.glowSp) { const g1 = GW3.glowSp(0xc8f0ff, 4, { opacity: 0.4 }); g1.position.y = 9.4; wk.add(g1); wk.userData.g = g1; const g2 = GW3.glowSp(0x9ad8e8, 9, { opacity: 0.2 }); g2.position.y = 0.4; wk.add(g2); }
   wk.rotation.set(0.32, Math.random() * 6.28, 0.12); wk.visible = false; GW3.SG.add(wk); FV.wreck3 = wk;
   // a crate, for coming up over the port rail
   const cr = new THREE.Group(), cb = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.7, 0.8), lam('#7a6040')); cr.add(cb);
@@ -941,8 +945,8 @@ function fv3Sea() {
 }
 function fv3SeaF(dt) {
   const c = fvWreckCur();
-  if (FV.wreck3) { FV.wreck3.visible = !!c; if (c) { FV.wreck3.position.set(c.wx, Math.sin(g.t * 0.7) * 0.15 - 0.5, -c.wy); if (FV.wreck3.userData.g) FV.wreck3.userData.g.material.opacity = 0.18 + 0.12 * Math.sin(g.t * 1.6); } }
-  if (FV.crate3) { FV.crate3.visible = FV.upT > 0; if (FV.upT > 0) { const k = clamp(1 - FV.upT / 1.2, 0, 1); FV.crate3.position.copy(gdv(FVC.DIVE[0] - 1.0 + k * 0.6, FVC.DIVE[1], -1.4 + k * (GWS.D + 2.2))); FV.crate3.rotation.set(Math.sin(g.t * 5) * 0.1, k * 0.8, 0); } }
+  if (FV.wreck3) { FV.wreck3.visible = !!c; if (c) { FV.wreck3.position.set(c.wx, Math.sin(g.t * 0.7) * 0.15 - 0.5, -c.wy); if (FV.wreck3.userData.g) FV.wreck3.userData.g.material.opacity = 0.35 + 0.2 * Math.sin(g.t * 2.3) * Math.sin(g.t * 0.7); } }
+  if (FV.crate3) { FV.crate3.visible = FV.upT > 0; if (FV.upT > 0) { const k = clamp((1 - FV.upT / 1.2) * 1.4, 0, 1); FV.crate3.position.copy(gdv(FVC.DIVE[0] - 1.7 + k * 0.4, FVC.DIVE[1] + 0.6, -1.4 + k * (GWS.D + 2.0))); FV.crate3.rotation.set(Math.sin(g.t * 5) * 0.1, k * 0.8, 0); } }
   // the table's chart, kept up with the voyage
   if (FV.tex) { const key = JSON.stringify(fvCur()); if (FV.texKey !== key) { FV.texKey = key; try { fvDrawSea(FV.tex.image); FV.tex.needsUpdate = true; } catch (e) {} } }
 }
@@ -976,7 +980,7 @@ function fbVoyDebug(kind, t) {
   }
   if (kind === 'salvage') {
     const c = take('salvage');
-    if (here !== 'fbsail' || !RAID.st.B || Math.hypot(RAID.st.B.x - c.wx, RAID.st.B.y - c.wy) > FVC.WRECK_R) { FB.ship = Object.assign(fbFreshShip(), { x: c.wx - 18, y: c.wy - 22, h: 0.6 }); fbGo('fbsail', 0); return 'to the wreck: call again'; }
+    if (here !== 'fbsail' || !RAID.st.B || Math.hypot(RAID.st.B.x - c.wx, RAID.st.B.y - c.wy) > FVC.WRECK_R) { const h0 = 0.6, a = h0 - Math.PI / 2;   /* (the wreck off her port beam) */ FB.ship = Object.assign(fbFreshShip(), { x: c.wx - Math.sin(a) * 24, y: c.wy - Math.cos(a) * 24, h: h0 }); fbGo('fbsail', 0); return 'to the wreck: call again'; }
     return 'salvage';
   }
   if (kind === 'table') { if (here !== 'fbsail') { fbGo('fbsail', 0); return 'to sea: call again'; } fvChartOpen('sea'); return 'table'; }
