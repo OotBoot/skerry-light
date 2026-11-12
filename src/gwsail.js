@@ -590,7 +590,7 @@ function gwsMe(dt) {
   const beam = wrapPi(gwBeam()), sea = gwsSeaOf();
   for (const r of sea.rocks) {
     const dx = r.x - V.x, dy = r.y - V.y; if (Math.abs(dx) > 1300 || Math.abs(dy) > 1300) { r.lit = 0; continue; }
-    const d = Math.hypot(r.x, r.y), b = bearingOf(r.x, r.y), inBeam = Math.abs(b) < SK.SHADE && Math.abs(angDiff(b, beam)) < SK.HALF_BEAM + r.r / Math.max(30, d) && d < SK.BEAM_RANGE;
+    const d = Math.hypot(r.x, r.y), b = bearingOf(r.x, r.y), inBeam = Math.abs(b) < SK.SHADE && Math.abs(angDiff(b, beam)) < gwsHalf() + r.r / Math.max(30, d) && d < SK.BEAM_RANGE;
     const lan = Math.hypot(dx, dy) < GWS.LANT_R + r.r;
     if (inBeam || r.flare > now) r.seen = now;
     r.lit = Math.max(inBeam || r.flare > now ? 1 : clamp(1 - (now - r.seen - SK.SEEN_HOLD - (typeof frcSpy === 'function' ? frcSpy() : 0)) / SK.SEEN_FADE, 0, 1), lan ? 0.32 : 0);
@@ -910,7 +910,7 @@ function gws3d(dt) {
   for (const R of GW3.rocks) {
     const r = R.r, k = r.lit || 0, root = R.M.root; root.visible = k > 0.01;
     if (!root.visible) continue;
-    const warm = r.flare > now ? 0.7 : Math.abs(angDiff(bearingOf(r.x, r.y), beam)) < SK.HALF_BEAM * 1.6 ? 1 : 0.05;
+    const warm = r.flare > now ? 0.7 : Math.abs(angDiff(bearingOf(r.x, r.y), beam)) < gwsHalf() * 1.6 ? 1 : 0.05;
     for (const mt of R.M.mats) { mt.opacity = k; mt.emissive.setRGB(0.22 * k * warm, 0.19 * k * warm, 0.13 * k * warm); }
     R.M.foamM.opacity = 0.3 * k;
   }
@@ -939,7 +939,7 @@ function gws3d(dt) {
     const up = Math.min(1, f.t / 1.2), z = 8 + up * 70 - Math.max(0, f.t - 1.2) * 5, k = f.t < GWS.FLARE_T ? 1 : Math.max(0, GWS.FLARE_T + 1 - f.t);
     F.s.position.set(f.x, z, -f.y); F.L.position.copy(F.s.position); F.L.intensity = 3.2 * k * (reduceMotion ? 1 : 0.9 + 0.1 * Math.sin(t * 23)); F.s.material.opacity = k; });
   // the Light's glare, when the beam's turned on you
-  { const fb = 1 - Math.min(1, Math.abs(angDiff(beam, bearingOf(V.x, V.y))) / 0.32), on = Math.abs(beam) < SK.SHADE + SK.HALF_BEAM;
+  { const fb = 1 - Math.min(1, Math.abs(angDiff(beam, bearingOf(V.x, V.y))) / 0.32), on = Math.abs(beam) < SK.SHADE + gwsHalf();
     GW3.glare.material.opacity = on ? fb * fb * 0.9 * (typeof flashK === 'function' ? flashK() : 1) : 0; GW3.glare.scale.setScalar(80 + 240 * fb); }
   // the wake: foam along her sides and under her stern, more the faster she goes
   { const L0 = GW3.last; GW3.last = { x: V.x, y: V.y };
@@ -955,6 +955,9 @@ function gws3d(dt) {
 // her heading and the deck's middle, her place; uLt: the Light's place in the deck's frame); the sailing game's own
 // coast and lighthouse put where the Light is from here and turned with her; its beam and spotlight too; no island's
 // cut in the sea, no coast's; the moon turned with the sky. Put back as they were once she's gone.
+// [fogrun] the Light's beam is three times as wide on a fog run (its half-width, radians): it lights rocks for three
+// times as long a sweep, and draws that wide on the water and in the air
+function gwsHalf() { return SK.HALF_BEAM * (typeof FR !== 'undefined' && FR.on && typeof RAID !== 'undefined' && RAID.map === 'fogrun' ? 3 : 1); }
 function gwsGL(u) {
   if (!gwsOn() || !GW3.on || !GW3.Lw) { if (GW3.gl) gwsGLReset(u); return; }
   const S = RAID.st, V = S.V || S.B, c = Math.cos(V.h), s = Math.sin(V.h), [Lx, Ly] = GW3.Lw, beam = wrapPi(gwBeam());
@@ -969,9 +972,10 @@ function gwsGL(u) {
   GL3D.sea.position.y = S.ph === 'sunk' ? clamp(S.sinkT / GWS.SINK, 0, 1) * (GWS.D + FPSC.GROUND + 2.6) : 0;
   if (GL3D.coast) { GL3D.coast.position.set(Lx, 0, -Ly); GL3D.coast.rotation.set(0, V.h, 0); }
   if (GL3D.tower) GL3D.tower.visible = true;
-  const on = Math.abs(beam) < SK.SHADE + SK.HALF_BEAM, wb = beam - V.h;
-  if (GL3D.beam) { GL3D.beam.visible = on; GL3D.beam.position.set(Lx, 54, -Ly); GL3D.beam.rotation.set(0, -wb, 0); }
-  if (GL3D.spot) { GL3D.spot.visible = on; GL3D.spot.position.set(Lx, 54, -Ly); GL3D.spot.target.position.set(Lx + Math.sin(wb) * 3000, 0, -(Ly + Math.cos(wb) * 3000)); GL3D.spot.target.updateMatrixWorld(); GL3D.spot.intensity = 2.2; }
+  const on = Math.abs(beam) < SK.SHADE + gwsHalf(), wb = beam - V.h, bw = gwsHalf() / SK.HALF_BEAM;
+  if (u.uHalf) u.uHalf.value = gwsHalf();
+  if (GL3D.beam) { GL3D.beam.visible = on; GL3D.beam.position.set(Lx, 54, -Ly); GL3D.beam.rotation.set(0, -wb, 0); GL3D.beam.scale.set(bw, 1, 1); }
+  if (GL3D.spot) { GL3D.spot.visible = on; GL3D.spot.position.set(Lx, 54, -Ly); GL3D.spot.target.position.set(Lx + Math.sin(wb) * 3000, 0, -(Ly + Math.cos(wb) * 3000)); GL3D.spot.target.updateMatrixWorld(); GL3D.spot.intensity = 2.2; GL3D.spot.angle = Math.min(1.2, gwsHalf()); }
   GL3D.amb.intensity = 0.36; GL3D.moon.intensity = 0.16;
 }
 function gwsGLReset(u) {
@@ -980,7 +984,8 @@ function gwsGLReset(u) {
   if (u.uGw) { u.uGw.value.set(1, 0, 0, 0); u.uGp.value.set(0, 0); u.uLt.value.set(0, 0); }
   GL3D.sea.position.y = 0;
   if (GL3D.coast) { GL3D.coast.position.set(0, 0, 0); GL3D.coast.rotation.set(0, 0, 0); }
-  if (GL3D.spot) { GL3D.spot.position.set(0, 54, 0); }
+  if (GL3D.spot) { GL3D.spot.position.set(0, 54, 0); GL3D.spot.angle = SK.HALF_BEAM; }
+  if (GL3D.beam) GL3D.beam.scale.set(1, 1, 1); if (u.uHalf) u.uHalf.value = SK.HALF_BEAM;
   if (typeof GFX !== 'undefined') GFX.skyTurn = 0;
 }
 

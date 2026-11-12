@@ -41,7 +41,7 @@ const FKC = {
   RING: 6.2, USE: 3,   // (a lit brazier's ring of light; how long to hold Use to light one)
   FOG: 20, FOG2: 14, FOG_FIRST: 12,   // (his fog: how often, and from half strength; the first)
   FLARE: 7, FLARE_UP: 0.9, RELOAD: 30, RELOAD2: 20, FLARE_Z: 26,
-  BEAM_W: 0.62, LY: -820,   // (the Light's beam: how wide either side it lights the rock (about a second and a quarter a sweep); the Light, far to the south)
+  BEAM_W: 1.86, LY: -820,   // (the Light's beam: how wide either side it lights the rock: three times what it was, about four seconds a sweep; the Light, far to the south)
   HP: 40, ROUND: 12, PTS: 4000, RAD: 0.95, TALL: 4.4, HEADZ: 3.85, PAD: 0.6, SP: 2.6, S: 2.25,
   SWING_R: 7.2, SWING_ARC: 1.55, SWING_KB: 13,
   ALIVE: 5, ALIVE_MORE: 3, TRICKLE: [4, 7],
@@ -745,8 +745,8 @@ function fk3dBuild(grp) {
     const geo = new THREE.CylinderGeometry(1, 0.05, 1, 32, 1, true); geo.translate(0, 0.5, 0); geo.rotateX(-Math.PI / 2);
     const beam = FK3.beam = new THREE.Group(); beam.position.copy(z3v(CX, CY + FKC.LY, G0 + 34)); grp.add(beam);
     const bm = FK3.beamM = new THREE.MeshBasicMaterial({ map: fade, transparent: true, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending, fog: false });
-    { const b = new THREE.Mesh(geo, bm); b.scale.set(110, 14, -FKC.LY + 120); b.frustumCulled = false; b.renderOrder = 9; beam.add(b); }
-    { const b = new THREE.Mesh(geo, bm); b.scale.set(30, 6, -FKC.LY + 100); b.frustumCulled = false; b.renderOrder = 9; beam.add(b); }
+    { const b = new THREE.Mesh(geo, bm); b.scale.set(330, 14, -FKC.LY + 120); b.frustumCulled = false; b.renderOrder = 9; beam.add(b); }
+    { const b = new THREE.Mesh(geo, bm); b.scale.set(90, 6, -FKC.LY + 100); b.frustumCulled = false; b.renderOrder = 9; beam.add(b); }
     const lamp = FK3.lamp = spr(z3Soft('rgba(255,236,180,0.9)', 'rgba(255,220,150,0)'), 0.5); lamp.scale.setScalar(40); lamp.position.copy(z3v(CX, CY + FKC.LY, G0 + 34)); grp.add(lamp);
   }
   // the flare
