@@ -55,9 +55,9 @@
 // starts with together (none alone)
 const FRC = { BACK: 10, LIVES: 1 };
 // the reaches: their names, how far you can see in each (m), and how many stops each has (the chart's, later)
-const FR_REACH = [null, { n: 'The Near Skerries', fog: 140, stops: 2 }, { n: 'The Grey Reach', fog: 90, stops: 3 }, { n: 'The Haar', fog: 50, stops: 2 }];
+const FR_REACH = [null, { n: 'The Near Skerries', fog: 55, stops: 2 }, { n: 'The Grey Reach', fog: 38, stops: 3 }, { n: 'The Haar', fog: 24, stops: 2 }];
 // what each lit island pushes the fog back, for the rest of its reach (m)
-const FR_PUSH = 10;
+const FR_PUSH = 5;
 // the island looks (FPS_ISLES) an island can be laid out in, small
 const FR_LOOKS = ['shingle', 'reef', 'chapel', 'cove', 'cliff', 'marsh'];
 // the route of step 1 (two Fight islands, then won), kept for reference: the chart (src/frchart.js) has taken over frNextStop
@@ -89,6 +89,18 @@ function frSeedFrom(st) { if (st && ZM_MAPS[st.map] && ZM_MAPS[st.map].fr && st.
 
 // ---------- the fog ----------
 function frFog(reach) { const r = reach || FR.reach, R = FR_REACH[r] || FR_REACH[1]; return R.fog + (r === FR.pushR ? FR.push : 0); }
+// the haar as a wall: a sphere of the fog's own colour round the camera, just past how far you can see, so nothing
+// beyond it shows (not the sky, the far hills, nor rocks' and islands' dark shapes against them). Each stage that has
+// fog keeps it up each frame (frDome(far, colour): src/frsail.js, src/frisle.js frIsleFog); left a moment, it goes.
+const FRD = { m: null, t: -9 };
+function frDome(far, col) {
+  if (typeof GL3D === 'undefined' || !GL3D.scene || !GL3D.camera || typeof THREE === 'undefined') return;
+  let m = FRD.m;
+  if (!(far > 0)) { if (m) m.visible = false; return; }
+  if (!m) { m = FRD.m = new THREE.Mesh(new THREE.SphereGeometry(1, 32, 16), new THREE.MeshBasicMaterial({ color: col, side: THREE.BackSide, fog: false, depthWrite: false, transparent: true, opacity: 0.97 })); m.renderOrder = -1; m.frustumCulled = false; }
+  if (m.parent !== GL3D.scene) GL3D.scene.add(m);
+  m.visible = true; m.material.color.set(col); m.scale.setScalar(far * 1.05); m.position.copy(GL3D.camera.position); FRD.t = g.t;
+}
 function frFogPush(m) { if (FR.pushR !== FR.reach) { FR.pushR = FR.reach; FR.push = 0; } FR.push += m; }
 
 // ---------- the route ----------
@@ -133,7 +145,7 @@ function frAfterStart() {
   FR.life = ZM.net ? FRC.LIVES : 0;
   if (FR.debug) { const k = FR.debug; FR.debug = null; if (typeof RCL !== 'undefined' && RCL.picking) rclChoose(RCL.last || 'merc'); if (k !== 'frsail') frJump(k); }
 }
-function frStop() { FR.on = false; FR.leaving = false; FR.backT = 0; FR.lost = false; }
+function frStop() { if (FRD.m) FRD.m.visible = false; FR.on = false; FR.leaving = false; FR.backT = 0; FR.lost = false; }
 // (raidUseStage) entering a stage: which reach and stop it is
 function frEnterStage() { const p = frPlanNow(); if (!p) return; FR.stop = p.key === 'frsail' ? p.n - 1 : p.n; if (p.reach !== FR.reach) { FR.reach = p.reach; } if (typeof frcEnter === 'function') frcEnter(p); if (p.key !== 'frsail' && typeof frChartClose === 'function' && typeof FRV !== 'undefined' && FRV.open) frChartClose(false); }   // [fogrun cards]
 
@@ -194,6 +206,7 @@ function frBringBack(sid) { frRunEvent('back', sid); }
 function frRestoreLife(sid) { frRunEvent('life', sid); }
 // (raidMe) each frame, everyone: the wait for your extra life
 function frMe(dt) {
+  if (FRD.m && FRD.m.visible && (g.t - FRD.t > 0.4 || g.t < FRD.t)) FRD.m.visible = false;
   if (FR.backT > 0 && !ZM.over) { FR.backT -= dt; if (FR.backT <= 0) { FR.backT = 0; frBack('life'); } }
   if (typeof frcMe === 'function') frcMe(dt);   // [fogrun cards] the relics, Call Them Home, Light the Way
 }

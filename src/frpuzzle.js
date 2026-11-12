@@ -4,11 +4,14 @@
 // until it's solved; then it's lit (ph 'lit', frIsleLit), and FRI.AWAY seconds later you're back aboard
 // (frIslandDone), as Hold the Light.
 //  - Bend the Beam (beam): a lamp on a pillar at the island's edge (the Light's beam from the cliff) throws its beam
-//    inland, and three mirror posts (four out past the Near Skerries) stand between it and the beacon. Each post sends
-//    the beam on along the way its head faces; Use turns the head a step (45 degrees). Carry the beam post to post to
-//    the beacon and it catches. The beam stops at the first post it reaches, or at anything solid, or runs off into
-//    the fog. The posts are laid out backwards from the beacon (so there's always a way), and their heads start
-//    turned wrong, from the island's seed. Each minute you take, a few of the drowned come up.
+//    inland, and mirror posts stand between it and the beacon: the beam must pass through FRP.BM_K of them (4, 5, 6
+//    by the reach), and FRP.BM_DECOY more (2, 3, 3) stand off along the wrong ways, so following the beam isn't
+//    enough. Each post sends the beam on along the way its head faces; Use turns the head a step (45 degrees), and
+//    every head is geared to another post's (FRP_L.link), which turns a step with it (it glows blue while you stand
+//    at the first). Carry the beam post to post to the beacon and it catches. The beam stops at the first post it
+//    reaches, or at anything solid, or runs off into the fog. The posts are laid out backwards from the beacon, and
+//    their heads scrambled by turning them as you would (so there's always a way), from the island's seed. Each
+//    minute you take, a few of the drowned come up.
 //  - Knock's Garden (knock): a field of carved figureheads on plinths between the landing and the beacon. Each moves
 //    only while none of you can see it (the Knock rule: inside someone's view, FRP.KN_FOV across for the others and
 //    your own screen for you, near enough to make out in the fog, and with nothing solid between). Unwatched, it
@@ -36,6 +39,7 @@ const FRP = {
   KN_SP: 2.4, KN_REACH: 1.15, KN_FOV: 1.05, KN_VFOV: 0.75, KN_SEE: 48, KN_REST: 4, KN_HURT: 2, KN_PAD: 0.45,
   BELL_R: 2.4, NOTE: 1.8, PENT: [0, 2, 4, 7, 9], BCOL: ['#e0704a', '#e8c64e', '#5aa4e0', '#6cc47a', '#b884e0'], BNAME: ['red', 'yellow', 'blue', 'green', 'violet'],
   PLATE_R: 1.35, HOLDT: [16, 9, 6, 4], MOAT: [3.3, 7.0],
+  BM_K: [0, 4, 5, 6], BM_DECOY: [0, 2, 3, 3],   // (Bend the Beam: the posts the beam must go through, and the decoys, by the reach)
 };
 // this island's puzzle as laid out (set, the same on every screen)
 var FRP_L = { kind: '' };
@@ -196,14 +200,14 @@ FRP_RULES.beam = {
   // laid out backwards from the beacon: the last post straight along one of the eight ways from it, the one before
   // that along another, and so on, and the lamp back along the first way at the shore; the heads then turned wrong
   set(H, K, Z) {
-    const { B, L: Ld } = frpFr(Z), C = [H.CX, H.CY], k = FR.reach > 1 ? 4 : 3, IR = H.IR, far = (a, b, m) => Math.hypot(a[0] - b[0], a[1] - b[1]) >= m;
+    const { B, L: Ld } = frpFr(Z), C = [H.CX, H.CY], k = FRP.BM_K[FR.reach] || 4, IR = H.IR, far = (a, b, m) => Math.hypot(a[0] - b[0], a[1] - b[1]) >= m;
     let Lay = null;
     for (let t = 0; t < 900 && !Lay; t++) {
       const strict = t < 700, s = new Array(k + 1), P = new Array(k);
       s[k] = H.RI(0, 7);
       let p = B, ok = true;
       for (let i = k - 1; i >= 0; i--) {
-        const len = H.R(7, 13), [ux, uy] = frpU(s[i + 1]); p = [p[0] - ux * len, p[1] - uy * len]; P[i] = p;
+        const len = H.R(6, 11), [ux, uy] = frpU(s[i + 1]); p = [p[0] - ux * len, p[1] - uy * len]; P[i] = p;
         let d = H.RI(0, 7); if (d === s[i + 1] || d === (s[i + 1] + 4) % 8) d = (d + 2) % 8; s[i] = d;
         if (Math.hypot(p[0] - C[0], p[1] - C[1]) > IR - 9 || !far(p, B, 5) || !far(p, Ld, 6)) { ok = false; break; }
         for (let q = i + 1; q < k; q++) if (!far(p, P[q], 5)) ok = false;
@@ -233,15 +237,37 @@ FRP_RULES.beam = {
       s[0] = (s[1] + 2) % 8; const [ux, uy] = frpU(s[0]);
       Lay = { lamp: [P[0][0] - ux * 8, P[0][1] - uy * 8], d0: s[0], posts: P, bea: B, sol: s.slice(1) };
     }
-    // the heads turned wrong, each by a step or more
+    // the decoys: more posts, each off along a way the beam could wrongly be sent from one of the right ones (so
+    // following the beam post to post isn't enough), none of them in the right way's path
+    const nd = FRP.BM_DECOY[FR.reach] || 2, kr = Lay.posts.length;
+    for (let t = 0, got = 0; t < 400 && got < nd; t++) {
+      const i = H.RI(0, kr - 1), pi = Lay.posts[i], din = i ? Lay.sol[i - 1] : Lay.d0, d = H.RI(0, 7);
+      if (d === Lay.sol[i] || d === (din + 4) % 8) continue;
+      const [ux, uy] = frpU(d), len = H.R(6, 11), q = [pi[0] + ux * len, pi[1] + uy * len];
+      if (Math.hypot(q[0] - C[0], q[1] - C[1]) > IR - 8 || !far(q, B, 5) || !far(q, Ld, 6) || !far(q, Lay.lamp, 5) || Lay.posts.some(o => !far(q, o, 5))) continue;
+      if (t < 300 && !H.clear(q[0], q[1], 0.6, 1.2)) continue;
+      const L2 = Object.assign({}, Lay, { posts: Lay.posts.concat([q]), sol: Lay.sol.concat([H.RI(0, 7)]) }), tr = frpBeamTrace(L2, L2.sol, false);
+      if (tr.hit !== 'beacon' || tr.lit.length !== kr) continue;
+      Lay = L2; got++;
+    }
+    Lay.k = kr;
+    // the linkage: every post's head is geared to another's, so turning one turns that one too, a step the same way
+    const n = Lay.posts.length; Lay.link = [];
+    for (let i = 0; i < n; i++) { let j = H.RI(0, n - 2); if (j >= i) j++; Lay.link.push(j); }
+    // the heads turned wrong: the right turns, then the posts turned at random (as you would turn them, so there's
+    // always a way back)
     let aims;
-    for (let t = 0; t < 12; t++) { aims = Lay.sol.map(a => (a + H.RI(1, 7)) % 8); if (frpBeamTrace(Lay, aims, false).hit !== 'beacon') break; }
+    for (let t = 0; t < 20; t++) {
+      aims = Lay.sol.slice();
+      for (let m = 0; m < n * 2 + 2; m++) { const i = H.RI(0, n - 1), c = H.RI(1, 7); aims[i] = (aims[i] + c) % 8; aims[Lay.link[i]] = (aims[Lay.link[i]] + c) % 8; }
+      const tr = frpBeamTrace(Lay, aims, false); if (tr.hit !== 'beacon' && tr.lit.length < 2) break;
+    }
     FRP_L = Object.assign({ kind: 'beam', aim0: aims }, Lay);
     const a0 = Math.PI / 2 - Lay.d0 * Math.PI / 4;
     H.put('frlamp', Lay.lamp[0], Lay.lamp[1], a0, {});
     { const lx = Lay.lamp[0] + Math.cos(a0) * 0.3, ly = Lay.lamp[1] + Math.sin(a0) * 0.3; H.light(lx, ly, 1.8, '#ffe6b0', 11, 'lantern'); }
     for (const p of Lay.posts) H.put('frmirror', p[0], p[1], H.R(0, H.TAU), {});
-    const way = [Lay.lamp].concat(Lay.posts, [B]);
+    const way = [Lay.lamp].concat(Lay.posts.slice(0, Lay.k), [B]);
     for (let i = 0; i < way.length - 1; i++) frpKeepLine(H, way[i], way[i + 1], 0.9);
   },
   enter() {
@@ -252,18 +278,18 @@ FRP_RULES.beam = {
   q(sid, k, a) {
     const S = RAID.st, i = a | 0;
     if (k !== 'turn' || S.ph === 'lit' || !(i >= 0 && i < S.aim.length)) return;
-    S.aim[i] = (S.aim[i] + 1) % 8; S.turns++;
+    S.aim[i] = (S.aim[i] + 1) % 8; const j = (FRP_L.link || [])[i]; if (j != null && j !== i) S.aim[j] = (S.aim[j] + 1) % 8; S.turns++;
     if (frpBeamTrace(FRP_L, S.aim, false).hit === 'beacon') frpSolve(`${frpWho(sid)} turned the last mirror: the beam reaches the beacon.`);
   },
   pack(o) { frpPack(o); o.fpb = [RAID.st.aim.join(''), RAID.st.turns]; },
   apply(o) { frpApply(o); const S = RAID.st; if (Array.isArray(o.fpb)) { const a = String(o.fpb[0] || ''); if (a.length === S.aim.length) S.aim = a.split('').map(c => clamp(c | 0, 0, 7)); S.turns = o.fpb[1] | 0; } },
   me(dt) { frpMe(dt); const S = RAID.st; if (S.turns !== S.turnSeen) { S.turnSeen = S.turns; try { if (!soundOff()) { sfxCreak(); tone(260, 'triangle', 0.002, 0.08, 0.08); } } catch (e) {} } },
   consider(c) { if (RAID.st.ph === 'lit') return; FRP_L.posts.forEach((p, i) => c({ k: 'frpost', i }, p[0], p[1], 0, FRP.POST_R, false)); },
-  prompt(o) { return o.k === 'frpost' ? { text: 'Turn the mirror post' } : null; },
+  prompt(o) { return o.k === 'frpost' ? { text: 'Turn the mirror post (the post glowing blue turns with it)' } : null; },
   use(o) { if (o.k !== 'frpost') return false; raidAsk('turn', o.i); return true; },
   hud(phone, mono) {
-    const S = RAID.st, n = FRP_L.posts.length, tr = FRP3.tr, got = tr ? tr.lit.length : 0;
-    const line = S.ph === 'lit' ? frpLitLine() : `Bend the Beam: turn the mirror posts (Use) to carry the beam to the beacon · ${got} of ${n} posts lit · more drowned in ${frpDrownIn()} s`;
+    const S = RAID.st, n = FRP_L.k || FRP_L.posts.length, tr = FRP3.tr, got = tr ? Math.min(n, tr.lit.length) : 0;
+    const line = S.ph === 'lit' ? frpLitLine() : `Bend the Beam: carry the beam to the beacon through ${n} of the posts. Each one turns another with it · ${got} lit · more drowned in ${frpDrownIn()} s`;
     frpLine(line, S.ph === 'lit' ? '#ffe2a8' : null, phone, mono);
     ctx.textBaseline = 'alphabetic';
   },
@@ -316,7 +342,9 @@ FRP_RULES.beam = {
       if (on) { const pin = tr.pts[at], pc = L.posts[i], inB = bearingOf(pin[0] - pc[0], pin[1] - pc[1]); off = -angDiff(inB, aims[i] * Math.PI / 4) / 2; }
       h.m += ((on ? 1 : 0) - h.m) * Math.min(1, dt * 5);
       h.M.rotation.y += angDiff(off, h.M.rotation.y) * Math.min(1, dt * 8);
-      h.gm.emissive.setRGB(0.9 * h.m, 0.8 * h.m, 0.55 * h.m); h.glow.material.opacity = 0.55 * h.m * fl;
+      // (the post geared to the one in front of you: a cold blue pulse)
+      const nr = ZM.near, hint = nr && nr.k === 'frpost' && (L.link || [])[nr.i] === i ? 0.5 + 0.5 * Math.sin(g.t * 6) : 0;
+      h.gm.emissive.setRGB(0.9 * h.m + 0.15 * hint, 0.8 * h.m + 0.45 * hint, 0.55 * h.m + 0.9 * hint); h.glow.material.opacity = 0.55 * h.m * fl;
     });
   },
   exit() { FRP3.on = false; },

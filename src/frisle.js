@@ -31,7 +31,7 @@
 // word (fi: phase, clock, how near it is to being put out, how often lit and put out, who lit it last; fsy: a line); a
 // joined player asks the host to light it (raidAsk 'light').
 
-const FRI = { R: 40, USE: 4, HOLD: 60, DOUSE: 2.5, DOUSE_R: 2.3, AWAY: 7, FOGC: '#10151b', TOP: 3.2 };
+const FRI = { R: 40, USE: 4, HOLD: 60, DOUSE: 2.5, DOUSE_R: 2.3, AWAY: 7, FOGC: '#262e37', TOP: 3.2 };
 const FRI_PH = ['dark', 'burn', 'out', 'lit'];
 
 // ---------- the island's look, small ----------
@@ -116,7 +116,7 @@ function frIsleSpawn(o) {
 // what kind comes up: more runners the further out you are
 function frIsleKindOf() { const u = Math.random(), run = 0.08 + 0.06 * (FR.stop | 0) + 0.05 * (FR.reach - 1); return u < run ? 'run' : u < run + 0.55 ? 'jog' : 'walk'; }
 // the island's fog: the look's, pulled in to the reach's (and pushed back as the lights are lit)
-function frIsleFog() { if (typeof GL3D === 'undefined' || !GL3D.scene || !GL3D.scene.fog) return; const F = GL3D.scene.fog, far = Math.min(FPS_ISLES.frisle.fog[2] + FR_PUSH * 4, frFog(typeof frcFogReach === 'function' ? frcFogReach(frPlanNow()) : FR.reach) * (typeof frcSee === 'function' ? frcSee() : 1)); F.far += (far - F.far) * 0.04; F.near = F.far * 0.2; }   // [fogrun cards] (the haar lifted; the Keeper's Oilcan)
+function frIsleFog() { if (typeof GL3D === 'undefined' || !GL3D.scene || !GL3D.scene.fog) return; const F = GL3D.scene.fog, far = Math.min(FPS_ISLES.frisle.fog[2] + FR_PUSH * 4, frFog(typeof frcFogReach === 'function' ? frcFogReach(frPlanNow()) : FR.reach) * (typeof frcSee === 'function' ? frcSee() : 1)); F.far += (far - F.far) * 0.04; F.near = F.far * 0.2; frDome(F.far, FRI.FOGC); }   // [fogrun cards] (the haar lifted; the Keeper's Oilcan)
 
 // ---------- the rules of a Fight ----------
 const FRI_RULES = {};

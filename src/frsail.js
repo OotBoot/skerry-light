@@ -5,14 +5,14 @@
 //    island lies a little either side of north (frLegGeo, from the run's seed: the same on every screen). The island
 //    shows on the bearing strip, with how far it is.
 //  - The rocks, from the run's seed: thick along the way, thinner off it. They show inside the fog's distance (frFog:
-//    140 m in the first reach, 90 in the second, 50 in the last), and in the Light's beam and a flare's, as in the
+//    55 m in the first reach, 38 in the second, 24 in the last), and in the Light's beam and a flare's, as in the
 //    Gannet's Wake; past it there's only the fog. The fog only cuts how far you see. Her speed is the Brig's, always.
 //  - She runs up on the island's beach once she's within FRS.IN of it (its radius and a little), and a moment after
 //    you're all ashore: the island's stage (src/frisle.js).
 // It's done through gwsail's GWS_LEG: this file's prep (from src/raid.js raidMapFor, before the world's laid out)
 // fills it in from the run's plan, and its exit clears it. Together it's the Gannet's Wake's word (g* keys), as is.
 
-const FRS = { LEN: [400, 600], SWING: 0.42, IN: 18, ROCKS: 70, FOGC: '#0e131a' };
+const FRS = { LEN: [400, 600], SWING: 0.42, IN: 18, ROCKS: 70, FOGC: '#29323b' };
 // leg n (from 1): where she sets out from (start, and her heading h0, straight at the island) and the island (mark)
 function frLegGeo(n) {
   let sx = GWS.START[0], sy = GWS.START[1];
@@ -77,5 +77,5 @@ function frs3d(dt, V) {
   const d = Math.hypot(L.mark[0] - V.x, L.mark[1] - V.y) - L.isleR;
   if (G.frGlow) G.frGlow.material.opacity = clamp(1.3 - d / Math.max(30, L.fog * 1.4), 0, 0.5) * (0.8 + 0.2 * Math.sin(g.t * 1.4));
   // the fog: as far as the reach lets you see (pushed back by what's been lit)
-  if (GL3D.scene && GL3D.scene.fog) { const F = GL3D.scene.fog; F.near = L.fog * 0.25; F.far = L.fog; }
+  if (GL3D.scene && GL3D.scene.fog) { const F = GL3D.scene.fog; F.near = L.fog * 0.25; F.far = L.fog; frDome(L.fog, FRS.FOGC); }
 }

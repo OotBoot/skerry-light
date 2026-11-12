@@ -6,6 +6,11 @@
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 173, date: '2026-11-12', title: "Fog Run: thicker fog, harder mirrors", Balance: [
+    "Fog Run: the fog is much thicker. You can see 55 m in the Near Skerries (was 140), 38 m in the Grey Reach (was 90) and 24 m in the Haar (was 50). Each island you light pushes it back 5 m. The Haar Lifts and the Keeper's Oilcan matter a lot more now.",
+    "Fog Run: Bend the Beam is harder. The beam must pass through 4, 5 or 6 mirror posts depending on the reach, and 2 or 3 decoy posts stand along the wrong paths." ], Changes: [
+    "Fog Run: the fog is now a solid wall of haar. Past it there's nothing, not even the sky or the shapes of far rocks and islands.",
+    "Fog Run: in Bend the Beam every mirror post is geared to another, which turns a step with it. The geared post glows blue while you stand at the first." ] },
   { v: 172, date: '2026-11-12', title: "Fog Run: six new Unknown islands", New: [
     "Fog Run: the Castaway. A living man by a driftwood fire. Speak to him and the drowned come for him: keep them off him for 40 seconds. Save him and he mends everyone, stows a spare plank aboard and leaves a Captain's card in everyone's salvage. Let them crowd him and he's gone.",
     "Fog Run: the Dicing Man. A drowned sailor at an upturned barrel. Throw once each: seven or more and he pays out what a wreck's chest would, a double six pays twice, and under seven costs you 300 points and a hit.",
