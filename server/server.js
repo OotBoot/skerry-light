@@ -34,17 +34,21 @@ const pagePath = join(root, 'dist', 'skerry-light.html');
 // The page, read once (and again only if the file changes), with its fingerprint (ETag) and its compressed copies,
 // so a browser gets it Brotli- or gzip-compressed, and one that already has this version gets a 304 and nothing
 // more: on Render's free plan, outbound bandwidth is what runs out first.
+// The build writes the compressed copies beside it (dist/skerry-light.html.br and .gz), so waking up only reads files;
+// if they're missing or older than the page (an old build), they're made here, quickly rather than as small as can be.
 let pageCache = null;
+function fresh(p, mt) { try { return statSync(p).mtimeMs >= mt; } catch (e) { return false; } }
 function page() {
   if (!existsSync(pagePath)) return null;
   const mt = statSync(pagePath).mtimeMs;
   if (pageCache && pageCache.mt === mt) return pageCache;
   const raw = readFileSync(pagePath);
+  const pre = ext => fresh(pagePath + ext, mt) ? readFileSync(pagePath + ext) : null;
   pageCache = {
     mt, raw,
     etag: '"' + createHash('sha1').update(raw).digest('base64url').slice(0, 20) + '"',
-    gz: gzipSync(raw, { level: 9 }),
-    br: brotliCompressSync(raw, { params: { [Z.BROTLI_PARAM_QUALITY]: 9, [Z.BROTLI_PARAM_SIZE_HINT]: raw.length } }),
+    gz: pre('.gz') || gzipSync(raw, { level: 6 }),
+    br: pre('.br') || brotliCompressSync(raw, { params: { [Z.BROTLI_PARAM_QUALITY]: 5, [Z.BROTLI_PARAM_SIZE_HINT]: raw.length } }),
   };
   console.log(`Page: ${(raw.length / 1e6).toFixed(2)} MB, ${(pageCache.br.length / 1e6).toFixed(2)} MB with Brotli, ${(pageCache.gz.length / 1e6).toFixed(2)} MB with gzip`);
   return pageCache;

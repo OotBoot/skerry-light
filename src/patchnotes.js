@@ -6,6 +6,8 @@
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 175, date: '2026-11-12', title: "Faster wake-up for the online game", Fixes: [
+    "The online game wakes from sleep much faster. The first visit after a quiet spell no longer waits about a minute and a half for the server to get ready." ] },
   { v: 174, date: '2026-11-12', title: "Fog Run: two dozen new cards", New: [
     "Fog Run: 24 new salvage cards, each with its own effect, including new relics and new crew cards.",
     "Fog Run: cursed relics, which give a strong gift at a real cost and are marked as cursed on the card: Fog in the Eyes, the Drowned Man's Bargain and the Mooncusser's Pact.",

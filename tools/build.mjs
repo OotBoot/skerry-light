@@ -7,6 +7,7 @@
 //                                own files (their list: dist/artifact-files.json, {published path: source path})
 
 import { readFileSync, writeFileSync, mkdirSync, readdirSync } from 'node:fs';
+import { gzipSync, brotliCompressSync, constants as Z } from 'node:zlib';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -41,6 +42,12 @@ html = page(js);
 
 mkdirSync(join(root, 'dist'), { recursive: true });
 writeFileSync(join(root, 'dist/skerry-light.html'), html);
+// Its compressed copies too, made here rather than by the server: Render's free plan has a tenth of a CPU, and
+// compressing 23 MB as it woke from sleep took it a minute and a half. (Not kept in git: Render builds its own.)
+// Brotli 5 and gzip 6 are within 1% of the strongest settings (the page is mostly base64 sound, which barely squeezes) at a twentieth of the time.
+const raw = Buffer.from(html);
+writeFileSync(join(root, 'dist/skerry-light.html.gz'), gzipSync(raw, { level: 6 }));
+writeFileSync(join(root, 'dist/skerry-light.html.br'), brotliCompressSync(raw, { params: { [Z.BROTLI_PARAM_QUALITY]: 5, [Z.BROTLI_PARAM_SIZE_HINT]: raw.length } }));
 
 const head = htmlArt.match(/<head>([\s\S]*?)<\/head>/)[1]
   .replace(/<meta charset[^>]*>\n?/, '')
