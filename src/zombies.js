@@ -3018,6 +3018,7 @@ function zmOpenDoor(d) {
 function zmDown() {
   const m = FPS.me;
   if (zmIsDown()) return;
+  if (typeof frcCork === 'function' && frcCork()) return;   // [fogrun cards] the Cork Lifebelt
   ZM.downs++;
   if (ZM.perks.wind) {
     // Second Wind: back up, everything near you thrown back, and every tonic gone

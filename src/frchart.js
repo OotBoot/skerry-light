@@ -99,6 +99,7 @@ function frchDraw(R, pool, k) {
 // stop if you've jumped about)
 function frChartOpts(n) {
   const C = frChart(), col = C.cols[n - 1]; if (!col) return [];
+  if (typeof frcPilot === 'function' && frcPilot(n)) return col.slice();   // [fogrun cards] the Pilot's Chart: the whole column open
   const at = C.all[FR.at];
   if (at && at.c === n - 1) return at.to.map(id => C.all[id]).filter(Boolean);
   return col.slice();
