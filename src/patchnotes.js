@@ -6,6 +6,14 @@
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 172, date: '2026-11-12', title: "Fog Run: six new Unknown islands", New: [
+    "Fog Run: the Castaway. A living man by a driftwood fire. Speak to him and the drowned come for him: keep them off him for 40 seconds. Save him and he mends everyone, stows a spare plank aboard and leaves a Captain's card in everyone's salvage. Let them crowd him and he's gone.",
+    "Fog Run: the Dicing Man. A drowned sailor at an upturned barrel. Throw once each: seven or more and he pays out what a wreck's chest would, a double six pays twice, and under seven costs you 300 points and a hit.",
+    "Fog Run: the Keeper's Oil. Four casks of lamp oil scattered across the island. Each one broached pushes the fog back 8 m for the rest of the reach. Find all four for a Captain's card.",
+    "Fog Run: the Wreckers' Gold. Take a share (500 points a reach, once each), but every share wakes a rush of runners and the beacon won't light for 20 seconds after.",
+    "Fog Run: the Fog's Bargain. A whispering standing stone. Give it all your points (500 at the least) for a relic you don't have yet, once each.",
+    "Fog Run: a Message in a Bottle. Read it for 2 chart fragments, yours to keep. The first to read it also finds a shorter way: a fair wind for the next sail." ], Changes: [
+    "Fog Run: Unknown islands now draw from ten encounters instead of four, so a plain fight turns up far less often." ] },
   { v: 171, date: '2026-11-12', title: "Playing together after a win", Fixes: [
     "Keeper's Last Light, Skerry Raids and Fog Run: after a game together you can now host or join a different one straight away. Hosting or joining from another game's card takes you out of the old lobby for you, instead of leaving the buttons missing.",
     "Skerry Raids and Fog Run: playing alone from a card no longer does nothing while you're still in another game's lobby.",
