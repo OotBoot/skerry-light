@@ -47,7 +47,7 @@
 // 'voydone' heard with their say spread), index.html (this script).
 
 const FVC = { DIG_T: 2.6, DIG_R: 3.4, HOLE: 1.3, TRINKET: 0.12, UP_T: 1.6, WAKE: 15, WAVES: 3, WAVE_GAP: 3, K: [0, 0.5, 0.65, 0.8],
-  WRECK_R: 40, HAUL: 4.2, BREATH: 7, SNAG: 0.9, CRATES: 3, TABLE: [-1.9, -5.4], DIVE: [-2.85, -2.4], CAP: [2.35, 7.4], PAD_HOLD: 0.45 };
+  WRECK_R: 40, HAUL: 4.2, BREATH: 7, SNAG: 0.9, CRATES: 3, TABLE: [0, -6.6], DIVE: [-2.85, -2.4], CAP: [2.35, 7.4], PAD_HOLD: 0.45 };
 const FV_CO = {
   gilt: { n: 'the Gilt & Gull Company', N: 'Gilt & Gull Company', s: 'hoards', k: 'hoard', col: '#d8a840' },
   bell: { n: 'the Bellmen', N: 'The Bellmen', s: 'bounties', k: 'bounty', col: '#c8664a' },

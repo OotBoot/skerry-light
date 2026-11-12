@@ -164,8 +164,7 @@ function fbkVoyage(p, maybe) {
   }
   fbkBoard(); fbKeepSave(); fbKeepRender(); fbMenuKeepRender();
 }
-fbOn('voydone', p => fbkVoyage(p, false));
-fbOn('voyage', p => fbkVoyage(p, true));
+fbOn('voydone', (kind, co, rw, t) => fbkVoyage({ company: co, kind }, false));   // (src/fbvoy.js: its say spread, kind, company, reward, tier)
 fbOn('sold', () => setTimeout(fbKeepTick, 0));   // (FB.gold is up by the time it's heard: the purse's paid at once)
 
 // (src/fbsea.js fbReport: leaving the session, or the page closing on it) counted once more, the board, the card
