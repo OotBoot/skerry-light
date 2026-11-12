@@ -232,6 +232,7 @@ function rclGrenade() {
   RCL.gT = C.gcd;
   rclLaunch(RCL.cls, m.x, m.y, z, v[0], v[1], v[2], true, m.id);
   rclEvent('g', m.x - FPSC.CX, m.y - FPSC.CY, z, v[0], v[1], v[2]);
+  if (typeof frcGren === 'function') frcGren(m, v, z);   // [fogrun cards] the Twin Fuse
   try { zxSound('throw', 0); } catch (e) {}
 }
 function rclLaunch(k, x, y, z, vx, vy, vz, mine, by) {

@@ -715,6 +715,7 @@ function fpsReload() {
 function fpsHurt(n, fromId, fromName) {
   const m = FPS.me; if (m.dead > 0 || m.protect > 0 || m.iframe > 0) return;
   if (FPS.zm && typeof rclHurtK === 'function') { n = rclHurtK(n); if (!(n > 0)) return; }   // [classes] Bulwark, the Wellspring (src/rclass.js)
+  if (FPS.zm && typeof frcHurtMe === 'function') { n = frcHurtMe(n); if (!(n > 0)) return; }   // [fogrun cards] St Elmo's Medal, the Drowned Man's Bargain
   m.hp -= n; FPS.hurtT = 0.5; FPS.calm = 0;
   // (in the Lighthouse, a knock from the drowned buys half a second before the next can land: shooting doesn't end it)
   if (FPS.zm) m.iframe = ZMC.IFRAME_HIT;
