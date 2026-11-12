@@ -6,6 +6,12 @@
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 174, date: '2026-11-12', title: "Fog Run: two dozen new cards", New: [
+    "Fog Run: 24 new salvage cards, each with its own effect, including new relics and new crew cards.",
+    "Fog Run: cursed relics, which give a strong gift at a real cost and are marked as cursed on the card: Fog in the Eyes, the Drowned Man's Bargain and the Mooncusser's Pact.",
+    "Fog Run: the Beachcomber's Sack deals you four cards a hand from then on, and a Message in a Bottle makes your next hand all Captain's cards.",
+    "Fog Run: the chart fragment marks unlock new cards: Keeper's Log and Pilot's Chart at 10, Twin Fuse and Blue Lights at 25, the Mooncusser's Pact at 50, and The Light Keeps Watch at 100.",
+    "Fog Run: new cards for the sail. For the crew: Caulking Iron, Toll for the Drowned and Blue Lights. For you: the Shipwright's Mallet and St Elmo's Medal." ] },
   { v: 173, date: '2026-11-12', title: "Fog Run: thicker fog, harder mirrors", Balance: [
     "Fog Run: the fog is much thicker. You can see 55 m in the Near Skerries (was 140), 38 m in the Grey Reach (was 90) and 24 m in the Haar (was 50). Each island you light pushes it back 5 m. The Haar Lifts and the Keeper's Oilcan matter a lot more now.",
     "Fog Run: Bend the Beam is harder. The beam must pass through 4, 5 or 6 mirror posts depending on the reach, and 2 or 3 decoy posts stand along the wrong paths." ], Changes: [
