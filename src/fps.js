@@ -1626,6 +1626,7 @@ addEventListener('keydown', e => {
   e.stopImmediatePropagation();
   if (typeof frChartKey === 'function' && frChartKey(e)) return;   // [fogrun] the chart, open (src/frchart.js)
   if (typeof frcKey === 'function' && frcKey(e)) return;   // [fogrun cards] the salvage's keys (src/frcards.js)
+  if (typeof fvKey === 'function' && fvKey(e)) return;   // [fbsea voyages] the voyage board, the charts, and M (src/fbvoy.js)
   if (e.code === 'Escape' || e.code === 'KeyP') { e.preventDefault(); fpsSetMenu(!FPS.menu); return; }
   if (FPS.menu) return;
   if (e.code === 'Tab') { e.preventDefault(); FPS.board = true; return; }

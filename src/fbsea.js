@@ -198,6 +198,7 @@ function fbEventHere(k, text, a) {
   else if (k === 'stow') fbFire('stow', ...(Array.isArray(a) ? a : ['', '']));
   else if (k === 'lost') fbFire('lost', Array.isArray(a) ? a : []);
   else if (k === 'ashore' || k === 'aboard') fbFire(k, a | 0);
+  else if (/^voy/.test(k)) fbFire(k, ...(Array.isArray(a) ? a : []));   // [fbsea voyages] 'voyage', 'voydone', 'voytake', 'voyquit': their say spread (src/fbvoy.js)
   else if (k) fbFire(k, a);
 }
 // (hosting or alone) the hold: one more thing in it
