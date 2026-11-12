@@ -26,13 +26,13 @@
 // dark exactly as they would be drawn flat, and their names and lantern glow are still painted over the top.
 // Without WebGL (the Classic renderer) the flat figures in fps.js are drawn instead.
 
-const FB = { tried: false, ok: false, root: null, key: '', mats: [], wpn: {}, cur: '', amp: 0, spd: 0, lx: null, ly: null, swing: 0 };
+const FBODY = { tried: false, ok: false, root: null, key: '', mats: [], wpn: {}, cur: '', amp: 0, spd: 0, lx: null, ly: null, swing: 0 };   // ([fbsea] FBODY, not FB: Freebooters' Sea's state is FB, src/fbsea.js)
 const FB_UP = typeof THREE !== 'undefined' ? new THREE.Vector3(0, 1, 0) : null;
 
 function fbCol(s, d) { try { if (typeof s === 'string' && /^#[0-9a-f]{3,8}$/i.test(s)) return new THREE.Color(s.slice(0, 7)); } catch (e) {} return new THREE.Color(d); }
 function fbMat(c, extra) {
   const m = new THREE.MeshLambertMaterial(Object.assign({ color: c, flatShading: true, transparent: true }, extra || {}));
-  m.userData.base = m.color.clone(); (FB.building || FB).mats.push(m); return m;
+  m.userData.base = m.color.clone(); (FBODY.building || FBODY).mats.push(m); return m;
 }
 function fbMesh(geo, mat, x, y, z, parent) { const m = new THREE.Mesh(geo, mat); m.position.set(x || 0, y || 0, z || 0); if (parent) parent.add(m); return m; }
 // a cylinder hanging down from y=0 to y=-h (for limbs and the coat skirt), optionally open at the front
@@ -200,7 +200,7 @@ function fbFigure(c, outfitId) {
   // the Admirals' own light, as rich as a reforged weapon (src/ocadmiral.js)
   if (oc && oc.adm && typeof ocaDress === 'function') F.adm = ocaDress(F);
   if (oc && oc.vy && typeof vyDress === 'function') F.vy = vyDress(F);   // [verity] his head on your shoulders (src/verityfx.js)
-  FB.building = null;
+  FBODY.building = null;
   F.aim = new THREE.Group(); F.spine.add(F.aim);
   GL3D.scene.add(root);
   return F;
@@ -406,13 +406,13 @@ function fbPose(F, s) {
 
 // your own figure, over your shoulder: built (again, when your colours or outfit change) and posed each frame
 function fpsBodySync(show) {
-  if (!show || typeof GL3D === 'undefined' || !GL3D.scene) { if (FB.fig) FB.fig.root.visible = false; return false; }
+  if (!show || typeof GL3D === 'undefined' || !GL3D.scene) { if (FBODY.fig) FBODY.fig.root.visible = false; return false; }
   const outfit = typeof ocEquippedId === 'function' ? ocEquippedId() : '';
   const key = JSON.stringify(fpsColours()) + '|' + outfit;
-  if (!FB.fig || FB.fig.key !== key) {
-    try { if (FB.fig) fbDispose(FB.fig); FB.fig = fbFigure(fpsColours(), outfit); FB.ok = true; } catch (e) { console.warn('fps body', e); FB.ok = false; FB.fig = null; return false; }
+  if (!FBODY.fig || FBODY.fig.key !== key) {
+    try { if (FBODY.fig) fbDispose(FBODY.fig); FBODY.fig = fbFigure(fpsColours(), outfit); FBODY.ok = true; } catch (e) { console.warn('fps body', e); FBODY.ok = false; FBODY.fig = null; return false; }
   }
-  const F = FB.fig, m = FPS.me, dt = Math.min(0.05, FPS.dtLast || 0.016), w = fpsW();
+  const F = FBODY.fig, m = FPS.me, dt = Math.min(0.05, FPS.dtLast || 0.016), w = fpsW();
   if (F.lx != null) { const v = Math.hypot(m.x - F.lx, m.y - F.ly) / Math.max(0.001, dt); F.spd += (Math.min(12, v) - F.spd) * Math.min(1, dt * 10); }
   F.lx = m.x; F.ly = m.y;
   fbPose(F, {
@@ -426,7 +426,7 @@ function fpsBodySync(show) {
   });
   return true;
 }
-function fpsBodyHide() { if (FB.fig) FB.fig.root.visible = false; }
+function fpsBodyHide() { if (FBODY.fig) FBODY.fig.root.visible = false; }
 
 // everyone else on the island, the other players and the wreckers (bots), as the same 3D figures, in their own
 // colours and outfits: built when first seen (up to the nearest ten), posed each frame, hidden in the dark
@@ -470,7 +470,7 @@ function fpsFiguresHide() { for (const F of FBR.values()) F.root.visible = false
 // your figure hides what's behind it among the flat things drawn over the 3D scene (other wreckers, the
 // drowned, Verity), the same way a rock does
 function fpsBodyOccluder() {
-  if (!FB.fig || !FB.fig.root.visible || !GL3D.occ) return;
+  if (!FBODY.fig || !FBODY.fig.root.visible || !GL3D.occ) return;
   const m = FPS.me, pts = [], P = [[-0.2, 0.05, 0], [0.2, 0.05, 0], [-0.26, 0.95, 0], [0.26, 0.95, 0], [-0.28, 1.5, 0], [0.28, 1.5, 0], [-0.15, 1.8, 0], [0.15, 1.8, 0], [0, 1.93, 0]];
   const c0 = cam(m.x, m.y, FPSC.GROUND + (m.jz || 0) + 1); if (c0.f < 0.7) return;
   const sh = Math.sin(m.h), ch = Math.cos(m.h);

@@ -38,6 +38,9 @@
 // (hosting or alone) lays out the next, and everyone follows the stage number in the host's word. Past the last, the
 // raid is won.
 
+// [fbsea] Freebooters' Sea (src/fbsea.js) is a raid too, with no end: its hooks here are marked [fbsea] (raidBegin,
+// raidAfterStart, raidStop, raidMe, raidNextStage (never won), raidReport, raidHostSend, raidApply, raidHud, and
+// raidMapFor's map.seed).
 // [fogrun] the islands' own size (src/frisle.js: map.R), put back to this once the part's done
 var FPSC_R0 = FPSC.R;
 const RAID = { on: false, map: 'raid', stage: 0, won: false, st: {}, t: 0, boss: 0, told: false, sta: 1, tired: false };
@@ -97,6 +100,7 @@ function raidMapFor(i) {
   D.isle = M.isle || 'raid'; D.shore = M.shore || (() => -999);
   D.seed = RAID.map === 'fogrun' && typeof frSeedOf === 'function' ? frSeedOf(i) : (RAID.map === 'raid' ? 0x5a11c : 0x6a77e) + i * 977;   // [fogrun] (from the run's seed)
   FPSC.R = M.R || FPSC_R0;   // [fogrun] (an island of its own size)
+  if (M.seed != null) D.seed = M.seed;   // [fbsea] (a part with a seed of its own: an island laid out the same at every visit)
 }
 
 // ---------- starting, and each frame ----------
@@ -109,6 +113,7 @@ function raidBegin(map) {
   RAID.map = RAIDS[map] && RAIDS[map].order.length ? map : 'raid';
   RAID_ORDER.length = 0; RAID_ORDER.push(...raidInfo().order);
   if (typeof frBegin === 'function') frBegin();   // [fogrun] its seed, and its first stop (src/frrun.js)
+  if (typeof fbBegin === 'function') fbBegin();   // [fbsea] the session's state, and the sea (src/fbsea.js)
   Object.assign(RAID, { stage: 0, won: false, st: {}, t: 0, boss: 0, told: false, sta: 1, tired: false, tiredN: 0, runNow: false, practice: 0 });   // (practice: src/raidmaren2.js rf2Practice)
   if (typeof rmvReset === 'function') rmvReset();   // [mvp] src/raidmvp.js
   raidMapFor(0);
@@ -123,6 +128,7 @@ function raidAfterStart() {
   if ($('rclEye')) $('rclEye').textContent = raidName();   // (the callings' picker: which raid)
   RAID.st = {}; raidCall('enter');
   if (typeof frAfterStart === 'function' && FR.on) frAfterStart();   // [fogrun]
+  if (typeof fbAfterStart === 'function' && FB.on) fbAfterStart();   // [fbsea]
 }
 const RAIDC = { ROUND: 4, CALM: 0.7, BOSS_HP: 1.15 };   // (BOSS_HP: every boss's strength here, against the Lighthouse's)
 // what you carry down: a pepperbox and a blunderbuss, both full (and Maren's Lantern, which never leaves your hand)
@@ -139,6 +145,7 @@ function raidStop() {
   if (RAID.on) raidCall('exit');
   RAID.on = false; FPSC.R = FPSC_R0;   // [fogrun]
   if (typeof frStop === 'function') frStop();   // [fogrun]
+  if (typeof fbStop === 'function') fbStop();   // [fbsea]
   if (typeof GL3D !== 'undefined' && GL3D.scene && RAID.fog0) { GL3D.scene.fog = null; RAID.fog0 = null; }
 }
 // alone or hosting, each frame
@@ -187,6 +194,7 @@ function raidMe(dt) {
     RAID.ct = Math.abs(e) > 2 ? est : (RAID.ct || 0) + dt + e * Math.min(1, dt * 1.5); } else RAID.ct = RAID.t;
   raidCall('me', dt);
   if (typeof frMe === 'function' && FR.on) frMe(dt);   // [fogrun] the wait for your extra life
+  if (typeof fbMe === 'function' && FB.on) fbMe(dt);   // [fbsea] the wait to be back on your feet
   if (typeof rclTick === 'function') rclTick(dt);   // [classes] src/rclass.js
   if (typeof rmvTick === 'function') rmvTick(dt);   // [mvp] src/raidmvp.js: what each of you did, counted
   // joined: the host's world has moved on to the next part
@@ -210,6 +218,7 @@ function raidShot(x, y, z, lh, lp, by, dmg) { if (RAID.on) raidCall('shot', x, y
 function raidNextStage() {
   if (!RAID.on || ZM.net === 'client' || ZM.over) return;
   if (typeof frGrow === 'function' && FR.on && RAID.stage + 1 >= RAID_ORDER.length) frGrow();   // [fogrun] the next stage, chosen now
+  if (typeof FB !== 'undefined' && FB.on && RAID.stage + 1 >= RAID_ORDER.length) return;   // [fbsea] (never won: the next stage is always grown first, src/fbsea.js fbGo)
   if (RAID.stage + 1 >= RAID_ORDER.length) { raidWin(); return; }
   raidUseStage(RAID.stage + 1);
 }
@@ -239,7 +248,7 @@ const raidNumeral = n => ['', 'I', 'II', 'III', 'IV', 'V', 'VI'][n] || String(n)
 function raidWin() {
   if (RAID.won) return;
   RAID.won = true;
-  if (!(typeof FR !== 'undefined' && FR.on)) { if (typeof wcEarn === 'function') { wcEarn('round'); wcEarn('round'); } if (typeof ocEarn === 'function') { ocEarn('round'); ocEarn('round'); } }   // [fogrun] (a fog run pays its own: src/frkeep.js frPay)
+  if (!(typeof FR !== 'undefined' && FR.on) && !(typeof FB !== 'undefined' && FB.on)) { if (typeof wcEarn === 'function') { wcEarn('round'); wcEarn('round'); } if (typeof ocEarn === 'function') { ocEarn('round'); ocEarn('round'); } }   // [fogrun] (a fog run pays its own: src/frkeep.js frPay)
   zmEnd();
 }
 // damage you did to a boss (counted on your own side)
@@ -247,6 +256,7 @@ function raidBossDamage(n) { if (RAID.on && n > 0) RAID.boss += n; }
 // (zmEnd) the scoreboard: the time, if won; the bosses' damage; and this raid's kills added to all the rest
 function raidReport() {
   if (typeof frReport === 'function' && FR.on && !RAID.told) { frReport(); return; }   // [fogrun] its own board and what it pays (src/frkeep.js)
+  if (typeof FB !== 'undefined' && FB.on) { if (!RAID.told && typeof fbReport === 'function') fbReport(); return; }   // [fbsea] its own (src/fbsea.js)
   const G = RAID.map;   // (each raid its own game on the board)
   if (RAID.told || typeof scoreReport !== 'function' || typeof BOARD === 'undefined' || !BOARD.mine || !BOARD.mine[G]) return;
   RAID.told = true;
@@ -278,11 +288,13 @@ function raidHostSend(z) {
   z.rd = [RAID.stage, RAID.won ? 1 : 0, Math.round(RAID.t * 20) / 20];   // (to a twentieth: what swings on it is timed by it)
   const o = {}; raidCall('pack', o); z.rs = o;
   if (typeof frPack === 'function' && FR.on) frPack(z);   // [fogrun] the run: its plan, its events
+  if (typeof fbPack === 'function' && FB.on) fbPack(z);   // [fbsea] the session: its stages, the ship, the hold, the purse
   if (typeof rmvPack === 'function') rmvPack(z);   // [mvp]
 }
 function raidApply(hz) {
   if (!RAID.on || !Array.isArray(hz.rd)) return;
   if (typeof frApplyRun === 'function' && FR.on) frApplyRun(hz);   // [fogrun] (first: the plan, so the stage number below lays out what the host has)
+  if (typeof fbApply === 'function' && FB.on) fbApply(hz);   // [fbsea] (first, the same way)
   const st = clamp(hz.rd[0] | 0, 0, RAID_ORDER.length - 1);
   if (st !== RAID.stage) raidUseStage(st);
   RAID.won = !!hz.rd[1]; RAID.t = +hz.rd[2] || RAID.t; RAID.tAt = performance.now() / 1000;
@@ -390,12 +402,13 @@ function raidHud(phone, mono, fell) {
   ctx.textAlign = 'left'; ctx.textBaseline = 'top';
   const L = Math.max(14, FPS.safeLeft || 0);
   ctx.font = fell(phone ? 15 : 19); ctx.fillStyle = 'rgba(236,228,207,0.85)';
-  ctx.fillText(typeof frHudTitle === 'function' && FR.on ? frHudTitle(S) : `${raidName()} · ${raidNumeral(RAID.stage + 1)} · ${S.n}`, L, top, W * 0.5);   // [fogrun]
+  ctx.fillText(typeof fbHudTitle === 'function' && FB.on ? fbHudTitle(S) : typeof frHudTitle === 'function' && FR.on ? frHudTitle(S) : `${raidName()} · ${raidNumeral(RAID.stage + 1)} · ${S.n}`, L, top, W * 0.5);   // [fogrun]
   ctx.font = mono(phone ? 10 : 12); ctx.fillStyle = 'rgba(236,228,207,0.55)';
   ctx.fillText(raidClock(RAID.t), L, top + (phone ? 18 : 26));
   fpsHudNote(top + (phone ? 30 : 40));
   raidCall('hud', phone, mono, fell);
   if (typeof frHud === 'function' && FR.on) frHud(phone, mono, fell);   // [fogrun] lost, or waiting on your extra life
+  if (typeof fbHud === 'function' && FB.on) fbHud(phone, mono, fell);   // [fbsea] the purse and the hold; back on your feet in...
 }
 
 // ---------- its card on the title screen ----------

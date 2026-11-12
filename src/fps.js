@@ -606,6 +606,7 @@ function fpsIncoming(sh, f) {
   if (!(m.dead > 0) && !(m.protect > 0)) { const hit = fpsShotHits(sh, m); if (hit) fpsHurt(hit.dmg, by, fpsNameOf(by)); }
 }
 function fpsShoot() {
+  if (FPS.zm && typeof fbNoGun === 'function' && fbNoGun()) return;   // [fbsea] your arms full: no gun (src/fbsea.js)
   if (FPS.zm && typeof rclShoot === 'function' && rclShoot()) return;   // [classes] an ultimate in place of the weapon (src/rclass.js)
   const m = FPS.me, w = fpsW();
   if (m.dead > 0 || m.reload > 0 || m.cd > 0 || FPS.menu || FPS.drawT > 0) return;

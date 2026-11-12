@@ -1009,6 +1009,14 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 .newgame.frbanner { border-color: rgba(190,200,210,0.5); background: linear-gradient(90deg, rgba(150,165,180,0.28), rgba(150,165,180,0.08)); }
 .newgame.frbanner:hover, .newgame.frbanner:focus-visible { background: linear-gradient(90deg, rgba(150,165,180,0.42), rgba(150,165,180,0.16)); }
 .newgame.frbanner .ng-tag { background: #8a9aaa; color: #f6f8fa; }
+/* [fbsea] Freebooters' Sea (src/fbsea.js): its card and its banner, the gold of salvage on a dark sea */
+.fbcard { border-color: rgba(216,176,96,0.5); }
+.fbcard h1 { color: #ffd88a; text-shadow: 0 0 28px rgba(216,176,96,0.4); }
+.fbcard .fbkeep { color: #e8d4a0; font-size: 13px; }
+.fbcard .fbkeep:empty { display: none; }
+.newgame.fbbanner { border-color: rgba(216,176,96,0.55); background: linear-gradient(90deg, rgba(200,160,80,0.28), rgba(200,160,80,0.08)); }
+.newgame.fbbanner:hover, .newgame.fbbanner:focus-visible { background: linear-gradient(90deg, rgba(200,160,80,0.42), rgba(200,160,80,0.16)); }
+.newgame.fbbanner .ng-tag { background: #c89a40; color: #1a1206; }
 
 /* Maren's End: the three callings (src/rclass.js): the picker, and the grenade and ultimate buttons on a touch screen */
 .rcpick .card { max-width: 60rem; width: min(60rem, calc(100vw - 32px)); max-height: calc(100vh - 32px); overflow-y: auto; }

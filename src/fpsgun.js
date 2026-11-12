@@ -450,6 +450,7 @@ function vmDraw(dt) {
   if (m.dead > 0) return true;
   if (!vmInit()) return false;
   if (FPS.scoped && fpsW().scope) return true;   // looking through the telescope: the gun's out of sight
+  if (FPS.zm && typeof fbNoGun === 'function' && fbNoGun()) return true;   // [fbsea] your arms full of what you carry: no gun in them
   // your coat changed: the sleeves follow
   const sk = JSON.stringify(fpsColours());
   if (sk !== VM.sleeve) { VM.sleeve = sk; const c = fpsColours(); VM.H.sleeve.color.set(vmHex(c[0], '#3a2a1e')); VM.H.cuff.color.set(vmHex(c[2], '#7a5a3a')); }

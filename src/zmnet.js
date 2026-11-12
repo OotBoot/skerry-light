@@ -34,6 +34,9 @@
 // [fogrun] Fog Run (src/frrun.js) has a lobby of its own on its own card (ZN.mode 'fr', prefix fr), kept apart from
 // nights and raids the same way the raids are kept from nights: by the map its host has picked (ZM_MAPS.fogrun.fr).
 // Its seed goes out once, in the start (st.fs); each player's lives go in their presence (frp).
+// [fbsea] Freebooters' Sea (src/fbsea.js) has a fourth, the same way (ZN.mode 'fb', prefix fb, ZM_MAPS.fbsea.fb). Its
+// world is fixed (the same sea on every screen), so nothing goes out in the start; the session's state goes in the
+// host's word (fbw, src/fbsea.js fbPack).
 
 const ZN = { code: null, at: 0, doneG: null, msg: '', g: null, sendT: 0, hseq: 0, seq: 0, q: [], hq: [], hits: new Map(), shots: [], shotSeq: 0,
   lastQ: {}, lastH: {}, lastShot: {}, seenT: {}, ev: [], eseq: 0, evSeen: 0, lastHseq: -1, hostT: 0, creditSeen: [0, 0, 0], lobT: 0, j: '', rj: null };
@@ -70,12 +73,12 @@ function znAt(o, t) {
 // ---------- the lobby ----------
 function znOnline() { return !!(typeof NET !== 'undefined' && NET.room && NET.status === 'ready'); }
 // the map a lobby's for: the raid's, or the one picked on the Lighthouse's card
-const znMap = () => ZN.mode === 'fr' ? 'fogrun' : ZN.mode === 'raid' ? (typeof RD_PICK !== 'undefined' ? RD_PICK : 'raid') : ZM_PICK;   // [raid] (which raid: src/raid.js) [fogrun]
+const znMap = () => ZN.mode === 'fb' ? 'fbsea' : ZN.mode === 'fr' ? 'fogrun' : ZN.mode === 'raid' ? (typeof RD_PICK !== 'undefined' ? RD_PICK : 'raid') : ZM_PICK;   // [raid] (which raid: src/raid.js) [fogrun]
 const znIsRaid = m => !!(ZM_MAPS[m] && ZM_MAPS[m].raid);
 // [fogrun] which card a map's lobby belongs on: 'fr' (Fog Run), 'raid' or 'zm'; and a mode from what's asked
-const znKind = m => ZM_MAPS[m] && ZM_MAPS[m].fr ? 'fr' : znIsRaid(m) ? 'raid' : 'zm';
-const znModeOf = mode => mode === 'raid' || mode === 'fr' ? mode : 'zm';
-const ZN_NICK = { zm: 'zmNick', raid: 'rdNick', fr: 'frNick' }, ZN_CARD = { zm: 'zmTitle', raid: 'rdTitle', fr: 'frTitle' };
+const znKind = m => ZM_MAPS[m] && ZM_MAPS[m].fb ? 'fb' : ZM_MAPS[m] && ZM_MAPS[m].fr ? 'fr' : znIsRaid(m) ? 'raid' : 'zm';   // [fbsea]
+const znModeOf = mode => mode === 'raid' || mode === 'fr' || mode === 'fb' ? mode : 'zm';
+const ZN_NICK = { zm: 'zmNick', raid: 'rdNick', fr: 'frNick', fb: 'fbNick' }, ZN_CARD = { zm: 'zmTitle', raid: 'rdTitle', fr: 'frTitle', fb: 'fbTitle' };   // [fbsea]
 function znNick() { const b = $(ZN_NICK[ZN.mode] || 'zmNick'); return znClean((b && b.value) || '', 16) || (NET.nick ? znClean(NET.nick, 16) : '') || 'Keeper ' + String(NET.sid || '').slice(0, 3).toUpperCase(); }
 function znOf(p) { const z = p && p.presence && p.presence.zm; return z && typeof z === 'object' && typeof z.room === 'string' && typeof z.sid === 'string' ? z : null; }
 function znBase() { return { room: ZN.code, sid: NET.sid, nick: znNick(), at: ZN.at }; }
@@ -141,13 +144,14 @@ function znOpenNights() {
 // Two cards share the one lobby: the Lighthouse's (prefix zm) and Maren's End's (prefix rd, src/raid.js). Each lists
 // only its own: a night whose map is the raid is a raid. Whichever card you host or join from, the lobby shows there.
 // [fogrun] and a third, Fog Run's (prefix fr): mode, which ZN.mode is its; each lists only nights of its own kind (znKind)
-const ZN_UI = [{ p: 'zm', mode: 'zm', raid: false, what: 'night', who: 'A keeper' }, { p: 'rd', mode: 'raid', raid: true, what: 'raid', who: 'A keeper' }, { p: 'fr', mode: 'fr', raid: true, fr: true, what: 'run', who: 'A keeper' }];
+const ZN_UI = [{ p: 'zm', mode: 'zm', raid: false, what: 'night', who: 'A keeper' }, { p: 'rd', mode: 'raid', raid: true, what: 'raid', who: 'A keeper' }, { p: 'fr', mode: 'fr', raid: true, fr: true, what: 'run', who: 'A keeper' },
+  { p: 'fb', mode: 'fb', raid: true, fb: true, what: 'crew', who: 'A freebooter' }];   // [fbsea]
 function znRender() { for (const U of ZN_UI) znRenderUI(U); }
 function znRenderUI(U) {
   const q = id => $(U.p + id);
   if (!q('Mp')) return;
   const on = znOnline(), mine = !!ZN.code && ZN.mode === U.mode, W = U.what;
-  q('MpNote').textContent = on ? (ZN.code && !mine ? `You’re in a ${{ zm: 'Lighthouse night', raid: 'raid', fr: 'fog run' }[ZN.mode] || 'game'}’s lobby on another card. Host or join a ${W} here and you’ll leave it.` : `Up to four in one ${W}. One of you hosts; the others join, and the host starts the ${W} when everyone’s in.`) : (NET.status === 'connecting' ? 'Looking for other players…' : (NET.offReason || 'Playing together isn’t available here.'));
+  q('MpNote').textContent = on ? (ZN.code && !mine ? `You’re in a ${{ zm: 'Lighthouse night', raid: 'raid', fr: 'fog run', fb: 'freebooters’ crew' }[ZN.mode] || 'game'}’s lobby on another card. Host or join a ${W} here and you’ll leave it.` : `Up to four in one ${W}. One of you hosts; the others join, and the host starts the ${W} when everyone’s in.`) : (NET.status === 'connecting' ? 'Looking for other players…' : (NET.offReason || 'Playing together isn’t available here.'));
   q('MpOpen').hidden = !on || mine;
   q('Lobby').hidden = !mine;
   if (!on) return;
@@ -182,7 +186,9 @@ function znRenderUI(U) {
     ol.append(li);
   });
   const hm = hz && hz.lob && ZM_MAPS[hz.lob.map] ? hz.lob.map : 'light';
-  q('LobbyMsg').textContent = ZN.msg || (U.fr   // [fogrun]
+  q('LobbyMsg').textContent = ZN.msg || (U.fb   // [fbsea]
+    ? (host ? (m.length > 1 ? `${m.length} of ${ZN_MAX} aboard. Set sail when everyone’s in.` : 'Waiting for others to join. You can set sail alone, too, whenever you like.') : 'Waiting for the host to set sail.')
+    : U.fr   // [fogrun]
     ? (host ? (m.length > 1 ? `${m.length} of ${ZN_MAX} here. Set out when everyone’s in.` : 'Waiting for others to join. You can set out alone, too, whenever you like.') : 'Waiting for the host to set out.')
     : U.raid
     ? (host ? (m.length > 1 ? `${m.length} of ${ZN_MAX} here, for ${ZM_MAPS[znMap()].N}. Start the raid when everyone’s in.` : `Waiting for others to join. You can start alone, too, whenever you like. The raid: ${ZM_MAPS[znMap()].N} (pick above).`) : `Waiting for the host to start the raid: ${ZM_MAPS[hm].N}.`)
@@ -657,6 +663,7 @@ function znRjAfter(rj, gained) {
   $('zmMpStart').addEventListener('click', znStart);
   if ($('rdMpHost')) { $('rdMpHost').addEventListener('click', () => znHost('raid')); $('rdMpLeave').addEventListener('click', znLeave); $('rdMpStart').addEventListener('click', znStart); }   // [raid] Maren's End's card
   if ($('frMpHost')) { $('frMpHost').addEventListener('click', () => znHost('fr')); $('frMpLeave').addEventListener('click', znLeave); $('frMpStart').addEventListener('click', znStart); }   // [fogrun] Fog Run's card
+  if ($('fbMpHost')) { $('fbMpHost').addEventListener('click', () => znHost('fb')); $('fbMpLeave').addEventListener('click', znLeave); $('fbMpStart').addEventListener('click', znStart); }   // [fbsea] Freebooters' Sea's card
   setInterval(() => { if (!FPS.on && !$('zmTitle').closest('[hidden]')) { znRender(); if (ZN.code) znSendLobby(); } }, 1500);
   addEventListener('pagehide', () => { if (ZN.code && NET.room) NET.room.presence({ zm: null }).catch(() => {}); });
 }

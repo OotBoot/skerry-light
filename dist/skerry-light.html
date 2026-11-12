@@ -1020,6 +1020,14 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 .newgame.frbanner { border-color: rgba(190,200,210,0.5); background: linear-gradient(90deg, rgba(150,165,180,0.28), rgba(150,165,180,0.08)); }
 .newgame.frbanner:hover, .newgame.frbanner:focus-visible { background: linear-gradient(90deg, rgba(150,165,180,0.42), rgba(150,165,180,0.16)); }
 .newgame.frbanner .ng-tag { background: #8a9aaa; color: #f6f8fa; }
+/* [fbsea] Freebooters' Sea (src/fbsea.js): its card and its banner, the gold of salvage on a dark sea */
+.fbcard { border-color: rgba(216,176,96,0.5); }
+.fbcard h1 { color: #ffd88a; text-shadow: 0 0 28px rgba(216,176,96,0.4); }
+.fbcard .fbkeep { color: #e8d4a0; font-size: 13px; }
+.fbcard .fbkeep:empty { display: none; }
+.newgame.fbbanner { border-color: rgba(216,176,96,0.55); background: linear-gradient(90deg, rgba(200,160,80,0.28), rgba(200,160,80,0.08)); }
+.newgame.fbbanner:hover, .newgame.fbbanner:focus-visible { background: linear-gradient(90deg, rgba(200,160,80,0.42), rgba(200,160,80,0.16)); }
+.newgame.fbbanner .ng-tag { background: #c89a40; color: #1a1206; }
 
 /* Maren's End: the three callings (src/rclass.js): the picker, and the grenade and ultimate buttons on a touch screen */
 .rcpick .card { max-width: 60rem; width: min(60rem, calc(100vw - 32px)); max-height: calc(100vh - 32px); overflow-y: auto; }
@@ -1324,6 +1332,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
     <button class="newgame zmbanner" id="zmBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">And a fourth, <b>Keeper's Last Light</b>: hold the keeper's station against the drowned, round after round</span><span class="ng-go" aria-hidden="true">↓</span></button>
     <button class="newgame rdbanner" id="rdBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">And raids, alone or with up to four: <b>Maren's End</b>, and new, <b>The Gannet's Wake</b></span><span class="ng-go" aria-hidden="true">↓</span></button>
     <button class="newgame frbanner" id="frBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">And <b>Fog Run</b>: sail the keeper's cutter out into the haar and light the islands, alone or with up to four</span><span class="ng-go" aria-hidden="true">↓</span></button>
+    <button class="newgame fbbanner" id="fbBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">And <b>Freebooters' Sea</b>: an open sea of islands to sail, salvage and sell, alone or with up to four</span><span class="ng-go" aria-hidden="true">↓</span></button><!-- [fbsea] -->
     <div class="menulinks"><button class="tool notesbtn" id="notesBtn" type="button">Patch notes</button><button class="tool notesbtn lorebtn" id="loreBtn" type="button">Lore compendium</button></div>
     <div class="card boardcard" id="boardCard" aria-labelledby="boardHead">
       <div class="cardtop"><span class="eyebrow">Best on record · every game</span><span class="boardminititle">The Scoreboard</span><span class="boardbtns"><button class="tool closebtn" id="boardRefresh" type="button">Refresh</button><button class="tool closebtn" id="boardMin" type="button" aria-expanded="true" aria-controls="boardCard" title="Make the scoreboard small">– Minimise</button></span></div>
@@ -1578,6 +1587,41 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
         <p><b>The sail.</b> One of you takes the wheel (Use at it): A and D steer, W makes sail, S shortens it. The rocks only show inside the fog, in the Light's beam and under a flare from the locker aft. Hit one and a plank stoves in: hold Use at the hole to patch it before she floods. The ship's bell at the mast sinks the drowned climbing her side. The next island is the mark on the strip at the top of the screen; she runs up on its beach once you're close.</p>
         <p><b>The island.</b> Light its beacon (hold Use at it, near the middle) and hold the drowned off it for a minute. If they crowd it they put it out: light it again, and the clock carries on from where it stopped. Once it's held, its light goes up through the fog and you're back aboard.</p>
         <p><b>Lives.</b> Alone, going down ends the run. Together, someone holding Use beside you gets you up; bleed out and your extra life (the lamp by your stamina) brings you back on your feet ten seconds later. After that you're lost in the fog, watching the others, until the island's light is lit. If everyone is lost at once, or the cutter goes down, the run is over.</p>
+      </details>
+    </div>
+    <div class="card zmcard fbcard" id="fbTitle" aria-labelledby="fbHead"><!-- [fbsea] its own card (src/fbsea.js) -->
+      <div class="cardtop"><span class="eyebrow">A seventh game · an open sea · alone or up to four</span></div>
+      <h1 id="fbHead">Freebooters' Sea</h1>
+      <p>1889. Beyond the Near Skerries lies the Wide Water, a sea the charts gave up on. When the Gannet went down, a hundred years of wrecks came up with her, and their cargo washed up on every rock. Take the keeper's cutter out from Saltcote and bring the salvage home before the drowned take it back.</p>
+      <p class="muted">Sail anywhere. Come in close to any island and drop anchor (Use at the wheel, or at the capstan forward), and you're all ashore. Find what's lying there, carry it back to the landing boat and it goes in the hold. Back at Saltcote, the factor buys the hold for sovereigns, shared by the whole crew. There's no end: you leave when you like.</p>
+      <p class="muted fbkeep" id="fbKeep"></p><!-- [fbsea] what you've banked (src/fbkeep.js, to come) -->
+      <div class="btnrow">
+        <button class="primary" id="fbPlay" type="button">Set sail</button>
+        <button class="tool" id="fbWcrate" type="button">Weapon crates</button>
+        <button class="tool" id="fbOcrate" type="button">Outfit crates</button>
+        <button class="tool" id="fbSettings" type="button">Settings</button>
+      </div>
+      <section class="warmp zmmp" id="fbMp" aria-labelledby="fbMpHead">
+        <h2 id="fbMpHead">Play together · up to four</h2>
+        <p class="muted" id="fbMpNote">Looking for other players…</p>
+        <div class="nickrow"><label for="fbNick">Your name</label><input id="fbNick" type="text" maxlength="16" autocomplete="nickname" placeholder="Freebooter"></div>
+        <div id="fbMpOpen" hidden>
+          <div class="btnrow"><button class="tool" id="fbMpHost" type="button">Host a crew</button></div>
+          <div class="warlobbies" id="fbLobbies"></div>
+        </div>
+        <div class="warlobby" id="fbLobby" hidden>
+          <h3 id="fbLobbyHead">Your crew</h3>
+          <ol class="warlobbylist" id="fbLobbyList"></ol>
+          <p class="muted" id="fbLobbyMsg"></p>
+          <div class="btnrow"><button class="primary" id="fbMpStart" type="button">Set sail together</button><button class="tool shareBtn" id="fbMpShare" type="button" data-mode="fbsea">Share invite</button><button class="tool" id="fbMpLeave" type="button">Leave</button></div>
+        </div>
+      </section>
+      <details class="howto">
+        <summary>How to play</summary>
+        <p><b>At sea.</b> One of you takes the wheel (Use at it): A and D steer, W makes sail, S shortens it. The nearest island is the mark on the strip at the top of the screen, with its name. Rocks show close by and in the Light's beam; hit one and a plank stoves in: hold Use at the hole to patch it before she floods. The bell at the mast sinks the drowned climbing her side.</p>
+        <p><b>Ashore.</b> Close in to an island (or Saltcote), drop anchor at the wheel or the capstan, and everyone goes ashore. Pick up what you find (Use): you carry it in your arms, with no gun in your hands, and Use again puts it down. Use at the landing boat stows it in the hold; with nothing in your arms, Use there takes everyone back aboard, where she lay.</p>
+        <p><b>Saltcote.</b> The factor's table on the quay buys everything in the hold for sovereigns, shared by the crew.</p>
+        <p><b>Going down.</b> Someone holding Use beside you gets you up. Bleed out and you're back on your feet ten seconds later, aboard or at the landing. If the cutter sinks, you all wash up at Saltcote in a fresh one, and what was in her hold is lost.</p>
       </details>
     </div>
   </div>
@@ -15049,6 +15093,7 @@ function fpsIncoming(sh, f) {
   if (!(m.dead > 0) && !(m.protect > 0)) { const hit = fpsShotHits(sh, m); if (hit) fpsHurt(hit.dmg, by, fpsNameOf(by)); }
 }
 function fpsShoot() {
+  if (FPS.zm && typeof fbNoGun === 'function' && fbNoGun()) return;   // [fbsea] your arms full: no gun (src/fbsea.js)
   if (FPS.zm && typeof rclShoot === 'function' && rclShoot()) return;   // [classes] an ultimate in place of the weapon (src/rclass.js)
   const m = FPS.me, w = fpsW();
   if (m.dead > 0 || m.reload > 0 || m.cd > 0 || FPS.menu || FPS.drawT > 0) return;
@@ -18559,6 +18604,7 @@ function vmDraw(dt) {
   if (m.dead > 0) return true;
   if (!vmInit()) return false;
   if (FPS.scoped && fpsW().scope) return true;   // looking through the telescope: the gun's out of sight
+  if (FPS.zm && typeof fbNoGun === 'function' && fbNoGun()) return true;   // [fbsea] your arms full of what you carry: no gun in them
   // your coat changed: the sleeves follow
   const sk = JSON.stringify(fpsColours());
   if (sk !== VM.sleeve) { VM.sleeve = sk; const c = fpsColours(); VM.H.sleeve.color.set(vmHex(c[0], '#3a2a1e')); VM.H.cuff.color.set(vmHex(c[2], '#7a5a3a')); }
@@ -19081,13 +19127,13 @@ function vmKnife(wpn, S) {
 // dark exactly as they would be drawn flat, and their names and lantern glow are still painted over the top.
 // Without WebGL (the Classic renderer) the flat figures in fps.js are drawn instead.
 
-const FB = { tried: false, ok: false, root: null, key: '', mats: [], wpn: {}, cur: '', amp: 0, spd: 0, lx: null, ly: null, swing: 0 };
+const FBODY = { tried: false, ok: false, root: null, key: '', mats: [], wpn: {}, cur: '', amp: 0, spd: 0, lx: null, ly: null, swing: 0 };   // ([fbsea] FBODY, not FB: Freebooters' Sea's state is FB, src/fbsea.js)
 const FB_UP = typeof THREE !== 'undefined' ? new THREE.Vector3(0, 1, 0) : null;
 
 function fbCol(s, d) { try { if (typeof s === 'string' && /^#[0-9a-f]{3,8}$/i.test(s)) return new THREE.Color(s.slice(0, 7)); } catch (e) {} return new THREE.Color(d); }
 function fbMat(c, extra) {
   const m = new THREE.MeshLambertMaterial(Object.assign({ color: c, flatShading: true, transparent: true }, extra || {}));
-  m.userData.base = m.color.clone(); (FB.building || FB).mats.push(m); return m;
+  m.userData.base = m.color.clone(); (FBODY.building || FBODY).mats.push(m); return m;
 }
 function fbMesh(geo, mat, x, y, z, parent) { const m = new THREE.Mesh(geo, mat); m.position.set(x || 0, y || 0, z || 0); if (parent) parent.add(m); return m; }
 // a cylinder hanging down from y=0 to y=-h (for limbs and the coat skirt), optionally open at the front
@@ -19255,7 +19301,7 @@ function fbFigure(c, outfitId) {
   // the Admirals' own light, as rich as a reforged weapon (src/ocadmiral.js)
   if (oc && oc.adm && typeof ocaDress === 'function') F.adm = ocaDress(F);
   if (oc && oc.vy && typeof vyDress === 'function') F.vy = vyDress(F);   // [verity] his head on your shoulders (src/verityfx.js)
-  FB.building = null;
+  FBODY.building = null;
   F.aim = new THREE.Group(); F.spine.add(F.aim);
   GL3D.scene.add(root);
   return F;
@@ -19461,13 +19507,13 @@ function fbPose(F, s) {
 
 // your own figure, over your shoulder: built (again, when your colours or outfit change) and posed each frame
 function fpsBodySync(show) {
-  if (!show || typeof GL3D === 'undefined' || !GL3D.scene) { if (FB.fig) FB.fig.root.visible = false; return false; }
+  if (!show || typeof GL3D === 'undefined' || !GL3D.scene) { if (FBODY.fig) FBODY.fig.root.visible = false; return false; }
   const outfit = typeof ocEquippedId === 'function' ? ocEquippedId() : '';
   const key = JSON.stringify(fpsColours()) + '|' + outfit;
-  if (!FB.fig || FB.fig.key !== key) {
-    try { if (FB.fig) fbDispose(FB.fig); FB.fig = fbFigure(fpsColours(), outfit); FB.ok = true; } catch (e) { console.warn('fps body', e); FB.ok = false; FB.fig = null; return false; }
+  if (!FBODY.fig || FBODY.fig.key !== key) {
+    try { if (FBODY.fig) fbDispose(FBODY.fig); FBODY.fig = fbFigure(fpsColours(), outfit); FBODY.ok = true; } catch (e) { console.warn('fps body', e); FBODY.ok = false; FBODY.fig = null; return false; }
   }
-  const F = FB.fig, m = FPS.me, dt = Math.min(0.05, FPS.dtLast || 0.016), w = fpsW();
+  const F = FBODY.fig, m = FPS.me, dt = Math.min(0.05, FPS.dtLast || 0.016), w = fpsW();
   if (F.lx != null) { const v = Math.hypot(m.x - F.lx, m.y - F.ly) / Math.max(0.001, dt); F.spd += (Math.min(12, v) - F.spd) * Math.min(1, dt * 10); }
   F.lx = m.x; F.ly = m.y;
   fbPose(F, {
@@ -19481,7 +19527,7 @@ function fpsBodySync(show) {
   });
   return true;
 }
-function fpsBodyHide() { if (FB.fig) FB.fig.root.visible = false; }
+function fpsBodyHide() { if (FBODY.fig) FBODY.fig.root.visible = false; }
 
 // everyone else on the island, the other players and the wreckers (bots), as the same 3D figures, in their own
 // colours and outfits: built when first seen (up to the nearest ten), posed each frame, hidden in the dark
@@ -19525,7 +19571,7 @@ function fpsFiguresHide() { for (const F of FBR.values()) F.root.visible = false
 // your figure hides what's behind it among the flat things drawn over the 3D scene (other wreckers, the
 // drowned, Verity), the same way a rock does
 function fpsBodyOccluder() {
-  if (!FB.fig || !FB.fig.root.visible || !GL3D.occ) return;
+  if (!FBODY.fig || !FBODY.fig.root.visible || !GL3D.occ) return;
   const m = FPS.me, pts = [], P = [[-0.2, 0.05, 0], [0.2, 0.05, 0], [-0.26, 0.95, 0], [0.26, 0.95, 0], [-0.28, 1.5, 0], [0.28, 1.5, 0], [-0.15, 1.8, 0], [0.15, 1.8, 0], [0, 1.93, 0]];
   const c0 = cam(m.x, m.y, FPSC.GROUND + (m.jz || 0) + 1); if (c0.f < 0.7) return;
   const sh = Math.sin(m.h), ch = Math.cos(m.h);
@@ -21983,6 +22029,7 @@ function zmPlayers() {
 function zmCheckOver() {
   if (!ZM.net || ZM.over) return;
   if (typeof frCheckOver === 'function' && typeof FR !== 'undefined' && FR.on) { frCheckOver(); return; }   // [fogrun] (there it's over when everyone's lost in the fog)
+  if (typeof FB !== 'undefined' && FB.on) return;   // [fbsea] (never over: whoever bleeds out is back on their feet, src/fbsea.js)
   const m = FPS.me;
   if (!(m.dead > 0) && !zmIsDown()) return;
   for (const r of FPS.remote.values()) if (!r.dead && !r.down && !r.left) return;
@@ -22809,6 +22856,7 @@ function zmDown() {
     zmSound('over');
     return;
   }
+  if (typeof fbDownAlone === 'function' && fbDownAlone()) return;   // [fbsea] alone: bled out at once, back on your feet in a while (src/fbsea.js)
   zmEnd();
 }
 // down (together), and no one's got you up yet
@@ -22877,6 +22925,7 @@ function zmBleedOut() {
   const m = FPS.me, kit = ZM.downKit;
   ZM.downT = 0; ZM.ghost = true; ZM.downKit = null; m.dead = FPSC.RESPAWN - 0.6; m.reload = 0; FPS.scoped = false;
   if (typeof frBledOut === 'function' && typeof FR !== 'undefined' && FR.on) { frBledOut(kit); return; }   // [fogrun] an extra life, or lost in the fog (src/frrun.js)
+  if (typeof fbBledOut === 'function' && typeof FB !== 'undefined' && FB.on) { fbBledOut(kit); return; }   // [fbsea] back on your feet in ten seconds (src/fbsea.js)
   fpsFeed('You bled out. You’ll be back next round, if anyone holds that long.');
 }
 // up again (a friend got to you): your own weapons back in your hands
@@ -23935,7 +23984,7 @@ function zmHud() {
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = fell(phone ? 24 : 34); ctx.fillStyle = '#e46c4f';
     ctx.fillText('You bled out', cx, H * 0.42);
     ctx.font = mono(phone ? 11 : 13); ctx.fillStyle = 'rgba(236,228,207,0.85)';
-    ctx.fillText('You’ll be back when the next round begins.', cx, H * 0.42 + 34);
+    ctx.fillText(typeof FB !== 'undefined' && FB.on ? `Back on your feet in ${Math.max(1, Math.ceil(FB.backT))} s, ${RAID_ORDER[RAID.stage] === 'fbsail' ? 'aboard' : 'at the landing'}.` : 'You’ll be back when the next round begins.', cx, H * 0.42 + 34);   // [fbsea]
   }
   // getting someone up: a ring round the sights filling as you hold
   if (ZM.revOf && ZM.revT > 0 && !ZM.over) zmHudReviving(phone, mono, t);
@@ -30793,6 +30842,9 @@ function zhHud() {
 // (hosting or alone) lays out the next, and everyone follows the stage number in the host's word. Past the last, the
 // raid is won.
 
+// [fbsea] Freebooters' Sea (src/fbsea.js) is a raid too, with no end: its hooks here are marked [fbsea] (raidBegin,
+// raidAfterStart, raidStop, raidMe, raidNextStage (never won), raidReport, raidHostSend, raidApply, raidHud, and
+// raidMapFor's map.seed).
 // [fogrun] the islands' own size (src/frisle.js: map.R), put back to this once the part's done
 var FPSC_R0 = FPSC.R;
 const RAID = { on: false, map: 'raid', stage: 0, won: false, st: {}, t: 0, boss: 0, told: false, sta: 1, tired: false };
@@ -30852,6 +30904,7 @@ function raidMapFor(i) {
   D.isle = M.isle || 'raid'; D.shore = M.shore || (() => -999);
   D.seed = RAID.map === 'fogrun' && typeof frSeedOf === 'function' ? frSeedOf(i) : (RAID.map === 'raid' ? 0x5a11c : 0x6a77e) + i * 977;   // [fogrun] (from the run's seed)
   FPSC.R = M.R || FPSC_R0;   // [fogrun] (an island of its own size)
+  if (M.seed != null) D.seed = M.seed;   // [fbsea] (a part with a seed of its own: an island laid out the same at every visit)
 }
 
 // ---------- starting, and each frame ----------
@@ -30864,6 +30917,7 @@ function raidBegin(map) {
   RAID.map = RAIDS[map] && RAIDS[map].order.length ? map : 'raid';
   RAID_ORDER.length = 0; RAID_ORDER.push(...raidInfo().order);
   if (typeof frBegin === 'function') frBegin();   // [fogrun] its seed, and its first stop (src/frrun.js)
+  if (typeof fbBegin === 'function') fbBegin();   // [fbsea] the session's state, and the sea (src/fbsea.js)
   Object.assign(RAID, { stage: 0, won: false, st: {}, t: 0, boss: 0, told: false, sta: 1, tired: false, tiredN: 0, runNow: false, practice: 0 });   // (practice: src/raidmaren2.js rf2Practice)
   if (typeof rmvReset === 'function') rmvReset();   // [mvp] src/raidmvp.js
   raidMapFor(0);
@@ -30878,6 +30932,7 @@ function raidAfterStart() {
   if ($('rclEye')) $('rclEye').textContent = raidName();   // (the callings' picker: which raid)
   RAID.st = {}; raidCall('enter');
   if (typeof frAfterStart === 'function' && FR.on) frAfterStart();   // [fogrun]
+  if (typeof fbAfterStart === 'function' && FB.on) fbAfterStart();   // [fbsea]
 }
 const RAIDC = { ROUND: 4, CALM: 0.7, BOSS_HP: 1.15 };   // (BOSS_HP: every boss's strength here, against the Lighthouse's)
 // what you carry down: a pepperbox and a blunderbuss, both full (and Maren's Lantern, which never leaves your hand)
@@ -30894,6 +30949,7 @@ function raidStop() {
   if (RAID.on) raidCall('exit');
   RAID.on = false; FPSC.R = FPSC_R0;   // [fogrun]
   if (typeof frStop === 'function') frStop();   // [fogrun]
+  if (typeof fbStop === 'function') fbStop();   // [fbsea]
   if (typeof GL3D !== 'undefined' && GL3D.scene && RAID.fog0) { GL3D.scene.fog = null; RAID.fog0 = null; }
 }
 // alone or hosting, each frame
@@ -30942,6 +30998,7 @@ function raidMe(dt) {
     RAID.ct = Math.abs(e) > 2 ? est : (RAID.ct || 0) + dt + e * Math.min(1, dt * 1.5); } else RAID.ct = RAID.t;
   raidCall('me', dt);
   if (typeof frMe === 'function' && FR.on) frMe(dt);   // [fogrun] the wait for your extra life
+  if (typeof fbMe === 'function' && FB.on) fbMe(dt);   // [fbsea] the wait to be back on your feet
   if (typeof rclTick === 'function') rclTick(dt);   // [classes] src/rclass.js
   if (typeof rmvTick === 'function') rmvTick(dt);   // [mvp] src/raidmvp.js: what each of you did, counted
   // joined: the host's world has moved on to the next part
@@ -30965,6 +31022,7 @@ function raidShot(x, y, z, lh, lp, by, dmg) { if (RAID.on) raidCall('shot', x, y
 function raidNextStage() {
   if (!RAID.on || ZM.net === 'client' || ZM.over) return;
   if (typeof frGrow === 'function' && FR.on && RAID.stage + 1 >= RAID_ORDER.length) frGrow();   // [fogrun] the next stage, chosen now
+  if (typeof FB !== 'undefined' && FB.on && RAID.stage + 1 >= RAID_ORDER.length) return;   // [fbsea] (never won: the next stage is always grown first, src/fbsea.js fbGo)
   if (RAID.stage + 1 >= RAID_ORDER.length) { raidWin(); return; }
   raidUseStage(RAID.stage + 1);
 }
@@ -30994,7 +31052,7 @@ const raidNumeral = n => ['', 'I', 'II', 'III', 'IV', 'V', 'VI'][n] || String(n)
 function raidWin() {
   if (RAID.won) return;
   RAID.won = true;
-  if (!(typeof FR !== 'undefined' && FR.on)) { if (typeof wcEarn === 'function') { wcEarn('round'); wcEarn('round'); } if (typeof ocEarn === 'function') { ocEarn('round'); ocEarn('round'); } }   // [fogrun] (a fog run pays its own: src/frkeep.js frPay)
+  if (!(typeof FR !== 'undefined' && FR.on) && !(typeof FB !== 'undefined' && FB.on)) { if (typeof wcEarn === 'function') { wcEarn('round'); wcEarn('round'); } if (typeof ocEarn === 'function') { ocEarn('round'); ocEarn('round'); } }   // [fogrun] (a fog run pays its own: src/frkeep.js frPay)
   zmEnd();
 }
 // damage you did to a boss (counted on your own side)
@@ -31002,6 +31060,7 @@ function raidBossDamage(n) { if (RAID.on && n > 0) RAID.boss += n; }
 // (zmEnd) the scoreboard: the time, if won; the bosses' damage; and this raid's kills added to all the rest
 function raidReport() {
   if (typeof frReport === 'function' && FR.on && !RAID.told) { frReport(); return; }   // [fogrun] its own board and what it pays (src/frkeep.js)
+  if (typeof FB !== 'undefined' && FB.on) { if (!RAID.told && typeof fbReport === 'function') fbReport(); return; }   // [fbsea] its own (src/fbsea.js)
   const G = RAID.map;   // (each raid its own game on the board)
   if (RAID.told || typeof scoreReport !== 'function' || typeof BOARD === 'undefined' || !BOARD.mine || !BOARD.mine[G]) return;
   RAID.told = true;
@@ -31033,11 +31092,13 @@ function raidHostSend(z) {
   z.rd = [RAID.stage, RAID.won ? 1 : 0, Math.round(RAID.t * 20) / 20];   // (to a twentieth: what swings on it is timed by it)
   const o = {}; raidCall('pack', o); z.rs = o;
   if (typeof frPack === 'function' && FR.on) frPack(z);   // [fogrun] the run: its plan, its events
+  if (typeof fbPack === 'function' && FB.on) fbPack(z);   // [fbsea] the session: its stages, the ship, the hold, the purse
   if (typeof rmvPack === 'function') rmvPack(z);   // [mvp]
 }
 function raidApply(hz) {
   if (!RAID.on || !Array.isArray(hz.rd)) return;
   if (typeof frApplyRun === 'function' && FR.on) frApplyRun(hz);   // [fogrun] (first: the plan, so the stage number below lays out what the host has)
+  if (typeof fbApply === 'function' && FB.on) fbApply(hz);   // [fbsea] (first, the same way)
   const st = clamp(hz.rd[0] | 0, 0, RAID_ORDER.length - 1);
   if (st !== RAID.stage) raidUseStage(st);
   RAID.won = !!hz.rd[1]; RAID.t = +hz.rd[2] || RAID.t; RAID.tAt = performance.now() / 1000;
@@ -31145,12 +31206,13 @@ function raidHud(phone, mono, fell) {
   ctx.textAlign = 'left'; ctx.textBaseline = 'top';
   const L = Math.max(14, FPS.safeLeft || 0);
   ctx.font = fell(phone ? 15 : 19); ctx.fillStyle = 'rgba(236,228,207,0.85)';
-  ctx.fillText(typeof frHudTitle === 'function' && FR.on ? frHudTitle(S) : `${raidName()} · ${raidNumeral(RAID.stage + 1)} · ${S.n}`, L, top, W * 0.5);   // [fogrun]
+  ctx.fillText(typeof fbHudTitle === 'function' && FB.on ? fbHudTitle(S) : typeof frHudTitle === 'function' && FR.on ? frHudTitle(S) : `${raidName()} · ${raidNumeral(RAID.stage + 1)} · ${S.n}`, L, top, W * 0.5);   // [fogrun]
   ctx.font = mono(phone ? 10 : 12); ctx.fillStyle = 'rgba(236,228,207,0.55)';
   ctx.fillText(raidClock(RAID.t), L, top + (phone ? 18 : 26));
   fpsHudNote(top + (phone ? 30 : 40));
   raidCall('hud', phone, mono, fell);
   if (typeof frHud === 'function' && FR.on) frHud(phone, mono, fell);   // [fogrun] lost, or waiting on your extra life
+  if (typeof fbHud === 'function' && FB.on) fbHud(phone, mono, fell);   // [fbsea] the purse and the hold; back on your feet in...
 }
 
 // ---------- its card on the title screen ----------
@@ -35891,6 +35953,11 @@ function gwGo(key) { if (!RAID.on || RAID.map !== 'gannet' || ZM.net === 'client
 // [fogrun] Fog Run's sailing legs (src/frsail.js) are this same stage with a few things changed, through GWS_LEG (below):
 // where she sets out from and the island she's to beach on, the rocks from the run's seed, the fog, and no Maren or
 // Plimsoll. Her sailing is never touched: her top speed and how quick she gathers way are the Brig's, always.
+// [fbsea] Freebooters' Sea's open sea (src/fbsail.js) is this stage again through GWS_LEG, with a few more of its
+// say (all optional, below): a sea of its own laid out already (sea), islands she runs aground on without harm
+// (sea.shore), her pose and holes put back as they were (enter), what happens when she sinks (sunk), how hard the
+// drowned come (prog, spawnOk), the line in the ship's panel (row), a label on the strip's mark (markLab), and a
+// brighter night (amb). Her sailing is still never touched.
 
 const GWS = {
   D: 1.3, HB: 3.3, STERN: -11, BOW: 11.4, SPRIT: 15.6,   // (the deck's height over the ground; her half beam, stern, stem and bowsprit's end)
@@ -35909,6 +35976,11 @@ const GWS = {
 // from the run's seed, that many, along the way), fog (m: a rock shows inside it, as well as in the beam or a flare),
 // maren and plim (false: neither of them out there), line(S, dm) (the HUD's line), landSay, arrive() (hosting or
 // alone: once she's run up on the beach), b3(SG, GW3) and f3(dt, V) (the island's own 3D, in the sea's group).
+// [fbsea] and: sea (its own sea, as gwsSea makes one, laid out already; sea.shore: [{ x, y, r }] land she runs up
+// against and is pushed off, never holed), enter(S) (after her state is made fresh: put back her pose, holes and
+// flood), sunk() (hosting or alone: she's gone down, in place of the end of the raid), prog() (0 to 1: how hard the
+// drowned come over the rail), spawnOk() (false: none come just now), row() ([label, value, colour]: the panel's
+// fourth line), markLab() (the strip's label under the mark, in place of its distance), amb ([ambient, moon]).
 var GWS_LEG = null;
 const gwsMark = () => GWS_LEG ? GWS_LEG.mark : GWS.MARK;
 const gwsMaren = () => !GWS_LEG || !!GWS_LEG.maren;
@@ -36001,6 +36073,7 @@ function gwsHullPts(B) {
 // (hosting) push her clear of any rock she's on; a real blow (as SK.IMPACT, and at a real angle) is a plank gone
 function gwsCollide(B) {
   const S = RAID.st, pts = gwsHullPts(B), sea = gwsSeaOf();
+  if (sea.shore && gwsShore(B, pts, sea.shore)) return false;   // [fbsea] aground on an island's shore: pushed off it, no harm done
   for (const r of sea.rocks) {
     if (Math.abs(r.x - B.x) > r.r + 30 || Math.abs(r.y - B.y) > r.r + 30) continue;
     let best = null;
@@ -36022,6 +36095,24 @@ function gwsCollide(B) {
     if (!(S.scrT > 0)) { S.scrT = 0.6; S.scrN = (S.scrN | 0) + 1; }
   }
   return false;
+}
+// [fbsea] (hosting) land she runs up against (an island's shore): pushed clear and her way along it kept, as a glancing
+// touch on a rock, but never holed and never slowed below a crawl
+function gwsShore(B, pts, shore) {
+  let hit = false;
+  for (const r of shore) {
+    if (Math.abs(r.x - B.x) > r.r + 30 || Math.abs(r.y - B.y) > r.r + 30) continue;
+    let best = null;
+    for (const p of pts) { const dx = p.x - r.x, dy = p.y - r.y, d = Math.hypot(dx, dy) || 0.001, pen = r.r + p.w - d; if (pen > 0 && (!best || pen > best.pen)) best = { pen, nx: dx / d, ny: dy / d }; }
+    if (!best) continue;
+    hit = true; B.x += best.nx * best.pen; B.y += best.ny * best.pen;
+    const vx = Math.sin(B.h) * B.v, vy = Math.cos(B.h) * B.v, closing = -(vx * best.nx + vy * best.ny);
+    if (closing <= 0) continue;
+    const tx = vx + best.nx * closing, ty = vy + best.ny * closing;
+    if (Math.hypot(tx, ty) > 0.5) B.h = wrapPi(B.h + angDiff(bearingOf(tx, ty), B.h) * 0.35);
+    B.v = Math.max(1.5, B.v - closing * 0.8);
+  }
+  return hit;
 }
 // (hosting) a plank stove in: a hole in the deck (near where she struck, if there's room), and the word to everyone
 function gwsStove(off, side) {
@@ -36114,6 +36205,7 @@ function gwsPlimTick(S, dt) {
 // ---------- the drowned over the rail ----------
 // (hosting) one of them up out of the sea alongside, to one of the low places in the rail, then in over it
 function gwsSpawn(S) {
+  if (GWS_LEG && GWS_LEG.spawnOk && !GWS_LEG.spawnOk()) return;   // [fbsea] (none just now)
   const n = Math.max(1, ZM.hum.length), prog = gwsProg(), alive = ZM.z.filter(z => !z.dead).length;
   if (alive >= 4 + 2 * n + Math.round(prog * 6)) return;
   const W = ZM.windows.filter(w => w.gws && w.q.length < 2); if (!W.length) return;
@@ -36132,7 +36224,8 @@ function gwsSpawn(S) {
   try { if (!soundOff()) sfxSplash(gwsPan(sx - FPSC.CX, sy - FPSC.CY, true), Math.max(0.1, 1 - Math.hypot(sx - FPS.me.x, sy - FPS.me.y) / 30)); } catch (e) {}
 }
 // how far out she's come, 0 at the Light's foot to 1 at the mark
-function gwsProg() { const B = RAID.st.B, sea = gwsSeaOf(), M = gwsMark(); return B ? clamp(1 - Math.hypot(M[0] - B.x, M[1] - B.y) / sea.len, 0, 1) : 0; }
+function gwsProg() { if (GWS_LEG && GWS_LEG.prog) return clamp(+GWS_LEG.prog() || 0, 0, 1);   // [fbsea]
+  const B = RAID.st.B, sea = gwsSeaOf(), M = gwsMark(); return B ? clamp(1 - Math.hypot(M[0] - B.x, M[1] - B.y) / sea.len, 0, 1) : 0; }
 const gwsToMark = B => { const M = gwsMark(); return Math.hypot(M[0] - B.x, M[1] - B.y); };
 
 // ---------- the props: the cutter (src/fpsisle.js's kinds) ----------
@@ -36285,6 +36378,7 @@ RAID_STAGES.gwsail = {
     });
     { const [mx, my] = gwsMarenAt(RAID.st, B); RAID.st.mar.x = mx; RAID.st.mar.y = my; }
     FPS.helm = false;
+    if (L && L.enter) L.enter(RAID.st);   // [fbsea] her pose, holes and flood, as they were
     if (L) return;   // [fogrun] (a leg says its own)
     ZM.banner = { text: 'The Skerries', t: 4.5, sub: 'Part I · out through the rocks to the Gannet’s mark', col: '#d8e6ff' };
     fpsFeed('The keeper’s cutter, at the foot of the Light. Take the wheel (Use) to sail her: the rocks only show in the beam.');
@@ -36319,7 +36413,7 @@ function gwsTick(dt) {
   if (S.helm && (!ZM.hum.some(h => h[0] === S.helm) || gwsIsDown(S.helm))) S.helm = null;
   if (S.helm === FPS.me.id) S.in = S.myIn.slice(); else if (!S.helm) S.in = [0, 0];
   else { S.inT += dt; if (S.inT > 3.5) S.in = [0, 0]; }
-  if (S.ph === 'sunk') { S.sinkT += dt; if (S.sinkT >= GWS.SINK && !ZM.over) zmEnd(); return; }
+  if (S.ph === 'sunk') { S.sinkT += dt; if (S.sinkT >= GWS.SINK && !ZM.over) { if (GWS_LEG && GWS_LEG.sunk) { const f = GWS_LEG.sunk; GWS_LEG.sunk = null; f(); } else if (!(GWS_LEG && GWS_LEG.sunk === null)) zmEnd(); } return; }   // [fbsea] (sunk: her own say)
   // [fogrun] run up on the island's beach: a moment, and ashore
   if (S.ph === 'beach') { S.beachT = (S.beachT || 0) + dt; if (S.beachT >= GWS.BEACH && GWS_LEG && GWS_LEG.arrive) { const f = GWS_LEG.arrive; GWS_LEG.arrive = null; f(); } return; }
   gwsSail(B, S.in[0], S.in[1], dt, true);
@@ -36817,7 +36911,7 @@ function gwsGL(u) {
   if (u.uHalf) u.uHalf.value = gwsHalf();
   if (GL3D.beam) { GL3D.beam.visible = on; GL3D.beam.position.set(Lx, 54, -Ly); GL3D.beam.rotation.set(0, -wb, 0); GL3D.beam.scale.set(bw, 1, 1); }
   if (GL3D.spot) { GL3D.spot.visible = on; GL3D.spot.position.set(Lx, 54, -Ly); GL3D.spot.target.position.set(Lx + Math.sin(wb) * 3000, 0, -(Ly + Math.cos(wb) * 3000)); GL3D.spot.target.updateMatrixWorld(); GL3D.spot.intensity = 2.2; GL3D.spot.angle = Math.min(1.2, gwsHalf()); }
-  GL3D.amb.intensity = 0.36; GL3D.moon.intensity = 0.16;
+  GL3D.amb.intensity = GWS_LEG && GWS_LEG.amb ? GWS_LEG.amb[0] : 0.36; GL3D.moon.intensity = GWS_LEG && GWS_LEG.amb ? GWS_LEG.amb[1] : 0.16;   // [fbsea] (a brighter night)
 }
 function gwsGLReset(u) {
   if (typeof GL3D === 'undefined' || !GL3D.sea) return;
@@ -36862,6 +36956,7 @@ function gwsHud(phone, mono, fell) {
     yy += rh; lab('FLARE', yy); val(S.flareCd > 0 ? `${Math.ceil(S.flareCd)} s` : 'READY · THE LOCKER AFT', yy, S.flareCd > 0 ? 'rgba(236,228,207,0.55)' : '#ff9a7a');
     // Maren
     yy += rh; const M = S.mar, md = Math.round(Math.hypot(M.x - V.x, M.y - V.y)), held = gwsGuarded(S, V);
+    if (GWS_LEG && GWS_LEG.row) { const r = GWS_LEG.row(); lab(r[0], yy); val(r[1], yy, r[2] || '#c8d4e0'); } else   // [fbsea] (its own line)
     if (!gwsMaren()) { lab('FOG', yy); val(`YOU CAN SEE ${Math.round(GWS_LEG.fog)} m`, yy, '#c8d4e0'); } else {   // [fogrun] (no Maren: how far the fog lets you see)
     lab('MAREN', yy, M.st >= 3 ? `rgba(216,230,255,${0.7 + 0.3 * Math.sin(t * 5)})` : null);
     val(S.abT > 0 ? 'ABOARD' : `${md} m ${gwsSide(S, md)}${held ? ' · HELD' : ''}`, yy, M.st >= 3 ? '#d8e6ff' : held ? '#8fd8ff' : 'rgba(236,228,207,0.85)'); }
@@ -36882,7 +36977,7 @@ function gwsHud(phone, mono, fell) {
     // the Light
     { const d = lb(bearingOf(-V.x, -V.y)); if (inS(d)) { const f = 1 - Math.min(1, Math.abs(angDiff(wrapPi(gwBeam()), bearingOf(V.x, V.y))) / 0.6); ctx.fillStyle = `rgba(255,216,138,${0.5 + 0.5 * f})`; const xx = xb(d); ctx.beginPath(); ctx.moveTo(xx, sy + 4); ctx.lineTo(xx + 3.5, sy + 14); ctx.lineTo(xx - 3.5, sy + 14); ctx.closePath(); ctx.fill(); } }
     // the mark
-    { const MK = gwsMark(), d = lb(bearingOf(MK[0] - V.x, MK[1] - V.y)); if (inS(d)) { const xx = xb(d); ctx.fillStyle = '#86cfae'; ctx.fillRect(xx - 5, sy + 7, 10, 6); if (!phone) { ctx.font = mono(9); ctx.fillText(`${Math.round(dm)} m`, xx, sy + sh + (inS(angDiff(0, m.h)) && Math.abs(xx - xb(angDiff(0, m.h))) < 30 ? 18 : 7)); ctx.font = mono(10); } } else edge(d, '#86cfae'); }
+    { const MK = gwsMark(), d = lb(bearingOf(MK[0] - V.x, MK[1] - V.y)); if (inS(d)) { const xx = xb(d); ctx.fillStyle = '#86cfae'; ctx.fillRect(xx - 5, sy + 7, 10, 6); if (!phone) { ctx.font = mono(9); ctx.fillText(GWS_LEG && GWS_LEG.markLab ? GWS_LEG.markLab() : `${Math.round(dm)} m`, xx, sy + sh + (inS(angDiff(0, m.h)) && Math.abs(xx - xb(angDiff(0, m.h))) < 30 ? 18 : 7)); ctx.font = mono(10); } } else edge(d, '#86cfae'); }
     // Plimsoll, and his ring while he's keeping her off you
     if (gwsPlim()) { const P = S.pl, d = lb(bearingOf(P.x - V.x, P.y - V.y)), py = sy + sh * 0.68;
       if (inS(d)) { const xx = xb(d); ctx.fillStyle = '#5fd3ff'; ctx.beginPath(); ctx.arc(xx, py, 3, 0, 6.28); ctx.fill();
@@ -43956,6 +44051,850 @@ function frxCount(b) { let n = 0; for (let i = 0; i < FRX.CASKS; i++) if (b & (1
 // the chart draws from them all
 if (FR_KINDS.unknown) FR_KINDS.unknown.rules = Object.keys(FRI_UNKNOWN);
 
+// ---- src/fbsea.js ----
+// Freebooters' Sea: an open sea to sail together, a game of its own (its own card on the title screen, its own lobby),
+// alone or up to four on one ship. 1889: beyond the Near Skerries lies the Wide Water, a sea the charts gave up on.
+// The crew sails the keeper's cutter round a wide sea of islands from the outpost of Saltcote, goes ashore wherever
+// they like, carries home what's lying there and sells it to the factor. No stages to clear and no end: you leave when
+// you like. The design: /home/claude/fbsea-design.md.
+//
+// How it's built. Like Fog Run (src/frrun.js), it's a raid (src/raid.js): its own map, ZM_MAPS.fbsea, its own entry in
+// RAIDS (kept off the raid card's picker: RAIDS.fbsea.own), the callings (src/rclass.js), going down and getting up,
+// and playing together through the Lighthouse's lobby (src/zmnet.js, its own mode 'fb', kept apart from nights, raids
+// and fog runs by ZM_MAPS.fbsea.fb). What's its own:
+//  - The world is fixed, the same on every screen and every session (no seed is drawn or sent): the sea, its rocks and
+//    its islands (FB_ISLES, src/fbsail.js), each island's layout (src/fbisle.js, from the island's own seed). Only the
+//    live state goes over the wire.
+//  - The session's state, FB (below): the stage plan, the ship as she lies (FB.ship: where she is, her heading, holes,
+//    flood), the hold (FB.hold: loot kinds), the purse (FB.gold: sovereigns banked this session, the crew's), what's
+//    still lying on each island (FB.left), and my own wait to be back on my feet (FB.backT).
+//  - A stage order grown as it's played, open-ended. RAID_ORDER starts as one stage, the open sea ('fbsail'). Drop
+//    anchor off an island and the next is that island ('fb_isle', or 'fb_port' for Saltcote); go back aboard and the
+//    next is the sea again, where she lay. FB.plan runs alongside RAID_ORDER, one entry a stage: { key, i } (i: which
+//    of FB_ISLES). fbGo(key, i) (hosting or alone) adds one and goes to it. The host sends the plan's last few entries
+//    in its word (fbw); a joined player's RAID_ORDER is rebuilt from it before the stage number is followed.
+//  - Lives: down and got up as the raids. Bleed out (or, alone, go down at all) and you're back on your feet FBC.BACK
+//    seconds later at the stage's start (the deck, or the landing), never the end. She sinks (a full flood): everyone
+//    washes up at Saltcote with a fresh cutter lying off it, and the hold is lost.
+//  - Loot (FB_LOOT, below): chests of three grades, a drowned captain's bell, a cargo crate, a strongbox and trinkets,
+//    each worth so many sovereigns. You carry one at a time in your arms (no gun while you carry it; you walk as ever),
+//    Use again to put it down, and Use at the landing boat stows it in the hold. At Saltcote, the factor's table (Use)
+//    buys the whole hold, the sovereigns to the crew's purse.
+//
+// The hook API, for the threads to come (a: swivel guns and the Mooncusser sloops; b: voyages, digging, the bounty,
+// salvage; c: sovereigns kept, standings, crates, the scoreboard, the save, rejoin):
+//  - fbHook(where, h): more for a stage to do, where is 'sail' (the open sea, src/fbsail.js), 'isle' (any island) or
+//    'port' (Saltcote). h has any of a stage's hooks (src/raid.js): enter(), tick(dt) (hosting or alone), me(dt), q(sid,
+//    k, a) (return true if it was yours), pack(o), apply(o), consider(c), prompt(o) / use(o) (return something for
+//    yours), hud(phone, mono, fell), b3(grp) / f3(dt), exit(), block(x, y, pad, feet), kill(d, how, by), hurt(d, dmg,
+//    code, by) (return the damage), shot(...), players(P). They run after the stage's own, in the order hooked. Keep
+//    your state in RAID.st (fresh each stage) or your own global; your word's keys in pack/apply must be your own
+//    (prefix them: 'fa' for a, 'fv' for b, 'fk' for c).
+//  - On the sea (src/fbsail.js): FB_ISLES (the islands, fixed: { n, x, y, r, look, seed, port }), fbSea() (its rocks,
+//    shores), fbNearest(x, y) ({ i, d }: the nearest island and how far off its shore), fbInReach(B) (the island she can
+//    anchor off now, or -1), fbAnchor(sid) (hosting or alone: drop anchor and go ashore). The ship's pose is
+//    RAID.st.B (host) / RAID.st.V (shown), as in src/gwsail.js; her holes S.holes and flood S.flood. gwsStove(off,
+//    side) holes her (a cannonball's hit). The sea's group (GW3.SG) is where 3D out on the water goes (sea frame:
+//    gsv(x, y, z)).
+//  - On land (src/fbisle.js): fbIsleNow() (the FB_ISLES entry of this stage, or null), fbIsleSpot(r) (a clear spot
+//    on this island, from its layout's tools while it's laid out: call it from a hooked set(H)), fbIsleSpawn(o)
+//    (hosting or alone: one of the drowned up out of the shore, away from everyone; o as raidSpawnAt), FBI.land()
+//    (where the landing is). fbHook('isle', { set(H, K, Z) }) lays out things of your own with the island.
+//  - Loot: fbLootAdd(kind, x, y) (hosting or alone: an item of that kind lying at x, y on this stage, world
+//    coordinates; returns it), fbLootKind(k, def) (a new kind of loot: { n (its name, with an article), N (short, for
+//    lists), v (sovereigns), shape ('chest', 'bell', 'crate', 'box', 'small'), col }), fbHoldValue(), fbCarrying()
+//    (what I'm carrying, or null), fbStowKind(kind) (hosting or alone: straight into the hold), fbSell(sid) (hosting or
+//    alone: the hold sold; at the factor's table).
+//  - What happens, for anyone to hear (hosting or alone, and on every joined screen as the host's word comes in):
+//    fbOn(ev, cb) with ev 'sold' (cb(sum, kinds, sid): sovereigns banked), 'stow' (cb(kind, sid)), 'lost' (cb(kinds):
+//    the hold went down with her), 'ashore' (cb(i)), 'aboard' (cb(i)); fbOnSold(cb) is fbOn('sold', cb). And
+//    fbEvent(k, text, a) (hosting or alone: a line for everyone, and an event the others hear as fbOn(k)).
+//  - Session ends (c): fbReport() is called where a raid reports to the scoreboard (leaving); FB.gold is what was
+//    banked this session. FB.sid is this session's id (the host's, the same for the crew: for paying crates once).
+//  - fbDebug(stageKey, i): straight into a session alone and on to that stage ('fbsail', 'fb_isle' with island i,
+//    or 'fb_port'), the calling picked for you, for tests. In one already: straight there.
+// Hooks in shared files are marked [fbsea]: src/raid.js (raidBegin fbBegin, raidAfterStart fbAfterStart, raidStop
+// fbStop, raidMe fbMe, raidNextStage (never won), raidReport fbReport, raidHostSend fbPack, raidApply fbApply,
+// raidHud fbHudTitle and fbHud, raidMapFor's map.seed), src/zombies.js (zmCheckOver, zmDown fbDownAlone, zmBleedOut
+// fbBledOut, the bled-out line), src/fps.js and src/fpsgun.js (fbNoGun: no gun while you carry), src/gwsail.js
+// (GWS_LEG's sea, enter, sunk, prog, spawnOk, row, markLab, amb), src/zmnet.js (the lobby's fourth card), src/share.js
+// (?mode=fbsea&lobby=...), src/menudesk.js (the seventh game), index.html (its card and banner), src/style.css.
+
+// FBC: BACK, seconds from bleeding out to back on your feet; AWAY, seconds from "back aboard" to aboard; KEEP, how many
+// of the plan's last entries go in the host's word
+const FBC = { BACK: 10, AWAY: 4, KEEP: 4 };
+// the music each part plays (src/raidmusic.js; the sea, an island, Saltcote: for now, the Gannet's and Fog Run's own)
+var FB_MUSIC = { sail: 'gwsail', isle: 'frisle', port: 'frsail' };
+var FB = { on: false, debug: null, plan: [], ship: null, hold: [], gold: 0, left: {}, backT: 0, kit: null, ev: [], eseq: 0, evSeen: -1, sid: '', hooks: { sail: [], isle: [], port: [] }, on_: {} };
+
+// ---------- the loot ----------
+// what can be carried home: its name (with its article, and short for lists), its worth in sovereigns, its shape
+var FB_LOOT = {
+  chest: { n: 'a battered sea chest', N: 'sea chest', v: 120, shape: 'chest', col: '#5a3e26' },
+  chest2: { n: 'an ironbound chest', N: 'ironbound chest', v: 300, shape: 'chest', col: '#3e3a36' },
+  chest3: { n: 'a gilded chest', N: 'gilded chest', v: 650, shape: 'chest', col: '#6a4a1e', gilt: true },
+  bell: { n: 'a drowned captain’s bell', N: 'captain’s bell', v: 450, shape: 'bell', col: '#a8823a' },
+  crate: { n: 'a cargo crate', N: 'cargo crate', v: 160, shape: 'crate', col: '#7a6040' },
+  strongbox: { n: 'a strongbox', N: 'strongbox', v: 500, shape: 'box', col: '#2e3034' },
+  locket: { n: 'a tarnished locket', N: 'locket', v: 30, shape: 'small', col: '#c8a050', trinket: true },
+  compass: { n: 'a brass compass', N: 'compass', v: 45, shape: 'small', col: '#b08a3a', trinket: true },
+  tankard: { n: 'a pewter tankard', N: 'tankard', v: 25, shape: 'small', col: '#8a8c90', trinket: true },
+  scrimshaw: { n: 'a scrimshaw tooth', N: 'scrimshaw', v: 60, shape: 'small', col: '#e0d8c0', trinket: true },
+};
+function fbLootKind(k, def) { FB_LOOT[k] = Object.assign({ n: k, N: k, v: 0, shape: 'crate', col: '#7a6040' }, def); return FB_LOOT[k]; }
+const fbLootOf = k => FB_LOOT[k] || FB_LOOT.crate;
+const fbHoldValue = () => FB.hold.reduce((a, k) => a + fbLootOf(k).v, 0);
+const fbSov = n => `${Math.round(n).toLocaleString('en')} ${Math.round(n) === 1 ? 'sovereign' : 'sovereigns'}`;
+// the hold in a few words: "2 sea chests and a locket"
+function fbHoldWords(list) {
+  list = list || FB.hold; if (!list.length) return 'nothing';
+  const n = {}; for (const k of list) n[k] = (n[k] || 0) + 1;
+  const bits = Object.keys(n).map(k => n[k] === 1 ? fbLootOf(k).n : `${n[k]} ${fbLootOf(k).N}${/x$|s$/.test(fbLootOf(k).N) ? 'es' : 's'}`);
+  return bits.length > 1 ? bits.slice(0, -1).join(', ') + ' and ' + bits[bits.length - 1] : bits[0];
+}
+
+// ---------- the map, as src/zombies.js and src/raid.js see it ----------
+ZM_MAPS.fbsea = Object.assign({}, ZM_MAPS.raid, { n: 'Freebooters’ Sea', N: 'Freebooters’ Sea', seed: 0xfb5ea, fb: true,
+  blurb: 'An open sea of islands, alone or up to four: sail anywhere, go ashore, bring the salvage home.',
+  land: n => `The keeper’s cutter, lying off Saltcote${n ? ', ' + n + ' of you aboard' : ''}. Out there, the Wide Water.` });
+RAIDS.fbsea = { n: 'Freebooters’ Sea', own: true, order: ['fbsail'], at: {}, mvp: '-',
+  lost: n => `Ashore from the Wide Water, at ${n}`, won: 'Home from the Wide Water', again: 'Set sail again' };
+
+// ---------- hooks for the parts to come ----------
+function fbHook(where, h) { (FB.hooks[where] || (FB.hooks[where] = [])).push(h); return h; }
+// (a stage) every hook of where's for k, in turn: the first that returns something, for prompt and use and q
+function fbHooks(where, k, ...a) { let r; for (const h of FB.hooks[where] || []) if (typeof h[k] === 'function') { const v = h[k](...a); if (v != null && v !== false && r == null) r = v; } return r; }
+// (hurt and players pass their value along the hooks: each gets the last one's say)
+function fbHookHurt(where, d, dmg, code, by) { for (const h of FB.hooks[where] || []) if (typeof h.hurt === 'function') { const r = h.hurt(d, dmg, code, by); if (r != null) dmg = r; } return dmg; }
+function fbHookPlayers(where, P) { for (const h of FB.hooks[where] || []) if (typeof h.players === 'function') { const r = h.players(P); if (r) P = r; } return P; }
+function fbOn(ev, cb) { (FB.on_[ev] || (FB.on_[ev] = [])).push(cb); }
+function fbOnSold(cb) { fbOn('sold', cb); }
+function fbFire(ev, ...a) { for (const cb of FB.on_[ev] || []) { try { cb(...a); } catch (e) { console.warn('fbOn ' + ev, e); } } }
+
+// ---------- the stage plan ----------
+const fbPlanNow = () => FB.plan[RAID.stage] || null;
+function fbOrderFromPlan() { RAID_ORDER.length = 0; for (const p of FB.plan) RAID_ORDER.push(p.key); }
+// (hosting or alone) on to a stage now: 'fbsail' (the sea, where she lies), 'fb_isle' (island i) or 'fb_port'
+function fbGo(key, i) {
+  if (!FB.on || ZM.net === 'client' || ZM.over || !RAID_STAGES[key]) return false;
+  if (key === 'fb_port') i = 0;
+  FB.plan.length = RAID.stage + 1; FB.plan.push({ key, i: i | 0 }); fbOrderFromPlan();
+  raidNextStage();
+  return true;
+}
+
+// ---------- the ship, between stages ----------
+// a fresh cutter, lying off Saltcote's quay with her head out to sea
+function fbFreshShip() { const P = FB_ISLES[0]; return { x: P.x + P.r + 34, y: P.y + 10, h: 0.55, sail: 0, holes: [], flood: 0, patched: 0 }; }
+// (hosting or alone, as she anchors) her pose and her state, kept for when you're back aboard
+function fbKeepShip(S) { const B = S.B; if (!B) return; FB.ship = { x: B.x, y: B.y, h: B.h, sail: B.sail, holes: S.holes.slice(), flood: S.flood, patched: S.patched | 0 }; }
+
+// ---------- starting, and stopping ----------
+// (raidBegin, with RAID.map set) is this Freebooters' Sea? Its state, fresh, and the sea
+function fbBegin() {
+  FB.on = RAID.map === 'fbsea';
+  if (!FB.on) return;
+  Object.assign(FB, { plan: [{ key: 'fbsail', i: 0 }], ship: fbFreshShip(), hold: [], gold: 0, left: {}, backT: 0, kit: null, ev: [], eseq: 0, evSeen: -1, sid: '' });
+  fbOrderFromPlan();
+}
+// (raidAfterStart) once it's laid out and we know who's in it: the session's id, and a test's jump
+function fbAfterStart() {
+  FB.sid = (typeof ZN !== 'undefined' && ZM.net && ZN.g) || 'solo-' + Math.random().toString(36).slice(2, 9);
+  fpsFeed('Take the wheel (Use) and sail her anywhere. Close in to an island and drop anchor to go ashore.');
+  if (FB.debug) { const d = FB.debug; FB.debug = null; if (typeof RCL !== 'undefined' && RCL.picking) rclChoose(RCL.last || 'merc'); if (d.key !== 'fbsail') fbGo(d.key, d.i); }
+}
+function fbStop() { FB.on = false; FB.backT = 0; FB.kit = null; }
+
+// ---------- lives ----------
+// (zmDown, alone) down with nobody to get you up: bled out at once, and back on your feet in a while
+function fbDownAlone() {
+  if (!(typeof FB !== 'undefined' && FB.on) || ZM.net) return false;
+  const m = FPS.me;
+  m.hp = 0; ZM.downT = 0; ZM.ghost = true; ZM.downKit = null; m.dead = FPSC.RESPAWN; m.reload = 0; FPS.scoped = false; FPS.helm = false;
+  fbBledOut(null);
+  zmSound('over');
+  return true;
+}
+// (zmBleedOut, together; fbDownAlone) back on your feet FBC.BACK seconds from now, with what you carried
+function fbBledOut(kit) {
+  FB.kit = kit || null; FB.backT = FBC.BACK;
+  ZM.banner = { text: 'You bled out', t: 3, sub: `Back on your feet in ${FBC.BACK} seconds`, col: '#ffe2a8' };
+  fpsFeed(`You bled out. You’re back on your feet in ${FBC.BACK} seconds.`);
+}
+// back on your feet, at the stage's start
+function fbBack() {
+  FB.backT = 0; if (!ZM.ghost) return;
+  const m = FPS.me;
+  ZM.ghost = false; ZM.downT = 0; m.dead = 0; m.hp = ZMC.HP; m.protect = 3; m.iframe = ZMC.IFRAME_UP;
+  if (FB.kit) { ZM.downKit = FB.kit; FB.kit = null; zmDownDisarm(); } else raidLoadout();
+  const slot = Math.max(0, ZM.hum.findIndex(h => h[0] === m.id));
+  m.x = FPSC.CX + ZMD.START[0] + [0, 1.5, -1.5, 0][slot % 4]; m.y = FPSC.CY + ZMD.START[1] + [0, -1.6, -1.6, 1.8][slot % 4]; m.jz = m.fl = ZMD.TOP; m.vz = 0;
+  ZM.banner = { text: 'Back on your feet', t: 2.5, small: true, col: '#ffe2a8' };
+  fpsFeed('You’re back on your feet.');
+  try { zmSound('wind'); } catch (e) {}
+}
+// (raidMe) each frame, everyone: the wait to be back on your feet
+function fbMe(dt) {
+  if (FB.backT > 0 && !ZM.over) { FB.backT -= dt; if (FB.backT <= 0) fbBack(); }
+  if (!ZM.ghost && FB.backT > 0 && !zmIsDown()) FB.backT = 0;   // (got up, or a new stage stood you up)
+}
+
+// ---------- what happens, for everyone ----------
+// (hosting or alone) a line for everyone and an event of kind k (with a, its say: heard as fbOn(k, ...a))
+function fbEvent(k, text, a) {
+  if (ZM.net === 'client') return;
+  FB.ev.push([++FB.eseq, k, text || '', a == null ? null : a]); if (FB.ev.length > 10) FB.ev.shift();
+  fbEventHere(k, text || '', a);
+}
+function fbEventHere(k, text, a) {
+  if (text) { fpsFeed(text); if (k === 'sold' || k === 'lost') ZM.banner = { text: k === 'sold' ? 'Sold' : 'The hold is lost', t: 3, sub: text, col: '#ffd88a', small: true }; }
+  if (k === 'sold') fbFire('sold', ...(Array.isArray(a) ? a : [0, [], '']));
+  else if (k === 'stow') fbFire('stow', ...(Array.isArray(a) ? a : ['', '']));
+  else if (k === 'lost') fbFire('lost', Array.isArray(a) ? a : []);
+  else if (k === 'ashore' || k === 'aboard') fbFire(k, a | 0);
+  else if (k) fbFire(k, a);
+}
+// (hosting or alone) the hold: one more thing in it
+function fbStowKind(kind, sid) { if (ZM.net === 'client') return; FB.hold.push(kind); fbEvent('stow', `${sid && sid !== FPS.me.id ? fbNick(sid) + ' stowed' : 'Stowed'} ${fbLootOf(kind).n} in the hold.`, [kind, sid || '']); }
+// (hosting or alone) the whole hold sold at the factor's table, with whatever sid has in their arms
+function fbSell(sid) {
+  if (ZM.net === 'client') return 0;
+  const S = RAID.st, extra = (S.loot || []).filter(o => o.by === sid);
+  for (const o of extra) { FB.hold.push(o.k); S.loot.splice(S.loot.indexOf(o), 1); }
+  const kinds = FB.hold.slice(), sum = fbHoldValue(); if (!kinds.length) return 0;
+  FB.gold += sum; FB.hold = [];
+  fbEvent('sold', `The factor buys ${fbHoldWords(kinds)} for ${fbSov(sum)}. The crew’s purse: ${fbSov(FB.gold)}.`, [sum, kinds, sid || '']);
+  return sum;
+}
+const fbNick = sid => !ZM.net ? 'You' : ((ZM.hum || []).find(h => h[0] === sid) || [])[1] || (sid === FPS.me.id ? 'The host' : 'Someone');
+
+// ---------- the ship lost ----------
+// (GWS_LEG.sunk, hosting or alone) she's gone down: the hold with her, and everyone washes up at Saltcote, a fresh
+// cutter lying off it
+function fbSunk() {
+  const lost = FB.hold.slice(); FB.hold = []; FB.ship = fbFreshShip();
+  fbEvent('lost', lost.length ? `She went down with ${fbHoldWords(lost)} in her hold. You wash up at Saltcote; a fresh cutter lies off the quay.` : 'She went down. You wash up at Saltcote; a fresh cutter lies off the quay.', lost);
+  fbGo('fb_port', 0);
+}
+
+// ---------- playing together (src/zmnet.js) ----------
+// the host's word for the session: fbw = [base (the plan's first entry sent), the plan from there ([key, i]), the ship
+// ([x, y, h, sail, holes, flood, patched]), the hold, the purse, events]
+function fbPack(z) {
+  const base = Math.max(0, FB.plan.length - FBC.KEEP), Sh = FB.ship || fbFreshShip(), r = v => Math.round(v * 100) / 100;
+  z.fbw = [base, FB.plan.slice(base).map(p => [p.key, p.i | 0]), [r(Sh.x), r(Sh.y), Math.round(Sh.h * 1e4) / 1e4, r(Sh.sail || 0), (Sh.holes || []).slice(), Math.round((Sh.flood || 0) * 1000), Sh.patched | 0],
+    FB.hold.slice(), FB.gold, FB.ev, FB.sid];
+  fbHooks('sail', 'packAll', z); fbHooks('isle', 'packAll', z); fbHooks('port', 'packAll', z);   // (a part's own session-wide word, whatever the stage)
+}
+// (raidApply, first of all) joined: the plan, so the stage number that follows lays out what the host has
+function fbApply(hz) {
+  const a = hz.fbw; if (!Array.isArray(a)) return;
+  const base = Math.max(0, a[0] | 0);
+  if (Array.isArray(a[1]) && a[1].length) {
+    const tail = a[1].filter(e => Array.isArray(e) && RAID_STAGES[e[0]]).map(e => ({ key: String(e[0]), i: clamp(e[1] | 0, 0, FB_ISLES.length - 1) }));
+    if (tail.length) {
+      const plan = FB.plan.slice(0, base); while (plan.length < base) plan.push({ key: 'fbsail', i: 0 });
+      // (what's before the base is never gone back to: kept as it was here, or the sea)
+      FB.plan = plan.concat(tail);
+      if (FB.plan.map(p => p.key).join() !== RAID_ORDER.join()) fbOrderFromPlan();
+    }
+  }
+  if (Array.isArray(a[2])) { const s = a[2]; FB.ship = { x: +s[0] || 0, y: +s[1] || 0, h: +s[2] || 0, sail: +s[3] || 0, holes: Array.isArray(s[4]) ? s[4].map(v => v | 0) : [], flood: (s[5] | 0) / 1000, patched: s[6] | 0 }; }
+  if (Array.isArray(a[3])) FB.hold = a[3].map(String).filter(k => FB_LOOT[k]);
+  FB.gold = Math.max(0, +a[4] || 0);
+  if (Array.isArray(a[5])) {
+    // (the first word heard: what's already happened isn't heard again)
+    if (FB.evSeen < 0) { FB.evSeen = 0; for (const e of a[5]) if (Array.isArray(e)) FB.evSeen = Math.max(FB.evSeen, e[0] | 0); }
+    for (const e of a[5]) { if (!Array.isArray(e) || !((e[0] | 0) > FB.evSeen)) continue; FB.evSeen = e[0] | 0; fbEventHere(String(e[1] || ''), znClean(e[2], 200), e[3]); }
+  }
+  if (typeof a[6] === 'string' && a[6]) FB.sid = a[6].slice(0, 24);
+  fbHooks('sail', 'applyAll', hz); fbHooks('isle', 'applyAll', hz); fbHooks('port', 'applyAll', hz);
+}
+// (raidReport, leaving) the session's say to the scoreboard: [c] src/fbkeep.js, to come
+function fbReport() { RAID.told = true; }
+
+// ---------- painted on top ----------
+function fbHudTitle(S) { return `Freebooters’ Sea · ${S && S.n || 'the Wide Water'}`; }
+// (raidHud, every stage) the crew's purse and the hold, top right; what you're carrying, low in the middle
+function fbHud(phone, mono, fell) {
+  const R = W - Math.max(14, FPS.safeRight || 0), y = (phone ? Math.max(10, FPS.safeTop || 0) + 70 : 118);
+  ctx.textAlign = 'right'; ctx.textBaseline = 'top';
+  const v = fbHoldValue(), hold = FB.hold.length ? `HOLD ${FB.hold.length} · ${v.toLocaleString('en')} SOV` : 'HOLD EMPTY';
+  const line1 = `PURSE ${Math.round(FB.gold).toLocaleString('en')} SOVEREIGNS`;
+  ctx.font = mono(phone ? 10 : 12); const w = Math.max(ctx.measureText(line1).width, ctx.measureText(hold).width) + 16;
+  ctx.fillStyle = 'rgba(8,10,14,0.5)'; ctx.fillRect(R - w + 6, y - 5, w, phone ? 32 : 40);
+  ctx.fillStyle = '#ffd88a'; ctx.fillText(line1, R, y);
+  ctx.fillStyle = FB.hold.length ? 'rgba(236,228,207,0.9)' : 'rgba(236,228,207,0.55)'; ctx.fillText(hold, R, y + (phone ? 14 : 18));
+  if (!phone && FB.hold.length) { ctx.font = mono(10); ctx.fillStyle = 'rgba(236,228,207,0.55)'; ctx.fillText(fbHoldWords(), R, y + 38, W * 0.4); }
+  const c = fbCarrying();
+  if (c && !ZM.over) {
+    ctx.textAlign = 'center'; ctx.textBaseline = 'bottom'; ctx.font = mono(phone ? 10 : 12); ctx.fillStyle = '#ffd88a';
+    ctx.fillText(`CARRYING ${fbLootOf(c.k).n.toUpperCase()} · ${fbLootOf(c.k).v} SOV · USE TO PUT IT DOWN · THE LANDING BOAT TO STOW IT`, cx, H - (phone ? 150 : 110), W - 40);
+  }
+  ctx.textBaseline = 'alphabetic';
+}
+
+// ---------- what you carry ----------
+// (any stage with loot: RAID.st.loot, src/fbisle.js) the item in my arms, or null
+function fbCarrying() { if (!(typeof FB !== 'undefined' && FB.on) || !RAID.on) return null; const L = RAID.st && RAID.st.loot; return L ? L.find(o => o.by === FPS.me.id) || null : null; }
+// (fpsShoot, vmDraw) arms full: no gun
+function fbNoGun() { return !!fbCarrying(); }
+
+// ---------- for tests ----------
+// fbDebug(stageKey, i): a session alone (the calling picked for you), then on to that stage: 'fbsail', 'fb_isle'
+// (island i of FB_ISLES, 1 to 12) or 'fb_port' (Saltcote). In one already (alone or hosting): straight there.
+function fbDebug(key, i) {
+  key = key || 'fbsail'; if (key === 'fb_isle' && !(i >= 1)) i = 1;
+  if (!(FPS.on && FB.on && RAID.on)) {
+    if (FPS.on) return false;
+    FB.debug = { key, i: i | 0 };
+    zmStart({ map: 'fbsea' });
+    return true;
+  }
+  if (ZM.net === 'client') return false;
+  if (key === 'fbsail' && RAID_ORDER[RAID.stage] !== 'fbsail') return fbGo('fbsail', 0);
+  return fbGo(key, i);
+}
+
+// ---------- its card on the title screen ----------
+(() => {
+  if (!$('fbTitle')) return;
+  $('fbPlay').addEventListener('click', () => { if (typeof znSoloOk === 'function' && !znSoloOk('fb')) return; zmStart({ map: 'fbsea' }); });
+  $('fbSettings').addEventListener('click', () => $('titleSettings').click());
+  $('fbWcrate').addEventListener('click', () => $('wcrateBtn').click());
+  $('fbOcrate').addEventListener('click', () => $('ocrateBtn').click());
+  if ($('fbBanner')) $('fbBanner').addEventListener('click', () => { $('fbTitle').scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' }); setTimeout(() => $('fbPlay').focus({ preventScroll: true }), 400); });
+})();
+
+// ---- src/fbsail.js ----
+// Freebooters' Sea: the open sea (RAID_STAGES.fbsail). The Gannet's Wake's Part I (src/gwsail.js) once more: the same
+// cutter, deck, helm, holes and flood, bell, flare locker, and the drowned over the rail, sailing just as the Brig
+// does, on a sea of its own with no mark to make, no Maren and no Plimsoll.
+//  - The sea, the Wide Water, is fixed: the same on every screen and every session. About 3 km square north of the
+//    Light (FBS.SEA), with the outpost of Saltcote at its south end and twelve islands across it (FB_ISLES), and rocks
+//    between them (fbSea: from a fixed seed, thicker round the reefs). Each island is drawn on the water in its own
+//    look (src/fpsisle.js FPS_ISLES: its ground, its beach, and a mark of its kind: a chapel's gable, a signal tower,
+//    a jetty, a wreck's ribs, reeds, a cairn). She runs up against an island's shore and is pushed off it, unharmed
+//    (gwsail's sea.shore); a rock holes her as ever.
+//  - The nearest island is the mark on the bearing strip, its name and how far off its shore under it.
+//  - Within FBS.REACH of an island's shore (or Saltcote's) she can drop anchor: at the wheel (Use, while you hold
+//    it) or at the capstan forward (Use, anyone). A moment later everyone's ashore: that island's stage
+//    (src/fbisle.js). Back aboard, she lies where she anchored, her head as it was, her holes, flood and hold kept,
+//    and her sail struck.
+//  - The rocks show inside FBS.SEE of her, in the deck lantern's light, the Light's beam and a flare's. The night is a
+//    little brighter out here (GWS_LEG.amb) so the islands show as shapes against the sea.
+//  - The drowned climb her side out on the open water, though not within FBS.CALM of Saltcote.
+// It's done through gwsail's GWS_LEG, as Fog Run's sail is (src/frsail.js): this file's prep fills it in from the ship
+// as she lies (FB.ship), and its exit clears it. Together it's the Gannet's Wake's word (g* keys), as is; dropping
+// anchor is raidAsk('anchor').
+// For the parts to come, fbHook('sail', h) (src/fbsea.js) adds to this stage; FB_ISLES, fbSea, fbNearest, fbInReach
+// and fbAnchor are here.
+
+const FBS = { SEA: [-1500, 1500, 900, 3900], REACH: 55, SEE: 150, CALM: 260, ROCKS: 230, SEED: 0xfb5ea, FOGC: '#0c1424', AMB: [0.62, 0.34], PROG: 0.15 };
+// the islands: their names, where they lie (the sea's frame: x east, y north, from the Light), their size on the water
+// (r, m), their look (FPS_ISLES) and the seed each is laid out from. The first is Saltcote, the outpost.
+var FB_ISLES = [
+  { n: 'Saltcote', x: -40, y: 1060, r: 62, look: 'cove', seed: 0x5a17c, port: true, say: 'the outpost: a quay, the factor’s table' },
+  { n: 'Gullstone', x: -560, y: 1380, r: 46, look: 'shingle', seed: 0x9011, say: 'grey shingle and gulls' },
+  { n: 'Widow’s Teeth', x: 470, y: 1540, r: 44, look: 'reef', seed: 0x71d0, say: 'black rock and broken hulls' },
+  { n: 'St Brannoc’s Isle', x: -1140, y: 1820, r: 50, look: 'chapel', seed: 0xb4a6, say: 'a roofless chapel and its graves' },
+  { n: 'Tallow Cove', x: 1150, y: 1270, r: 48, look: 'cove', seed: 0x7a11, say: 'a smugglers’ jetty' },
+  { n: 'Beacon Knoll', x: -220, y: 2080, r: 52, look: 'cliff', seed: 0xbe4c, say: 'heather and a ruined signal tower' },
+  { n: 'Marrowfen', x: 860, y: 2230, r: 50, look: 'marsh', seed: 0x3a40, say: 'mud, reeds and marsh lights' },
+  { n: 'Crowsnest Rock', x: -1250, y: 2720, r: 46, look: 'cliff', seed: 0xc405, say: 'crags and a stair cut in them' },
+  { n: 'The Coffin Stones', x: 300, y: 2780, r: 46, look: 'reef', seed: 0xc0ff, say: 'wrecks on the rocks' },
+  { n: 'Hangman’s Holm', x: 1300, y: 2920, r: 44, look: 'shingle', seed: 0x4a46, say: 'a bleak shingle holm' },
+  { n: 'Gilt Strand', x: -640, y: 3360, r: 48, look: 'cove', seed: 0x6117, say: 'a golden beach and a boathouse' },
+  { n: 'Mother Carey’s Rest', x: 760, y: 3600, r: 50, look: 'chapel', seed: 0xca4e, say: 'an old chapel among the stones' },
+  { n: 'Blackwater Holm', x: -1320, y: 3740, r: 46, look: 'marsh', seed: 0xb1ac, say: 'black pools and peat' },
+];
+// the sea: its rocks (fixed), and the islands' shores she runs up against; laid out once, the same on every side
+var FBS_SEA = null;
+function fbSea() {
+  if (FBS_SEA) return FBS_SEA;
+  const R = seeded(FBS.SEED), rnd = (a, b) => a + R() * (b - a), rocks = [], [x0, x1, y0, y1] = FBS.SEA, S0 = fbFreshShip();
+  const ok = (x, y, r) => Math.hypot(x - S0.x, y - S0.y) > 90 && !FB_ISLES.some(I => Math.hypot(I.x - x, I.y - y) < I.r + r + 40) && !rocks.some(o => Math.hypot(o.x - x, o.y - y) < o.r + r + 22);
+  const add = (x, y, r) => { const prof = []; for (let i = 0; i < 7; i++) prof.push(rnd(0.35, 1)); prof[0] = rnd(0.15, 0.45); prof[6] = rnd(0.15, 0.45); rocks.push({ x, y, r, prof, ph: rnd(0, 6.28), seen: -99, lit: 0, i: rocks.length }); };
+  // round the reefs, a ring of rocks, open to the south (the way in)
+  for (const I of FB_ISLES) if (I.look === 'reef') for (let k = 0; k < 11; k++) { const a = k / 11 * 6.283 + rnd(-0.2, 0.2); if (a > 2.7 && a < 3.6) continue; const d = I.r + rnd(48, 80), x = I.x + Math.sin(a) * d, y = I.y + Math.cos(a) * d, r = rnd(4, 9); if (ok(x, y, r)) add(x, y, r); }
+  // and the rest across the open water, more of them the further north
+  for (let n = 0; n < 20000 && rocks.length < FBS.ROCKS; n++) { const y = y0 + Math.sqrt(rnd(0, 1)) * (y1 - y0), x = rnd(x0, x1), r = rnd(4, 15); if (ok(x, y, r)) add(x, y, r); }
+  const shore = FB_ISLES.map((I, i) => ({ x: I.x, y: I.y, r: I.r - 6, i }));
+  return FBS_SEA = { rocks, shore, path: [{ x: S0.x, y: S0.y }, { x: S0.x, y: S0.y + 1 }], spars: [], len: y1 - y0 };
+}
+// the nearest island to (x, y) in the sea's frame: which, and how far off its shore
+function fbNearest(x, y) { let b = { i: 0, d: 1e9 }; FB_ISLES.forEach((I, i) => { const d = Math.hypot(I.x - x, I.y - y) - I.r; if (d < b.d) b = { i, d }; }); return b; }
+// the island she can anchor off now (-1: none in reach)
+function fbInReach(B) { if (!B) return -1; const n = fbNearest(B.x, B.y); return n.d < FBS.REACH ? n.i : -1; }
+const fbsNear = () => { const S = RAID.st, V = S && (S.V || S.B); return V ? fbNearest(V.x, V.y) : { i: 0, d: 1e9 }; };
+const fbsReach = () => { const S = RAID.st; return S && S.ph === 'sail' ? fbInReach(S.V || S.B) : -1; };
+// a bearing in words, from her bow: ahead, off the starboard bow...
+function fbsSide(V, x, y) {
+  const a = angDiff(bearingOf(x - V.x, y - V.y), V.h), A = Math.abs(a), s = a > 0 ? 'starboard' : 'port';
+  return A < 0.25 ? 'dead ahead' : A < 1.1 ? `off the ${s} bow` : A < 2.0 ? `on the ${s} beam` : A < 2.9 ? `on the ${s} quarter` : 'astern';
+}
+
+// (prep) the sea, into GWS_LEG, from the ship as she lies; before the world's laid out
+function fbsLeg() {
+  const Sh = FB.ship || fbFreshShip(), sea = fbSea();
+  GWS_LEG = { key: 'fbsail', n: 0, seed: FBS.SEED, start: [Sh.x, Sh.y], h0: Sh.h, mark: [FB_ISLES[0].x, FB_ISLES[0].y], isleR: FB_ISLES[0].r, markIn: -1, rocks: sea.rocks.length, fog: FBS.SEE, maren: false, plim: false,
+    sea, amb: FBS.AMB, look: 'cove', ground: FPS_ISLES.cove.ground, ground2: FPS_ISLES.cove.ground2,
+    // (her state as she was: anchored, so her way is off her and her sail struck, never her speed to come)
+    enter(S) { const B = S.B; B.v = 0; B.sail = 0.15; B.rudder = 0; S.V = Object.assign({}, B); S.holes = (Sh.holes || []).slice(); S.flood = Sh.flood || 0; S.patched = Sh.patched | 0; },
+    sunk: () => fbSunk(),
+    prog: () => FBS.PROG,
+    spawnOk: () => { const B = RAID.st.B; return !B || Math.hypot(B.x - FB_ISLES[0].x, B.y - FB_ISLES[0].y) > FBS.CALM; },
+    row: () => ['HOLD', FB.hold.length ? `${FB.hold.length} · ${fbHoldValue().toLocaleString('en')} SOV` : 'EMPTY', FB.hold.length ? '#ffd88a' : null],
+    markLab: () => { const n = fbsNear(); return `${FB_ISLES[n.i].n} · ${Math.max(0, Math.round(n.d))} m`; },
+    line: (S, dm) => { const n = fbsNear(), I = FB_ISLES[n.i], V = S.V || S.B;
+      if (S.ph === 'beach') return `The anchor’s down off ${FB_ISLES[S.fbAt | 0].n}. Going ashore…`;
+      if (S.ph === 'sunk') return 'She’s going down.';
+      if (fbsReach() >= 0) return `Off ${I.n}: drop anchor (Use at the wheel, or at the capstan forward) to go ashore`;
+      return `The Wide Water · ${I.n}, ${Math.max(0, Math.round(n.d)).toLocaleString('en')} m ${fbsSide(V, I.x, I.y)}`; },
+    b3: fbs3dBuild, f3: fbs3d };
+  FPS_ISLES.fbsail.fog = [FBS.FOGC, 600, 4200];
+}
+FPS_ISLES.fbsail = Object.assign({}, FPS_ISLES.gwsail, { name: 'the Wide Water', fog: [FBS.FOGC, 600, 4200] });
+FPI_GEN.fbsail = FPI_GEN.gwsail;
+const FBS_MAP = Object.assign({}, GWS_MAP, { isle: 'fbsail' });
+
+// (hosting or alone) drop anchor off the island in reach, and a moment later everyone's ashore
+function fbAnchor(sid) {
+  const S = RAID.st; if (!S.B || S.ph !== 'sail' || ZM.net === 'client') return false;
+  const i = fbInReach(S.B); if (i < 0) return false;
+  const I = FB_ISLES[i];
+  S.ph = 'beach'; S.beachT = 0; S.fbAt = i; S.helm = null;
+  fbKeepShip(S);
+  gwsSay(`${sid && sid !== FPS.me.id ? fbNick(sid) + ' lets go the anchor' : 'The anchor’s down'} off ${I.n}. Ashore!`, true);
+  GWS_LEG.arrive = () => { fbKeepShip(S); fbEvent('ashore', '', i); fbGo(I.port ? 'fb_port' : 'fb_isle', i); };
+  return true;
+}
+const fbsCall = (k, ...a) => fbHooks('sail', k, ...a);
+RAID_STAGES.fbsail = Object.assign({}, RAID_STAGES.gwsail, {
+  n: 'At sea', map: FBS_MAP, gws: true,
+  music: () => fbsCall('music') || FB_MUSIC.sail,
+  prep(i) { fbsLeg(); fbsCall('prep', i); },
+  enter() {
+    if (!GWS_LEG) fbsLeg();
+    RAID_STAGES.gwsail.enter();
+    RAID.st.fbAt = -1;
+    ZM.banner = this.banner();
+    fpsFeed(RAID.stage === 0 ? 'The keeper’s cutter, lying off Saltcote. Take the wheel (Use) and sail her anywhere: the nearest island is on the strip at the top.' : 'Back aboard, where she lay. Take the wheel (Use) and make sail.');
+    fbsCall('enter');
+  },
+  banner() { return { text: 'The Wide Water', t: 4.5, sub: RAID.stage === 0 ? 'Freebooters’ Sea · off Saltcote' : 'Back aboard', col: '#ffd88a' }; },
+  tick(dt) { gwsTick(dt); fbsCall('tick', dt); },
+  me(dt) {
+    gwsMe(dt);
+    // (the strip's mark: the nearest island)
+    const S = RAID.st, V = S.V || S.B; if (V && GWS_LEG) { const n = fbNearest(V.x, V.y), I = FB_ISLES[n.i]; GWS_LEG.mark = [I.x, I.y]; GWS_LEG.isleR = I.r; }
+    fbsCall('me', dt);
+  },
+  q(sid, k, a) { if (k === 'anchor') { fbAnchor(sid); return; } if (fbsCall('q', sid, k, a)) return; gwsQ(sid, k, a); },
+  pack(o) { gwsPack(o); fbsCall('pack', o); },
+  apply(o) { gwsApply(o); fbsCall('apply', o); },
+  consider(c) {
+    gwsConsider(c);
+    // the anchor's capstan forward: let go the anchor, when she's in reach of an island
+    if (fbsReach() >= 0) { const [x, y] = gwsW(2.35, 7.4); c({ k: 'fbanchor' }, x, y, GWS.D, 1.6, false); }
+    fbsCall('consider', c);
+  },
+  prompt(o) {
+    const i = fbsReach();
+    if (o.k === 'fbanchor') return i >= 0 ? { text: `Let go the anchor off ${FB_ISLES[i].n}, and go ashore`, free: true } : null;
+    if (o.k === 'gwhelm' && FPS.helm && i >= 0) return { text: `Drop anchor off ${FB_ISLES[i].n}, and go ashore`, free: true };
+    return fbsCall('prompt', o) || gwsPrompt(o);
+  },
+  use(o) {
+    if ((o.k === 'fbanchor' || (o.k === 'gwhelm' && FPS.helm)) && fbsReach() >= 0) { if (FPS.helm) gwsLetGo(); raidAsk('anchor'); return true; }
+    if (o.k === 'fbanchor') return true;
+    return !!fbsCall('use', o) || gwsUse(o);
+  },
+  hud(phone, mono, fell) { gwsHud(phone, mono, fell); fbsCall('hud', phone, mono, fell); },
+  b3(grp) { gws3dBuild(grp); fbsCall('b3', grp); },
+  f3(dt) { gws3d(dt); fbsCall('f3', dt); },
+  block(x, y, pad, feet) { return RAID_STAGES.gwsail.block(x, y, pad, feet) || !!fbsCall('block', x, y, pad, feet); },
+  kill(d, how, by) { fbsCall('kill', d, how, by); },
+  hurt(d, dmg, code, by) { return fbHookHurt('sail', d, dmg, code, by); },
+  players(P) { return fbHookPlayers('sail', P); },
+  shot(...a) { fbsCall('shot', ...a); },
+  exit() { fbsCall('exit'); gwsExit(); GWS_LEG = null; if (typeof GL3D !== 'undefined' && GL3D.scene) GL3D.scene.fog = null; },
+});
+
+// ---------- the islands out there, in 3D (in the sea's group: GWS_LEG.b3 and f3) ----------
+function fbs3dBuild(SG, G) {
+  const lam = c => z3Lam(c), rk = lam('#4e5052'), rk2 = lam('#3e403e'), wood = lam('#3a2e22'), stone = lam('#6a6a64');
+  G.fbI = [];
+  FB_ISLES.forEach((I, i) => {
+    const T = FPS_ISLES[I.look] || FPS_ISLES.shingle, R = seeded(I.seed ^ 0x15e), g0 = new THREE.Group(); g0.position.set(I.x, 0, -I.y); SG.add(g0);
+    const hi = I.look === 'cliff' ? 9 : I.look === 'marsh' ? 1.6 : I.look === 'chapel' ? 5 : I.look === 'reef' ? 3 : 4;
+    // a hump of the island's own ground, a beach round it, a few rocks on it
+    const mound = new THREE.Mesh(new THREE.SphereGeometry(1, 30, 10), lam(T.ground)); mound.scale.set(I.r * 0.92, hi, I.r * 0.92); mound.position.y = -0.6; g0.add(mound);
+    const beach = new THREE.Mesh(new THREE.CylinderGeometry(I.r, I.r + 5, 0.9, 36), lam(T.ground2)); beach.position.y = -0.25; g0.add(beach);
+    for (let k = 0; k < 10; k++) { const a = R() * 6.283, d = I.r * (0.35 + R() * 0.6), r = 1.5 + R() * 3.5; const m = new THREE.Mesh(new THREE.DodecahedronGeometry(r, 0), k % 2 ? rk : rk2); m.position.set(Math.cos(a) * d, r * 0.3 + hi * (1 - d / I.r) * 0.8, Math.sin(a) * d); m.rotation.set(R() * 3, R() * 3, R() * 3); g0.add(m); }
+    const top = hi - 0.6;
+    // and a mark of its kind, to know it by from the water
+    if (I.look === 'chapel') { const nave = new THREE.Mesh(new THREE.BoxGeometry(6, 3.4, 12), stone); nave.position.set(4, top + 1.2, 2); nave.rotation.y = 0.4; g0.add(nave); const gab = new THREE.Mesh(new THREE.BoxGeometry(6, 6.5, 1), stone); gab.position.set(4 + Math.sin(0.4) * 6, top + 2.6, 2 + Math.cos(0.4) * 6); gab.rotation.y = 0.4; g0.add(gab); }
+    else if (I.look === 'cliff') { const tw = new THREE.Mesh(new THREE.CylinderGeometry(2.6, 3, 9, 12), stone); tw.position.set(-6, top + 4, 4); g0.add(tw); const s = G.glowSp(0xffb060, 10, { opacity: 0.55 }); s.position.set(-6, top + 9.6, 4); g0.add(s); }
+    else if (I.look === 'cove') { const j = new THREE.Mesh(new THREE.BoxGeometry(2.6, 0.5, 22), wood); const a = I.port ? Math.PI * 0.6 : R() * 6.283; j.position.set(Math.cos(a) * (I.r + 8), 0.6, Math.sin(a) * (I.r + 8)); j.rotation.y = -a + Math.PI / 2; g0.add(j); const bh = new THREE.Mesh(new THREE.BoxGeometry(8, 4.5, 10), wood); bh.position.set(Math.cos(a) * (I.r - 14), top * 0.4 + 2, Math.sin(a) * (I.r - 14)); bh.rotation.y = -a; g0.add(bh); }
+    else if (I.look === 'reef') { for (let k = 0; k < 2; k++) { const a = R() * 6.283, w = new THREE.Group(); w.position.set(Math.cos(a) * I.r * 0.5, 0.5, Math.sin(a) * I.r * 0.5); w.rotation.set(0.25, R() * 6.28, 0.1); g0.add(w); for (let r = 0; r < 6; r++) { const rib = new THREE.Mesh(new THREE.TorusGeometry(2.4, 0.18, 4, 10, Math.PI), wood); rib.position.z = r * 1.4 - 3.5; w.add(rib); } } }
+    else if (I.look === 'marsh') { const reed = lam('#6a7040'); for (let k = 0; k < 40; k++) { const a = R() * 6.283, d = R() * I.r * 0.9, m = new THREE.Mesh(new THREE.ConeGeometry(0.5, 2.4 + R() * 1.6, 4), reed); m.position.set(Math.cos(a) * d, 1.2, Math.sin(a) * d); g0.add(m); } const s = G.glowSp(0xb8ffb0, 4, { opacity: 0.35 }); s.position.set(5, 2, -6); g0.add(s); }
+    else { const c = new THREE.Mesh(new THREE.CylinderGeometry(1, 1.6, 2.6, 7), stone); c.position.set(2, top + 1.2, -3); g0.add(c); }
+    // Saltcote: its quay's lamps and its windows, warm across the water
+    if (I.port) { for (let k = 0; k < 6; k++) { const a = Math.PI * 0.6 + (k - 2.5) * 0.28, s = G.glowSp(0xffc070, 7, { opacity: 0.7 }); s.position.set(Math.cos(a) * (I.r - 6), top * 0.5 + 3, Math.sin(a) * (I.r - 6)); g0.add(s); }
+      for (let k = 0; k < 4; k++) { const hut = new THREE.Mesh(new THREE.BoxGeometry(6, 4, 5), wood); const a = Math.PI * 0.6 + (k - 1.5) * 0.45; hut.position.set(Math.cos(a) * (I.r - 22), top * 0.6 + 2, Math.sin(a) * (I.r - 22)); hut.rotation.y = -a; g0.add(hut); } }
+    // a faint lantern at its landing, so there's something to steer for at night
+    const lg = G.glowSp(0xffd8a0, I.port ? 18 : 6, { opacity: 0 }); lg.position.set(0, top + 3, 0); g0.add(lg);
+    G.fbI.push({ g: g0, lg, I });
+  });
+}
+function fbs3d(dt, V) {
+  const G = GW3; if (!G.fbI) return;
+  for (const o of G.fbI) { const d = Math.hypot(o.I.x - V.x, o.I.y - V.y) - o.I.r; o.lg.material.opacity = clamp(1.2 - d / 1400, 0.08, 0.5) * (0.85 + 0.15 * Math.sin(g.t * 1.3 + o.I.x)); }
+  if (GL3D.scene && GL3D.scene.fog) { const F = GL3D.scene.fog; F.near = 600; F.far = 4200; }
+}
+
+// ---- src/fbisle.js ----
+// Freebooters' Sea: going ashore (RAID_STAGES.fb_isle, any of the twelve islands, and RAID_STAGES.fb_port, Saltcote).
+//
+// Each island is a small one (FBI.R across its radius; Saltcote FBI.PORT_R) in its own look of Wreckers' Night's
+// (FPS_ISLES: the Shingle Skerry, Wreckers' Reef, Chapel Islet, Smugglers' Cove, Signal Head, the Salt Marsh), with
+// its own rocks, wrecks and props as that look lays them out, laid out from the island's own seed (FB_ISLES[i].seed,
+// through the stage's map.seed), so it's the same island at every visit and on every screen.
+//  - The landing: the clearest stretch of shore on the side she's anchored off (where the ship lies, FB.ship), a
+//    landing boat drawn up there and a lamp on a post. It's the stage's start (where you come ashore, and where you're
+//    back on your feet after bleeding out).
+//  - What's lying about (FB_LOOT, src/fbsea.js): a chest (better the further north the island) and a trinket or two
+//    on every island, now and then a cargo crate washed up by the shore, laid out with the island; what's left when
+//    you go is still there next time (FB.left). Use picks one up and you carry it in your arms (no gun while you do),
+//    Use again puts it down in front of you; going down drops it where you fall. Use at the landing boat with it in
+//    your arms stows it in the hold (FB.hold). With nothing in your arms, Use at the boat takes everyone back aboard
+//    FBC.AWAY seconds later (anything still in someone's arms goes aboard with them), and you're at sea where she lay.
+//  - The drowned come up out of the shore a few at a time, more the more of you there are (fbIsleSpawn). Not at
+//    Saltcote.
+//  - Saltcote (fb_port) is the outpost: its quay (Smugglers' Cove's jetty and boathouse), the factor's table on the
+//    shore near the landing (Use: the hold sold for sovereigns, src/fbsea.js fbSell), a voyage board beside it (for
+//    voyages, to come), crates and lamps about. The spot kept for its chapel is FPS.g.isle.zm.fb.chapel.
+// Together it's host-authoritative: the host has the loot (who carries what, where it lies), the clock to go back
+// aboard and the drowned, and sends them in the stage's word (fl: the loot, fa: the clock, fsy: a line). A joined
+// player asks the host (raidAsk 'carry' id, 'drop' [id, x, y], 'stow' id, 'aboard', 'sell'), and sees it done at once
+// on their own side meanwhile.
+// For the parts to come: fbHook('isle', h) and fbHook('port', h) (src/fbsea.js), with set(H, K, Z) laying out their
+// own things with the island; fbIsleNow(), fbIsleSpot(r, dmin, dmax), fbIsleSpawn(o), FBI.land(), fbLootAdd() here.
+
+const FBI = { R: 44, PORT_R: 52, USE_R: 1.7, BOAT_R: 2.6, CAP: 2, GAP: 8, FIRST: 8, land: () => fbiLand() };
+
+// ---------- the island's look, small ----------
+const fbIsleNow = () => { const p = fbPlanNow(); return p && p.key !== 'fbsail' ? FB_ISLES[p.i] || null : null; };
+function fbIsleLook(i) {
+  const p = FB.plan[i] || { i: 1 }, I = FB_ISLES[p.i] || FB_ISLES[1], B = FPS_ISLES[I.look] || FPS_ISLES.shingle;
+  FPS_ISLES.fbisle = Object.assign({}, B, {
+    name: I.n, look: FPS_ISLES[I.look] ? I.look : 'shingle',
+    rocks: [Math.ceil(B.rocks[0] * 0.35), B.rocks[1], Math.min(B.rocks[2], 5), B.rocks[3]],
+    wrecks: [Math.min(1, B.wrecks[0]), B.wrecks[1] || 6, Math.min(B.wrecks[2] || 8, 7)],
+    fog: [B.fog[0], Math.round(B.fog[1] * 0.5), Math.round(Math.min(B.fog[2], 700))],
+    birds: [B.birds[0], Math.min(3, B.birds[1])], pebbles: Math.round(B.pebbles * 0.3), tufts: [B.tufts[0], Math.round(B.tufts[1] * 0.3)], pools: Math.round(B.pools * 0.3), wrack: Math.round(B.wrack * 0.5),
+    indoor: false, keep: false, arena: false, noGround: false,
+  });
+  const R = I.port ? FBI.PORT_R : FBI.R;
+  Object.assign(FBI_MAP, { R, seed: I.seed, nav: [-R, R, -R, R], start: [0, -(R - 7)] });
+  FBI_MAP.zones.isle.r = [-R, R, -R, R]; FBI_MAP.zones.isle.n = I.n;
+}
+FPS_ISLES.fbisle = Object.assign({}, FPS_ISLES.shingle, { look: 'shingle' });
+const FBI_MAP = { start: [0, -(FBI.R - 7)], top: 0, R: FBI.R, seed: 0, isle: 'fbisle', shore: () => -999, nav: [-FBI.R, FBI.R, -FBI.R, FBI.R], zones: { isle: { n: 'the island', r: [-FBI.R, FBI.R, -FBI.R, FBI.R], sky: true } } };
+var FBI_H = null;   // (the island's laying-out tools, while it's being laid out: fbIsleSpot)
+// a clear spot on the island as it's laid out (r across, between dmin and dmax from the middle), or null
+function fbIsleSpot(r, dmin, dmax) { return FBI_H ? FBI_H.spot(r, dmin == null ? 6 : dmin, dmax == null ? FBI_H.IR - 8 : dmax, 2.4) : null; }
+FPI_GEN.fbisle = {
+  built: true,
+  set(H) {
+    const T = H.I.T, L = FPI_GEN[T.look] || {}, { CX, CY, IR } = H, I = fbIsleNow() || FB_ISLES[1], port = !!I.port;
+    const Z = H.I.zm = { doors: [], windows: [], buys: [], perks: [], spawns: [], lights: [] };
+    FBI_H = H;
+    if (L.set) L.set(H);
+    // the landing: the clearest stretch of shore on the side she's anchored off, the boat drawn up, a lamp
+    const Sh = FB.ship, a0 = Sh ? Math.atan2(Sh.y - I.y, Sh.x - I.x) : -Math.PI / 2;
+    let land = null;
+    for (let k = 0; k < 24 && !land; k++) { const a = a0 + (k % 2 ? 1 : -1) * Math.ceil(k / 2) * 0.22, [x, y] = H.polar(a, IR - 7); if (H.clear(x, y, 3, 1)) land = [x, y, a]; }
+    if (!land) { const [x, y] = H.polar(a0, IR - 7); land = [x, y, a0]; }
+    const [bx, by] = H.polar(land[2] + 0.1, IR - 3);
+    H.put('boat', bx, by, land[2] + Math.PI / 2 + 0.25, { len: 4.4, beam: 1.6, paint: '#5a3a26', upright: true });
+    { const [lx, ly] = H.polar(land[2] - 0.12, IR - 5); fpiLanternPost(H, lx, ly, land[2]); }
+    const [sx, sy] = H.polar(land[2], IR - 9);
+    Z.fb = { land: [sx - CX, sy - CY], landA: land[2], boat: [bx - CX, by - CY], loot: [] };
+    // Saltcote: the factor's table near the landing, the voyage board beside it, cargo about, and room for a chapel
+    if (port) {
+      const near = (da, d, r) => { for (let k = 0; k < 16; k++) { const [x, y] = H.polar(land[2] + da + (k % 2 ? 1 : -1) * Math.ceil(k / 2) * 0.06, d - Math.floor(k / 4) * 2); if (H.clear(x, y, r, 1.2)) return [x, y]; } return H.polar(land[2] + da, d); };
+      const tb = near(0.32, IR - 13, 2.2); H.put('fbtable', tb[0], tb[1], land[2] + Math.PI / 2, {}); Z.fb.table = [tb[0] - CX, tb[1] - CY];
+      H.light(tb[0], tb[1], 2.6, '#ffc070', 9, 'lantern');
+      const vb = near(-0.32, IR - 13, 1.6); H.put('fbboard', vb[0], vb[1], land[2] + Math.PI / 2, {}); Z.fb.board = [vb[0] - CX, vb[1] - CY];
+      for (let k = 0; k < 3; k++) { const at = H.near(tb[0], tb[1], 1.6, 3.5, 7, 1.6); if (at) fpiCrates(H, at[0], at[1], k === 0); }
+      { const at = H.near(vb[0], vb[1], 1.2, 3, 6, 1.6); if (at) fpiBarrels(H, at[0], at[1]); }
+      for (const da of [0.6, -0.6]) { const [x, y] = H.polar(land[2] + da, IR - 8); if (H.clear(x, y, 0.5, 1)) fpiLanternPost(H, x, y, land[2]); }
+      const ch = H.spot(6, 8, IR - 18, 3); Z.fb.chapel = ch ? [ch[0] - CX, ch[1] - CY] : [0, 0];
+    } else {
+      // what's lying about: a chest (better the further out), a trinket or two, now and then a cargo crate
+      const R = seeded(I.seed ^ 0x10a7), far = (I.y - FB_ISLES[0].y) / 2700, u = R();
+      const chest = u < 0.25 + far * 0.5 ? (R() < far * 0.6 ? 'chest3' : 'chest2') : 'chest';
+      const kinds = [chest], tr = Object.keys(FB_LOOT).filter(k => FB_LOOT[k].trinket);
+      for (let k = 0, n = 1 + (R() < 0.5 ? 1 : 0); k < n; k++) kinds.push(tr[(R() * tr.length) | 0]);
+      if (R() < 0.35) kinds.push('crate');
+      for (const k of kinds) { const at = k === 'crate' ? H.spot(1, IR - 16, IR - 6, 2.4) : H.spot(1, 6, IR - 9, 2.4); if (at) Z.fb.loot.push([k, at[0] - CX, at[1] - CY]); }
+    }
+    // (where you come ashore: the landing, a little up the beach)
+    ZMD.START = Z.fb.land.slice(); FBI_MAP.start = Z.fb.land.slice();
+    fbHooks(port ? 'port' : 'isle', 'set', H, zmKit(H, Z), Z);
+  },
+  props(H) { const L = FPI_GEN[H.I.T.look] || {}; if (L.props) L.props(H); FBI_H = null; },
+  decor() {},
+};
+// the factor's table: a trestle table under an awning, his ledger, scales and stacks of coin on it, a stool
+FPI_K.fbtable = {
+  col: FPI_C.wood2,
+  sol(p) { return [fpiBox(p, 0, 0, 1.1, 0.45, 0.85)]; },
+  b3(p, A) {
+    A.box('#5e4a34', 0, 0, 0.78, 2.2, 0.9, 0.08);
+    for (const [u, v] of [[-0.95, -0.35], [0.95, -0.35], [-0.95, 0.35], [0.95, 0.35]]) A.box(FPI_C.wood3, u, v, 0, 0.08, 0.08, 0.78);
+    A.box('#2e2a22', -0.5, 0.05, 0.86, 0.5, 0.36, 0.05); A.box('#d8ccb0', -0.5, 0.05, 0.91, 0.46, 0.32, 0.01);   // (the ledger, open)
+    A.cyl(FPI_C.brass, 0.4, 0.1, 0.86, 0.03, 0.4); A.box(FPI_C.brass, 0.4, 0.1, 1.26, 0.5, 0.03, 0.03);   // (the scales)
+    for (const du of [-0.25, 0.25]) A.cyl(FPI_C.brass, 0.4 + du, 0.1, 1.1, 0.09, 0.02);
+    for (let i = 0; i < 4; i++) A.cyl('#d8b050', 0.85 - i * 0.12, -0.25, 0.86, 0.035, 0.03 + i * 0.03);   // (sovereigns, stacked)
+    A.cyl(FPI_C.wood3, 0, 0.85, 0, 0.2, 0.5);   // (his stool)
+    // the awning: four poles and a canvas
+    for (const [u, v] of [[-1.3, -0.8], [1.3, -0.8], [-1.3, 0.9], [1.3, 0.9]]) A.cyl(FPI_C.wood3, u, v, 0, 0.05, v < 0 ? 2.3 : 2.6);
+    A.box('#8a7a5a', 0, 0.05, 2.45, 2.8, 1.9, 0.05, 0, 0.12);
+    A.glow('#ffd08a', 1.2, 0.85, 2.3, 0.2);
+  },
+};
+// the voyage board: two posts and a board with papers pinned to it (voyages: to come)
+FPI_K.fbboard = {
+  col: FPI_C.wood3,
+  sol(p) { return [fpiBox(p, 0, 0, 0.75, 0.12, 2.1)]; },
+  b3(p, A) {
+    for (const u of [-0.7, 0.7]) A.box(FPI_C.wood3, u, 0, 0, 0.1, 0.1, 2.2);
+    A.box('#4a3a2a', 0, 0, 1.0, 1.5, 0.06, 1.0);
+    for (const [u, z, c] of [[-0.4, 1.55, '#d8ccb0'], [0.15, 1.6, '#cfc2a2'], [0.45, 1.25, '#d8ccb0'], [-0.2, 1.2, '#c8b890']]) A.box(c, u, -0.04, z, 0.34, 0.01, 0.42);
+    A.box('#3a2e22', 0, 0, 2.05, 1.7, 0.2, 0.08);
+  },
+};
+const fbiFb = () => { const Z = FPS.g && FPS.g.isle && FPS.g.isle.zm; return Z && Z.fb || null; };
+const fbiW = a => [FPSC.CX + a[0], FPSC.CY + a[1]];
+function fbiLand() { const F = fbiFb(); return F ? fbiW(F.boat) : [FPSC.CX, FPSC.CY - FBI.R + 3]; }
+const fbiGround = (x, y) => FPSC.GROUND + (typeof fpsIsleH === 'function' && FPS.g ? fpsIsleH(FPS.g.isle, x, y) : 0);
+const fbiAble = () => { const m = FPS.me; return !(m.dead > 0) && !zmIsDown() && !ZM.over; };
+const fbiN = () => Math.max(1, ZM.hum.length);
+
+// ---------- the loot, on land ----------
+// (hosting or alone) an item of kind lying at (x, y) on this stage (world coordinates)
+function fbLootAdd(kind, x, y) {
+  const S = RAID.st; if (!S.loot || ZM.net === 'client' || !FB_LOOT[kind]) return null;
+  S.lseq = (S.lseq | 0) + 1;
+  const o = { id: 'a' + RAID.stage + '.' + S.lseq, k: kind, x, y, by: '' }; S.loot.push(o); return o;
+}
+// (hosting or alone) what a player asked of the loot: carry (a: its id), drop ([id, x, y], from the island's middle),
+// stow (id: at the landing boat)
+function fbLootQ(sid, k, a) {
+  const S = RAID.st, L = S.loot; if (!L) return false;
+  if (k === 'carry') { const o = L.find(q => q.id === String(a)); if (o && !o.by && !L.some(q => q.by === sid)) o.by = sid; return true; }
+  if (k === 'drop') { if (!Array.isArray(a)) return true; const o = L.find(q => q.id === String(a[0])); if (o && o.by === sid) { const R = FPSC.R - 2, x = clamp(+a[1] || 0, -R, R), y = clamp(+a[2] || 0, -R, R); o.by = ''; o.x = FPSC.CX + x; o.y = FPSC.CY + y; } return true; }
+  if (k === 'stow') { const o = L.find(q => q.id === String(a)); if (o && o.by === sid) { L.splice(L.indexOf(o), 1); fbStowKind(o.k, sid); } return true; }
+  return false;
+}
+// (hosting or alone) going back aboard: what's in anyone's arms goes with them, and what's lying is left for next time
+function fbIsleKeep() {
+  const S = RAID.st, p = fbPlanNow(); if (!S.loot || !p || ZM.net === 'client') return;
+  FB.left[p.i] = S.loot.filter(o => !o.by).map(o => ({ id: o.id, k: o.k, x: o.x - FPSC.CX, y: o.y - FPSC.CY }));
+}
+function fbIsleLeave() {
+  const S = RAID.st, p = fbPlanNow(); if (!p || ZM.net === 'client' || ZM.over) return;
+  for (const o of S.loot.filter(o => o.by)) { S.loot.splice(S.loot.indexOf(o), 1); fbStowKind(o.k, o.by); }
+  fbIsleKeep(); S.kept = 1;
+  fbEvent('aboard', '', p.i);
+  fbGo('fbsail', 0);
+}
+
+// ---------- the drowned ----------
+// (hosting or alone) one of the drowned up out of the shore, at least 12 m from everyone; o: raidSpawnAt's
+function fbIsleSpawn(o) {
+  const P = ZM.players || [];
+  for (let t = 0; t < 20; t++) {
+    const a = Math.random() * 6.283, d = FPSC.R - 3 - Math.random() * 5, x = FPSC.CX + Math.cos(a) * d, y = FPSC.CY + Math.sin(a) * d;
+    if (P.some(p => Math.hypot(p.x - x, p.y - y) < 12)) continue;
+    if (zmBlockedAt(x, y, 0.5, 0)) continue;
+    return raidSpawnAt(x, y, o);
+  }
+  return null;
+}
+const fbIsleHp = () => zmHp(RAIDC.ROUND + 1) * (0.9 + Math.random() * 0.2) * (1 + 0.25 * (fbiN() - 1));
+const fbIsleKind = () => { const u = Math.random(); return u < 0.08 ? 'run' : u < 0.6 ? 'jog' : 'walk'; };
+
+// ---------- the word on land ----------
+function fbIsleSay(text, warn) { if (ZM.net !== 'client') { const S = RAID.st; S.say = [((S.say || [0])[0] | 0) + 1, text, warn ? 1 : 0]; } fbIsleHear(text, warn); }
+function fbIsleHear(text, warn) { fpsFeed(text); if (warn) ZM.banner = { text, t: 2.8, small: true, col: '#ffe2a8' }; }
+
+// ---------- the stage, for an island or for Saltcote ----------
+function fbIsleStage(port) {
+  const W = port ? 'port' : 'isle', call = (k, ...a) => fbHooks(W, k, ...a);
+  return {
+    get n() { const I = fbIsleNow(); return I ? I.n : port ? 'Saltcote' : 'an island'; },
+    map: FBI_MAP, mend: true, open: true, fbIsle: true, port,
+    music: () => call('music') || (port ? FB_MUSIC.port : FB_MUSIC.isle),
+    prep(i) { fbIsleLook(i); call('prep', i); },
+    enter() {
+      const p = fbPlanNow() || { i: port ? 0 : 1 }, I = FB_ISLES[p.i], F = fbiFb();
+      Object.assign(RAID.st, { loot: [], lseq: 0, away: 0, awayT: 0, say: [0, '', 0], seenSay: 0, pend: 0, pendId: '', spT: FBI.FIRST, kept: 0 });
+      if (ZM.net !== 'client') {
+        const left = FB.left[p.i] || (F ? F.loot.map((e, n) => ({ id: 'i' + p.i + '.' + n, k: e[0], x: e[1], y: e[2] })) : []);
+        RAID.st.loot = left.map(o => ({ id: o.id, k: o.k, x: FPSC.CX + o.x, y: FPSC.CY + o.y, by: '' }));
+      }
+      ZM.banner = this.banner();
+      fpsFeed(port ? 'Ashore at Saltcote. The factor’s table by the landing buys what’s in the hold (Use at it). Use at the landing boat to go back aboard.'
+        : `Ashore on ${I.n}. Find what’s lying about and carry it to the landing boat (Use) to stow it in the hold. With nothing in your arms, Use at the boat takes everyone back aboard.`);
+      call('enter');
+    },
+    banner() { const I = fbIsleNow(); return { text: I ? I.n : 'Ashore', t: 4.5, sub: port ? 'Freebooters’ Sea · the outpost' : `Freebooters’ Sea · ${I ? I.say : ''}`, col: '#ffe2a8' }; },
+    tick(dt) {
+      const S = RAID.st;
+      // the drowned: a few at a time, more the more of you there are (none at Saltcote)
+      if (!port && !S.away) { S.spT -= dt; if (S.spT <= 0) { S.spT = FBI.GAP * (0.75 + Math.random() * 0.5) / Math.sqrt(fbiN()); if (ZM.z.filter(z => !z.dead && !z.boss).length < FBI.CAP + 2 * fbiN()) fbIsleSpawn({ kind: fbIsleKind(), hp: fbIsleHp() }); } }
+      if (S.away) { S.awayT -= dt; if (S.awayT <= 0) { S.away = 0; fbIsleLeave(); return; } }
+      call('tick', dt);
+    },
+    me(dt) {
+      const S = RAID.st, m = FPS.me;
+      if (S.pend > 0) S.pend -= dt;
+      // going down drops what you're carrying, where you fall
+      const c = fbCarrying(); if (c && !fbiAble()) fbiDrop(c, m.x, m.y);
+      if (Array.isArray(S.say) && S.say[0] > (S.seenSay | 0)) { if (ZM.net === 'client' && S.seenSay) fbIsleHear(String(S.say[1] || ''), !!S.say[2]); S.seenSay = S.say[0] | 0; }
+      call('me', dt);
+    },
+    q(sid, k, a) {
+      const S = RAID.st;
+      if (fbLootQ(sid, k, a)) return;
+      if (k === 'aboard') { if (!S.away) { S.away = 1; S.awayT = FBC.AWAY; fbIsleSay(`${sid !== FPS.me.id || ZM.net ? fbNick(sid) + ' calls everyone' : 'Everyone'} back to the boat: back aboard in ${FBC.AWAY} seconds.`, true); } return; }
+      if (k === 'sell' && port) { if (!fbSell(sid) && sid === FPS.me.id) fpsFeed('There’s nothing in the hold to sell.'); return; }
+      call('q', sid, k, a);
+    },
+    pack(o) {
+      const S = RAID.st, r = v => Math.round(v * 10) / 10;
+      o.fl = S.loot.map(q => [q.id, q.k, r(q.x - FPSC.CX), r(q.y - FPSC.CY), q.by || '']);
+      o.fa = S.away ? Math.ceil(S.awayT * 10) / 10 : -1; o.fsy = S.say;
+      call('pack', o);
+    },
+    apply(o) {
+      const S = RAID.st;
+      if (Array.isArray(o.fl)) {
+        const mine = S.pend > 0 ? S.loot.find(q => q.id === S.pendId) : null;
+        S.loot = o.fl.filter(e => Array.isArray(e) && FB_LOOT[e[1]]).map(e => ({ id: String(e[0]), k: String(e[1]), x: FPSC.CX + (+e[2] || 0), y: FPSC.CY + (+e[3] || 0), by: String(e[4] || '') }));
+        // (what I've just asked for: as I asked, until the host's word catches up)
+        if (S.pend > 0) { const i = S.loot.findIndex(q => q.id === S.pendId); if (mine && i >= 0) S.loot[i] = mine; else if (!mine && i >= 0) S.loot.splice(i, 1); }
+      }
+      S.away = +o.fa >= 0 ? 1 : 0; S.awayT = Math.max(0, +o.fa || 0);
+      if (Array.isArray(o.fsy)) S.say = o.fsy;
+      call('apply', o);
+    },
+    consider(c) {
+      const S = RAID.st, m = FPS.me, mz = m.jz || 0, F = fbiFb(), mine = fbCarrying(); if (!F) return;
+      if (!mine) for (const q of S.loot) if (!q.by) c({ k: 'fbloot', id: q.id }, q.x, q.y, mz, FBI.USE_R, false);
+      const [bx, by] = fbiW(F.boat); c({ k: 'fbboat' }, bx, by, mz, FBI.BOAT_R, false);
+      if (port && F.table) { const [tx, ty] = fbiW(F.table); c({ k: 'fbtable' }, tx, ty, mz, 2.3, false); }
+      call('consider', c);
+      // (in your arms, and nothing else to hand: Use puts it down)
+      if (mine && Math.hypot(bx - m.x, by - m.y) > FBI.BOAT_R && !(port && F.table && Math.hypot(fbiW(F.table)[0] - m.x, fbiW(F.table)[1] - m.y) < 2.3)) c({ k: 'fbdrop', id: mine.id }, m.x, m.y, mz, 0.01, false);
+    },
+    prompt(o) {
+      const S = RAID.st, mine = fbCarrying();
+      if (o.k === 'fbloot') { const q = S.loot.find(x => x.id === o.id); return q ? { text: `Pick up ${fbLootOf(q.k).n} (${fbLootOf(q.k).v} sovereigns)`, free: true } : null; }
+      if (o.k === 'fbdrop') return mine ? { text: `Put down ${fbLootOf(mine.k).n}`, free: true } : null;
+      if (o.k === 'fbboat') return mine ? { text: `Stow ${fbLootOf(mine.k).n} in the boat, for the hold`, free: true } : S.away ? { text: `Back aboard in ${Math.ceil(S.awayT)} s` } : { text: 'Back aboard (everyone)', free: true };
+      if (o.k === 'fbtable') return FB.hold.length || mine ? { text: `Sell the hold to the factor: ${fbSov(fbHoldValue() + (mine ? fbLootOf(mine.k).v : 0))}`, free: true } : { text: 'The factor’s table: nothing in the hold to sell' };
+      return call('prompt', o) || null;
+    },
+    use(o) {
+      const S = RAID.st, mine = fbCarrying();
+      if (o.k === 'fbloot') {
+        const q = S.loot.find(x => x.id === o.id); if (!q || q.by || mine) { zmSound('no'); return true; }
+        raidAsk('carry', q.id); if (ZM.net === 'client') { q.by = FPS.me.id; S.pend = 0.9; S.pendId = q.id; }
+        fpsFeed(`You pick up ${fbLootOf(q.k).n}. Carry it to the landing boat to stow it.`);
+        try { if (!soundOff()) tone(220, 'triangle', 0.01, 0.12, 0.08, { to: 330 }); } catch (e) {}
+        return true;
+      }
+      if (o.k === 'fbdrop') { if (mine) { const m = FPS.me, x = m.x + Math.sin(m.h) * 1.1, y = m.y + Math.cos(m.h) * 1.1; fbiDrop(mine, zmBlockedAt(x, y, 0.4, 0) ? m.x : x, zmBlockedAt(x, y, 0.4, 0) ? m.y : y); } return true; }
+      if (o.k === 'fbboat') {
+        if (mine) { raidAsk('stow', mine.id); if (ZM.net === 'client') { S.loot = S.loot.filter(q => q !== mine); S.pend = 0.9; S.pendId = mine.id; } try { if (!soundOff()) noise('lowpass', 500, 1, 0.005, 0.2, 0.3); } catch (e) {} return true; }
+        if (!S.away) raidAsk('aboard'); return true;
+      }
+      if (o.k === 'fbtable') { if (FB.hold.length || mine) { raidAsk('sell'); try { if (!soundOff()) for (let i = 0; i < 4; i++) tone(1400 + i * 120, 'triangle', 0.002, 0.08, 0.05, { delay: i * 0.07 }); } catch (e) {} } else zmSound('no'); return true; }
+      return !!call('use', o);
+    },
+    hud(phone, mono, fell) { fbIsleHud(phone, mono); call('hud', phone, mono, fell); },
+    kill(d, how, by) { call('kill', d, how, by); },
+    hurt(d, dmg, code, by) { return fbHookHurt(W, d, dmg, code, by); },
+    players(P) { return fbHookPlayers(W, P); },
+    block(x, y, pad, feet) { return !!call('block', x, y, pad, feet); },
+    shot(...a) { call('shot', ...a); },
+    b3(grp) { fbi3dBuild(grp); call('b3', grp); },
+    f3(dt) { fbi3d(dt); call('f3', dt); },
+    exit() { const S = RAID.st; if (!S.kept) fbIsleKeep(); FBI3.on = false; call('exit'); },
+  };
+}
+// put down what you carry at (x, y) (asked of the host; at once on my side)
+function fbiDrop(o, x, y) {
+  const S = RAID.st; raidAsk('drop', [o.id, Math.round((x - FPSC.CX) * 10) / 10, Math.round((y - FPSC.CY) * 10) / 10]);
+  if (ZM.net === 'client') { o.by = ''; o.x = x; o.y = y; S.pend = 0.9; S.pendId = o.id; }
+}
+RAID_STAGES.fb_isle = fbIsleStage(false);
+RAID_STAGES.fb_port = fbIsleStage(true);
+
+// ---------- painted on top ----------
+function fbIsleHud(phone, mono) {
+  const S = RAID.st, I = fbIsleNow(); if (!I) return;
+  const L = Math.max(14, FPS.safeLeft || 0), top = fpsHudTop() + (phone ? 32 : 44), lying = S.loot.filter(q => !q.by).length;
+  const line = S.away ? `Back to the boat: back aboard in ${Math.ceil(S.awayT)} s`
+    : I.port ? `Saltcote · the factor’s table buys the hold (${FB.hold.length ? fbSov(fbHoldValue()) : 'empty'}) · the landing boat takes you back aboard`
+    : `${I.n} · ${lying ? `${lying} ${lying === 1 ? 'thing' : 'things'} lying about` : 'nothing left lying about'} · carry them to the landing boat`;
+  ctx.textAlign = 'left'; ctx.textBaseline = 'top'; ctx.font = mono(phone ? 10 : 13); ctx.fillStyle = S.away ? '#ffd88a' : 'rgba(236,228,207,0.8)';
+  ctx.fillText(line, L, top, W * 0.55); fpsHudNote(top + (phone ? 14 : 18));
+  ctx.textBaseline = 'alphabetic';
+}
+
+// ---------- in 3D: what's lying about, and what's carried ----------
+const FBI3 = { on: false, grp: null, m: new Map() };
+// a piece of loot, about life size, with a faint glint over it so it's found in the dark
+function fbLootMesh(k) {
+  const D = fbLootOf(k), g0 = new THREE.Group(), lam = c => z3Lam(c), iron = lam('#2a2a2c'), brass = lam('#b08a3a');
+  const add = (geo, mat, x, y, z) => { const m = new THREE.Mesh(geo, mat); m.position.set(x || 0, y || 0, z || 0); g0.add(m); return m; };
+  if (D.shape === 'chest') { add(new THREE.BoxGeometry(0.9, 0.42, 0.56), lam(D.col), 0, 0.21); add(new THREE.CylinderGeometry(0.28, 0.28, 0.9, 10, 1, false, 0, Math.PI).rotateZ(Math.PI / 2), lam(D.col), 0, 0.42); for (const x of [-0.32, 0, 0.32]) add(new THREE.BoxGeometry(0.05, 0.72, 0.6), D.gilt ? brass : iron, x, 0.36); add(new THREE.BoxGeometry(0.12, 0.14, 0.04), brass, 0, 0.38, 0.29); }
+  else if (D.shape === 'bell') { add(new THREE.CylinderGeometry(0.2, 0.36, 0.5, 14), lam(D.col), 0, 0.3); add(new THREE.TorusGeometry(0.08, 0.025, 6, 10), lam(D.col), 0, 0.6); add(new THREE.SphereGeometry(0.06, 8, 6), iron, 0, 0.06); }
+  else if (D.shape === 'crate') { add(new THREE.BoxGeometry(0.8, 0.7, 0.8), lam(D.col), 0, 0.35); for (const y of [0.06, 0.64]) add(new THREE.BoxGeometry(0.84, 0.08, 0.84), lam('#4a3a28'), 0, y); add(new THREE.BoxGeometry(0.84, 0.08, 0.1).rotateZ(0.7), lam('#4a3a28'), 0, 0.35, 0.41); }
+  else if (D.shape === 'box') { add(new THREE.BoxGeometry(0.6, 0.36, 0.42), lam(D.col), 0, 0.18); for (const x of [-0.24, 0.24]) add(new THREE.BoxGeometry(0.04, 0.38, 0.44), brass, x, 0.19); add(new THREE.BoxGeometry(0.1, 0.12, 0.03), brass, 0, 0.2, 0.22); }
+  else { add(new THREE.SphereGeometry(0.11, 10, 8), lam(D.col), 0, 0.1); add(new THREE.TorusGeometry(0.12, 0.02, 6, 12).rotateX(Math.PI / 2), brass, 0, 0.06); }
+  const gl = new THREE.Sprite(new THREE.SpriteMaterial({ map: z3Soft('rgba(255,220,140,0.8)', 'rgba(255,220,140,0)'), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: 0.5 }));
+  gl.scale.setScalar(D.shape === 'small' ? 0.9 : 1.6); gl.position.y = D.shape === 'small' ? 0.25 : 0.6; g0.add(gl); g0.userData.gl = gl;
+  return g0;
+}
+function fbi3dBuild(grp) { FBI3.on = true; FBI3.grp = new THREE.Group(); grp.add(FBI3.grp); FBI3.m = new Map(); }
+function fbi3d(dt) {
+  if (!FBI3.on || !FBI3.grp) return;
+  const S = RAID.st, m = FPS.me, t = g.t, seen = new Set();
+  for (const q of S.loot || []) {
+    let M = FBI3.m.get(q.id); if (!M || M.userData.k !== q.k) { if (M) FBI3.grp.remove(M); M = fbLootMesh(q.k); M.userData.k = q.k; FBI3.grp.add(M); FBI3.m.set(q.id, M); }
+    seen.add(q.id); M.visible = true;
+    if (!q.by) { M.position.copy(z3v(q.x, q.y, fbiGround(q.x, q.y))); M.rotation.set(0, (q.id.length * 1.7) % 6.28, 0); M.scale.setScalar(1); M.userData.gl.material.opacity = 0.35 + 0.2 * Math.sin(t * 2.2 + q.x); continue; }
+    M.userData.gl.material.opacity = 0;
+    if (q.by === m.id) {
+      // in my arms: low in front of me, as I look (not tipping with the look up and down)
+      if (fpsThird() || zmSpecOn()) { M.position.copy(z3v(m.x + Math.sin(m.h) * 0.45, m.y + Math.cos(m.h) * 0.45, fbiGround(m.x, m.y) + (m.jz || 0) + 0.9)); M.rotation.set(0, -m.h, 0); M.scale.setScalar(0.8); continue; }
+      const sw = reduceMotion ? 0 : Math.sin((FPS.step || 0) * 0.5) * 0.02, ez = FPSC.GROUND + FPSC.EYE + (m.jz || 0) - (FPS.crouchEye || 0);
+      M.position.copy(z3v(m.x + Math.sin(m.h) * 1.05, m.y + Math.cos(m.h) * 1.05, ez - 0.72 + sw)); M.rotation.set(0, -m.h, 0); M.scale.setScalar(0.55);
+      continue;
+    }
+    const r = FPS.remote.get(q.by); if (!r || r.x == null) { M.visible = false; continue; }
+    M.position.copy(z3v(r.x + Math.sin(r.h || 0) * 0.45, r.y + Math.cos(r.h || 0) * 0.45, FPSC.GROUND + (r.jz || 0) + 0.85)); M.rotation.set(0, -(r.h || 0), 0); M.scale.setScalar(0.8);
+  }
+  for (const [id, M] of FBI3.m) if (!seen.has(id)) { FBI3.grp.remove(M); FBI3.m.delete(id); }
+}
+
 // ---- src/zmnet.js ----
 // The Lighthouse, played together: a lobby, and up to four in one night.
 //
@@ -43993,6 +44932,9 @@ if (FR_KINDS.unknown) FR_KINDS.unknown.rules = Object.keys(FRI_UNKNOWN);
 // [fogrun] Fog Run (src/frrun.js) has a lobby of its own on its own card (ZN.mode 'fr', prefix fr), kept apart from
 // nights and raids the same way the raids are kept from nights: by the map its host has picked (ZM_MAPS.fogrun.fr).
 // Its seed goes out once, in the start (st.fs); each player's lives go in their presence (frp).
+// [fbsea] Freebooters' Sea (src/fbsea.js) has a fourth, the same way (ZN.mode 'fb', prefix fb, ZM_MAPS.fbsea.fb). Its
+// world is fixed (the same sea on every screen), so nothing goes out in the start; the session's state goes in the
+// host's word (fbw, src/fbsea.js fbPack).
 
 const ZN = { code: null, at: 0, doneG: null, msg: '', g: null, sendT: 0, hseq: 0, seq: 0, q: [], hq: [], hits: new Map(), shots: [], shotSeq: 0,
   lastQ: {}, lastH: {}, lastShot: {}, seenT: {}, ev: [], eseq: 0, evSeen: 0, lastHseq: -1, hostT: 0, creditSeen: [0, 0, 0], lobT: 0, j: '', rj: null };
@@ -44029,12 +44971,12 @@ function znAt(o, t) {
 // ---------- the lobby ----------
 function znOnline() { return !!(typeof NET !== 'undefined' && NET.room && NET.status === 'ready'); }
 // the map a lobby's for: the raid's, or the one picked on the Lighthouse's card
-const znMap = () => ZN.mode === 'fr' ? 'fogrun' : ZN.mode === 'raid' ? (typeof RD_PICK !== 'undefined' ? RD_PICK : 'raid') : ZM_PICK;   // [raid] (which raid: src/raid.js) [fogrun]
+const znMap = () => ZN.mode === 'fb' ? 'fbsea' : ZN.mode === 'fr' ? 'fogrun' : ZN.mode === 'raid' ? (typeof RD_PICK !== 'undefined' ? RD_PICK : 'raid') : ZM_PICK;   // [raid] (which raid: src/raid.js) [fogrun]
 const znIsRaid = m => !!(ZM_MAPS[m] && ZM_MAPS[m].raid);
 // [fogrun] which card a map's lobby belongs on: 'fr' (Fog Run), 'raid' or 'zm'; and a mode from what's asked
-const znKind = m => ZM_MAPS[m] && ZM_MAPS[m].fr ? 'fr' : znIsRaid(m) ? 'raid' : 'zm';
-const znModeOf = mode => mode === 'raid' || mode === 'fr' ? mode : 'zm';
-const ZN_NICK = { zm: 'zmNick', raid: 'rdNick', fr: 'frNick' }, ZN_CARD = { zm: 'zmTitle', raid: 'rdTitle', fr: 'frTitle' };
+const znKind = m => ZM_MAPS[m] && ZM_MAPS[m].fb ? 'fb' : ZM_MAPS[m] && ZM_MAPS[m].fr ? 'fr' : znIsRaid(m) ? 'raid' : 'zm';   // [fbsea]
+const znModeOf = mode => mode === 'raid' || mode === 'fr' || mode === 'fb' ? mode : 'zm';
+const ZN_NICK = { zm: 'zmNick', raid: 'rdNick', fr: 'frNick', fb: 'fbNick' }, ZN_CARD = { zm: 'zmTitle', raid: 'rdTitle', fr: 'frTitle', fb: 'fbTitle' };   // [fbsea]
 function znNick() { const b = $(ZN_NICK[ZN.mode] || 'zmNick'); return znClean((b && b.value) || '', 16) || (NET.nick ? znClean(NET.nick, 16) : '') || 'Keeper ' + String(NET.sid || '').slice(0, 3).toUpperCase(); }
 function znOf(p) { const z = p && p.presence && p.presence.zm; return z && typeof z === 'object' && typeof z.room === 'string' && typeof z.sid === 'string' ? z : null; }
 function znBase() { return { room: ZN.code, sid: NET.sid, nick: znNick(), at: ZN.at }; }
@@ -44100,13 +45042,14 @@ function znOpenNights() {
 // Two cards share the one lobby: the Lighthouse's (prefix zm) and Maren's End's (prefix rd, src/raid.js). Each lists
 // only its own: a night whose map is the raid is a raid. Whichever card you host or join from, the lobby shows there.
 // [fogrun] and a third, Fog Run's (prefix fr): mode, which ZN.mode is its; each lists only nights of its own kind (znKind)
-const ZN_UI = [{ p: 'zm', mode: 'zm', raid: false, what: 'night', who: 'A keeper' }, { p: 'rd', mode: 'raid', raid: true, what: 'raid', who: 'A keeper' }, { p: 'fr', mode: 'fr', raid: true, fr: true, what: 'run', who: 'A keeper' }];
+const ZN_UI = [{ p: 'zm', mode: 'zm', raid: false, what: 'night', who: 'A keeper' }, { p: 'rd', mode: 'raid', raid: true, what: 'raid', who: 'A keeper' }, { p: 'fr', mode: 'fr', raid: true, fr: true, what: 'run', who: 'A keeper' },
+  { p: 'fb', mode: 'fb', raid: true, fb: true, what: 'crew', who: 'A freebooter' }];   // [fbsea]
 function znRender() { for (const U of ZN_UI) znRenderUI(U); }
 function znRenderUI(U) {
   const q = id => $(U.p + id);
   if (!q('Mp')) return;
   const on = znOnline(), mine = !!ZN.code && ZN.mode === U.mode, W = U.what;
-  q('MpNote').textContent = on ? (ZN.code && !mine ? `You’re in a ${{ zm: 'Lighthouse night', raid: 'raid', fr: 'fog run' }[ZN.mode] || 'game'}’s lobby on another card. Host or join a ${W} here and you’ll leave it.` : `Up to four in one ${W}. One of you hosts; the others join, and the host starts the ${W} when everyone’s in.`) : (NET.status === 'connecting' ? 'Looking for other players…' : (NET.offReason || 'Playing together isn’t available here.'));
+  q('MpNote').textContent = on ? (ZN.code && !mine ? `You’re in a ${{ zm: 'Lighthouse night', raid: 'raid', fr: 'fog run', fb: 'freebooters’ crew' }[ZN.mode] || 'game'}’s lobby on another card. Host or join a ${W} here and you’ll leave it.` : `Up to four in one ${W}. One of you hosts; the others join, and the host starts the ${W} when everyone’s in.`) : (NET.status === 'connecting' ? 'Looking for other players…' : (NET.offReason || 'Playing together isn’t available here.'));
   q('MpOpen').hidden = !on || mine;
   q('Lobby').hidden = !mine;
   if (!on) return;
@@ -44141,7 +45084,9 @@ function znRenderUI(U) {
     ol.append(li);
   });
   const hm = hz && hz.lob && ZM_MAPS[hz.lob.map] ? hz.lob.map : 'light';
-  q('LobbyMsg').textContent = ZN.msg || (U.fr   // [fogrun]
+  q('LobbyMsg').textContent = ZN.msg || (U.fb   // [fbsea]
+    ? (host ? (m.length > 1 ? `${m.length} of ${ZN_MAX} aboard. Set sail when everyone’s in.` : 'Waiting for others to join. You can set sail alone, too, whenever you like.') : 'Waiting for the host to set sail.')
+    : U.fr   // [fogrun]
     ? (host ? (m.length > 1 ? `${m.length} of ${ZN_MAX} here. Set out when everyone’s in.` : 'Waiting for others to join. You can set out alone, too, whenever you like.') : 'Waiting for the host to set out.')
     : U.raid
     ? (host ? (m.length > 1 ? `${m.length} of ${ZN_MAX} here, for ${ZM_MAPS[znMap()].N}. Start the raid when everyone’s in.` : `Waiting for others to join. You can start alone, too, whenever you like. The raid: ${ZM_MAPS[znMap()].N} (pick above).`) : `Waiting for the host to start the raid: ${ZM_MAPS[hm].N}.`)
@@ -44616,6 +45561,7 @@ function znRjAfter(rj, gained) {
   $('zmMpStart').addEventListener('click', znStart);
   if ($('rdMpHost')) { $('rdMpHost').addEventListener('click', () => znHost('raid')); $('rdMpLeave').addEventListener('click', znLeave); $('rdMpStart').addEventListener('click', znStart); }   // [raid] Maren's End's card
   if ($('frMpHost')) { $('frMpHost').addEventListener('click', () => znHost('fr')); $('frMpLeave').addEventListener('click', znLeave); $('frMpStart').addEventListener('click', znStart); }   // [fogrun] Fog Run's card
+  if ($('fbMpHost')) { $('fbMpHost').addEventListener('click', () => znHost('fb')); $('fbMpLeave').addEventListener('click', znLeave); $('fbMpStart').addEventListener('click', znStart); }   // [fbsea] Freebooters' Sea's card
   setInterval(() => { if (!FPS.on && !$('zmTitle').closest('[hidden]')) { znRender(); if (ZN.code) znSendLobby(); } }, 1500);
   addEventListener('pagehide', () => { if (ZN.code && NET.room) NET.room.presence({ zm: null }).catch(() => {}); });
 }
@@ -49794,6 +50740,7 @@ csInit();
 //   lighthouse  a Keeper's Last Light night (zmnet.js, z...)
 //   raid        a Maren's End raid (the same lobby as the Lighthouse's, on the raid's own card)
 //   fogrun      a Fog Run (the same lobby again, on its own card: src/frrun.js) [fogrun]
+//   fbsea       a Freebooters' Sea crew (the same lobby again, on its own card: src/fbsea.js) [fbsea]
 // On a phone or tablet the button opens the share sheet; on a computer it copies the text to the clipboard.
 // On claude.ai everyone plays in the artifact's own room, which the live site can't reach, so there the link is the
 // artifact itself: it can't carry a code, but the friend sees the lobby in the list and taps it.
@@ -49802,9 +50749,9 @@ csInit();
 const SHARE_SITE = 'https://skerry-light.onrender.com/';
 const SHARE_ARTIFACT = 'https://claude.ai/artifact/4abbzGK8dMDsPyR5KdssJv';
 const SHARE_TEXT = 'Join my game on Skerry Light!';
-const SHARE_MODES = ['sail', 'wreckers', 'war', 'lighthouse', 'raid', 'fogrun'];   // [fogrun]
+const SHARE_MODES = ['sail', 'wreckers', 'war', 'lighthouse', 'raid', 'fogrun', 'fbsea'];   // [fogrun] [fbsea]
 // the Lighthouse's lobby's own word for each of the modes it serves (src/zmnet.js ZN.mode) [fogrun]
-var SHARE_ZN = { lighthouse: 'zm', raid: 'raid', fogrun: 'fr' };
+var SHARE_ZN = { lighthouse: 'zm', raid: 'raid', fogrun: 'fr', fbsea: 'fb' };
 const shareOnClaude = () => (typeof NET !== 'undefined' && NET.via === 'claude') || !!(window.claude && typeof window.claude.use === 'function');
 
 function shareUrl(mode, code) {
@@ -49819,7 +50766,7 @@ function shareUrl(mode, code) {
 function shareCode(mode) {
   if (mode === 'sail') return NET.crew;
   if (mode === 'war') return typeof WN !== 'undefined' ? WN.code : null;
-  if (mode === 'lighthouse' || mode === 'raid' || mode === 'fogrun') return typeof ZN !== 'undefined' && ZN.mode === SHARE_ZN[mode] ? ZN.code : null;   // [fogrun]
+  if (mode === 'lighthouse' || mode === 'raid' || mode === 'fogrun' || mode === 'fbsea') return typeof ZN !== 'undefined' && ZN.mode === SHARE_ZN[mode] ? ZN.code : null;   // [fogrun]
   return null;
 }
 function shareIsPhone() {
@@ -49874,8 +50821,8 @@ if (SHARE_JOIN && /[?&](mode|lobby)=/.test(location.search)) {
   // tidy the address bar, so a reload later doesn't drag you back into an old lobby
   try { const q = new URLSearchParams(location.search); q.delete('mode'); q.delete('lobby'); const s = q.toString(); history.replaceState(null, '', location.pathname + (s ? '?' + s : '') + location.hash); } catch (e) {}
 }
-const SHARE_CARD = { sail: 'together', wreckers: 'fpsTitle', war: 'warTitle', lighthouse: 'zmTitle', raid: 'rdTitle', fogrun: 'frTitle' };
-const SHARE_WHAT = { sail: 'crew', war: 'war', lighthouse: 'night', raid: 'raid', fogrun: 'run' };
+const SHARE_CARD = { sail: 'together', wreckers: 'fpsTitle', war: 'warTitle', lighthouse: 'zmTitle', raid: 'rdTitle', fogrun: 'frTitle', fbsea: 'fbTitle' };
+const SHARE_WHAT = { sail: 'crew', war: 'war', lighthouse: 'night', raid: 'raid', fogrun: 'run', fbsea: 'crew' };
 function shareShow(mode) { const c = $(SHARE_CARD[mode]); if (c) c.scrollIntoView({ block: 'start' }); }
 function shareArrive() {
   const J = SHARE_JOIN; if (!J) return;
@@ -49917,7 +50864,7 @@ function shareArrive() {
       if (ZN.code === J.code) return clearInterval(iv);
       const n = znOpenNights().find(x => x.code === J.code);
       if (n) {
-        clearInterval(iv); const mode = ZM_MAPS[n.map] && ZM_MAPS[n.map].fr ? 'fogrun' : ZM_MAPS[n.map] && ZM_MAPS[n.map].raid ? 'raid' : 'lighthouse'; shareShow(mode);   // [fogrun]
+        clearInterval(iv); const mode = ZM_MAPS[n.map] && ZM_MAPS[n.map].fb ? 'fbsea' : ZM_MAPS[n.map] && ZM_MAPS[n.map].fr ? 'fogrun' : ZM_MAPS[n.map] && ZM_MAPS[n.map].raid ? 'raid' : 'lighthouse'; shareShow(mode);   // [fogrun]
         if (n.started && typeof znRjFor === 'function' && znRjFor(J.code)) znRejoin(znRjFor(J.code));   // (one I dropped out of: back in)
         else if (n.started) toast(`That ${SHARE_WHAT[mode]} has already started.`, 'Already started'); else znJoin(J.code, SHARE_ZN[mode]);
         return;
@@ -50706,12 +51653,12 @@ function rjRender() {
 }
 
 // ---- src/menudesk.js ----
-// The main menu on a desktop or any wide screen (style.css, "the desk menu"): a list of the six games down the left,
+// The main menu on a desktop or any wide screen (style.css, "the desk menu"): a list of the seven games down the left,
 // the chosen game's card in full in the middle, and the scoreboard on the right (or under the list, on a narrower
 // screen). Phones, tablets held upright and phones on their side keep the long scrolling menu untouched: everything
 // here is gated on DESK_MQ, and the CSS that lays it out sits inside the same media query.
 //
-// Keys on the menu: up and down in the list (or 1 to 6 anywhere on it) choose a game; Enter or Space presses what's
+// Keys on the menu: up and down in the list (or 1 to 7 anywhere on it) choose a game; Enter or Space presses what's
 // focused. Controller: LB and RB step through the games (gamepad.js calls mdCycle), the D-pad moves as ever.
 var DESK_MQ = '(min-width: 1100px) and (min-height: 620px)';
 var MD = { on: false, cur: null, mq: null, nav: null, cards: [] };
@@ -50722,7 +51669,8 @@ const MD_GAMES = [
   { id: 'warTitle', sub: 'A war for the islands · up to ten', c: '#78b4a0' },
   { id: 'zmTitle', sub: 'Hold the station, round after round', c: '#d0503f' },
   { id: 'rdTitle', sub: "Maren's End and The Gannet's Wake", c: '#5a9ad8' },
-  { id: 'frTitle', sub: 'Light the islands in the haar', c: '#a8b8c8', tag: 'New' },
+  { id: 'frTitle', sub: 'Light the islands in the haar', c: '#a8b8c8' },
+  { id: 'fbTitle', sub: 'An open sea of islands and salvage', c: '#d8b060', tag: 'New' },   // [fbsea]
 ];
 const mdStore = { get() { try { return localStorage.getItem('skerryDeskGame'); } catch (e) { return null; } }, set(v) { try { localStorage.setItem('skerryDeskGame', v); } catch (e) {} } };
 
@@ -50756,7 +51704,7 @@ function mdApply() {
   for (const c of MD.cards) c.classList.add('modecard');
   // the list of games, built from each card's own heading so a renamed game renames itself here
   const nav = document.createElement('nav'); nav.className = 'md-nav'; nav.setAttribute('aria-label', 'Games');
-  nav.innerHTML = '<div class="md-brand"><span class="md-word">Skerry Light</span><span class="md-hint">Choose a game · ↑ ↓ or 1–6</span></div><div class="md-list" role="tablist" aria-orientation="vertical"></div>';
+  nav.innerHTML = '<div class="md-brand"><span class="md-word">Skerry Light</span><span class="md-hint">Choose a game · ↑ ↓ or 1–7</span></div><div class="md-list" role="tablist" aria-orientation="vertical"></div>';
   const list = nav.querySelector('.md-list');
   MD_GAMES.forEach((g, i) => {
     const card = document.getElementById(g.id); if (!card) return;
@@ -50793,10 +51741,10 @@ function mdApply() {
     return orig.call(this, o);
   };
 
-  // 1 to 6 choose a game while the menu is the top screen and nothing's being typed
+  // 1 to 7 choose a game while the menu is the top screen and nothing's being typed
   addEventListener('keydown', e => {
     if (!MD.on || e.ctrlKey || e.metaKey || e.altKey || e.repeat) return;
-    if (!/^[1-6]$/.test(e.key) || tc.hidden || (typeof state !== 'undefined' && state !== 'title')) return;
+    if (!/^[1-7]$/.test(e.key) || tc.hidden || (typeof state !== 'undefined' && state !== 'title')) return;
     if (e.target && /INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
     if (typeof activeOverlay === 'function' && activeOverlay() !== tc) return;
     const c = MD.cards[+e.key - 1]; if (c) { e.preventDefault(); mdPick(c.id, true); }
@@ -50886,5 +51834,8 @@ requestAnimationFrame(frame);
 <!-- [fogrun] Lantern Rock and the Fog-Keeper -->
 <!-- [fogrun] the salvage: cards and relics -->
 <!-- [fogrun] more of the Unknown islands' encounters -->
+<!-- [fbsea] Freebooters' Sea: the session, its stages, loot, lives -->
+<!-- [fbsea] the open sea -->
+<!-- [fbsea] the islands, and Saltcote -->
 </body>
 </html>

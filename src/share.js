@@ -7,6 +7,7 @@
 //   lighthouse  a Keeper's Last Light night (zmnet.js, z...)
 //   raid        a Maren's End raid (the same lobby as the Lighthouse's, on the raid's own card)
 //   fogrun      a Fog Run (the same lobby again, on its own card: src/frrun.js) [fogrun]
+//   fbsea       a Freebooters' Sea crew (the same lobby again, on its own card: src/fbsea.js) [fbsea]
 // On a phone or tablet the button opens the share sheet; on a computer it copies the text to the clipboard.
 // On claude.ai everyone plays in the artifact's own room, which the live site can't reach, so there the link is the
 // artifact itself: it can't carry a code, but the friend sees the lobby in the list and taps it.
@@ -15,9 +16,9 @@
 const SHARE_SITE = 'https://skerry-light.onrender.com/';
 const SHARE_ARTIFACT = 'https://claude.ai/artifact/4abbzGK8dMDsPyR5KdssJv';
 const SHARE_TEXT = 'Join my game on Skerry Light!';
-const SHARE_MODES = ['sail', 'wreckers', 'war', 'lighthouse', 'raid', 'fogrun'];   // [fogrun]
+const SHARE_MODES = ['sail', 'wreckers', 'war', 'lighthouse', 'raid', 'fogrun', 'fbsea'];   // [fogrun] [fbsea]
 // the Lighthouse's lobby's own word for each of the modes it serves (src/zmnet.js ZN.mode) [fogrun]
-var SHARE_ZN = { lighthouse: 'zm', raid: 'raid', fogrun: 'fr' };
+var SHARE_ZN = { lighthouse: 'zm', raid: 'raid', fogrun: 'fr', fbsea: 'fb' };
 const shareOnClaude = () => (typeof NET !== 'undefined' && NET.via === 'claude') || !!(window.claude && typeof window.claude.use === 'function');
 
 function shareUrl(mode, code) {
@@ -32,7 +33,7 @@ function shareUrl(mode, code) {
 function shareCode(mode) {
   if (mode === 'sail') return NET.crew;
   if (mode === 'war') return typeof WN !== 'undefined' ? WN.code : null;
-  if (mode === 'lighthouse' || mode === 'raid' || mode === 'fogrun') return typeof ZN !== 'undefined' && ZN.mode === SHARE_ZN[mode] ? ZN.code : null;   // [fogrun]
+  if (mode === 'lighthouse' || mode === 'raid' || mode === 'fogrun' || mode === 'fbsea') return typeof ZN !== 'undefined' && ZN.mode === SHARE_ZN[mode] ? ZN.code : null;   // [fogrun]
   return null;
 }
 function shareIsPhone() {
@@ -87,8 +88,8 @@ if (SHARE_JOIN && /[?&](mode|lobby)=/.test(location.search)) {
   // tidy the address bar, so a reload later doesn't drag you back into an old lobby
   try { const q = new URLSearchParams(location.search); q.delete('mode'); q.delete('lobby'); const s = q.toString(); history.replaceState(null, '', location.pathname + (s ? '?' + s : '') + location.hash); } catch (e) {}
 }
-const SHARE_CARD = { sail: 'together', wreckers: 'fpsTitle', war: 'warTitle', lighthouse: 'zmTitle', raid: 'rdTitle', fogrun: 'frTitle' };
-const SHARE_WHAT = { sail: 'crew', war: 'war', lighthouse: 'night', raid: 'raid', fogrun: 'run' };
+const SHARE_CARD = { sail: 'together', wreckers: 'fpsTitle', war: 'warTitle', lighthouse: 'zmTitle', raid: 'rdTitle', fogrun: 'frTitle', fbsea: 'fbTitle' };
+const SHARE_WHAT = { sail: 'crew', war: 'war', lighthouse: 'night', raid: 'raid', fogrun: 'run', fbsea: 'crew' };
 function shareShow(mode) { const c = $(SHARE_CARD[mode]); if (c) c.scrollIntoView({ block: 'start' }); }
 function shareArrive() {
   const J = SHARE_JOIN; if (!J) return;
@@ -130,7 +131,7 @@ function shareArrive() {
       if (ZN.code === J.code) return clearInterval(iv);
       const n = znOpenNights().find(x => x.code === J.code);
       if (n) {
-        clearInterval(iv); const mode = ZM_MAPS[n.map] && ZM_MAPS[n.map].fr ? 'fogrun' : ZM_MAPS[n.map] && ZM_MAPS[n.map].raid ? 'raid' : 'lighthouse'; shareShow(mode);   // [fogrun]
+        clearInterval(iv); const mode = ZM_MAPS[n.map] && ZM_MAPS[n.map].fb ? 'fbsea' : ZM_MAPS[n.map] && ZM_MAPS[n.map].fr ? 'fogrun' : ZM_MAPS[n.map] && ZM_MAPS[n.map].raid ? 'raid' : 'lighthouse'; shareShow(mode);   // [fogrun]
         if (n.started && typeof znRjFor === 'function' && znRjFor(J.code)) znRejoin(znRjFor(J.code));   // (one I dropped out of: back in)
         else if (n.started) toast(`That ${SHARE_WHAT[mode]} has already started.`, 'Already started'); else znJoin(J.code, SHARE_ZN[mode]);
         return;

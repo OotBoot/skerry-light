@@ -2215,6 +2215,7 @@ function zmPlayers() {
 function zmCheckOver() {
   if (!ZM.net || ZM.over) return;
   if (typeof frCheckOver === 'function' && typeof FR !== 'undefined' && FR.on) { frCheckOver(); return; }   // [fogrun] (there it's over when everyone's lost in the fog)
+  if (typeof FB !== 'undefined' && FB.on) return;   // [fbsea] (never over: whoever bleeds out is back on their feet, src/fbsea.js)
   const m = FPS.me;
   if (!(m.dead > 0) && !zmIsDown()) return;
   for (const r of FPS.remote.values()) if (!r.dead && !r.down && !r.left) return;
@@ -3041,6 +3042,7 @@ function zmDown() {
     zmSound('over');
     return;
   }
+  if (typeof fbDownAlone === 'function' && fbDownAlone()) return;   // [fbsea] alone: bled out at once, back on your feet in a while (src/fbsea.js)
   zmEnd();
 }
 // down (together), and no one's got you up yet
@@ -3109,6 +3111,7 @@ function zmBleedOut() {
   const m = FPS.me, kit = ZM.downKit;
   ZM.downT = 0; ZM.ghost = true; ZM.downKit = null; m.dead = FPSC.RESPAWN - 0.6; m.reload = 0; FPS.scoped = false;
   if (typeof frBledOut === 'function' && typeof FR !== 'undefined' && FR.on) { frBledOut(kit); return; }   // [fogrun] an extra life, or lost in the fog (src/frrun.js)
+  if (typeof fbBledOut === 'function' && typeof FB !== 'undefined' && FB.on) { fbBledOut(kit); return; }   // [fbsea] back on your feet in ten seconds (src/fbsea.js)
   fpsFeed('You bled out. You’ll be back next round, if anyone holds that long.');
 }
 // up again (a friend got to you): your own weapons back in your hands
@@ -4167,7 +4170,7 @@ function zmHud() {
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = fell(phone ? 24 : 34); ctx.fillStyle = '#e46c4f';
     ctx.fillText('You bled out', cx, H * 0.42);
     ctx.font = mono(phone ? 11 : 13); ctx.fillStyle = 'rgba(236,228,207,0.85)';
-    ctx.fillText('You’ll be back when the next round begins.', cx, H * 0.42 + 34);
+    ctx.fillText(typeof FB !== 'undefined' && FB.on ? `Back on your feet in ${Math.max(1, Math.ceil(FB.backT))} s, ${RAID_ORDER[RAID.stage] === 'fbsail' ? 'aboard' : 'at the landing'}.` : 'You’ll be back when the next round begins.', cx, H * 0.42 + 34);   // [fbsea]
   }
   // getting someone up: a ring round the sights filling as you hold
   if (ZM.revOf && ZM.revT > 0 && !ZM.over) zmHudReviving(phone, mono, t);

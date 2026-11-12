@@ -77,6 +77,7 @@
     <button class="newgame zmbanner" id="zmBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">And a fourth, <b>Keeper's Last Light</b>: hold the keeper's station against the drowned, round after round</span><span class="ng-go" aria-hidden="true">↓</span></button>
     <button class="newgame rdbanner" id="rdBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">And raids, alone or with up to four: <b>Maren's End</b>, and new, <b>The Gannet's Wake</b></span><span class="ng-go" aria-hidden="true">↓</span></button>
     <button class="newgame frbanner" id="frBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">And <b>Fog Run</b>: sail the keeper's cutter out into the haar and light the islands, alone or with up to four</span><span class="ng-go" aria-hidden="true">↓</span></button>
+    <button class="newgame fbbanner" id="fbBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">And <b>Freebooters' Sea</b>: an open sea of islands to sail, salvage and sell, alone or with up to four</span><span class="ng-go" aria-hidden="true">↓</span></button><!-- [fbsea] -->
     <div class="menulinks"><button class="tool notesbtn" id="notesBtn" type="button">Patch notes</button><button class="tool notesbtn lorebtn" id="loreBtn" type="button">Lore compendium</button></div>
     <div class="card boardcard" id="boardCard" aria-labelledby="boardHead">
       <div class="cardtop"><span class="eyebrow">Best on record · every game</span><span class="boardminititle">The Scoreboard</span><span class="boardbtns"><button class="tool closebtn" id="boardRefresh" type="button">Refresh</button><button class="tool closebtn" id="boardMin" type="button" aria-expanded="true" aria-controls="boardCard" title="Make the scoreboard small">– Minimise</button></span></div>
@@ -331,6 +332,41 @@
         <p><b>The sail.</b> One of you takes the wheel (Use at it): A and D steer, W makes sail, S shortens it. The rocks only show inside the fog, in the Light's beam and under a flare from the locker aft. Hit one and a plank stoves in: hold Use at the hole to patch it before she floods. The ship's bell at the mast sinks the drowned climbing her side. The next island is the mark on the strip at the top of the screen; she runs up on its beach once you're close.</p>
         <p><b>The island.</b> Light its beacon (hold Use at it, near the middle) and hold the drowned off it for a minute. If they crowd it they put it out: light it again, and the clock carries on from where it stopped. Once it's held, its light goes up through the fog and you're back aboard.</p>
         <p><b>Lives.</b> Alone, going down ends the run. Together, someone holding Use beside you gets you up; bleed out and your extra life (the lamp by your stamina) brings you back on your feet ten seconds later. After that you're lost in the fog, watching the others, until the island's light is lit. If everyone is lost at once, or the cutter goes down, the run is over.</p>
+      </details>
+    </div>
+    <div class="card zmcard fbcard" id="fbTitle" aria-labelledby="fbHead"><!-- [fbsea] its own card (src/fbsea.js) -->
+      <div class="cardtop"><span class="eyebrow">A seventh game · an open sea · alone or up to four</span></div>
+      <h1 id="fbHead">Freebooters' Sea</h1>
+      <p>1889. Beyond the Near Skerries lies the Wide Water, a sea the charts gave up on. When the Gannet went down, a hundred years of wrecks came up with her, and their cargo washed up on every rock. Take the keeper's cutter out from Saltcote and bring the salvage home before the drowned take it back.</p>
+      <p class="muted">Sail anywhere. Come in close to any island and drop anchor (Use at the wheel, or at the capstan forward), and you're all ashore. Find what's lying there, carry it back to the landing boat and it goes in the hold. Back at Saltcote, the factor buys the hold for sovereigns, shared by the whole crew. There's no end: you leave when you like.</p>
+      <p class="muted fbkeep" id="fbKeep"></p><!-- [fbsea] what you've banked (src/fbkeep.js, to come) -->
+      <div class="btnrow">
+        <button class="primary" id="fbPlay" type="button">Set sail</button>
+        <button class="tool" id="fbWcrate" type="button">Weapon crates</button>
+        <button class="tool" id="fbOcrate" type="button">Outfit crates</button>
+        <button class="tool" id="fbSettings" type="button">Settings</button>
+      </div>
+      <section class="warmp zmmp" id="fbMp" aria-labelledby="fbMpHead">
+        <h2 id="fbMpHead">Play together · up to four</h2>
+        <p class="muted" id="fbMpNote">Looking for other players…</p>
+        <div class="nickrow"><label for="fbNick">Your name</label><input id="fbNick" type="text" maxlength="16" autocomplete="nickname" placeholder="Freebooter"></div>
+        <div id="fbMpOpen" hidden>
+          <div class="btnrow"><button class="tool" id="fbMpHost" type="button">Host a crew</button></div>
+          <div class="warlobbies" id="fbLobbies"></div>
+        </div>
+        <div class="warlobby" id="fbLobby" hidden>
+          <h3 id="fbLobbyHead">Your crew</h3>
+          <ol class="warlobbylist" id="fbLobbyList"></ol>
+          <p class="muted" id="fbLobbyMsg"></p>
+          <div class="btnrow"><button class="primary" id="fbMpStart" type="button">Set sail together</button><button class="tool shareBtn" id="fbMpShare" type="button" data-mode="fbsea">Share invite</button><button class="tool" id="fbMpLeave" type="button">Leave</button></div>
+        </div>
+      </section>
+      <details class="howto">
+        <summary>How to play</summary>
+        <p><b>At sea.</b> One of you takes the wheel (Use at it): A and D steer, W makes sail, S shortens it. The nearest island is the mark on the strip at the top of the screen, with its name. Rocks show close by and in the Light's beam; hit one and a plank stoves in: hold Use at the hole to patch it before she floods. The bell at the mast sinks the drowned climbing her side.</p>
+        <p><b>Ashore.</b> Close in to an island (or Saltcote), drop anchor at the wheel or the capstan, and everyone goes ashore. Pick up what you find (Use): you carry it in your arms, with no gun in your hands, and Use again puts it down. Use at the landing boat stows it in the hold; with nothing in your arms, Use there takes everyone back aboard, where she lay.</p>
+        <p><b>Saltcote.</b> The factor's table on the quay buys everything in the hold for sovereigns, shared by the crew.</p>
+        <p><b>Going down.</b> Someone holding Use beside you gets you up. Bleed out and you're back on your feet ten seconds later, aboard or at the landing. If the cutter sinks, you all wash up at Saltcote in a fresh one, and what was in her hold is lost.</p>
       </details>
     </div>
   </div>
@@ -800,6 +836,9 @@
 <script src="src/frboss.js"></script><!-- [fogrun] Lantern Rock and the Fog-Keeper -->
 <script src="src/frcards.js"></script><!-- [fogrun] the salvage: cards and relics -->
 <script src="src/frunknown.js"></script><!-- [fogrun] more of the Unknown islands' encounters -->
+<script src="src/fbsea.js"></script><!-- [fbsea] Freebooters' Sea: the session, its stages, loot, lives -->
+<script src="src/fbsail.js"></script><!-- [fbsea] the open sea -->
+<script src="src/fbisle.js"></script><!-- [fbsea] the islands, and Saltcote -->
 <script src="src/zmnet.js"></script>
 <script src="src/war.js"></script>
 <script src="src/warview.js"></script>
