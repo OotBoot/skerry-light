@@ -12,6 +12,8 @@
 //          (ends through the door; going down before it is incomplete)
 //   fogrun  s: the furthest island reached   b: time through, as raid (0: not won)   c: islands lit   (src/frkeep.js;
 //          ends won, lost in the fog or sunk; left before then is incomplete)
+//   fbsea   s: sovereigns banked in the session   b: voyages done in it   c: sovereigns banked in all, as it stood
+//          (src/fbkeep.js; it ends when you leave it, so it's never incomplete)
 // Your own games are kept on this device too (`skerry-runs`, your best 25 of each and the one under way).
 //
 // Below, from before: your bests, kept in your save (they're no longer what the board shows, but the boards from
@@ -30,6 +32,7 @@
 //   raid    s: best time through Maren's End (kept as 100000 less its seconds, so higher is better; 0: never through)
 //           b: most damage done to its bosses in one raid    c: the drowned sent back in all raids, together
 //   fogrun  s: the furthest island reached    b: the fastest won run (as raid)    c: islands lit in all runs
+//   fbsea   s: the most sovereigns banked in one session    b: the most voyages done in one    c: sovereigns in all
 // And two marks: p, you've played it; f, you've finished a game of it (a voyage to harbour, a round of Wreckers'
 // Night to its end, a war to its end, a night at the Lighthouse until it fell, Maren's End to the door). A game left
 // or lost before its end still counts what it got to; until one's finished, your name has a yellow asterisk by it.
@@ -54,6 +57,9 @@ const BOARD = {
     // [fogrun] src/frkeep.js
     fogrun: { name: 'Fog Run', s: 'Furthest', b: 'Time', c: 'Lit', what: 'Each fog run: the furthest island reached, the time through if it was won, and the islands lit.',
       fs: v => v > 0 ? 'Island ' + v : '—', fb: v => v > 0 ? raidTimeOf(v) : '—' },
+    // [fbsea] src/fbkeep.js
+    fbsea: { name: 'Freebooters’ Sea', s: 'Banked', b: 'Voyages', c: 'In all', what: 'Each session on the Wide Water: the sovereigns banked in it, the voyages done, and the sovereigns banked in all.',
+      fs: v => boardSov(v), fc: v => boardSov(v) },
   },
   open: {}, mine: null, via: null, db: null, user: null, uid: null, data: null, loading: false, err: '', lastT: 0, sendT: 0, store: '',
 };
@@ -153,6 +159,8 @@ function boardName() {
 // ---------- your username: one for every game, kept on this device ----------
 const NICK_BOXES = ['nick', 'fpsNick', 'zmNick', 'rdNick', 'boardName'];
 // Maren's End's best time, from its s (100000 less the seconds)
+// [fbsea] sovereigns, short enough for a phone's column: 980, 12.4k, 3.1m
+function boardSov(v) { v = Math.max(0, v | 0); return v < 10000 ? v.toLocaleString('en') : v < 1e6 ? (Math.floor(v / 100) / 10).toFixed(v < 1e5 ? 1 : 0).replace(/\.0$/, '') + 'k' : (Math.floor(v / 1e5) / 10).toFixed(1).replace(/\.0$/, '') + 'm'; }
 function raidTimeOf(v) { const t = Math.max(0, 100000 - v); return `${Math.floor(t / 60)}:${String(t % 60).padStart(2, '0')}`; }
 function nickSet(v, from) {
   const n = typeof cleanNick === 'function' ? cleanNick(v || '') : String(v || '').trim().slice(0, 16);
@@ -333,6 +341,7 @@ function boardRender() {
     const head = mk('div', 'boardhead'); head.setAttribute('aria-hidden', 'true'); head.title = G.what;
     for (const [c, t] of [['rk', '#'], ['nm', 'Name'], ['sc', G.s], ['sb', G.b]].concat(G.c ? [['sb', G.c]] : [])) head.append(mk('span', c, t));
     if (G.c) sec.classList.add('three');
+    sec.classList.add('bg-' + g);   // [fbsea] (a board can have its own columns)
     sec.append(head);
     const ol = mk('ol', 'boardlist'); ol.setAttribute('aria-label', G.name + ': ' + G.what);
     if (!rows.length) ol.append(mk('li', 'empty', BOARD.loading && !BOARD.data ? 'Reading the board…' : BOARD.data ? 'No one yet. Be the first.' : BOARD.err ? '—' : 'Reading the board…'));
@@ -341,7 +350,7 @@ function boardRender() {
       const li = mk('li', e.me ? 'me' : ''); if (e.me) meShown = true;
       // (no f: a server from before the marks; its rows count as finished)
       const inc = e.f === 0 || e.f === false; if (inc) anyInc = true;
-      for (const [cls, txt] of [['rk', String(k + 1)], ['nm', e.n + (e.me ? ' (you)' : '')], ['sc', G.fs ? G.fs(e.s) : String(e.s)], ['sb', G.fb ? G.fb(e.b) : String(e.b)]].concat(G.c ? [['sb', String(e.c | 0)]] : [])) {
+      for (const [cls, txt] of [['rk', String(k + 1)], ['nm', e.n + (e.me ? ' (you)' : '')], ['sc', G.fs ? G.fs(e.s) : String(e.s)], ['sb', G.fb ? G.fb(e.b) : String(e.b)]].concat(G.c ? [['sb', G.fc ? G.fc(e.c | 0) : String(e.c | 0)]] : [])) {   // [fbsea] (fc: the third number's own form)
         const sp = mk('span', cls, txt); li.append(sp);
         if (cls === 'nm' && inc) { const a = mk('span', 'inc', '*'); a.title = 'An incomplete game'; a.setAttribute('aria-label', ' (an incomplete game)'); sp.append(a); }
       }
@@ -351,7 +360,7 @@ function boardRender() {
     // your best game, under a board you're not on as far as it shows
     const m = BOARD.runs && BOARD.runs[g] && BOARD.runs[g].filter(r => r.s + r.b + (r.c | 0) > 0).sort((a, b) => runKey(b) - runKey(a))[0];
     if (m && !meShown) {
-      const p = mk('p', 'boardmine', `Your best: ${G.fs ? G.fs(m.s) : m.s} · ${G.fb ? G.fb(m.b) : m.b}${G.c ? ' · ' + (m.c | 0) : ''}`);
+      const p = mk('p', 'boardmine', `Your best: ${G.fs ? G.fs(m.s) : m.s} · ${G.fb ? G.fb(m.b) : m.b}${G.c ? ' · ' + (G.fc ? G.fc(m.c | 0) : m.c | 0) : ''}`);
       if (!m.f) { const a = mk('span', 'inc', '*'); a.title = 'An incomplete game'; p.append(a); anyInc = true; }
       sec.append(p);
     }

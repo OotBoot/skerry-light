@@ -151,7 +151,7 @@ function znRenderUI(U) {
   const q = id => $(U.p + id);
   if (!q('Mp')) return;
   const on = znOnline(), mine = !!ZN.code && ZN.mode === U.mode, W = U.what;
-  q('MpNote').textContent = on ? (ZN.code && !mine ? `You’re in a ${{ zm: 'Lighthouse night', raid: 'raid', fr: 'fog run', fb: 'freebooters’ crew' }[ZN.mode] || 'game'}’s lobby on another card. Host or join a ${W} here and you’ll leave it.` : `Up to four in one ${W}. One of you hosts; the others join, and the host starts the ${W} when everyone’s in.`) : (NET.status === 'connecting' ? 'Looking for other players…' : (NET.offReason || 'Playing together isn’t available here.'));
+  q('MpNote').textContent = on ? (ZN.code && !mine ? `You’re in a ${{ zm: 'Lighthouse night', raid: 'raid', fr: 'fog run', fb: 'freebooters’ crew' }[ZN.mode] || 'game'}’s lobby on another card. Host or join a ${W} here and you’ll leave it.` : U.fb ? 'Up to four on one ship. One of you hosts; the others join, and the host sets sail when everyone’s aboard.' : `Up to four in one ${W}. One of you hosts; the others join, and the host starts the ${W} when everyone’s in.`) : (NET.status === 'connecting' ? 'Looking for other players…' : (NET.offReason || 'Playing together isn’t available here.'));   // [fbsea] (the host sets sail)
   q('MpOpen').hidden = !on || mine;
   q('Lobby').hidden = !mine;
   if (!on) return;
@@ -226,7 +226,7 @@ function zmNetPeers() {
         if (hz.st.fs) st.fs = hz.st.fs >>> 0;   // [fogrun] the run's seed
         znBegin(st, 'client'); return;
       }
-      ZN.doneG = hz.st.g; ZN.msg = 'The night started without you. Host your own, or wait for the next.'; ZN.rjWant = null;
+      ZN.doneG = hz.st.g; ZN.msg = ZN.mode === 'fb' ? 'They set sail without you. Host your own crew, or wait for the next.' : 'The night started without you. Host your own, or wait for the next.'; ZN.rjWant = null;   // [fbsea]
     }
     if (znAmHost() && performance.now() - ZN.lobT > 3000) { ZN.lobT = performance.now(); znSendLobby(); }
   }
@@ -597,7 +597,8 @@ function znRjSnap() {
     spent: ZM.spent | 0, doors: ZM.doorsOpened | 0, downs: ZM.downs | 0, cr: ZN.creditSeen.slice(), x: m.x - FPSC.CX, y: m.y - FPSC.CY, jz: m.jz || 0, fl: m.fl, h: m.h, p: m.p,
     hp: m.hp, dead: m.dead || 0, dn: ZM.downT || 0, gh: !!ZM.ghost, kit: cp(ZM.downKit), st: typeof RAID !== 'undefined' && RAID.on ? RAID.stage : -1,
     cls: typeof RCL !== 'undefined' ? RCL.cls : null, uK: typeof RCL !== 'undefined' ? RCL.uK || 0 : 0, mvp: typeof RMV !== 'undefined' ? cp(RMV.s) : null,
-    fr: typeof frRjSnap === 'function' ? frRjSnap() : null };   // [fogrun] the run's seed and stage, my lives
+    fr: typeof frRjSnap === 'function' ? frRjSnap() : null,   // [fogrun] the run's seed and stage, my lives
+    fb: typeof fbRjSnap === 'function' ? fbRjSnap() : null };   // [fbsea] the session's id, what's in my arms, my wait to be back up (src/fbkeep.js)
 }
 // the record src/rejoin.js keeps: a night I've joined (null: in none; false: hosting it, which can't be come back to)
 function znRjRecord() {
@@ -613,9 +614,9 @@ const znRjFor = code => { const r = typeof rjGet === 'function' ? rjGet() : null
 // that names me arrives (zmNetPeers)
 function znRejoin(r) {
   if (!znOnline() || FPS.on || !r) return false;
-  ZN.mode = znModeOf(r.mode); ZN.code = r.code;   // [fogrun] ZN.at = +r.at || Date.now(); ZN.msg = ''; ZN.doneG = null; ZN.rjWant = r;
+  ZN.mode = znModeOf(r.mode); ZN.code = r.code; ZN.at = +r.at || Date.now(); ZN.msg = ''; ZN.doneG = null; ZN.rjWant = r;   // [fogrun] [fbsea] (this line's end had been commented out by the [fogrun] mark, so a rejoin never took)
   znSendLobby(); znRender();
-  setTimeout(() => { if (ZN.rjWant === r) { ZN.rjWant = null; if (typeof rjClear === 'function') rjClear(); ZN.msg = 'That night has ended.'; znLeave(); } }, 10000);
+  setTimeout(() => { if (ZN.rjWant === r) { ZN.rjWant = null; if (typeof rjClear === 'function') rjClear(); ZN.msg = ZN.mode === 'fb' ? 'That crew has come home: the session is over.' : 'That night has ended.'; znLeave(); } }, 10000);   // [fbsea]
   return true;
 }
 // the first word from the host after coming back: credit counted from where it was, and the feed's old lines not
@@ -653,6 +654,7 @@ function znRjAfter(rj, gained) {
   else if (!(m.hp > 0)) m.hp = 1;
   m.protect = Math.max(m.protect || 0, 2);
   if (typeof frRjAfter === 'function') frRjAfter(rj.fr);   // [fogrun] my lives, as they were
+  if (typeof fbRjAfter === 'function') fbRjAfter(rj.fb);   // [fbsea] (src/fbkeep.js)
   fpsFeed('You’re back in.');
 }
 

@@ -38,6 +38,7 @@ const MAXRUNS = 4000, PER = 25;   // games kept for each board (the lowest let g
 //   war:    s = 1 if won, b = land taken (tiles)       zm:  s = rounds held, b = kills
 //   raid:   s = time through, as 100000 less its seconds (0: not through), b = damage to its bosses, c = kills
 //   fogrun: s = the furthest island reached, b = time through if won (as raid), c = islands lit
+//   fbsea:  s = sovereigns banked in the session, b = voyages done in it, c = sovereigns banked in all (as it stood)
 const runsMem = new Map(); // game -> Map(field -> entry)
 // what each game's two numbers are, and the most each can sensibly be
 //   skerry: s = most voyages in one run,        b = voyages made in all
@@ -49,7 +50,8 @@ const runsMem = new Map(); // game -> Map(field -> entry)
 //   gannet: the same, for the second raid, The Gannet's Wake
 //   fogrun: s = the furthest island reached, b = time through a won run (as raid; 0: not won), c = islands lit (one
 //           run's; a best: in all)
-const GAMES = { skerry: [1000, 1e6], fps: [300, 1e5], war: [1e5, 1e6], zm: [1000, 1e6], raid: [1e5, 1e8, 1e7], gannet: [1e5, 1e8, 1e7], fogrun: [100, 1e5, 1e6] };
+//   fbsea:  s = the most sovereigns banked in one session, b = the most voyages done in one, c = sovereigns in all
+const GAMES = { skerry: [1000, 1e6], fps: [300, 1e5], war: [1e5, 1e6], zm: [1000, 1e6], raid: [1e5, 1e8, 1e7], gannet: [1e5, 1e8, 1e7], fogrun: [100, 1e5, 1e6], fbsea: [1e7, 1e4, 1e9] };
 
 const memory = new Map(); // game -> Map(id -> entry)
 let cache = null, cacheAt = 0;

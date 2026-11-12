@@ -339,7 +339,7 @@
       <h1 id="fbHead">Freebooters' Sea</h1>
       <p>1889. Beyond the Near Skerries lies the Wide Water, a sea the charts gave up on. When the Gannet went down, a hundred years of wrecks came up with her, and their cargo washed up on every rock. Take the keeper's cutter out from Saltcote and bring the salvage home before the drowned take it back.</p>
       <p class="muted">Sail anywhere. Come in close to any island and drop anchor (Use at the wheel, or at the capstan forward), and you're all ashore. Find what's lying there, carry it back to the landing boat and it goes in the hold. Back at Saltcote, the factor buys the hold for sovereigns, shared by the whole crew. There's no end: you leave when you like.</p>
-      <p class="muted fbkeep" id="fbKeep"></p><!-- [fbsea] what you've banked (src/fbkeep.js, to come) -->
+      <p class="muted fbkeep" id="fbKeep"></p><!-- [fbsea] what you've banked (src/fbkeep.js) -->
       <div class="btnrow">
         <button class="primary" id="fbPlay" type="button">Set sail</button>
         <button class="tool" id="fbWcrate" type="button">Weapon crates</button>
@@ -630,6 +630,7 @@
       <span class="eyebrow">Wreckers' Night carries on without you</span>
       <h1 id="fpsMenuHead">Menu</h1>
       <div id="fpsMenuMain">
+      <div class="fbmenukeep" id="fbMenuKeep" hidden></div><!-- [fbsea] the purse and the standings (src/fbkeep.js) -->
       <div class="btnrow">
         <button class="primary" id="fpsResume" type="button">Back to the fight</button>
         <button class="tool" id="fpsViewBtn" type="button">View: first person</button>
@@ -839,6 +840,8 @@
 <script src="src/fbsea.js"></script><!-- [fbsea] Freebooters' Sea: the session, its stages, loot, lives -->
 <script src="src/fbsail.js"></script><!-- [fbsea] the open sea -->
 <script src="src/fbisle.js"></script><!-- [fbsea] the islands, and Saltcote -->
+<script src="src/fbdress.js"></script><!-- [fbsea] the sea's looks: island silhouettes, Saltcote's light, the cutter at anchor from ashore -->
+<script src="src/fbkeep.js"></script><!-- [fbsea] what you keep: sovereigns, standings, crates, its board, rejoin -->
 <script src="src/zmnet.js"></script>
 <script src="src/war.js"></script>
 <script src="src/warview.js"></script>
