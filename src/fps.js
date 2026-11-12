@@ -606,6 +606,7 @@ function fpsIncoming(sh, f) {
   if (!(m.dead > 0) && !(m.protect > 0)) { const hit = fpsShotHits(sh, m); if (hit) fpsHurt(hit.dmg, by, fpsNameOf(by)); }
 }
 function fpsShoot() {
+  if (FPS.zm && typeof fagShoot === 'function' && fagShoot()) return;   // [fbsea] at a swivel gun: fire it (src/fbguns.js)
   if (FPS.zm && typeof fbNoGun === 'function' && fbNoGun()) return;   // [fbsea] your arms full: no gun (src/fbsea.js)
   if (FPS.zm && typeof rclShoot === 'function' && rclShoot()) return;   // [classes] an ultimate in place of the weapon (src/rclass.js)
   const m = FPS.me, w = fpsW();
@@ -1058,6 +1059,7 @@ function fpsInput(dt) {
   if (!FPS.helm) { if (K.ArrowLeft) m.h = wrapPi(m.h - dt * 2.2); if (K.ArrowRight) m.h = wrapPi(m.h + dt * 2.2); }   // [gannet] (at the cutter's wheel the arrows steer her)
   if (FPS.stick) { fx += FPS.stick.dx; fz -= FPS.stick.dy; }
   if (FPS.helm && typeof gwsHelm === 'function' && gwsHelm(fx + (K.ArrowRight ? 1 : 0) - (K.ArrowLeft ? 1 : 0), fz)) fx = fz = 0;   // [gannet] at the wheel your move keys sail her instead (src/gwsail.js)
+  if (FPS.zm && typeof fagPin === 'function' && fagPin()) fx = fz = 0;   // [fbsea] at a swivel gun you stand to it (src/fbguns.js)
   if (FPS.mouseDown || FPS.touchFire || fire) {
     // a slow frame may owe an automatic more than one round
     fpsShoot();

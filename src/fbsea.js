@@ -284,7 +284,7 @@ function fbHud(phone, mono, fell) {
 // (any stage with loot: RAID.st.loot, src/fbisle.js) the item in my arms, or null
 function fbCarrying() { if (!(typeof FB !== 'undefined' && FB.on) || !RAID.on) return null; const L = RAID.st && RAID.st.loot; return L ? L.find(o => o.by === FPS.me.id) || null : null; }
 // (fpsShoot, vmDraw) arms full: no gun
-function fbNoGun() { return !!fbCarrying(); }
+function fbNoGun() { return !!fbCarrying() || (typeof fagManning === 'function' && fagManning()); }   // [fbsea] (or at a swivel gun: src/fbguns.js)
 
 // ---------- for tests ----------
 // fbDebug(stageKey, i): a session alone (the calling picked for you), then on to that stage: 'fbsail', 'fb_isle'
