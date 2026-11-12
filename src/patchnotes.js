@@ -6,6 +6,17 @@
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 176, date: '2026-11-12', title: "New game: Freebooters' Sea", New: [
+    "Freebooters' Sea: a new open-ended game for one to four players, with its own card on the title screen and its own lobby. Crew the keeper's cutter on the Wide Water, a big open sea of twelve islands and the outpost of Saltcote, and sail wherever you like for as long as you like.",
+    "Freebooters' Sea: drop anchor off any island and go ashore. Pick up what's lying about, carry it back to the landing boat to stow it in the hold, and sell the hold at the factor's table in Saltcote for sovereigns shared by the crew.",
+    "Freebooters' Sea: voyages from the board at Saltcote, one at a time, from three companies. Gilt & Gull Company hoard charts (find the X by its landmarks and dig), Bellmen bounties (clear a drowned camp and kill its captain for his bell) and Tidewrights salvage (anchor over a wreck and dive for its cargo).",
+    "Freebooters' Sea: four swivel guns on the cutter's rails. Man one, aim and fire at the Mooncussers' black sloops, which hunt the sea, fire broadsides that hole your deck and send boarders over the rail. Sink one and haul its loot out of the water.",
+    "Freebooters' Sea: a chart table on deck shows the whole sea, your ship and your voyage's marks. M (or View on a controller) shows your voyage's charts.",
+    "Freebooters' Sea: going down never ends the session. Bleed out and you're back on your feet in 10 seconds. If the cutter sinks, the crew washes up at Saltcote in a fresh one, but what was in the hold is lost.",
+    "Freebooters' Sea: what you keep. A weapon or outfit crate for every 1,000 sovereigns a session earns, a standing from 1 to 10 with each company, and a pirate token every time a standing goes up.",
+    "Freebooters' Sea: its own scoreboard column (best session, voyages done in it, sovereigns in all), saved to the cloud with everything else. Invite links and rejoining work as in the other co-op games.",
+    "Freebooters' Sea: a lore compendium entry for the Wide Water, Saltcote, the black sloops and the three companies." ], Fixes: [
+    "Rejoining a night, raid or Fog Run after a dropped connection now works again." ] },
   { v: 175, date: '2026-11-12', title: "Faster wake-up for the online game", Fixes: [
     "The online game wakes from sleep much faster. The first visit after a quiet spell no longer waits about a minute and a half for the server to get ready." ] },
   { v: 174, date: '2026-11-12', title: "Fog Run: two dozen new cards", New: [
