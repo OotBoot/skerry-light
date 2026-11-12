@@ -75,13 +75,14 @@ function lwMain() {
     "…that the keeper refused to write down the year [[ironship|the iron ship]] came from?",
     "…that nobody knows who sets [[crates|the drifting crates]] adrift?",
     "…that [[maren]] is not in [[ch_reach|the Drowned Reach]], but the [[drowned]] are?",
+    "…that [[bellmen|the Bellmen]] ring every drowned captain's bell once on the quay at [[saltcote]] before they strike his ship off the roll?",
     "…that [[pascoe|Old Pascoe]] once came home three days late with a day's beard?",
   ];
   const did = [0, 1, 2, 3].map(i => facts[(day + i * 3) % facts.length]);
-  const chron = ['ch_voyages', 'ch_wreckers', 'ch_gannetswake', 'ch_lastlight', 'ch_fogrun', 'ch_marensend', 'ch_reach'].map(id => LW.byId[id]);
+  const chron = ['ch_voyages', 'ch_wreckers', 'ch_gannetswake', 'ch_lastlight', 'ch_fbsea', 'ch_fogrun', 'ch_marensend', 'ch_reach'].map(id => LW.byId[id]);
   return '<h1 class="lw-h1 lw-welcome" id="loreHead">Welcome to the Skerry Compendium</h1><p class="lw-from">The record of the Light that anyone can read. ' + LORE.length + ' articles, from the first fire on Lantern Rock to the wars of the Reach.</p>' +
     '<div class="lw-mp">' +
-    '<section class="lw-panel lw-wide"><h2>The seven tales</h2><p>Every game is one chapter of the same history. Read them in the order they happened, or start with the <a href="#" class="lw-a" data-a="timeline">timeline</a>.</p><ol class="lw-chron">' + chron.map(a => '<li><a href="#" class="lw-a" data-a="' + a.id + '"><b>' + lwEsc(a.t) + '</b><span>' + lwEsc(a.box.find(r => r[0] === 'When')[1]) + '</span></a></li>').join('') + '</ol></section>' +
+    '<section class="lw-panel lw-wide"><h2>The eight tales</h2><p>Every game is one chapter of the same history. Read them in the order they happened, or start with the <a href="#" class="lw-a" data-a="timeline">timeline</a>.</p><ol class="lw-chron">' + chron.map(a => '<li><a href="#" class="lw-a" data-a="' + a.id + '"><b>' + lwEsc(a.t) + '</b><span>' + lwEsc(a.box.find(r => r[0] === 'When')[1]) + '</span></a></li>').join('') + '</ol></section>' +
     '<section class="lw-panel"><h2>Today\'s featured article</h2>' + (fimg ? '<img class="lw-feat" src="' + fimg + '" alt="">' : '') + '<p>' + lwLinks(feat.sum) + ' (<a href="#" class="lw-a" data-a="' + feat.id + '">Read more</a>)</p></section>' +
     '<section class="lw-panel"><h2>Did you know</h2><ul class="lw-list">' + did.map(f => '<li>' + lwLinks(f) + '</li>').join('') + '</ul></section>' +
     (page ? '<section class="lw-panel"><h2>From the keeper\'s log</h2><p class="lw-logdate">' + lwEsc(page.date) + '</p><blockquote>' + lwEsc(page.text) + '</blockquote><p><a href="#" class="lw-a" data-a="log">About the log</a></p></section>' : '') +

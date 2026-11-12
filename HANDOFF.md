@@ -4,7 +4,7 @@ Paste this into the new conversation, or point it at this file in the repo. It c
 
 ## 1. What it is
 
-**Skerry Light** is a browser game: plain JavaScript, three.js, Web Audio, and a small Node server. It has four modes, each named in the possessive style:
+**Skerry Light** is a browser game: plain JavaScript, three.js, Web Audio, and a small Node server. It has seven games, each with its own card on the title screen (and an entry in the desktop menu, `menudesk.js`):
 
 | Mode | What it is | Main source files |
 |---|---|---|
@@ -12,6 +12,9 @@ Paste this into the new conversation, or point it at this file in the repo. It c
 | **Wreckers' Night** | Multiplayer FPS on the islands, with weapon crates | `fps*.js`, `wcrates.js` |
 | **Drowned Reach** | A war for the islands, with banner crates | `war.js`, `warnet.js`, `warview.js` |
 | **Keeper's Last Light** | Round-based zombies inside the lighthouse. **The code calls it "the Lighthouse"** | `zombies.js`, `zm*.js` |
+| **Skerry Raids** | Two raids for one to four, in three parts each: Maren's End and The Gannet's Wake. Built on the Lighthouse's engine and lobby | `raid*.js`, `gannet.js`, `gw*.js`, `rclass.js` |
+| **Fog Run** | A run through the haar, island to island, lighting the lights; cards and relics, chart fragments | `fr*.js` (`frkeep.js`: what you keep) |
+| **Freebooters' Sea** | An open sea of islands to sail, salvage and sell, alone or up to four, with no end; code key `fbsea`, lobby mode `'fb'` | `fb*.js` (`fbsea.js` the session and its hook API, `fbsail.js` the sea, `fbisle.js` the islands and Saltcote, `fbdress.js` the sea's looks, `fbkeep.js` sovereigns, standings, crates, its board, rejoin) |
 
 There are also shared files:
 - Crates and cosmetics: `crates.js`, `ocrates.js`, `rcrates.js`, `wcrates.js`, `skinfx.js`

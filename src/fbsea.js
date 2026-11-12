@@ -256,8 +256,8 @@ function fbApply(hz) {
   if (typeof a[6] === 'string' && a[6]) FB.sid = a[6].slice(0, 24);
   fbHooks('sail', 'applyAll', hz); fbHooks('isle', 'applyAll', hz); fbHooks('port', 'applyAll', hz);
 }
-// (raidReport, leaving) the session's say to the scoreboard: [c] src/fbkeep.js, to come
-function fbReport() { RAID.told = true; }
+// (raidReport, leaving) the session's say to the scoreboard, and what it kept: src/fbkeep.js
+function fbReport() { RAID.told = true; if (typeof fbKeepReport === 'function') fbKeepReport(); }   // [fbsea keep]
 
 // ---------- painted on top ----------
 function fbHudTitle(S) { return `Freebooters’ Sea · ${S && S.n || 'the Wide Water'}`; }

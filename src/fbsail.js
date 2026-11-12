@@ -176,7 +176,7 @@ function fbs3dBuild(SG, G) {
       for (let k = 0; k < 4; k++) { const hut = new THREE.Mesh(new THREE.BoxGeometry(6, 4, 5), wood); const a = Math.PI * 0.6 + (k - 1.5) * 0.45; hut.position.set(Math.cos(a) * (I.r - 22), top * 0.6 + 2, Math.sin(a) * (I.r - 22)); hut.rotation.y = -a; g0.add(hut); } }
     // a faint lantern at its landing, so there's something to steer for at night
     const lg = G.glowSp(0xffd8a0, I.port ? 18 : 6, { opacity: 0 }); lg.position.set(0, top + 3, 0); g0.add(lg);
-    G.fbI.push({ g: g0, lg, I });
+    G.fbI.push({ g: g0, lg, I, mound });   // [fbsea dress] (mound: src/fbdress.js raises the cliffs)
   });
 }
 function fbs3d(dt, V) {

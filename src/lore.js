@@ -1,14 +1,14 @@
 'use strict';
 // The Skerry Compendium: the lore book on the main menu, written like a wiki (src/loreui.js draws it).
 // It ties every game into one history: the voyages (Skerry Light), Wreckers' Night, Drowned Reach, Keeper's Last Light,
-// the two raids (Maren's End, The Gannet's Wake) and Fog Run. Where the game itself says nothing, the gaps are filled
+// the two raids (Maren's End, The Gannet's Wake), Fog Run and Freebooters' Sea [fbsea]. Where the game itself says nothing, the gaps are filled
 // with lore that fits; the keeper's log (SK.LOG in config.js) is the spine and is never contradicted.
 // An article: { id, t: title, cat: [categories], img: a picture key (see loreImg in loreui.js), gal: visitors' picture keys for a gallery, box: [[label, value], ...]
 //   (the infobox), sum: the opening paragraph, secs: [{ h: heading, p: [paragraphs] }], also: [ids for See also] }.
 // In any text, [[id]] links to an article by its title and [[id|words]] links with other words.
 // Keep secrets out entirely: no Easter egg, nothing hidden in any map, no secret bosses or hidden buttons, not even a hint.
 var LORE_CATS = [
-  { k: 'Chronicles', d: 'The seven great tales of the Skerries, each told by one of the games.' },
+  { k: 'Chronicles', d: 'The eight great tales of the Skerries, each told by one of the games.' },
   { k: 'Characters', d: 'People, and things that were once people.' },
   { k: 'Creatures', d: 'What walks, swims, flies or crawls in the waters round the Light.' },
   { k: 'Places', d: 'Rocks, shores, buildings and the far seas.' },
@@ -48,6 +48,7 @@ var LORE = [
   ]},
   { h: 'After the Gannet', p: [
     "<b>Winter 1888 to 1889.</b> The drowned come up out of the sea for [[station|the keeper's station]] itself, night after night: see [[ch_lastlight]].",
+    "<b>Spring and summer 1889.</b> The wrecks the Gannet brought up with her drift out past the Near Skerries onto [[widewater|the Wide Water]], and freebooters follow them from [[saltcote]]: see [[ch_fbsea]].",   // [fbsea]
         "<b>Autumn 1889.</b> [[haar|The haar]] closes in and the lights of the outer rocks go out one by one. The cutter goes out to light them again: see [[ch_fogrun]].",
     "<b>The Dry Night, 1890.</b> The sea round the Light drains away down [[swallow|the Swallow]]. Raiders go down after it with Maren's lantern: see [[ch_marensend]].",
     "<b>Winter 1891.</b> The sea comes up Fish Street in [[wrackhaven]] one night and does not go back. The town is left to the drowned, and the defenders of the station follow them there.",
@@ -132,6 +133,19 @@ var LORE = [
     "The last light out there, on [[lanternrock]], was held by the thing that had put the others out: [[fogkeeper|the Fog-Keeper]], keeper of a light older than Skerry Light. When he fell, his dead lamp came on, and its beam swept the fog off the whole sea.",
   ]},
 ], also: ['haar', 'fogkeeper', 'puzzles'] },
+// [fbsea] Freebooters' Sea (src/fbsea.js, src/fbkeep.js)
+{ id: 'ch_fbsea', t: "Freebooters' Sea", cat: ['Chronicles', 'Events'], box: [['Told in', "Freebooters' Sea"], ['When', 'Spring and summer 1889'], ['Where', '[[widewater|The Wide Water]], out of [[saltcote]]'], ['Who', 'Freebooters in the [[cutter|keeper\'s cutter]]'], ['Foes', '[[blacksloops|The Mooncussers\' black sloops]], [[drowned]]'], ['Paid by', '[[giltgull|Gilt & Gull Company]], [[bellmen|the Bellmen]], [[tidewrights|the Tidewrights]]']], sum: "When the Gannet went down for the second time, a hundred years of wrecks came up with her, and the tides carried them out past the Near Skerries onto the Wide Water, a sea the charts had long since given up on. By the spring of 1889 their cargo was washing up on every rock out there, and freebooters were going out after it.", secs: [
+  { h: 'The cutter', p: [
+    "The keeper fitted the [[cutter|cutter]] with four swivel guns on her rails and lent her to whoever would sail her, on one condition: that what came up out of the wrecks was brought home to [[saltcote]] and sold honestly, before [[blacksloops|the black sloops]] got to it or the drowned took it back.",
+    "There was no end to it and no run to finish. Crews sailed out when they liked, went ashore wherever there was a beach, dug, fought, carried what they found down to the landing boat, and came home with the hold full or not at all.",
+  ]},
+  { h: 'Voyages', p: [
+    "The voyage board on the quay at Saltcote paid for more particular work: a hoard chart to dig out for [[giltgull|Gilt & Gull Company]], a drowned captain's bell to bring back for [[bellmen|the Bellmen]], a wreck to dive on for [[tidewrights|the Tidewrights]], or a black sloop to sink. Each company remembered who had done its work, and paid them the better for it.",
+  ]},
+  { h: 'The factor', p: [
+    "Everything came across the factor's table on the shore by Saltcote's landing: sea chests, ironbound and gilded, cargo crates, strongboxes, captains' bells, lockets and scrimshaw. He weighed it, wrote it in his ledger and paid in gold sovereigns, and the crew shared the purse. A ship that went down took her hold with her, and the crew washed up at Saltcote to start again.",
+  ]},
+], also: ['widewater', 'saltcote', 'blacksloops'] },
 { id: 'ch_marensend', t: "Maren's End", cat: ['Chronicles', 'Events'], img: 'maren', box: [['Told in', "Maren's End (raid)"], ['When', 'The Dry Night, 1890'], ['Where', '[[swallow|The Swallow]], the [[blackwater|Black Water]] and [[seafort|the sea fort]]'], ['Who', 'Raiders of the [[callings|three callings]]'], ['Carried', '[[marenslantern]]'], ['Foes', '[[mooncusser|Mooncussers]], [[batofmaren|the Knock, Bat of Maren]], [[maren]]'], ['Parts', 'I The Swallow · II The Black Water · III Maren\'s End']], sum: "The tale of the night the sea went away. In 1890 the water round the Light drained down a great hole in the sea bed, leaving a dry bed of salt and wrecks with a long pier running out over it. A few went down after it, carrying the lantern Maren rowed out with in 1887, to finish what the Gannet started.", secs: [
   { h: 'Part I: The Swallow', p: [
     "From the far end of [[longpier|the Long Pier]] the raiders dropped down the throat of [[swallow|the Swallow]], half a minute in the dark. At the bottom, a path wound through the black with braziers along it. Only [[marenslantern|Maren's Lantern]] would light them, and out of their light the dark itself drained the life from anyone in it.",
@@ -321,6 +335,21 @@ var LORE = [
     "Every island lit pushed it back a little. The crews charted it in three reaches: the Near Skerries, where you could still see a ship's length or two; the Grey Reach; and the Haar itself, where you could hardly see your own bow. Those lost overboard in it are said to wander until an island's light is lit, and the islands have a bell for calling them home, the Lost Man's Bell.",
   ] },
 ], also: ['ch_fogrun', 'puzzles'] },
+// [fbsea]
+{ id: 'widewater', t: 'The Wide Water', cat: ['Places'], box: [['Kind', 'Open sea, about two miles across'], ['Lies', 'North of the Light, beyond the Near Skerries'], ['Islands', 'Twelve, and [[saltcote]]'], ['Appears in', '[[ch_fbsea]]']], sum: "The open sea beyond the Near Skerries, about two miles each way, which the Admiralty charts leave blank. Twelve islands lie across it, with reefs and loose rock between, and since 1889 the wreckage of a hundred years has been washing up on all of them.", secs: [
+  { h: 'The islands', p: [
+    "Gullstone, all grey shingle and gulls. Widow's Teeth, black rock and broken hulls, ringed with reef. St Brannoc's Isle, its chapel roofless among the graves. Tallow Cove and its smugglers' jetty. Beacon Knoll, heather and a ruined signal tower. Marrowfen, mud and reeds and marsh lights. Crowsnest Rock, with a stair cut in its crags. The Coffin Stones, wrecks on the rocks. Hangman's Holm, a bleak shingle holm. Gilt Strand, its golden beach and its boathouse. Mother Carey's Rest, an old chapel among the stones. And Blackwater Holm, black pools and peat, furthest out of all.",
+    "The further north a crew sails, the better the chests they find and the thicker the rocks between the islands. The charts that do exist are mostly hoard charts, and most of those are lies.",
+  ]},
+  { h: 'At night', p: [ "The nights out there are a little brighter than at the Light, and the islands show as shapes against the sea. Each has a faint lantern at its landing, lit by nobody anyone has met." ] },
+], also: ['saltcote', 'ch_fbsea', 'blacksloops'] },
+{ id: 'saltcote', t: 'Saltcote', cat: ['Places'], box: [['Kind', 'An outpost on a cove'], ['Lies', 'The south end of [[widewater|the Wide Water]]'], ['Has', 'A quay, the factor\'s table, the voyage board, a chapel'], ['Appears in', '[[ch_fbsea]]']], sum: "The outpost at the south end of the Wide Water: a cove with a quay, a handful of huts and salt pans, and a lighthouse on the point that is a good deal smaller than Skerry Light and a good deal friendlier. Every freebooter's voyage starts and ends there.", secs: [
+  { h: 'The quay', p: [
+    "The factor keeps his table on the shore by the landing, under an awning, with his ledger, his scales and his stacks of sovereigns. Beside it stands the voyage board, papered over with the companies' notices. The chapel up the slope mends whoever comes home hurt.",
+    "The drowned do not come up at Saltcote, and the black sloops keep their distance from its light. Nobody there will say why, and nobody wants to find out.",
+  ]},
+  { h: 'Its lamps', p: [ "The quay's lamps and the windows of its huts can be seen across the water from a long way out, and on a dark night they are the only steady lights on the Wide Water." ] },
+], also: ['widewater', 'ch_fbsea'] },
 { id: 'puzzles', t: 'The islands of the haar', cat: ['Places'], box: [['Kinds', 'Fight, elite, puzzle, wreck, chapel, unknown'], ['Appears in', '[[ch_fogrun]]']], sum: "The islands between the Light and Lantern Rock, each with its own light to be lit. Some were fought for, some rested on, and some were puzzles left by the keepers of the old rocks, who did not want just anyone lighting their lamps.", secs: [
   { h: 'The puzzles', p: [
     "<b>Bend the Beam:</b> mirror posts to turn, to carry the Light's beam from the cliff to the beacon. <b>Knock's Garden:</b> a field of figurehead statues that move only when nobody is looking; see [[knock]]. <b>The Bell Buoys:</b> a fog horn sounds a tune, and the island's bells must answer it. <b>The Tide Stones:</b> four plates that must be held down at once to raise the causeway.",
@@ -428,9 +457,15 @@ var LORE = [
 { id: 'ironship', t: 'The iron ship', cat: ['Ships'], box: [['Rig', 'None'], ['Arrived', '12 August 1888'], ['From', 'A year the keeper would not write down'], ['Known to the boats as', 'The Carrier']], sum: "A ship with no sails at all: iron, longer than the harbour, flat as a table on top and lit like a town. Things flew off her deck with a roar and swept the water with lights.", secs: [
   { h: '', p: [ "Her crew spoke of a year the keeper would not write down. Plimsoll walked ahead of her too. She proved, if proof was needed, that the sea had come loose in time as well as place, and in [[ch_reach]] her people were not the only ones from later years." ] },
 ], also: ['boats', 'opensky'] },
-{ id: 'cutter', t: "The keeper's cutter", cat: ['Ships'], box: [['Kind', 'A small cutter'], ['Berth', 'The foot of [[skerrylight]]'], ['Appears in', '[[ch_gannetswake]], [[ch_fogrun]]']], sum: "The Light's own boat, kept at the foot of the tower. The keeper sent her out after the Gannet in 1888 and into the haar in 1889, each time with a crew of whoever would go.", secs: [
+{ id: 'cutter', t: "The keeper's cutter", cat: ['Ships'], box: [['Kind', 'A small cutter'], ['Berth', 'The foot of [[skerrylight]]'], ['Appears in', '[[ch_gannetswake]], [[ch_fogrun]], [[ch_fbsea]]']], sum: "The Light's own boat, kept at the foot of the tower. The keeper sent her out after the Gannet in 1888, onto the Wide Water and into the haar in 1889, each time with a crew of whoever would go.", secs: [
   { h: '', p: [ "She has a wheel, a ship's bell at the mast, a flare locker aft, and since 1889 a chart table on deck. She has been holed more times than anyone has counted, and patched every time. She has never been slowed down." ] },
 ], also: ['ch_fogrun', 'ch_gannetswake', 'bell'] },
+// [fbsea]
+{ id: 'blacksloops', t: "The Mooncussers' black sloops", cat: ['Ships', 'Factions'], box: [['Kind', 'Fore-and-aft sloops, tarred black'], ['Show', 'No lights at all'], ['Crew', 'Never taken alive'], ['Appears in', '[[ch_fbsea]]']], sum: "Black sloops that sail the Wide Water without a lamp between them, after the same salvage the freebooters are. They chase what they see, fire broadsides into it, and send the drowned over its rail. Sink one and whatever it had taken floats.", secs: [
+  { h: 'Whose they are', p: [
+    "Nobody aboard one has ever been taken alive. The men of Saltcote call them the Mooncussers' sloops, after [[mooncussers|the wreckers of the old days]], and say the hanged men came down out of their chains to go back to sea. Others say they are only wreckers who took the old name. They do not come near Saltcote's light.",
+  ]},
+], also: ['mooncussers', 'ch_fbsea', 'widewater'] },
 { id: 'boats', t: 'The boats of 1888', cat: ['Ships'], box: [['Kinds', 'Brig, cutter, barque, and one carrier']], sum: "The ships that sailed in under the Light in the year of the voyages. Most were brigs; a few were the quick cutters and the heavy barques, and one, impossibly, was an aircraft carrier.", secs: [
   { h: '', p: [
     "<b>The brig</b> takes four hits, and her carpenter patches a plank as she goes. <b>The cutter</b> is quick and takes two. <b>The barque</b> is heavy, takes five, and has a bow gun that blows apart a rock just ahead of her. <b>The carrier</b> is [[ironship|the iron ship]], whose floodlights reach far and whose scout jet lights the rocks along her course.",
@@ -445,11 +480,21 @@ var LORE = [
   ] },
 ], also: ['mooncussers', 'ch_wreckers'] },
 { id: 'mooncussers', t: 'The Mooncussers', cat: ['Factions'], box: [['Trade', 'Wrecking with false lights'], ['Active', '1600s to 1700s'], ['Fate', 'Hanged in chains, and came back']], sum: "The wreckers of the old days, who cursed the moon because a moonlit night showed ships the rocks. They hung false lights on poles to draw ships in, and the fort's governors hung them in chains on the sea wall for it.", secs: [
-  { h: '', p: [ "Their lamps are the [[wreckerslights|wreckers' lights]] still seen over the rocks. Those that came back are [[mooncusser|the Mooncusser]]." ] },
-], also: ['mooncusser', 'wreckerslights', 'seafort'] },
+  { h: '', p: [ "Their lamps are the [[wreckerslights|wreckers' lights]] still seen over the rocks. Those that came back are [[mooncusser|the Mooncusser]]. Their name went to sea again in 1889 with [[blacksloops|the black sloops]] of the Wide Water." ] },
+], also: ['mooncusser', 'wreckerslights', 'blacksloops'] },
 { id: 'salvors', t: 'The Northern Salvage Company', cat: ['Factions'], box: [['Trade', 'Salvage diving'], ['Came for', 'The Gannet\'s cargo'], ['Lost', 'Spring 1888, all its divers']], sum: "A salvage firm that sent a steam tender and a team of helmet divers to the Gannet in the spring of 1888. The divers went down. Their air lines came up cut.", secs: [
   { h: '', p: [ "The tender sailed home with nobody to pump for. The brass helmets were seen next on [[diver|the Divers]]." ] },
 ], also: ['diver', 'gannet'] },
+// [fbsea] the three companies of Saltcote
+{ id: 'giltgull', t: 'Gilt & Gull Company', cat: ['Factions'], box: [['Trade', 'Hoard charts, and what is under them'], ['Office', 'The voyage board, [[saltcote]]'], ['Appears in', '[[ch_fbsea]]']], sum: "A firm of chart-dealers who buy every scrap of paper that comes out of the wrecks with an X on it, sort the true charts from the false, and send freebooters out to dig. They keep a fair share of what comes up, and pay well for the rest.", secs: [
+  { h: '', p: [ "Their charts name an island and draw its landmarks round the X. The crews say a Gilt & Gull chart is true one time in three, and that the other two times there is usually something worse than nothing under it." ] },
+], also: ['bellmen', 'tidewrights', 'saltcote'] },
+{ id: 'bellmen', t: 'The Bellmen', cat: ['Factions'], box: [['Trade', 'Bounties on the drowned captains'], ['Pay for', 'Each captain\'s bell'], ['Appears in', '[[ch_fbsea]]']], sum: "An old guild of bell-founders and parish clerks who keep a roll of every ship lost on the coast. When one of her drowned captains comes ashore on the Wide Water and holds a camp there, the Bellmen post a bounty on him, payable on his ship's bell.", secs: [
+  { h: '', p: [ "Each bell brought home is rung once on the quay and struck off the roll. [[bell|A rung bell]] is the first answer to almost everything on this coast, and the Bellmen believe a drowned captain parted from his bell stays down." ] },
+], also: ['giltgull', 'tidewrights', 'bell'] },
+{ id: 'tidewrights', t: 'The Tidewrights', cat: ['Factions'], box: [['Trade', 'Salvage, from the wrecks at sea'], ['Successors to', '[[salvors|The Northern Salvage Company]]'], ['Appears in', '[[ch_fbsea]]']], sum: "Salvors who mark the wrecks lying in open water and pay for crates brought up from them. They took on the work the Northern Salvage Company gave up after its divers were lost, and do it without helmets: one breath, down, and up again.", secs: [
+  { h: '', p: [ "They keep no divers of their own. They say it is cheaper to pay freebooters by the crate, and nobody has ever argued the point with them." ] },
+], also: ['giltgull', 'bellmen', 'salvors'] },
 { id: 'callings', t: 'The three callings', cat: ['Factions'], box: [['Callings', 'Mercenary, Brute, Apothecary'], ['Appears in', '[[ch_gannetswake]], [[ch_marensend]], [[ch_fogrun]]']], sum: "The three kinds of fighter who went out on the raids and the runs. Every crew that went after the Gannet, down the Swallow or into the haar was made of them.", secs: [
   { h: '', p: [
     "<b>The Mercenary</b> is quick and sharp-eyed, hired guns off the merchant ships, with an avtomat and a longarm. <b>The Brute</b> is hard to stop: dockers, whalers and boarding men, with a blunderbuss and a boarding axe, who come down from a jump hard enough to shake the ground. <b>The Apothecary</b> keeps the others standing, trained in the old way of [[apothecaries|the fort's apothecaries]], with a duck's-foot pistol and a flare pistol, and drifts down from a height like a gull.",

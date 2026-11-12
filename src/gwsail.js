@@ -1073,8 +1073,8 @@ function gwsHud(phone, mono, fell) {
     { const d = angDiff(0, m.h); if (inS(d)) { ctx.fillStyle = 'rgba(236,228,207,0.85)'; ctx.fillRect(xb(d) - 1, sy + sh - 4, 2, 4); ctx.fillText('BOW', xb(d), sy + sh + 7); } }
     // the Light
     { const d = lb(bearingOf(-V.x, -V.y)); if (inS(d)) { const f = 1 - Math.min(1, Math.abs(angDiff(wrapPi(gwBeam()), bearingOf(V.x, V.y))) / 0.6); ctx.fillStyle = `rgba(255,216,138,${0.5 + 0.5 * f})`; const xx = xb(d); ctx.beginPath(); ctx.moveTo(xx, sy + 4); ctx.lineTo(xx + 3.5, sy + 14); ctx.lineTo(xx - 3.5, sy + 14); ctx.closePath(); ctx.fill(); } }
-    // the mark
-    { const MK = gwsMark(), d = lb(bearingOf(MK[0] - V.x, MK[1] - V.y)); if (inS(d)) { const xx = xb(d); ctx.fillStyle = '#86cfae'; ctx.fillRect(xx - 5, sy + 7, 10, 6); if (!phone) { ctx.font = mono(9); ctx.fillText(GWS_LEG && GWS_LEG.markLab ? GWS_LEG.markLab() : `${Math.round(dm)} m`, xx, sy + sh + (inS(angDiff(0, m.h)) && Math.abs(xx - xb(angDiff(0, m.h))) < 30 ? 18 : 7)); ctx.font = mono(10); } } else edge(d, '#86cfae'); }
+    // the mark ([fbsea] its label clears BOW by the label's own width, and stays under the strip)
+    { const MK = gwsMark(), d = lb(bearingOf(MK[0] - V.x, MK[1] - V.y)); if (inS(d)) { const xx = xb(d); ctx.fillStyle = '#86cfae'; ctx.fillRect(xx - 5, sy + 7, 10, 6); if (!phone) { ctx.font = mono(9); const lab = GWS_LEG && GWS_LEG.markLab ? GWS_LEG.markLab() : `${Math.round(dm)} m`, lw = ctx.measureText(lab).width, lx = clamp(xx, sx + lw / 2, sx + sw - lw / 2); ctx.fillText(lab, lx, sy + sh + (inS(angDiff(0, m.h)) && Math.abs(lx - xb(angDiff(0, m.h))) < lw / 2 + 16 ? 19 : 7)); ctx.font = mono(10); } } else edge(d, '#86cfae'); }
     // Plimsoll, and his ring while he's keeping her off you
     if (gwsPlim()) { const P = S.pl, d = lb(bearingOf(P.x - V.x, P.y - V.y)), py = sy + sh * 0.68;
       if (inS(d)) { const xx = xb(d); ctx.fillStyle = '#5fd3ff'; ctx.beginPath(); ctx.arc(xx, py, 3, 0, 6.28); ctx.fill();
