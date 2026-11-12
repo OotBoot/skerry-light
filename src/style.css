@@ -1196,3 +1196,50 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
   .lorecard { padding: 0; } .lw { height: 100dvh; }
   .lw-side { font-size: 13px; }
 }
+
+/* The desk menu (src/menudesk.js): on a desktop or any wide screen, the games in a list down the left, the chosen
+   game's card in full in the middle, and the scoreboard on the right (under the list when there isn't room).
+   #titleCard only gets .mddesk at 1100 by 620 and up, so phones keep the long scrolling menu exactly as it was. */
+.md-nav { display: none; }
+#titleCard.mddesk { grid-template-columns: 300px minmax(0, 52rem); grid-template-rows: auto auto auto auto 1fr; grid-template-areas: "ver ver" "rej rej" "nav card" "links card" "board card";
+  justify-content: center; align-content: start; place-items: start stretch; column-gap: 28px; row-gap: 14px; padding: 16px 32px 24px; }
+@media (min-width: 1440px) {
+  #titleCard.mddesk { grid-template-columns: 290px minmax(0, 52rem) minmax(320px, 380px); grid-template-areas: "ver ver ver" "rej rej rej" "nav card board" "links card board" ". card board"; }
+  #titleCard.mddesk > #boardCard { position: sticky; top: 12px; max-height: calc(100dvh - 72px); overflow-y: auto; }
+}
+#titleCard.mddesk > .verline { grid-area: ver; justify-self: center; margin: 0; }
+#titleCard.mddesk > .rejoinbar { grid-area: rej; justify-self: center; max-width: 52rem; margin: 0; }
+#titleCard.mddesk > .newgame { display: none; }
+#titleCard.mddesk > .md-nav { grid-area: nav; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+#titleCard.mddesk > .menulinks { grid-area: links; justify-self: stretch; margin: 0; flex-wrap: nowrap; }
+#titleCard.mddesk > .menulinks .notesbtn { flex: 1 1 0; padding-block: 9px; }
+#titleCard.mddesk > #boardCard { grid-area: board; max-width: none; width: auto; margin: 0; padding: 20px 20px 18px; }
+#titleCard.mddesk > #boardCard h1 { font-size: 2.4rem; }
+#titleCard.mddesk > .modecard { grid-area: card; display: none; max-width: none; width: auto; margin: 0; position: sticky; top: 12px; max-height: calc(100dvh - 72px); overflow-y: auto; padding: 34px 40px 30px; gap: 16px; scrollbar-width: thin; }
+#titleCard.mddesk > .modecard.mdon { display: flex; animation: mdIn 0.22s ease-out; }
+#titleCard.mddesk > .modecard h1 { font-size: 4.2rem; }
+#titleCard.mddesk > .modecard > p { font-size: 1.05rem; line-height: 1.55; }
+@keyframes mdIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { #titleCard.mddesk > .modecard.mdon { animation: none; } }
+.md-brand { display: flex; flex-direction: column; gap: 2px; padding: 2px 2px 4px; }
+.md-word { font-family: var(--display); font-size: 2.5rem; line-height: 1; color: var(--lamp); text-shadow: 0 0 18px rgba(255,216,138,0.25); }
+.md-hint { font-family: var(--log); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+.md-list { display: flex; flex-direction: column; gap: 6px; }
+.md-tab { --mdc: var(--lamp); display: flex; align-items: center; gap: 12px; width: 100%; padding: 10px 12px 10px 10px; text-align: left; cursor: pointer; color: var(--ink); font-family: var(--log);
+  background: rgba(10,16,30,0.78); border: 1px solid var(--rule); border-left: 3px solid color-mix(in srgb, var(--mdc) 40%, transparent); backdrop-filter: blur(3px);
+  transition: background 0.15s, border-color 0.15s, transform 0.15s; }
+.md-tab:hover { background: color-mix(in srgb, var(--mdc) 13%, rgba(10,16,30,0.85)); border-color: color-mix(in srgb, var(--mdc) 40%, transparent); transform: translateX(2px); }
+.md-tab.on { background: linear-gradient(90deg, color-mix(in srgb, var(--mdc) 28%, rgba(10,16,30,0.85)), rgba(10,16,30,0.88)); border-color: color-mix(in srgb, var(--mdc) 70%, transparent); border-left-color: var(--mdc); }
+.md-tab:focus-visible, .md-tab.padfocus { outline: 2px solid var(--lamp); outline-offset: 2px; }
+.md-n { flex: none; width: 22px; height: 22px; display: grid; place-items: center; font-size: 11px; color: var(--mdc); border: 1px solid color-mix(in srgb, var(--mdc) 50%, transparent); }
+.md-tab.on .md-n { background: var(--mdc); color: #0b0f18; font-weight: 700; }
+.md-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.md-txt b { font-family: var(--display); font-weight: 400; font-size: 1.3rem; line-height: 1.05; color: var(--ink); }
+.md-tab.on .md-txt b { color: var(--mdc); }
+.md-txt small { font-size: 10.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.md-tag { flex: none; font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; padding: 2px 5px; background: var(--mdc); color: #0b0f18; font-weight: 700; }
+#titleCard.mddesk > .modecard .btnrow { gap: 10px; }
+#titleCard.mddesk > .modecard .btnrow .tool { margin-left: 0; }
+#titleCard.mddesk > .modecard .btnrow .primary { margin-right: 8px; }
+#titleCard.mddesk > #boardCard .cardtop { flex-wrap: wrap; row-gap: 8px; }
+@media (max-width: 1439px) { #titleCard.mddesk > #boardCard .eyebrow { flex: 1 1 100%; } #titleCard.mddesk > #boardCard h1 { font-size: 2rem; } }

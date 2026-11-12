@@ -6,6 +6,10 @@
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 169, date: '2026-11-12', title: "A main menu for big screens", New: [
+    "Main menu: on a desktop or any wide screen, the menu is laid out for a mouse, keyboard and controller. The six games are listed down the left, the one you pick fills the middle in full, and the scoreboard sits on the right (or under the list on a narrower screen). No more scrolling past every card to find your game.",
+    "Main menu: choose a game with a click, the up and down arrows, or the keys 1 to 6. On a controller, LB and RB step through the games. The game you last picked is remembered on this device." ], Changes: [
+    "Main menu: phones and tablets held upright keep the menu exactly as it was." ] },
   { v: 168, date: '2026-11-11', title: "The Skerry Compendium", New: [
     "Main menu: a new Lore compendium button, beside Patch notes, opens the Skerry Compendium: the whole story of the Light in one place, laid out like a wiki.",
     "Lore: 70 articles tying every game into one history, from the first fire on Lantern Rock, through the wreck of the Gannet and the voyages of 1888, to Maren's End and the wars of the Drowned Reach. Characters, creatures, places, factions, ships, objects and events, each with an infobox and links to the rest.",

@@ -14,6 +14,8 @@ The log goes on through 1888. The sea stops being one sea: some nights it freeze
 
 **The Skerry Compendium.** Beside Patch notes on the main menu, **Lore compendium** opens the game's lore book, laid out like a wiki: the whole history of the Light in one place, tying every game into one story. The seven tales, in the order they happened: the voyages of 1888 (Skerry Light), Wreckers' Night, The Gannet's Wake (14 December 1888), Keeper's Last Light (the winter after), Fog Run (1889), Maren's End (the Dry Night of 1890) and Drowned Reach (the years after). Around them, 70 articles in eight categories (Chronicles, Characters, Creatures, Places, Factions, Events, Ships, Objects), each with an infobox, links to the rest, See also, What links here and its categories at the foot; a timeline of the Skerries from the first fire on Lantern Rock; search as you type (Enter for full results); Random article and All pages; and on the main page a featured article and a page from the keeper's log that change each day. ‹ Back (or Backspace) goes to the last page read; ✕, Esc or B on a controller closes it. Its text is in `src/lore.js` (the file's top comment shows the shape of an article) and `src/loreui.js` draws it. Where the game says nothing the gaps are filled with lore that fits, and the keeper's log (`SK.LOG`) is never contradicted. Keep secrets out of it entirely.
 
+**The main menu on a big screen.** On a desktop or any screen at least 1100 by 620 pixels, the main menu is laid out for a mouse, keyboard and controller: the six games in a list down the left (each with its number), the chosen game's card in full in the middle, and the scoreboard on the right (under the list when the screen is under 1440 pixels wide), with Patch notes and Lore compendium under the list. Click a game, use the up and down arrows in the list, or press 1 to 6 to choose; LB and RB do it on a controller, and Start still presses the chosen game's main button. The last game picked is remembered on this device. Phones, tablets held upright and phones on their side keep the long scrolling menu exactly as before. `src/menudesk.js` builds the list; the layout is "the desk menu" in `src/style.css`.
+
 The version number sits at the top of the main menu, so you can tell which build you're playing. Under the game banners, **Patch notes** opens a page listing every recent update, newest first, sorted into New, Balance, Changes, Fixes and Sound. Close it with the ✕, Esc, or B on a controller.
 
 ## How to play
@@ -730,6 +732,7 @@ src/game.js         game state, update step, input and screens
 src/transport.js    connects to the crew server outside claude.ai
 src/net.js          crews: lobby, shared voyages, crewmates' ships
 src/share.js        invite links: the Share invite button in every lobby, and joining from a link
+src/menudesk.js     the main menu on a desktop or wide screen: the list of games, one card at a time
 src/rejoin.js       rejoining a game in progress: the note kept while you play, and the Rejoin bar on the main menu
 src/crates.js       boats, crates, skins and pennants
 src/fps.js          Wreckers' Night, the multiplayer FPS mode

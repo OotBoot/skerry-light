@@ -148,6 +148,8 @@ function pollPad(dt) {
           if (el && !(el.classList.contains('closebtn') && el !== ringed && el !== document.activeElement)) { if (el.tagName === 'INPUT') el.focus(); else el.click(); }
         }
         if (down(9)) { const el = mainButton(root); if (el) el.click(); }
+        // the desk menu on a wide screen: LB and RB step through the games (src/menudesk.js)
+        if (root.id === 'titleCard' && (down(4) || down(5)) && typeof mdCycle === 'function') mdCycle(down(5) ? 1 : -1);
         if (down(1)) {
           if (root.id === 'loreCard') closeLore();
           else if (root.id === 'notesCard') closeNotes();
