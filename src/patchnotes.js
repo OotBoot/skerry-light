@@ -6,6 +6,12 @@
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 188, date: '2026-11-13', title: "Skerry Links: ball and club crates, and your outfit on the course", New: [
+    "Skerry Links: your golfer now wears the outfit you've chosen from the Tailor's Crate, hat and all, shimmering, glowing or alight just as on the island. Online, everyone sees each other's.",
+    "Skerry Links: Ball crates. The Chandler's Crate holds one of 18 balls across all five grades. Bosun balls leave a coloured trail, Mate balls shimmer and throw sparks, Captain balls glow, and the three Admiral balls are alive: The Skerry Light, The Maelstrom and Verity's Grin.",
+    "Skerry Links: Club crates. The Shipwright's Crate holds one of 14 sets of clubs made from a ship's gear: oars, a belaying pin, a boat-hook, anchors, whalebone, harpoons, a narwhal tusk, a lantern and a kraken's arm, up to the Admirals' Keeper's Beam and Drowned Trident.",
+    "Skerry Links: earn a ball crate every 3 holes and a club crate every 6, plus a ball crate for a birdie and a club crate for an eagle. Your first of each is free. Open them from the buttons on the Skerry Links card." ], Changes: [
+    "Saves: your golf balls and clubs are kept in your save link, code, file and cloud save with everything else." ] },
   { v: 187, date: '2026-11-13', title: "Skerry Links: easier putting and chipping", Changes: [
     "Skerry Links: putts roll out more freely and ease to a stop instead of dying suddenly, and greens break about half as much, so a putt no longer hooks away in its last foot.",
     "Skerry Links: a slow ball right by the cup is drawn in, and the cup takes a gently rolling ball a touch further from its centre.",

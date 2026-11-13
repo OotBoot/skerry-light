@@ -392,6 +392,10 @@
         <button class="primary" id="gfPlay" type="button">Tee off</button>
         <button class="tool" id="gfSettings" type="button">Settings</button>
       </div>
+      <div class="btnrow gfcrates"><!-- [golf] ball and club crates (src/gfcrates.js) -->
+        <button class="tool gkrateBtn" id="gkrateBallBtn" data-kind="ball" type="button">Ball crates</button>
+        <button class="tool gkrateBtn" id="gkrateClubBtn" data-kind="club" type="button">Club crates</button>
+      </div>
       <p class="muted gfbest" id="gfBest"></p>
       <section class="gfboard" aria-labelledby="gfBoardHead">
         <h2 id="gfBoardHead">Best rounds</h2>
@@ -703,6 +707,24 @@
     </div>
   </div>
 
+  <div class="overlay cratecard wcratecard gkratecard" id="gkrateCard" hidden role="dialog" aria-modal="true" aria-labelledby="gkrateHead"><!-- [golf] src/gfcrates.js -->
+    <div class="card">
+      <div class="cardtop sticky"><span class="eyebrow">Skerry Links · the chandler and the shipwright</span><button class="tool closebtn" id="gkrateClose" type="button">✕ Close</button></div>
+      <h1 id="gkrateHead">Ball and Club Crates</h1>
+      <p>Balls and clubs for the links. The Chandler's Crate holds a ball: its paint, the colour of its trail, and how it shines. The Shipwright's Crate holds a set of clubs made from a ship's gear, from an oar to a harpoon. Bosun balls leave a coloured trail, Mate balls and clubs shimmer and throw sparks, Captain ones glow, and the Admirals' are alive with light. Your golfer wears your outfit from the Tailor's Crate on the Wreckers' Night card. You earn a ball crate for every 3 holes you finish and a club crate for every 6, a ball crate for a birdie and a club crate for an eagle. Same grades and odds as the other crates: if you see gold in the reel, it's yours.</p>
+      <div class="wcprogress"><span id="gkProgress"></span><i id="gkBar" aria-hidden="true"></i></div>
+      <h2 class="invh">Crate inventory</h2>
+      <div class="cratetypes" id="gkTypes"></div>
+      <div class="reel" id="gkReel"><div class="strip" id="gkStrip"></div><div class="marker" aria-hidden="true"></div></div>
+      <div class="result" id="gkResult" hidden aria-live="polite"></div>
+      <ul class="odds" id="gkOdds" aria-label="Chances for each grade"></ul>
+      <div class="loottabs" id="gkTabs" role="group" aria-label="Show"></div>
+      <h2 class="invh" id="gkInvHead">Your balls</h2>
+      <span class="eyebrow" id="gkCollected"></span>
+      <div class="inv" id="gkInv"></div>
+    </div>
+  </div>
+
   <div class="overlay cratecard wcratecard rcratecard" id="rcrateCard" hidden role="dialog" aria-modal="true" aria-labelledby="rcrateHead">
     <div class="card">
       <div class="cardtop sticky"><span class="eyebrow">Drowned Reach · the herald</span><button class="tool closebtn" id="rcrateClose" type="button">✕ Close</button></div>
@@ -966,6 +988,8 @@
 <script src="src/golfhud.js"></script><!-- [golf] the screen over the 3D view, the scorecard -->
 <script src="src/golf3d.js"></script><!-- [golf] the 3D view -->
 <script src="src/golfnet.js"></script><!-- [golf] played together -->
+<script src="src/gfcrates.js"></script><!-- [golf] ball and club crates -->
+<script src="src/gfdress.js"></script><!-- [golf] the golfer, ball and clubs dressed -->
 <script src="src/menudesk.js"></script>
 <script src="src/main.js"></script>
 </body>

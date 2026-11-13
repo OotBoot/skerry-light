@@ -279,7 +279,8 @@ function saveData() {
     // and your bests for the scoreboard and your username (src/scores.js)
     best: crOther('boardBests'), nick: crOther('boardNick') || undefined,
     fr: crOther('frData'),   // [fogrun] chart fragments (src/frkeep.js)
-    fb: crOther('fbData') };   // [fbsea] sovereigns and standings (src/fbkeep.js)
+    fb: crOther('fbData'),   // [fbsea] sovereigns and standings (src/fbkeep.js)
+    gc: crOther('gkData') };   // [golf] balls and clubs (src/gfcrates.js)
 }
 function crOther(f) { try { return typeof window[f] === 'function' ? window[f]() : undefined; } catch (e) { return undefined; } }
 function saveCrates() {
@@ -317,6 +318,7 @@ function mergeSave(d, takeLooks) {
   try { if (typeof boardMerge === 'function' && boardMerge(d.best, d.nick, takeLooks)) changed = true; } catch (e) {}
   if (typeof frMerge === 'function' && frMerge(d.fr)) changed = true;   // [fogrun] chart fragments (src/frkeep.js)
   if (typeof fbMerge === 'function' && fbMerge(d.fb)) changed = true;   // [fbsea] sovereigns and standings (src/fbkeep.js)
+  if (typeof gkMerge === 'function' && gkMerge(d.gc, takeLooks)) changed = true;   // [golf] balls and clubs (src/gfcrates.js)
   if (takeLooks) {
     if (d.equipped && typeof d.equipped === 'object') for (const b of BOATS) {
       const sk = SKIN_BY_ID[d.equipped[b.id]];
@@ -386,7 +388,7 @@ function saveLink() {
   if (window.claude && typeof window.claude.use === 'function') return null;
   return location.origin + location.pathname + '#load=' + saveCode();
 }
-function lootSize() { const pt = typeof ptData === 'function' && ptData(), sum = o => o ? Object.values(o.owned || {}).reduce((a, v) => a + (v | 0), 0) + (o.crates | 0) : 0; return Object.values(CRATES.owned).reduce((a, v) => a + (v | 0), 0) + (CRATES.crates.skerry | 0) + (pt ? pt.e : 0) + sum(crOther('wcData')) + sum(crOther('ocData')) + sum(crOther('rcData')) + ((crOther('frData') || {}).f | 0) + ((crOther('fbData') || {}).v | 0) + Math.floor(((crOther('fbData') || {}).t | 0) / 100); }   // [pirate tokens] src/zmegg.js [fogrun] chart fragments [fbsea] voyages, sovereigns
+function lootSize() { const pt = typeof ptData === 'function' && ptData(), sum = o => o ? Object.values(o.owned || {}).reduce((a, v) => a + (v | 0), 0) + (o.crates | 0) : 0; return Object.values(CRATES.owned).reduce((a, v) => a + (v | 0), 0) + (CRATES.crates.skerry | 0) + (pt ? pt.e : 0) + sum(crOther('wcData')) + sum(crOther('ocData')) + sum(crOther('rcData')) + ((crOther('frData') || {}).f | 0) + ((crOther('fbData') || {}).v | 0) + Math.floor(((crOther('fbData') || {}).t | 0) / 100) + (g => g ? sum({ owned: g.b.o, crates: g.b.c }) + sum({ owned: g.k.o, crates: g.k.c }) : 0)(crOther('gkData')); }   // [pirate tokens] src/zmegg.js [fogrun] chart fragments [fbsea] voyages, sovereigns
 function markBackedUp() { try { localStorage.setItem('skerry-backup', String(lootSize())); } catch (e) {} renderBackupDot(); }
 function needsBackup() { let b = 0; try { b = +localStorage.getItem('skerry-backup') || 0; } catch (e) {} return lootSize() > b && Object.keys(CRATES.owned).length > 0; }
 function renderBackupDot() { for (const b of document.querySelectorAll('.backupBtn')) b.classList.toggle('due', needsBackup()); }

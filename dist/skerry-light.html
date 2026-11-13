@@ -969,6 +969,15 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 /* Wreckers' Night's outfit crates */
 .cratebox.ocbox { background: linear-gradient(#4a3a2c, #241a12); border-color: #c8a060; box-shadow: inset 0 -8px 0 rgba(0,0,0,0.3), inset 0 0 0 3px rgba(200,160,96,0.25); }
 .skincard canvas.ocprev { display: block; margin-block: 4px 2px; }
+/* [golf] Skerry Links: ball and club crates (src/gfcrates.js): a chandler's crate and a shipwright's */
+.cratebox.gkbox.gk-ball { background: linear-gradient(#3a5a4a, #1a2a22); border-color: #e8e2c8; box-shadow: inset 0 -8px 0 rgba(0,0,0,0.3), inset 0 0 0 3px rgba(232,226,200,0.25); }
+.cratebox.gkbox.gk-club { background: linear-gradient(#5a4a34, #2a2016); border-color: #9ad0c0; box-shadow: inset 0 -8px 0 rgba(0,0,0,0.3), inset 0 0 0 3px rgba(154,208,192,0.25); }
+.skincard canvas.gkprev { display: block; margin-block: 4px 2px; border-radius: 4px; }
+.gkratecard .card { border-color: rgba(154,208,192,0.45); }
+.gkratecard h1 { color: #cfe8d8; }
+.gkratecard .loottabs { margin-top: 14px; }
+.gkratecard .loottabs .tool.on { border-color: #9ad0c0; color: #e8f4ee; }
+.gfcrates { margin-top: 6px; }
 
 /* The Lighthouse: its card, its banner, the Use button, the end of the night */
 .zmcard { border-color: rgba(200,60,48,0.5); }
@@ -1781,6 +1790,10 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
         <button class="primary" id="gfPlay" type="button">Tee off</button>
         <button class="tool" id="gfSettings" type="button">Settings</button>
       </div>
+      <div class="btnrow gfcrates"><!-- [golf] ball and club crates (src/gfcrates.js) -->
+        <button class="tool gkrateBtn" id="gkrateBallBtn" data-kind="ball" type="button">Ball crates</button>
+        <button class="tool gkrateBtn" id="gkrateClubBtn" data-kind="club" type="button">Club crates</button>
+      </div>
       <p class="muted gfbest" id="gfBest"></p>
       <section class="gfboard" aria-labelledby="gfBoardHead">
         <h2 id="gfBoardHead">Best rounds</h2>
@@ -2092,6 +2105,24 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
     </div>
   </div>
 
+  <div class="overlay cratecard wcratecard gkratecard" id="gkrateCard" hidden role="dialog" aria-modal="true" aria-labelledby="gkrateHead"><!-- [golf] src/gfcrates.js -->
+    <div class="card">
+      <div class="cardtop sticky"><span class="eyebrow">Skerry Links · the chandler and the shipwright</span><button class="tool closebtn" id="gkrateClose" type="button">✕ Close</button></div>
+      <h1 id="gkrateHead">Ball and Club Crates</h1>
+      <p>Balls and clubs for the links. The Chandler's Crate holds a ball: its paint, the colour of its trail, and how it shines. The Shipwright's Crate holds a set of clubs made from a ship's gear, from an oar to a harpoon. Bosun balls leave a coloured trail, Mate balls and clubs shimmer and throw sparks, Captain ones glow, and the Admirals' are alive with light. Your golfer wears your outfit from the Tailor's Crate on the Wreckers' Night card. You earn a ball crate for every 3 holes you finish and a club crate for every 6, a ball crate for a birdie and a club crate for an eagle. Same grades and odds as the other crates: if you see gold in the reel, it's yours.</p>
+      <div class="wcprogress"><span id="gkProgress"></span><i id="gkBar" aria-hidden="true"></i></div>
+      <h2 class="invh">Crate inventory</h2>
+      <div class="cratetypes" id="gkTypes"></div>
+      <div class="reel" id="gkReel"><div class="strip" id="gkStrip"></div><div class="marker" aria-hidden="true"></div></div>
+      <div class="result" id="gkResult" hidden aria-live="polite"></div>
+      <ul class="odds" id="gkOdds" aria-label="Chances for each grade"></ul>
+      <div class="loottabs" id="gkTabs" role="group" aria-label="Show"></div>
+      <h2 class="invh" id="gkInvHead">Your balls</h2>
+      <span class="eyebrow" id="gkCollected"></span>
+      <div class="inv" id="gkInv"></div>
+    </div>
+  </div>
+
   <div class="overlay cratecard wcratecard rcratecard" id="rcrateCard" hidden role="dialog" aria-modal="true" aria-labelledby="rcrateHead">
     <div class="card">
       <div class="cardtop sticky"><span class="eyebrow">Drowned Reach · the herald</span><button class="tool closebtn" id="rcrateClose" type="button">✕ Close</button></div>
@@ -2266,7 +2297,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 // ---- src/config.js ----
 'use strict';
 // The game's version, shown at the top of the main menu. Bump it by one with every change pushed to main.
-var VERSION = 187;
+var VERSION = 188;
 // Skerry Light: tuning, asset paths and lore.
 // World units are metres. The lighthouse stands at the origin on the shoreline (y = 0);
 // north (+y) is open sea. Bearings: 0 = north, positive = east.
@@ -2395,6 +2426,12 @@ const flashK = () => SETTINGS.flashes === 'reduced' ? 0.3 : 1;
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 188, date: '2026-11-13', title: "Skerry Links: ball and club crates, and your outfit on the course", New: [
+    "Skerry Links: your golfer now wears the outfit you've chosen from the Tailor's Crate, hat and all, shimmering, glowing or alight just as on the island. Online, everyone sees each other's.",
+    "Skerry Links: Ball crates. The Chandler's Crate holds one of 18 balls across all five grades. Bosun balls leave a coloured trail, Mate balls shimmer and throw sparks, Captain balls glow, and the three Admiral balls are alive: The Skerry Light, The Maelstrom and Verity's Grin.",
+    "Skerry Links: Club crates. The Shipwright's Crate holds one of 14 sets of clubs made from a ship's gear: oars, a belaying pin, a boat-hook, anchors, whalebone, harpoons, a narwhal tusk, a lantern and a kraken's arm, up to the Admirals' Keeper's Beam and Drowned Trident.",
+    "Skerry Links: earn a ball crate every 3 holes and a club crate every 6, plus a ball crate for a birdie and a club crate for an eagle. Your first of each is free. Open them from the buttons on the Skerry Links card." ], Changes: [
+    "Saves: your golf balls and clubs are kept in your save link, code, file and cloud save with everything else." ] },
   { v: 187, date: '2026-11-13', title: "Skerry Links: easier putting and chipping", Changes: [
     "Skerry Links: putts roll out more freely and ease to a stop instead of dying suddenly, and greens break about half as much, so a putt no longer hooks away in its last foot.",
     "Skerry Links: a slow ball right by the cup is drawn in, and the cup takes a gently rolling ball a touch further from its centre.",
@@ -13928,7 +13965,8 @@ function saveData() {
     // and your bests for the scoreboard and your username (src/scores.js)
     best: crOther('boardBests'), nick: crOther('boardNick') || undefined,
     fr: crOther('frData'),   // [fogrun] chart fragments (src/frkeep.js)
-    fb: crOther('fbData') };   // [fbsea] sovereigns and standings (src/fbkeep.js)
+    fb: crOther('fbData'),   // [fbsea] sovereigns and standings (src/fbkeep.js)
+    gc: crOther('gkData') };   // [golf] balls and clubs (src/gfcrates.js)
 }
 function crOther(f) { try { return typeof window[f] === 'function' ? window[f]() : undefined; } catch (e) { return undefined; } }
 function saveCrates() {
@@ -13966,6 +14004,7 @@ function mergeSave(d, takeLooks) {
   try { if (typeof boardMerge === 'function' && boardMerge(d.best, d.nick, takeLooks)) changed = true; } catch (e) {}
   if (typeof frMerge === 'function' && frMerge(d.fr)) changed = true;   // [fogrun] chart fragments (src/frkeep.js)
   if (typeof fbMerge === 'function' && fbMerge(d.fb)) changed = true;   // [fbsea] sovereigns and standings (src/fbkeep.js)
+  if (typeof gkMerge === 'function' && gkMerge(d.gc, takeLooks)) changed = true;   // [golf] balls and clubs (src/gfcrates.js)
   if (takeLooks) {
     if (d.equipped && typeof d.equipped === 'object') for (const b of BOATS) {
       const sk = SKIN_BY_ID[d.equipped[b.id]];
@@ -14035,7 +14074,7 @@ function saveLink() {
   if (window.claude && typeof window.claude.use === 'function') return null;
   return location.origin + location.pathname + '#load=' + saveCode();
 }
-function lootSize() { const pt = typeof ptData === 'function' && ptData(), sum = o => o ? Object.values(o.owned || {}).reduce((a, v) => a + (v | 0), 0) + (o.crates | 0) : 0; return Object.values(CRATES.owned).reduce((a, v) => a + (v | 0), 0) + (CRATES.crates.skerry | 0) + (pt ? pt.e : 0) + sum(crOther('wcData')) + sum(crOther('ocData')) + sum(crOther('rcData')) + ((crOther('frData') || {}).f | 0) + ((crOther('fbData') || {}).v | 0) + Math.floor(((crOther('fbData') || {}).t | 0) / 100); }   // [pirate tokens] src/zmegg.js [fogrun] chart fragments [fbsea] voyages, sovereigns
+function lootSize() { const pt = typeof ptData === 'function' && ptData(), sum = o => o ? Object.values(o.owned || {}).reduce((a, v) => a + (v | 0), 0) + (o.crates | 0) : 0; return Object.values(CRATES.owned).reduce((a, v) => a + (v | 0), 0) + (CRATES.crates.skerry | 0) + (pt ? pt.e : 0) + sum(crOther('wcData')) + sum(crOther('ocData')) + sum(crOther('rcData')) + ((crOther('frData') || {}).f | 0) + ((crOther('fbData') || {}).v | 0) + Math.floor(((crOther('fbData') || {}).t | 0) / 100) + (g => g ? sum({ owned: g.b.o, crates: g.b.c }) + sum({ owned: g.k.o, crates: g.k.c }) : 0)(crOther('gkData')); }   // [pirate tokens] src/zmegg.js [fogrun] chart fragments [fbsea] voyages, sovereigns
 function markBackedUp() { try { localStorage.setItem('skerry-backup', String(lootSize())); } catch (e) {} renderBackupDot(); }
 function needsBackup() { let b = 0; try { b = +localStorage.getItem('skerry-backup') || 0; } catch (e) {} return lootSize() > b && Object.keys(CRATES.owned).length > 0; }
 function renderBackupDot() { for (const b of document.querySelectorAll('.backupBtn')) b.classList.toggle('due', needsBackup()); }
@@ -55972,6 +56011,846 @@ function gfnSync(w, cardOnly) {
   gfnRender();
 })();
 
+// ---- src/gfcrates.js ----
+'use strict';
+// Skerry Links: ball and club crates, the looks of your golf.
+//
+// A crate system of its own, like the outfit crates (src/ocrates.js) and kept apart from them and from the boat, weapon
+// and banner crates: its own save (localStorage 'skerry-gkrates'), counts and card, opened from Ball crates or Club
+// crates on the Skerry Links card. It borrows the boat crates' grades and odds (RARITIES), their card styles and the
+// reel sounds, without changing any of them. Two crates on the one card:
+//   the Chandler's Crate   a ball: its paint and pattern, the colour of its trail, and how it shines
+//   the Shipwright's Crate a set of clubs made from what a ship carries: oars, belaying pins, boat-hooks, anchors,
+//                          whalebone, harpoons, a narwhal's tusk, a lantern, a kraken's arm, a lighthouse, a trident
+// The better the grade, the more it does:
+//   Deckhand  a colour or a simple pattern
+//   Bosun     a richer pattern, and a coloured trail behind the ball
+//   Mate      it shimmers, the pattern moves, and the ball throws sparks as it flies
+//   Captain   it glows, pulsing, with a halo round the ball
+//   Admiral   alive: the Skerry Light's ball turns its beam as it goes, the Maelstrom's swirls, and Verity's Grin
+//             is his own face, blinking up at you; the Admiral clubs carry a lamp room with its beam turning, or
+//             the drowned sea's green fire and bubbles rising off the prongs
+// What the golfer wears is your outfit from the Tailor's Crate (src/ocrates.js), in 3D in src/gfdress.js.
+//
+// Earning: a ball crate for every 3 holes you finish and a club crate for every 6 (the count carries over between
+// rounds), a ball crate more for a birdie and a club crate more for an eagle or better. The first of each is free.
+//
+// The global API, for the 3D view (src/gfdress.js) and the round played together (src/golfnet.js):
+//   gkBall(id) / gkClub(id) -> a ball or club by id (null for the plain one or an unknown id)
+//   gkMine()                -> what you play with: { oc, ball, club } (ids, '' for plain)
+//   gkData() / gkMerge(d, takeLooks) -> for the one save that carries everything (src/crates.js)
+
+const GK_KEY = 'skerry-gkrates';
+const GK_BALL_HOLES = 3, GK_CLUB_HOLES = 6;
+
+// balls: [id, name, rarity, base, second colour, pattern, extra (c3 a third colour, trail, fx, adm)]
+const GK_BALL_ROWS = [
+  ['b_gull',     'Gull’s Egg',          'deckhand', '#ece6d6', '#6e675c', 'speckle'],
+  ['b_buoy',     'Harbour Buoy',        'deckhand', '#d83a2a', '#f4efe2', 'band'],
+  ['b_oilskin',  'Oilskin Yellow',      'deckhand', '#e8c030', '#6a5010', 'seam'],
+  ['b_seaglass', 'Sea-Glass Green',     'deckhand', '#86d2aa', '#e8fff0', 'frost'],
+  ['b_tarred',   'Tarred Rope',         'deckhand', '#3a3228', '#a8885a', 'twist'],
+  ['b_compass',  'Ship’s Compass',      'bosun',    '#f0e8d0', '#1a2a4a', 'compass',  { c3: '#c03030', trail: '#ffe0a0' }],
+  ['b_signal',   'Signal Flags',        'bosun',    '#f4efe2', '#2a4ad8', 'quarters', { c3: '#e8c030', trail: '#9ab8ff' }],
+  ['b_float',    'Glass Net Float',     'bosun',    '#2f8494', '#c8a060', 'net',      { trail: '#8fe0ee' }],
+  ['b_mackerel', 'Mackerel',            'bosun',    '#4f86a6', '#14202e', 'tiger',    { c3: '#e8eef2', trail: '#a8d8f0' }],
+  ['b_pearl',    'Moon Pearl',          'mate',     '#f2ecf6', '#c4b4ff', 'pearl',    { c3: '#ffc8e0', trail: '#e8dcff', fx: 'shimmer', glow: '#d8ccff' }],
+  ['b_phos',     'Phosphor Tide',       'mate',     '#0c3a3c', '#62ffd4', 'waves',    { trail: '#62ffd4', fx: 'shimmer', glow: '#62ffd4' }],
+  ['b_aurora',   'Northern Lights',     'mate',     '#121c34', '#7affb0', 'aurora',   { c3: '#b07aff', trail: '#9affc8', fx: 'shimmer', glow: '#7affb0' }],
+  ['b_ember',    'Ember Isle',          'captain',  '#2a0e08', '#ff7a2a', 'cracks',   { trail: '#ff9a40', fx: 'glow', glow: '#ff8a30' }],
+  ['b_corpse',   'The Corpse Light',    'captain',  '#0e1a14', '#7affb0', 'wisp',     { trail: '#7affb0', fx: 'glow', glow: '#7affb0' }],
+  ['b_storm',    'Storm Glass',         'captain',  '#161a2c', '#b8f0ff', 'bolts',    { trail: '#b8f0ff', fx: 'glow', glow: '#9ae0ff' }],
+  ['b_light',    'The Skerry Light',    'admiral',  '#f4ecd0', '#ffc23a', 'light',    { trail: '#ffe08a', fx: 'aura', glow: '#ffd88a', adm: 'light' }],
+  ['b_maelstrom','The Maelstrom',       'admiral',  '#140a2a', '#62e0ff', 'whirl',    { c3: '#c06aff', trail: '#8ad8ff', fx: 'aura', glow: '#7ad0ff', adm: 'whirl' }],
+  ['b_verity',   'Verity’s Grin',       'admiral',  '#e8d41a', '#060504', 'verity',   { trail: '#ffe24a', fx: 'aura', glow: '#ffe24a', adm: 'verity' }],
+];
+// clubs: [id, name, rarity, style, shaft, head, accent, extra (glow, fx, adm, glass)]
+const GK_CLUB_ROWS = [
+  ['k_oar',     'Driftwood Oar',        'deckhand', 'oar',        '#8a6a48', '#a8885e', '#d8c8a0'],
+  ['k_pin',     'Belaying Pin',         'deckhand', 'pin',        '#6a4a2a', '#7e5832', '#c8a060'],
+  ['k_hook',    'Boat-Hook',            'deckhand', 'hook',       '#7a5a3a', '#4a4a52', '#c8b890'],
+  ['k_anchor',  'Rope-Bound Anchor',    'deckhand', 'anchor',     '#4a4640', '#3a3a3e', '#c8b890'],
+  ['k_brass',   'Brass Anchor',         'bosun',    'anchor',     '#24242a', '#e0b050', '#a02828'],
+  ['k_bone',    'Whalebone',            'bosun',    'bone',       '#e8e0cc', '#d8cfb8', '#3a2a1e'],
+  ['k_harpoon', 'Whaler’s Harpoon',     'bosun',    'harpoon',    '#6a4a2a', '#9a9aa2', '#c8b890'],
+  ['k_narwhal', 'Narwhal Tusk',         'mate',     'tusk',       '#efe8d8', '#f8f4ea', '#9ae0ff', { fx: 'shimmer', glow: '#bfefff' }],
+  ['k_glass',   'Sea-Glass Oar',        'mate',     'oar',        '#5ac8b0', '#8ef0d8', '#e8fff8', { fx: 'shimmer', glow: '#8ef0d8', glass: 1 }],
+  ['k_ember',   'Ember Harpoon',        'captain',  'harpoon',    '#2a1008', '#ff7a2a', '#ffb050', { fx: 'glow', glow: '#ff8a30' }],
+  ['k_corpse',  'Corpse-Light Lantern', 'captain',  'lantern',    '#24302a', '#1a2a20', '#7affb0', { fx: 'glow', glow: '#7affb0' }],
+  ['k_kraken',  'Kraken’s Arm',         'captain',  'tentacle',   '#4a1a5a', '#6a2a7a', '#e0a8ff', { fx: 'glow', glow: '#c06aff' }],
+  ['k_beam',    'The Keeper’s Beam',    'admiral',  'lighthouse', '#c89a30', '#f4ecd0', '#c03030', { fx: 'aura', glow: '#ffd88a', adm: 'beam' }],
+  ['k_trident', 'The Drowned Trident',  'admiral',  'trident',    '#2a5a50', '#5a9a88', '#7affe0', { fx: 'aura', glow: '#3affc8', adm: 'drowned' }],
+];
+const GK_BALLS = GK_BALL_ROWS.map(([id, name, rarity, base, c2, pat, x]) => Object.freeze(Object.assign({ id, name, rarity, base, c2, pat, kind: 'ball' }, x || {})));
+const GK_CLUBS = GK_CLUB_ROWS.map(([id, name, rarity, style, shaft, head, accent, x]) => Object.freeze(Object.assign({ id, name, rarity, style, shaft, head, accent, kind: 'club' }, x || {})));
+const GK_BY_ID = Object.fromEntries(GK_BALLS.concat(GK_CLUBS).map(o => [o.id, o]));
+const gkBall = id => (typeof id === 'string' && GK_BY_ID[id] && GK_BY_ID[id].kind === 'ball' && GK_BY_ID[id]) || null;
+const gkClub = id => (typeof id === 'string' && GK_BY_ID[id] && GK_BY_ID[id].kind === 'club' && GK_BY_ID[id]) || null;
+const gkRarityOf = o => RARITIES.find(r => r.id === o.rarity);
+const gkLevel = o => o && o.rarity ? RARITIES.findIndex(r => r.id === o.rarity) + 1 : 0;
+const GK_KINDS = {
+  ball: { list: GK_BALLS, crate: 'Chandler’s Crate', what: 'a ball for the links', one: 'ball', many: 'balls', plain: 'Plain white', btn: 'Ball crates' },
+  club: { list: GK_CLUBS, crate: 'Shipwright’s Crate', what: 'a set of clubs made from a ship’s gear', one: 'set of clubs', many: 'sets of clubs', plain: 'Keeper’s hickory', btn: 'Club crates' },
+};
+
+var GK = { ball: { crates: 0, opened: 0, owned: {}, eq: '' }, club: { crates: 0, opened: 0, owned: {}, eq: '' }, holes: 0, seen: '', tab: 'ball', pending: null, opening: false, opener: null };
+
+// ---------- saving ----------
+function gkLoad() {
+  let fresh = true;
+  try {
+    const raw = localStorage.getItem(GK_KEY);
+    if (raw) {
+      fresh = false;
+      const d = JSON.parse(raw) || {}, n = v => Math.max(0, Math.min(99999, v | 0));
+      for (const k of ['ball', 'club']) {
+        const s = d[k] || {}, S = GK[k];
+        S.crates = n(s.crates); S.opened = n(s.opened); S.owned = {};
+        if (s.owned && typeof s.owned === 'object') for (const [id, c] of Object.entries(s.owned)) if (GK_BY_ID[id] && GK_BY_ID[id].kind === k && n(c)) S.owned[id] = n(c);
+        S.eq = GK_BY_ID[s.eq] && S.owned[s.eq] ? s.eq : '';
+      }
+      GK.holes = n(d.holes);
+      if (GK_BY_ID[d.pending]) { const p = GK_BY_ID[d.pending]; GK[p.kind].owned[p.id] = (GK[p.kind].owned[p.id] | 0) + 1; }
+    }
+  } catch (e) {}
+  if (fresh) { GK.ball.crates = 1; GK.club.crates = 1; }
+  GK.pending = null;
+  gkSave(true);
+}
+function gkSave(quiet) {
+  try { localStorage.setItem(GK_KEY, JSON.stringify({ ball: GK.ball, club: GK.club, holes: GK.holes, pending: GK.pending })); } catch (e) {}
+  if (!quiet && typeof cloudSaveSoon === 'function') try { cloudSaveSoon(); } catch (e) {}
+}
+// for the one save that carries everything (src/crates.js saveData / mergeSave): every ball and club either side has,
+// crates by everything ever earned, and its looks only if takeLooks
+function gkData() { return { b: { c: GK.ball.crates, n: GK.ball.opened, o: GK.ball.owned, e: GK.ball.eq }, k: { c: GK.club.crates, n: GK.club.opened, o: GK.club.owned, e: GK.club.eq }, h: GK.holes }; }
+function gkMerge(d, takeLooks) {
+  if (!d || typeof d !== 'object') return false;
+  let changed = false;
+  const n = v => Math.max(0, Math.min(99999, v | 0));
+  for (const [k, s] of [['ball', d.b], ['club', d.k]]) {
+    if (!s || typeof s !== 'object') continue;
+    const S = GK[k];
+    if (s.o && typeof s.o === 'object') for (const [id, c] of Object.entries(s.o)) if (GK_BY_ID[id] && GK_BY_ID[id].kind === k && n(c) > (S.owned[id] | 0)) { S.owned[id] = n(c); changed = true; }
+    const earned = Math.max(n(s.c) + n(s.n), S.crates + S.opened), opened = Math.max(S.opened, n(s.n)), left = Math.min(99999, Math.max(0, earned - opened));
+    if (left !== S.crates || opened !== S.opened) { S.crates = left; S.opened = opened; changed = true; }
+    if (takeLooks && GK_BY_ID[s.e] && S.owned[s.e] && S.eq !== s.e) { S.eq = s.e; changed = true; }
+  }
+  if (n(d.h) > GK.holes) { GK.holes = n(d.h); changed = true; }
+  if (changed) { gkSave(true); gkRender(); }
+  return changed;
+}
+function gkMine() { return { oc: typeof ocEquippedId === 'function' ? ocEquippedId() : '', ball: GK.ball.owned[GK.ball.eq] ? GK.ball.eq : '', club: GK.club.owned[GK.club.eq] ? GK.club.eq : '' }; }
+
+// ---------- earning: as each hole ends (src/golf.js gfHoleDone), for your own score on it ----------
+function gkGrant(k, n, why) {
+  GK[k].crates = Math.min(99999, GK[k].crates + n); gkSave(); gkRender();
+  return '+' + n + ' ' + (k === 'ball' ? 'ball' : 'club') + ' crate' + (n > 1 ? 's' : '') + ' (' + why + ')';
+}
+function gkHole() {
+  if (typeof GF === 'undefined' || !GF.on) return;
+  const p = GF.P[GF.me], H = GF.H; if (!p || !H || p.gone) return;
+  const key = GF.seed + ':' + GF.hi; if (GK.seen === key) return; GK.seen = key;
+  const sc = p.sc[GF.hi]; if (sc == null) return;
+  GK.holes++;
+  const got = [];
+  if (GK.holes % GK_BALL_HOLES === 0) got.push(gkGrant('ball', 1, GK_BALL_HOLES + ' holes played'));
+  if (GK.holes % GK_CLUB_HOLES === 0) got.push(gkGrant('club', 1, GK_CLUB_HOLES + ' holes played'));
+  if (sc < GFC.MAXS && sc - H.par <= -1) got.push(gkGrant('ball', 1, 'a birdie'));
+  if (sc < GFC.MAXS && sc - H.par <= -2) got.push(gkGrant('club', 1, sc === 1 ? 'a hole in one' : 'an eagle'));
+  if (!got.length) { gkSave(); return; }
+  if (typeof toast === 'function') toast(got.join(' · ') + '. Open them from the Skerry Links card.', got[0]);
+}
+
+// ---------- rolling ----------
+function gkRoll(k) {
+  let r = Math.random(), rarity = RARITIES[0];
+  for (const ra of RARITIES) { if (r < ra.odds) { rarity = ra; break; } r -= ra.odds; }
+  const pool = GK_KINDS[k].list.filter(o => o.rarity === rarity.id);
+  return pool[(Math.random() * pool.length) | 0];
+}
+function gkFiller(k) { let o; do { o = gkRoll(k); } while (o.rarity === 'admiral'); return o; }
+
+// ---------- the ball's paint: one painter for the card's picture and the 3D ball's texture (an equirectangular map) ----------
+// (W by H, H half of W; t the time, for the ones that move)
+function gkRand(s) { let h = 2166136261; for (let i = 0; i < s.length; i++) h = Math.imul(h ^ s.charCodeAt(i), 16777619); return () => { h = Math.imul(h ^ (h >>> 15), 2246822507); h = Math.imul(h ^ (h >>> 13), 3266489909); return ((h ^= h >>> 16) >>> 0) / 4294967296; }; }
+function gkPaintBall(g, b, W, H, t) {
+  const o = b || { base: '#f4f2ea', c2: '#d8d4c8', pat: 'dimples', id: 'plain' }, R = gkRand(o.id), c3 = o.c3 || o.c2;
+  g.save(); g.fillStyle = o.base; g.fillRect(0, 0, W, H);
+  const line = (w, c) => { g.strokeStyle = c; g.lineWidth = w; g.lineCap = 'round'; };
+  switch (o.pat) {
+    case 'dimples': g.fillStyle = o.c2; for (let j = 1; j < 9; j++) for (let i = 0; i < 18; i++) { g.globalAlpha = 0.45; g.beginPath(); g.arc((i + (j % 2) * 0.5) / 18 * W, j / 9 * H, H * 0.018, 0, 6.283); g.fill(); } break;
+    case 'speckle': g.fillStyle = o.c2; for (let i = 0; i < 140; i++) { g.globalAlpha = 0.35 + R() * 0.6; g.beginPath(); g.ellipse(R() * W, H * (0.08 + R() * 0.84), H * (0.006 + R() * 0.018), H * (0.005 + R() * 0.012), R() * 3, 0, 6.283); g.fill(); } break;
+    case 'band': g.fillStyle = o.c2; g.fillRect(0, H * 0.36, W, H * 0.28); g.fillStyle = o.base; g.fillRect(0, H * 0.47, W, H * 0.06); g.fillStyle = 'rgba(0,0,0,0.25)'; g.fillRect(0, H * 0.34, W, H * 0.02); g.fillRect(0, H * 0.64, W, H * 0.02); break;
+    case 'seam': line(H * 0.035, o.c2); for (const ph of [0, Math.PI]) { g.beginPath(); for (let x = 0; x <= W; x += 4) g.lineTo(x, H * (0.5 + 0.28 * Math.sin(x / W * 6.283 * 2 + ph))); g.stroke(); } break;
+    case 'frost': for (let i = 0; i < 40; i++) { const x = R() * W, y = R() * H, r = H * (0.04 + R() * 0.12), gr = g.createRadialGradient(x, y, 0, x, y, r); gr.addColorStop(0, o.c2 + 'aa'); gr.addColorStop(1, o.c2 + '00'); g.fillStyle = gr; g.fillRect(x - r, y - r, r * 2, r * 2); } break;
+    case 'twist': line(H * 0.07, o.c2); for (let k = -6; k < 14; k++) { g.beginPath(); g.moveTo(k * W / 8, 0); g.lineTo(k * W / 8 + W * 0.5, H); g.stroke(); } line(H * 0.02, 'rgba(0,0,0,0.35)'); for (let k = -6; k < 14; k++) { g.beginPath(); g.moveTo(k * W / 8 + H * 0.05, 0); g.lineTo(k * W / 8 + W * 0.5 + H * 0.05, H); g.stroke(); } break;
+    case 'compass': {
+      line(H * 0.008, o.c2); g.globalAlpha = 0.5; for (let i = 0; i < 12; i++) { g.beginPath(); g.moveTo(i / 12 * W, 0); g.lineTo(i / 12 * W, H); g.stroke(); } g.beginPath(); g.moveTo(0, H / 2); g.lineTo(W, H / 2); g.stroke(); g.globalAlpha = 1;
+      for (const cx of [W * 0.25, W * 0.75]) { const cy = H / 2, r = H * 0.34; g.fillStyle = o.c2; for (let i = 0; i < 8; i++) { const a = i / 8 * 6.283, l = i % 2 ? r * 0.55 : r; g.fillStyle = i === 0 ? c3 : o.c2; g.beginPath(); g.moveTo(cx + Math.cos(a - 0.3) * r * 0.16, cy + Math.sin(a - 0.3) * r * 0.16); g.lineTo(cx + Math.cos(a) * l * 0.5, cy + Math.sin(a) * l); g.lineTo(cx + Math.cos(a + 0.3) * r * 0.16, cy + Math.sin(a + 0.3) * r * 0.16); g.closePath(); g.fill(); }
+        line(H * 0.012, o.c2); g.beginPath(); g.ellipse(cx, cy, r * 0.52, r * 1.04, 0, 0, 6.283); g.stroke(); }
+      break; }
+    case 'quarters': g.fillStyle = o.c2; g.fillRect(0, 0, W / 4, H / 2); g.fillRect(W / 2, 0, W / 4, H / 2); g.fillRect(W / 4, H / 2, W / 4, H / 2); g.fillRect(W * 0.75, H / 2, W / 4, H / 2); g.fillStyle = c3; g.fillRect(0, H * 0.46, W, H * 0.08); for (let i = 0; i < 4; i++) g.fillRect(i * W / 4 + W / 8 - H * 0.04, 0, H * 0.08, H); break;
+    case 'net': { const gr = g.createLinearGradient(0, 0, 0, H); gr.addColorStop(0, 'rgba(255,255,255,0.25)'); gr.addColorStop(0.5, 'rgba(255,255,255,0)'); g.fillStyle = gr; g.fillRect(0, 0, W, H); line(H * 0.03, o.c2); for (let k = -8; k < 16; k++) { g.beginPath(); g.moveTo(k * W / 10, 0); g.lineTo(k * W / 10 + H, H); g.stroke(); g.beginPath(); g.moveTo(k * W / 10, 0); g.lineTo(k * W / 10 - H, H); g.stroke(); } g.fillStyle = o.c2; for (let k = 0; k < 20; k++) for (let j = 1; j < 5; j++) { g.beginPath(); g.arc(k * W / 10 + (j % 2) * W / 20, j * H / 5, H * 0.03, 0, 6.283); g.fill(); } break; }
+    case 'tiger': g.fillStyle = c3; g.fillRect(0, H * 0.55, W, H * 0.45); line(H * 0.035, o.c2); for (let i = 0; i < 22; i++) { const x0 = i / 22 * W; g.beginPath(); for (let y = 0; y <= H * 0.52; y += 3) g.lineTo(x0 + Math.sin(y / H * 18 + i) * H * 0.04, y); g.stroke(); } g.fillStyle = 'rgba(255,255,255,0.3)'; g.fillRect(0, H * 0.52, W, H * 0.04); break;
+    case 'pearl': for (let i = 0; i < 6; i++) { const y = ((i / 6 + t * 0.03) % 1) * H, gr = g.createLinearGradient(0, y - H * 0.15, 0, y + H * 0.15); const c = i % 2 ? o.c2 : c3; gr.addColorStop(0, c + '00'); gr.addColorStop(0.5, c + 'aa'); gr.addColorStop(1, c + '00'); g.fillStyle = gr; g.fillRect(0, y - H * 0.15, W, H * 0.3); } break;
+    case 'waves': line(H * 0.03, o.c2); for (let j = 0; j < 6; j++) { g.globalAlpha = 0.5 + 0.5 * Math.sin(t * 2 + j); g.beginPath(); for (let x = 0; x <= W; x += 4) g.lineTo(x, H * (0.12 + j * 0.15) + Math.sin(x / W * 6.283 * 3 + t * 1.5 + j) * H * 0.04); g.stroke(); } break;
+    case 'aurora': for (let i = 0; i < 14; i++) { const x = (i / 14 + Math.sin(t * 0.3 + i) * 0.02) * W, c = i % 3 ? o.c2 : c3, gr = g.createLinearGradient(0, H * 0.15, 0, H * 0.7); gr.addColorStop(0, c + '00'); gr.addColorStop(0.6, c + 'cc'); gr.addColorStop(1, c + '00'); g.globalAlpha = 0.5 + 0.5 * Math.sin(t * 1.3 + i * 1.7); g.fillStyle = gr; g.fillRect(x, H * 0.15, W / 22, H * 0.55); } break;
+    case 'cracks': case 'bolts': case 'wisp': {
+      const n = o.pat === 'wisp' ? 7 : 12;
+      for (let i = 0; i < n; i++) {
+        let x = R() * W, y = R() * H; const pts = [[x, y]];
+        for (let s = 0; s < 8; s++) { if (o.pat === 'wisp') { x += H * 0.08; y += Math.sin(s * 0.9 + i) * H * 0.06; } else { x += (R() - 0.5) * H * 0.3; y += (R() - 0.3) * H * 0.18; } pts.push([x, y]); }
+        for (const [w, a] of [[H * 0.07, 0.25], [H * 0.022, 1]]) { line(w, o.c2); g.globalAlpha = a * (o.pat === 'wisp' ? 0.6 + 0.4 * Math.sin(t * 2 + i) : 1); g.beginPath(); pts.forEach(([px, py]) => g.lineTo(px, py)); g.stroke(); }
+      }
+      g.globalAlpha = 1; break; }
+    case 'light': {
+      // gold filigree on cream, and the beam going round
+      line(H * 0.018, o.c2); for (let i = 0; i < 8; i++) for (let j = 0; j < 3; j++) { const x = (i + 0.5) / 8 * W, y = (j + 0.5) / 3 * H; g.beginPath(); g.arc(x, y, H * 0.08, 0, 4.7); g.stroke(); g.beginPath(); g.arc(x + H * 0.09, y + H * 0.09, H * 0.045, 3.1, 7.5); g.stroke(); }
+      const bx = ((t * 0.35) % 1) * W; for (const off of [0, W / 2]) { const x = (bx + off) % W, gr = g.createLinearGradient(x - W * 0.1, 0, x + W * 0.1, 0); gr.addColorStop(0, 'rgba(255,246,216,0)'); gr.addColorStop(0.5, 'rgba(255,250,230,0.95)'); gr.addColorStop(1, 'rgba(255,246,216,0)'); g.fillStyle = gr; g.fillRect(x - W * 0.1, 0, W * 0.2, H); if (x < W * 0.1) { g.fillRect(x - W * 0.1 + W, 0, W * 0.2, H); } }
+      g.fillStyle = '#c03030'; g.fillRect(0, H * 0.46, W, H * 0.08); break; }
+    case 'whirl': {
+      for (let arm = 0; arm < 3; arm++) for (let s = 0; s < 40; s++) { const f = s / 40, x = ((arm / 3 + f * 0.8 + t * 0.12) % 1) * W, y = H * (0.05 + f * 0.9); g.globalAlpha = 0.9 - f * 0.4; g.fillStyle = arm % 2 ? c3 : o.c2; g.beginPath(); g.arc(x, y, H * (0.03 + 0.05 * (1 - Math.abs(f - 0.5) * 2)), 0, 6.283); g.fill(); }
+      g.globalAlpha = 1; g.fillStyle = '#ffffff'; for (let i = 0; i < 20; i++) { if (Math.sin(t * 4 + i * 2.3) > 0.6) g.fillRect(R() * W, R() * H, H * 0.02, H * 0.02); } break; }
+    case 'verity': g.fillStyle = 'rgba(255,250,210,0.4)'; g.beginPath(); g.ellipse(W * 0.2, H * 0.3, W * 0.06, H * 0.08, 0, 0, 6.283); g.fill(); break;
+  }
+  g.restore();
+}
+// the card's picture of a ball: the paint turning on it, shaded round, its glow and its trail
+function gkDrawBall(cv, b, t) {
+  const g = cv.getContext('2d'), Wd = cv.width, Hd = cv.height, tt = reduceMotion ? 0 : t;
+  g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, Wd, Hd);
+  const bg = g.createLinearGradient(0, 0, 0, Hd); bg.addColorStop(0, '#2a4a5e'); bg.addColorStop(0.62, '#3a6a4a'); bg.addColorStop(1, '#2a5236'); g.fillStyle = bg; g.fillRect(0, 0, Wd, Hd);
+  const r = Hd * 0.3, cx = Wd * 0.56, cy = Hd * 0.48;
+  // its trail, off to the left and up
+  if (b && b.trail) { const gr = g.createLinearGradient(cx - Wd * 0.5, cy - r * 1.4, cx, cy); gr.addColorStop(0, b.trail + '00'); gr.addColorStop(1, b.trail + 'cc'); g.strokeStyle = gr; g.lineWidth = r * 0.5; g.lineCap = 'round'; g.beginPath(); g.moveTo(cx - Wd * 0.5, cy - r * 1.6); g.quadraticCurveTo(cx - Wd * 0.2, cy - r * 1.2, cx - r * 0.3, cy); g.stroke(); }
+  if (b && b.fx) {
+    const pulse = b.fx === 'glow' ? 0.6 + 0.3 * Math.sin(tt * 2) : b.fx === 'aura' ? 0.8 + 0.2 * Math.sin(tt * 2.6) : 0.35 + 0.2 * Math.sin(tt * 2.2);
+    const gr = g.createRadialGradient(cx, cy, r * 0.8, cx, cy, r * 2.4); gr.addColorStop(0, b.glow + 'cc'); gr.addColorStop(1, b.glow + '00'); g.globalAlpha = pulse; g.fillStyle = gr; g.fillRect(0, 0, Wd, Hd); g.globalAlpha = 1;
+  }
+  if (b && b.adm === 'light') { g.save(); g.globalCompositeOperation = 'lighter'; const a = tt * 0.9; for (const [off, al] of [[0, 0.35], [Math.PI, 0.18]]) { g.globalAlpha = al * (0.6 + 0.4 * Math.abs(Math.cos(a + off))); g.fillStyle = '#fff0b8'; g.beginPath(); g.moveTo(cx, cy); g.lineTo(cx + Math.cos(a + off - 0.14) * Wd, cy + Math.sin(a + off - 0.14) * Hd * 0.5); g.lineTo(cx + Math.cos(a + off + 0.14) * Wd, cy + Math.sin(a + off + 0.14) * Hd * 0.5); g.closePath(); g.fill(); } g.restore(); }
+  // the shadow on the grass
+  g.fillStyle = 'rgba(0,0,0,0.3)'; g.beginPath(); g.ellipse(cx + r * 0.2, cy + r * 1.05, r * 0.9, r * 0.22, 0, 0, 6.283); g.fill();
+  if (b && b.adm === 'verity' && typeof vyFace === 'function') {
+    vyFace(g, cx, cy - Math.abs(Math.sin(tt * 2.1)) * r * 0.12, r, tt, 0, 1, Math.sin(tt * 0.6));
+  } else {
+    // the paint, turning (a strip of it, squeezed towards the edges)
+    const P = gkDrawBall.cv || (gkDrawBall.cv = document.createElement('canvas')); P.width = 128; P.height = 64;
+    gkPaintBall(P.getContext('2d'), b, 128, 64, tt);
+    g.save(); g.beginPath(); g.arc(cx, cy, r, 0, 6.283); g.clip();
+    const off = (tt * 0.12 % 1) * 128, sl = 24;
+    for (let i = 0; i < sl; i++) { const a0 = -Math.PI / 2 + i / sl * Math.PI, a1 = a0 + Math.PI / sl, x0 = cx + Math.sin(a0) * r, x1 = cx + Math.sin(a1) * r; const sx = (off + i / sl * 64) % 128; g.drawImage(P, sx, 0, Math.min(64 / sl + 0.5, 128 - sx), 64, x0, cy - r, x1 - x0 + 0.6, r * 2); }
+    const sh = g.createRadialGradient(cx - r * 0.35, cy - r * 0.4, r * 0.1, cx, cy, r * 1.05); sh.addColorStop(0, 'rgba(255,255,255,0.45)'); sh.addColorStop(0.35, 'rgba(255,255,255,0)'); sh.addColorStop(1, 'rgba(0,0,0,0.55)'); g.fillStyle = sh; g.fillRect(cx - r, cy - r, r * 2, r * 2);
+    g.restore();
+  }
+  // sparks off the better ones
+  if (b && (b.fx === 'aura' || b.fx === 'glow') && !reduceMotion) { g.fillStyle = '#ffffff'; for (let i = 0; i < 6; i++) { const a = tt * 0.9 + i * 1.05, rr = r * (1.4 + 0.3 * Math.sin(tt * 2 + i)); if (Math.sin(tt * 3 + i * 2) > 0.1) g.fillRect(cx + Math.cos(a) * rr - 1, cy + Math.sin(a) * rr * 0.8 - 1, 2, 2); } }
+}
+// the card's picture of a set of clubs: one of them, its head at the bottom
+function gkDrawClub(cv, k, t) {
+  const g = cv.getContext('2d'), Wd = cv.width, Hd = cv.height, tt = reduceMotion ? 0 : t, s = Hd / 94;
+  g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, Wd, Hd);
+  const bg = g.createLinearGradient(0, 0, 0, Hd); bg.addColorStop(0, '#1e2a38'); bg.addColorStop(1, '#12202a'); g.fillStyle = bg; g.fillRect(0, 0, Wd, Hd);
+  const o = k || { style: 'plain', shaft: '#c9c9c9', head: '#8a8a8a', accent: '#2a2420' };
+  g.save(); g.translate(Wd / 2, Hd / 2); g.scale(s, s); g.rotate(-0.55);   // (the shaft along -y, the head at +y)
+  const pulse = o.fx === 'glow' ? 0.6 + 0.35 * Math.sin(tt * 2) : o.fx === 'aura' ? 0.8 + 0.2 * Math.sin(tt * 2.6) : o.fx === 'shimmer' ? 0.35 + 0.25 * Math.sin(tt * 2.2) : 0;
+  if (o.fx) { const gr = g.createRadialGradient(0, 30, 2, 0, 30, 40); gr.addColorStop(0, o.glow + 'aa'); gr.addColorStop(1, o.glow + '00'); g.globalAlpha = pulse; g.fillStyle = gr; g.fillRect(-60, -10, 120, 80); g.globalAlpha = 1; }
+  const glow = c => { if (o.fx === 'glow' || o.fx === 'aura') { g.shadowColor = o.glow; g.shadowBlur = 4 + pulse * 8; } else g.shadowBlur = 0; };
+  const shaftW = o.style === 'oar' || o.style === 'pin' || o.style === 'hook' || o.style === 'harpoon' ? 3.4 : o.style === 'tentacle' ? 4 : 2.4;
+  // the grip and the shaft
+  g.fillStyle = o.accent; g.fillRect(-shaftW / 2 - 0.6, -46, shaftW + 1.2, 14);
+  if (o.style === 'tentacle') { g.strokeStyle = o.shaft; g.lineWidth = 4; g.lineCap = 'round'; g.beginPath(); for (let y = -34; y <= 26; y += 2) g.lineTo(Math.sin(y * 0.12 + tt * 2) * 2.4, y); g.stroke(); g.fillStyle = o.accent; for (let y = -30; y < 24; y += 6) { g.beginPath(); g.arc(Math.sin(y * 0.12 + tt * 2) * 2.4 + 1.6, y, 0.9, 0, 6.283); g.fill(); } }
+  else if (o.style === 'tusk') { g.fillStyle = o.shaft; g.beginPath(); g.moveTo(-2, -34); g.lineTo(2, -34); g.lineTo(1, 26); g.lineTo(-1, 26); g.fill(); g.strokeStyle = 'rgba(80,70,50,0.5)'; g.lineWidth = 0.6; for (let y = -34; y < 26; y += 3) { g.beginPath(); g.moveTo(-2, y); g.lineTo(2, y + 2.5); g.stroke(); } }
+  else { g.globalAlpha = o.glass ? 0.75 : 1; g.fillStyle = o.shaft; g.fillRect(-shaftW / 2, -34, shaftW, 60); g.globalAlpha = 1; }
+  if (o.style === 'bone') { g.fillStyle = o.accent; for (let y = -28; y < 24; y += 9) g.fillRect(-1.2, y, 2.4, 0.7); }
+  if (o.style === 'lighthouse') { g.fillStyle = o.accent; for (let y = -30; y < 24; y += 10) g.fillRect(-shaftW / 2, y, shaftW, 4); }
+  if (o.style === 'anchor' || o.style === 'hook') { g.strokeStyle = o.accent; g.lineWidth = 0.9; for (let y = -30; y < -16; y += 1.6) { g.beginPath(); g.moveTo(-shaftW / 2 - 0.4, y); g.lineTo(shaftW / 2 + 0.4, y + 1.2); g.stroke(); } }
+  // the head
+  g.fillStyle = o.head; g.strokeStyle = o.head;
+  switch (o.style) {
+    case 'oar': g.globalAlpha = o.glass ? 0.8 : 1; glow(); g.beginPath(); g.ellipse(0, 36, 7, 13, 0, 0, 6.283); g.fill(); g.shadowBlur = 0; g.globalAlpha = 1; g.fillStyle = o.accent; g.fillRect(-1, 22, 2, 26); break;
+    case 'pin': g.beginPath(); g.ellipse(0, 33, 5.5, 8, 0, 0, 6.283); g.fill(); g.fillStyle = o.accent; g.fillRect(-5, 26, 10, 1.5); g.fillRect(-5, 39, 10, 1.5); break;
+    case 'hook': g.fillStyle = '#4a4a52'; g.beginPath(); g.moveTo(-1.6, 26); g.lineTo(1.6, 26); g.lineTo(0, 44); g.fill(); g.lineWidth = 2.6; g.strokeStyle = '#4a4a52'; g.beginPath(); g.arc(6, 31, 5.5, Math.PI, Math.PI * 2.3); g.stroke(); break;
+    case 'anchor': g.lineWidth = 3; g.beginPath(); g.arc(0, 30, 11, 0.15, Math.PI - 0.15); g.stroke(); g.beginPath(); g.moveTo(-14, 30); g.lineTo(-9, 34); g.lineTo(-11, 26); g.fill(); g.beginPath(); g.moveTo(14, 30); g.lineTo(9, 34); g.lineTo(11, 26); g.fill(); g.fillRect(-7, 22, 14, 2.2); break;
+    case 'bone': g.lineWidth = 4; g.lineCap = 'round'; g.beginPath(); g.moveTo(0, 26); g.quadraticCurveTo(2, 40, 14, 40); g.stroke(); g.fillStyle = o.accent; for (let i = 0; i < 4; i++) g.fillRect(2 + i * 3, 37, 1.2, 2.2); break;
+    case 'harpoon': glow(); g.fillStyle = o.head; g.fillRect(-2.2, 24, 4.4, 6); g.beginPath(); g.moveTo(-5, 30); g.lineTo(5, 30); g.lineTo(0, 46); g.closePath(); g.fill(); g.beginPath(); g.moveTo(-5, 30); g.lineTo(-8, 26); g.lineTo(-3, 33); g.fill(); g.beginPath(); g.moveTo(5, 30); g.lineTo(8, 26); g.lineTo(3, 33); g.fill(); g.shadowBlur = 0; break;
+    case 'tusk': g.fillStyle = o.head; g.beginPath(); g.moveTo(-2, 26); g.quadraticCurveTo(2, 38, 12, 40); g.quadraticCurveTo(4, 34, 2, 26); g.fill(); break;
+    case 'lantern': g.fillStyle = '#3a3a3e'; g.fillRect(-4.5, 26, 9, 2); g.fillRect(-4.5, 39, 9, 2); glow(); g.fillStyle = o.accent; g.globalAlpha = 0.65 + pulse * 0.35; g.fillRect(-3.5, 28, 7, 11); g.globalAlpha = 1; g.shadowBlur = 0; g.strokeStyle = '#3a3a3e'; g.lineWidth = 0.8; g.beginPath(); g.moveTo(0, 28); g.lineTo(0, 39); g.stroke(); break;
+    case 'tentacle': glow(); g.strokeStyle = o.head; g.lineWidth = 4; g.lineCap = 'round'; g.beginPath(); g.moveTo(Math.sin(26 * 0.12 + tt * 2) * 2.4, 26); g.quadraticCurveTo(4, 44, 12, 38); g.quadraticCurveTo(14, 32, 9, 33); g.stroke(); g.shadowBlur = 0; break;
+    case 'lighthouse': {
+      g.fillStyle = '#c89a30'; g.fillRect(-6, 26, 12, 2); glow(); g.fillStyle = '#fff0b8'; g.globalAlpha = 0.8 + 0.2 * pulse; g.fillRect(-4.5, 28, 9, 9); g.globalAlpha = 1; g.shadowBlur = 0;
+      g.strokeStyle = '#c89a30'; g.lineWidth = 0.7; for (let x = -3; x <= 3; x += 3) { g.beginPath(); g.moveTo(x, 28); g.lineTo(x, 37); g.stroke(); }
+      g.fillStyle = '#c89a30'; g.beginPath(); g.moveTo(-6, 37); g.lineTo(6, 37); g.lineTo(0, 44); g.closePath(); g.fill();
+      g.save(); g.globalCompositeOperation = 'lighter'; const a = tt * 1.1; for (const [off, al] of [[0, 0.3], [Math.PI, 0.15]]) { g.globalAlpha = al * (0.6 + 0.4 * Math.abs(Math.cos(a + off))); g.fillStyle = '#fff0b8'; g.beginPath(); g.moveTo(0, 32); g.lineTo(Math.cos(a + off - 0.15) * 70, 32 + Math.sin(a + off - 0.15) * 20); g.lineTo(Math.cos(a + off + 0.15) * 70, 32 + Math.sin(a + off + 0.15) * 20); g.closePath(); g.fill(); } g.restore();
+      break; }
+    case 'trident': glow(); g.fillStyle = o.head; g.fillRect(-10, 24, 20, 3); for (const x of [-9, 0, 9]) { g.beginPath(); g.moveTo(x - 1.6, 27); g.lineTo(x + 1.6, 27); g.lineTo(x, x ? 40 : 44); g.closePath(); g.fill(); g.beginPath(); g.moveTo(x, x ? 40 : 44); g.lineTo(x - 2.4, x ? 36 : 40); g.lineTo(x, x ? 37 : 41); g.fill(); } g.shadowBlur = 0;
+      if (!reduceMotion) { g.strokeStyle = '#c8fff4'; g.lineWidth = 0.6; for (let i = 0; i < 8; i++) { const life = (tt * (0.25 + i * 0.03) + i * 0.37) % 1, x = (i % 3 - 1) * 9 + Math.sin(tt * 3 + i) * 1.5, y = 40 - life * 60; g.globalAlpha = Math.min(1, life * 5, (1 - life) * 3); g.beginPath(); g.arc(x, y, 0.8 + (i % 3) * 0.4, 0, 6.283); g.stroke(); } g.globalAlpha = 1; }
+      break;
+    default: g.fillRect(-1.5, 26, 9, 5); g.fillStyle = 'rgba(0,0,0,0.3)'; g.fillRect(-1.5, 30, 9, 1);
+  }
+  g.restore();
+  if (o.fx === 'shimmer' && !reduceMotion) { const x = ((tt * 0.4) % 1.6 - 0.3) * Wd, gr = g.createLinearGradient(x - 20, 0, x + 20, 0); gr.addColorStop(0, 'rgba(255,255,255,0)'); gr.addColorStop(0.5, 'rgba(255,255,255,0.18)'); gr.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = gr; g.fillRect(0, 0, Wd, Hd); }
+}
+function gkPreview(it, kind, w) {
+  const cv = document.createElement('canvas'); cv.width = Math.round(w * 1.6); cv.height = Math.round(w * 1.2);
+  cv.style.width = Math.round(w * 0.95) + 'px'; cv.style.height = Math.round(w * 0.71) + 'px'; cv.className = 'gkprev';
+  cv._it = it; cv._k = kind; (kind === 'ball' ? gkDrawBall : gkDrawClub)(cv, it, 0);
+  return cv;
+}
+let gkTick = 0;
+setInterval(() => {
+  const card = $('gkrateCard'); if (!card || card.hidden || reduceMotion) return;
+  const t = performance.now() / 1000, all = ++gkTick % 2 === 0;
+  for (const cv of card.querySelectorAll('canvas.gkprev')) if (cv._it && (cv._it.fx || cv._it.trail) && (all || cv._it.adm)) (cv._k === 'ball' ? gkDrawBall : gkDrawClub)(cv, cv._it, t);
+}, 50);
+
+function gkCard(it, kind, cls) {
+  const d = document.createElement('div'), ra = it ? gkRarityOf(it) : null;
+  d.className = 'skincard gkskin r-' + (ra ? ra.id : 'standard') + (cls ? ' ' + cls : '');
+  d.style.setProperty('--rc', ra ? ra.color : '#8f98ab');
+  const level = gkLevel(it);
+  if (level) { const pips = document.createElement('span'); pips.className = 'pips'; pips.setAttribute('aria-hidden', 'true'); for (let i = 0; i < level; i++) pips.appendChild(document.createElement('i')); d.appendChild(pips); }
+  d.appendChild(gkPreview(it, kind, 104));
+  const n = document.createElement('b'); n.textContent = it ? it.name : GK_KINDS[kind].plain; d.appendChild(n);
+  const r = document.createElement('small'); r.textContent = (ra ? ra.name : 'Standard') + ' · ' + (kind === 'ball' ? 'ball' : 'clubs'); d.appendChild(r);
+  return d;
+}
+
+// ---------- the card ----------
+function gkShow(e) {
+  try { audioInit(); } catch (err) {}
+  GK.opener = e && e.currentTarget || document.activeElement;
+  const k = GK.opener && GK.opener.dataset && GK.opener.dataset.kind; if (k === 'ball' || k === 'club') GK.tab = k;
+  const card = $('gkrateCard'); card.hidden = false; $('gkResult').hidden = true; gkRender(); card.scrollTop = 0;
+  $('gkrateClose').focus({ preventScroll: true });
+}
+function gkHide() {
+  if (GK.opening) return;
+  const card = $('gkrateCard'); if (card.hidden) return;
+  card.hidden = true;
+  const back = GK.opener && document.contains(GK.opener) && GK.opener.offsetParent ? GK.opener : $('gkrateBallBtn');
+  if (back) try { back.focus({ preventScroll: true }); } catch (err) {}
+}
+function gkEquip(kind, id) {
+  if (id && !GK[kind].owned[id]) return;
+  GK[kind].eq = id || ''; gkSave(); gkRender();
+  if (typeof GFN !== 'undefined' && GFN.code && typeof gfnSendLobby === 'function') try { gfnSendLobby(); } catch (e) {}
+}
+function gkRender() {
+  for (const b of document.querySelectorAll('.gkrateBtn')) { const k = b.dataset.kind; if (GK[k]) b.textContent = GK_KINDS[k].btn + ' · ' + GK[k].crates; }
+  const card = $('gkrateCard'); if (!card || card.hidden) return;
+  const tabs = $('gkTabs'); tabs.textContent = '';
+  for (const k of ['ball', 'club']) { const b = document.createElement('button'); b.type = 'button'; b.className = 'tool' + (GK.tab === k ? ' on' : ''); b.setAttribute('aria-pressed', GK.tab === k ? 'true' : 'false'); b.textContent = k === 'ball' ? 'Balls' : 'Clubs'; b.disabled = GK.opening; b.addEventListener('click', () => { GK.tab = k; $('gkResult').hidden = true; gkRender(); }); tabs.appendChild(b); }
+  const ci = $('gkTypes'); ci.textContent = '';
+  for (const k of ['ball', 'club']) {
+    const S = GK[k], K = GK_KINDS[k];
+    const row = document.createElement('div'); row.className = 'cratetype' + (GK.tab === k ? ' viewing' : '');
+    const box = document.createElement('span'); box.className = 'cratebox gkbox gk-' + k; box.setAttribute('aria-hidden', 'true');
+    const nm = document.createElement('b'); nm.textContent = K.crate;
+    const n = document.createElement('small'); n.textContent = (S.crates === 1 ? '1 crate' : S.crates + ' crates') + ' · ' + K.what;
+    const open = document.createElement('button'); open.type = 'button'; open.className = S.crates > 0 ? 'primary small' : 'tool';
+    open.textContent = GK.opening ? 'Opening…' : S.crates > 0 ? 'Open' : 'None yet'; open.disabled = S.crates <= 0 || GK.opening; open.addEventListener('click', () => gkOpen(k));
+    const all = document.createElement('button'); all.type = 'button'; all.className = 'tool'; all.textContent = 'Open all'; all.hidden = S.crates < 2; all.disabled = GK.opening; all.addEventListener('click', () => gkOpenAll(k));
+    row.append(box, nm, n, all, open); ci.appendChild(row);
+  }
+  $('gkrateClose').disabled = GK.opening;
+  const lb = GK_BALL_HOLES - GK.holes % GK_BALL_HOLES, lc = GK_CLUB_HOLES - GK.holes % GK_CLUB_HOLES;
+  $('gkProgress').textContent = `Next ball crate in ${lb} ${lb === 1 ? 'hole' : 'holes'}, next club crate in ${lc}. A birdie earns a ball crate too, an eagle a club crate.`;
+  $('gkBar').style.setProperty('--v', ((GK.holes % GK_CLUB_HOLES) / GK_CLUB_HOLES).toFixed(2));
+  const odds = $('gkOdds'); odds.textContent = '';
+  for (const ra of RARITIES) { const li = document.createElement('li'); li.style.setProperty('--rc', ra.color); li.textContent = ra.name + ' · ' + (ra.odds * 100).toFixed(ra.odds < 0.01 ? 2 : 1) + '%'; odds.appendChild(li); }
+  const kind = GK.tab, S = GK[kind], K = GK_KINDS[kind];
+  $('gkInvHead').textContent = kind === 'ball' ? 'Your balls' : 'Your clubs';
+  const inv = $('gkInv'); inv.textContent = '';
+  let owned = 0, lastGrade = null;
+  for (const it of [null].concat(K.list)) {
+    const gr = it ? it.rarity : 'standard';
+    if (gr !== lastGrade) {
+      lastGrade = gr;
+      const ra = it ? gkRarityOf(it) : null, mine = K.list.filter(x => x.rarity === gr);
+      const sub = document.createElement('span'); sub.className = 'invsub';
+      sub.textContent = ra ? `${ra.name} · ${mine.filter(x => S.owned[x.id]).length} of ${mine.length}` : 'Standard';
+      inv.appendChild(sub);
+    }
+    const id = it ? it.id : '', count = !it ? 1 : (S.owned[id] | 0), isOn = (S.owned[S.eq] ? S.eq : '') === id;
+    const c = gkCard(it, kind, (isOn ? 'equipped' : '') + (count ? '' : ' locked'));
+    if (count > 1) { const dd = document.createElement('span'); dd.className = 'dupes'; dd.textContent = '×' + count; c.appendChild(dd); }
+    if (count) {
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'tool'; b.textContent = isOn ? 'Playing' : 'Play with'; b.disabled = isOn;
+      b.setAttribute('aria-label', (isOn ? 'Playing with ' : 'Play with ') + (it ? it.name : K.plain));
+      b.addEventListener('click', () => gkEquip(kind, id));
+      c.appendChild(b);
+      if (it) owned++;
+    } else c.setAttribute('aria-label', it.name + ', not found yet');
+    inv.appendChild(c);
+  }
+  $('gkCollected').textContent = owned + ' of ' + K.list.length + ' found';
+}
+
+// ---------- opening ----------
+function gkOpen(k) {
+  const S = GK[k]; if (GK.opening || S.crates <= 0) return;
+  GK.opening = true; GK.tab = k; S.crates--; S.opened++;
+  const prize = gkRoll(k); GK.pending = prize.id; gkSave();
+  $('gkResult').hidden = true; gkRender();
+  gkSpin(prize, k, reduceMotion ? 600 : 6000, () => gkFinish(prize));
+}
+function gkSpin(prize, k, dur, done) {
+  requestAnimationFrame(() => {
+    const sheet = $('gkrateCard'), r = $('gkReel').getBoundingClientRect(), sr = sheet.getBoundingClientRect();
+    if (r.top < sr.top + 70 || r.bottom > sr.bottom - 10) sheet.scrollTo({ top: sheet.scrollTop + r.top - sr.top - sr.height * 0.25, behavior: reduceMotion ? 'auto' : 'smooth' });
+  });
+  const reel = $('gkReel'), strip = $('gkStrip'); strip.textContent = '';
+  const N = 56, WIN = 48;
+  for (let i = 0; i < N; i++) strip.appendChild(gkCard(i === WIN ? prize : gkFiller(k), k, 'reelitem'));
+  const cardW = strip.firstChild.getBoundingClientRect().width + 8, viewW = reel.getBoundingClientRect().width;
+  const end = WIN * cardW + cardW / 2 - viewW / 2 + (Math.random() - 0.5) * cardW * 0.7, t0 = performance.now();
+  let lastIdx = -1;
+  const step = now => {
+    const t = Math.min(1, (now - t0) / dur), x = end * (1 - Math.pow(1 - t, 4));
+    strip.style.transform = 'translateX(' + (-x) + 'px)';
+    const idx = Math.floor((x + viewW / 2) / cardW);
+    if (idx !== lastIdx) { lastIdx = idx; try { sfxTick(); } catch (e) {} }
+    if (t < 1) requestAnimationFrame(step); else done();
+  };
+  strip.style.transform = 'translateX(0)'; requestAnimationFrame(step);
+}
+function gkFinish(prize) {
+  const k = prize.kind, S = GK[k];
+  GK.opening = false; S.owned[prize.id] = (S.owned[prize.id] | 0) + 1; GK.pending = null; gkSave();
+  const ra = gkRarityOf(prize);
+  try { sfxReveal(RARITIES.indexOf(ra)); } catch (e) {}
+  const res = $('gkResult'); res.textContent = ''; res.style.setProperty('--rc', ra.color); res.className = 'result r-' + ra.id;
+  const h = document.createElement('p'); h.className = 'won'; h.textContent = (S.owned[prize.id] > 1 ? 'Another ' : 'New: ') + prize.name;
+  const r = document.createElement('small'); r.textContent = ra.name + ' grade · ' + (k === 'ball' ? 'ball' : 'clubs');
+  const on = S.eq === prize.id;
+  const eq = document.createElement('button'); eq.type = 'button'; eq.className = 'primary'; eq.textContent = on ? 'Playing' : 'Play with it'; eq.disabled = on;
+  eq.addEventListener('click', () => { gkEquip(k, prize.id); eq.textContent = 'Playing'; eq.disabled = true; });
+  res.append(h, r, eq); res.hidden = false; gkRender();
+  if (!on) eq.focus({ preventScroll: true });
+}
+function gkOpenAll(k) {
+  const S = GK[k], count = S.crates; if (GK.opening || count < 1) return;
+  const byGrade = {}, fresh = []; let best = null;
+  for (let i = 0; i < count; i++) {
+    const prize = gkRoll(k), had = S.owned[prize.id] | 0; S.owned[prize.id] = had + 1;
+    if (!had && !fresh.includes(prize)) fresh.push(prize);
+    byGrade[prize.rarity] = (byGrade[prize.rarity] || 0) + 1;
+    if (!best || gkLevel(prize) > gkLevel(best)) best = prize;
+  }
+  S.crates = 0; S.opened += count; gkSave();
+  GK.opening = true; GK.tab = k; $('gkResult').hidden = true; gkRender();
+  gkSpin(best, k, reduceMotion ? 400 : 2600, () => {
+    GK.opening = false;
+    const bra = gkRarityOf(best); try { sfxReveal(RARITIES.indexOf(bra)); } catch (e) {}
+    const res = $('gkResult'); res.textContent = ''; res.style.setProperty('--rc', bra.color); res.className = 'result haul r-' + bra.id;
+    const h = document.createElement('p'); h.className = 'won'; h.textContent = 'Opened ' + count + (count === 1 ? ' crate' : ' crates');
+    const K = GK_KINDS[k], sub = document.createElement('small'); sub.textContent = (fresh.length ? fresh.length + ' new ' + (fresh.length === 1 ? K.one : K.many) : 'Nothing new this time') + ' · best: ' + best.name;
+    const grades = document.createElement('ul'); grades.className = 'odds';
+    for (const ra of RARITIES) { if (!byGrade[ra.id]) continue; const li = document.createElement('li'); li.style.setProperty('--rc', ra.color); li.textContent = ra.name + ' × ' + byGrade[ra.id]; grades.appendChild(li); }
+    res.append(h, sub, grades);
+    if (fresh.length) { const strip = document.createElement('div'); strip.className = 'haulstrip'; for (const it of fresh.sort((a, b) => gkLevel(b) - gkLevel(a))) strip.appendChild(gkCard(it, k, 'reelitem')); res.appendChild(strip); }
+    res.hidden = false; gkRender();
+  });
+}
+
+// ---------- hooked onto the round (src/golf.js) and the round together (src/golfnet.js) ----------
+// each hole's end earns towards crates; and your looks go out with your name, so the others see your outfit, ball and clubs
+if (typeof gfHoleDone === 'function') { const o = gfHoleDone; gfHoleDone = function () { const r = o.apply(this, arguments); try { gkHole(); } catch (e) {} return r; }; }
+if (typeof gfnBase === 'function') { const o = gfnBase; gfnBase = function () { const z = o.apply(this, arguments), m = gkMine(); z.lk = [m.oc, m.ball, m.club]; return z; }; }
+
+gkLoad();
+for (const b of document.querySelectorAll('.gkrateBtn')) b.addEventListener('click', gkShow);
+if ($('gkrateClose')) $('gkrateClose').addEventListener('click', gkHide);
+addEventListener('keydown', e => {
+  if (e.key !== 'Escape') return;
+  const card = $('gkrateCard'); if (!card || card.hidden) return;
+  e.preventDefault(); e.stopPropagation(); gkHide();
+}, true);
+gkRender();
+
+// ---- src/gfdress.js ----
+'use strict';
+// Skerry Links: the golfer, the ball and the clubs dressed in what you play with (src/gfcrates.js), in the 3D view
+// (src/golf3d.js).
+//
+// The golfer wears your outfit from the Tailor's Crate (src/ocrates.js): the long coat open over the waistcoat, its trim
+// and lapels, the sash, the buttons, the breeches and boots, and the outfit's own hat (the same hats as the wreckers',
+// fbHat in src/fpsbody.js), stooped over the ball. The finer outfits shimmer and glow as they do on the island, the
+// Admirals' carry their own living light (src/ocadmiral.js), and Verity's own outfit puts his head on your shoulders
+// (src/verityfx.js). Without an outfit it's the plain golfer in your player's colour, as before.
+// The clubs are made from a ship's gear (gdClub): an oar, a belaying pin, a boat-hook, an anchor, whalebone, a harpoon,
+// a narwhal's tusk, a hanging lantern, a kraken's arm, a little lighthouse with its beam turning, or a trident with the
+// drowned sea's green fire and bubbles. The ball wears its paint (gkPaintBall), turns as it rolls and flies, trails its
+// colour, throws sparks on the Mate grades and up, glows on the Captain grades, and the Admirals' are alive: the Skerry
+// Light's beam sweeps round it, the Maelstrom swirls, and Verity's Grin is his own face, blinking.
+// Who wears what: on one screen, the first player plays with your things and the others as before, in their colours;
+// online, everyone plays with their own (sent with their name, src/golfnet.js gfnBase).
+// It's put on by wrapping the view's own frame (gf3dDraw: the right golfer and ball before it draws them) and its
+// camera (gf3dCamera: the light and the movement, once the camera is set for the frame).
+
+var GD = { cache: new Map(), ballKey: null, core: null, tex: null, cv: null, spin: null, last: null, sp: null, spI: 0, soft: null, look: null, t: 0 };
+
+function gdSoft() {
+  if (GD.soft) return GD.soft;
+  const c = document.createElement('canvas'); c.width = c.height = 64; const x = c.getContext('2d'), gr = x.createRadialGradient(32, 32, 0, 32, 32, 32);
+  gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(0.35, 'rgba(255,255,255,0.45)'); gr.addColorStop(1, 'rgba(255,255,255,0)'); x.fillStyle = gr; x.fillRect(0, 0, 64, 64);
+  return (GD.soft = new THREE.CanvasTexture(c));
+}
+// a beam of light: a cone from its apex, fading out along its length, and its fainter twin the other way
+function gdBeam(len, rad, op) {
+  if (!GD.fade) { const c = document.createElement('canvas'); c.width = 4; c.height = 64; const x = c.getContext('2d'), gr = x.createLinearGradient(0, 0, 0, 64); gr.addColorStop(0, '#ffffff'); gr.addColorStop(0.5, '#555555'); gr.addColorStop(1, '#000000'); x.fillStyle = gr; x.fillRect(0, 0, 4, 64); GD.fade = new THREE.CanvasTexture(c); }
+  const beam = new THREE.Group();
+  for (const [s, o] of [[1, op], [-1, op * 0.5]]) { const cg = new THREE.ConeGeometry(rad, len, 16, 1, true); cg.translate(0, -len / 2, 0); cg.rotateZ(s * Math.PI / 2); const m = new THREE.Mesh(cg, new THREE.MeshBasicMaterial({ color: '#fff0b8', map: GD.fade, transparent: true, opacity: o, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide })); m.userData.keep = false; beam.add(m); }
+  return beam;
+}
+const gdAdd = c => new THREE.MeshBasicMaterial({ color: c, map: gdSoft(), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false });
+function gdLam(c, x) { const m = new THREE.MeshLambertMaterial(Object.assign({ color: c }, x || {})); m.userData.base = m.color.clone(); return m; }
+
+// who's on the tee plays with what: { oc, ball, club }
+function gdLookFor(p) {
+  const none = { oc: '', ball: '', club: '' };
+  if (!p || typeof gkMine !== 'function') return none;
+  const i = GF.P.indexOf(p);
+  if (GF.mode !== 'net') return i === 0 ? gkMine() : none;
+  if (i === GF.me) return gkMine();
+  if (typeof NET === 'undefined' || !NET.peers || typeof gfnOf !== 'function') return none;
+  const q = NET.peers.find(x => { const z = gfnOf(x); return z && z.sid === p.sid; }), lk = q && gfnOf(q).lk;
+  if (!Array.isArray(lk)) return none;
+  return { oc: typeof ocOutfit === 'function' && ocOutfit(lk[0]) ? lk[0] : '', ball: gkBall(lk[1]) ? lk[1] : '', club: gkClub(lk[2]) ? lk[2] : '' };
+}
+
+// ---------- the clubs: along the club's own -y from the hands (y -0.58) to the head (y -len), the toe out along +x ----------
+function gdBetween(r1, r2, y0, y1, mat, seg) { const g = new THREE.CylinderGeometry(r1, r2, y0 - y1, seg || 7); const m = new THREE.Mesh(g, mat); m.position.y = (y0 + y1) / 2; return m; }
+function gdClub(k, len) {
+  const grp = new THREE.Group(), fx = { glow: [], beam: null, bubbles: null, k };
+  const L = len, o = k || { style: 'plain', shaft: '#c9c9c9', head: '#8a8a8a', accent: '#2a2420' };
+  const gl = o.fx === 'glow' || o.fx === 'aura' || o.fx === 'shimmer';
+  const shaft = gdLam(o.shaft, o.glass ? { transparent: true, opacity: 0.7 } : null), head = gdLam(o.head, o.glass ? { transparent: true, opacity: 0.78 } : null), acc = gdLam(o.accent);
+  if (gl) { for (const m of [head, acc]) { m.emissive = new THREE.Color(o.glow); m.emissiveIntensity = 0; fx.glow.push(m); } }
+  const add = (m, x, y, z) => { if (x != null) m.position.set(x, y, z || 0); grp.add(m); return m; };
+  const top = -0.56, yH = -L;
+  // the grip
+  add(gdBetween(0.017, 0.016, top + 0.02, top - 0.2, o.style === 'plain' ? gdLam(0x2a2420) : acc, 8));
+  switch (o.style) {
+    case 'oar': {
+      add(gdBetween(0.014, 0.015, top, yH + 0.26, shaft));
+      const b = add(new THREE.Mesh(new THREE.SphereGeometry(1, 16, 10), head)); b.scale.set(0.052, 0.14, 0.014); b.position.set(0.01, yH + 0.13, 0);
+      add(gdBetween(0.017, 0.017, yH + 0.29, yH + 0.25, acc, 8));
+      break; }
+    case 'pin': {
+      add(gdBetween(0.012, 0.02, top, yH + 0.15, shaft, 9));
+      add(new THREE.Mesh(new THREE.SphereGeometry(0.026, 10, 8), shaft), 0, top + 0.03, 0);
+      const b = add(new THREE.Mesh(new THREE.SphereGeometry(1, 14, 10), head)); b.scale.set(0.048, 0.08, 0.044); b.position.set(0.0, yH + 0.075, 0);
+      for (const y of [yH + 0.15, yH + 0.005]) add(gdBetween(0.03, 0.03, y + 0.01, y - 0.01, acc, 10));
+      break; }
+    case 'hook': {
+      add(gdBetween(0.014, 0.014, top, yH + 0.14, shaft));
+      const iron = gdLam('#4a4a52'); add(gdBetween(0.02, 0.02, yH + 0.17, yH + 0.1, iron));
+      add(gdBetween(0.018, 0.002, yH + 0.1, yH, iron));
+      const h = add(new THREE.Mesh(new THREE.TorusGeometry(0.045, 0.011, 6, 14, Math.PI * 1.25), iron)); h.position.set(0.045, yH + 0.12, 0); h.rotation.z = -Math.PI * 0.35;
+      for (let i = 0; i < 5; i++) add(gdBetween(0.016, 0.016, top - 0.24 - i * 0.025, top - 0.25 - i * 0.025, acc, 8));
+      break; }
+    case 'anchor': {
+      add(gdBetween(0.012, 0.014, top, yH + 0.08, shaft));
+      const c = add(new THREE.Mesh(new THREE.TorusGeometry(0.085, 0.014, 6, 18, Math.PI), head)); c.position.set(0, yH + 0.1, 0); c.rotation.z = Math.PI;
+      for (const s of [-1, 1]) { const f = add(new THREE.Mesh(new THREE.ConeGeometry(0.028, 0.06, 4), head)); f.position.set(s * 0.085, yH + 0.115, 0); f.rotation.z = -s * 0.5; f.scale.z = 0.4; }
+      const st = add(gdBetween(0.009, 0.009, 0.09, -0.09, head, 6)); st.rotation.x = Math.PI / 2; st.position.y = top - 0.32;
+      add(new THREE.Mesh(new THREE.TorusGeometry(0.022, 0.006, 5, 10), head), 0, yH + 0.02, 0);
+      for (let i = 0; i < 6; i++) add(gdBetween(0.017, 0.017, top - 0.22 - i * 0.022, top - 0.233 - i * 0.022, acc, 8));
+      break; }
+    case 'bone': {
+      add(gdBetween(0.015, 0.012, top, yH + 0.12, shaft, 9));
+      for (let i = 0; i < 6; i++) add(gdBetween(0.0155, 0.0155, top - 0.25 - i * 0.09, top - 0.255 - i * 0.09, acc, 9));
+      const cu = new THREE.QuadraticBezierCurve3(new THREE.Vector3(0, yH + 0.13, 0), new THREE.Vector3(0.0, yH, 0), new THREE.Vector3(0.15, yH + 0.03, 0));
+      add(new THREE.Mesh(new THREE.TubeGeometry(cu, 12, 0.02, 7), head));
+      for (let i = 0; i < 4; i++) add(new THREE.Mesh(new THREE.BoxGeometry(0.008, 0.016, 0.008), acc), 0.04 + i * 0.026, yH + 0.025 + i * 0.003, 0.014);
+      break; }
+    case 'harpoon': {
+      add(gdBetween(0.014, 0.014, top, yH + 0.16, shaft));
+      add(gdBetween(0.019, 0.016, yH + 0.18, yH + 0.12, head));
+      add(gdBetween(0.036, 0.001, yH + 0.12, yH - 0.03, head, 4));
+      for (const s of [-1, 1]) { const b = add(new THREE.Mesh(new THREE.ConeGeometry(0.012, 0.07, 4), head)); b.position.set(s * 0.035, yH + 0.11, 0); b.rotation.z = s * 0.6; }
+      if (o.fx === 'glow') { const h = add(new THREE.Mesh(new THREE.PlaneGeometry(0.4, 0.4), gdAdd(o.glow)), 0, yH + 0.06, 0); fx.halo = h; }
+      break; }
+    case 'tusk': {
+      const g = new THREE.CylinderGeometry(0.009, 0.019, top - yH - 0.04, 5, 36), p = g.attributes.position;
+      for (let i = 0; i < p.count; i++) { const y = p.getY(i), a = y * 30, x = p.getX(i), z = p.getZ(i); p.setXYZ(i, x * Math.cos(a) - z * Math.sin(a), y, x * Math.sin(a) + z * Math.cos(a)); }
+      g.computeVertexNormals(); const m = add(new THREE.Mesh(g, gdLam(o.shaft, { flatShading: true }))); m.position.y = (top + yH + 0.04) / 2; fx.glow.push(m.material); m.material.emissive = new THREE.Color(o.glow); m.material.emissiveIntensity = 0;
+      const tip = add(new THREE.Mesh(new THREE.ConeGeometry(0.026, 0.16, 7), head)); tip.rotation.z = -Math.PI / 2 - 0.25; tip.position.set(0.07, yH + 0.03, 0);
+      add(new THREE.Mesh(new THREE.SphereGeometry(0.026, 10, 8), head), 0, yH + 0.04, 0);
+      break; }
+    case 'lantern': {
+      add(gdBetween(0.012, 0.012, top, yH + 0.17, shaft));
+      const iron = gdLam('#3a3a3e'); add(new THREE.Mesh(new THREE.TorusGeometry(0.03, 0.006, 5, 12, Math.PI), iron), 0, yH + 0.17, 0);
+      add(gdBetween(0.006, 0.05, yH + 0.17, yH + 0.135, iron, 6));
+      const glass = new THREE.MeshBasicMaterial({ color: o.accent, transparent: true, opacity: 0.9 }); fx.lamp = glass;
+      add(gdBetween(0.04, 0.04, yH + 0.135, yH + 0.03, glass, 6));
+      for (let i = 0; i < 6; i++) { const a = i / 6 * 6.283; add(new THREE.Mesh(new THREE.BoxGeometry(0.006, 0.105, 0.006), iron), Math.sin(a) * 0.042, yH + 0.083, Math.cos(a) * 0.042); }
+      add(gdBetween(0.05, 0.052, yH + 0.03, yH, iron, 6));
+      fx.halo = add(new THREE.Mesh(new THREE.PlaneGeometry(0.5, 0.5), gdAdd(o.glow)), 0, yH + 0.08, 0);
+      break; }
+    case 'tentacle': {
+      const pts = []; for (let i = 0; i <= 12; i++) { const f = i / 12; pts.push(new THREE.Vector3(Math.sin(f * 7) * 0.025, top + (yH + 0.06 - top) * f, Math.cos(f * 5) * 0.012)); }
+      add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 40, 0.017, 7), shaft));
+      for (let i = 1; i < 12; i++) { const q = pts[i]; add(new THREE.Mesh(new THREE.SphereGeometry(0.007, 6, 4), acc), q.x + 0.016, q.y, q.z); }
+      const curl = add(new THREE.Mesh(new THREE.TorusGeometry(0.04, 0.014, 6, 14, Math.PI * 1.5), head)); curl.position.set(0.04, yH + 0.04, 0); curl.rotation.z = Math.PI * 0.6;
+      add(new THREE.Mesh(new THREE.SphereGeometry(0.017, 8, 6), head), pts[12].x, pts[12].y, pts[12].z);
+      fx.halo = add(new THREE.Mesh(new THREE.PlaneGeometry(0.45, 0.45), gdAdd(o.glow)), 0.03, yH + 0.05, 0);
+      break; }
+    case 'lighthouse': {
+      add(gdBetween(0.013, 0.013, top, yH + 0.2, shaft));
+      const red = gdLam(o.accent), white = gdLam('#f4ecd0'), gold = gdLam('#e0b050'); gold.emissive = new THREE.Color('#5a3a08');
+      for (let i = 0; i < 5; i++) add(gdBetween(0.0145, 0.0145, top - 0.25 - i * 0.11, top - 0.3 - i * 0.11, red, 8));
+      add(gdBetween(0.012, 0.045, yH + 0.2, yH + 0.155, gold, 10));                     // the dome
+      const glass = new THREE.MeshBasicMaterial({ color: '#fff0b8', transparent: true, opacity: 0.95 }); fx.lamp = glass;
+      add(gdBetween(0.036, 0.036, yH + 0.155, yH + 0.105, glass, 10));                  // the lamp room
+      add(new THREE.Mesh(new THREE.TorusGeometry(0.046, 0.005, 5, 16), gold), 0, yH + 0.105, 0).rotation.x = Math.PI / 2;
+      add(gdBetween(0.042, 0.055, yH + 0.105, yH + 0.04, white, 10));                   // the tower
+      add(gdBetween(0.047, 0.055, yH + 0.075, yH + 0.055, red, 10));
+      add(gdBetween(0.058, 0.06, yH + 0.04, yH, white, 10));
+      // the beam, and its fainter twin, turning
+      const beam = gdBeam(2.2, 0.22, 0.35); beam.position.y = yH + 0.13; grp.add(beam); fx.beam = beam;
+      fx.halo = add(new THREE.Mesh(new THREE.PlaneGeometry(0.55, 0.55), gdAdd('#ffd88a')), 0, yH + 0.13, 0);
+      break; }
+    case 'trident': {
+      add(gdBetween(0.013, 0.013, top, yH + 0.14, shaft));
+      add(new THREE.Mesh(new THREE.BoxGeometry(0.17, 0.02, 0.02), head), 0, yH + 0.135, 0);
+      add(gdBetween(0.02, 0.016, yH + 0.17, yH + 0.135, head, 8));
+      for (const x of [-0.075, 0, 0.075]) {
+        add(gdBetween(0.009, 0.009, yH + 0.135, yH + (x ? 0.05 : 0.03), head, 5), x, 0, 0).position.y = yH + (x ? 0.092 : 0.082);
+        const pr = add(new THREE.Mesh(new THREE.ConeGeometry(0.016, 0.05, 4), head)); pr.rotation.z = Math.PI; pr.position.set(x, yH + (x ? 0.03 : 0.008), 0);
+      }
+      fx.halo = add(new THREE.Mesh(new THREE.PlaneGeometry(0.6, 0.6), gdAdd(o.glow)), 0, yH + 0.08, 0);
+      fx.bubbles = true;
+      break; }
+    default: {
+      add(gdBetween(0.008, 0.008, top, yH + 0.05, shaft, 5));
+      add(new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.05, 0.06), head), 0, yH + 0.03, 0);
+    }
+  }
+  if (fx.halo) fx.halo.userData.face = true;
+  return { grp, fx };
+}
+
+// ---------- the golfer ----------
+function gdGolfer(ocId, clubId) {
+  const oc = typeof ocOutfit === 'function' ? ocOutfit(ocId) : null, k = gkClub(clubId);
+  let g, sw, toBall;
+  if (!oc) {
+    g = gf3dGolfer(); sw = g.userData.sw;
+    const club = sw.children[0], keep = club.children.filter(c => (g.userData.arms || []).includes(c));
+    for (const c of club.children.slice()) if (!keep.includes(c)) club.remove(c);
+    toBall = new THREE.Vector3(0.62, -1.3, 0);
+    const C = gdClub(k, toBall.length()); club.add(C.grp); g.userData.club = C.fx;
+    return g;
+  }
+  g = new THREE.Group();
+  const dark = s => new THREE.Color(s).multiplyScalar(0.55);
+  const M = {
+    coat: gdLam(oc.coat, { side: THREE.DoubleSide }), lining: gdLam(dark(oc.coat), { side: THREE.DoubleSide }), trim: gdLam(oc.trim), sash: gdLam(oc.sash, { side: THREE.DoubleSide }),
+    waist: gdLam(oc.waist || new THREE.Color(oc.sash).lerp(new THREE.Color('#2a2018'), 0.6)), breeches: gdLam(oc.breeches || '#4a3f33'), hat: gdLam(oc.hat || '#1b1713', { side: THREE.DoubleSide }),
+    brass: gdLam(oc.brass || '#b8913c'), shirt: gdLam('#d6cfbd'), stocking: gdLam('#c9c0aa'), leather: gdLam('#2a1c14'), tan: gdLam('#5c4028'), flesh: gdLam('#e0b48c'), hair: gdLam('#2a1e16'),
+  };
+  const F = { oc, M, root: g, halo: null, head: null, mats: Object.values(M), fx: oc.fx || '' };
+  // legs, apart and a little flexed, the boots pointing at the ball
+  for (const z of [-0.13, 0.13]) {
+    const leg = new THREE.Group(); leg.position.set(-0.04, 0.9, z); leg.rotation.z = -0.12; g.add(leg);
+    leg.add(fbDown(0.085, 0.066, 0.45, M.breeches, 9));
+    fbMesh(new THREE.CylinderGeometry(0.068, 0.068, 0.03, 9), M.breeches, 0, -0.44, 0, leg);
+    const knee = new THREE.Group(); knee.position.y = -0.45; knee.rotation.z = 0.14; leg.add(knee);
+    knee.add(fbDown(0.06, 0.052, 0.12, M.stocking, 9));
+    const sh = fbDown(0.068, 0.062, 0.3, M.leather, 10); sh.position.y = -0.12; knee.add(sh);
+    const cuff = fbDown(0.083, 0.076, 0.06, M.tan, 10); cuff.position.y = -0.1; knee.add(cuff);
+    fbMesh(new THREE.BoxGeometry(0.25, 0.075, 0.1), M.leather, 0.05, -0.41, 0, knee);
+    fbMesh(new THREE.BoxGeometry(0.27, 0.022, 0.11), M.tan, 0.05, -0.452, 0, knee);
+  }
+  // stooped from the hips; the body built facing -z as the wreckers are (src/fpsbody.js), turned to face the ball (+x)
+  const hips = new THREE.Group(); hips.position.set(0, 0.92, 0); hips.rotation.z = -0.32; g.add(hips);
+  const body = new THREE.Group(); body.rotation.y = -Math.PI / 2; hips.add(body);
+  fbMesh(new THREE.SphereGeometry(0.17, 10, 8), M.breeches, 0, -0.04, 0, body).scale.set(1.05, 0.7, 0.75);
+  // the coat's skirt hangs straight down
+  const hang = new THREE.Group(); hang.position.y = 0.06; hang.rotation.x = 0.0; body.add(hang);
+  const hz = new THREE.Group(); hz.rotation.x = -0.26; hang.add(hz);   // (back against the stoop: the body's -z is its front)
+  const sk = fbDown(0.2, 0.3, 0.42, M.coat, 14, 1.0); sk.scale.z = 0.8; hz.add(sk);
+  const skl = fbDown(0.195, 0.295, 0.42, M.lining, 14, 1.0); skl.scale.z = 0.78; hz.add(skl);
+  const hem = fbDown(0.298, 0.302, 0.035, M.trim, 14, 1.0); hem.position.y = -0.39; hem.scale.z = 0.81; hz.add(hem);
+  const spine = new THREE.Group(); spine.position.y = 0.06; body.add(spine);
+  const waist = fbUp(0.165, 0.185, 0.52, M.waist, 12); waist.scale.z = 0.72; spine.add(waist);
+  for (let i = 0; i < 5; i++) fbMesh(new THREE.SphereGeometry(0.01, 6, 4), M.brass, 0, 0.1 + i * 0.075, -0.135, spine);
+  fbMesh(new THREE.BoxGeometry(0.1, 0.12, 0.03), M.shirt, 0, 0.5, -0.12, spine).rotation.x = -0.15;
+  fbMesh(new THREE.ConeGeometry(0.04, 0.1, 6), M.shirt, 0, 0.49, -0.14, spine).rotation.x = Math.PI;
+  const coatU = fbUp(0.2, 0.225, 0.55, M.coat, 14, 0.95); coatU.scale.z = 0.8; spine.add(coatU);
+  const coatL = fbUp(0.195, 0.22, 0.55, M.lining, 14, 0.95); coatL.scale.z = 0.78; spine.add(coatL);
+  for (const s of [-1, 1]) {
+    const lap = fbMesh(new THREE.BoxGeometry(0.07, 0.28, 0.012), M.trim, s * 0.1, 0.4, -0.152, spine); lap.rotation.set(-0.12, s * 0.5, s * 0.08);
+    for (let i = 0; i < 3; i++) fbMesh(new THREE.SphereGeometry(0.012, 6, 4), M.brass, s * (0.105 + i * 0.004), 0.31 + i * 0.075, -0.17, spine);
+  }
+  const collar = fbUp(0.13, 0.12, 0.08, M.coat, 12, 1.3); collar.position.y = 0.53; collar.scale.z = 0.85; spine.add(collar);
+  const belt = fbUp(0.19, 0.19, 0.055, M.leather, 14); belt.position.y = -0.01; belt.scale.z = 0.76; spine.add(belt);
+  fbMesh(new THREE.BoxGeometry(0.065, 0.05, 0.015), M.brass, 0, 0.017, -0.148, spine);
+  const sash = fbUp(0.195, 0.2, 0.07, M.sash, 14); sash.position.y = 0.045; sash.scale.z = 0.78; spine.add(sash);
+  fbMesh(new THREE.SphereGeometry(0.03, 8, 6), M.sash, -0.17, 0.07, -0.07, spine).scale.set(1, 0.8, 0.8);
+  for (const k2 of [0, 1]) fbMesh(new THREE.BoxGeometry(0.035, 0.18, 0.012), M.sash, -0.18 - k2 * 0.02, -0.04, -0.07 + k2 * 0.03, spine).rotation.z = 0.15 + k2 * 0.12;
+  for (const x of [-0.215, 0.215]) fbMesh(new THREE.SphereGeometry(0.088, 10, 8), M.coat, x, 0.47, 0, spine).scale.set(1, 0.85, 0.95);
+  // the head, looking down at the ball
+  const head = F.head = new THREE.Group(); head.position.y = 0.58; head.rotation.x = -0.42; spine.add(head);
+  fbMesh(new THREE.CylinderGeometry(0.05, 0.058, 0.08, 8), M.flesh, 0, 0.02, 0, head);
+  fbMesh(new THREE.SphereGeometry(0.105, 14, 10), M.flesh, 0, 0.14, 0, head).scale.set(0.9, 1.05, 1);
+  fbMesh(new THREE.SphereGeometry(0.111, 14, 10, 0, Math.PI * 2, 0, Math.PI * 0.62), M.hair, 0, 0.145, 0.008, head).scale.set(0.92, 1.05, 1.02);
+  const queue = fbDown(0.022, 0.012, 0.16, M.hair, 6); queue.position.set(0, 0.1, 0.1); queue.rotation.x = 0.25; head.add(queue);
+  for (const s of [-1, 1]) fbMesh(new THREE.SphereGeometry(0.022, 6, 5), M.flesh, s * 0.095, 0.13, 0.005, head).scale.set(0.5, 1, 0.8);
+  fbMesh(new THREE.ConeGeometry(0.018, 0.045, 5), M.flesh, 0, 0.13, -0.105, head).rotation.x = -Math.PI / 2;
+  fbMesh(new THREE.BoxGeometry(0.09, 0.03, 0.02), M.hair, 0, 0.065, -0.095, head);
+  if (oc.eyes) { F.eyeMat = new THREE.MeshBasicMaterial({ color: oc.eyes, transparent: true }); for (const s of [-1, 1]) fbMesh(new THREE.SphereGeometry(0.014, 6, 4), F.eyeMat, s * 0.036, 0.16, -0.098, head); }
+  else for (const s of [-1, 1]) fbMesh(new THREE.SphereGeometry(0.01, 5, 4), M.leather, s * 0.035, 0.16, -0.093, head);
+  if (typeof fbHat === 'function') fbHat(head, M, oc.style);
+  // the arms and the club swing together from the shoulders, as the plain golfer's do
+  sw = new THREE.Group(); sw.position.set(0.167, 1.4, 0); g.add(sw);
+  toBall = new THREE.Vector3(0.78 - 0.167, 0.03 - 1.4, 0);
+  const club = new THREE.Group(); club.quaternion.setFromUnitVectors(new THREE.Vector3(0, -1, 0), toBall.clone().normalize()); sw.add(club);
+  for (const z of [-0.2, 0.2]) {
+    const arm = new THREE.Group(); club.add(arm);
+    const a = new THREE.Vector3(0, 0, z), b = new THREE.Vector3(0, -0.56, z * 0.12), d = b.clone().sub(a), l = d.length();
+    const up = new THREE.Mesh(new THREE.CylinderGeometry(0.056, 0.046, l, 8), M.coat); up.position.copy(a).add(b).multiplyScalar(0.5); up.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), d.clone().normalize()); arm.add(up);
+    const cf = new THREE.Mesh(new THREE.CylinderGeometry(0.062, 0.066, 0.08, 8), M.trim); cf.position.copy(a).lerp(b, 0.86); cf.quaternion.copy(up.quaternion); arm.add(cf);
+    fbMesh(new THREE.SphereGeometry(0.04, 8, 6), M.flesh, b.x, b.y - 0.02, b.z, arm).scale.set(0.9, 1.2, 0.8);
+  }
+  const C = gdClub(k, toBall.length()); club.add(C.grp);
+  g.userData = { sw, body: { material: { color: new THREE.Color() } }, club: C.fx, F };
+  // the finer outfits: a halo behind the head; the Admirals' living light; Verity's head
+  if (oc.halo && !oc.adm) { F.halo = new THREE.Mesh(new THREE.PlaneGeometry(1.3, 1.3), gdAdd(oc.halo)); F.halo.material.opacity = 0.45; F.halo.position.set(0.22, 1.6, 0); g.add(F.halo); }
+  if (oc.adm && typeof ocaDress === 'function') F.adm = ocaDress(F);
+  if (oc.vy && typeof vyDress === 'function') F.vy = vyDress(F);
+  if (oc.fx && !oc.adm) for (const m of [M.trim, M.sash].concat(oc.fx === 'aura' ? [M.coat] : [])) { m.emissive = new THREE.Color(oc.glow || oc.trim); m.emissiveIntensity = 0; }
+  return g;
+}
+// each frame: the golfer's light (and the club's)
+function gdGolferFrame(g, t) {
+  const F = g.userData.F, C = g.userData.club, cam = G3.cam;
+  if (F) {
+    const o = F.oc, pulse = o.fx === 'shimmer' ? 0.18 + 0.14 * Math.sin(t * 2.2) : o.fx === 'glow' ? 0.45 + 0.3 * Math.sin(t * 1.8) : o.fx === 'aura' ? 0.55 + 0.25 * Math.sin(t * 2.6) : 0;
+    if (o.fx && !o.adm) { F.M.trim.emissiveIntensity = pulse; F.M.sash.emissiveIntensity = o.fx === 'shimmer' ? 0 : pulse * 0.7; if (o.fx === 'aura') F.M.coat.emissiveIntensity = pulse * 0.35; }
+    if (F.eyeMat) F.eyeMat.opacity = 0.75 + 0.25 * Math.sin(t * 3);
+    if (F.adm && typeof OCA !== 'undefined' && OCA.T) {
+      OCA.T.value = reduceMotion ? 0 : (performance.now() / 1000) % 600; OCA.H.value = G3.r.domElement.height * 0.5;
+      g.updateMatrixWorld(); F.ocaR.value.copy(g.matrixWorld).invert(); F.ocaO.value = 1;
+      const v = OCA.v.set(cam.position.x - g.position.x, 0, cam.position.z - g.position.z), l = v.length() || 1;
+      v.multiplyScalar(-0.22 / l).applyQuaternion(OCA.q.copy(g.quaternion).invert());
+      F.halo.position.set(0.22 + v.x, 1.66, v.z); F.halo.quaternion.copy(OCA.q).multiply(cam.quaternion);
+    } else if (F.halo) { g.updateMatrixWorld(); F.halo.quaternion.copy(g.quaternion).invert().multiply(cam.quaternion); F.halo.material.opacity = 0.3 + 0.2 * Math.sin(t * 1.6); }
+    if (F.vy && typeof vyPose === 'function') vyPose(F, { t, op: 1 });
+  }
+  if (C) {
+    const o = C.k, pulse = !o ? 0 : o.fx === 'shimmer' ? 0.2 + 0.15 * Math.sin(t * 2.4) : o.fx === 'glow' ? 0.55 + 0.35 * Math.sin(t * 2) : o.fx === 'aura' ? 0.7 + 0.25 * Math.sin(t * 2.6) : 0;
+    for (const m of C.glow) m.emissiveIntensity = pulse;
+    if (C.lamp) C.lamp.opacity = 0.75 + 0.25 * Math.sin(t * (o.style === 'lantern' ? 7 : 3)) * (o.style === 'lantern' ? Math.sin(t * 2.3) : 1);
+    if (C.beam) C.beam.rotation.y = reduceMotion ? 0.6 : t * 1.4;
+    if (C.halo) { C.halo.parent.updateMatrixWorld(); const q = new THREE.Quaternion(); C.halo.parent.getWorldQuaternion(q); C.halo.quaternion.copy(q.invert().multiply(cam.quaternion)); C.halo.material.opacity = 0.35 + 0.35 * pulse; }
+    if (C.bubbles && g.visible && C.halo && !reduceMotion && Math.random() < 0.5) { const p = C.halo.getWorldPosition(new THREE.Vector3()); gdSpark(p.x + (Math.random() - 0.5) * 0.12, p.y, p.z + (Math.random() - 0.5) * 0.12, 0, 0.35 + Math.random() * 0.3, 0, '#9affe6', 1.4); }
+  }
+}
+
+// ---------- sparks: a few points of light that drift and fade (the ball's sparks, the trident's bubbles) ----------
+function gdSparks() {
+  if (GD.sp) return GD.sp;
+  const N = 90, g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(N * 3), 3)); g.setAttribute('color', new THREE.BufferAttribute(new Float32Array(N * 3), 3));
+  const pts = new THREE.Points(g, new THREE.PointsMaterial({ size: 0.09, map: gdSoft(), vertexColors: true, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, sizeAttenuation: true }));
+  pts.frustumCulled = false; G3.scene.add(pts);
+  GD.sp = { pts, N, p: [], c: new THREE.Color() };
+  for (let i = 0; i < N; i++) GD.sp.p.push({ x: 0, y: -999, z: 0, vx: 0, vy: 0, vz: 0, life: 0, max: 1, col: new THREE.Color() });
+  return GD.sp;
+}
+function gdSpark(x, y, z, vx, vy, vz, col, life) {
+  const S = gdSparks(), q = S.p[GD.spI = (GD.spI + 1) % S.N];
+  Object.assign(q, { x, y, z, vx, vy, vz, life: life || 0.8, max: life || 0.8 }); q.col.set(col);
+}
+function gdSparksFrame(dt) {
+  const S = GD.sp; if (!S) return;
+  const pa = S.pts.geometry.attributes.position, ca = S.pts.geometry.attributes.color;
+  S.p.forEach((q, i) => {
+    if (q.life > 0) { q.life -= dt; q.x += q.vx * dt; q.y += q.vy * dt; q.z += q.vz * dt; q.vy -= dt * 0.2; }
+    const f = Math.max(0, q.life / q.max);
+    pa.setXYZ(i, q.x, q.life > 0 ? q.y : -999, q.z); ca.setXYZ(i, q.col.r * f, q.col.g * f, q.col.b * f);
+  });
+  pa.needsUpdate = ca.needsUpdate = true;
+}
+
+// ---------- the ball ----------
+function gdBallLook(id) {
+  const b = gkBall(id), B = G3.ball;
+  for (const c of B.children.slice()) { B.remove(c); c.traverse(o => { if (o.geometry && !o.userData.keep) o.geometry.dispose(); if (o.material && o.material.map && o.material.map !== GD.soft) o.material.map.dispose(); if (o.material) o.material.dispose(); }); }
+  GD.core = null; GD.orb = null; GD.bhalo = null; GD.bbeam = null; GD.cv = null; GD.tex = null;
+  B.material.visible = !b;
+  G3.trail.material.color.set(b && b.trail ? b.trail : '#ffffff'); G3.trail.material.opacity = b && b.trail ? 0.8 : 0.55;
+  GD.ball = b; GD.ballKey = id;
+  if (!b) return;
+  if (b.adm === 'verity' && typeof rvGeo === 'function') {
+    const Q = rvGeo(), yellow = new THREE.MeshPhongMaterial({ color: 0xe8d41a, emissive: 0x4a4000, specular: 0x605010, shininess: 28 });
+    const orb = rvOrb(Q, yellow, new THREE.MeshBasicMaterial({ color: 0x060504, side: THREE.DoubleSide }), new THREE.MeshLambertMaterial({ color: 0xf0e070, emissive: 0x302808, side: THREE.DoubleSide }));
+    const s = 0.1; orb.o.scale.setScalar(s); orb.o.position.y = -RVO.Y * s; orb.o.traverse(o => { if (o.geometry) o.userData.keep = true; });
+    B.add(orb.o); GD.orb = orb; GD.orbY = yellow;
+  } else {
+    const cv = GD.cv = document.createElement('canvas'); cv.width = 256; cv.height = 128; gkPaintBall(cv.getContext('2d'), b, 256, 128, 0);
+    const tex = GD.tex = new THREE.CanvasTexture(cv); if (THREE.SRGBColorSpace) tex.colorSpace = THREE.SRGBColorSpace;
+    const glow = b.fx === 'glow' || b.fx === 'aura';
+    const m = new THREE.MeshPhongMaterial({ map: tex, shininess: 60, specular: 0x444444, emissive: glow ? 0xffffff : 0x333333, emissiveMap: glow ? tex : null, emissiveIntensity: glow ? 0.6 : 0.25 });
+    if (!glow) { m.emissiveMap = tex; m.emissive.set(0x555555); }
+    GD.core = new THREE.Mesh(new THREE.SphereGeometry(0.07, 22, 16), m); B.add(GD.core);
+  }
+  if (b.fx === 'glow' || b.fx === 'aura') { GD.bhalo = new THREE.Mesh(new THREE.PlaneGeometry(0.5, 0.5), gdAdd(b.glow)); GD.bhalo.material.opacity = 0.6; B.add(GD.bhalo); }
+  if (b.adm === 'light') {
+    const beam = GD.bbeam = gdBeam(2.6, 0.26, 0.35); B.add(beam);
+  }
+}
+function gdBallFrame(dt, t) {
+  const B = G3.ball, b = GD.ball, cam = G3.cam;
+  const p = B.position, last = GD.last || (GD.last = p.clone()), d = p.clone().sub(last), m = d.length(); GD.last.copy(p);
+  if (!b) return;
+  // it turns as it goes (not leaping across a new hole's start)
+  if (GD.core && m > 1e-4 && m < 5) { const ax = new THREE.Vector3(d.z, 0, -d.x); if (ax.lengthSq() > 1e-10) { ax.normalize(); GD.core.rotateOnWorldAxis(ax, m / 0.07); } }
+  if (GD.core && GD.cv && (b.fx === 'shimmer' || b.adm || b.pat === 'wisp') && !reduceMotion && (GD.tick = (GD.tick || 0) + 1) % 2 === 0) { gkPaintBall(GD.cv.getContext('2d'), b, 256, 128, t); GD.tex.needsUpdate = true; }
+  const pulse = b.fx === 'shimmer' ? 0.3 + 0.15 * Math.sin(t * 2.2) : b.fx === 'glow' ? 0.6 + 0.35 * Math.sin(t * 2) : b.fx === 'aura' ? 0.75 + 0.25 * Math.sin(t * 2.6) : 0.25;
+  if (GD.core && (b.fx === 'glow' || b.fx === 'aura')) GD.core.material.emissiveIntensity = pulse;
+  if (GD.bhalo) { GD.bhalo.quaternion.copy(cam.quaternion); GD.bhalo.material.opacity = 0.35 + 0.35 * pulse; }
+  if (GD.bbeam) GD.bbeam.rotation.y = reduceMotion ? 0.6 : t * 1.3;
+  if (GD.orb) {
+    const o = GD.orb; o.o.rotation.y = Math.atan2(-(cam.position.x - p.x), -(cam.position.z - p.z));
+    const bl = typeof vyBlink === 'function' ? vyBlink(t, 0) : 1; for (const e of o.eyes) e.scale.y = 0.1 * bl;
+    o.face.scale.x = 1 + 0.08 * Math.sin(t * 1.7); o.body.rotation.z = Math.sin(t * 0.9) * 0.1;
+    GD.orbY.emissive.setRGB(0.24 + 0.08 * Math.sin(t * 2.2), 0.2 + 0.07 * Math.sin(t * 2.2), 0);
+  }
+  // sparks off it as it flies, on the Mate grades and up (and a few round it at rest on the Admirals')
+  if (B.visible && !reduceMotion && (b.fx || b.adm)) {
+    const moving = m > 0.02 && m < 5, n = moving ? (b.adm ? 3 : b.fx === 'glow' ? 2 : 1) : (b.adm && Math.random() < 0.25 ? 1 : 0);
+    for (let i = 0; i < n; i++) { const a = Math.random() * 6.283, r = 0.05 + Math.random() * 0.06; gdSpark(p.x + Math.cos(a) * r, p.y + Math.sin(a) * r * 0.6, p.z + Math.sin(a) * r, (Math.random() - 0.5) * 0.4, 0.15 + Math.random() * 0.4, (Math.random() - 0.5) * 0.4, Math.random() < 0.5 ? b.glow || b.trail : '#ffffff', moving ? 0.9 : 1.2); }
+  }
+}
+
+// ---------- each frame, put onto the view's own ----------
+function gdApply() {
+  const p = gfPlayer(), lk = GD.look = gdLookFor(p), key = lk.oc + '|' + lk.club;
+  if (!G3.golfer.userData.gdKey) { G3.golfer.userData.gdKey = '|plain'; GD.cache.set('|plain', G3.golfer); }
+  const want = key === '|' ? '|plain' : key;
+  if (G3.golfer.userData.gdKey !== want) {
+    let g = GD.cache.get(want);
+    if (!g) { g = gdGolfer(lk.oc, lk.club); g.userData.gdKey = want; GD.cache.set(want, g); if (GD.cache.size > 10) { const [k0, g0] = GD.cache.entries().next().value; if (k0 !== '|plain') { GD.cache.delete(k0); if (g0 !== G3.golfer) gf3dDispose(g0); } } }
+    g.visible = G3.golfer.visible; G3.scene.remove(G3.golfer); G3.scene.add(g); G3.golfer = g;
+  }
+  if (GD.ballKey !== lk.ball) gdBallLook(lk.ball);
+}
+function gdFrame(dt) {
+  const t = reduceMotion ? 0 : (GD.t += dt);
+  if (G3.golfer.visible) gdGolferFrame(G3.golfer, t);
+  gdBallFrame(dt, t);
+  gdSparksFrame(dt);
+}
+if (typeof gf3dDraw === 'function') {
+  const o = gf3dDraw; gf3dDraw = function () { try { if (G3.ok && GF.H) gdApply(); } catch (e) { console.error(e); } return o.apply(this, arguments); };
+  const c = gf3dCamera; gf3dCamera = function (dt) { const r = c.apply(this, arguments); try { if (G3.ok) gdFrame(dt || 0); } catch (e) { console.error(e); } return r; };
+}
+
 // ---- src/menudesk.js ----
 // The main menu on a desktop or any wide screen (style.css, "the desk menu"): a list of the seven games down the left,
 // the chosen game's card in full in the middle, and the scoreboard on the right (or under the list, on a narrower
@@ -56174,5 +57053,7 @@ requestAnimationFrame(frame);
 <!-- [golf] the screen over the 3D view, the scorecard -->
 <!-- [golf] the 3D view -->
 <!-- [golf] played together -->
+<!-- [golf] ball and club crates -->
+<!-- [golf] the golfer, ball and clubs dressed -->
 </body>
 </html>
