@@ -6,6 +6,8 @@
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 190, date: '2026-11-13', title: "Skerry Links: one beam", Changes: [
+    "Skerry Links: Skerry Light now throws a single beam, turning once every ten seconds." ] },
   { v: 189, date: '2026-11-13', title: "Skerry Links: from midday to night, and the Light", New: [
     "Skerry Links: the round now runs through the day. The 1st is played at midday, the sun drops hole by hole, the 6th is played at sunset, and the 7th, 8th and 9th by moonlight under the stars.",
     "Skerry Links: Skerry Light stands off in the distance from every hole, on its rock out at sea (or on a far hill from the inland holes). By day its lamp is dark. From sunset it turns, its two beams sweeping round with a flash as one swings towards you, and the keeper's window is lit.",

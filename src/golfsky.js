@@ -2,7 +2,7 @@
 // Skerry Links: the time of day and the lighthouse.
 // The round runs from midday on the 1st to night on the 7th, 8th and 9th: each hole has its own light (gfTod), the sun
 // lower and warmer hole by hole, a sunset on the 6th, then the moon and the stars. Off in the distance stands Skerry
-// Light on its rock, white with two red bands. By day its lamp is dark; from sunset on it turns, two beams sweeping
+// Light on its rock, white with two red bands. By day its lamp is dark; from sunset on it turns, its one beam sweeping
 // round, and ships with their lanterns lit come in along the channel it marks, keeping well outside the skerries
 // (a reef of black rocks further out). Each hole is its own frame, so the lighthouse is set for each: out to sea in
 // the direction nearest a little right of the line of play, or, on the inland holes, on high ground far off.
@@ -45,14 +45,14 @@ function gfSkyInit() {
   const ck = new THREE.Mesh(new THREE.BoxGeometry(11, 5, 7), M(0xe4ddcc)); ck.position.set(13, 6.5, 4); lh.add(ck);
   const rf = new THREE.Mesh(new THREE.ConeGeometry(7.2, 3.6, 4), M(0x5a3a30)); rf.rotation.y = Math.PI / 4; rf.scale.set(1.1, 1, 0.75); rf.position.set(13, 10.8, 4); lh.add(rf);
   G3.cottageWin = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 1.4), new THREE.MeshBasicMaterial({ color: 0x3a3a3a, fog: false })); G3.cottageWin.position.set(13, 6.6, 7.55); lh.add(G3.cottageWin);
-  // the beams: two long cones of light from the lantern, brightest at the lamp and fading out along their length
+  // the beam: one long cone of light from the lantern, brightest at the lamp and fading out along their length
   const BL = 900, bg = new THREE.ConeGeometry(30, BL, 20, 1, true); bg.translate(0, -BL / 2, 0); bg.rotateZ(Math.PI / 2);
   const bm = G3.beamMat = new THREE.ShaderMaterial({ transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, fog: false,
     uniforms: { k: { value: 0 }, L: { value: BL } },
     vertexShader: 'uniform float L; varying float a; void main(){ a = clamp(position.x / L, 0.0, 1.0); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
     fragmentShader: 'uniform float k; varying float a; void main(){ float v = pow(1.0 - a, 2.2) * 0.42 * k; gl_FragColor = vec4(vec3(1.0, 0.93, 0.72) * v, 1.0); }' });
   const beams = G3.beams = new THREE.Group(); beams.position.y = 47;
-  for (const r of [0, Math.PI]) { const b = new THREE.Mesh(bg, bm); b.rotation.y = r; b.rotation.z = -0.025; beams.add(b); }
+  { const b = new THREE.Mesh(bg, bm); b.rotation.z = -0.025; beams.add(b); }
   lh.add(beams);
   // the lamp's glow, and its flash as a beam comes round towards you
   const gc = document.createElement('canvas'); gc.width = gc.height = 64; { const x = gc.getContext('2d'), g = x.createRadialGradient(32, 32, 0, 32, 32, 32); g.addColorStop(0, 'rgba(255,250,225,1)'); g.addColorStop(0.25, 'rgba(255,225,150,0.6)'); g.addColorStop(1, 'rgba(255,200,120,0)'); x.fillStyle = g; x.fillRect(0, 0, 64, 64); }
@@ -149,12 +149,12 @@ function gfSkyHole(H) {
 // ---------- every frame ----------
 function gfSkyTick(dt, t) {
   if (!G3.lh) return;
-  // the light turns once in twelve seconds; its flash as a beam swings round to face you
+  // the light turns once in ten seconds; its flash as the beam swings round to face you
   const on = !!G3.beamOn; G3.beams.visible = on; G3.beamMat.uniforms.k.value = on ? 1 : 0;
   if (on) {
-    G3.beams.rotation.y = -t * Math.PI * 2 / 12;
+    G3.beams.rotation.y = -t * Math.PI * 2 / 10;
     const lp = G3.lh.position, dx = G3.cam.position.x - lp.x, dz = G3.cam.position.z - lp.z, dl = Math.hypot(dx, dz) || 1, ba = G3.lh.rotation.y + G3.beams.rotation.y;
-    let face = 0; for (const off of [0, Math.PI]) { const r = ba + off, c = (Math.cos(r) * dx - Math.sin(r) * dz) / dl; face = Math.max(face, Math.pow(Math.max(0, c), 60)); }
+    const face = Math.pow(Math.max(0, (Math.cos(ba) * dx - Math.sin(ba) * dz) / dl), 60);
     const far = Math.max(0.35, Math.min(1.2, dl / 900)); G3.glow.visible = true; G3.glow.scale.setScalar((30 + face * 240) * far);
   } else G3.glow.visible = false;
   // the ships work their way in along the route, round and round
