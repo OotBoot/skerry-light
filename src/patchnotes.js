@@ -6,6 +6,9 @@
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 182, date: '2026-11-13', title: "The Original: ships find their way home", Fixes: [
+    "The Original: ships no longer run onto the shore beside the harbour. They now line up and come into the harbour mouth from above, and give the shore and the lighthouse rock a wide berth, lit or not.",
+    "The Original: a ship you've lit now properly avoids every rock you've shown her. Instead of swerving at the last moment, she plots a course to the harbour round all the rocks she remembers and sails it, and plots again each time you show her a new one." ] },
   { v: 181, date: '2026-11-13', title: "New: The Original", New: [
     "The Original: Skerry Light as it began, remade as a flat 2D game for one. Find it in its own Featured spot at the very top of the main menu.",
     "The Original: you are the keeper. Ships stand in for the harbour through the skerries and can't see the rocks, so swing the lighthouse beam to show them. A ship remembers the rocks you light for as long as her ring holds any light; let it run dry and she forgets them all.",
