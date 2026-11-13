@@ -412,7 +412,10 @@ function znHostSend() {
   // the drowned, one entry each under its id (base 36), so a patch carries only those that moved or changed:
   //   z  x.y.jz.h.state.swing.flags.scorch     zs  kind.window.seed (what doesn't change), each in base 36
   z.z = {}; z.zs = {};
-  for (const q of ZM.z.filter(q => !q.gone).slice(0, 40)) {
+  // (the living first, every one of them, and then the fallen of the last moments as room allows: in a crab round with
+  //  four of you there are thirty crabs up at once and a dozen just fallen, and a flat forty cut off the newest living)
+  const live = ZM.z.filter(q => !q.gone && !q.dead), fell = ZM.z.filter(q => !q.gone && q.dead);
+  for (const q of live.concat(fell.slice(0, Math.max(0, 48 - live.length)))) {
     const id = zb36(q.zn);
     z.z[id] = [(q.x - CX) * 10 + 9000, (q.y - CY) * 10 + 9000, (q.jz || 0) * 10, (((q.h % TAU) + TAU) % TAU) * 100, ZN_ST[q.st] | 0, q.swing < 0 ? 0 : q.swing * 100 + 1,
       (q.dead ? 1 : 0) | (q.burn ? 2 : 0) | (q.head ? 4 : 0) | (q.walk ? 8 : 0) | (q.mark > 0 ? 16 : 0), (q.scorch || 0) * 9].map(zb36).join('.');

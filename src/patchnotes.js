@@ -6,6 +6,8 @@
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 177, date: '2026-11-13', title: "Keeper's Last Light: every crab shows in co-op", Fixes: [
+    "Keeper's Last Light: in a crab round with three or four players, some crabs could be invisible to everyone but the host. Every living crab now shows on every screen." ] },
   { v: 176, date: '2026-11-12', title: "New game: Freebooters' Sea", New: [
     "Freebooters' Sea: a new open-ended game for one to four players, with its own card on the title screen and its own lobby. Crew the keeper's cutter on the Wide Water, a big open sea of twelve islands and the outpost of Saltcote, and sail wherever you like for as long as you like.",
     "Freebooters' Sea: drop anchor off any island and go ashore. Pick up what's lying about, carry it back to the landing boat to stow it in the hold, and sell the hold at the factor's table in Saltcote for sovereigns shared by the crew.",
