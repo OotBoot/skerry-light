@@ -14,6 +14,8 @@
 //          ends won, lost in the fog or sunk; left before then is incomplete)
 //   fbsea   s: sovereigns banked in the session   b: voyages done in it   c: sovereigns banked in all, as it stood
 //          (src/fbkeep.js; it ends when you leave it, so it's never incomplete)
+//   golf    s: 200 less the round's score to par (0 until the ninth hole's done)   b: holes played   c: birdies or better
+//          (src/golf.js; a full round of nine only; left before the ninth is incomplete)
 // Your own games are kept on this device too (`skerry-runs`, your best 25 of each and the one under way).
 //
 // Below, from before: your bests, kept in your save (they're no longer what the board shows, but the boards from
@@ -60,6 +62,9 @@ const BOARD = {
     // [fbsea] src/fbkeep.js
     fbsea: { name: 'Freebooters’ Sea', s: 'Banked', b: 'Voyages', c: 'In all', what: 'Each session on the Wide Water: the sovereigns banked in it, the voyages done, and the sovereigns banked in all.',
       fs: v => boardSov(v), fc: v => boardSov(v) },
+    // [golf] src/golf.js: s is 200 less the round to par (so the lowest round ranks first), shown as strokes and to par
+    golf: { name: 'Skerry Links', s: 'Round', b: 'Holes', c: 'Birdies', what: 'Each round of nine on the cliffs: the score (and to par), the holes played, and the birdies or better.',
+      fs: v => v > 0 ? `${GF_PAR + 200 - v} (${(t => t === 0 ? 'E' : t > 0 ? '+' + t : '−' + -t)(200 - v)})` : '—' },
   },
   open: {}, mine: null, via: null, db: null, user: null, uid: null, data: null, loading: false, err: '', lastT: 0, sendT: 0, store: '',
 };
@@ -157,7 +162,7 @@ function boardName() {
 }
 
 // ---------- your username: one for every game, kept on this device ----------
-const NICK_BOXES = ['nick', 'fpsNick', 'zmNick', 'rdNick', 'boardName'];
+const NICK_BOXES = ['nick', 'fpsNick', 'zmNick', 'rdNick', 'boardName', 'gfNick0'];
 // Maren's End's best time, from its s (100000 less the seconds)
 // [fbsea] sovereigns, short enough for a phone's column: 980, 12.4k, 3.1m
 function boardSov(v) { v = Math.max(0, v | 0); return v < 10000 ? v.toLocaleString('en') : v < 1e6 ? (Math.floor(v / 100) / 10).toFixed(v < 1e5 ? 1 : 0).replace(/\.0$/, '') + 'k' : (Math.floor(v / 1e5) / 10).toFixed(1).replace(/\.0$/, '') + 'm'; }
@@ -366,6 +371,7 @@ function boardRender() {
     }
     box.append(sec);
   }
+  if (typeof gfBoardRender === 'function') gfBoardRender();   // [golf] the course's own leaderboard, on its card
   // what the asterisk means, under the board while there's one on it
   if ($('boardKey')) $('boardKey').hidden = !anyInc;
   $('boardNameRow').hidden = BOARD.via === 'claude';

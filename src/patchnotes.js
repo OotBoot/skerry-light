@@ -6,6 +6,15 @@
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 183, date: '2026-11-13', title: "New game: Skerry Links", New: [
+    "Skerry Links: a new game of golf, with its own card on the main menu. Nine holes along the headland, par 36, laid out after the front nine at Pebble Beach: in from the gate, down to the cove, then out along the cliffs to the little par 3 on the point and over the chasm on the 8th.",
+    "Skerry Links: pick a club (driver down to sand wedge, each showing its carry), aim left and right, and time the swing meter: once to start, once to set the power (past 100% is an overswing), once more on the strike line. Early hooks it, late slices it.",
+    "Skerry Links: wind on every hole, bounces and roll that depend on where the ball lands, trees that catch it, the sea and a creek that cost a stroke, and quick, sloping greens with arrows showing which way they fall. The putter's meter is a length, with a scale to suit the putt.",
+    "Skerry Links: play alone, with up to four taking turns on one screen, or online with up to four (Host a round on its card, or Share invite). Choose all nine holes or three at a time, the wind, and a gentler swing meter.",
+    "Skerry Links: a scorecard after every hole (Tab or Y any time), your best round kept on the card, and its own column on the Scoreboard: full rounds of nine, lowest first, with holes played and birdies. The card shows the top five rounds.",
+    "Skerry Links: keyboard, mouse, touch buttons and controller all work. The map in the corner shows the whole hole, and M shows it from above." ], Changes: [
+    "Main menu: Skerry Links is game 8 on the desk menu (press 8), with its own banner on phones." ], Sound: [
+    "Skerry Links: the strike, the putt, the ball landing on turf, green or sand, the rattle in the cup, a splash in the sea, applause for a birdie, and the sea below the cliffs, all following your volume setting." ] },
   { v: 182, date: '2026-11-13', title: "The Original: ships find their way home", Fixes: [
     "The Original: ships no longer run onto the shore beside the harbour. They now line up and come into the harbour mouth from above, and give the shore and the lighthouse rock a wide berth, lit or not.",
     "The Original: a ship you've lit now properly avoids every rock you've shown her. Instead of swerving at the last moment, she plots a course to the harbour round all the rocks she remembers and sails it, and plots again each time you show her a new one." ] },

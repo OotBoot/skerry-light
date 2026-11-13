@@ -21,10 +21,12 @@ function frame(now) {
   const dt = Math.min(0.05, (now - last) / 1000); last = now;
   try {
     // Wreckers' Night runs its own loop (and the menu cursor never stays over a game)
-    if (state === 'fps' || state === 'war') hideCursor();
+    if (state === 'fps' || state === 'war' || state === 'golf') hideCursor();
     if (state === 'fps') { fpsFrame(dt); requestAnimationFrame(frame); return; }
     // and so does The Drowned Reach
     if (state === 'war') { warFrame(dt); requestAnimationFrame(frame); return; }
+    // and so does Skerry Links (src/golf.js)
+    if (state === 'golf') { gfFrame(dt); requestAnimationFrame(frame); return; }
     pollPad(dt);
     // paused: nothing moves, but the scene is still drawn under the pause card
     if (paused) { drawScene(); requestAnimationFrame(frame); return; }

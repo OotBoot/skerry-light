@@ -1304,6 +1304,87 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 .origwrap { position: fixed; inset: 0; z-index: 9000; background: #050b16; }
 .origwrap[hidden] { display: none; }
 .origwrap iframe { display: block; width: 100%; height: 100%; border: 0; }
+
+/* Skerry Links (src/golf.js): its banner and card on the menu, the screen over its 3D view, and the scorecard */
+.newgame.gfbanner { border-color: rgba(143,194,106,0.55); background: linear-gradient(90deg, rgba(120,170,90,0.28), rgba(120,170,90,0.08)); }
+.newgame.gfbanner:hover, .newgame.gfbanner:focus-visible { background: linear-gradient(90deg, rgba(120,170,90,0.42), rgba(120,170,90,0.16)); }
+.newgame.gfbanner .ng-tag { background: #7fb25a; color: #0e1a08; }
+.gfcard h1 { color: #b6df8e; }
+.gfopts { display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: 8px 14px; font-family: var(--log); font-size: 13px; color: var(--muted); }
+.gfopts label { display: flex; flex-direction: column; gap: 4px; }
+.gfopts select { font: inherit; color: var(--ink); background: rgba(8,12,22,0.9); border: 1px solid var(--rule); padding: 6px 8px; }
+.gfnames { display: flex; flex-direction: column; gap: 6px; }
+.gfboard h2 { font-family: var(--display); font-weight: 400; font-size: 1.2rem; margin: 0 0 6px; color: #b6df8e; }
+.gfleaders { list-style: none; margin: 0; padding: 0; font-family: var(--log); font-size: 13px; }
+.gfleaders li { display: flex; gap: 10px; padding: 4px 0; border-bottom: 1px solid var(--rule); }
+.gfleaders li.me { color: var(--lamp); }
+.gfleaders li.empty { color: var(--muted); }
+.gfleaders .rk { width: 1.5em; color: var(--muted); }
+.gfleaders .nm { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#gfUI { position: fixed; inset: 0; z-index: 30; font-family: var(--log); color: var(--ink); -webkit-user-select: none; user-select: none; touch-action: none; }
+#gfCv { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+#gfUI .gf-top, #gfUI .gf-who, #gfUI .gf-lie, #gfUI .gf-msg, #gfUI .gf-turn, #gfMap { pointer-events: none; }
+.gf-top { position: absolute; top: max(10px, env(safe-area-inset-top, 0px)); left: 12px; right: 12px; display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+.gf-hole, .gf-who, .gf-lie, .gf-wind { background: rgba(8,12,22,0.72); border: 1px solid rgba(236,228,207,0.16); padding: 8px 12px; }
+.gf-hole b { display: block; font-family: var(--display); font-weight: 400; font-size: 1.6rem; color: #b6df8e; line-height: 1; }
+.gf-hole span { display: block; font-family: var(--body); font-size: 15px; margin-top: 2px; }
+.gf-hole small, .gf-who small, .gf-wind small { display: block; color: var(--muted); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; }
+.gf-wind { display: flex; flex-direction: column; align-items: center; padding: 6px 8px; margin-right: 168px; }
+.gf-wind canvas { width: 56px; height: 56px; }
+.gf-wind b { font-size: 14px; color: var(--lamp); }
+#gfMap { position: absolute; top: max(10px, env(safe-area-inset-top, 0px)); right: 12px; width: 156px; height: 230px; border: 1px solid rgba(236,228,207,0.22); background: rgba(8,12,22,0.6); }
+.gf-who { position: absolute; top: 108px; left: 12px; }
+.gf-who b { display: block; font-family: var(--display); font-weight: 400; font-size: 1.3rem; }
+.gf-who span { display: block; font-size: 14px; }
+.gf-lie { position: absolute; right: 12px; top: 252px; text-align: right; }
+.gf-lie b { display: block; font-size: 16px; color: var(--lamp); }
+.gf-lie span { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
+.gf-msg { position: absolute; left: 50%; top: 32%; transform: translate(-50%, -50%); font-family: var(--display); font-size: clamp(1.2rem, 2.8vw, 2.2rem); color: #fff6d8; text-shadow: 0 2px 12px rgba(0,0,0,0.75); text-align: center; opacity: 0; transition: opacity 0.4s; max-width: 90vw; }
+.gf-msg.on { opacity: 1; }
+.gf-turn { position: absolute; left: 50%; top: 14px; transform: translateX(-50%); background: rgba(8,12,22,0.78); border: 1px solid rgba(255,216,138,0.5); padding: 6px 14px; color: var(--lamp); font-size: 14px; }
+.gf-pad { position: absolute; left: 0; right: 0; bottom: max(10px, env(safe-area-inset-bottom, 0px)); display: grid; grid-template-columns: 1fr minmax(260px, 380px) 1fr; grid-template-rows: auto auto auto; align-items: end; gap: 6px 12px; padding: 0 12px; pointer-events: none; }
+.gf-pad > * { pointer-events: auto; }
+.gf-club { grid-column: 1; grid-row: 1 / 3; justify-self: start; display: flex; flex-direction: column; align-items: stretch; gap: 4px; background: rgba(8,12,22,0.72); border: 1px solid rgba(236,228,207,0.16); padding: 6px; min-width: 150px; }
+.gf-cname { text-align: center; padding: 2px 4px; }
+.gf-cname b { display: block; font-family: var(--display); font-weight: 400; font-size: 1.25rem; color: var(--lamp); }
+.gf-cname small { color: var(--muted); font-size: 12px; }
+.gf-putt { grid-column: 1; grid-row: 3; justify-self: start; display: flex; align-items: center; gap: 8px; background: rgba(8,12,22,0.72); border: 1px solid rgba(236,228,207,0.16); padding: 4px 8px; font-size: 13px; }
+#gfMeter { grid-column: 3; grid-row: 1 / 4; justify-self: end; width: min(100%, 340px); height: 180px; pointer-events: none; margin-bottom: 34px; }
+.gf-aim { grid-column: 2; grid-row: 2; align-self: end; display: flex; gap: 8px; justify-content: center; }
+.gf-hint { grid-column: 2; grid-row: 3; margin: 0; text-align: center; font-size: 12px; color: var(--muted); text-shadow: 0 1px 4px #000; pointer-events: none; }
+.gfbtn { font: inherit; font-size: 18px; color: var(--ink); background: rgba(8,12,22,0.82); border: 1px solid rgba(236,228,207,0.3); padding: 8px 14px; cursor: pointer; min-width: 48px; touch-action: none; }
+.gfbtn:hover, .gfbtn:focus-visible { border-color: var(--lamp); color: var(--lamp); outline: none; }
+.gfbtn:disabled { opacity: 0.4; }
+.gfbtn.sm { font-size: 13px; padding: 6px 10px; min-width: 0; }
+.gfbtn.swing { min-width: 120px; background: rgba(120,170,90,0.85); color: #0e1a08; border-color: #b6df8e; font-family: var(--display); font-size: 1.3rem; }
+.gf-tools { position: absolute; right: 12px; bottom: max(10px, env(safe-area-inset-bottom, 0px)); display: flex; gap: 6px; z-index: 2; }
+.gfcardov .card { max-width: min(46rem, 100%); }
+.gfc-wrap { overflow-x: auto; }
+.gfc { border-collapse: collapse; width: 100%; font-family: var(--log); font-size: 13px; text-align: center; }
+.gfc th, .gfc td { border: 1px solid var(--rule); padding: 5px 4px; min-width: 1.9em; }
+.gfc th { text-align: left; font-weight: 400; color: var(--muted); white-space: nowrap; max-width: 8em; overflow: hidden; text-overflow: ellipsis; }
+.gfc .gfc-h td { color: #b6df8e; } .gfc .gfc-y td, .gfc .gfc-p td { color: var(--muted); }
+.gfc .gfc-pl td { font-size: 15px; }
+.gfc td.gfc-birdie { box-shadow: inset 0 0 0 2px #b6df8e; border-radius: 50%; color: #b6df8e; }
+.gfc td.gfc-eagle { box-shadow: inset 0 0 0 2px #ffd88a, inset 0 0 0 4px rgba(0,0,0,0.6), inset 0 0 0 6px #ffd88a; border-radius: 50%; color: var(--lamp); }
+.gfc td.gfc-bogey { box-shadow: inset 0 0 0 1px #c9a07a; color: #e6c09a; }
+.gfc td.gfc-double { box-shadow: inset 0 0 0 1px #e46c4f, inset 0 0 0 3px rgba(0,0,0,0.6), inset 0 0 0 4px #e46c4f; color: #f09a80; }
+#gfUI .overlay { position: absolute; z-index: 40; }
+@media (max-width: 720px) {
+  .gf-wind { margin-right: 0; position: absolute; right: 0; top: 152px; }
+  #gfMap { width: 96px; height: 140px; }
+  .gf-who { top: 96px; }
+  .gf-lie { top: 258px; }
+  .gf-hole b { font-size: 1.3rem; } .gf-hole span { font-size: 13px; }
+  .gf-pad { grid-template-columns: 1fr; padding: 0 8px; }
+  .gf-club { grid-column: 1; grid-row: 1; flex-direction: row; align-items: center; justify-self: center; min-width: 0; }
+  .gf-putt { grid-column: 1; grid-row: 2; justify-self: center; }
+  #gfMeter { grid-column: 1; grid-row: 3; height: 120px; justify-self: center; margin-bottom: 0; }
+  .gf-aim { grid-column: 1; grid-row: 4; }
+  .gf-hint { display: none; }
+  .gf-tools { top: auto; bottom: 58px; flex-direction: column; }
+}
+.gfcard { border-color: rgba(143,194,106,0.5); } .gfcard h1 { text-shadow: 0 0 28px rgba(120,170,90,0.4); }
 </style>
 </head>
 <body>
@@ -1375,6 +1456,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
     <button class="newgame rdbanner" id="rdBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">And raids, alone or with up to four: <b>Maren's End</b>, and new, <b>The Gannet's Wake</b></span><span class="ng-go" aria-hidden="true">↓</span></button>
     <button class="newgame frbanner" id="frBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">And <b>Fog Run</b>: sail the keeper's cutter out into the haar and light the islands, alone or with up to four</span><span class="ng-go" aria-hidden="true">↓</span></button>
     <button class="newgame fbbanner" id="fbBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">And <b>Freebooters' Sea</b>: an open sea of islands to sail, salvage and sell, alone or with up to four</span><span class="ng-go" aria-hidden="true">↓</span></button><!-- [fbsea] -->
+    <button class="newgame gfbanner" id="gfBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">And <b>Skerry Links</b>: nine holes of golf along the cliffs, alone or with up to four</span><span class="ng-go" aria-hidden="true">↓</span></button><!-- [golf] -->
     <div class="menulinks"><button class="tool notesbtn" id="notesBtn" type="button">Patch notes</button><button class="tool notesbtn lorebtn" id="loreBtn" type="button">Lore compendium</button></div>
     <div class="card boardcard" id="boardCard" aria-labelledby="boardHead">
       <div class="cardtop"><span class="eyebrow">Best on record · every game</span><span class="boardminititle">The Scoreboard</span><span class="boardbtns"><button class="tool closebtn" id="boardRefresh" type="button">Refresh</button><button class="tool closebtn" id="boardMin" type="button" aria-expanded="true" aria-controls="boardCard" title="Make the scoreboard small">– Minimise</button></span></div>
@@ -1665,6 +1747,96 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
         <p><b>Saltcote.</b> The factor's table on the quay buys everything in the hold for sovereigns, shared by the crew.</p>
         <p><b>Going down.</b> Someone holding Use beside you gets you up. Bleed out and you're back on your feet ten seconds later, aboard or at the landing. If the cutter sinks, you all wash up at Saltcote in a fresh one, and what was in her hold is lost.</p>
       </details>
+    </div>
+    <div class="card zmcard gfcard" id="gfTitle" aria-labelledby="gfHead"><!-- [golf] its own card (src/golf.js) -->
+      <div class="cardtop"><span class="eyebrow">An eighth game · nine holes on the cliffs · alone or up to four</span></div>
+      <h1 id="gfHead">Skerry Links</h1>
+      <p>Before the lamp failed, the keepers laid out nine holes along the headland: in from the gate, down to the cove, then out along the cliffs to the point and home over the chasm. On a still evening you can still play them. Par 36, laid out after the front nine at Pebble Beach.</p>
+      <p class="muted">Pick a club, aim left or right, and time the swing meter: one press to start, one to set the power, and one more as it comes back over the strike line. Mind the wind, read the slopes on the greens, and keep it out of the sea.</p>
+      <div class="gfopts">
+        <label>Players on this screen <select id="gfPlayers"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option></select></label>
+        <label>Holes <select id="gfHolesSel"><option value="all">All nine</option><option value="f3">Holes 1 to 3</option><option value="m3">Holes 4 to 6</option><option value="b3">Holes 7 to 9</option></select></label>
+        <label>Wind <select id="gfWindSel"><option value="calm">Calm</option><option value="breezy" selected>Breezy</option><option value="gusty">Blowing a gale</option></select></label>
+        <label>Swing meter <select id="gfMeterSel"><option value="normal">Normal</option><option value="gentle">Gentle (slower)</option></select></label>
+      </div>
+      <div class="gfnames" id="gfNames">
+        <div class="nickrow" id="gfNameRow0"><label for="gfNick0">Your name</label><input id="gfNick0" type="text" maxlength="16" autocomplete="nickname" placeholder="Golfer"></div>
+        <div class="nickrow" id="gfNameRow1" hidden><label for="gfNick1">Player 2</label><input id="gfNick1" type="text" maxlength="16" placeholder="Player 2"></div>
+        <div class="nickrow" id="gfNameRow2" hidden><label for="gfNick2">Player 3</label><input id="gfNick2" type="text" maxlength="16" placeholder="Player 3"></div>
+        <div class="nickrow" id="gfNameRow3" hidden><label for="gfNick3">Player 4</label><input id="gfNick3" type="text" maxlength="16" placeholder="Player 4"></div>
+      </div>
+      <div class="btnrow">
+        <button class="primary" id="gfPlay" type="button">Tee off</button>
+        <button class="tool" id="gfSettings" type="button">Settings</button>
+      </div>
+      <p class="muted gfbest" id="gfBest"></p>
+      <section class="gfboard" aria-labelledby="gfBoardHead">
+        <h2 id="gfBoardHead">Best rounds</h2>
+        <ol class="gfleaders" id="gfLeaders"></ol>
+      </section>
+      <section class="warmp zmmp" id="gfMp" aria-labelledby="gfMpHead">
+        <h2 id="gfMpHead">Play together online · up to four</h2>
+        <p class="muted" id="gfMpNote">Looking for other players…</p>
+        <div id="gfMpOpen" hidden>
+          <div class="btnrow"><button class="tool" id="gfMpHost" type="button">Host a round</button></div>
+          <div class="warlobbies" id="gfLobbies"></div>
+        </div>
+        <div class="warlobby" id="gfLobby" hidden>
+          <h3 id="gfLobbyHead">Your round</h3>
+          <ol class="warlobbylist" id="gfLobbyList"></ol>
+          <p class="muted" id="gfLobbyMsg"></p>
+          <div class="btnrow"><button class="primary" id="gfMpStart" type="button">Tee off together</button><button class="tool shareBtn" id="gfMpShare" type="button" data-mode="golf">Share invite</button><button class="tool" id="gfMpLeave" type="button">Leave</button></div>
+        </div>
+      </section>
+      <details class="howto">
+        <summary>How to play</summary>
+        <p><b>Clubs.</b> Up and down (W and S, or the ▲ ▼ buttons) change club. Each shows how far it carries at full power from where you lie: the driver 252 yards off the tee, down to the sand wedge's 88. The rough takes some of that away, a bunker more (less with the sand wedge), and the driver off the ground a little. The game picks a club for the distance to start you off.</p>
+        <p><b>Aim.</b> Left and right (A and D, the arrow keys, or the ◀ ▶ buttons; hold Shift to aim finely) turn the line on the ground. The ring is where a full shot comes down in still air. M (or the map button) shows the hole from above, and the map in the corner shows it all.</p>
+        <p><b>The swing.</b> Space, a tap or A on a controller: once to start, once to set the power as the marker climbs, once more as it falls back over the white strike line. Past 100% is an overswing: a few yards more, but the strike gets much harder to time. Early on the line hooks it left, late slices it right.</p>
+        <p><b>Wind.</b> The arrow at the top shows which way it blows as you're looking, and how hard. High shots feel it most. The flag streams with it.</p>
+        <p><b>Putting.</b> On the green you have the putter, and the meter is a length: its scale (10, 20, 40 or 80 feet, Q and E to change) fits the putt. The arrows on the green point downhill, longer and redder where it's steeper. Too fast at the cup and it lips out.</p>
+        <p><b>Trouble.</b> The sea, the creek on the second and anywhere off the course cost a stroke and a drop where it went in. Trees catch the ball. Ten strokes and you pick up.</p>
+        <p><b>Turns and the card.</b> Everyone tees off in turn, the best on the last hole first; after that whoever's furthest from the hole plays. Tab (or Y) shows the scorecard. A full round of nine goes on the scoreboard, under the first player's name on a shared screen.</p>
+      </details>
+    </div>
+  </div>
+
+  <!-- Skerry Links: the 3D view and what's over it (src/golf.js, src/golfhud.js, src/golf3d.js) -->
+  <div id="gfUI" hidden>
+    <canvas id="gfCv"></canvas>
+    <div class="gf-top">
+      <div class="gf-hole"><b id="gfHoleNo">Hole 1</b><span id="gfHoleName"></span><small id="gfHolePar"></small></div>
+      <div class="gf-wind"><canvas id="gfWindCv" width="64" height="64" aria-hidden="true"></canvas><b id="gfWindTxt"></b><small>Wind</small></div>
+    </div>
+    <div class="gf-who"><b id="gfWho"></b><span id="gfStroke"></span><small id="gfTotal"></small></div>
+    <canvas id="gfMap" aria-label="Map of the hole"></canvas>
+    <div class="gf-lie"><b id="gfPinD"></b><span id="gfLie"></span></div>
+    <div class="gf-turn" id="gfTurn" hidden></div>
+    <div class="gf-msg" id="gfMsg" role="status"></div>
+    <div class="gf-pad" id="gfPadBox">
+      <div class="gf-club"><button class="gfbtn" id="gfClubUp" type="button" aria-label="Longer club">▲</button><div class="gf-cname"><b id="gfClubName"></b><small id="gfClubD"></small></div><button class="gfbtn" id="gfClubDn" type="button" aria-label="Shorter club">▼</button></div>
+      <div class="gf-putt" id="gfPuttRow" hidden><button class="gfbtn sm" id="gfPuttDn" type="button" aria-label="Shorter putt scale">−</button><span id="gfPuttScale"></span><button class="gfbtn sm" id="gfPuttUp" type="button" aria-label="Longer putt scale">+</button></div>
+      <canvas id="gfMeter" aria-hidden="true"></canvas>
+      <div class="gf-aim"><button class="gfbtn" id="gfAimL" type="button" aria-label="Aim left">◀</button><button class="gfbtn swing" id="gfSwing" type="button">Swing</button><button class="gfbtn" id="gfAimR" type="button" aria-label="Aim right">▶</button></div>
+      <p class="gf-hint" id="gfHint"></p>
+    </div>
+    <div class="gf-tools"><button class="gfbtn sm" id="gfLookBtn" type="button" title="The hole from above (M)">Map</button><button class="gfbtn sm" id="gfCardBtn" type="button" title="Scorecard (Tab)">Card</button><button class="gfbtn sm" id="gfMenuBtn" type="button" aria-label="Menu" title="Menu (Esc)">☰</button></div>
+    <div class="overlay pausecard gfcardov" id="gfCard" hidden role="dialog" aria-modal="true" aria-labelledby="gfCardHead">
+      <div class="card">
+        <h1 id="gfCardHead">Scorecard</h1>
+        <p class="muted" id="gfCardSub"></p>
+        <div class="gfc-wrap"><table class="gfc" id="gfCardTable"></table></div>
+        <p class="muted" id="gfCardWait" hidden>Waiting for the host to go on.</p>
+        <div class="btnrow"><button class="primary" id="gfCardNext" type="button">Next hole</button><button class="primary" id="gfCardAgain" type="button" hidden>Play again</button><button class="tool" id="gfCardMenu" type="button" hidden>Back to the menu</button></div>
+      </div>
+    </div>
+    <div class="overlay pausecard" id="gfPause" hidden role="dialog" aria-modal="true" aria-labelledby="gfPauseHead">
+      <div class="card">
+        <h1 id="gfPauseHead">Skerry Links</h1>
+        <p class="muted">Play stops while this is open (in a round together, the others carry on).</p>
+        <div class="btnrow"><button class="primary" id="gfResume" type="button">Back to the hole</button><button class="tool" id="gfPauseCard" type="button">Scorecard</button><button class="tool" id="gfLeave" type="button">Leave the round</button></div>
+        <div class="lookrow"><label for="gfVol">Volume <output id="gfVolOut">100%</output></label><input id="gfVol" class="lookslider volslider" type="range" min="0" max="100" step="5" value="100"></div>
+      </div>
     </div>
   </div>
 
@@ -2080,7 +2252,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 // ---- src/config.js ----
 'use strict';
 // The game's version, shown at the top of the main menu. Bump it by one with every change pushed to main.
-var VERSION = 182;
+var VERSION = 183;
 // Skerry Light: tuning, asset paths and lore.
 // World units are metres. The lighthouse stands at the origin on the shoreline (y = 0);
 // north (+y) is open sea. Bearings: 0 = north, positive = east.
@@ -2209,6 +2381,15 @@ const flashK = () => SETTINGS.flashes === 'reduced' ? 0.3 : 1;
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 183, date: '2026-11-13', title: "New game: Skerry Links", New: [
+    "Skerry Links: a new game of golf, with its own card on the main menu. Nine holes along the headland, par 36, laid out after the front nine at Pebble Beach: in from the gate, down to the cove, then out along the cliffs to the little par 3 on the point and over the chasm on the 8th.",
+    "Skerry Links: pick a club (driver down to sand wedge, each showing its carry), aim left and right, and time the swing meter: once to start, once to set the power (past 100% is an overswing), once more on the strike line. Early hooks it, late slices it.",
+    "Skerry Links: wind on every hole, bounces and roll that depend on where the ball lands, trees that catch it, the sea and a creek that cost a stroke, and quick, sloping greens with arrows showing which way they fall. The putter's meter is a length, with a scale to suit the putt.",
+    "Skerry Links: play alone, with up to four taking turns on one screen, or online with up to four (Host a round on its card, or Share invite). Choose all nine holes or three at a time, the wind, and a gentler swing meter.",
+    "Skerry Links: a scorecard after every hole (Tab or Y any time), your best round kept on the card, and its own column on the Scoreboard: full rounds of nine, lowest first, with holes played and birdies. The card shows the top five rounds.",
+    "Skerry Links: keyboard, mouse, touch buttons and controller all work. The map in the corner shows the whole hole, and M shows it from above." ], Changes: [
+    "Main menu: Skerry Links is game 8 on the desk menu (press 8), with its own banner on phones." ], Sound: [
+    "Skerry Links: the strike, the putt, the ball landing on turf, green or sand, the rattle in the cup, a splash in the sea, applause for a birdie, and the sea below the cliffs, all following your volume setting." ] },
   { v: 182, date: '2026-11-13', title: "The Original: ships find their way home", Fixes: [
     "The Original: ships no longer run onto the shore beside the harbour. They now line up and come into the harbour mouth from above, and give the shore and the lighthouse rock a wide berth, lit or not.",
     "The Original: a ship you've lit now properly avoids every rock you've shown her. Instead of swerving at the last moment, she plots a course to the harbour round all the rocks she remembers and sails it, and plots again each time you show her a new one." ] },
@@ -11773,7 +11954,7 @@ for (const id of ['setFov', 'fpsFov']) { const i = $(id); if (i) i.addEventListe
 setTimeout(fovSync, 0);
 // the volume sliders: the Settings card's, the pause card's, the first-person menu's (Wreckers' Night, the Lighthouse,
 // the raids, Freebooters' Sea) and the Drowned Reach's menu are all the one setting, SETTINGS.vol (0 to 1)
-const VOL_SLIDERS = ['setVol', 'pauseVol', 'fpsVol', 'warVol'];
+const VOL_SLIDERS = ['setVol', 'pauseVol', 'fpsVol', 'warVol', 'gfVol'];   // [golf] (and Skerry Links' menu)
 function volSync() {
   const v = Math.round(clamp(SETTINGS.vol == null ? 1 : +SETTINGS.vol || 0, 0, 1) * 100);
   for (const id of VOL_SLIDERS) { const i = $(id), o = $(id + 'Out'); if (i && document.activeElement !== i) i.value = String(v); if (o) o.textContent = v ? v + '%' : 'Off'; }
@@ -12371,6 +12552,7 @@ function onPeersChange(change) {
   checkLaunch();
   if (typeof warNetPeers === 'function') warNetPeers();
   if (typeof zmNetPeers === 'function') zmNetPeers();
+  if (typeof gfNetPeers === 'function') gfNetPeers();   // [golf] Skerry Links' lobby (src/golfnet.js)
 }
 
 // ---------- crew bookkeeping ----------
@@ -50766,6 +50948,8 @@ rcRender();
 //          ends won, lost in the fog or sunk; left before then is incomplete)
 //   fbsea   s: sovereigns banked in the session   b: voyages done in it   c: sovereigns banked in all, as it stood
 //          (src/fbkeep.js; it ends when you leave it, so it's never incomplete)
+//   golf    s: 200 less the round's score to par (0 until the ninth hole's done)   b: holes played   c: birdies or better
+//          (src/golf.js; a full round of nine only; left before the ninth is incomplete)
 // Your own games are kept on this device too (`skerry-runs`, your best 25 of each and the one under way).
 //
 // Below, from before: your bests, kept in your save (they're no longer what the board shows, but the boards from
@@ -50812,6 +50996,9 @@ const BOARD = {
     // [fbsea] src/fbkeep.js
     fbsea: { name: 'Freebooters’ Sea', s: 'Banked', b: 'Voyages', c: 'In all', what: 'Each session on the Wide Water: the sovereigns banked in it, the voyages done, and the sovereigns banked in all.',
       fs: v => boardSov(v), fc: v => boardSov(v) },
+    // [golf] src/golf.js: s is 200 less the round to par (so the lowest round ranks first), shown as strokes and to par
+    golf: { name: 'Skerry Links', s: 'Round', b: 'Holes', c: 'Birdies', what: 'Each round of nine on the cliffs: the score (and to par), the holes played, and the birdies or better.',
+      fs: v => v > 0 ? `${GF_PAR + 200 - v} (${(t => t === 0 ? 'E' : t > 0 ? '+' + t : '−' + -t)(200 - v)})` : '—' },
   },
   open: {}, mine: null, via: null, db: null, user: null, uid: null, data: null, loading: false, err: '', lastT: 0, sendT: 0, store: '',
 };
@@ -50909,7 +51096,7 @@ function boardName() {
 }
 
 // ---------- your username: one for every game, kept on this device ----------
-const NICK_BOXES = ['nick', 'fpsNick', 'zmNick', 'rdNick', 'boardName'];
+const NICK_BOXES = ['nick', 'fpsNick', 'zmNick', 'rdNick', 'boardName', 'gfNick0'];
 // Maren's End's best time, from its s (100000 less the seconds)
 // [fbsea] sovereigns, short enough for a phone's column: 980, 12.4k, 3.1m
 function boardSov(v) { v = Math.max(0, v | 0); return v < 10000 ? v.toLocaleString('en') : v < 1e6 ? (Math.floor(v / 100) / 10).toFixed(v < 1e5 ? 1 : 0).replace(/\.0$/, '') + 'k' : (Math.floor(v / 1e5) / 10).toFixed(1).replace(/\.0$/, '') + 'm'; }
@@ -51118,6 +51305,7 @@ function boardRender() {
     }
     box.append(sec);
   }
+  if (typeof gfBoardRender === 'function') gfBoardRender();   // [golf] the course's own leaderboard, on its card
   // what the asterisk means, under the board while there's one on it
   if ($('boardKey')) $('boardKey').hidden = !anyInc;
   $('boardNameRow').hidden = BOARD.via === 'claude';
@@ -53308,6 +53496,7 @@ csInit();
 //   raid        a Maren's End raid (the same lobby as the Lighthouse's, on the raid's own card)
 //   fogrun      a Fog Run (the same lobby again, on its own card: src/frrun.js) [fogrun]
 //   fbsea       a Freebooters' Sea crew (the same lobby again, on its own card: src/fbsea.js) [fbsea]
+//   golf        a round of Skerry Links (its own lobby: src/golfnet.js, g...) [golf]
 // On a phone or tablet the button opens the share sheet; on a computer it copies the text to the clipboard.
 // On claude.ai everyone plays in the artifact's own room, which the live site can't reach, so there the link is the
 // artifact itself: it can't carry a code, but the friend sees the lobby in the list and taps it.
@@ -53316,7 +53505,7 @@ csInit();
 const SHARE_SITE = 'https://skerry-light.onrender.com/';
 const SHARE_ARTIFACT = 'https://claude.ai/artifact/4abbzGK8dMDsPyR5KdssJv';
 const SHARE_TEXT = 'Join my game on Skerry Light!';
-const SHARE_MODES = ['sail', 'wreckers', 'war', 'lighthouse', 'raid', 'fogrun', 'fbsea'];   // [fogrun] [fbsea]
+const SHARE_MODES = ['sail', 'wreckers', 'war', 'lighthouse', 'raid', 'fogrun', 'fbsea', 'golf'];   // [fogrun] [fbsea] [golf]
 // the Lighthouse's lobby's own word for each of the modes it serves (src/zmnet.js ZN.mode) [fogrun]
 var SHARE_ZN = { lighthouse: 'zm', raid: 'raid', fogrun: 'fr', fbsea: 'fb' };
 const shareOnClaude = () => (typeof NET !== 'undefined' && NET.via === 'claude') || !!(window.claude && typeof window.claude.use === 'function');
@@ -53333,6 +53522,7 @@ function shareUrl(mode, code) {
 function shareCode(mode) {
   if (mode === 'sail') return NET.crew;
   if (mode === 'war') return typeof WN !== 'undefined' ? WN.code : null;
+  if (mode === 'golf') return typeof GFN !== 'undefined' ? GFN.code : null;   // [golf]
   if (mode === 'lighthouse' || mode === 'raid' || mode === 'fogrun' || mode === 'fbsea') return typeof ZN !== 'undefined' && ZN.mode === SHARE_ZN[mode] ? ZN.code : null;   // [fogrun]
   return null;
 }
@@ -53388,8 +53578,8 @@ if (SHARE_JOIN && /[?&](mode|lobby)=/.test(location.search)) {
   // tidy the address bar, so a reload later doesn't drag you back into an old lobby
   try { const q = new URLSearchParams(location.search); q.delete('mode'); q.delete('lobby'); const s = q.toString(); history.replaceState(null, '', location.pathname + (s ? '?' + s : '') + location.hash); } catch (e) {}
 }
-const SHARE_CARD = { sail: 'together', wreckers: 'fpsTitle', war: 'warTitle', lighthouse: 'zmTitle', raid: 'rdTitle', fogrun: 'frTitle', fbsea: 'fbTitle' };
-const SHARE_WHAT = { sail: 'crew', war: 'war', lighthouse: 'night', raid: 'raid', fogrun: 'run', fbsea: 'crew' };
+const SHARE_CARD = { sail: 'together', wreckers: 'fpsTitle', war: 'warTitle', lighthouse: 'zmTitle', raid: 'rdTitle', fogrun: 'frTitle', fbsea: 'fbTitle', golf: 'gfTitle' };
+const SHARE_WHAT = { sail: 'crew', war: 'war', lighthouse: 'night', raid: 'raid', fogrun: 'run', fbsea: 'crew', golf: 'round' };
 function shareShow(mode) { const c = $(SHARE_CARD[mode]); if (c) c.scrollIntoView({ block: 'start' }); }
 function shareArrive() {
   const J = SHARE_JOIN; if (!J) return;
@@ -53427,6 +53617,10 @@ function shareArrive() {
         else if (w.started) toast('That war has already started.', 'Already started'); else wnJoin(J.code);
         return;
       }
+    } else if (J.mode === 'golf') {   // [golf]
+      if (GFN.code === J.code) return clearInterval(iv);
+      const r = gfnOpen().find(x => x.code === J.code);
+      if (r) { clearInterval(iv); shareShow('golf'); if (r.started) toast('That round has already started.', 'Already started'); else gfnJoin(J.code); return; }
     } else {
       if (ZN.code === J.code) return clearInterval(iv);
       const n = znOpenNights().find(x => x.code === J.code);
@@ -54309,6 +54503,1382 @@ function rjRender() {
   setTimeout(rjRender, 1500);
 }
 
+// ---- src/golfcourse.js ----
+'use strict';
+// Skerry Links: the course. Nine holes laid out after the front nine at Pebble Beach (the real pars, the yardages near
+// enough, the doglegs, the barranca short of the second green, the run out to the sea at the fourth, the cliffs from
+// the fourth to the ninth, the little par 3 out on the point and the carry over the chasm at the eighth), drawn in the
+// game's own look and given names of our own. The rest of the mode is src/golf.js (the round), src/golf3d.js (the 3D
+// view) and src/golfnet.js (playing together).
+//
+// Each hole has its own frame: the tee at (0, 0), y running out towards the green, x to the right, in metres; up is z.
+// A hole is written below roughly to size and then scaled (every place, not the sizes of things) so that the walk from
+// the tee down the middle of the fairway to the middle of the green is its yardage. Its parts:
+//   pts      the line of play, tee to the middle of the green (a fairway follows it from fw0 metres out, fw wide each side)
+//   gr       the green: [x, y, rx, ry, turn] (an ellipse), gt its tilt [down x, down y] (metres of fall a metre), gb a
+//            bump on it [x, y, height, spread], pin the cup [x, y] from the green's middle
+//   bk       bunkers, [x, y, rx, ry, turn]          sea   the sea, as polygons; land: instead, the land as one polygon
+//            and the sea all round it            ck    a creek (the barranca), as polygons, below its banks
+//   el       the height of the land along the hole, evenly from tee to green       tl  the fairway's fall to the sea (x)
+//   trees    [seed, how many, keep off the right]  (the trees are scattered in the rough from the seed)
+// gfSurf(H, x, y) says what's underfoot there ('tee', 'fairway', 'fringe', 'green', 'rough', 'deep', 'sand', 'rock',
+// 'water' or 'out'), gfH(H, x, y) how high the ground is, gfNorm the slope. The 3D view and the ball both use them, so
+// what you see is what the ball meets.
+
+const GF_YD = 0.9144;   // (metres in a yard)
+const GF_RAW = [
+  { n: 'The Gate', par: 4, yd: 377, pts: [[0, 0], [0, 215], [38, 330]], fw: 17, fw0: 55,
+    gr: [38, 330, 13, 11, 0.5], gt: [0.004, -0.018], gb: [4, 4, 0.25, 5], pin: [3, -2],
+    bk: [[24, 205, 9, 5.5, 0.4], [24, 322, 5, 4, 0.2], [53, 338, 4, 6, 0.3]], el: [16, 17, 19, 21], trees: [11, 70, 0] },
+  { n: 'The Long Road', par: 5, yd: 511, pts: [[0, 0], [-8, 240], [-2, 467]], fw: 18, fw0: 50,
+    gr: [-2, 467, 12, 14, 0], gt: [-0.006, -0.02], gb: [-4, 5, 0.3, 4], pin: [-4, 4],
+    bk: [[-26, 200, 8, 5, 0.2], [15, 292, 7, 5, -0.3], [-17, 459, 5, 4, 0.4], [14, 471, 6, 4, -0.4]],
+    ck: [[[-200, 392], [-20, 395], [0, 398], [30, 394], [200, 392], [200, 400], [30, 403], [0, 406], [-20, 403], [-200, 401]]],
+    el: [21, 22, 22, 20, 21], trees: [22, 90, 0] },
+  { n: 'Down to the Cove', par: 4, yd: 404, pts: [[0, 0], [4, 215], [-88, 330]], fw: 16, fw0: 50,
+    gr: [-88, 330, 12, 10, -0.6], gt: [0.012, -0.012], gb: [-5, 3, 0.25, 4], pin: [-4, 2],
+    bk: [[-18, 226, 10, 6, 0.6], [-77, 321, 5, 4, -0.5], [-97, 341, 6, 4, -0.6]],
+    sea: [[[-2400, 380], [-170, 400], [-150, 520], [-160, 2400], [-2400, 2400]]],
+    el: [24, 21, 17, 14], trees: [33, 80, 0] },
+  { n: 'First Sight of the Sea', par: 4, yd: 331, pts: [[0, 0], [-4, 170], [6, 303]], fw: 15, fw0: 40, tl: 0.02,
+    gr: [6, 303, 9, 10, 0], gt: [-0.008, -0.022], gb: [2, -3, 0.2, 3], pin: [-2, 3],
+    bk: [[-13, 192, 6, 9, 0.1], [-10, 300, 5, 4, 0.3], [14, 296, 4, 5, -0.3]],
+    sea: [[[44, -300], [40, 60], [46, 150], [37, 240], [31, 310], [35, 360], [60, 430], [2400, 430], [2400, -300]]],
+    el: [12, 11, 10, 10], trees: [44, 60, 1] },
+  { n: "Cliff's Edge", par: 3, yd: 192, pts: [[0, 0], [4, 176]], fw: 14, fw0: 110, tl: 0.02,
+    gr: [4, 176, 10, 12, 0.2], gt: [0.01, -0.016], gb: [-3, 4, 0.2, 3], pin: [2, 3],
+    bk: [[-12, 168, 5, 6, 0.2], [-6, 190, 6, 3, 0.4]],
+    sea: [[[36, -300], [32, 80], [24, 150], [21, 200], [34, 250], [2400, 250], [2400, -300]]],
+    el: [14, 13], trees: [55, 50, 1] },
+  { n: 'The Climb', par: 5, yd: 506, pts: [[0, 0], [-6, 250], [12, 463]], fw: 18, fw0: 45, tl: 0.015,
+    gr: [12, 463, 13, 12, 0.3], gt: [0.004, -0.024], gb: [-4, 2, 0.3, 4], pin: [3, 3],
+    bk: [[-21, 240, 9, 6, 0.1], [-5, 332, 6, 5, 0.4], [0, 454, 5, 4, 0.3], [25, 470, 4, 5, -0.2]],
+    sea: [[[38, -300], [36, 120], [42, 250], [36, 360], [44, 470], [40, 560], [2400, 560], [2400, -300]]],
+    el: [12, 10, 9, 14, 24, 29, 30], trees: [66, 70, 1] },
+  { n: 'The Point', par: 3, yd: 109, pts: [[0, 0], [0, 100]], fw: 0, fw0: 999,
+    gr: [0, 100, 8, 10, 0.1], gt: [0.006, 0.02], gb: [-2, -3, 0.15, 3], pin: [-1, -2],
+    bk: [[-10, 96, 4, 5, 0.2], [10, 92, 4, 4, 0], [-4, 111, 5, 2.5, 0.2], [9, 107, 3, 3, 0]],
+    land: [[-2400, -2400], [2400, -2400], [2400, -40], [40, -20], [30, 40], [22, 72], [16, 106], [4, 117], [-12, 115], [-21, 98], [-26, 62], [-60, 30], [-2400, 20]],
+    el: [16, 10, 5], trees: [77, 30, 1] },
+  { n: 'The Chasm', par: 4, yd: 427, pts: [[0, 0], [0, 240], [-8, 390]], fw: 17, fw0: 50,
+    gr: [-8, 390, 10, 9, 0.2], gt: [-0.01, 0.018], gb: [2, 2, 0.25, 3], pin: [2, -2],
+    bk: [[-20, 384, 4, 6, 0.1], [5, 399, 5, 4, -0.3], [-14, 404, 6, 3, 0.2]],
+    sea: [[[40, -300], [34, 100], [38, 255], [12, 262], [-16, 272], [-23, 296], [-12, 320], [14, 326], [30, 342], [22, 382], [18, 420], [30, 520], [2400, 520], [2400, -300]]],
+    el: [18, 24, 25, 24, 20], trees: [88, 60, 1] },
+  { n: 'Homeward Cliff', par: 4, yd: 481, pts: [[0, 0], [-6, 240], [-22, 440]], fw: 17, fw0: 45, tl: 0.03,
+    gr: [-22, 440, 12, 13, -0.2], gt: [0.012, -0.016], gb: [-3, 3, 0.25, 4], pin: [-3, 2],
+    bk: [[-25, 236, 8, 6, 0.1], [-37, 432, 5, 6, 0.3], [-10, 450, 5, 3, -0.2]],
+    sea: [[[34, -300], [30, 120], [26, 260], [16, 380], [8, 470], [10, 560], [2400, 560], [2400, -300]]],
+    el: [20, 18, 16, 15], trees: [99, 60, 1] },
+];
+
+// ---------- small geometry ----------
+function gfSegD(px, py, ax, ay, bx, by) {
+  const dx = bx - ax, dy = by - ay, l = dx * dx + dy * dy, t = l ? Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy) / l)) : 0;
+  return Math.hypot(px - ax - dx * t, py - ay - dy * t);
+}
+function gfInPoly(P, x, y) { let c = false; for (let i = 0, j = P.length - 1; i < P.length; j = i++) { const a = P[i], b = P[j]; if ((a[1] > y) !== (b[1] > y) && x < (b[0] - a[0]) * (y - a[1]) / (b[1] - a[1]) + a[0]) c = !c; } return c; }
+function gfPolyD(P, x, y) { let d = 1e9; for (let i = 0, j = P.length - 1; i < P.length; j = i++) d = Math.min(d, gfSegD(x, y, P[j][0], P[j][1], P[i][0], P[i][1])); return d; }
+function gfPathLen(P) { let l = 0; for (let i = 1; i < P.length; i++) l += Math.hypot(P[i][0] - P[i - 1][0], P[i][1] - P[i - 1][1]); return l; }
+// the part of a line from d0 metres along it to d1
+function gfSlice(P, d0, d1) {
+  const out = []; let s = 0;
+  for (let i = 1; i < P.length; i++) {
+    const a = P[i - 1], b = P[i], l = Math.hypot(b[0] - a[0], b[1] - a[1]);
+    const at = d => [a[0] + (b[0] - a[0]) * (d - s) / l, a[1] + (b[1] - a[1]) * (d - s) / l];
+    if (s + l >= d0 && s <= d1) { if (!out.length) out.push(at(Math.max(d0, s))); out.push(at(Math.min(d1, s + l))); }
+    s += l;
+  }
+  return out;
+}
+const gfSmooth = (a, b, x) => { const t = Math.max(0, Math.min(1, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
+// where (x, y) sits in an ellipse [cx, cy, rx, ry, turn]: under 1 inside
+function gfEll(E, x, y, grow) { const c = Math.cos(E[4] || 0), s = Math.sin(E[4] || 0), u = (x - E[0]) * c + (y - E[1]) * s, v = -(x - E[0]) * s + (y - E[1]) * c, g = grow || 0; return Math.hypot(u / (E[2] + g), v / (E[3] + g)); }
+// a seeded random number run (the trees: the same on every screen)
+function gfRng(seed) { let s = seed >>> 0 || 1; return () => { s = (s + 0x6D2B79F5) >>> 0; let t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+
+// ---------- the holes, made ready ----------
+function gfBuildHole(i) {
+  const R = GF_RAW[i], k = R.yd * GF_YD / gfPathLen(R.pts), S = p => [p[0] * k, p[1] * k];
+  const H = { i, n: R.n, par: R.par, yd: R.yd, k, pts: R.pts.map(S), fw: R.fw, fw0: R.fw0 * k, tl: R.tl || 0, el: R.el };
+  H.len = gfPathLen(H.pts);
+  H.fwy = R.fw ? gfSlice(H.pts, H.fw0, H.len - 8) : [];
+  const g = R.gr; H.gr = [g[0] * k, g[1] * k, g[2], g[3], g[4]]; H.gt = [R.gt[0] * 0.75, R.gt[1] * 0.75]; H.gb = [H.gr[0] + R.gb[0], H.gr[1] + R.gb[1], R.gb[2], R.gb[3]];
+  H.pin = [H.gr[0] + R.pin[0], H.gr[1] + R.pin[1]];
+  H.bk = (R.bk || []).map(b => [b[0] * k, b[1] * k, b[2], b[3], b[4]]);
+  // (big polygons scale too, which only matters near the hole)
+  H.sea = (R.sea || []).map(P => P.map(S)); H.land = R.land ? R.land.map(S) : null; H.ck = (R.ck || []).map(P => P.map(S));
+  H.dir = Math.atan2(H.pin[0], H.pin[1]);   // (tee to pin, as a bearing: 0 is straight up the frame)
+  H.tl2 = Math.hypot(H.pin[0], H.pin[1]);
+  // how far the course runs: everything within this box is drawn in detail and in play
+  let x0 = 1e9, x1 = -1e9, y0 = -40, y1 = -1e9;
+  for (const p of H.pts.concat([H.pin])) { x0 = Math.min(x0, p[0]); x1 = Math.max(x1, p[0]); y1 = Math.max(y1, p[1]); }
+  H.box = [Math.floor(x0 - 110), Math.floor(y0), Math.ceil(x1 + 110), Math.ceil(y1 + 70)];
+  H.greenH = 0; H.greenH = gfBase(H, H.gr[0], H.gr[1]) + 0.35;
+  H.teeH = gfBase(H, 0, 0) + 0.25;
+  gfTrees(H, R.trees || [i, 50, 0]);
+  return H;
+}
+// the land's run along the hole, before the greens, tees, bunkers and cliffs shape it
+function gfBase(H, x, y) {
+  const t = Math.max(0, Math.min(1, (x * Math.sin(H.dir) + y * Math.cos(H.dir)) / H.tl2)), E = H.el, f = t * (E.length - 1), a = Math.min(E.length - 2, Math.floor(f)), u = f - a;
+  const b = E.length > 1 ? E[a] + (E[a + 1] - E[a]) * (u * u * (3 - 2 * u)) : E[0];
+  const wav = Math.sin(x * 0.031 + y * 0.017) * 0.7 + Math.sin(-x * 0.023 + y * 0.041 + 1.3) * 0.55 + Math.sin(x * 0.07 - y * 0.05 + 2.1) * 0.25;
+  return b + wav - x * H.tl;
+}
+// how far from the sea (below 0: in it)
+function gfSeaD(H, x, y) {
+  if (H.land) { const d = gfPolyD(H.land, x, y); return gfInPoly(H.land, x, y) ? d : -d; }
+  let d = 1e9, inn = false;
+  for (const P of H.sea) { d = Math.min(d, gfPolyD(P, x, y)); if (gfInPoly(P, x, y)) inn = true; }
+  return inn ? -d : d;
+}
+const GF_CLIFF = 5;   // (how wide the drop from the turf to the sea is)
+function gfH(H, x, y) {
+  let h = gfBase(H, x, y);
+  // the green: a tilted plane with a bump on it, blended into the land round it
+  const e = gfEll(H.gr, x, y);
+  if (e < 1.9) {
+    const gh = H.greenH - H.gt[0] * (x - H.gr[0]) - H.gt[1] * (y - H.gr[1]) + H.gb[2] * Math.exp(-((x - H.gb[0]) ** 2 + (y - H.gb[1]) ** 2) / (H.gb[3] * H.gb[3]));
+    h += (gh - h) * (1 - gfSmooth(1.05, 1.9, e));
+  }
+  // the tee: flat
+  const td = Math.hypot(x, y); if (td < 14) h += (H.teeH - h) * (1 - gfSmooth(5, 14, td));
+  // bunkers: dished
+  for (const b of H.bk) { const q = gfEll(b, x, y); if (q < 1.25) h -= 0.55 * (1 - gfSmooth(0.55, 1.2, q)); }
+  // the creek: cut down below its banks
+  for (const P of H.ck) { if (gfInPoly(P, x, y)) { h -= 1.8; break; } const d = gfPolyD(P, x, y); if (d < 3) h -= 1.8 * (1 - d / 3); }
+  // the cliffs and the sea
+  const sd = gfSeaD(H, x, y);
+  if (sd < GF_CLIFF) { const f = gfSmooth(-1, GF_CLIFF, sd); h = -3.5 - Math.max(0, -sd) * 0.04 + (h + 3.5) * f; }
+  return h;
+}
+function gfNorm(H, x, y) { const e = 0.3, dx = (gfH(H, x + e, y) - gfH(H, x - e, y)) / (2 * e), dy = (gfH(H, x, y + e) - gfH(H, x, y - e)) / (2 * e), l = Math.hypot(dx, dy, 1); return [-dx / l, -dy / l, 1 / l]; }
+function gfInCreek(H, x, y) { for (const P of H.ck) if (gfInPoly(P, x, y)) return true; return false; }
+function gfFwD(H, x, y) { let d = 1e9; for (let i = 1; i < H.fwy.length; i++) d = Math.min(d, gfSegD(x, y, H.fwy[i - 1][0], H.fwy[i - 1][1], H.fwy[i][0], H.fwy[i][1])); return d; }
+function gfSurf(H, x, y) {
+  const b = H.box; if (x < b[0] - 40 || x > b[2] + 40 || y < b[1] - 30 || y > b[3] + 60) return 'out';
+  const sd = gfSeaD(H, x, y);
+  if (sd < 0 || gfInCreek(H, x, y)) return 'water';
+  if (sd < GF_CLIFF - 1) return 'rock';
+  for (const k of H.bk) if (gfEll(k, x, y) < 1) return 'sand';
+  const e = gfEll(H.gr, x, y); if (e < 1) return 'green';
+  if (gfEll(H.gr, x, y, 1.8) < 1) return 'fringe';
+  if (Math.abs(x) < 4 && y > -6 && y < 6) return 'tee';
+  const fd = gfFwD(H, x, y);
+  if (fd < H.fw) return 'fairway';
+  if (fd < H.fw + 26 || e < 3.2) return 'rough';
+  let ld = 1e9; for (let i = 1; i < H.pts.length; i++) ld = Math.min(ld, gfSegD(x, y, H.pts[i - 1][0], H.pts[i - 1][1], H.pts[i][0], H.pts[i][1]));
+  return ld < Math.max(H.fw, 14) + 26 ? 'rough' : 'deep';
+}
+// the trees: scattered in the rough, clear of the fairway, the green, the tee and the cliffs; rt: none on the right
+function gfTrees(H, T) {
+  const r = gfRng(T[0] * 7919 + 13), b = H.box, out = [];
+  for (let n = 0; n < T[1] * 6 && out.length < T[1]; n++) {
+    const x = b[0] + r() * (b[2] - b[0]), y = b[1] + 20 + r() * (b[3] - b[1] - 20);
+    if (T[2] && x > gfLineX(H, y) + 8) continue;
+    if (gfFwD(H, x, y) < H.fw + 14 || gfEll(H.gr, x, y) < 3.0 || Math.hypot(x, y) < 22 || gfSeaD(H, x, y) < 12) continue;
+    if (gfSegD(x, y, 0, 0, H.pts[1][0], H.pts[1][1]) < 16) continue;
+    if (out.some(t => Math.hypot(t.x - x, t.y - y) < 5)) continue;
+    const s = 0.75 + r() * 0.6; out.push({ x, y, r: 3.6 * s, h: 8 + r() * 6 * s, lean: (r() - 0.5) * 0.5, kind: r() < 0.65 ? 0 : 1 });
+  }
+  H.trees = out;
+}
+// the middle of the line of play at a given y (for keeping trees off the sea side)
+function gfLineX(H, y) { const P = H.pts; for (let i = 1; i < P.length; i++) if (y <= P[i][1] || i === P.length - 1) { const a = P[i - 1], b = P[i], t = Math.max(0, Math.min(1, (y - a[1]) / ((b[1] - a[1]) || 1))); return a[0] + (b[0] - a[0]) * t; } return 0; }
+
+var GF_HOLES = null;
+function gfHoles() { if (!GF_HOLES) GF_HOLES = GF_RAW.map((_, i) => gfBuildHole(i)); return GF_HOLES; }
+const GF_PAR = GF_RAW.reduce((a, h) => a + h.par, 0);
+
+// ---- src/golf.js ----
+'use strict';
+// Skerry Links: a round of golf on the cliffs, nine holes laid out after the front nine at Pebble Beach (src/golfcourse.js).
+// Its own card on the title screen (id gfTitle, the eighth on the desk menu), alone, up to four taking turns on one
+// screen, or up to four online (src/golfnet.js). The 3D view is src/golf3d.js.
+//
+// A shot. Pick a club (up and down; each has its carry at full power, shown in yards), aim with left and right (the
+// line and the ring on the ground show where a full shot carries in still air), then the swing meter: press once to
+// start the swing, again to set the power as the marker rises (past 100% is an overswing: a little further, but the
+// strike is harder to time), and once more as it comes back down, on the strike line. Early on the strike line draws
+// the ball left (a hook), late pushes it right (a slice), and on it is straight. On the green the putter's meter is a
+// length instead (its scale fits the putt: 10, 20, 40 or 80 feet), and timing only pushes or pulls it a little.
+// The ball. It flies through the air (drag, lift that dies away, the wind, side spin), bounces and rolls by what it
+// lands on (the fairway runs, the rough grabs, the bunkers hold, the greens are quick, and slopes take it), and drops
+// in the cup if it reaches it slowly enough (too fast and it lips out). In the sea, the creek, or off the course: a
+// stroke's penalty and a drop where it went in. Ten strokes on a hole and you pick up.
+// Turns. Everyone tees off in turn (the best score on the last hole first), then whoever's furthest from the hole plays.
+// The whole shot is worked out the moment it's struck (gfSim: a track of where the ball is, 60 times a second) and then
+// played back, so the result's known at once and the same on every screen.
+// The scoreboard (src/scores.js, game 'golf'): a full round of nine is an entry, s = 200 less your score to par (so the
+// lowest round ranks first), b the holes played, c birdies or better. On one screen with others, the entry is the first
+// player's. A round left early keeps its holes, with an asterisk.
+// Debug and tests: gfDebug(hole) starts a round alone on that hole (0 to 8); gfDebugShot(club, power, acc, aim) strikes.
+
+const GFC = { DT: 1 / 120, KD: 0.0045, KL: 0.0032, TAU: 6, KS: 0.00045, G: 9.81, CUP: 0.06, MAXS: 10, PUTT_MU: 0.062 };
+const GF_CLUBS = [
+  { k: 'D', n: 'Driver', c: 252, a: 12 }, { k: '3W', n: '3 Wood', c: 228, a: 13 }, { k: '5W', n: '5 Wood', c: 210, a: 15 },
+  { k: '4I', n: '4 Iron', c: 192, a: 17 }, { k: '5I', n: '5 Iron', c: 181, a: 19 }, { k: '6I', n: '6 Iron', c: 170, a: 21 },
+  { k: '7I', n: '7 Iron', c: 158, a: 24 }, { k: '8I', n: '8 Iron', c: 146, a: 28 }, { k: '9I', n: '9 Iron', c: 133, a: 32 },
+  { k: 'PW', n: 'Pitching Wedge', c: 118, a: 38 }, { k: 'SW', n: 'Sand Wedge', c: 88, a: 48 }, { k: 'P', n: 'Putter', c: 0, a: 0, putt: true },
+];
+// what the ball meets: roll (how hard the ground slows a rolling ball, times g), bounce, grip (what's left of the speed
+// along the ground at a bounce), lie (how much of a full shot you get from it)
+const GF_SURF = {
+  tee: { n: 'Tee', roll: 0.17, e: 0.32, f: 0.72, lie: 1 }, fairway: { n: 'Fairway', roll: 0.17, e: 0.32, f: 0.72, lie: 1 },
+  fringe: { n: 'Fringe', roll: 0.12, e: 0.27, f: 0.64, lie: 0.97 }, green: { n: 'Green', roll: GFC.PUTT_MU, e: 0.22, f: 0.62, lie: 1 },
+  rough: { n: 'Rough', roll: 0.42, e: 0.2, f: 0.45, lie: 0.86 }, deep: { n: 'Deep rough', roll: 0.8, e: 0.12, f: 0.3, lie: 0.72 },
+  sand: { n: 'Bunker', roll: 2.4, e: 0.04, f: 0.12, lie: 0.62 }, rock: { n: 'Rocks', roll: 0.35, e: 0.5, f: 0.7, lie: 0.7 },
+  water: { n: 'Sea', roll: 9, e: 0, f: 0, lie: 1 }, out: { n: 'Out of bounds', roll: 9, e: 0, f: 0, lie: 1 },
+};
+const GF_COLS = ['#ffd88a', '#8fd0ff', '#ff9a7a', '#a8e28a'];
+const GF_PUTTS = [10, 20, 40, 80];   // (the putter's scales, feet at full)
+const GF_WIND = { calm: [0, 2], breezy: [1.5, 5.5], gusty: [4, 9] };
+const GF_METER = { normal: [1 / 1.05, 1.35], gentle: [1 / 1.6, 0.9] };   // (up, then down: of the meter a second)
+var GF = { on: false, H: null, P: [], cur: 0, hi: 0, holes: [], ph: 'off', club: 0, aim: 0, putt: 1, m: null, shot: null, msg: '', msgT: 0,
+  wind: [0, 0], seed: 1, mode: 'solo', set: null, cam: null, view: 'aim', t: 0, over: false, cardT: 0, keys: {}, rep: null, net: null, me: 0 };
+const gfStore = { get() { try { return JSON.parse(localStorage.getItem('skerry-golf') || '{}') || {}; } catch (e) { return {}; } }, set(o) { try { localStorage.setItem('skerry-golf', JSON.stringify(o)); } catch (e) {} } };
+
+// ---------- the ball ----------
+// the speed off the face that carries a club a given distance in still air over flat ground (found by halving)
+function gfFlatCarry(v, ang) {
+  let x = 0, z = 0, vx = v * Math.cos(ang), vz = v * Math.sin(ang), t = 0; const dt = GFC.DT;
+  while (t < 20) { const s = Math.hypot(vx, vz), L = GFC.KL * Math.exp(-t / GFC.TAU); vx += (-GFC.KD * s * vx - L * s * vz) * dt; vz += (-GFC.G - GFC.KD * s * vz + L * s * vx) * dt; x += vx * dt; z += vz * dt; t += dt; if (z < 0 && t > 0.1) break; }
+  return x;
+}
+const GF_VCACHE = new Map();
+function gfSpeedFor(club, m) {
+  const key = club.k + ':' + Math.round(m * 10); if (GF_VCACHE.has(key)) return GF_VCACHE.get(key);
+  let lo = 2, hi = 130; const a = club.a * Math.PI / 180;
+  for (let i = 0; i < 34; i++) { const mid = (lo + hi) / 2; if (gfFlatCarry(mid, a) < m) lo = mid; else hi = mid; }
+  GF_VCACHE.set(key, lo); return lo;
+}
+// the shot, worked out whole: from (x, y) with a club, a bearing (0 up the hole's frame), power (0 to 1.1) and a
+// strike (acc: -0.15 late to +0.15 early; 0 on the line). Returns { tr: the ball's track [x, y, z] at 60 a second,
+// end: [x, y], how: 'rest' | 'cup' | 'water' | 'out', drop: [x, y] (after water), surf, flew: carry in metres }
+function gfSim(H, x0, y0, clubI, aim, power, acc, wind, pu) {
+  const club = GF_CLUBS[clubI], lieS = gfSurf(H, x0, y0), z0 = gfH(H, x0, y0);
+  const E = Math.sign(acc) * Math.max(0, Math.abs(acc) - 0.012) / 0.138 * (power > 1 ? 1 + (power - 1) * 8 : 1);   // (-1 to 1: the strike's error; an overswing makes it worse)
+  const B = { x: x0, y: y0, z: z0 + 0.02, vx: 0, vy: 0, vz: 0, t: 0, mode: 'air', side: 0, lift: 1, lip: 0, hit: new Set() };
+  const tr = [[B.x, B.y, B.z]];
+  if (club.putt) {
+    const ft = GF_PUTTS[pu == null ? GF.putt : pu] || 20, D = ft * 0.3048 * power, v = Math.sqrt(2 * GFC.PUTT_MU * GFC.G * D) * (lieS === 'sand' ? 0.5 : 1);
+    const a = aim - E * 0.05; B.vx = Math.sin(a) * v; B.vy = Math.cos(a) * v; B.mode = 'roll'; B.z = z0;
+  } else {
+    let lie = (GF_SURF[lieS] || GF_SURF.rough).lie;
+    if (lieS === 'sand' && club.k === 'SW') lie = 0.86;
+    if (club.k === 'D' && lieS !== 'tee') lie *= 0.9;   // (a driver off the ground)
+    const m = club.c * GF_YD * Math.min(power, 1) * (power > 1 ? 1 + (power - 1) * 0.6 : 1) * lie;
+    const v = gfSpeedFor(club, m), la = club.a * Math.PI / 180, a = aim - E * 0.07, ch = Math.cos(la);
+    B.vx = Math.sin(a) * ch * v; B.vy = Math.cos(a) * ch * v; B.vz = Math.sin(la) * v; B.side = E * 1.0;
+    B.spin = club.a / 48;   // (wedges stop; long clubs run)
+  }
+  const near = H.trees.filter(t => gfSegD(t.x, t.y, x0, y0, x0 + Math.sin(aim) * 320, y0 + Math.cos(aim) * 320) < 90);
+  let how = 'rest', steps = 0, flew = 0, landed = false;
+  const dt = GFC.DT, wx = wind[0], wy = wind[1];
+  while (steps < 120 * 45) {
+    steps++; B.t += dt;
+    if (B.mode === 'air') {
+      const rx = B.vx - wx, ry = B.vy - wy, rz = B.vz, s = Math.hypot(rx, ry, rz) || 1e-6, rh = Math.hypot(rx, ry) || 1e-6, hx = rx / rh, hy = ry / rh;
+      const dec = Math.exp(-B.t / GFC.TAU), L = GFC.KL * dec * B.lift, Sd = GFC.KS * B.side * dec;
+      B.vx += (-GFC.KD * s * rx + L * s * s * (-rz / s * hx) + Sd * s * s * hy) * dt;
+      B.vy += (-GFC.KD * s * ry + L * s * s * (-rz / s * hy) - Sd * s * s * hx) * dt;
+      B.vz += (-GFC.G - GFC.KD * s * rz + L * s * s * (rh / s)) * dt;
+      B.x += B.vx * dt; B.y += B.vy * dt; B.z += B.vz * dt;
+      // through a tree's crown: most of the speed gone, and down it drops
+      for (const t of near) { if (B.hit.has(t)) continue; const gz = t.gz != null ? t.gz : (t.gz = gfH(H, t.x, t.y)), cz = gz + t.h * 0.68, d = Math.hypot(B.x - t.x, B.y - t.y, (B.z - cz) * 1.5); if (d < t.r || (Math.hypot(B.x - t.x, B.y - t.y) < 0.45 && B.z < cz && B.z > gz)) { B.hit.add(t); B.vx *= 0.22; B.vy *= 0.22; B.vz = Math.min(B.vz, 0) * 0.3; B.lift = 0; B.side = 0; } }
+      const g = gfH(H, B.x, B.y);
+      if (B.z <= g) {
+        const sf = gfSurf(H, B.x, B.y);
+        if (sf === 'water' || sf === 'out') { how = sf; B.z = Math.max(g, -0.2); tr.push([B.x, B.y, B.z]); break; }
+        if (!landed) { landed = true; flew = Math.hypot(B.x - x0, B.y - y0); }
+        const S = GF_SURF[sf], n = gfNorm(H, B.x, B.y), vn = B.vx * n[0] + B.vy * n[1] + B.vz * n[2];
+        B.z = g;
+        if (vn < 0) {
+          let f = S.f; if (B.spin && B.lift > 0.5 && (sf === 'green' || sf === 'fringe' || sf === 'fairway')) f *= 1 - 0.45 * B.spin; B.lift = 0;
+          const tx = B.vx - vn * n[0], ty = B.vy - vn * n[1], tz = B.vz - vn * n[2];
+          B.vx = tx * f - S.e * vn * n[0]; B.vy = ty * f - S.e * vn * n[1]; B.vz = tz * f - S.e * vn * n[2];
+          B.side *= 0.3;
+          if (-vn * S.e < 1.1) { B.mode = 'roll'; B.vz = 0; }
+        }
+      }
+    } else if (B.mode === 'roll') {
+      const sf = gfSurf(H, B.x, B.y);
+      if (sf === 'water' || sf === 'out') { how = sf; break; }
+      const S = GF_SURF[sf], n = gfNorm(H, B.x, B.y), gx = -n[0] / n[2], gy = -n[1] / n[2];
+      const sp = Math.hypot(B.vx, B.vy), slA = GFC.G * 5 / 7 * Math.hypot(gx, gy), fr = S.roll * GFC.G;
+      if (sp < 0.04 && slA < fr * 1.05) { how = 'rest'; B.vx = B.vy = 0; tr.push([B.x, B.y, gfH(H, B.x, B.y)]); break; }
+      let ax = -GFC.G * 5 / 7 * gx, ay = -GFC.G * 5 / 7 * gy;
+      if (sp > 1e-4) { const k = Math.min(fr, sp / dt) / sp; ax -= B.vx * k; ay -= B.vy * k; }
+      B.vx += ax * dt; B.vy += ay * dt; B.x += B.vx * dt; B.y += B.vy * dt;
+      const g = gfH(H, B.x, B.y);
+      // over a lip or a cliff: in the air again
+      if (B.z - g > 0.12 + Math.hypot(B.vx, B.vy) * dt * 0.5) { B.mode = 'air'; B.vz = 0; B.lift = 0; } else B.z = g;
+      // the cup
+      const cd = Math.hypot(B.x - H.pin[0], B.y - H.pin[1]), s2 = Math.hypot(B.vx, B.vy);
+      if (cd < GFC.CUP && sf === 'green') {
+        if (s2 < 1.35) { how = 'cup'; B.x = H.pin[0]; B.y = H.pin[1]; B.z = g - 0.08; tr.push([B.x, B.y, B.z]); break; }
+        if (!B.lip && s2 < 2.4) { B.lip = 1; const side = ((B.x - H.pin[0]) * B.vy - (B.y - H.pin[1]) * B.vx) > 0 ? 1 : -1, r = side * (0.5 + 0.4 * (1 - cd / GFC.CUP)), c = Math.cos(r), s = Math.sin(r); const vx = B.vx * c - B.vy * s, vy = B.vx * s + B.vy * c; B.vx = vx * 0.55; B.vy = vy * 0.55; }
+      } else if (cd > GFC.CUP * 2) B.lip = 0;
+    }
+    if (steps % 2 === 0) tr.push([B.x, B.y, B.z]);
+  }
+  if (!landed) flew = Math.hypot(B.x - x0, B.y - y0);
+  const out = { tr, end: [B.x, B.y], how, flew, surf: how === 'cup' ? 'green' : how === 'rest' ? gfSurf(H, B.x, B.y) : how };
+  if (how === 'water' || how === 'out') out.drop = gfDropFrom(H, tr, x0, y0);
+  return out;
+}
+// where to drop after the sea: back along the track from where it went in, to good ground clear of the cliff
+function gfDropFrom(H, tr, x0, y0) {
+  let j = tr.length - 1;
+  while (j > 0 && /water|out/.test(gfSurf(H, tr[j][0], tr[j][1]))) j--;
+  for (; j > 0; j--) { const [x, y] = tr[j], s = gfSurf(H, x, y); if (s !== 'water' && s !== 'out' && s !== 'rock' && gfSeaD(H, x, y) > 6 && !gfInCreek(H, x, y) && gfCreekD(H, x, y) > 4) return [x, y]; }
+  return [x0, y0];
+}
+function gfCreekD(H, x, y) { let d = 1e9; for (const P of H.ck) d = Math.min(d, gfPolyD(P, x, y)); return d; }
+
+// ---------- the round ----------
+function gfHoleNow() { return GF.H; }
+function gfPlayer() { return GF.P[GF.cur]; }
+const gfToPin = p => Math.hypot(p.x - GF.H.pin[0], p.y - GF.H.pin[1]);
+const gfYds = m => Math.round(m / GF_YD);
+const gfFt = m => Math.round(m / 0.3048);
+function gfDist(m) { return m < 18 ? gfFt(m) + ' ft' : gfYds(m) + ' yd'; }
+function gfScoreName(st, par) {
+  if (st === 1) return 'Hole in one!';
+  const d = st - par; return d <= -3 ? 'Albatross!' : d === -2 ? 'Eagle!' : d === -1 ? 'Birdie!' : d === 0 ? 'Par' : d === 1 ? 'Bogey' : d === 2 ? 'Double bogey' : d === 3 ? 'Triple bogey' : '+' + d;
+}
+function gfToPar(p) { let s = 0; GF.holes.forEach((h, k) => { if (p.sc[k] != null) s += p.sc[k] - GF_RAW[h].par; }); return s; }
+const gfParTxt = v => v === 0 ? 'E' : v > 0 ? '+' + v : '−' + -v;
+function gfTotal(p) { return p.sc.reduce((a, v) => a + (v || 0), 0); }
+
+// a round begins: who's playing (names, and for online play their ids), the settings, the seed for the wind
+function gfStart(o) {
+  o = o || {};
+  const st = gfStore.get();
+  GF.set = { wind: o.wind || st.wind || 'breezy', meter: o.meter || st.meter || 'normal', aid: st.aid !== false };
+  GF.holes = o.holes || [0, 1, 2, 3, 4, 5, 6, 7, 8];
+  GF.seed = o.seed >>> 0 || ((Math.random() * 4294967295) >>> 0);
+  GF.mode = o.net ? 'net' : (o.names && o.names.length > 1 ? 'local' : 'solo');
+  GF.net = o.net || null;
+  const names = o.names && o.names.length ? o.names : [gfMyName()];
+  GF.P = names.map((nm, i) => ({ nm: String(nm || 'Player ' + (i + 1)).slice(0, 16), col: GF_COLS[i % 4], sid: o.sids ? o.sids[i] : null, sc: GF.holes.map(() => null), x: 0, y: 0, lie: 'tee', st: 0, done: false, gone: false }));
+  GF.me = o.net ? Math.max(0, GF.P.findIndex(p => p.sid === NET.sid)) : 0;
+  GF.on = true; GF.over = false; GF.hi = 0; GF.t = 0;
+  GF.full = GF.holes.length === 9 && !o.debug;
+  gfEnter();
+  if (GF.full && typeof scorePlayed === 'function') scorePlayed('golf');
+  gfLoadHole(0);
+}
+function gfMyName() { const v = ($('gfNick0') && $('gfNick0').value) || (typeof NET !== 'undefined' && NET.nick) || ''; return String(v).replace(/[\u0000-\u001f<>&"]/g, '').trim().slice(0, 16) || 'Golfer'; }
+function gfLoadHole(k) {
+  GF.hi = k; const H = GF.H = gfHoles()[GF.holes[k]];
+  const r = gfRng(GF.seed + GF.holes[k] * 977), w = GF_WIND[GF.set.wind] || GF_WIND.breezy, ws = w[0] + r() * (w[1] - w[0]), wa = r() * Math.PI * 2;
+  GF.wind = [Math.sin(wa) * ws, Math.cos(wa) * ws];
+  for (const p of GF.P) { p.x = 0; p.y = 0; p.lie = 'tee'; p.st = 0; p.done = p.gone; }
+  // the honour: the best score on the last hole goes first (as it stood before, if level)
+  if (k > 0) { const was = GF.P.slice(); GF.order = GF.order.slice().sort((a, b) => (GF.P[a].sc[k - 1] || 99) - (GF.P[b].sc[k - 1] || 99) || was.indexOf(GF.P[a]) - was.indexOf(GF.P[b])); }
+  else GF.order = GF.P.map((_, i) => i);
+  if (typeof gf3dHole === 'function') gf3dHole(H);
+  GF.shot = null; GF.cam = null;
+  gfSay(`Hole ${GF.holes[k] + 1} · ${H.n} · Par ${H.par} · ${H.yd} yards`, 3.2);
+  gfNextTurn(true);
+}
+// whose go it is: on the tee, in the order of the honour; after that, whoever's furthest from the hole
+function gfNextTurn(first) {
+  const left = GF.order.filter(i => !GF.P[i].done);
+  if (!left.length) { gfHoleDone(); return; }
+  const tee = left.filter(i => GF.P[i].st === 0);
+  GF.cur = tee.length ? tee[0] : left.slice().sort((a, b) => gfToPin(GF.P[b]) - gfToPin(GF.P[a]))[0];
+  gfReadyShot();
+}
+// the player steps up: aim at the pin, the club that fits the distance
+function gfReadyShot() {
+  const p = gfPlayer(), H = GF.H;
+  GF.aim = Math.atan2(H.pin[0] - p.x, H.pin[1] - p.y);
+  // a dogleg: off the tee, aim down the fairway's first leg when the pin is out of reach
+  const d = gfToPin(p);
+  if (p.st === 0 && H.pts.length > 2 && d > 240) { const q = H.pts[1]; GF.aim = Math.atan2(q[0] - p.x, q[1] - p.y); }
+  GF.club = gfPickClub(p, d);
+  GF.putt = gfPuttScale(d);
+  GF.m = null; GF.ph = 'aim'; GF.view = 'aim'; GF.lookT = 0;
+  if (typeof G3 !== 'undefined' && GF.intro <= 0) G3.cp = null;   // (a cut to the new shot, not a swing round through the golfer)
+  if (GF.mode === 'net' && typeof gfnTurned === 'function') gfnTurned();
+  if (typeof gfHud === 'function') gfHud(true);
+}
+function gfPickClub(p, d) {
+  if (p.lie === 'green' || (p.lie === 'fringe' && d < 12)) return GF_CLUBS.length - 1;
+  // the shortest club that gets there at full power (or near enough); if none does, the longest you'd take from here
+  const lie = (GF_SURF[p.lie] || GF_SURF.rough).lie, reach = i => GF_CLUBS[i].c * GF_YD * lie * (GF_CLUBS[i].k === 'SW' && p.lie === 'sand' ? 0.86 / 0.62 : 1);
+  for (let i = GF_CLUBS.length - 2; i >= 0; i--) { if (GF_CLUBS[i].k === 'D' && p.lie !== 'tee') continue; if (reach(i) >= d * 0.97) return i; }
+  // short of the green whatever you take: the longest that doesn't come down in (or run into) the sea or the creek
+  let i = p.lie === 'tee' ? 0 : 1; const H = GF.H, sa = Math.sin(GF.aim), ca = Math.cos(GF.aim);
+  const wet = i => { for (let f = 0.9; f <= 1.18; f += 0.04) { const m = reach(i) * f, s = gfSurf(H, p.x + sa * m, p.y + ca * m); if (s === 'water' || s === 'out') return true; } return false; };
+  while (i < GF_CLUBS.length - 2 && wet(i)) i++;
+  return i;
+}
+function gfPuttScale(d) { const ft = d / 0.3048 * 1.35; for (let i = 0; i < GF_PUTTS.length; i++) if (GF_PUTTS[i] >= ft) return i; return GF_PUTTS.length - 1; }
+// may I swing now (whose go it is, and is it on this screen)
+function gfMyTurn() { if (!GF.on || GF.over) return false; const p = gfPlayer(); if (!p || p.done) return false; return GF.mode !== 'net' || (p.sid === NET.sid && (typeof gfnTurnOk !== 'function' || gfnTurnOk())); }
+
+// ---------- the swing ----------
+// one press: start, set the power, strike
+function gfPress() {
+  if (GF.ph === 'fly') { if (GF.rep) GF.rep.fast = true; return; }
+  if (GF.ph === 'card') { gfCardNext(); return; }
+  if (!gfMyTurn() || (GF.ph !== 'aim' && GF.ph !== 'swing')) return;
+  if (GF.ph === 'aim') { GF.ph = 'swing'; GF.m = { s: 1, v: 0, p: 0 }; gfSnd('tick'); return; }
+  const M = GF.m;
+  if (M.s === 1) { M.p = Math.max(0.03, M.v); M.s = 2; gfSnd('tick'); }
+  else if (M.s === 2) gfStrike(M.v);
+}
+function gfMeterTick(dt) {
+  const M = GF.m; if (!M || GF.ph !== 'swing') return;
+  const sp = GF_METER[GF.set.meter] || GF_METER.normal;
+  if (M.s === 1) { M.v += dt * sp[0]; if (M.v >= 1.1) { M.v = 1.1; M.p = 1.1; M.s = 2; } }
+  else if (M.s === 2) { M.v -= dt * sp[1]; if (M.v <= -0.15) gfStrike(-0.15); }
+}
+function gfStrike(acc) {
+  const M = GF.m, p = gfPlayer(); M.s = 3;
+  const shot = { c: GF.club, a: GF.aim, w: M.p, e: Math.max(-0.15, Math.min(0.15, acc)), pu: GF.putt, x: p.x, y: p.y, k: GF.hi, n: p.st };
+  if (GF.mode === 'net' && typeof gfnShot === 'function') gfnShot(shot);
+  gfPlayShot(GF.cur, shot);
+}
+// a shot struck (here, or heard from another screen): worked out, then played back
+function gfPlayShot(pi, shot, told) {
+  const H = GF.H;
+  const R = gfSim(H, shot.x, shot.y, shot.c, shot.a, shot.w, shot.e, GF.wind, shot.pu);
+  // (another screen's word for where it ended wins, should the sums differ in the last place)
+  if (told && told.end) { R.end = told.end; R.how = told.how; R.drop = told.drop; R.surf = told.surf; }
+  GF.cur = pi; GF.club = shot.c; GF.aim = shot.a;
+  GF.shot = { pi, shot, R, sx: shot.x, sy: shot.y };
+  GF.rep = { i: 0, t: 0, fast: false, end: false };
+  GF.ph = 'fly'; GF.view = 'fly'; GF.swingT = 0;
+  gfSnd(GF_CLUBS[shot.c].putt ? 'putt' : 'strike', shot.w);
+  const E = Math.abs(shot.e);
+  if (!GF_CLUBS[shot.c].putt) gfSay(E < 0.012 ? 'Perfect strike' : shot.e > 0.06 ? 'Hooked' : shot.e < -0.06 ? 'Sliced' : shot.e > 0 ? 'Drawn a touch left' : 'Faded a touch right', 1.4);
+  if (typeof gfHud === 'function') gfHud(true);
+  return R;
+}
+// the playback: along the track, then the result
+function gfReplayTick(dt) {
+  const S = GF.shot, Rp = GF.rep; if (!S || !Rp) return;
+  const tr = S.R.tr;
+  Rp.t += dt * (Rp.fast ? 4 : 1);
+  const want = Math.min(tr.length - 1, Math.floor(Rp.t * 60));
+  for (let i = Rp.i + 1; i <= want; i++) { const a = tr[i - 1], b = tr[i]; if (a[2] - gfH(GF.H, a[0], a[1]) > 0.3 && b[2] - gfH(GF.H, b[0], b[1]) < 0.05) gfSnd('land', 1, gfSurf(GF.H, b[0], b[1])); }
+  Rp.i = want;
+  if (Rp.i >= tr.length - 1 && !Rp.end) { Rp.end = true; Rp.doneT = 0; gfShotDone(); }
+  if (Rp.end) { Rp.doneT += dt; if (Rp.doneT > (GF.mode === 'net' ? 2.4 : 2.0) && GF.ph === 'result') gfAfterResult(); }
+}
+function gfBallNow() { const S = GF.shot; if (!S || !GF.rep) return null; const tr = S.R.tr, i = Math.min(tr.length - 1, GF.rep.i), a = tr[i], b = tr[Math.min(tr.length - 1, i + 1)], f = Math.min(1, (GF.rep.t * 60) - i); return [a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f, a[2] + (b[2] - a[2]) * f]; }
+function gfShotDone() {
+  const S = GF.shot, p = GF.P[S.pi], R = S.R, H = GF.H;
+  p.st++;
+  if (R.how === 'cup') {
+    p.done = true; p.sc[GF.hi] = p.st; p.x = H.pin[0]; p.y = H.pin[1]; p.lie = 'green';
+    const nm = gfScoreName(p.st, H.par);
+    gfSay((GF.P.length > 1 ? p.nm + ': ' : '') + nm, 3); gfSnd(p.st - H.par <= -1 ? 'cheer' : 'cup');
+  } else if (R.how === 'water' || R.how === 'out') {
+    p.st++; p.x = R.drop[0]; p.y = R.drop[1]; p.lie = gfSurf(H, p.x, p.y);
+    gfSay(R.how === 'water' ? (gfInCreek(H, R.end[0], R.end[1]) ? 'In the creek. One stroke penalty, and a drop.' : 'Into the sea. One stroke penalty, and a drop.') : 'Out of bounds. One stroke penalty, and a drop.', 3);
+    if (R.how === 'water') gfSnd('splash');
+  } else {
+    p.x = R.end[0]; p.y = R.end[1]; p.lie = R.surf;
+    const d = gfToPin(p), pu = GF_CLUBS[S.shot.c].putt;
+    gfSay(pu ? (d < 1.2 ? 'Close. ' + gfFt(d) + ' ft left' : gfDist(d) + ' left') : `${GF_SURF[p.lie].n} · ${gfYds(R.flew)} yd carry · ${gfDist(d)} to the pin`, 2.6);
+  }
+  if (!p.done && p.st >= GFC.MAXS) { p.done = true; p.sc[GF.hi] = GFC.MAXS; gfSay(`${GF.P.length > 1 ? p.nm + ' picks' : 'Picked'} up at ${GFC.MAXS}.`, 2.6); }
+  GF.ph = 'result';
+  if (typeof gfHud === 'function') gfHud(true);
+}
+// the next go (on a shared round, the host's word says whose: src/golfnet.js)
+function gfAfterResult() {
+  GF.shot = null; GF.rep = null;
+  if (GF.mode === 'net' && typeof gfnAfter === 'function' && gfnAfter()) return;
+  gfNextTurn();
+}
+function gfHoleDone() {
+  const k = GF.hi, H = GF.H;
+  for (const p of GF.P) if (p.sc[k] == null) p.sc[k] = p.gone ? null : Math.min(GFC.MAXS, p.st || GFC.MAXS);
+  gfReportBoard(false);
+  GF.ph = 'card'; GF.cardT = 0; GF.view = 'card';
+  if (k >= GF.holes.length - 1) { GF.over = true; gfRoundDone(); }
+  if (typeof gfCardShow === 'function') gfCardShow(true);
+}
+function gfCardNext() {
+  if (GF.mode === 'net' && typeof gfnCardNext === 'function' && gfnCardNext()) return;
+  if (GF.over) return;
+  $('gfCard').hidden = true;
+  gfLoadHole(GF.hi + 1);
+}
+// the scoreboard and your own bests
+function gfReportBoard(done) {
+  if (!GF.full || typeof scoreRun !== 'function') return;
+  const p = GF.P[GF.me]; if (!p) return;
+  const holes = p.sc.filter(v => v != null).length, birdies = p.sc.filter((v, k) => v != null && v < GF_RAW[GF.holes[k]].par).length;
+  const s = done ? Math.max(1, 200 - gfToPar(p)) : 0;
+  scoreRun('golf', s, holes, birdies, done);
+  if (done && typeof scoreReport === 'function') scoreReport('golf', s, holes, birdies, true);
+}
+function gfRoundDone() {
+  gfReportBoard(true);
+  if (typeof scoreRunEnd === 'function' && GF.full) scoreRunEnd('golf');
+  const p = GF.P[GF.me]; if (!p || !GF.full) return;
+  const st = gfStore.get(), tot = gfTotal(p); st.rounds = (st.rounds | 0) + 1;
+  if (!st.best || tot < st.best) { st.best = tot; st.newBest = 1; } else st.newBest = 0;
+  st.hb = st.hb || []; GF.holes.forEach((h, k) => { const v = p.sc[k]; if (v != null && (!st.hb[h] || v < st.hb[h])) st.hb[h] = v; });
+  gfStore.set(Object.assign(gfStore.get(), { rounds: st.rounds, best: st.best, newBest: st.newBest, hb: st.hb }));
+}
+function gfQuit() {
+  if (!GF.on) return;
+  if (GF.full && !GF.over) { gfReportBoard(false); if (typeof scoreRunEnd === 'function') scoreRunEnd('golf'); }
+  if (GF.mode === 'net' && typeof gfnStop === 'function') gfnStop();
+  GF.on = false; GF.ph = 'off';
+  gfExit();
+}
+
+// ---------- the screen, the keys and the camera ----------
+function gfEnter() {
+  try { audioInit(); } catch (e) {}
+  if (typeof gf3dInit === 'function' && !gf3dInit()) { if (typeof toast === 'function') toast('Skerry Links needs WebGL, which this browser has turned off.', 'No 3D'); }
+  state = 'golf'; paused = false;
+  $('titleCard').hidden = true; $('hud').hidden = true; $('logbox').hidden = true; $('biomeBanner').hidden = true;
+  $('gfUI').hidden = false; $('gfPause').hidden = true; $('gfCard').hidden = true;
+  document.body.classList.add('gfon');
+  gfAmbience(true);
+}
+function gfExit() {
+  $('gfUI').hidden = true; document.body.classList.remove('gfon');
+  gfAmbience(false);
+  state = 'title'; toTitle();
+  if (typeof gfnBackToLobby === 'function') gfnBackToLobby();
+  setTimeout(() => { const c = $('gfTitle'); if (c) c.scrollIntoView({ block: 'start' }); gfCardRender(); }, 60);
+}
+function gfSay(t, s) { GF.msg = t; GF.msgT = s || 2.5; const el = $('gfMsg'); if (el) { el.textContent = t; el.classList.add('on'); } }
+// every frame while a round's on (src/main.js)
+function gfFrame(dt) {
+  GF.t += dt;
+  gfPadPoll(dt);
+  if (!$('gfPause').hidden) { if (typeof gf3dDraw === 'function') gf3dDraw(dt); return; }
+  if (GF.ph === 'aim' && gfMyTurn()) {
+    const k = GF.keys, rs = (k.fine ? 0.16 : 0.55) * (GF_CLUBS[GF.club].putt ? 0.5 : 1);
+    if (k.l) GF.aim -= rs * dt; if (k.r) GF.aim += rs * dt;
+    if (GF.padAx) GF.aim += GF.padAx * rs * dt;
+  }
+  gfMeterTick(dt);
+  if (GF.ph === 'fly' || GF.ph === 'result') gfReplayTick(dt);
+  if (GF.ph === 'card') GF.cardT += dt;
+  if (GF.msgT > 0) { GF.msgT -= dt; if (GF.msgT <= 0) { const el = $('gfMsg'); if (el) el.classList.remove('on'); } }
+  if (GF.mode === 'net' && typeof gfnTick === 'function') gfnTick(dt);
+  if (typeof gf3dDraw === 'function') gf3dDraw(dt);
+  if (typeof gfHud === 'function') gfHud(false);
+}
+function gfClub(d) {
+  if (GF.ph !== 'aim' || !gfMyTurn()) return;
+  GF.club = Math.max(0, Math.min(GF_CLUBS.length - 1, GF.club + d));
+  if (GF_CLUBS[GF.club].putt) GF.putt = gfPuttScale(gfToPin(gfPlayer()));
+  gfSnd('tick'); gfHud(true);
+}
+function gfPuttStep(d) { if (GF.ph !== 'aim' || !gfMyTurn() || !GF_CLUBS[GF.club].putt) return; GF.putt = Math.max(0, Math.min(GF_PUTTS.length - 1, GF.putt + d)); gfHud(true); }
+function gfPauseOpen(on) {
+  if (!GF.on) return;
+  $('gfPause').hidden = !on;
+  if (on) { setTimeout(() => $('gfResume').focus({ preventScroll: true }), 30); }
+}
+function gfKey(e, down) {
+  if (state !== 'golf') return;
+  if (e.target && /INPUT|TEXTAREA|SELECT/.test(e.target.tagName) && e.key !== 'Escape') return;
+  const k = e.key, K = GF.keys;
+  if (k === 'Escape') { if (down) { e.preventDefault(); if (!$('gfCard').hidden && GF.ph !== 'card') gfCardShow(false, true); else gfPauseOpen($('gfPause').hidden); } e.stopImmediatePropagation(); return; }
+  if (!$('gfPause').hidden) return;
+  e.stopImmediatePropagation();
+  if (k === 'ArrowLeft' || k === 'a' || k === 'A') { K.l = down; e.preventDefault(); }
+  else if (k === 'ArrowRight' || k === 'd' || k === 'D') { K.r = down; e.preventDefault(); }
+  else if (k === 'Shift') K.fine = down;
+  else if (!down) return;
+  else if (e.repeat) { if (k === ' ') e.preventDefault(); return; }
+  else if (k === 'ArrowUp' || k === 'w' || k === 'W') { e.preventDefault(); gfClub(-1); }
+  else if (k === 'ArrowDown' || k === 's' || k === 'S') { e.preventDefault(); gfClub(1); }
+  else if (k === 'q' || k === 'Q') gfPuttStep(-1);
+  else if (k === 'e' || k === 'E') gfPuttStep(1);
+  else if (k === ' ' || k === 'Enter') { e.preventDefault(); if (!$('gfCard').hidden && GF.over) return; gfPress(); }
+  else if (k === 'Tab') { e.preventDefault(); gfCardShow($('gfCard').hidden, true); }
+  else if (k === 'm' || k === 'M' || k === 'v' || k === 'V') gfLook();
+}
+// the view from above the hole, and back
+function gfLook() { if (GF.ph !== 'aim') return; GF.view = GF.view === 'look' ? 'aim' : 'look'; }
+addEventListener('keydown', e => gfKey(e, true), true);
+addEventListener('keyup', e => gfKey(e, false), true);
+// a controller: the stick or the D-pad aims (left, right) and picks the club (up, down), A swings, X the view from
+// above, Y the scorecard, LB and RB the putter's scale, Start the menu
+function gfPadPoll(dt) {
+  const p = typeof firstPad === 'function' ? firstPad() : null; if (!p) { GF.padAx = 0; return; }
+  const now = p.buttons.map(b => b.pressed), prev = GF.padPrev || [], down = i => now[i] && !prev[i]; GF.padPrev = now;
+  const ax = Math.abs(p.axes[0] || 0) > 0.18 ? p.axes[0] : 0;
+  if (!$('gfPause').hidden) { if (down(1) || down(9)) gfPauseOpen(false); if (down(0) && document.activeElement && document.activeElement.click) document.activeElement.click(); return; }
+  GF.padAx = ax + (now[15] ? 1 : 0) - (now[14] ? 1 : 0);
+  const ay = p.axes[1] || 0; GF.padY = GF.padY || 0;
+  if (Math.abs(ay) > 0.6 && Math.abs(GF.padY) <= 0.6) gfClub(ay > 0 ? 1 : -1); GF.padY = ay;
+  if (down(12)) gfClub(-1); if (down(13)) gfClub(1);
+  if (down(4)) gfPuttStep(-1); if (down(5)) gfPuttStep(1);
+  if (down(0)) { if (!$('gfCard').hidden && GF.over) $('gfCardMenu').click(); else gfPress(); }
+  if (down(2)) gfLook();
+  if (down(3)) gfCardShow($('gfCard').hidden, true);
+  if (down(9)) gfPauseOpen(true);
+  if (down(1) && !$('gfCard').hidden && !GF.over) gfCardShow(false, true);
+}
+
+// ---------- the sounds (Web Audio, src/audio.js; they follow the volume) ----------
+function gfSnd(k, v, surf) {
+  if (typeof AUD === 'undefined' || !AUD.ctx) return;
+  try {
+    if (k === 'tick') tone(1500, 'square', 0.001, 0.03, 0.02);
+    else if (k === 'strike') { const w = Math.min(1, v || 1); noise('bandpass', 2600, 1.4, 0.001, 0.32 * w + 0.08, 0.08); tone(220, 'triangle', 0.001, 0.22 * w, 0.09, { to: 110 }); noise('bandpass', 700, 0.8, 0.02, 0.06 * w, 0.6, { delay: 0.05, to: 2000 }); }
+    else if (k === 'putt') { tone(1100, 'sine', 0.001, 0.12, 0.05); noise('highpass', 3000, 1, 0.001, 0.05, 0.03); }
+    else if (k === 'land') { if (surf === 'sand') noise('lowpass', 900, 0.6, 0.005, 0.12, 0.25); else if (surf === 'green' || surf === 'fringe') tone(420, 'sine', 0.002, 0.07, 0.07); else noise('lowpass', 500, 0.7, 0.003, 0.09, 0.12); }
+    else if (k === 'cup') { [0, 0.07, 0.15].forEach((d, i) => tone(1300 - i * 180, 'triangle', 0.001, 0.09, 0.05, { delay: d })); sfxChime(); }
+    else if (k === 'cheer') { gfSnd('cup'); for (let i = 0; i < 9; i++) noise('bandpass', 1400 + Math.random() * 1600, 0.9, 0.05, 0.05 + Math.random() * 0.04, 0.5 + Math.random() * 0.6, { delay: 0.3 + i * 0.12 }); }
+    else if (k === 'splash') { if (typeof sfxSplash === 'function') sfxSplash(); else noise('lowpass', 1200, 0.7, 0.01, 0.25, 0.6); }
+  } catch (e) {}
+}
+// the sea below the cliffs and the wind in the grass, while a round's on
+function gfAmbience(on) {
+  if (typeof AUD === 'undefined' || !AUD.ctx) return;
+  const c = AUD.ctx;
+  if (on && !GF.amb) {
+    try {
+      const s = c.createBufferSource(); s.buffer = AUD.brown; s.loop = true;
+      const f = c.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 520;
+      const g = c.createGain(); g.gain.value = 0.0001; g.gain.setTargetAtTime(0.09, c.currentTime, 1.2);
+      const lfo = c.createOscillator(), lg = c.createGain(); lfo.frequency.value = 0.11; lg.gain.value = 0.05; lfo.connect(lg).connect(g.gain); lfo.start();
+      s.connect(f).connect(g).connect(AUD.master); s.start();
+      GF.amb = { s, g, lfo };
+    } catch (e) {}
+  } else if (!on && GF.amb) { const A = GF.amb; GF.amb = null; try { A.g.gain.setTargetAtTime(0.0001, c.currentTime, 0.3); setTimeout(() => { try { A.s.stop(); A.lfo.stop(); } catch (e) {} }, 1200); } catch (e) {} }
+}
+
+// ---------- the card on the title screen ----------
+function gfCardRender() {
+  const st = gfStore.get(), el = $('gfBest'); if (!el) return;
+  el.textContent = st.best ? `Your best round: ${st.best} (${gfParTxt(st.best - GF_PAR)}) · rounds played: ${st.rounds | 0}` : 'No round played yet. Par for the nine is 36.';
+  gfBoardRender();
+}
+// the course's own leaderboard on its card: the board's top five rounds (src/scores.js)
+function gfBoardRender() {
+  const ol = $('gfLeaders'); if (!ol || typeof BOARD === 'undefined') return;
+  const rows = ((BOARD.data && BOARD.data.golf) || []).filter(e => e.s > 0).slice(0, 5);
+  ol.textContent = '';
+  if (!rows.length) { const li = document.createElement('li'); li.className = 'empty'; li.textContent = BOARD.data ? 'No rounds on the board yet. Be the first.' : (BOARD.err || 'Reading the board…'); ol.append(li); return; }
+  rows.forEach((e, k) => {
+    const li = document.createElement('li'); if (e.me) li.className = 'me';
+    const tp = 200 - e.s, a = document.createElement('span'); a.className = 'rk'; a.textContent = String(k + 1);
+    const n = document.createElement('span'); n.className = 'nm'; n.textContent = e.n + (e.me ? ' (you)' : '');
+    const s = document.createElement('span'); s.className = 'sc'; s.textContent = `${GF_PAR + tp} (${gfParTxt(tp)})`;
+    li.append(a, n, s); ol.append(li);
+  });
+}
+// how many on this screen, and their names
+function gfLocalRows() {
+  const n = +($('gfPlayers').value || 1), box = $('gfNames'); if (!box) return;
+  for (let i = 0; i < 4; i++) { const r = $('gfNameRow' + i); if (r) r.hidden = i >= n; }
+  const st = gfStore.get(); st.n = n; gfStore.set(st);
+}
+function gfPlayLocal() {
+  if (typeof GFN !== 'undefined' && GFN.code) { if (typeof gfnLeave === 'function') gfnLeave(); }
+  const n = +($('gfPlayers').value || 1), names = [];
+  for (let i = 0; i < n; i++) { const v = ($('gfNick' + i) && $('gfNick' + i).value || '').replace(/[\u0000-\u001f<>&"]/g, '').trim().slice(0, 16); names.push(v || (i === 0 ? gfMyName() : 'Player ' + (i + 1))); }
+  const o = gfOptions(); gfStart({ names, wind: o.wind, meter: o.meter, holes: o.holes });
+}
+function gfOptions() {
+  const wind = $('gfWindSel').value, meter = $('gfMeterSel').value, hs = $('gfHolesSel').value;
+  const st = gfStore.get(); st.wind = wind; st.meter = meter; st.holes = hs; const names = []; for (let i = 1; i < 4; i++) names.push(($('gfNick' + i) || {}).value || ''); st.names = names; gfStore.set(st);
+  const holes = hs === 'f3' ? [0, 1, 2] : hs === 'm3' ? [3, 4, 5] : hs === 'b3' ? [6, 7, 8] : [0, 1, 2, 3, 4, 5, 6, 7, 8];
+  return { wind, meter, holes, hs };
+}
+// tests: straight onto a hole, alone; and a shot struck as if by the meter
+function gfDebug(h) { gfStart({ names: [gfMyName()], holes: [h | 0], debug: true }); }
+function gfDebugShot(club, power, acc, aim) { if (GF.ph !== 'aim') return null; if (club != null) GF.club = club; if (aim != null) GF.aim = aim; GF.ph = 'swing'; GF.m = { s: 2, v: 0, p: power == null ? 1 : power }; gfStrike(acc || 0); return GF.shot && GF.shot.R; }
+
+(function gfInit() {
+  if (!$('gfTitle')) return;
+  const st = gfStore.get();
+  if (st.wind && GF_WIND[st.wind]) $('gfWindSel').value = st.wind;
+  if (st.meter && GF_METER[st.meter]) $('gfMeterSel').value = st.meter;
+  if (st.holes) $('gfHolesSel').value = st.holes;
+  if (st.n) $('gfPlayers').value = String(st.n);
+  if (Array.isArray(st.names)) st.names.forEach((v, i) => { const b = $('gfNick' + (i + 1)); if (b && v) b.value = String(v).slice(0, 16); });
+  gfLocalRows();
+  $('gfPlayers').addEventListener('change', gfLocalRows);
+  for (const id of ['gfWindSel', 'gfMeterSel', 'gfHolesSel']) $(id).addEventListener('change', gfOptions);
+  $('gfPlay').addEventListener('click', gfPlayLocal);
+  $('gfSettings').addEventListener('click', () => $('titleSettings').click());
+  if ($('gfBanner')) $('gfBanner').addEventListener('click', () => { $('gfTitle').scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' }); setTimeout(() => $('gfPlay').focus({ preventScroll: true }), 400); });
+  $('gfResume').addEventListener('click', () => gfPauseOpen(false));
+  $('gfPauseCard').addEventListener('click', () => { gfPauseOpen(false); gfCardShow(true, true); });
+  $('gfLeave').addEventListener('click', gfQuit);
+  $('gfMenuBtn').addEventListener('click', () => gfPauseOpen(true));
+  $('gfCardNext').addEventListener('click', () => { if (GF.ph === 'card') gfCardNext(); else gfCardShow(false, true); });
+  $('gfCardMenu').addEventListener('click', gfQuit);
+  $('gfCardAgain').addEventListener('click', () => { if (GF.mode === 'net') return; const names = GF.P.map(p => p.nm), holes = GF.holes.slice(); GF.on = false; gfStart({ names, holes, wind: GF.set.wind, meter: GF.set.meter }); });
+  // the buttons on a touch screen (held: aim; tapped: the rest)
+  const hold = (id, key) => { const b = $(id); const on = e => { e.preventDefault(); GF.keys[key] = true; }, off = () => { GF.keys[key] = false; }; b.addEventListener('pointerdown', on); for (const t of ['pointerup', 'pointerleave', 'pointercancel']) b.addEventListener(t, off); };
+  hold('gfAimL', 'l'); hold('gfAimR', 'r');
+  $('gfClubUp').addEventListener('click', () => gfClub(-1)); $('gfClubDn').addEventListener('click', () => gfClub(1));
+  $('gfPuttDn').addEventListener('click', () => gfPuttStep(-1)); $('gfPuttUp').addEventListener('click', () => gfPuttStep(1));
+  $('gfSwing').addEventListener('pointerdown', e => { e.preventDefault(); gfPress(); });
+  $('gfLookBtn').addEventListener('click', gfLook);
+  $('gfCardBtn').addEventListener('click', () => gfCardShow($('gfCard').hidden, true));
+  // a tap on the 3D view swings too (the meter's below it)
+  $('gfCv').addEventListener('pointerdown', e => { if (e.pointerType === 'mouse' && e.button !== 0) return; gfPress(); });
+  addEventListener('resize', () => { if (GF.on && typeof gf3dResize === 'function') gf3dResize(); });
+  gfCardRender();
+})();
+
+// ---- src/golfhud.js ----
+'use strict';
+// Skerry Links: what's on the screen over the 3D view (#gfUI in index.html): the hole and the player up, the club, the
+// lie and the distance, the wind, the map of the hole in the corner, the swing meter, and the scorecard.
+// The meter is an arc: the marker climbs from the strike line on the left to the power you set (the top at 100%,
+// the red past it the overswing), then falls back; the strike line is the narrow bright band at the start.
+
+const GH = { key: '', mapCv: null, meterCv: null, windCv: null };
+
+function gfHud(force) {
+  const H = GF.H, p = gfPlayer(); if (!H || !p) return;
+  const club = GF_CLUBS[GF.club], d = gfToPin(p), mine = gfMyTurn();
+  const key = [GF.hi, GF.cur, GF.club, GF.putt, GF.ph, p.st, p.lie, Math.round(d * 3), GF.P.map(q => q.sc.join(',') + q.st).join('|'), mine].join(';');
+  if (force || key !== GH.key) {
+    GH.key = key;
+    $('gfHoleNo').textContent = `Hole ${GF.holes[GF.hi] + 1}`; $('gfHoleName').textContent = H.n;
+    $('gfHolePar').textContent = `Par ${H.par} · ${H.yd} yd`;
+    const tp = gfToPar(p), sh = GF.P.length > 1;
+    $('gfWho').textContent = sh ? p.nm : 'You'; $('gfWho').style.color = p.col;
+    $('gfStroke').textContent = p.done ? 'Holed' : `Stroke ${p.st + 1}`;
+    $('gfTotal').textContent = `${gfParTxt(tp)} for the round`;
+    $('gfLie').textContent = p.done ? '' : (GF_SURF[p.lie] || GF_SURF.rough).n;
+    $('gfPinD').textContent = p.done ? '' : `${gfDist(d)} to the pin`;
+    $('gfClubName').textContent = club.n;
+    const lie = (GF_SURF[p.lie] || GF_SURF.rough).lie * (club.k === 'D' && p.lie !== 'tee' ? 0.9 : 1);
+    $('gfClubD').textContent = club.putt ? `up to ${GF_PUTTS[GF.putt]} ft` : `${Math.round(club.c * (club.putt ? 1 : lie))} yd${lie < 0.99 ? ' from here' : ''}`;
+    $('gfPuttRow').hidden = !club.putt;
+    $('gfPuttScale').textContent = `${GF_PUTTS[GF.putt]} ft`;
+    const others = GF.mode === 'net' && !mine && !p.done;
+    $('gfTurn').hidden = !(others || (GF.P.length > 1 && GF.ph === 'aim'));
+    $('gfTurn').textContent = others ? `${p.nm} is playing` : `${p.nm}, you're up`;
+    $('gfHint').textContent = GF.ph === 'aim' ? (mine ? (club.putt ? 'Space: putt · ← → aim · Q E scale' : 'Space: swing · ← → aim · ↑ ↓ club · M map') : '') : GF.ph === 'swing' ? (GF.m && GF.m.s === 1 ? 'Space: set the power' : 'Space: strike on the line') : GF.ph === 'fly' ? 'Space: hurry it along' : GF.ph === 'card' ? (GF.over || (GF.mode === 'net' && typeof gfnCanNext === 'function' && !gfnCanNext()) ? '' : 'Space: next hole') : GF.ph === 'wait' ? 'Waiting for the host…' : '';
+    $('gfSwing').disabled = !mine && GF.ph !== 'fly' && GF.ph !== 'card';
+    $('gfPadBox').classList.toggle('putting', !!club.putt);
+  }
+  gfDrawMeter(); gfDrawWind(); gfDrawMap();
+}
+
+// ---------- the meter ----------
+function gfDrawMeter() {
+  const cv = $('gfMeter'), show = (GF.ph === 'aim' || GF.ph === 'swing') && gfMyTurn() && GF.intro <= 0;
+  cv.hidden = !show; if (!show) return;
+  const r = Math.min(2, window.devicePixelRatio || 1), W = cv.clientWidth, Hh = cv.clientHeight; if (cv.width !== Math.round(W * r)) { cv.width = Math.round(W * r); cv.height = Math.round(Hh * r); }
+  const c = cv.getContext('2d'); c.setTransform(r, 0, 0, r, 0, 0); c.clearRect(0, 0, W, Hh);
+  const cx = W / 2, cy = Hh - 10, R = Math.min(W / 2 - 14, Hh - 24), a0 = Math.PI * 1.06, span = Math.PI * 0.88;   // (-0.15 at the far left, 1.1 at the far right)
+  const ang = v => a0 + (v + 0.15) / 1.25 * span;
+  c.lineCap = 'butt';
+  const arc = (v0, v1, col, w) => { c.beginPath(); c.arc(cx, cy, R, ang(v0), ang(v1)); c.strokeStyle = col; c.lineWidth = w; c.stroke(); };
+  arc(-0.15, 1.1, 'rgba(8,12,22,0.78)', 26);
+  const g = c.createLinearGradient(cx - R, 0, cx + R, 0); g.addColorStop(0, '#5fa04a'); g.addColorStop(0.55, '#ffd88a'); g.addColorStop(0.85, '#ffb060');
+  arc(0, 1, g, 16); arc(1, 1.1, '#d8452f', 16);
+  arc(-0.15, -0.012, 'rgba(216,69,47,0.55)', 16); arc(0.012, 0.06, 'rgba(255,216,138,0.25)', 16);
+  arc(-0.012, 0.012, '#ffffff', 22);   // (the strike line)
+  // marks at a quarter, a half and three-quarters
+  c.fillStyle = '#e9d9a6'; c.font = '11px "Courier New", monospace'; c.textAlign = 'center';
+  for (const v of [0.25, 0.5, 0.75, 1]) { const a = ang(v); c.beginPath(); c.moveTo(cx + Math.cos(a) * (R - 13), cy + Math.sin(a) * (R - 13)); c.lineTo(cx + Math.cos(a) * (R - 19), cy + Math.sin(a) * (R - 19)); c.strokeStyle = 'rgba(10,10,10,0.7)'; c.lineWidth = 2; c.stroke(); c.fillText(Math.round(v * 100) + '%', cx + Math.cos(a) * (R - 32), cy + Math.sin(a) * (R - 32) + 4); }
+  const M = GF.m;
+  if (M && M.s >= 2) { const a = ang(M.p); c.beginPath(); c.moveTo(cx + Math.cos(a) * (R - 14), cy + Math.sin(a) * (R - 14)); c.lineTo(cx + Math.cos(a) * (R + 14), cy + Math.sin(a) * (R + 14)); c.strokeStyle = '#ffffff'; c.lineWidth = 3; c.stroke(); }
+  if (M) { const a = ang(M.v); c.beginPath(); c.moveTo(cx + Math.cos(a) * (R - 18), cy + Math.sin(a) * (R - 18)); c.lineTo(cx + Math.cos(a) * (R + 18), cy + Math.sin(a) * (R + 18)); c.strokeStyle = '#14110a'; c.lineWidth = 6; c.stroke(); c.strokeStyle = '#fff6d8'; c.lineWidth = 3; c.stroke(); }
+  // what the power comes to
+  const club = GF_CLUBS[GF.club], p = gfPlayer(), v = M ? (M.s >= 2 ? M.p : M.v) : 1;
+  const lie = club.putt ? 1 : (GF_SURF[p.lie] || GF_SURF.rough).lie;
+  c.font = 'bold 15px Georgia, serif'; c.fillStyle = '#ffd88a';
+  c.fillText(M ? (club.putt ? `${Math.round(GF_PUTTS[GF.putt] * Math.max(0, Math.min(1.1, v)))} ft` : `${Math.round(club.c * lie * Math.max(0, Math.min(1.1, v)))} yd`) : (club.putt ? 'Putt' : 'Swing'), cx, cy - 6);
+}
+// the wind: an arrow turned as you're looking, and its speed
+function gfDrawWind() {
+  const cv = $('gfWindCv'), c = cv.getContext('2d'), W = cv.width, s = Math.hypot(GF.wind[0], GF.wind[1]);
+  c.clearRect(0, 0, W, W); c.save(); c.translate(W / 2, W / 2);
+  c.beginPath(); c.arc(0, 0, W / 2 - 2, 0, Math.PI * 2); c.fillStyle = 'rgba(8,12,22,0.7)'; c.fill(); c.strokeStyle = 'rgba(233,217,166,0.5)'; c.lineWidth = 1.5; c.stroke();
+  const a = Math.atan2(GF.wind[0], GF.wind[1]) - (G3.yaw || 0);
+  c.rotate(a); const L = W * 0.34 * Math.min(1, 0.35 + s / 9);
+  c.beginPath(); c.moveTo(0, L); c.lineTo(0, -L); c.strokeStyle = '#ffd88a'; c.lineWidth = 4; c.stroke();
+  c.beginPath(); c.moveTo(0, -L - 6); c.lineTo(-8, -L + 6); c.lineTo(8, -L + 6); c.closePath(); c.fillStyle = '#ffd88a'; c.fill();
+  c.restore();
+  $('gfWindTxt').textContent = s < 0.4 ? 'Still' : Math.round(s * 2.237) + ' mph';
+}
+// the hole from above, in the corner: the course's own picture, the ball, the aim and the others
+function gfDrawMap() {
+  const cv = $('gfMap'), P = G3.paint, H = GF.H; if (!P || !H) return;
+  const r = Math.min(2, window.devicePixelRatio || 1), W = cv.clientWidth, Hh = cv.clientHeight; if (!W) return;
+  if (cv.width !== Math.round(W * r)) { cv.width = Math.round(W * r); cv.height = Math.round(Hh * r); }
+  const c = cv.getContext('2d'); c.setTransform(r, 0, 0, r, 0, 0); c.clearRect(0, 0, W, Hh);
+  // fit the hole from the tee to just past the green
+  const [x0, y0, x1, y1] = H.box, cx0 = Math.min(0, H.pin[0], ...H.pts.map(q => q[0])) - 30, cx1 = Math.max(0, H.pin[0], ...H.pts.map(q => q[0])) + 30, cy0 = -15, cy1 = H.pin[1] + 30;
+  const sc = Math.min(W / (cx1 - cx0), Hh / (cy1 - cy0)), ox = (W - (cx1 - cx0) * sc) / 2, oy = (Hh - (cy1 - cy0) * sc) / 2;
+  const X = x => ox + (x - cx0) * sc, Y = y => Hh - oy - (y - cy0) * sc;
+  c.save(); c.beginPath(); c.rect(0, 0, W, Hh); c.clip();
+  c.drawImage(P.cv, X(x0), Y(y1), (x1 - x0) * sc, (y1 - y0) * sc);
+  c.restore();
+  // the pin, the others, the ball, the aim
+  c.fillStyle = '#d8452f'; c.beginPath(); c.arc(X(H.pin[0]), Y(H.pin[1]), 3, 0, 7); c.fill();
+  GF.P.forEach((q, i) => { if (q.done || i === GF.cur) return; c.fillStyle = q.col; c.beginPath(); c.arc(X(q.x), Y(q.y), 2.6, 0, 7); c.fill(); });
+  const p = gfPlayer(), b = gfBallNow() || [p.x, p.y];
+  if (GF.ph === 'aim') { const club = GF_CLUBS[GF.club], L = club.putt ? GF_PUTTS[GF.putt] * 0.3048 : club.c * GF_YD * (GF_SURF[p.lie] || GF_SURF.rough).lie; c.strokeStyle = 'rgba(255,242,196,0.9)'; c.setLineDash([3, 3]); c.lineWidth = 1.5; c.beginPath(); c.moveTo(X(p.x), Y(p.y)); c.lineTo(X(p.x + Math.sin(GF.aim) * L), Y(p.y + Math.cos(GF.aim) * L)); c.stroke(); c.setLineDash([]); }
+  if (GF.shot && GF.rep) { const tr = GF.shot.R.tr; c.strokeStyle = 'rgba(255,255,255,0.7)'; c.lineWidth = 1.2; c.beginPath(); for (let i = 0; i <= GF.rep.i; i += 3) { const q = tr[i]; i ? c.lineTo(X(q[0]), Y(q[1])) : c.moveTo(X(q[0]), Y(q[1])); } c.stroke(); }
+  c.fillStyle = '#fff'; c.strokeStyle = p.col; c.lineWidth = 2; c.beginPath(); c.arc(X(b[0]), Y(b[1]), 3.4, 0, 7); c.fill(); c.stroke();
+}
+
+// ---------- the scorecard ----------
+// shown at the end of each hole (Next goes on), at the end of the round, and whenever asked for (Tab, Y, the button)
+function gfCardShow(on, manual) {
+  const el = $('gfCard'); if (!el) return;
+  if (!on) { if (GF.ph === 'card') { if (manual && !GF.over) gfCardNext(); return; } el.hidden = true; return; }
+  el.hidden = false;
+  const H = GF.H, holes = GF.holes, done = GF.ph === 'card';
+  $('gfCardHead').textContent = GF.over ? 'The round is over' : done ? `Hole ${GF.holes[GF.hi] + 1} · ${H.n}` : 'Scorecard';
+  // the line under the heading: how the hole went, or who won
+  let sub = '';
+  if (GF.over) {
+    const L = GF.P.filter(q => !q.gone).slice().sort((a, b) => gfTotal(a) - gfTotal(b)), w = L[0];
+    sub = GF.P.length > 1 ? (L.length > 1 && gfTotal(L[1]) === gfTotal(w) ? `A tie at ${gfTotal(w)}.` : `${w.nm} wins with ${gfTotal(w)} (${gfParTxt(gfToPar(w))}).`) : `You went round in ${gfTotal(w)} (${gfParTxt(gfToPar(w))}).`;
+    const st = gfStore.get(); if (GF.full && st.newBest) sub += ' A new best round!';
+    if (!GF.full) sub += ' (Only a full round of nine goes on the scoreboard.)';
+  } else if (done) sub = GF.P.map(q => `${GF.P.length > 1 ? q.nm + ': ' : ''}${q.sc[GF.hi] != null ? gfScoreName(q.sc[GF.hi], H.par) + ' (' + q.sc[GF.hi] + ')' : '—'}`).join(' · ');
+  $('gfCardSub').textContent = sub;
+  const T = $('gfCardTable'); T.textContent = '';
+  const row = (cls, cells) => { const tr = document.createElement('tr'); if (cls) tr.className = cls; cells.forEach((v, i) => { const td = document.createElement(i ? 'td' : 'th'); if (v && typeof v === 'object') { td.textContent = v.t; if (v.c) td.className = v.c; if (v.s) td.style.color = v.s; } else td.textContent = v; tr.append(td); }); T.append(tr); };
+  row('gfc-h', ['Hole'].concat(holes.map(h => String(h + 1)), ['Total', '±']));
+  row('gfc-y', ['Yards'].concat(holes.map(h => String(GF_RAW[h].yd)), [String(holes.reduce((a, h) => a + GF_RAW[h].yd, 0)), '']));
+  const par = holes.reduce((a, h) => a + GF_RAW[h].par, 0);
+  row('gfc-p', ['Par'].concat(holes.map(h => String(GF_RAW[h].par)), [String(par), '']));
+  for (const q of GF.P) {
+    const cells = holes.map((h, k) => { const v = q.sc[k]; if (v == null) return { t: k === GF.hi && !GF.over && q.st ? '·' : '' }; const d = v - GF_RAW[h].par; return { t: String(v), c: d <= -2 ? 'gfc-eagle' : d === -1 ? 'gfc-birdie' : d === 0 ? '' : d === 1 ? 'gfc-bogey' : 'gfc-double' }; });
+    row('gfc-pl', [{ t: q.nm + (q.gone ? ' (left)' : ''), s: q.col }].concat(cells, [String(gfTotal(q) || ''), gfParTxt(gfToPar(q))]));
+  }
+  $('gfCardNext').hidden = GF.over || (GF.mode === 'net' && done && typeof gfnCanNext === 'function' && !gfnCanNext());
+  $('gfCardNext').textContent = done ? (GF.hi + 1 < holes.length ? `On to hole ${holes[GF.hi + 1] + 1}` : 'Finish') : 'Back to the hole';
+  $('gfCardAgain').hidden = !GF.over || GF.mode === 'net';
+  $('gfCardMenu').hidden = !GF.over;
+  $('gfCardWait').hidden = !(GF.mode === 'net' && done && !GF.over && typeof gfnCanNext === 'function' && !gfnCanNext());
+  setTimeout(() => { const b = !$('gfCardNext').hidden ? $('gfCardNext') : $('gfCardMenu'); if (b && !b.hidden) b.focus({ preventScroll: true }); }, 30);
+}
+
+// ---- src/golf3d.js ----
+'use strict';
+// Skerry Links in 3D (three.js, its own canvas, #gfCv): the hole's land and turf, the sea below the cliffs, the trees,
+// the pin, the ball and its shadow, the golfer and the swing, the aim line, the slopes on the green, and the camera.
+// The land is one mesh in detail over the hole (heights from gfH, src/golfcourse.js) wearing a picture of the course
+// painted on a canvas (gf3dPaint: the rough, the mown fairway, the greens, the bunkers, the rocks and the sea bed, all
+// from the same shapes the ball plays off), with a plainer one round it out to the horizon. Game frame to three.js:
+// (x, y, z up) is (x, z, -y).
+
+const G3 = { ok: false, r: null, scene: null, cam: null, hole: null, ball: null, shadow: null, golfer: null, pin: null, flag: null, aimPts: null, ring: null, slopes: null, others: [], trail: null, paint: null, cp: null, cl: null };
+const gv = (x, y, z) => new THREE.Vector3(x, z, -y);
+
+function gf3dInit() {
+  if (G3.ok) return true;
+  if (typeof THREE === 'undefined') return false;
+  const cv = $('gfCv');
+  try { G3.r = new THREE.WebGLRenderer({ canvas: cv, antialias: true, powerPreference: 'high-performance' }); } catch (e) { return false; }
+  G3.r.setPixelRatio(Math.min(1.5, window.devicePixelRatio || 1));
+  const S = G3.scene = new THREE.Scene();
+  S.fog = new THREE.Fog(0xdcc7a2, 260, 1500);
+  G3.cam = new THREE.PerspectiveCamera(52, 1, 0.1, 6000);
+  // late afternoon: a low warm sun out to sea, the sky light from above
+  S.add(new THREE.HemisphereLight(0xd8e6ff, 0x4e5a38, 0.85));
+  const sun = G3.sun = new THREE.DirectionalLight(0xffe0b0, 1.05); sun.position.set(-0.55, 0.42, -0.72).multiplyScalar(100); S.add(sun);
+  // the sky: blue overhead to a warm haze at the horizon, brighter towards the sun
+  const sky = new THREE.Mesh(new THREE.SphereGeometry(4500, 24, 16), new THREE.ShaderMaterial({ side: THREE.BackSide, depthWrite: false, fog: false,
+    uniforms: { sd: { value: sun.position.clone().normalize() } },
+    vertexShader: 'varying vec3 vd; void main(){ vd = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+    fragmentShader: 'uniform vec3 sd; varying vec3 vd; void main(){ float h = clamp(vd.y, -0.1, 1.0); vec3 top = vec3(0.36, 0.55, 0.78), hor = vec3(0.92, 0.80, 0.62); vec3 c = mix(hor, top, pow(max(h, 0.0), 0.55)); float s = max(dot(vd, sd), 0.0); c += vec3(1.0, 0.78, 0.45) * (pow(s, 9.0) * 0.35 + pow(s, 400.0) * 1.2); gl_FragColor = vec4(c, 1.0); }' }));
+  sky.renderOrder = -1; S.add(sky); G3.sky = sky;
+  // the sea
+  const sea = G3.sea = new THREE.Mesh(new THREE.PlaneGeometry(9000, 9000), new THREE.MeshPhongMaterial({ color: 0x2b6a80, specular: 0xffe6b8, shininess: 70, transparent: true, opacity: 0.86 }));
+  sea.rotation.x = -Math.PI / 2; sea.position.y = 0; S.add(sea);
+  // the ball, its shadow and its trail
+  G3.ball = new THREE.Mesh(new THREE.SphereGeometry(0.07, 14, 10), new THREE.MeshLambertMaterial({ color: 0xffffff, emissive: 0x555555 })); S.add(G3.ball);
+  G3.shadow = new THREE.Mesh(new THREE.CircleGeometry(0.09, 16), new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.35, depthWrite: false }));
+  G3.shadow.rotation.x = -Math.PI / 2; S.add(G3.shadow);
+  G3.trailN = 48; const tg = new THREE.BufferGeometry(); tg.setAttribute('position', new THREE.BufferAttribute(new Float32Array(G3.trailN * 3), 3));
+  G3.trail = new THREE.Line(tg, new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.55 })); G3.trail.frustumCulled = false; S.add(G3.trail);
+  for (let i = 0; i < 4; i++) { const m = new THREE.Mesh(new THREE.SphereGeometry(0.07, 10, 8), new THREE.MeshLambertMaterial({ color: GF_COLS[i], emissive: new THREE.Color(GF_COLS[i]).multiplyScalar(0.35) })); m.visible = false; S.add(m); const mk = new THREE.Mesh(new THREE.ConeGeometry(0.35, 0.7, 8), new THREE.MeshBasicMaterial({ color: GF_COLS[i] })); mk.rotation.x = Math.PI; mk.visible = false; S.add(mk); G3.others.push({ m, mk }); }
+  // the pin, the flag and the cup
+  const pin = G3.pin = new THREE.Group();
+  const stick = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.018, 2.3, 6), new THREE.MeshLambertMaterial({ color: 0xf4efe2 })); stick.position.y = 1.15; pin.add(stick);
+  const fg = new THREE.PlaneGeometry(0.75, 0.48, 6, 1); fg.translate(0.375, 0, 0);
+  G3.flag = new THREE.Mesh(fg, new THREE.MeshLambertMaterial({ color: 0xd8452f, side: THREE.DoubleSide })); G3.flag.position.y = 2.05; pin.add(G3.flag);
+  const cup = new THREE.Mesh(new THREE.CircleGeometry(0.11, 20), new THREE.MeshBasicMaterial({ color: 0x14180f })); cup.rotation.x = -Math.PI / 2; cup.position.y = 0.012; pin.add(cup);
+  const rim = new THREE.Mesh(new THREE.RingGeometry(0.11, 0.135, 20), new THREE.MeshBasicMaterial({ color: 0xe9e4d4 })); rim.rotation.x = -Math.PI / 2; rim.position.y = 0.01; pin.add(rim);
+  S.add(pin);
+  // a marker over the pin, the same size however far off it is, so it can be found from the tee
+  { const c = document.createElement('canvas'); c.width = c.height = 64; const x = c.getContext('2d'); x.fillStyle = '#f4efe2'; x.fillRect(29, 6, 4, 54); x.fillStyle = '#d8452f'; x.beginPath(); x.moveTo(33, 6); x.lineTo(60, 16); x.lineTo(33, 27); x.closePath(); x.fill(); x.strokeStyle = 'rgba(0,0,0,0.5)'; x.lineWidth = 2; x.stroke();
+    const t = new THREE.CanvasTexture(c); G3.pinMark = new THREE.Sprite(new THREE.SpriteMaterial({ map: t, sizeAttenuation: false, depthTest: false, transparent: true, opacity: 0.9 })); G3.pinMark.scale.set(0.045, 0.045, 1); G3.pinMark.renderOrder = 5; S.add(G3.pinMark); }
+  // the aim: dots along the ground to where a full shot comes down, and a ring there
+  const ag = new THREE.BufferGeometry(); ag.setAttribute('position', new THREE.BufferAttribute(new Float32Array(64 * 3), 3));
+  G3.aimPts = new THREE.Points(ag, new THREE.PointsMaterial({ color: 0xfff2c4, size: 0.32, sizeAttenuation: true, transparent: true, opacity: 0.9, depthWrite: false })); G3.aimPts.frustumCulled = false; S.add(G3.aimPts);
+  G3.ring = new THREE.Mesh(new THREE.RingGeometry(1.8, 2.3, 40), new THREE.MeshBasicMaterial({ color: 0xfff2c4, transparent: true, opacity: 0.8, side: THREE.DoubleSide, depthWrite: false }));
+  G3.ring.rotation.x = -Math.PI / 2; S.add(G3.ring);
+  G3.golfer = gf3dGolfer(); S.add(G3.golfer);
+  G3.ok = true; gf3dResize();
+  return true;
+}
+function gf3dResize() { if (!G3.r) return; const w = innerWidth, h = innerHeight; G3.r.setSize(w, h, false); G3.cam.aspect = w / h; G3.cam.fov = w < h ? 64 : 52; G3.cam.updateProjectionMatrix(); }
+
+// ---------- the golfer ----------
+function gf3dGolfer() {
+  const g = new THREE.Group(), L = c => new THREE.MeshLambertMaterial({ color: c });
+  const trou = L(0x2a3346), skin = L(0xe0b48c), dark = L(0x22201c);
+  for (const z of [-0.13, 0.13]) { const leg = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.85, 0.15), trou); leg.position.set(-0.04, 0.43, z); leg.rotation.z = -0.12; g.add(leg); const sh = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.08, 0.13), dark); sh.position.set(0.02, 0.04, z); g.add(sh); }
+  const body = g.userData.body = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.62, 0.42), L(0xffd88a)); body.position.set(0.06, 1.13, 0); body.rotation.z = -0.32; g.add(body);
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.12, 12, 10), skin); head.position.set(0.2, 1.55, 0); g.add(head);
+  const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.125, 0.13, 0.08, 12), dark); cap.position.set(0.2, 1.64, 0); g.add(cap);
+  const brim = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.02, 0.2), dark); brim.position.set(0.31, 1.61, 0); g.add(brim);
+  // the arms and the club swing together about the line from the shoulders to the ball
+  const sw = g.userData.sw = new THREE.Group(); sw.position.set(0.16, 1.32, 0); g.add(sw);
+  const toBall = new THREE.Vector3(0.62, -1.3, 0), len = toBall.length(), dir = toBall.clone().normalize();
+  const club = new THREE.Group(); club.quaternion.setFromUnitVectors(new THREE.Vector3(0, -1, 0), dir); sw.add(club);
+  for (const z of [-0.09, 0.09]) { const arm = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.04, 0.62, 6), L(0xffd88a)); arm.position.set(0, -0.31, z * 0.6); arm.rotation.x = z > 0 ? -0.15 : 0.15; club.add(arm); g.userData.arms = (g.userData.arms || []).concat(arm); }
+  const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.008, len - 0.55, 5), L(0xc9c9c9)); shaft.position.y = -0.6 - (len - 0.55) / 2; club.add(shaft);
+  const ch = g.userData.head = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.05, 0.06), L(0x8a8a8a)); ch.position.y = -len + 0.03; club.add(ch);
+  return g;
+}
+
+// ---------- a hole ----------
+function gf3dDispose(o) { o.traverse(c => { if (c.geometry) c.geometry.dispose(); if (c.material) [].concat(c.material).forEach(m => { if (m.map) m.map.dispose(); m.dispose(); }); }); }
+function gf3dHole(H) {
+  if (!G3.ok && !gf3dInit()) return;
+  if (G3.hole) { G3.scene.remove(G3.hole); gf3dDispose(G3.hole); }
+  const grp = G3.hole = new THREE.Group();
+  const P = G3.paint = gf3dPaint(H);
+  const tex = new THREE.CanvasTexture(P.cv); tex.anisotropy = Math.min(8, G3.r.capabilities.getMaxAnisotropy ? G3.r.capabilities.getMaxAnisotropy() : 4); if (THREE.SRGBColorSpace) tex.colorSpace = THREE.SRGBColorSpace;
+  // the land in detail over the hole
+  const [x0, y0, x1, y1] = H.box, step = 2.5, nx = Math.ceil((x1 - x0) / step) + 1, ny = Math.ceil((y1 - y0) / step) + 1;
+  const pos = new Float32Array(nx * ny * 3), uv = new Float32Array(nx * ny * 2), idx = [];
+  for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) {
+    const x = Math.min(x1, x0 + i * step), y = Math.min(y1, y0 + j * step), k = j * nx + i;
+    pos[k * 3] = x; pos[k * 3 + 1] = gfH(H, x, y); pos[k * 3 + 2] = -y; uv[k * 2] = (x - x0) / (x1 - x0); uv[k * 2 + 1] = (y - y0) / (y1 - y0);
+    if (i < nx - 1 && j < ny - 1) idx.push(k, k + 1, k + nx, k + 1, k + nx + 1, k + nx);
+  }
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.setAttribute('uv', new THREE.BufferAttribute(uv, 2)); g.setIndex(idx); g.computeVertexNormals();
+  grp.add(new THREE.Mesh(g, new THREE.MeshLambertMaterial({ map: tex })));
+  // and plainer out to the horizon (with a hole where the detailed land is)
+  const fs = 20, fx0 = x0 - 1100, fy0 = y0 - 900, fx1 = x1 + 1100, fy1 = y1 + 1100, fnx = Math.ceil((fx1 - fx0) / fs) + 1, fny = Math.ceil((fy1 - fy0) / fs) + 1;
+  const fp = new Float32Array(fnx * fny * 3), fc = new Float32Array(fnx * fny * 3), fi = [], cR = new THREE.Color(0x4c6f36), cD = new THREE.Color(0x3e5e2e), cK = new THREE.Color(0x857a68), cB = new THREE.Color(0x2c5260), tmp = new THREE.Color();
+  for (let j = 0; j < fny; j++) for (let i = 0; i < fnx; i++) {
+    const x = fx0 + i * fs, y = fy0 + j * fs, k = j * fnx + i, h = gfH(H, x, y), sd = gfSeaD(H, x, y);
+    fp[k * 3] = x; fp[k * 3 + 1] = h - 0.5; fp[k * 3 + 2] = -y;
+    tmp.copy(sd < 0 ? cB : sd < 12 ? cK : (glHashG(i, j) > 0.5 ? cR : cD)); fc[k * 3] = tmp.r; fc[k * 3 + 1] = tmp.g; fc[k * 3 + 2] = tmp.b;
+    if (i < fnx - 1 && j < fny - 1) { const inside = x >= x0 + fs && x + fs <= x1 - fs && y >= y0 + fs && y + fs <= y1 - fs; if (!inside) fi.push(k, k + 1, k + fnx, k + 1, k + fnx + 1, k + fnx); }
+  }
+  const fg = new THREE.BufferGeometry(); fg.setAttribute('position', new THREE.BufferAttribute(fp, 3)); fg.setAttribute('color', new THREE.BufferAttribute(fc, 3)); fg.setIndex(fi); fg.computeVertexNormals();
+  grp.add(new THREE.Mesh(fg, new THREE.MeshLambertMaterial({ vertexColors: true })));
+  // the creek's water, a little below its banks
+  for (const C of H.ck) {
+    const sh = new THREE.Shape(C.map(p => new THREE.Vector2(p[0], p[1]))), m = new THREE.Mesh(new THREE.ShapeGeometry(sh), new THREE.MeshPhongMaterial({ color: 0x2f6474, specular: 0xffffff, shininess: 50, transparent: true, opacity: 0.85 }));
+    m.rotation.x = -Math.PI / 2; const c = C.reduce((a, p) => [a[0] + p[0] / C.length, a[1] + p[1] / C.length], [0, 0]); m.position.y = gfBase(H, c[0], c[1]) - 1.3; grp.add(m);
+  }
+  // the trees: wind-bent cypresses and tall pines
+  const T = H.trees, trunkG = new THREE.CylinderGeometry(0.22, 0.38, 1, 6), cypG = new THREE.DodecahedronGeometry(1, 0), pineG = new THREE.ConeGeometry(1, 1, 7);
+  const trunks = new THREE.InstancedMesh(trunkG, new THREE.MeshLambertMaterial({ color: 0x5a4330 }), T.length);
+  const cyp = new THREE.InstancedMesh(cypG, new THREE.MeshLambertMaterial({ color: 0x31502c, flatShading: true }), Math.max(1, T.filter(t => !t.kind).length));
+  const pine = new THREE.InstancedMesh(pineG, new THREE.MeshLambertMaterial({ color: 0x2a4630, flatShading: true }), Math.max(1, T.filter(t => t.kind).length));
+  const M = new THREE.Matrix4(), Q = new THREE.Quaternion(), E = new THREE.Euler(), V = new THREE.Vector3(), Sc = new THREE.Vector3();
+  let a = 0, b = 0;
+  T.forEach((t, k) => {
+    const gz = t.gz = gfH(H, t.x, t.y);
+    E.set(0, t.lean * 3, t.lean * 0.4); Q.setFromEuler(E); M.compose(V.set(t.x, gz + t.h * 0.3, -t.y), Q, Sc.set(1, t.h * 0.62, 1)); trunks.setMatrixAt(k, M);
+    if (!t.kind) { M.compose(V.set(t.x + t.lean * 2, gz + t.h * 0.68, -t.y), Q, Sc.set(t.r * 1.25, t.r * 0.55, t.r * 1.05)); cyp.setMatrixAt(a++, M); }
+    else { M.compose(V.set(t.x, gz + t.h * 0.62, -t.y), Q, Sc.set(t.r * 0.75, t.h * 0.75, t.r * 0.75)); pine.setMatrixAt(b++, M); }
+  });
+  cyp.count = a; pine.count = b; grp.add(trunks, cyp, pine);
+  // the slopes on the green: little arrows pointing downhill, longer and warmer where it's steeper
+  const sp = [], sc = [], gr = H.gr, cool = new THREE.Color(0xbfe8ff), warm = new THREE.Color(0xffb060);
+  for (let yy = gr[1] - gr[3] - 2; yy <= gr[1] + gr[3] + 2; yy += 1.6) for (let xx = gr[0] - gr[2] - 2; xx <= gr[0] + gr[2] + 2; xx += 1.6) {
+    if (gfEll(gr, xx, yy) > 1.05) continue;
+    const n = gfNorm(H, xx, yy), gx = n[0] / n[2], gy = n[1] / n[2], m = Math.hypot(gx, gy); if (m < 0.002) continue;
+    const L = Math.min(0.8, 0.12 + m * 18), ux = gx / m, uy = gy / m, h0 = gfH(H, xx, yy) + 0.03, ex = xx + ux * L, ey = yy + uy * L, h1 = gfH(H, ex, ey) + 0.03;
+    const c = cool.clone().lerp(warm, Math.min(1, m / 0.035));
+    const seg = (ax, ay, az, bx, by, bz) => { sp.push(ax, az, -ay, bx, bz, -by); sc.push(c.r, c.g, c.b, c.r, c.g, c.b); };
+    seg(xx, yy, h0, ex, ey, h1);
+    seg(ex, ey, h1, ex - ux * 0.22 + uy * 0.14, ey - uy * 0.22 - ux * 0.14, h1); seg(ex, ey, h1, ex - ux * 0.22 - uy * 0.14, ey - uy * 0.22 + ux * 0.14, h1);
+  }
+  const sg = new THREE.BufferGeometry(); sg.setAttribute('position', new THREE.Float32BufferAttribute(sp, 3)); sg.setAttribute('color', new THREE.Float32BufferAttribute(sc, 3));
+  G3.slopes = new THREE.LineSegments(sg, new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.7 })); G3.slopes.visible = false; grp.add(G3.slopes);
+  // the tee markers
+  for (const x of [-3.2, 3.2]) { const t = new THREE.Mesh(new THREE.SphereGeometry(0.14, 8, 6), new THREE.MeshLambertMaterial({ color: 0xd8452f })); t.position.copy(gv(x, 1.5, H.teeH + 0.1)); grp.add(t); }
+  G3.scene.add(grp);
+  G3.pin.position.copy(gv(H.pin[0], H.pin[1], gfH(H, H.pin[0], H.pin[1]))); G3.pinMark.position.copy(gv(H.pin[0], H.pin[1], gfH(H, H.pin[0], H.pin[1]) + 4.5));
+  G3.cp = null;
+  GF.intro = 2.4;
+}
+function glHashG(a, b) { const s = Math.sin(a * 127.1 + b * 311.7) * 43758.5453; return s - Math.floor(s); }
+
+// the picture of the course the land wears (and the map in the corner shows): painted from the hole's own shapes
+function gf3dPaint(H) {
+  const [x0, y0, x1, y1] = H.box, W = x1 - x0, Hh = y1 - y0, ppm = Math.min(4, 2048 / Math.max(W, Hh));
+  const cv = document.createElement('canvas'); cv.width = Math.ceil(W * ppm); cv.height = Math.ceil(Hh * ppm);
+  const c = cv.getContext('2d'), X = x => (x - x0) * ppm, Y = y => (y1 - y) * ppm, path = P => { c.beginPath(); P.forEach((p, i) => i ? c.lineTo(X(p[0]), Y(p[1])) : c.moveTo(X(p[0]), Y(p[1]))); };
+  const ell = (E, grow) => { c.beginPath(); c.ellipse(X(E[0]), Y(E[1]), (E[2] + grow) * ppm, (E[3] + grow) * ppm, -(E[4] || 0), 0, Math.PI * 2); };
+  const r = gfRng(H.i * 31 + 5);
+  // deep rough, then the rough along the line of play and round the green
+  c.fillStyle = '#3f6130'; c.fillRect(0, 0, cv.width, cv.height);
+  c.lineCap = c.lineJoin = 'round'; c.strokeStyle = '#4d7639';
+  if (H.fwy.length) { path(H.fwy); c.lineWidth = 2 * (H.fw + 26) * ppm; c.stroke(); }
+  path(H.pts); c.lineWidth = 2 * (Math.max(H.fw, 14) + 26) * ppm; c.stroke();
+  c.fillStyle = '#4d7639'; c.beginPath(); c.ellipse(X(H.gr[0]), Y(H.gr[1]), H.gr[2] * 3.2 * ppm, H.gr[3] * 3.2 * ppm, -H.gr[4], 0, Math.PI * 2); c.fill();
+  // tufts and wear
+  for (let i = 0; i < 26000; i++) { const s = r() < 0.5; c.fillStyle = s ? 'rgba(20,40,10,0.13)' : 'rgba(190,210,120,0.08)'; c.fillRect(r() * cv.width, r() * cv.height, 1 + r() * 2.5, 1 + r() * 2.5); }
+  // the fairway, mown in bands across the line of play
+  if (H.fwy.length) {
+    path(H.fwy); c.lineWidth = 2 * H.fw * ppm; c.strokeStyle = '#6a9e45'; c.stroke();
+    // (the bands drawn on a canvas of their own, kept only where the fairway is, then laid on)
+    const o = document.createElement('canvas'); o.width = cv.width; o.height = cv.height; const oc = o.getContext('2d');
+    oc.lineCap = oc.lineJoin = 'round'; oc.beginPath(); H.fwy.forEach((p, i) => i ? oc.lineTo(X(p[0]), Y(p[1])) : oc.moveTo(X(p[0]), Y(p[1]))); oc.lineWidth = 2 * H.fw * ppm; oc.strokeStyle = '#000'; oc.stroke();
+    oc.globalCompositeOperation = 'source-in'; oc.translate(X(0), Y(0)); oc.rotate(H.dir); oc.fillStyle = 'rgba(255,255,220,0.1)';
+    for (let d = -60; d < H.len + 80; d += 16) oc.fillRect(-400 * ppm, -(d + 8) * ppm, 800 * ppm, 8 * ppm);
+    c.drawImage(o, 0, 0);
+  }
+  // the tee
+  c.fillStyle = '#74a84c'; c.fillRect(X(-4), Y(6), 8 * ppm, 12 * ppm);
+  // the fringe and the green
+  c.fillStyle = '#73a84b'; ell(H.gr, 1.8); c.fill();
+  c.fillStyle = '#84c058'; ell(H.gr, 0); c.fill();
+  c.save(); ell(H.gr, 0); c.clip(); c.fillStyle = 'rgba(255,255,230,0.08)'; c.translate(X(H.gr[0]), Y(H.gr[1])); c.rotate(H.dir + 0.6); for (let d = -30; d < 30; d += 3) c.fillRect(-40 * ppm, d * ppm, 80 * ppm, 1.5 * ppm); c.restore();
+  // bunkers
+  for (const b of H.bk) { c.fillStyle = '#c9b98a'; ell(b, 0.5); c.fill(); c.fillStyle = '#e8dbb0'; ell(b, 0); c.fill(); }
+  for (let i = 0; i < 2500; i++) { const b = H.bk[(r() * H.bk.length) | 0]; if (!b) break; const a = r() * 6.283, d = Math.sqrt(r()); const px = b[0] + Math.cos(a) * b[2] * d, py = b[1] + Math.sin(a) * b[3] * d; c.fillStyle = 'rgba(150,130,90,0.16)'; c.fillRect(X(px), Y(py), 1.5, 1.5); }
+  // the creek
+  for (const C of H.ck) { c.fillStyle = '#5b5040'; path(C); c.closePath(); c.lineWidth = 5 * ppm; c.strokeStyle = '#6f6450'; c.stroke(); c.fill(); }
+  // the sea: the bed, the surf at its edge, the rocks of the cliff
+  const seaPath = () => { if (H.land) { c.beginPath(); c.rect(-10, -10, cv.width + 20, cv.height + 20); H.land.forEach((p, i) => i ? c.lineTo(X(p[0]), Y(p[1])) : c.moveTo(X(p[0]), Y(p[1]))); c.closePath(); } else { c.beginPath(); for (const P of H.sea) { P.forEach((p, i) => i ? c.lineTo(X(p[0]), Y(p[1])) : c.moveTo(X(p[0]), Y(p[1]))); c.closePath(); } } };
+  const edges = H.land ? [H.land] : H.sea;
+  if (edges.length) {
+    seaPath(); c.fillStyle = '#35606a'; c.fill('evenodd');
+    c.lineJoin = 'round';
+    for (const P of edges) { path(P); c.closePath(); c.lineWidth = 7 * ppm; c.strokeStyle = 'rgba(210,235,230,0.55)'; c.stroke(); c.lineWidth = 2 * (GF_CLIFF - 1) * ppm; c.strokeStyle = '#857a66'; c.stroke(); c.lineWidth = 2.5 * ppm; c.strokeStyle = '#6b6152'; c.stroke(); }
+  }
+  return { cv, ppm, X, Y };
+}
+
+// ---------- each frame ----------
+function gf3dDraw(dt) {
+  if (!G3.ok || !GF.H) return;
+  const H = GF.H, p = gfPlayer(), t = GF.t;
+  // the ball: in flight from the track, or lying where it lies
+  let bp = gfBallNow();
+  const lying = !bp; if (lying && p) bp = [p.x, p.y, gfH(H, p.x, p.y)];
+  if (bp) {
+    G3.ball.position.copy(gv(bp[0], bp[1], bp[2] + 0.06)); G3.ball.visible = !(p && p.done && lying);
+    const gh = gfH(H, bp[0], bp[1]), up = Math.max(0, bp[2] - gh); G3.shadow.position.copy(gv(bp[0], bp[1], Math.max(gh, 0) + 0.03)); G3.shadow.scale.setScalar(1 + up * 0.04); G3.shadow.material.opacity = Math.max(0.08, 0.35 - up * 0.006); G3.shadow.visible = G3.ball.visible && gh > -0.5;
+  }
+  // the trail behind a ball in the air
+  const tp = G3.trail.geometry.attributes.position, S = GF.shot;
+  if (S && GF.rep) { const tr = S.R.tr, i1 = Math.min(tr.length - 1, GF.rep.i); for (let k = 0; k < G3.trailN; k++) { const q = tr[Math.max(0, i1 - (G3.trailN - 1 - k) * 2)]; tp.setXYZ(k, q[0], q[2] + 0.06, -q[1]); } tp.needsUpdate = true; G3.trail.visible = true; } else G3.trail.visible = false;
+  // the others' balls, where they lie
+  GF.P.forEach((q, i) => { const o = G3.others[i]; if (!o) return; const show = q !== p && !q.done && q.st > 0; o.m.visible = o.mk.visible = show; if (show) { const z = gfH(H, q.x, q.y); o.m.position.copy(gv(q.x, q.y, z + 0.06)); o.mk.position.copy(gv(q.x, q.y, z + 1.6 + Math.sin(t * 3 + i) * 0.1)); } });
+  // the golfer at the ball, swinging with the meter
+  const aiming = (GF.ph === 'aim' || GF.ph === 'swing') && p && !p.done;
+  const swinging = GF.ph === 'fly' && GF.rep && GF.rep.t < 1.2 && S && !lying;
+  G3.golfer.visible = !!(aiming || swinging);
+  if (G3.golfer.visible) {
+    const sx = swinging ? S.sx : p.x, sy = swinging ? S.sy : p.y, a = swinging ? S.shot.a : GF.aim, rx = Math.cos(a), ry = -Math.sin(a), putt = GF_CLUBS[swinging ? S.shot.c : GF.club].putt;
+    const st = putt ? 0.55 : 0.75, gx = sx - rx * st, gy = sy - ry * st;
+    G3.golfer.position.copy(gv(gx, gy, gfH(H, gx, gy))); G3.golfer.rotation.y = Math.atan2(ry, rx);
+    G3.golfer.userData.body.material.color.set(p ? p.col : '#ffd88a');
+    let sw = 0; const M = GF.m, top = putt ? 0.55 : 2.5;
+    if (GF.ph === 'swing' && M) sw = M.s === 1 ? -M.v * top / 1.1 : -Math.max(0, M.v) * top / 1.1;
+    else if (swinging) { const k = GF.rep.t; sw = Math.min(top * 0.9, k * 9) * (putt ? 0.6 : 1); }
+    G3.golfer.userData.sw.rotation.x = sw;
+  }
+  // the pin's flag streams downwind
+  const wb = Math.atan2(GF.wind[0], GF.wind[1]), ws = Math.hypot(GF.wind[0], GF.wind[1]);
+  G3.flag.rotation.y = -wb + Math.PI / 2 + Math.sin(t * (2 + ws * 0.4)) * 0.12; G3.flag.scale.x = 0.7 + Math.min(0.3, ws * 0.04);
+  if (G3.pinMark) G3.pinMark.visible = !!p && gfToPin(p) > 35 && GF.view !== 'card';
+  // the aim line and the ring where a full shot comes down
+  const showAim = GF.ph === 'aim' && p && !p.done && GF.intro <= 0;
+  const club = GF_CLUBS[GF.club], ap = G3.aimPts.geometry.attributes.position;
+  G3.aimPts.visible = G3.ring.visible = showAim;
+  if (showAim) {
+    const lie = club.putt ? 1 : (GF_SURF[p.lie] || GF_SURF.rough).lie * (club.k === 'D' && p.lie !== 'tee' ? 0.9 : 1);
+    const L = club.putt ? GF_PUTTS[GF.putt] * 0.3048 : club.c * GF_YD * lie, sa = Math.sin(GF.aim), ca = Math.cos(GF.aim);
+    for (let k = 0; k < 64; k++) { const f = (k + 1) / 64, d = L * f, x = p.x + sa * d, y = p.y + ca * d, gz = gfH(H, x, y); ap.setXYZ(k, x, Math.max(gz, 0) + 0.08 + (club.putt ? 0 : Math.sin(f * Math.PI) * 0), -y); }
+    ap.needsUpdate = true;
+    const ex = p.x + sa * L, ey = p.y + ca * L; G3.ring.position.copy(gv(ex, ey, Math.max(gfH(H, ex, ey), 0) + 0.1)); G3.ring.scale.setScalar(club.putt ? 0.18 : 0.6 + L / 160);
+    G3.aimPts.material.size = club.putt ? 0.06 : 0.32;
+  }
+  if (G3.slopes) G3.slopes.visible = !!(p && !p.done && (p.lie === 'green' || p.lie === 'fringe' || (club.putt && gfToPin(p) < 30)) && GF.ph !== 'card');
+  gf3dCamera(dt, bp);
+  G3.r.render(G3.scene, G3.cam);
+}
+// the camera: behind the ball down the aim when it's your go, chasing the ball in flight, high over the hole to look
+function gf3dCamera(dt, bp) {
+  const H = GF.H, p = gfPlayer(); let pos, look, k = 3;
+  const behind = (x, y, a, back, up, ahead) => { const sa = Math.sin(a), ca = Math.cos(a), z = gfH(H, x, y); const cx = x - sa * back, cy = y - ca * back; return [[cx, cy, Math.max(gfH(H, cx, cy), 0, z - 4) + up], [x + sa * ahead, y + ca * ahead, Math.max(z + (ahead > 20 ? 1.5 : 0), 0)]]; };
+  if (GF.intro > 0) {
+    GF.intro -= dt; const f = 1 - Math.max(0, GF.intro) / 2.4, e = f * f * (3 - 2 * f);
+    const A = [H.pin[0] - Math.sin(H.dir) * 40, H.pin[1] - Math.cos(H.dir) * 40, gfH(H, H.pin[0], H.pin[1]) + 45], B = behind(p.x, p.y, GF.aim, 7, 2.6, 60);
+    pos = A.map((v, i) => v + (B[0][i] - v) * e); const LA = [H.pin[0], H.pin[1], gfH(H, H.pin[0], H.pin[1])]; look = LA.map((v, i) => v + (B[1][i] - v) * e); k = 50;
+  } else if (GF.view === 'look' && p) {
+    const mx = (p.x + H.pin[0]) / 2, my = (p.y + H.pin[1]) / 2, d = Math.max(60, gfToPin(p)), a = Math.atan2(H.pin[0] - p.x, H.pin[1] - p.y);
+    pos = [mx - Math.sin(a) * d * 0.45, my - Math.cos(a) * d * 0.45, gfH(H, mx, my) + d * 0.85]; look = [mx + Math.sin(a) * d * 0.1, my + Math.cos(a) * d * 0.1, gfH(H, mx, my)]; k = 4;
+  } else if ((GF.ph === 'fly' || GF.ph === 'result') && bp && GF.shot) {
+    const S = GF.shot, tr = S.R.tr, i = Math.min(tr.length - 1, GF.rep.i), q = tr[Math.max(0, i - 12)], dx = bp[0] - q[0], dy = bp[1] - q[1], m = Math.hypot(dx, dy);
+    const a = m > 0.3 ? Math.atan2(dx, dy) : S.shot.a, putt = GF_CLUBS[S.shot.c].putt;
+    if (GF.rep.t < 0.35 && !putt) { const B = behind(S.sx, S.sy, S.shot.a, 7, 2.6, 60); pos = B[0]; look = [bp[0], bp[1], bp[2]]; k = 6; }
+    else if (GF.ph === 'result' && S.R.how === 'cup') { const B = behind(bp[0], bp[1], S.shot.a, 9, 3.4, 0); pos = B[0]; look = [bp[0], bp[1], bp[2] + 0.6]; k = 1.5; }
+    else if (putt) { const d0 = Math.hypot(S.sx - GF.H.pin[0], S.sy - GF.H.pin[1]), B = behind(S.sx, S.sy, S.shot.a, 3.6 + d0 * 0.22, 1.7 + d0 * 0.13, 0); pos = B[0]; look = [bp[0], bp[1], bp[2]]; k = 3; }
+    else { const B = behind(bp[0], bp[1], a, 11, 4.5, 0); pos = B[0]; look = [bp[0], bp[1], bp[2]]; k = 2.2; }
+  } else if (p) {
+    const putt = GF_CLUBS[GF.club].putt, d = gfToPin(p), B = putt ? behind(p.x, p.y, GF.aim, 3.6 + d * 0.22, 1.7 + d * 0.13, Math.max(2, Math.min(d, 25) * 0.75)) : behind(p.x, p.y, GF.aim, 7, 2.6, 60);
+    pos = B[0]; look = B[1]; k = 5;
+  }
+  if (!pos) return;
+  const P = gv(pos[0], pos[1], pos[2]), L = gv(look[0], look[1], look[2]);
+  if (!G3.cp) { G3.cp = P.clone(); G3.cl = L.clone(); }
+  const f = 1 - Math.exp(-k * dt); G3.cp.lerp(P, f); G3.cl.lerp(L, f);
+  // never under the ground
+  const gz = gfH(H, G3.cp.x, -G3.cp.z); if (G3.cp.y < Math.max(gz, 0) + 0.8) G3.cp.y = Math.max(gz, 0) + 0.8;
+  G3.cam.position.copy(G3.cp); G3.cam.lookAt(G3.cl);
+  G3.yaw = Math.atan2(G3.cl.x - G3.cp.x, -(G3.cl.z - G3.cp.z));
+}
+
+// ---- src/golfnet.js ----
+'use strict';
+// Skerry Links played together: a lobby on its card, and up to four in one round, each on their own screen.
+//
+// Like the Lighthouse's lobby (src/zmnet.js), it all goes through the room the crews sail in (src/net.js), on its own
+// key (`gf`) in each player's presence: { room, sid, nick, at } in the lobby (the first in is the host, who adds lob,
+// how many are in), and st once the host starts (the round: g its id, hum the players [sid, name], the holes, the wind
+// and the meter, and the seed, so every screen has the same wind on every hole). server/server.js relays a round's
+// players to each other at full rate, and only that much to everyone else, for the list.
+// The host's screen keeps the round: whose go it is, where every ball lies, the strokes and the scores, and sends it
+// as w (k the hole, t whose go, tk a count of goes, ph 'card' at a hole's end, P each player [x, y, strokes, holed,
+// lie, left], sc the scorecard, ls the last shot). Whoever's go it is swings on their own screen and sends the shot as s
+// ([seq, hole, stroke, club, aim, power, strike, putter scale, x, y, end x, end y, how, drop x, drop y, lie]); the host
+// takes it, plays it back and passes it on in ls, so everyone sees the same ball fly. Every screen works the flight out
+// from the same numbers (gfSim) and puts the ball where the striker's screen said it stopped.
+// Leaving: a player gone for ten seconds is marked as left (their card stands; their goes are skipped). If the host
+// goes, the round ends for everyone.
+
+var GFN = { code: null, at: 0, msg: '', st: null, doneG: null, g: null, role: null, seq: 0, mine: null, lastS: {}, lsSeq: 0, ls: null, w: null, tk: 0, wT: 0, seen: {}, hostSeen: 0, sentAt: 0 };
+const GFN_MAX = 4;
+const gfnClean = (v, n) => String(v == null ? '' : v).replace(/[\u0000-\u001f\u007f-\u009f<>&"]/g, '').trim().slice(0, n);
+function gfnOnline() { return !!(typeof NET !== 'undefined' && NET.room && NET.status === 'ready'); }
+function gfnNick() { return gfnClean(($('gfNick0') && $('gfNick0').value) || NET.nick || '', 16) || 'Golfer ' + String(NET.sid || '').slice(0, 3).toUpperCase(); }
+function gfnOf(p) { const z = p && p.presence && p.presence.gf; return z && typeof z === 'object' && typeof z.room === 'string' && typeof z.sid === 'string' ? z : null; }
+function gfnBase() { return { room: GFN.code, sid: NET.sid, nick: gfnNick(), at: GFN.at }; }
+function gfnPeers(code) {
+  const out = NET.peers.filter(p => { const z = gfnOf(p); return z && z.room === code && fresh(p) && !(p.isMe && p.sameTab); });
+  if (GFN.code === code) out.push({ isMe: true, sameTab: true, presence: { gf: gfnBase() } });
+  const seen = new Set();
+  return out.filter(p => { const s = gfnOf(p).sid; if (seen.has(s)) return false; seen.add(s); return true; }).sort((a, b) => (gfnOf(a).at || 0) - (gfnOf(b).at || 0) || (gfnOf(a).sid < gfnOf(b).sid ? -1 : 1));
+}
+function gfnMembers() { return GFN.code ? gfnPeers(GFN.code).slice(0, GFN_MAX) : []; }
+function gfnAmHost() { const m = gfnMembers(); return !!m.length && m[0].isMe && m[0].sameTab; }
+function gfnSend(z) { if (NET.room) NET.room.presence({ gf: z }).catch(() => {}); }
+function gfnSendLobby() { if (!GFN.code) return; const z = gfnBase(); if (gfnAmHost()) z.lob = { n: gfnMembers().length }; gfnSend(z); }
+function gfnHost() {
+  if (!gfnOnline() || GF.on) return;
+  GFN.code = 'g' + Math.random().toString(36).slice(2, 8); GFN.at = Date.now(); GFN.msg = '';
+  gfnSendLobby(); gfnRender();
+}
+function gfnJoin(code) {
+  if (!gfnOnline() || !code || GF.on) return;
+  if (gfnPeers(code).length >= GFN_MAX) { GFN.msg = 'That round is full (four players).'; gfnRender(); return; }
+  GFN.code = code; GFN.at = Date.now(); GFN.msg = '';
+  gfnSendLobby(); gfnRender();
+}
+function gfnLeave() { GFN.code = null; GFN.st = null; GFN.g = null; if (NET.room) NET.room.presence({ gf: null }).catch(() => {}); gfnRender(); }
+// the rounds being hosted here
+function gfnOpen() {
+  const rooms = new Map();
+  for (const p of NET.peers) { const z = gfnOf(p); if (!z || !fresh(p) || (p.isMe && p.sameTab)) continue; if (!rooms.has(z.room)) rooms.set(z.room, []); rooms.get(z.room).push(p); }
+  const out = [];
+  for (const [code, list] of rooms) {
+    if (code === GFN.code) continue;
+    list.sort((a, b) => (gfnOf(a).at || 0) - (gfnOf(b).at || 0));
+    const h = gfnOf(list[0]); out.push({ code, host: gfnClean(h.nick, 16) || 'Someone', n: list.length, started: !!(h.st && h.st.g) });
+  }
+  return out;
+}
+function gfnRender() {
+  const q = id => $('gf' + id); if (!q('Mp')) return;
+  const on = gfnOnline(), mine = !!GFN.code;
+  q('MpNote').textContent = on ? 'Up to four, each on their own screen. One of you hosts; the others join, and the host tees off when everyone’s in.' : (NET.status === 'connecting' ? 'Looking for other players…' : (NET.offReason || 'Playing together isn’t available here. You can still play with up to four on this screen.'));
+  q('MpOpen').hidden = !on || mine; q('Lobby').hidden = !mine;
+  if (!on) return;
+  if (!mine) {
+    const L = gfnOpen(), el = q('Lobbies'), key = JSON.stringify(L) + GFN.msg;
+    if (el.dataset.k === key) return; el.dataset.k = key; el.textContent = '';
+    if (GFN.msg) { const p = document.createElement('p'); p.className = 'muted'; p.textContent = GFN.msg; el.append(p); }
+    if (!L.length) { const p = document.createElement('p'); p.className = 'muted'; p.textContent = 'No one is hosting a round right now. Host one, and send the people you want to play with to this page.'; el.append(p); return; }
+    for (const n of L) {
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'warlobbyrow';
+      const nm = document.createElement('span'); nm.className = 'nm'; nm.textContent = `${n.host}’s round`;
+      const sm = document.createElement('small'); sm.textContent = n.started ? 'under way' : `${n.n}/${GFN_MAX} players · tap to join`;
+      b.append(nm, sm); b.disabled = n.started || n.n >= GFN_MAX; b.addEventListener('click', () => gfnJoin(n.code)); el.append(b);
+    }
+    return;
+  }
+  const m = gfnMembers(), host = gfnAmHost(), hz = m.length ? gfnOf(m[0]) : null;
+  const key = m.map(p => gfnOf(p).sid + gfnOf(p).nick).join('|') + host + GFN.msg;
+  q('MpStart').hidden = !host;
+  if (q('Lobby').dataset.k === key) return; q('Lobby').dataset.k = key;
+  q('LobbyHead').textContent = host ? 'Your round' : `${gfnClean(hz && hz.nick, 16) || 'Someone'}’s round`;
+  const ol = q('LobbyList'); ol.textContent = '';
+  m.forEach((p, k) => { const li = document.createElement('li'), z = gfnOf(p); li.textContent = (gfnClean(z.nick, 16) || 'A golfer') + (p.isMe && p.sameTab ? ' (you)' : '') + (k === 0 ? ' · hosting' : ''); if (p.isMe && p.sameTab) li.className = 'me'; ol.append(li); });
+  q('LobbyMsg').textContent = GFN.msg || (host ? (m.length > 1 ? `${m.length} of ${GFN_MAX} here. Tee off when everyone’s in (the holes, wind and meter are yours to pick above).` : 'Waiting for others to join. You can tee off alone, too.') : 'Waiting for the host to tee off.');
+}
+// the host tees off, with everyone in the lobby
+function gfnStart() {
+  if (!gfnAmHost() || GF.on) return;
+  const o = gfOptions(), m = gfnMembers();
+  const st = { g: Math.random().toString(36).slice(2, 9), hum: m.map(p => [gfnOf(p).sid, gfnClean(gfnOf(p).nick, 16) || 'A golfer']), holes: o.holes, wind: o.wind, meter: o.meter, seed: (Math.random() * 4294967295) >>> 0 };
+  gfnBegin(st, 'host');
+}
+function gfnBegin(st, role) {
+  Object.assign(GFN, { st, g: st.g, doneG: st.g, role, seq: 0, mine: null, lastS: {}, lsSeq: 0, ls: null, w: null, tk: 0, wT: 0, seen: {}, hostSeen: performance.now(), hostTk: -1, sentAt: 0 });
+  for (const [sid] of st.hum) GFN.seen[sid] = performance.now();
+  gfStart({ net: { role }, names: st.hum.map(h => h[1]), sids: st.hum.map(h => h[0]), holes: st.holes, wind: st.wind, meter: st.meter, seed: st.seed });
+}
+// every change in the room (src/net.js): keep the lobby current, and start when the host does
+function gfNetPeers() {
+  if (GF.on && GF.mode === 'net') { gfnRead(); return; }
+  if (GFN.code) {
+    const m = gfnMembers();
+    if (!m.some(p => p.isMe && p.sameTab)) { GFN.msg = 'That round filled up before you got in.'; gfnLeave(); return; }
+    const h = m[0], hz = h ? gfnOf(h) : null;
+    if (h && !(h.isMe && h.sameTab) && hz.st && typeof hz.st.g === 'string' && hz.st.g !== GFN.doneG && Array.isArray(hz.st.hum) && !GF.on) {
+      if (hz.st.hum.some(x => Array.isArray(x) && x[0] === NET.sid)) {
+        const s = hz.st, okH = Array.isArray(s.holes) ? s.holes.filter(v => Number.isInteger(v) && v >= 0 && v < 9).slice(0, 9) : null;
+        gfnBegin({ g: s.g, hum: s.hum.slice(0, GFN_MAX).filter(Array.isArray).map(x => [String(x[0]), gfnClean(x[1], 16) || 'A golfer']), holes: okH && okH.length ? okH : [0, 1, 2, 3, 4, 5, 6, 7, 8], wind: GF_WIND[s.wind] ? s.wind : 'breezy', meter: GF_METER[s.meter] ? s.meter : 'normal', seed: s.seed >>> 0 }, 'client');
+        return;
+      }
+      GFN.doneG = hz.st.g; GFN.msg = 'They teed off without you. Host your own round, or wait for the next.';
+    }
+    if (gfnAmHost() && performance.now() - (GFN.lobT || 0) > 3000) { GFN.lobT = performance.now(); gfnSendLobby(); }
+  }
+  gfnRender();
+}
+
+// ---------- during the round ----------
+const gfnHostP = () => { const m = gfnMembers(); return m.length && !(m[0].isMe && m[0].sameTab) ? gfnOf(m[0]) : null; };
+// my own shot, struck here: out to the others (the host keeps it as the last shot; a player sends it to the host)
+function gfnShot(shot) {
+  const R = gfSim(GF.H, shot.x, shot.y, shot.c, shot.a, shot.w, shot.e, GF.wind, shot.pu);
+  const rec = [++GFN.seq, shot.k, shot.n, shot.c, +shot.a.toFixed(5), +shot.w.toFixed(4), +shot.e.toFixed(4), shot.pu, +shot.x.toFixed(3), +shot.y.toFixed(3), +R.end[0].toFixed(3), +R.end[1].toFixed(3), R.how, R.drop ? +R.drop[0].toFixed(2) : 0, R.drop ? +R.drop[1].toFixed(2) : 0, R.surf];
+  if (GFN.role === 'host') { GFN.ls = [++GFN.lsSeq, GF.cur].concat(rec.slice(3)); GFN.sentAt = 0; }
+  else GFN.mine = rec;
+  gfnSendNow();
+}
+const gfnTold = r => ({ end: [r[10], r[11]], how: r[12], drop: [r[13], r[14]], surf: r[15] });
+// after a shot's played back: the host goes on as ever; a player waits for the host's word on whose go it is
+function gfnAfter() { if (GFN.role === 'host') return false; GF.ph = 'wait'; gfnApply(); return true; }
+function gfnTurned() { if (GFN.role === 'host') { GFN.tk++; GFN.sentAt = 0; } }
+function gfnCanNext() { return GFN.role === 'host'; }
+function gfnCardNext() { return GFN.role !== 'host'; }
+// a player may swing only when the host's word agrees it's their go
+function gfnTurnOk() { if (GFN.role === 'host') return true; const w = GFN.w; return !!w && w.k === GF.hi && w.t === GF.cur && w.ph !== 'card' && GFN.hostTk === w.tk; }
+function gfnStop() {
+  GFN.g = null; GF.mode = 'solo';
+  if (GFN.code) gfnSendLobby();
+}
+function gfnBackToLobby() { setTimeout(() => { if (GFN.code) gfnSendLobby(); gfnRender(); }, 50); }
+// what goes in my presence: the base, the round's id, my last shot, and the host's word
+function gfnSendNow() {
+  if (!GFN.code) return;
+  const z = gfnBase(); z.g = GFN.g;
+  if (GFN.role === 'host') { z.st = GFN.st; z.w = gfnWord(); }
+  else if (GFN.mine) z.s = GFN.mine;
+  gfnSend(z); GFN.sentAt = performance.now();
+}
+function gfnWord() {
+  return { k: GF.hi, t: GF.cur, tk: GFN.tk, ph: GF.ph === 'card' ? 'card' : '', ls: GFN.ls,
+    P: GF.P.map(p => [Math.round(p.x * 100), Math.round(p.y * 100), p.st, p.done ? 1 : 0, p.lie, p.gone ? 1 : 0]), sc: GF.P.map(p => p.sc.map(v => v == null ? -1 : v)) };
+}
+// each frame: the host's word out a few times a second, and anyone who's gone
+function gfnTick(dt) {
+  const now = performance.now();
+  if (GFN.role === 'host') {
+    if (now - GFN.sentAt > 250) gfnSendNow();
+    const m = gfnMembers(), here = new Set(m.map(p => gfnOf(p).sid));
+    GF.P.forEach((p, i) => {
+      if (p.gone || p.sid === NET.sid) return;
+      if (here.has(p.sid)) GFN.seen[p.sid] = now;
+      else if (now - (GFN.seen[p.sid] || 0) > 10000) { p.gone = true; p.done = true; gfSay(`${p.nm} has left the round.`, 3); if (i === GF.cur && (GF.ph === 'aim' || GF.ph === 'swing')) gfNextTurn(); }
+    });
+  } else {
+    if (gfnHostP()) GFN.hostSeen = now;
+    else if (now - GFN.hostSeen > 10000) { gfSay('The host has left, so the round is over.', 4); setTimeout(() => { if (GF.on && GF.mode === 'net') gfQuit(); }, 2500); GFN.hostSeen = now + 1e9; }
+    if (now - GFN.sentAt > 1000) gfnSendNow();
+  }
+}
+// the room changed during the round: the host reads the players' shots; a player reads the host's word
+function gfnRead() {
+  if (GFN.role === 'host') {
+    for (const p of gfnMembers()) {
+      const z = gfnOf(p); if (!z || (p.isMe && p.sameTab) || z.g !== GFN.g || !Array.isArray(z.s)) continue;
+      const s = z.s, pi = GF.P.findIndex(q => q.sid === z.sid); if (pi < 0) continue;
+      if ((GFN.lastS[z.sid] || 0) >= s[0]) continue;
+      // only a shot for this hole, this stroke, on that player's go, while nothing else is in the air
+      if (s[1] !== GF.hi || s[2] !== GF.P[pi].st || pi !== GF.cur || (GF.ph !== 'aim' && GF.ph !== 'swing')) { if (s[1] < GF.hi || s[2] < GF.P[pi].st) GFN.lastS[z.sid] = s[0]; continue; }
+      GFN.lastS[z.sid] = s[0];
+      const shot = { c: s[3] | 0, a: +s[4], w: +s[5], e: +s[6], pu: s[7] | 0, x: +s[8], y: +s[9], k: s[1], n: s[2] };
+      GFN.ls = [++GFN.lsSeq, pi].concat(s.slice(3));
+      gfPlayShot(pi, shot, gfnTold(s)); GFN.sentAt = 0;
+    }
+    return;
+  }
+  const hz = gfnHostP(); if (!hz || hz.g !== GFN.g || !hz.w) return;
+  GFN.w = hz.w;
+  gfnApply();
+}
+function gfnApply() {
+  const w = GFN.w; if (!w || !GF.on) return;
+  // a shot by someone else: played back here
+  const ls = w.ls;
+  if (Array.isArray(ls) && ls[0] > (GFN.lsSeen || 0)) {
+    GFN.lsSeen = ls[0];
+    const pi = ls[1] | 0, p = GF.P[pi];
+    if (p && p.sid !== NET.sid && w.k === GF.hi && GF.ph !== 'fly' && GF.ph !== 'result') {
+      const s = [0, w.k, 0].concat(ls.slice(2));
+      gfPlayShot(pi, { c: s[3] | 0, a: +s[4], w: +s[5], e: +s[6], pu: s[7] | 0, x: +s[8], y: +s[9] }, gfnTold(s));
+      return;
+    }
+  }
+  if (GF.ph === 'fly' || GF.ph === 'result') return;
+  // on to the next hole
+  if (w.k > GF.hi) { gfnSync(w, true); $('gfCard').hidden = true; gfLoadHole(Math.min(GF.holes.length - 1, w.k)); GFN.hostTk = -1; }
+  if (w.k !== GF.hi) return;
+  gfnSync(w, false);
+  if (w.ph === 'card') { if (GF.ph !== 'card') gfHoleDone(); return; }
+  if (GFN.hostTk !== w.tk) { GFN.hostTk = w.tk; GF.cur = Math.max(0, Math.min(GF.P.length - 1, w.t | 0)); const keep = GFN.hostTk; gfReadyShot(); GFN.hostTk = keep; }
+}
+// the host's word for where everything lies, and the card so far
+function gfnSync(w, cardOnly) {
+  if (Array.isArray(w.sc)) w.sc.forEach((row, i) => { const p = GF.P[i]; if (p && Array.isArray(row)) row.forEach((v, k) => { if (k < p.sc.length) p.sc[k] = v >= 0 ? v | 0 : null; }); });
+  if (cardOnly || !Array.isArray(w.P)) return;
+  w.P.forEach((a, i) => { const p = GF.P[i]; if (!p || !Array.isArray(a)) return; p.x = (a[0] | 0) / 100; p.y = (a[1] | 0) / 100; p.st = a[2] | 0; p.done = !!a[3]; p.lie = GF_SURF[a[4]] ? a[4] : 'rough'; p.gone = !!a[5]; });
+}
+
+(function gfnInit() {
+  if (!$('gfMp')) return;
+  $('gfMpHost').addEventListener('click', gfnHost);
+  $('gfMpStart').addEventListener('click', gfnStart);
+  $('gfMpLeave').addEventListener('click', gfnLeave);
+  setInterval(() => { if (state === 'title') gfnRender(); }, 1500);
+  // (in the lobby, everyone says they're still here every few seconds, so a long wait doesn't look like leaving)
+  setInterval(() => { if (GFN.code && !(GF.on && GF.mode === 'net')) gfnSendLobby(); }, 4000);
+  gfnRender();
+})();
+
 // ---- src/menudesk.js ----
 // The main menu on a desktop or any wide screen (style.css, "the desk menu"): a list of the seven games down the left,
 // the chosen game's card in full in the middle, and the scoreboard on the right (or under the list, on a narrower
@@ -54327,7 +55897,8 @@ const MD_GAMES = [
   { id: 'zmTitle', sub: 'Hold the station, round after round', c: '#d0503f' },
   { id: 'rdTitle', sub: "Maren's End and The Gannet's Wake", c: '#5a9ad8' },
   { id: 'frTitle', sub: 'Light the islands in the haar', c: '#a8b8c8' },
-  { id: 'fbTitle', sub: 'An open sea of islands and salvage', c: '#d8b060', tag: 'New' },   // [fbsea]
+  { id: 'fbTitle', sub: 'An open sea of islands and salvage', c: '#d8b060' },   // [fbsea]
+  { id: 'gfTitle', sub: 'Nine holes of golf on the cliffs', c: '#8fc26a', tag: 'New' },   // [golf] src/golf.js
 ];
 const mdStore = { get() { try { return localStorage.getItem('skerryDeskGame'); } catch (e) { return null; } }, set(v) { try { localStorage.setItem('skerryDeskGame', v); } catch (e) {} } };
 
@@ -54361,7 +55932,7 @@ function mdApply() {
   for (const c of MD.cards) c.classList.add('modecard');
   // the list of games, built from each card's own heading so a renamed game renames itself here
   const nav = document.createElement('nav'); nav.className = 'md-nav'; nav.setAttribute('aria-label', 'Games');
-  nav.innerHTML = '<div class="md-brand"><span class="md-word">Skerry Light</span><span class="md-hint">Choose a game · ↑ ↓ or 1–7</span></div><div class="md-list" role="tablist" aria-orientation="vertical"></div>';
+  nav.innerHTML = '<div class="md-brand"><span class="md-word">Skerry Light</span><span class="md-hint">Choose a game · ↑ ↓ or 1–8</span></div><div class="md-list" role="tablist" aria-orientation="vertical"></div>';
   const list = nav.querySelector('.md-list');
   // The Original (src/original.js) has its own featured spot above the list: not a tab, it opens straight into the game
   const of = document.createElement('button'); of.type = 'button'; of.className = 'origfeat md-orig'; of.id = 'origDesk';
@@ -54406,7 +55977,7 @@ function mdApply() {
   // 1 to 7 choose a game while the menu is the top screen and nothing's being typed
   addEventListener('keydown', e => {
     if (!MD.on || e.ctrlKey || e.metaKey || e.altKey || e.repeat) return;
-    if (!/^[1-7]$/.test(e.key) || tc.hidden || (typeof state !== 'undefined' && state !== 'title')) return;
+    if (!/^[1-8]$/.test(e.key) || tc.hidden || (typeof state !== 'undefined' && state !== 'title')) return;
     if (e.target && /INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
     if (typeof activeOverlay === 'function' && activeOverlay() !== tc) return;
     const c = MD.cards[+e.key - 1]; if (c) { e.preventDefault(); mdPick(c.id, true); }
@@ -54437,10 +56008,12 @@ function frame(now) {
   const dt = Math.min(0.05, (now - last) / 1000); last = now;
   try {
     // Wreckers' Night runs its own loop (and the menu cursor never stays over a game)
-    if (state === 'fps' || state === 'war') hideCursor();
+    if (state === 'fps' || state === 'war' || state === 'golf') hideCursor();
     if (state === 'fps') { fpsFrame(dt); requestAnimationFrame(frame); return; }
     // and so does The Drowned Reach
     if (state === 'war') { warFrame(dt); requestAnimationFrame(frame); return; }
+    // and so does Skerry Links (src/golf.js)
+    if (state === 'golf') { gfFrame(dt); requestAnimationFrame(frame); return; }
     pollPad(dt);
     // paused: nothing moves, but the scene is still drawn under the pause card
     if (paused) { drawScene(); requestAnimationFrame(frame); return; }
@@ -54503,5 +56076,10 @@ requestAnimationFrame(frame);
 <!-- [fbsea] the sea's looks: island silhouettes, Saltcote's light, the cutter at anchor from ashore -->
 <!-- [fbsea] what you keep: sovereigns, standings, crates, its board, rejoin -->
 <!-- [fbsea voyages] the voyage board, hoards, bounties, salvage, the chart table -->
+<!-- [golf] Skerry Links: the course -->
+<!-- [golf] the round, the ball, the swing -->
+<!-- [golf] the screen over the 3D view, the scorecard -->
+<!-- [golf] the 3D view -->
+<!-- [golf] played together -->
 </body>
 </html>

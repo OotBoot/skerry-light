@@ -79,6 +79,7 @@
     <button class="newgame rdbanner" id="rdBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">And raids, alone or with up to four: <b>Maren's End</b>, and new, <b>The Gannet's Wake</b></span><span class="ng-go" aria-hidden="true">↓</span></button>
     <button class="newgame frbanner" id="frBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">And <b>Fog Run</b>: sail the keeper's cutter out into the haar and light the islands, alone or with up to four</span><span class="ng-go" aria-hidden="true">↓</span></button>
     <button class="newgame fbbanner" id="fbBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">And <b>Freebooters' Sea</b>: an open sea of islands to sail, salvage and sell, alone or with up to four</span><span class="ng-go" aria-hidden="true">↓</span></button><!-- [fbsea] -->
+    <button class="newgame gfbanner" id="gfBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">And <b>Skerry Links</b>: nine holes of golf along the cliffs, alone or with up to four</span><span class="ng-go" aria-hidden="true">↓</span></button><!-- [golf] -->
     <div class="menulinks"><button class="tool notesbtn" id="notesBtn" type="button">Patch notes</button><button class="tool notesbtn lorebtn" id="loreBtn" type="button">Lore compendium</button></div>
     <div class="card boardcard" id="boardCard" aria-labelledby="boardHead">
       <div class="cardtop"><span class="eyebrow">Best on record · every game</span><span class="boardminititle">The Scoreboard</span><span class="boardbtns"><button class="tool closebtn" id="boardRefresh" type="button">Refresh</button><button class="tool closebtn" id="boardMin" type="button" aria-expanded="true" aria-controls="boardCard" title="Make the scoreboard small">– Minimise</button></span></div>
@@ -369,6 +370,96 @@
         <p><b>Saltcote.</b> The factor's table on the quay buys everything in the hold for sovereigns, shared by the crew.</p>
         <p><b>Going down.</b> Someone holding Use beside you gets you up. Bleed out and you're back on your feet ten seconds later, aboard or at the landing. If the cutter sinks, you all wash up at Saltcote in a fresh one, and what was in her hold is lost.</p>
       </details>
+    </div>
+    <div class="card zmcard gfcard" id="gfTitle" aria-labelledby="gfHead"><!-- [golf] its own card (src/golf.js) -->
+      <div class="cardtop"><span class="eyebrow">An eighth game · nine holes on the cliffs · alone or up to four</span></div>
+      <h1 id="gfHead">Skerry Links</h1>
+      <p>Before the lamp failed, the keepers laid out nine holes along the headland: in from the gate, down to the cove, then out along the cliffs to the point and home over the chasm. On a still evening you can still play them. Par 36, laid out after the front nine at Pebble Beach.</p>
+      <p class="muted">Pick a club, aim left or right, and time the swing meter: one press to start, one to set the power, and one more as it comes back over the strike line. Mind the wind, read the slopes on the greens, and keep it out of the sea.</p>
+      <div class="gfopts">
+        <label>Players on this screen <select id="gfPlayers"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option></select></label>
+        <label>Holes <select id="gfHolesSel"><option value="all">All nine</option><option value="f3">Holes 1 to 3</option><option value="m3">Holes 4 to 6</option><option value="b3">Holes 7 to 9</option></select></label>
+        <label>Wind <select id="gfWindSel"><option value="calm">Calm</option><option value="breezy" selected>Breezy</option><option value="gusty">Blowing a gale</option></select></label>
+        <label>Swing meter <select id="gfMeterSel"><option value="normal">Normal</option><option value="gentle">Gentle (slower)</option></select></label>
+      </div>
+      <div class="gfnames" id="gfNames">
+        <div class="nickrow" id="gfNameRow0"><label for="gfNick0">Your name</label><input id="gfNick0" type="text" maxlength="16" autocomplete="nickname" placeholder="Golfer"></div>
+        <div class="nickrow" id="gfNameRow1" hidden><label for="gfNick1">Player 2</label><input id="gfNick1" type="text" maxlength="16" placeholder="Player 2"></div>
+        <div class="nickrow" id="gfNameRow2" hidden><label for="gfNick2">Player 3</label><input id="gfNick2" type="text" maxlength="16" placeholder="Player 3"></div>
+        <div class="nickrow" id="gfNameRow3" hidden><label for="gfNick3">Player 4</label><input id="gfNick3" type="text" maxlength="16" placeholder="Player 4"></div>
+      </div>
+      <div class="btnrow">
+        <button class="primary" id="gfPlay" type="button">Tee off</button>
+        <button class="tool" id="gfSettings" type="button">Settings</button>
+      </div>
+      <p class="muted gfbest" id="gfBest"></p>
+      <section class="gfboard" aria-labelledby="gfBoardHead">
+        <h2 id="gfBoardHead">Best rounds</h2>
+        <ol class="gfleaders" id="gfLeaders"></ol>
+      </section>
+      <section class="warmp zmmp" id="gfMp" aria-labelledby="gfMpHead">
+        <h2 id="gfMpHead">Play together online · up to four</h2>
+        <p class="muted" id="gfMpNote">Looking for other players…</p>
+        <div id="gfMpOpen" hidden>
+          <div class="btnrow"><button class="tool" id="gfMpHost" type="button">Host a round</button></div>
+          <div class="warlobbies" id="gfLobbies"></div>
+        </div>
+        <div class="warlobby" id="gfLobby" hidden>
+          <h3 id="gfLobbyHead">Your round</h3>
+          <ol class="warlobbylist" id="gfLobbyList"></ol>
+          <p class="muted" id="gfLobbyMsg"></p>
+          <div class="btnrow"><button class="primary" id="gfMpStart" type="button">Tee off together</button><button class="tool shareBtn" id="gfMpShare" type="button" data-mode="golf">Share invite</button><button class="tool" id="gfMpLeave" type="button">Leave</button></div>
+        </div>
+      </section>
+      <details class="howto">
+        <summary>How to play</summary>
+        <p><b>Clubs.</b> Up and down (W and S, or the ▲ ▼ buttons) change club. Each shows how far it carries at full power from where you lie: the driver 252 yards off the tee, down to the sand wedge's 88. The rough takes some of that away, a bunker more (less with the sand wedge), and the driver off the ground a little. The game picks a club for the distance to start you off.</p>
+        <p><b>Aim.</b> Left and right (A and D, the arrow keys, or the ◀ ▶ buttons; hold Shift to aim finely) turn the line on the ground. The ring is where a full shot comes down in still air. M (or the map button) shows the hole from above, and the map in the corner shows it all.</p>
+        <p><b>The swing.</b> Space, a tap or A on a controller: once to start, once to set the power as the marker climbs, once more as it falls back over the white strike line. Past 100% is an overswing: a few yards more, but the strike gets much harder to time. Early on the line hooks it left, late slices it right.</p>
+        <p><b>Wind.</b> The arrow at the top shows which way it blows as you're looking, and how hard. High shots feel it most. The flag streams with it.</p>
+        <p><b>Putting.</b> On the green you have the putter, and the meter is a length: its scale (10, 20, 40 or 80 feet, Q and E to change) fits the putt. The arrows on the green point downhill, longer and redder where it's steeper. Too fast at the cup and it lips out.</p>
+        <p><b>Trouble.</b> The sea, the creek on the second and anywhere off the course cost a stroke and a drop where it went in. Trees catch the ball. Ten strokes and you pick up.</p>
+        <p><b>Turns and the card.</b> Everyone tees off in turn, the best on the last hole first; after that whoever's furthest from the hole plays. Tab (or Y) shows the scorecard. A full round of nine goes on the scoreboard, under the first player's name on a shared screen.</p>
+      </details>
+    </div>
+  </div>
+
+  <!-- Skerry Links: the 3D view and what's over it (src/golf.js, src/golfhud.js, src/golf3d.js) -->
+  <div id="gfUI" hidden>
+    <canvas id="gfCv"></canvas>
+    <div class="gf-top">
+      <div class="gf-hole"><b id="gfHoleNo">Hole 1</b><span id="gfHoleName"></span><small id="gfHolePar"></small></div>
+      <div class="gf-wind"><canvas id="gfWindCv" width="64" height="64" aria-hidden="true"></canvas><b id="gfWindTxt"></b><small>Wind</small></div>
+    </div>
+    <div class="gf-who"><b id="gfWho"></b><span id="gfStroke"></span><small id="gfTotal"></small></div>
+    <canvas id="gfMap" aria-label="Map of the hole"></canvas>
+    <div class="gf-lie"><b id="gfPinD"></b><span id="gfLie"></span></div>
+    <div class="gf-turn" id="gfTurn" hidden></div>
+    <div class="gf-msg" id="gfMsg" role="status"></div>
+    <div class="gf-pad" id="gfPadBox">
+      <div class="gf-club"><button class="gfbtn" id="gfClubUp" type="button" aria-label="Longer club">▲</button><div class="gf-cname"><b id="gfClubName"></b><small id="gfClubD"></small></div><button class="gfbtn" id="gfClubDn" type="button" aria-label="Shorter club">▼</button></div>
+      <div class="gf-putt" id="gfPuttRow" hidden><button class="gfbtn sm" id="gfPuttDn" type="button" aria-label="Shorter putt scale">−</button><span id="gfPuttScale"></span><button class="gfbtn sm" id="gfPuttUp" type="button" aria-label="Longer putt scale">+</button></div>
+      <canvas id="gfMeter" aria-hidden="true"></canvas>
+      <div class="gf-aim"><button class="gfbtn" id="gfAimL" type="button" aria-label="Aim left">◀</button><button class="gfbtn swing" id="gfSwing" type="button">Swing</button><button class="gfbtn" id="gfAimR" type="button" aria-label="Aim right">▶</button></div>
+      <p class="gf-hint" id="gfHint"></p>
+    </div>
+    <div class="gf-tools"><button class="gfbtn sm" id="gfLookBtn" type="button" title="The hole from above (M)">Map</button><button class="gfbtn sm" id="gfCardBtn" type="button" title="Scorecard (Tab)">Card</button><button class="gfbtn sm" id="gfMenuBtn" type="button" aria-label="Menu" title="Menu (Esc)">☰</button></div>
+    <div class="overlay pausecard gfcardov" id="gfCard" hidden role="dialog" aria-modal="true" aria-labelledby="gfCardHead">
+      <div class="card">
+        <h1 id="gfCardHead">Scorecard</h1>
+        <p class="muted" id="gfCardSub"></p>
+        <div class="gfc-wrap"><table class="gfc" id="gfCardTable"></table></div>
+        <p class="muted" id="gfCardWait" hidden>Waiting for the host to go on.</p>
+        <div class="btnrow"><button class="primary" id="gfCardNext" type="button">Next hole</button><button class="primary" id="gfCardAgain" type="button" hidden>Play again</button><button class="tool" id="gfCardMenu" type="button" hidden>Back to the menu</button></div>
+      </div>
+    </div>
+    <div class="overlay pausecard" id="gfPause" hidden role="dialog" aria-modal="true" aria-labelledby="gfPauseHead">
+      <div class="card">
+        <h1 id="gfPauseHead">Skerry Links</h1>
+        <p class="muted">Play stops while this is open (in a round together, the others carry on).</p>
+        <div class="btnrow"><button class="primary" id="gfResume" type="button">Back to the hole</button><button class="tool" id="gfPauseCard" type="button">Scorecard</button><button class="tool" id="gfLeave" type="button">Leave the round</button></div>
+        <div class="lookrow"><label for="gfVol">Volume <output id="gfVolOut">100%</output></label><input id="gfVol" class="lookslider volslider" type="range" min="0" max="100" step="5" value="100"></div>
+      </div>
     </div>
   </div>
 
@@ -868,6 +959,11 @@
 <script src="src/lore.js"></script>
 <script src="src/loreui.js"></script>
 <script src="src/rejoin.js"></script>
+<script src="src/golfcourse.js"></script><!-- [golf] Skerry Links: the course -->
+<script src="src/golf.js"></script><!-- [golf] the round, the ball, the swing -->
+<script src="src/golfhud.js"></script><!-- [golf] the screen over the 3D view, the scorecard -->
+<script src="src/golf3d.js"></script><!-- [golf] the 3D view -->
+<script src="src/golfnet.js"></script><!-- [golf] played together -->
 <script src="src/menudesk.js"></script>
 <script src="src/main.js"></script>
 </body>

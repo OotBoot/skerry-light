@@ -51,7 +51,8 @@ const runsMem = new Map(); // game -> Map(field -> entry)
 //   fogrun: s = the furthest island reached, b = time through a won run (as raid; 0: not won), c = islands lit (one
 //           run's; a best: in all)
 //   fbsea:  s = the most sovereigns banked in one session, b = the most voyages done in one, c = sovereigns in all
-const GAMES = { skerry: [1000, 1e6], fps: [300, 1e5], war: [1e5, 1e6], zm: [1000, 1e6], raid: [1e5, 1e8, 1e7], gannet: [1e5, 1e8, 1e7], fogrun: [100, 1e5, 1e6], fbsea: [1e7, 1e4, 1e9] };
+//   golf:   s = 200 less a round of nine's score to par (0 until it's finished), b = holes played, c = birdies or better
+const GAMES = { skerry: [1000, 1e6], fps: [300, 1e5], war: [1e5, 1e6], zm: [1000, 1e6], raid: [1e5, 1e8, 1e7], gannet: [1e5, 1e8, 1e7], fogrun: [100, 1e5, 1e6], fbsea: [1e7, 1e4, 1e9], golf: [1000, 100, 100] };
 
 const memory = new Map(); // game -> Map(id -> entry)
 let cache = null, cacheAt = 0;

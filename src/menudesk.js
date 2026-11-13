@@ -15,7 +15,8 @@ const MD_GAMES = [
   { id: 'zmTitle', sub: 'Hold the station, round after round', c: '#d0503f' },
   { id: 'rdTitle', sub: "Maren's End and The Gannet's Wake", c: '#5a9ad8' },
   { id: 'frTitle', sub: 'Light the islands in the haar', c: '#a8b8c8' },
-  { id: 'fbTitle', sub: 'An open sea of islands and salvage', c: '#d8b060', tag: 'New' },   // [fbsea]
+  { id: 'fbTitle', sub: 'An open sea of islands and salvage', c: '#d8b060' },   // [fbsea]
+  { id: 'gfTitle', sub: 'Nine holes of golf on the cliffs', c: '#8fc26a', tag: 'New' },   // [golf] src/golf.js
 ];
 const mdStore = { get() { try { return localStorage.getItem('skerryDeskGame'); } catch (e) { return null; } }, set(v) { try { localStorage.setItem('skerryDeskGame', v); } catch (e) {} } };
 
@@ -49,7 +50,7 @@ function mdApply() {
   for (const c of MD.cards) c.classList.add('modecard');
   // the list of games, built from each card's own heading so a renamed game renames itself here
   const nav = document.createElement('nav'); nav.className = 'md-nav'; nav.setAttribute('aria-label', 'Games');
-  nav.innerHTML = '<div class="md-brand"><span class="md-word">Skerry Light</span><span class="md-hint">Choose a game · ↑ ↓ or 1–7</span></div><div class="md-list" role="tablist" aria-orientation="vertical"></div>';
+  nav.innerHTML = '<div class="md-brand"><span class="md-word">Skerry Light</span><span class="md-hint">Choose a game · ↑ ↓ or 1–8</span></div><div class="md-list" role="tablist" aria-orientation="vertical"></div>';
   const list = nav.querySelector('.md-list');
   // The Original (src/original.js) has its own featured spot above the list: not a tab, it opens straight into the game
   const of = document.createElement('button'); of.type = 'button'; of.className = 'origfeat md-orig'; of.id = 'origDesk';
@@ -94,7 +95,7 @@ function mdApply() {
   // 1 to 7 choose a game while the menu is the top screen and nothing's being typed
   addEventListener('keydown', e => {
     if (!MD.on || e.ctrlKey || e.metaKey || e.altKey || e.repeat) return;
-    if (!/^[1-7]$/.test(e.key) || tc.hidden || (typeof state !== 'undefined' && state !== 'title')) return;
+    if (!/^[1-8]$/.test(e.key) || tc.hidden || (typeof state !== 'undefined' && state !== 'title')) return;
     if (e.target && /INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
     if (typeof activeOverlay === 'function' && activeOverlay() !== tc) return;
     const c = MD.cards[+e.key - 1]; if (c) { e.preventDefault(); mdPick(c.id, true); }

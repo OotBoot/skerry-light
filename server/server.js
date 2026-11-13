@@ -148,11 +148,20 @@ function zmLite(p) {
   if (z.lob) lite.lob = z.lob; if (z.st && typeof z.st === 'object') lite.st = { g: z.st.g };
   return Object.assign({}, p, { zm: lite });
 }
-// what someone in another war, another night or the lobby hears of this player
+// Skerry Links played together: the same, for the four (at most) in one round
+const gfRoom = c => (c.presence && c.presence.gf && typeof c.presence.gf.room === 'string' ? c.presence.gf.room : null);
+function gfLite(p) {
+  const z = p.gf; if (!z || typeof z !== 'object') return p;
+  const lite = { room: z.room, sid: z.sid, nick: z.nick, at: z.at };
+  if (z.lob) lite.lob = z.lob; if (z.st && typeof z.st === 'object') lite.st = { g: z.st.g };
+  return Object.assign({}, p, { gf: lite });
+}
+// what someone in another war, another night, another round or the lobby hears of this player
 const liteFor = (from, c) => {
   let p = from.presence;
   if (warRoom(from) && warRoom(from) !== warRoom(c)) p = warLite(p);
   if (zmRoom(from) && zmRoom(from) !== zmRoom(c)) p = zmLite(p);
+  if (gfRoom(from) && gfRoom(from) !== gfRoom(c)) p = gfLite(p);
   return p;
 };
 const crewOf = c => (c.presence && typeof c.presence.crew === 'string' ? c.presence.crew : null);
@@ -161,7 +170,7 @@ function relay(from, patch) {
   let msg = null, pmsg = null;
   const full = () => msg || (msg = JSON.stringify({ t: 'state', peer: from.id, presence: from.presence }));
   const part = () => pmsg || (pmsg = JSON.stringify({ t: 'patch', peer: from.id, d: patch.d, x: patch.x }));
-  const room = warRoom(from), night = zmRoom(from);
+  const room = warRoom(from), night = zmRoom(from), round = gfRoom(from);
   const crew = crewOf(from);
   const now = Date.now();
   for (const c of clients.values()) {
@@ -170,9 +179,10 @@ function relay(from, patch) {
       // Wreckers' Night: everyone on the island hears everyone else at full rate
       (onIsland(from) && onIsland(c)) ||
       (room && warRoom(c) === room) ||
-      (night && zmRoom(c) === night);
+      (night && zmRoom(c) === night) ||
+      (round && gfRoom(c) === round);
     if (mate || now - (c.lastLobbySend.get(from.id) || 0) >= LOBBY_INTERVAL_MS) {
-      if (mate || (!room && !night)) {
+      if (mate || (!room && !night && !round)) {
         // (a patch only to someone who has had every change of this player's since a whole copy)
         if (patch && c.v2 && c.upToDate.has(from.id)) send(c, part());
         else { send(c, full()); c.upToDate.add(from.id); }

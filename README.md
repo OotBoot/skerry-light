@@ -14,7 +14,7 @@ The log goes on through 1888. The sea stops being one sea: some nights it freeze
 
 **The Skerry Compendium.** Beside Patch notes on the main menu, **Lore compendium** opens the game's lore book, laid out like a wiki: the whole history of the Light in one place, tying every game into one story. The seven tales, in the order they happened: the voyages of 1888 (Skerry Light), Wreckers' Night, The Gannet's Wake (14 December 1888), Keeper's Last Light (the winter after), Fog Run (1889), Maren's End (the Dry Night of 1890) and Drowned Reach (the years after). Around them, 70 articles in eight categories (Chronicles, Characters, Creatures, Places, Factions, Events, Ships, Objects), each with an infobox, links to the rest, See also, What links here and its categories at the foot; a timeline of the Skerries from the first fire on Lantern Rock; search as you type (Enter for full results); Random article and All pages; and on the main page a featured article and a page from the keeper's log that change each day. ‹ Back (or Backspace) goes to the last page read; ✕, Esc or B on a controller closes it. Its text is in `src/lore.js` (the file's top comment shows the shape of an article) and `src/loreui.js` draws it. Where the game says nothing the gaps are filled with lore that fits, and the keeper's log (`SK.LOG`) is never contradicted. Keep secrets out of it entirely.
 
-**The main menu on a big screen.** On a desktop or any screen at least 1100 by 620 pixels, the main menu is laid out for a mouse, keyboard and controller: the six games in a list down the left (each with its number), the chosen game's card in full in the middle, and the scoreboard on the right (under the list when the screen is under 1440 pixels wide), with Patch notes and Lore compendium under the list. Click a game, use the up and down arrows in the list, or press 1 to 6 to choose; LB and RB do it on a controller, and Start still presses the chosen game's main button. The last game picked is remembered on this device. Phones, tablets held upright and phones on their side keep the long scrolling menu exactly as before. `src/menudesk.js` builds the list; the layout is "the desk menu" in `src/style.css`.
+**The main menu on a big screen.** On a desktop or any screen at least 1100 by 620 pixels, the main menu is laid out for a mouse, keyboard and controller: the eight games in a list down the left (each with its number), the chosen game's card in full in the middle, and the scoreboard on the right (under the list when the screen is under 1440 pixels wide), with Patch notes and Lore compendium under the list. Click a game, use the up and down arrows in the list, or press 1 to 8 to choose; LB and RB do it on a controller, and Start still presses the chosen game's main button. The last game picked is remembered on this device. Phones, tablets held upright and phones on their side keep the long scrolling menu exactly as before. `src/menudesk.js` builds the list; the layout is "the desk menu" in `src/style.css`.
 
 **The Original.** At the very top of the main menu (on the desk menu, above the list of games) a gold **Featured** banner opens *The Original*: Skerry Light as it began, a flat 2D game for one. You are the keeper in the bottom-left corner, and ships stand in from the top and the left for the harbour in the bottom right. They can't see the rocks: swing the beam (mouse, ← → or A / D, or drag a finger) to light them. Each ship has a ring that fills while your beam is on her and drains over 6 seconds in the dark; while it holds any light she remembers every rock you show her and plots a course to the harbour round them all, and when it runs dry she forgets them all. Every ship knows the shore and the lighthouse rock without being shown, and comes into the harbour mouth from above. Ships gather speed all night with no top speed. The fog bell (Space, or double tap) slows every ship for 4 seconds and swings again after 18. Every night brings one more ship and more rocks; lose three in a night and you start again from night 1. Your best night is kept on this device. A controller works too (stick to swing, A for the bell, B back). ‹ Menu or Esc goes back to the main menu, and the night waits, paused, until you return. The bell, a chime for each ship home and the crunch of a wreck follow the volume setting. The game is its own page, `src/original.html`; `src/original.js` opens it in a frame over the menu and the build inlines it.
 
@@ -109,7 +109,7 @@ The version number sits at the top of the main menu, so you can tell which build
 
 Sounds come from where they happen, in every game: a gunshot, a moan, a boss's footsteps, a splash or a bell is panned to the side it's on, and anything behind you is muffled, so you can tell ahead from behind and turn to find it. Headphones help most.
 
-**Volume** is a slider, from off to 100%, and it's in every in-game menu as well as on the **Settings** card: Skerry Light's pause card, the first-person menu (Esc or Start) in Wreckers' Night, Keeper's Last Light, the raids, Fog Run and Freebooters' Sea, and the Drowned Reach's menu. It's one setting, so moving any of them moves them all.
+**Volume** is a slider, from off to 100%, and it's in every in-game menu as well as on the **Settings** card: Skerry Light's pause card, the first-person menu (Esc or Start) in Wreckers' Night, Keeper's Last Light, the raids, Fog Run and Freebooters' Sea, the Drowned Reach's menu and Skerry Links' menu. It's one setting, so moving any of them moves them all.
 
 ## Look sensitivity
 
@@ -230,6 +230,7 @@ How it works: the host's browser runs the whole war, the same code as a game alo
 - **Maren's End:** each raid: the time through, the damage done to its bosses, and the drowned sent back.
 - **Fog Run:** each run: the furthest island reached, the time through if won, and the islands lit.
 - **Freebooters' Sea:** each session: the sovereigns banked, the voyages done, and the sovereigns banked in all.
+- **Skerry Links:** each full round of nine: the score (and to par), the holes played and the birdies; the lowest round ranks first.
 
 It sits at the top of the title screen: the top ten of every game at once, each with an **All** button (once there are more than ten) to see every entry, and your own marked "(you)" (your best game is shown under a board where you're not in what it shows). A game is logged as it goes, and once more when it ends.
 
@@ -538,6 +539,39 @@ A seventh game, on its own card on the title screen (**Set sail**). 1889: beyond
 
 How it's built: `src/fbsea.js` (the session, its stages, the loot, the hold, the factor, lives and the hook API), `src/fbsail.js` (the open sea, on src/gwsail.js through `GWS_LEG`), `src/fbisle.js` (the islands and Saltcote), `src/fbdress.js` (the sea's looks: the islands' silhouettes, Saltcote's light, the cutter at anchor seen from ashore), `src/fbkeep.js` (what you keep: sovereigns, standings, crates, its board, rejoin), on the raids' stage system (src/raid.js, `ZM_MAPS.fbsea`). `src/fbguns.js` (the swivel guns and the black sloops) and `src/fbvoy.js` (the voyage board, hoard charts and digging, bounties, salvage, the chart table) are built on its hooks (`fbHook`, `fbOn`).
 
+## Skerry Links (nine holes of golf on the cliffs, alone or up to four)
+
+An eighth game, on its own card on the title screen (**Tee off**; on the desk menu it's number 8). Before the lamp failed, the keepers laid out nine holes along the headland, and on a still evening you can still play them. The course is laid out after the front nine at Pebble Beach: the real pars (par 36), the yardages near enough, and the shape of each hole, drawn in the game's own look with names of its own.
+
+| Hole | Name | Par | Yards | What it is |
+|---|---|---|---|---|
+| 1 | The Gate | 4 | 377 | A dogleg right, gently uphill, a bunker in the corner |
+| 2 | The Long Road | 5 | 511 | A long par 5 with a creek (the barranca) across the fairway short of the green |
+| 3 | Down to the Cove | 4 | 404 | A dogleg left, running downhill towards the cove |
+| 4 | First Sight of the Sea | 4 | 331 | A short par 4 with the sea and a low cliff all down the right; a small green |
+| 5 | Cliff's Edge | 3 | 192 | A par 3 along the cliff top, the sea on the right |
+| 6 | The Climb | 5 | 506 | Down off the tee, then a steep climb to a green on the headland; the sea on the right |
+| 7 | The Point | 3 | 109 | A little downhill par 3 to a tiny green on the point, with the sea on three sides |
+| 8 | The Chasm | 4 | 427 | Up onto the plateau off the tee, then the second shot over a sea-filled chasm to a small green |
+| 9 | Homeward Cliff | 4 | 481 | A long par 4 along the cliff, the fairway leaning towards the sea |
+
+- **Before you tee off.** Players on this screen (1 to 4, taking turns, each with a name), which holes (all nine, or three at a time: 1 to 3, 4 to 6, 7 to 9), the wind (calm, breezy or blowing a gale) and the swing meter (normal, or gentle and slower). The choices are kept on this device. Settings opens the game's Settings card.
+- **Clubs.** Driver (252 yards at full power), 3 wood (228), 5 wood (210), irons 4 to 9 (192 down to 133), pitching wedge (118), sand wedge (88) and the putter. Up and down (W and S, or the ▲ ▼ buttons, or the stick or D-pad) change club; the club box shows how far it carries at full power from where you lie. The game hands you a club for the distance to start with. From the rough a shot loses some distance, from deep rough more, from a bunker most (the sand wedge does best there), and the driver off the fairway a little.
+- **Aim.** Left and right (A and D, the arrow keys, the ◀ ▶ buttons, or the stick) turn the dotted line; hold Shift to aim finely. The ring at its end is where a full shot comes down in still air. Off the tee of a dogleg you start aimed down the first leg. **M** (or the **Map** button, or X on a controller) shows the hole from above, and the map in the top right corner always shows the whole hole, your ball, the others' balls and your line.
+- **The swing meter.** An arc at the bottom right. Press Space (or tap the screen or **Swing**, or A on a controller) to start the swing; the marker climbs. Press again to set the power (up to 100%, and the red beyond it is an overswing: a few more yards, but the strike becomes much harder to time). The marker swings back down: press once more as it crosses the white strike line. Right on it is a perfect strike; early hooks the ball left, late slices it right, and the further off, the more it bends. Missing the line altogether is a bad slice.
+- **The wind.** The arrow by the hole's name shows which way it blows as you're looking, and how hard, in miles an hour. It's new on every hole. High, long shots feel it most; into the wind costs distance, downwind adds it, and a crosswind carries the ball sideways. The flag on the pin streams with it.
+- **The ball.** It flies with drag, the lift of its spin (which dies away), the wind and any side spin, then bounces and rolls by what it lands on: the fairway runs, the rough grabs, bunkers hold it, and the greens are quick. Wedges bite and stop; long clubs run on. Slopes take a rolling ball downhill, and a ball rolling off the top of a cliff goes over.
+- **Putting.** On the green (or close by on the fringe) you have the putter. Its meter is a length, not a distance in yards: its scale (10, 20, 40 or 80 feet at full) is set to suit the putt, and Q and E (or the − + buttons, or LB and RB) change it. Small arrows on the green point downhill, longer and warmer in colour where it's steeper: uphill putts need more, downhill ones less, and putts across a slope break. Timing on a putt only pushes or pulls it a little. Reach the cup slowly enough and it drops; too fast and it lips out.
+- **Trouble.** The sea, the creek on the 2nd and anywhere off the course cost a stroke and a drop back where the ball went in, clear of the cliff edge. Trees catch the ball and drop it. Ten strokes on one hole and you pick up (scored as 10).
+- **Turns.** Everyone tees off in turn, the best score on the last hole first. After that, whoever is furthest from the hole plays next, until everyone has holed out.
+- **The scorecard.** At the end of each hole it shows everyone's score for each hole against the par and yardage, with a circle for a birdie, two for an eagle or better, a box for a bogey and two for worse, and the total and score to par. Tab (or the **Card** button, or Y on a controller) shows it at any time. At the end of the round it says who won (or your score alone), and **Play again** starts another round with the same players.
+- **The menu.** Esc, the ☰ button or Start: back to the hole, the scorecard, leave the round, and the volume slider.
+- **Your best.** The card shows your best full round and how many you've played, kept on this device, and its own **Best rounds** list: the top five rounds from the scoreboard.
+- **The scoreboard.** Skerry Links has its own column on the scoreboard: each full round of nine, ranked by score (lowest first), with the holes played and the birdies (or better). A round left before the ninth hole is logged with its holes and an asterisk. Only full rounds of nine count; three-hole rounds don't go on the board. With more than one player on one screen, the board takes the first player's round.
+- **Together, online.** The card's own lobby (**Host a round**, join one from the list, **Share invite**: `?mode=golf&lobby=...`); the host tees off with everyone who's in, and the host's choice of holes, wind and meter. Up to four, each on their own screen and each swinging on their own go; everyone watches every shot. The host's screen keeps the round. A player who drops out for ten seconds is marked as left (their card stands). If the host leaves, the round ends.
+
+How it's built: `src/golfcourse.js` (the nine holes: their shapes, heights, cliffs, sea, bunkers and trees; what's underfoot anywhere), `src/golf.js` (the round, the turns, the swing, the ball's flight and roll, the scores, the keys, the sounds and the card), `src/golfhud.js` (the screen over the 3D view, the meter, the map, the wind and the scorecard), `src/golf3d.js` (the 3D view, its own WebGL canvas: the land wearing a painted picture of the course, the sea, the trees, the pin, the golfer and the camera) and `src/golfnet.js` (the lobby and the round together, on the presence key `gf`; `server/server.js` relays a round's players to each other at full rate). For tests, `gfDebug(hole)` starts a round alone on one hole (0 to 8) and `gfDebugShot(club, power, strike, aim)` strikes a shot.
+
 ## Wreckers' Night (multiplayer FPS)
 
 A separate game with its own card on the title screen, below Skerry Light (a banner at the top of the title screen points to it). The card has the weapon picker (the pepperbox now, four slots waiting for more weapons), Go ashore, Settings, your name, who's on the island, and how to play. You go ashore on foot on a skerry at night with a six-shot pepperbox pistol and a lantern, and shoot it out with everyone else on the island. It never touches your voyages, crates, cosmetics or crew; your equipped skin only colours your coat and lantern.
@@ -659,7 +693,7 @@ Every mode with a lobby has a **Share invite** button: the crew screen (Skerry L
 - On a phone or tablet it opens the share sheet; on a computer it copies the invite to the clipboard. Either way it reads "Join my game on Skerry Light!" followed by the link.
 - Opening the link takes your friend straight into your lobby, on the right game's card. If the lobby has closed or the game has already started, they're told so and can host their own. A Wreckers' Night link opens that card, ready to tap **Go ashore**.
 - On claude.ai the link is the game's page itself, as everyone there plays in the page's own room: your friend opens it and taps your lobby in the list.
-- Links look like `https://skerry-light.onrender.com/?mode=raid&lobby=z1ab2cd` (modes: sail, wreckers, war, lighthouse, raid, fogrun, fbsea). Old crew links ending in `#gannet-12` still work.
+- Links look like `https://skerry-light.onrender.com/?mode=raid&lobby=z1ab2cd` (modes: sail, wreckers, war, lighthouse, raid, fogrun, fbsea, golf). Old crew links ending in `#gannet-12` still work.
 
 ## Rejoining a game in progress
 
@@ -792,6 +826,11 @@ src/verityfx.js     Verity's Wardrobe: the twelve cosmetics he drops, their look
 src/zmegg.js        The Lighthouse's secret, and the pirate tokens it pays (the Gannet's locker)
 src/original.js     The Original: the featured banner on the main menu, and the frame the 2D game plays in
 src/original.html   The Original itself: Skerry Light as it began, a self-contained 2D canvas game
+src/golfcourse.js   Skerry Links: the nine holes (after the front nine at Pebble Beach), what's underfoot, how high
+src/golf.js         Skerry Links: the round, the turns, the swing meter, the ball's flight and roll, the scores
+src/golfhud.js      Skerry Links: the screen over the 3D view, the meter, the map, the wind, the scorecard
+src/golf3d.js       Skerry Links: the 3D view (its own WebGL canvas) and the camera
+src/golfnet.js      Skerry Links: the lobby and a round together online
 src/main.js         starts the main loop
 assets/maren.png    Maren cutout
 assets/plimsoll.png Plimsoll cutout

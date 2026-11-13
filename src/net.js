@@ -118,6 +118,7 @@ function onPeersChange(change) {
   checkLaunch();
   if (typeof warNetPeers === 'function') warNetPeers();
   if (typeof zmNetPeers === 'function') zmNetPeers();
+  if (typeof gfNetPeers === 'function') gfNetPeers();   // [golf] Skerry Links' lobby (src/golfnet.js)
 }
 
 // ---------- crew bookkeeping ----------
