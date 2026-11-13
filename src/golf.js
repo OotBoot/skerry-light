@@ -21,7 +21,10 @@
 // player's. A round left early keeps its holes, with an asterisk.
 // Debug and tests: gfDebug(hole) starts a round alone on that hole (0 to 8); gfDebugShot(club, power, acc, aim) strikes.
 
-const GFC = { DT: 1 / 120, KD: 0.0045, KL: 0.0032, TAU: 6, KS: 0.00045, G: 9.81, CUP: 0.06, MAXS: 10, PUTT_MU: 0.062 };
+const GFC = { DT: 1 / 120, KD: 0.0045, KL: 0.0032, TAU: 6, KS: 0.00045, G: 9.81, CUP: 0.06, MAXS: 10, PUTT_MU: 0.062, GR_A0: 0.24, GR_B: 0.2, GR_SLOPE: 0.45 };
+// (on a green a rolling ball slows by GR_A0 m/s² plus GR_B of its speed a second, so it rolls out freely and eases to a stop, and feels a little under half of the slope's pull, so putts break gently)
+function gfGreenRoll(v) { const a = GFC.GR_A0, b = GFC.GR_B; return v / b - a / (b * b) * Math.log(1 + b * v / a); }
+function gfGreenSpeed(D) { let lo = 0, hi = 20; for (let i = 0; i < 40; i++) { const m = (lo + hi) / 2; if (gfGreenRoll(m) < D) lo = m; else hi = m; } return (lo + hi) / 2; }
 const GF_CLUBS = [
   { k: 'D', n: 'Driver', c: 252, a: 12 }, { k: '3W', n: '3 Wood', c: 228, a: 13 }, { k: '5W', n: '5 Wood', c: 210, a: 15 },
   { k: '4I', n: '4 Iron', c: 192, a: 17 }, { k: '5I', n: '5 Iron', c: 181, a: 19 }, { k: '6I', n: '6 Iron', c: 170, a: 21 },
@@ -68,7 +71,7 @@ function gfSim(H, x0, y0, clubI, aim, power, acc, wind, pu) {
   const B = { x: x0, y: y0, z: z0 + 0.02, vx: 0, vy: 0, vz: 0, t: 0, mode: 'air', side: 0, lift: 1, lip: 0, hit: new Set() };
   const tr = [[B.x, B.y, B.z]];
   if (club.putt) {
-    const ft = GF_PUTTS[pu == null ? GF.putt : pu] || 20, D = ft * 0.3048 * power, v = Math.sqrt(2 * GFC.PUTT_MU * GFC.G * D) * (lieS === 'sand' ? 0.5 : 1);
+    const ft = GF_PUTTS[pu == null ? GF.putt : pu] || 20, D = ft * 0.3048 * power, v = gfGreenSpeed(D) * (lieS === 'sand' ? 0.5 : 1);
     const a = aim - E * 0.05; B.vx = Math.sin(a) * v; B.vy = Math.cos(a) * v; B.mode = 'roll'; B.z = z0;
   } else {
     let lie = (GF_SURF[lieS] || GF_SURF.rough).lie;
@@ -111,18 +114,20 @@ function gfSim(H, x0, y0, clubI, aim, power, acc, wind, pu) {
     } else if (B.mode === 'roll') {
       const sf = gfSurf(H, B.x, B.y);
       if (sf === 'water' || sf === 'out') { how = sf; break; }
-      const S = GF_SURF[sf], n = gfNorm(H, B.x, B.y), gx = -n[0] / n[2], gy = -n[1] / n[2];
-      const sp = Math.hypot(B.vx, B.vy), slA = GFC.G * 5 / 7 * Math.hypot(gx, gy), fr = S.roll * GFC.G;
-      if (sp < 0.04 && slA < fr * 1.05) { how = 'rest'; B.vx = B.vy = 0; tr.push([B.x, B.y, gfH(H, B.x, B.y)]); break; }
+      const S = GF_SURF[sf], n = gfNorm(H, B.x, B.y), gr = sf === 'green', sl = gr ? GFC.GR_SLOPE : 1, gx = -n[0] / n[2] * sl, gy = -n[1] / n[2] * sl;
+      const sp = Math.hypot(B.vx, B.vy), slA = GFC.G * 5 / 7 * Math.hypot(gx, gy), fr = gr ? GFC.GR_A0 + GFC.GR_B * sp : S.roll * GFC.G;
+      if (sp < (gr ? 0.03 : 0.04) && slA < (gr ? GFC.G * 0.05 : fr * 1.05)) { how = 'rest'; B.vx = B.vy = 0; tr.push([B.x, B.y, gfH(H, B.x, B.y)]); break; }
       let ax = -GFC.G * 5 / 7 * gx, ay = -GFC.G * 5 / 7 * gy;
       if (sp > 1e-4) { const k = Math.min(fr, sp / dt) / sp; ax -= B.vx * k; ay -= B.vy * k; }
+      // a slow ball close to the cup is drawn gently in (the cup's edge falls away a little)
+      if (gr) { const dx = H.pin[0] - B.x, dy = H.pin[1] - B.y, d = Math.hypot(dx, dy); if (d < 0.35 && d > 1e-3 && sp < 1.2) { const pull = 0.45 * (1 - d / 0.35); ax += dx / d * pull; ay += dy / d * pull; } }
       B.vx += ax * dt; B.vy += ay * dt; B.x += B.vx * dt; B.y += B.vy * dt;
       const g = gfH(H, B.x, B.y);
       // over a lip or a cliff: in the air again
       if (B.z - g > 0.12 + Math.hypot(B.vx, B.vy) * dt * 0.5) { B.mode = 'air'; B.vz = 0; B.lift = 0; } else B.z = g;
       // the cup
       const cd = Math.hypot(B.x - H.pin[0], B.y - H.pin[1]), s2 = Math.hypot(B.vx, B.vy);
-      if (cd < GFC.CUP && sf === 'green') {
+      if ((cd < GFC.CUP || (cd < GFC.CUP * 1.3 && s2 < 0.9)) && sf === 'green') {
         if (s2 < 1.35) { how = 'cup'; B.x = H.pin[0]; B.y = H.pin[1]; B.z = g - 0.08; tr.push([B.x, B.y, B.z]); break; }
         if (!B.lip && s2 < 2.4) { B.lip = 1; const side = ((B.x - H.pin[0]) * B.vy - (B.y - H.pin[1]) * B.vx) > 0 ? 1 : -1, r = side * (0.5 + 0.4 * (1 - cd / GFC.CUP)), c = Math.cos(r), s = Math.sin(r); const vx = B.vx * c - B.vy * s, vy = B.vx * s + B.vy * c; B.vx = vx * 0.55; B.vy = vy * 0.55; }
       } else if (cd > GFC.CUP * 2) B.lip = 0;
@@ -236,14 +241,21 @@ function gfPress() {
   if (!gfMyTurn() || (GF.ph !== 'aim' && GF.ph !== 'swing')) return;
   if (GF.ph === 'aim') { GF.ph = 'swing'; GF.m = { s: 1, v: 0, p: 0 }; gfSnd('tick'); return; }
   const M = GF.m;
-  if (M.s === 1) { M.p = Math.max(0.03, M.v); M.s = 2; gfSnd('tick'); }
+  if (M.s === 1) {
+    // inside the green zone is the power you chose exactly; on a putt a miss is softened too
+    const pw = GF.pw || 1, z = gfPowZone(), putt = GF_CLUBS[GF.club].putt, ms = gfMeterScale();
+    M.p = Math.abs(M.v - pw / ms) <= z ? pw : Math.max(0.03, putt ? pw + (M.v - pw) * 0.6 : M.v * ms); M.s = 2; gfSnd('tick');
+  }
   else if (M.s === 2) gfStrike(M.v);
 }
+// how much power the meter's full sweep stands for: on a short chip it's scaled down so the power you want sits at 70% of the bar, not a quick dab near the bottom
+function gfMeterScale() { const pw = GF.pw || 1; return GF_CLUBS[GF.club].putt || pw >= 0.7 ? 1 : Math.max(0.12, pw / 0.7); }
+function gfPowZone() { return GF_CLUBS[GF.club].putt ? 0.06 : 0.035; }
 function gfMeterTick(dt) {
   const M = GF.m; if (!M || GF.ph !== 'swing') return;
-  const sp = GF_METER[GF.set.meter] || GF_METER.normal;
-  if (M.s === 1) { M.v += dt * sp[0]; if (M.v >= 1.1) { M.v = 1.1; M.p = 1.1; M.s = 2; } }
-  else if (M.s === 2) { M.v -= dt * sp[1]; if (M.v <= -0.15) gfStrike(-0.15); }
+  const sp = GF_METER[GF.set.meter] || GF_METER.normal, pk = GF_CLUBS[GF.club].putt ? 0.7 : 1;   // (the putter's meter runs slower)
+  if (M.s === 1) { M.v += dt * sp[0] * pk; if (M.v >= 1.1) { M.v = 1.1; M.p = 1.1 * gfMeterScale(); M.s = 2; } }
+  else if (M.s === 2) { M.v -= dt * sp[1] * pk; if (M.v <= -0.15) gfStrike(-0.15); }
 }
 function gfStrike(acc) {
   const M = GF.m, p = gfPlayer(); M.s = 3;

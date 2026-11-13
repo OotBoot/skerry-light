@@ -6,6 +6,11 @@
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 187, date: '2026-11-13', title: "Skerry Links: easier putting and chipping", Changes: [
+    "Skerry Links: putts roll out more freely and ease to a stop instead of dying suddenly, and greens break about half as much, so a putt no longer hooks away in its last foot.",
+    "Skerry Links: a slow ball right by the cup is drawn in, and the cup takes a gently rolling ball a touch further from its centre.",
+    "Skerry Links: stopping the meter anywhere in the green zone now hits exactly the power you set. The zone is wider on the putter, the putter's meter runs slower, and a putt that misses the zone is only out by about half as much.",
+    "Skerry Links: on a short chip the swing meter rescales so your chosen power sits at 70% of the bar (its marks show the real percentages), so you no longer have to dab at the bottom of it." ] },
   { v: 186, date: '2026-11-13', title: "Skerry Links: green heat map", New: [
     "Skerry Links: a Slope toggle for putting (the Slope button, H, or Back on a controller). It colours the green from blue (low) to red (high) with a contour line every 2.5 cm, so you can read the break at a glance. It stays as you left it." ], Changes: [
     "Skerry Links: the swing meter sits higher on wide screens so the Power bar no longer covers it." ] },

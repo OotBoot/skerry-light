@@ -50,17 +50,17 @@ function gfDrawMeter() {
   arc(-0.15, 1.1, 'rgba(8,12,22,0.78)', 26);
   const g = c.createLinearGradient(cx - R, 0, cx + R, 0); g.addColorStop(0, '#5fa04a'); g.addColorStop(0.55, '#ffd88a'); g.addColorStop(0.85, '#ffb060');
   arc(0, 1, g, 16); arc(1, 1.1, '#d8452f', 16);
-  const pz = GF.pw || 1; arc(Math.max(0, pz - 0.035), Math.min(1.1, pz + 0.035), '#3fd44a', 24); arc(pz - 0.004, pz + 0.004, '#eaffd8', 26);
+  const ms = gfMeterScale(), pz = (GF.pw || 1) / ms, z = gfPowZone(); arc(Math.max(0, pz - z), Math.min(1.1, pz + z), '#3fd44a', 24); arc(pz - 0.004, pz + 0.004, '#eaffd8', 26);
   arc(-0.15, -0.012, 'rgba(216,69,47,0.55)', 16); arc(0.012, 0.06, 'rgba(255,216,138,0.25)', 16);
   arc(-0.012, 0.012, '#ffffff', 22);   // (the strike line)
   // marks at a quarter, a half and three-quarters
   c.fillStyle = '#e9d9a6'; c.font = '11px "Courier New", monospace'; c.textAlign = 'center';
-  for (const v of [0.25, 0.5, 0.75, 1]) { const a = ang(v); c.beginPath(); c.moveTo(cx + Math.cos(a) * (R - 13), cy + Math.sin(a) * (R - 13)); c.lineTo(cx + Math.cos(a) * (R - 19), cy + Math.sin(a) * (R - 19)); c.strokeStyle = 'rgba(10,10,10,0.7)'; c.lineWidth = 2; c.stroke(); c.fillText(Math.round(v * 100) + '%', cx + Math.cos(a) * (R - 32), cy + Math.sin(a) * (R - 32) + 4); }
+  for (const v of [0.25, 0.5, 0.75, 1]) { const a = ang(v); c.beginPath(); c.moveTo(cx + Math.cos(a) * (R - 13), cy + Math.sin(a) * (R - 13)); c.lineTo(cx + Math.cos(a) * (R - 19), cy + Math.sin(a) * (R - 19)); c.strokeStyle = 'rgba(10,10,10,0.7)'; c.lineWidth = 2; c.stroke(); c.fillText(Math.round(v * ms * 100) + '%', cx + Math.cos(a) * (R - 32), cy + Math.sin(a) * (R - 32) + 4); }
   const M = GF.m;
-  if (M && M.s >= 2) { const a = ang(M.p); c.beginPath(); c.moveTo(cx + Math.cos(a) * (R - 14), cy + Math.sin(a) * (R - 14)); c.lineTo(cx + Math.cos(a) * (R + 14), cy + Math.sin(a) * (R + 14)); c.strokeStyle = '#ffffff'; c.lineWidth = 3; c.stroke(); }
+  if (M && M.s >= 2) { const a = ang(M.p / ms); c.beginPath(); c.moveTo(cx + Math.cos(a) * (R - 14), cy + Math.sin(a) * (R - 14)); c.lineTo(cx + Math.cos(a) * (R + 14), cy + Math.sin(a) * (R + 14)); c.strokeStyle = '#ffffff'; c.lineWidth = 3; c.stroke(); }
   if (M) { const a = ang(M.v); c.beginPath(); c.moveTo(cx + Math.cos(a) * (R - 18), cy + Math.sin(a) * (R - 18)); c.lineTo(cx + Math.cos(a) * (R + 18), cy + Math.sin(a) * (R + 18)); c.strokeStyle = '#14110a'; c.lineWidth = 6; c.stroke(); c.strokeStyle = '#fff6d8'; c.lineWidth = 3; c.stroke(); }
   // what the power comes to
-  const club = GF_CLUBS[GF.club], p = gfPlayer(), v = M ? (M.s >= 2 ? M.p : M.v) : 1;
+  const club = GF_CLUBS[GF.club], p = gfPlayer(), v = M ? (M.s >= 2 ? M.p : M.v * ms) : 1;
   const lie = club.putt ? 1 : (GF_SURF[p.lie] || GF_SURF.rough).lie;
   c.font = 'bold 15px Georgia, serif'; c.fillStyle = '#ffd88a';
   c.fillText(M ? (club.putt ? `${Math.round(GF_PUTTS[GF.putt] * Math.max(0, Math.min(1.1, v)))} ft` : `${Math.round(club.c * lie * Math.max(0, Math.min(1.1, v)))} yd`) : (club.putt ? 'Putt' : 'Swing'), cx, cy - 6);
