@@ -20,7 +20,7 @@ function sfxbLoad() {
   }
 }
 
-// play a recording: o.vol (0..1, before the master), o.pan (-1..1), o.rate (playback speed), o.vary (random speed
+// play a recording: o.vol (0..1, before the master), o.pan (-1..1, or a direction from earDir), o.rate (playback speed), o.vary (random speed
 // spread, default ±4%), o.delay (s), o.gap (s: not again within this long, for sounds that come thick and fast),
 // o.out (through the outdoor bus, muffled indoors). True if it played (or would have, with the sound off).
 function sfxPlay(name, o) {
@@ -41,7 +41,7 @@ function sfxPlay(name, o) {
   s.playbackRate.value = (o.rate || 1) * (1 + (Math.random() - 0.5) * vary);
   const g = c.createGain(); g.gain.value = Math.max(0, o.vol == null ? 1 : o.vol);
   let dest = o.out && AUD.outF ? AUD.outF : AUD.master;
-  if (AUD.panOK && o.pan) { const p = c.createStereoPanner(); p.pan.value = Math.max(-1, Math.min(1, o.pan)); p.connect(dest); dest = p; }
+  dest = panNode(o.pan || AUD.place, dest);   // (a plain pan, or a direction: earDir in audio.js)
   s.connect(g).connect(dest);
   s.start(now + (o.delay || 0));
   return true;

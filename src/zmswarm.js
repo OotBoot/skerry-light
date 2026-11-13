@@ -114,7 +114,7 @@ function zwKilled(d) {
 // of tiny hard clicks, a crunch a crack and a wet thump
 function zwSound(k, d, pan) {
   if (typeof soundOff === 'function' && soundOff()) return;
-  const v = d == null ? 1 : Math.max(0.05, 1 - d / 30), o = { pan: clamp(pan || 0, -1, 1) };
+  const v = d == null ? 1 : Math.max(0.05, 1 - d / 30), o = { pan: fpsDir(pan) };
   if (typeof sfxPlay === 'function' && sfxPlay(k, { vol: (k === 'skitter' ? 0.45 : k === 'crunch' ? 0.7 : 0.9) * v, pan: o.pan, vary: 0.15, gap: k === 'skitter' ? 0.25 : 0.03 })) return;
   if (k === 'skitter') { const n = 6 + ((Math.random() * 6) | 0); for (let i = 0; i < n; i++) noise('highpass', 2500 + Math.random() * 2500, 2, 0.001, (0.05 + Math.random() * 0.05) * v, 0.025, Object.assign({ delay: i * (0.025 + Math.random() * 0.03) }, o)); }
   else if (k === 'crunch') { noise('bandpass', 1800, 1.5, 0.001, 0.25 * v, 0.07, o); noise('lowpass', 500, 1, 0.003, 0.25 * v, 0.14, Object.assign({ delay: 0.02 }, o)); tone(130, 'sine', 0.002, 0.18 * v, 0.12, Object.assign({ to: 70 }, o)); }

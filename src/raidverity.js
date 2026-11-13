@@ -399,7 +399,8 @@ function rvAim(z, p, act) {
   else if (act === 'lunge') { const L = Math.min(RVC.LUNGE_MAX, d); [z.ix, z.iy] = rvClampIn(z.x + dx / d * L, z.y + dy / d * L, RVC.T.RAD); }
 }
 // his sounds: his own voice (src/audio.js: the clip, faster or dragged down), and the recordings
-function rvSound(k, d) {
+function rvSound(k, d) { sndFrom(zbDir(d), () => rvSoundAt(k, d)); }   // (from where the boss stands: src/zmboss.js zbDir)
+function rvSoundAt(k, d) {
   const v = clamp(1 - (d || 0) / 40, 0.2, 1), play = (n, vol) => { try { return typeof sfxPlay === 'function' && sfxPlay(n, { vol: vol * v, vary: 0.05 }); } catch (e) { return false; } };
   const voice = (rate, vol) => { try { if (typeof sfxVerity === 'function') sfxVerity(rate, vol * v); } catch (e) {} };
   if (k === 'giggle') { voice(1.35, 0.35); return; }

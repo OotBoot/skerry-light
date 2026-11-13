@@ -56,7 +56,7 @@ function updateKnocks(dt) {
       k.x += dx / dist * sp; k.y += dy / dist * sp; k.ph += dt * 8;
       k.knockT -= dt;
       if (k.knockT <= 0 && dist < 650) {
-        const pan = clamp(angDiff(bearingOf(k.x - ship.x, k.y - ship.y), ship.h) / (fov / 2), -1, 1);
+        const pan = earDir(angDiff(bearingOf(k.x - ship.x, k.y - ship.y), ship.h));
         const near = 1 - dist / 650;
         sfxKnock(pan, 0.25 + near * 0.85, 0.22 - near * 0.1);
         k.knockT = 2.6 - near * 1.9;
@@ -129,7 +129,7 @@ function updateEnemies(dt) {
   for (const d of E.drowned) {
     const dx = ship.x - d.x, dy = ship.y - d.y, dist = Math.hypot(dx, dy) || 1;
     d.x += dx / dist * sp * dt; d.y += dy / dist * sp * dt; d.ph += dt * 3;
-    const pan = clamp(angDiff(bearingOf(d.x - ship.x, d.y - ship.y), ship.h) / (fov / 2), -1, 1);
+    const pan = earDir(angDiff(bearingOf(d.x - ship.x, d.y - ship.y), ship.h));
     d.splashT -= dt;
     if (dist < 90 && d.splashT <= 0) { d.splashT = rand(1.2, 2.6); sfxSplash(pan, 1 - dist / 90); }
     // he only snaps at the drowned he walks right into, and not every time
@@ -155,7 +155,7 @@ function updateEnemies(dt) {
     if (l.gone) continue;
     if (Math.hypot(l.x - ship.x, l.y - ship.y) < 45) {
       l.gone = true;
-      const pan = clamp(angDiff(bearingOf(l.x - ship.x, l.y - ship.y), ship.h) / (fov / 2), -1, 1);
+      const pan = earDir(angDiff(bearingOf(l.x - ship.x, l.y - ship.y), ship.h));
       sfxCackle(pan);
       addLog(E.warnedLure ? 'Another pair of false lights went out. Rocks below.' :
         'Those lamps went out. They were never the harbour. Wreckers hang false lights over rocks; trust the bearing strip.', 'w');

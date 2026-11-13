@@ -436,7 +436,7 @@ function gcSpawn(at) {
   if (!at) return null;
   const n = gcN(), u = Math.random(), kind = u < (GCW.p2 ? 0.35 : 0.2) ? 'run' : 'jog';
   const z = raidSpawnAt(FPSC.CX + at[0], FPSC.CY + at[1], { kind, rise: 1.1, hp: zmHp(GCC.ROUND) * (0.9 + Math.random() * 0.2) * (1 + 0.2 * (n - 1)) });
-  if (z) zmSound('moan', Math.hypot(z.x - FPS.me.x, z.y - FPS.me.y), 0, kind);
+  if (z) zmSound('moan', Math.hypot(z.x - FPS.me.x, z.y - FPS.me.y), fpsEar(z.x, z.y), kind);
   return z;
 }
 // the captain comes up through his deck
@@ -693,7 +693,8 @@ ZBT.crane = {
   pose: (z, M, dt) => gcPoseCrane(z, M, dt),
 };
 // his sounds and the ship's: the recordings (src/sfxbank.js) where there's one, else the synth (src/audio.js)
-function gcSound(k, d) {
+function gcSound(k, d) { sndFrom(zbDir(d), () => gcSoundAt(k, d)); }   // (from where the boss stands: src/zmboss.js zbDir)
+function gcSoundAt(k, d) {
   const v = clamp(1 - (d || 0) / 60, 0.15, 1), play = (n, vol, o) => { try { return typeof sfxPlay === 'function' && sfxPlay(n, Object.assign({ vol: vol * v, vary: 0.05 }, o || {})); } catch (e) { return false; } };
   const syn = f => { try { if (!soundOff() && AUD.ctx) f(); } catch (e) {} };
   if (k === 'arrive' || k === 'rise') { play('splash', 0.9); play('creak', 1); play('bossdiver', 0.7); syn(() => tone(55, 'sawtooth', 0.4, 0.06, 2.2, { to: 42 })); return; }

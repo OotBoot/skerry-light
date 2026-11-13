@@ -208,7 +208,7 @@ function rclQuake(x, y, fz, mine, ahead) {
   const m = FPS.me, z = FPSC.GROUND + fz;
   RCL.quakes.push({ x, y, z, R: ahead ? 5.5 : 4.2, t: 0 });
   fpsPuff(x, y, z + 0.1, '150,130,110', 18);
-  try { zxSound('boom', mine ? 0 : Math.hypot(x - m.x, y - m.y), 4); } catch (e) {}
+  try { sndFrom(mine ? 0 : fpsEar(x, y), () => zxSound('boom', mine ? 0 : Math.hypot(x - m.x, y - m.y), 4)); } catch (e) {}
   if (!mine) return;
   if (!ahead) { RCL.slam = false; RCL.slamCd = RCLC.SLAM_CD; rclEvent('q', x - FPSC.CX, y - FPSC.CY, fz); }
   let any = false;
@@ -275,7 +275,7 @@ function rclBurst(P) {
   else {
     RCL.clouds.push({ x: P.x, y: P.y, fz, r: RCLC.CLOUD_R, t: RCLC.CLOUD_T, k: 0.1, mine: P.mine, seed: Math.random() * 100 });
     fpsPuff(P.x, P.y, P.z, '170,230,100', 16);
-    try { zxSound('burst', P.mine ? 0 : Math.hypot(P.x - FPS.me.x, P.y - FPS.me.y)); } catch (e) {}
+    try { sndFrom(P.mine ? 0 : fpsEar(P.x, P.y), () => zxSound('burst', P.mine ? 0 : Math.hypot(P.x - FPS.me.x, P.y - FPS.me.y))); } catch (e) {}
   }
 }
 function rclClouds(dt) {

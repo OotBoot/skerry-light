@@ -1677,6 +1677,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
           <button class="tool" id="warHowBtn" type="button">How to play</button>
           <button class="tool" id="warLeave" type="button">Leave the Reach</button>
         </div>
+        <div class="lookrow"><label for="warVol">Volume <output id="warVolOut">100%</output></label><input id="warVol" class="lookslider volslider" type="range" min="0" max="100" step="5" value="100"></div>
         <div id="warHow" hidden class="howto">
           <p>Tap land touching yours to march on it with the share the slider sets; tap a far shore to send a boat. Build with gold: a harbour on the shore, a watchtower at the border, a beacon on a dark shore. Flares light and clear a spot; a fire-ship burns a shore. Ring the bell when hard pressed. The drowned rise on dark shores at night; the tide opens and shuts the shoals every ninety seconds; hold the Light’s rock to be the Keeper; hold a whole great isle for a bonus. You win with six tenths of the land, or when you stand alone.</p>
         </div>
@@ -1902,6 +1903,8 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
         <button class="tool" id="fpsLeave" type="button">Leave the island</button>
       </div>
       <div class="lookrow" id="fpsOpts">
+        <label for="fpsVol">Volume <output id="fpsVolOut">100%</output></label>
+        <input id="fpsVol" class="lookslider volslider" type="range" min="0" max="100" step="5" value="100">
         <label for="fpsLookX">Look sensitivity, across (X) <output id="fpsLookXOut">1.00</output></label>
         <input id="fpsLookX" class="lookslider" type="range" min="0.3" max="3" step="0.05" value="1">
         <label for="fpsLookY">Look sensitivity, up and down (Y) <output id="fpsLookYOut">1.00</output></label>
@@ -1980,6 +1983,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
         <button class="tool" id="pauseSettings" type="button">Settings</button>
         <button class="tool" id="pauseMenu" type="button">Give up the voyage</button>
       </div>
+      <div class="lookrow"><label for="pauseVol">Volume <output id="pauseVolOut">100%</output></label><input id="pauseVol" class="lookslider volslider" type="range" min="0" max="100" step="5" value="100"></div>
     </div>
   </div>
 
@@ -1988,7 +1992,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
       <div class="cardtop"><span class="eyebrow">Kept on this device</span><button class="tool closebtn" id="settingsClose" type="button">✕ Close</button></div>
       <h1 id="settingsHead">Settings</h1>
       <p class="setnote" id="settingsCrew" hidden>Your crew sails on.</p>
-      <div class="setrow"><span class="label" id="lbl-vol">Volume</span><div class="loottabs" id="set-vol" role="group" aria-labelledby="lbl-vol"></div></div>
+      <div class="setrow"><label class="label" for="setVol">Volume <output id="setVolOut">100%</output></label><input id="setVol" class="lookslider volslider" type="range" min="0" max="100" step="5" value="100"></div>
       <div class="setrow"><span class="label" id="lbl-scares">Jumpscares</span><div class="loottabs" id="set-scares" role="group" aria-labelledby="lbl-scares"></div></div>
       <div class="setrow"><span class="label" id="lbl-flashes">Flashes</span><div class="loottabs" id="set-flashes" role="group" aria-labelledby="lbl-flashes"></div></div>
       <div class="setrow"><span class="label" id="lbl-motion">Motion</span><div class="loottabs" id="set-motion" role="group" aria-labelledby="lbl-motion"></div></div>
@@ -2041,7 +2045,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 // ---- src/config.js ----
 'use strict';
 // The game's version, shown at the top of the main menu. Bump it by one with every change pushed to main.
-var VERSION = 177;
+var VERSION = 178;
 // Skerry Light: tuning, asset paths and lore.
 // World units are metres. The lighthouse stands at the origin on the shoreline (y = 0);
 // north (+y) is open sea. Bearings: 0 = north, positive = east.
@@ -2170,6 +2174,11 @@ const flashK = () => SETTINGS.flashes === 'reduced' ? 0.3 : 1;
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 178, date: '2026-11-13', title: "Directional sound, and volume in every menu", Sound: [
+    "Every game: sounds now come from where they happen. Gunshots, the drowned, bosses, boats, splashes, bells and creatures are panned to the side they're on, and sounds behind you are muffled, so you can tell ahead from behind and turn to find them. Best with headphones.",
+    "Wreckers' Night, Keeper's Last Light, the raids, Fog Run and Freebooters' Sea: other players' shots, the drowned's moans, boards being torn off windows, doors, power-ups and every boss's footsteps and attacks are all directional now. Before, many of these played dead centre.",
+    "Skerry Light: things behind the boat no longer sound as if they're hard left or hard right, and rocks blown apart by a crewmate's gun are now directional too." ], Changes: [
+    "Volume is now a slider, from off to 100% in steps of 5%, and it's in every in-game menu: the Settings card, Skerry Light's pause card, the menu in Wreckers' Night, Keeper's Last Light, the raids, Fog Run and Freebooters' Sea, and the Drowned Reach's menu. They're all the same setting, so changing it in one changes it everywhere." ] },
   { v: 177, date: '2026-11-13', title: "Keeper's Last Light: every crab shows in co-op", Fixes: [
     "Keeper's Last Light: in a crab round with three or four players, some crabs could be invisible to everyone but the host. Every living crab now shows on every screen." ] },
   { v: 176, date: '2026-11-12', title: "New game: Freebooters' Sea", New: [
@@ -2523,14 +2532,25 @@ function setMuted(m) {
 }
 function applyVolume() { if (AUD.master) AUD.master.gain.setTargetAtTime(masterLevel(), AUD.ctx.currentTime, 0.05); }
 
-function outNode(pan) {
-  const c = AUD.ctx;
-  if (AUD.panOK && pan) {
-    const p = c.createStereoPanner(); p.pan.value = Math.max(-1, Math.min(1, pan));
-    p.connect(AUD.master); return p;
-  }
-  return AUD.master;
+// Directional sound. A sound's pan is either a plain number (-1 hard left .. 1 hard right) or a direction made by
+// earDir(a), a being how far round from straight ahead the sound is, in radians (+ to the right). A direction pans by
+// where the thing really is (full over when it's beside you, back towards the middle as it comes round behind) and
+// muffles as it goes astern of you, so that ahead and behind sound different and you can turn to find it.
+function earDir(a) { return { a: a || 0 }; }
+// the direction of a thing at (x, y) from an ear at (ex, ey) looking along eh
+function earAt(x, y, ex, ey, eh) { return earDir(angDiff(bearingOf(x - ex, y - ey), eh)); }
+// (the nodes a pan needs between a sound and dest: the low-pass astern, the stereo pan)
+function panNode(pan, dest) {
+  const c = AUD.ctx; if (!pan || !c) return dest;
+  let p = pan, back = 0;
+  if (typeof pan === 'object') { const a = +pan.a || 0; p = Math.sin(a) * 0.95; back = Math.max(0, -Math.cos(a)); }
+  if (back > 0.05) { const f = c.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 20000 * Math.pow(0.12, back); f.Q.value = 0.4; f.connect(dest); dest = f; }
+  if (AUD.panOK && Math.abs(p) > 0.01) { const s = c.createStereoPanner(); s.pan.value = Math.max(-1, Math.min(1, p)); s.connect(dest); dest = s; }
+  return dest;
 }
+function outNode(pan) { return panNode(pan || AUD.place, AUD.master); }
+// everything fn plays (that hasn't a pan of its own) comes from pan: for a creature's whole voice at once
+function sndFrom(pan, fn) { const was = AUD.place; AUD.place = pan || was; try { return fn(); } finally { AUD.place = was; } }
 
 function envGain(t, attack, peak, decay, dest) {
   const g = AUD.ctx.createGain();
@@ -2796,10 +2816,10 @@ function sfxCannon() {
   tone(62, 'sine', 0.003, 0.9, 0.7, { to: 32 });
   tone(130, 'triangle', 0.002, 0.4, 0.25, { to: 60 });
 }
-function sfxSmash(vol) {
-  noise('bandpass', 1300, 0.9, 0.003, 0.6 * vol, 0.5, { to: 400 });
-  noise('lowpass', 500, 0.7, 0.01, 0.5 * vol, 0.9, { delay: 0.04 });
-  for (let i = 0; i < 4; i++) tone(300 + Math.random() * 400, 'triangle', 0.002, 0.12 * vol, 0.08, { delay: 0.05 + i * 0.07, to: 180 });
+function sfxSmash(vol, pan) {
+  noise('bandpass', 1300, 0.9, 0.003, 0.6 * vol, 0.5, { to: 400, pan });
+  noise('lowpass', 500, 0.7, 0.01, 0.5 * vol, 0.9, { delay: 0.04, pan });
+  for (let i = 0; i < 4; i++) tone(300 + Math.random() * 400, 'triangle', 0.002, 0.12 * vol, 0.08, { delay: 0.05 + i * 0.07, to: 180, pan });
 }
 
 // the carrier's scout jet: the catapult's thump and a rising roar as it goes
@@ -2975,7 +2995,7 @@ function sfxbLoad() {
   }
 }
 
-// play a recording: o.vol (0..1, before the master), o.pan (-1..1), o.rate (playback speed), o.vary (random speed
+// play a recording: o.vol (0..1, before the master), o.pan (-1..1, or a direction from earDir), o.rate (playback speed), o.vary (random speed
 // spread, default ±4%), o.delay (s), o.gap (s: not again within this long, for sounds that come thick and fast),
 // o.out (through the outdoor bus, muffled indoors). True if it played (or would have, with the sound off).
 function sfxPlay(name, o) {
@@ -2996,7 +3016,7 @@ function sfxPlay(name, o) {
   s.playbackRate.value = (o.rate || 1) * (1 + (Math.random() - 0.5) * vary);
   const g = c.createGain(); g.gain.value = Math.max(0, o.vol == null ? 1 : o.vol);
   let dest = o.out && AUD.outF ? AUD.outF : AUD.master;
-  if (AUD.panOK && o.pan) { const p = c.createStereoPanner(); p.pan.value = Math.max(-1, Math.min(1, o.pan)); p.connect(dest); dest = p; }
+  dest = panNode(o.pan || AUD.place, dest);   // (a plain pan, or a direction: earDir in audio.js)
   s.connect(g).connect(dest);
   s.start(now + (o.delay || 0));
   return true;
@@ -7342,13 +7362,13 @@ function updateMaren(dt) {
   // close in and out of sight, you hear her oars working in the rowlocks
   if (state === 'play' && !g.attract && m.stage >= 3 && !marenInView()) {
     m.oarT = (m.oarT == null ? 1 : m.oarT) - dt;
-    if (m.oarT <= 0) { m.oarT = rand(2.5, 4); sfxRowlock(clamp(angDiff(bearingOf(m.x - ship.x, m.y - ship.y), ship.h) / (fov / 2), -1, 1)); }
+    if (m.oarT <= 0) { m.oarT = rand(2.5, 4); sfxRowlock(earDir(angDiff(bearingOf(m.x - ship.x, m.y - ship.y), ship.h))); }
   }
   // the first time you see her at each stage, she whispers
   const vis = visibility(m.x, m.y);
   if (vis > 0.3 && marenInView() && m.seenStage !== m.stage) {
     m.seenStage = m.stage;
-    const pan = clamp(angDiff(bearingOf(m.x - ship.x, m.y - ship.y), ship.h) / (fov / 2), -1, 1);
+    const pan = earDir(angDiff(bearingOf(m.x - ship.x, m.y - ship.y), ship.h));
     sfxWhisper(pan, 0.6 + m.stage * 0.15);
   }
 }
@@ -7460,7 +7480,7 @@ function drawPlimRing() {
 }
 
 function squeakFrom(p, d, boost) {
-  const pan = clamp(angDiff(bearingOf(p.x - ship.x, p.y - ship.y), ship.h) / (fov / 2), -1, 1);
+  const pan = earDir(angDiff(bearingOf(p.x - ship.x, p.y - ship.y), ship.h));
   sfxSqueak(pan, Math.max(0, 1 - d / 260) * boost * (g.attract ? 0.5 : 1));
 }
 
@@ -7556,7 +7576,7 @@ function updateKnocks(dt) {
       k.x += dx / dist * sp; k.y += dy / dist * sp; k.ph += dt * 8;
       k.knockT -= dt;
       if (k.knockT <= 0 && dist < 650) {
-        const pan = clamp(angDiff(bearingOf(k.x - ship.x, k.y - ship.y), ship.h) / (fov / 2), -1, 1);
+        const pan = earDir(angDiff(bearingOf(k.x - ship.x, k.y - ship.y), ship.h));
         const near = 1 - dist / 650;
         sfxKnock(pan, 0.25 + near * 0.85, 0.22 - near * 0.1);
         k.knockT = 2.6 - near * 1.9;
@@ -7629,7 +7649,7 @@ function updateEnemies(dt) {
   for (const d of E.drowned) {
     const dx = ship.x - d.x, dy = ship.y - d.y, dist = Math.hypot(dx, dy) || 1;
     d.x += dx / dist * sp * dt; d.y += dy / dist * sp * dt; d.ph += dt * 3;
-    const pan = clamp(angDiff(bearingOf(d.x - ship.x, d.y - ship.y), ship.h) / (fov / 2), -1, 1);
+    const pan = earDir(angDiff(bearingOf(d.x - ship.x, d.y - ship.y), ship.h));
     d.splashT -= dt;
     if (dist < 90 && d.splashT <= 0) { d.splashT = rand(1.2, 2.6); sfxSplash(pan, 1 - dist / 90); }
     // he only snaps at the drowned he walks right into, and not every time
@@ -7655,7 +7675,7 @@ function updateEnemies(dt) {
     if (l.gone) continue;
     if (Math.hypot(l.x - ship.x, l.y - ship.y) < 45) {
       l.gone = true;
-      const pan = clamp(angDiff(bearingOf(l.x - ship.x, l.y - ship.y), ship.h) / (fov / 2), -1, 1);
+      const pan = earDir(angDiff(bearingOf(l.x - ship.x, l.y - ship.y), ship.h));
       sfxCackle(pan);
       addLog(E.warnedLure ? 'Another pair of false lights went out. Rocks below.' :
         'Those lamps went out. They were never the harbour. Wreckers hang false lights over rocks; trust the bearing strip.', 'w');
@@ -7957,7 +7977,7 @@ function smash(r, mine) {
   r.gone = true; r.doomed = true;
   const near = Math.hypot(r.x - ship.x, r.y - ship.y);
   burst(r.x, r.y, ['#5a5f68', '#7d828b', '#33373e', '#e8eef8', '#c8d6e8'], Math.min(60, 20 + r.r * 2.5), 10 + r.r * 0.4, 12);
-  if (near < 900) sfxSmash(Math.max(0.15, 1 - near / 900));
+  if (near < 900) sfxSmash(Math.max(0.15, 1 - near / 900), panOf(r));
   if (!mine && near < 900 && state === 'play') addLog('A crewmate’s gun blew a rock apart.', 'p');
 }
 
@@ -8124,7 +8144,7 @@ const fwd = () => ({ x: Math.sin(ship.h), y: Math.cos(ship.h) });
 function aheadPt(d, lat) { const f = fwd(); return { x: ship.x + f.x * d + f.y * lat, y: ship.y + f.y * d - f.x * lat }; }
 function okWater(p) { return g.backrooms ? true : p.y > 40; }
 const dist = (o) => Math.hypot(o.x - ship.x, o.y - ship.y);
-const panOf = (o) => clamp(angDiff(bearingOf(o.x - ship.x, o.y - ship.y), ship.h) / (fov / 2), -1, 1);
+const panOf = (o) => earDir(angDiff(bearingOf(o.x - ship.x, o.y - ship.y), ship.h));
 const inView = (o) => Math.abs(angDiff(bearingOf(o.x - ship.x, o.y - ship.y), ship.h)) < fov / 2 + 0.05;
 function intro(k) { const F = g.foes[k]; if (F && !F.intro) { F.intro = true; addLog(FOE_INTRO[k], 'w'); } }
 function foeHit(what) { if (ship.inv <= 0) hit(-Math.sin(ship.h), -Math.cos(ship.h), what); }
@@ -11208,7 +11228,7 @@ function update(dt) {
   if (clock0 < tellAt && g.marenClock >= tellAt && g.maren.active && state === 'play' && !g.attract && !marenHeld()) {
     g.marenTell = 1.5;
     const at = bearingOf(g.maren.x - ship.x, g.maren.y - ship.y);
-    sfxSwell(clamp(angDiff(at, ship.h) / (fov / 2), -1, 1));
+    sfxSwell(earDir(angDiff(at, ship.h)));
     if (soundOff()) callout('A swell: she\u2019s about to step nearer', { bearing: at });
   }
   if (g.marenTell > 0) g.marenTell = Math.max(0, g.marenTell - dt);
@@ -11430,7 +11450,6 @@ function closeSettings() {
   else if (state === 'play') cv.focus({ preventScroll: true });
 }
 const SETTING_OPTS = {
-  vol: [[0, 'Off'], [0.25, '25%'], [0.5, '50%'], [0.75, '75%'], [1, '100%']],
   scares: [['full', 'Full'], ['soft', 'Softened']],
   flashes: [['normal', 'Normal'], ['reduced', 'Reduced']],
   motion: [['auto', 'Auto'], ['reduce', 'Reduce'], ['full', 'Full']],
@@ -11467,8 +11486,17 @@ function fovSync() {
 for (const id of ['setFov', 'fpsFov']) { const i = $(id); if (i) i.addEventListener('input', () => { SETTINGS.fov = Math.round(+i.value); saveSettings(); fovSync(); }); }
 { const r = $('fpsFovReset'); if (r) r.addEventListener('click', () => { SETTINGS.fov = 69; saveSettings(); fovSync(); }); }
 setTimeout(fovSync, 0);
+// the volume sliders: the Settings card's, the pause card's, the first-person menu's (Wreckers' Night, the Lighthouse,
+// the raids, Freebooters' Sea) and the Drowned Reach's menu are all the one setting, SETTINGS.vol (0 to 1)
+const VOL_SLIDERS = ['setVol', 'pauseVol', 'fpsVol', 'warVol'];
+function volSync() {
+  const v = Math.round(clamp(SETTINGS.vol == null ? 1 : +SETTINGS.vol || 0, 0, 1) * 100);
+  for (const id of VOL_SLIDERS) { const i = $(id), o = $(id + 'Out'); if (i && document.activeElement !== i) i.value = String(v); if (o) o.textContent = v ? v + '%' : 'Off'; }
+}
+for (const id of VOL_SLIDERS) { const i = $(id); if (i) i.addEventListener('input', () => { SETTINGS.vol = Math.round(+i.value) / 100; saveSettings(); applyVolume(); volSync(); }); }
+setTimeout(volSync, 0);
 function applySettings() {
-  lookSync(); fovSync();
+  lookSync(); fovSync(); volSync();
   applyVolume(); refreshMotion();
   if (typeof gl3dRefresh === 'function') gl3dRefresh();
 }
@@ -12393,7 +12421,7 @@ function mateShout(m, text) {
   m.shoutText = text; m.shoutT = 4;
   if (!g || g.attract) return;
   const d = Math.hypot(m.x - ship.x, m.y - ship.y);
-  const pan = clamp(angDiff(bearingOf(m.x - ship.x, m.y - ship.y), ship.h) / (fov / 2), -1, 1);
+  const pan = earDir(angDiff(bearingOf(m.x - ship.x, m.y - ship.y), ship.h));
   sfxHorn(pan, Math.max(0.3, 1 - d / 800));
   if (state === 'play') addLog(m.name + ': ' + text + ' (' + Math.round(d) + ' m)', 'p');
 }
@@ -12406,7 +12434,7 @@ function mateNear(dist) {
 function mateRangBell(m) {
   if (!g || state !== 'play') return;
   const d = Math.hypot(m.x - ship.x, m.y - ship.y);
-  const pan = clamp(angDiff(bearingOf(m.x - ship.x, m.y - ship.y), ship.h) / (fov / 2), -1, 1);
+  const pan = earDir(angDiff(bearingOf(m.x - ship.x, m.y - ship.y), ship.h));
   sfxBellFar(pan, Math.max(0.15, 1 - d / 600));
   if (d < SK.CREW_BELL_RANGE && g.maren.active && g.maren.stage >= 1) {
     g.maren.stage = Math.max(0, g.maren.stage - 2); placeMaren(g.maren.stage);
@@ -14827,7 +14855,7 @@ function fpsNetTick(dt) {
       fpsFeed(killer ? `${killer} shot ${r.n}.` : `${r.n} was taken by the sea.`);
     } else r.prevKb = Object.assign({}, r.kb);
     r.d = f.d || 0; r.dead = f.dead;
-    if (f.bl > r.bl) { FPS.pings.push({ x: f.x, y: f.y, t: 4, n: r.n }); fpsBellSound(Math.hypot(f.x - FPS.me.x, f.y - FPS.me.y)); }
+    if (f.bl > r.bl) { FPS.pings.push({ x: f.x, y: f.y, t: 4, n: r.n }); fpsBellSound(Math.hypot(f.x - FPS.me.x, f.y - FPS.me.y), fpsEar(f.x, f.y)); }
     r.bl = f.bl;
     if (f.fl && f.fl[0] > r.fl) FPS.g.flares.push({ x: f.fl[1], y: f.fl[2], t: SK.FLARE_TIME, skin: FLARES[0] });
     if (f.fl) r.fl = f.fl[0];
@@ -15084,7 +15112,7 @@ function fpsResolveShot(sh, mine) {
   const [, x, y, z, h, p, by, code] = sh, w = fpsWOf(code), m = FPS.me;
   const d = Math.hypot(x - m.x, y - m.y), pan = angDiff(bearingOf(x - m.x, y - m.y), m.h);
   const shooter = by === m.id ? null : FPS.remote.get(by) || FPS.bots.find(b => b.id === by);
-  if (w.melee) { if (shooter) shooter.slashT = 0.3; fpsSwishSound(mine ? 0 : d); }
+  if (w.melee) { if (shooter) shooter.slashT = 0.3; fpsSwishSound(mine ? 0 : d, mine ? 0 : pan); }
   else { if (shooter) shooter.flashT = 0.12; fpsWeaponSound(code, mine ? 0 : d, mine ? 0 : pan); }
   if (w.speed) {
     // the harpoon flies as a thing of its own; everyone moves it the same way
@@ -15200,7 +15228,7 @@ function fpsHarpoonsTick(dt) {
         if (o.drowned && FPS.zm && typeof zmHarpoonOn === 'function' && zmHarpoonOn(hp, o)) { hp.done = false; continue; }
         hp.stuck = 0.6;
         if (hp.skew && typeof zmpHarpoonCarry === 'function') zmpHarpoonCarry(hp, true);
-      } else { if (hp.skew && typeof zmpHarpoonCarry === 'function') zmpHarpoonCarry(hp, true); hp.stuck = 8; fpsPuff(r.x, r.y, r.z, '190,190,180', 8); try { noise('bandpass', 900, 3, 0.002, 0.12, 0.15); } catch (e) {} }
+      } else { if (hp.skew && typeof zmpHarpoonCarry === 'function') zmpHarpoonCarry(hp, true); hp.stuck = 8; fpsPuff(r.x, r.y, r.z, '190,190,180', 8); try { noise('bandpass', 900, 3, 0.002, 0.12, 0.15, { pan: fpsEar(r.x, r.y) }); } catch (e) {} }
     }
   }
   FPS.harps = FPS.harps.filter(hp => !hp.done || hp.stuck > 0);
@@ -15265,13 +15293,17 @@ function fpsMelee() { if (FPS.weapon === 'cutlass') fpsSwitch(FPS.last !== 'cutl
 function fpsLantern() { FPS.me.lan = !FPS.me.lan; try { sfxTick(); } catch (e) {} fpsSend(); }
 
 // ---------- sounds (made from the game's own noises) ----------
+// a sound's direction from where it is, as I hear it (src/audio.js earDir: panned to its side, muffled behind me);
+// fpsDir takes the angle the callers here have always passed (radians round from where I'm looking), or a direction already made
+const fpsEar = (x, y) => earAt(x, y, FPS.me.x, FPS.me.y, FPS.me.h);
+const fpsDir = a => a && typeof a === 'object' ? a : a ? earDir(a) : 0;
 function fpsGunSound(d, pan) {
   try {
     if (soundOff()) return;
-    const v = Math.max(0.05, 1 - d / 350);
-    if (sfxPlay('pepperbox', { vol: 0.95 * v, pan: Math.max(-1, Math.min(1, pan || 0)), vary: 0.1 })) return;
-    noise('lowpass', 1600 * v + 300, 0.7, 0.002, 0.55 * v, 0.28 + (1 - v) * 0.3, { pan: Math.max(-1, Math.min(1, pan || 0)) });
-    tone(90, 'triangle', 0.002, 0.3 * v, 0.18, { to: 45 });
+    const v = Math.max(0.05, 1 - d / 350), P = fpsDir(pan);
+    if (sfxPlay('pepperbox', { vol: 0.95 * v, pan: P, vary: 0.1 })) return;
+    noise('lowpass', 1600 * v + 300, 0.7, 0.002, 0.55 * v, 0.28 + (1 - v) * 0.3, { pan: P });
+    tone(90, 'triangle', 0.002, 0.3 * v, 0.18, { to: 45, pan: P });
   } catch (e) {}
 }
 // each weapon's own report: the pepperbox's crack, the blunderbuss's roar, the longarm's long bang,
@@ -15279,17 +15311,17 @@ function fpsGunSound(d, pan) {
 function fpsWeaponSound(code, d, pan) {
   try {
     if (soundOff()) return;
-    const v = Math.max(0.05, 1 - d / 400), o = { pan: Math.max(-1, Math.min(1, pan || 0)) };
+    const v = Math.max(0.05, 1 - d / 400), o = { pan: fpsDir(pan) };
     { const R = { p: 'pepperbox', b: 'blunderbuss', l: 'longarm', h: 'harpoon', a: 'avtomat' }[code] || (FPSW_BY_CODE[code] ? null : 'pepperbox'); if (R && sfxPlay(R, { vol: (code === 'a' ? 0.7 : 0.95) * v, pan: o.pan, vary: 0.1 })) return; }   // (the recordings: src/sfxbank.js)
-    if (code === 'b') { noise('lowpass', 900 * v + 250, 0.6, 0.002, 0.8 * v, 0.55 + (1 - v) * 0.3, o); tone(55, 'sawtooth', 0.002, 0.35 * v, 0.3, { to: 30 }); }
-    else if (code === 'l') { noise('lowpass', 2200 * v + 300, 0.8, 0.001, 0.7 * v, 0.45 + (1 - v) * 0.5, o); tone(120, 'triangle', 0.001, 0.25 * v, 0.25, { to: 40 }); }
-    else if (code === 'a') { noise('lowpass', 2800 * v + 400, 0.9, 0.001, 0.42 * v, 0.12 + (1 - v) * 0.3, o); tone(160, 'square', 0.001, 0.1 * v, 0.05, { to: 70 }); }
-    else if (code === 'h') { noise('lowpass', 500, 0.8, 0.003, 0.5 * v, 0.25, o); tone(70, 'triangle', 0.003, 0.4 * v, 0.2, { to: 35 }); noise('highpass', 3000, 0.7, 0.05, 0.12 * v, 0.6, o); }
+    if (code === 'b') { noise('lowpass', 900 * v + 250, 0.6, 0.002, 0.8 * v, 0.55 + (1 - v) * 0.3, o); tone(55, 'sawtooth', 0.002, 0.35 * v, 0.3, { to: 30, pan: o.pan }); }
+    else if (code === 'l') { noise('lowpass', 2200 * v + 300, 0.8, 0.001, 0.7 * v, 0.45 + (1 - v) * 0.5, o); tone(120, 'triangle', 0.001, 0.25 * v, 0.25, { to: 40, pan: o.pan }); }
+    else if (code === 'a') { noise('lowpass', 2800 * v + 400, 0.9, 0.001, 0.42 * v, 0.12 + (1 - v) * 0.3, o); tone(160, 'square', 0.001, 0.1 * v, 0.05, { to: 70, pan: o.pan }); }
+    else if (code === 'h') { noise('lowpass', 500, 0.8, 0.003, 0.5 * v, 0.25, o); tone(70, 'triangle', 0.003, 0.4 * v, 0.2, { to: 35, pan: o.pan }); noise('highpass', 3000, 0.7, 0.05, 0.12 * v, 0.6, o); }
     else fpsGunSound(d, pan);
   } catch (e) {}
 }
-function fpsSwishSound(d) { try { if (soundOff()) return; const v = Math.max(0.05, 1 - d / 60); if (sfxPlay('swish', { vol: 0.7 * v, vary: 0.15 })) return; noise('bandpass', 2600, 1.2, 0.03, 0.22 * v, 0.18); } catch (e) {} }
-function fpsBellSound(d) { try { sfxBellFar(0, Math.max(0.15, 1 - d / 400)); } catch (e) {} }
+function fpsSwishSound(d, pan) { try { if (soundOff()) return; const v = Math.max(0.05, 1 - d / 60), P = fpsDir(pan); if (sfxPlay('swish', { vol: 0.7 * v, vary: 0.15, pan: P })) return; noise('bandpass', 2600, 1.2, 0.03, 0.22 * v, 0.18, { pan: P }); } catch (e) {} }
+function fpsBellSound(d, pan) { try { sfxBellFar(fpsDir(pan), Math.max(0.15, 1 - d / 400)); } catch (e) {} }
 function fpsHitSound(head) { try { tone(head ? 1250 : 900, 'square', 0.001, 0.06, 0.05); } catch (e) {} }
 function fpsClick() { try { tone(420, 'square', 0.001, 0.05, 0.04); tone(300, 'square', 0.001, 0.05, 0.04, { delay: 0.5 }); } catch (e) {} }
 function fpsFeed(text) { FPS.feed.push({ text, t: 5 }); if (FPS.feed.length > 5) FPS.feed.shift(); }
@@ -15411,7 +15443,7 @@ function fpsDrownedTick(dt, now) {
     const a = Math.random() * 6.283;
     FPS.drowned.push({ drowned: true, id: 'dr-' + Math.random().toString(36).slice(2, 7), n: 'a drowned man', x: FPSC.CX + Math.cos(a) * (FPSC.R + 6), y: FPSC.CY + Math.sin(a) * (FPSC.R + 6), hp: 3, rise: 0, bite: 0, ph: Math.random() * 6, hitT: 0, hist: [] });
     fpsFeed('Something is wading ashore.');
-    try { sfxSplash(0, 0.5); } catch (e) {}
+    { const q = FPS.drowned[FPS.drowned.length - 1]; try { sfxSplash(fpsEar(q.x, q.y), 0.5); } catch (e) {} }
   }
   for (const d of FPS.drowned) {
     if (d.hitT > 0) d.hitT -= dt;
@@ -22252,8 +22284,8 @@ function zmZombies(dt) {
       if (z.st === 'out') { z.jz = top; z.x = w.x; z.y = w.y; if (w.q.indexOf(z) === 0) { z.st = 'tear'; z.t = 0; } continue; }
       if (z.st === 'tear') {
         z.jz = top; z.x = w.x; z.y = w.y;
-        if (w.boards > 0) { if (z.t > Math.max(0.55, 1.25 - ZM.round * 0.03)) { z.t = 0; w.boards--; w.fall.push({ i: w.boards, t: 0 }); zmSound('tear', Math.hypot(w.x - FPS.me.x, w.y - FPS.me.y)); } }
-        else { z.st = 'climb'; z.t = 0; zmSound('tear', Math.hypot(w.x - FPS.me.x, w.y - FPS.me.y)); }
+        if (w.boards > 0) { if (z.t > Math.max(0.55, 1.25 - ZM.round * 0.03)) { z.t = 0; w.boards--; w.fall.push({ i: w.boards, t: 0 }); zmSound('tear', w); } }
+        else { z.st = 'climb'; z.t = 0; zmSound('tear', w); }
         continue;
       }
       const k = Math.min(1, z.t / 0.55);
@@ -22301,7 +22333,7 @@ function zmZombies(dt) {
       const w = z.win; z.walk = false; z.h = bearingOf(-w.nx, -w.ny);
       if (w.boards > 0) {
         // a board off every second or so (quicker as the rounds go on)
-        if (z.t > Math.max(0.55, 1.25 - ZM.round * 0.03)) { z.t = 0; w.boards--; w.fall.push({ i: w.boards, t: 0 }); zmSound('tear', Math.hypot(w.x - FPS.me.x, w.y - FPS.me.y)); }
+        if (z.t > Math.max(0.55, 1.25 - ZM.round * 0.03)) { z.t = 0; w.boards--; w.fall.push({ i: w.boards, t: 0 }); zmSound('tear', w); }
         // and a swipe through the gap at whoever's right there
         if (P.some(p => Math.hypot(p.x - w.x, p.y - w.y) < 1.5 && Math.abs(p.jz || 0) < 1)) zmSwipe(z, dt);
       } else { z.st = 'climb'; z.t = 0; }
@@ -22470,7 +22502,7 @@ function zmMoans(dt) {
     ZM.groanT = 1.2 + Math.random() * 2.5;
     let best = null, bd = 30;
     for (const z of ZM.z) { if (z.dead || z.skit) continue; const d = Math.hypot(z.x - m.x, z.y - m.y) * (0.7 + Math.random() * 0.6); if (d < bd) { bd = d; best = z; } }
-    if (best) zmSound('moan', Math.hypot(best.x - m.x, best.y - m.y), angDiff(bearingOf(best.x - m.x, best.y - m.y), m.h), best.kind);
+    if (best) zmSound('moan', best, 0, best.kind);
   }
 }
 // a swing at you: wound up, then, if you're still in reach, a knock
@@ -22550,7 +22582,7 @@ function zmMaybeDrop(d, how) {
     ZM.dropsRound++;
     const r = Math.random(), k = zmInfRes() ? 'double' : r < 0.35 ? 'keg' : r < 0.6 ? 'double' : r < 0.8 ? 'spot' : 'flash';   // [raid] (there, only Double Points)
     ZM.drops.push({ k, x: d.x, y: d.y, z: d.jz || 0, t: 26, ph: Math.random() * 6, id: ++ZM.zc });
-    zmSound('drop');
+    zmSound('drop', null, fpsEar(d.x, d.y));
   }
 }
 // a shot here: what it hits, as the islands judge it, but against the drowned standing where they are now (there's
@@ -22856,7 +22888,7 @@ function zmOpenDoor(d) {
   for (const k of d.also || []) ZM.open.add(k);
   if (d.zones.includes('lamp')) ZM.open.add('tower');
   zmNavBuild(); ZM.navT = 0;
-  zmSound(d.kind === 'debris' ? 'debris' : 'door');
+  zmSound(d.kind === 'debris' ? 'debris' : 'door', null, fpsEar(d.x, d.y));
   for (let i = 0; i < 14; i++) FPS.parts.push({ x: d.x + (Math.random() - 0.5) * 2, y: d.y + (Math.random() - 0.5) * 2, z: FPSC.GROUND + Math.random() * 2.2, vx: (Math.random() - 0.5) * 1.5, vy: (Math.random() - 0.5) * 1.5, vz: Math.random() * 1.5, t: 0.9, c: '150,140,120' });
 }
 
@@ -22979,10 +23011,13 @@ function zmShowOver() {
 function zmAgain() { const net = ZM.net; fpsStop(); if (!net) { const map = ZM_MAP; setTimeout(() => zmStart({ map }), 0); } else if (typeof zmnBackToLobby === 'function') zmnBackToLobby(); }
 
 // ---------- sounds ----------
+// k the sound; d how far off it is, or where it is ({x, y}: its distance and direction worked out here); pan the angle
+// round from where I'm looking (radians), or a direction (src/fps.js fpsDir); left out, it plays straight on
 function zmSound(k, d, pan, kind) {
   try {
     if (soundOff()) return;
-    const v = d == null ? 1 : Math.max(0.05, 1 - d / 40), o = { pan: clamp(pan || 0, -1, 1) };
+    if (d && typeof d === 'object') { const m = FPS.me; pan = fpsEar(d.x, d.y); d = Math.hypot(d.x - m.x, d.y - m.y); }
+    const v = d == null ? 1 : Math.max(0.05, 1 - d / 40), o = { pan: fpsDir(pan) };
     // (the recordings, where there's one: src/sfxbank.js)
     { const R = { moan: kind === 'run' ? 'snarl' : 'moan', tear: 'tear', board: 'board', hit: 'hit', round: 'roundstart', end: 'roundend', buy: 'buy', no: 'deny', door: 'door', debris: 'debris', open: 'chest', gull: 'gull', drop: 'powerup', take: 'pickup', drink: 'drink', beat: 'heartbeat', over: 'gameover', beam: 'beam' }[k];
       const VOL = { moan: 0.55, tear: 0.95, board: 0.85, round: 0.9, end: 0.8, buy: 0.6, no: 0.5, gull: 0.5, drop: 0.6, beat: 0.9, beam: 0.3 };
@@ -22996,9 +23031,9 @@ function zmSound(k, d, pan, kind) {
     else if (k === 'end') { for (let i = 0; i < 3; i++) tone(392 - i * 49, 'triangle', 0.01, 0.12, 0.9, { delay: i * 0.45 }); }
     else if (k === 'buy') { tone(880, 'triangle', 0.002, 0.12, 0.12); tone(1320, 'triangle', 0.002, 0.1, 0.2, { delay: 0.08 }); }
     else if (k === 'no') tone(140, 'square', 0.002, 0.06, 0.18);
-    else if (k === 'door') { noise('bandpass', 380, 4, 0.2, 0.18, 0.9, { to: 220 }); noise('lowpass', 200, 1, 0.01, 0.4, 0.4, { delay: 0.9 }); }
-    else if (k === 'debris') { for (let i = 0; i < 4; i++) noise('lowpass', 400 + Math.random() * 600, 1, 0.005, 0.3, 0.3, { delay: i * 0.12 }); }
-    else if (k === 'open') { noise('bandpass', 500, 5, 0.1, 0.16, 0.5, { to: 300 }); }
+    else if (k === 'door') { noise('bandpass', 380, 4, 0.2, 0.18, 0.9, { to: 220, pan: o.pan }); noise('lowpass', 200, 1, 0.01, 0.4, 0.4, { delay: 0.9, pan: o.pan }); }
+    else if (k === 'debris') { for (let i = 0; i < 4; i++) noise('lowpass', 400 + Math.random() * 600, 1, 0.005, 0.3, 0.3, { delay: i * 0.12, pan: o.pan }); }
+    else if (k === 'open') { noise('bandpass', 500, 5, 0.1, 0.16, 0.5, { to: 300, pan: o.pan }); }
     else if (k === 'tick') tone(1200 + Math.random() * 800, 'triangle', 0.001, 0.05, 0.06);
     else if (k === 'offer') { tone(660, 'triangle', 0.01, 0.1, 0.4); tone(990, 'triangle', 0.01, 0.08, 0.6, { delay: 0.1 }); }
     else if (k === 'gull') { for (let i = 0; i < 3; i++) tone(1800 - i * 200, 'sawtooth', 0.01, 0.05, 0.15, { delay: i * 0.18, to: 1100 }); }
@@ -23008,7 +23043,7 @@ function zmSound(k, d, pan, kind) {
     else if (k === 'beat') { tone(58, 'sine', 0.005, 0.32, 0.16, { to: 42 }); tone(52, 'sine', 0.005, 0.22, 0.16, { to: 38, delay: 0.2 }); }
     else if (k === 'wind') { noise('bandpass', 900, 1, 0.3, 0.25, 1.0, { to: 300 }); }
     else if (k === 'over') { tone(196, 'sine', 0.2, 0.2, 3.0, { to: 98 }); sfxBellFar(0, 0.6); }
-    else if (k === 'beam') { if (Math.random() < 0.5) noise('bandpass', 260 + Math.random() * 80, 2, 0.02, 0.09, 0.14); }
+    else if (k === 'beam') { if (Math.random() < 0.5) noise('bandpass', 260 + Math.random() * 80, 2, 0.02, 0.09, 0.14, o); }
   } catch (e) {}
 }
 
@@ -26243,7 +26278,7 @@ function zxShot(sh, mine) {
 // someone else's (together): what it throws, to see and hear, and nothing more (their hits come from them)
 function zxShotFx(r, code, x, y, z, h, p, d, pan) {
   if (!ZX_ID[code]) return false;
-  zxSound(code, d, pan);
+  sndFrom(fpsDir(pan), () => zxSound(code, d));   // (from where they stand: src/audio.js)
   if (code === 'x') { r.slashT = 0.3; return true; }
   if (code === 'r') { zrShot(x, y, z, h, p, r.id, false, 0); return true; }   // [crab]
   if (code === 'd' || code === 'u') {
@@ -26469,7 +26504,7 @@ function zxContact(P, r) {
       fpsPuff(r.x, r.y, r.z, '160,30,20', 8);
       if (mine && P.k === 'w') { zmHurt(o, r.head ? w.head : w.dmg, r.head, 'w', FPS.me.id); o.hitT = 0.25; zxMark(r.head); }
     } else { P.x = bx; P.y = by; P.z = bz; fpsPuff(r.x, r.y, r.z, '190,190,180', 5); }
-    zxSound('stick', mine ? 0 : zxDist(P));
+    sndFrom(mine ? 0 : fpsEar(P.x, P.y), () => zxSound('stick', mine ? 0 : zxDist(P)));
     return;
   }
   if (P.k === 'g') {
@@ -26491,7 +26526,7 @@ function zxContact(P, r) {
       P.done = true; zxPool(o.x, o.y, o.jz || 0, 2.4, 6, mine, P.by, false); return;
     }
     if (P.burstT != null) { P.done = true; P.x = bx; P.y = by; P.z = bz; zxStarBurst(P); return; }
-    P.done = true; zxPool(bx, by, zxFloor(bx, by, bz - FPSC.GROUND), 2.4, 6, mine, P.by, false); zxSound('fizz', mine ? 0 : zxDist(P));
+    P.done = true; zxPool(bx, by, zxFloor(bx, by, bz - FPSC.GROUND), 2.4, 6, mine, P.by, false); sndFrom(mine ? 0 : fpsEar(P.x, P.y), () => zxSound('fizz', mine ? 0 : zxDist(P)));
     return;
   }
   if (P.k === 't') { P.done = true; zxPool(bx, by, zxFloor(bx, by, bz - FPSC.GROUND), 1.7, 5, mine, P.by, true); return; }
@@ -26505,7 +26540,7 @@ function zxContact(P, r) {
 }
 // came down with nothing struck (or flew its course)
 function zxLand(P, r) {
-  if (P.k === 'y') { P.done = true; fpsPuff(P.x, P.y, P.z, '190,190,180', 8); if (r.kind !== 'none') zxSound('clang', P.mine ? 0 : zxDist(P)); return; }
+  if (P.k === 'y') { P.done = true; fpsPuff(P.x, P.y, P.z, '190,190,180', 8); if (r.kind !== 'none') sndFrom(P.mine ? 0 : fpsEar(P.x, P.y), () => zxSound('clang', P.mine ? 0 : zxDist(P))); return; }
   if (P.k === 'g') { zxHaul(P); return; }
   zxContact(P, Object.assign({ kind: 'ground' }, r, { x: P.x, y: P.y, z: P.z }));
 }
@@ -26526,7 +26561,7 @@ function zxBlast(P) {
 // a blast: everyone in reach (and in sight of it) hurt, more the nearer, and thrown back a little
 function zxBoom(x, y, z, R, dmg, code, mine, kb) {
   ZX.booms.push({ x, y, z, R, t: 0 });
-  zxSound('boom', mine ? 0 : Math.hypot(x - FPS.me.x, y - FPS.me.y), R);
+  sndFrom(mine ? 0 : fpsEar(x, y), () => zxSound('boom', mine ? 0 : Math.hypot(x - FPS.me.x, y - FPS.me.y), R));
   for (let i = 0; i < 24 + R * 4; i++) { const a = Math.random() * 6.283, sp = 2 + Math.random() * R * 2; FPS.parts.push({ x, y, z, vx: Math.sin(a) * sp, vy: Math.cos(a) * sp, vz: Math.random() * 5, t: 0.5 + Math.random() * 0.3, c: Math.random() < 0.5 ? '255,190,90' : '120,110,100' }); }
   if (!mine) return;
   let any = false;
@@ -26545,7 +26580,7 @@ function zxBoom(x, y, z, R, dmg, code, mine, kb) {
 // Grapnel: haul in what it caught (the Mooring Line: into a heap in front of you, lashed there)
 function zxHaul(P) {
   P.st = 'reel'; P.reelT = 0.4; P.vx = P.vy = P.vz = 0;
-  zxSound('reel', P.mine ? 0 : zxDist(P));
+  sndFrom(P.mine ? 0 : fpsEar(P.x, P.y), () => zxSound('reel', P.mine ? 0 : zxDist(P)));
   if (!P.mine) return;
   const m = FPS.me, caught = P.caught.filter(o => !o.dead && !o.boss && o.st === 'in');
   if (!caught.length) return;
@@ -26596,7 +26631,7 @@ function zxPools(dt) {
 // the Star Shell: up it bursts into burning stars that fall round where it was
 function zxStarBurst(P) {
   const n = Math.min(9, 3 + (P.tier || 0));
-  zxSound('burst', P.mine ? 0 : zxDist(P));
+  sndFrom(P.mine ? 0 : fpsEar(P.x, P.y), () => zxSound('burst', P.mine ? 0 : zxDist(P)));
   ZX.booms.push({ x: P.x, y: P.y, z: P.z, R: 1.2, t: 0, star: true });
   for (let i = 0; i < n; i++) {
     const a = (i / n) * 6.283 + Math.random() * 0.5, sp = 1.5 + Math.random() * (1.5 + 0.35 * P.tier);
@@ -26609,7 +26644,7 @@ function zxNet(x, y, fz, mine, t) {
   const N = { x, y, fz, r: t ? Math.min(4.5, 2.8 + 0.3 * t) : 2.8, T: t ? Math.min(9, 4 + 0.5 * t) : 4, caught: new Set(), k: 0, bite: 0.5, tier: t || 0, mine, seed: Math.random() * 6 };
   N.t = N.T;
   ZX.nets.push(N); if (ZX.nets.length > 8) ZX.nets.shift();
-  zxSound('net', mine ? 0 : Math.hypot(x - FPS.me.x, y - FPS.me.y));
+  sndFrom(mine ? 0 : fpsEar(x, y), () => zxSound('net', mine ? 0 : Math.hypot(x - FPS.me.x, y - FPS.me.y)));
   if (mine) zxNetCatch(N, true);
 }
 function zxNetCatch(N, first) {
@@ -26661,7 +26696,7 @@ function zxBounce(P, ox, oy, oz) {
   if (bx || !by) P.vx = -P.vx; if (by || !bx) P.vy = -P.vy;
   P.x = ox; P.y = oy; P.z = oz; P.bounces--; P.hit = new Set(); P.life = P.t + 1.1;
   fpsPuff(ox, oy, oz, '200,200,190', 6);
-  zxSound('clang', P.mine ? 0 : zxDist(P));
+  sndFrom(P.mine ? 0 : fpsEar(P.x, P.y), () => zxSound('clang', P.mine ? 0 : zxDist(P)));
 }
 
 // the Homeward Axe, thrown: out (through them all) and home again to the hand that threw it
@@ -26674,11 +26709,11 @@ function zxAxeFly(P, dt) {
   else {
     if (!who) { P.done = true; return; }
     const tx = who.x, ty = who.y, d = Math.hypot(tx - P.x, ty - P.y);
-    if (d < 1.0 || P.t > 5) { P.done = true; zxSound('catch', P.mine ? 0 : zxDist(P)); return; }
+    if (d < 1.0 || P.t > 5) { P.done = true; sndFrom(P.mine ? 0 : fpsEar(P.x, P.y), () => zxSound('catch', P.mine ? 0 : zxDist(P))); return; }
     nx = P.x + (tx - P.x) / d * sp * dt; ny = P.y + (ty - P.y) / d * sp * dt;
     P.z += ((FPSC.GROUND + FPSC.EYE - 0.4 + (who.jz || 0)) - P.z) * Math.min(1, dt * 4); P.fz = who.jz || 0;
   }
-  if (!P.back && (P.out >= P.max || zmBlockedAt(nx, ny, 0.2, P.fz))) { P.back = true; if (P.out < P.max) { fpsPuff(P.x, P.y, P.z, '190,190,180', 6); zxSound('clang', P.mine ? 0 : zxDist(P)); } return; }
+  if (!P.back && (P.out >= P.max || zmBlockedAt(nx, ny, 0.2, P.fz))) { P.back = true; if (P.out < P.max) { fpsPuff(P.x, P.y, P.z, '190,190,180', 6); sndFrom(P.mine ? 0 : fpsEar(P.x, P.y), () => zxSound('clang', P.mine ? 0 : zxDist(P))); } return; }
   P.x = nx; P.y = ny;
   const set = P.back ? P.hitB : P.hitO;
   for (const o of ZM.z) {
@@ -28179,7 +28214,16 @@ ZBT.diver = {
 function zbAim(z) { z.ix = z.x + Math.sin(z.h) * ZBC.SLAM_AT; z.iy = z.y + Math.cos(z.h) * ZBC.SLAM_AT; }
 
 // ---------- the Diver's sounds ----------
-function zbSound(k, d) {
+// the bosses' voices come from where the boss is (src/audio.js sndFrom): the nearest of them, when the distance a sound
+// was given is about how far off it stands (a flare or a bell somewhere else plays where it was, or straight on)
+function zbDir(d) {
+  if (!(d > 0)) return 0;
+  const m = FPS.me; let b = null, bd = 1e9;
+  for (const z of ZM.z) { if (!z.boss || z.dead) continue; const q = Math.hypot(z.x - m.x, z.y - m.y); if (q < bd) { bd = q; b = z; } }
+  return b && d > bd * 0.6 - 1 && d < bd * 1.5 + 1 ? fpsEar(b.x, b.y) : 0;
+}
+function zbSound(k, d) { sndFrom(zbDir(d), () => zbSoundAt(k, d)); }
+function zbSoundAt(k, d) {
   try {
     if (soundOff()) return;
     const v = d == null ? 1 : Math.max(0.08, 1 - d / 45);
@@ -28641,7 +28685,8 @@ function zbkLane(z, p, d) {
 }
 
 // ---------- sounds ----------
-function zbmSound(k, d) {
+function zbmSound(k, d) { sndFrom(zbDir(d), () => zbmSoundAt(k, d)); }
+function zbmSoundAt(k, d) {
   try {
     if (soundOff()) return;
     const v = d == null ? 1 : Math.max(0.08, 1 - d / 45);
@@ -28669,7 +28714,8 @@ function zbmSound(k, d) {
     }
   } catch (e) {}
 }
-function zbkSound(k, d) {
+function zbkSound(k, d) { sndFrom(zbDir(d), () => zbkSoundAt(k, d)); }
+function zbkSoundAt(k, d) {
   try {
     if (soundOff()) return;
     const v = d == null ? 1 : Math.max(0.08, 1 - d / 45);
@@ -29208,7 +29254,7 @@ function zwKilled(d) {
 // of tiny hard clicks, a crunch a crack and a wet thump
 function zwSound(k, d, pan) {
   if (typeof soundOff === 'function' && soundOff()) return;
-  const v = d == null ? 1 : Math.max(0.05, 1 - d / 30), o = { pan: clamp(pan || 0, -1, 1) };
+  const v = d == null ? 1 : Math.max(0.05, 1 - d / 30), o = { pan: fpsDir(pan) };
   if (typeof sfxPlay === 'function' && sfxPlay(k, { vol: (k === 'skitter' ? 0.45 : k === 'crunch' ? 0.7 : 0.9) * v, pan: o.pan, vary: 0.15, gap: k === 'skitter' ? 0.25 : 0.03 })) return;
   if (k === 'skitter') { const n = 6 + ((Math.random() * 6) | 0); for (let i = 0; i < n; i++) noise('highpass', 2500 + Math.random() * 2500, 2, 0.001, (0.05 + Math.random() * 0.05) * v, 0.025, Object.assign({ delay: i * (0.025 + Math.random() * 0.03) }, o)); }
   else if (k === 'crunch') { noise('bandpass', 1800, 1.5, 0.001, 0.25 * v, 0.07, o); noise('lowpass', 500, 1, 0.003, 0.25 * v, 0.14, Object.assign({ delay: 0.02 }, o)); tone(130, 'sine', 0.002, 0.18 * v, 0.12, Object.assign({ to: 70 }, o)); }
@@ -31693,7 +31739,7 @@ function rswSpawn(P) {
   const at = rswPlace(P); if (!at) return;
   const [wx, wy] = at, u = Math.random(), kind = u < 0.2 + lit * 0.025 ? 'run' : u < 0.82 ? 'jog' : 'walk';
   raidSpawnAt(wx, wy, { kind, hp: zmHp(RAIDC.ROUND + lit * 0.4) * (0.9 + Math.random() * 0.2) * (1 + 0.25 * (n - 1)) });
-  zmSound('moan', Math.hypot(wx - FPS.me.x, wy - FPS.me.y), 0, kind);
+  zmSound('moan', Math.hypot(wx - FPS.me.x, wy - FPS.me.y), fpsEar(wx, wy), kind);
 }
 // now and then a Diver comes up out of the dark as well, glowing like the rest; no bar for his strength down here
 // (RAID_STAGES.descent.noBars), so you can't tell how much he's got left
@@ -31747,7 +31793,7 @@ function rswPierSpawn() {
   const u = Math.random(), kind = u < 0.25 ? 'run' : 'jog';
   const z = raidSpawnAt(x, y, { kind, rise: 0, hp: zmHp(RAIDC.ROUND) * (0.9 + Math.random() * 0.2) * (1 + 0.25 * (n - 1)) });
   if (z) { z.sp *= RSWP.ZK; z.jz = z.fl = RSW.DECK; z.lx = x; z.ly = y; }   // the pier's drowned are 30% quicker; the cave's stay slowed
-  zmSound('moan', Math.hypot(x - FPS.me.x, y - FPS.me.y), 0, kind);
+  zmSound('moan', Math.hypot(x - FPS.me.x, y - FPS.me.y), fpsEar(x, y), kind);
 }
 // everyone: the platform's held; it falls away (its footing gone, its boards dropping), and whoever's on it with it.
 // Hosting: any of the drowned still up on the pier go over too
@@ -33510,7 +33556,8 @@ ZBT.maren = {
 };
 // her sounds, and the stage's: from the recordings where there's one (src/sfxbank.js), else Maren's own whisper and
 // sting from the sea (src/audio.js)
-function rfSound(k, d) {
+function rfSound(k, d) { sndFrom(zbDir(d), () => rfSoundAt(k, d)); }   // (from where the boss stands: src/zmboss.js zbDir)
+function rfSoundAt(k, d) {
   const v = clamp(1 - (d || 0) / 70, 0.15, 1), play = (n, vol) => { try { return typeof sfxPlay === 'function' && sfxPlay(n, { vol: vol * v, vary: 0.05 }); } catch (e) { return false; } };
   const whisper = vol => { try { if (typeof sfxWhisper === 'function') sfxWhisper(0, vol * v); } catch (e) {} };
   const sting = () => { try { if (typeof sfxSting === 'function') sfxSting(); } catch (e) {} };
@@ -33994,7 +34041,8 @@ function rfkAim(z, p, act) {
   z.ax = z.x; z.ay = z.y; z.ix = z.x + dx / d * L; z.iy = z.y + dy / d * L;
 }
 // its sounds: wood (from the recordings where there's one, src/sfxbank.js), and its three knocks (src/audio.js)
-function rfkSound(k, d) {
+function rfkSound(k, d) { sndFrom(zbDir(d), () => rfkSoundAt(k, d)); }   // (from where the boss stands: src/zmboss.js zbDir)
+function rfkSoundAt(k, d) {
   const v = clamp(1 - (d || 0) / 70, 0.15, 1), play = (n, vol) => { try { return typeof sfxPlay === 'function' && sfxPlay(n, { vol: vol * v, vary: 0.06 }); } catch (e) { return false; } };
   const knock = (vol, gap) => { try { if (typeof sfxKnock === 'function') sfxKnock(0, vol * v, gap); } catch (e) {} };
   if (k === 'arrive') { knock(1, 0.34); play('debris', 1); play('thunder', 0.7); try { if (typeof sfxSting === 'function') sfxSting(); } catch (e) {} return; }
@@ -35022,7 +35070,8 @@ function rvAim(z, p, act) {
   else if (act === 'lunge') { const L = Math.min(RVC.LUNGE_MAX, d); [z.ix, z.iy] = rvClampIn(z.x + dx / d * L, z.y + dy / d * L, RVC.T.RAD); }
 }
 // his sounds: his own voice (src/audio.js: the clip, faster or dragged down), and the recordings
-function rvSound(k, d) {
+function rvSound(k, d) { sndFrom(zbDir(d), () => rvSoundAt(k, d)); }   // (from where the boss stands: src/zmboss.js zbDir)
+function rvSoundAt(k, d) {
   const v = clamp(1 - (d || 0) / 40, 0.2, 1), play = (n, vol) => { try { return typeof sfxPlay === 'function' && sfxPlay(n, { vol: vol * v, vary: 0.05 }); } catch (e) { return false; } };
   const voice = (rate, vol) => { try { if (typeof sfxVerity === 'function') sfxVerity(rate, vol * v); } catch (e) {} };
   if (k === 'giggle') { voice(1.35, 0.35); return; }
@@ -36247,7 +36296,7 @@ function gwsSpawn(S) {
     st: 'out', win: w, t: 0, ph: Math.random() * 6, hitT: 0, atk: 0.6, swing: -1, stuck: 0, h: bearingOf(w.x - sx, w.y - sy), seed: (Math.random() * 1e6) | 0, rise: 1, hist: [], raid: true,
   };
   w.q.push(z); ZM.z.push(z); FPS.drowned = ZM.z;
-  zmSound('moan', Math.hypot(sx - FPS.me.x, sy - FPS.me.y), 0, kind);
+  zmSound('moan', Math.hypot(sx - FPS.me.x, sy - FPS.me.y), fpsEar(sx, sy), kind);
   try { if (!soundOff()) sfxSplash(gwsPan(sx - FPSC.CX, sy - FPSC.CY, true), Math.max(0.1, 1 - Math.hypot(sx - FPS.me.x, sy - FPS.me.y) / 30)); } catch (e) {}
 }
 // how far out she's come, 0 at the Light's foot to 1 at the mark
@@ -36362,7 +36411,7 @@ function gwsHear(text, warn) { fpsFeed(text); if (warn) ZM.banner = { text, t: 2
 function gwsPan(x, y, local) {
   const S = RAID.st, V = S.V || S.B, m = FPS.me, [mu, mv] = gwsL(m.x, m.y);
   const b = local ? bearingOf(x - mu, y - mv) : bearingOf(x - V.x, y - V.y) - V.h;
-  return clamp(angDiff(b, m.h) / 1.2, -1, 1);
+  return earDir(angDiff(b, m.h));   // (a direction: panned to its side, muffled astern; src/audio.js)
 }
 function gwsHitFx() {
   try { if (!soundOff()) { sfxHit(); noise('lowpass', 300, 1, 0.005, 0.7, 0.9, { to: 70 }); tone(70, 'sine', 0.01, 0.3, 0.8, { to: 40 }); } } catch (e) {}
@@ -37550,7 +37599,8 @@ ZBT.bosun = Object.assign({}, ZBT.diver, {
   reset(z, M) { M.suit.emissive.set(0); M.brass.emissive.set(0x140e04); M.root.rotation.set(0, 0, 0); M.root.scale.setScalar(1); M.key.visible = true; },
   pose(z, M, dt) { zbPoseDiver(z, M, dt); M.key.visible = !z.dead; if (M.eyeM) { const k = z.dead ? 0.12 : 0.85 + 0.15 * Math.sin(g.t * 3 + z.seed); M.eyeM.color.setRGB(0.72 * k, k, 0.85 * k); } },
 });
-function gwBosunSound(k, d) {
+function gwBosunSound(k, d) { sndFrom(zbDir(d), () => gwBosunSoundAt(k, d)); }
+function gwBosunSoundAt(k, d) {
   const v = d == null ? 1 : Math.max(0.08, 1 - d / 45), play = (n, vol) => { try { return !soundOff() && typeof sfxPlay === 'function' && sfxPlay(n, { vol: vol * v, vary: 0.06 }); } catch (e) { return false; } };
   if (k === 'arrive') { if (!play('snarl', 1)) zbSound('groan', d); play('creak', 0.6); return; }
   if (k === 'slam') { if (play('axechop', 1)) { play('debris', 0.4); return; } }
@@ -37714,7 +37764,7 @@ function gwSpawn() {
     const z = raidSpawnAt(x, y, { kind, hp: zmHp(GWH.LEVEL) * (0.9 + Math.random() * 0.2) * (1 + 0.2 * (n - 1)), rise: R.k === 'tier' ? 1.4 : 1.1 });
     z.rb = R.z; z.jz = R.z - 1.9; z.fl = R.z;
     if (R.k === 'tier') gwSplash(x, y, GWH.WZ, 14);
-    zmSound('moan', Math.hypot(x - FPS.me.x, y - FPS.me.y) + Math.abs(R.z - (FPS.me.jz || 0)) * 4, 0, kind);
+    zmSound('moan', Math.hypot(x - FPS.me.x, y - FPS.me.y) + Math.abs(R.z - (FPS.me.jz || 0)) * 4, fpsEar(x, y), kind);
     return true;
   }
   return false;
@@ -38095,7 +38145,7 @@ function gwMe(dt) {
   // his knocks: while he moves and you're near enough to hear, three on wood, quicker and louder the nearer he is
   const kd = Math.hypot(K.x - m.x, K.y - m.y) + Math.abs(K.jz - (m.jz || 0)) * 1.5;
   S.warnT -= dt; if (S.mvT > 0) S.mvT -= dt;
-  if (K.mv && !(K.lunge > 0)) { S.mvT = 1.2; if (kd < KN.WARN && S.warnT <= 0) { const k = 1 - kd / KN.WARN, pan = clamp(Math.sin(angDiff(bearingOf(K.x - m.x, K.y - m.y), m.h)), -1, 1) * 0.8; try { if (!soundOff()) sfxKnock(pan, 0.25 + 0.75 * k, 0.26 - 0.16 * k); } catch (e) {} S.warnT = 0.9 + 2.6 * (1 - k); S.knockT = 1.6; } }
+  if (K.mv && !(K.lunge > 0)) { S.mvT = 1.2; if (kd < KN.WARN && S.warnT <= 0) { const k = 1 - kd / KN.WARN, pan = fpsEar(K.x, K.y); try { if (!soundOff()) sfxKnock(pan, 0.25 + 0.75 * k, 0.26 - 0.16 * k); } catch (e) {} S.warnT = 0.9 + 2.6 * (1 - k); S.knockT = 1.6; } }
   if (S.knockT > 0) S.knockT -= dt;
   // holding Use beside him while he's held still: his key, off its cord
   const hold = FPS.keys.KeyF || FPS.keys.KeyE || FPS.touchUse || FPS.padUse, o = ZM.near;
@@ -38641,7 +38691,7 @@ function gcSpawn(at) {
   if (!at) return null;
   const n = gcN(), u = Math.random(), kind = u < (GCW.p2 ? 0.35 : 0.2) ? 'run' : 'jog';
   const z = raidSpawnAt(FPSC.CX + at[0], FPSC.CY + at[1], { kind, rise: 1.1, hp: zmHp(GCC.ROUND) * (0.9 + Math.random() * 0.2) * (1 + 0.2 * (n - 1)) });
-  if (z) zmSound('moan', Math.hypot(z.x - FPS.me.x, z.y - FPS.me.y), 0, kind);
+  if (z) zmSound('moan', Math.hypot(z.x - FPS.me.x, z.y - FPS.me.y), fpsEar(z.x, z.y), kind);
   return z;
 }
 // the captain comes up through his deck
@@ -38898,7 +38948,8 @@ ZBT.crane = {
   pose: (z, M, dt) => gcPoseCrane(z, M, dt),
 };
 // his sounds and the ship's: the recordings (src/sfxbank.js) where there's one, else the synth (src/audio.js)
-function gcSound(k, d) {
+function gcSound(k, d) { sndFrom(zbDir(d), () => gcSoundAt(k, d)); }   // (from where the boss stands: src/zmboss.js zbDir)
+function gcSoundAt(k, d) {
   const v = clamp(1 - (d || 0) / 60, 0.15, 1), play = (n, vol, o) => { try { return typeof sfxPlay === 'function' && sfxPlay(n, Object.assign({ vol: vol * v, vary: 0.05 }, o || {})); } catch (e) { return false; } };
   const syn = f => { try { if (!soundOff() && AUD.ctx) f(); } catch (e) {} };
   if (k === 'arrive' || k === 'rise') { play('splash', 0.9); play('creak', 1); play('bossdiver', 0.7); syn(() => tone(55, 'sawtooth', 0.4, 0.06, 2.2, { to: 42 })); return; }
@@ -39637,7 +39688,7 @@ function rclQuake(x, y, fz, mine, ahead) {
   const m = FPS.me, z = FPSC.GROUND + fz;
   RCL.quakes.push({ x, y, z, R: ahead ? 5.5 : 4.2, t: 0 });
   fpsPuff(x, y, z + 0.1, '150,130,110', 18);
-  try { zxSound('boom', mine ? 0 : Math.hypot(x - m.x, y - m.y), 4); } catch (e) {}
+  try { sndFrom(mine ? 0 : fpsEar(x, y), () => zxSound('boom', mine ? 0 : Math.hypot(x - m.x, y - m.y), 4)); } catch (e) {}
   if (!mine) return;
   if (!ahead) { RCL.slam = false; RCL.slamCd = RCLC.SLAM_CD; rclEvent('q', x - FPSC.CX, y - FPSC.CY, fz); }
   let any = false;
@@ -39704,7 +39755,7 @@ function rclBurst(P) {
   else {
     RCL.clouds.push({ x: P.x, y: P.y, fz, r: RCLC.CLOUD_R, t: RCLC.CLOUD_T, k: 0.1, mine: P.mine, seed: Math.random() * 100 });
     fpsPuff(P.x, P.y, P.z, '170,230,100', 16);
-    try { zxSound('burst', P.mine ? 0 : Math.hypot(P.x - FPS.me.x, P.y - FPS.me.y)); } catch (e) {}
+    try { sndFrom(P.mine ? 0 : fpsEar(P.x, P.y), () => zxSound('burst', P.mine ? 0 : Math.hypot(P.x - FPS.me.x, P.y - FPS.me.y))); } catch (e) {}
   }
 }
 function rclClouds(dt) {
@@ -42825,7 +42876,8 @@ ZBT.fogkeeper = {
   pose: (z, M, dt) => fkPose(z, M, dt),
 };
 // his sounds and the rock's: the recordings (src/sfxbank.js) where there's one, else the synth (src/audio.js)
-function fkSound(k, d) {
+function fkSound(k, d) { sndFrom(zbDir(d), () => fkSoundAt(k, d)); }   // (from where the boss stands: src/zmboss.js zbDir)
+function fkSoundAt(k, d) {
   const v = clamp(1 - (d || 0) / 60, 0.15, 1), play = (n, vol, o) => { try { return typeof sfxPlay === 'function' && sfxPlay(n, Object.assign({ vol: vol * v, vary: 0.05 }, o || {})); } catch (e) { return false; } };
   const syn = f => { try { if (!soundOff() && AUD.ctx) f(); } catch (e) {} };
   if (k === 'arrive' || k === 'rise') { play('creak', 0.8); play('bossdiver', 0.7); syn(() => { tone(50, 'sawtooth', 0.5, 0.06, 2.6, { to: 38 }); noise('lowpass', 400, 1, 0.6, 0.08, 2.4); }); return; }
@@ -47334,8 +47386,8 @@ function znShotFx(r, s) {
   const x = r.x, y = r.y, z = FPSC.GROUND + FPSC.EYE + (r.jz || 0), d = Math.hypot(x - m.x, y - m.y), pan = angDiff(bearingOf(x - m.x, y - m.y), m.h);
   r.flashT = 0.12;
   if (typeof zxShotFx === 'function' && zxShotFx(r, code, x, y, z, h, p, d, pan)) return;   // [chest] (src/zmchest.js: what they throw, to see)
-  if (w.melee) { fpsSwishSound(d); r.slashT = 0.3; return; }
-  if (w.beam) { if (d < 40 && Math.random() < 0.4) zmSound('beam'); }
+  if (w.melee) { fpsSwishSound(d, pan); r.slashT = 0.3; return; }
+  if (w.beam) { if (d < 40 && Math.random() < 0.4) zmSound('beam', null, pan); }
   else fpsWeaponSound(code, d, pan);
   if (w.speed) return;
   const ray = fpsRay(x, y, z, h, p, r.id, ZM.z.filter(q => !q.dead), w.range);

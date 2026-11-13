@@ -67,7 +67,7 @@ function zxShot(sh, mine) {
 // someone else's (together): what it throws, to see and hear, and nothing more (their hits come from them)
 function zxShotFx(r, code, x, y, z, h, p, d, pan) {
   if (!ZX_ID[code]) return false;
-  zxSound(code, d, pan);
+  sndFrom(fpsDir(pan), () => zxSound(code, d));   // (from where they stand: src/audio.js)
   if (code === 'x') { r.slashT = 0.3; return true; }
   if (code === 'r') { zrShot(x, y, z, h, p, r.id, false, 0); return true; }   // [crab]
   if (code === 'd' || code === 'u') {
@@ -293,7 +293,7 @@ function zxContact(P, r) {
       fpsPuff(r.x, r.y, r.z, '160,30,20', 8);
       if (mine && P.k === 'w') { zmHurt(o, r.head ? w.head : w.dmg, r.head, 'w', FPS.me.id); o.hitT = 0.25; zxMark(r.head); }
     } else { P.x = bx; P.y = by; P.z = bz; fpsPuff(r.x, r.y, r.z, '190,190,180', 5); }
-    zxSound('stick', mine ? 0 : zxDist(P));
+    sndFrom(mine ? 0 : fpsEar(P.x, P.y), () => zxSound('stick', mine ? 0 : zxDist(P)));
     return;
   }
   if (P.k === 'g') {
@@ -315,7 +315,7 @@ function zxContact(P, r) {
       P.done = true; zxPool(o.x, o.y, o.jz || 0, 2.4, 6, mine, P.by, false); return;
     }
     if (P.burstT != null) { P.done = true; P.x = bx; P.y = by; P.z = bz; zxStarBurst(P); return; }
-    P.done = true; zxPool(bx, by, zxFloor(bx, by, bz - FPSC.GROUND), 2.4, 6, mine, P.by, false); zxSound('fizz', mine ? 0 : zxDist(P));
+    P.done = true; zxPool(bx, by, zxFloor(bx, by, bz - FPSC.GROUND), 2.4, 6, mine, P.by, false); sndFrom(mine ? 0 : fpsEar(P.x, P.y), () => zxSound('fizz', mine ? 0 : zxDist(P)));
     return;
   }
   if (P.k === 't') { P.done = true; zxPool(bx, by, zxFloor(bx, by, bz - FPSC.GROUND), 1.7, 5, mine, P.by, true); return; }
@@ -329,7 +329,7 @@ function zxContact(P, r) {
 }
 // came down with nothing struck (or flew its course)
 function zxLand(P, r) {
-  if (P.k === 'y') { P.done = true; fpsPuff(P.x, P.y, P.z, '190,190,180', 8); if (r.kind !== 'none') zxSound('clang', P.mine ? 0 : zxDist(P)); return; }
+  if (P.k === 'y') { P.done = true; fpsPuff(P.x, P.y, P.z, '190,190,180', 8); if (r.kind !== 'none') sndFrom(P.mine ? 0 : fpsEar(P.x, P.y), () => zxSound('clang', P.mine ? 0 : zxDist(P))); return; }
   if (P.k === 'g') { zxHaul(P); return; }
   zxContact(P, Object.assign({ kind: 'ground' }, r, { x: P.x, y: P.y, z: P.z }));
 }
@@ -350,7 +350,7 @@ function zxBlast(P) {
 // a blast: everyone in reach (and in sight of it) hurt, more the nearer, and thrown back a little
 function zxBoom(x, y, z, R, dmg, code, mine, kb) {
   ZX.booms.push({ x, y, z, R, t: 0 });
-  zxSound('boom', mine ? 0 : Math.hypot(x - FPS.me.x, y - FPS.me.y), R);
+  sndFrom(mine ? 0 : fpsEar(x, y), () => zxSound('boom', mine ? 0 : Math.hypot(x - FPS.me.x, y - FPS.me.y), R));
   for (let i = 0; i < 24 + R * 4; i++) { const a = Math.random() * 6.283, sp = 2 + Math.random() * R * 2; FPS.parts.push({ x, y, z, vx: Math.sin(a) * sp, vy: Math.cos(a) * sp, vz: Math.random() * 5, t: 0.5 + Math.random() * 0.3, c: Math.random() < 0.5 ? '255,190,90' : '120,110,100' }); }
   if (!mine) return;
   let any = false;
@@ -369,7 +369,7 @@ function zxBoom(x, y, z, R, dmg, code, mine, kb) {
 // Grapnel: haul in what it caught (the Mooring Line: into a heap in front of you, lashed there)
 function zxHaul(P) {
   P.st = 'reel'; P.reelT = 0.4; P.vx = P.vy = P.vz = 0;
-  zxSound('reel', P.mine ? 0 : zxDist(P));
+  sndFrom(P.mine ? 0 : fpsEar(P.x, P.y), () => zxSound('reel', P.mine ? 0 : zxDist(P)));
   if (!P.mine) return;
   const m = FPS.me, caught = P.caught.filter(o => !o.dead && !o.boss && o.st === 'in');
   if (!caught.length) return;
@@ -420,7 +420,7 @@ function zxPools(dt) {
 // the Star Shell: up it bursts into burning stars that fall round where it was
 function zxStarBurst(P) {
   const n = Math.min(9, 3 + (P.tier || 0));
-  zxSound('burst', P.mine ? 0 : zxDist(P));
+  sndFrom(P.mine ? 0 : fpsEar(P.x, P.y), () => zxSound('burst', P.mine ? 0 : zxDist(P)));
   ZX.booms.push({ x: P.x, y: P.y, z: P.z, R: 1.2, t: 0, star: true });
   for (let i = 0; i < n; i++) {
     const a = (i / n) * 6.283 + Math.random() * 0.5, sp = 1.5 + Math.random() * (1.5 + 0.35 * P.tier);
@@ -433,7 +433,7 @@ function zxNet(x, y, fz, mine, t) {
   const N = { x, y, fz, r: t ? Math.min(4.5, 2.8 + 0.3 * t) : 2.8, T: t ? Math.min(9, 4 + 0.5 * t) : 4, caught: new Set(), k: 0, bite: 0.5, tier: t || 0, mine, seed: Math.random() * 6 };
   N.t = N.T;
   ZX.nets.push(N); if (ZX.nets.length > 8) ZX.nets.shift();
-  zxSound('net', mine ? 0 : Math.hypot(x - FPS.me.x, y - FPS.me.y));
+  sndFrom(mine ? 0 : fpsEar(x, y), () => zxSound('net', mine ? 0 : Math.hypot(x - FPS.me.x, y - FPS.me.y)));
   if (mine) zxNetCatch(N, true);
 }
 function zxNetCatch(N, first) {
@@ -485,7 +485,7 @@ function zxBounce(P, ox, oy, oz) {
   if (bx || !by) P.vx = -P.vx; if (by || !bx) P.vy = -P.vy;
   P.x = ox; P.y = oy; P.z = oz; P.bounces--; P.hit = new Set(); P.life = P.t + 1.1;
   fpsPuff(ox, oy, oz, '200,200,190', 6);
-  zxSound('clang', P.mine ? 0 : zxDist(P));
+  sndFrom(P.mine ? 0 : fpsEar(P.x, P.y), () => zxSound('clang', P.mine ? 0 : zxDist(P)));
 }
 
 // the Homeward Axe, thrown: out (through them all) and home again to the hand that threw it
@@ -498,11 +498,11 @@ function zxAxeFly(P, dt) {
   else {
     if (!who) { P.done = true; return; }
     const tx = who.x, ty = who.y, d = Math.hypot(tx - P.x, ty - P.y);
-    if (d < 1.0 || P.t > 5) { P.done = true; zxSound('catch', P.mine ? 0 : zxDist(P)); return; }
+    if (d < 1.0 || P.t > 5) { P.done = true; sndFrom(P.mine ? 0 : fpsEar(P.x, P.y), () => zxSound('catch', P.mine ? 0 : zxDist(P))); return; }
     nx = P.x + (tx - P.x) / d * sp * dt; ny = P.y + (ty - P.y) / d * sp * dt;
     P.z += ((FPSC.GROUND + FPSC.EYE - 0.4 + (who.jz || 0)) - P.z) * Math.min(1, dt * 4); P.fz = who.jz || 0;
   }
-  if (!P.back && (P.out >= P.max || zmBlockedAt(nx, ny, 0.2, P.fz))) { P.back = true; if (P.out < P.max) { fpsPuff(P.x, P.y, P.z, '190,190,180', 6); zxSound('clang', P.mine ? 0 : zxDist(P)); } return; }
+  if (!P.back && (P.out >= P.max || zmBlockedAt(nx, ny, 0.2, P.fz))) { P.back = true; if (P.out < P.max) { fpsPuff(P.x, P.y, P.z, '190,190,180', 6); sndFrom(P.mine ? 0 : fpsEar(P.x, P.y), () => zxSound('clang', P.mine ? 0 : zxDist(P))); } return; }
   P.x = nx; P.y = ny;
   const set = P.back ? P.hitB : P.hitO;
   for (const o of ZM.z) {

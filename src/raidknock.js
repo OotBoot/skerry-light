@@ -193,7 +193,8 @@ function rfkAim(z, p, act) {
   z.ax = z.x; z.ay = z.y; z.ix = z.x + dx / d * L; z.iy = z.y + dy / d * L;
 }
 // its sounds: wood (from the recordings where there's one, src/sfxbank.js), and its three knocks (src/audio.js)
-function rfkSound(k, d) {
+function rfkSound(k, d) { sndFrom(zbDir(d), () => rfkSoundAt(k, d)); }   // (from where the boss stands: src/zmboss.js zbDir)
+function rfkSoundAt(k, d) {
   const v = clamp(1 - (d || 0) / 70, 0.15, 1), play = (n, vol) => { try { return typeof sfxPlay === 'function' && sfxPlay(n, { vol: vol * v, vary: 0.06 }); } catch (e) { return false; } };
   const knock = (vol, gap) => { try { if (typeof sfxKnock === 'function') sfxKnock(0, vol * v, gap); } catch (e) {} };
   if (k === 'arrive') { knock(1, 0.34); play('debris', 1); play('thunder', 0.7); try { if (typeof sfxSting === 'function') sfxSting(); } catch (e) {} return; }

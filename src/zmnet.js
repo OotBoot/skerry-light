@@ -282,8 +282,8 @@ function znShotFx(r, s) {
   const x = r.x, y = r.y, z = FPSC.GROUND + FPSC.EYE + (r.jz || 0), d = Math.hypot(x - m.x, y - m.y), pan = angDiff(bearingOf(x - m.x, y - m.y), m.h);
   r.flashT = 0.12;
   if (typeof zxShotFx === 'function' && zxShotFx(r, code, x, y, z, h, p, d, pan)) return;   // [chest] (src/zmchest.js: what they throw, to see)
-  if (w.melee) { fpsSwishSound(d); r.slashT = 0.3; return; }
-  if (w.beam) { if (d < 40 && Math.random() < 0.4) zmSound('beam'); }
+  if (w.melee) { fpsSwishSound(d, pan); r.slashT = 0.3; return; }
+  if (w.beam) { if (d < 40 && Math.random() < 0.4) zmSound('beam', null, pan); }
   else fpsWeaponSound(code, d, pan);
   if (w.speed) return;
   const ray = fpsRay(x, y, z, h, p, r.id, ZM.z.filter(q => !q.dead), w.range);

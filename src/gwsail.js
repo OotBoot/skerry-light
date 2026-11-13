@@ -317,7 +317,7 @@ function gwsSpawn(S) {
     st: 'out', win: w, t: 0, ph: Math.random() * 6, hitT: 0, atk: 0.6, swing: -1, stuck: 0, h: bearingOf(w.x - sx, w.y - sy), seed: (Math.random() * 1e6) | 0, rise: 1, hist: [], raid: true,
   };
   w.q.push(z); ZM.z.push(z); FPS.drowned = ZM.z;
-  zmSound('moan', Math.hypot(sx - FPS.me.x, sy - FPS.me.y), 0, kind);
+  zmSound('moan', Math.hypot(sx - FPS.me.x, sy - FPS.me.y), fpsEar(sx, sy), kind);
   try { if (!soundOff()) sfxSplash(gwsPan(sx - FPSC.CX, sy - FPSC.CY, true), Math.max(0.1, 1 - Math.hypot(sx - FPS.me.x, sy - FPS.me.y) / 30)); } catch (e) {}
 }
 // how far out she's come, 0 at the Light's foot to 1 at the mark
@@ -432,7 +432,7 @@ function gwsHear(text, warn) { fpsFeed(text); if (warn) ZM.banner = { text, t: 2
 function gwsPan(x, y, local) {
   const S = RAID.st, V = S.V || S.B, m = FPS.me, [mu, mv] = gwsL(m.x, m.y);
   const b = local ? bearingOf(x - mu, y - mv) : bearingOf(x - V.x, y - V.y) - V.h;
-  return clamp(angDiff(b, m.h) / 1.2, -1, 1);
+  return earDir(angDiff(b, m.h));   // (a direction: panned to its side, muffled astern; src/audio.js)
 }
 function gwsHitFx() {
   try { if (!soundOff()) { sfxHit(); noise('lowpass', 300, 1, 0.005, 0.7, 0.9, { to: 70 }); tone(70, 'sine', 0.01, 0.3, 0.8, { to: 40 }); } } catch (e) {}

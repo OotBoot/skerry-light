@@ -495,7 +495,16 @@ ZBT.diver = {
 function zbAim(z) { z.ix = z.x + Math.sin(z.h) * ZBC.SLAM_AT; z.iy = z.y + Math.cos(z.h) * ZBC.SLAM_AT; }
 
 // ---------- the Diver's sounds ----------
-function zbSound(k, d) {
+// the bosses' voices come from where the boss is (src/audio.js sndFrom): the nearest of them, when the distance a sound
+// was given is about how far off it stands (a flare or a bell somewhere else plays where it was, or straight on)
+function zbDir(d) {
+  if (!(d > 0)) return 0;
+  const m = FPS.me; let b = null, bd = 1e9;
+  for (const z of ZM.z) { if (!z.boss || z.dead) continue; const q = Math.hypot(z.x - m.x, z.y - m.y); if (q < bd) { bd = q; b = z; } }
+  return b && d > bd * 0.6 - 1 && d < bd * 1.5 + 1 ? fpsEar(b.x, b.y) : 0;
+}
+function zbSound(k, d) { sndFrom(zbDir(d), () => zbSoundAt(k, d)); }
+function zbSoundAt(k, d) {
   try {
     if (soundOff()) return;
     const v = d == null ? 1 : Math.max(0.08, 1 - d / 45);

@@ -96,14 +96,25 @@ function setMuted(m) {
 }
 function applyVolume() { if (AUD.master) AUD.master.gain.setTargetAtTime(masterLevel(), AUD.ctx.currentTime, 0.05); }
 
-function outNode(pan) {
-  const c = AUD.ctx;
-  if (AUD.panOK && pan) {
-    const p = c.createStereoPanner(); p.pan.value = Math.max(-1, Math.min(1, pan));
-    p.connect(AUD.master); return p;
-  }
-  return AUD.master;
+// Directional sound. A sound's pan is either a plain number (-1 hard left .. 1 hard right) or a direction made by
+// earDir(a), a being how far round from straight ahead the sound is, in radians (+ to the right). A direction pans by
+// where the thing really is (full over when it's beside you, back towards the middle as it comes round behind) and
+// muffles as it goes astern of you, so that ahead and behind sound different and you can turn to find it.
+function earDir(a) { return { a: a || 0 }; }
+// the direction of a thing at (x, y) from an ear at (ex, ey) looking along eh
+function earAt(x, y, ex, ey, eh) { return earDir(angDiff(bearingOf(x - ex, y - ey), eh)); }
+// (the nodes a pan needs between a sound and dest: the low-pass astern, the stereo pan)
+function panNode(pan, dest) {
+  const c = AUD.ctx; if (!pan || !c) return dest;
+  let p = pan, back = 0;
+  if (typeof pan === 'object') { const a = +pan.a || 0; p = Math.sin(a) * 0.95; back = Math.max(0, -Math.cos(a)); }
+  if (back > 0.05) { const f = c.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 20000 * Math.pow(0.12, back); f.Q.value = 0.4; f.connect(dest); dest = f; }
+  if (AUD.panOK && Math.abs(p) > 0.01) { const s = c.createStereoPanner(); s.pan.value = Math.max(-1, Math.min(1, p)); s.connect(dest); dest = s; }
+  return dest;
 }
+function outNode(pan) { return panNode(pan || AUD.place, AUD.master); }
+// everything fn plays (that hasn't a pan of its own) comes from pan: for a creature's whole voice at once
+function sndFrom(pan, fn) { const was = AUD.place; AUD.place = pan || was; try { return fn(); } finally { AUD.place = was; } }
 
 function envGain(t, attack, peak, decay, dest) {
   const g = AUD.ctx.createGain();
@@ -369,10 +380,10 @@ function sfxCannon() {
   tone(62, 'sine', 0.003, 0.9, 0.7, { to: 32 });
   tone(130, 'triangle', 0.002, 0.4, 0.25, { to: 60 });
 }
-function sfxSmash(vol) {
-  noise('bandpass', 1300, 0.9, 0.003, 0.6 * vol, 0.5, { to: 400 });
-  noise('lowpass', 500, 0.7, 0.01, 0.5 * vol, 0.9, { delay: 0.04 });
-  for (let i = 0; i < 4; i++) tone(300 + Math.random() * 400, 'triangle', 0.002, 0.12 * vol, 0.08, { delay: 0.05 + i * 0.07, to: 180 });
+function sfxSmash(vol, pan) {
+  noise('bandpass', 1300, 0.9, 0.003, 0.6 * vol, 0.5, { to: 400, pan });
+  noise('lowpass', 500, 0.7, 0.01, 0.5 * vol, 0.9, { delay: 0.04, pan });
+  for (let i = 0; i < 4; i++) tone(300 + Math.random() * 400, 'triangle', 0.002, 0.12 * vol, 0.08, { delay: 0.05 + i * 0.07, to: 180, pan });
 }
 
 // the carrier's scout jet: the catapult's thump and a rising roar as it goes

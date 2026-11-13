@@ -278,7 +278,7 @@ function update(dt) {
   if (clock0 < tellAt && g.marenClock >= tellAt && g.maren.active && state === 'play' && !g.attract && !marenHeld()) {
     g.marenTell = 1.5;
     const at = bearingOf(g.maren.x - ship.x, g.maren.y - ship.y);
-    sfxSwell(clamp(angDiff(at, ship.h) / (fov / 2), -1, 1));
+    sfxSwell(earDir(angDiff(at, ship.h)));
     if (soundOff()) callout('A swell: she\u2019s about to step nearer', { bearing: at });
   }
   if (g.marenTell > 0) g.marenTell = Math.max(0, g.marenTell - dt);
@@ -500,7 +500,6 @@ function closeSettings() {
   else if (state === 'play') cv.focus({ preventScroll: true });
 }
 const SETTING_OPTS = {
-  vol: [[0, 'Off'], [0.25, '25%'], [0.5, '50%'], [0.75, '75%'], [1, '100%']],
   scares: [['full', 'Full'], ['soft', 'Softened']],
   flashes: [['normal', 'Normal'], ['reduced', 'Reduced']],
   motion: [['auto', 'Auto'], ['reduce', 'Reduce'], ['full', 'Full']],
@@ -537,8 +536,17 @@ function fovSync() {
 for (const id of ['setFov', 'fpsFov']) { const i = $(id); if (i) i.addEventListener('input', () => { SETTINGS.fov = Math.round(+i.value); saveSettings(); fovSync(); }); }
 { const r = $('fpsFovReset'); if (r) r.addEventListener('click', () => { SETTINGS.fov = 69; saveSettings(); fovSync(); }); }
 setTimeout(fovSync, 0);
+// the volume sliders: the Settings card's, the pause card's, the first-person menu's (Wreckers' Night, the Lighthouse,
+// the raids, Freebooters' Sea) and the Drowned Reach's menu are all the one setting, SETTINGS.vol (0 to 1)
+const VOL_SLIDERS = ['setVol', 'pauseVol', 'fpsVol', 'warVol'];
+function volSync() {
+  const v = Math.round(clamp(SETTINGS.vol == null ? 1 : +SETTINGS.vol || 0, 0, 1) * 100);
+  for (const id of VOL_SLIDERS) { const i = $(id), o = $(id + 'Out'); if (i && document.activeElement !== i) i.value = String(v); if (o) o.textContent = v ? v + '%' : 'Off'; }
+}
+for (const id of VOL_SLIDERS) { const i = $(id); if (i) i.addEventListener('input', () => { SETTINGS.vol = Math.round(+i.value) / 100; saveSettings(); applyVolume(); volSync(); }); }
+setTimeout(volSync, 0);
 function applySettings() {
-  lookSync(); fovSync();
+  lookSync(); fovSync(); volSync();
   applyVolume(); refreshMotion();
   if (typeof gl3dRefresh === 'function') gl3dRefresh();
 }

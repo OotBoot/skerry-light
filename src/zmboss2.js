@@ -248,7 +248,8 @@ function zbkLane(z, p, d) {
 }
 
 // ---------- sounds ----------
-function zbmSound(k, d) {
+function zbmSound(k, d) { sndFrom(zbDir(d), () => zbmSoundAt(k, d)); }
+function zbmSoundAt(k, d) {
   try {
     if (soundOff()) return;
     const v = d == null ? 1 : Math.max(0.08, 1 - d / 45);
@@ -276,7 +277,8 @@ function zbmSound(k, d) {
     }
   } catch (e) {}
 }
-function zbkSound(k, d) {
+function zbkSound(k, d) { sndFrom(zbDir(d), () => zbkSoundAt(k, d)); }
+function zbkSoundAt(k, d) {
   try {
     if (soundOff()) return;
     const v = d == null ? 1 : Math.max(0.08, 1 - d / 45);

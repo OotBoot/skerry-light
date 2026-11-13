@@ -675,7 +675,8 @@ ZBT.maren = {
 };
 // her sounds, and the stage's: from the recordings where there's one (src/sfxbank.js), else Maren's own whisper and
 // sting from the sea (src/audio.js)
-function rfSound(k, d) {
+function rfSound(k, d) { sndFrom(zbDir(d), () => rfSoundAt(k, d)); }   // (from where the boss stands: src/zmboss.js zbDir)
+function rfSoundAt(k, d) {
   const v = clamp(1 - (d || 0) / 70, 0.15, 1), play = (n, vol) => { try { return typeof sfxPlay === 'function' && sfxPlay(n, { vol: vol * v, vary: 0.05 }); } catch (e) { return false; } };
   const whisper = vol => { try { if (typeof sfxWhisper === 'function') sfxWhisper(0, vol * v); } catch (e) {} };
   const sting = () => { try { if (typeof sfxSting === 'function') sfxSting(); } catch (e) {} };

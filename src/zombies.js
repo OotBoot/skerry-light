@@ -2411,8 +2411,8 @@ function zmZombies(dt) {
       if (z.st === 'out') { z.jz = top; z.x = w.x; z.y = w.y; if (w.q.indexOf(z) === 0) { z.st = 'tear'; z.t = 0; } continue; }
       if (z.st === 'tear') {
         z.jz = top; z.x = w.x; z.y = w.y;
-        if (w.boards > 0) { if (z.t > Math.max(0.55, 1.25 - ZM.round * 0.03)) { z.t = 0; w.boards--; w.fall.push({ i: w.boards, t: 0 }); zmSound('tear', Math.hypot(w.x - FPS.me.x, w.y - FPS.me.y)); } }
-        else { z.st = 'climb'; z.t = 0; zmSound('tear', Math.hypot(w.x - FPS.me.x, w.y - FPS.me.y)); }
+        if (w.boards > 0) { if (z.t > Math.max(0.55, 1.25 - ZM.round * 0.03)) { z.t = 0; w.boards--; w.fall.push({ i: w.boards, t: 0 }); zmSound('tear', w); } }
+        else { z.st = 'climb'; z.t = 0; zmSound('tear', w); }
         continue;
       }
       const k = Math.min(1, z.t / 0.55);
@@ -2460,7 +2460,7 @@ function zmZombies(dt) {
       const w = z.win; z.walk = false; z.h = bearingOf(-w.nx, -w.ny);
       if (w.boards > 0) {
         // a board off every second or so (quicker as the rounds go on)
-        if (z.t > Math.max(0.55, 1.25 - ZM.round * 0.03)) { z.t = 0; w.boards--; w.fall.push({ i: w.boards, t: 0 }); zmSound('tear', Math.hypot(w.x - FPS.me.x, w.y - FPS.me.y)); }
+        if (z.t > Math.max(0.55, 1.25 - ZM.round * 0.03)) { z.t = 0; w.boards--; w.fall.push({ i: w.boards, t: 0 }); zmSound('tear', w); }
         // and a swipe through the gap at whoever's right there
         if (P.some(p => Math.hypot(p.x - w.x, p.y - w.y) < 1.5 && Math.abs(p.jz || 0) < 1)) zmSwipe(z, dt);
       } else { z.st = 'climb'; z.t = 0; }
@@ -2629,7 +2629,7 @@ function zmMoans(dt) {
     ZM.groanT = 1.2 + Math.random() * 2.5;
     let best = null, bd = 30;
     for (const z of ZM.z) { if (z.dead || z.skit) continue; const d = Math.hypot(z.x - m.x, z.y - m.y) * (0.7 + Math.random() * 0.6); if (d < bd) { bd = d; best = z; } }
-    if (best) zmSound('moan', Math.hypot(best.x - m.x, best.y - m.y), angDiff(bearingOf(best.x - m.x, best.y - m.y), m.h), best.kind);
+    if (best) zmSound('moan', best, 0, best.kind);
   }
 }
 // a swing at you: wound up, then, if you're still in reach, a knock
@@ -2709,7 +2709,7 @@ function zmMaybeDrop(d, how) {
     ZM.dropsRound++;
     const r = Math.random(), k = zmInfRes() ? 'double' : r < 0.35 ? 'keg' : r < 0.6 ? 'double' : r < 0.8 ? 'spot' : 'flash';   // [raid] (there, only Double Points)
     ZM.drops.push({ k, x: d.x, y: d.y, z: d.jz || 0, t: 26, ph: Math.random() * 6, id: ++ZM.zc });
-    zmSound('drop');
+    zmSound('drop', null, fpsEar(d.x, d.y));
   }
 }
 // a shot here: what it hits, as the islands judge it, but against the drowned standing where they are now (there's
@@ -3015,7 +3015,7 @@ function zmOpenDoor(d) {
   for (const k of d.also || []) ZM.open.add(k);
   if (d.zones.includes('lamp')) ZM.open.add('tower');
   zmNavBuild(); ZM.navT = 0;
-  zmSound(d.kind === 'debris' ? 'debris' : 'door');
+  zmSound(d.kind === 'debris' ? 'debris' : 'door', null, fpsEar(d.x, d.y));
   for (let i = 0; i < 14; i++) FPS.parts.push({ x: d.x + (Math.random() - 0.5) * 2, y: d.y + (Math.random() - 0.5) * 2, z: FPSC.GROUND + Math.random() * 2.2, vx: (Math.random() - 0.5) * 1.5, vy: (Math.random() - 0.5) * 1.5, vz: Math.random() * 1.5, t: 0.9, c: '150,140,120' });
 }
 
@@ -3138,10 +3138,13 @@ function zmShowOver() {
 function zmAgain() { const net = ZM.net; fpsStop(); if (!net) { const map = ZM_MAP; setTimeout(() => zmStart({ map }), 0); } else if (typeof zmnBackToLobby === 'function') zmnBackToLobby(); }
 
 // ---------- sounds ----------
+// k the sound; d how far off it is, or where it is ({x, y}: its distance and direction worked out here); pan the angle
+// round from where I'm looking (radians), or a direction (src/fps.js fpsDir); left out, it plays straight on
 function zmSound(k, d, pan, kind) {
   try {
     if (soundOff()) return;
-    const v = d == null ? 1 : Math.max(0.05, 1 - d / 40), o = { pan: clamp(pan || 0, -1, 1) };
+    if (d && typeof d === 'object') { const m = FPS.me; pan = fpsEar(d.x, d.y); d = Math.hypot(d.x - m.x, d.y - m.y); }
+    const v = d == null ? 1 : Math.max(0.05, 1 - d / 40), o = { pan: fpsDir(pan) };
     // (the recordings, where there's one: src/sfxbank.js)
     { const R = { moan: kind === 'run' ? 'snarl' : 'moan', tear: 'tear', board: 'board', hit: 'hit', round: 'roundstart', end: 'roundend', buy: 'buy', no: 'deny', door: 'door', debris: 'debris', open: 'chest', gull: 'gull', drop: 'powerup', take: 'pickup', drink: 'drink', beat: 'heartbeat', over: 'gameover', beam: 'beam' }[k];
       const VOL = { moan: 0.55, tear: 0.95, board: 0.85, round: 0.9, end: 0.8, buy: 0.6, no: 0.5, gull: 0.5, drop: 0.6, beat: 0.9, beam: 0.3 };
@@ -3155,9 +3158,9 @@ function zmSound(k, d, pan, kind) {
     else if (k === 'end') { for (let i = 0; i < 3; i++) tone(392 - i * 49, 'triangle', 0.01, 0.12, 0.9, { delay: i * 0.45 }); }
     else if (k === 'buy') { tone(880, 'triangle', 0.002, 0.12, 0.12); tone(1320, 'triangle', 0.002, 0.1, 0.2, { delay: 0.08 }); }
     else if (k === 'no') tone(140, 'square', 0.002, 0.06, 0.18);
-    else if (k === 'door') { noise('bandpass', 380, 4, 0.2, 0.18, 0.9, { to: 220 }); noise('lowpass', 200, 1, 0.01, 0.4, 0.4, { delay: 0.9 }); }
-    else if (k === 'debris') { for (let i = 0; i < 4; i++) noise('lowpass', 400 + Math.random() * 600, 1, 0.005, 0.3, 0.3, { delay: i * 0.12 }); }
-    else if (k === 'open') { noise('bandpass', 500, 5, 0.1, 0.16, 0.5, { to: 300 }); }
+    else if (k === 'door') { noise('bandpass', 380, 4, 0.2, 0.18, 0.9, { to: 220, pan: o.pan }); noise('lowpass', 200, 1, 0.01, 0.4, 0.4, { delay: 0.9, pan: o.pan }); }
+    else if (k === 'debris') { for (let i = 0; i < 4; i++) noise('lowpass', 400 + Math.random() * 600, 1, 0.005, 0.3, 0.3, { delay: i * 0.12, pan: o.pan }); }
+    else if (k === 'open') { noise('bandpass', 500, 5, 0.1, 0.16, 0.5, { to: 300, pan: o.pan }); }
     else if (k === 'tick') tone(1200 + Math.random() * 800, 'triangle', 0.001, 0.05, 0.06);
     else if (k === 'offer') { tone(660, 'triangle', 0.01, 0.1, 0.4); tone(990, 'triangle', 0.01, 0.08, 0.6, { delay: 0.1 }); }
     else if (k === 'gull') { for (let i = 0; i < 3; i++) tone(1800 - i * 200, 'sawtooth', 0.01, 0.05, 0.15, { delay: i * 0.18, to: 1100 }); }
@@ -3167,7 +3170,7 @@ function zmSound(k, d, pan, kind) {
     else if (k === 'beat') { tone(58, 'sine', 0.005, 0.32, 0.16, { to: 42 }); tone(52, 'sine', 0.005, 0.22, 0.16, { to: 38, delay: 0.2 }); }
     else if (k === 'wind') { noise('bandpass', 900, 1, 0.3, 0.25, 1.0, { to: 300 }); }
     else if (k === 'over') { tone(196, 'sine', 0.2, 0.2, 3.0, { to: 98 }); sfxBellFar(0, 0.6); }
-    else if (k === 'beam') { if (Math.random() < 0.5) noise('bandpass', 260 + Math.random() * 80, 2, 0.02, 0.09, 0.14); }
+    else if (k === 'beam') { if (Math.random() < 0.5) noise('bandpass', 260 + Math.random() * 80, 2, 0.02, 0.09, 0.14, o); }
   } catch (e) {}
 }
 

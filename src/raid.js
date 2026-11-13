@@ -862,7 +862,7 @@ function rswSpawn(P) {
   const at = rswPlace(P); if (!at) return;
   const [wx, wy] = at, u = Math.random(), kind = u < 0.2 + lit * 0.025 ? 'run' : u < 0.82 ? 'jog' : 'walk';
   raidSpawnAt(wx, wy, { kind, hp: zmHp(RAIDC.ROUND + lit * 0.4) * (0.9 + Math.random() * 0.2) * (1 + 0.25 * (n - 1)) });
-  zmSound('moan', Math.hypot(wx - FPS.me.x, wy - FPS.me.y), 0, kind);
+  zmSound('moan', Math.hypot(wx - FPS.me.x, wy - FPS.me.y), fpsEar(wx, wy), kind);
 }
 // now and then a Diver comes up out of the dark as well, glowing like the rest; no bar for his strength down here
 // (RAID_STAGES.descent.noBars), so you can't tell how much he's got left
@@ -916,7 +916,7 @@ function rswPierSpawn() {
   const u = Math.random(), kind = u < 0.25 ? 'run' : 'jog';
   const z = raidSpawnAt(x, y, { kind, rise: 0, hp: zmHp(RAIDC.ROUND) * (0.9 + Math.random() * 0.2) * (1 + 0.25 * (n - 1)) });
   if (z) { z.sp *= RSWP.ZK; z.jz = z.fl = RSW.DECK; z.lx = x; z.ly = y; }   // the pier's drowned are 30% quicker; the cave's stay slowed
-  zmSound('moan', Math.hypot(x - FPS.me.x, y - FPS.me.y), 0, kind);
+  zmSound('moan', Math.hypot(x - FPS.me.x, y - FPS.me.y), fpsEar(x, y), kind);
 }
 // everyone: the platform's held; it falls away (its footing gone, its boards dropping), and whoever's on it with it.
 // Hosting: any of the drowned still up on the pier go over too

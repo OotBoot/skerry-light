@@ -453,7 +453,7 @@ function mateShout(m, text) {
   m.shoutText = text; m.shoutT = 4;
   if (!g || g.attract) return;
   const d = Math.hypot(m.x - ship.x, m.y - ship.y);
-  const pan = clamp(angDiff(bearingOf(m.x - ship.x, m.y - ship.y), ship.h) / (fov / 2), -1, 1);
+  const pan = earDir(angDiff(bearingOf(m.x - ship.x, m.y - ship.y), ship.h));
   sfxHorn(pan, Math.max(0.3, 1 - d / 800));
   if (state === 'play') addLog(m.name + ': ' + text + ' (' + Math.round(d) + ' m)', 'p');
 }
@@ -466,7 +466,7 @@ function mateNear(dist) {
 function mateRangBell(m) {
   if (!g || state !== 'play') return;
   const d = Math.hypot(m.x - ship.x, m.y - ship.y);
-  const pan = clamp(angDiff(bearingOf(m.x - ship.x, m.y - ship.y), ship.h) / (fov / 2), -1, 1);
+  const pan = earDir(angDiff(bearingOf(m.x - ship.x, m.y - ship.y), ship.h));
   sfxBellFar(pan, Math.max(0.15, 1 - d / 600));
   if (d < SK.CREW_BELL_RANGE && g.maren.active && g.maren.stage >= 1) {
     g.maren.stage = Math.max(0, g.maren.stage - 2); placeMaren(g.maren.stage);

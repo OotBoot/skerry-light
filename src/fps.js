@@ -316,7 +316,7 @@ function fpsNetTick(dt) {
       fpsFeed(killer ? `${killer} shot ${r.n}.` : `${r.n} was taken by the sea.`);
     } else r.prevKb = Object.assign({}, r.kb);
     r.d = f.d || 0; r.dead = f.dead;
-    if (f.bl > r.bl) { FPS.pings.push({ x: f.x, y: f.y, t: 4, n: r.n }); fpsBellSound(Math.hypot(f.x - FPS.me.x, f.y - FPS.me.y)); }
+    if (f.bl > r.bl) { FPS.pings.push({ x: f.x, y: f.y, t: 4, n: r.n }); fpsBellSound(Math.hypot(f.x - FPS.me.x, f.y - FPS.me.y), fpsEar(f.x, f.y)); }
     r.bl = f.bl;
     if (f.fl && f.fl[0] > r.fl) FPS.g.flares.push({ x: f.fl[1], y: f.fl[2], t: SK.FLARE_TIME, skin: FLARES[0] });
     if (f.fl) r.fl = f.fl[0];
@@ -573,7 +573,7 @@ function fpsResolveShot(sh, mine) {
   const [, x, y, z, h, p, by, code] = sh, w = fpsWOf(code), m = FPS.me;
   const d = Math.hypot(x - m.x, y - m.y), pan = angDiff(bearingOf(x - m.x, y - m.y), m.h);
   const shooter = by === m.id ? null : FPS.remote.get(by) || FPS.bots.find(b => b.id === by);
-  if (w.melee) { if (shooter) shooter.slashT = 0.3; fpsSwishSound(mine ? 0 : d); }
+  if (w.melee) { if (shooter) shooter.slashT = 0.3; fpsSwishSound(mine ? 0 : d, mine ? 0 : pan); }
   else { if (shooter) shooter.flashT = 0.12; fpsWeaponSound(code, mine ? 0 : d, mine ? 0 : pan); }
   if (w.speed) {
     // the harpoon flies as a thing of its own; everyone moves it the same way
@@ -689,7 +689,7 @@ function fpsHarpoonsTick(dt) {
         if (o.drowned && FPS.zm && typeof zmHarpoonOn === 'function' && zmHarpoonOn(hp, o)) { hp.done = false; continue; }
         hp.stuck = 0.6;
         if (hp.skew && typeof zmpHarpoonCarry === 'function') zmpHarpoonCarry(hp, true);
-      } else { if (hp.skew && typeof zmpHarpoonCarry === 'function') zmpHarpoonCarry(hp, true); hp.stuck = 8; fpsPuff(r.x, r.y, r.z, '190,190,180', 8); try { noise('bandpass', 900, 3, 0.002, 0.12, 0.15); } catch (e) {} }
+      } else { if (hp.skew && typeof zmpHarpoonCarry === 'function') zmpHarpoonCarry(hp, true); hp.stuck = 8; fpsPuff(r.x, r.y, r.z, '190,190,180', 8); try { noise('bandpass', 900, 3, 0.002, 0.12, 0.15, { pan: fpsEar(r.x, r.y) }); } catch (e) {} }
     }
   }
   FPS.harps = FPS.harps.filter(hp => !hp.done || hp.stuck > 0);
@@ -754,13 +754,17 @@ function fpsMelee() { if (FPS.weapon === 'cutlass') fpsSwitch(FPS.last !== 'cutl
 function fpsLantern() { FPS.me.lan = !FPS.me.lan; try { sfxTick(); } catch (e) {} fpsSend(); }
 
 // ---------- sounds (made from the game's own noises) ----------
+// a sound's direction from where it is, as I hear it (src/audio.js earDir: panned to its side, muffled behind me);
+// fpsDir takes the angle the callers here have always passed (radians round from where I'm looking), or a direction already made
+const fpsEar = (x, y) => earAt(x, y, FPS.me.x, FPS.me.y, FPS.me.h);
+const fpsDir = a => a && typeof a === 'object' ? a : a ? earDir(a) : 0;
 function fpsGunSound(d, pan) {
   try {
     if (soundOff()) return;
-    const v = Math.max(0.05, 1 - d / 350);
-    if (sfxPlay('pepperbox', { vol: 0.95 * v, pan: Math.max(-1, Math.min(1, pan || 0)), vary: 0.1 })) return;
-    noise('lowpass', 1600 * v + 300, 0.7, 0.002, 0.55 * v, 0.28 + (1 - v) * 0.3, { pan: Math.max(-1, Math.min(1, pan || 0)) });
-    tone(90, 'triangle', 0.002, 0.3 * v, 0.18, { to: 45 });
+    const v = Math.max(0.05, 1 - d / 350), P = fpsDir(pan);
+    if (sfxPlay('pepperbox', { vol: 0.95 * v, pan: P, vary: 0.1 })) return;
+    noise('lowpass', 1600 * v + 300, 0.7, 0.002, 0.55 * v, 0.28 + (1 - v) * 0.3, { pan: P });
+    tone(90, 'triangle', 0.002, 0.3 * v, 0.18, { to: 45, pan: P });
   } catch (e) {}
 }
 // each weapon's own report: the pepperbox's crack, the blunderbuss's roar, the longarm's long bang,
@@ -768,17 +772,17 @@ function fpsGunSound(d, pan) {
 function fpsWeaponSound(code, d, pan) {
   try {
     if (soundOff()) return;
-    const v = Math.max(0.05, 1 - d / 400), o = { pan: Math.max(-1, Math.min(1, pan || 0)) };
+    const v = Math.max(0.05, 1 - d / 400), o = { pan: fpsDir(pan) };
     { const R = { p: 'pepperbox', b: 'blunderbuss', l: 'longarm', h: 'harpoon', a: 'avtomat' }[code] || (FPSW_BY_CODE[code] ? null : 'pepperbox'); if (R && sfxPlay(R, { vol: (code === 'a' ? 0.7 : 0.95) * v, pan: o.pan, vary: 0.1 })) return; }   // (the recordings: src/sfxbank.js)
-    if (code === 'b') { noise('lowpass', 900 * v + 250, 0.6, 0.002, 0.8 * v, 0.55 + (1 - v) * 0.3, o); tone(55, 'sawtooth', 0.002, 0.35 * v, 0.3, { to: 30 }); }
-    else if (code === 'l') { noise('lowpass', 2200 * v + 300, 0.8, 0.001, 0.7 * v, 0.45 + (1 - v) * 0.5, o); tone(120, 'triangle', 0.001, 0.25 * v, 0.25, { to: 40 }); }
-    else if (code === 'a') { noise('lowpass', 2800 * v + 400, 0.9, 0.001, 0.42 * v, 0.12 + (1 - v) * 0.3, o); tone(160, 'square', 0.001, 0.1 * v, 0.05, { to: 70 }); }
-    else if (code === 'h') { noise('lowpass', 500, 0.8, 0.003, 0.5 * v, 0.25, o); tone(70, 'triangle', 0.003, 0.4 * v, 0.2, { to: 35 }); noise('highpass', 3000, 0.7, 0.05, 0.12 * v, 0.6, o); }
+    if (code === 'b') { noise('lowpass', 900 * v + 250, 0.6, 0.002, 0.8 * v, 0.55 + (1 - v) * 0.3, o); tone(55, 'sawtooth', 0.002, 0.35 * v, 0.3, { to: 30, pan: o.pan }); }
+    else if (code === 'l') { noise('lowpass', 2200 * v + 300, 0.8, 0.001, 0.7 * v, 0.45 + (1 - v) * 0.5, o); tone(120, 'triangle', 0.001, 0.25 * v, 0.25, { to: 40, pan: o.pan }); }
+    else if (code === 'a') { noise('lowpass', 2800 * v + 400, 0.9, 0.001, 0.42 * v, 0.12 + (1 - v) * 0.3, o); tone(160, 'square', 0.001, 0.1 * v, 0.05, { to: 70, pan: o.pan }); }
+    else if (code === 'h') { noise('lowpass', 500, 0.8, 0.003, 0.5 * v, 0.25, o); tone(70, 'triangle', 0.003, 0.4 * v, 0.2, { to: 35, pan: o.pan }); noise('highpass', 3000, 0.7, 0.05, 0.12 * v, 0.6, o); }
     else fpsGunSound(d, pan);
   } catch (e) {}
 }
-function fpsSwishSound(d) { try { if (soundOff()) return; const v = Math.max(0.05, 1 - d / 60); if (sfxPlay('swish', { vol: 0.7 * v, vary: 0.15 })) return; noise('bandpass', 2600, 1.2, 0.03, 0.22 * v, 0.18); } catch (e) {} }
-function fpsBellSound(d) { try { sfxBellFar(0, Math.max(0.15, 1 - d / 400)); } catch (e) {} }
+function fpsSwishSound(d, pan) { try { if (soundOff()) return; const v = Math.max(0.05, 1 - d / 60), P = fpsDir(pan); if (sfxPlay('swish', { vol: 0.7 * v, vary: 0.15, pan: P })) return; noise('bandpass', 2600, 1.2, 0.03, 0.22 * v, 0.18, { pan: P }); } catch (e) {} }
+function fpsBellSound(d, pan) { try { sfxBellFar(fpsDir(pan), Math.max(0.15, 1 - d / 400)); } catch (e) {} }
 function fpsHitSound(head) { try { tone(head ? 1250 : 900, 'square', 0.001, 0.06, 0.05); } catch (e) {} }
 function fpsClick() { try { tone(420, 'square', 0.001, 0.05, 0.04); tone(300, 'square', 0.001, 0.05, 0.04, { delay: 0.5 }); } catch (e) {} }
 function fpsFeed(text) { FPS.feed.push({ text, t: 5 }); if (FPS.feed.length > 5) FPS.feed.shift(); }
@@ -900,7 +904,7 @@ function fpsDrownedTick(dt, now) {
     const a = Math.random() * 6.283;
     FPS.drowned.push({ drowned: true, id: 'dr-' + Math.random().toString(36).slice(2, 7), n: 'a drowned man', x: FPSC.CX + Math.cos(a) * (FPSC.R + 6), y: FPSC.CY + Math.sin(a) * (FPSC.R + 6), hp: 3, rise: 0, bite: 0, ph: Math.random() * 6, hitT: 0, hist: [] });
     fpsFeed('Something is wading ashore.');
-    try { sfxSplash(0, 0.5); } catch (e) {}
+    { const q = FPS.drowned[FPS.drowned.length - 1]; try { sfxSplash(fpsEar(q.x, q.y), 0.5); } catch (e) {} }
   }
   for (const d of FPS.drowned) {
     if (d.hitT > 0) d.hitT -= dt;

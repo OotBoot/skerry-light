@@ -63,7 +63,7 @@ function smash(r, mine) {
   r.gone = true; r.doomed = true;
   const near = Math.hypot(r.x - ship.x, r.y - ship.y);
   burst(r.x, r.y, ['#5a5f68', '#7d828b', '#33373e', '#e8eef8', '#c8d6e8'], Math.min(60, 20 + r.r * 2.5), 10 + r.r * 0.4, 12);
-  if (near < 900) sfxSmash(Math.max(0.15, 1 - near / 900));
+  if (near < 900) sfxSmash(Math.max(0.15, 1 - near / 900), panOf(r));
   if (!mine && near < 900 && state === 'play') addLog('A crewmate’s gun blew a rock apart.', 'p');
 }
 

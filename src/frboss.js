@@ -469,7 +469,8 @@ ZBT.fogkeeper = {
   pose: (z, M, dt) => fkPose(z, M, dt),
 };
 // his sounds and the rock's: the recordings (src/sfxbank.js) where there's one, else the synth (src/audio.js)
-function fkSound(k, d) {
+function fkSound(k, d) { sndFrom(zbDir(d), () => fkSoundAt(k, d)); }   // (from where the boss stands: src/zmboss.js zbDir)
+function fkSoundAt(k, d) {
   const v = clamp(1 - (d || 0) / 60, 0.15, 1), play = (n, vol, o) => { try { return typeof sfxPlay === 'function' && sfxPlay(n, Object.assign({ vol: vol * v, vary: 0.05 }, o || {})); } catch (e) { return false; } };
   const syn = f => { try { if (!soundOff() && AUD.ctx) f(); } catch (e) {} };
   if (k === 'arrive' || k === 'rise') { play('creak', 0.8); play('bossdiver', 0.7); syn(() => { tone(50, 'sawtooth', 0.5, 0.06, 2.6, { to: 38 }); noise('lowpass', 400, 1, 0.6, 0.08, 2.4); }); return; }

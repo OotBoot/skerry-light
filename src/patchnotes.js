@@ -6,6 +6,11 @@
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 178, date: '2026-11-13', title: "Directional sound, and volume in every menu", Sound: [
+    "Every game: sounds now come from where they happen. Gunshots, the drowned, bosses, boats, splashes, bells and creatures are panned to the side they're on, and sounds behind you are muffled, so you can tell ahead from behind and turn to find them. Best with headphones.",
+    "Wreckers' Night, Keeper's Last Light, the raids, Fog Run and Freebooters' Sea: other players' shots, the drowned's moans, boards being torn off windows, doors, power-ups and every boss's footsteps and attacks are all directional now. Before, many of these played dead centre.",
+    "Skerry Light: things behind the boat no longer sound as if they're hard left or hard right, and rocks blown apart by a crewmate's gun are now directional too." ], Changes: [
+    "Volume is now a slider, from off to 100% in steps of 5%, and it's in every in-game menu: the Settings card, Skerry Light's pause card, the menu in Wreckers' Night, Keeper's Last Light, the raids, Fog Run and Freebooters' Sea, and the Drowned Reach's menu. They're all the same setting, so changing it in one changes it everywhere." ] },
   { v: 177, date: '2026-11-13', title: "Keeper's Last Light: every crab shows in co-op", Fixes: [
     "Keeper's Last Light: in a crab round with three or four players, some crabs could be invisible to everyone but the host. Every living crab now shows on every screen." ] },
   { v: 176, date: '2026-11-12', title: "New game: Freebooters' Sea", New: [

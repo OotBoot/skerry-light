@@ -502,7 +502,8 @@ ZBT.bosun = Object.assign({}, ZBT.diver, {
   reset(z, M) { M.suit.emissive.set(0); M.brass.emissive.set(0x140e04); M.root.rotation.set(0, 0, 0); M.root.scale.setScalar(1); M.key.visible = true; },
   pose(z, M, dt) { zbPoseDiver(z, M, dt); M.key.visible = !z.dead; if (M.eyeM) { const k = z.dead ? 0.12 : 0.85 + 0.15 * Math.sin(g.t * 3 + z.seed); M.eyeM.color.setRGB(0.72 * k, k, 0.85 * k); } },
 });
-function gwBosunSound(k, d) {
+function gwBosunSound(k, d) { sndFrom(zbDir(d), () => gwBosunSoundAt(k, d)); }
+function gwBosunSoundAt(k, d) {
   const v = d == null ? 1 : Math.max(0.08, 1 - d / 45), play = (n, vol) => { try { return !soundOff() && typeof sfxPlay === 'function' && sfxPlay(n, { vol: vol * v, vary: 0.06 }); } catch (e) { return false; } };
   if (k === 'arrive') { if (!play('snarl', 1)) zbSound('groan', d); play('creak', 0.6); return; }
   if (k === 'slam') { if (play('axechop', 1)) { play('debris', 0.4); return; } }
@@ -666,7 +667,7 @@ function gwSpawn() {
     const z = raidSpawnAt(x, y, { kind, hp: zmHp(GWH.LEVEL) * (0.9 + Math.random() * 0.2) * (1 + 0.2 * (n - 1)), rise: R.k === 'tier' ? 1.4 : 1.1 });
     z.rb = R.z; z.jz = R.z - 1.9; z.fl = R.z;
     if (R.k === 'tier') gwSplash(x, y, GWH.WZ, 14);
-    zmSound('moan', Math.hypot(x - FPS.me.x, y - FPS.me.y) + Math.abs(R.z - (FPS.me.jz || 0)) * 4, 0, kind);
+    zmSound('moan', Math.hypot(x - FPS.me.x, y - FPS.me.y) + Math.abs(R.z - (FPS.me.jz || 0)) * 4, fpsEar(x, y), kind);
     return true;
   }
   return false;
@@ -1047,7 +1048,7 @@ function gwMe(dt) {
   // his knocks: while he moves and you're near enough to hear, three on wood, quicker and louder the nearer he is
   const kd = Math.hypot(K.x - m.x, K.y - m.y) + Math.abs(K.jz - (m.jz || 0)) * 1.5;
   S.warnT -= dt; if (S.mvT > 0) S.mvT -= dt;
-  if (K.mv && !(K.lunge > 0)) { S.mvT = 1.2; if (kd < KN.WARN && S.warnT <= 0) { const k = 1 - kd / KN.WARN, pan = clamp(Math.sin(angDiff(bearingOf(K.x - m.x, K.y - m.y), m.h)), -1, 1) * 0.8; try { if (!soundOff()) sfxKnock(pan, 0.25 + 0.75 * k, 0.26 - 0.16 * k); } catch (e) {} S.warnT = 0.9 + 2.6 * (1 - k); S.knockT = 1.6; } }
+  if (K.mv && !(K.lunge > 0)) { S.mvT = 1.2; if (kd < KN.WARN && S.warnT <= 0) { const k = 1 - kd / KN.WARN, pan = fpsEar(K.x, K.y); try { if (!soundOff()) sfxKnock(pan, 0.25 + 0.75 * k, 0.26 - 0.16 * k); } catch (e) {} S.warnT = 0.9 + 2.6 * (1 - k); S.knockT = 1.6; } }
   if (S.knockT > 0) S.knockT -= dt;
   // holding Use beside him while he's held still: his key, off its cord
   const hold = FPS.keys.KeyF || FPS.keys.KeyE || FPS.touchUse || FPS.padUse, o = ZM.near;

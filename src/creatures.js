@@ -123,13 +123,13 @@ function updateMaren(dt) {
   // close in and out of sight, you hear her oars working in the rowlocks
   if (state === 'play' && !g.attract && m.stage >= 3 && !marenInView()) {
     m.oarT = (m.oarT == null ? 1 : m.oarT) - dt;
-    if (m.oarT <= 0) { m.oarT = rand(2.5, 4); sfxRowlock(clamp(angDiff(bearingOf(m.x - ship.x, m.y - ship.y), ship.h) / (fov / 2), -1, 1)); }
+    if (m.oarT <= 0) { m.oarT = rand(2.5, 4); sfxRowlock(earDir(angDiff(bearingOf(m.x - ship.x, m.y - ship.y), ship.h))); }
   }
   // the first time you see her at each stage, she whispers
   const vis = visibility(m.x, m.y);
   if (vis > 0.3 && marenInView() && m.seenStage !== m.stage) {
     m.seenStage = m.stage;
-    const pan = clamp(angDiff(bearingOf(m.x - ship.x, m.y - ship.y), ship.h) / (fov / 2), -1, 1);
+    const pan = earDir(angDiff(bearingOf(m.x - ship.x, m.y - ship.y), ship.h));
     sfxWhisper(pan, 0.6 + m.stage * 0.15);
   }
 }
@@ -241,7 +241,7 @@ function drawPlimRing() {
 }
 
 function squeakFrom(p, d, boost) {
-  const pan = clamp(angDiff(bearingOf(p.x - ship.x, p.y - ship.y), ship.h) / (fov / 2), -1, 1);
+  const pan = earDir(angDiff(bearingOf(p.x - ship.x, p.y - ship.y), ship.h));
   sfxSqueak(pan, Math.max(0, 1 - d / 260) * boost * (g.attract ? 0.5 : 1));
 }
 

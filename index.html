@@ -414,6 +414,7 @@
           <button class="tool" id="warHowBtn" type="button">How to play</button>
           <button class="tool" id="warLeave" type="button">Leave the Reach</button>
         </div>
+        <div class="lookrow"><label for="warVol">Volume <output id="warVolOut">100%</output></label><input id="warVol" class="lookslider volslider" type="range" min="0" max="100" step="5" value="100"></div>
         <div id="warHow" hidden class="howto">
           <p>Tap land touching yours to march on it with the share the slider sets; tap a far shore to send a boat. Build with gold: a harbour on the shore, a watchtower at the border, a beacon on a dark shore. Flares light and clear a spot; a fire-ship burns a shore. Ring the bell when hard pressed. The drowned rise on dark shores at night; the tide opens and shuts the shoals every ninety seconds; hold the Light’s rock to be the Keeper; hold a whole great isle for a bonus. You win with six tenths of the land, or when you stand alone.</p>
         </div>
@@ -639,6 +640,8 @@
         <button class="tool" id="fpsLeave" type="button">Leave the island</button>
       </div>
       <div class="lookrow" id="fpsOpts">
+        <label for="fpsVol">Volume <output id="fpsVolOut">100%</output></label>
+        <input id="fpsVol" class="lookslider volslider" type="range" min="0" max="100" step="5" value="100">
         <label for="fpsLookX">Look sensitivity, across (X) <output id="fpsLookXOut">1.00</output></label>
         <input id="fpsLookX" class="lookslider" type="range" min="0.3" max="3" step="0.05" value="1">
         <label for="fpsLookY">Look sensitivity, up and down (Y) <output id="fpsLookYOut">1.00</output></label>
@@ -717,6 +720,7 @@
         <button class="tool" id="pauseSettings" type="button">Settings</button>
         <button class="tool" id="pauseMenu" type="button">Give up the voyage</button>
       </div>
+      <div class="lookrow"><label for="pauseVol">Volume <output id="pauseVolOut">100%</output></label><input id="pauseVol" class="lookslider volslider" type="range" min="0" max="100" step="5" value="100"></div>
     </div>
   </div>
 
@@ -725,7 +729,7 @@
       <div class="cardtop"><span class="eyebrow">Kept on this device</span><button class="tool closebtn" id="settingsClose" type="button">✕ Close</button></div>
       <h1 id="settingsHead">Settings</h1>
       <p class="setnote" id="settingsCrew" hidden>Your crew sails on.</p>
-      <div class="setrow"><span class="label" id="lbl-vol">Volume</span><div class="loottabs" id="set-vol" role="group" aria-labelledby="lbl-vol"></div></div>
+      <div class="setrow"><label class="label" for="setVol">Volume <output id="setVolOut">100%</output></label><input id="setVol" class="lookslider volslider" type="range" min="0" max="100" step="5" value="100"></div>
       <div class="setrow"><span class="label" id="lbl-scares">Jumpscares</span><div class="loottabs" id="set-scares" role="group" aria-labelledby="lbl-scares"></div></div>
       <div class="setrow"><span class="label" id="lbl-flashes">Flashes</span><div class="loottabs" id="set-flashes" role="group" aria-labelledby="lbl-flashes"></div></div>
       <div class="setrow"><span class="label" id="lbl-motion">Motion</span><div class="loottabs" id="set-motion" role="group" aria-labelledby="lbl-motion"></div></div>

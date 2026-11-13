@@ -84,7 +84,7 @@ const fwd = () => ({ x: Math.sin(ship.h), y: Math.cos(ship.h) });
 function aheadPt(d, lat) { const f = fwd(); return { x: ship.x + f.x * d + f.y * lat, y: ship.y + f.y * d - f.x * lat }; }
 function okWater(p) { return g.backrooms ? true : p.y > 40; }
 const dist = (o) => Math.hypot(o.x - ship.x, o.y - ship.y);
-const panOf = (o) => clamp(angDiff(bearingOf(o.x - ship.x, o.y - ship.y), ship.h) / (fov / 2), -1, 1);
+const panOf = (o) => earDir(angDiff(bearingOf(o.x - ship.x, o.y - ship.y), ship.h));
 const inView = (o) => Math.abs(angDiff(bearingOf(o.x - ship.x, o.y - ship.y), ship.h)) < fov / 2 + 0.05;
 function intro(k) { const F = g.foes[k]; if (F && !F.intro) { F.intro = true; addLog(FOE_INTRO[k], 'w'); } }
 function foeHit(what) { if (ship.inv <= 0) hit(-Math.sin(ship.h), -Math.cos(ship.h), what); }
