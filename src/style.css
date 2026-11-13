@@ -1267,3 +1267,29 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 #titleCard.mddesk > .modecard .btnrow .primary { margin-right: 8px; }
 #titleCard.mddesk > #boardCard .cardtop { flex-wrap: wrap; row-gap: 8px; }
 @media (max-width: 1439px) { #titleCard.mddesk > #boardCard .eyebrow { flex: 1 1 100%; } #titleCard.mddesk > #boardCard h1 { font-size: 2rem; } }
+
+/* The Original (src/original.js): its featured spot at the top of the menu, and the frame it plays in */
+.origfeat { --of: #ffd88a; max-width: 34rem; width: 100%; box-sizing: border-box; display: flex; align-items: center; gap: 12px; padding: 12px 14px; cursor: pointer; text-align: left; position: relative; clip-path: inset(0);
+  background: radial-gradient(120% 160% at 0% 50%, rgba(255,216,138,0.26), rgba(255,216,138,0.05) 60%), rgba(8,12,22,0.9); border: 1px solid rgba(255,216,138,0.75); box-shadow: 0 0 22px rgba(255,216,138,0.16), inset 0 0 0 1px rgba(255,216,138,0.12); color: var(--ink); font-family: var(--log); }
+.origfeat::after { content: ""; position: absolute; inset: 0; background: linear-gradient(100deg, transparent 30%, rgba(255,236,180,0.16) 45%, transparent 60%); transform: translateX(-100%); animation: ofSweep 5s ease-in-out infinite; pointer-events: none; }
+@keyframes ofSweep { 0%, 55% { transform: translateX(-100%); } 85%, 100% { transform: translateX(100%); } }
+@media (prefers-reduced-motion: reduce) { .origfeat::after { animation: none; display: none; } }
+.origfeat:hover, .origfeat:focus-visible, .origfeat.padfocus { border-color: var(--of); box-shadow: 0 0 30px rgba(255,216,138,0.3), inset 0 0 0 1px rgba(255,216,138,0.3); outline: none; }
+.origfeat .of-tag { flex: none; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; padding: 3px 6px; background: var(--of); color: #1a140a; font-weight: 700; }
+.origfeat .of-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.origfeat .of-main b { font-family: var(--display); font-weight: 400; font-size: 1.5rem; line-height: 1; color: var(--of); text-shadow: 0 0 14px rgba(255,216,138,0.35); }
+.origfeat .of-main small { font-size: 11px; color: var(--muted); line-height: 1.35; }
+.origfeat .of-go { flex: none; font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--of); }
+#titleCard > .origfeat { margin-bottom: 6px; }
+@media (max-width: 520px) { .origfeat { padding: 10px 12px; gap: 10px; } .origfeat .of-main b { font-size: 1.3rem; } }
+#titleCard > .origfeat { grid-column: 1 / -1; }
+#titleCard.mddesk > .origfeat { display: none; }
+.md-nav .md-orig { max-width: none; padding: 12px 14px; flex-direction: column; align-items: flex-start; gap: 6px; }
+.md-nav .md-orig .of-tag { font-size: 9px; padding: 2px 5px; }
+.md-nav .md-orig .of-main { width: 100%; }
+.md-nav .md-orig .of-main b { font-size: 1.7rem; }
+.md-nav .md-orig .of-go { position: absolute; right: 14px; top: 12px; font-size: 11px; }
+.md-nav .md-orig .of-main small { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.origwrap { position: fixed; inset: 0; z-index: 9000; background: #050b16; }
+.origwrap[hidden] { display: none; }
+.origwrap iframe { display: block; width: 100%; height: 100%; border: 0; }

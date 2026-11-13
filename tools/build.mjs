@@ -23,6 +23,9 @@ html = html.replace(/<link rel="stylesheet" href="(src\/[^"]+)">/g, (_, p) => `<
 const scripts = [...html.matchAll(/<script src="((?:src|vendor)\/[^"]+)"><\/script>\n?/g)];
 if (!scripts.length) throw new Error('no scripts found in index.html');
 let js = scripts.map(m => `// ---- ${m[1]} ----\n` + read(m[1])).join('\n');
+// The Original (src/original.js) is its own page, src/original.html, inlined as a string (with </ broken up so it can't close this script)
+if (!js.includes("'src/original.html'")) throw new Error('src/original.html not referenced in scripts');
+js = js.split("'src/original.html'").join(JSON.stringify(read('src/original.html')).replace(/<\//g, '<\\/').replace(/<!--/g, '<\\!--'));
 const foeAssets = readdirSync(join(root, 'assets/foes')).filter(f => f.endsWith('.webp')).map(f => 'assets/foes/' + f);
 // the recorded sound effects (src/sfxlist.js names each one)
 let sfxAssets = []; try { sfxAssets = readdirSync(join(root, 'assets/sfx')).filter(f => f.endsWith('.mp3')).map(f => 'assets/sfx/' + f); } catch (e) {}

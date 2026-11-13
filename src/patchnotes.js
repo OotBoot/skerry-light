@@ -6,6 +6,12 @@
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 181, date: '2026-11-13', title: "New: The Original", New: [
+    "The Original: Skerry Light as it began, remade as a flat 2D game for one. Find it in its own Featured spot at the very top of the main menu.",
+    "The Original: you are the keeper. Ships stand in for the harbour through the skerries and can't see the rocks, so swing the lighthouse beam to show them. A ship remembers the rocks you light for as long as her ring holds any light; let it run dry and she forgets them all.",
+    "The Original: ships pick up speed all night with no limit. Ring the fog bell (Space, or double tap on a phone) to slow every ship for a few seconds. Each night brings one more ship; lose three in one night and you start over. Your best night is kept.",
+    "The Original: play with a mouse, the keyboard, a touchscreen or a controller. ‹ Menu or Esc takes you back to the main menu, and your night waits paused until you return." ], Sound: [
+    "The Original: the bell, a chime for every ship safe home and the crunch of a wreck, all following your volume setting." ] },
   { v: 180, date: '2026-11-13', title: "Smoother frame rate on foot", Changes: [
     "Keeper's Last Light, the raids, Fog Run and Freebooters' Sea: rooms, stages and the drowned are now drawn in far fewer pieces. The Lighthouse went from about a thousand separate draws a frame to under three hundred, so it runs noticeably smoother, especially on laptops.",
     "Wreckers' Night: the other wreckers' figures cost much less to draw, and the island's cover is worked out with far less waste each frame, so fights with several players in view hold their frame rate better.",

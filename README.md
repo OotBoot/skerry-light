@@ -16,6 +16,8 @@ The log goes on through 1888. The sea stops being one sea: some nights it freeze
 
 **The main menu on a big screen.** On a desktop or any screen at least 1100 by 620 pixels, the main menu is laid out for a mouse, keyboard and controller: the six games in a list down the left (each with its number), the chosen game's card in full in the middle, and the scoreboard on the right (under the list when the screen is under 1440 pixels wide), with Patch notes and Lore compendium under the list. Click a game, use the up and down arrows in the list, or press 1 to 6 to choose; LB and RB do it on a controller, and Start still presses the chosen game's main button. The last game picked is remembered on this device. Phones, tablets held upright and phones on their side keep the long scrolling menu exactly as before. `src/menudesk.js` builds the list; the layout is "the desk menu" in `src/style.css`.
 
+**The Original.** At the very top of the main menu (on the desk menu, above the list of games) a gold **Featured** banner opens *The Original*: Skerry Light as it began, a flat 2D game for one. You are the keeper in the bottom-left corner, and ships stand in from the top and the left for the harbour in the bottom right. They can't see the rocks: swing the beam (mouse, ← → or A / D, or drag a finger) to light them. Each ship has a ring that fills while your beam is on her and drains over 6 seconds in the dark; while it holds any light she remembers every rock you show her and steers round it, and when it runs dry she forgets them all. Ships gather speed all night with no top speed. The fog bell (Space, or double tap) slows every ship for 4 seconds and swings again after 18. Every night brings one more ship and more rocks; lose three in a night and you start again from night 1. Your best night is kept on this device. A controller works too (stick to swing, A for the bell, B back). ‹ Menu or Esc goes back to the main menu, and the night waits, paused, until you return. The bell, a chime for each ship home and the crunch of a wreck follow the volume setting. The game is its own page, `src/original.html`; `src/original.js` opens it in a frame over the menu and the build inlines it.
+
 The version number sits at the top of the main menu, so you can tell which build you're playing. Under the game banners, **Patch notes** opens a page listing every recent update, newest first, sorted into New, Balance, Changes, Fixes and Sound. Close it with the ✕, Esc, or B on a controller.
 
 ## How to play
@@ -788,6 +790,8 @@ src/gwcapt.js       The Gannet's Wake, Part III: the Quarterdeck (Captain Absalo
 src/raidverity.js   Maren's End: a secret, and the pirate token it pays
 src/verityfx.js     Verity's Wardrobe: the twelve cosmetics he drops, their looks and their sounds
 src/zmegg.js        The Lighthouse's secret, and the pirate tokens it pays (the Gannet's locker)
+src/original.js     The Original: the featured banner on the main menu, and the frame the 2D game plays in
+src/original.html   The Original itself: Skerry Light as it began, a self-contained 2D canvas game
 src/main.js         starts the main loop
 assets/maren.png    Maren cutout
 assets/plimsoll.png Plimsoll cutout

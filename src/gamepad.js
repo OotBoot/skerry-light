@@ -89,6 +89,13 @@ function pollPad(dt) {
   const ax = dz(p.axes[0] || 0), ay = dz(p.axes[1] || 0);
   const lt = p.buttons[6] ? p.buttons[6].value : 0, rt = p.buttons[7] ? p.buttons[7].value : 0;
 
+  // The Original (src/original.js) open over the menu: the stick and A go to it, B goes back
+  if (typeof origIsOpen === 'function' && origIsOpen()) {
+    hideCursor();
+    try { const w = ORIG.frame.contentWindow; if (w.ORIG_PAD) w.ORIG_PAD(ax, down(0)); } catch (e) {}
+    if (down(1)) origClose();
+    PAD.prev = now; return;
+  }
   if (state === 'play' && activeOverlay() === null && !(typeof NET !== 'undefined' && NET.watch)) {
     hideCursor();
     // in a crew, LB held turns the D-pad into the four quick hails (up, right, down, left) instead of the helm

@@ -51,6 +51,11 @@ function mdApply() {
   const nav = document.createElement('nav'); nav.className = 'md-nav'; nav.setAttribute('aria-label', 'Games');
   nav.innerHTML = '<div class="md-brand"><span class="md-word">Skerry Light</span><span class="md-hint">Choose a game · ↑ ↓ or 1–7</span></div><div class="md-list" role="tablist" aria-orientation="vertical"></div>';
   const list = nav.querySelector('.md-list');
+  // The Original (src/original.js) has its own featured spot above the list: not a tab, it opens straight into the game
+  const of = document.createElement('button'); of.type = 'button'; of.className = 'origfeat md-orig'; of.id = 'origDesk';
+  of.innerHTML = '<span class="of-tag">Featured</span><span class="of-main"><b>The Original</b><small>Skerry Light as it began, in 2D</small></span><span class="of-go" aria-hidden="true">Play ›</span>';
+  of.addEventListener('click', () => { if (typeof origOpen === 'function') origOpen(); });
+  list.before(of);
   MD_GAMES.forEach((g, i) => {
     const card = document.getElementById(g.id); if (!card) return;
     const h = card.querySelector('h1'), name = h ? h.textContent.trim() : g.id;
