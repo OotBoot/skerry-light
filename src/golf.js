@@ -420,13 +420,17 @@ function gfKey(e, down) {
   else if (k === ' ' || k === 'Enter') { e.preventDefault(); if (!$('gfCard').hidden && GF.over) return; gfPress(); }
   else if (k === 'Tab') { e.preventDefault(); gfCardShow($('gfCard').hidden, true); }
   else if (k === 'm' || k === 'M' || k === 'v' || k === 'V') gfLook();
+  else if (k === 'h' || k === 'H') gfHeat();
 }
 // the view from above the hole, and back
+// on or by the green, so the slopes (and the Slope heat map, if it's on) are worth showing
+function gfOnGreen() { const p = gfPlayer(), club = GF_CLUBS[GF.club]; return !!(GF.H && p && !p.done && (p.lie === 'green' || p.lie === 'fringe' || (club.putt && gfToPin(p) < 30)) && GF.ph !== 'card'); }
+function gfHeat() { GF.heat = !GF.heat; const st = gfStore.get(); st.heat = GF.heat; gfStore.set(st); gfSnd('tick'); gfHud(true); }
 function gfLook() { if (GF.ph !== 'aim') return; GF.view = GF.view === 'look' ? 'aim' : 'look'; }
 addEventListener('keydown', e => gfKey(e, true), true);
 addEventListener('keyup', e => gfKey(e, false), true);
 // a controller: the stick or the D-pad aims (left, right) and picks the club (up, down), A swings, X the view from
-// above, Y the scorecard, LB and RB the putter's scale, Start the menu
+// above, Y the scorecard, LB and RB the putter's scale, Back the Slope heat map, Start the menu
 function gfPadPoll(dt) {
   const p = typeof firstPad === 'function' ? firstPad() : null; if (!p) { GF.padAx = 0; return; }
   const now = p.buttons.map(b => b.pressed), prev = GF.padPrev || [], down = i => now[i] && !prev[i]; GF.padPrev = now;
@@ -439,7 +443,7 @@ function gfPadPoll(dt) {
   if (down(4)) gfPuttStep(-1); if (down(5)) gfPuttStep(1);
   const lt = p.buttons[6] ? p.buttons[6].value : 0, rt = p.buttons[7] ? p.buttons[7].value : 0; if (lt > 0.2 || rt > 0.2) gfSetPow(GF.pw + (rt - lt) * dt * 0.6);
   if (down(0)) { if (!$('gfCard').hidden && GF.over) $('gfCardMenu').click(); else gfPress(); }
-  if (down(2)) gfLook();
+  if (down(2)) gfLook(); if (down(8)) gfHeat();
   if (down(3)) gfCardShow($('gfCard').hidden, true);
   if (down(9)) gfPauseOpen(true);
   if (down(1) && !$('gfCard').hidden && !GF.over) gfCardShow(false, true);
@@ -544,6 +548,7 @@ function gfDebugShot(club, power, acc, aim) { if (GF.ph !== 'aim') return null; 
   $('gfPuttDn').addEventListener('click', () => gfPuttStep(-1)); $('gfPuttUp').addEventListener('click', () => gfPuttStep(1));
   $('gfSwing').addEventListener('pointerdown', e => { e.preventDefault(); gfPress(); });
   $('gfLookBtn').addEventListener('click', gfLook);
+  $('gfHeatBtn').addEventListener('click', gfHeat); GF.heat = !!st.heat;
   $('gfPow').addEventListener('input', () => gfSetPow(+$('gfPow').value / 100));
   for (const t of ['pointerdown', 'keydown']) $('gfPow').addEventListener(t, e => e.stopPropagation());
   $('gfCardBtn').addEventListener('click', () => gfCardShow($('gfCard').hidden, true));

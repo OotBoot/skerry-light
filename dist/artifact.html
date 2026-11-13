@@ -1344,7 +1344,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 .gf-cname b { display: block; font-family: var(--display); font-weight: 400; font-size: 1.25rem; color: var(--lamp); }
 .gf-cname small { color: var(--muted); font-size: 12px; }
 .gf-putt { grid-column: 1; grid-row: 3; justify-self: start; display: flex; align-items: center; gap: 8px; background: rgba(8,12,22,0.72); border: 1px solid rgba(236,228,207,0.16); padding: 4px 8px; font-size: 13px; }
-#gfMeter { grid-column: 3; grid-row: 1 / 4; justify-self: end; width: min(100%, 340px); height: 180px; pointer-events: none; margin-bottom: 34px; }
+#gfMeter { grid-column: 3; grid-row: 1 / 4; justify-self: end; width: min(100%, 340px); height: 180px; pointer-events: none; margin-bottom: 124px; }
 .gf-aim { grid-column: 2; grid-row: 2; align-self: end; display: flex; gap: 8px; justify-content: center; }
 .gf-hint { grid-column: 2; grid-row: 3; margin: 0; text-align: center; font-size: 12px; color: var(--muted); text-shadow: 0 1px 4px #000; pointer-events: none; }
 .gfbtn { font: inherit; font-size: 18px; color: var(--ink); background: rgba(8,12,22,0.82); border: 1px solid rgba(236,228,207,0.3); padding: 8px 14px; cursor: pointer; min-width: 48px; touch-action: none; }
@@ -1386,6 +1386,12 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 .gf-pow output { color: #9be36a; margin-left: 6px; }
 .gf-pow input { width: 100%; accent-color: #3fd44a; height: 26px; touch-action: none; }
 @media (max-width: 720px) { .gf-pow { grid-column: 1; grid-row: 5; justify-self: start; width: calc(100% - 96px); max-width: 320px; margin-bottom: 0; } }
+.gf-heatkey { position: absolute; right: 12px; top: 318px; display: grid; grid-template-columns: auto 120px auto; align-items: center; gap: 6px; background: rgba(8,12,22,0.72); border: 1px solid rgba(236,228,207,0.16); padding: 6px 10px; font-size: 11px; color: var(--muted); pointer-events: none; }
+.gf-heatkey i { height: 8px; background: linear-gradient(90deg, rgb(40,90,220), rgb(40,190,230), rgb(70,210,90), rgb(240,220,60), rgb(240,120,40), rgb(215,40,40)); }
+.gf-heatkey small { grid-column: 1 / -1; text-align: center; font-size: 10px; letter-spacing: 0.06em; }
+.gf-heatkey[hidden], #gfHeatBtn[hidden] { display: none; }
+#gfHeatBtn[aria-pressed="true"] { background: #3fd44a; color: #0b1a0c; }
+@media (max-width: 720px) { .gf-heatkey { top: 324px; } }
 </style>
 <div id="stage">
   <canvas id="bg" class="under" aria-hidden="true"></canvas>
@@ -1820,7 +1826,8 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
       <div class="gf-aim"><button class="gfbtn" id="gfAimL" type="button" aria-label="Aim left">◀</button><button class="gfbtn swing" id="gfSwing" type="button">Swing</button><button class="gfbtn" id="gfAimR" type="button" aria-label="Aim right">▶</button></div>
       <p class="gf-hint" id="gfHint"></p>
     </div>
-    <div class="gf-tools"><button class="gfbtn sm" id="gfLookBtn" type="button" title="The hole from above (M)">Map</button><button class="gfbtn sm" id="gfCardBtn" type="button" title="Scorecard (Tab)">Card</button><button class="gfbtn sm" id="gfMenuBtn" type="button" aria-label="Menu" title="Menu (Esc)">☰</button></div>
+    <div class="gf-heatkey" id="gfHeatKey" hidden><span>Low</span><i></i><span>High</span><small>a line every 2.5 cm</small></div>
+    <div class="gf-tools"><button class="gfbtn sm" id="gfHeatBtn" type="button" aria-pressed="false" title="Heat map of the green's slopes (H)">Slope</button><button class="gfbtn sm" id="gfLookBtn" type="button" title="The hole from above (M)">Map</button><button class="gfbtn sm" id="gfCardBtn" type="button" title="Scorecard (Tab)">Card</button><button class="gfbtn sm" id="gfMenuBtn" type="button" aria-label="Menu" title="Menu (Esc)">☰</button></div>
     <div class="overlay pausecard gfcardov" id="gfCard" hidden role="dialog" aria-modal="true" aria-labelledby="gfCardHead">
       <div class="card">
         <h1 id="gfCardHead">Scorecard</h1>
@@ -2252,7 +2259,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 // ---- src/config.js ----
 'use strict';
 // The game's version, shown at the top of the main menu. Bump it by one with every change pushed to main.
-var VERSION = 185;
+var VERSION = 186;
 // Skerry Light: tuning, asset paths and lore.
 // World units are metres. The lighthouse stands at the origin on the shoreline (y = 0);
 // north (+y) is open sea. Bearings: 0 = north, positive = east.
@@ -2381,6 +2388,9 @@ const flashK = () => SETTINGS.flashes === 'reduced' ? 0.3 : 1;
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 186, date: '2026-11-13', title: "Skerry Links: green heat map", New: [
+    "Skerry Links: a Slope toggle for putting (the Slope button, H, or Back on a controller). It colours the green from blue (low) to red (high) with a contour line every 2.5 cm, so you can read the break at a glance. It stays as you left it." ], Changes: [
+    "Skerry Links: the swing meter sits higher on wide screens so the Power bar no longer covers it." ] },
   { v: 185, date: '2026-11-13', title: "Skerry Links: power bar and a new flight camera", New: [
     "Skerry Links: a Power bar for each shot. Drag it (or Z and X, or LT and RT) to set the distance you're going for; it moves a green zone on the swing meter, the landing ring and a crosshair on the map. Stop the meter in the green to hit it that far. It starts at the right power for the distance to the pin." ], Changes: [
     "Skerry Links: the camera now follows the ball in flight from high up behind and off to one side, looking down on it, instead of from just behind." ] },
@@ -55119,13 +55129,17 @@ function gfKey(e, down) {
   else if (k === ' ' || k === 'Enter') { e.preventDefault(); if (!$('gfCard').hidden && GF.over) return; gfPress(); }
   else if (k === 'Tab') { e.preventDefault(); gfCardShow($('gfCard').hidden, true); }
   else if (k === 'm' || k === 'M' || k === 'v' || k === 'V') gfLook();
+  else if (k === 'h' || k === 'H') gfHeat();
 }
 // the view from above the hole, and back
+// on or by the green, so the slopes (and the Slope heat map, if it's on) are worth showing
+function gfOnGreen() { const p = gfPlayer(), club = GF_CLUBS[GF.club]; return !!(GF.H && p && !p.done && (p.lie === 'green' || p.lie === 'fringe' || (club.putt && gfToPin(p) < 30)) && GF.ph !== 'card'); }
+function gfHeat() { GF.heat = !GF.heat; const st = gfStore.get(); st.heat = GF.heat; gfStore.set(st); gfSnd('tick'); gfHud(true); }
 function gfLook() { if (GF.ph !== 'aim') return; GF.view = GF.view === 'look' ? 'aim' : 'look'; }
 addEventListener('keydown', e => gfKey(e, true), true);
 addEventListener('keyup', e => gfKey(e, false), true);
 // a controller: the stick or the D-pad aims (left, right) and picks the club (up, down), A swings, X the view from
-// above, Y the scorecard, LB and RB the putter's scale, Start the menu
+// above, Y the scorecard, LB and RB the putter's scale, Back the Slope heat map, Start the menu
 function gfPadPoll(dt) {
   const p = typeof firstPad === 'function' ? firstPad() : null; if (!p) { GF.padAx = 0; return; }
   const now = p.buttons.map(b => b.pressed), prev = GF.padPrev || [], down = i => now[i] && !prev[i]; GF.padPrev = now;
@@ -55138,7 +55152,7 @@ function gfPadPoll(dt) {
   if (down(4)) gfPuttStep(-1); if (down(5)) gfPuttStep(1);
   const lt = p.buttons[6] ? p.buttons[6].value : 0, rt = p.buttons[7] ? p.buttons[7].value : 0; if (lt > 0.2 || rt > 0.2) gfSetPow(GF.pw + (rt - lt) * dt * 0.6);
   if (down(0)) { if (!$('gfCard').hidden && GF.over) $('gfCardMenu').click(); else gfPress(); }
-  if (down(2)) gfLook();
+  if (down(2)) gfLook(); if (down(8)) gfHeat();
   if (down(3)) gfCardShow($('gfCard').hidden, true);
   if (down(9)) gfPauseOpen(true);
   if (down(1) && !$('gfCard').hidden && !GF.over) gfCardShow(false, true);
@@ -55243,6 +55257,7 @@ function gfDebugShot(club, power, acc, aim) { if (GF.ph !== 'aim') return null; 
   $('gfPuttDn').addEventListener('click', () => gfPuttStep(-1)); $('gfPuttUp').addEventListener('click', () => gfPuttStep(1));
   $('gfSwing').addEventListener('pointerdown', e => { e.preventDefault(); gfPress(); });
   $('gfLookBtn').addEventListener('click', gfLook);
+  $('gfHeatBtn').addEventListener('click', gfHeat); GF.heat = !!st.heat;
   $('gfPow').addEventListener('input', () => gfSetPow(+$('gfPow').value / 100));
   for (const t of ['pointerdown', 'keydown']) $('gfPow').addEventListener(t, e => e.stopPropagation());
   $('gfCardBtn').addEventListener('click', () => gfCardShow($('gfCard').hidden, true));
@@ -55280,11 +55295,12 @@ function gfHud(force) {
     $('gfClubD').textContent = club.putt ? `up to ${GF_PUTTS[GF.putt]} ft` : `${Math.round(club.c * (club.putt ? 1 : lie))} yd${lie < 0.99 ? ' from here' : ''}`;
     $('gfPuttRow').hidden = !club.putt;
     gfPowUi(); $('gfPowRow').hidden = !mine || GF.ph !== 'aim';
+    const og = gfOnGreen(); $('gfHeatBtn').hidden = !og; $('gfHeatBtn').setAttribute('aria-pressed', GF.heat ? 'true' : 'false'); $('gfHeatKey').hidden = !(og && GF.heat);
     $('gfPuttScale').textContent = `${GF_PUTTS[GF.putt]} ft`;
     const others = GF.mode === 'net' && !mine && !p.done;
     $('gfTurn').hidden = !(others || (GF.P.length > 1 && GF.ph === 'aim'));
     $('gfTurn').textContent = others ? `${p.nm} is playing` : `${p.nm}, you're up`;
-    $('gfHint').textContent = GF.ph === 'aim' ? (mine ? (club.putt ? 'Space: putt · ← → aim · Z X power · Q E scale' : 'Space: swing · ← → aim · ↑ ↓ club · Z X power · M map') : '') : GF.ph === 'swing' ? (GF.m && GF.m.s === 1 ? 'Space: set the power' : 'Space: strike on the line') : GF.ph === 'fly' ? 'Space: hurry it along' : GF.ph === 'card' ? (GF.over || (GF.mode === 'net' && typeof gfnCanNext === 'function' && !gfnCanNext()) ? '' : 'Space: next hole') : GF.ph === 'wait' ? 'Waiting for the host…' : '';
+    $('gfHint').textContent = GF.ph === 'aim' ? (mine ? (club.putt ? 'Space: putt · ← → aim · Z X power · Q E scale · H slope' : 'Space: swing · ← → aim · ↑ ↓ club · Z X power · M map') : '') : GF.ph === 'swing' ? (GF.m && GF.m.s === 1 ? 'Space: set the power' : 'Space: strike on the line') : GF.ph === 'fly' ? 'Space: hurry it along' : GF.ph === 'card' ? (GF.over || (GF.mode === 'net' && typeof gfnCanNext === 'function' && !gfnCanNext()) ? '' : 'Space: next hole') : GF.ph === 'wait' ? 'Waiting for the host…' : '';
     $('gfSwing').disabled = !mine && GF.ph !== 'fly' && GF.ph !== 'card';
     $('gfPadBox').classList.toggle('putting', !!club.putt);
   }
@@ -55530,12 +55546,42 @@ function gf3dHole(H) {
   }
   const sg = new THREE.BufferGeometry(); sg.setAttribute('position', new THREE.Float32BufferAttribute(sp, 3)); sg.setAttribute('color', new THREE.Float32BufferAttribute(sc, 3));
   G3.slopes = new THREE.LineSegments(sg, new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.7 })); G3.slopes.visible = false; grp.add(G3.slopes);
+  // the lie of the green as a heat map (shown with the Slope toggle): blue low, red high, a thin line every 2.5 cm of height and a bolder one every 10
+  G3.heat = gf3dHeat(H); grp.add(G3.heat.mesh);
   // the tee markers
   for (const x of [-3.2, 3.2]) { const t = new THREE.Mesh(new THREE.SphereGeometry(0.14, 8, 6), new THREE.MeshLambertMaterial({ color: 0xd8452f })); t.position.copy(gv(x, 1.5, H.teeH + 0.1)); grp.add(t); }
   G3.scene.add(grp);
   G3.pin.position.copy(gv(H.pin[0], H.pin[1], gfH(H, H.pin[0], H.pin[1]))); G3.pinMark.position.copy(gv(H.pin[0], H.pin[1], gfH(H, H.pin[0], H.pin[1]) + 4.5));
   G3.cp = null;
   GF.intro = 2.4;
+}
+function gf3dHeat(H) {
+  const gr = H.gr, R = Math.max(gr[2], gr[3]) + 3, x0 = gr[0] - R, y0 = gr[1] - R, st = 0.25, n = Math.ceil(2 * R / st) + 1, hs = new Float32Array(n * n);
+  let lo = 1e9, hi = -1e9; const off = new Uint8Array(n * n);   // (bunkers and water left uncovered)
+  for (let j = 0; j < n; j++) for (let i = 0; i < n; i++) { const x = x0 + i * st, y = y0 + j * st, h = hs[j * n + i] = gfH(H, x, y), su = gfSurf(H, x, y); off[j * n + i] = su === 'sand' || su === 'water' || su === 'out' || su === 'rock'; if (gfEll(gr, x, y) <= 1) { lo = Math.min(lo, h); hi = Math.max(hi, h); } }
+  const span = Math.max(0.15, hi - lo), ppm = 14, S = Math.ceil(2 * R * ppm), cv = document.createElement('canvas'); cv.width = cv.height = S;
+  const c = cv.getContext('2d'), img = c.createImageData(S, S), D = img.data;
+  const ramp = [[40, 90, 220], [40, 190, 230], [70, 210, 90], [240, 220, 60], [240, 120, 40], [215, 40, 40]];
+  const hAt = (x, y) => { const fx = Math.max(0, Math.min(n - 1.001, (x - x0) / st)), fy = Math.max(0, Math.min(n - 1.001, (y - y0) / st)), i = fx | 0, j = fy | 0, u = fx - i, v = fy - j, k = j * n + i; return (hs[k] * (1 - u) + hs[k + 1] * u) * (1 - v) + (hs[k + n] * (1 - u) + hs[k + n + 1] * u) * v; };
+  for (let py = 0; py < S; py++) for (let px = 0; px < S; px++) {
+    const x = x0 + (px + 0.5) / ppm, y = y0 + 2 * R - (py + 0.5) / ppm, e = gfEll(gr, x, y), o = (py * S + px) * 4;
+    if (e > 1.14 || off[Math.round((y - y0) / st) * n + Math.round((x - x0) / st)]) { D[o + 3] = 0; continue; }
+    const h = hAt(x, y), t = Math.max(0, Math.min(1, (h - lo) / span)) * (ramp.length - 1), a = Math.min(ramp.length - 2, t | 0), f = t - a;
+    let r = ramp[a][0] + (ramp[a + 1][0] - ramp[a][0]) * f, g = ramp[a][1] + (ramp[a + 1][1] - ramp[a][1]) * f, b = ramp[a][2] + (ramp[a + 1][2] - ramp[a][2]) * f;
+    // the contour lines: how close this height is to a whole 2.5 cm, measured in pixels across the slope so the lines stay even
+    const dh = Math.hypot(hAt(x + 0.05, y) - hAt(x - 0.05, y), hAt(x, y + 0.05) - hAt(x, y - 0.05)) / 0.1 / ppm + 1e-6;
+    const q = h / 0.025, d1 = Math.abs(q - Math.round(q)) * 0.025 / dh, q4 = h / 0.1, d4 = Math.abs(q4 - Math.round(q4)) * 0.1 / dh;
+    const line = d4 < 1.1 ? 0.75 : d1 < 0.6 ? 0.4 : 0; r *= 1 - line; g *= 1 - line; b *= 1 - line;
+    D[o] = r; D[o + 1] = g; D[o + 2] = b; D[o + 3] = 255 * (e < 1 ? 0.7 : 0.7 * (1.14 - e) / 0.14);
+  }
+  c.putImageData(img, 0, 0);
+  const tex = new THREE.CanvasTexture(cv); tex.anisotropy = 4;
+  const m = Math.ceil(2 * R / 0.5) + 1, pos = new Float32Array(m * m * 3), uv = new Float32Array(m * m * 2), idx = [];
+  for (let j = 0; j < m; j++) for (let i = 0; i < m; i++) { const k = j * m + i, x = x0 + i * 0.5, y = y0 + j * 0.5; pos[k * 3] = x; pos[k * 3 + 1] = hAt(x, y) + 0.025; pos[k * 3 + 2] = -y; uv[k * 2] = i / (m - 1); uv[k * 2 + 1] = j / (m - 1); if (i < m - 1 && j < m - 1) idx.push(k, k + 1, k + m, k + 1, k + m + 1, k + m); }
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.setAttribute('uv', new THREE.BufferAttribute(uv, 2)); g.setIndex(idx);
+  const mesh = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }));
+  mesh.visible = false; mesh.renderOrder = 1;
+  return { mesh, lo, hi };
 }
 function glHashG(a, b) { const s = Math.sin(a * 127.1 + b * 311.7) * 43758.5453; return s - Math.floor(s); }
 
@@ -55632,7 +55678,7 @@ function gf3dDraw(dt) {
     const ex = p.x + sa * L, ey = p.y + ca * L; G3.ring.position.copy(gv(ex, ey, Math.max(gfH(H, ex, ey), 0) + 0.1)); G3.ring.scale.setScalar(club.putt ? 0.18 : 0.6 + L / 160);
     G3.aimPts.material.size = club.putt ? 0.06 : 0.32;
   }
-  if (G3.slopes) G3.slopes.visible = !!(p && !p.done && (p.lie === 'green' || p.lie === 'fringe' || (club.putt && gfToPin(p) < 30)) && GF.ph !== 'card');
+  const onGreen = gfOnGreen(); if (G3.slopes) G3.slopes.visible = onGreen; if (G3.heat) G3.heat.mesh.visible = onGreen && !!GF.heat;
   gf3dCamera(dt, bp);
   G3.r.render(G3.scene, G3.cam);
 }

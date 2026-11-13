@@ -25,11 +25,12 @@ function gfHud(force) {
     $('gfClubD').textContent = club.putt ? `up to ${GF_PUTTS[GF.putt]} ft` : `${Math.round(club.c * (club.putt ? 1 : lie))} yd${lie < 0.99 ? ' from here' : ''}`;
     $('gfPuttRow').hidden = !club.putt;
     gfPowUi(); $('gfPowRow').hidden = !mine || GF.ph !== 'aim';
+    const og = gfOnGreen(); $('gfHeatBtn').hidden = !og; $('gfHeatBtn').setAttribute('aria-pressed', GF.heat ? 'true' : 'false'); $('gfHeatKey').hidden = !(og && GF.heat);
     $('gfPuttScale').textContent = `${GF_PUTTS[GF.putt]} ft`;
     const others = GF.mode === 'net' && !mine && !p.done;
     $('gfTurn').hidden = !(others || (GF.P.length > 1 && GF.ph === 'aim'));
     $('gfTurn').textContent = others ? `${p.nm} is playing` : `${p.nm}, you're up`;
-    $('gfHint').textContent = GF.ph === 'aim' ? (mine ? (club.putt ? 'Space: putt · ← → aim · Z X power · Q E scale' : 'Space: swing · ← → aim · ↑ ↓ club · Z X power · M map') : '') : GF.ph === 'swing' ? (GF.m && GF.m.s === 1 ? 'Space: set the power' : 'Space: strike on the line') : GF.ph === 'fly' ? 'Space: hurry it along' : GF.ph === 'card' ? (GF.over || (GF.mode === 'net' && typeof gfnCanNext === 'function' && !gfnCanNext()) ? '' : 'Space: next hole') : GF.ph === 'wait' ? 'Waiting for the host…' : '';
+    $('gfHint').textContent = GF.ph === 'aim' ? (mine ? (club.putt ? 'Space: putt · ← → aim · Z X power · Q E scale · H slope' : 'Space: swing · ← → aim · ↑ ↓ club · Z X power · M map') : '') : GF.ph === 'swing' ? (GF.m && GF.m.s === 1 ? 'Space: set the power' : 'Space: strike on the line') : GF.ph === 'fly' ? 'Space: hurry it along' : GF.ph === 'card' ? (GF.over || (GF.mode === 'net' && typeof gfnCanNext === 'function' && !gfnCanNext()) ? '' : 'Space: next hole') : GF.ph === 'wait' ? 'Waiting for the host…' : '';
     $('gfSwing').disabled = !mine && GF.ph !== 'fly' && GF.ph !== 'card';
     $('gfPadBox').classList.toggle('putting', !!club.putt);
   }

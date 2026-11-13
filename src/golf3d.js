@@ -139,12 +139,42 @@ function gf3dHole(H) {
   }
   const sg = new THREE.BufferGeometry(); sg.setAttribute('position', new THREE.Float32BufferAttribute(sp, 3)); sg.setAttribute('color', new THREE.Float32BufferAttribute(sc, 3));
   G3.slopes = new THREE.LineSegments(sg, new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.7 })); G3.slopes.visible = false; grp.add(G3.slopes);
+  // the lie of the green as a heat map (shown with the Slope toggle): blue low, red high, a thin line every 2.5 cm of height and a bolder one every 10
+  G3.heat = gf3dHeat(H); grp.add(G3.heat.mesh);
   // the tee markers
   for (const x of [-3.2, 3.2]) { const t = new THREE.Mesh(new THREE.SphereGeometry(0.14, 8, 6), new THREE.MeshLambertMaterial({ color: 0xd8452f })); t.position.copy(gv(x, 1.5, H.teeH + 0.1)); grp.add(t); }
   G3.scene.add(grp);
   G3.pin.position.copy(gv(H.pin[0], H.pin[1], gfH(H, H.pin[0], H.pin[1]))); G3.pinMark.position.copy(gv(H.pin[0], H.pin[1], gfH(H, H.pin[0], H.pin[1]) + 4.5));
   G3.cp = null;
   GF.intro = 2.4;
+}
+function gf3dHeat(H) {
+  const gr = H.gr, R = Math.max(gr[2], gr[3]) + 3, x0 = gr[0] - R, y0 = gr[1] - R, st = 0.25, n = Math.ceil(2 * R / st) + 1, hs = new Float32Array(n * n);
+  let lo = 1e9, hi = -1e9; const off = new Uint8Array(n * n);   // (bunkers and water left uncovered)
+  for (let j = 0; j < n; j++) for (let i = 0; i < n; i++) { const x = x0 + i * st, y = y0 + j * st, h = hs[j * n + i] = gfH(H, x, y), su = gfSurf(H, x, y); off[j * n + i] = su === 'sand' || su === 'water' || su === 'out' || su === 'rock'; if (gfEll(gr, x, y) <= 1) { lo = Math.min(lo, h); hi = Math.max(hi, h); } }
+  const span = Math.max(0.15, hi - lo), ppm = 14, S = Math.ceil(2 * R * ppm), cv = document.createElement('canvas'); cv.width = cv.height = S;
+  const c = cv.getContext('2d'), img = c.createImageData(S, S), D = img.data;
+  const ramp = [[40, 90, 220], [40, 190, 230], [70, 210, 90], [240, 220, 60], [240, 120, 40], [215, 40, 40]];
+  const hAt = (x, y) => { const fx = Math.max(0, Math.min(n - 1.001, (x - x0) / st)), fy = Math.max(0, Math.min(n - 1.001, (y - y0) / st)), i = fx | 0, j = fy | 0, u = fx - i, v = fy - j, k = j * n + i; return (hs[k] * (1 - u) + hs[k + 1] * u) * (1 - v) + (hs[k + n] * (1 - u) + hs[k + n + 1] * u) * v; };
+  for (let py = 0; py < S; py++) for (let px = 0; px < S; px++) {
+    const x = x0 + (px + 0.5) / ppm, y = y0 + 2 * R - (py + 0.5) / ppm, e = gfEll(gr, x, y), o = (py * S + px) * 4;
+    if (e > 1.14 || off[Math.round((y - y0) / st) * n + Math.round((x - x0) / st)]) { D[o + 3] = 0; continue; }
+    const h = hAt(x, y), t = Math.max(0, Math.min(1, (h - lo) / span)) * (ramp.length - 1), a = Math.min(ramp.length - 2, t | 0), f = t - a;
+    let r = ramp[a][0] + (ramp[a + 1][0] - ramp[a][0]) * f, g = ramp[a][1] + (ramp[a + 1][1] - ramp[a][1]) * f, b = ramp[a][2] + (ramp[a + 1][2] - ramp[a][2]) * f;
+    // the contour lines: how close this height is to a whole 2.5 cm, measured in pixels across the slope so the lines stay even
+    const dh = Math.hypot(hAt(x + 0.05, y) - hAt(x - 0.05, y), hAt(x, y + 0.05) - hAt(x, y - 0.05)) / 0.1 / ppm + 1e-6;
+    const q = h / 0.025, d1 = Math.abs(q - Math.round(q)) * 0.025 / dh, q4 = h / 0.1, d4 = Math.abs(q4 - Math.round(q4)) * 0.1 / dh;
+    const line = d4 < 1.1 ? 0.75 : d1 < 0.6 ? 0.4 : 0; r *= 1 - line; g *= 1 - line; b *= 1 - line;
+    D[o] = r; D[o + 1] = g; D[o + 2] = b; D[o + 3] = 255 * (e < 1 ? 0.7 : 0.7 * (1.14 - e) / 0.14);
+  }
+  c.putImageData(img, 0, 0);
+  const tex = new THREE.CanvasTexture(cv); tex.anisotropy = 4;
+  const m = Math.ceil(2 * R / 0.5) + 1, pos = new Float32Array(m * m * 3), uv = new Float32Array(m * m * 2), idx = [];
+  for (let j = 0; j < m; j++) for (let i = 0; i < m; i++) { const k = j * m + i, x = x0 + i * 0.5, y = y0 + j * 0.5; pos[k * 3] = x; pos[k * 3 + 1] = hAt(x, y) + 0.025; pos[k * 3 + 2] = -y; uv[k * 2] = i / (m - 1); uv[k * 2 + 1] = j / (m - 1); if (i < m - 1 && j < m - 1) idx.push(k, k + 1, k + m, k + 1, k + m + 1, k + m); }
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.setAttribute('uv', new THREE.BufferAttribute(uv, 2)); g.setIndex(idx);
+  const mesh = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }));
+  mesh.visible = false; mesh.renderOrder = 1;
+  return { mesh, lo, hi };
 }
 function glHashG(a, b) { const s = Math.sin(a * 127.1 + b * 311.7) * 43758.5453; return s - Math.floor(s); }
 
@@ -241,7 +271,7 @@ function gf3dDraw(dt) {
     const ex = p.x + sa * L, ey = p.y + ca * L; G3.ring.position.copy(gv(ex, ey, Math.max(gfH(H, ex, ey), 0) + 0.1)); G3.ring.scale.setScalar(club.putt ? 0.18 : 0.6 + L / 160);
     G3.aimPts.material.size = club.putt ? 0.06 : 0.32;
   }
-  if (G3.slopes) G3.slopes.visible = !!(p && !p.done && (p.lie === 'green' || p.lie === 'fringe' || (club.putt && gfToPin(p) < 30)) && GF.ph !== 'card');
+  const onGreen = gfOnGreen(); if (G3.slopes) G3.slopes.visible = onGreen; if (G3.heat) G3.heat.mesh.visible = onGreen && !!GF.heat;
   gf3dCamera(dt, bp);
   G3.r.render(G3.scene, G3.cam);
 }
