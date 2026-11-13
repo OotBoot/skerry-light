@@ -2297,7 +2297,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 // ---- src/config.js ----
 'use strict';
 // The game's version, shown at the top of the main menu. Bump it by one with every change pushed to main.
-var VERSION = 188;
+var VERSION = 189;
 // Skerry Light: tuning, asset paths and lore.
 // World units are metres. The lighthouse stands at the origin on the shoreline (y = 0);
 // north (+y) is open sea. Bearings: 0 = north, positive = east.
@@ -2426,6 +2426,10 @@ const flashK = () => SETTINGS.flashes === 'reduced' ? 0.3 : 1;
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 189, date: '2026-11-13', title: "Skerry Links: from midday to night, and the Light", New: [
+    "Skerry Links: the round now runs through the day. The 1st is played at midday, the sun drops hole by hole, the 6th is played at sunset, and the 7th, 8th and 9th by moonlight under the stars.",
+    "Skerry Links: Skerry Light stands off in the distance from every hole, on its rock out at sea (or on a far hill from the inland holes). By day its lamp is dark. From sunset it turns, its two beams sweeping round with a flash as one swings towards you, and the keeper's window is lit.",
+    "Skerry Links: out beyond the Light lies a reef of skerries, and ships come in past it on the far side, keeping well clear. After dark they show their lanterns." ] },
   { v: 188, date: '2026-11-13', title: "Skerry Links: ball and club crates, and your outfit on the course", New: [
     "Skerry Links: your golfer now wears the outfit you've chosen from the Tailor's Crate, hat and all, shimmering, glowing or alight just as on the island. Online, everyone sees each other's.",
     "Skerry Links: Ball crates. The Chandler's Crate holds one of 18 balls across all five grades. Bosun balls leave a coloured trail, Mate balls shimmer and throw sparks, Captain balls glow, and the three Admiral balls are alive: The Skerry Light, The Maelstrom and Verity's Grin.",
@@ -55489,13 +55493,13 @@ function gf3dInit() {
   S.fog = new THREE.Fog(0xdcc7a2, 260, 1500);
   G3.cam = new THREE.PerspectiveCamera(52, 1, 0.1, 6000);
   // late afternoon: a low warm sun out to sea, the sky light from above
-  S.add(new THREE.HemisphereLight(0xd8e6ff, 0x4e5a38, 0.85));
+  G3.hemi = new THREE.HemisphereLight(0xd8e6ff, 0x4e5a38, 0.85); S.add(G3.hemi);
   const sun = G3.sun = new THREE.DirectionalLight(0xffe0b0, 1.05); sun.position.set(-0.55, 0.42, -0.72).multiplyScalar(100); S.add(sun);
   // the sky: blue overhead to a warm haze at the horizon, brighter towards the sun
   const sky = new THREE.Mesh(new THREE.SphereGeometry(4500, 24, 16), new THREE.ShaderMaterial({ side: THREE.BackSide, depthWrite: false, fog: false,
-    uniforms: { sd: { value: sun.position.clone().normalize() } },
+    uniforms: { sd: { value: sun.position.clone().normalize() }, top: { value: new THREE.Color(0.36, 0.55, 0.78) }, hor: { value: new THREE.Color(0.92, 0.8, 0.62) }, glow: { value: new THREE.Color(1, 0.78, 0.45) }, night: { value: 0 } },
     vertexShader: 'varying vec3 vd; void main(){ vd = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
-    fragmentShader: 'uniform vec3 sd; varying vec3 vd; void main(){ float h = clamp(vd.y, -0.1, 1.0); vec3 top = vec3(0.36, 0.55, 0.78), hor = vec3(0.92, 0.80, 0.62); vec3 c = mix(hor, top, pow(max(h, 0.0), 0.55)); float s = max(dot(vd, sd), 0.0); c += vec3(1.0, 0.78, 0.45) * (pow(s, 9.0) * 0.35 + pow(s, 400.0) * 1.2); gl_FragColor = vec4(c, 1.0); }' }));
+    fragmentShader: 'uniform vec3 sd, top, hor, glow; uniform float night; varying vec3 vd; void main(){ float h = clamp(vd.y, -0.1, 1.0); vec3 c = mix(hor, top, pow(max(h, 0.0), 0.55)); float s = max(dot(vd, sd), 0.0); c += glow * (pow(s, 9.0) * mix(0.35, 0.08, night) + pow(s, 400.0) * mix(1.2, 0.0, night)); gl_FragColor = vec4(c, 1.0); }' }));
   sky.renderOrder = -1; S.add(sky); G3.sky = sky;
   // the sea
   const sea = G3.sea = new THREE.Mesh(new THREE.PlaneGeometry(9000, 9000), new THREE.MeshPhongMaterial({ color: 0x2b6a80, specular: 0xffe6b8, shininess: 70, transparent: true, opacity: 0.86 }));
@@ -55616,6 +55620,7 @@ function gf3dHole(H) {
   G3.scene.add(grp);
   G3.pin.position.copy(gv(H.pin[0], H.pin[1], gfH(H, H.pin[0], H.pin[1]))); G3.pinMark.position.copy(gv(H.pin[0], H.pin[1], gfH(H, H.pin[0], H.pin[1]) + 4.5));
   G3.cp = null;
+  if (typeof gfSkyHole === 'function') gfSkyHole(H);
   GF.intro = 2.4;
 }
 function gf3dHeat(H) {
@@ -55743,6 +55748,7 @@ function gf3dDraw(dt) {
   }
   const onGreen = gfOnGreen(); if (G3.slopes) G3.slopes.visible = onGreen; if (G3.heat) G3.heat.mesh.visible = onGreen && !!GF.heat;
   gf3dCamera(dt, bp);
+  if (typeof gfSkyTick === 'function') gfSkyTick(dt, t);
   G3.r.render(G3.scene, G3.cam);
 }
 // the camera: behind the ball down the aim when it's your go, chasing the ball in flight, high over the hole to look
@@ -55779,6 +55785,178 @@ function gf3dCamera(dt, bp) {
   const gz = gfH(H, G3.cp.x, -G3.cp.z); if (G3.cp.y < Math.max(gz, 0) + 0.8) G3.cp.y = Math.max(gz, 0) + 0.8;
   G3.cam.position.copy(G3.cp); G3.cam.lookAt(G3.cl);
   G3.yaw = Math.atan2(G3.cl.x - G3.cp.x, -(G3.cl.z - G3.cp.z));
+}
+
+// ---- src/golfsky.js ----
+'use strict';
+// Skerry Links: the time of day and the lighthouse.
+// The round runs from midday on the 1st to night on the 7th, 8th and 9th: each hole has its own light (gfTod), the sun
+// lower and warmer hole by hole, a sunset on the 6th, then the moon and the stars. Off in the distance stands Skerry
+// Light on its rock, white with two red bands. By day its lamp is dark; from sunset on it turns, two beams sweeping
+// round, and ships with their lanterns lit come in along the channel it marks, keeping well outside the skerries
+// (a reef of black rocks further out). Each hole is its own frame, so the lighthouse is set for each: out to sea in
+// the direction nearest a little right of the line of play, or, on the inland holes, on high ground far off.
+// Far things wear no scene fog (it would wash them out at a kilometre); their colours are hazed by hand instead.
+
+// the light at key points through the round (f: 0 the 1st hole, 1 the 9th), mixed between for each hole
+const GF_TOD_KEYS = [
+  { f: 0, el: 62, sun: [1, 0.97, 0.9], sunI: 0.82, hemi: [0.84, 0.9, 1], gnd: [0.31, 0.35, 0.22], hemiI: 0.74, top: [0.28, 0.5, 0.86], hor: [0.78, 0.86, 0.94], glow: [1, 0.95, 0.8], fog: [0.8, 0.86, 0.9], sea: [0.15, 0.42, 0.53], spec: [1, 1, 0.95], star: 0, beam: 0 },
+  { f: 0.3, el: 40, sun: [1, 0.93, 0.8], sunI: 0.95, hemi: [0.85, 0.9, 1], gnd: [0.31, 0.35, 0.22], hemiI: 0.8, top: [0.32, 0.53, 0.82], hor: [0.86, 0.84, 0.76], glow: [1, 0.85, 0.6], fog: [0.84, 0.81, 0.72], sea: [0.16, 0.41, 0.5], spec: [1, 0.95, 0.8], star: 0, beam: 0 },
+  { f: 0.5, el: 20, sun: [1, 0.86, 0.66], sunI: 1.05, hemi: [0.85, 0.89, 1], gnd: [0.31, 0.35, 0.22], hemiI: 0.82, top: [0.36, 0.55, 0.78], hor: [0.92, 0.8, 0.62], glow: [1, 0.78, 0.45], fog: [0.86, 0.78, 0.64], sea: [0.17, 0.41, 0.5], spec: [1, 0.9, 0.72], star: 0, beam: 0 },
+  { f: 0.625, el: 4, sun: [1, 0.62, 0.36], sunI: 0.85, hemi: [0.92, 0.8, 0.82], gnd: [0.3, 0.29, 0.22], hemiI: 0.88, top: [0.28, 0.33, 0.55], hor: [0.98, 0.6, 0.38], glow: [1, 0.55, 0.28], fog: [0.62, 0.48, 0.44], sea: [0.17, 0.3, 0.4], spec: [1, 0.66, 0.4], star: 0.15, beam: 1 },
+  { f: 0.75, el: 34, moon: 1, sun: [0.62, 0.72, 1], sunI: 0.5, hemi: [0.5, 0.6, 0.9], gnd: [0.2, 0.22, 0.2], hemiI: 0.78, top: [0.03, 0.05, 0.13], hor: [0.1, 0.13, 0.24], glow: [0.75, 0.82, 1], fog: [0.08, 0.1, 0.18], sea: [0.06, 0.12, 0.2], spec: [0.09, 0.1, 0.15], star: 1, beam: 1 },
+  { f: 1, el: 40, moon: 1, sun: [0.6, 0.7, 1], sunI: 0.48, hemi: [0.48, 0.58, 0.88], gnd: [0.19, 0.21, 0.19], hemiI: 0.75, top: [0.02, 0.035, 0.1], hor: [0.08, 0.1, 0.2], glow: [0.75, 0.82, 1], fog: [0.06, 0.08, 0.15], sea: [0.05, 0.1, 0.17], spec: [0.08, 0.09, 0.14], star: 1, beam: 1 },
+];
+function gfTod(i) {
+  const f = Math.max(0, Math.min(1, i / 8)), K = GF_TOD_KEYS;
+  let a = K[K.length - 1], b = a;
+  for (let k = 0; k < K.length - 1; k++) if (f >= K[k].f && f < K[k + 1].f) { a = K[k]; b = K[k + 1]; break; }
+  // (the sun doesn't fade into the moon: the moon's keys stand apart)
+  if (!a.moon && b.moon) b = a;
+  const u = b === a ? 0 : (f - a.f) / (b.f - a.f), mix = (x, y) => Array.isArray(x) ? x.map((v, j) => v + (y[j] - v) * u) : x + (y - x) * u, o = {};
+  for (const k in a) if (k !== 'f') o[k] = mix(a[k], b[k] != null ? b[k] : a[k]);
+  o.moon = !!a.moon; return o;
+}
+
+// ---------- building it all, once ----------
+function gfSkyInit() {
+  if (G3.lh) return;
+  const S = G3.scene, haze = G3.haze = [];
+  const M = (hex, o) => { const m = new THREE.MeshLambertMaterial(Object.assign({ color: hex, fog: false }, o || {})); haze.push([m, new THREE.Color(hex)]); return m; };
+  const lh = G3.lh = new THREE.Group();
+  // the rock it stands on, and the tower: whitewashed with two red bands, the gallery, the lantern and its red dome
+  G3.mound = new THREE.Mesh(new THREE.SphereGeometry(1, 28, 10, 0, Math.PI * 2, 0, Math.PI / 2), M(0x557a3c)); G3.mound.scale.set(120, 26, 105); G3.mound.position.y = -24; lh.add(G3.mound);
+  const rock = new THREE.Mesh(new THREE.DodecahedronGeometry(22, 1), M(0x3d3a36, { flatShading: true })); rock.scale.set(1.4, 0.5, 1.1); rock.position.y = -2; lh.add(rock);
+  const tw = new THREE.Mesh(new THREE.CylinderGeometry(3.4, 4.8, 36, 18), M(0xf1ede2)); tw.position.y = 26; lh.add(tw);
+  for (const y of [17, 31]) { const band = new THREE.Mesh(new THREE.CylinderGeometry(4.6 - (y - 8) * 0.04, 4.6 - (y - 8) * 0.04 + 0.12, 4.2, 18), M(0xb23a2c)); band.position.y = y; lh.add(band); }
+  const gal = new THREE.Mesh(new THREE.CylinderGeometry(4.8, 4.8, 0.9, 18), M(0x2a2826)); gal.position.y = 44.4; lh.add(gal);
+  G3.lamp = new THREE.Mesh(new THREE.CylinderGeometry(2.7, 2.7, 4, 14), new THREE.MeshBasicMaterial({ color: 0x9fb2b8, fog: false })); G3.lamp.position.y = 47; lh.add(G3.lamp);
+  const dome = new THREE.Mesh(new THREE.SphereGeometry(3, 14, 8, 0, Math.PI * 2, 0, Math.PI / 2), M(0x9c3326)); dome.position.y = 49; lh.add(dome);
+  const ck = new THREE.Mesh(new THREE.BoxGeometry(11, 5, 7), M(0xe4ddcc)); ck.position.set(13, 6.5, 4); lh.add(ck);
+  const rf = new THREE.Mesh(new THREE.ConeGeometry(7.2, 3.6, 4), M(0x5a3a30)); rf.rotation.y = Math.PI / 4; rf.scale.set(1.1, 1, 0.75); rf.position.set(13, 10.8, 4); lh.add(rf);
+  G3.cottageWin = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 1.4), new THREE.MeshBasicMaterial({ color: 0x3a3a3a, fog: false })); G3.cottageWin.position.set(13, 6.6, 7.55); lh.add(G3.cottageWin);
+  // the beams: two long cones of light from the lantern, brightest at the lamp and fading out along their length
+  const BL = 900, bg = new THREE.ConeGeometry(30, BL, 20, 1, true); bg.translate(0, -BL / 2, 0); bg.rotateZ(Math.PI / 2);
+  const bm = G3.beamMat = new THREE.ShaderMaterial({ transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, fog: false,
+    uniforms: { k: { value: 0 }, L: { value: BL } },
+    vertexShader: 'uniform float L; varying float a; void main(){ a = clamp(position.x / L, 0.0, 1.0); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+    fragmentShader: 'uniform float k; varying float a; void main(){ float v = pow(1.0 - a, 2.2) * 0.42 * k; gl_FragColor = vec4(vec3(1.0, 0.93, 0.72) * v, 1.0); }' });
+  const beams = G3.beams = new THREE.Group(); beams.position.y = 47;
+  for (const r of [0, Math.PI]) { const b = new THREE.Mesh(bg, bm); b.rotation.y = r; b.rotation.z = -0.025; beams.add(b); }
+  lh.add(beams);
+  // the lamp's glow, and its flash as a beam comes round towards you
+  const gc = document.createElement('canvas'); gc.width = gc.height = 64; { const x = gc.getContext('2d'), g = x.createRadialGradient(32, 32, 0, 32, 32, 32); g.addColorStop(0, 'rgba(255,250,225,1)'); g.addColorStop(0.25, 'rgba(255,225,150,0.6)'); g.addColorStop(1, 'rgba(255,200,120,0)'); x.fillStyle = g; x.fillRect(0, 0, 64, 64); }
+  const glowT = G3.glowT = new THREE.CanvasTexture(gc);
+  G3.glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowT, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, fog: false })); G3.glow.position.y = 47; lh.add(G3.glow);
+  S.add(lh);
+  // the skerries: a reef of low black rocks out beyond the light, the surf white round them by day
+  const sk = G3.skerries = new THREE.Group(), skM = M(0x24221f, { flatShading: true }), surf = new THREE.MeshBasicMaterial({ color: 0xdfe8ea, transparent: true, opacity: 0.55, fog: false });
+  const r = gfRng(4242);
+  for (let k = 0; k < 9; k++) {
+    const m = new THREE.Mesh(new THREE.DodecahedronGeometry(1, 0), skM), s = 5 + r() * 9;
+    m.scale.set(s * (1 + r()), s * 0.45, s); m.rotation.y = r() * 6; m.userData.p = [(r() - 0.5) * 70, -130 + k * 34 + (r() - 0.5) * 16]; sk.add(m);
+    const ring = new THREE.Mesh(new THREE.RingGeometry(s * 1.3, s * 1.9, 18), surf); ring.rotation.x = -Math.PI / 2; ring.position.y = 0.3; ring.userData.of = m; sk.add(ring);
+  }
+  S.add(sk);
+  // the ships: a hull, a mast or two, sails, and a lantern at the stern and the masthead, lit after dark
+  G3.ships = [];
+  for (let k = 0; k < 3; k++) {
+    const sh = new THREE.Group(), hull = new THREE.Mesh(new THREE.BoxGeometry(5, 4, 20), M(0x4a3122)); hull.position.y = 1.5; sh.add(hull);
+    const bow = new THREE.Mesh(new THREE.ConeGeometry(2.5, 6, 4), M(0x4a3122)); bow.rotation.x = Math.PI / 2; bow.rotation.y = Math.PI / 4; bow.scale.set(1, 1, 0.8); bow.position.set(0, 1.5, 12.8); sh.add(bow);
+    for (const [z, h] of [[4, 22], [-5, 18]]) {
+      const mast = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.35, h, 5), M(0x3b2a1f)); mast.position.set(0, 3 + h / 2, z); sh.add(mast);
+      const sail = new THREE.Mesh(new THREE.PlaneGeometry(10, h * 0.62), M(0xe9e1cc, { side: THREE.DoubleSide })); sail.position.set(0, 4 + h * 0.5, z + 0.5); sail.rotation.y = Math.PI / 2 + 0.25; sh.add(sail);
+    }
+    const lt = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowT, color: 0xffc070, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, fog: false })); lt.position.set(0, 7, -10); lt.scale.setScalar(9); sh.add(lt);
+    const mt = lt.clone(); mt.material = lt.material.clone(); mt.material.color.set(0xfff0d0); mt.position.set(0, 26, 4); mt.scale.setScalar(6); sh.add(mt);
+    sh.userData = { lights: [lt, mt], ph: k / 3 }; S.add(sh); G3.ships.push(sh);
+  }
+  // the stars and the moon
+  const sp = [], rs = gfRng(77);
+  for (let k = 0; k < 900; k++) { const a = rs() * Math.PI * 2, z = Math.pow(rs(), 0.7), c = Math.sqrt(1 - z * z); sp.push(Math.cos(a) * c * 4000, z * 4000 + 40, Math.sin(a) * c * 4000); }
+  const sg = new THREE.BufferGeometry(); sg.setAttribute('position', new THREE.Float32BufferAttribute(sp, 3));
+  G3.stars = new THREE.Points(sg, new THREE.PointsMaterial({ color: 0xffffff, size: 2, sizeAttenuation: false, transparent: true, opacity: 0, fog: false, depthWrite: false })); G3.stars.renderOrder = 0; S.add(G3.stars);
+  const mc = document.createElement('canvas'); mc.width = mc.height = 64; { const x = mc.getContext('2d'), g = x.createRadialGradient(32, 32, 10, 32, 32, 32); g.addColorStop(0, 'rgba(235,240,255,1)'); g.addColorStop(0.42, 'rgba(235,240,255,1)'); g.addColorStop(0.5, 'rgba(180,195,240,0.35)'); g.addColorStop(1, 'rgba(160,180,240,0)'); x.fillStyle = g; x.fillRect(0, 0, 64, 64); }
+  G3.moon = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(mc), fog: false, depthWrite: false, transparent: true })); G3.moon.scale.setScalar(260); S.add(G3.moon);
+}
+
+// ---------- each hole: its light, and where the lighthouse stands ----------
+function gfSkyHole(H) {
+  if (!G3.ok) return; gfSkyInit();
+  const T = G3.tod = gfTod(H.i), c3 = a => new THREE.Color(a[0], a[1], a[2]);
+  // the sun (or the moon) out over the sea, ahead and to the left
+  const az = Math.atan2(-0.55, 0.72) + (T.moon ? 0.9 : 0), el = T.el * Math.PI / 180, sd = new THREE.Vector3(Math.sin(az) * Math.cos(el), Math.sin(el), -Math.cos(az) * Math.cos(el));
+  G3.sun.position.copy(sd).multiplyScalar(100); G3.sun.color.copy(c3(T.sun)); G3.sun.intensity = T.sunI;
+  if (G3.hemi) { G3.hemi.color.copy(c3(T.hemi)); G3.hemi.groundColor.copy(c3(T.gnd)); G3.hemi.intensity = T.hemiI; }
+  const U = G3.sky.material.uniforms; U.sd.value.copy(sd); if (U.top) { U.top.value.copy(c3(T.top)); U.hor.value.copy(c3(T.hor)); U.glow.value.copy(c3(T.glow)); U.night.value = T.moon ? 1 : 0; }
+  const fc = c3(T.fog); G3.scene.fog.color.copy(fc); G3.r.setClearColor(fc);
+  G3.sea.material.color.copy(c3(T.sea)); G3.sea.material.specular.copy(c3(T.spec)); G3.sea.material.shininess = T.moon ? 160 : 70;
+  G3.stars.material.opacity = T.star; G3.stars.visible = T.star > 0.01;
+  G3.moon.visible = T.moon; G3.moon.position.copy(sd).multiplyScalar(3900);
+  // far things hazed towards the horizon's colour by hand
+  const hz = T.moon ? 0.25 : 0.32; for (const [m, base] of G3.haze) m.color.copy(base).lerp(fc, hz);
+  G3.beamOn = T.beam > 0.5;
+  G3.lamp.material.color.set(G3.beamOn ? 0xfff2c0 : 0x8c9ea6);
+  G3.cottageWin.material.color.set(G3.beamOn ? 0xffc472 : 0x3a3a3a);
+  for (const s of G3.ships) for (const l of s.userData.lights) l.visible = G3.beamOn;
+  // where the light stands: out to sea a little right of the line of play if there's sea, or far off on the land
+  const cx = (H.box[0] + H.box[2]) / 2, cy = (H.box[1] + H.box[3]) / 2, want = H.dir + 0.45;
+  // (a spot of open water well off, with room round it for the rock, nearest the direction wanted; further is better)
+  let best = null; const wetAt = (x, y) => gfSeaD(H, x, y) < -60;
+  for (let k = 0; k < 72; k++) {
+    const a = k / 72 * Math.PI * 2, da = Math.abs(((a - want) % (Math.PI * 2) + Math.PI * 3) % (Math.PI * 2) - Math.PI);
+    for (const d of [1050, 900, 750, 600, 480]) {
+      const x = cx + Math.sin(a) * d, y = cy + Math.cos(a) * d;
+      if (!wetAt(x, y) || ![0, 1, 2, 3, 4, 5].every(j => wetAt(x + Math.sin(j) * 70, y + Math.cos(j) * 70))) continue;
+      const cost = da + (1050 - d) / 1000 * 0.9; if (!best || cost < best.cost) best = { a, d, cost }; break;
+    }
+  }
+  const sea = !!best, a = sea ? best.a : want, d = sea ? best.d : 680, ux = Math.sin(a), uy = Math.cos(a), lx = cx + ux * d, ly = cy + uy * d;
+  const ks = sea ? 1.35 : 1.6, gz = sea ? 0 : Math.max(0, gfH(H, lx, ly)) + 26 * ks; G3.mound.visible = !sea; G3.lh.scale.setScalar(ks);
+  G3.lh.position.copy(gv(lx, ly, gz)); G3.lh.rotation.y = -a;
+  G3.lhAt = [lx, ly, gz + 47 * ks];
+  // the reef further out, and the ships' way in: from far out on one side, round outside the reef, past the light
+  // and on in along the coast
+  G3.skerries.visible = sea;
+  const vx = uy, vy = -ux;
+  for (const m of G3.skerries.children) {
+    if (m.userData.of) { m.position.set(m.userData.of.position.x, 0.3, m.userData.of.position.z); continue; }
+    const [pu, pv] = m.userData.p, x = lx + ux * (230 + pu) + vx * pv, y = ly + uy * (230 + pu) + vy * pv; m.position.copy(gv(x, y, 0.5));
+  }
+  const [x0, y0, x1, y1] = H.box, wet = ([x, y]) => x < x0 - 1000 || x > x1 + 1000 || y < y0 - 800 || y > y1 + 1000 || gfSeaD(H, x, y) < -30;
+  let route = null;
+  if (sea) for (const sg of [1, -1]) for (const sc of [1, 0.75]) {
+    if (route) break;
+    const pts = [[2000, -300], [1100, -290], [520, -270], [260, -250], [90, -230], [-80, -190], [-260, -150]].map(([pu, pv]) => [lx + ux * pu * sc + vx * pv * sg, ly + uy * pu * sc + vy * pv * sg]);
+    let ok = true; for (let i = 0; i < pts.length - 1 && ok; i++) for (let f = 0; f <= 1; f += 0.1) if (!wet([pts[i][0] + (pts[i + 1][0] - pts[i][0]) * f, pts[i][1] + (pts[i + 1][1] - pts[i][1]) * f])) { ok = false; break; }
+    // (and on the inside of the way, nearer the coast than the last stretch, it may simply stop short)
+    if (!ok) { while (pts.length > 3 && !pts.every(wet)) pts.pop(); ok = pts.length > 3 && pts.every(wet); }
+    if (ok) route = pts;
+  }
+  G3.route = route; const ok = !!route; for (const s of G3.ships) s.visible = ok;
+}
+
+// ---------- every frame ----------
+function gfSkyTick(dt, t) {
+  if (!G3.lh) return;
+  // the light turns once in twelve seconds; its flash as a beam swings round to face you
+  const on = !!G3.beamOn; G3.beams.visible = on; G3.beamMat.uniforms.k.value = on ? 1 : 0;
+  if (on) {
+    G3.beams.rotation.y = -t * Math.PI * 2 / 12;
+    const lp = G3.lh.position, dx = G3.cam.position.x - lp.x, dz = G3.cam.position.z - lp.z, dl = Math.hypot(dx, dz) || 1, ba = G3.lh.rotation.y + G3.beams.rotation.y;
+    let face = 0; for (const off of [0, Math.PI]) { const r = ba + off, c = (Math.cos(r) * dx - Math.sin(r) * dz) / dl; face = Math.max(face, Math.pow(Math.max(0, c), 60)); }
+    const far = Math.max(0.35, Math.min(1.2, dl / 900)); G3.glow.visible = true; G3.glow.scale.setScalar((30 + face * 240) * far);
+  } else G3.glow.visible = false;
+  // the ships work their way in along the route, round and round
+  const R = G3.route; if (!R) return;
+  const segL = [], tot = R.slice(1).reduce((s, p, i) => { const l = Math.hypot(p[0] - R[i][0], p[1] - R[i][1]); segL.push(l); return s + l; }, 0);
+  for (const s of G3.ships) {
+    let u = ((t * 11 / tot + s.userData.ph) % 1) * tot, i = 0; while (i < segL.length - 1 && u > segL[i]) { u -= segL[i]; i++; }
+    const A = R[i], B = R[i + 1], f = Math.min(1, u / segL[i]), x = A[0] + (B[0] - A[0]) * f, y = A[1] + (B[1] - A[1]) * f;
+    s.position.copy(gv(x, y, 0)); s.rotation.y = Math.atan2(B[0] - A[0], -(B[1] - A[1])); s.rotation.z = Math.sin(t * 0.9 + s.userData.ph * 9) * 0.04;
+    // (fading in at the far end of the way and out at the near end, so none pops)
+    const e = Math.min(1, (i === 0 ? u : 1e9) / 120, (i === segL.length - 1 ? segL[i] - u : 1e9) / 120); s.scale.setScalar(Math.max(0.001, e));
+  }
 }
 
 // ---- src/golfnet.js ----
@@ -57052,6 +57230,7 @@ requestAnimationFrame(frame);
 <!-- [golf] the round, the ball, the swing -->
 <!-- [golf] the screen over the 3D view, the scorecard -->
 <!-- [golf] the 3D view -->
+<!-- [golf] the time of day, the lighthouse and the ships -->
 <!-- [golf] played together -->
 <!-- [golf] ball and club crates -->
 <!-- [golf] the golfer, ball and clubs dressed -->

@@ -19,13 +19,13 @@ function gf3dInit() {
   S.fog = new THREE.Fog(0xdcc7a2, 260, 1500);
   G3.cam = new THREE.PerspectiveCamera(52, 1, 0.1, 6000);
   // late afternoon: a low warm sun out to sea, the sky light from above
-  S.add(new THREE.HemisphereLight(0xd8e6ff, 0x4e5a38, 0.85));
+  G3.hemi = new THREE.HemisphereLight(0xd8e6ff, 0x4e5a38, 0.85); S.add(G3.hemi);
   const sun = G3.sun = new THREE.DirectionalLight(0xffe0b0, 1.05); sun.position.set(-0.55, 0.42, -0.72).multiplyScalar(100); S.add(sun);
   // the sky: blue overhead to a warm haze at the horizon, brighter towards the sun
   const sky = new THREE.Mesh(new THREE.SphereGeometry(4500, 24, 16), new THREE.ShaderMaterial({ side: THREE.BackSide, depthWrite: false, fog: false,
-    uniforms: { sd: { value: sun.position.clone().normalize() } },
+    uniforms: { sd: { value: sun.position.clone().normalize() }, top: { value: new THREE.Color(0.36, 0.55, 0.78) }, hor: { value: new THREE.Color(0.92, 0.8, 0.62) }, glow: { value: new THREE.Color(1, 0.78, 0.45) }, night: { value: 0 } },
     vertexShader: 'varying vec3 vd; void main(){ vd = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
-    fragmentShader: 'uniform vec3 sd; varying vec3 vd; void main(){ float h = clamp(vd.y, -0.1, 1.0); vec3 top = vec3(0.36, 0.55, 0.78), hor = vec3(0.92, 0.80, 0.62); vec3 c = mix(hor, top, pow(max(h, 0.0), 0.55)); float s = max(dot(vd, sd), 0.0); c += vec3(1.0, 0.78, 0.45) * (pow(s, 9.0) * 0.35 + pow(s, 400.0) * 1.2); gl_FragColor = vec4(c, 1.0); }' }));
+    fragmentShader: 'uniform vec3 sd, top, hor, glow; uniform float night; varying vec3 vd; void main(){ float h = clamp(vd.y, -0.1, 1.0); vec3 c = mix(hor, top, pow(max(h, 0.0), 0.55)); float s = max(dot(vd, sd), 0.0); c += glow * (pow(s, 9.0) * mix(0.35, 0.08, night) + pow(s, 400.0) * mix(1.2, 0.0, night)); gl_FragColor = vec4(c, 1.0); }' }));
   sky.renderOrder = -1; S.add(sky); G3.sky = sky;
   // the sea
   const sea = G3.sea = new THREE.Mesh(new THREE.PlaneGeometry(9000, 9000), new THREE.MeshPhongMaterial({ color: 0x2b6a80, specular: 0xffe6b8, shininess: 70, transparent: true, opacity: 0.86 }));
@@ -146,6 +146,7 @@ function gf3dHole(H) {
   G3.scene.add(grp);
   G3.pin.position.copy(gv(H.pin[0], H.pin[1], gfH(H, H.pin[0], H.pin[1]))); G3.pinMark.position.copy(gv(H.pin[0], H.pin[1], gfH(H, H.pin[0], H.pin[1]) + 4.5));
   G3.cp = null;
+  if (typeof gfSkyHole === 'function') gfSkyHole(H);
   GF.intro = 2.4;
 }
 function gf3dHeat(H) {
@@ -273,6 +274,7 @@ function gf3dDraw(dt) {
   }
   const onGreen = gfOnGreen(); if (G3.slopes) G3.slopes.visible = onGreen; if (G3.heat) G3.heat.mesh.visible = onGreen && !!GF.heat;
   gf3dCamera(dt, bp);
+  if (typeof gfSkyTick === 'function') gfSkyTick(dt, t);
   G3.r.render(G3.scene, G3.cam);
 }
 // the camera: behind the ball down the aim when it's your go, chasing the ball in flight, high over the hole to look

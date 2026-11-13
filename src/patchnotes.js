@@ -6,6 +6,10 @@
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 189, date: '2026-11-13', title: "Skerry Links: from midday to night, and the Light", New: [
+    "Skerry Links: the round now runs through the day. The 1st is played at midday, the sun drops hole by hole, the 6th is played at sunset, and the 7th, 8th and 9th by moonlight under the stars.",
+    "Skerry Links: Skerry Light stands off in the distance from every hole, on its rock out at sea (or on a far hill from the inland holes). By day its lamp is dark. From sunset it turns, its two beams sweeping round with a flash as one swings towards you, and the keeper's window is lit.",
+    "Skerry Links: out beyond the Light lies a reef of skerries, and ships come in past it on the far side, keeping well clear. After dark they show their lanterns." ] },
   { v: 188, date: '2026-11-13', title: "Skerry Links: ball and club crates, and your outfit on the course", New: [
     "Skerry Links: your golfer now wears the outfit you've chosen from the Tailor's Crate, hat and all, shimmering, glowing or alight just as on the island. Online, everyone sees each other's.",
     "Skerry Links: Ball crates. The Chandler's Crate holds one of 18 balls across all five grades. Bosun balls leave a coloured trail, Mate balls shimmer and throw sparks, Captain balls glow, and the three Admiral balls are alive: The Skerry Light, The Maelstrom and Verity's Grin.",
