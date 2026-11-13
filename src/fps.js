@@ -1754,6 +1754,38 @@ $('fpsSettings').addEventListener('click', () => $('titleSettings').click());
 $('fpsNick').addEventListener('keydown', e => { if (e.key === 'Enter') fpsStart(); });
 $('fpsResume').addEventListener('click', () => fpsSetMenu(false));
 $('fpsLeave').addEventListener('click', fpsStop);
+// the menu's Unstuck: caught on a rock, a wall's corner or a rail, step to a free place within a metre (a few tries at
+// random), only one you could have walked to: never through a wall, a door or out of a window, so it can't be used
+// to get anywhere you couldn't. Each player owns where they stand (in a crew too: the host and the others take it
+// from what they send, src/zmnet.js `p`), so it's done here and goes out with the next send.
+// (nothing free within a metre: a little further, up to three; a short wait between goes)
+function fpsUnstuckFree(m, pad, feet) {
+  if (FPS.zm) { const pen0 = zmWinPen(m.x, m.y, pad, feet); return (x, y) => !zmBlockedAt(x, y, pad, feet) && !zmCrowd(m, x, y) && (p => p <= 0 || p < pen0 - 1e-6)(zmWinPen(x, y, pad, feet)); }
+  const I = FPS.g && FPS.g.isle, fl = !!(I && I.floors);
+  return (x, y) => !fpsBlockedIn(FPS.g, x, y, pad, null, fl ? feet : null, fl);
+}
+function fpsUnstuck() {
+  const m = FPS.me, now = performance.now();
+  if (!FPS.on || !m) return 'Not on your feet.';
+  if (m.dead > 0 || (FPS.zm && typeof zmIsDown === 'function' && zmIsDown())) return 'Not while you’re down.';
+  if (FPS.helm) return 'Let go of the wheel first.';
+  if (now < (FPS.unstuckAt || 0)) return `Not yet: ${Math.ceil((FPS.unstuckAt - now) / 1000)} s.`;
+  const pad = FPS.zm ? (m.zpad || ZMC.PAD) : 0.5, feet = m.jz || 0, free = fpsUnstuckFree(m, pad, feet);
+  // (a way there: once it's clear of whatever you're caught in, it stays clear all the way)
+  const way = (x, y) => { let out = false; for (let k = 1; k <= 10; k++) { const f = free(m.x + (x - m.x) * k / 10, m.y + (y - m.y) * k / 10); if (f) out = true; else if (out) return false; } return out; };
+  for (const R of [1, 1.5, 2, 3]) for (let i = 0; i < 40; i++) {
+    const a = Math.random() * 6.283, d = R * (0.35 + 0.65 * Math.sqrt(Math.random())), x = m.x + Math.sin(a) * d, y = m.y + Math.cos(a) * d;
+    if (!free(x, y) || !way(x, y)) continue;
+    m.x = x; m.y = y; m.vz = 0;
+    if (FPS.zm) zmSettle(m); else if (FPS.g && FPS.g.isle && FPS.g.isle.floors) fpsSettle(m);
+    FPS.unstuckAt = now + 5000; try { sfxTick(); } catch (e) {} try { fpsSend(true); } catch (e) {}
+    return null;
+  }
+  FPS.unstuckAt = now + 1500;
+  return 'Nowhere clear close by: try a step or a jump first.';
+}
+function fpsUnstuckAsk() { const no = fpsUnstuck(); fpsSetMenu(false); fpsFeed(no || 'You work yourself free.'); }
+$('fpsUnstuck').addEventListener('click', fpsUnstuckAsk);
 // the menu's Options: the look sensitivity slider (the same setting as on the Settings card)
 // (the menu's look sensitivity slider is on its first page: the same setting as on the Settings card; lookSync on opening)
 // the menu's Controller page: the controller's look sensitivity, and how much of it is left while aiming (remembered)

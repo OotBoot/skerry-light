@@ -1906,6 +1906,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
         <button class="primary" id="fpsResume" type="button">Back to the fight</button>
         <button class="tool" id="fpsViewBtn" type="button">View: first person</button>
         <button class="tool" id="fpsPadBtn" type="button">Controller</button>
+        <button class="tool" id="fpsUnstuck" type="button" title="Caught on something? Step to a clear spot within a metre of where you stand">Unstuck</button>
         <button class="tool" id="zmUnstick" type="button" hidden title="Send one of the drowned that's stuck out of reach back out to sea, to come in again by the window nearest you">Unstick a drowned</button>
         <button class="tool" id="fpsLeave" type="button">Leave the island</button>
       </div>
@@ -2052,7 +2053,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 // ---- src/config.js ----
 'use strict';
 // The game's version, shown at the top of the main menu. Bump it by one with every change pushed to main.
-var VERSION = 178;
+var VERSION = 179;
 // Skerry Light: tuning, asset paths and lore.
 // World units are metres. The lighthouse stands at the origin on the shoreline (y = 0);
 // north (+y) is open sea. Bearings: 0 = north, positive = east.
@@ -2181,6 +2182,9 @@ const flashK = () => SETTINGS.flashes === 'reduced' ? 0.3 : 1;
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 179, date: '2026-11-13', title: "Unstuck button", New: [
+    "Unstuck: a new button in the in-game menu (Esc, or Start on a controller) in Wreckers' Night, Keeper's Last Light, the raids, Fog Run and Freebooters' Sea. Caught on a rock or a corner? It steps you to a clear spot within a metre of where you stand.",
+    "Unstuck only picks a spot you could have walked to, so it never takes you through a wall, a shut door or out of a window. It works in co-op, can be used every 5 seconds, and not while you're down or at the wheel." ] },
   { v: 178, date: '2026-11-13', title: "Directional sound, and volume in every menu", Sound: [
     "Every game: sounds now come from where they happen. Gunshots, the drowned, bosses, boats, splashes, bells and creatures are panned to the side they're on, and sounds behind you are muffled, so you can tell ahead from behind and turn to find them. Best with headphones.",
     "Wreckers' Night, Keeper's Last Light, the raids, Fog Run and Freebooters' Sea: other players' shots, the drowned's moans, boards being torn off windows, doors, power-ups and every boss's footsteps and attacks are all directional now. Before, many of these played dead centre.",
@@ -16300,6 +16304,38 @@ $('fpsSettings').addEventListener('click', () => $('titleSettings').click());
 $('fpsNick').addEventListener('keydown', e => { if (e.key === 'Enter') fpsStart(); });
 $('fpsResume').addEventListener('click', () => fpsSetMenu(false));
 $('fpsLeave').addEventListener('click', fpsStop);
+// the menu's Unstuck: caught on a rock, a wall's corner or a rail, step to a free place within a metre (a few tries at
+// random), only one you could have walked to: never through a wall, a door or out of a window, so it can't be used
+// to get anywhere you couldn't. Each player owns where they stand (in a crew too: the host and the others take it
+// from what they send, src/zmnet.js `p`), so it's done here and goes out with the next send.
+// (nothing free within a metre: a little further, up to three; a short wait between goes)
+function fpsUnstuckFree(m, pad, feet) {
+  if (FPS.zm) { const pen0 = zmWinPen(m.x, m.y, pad, feet); return (x, y) => !zmBlockedAt(x, y, pad, feet) && !zmCrowd(m, x, y) && (p => p <= 0 || p < pen0 - 1e-6)(zmWinPen(x, y, pad, feet)); }
+  const I = FPS.g && FPS.g.isle, fl = !!(I && I.floors);
+  return (x, y) => !fpsBlockedIn(FPS.g, x, y, pad, null, fl ? feet : null, fl);
+}
+function fpsUnstuck() {
+  const m = FPS.me, now = performance.now();
+  if (!FPS.on || !m) return 'Not on your feet.';
+  if (m.dead > 0 || (FPS.zm && typeof zmIsDown === 'function' && zmIsDown())) return 'Not while you’re down.';
+  if (FPS.helm) return 'Let go of the wheel first.';
+  if (now < (FPS.unstuckAt || 0)) return `Not yet: ${Math.ceil((FPS.unstuckAt - now) / 1000)} s.`;
+  const pad = FPS.zm ? (m.zpad || ZMC.PAD) : 0.5, feet = m.jz || 0, free = fpsUnstuckFree(m, pad, feet);
+  // (a way there: once it's clear of whatever you're caught in, it stays clear all the way)
+  const way = (x, y) => { let out = false; for (let k = 1; k <= 10; k++) { const f = free(m.x + (x - m.x) * k / 10, m.y + (y - m.y) * k / 10); if (f) out = true; else if (out) return false; } return out; };
+  for (const R of [1, 1.5, 2, 3]) for (let i = 0; i < 40; i++) {
+    const a = Math.random() * 6.283, d = R * (0.35 + 0.65 * Math.sqrt(Math.random())), x = m.x + Math.sin(a) * d, y = m.y + Math.cos(a) * d;
+    if (!free(x, y) || !way(x, y)) continue;
+    m.x = x; m.y = y; m.vz = 0;
+    if (FPS.zm) zmSettle(m); else if (FPS.g && FPS.g.isle && FPS.g.isle.floors) fpsSettle(m);
+    FPS.unstuckAt = now + 5000; try { sfxTick(); } catch (e) {} try { fpsSend(true); } catch (e) {}
+    return null;
+  }
+  FPS.unstuckAt = now + 1500;
+  return 'Nowhere clear close by: try a step or a jump first.';
+}
+function fpsUnstuckAsk() { const no = fpsUnstuck(); fpsSetMenu(false); fpsFeed(no || 'You work yourself free.'); }
+$('fpsUnstuck').addEventListener('click', fpsUnstuckAsk);
 // the menu's Options: the look sensitivity slider (the same setting as on the Settings card)
 // (the menu's look sensitivity slider is on its first page: the same setting as on the Settings card; lookSync on opening)
 // the menu's Controller page: the controller's look sensitivity, and how much of it is left while aiming (remembered)

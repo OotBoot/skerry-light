@@ -6,6 +6,9 @@
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 179, date: '2026-11-13', title: "Unstuck button", New: [
+    "Unstuck: a new button in the in-game menu (Esc, or Start on a controller) in Wreckers' Night, Keeper's Last Light, the raids, Fog Run and Freebooters' Sea. Caught on a rock or a corner? It steps you to a clear spot within a metre of where you stand.",
+    "Unstuck only picks a spot you could have walked to, so it never takes you through a wall, a shut door or out of a window. It works in co-op, can be used every 5 seconds, and not while you're down or at the wheel." ] },
   { v: 178, date: '2026-11-13', title: "Directional sound, and volume in every menu", Sound: [
     "Every game: sounds now come from where they happen. Gunshots, the drowned, bosses, boats, splashes, bells and creatures are panned to the side they're on, and sounds behind you are muffled, so you can tell ahead from behind and turn to find them. Best with headphones.",
     "Wreckers' Night, Keeper's Last Light, the raids, Fog Run and Freebooters' Sea: other players' shots, the drowned's moans, boards being torn off windows, doors, power-ups and every boss's footsteps and attacks are all directional now. Before, many of these played dead centre.",
