@@ -1744,7 +1744,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
     <div class="card zmcard gfcard" id="gfTitle" aria-labelledby="gfHead"><!-- [golf] its own card (src/golf.js) -->
       <div class="cardtop"><span class="eyebrow">An eighth game · nine holes on the cliffs · alone or up to four</span></div>
       <h1 id="gfHead">Skerry Links</h1>
-      <p>Before the lamp failed, the keepers laid out nine holes along the headland: in from the gate, down to the cove, then out along the cliffs to the point and home over the chasm. On a still evening you can still play them. Par 36, laid out after the front nine at Pebble Beach.</p>
+      <p>Before the lamp failed, the keepers laid out nine holes along the headland: in from the gate, down to the cove, then out along the cliffs to the point and home over the chasm. On a still evening you can still play them. Par 36.</p>
       <p class="muted">Pick a club, aim left or right, and time the swing meter: one press to start, one to set the power, and one more as it comes back over the strike line. Mind the wind, read the slopes on the greens, and keep it out of the sea.</p>
       <div class="gfopts">
         <label>Players on this screen <select id="gfPlayers"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option></select></label>
@@ -2245,7 +2245,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 // ---- src/config.js ----
 'use strict';
 // The game's version, shown at the top of the main menu. Bump it by one with every change pushed to main.
-var VERSION = 183;
+var VERSION = 184;
 // Skerry Light: tuning, asset paths and lore.
 // World units are metres. The lighthouse stands at the origin on the shoreline (y = 0);
 // north (+y) is open sea. Bearings: 0 = north, positive = east.
@@ -2374,8 +2374,10 @@ const flashK = () => SETTINGS.flashes === 'reduced' ? 0.3 : 1;
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 184, date: '2026-11-13', title: "Skerry Links: card wording", Changes: [
+    "Skerry Links: tidied the course description on its card." ] },
   { v: 183, date: '2026-11-13', title: "New game: Skerry Links", New: [
-    "Skerry Links: a new game of golf, with its own card on the main menu. Nine holes along the headland, par 36, laid out after the front nine at Pebble Beach: in from the gate, down to the cove, then out along the cliffs to the little par 3 on the point and over the chasm on the 8th.",
+    "Skerry Links: a new game of golf, with its own card on the main menu. Nine holes along the headland, par 36: in from the gate, down to the cove, then out along the cliffs to the little par 3 on the point and over the chasm on the 8th.",
     "Skerry Links: pick a club (driver down to sand wedge, each showing its carry), aim left and right, and time the swing meter: once to start, once to set the power (past 100% is an overswing), once more on the strike line. Early hooks it, late slices it.",
     "Skerry Links: wind on every hole, bounces and roll that depend on where the ball lands, trees that catch it, the sea and a creek that cost a stroke, and quick, sloping greens with arrows showing which way they fall. The putter's meter is a length, with a scale to suit the putt.",
     "Skerry Links: play alone, with up to four taking turns on one screen, or online with up to four (Host a round on its card, or Share invite). Choose all nine holes or three at a time, the wind, and a gentler swing meter.",

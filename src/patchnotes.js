@@ -6,8 +6,10 @@
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 184, date: '2026-11-13', title: "Skerry Links: card wording", Changes: [
+    "Skerry Links: tidied the course description on its card." ] },
   { v: 183, date: '2026-11-13', title: "New game: Skerry Links", New: [
-    "Skerry Links: a new game of golf, with its own card on the main menu. Nine holes along the headland, par 36, laid out after the front nine at Pebble Beach: in from the gate, down to the cove, then out along the cliffs to the little par 3 on the point and over the chasm on the 8th.",
+    "Skerry Links: a new game of golf, with its own card on the main menu. Nine holes along the headland, par 36: in from the gate, down to the cove, then out along the cliffs to the little par 3 on the point and over the chasm on the 8th.",
     "Skerry Links: pick a club (driver down to sand wedge, each showing its carry), aim left and right, and time the swing meter: once to start, once to set the power (past 100% is an overswing), once more on the strike line. Early hooks it, late slices it.",
     "Skerry Links: wind on every hole, bounces and roll that depend on where the ball lands, trees that catch it, the sea and a creek that cost a stroke, and quick, sloping greens with arrows showing which way they fall. The putter's meter is a length, with a scale to suit the putt.",
     "Skerry Links: play alone, with up to four taking turns on one screen, or online with up to four (Host a round on its card, or Share invite). Choose all nine holes or three at a time, the wind, and a gentler swing meter.",
