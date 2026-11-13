@@ -235,7 +235,7 @@ function gf3dDraw(dt) {
   G3.aimPts.visible = G3.ring.visible = showAim;
   if (showAim) {
     const lie = club.putt ? 1 : (GF_SURF[p.lie] || GF_SURF.rough).lie * (club.k === 'D' && p.lie !== 'tee' ? 0.9 : 1);
-    const L = club.putt ? GF_PUTTS[GF.putt] * 0.3048 : club.c * GF_YD * lie, sa = Math.sin(GF.aim), ca = Math.cos(GF.aim);
+    const L = (club.putt ? GF_PUTTS[GF.putt] * 0.3048 : club.c * GF_YD * lie) * (GF.pw || 1), sa = Math.sin(GF.aim), ca = Math.cos(GF.aim);
     for (let k = 0; k < 64; k++) { const f = (k + 1) / 64, d = L * f, x = p.x + sa * d, y = p.y + ca * d, gz = gfH(H, x, y); ap.setXYZ(k, x, Math.max(gz, 0) + 0.08 + (club.putt ? 0 : Math.sin(f * Math.PI) * 0), -y); }
     ap.needsUpdate = true;
     const ex = p.x + sa * L, ey = p.y + ca * L; G3.ring.position.copy(gv(ex, ey, Math.max(gfH(H, ex, ey), 0) + 0.1)); G3.ring.scale.setScalar(club.putt ? 0.18 : 0.6 + L / 160);
@@ -262,7 +262,11 @@ function gf3dCamera(dt, bp) {
     if (GF.rep.t < 0.35 && !putt) { const B = behind(S.sx, S.sy, S.shot.a, 7, 2.6, 60); pos = B[0]; look = [bp[0], bp[1], bp[2]]; k = 6; }
     else if (GF.ph === 'result' && S.R.how === 'cup') { const B = behind(bp[0], bp[1], S.shot.a, 9, 3.4, 0); pos = B[0]; look = [bp[0], bp[1], bp[2] + 0.6]; k = 1.5; }
     else if (putt) { const d0 = Math.hypot(S.sx - GF.H.pin[0], S.sy - GF.H.pin[1]), B = behind(S.sx, S.sy, S.shot.a, 3.6 + d0 * 0.22, 1.7 + d0 * 0.13, 0); pos = B[0]; look = [bp[0], bp[1], bp[2]]; k = 3; }
-    else { const B = behind(bp[0], bp[1], a, 11, 4.5, 0); pos = B[0]; look = [bp[0], bp[1], bp[2]]; k = 2.2; }
+    else {
+      // in flight: from above and behind, a little off to the side, looking down on the ball (higher the higher it flies)
+      const sa = Math.sin(a), ca = Math.cos(a), up = Math.max(0, bp[2] - gfH(H, bp[0], bp[1])), back = 13 + up * 0.15, side = 5, cx = bp[0] - sa * back + ca * side, cy = bp[1] - ca * back - sa * side;
+      pos = [cx, cy, Math.max(gfH(H, cx, cy), 0, bp[2]) + 11 + up * 0.25]; look = [bp[0] + sa * 6, bp[1] + ca * 6, bp[2]]; k = 2.6;
+    }
   } else if (p) {
     const putt = GF_CLUBS[GF.club].putt, d = gfToPin(p), B = putt ? behind(p.x, p.y, GF.aim, 3.6 + d * 0.22, 1.7 + d * 0.13, Math.max(2, Math.min(d, 25) * 0.75)) : behind(p.x, p.y, GF.aim, 7, 2.6, 60);
     pos = B[0]; look = B[1]; k = 5;

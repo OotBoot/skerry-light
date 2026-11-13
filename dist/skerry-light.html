@@ -1385,6 +1385,12 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
   .gf-tools { top: auto; bottom: 58px; flex-direction: column; }
 }
 .gfcard { border-color: rgba(143,194,106,0.5); } .gfcard h1 { text-shadow: 0 0 28px rgba(120,170,90,0.4); }
+
+/* Skerry Links: the power bar you drag (the green zone on the meter, the ring and the map's mark follow it) */
+.gf-pow { grid-column: 3; grid-row: 3; justify-self: end; width: min(100%, 300px); display: flex; flex-direction: column; gap: 2px; background: rgba(8,12,22,0.72); border: 1px solid rgba(236,228,207,0.16); padding: 6px 10px; font-size: 12px; color: var(--muted); z-index: 1; margin-bottom: 48px; }
+.gf-pow output { color: #9be36a; margin-left: 6px; }
+.gf-pow input { width: 100%; accent-color: #3fd44a; height: 26px; touch-action: none; }
+@media (max-width: 720px) { .gf-pow { grid-column: 1; grid-row: 5; justify-self: start; width: calc(100% - 96px); max-width: 320px; margin-bottom: 0; } }
 </style>
 </head>
 <body>
@@ -1816,6 +1822,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
     <div class="gf-pad" id="gfPadBox">
       <div class="gf-club"><button class="gfbtn" id="gfClubUp" type="button" aria-label="Longer club">▲</button><div class="gf-cname"><b id="gfClubName"></b><small id="gfClubD"></small></div><button class="gfbtn" id="gfClubDn" type="button" aria-label="Shorter club">▼</button></div>
       <div class="gf-putt" id="gfPuttRow" hidden><button class="gfbtn sm" id="gfPuttDn" type="button" aria-label="Shorter putt scale">−</button><span id="gfPuttScale"></span><button class="gfbtn sm" id="gfPuttUp" type="button" aria-label="Longer putt scale">+</button></div>
+      <div class="gf-pow" id="gfPowRow"><label for="gfPow">Power <output id="gfPowOut"></output></label><input id="gfPow" type="range" min="5" max="100" step="1" value="100"></div>
       <canvas id="gfMeter" aria-hidden="true"></canvas>
       <div class="gf-aim"><button class="gfbtn" id="gfAimL" type="button" aria-label="Aim left">◀</button><button class="gfbtn swing" id="gfSwing" type="button">Swing</button><button class="gfbtn" id="gfAimR" type="button" aria-label="Aim right">▶</button></div>
       <p class="gf-hint" id="gfHint"></p>
@@ -2252,7 +2259,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 // ---- src/config.js ----
 'use strict';
 // The game's version, shown at the top of the main menu. Bump it by one with every change pushed to main.
-var VERSION = 184;
+var VERSION = 185;
 // Skerry Light: tuning, asset paths and lore.
 // World units are metres. The lighthouse stands at the origin on the shoreline (y = 0);
 // north (+y) is open sea. Bearings: 0 = north, positive = east.
@@ -2381,6 +2388,9 @@ const flashK = () => SETTINGS.flashes === 'reduced' ? 0.3 : 1;
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 185, date: '2026-11-13', title: "Skerry Links: power bar and a new flight camera", New: [
+    "Skerry Links: a Power bar for each shot. Drag it (or Z and X, or LT and RT) to set the distance you're going for; it moves a green zone on the swing meter, the landing ring and a crosshair on the map. Stop the meter in the green to hit it that far. It starts at the right power for the distance to the pin." ], Changes: [
+    "Skerry Links: the camera now follows the ball in flight from high up behind and off to one side, looking down on it, instead of from just behind." ] },
   { v: 184, date: '2026-11-13', title: "Skerry Links: card wording", Changes: [
     "Skerry Links: tidied the course description on its card." ] },
   { v: 183, date: '2026-11-13', title: "New game: Skerry Links", New: [
@@ -54903,6 +54913,7 @@ function gfReadyShot() {
   if (p.st === 0 && H.pts.length > 2 && d > 240) { const q = H.pts[1]; GF.aim = Math.atan2(q[0] - p.x, q[1] - p.y); }
   GF.club = gfPickClub(p, d);
   GF.putt = gfPuttScale(d);
+  gfAutoPow();
   GF.m = null; GF.ph = 'aim'; GF.view = 'aim'; GF.lookT = 0;
   if (typeof G3 !== 'undefined' && GF.intro <= 0) G3.cp = null;   // (a cut to the new shot, not a swing round through the golfer)
   if (GF.mode === 'net' && typeof gfnTurned === 'function') gfnTurned();
@@ -55076,13 +55087,19 @@ function gfFrame(dt) {
   if (typeof gf3dDraw === 'function') gf3dDraw(dt);
   if (typeof gfHud === 'function') gfHud(false);
 }
+// the power you mean to hit with (the green zone on the meter, and where the ring and the map's mark sit): to start
+// with, what the distance to the pin calls for with this club; then wherever you drag the power bar (or Z and X)
+function gfCarryNow() { const p = gfPlayer(), club = GF_CLUBS[GF.club]; if (club.putt) return GF_PUTTS[GF.putt] * 0.3048; return club.c * GF_YD * (GF_SURF[p.lie] || GF_SURF.rough).lie * (club.k === 'D' && p.lie !== 'tee' ? 0.9 : 1); }
+function gfAutoPow() { const p = gfPlayer(); if (!p) return; GF.pw = Math.max(0.05, Math.min(1, gfToPin(p) / gfCarryNow())); gfPowUi(); }
+function gfSetPow(v) { if (GF.ph !== 'aim' || !gfMyTurn()) return; GF.pw = Math.max(0.05, Math.min(1, v)); gfPowUi(); }
+function gfPowUi() { const s = $('gfPow'); if (s && document.activeElement !== s) s.value = String(Math.round(GF.pw * 100)); const o = $('gfPowOut'); if (o) { const c = GF_CLUBS[GF.club], L = gfCarryNow() * GF.pw; o.textContent = `${Math.round(GF.pw * 100)}% · ${c.putt ? Math.round(L / 0.3048) + ' ft' : Math.round(L / GF_YD) + ' yd'}`; } }
 function gfClub(d) {
   if (GF.ph !== 'aim' || !gfMyTurn()) return;
   GF.club = Math.max(0, Math.min(GF_CLUBS.length - 1, GF.club + d));
   if (GF_CLUBS[GF.club].putt) GF.putt = gfPuttScale(gfToPin(gfPlayer()));
-  gfSnd('tick'); gfHud(true);
+  gfAutoPow(); gfSnd('tick'); gfHud(true);
 }
-function gfPuttStep(d) { if (GF.ph !== 'aim' || !gfMyTurn() || !GF_CLUBS[GF.club].putt) return; GF.putt = Math.max(0, Math.min(GF_PUTTS.length - 1, GF.putt + d)); gfHud(true); }
+function gfPuttStep(d) { if (GF.ph !== 'aim' || !gfMyTurn() || !GF_CLUBS[GF.club].putt) return; GF.putt = Math.max(0, Math.min(GF_PUTTS.length - 1, GF.putt + d)); gfAutoPow(); gfHud(true); }
 function gfPauseOpen(on) {
   if (!GF.on) return;
   $('gfPause').hidden = !on;
@@ -55102,6 +55119,8 @@ function gfKey(e, down) {
   else if (e.repeat) { if (k === ' ') e.preventDefault(); return; }
   else if (k === 'ArrowUp' || k === 'w' || k === 'W') { e.preventDefault(); gfClub(-1); }
   else if (k === 'ArrowDown' || k === 's' || k === 'S') { e.preventDefault(); gfClub(1); }
+  else if (k === 'z' || k === 'Z') gfSetPow(GF.pw - 0.05);
+  else if (k === 'x' || k === 'X') gfSetPow(GF.pw + 0.05);
   else if (k === 'q' || k === 'Q') gfPuttStep(-1);
   else if (k === 'e' || k === 'E') gfPuttStep(1);
   else if (k === ' ' || k === 'Enter') { e.preventDefault(); if (!$('gfCard').hidden && GF.over) return; gfPress(); }
@@ -55124,6 +55143,7 @@ function gfPadPoll(dt) {
   if (Math.abs(ay) > 0.6 && Math.abs(GF.padY) <= 0.6) gfClub(ay > 0 ? 1 : -1); GF.padY = ay;
   if (down(12)) gfClub(-1); if (down(13)) gfClub(1);
   if (down(4)) gfPuttStep(-1); if (down(5)) gfPuttStep(1);
+  const lt = p.buttons[6] ? p.buttons[6].value : 0, rt = p.buttons[7] ? p.buttons[7].value : 0; if (lt > 0.2 || rt > 0.2) gfSetPow(GF.pw + (rt - lt) * dt * 0.6);
   if (down(0)) { if (!$('gfCard').hidden && GF.over) $('gfCardMenu').click(); else gfPress(); }
   if (down(2)) gfLook();
   if (down(3)) gfCardShow($('gfCard').hidden, true);
@@ -55230,6 +55250,8 @@ function gfDebugShot(club, power, acc, aim) { if (GF.ph !== 'aim') return null; 
   $('gfPuttDn').addEventListener('click', () => gfPuttStep(-1)); $('gfPuttUp').addEventListener('click', () => gfPuttStep(1));
   $('gfSwing').addEventListener('pointerdown', e => { e.preventDefault(); gfPress(); });
   $('gfLookBtn').addEventListener('click', gfLook);
+  $('gfPow').addEventListener('input', () => gfSetPow(+$('gfPow').value / 100));
+  for (const t of ['pointerdown', 'keydown']) $('gfPow').addEventListener(t, e => e.stopPropagation());
   $('gfCardBtn').addEventListener('click', () => gfCardShow($('gfCard').hidden, true));
   // a tap on the 3D view swings too (the meter's below it)
   $('gfCv').addEventListener('pointerdown', e => { if (e.pointerType === 'mouse' && e.button !== 0) return; gfPress(); });
@@ -55264,11 +55286,12 @@ function gfHud(force) {
     const lie = (GF_SURF[p.lie] || GF_SURF.rough).lie * (club.k === 'D' && p.lie !== 'tee' ? 0.9 : 1);
     $('gfClubD').textContent = club.putt ? `up to ${GF_PUTTS[GF.putt]} ft` : `${Math.round(club.c * (club.putt ? 1 : lie))} yd${lie < 0.99 ? ' from here' : ''}`;
     $('gfPuttRow').hidden = !club.putt;
+    gfPowUi(); $('gfPowRow').hidden = !mine || GF.ph !== 'aim';
     $('gfPuttScale').textContent = `${GF_PUTTS[GF.putt]} ft`;
     const others = GF.mode === 'net' && !mine && !p.done;
     $('gfTurn').hidden = !(others || (GF.P.length > 1 && GF.ph === 'aim'));
     $('gfTurn').textContent = others ? `${p.nm} is playing` : `${p.nm}, you're up`;
-    $('gfHint').textContent = GF.ph === 'aim' ? (mine ? (club.putt ? 'Space: putt · ← → aim · Q E scale' : 'Space: swing · ← → aim · ↑ ↓ club · M map') : '') : GF.ph === 'swing' ? (GF.m && GF.m.s === 1 ? 'Space: set the power' : 'Space: strike on the line') : GF.ph === 'fly' ? 'Space: hurry it along' : GF.ph === 'card' ? (GF.over || (GF.mode === 'net' && typeof gfnCanNext === 'function' && !gfnCanNext()) ? '' : 'Space: next hole') : GF.ph === 'wait' ? 'Waiting for the host…' : '';
+    $('gfHint').textContent = GF.ph === 'aim' ? (mine ? (club.putt ? 'Space: putt · ← → aim · Z X power · Q E scale' : 'Space: swing · ← → aim · ↑ ↓ club · Z X power · M map') : '') : GF.ph === 'swing' ? (GF.m && GF.m.s === 1 ? 'Space: set the power' : 'Space: strike on the line') : GF.ph === 'fly' ? 'Space: hurry it along' : GF.ph === 'card' ? (GF.over || (GF.mode === 'net' && typeof gfnCanNext === 'function' && !gfnCanNext()) ? '' : 'Space: next hole') : GF.ph === 'wait' ? 'Waiting for the host…' : '';
     $('gfSwing').disabled = !mine && GF.ph !== 'fly' && GF.ph !== 'card';
     $('gfPadBox').classList.toggle('putting', !!club.putt);
   }
@@ -55288,6 +55311,7 @@ function gfDrawMeter() {
   arc(-0.15, 1.1, 'rgba(8,12,22,0.78)', 26);
   const g = c.createLinearGradient(cx - R, 0, cx + R, 0); g.addColorStop(0, '#5fa04a'); g.addColorStop(0.55, '#ffd88a'); g.addColorStop(0.85, '#ffb060');
   arc(0, 1, g, 16); arc(1, 1.1, '#d8452f', 16);
+  const pz = GF.pw || 1; arc(Math.max(0, pz - 0.035), Math.min(1.1, pz + 0.035), '#3fd44a', 24); arc(pz - 0.004, pz + 0.004, '#eaffd8', 26);
   arc(-0.15, -0.012, 'rgba(216,69,47,0.55)', 16); arc(0.012, 0.06, 'rgba(255,216,138,0.25)', 16);
   arc(-0.012, 0.012, '#ffffff', 22);   // (the strike line)
   // marks at a quarter, a half and three-quarters
@@ -55331,7 +55355,7 @@ function gfDrawMap() {
   c.fillStyle = '#d8452f'; c.beginPath(); c.arc(X(H.pin[0]), Y(H.pin[1]), 3, 0, 7); c.fill();
   GF.P.forEach((q, i) => { if (q.done || i === GF.cur) return; c.fillStyle = q.col; c.beginPath(); c.arc(X(q.x), Y(q.y), 2.6, 0, 7); c.fill(); });
   const p = gfPlayer(), b = gfBallNow() || [p.x, p.y];
-  if (GF.ph === 'aim') { const club = GF_CLUBS[GF.club], L = club.putt ? GF_PUTTS[GF.putt] * 0.3048 : club.c * GF_YD * (GF_SURF[p.lie] || GF_SURF.rough).lie; c.strokeStyle = 'rgba(255,242,196,0.9)'; c.setLineDash([3, 3]); c.lineWidth = 1.5; c.beginPath(); c.moveTo(X(p.x), Y(p.y)); c.lineTo(X(p.x + Math.sin(GF.aim) * L), Y(p.y + Math.cos(GF.aim) * L)); c.stroke(); c.setLineDash([]); }
+  if (GF.ph === 'aim') { const club = GF_CLUBS[GF.club], L = gfCarryNow() * (GF.pw || 1); c.strokeStyle = 'rgba(255,242,196,0.9)'; c.setLineDash([3, 3]); c.lineWidth = 1.5; c.beginPath(); c.moveTo(X(p.x), Y(p.y)); c.lineTo(X(p.x + Math.sin(GF.aim) * L), Y(p.y + Math.cos(GF.aim) * L)); c.stroke(); c.setLineDash([]); const tx = X(p.x + Math.sin(GF.aim) * L), ty = Y(p.y + Math.cos(GF.aim) * L); c.strokeStyle = '#9be36a'; c.lineWidth = 2; c.beginPath(); c.arc(tx, ty, 5, 0, 7); c.stroke(); c.beginPath(); c.moveTo(tx - 7, ty); c.lineTo(tx + 7, ty); c.moveTo(tx, ty - 7); c.lineTo(tx, ty + 7); c.stroke(); }
   if (GF.shot && GF.rep) { const tr = GF.shot.R.tr; c.strokeStyle = 'rgba(255,255,255,0.7)'; c.lineWidth = 1.2; c.beginPath(); for (let i = 0; i <= GF.rep.i; i += 3) { const q = tr[i]; i ? c.lineTo(X(q[0]), Y(q[1])) : c.moveTo(X(q[0]), Y(q[1])); } c.stroke(); }
   c.fillStyle = '#fff'; c.strokeStyle = p.col; c.lineWidth = 2; c.beginPath(); c.arc(X(b[0]), Y(b[1]), 3.4, 0, 7); c.fill(); c.stroke();
 }
@@ -55609,7 +55633,7 @@ function gf3dDraw(dt) {
   G3.aimPts.visible = G3.ring.visible = showAim;
   if (showAim) {
     const lie = club.putt ? 1 : (GF_SURF[p.lie] || GF_SURF.rough).lie * (club.k === 'D' && p.lie !== 'tee' ? 0.9 : 1);
-    const L = club.putt ? GF_PUTTS[GF.putt] * 0.3048 : club.c * GF_YD * lie, sa = Math.sin(GF.aim), ca = Math.cos(GF.aim);
+    const L = (club.putt ? GF_PUTTS[GF.putt] * 0.3048 : club.c * GF_YD * lie) * (GF.pw || 1), sa = Math.sin(GF.aim), ca = Math.cos(GF.aim);
     for (let k = 0; k < 64; k++) { const f = (k + 1) / 64, d = L * f, x = p.x + sa * d, y = p.y + ca * d, gz = gfH(H, x, y); ap.setXYZ(k, x, Math.max(gz, 0) + 0.08 + (club.putt ? 0 : Math.sin(f * Math.PI) * 0), -y); }
     ap.needsUpdate = true;
     const ex = p.x + sa * L, ey = p.y + ca * L; G3.ring.position.copy(gv(ex, ey, Math.max(gfH(H, ex, ey), 0) + 0.1)); G3.ring.scale.setScalar(club.putt ? 0.18 : 0.6 + L / 160);
@@ -55636,7 +55660,11 @@ function gf3dCamera(dt, bp) {
     if (GF.rep.t < 0.35 && !putt) { const B = behind(S.sx, S.sy, S.shot.a, 7, 2.6, 60); pos = B[0]; look = [bp[0], bp[1], bp[2]]; k = 6; }
     else if (GF.ph === 'result' && S.R.how === 'cup') { const B = behind(bp[0], bp[1], S.shot.a, 9, 3.4, 0); pos = B[0]; look = [bp[0], bp[1], bp[2] + 0.6]; k = 1.5; }
     else if (putt) { const d0 = Math.hypot(S.sx - GF.H.pin[0], S.sy - GF.H.pin[1]), B = behind(S.sx, S.sy, S.shot.a, 3.6 + d0 * 0.22, 1.7 + d0 * 0.13, 0); pos = B[0]; look = [bp[0], bp[1], bp[2]]; k = 3; }
-    else { const B = behind(bp[0], bp[1], a, 11, 4.5, 0); pos = B[0]; look = [bp[0], bp[1], bp[2]]; k = 2.2; }
+    else {
+      // in flight: from above and behind, a little off to the side, looking down on the ball (higher the higher it flies)
+      const sa = Math.sin(a), ca = Math.cos(a), up = Math.max(0, bp[2] - gfH(H, bp[0], bp[1])), back = 13 + up * 0.15, side = 5, cx = bp[0] - sa * back + ca * side, cy = bp[1] - ca * back - sa * side;
+      pos = [cx, cy, Math.max(gfH(H, cx, cy), 0, bp[2]) + 11 + up * 0.25]; look = [bp[0] + sa * 6, bp[1] + ca * 6, bp[2]]; k = 2.6;
+    }
   } else if (p) {
     const putt = GF_CLUBS[GF.club].putt, d = gfToPin(p), B = putt ? behind(p.x, p.y, GF.aim, 3.6 + d * 0.22, 1.7 + d * 0.13, Math.max(2, Math.min(d, 25) * 0.75)) : behind(p.x, p.y, GF.aim, 7, 2.6, 60);
     pos = B[0]; look = B[1]; k = 5;

@@ -24,11 +24,12 @@ function gfHud(force) {
     const lie = (GF_SURF[p.lie] || GF_SURF.rough).lie * (club.k === 'D' && p.lie !== 'tee' ? 0.9 : 1);
     $('gfClubD').textContent = club.putt ? `up to ${GF_PUTTS[GF.putt]} ft` : `${Math.round(club.c * (club.putt ? 1 : lie))} yd${lie < 0.99 ? ' from here' : ''}`;
     $('gfPuttRow').hidden = !club.putt;
+    gfPowUi(); $('gfPowRow').hidden = !mine || GF.ph !== 'aim';
     $('gfPuttScale').textContent = `${GF_PUTTS[GF.putt]} ft`;
     const others = GF.mode === 'net' && !mine && !p.done;
     $('gfTurn').hidden = !(others || (GF.P.length > 1 && GF.ph === 'aim'));
     $('gfTurn').textContent = others ? `${p.nm} is playing` : `${p.nm}, you're up`;
-    $('gfHint').textContent = GF.ph === 'aim' ? (mine ? (club.putt ? 'Space: putt · ← → aim · Q E scale' : 'Space: swing · ← → aim · ↑ ↓ club · M map') : '') : GF.ph === 'swing' ? (GF.m && GF.m.s === 1 ? 'Space: set the power' : 'Space: strike on the line') : GF.ph === 'fly' ? 'Space: hurry it along' : GF.ph === 'card' ? (GF.over || (GF.mode === 'net' && typeof gfnCanNext === 'function' && !gfnCanNext()) ? '' : 'Space: next hole') : GF.ph === 'wait' ? 'Waiting for the host…' : '';
+    $('gfHint').textContent = GF.ph === 'aim' ? (mine ? (club.putt ? 'Space: putt · ← → aim · Z X power · Q E scale' : 'Space: swing · ← → aim · ↑ ↓ club · Z X power · M map') : '') : GF.ph === 'swing' ? (GF.m && GF.m.s === 1 ? 'Space: set the power' : 'Space: strike on the line') : GF.ph === 'fly' ? 'Space: hurry it along' : GF.ph === 'card' ? (GF.over || (GF.mode === 'net' && typeof gfnCanNext === 'function' && !gfnCanNext()) ? '' : 'Space: next hole') : GF.ph === 'wait' ? 'Waiting for the host…' : '';
     $('gfSwing').disabled = !mine && GF.ph !== 'fly' && GF.ph !== 'card';
     $('gfPadBox').classList.toggle('putting', !!club.putt);
   }
@@ -48,6 +49,7 @@ function gfDrawMeter() {
   arc(-0.15, 1.1, 'rgba(8,12,22,0.78)', 26);
   const g = c.createLinearGradient(cx - R, 0, cx + R, 0); g.addColorStop(0, '#5fa04a'); g.addColorStop(0.55, '#ffd88a'); g.addColorStop(0.85, '#ffb060');
   arc(0, 1, g, 16); arc(1, 1.1, '#d8452f', 16);
+  const pz = GF.pw || 1; arc(Math.max(0, pz - 0.035), Math.min(1.1, pz + 0.035), '#3fd44a', 24); arc(pz - 0.004, pz + 0.004, '#eaffd8', 26);
   arc(-0.15, -0.012, 'rgba(216,69,47,0.55)', 16); arc(0.012, 0.06, 'rgba(255,216,138,0.25)', 16);
   arc(-0.012, 0.012, '#ffffff', 22);   // (the strike line)
   // marks at a quarter, a half and three-quarters
@@ -91,7 +93,7 @@ function gfDrawMap() {
   c.fillStyle = '#d8452f'; c.beginPath(); c.arc(X(H.pin[0]), Y(H.pin[1]), 3, 0, 7); c.fill();
   GF.P.forEach((q, i) => { if (q.done || i === GF.cur) return; c.fillStyle = q.col; c.beginPath(); c.arc(X(q.x), Y(q.y), 2.6, 0, 7); c.fill(); });
   const p = gfPlayer(), b = gfBallNow() || [p.x, p.y];
-  if (GF.ph === 'aim') { const club = GF_CLUBS[GF.club], L = club.putt ? GF_PUTTS[GF.putt] * 0.3048 : club.c * GF_YD * (GF_SURF[p.lie] || GF_SURF.rough).lie; c.strokeStyle = 'rgba(255,242,196,0.9)'; c.setLineDash([3, 3]); c.lineWidth = 1.5; c.beginPath(); c.moveTo(X(p.x), Y(p.y)); c.lineTo(X(p.x + Math.sin(GF.aim) * L), Y(p.y + Math.cos(GF.aim) * L)); c.stroke(); c.setLineDash([]); }
+  if (GF.ph === 'aim') { const club = GF_CLUBS[GF.club], L = gfCarryNow() * (GF.pw || 1); c.strokeStyle = 'rgba(255,242,196,0.9)'; c.setLineDash([3, 3]); c.lineWidth = 1.5; c.beginPath(); c.moveTo(X(p.x), Y(p.y)); c.lineTo(X(p.x + Math.sin(GF.aim) * L), Y(p.y + Math.cos(GF.aim) * L)); c.stroke(); c.setLineDash([]); const tx = X(p.x + Math.sin(GF.aim) * L), ty = Y(p.y + Math.cos(GF.aim) * L); c.strokeStyle = '#9be36a'; c.lineWidth = 2; c.beginPath(); c.arc(tx, ty, 5, 0, 7); c.stroke(); c.beginPath(); c.moveTo(tx - 7, ty); c.lineTo(tx + 7, ty); c.moveTo(tx, ty - 7); c.lineTo(tx, ty + 7); c.stroke(); }
   if (GF.shot && GF.rep) { const tr = GF.shot.R.tr; c.strokeStyle = 'rgba(255,255,255,0.7)'; c.lineWidth = 1.2; c.beginPath(); for (let i = 0; i <= GF.rep.i; i += 3) { const q = tr[i]; i ? c.lineTo(X(q[0]), Y(q[1])) : c.moveTo(X(q[0]), Y(q[1])); } c.stroke(); }
   c.fillStyle = '#fff'; c.strokeStyle = p.col; c.lineWidth = 2; c.beginPath(); c.arc(X(b[0]), Y(b[1]), 3.4, 0, 7); c.fill(); c.stroke();
 }

@@ -6,6 +6,9 @@
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 185, date: '2026-11-13', title: "Skerry Links: power bar and a new flight camera", New: [
+    "Skerry Links: a Power bar for each shot. Drag it (or Z and X, or LT and RT) to set the distance you're going for; it moves a green zone on the swing meter, the landing ring and a crosshair on the map. Stop the meter in the green to hit it that far. It starts at the right power for the distance to the pin." ], Changes: [
+    "Skerry Links: the camera now follows the ball in flight from high up behind and off to one side, looking down on it, instead of from just behind." ] },
   { v: 184, date: '2026-11-13', title: "Skerry Links: card wording", Changes: [
     "Skerry Links: tidied the course description on its card." ] },
   { v: 183, date: '2026-11-13', title: "New game: Skerry Links", New: [

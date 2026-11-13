@@ -207,6 +207,7 @@ function gfReadyShot() {
   if (p.st === 0 && H.pts.length > 2 && d > 240) { const q = H.pts[1]; GF.aim = Math.atan2(q[0] - p.x, q[1] - p.y); }
   GF.club = gfPickClub(p, d);
   GF.putt = gfPuttScale(d);
+  gfAutoPow();
   GF.m = null; GF.ph = 'aim'; GF.view = 'aim'; GF.lookT = 0;
   if (typeof G3 !== 'undefined' && GF.intro <= 0) G3.cp = null;   // (a cut to the new shot, not a swing round through the golfer)
   if (GF.mode === 'net' && typeof gfnTurned === 'function') gfnTurned();
@@ -380,13 +381,19 @@ function gfFrame(dt) {
   if (typeof gf3dDraw === 'function') gf3dDraw(dt);
   if (typeof gfHud === 'function') gfHud(false);
 }
+// the power you mean to hit with (the green zone on the meter, and where the ring and the map's mark sit): to start
+// with, what the distance to the pin calls for with this club; then wherever you drag the power bar (or Z and X)
+function gfCarryNow() { const p = gfPlayer(), club = GF_CLUBS[GF.club]; if (club.putt) return GF_PUTTS[GF.putt] * 0.3048; return club.c * GF_YD * (GF_SURF[p.lie] || GF_SURF.rough).lie * (club.k === 'D' && p.lie !== 'tee' ? 0.9 : 1); }
+function gfAutoPow() { const p = gfPlayer(); if (!p) return; GF.pw = Math.max(0.05, Math.min(1, gfToPin(p) / gfCarryNow())); gfPowUi(); }
+function gfSetPow(v) { if (GF.ph !== 'aim' || !gfMyTurn()) return; GF.pw = Math.max(0.05, Math.min(1, v)); gfPowUi(); }
+function gfPowUi() { const s = $('gfPow'); if (s && document.activeElement !== s) s.value = String(Math.round(GF.pw * 100)); const o = $('gfPowOut'); if (o) { const c = GF_CLUBS[GF.club], L = gfCarryNow() * GF.pw; o.textContent = `${Math.round(GF.pw * 100)}% · ${c.putt ? Math.round(L / 0.3048) + ' ft' : Math.round(L / GF_YD) + ' yd'}`; } }
 function gfClub(d) {
   if (GF.ph !== 'aim' || !gfMyTurn()) return;
   GF.club = Math.max(0, Math.min(GF_CLUBS.length - 1, GF.club + d));
   if (GF_CLUBS[GF.club].putt) GF.putt = gfPuttScale(gfToPin(gfPlayer()));
-  gfSnd('tick'); gfHud(true);
+  gfAutoPow(); gfSnd('tick'); gfHud(true);
 }
-function gfPuttStep(d) { if (GF.ph !== 'aim' || !gfMyTurn() || !GF_CLUBS[GF.club].putt) return; GF.putt = Math.max(0, Math.min(GF_PUTTS.length - 1, GF.putt + d)); gfHud(true); }
+function gfPuttStep(d) { if (GF.ph !== 'aim' || !gfMyTurn() || !GF_CLUBS[GF.club].putt) return; GF.putt = Math.max(0, Math.min(GF_PUTTS.length - 1, GF.putt + d)); gfAutoPow(); gfHud(true); }
 function gfPauseOpen(on) {
   if (!GF.on) return;
   $('gfPause').hidden = !on;
@@ -406,6 +413,8 @@ function gfKey(e, down) {
   else if (e.repeat) { if (k === ' ') e.preventDefault(); return; }
   else if (k === 'ArrowUp' || k === 'w' || k === 'W') { e.preventDefault(); gfClub(-1); }
   else if (k === 'ArrowDown' || k === 's' || k === 'S') { e.preventDefault(); gfClub(1); }
+  else if (k === 'z' || k === 'Z') gfSetPow(GF.pw - 0.05);
+  else if (k === 'x' || k === 'X') gfSetPow(GF.pw + 0.05);
   else if (k === 'q' || k === 'Q') gfPuttStep(-1);
   else if (k === 'e' || k === 'E') gfPuttStep(1);
   else if (k === ' ' || k === 'Enter') { e.preventDefault(); if (!$('gfCard').hidden && GF.over) return; gfPress(); }
@@ -428,6 +437,7 @@ function gfPadPoll(dt) {
   if (Math.abs(ay) > 0.6 && Math.abs(GF.padY) <= 0.6) gfClub(ay > 0 ? 1 : -1); GF.padY = ay;
   if (down(12)) gfClub(-1); if (down(13)) gfClub(1);
   if (down(4)) gfPuttStep(-1); if (down(5)) gfPuttStep(1);
+  const lt = p.buttons[6] ? p.buttons[6].value : 0, rt = p.buttons[7] ? p.buttons[7].value : 0; if (lt > 0.2 || rt > 0.2) gfSetPow(GF.pw + (rt - lt) * dt * 0.6);
   if (down(0)) { if (!$('gfCard').hidden && GF.over) $('gfCardMenu').click(); else gfPress(); }
   if (down(2)) gfLook();
   if (down(3)) gfCardShow($('gfCard').hidden, true);
@@ -534,6 +544,8 @@ function gfDebugShot(club, power, acc, aim) { if (GF.ph !== 'aim') return null; 
   $('gfPuttDn').addEventListener('click', () => gfPuttStep(-1)); $('gfPuttUp').addEventListener('click', () => gfPuttStep(1));
   $('gfSwing').addEventListener('pointerdown', e => { e.preventDefault(); gfPress(); });
   $('gfLookBtn').addEventListener('click', gfLook);
+  $('gfPow').addEventListener('input', () => gfSetPow(+$('gfPow').value / 100));
+  for (const t of ['pointerdown', 'keydown']) $('gfPow').addEventListener(t, e => e.stopPropagation());
   $('gfCardBtn').addEventListener('click', () => gfCardShow($('gfCard').hidden, true));
   // a tap on the 3D view swings too (the meter's below it)
   $('gfCv').addEventListener('pointerdown', e => { if (e.pointerType === 'mouse' && e.button !== 0) return; gfPress(); });

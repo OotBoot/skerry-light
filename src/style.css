@@ -1374,3 +1374,9 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
   .gf-tools { top: auto; bottom: 58px; flex-direction: column; }
 }
 .gfcard { border-color: rgba(143,194,106,0.5); } .gfcard h1 { text-shadow: 0 0 28px rgba(120,170,90,0.4); }
+
+/* Skerry Links: the power bar you drag (the green zone on the meter, the ring and the map's mark follow it) */
+.gf-pow { grid-column: 3; grid-row: 3; justify-self: end; width: min(100%, 300px); display: flex; flex-direction: column; gap: 2px; background: rgba(8,12,22,0.72); border: 1px solid rgba(236,228,207,0.16); padding: 6px 10px; font-size: 12px; color: var(--muted); z-index: 1; margin-bottom: 48px; }
+.gf-pow output { color: #9be36a; margin-left: 6px; }
+.gf-pow input { width: 100%; accent-color: #3fd44a; height: 26px; touch-action: none; }
+@media (max-width: 720px) { .gf-pow { grid-column: 1; grid-row: 5; justify-self: start; width: calc(100% - 96px); max-width: 320px; margin-bottom: 0; } }
