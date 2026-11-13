@@ -394,7 +394,7 @@ function fpsIsleRay(G, x, y, z, sx, sy, tp, best) {
     if (za <= s.z1 && za >= lo) th = t0;
     else if (za > s.z1 && zb <= s.z1) th = t0 + (s.z1 - za) / (zb - za) * (t1 - t0);
     else if (za < lo && zb >= lo) th = t0 + (lo - za) / (zb - za) * (t1 - t0);
-    if (th != null && th < best.t) best = { t: th, kind: 'prop' };
+    if (th != null && th < best.t) { best.t = th; best.kind = 'prop'; }   // (in place: rays are cast by the hundred a frame)
   }
   return best;
 }
@@ -1518,23 +1518,37 @@ function fpsIsleFrame3D() {
 // it rather than left out; and what counts as behind it is decided in gl3dClip by whether your line of sight
 // to the thing actually crosses the solid (see fpsIsleBehind), not by comparing the solid's middle.
 const FPI_CUT = 0.25;
+// (worked in place in a few reused buffers: this runs every frame over every prop, and the garbage it used to leave
+// behind was most of what the frame threw away)
+const FPI_B = { r: new Float64Array(32), f: new Float64Array(32), z: new Float64Array(32) };
 function fpsIsleOccluders(out) {
   const I = g.isle; if (!I || I.T.indoor) return;   // (the Lighthouse paints nothing over its 3D rooms that walls need to hide)
+  const sy = Math.sin(yaw), cy = Math.cos(yaw), P = !!camPitch, R = FPI_B.r, F = FPI_B.f, Z = FPI_B.z;
   for (const s of I.solids) {
     if (s.occ === false || (s.ray === false && s.occ !== true)) continue;
-    const c0 = cam(s.x, s.y, FPSC.GROUND), reach = s.s === 'c' ? s.r : Math.hypot(s.hw, s.hd);
-    if (c0.f + reach + (s.z1 - FPSC.GROUND) < FPI_CUT || c0.f - reach > 260) continue;
+    // (how far ahead its middle is, as cam() would say)
+    const ex = s.x - camX, ey = s.y - camY, eh = ex * sy + ey * cy, c0f = P ? eh * camCP + (FPSC.GROUND - camH) * camSP : eh, reach = s.s === 'c' ? s.r : Math.hypot(s.hw, s.hd);
+    if (c0f + reach + (s.z1 - FPSC.GROUND) < FPI_CUT || c0f - reach > 260) continue;
     const ring = fpiCorners(s), z0 = s.z0 != null ? s.z0 : FPSC.GROUND - 0.05, n = ring.length;
-    const V = []; for (const z of [z0, s.z1]) for (const [x, y] of ring) V.push([x, y, z]);
-    const E = []; for (let i = 0; i < n; i++) { const j = (i + 1) % n; E.push([i, j], [i + n, j + n], [i, i + n]); }
-    const C = V.map(v => cam(v[0], v[1], v[2])), sc = [];
+    // the corners, bottom ring then top ring, into the camera's frame (as cam() does)
+    for (let h = 0; h < 2; h++) for (let i = 0; i < n; i++) {
+      const k = h * n + i, dx = ring[i][0] - camX, dy = ring[i][1] - camY, z = h ? s.z1 : z0, fh = dx * sy + dy * cy;
+      R[k] = dx * cy - dy * sy;
+      if (!P) { F[k] = fh; Z[k] = z; } else { const dz = z - camH; F[k] = fh * camCP + dz * camSP; Z[k] = camH + dz * camCP - fh * camSP; }
+    }
+    const sc = [];
     let fmin = 1e9, fmax = -1e9;
-    const put = c => { const q = proj(c); sc.push([clamp(q.x, -1e5, 1e5), clamp(q.y, -1e5, 1e5)]); if (c.f < fmin) fmin = c.f; if (c.f > fmax) fmax = c.f; };
-    for (const c of C) if (c.f >= FPI_CUT) put(c);
-    for (const [a, b] of E) {
-      const A = C[a], B = C[b]; if ((A.f >= FPI_CUT) === (B.f >= FPI_CUT)) continue;
-      const t = (FPI_CUT - A.f) / (B.f - A.f);
-      put({ r: A.r + (B.r - A.r) * t, f: FPI_CUT, z: A.z + (B.z - A.z) * t });
+    const put = (r, f, z) => { const k = focal / f; sc.push([clamp(cx + r * k, -1e5, 1e5), clamp(hy - pitchY + (camH - z) * k, -1e5, 1e5)]); if (f < fmin) fmin = f; if (f > fmax) fmax = f; };
+    for (let k = 0; k < 2 * n; k++) if (F[k] >= FPI_CUT) put(R[k], F[k], Z[k]);
+    // the edges (round the bottom, round the top, and up each corner) that cross the cut plane
+    for (let i = 0; i < n; i++) {
+      const j = (i + 1) % n;
+      for (let e = 0; e < 3; e++) {
+        const a = e === 0 ? i : e === 1 ? i + n : i, b = e === 0 ? j : e === 1 ? j + n : i + n;
+        if ((F[a] >= FPI_CUT) === (F[b] >= FPI_CUT)) continue;
+        const t = (FPI_CUT - F[a]) / (F[b] - F[a]);
+        put(R[a] + (R[b] - R[a]) * t, FPI_CUT, Z[a] + (Z[b] - Z[a]) * t);
+      }
     }
     if (sc.length < 3) continue;
     let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9;
@@ -1567,6 +1581,11 @@ function fpsIsleBehind(s, x, y) {
   return true;
 }
 function fpiCorners(s) {
+  // (kept on the solid while it stays put: asked for every frame)
+  const C = s._fc; if (C && C.x === s.x && C.y === s.y && C.ang === s.ang && C.hw === s.hw && C.hd === s.hd && C.r === s.r && C.s === s.s) return C.pts;
+  const pts = fpiCorners0(s); s._fc = { x: s.x, y: s.y, ang: s.ang, hw: s.hw, hd: s.hd, r: s.r, s: s.s, pts }; return pts;
+}
+function fpiCorners0(s) {
   if (s.s === 'c') { const out = []; for (let i = 0; i < 8; i++) { const a = i / 8 * Math.PI * 2; out.push([s.x + Math.cos(a) * s.r, s.y + Math.sin(a) * s.r]); } return out; }
   const c = Math.cos(s.ang), n = Math.sin(s.ang), out = [];
   for (const [u, v] of [[-s.hw, -s.hd], [s.hw, -s.hd], [s.hw, s.hd], [-s.hw, s.hd]]) out.push([s.x + u * c - v * n, s.y + u * n + v * c]);

@@ -32,6 +32,7 @@ const FB_UP = typeof THREE !== 'undefined' ? new THREE.Vector3(0, 1, 0) : null;
 function fbCol(s, d) { try { if (typeof s === 'string' && /^#[0-9a-f]{3,8}$/i.test(s)) return new THREE.Color(s.slice(0, 7)); } catch (e) {} return new THREE.Color(d); }
 function fbMat(c, extra) {
   const m = new THREE.MeshLambertMaterial(Object.assign({ color: c, flatShading: true, transparent: true }, extra || {}));
+  m.forceSinglePass = true;   // (two-sided and see-through: drawn in one go, not inside then outside with the shader set up afresh for each)
   m.userData.base = m.color.clone(); (FBODY.building || FBODY).mats.push(m); return m;
 }
 function fbMesh(geo, mat, x, y, z, parent) { const m = new THREE.Mesh(geo, mat); m.position.set(x || 0, y || 0, z || 0); if (parent) parent.add(m); return m; }
@@ -275,7 +276,7 @@ function fbWeapon(F, id, plain) {
   try { if (typeof vmInit === 'function' && vmInit() && VM_BUILD[id]) built = VM_BUILD[id](vmMatsFor(id, plain)); } catch (e) { built = null; }
   if (built) {
     for (const h of [built.hand, built.left]) if (h) { h.children[0].visible = false; h.children[1].visible = false; }
-    for (const k in built.M) { const m = built.M[k]; if (m && m.isMaterial) { m.transparent = true; F.wmats = F.wmats || new Set(); F.wmats.add(m); } }
+    for (const k in built.M) { const m = built.M[k]; if (m && m.isMaterial) { if (!m.transparent) m.userData.fbSolid = true; m.transparent = true; F.wmats = F.wmats || new Set(); F.wmats.add(m); } }
     for (const o of ['fresh', 'spent', 'old']) if (built[o] && built[o].parent && built[o].parent !== built.root) built[o].parent.remove(built[o]);
   } else {
     // no first-person models to borrow: a plain gun
@@ -383,9 +384,12 @@ function fbPose(F, s) {
   }
   // lit as they're lit, and as solid as they're seen
   const see = s.see, op = s.op;
-  for (const mt of F.mats) { mt.color.copy(mt.userData.base).multiplyScalar(see); mt.opacity = op; }
+  // (only see-through while fading: a see-through two-sided material is drawn twice and set up afresh each time,
+  // which for a whole figure every frame was a good part of the frame; a solid one is drawn once)
+  const solid = op >= 0.995;
+  for (const mt of F.mats) { mt.color.copy(mt.userData.base).multiplyScalar(see); mt.opacity = op; mt.transparent = !solid; }
   F.M.glass.opacity = op;
-  if (F.wmats) for (const mt of F.wmats) mt.opacity = op;
+  if (F.wmats) for (const mt of F.wmats) { mt.opacity = op; if (mt.userData.fbSolid) mt.transparent = !solid; }
   // an outfit's own light: a shimmer in the trim (Mate), a glow and glowing eyes (Captain), and for the Admirals
   // the whole coat alight, and a halo
   const oc = F.oc;

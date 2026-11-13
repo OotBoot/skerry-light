@@ -1007,7 +1007,7 @@ function gwsGL(u) {
   const on = Math.abs(beam) < SK.SHADE + gwsHalf(), wb = beam - V.h, bw = gwsHalf() / SK.HALF_BEAM;
   if (u.uHalf) u.uHalf.value = gwsHalf();
   if (GL3D.beam) { GL3D.beam.visible = on; GL3D.beam.position.set(Lx, 54, -Ly); GL3D.beam.rotation.set(0, -wb, 0); GL3D.beam.scale.set(bw, 1, 1); }
-  if (GL3D.spot) { GL3D.spot.visible = on; GL3D.spot.position.set(Lx, 54, -Ly); GL3D.spot.target.position.set(Lx + Math.sin(wb) * 3000, 0, -(Ly + Math.cos(wb) * 3000)); GL3D.spot.target.updateMatrixWorld(); GL3D.spot.intensity = 2.2; GL3D.spot.angle = Math.min(1.2, gwsHalf()); }
+  if (GL3D.spot) { GL3D.spot.visible = true; GL3D.spot.position.set(Lx, 54, -Ly); GL3D.spot.target.position.set(Lx + Math.sin(wb) * 3000, 0, -(Ly + Math.cos(wb) * 3000)); GL3D.spot.target.updateMatrixWorld(); GL3D.spot.intensity = on ? 2.2 : 0; GL3D.spot.angle = Math.min(1.2, gwsHalf()); }
   GL3D.amb.intensity = GWS_LEG && GWS_LEG.amb ? GWS_LEG.amb[0] : 0.36; GL3D.moon.intensity = GWS_LEG && GWS_LEG.amb ? GWS_LEG.amb[1] : 0.16;   // [fbsea] (a brighter night)
 }
 function gwsGLReset(u) {

@@ -2046,7 +2046,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 // ---- src/config.js ----
 'use strict';
 // The game's version, shown at the top of the main menu. Bump it by one with every change pushed to main.
-var VERSION = 179;
+var VERSION = 180;
 // Skerry Light: tuning, asset paths and lore.
 // World units are metres. The lighthouse stands at the origin on the shoreline (y = 0);
 // north (+y) is open sea. Bearings: 0 = north, positive = east.
@@ -2175,6 +2175,11 @@ const flashK = () => SETTINGS.flashes === 'reduced' ? 0.3 : 1;
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 180, date: '2026-11-13', title: "Smoother frame rate on foot", Changes: [
+    "Keeper's Last Light, the raids, Fog Run and Freebooters' Sea: rooms, stages and the drowned are now drawn in far fewer pieces. The Lighthouse went from about a thousand separate draws a frame to under three hundred, so it runs noticeably smoother, especially on laptops.",
+    "Wreckers' Night: the other wreckers' figures cost much less to draw, and the island's cover is worked out with far less waste each frame, so fights with several players in view hold their frame rate better.",
+    "Every game in 3D: when the game lowers the resolution to keep up, it no longer keeps stepping back up to a resolution that was just too slow, which caused a hitch every few seconds on some machines." ], Fixes: [
+    "Wreckers' Night and The Gannet's Wake: fixed a hitch the first few times the lighthouse beam swept on or off, while the game rebuilt its lighting." ] },
   { v: 179, date: '2026-11-13', title: "Unstuck button", New: [
     "Unstuck: a new button in the in-game menu (Esc, or Start on a controller) in Wreckers' Night, Keeper's Last Light, the raids, Fog Run and Freebooters' Sea. Caught on a rock or a corner? It steps you to a clear spot within a metre of where you stand.",
     "Unstuck only picks a spot you could have walked to, so it never takes you through a wall, a shut door or out of a window. It works in co-op, can be used every 5 seconds, and not while you're down or at the wheel." ] },
@@ -10031,8 +10036,10 @@ function gl3dPace() {
   if (!(d > 0) || d > 1000) return;
   const pr = gl3dPR();
   if (d > 40) { GL3D.slow += d; GL3D.quick = 0; } else { GL3D.slow = Math.max(0, GL3D.slow - d * 0.5); if (d < 21) GL3D.quick += d; }
-  if (GL3D.slow > 1500 && pr > 1) { GL3D.pr = Math.max(1, pr - 0.25); GL3D.slow = 0; gl3dResize(); }
-  else if (GL3D.quick > 5000 && pr < dpr) { GL3D.pr = Math.min(dpr, pr + 0.25); GL3D.quick = 0; gl3dResize(); }
+  // (a resolution that's just proved too slow isn't tried again for a minute: stepping down and back up over and over
+  // was a stutter of its own, every few seconds, each change a hitch while the canvas is made again)
+  if (GL3D.slow > 1500 && pr > 1) { GL3D.cap = pr; GL3D.capT = t; GL3D.pr = Math.max(1, pr - 0.25); GL3D.slow = 0; gl3dResize(); }
+  else if (GL3D.quick > 5000 && pr < dpr) { GL3D.quick = 0; if (!(pr + 0.25 >= (GL3D.cap || 99) && t - GL3D.capT < 60000)) { GL3D.pr = Math.min(dpr, pr + 0.25); gl3dResize(); } }
 }
 // is the 3D renderer drawing this frame?
 function gl3dActive() {
@@ -10420,7 +10427,9 @@ function gl3dRender(roll, sx, sy, beamOn) {
   // the lights
   GL3D.moon.position.set(Math.sin(mb) * 1000, 400, -Math.cos(mb) * 1000); GL3D.moon.target.position.set(0, 0, 0);
   const far = SK.BEAM_RANGE;
-  GL3D.spot.visible = beamOn;
+  // (the spotlight is always counted and only dimmed to nothing when the beam's away: switching it off and on changes
+  // how many lights there are, and three.js then rebuilds the shaders of everything lit, a stall each sweep)
+  GL3D.spot.visible = true; GL3D.spot.intensity = beamOn ? 2.2 : 0;
   GL3D.spot.target.position.set(Math.sin(g.beam) * far, 0, -Math.cos(g.beam) * far);
   GL3D.spot.color.set(glOver('#ffe2a8', `rgba(${B.beam},0.35)`));
   GL3D.lantern.position.set(ship.x, (g.sky ? ship.z || 0 : 0) + (typeof FPS !== 'undefined' && FPS.on && FPS.zm ? (ship.jz || 0) - 1.4 : 0) + 4, -ship.y); GL3D.lantern.distance = LR * 1.2;
@@ -10439,6 +10448,7 @@ function gl3dRender(roll, sx, sy, beamOn) {
   findOccluders();
   for (const [o, m] of GL3D.objs) if (m.seen !== GL3D.frame) dropThing(o, m);
   if (typeof gwsGL === 'function') gwsGL(u);   // [gannet] out on the cutter: the sea in her frame (src/gwsail.js)
+  if (typeof glbTick === 'function') glbTick();   // (the first-person modes: still meshes drawn together, src/glbatch.js)
   GL3D.r.render(GL3D.scene, cam3);
   return shown;
 }
@@ -10949,6 +10959,234 @@ function syncIsland(B) {
   geo.setIndex(idx); geo.computeVertexNormals();
   const m = new THREE.Mesh(geo, new THREE.MeshLambertMaterial({ vertexColors: true, side: THREE.DoubleSide }));
   GL3D.island = m; GL3D.scene.add(m);
+}
+
+// ---- src/glbatch.js ----
+// The 3D view's batching, for the first-person modes: many small meshes that never move against one another,
+// drawn as one.
+//
+// The wreckers' figures, the Lighthouse's rooms, the raids' stages and the drowned are built from hundreds of small
+// meshes (buttons, planks, rivets, fingers), and each one is a draw call of its own: that cost is the computer's
+// processor's, not the graphics chip's, and in the Lighthouse it came to a thousand a frame. Here, meshes that have sat
+// still for a moment (still against the nearest thing above them that does move: an arm, a door, a whole room) and
+// look alike are copied, in that thing's own frame, into one mesh hung from it, and the originals are taken off
+// the camera's layer: they stay where they are in the scene, and their `visible` is still the game's to set.
+//
+// Every frame, before drawing, each batch checks its originals and everything between them and where the batch hangs:
+// if any of them has moved, been shown or hidden, swapped its material or geometry, had its vertices changed or been
+// taken out of the scene, the batch is undone there and then (the originals drawn again, exactly as before), and the
+// thing that changed never counts as still again. So the game never has to know: it moves, hides, swaps and removes
+// things just as it always has. Materials are shared, not copied, so a colour or an opacity set on one still shows (and where
+// several materials that looked alike were drawn as one, the batch is undone when one of them changes).
+// Left out: anything see-through that spreads wide (it has to be sorted on its own), shader materials and materials
+// with their own shader code (some work from a mesh's own coordinates), instanced, skinned and morphing meshes,
+// interleaved or partly drawn geometry, and anything not drawn by frustum. Only while state is 'fps'.
+
+const GLB = { batches: [], src: new Map(), recs: new Map(), vol: new WeakSet(), vmat: new WeakSet(), mkc: new WeakMap(), merged: new WeakSet(), bad: new WeakSet(),
+  scan: 0, frame: 0, next: 0, IDLE: 30, STEADY: 1200, EVERY: 8, CELL: 30, TCELL: 2.5, MAXV: 200000, MS: 2.5, pend: [] };
+const GLB_MAT = typeof THREE !== 'undefined' ? new THREE.Matrix4() : null, GLB_NM = typeof THREE !== 'undefined' ? new THREE.Matrix3() : null;
+
+// a node's record: where it sits, whether it's shown, what hangs it, and (a mesh) what it's made of
+function glbRead(o, r) {
+  const p = o.position, q = o.quaternion, s = o.scale, a = r.a;
+  a[0] = p.x; a[1] = p.y; a[2] = p.z; a[3] = q.x; a[4] = q.y; a[5] = q.z; a[6] = q.w; a[7] = s.x; a[8] = s.y; a[9] = s.z; a[10] = o.visible ? 1 : 0;
+  if (!o.matrixAutoUpdate) { const e = o.matrix.elements; for (let i = 0; i < 16; i++) a[11 + i] = e[i]; }
+  r.par = o.parent; r.mat = o.material; r.geo = o.geometry; r.av = o.isMesh && o.geometry ? glbAttrs(o.geometry) : null; r.gv = r.av ? glbGeoV(r.av) : 0; r.ro = o.renderOrder;
+}
+function glbSame(o, r) {
+  const p = o.position, q = o.quaternion, s = o.scale, a = r.a;
+  if (a[0] !== p.x || a[1] !== p.y || a[2] !== p.z || a[3] !== q.x || a[4] !== q.y || a[5] !== q.z || a[6] !== q.w || a[7] !== s.x || a[8] !== s.y || a[9] !== s.z || a[10] !== (o.visible ? 1 : 0)) return false;
+  if (r.par !== o.parent || r.mat !== o.material || r.geo !== o.geometry || r.ro !== o.renderOrder) return false;
+  if (!o.matrixAutoUpdate) { const e = o.matrix.elements; for (let i = 0; i < 16; i++) if (a[11 + i] !== e[i]) return false; }
+  if (r.av && r.gv !== glbGeoV(r.av)) return false;
+  return true;
+}
+// (a geometry's index and attributes, listed once, so the check each frame leaves nothing behind)
+function glbAttrs(g) { const L = [g.drawRange]; if (g.index) L.push(g.index); for (const k in g.attributes) L.push(g.attributes[k]); return L; }
+function glbGeoV(L) {
+  const d = L[0]; let v = d.start * 13 + (d.count === Infinity ? 0 : d.count * 17);
+  for (let i = 1; i < L.length; i++) v = v * 7 + (L[i].version | 0) + 1;
+  return v;
+}
+function glbRec(o, now) {
+  let r = GLB.recs.get(o);
+  if (!r) { r = { a: new Float64Array(27), since: now, seen: 0 }; glbRead(o, r); GLB.recs.set(o, r); return r; }
+  if (!glbSame(o, r)) { glbRead(o, r); r.since = now; }
+  return r;
+}
+const glbSteady = (o, r, now) => r && !GLB.vol.has(o) && now - r.since >= GLB.STEADY;
+
+// what a material looks like, as numbers (materials that look the same are drawn as one: each frame a batch checks
+// that every material in it still looks as it did)
+const GLB_MP = ['opacity', 'transparent', 'side', 'flatShading', 'vertexColors', 'fog', 'depthWrite', 'depthTest', 'blending', 'alphaTest', 'visible', 'shininess', 'wireframe', 'polygonOffset', 'polygonOffsetFactor', 'polygonOffsetUnits', 'colorWrite', 'toneMapped', 'emissiveIntensity', 'reflectivity', 'version', 'premultipliedAlpha', 'dithering', 'forceSinglePass'];
+const GLB_MC = ['color', 'emissive', 'specular'], GLB_MR = ['map', 'alphaMap', 'emissiveMap', 'specularMap', 'lightMap', 'aoMap', 'bumpMap', 'normalMap', 'envMap', 'displacementMap', 'gradientMap', 'matcap'];
+function glbMatSig(m) {
+  const a = [];
+  for (const k of GLB_MP) { const v = m[k]; a.push(typeof v === 'number' ? v : v === true ? 1 : v === false ? 0 : v == null ? -1 : String(v)); }
+  for (const k of GLB_MC) { const c = m[k]; if (c && c.isColor) a.push(c.r, c.g, c.b); else a.push(-1, -1, -1); }
+  return a;
+}
+function glbMatSame(m, a) {
+  let i = 0;
+  for (const k of GLB_MP) { const v = m[k], w = a[i++]; if (w !== (typeof v === 'number' ? v : v === true ? 1 : v === false ? 0 : v == null ? -1 : String(v))) return false; }
+  for (const k of GLB_MC) { const c = m[k]; if (c && c.isColor) { if (a[i] !== c.r || a[i + 1] !== c.g || a[i + 2] !== c.b) return false; } else if (a[i] !== -1) return false; i += 3; }
+  return true;
+}
+// which materials can stand in for one another: the same kind, the same textures, and the same look
+function glbMatKey(m) {
+  if (GLB.vmat.has(m)) return 'own' + m.id;
+  const c = GLB.mkc.get(m); if (c && glbMatSame(m, c.sig)) return c.k;
+  const k = m.type + '|' + GLB_MR.map(n => m[n] ? m[n].id : '').join(',') + '|' + (m.customProgramCacheKey ? m.customProgramCacheKey() : '') + '|' + Object.keys(m.defines || {}).join(',') + '|' + glbMatSig(m).join(',');
+  GLB.mkc.set(m, { k, sig: glbMatSig(m) }); return k;
+}
+
+// can this mesh go in a batch at all?
+function glbFits(o) {
+  if (!o.isMesh || o.isInstancedMesh || o.isSkinnedMesh || GLB.merged.has(o) || GLB.bad.has(o) || !o.frustumCulled) return false;
+  const m = o.material, g = o.geometry;
+  if (!m || Array.isArray(m) || m.isShaderMaterial || m.isRawShaderMaterial || m.onBeforeCompile !== THREE.Material.prototype.onBeforeCompile) return false;
+  if (o.onBeforeRender !== THREE.Object3D.prototype.onBeforeRender || o.onAfterRender !== THREE.Object3D.prototype.onAfterRender) return false;
+  if (!g || !g.isBufferGeometry || !g.attributes.position || g.attributes.tangent || Object.keys(g.morphAttributes).length || g.drawRange.start !== 0 || g.drawRange.count !== Infinity) return false;
+  for (const k in g.attributes) if (g.attributes[k].isInterleavedBufferAttribute || g.attributes[k].isInstancedBufferAttribute) return false;
+  if (g.index && g.index.isInterleavedBufferAttribute) return false;
+  return true;
+}
+// the attributes' shape, so only geometries that line up go together
+function glbAttrKey(g) {
+  let k = g.index ? 'i' : 'n';
+  for (const n of Object.keys(g.attributes).sort()) { const a = g.attributes[n]; k += '|' + n + a.itemSize + (a.normalized ? 'N' : '') + a.array.constructor.name; }
+  return k;
+}
+
+// once in a while: note what's sat still, and gather what could go together
+function glbScan(now) {
+  const S = GL3D.scene, id = ++GLB.scan, cand = new Map();
+  const walk = (o, anchor, ok) => {
+    if (GLB.merged.has(o)) return;
+    const r = glbRec(o, now); r.seen = id;
+    const still = o !== S && glbSteady(o, r, now);
+    // where things under this hang: here, unless this has sat still (then wherever this hangs)
+    let a = anchor, good = ok && o.visible;
+    if (o !== S && !still) { a = o; good = o.visible; }
+    if (o !== S && still && good && !GLB.src.has(o) && glbFits(o)) {
+      // (worked out once while it stays put under the same anchor and looks the same)
+      const mk = glbMatKey(o.material);
+      if (r.ca !== a || r.cmk !== mk) {
+        const g = o.geometry;
+        if (!g.boundingSphere) g.computeBoundingSphere();
+        // its place in the anchor's frame
+        const M = glbLocal(o, a), c = g.boundingSphere.center.clone().applyMatrix4(M), cell = o.material.transparent ? GLB.TCELL : GLB.CELL;
+        r.ca = a; r.cmk = mk; r.ck = a.id + '|' + mk + '|' + o.renderOrder + '|' + glbAttrKey(g) + '|' + Math.floor(c.x / cell) + ',' + Math.floor(c.y / cell) + ',' + Math.floor(c.z / cell);
+      }
+      const key = r.ck;
+      let L = cand.get(key); if (!L) { L = { a, list: [] }; cand.set(key, L); } L.list.push(o);
+    }
+    for (const ch of o.children) walk(ch, a, good);
+  };
+  walk(S, S, true);
+  for (const [o, r] of GLB.recs) if (r.seen !== id) GLB.recs.delete(o);
+  GLB.pend = [...cand.values()].filter(L => L.list.length >= 2);
+}
+// a mesh's matrix in the frame of something above it
+function glbLocal(o, a) {
+  const chain = []; for (let n = o; n && n !== a; n = n.parent) chain.push(n);
+  const M = new THREE.Matrix4();
+  for (let i = chain.length - 1; i >= 0; i--) { const n = chain[i]; if (n.matrixAutoUpdate) n.updateMatrix(); M.multiply(n.matrix); }
+  return M;
+}
+
+// copy a group of meshes into one geometry, in their anchor's frame
+function glbBuild(P) {
+  const { a, list } = P, S = GL3D.scene;
+  // still all as they were when gathered?
+  let L = list.filter(o => !GLB.src.has(o) && glbFits(o) && glbAttached(o, S));
+  if (L.length < 2) return;
+  // (and every material still looking like the first: one drawn for all of them)
+  const m0 = L[0].material, s0 = glbMatSig(m0); L = L.filter(o => o.material === m0 || (o.material.type === m0.type && glbMatSame(o.material, s0)));
+  if (L.length < 2) return;
+  const g0 = L[0].geometry, names = Object.keys(g0.attributes);
+  let nv = 0, ni = 0; const indexed = !!g0.index;
+  for (const o of L) { const g = o.geometry; nv += g.attributes.position.count; ni += indexed ? g.index.count : 0; }
+  if (nv > GLB.MAXV) return;
+  const out = new THREE.BufferGeometry(), arrs = {};
+  for (const n of names) { const s = g0.attributes[n]; arrs[n] = new s.array.constructor(nv * s.itemSize); }
+  const idx = indexed ? (nv > 65535 ? new Uint32Array(ni) : new Uint16Array(ni)) : null;
+  let vo = 0, io = 0;
+  const nodes = new Set();
+  for (const o of L) {
+    const g = o.geometry, M = glbLocal(o, a), e = M.elements, n = g.attributes.position.count;
+    GLB_NM.getNormalMatrix(M); const ne = GLB_NM.elements, flip = M.determinant() < 0;
+    for (const k of names) {
+      const s = g.attributes[k], d = arrs[k], sz = s.itemSize, src = s.array, base = vo * sz;
+      if (k === 'position') for (let i = 0; i < n; i++) { const x = s.getX(i), y = s.getY(i), z = s.getZ(i), j = base + i * 3;
+        d[j] = e[0] * x + e[4] * y + e[8] * z + e[12]; d[j + 1] = e[1] * x + e[5] * y + e[9] * z + e[13]; d[j + 2] = e[2] * x + e[6] * y + e[10] * z + e[14]; }
+      else if (k === 'normal') for (let i = 0; i < n; i++) { const x = s.getX(i), y = s.getY(i), z = s.getZ(i), j = base + i * 3;
+        let X = ne[0] * x + ne[3] * y + ne[6] * z, Y = ne[1] * x + ne[4] * y + ne[7] * z, Z = ne[2] * x + ne[5] * y + ne[8] * z; const l = Math.hypot(X, Y, Z) || 1;
+        d[j] = X / l; d[j + 1] = Y / l; d[j + 2] = Z / l; }
+      else if (src.length >= n * sz) d.set(src.subarray(0, n * sz), base);
+    }
+    if (indexed) { const si = g.index.array, c = g.index.count; for (let i = 0; i < c; i += 3) { const p = si[i] + vo, q = si[i + 1] + vo, r = si[i + 2] + vo; idx[io++] = p; if (flip) { idx[io++] = r; idx[io++] = q; } else { idx[io++] = q; idx[io++] = r; } } }
+    else if (flip) {
+      // (mirrored: the triangles turned the other way round, so they still face out)
+      for (const k of names) { const d = arrs[k], sz = g0.attributes[k].itemSize; for (let i = 0; i + 2 < n; i += 3) for (let c = 0; c < sz; c++) { const x = (vo + i + 1) * sz + c, y = (vo + i + 2) * sz + c, t = d[x]; d[x] = d[y]; d[y] = t; } }
+    }
+    vo += n;
+    for (let x = o; x && x !== a; x = x.parent) nodes.add(x);
+  }
+  for (const k of names) { const s = g0.attributes[k]; out.setAttribute(k, new THREE.BufferAttribute(arrs[k], s.itemSize, s.normalized)); }
+  if (idx) out.setIndex(new THREE.BufferAttribute(idx, 1));
+  out.computeBoundingSphere(); out.computeBoundingBox();
+  const mesh = new THREE.Mesh(out, L[0].material);
+  mesh.renderOrder = L[0].renderOrder; mesh.castShadow = L[0].castShadow; mesh.receiveShadow = L[0].receiveShadow; mesh.name = 'batch';
+  GLB.merged.add(mesh); a.add(mesh); mesh.updateMatrixWorld();
+  const mats = [...new Set(L.map(o => o.material))];
+  const B = { a, mesh, srcs: L, nodes: [...nodes], masks: L.map(o => o.layers.mask), mats, msig: mats.map(glbMatSig) };
+  for (const o of L) { GLB.src.set(o, B); o.layers.mask = 0; }
+  // what each frame checks against: the records as they are now
+  for (const x of B.nodes) { const r = GLB.recs.get(x) || glbRec(x, 0); glbRead(x, r); }
+  GLB.batches.push(B);
+}
+function glbAttached(o, S) { for (let x = o; x; x = x.parent) if (x === S) return true; return false; }
+
+// undo a batch: the originals drawn again, the copy gone
+function glbUndo(B) {
+  B.srcs.forEach((o, i) => { if (o.layers.mask === 0) o.layers.mask = B.masks[i]; GLB.src.delete(o); });
+  if (B.mesh.parent) B.mesh.parent.remove(B.mesh);
+  B.mesh.geometry.dispose();
+  const i = GLB.batches.indexOf(B); if (i >= 0) GLB.batches.splice(i, 1);
+}
+function glbClear() { while (GLB.batches.length) glbUndo(GLB.batches[GLB.batches.length - 1]); GLB.recs.clear(); GLB.pend = []; }
+
+// each frame, before the 3D view is drawn
+function glbTick() {
+  if (typeof GL3D === 'undefined' || !GL3D.scene) return;
+  if (state !== 'fps' || GLB.off) { if (GLB.batches.length || GLB.recs.size) glbClear(); return; }
+  const now = performance.now(), S = GL3D.scene;
+  // anything changed under a batch: undone at once, and what changed never counts as still again
+  for (let b = GLB.batches.length - 1; b >= 0; b--) {
+    const B = GLB.batches[b]; let gone = B.mesh.parent !== B.a;
+    if (!gone) for (const x of B.nodes) { const r = GLB.recs.get(x); if (!r || !glbSame(x, r)) { GLB.vol.add(x); if (r) { glbRead(x, r); r.since = now; } gone = true; break; } }
+    if (!gone) for (const o of B.srcs) if (o.layers.mask !== 0) { GLB.vol.add(o); gone = true; break; }
+    // (a material changed: those that looked alike may not now; that material isn't shared out again)
+    if (!gone && B.mats.length > 1) for (let i = 0; i < B.mats.length; i++) if (!glbMatSame(B.mats[i], B.msig[i])) { GLB.vmat.add(B.mats[i]); gone = true; break; }
+    if (!gone && (GLB.frame % GLB.EVERY === 0) && !glbAttached(B.a, S)) gone = true;
+    if (gone) glbUndo(B);
+  }
+  GLB.frame++;
+  // build what's waiting, a little each frame; then look again
+  if (GLB.pend.length) { const t0 = performance.now(); while (GLB.pend.length && performance.now() - t0 < GLB.MS) { const P = GLB.pend.shift(); try { glbBuild(P); } catch (e) { for (const o of P.list) GLB.bad.add(o); } } }
+  else if (GLB.frame >= GLB.next) { glbScan(now); GLB.next = GLB.frame + (GLB.pend.length ? GLB.EVERY : GLB.IDLE); }
+}
+
+// a copy of something batched: drawn like the original, and without the batch's own copy
+if (typeof THREE !== 'undefined') {
+  const copy0 = THREE.Object3D.prototype.copy;
+  THREE.Object3D.prototype.copy = function (source, recursive) {
+    copy0.call(this, source, recursive);
+    const B = GLB.src.get(source); if (B) { const i = B.srcs.indexOf(source); this.layers.mask = B.masks[i]; }
+    if (recursive !== false && source.children.length === this.children.length) for (let i = source.children.length - 1; i >= 0; i--) if (GLB.merged.has(source.children[i])) this.remove(this.children[i]);
+    return this;
+  };
 }
 
 // ---- src/game.js ----
@@ -16792,7 +17030,7 @@ function fpsIsleRay(G, x, y, z, sx, sy, tp, best) {
     if (za <= s.z1 && za >= lo) th = t0;
     else if (za > s.z1 && zb <= s.z1) th = t0 + (s.z1 - za) / (zb - za) * (t1 - t0);
     else if (za < lo && zb >= lo) th = t0 + (lo - za) / (zb - za) * (t1 - t0);
-    if (th != null && th < best.t) best = { t: th, kind: 'prop' };
+    if (th != null && th < best.t) { best.t = th; best.kind = 'prop'; }   // (in place: rays are cast by the hundred a frame)
   }
   return best;
 }
@@ -17916,23 +18154,37 @@ function fpsIsleFrame3D() {
 // it rather than left out; and what counts as behind it is decided in gl3dClip by whether your line of sight
 // to the thing actually crosses the solid (see fpsIsleBehind), not by comparing the solid's middle.
 const FPI_CUT = 0.25;
+// (worked in place in a few reused buffers: this runs every frame over every prop, and the garbage it used to leave
+// behind was most of what the frame threw away)
+const FPI_B = { r: new Float64Array(32), f: new Float64Array(32), z: new Float64Array(32) };
 function fpsIsleOccluders(out) {
   const I = g.isle; if (!I || I.T.indoor) return;   // (the Lighthouse paints nothing over its 3D rooms that walls need to hide)
+  const sy = Math.sin(yaw), cy = Math.cos(yaw), P = !!camPitch, R = FPI_B.r, F = FPI_B.f, Z = FPI_B.z;
   for (const s of I.solids) {
     if (s.occ === false || (s.ray === false && s.occ !== true)) continue;
-    const c0 = cam(s.x, s.y, FPSC.GROUND), reach = s.s === 'c' ? s.r : Math.hypot(s.hw, s.hd);
-    if (c0.f + reach + (s.z1 - FPSC.GROUND) < FPI_CUT || c0.f - reach > 260) continue;
+    // (how far ahead its middle is, as cam() would say)
+    const ex = s.x - camX, ey = s.y - camY, eh = ex * sy + ey * cy, c0f = P ? eh * camCP + (FPSC.GROUND - camH) * camSP : eh, reach = s.s === 'c' ? s.r : Math.hypot(s.hw, s.hd);
+    if (c0f + reach + (s.z1 - FPSC.GROUND) < FPI_CUT || c0f - reach > 260) continue;
     const ring = fpiCorners(s), z0 = s.z0 != null ? s.z0 : FPSC.GROUND - 0.05, n = ring.length;
-    const V = []; for (const z of [z0, s.z1]) for (const [x, y] of ring) V.push([x, y, z]);
-    const E = []; for (let i = 0; i < n; i++) { const j = (i + 1) % n; E.push([i, j], [i + n, j + n], [i, i + n]); }
-    const C = V.map(v => cam(v[0], v[1], v[2])), sc = [];
+    // the corners, bottom ring then top ring, into the camera's frame (as cam() does)
+    for (let h = 0; h < 2; h++) for (let i = 0; i < n; i++) {
+      const k = h * n + i, dx = ring[i][0] - camX, dy = ring[i][1] - camY, z = h ? s.z1 : z0, fh = dx * sy + dy * cy;
+      R[k] = dx * cy - dy * sy;
+      if (!P) { F[k] = fh; Z[k] = z; } else { const dz = z - camH; F[k] = fh * camCP + dz * camSP; Z[k] = camH + dz * camCP - fh * camSP; }
+    }
+    const sc = [];
     let fmin = 1e9, fmax = -1e9;
-    const put = c => { const q = proj(c); sc.push([clamp(q.x, -1e5, 1e5), clamp(q.y, -1e5, 1e5)]); if (c.f < fmin) fmin = c.f; if (c.f > fmax) fmax = c.f; };
-    for (const c of C) if (c.f >= FPI_CUT) put(c);
-    for (const [a, b] of E) {
-      const A = C[a], B = C[b]; if ((A.f >= FPI_CUT) === (B.f >= FPI_CUT)) continue;
-      const t = (FPI_CUT - A.f) / (B.f - A.f);
-      put({ r: A.r + (B.r - A.r) * t, f: FPI_CUT, z: A.z + (B.z - A.z) * t });
+    const put = (r, f, z) => { const k = focal / f; sc.push([clamp(cx + r * k, -1e5, 1e5), clamp(hy - pitchY + (camH - z) * k, -1e5, 1e5)]); if (f < fmin) fmin = f; if (f > fmax) fmax = f; };
+    for (let k = 0; k < 2 * n; k++) if (F[k] >= FPI_CUT) put(R[k], F[k], Z[k]);
+    // the edges (round the bottom, round the top, and up each corner) that cross the cut plane
+    for (let i = 0; i < n; i++) {
+      const j = (i + 1) % n;
+      for (let e = 0; e < 3; e++) {
+        const a = e === 0 ? i : e === 1 ? i + n : i, b = e === 0 ? j : e === 1 ? j + n : i + n;
+        if ((F[a] >= FPI_CUT) === (F[b] >= FPI_CUT)) continue;
+        const t = (FPI_CUT - F[a]) / (F[b] - F[a]);
+        put(R[a] + (R[b] - R[a]) * t, FPI_CUT, Z[a] + (Z[b] - Z[a]) * t);
+      }
     }
     if (sc.length < 3) continue;
     let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9;
@@ -17965,6 +18217,11 @@ function fpsIsleBehind(s, x, y) {
   return true;
 }
 function fpiCorners(s) {
+  // (kept on the solid while it stays put: asked for every frame)
+  const C = s._fc; if (C && C.x === s.x && C.y === s.y && C.ang === s.ang && C.hw === s.hw && C.hd === s.hd && C.r === s.r && C.s === s.s) return C.pts;
+  const pts = fpiCorners0(s); s._fc = { x: s.x, y: s.y, ang: s.ang, hw: s.hw, hd: s.hd, r: s.r, s: s.s, pts }; return pts;
+}
+function fpiCorners0(s) {
   if (s.s === 'c') { const out = []; for (let i = 0; i < 8; i++) { const a = i / 8 * Math.PI * 2; out.push([s.x + Math.cos(a) * s.r, s.y + Math.sin(a) * s.r]); } return out; }
   const c = Math.cos(s.ang), n = Math.sin(s.ang), out = [];
   for (const [u, v] of [[-s.hw, -s.hd], [s.hw, -s.hd], [s.hw, s.hd], [-s.hw, s.hd]]) out.push([s.x + u * c - v * n, s.y + u * n + v * c]);
@@ -19228,6 +19485,7 @@ const FB_UP = typeof THREE !== 'undefined' ? new THREE.Vector3(0, 1, 0) : null;
 function fbCol(s, d) { try { if (typeof s === 'string' && /^#[0-9a-f]{3,8}$/i.test(s)) return new THREE.Color(s.slice(0, 7)); } catch (e) {} return new THREE.Color(d); }
 function fbMat(c, extra) {
   const m = new THREE.MeshLambertMaterial(Object.assign({ color: c, flatShading: true, transparent: true }, extra || {}));
+  m.forceSinglePass = true;   // (two-sided and see-through: drawn in one go, not inside then outside with the shader set up afresh for each)
   m.userData.base = m.color.clone(); (FBODY.building || FBODY).mats.push(m); return m;
 }
 function fbMesh(geo, mat, x, y, z, parent) { const m = new THREE.Mesh(geo, mat); m.position.set(x || 0, y || 0, z || 0); if (parent) parent.add(m); return m; }
@@ -19471,7 +19729,7 @@ function fbWeapon(F, id, plain) {
   try { if (typeof vmInit === 'function' && vmInit() && VM_BUILD[id]) built = VM_BUILD[id](vmMatsFor(id, plain)); } catch (e) { built = null; }
   if (built) {
     for (const h of [built.hand, built.left]) if (h) { h.children[0].visible = false; h.children[1].visible = false; }
-    for (const k in built.M) { const m = built.M[k]; if (m && m.isMaterial) { m.transparent = true; F.wmats = F.wmats || new Set(); F.wmats.add(m); } }
+    for (const k in built.M) { const m = built.M[k]; if (m && m.isMaterial) { if (!m.transparent) m.userData.fbSolid = true; m.transparent = true; F.wmats = F.wmats || new Set(); F.wmats.add(m); } }
     for (const o of ['fresh', 'spent', 'old']) if (built[o] && built[o].parent && built[o].parent !== built.root) built[o].parent.remove(built[o]);
   } else {
     // no first-person models to borrow: a plain gun
@@ -19579,9 +19837,12 @@ function fbPose(F, s) {
   }
   // lit as they're lit, and as solid as they're seen
   const see = s.see, op = s.op;
-  for (const mt of F.mats) { mt.color.copy(mt.userData.base).multiplyScalar(see); mt.opacity = op; }
+  // (only see-through while fading: a see-through two-sided material is drawn twice and set up afresh each time,
+  // which for a whole figure every frame was a good part of the frame; a solid one is drawn once)
+  const solid = op >= 0.995;
+  for (const mt of F.mats) { mt.color.copy(mt.userData.base).multiplyScalar(see); mt.opacity = op; mt.transparent = !solid; }
   F.M.glass.opacity = op;
-  if (F.wmats) for (const mt of F.wmats) mt.opacity = op;
+  if (F.wmats) for (const mt of F.wmats) { mt.opacity = op; if (mt.userData.fbSolid) mt.transparent = !solid; }
   // an outfit's own light: a shimmer in the trim (Mate), a glow and glowing eyes (Captain), and for the Admirals
   // the whole coat alight, and a halo
   const oc = F.oc;
@@ -37022,7 +37283,7 @@ function gwsGL(u) {
   const on = Math.abs(beam) < SK.SHADE + gwsHalf(), wb = beam - V.h, bw = gwsHalf() / SK.HALF_BEAM;
   if (u.uHalf) u.uHalf.value = gwsHalf();
   if (GL3D.beam) { GL3D.beam.visible = on; GL3D.beam.position.set(Lx, 54, -Ly); GL3D.beam.rotation.set(0, -wb, 0); GL3D.beam.scale.set(bw, 1, 1); }
-  if (GL3D.spot) { GL3D.spot.visible = on; GL3D.spot.position.set(Lx, 54, -Ly); GL3D.spot.target.position.set(Lx + Math.sin(wb) * 3000, 0, -(Ly + Math.cos(wb) * 3000)); GL3D.spot.target.updateMatrixWorld(); GL3D.spot.intensity = 2.2; GL3D.spot.angle = Math.min(1.2, gwsHalf()); }
+  if (GL3D.spot) { GL3D.spot.visible = true; GL3D.spot.position.set(Lx, 54, -Ly); GL3D.spot.target.position.set(Lx + Math.sin(wb) * 3000, 0, -(Ly + Math.cos(wb) * 3000)); GL3D.spot.target.updateMatrixWorld(); GL3D.spot.intensity = on ? 2.2 : 0; GL3D.spot.angle = Math.min(1.2, gwsHalf()); }
   GL3D.amb.intensity = GWS_LEG && GWS_LEG.amb ? GWS_LEG.amb[0] : 0.36; GL3D.moon.intensity = GWS_LEG && GWS_LEG.amb ? GWS_LEG.amb[1] : 0.16;   // [fbsea] (a brighter night)
 }
 function gwsGLReset(u) {

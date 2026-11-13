@@ -92,8 +92,10 @@ function gl3dPace() {
   if (!(d > 0) || d > 1000) return;
   const pr = gl3dPR();
   if (d > 40) { GL3D.slow += d; GL3D.quick = 0; } else { GL3D.slow = Math.max(0, GL3D.slow - d * 0.5); if (d < 21) GL3D.quick += d; }
-  if (GL3D.slow > 1500 && pr > 1) { GL3D.pr = Math.max(1, pr - 0.25); GL3D.slow = 0; gl3dResize(); }
-  else if (GL3D.quick > 5000 && pr < dpr) { GL3D.pr = Math.min(dpr, pr + 0.25); GL3D.quick = 0; gl3dResize(); }
+  // (a resolution that's just proved too slow isn't tried again for a minute: stepping down and back up over and over
+  // was a stutter of its own, every few seconds, each change a hitch while the canvas is made again)
+  if (GL3D.slow > 1500 && pr > 1) { GL3D.cap = pr; GL3D.capT = t; GL3D.pr = Math.max(1, pr - 0.25); GL3D.slow = 0; gl3dResize(); }
+  else if (GL3D.quick > 5000 && pr < dpr) { GL3D.quick = 0; if (!(pr + 0.25 >= (GL3D.cap || 99) && t - GL3D.capT < 60000)) { GL3D.pr = Math.min(dpr, pr + 0.25); gl3dResize(); } }
 }
 // is the 3D renderer drawing this frame?
 function gl3dActive() {
@@ -481,7 +483,9 @@ function gl3dRender(roll, sx, sy, beamOn) {
   // the lights
   GL3D.moon.position.set(Math.sin(mb) * 1000, 400, -Math.cos(mb) * 1000); GL3D.moon.target.position.set(0, 0, 0);
   const far = SK.BEAM_RANGE;
-  GL3D.spot.visible = beamOn;
+  // (the spotlight is always counted and only dimmed to nothing when the beam's away: switching it off and on changes
+  // how many lights there are, and three.js then rebuilds the shaders of everything lit, a stall each sweep)
+  GL3D.spot.visible = true; GL3D.spot.intensity = beamOn ? 2.2 : 0;
   GL3D.spot.target.position.set(Math.sin(g.beam) * far, 0, -Math.cos(g.beam) * far);
   GL3D.spot.color.set(glOver('#ffe2a8', `rgba(${B.beam},0.35)`));
   GL3D.lantern.position.set(ship.x, (g.sky ? ship.z || 0 : 0) + (typeof FPS !== 'undefined' && FPS.on && FPS.zm ? (ship.jz || 0) - 1.4 : 0) + 4, -ship.y); GL3D.lantern.distance = LR * 1.2;
@@ -500,6 +504,7 @@ function gl3dRender(roll, sx, sy, beamOn) {
   findOccluders();
   for (const [o, m] of GL3D.objs) if (m.seen !== GL3D.frame) dropThing(o, m);
   if (typeof gwsGL === 'function') gwsGL(u);   // [gannet] out on the cutter: the sea in her frame (src/gwsail.js)
+  if (typeof glbTick === 'function') glbTick();   // (the first-person modes: still meshes drawn together, src/glbatch.js)
   GL3D.r.render(GL3D.scene, cam3);
   return shown;
 }

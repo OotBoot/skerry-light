@@ -6,6 +6,11 @@
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 180, date: '2026-11-13', title: "Smoother frame rate on foot", Changes: [
+    "Keeper's Last Light, the raids, Fog Run and Freebooters' Sea: rooms, stages and the drowned are now drawn in far fewer pieces. The Lighthouse went from about a thousand separate draws a frame to under three hundred, so it runs noticeably smoother, especially on laptops.",
+    "Wreckers' Night: the other wreckers' figures cost much less to draw, and the island's cover is worked out with far less waste each frame, so fights with several players in view hold their frame rate better.",
+    "Every game in 3D: when the game lowers the resolution to keep up, it no longer keeps stepping back up to a resolution that was just too slow, which caused a hitch every few seconds on some machines." ], Fixes: [
+    "Wreckers' Night and The Gannet's Wake: fixed a hitch the first few times the lighthouse beam swept on or off, while the game rebuilt its lighting." ] },
   { v: 179, date: '2026-11-13', title: "Unstuck button", New: [
     "Unstuck: a new button in the in-game menu (Esc, or Start on a controller) in Wreckers' Night, Keeper's Last Light, the raids, Fog Run and Freebooters' Sea. Caught on a rock or a corner? It steps you to a clear spot within a metre of where you stand.",
     "Unstuck only picks a spot you could have walked to, so it never takes you through a wall, a shut door or out of a window. It works in co-op, can be used every 5 seconds, and not while you're down or at the wheel." ] },
