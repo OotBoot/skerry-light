@@ -116,11 +116,13 @@ function gfSim(H, x0, y0, clubI, aim, power, acc, wind, pu) {
       if (sf === 'water' || sf === 'out') { how = sf; break; }
       const S = GF_SURF[sf], n = gfNorm(H, B.x, B.y), gr = sf === 'green', sl = gr ? GFC.GR_SLOPE : 1, gx = -n[0] / n[2] * sl, gy = -n[1] / n[2] * sl;
       const sp = Math.hypot(B.vx, B.vy), slA = GFC.G * 5 / 7 * Math.hypot(gx, gy), fr = gr ? GFC.GR_A0 + GFC.GR_B * sp : S.roll * GFC.G;
-      if (sp < (gr ? 0.03 : 0.04) && slA < (gr ? GFC.G * 0.05 : fr * 1.05)) { how = 'rest'; B.vx = B.vy = 0; tr.push([B.x, B.y, gfH(H, B.x, B.y)]); break; }
+      const dPin = Math.hypot(H.pin[0] - B.x, H.pin[1] - B.y);
+      if (sp < (gr ? 0.03 : 0.04) && slA < (gr ? GFC.G * 0.05 : fr * 1.05) && !(gr && dPin < 0.2)) { how = 'rest'; B.vx = B.vy = 0; tr.push([B.x, B.y, gfH(H, B.x, B.y)]); break; }
       let ax = -GFC.G * 5 / 7 * gx, ay = -GFC.G * 5 / 7 * gy;
       if (sp > 1e-4) { const k = Math.min(fr, sp / dt) / sp; ax -= B.vx * k; ay -= B.vy * k; }
-      // a slow ball close to the cup is drawn gently in (the cup's edge falls away a little)
-      if (gr) { const dx = H.pin[0] - B.x, dy = H.pin[1] - B.y, d = Math.hypot(dx, dy); if (d < 0.35 && d > 1e-3 && sp < 1.2) { const pull = 0.45 * (1 - d / 0.35); ax += dx / d * pull; ay += dy / d * pull; } }
+      // a slow ball close to the cup is drawn gently in (the cup's edge falls away a little): one dying within about 11 in
+      // of it creeps on and drops, and none comes to rest within 8 in
+      if (gr) { const dx = H.pin[0] - B.x, dy = H.pin[1] - B.y, d = Math.hypot(dx, dy); if (d < 0.4 && d > 1e-3 && sp < 1.2) { const pull = 0.8 * (1 - d / 0.4); ax += dx / d * pull; ay += dy / d * pull; } }
       B.vx += ax * dt; B.vy += ay * dt; B.x += B.vx * dt; B.y += B.vy * dt;
       const g = gfH(H, B.x, B.y);
       // over a lip or a cliff: in the air again
