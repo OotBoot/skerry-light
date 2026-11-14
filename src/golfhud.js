@@ -34,7 +34,13 @@ function gfHud(force) {
     $('gfSwing').disabled = !mine && GF.ph !== 'fly' && GF.ph !== 'card';
     $('gfPadBox').classList.toggle('putting', !!club.putt);
   }
-  gfDrawMeter(); gfDrawWind(); gfDrawMap();
+  // (the canvases only when what they show has moved)
+  const b = gfBallNow(), r1 = v => Math.round(v * 10);
+  const mk = [GF.ph, GF.cur, GF.club, GF.putt, r1(GF.pw || 1), Math.round(GF.aim * 200), b ? r1(b[0]) + ',' + r1(b[1]) : '', GF.P.map(q => r1(q.x) + ',' + r1(q.y)).join('|'), GF.hi, G3.paint ? 1 : 0, $('gfMap').clientWidth].join(';');
+  if (force || mk !== GH.mapKey) { GH.mapKey = mk; gfDrawMap(); }
+  const wk = [GF.hi, Math.round((G3.yaw || 0) * 40)].join(';'); if (force || wk !== GH.windKey) { GH.windKey = wk; gfDrawWind(); }
+  const ek = [GF.ph, GF.intro > 0, GF.club, GF.putt, r1(GF.pw || 1), GF.m ? [GF.m.s, Math.round(GF.m.v * 400), GF.m.p].join(',') : '', $('gfMeter').clientWidth].join(';');
+  if (force || ek !== GH.meterKey) { GH.meterKey = ek; gfDrawMeter(); }
 }
 
 // ---------- the meter ----------

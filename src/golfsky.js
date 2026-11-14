@@ -46,11 +46,11 @@ function gfSkyInit() {
   const rf = new THREE.Mesh(new THREE.ConeGeometry(7.2, 3.6, 4), M(0x5a3a30)); rf.rotation.y = Math.PI / 4; rf.scale.set(1.1, 1, 0.75); rf.position.set(13, 10.8, 4); lh.add(rf);
   G3.cottageWin = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 1.4), new THREE.MeshBasicMaterial({ color: 0x3a3a3a, fog: false })); G3.cottageWin.position.set(13, 6.6, 7.55); lh.add(G3.cottageWin);
   // the beam: one long cone of light from the lantern, brightest at the lamp and fading out along their length
-  const BL = 900, bg = new THREE.ConeGeometry(30, BL, 20, 1, true); bg.translate(0, -BL / 2, 0); bg.rotateZ(Math.PI / 2);
-  const bm = G3.beamMat = new THREE.ShaderMaterial({ transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, fog: false,
+  const BL = 900, bg = new THREE.ConeGeometry(30, BL, 12, 1, true); bg.translate(0, -BL / 2, 0); bg.rotateZ(Math.PI / 2);
+  const bm = G3.beamMat = new THREE.ShaderMaterial({ transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.FrontSide, fog: false,
     uniforms: { k: { value: 0 }, L: { value: BL } },
     vertexShader: 'uniform float L; varying float a; void main(){ a = clamp(position.x / L, 0.0, 1.0); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
-    fragmentShader: 'uniform float k; varying float a; void main(){ float v = pow(1.0 - a, 2.2) * 0.42 * k; gl_FragColor = vec4(vec3(1.0, 0.93, 0.72) * v, 1.0); }' });
+    fragmentShader: 'uniform float k; varying float a; void main(){ float v = pow(1.0 - a, 2.2) * 0.62 * k; gl_FragColor = vec4(vec3(1.0, 0.93, 0.72) * v, 1.0); }' });
   const beams = G3.beams = new THREE.Group(); beams.position.y = 47;
   { const b = new THREE.Mesh(bg, bm); b.rotation.z = -0.025; beams.add(b); }
   lh.add(beams);

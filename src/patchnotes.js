@@ -6,6 +6,10 @@
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 193, date: '2026-11-14', title: "Skerry Links: smoother frame rate", Changes: [
+    "Skerry Links: the course now keeps itself smooth. If your device can't keep up, the 3D view drops its resolution a step at a time until it can, and climbs back when there's room to spare.",
+    "Skerry Links: phones and high-resolution screens draw the course at a slightly lower resolution, without edge smoothing, which costs a lot there and is hard to see on a small screen.",
+    "Skerry Links: the aim line, mini map, wind dial and swing meter are only redrawn when something on them changes, and the lighthouse beam is cheaper to draw." ] },
   { v: 192, date: '2026-11-14', title: "Skerry Links: the whole course in view", New: [
     "Skerry Links: the nine holes now sit together on one course. The 1st to the 3rd run south down the inland side, and the 4th to the 9th run north along the cliffs, each tee just past the last green. From any hole you can see the other eight in the distance, with their fairways, greens, bunkers, trees and a flag on every green, drawn simply so the game stays smooth." ] },
   { v: 191, date: '2026-11-14', title: "Skerry Links: the harbour, and a clearer phone screen", New: [

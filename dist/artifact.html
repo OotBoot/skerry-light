@@ -2293,7 +2293,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 // ---- src/config.js ----
 'use strict';
 // The game's version, shown at the top of the main menu. Bump it by one with every change pushed to main.
-var VERSION = 192;
+var VERSION = 193;
 // Skerry Light: tuning, asset paths and lore.
 // World units are metres. The lighthouse stands at the origin on the shoreline (y = 0);
 // north (+y) is open sea. Bearings: 0 = north, positive = east.
@@ -2422,6 +2422,10 @@ const flashK = () => SETTINGS.flashes === 'reduced' ? 0.3 : 1;
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 193, date: '2026-11-14', title: "Skerry Links: smoother frame rate", Changes: [
+    "Skerry Links: the course now keeps itself smooth. If your device can't keep up, the 3D view drops its resolution a step at a time until it can, and climbs back when there's room to spare.",
+    "Skerry Links: phones and high-resolution screens draw the course at a slightly lower resolution, without edge smoothing, which costs a lot there and is hard to see on a small screen.",
+    "Skerry Links: the aim line, mini map, wind dial and swing meter are only redrawn when something on them changes, and the lighthouse beam is cheaper to draw." ] },
   { v: 192, date: '2026-11-14', title: "Skerry Links: the whole course in view", New: [
     "Skerry Links: the nine holes now sit together on one course. The 1st to the 3rd run south down the inland side, and the 4th to the 9th run north along the cliffs, each tee just past the last green. From any hole you can see the other eight in the distance, with their fairways, greens, bunkers, trees and a flag on every green, drawn simply so the game stays smooth." ] },
   { v: 191, date: '2026-11-14', title: "Skerry Links: the harbour, and a clearer phone screen", New: [
@@ -55374,7 +55378,13 @@ function gfHud(force) {
     $('gfSwing').disabled = !mine && GF.ph !== 'fly' && GF.ph !== 'card';
     $('gfPadBox').classList.toggle('putting', !!club.putt);
   }
-  gfDrawMeter(); gfDrawWind(); gfDrawMap();
+  // (the canvases only when what they show has moved)
+  const b = gfBallNow(), r1 = v => Math.round(v * 10);
+  const mk = [GF.ph, GF.cur, GF.club, GF.putt, r1(GF.pw || 1), Math.round(GF.aim * 200), b ? r1(b[0]) + ',' + r1(b[1]) : '', GF.P.map(q => r1(q.x) + ',' + r1(q.y)).join('|'), GF.hi, G3.paint ? 1 : 0, $('gfMap').clientWidth].join(';');
+  if (force || mk !== GH.mapKey) { GH.mapKey = mk; gfDrawMap(); }
+  const wk = [GF.hi, Math.round((G3.yaw || 0) * 40)].join(';'); if (force || wk !== GH.windKey) { GH.windKey = wk; gfDrawWind(); }
+  const ek = [GF.ph, GF.intro > 0, GF.club, GF.putt, r1(GF.pw || 1), GF.m ? [GF.m.s, Math.round(GF.m.v * 400), GF.m.p].join(',') : '', $('gfMeter').clientWidth].join(';');
+  if (force || ek !== GH.meterKey) { GH.meterKey = ek; gfDrawMeter(); }
 }
 
 // ---------- the meter ----------
@@ -55490,8 +55500,11 @@ function gf3dInit() {
   if (G3.ok) return true;
   if (typeof THREE === 'undefined') return false;
   const cv = $('gfCv');
-  try { G3.r = new THREE.WebGLRenderer({ canvas: cv, antialias: true, powerPreference: 'high-performance' }); } catch (e) { return false; }
-  G3.r.setPixelRatio(Math.min(1.5, window.devicePixelRatio || 1));
+  // (phones and dense screens go without multisampling, which costs most there and shows least)
+  const dpr = window.devicePixelRatio || 1, touch = matchMedia && matchMedia('(pointer: coarse)').matches;
+  G3.lite = touch || dpr >= 2;
+  try { G3.r = new THREE.WebGLRenderer({ canvas: cv, antialias: !G3.lite, powerPreference: 'high-performance' }); } catch (e) { return false; }
+  G3.prMax = Math.min(G3.lite ? 1.25 : 1.5, dpr); G3.pr = G3.prMax; G3.r.setPixelRatio(G3.pr);
   const S = G3.scene = new THREE.Scene();
   S.fog = new THREE.Fog(0xdcc7a2, 260, 1500);
   G3.cam = new THREE.PerspectiveCamera(52, 1, 0.1, 6000);
@@ -55534,6 +55547,17 @@ function gf3dInit() {
   G3.ok = true; gf3dResize();
   return true;
 }
+// the resolution follows the frame rate: down a step when frames run long (under about 50 a second over a second and
+// a half), back up when there's plenty to spare for a few seconds; never under 0.6 of a pixel per screen pixel
+function gf3dScale(dt) {
+  const S = G3.fps || (G3.fps = { n: 0, t: 0, good: 0 }); if (!(dt > 0) || dt > 0.25) return;
+  S.n++; S.t += dt; if (S.t < 1.5) return;
+  const avg = S.t / S.n; S.n = 0; S.t = 0;
+  let pr = G3.pr;
+  if (avg > 1 / 50) { pr = Math.max(0.6, pr - (avg > 1 / 30 ? 0.25 : 0.12)); S.good = 0; }
+  else if (avg < 1 / 58) { if (++S.good >= 3 && pr < G3.prMax) { pr = Math.min(G3.prMax, pr + 0.1); S.good = 0; } }
+  if (Math.abs(pr - G3.pr) > 1e-3) { G3.pr = pr; G3.r.setPixelRatio(pr); gf3dResize(); }
+}
 function gf3dResize() { if (!G3.r) return; const w = innerWidth, h = innerHeight; G3.r.setSize(w, h, false); G3.cam.aspect = w / h; G3.cam.fov = w < h ? 64 : 52; G3.cam.updateProjectionMatrix(); }
 
 // ---------- the golfer ----------
@@ -55562,7 +55586,7 @@ function gf3dHole(H) {
   if (G3.hole) { G3.scene.remove(G3.hole); gf3dDispose(G3.hole); }
   const grp = G3.hole = new THREE.Group();
   const P = G3.paint = gf3dPaint(H);
-  const tex = new THREE.CanvasTexture(P.cv); tex.anisotropy = Math.min(8, G3.r.capabilities.getMaxAnisotropy ? G3.r.capabilities.getMaxAnisotropy() : 4); if (THREE.SRGBColorSpace) tex.colorSpace = THREE.SRGBColorSpace;
+  const tex = new THREE.CanvasTexture(P.cv); tex.anisotropy = Math.min(G3.lite ? 2 : 4, G3.r.capabilities.getMaxAnisotropy ? G3.r.capabilities.getMaxAnisotropy() : 4); if (THREE.SRGBColorSpace) tex.colorSpace = THREE.SRGBColorSpace;
   // the land in detail over the hole
   const [x0, y0, x1, y1] = H.box, step = 2.5, nx = Math.ceil((x1 - x0) / step) + 1, ny = Math.ceil((y1 - y0) / step) + 1;
   const pos = new Float32Array(nx * ny * 3), uv = new Float32Array(nx * ny * 2), idx = [];
@@ -55742,7 +55766,9 @@ function gf3dDraw(dt) {
   const showAim = GF.ph === 'aim' && p && !p.done && GF.intro <= 0;
   const club = GF_CLUBS[GF.club], ap = G3.aimPts.geometry.attributes.position;
   G3.aimPts.visible = G3.ring.visible = showAim;
-  if (showAim) {
+  const aimKey = showAim ? [p.x, p.y, GF.aim, GF.pw, GF.club, GF.putt, p.lie].join(',') : '';
+  if (showAim && aimKey !== G3.aimKey) {
+    G3.aimKey = aimKey;
     const lie = club.putt ? 1 : (GF_SURF[p.lie] || GF_SURF.rough).lie * (club.k === 'D' && p.lie !== 'tee' ? 0.9 : 1);
     const L = (club.putt ? GF_PUTTS[GF.putt] * 0.3048 : club.c * GF_YD * lie) * (GF.pw || 1), sa = Math.sin(GF.aim), ca = Math.cos(GF.aim);
     for (let k = 0; k < 64; k++) { const f = (k + 1) / 64, d = L * f, x = p.x + sa * d, y = p.y + ca * d, gz = gfH(H, x, y); ap.setXYZ(k, x, Math.max(gz, 0) + 0.08 + (club.putt ? 0 : Math.sin(f * Math.PI) * 0), -y); }
@@ -55753,6 +55779,7 @@ function gf3dDraw(dt) {
   const onGreen = gfOnGreen(); if (G3.slopes) G3.slopes.visible = onGreen; if (G3.heat) G3.heat.mesh.visible = onGreen && !!GF.heat;
   gf3dCamera(dt, bp);
   if (typeof gfSkyTick === 'function') gfSkyTick(dt, t);
+  gf3dScale(dt);
   G3.r.render(G3.scene, G3.cam);
 }
 // the camera: behind the ball down the aim when it's your go, chasing the ball in flight, high over the hole to look
@@ -55840,11 +55867,11 @@ function gfSkyInit() {
   const rf = new THREE.Mesh(new THREE.ConeGeometry(7.2, 3.6, 4), M(0x5a3a30)); rf.rotation.y = Math.PI / 4; rf.scale.set(1.1, 1, 0.75); rf.position.set(13, 10.8, 4); lh.add(rf);
   G3.cottageWin = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 1.4), new THREE.MeshBasicMaterial({ color: 0x3a3a3a, fog: false })); G3.cottageWin.position.set(13, 6.6, 7.55); lh.add(G3.cottageWin);
   // the beam: one long cone of light from the lantern, brightest at the lamp and fading out along their length
-  const BL = 900, bg = new THREE.ConeGeometry(30, BL, 20, 1, true); bg.translate(0, -BL / 2, 0); bg.rotateZ(Math.PI / 2);
-  const bm = G3.beamMat = new THREE.ShaderMaterial({ transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, fog: false,
+  const BL = 900, bg = new THREE.ConeGeometry(30, BL, 12, 1, true); bg.translate(0, -BL / 2, 0); bg.rotateZ(Math.PI / 2);
+  const bm = G3.beamMat = new THREE.ShaderMaterial({ transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.FrontSide, fog: false,
     uniforms: { k: { value: 0 }, L: { value: BL } },
     vertexShader: 'uniform float L; varying float a; void main(){ a = clamp(position.x / L, 0.0, 1.0); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
-    fragmentShader: 'uniform float k; varying float a; void main(){ float v = pow(1.0 - a, 2.2) * 0.42 * k; gl_FragColor = vec4(vec3(1.0, 0.93, 0.72) * v, 1.0); }' });
+    fragmentShader: 'uniform float k; varying float a; void main(){ float v = pow(1.0 - a, 2.2) * 0.62 * k; gl_FragColor = vec4(vec3(1.0, 0.93, 0.72) * v, 1.0); }' });
   const beams = G3.beams = new THREE.Group(); beams.position.y = 47;
   { const b = new THREE.Mesh(bg, bm); b.rotation.z = -0.025; beams.add(b); }
   lh.add(beams);

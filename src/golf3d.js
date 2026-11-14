@@ -13,8 +13,11 @@ function gf3dInit() {
   if (G3.ok) return true;
   if (typeof THREE === 'undefined') return false;
   const cv = $('gfCv');
-  try { G3.r = new THREE.WebGLRenderer({ canvas: cv, antialias: true, powerPreference: 'high-performance' }); } catch (e) { return false; }
-  G3.r.setPixelRatio(Math.min(1.5, window.devicePixelRatio || 1));
+  // (phones and dense screens go without multisampling, which costs most there and shows least)
+  const dpr = window.devicePixelRatio || 1, touch = matchMedia && matchMedia('(pointer: coarse)').matches;
+  G3.lite = touch || dpr >= 2;
+  try { G3.r = new THREE.WebGLRenderer({ canvas: cv, antialias: !G3.lite, powerPreference: 'high-performance' }); } catch (e) { return false; }
+  G3.prMax = Math.min(G3.lite ? 1.25 : 1.5, dpr); G3.pr = G3.prMax; G3.r.setPixelRatio(G3.pr);
   const S = G3.scene = new THREE.Scene();
   S.fog = new THREE.Fog(0xdcc7a2, 260, 1500);
   G3.cam = new THREE.PerspectiveCamera(52, 1, 0.1, 6000);
@@ -57,6 +60,17 @@ function gf3dInit() {
   G3.ok = true; gf3dResize();
   return true;
 }
+// the resolution follows the frame rate: down a step when frames run long (under about 50 a second over a second and
+// a half), back up when there's plenty to spare for a few seconds; never under 0.6 of a pixel per screen pixel
+function gf3dScale(dt) {
+  const S = G3.fps || (G3.fps = { n: 0, t: 0, good: 0 }); if (!(dt > 0) || dt > 0.25) return;
+  S.n++; S.t += dt; if (S.t < 1.5) return;
+  const avg = S.t / S.n; S.n = 0; S.t = 0;
+  let pr = G3.pr;
+  if (avg > 1 / 50) { pr = Math.max(0.6, pr - (avg > 1 / 30 ? 0.25 : 0.12)); S.good = 0; }
+  else if (avg < 1 / 58) { if (++S.good >= 3 && pr < G3.prMax) { pr = Math.min(G3.prMax, pr + 0.1); S.good = 0; } }
+  if (Math.abs(pr - G3.pr) > 1e-3) { G3.pr = pr; G3.r.setPixelRatio(pr); gf3dResize(); }
+}
 function gf3dResize() { if (!G3.r) return; const w = innerWidth, h = innerHeight; G3.r.setSize(w, h, false); G3.cam.aspect = w / h; G3.cam.fov = w < h ? 64 : 52; G3.cam.updateProjectionMatrix(); }
 
 // ---------- the golfer ----------
@@ -85,7 +99,7 @@ function gf3dHole(H) {
   if (G3.hole) { G3.scene.remove(G3.hole); gf3dDispose(G3.hole); }
   const grp = G3.hole = new THREE.Group();
   const P = G3.paint = gf3dPaint(H);
-  const tex = new THREE.CanvasTexture(P.cv); tex.anisotropy = Math.min(8, G3.r.capabilities.getMaxAnisotropy ? G3.r.capabilities.getMaxAnisotropy() : 4); if (THREE.SRGBColorSpace) tex.colorSpace = THREE.SRGBColorSpace;
+  const tex = new THREE.CanvasTexture(P.cv); tex.anisotropy = Math.min(G3.lite ? 2 : 4, G3.r.capabilities.getMaxAnisotropy ? G3.r.capabilities.getMaxAnisotropy() : 4); if (THREE.SRGBColorSpace) tex.colorSpace = THREE.SRGBColorSpace;
   // the land in detail over the hole
   const [x0, y0, x1, y1] = H.box, step = 2.5, nx = Math.ceil((x1 - x0) / step) + 1, ny = Math.ceil((y1 - y0) / step) + 1;
   const pos = new Float32Array(nx * ny * 3), uv = new Float32Array(nx * ny * 2), idx = [];
@@ -265,7 +279,9 @@ function gf3dDraw(dt) {
   const showAim = GF.ph === 'aim' && p && !p.done && GF.intro <= 0;
   const club = GF_CLUBS[GF.club], ap = G3.aimPts.geometry.attributes.position;
   G3.aimPts.visible = G3.ring.visible = showAim;
-  if (showAim) {
+  const aimKey = showAim ? [p.x, p.y, GF.aim, GF.pw, GF.club, GF.putt, p.lie].join(',') : '';
+  if (showAim && aimKey !== G3.aimKey) {
+    G3.aimKey = aimKey;
     const lie = club.putt ? 1 : (GF_SURF[p.lie] || GF_SURF.rough).lie * (club.k === 'D' && p.lie !== 'tee' ? 0.9 : 1);
     const L = (club.putt ? GF_PUTTS[GF.putt] * 0.3048 : club.c * GF_YD * lie) * (GF.pw || 1), sa = Math.sin(GF.aim), ca = Math.cos(GF.aim);
     for (let k = 0; k < 64; k++) { const f = (k + 1) / 64, d = L * f, x = p.x + sa * d, y = p.y + ca * d, gz = gfH(H, x, y); ap.setXYZ(k, x, Math.max(gz, 0) + 0.08 + (club.putt ? 0 : Math.sin(f * Math.PI) * 0), -y); }
@@ -276,6 +292,7 @@ function gf3dDraw(dt) {
   const onGreen = gfOnGreen(); if (G3.slopes) G3.slopes.visible = onGreen; if (G3.heat) G3.heat.mesh.visible = onGreen && !!GF.heat;
   gf3dCamera(dt, bp);
   if (typeof gfSkyTick === 'function') gfSkyTick(dt, t);
+  gf3dScale(dt);
   G3.r.render(G3.scene, G3.cam);
 }
 // the camera: behind the ball down the aim when it's your go, chasing the ball in flight, high over the hole to look
