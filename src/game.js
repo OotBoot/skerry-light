@@ -504,6 +504,7 @@ const SETTING_OPTS = {
   flashes: [['normal', 'Normal'], ['reduced', 'Reduced']],
   motion: [['auto', 'Auto'], ['reduce', 'Reduce'], ['full', 'Full']],
   aim: [['hold', 'Off'], ['toggle', 'On']],
+  power: [['auto', 'Auto'], ['on', 'On'], ['off', 'Off']],
 };
 function renderSettings() {
   for (const key in SETTING_OPTS) {
@@ -549,6 +550,7 @@ function applySettings() {
   lookSync(); fovSync(); volSync();
   applyVolume(); refreshMotion();
   if (typeof gl3dRefresh === 'function') gl3dRefresh();
+  if (typeof pwApply === 'function') pwApply();
 }
 
 // ---------- flow ----------

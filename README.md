@@ -32,7 +32,7 @@ The version number sits at the top of the main menu, so you can tell which build
 | Flare | F, or the flare button |
 | View | V, the 1st/3rd person button, or Y on a controller: switch between the deck and a chase camera behind your ship |
 | Pause | Esc or P, or Start on a controller. Sailing alone, the voyage stops (it also pauses by itself if you switch to another tab or app), with Resume and Settings. A crew never stops for one sailor: there Esc or Start opens the settings and your crew sails on |
-| Settings | the Settings button on the title screen or the pause card, kept on this device: volume (a slider, off to 100%), jumpscares Full or Softened (smaller and quieter, with no shaking, black frames or inverted flashes), flashes Normal or Reduced (the Informer's camera flash, the beam's glare, the bell's flash and lightning at 30%), motion Auto (your device's setting), Reduce or Full, and graphics 3D or Classic |
+| Settings | the Settings button on the title screen or the pause card, kept on this device: volume (a slider, off to 100%), jumpscares Full or Softened (smaller and quieter, with no shaking, black frames or inverted flashes), flashes Normal or Reduced (the Informer's camera flash, the beam's glare, the bell's flash and lightning at 30%), motion Auto (your device's setting), Reduce or Full, and battery saver Auto, On or Off (see Battery saver below) |
 | Hail your crew | keys 1 to 4 call *Here!*, *Help!*, *Follow me* and *Maren close*; on a phone, the four hail buttons above the bell; on a controller, hold LB and press the D-pad (up, right, down, left). Once every 3 seconds |
 | Xbox controller | Left stick or D-pad steer · RT faster, LT slower · A bell · X flare · Start pause. In menus: the left stick moves an on-screen cursor (it only shows in menus, never over a game) and A clicks what it's over, the right stick scrolls, and the D-pad jumps between buttons; A to press, B to close or go back, Start for the main button, Y for crates. RB watches the next crewmate when spectating. Hits and jumpscares rumble |
 
@@ -110,6 +110,16 @@ The version number sits at the top of the main menu, so you can tell which build
 Sounds come from where they happen, in every game: a gunshot, a moan, a boss's footsteps, a splash or a bell is panned to the side it's on, and anything behind you is muffled, so you can tell ahead from behind and turn to find it. Headphones help most.
 
 **Volume** is a slider, from off to 100%, and it's in every in-game menu as well as on the **Settings** card: Skerry Light's pause card, the first-person menu (Esc or Start) in Wreckers' Night, Keeper's Last Light, the raids, Fog Run and Freebooters' Sea, the Drowned Reach's menu and Skerry Links' menu. It's one setting, so moving any of them moves them all.
+
+## Battery saver
+
+Phones and tablets get hot and drain quickly when a game draws every frame at full resolution. The **Battery saver** on the **Settings** card (every mode's Settings button opens it) has three choices: **Auto** (the default: on for phones and tablets, off on computers), **On** and **Off**. With it on:
+
+- the game draws 30 frames a second instead of 60 (or 120),
+- the 3D view renders at about 1.25 pixels per screen pixel instead of 2, and the painted layers (HUD, creatures, effects) at 1.5,
+- everything still moves at exactly the same speed: boats, shots, zombies and golf balls cover the same distance each second, only fewer frames are drawn.
+
+Whatever the setting, the menus and the pause screen draw at 30 frames a second, and the game's sound sleeps whenever you switch to another app or tab.
 
 ## Look sensitivity
 

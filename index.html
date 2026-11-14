@@ -850,12 +850,13 @@
       <div class="setrow"><span class="label" id="lbl-scares">Jumpscares</span><div class="loottabs" id="set-scares" role="group" aria-labelledby="lbl-scares"></div></div>
       <div class="setrow"><span class="label" id="lbl-flashes">Flashes</span><div class="loottabs" id="set-flashes" role="group" aria-labelledby="lbl-flashes"></div></div>
       <div class="setrow"><span class="label" id="lbl-motion">Motion</span><div class="loottabs" id="set-motion" role="group" aria-labelledby="lbl-motion"></div></div>
+      <div class="setrow"><span class="label" id="lbl-power">Battery saver <small>(cooler phone, longer battery: 30 frames a second, a little softer picture)</small></span><div class="loottabs" id="set-power" role="group" aria-labelledby="lbl-power"></div></div>
       <div class="setrow"><label class="label" for="setLookX">Look sensitivity, across (X) <small>(Wreckers' Night and Keeper's Last Light)</small> <output id="setLookXOut">1.00</output></label><input id="setLookX" class="lookslider" type="range" min="0.3" max="3" step="0.05" value="1"></div>
       <div class="setrow"><label class="label" for="setLookY">Look sensitivity, up and down (Y) <small>(Wreckers' Night and Keeper's Last Light)</small> <output id="setLookYOut">1.00</output></label><input id="setLookY" class="lookslider" type="range" min="0.3" max="3" step="0.05" value="1"></div>
       <div class="setrow"><label class="label" for="setFov">Field of view <small>(Wreckers' Night and Keeper's Last Light)</small> <output id="setFovOut">69°</output></label><input id="setFov" class="lookslider" type="range" min="60" max="110" step="1" value="69"></div>
       <div class="setrow"><span class="label" id="lbl-aim">Toggle aim <small>(click right mouse or LT once to aim, again to stop)</small></span><div class="loottabs" id="set-aim" role="group" aria-labelledby="lbl-aim"></div></div>
       <div class="btnrow" id="rdPracticeRow" hidden><button class="tool" id="rdPractice" type="button">Practise: Maren's storm</button></div>
-      <p class="setnote">Softened jumpscares are smaller and quieter, with no shaking or black frames. Fewer flashes dims the camera flash, the beam's glare, the bell and lightning. Auto motion follows your device's setting.</p>
+      <p class="setnote">Softened jumpscares are smaller and quieter, with no shaking or black frames. Fewer flashes dims the camera flash, the beam's glare, the bell and lightning. Auto motion follows your device's setting. Auto battery saver is on for phones and tablets; the game runs at the same speed either way.</p>
     </div>
   </div>
 
@@ -889,6 +890,7 @@
 
 <script src="vendor/three.min.js"></script>
 <script src="src/config.js"></script>
+<script src="src/power.js"></script>
 <script src="src/patchnotes.js"></script>
 <script src="src/audio.js"></script>
 <script src="src/sfxlist.js"></script>

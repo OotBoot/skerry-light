@@ -1,6 +1,6 @@
 'use strict';
 // The game's version, shown at the top of the main menu. Bump it by one with every change pushed to main.
-var VERSION = 195;
+var VERSION = 196;
 // Skerry Light: tuning, asset paths and lore.
 // World units are metres. The lighthouse stands at the origin on the shoreline (y = 0);
 // north (+y) is open sea. Bearings: 0 = north, positive = east.
@@ -104,8 +104,9 @@ const SK = {
 // (lookX, lookY: how quickly the view turns across and up and down in Wreckers' Night and the Lighthouse, 1 the usual;
 //  from 0.3 to 3. They were one setting, look, once: an old saved look carries over into both)
 // (fov: the field of view across the screen in Wreckers' Night and the Lighthouse, in degrees, 60 to 110;
+//  power: the battery saver (src/power.js), 'auto' (on for phones and tablets), 'on' or 'off';
 //  aim: 'toggle' to click (or pull LT) once to aim and again to stop, 'hold' (the default) to aim while it's held)
-const SETTINGS = { vol: 1, scares: 'full', flashes: 'normal', motion: 'auto', lookX: 1, lookY: 1, fov: 69, aim: 'hold' };
+const SETTINGS = { vol: 1, scares: 'full', flashes: 'normal', motion: 'auto', lookX: 1, lookY: 1, fov: 69, aim: 'hold', power: 'auto' };
 try { Object.assign(SETTINGS, JSON.parse(localStorage.getItem('skerry-settings') || '{}') || {}); } catch (e) {}
 { let s = null; try { s = JSON.parse(localStorage.getItem('skerry-settings') || '{}'); } catch (e) {}
   if (s && s.look != null) { if (s.lookX == null) SETTINGS.lookX = s.look; if (s.lookY == null) SETTINGS.lookY = s.look; } delete SETTINGS.look;

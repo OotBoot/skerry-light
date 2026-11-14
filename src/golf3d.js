@@ -17,7 +17,7 @@ function gf3dInit() {
   const dpr = window.devicePixelRatio || 1, touch = matchMedia && matchMedia('(pointer: coarse)').matches;
   G3.lite = touch || dpr >= 2;
   try { G3.r = new THREE.WebGLRenderer({ canvas: cv, antialias: !G3.lite, powerPreference: 'high-performance' }); } catch (e) { return false; }
-  G3.prMax = Math.min(G3.lite ? 1.25 : 1.5, dpr); G3.pr = G3.prMax; G3.r.setPixelRatio(G3.pr);
+  G3.dprRaw = dpr; gf3dPower(true);
   const S = G3.scene = new THREE.Scene();
   S.fog = new THREE.Fog(0xdcc7a2, 260, 1500);
   G3.cam = new THREE.PerspectiveCamera(52, 1, 0.1, 6000);
@@ -67,10 +67,14 @@ function gf3dScale(dt) {
   S.n++; S.t += dt; if (S.t < 1.5) return;
   const avg = S.t / S.n; S.n = 0; S.t = 0;
   let pr = G3.pr;
-  if (avg > 1 / 50) { pr = Math.max(0.6, pr - (avg > 1 / 30 ? 0.25 : 0.12)); S.good = 0; }
-  else if (avg < 1 / 58) { if (++S.good >= 3 && pr < G3.prMax) { pr = Math.min(G3.prMax, pr + 0.1); S.good = 0; } }
+  // (judged against the frame rate aimed at: at the battery saver's 30 a second, a 33 ms frame is on time)
+  const aim = typeof pwFrameS === 'function' ? pwFrameS() : 0;
+  if (avg > Math.max(1 / 50, aim * 1.2)) { pr = Math.max(0.6, pr - (avg > Math.max(1 / 30, aim * 1.6) ? 0.25 : 0.12)); S.good = 0; }
+  else if (avg < Math.max(1 / 58, aim * 1.06)) { if (++S.good >= 3 && pr < G3.prMax) { pr = Math.min(G3.prMax, pr + 0.1); S.good = 0; } }
   if (Math.abs(pr - G3.pr) > 1e-3) { G3.pr = pr; G3.r.setPixelRatio(pr); gf3dResize(); }
 }
+// the top of the resolution: less on phones and dense screens, and no more than 1.25 with the battery saver (src/power.js)
+function gf3dPower(first) { if (!G3.r) return; G3.prMax = Math.min(G3.lite ? 1.25 : 1.5, G3.dprRaw || 1, typeof pwSaver === 'function' && pwSaver() ? 1.25 : 9); G3.pr = G3.prMax; G3.r.setPixelRatio(G3.pr); if (!first) gf3dResize(); }
 function gf3dResize() { if (!G3.r) return; const w = innerWidth, h = innerHeight; G3.r.setSize(w, h, false); G3.cam.aspect = w / h; G3.cam.fov = w < h ? 64 : 52; G3.cam.updateProjectionMatrix(); }
 
 // ---------- the golfer ----------

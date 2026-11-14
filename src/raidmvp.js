@@ -273,7 +273,7 @@ function rmv3dBuild(P) {
   const cv = old.cloneNode(false); old.replaceWith(cv);
   let r;
   try { r = new THREE.WebGLRenderer({ canvas: cv, antialias: true, alpha: true }); } catch (e) { return; }
-  r.setPixelRatio(Math.min(2, window.devicePixelRatio || 1)); r.setClearColor(0x000000, 0);
+  r.setPixelRatio(Math.min(typeof pwGlCap === 'function' ? pwGlCap() : 2, window.devicePixelRatio || 1)); r.setClearColor(0x000000, 0);
   const scene = new THREE.Scene(), cam = new THREE.PerspectiveCamera(28, 1, 0.1, 200);
   scene.add(new THREE.HemisphereLight(0xffd0a0, 0x2a2030, 0.75));
   const sun = new THREE.DirectionalLight(0xffa060, 0.9); sun.position.set(-4, 5, 8); scene.add(sun);   // (behind them, the sun going down)

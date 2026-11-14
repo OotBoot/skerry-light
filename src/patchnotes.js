@@ -6,6 +6,12 @@
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 196, date: '2026-11-14', title: "Battery saver: cooler phones", New: [
+    "Settings: a new Battery saver option (Auto, On or Off). With it on, the game draws 30 frames a second instead of 60 and renders at a slightly lower resolution, so phones and tablets run much cooler and the battery lasts far longer. Auto turns it on for phones and tablets.",
+    "Every mode runs at exactly the same speed with the saver on: boats, shots, zombies and golf balls move just as fast, only fewer frames are drawn." ], Changes: [
+    "Menus and the pause screen now draw at 30 frames a second on every device.",
+    "Switching to another app or tab now puts the game's sound to sleep in every mode, not just a solo voyage, and wakes it when you come back.",
+    "The automatic resolution in the 3D views and on Skerry Links no longer mistakes the 30 frame cap for a slow device." ] },
   { v: 195, date: '2026-11-14', title: "Out of bounds and stuck spots", Fixes: [
     "Keeper's Last Light: at the Lighthouse you can no longer hop over the low walls beside the jetty's steps and wander off round the rock.",
     "Keeper's Last Light: at the Lighthouse you can no longer jump over the lantern gallery's parapet and drop off the tower.",

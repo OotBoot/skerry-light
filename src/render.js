@@ -26,7 +26,7 @@ for (let i = 0; i < 220; i++) stars.push({ b: rand(-Math.PI, Math.PI), e: rand(0
 for (let i = 0; i < 14; i++) town.push({ x: SK.HARBOUR.x + rand(-140, 160), y: rand(-60, -15), z: rand(6, 20), ph: rand(0, 6.28) });
 
 function resize() {
-  dpr = Math.min(window.devicePixelRatio || 1, 2);
+  dpr = Math.min(window.devicePixelRatio || 1, typeof pwDprCap === 'function' ? pwDprCap() : 2);
   W = cv.clientWidth; H = cv.clientHeight;
   HUD_BOX.t = -99;   // measure the HUD again for the bearing strip
   cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);

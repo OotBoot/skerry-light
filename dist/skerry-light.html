@@ -2251,12 +2251,13 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
       <div class="setrow"><span class="label" id="lbl-scares">Jumpscares</span><div class="loottabs" id="set-scares" role="group" aria-labelledby="lbl-scares"></div></div>
       <div class="setrow"><span class="label" id="lbl-flashes">Flashes</span><div class="loottabs" id="set-flashes" role="group" aria-labelledby="lbl-flashes"></div></div>
       <div class="setrow"><span class="label" id="lbl-motion">Motion</span><div class="loottabs" id="set-motion" role="group" aria-labelledby="lbl-motion"></div></div>
+      <div class="setrow"><span class="label" id="lbl-power">Battery saver <small>(cooler phone, longer battery: 30 frames a second, a little softer picture)</small></span><div class="loottabs" id="set-power" role="group" aria-labelledby="lbl-power"></div></div>
       <div class="setrow"><label class="label" for="setLookX">Look sensitivity, across (X) <small>(Wreckers' Night and Keeper's Last Light)</small> <output id="setLookXOut">1.00</output></label><input id="setLookX" class="lookslider" type="range" min="0.3" max="3" step="0.05" value="1"></div>
       <div class="setrow"><label class="label" for="setLookY">Look sensitivity, up and down (Y) <small>(Wreckers' Night and Keeper's Last Light)</small> <output id="setLookYOut">1.00</output></label><input id="setLookY" class="lookslider" type="range" min="0.3" max="3" step="0.05" value="1"></div>
       <div class="setrow"><label class="label" for="setFov">Field of view <small>(Wreckers' Night and Keeper's Last Light)</small> <output id="setFovOut">69°</output></label><input id="setFov" class="lookslider" type="range" min="60" max="110" step="1" value="69"></div>
       <div class="setrow"><span class="label" id="lbl-aim">Toggle aim <small>(click right mouse or LT once to aim, again to stop)</small></span><div class="loottabs" id="set-aim" role="group" aria-labelledby="lbl-aim"></div></div>
       <div class="btnrow" id="rdPracticeRow" hidden><button class="tool" id="rdPractice" type="button">Practise: Maren's storm</button></div>
-      <p class="setnote">Softened jumpscares are smaller and quieter, with no shaking or black frames. Fewer flashes dims the camera flash, the beam's glare, the bell and lightning. Auto motion follows your device's setting.</p>
+      <p class="setnote">Softened jumpscares are smaller and quieter, with no shaking or black frames. Fewer flashes dims the camera flash, the beam's glare, the bell and lightning. Auto motion follows your device's setting. Auto battery saver is on for phones and tablets; the game runs at the same speed either way.</p>
     </div>
   </div>
 
@@ -2300,7 +2301,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 // ---- src/config.js ----
 'use strict';
 // The game's version, shown at the top of the main menu. Bump it by one with every change pushed to main.
-var VERSION = 195;
+var VERSION = 196;
 // Skerry Light: tuning, asset paths and lore.
 // World units are metres. The lighthouse stands at the origin on the shoreline (y = 0);
 // north (+y) is open sea. Bearings: 0 = north, positive = east.
@@ -2404,8 +2405,9 @@ const SK = {
 // (lookX, lookY: how quickly the view turns across and up and down in Wreckers' Night and the Lighthouse, 1 the usual;
 //  from 0.3 to 3. They were one setting, look, once: an old saved look carries over into both)
 // (fov: the field of view across the screen in Wreckers' Night and the Lighthouse, in degrees, 60 to 110;
+//  power: the battery saver (src/power.js), 'auto' (on for phones and tablets), 'on' or 'off';
 //  aim: 'toggle' to click (or pull LT) once to aim and again to stop, 'hold' (the default) to aim while it's held)
-const SETTINGS = { vol: 1, scares: 'full', flashes: 'normal', motion: 'auto', lookX: 1, lookY: 1, fov: 69, aim: 'hold' };
+const SETTINGS = { vol: 1, scares: 'full', flashes: 'normal', motion: 'auto', lookX: 1, lookY: 1, fov: 69, aim: 'hold', power: 'auto' };
 try { Object.assign(SETTINGS, JSON.parse(localStorage.getItem('skerry-settings') || '{}') || {}); } catch (e) {}
 { let s = null; try { s = JSON.parse(localStorage.getItem('skerry-settings') || '{}'); } catch (e) {}
   if (s && s.look != null) { if (s.lookX == null) SETTINGS.lookX = s.look; if (s.lookY == null) SETTINGS.lookY = s.look; } delete SETTINGS.look;
@@ -2420,6 +2422,50 @@ const softScares = () => SETTINGS.scares === 'soft';
 // reduced flashes: the Informer's flash, the beam's glare, the bell's flash and lightning at 30%
 const flashK = () => SETTINGS.flashes === 'reduced' ? 0.3 : 1;
 
+// ---- src/power.js ----
+// Battery saver: how hard the game works the phone. Phones and tablets ran hot and flat quickly, drawing every frame
+// the screen could show at nearly its full resolution. With the saver on (the Settings card: Auto turns it on for
+// any touch-first device, On and Off force it), the game draws 30 frames a second instead of 60, the 3D view at a
+// little over one pixel per screen pixel instead of two, and the painted layers at one and a half.
+// Only the drawing slows: every mode moves things by the time that has passed (dt), so a boat, a bullet or a ball
+// covers the same water in a second at 30 frames as at 60. The menus behind a card draw at 30 whatever the setting,
+// and a tab in the background lets its sound sleep in every mode (the browser already stops drawing it).
+
+var PW = { last: -1e9 };
+function pwTouch() { try { return !!(matchMedia && matchMedia('(pointer: coarse)').matches); } catch (e) { return false; } }
+function pwSaver() { const s = SETTINGS.power; return s === 'on' || (s !== 'off' && pwTouch()); }
+// the most pixels per screen pixel: the painted (2D) canvases, and the 3D views
+function pwDprCap() { return pwSaver() ? 1.5 : 2; }
+function pwGlCap() { return pwSaver() ? 1.25 : 2; }
+// the frames a second the game aims at just now (0: as many as the screen shows)
+function pwFps() {
+  if (pwSaver()) return 30;
+  if (typeof state !== 'undefined' && (state === 'title' || state === 'port' || state === 'over')) return 30;
+  if (typeof paused !== 'undefined' && paused) return 30;
+  return 0;
+}
+// the time a frame is meant to take, in seconds (the adaptive resolutions judge "slow" against it, not against 60)
+function pwFrameS() { const f = pwFps(); return f ? 1 / f : 0; }
+// is this screen refresh one to leave undrawn? (a few milliseconds' grace, so that a 60 or 120 a second screen lands
+// on every second or fourth refresh rather than drifting)
+function pwSkip(now) {
+  const f = pwFps(); if (!f) { PW.last = now; return false; }
+  if (now - PW.last < 1000 / f - 4 && now >= PW.last) return true;
+  PW.last = now; return false;
+}
+// the setting changed: the canvases take their new resolution
+function pwApply() {
+  if (typeof GL3D !== 'undefined') GL3D.pr = 0;
+  if (typeof resize === 'function' && typeof cv !== 'undefined') resize();
+  if (typeof gf3dPower === 'function') gf3dPower();
+}
+// in the background: the sound sleeps in every mode (a solo voyage also pauses, in src/game.js), and wakes on return
+document.addEventListener('visibilitychange', () => {
+  if (typeof AUD === 'undefined' || !AUD.ctx) return;
+  if (document.hidden) { if (AUD.ctx.state === 'running') { PW.slept = true; AUD.ctx.suspend().catch(() => {}); } }
+  else if (PW.slept) { PW.slept = false; if (!(typeof paused !== 'undefined' && paused)) AUD.ctx.resume().catch(() => {}); }
+});
+
 // ---- src/patchnotes.js ----
 'use strict';
 // The patch notes log, shown on the main menu's Patch Notes page (src/patchnotesui.js draws it).
@@ -2429,6 +2475,12 @@ const flashK = () => SETTINGS.flashes === 'reduced' ? 0.3 : 1;
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 196, date: '2026-11-14', title: "Battery saver: cooler phones", New: [
+    "Settings: a new Battery saver option (Auto, On or Off). With it on, the game draws 30 frames a second instead of 60 and renders at a slightly lower resolution, so phones and tablets run much cooler and the battery lasts far longer. Auto turns it on for phones and tablets.",
+    "Every mode runs at exactly the same speed with the saver on: boats, shots, zombies and golf balls move just as fast, only fewer frames are drawn." ], Changes: [
+    "Menus and the pause screen now draw at 30 frames a second on every device.",
+    "Switching to another app or tab now puts the game's sound to sleep in every mode, not just a solo voyage, and wakes it when you come back.",
+    "The automatic resolution in the 3D views and on Skerry Links no longer mistakes the 30 frame cap for a slow device." ] },
   { v: 195, date: '2026-11-14', title: "Out of bounds and stuck spots", Fixes: [
     "Keeper's Last Light: at the Lighthouse you can no longer hop over the low walls beside the jetty's steps and wander off round the rock.",
     "Keeper's Last Light: at the Lighthouse you can no longer jump over the lantern gallery's parapet and drop off the tower.",
@@ -3709,7 +3761,7 @@ for (let i = 0; i < 220; i++) stars.push({ b: rand(-Math.PI, Math.PI), e: rand(0
 for (let i = 0; i < 14; i++) town.push({ x: SK.HARBOUR.x + rand(-140, 160), y: rand(-60, -15), z: rand(6, 20), ph: rand(0, 6.28) });
 
 function resize() {
-  dpr = Math.min(window.devicePixelRatio || 1, 2);
+  dpr = Math.min(window.devicePixelRatio || 1, typeof pwDprCap === 'function' ? pwDprCap() : 2);
   W = cv.clientWidth; H = cv.clientHeight;
   HUD_BOX.t = -99;   // measure the HUD again for the bearing strip
   cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
@@ -10340,7 +10392,7 @@ function gl3dInit() {
   return true;
 }
 // (the 3D view's resolution: the screen's own, less when frames have been coming slowly (gl3dPace), down to 1)
-function gl3dPR() { return GL3D.pr ? Math.min(GL3D.pr, dpr) : dpr; }
+function gl3dPR() { const top = Math.min(dpr, typeof pwGlCap === 'function' ? pwGlCap() : 2); return GL3D.pr ? Math.min(GL3D.pr, top) : top; }
 function gl3dResize() {
   if (!bgCv) return;
   bgCv.width = Math.round(W * dpr); bgCv.height = Math.round(H * dpr);
@@ -10352,11 +10404,13 @@ function gl3dPace() {
   const t = performance.now(), d = t - (GL3D.lastT || t); GL3D.lastT = t;
   if (!(d > 0) || d > 1000) return;
   const pr = gl3dPR();
-  if (d > 40) { GL3D.slow += d; GL3D.quick = 0; } else { GL3D.slow = Math.max(0, GL3D.slow - d * 0.5); if (d < 21) GL3D.quick += d; }
+  // (slow and quick are judged against the frame rate aimed at: at the battery saver's 30, a 33 ms frame is on time)
+  const aim = (typeof pwFrameS === 'function' ? pwFrameS() : 0) * 1000, top = Math.min(dpr, typeof pwGlCap === 'function' ? pwGlCap() : 2);
+  if (d > Math.max(40, aim * 1.4)) { GL3D.slow += d; GL3D.quick = 0; } else { GL3D.slow = Math.max(0, GL3D.slow - d * 0.5); if (d < Math.max(21, aim * 1.1)) GL3D.quick += d; }
   // (a resolution that's just proved too slow isn't tried again for a minute: stepping down and back up over and over
   // was a stutter of its own, every few seconds, each change a hitch while the canvas is made again)
   if (GL3D.slow > 1500 && pr > 1) { GL3D.cap = pr; GL3D.capT = t; GL3D.pr = Math.max(1, pr - 0.25); GL3D.slow = 0; gl3dResize(); }
-  else if (GL3D.quick > 5000 && pr < dpr) { GL3D.quick = 0; if (!(pr + 0.25 >= (GL3D.cap || 99) && t - GL3D.capT < 60000)) { GL3D.pr = Math.min(dpr, pr + 0.25); gl3dResize(); } }
+  else if (GL3D.quick > 5000 && pr < top) { GL3D.quick = 0; if (!(pr + 0.25 >= (GL3D.cap || 99) && t - GL3D.capT < 60000)) { GL3D.pr = Math.min(top, pr + 0.25); gl3dResize(); } }
 }
 // is the 3D renderer drawing this frame?
 function gl3dActive() {
@@ -12013,6 +12067,7 @@ const SETTING_OPTS = {
   flashes: [['normal', 'Normal'], ['reduced', 'Reduced']],
   motion: [['auto', 'Auto'], ['reduce', 'Reduce'], ['full', 'Full']],
   aim: [['hold', 'Off'], ['toggle', 'On']],
+  power: [['auto', 'Auto'], ['on', 'On'], ['off', 'Off']],
 };
 function renderSettings() {
   for (const key in SETTING_OPTS) {
@@ -12058,6 +12113,7 @@ function applySettings() {
   lookSync(); fovSync(); volSync();
   applyVolume(); refreshMotion();
   if (typeof gl3dRefresh === 'function') gl3dRefresh();
+  if (typeof pwApply === 'function') pwApply();
 }
 
 // ---------- flow ----------
@@ -36545,7 +36601,7 @@ function rmv3dBuild(P) {
   const cv = old.cloneNode(false); old.replaceWith(cv);
   let r;
   try { r = new THREE.WebGLRenderer({ canvas: cv, antialias: true, alpha: true }); } catch (e) { return; }
-  r.setPixelRatio(Math.min(2, window.devicePixelRatio || 1)); r.setClearColor(0x000000, 0);
+  r.setPixelRatio(Math.min(typeof pwGlCap === 'function' ? pwGlCap() : 2, window.devicePixelRatio || 1)); r.setClearColor(0x000000, 0);
   const scene = new THREE.Scene(), cam = new THREE.PerspectiveCamera(28, 1, 0.1, 200);
   scene.add(new THREE.HemisphereLight(0xffd0a0, 0x2a2030, 0.75));
   const sun = new THREE.DirectionalLight(0xffa060, 0.9); sun.position.set(-4, 5, 8); scene.add(sun);   // (behind them, the sun going down)
@@ -55577,7 +55633,7 @@ function gf3dInit() {
   const dpr = window.devicePixelRatio || 1, touch = matchMedia && matchMedia('(pointer: coarse)').matches;
   G3.lite = touch || dpr >= 2;
   try { G3.r = new THREE.WebGLRenderer({ canvas: cv, antialias: !G3.lite, powerPreference: 'high-performance' }); } catch (e) { return false; }
-  G3.prMax = Math.min(G3.lite ? 1.25 : 1.5, dpr); G3.pr = G3.prMax; G3.r.setPixelRatio(G3.pr);
+  G3.dprRaw = dpr; gf3dPower(true);
   const S = G3.scene = new THREE.Scene();
   S.fog = new THREE.Fog(0xdcc7a2, 260, 1500);
   G3.cam = new THREE.PerspectiveCamera(52, 1, 0.1, 6000);
@@ -55627,10 +55683,14 @@ function gf3dScale(dt) {
   S.n++; S.t += dt; if (S.t < 1.5) return;
   const avg = S.t / S.n; S.n = 0; S.t = 0;
   let pr = G3.pr;
-  if (avg > 1 / 50) { pr = Math.max(0.6, pr - (avg > 1 / 30 ? 0.25 : 0.12)); S.good = 0; }
-  else if (avg < 1 / 58) { if (++S.good >= 3 && pr < G3.prMax) { pr = Math.min(G3.prMax, pr + 0.1); S.good = 0; } }
+  // (judged against the frame rate aimed at: at the battery saver's 30 a second, a 33 ms frame is on time)
+  const aim = typeof pwFrameS === 'function' ? pwFrameS() : 0;
+  if (avg > Math.max(1 / 50, aim * 1.2)) { pr = Math.max(0.6, pr - (avg > Math.max(1 / 30, aim * 1.6) ? 0.25 : 0.12)); S.good = 0; }
+  else if (avg < Math.max(1 / 58, aim * 1.06)) { if (++S.good >= 3 && pr < G3.prMax) { pr = Math.min(G3.prMax, pr + 0.1); S.good = 0; } }
   if (Math.abs(pr - G3.pr) > 1e-3) { G3.pr = pr; G3.r.setPixelRatio(pr); gf3dResize(); }
 }
+// the top of the resolution: less on phones and dense screens, and no more than 1.25 with the battery saver (src/power.js)
+function gf3dPower(first) { if (!G3.r) return; G3.prMax = Math.min(G3.lite ? 1.25 : 1.5, G3.dprRaw || 1, typeof pwSaver === 'function' && pwSaver() ? 1.25 : 9); G3.pr = G3.prMax; G3.r.setPixelRatio(G3.pr); if (!first) gf3dResize(); }
 function gf3dResize() { if (!G3.r) return; const w = innerWidth, h = innerHeight; G3.r.setSize(w, h, false); G3.cam.aspect = w / h; G3.cam.fov = w < h ? 64 : 52; G3.cam.updateProjectionMatrix(); }
 
 // ---------- the golfer ----------
@@ -57401,6 +57461,9 @@ newVoyage(1, true);
 let last = performance.now();
 let loggedError = false;
 function frame(now) {
+  // the battery saver (src/power.js) leaves some refreshes undrawn; dt is the real time since the last drawn frame,
+  // so nothing moves any slower
+  if (typeof pwSkip === 'function' && pwSkip(now)) { requestAnimationFrame(frame); return; }
   const dt = Math.min(0.05, (now - last) / 1000); last = now;
   try {
     // Wreckers' Night runs its own loop (and the menu cursor never stays over a game)

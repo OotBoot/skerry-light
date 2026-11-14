@@ -79,7 +79,7 @@ function gl3dInit() {
   return true;
 }
 // (the 3D view's resolution: the screen's own, less when frames have been coming slowly (gl3dPace), down to 1)
-function gl3dPR() { return GL3D.pr ? Math.min(GL3D.pr, dpr) : dpr; }
+function gl3dPR() { const top = Math.min(dpr, typeof pwGlCap === 'function' ? pwGlCap() : 2); return GL3D.pr ? Math.min(GL3D.pr, top) : top; }
 function gl3dResize() {
   if (!bgCv) return;
   bgCv.width = Math.round(W * dpr); bgCv.height = Math.round(H * dpr);
@@ -91,11 +91,13 @@ function gl3dPace() {
   const t = performance.now(), d = t - (GL3D.lastT || t); GL3D.lastT = t;
   if (!(d > 0) || d > 1000) return;
   const pr = gl3dPR();
-  if (d > 40) { GL3D.slow += d; GL3D.quick = 0; } else { GL3D.slow = Math.max(0, GL3D.slow - d * 0.5); if (d < 21) GL3D.quick += d; }
+  // (slow and quick are judged against the frame rate aimed at: at the battery saver's 30, a 33 ms frame is on time)
+  const aim = (typeof pwFrameS === 'function' ? pwFrameS() : 0) * 1000, top = Math.min(dpr, typeof pwGlCap === 'function' ? pwGlCap() : 2);
+  if (d > Math.max(40, aim * 1.4)) { GL3D.slow += d; GL3D.quick = 0; } else { GL3D.slow = Math.max(0, GL3D.slow - d * 0.5); if (d < Math.max(21, aim * 1.1)) GL3D.quick += d; }
   // (a resolution that's just proved too slow isn't tried again for a minute: stepping down and back up over and over
   // was a stutter of its own, every few seconds, each change a hitch while the canvas is made again)
   if (GL3D.slow > 1500 && pr > 1) { GL3D.cap = pr; GL3D.capT = t; GL3D.pr = Math.max(1, pr - 0.25); GL3D.slow = 0; gl3dResize(); }
-  else if (GL3D.quick > 5000 && pr < dpr) { GL3D.quick = 0; if (!(pr + 0.25 >= (GL3D.cap || 99) && t - GL3D.capT < 60000)) { GL3D.pr = Math.min(dpr, pr + 0.25); gl3dResize(); } }
+  else if (GL3D.quick > 5000 && pr < top) { GL3D.quick = 0; if (!(pr + 0.25 >= (GL3D.cap || 99) && t - GL3D.capT < 60000)) { GL3D.pr = Math.min(top, pr + 0.25); gl3dResize(); } }
 }
 // is the 3D renderer drawing this frame?
 function gl3dActive() {

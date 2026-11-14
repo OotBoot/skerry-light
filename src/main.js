@@ -18,6 +18,9 @@ newVoyage(1, true);
 let last = performance.now();
 let loggedError = false;
 function frame(now) {
+  // the battery saver (src/power.js) leaves some refreshes undrawn; dt is the real time since the last drawn frame,
+  // so nothing moves any slower
+  if (typeof pwSkip === 'function' && pwSkip(now)) { requestAnimationFrame(frame); return; }
   const dt = Math.min(0.05, (now - last) / 1000); last = now;
   try {
     // Wreckers' Night runs its own loop (and the menu cursor never stays over a game)
