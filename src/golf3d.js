@@ -146,6 +146,7 @@ function gf3dHole(H) {
   G3.scene.add(grp);
   G3.pin.position.copy(gv(H.pin[0], H.pin[1], gfH(H, H.pin[0], H.pin[1]))); G3.pinMark.position.copy(gv(H.pin[0], H.pin[1], gfH(H, H.pin[0], H.pin[1]) + 4.5));
   G3.cp = null;
+  if (typeof gf3dCourse === 'function') gf3dCourse(H);
   if (typeof gfSkyHole === 'function') gfSkyHole(H);
   GF.intro = 2.4;
 }
