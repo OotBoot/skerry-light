@@ -6,6 +6,10 @@
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 197, date: '2026-11-14', title: "Much faster loading", Changes: [
+    "The online game's page is now about 1.7 MB to download instead of 15 MB, so the menu appears several times sooner, most of all on slower connections.",
+    "Sound effects and music now download in the background after the menu appears, and your browser keeps them. Until a sound arrives you'll hear the game's built-in version of it.",
+    "After an update, returning players only download the small page again, not every sound." ] },
   { v: 196, date: '2026-11-14', title: "Battery saver: cooler phones", New: [
     "Settings: a new Battery saver option (Auto, On or Off). With it on, the game draws 30 frames a second instead of 60 and renders at a slightly lower resolution, so phones and tablets run much cooler and the battery lasts far longer. Auto turns it on for phones and tablets.",
     "Every mode runs at exactly the same speed with the saver on: boats, shots, zombies and golf balls move just as fast, only fewer frames are drawn." ], Changes: [

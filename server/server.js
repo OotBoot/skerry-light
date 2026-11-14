@@ -14,7 +14,7 @@
 //   npm start            (PORT defaults to 8080)
 
 import http from 'node:http';
-import { readFileSync, existsSync, statSync } from 'node:fs';
+import { readFileSync, existsSync, statSync, createReadStream } from 'node:fs';
 import { gzipSync, brotliCompressSync, constants as Z } from 'node:zlib';
 import { createHash } from 'node:crypto';
 import { dirname, join } from 'node:path';
@@ -30,7 +30,9 @@ const MAX_PLAYERS = Number(process.env.MAX_PLAYERS) || 300;
 const MAX_PRESENCE_BYTES = 12 * 1024;   // (a lighthouse night's host with forty drowned, bosses and a full feed comes to about 3 KB)
 const LOBBY_INTERVAL_MS = 1000;
 
-const pagePath = join(root, 'dist', 'skerry-light.html');
+// dist/web.html is the page without its sound inlined (the recordings are served below, as files); an older build
+// without it falls back to the all-in-one page.
+const pagePath = existsSync(join(root, 'dist', 'web.html')) ? join(root, 'dist', 'web.html') : join(root, 'dist', 'skerry-light.html');
 // The page, read once (and again only if the file changes), with its fingerprint (ETag) and its compressed copies,
 // so a browser gets it Brotli- or gzip-compressed, and one that already has this version gets a 304 and nothing
 // more: on Render's free plan, outbound bandwidth is what runs out first.
@@ -81,6 +83,21 @@ const server = http.createServer((req, res) => {
     res.writeHead(200, head);
     res.end(req.method === 'HEAD' ? undefined : body);
     return;
+  }
+  // The recordings (assets/sfx/*.mp3 and the one other clip), each fetched by the page after it's up. Their URLs carry a
+  // fingerprint (?v=) that changes when the file does, so the browser keeps them for a year and never asks again.
+  const snd = /^\/assets\/(?:sfx\/[a-z0-9_]+|verity)\.mp3$/.exec(url);
+  if (snd && (req.method === 'GET' || req.method === 'HEAD')) {
+    const f = join(root, url.slice(1));
+    let st = null; try { st = statSync(f); } catch (e) {}
+    if (st && st.isFile()) {
+      const versioned = /[?&]v=/.test(req.url);
+      res.writeHead(200, { 'content-type': 'audio/mpeg', 'content-length': st.size, 'access-control-allow-origin': '*',
+        'cache-control': versioned ? 'public, max-age=31536000, immutable' : 'public, max-age=3600' });
+      if (req.method === 'HEAD') { res.end(); return; }
+      createReadStream(f).pipe(res);
+      return;
+    }
   }
   res.writeHead(404, { 'content-type': 'text/plain' });
   res.end('Not found\n');
