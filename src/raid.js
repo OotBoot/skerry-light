@@ -989,7 +989,9 @@ RAID_STAGES.descent = {
     // up on the pier, until the platform's held: over the Swallow, nowhere but the pier and the platform
     if (feet > RSW.SEA - 1) {
       const lx = x - FPSC.CX, ly = y - FPSC.CY, [x0, x1, y0, y1] = RSW.TOP;
-      if (lx < x0 - 0.4 || lx > x1 + 0.4 || ly < y0 - 0.4 || ly > y1 + 0.4) return false;
+      // (off the Swallow, the pier is all there is: a jump off its side or its landward end drops you nowhere, so
+      // its edges stop you like a wall)
+      if (lx < x0 - 0.4 || lx > x1 + 0.4 || ly < y0 - 0.4 || ly > y1 + 0.4) return Math.abs(lx) > RSWP.PW / 2 - pad || ly < -84.6 + pad;
       const onPier = Math.abs(lx) <= RSWP.PW / 2 && ly <= RSWP.PC[1], onPlat = Math.hypot(lx - RSWP.PC[0], ly - RSWP.PC[1]) <= RSWP.PR - Math.min(pad, 0.3);
       if (onPier) return false;
       // (before the platform falls, only it; after, only straight down the throat, never onto the funnel's sides)

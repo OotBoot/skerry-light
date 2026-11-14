@@ -1760,7 +1760,7 @@ $('fpsLeave').addEventListener('click', fpsStop);
 // from what they send, src/zmnet.js `p`), so it's done here and goes out with the next send.
 // (nothing free within a metre: a little further, up to three; a short wait between goes)
 function fpsUnstuckFree(m, pad, feet) {
-  if (FPS.zm) { const pen0 = zmWinPen(m.x, m.y, pad, feet); return (x, y) => !zmBlockedAt(x, y, pad, feet) && !zmCrowd(m, x, y) && (p => p <= 0 || p < pen0 - 1e-6)(zmWinPen(x, y, pad, feet)); }
+  if (FPS.zm) { const pen0 = zmWinPen(m.x, m.y, pad, feet), kp0 = zmKeepPen(m.x, m.y, pad, feet); return (x, y) => !zmBlockedAt(x, y, pad, feet) && !zmCrowd(m, x, y) && (p => p <= 0 || p < pen0 - 1e-6)(zmWinPen(x, y, pad, feet)) && zmKeepOk(kp0, x, y, pad, feet); }
   const I = FPS.g && FPS.g.isle, fl = !!(I && I.floors);
   return (x, y) => !fpsBlockedIn(FPS.g, x, y, pad, null, fl ? feet : null, fl);
 }

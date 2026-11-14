@@ -6,6 +6,15 @@
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 195, date: '2026-11-14', title: "Out of bounds and stuck spots", Fixes: [
+    "Keeper's Last Light: at the Lighthouse you can no longer hop over the low walls beside the jetty's steps and wander off round the rock.",
+    "Keeper's Last Light: at the Lighthouse you can no longer jump over the lantern gallery's parapet and drop off the tower.",
+    "Keeper's Last Light: in Wrackhaven's town hall the rail round the stair hole now stops you, so you can't step or jump between the Records Room and the Council Chamber without opening the door between them, or drop onto the stair below its gate.",
+    "Keeper's Last Light: Wrackhaven's banisters round the stair holes now lie flat instead of sloping up into the air.",
+    "Keeper's Last Light and the raids: coming down from a jump onto a cart, a pot, a cask or a rail no longer leaves you stuck inside it; you slide off its edge instead.",
+    "Keeper's Last Light and the raids: a high jump at a window no longer carries you out through the wall above it.",
+    "Maren's End: you can no longer jump off the side of the Long Pier, or over the Sea Battery's parapet into the sea.",
+    "The Gannet's Wake: you can no longer get out of the flooded cable tier through its far wall." ] },
   { v: 194, date: '2026-11-14', title: "Skerry Links: tap-ins drop", Changes: [
     "Skerry Links: a putt that dies right by the hole now usually topples in. A ball stopping within about 11 inches creeps on into the cup, and no putt is left hanging a few inches short any more." ] },
   { v: 193, date: '2026-11-14', title: "Skerry Links: smoother frame rate", Changes: [

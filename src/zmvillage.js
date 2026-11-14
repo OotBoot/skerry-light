@@ -608,7 +608,7 @@ Object.assign(FPI_K, {
   vbanister: {
     noShadow: true, sol() { return []; },
     b3(p, A) {
-      const len = p.len || 4, rise = p.rise || 2.2, b = p.base || 0, sl = Math.atan2(rise, len), L = Math.hypot(len, rise), O = FPI_C.wood3;
+      const len = p.len || 4, rise = p.rise != null ? p.rise : 2.2, b = p.base || 0, sl = Math.atan2(rise, len), L = Math.hypot(len, rise), O = FPI_C.wood3;
       const zAt = v => b + rise * v / len;
       zmvBarV(A, O, 0, 0, zAt(0) - 0.1, len, zAt(len) - 0.1, 0.06, 0.3);
       zmvBarV(A, FPI_C.wood2, 0, 0, zAt(0) + 0.95, len, zAt(len) + 0.95, 0.09, 0.07);
