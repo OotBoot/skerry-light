@@ -2300,7 +2300,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 // ---- src/config.js ----
 'use strict';
 // The game's version, shown at the top of the main menu. Bump it by one with every change pushed to main.
-var VERSION = 194;
+var VERSION = 195;
 // Skerry Light: tuning, asset paths and lore.
 // World units are metres. The lighthouse stands at the origin on the shoreline (y = 0);
 // north (+y) is open sea. Bearings: 0 = north, positive = east.
@@ -2429,6 +2429,15 @@ const flashK = () => SETTINGS.flashes === 'reduced' ? 0.3 : 1;
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 195, date: '2026-11-14', title: "Out of bounds and stuck spots", Fixes: [
+    "Keeper's Last Light: at the Lighthouse you can no longer hop over the low walls beside the jetty's steps and wander off round the rock.",
+    "Keeper's Last Light: at the Lighthouse you can no longer jump over the lantern gallery's parapet and drop off the tower.",
+    "Keeper's Last Light: in Wrackhaven's town hall the rail round the stair hole now stops you, so you can't step or jump between the Records Room and the Council Chamber without opening the door between them, or drop onto the stair below its gate.",
+    "Keeper's Last Light: Wrackhaven's banisters round the stair holes now lie flat instead of sloping up into the air.",
+    "Keeper's Last Light and the raids: coming down from a jump onto a cart, a pot, a cask or a rail no longer leaves you stuck inside it; you slide off its edge instead.",
+    "Keeper's Last Light and the raids: a high jump at a window no longer carries you out through the wall above it.",
+    "Maren's End: you can no longer jump off the side of the Long Pier, or over the Sea Battery's parapet into the sea.",
+    "The Gannet's Wake: you can no longer get out of the flooded cable tier through its far wall." ] },
   { v: 194, date: '2026-11-14', title: "Skerry Links: tap-ins drop", Changes: [
     "Skerry Links: a putt that dies right by the hole now usually topples in. A ball stopping within about 11 inches creeps on into the cup, and no putt is left hanging a few inches short any more." ] },
   { v: 193, date: '2026-11-14', title: "Skerry Links: smoother frame rate", Changes: [
@@ -16859,7 +16868,7 @@ $('fpsLeave').addEventListener('click', fpsStop);
 // from what they send, src/zmnet.js `p`), so it's done here and goes out with the next send.
 // (nothing free within a metre: a little further, up to three; a short wait between goes)
 function fpsUnstuckFree(m, pad, feet) {
-  if (FPS.zm) { const pen0 = zmWinPen(m.x, m.y, pad, feet); return (x, y) => !zmBlockedAt(x, y, pad, feet) && !zmCrowd(m, x, y) && (p => p <= 0 || p < pen0 - 1e-6)(zmWinPen(x, y, pad, feet)); }
+  if (FPS.zm) { const pen0 = zmWinPen(m.x, m.y, pad, feet), kp0 = zmKeepPen(m.x, m.y, pad, feet); return (x, y) => !zmBlockedAt(x, y, pad, feet) && !zmCrowd(m, x, y) && (p => p <= 0 || p < pen0 - 1e-6)(zmWinPen(x, y, pad, feet)) && zmKeepOk(kp0, x, y, pad, feet); }
   const I = FPS.g && FPS.g.isle, fl = !!(I && I.floors);
   return (x, y) => !fpsBlockedIn(FPS.g, x, y, pad, null, fl ? feet : null, fl);
 }
@@ -21237,8 +21246,9 @@ Object.assign(FPI_K, {
       }
     },
   },
-  // the harbour's water round the jetty: nobody walks out onto it (only stands in the way; nothing to draw)
-  seaguard: { noShadow: true, sol(p) { return [fpiBox(p, 0, 0, p.w / 2, p.d / 2, 3.2, { z0: -2, ray: false, occ: false, col: '#14202a' })]; } },
+  // the harbour's water round the jetty: nobody walks out onto it (only stands in the way, well over the height of any
+  // jump off a deck, a quay or a battery; nothing to draw)
+  seaguard: { noShadow: true, sol(p) { return [fpiBox(p, 0, 0, p.w / 2, p.d / 2, 40, { z0: -2, ray: false, occ: false, col: '#14202a' })]; } },
   // an iron ladder down the jetty's side into the water, where the drowned come up (v: out over the water)
   ladder: {
     noShadow: true, sol() { return []; },
@@ -21575,6 +21585,8 @@ FPI_GEN.light = {
       tput('glasspane', ca * GR, sa * GR, a + Math.PI / 2, { w, z0: L5 + 0.05, z1: L5 + 4.4 });
     }
     Z.top = { x: OX + TX, y: OY + TY, r: GR - 0.2, z: L5 };
+    // (the gallery's parapet stops you at your waist: over it, nothing, all the way up, so nobody jumps off the top)
+    (Z.keep = Z.keep || []).push({ c: [OX + TX, OY + TY], r: RT + 0.1, z0: L5 + 0.5 });
     // the iron stair round the inside of the glass, from beside the west door up over the head of the spiral stair
     // to the Roof Room (each tread rises ZMT.ST.RISE; the last rise is onto the Roof Room's floor)
     const RF = ZMT.RF, RW = ZMT.RW, RH = ZMT.RH, ST = ZMT.ST;
@@ -21790,6 +21802,9 @@ FPI_GEN.light = {
       for (const sx of [-1, 1]) put('wall', sx * 3.42, -40.3, Math.PI / 2, { len: 2.5, th: 0.6, hh: 1.75, mat: 'stone', cap: true, jag: 0 });
       // the water round it: out of everyone's reach (the drowned in it come up by the ladders)
       for (const [x0, x1, y0, y1] of [[-34, -3, -60, -41.25], [3, 34, -60, -41.25], [-34, -12, -66, -60], [12, 34, -66, -60], [-34, 34, -82, -66]]) put('seaguard', (x0 + x1) / 2, (y0 + y1) / 2, 0, { w: x1 - x0, d: y1 - y0 });
+      // (and the shingle under the sea wall either side of the steps, where the drowned wade up to the boarded gaps:
+      // the steps' low walls were a hop from the pier, and past them the whole rock lay open)
+      (Z.keep = Z.keep || []).push(...[[-34, -3.72], [3.72, 34]].map(([x0, x1]) => ({ b: [OX + x0, OX + x1, OY - 41.6, OY - 39.2] })));
       // where the drowned come up: a ladder down into the water at each (no boards: nothing to nail back)
       const seaWin = (x, y, nx, ny) => { const [wx, wy] = W(x, y); Z.windows.push({ x: wx, y: wy, nx, ny, zone: 'dock', z: DT, boards: 0, sea: true, id: Z.windows.length, q: [], hw: 0.9, th: 0.1 }); put('ladder', x + nx * 0.07, y + ny * 0.07, Math.atan2(-nx, ny), { top: DT }); };
       seaWin(-3, -51, -1, 0); seaWin(3, -46.5, 1, 0); seaWin(-8, -60, 0, 1); seaWin(8, -60, 0, 1);
@@ -21994,6 +22009,11 @@ FPI_GEN.wrack = {
     // the rails round the stair holes, and the banisters up the flights
     // (only to look at: a fall into a stairwell lands you on the stair, past its gate, where you'd come from anyway)
     vput('vbanister', -11, -4, -Math.PI / 2, { len: 2.8, rise: 0, base: F1 }); vput('vbanister', -8.2, -4, 0, { len: 9, rise: 0, base: F1 });
+    // (the stair from the Moot Hall comes up through the Records Room's floor and off into the Council Chamber: along
+    // the Records Room's two sides of its hole, unseen, from a little over its floor to the ceiling, so nobody steps
+    // or jumps over the rail from one room into the other past the door between them, or drops onto the flight
+    // below its gate; the flight's climbers pass well under it)
+    (Z.keep = Z.keep || []).push({ b: [OX - 8.3, OX - 8.1, OY - 4.1, OY + 1], z0: F1 + 0.5, z1: F2 }, { b: [OX - 11, OX - 8.1, OY - 4.1, OY - 3.9], z0: F1 + 0.5, z1: F2 });
     vput('vbanister', 3.25, 9.3, Math.PI / 2, { len: 4.5, rise: 0, base: F2 });
     vput('vbanister', -8.4, -7, 0, { len: 12, rise: F1, base: 0 });
     vput('vbanister', 9.25, 7.45, Math.PI / 2, { len: 11.25, rise: 15 * RS, base: F1 }); vput('vbanister', 9.25, 8.85, Math.PI / 2, { len: 7.5, rise: 10 * RS, base: F1 });
@@ -22231,6 +22251,10 @@ function zmArena() {
   };
   const D = ZM_MAPS[ZM_MAP];
   fpsIsleGen(G, 0, seeded(D.seed), D.isle);
+  // (a lifted block, a lintel over a window or a door, is walked under on the islands and never stops anyone there;
+  // here, where everything knows how high it stands, it stops a body that reaches it: without it a jump that carried
+  // your feet over a window's opening went straight out through the wall above it)
+  { let n = 0; for (const s of G.isle.solids) if (s.mv === false && s.p && s.p.k === 'block') { delete s.mv; n++; } if (n) fpiIndex(G.isle); }
   G.island.key = G.isle.key = D.isle + ':' + Date.now();
   return G;
 }
@@ -22308,12 +22332,29 @@ function zmWinPen(x, y, pad, feet) {
   }
   return pen;
 }
+// Out of bounds, for players only: walls nobody sees and the drowned don't feel (they wade the shingle under the sea
+// wall and climb the walls; you never go there), laid by a map (Z.keep, in its generator) or by a raid's part (the
+// same list, from its enter). Each is a box { b: [x0, x1, y0, y1] } or a ring { c: [x, y], r } (everything further
+// out than r from c), in world coordinates, between heights z0 and z1 over the ground: so jumping off a jetty, over
+// a quay's low wall or a gallery's parapet, or over a stair rail onto a floor whose door is shut, goes nowhere. How
+// far into the nearest of them a place is (0: clear of them all), so someone caught in one can still step out
+function zmKeepPen(x, y, pad, feet) {
+  const L = FPS.g && FPS.g.isle && FPS.g.isle.zm && FPS.g.isle.zm.keep; if (!L || !L.length) return 0;
+  let pen = 0;
+  for (const k of L) {
+    if (feet + 1.9 <= (k.z0 != null ? k.z0 : -99) || feet >= (k.z1 != null ? k.z1 : 999)) continue;
+    if (k.b) { const [x0, x1, y0, y1] = k.b, d = Math.min(x - x0, x1 - x, y - y0, y1 - y) + pad; if (d > 0) pen = Math.max(pen, d); }
+    else if (k.c) { const d = Math.hypot(x - k.c[0], y - k.c[1]) - k.r + pad; if (d > 0) pen = Math.max(pen, d); }
+  }
+  return pen;
+}
+const zmKeepOk = (pen0, x, y, pad, feet) => { const p = zmKeepPen(x, y, pad, feet); return p <= 0 || p < pen0 - 1e-6; };
 // move with sliding, then stand on whatever's underneath: step up onto it, step down a stair, or fall
 function zmMove(m, dx, dy) {
   const me = m === FPS.me, feet = m.jz || 0, pad = m.zpad || (me ? ZMC.PAD : 0.5);
   // (you can't walk through them: the drowned crowd you in; nor out through a window: only further back from one)
-  const pen0 = m === FPS.me ? zmWinPen(m.x, m.y, pad, feet) : 0;
-  const free = m === FPS.me ? (x, y) => !zmBlockedAt(x, y, pad, feet) && !zmCrowd(m, x, y) && (pen0 => { const p = zmWinPen(x, y, pad, feet); return p <= 0 || p < pen0 - 1e-6; })(pen0) : (x, y) => !zmBlockedAt(x, y, pad, feet);
+  const pen0 = m === FPS.me ? zmWinPen(m.x, m.y, pad, feet) : 0, kp0 = m === FPS.me ? zmKeepPen(m.x, m.y, pad, feet) : 0;
+  const free = m === FPS.me ? (x, y) => !zmBlockedAt(x, y, pad, feet) && !zmCrowd(m, x, y) && (pen0 => { const p = zmWinPen(x, y, pad, feet); return p <= 0 || p < pen0 - 1e-6; })(pen0) && zmKeepOk(kp0, x, y, pad, feet) : (x, y) => !zmBlockedAt(x, y, pad, feet);
   let ok = true;
   let sx = 0, sy = 0;
   // (you, against something: slide along it rather than stop, whichever way it runs: the wall's lie from how the room
@@ -22343,6 +22384,25 @@ function zmMove(m, dx, dy) {
   else ok = false;
   zmSettle(m);
   return ok;
+}
+// Coming down from a jump onto something that isn't a floor (a cart, a pot, a cask, a rail), with its top about as
+// high as the jump: over it at the top of the jump, you'd sink into it on the way down and stick there. Instead you
+// slide off it, to the nearest clear place round it (as if you'd glanced off its edge)
+function zmUnsink(m, jz0) {
+  const pad = m.zpad || ZMC.PAD, feet = m.jz || 0;
+  if (!zmBlockedAt(m.x, m.y, pad, feet) || zmBlockedAt(m.x, m.y, pad, jz0)) return;
+  // (what you sank into: whatever's in the way now that wasn't a moment ago, higher up)
+  const hits = (x, y, f) => { const out = []; for (const q of zmNear(x, y)) { const bot = q.z0 != null ? q.z0 - FPSC.GROUND : 0, top = q.z1 - FPSC.GROUND; if (bot >= f + 1.9 || top <= f + (q.fl ? ZMC.STEP : 0.05)) continue; if (fpiDist(q, x, y) < pad) out.push(q); } return out; };
+  const was = new Set(hits(m.x, m.y, jz0)), sank = new Set(hits(m.x, m.y, feet).filter(q => !was.has(q)));
+  if (!sank.size) return;
+  const kp0 = zmKeepPen(m.x, m.y, pad, feet), wp0 = zmWinPen(m.x, m.y, pad, feet);
+  // (only a place reached by a straight way out through nothing but that: never through a wall beside it)
+  const way = (x, y) => { for (let k = 1; k <= 12; k++) { const px = m.x + (x - m.x) * k / 12, py = m.y + (y - m.y) * k / 12; if ((typeof raidBlock === 'function' && raidBlock(px, py, pad, feet)) || hits(px, py, feet).some(q => !sank.has(q))) return false; } return true; };
+  for (let r = 0.1; r <= 1.6; r += 0.1) for (let i = 0; i < 16; i++) {
+    const a = i / 16 * Math.PI * 2, x = m.x + Math.sin(a) * r, y = m.y + Math.cos(a) * r;
+    if (zmBlockedAt(x, y, pad, feet) || !zmKeepOk(kp0, x, y, pad, feet) || zmWinPen(x, y, pad, feet) > wp0 + 1e-6 || !way(x, y)) continue;
+    m.x = x; m.y = y; return;
+  }
 }
 function zmCrowd(m, x, y) {
   for (const z of ZM.z) {
@@ -22591,7 +22651,7 @@ function zmFrame(dt) {
       if (m.reload > 0) { m.reload -= dt; if (m.reload <= 0) { m.reload = 0; zmReloaded(); } }
       if (FPS.drawT > 0) FPS.drawT -= dt;
       if (FPS.knifeT > 0) FPS.knifeT -= dt;
-      fpsJumpTick(m, dt);
+      { const jz0 = m.jz || 0; fpsJumpTick(m, dt); if ((m.jz || 0) < jz0 - 1e-4) zmUnsink(m, jz0); }
       if (FPS.landed > 0) FPS.landed -= dt;
       if (FPS.meFlashT > 0) FPS.meFlashT -= dt; if (FPS.meSlashT > 0) FPS.meSlashT -= dt;
       if (!FPS.mouseDown && !FPS.touchFire && !FPS.padFire) FPS.heldFire = false;
@@ -25508,7 +25568,7 @@ Object.assign(FPI_K, {
   vbanister: {
     noShadow: true, sol() { return []; },
     b3(p, A) {
-      const len = p.len || 4, rise = p.rise || 2.2, b = p.base || 0, sl = Math.atan2(rise, len), L = Math.hypot(len, rise), O = FPI_C.wood3;
+      const len = p.len || 4, rise = p.rise != null ? p.rise : 2.2, b = p.base || 0, sl = Math.atan2(rise, len), L = Math.hypot(len, rise), O = FPI_C.wood3;
       const zAt = v => b + rise * v / len;
       zmvBarV(A, O, 0, 0, zAt(0) - 0.1, len, zAt(len) - 0.1, 0.06, 0.3);
       zmvBarV(A, FPI_C.wood2, 0, 0, zAt(0) + 0.95, len, zAt(len) + 0.95, 0.09, 0.07);
@@ -32481,7 +32541,9 @@ RAID_STAGES.descent = {
     // up on the pier, until the platform's held: over the Swallow, nowhere but the pier and the platform
     if (feet > RSW.SEA - 1) {
       const lx = x - FPSC.CX, ly = y - FPSC.CY, [x0, x1, y0, y1] = RSW.TOP;
-      if (lx < x0 - 0.4 || lx > x1 + 0.4 || ly < y0 - 0.4 || ly > y1 + 0.4) return false;
+      // (off the Swallow, the pier is all there is: a jump off its side or its landward end drops you nowhere, so
+      // its edges stop you like a wall)
+      if (lx < x0 - 0.4 || lx > x1 + 0.4 || ly < y0 - 0.4 || ly > y1 + 0.4) return Math.abs(lx) > RSWP.PW / 2 - pad || ly < -84.6 + pad;
       const onPier = Math.abs(lx) <= RSWP.PW / 2 && ly <= RSWP.PC[1], onPlat = Math.hypot(lx - RSWP.PC[0], ly - RSWP.PC[1]) <= RSWP.PR - Math.min(pad, 0.3);
       if (onPier) return false;
       // (before the platform falls, only it; after, only straight down the throat, never onto the funnel's sides)
