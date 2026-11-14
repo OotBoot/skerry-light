@@ -6,6 +6,9 @@
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 191, date: '2026-11-14', title: "Skerry Links: the harbour, and a clearer phone screen", New: [
+    "Skerry Links: a little harbour lies under the cliffs on the holes by the sea, with a stone quay, a breakwater, cottages and two boats moored. Ships come in past the Light and thread their way between the skerries lying across the way, then round the breakwater to the quay. After dark the quay lamps are lit." ], Changes: [
+    "Skerry Links: on phones the club box now sits on the left and the swing meter on the right, so the middle of the screen stays clear for the shot." ] },
   { v: 190, date: '2026-11-13', title: "Skerry Links: one beam", Changes: [
     "Skerry Links: Skerry Light now throws a single beam, turning once every ten seconds." ] },
   { v: 189, date: '2026-11-13', title: "Skerry Links: from midday to night, and the Light", New: [

@@ -1386,9 +1386,12 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
   .gf-lie { top: 258px; }
   .gf-hole b { font-size: 1.3rem; } .gf-hole span { font-size: 13px; }
   .gf-pad { grid-template-columns: 1fr; padding: 0 8px; }
-  .gf-club { grid-column: 1; grid-row: 1; flex-direction: row; align-items: center; justify-self: center; min-width: 0; }
-  .gf-putt { grid-column: 1; grid-row: 2; justify-self: center; }
-  #gfMeter { grid-column: 1; grid-row: 3; height: 120px; justify-self: center; margin-bottom: 0; }
+  /* (the club on the left and the meter on the right, so the middle stays clear for the shot) */
+  .gf-club { position: fixed; left: 8px; bottom: calc(132px + env(safe-area-inset-bottom, 0px)); width: 104px; min-width: 0; padding: 4px; gap: 3px; }
+  .gf-club .gfbtn { padding: 5px 0; font-size: 15px; min-width: 0; }
+  .gf-club .gf-cname b { font-size: 1rem; }
+  .gf-putt { position: fixed; left: 8px; bottom: calc(262px + env(safe-area-inset-bottom, 0px)); }
+  #gfMeter { position: fixed; right: 2px; bottom: calc(200px + env(safe-area-inset-bottom, 0px)); width: 196px; height: 112px; margin-bottom: 0; }
   .gf-aim { grid-column: 1; grid-row: 4; }
   .gf-hint { display: none; }
   .gf-tools { top: auto; bottom: 58px; flex-direction: column; }
@@ -2297,7 +2300,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 // ---- src/config.js ----
 'use strict';
 // The game's version, shown at the top of the main menu. Bump it by one with every change pushed to main.
-var VERSION = 190;
+var VERSION = 191;
 // Skerry Light: tuning, asset paths and lore.
 // World units are metres. The lighthouse stands at the origin on the shoreline (y = 0);
 // north (+y) is open sea. Bearings: 0 = north, positive = east.
@@ -2426,6 +2429,9 @@ const flashK = () => SETTINGS.flashes === 'reduced' ? 0.3 : 1;
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 191, date: '2026-11-14', title: "Skerry Links: the harbour, and a clearer phone screen", New: [
+    "Skerry Links: a little harbour lies under the cliffs on the holes by the sea, with a stone quay, a breakwater, cottages and two boats moored. Ships come in past the Light and thread their way between the skerries lying across the way, then round the breakwater to the quay. After dark the quay lamps are lit." ], Changes: [
+    "Skerry Links: on phones the club box now sits on the left and the swing meter on the right, so the middle of the screen stays clear for the shot." ] },
   { v: 190, date: '2026-11-13', title: "Skerry Links: one beam", Changes: [
     "Skerry Links: Skerry Light now throws a single beam, turning once every ten seconds." ] },
   { v: 189, date: '2026-11-13', title: "Skerry Links: from midday to night, and the Light", New: [
@@ -55854,7 +55860,7 @@ function gfSkyInit() {
   // the skerries: a reef of low black rocks out beyond the light, the surf white round them by day
   const sk = G3.skerries = new THREE.Group(), skM = M(0x24221f, { flatShading: true }), surf = new THREE.MeshBasicMaterial({ color: 0xdfe8ea, transparent: true, opacity: 0.55, fog: false });
   const r = gfRng(4242);
-  for (let k = 0; k < 9; k++) {
+  for (let k = 0; k < 10; k++) {
     const m = new THREE.Mesh(new THREE.DodecahedronGeometry(1, 0), skM), s = 5 + r() * 9;
     m.scale.set(s * (1 + r()), s * 0.45, s); m.rotation.y = r() * 6; m.userData.p = [(r() - 0.5) * 70, -130 + k * 34 + (r() - 0.5) * 16]; sk.add(m);
     const ring = new THREE.Mesh(new THREE.RingGeometry(s * 1.3, s * 1.9, 18), surf); ring.rotation.x = -Math.PI / 2; ring.position.y = 0.3; ring.userData.of = m; sk.add(ring);
@@ -55873,6 +55879,15 @@ function gfSkyInit() {
     const mt = lt.clone(); mt.material = lt.material.clone(); mt.material.color.set(0xfff0d0); mt.position.set(0, 26, 4); mt.scale.setScalar(6); sh.add(mt);
     sh.userData = { lights: [lt, mt], ph: k / 3 }; S.add(sh); G3.ships.push(sh);
   }
+  // the harbour: a stone quay at the foot of the cliffs, a breakwater curving round it, cottages, lamps and two boats
+  // moored (built along its own x, the sea towards its +z)
+  { const hg = G3.harbour = new THREE.Group(), stone = M(0x8a8478), dark = M(0x4a443c), wall = M(0xe4ddcc), roof = M(0x5a3a30), lamps = [];
+    const quay = new THREE.Mesh(new THREE.BoxGeometry(80, 3, 16), stone); quay.position.set(0, 1.5, -8); hg.add(quay);
+    for (let k = 0; k < 9; k++) { const a = k / 8 * 1.9, bx = 40 + Math.sin(a) * 6 - (1 - Math.cos(a)) * 38, bz = -2 + Math.sin(a) * 78; const b = new THREE.Mesh(new THREE.BoxGeometry(9, 3.2, 12), stone); b.position.set(bx, 1.4, bz); b.rotation.y = -a * 0.9; hg.add(b); }
+    [[-26, 6, 4.5], [-10, 7, 4], [8, 6, 5], [24, 8, 4]].forEach(([hx, w, h]) => { const c = new THREE.Mesh(new THREE.BoxGeometry(w * 1.6, h, w), wall); c.position.set(hx, 3 + h / 2, -13); hg.add(c); const r = new THREE.Mesh(new THREE.ConeGeometry(w * 1.05, 3, 4), roof); r.rotation.y = Math.PI / 4; r.scale.set(1.6, 1, 1); r.position.set(hx, 4.5 + h, -13); hg.add(r); });
+    for (const [lxp, lzp] of [[-38, -1], [0, -1], [36, -1], [8, 74]]) { const post = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.3, 6, 5), dark); post.position.set(lxp, 6, lzp); hg.add(post); const g = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowT, color: 0xffc070, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, fog: false })); g.position.set(lxp, 9.3, lzp); g.scale.setScalar(10); hg.add(g); lamps.push(g); }
+    for (const [bx, bz, r] of [[-20, 10, 0.3], [14, 12, -0.2]]) { const b = new THREE.Group(), h = new THREE.Mesh(new THREE.BoxGeometry(3.5, 2.2, 11), M(0x6a4a30)); h.position.y = 0.9; b.add(h); const m = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.18, 9, 5), dark); m.position.y = 5.5; b.add(m); b.position.set(bx, 0, bz); b.rotation.y = r + Math.PI / 2; hg.add(b); }
+    hg.scale.setScalar(0.85); hg.userData.lamps = lamps; hg.visible = false; S.add(hg); }
   // the stars and the moon
   const sp = [], rs = gfRng(77);
   for (let k = 0; k < 900; k++) { const a = rs() * Math.PI * 2, z = Math.pow(rs(), 0.7), c = Math.sqrt(1 - z * z); sp.push(Math.cos(a) * c * 4000, z * 4000 + 40, Math.sin(a) * c * 4000); }
@@ -55917,25 +55932,71 @@ function gfSkyHole(H) {
   const ks = sea ? 1.35 : 1.6, gz = sea ? 0 : Math.max(0, gfH(H, lx, ly)) + 26 * ks; G3.mound.visible = !sea; G3.lh.scale.setScalar(ks);
   G3.lh.position.copy(gv(lx, ly, gz)); G3.lh.rotation.y = -a;
   G3.lhAt = [lx, ly, gz + 47 * ks];
-  // the reef further out, and the ships' way in: from far out on one side, round outside the reef, past the light
-  // and on in along the coast
-  G3.skerries.visible = sea;
-  const vx = uy, vy = -ux;
-  for (const m of G3.skerries.children) {
-    if (m.userData.of) { m.position.set(m.userData.of.position.x, 0.3, m.userData.of.position.z); continue; }
-    const [pu, pv] = m.userData.p, x = lx + ux * (230 + pu) + vx * pv, y = ly + uy * (230 + pu) + vy * pv; m.position.copy(gv(x, y, 0.5));
+  gfHarbourHole(H, sea, lx, ly, ux, uy);
+}
+
+// the harbour under the cliffs, and the ships' way into it: in from far out, past the Light, then threading between
+// the skerries that lie across the direct line, out to the harbour mouth and in to the quay
+function gfHarbourHole(H, sea, lx, ly, ux, uy) {
+  const [x0, y0, x1, y1] = H.box, sdA = (x, y) => (x < x0 - 1000 || x > x1 + 1000 || y < y0 - 800 || y > y1 + 1000) ? -999 : gfSeaD(H, x, y);
+  const wet = (x, y, m) => sdA(x, y) < -(m || 14);
+  G3.harbour.visible = false; G3.route = null; for (const s of G3.ships) s.visible = false;
+  const rocks = [];
+  // a few rocks round the Light's own rock
+  if (sea) { const r = gfRng(H.i * 13 + 7); for (let k = 0; k < 4; k++) { const a = r() * 6.28, d = 70 + r() * 60, x = lx + Math.sin(a) * d, y = ly + Math.cos(a) * d; if (wet(x, y, 20)) rocks.push([x, y]); } }
+  // the harbour: just off the foot of the cliffs, in view from the tee (a little right of the line of play by choice)
+  let hb = null;
+  if (sea) for (let k = -12; k <= 12; k++) {
+    const rel = k * 5 * Math.PI / 180, a = H.dir + rel;
+    for (let d = 160; d <= 800; d += 15) {
+      const x = Math.sin(a) * d, y = Math.cos(a) * d, v = sdA(x, y);
+      if (v < 0 && v > -70) {
+        if (v > -14 || gfSegD(x, y, 0, 0, H.pin[0], H.pin[1]) < 100) continue;
+        const gx = sdA(x + 3, y) - sdA(x - 3, y), gy = sdA(x, y + 3) - sdA(x, y - 3), gl = Math.hypot(gx, gy) || 1, nx = -gx / gl, ny = -gy / gl;
+        if (![60, 120, 180].every(o => wet(x + nx * o, y + ny * o, 30))) break;
+        const cost = Math.abs(rel - 0.35) + Math.abs(d - 380) / 500; if (!hb || cost < hb.cost) hb = { x, y, nx, ny, cost }; break;
+      }
+      if (v < -70) break;
+    }
   }
-  const [x0, y0, x1, y1] = H.box, wet = ([x, y]) => x < x0 - 1000 || x > x1 + 1000 || y < y0 - 800 || y > y1 + 1000 || gfSeaD(H, x, y) < -30;
-  let route = null;
-  if (sea) for (const sg of [1, -1]) for (const sc of [1, 0.75]) {
-    if (route) break;
-    const pts = [[2000, -300], [1100, -290], [520, -270], [260, -250], [90, -230], [-80, -190], [-260, -150]].map(([pu, pv]) => [lx + ux * pu * sc + vx * pv * sg, ly + uy * pu * sc + vy * pv * sg]);
-    let ok = true; for (let i = 0; i < pts.length - 1 && ok; i++) for (let f = 0; f <= 1; f += 0.1) if (!wet([pts[i][0] + (pts[i + 1][0] - pts[i][0]) * f, pts[i][1] + (pts[i + 1][1] - pts[i][1]) * f])) { ok = false; break; }
-    // (and on the inside of the way, nearer the coast than the last stretch, it may simply stop short)
-    if (!ok) { while (pts.length > 3 && !pts.every(wet)) pts.pop(); ok = pts.length > 3 && pts.every(wet); }
-    if (ok) route = pts;
+  if (hb) {
+    const { x, y, nx, ny } = hb, tx = -ny, ty = nx;   // (seaward, and along the shore)
+    G3.harbour.visible = true; G3.harbour.position.copy(gv(x, y, 0)); G3.harbour.rotation.y = Math.atan2(nx, -ny);
+    G3.harbour.userData.lamps.forEach(l => l.visible = !!G3.beamOn);
+    const B = [x + nx * 22 + tx * 6, y + ny * 22 + ty * 6], M = [x + nx * 95 - tx * 40, y + ny * 95 - ty * 40];
+    // in past the Light (on its landward side, a ship's length off), from far out beyond it
+    const lo = [lx - x, ly - y], ll = Math.hypot(lo[0], lo[1]) || 1, ox = lo[0] / ll, oy = lo[1] / ll, px = -oy, py = ox;
+    let best = null;
+    for (const side of [1, -1]) for (const amp of [70, 50, 35]) {
+      if (best) break;
+      const S0 = [lx + ox * 900 + px * side * 160, ly + oy * 900 + py * side * 160], S1 = [lx - ox * 40 + px * side * 150, ly - oy * 40 + py * side * 150];
+      // the skerries lie on the straight line from there to the harbour mouth; the way swings out round each in turn
+      const way = [S0, S1], reef = [];
+      for (const [f, sgn] of [[0.22, 1], [0.44, -1], [0.66, 1], [0.84, -1]]) {
+        const cx = S1[0] + (M[0] - S1[0]) * f, cy = S1[1] + (M[1] - S1[1]) * f, dx = M[0] - S1[0], dy = M[1] - S1[1], dl = Math.hypot(dx, dy) || 1;
+        reef.push([cx, cy]); way.push([cx - dy / dl * amp * sgn, cy + dx / dl * amp * sgn]);
+      }
+      way.push(M, B);
+      const pts = gfSpline(way, 12);
+      let ok = pts.every(([px2, py2], i) => wet(px2, py2, i > pts.length - 14 ? 6 : 16)) && reef.every(([rx, ry]) => wet(rx, ry, 12));
+      if (ok) best = { pts, reef };
+    }
+    if (best) { G3.route = best.pts; rocks.push(...best.reef); for (const s of G3.ships) s.visible = true; }
   }
-  G3.route = route; const ok = !!route; for (const s of G3.ships) s.visible = ok;
+  // set the rocks out (any left over hidden)
+  const R = G3.skerries.children.filter(c => !c.userData.of);
+  R.forEach((m, k) => { const p = rocks[k]; m.visible = !!p; if (p) m.position.copy(gv(p[0], p[1], 0.5)); });
+  for (const c of G3.skerries.children) if (c.userData.of) { c.visible = c.userData.of.visible; c.position.set(c.userData.of.position.x, 0.3, c.userData.of.position.z); }
+  G3.skerries.visible = rocks.length > 0;
+}
+// a smooth way through the points (Catmull-Rom), a point about every `step` metres
+function gfSpline(P, step) {
+  const out = [];
+  for (let i = 0; i < P.length - 1; i++) {
+    const p0 = P[Math.max(0, i - 1)], p1 = P[i], p2 = P[i + 1], p3 = P[Math.min(P.length - 1, i + 2)], n = Math.max(2, Math.ceil(Math.hypot(p2[0] - p1[0], p2[1] - p1[1]) / step));
+    for (let k = 0; k < n; k++) { const t = k / n, t2 = t * t, t3 = t2 * t, f = (a, b, c, d) => 0.5 * (2 * b + (-a + c) * t + (2 * a - 5 * b + 4 * c - d) * t2 + (-a + 3 * b - 3 * c + d) * t3); out.push([f(p0[0], p1[0], p2[0], p3[0]), f(p0[1], p1[1], p2[1], p3[1])]); }
+  }
+  out.push(P[P.length - 1]); return out;
 }
 
 // ---------- every frame ----------
@@ -55956,8 +56017,8 @@ function gfSkyTick(dt, t) {
     let u = ((t * 11 / tot + s.userData.ph) % 1) * tot, i = 0; while (i < segL.length - 1 && u > segL[i]) { u -= segL[i]; i++; }
     const A = R[i], B = R[i + 1], f = Math.min(1, u / segL[i]), x = A[0] + (B[0] - A[0]) * f, y = A[1] + (B[1] - A[1]) * f;
     s.position.copy(gv(x, y, 0)); s.rotation.y = Math.atan2(B[0] - A[0], -(B[1] - A[1])); s.rotation.z = Math.sin(t * 0.9 + s.userData.ph * 9) * 0.04;
-    // (fading in at the far end of the way and out at the near end, so none pops)
-    const e = Math.min(1, (i === 0 ? u : 1e9) / 120, (i === segL.length - 1 ? segL[i] - u : 1e9) / 120); s.scale.setScalar(Math.max(0.001, e));
+    // (growing out of the haze far out, and slipping in at the quay at the end of the way)
+    const left = segL.slice(i).reduce((q, v) => q + v, 0) - u, done = u + segL.slice(0, i).reduce((q, v) => q + v, 0), e = Math.min(1, done / 150, left / 25); s.scale.setScalar(Math.max(0.001, e));
   }
 }
 
