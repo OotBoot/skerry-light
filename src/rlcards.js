@@ -28,7 +28,7 @@
 //                spawn     sends out a sp unit (a card id) every ev seconds
 // A spawned unit that is not a card of its own (the Wreckers' Fire's wreckers) uses the card it names.
 
-const RL_SPD = { slow: 0.75, med: 1.0, fast: 1.4, vfast: 1.9 };
+const RL_SPD = { slow: 0.8, med: 1.1, fast: 1.5, vfast: 2.0 };
 const RL_CARDS = [
   // troops
   { id: 'mudlarks', n: 'Mudlarks', cost: 1, type: 'troop', hp: 70, dmg: 50, hit: 1.0, rng: 0.8, spd: RL_SPD.fast, tg: 'ground', cnt: 3, size: 0.3,

@@ -515,6 +515,48 @@
     </div>
   </div>
 
+  <!-- Rival Lights: the 3D view and what's over it (src/rl.js, src/rlhud.js, src/rl3d.js) -->
+  <div id="rlUI" hidden>
+    <canvas id="rlCv"></canvas>
+    <div class="rl-flash" id="rlFlash" aria-hidden="true"></div>
+    <div class="rl-top" id="rlTop">
+      <div class="rl-who theirs"><b id="rlName0">Rival</b><span class="rl-pips" id="rlCr0" aria-label="Lights they have put out"></span></div>
+      <div class="rl-clock" id="rlClockBox"><b id="rlClock">3:00</b><small id="rlClockSub">Time left</small></div>
+      <div class="rl-who mine"><b id="rlName1">You</b><span class="rl-pips" id="rlCr1" aria-label="Lights you have put out"></span></div>
+      <button class="rl-menu" id="rlMenuBtn" type="button" aria-label="Menu" title="Menu (Esc)">&#9776;</button>
+    </div>
+    <div class="rl-tw" id="rlTw" aria-hidden="true"></div>
+    <div class="rl-count" id="rlCount" aria-hidden="true"></div>
+    <div class="rl-toast" id="rlToast" role="status"></div>
+    <div class="rl-bottom" id="rlBottom">
+      <div class="rl-hand">
+        <div class="rl-next" title="The next card"><small>Next</small><canvas id="rlNextCv" width="96" height="112"></canvas><span class="rl-cost" id="rlNextCost"></span></div>
+        <button class="rl-card" id="rlC0" type="button"><canvas width="150" height="176"></canvas><span class="rl-wait"></span><span class="rl-cost"></span><span class="rl-nm"></span><kbd>1</kbd></button>
+        <button class="rl-card" id="rlC1" type="button"><canvas width="150" height="176"></canvas><span class="rl-wait"></span><span class="rl-cost"></span><span class="rl-nm"></span><kbd>2</kbd></button>
+        <button class="rl-card" id="rlC2" type="button"><canvas width="150" height="176"></canvas><span class="rl-wait"></span><span class="rl-cost"></span><span class="rl-nm"></span><kbd>3</kbd></button>
+        <button class="rl-card" id="rlC3" type="button"><canvas width="150" height="176"></canvas><span class="rl-wait"></span><span class="rl-cost"></span><span class="rl-nm"></span><kbd>4</kbd></button>
+      </div>
+      <div class="rl-oil" id="rlOil"><b id="rlOilN">5</b><div class="rl-oilbar" id="rlOilBar"><span><i></i></span><span><i></i></span><span><i></i></span><span><i></i></span><span><i></i></span><span><i></i></span><span><i></i></span><span><i></i></span><span><i></i></span><span><i></i></span></div><small>Lamp oil</small></div>
+    </div>
+    <div class="rl-drag" id="rlDrag" hidden aria-hidden="true"><canvas width="150" height="176"></canvas></div>
+    <div class="overlay pausecard" id="rlPause" hidden role="dialog" aria-modal="true" aria-labelledby="rlPauseHead">
+      <div class="card">
+        <h1 id="rlPauseHead">Rival Lights</h1>
+        <p class="muted" id="rlPauseSub">The match waits while this is open.</p>
+        <div class="btnrow"><button class="primary" id="rlResume" type="button">Resume</button><button class="tool" id="rlLeave" type="button">Leave the match</button></div>
+        <div class="lookrow"><label for="rlVol">Volume <output id="rlVolOut">100%</output></label><input id="rlVol" class="lookslider volslider" type="range" min="0" max="100" step="5" value="100"></div>
+      </div>
+    </div>
+    <div class="overlay pausecard rl-endov" id="rlEnd" hidden role="dialog" aria-modal="true" aria-labelledby="rlEndHead">
+      <div class="card">
+        <h1 id="rlEndHead">Victory</h1>
+        <p class="muted" id="rlEndSub"></p>
+        <div class="rl-score"><div class="mine"><span id="rlEndMeN"></span><span class="rl-pips" id="rlEndMe"></span></div><div class="theirs"><span id="rlEndThemN"></span><span class="rl-pips" id="rlEndThem"></span></div></div>
+        <div class="btnrow"><button class="primary" id="rlAgain" type="button">Again</button><button class="tool" id="rlMenu" type="button">Back to the menu</button></div>
+      </div>
+    </div>
+  </div>
+
   <!-- Drowned Reach: the panels round the map -->
   <div id="warUI" hidden>
     <div class="wartop">
@@ -1075,6 +1117,11 @@
 <script src="src/golfnet.js"></script><!-- [golf] played together -->
 <script src="src/gfcrates.js"></script><!-- [golf] ball and club crates -->
 <script src="src/gfdress.js"></script><!-- [golf] the golfer, ball and clubs dressed -->
+<script src="src/rlcards.js"></script><!-- [rival] Rival Lights: the 32 cards -->
+<script src="src/rl.js"></script><!-- [rival] the rules, the match, the snapshots -->
+<script src="src/rlbot.js"></script><!-- [rival] the keeper across the water -->
+<script src="src/rl3d.js"></script><!-- [rival] the 3D view -->
+<script src="src/rlhud.js"></script><!-- [rival] the hand, the oil, the clock, the end card -->
 <script src="src/rlart.js"></script><!-- [rival] the cards' pictures and faces -->
 <script src="src/rldeck.js"></script><!-- [rival] your decks, the deck builder, the save -->
 <script src="src/rlcrates.js"></script><!-- [rival] tower skins and crates, your record, the card -->

@@ -539,7 +539,7 @@ for (const id of ['setFov', 'fpsFov']) { const i = $(id); if (i) i.addEventListe
 setTimeout(fovSync, 0);
 // the volume sliders: the Settings card's, the pause card's, the first-person menu's (Wreckers' Night, the Lighthouse,
 // the raids, Freebooters' Sea) and the Drowned Reach's menu are all the one setting, SETTINGS.vol (0 to 1)
-const VOL_SLIDERS = ['setVol', 'pauseVol', 'fpsVol', 'warVol', 'gfVol'];   // [golf] (and Skerry Links' menu)
+const VOL_SLIDERS = ['setVol', 'pauseVol', 'fpsVol', 'warVol', 'gfVol', 'rlVol'];   // [golf] (and Skerry Links' menu) [rival]
 function volSync() {
   const v = Math.round(clamp(SETTINGS.vol == null ? 1 : +SETTINGS.vol || 0, 0, 1) * 100);
   for (const id of VOL_SLIDERS) { const i = $(id), o = $(id + 'Out'); if (i && document.activeElement !== i) i.value = String(v); if (o) o.textContent = v ? v + '%' : 'Off'; }
