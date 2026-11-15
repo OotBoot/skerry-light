@@ -6,6 +6,15 @@
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 198, date: '2026-11-15', title: "New game: Rival Lights", New: [
+    "Rival Lights: a new game for two, with its own card on the main menu. Two keepers face each other across a tidal race, each guarding a Great Light and two Lamp Towers. Spend lamp oil to play cards from your hand of four, send your troops over the two causeways, and put out the other keeper's lights.",
+    "Rival Lights: 32 cards to choose from: 22 troops (Mudlarks, Shore Crabs, the Wrecker Gang, Gull Flock, the Fog Wraith, The Diver, the Mooncusser, the Keelback, the Kelp Horror, the Crab King and more), 6 spells (Signal Flare, Cannon Shot, Rogue Wave, The Haar, Powder Keg, Storm Glass) and 4 buildings (Sea Battery, Swivel Gun, Bell Buoy, Wreckers' Fire).",
+    "Rival Lights: build a deck of 8 in the Keeper's Locker. Three deck slots, filters, every card's numbers in plain words, and a warning if your deck can't hit anything in the air.",
+    "Rival Lights: three-minute matches. Every tower you fell puts out a light; fell the Great Light and you win at once. Oil comes twice as fast in the last minute, and a level match goes to a minute of sudden death overtime.",
+    "Rival Lights: duel a bot (Easy, Normal or Hard), or play online against a friend: host a duel, share the invite, and the host starts it.",
+    "Rival Lights: 18 tower skins from the Lampwright's Crate, from red-and-white bands and an iron screw-pile to glowing and living Admiral towers. Your towers wear your skin in every match, and online your rival sees it too.",
+    "Rival Lights: earn a tower crate for every match you finish and another for every win. Your first crate is free.",
+    "Saves: your Rival Lights decks, record and tower skins are kept in your save link, code, file and cloud save with everything else." ] },
   { v: 197, date: '2026-11-14', title: "Much faster loading", Changes: [
     "The online game's page is now about 1.7 MB to download instead of 15 MB, so the menu appears several times sooner, most of all on slower connections.",
     "Sound effects and music now download in the background after the menu appears, and your browser keeps them. Until a sound arrives you'll hear the game's built-in version of it.",
