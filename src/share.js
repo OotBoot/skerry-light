@@ -9,6 +9,7 @@
 //   fogrun      a Fog Run (the same lobby again, on its own card: src/frrun.js) [fogrun]
 //   fbsea       a Freebooters' Sea crew (the same lobby again, on its own card: src/fbsea.js) [fbsea]
 //   golf        a round of Skerry Links (its own lobby: src/golfnet.js, g...) [golf]
+//   rival       a Rival Lights duel (its own lobby: src/rlnet.js, r...) [rival]
 // On a phone or tablet the button opens the share sheet; on a computer it copies the text to the clipboard.
 // On claude.ai everyone plays in the artifact's own room, which the live site can't reach, so there the link is the
 // artifact itself: it can't carry a code, but the friend sees the lobby in the list and taps it.
@@ -17,7 +18,7 @@
 const SHARE_SITE = 'https://skerry-light.onrender.com/';
 const SHARE_ARTIFACT = 'https://claude.ai/artifact/4abbzGK8dMDsPyR5KdssJv';
 const SHARE_TEXT = 'Join my game on Skerry Light!';
-const SHARE_MODES = ['sail', 'wreckers', 'war', 'lighthouse', 'raid', 'fogrun', 'fbsea', 'golf'];   // [fogrun] [fbsea] [golf]
+const SHARE_MODES = ['sail', 'wreckers', 'war', 'lighthouse', 'raid', 'fogrun', 'fbsea', 'golf', 'rival'];   // [fogrun] [fbsea] [golf] [rival]
 // the Lighthouse's lobby's own word for each of the modes it serves (src/zmnet.js ZN.mode) [fogrun]
 var SHARE_ZN = { lighthouse: 'zm', raid: 'raid', fogrun: 'fr', fbsea: 'fb' };
 const shareOnClaude = () => (typeof NET !== 'undefined' && NET.via === 'claude') || !!(window.claude && typeof window.claude.use === 'function');
@@ -35,6 +36,7 @@ function shareCode(mode) {
   if (mode === 'sail') return NET.crew;
   if (mode === 'war') return typeof WN !== 'undefined' ? WN.code : null;
   if (mode === 'golf') return typeof GFN !== 'undefined' ? GFN.code : null;   // [golf]
+  if (mode === 'rival') return typeof RLN !== 'undefined' ? RLN.code : null;   // [rival]
   if (mode === 'lighthouse' || mode === 'raid' || mode === 'fogrun' || mode === 'fbsea') return typeof ZN !== 'undefined' && ZN.mode === SHARE_ZN[mode] ? ZN.code : null;   // [fogrun]
   return null;
 }
@@ -90,8 +92,8 @@ if (SHARE_JOIN && /[?&](mode|lobby)=/.test(location.search)) {
   // tidy the address bar, so a reload later doesn't drag you back into an old lobby
   try { const q = new URLSearchParams(location.search); q.delete('mode'); q.delete('lobby'); const s = q.toString(); history.replaceState(null, '', location.pathname + (s ? '?' + s : '') + location.hash); } catch (e) {}
 }
-const SHARE_CARD = { sail: 'together', wreckers: 'fpsTitle', war: 'warTitle', lighthouse: 'zmTitle', raid: 'rdTitle', fogrun: 'frTitle', fbsea: 'fbTitle', golf: 'gfTitle' };
-const SHARE_WHAT = { sail: 'crew', war: 'war', lighthouse: 'night', raid: 'raid', fogrun: 'run', fbsea: 'crew', golf: 'round' };
+const SHARE_CARD = { sail: 'together', wreckers: 'fpsTitle', war: 'warTitle', lighthouse: 'zmTitle', raid: 'rdTitle', fogrun: 'frTitle', fbsea: 'fbTitle', golf: 'gfTitle', rival: 'rlTitle' };
+const SHARE_WHAT = { sail: 'crew', war: 'war', lighthouse: 'night', raid: 'raid', fogrun: 'run', fbsea: 'crew', golf: 'round', rival: 'duel' };
 function shareShow(mode) { const c = $(SHARE_CARD[mode]); if (c) c.scrollIntoView({ block: 'start' }); }
 function shareArrive() {
   const J = SHARE_JOIN; if (!J) return;
@@ -133,6 +135,11 @@ function shareArrive() {
       if (GFN.code === J.code) return clearInterval(iv);
       const r = gfnOpen().find(x => x.code === J.code);
       if (r) { clearInterval(iv); shareShow('golf'); if (r.started) toast('That round has already started.', 'Already started'); else gfnJoin(J.code); return; }
+    } else if (J.mode === 'rival') {   // [rival]
+      if (typeof RLN === 'undefined') return give('');
+      if (RLN.code === J.code) return clearInterval(iv);
+      const r = rlnOpen().find(x => x.code === J.code);
+      if (r) { clearInterval(iv); shareShow('rival'); if (r.started) toast('That duel has already started.', 'Already started'); else if (r.n >= 2) toast('That duel already has two keepers.', 'Duel full'); else rlnJoin(J.code); return; }
     } else {
       if (ZN.code === J.code) return clearInterval(iv);
       const n = znOpenNights().find(x => x.code === J.code);

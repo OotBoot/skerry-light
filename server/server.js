@@ -173,12 +173,22 @@ function gfLite(p) {
   if (z.lob) lite.lob = z.lob; if (z.st && typeof z.st === 'object') lite.st = { g: z.st.g };
   return Object.assign({}, p, { gf: lite });
 }
-// what someone in another war, another night, another round or the lobby hears of this player
+// Rival Lights played online: the same, for the two in one duel (the host's snapshot, about twelve times a second,
+// and the guest's taps, are for the other one only; everyone else hears enough to list the duel)
+const rlRoom = c => (c.presence && c.presence.rl && typeof c.presence.rl.room === 'string' ? c.presence.rl.room : null);
+function rlLite(p) {
+  const z = p.rl; if (!z || typeof z !== 'object') return p;
+  const lite = { room: z.room, sid: z.sid, nick: z.nick, at: z.at };
+  if (z.lob) lite.lob = z.lob; if (z.st && typeof z.st === 'object') lite.st = { g: z.st.g };
+  return Object.assign({}, p, { rl: lite });
+}
+// what someone in another war, another night, another round, another duel or the lobby hears of this player
 const liteFor = (from, c) => {
   let p = from.presence;
   if (warRoom(from) && warRoom(from) !== warRoom(c)) p = warLite(p);
   if (zmRoom(from) && zmRoom(from) !== zmRoom(c)) p = zmLite(p);
   if (gfRoom(from) && gfRoom(from) !== gfRoom(c)) p = gfLite(p);
+  if (rlRoom(from) && rlRoom(from) !== rlRoom(c)) p = rlLite(p);
   return p;
 };
 const crewOf = c => (c.presence && typeof c.presence.crew === 'string' ? c.presence.crew : null);
@@ -187,7 +197,7 @@ function relay(from, patch) {
   let msg = null, pmsg = null;
   const full = () => msg || (msg = JSON.stringify({ t: 'state', peer: from.id, presence: from.presence }));
   const part = () => pmsg || (pmsg = JSON.stringify({ t: 'patch', peer: from.id, d: patch.d, x: patch.x }));
-  const room = warRoom(from), night = zmRoom(from), round = gfRoom(from);
+  const room = warRoom(from), night = zmRoom(from), round = gfRoom(from), duel = rlRoom(from);
   const crew = crewOf(from);
   const now = Date.now();
   for (const c of clients.values()) {
@@ -197,9 +207,10 @@ function relay(from, patch) {
       (onIsland(from) && onIsland(c)) ||
       (room && warRoom(c) === room) ||
       (night && zmRoom(c) === night) ||
-      (round && gfRoom(c) === round);
+      (round && gfRoom(c) === round) ||
+      (duel && rlRoom(c) === duel);
     if (mate || now - (c.lastLobbySend.get(from.id) || 0) >= LOBBY_INTERVAL_MS) {
-      if (mate || (!room && !night && !round)) {
+      if (mate || (!room && !night && !round && !duel)) {
         // (a patch only to someone who has had every change of this player's since a whole copy)
         if (patch && c.v2 && c.upToDate.has(from.id)) send(c, part());
         else { send(c, full()); c.upToDate.add(from.id); }
