@@ -80,6 +80,7 @@
     <button class="newgame frbanner" id="frBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">And <b>Fog Run</b>: sail the keeper's cutter out into the haar and light the islands, alone or with up to four</span><span class="ng-go" aria-hidden="true">↓</span></button>
     <button class="newgame fbbanner" id="fbBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">And <b>Freebooters' Sea</b>: an open sea of islands to sail, salvage and sell, alone or with up to four</span><span class="ng-go" aria-hidden="true">↓</span></button><!-- [fbsea] -->
     <button class="newgame gfbanner" id="gfBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">And <b>Skerry Links</b>: nine holes of golf along the cliffs, alone or with up to four</span><span class="ng-go" aria-hidden="true">↓</span></button><!-- [golf] -->
+    <button class="newgame rlbanner" id="rlBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">And a ninth, <b>Rival Lights</b>: a duel of lights across the race, one keeper against another</span><span class="ng-go" aria-hidden="true">↓</span></button><!-- [rival] -->
     <div class="menulinks"><button class="tool notesbtn" id="notesBtn" type="button">Patch notes</button><button class="tool notesbtn lorebtn" id="loreBtn" type="button">Lore compendium</button></div>
     <div class="card boardcard" id="boardCard" aria-labelledby="boardHead">
       <div class="cardtop"><span class="eyebrow">Best on record · every game</span><span class="boardminititle">The Scoreboard</span><span class="boardbtns"><button class="tool closebtn" id="boardRefresh" type="button">Refresh</button><button class="tool closebtn" id="boardMin" type="button" aria-expanded="true" aria-controls="boardCard" title="Make the scoreboard small">– Minimise</button></span></div>
@@ -426,6 +427,51 @@
         <p><b>Turns and the card.</b> Everyone tees off in turn, the best on the last hole first; after that whoever's furthest from the hole plays. Tab (or Y) shows the scorecard. A full round of nine goes on the scoreboard, under the first player's name on a shared screen.</p>
       </details>
     </div>
+    <div class="card zmcard rlcard" id="rlTitle" aria-labelledby="rlHead"><!-- [rival] Rival Lights: its own card (src/rl.js the duel, src/rldeck.js, src/rlcrates.js, src/rlnet.js) -->
+      <div class="cardtop"><span class="eyebrow">A ninth game · a duel of lights · one against one</span></div>
+      <h1 id="rlHead">Rival Lights</h1>
+      <p>Two keepers, two rocks, and the race running fast between them. Each kept a light, and each swore the other's was the false one that put ships on the reef. Now they settle it the old way: crews over the causeways at low water, crabs and gulls and worse called up out of the shallows, and lamp oil for whatever the night needs. Put out the other keeper's Great Light before they put out yours.</p>
+      <p class="muted">Three minutes. Spend oil to play cards from your hand of four; your troops cross the race by the two causeways and go for the other side's towers. Every tower you fell is a crown. Fell the Great Light and it's over at once.</p>
+      <div class="rlopts">
+        <label>The other keeper <select id="rlBotLvl"><option value="easy">Easy: an old hand, slow to stir</option><option value="normal" selected>Normal: a fair fight</option><option value="hard">Hard: knows every trick of the race</option></select></label>
+      </div>
+      <div class="btnrow">
+        <button class="primary" id="rlPlay" type="button">Duel the bot</button>
+        <button class="tool" id="rlDeckBtn" type="button">Deck</button>
+      </div>
+      <div class="btnrow rlcrates"><!-- [rival] tower skins (src/rlcrates.js) -->
+        <button class="tool" id="rlCrateBtn" type="button">Tower crates</button>
+        <button class="tool" id="rlSkinBtn" type="button">Towers</button>
+      </div>
+      <p class="muted rlstats" id="rlStats"></p>
+      <section class="warmp zmmp" id="rlMp" aria-labelledby="rlMpHead"><!-- [rival] the lobby is src/rlnet.js -->
+        <h2 id="rlMpHead">Duel online · one against one</h2>
+        <p class="muted" id="rlMpNote">Looking for another keeper…</p>
+        <div id="rlMpOpen" hidden>
+          <div class="btnrow"><button class="tool" id="rlMpHost" type="button">Host a duel</button></div>
+          <div class="warlobbies" id="rlLobbies"></div>
+        </div>
+        <div class="warlobby" id="rlLobby" hidden>
+          <h3 id="rlLobbyHead">Your duel</h3>
+          <ol class="warlobbylist" id="rlLobbyList"></ol>
+          <p class="muted" id="rlLobbyMsg"></p>
+          <div class="btnrow"><button class="primary" id="rlMpStart" type="button">Light the lamps</button><button class="tool shareBtn" id="rlMpShare" type="button" data-mode="rival">Share invite</button><button class="tool" id="rlMpLeave" type="button">Leave</button></div>
+        </div>
+      </section>
+      <details class="howto">
+        <summary>How to play</summary>
+        <p><b>Oil.</b> Every card costs lamp oil, shown in the drop on its corner. You start with 5 and fill by one every 2.8 seconds, up to 10. Oil you can't hold is wasted, so spend before you're full.</p>
+        <p><b>Your hand.</b> You hold four cards from your deck of eight, and the next one waits beside them. Play a card and it goes to the back of the queue, so every card comes round again in turn.</p>
+        <p><b>Playing.</b> Pick a card, then tap the rocks where you want it. Troops and buildings go down on your own side of the race, on dry rock, not on the water or a tower. Spells go anywhere.</p>
+        <p><b>Lanes and causeways.</b> The race cuts the field in two and crosses it by two causeways, one in each lane. Troops on foot walk to the nearer causeway, cross, and go for whatever they can hit within a few tiles; failing that, the next tower down their lane. Some go only for buildings and towers.</p>
+        <p><b>Flyers.</b> Gulls, the Cormorant and the Gannet fly straight over the water, and only what can hit the air touches them: towers, the Harpooner, the Coastguard, the Lamplighter, the Head Keeper, the Swivel Gun and spells. Keep something in your deck that can.</p>
+        <p><b>Towers and crowns.</b> Each side has two Lamp Towers forward and the Great Light at the back, and they all shoot. Fell a tower and you take a crown, and the rock behind it opens to you: you may set troops down in that lane on their side of the race. Fell the Great Light and you take all three crowns and the match.</p>
+        <p><b>The Great Light wakes.</b> The Great Light sleeps until it's hit or one of its Lamp Towers falls. Then it wakes and shoots too, harder than the lamps.</p>
+        <p><b>Double oil and overtime.</b> In the last minute oil comes twice as fast. At time, more crowns wins. Level, and there's a minute of overtime at double oil, where the next tower to fall wins. Still level, it's a draw.</p>
+        <p><b>Decks.</b> Deck opens the deck builder: three slots, eight cards each from the 32, no two the same. Tap a card to read everything about it, and swap cards in and out one for one. Watch the average oil: a cheap deck cycles fast, a heavy one hits hard but slowly.</p>
+        <p><b>Tower skins.</b> Every duel you finish earns a tower crate, and a win earns another; the first is free. The Lampwright's Crate holds a set of towers for your rock, the Great Light and both lamps, with the same grades as the other crates: Mates shimmer, Captains glow, Admirals are alive. Whatever you raise, your side's colour is on the rails and the pennants.</p>
+      </details>
+    </div>
   </div>
 
   <!-- Skerry Links: the 3D view and what's over it (src/golf.js, src/golfhud.js, src/golf3d.js) -->
@@ -725,6 +771,41 @@
     </div>
   </div>
 
+  <div class="overlay rldeckcard" id="rlDeckCard" hidden role="dialog" aria-modal="true" aria-labelledby="rlDeckHead"><!-- [rival] the deck builder (src/rldeck.js) -->
+    <div class="card">
+      <div class="cardtop sticky"><span class="eyebrow">Rival Lights · the keeper's locker</span><button class="tool closebtn" id="rlDeckClose" type="button">✕ Close</button></div>
+      <h1 id="rlDeckHead">Your Deck</h1>
+      <div class="rldk-tabs" id="rlDkTabs" role="tablist" aria-label="Deck slots"></div>
+      <div class="rldk-deck" id="rlDkDeck" aria-label="The eight cards in this deck"></div>
+      <div class="rldk-meta"><span class="rldk-avg" id="rlDkAvg"></span><span class="rldk-mix" id="rlDkMix"></span><button class="tool" id="rlDkReset" type="button">Starter deck</button></div>
+      <p class="rldk-hint" id="rlDkHint" aria-live="polite"></p>
+      <div class="rldk-body">
+        <div class="rldk-colwrap">
+          <div class="rldk-bar"><div class="rldk-filter" id="rlDkFilter" role="group" aria-label="Show"></div><label class="rldk-sort">Sort <select id="rlDkSort"><option value="cost">by oil</option><option value="name">by name</option><option value="type">by type</option></select></label></div>
+          <div class="rldk-col" id="rlDkCol" aria-label="Every card"></div>
+        </div>
+        <aside class="rldk-detail" id="rlDkDetail" hidden aria-live="polite"></aside>
+      </div>
+    </div>
+  </div>
+
+  <div class="overlay cratecard wcratecard rlkratecard" id="rlCrateCard" hidden role="dialog" aria-modal="true" aria-labelledby="rlkHead"><!-- [rival] tower crates and skins (src/rlcrates.js) -->
+    <div class="card">
+      <div class="cardtop sticky"><span class="eyebrow">Rival Lights · the lampwright</span><button class="tool closebtn" id="rlkClose" type="button">✕ Close</button></div>
+      <h1 id="rlkHead">The Lampwright's Crate</h1>
+      <p>A set of towers for your rock: the Great Light and both Lamp Towers, built and painted to match. Deckhand towers are honest paint and stone, Bosun ones are finer work, Mate towers shimmer, Captain towers glow and pulse, and the Admirals' are alive, their beams turning. Whatever you raise, your side's colour stays on the rails, the plinths and the pennants. Same grades and odds as the other crates: if you see gold in the reel, it's yours.</p>
+      <div class="wcprogress"><span id="rlkProgress"></span></div>
+      <h2 class="invh">Crate inventory</h2>
+      <div class="cratetypes" id="rlkTypes"></div>
+      <div class="reel rlkreel" id="rlkReel"><div class="strip" id="rlkStrip"></div><div class="marker" aria-hidden="true"></div></div>
+      <div class="result" id="rlkResult" hidden aria-live="polite"></div>
+      <ul class="odds" id="rlkOdds" aria-label="Chances for each grade"></ul>
+      <h2 class="invh" id="rlkInvHead">Your towers</h2>
+      <span class="eyebrow" id="rlkCollected"></span>
+      <div class="inv" id="rlkInv"></div>
+    </div>
+  </div>
+
   <div class="overlay cratecard wcratecard rcratecard" id="rcrateCard" hidden role="dialog" aria-modal="true" aria-labelledby="rcrateHead">
     <div class="card">
       <div class="cardtop sticky"><span class="eyebrow">Drowned Reach · the herald</span><button class="tool closebtn" id="rcrateClose" type="button">✕ Close</button></div>
@@ -994,6 +1075,9 @@
 <script src="src/golfnet.js"></script><!-- [golf] played together -->
 <script src="src/gfcrates.js"></script><!-- [golf] ball and club crates -->
 <script src="src/gfdress.js"></script><!-- [golf] the golfer, ball and clubs dressed -->
+<script src="src/rlart.js"></script><!-- [rival] the cards' pictures and faces -->
+<script src="src/rldeck.js"></script><!-- [rival] your decks, the deck builder, the save -->
+<script src="src/rlcrates.js"></script><!-- [rival] tower skins and crates, your record, the card -->
 <script src="src/menudesk.js"></script>
 <script src="src/main.js"></script>
 </body>

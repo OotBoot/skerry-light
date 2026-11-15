@@ -591,6 +591,39 @@ An eighth game, on its own card on the title screen (**Tee off**; on the desk me
 
 How it's built: `src/golfcourse.js` (the nine holes: their shapes, heights, cliffs, sea, bunkers and trees; what's underfoot anywhere), `src/golf.js` (the round, the turns, the swing, the ball's flight and roll, the scores, the keys, the sounds and the card), `src/golfhud.js` (the screen over the 3D view, the meter, the map, the wind and the scorecard), `src/golf3d.js` (the 3D view, its own WebGL canvas: the land wearing a painted picture of the course, the sea, the trees, the pin, the golfer and the camera), `src/golfworld.js` (the nine holes on one map, and the other holes drawn at low detail round the one being played), `src/golfsky.js` (the time of day hole by hole, the sky, the stars and the moon, the lighthouse and its beams, the skerries and the ships), `src/gfcrates.js` (the ball and club crates), `src/gfdress.js` (the golfer, ball and clubs dressed in your outfit and what you play with) and `src/golfnet.js` (the lobby and the round together, on the presence key `gf`; `server/server.js` relays a round's players to each other at full rate). For tests, `gfDebug(hole)` starts a round alone on one hole (0 to 8) and `gfDebugShot(club, power, strike, aim)` strikes a shot.
 
+## Rival Lights (a duel of lights, one against one)
+
+A ninth game, on its own card on the title screen (**Duel the bot**; on the desk menu it's number 9). Two keepers on two rocks face each other across a tidal race, each sure the other's light is the false one that puts ships on the reef. They settle it in three minutes: crews, crabs, gulls and worse sent over the causeways, spells cast from the rocks, and lamp oil for all of it. Fell the other keeper's towers before they fell yours. Everything in it, the cards, the towers and the pictures, is drawn in the game's own world: keepers, wreckers, the drowned, the Diver, the Mooncusser, the Keelback, the haar.
+
+- **The field.** Your rock is at the bottom of the screen and theirs at the top, whichever side you are; the race runs across the middle and two causeways cross it, one in each lane. Each side has its **Great Light** at the back in the middle and two **Lamp Towers** forward, one in each lane. The Lamp Towers shoot anything in range, on the ground or in the air.
+- **Lamp oil.** Every card costs oil, shown in the drop on its corner. You start with 5 and gain one every 2.8 seconds, up to 10; oil past 10 is wasted.
+- **Your hand.** You hold four cards from your deck of eight, with the next one shown beside them. Playing a card sends it to the back of the queue, so the eight come round in turn.
+- **Playing a card.** Pick it, then tap where it goes. Troops and buildings go down on your own half, on dry rock: not on the water, not on a tower. When one of their Lamp Towers falls, the front of their rock in that lane opens to you as well. Spells go anywhere.
+- **How troops move.** On foot they walk to the nearer causeway, cross, and go for the nearest thing they can hit within about five tiles; with nothing near, for the next tower down their lane. Some (the Powder Monkey, the Hermit Crab, the Crab King) go only for buildings and towers. Flyers (the Gull Flock, the Cormorant, the Gannet) go straight over the water, and only what can hit the air can touch them: towers, the Harpooner, the Coastguard Pair, the Lamplighter, the Head Keeper, the Swivel Gun, the Gulls and the Cormorant themselves, and spells. Troops jostle and push apart; buildings wear down over their life.
+- **Crowns.** Every tower you fell is a crown. Fell the Great Light and you take all three at once and the match ends there.
+- **The Great Light wakes.** It sleeps until it's hit or one of its own Lamp Towers falls, then it wakes and shoots as well, harder than a lamp.
+- **Time, double oil and overtime.** A match is three minutes, and in the last minute oil comes twice as fast. At time, more crowns wins. Level, and there's a minute of overtime at double oil where the next tower to fall wins. Still level at the end of that, it's a draw.
+- **The other keeper.** Against the bot, choose how good it is on the card: Easy, Normal or Hard.
+- **The cards.** 32 of them: 22 troops, 6 spells and 4 buildings.
+
+| Oil | Troops | Spells | Buildings |
+|---|---|---|---|
+| 1 | Mudlarks (three, quick) | | |
+| 2 | Deckhand, Shore Crabs (six), Powder Monkey (runs a lit cask at a building) | Signal Flare (burns and dazzles) | |
+| 3 | Wrecker Gang (three), Harpooner (long reach, hits flyers), Drowned Sailor (rises once more), Gull Flock (four flyers), Fog Wraith (can't be struck for 3 s) | Cannon Shot (lobbed), Rogue Wave (rolls forward, knocks back), The Haar (enemies inside move and strike slower) | Sea Battery (ground only) |
+| 4 | Coastguard Pair, Cormorant (a flyer that spits stones), Gannet (dives on the ground), The Diver, Cutlass Bosun, Lamplighter (burning oil, splashes) | Powder Keg (lobbed, big) | Swivel Gun (hits anything), Bell Buoy (draws walkers to it and slows them) |
+| 5 | Hermit Crab (only buildings), Drowned Crew (eight), Mooncusser (a false light that burns all it falls on), Head Keeper (long sight, hits flyers) | | Wreckers' Fire (a wrecker comes to it every 5 s) |
+| 6 | Keelback (charges), Kelp Horror (its blows slow) | Storm Glass (three bolts on the strongest) | |
+| 7 | Crab King (only towers) | | |
+
+- **Your deck** (`src/rldeck.js`, **Deck** on the card). Three deck slots, Deck 1 to 3, each eight different cards; the slot you last chose is the one you play, and each starts as the starter deck (Deckhand, Shore Crabs, Harpooner, Gull Flock, The Diver, Hermit Crab, Cannon Shot, Sea Battery). The deck builder shows the eight across the top with the average oil, how many troops, spells and buildings, what your cheapest four cards cost (how fast the deck cycles), and a warning if nothing in it can hit flyers. Below is every card, filtered by type and sorted by oil, name or type. Tap any card to read it in plain words: how many come, hit points, damage and how often, reach, speed, what it goes for, its line and what its ability does. To change the deck you swap one for one, so it always holds eight and never the same card twice: pick a card from the collection, then the deck card it replaces (or one of the small deck cards under its details), or pick a deck card, then the card to put in its place. **Starter deck** puts the slot back as it began. It works with a mouse, a finger or the keyboard (Tab, Enter, Escape to let go of a card or close); on a phone the details sit along the foot of the screen.
+- **Tower skins** (`src/rlcrates.js`, **Tower crates** and **Towers** on the card). The **Lampwright's Crate** holds a set of towers for your rock, the Great Light and both Lamp Towers, with the same grades, odds and reel as the other crates: 5 Deckhand (Whitewash and Red, The Black Coil, Granite Course, Iron Screw-Pile on its iron legs, Tarred Timber), 4 Bosun (Brass Lantern, Martello Stone, a squat stone fort with a light on top, Daymark Chequers, Lichen and Limewash), 3 Mate that shimmer, a sheen running up them (Sea-Glass Light, Moonlit Rock, Hoarfrost), 3 Captain that glow and pulse with a halo round the lamp and a glow at their foot (Ember Light, Corpse Light, Thunderhead), and 3 Admiral, alive, their beams turning: **Northern Lights** (ribbons of green and violet light waving round the top), **The Maelstrom** (sparks swirling up round the tower and a whirlpool turning at its foot) and **The Drowned Light** (hung with weed that sways, bubbles rising off it). Whatever you raise, your side's colour (blue or red) stays on the plinth ring, the gallery rail, the door and the pennant, so the two sides always read apart. **Towers** opens the crate card at your collection, where you choose which to raise. They're only looks: every tower fights the same.
+- **Earning crates.** One for every duel you finish and one more for a win; the first is free.
+- **Your record.** The card keeps your duels played, won, lost and drawn, crowns taken, your current run of wins and your best. Decks, record, crates and towers are kept in this browser (`skerry-rival`) and in your save, with everything else.
+- **Together, online.** The card's own lobby: host a duel, join one from the list, or share an invite. Two keepers, one on each rock.
+
+How it's built: `src/rlcards.js` (the 32 cards and the starter deck), `src/rlart.js` (every card's portrait, painted in canvas with no image files, and the card faces), `src/rldeck.js` (the three decks, the deck builder and the save) and `src/rlcrates.js` (tower skins, the 3D towers for the match, the Lampwright's Crate, your record and the card's buttons).
+
 ## Wreckers' Night (multiplayer FPS)
 
 A separate game with its own card on the title screen, below Skerry Light (a banner at the top of the title screen points to it). The card has the weapon picker (the pepperbox now, four slots waiting for more weapons), Go ashore, Settings, your name, who's on the island, and how to play. You go ashore on foot on a skerry at night with a six-shot pepperbox pistol and a lantern, and shoot it out with everyone else on the island. It never touches your voyages, crates, cosmetics or crew; your equipped skin only colours your coat and lantern.
@@ -852,6 +885,10 @@ src/golf3d.js       Skerry Links: the 3D view (its own WebGL canvas) and the cam
 src/golfnet.js      Skerry Links: the lobby and a round together online
 src/gfcrates.js     Skerry Links: the ball and club crates
 src/gfdress.js      Skerry Links: the golfer in your outfit, your ball and clubs in 3D
+src/rlcards.js      Rival Lights: the 32 cards
+src/rlart.js        Rival Lights: the cards' painted portraits and faces
+src/rldeck.js       Rival Lights: your three decks, the deck builder, the save
+src/rlcrates.js     Rival Lights: tower skins and their 3D towers, the Lampwright's Crate, your record
 src/main.js         starts the main loop
 assets/maren.png    Maren cutout
 assets/plimsoll.png Plimsoll cutout
