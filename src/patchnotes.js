@@ -6,6 +6,16 @@
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 199, date: '2026-11-15', title: "Rival Lights: sturdier big cards, softer towers", Balance: [
+    "Rival Lights: Lamp Tower damage down from 58 to 51 a shot, and the Great Light's from 80 to 70.",
+    "Rival Lights: Hermit Crab health up from 2,000 to 2,450.",
+    "Rival Lights: Drowned Crew health up from 120 to 140 each.",
+    "Rival Lights: Mooncusser health up from 720 to 900.",
+    "Rival Lights: Head Keeper health up from 680 to 850.",
+    "Rival Lights: Wreckers' Fire health up from 820 to 1,000.",
+    "Rival Lights: Keelback health up from 1,650 to 2,050.",
+    "Rival Lights: Kelp Horror health up from 2,700 to 3,300.",
+    "Rival Lights: Crab King health up from 3,500 to 4,300." ] },
   { v: 198, date: '2026-11-15', title: "New game: Rival Lights", New: [
     "Rival Lights: a new game for two, with its own card on the main menu. Two keepers face each other across a tidal race, each guarding a Great Light and two Lamp Towers. Spend lamp oil to play cards from your hand of four, send your troops over the two causeways, and put out the other keeper's lights.",
     "Rival Lights: 32 cards to choose from: 22 troops (Mudlarks, Shore Crabs, the Wrecker Gang, Gull Flock, the Fog Wraith, The Diver, the Mooncusser, the Keelback, the Kelp Horror, the Crab King and more), 6 spells (Signal Flare, Cannon Shot, Rogue Wave, The Haar, Powder Keg, Storm Glass) and 4 buildings (Sea Battery, Swivel Gun, Bell Buoy, Wreckers' Fire).",

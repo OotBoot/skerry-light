@@ -37,7 +37,7 @@
 // Tests: rlDebugSpeed(x) runs the clock x times as fast; rlDebugBots(on) lets a second bot play side 0 as well.
 
 const RLC = { DT: 0.05, W: 18, H: 32, R0: 15, R1: 17, LX: [3.5, 14.5], CW: 1, OIL0: 5, OILT: 2.8, MAXOIL: 10, LEN: 180, DBL: 60, OT: 60, SIGHT: 5.5, COUNT: 3, DEP: 0.8, POCKET: 4 };
-const RL_TW = { lamp: { hp: 1800, dmg: 58, hit: 0.8, rng: 7.5, r: 1.2 }, great: { hp: 3000, dmg: 80, hit: 1.0, rng: 7, r: 1.6 } };
+const RL_TW = { lamp: { hp: 1800, dmg: 51, hit: 0.8, rng: 7.5, r: 1.2 }, great: { hp: 3000, dmg: 70, hit: 1.0, rng: 7, r: 1.6 } };
 // what each shooter throws, and how fast it flies (tiles a second); the lobbed ones arc (src/rl3d.js draws the arc)
 const RL_SHOT = { harpooner: 'harpoon', coastguard: 'shot', cormorant: 'stone', lamplighter: 'oil', mooncusser: 'lantern', lightkeeper: 'flare', battery: 'ball', swivel: 'shot' };
 const RL_PSPD = { bolt: 15, harpoon: 11, shot: 20, stone: 10, oil: 7, lantern: 6.5, flare: 13, ball: 12 };
