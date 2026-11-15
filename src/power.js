@@ -33,6 +33,7 @@ function pwApply() {
   if (typeof GL3D !== 'undefined') GL3D.pr = 0;
   if (typeof resize === 'function' && typeof cv !== 'undefined') resize();
   if (typeof gf3dPower === 'function') gf3dPower();
+  if (typeof rl3dPower === 'function') rl3dPower();
 }
 // in the background: the sound sleeps in every mode (a solo voyage also pauses, in src/game.js), and wakes on return
 document.addEventListener('visibilitychange', () => {
