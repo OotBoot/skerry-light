@@ -215,7 +215,7 @@ function rlnDraftCheck() {
   if (typeof rldRival === 'function') rldRival(dd ? Math.min(8, dd.n | 0) : 0);
   if (RLN.role !== 'dhost' || !RLN.ddk || !dd || !Array.isArray(dd.dk)) return;
   const theirs = rlnDeck(dd.dk), st = RLN.dst;
-  if (!rldValid(st.seed, dd.dk) || theirs.join() !== dd.dk.join()) { rlnDraftOff('Your rival’s drafted deck didn’t match the offers, so the draft was called off.'); return; }
+  if (!rldValid(st.seed, dd.dk, 1) || theirs.join() !== dd.dk.join()) { rlnDraftOff('Your rival’s drafted deck didn’t match the offers, so the draft was called off.'); return; }
   const go = { g: Math.random().toString(36).slice(2, 9), sids: st.sids.slice(), names: st.names.slice(), decks: [RLN.ddk.slice(), theirs], skins: st.skins.slice(), seed: (Math.random() * 4294967295) >>> 0, dr: 2 };
   RLN.dst = null; RLN.ddk = null; if (typeof rldClose === 'function') rldClose(true);
   rlnBegin(go, 'host');

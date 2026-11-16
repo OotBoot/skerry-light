@@ -1666,6 +1666,11 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 .rldr-txt dt { color: var(--muted); }
 .rldr-txt dd { margin: 0; }
 .rldr-key { margin-top: auto; align-self: flex-start; padding: 4px 10px; background: var(--lamp); color: var(--night); font-family: var(--log); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; }
+.rldr-rival { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; padding: 6px 8px; background: rgba(255,99,82,0.07); border: 1px solid rgba(255,99,82,0.3); }
+.rldr-rival .rldr-rvh { font-family: var(--log); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #ff9a8a; margin-right: 4px; }
+.rldr-rival .rlface { width: 74px; opacity: 0.9; }
+.rldr-rival .rlface .rlname { font-size: 9.5px; }
+.rldr-rival .rlface .rloil { width: 18px; height: 18px; top: 3px; left: 3px; } .rldr-rival .rlface .rloil b { font-size: 10px; }
 .rldraftcard p.rldr-hint { margin: 0; min-height: 1.4em; font-family: var(--log); font-size: 13px; color: var(--lamp); }
 .rldr-deckhead { display: flex; justify-content: space-between; font-family: var(--log); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
 .rldr-deck { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 6px; padding: 8px; background: rgba(4,7,14,0.6); border: 1px solid rgba(232,160,80,0.3); }
@@ -1679,6 +1684,9 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 @media (max-width: 640px) {
   .rldraftcard .card { padding: 18px 12px 14px; }
   #rlUI .rldraftcard .rldr-txt dl { display: none; }
+  .rldr-rival { gap: 4px; padding: 4px 6px; }
+  .rldr-rival .rldr-rvh { flex-basis: 100%; font-size: 10px; }
+  .rldr-rival .rlface { width: 60px; }
   #rlUI .rldraftcard .rldr-c .rlface { width: 72px; }
   #rlUI .rldraftcard .rldr-deck { grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 3px; padding: 4px; }
   .rldr-offer { grid-template-columns: minmax(0, 1fr); gap: 8px; }

@@ -3,9 +3,10 @@
 // three cards offered each round, take one. The two you leave are gone. After the eighth pick the duel begins with the
 // eight you took.
 //
-// The offers come from a seed (rldOffers(seed)), so both screens of an online duel see the very same three each round,
-// and both keepers are offered the same cards: it's who picks better that counts, not who was dealt better. No card is
-// offered twice in one draft (24 different cards in all). Each round has a theme, so every drafted deck can hold its
+// The offers come from a seed (rldOffersBoth(seed)), so both screens of an online duel agree on them. Each keeper gets
+// their own three each round (none of them the other keeper's three that round, where the theme allows), and sees the
+// other's three under their own (rldTheirs), but never which one the other took. No card is offered twice to the same
+// keeper (24 different cards each). Each round has a theme, so every drafted deck can hold its
 // own: a big hitter, two rounds of things that hit flyers, a striking spell, two cheap troops, a building or a spell,
 // and one where anything goes. The order of the rounds is shuffled by the seed.
 //
@@ -13,15 +14,16 @@
 // (rldScene: RL.ph 'draft' with RL.on false, so the match doesn't run and the online code still counts it as the lobby;
 // src/rl.js's rlFrame only draws), and the three cards sit over it at the foot of the screen. When both decks are
 // done rlStart begins the duel on the same screen; leaving or a draft called off goes back to the menu (rlExit).
-// Against the bot (rldBot, #rlDraftBot on the Skerry Clash card) there's no clock; the bot drafts from the same offers
+// Against the bot (rldBot, #rlDraftBot on the Skerry Clash card) there's no clock; the bot drafts from its own offers
 // (rldBotPicks: easy at random, normal and hard keeping its average oil near 3.6 and taking the stronger card). Online
 // (src/rlnet.js) each pick has 15 seconds, and a card is taken for you at random when it runs out; when you're done
 // your deck goes to the host in your lobby presence (dd), who checks every card was one of that round's offers
 // (rldValid) and starts the duel with both decks.
 //
 // The global API:
-//   rldOffers(seed)          -> [[3 ids] x 8] and .th, the theme of each round
-//   rldValid(seed, deck)     -> true if each of the 8 was one of its round's three
+//   rldOffersBoth(seed)      -> [side 0's, side 1's], each [[3 ids] x 8] with .th, the theme of each round (the same for both)
+//   rldOffers(seed, side)    -> that side's
+//   rldValid(seed, deck, side) -> true if each of the 8 was one of that side's three that round
 //   rldOpen(o)               the draft, in the arena: o = { seed, net (online, with the clock), vs (the rival's name),
 //                            me (0 or 1, which end you see it from), names, skins, done(deck) }
 //   rldClose(keep)           shuts it without finishing (done is not called), and leaves the arena unless keep (the
@@ -42,22 +44,28 @@ function rldPool(th) {
   if (th === 'tool') return all.filter(C => C.type !== 'troop');
   return all;
 }
-function rldOffers(seed) {
-  const R = rlRng(((seed >>> 0) ^ 0x5bd1e995) >>> 0), used = new Set(), out = [];
+// both keepers' offers: the same theme each round, different cards (none of one side's three in the other's that
+// round, where the theme's pool allows), and no card twice for the same keeper
+function rldOffersBoth(seed) {
+  const R = rlRng(((seed >>> 0) ^ 0x5bd1e995) >>> 0), used = [new Set(), new Set()], out = [[], []];
   const th = ['win', 'air', 'air', 'hit', 'cheap', 'cheap', 'tool', 'any'];
   for (let i = th.length - 1; i > 0; i--) { const j = (R() * (i + 1)) | 0; [th[i], th[j]] = [th[j], th[i]]; }
   for (const t of th) {
-    const o = [];
-    for (const L of [rldPool(t), RL_CARDS]) {   // (the theme's own first; anything, should it run short)
-      const left = L.filter(C => !used.has(C.id));
-      while (o.length < 3 && left.length) { const C = left.splice((R() * left.length) | 0, 1)[0]; used.add(C.id); o.push(C.id); }
+    const both = [];
+    for (const s of [0, 1]) {
+      const o = [];
+      for (const L of [rldPool(t).filter(C => !both.includes(C.id)), rldPool(t), RL_CARDS]) {   // (the theme's own, not the other's this round; then the theme's own; then anything)
+        const left = L.filter(C => !used[s].has(C.id) && !o.includes(C.id));
+        while (o.length < 3 && left.length) { const C = left.splice((R() * left.length) | 0, 1)[0]; used[s].add(C.id); o.push(C.id); }
+      }
+      both.push(...o); out[s].push(o);
     }
-    out.push(o);
   }
-  out.th = th;
+  out[0].th = th; out[1].th = th;
   return out;
 }
-function rldValid(seed, d) { if (!Array.isArray(d) || d.length !== RLD_ROUNDS) return false; const O = rldOffers(seed); return d.every((id, i) => O[i].includes(id)); }
+function rldOffers(seed, side) { return rldOffersBoth(seed)[side === 1 ? 1 : 0]; }
+function rldValid(seed, d, side) { if (!Array.isArray(d) || d.length !== RLD_ROUNDS) return false; const O = rldOffers(seed, side); return d.every((id, i) => O[i].includes(id)); }
 // the bot's picks: easy at random; otherwise the card that keeps its average oil nearest 3.6, the stronger fighter on a near tie
 function rldBotPicks(O, lvl) {
   const d = [];
@@ -74,11 +82,12 @@ function rldBotPicks(O, lvl) {
 // ---------- the draft screen ----------
 function rldOpen(o) {
   o = o || {};
-  Object.assign(RLDR, { on: true, seed: o.seed >>> 0, offers: rldOffers(o.seed >>> 0), picks: [], net: !!o.net, vs: o.vs || '', done: o.done || null, rival: -1, t0: performance.now(), lock: false });
+  const me = o.me === 1 ? 1 : 0, OB = rldOffersBoth(o.seed >>> 0);
+  Object.assign(RLDR, { on: true, seed: o.seed >>> 0, me, offers: OB[me], ro: OB[1 - me], picks: [], net: !!o.net, vs: o.vs || '', done: o.done || null, rival: -1, t0: performance.now(), lock: false });
   try { audioInit(); } catch (e) {}
   const card = $('rlDraftCard'); if (!card) return;
   for (const id of ['rlDeckCard', 'rlCrateCard']) { const e = $(id); if (e) e.hidden = true; }
-  rldScene(o);
+  rldScene(o); if ($('rlDrRival')) $('rlDrRival').dataset.k = '';
   card.hidden = false; card.scrollTop = 0; rldRender();
   clearInterval(RLDR.tm); RLDR.tm = setInterval(rldClock, 100);
 }
@@ -94,7 +103,17 @@ function rldScene(o) {
   Object.assign(RL, { on: false, ph: 'draft', FX: [] });
   $('rlUI').classList.add('drafting'); $('rlPause').hidden = true;
 }
-function rldRival(n) { if (RLDR.rival === n) return; RLDR.rival = n; if (RLDR.on) rldHint(); }
+function rldRival(n) { if (RLDR.rival === n) return; RLDR.rival = n; if (RLDR.on) { rldHint(); rldTheirs(); } }
+// the rival's three this round (theirs, which online may be ahead of or behind yours), never which they took
+function rldTheirs() {
+  const el = $('rlDrRival'); if (!el) return;
+  const r = RLDR.net ? RLDR.rival : RLDR.picks.length, vs = rlnCleanName(RLDR.vs) || 'Your rival';
+  const key = r + '|' + vs; if (el.dataset.k === key) return; el.dataset.k = key; el.textContent = '';
+  if (r < 0 || r >= RLD_ROUNDS || !RLDR.ro[r]) { el.hidden = r < RLD_ROUNDS; if (!el.hidden) { const p = document.createElement('span'); p.className = 'rldr-rvh'; p.textContent = vs + ' has drafted their deck.'; el.appendChild(p); } return; }
+  el.hidden = false;
+  const h = document.createElement('span'); h.className = 'rldr-rvh'; h.textContent = vs + '’s choices' + (RLDR.net ? ', round ' + (r + 1) : '') + ':'; el.appendChild(h);
+  for (const id of RLDR.ro[r]) { const c = RL_CARD[id], f = rlCardFace(id, null, 74); f.title = c ? c.n + ' · ' + c.cost + ' oil' : id; el.appendChild(f); }
+}
 function rldPick(id) {
   const r = RLDR.picks.length;
   if (!RLDR.on || RLDR.lock || r >= RLD_ROUNDS || !RLDR.offers[r].includes(id)) return;
@@ -141,6 +160,7 @@ function rldRender() {
     const k1 = document.createElement('span'); k1.className = 'rldr-key'; k1.textContent = 'Take it · ' + (k + 1); tx.appendChild(k1);
     b.appendChild(tx); b.addEventListener('click', () => rldPick(id)); of.appendChild(b);
   });
+  rldTheirs();
   // the deck so far
   const dv = $('rlDrDeck'); dv.textContent = '';
   for (let i = 0; i < RLD_ROUNDS; i++) {
@@ -160,14 +180,14 @@ function rldLeave() {
   if (net && typeof rlnLeave === 'function') rlnLeave();
   try { sfxTick(); } catch (e) {}
 }
-// against the bot: draft, the bot drafts from the same offers, and the duel begins
+// against the bot: draft, the bot drafts from its own offers, and the duel begins
 function rldBot(lvl) {
   lvl = typeof lvl === 'string' ? lvl : ($('rlBotLvl') && $('rlBotLvl').value) || 'normal'; if (!RL_BOTNM[lvl]) lvl = 'normal';
   const seed = (Math.random() * 4294967295) >>> 0;
   const sk = typeof rlSkinMine === 'function' ? rlSkinMine() : '';
   rldOpen({ seed, vs: RL_BOTNM[lvl], me: 0, names: [rlMyName(), RL_BOTNM[lvl]], skins: [sk || '', ''], done: deck => {
     rldClose(true);
-    rlStart({ mode: 'bot', me: 0, names: [rlMyName(), RL_BOTNM[lvl]], decks: [deck, rldBotPicks(rldOffers(seed), lvl)], skins: [sk || '', ''], lvl, draft: 1 });
+    rlStart({ mode: 'bot', me: 0, names: [rlMyName(), RL_BOTNM[lvl]], decks: [deck, rldBotPicks(rldOffers(seed, 1), lvl)], skins: [sk || '', ''], lvl, draft: 1 });
   } });
 }
 
