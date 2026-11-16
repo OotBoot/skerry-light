@@ -6,6 +6,11 @@
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 214, date: '2026-11-16', title: "Skerry Clash: room for three", Fixes: [
+    "Skerry Clash: invite links to a Three keepers match turned the third keeper away as if the room were full. All three can now join from an invite.",
+    "Skerry Clash: Host a duel now always hosts a duel, even if your last room was set to Three keepers.",
+    "Skerry Clash: a keeper on a slower device is no longer counted as gone while their arena is still loading at the start of a Three keepers match." ], Changes: [
+    "Skerry Clash: a new Host three keepers button beside Host a duel and Host a triple draft opens a room for three straight away." ] },
   { v: 213, date: '2026-11-16', title: "Skerry Clash: Three keepers", New: [
     "Skerry Clash: a new Three keepers mode, every keeper for themselves. Three rocks share one round skerry, cut apart by three channels, with a causeway over each one to your two neighbours.",
     "Skerry Clash: each keeper has a Great Light and two Lamp Towers, one facing each neighbour. Your troops go for whichever rival is nearer, so you can send a push at either side.",

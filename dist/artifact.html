@@ -2200,10 +2200,10 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
       <p class="muted rlstats" id="rlStats"></p>
       <p class="muted rlstats rlmmr" id="rlMmr"></p><!-- [rival] the rating (src/rlmmr.js) -->
       <section class="warmp zmmp" id="rlMp" aria-labelledby="rlMpHead"><!-- [rival] the lobby is src/rlnet.js -->
-        <h2 id="rlMpHead">Duel online · one against one</h2>
+        <h2 id="rlMpHead">Duel online · one against one, or three keepers</h2>
         <p class="muted" id="rlMpNote">Looking for another keeper…</p>
         <div id="rlMpOpen" hidden>
-          <div class="btnrow"><button class="tool" id="rlMpHost" type="button">Host a duel</button><button class="tool" id="rlMpHostDr" type="button">Host a triple draft</button></div>
+          <div class="btnrow"><button class="tool" id="rlMpHost" type="button">Host a duel</button><button class="tool" id="rlMpHostDr" type="button">Host a triple draft</button><button class="tool" id="rlMpHost3" type="button">Host three keepers</button></div>
           <div class="warlobbies" id="rlLobbies"></div>
         </div>
         <div class="warlobby" id="rlLobby" hidden>
@@ -2801,7 +2801,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 // ---- src/config.js ----
 'use strict';
 // The game's version, shown at the top of the main menu. Bump it by one with every change pushed to main.
-var VERSION = 213;
+var VERSION = 214;
 // Skerry Light: tuning, asset paths and lore.
 // World units are metres. The lighthouse stands at the origin on the shoreline (y = 0);
 // north (+y) is open sea. Bearings: 0 = north, positive = east.
@@ -2976,6 +2976,11 @@ document.addEventListener('visibilitychange', () => {
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 214, date: '2026-11-16', title: "Skerry Clash: room for three", Fixes: [
+    "Skerry Clash: invite links to a Three keepers match turned the third keeper away as if the room were full. All three can now join from an invite.",
+    "Skerry Clash: Host a duel now always hosts a duel, even if your last room was set to Three keepers.",
+    "Skerry Clash: a keeper on a slower device is no longer counted as gone while their arena is still loading at the start of a Three keepers match." ], Changes: [
+    "Skerry Clash: a new Host three keepers button beside Host a duel and Host a triple draft opens a room for three straight away." ] },
   { v: 213, date: '2026-11-16', title: "Skerry Clash: Three keepers", New: [
     "Skerry Clash: a new Three keepers mode, every keeper for themselves. Three rocks share one round skerry, cut apart by three channels, with a causeway over each one to your two neighbours.",
     "Skerry Clash: each keeper has a Great Light and two Lamp Towers, one facing each neighbour. Your troops go for whichever rival is nearer, so you can send a push at either side.",
@@ -54448,8 +54453,8 @@ function shareArrive() {
       if (r) {
         clearInterval(iv); shareShow('rival');
         // (under way or full: offered to watch instead, the duel's Watch button in the list made ready)
-        if (r.started || r.n >= 2) {
-          toast(r.started ? 'That duel has already started. Tap Watch to see it.' : 'That duel already has two keepers. Tap Watch to see it.', 'Watch instead');
+        if (r.started || r.n >= (r.max || 2)) {   // (a match for three takes three keepers, a duel two)
+          toast(r.started ? 'That duel has already started. Tap Watch to see it.' : r.max > 2 ? 'That match already has three keepers. Tap Watch to see it.' : 'That duel already has two keepers. Tap Watch to see it.', 'Watch instead');
           RLN.msg = `${r.host}’s duel is ${r.started ? 'under way' : 'full'}: you can watch it.`; rlnRender();
           setTimeout(() => { const b = document.querySelector(`#rlLobbies .rlwatch[data-code="${J.code}"]`); if (b) { b.classList.add('glow'); b.focus({ preventScroll: true }); } }, 120);
         } else rlnJoin(J.code);
@@ -64020,7 +64025,9 @@ function rlnHost() {
 function rlnJoin(code) {
   if (!rlnOnline() || !code || rlnInMatch()) return;
   if (rlnPeers(code).length >= rlnMax(code)) { RLN.msg = rlnMax(code) > 2 ? 'That match already has three keepers.' : 'That duel already has two keepers.'; rlnRender(); return; }
-  RLN.n3 = false; RLN.code = code; RLN.at = Date.now(); RLN.msg = ''; RLN.quit = null; RLN.spec = false;
+  // (my join time goes after everyone already in, whatever my clock says, so a slow clock never puts me ahead of the host)
+  const late = Math.max(0, ...rlnPeers(code).map(p => rlnOf(p).at || 0));
+  RLN.n3 = false; RLN.code = code; RLN.at = Math.max(Date.now(), late + 1); RLN.msg = ''; RLN.quit = null; RLN.spec = false;
   rlnSendLobby(); rlnRender();
 }
 // watch a duel, waiting or under way: in its room, as neither keeper (the duel itself starts in rlNetPeers)
@@ -64147,7 +64154,7 @@ function rlnBegin(st, role) {
   RLN.side = role === 'host' ? 0 : Math.max(0, st.sids.indexOf(NET.sid)); RLN.gS = {}; RLN.gB = {}; RLN.gQ = {}; RLN.gOut = {};
   Object.assign(RLN, { st, g: st.g, doneG: st.g, role, seq: 0, q: [], lastQ: 0, ws: 0, wsSeen: -1, wsSeenAny: -1, sendT: 0, sentAt: 0, seen: now, lastB: null, chunks: null, quit: null, ended: false, acked: false, msg: '' });
   if (role === 'spec') { RLN.specSk = st.skins.join('|'); rlStart({ mode: 'net', me: 0, n3: !!st.n3, names: st.names.slice(), skins: st.skins.slice(), seed: st.seed, net: { host: false, spec: true } }); return; }
-  if (st.n3) { const now2 = performance.now(); st.sids.forEach((sid, i) => { if (i && sid) RLN.gS[i] = now2; }); }
+  if (st.n3) { const now2 = performance.now() + RLN_GONE; st.sids.forEach((sid, i) => { if (i && sid) RLN.gS[i] = now2; }); }   // (twenty seconds' grace for each guest's first word, while a slow phone builds the arena)
   rlStart({ mode: 'net', me: role === 'host' ? 0 : st.n3 ? RLN.side : 1, n3: !!st.n3, bots: st.bots, names: st.names.slice(), decks: st.decks.map(d => d.slice()), skins: st.skins.slice(), seed: st.seed, net: { host: role === 'host' }, draft: st.dr === 2 });
   rlnSendNow();
 }
@@ -64381,8 +64388,9 @@ function rlnBackToLobby() {
 
 (function rlnInit() {
   if (!$('rlMp')) return;
-  if ($('rlMpHost')) $('rlMpHost').addEventListener('click', () => { RLN.draft = false; rlnHost(); });
-  if ($('rlMpHostDr')) $('rlMpHostDr').addEventListener('click', () => { RLN.draft = true; rlnHost(); });   // (a triple draft from the start; the host can still change it in the lobby)
+  if ($('rlMpHost')) $('rlMpHost').addEventListener('click', () => { RLN.draft = false; RLN.n3 = false; rlnHost(); });
+  if ($('rlMpHostDr')) $('rlMpHostDr').addEventListener('click', () => { RLN.draft = true; RLN.n3 = false; rlnHost(); });
+  if ($('rlMpHost3')) $('rlMpHost3').addEventListener('click', () => { RLN.draft = false; RLN.n3 = true; rlnHost(); });   // (a match for three from the start, room for three keepers)   // (a triple draft from the start; the host can still change it in the lobby)
   if ($('rlMpStart')) $('rlMpStart').addEventListener('click', rlnStart);
   if ($('rlMpLeave')) $('rlMpLeave').addEventListener('click', rlnLeave);
   if ($('rlMpDraft')) $('rlMpDraft').addEventListener('change', e => { if (!rlnAmHost()) return; RLN.draft = !!e.target.checked; rlnSendLobby(); rlnRender(); });
