@@ -345,11 +345,11 @@ cpStage('m07quay', Object.assign({}, CP7_HOOKS, {
     S.spawned = cpgAll().length;
     cpObjective('Clear the quay of Kittow’s men. Keep out of their lanterns’ light');
     cpWaypoint(0, -1, 'The yard gate', 2.5);
-    setTimeout(() => { if (RAID.st === S && !ZM.over) cpSay('recv', 'Keep to the dark, gentlemen. They have lanterns, and we have none.', 'cp_m07_05'); }, 900);
+    S.go = [0.9, 'recv', 'Keep to the dark, gentlemen. They have lanterns, and we have none.', 'cp_m07_05'];
   },
   tick(dt) {
     const S = RAID.st, n = cp7N();
-    cp7Beats();
+    cp7Beats(); cpgGo(S, dt);
     if (S.ph === 'quay') {
       // the first of them to see you shouts; out of the warehouses come more
       if (!S.rf && cpgAll().some(z => z.aware)) {
@@ -427,11 +427,11 @@ cpStage('m07yard', Object.assign({}, CP7_HOOKS, {
     cpgSpawn(0, CP7.YC - 3.2, { h: Math.PI, aware: 0, gun: true });
     cpObjective('Find the Gannet’s three sea chests in the stacks, and carry them to the gig');
     cp7YWay();
-    setTimeout(() => { if (RAID.st === S && !ZM.over) cpSay('recv', 'Three chests, somewhere in the stacks. The beam will show them, and it will show you. Mind the shadows.', 'cp_m07_13'); }, 1200);
+    S.go = [1.2, 'recv', 'Three chests, somewhere in the stacks. The beam will show them, and it will show you. Mind the shadows.', 'cp_m07_13'];
   },
   tick(dt) {
     const S = RAID.st, n = cp7N(), P = ZM.players || [];
-    cp7Beats();
+    cp7Beats(); cpgGo(S, dt);
     // the chests: one of you close by finds it; whoever carries one takes it with them, and drops it if they go down
     for (const c of S.ch) {
       if (c.s === 0 && P.some(p => Math.hypot(p.x - FPSC.CX - c.x, p.y - FPSC.CY - c.y) < 3.2 || cp7FlareAt(FPSC.CX + c.x, FPSC.CY + c.y) > 0.3)) { c.s = 1; cp7Found(); }

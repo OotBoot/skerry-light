@@ -190,6 +190,10 @@ function cpgPose(z, M, dt) {
   }
 }
 
+// (hosting) a part's opening line, S.go = [seconds, who, text, vo]: said once the part's own clock has run that long
+// (the clock waits through a cinematic, so it's never said over one); call it from the stage's tick
+function cpgGo(S, dt) { if (!S.go) return; S.go[0] -= dt; if (S.go[0] <= 0) { const [, w, t, v] = S.go; S.go = null; cpSay(w, t, v); } }
+
 // ---------- lamps a stage owns ----------
 // cplAdd(x, y, z, col, r, o): about the island's middle (x, y), z metres up; o: { on (default true), k ('lantern' or
 // 'fire'), s (the glow's size) }. Call it in the stage's set or enter (every screen), and cplBuild3D(grp) in its b3.

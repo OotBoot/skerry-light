@@ -11,7 +11,7 @@ const CP7A = { recv: ['#1e2634', '#e0d8c8', '#b8a060', '#ffd88a'], crew: ['#3a3a
 // the Receiver and his boat crew at the top of the quay steps
 function cp7aCrew(C, x, y, h) {
   C.recv = cp2aNpc(C, CP7A.recv, x, y, h, { noGun: true, lan: false });
-  C.crew = [[-2.4, -0.6], [2.3, -0.9], [-0.8, -2.2], [1.2, 1.6]].slice(0, 3).map(([dx, dy]) => cp2aNpc(C, CP7A.crew, x + dx, y + dy, h + (Math.random() - 0.5) * 0.4, { lan: false }));
+  C.crew = [[-2.4, -0.6], [2.3, -0.9], [-0.8, -2.2], [1.2, 1.6]].slice(0, 3).map(([dx, dy]) => cp2aNpc(C, CP7A.crew, x + dx, y + dy, h + (Math.random() - 0.5) * 0.4, { lan: false, noGun: true }));
 }
 
 // ---------- the intro ----------

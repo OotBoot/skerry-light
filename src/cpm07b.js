@@ -100,11 +100,11 @@ cpStage('m07nell', Object.assign({}, CP7_HOOKS, {
     const n = cp7N(), z = cpn7Spawn(...CPN7.FROM); S.nz = z.zn;
     for (let i = 0; i < 1 + n; i++) cpgSpawn(CPN7.FROM[0] + (i % 2) * 2.2, CPN7.FROM[1] - 2 - i * 1.8, { aware: 1, gun: Math.random() < 0.6, h: Math.PI / 2 });
     cpObjective('Put Black Nell down');
-    setTimeout(() => { if (RAID.st === S && !ZM.over) cpSay('recv', 'Mind her long gun. When she lays it on you, get out of the line of it!', 'cp_m07_23'); }, 1400);
+    S.go = [1.4, 'recv', 'Mind her long gun. When she lays it on you, get out of the line of it!', 'cp_m07_23'];
   },
   tick(dt) {
     const S = RAID.st, n = cp7N(), B = cpn7Nell();
-    cp7Beats();
+    cp7Beats(); cpgGo(S, dt);
     if (S.ph !== 'fight') return;
     S.hk = B ? clamp(B.hp / B.max, 0, 1) : 0;
     if (!B || B.dead) { S.ph = 'done'; for (const z of ZM.z) if (!z.dead) { z.dead = 1; z.deadT = 0; } cpObjective(''); setTimeout(() => { if (RAID.st === S && !ZM.over) cpDone(); }, 2200); return; }

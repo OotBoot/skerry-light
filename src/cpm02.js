@@ -200,10 +200,11 @@ cpStage('m02lights', {
     const n = cp2N();
     for (let i = 0; i < CPM2.LIGHTS; i++) cp2Guard(i, false);
     for (let k = 1; k < n; k++) cp2Guard((Math.random() * CPM2.LIGHTS) | 0, false);
-    setTimeout(() => { if (RAID.st === S && !ZM.over) cpSay('sarg', 'Down the cliff path, quick. Put out every light on the point before she strikes.', 'cp_m02_06'); }, 600);
+    S.go = [0.6, 'sarg', 'Down the cliff path, quick. Put out every light on the point before she strikes.', 'cp_m02_06'];
   },
   tick(dt) {
     const S = RAID.st, n = cp2N(), lit = cp2LitN();
+    cpgGo(S, dt);
     if (S.ph === 'lights') {
       // she comes in: nearer for every light that burns
       S.c = Math.min(1, S.c + dt / CPM2.STRIKE * (lit / CPM2.LIGHTS) * (1 + 0.08 * (n - 1)));
