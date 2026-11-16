@@ -40488,7 +40488,7 @@ function gcCraneGeo() {
   Q.hook = new THREE.TorusGeometry(0.055, 0.011, 5, 12, Math.PI * 1.3);
   Q.spike = new THREE.ConeGeometry(0.014, 0.12, 6);
   Q.horn = new THREE.CylinderGeometry(0.1, 0.016, 0.46, 18, 3, true); Q.horn.translate(0, 0.23, 0);   // (narrow end at the origin, its bell out along +y)
-  { const P = Q.horn.attributes.position; for (let i = 0; i < P.count; i++) { const y = P.getY(i) / 0.46, k = 0.16 + 0.84 * Math.pow(y, 2.2); const r = Math.hypot(P.getX(i), P.getZ(i)) || 1, a = Math.atan2(P.getZ(i), P.getX(i)), rr = 0.016 + 0.084 * k; P.setX(i, Math.cos(a) * rr); P.setZ(i, Math.sin(a) * rr); } Q.horn.computeVertexNormals(); }
+  { const P = Q.horn.attributes.position; for (let i = 0; i < P.count; i++) { const y = P.getY(i) / 0.46, k = 0.16 + 0.84 * Math.pow(Math.max(0, y), 2.2); const r = Math.hypot(P.getX(i), P.getZ(i)) || 1, a = Math.atan2(P.getZ(i), P.getX(i)), rr = 0.016 + 0.084 * k; P.setX(i, Math.cos(a) * rr); P.setZ(i, Math.sin(a) * rr); } Q.horn.computeVertexNormals(); }   // [campaign] (y a hair under 0 at the narrow end made a NaN there)
   Q.weed = new THREE.BoxGeometry(0.018, 0.3, 0.006); Q.weed.translate(0, -0.15, 0);
   Q.halo = z3Soft('rgba(150,230,210,0.8)', 'rgba(120,200,200,0)');
   Q.gold = z3Soft('rgba(255,220,140,0.9)', 'rgba(255,190,90,0)');
@@ -49291,13 +49291,688 @@ cpCineDef('m04_outro', { shots: [{ d: 3, card: { eye: 'Mission complete', t: 'Th
 
 // ---- src/cpm05.js ----
 'use strict';
-// The Chronicle of the Light, mission 5: The Wren Comes In (9 January 1888). A placeholder until the mission is written: its place in
-// the campaign (src/cp.js cpMission), a title card, and the stage still being written (src/cpkit.js 'cp_wip').
+// The Chronicle of the Light, mission 5: The Wren Comes In (2 and 9 January 1888). The week the shark came: first
+// on foot on the strand across the water from the Light, the morning he walked up out of the surf in the Gannet's
+// cabin boy's blue shoes; then a week on, at night, aboard the schooner Wren as she comes in through the skerries
+// with him walking ahead of her on the water, and the voyages of 1888 begin.
+//  I.   The Strand (cp_m05sand, src/cpm05a.js): 2 January, dawn, under a red sky, the rocks in the bay warm. Follow
+//       the blue prints along the tide line to where he stands looking up at the Light; then hold the strand, with
+//       the old fog bell there, until the sun is up.
+//  II.  The Outer Skerries (cp_m05outer, src/cpm05b.js): 9 January, night. Crew the Wren (the keeper's cutter's
+//       deck, dressed as a schooner: a foremast, her foresail, her name on the transom) on the FPS engine's sail
+//       (src/gwsail.js through GWS_LEG), on a sea of this mission's own: the warm green water of that night, its
+//       rocks thick either side of the one channel Plimsoll walks. Keep up with him and you're covered; the bow
+//       lantern shows the rocks close ahead to whoever stands lookout there; at the Hulks he goes under and you're
+//       on your own with the bell till he's up again; out through the Gate.
+//  III. The Inner Skerries (cp_m05inner): past the Gate to the harbour, palms on the cliffs, and in the last reach
+//       he walks on ahead to the pier while Maren comes on and the drowned climb every rail. Make the harbour.
+// Cinematics: the intro (the strand at dawn), Plimsoll on the sand (in Part I), the Wren at sea (Part II's start),
+// Plimsoll going under (Part II), the palms (Part III's start), Maren in the last reach (Part III), and the outro.
+// Lines: cp_m05_01 on (the table in campaign-sound/m05.md).
+
+cpCast('wren', { n: 'The Wren’s Master', c: '#c8d8a0' });
+cpCast('hand', { n: 'A Hand off the Wren', c: '#d8c8a8' });
+CP_MUSIC_FALL.cpm05dawn = 'cpsad';   // (the strand at dawn: its own, till it's recorded)
+CP_MUSIC_FALL.cpm05sail = 'gwsail';  // (the Wren coming in)
+CP_MUSIC_FALL.cpm05last = 'gwsail';  // (the last reach)
+const CPM5 = { biome0: null };
+// (the night's sea: the 2 January sky red over the headland, the 9 January water warm and green; put back after)
+function cpm5Biome(id) {
+  if (typeof g === 'undefined' || !g) return;
+  if (CPM5.biome0 === null) CPM5.biome0 = g.biome || 'skerry';
+  g.biome = id;
+}
+function cpm5BiomeBack() { if (typeof g !== 'undefined' && g && CPM5.biome0 !== null) g.biome = CPM5.biome0; CPM5.biome0 = null; }
+
 cpMission({ id: 'm05', act: 3, n: 'The Wren Comes In', when: '9 January 1888', where: 'The Skerries',
-  blurb: 'A boy in blue shoes walks ahead through the deep water. Sail the cutter in behind Plimsoll, with Maren coming nearer every turn of the lamp.',
-  stages: ['cp_wip'], intro: 'm05_intro', outro: 'm05_outro', music: { default: 'cptense' } });
-cpCineDef('m05_intro', { shots: [cpTitleShot(CP_BY.m05), { d: 4, cam: [0, -70, 6], to: [0, -55, 4], look: [0, 0, 1], lines: [[0.3, 'log', 'This page of the log is still being written.', '']] }] });
-cpCineDef('m05_outro', { shots: [{ d: 3, card: { eye: 'Mission complete', t: 'The Wren Comes In', sub: '9 January 1888' } }] });
+  blurb: 'A boy in blue shoes walks ahead through the deep water. Sail the Wren in behind Plimsoll, with Maren coming nearer every turn of the lamp.',
+  stages: ['cp_m05sand', 'cp_m05outer', 'cp_m05inner'], intro: 'm05_intro', outro: 'm05_outro',
+  cut: { 1: 'm05_wren', 2: 'm05_palms' }, music: { default: 'cpm05sail' }, lives: 1,
+  begin() { CPM5.biome0 = null; },
+  stop() { cpm5BiomeBack(); if (typeof GWS_LEG !== 'undefined' && GWS_LEG && /^cpm05/.test(GWS_LEG.key || '')) GWS_LEG = null; } });
+
+// ---------- actors ----------
+// Plimsoll on foot: his picture standing upright (it faces left: flipped to face right), his shoes glowing blue
+function cpm5PlimActor(grp, tall, flip) {
+  const P = new THREE.Group(); grp.add(P);
+  const tex = typeof gwsImgTex === 'function' && typeof IMG !== 'undefined' ? gwsImgTex(IMG.plim, false, !!flip) : null;
+  const asp = typeof SK !== 'undefined' && SK.PLIM_ASPECT || 0.6;
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, color: tex ? 0xffffff : 0x3a5a7a, transparent: true, depthWrite: false }));
+  sp.scale.set(tall * asp, tall, 1); sp.position.y = tall / 2; P.add(sp);
+  const soft = z3Soft('rgba(255,255,255,0.95)', 'rgba(255,255,255,0)');
+  const glow = (c, s, o) => { const g0 = new THREE.Sprite(new THREE.SpriteMaterial({ map: soft, color: c, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: o == null ? 0.8 : o })); g0.scale.setScalar(s); P.add(g0); return g0; };
+  const shoes = [glow(0x6ed7ff, 0.6), glow(0x6ed7ff, 0.6)]; shoes.forEach((s, i) => s.position.set(i ? 0.22 : -0.22, 0.08, 0));
+  const halo = glow(0x5fd3ff, tall * 1.6, 0.16); halo.position.y = tall * 0.5;
+  return { P, sp, shoes, halo };
+}
+// Maren, standing on the water: her picture, pale as moonlight, and a cold glow
+function cpm5MarenActor(grp, tall) {
+  const P = new THREE.Group(); grp.add(P);
+  const tex = typeof gwsImgTex === 'function' && typeof IMG !== 'undefined' ? gwsImgTex(IMG.maren, true) : null;
+  const asp = typeof SK !== 'undefined' && SK.MAREN_ASPECT || 0.5;
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, color: tex ? 0xffffff : 0x9fb8d8, transparent: true, depthWrite: false, fog: false, opacity: 0.9 }));
+  sp.scale.set(tall * asp, tall, 1); sp.position.y = tall / 2; P.add(sp);
+  const g0 = new THREE.Sprite(new THREE.SpriteMaterial({ map: z3Soft('rgba(255,255,255,0.95)', 'rgba(255,255,255,0)'), color: 0xc8dcff, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: 0.3, fog: false }));
+  g0.scale.setScalar(tall * 2); g0.position.y = tall / 2; P.add(g0);
+  return { P, sp, g0 };
+}
+// (a sail stage, frozen for a cinematic) a point of the sea's, into deck coordinates about the island's middle
+function cpm5SeaL(sx, sy) {
+  const S = RAID.st, V = S && (S.V || S.B); if (!V) return [0, 0];
+  const c = Math.cos(V.h), s = Math.sin(V.h), dx = sx - V.x, dy = sy - V.y;
+  return [dx * c - dy * s, dx * s + dy * c];
+}
+
+// ---------- the cinematics ----------
+// the opening: the strand at dawn, the sky red, the keeper down at the tide line with his lantern
+cpCineDef('m05_intro', {
+  music: 'cpm05dawn',
+  b3(grp, C) {
+    C.holm = cpkNpc(['#1e2436', '#d8d0bc', '#8a7a4a', '#ffd88a']);
+    C.prints = CPM5S.PRINTS.slice(0, 3);
+  },
+  exit(C) { cpkNpcFree(C.holm); },
+  shots: [
+    cpTitleShot(CP_BY.m05),
+    { d: 4.2, card: { eye: 'The keeper’s log', t: '2 January 1888', sub: 'Dawn, on the strand across the water from the Light' } },
+    { d: 6.5, cam: [40, -60, 14], to: [18, -30, 6], look: [-6, 10, 1], lookTo: [-10, 30, 1.5], fade: [1, 0],
+      lines: [[0.4, 'log', 'All night the sky over the headland had been red, as if the hills were burning.', 'cp_m05_01']] },
+    { d: 5.5, cam: [-4, 30, 2.4], to: [-8, 34, 2.0], look: [-14, 40, 1.6],
+      f(t, k, C) { const [x, y] = cpkW(-13, 40); cpkNpcPose(C.holm, { x, y, h: 2.6, lan: true }); },
+      lines: [[0.3, 'holm', 'The rocks in the bay are warm to the touch. In January.', 'cp_m05_02']] },
+    { d: 6, cam: [-30, 30, 3.2], to: [-34, 16, 2.4], look: [-38, 22, 0], lookTo: [-34, 6, 0],
+      f(t, k, C) { const [x, y] = cpkW(-13, 40); cpkNpcPose(C.holm, { x, y, h: 2.6, lan: true }); },
+      lines: [[0.3, 'holm', 'Something came up out of the surf in the night. Small prints. Shoes.', 'cp_m05_03'], [3.4, 'holm', 'Follow them along the tide line, and keep your irons ready.', 'cp_m05_04']] },
+  ],
+});
+// Plimsoll on the sand, looking up at the Light; then back into the sea, and the surf boiling after him
+cpCineDef('m05_plim', {
+  music: 'cpm05dawn',
+  b3(grp, C) {
+    const [px, py] = cpkW(...CPM5S.PLIM);
+    C.p = cpm5PlimActor(grp, 2.7, false); C.p.P.position.copy(z3v(px, py, FPSC.GROUND));
+    C.x0 = px; C.y0 = py;
+  },
+  shots: [
+    { d: 5.5, cam: [0, -28, 4.6], to: [4, -35, 3.4], look: [12, -50, 1.6], lookTo: [16, -62, 1.2], fade: [0.6, 0],
+      lines: [[0.3, 'log', 'A shark walked up out of the surf at dawn, wearing the blue shoes of the Gannet’s cabin boy.', 'cp_m05_05']] },
+    { d: 5, cam: [4, -50, 1.4], to: [6, -51, 1.5], look: [10, -46, 2.0],
+      f(t, k, C) { C.p.sp.material.rotation = Math.sin(t * 1.3) * 0.03; C.p.shoes.forEach((s, i) => s.material.opacity = 0.7 + 0.3 * Math.sin(t * 4 + i)); },
+      lines: [[0.6, 'holm', 'Blue shoes. The Gannet’s boy went down in blue shoes.', 'cp_m05_06']] },
+    { d: 6.5, cam: [2, -30, 3.0], to: [6, -34, 3.4], look: [10, -48, 1.2], lookTo: [16, -62, 0.4],
+      f(t, k, C) { const e = Math.min(1, t / 5.5), x = C.x0 + 6 * e, y = C.y0 - 16 * e, sink = Math.max(0, e - 0.45) * 2.4; C.p.P.position.copy(z3v(x, y, FPSC.GROUND - sink)); C.p.sp.material.rotation = Math.sin(t * 8) * 0.06; C.p.shoes.forEach((s, i) => s.position.y = 0.08 + Math.max(0, Math.sin(t * 8 + i * Math.PI)) * 0.15); },
+      sfx: [[0.5, 'squeak', 0.4], [1.3, 'squeak', 0.35], [2.1, 'squeak', 0.3], [4.4, 'splash', 0.5]],
+      lines: [[0.4, 'log', 'He stood on the sand and looked at me, then walked back into the sea.', 'cp_m05_07']] },
+    { d: 4.5, cam: [-10, -20, 4.5], to: [-12, -16, 5.5], look: [0, -50, 0], shake: 0.25,
+      enter(C) { C.p.P.visible = false; },
+      lines: [[0.4, 'holm', 'The surf is full of them. Get to the old fog bell, and hold till the sun’s up!', 'cp_m05_08']] },
+  ],
+});
+// a week on: the Wren at sea, at night, coming in, and the shark on the water ahead of her
+cpCineDef('m05_wren', {
+  music: 'cpm05sail',
+  b3(grp, C) {
+    const S = RAID.st, P = S && S.pl;
+    if (P) { const [u, v] = cpm5SeaL(P.x, P.y); C.pl = [u, v, 1.6]; } else C.pl = [0, 120, 1.6];
+    this.shots[2].look = C.pl; this.shots[2].lookTo = C.pl; this.shots[3].look = C.pl;
+  },
+  shots: [
+    { d: 4.2, card: { eye: 'One week on', t: '9 January 1888', sub: 'Night, off the Skerries. The schooner Wren, coming in' } },
+    { d: 6, cam: [2.4, -10.6, 3.6], to: [1.6, -6.5, 3.2], look: [0, 6, 4.5], lookTo: [0, 12, 3.5], fade: [0.8, 0],
+      lines: [[0.4, 'wren', 'Keeper’s word, by the pilot cutter: follow the shark in, and ring if she comes.', 'cp_m05_09'], [3.8, 'hand', 'The shark, he says. As if there were a choice of them.', 'cp_m05_10']] },
+    { d: 5.5, cam: [0, 9.6, 3.1], to: [0, 10.4, 3.0], look: [0, 120, 1.6],
+      sfx: [[1.0, 'squeak', 0.3], [2.2, 'squeak', 0.3]],
+      lines: [[0.5, 'wren', 'There. Walking on the water, ahead of the bowsprit, and his shoes alight.', 'cp_m05_11']] },
+    { d: 5, cam: [-2.6, 2, 2.8], to: [-2.2, 5, 3.2], look: [0, 120, 1.6],
+      lines: [[0.3, 'wren', 'Keep him close and keep a hand forward with the bow lantern. The rocks show only in the beam.', 'cp_m05_12']] },
+  ],
+});
+// at the Hulks: he stops, looks back once, and goes down under the water
+cpCineDef('m05_dive', {
+  b3(grp, C) {
+    const S = RAID.st, P = S && S.pl; const [u, v] = P ? cpm5SeaL(P.x, P.y) : [0, 80];
+    C.pl = [u, v, 1.4]; this.shots[0].look = C.pl; this.shots[1].look = [u, v, 0.6];
+  },
+  shots: [
+    { d: 4, cam: [0, 9.8, 3.2], to: [0.4, 10.2, 3.0], look: [0, 80, 1.4],
+      lines: [[0.3, 'hand', 'He’s stopped. He’s looking back at us.', 'cp_m05_13']] },
+    { d: 4.5, cam: [1.2, 10.0, 3.0], look: [0, 80, 0.6], sfx: [[2.4, 'splash', 0.6]],
+      lines: [[0.4, 'wren', 'He’s gone under, among the hulks. Every man to his post: we’re on our own till he comes up.', 'cp_m05_14']] },
+  ],
+});
+// through the Gate: the inner skerries, the Light ahead, and palms on the cliffs
+cpCineDef('m05_palms', {
+  music: 'cpm05sail',
+  b3(grp, C) {
+    const [lu, lv] = cpm5SeaL(0, 0), [hu, hv] = cpm5SeaL(SK.HARBOUR.x, SK.HARBOUR.y);
+    this.shots[0].look = [lu, lv, 40]; this.shots[1].look = [hu * 0.5, hv * 0.5, 20]; this.shots[1].lookTo = [hu, hv, 10];
+  },
+  shots: [
+    { d: 5.5, cam: [0, 10, 4], to: [0, 11, 3.4], look: [0, 900, 40], fade: [0.6, 0],
+      lines: [[0.4, 'hand', 'Through the Gate, and the Light right ahead of us.', 'cp_m05_15']] },
+    { d: 6, cam: [-2.8, 4, 3.2], to: [-2.8, 6, 3.4], look: [0, 600, 20],
+      lines: [[0.3, 'hand', 'Master. Those are palm trees on the cliffs.', 'cp_m05_16'], [3.4, 'wren', 'And the wake’s gone green behind us. Mind your helm, and never mind the trees.', 'cp_m05_17']] },
+  ],
+});
+// the last reach: he walks on to the harbour, and she's on the water close astern
+cpCineDef('m05_last', {
+  music: 'cpm05last',
+  b3(grp, C) {
+    const S = RAID.st, M = S && S.mar, V = S && (S.V || S.B);
+    let [mu, mv] = [0, -60]; if (V) { const a = V.h + Math.PI; [mu, mv] = cpm5SeaL(V.x + Math.sin(a) * 70, V.y + Math.cos(a) * 70); }
+    C.m = cpm5MarenActor(grp, 4.4); const [wx, wy] = cpkW(mu, mv); C.m.P.position.copy(z3v(wx, wy, FPSC.GROUND)); C.mw = [wx, wy];
+    this.shots[0].look = [mu, mv, 2.2]; this.shots[1].look = [mu * 0.6, mv * 0.6, 2.6];
+    void M;
+  },
+  shots: [
+    { d: 4.5, cam: [0.6, -10.4, 2.9], to: [0.3, -10.8, 3.1], look: [0, -70, 2.2], fade: [0.4, 0],
+      f(t, k, C) { C.m.sp.material.rotation = Math.sin(t * 1.3) * 0.04; C.m.P.position.y = FPSC.GROUND + Math.sin(t * 0.9) * 0.08; },
+      sfx: [[0.3, 'whisper', 0.6]],
+      lines: [[0.4, 'hand', 'Master, she’s on the water astern. A woman, and her lantern.', 'cp_m05_18']] },
+    { d: 5, cam: [0, -9, 3.6], to: [0, -9.6, 3.4], look: [0, -42, 2.6],
+      f(t, k, C) { const V = RAID.st.V || RAID.st.B; void V; C.m.sp.material.rotation = Math.sin(t * 1.3) * 0.04; const kk = Math.min(1, t / 4); C.m.P.position.x = C.mw[0] + (FPSC.CX - C.mw[0]) * kk * 0.35; C.m.P.position.z = -(C.mw[1] + (FPSC.CY - 10 - C.mw[1]) * kk * 0.35); },
+      lines: [[0.3, 'wren', 'The shark’s walked on to the pier. Ring that bell, and ring it again, and crack on all she’ll carry!', 'cp_m05_19']] },
+  ],
+});
+// in: the Wren alongside the pier, the shark sitting on its end with his shoes off, and the keeper's page
+cpCineDef('m05_outro', {
+  music: 'cphope',
+  b3(grp, C) {
+    // (the shark, on the pier head ahead of her bow)
+    const [u, v] = cpm5SeaL(SK.HARBOUR.x - 20, SK.HARBOUR.y + 40);
+    C.p = cpm5PlimActor(grp, 2.4, true); const [wx, wy] = cpkW(u, v); C.p.P.position.copy(z3v(wx, wy, FPSC.GROUND + 2.2));
+    this.shots[0].look = [u, v, 3.4]; this.shots[1].look = [u, v, 3.2];
+  },
+  shots: [
+    { d: 6, cam: [0, 9.4, 3.2], to: [0.6, 10.2, 3.6], look: [0, 40, 3.4], fade: [0.5, 0],
+      lines: [[0.4, 'hand', 'Not a scratch on her. And look at him: sat down on the pier, taking his shoes off.', 'cp_m05_20']] },
+    { d: 6, cam: [-2.8, 6, 3.0], to: [-2.6, 8, 3.2], look: [0, 40, 3.2],
+      lines: [[0.3, 'hand', 'Blue plimsolls, on a shark.', 'cp_m05_21'], [2.8, 'wren', 'Then that’s his name, and he’s earned it. Plimsoll.', 'cp_m05_22']] },
+    { d: 9, card: { eye: 'The keeper’s log · 9 January 1888', t: 'The Wren Comes In', sub: 'The schooner Wren came through the skerries last night without a scratch. Her master swears a shark in shoes walked ahead of her the whole way in. The men call him Plimsoll now.' } },
+  ],
+});
+
+// ---- src/cpm05a.js ----
+'use strict';
+// The Chronicle of the Light, mission 5, Part I: The Strand (cp_m05sand). 2 January 1888, at dawn, on the strand
+// across the water from the Light: a spit of sand with the surf all round it, the Light on its rock to the south,
+// the sky red over the headland as if the hills were burning, and the rocks in the bay warm, steaming where the
+// surf runs over them. The keeper is down at the tide line with his lantern.
+//  - The prints. A line of small shoe prints comes up out of the surf in the north-west and wanders south along the
+//    tide line, each glowing faintly blue. Walk up to the next and the one after shows; the drowned come up out of
+//    the warm sand by the steaming rocks as you go, and now and then right where the prints lead.
+//  - At the last print, on the south point, he's standing on the sand looking up at the Light: Plimsoll, in the
+//    Gannet's cabin boy's blue shoes (a cinematic, m05_plim). He walks back into the sea, and the surf boils.
+//  - Then hold the strand until the sun is up (CPM5S.HOLD seconds, the dawn bar): the drowned come up out of the
+//    surf all round the south shore, more of you more of them. The old fog bell on its frame by the point (Use:
+//    CPM5S.BELL_CD to swing again) sends every one of them within CPM5S.BELL_R back under the sand. At sunrise
+//    they sink away, and the part is done.
+// Laid out by FPI_GEN.cpm05sand (its look FPS_ISLES.cpm05sand: Smugglers' Cove's sand, its sky and fog the dawn's);
+// the Light far off over the water is src/zombies.js's (Z.far). Host-authoritative: the host runs the prints, the
+// drowned, the hold and the bell, and sends them in m5s; a joined player asks to ring the bell (raidAsk 'm5bell').
+// Lines through cpSay (cp_m05_23 on), events through cpEvent ('m5bell', 'm5print').
+
+const CPM5S = {
+  R: 56, START: [-14, 34], HOLM: [-13, 40], PLIM: [10, -46], BELL: [-2, -24], BELL_CD: 14, BELL_R: 24, HOLD: 55, NEAR: 3.2,
+  // the prints, from the surf in the north-west round to the south point
+  PRINTS: [[-40, 24], [-37, 12], [-38, -2], [-31, -14], [-20, -25], [-8, -33], [3, -40]],
+  // the warm rocks: where the drowned come up while you follow the prints
+  WARM: [[-24, 10], [-12, -10], [14, -16], [22, 8], [-28, -32], [4, 14], [-44, 0], [18, -34]],
+  LEVEL: 4,
+};
+const CPM5S_PH = ['trail', 'plim', 'surge', 'dawn'];
+
+// ---------- its look, and laying it out ----------
+FPS_ISLES.cpm05sand = Object.assign({}, FPS_ISLES.cove, { name: 'the strand under the Light', rocks: [0, 3, 6, 1], wrecks: [0], sky: '255,104,64', skyA: 0.2,
+  fog: ['#2a140e', 40, 420], mist: '140,70,44', mistA: 0.12, birds: ['gull', 3], tufts: ['#7a6a40', 30], pebbles: 120, pools: 5, wrack: 90, indoor: false, keep: false, arena: false, noGround: false, nLights: 4 });
+FPI_GEN.cpm05sand = {
+  built: true,
+  set(H) {
+    const Z = H.I.zm = { doors: [], windows: [], buys: [], perks: [], spawns: [], lights: [] }, W = (x, y) => [H.CX + x, H.CY + y], R = H.R;
+    // the Light, far off across the water to the south, lit and turning
+    Z.far = { X: 30, Y: -330 };
+    // the warm rocks, steaming: low black boulders in the sand (their steam and glow are the stage's)
+    for (const [x, y] of CPM5S.WARM) { const [wx, wy] = W(x, y); H.put('stone', wx, wy, R(0, H.TAU), { w: R(2.2, 3.4), d: R(1.6, 2.6), hh: R(0.7, 1.2) }); }
+    // where the keeper came down: his boat drawn up, a lantern on a post, a coil of rope and his creel
+    { const [x, y] = W(-20, 42); H.put('boat', x, y, 0.35, { len: 4.6, beam: 1.6, paint: '#34465a' }); }
+    { const [x, y] = W(-22, 35); fpiLanternPost(H, x, y, 0.2); }
+    // the old fog bell on its frame, by the point, and a drift of wrack and timber round the strand
+    { const [x, y] = W(...CPM5S.BELL); H.put('bellframe', x, y, 0.3, {}); }
+    for (const [x, y, a, l] of [[16, 26, 0.6, 4.2], [30, -10, 2.1, 3.4], [-6, 30, 1.2, 2.8], [26, 22, 2.8, 3.6], [-34, -24, 0.4, 3.2]]) { const [wx, wy] = W(x, y); H.put('log', wx, wy, a, { len: l, rad: 0.24 }); }
+    // the ribs of an old wreck half buried on the east side, and a few stakes of a fish weir
+    { const [x, y] = W(34, 6); H.wrecks.push({ x, y, r: 6.5, ang: 1.1, lean: 0.4, name: 'a wreck', ribs: 5 }); }
+    for (let i = 0; i < 6; i++) { const [x, y] = W(38 + i * 1.6, -22 - i * 2.2); H.put('post', x, y, 0, { r: 0.1, hh: 1.1 }); }
+    // a little light about the place: the keeper's lantern, and the glow off the warm rocks
+    for (const [x, y] of CPM5S.WARM.slice(0, 4)) H.light(H.CX + x, H.CY + y, 0.6, '#ff7a40', 5, 'lantern');
+    H.light(H.CX + CPM5S.HOLM[0] + 0.5, H.CY + CPM5S.HOLM[1], 1.2, '#ffc070', 7, 'lantern');
+    ZMD.START = CPM5S.START.slice();
+  },
+  props(H) { fpiScatter(H, 6, 1.4, 12, H.IR - 10, 3, (x, y) => H.put('stone', x, y, H.R(0, H.TAU), { w: H.R(0.8, 1.6), d: H.R(0.6, 1.2), hh: H.R(0.3, 0.6) }, true)); },
+  decor() {},
+};
+
+// ---------- the stage ----------
+cpStage('m05sand', {
+  n: 'The Strand', mend: true,
+  map: { start: CPM5S.START.slice(), top: 0, R: CPM5S.R, isle: 'cpm05sand', shore: () => -999, nav: [-CPM5S.R, CPM5S.R, -CPM5S.R, CPM5S.R], zones: { strand: { n: 'the strand', r: [-CPM5S.R, CPM5S.R, -CPM5S.R, CPM5S.R], sky: true } } },
+  music: () => 'cpm05dawn',
+  prep() { cpm5Biome('ember'); },
+  enter() {
+    Object.assign(RAID.st, { m5: true, ph: 'trail', pi: 0, holdT: 0, bellCd: 0, spT: 5, ambT: 0, pend: 0, said: {}, dawnT: 0, ring: 0, look: 0 });
+    ZM.round = Math.max(ZM.round, CPM5S.LEVEL);
+    FPS.me.h = Math.PI * 0.9;
+    if (ZM.net === 'client') return;
+    cpm5sNext();
+  },
+  tick(dt) { cpm5sTick(dt); },
+  me(dt) { cpm5sMe(dt); },
+  q(sid, k) { if (k === 'm5bell') cpm5sBell(sid); },
+  pack(o) { const S = RAID.st; o.m5s = [CPM5S_PH.indexOf(S.ph), S.pi, Math.round(S.holdT * 10), Math.round(S.bellCd * 10)]; },
+  apply(o) { const S = RAID.st, a = o.m5s; if (!Array.isArray(a)) return; S.ph = CPM5S_PH[a[0] | 0] || 'trail'; S.pi = a[1] | 0; S.holdT = (a[2] | 0) / 10; S.bellCd = (a[3] | 0) / 10; },
+  consider(c) { const S = RAID.st; if (S.ph === 'surge' || S.ph === 'trail') { const [x, y] = cpkW(...CPM5S.BELL); c({ k: 'm5bell' }, x, y, 0, 2.6, false); } },
+  prompt(o) { if (o.k !== 'm5bell') return null; const S = RAID.st; return S.bellCd > 0 ? { text: `The old fog bell: still swinging (${Math.ceil(S.bellCd)} s)` } : S.ph === 'surge' ? { text: 'Ring the fog bell (sends the drowned near it back under)', free: true } : { text: 'The old fog bell: ring it when they come', free: true }; },
+  use(o) { if (o.k !== 'm5bell') return false; const S = RAID.st; if (S.bellCd > 0 || S.pend > 0) { zmSound('no'); return true; } S.pend = 0.8; raidAsk('m5bell'); return true; },
+  hud(phone, mono, fell) { cpm5sHud(phone, mono, fell); },
+  b3(grp) { cpm5s3dBuild(grp); },
+  f3(dt) { cpm5s3d(dt); },
+  exit() { const T = CPM5S3; if (T.holm) cpkNpcFree(T.holm); CPM5S3.on = false; CPM5S3.holm = null; },
+});
+
+// ---------- hosting or alone ----------
+// the next print to make for (or, past the last, the point where he stands)
+function cpm5sNext() {
+  const S = RAID.st, i = S.pi, P = CPM5S.PRINTS;
+  if (i < P.length) { cpObjective(i ? 'Follow the blue prints along the tide line' : 'Something came up out of the surf: follow the prints'); cpWaypoint(P[i][0], P[i][1], 'The prints', 0.3); }
+  else { cpObjective('Go to the south point'); cpWaypoint(CPM5S.PLIM[0], CPM5S.PLIM[1], 'The point', 1.5); }
+}
+function cpm5sTick(dt) {
+  const S = RAID.st, n = Math.max(1, ZM.hum.length); if (!S.m5) return;
+  if (S.bellCd > 0) S.bellCd = Math.max(0, S.bellCd - dt);
+  const alive = ZM.z.filter(z => !z.dead).length;
+  if (S.ph === 'trail') {
+    const P = CPM5S.PRINTS;
+    if (S.pi < P.length) {
+      const [x, y] = cpkW(...P[S.pi]);
+      if (cpkNear(x, y, CPM5S.NEAR)) {
+        S.pi++; cpEvent('m5print', S.pi);
+        const L = { 2: ['holm', 'Small feet, and turned in a little. A boy’s, by the stride.', 'cp_m05_23'], 4: ['holm', 'Look how the sand’s glazed round them, as if something hot had stood here.', 'cp_m05_24'], 6: ['holm', 'They go on to the point. Whatever it is, it’s still here.', 'cp_m05_25'] }[S.pi];
+        if (L) cpSay(...L);
+        // (now and then, right where the prints lead: one up out of the sand ahead of you)
+        if (S.pi % 2 === 1 && S.pi < P.length) { const [ax, ay] = cpkW(...P[S.pi]); cpm5sRise(ax + (Math.random() - 0.5) * 6, ay + (Math.random() - 0.5) * 6, 'jog'); }
+        cpm5sNext();
+      }
+    } else {
+      const [x, y] = cpkW(...CPM5S.PLIM);
+      if (cpkNear(x, y, 14)) {
+        S.ph = 'plim'; cpWaypoint(null); cpObjective('');
+        for (const z of ZM.z) if (!z.dead) zmKill(z, false, '', 'flash');
+        cpCine('m05_plim', () => { S.ph = 'surge'; S.holdT = 0; S.spT = 1.5; cpObjective('Hold the strand until the sun is up'); cpWaypoint(CPM5S.BELL[0], CPM5S.BELL[1], 'The fog bell', 2.2); cpEvent('m5surge'); });
+      }
+    }
+    // the drowned, up out of the warm sand by the steaming rocks: a few at a time
+    S.spT -= dt;
+    if (S.spT <= 0) { S.spT = (6 + Math.random() * 4) / Math.sqrt(n); if (alive < 2 + n) { const [wx, wy] = CPM5S.WARM[(Math.random() * CPM5S.WARM.length) | 0], [x, y] = cpkW(wx + (Math.random() - 0.5) * 4, wy + (Math.random() - 0.5) * 4); if (!cpkNear(x, y, 9)) cpm5sRise(x, y); } }
+  } else if (S.ph === 'surge') {
+    S.holdT += dt;
+    const k = S.holdT / CPM5S.HOLD;
+    if (S.holdT > 20 && !S.said.half) { S.said.half = 1; cpSay('holm', 'Look east: the hills are going grey. Hold on!', 'cp_m05_26'); }
+    if (S.holdT > 42 && !S.said.sun) { S.said.sun = 1; cpSay('holm', 'There’s the rim of the sun. They hate it. Hold!', 'cp_m05_27'); }
+    S.spT -= dt;
+    if (S.spT <= 0) {
+      S.spT = (2.6 - 1.0 * k) * (0.75 + Math.random() * 0.5) / Math.sqrt(1 + 0.5 * (n - 1));
+      if (alive < Math.round(4 + 2 * n + k * 3)) for (let t = 0; t < 12; t++) { const a = -Math.PI * (0.05 + Math.random() * 0.9), d = CPM5S.R - 4 - Math.random() * 5, [x, y] = cpkW(Math.cos(a) * d, Math.sin(a) * d); if (cpkNear(x, y, 10)) continue; cpm5sRise(x, y, Math.random() < 0.15 + 0.2 * k ? 'run' : 'jog'); break; }
+    }
+    if (S.holdT >= CPM5S.HOLD) { S.ph = 'dawn'; S.dawnT = 0; cpWaypoint(null); cpObjective(''); for (const z of ZM.z) if (!z.dead) zmKill(z, false, '', 'flash'); cpEvent('m5dawn'); cpSay('holm', 'Sunrise. They’re gone back under. And so is he, whatever he was.', 'cp_m05_28'); }
+  } else if (S.ph === 'dawn') { S.dawnT += dt; if (S.dawnT > 6) cpDone(); }
+}
+function cpm5sRise(x, y, kind) {
+  const n = Math.max(1, ZM.hum.length), u = Math.random();
+  const z = raidSpawnAt(x, y, { kind: kind || (u < 0.12 ? 'run' : u < 0.7 ? 'jog' : 'walk'), hp: zmHp(CPM5S.LEVEL) * (0.9 + Math.random() * 0.2) * (1 + 0.25 * (n - 1)), rise: 1.3 });
+  if (z) zmSound('moan', Math.hypot(x - FPS.me.x, y - FPS.me.y), fpsEar(x, y), z.kind);
+  return z;
+}
+// (hosting or alone) the fog bell rung: every one of them near it back under the sand
+function cpm5sBell(sid) {
+  const S = RAID.st; if (S.bellCd > 0 || S.ph === 'plim' || S.ph === 'dawn') return;
+  S.bellCd = CPM5S.BELL_CD; const [bx, by] = cpkW(...CPM5S.BELL); let n = 0;
+  for (const z of ZM.z) if (!z.dead && Math.hypot(z.x - bx, z.y - by) < CPM5S.BELL_R) { zmKill(z, false, '', 'flash'); n++; }
+  cpEvent('m5bell', [sid === FPS.me.id ? '' : String(sid || ''), n]);
+}
+cpOn('m5bell', a => {
+  CPM5S3.ring = 1;
+  try { if (!soundOff()) sfxBell(); } catch (e) {}
+  const who = Array.isArray(a) && a[0] ? ((ZM.hum || []).find(h => h[0] === a[0]) || [])[1] || 'Someone' : '', n = Array.isArray(a) ? a[1] | 0 : 0;
+  fpsFeed((who ? `${who} rang the old fog bell` : 'The old fog bell rings out over the strand') + (n ? `, and ${n} of them sink back under the sand.` : '.'));
+});
+cpOn('m5print', i => { try { if (!soundOff()) sfxSqueak(0, 0.35); } catch (e) {} if (i === 1) fpsFeed('A print in the wet sand, glowing faintly blue. Another beyond it.'); });
+cpOn('m5surge', () => { ZM.banner = { text: 'Hold the strand', t: 4, sub: 'until the sun is up · the old fog bell by the point sends them back', col: '#ffd0a0' }; try { if (!soundOff()) sfxSplash(0, 0.8); } catch (e) {} });
+cpOn('m5dawn', () => { ZM.banner = { text: 'Sunrise', t: 4, sub: 'they sink away into the sand', col: '#ffe2a8' }; if (typeof raidRespawn === 'function') raidRespawn(); });
+
+// ---------- everyone ----------
+function cpm5sMe(dt) {
+  const S = RAID.st; if (!S.m5) return;
+  if (S.pend > 0) S.pend -= dt;
+  if (ZM.net === 'client' && S.bellCd > 0) S.bellCd = Math.max(0, S.bellCd - dt);
+  // the surf, and now and then a hiss off the warm rocks
+  S.ambT -= dt; if (S.ambT <= 0) { S.ambT = 3 + Math.random() * 4; try { if (!soundOff()) noise('bandpass', 2400, 1.2, 0.3, 0.9, 0.05, { pan: (Math.random() - 0.5) * 1.4 }); } catch (e) {} }
+}
+function cpm5sHud(phone, mono, fell) {
+  const S = RAID.st; if (!S.m5 || S.ph !== 'surge') return;
+  const L = Math.max(14, FPS.safeLeft || 0), top = fpsHudTop() + (phone ? 72 : 96), w = phone ? 150 : 214, h = phone ? 6 : 8, k = clamp(S.holdT / CPM5S.HOLD, 0, 1);
+  ctx.fillStyle = 'rgba(8,10,14,0.55)'; ctx.fillRect(L - 4, top - 4, w + 8, h + 22);
+  ctx.fillStyle = 'rgba(80,60,50,0.6)'; ctx.fillRect(L, top, w, h); ctx.fillStyle = '#ffb070'; ctx.fillRect(L, top, w * k, h);
+  ctx.textAlign = 'left'; ctx.textBaseline = 'top'; ctx.font = mono(phone ? 9 : 11); ctx.fillStyle = 'rgba(255,220,180,0.85)';
+  ctx.fillText(`SUNRISE · ${Math.max(0, Math.ceil(CPM5S.HOLD - S.holdT))} s   BELL · ${S.bellCd > 0 ? Math.ceil(S.bellCd) + ' s' : 'READY'}`, L, top + h + 4);
+  fpsHudNote(top + h + 20); ctx.textBaseline = 'alphabetic';
+}
+
+// ---------- in 3D: the prints, the steam off the warm rocks, the keeper, the shark on the point, the dawn ----------
+const CPM5S3 = { on: false, holm: null, ring: 0 };
+function cpm5s3dBuild(grp) {
+  const T = CPM5S3; T.on = true; T.ring = 0;
+  const G0 = FPSC.GROUND, soft = z3Soft('rgba(255,255,255,0.95)', 'rgba(255,255,255,0)');
+  const glow = (c, s, o) => { const g0 = new THREE.Sprite(new THREE.SpriteMaterial({ map: soft, color: c, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: o == null ? 0.6 : o })); g0.scale.setScalar(s); return g0; };
+  // the prints: a pair of small shoe shapes each, pressed into the sand, faintly blue, in the walk's direction
+  const shoe = new THREE.Shape(); shoe.moveTo(0, -0.13); shoe.quadraticCurveTo(0.06, -0.12, 0.055, 0); shoe.quadraticCurveTo(0.06, 0.14, 0, 0.14); shoe.quadraticCurveTo(-0.06, 0.14, -0.055, 0); shoe.quadraticCurveTo(-0.06, -0.12, 0, -0.13);
+  const sg = new THREE.ShapeGeometry(shoe).rotateX(-Math.PI / 2);
+  T.prints = CPM5S.PRINTS.map((p, i) => {
+    const q = CPM5S.PRINTS[i + 1] || CPM5S.PLIM, a = Math.atan2(q[0] - p[0], q[1] - p[1]), g3 = new THREE.Group(), [x, y] = cpkW(...p);
+    g3.position.copy(z3v(x, y, G0 + 0.03)); g3.rotation.y = -a; grp.add(g3);
+    const mat = new THREE.MeshBasicMaterial({ color: 0x6ed7ff, transparent: true, opacity: 0.7, depthWrite: false, blending: THREE.AdditiveBlending });
+    // (a few steps leading into it, and out)
+    for (let k = -2; k <= 1; k++) for (const s of [-1, 1]) { const m = new THREE.Mesh(sg, mat); m.position.set(s * 0.12, 0, -(k * 0.62 + (s > 0 ? 0.31 : 0))); g3.add(m); }
+    const gl = glow(0x5fd3ff, 2.6, 0.35); gl.position.y = 0.3; g3.add(gl);
+    return { g3, mat, gl };
+  });
+  // steam off the warm rocks, and their glow
+  T.steam = [];
+  for (const [x0, y0] of CPM5S.WARM) for (let k = 0; k < 4; k++) { const s = glow(0xd8c8b8, 1.6, 0); const [x, y] = cpkW(x0 + (Math.random() - 0.5) * 2, y0 + (Math.random() - 0.5) * 2); s.position.copy(z3v(x, y, G0 + 0.8)); grp.add(s); T.steam.push({ s, x, y, ph: Math.random() }); }
+  T.warm = CPM5S.WARM.map(([x0, y0]) => { const s = glow(0xff6a30, 4.5, 0.25); const [x, y] = cpkW(x0, y0); s.position.copy(z3v(x, y, G0 + 0.5)); grp.add(s); return s; });
+  // the keeper, at the foot of the path by his boat, his lantern lifted
+  T.holm = cpkNpc(['#1e2436', '#d8d0bc', '#8a7a4a', '#ffd88a']);
+  // the shark, standing on the point (far off at first), looking up at the Light
+  T.plim = cpm5PlimActor(grp, 2.7, false); { const [x, y] = cpkW(...CPM5S.PLIM); T.plim.P.position.copy(z3v(x, y, G0)); } T.plim.P.visible = false;
+  // the bell's ring, spreading over the sand; and the sun coming up out of the east
+  T.ringM = new THREE.Mesh(new THREE.RingGeometry(0.9, 1, 64).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: 0xffd8a0, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide }));
+  { const [x, y] = cpkW(...CPM5S.BELL); T.ringM.position.copy(z3v(x, y, G0 + 0.2)); } grp.add(T.ringM);
+  T.sun = glow(0xffa860, 260, 0); { const [x, y] = cpkW(420, 40); T.sun.position.copy(z3v(x, y, -20)); } T.sun.material.fog = false; grp.add(T.sun);
+}
+function cpm5s3d(dt) {
+  const T = CPM5S3, S = RAID.st; if (!T.on || !S.m5) return;
+  const t = g.t, G0 = FPSC.GROUND;
+  T.prints.forEach((P, i) => { const shown = i < S.pi + 1 && S.ph === 'trail' || (S.ph !== 'trail' && i < CPM5S.PRINTS.length), next = i === S.pi && S.ph === 'trail'; P.g3.visible = shown; P.mat.opacity = next ? 0.55 + 0.35 * Math.sin(t * 3) : 0.35; P.gl.material.opacity = next ? 0.3 + 0.15 * Math.sin(t * 3) : 0.06; });
+  for (const q of T.steam) { const k = (t * 0.25 + q.ph) % 1; q.s.position.y = G0 + 0.5 + k * 2.6; q.s.material.opacity = 0.16 * Math.sin(k * Math.PI); q.s.scale.setScalar(1 + k * 2.2); }
+  T.warm.forEach((s, i) => { s.material.opacity = 0.18 + 0.08 * Math.sin(t * 1.3 + i); });
+  if (T.holm) { const [x, y] = cpkW(...CPM5S.HOLM); cpkNpcPose(T.holm, { x, y, h: Math.atan2(FPS.me.x - x, FPS.me.y - y), lan: true, dt }); }
+  // the shark: on the point once you're most of the way along the prints, gone once he's walked into the sea
+  T.plim.P.visible = S.ph === 'trail' && S.pi >= 3 && !cpCineOn(); T.plim.sp.material.rotation = Math.sin(t * 1.2) * 0.03; T.plim.shoes.forEach((s, i) => s.material.opacity = 0.6 + 0.3 * Math.sin(t * 4 + i));
+  if (T.ring > 0) { T.ring = Math.max(0, T.ring - dt / 1.6); const k = 1 - T.ring; T.ringM.scale.setScalar(1 + k * CPM5S.BELL_R); T.ringM.material.opacity = T.ring * 0.7; } else T.ringM.material.opacity = 0;
+  // the dawn: the sun's glow coming up over the east as you hold, and the fog going from red to gold
+  const dawn = S.ph === 'surge' ? clamp(S.holdT / CPM5S.HOLD, 0, 1) : S.ph === 'dawn' ? 1 : 0;
+  T.sun.material.opacity = dawn * dawn * 0.75; T.sun.position.y = -30 + dawn * 50;
+  if (GL3D.scene && GL3D.scene.fog) { const F = GL3D.scene.fog; F.color.setRGB(0.16 + 0.2 * dawn, 0.08 + 0.12 * dawn, 0.055 + 0.05 * dawn); RAID.fog0 = true; }
+  if (GL3D.amb) GL3D.amb.intensity = Math.max(GL3D.amb.intensity, 0.3 + 0.35 * dawn);
+}
+
+// ---- src/cpm05b.js ----
+'use strict';
+// The Chronicle of the Light, mission 5, Parts II and III: the Wren coming in through the skerries (cp_m05outer,
+// cp_m05inner). The Gannet's Wake's sail (src/gwsail.js) through GWS_LEG, as Fog Run's and Freebooters' Sea's are,
+// with a sea of this mission's own and Maren and Plimsoll both out on it. Her sailing is never touched: the
+// Brig's top speed and the Brig's way of gathering it, always.
+//  - The sea: the warm green water of 9 January 1888 (the Coral Lagoon's look: src/biomes.js 'lagoon', palms on the
+//    cliffs and the wake glowing), inbound from the north to the harbour under the Light. Its rocks lie thick on
+//    both sides of one winding channel of deep water (CPM5B.OUT and .IN: the channel's bends), the channel itself
+//    kept clear (CPM5B.HW either side of it, narrower through the Narrows): Plimsoll walks it, a step at a time.
+//    Keep inside his ring and Maren holds where she is; fall behind and he waits only a few seconds.
+//  - The Wren: the cutter's deck dressed as a schooner (a foremast with its gaff foresail and a staysail, her name
+//    on the transom and her bows), and her bow lantern: whoever stands lookout at it (CPM5B.LOOK) shows everyone the
+//    rocks close ahead of her bow, dimly, between the sweeps of the beam.
+//  - Part II, the Outer Skerries: at the Hulks (old wrecks on the rocks, the drowned climbing out of them onto her
+//    rails) he stops, looks back, and goes under (a cinematic). Till he's up again, further on, there's no cover:
+//    the bell's all you have. Then out between the two stacks of the Gate, and the part is done.
+//  - Part III, the Inner Skerries: the Narrows, then the last reach (within CPM5B.FIN of the harbour, a cinematic):
+//    he walks on ahead to the pier and waits there, Maren comes on two stages nearer, and the drowned come over
+//    every rail. Make the harbour, between the pier heads, and the mission is won.
+// Together it's the Gannet's Wake's word (g* keys) as it is, and this file's own (m5w: Plimsoll under, who's on
+// lookout, the last reach).
+
+const CPM5B = {
+  // the channel's bends (the sea's frame: the Light at 0, 0; north +y), its half width, and how many rocks
+  OUT: [[-380, 2380], [-330, 2200], [-420, 2000], [-470, 1800], [-360, 1640], [-220, 1500], [-160, 1330], [-70, 1180], [-60, 1050]],
+  IN: [[-60, 1040], [10, 930], [-30, 800], [60, 660], [140, 540], [90, 400], [170, 260], [230, 150], [230, 64]],
+  HW: 25, NARROW: 17, ROCKS_OUT: 190, ROCKS_IN: 170,
+  HULKS: [-470, 1800], DIVE_AT: 3, UP_AT: 5, UP_R: 120,   // (the Hulks: where he goes under, the bend where he comes up)
+  GATE: [-64, 1110], GATE_W: 25, GATE_Y: 1080,             // (the Gate: its two stacks either side of the channel)
+  HARB: [230, 64], IN_R: 46, FIN: 440,                     // (the harbour mouth: in once she's this near; the last reach)
+  LOOK: [0, 9.3], LOOK_R: 1.8, LOOK_SEE: 110, LOOK_A: 0.6, // (the bow lantern: where the lookout stands, how far and wide it shows)
+  FORE: 7.6, FORE_H: 11.2,                                 // (her foremast: where it stands, how tall)
+};
+
+// ---------- the sea ----------
+// a bend list laid off every dozen metres (Plimsoll's steps), and how far a point is from it
+function cpm5Steps(C) { const out = [{ x: C[0][0], y: C[0][1] }]; for (let i = 1; i < C.length; i++) { const [ax, ay] = C[i - 1], [bx, by] = C[i], n = Math.max(1, Math.ceil(Math.hypot(bx - ax, by - ay) / 12)); for (let j = 1; j <= n; j++) out.push({ x: ax + (bx - ax) * j / n, y: ay + (by - ay) * j / n, b: j === n ? i : -1 }); } return out; }
+function cpm5Off(path, x, y) { let b = 1e9; for (let i = 1; i < path.length; i++) { const a = path[i - 1], c = path[i], dx = c.x - a.x, dy = c.y - a.y, L = dx * dx + dy * dy || 1, t = clamp(((x - a.x) * dx + (y - a.y) * dy) / L, 0, 1); b = Math.min(b, Math.hypot(a.x + dx * t - x, a.y + dy * t - y)); } return b; }
+const CPM5_SEAS = {};
+function cpm5Sea(which) {
+  if (CPM5_SEAS[which]) return CPM5_SEAS[which];
+  const out = which === 'outer', C = out ? CPM5B.OUT : CPM5B.IN, R = seeded(out ? 0x5e1a9 : 0x5e2b7), rnd = (a, b) => a + R() * (b - a);
+  const path = cpm5Steps(C), rocks = [];
+  const hw = (x, y) => !out && y < 700 && y > 500 ? CPM5B.NARROW : CPM5B.HW;
+  const ok = (x, y, r) => y > 120 && Math.hypot(x, y) > 110 && Math.hypot(x - SK.HARBOUR.x, y - SK.HARBOUR.y) > 70 + r && Math.hypot(x - C[0][0], y - C[0][1]) > 40 + r && cpm5Off(path, x, y) > hw(x, y) + r + 3 && !rocks.some(o => Math.hypot(o.x - x, o.y - y) < o.r + r + 4);
+  const add = (x, y, r) => { const prof = []; for (let i = 0; i < 7; i++) prof.push(rnd(0.35, 1)); prof[0] = rnd(0.15, 0.45); prof[6] = rnd(0.15, 0.45); rocks.push({ x, y, r, prof, ph: rnd(0, 6.28), seen: -99, lit: 0, i: rocks.length }); };
+  // the Gate's two stacks, either side of the channel
+  if (out) for (const s of [-1, 1]) { const x = CPM5B.GATE[0] + s * (CPM5B.GATE_W + 14), y = CPM5B.GATE[1]; add(x, y, 13); }
+  // thick along the channel's edges: most within a hundred metres of it, either side
+  const N = out ? CPM5B.ROCKS_OUT : CPM5B.ROCKS_IN;
+  for (let n = 0; n < 30000 && rocks.length < N * 0.8; n++) { const p = path[(R() * path.length) | 0], a = R() * 6.283, d = rnd(20, 120), x = p.x + Math.sin(a) * d, y = p.y + Math.cos(a) * d, r = rnd(4, 12); if (ok(x, y, r)) add(x, y, r); }
+  // and scattered further out, so nobody cuts the corner
+  const xs = C.map(c => c[0]), ys = C.map(c => c[1]), x0 = Math.min(...xs) - 380, x1 = Math.max(...xs) + 380, y0 = Math.min(...ys), y1 = Math.max(...ys) + 120;
+  for (let n = 0; n < 20000 && rocks.length < N; n++) { const x = rnd(x0, x1), y = rnd(y0, y1), r = rnd(5, 15); if (ok(x, y, r)) add(x, y, r); }
+  // (the Hulks: a few more rocks close round where the old wrecks lie)
+  if (out) for (let n = 0; n < 4000; n++) { const a = R() * 6.283, d = rnd(30, 90), x = CPM5B.HULKS[0] + Math.sin(a) * d, y = CPM5B.HULKS[1] + Math.cos(a) * d, r = rnd(4, 8); if (ok(x, y, r)) add(x, y, r); if (rocks.length > N + 16) break; }
+  const len = path.reduce((a, p, i) => i ? a + Math.hypot(p.x - path[i - 1].x, p.y - path[i - 1].y) : 0, 0);
+  return CPM5_SEAS[which] = { rocks, path, spars: [], len };
+}
+// how far along the channel a point is (0 to 1)
+function cpm5Along(sea, x, y) { let b = 0, bd = 1e9; sea.path.forEach((p, i) => { const d = Math.hypot(p.x - x, p.y - y); if (d < bd) { bd = d; b = i; } }); return b / Math.max(1, sea.path.length - 1); }
+
+// ---------- the leg (gwsail's GWS_LEG) ----------
+function cpm5Leg(which) {
+  const out = which === 'outer', sea = cpm5Sea(which), C = out ? CPM5B.OUT : CPM5B.IN;
+  for (const r of sea.rocks) { r.seen = -99; r.flare = 0; r.lit = 0; }
+  const s0 = C[0], s1 = C[1];
+  GWS_LEG = { key: 'cpm05' + which, which, start: s0.slice(), h0: bearingOf(s1[0] - s0[0], s1[1] - s0[1]), mark: out ? CPM5B.GATE.slice() : CPM5B.HARB.slice(), markIn: -1, isleR: 0,
+    maren: true, plim: true, sea,
+    line: (S, dm) => cpm5Line(S, dm),
+    markLab: () => out ? 'THE GATE' : 'HARBOUR',
+    prog: () => cpm5Prog(),
+    sunk: () => cpFail('The Wren went down on the skerries, with all hands'),
+    b3: (SG, G) => cpm5b3d(SG, G), f3: (dt, V) => cpm5f3d(dt, V), amb: [0.42, 0.2] };
+  FPS_ISLES.cpm05sea.fog = ['#06141a', 400, 4200];
+  return GWS_LEG;
+}
+// how hard the drowned come over the rail: further in, harder; round the Hulks and in the last reach, hardest
+function cpm5Prog() {
+  const S = RAID.st, B = S.B, L = GWS_LEG; if (!B || !L) return 0;
+  const a = cpm5Along(L.sea, B.x, B.y);
+  if (L.which === 'outer') return clamp(0.15 + a * 0.4 + (Math.hypot(B.x - CPM5B.HULKS[0], B.y - CPM5B.HULKS[1]) < 260 ? 0.45 : 0), 0, 1);
+  return S.m5fin ? 1 : clamp(0.4 + a * 0.4, 0, 1);
+}
+function cpm5Line(S, dm) {
+  const L = GWS_LEG; if (S.ph === 'sunk') return 'She’s going down.';
+  if (L.which === 'outer') return S.m5dv === 1 ? 'Plimsoll has gone under at the Hulks: hold her in the channel, and ring if Maren comes' : `Follow Plimsoll through the outer skerries, out through the Gate: ${Math.round(dm).toLocaleString('en')} m`;
+  return S.m5fin ? `The last reach: make the harbour between the pier heads · ${Math.round(dm).toLocaleString('en')} m` : `Follow Plimsoll in through the inner skerries to the harbour: ${Math.round(dm).toLocaleString('en')} m`;
+}
+
+// ---------- the look, and the deck ----------
+FPS_ISLES.cpm05sea = Object.assign({}, FPS_ISLES.gwsail, { name: 'the Skerries' });
+FPI_GEN.cpm05sea = { built: true, set(H) { const Z = H.I.zm = { doors: [], windows: [], buys: [], perks: [], spawns: [], lights: [] }, K = zmKit(H, Z); gwsLay(H, K, Z); K.put('cpm5fore', 0, 0, 0, {}); }, decor() {} };
+// her foremast, through the deck forward of the main (its sails are the stage's)
+FPI_K.cpm5fore = {
+  col: '#6a5440', noShadow: true,
+  sol(p) { return [fpiCirc(p, 0, CPM5B.FORE, 0.2, GWS.D + CPM5B.FORE_H)]; },
+  b3(p, A) {
+    const D = GWS.D, v = CPM5B.FORE;
+    A.cyl('#6a5440', 0, v, D - 0.1, 0.19, CPM5B.FORE_H, 0, 0, 0, 'cyl8'); A.cyl('#4a3a2a', 0, v, D, 0.34, 0.22);
+    for (const z of [2.4, 4.6, 6.8]) A.part('torus', '#4a3a2a', 0, v, D + z, 0.8, 0.8, 0.8, 0, Math.PI / 2, 0);
+    A.box('#4a3826', 0, v - 0.45, D + 0.72, 1.1, 0.1, 0.1); for (let i = 0; i < 4; i++) A.cyl('#6a5440', -0.42 + i * 0.28, v - 0.45, D + 0.6, 0.025, 0.3);
+    A.box('#4a3826', 0, v, D + CPM5B.FORE_H - 2.2, 1.8, 0.1, 0.1);
+  },
+};
+const CPM5_MAP = Object.assign({}, GWS_MAP, { isle: 'cpm05sea', zones: { deck: { n: 'the Wren', r: [-4, 4, -12, 12], sky: true } } });
+
+// ---------- the stages ----------
+function cpm5SailStage(which) {
+  const G0 = RAID_STAGES.gwsail, out = which === 'outer';
+  return Object.assign({}, G0, {
+    n: out ? 'The Outer Skerries' : 'The Inner Skerries', map: CPM5_MAP, gws: true,
+    music: () => RAID.st.m5fin ? 'cpm05last' : 'cpm05sail',
+    prep() { cpm5Biome('lagoon'); cpm5Leg(which); },
+    enter() {
+      if (!GWS_LEG || GWS_LEG.which !== which) { cpm5Biome('lagoon'); cpm5Leg(which); }
+      G0.enter();
+      Object.assign(RAID.st, { m5w: which, m5dv: 0, m5lk: '', m5fin: 0, m5said: {}, m5spT: 3, m5up: 0 });
+      if (!out) RAID.st.mar.st = 1;
+      ZM.banner = { text: out ? 'The Outer Skerries' : 'The Inner Skerries', t: 4.5, sub: out ? '9 January 1888 · follow the shark in' : 'past the Gate · the harbour under the Light', col: '#c8f0d8' };
+      fpsFeed(out ? 'Aboard the Wren. Take the wheel (Use) and follow Plimsoll: keep inside his ring and Maren holds where she is.' : 'Through the Gate. Follow him on in: the channel narrows ahead.');
+      if (out) fpsFeed('Stand lookout at the bow lantern and the rocks close ahead show for everyone. The bell at the mainmast drives Maren back.');
+      if (ZM.net !== 'client') { cpObjective(''); cpWaypoint(null); }
+    },
+    tick(dt) { G0.tick(dt); cpm5Tick(dt); },
+    me(dt) { G0.me(dt); cpm5Me(dt); },
+    pack(o) { G0.pack(o); const S = RAID.st; o.m5w = [S.m5dv, S.m5lk || '', S.m5fin | 0]; },
+    apply(o) { G0.apply(o); const S = RAID.st, a = o.m5w; if (!Array.isArray(a)) return; S.m5dv = +a[0] || 0; S.m5lk = String(a[1] || ''); S.m5fin = a[2] | 0; if (GWS_LEG) GWS_LEG.plim = S.m5dv !== 1; },
+    consider(c) { G0.consider(c); const S = RAID.st; if (S.B && S.ph !== 'sunk') { const [x, y] = gwsW(...CPM5B.LOOK); c({ k: 'm5look' }, x, y, GWS.D, 1.6, false); } },
+    prompt(o) { if (o.k === 'm5look') { const S = RAID.st; return { text: S.m5lk === FPS.me.id ? 'On lookout at the bow lantern: the rocks close ahead show for everyone' : S.m5lk ? `${gwsNick(S.m5lk)} is on lookout at the bow lantern` : 'Stand here on lookout: the bow lantern shows the rocks close ahead' }; } return G0.prompt(o); },
+    use(o) { if (o.k === 'm5look') return true; return G0.use(o); },
+    hud(phone, mono, fell) { G0.hud(phone, mono, fell); cpm5Hud(phone, mono, fell); },
+    b3(grp) { G0.b3(grp); },
+    f3(dt) { G0.f3(dt); cpm5PlimF3(); },
+    exit() { G0.exit(); GWS_LEG = null; CPM5B3.on = false; },
+  });
+}
+cpStage('m05outer', cpm5SailStage('outer'));
+cpStage('m05inner', cpm5SailStage('inner'));
+
+// ---------- hosting or alone ----------
+function cpm5Tick(dt) {
+  const S = RAID.st, B = S.B, L = GWS_LEG; if (!B || !L || S.ph === 'sunk' || ZM.over) return;
+  const n = Math.max(1, ZM.hum.length);
+  // who's on lookout at the bow lantern (the first of you there)
+  { let lk = ''; const [x, y] = gwsW(...CPM5B.LOOK); for (const p of ZM.players || []) if (Math.hypot(p.x - x, p.y - y) < CPM5B.LOOK_R && !gwsIsDown(p.sid)) { lk = p.sid; break; } if (lk && lk !== S.m5lk && !S.m5said.look) { S.m5said.look = 1; cpSay('wren', 'Good. Sing out what you see from the bow, lad.', 'cp_m05_29'); } S.m5lk = lk; }
+  if (L.which === 'outer') {
+    // at the Hulks, he goes under (once she's close behind him), and comes up again a bend or two on
+    const up = L.sea.path.findIndex(p => p.b === CPM5B.UP_AT), dive = L.sea.path.findIndex(p => p.b === CPM5B.DIVE_AT);
+    if (S.m5dv === 0 && S.pl.k >= dive && Math.hypot(S.pl.x - B.x, S.pl.y - B.y) < 160) {
+      S.m5dv = 0.5;
+      cpCine('m05_dive', () => { S.m5dv = 1; const q = L.sea.path[up]; Object.assign(S.pl, { x: q.x, y: q.y, k: up + 1, w: 0, wait: 0 }); L.plim = false; gwsSay('Plimsoll has gone under. No cover till he’s up again: keep her in the channel, and ring if she comes.', true); });
+    }
+    if (S.m5dv === 1) { const q = L.sea.path[up]; if (Math.hypot(q.x - B.x, q.y - B.y) < CPM5B.UP_R) { S.m5dv = 2; L.plim = true; cpSay('hand', 'There! He’s up again, ahead of us, and walking on.', 'cp_m05_30'); cpEvent('m5up'); } }
+    if (!S.m5said.hulks && Math.hypot(B.x - CPM5B.HULKS[0], B.y - CPM5B.HULKS[1]) < 300) { S.m5said.hulks = 1; cpSay('wren', 'The Hulks. Old wrecks on the rocks, and things coming out of them. Repel boarders!', 'cp_m05_31'); }
+    // out through the Gate
+    if (B.y < CPM5B.GATE_Y && Math.abs(B.x - CPM5B.GATE[0]) < 140) { S.m5gate = 1; cpDone(); }
+  } else {
+    if (!S.m5said.narrow && B.y < 720) { S.m5said.narrow = 1; cpSay('wren', 'The Narrows. Hold her in his wake, a ship’s length either side and no more.', 'cp_m05_32'); }
+    const dh = Math.hypot(CPM5B.HARB[0] - B.x, CPM5B.HARB[1] - B.y);
+    if (!S.m5fin && dh < CPM5B.FIN) {
+      S.m5fin = 1;
+      cpCine('m05_last', () => { S.mar.st = Math.min(SK.MAREN_STAGES.length - 1, Math.max(S.mar.st, 2)); S.m5spT = 1; gwsSay('He has walked on to the pier. Maren is coming: ring the bell, and make the harbour!', true); });
+    }
+    // the last reach: he walks straight on to the pier and waits there; the drowned over every rail
+    if (S.m5fin && !cpCineOn()) {
+      const P = S.pl, path = L.sea.path, q = path[path.length - 1], d = Math.hypot(q.x - P.x, q.y - P.y);
+      if (d > 0.5) { const sp = Math.min(d, 16 * dt); P.x += (q.x - P.x) / d * sp; P.y += (q.y - P.y) / d * sp; P.dx = (q.x - P.x) / d; P.dy = (q.y - P.y) / d; P.w = 1; P.k = path.length; } else P.w = 0;
+      S.m5spT -= dt; if (S.m5spT <= 0) { S.m5spT = 2.4 / Math.sqrt(n); gwsSpawn(S); }
+    }
+    if (dh < CPM5B.IN_R) cpDone();
+  }
+}
+cpOn('m5up', () => { try { if (!soundOff()) sfxSplash(0, 0.6); } catch (e) {} });
+
+// ---------- everyone ----------
+function cpm5Me(dt) {
+  const S = RAID.st, V = S.V || S.B, L = GWS_LEG; if (!V || !L) return;
+  // the bow lantern: with someone on lookout, the rocks close ahead of her bow show (dimly) for everyone
+  if (S.m5lk) {
+    const now = RAID.ct || 0;
+    for (const r of L.sea.rocks) {
+      const dx = r.x - V.x, dy = r.y - V.y; if (Math.abs(dx) > CPM5B.LOOK_SEE + 20 || Math.abs(dy) > CPM5B.LOOK_SEE + 20) continue;
+      const d = Math.hypot(dx, dy) - r.r; if (d > CPM5B.LOOK_SEE) continue;
+      if (Math.abs(angDiff(bearingOf(dx, dy), V.h)) > CPM5B.LOOK_A + r.r / Math.max(10, d)) continue;
+      r.lit = Math.max(r.lit, 0.25 + 0.6 * (1 - Math.max(0, d) / CPM5B.LOOK_SEE)); void now;
+    }
+  }
+}
+function cpm5Hud(phone, mono, fell) {
+  const S = RAID.st, L = GWS_LEG; if (!L || !S.B) return;
+  const x = Math.max(14, FPS.safeLeft || 0), y = fpsHudTop() + (phone ? 32 : 44) + (phone ? 20 : 28) + (phone ? 14 : 18) * 5 + (phone ? 12 : 16);
+  ctx.textAlign = 'left'; ctx.textBaseline = 'top'; ctx.font = mono(phone ? 9 : 11);
+  const lk = S.m5lk ? (S.m5lk === FPS.me.id ? 'YOU' : gwsNick(S.m5lk).toUpperCase()) : 'NOBODY · STAND AT THE BOW LANTERN';
+  const pl = S.m5dv === 1 ? 'GONE UNDER · NO COVER' : S.m5fin ? 'AT THE PIER · NO COVER' : gwsGuarded(S, S.V || S.B) ? 'CLOSE · SHE HOLDS' : 'AHEAD · KEEP UP';
+  ctx.fillStyle = 'rgba(8,10,14,0.5)'; ctx.fillRect(x - 6, y - 4, phone ? 162 : 226, phone ? 30 : 36);
+  ctx.fillStyle = S.m5lk ? 'rgba(236,228,207,0.85)' : 'rgba(232,176,128,0.85)'; ctx.fillText('LOOKOUT · ' + lk, x, y, phone ? 150 : 214);
+  ctx.fillStyle = S.m5dv === 1 || S.m5fin ? `rgba(255,170,140,${0.75 + 0.25 * Math.sin(g.t * 5)})` : '#8fd8ff'; ctx.fillText('PLIMSOLL · ' + pl, x, y + (phone ? 13 : 16), phone ? 150 : 214);
+  fpsHudNote(y + (phone ? 28 : 34)); ctx.textBaseline = 'alphabetic';
+}
+
+// ---------- in 3D: the Wren's rig and lantern, the green wake, the Hulks and the Gate ----------
+const CPM5B3 = { on: false };
+function cpm5b3d(SG, G) {
+  const T = CPM5B3, D = GWS.D, L = GWS_LEG; T.on = true;
+  const lam = c => z3Lam(c), canvas = z3Lam('#d8ccb0', { side: THREE.DoubleSide }), DG = G.DG;
+  // the foresail on its gaff, aft of the foremast, and the fore staysail to the bowsprit (the cutter's jib is struck)
+  if (G.jibS) G.jibS.visible = false;
+  T.fore = gwsSailMesh(canvas, 9); DG.add(T.fore); T.stay = gwsSailMesh(canvas, 7); DG.add(T.stay);
+  { const v = CPM5B.FORE, gaff = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.07, 4.4, 6).rotateX(Math.PI / 2), lam('#5a4632')); gaff.position.copy(gdv(0, v - 2.0, D + 10.0)); gaff.rotation.x = -0.35; DG.add(gaff);
+    const boom = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.08, 4.0, 6).rotateX(Math.PI / 2), lam('#5a4632')); boom.position.copy(gdv(0, v - 2.0, D + 2.0)); DG.add(boom);
+    const pts = [gdv(0, v, D + CPM5B.FORE_H - 0.3), gdv(0, GWS.SPRIT - 0.2, D + 1.25), gdv(0, v, D + CPM5B.FORE_H - 0.3), gdv(0, GWS.MAST[1], D + GWS.MAST_H - 1)];
+    for (const s of [-1, 1]) pts.push(gdv(0, v, D + CPM5B.FORE_H - 0.5), gdv(s * (gwsHw(v - 0.5) - 0.1), v - 0.5, D + 0.95));
+    DG.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color: 0x4a4236, transparent: true, opacity: 0.85 }))); }
+  // her name, on the transom and on each bow
+  { const cv = document.createElement('canvas'); cv.width = 256; cv.height = 64; const x = cv.getContext('2d'); x.font = 'bold 42px "IM Fell English SC", serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillStyle = 'rgba(232,220,180,0.92)'; x.fillText('WREN', 128, 34);
+    const tex = new THREE.CanvasTexture(cv), mat = new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false, color: 0xb8b098 });
+    const tr = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 0.4), mat); tr.position.copy(gdv(0, GWS.STERN - 0.2, D - 0.62)); tr.rotation.y = Math.PI; DG.add(tr);
+    for (const s of [-1, 1]) { const b = new THREE.Mesh(new THREE.PlaneGeometry(1.3, 0.32), mat); const v = GWS.BOW - 2.6; b.position.copy(gdv(s * (gwsHw(v) + 0.13), v, D - 0.4)); b.rotation.y = s > 0 ? Math.PI / 2 + 0.25 : -Math.PI / 2 - 0.25; DG.add(b); } }
+  // the bow lantern, on its bracket at the stem: brighter, and its light thrown ahead, while someone's on lookout
+  { const B = T.bow = new THREE.Group(); B.position.copy(gdv(0, GWS.BOW - 0.9, D + 1.45)); DG.add(B);
+    B.add(new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.12, 0.05, 10), lam('#9a7a34')));
+    T.bowGl = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.09, 0.24, 10, 1, true), new THREE.MeshBasicMaterial({ color: 0xfff0c0, transparent: true, opacity: 0.7, side: THREE.DoubleSide })); T.bowGl.position.y = 0.15; B.add(T.bowGl);
+    T.bowH = G.glowSp(0xffd890, 1.4); T.bowH.position.y = 0.15; B.add(T.bowH);
+    T.bowL = new THREE.PointLight(0xffd090, 0.6, 14, 1.4); T.bowL.position.y = 0.2; B.add(T.bowL);
+    const post = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.6, 0.05), lam('#2a2a2c')); post.position.y = -0.3; B.add(post);
+    T.cone = G.glowSp(0xffe0a0, 30, { opacity: 0 }); T.cone.position.copy(gdv(0, GWS.BOW + 24, D + 0.8)); T.cone.scale.set(34, 4, 1); DG.add(T.cone); }
+  // the wake glows green tonight
+  for (const F of G.foam || []) F.m.material.color.setHex(0x7affc8);
+  // the Hulks: the ribs of old wrecks on the rocks there, weed on them, a green glow among them
+  T.hulks = null;
+  if (L && L.which === 'outer') {
+    const H = T.hulks = new THREE.Group(); H.position.copy(gsv(CPM5B.HULKS[0], CPM5B.HULKS[1], 0)); SG.add(H);
+    const rib = lam('#2a2018'), R = seeded(0x4b1c);
+    for (let w = 0; w < 4; w++) { const a = R() * 6.283, d = 30 + R() * 50, g3 = new THREE.Group(); g3.position.set(Math.sin(a) * d, 0, -Math.cos(a) * d); g3.rotation.set((R() - 0.5) * 0.4, R() * 6.283, (R() - 0.5) * 0.5); H.add(g3);
+      for (let i = 0; i < 6; i++) for (const s of [-1, 1]) { const m = new THREE.Mesh(new THREE.TorusGeometry(2.6, 0.18, 4, 10, Math.PI * 0.55), rib); m.position.set(s * 0.2, -0.6, -6 + i * 2.2); m.rotation.set(0, Math.PI / 2, s > 0 ? -0.2 : Math.PI + 0.2); g3.add(m); }
+      const keel = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.4, 14), rib); keel.position.y = -0.8; g3.add(keel); }
+    T.hulkG = G.glowSp(0x7affc0, 120, { opacity: 0.08 }); T.hulkG.position.y = 4; H.add(T.hulkG);
+  }
+  // the Gate's two stacks: tall black pillars of rock, always to be seen against the sky
+  T.gate = [];
+  if (L && L.which === 'outer') for (const s of [-1, 1]) { const m = new THREE.Mesh(new THREE.CylinderGeometry(6, 12, 34, 9), lam('#1a2422')); m.position.copy(gsv(CPM5B.GATE[0] + s * (CPM5B.GATE_W + 14), CPM5B.GATE[1], 14)); SG.add(m); T.gate.push(m); }
+}
+function cpm5f3d(dt, V) {
+  const T = CPM5B3, S = RAID.st, D = GWS.D, t = g.t; if (!T.on || !T.fore) return;
+  const fill = clamp(0.25 + V.sail * 0.55, 0.25, 1.15), v = CPM5B.FORE;
+  gwsSailShape(T.fore, [[0, v - 0.15, D + 2.1], [0, v - 3.9, D + 2.1], [0, v - 0.15, D + 9.6], [0, v - 3.9, D + 10.9]], 1, fill * 0.75, t + 2);
+  gwsSailShape(T.stay, [[0, GWS.SPRIT - 0.4, D + 1.3], [0.7 + 0.3 * fill, v + 1.2, D + 1.6], [0, v + 0.2, D + CPM5B.FORE_H - 0.6], [0, v + 0.2, D + CPM5B.FORE_H - 0.6]], 1, fill * 0.5, t + 3);
+  const on = !!S.m5lk, f = reduceMotion ? 1 : 0.9 + 0.1 * Math.sin(t * 13);
+  T.bowH.material.opacity = (on ? 0.95 : 0.5) * f; T.bowL.intensity = (on ? 1.4 : 0.5) * f; T.cone.material.opacity = on ? 0.06 + 0.02 * Math.sin(t * 2) : 0;
+  if (T.hulkG) T.hulkG.material.opacity = 0.06 + 0.04 * Math.sin(t * 0.8);
+  for (const m of T.gate) m.visible = true;
+}
+// (each frame, after gwsail's 3D) Plimsoll going under, in the cinematic
+function cpm5PlimF3() {
+  if (!GW3.plim) return;
+  if (CPN.on && CPN.on.id === 'm05_dive' && CPN.shot === 1) { const k = clamp(((CPN.st || 0) - 1.6) / 1.4, 0, 1); GW3.plim.position.y -= k * 4.5; if (GW3.ring) GW3.ring.visible = false; }
+}
 
 // ---- src/cpm06.js ----
 'use strict';
@@ -49321,13 +49996,915 @@ cpCineDef('m07_outro', { shots: [{ d: 3, card: { eye: 'Mission complete', t: "Wr
 
 // ---- src/cpm08.js ----
 'use strict';
-// The Chronicle of the Light, mission 8: The Gannet's Wake (14 December 1888). A placeholder until the mission is written: its place in
-// the campaign (src/cp.js cpMission), a title card, and the stage still being written (src/cpkit.js 'cp_wip').
-cpMission({ id: 'm08', act: 3, n: "The Gannet's Wake", when: '14 December 1888', where: 'Off the Skerries, and aboard the risen Gannet',
-  blurb: "A year to the night, the Gannet's bell. Sail out to where she went down, go aboard, and face Knock, the Bosun and Captain Crane.",
-  stages: ['cp_wip'], intro: 'm08_intro', outro: 'm08_outro', music: { default: 'cptense' } });
-cpCineDef('m08_intro', { shots: [cpTitleShot(CP_BY.m08), { d: 4, cam: [0, -70, 6], to: [0, -55, 4], look: [0, 0, 1], lines: [[0.3, 'log', 'This page of the log is still being written.', '']] }] });
-cpCineDef('m08_outro', { shots: [{ d: 3, card: { eye: 'Mission complete', t: "The Gannet's Wake", sub: '14 December 1888' } }] });
+// The Chronicle of the Light, mission 8: The Gannet's Wake (14 December 1888). A year to the night after the brig
+// broke up on the skerries, her bell is heard again; the keeper lights the lamp and stands on the gallery till dawn,
+// and his cutter goes out after the bell with a lantern on the water ahead of it. Told from the Light's side this
+// time, where the raid tells it from the cutter's: the north landing first, then her lantern out to the ring of
+// spars, then the Gannet's own deck by flarelight.
+//  I.   The North Landing (cp_m08rock, src/cpm08a.js): the back of the Light's rock, where the cutter is kept on her
+//       slip. Carry the flares, the grapnel and line and the lamp oil down to her while the drowned climb out of the
+//       gully; Holm lights the lamp (m08_gallery) and sees a lantern on the water; knock out the chocks.
+//  II.  Her Lantern (cp_m08out, src/cpm08b.js): on the raid's own sea (gwsail through GWS_LEG), following Maren's
+//       skiff out, answering the Gannet's bell with the cutter's; the ring of spars (m08_ring); fire flares into her
+//       four tall spars and she comes up alongside (m08_board, after the part).
+//  III. By Flarelight (cp_m08deck, src/cpm08c.js): her weather deck (the Quarterdeck's stage underneath). The Bosun
+//       up out of the hatch with Knock loose on the deck behind you; Crane (m08_crane) under his black sail from the
+//       start, its halyards to cut; Maren's lantern under the port rail at the last (m08_maren); the outro.
+// Lines: cp_m08_01 on (the table in campaign-sound/m08.md).
+
+cpCast('m8cox', { n: 'The Coxswain', c: '#b8d0c0' });
+CP_MUSIC_FALL.cpm08rock = 'gwhold';    // (the north landing, the bell far out: slow and cold)
+CP_MUSIC_FALL.cpm08sail = 'gwsail';    // (following her lantern out)
+CP_MUSIC_FALL.cpm08rise = 'gwsail';    // (the Gannet coming up)
+CP_MUSIC_FALL.cpm08deck = 'gwhold';    // (the waist in the dark: Knock and the Bosun)
+CP_MUSIC_FALL.cpm08crane = 'gwcapt2';  // (Crane by flarelight)
+CP_MUSIC_FALL.cpm08last = 'gwcapt2';   // (her lantern)
+CP_MUSIC_FALL.cpm08end = 'cpsad';      // (she goes down)
+
+cpMission({ id: 'm08', act: 3, n: "The Gannet's Wake", when: '14 December 1888', where: 'Skerry Light, and aboard the risen Gannet',
+  blurb: "A year to the night, the Gannet's bell. Ready the cutter under the Light, follow a lantern out to her spars, and face her crew by flarelight.",
+  stages: ['cp_m08rock', 'cp_m08out', 'cp_m08deck'], intro: 'm08_intro', outro: 'm08_outro',
+  cut: { 1: 'm08_sea' }, after: { 1: 'm08_board' }, music: { default: 'cpm08sail' }, lives: 1,
+  stop() { if (typeof GWS_LEG !== 'undefined' && GWS_LEG && GWS_LEG.key === 'cpm08out') GWS_LEG = null; } });
+
+// ---------- the cinematics ----------
+// a sea point (a sail stage, frozen for a cinematic), in deck coordinates about the island's middle
+function cpm8SeaL(sx, sy) { return typeof cpm5SeaL === 'function' ? cpm5SeaL(sx, sy) : [0, 60]; }
+// the opening: the north landing, the Light over it, the bell a mile out, Holm at the tower door
+cpCineDef('m08_intro', {
+  music: 'cpm08rock',
+  b3(grp, C) { C.holm = cpkNpc(['#1e2436', '#d8d0bc', '#8a7a4a', '#ffd88a']); C.rang = 0; },
+  exit(C) { cpkNpcFree(C.holm); },
+  shots: [
+    cpTitleShot(CP_BY.m08),
+    { d: 4.2, card: { eye: 'The keeper’s log', t: '14 December 1888', sub: 'A year to the night. The north landing, under Skerry Light' } },
+    { d: 6.5, cam: [34, 62, 10], to: [20, 44, 7], look: [0, -30, 34], lookTo: [0, -30, 26], fade: [1, 0],
+      f(t, k, C) { if (t > 2.5 && !C.rang) { C.rang = 1; try { if (!soundOff()) sfxBellFar(0.4, 0.5); } catch (e) {} } },
+      lines: [[0.4, 'log', 'A year tonight. At the change of the watch we heard the Gannet’s bell, out past the rocks.', 'cp_m08_01']] },
+    { d: 5.5, cam: [-5, -2, 2.2], to: [-3.5, -5, 2.0], look: [1.5, -14.8, 1.7],
+      f(t, k, C) { const [x, y] = cpkW(1.5, -14.8); cpkNpcPose(C.holm, { x, y, h: 0.2, lan: true }); },
+      lines: [[0.3, 'holm', 'Her bell. A mile out, where she broke up. A year to the night.', 'cp_m08_02'], [3.2, 'holm', 'I’ll light the lamp and keep it. You get the cutter ready.', 'cp_m08_03']] },
+    { d: 5.5, cam: [6, 14, 3.2], to: [4, 20, 2.8], look: [0, 38, 1.0], lookTo: [0, 40, 1.2],
+      f(t, k, C) { const [x, y] = cpkW(1.5, -14.8); cpkNpcPose(C.holm, { x, y, h: 0.2, lan: true }); },
+      lines: [[0.3, 'm8cox', 'Flares, the grapnel and line, and oil for her lamps. Down to the slip with them, lads.', 'cp_m08_04']] },
+  ],
+});
+// the lamp lit: Holm on the gallery, and a lantern out on the water rowing north
+cpCineDef('m08_gallery', {
+  music: 'cpm08rock',
+  b3(grp, C) {
+    C.holm = cpkNpc(['#1e2436', '#d8d0bc', '#8a7a4a', '#ffd88a']);
+    const soft = z3Soft('rgba(255,255,255,0.95)', 'rgba(255,255,255,0)'); C.sk = new THREE.Sprite(new THREE.SpriteMaterial({ map: soft, color: 0xffc070, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false, opacity: 0.9 }));
+    C.sk.scale.setScalar(6); const [x, y] = cpkW(-46, 190); C.sk.position.copy(z3v(x, y, FPSC.GROUND - 0.6)); grp.add(C.sk); C.skx = x; C.sky = y;
+  },
+  exit(C) { cpkNpcFree(C.holm); },
+  shots: [
+    { d: 5.5, cam: [9, -16, 38], to: [7, -19, 37.2], look: [0, -26.4, 36.8], fade: [0.6, 0],
+      f(t, k, C) { const [x, y] = cpkW(0, -26.4); cpkNpcPose(C.holm, { x, y, jz: 35.25, h: 0, lan: true }); },
+      lines: [[0.4, 'holm', 'The lamp is lit. And there’s another light on the water, and it isn’t mine.', 'cp_m08_08']] },
+    { d: 6.5, cam: [0.8, -27.4, 37.1], to: [0.6, -27.0, 37.0], look: [-46, 190, 0], lookTo: [-48, 198, 0],
+      f(t, k, C) { const [x, y] = cpkW(0, -26.4); cpkNpcPose(C.holm, { x, y, jz: 35.25, h: -0.2, lan: true }); C.sk.position.x = C.skx - t * 0.6; C.sk.position.z = -(C.sky + t * 1.4); C.sk.material.opacity = 0.75 + 0.2 * Math.sin(t * 7); },
+      lines: [[0.4, 'log', 'She was out there, rowing toward where the Gannet was, and the lantern in her skiff was still lit.', 'cp_m08_09']] },
+    { d: 5, cam: [3, 12, 1.8], to: [2.5, 10, 2.2], look: [0, -26, 36],
+      f(t, k, C) { const [x, y] = cpkW(0, -26.4); cpkNpcPose(C.holm, { x, y, jz: 35.25, h: 0, lan: true }); },
+      lines: [[0.3, 'holm', 'Maren! Follow her lantern. Knock the chocks out and go!', 'cp_m08_10']] },
+  ],
+});
+// at sea: the cutter out from under the Light, the lantern low on the water ahead
+cpCineDef('m08_sea', {
+  music: 'cpm08sail',
+  b3(grp, C) {
+    const S = RAID.st, K = S && S.m8k; const [u, v] = K ? cpm8SeaL(K.x, K.y) : [0, 80];
+    C.sk = [u, v, 0.8]; this.shots[1].look = C.sk; this.shots[1].lookTo = C.sk; this.shots[2].look = C.sk;
+    const [lu, lv] = cpm8SeaL(0, 0); this.shots[0].look = [lu, lv, 30];
+  },
+  shots: [
+    { d: 5, cam: [1.8, 8, 3.4], to: [1.6, 4, 3.0], look: [0, -200, 30], fade: [0.8, 0],
+      lines: [[0.4, 'log', 'I sent the cutter out, and stood on the gallery to watch her go.', 'cp_m08_13']] },
+    { d: 5.5, cam: [0, 9.6, 3.1], to: [0, 10.4, 3.0], look: [0, 80, 0.8],
+      lines: [[0.4, 'm8cox', 'There. A lantern, low on the water, and a skiff under it.', 'cp_m08_14']] },
+    { d: 6, cam: [-2.6, 2, 2.8], to: [-2.2, 5, 3.2], look: [0, 80, 0.8],
+      lines: [[0.3, 'm8cox', 'Keep her lantern over the bowsprit. When the Gannet tolls, answer with ours, or they’ll be up the sides.', 'cp_m08_33']] },
+  ],
+});
+// the ring of her spars: the skiff stops in the middle of it, and the woman in it speaks
+cpCineDef('m08_ring', {
+  music: 'cpm08sail',
+  b3(grp, C) {
+    const S = RAID.st, K = S && S.m8k; const [u, v] = K ? cpm8SeaL(K.x, K.y) : [0, 60];
+    this.shots[0].look = [u, v, 1.2]; this.shots[1].look = [u, v, 1.4]; this.shots[1].lookTo = [u, v, 1.0];
+    const [mu, mv] = cpm8SeaL(GWS.MARK[0], GWS.MARK[1]); this.shots[2].look = [mu, mv, 6];
+  },
+  shots: [
+    { d: 5, cam: [0.6, 9.6, 3.0], to: [0.3, 10.4, 3.1], look: [0, 60, 1.2], fade: [0.4, 0], sfx: [[0.6, 'whisper', 0.5]],
+      lines: [[0.4, 'm8cox', 'The ring of her spars. The skiff’s stopped dead in the middle of it.', 'cp_m08_18']] },
+    { d: 5.5, cam: [-1.4, 8, 2.4], to: [-1.0, 9.5, 2.2], look: [0, 60, 1.4],
+      lines: [[0.6, 'maren', 'Light them. Light them, so they can see where she lies.', 'cp_m08_19']] },
+    { d: 5, cam: [2.4, -2, 4.6], to: [2.0, 1, 4.2], look: [0, 60, 6],
+      lines: [[0.3, 'm8cox', 'Four of them still carry their tops. A flare into each, from the forward deck.', 'cp_m08_34']] },
+  ],
+});
+// the Gannet alongside, her bell ringing; her figurehead gone from her bow; up her side
+cpCineDef('m08_board', {
+  music: 'cpm08rise',
+  b3(grp, C) { C.rang = 0; },
+  shots: [
+    { d: 5.5, cam: [2.6, -3, 2.6], to: [2.0, 1, 2.8], look: [-9.6, -6, 5.5], lookTo: [-9.6, 4, 5.0],
+      f(t, k, C) { if (!C.rang) { C.rang = 1; try { if (!soundOff()) sfxBell(); } catch (e) {} } },
+      lines: [[0.4, 'log', 'The Gannet came up alongside, inside the ring of her spars, the water pouring off her, and her bell was ringing.', 'cp_m08_22']] },
+    { d: 5, cam: [0.5, 9, 3.0], to: [0.2, 10, 3.2], look: [-9.6, 16, 4.6], sfx: [[1.2, 'creak', 0.6]],
+      lines: [[0.4, 'm8cox', 'Her figurehead’s gone from her bow. There’s nothing on the stem at all.', 'cp_m08_23']] },
+    { d: 4.5, cam: [-3.2, -1, 2.2], to: [-6.4, 0, 6.0], look: [-9.6, 1, 7.5], fade: [0, 0.7],
+      lines: [[0.3, 'm8cox', 'Up her side, all of you. I’ll hold the cutter off.', 'cp_m08_24']] },
+  ],
+});
+// the Bosun down: Crane comes up through his deck by the wheel, his black sail already up between her and the Light
+cpCineDef('m08_crane', {
+  music: 'cpm08crane',
+  b3(grp, C) {
+    C.cr = typeof gcBuildCrane === 'function' ? gcBuildCrane() : null;
+    if (C.cr) { grp.add(C.cr.root); const [x, y] = cpkW(...GC_RISE); C.cx = x; C.cy = y; C.cr.root.position.copy(z3v(x, y, FPSC.GROUND + GCC.QD - 4.6)); C.cr.root.rotation.y = 0; }
+    GCW.sail = 0; C.rose = 0;
+  },
+  exit(C) { if (C.cr && C.cr.root.parent) C.cr.root.parent.remove(C.cr.root); },
+  shots: [
+    { d: 5, cam: [3, 2, 1.9], to: [2.4, -2, 2.1], look: [0, -14.8, 2.4], lookTo: [0, -14.8, 3.6], shake: 0.25,
+      f(t, k, C) { if (C.cr) { const e = zbE(Math.min(1, t / 4.4)); C.cr.root.position.y = FPSC.GROUND + GCC.QD - 4.6 * (1 - e); } if (t > 0.3 && !C.rose) { C.rose = 1; try { gcSound('rise', 8); } catch (e) {} } },
+      lines: [[0.6, 'crane', 'Who comes aboard my ship without leave?', 'cp_m08_27']] },
+    { d: 5, cam: [-2, -6, 2.4], to: [-1.6, -7.4, 2.6], look: [0, -14.8, 4.0],
+      f(t, k, C) { if (C.cr) C.cr.root.position.y = FPSC.GROUND + GCC.QD; },
+      lines: [[0.4, 'crane', 'Douse that Light. Hoist the black!', 'cp_m08_28']] },
+    { d: 5, cam: [3.8, 6, 2.6], to: [3.2, 2, 3.2], look: [-5.5, 3.5, 7], lookTo: [-5.5, 3.5, 11],
+      f(t, k, C) { GCW.sail = zbE(Math.min(1, t / 3.6)); if (C.cr) C.cr.root.position.y = FPSC.GROUND + GCC.QD; },
+      sfx: [[0.3, 'creak', 0.8]], lines: [[0.8, 'm8cox', 'A black sail, up her port side. The Light’s cut off the deck!', 'cp_m08_32']] },
+  ],
+});
+// a third of his strength left: her skiff under the port rail, her lantern lifted, and the black sail takes fire
+cpCineDef('m08_maren', {
+  music: 'cpm08last',
+  b3(grp, C) { C.burnt = 0; },
+  shots: [
+    { d: 5, cam: [-3.6, 0, 2.6], to: [-4.2, 1.5, 2.4], look: [-9.5, 2, -2.2], fade: [0.4, 0], sfx: [[0.3, 'whisper', 0.6]],
+      lines: [[0.4, 'm8cox', 'Her skiff, under the port rail! And her lantern lifted up to him!', 'cp_m08_42']] },
+    { d: 5.5, cam: [-6.6, 4.5, 0.4], to: [-6.8, 3.8, 0.2], look: [-9.5, 2, -1.2],
+      lines: [[0.5, 'maren', 'I came to warn you. I came too late, and I have come every year since.', 'cp_m08_36']] },
+    { d: 5, cam: [2, 8, 2.0], to: [1.4, 6, 2.6], look: [-5.5, 3.5, 8], lookTo: [-5.5, 3.5, 4],
+      f(t, k, C) { GCW.sail = Math.max(0, 1 - t / 3.8); },
+      sfx: [[0.6, 'tear', 0.7]], lines: [[0.4, 'crane', 'Who carries that lantern? Who is that, on my water?', 'cp_m08_37']] },
+  ],
+});
+// he falls: the Gannet goes down under them all, and the keeper's page
+cpCineDef('m08_outro', {
+  music: 'cpm08end',
+  b3(grp, C) { C.fd0 = GCW.fd || 0; },
+  shots: [
+    { d: 5.5, cam: [2, -8, 2.0], to: [1.4, -10, 2.4], look: [0, -15, 0.6], fade: [0.5, 0],
+      f(t, k, C) { GCW.fd = Math.min(1, C.fd0 + t / 8); },
+      lines: [[0.4, 'crane', 'Let her go, then. Let her go down, and me with her.', 'cp_m08_38']] },
+    { d: 6, cam: [-4.2, 2, 2.6], to: [-4.4, 4, 2.2], look: [-60, 30, 20], lookTo: [-300, 110, 30],
+      f(t, k, C) { GCW.fd = 1; },
+      lines: [[0.4, 'm8cox', 'Over the side, all of you, and into the cutter! She’s going!', 'cp_m08_39']] },
+    { d: 6.5, cam: [-46, -30, 3], to: [-52, -34, 2.6], look: [0, 0, 1], fade: [0, 1], shake: 0.1,
+      f(t, k, C) { GCW.fd = 1; },
+      lines: [[0.4, 'log', 'I lit the lamp myself and stood on the gallery until dawn.', 'cp_m08_40'], [3.4, 'log', 'When the lamp turned, she looked up at me.', 'cp_m08_41']] },
+    { d: 10, card: { eye: 'The keeper’s log · 14 December 1888', t: "The Gannet's Wake", sub: 'A year tonight. I lit the lamp myself and stood on the gallery until dawn. She was out there, rowing toward where the Gannet was, and the lantern in her skiff was still lit. When the lamp turned, she looked up at me.' } },
+  ],
+});
+
+// ---- src/cpm08a.js ----
+'use strict';
+// The Chronicle of the Light, mission 8, Part I: The North Landing (cp_m08rock). 14 December 1888, a year to the
+// night after the Gannet went down. The back of Skerry Light's own rock, the side the raid never shows: the boat
+// slip in the gully under the tower's north face, where the keeper's cutter is kept drawn up on her cradle out of
+// the swell, the oil store's back door and the boat shed either side, and the tower itself standing over it all,
+// white with its two red bands, lit and turning (src/zombies.js's Light, at the rock's own south end: Z.far).
+//  - Out past the rocks, a mile off, the Gannet's bell. Holm goes up to light the lamp and keep it, and leaves you to
+//    make the cutter ready: three loads to carry down to her on the slip (the flare box from the oil store, the
+//    grapnel and line from the boat shed, the cask of lamp oil from the tower door). One load to a pair of hands;
+//    whoever goes down drops theirs where they fall. The drowned climb up out of the gully and the shore rocks
+//    the while, more of them the more of you, and each toll of the bell brings a few more.
+//  - All three aboard: Holm on the gallery, the lamp lit, and a lantern out on the water that isn't his (a
+//    cinematic, m08_gallery). Then knock out the two chocks under her (hold Use at each) while they come up the slip
+//    at you, and she runs down into the sea: the part is done.
+// Laid out by FPI_GEN.cpm08rock. Host-authoritative: the host keeps the loads (where each lies, who carries it), the
+// chocks and the drowned, and sends them in m8r; a joined player asks to take a load ('m8take'), stow it ('m8stow')
+// and, while holding Use at a chock, to knock at it ('m8chock'). Lines through cpSay (cp_m08_05 on).
+
+const CPM8R = {
+  R: 52, START: [-3, 8], TOWER: [0, -30], FOOT: 14, CUT: [0, 38], STOW_R: 5, SLIP: [0, 31, 4.6, 18],
+  LOADS: [
+    { n: 'the flare box', at: [15, -10.5], c: '#d86a4a' },
+    { n: 'the grapnel and line', at: [-14.5, -8.5], c: '#a8a8a8' },
+    { n: 'the cask of lamp oil', at: [4, -13.2], c: '#c8a060' },
+  ],
+  CHOCKS: [[-2.3, 34.2], [2.3, 34.2]], CHOCK_T: 2.6, TOLL: 19, LEVEL: 7,
+};
+const CPM8R_PH = ['load', 'gallery', 'chocks', 'gone'];
+
+// ---------- its look, and laying it out ----------
+FPS_ISLES.cpm08rock = Object.assign({}, FPS_ISLES.light, { name: 'the north landing under the Light', indoor: false, rocks: [0, 4, 7, 2], wrecks: [0], sky: '90,100,130', skyA: 0.05,
+  fog: ['#080a10', 30, 420], mist: '60,66,80', mistA: 0.1, birds: ['gull', 0], tufts: ['#3e4632', 26], pebbles: 160, pools: 6, wrack: 70, nLights: 6, keep: false, arena: false, noGround: false });
+// the tower's foot: its plinth and the rock round it, solid (its look is the Light's own, Z.far)
+FPI_K.cpm8foot = { col: '#3a3c40', noShadow: true, sol(p) { return [fpiCirc(p, 0, 0, CPM8R.FOOT, 1.4)]; }, b3() {} };
+FPI_GEN.cpm08rock = {
+  built: true,
+  set(H) {
+    const Z = H.I.zm = { doors: [], windows: [], buys: [], perks: [], spawns: [], lights: [] }, W = (x, y) => [H.CX + x, H.CY + y], R = H.R, put = (k, x, y, a, o) => { const [wx, wy] = W(x, y); H.put(k, wx, wy, a, o || {}); };
+    // the Light, at the south end of its own rock, close over you
+    Z.far = { X: CPM8R.TOWER[0], Y: CPM8R.TOWER[1] };
+    put('cpm8foot', ...CPM8R.TOWER, 0);
+    // the oil store's back (east) and the boat shed (west): low stone sheds against the rock, a lamp by each door
+    put('block', 19, -14, 0.1, { w: 6, d: 4.4, hh: 2.7, col: '#8a8678', trim: '#3a2a24' });
+    put('block', -19, -12, -0.12, { w: 6.4, d: 5, hh: 2.9, col: '#6a5a48', trim: '#2e2a26' });
+    for (const [x, y] of [[15.6, -11.8], [-15.4, -9.6], [2.4, -14.6]]) { const [wx, wy] = W(x, y); fpiLanternPost(H, wx, wy, 0); }
+    put('sacks', 21.5, -10.8, 0.2); put('sacks', -21.2, -8.6, -0.4, { c: '#5a5040' }); put('rowboat', -23, -4, 1.4, { len: 3.8 });
+    // the slip: a ramp of dressed stone down the gully to the water, the cutter drawn up on her cradle at its foot
+    { const [x, y, w, d] = CPM8R.SLIP; put('block', x, y, 0, { w, d, hh: 0.12, col: '#5c5a52' }); }
+    put('boat', ...CPM8R.CUT, 0, { len: 9.6, beam: 3.0, paint: '#2e3e52', upright: true });
+    for (const [x, y] of CPM8R.CHOCKS) put('block', x, y, 0, { w: 0.8, d: 0.6, hh: 0.55, col: '#4a3a2a' });
+    put('bollard', -3.6, 22.5, 0, { rope: true }); put('bollard', 3.6, 22.5, 0, { rope: true });
+    put('bellframe', 7, 18, -0.4);
+    for (const [x, y, a, l] of [[-8, 24, 0.4, 3.2], [9.5, 27, 2.2, 2.8], [-11, 6, 1.1, 3.6]]) put('log', x, y, a, { len: l, rad: 0.2 });
+    // the shore rocks, where they climb up out of the water
+    for (let i = 0; i < 14; i++) { const a = -0.2 + i / 13 * (Math.PI + 0.4), d = CPM8R.R - 6 - R(0, 6), [wx, wy] = W(Math.cos(a) * d, Math.sin(a) * d); if (Math.abs(Math.cos(a) * d) < 6 && Math.sin(a) * d > 20) continue; H.put('stone', wx, wy, R(0, H.TAU), { w: R(2.4, 4.4), d: R(1.8, 3), hh: R(0.8, 1.6) }); }
+    H.light(H.CX - 0.5, H.CY + 22, 1.6, '#ffc070', 8, 'lantern'); H.light(H.CX + 17, H.CY - 11, 1.6, '#ffb860', 7, 'lantern'); H.light(H.CX - 16, H.CY - 9, 1.6, '#ffb860', 7, 'lantern');
+    ZMD.START = CPM8R.START.slice();
+  },
+  props(H) { fpiScatter(H, 8, 1.6, 10, H.IR - 8, 3, (x, y) => { if (Math.abs(x - H.CX) < 5 && y - H.CY > 16) return; H.put('stone', x, y, H.R(0, H.TAU), { w: H.R(0.8, 1.8), d: H.R(0.6, 1.4), hh: H.R(0.3, 0.7) }, true); }); },
+  decor() {},
+};
+
+// ---------- the stage ----------
+cpStage('m08rock', {
+  n: 'The North Landing', mend: true,
+  map: { start: CPM8R.START.slice(), top: 0, R: CPM8R.R, isle: 'cpm08rock', shore: () => -999, nav: [-CPM8R.R, CPM8R.R, -CPM8R.R, CPM8R.R], zones: { rock: { n: 'the north landing', r: [-CPM8R.R, CPM8R.R, -CPM8R.R, CPM8R.R], sky: true } } },
+  music: () => 'cpm08rock',
+  enter() {
+    Object.assign(RAID.st, { m8: true, ph: 'load', loads: CPM8R.LOADS.map(L => { const [x, y] = cpkW(...L.at); return { st: 0, x, y, by: '' }; }), chock: [0, 0], spT: 6, tollT: 7, pend: 0, said: {}, holdT: 0, goneT: 0, ambT: 2 });
+    ZM.round = Math.max(ZM.round, CPM8R.LEVEL);
+    FPS.me.h = Math.PI * 0.85;
+    if (ZM.net === 'client') return;
+    cpm8rObj();
+  },
+  tick(dt) { cpm8rTick(dt); },
+  me(dt) { cpm8rMe(dt); },
+  q(sid, k, a) { cpm8rAsk(sid, k, a); },
+  pack(o) { const S = RAID.st; o.m8r = [CPM8R_PH.indexOf(S.ph), S.loads.map(L => [L.st, Math.round((L.x - FPSC.CX) * 10), Math.round((L.y - FPSC.CY) * 10), L.by || '']), S.chock.map(c => Math.round(c * 100))]; },
+  apply(o) {
+    const S = RAID.st, a = o.m8r; if (!Array.isArray(a) || !S.loads) return;
+    S.ph = CPM8R_PH[a[0] | 0] || 'load';
+    if (Array.isArray(a[1])) a[1].slice(0, 3).forEach((e, i) => { if (!Array.isArray(e)) return; const L = S.loads[i]; L.st = e[0] | 0; L.x = FPSC.CX + e[1] / 10; L.y = FPSC.CY + e[2] / 10; L.by = String(e[3] || ''); });
+    if (Array.isArray(a[2])) S.chock = a[2].slice(0, 2).map(v => (+v || 0) / 100);
+  },
+  consider(c) {
+    const S = RAID.st; if (!S.loads) return;
+    S.loads.forEach((L, i) => { if (L.st === 0) c({ k: 'm8load', i }, L.x, L.y, 0, 2.2, false); });
+    if (S.ph === 'load') { const [x, y] = cpkW(...CPM8R.CUT); c({ k: 'm8stow' }, x, y - 3.4, 0, CPM8R.STOW_R, false); }
+    if (S.ph === 'chocks') CPM8R.CHOCKS.forEach(([cx, cy], i) => { if (S.chock[i] < 1) { const [x, y] = cpkW(cx, cy); c({ k: 'm8chock', i }, x, y, 0, 1.9, false); } });
+  },
+  prompt(o) {
+    const S = RAID.st, mine = cpm8rMine();
+    if (o.k === 'm8load') return mine >= 0 ? { text: `Your hands are full (${CPM8R.LOADS[mine].n})` } : { text: `Take up ${CPM8R.LOADS[o.i].n}`, free: true };
+    if (o.k === 'm8stow') return mine >= 0 ? { text: `Stow ${CPM8R.LOADS[mine].n} aboard the cutter`, free: true } : { text: `The keeper’s cutter: ${S.loads.filter(L => L.st === 2).length} of 3 loads aboard` };
+    if (o.k === 'm8chock') return { text: 'Hold to knock out the chock', hold: true };
+    return null;
+  },
+  use(o) {
+    const S = RAID.st;
+    if (o.k === 'm8load') { if (cpm8rMine() >= 0 || S.pend > 0) { zmSound('no'); return true; } S.pend = 0.6; raidAsk('m8take', o.i); return true; }
+    if (o.k === 'm8stow') { if (cpm8rMine() < 0 || S.pend > 0) { zmSound('no'); return true; } S.pend = 0.6; raidAsk('m8stow', 0); return true; }
+    if (o.k === 'm8chock') return true;
+    return false;
+  },
+  hud(phone, mono, fell) { cpm8rHud(phone, mono, fell); },
+  b3(grp) { cpm8r3dBuild(grp); },
+  f3(dt) { cpm8r3d(dt); },
+  exit() { CPM8R3.on = false; },
+});
+
+// ---------- hosting or alone ----------
+const cpm8rMine = () => { const S = RAID.st; return S.loads ? S.loads.findIndex(L => L.st === 1 && L.by === FPS.me.id) : -1; };
+const cpm8rWho = sid => sid === FPS.me.id ? FPS.me : FPS.remote.get(sid);
+const cpm8rGone = sid => sid === FPS.me.id ? (FPS.me.dead > 0 || zmIsDown()) : (() => { const r = FPS.remote.get(sid); return !r || r.left || r.dead || r.down; })();
+// the objective and the waypoint: the nearest load still lying, or the cutter while one's being carried; the chocks
+function cpm8rObj() {
+  const S = RAID.st, n = S.loads.filter(L => L.st === 2).length;
+  if (S.ph === 'load') {
+    cpObjective(`Load the cutter on the slip: flares, grapnel and line, lamp oil (${n} of 3 aboard)`);
+    const lying = S.loads.map((L, i) => [L, i]).filter(([L]) => L.st === 0);
+    if (S.loads.some(L => L.st === 1)) cpWaypoint(CPM8R.CUT[0], CPM8R.CUT[1] - 3, 'The cutter', 1.6);
+    else if (lying.length) { const [L, i] = lying[0]; cpWaypoint(L.x - FPSC.CX, L.y - FPSC.CY, CPM8R.LOADS[i].n[4].toUpperCase() + CPM8R.LOADS[i].n.slice(5), 0.8); }
+  } else if (S.ph === 'chocks') { cpObjective(`Knock out the chocks and run her down the slip (${S.chock.filter(c => c >= 1).length} of 2)`); const i = S.chock[0] < 1 ? 0 : 1; cpWaypoint(CPM8R.CHOCKS[i][0], CPM8R.CHOCKS[i][1], 'A chock', 0.6); }
+  else { cpObjective(''); cpWaypoint(null); }
+}
+function cpm8rAsk(sid, k, a) {
+  const S = RAID.st, who = cpm8rWho(sid); if (!S.m8 || !who || cpm8rGone(sid)) return;
+  if (k === 'm8take') { const L = S.loads[clamp(a | 0, 0, 2)]; if (!L || L.st !== 0 || S.loads.some(q => q.st === 1 && q.by === sid) || Math.hypot(who.x - L.x, who.y - L.y) > 3.2) return; L.st = 1; L.by = sid; cpEvent('m8take', [S.loads.indexOf(L), sid]); cpm8rObj(); return; }
+  if (k === 'm8stow') {
+    const L = S.loads.find(q => q.st === 1 && q.by === sid), [x, y] = cpkW(...CPM8R.CUT); if (!L || Math.hypot(who.x - x, who.y - (y - 3.4)) > CPM8R.STOW_R + 1.2) return;
+    L.st = 2; L.by = ''; const n = S.loads.filter(q => q.st === 2).length; cpEvent('m8stow', [S.loads.indexOf(L), sid, n]);
+    if (n === 1) cpSay('holm', 'That’s one aboard. Mind the gully: they’re climbing up out of it.', 'cp_m08_05');
+    if (n === 2) cpSay('m8cox', 'One more load, and she’s ready for the water.', 'cp_m08_07');
+    if (n === 3) { S.ph = 'gallery'; cpObjective(''); cpWaypoint(null); for (const z of ZM.z) if (!z.dead) zmKill(z, false, '', 'flash'); cpCine('m08_gallery', () => { S.ph = 'chocks'; S.spT = 2; cpm8rObj(); cpEvent('m8chocks'); }); }
+    else cpm8rObj();
+    return;
+  }
+  if (k === 'm8chock') {
+    const i = clamp(a | 0, 0, 1), [x, y] = cpkW(...CPM8R.CHOCKS[i]); if (S.ph !== 'chocks' || S.chock[i] >= 1 || Math.hypot(who.x - x, who.y - y) > 2.6) return;
+    S.chock[i] = Math.min(1, S.chock[i] + 0.25 / CPM8R.CHOCK_T);
+    if (S.chock[i] >= 1) {
+      cpEvent('m8chock', i); const n = S.chock.filter(c => c >= 1).length;
+      if (n === 1) cpSay('m8cox', 'One chock out. The other, quick, before they’re all over her!', 'cp_m08_11');
+      if (n === 2) { S.ph = 'gone'; S.goneT = 0; cpObjective(''); cpWaypoint(null); cpSay('m8cox', 'She’s running! Down the slip and jump aboard!', 'cp_m08_12'); for (const z of ZM.z) if (!z.dead) zmKill(z, false, '', 'flash'); }
+      else cpm8rObj();
+    }
+  }
+}
+function cpm8rTick(dt) {
+  const S = RAID.st, n = Math.max(1, ZM.hum.length); if (!S.m8) return;
+  // a load whose bearer goes down (or leaves) falls where they were
+  S.loads.forEach((L, i) => { if (L.st !== 1) return; const w = cpm8rWho(L.by); if (w) { L.x = w.x; L.y = w.y; } if (cpm8rGone(L.by)) { L.st = 0; L.by = ''; cpEvent('m8drop', i); cpm8rObj(); } });
+  if (S.ph === 'gone') { S.goneT += dt; if (S.goneT > 3.2) cpDone(); return; }
+  if (S.ph === 'gallery') return;
+  // the Gannet's bell, a mile out: each toll brings a few more up out of the water
+  S.tollT -= dt;
+  if (S.tollT <= 0) { S.tollT = CPM8R.TOLL * (0.85 + Math.random() * 0.3); cpEvent('m8toll'); for (let k = 0; k < 1 + Math.ceil(n / 2); k++) cpm8rRise(); if (!S.said.toll) { S.said.toll = 1; cpSay('m8cox', 'There she tolls again. Nearer, or I’m a Dutchman.', 'cp_m08_06'); } }
+  // and the trickle between
+  S.spT -= dt;
+  const hard = S.ph === 'chocks' ? 1 : S.loads.filter(L => L.st === 2).length / 3;
+  if (S.spT <= 0) { S.spT = (5.2 - 2.4 * hard) * (0.75 + Math.random() * 0.5) / Math.sqrt(1 + 0.6 * (n - 1)); cpm8rRise(); }
+}
+// one of the drowned, up out of the water over the shore rocks (the north, east and west sides; and up the slip)
+function cpm8rRise() {
+  const S = RAID.st, n = Math.max(1, ZM.hum.length), alive = ZM.z.filter(z => !z.dead).length; if (alive >= 4 + 2 * n + (S.ph === 'chocks' ? 3 : 0)) return null;
+  for (let t = 0; t < 14; t++) {
+    const slip = S.ph === 'chocks' && Math.random() < 0.4, a = slip ? Math.PI / 2 + (Math.random() - 0.5) * 0.25 : -0.15 + Math.random() * (Math.PI + 0.3), d = slip ? CPM8R.R - 4 : CPM8R.R - 4 - Math.random() * 6;
+    const [x, y] = cpkW(Math.cos(a) * d, Math.sin(a) * d); if (cpkNear(x, y, 9)) continue;
+    const u = Math.random(), kind = u < 0.15 + 0.15 * (S.ph === 'chocks') ? 'run' : u < 0.75 ? 'jog' : 'walk';
+    const z = raidSpawnAt(x, y, { kind, hp: zmHp(CPM8R.LEVEL) * (0.9 + Math.random() * 0.2) * (1 + 0.25 * (n - 1)), rise: 1.2 });
+    if (z) zmSound('moan', Math.hypot(x - FPS.me.x, y - FPS.me.y), fpsEar(x, y), z.kind);
+    return z;
+  }
+  return null;
+}
+cpOn('m8toll', () => { try { if (!soundOff()) sfxBellFar(0.35, 0.55); } catch (e) {} CPM8R3.toll = 1; fpsFeed('Out past the rocks, the Gannet’s bell tolls. They come up out of the water at the sound of it.'); });
+cpOn('m8take', a => { try { if (!soundOff()) sfxPlay('pickup', { vol: 0.5 }); } catch (e) {} const sid = Array.isArray(a) ? a[1] : '', L = CPM8R.LOADS[Array.isArray(a) ? a[0] | 0 : 0]; if (L && sid !== FPS.me.id) fpsFeed(`${gwsNick(sid)} takes up ${L.n}.`); else if (L) fpsFeed(`You take up ${L.n}. Down the slip to the cutter with it.`); });
+cpOn('m8stow', a => { try { if (!soundOff()) sfxPlay('chest', { vol: 0.5 }); } catch (e) {} const L = CPM8R.LOADS[Array.isArray(a) ? a[0] | 0 : 0], n = Array.isArray(a) ? a[2] | 0 : 0; ZM.banner = { text: `${n} of 3 aboard`, t: 2.6, small: true, col: L ? L.c : '#ffd88a', sub: L ? L.n + ', stowed' : '' }; });
+cpOn('m8drop', i => { const L = CPM8R.LOADS[i | 0]; if (L) fpsFeed(`${L.n[0].toUpperCase() + L.n.slice(1)} falls where its bearer went down. Someone take it up.`); });
+cpOn('m8chocks', () => { ZM.banner = { text: 'Knock out the chocks', t: 4, sub: 'one each side of her keel · then she runs', col: '#ffd8a0' }; if (typeof raidRespawn === 'function') raidRespawn(); });
+cpOn('m8chock', () => { try { if (!soundOff()) { tone(140, 'square', 0.002, 0.12, 0.2, { to: 70 }); noise('bandpass', 700, 2, 0.002, 0.2, 0.3); } } catch (e) {} CPM8R3.shake = 0.5; });
+
+// ---------- everyone ----------
+function cpm8rMe(dt) {
+  const S = RAID.st; if (!S.m8) return;
+  if (S.pend > 0) S.pend -= dt;
+  // holding Use at a chock: a knock at it every quarter second (the host counts them)
+  const hold = FPS.keys.KeyF || FPS.keys.KeyE || FPS.touchUse || FPS.padUse, o = ZM.near, alive = !(FPS.me.dead > 0) && !zmIsDown() && !ZM.ghost;
+  if (hold && o && o.k === 'm8chock' && alive && S.ph === 'chocks') { S.holdT += dt; if (S.holdT >= 0.25) { S.holdT -= 0.25; raidAsk('m8chock', o.i); try { if (!soundOff()) tone(220 + Math.random() * 40, 'triangle', 0.002, 0.06, 0.12, { to: 120 }); } catch (e) {} } } else S.holdT = 0;
+  // the swell in the gully, and the gulls' rock
+  S.ambT -= dt; if (S.ambT <= 0) { S.ambT = 3 + Math.random() * 4; try { if (!soundOff()) noise('bandpass', 500, 0.8, 0.6, 1.4, 0.06, { pan: (Math.random() - 0.5) * 1.2 }); } catch (e) {} }
+}
+function cpm8rHud(phone, mono, fell) {
+  const S = RAID.st; if (!S.m8) return;
+  const mine = cpm8rMine();
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  if (mine >= 0) { ctx.font = mono(phone ? 10 : 12); ctx.fillStyle = 'rgba(255,224,170,0.9)'; ctx.fillText(`CARRYING · ${CPM8R.LOADS[mine].n.toUpperCase()} · DOWN THE SLIP TO THE CUTTER`, cx, H - (phone ? 120 : 84)); }
+  const o = ZM.near;
+  if (S.ph === 'chocks' && o && o.k === 'm8chock') { const k = clamp(S.chock[o.i] || 0, 0, 1); ctx.strokeStyle = 'rgba(255,210,150,0.25)'; ctx.lineWidth = 4; ctx.beginPath(); ctx.arc(cx, H / 2, 26, 0, 6.283); ctx.stroke(); ctx.strokeStyle = '#ffd08a'; ctx.beginPath(); ctx.arc(cx, H / 2, 26, -Math.PI / 2, -Math.PI / 2 + k * 6.283); ctx.stroke(); }
+  ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+}
+
+// ---------- in 3D: the loads, the cutter's mast and gear, the chocks, the toll over the water ----------
+const CPM8R3 = { on: false, toll: 0, shake: 0 };
+function cpm8r3dBuild(grp) {
+  const T = CPM8R3, G0 = FPSC.GROUND, S = RAID.st; T.on = true; T.toll = 0; T.shake = 0;
+  const soft = z3Soft('rgba(255,255,255,0.95)', 'rgba(255,255,255,0)'), lam = c => new THREE.MeshLambertMaterial({ color: c });
+  const glow = (c, s, o) => { const g0 = new THREE.Sprite(new THREE.SpriteMaterial({ map: soft, color: c, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: o == null ? 0.5 : o })); g0.scale.setScalar(s); return g0; };
+  // the three loads: a red-painted flare box, a grapnel on a coil of line, a cask
+  T.loads = CPM8R.LOADS.map((L, i) => {
+    const g3 = new THREE.Group(); grp.add(g3);
+    if (i === 0) { const b = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.5, 0.55), lam('#8a3424')); b.position.y = 0.25; g3.add(b); const l = new THREE.Mesh(new THREE.BoxGeometry(0.94, 0.06, 0.59), lam('#3a2a1e')); l.position.y = 0.5; g3.add(l); }
+    else if (i === 1) { const c = new THREE.Mesh(new THREE.TorusGeometry(0.34, 0.1, 6, 14), lam('#8a7650')); c.rotation.x = Math.PI / 2; c.position.y = 0.12; g3.add(c); const s = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.9, 6), lam('#4a4c50')); s.position.y = 0.5; g3.add(s); for (let k = 0; k < 4; k++) { const f = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.05, 0.36), lam('#4a4c50')); const a = k / 4 * 6.283; f.position.set(Math.cos(a) * 0.14, 0.9, Math.sin(a) * 0.14); f.rotation.y = -a; f.rotation.x = 0.5; g3.add(f); } }
+    else { const c = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.3, 0.75, 10), lam('#6a4a2e')); c.position.y = 0.38; g3.add(c); for (const y of [0.12, 0.64]) { const h = new THREE.Mesh(new THREE.CylinderGeometry(0.315, 0.315, 0.05, 10), lam('#2c2e30')); h.position.y = y; g3.add(h); } }
+    const gl = glow(new THREE.Color(L.c), 1.6, 0.35); gl.position.y = 0.6; g3.add(gl);
+    return { g3, gl };
+  });
+  // the cutter's mast, boom and furled sail, standing up off her on the slip
+  { const [x, y] = cpkW(...CPM8R.CUT), m = new THREE.Group(); m.position.copy(z3v(x, y + 1.2, G0 + 0.9)); grp.add(m);
+    const mast = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.14, 9, 8), lam('#6a5440')); mast.position.y = 4.5; m.add(mast);
+    const boom = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 4.6, 6), lam('#5a4630')); boom.rotation.x = Math.PI / 2; boom.position.set(0, 1.4, 2.3); m.add(boom);
+    const furl = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 4.2, 8), lam('#8a826e')); furl.rotation.x = Math.PI / 2; furl.position.set(0, 1.62, 2.2); m.add(furl);
+    const lan = glow(0xffc070, 1.4, 0.7); lan.position.set(0, 3.2, 0.2); m.add(lan); T.cutLan = lan; T.mast = m; }
+  // the chocks' wedges under her keel (knocked out: gone)
+  T.chocks = CPM8R.CHOCKS.map(([cx0, cy0]) => { const w = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.35, 0.9), lam('#7a5a3a')); const [x, y] = cpkW(cx0 * 0.6, cy0 + 0.6); w.position.copy(z3v(x, y, G0 + 0.18)); grp.add(w); return w; });
+  // the stowed loads, sat on her deck
+  T.aboard = T.loads.map((L, i) => { const s = L.g3.clone(); const [x, y] = cpkW(CPM8R.CUT[0] + (i - 1) * 0.9, CPM8R.CUT[1] - 1.5 + i * 0.6); s.position.copy(z3v(x, y, G0 + 0.95)); s.visible = false; grp.add(s); return s; });
+  // the sea's flash when the bell tolls (far out to the north: the glow over the water where she lies)
+  T.far = glow(0x8ac8c0, 120, 0); { const [x, y] = cpkW(-150, 1600); T.far.position.copy(z3v(x, y, G0 + 10)); } T.far.material.fog = false; grp.add(T.far);
+  void S;
+}
+function cpm8r3d(dt) {
+  const T = CPM8R3, S = RAID.st; if (!T.on || !S.m8 || !S.loads) return;
+  const t = g.t, G0 = FPSC.GROUND, m = FPS.me;
+  S.loads.forEach((L, i) => {
+    const o = T.loads[i]; T.aboard[i].visible = L.st === 2;
+    if (L.st === 2 || (L.st === 1 && L.by === m.id)) { o.g3.visible = false; return; }
+    o.g3.visible = true;
+    if (L.st === 0) { o.g3.position.copy(z3v(L.x, L.y, G0)); o.g3.rotation.y = i * 1.3; o.gl.material.opacity = 0.25 + 0.15 * Math.sin(t * 3 + i); }
+    else { const r = FPS.remote.get(L.by); if (!r) { o.g3.visible = false; return; } o.g3.position.copy(z3v(r.x + Math.sin(r.h || 0) * 0.5, r.y + Math.cos(r.h || 0) * 0.5, G0 + (r.jz || 0) + 0.7)); o.g3.rotation.y = -(r.h || 0); o.gl.material.opacity = 0.12; }
+  });
+  T.chocks.forEach((w, i) => { w.visible = (S.chock[i] || 0) < 1; });
+  if (T.toll > 0) { T.toll = Math.max(0, T.toll - dt / 2.5); } T.far.material.opacity = 0.05 + T.toll * 0.25;
+  if (T.shake > 0) { T.shake = Math.max(0, T.shake - dt); FPS.eyeLag = (FPS.eyeLag || 0) + (Math.random() - 0.5) * 0.04 * T.shake; }
+  T.cutLan.material.opacity = 0.6 + 0.1 * Math.sin(t * 7);
+}
+
+// ---- src/cpm08b.js ----
+'use strict';
+// The Chronicle of the Light, mission 8, Part II: Her Lantern (cp_m08out). Down the slip and out from the north side
+// of the Light, the keeper's cutter goes out after the Gannet's bell, on the Gannet's Wake's own sail (src/gwsail.js,
+// through GWS_LEG) and the raid's own sea: the same skerries, the same rocks from the same seed, the same ring of her
+// spars a mile out. Her sailing is never touched. What's new is who goes ahead of you, and what you do out there.
+//  - Nobody walks ahead tonight. Ahead, low on the water, a skiff with a hand lantern in it, and a woman at the oars:
+//    Maren, rowing out to where the Gannet went down, as she did a year ago tonight to warn her. She keeps to the
+//    deep water (the raid's own channel), a little ahead of the cutter, and waits while you come up; her lantern
+//    shows the rocks round her skiff to everyone. She's not out for you tonight.
+//  - The Gannet's bell tolls every so often, louder nearer her. Answer it: ring the cutter's bell within a few
+//    seconds of the toll and the water goes quiet for a while (no drowned come up the sides); miss it and a wave of
+//    them comes up the rails at once, more of you more of them.
+//  - The ring of her spars (a cinematic, m08_ring): the skiff stops in the middle of it and Maren speaks. Four of the
+//    broken masts in the ring still carry their tops and rigging: sail in close to each and fire a flare into it
+//    from the forward deck. With all four burning, the Gannet comes up alongside (gwsail's own rising, driven by this
+//    stage), and the part is done; the next part's cinematic (m08_board) takes you up her side.
+// Host-authoritative: the skiff, the bell's answering, the spars and the rising are the host's, sent in m8s with the
+// Gannet's Wake's own word; a joined player asks to fire into a spar ('m8spar'). Lines through cpSay (cp_m08_15 on).
+
+const CPM8B = {
+  START: [-26, 104], TOLL: [22, 16], WIN: 7, CALM: 13, SPARS: [1, 5, 9, 13], SPAR_R: 26, RING_SEE: 120,
+  SKIFF: [60, 170], SKIFF_LAN: 46, FWD: [0, 6.2],
+};
+
+// ---------- the sea: the raid's own (its rocks and its ring of spars, from its seed), with the skiff's way out ----------
+var CPM8_SEA = null;
+function cpm8Sea() {
+  if (CPM8_SEA) return CPM8_SEA;
+  const L0 = GWS_LEG; GWS_LEG = null; const base = gwsSea(); GWS_LEG = L0;
+  const [sx, sy] = CPM8B.START, [mx, my] = GWS.MARK;
+  let path = typeof findPath === 'function' ? findPath(sx, sy + 20, mx, my, base.rocks) : null;
+  if (!path || !path.length) path = [{ x: sx, y: sy + 20 }, { x: mx, y: my }];
+  const out = [{ x: path[0].x, y: path[0].y }]; for (let i = 1; i < path.length; i++) { const a = path[i - 1], b = path[i], n = Math.max(1, Math.ceil(Math.hypot(b.x - a.x, b.y - a.y) / 12)); for (let j = 1; j <= n; j++) out.push({ x: a.x + (b.x - a.x) * j / n, y: a.y + (b.y - a.y) * j / n }); }
+  for (const r of base.rocks) { r.seen = -99; r.lit = 0; r.flare = 0; }
+  return CPM8_SEA = { rocks: base.rocks, path: out, spars: base.spars, len: Math.hypot(mx - sx, my - sy) };
+}
+function cpm8Leg() {
+  const sea = cpm8Sea(), s0 = CPM8B.START, p1 = sea.path[Math.min(3, sea.path.length - 1)];
+  for (const r of sea.rocks) { r.seen = -99; r.lit = 0; r.flare = 0; }
+  GWS_LEG = { key: 'cpm08out', start: s0.slice(), h0: bearingOf(p1.x - s0[0], p1.y - s0[1]), mark: GWS.MARK.slice(), markIn: -1, isleR: 0, maren: false, plim: false, sea,
+    line: (S, dm) => cpm8Line(S, dm), markLab: () => 'HER SPARS', prog: () => cpm8Prog(), row: () => cpm8Row(),
+    spawnOk: () => !(RAID.st.m8b && RAID.st.m8b.calm > 0),
+    sunk: () => cpFail('The keeper’s cutter went down on the skerries'),
+    b3: (SG, G) => cpm8b3d(SG, G), f3: (dt, V) => cpm8f3d(dt, V), amb: [0.36, 0.17] };
+  return GWS_LEG;
+}
+function cpm8Prog() { const S = RAID.st, B = S.B; if (!B) return 0; return clamp(0.15 + 0.5 * (1 - Math.hypot(GWS.MARK[0] - B.x, GWS.MARK[1] - B.y) / cpm8Sea().len) + (S.ph === 'rise' ? 0.35 : 0), 0, 1); }
+const cpm8Lit = () => { const S = RAID.st; return CPM8B.SPARS.filter((_, i) => (S.m8lit | 0) & (1 << i)).length; };
+function cpm8Line(S, dm) {
+  if (S.ph === 'sunk') return 'She’s going down.';
+  if (S.ph === 'rise') return `Hold her inside the ring of spars: the Gannet is coming up (${Math.round(S.riseT / GWS.RISE * 100)}%)`;
+  if (S.ph === 'ladder') return 'The Gannet is alongside.';
+  if (S.m8ring) return `Sail in close to each of her four tall spars and fire a flare into it, from the forward deck (${cpm8Lit()} of 4 burning)`;
+  return `Follow Maren’s lantern out to the Gannet’s spars: ${Math.round(dm).toLocaleString('en')} m · answer her bell with ours`;
+}
+function cpm8Row() {
+  const B = RAID.st.m8b; if (!B) return ['BELL', '…'];
+  if (B.win > 0) return ['HER BELL', `TOLLED · ANSWER IT · ${Math.ceil(B.win)} s`, '#ffb070'];
+  if (B.calm > 0) return ['HER BELL', `ANSWERED · QUIET ${Math.ceil(B.calm)} s`, '#9ad8c0'];
+  return ['HER BELL', 'LISTEN FOR IT', 'rgba(236,228,207,0.6)'];
+}
+
+// ---------- the stage ----------
+FPS_ISLES.cpm08sea = Object.assign({}, FPS_ISLES.gwsail, { name: 'the Skerries' });
+FPI_GEN.cpm08sea = FPI_GEN.gwsail;
+const CPM8_MAP = Object.assign({}, GWS_MAP, { isle: 'cpm08sea' });
+(function () {
+  const G0 = RAID_STAGES.gwsail;
+  cpStage('m08out', Object.assign({}, G0, {
+    n: 'Her Lantern', map: CPM8_MAP, gws: true,
+    music: () => RAID.st.ph === 'rise' || RAID.st.ph === 'ladder' ? 'cpm08rise' : 'cpm08sail',
+    prep() { cpm8Leg(); },
+    enter() {
+      if (!GWS_LEG || GWS_LEG.key !== 'cpm08out') cpm8Leg();
+      G0.enter();
+      const sea = cpm8Sea(), p = sea.path[Math.min(6, sea.path.length - 1)];
+      Object.assign(RAID.st, { m8k: { k: 7, x: p.x, y: p.y, h: 0, row: 0 }, m8b: { t: 9, win: 0, n: 0, calm: 0 }, m8lit: 0, m8ring: 0, m8said: {}, m8riseSaid: 0, m8doneT: 0, m8pend: 0 });
+      ZM.banner = { text: 'Her Lantern', t: 4.5, sub: '14 December 1888 · out from the north side of the Light', col: '#ffe0a8' };
+      fpsFeed('Take the wheel (Use) and follow the skiff’s lantern out. When the Gannet’s bell tolls, ring ours at the mast to answer it.');
+      if (ZM.net !== 'client') { cpObjective(''); cpWaypoint(null); }
+    },
+    tick(dt) { G0.tick(dt); cpm8Tick(dt); },
+    me(dt) { G0.me(dt); cpm8Me(dt); },
+    q(sid, k, a) { if (k === 'm8spar') return cpm8Spar(sid, a | 0); return G0.q(sid, k, a); },
+    pack(o) { G0.pack(o); const S = RAID.st, K = S.m8k, B = S.m8b; o.m8s = [Math.round(K.x), Math.round(K.y), Math.round(K.h * 100), S.m8lit | 0, Math.round(B.win * 10), Math.round(B.calm * 10), S.m8ring | 0]; },
+    apply(o) { G0.apply(o); const S = RAID.st, a = o.m8s; if (!Array.isArray(a) || !S.m8k) return; const K = S.m8k; K.tx = +a[0] || 0; K.ty = +a[1] || 0; K.h = (+a[2] || 0) / 100; S.m8lit = a[3] | 0; S.m8b.win = (+a[4] || 0) / 10; S.m8b.calm = (+a[5] || 0) / 10; S.m8ring = a[6] | 0; },
+    consider(c) { G0.consider(c); const S = RAID.st; if (S.B && S.m8ring && S.ph === 'sail') { const [x, y] = gwsW(...CPM8B.FWD); c({ k: 'm8spar' }, x, y, GWS.D, 2.6, false); } },
+    prompt(o) {
+      if (o.k === 'm8spar') { const i = cpm8NearSpar(); return i < 0 ? { text: 'Bring her in close to one of the four tall spars, then fire into it from here' } : { text: 'Fire a flare into the spar’s rigging', free: true }; }
+      return G0.prompt(o);
+    },
+    use(o) {
+      if (o.k === 'm8spar') { const S = RAID.st, i = cpm8NearSpar(); if (i < 0 || S.m8pend > 0) { zmSound('no'); return true; } S.m8pend = 1; raidAsk('m8spar', i); return true; }
+      return G0.use(o);
+    },
+    hud(phone, mono, fell) { G0.hud(phone, mono, fell); cpm8Hud(phone, mono, fell); },
+    exit() { G0.exit(); GWS_LEG = null; CPM8B3.on = false; },
+  }));
+})();
+
+// ---------- hosting or alone ----------
+// the target spar nearest her, if she's close enough to fire into it (-1: none)
+function cpm8NearSpar() {
+  const S = RAID.st, V = S.V || S.B, sea = cpm8Sea(); if (!V) return -1;
+  let best = -1, bd = CPM8B.SPAR_R;
+  CPM8B.SPARS.forEach((si, i) => { if ((S.m8lit | 0) & (1 << i)) return; const p = sea.spars[si]; if (!p) return; const d = Math.hypot(p.x - V.x, p.y - V.y); if (d < bd) { bd = d; best = i; } });
+  return best;
+}
+function cpm8Spar(sid, i) {
+  const S = RAID.st; if (!S.m8ring || S.ph !== 'sail' || i < 0 || i >= CPM8B.SPARS.length || ((S.m8lit | 0) & (1 << i))) return;
+  const p = cpm8Sea().spars[CPM8B.SPARS[i]], B = S.B; if (!p || Math.hypot(p.x - B.x, p.y - B.y) > CPM8B.SPAR_R + 6) return;
+  S.m8lit = (S.m8lit | 0) | (1 << i); const n = cpm8Lit();
+  cpEvent('m8spar', [i, sid, n]);
+  if (n === 2) cpSay('m8cox', 'Two of them burning. Bring her round for the others.', 'cp_m08_20');
+  if (n >= CPM8B.SPARS.length) { S.ph = 'rise'; S.riseT = 0; for (const z of ZM.z) if (!z.dead) zmKill(z, false, '', 'flash'); cpSay('m8cox', 'All four alight. God help us: something’s coming up under us.', 'cp_m08_21'); cpEvent('m8rise'); }
+}
+function cpm8Tick(dt) {
+  const S = RAID.st, B = S.B, K = S.m8k, Bl = S.m8b, sea = cpm8Sea(), n = Math.max(1, ZM.hum.length); if (!B || !K || S.ph === 'sunk') return;
+  const dm = Math.hypot(GWS.MARK[0] - B.x, GWS.MARK[1] - B.y);
+  // the skiff: on ahead along the deep water, waiting while you come up
+  { const d = Math.hypot(K.x - B.x, K.y - B.y), P = sea.path, end = K.k >= P.length;
+    const sp = end ? 0 : d < CPM8B.SKIFF[0] ? Math.max(7, B.v + 3) : d < CPM8B.SKIFF[1] ? Math.max(3.5, B.v * 0.8) : 0;
+    K.row = sp > 0 ? 1 : 0;
+    if (!end && sp > 0) { const t = P[K.k], dx = t.x - K.x, dy = t.y - K.y, dd = Math.hypot(dx, dy), s = sp * dt; if (dd <= s) { K.x = t.x; K.y = t.y; K.k++; } else { K.x += dx / dd * s; K.y += dy / dd * s; K.h += angDiff(bearingOf(dx, dy), K.h) * Math.min(1, dt * 2); } }
+    if (d > CPM8B.SKIFF[1] + 60 && !S.m8said.lost && !S.m8ring) { S.m8said.lost = 1; cpSay('m8cox', 'We’re losing her lantern. Crack on, or we’ll lose her in the rocks!', 'cp_m08_17'); } }
+  // the ring: the first time she's close, a word from the water
+  if (!S.m8ring && dm < GWS.MARK_R + CPM8B.RING_SEE && S.ph === 'sail') {
+    S.m8ring = 1; for (const z of ZM.z) if (!z.dead) zmKill(z, false, '', 'flash');
+    // (and the skiff, there before you: stopped in the middle of the ring)
+    K.k = sea.path.length; K.x = GWS.MARK[0] - 6; K.y = GWS.MARK[1] + 4; K.row = 0;
+    cpCine('m08_ring', () => { cpEvent('m8ring'); });
+  }
+  // her bell: tolls, a window to answer it, quiet after; unanswered, they come up the sides
+  if (Bl.calm > 0) Bl.calm = Math.max(0, Bl.calm - dt);
+  if (S.ph === 'sail' || S.ph === 'rise') {
+    if (Bl.win > 0) {
+      if ((S.bellN | 0) > Bl.n) { Bl.win = 0; Bl.calm = CPM8B.CALM; cpEvent('m8ans', 1); if (!S.m8said.ans) { S.m8said.ans = 1; cpSay('m8cox', 'Answered. Hear how the water goes quiet.', 'cp_m08_15'); } }
+      else { Bl.win -= dt; if (Bl.win <= 0) { Bl.win = 0; cpEvent('m8ans', 0); if (!S.m8said.miss) { S.m8said.miss = 1; cpSay('m8cox', 'Too slow! Here they come, up over the rails!', 'cp_m08_16'); } Bl.calm = 0; for (let k = 0; k < 2 + n; k++) gwsSpawn(S); } }
+    } else { Bl.t -= dt; if (Bl.t <= 0) { const k = clamp(1 - dm / cpm8Sea().len, 0, 1); Bl.t = CPM8B.TOLL[0] + (CPM8B.TOLL[1] - CPM8B.TOLL[0]) * k; Bl.win = CPM8B.WIN; Bl.n = S.bellN | 0; cpEvent('m8toll2', Math.round(clamp(1 - dm / 1700, 0.15, 1) * 100)); } }
+  }
+  // the rising: held in the ring, she comes up alongside; then up her side (the next part)
+  if (S.ph === 'rise') { if (dm < GWS.MARK_IN + 30) S.riseT += dt; if (S.riseT >= GWS.RISE) { S.ph = 'ladder'; S.m8doneT = 0; cpEvent('m8up'); } }
+  if (S.ph === 'ladder') { S.m8doneT += dt; if (S.m8doneT > 2.2) cpDone(); }
+}
+cpOn('m8toll2', v => { try { if (!soundOff()) sfxBellFar(0, clamp((v | 0) / 100, 0.15, 1)); } catch (e) {} ZM.banner = { text: 'The Gannet’s bell', t: 2.6, small: true, sub: 'answer it: ring ours at the mast', col: '#ffc890' }; });
+cpOn('m8ans', ok => { if (ok) { fpsFeed('Her bell answered. The water round the cutter goes still.'); CPM8B3.calm = 1; } else fpsFeed('Her bell unanswered: the drowned come up the cutter’s sides.'); });
+cpOn('m8ring', () => { ZM.banner = { text: 'The ring of her spars', t: 4.5, sub: 'fire a flare into each of the four tall spars · from the forward deck', col: '#ffd8a0' }; if (typeof raidRespawn === 'function') raidRespawn(); });
+cpOn('m8spar', a => { try { if (!soundOff()) { sfxFlare(); sfxSplash(0, 0.3); } } catch (e) {} const n = Array.isArray(a) ? a[2] | 0 : 0, sid = Array.isArray(a) ? a[1] : ''; fpsFeed(`${gwsNick(sid)} ${sid === FPS.me.id ? 'fire' : 'fires'} a flare into the spar’s old rigging, and it takes. ${n} of 4 burning.`); CPM8B3.flash = 1; });
+cpOn('m8rise', () => { ZM.banner = { text: 'Something is coming up', t: 4.5, sub: 'hold her inside the ring of spars', col: '#bfe0d8' }; });
+cpOn('m8up', () => { try { if (!soundOff()) sfxBell(); } catch (e) {} fpsFeed('The Gannet lies alongside, her bell ringing, the water pouring off her.'); });
+
+// ---------- everyone ----------
+function cpm8Me(dt) {
+  const S = RAID.st, K = S.m8k, sea = cpm8Sea(); if (!K) return;
+  if (S.m8pend > 0) S.m8pend -= dt;
+  if (ZM.net === 'client') { if (K.tx != null) { const k = Math.min(1, dt * 4); K.x += (K.tx - K.x) * k; K.y += (K.ty - K.y) * k; } if (S.m8b.win > 0) S.m8b.win = Math.max(0, S.m8b.win - dt); if (S.m8b.calm > 0) S.m8b.calm = Math.max(0, S.m8b.calm - dt); }
+  // her lantern shows the rocks round the skiff, for everyone
+  for (const r of sea.rocks) { const dx = r.x - K.x, dy = r.y - K.y; if (Math.abs(dx) > 80 || Math.abs(dy) > 80) continue; const d = Math.hypot(dx, dy) - r.r; if (d < CPM8B.SKIFF_LAN) r.lit = Math.max(r.lit, 0.3 + 0.5 * (1 - Math.max(0, d) / CPM8B.SKIFF_LAN)); }
+  // the oars in the rowlocks, faint over the water
+  S.m8oarT = (S.m8oarT || 0) - dt; if (S.m8oarT <= 0 && K.row) { S.m8oarT = 2.6 + Math.random(); const V = S.V || S.B; if (V && Math.hypot(K.x - V.x, K.y - V.y) < 160) try { if (!soundOff()) sfxRowlock(gwsPan(K.x, K.y)); } catch (e) {} }
+}
+function cpm8Hud(phone, mono, fell) {
+  const S = RAID.st; if (!S.m8k || !S.B) return;
+  if (S.m8ring && S.ph === 'sail') { const i = cpm8NearSpar(); if (i >= 0) { ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = mono(phone ? 10 : 12); ctx.fillStyle = `rgba(255,200,140,${0.75 + 0.25 * Math.sin(g.t * 6)})`; ctx.fillText('A TALL SPAR CLOSE ALONGSIDE · FIRE INTO IT FROM THE FORWARD DECK', cx, H - (phone ? 130 : 96)); ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic'; } }
+}
+
+// ---------- in 3D: the skiff and her lantern, the four tall spars (and their fires), the quiet when answered ----------
+const CPM8B3 = { on: false, flash: 0, calm: 0 };
+function cpm8Skiff(lam, glowSp) {
+  const S = new THREE.Group();
+  const hull = new THREE.Mesh(new THREE.SphereGeometry(1, 12, 6, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2), lam('#3a3226')); hull.scale.set(0.75, 0.45, 2.1); hull.position.y = 0.32; S.add(hull);
+  const gun = new THREE.Mesh(new THREE.TorusGeometry(1, 0.05, 4, 20), lam('#5a4a36')); gun.rotation.x = Math.PI / 2; gun.scale.set(0.75, 2.1, 1); gun.position.y = 0.32; S.add(gun);
+  const oars = []; for (const s of [-1, 1]) { const o = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 2.8, 5), lam('#6a5a40')); o.rotation.z = s * 1.25; o.position.set(s * 1.3, 0.4, 0); S.add(o); oars.push(o); }
+  const lan = new THREE.Group(); lan.position.set(0, 0.95, 1.4); S.add(lan);
+  lan.add(new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.2, 8), new THREE.MeshBasicMaterial({ color: 0xffe0a0 })));
+  const halo = glowSp(0xffc070, 3.2); lan.add(halo); const big = glowSp(0xffb060, 16, { opacity: 0.18 }); lan.add(big);
+  const light = new THREE.PointLight(0xffc070, 1.4, 40, 1.6); lan.add(light);
+  return { S, oars, halo, big, light, lan };
+}
+function cpm8b3d(SG, G) {
+  const T = CPM8B3, sea = cpm8Sea(); T.on = true; T.flash = 0; T.calm = 0;
+  const lam = c => z3Lam(c);
+  // the skiff: Maren at the oars, her back to her bow, the lantern on the thwart
+  T.sk = cpm8Skiff(lam, G.glowSp); SG.add(T.sk.S);
+  T.mar = typeof cpm5MarenActor === 'function' ? cpm5MarenActor(T.sk.S, 1.5) : null; if (T.mar) { T.mar.P.position.set(0, 0.35, -0.2); T.mar.g0.material.opacity = 0.18; }
+  // the four tall spars: a top and a little rigging on each, a pale glow till lit, then fire
+  T.sp = CPM8B.SPARS.map(si => {
+    const p = sea.spars[si], g3 = new THREE.Group(), h = Math.max(9, p.h + 4); g3.position.copy(gsv(p.x, p.y, 0)); SG.add(g3);
+    const mast = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.34, h, 7), lam('#2a2420')); mast.position.y = h / 2 - 1; mast.rotation.set(p.lx * 0.4, 0, p.ly * 0.4); g3.add(mast);
+    const yard = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 6, 5), lam('#2a2420')); yard.rotation.z = Math.PI / 2 + 0.2; yard.position.y = h - 2; g3.add(yard);
+    const rag = new THREE.Mesh(new THREE.PlaneGeometry(4.4, 2.6), new THREE.MeshLambertMaterial({ color: 0x4a463c, side: THREE.DoubleSide, transparent: true, opacity: 0.85 })); rag.position.y = h - 3.4; g3.add(rag);
+    const mark = G.glowSp(0x9ad0e0, 7, { opacity: 0.25 }); mark.position.y = h - 1.6; g3.add(mark);
+    const fire = G.glowSp(0xff8a3a, 9, { opacity: 0 }); fire.position.y = h - 2.2; g3.add(fire);
+    const fl = new THREE.PointLight(0xff8a40, 0, 70, 1.5); fl.position.y = h - 2; g3.add(fl);
+    return { g3, mark, fire, fl, rag, h };
+  });
+}
+function cpm8f3d(dt, V) {
+  const T = CPM8B3, S = RAID.st, K = S.m8k; if (!T.on || !K) return;
+  const t = g.t;
+  T.sk.S.position.copy(gsv(K.x, K.y, 0)); T.sk.S.position.y = Math.sin(t * 1.1) * 0.08; T.sk.S.rotation.y = -K.h; T.sk.S.rotation.z = Math.sin(t * 0.9) * 0.05;
+  const st = K.row ? Math.sin(t * 2.4) : 0; T.sk.oars.forEach((o, i) => { o.rotation.y = st * 0.5; o.position.y = 0.4 + (i ? 1 : 1) * Math.max(0, st) * 0.1; });
+  const fl = 0.85 + 0.15 * Math.sin(t * 9) * Math.sin(t * 3.7); T.sk.halo.material.opacity = 0.75 * fl; T.sk.light.intensity = 1.4 * fl;
+  if (T.mar) T.mar.sp.material.rotation = Math.sin(t * 1.2) * 0.03;
+  T.sp.forEach((P, i) => { const lit = ((S.m8lit | 0) & (1 << i)) !== 0, f = 0.8 + 0.2 * Math.sin(t * 11 + i) * Math.sin(t * 5.3 + i * 2); P.mark.material.opacity = lit ? 0 : S.m8ring ? 0.2 + 0.12 * Math.sin(t * 2.6 + i) : 0.05; P.fire.material.opacity = lit ? 0.9 * f : 0; P.fire.scale.setScalar(lit ? 9 + 2 * f : 1); P.fl.intensity = lit ? 2.2 * f : 0; P.rag.visible = !lit || Math.sin(t * 3 + i) > -2; });
+  if (T.flash > 0) T.flash = Math.max(0, T.flash - dt);
+  void V;
+}
+
+// ---- src/cpm08c.js ----
+'use strict';
+// The Chronicle of the Light, mission 8, Part III: By Flarelight (cp_m08deck). Up her side and over the rail onto
+// the risen Gannet's weather deck (the Quarterdeck's own deck, src/gwcapt.js: her masts and torn sails, the wheel,
+// the flare lockers, the ship's bell on the forecastle, the Light off to the west), but not the raid's fight.
+//  - First, the waist in the dark. Her figurehead has walked off her bow and stands on her forecastle: Knock, who
+//    moves only while none of you has him in sight (or in a flare's light). Out of the main hatch, aft of you, comes
+//    the Bosun with his boarding axe, the guard of her hold come up on deck. Put the Bosun down with Knock at your
+//    backs; if Knock reaches one of you he takes half their health and throws them down the deck, and goes back to
+//    the bow to wait; the ship's bell freezes him where he is, as it always did.
+//  - Then Crane (a cinematic, m08_crane): up through his own deck by the wheel, and his black sail already up the
+//    port side between her and the Light. By flarelight only, from the start. Two halyards hold the black sail up,
+//    belayed on the port rail: hold Use at each to cut it, and the sail comes down and the Light's beam crosses the
+//    deck again, until he hauls it back up (and while he hauls it nothing touches him).
+//  - At a third of his strength, a lantern under the port rail (a cinematic, m08_maren): her skiff, a year late. The
+//    black sail burns, the Light's beam is on the deck for good, and her lantern lights him whenever he stands on
+//    her side of the ship. Put him down, and she goes down under you all (the outro).
+// The Quarterdeck's stage underneath (its layout, its hull, its Crane, its lockers and bell, its word gc), with this
+// part's own on top: Knock, the Bosun, the halyards and her lantern, and its own end (no token: the mission's outro).
+// Host-authoritative: the host runs Knock, the halyards and the phases and sends them in m8d; a joined player asks to
+// cut at a halyard ('m8hal'). Lines through cpSay (cp_m08_25 on).
+
+const CPM8D = {
+  KNOCK: [0, 19.5], BOSUN: [1.6, -5.2], HAL: [[-4.15, -7.2], [-4.15, 9.8]], HAL_T: 2.4, DOWN: 18, MAREN: 0.34,
+  KN_SP: 3.9, KN_SEE: 30, KN_FOV: 0.78, KN_REACH: 1.2, KN_REST: 9, KN_BELL: 12,
+  ALIVE: 4, ALIVE_MORE: 2, TRICKLE: [4.5, 7], LEVEL: 10,
+};
+const CPM8D_PH = ['bosun', 'crane0', 'crane', 'maren0', 'maren', 'won'];
+
+// ---------- the stage ----------
+(function () {
+  const G0 = RAID_STAGES.gwcapt;
+  cpStage('m08deck', Object.assign({}, G0, {
+    n: 'By Flarelight',
+    music: () => { const p = RAID.st.m8d ? RAID.st.m8d.ph : 'bosun'; return p === 'bosun' || p === 'crane0' ? 'cpm08deck' : p === 'maren' || p === 'maren0' ? 'cpm08last' : 'cpm08crane'; },
+    enter() {
+      G0.enter();
+      GCW.wait = 1e9; GCW.mine = true;
+      const [kx, ky] = cpkW(...CPM8D.KNOCK);
+      RAID.st.m8d = { ph: 'bosun', t: 0, trickT: 5, said: {}, hal: [0, 0], down: 0, holdT: 0, litAgo: 9, kb: [0, 0], scare: 0,
+        kn: { x: kx, y: ky, tx: kx, ty: ky, jz: GCC.FC, h: Math.PI, mv: 0, seen: 0, rest: 4, fig: 0, ph: 0, zpad: 0.5, fl: GCC.FC } };
+      ZM.round = Math.max(ZM.round, CPM8D.LEVEL);
+      if (ZM.net === 'client') return;
+      cpm8dBosun();
+      cpObjective(''); cpWaypoint(null);
+      cpSay('bosun', 'Nobody walks her deck without the captain’s leave. Nobody.', 'cp_m08_25');
+    },
+    tick(dt) { G0.tick(dt); cpm8dTick(dt); },
+    me(dt) { G0.me(dt); cpm8dMe(dt); },
+    q(sid, k, a) {
+      if (k === 'm8hal') return cpm8dHal(sid, a | 0);
+      G0.q(sid, k, a);
+      // the ship's bell: Knock freezes where he stands
+      if (k === 'bell') { const K = RAID.st.m8d.kn; if (!K.fig && GCW.bell > GCC.BELL - 0.5) { K.rest = Math.max(K.rest, CPM8D.KN_BELL); cpEvent('m8kbell'); } }
+    },
+    kill(d, how, by) { cpm8dKill(d, how, by); },
+    hurt(d, dmg, code, by) { return cpm8dHurt(d, dmg, code, by); },
+    pack(o) { G0.pack(o); const D = RAID.st.m8d, K = D.kn; o.m8d = [CPM8D_PH.indexOf(D.ph), Math.round((K.x - FPSC.CX) * 10), Math.round((K.y - FPSC.CY) * 10), Math.round(K.h * 100), (K.mv ? 1 : 0) | (K.rest > 0 ? 2 : 0) | (K.fig ? 4 : 0), K.seen | 0, Math.round(D.hal[0] * 100), Math.round(D.hal[1] * 100), Math.round(D.down * 10)]; },
+    apply(o) {
+      G0.apply(o); const D = RAID.st.m8d, a = o.m8d; if (!D || !Array.isArray(a)) return; const K = D.kn;
+      D.ph = CPM8D_PH[a[0] | 0] || 'bosun'; const tx = FPSC.CX + a[1] / 10, ty = FPSC.CY + a[2] / 10; if (Math.hypot(tx - K.x, ty - K.y) > 4) { K.x = tx; K.y = ty; } K.tx = tx; K.ty = ty; K.th = a[3] / 100;
+      K.mv = a[4] & 1; K.rest = a[4] & 2 ? 1 : 0; K.fig = a[4] & 4 ? 1 : 0; K.seen = a[5] | 0; D.hal = [(+a[6] || 0) / 100, (+a[7] || 0) / 100]; D.down = (+a[8] || 0) / 10;
+    },
+    consider(c) { G0.consider(c); const D = RAID.st.m8d; if (cpm8dHalOk()) CPM8D.HAL.forEach(([x0, y0], i) => { if (D.hal[i] < 1) { const [x, y] = cpkW(x0, y0); c({ k: 'm8hal', i }, x, y, 0, 1.8, false); } }); },
+    prompt(o) { if (o.k === 'm8hal') return { text: 'Hold to cut the black sail’s halyard', hold: true }; return G0.prompt(o); },
+    use(o) { if (o.k === 'm8hal') return true; return G0.use(o); },
+    hud(phone, mono, fell) { cpm8dHud(phone, mono, fell, G0); },
+    b3(grp) { G0.b3(grp); cpm8d3dBuild(grp); },
+    f3(dt) { G0.f3(dt); cpm8d3d(dt); },
+    exit() { G0.exit(); CPM8D3.on = false; },
+  }));
+})();
+
+// ---------- the light on him: flares, the beam with the sail down, her lantern ----------
+function cpm8dLit() {
+  const D = RAID.st.m8d; if (!D || !GCW.on) return false;
+  if (gcFlares()) return true;
+  if ((GCW.sail || 0) < 0.25 && gwInBeam(gcBeamAt(), GCC.BEAM_W)) return true;
+  if (D.ph === 'maren') { const M = gcCrane(); if (M && M.x - FPSC.CX < -0.8) return true; }
+  return false;
+}
+function cpm8dHurt(d, dmg, code, by) {
+  if (!d || d.bt !== 'crane') return dmg;
+  const mine = !by || by === FPS.me.id, D = RAID.st.m8d, lit = cpm8dLit() || (!mine && D && D.litAgo < GCC.LIT_GRACE);
+  if (!lit || d.act === 'rise' || d.act === 'hoist') { if (mine) gcDarkHit(d, !lit ? 'dark' : d.act); return 0; }
+  if (mine) { raidBossDamage(dmg * (ZM_DMG[code] == null ? 1 : ZM_DMG[code])); GCW.litHit = 0.25; }
+  return dmg;
+}
+// the halyards can be cut while the sail's up and he's fighting (not before he's come, nor once she's burnt it)
+const cpm8dHalOk = () => { const D = RAID.st.m8d; return !!D && D.ph === 'crane' && GCW.st === 'fight' && (GCW.sail || 0) > 0.9 && D.down <= 0; };
+
+// ---------- hosting or alone ----------
+function cpm8dBosun() {
+  if (typeof ZBT === 'undefined' || !ZBT.bosun) return;
+  const T = ZBT.bosun, [x, y] = cpkW(...CPM8D.BOSUN), zn = ++ZM.zc, n = Math.max(1, ZM.hum.length), hp = zbHpOf('bosun', CPM8D.LEVEL, n) * 0.85;
+  const z = { drowned: true, zm: true, boss: true, bt: 'bosun', zn, id: 'z' + zn.toString(36), n: T.n, kind: 'boss', x, y, jz: 0, fl: 0, hp, max: hp, sp: T.sp(), st: 'in', win: null, t: 0, ph: 0, hitT: 0, atk: 0, swing: -1, stuck: 0, lost: 0, h: 0, seed: (Math.random() * 1e6) | 0, rise: 1, hist: [],
+    act: null, at: 0, aseq: 0, slamCd: 4, swCd: 1.5, ix: x, iy: y, ax: x, ay: y, lx: x, ly: y, raid: true };
+  if (T.init) T.init(z);
+  zbMake(z, 'bosun'); ZM.z.push(z); FPS.drowned = ZM.z;
+  if (typeof ZB !== 'undefined') { zbNew(); ZB.seen.add(zn); }
+  RAID.st.m8d.bz = zn;
+  for (let i = 0; i < 20; i++) fpsPuff(x + (Math.random() - 0.5) * 2, y + (Math.random() - 0.5) * 2, FPSC.GROUND + Math.random() * 2, '140,170,170', 3);
+}
+function cpm8dTick(dt) {
+  const S = RAID.st, D = S.m8d, K = D && D.kn, n = Math.max(1, ZM.hum.length); if (!D || !GCW.on) return;
+  D.t += dt; D.litAgo = cpm8dLit() ? 0 : D.litAgo + dt;
+  if (D.ph === 'bosun') {
+    cpm8dKnock(dt);
+    if (D.t > 7 && !D.said.kn) { D.said.kn = 1; cpSay('m8cox', 'Keep your eyes on that figurehead! It only moves while nobody’s looking at it!', 'cp_m08_26'); }
+    // a few of her drowned, up over the rails the while
+    D.trickT -= dt;
+    if (D.trickT <= 0) { D.trickT = (CPM8D.TRICKLE[0] + Math.random() * (CPM8D.TRICKLE[1] - CPM8D.TRICKLE[0])) / (1 + 0.25 * (n - 1)); const alive = ZM.z.filter(z => !z.dead && !z.boss).length; if (alive < CPM8D.ALIVE + CPM8D.ALIVE_MORE * (n - 1)) gcSpawn(gcSpots(1, Math.random() * 1e6)[0]); }
+    // (the Bosun gone some other way: on, all the same)
+    if (D.t > 2 && !ZM.z.some(z => z.zn === D.bz && !z.dead)) cpm8dBosunDown();
+    return;
+  }
+  const M = gcCrane();
+  if (D.ph === 'crane') {
+    // the halyards cut: the sail comes down for a while, then he hauls it up again
+    if (D.down > 0) {
+      D.down -= dt; D.sailK = Math.max(0, (D.sailK == null ? 1 : D.sailK) - dt / 1.2); GCW.sail = D.sailK;
+      if (D.down <= 0 && M && !M.dead) { D.down = 0; D.hal = [0, 0]; D.sailK = 1; GCW.sail = 0; if (M.act) { M.act = null; M.at = 0; } zbStart(M, 'hoist'); if (!D.said.re) { D.said.re = 1; cpSay('crane', 'Hoist it again, you dogs! Shut that Light off my deck!', 'cp_m08_31'); } }
+    }
+    if (D.t > 6 && !D.said.hal) { D.said.hal = 1; cpSay('m8cox', 'Only a flare will show him now. Cut the halyards on the port rail and that sail comes down!', 'cp_m08_29'); }
+    if (M && !M.dead && M.act !== 'rise' && M.hp <= M.max * CPM8D.MAREN) {
+      D.ph = 'maren0'; D.down = 0; if (M.act) { M.act = null; M.at = 0; }
+      for (const z of ZM.z) if (!z.dead && !z.boss) { gcOverSide(z); zmKill(z, false, '', 'flash'); }
+      cpCine('m08_maren', () => { D.ph = 'maren'; GCW.sail = 0; cpEvent('m8maren'); cpSay('m8cox', 'The black sail’s burning! Her lantern’s on him: finish him!', 'cp_m08_35'); });
+    }
+  }
+  if (D.ph === 'maren') GCW.sail = 0;
+}
+function cpm8dBosunDown() {
+  const S = RAID.st, D = S.m8d; if (D.ph !== 'bosun') return;
+  D.ph = 'crane0'; const K = D.kn, [kx, ky] = cpkW(...CPM8D.KNOCK); K.x = kx; K.y = ky; K.jz = GCC.FC; K.h = Math.PI; K.mv = 0; K.fig = 1;
+  for (const z of ZM.z) if (!z.dead && !z.boss) { gcOverSide(z); zmKill(z, false, '', 'flash'); }
+  cpCine('m08_crane', () => { D.ph = 'crane'; D.t = 0; GCW.p2 = 1; GCW.sail = 1; GCW.wait = 0.2; cpEvent('m8crane'); });
+}
+function cpm8dKill(d, how, by) {
+  const D = RAID.st.m8d; if (!D) return;
+  if (d.bt === 'bosun' && D.ph === 'bosun') { cpm8dBosunDown(); return; }
+  if (d.bt === 'crane' && d.boss && GCW.st === 'fight') {
+    GCW.st = 'won'; GCW.wonT = 3.2; GCW.mine = true; D.ph = 'won';
+    for (const z of ZM.z) if (!z.dead && !z.boss) zmKill(z, false, '', 'flash');
+    gcLine('Captain Absalom Crane goes down to the deck of his ship, and is still. Under you, she starts to go.');
+  }
+}
+// cut at a halyard: a quarter second's worth of cutting, from whoever's holding Use at it
+function cpm8dHal(sid, i) {
+  const D = RAID.st.m8d, who = sid === FPS.me.id ? FPS.me : FPS.remote.get(sid); if (!who || !cpm8dHalOk()) return;
+  i = clamp(i, 0, 1); const [x, y] = cpkW(...CPM8D.HAL[i]); if (Math.hypot(who.x - x, who.y - y) > 2.6 || D.hal[i] >= 1) return;
+  D.hal[i] = Math.min(1, D.hal[i] + 0.25 / CPM8D.HAL_T);
+  if (D.hal[i] >= 1) { cpEvent('m8hal', i); if (D.hal.every(h => h >= 1)) { D.down = CPM8D.DOWN; cpEvent('m8down'); if (!D.said.down) { D.said.down = 1; cpSay('m8cox', 'Down she comes! The Light’s on the deck again!', 'cp_m08_30'); } } }
+}
+// Knock: frozen while one of you has him in sight, or a flare lights the deck; else on for the nearest of you
+function cpm8dSees(x, y, h, K) { const dx = K.x - x, dy = K.y - y, d = Math.hypot(dx, dy); return d < CPM8D.KN_SEE && (d < 0.8 || Math.abs(angDiff(bearingOf(dx, dy), h)) < CPM8D.KN_FOV + Math.atan2(0.5, d)); }
+function cpm8dKnock(dt) {
+  const D = RAID.st.m8d, K = D.kn, P = ZM.players || [], m = FPS.me;
+  if (K.fig) { K.mv = 0; return; }
+  let seen = 0;
+  if (!(m.dead > 0) && !zmIsDown() && !ZM.ghost && cpm8dSees(m.x, m.y, m.h, K)) seen++;
+  if (ZM.net === 'host') for (const r of FPS.remote.values()) if (!r.dead && !r.down && !r.left && r.x != null && cpm8dSees(r.tx != null ? r.tx : r.x, r.ty != null ? r.ty : r.y, r.th != null ? r.th : r.h || 0, K)) seen++;
+  if (gcFlares()) seen++;
+  K.seen = seen; K.mv = 0;
+  if (K.rest > 0) { K.rest -= dt; return; }
+  if (seen || !P.length) return;
+  let best = null, bd = 1e9; for (const p of P) { const d = Math.hypot(p.x - K.x, p.y - K.y); if (d < bd) { bd = d; best = p; } }
+  if (!best) return;
+  const want = bearingOf(best.x - K.x, best.y - K.y), s = Math.min(bd, CPM8D.KN_SP * dt);
+  K.h += angDiff(want, K.h) * Math.min(1, dt * 6);
+  const x0 = K.x, y0 = K.y;
+  for (const dh of [0, 0.6, -0.6, 1.2, -1.2]) { const a = want + dh, nx = K.x + Math.sin(a) * s, ny = K.y + Math.cos(a) * s; if (gcInside(nx - FPSC.CX, ny - FPSC.CY, 0.3)) { K.x = nx; K.y = ny; break; } }
+  K.jz = gcDeckZ(K.y - FPSC.CY); K.mv = Math.hypot(K.x - x0, K.y - y0) > 0.001 ? 1 : 0;
+  if (bd < CPM8D.KN_REACH) { cpEvent('m8kn', best.sid); K.rest = CPM8D.KN_REST; const [kx, ky] = cpkW(...CPM8D.KNOCK); K.x = kx; K.y = ky; K.jz = GCC.FC; K.h = Math.PI; }
+}
+cpOn('m8kn', sid => {
+  const D = RAID.st.m8d; if (!D) return;
+  try { if (!soundOff()) sfxKnock(0, 1, 0.08); } catch (e) {}
+  if (sid === FPS.me.id && !(FPS.me.dead > 0) && !zmIsDown()) {
+    D.scare = SK.KNOCK_SCARE_TIME; try { if (!soundOff()) sfxKnockScare(); } catch (e) {}
+    const m = FPS.me; m.iframe = 0; fpsHurt(gcHalf()); FPS.hurtT = 0.9; D.kb = [Math.sin(m.h + Math.PI) * 9, Math.cos(m.h + Math.PI) * 9];
+    fpsFeed('Knock reached you, and threw you down the deck. He’s gone back to her bow.');
+  } else fpsFeed(`Knock reached ${gwsNick(sid)}. He’s gone back to her bow, for now.`);
+});
+cpOn('m8kbell', () => fpsFeed('At the bell Knock stops dead where he stands, like the carving he is.'));
+cpOn('m8crane', () => { if (typeof raidRespawn === 'function') raidRespawn(); ZM.banner = { text: 'Captain Absalom Crane', t: 4.5, col: '#c8e0d0', sub: 'by flarelight: his black sail is up · cut its halyards on the port rail' }; });
+cpOn('m8hal', i => { try { if (!soundOff()) { noise('bandpass', 1800, 2, 0.002, 0.25, 0.4); tone(90, 'sine', 0.01, 0.3, 0.3, { to: 50 }); } } catch (e) {} fpsFeed(`The ${i ? 'forward' : 'after'} halyard parts with a crack.`); });
+cpOn('m8down', () => { try { if (!soundOff()) sfxSplash(0, 0.7); } catch (e) {} ZM.banner = { text: 'The black sail comes down', t: 3.4, small: true, col: '#ffe0a0', sub: 'the Light’s beam crosses the deck again · shoot when it’s on him' }; });
+cpOn('m8maren', () => { if (typeof raidRespawn === 'function') raidRespawn(); ZM.banner = { text: 'Her lantern', t: 4, col: '#ffd890', sub: 'the black sail burns · her lantern lights him on the port side' }; });
+
+// ---------- everyone ----------
+function cpm8dMe(dt) {
+  const S = RAID.st, D = S.m8d, m = FPS.me; if (!D || !GCW.on) return;
+  const K = D.kn;
+  if (ZM.net === 'client') { const k = Math.min(1, dt * 12); K.x += (K.tx - K.x) * k; K.y += (K.ty - K.y) * k; K.h += angDiff(K.th || 0, K.h) * k; K.jz = gcDeckZ(K.y - FPSC.CY); if (D.down > 0) D.down = Math.max(0, D.down - dt); }
+  // the light, by this part's say, for the HUD and his bar
+  GCW.lit = cpm8dLit();
+  if (D.scare > 0) D.scare -= dt;
+  if (Math.hypot(D.kb[0], D.kb[1]) > 0.1) { zmMove(m, D.kb[0] * dt, D.kb[1] * dt); const k = Math.exp(-dt * 3.2); D.kb[0] *= k; D.kb[1] *= k; } else D.kb = [0, 0];
+  // his knocks on wood, three, while he moves (nearer, quicker)
+  D.warnT = (D.warnT || 0) - dt;
+  if (K.mv && !K.fig) { const kd = Math.hypot(K.x - m.x, K.y - m.y); if (kd < 30 && D.warnT <= 0) { const k = 1 - kd / 30; try { if (!soundOff()) sfxKnock(fpsEar(K.x, K.y), 0.3 + 0.7 * k, 0.26 - 0.16 * k); } catch (e) {} D.warnT = 0.8 + 2.4 * (1 - k); D.knockT = 1.4; } }
+  if (D.knockT > 0) D.knockT -= dt;
+  // holding Use at a halyard: a cut every quarter second (the host counts them)
+  const hold = FPS.keys.KeyF || FPS.keys.KeyE || FPS.touchUse || FPS.padUse, o = ZM.near, alive = !(m.dead > 0) && !zmIsDown() && !ZM.ghost;
+  if (hold && o && o.k === 'm8hal' && alive && cpm8dHalOk()) { D.holdT += dt; if (D.holdT >= 0.25) { D.holdT -= 0.25; raidAsk('m8hal', o.i); try { if (!soundOff()) noise('bandpass', 2600, 3, 0.002, 0.06, 0.12); } catch (e) {} } } else D.holdT = 0;
+}
+function cpm8dHud(phone, mono, fell, G0) {
+  const S = RAID.st, D = S.m8d, m = FPS.me; if (!D) return;
+  const L = Math.max(14, FPS.safeLeft || 0), top = fpsHudTop() + (phone ? 32 : 46), dy = phone ? 14 : 17, t = g.t;
+  if (D.ph === 'bosun' || D.ph === 'crane0') {
+    ctx.textAlign = 'left'; ctx.textBaseline = 'top'; ctx.shadowColor = 'rgba(0,0,0,0.9)'; ctx.shadowBlur = 6;
+    ctx.font = fell(phone ? 15 : 20); ctx.fillStyle = 'rgba(220,200,160,0.95)'; ctx.fillText('Put down the Bosun', L, top, W * 0.5);
+    ctx.font = mono(phone ? 10 : 12); ctx.fillStyle = 'rgba(236,228,207,0.75)'; ctx.fillText('and keep Knock, at her bow, in someone’s sight', L, top + (phone ? 20 : 26), W * 0.5);
+    ctx.fillText(`${GCW.bell > 0 ? '◦' : '•'} The ship’s bell (freezes Knock): ${GCW.bell > 0 ? Math.ceil(GCW.bell) + ' s' : 'ready'}`, L, top + (phone ? 20 : 26) + dy, W * 0.5);
+    GC_LOCK.forEach(([, , side], i) => { const f = GCW.fl[i]; ctx.fillText(`${f.cd > 0 ? '◦' : '•'} Flare locker, ${side}: ${gcFlareOn(i) ? 'burning' : f.cd > 0 ? Math.ceil(f.cd) + ' s' : 'ready (a flare holds Knock too)'}`, L, top + (phone ? 20 : 26) + dy * (2 + i), W * 0.5); });
+    ctx.shadowBlur = 0; ctx.shadowColor = 'transparent';
+    fpsHudNote(top + (phone ? 20 : 26) + dy * 4 + 4);
+    // Knock: moving, or held
+    const K = D.kn, yk = H - (phone ? 150 : 100); ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    if (!K.fig && !(m.dead > 0)) {
+      if (K.mv) { const p = 0.6 + 0.4 * Math.sin(t * 9); ctx.font = fell(phone ? 18 : 24); ctx.fillStyle = `rgba(255,${120 + 40 * p | 0},70,${0.7 + 0.3 * p})`; ctx.fillText('KNOCK IS MOVING', cx, yk); }
+      else if (K.rest > 0) { ctx.font = mono(phone ? 10 : 12); ctx.fillStyle = 'rgba(200,190,170,0.6)'; ctx.fillText('KNOCK IS STILL · FOR NOW', cx, yk); }
+      else if (K.seen) { ctx.font = mono(phone ? 10 : 12); ctx.fillStyle = 'rgba(170,220,200,0.8)'; ctx.fillText('KNOCK IS STILL · HELD IN SIGHT', cx, yk); }
+      if (D.knockT > 0) { const a = angDiff(bearingOf(K.x - m.x, K.y - m.y), m.h), r = phone ? 70 : 96, k = Math.min(1, D.knockT / 0.6); ctx.save(); ctx.translate(cx, H / 2); ctx.rotate(a); ctx.globalAlpha = 0.85 * k; ctx.fillStyle = '#ffb070'; ctx.beginPath(); ctx.moveTo(0, -r - 16); ctx.lineTo(-10, -r); ctx.lineTo(10, -r); ctx.closePath(); ctx.fill(); ctx.restore(); ctx.font = mono(phone ? 9 : 11); ctx.fillStyle = `rgba(255,190,130,${0.8 * k})`; ctx.fillText('KNOCK · KNOCK · KNOCK', cx, H / 2 + r + 18); }
+    }
+    ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+  } else {
+    // the Quarterdeck's own, with the beam's lines when the sail's down
+    const p2 = GCW.p2; if ((GCW.sail || 0) < 0.5) GCW.p2 = 0;
+    G0.hud(phone, mono, fell); GCW.p2 = p2;
+    if (D.ph === 'crane' && GCW.st === 'fight') {
+      const yy = top + (phone ? 20 : 26) + dy * 5 + 6; ctx.textAlign = 'left'; ctx.textBaseline = 'top'; ctx.font = mono(phone ? 10 : 12); ctx.shadowColor = 'rgba(0,0,0,0.9)'; ctx.shadowBlur = 6;
+      if (D.down > 0) { ctx.fillStyle = 'rgba(255,214,140,0.9)'; ctx.fillText(`The black sail is down: ${Math.ceil(D.down)} s till he hauls it up`, L, yy, W * 0.5); }
+      else if ((GCW.sail || 0) > 0.9) { ctx.fillStyle = 'rgba(255,190,150,0.9)'; ctx.fillText(`Halyards on the port rail: ${D.hal.map((h, i) => (i ? 'forward ' : 'after ') + (h >= 1 ? 'cut' : Math.round(h * 100) + '%')).join(' · ')}`, L, yy, W * 0.5); }
+      ctx.shadowBlur = 0; ctx.shadowColor = 'transparent'; fpsHudNote(yy + dy + 4);
+    }
+    if (D.ph === 'maren' && GCW.st === 'fight') { ctx.textAlign = 'left'; ctx.textBaseline = 'top'; ctx.font = mono(phone ? 10 : 12); ctx.fillStyle = 'rgba(255,220,150,0.9)'; ctx.fillText('Her lantern lights him whenever he stands on the port side', L, top + (phone ? 20 : 26) + dy * 5 + 6, W * 0.5); }
+    const o = ZM.near;
+    if (o && o.k === 'm8hal') { const k = clamp(D.hal[o.i] || 0, 0, 1); ctx.strokeStyle = 'rgba(255,190,150,0.25)'; ctx.lineWidth = 4; ctx.beginPath(); ctx.arc(cx, H / 2, 26, 0, 6.283); ctx.stroke(); ctx.strokeStyle = '#ffb890'; ctx.beginPath(); ctx.arc(cx, H / 2, 26, -Math.PI / 2, -Math.PI / 2 + k * 6.283); ctx.stroke(); }
+    ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+  }
+  if (D.scare > 0) { ctx.save(); drawKnockScare(SK.KNOCK_SCARE_TIME - D.scare); ctx.restore(); }
+}
+
+// ---------- in 3D: Knock, the halyards, her skiff under the port rail ----------
+const CPM8D3 = { on: false };
+function cpm8d3dBuild(grp) {
+  const T = CPM8D3; T.on = true; T.kn = null;
+  if (typeof rfBuildKnock === 'function') { const M = rfBuildKnock(); M.body.scale.setScalar(KN.S); grp.add(M.root); M.wood.color.setScalar(0.62); M.limbM.color.multiplyScalar(0.7); T.kn = M; T.ph = 0; }
+  // the halyards: a line from each belaying pin on the port rail up to the black sail's yard, cut away once cut
+  const rope = new THREE.LineBasicMaterial({ color: 0x8a7650 }), G0 = FPSC.GROUND;
+  T.hal = CPM8D.HAL.map(([x0, y0]) => { const [x, y] = cpkW(x0, y0), geo = new THREE.BufferGeometry().setFromPoints([z3v(x, y, G0 + 1.2), z3v(x - 1.35, y, G0 + 17.5)]), l = new THREE.Line(geo, rope); grp.add(l); const pin = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.5, 6), z3Lam('#6a5a40')); pin.position.copy(z3v(x, y, G0 + 1.2)); grp.add(pin); return l; });
+  // her skiff, alongside to port, her lantern lifted (shown from the cinematic on)
+  const soft = z3Soft('rgba(255,255,255,0.95)', 'rgba(255,255,255,0)'), glowSp = (c, s, o) => { const g0 = new THREE.Sprite(new THREE.SpriteMaterial({ map: soft, color: c, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: o && o.opacity != null ? o.opacity : 0.7 })); g0.scale.setScalar(s); return g0; };
+  T.sk = cpm8Skiff(c => z3Lam(c), glowSp); const [sx, sy] = cpkW(-9.5, 2); T.sk.S.position.copy(z3v(sx, sy, G0 - GCC.FB - 0.2)); T.sk.S.visible = false; grp.add(T.sk.S);
+  T.mar = typeof cpm5MarenActor === 'function' ? cpm5MarenActor(T.sk.S, 1.7) : null; if (T.mar) T.mar.P.position.set(0, 0.35, 0.6);
+  T.burn = glowSp(0xff8a3a, 14, { opacity: 0 }); { const [x, y] = cpkW(-5.6, 3.5); T.burn.position.copy(z3v(x, y, G0 + 8)); } grp.add(T.burn);
+}
+function cpm8d3d(dt) {
+  const T = CPM8D3, D = RAID.st.m8d; if (!T.on || !D) return;
+  const K = D.kn, M = T.kn, t = g.t, G0 = FPSC.GROUND;
+  if (M) {
+    M.root.position.copy(z3v(K.x, K.y, G0 + (K.jz || 0))); M.root.rotation.set(0, -K.h, 0);
+    if (K.mv) T.ph += dt * 4.2; const st = Math.sin(T.ph);
+    M.torso.rotation.set(-0.08, Math.sin(T.ph) * 0.07, 0);
+    for (const [i, A] of [[0.25 - st * 0.35, 0.18, 0.3], [st * 0.45, -0.18, 0.35]].entries()) { M.arms[i].sh.rotation.set(A[0], 0, A[1]); M.arms[i].el.rotation.set(A[2], 0, 0); }
+    for (const [i, A] of [[st * 0.5, Math.max(0, -st) * 0.7], [-st * 0.5, Math.max(0, st) * 0.7]].entries()) { M.legs[i].hp.rotation.set(-A[0], 0, 0); M.legs[i].kn.rotation.set(A[1], 0, 0); M.legs[i].ft.rotation.set(-A[0] + A[1] * 0.4, 0, 0); }
+    if (M.bat) M.bat.rotation.set(0.4, 0, -0.6);
+    const m = FPS.me, d = angDiff(bearingOf(m.x - K.x, m.y - K.y), K.h), ex = clamp(d, -1.2, 1.2) * 0.009; for (const e of M.eyes) e.ir.position.set(Math.abs(d) < 2 ? ex : 0, 0, -0.021);
+  }
+  const sailUp = (GCW.sail || 0) > 0.5; T.hal.forEach((l, i) => { l.visible = sailUp && (D.hal[i] || 0) < 1 && D.ph !== 'maren'; });
+  const mar = D.ph === 'maren' || D.ph === 'maren0';
+  T.sk.S.visible = mar; if (mar) { T.sk.S.position.y = G0 - GCC.FB - 0.2 + Math.sin(t * 1.1) * 0.08; const f = 0.85 + 0.15 * Math.sin(t * 9); T.sk.halo.material.opacity = 0.8 * f; T.sk.light.intensity = 2 * f; T.sk.big.material.opacity = 0.3; }
+  T.burnK = D.ph === 'maren' ? Math.min(1, (T.burnK || 0) + dt / 1.5) * 1 : 0; T.burn.material.opacity = D.ph === 'maren' ? Math.max(0, 0.7 - (T.burnK || 0) * 0.5) * (0.8 + 0.2 * Math.sin(t * 13)) : 0;
+}
 
 // ---- src/cpm09.js ----
 'use strict';
@@ -65967,9 +67544,14 @@ requestAnimationFrame(frame);
 <!-- [campaign] mission 3 -->
 <!-- [campaign] mission 4 -->
 <!-- [campaign] mission 5 -->
+<!-- [campaign] mission 5: the strand -->
+<!-- [campaign] mission 5: the Wren coming in -->
 <!-- [campaign] mission 6 -->
 <!-- [campaign] mission 7 -->
 <!-- [campaign] mission 8 -->
+<!-- [campaign] mission 8: the north landing -->
+<!-- [campaign] mission 8: her lantern -->
+<!-- [campaign] mission 8: by flarelight -->
 <!-- [campaign] mission 9 -->
 <!-- [campaign] mission 10 -->
 <!-- [campaign] mission 11 -->

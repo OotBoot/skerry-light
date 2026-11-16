@@ -62,14 +62,14 @@ cpCineDef('m08_gallery', {
   },
   exit(C) { cpkNpcFree(C.holm); },
   shots: [
-    { d: 5.5, cam: [9, -16, 38], to: [7, -19, 37.2], look: [0, -25.8, 36.4], fade: [0.6, 0],
-      f(t, k, C) { const [x, y] = cpkW(0, -25.8); cpkNpcPose(C.holm, { x, y, jz: 34.95, h: 0, lan: true }); },
+    { d: 5.5, cam: [9, -16, 38], to: [7, -19, 37.2], look: [0, -26.4, 36.8], fade: [0.6, 0],
+      f(t, k, C) { const [x, y] = cpkW(0, -26.4); cpkNpcPose(C.holm, { x, y, jz: 35.25, h: 0, lan: true }); },
       lines: [[0.4, 'holm', 'The lamp is lit. And there’s another light on the water, and it isn’t mine.', 'cp_m08_08']] },
     { d: 6.5, cam: [0.8, -27.4, 37.1], to: [0.6, -27.0, 37.0], look: [-46, 190, 0], lookTo: [-48, 198, 0],
-      f(t, k, C) { const [x, y] = cpkW(0, -25.8); cpkNpcPose(C.holm, { x, y, jz: 34.95, h: -0.2, lan: true }); C.sk.position.x = C.skx - t * 0.6; C.sk.position.z = -(C.sky + t * 1.4); C.sk.material.opacity = 0.75 + 0.2 * Math.sin(t * 7); },
+      f(t, k, C) { const [x, y] = cpkW(0, -26.4); cpkNpcPose(C.holm, { x, y, jz: 35.25, h: -0.2, lan: true }); C.sk.position.x = C.skx - t * 0.6; C.sk.position.z = -(C.sky + t * 1.4); C.sk.material.opacity = 0.75 + 0.2 * Math.sin(t * 7); },
       lines: [[0.4, 'log', 'She was out there, rowing toward where the Gannet was, and the lantern in her skiff was still lit.', 'cp_m08_09']] },
     { d: 5, cam: [3, 12, 1.8], to: [2.5, 10, 2.2], look: [0, -26, 36],
-      f(t, k, C) { const [x, y] = cpkW(0, -25.8); cpkNpcPose(C.holm, { x, y, jz: 34.95, h: 0, lan: true }); },
+      f(t, k, C) { const [x, y] = cpkW(0, -26.4); cpkNpcPose(C.holm, { x, y, jz: 35.25, h: 0, lan: true }); },
       lines: [[0.3, 'holm', 'Maren! Follow her lantern. Knock the chocks out and go!', 'cp_m08_10']] },
   ],
 });
