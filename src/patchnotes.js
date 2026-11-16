@@ -6,6 +6,12 @@
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 206, date: '2026-11-16', title: "Skerry Clash: Triple Draft", New: [
+    "Skerry Clash: a new Triple Draft mode. Instead of bringing your own deck, both keepers build one on the spot: eight rounds, three cards each round, take one and the other two are gone.",
+    "Skerry Clash: both keepers are offered exactly the same cards, and no card comes up twice in one draft. Each round has a theme (a big hitter, something that hits flyers, a spell that strikes, a cheap troop, a building or a spell, or anything goes), so every drafted deck has a fighting chance.",
+    "Skerry Clash: play it against the bot with the new Triple draft button on the Skerry Clash card. The bot drafts from the same offers, and Again on the end screen starts a fresh draft.",
+    "Skerry Clash: online, the host can tick Triple draft in the lobby, and the list of duels shows which ones are drafts. Each pick has 15 seconds, you can see how far your rival has got, and the duel starts as soon as both decks are done." ], Fixes: [
+    "Skerry Clash: the list of online duels now shows the host's rating beside their name, as it was meant to." ] },
   { v: 205, date: '2026-11-16', title: "Skerry Clash: Shipwreck cost", Balance: [
     "Skerry Clash: Shipwreck now costs 5 oil, down from 6. Now that it can only land on your own rock it's a defensive card, and its price comes down to match. Its damage and size are unchanged." ] },
   { v: 204, date: '2026-11-16', title: "Skerry Clash: watch duels live", New: [
