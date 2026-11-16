@@ -1672,6 +1672,11 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 .rldr-txt dt { color: var(--muted); }
 .rldr-txt dd { margin: 0; }
 .rldr-key { margin-top: auto; align-self: flex-start; padding: 4px 10px; background: var(--lamp); color: var(--night); font-family: var(--log); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; }
+.rldr-rival { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; padding: 6px 8px; background: rgba(255,99,82,0.07); border: 1px solid rgba(255,99,82,0.3); }
+.rldr-rival .rldr-rvh { font-family: var(--log); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #ff9a8a; margin-right: 4px; }
+.rldr-rival .rlface { width: 74px; opacity: 0.9; }
+.rldr-rival .rlface .rlname { font-size: 9.5px; }
+.rldr-rival .rlface .rloil { width: 18px; height: 18px; top: 3px; left: 3px; } .rldr-rival .rlface .rloil b { font-size: 10px; }
 .rldraftcard p.rldr-hint { margin: 0; min-height: 1.4em; font-family: var(--log); font-size: 13px; color: var(--lamp); }
 .rldr-deckhead { display: flex; justify-content: space-between; font-family: var(--log); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
 .rldr-deck { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 6px; padding: 8px; background: rgba(4,7,14,0.6); border: 1px solid rgba(232,160,80,0.3); }
@@ -1685,6 +1690,9 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 @media (max-width: 640px) {
   .rldraftcard .card { padding: 18px 12px 14px; }
   #rlUI .rldraftcard .rldr-txt dl { display: none; }
+  .rldr-rival { gap: 4px; padding: 4px 6px; }
+  .rldr-rival .rldr-rvh { flex-basis: 100%; font-size: 10px; }
+  .rldr-rival .rlface { width: 60px; }
   #rlUI .rldraftcard .rldr-c .rlface { width: 72px; }
   #rlUI .rldraftcard .rldr-deck { grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 3px; padding: 4px; }
   .rldr-offer { grid-template-columns: minmax(0, 1fr); gap: 8px; }
@@ -2219,7 +2227,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
         <summary>How to play</summary>
         <p><b>Oil.</b> Every card costs lamp oil, shown in the drop on its corner. You start with 5 and fill by one every 2.8 seconds, up to 10. Oil you can't hold is wasted, so spend before you're full.</p>
         <p><b>Three keepers.</b> Every keeper for themselves on one round skerry cut three ways by channels, a causeway to each neighbour. The last Great Light burning wins; at time, the most towers standing. Against two bots, or online with up to three (a bot takes any empty seat). It isn't rated.</p>
-        <p><b>Triple draft.</b> No deck of your own: eight rounds, three cards a round, take one and the other two are gone. Both keepers are offered the same cards. Online each pick has 15 seconds.</p>
+        <p><b>Triple draft.</b> No deck of your own: eight rounds, three cards a round, take one and the other two are gone. Each keeper gets different cards, and you can see your rival's three each round, but not which they take. Online each pick has 15 seconds.</p>
         <p><b>Your hand.</b> You hold four cards from your deck of eight, and the next one waits beside them. Play a card and it goes to the back of the queue, so every card comes round again in turn.</p>
         <p><b>Playing.</b> Pick a card, then tap the rocks where you want it. Troops and buildings go down on your own side of the race, on dry rock, not on the water or a tower. Spells go anywhere.</p>
         <p><b>Lanes and causeways.</b> The race cuts the field in two and crosses it by two causeways, one in each lane. Troops on foot walk to the nearer causeway, cross, and go for whatever they can hit within a few tiles; failing that, the next tower down their lane. Some go only for buildings and towers.</p>
@@ -2311,6 +2319,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
         <p class="rldr-theme" id="rlDrTheme"></p>
         <div class="rldr-time" id="rlDrTime" hidden><i></i><b></b></div>
         <div class="rldr-offer" id="rlDrOffer" aria-label="Three cards: take one"></div>
+        <div class="rldr-rival" id="rlDrRival" hidden aria-label="Your rival's three this round"></div>
         <p class="rldr-hint" id="rlDrHint" aria-live="polite"></p>
         <div class="rldr-deckhead"><span>Your deck</span><span id="rlDrAvg"></span></div>
         <div class="rldr-deck" id="rlDrDeck" aria-label="The cards you have taken"></div>
@@ -2801,7 +2810,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 // ---- src/config.js ----
 'use strict';
 // The game's version, shown at the top of the main menu. Bump it by one with every change pushed to main.
-var VERSION = 213;
+var VERSION = 214;
 // Skerry Light: tuning, asset paths and lore.
 // World units are metres. The lighthouse stands at the origin on the shoreline (y = 0);
 // north (+y) is open sea. Bearings: 0 = north, positive = east.
@@ -2976,6 +2985,9 @@ document.addEventListener('visibilitychange', () => {
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 214, date: '2026-11-16', title: "Skerry Clash: Triple Draft, your own cards", Changes: [
+    "Skerry Clash: in a Triple Draft each keeper is now offered their own cards instead of the same ones. Both of you still get the same theme each round, but never the same three.",
+    "Skerry Clash: you can now see your rival's three options each round, just under your own. You never see which one they took. Online it shows the round your rival is on, against the bot the same round as yours." ] },
   { v: 213, date: '2026-11-16', title: "Skerry Clash: Three keepers", New: [
     "Skerry Clash: a new Three keepers mode, every keeper for themselves. Three rocks share one round skerry, cut apart by three channels, with a causeway over each one to your two neighbours.",
     "Skerry Clash: each keeper has a Great Light and two Lamp Towers, one facing each neighbour. Your troops go for whichever rival is nearer, so you can send a push at either side.",
@@ -63740,9 +63752,10 @@ function rkMerge(d, takeLooks) {
 // three cards offered each round, take one. The two you leave are gone. After the eighth pick the duel begins with the
 // eight you took.
 //
-// The offers come from a seed (rldOffers(seed)), so both screens of an online duel see the very same three each round,
-// and both keepers are offered the same cards: it's who picks better that counts, not who was dealt better. No card is
-// offered twice in one draft (24 different cards in all). Each round has a theme, so every drafted deck can hold its
+// The offers come from a seed (rldOffersBoth(seed)), so both screens of an online duel agree on them. Each keeper gets
+// their own three each round (none of them the other keeper's three that round, where the theme allows), and sees the
+// other's three under their own (rldTheirs), but never which one the other took. No card is offered twice to the same
+// keeper (24 different cards each). Each round has a theme, so every drafted deck can hold its
 // own: a big hitter, two rounds of things that hit flyers, a striking spell, two cheap troops, a building or a spell,
 // and one where anything goes. The order of the rounds is shuffled by the seed.
 //
@@ -63750,15 +63763,16 @@ function rkMerge(d, takeLooks) {
 // (rldScene: RL.ph 'draft' with RL.on false, so the match doesn't run and the online code still counts it as the lobby;
 // src/rl.js's rlFrame only draws), and the three cards sit over it at the foot of the screen. When both decks are
 // done rlStart begins the duel on the same screen; leaving or a draft called off goes back to the menu (rlExit).
-// Against the bot (rldBot, #rlDraftBot on the Skerry Clash card) there's no clock; the bot drafts from the same offers
+// Against the bot (rldBot, #rlDraftBot on the Skerry Clash card) there's no clock; the bot drafts from its own offers
 // (rldBotPicks: easy at random, normal and hard keeping its average oil near 3.6 and taking the stronger card). Online
 // (src/rlnet.js) each pick has 15 seconds, and a card is taken for you at random when it runs out; when you're done
 // your deck goes to the host in your lobby presence (dd), who checks every card was one of that round's offers
 // (rldValid) and starts the duel with both decks.
 //
 // The global API:
-//   rldOffers(seed)          -> [[3 ids] x 8] and .th, the theme of each round
-//   rldValid(seed, deck)     -> true if each of the 8 was one of its round's three
+//   rldOffersBoth(seed)      -> [side 0's, side 1's], each [[3 ids] x 8] with .th, the theme of each round (the same for both)
+//   rldOffers(seed, side)    -> that side's
+//   rldValid(seed, deck, side) -> true if each of the 8 was one of that side's three that round
 //   rldOpen(o)               the draft, in the arena: o = { seed, net (online, with the clock), vs (the rival's name),
 //                            me (0 or 1, which end you see it from), names, skins, done(deck) }
 //   rldClose(keep)           shuts it without finishing (done is not called), and leaves the arena unless keep (the
@@ -63779,22 +63793,28 @@ function rldPool(th) {
   if (th === 'tool') return all.filter(C => C.type !== 'troop');
   return all;
 }
-function rldOffers(seed) {
-  const R = rlRng(((seed >>> 0) ^ 0x5bd1e995) >>> 0), used = new Set(), out = [];
+// both keepers' offers: the same theme each round, different cards (none of one side's three in the other's that
+// round, where the theme's pool allows), and no card twice for the same keeper
+function rldOffersBoth(seed) {
+  const R = rlRng(((seed >>> 0) ^ 0x5bd1e995) >>> 0), used = [new Set(), new Set()], out = [[], []];
   const th = ['win', 'air', 'air', 'hit', 'cheap', 'cheap', 'tool', 'any'];
   for (let i = th.length - 1; i > 0; i--) { const j = (R() * (i + 1)) | 0; [th[i], th[j]] = [th[j], th[i]]; }
   for (const t of th) {
-    const o = [];
-    for (const L of [rldPool(t), RL_CARDS]) {   // (the theme's own first; anything, should it run short)
-      const left = L.filter(C => !used.has(C.id));
-      while (o.length < 3 && left.length) { const C = left.splice((R() * left.length) | 0, 1)[0]; used.add(C.id); o.push(C.id); }
+    const both = [];
+    for (const s of [0, 1]) {
+      const o = [];
+      for (const L of [rldPool(t).filter(C => !both.includes(C.id)), rldPool(t), RL_CARDS]) {   // (the theme's own, not the other's this round; then the theme's own; then anything)
+        const left = L.filter(C => !used[s].has(C.id) && !o.includes(C.id));
+        while (o.length < 3 && left.length) { const C = left.splice((R() * left.length) | 0, 1)[0]; used[s].add(C.id); o.push(C.id); }
+      }
+      both.push(...o); out[s].push(o);
     }
-    out.push(o);
   }
-  out.th = th;
+  out[0].th = th; out[1].th = th;
   return out;
 }
-function rldValid(seed, d) { if (!Array.isArray(d) || d.length !== RLD_ROUNDS) return false; const O = rldOffers(seed); return d.every((id, i) => O[i].includes(id)); }
+function rldOffers(seed, side) { return rldOffersBoth(seed)[side === 1 ? 1 : 0]; }
+function rldValid(seed, d, side) { if (!Array.isArray(d) || d.length !== RLD_ROUNDS) return false; const O = rldOffers(seed, side); return d.every((id, i) => O[i].includes(id)); }
 // the bot's picks: easy at random; otherwise the card that keeps its average oil nearest 3.6, the stronger fighter on a near tie
 function rldBotPicks(O, lvl) {
   const d = [];
@@ -63811,11 +63831,12 @@ function rldBotPicks(O, lvl) {
 // ---------- the draft screen ----------
 function rldOpen(o) {
   o = o || {};
-  Object.assign(RLDR, { on: true, seed: o.seed >>> 0, offers: rldOffers(o.seed >>> 0), picks: [], net: !!o.net, vs: o.vs || '', done: o.done || null, rival: -1, t0: performance.now(), lock: false });
+  const me = o.me === 1 ? 1 : 0, OB = rldOffersBoth(o.seed >>> 0);
+  Object.assign(RLDR, { on: true, seed: o.seed >>> 0, me, offers: OB[me], ro: OB[1 - me], picks: [], net: !!o.net, vs: o.vs || '', done: o.done || null, rival: -1, t0: performance.now(), lock: false });
   try { audioInit(); } catch (e) {}
   const card = $('rlDraftCard'); if (!card) return;
   for (const id of ['rlDeckCard', 'rlCrateCard']) { const e = $(id); if (e) e.hidden = true; }
-  rldScene(o);
+  rldScene(o); if ($('rlDrRival')) $('rlDrRival').dataset.k = '';
   card.hidden = false; card.scrollTop = 0; rldRender();
   clearInterval(RLDR.tm); RLDR.tm = setInterval(rldClock, 100);
 }
@@ -63831,7 +63852,17 @@ function rldScene(o) {
   Object.assign(RL, { on: false, ph: 'draft', FX: [] });
   $('rlUI').classList.add('drafting'); $('rlPause').hidden = true;
 }
-function rldRival(n) { if (RLDR.rival === n) return; RLDR.rival = n; if (RLDR.on) rldHint(); }
+function rldRival(n) { if (RLDR.rival === n) return; RLDR.rival = n; if (RLDR.on) { rldHint(); rldTheirs(); } }
+// the rival's three this round (theirs, which online may be ahead of or behind yours), never which they took
+function rldTheirs() {
+  const el = $('rlDrRival'); if (!el) return;
+  const r = RLDR.net ? RLDR.rival : RLDR.picks.length, vs = rlnCleanName(RLDR.vs) || 'Your rival';
+  const key = r + '|' + vs; if (el.dataset.k === key) return; el.dataset.k = key; el.textContent = '';
+  if (r < 0 || r >= RLD_ROUNDS || !RLDR.ro[r]) { el.hidden = r < RLD_ROUNDS; if (!el.hidden) { const p = document.createElement('span'); p.className = 'rldr-rvh'; p.textContent = vs + ' has drafted their deck.'; el.appendChild(p); } return; }
+  el.hidden = false;
+  const h = document.createElement('span'); h.className = 'rldr-rvh'; h.textContent = vs + '’s choices' + (RLDR.net ? ', round ' + (r + 1) : '') + ':'; el.appendChild(h);
+  for (const id of RLDR.ro[r]) { const c = RL_CARD[id], f = rlCardFace(id, null, 74); f.title = c ? c.n + ' · ' + c.cost + ' oil' : id; el.appendChild(f); }
+}
 function rldPick(id) {
   const r = RLDR.picks.length;
   if (!RLDR.on || RLDR.lock || r >= RLD_ROUNDS || !RLDR.offers[r].includes(id)) return;
@@ -63878,6 +63909,7 @@ function rldRender() {
     const k1 = document.createElement('span'); k1.className = 'rldr-key'; k1.textContent = 'Take it · ' + (k + 1); tx.appendChild(k1);
     b.appendChild(tx); b.addEventListener('click', () => rldPick(id)); of.appendChild(b);
   });
+  rldTheirs();
   // the deck so far
   const dv = $('rlDrDeck'); dv.textContent = '';
   for (let i = 0; i < RLD_ROUNDS; i++) {
@@ -63897,14 +63929,14 @@ function rldLeave() {
   if (net && typeof rlnLeave === 'function') rlnLeave();
   try { sfxTick(); } catch (e) {}
 }
-// against the bot: draft, the bot drafts from the same offers, and the duel begins
+// against the bot: draft, the bot drafts from its own offers, and the duel begins
 function rldBot(lvl) {
   lvl = typeof lvl === 'string' ? lvl : ($('rlBotLvl') && $('rlBotLvl').value) || 'normal'; if (!RL_BOTNM[lvl]) lvl = 'normal';
   const seed = (Math.random() * 4294967295) >>> 0;
   const sk = typeof rlSkinMine === 'function' ? rlSkinMine() : '';
   rldOpen({ seed, vs: RL_BOTNM[lvl], me: 0, names: [rlMyName(), RL_BOTNM[lvl]], skins: [sk || '', ''], done: deck => {
     rldClose(true);
-    rlStart({ mode: 'bot', me: 0, names: [rlMyName(), RL_BOTNM[lvl]], decks: [deck, rldBotPicks(rldOffers(seed), lvl)], skins: [sk || '', ''], lvl, draft: 1 });
+    rlStart({ mode: 'bot', me: 0, names: [rlMyName(), RL_BOTNM[lvl]], decks: [deck, rldBotPicks(rldOffers(seed, 1), lvl)], skins: [sk || '', ''], lvl, draft: 1 });
   } });
 }
 
@@ -64135,7 +64167,7 @@ function rlnDraftCheck() {
   if (typeof rldRival === 'function') rldRival(dd ? Math.min(8, dd.n | 0) : 0);
   if (RLN.role !== 'dhost' || !RLN.ddk || !dd || !Array.isArray(dd.dk)) return;
   const theirs = rlnDeck(dd.dk), st = RLN.dst;
-  if (!rldValid(st.seed, dd.dk) || theirs.join() !== dd.dk.join()) { rlnDraftOff('Your rival’s drafted deck didn’t match the offers, so the draft was called off.'); return; }
+  if (!rldValid(st.seed, dd.dk, 1) || theirs.join() !== dd.dk.join()) { rlnDraftOff('Your rival’s drafted deck didn’t match the offers, so the draft was called off.'); return; }
   const go = { g: Math.random().toString(36).slice(2, 9), sids: st.sids.slice(), names: st.names.slice(), decks: [RLN.ddk.slice(), theirs], skins: st.skins.slice(), seed: (Math.random() * 4294967295) >>> 0, dr: 2 };
   RLN.dst = null; RLN.ddk = null; if (typeof rldClose === 'function') rldClose(true);
   rlnBegin(go, 'host');

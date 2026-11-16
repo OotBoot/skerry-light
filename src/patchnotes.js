@@ -6,6 +6,9 @@
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 214, date: '2026-11-16', title: "Skerry Clash: Triple Draft, your own cards", Changes: [
+    "Skerry Clash: in a Triple Draft each keeper is now offered their own cards instead of the same ones. Both of you still get the same theme each round, but never the same three.",
+    "Skerry Clash: you can now see your rival's three options each round, just under your own. You never see which one they took. Online it shows the round your rival is on, against the bot the same round as yours." ] },
   { v: 213, date: '2026-11-16', title: "Skerry Clash: Three keepers", New: [
     "Skerry Clash: a new Three keepers mode, every keeper for themselves. Three rocks share one round skerry, cut apart by three channels, with a causeway over each one to your two neighbours.",
     "Skerry Clash: each keeper has a Great Light and two Lamp Towers, one facing each neighbour. Your troops go for whichever rival is nearer, so you can send a push at either side.",
