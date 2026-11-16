@@ -21,7 +21,26 @@
 // begun to strike keeps its target while it stays in reach. Towers shoot the nearest enemy in range; the Great Light
 // sleeps until it's hit or one of its Lamp Towers falls.
 // The abilities on the cards (see the top of src/rlcards.js) are all here: revive, bomb, cloak, charge, slowhit for
-// troops; lob, stun, wave, haar and bolts for spells; lure and spawn for buildings.
+// troops; lob, stun, wave, haar and bolts for spells; lure and spawn for buildings. And those that came with the second
+// 32 cards: burst, leap, shield, drain, heal, spin, rally, deathspawn and chain for troops; pull, mend, haste, dot,
+// summon and whirl for spells; tar, blast, lob (a Mortar Pit's arcing shell, with its least range minr), ramp and oil
+// for buildings, and spawn's sn (how many come at a time).
+// How they work, in short: a burst flies at the nearest foe and goes off on it (like a bomb, but at anything); a leap
+// is a pounce of up to lp tiles onto a target on the same dry rock, biting as it lands, then 3 s before the next; a
+// shell (sh) is spent before hit points; drain mends the striker by half of each hit; a healer never strikes, keeps
+// beside the friend nearest it (the furthest forward if there's a choice) and mends all friends within its reach hl
+// once a second; spin lands each blow on everyone round the swinger; rally makes friends within 4 tiles strike 30%
+// faster; deathspawn lets sn of the sp card out where it fell; chain leaps from the struck to ch more within 3 tiles,
+// each at full damage. Pull drags every enemy on foot in r most of the way to the middle at once (never over the race)
+// and then strikes; mend, haste, dot and whirl are lasting zones in Z (haste: 40% faster moving and striking while
+// inside; dot: dmg a second, struck every half second; whirl: dragged 3 tiles a second to the middle, dmg every half
+// second); summon strikes, then sets the sp card's troops down there for the caster (on the nearer bank if it falls
+// in the race). Tar halves the speed of enemy walkers within its rng; blast, when its breath is back (hit seconds) and
+// a walker is within rng, strikes every walker there and knocks them kb tiles away; a lob building's shell doesn't
+// home, and it never aims at anything nearer than minr; ramp burns its target without a shot, x1, then x3 after 2 s
+// on the same one, x8 after 4 s; oil adds one to its owner's oil every ev seconds.
+// Speeds: a unit's pace and its striking are slowed by a slowing hit (35%) and the haar (45%) and hastened by Fair
+// Wind (40%); tar halves the pace only, a rally quickens the striking only.
 //
 // The state's arrays: T the six towers (fixed order: side 0's Great Light, left lamp, right lamp, then side 1's), U the
 // units (troops and buildings), P the projectiles (each knows where it left from, sx sy, and where it's going, tx ty,
@@ -35,14 +54,44 @@
 // src/rldeck.js, src/rlcrates.js), rlRecord(r) at the end (stats and crates), rlnRequest(play) for the guest's cards,
 // rlnTick(dt) every frame online, rlnStop() on leaving an online match, rlnBackToLobby() back on the title card.
 // Tests: rlDebugSpeed(x) runs the clock x times as fast; rlDebugBots(on) lets a second bot play side 0 as well.
+//
+// For the view (what src/rl3d.js and the sound may key off, on the host and, through rlSnap/rlApply, the guest; the
+// same list is kept in rl-kinds.md for the view's side of the merge). Kinds added with the second 32 cards (v200):
+//   FX  heal    { c, x, y, side, r }       a Surgeon's pulse (at it, r its reach 3), or a Siren's drain (at her, r 0)
+//       leap    { c, x, y, tx, ty, side }  a Ship's Cat pounces from (x, y) to (tx, ty); it's already there (instant)
+//       chain   { c, pts, side, x, y }     the Stormcaller's lightning: pts [[x, y], ...] the first struck, then each
+//                                          it leapt on to; x, y the first
+//       pull    { c, x, y, r, side }       a Tide Pull drags everything on foot in r to (x, y), at once
+//       blast   { c, x, y, r, side }       a Fog Horn bellows (r its reach); the walkers in it are knocked back
+//       oil     { c, x, y, side }          an Oil Store gives its owner one oil
+//       shield  { c, x, y, side }          a Lobster Knight's shell breaks
+//       burst   { c, x, y, r, side }       a Will-o'-the-Wisp goes off (r its splash); it dies with no 'die'
+//       summon  { c, x, y, r, side }       a Shipwreck's crew comes out: c the card that comes ('wreckers'), r the spell's
+//       spin    { c, x, y, r, side }       an Anchor Swinger's blow lands all round her (r its splash)
+//       spawn   (as before)                now also each crab out of a fallen Crab Mother
+//   Z   mend, haste, dot, whirl            { id, k, x, y, r, side, t (seconds since it began), dur }: time left dur - t
+//       (a Tar Barrel's mire is no zone: it's the unit's own, radius RL_CARD.tarpit.rng)
+//   P   herring (fishwives), net (netthrower), grenade (grenadier: arcs, doesn't home, splash), rocket (rocketcrew),
+//       song (siren), bolt2 (stormcaller; a 'chain' follows), mortar (Mortar Pit: arcs high, doesn't home, splash),
+//       gale (petrel); the Martello Tower fires the Sea Battery's 'ball'; the Sea Eagle and the Kraken's Arm are melee
+//   U   sh   shell left (Lobster Knight; its whole is RL_CARD.lobster.sh), 0 when spent
+//       rp   Burning Lens ramp 0 (x1), 1 (x3), 2 (x8). The lens has no shot: while st is 'hit' it burns tg (a unit
+//            or a tower's id) continuously; draw a beam to it, brighter with rp
+//       hs   hastened (Fair Wind), ral rallied (by a Wrecker Chief), tar mired (by a Tar Barrel), mend being mended
+//            (Lamp Oil, a Surgeon's pulse within the last second, a Siren's drain); each 0 or 1
 
 const RLC = { DT: 0.05, W: 18, H: 32, R0: 15, R1: 17, LX: [3.5, 14.5], CW: 1, OIL0: 5, OILT: 2.8, MAXOIL: 10, LEN: 180, DBL: 60, OT: 60, SIGHT: 5.5, COUNT: 3, DEP: 0.8, POCKET: 4 };
 const RL_TW = { lamp: { hp: 3050, dmg: 109, hit: 0.8, rng: 7.5, r: 1.2 }, great: { hp: 4800, dmg: 109, hit: 1.0, rng: 7, r: 1.6 } };
 // what each shooter throws, and how fast it flies (tiles a second); the lobbed ones arc (src/rl3d.js draws the arc)
-const RL_SHOT = { harpooner: 'harpoon', coastguard: 'shot', cormorant: 'stone', lamplighter: 'oil', mooncusser: 'lantern', lightkeeper: 'flare', battery: 'ball', swivel: 'shot' };
-const RL_PSPD = { bolt: 15, harpoon: 11, shot: 20, stone: 10, oil: 7, lantern: 6.5, flare: 13, ball: 12 };
-const RL_PK = ['bolt', 'harpoon', 'shot', 'stone', 'oil', 'lantern', 'flare', 'ball', 'lob', 'keg'];
-const RL_FK = ['deploy', 'spell', 'die', 'tower', 'hit', 'boom', 'revive', 'bolt', 'ring', 'flash', 'go', 'dbl', 'ot', 'spawn', 'end', 'crown', 'splash'];
+const RL_SHOT = { harpooner: 'harpoon', coastguard: 'shot', cormorant: 'stone', lamplighter: 'oil', mooncusser: 'lantern', lightkeeper: 'flare', battery: 'ball', swivel: 'shot',
+  fishwives: 'herring', netthrower: 'net', grenadier: 'grenade', rocketcrew: 'rocket', siren: 'song', stormcaller: 'bolt2', mortar: 'mortar', petrel: 'gale', martello: 'ball' };
+const RL_PSPD = { bolt: 15, harpoon: 11, shot: 20, stone: 10, oil: 7, lantern: 6.5, flare: 13, ball: 12, herring: 12, net: 8, grenade: 7, rocket: 9, song: 8, bolt2: 22, mortar: 7, gale: 14 };
+// (the lobbed shots that don't home: they come down where the target stood when they left)
+const RL_ARC = { grenade: 1, mortar: 1 };
+const RL_PK = ['bolt', 'harpoon', 'shot', 'stone', 'oil', 'lantern', 'flare', 'ball', 'lob', 'keg', 'herring', 'net', 'grenade', 'rocket', 'song', 'bolt2', 'mortar', 'gale'];
+const RL_FK = ['deploy', 'spell', 'die', 'tower', 'hit', 'boom', 'revive', 'bolt', 'ring', 'flash', 'go', 'dbl', 'ot', 'spawn', 'end', 'crown', 'splash',
+  'heal', 'leap', 'chain', 'pull', 'blast', 'oil', 'shield', 'burst', 'summon', 'spin'];
+const RL_ZK = ['haar', 'wave', 'mend', 'haste', 'dot', 'whirl'];
 const RL_ST = ['idle', 'walk', 'hit'];
 const RL_BOTNM = { easy: 'Apprentice Pell', normal: 'Keeper Morrow', hard: 'Old Grisewood' };
 var RL = { on: false, mode: 'bot', me: 0, ph: 'off', t: 0, left: RLC.LEN, ot: false, dbl: false, oil: [0, 0], hand: [[], []], next: ['', ''], queue: [[], []],
@@ -113,13 +162,7 @@ function rlPlay(side, c, x, y) {
   if (C.type === 'spell') rlCast(side, C, x, y);
   else {
     const n = C.cnt || 1;
-    for (let k = 0; k < n; k++) {
-      const r = n > 1 ? 0.5 * Math.sqrt(k + 0.5) : 0, a = k * 2.4 + (side ? Math.PI : 0);
-      let px = x + Math.sin(a) * r, py = y + Math.cos(a) * r * 0.8;
-      px = Math.max(0.4, Math.min(RLC.W - 0.4, px)); py = Math.max(0.4, Math.min(RLC.H - 0.4, py));
-      if (!C.air && py > RLC.R0 && py < RLC.R1) py = side ? RLC.R1 + 0.2 : RLC.R0 - 0.2;
-      rlSpawn(side, c, px, py, k * 0.05);
-    }
+    rlCrowd(side, C, x, y, 0);
     rlFx('deploy', { c, x, y, side, r: n > 1 ? 1.2 : (C.size || 0.5) + 0.3 });
   }
   return true;
@@ -131,10 +174,34 @@ function rlTry(c, x, y) {
   if (rlIsGuest()) { if (typeof rlnRequest === 'function') rlnRequest({ c, x: Math.round(x * 10) / 10, y: Math.round(y * 10) / 10 }); RL.pend = { c, x, y, at: performance.now(), oil: RL.oil[RL.me] }; return true; }
   return rlPlay(RL.me, c, x, y);
 }
+// a card's troops set down round a point, in a little whorl (cnt of them); a walker never lands in the race (it's
+// put on the bank: its own side's for a card played, the nearer one for a Shipwreck's crew)
+function rlCrowd(side, C, x, y, late, near) {
+  const n = C.cnt || 1, out = [];
+  for (let k = 0; k < n; k++) {
+    const r = n > 1 ? 0.5 * Math.sqrt(k + 0.5) : 0, a = k * 2.4 + (side ? Math.PI : 0);
+    let px = x + Math.sin(a) * r, py = y + Math.cos(a) * r * 0.8;
+    px = Math.max(0.4, Math.min(RLC.W - 0.4, px)); py = Math.max(0.4, Math.min(RLC.H - 0.4, py));
+    if (!C.air && py > RLC.R0 && py < RLC.R1) py = (near ? py > (RLC.R0 + RLC.R1) / 2 : side) ? RLC.R1 + 0.2 : RLC.R0 - 0.2;
+    out.push(rlSpawn(side, C.id, px, py, late + k * 0.05));
+  }
+  return out;
+}
+// moved by a spell or a blast (pulled, whirled, knocked): never over the race, only along a causeway or to the bank's
+// edge; whoever is moved looks for a target afresh
+function rlDrag(u, nx, ny) {
+  if (u.bld) return;
+  const bank = y => y <= RLC.R0 ? -1 : y >= RLC.R1 ? 1 : 0, b0 = bank(u.y);
+  if (!u.air && b0 && bank(ny) !== b0) ny = b0 < 0 ? Math.min(ny, RLC.R0) : Math.max(ny, RLC.R1);
+  u.px = u.x; u.py = u.y;
+  u.x = Math.max(0.3, Math.min(RLC.W - 0.3, nx)); u.y = Math.max(0.3, Math.min(RLC.H - 0.3, ny));
+  rlWater(u); u.lock = 0;
+}
 function rlSpawn(side, c, x, y, late) {
   const C = RL_CARD[c];
   const u = { id: RL.nid++, c, side, x, y, px: x, py: y, hp: C.hp, max: C.hp, air: !!C.air, size: C.size || 0.4, tg: 0, cd: 0, st: 'idle', face: side ? Math.PI : 0,
-    cloak: C.ab === 'cloak' ? C.cl || 3 : 0, slow: 0, stun: 0, bld: C.type === 'building', life: C.life || 0, dep: RLC.DEP + (late || 0), run: 0, chg: 0, rv: 0, fog: 0, ev: C.ev || 0, ring: C.hit || 4, rt: 0, lock: 0 };
+    cloak: C.ab === 'cloak' ? C.cl || 3 : 0, slow: 0, stun: 0, bld: C.type === 'building', life: C.life || 0, dep: RLC.DEP + (late || 0), run: 0, chg: 0, rv: 0, fog: 0, ev: C.ev || 0, ring: C.hit || 4, rt: 0, lock: 0,
+    sh: C.ab === 'shield' ? C.sh || 0 : 0, rp: 0, rpT: 0, hs: 0, ral: 0, tar: 0, mendT: 0, lpcd: 0, hlT: 1 };
   RL.U.push(u); return u;
 }
 
@@ -149,6 +216,18 @@ function rlCast(side, C, x, y) {
     RL.Z.push({ id: RL.nid++, k: 'wave', side, x, y, y0: y, t: 0, dur: (C.len || 9) / 6, r: C.r, w: C.w || 3, dir, dmg: C.dmg, tw: C.tw, kb: C.kb || 1.5, hit: [] });
   } else if (C.ab === 'haar') {
     RL.Z.push({ id: RL.nid++, k: 'haar', side, x, y, t: 0, dur: C.dur || 5, r: C.r });
+  } else if (C.ab === 'mend' || C.ab === 'haste' || C.ab === 'dot' || C.ab === 'whirl') {
+    RL.Z.push({ id: RL.nid++, k: C.ab, side, x, y, t: 0, dur: C.dur || 4, r: C.r, dmg: C.dmg || 0, tw: C.tw || 0, hl: C.hl || 0, acc: 0.5 });
+  } else if (C.ab === 'pull') {
+    for (const e of rlEnemiesIn(side, x, y, C.r, false, false)) if (!e.bld) { rlDrag(e, x + (e.x - x) * 0.2, y + (e.y - y) * 0.2); e.stun = Math.max(e.stun, 0.25); e.lock = 0; e.rt = 0; }
+    rlFx('pull', { c: C.id, x, y, r: C.r, side });
+    rlBlast(side, x, y, C.r, C.dmg, C.tw, true);
+  } else if (C.ab === 'summon') {
+    rlBlast(side, x, y, C.r, C.dmg, C.tw, true);
+    rlFx('flash', { c: C.id, x, y, side, r: C.r });
+    const S = RL_CARD[C.sp] ? RL_CARD[C.sp] : RL_CARD.wreckers;
+    rlCrowd(side, S, x, y, 0.15, C.r);
+    rlFx('summon', { c: S.id, x, y, side, r: C.r });
   } else if (C.ab === 'bolts') {
     const cand = rlEnemiesIn(side, x, y, C.r, true).sort((a, b) => b.hp - a.hp).slice(0, C.k || 3);
     cand.forEach((e, i) => { rlHurt(e, e.k ? C.dmg * C.tw : C.dmg, side); rlFx('bolt', { c: C.id, x: e.x, y: e.y, side, r: i }); });
@@ -170,6 +249,8 @@ function rlEnemiesIn(side, x, y, r, towers, air) {
 function rlBlast(side, x, y, r, dmg, tw, air) { for (const e of rlEnemiesIn(side, x, y, r, true, air)) rlHurt(e, e.k ? dmg * (tw == null ? 1 : tw) : dmg, side); }
 function rlHurt(e, dmg, by) {
   if (!(dmg > 0) || e.hp <= 0) return;
+  // a shell soaks the first of it
+  if (e.sh > 0) { const a = Math.min(e.sh, dmg); e.sh -= a; dmg -= a; if (e.sh <= 0) { e.sh = 0; rlFx('shield', { c: e.c, x: e.x, y: e.y, side: e.side }); } if (!(dmg > 0)) return; }
   e.hp -= dmg;
   if (e.k) { if (e.k === 'great') e.awake = true; e.hitAt = RL.clk; }
 }
@@ -191,20 +272,37 @@ function rlTick() {
   rlTowersTick(dt);
   rlShots(dt);
   rlDeaths();
+  for (const u of RL.U) u.mend = u.mendT > 0 ? 1 : 0;
   if (RL.ph === 'play' && RL.left <= 0) {
     if (!RL.ot) { if (RL.crowns[0] !== RL.crowns[1]) rlEnd(RL.crowns[0] > RL.crowns[1] ? 0 : 1); else { RL.ot = true; RL.left = RLC.OT; rlFx('ot', { x: 9, y: 16, side: 0 }); } }
     else rlEnd(RL.crowns[0] === RL.crowns[1] ? 2 : RL.crowns[0] > RL.crowns[1] ? 0 : 1);
   }
   rlFxTrim();
 }
-function rlFxTrim() { const c = RL.clk; RL.FX = RL.FX.filter(f => c - f.at < (f.k === 'hit' ? 0.7 : 2)); }
+// (the small, frequent ones, a blow or a mouthful mended, go sooner)
+const rlFxShort = f => f.k === 'hit' || f.k === 'spin' || (f.k === 'heal' && !f.r);
+function rlFxTrim() { const c = RL.clk; RL.FX = RL.FX.filter(f => c - f.at < (rlFxShort(f) ? 0.7 : 2)); }
 
-// the lasting spells: the haar slows the enemies inside it; the wave rolls on, striking and knocking back each once
+// the lasting spells: the haar slows the enemies inside it; the wave rolls on, striking and knocking back each once;
+// Lamp Oil mends the caster's troops inside, Fair Wind hastens them; Brine Rain stings every half second, and the
+// Whirlpool drags walkers in to its middle while it stings. Then the auras of the units themselves: a Wrecker Chief
+// rallies the friends about him, a Tar Barrel mires the enemy walkers about it.
 function rlZones(dt) {
-  for (const u of RL.U) u.fog = 0;
+  for (const u of RL.U) { u.fog = 0; u.hs = 0; u.ral = 0; u.tar = 0; if (u.mendT > 0) u.mendT -= dt; }
+  const inZ = (z, u) => Math.hypot(u.x - z.x, u.y - z.y) <= z.r + u.size * 0.5;
   for (const z of RL.Z) {
     z.t += dt;
-    if (z.k === 'haar') { for (const u of RL.U) if (u.side !== z.side && Math.hypot(u.x - z.x, u.y - z.y) <= z.r + u.size * 0.5) u.fog = 1; }
+    if (z.k === 'haar') { for (const u of RL.U) if (u.side !== z.side && inZ(z, u)) u.fog = 1; }
+    else if (z.k === 'mend') { for (const u of RL.U) if (u.side === z.side && !u.bld && u.hp > 0 && inZ(z, u)) { u.hp = Math.min(u.max, u.hp + z.hl * dt); u.mendT = 0.3; } }
+    else if (z.k === 'haste') { for (const u of RL.U) if (u.side === z.side && !u.bld && u.hp > 0 && inZ(z, u)) u.hs = 1; }
+    else if (z.k === 'dot' || z.k === 'whirl') {
+      if (z.k === 'whirl') for (const u of rlEnemiesIn(z.side, z.x, z.y, z.r, false, false)) {
+        if (u.bld) continue;
+        const dx = z.x - u.x, dy = z.y - u.y, d = Math.hypot(dx, dy); if (d < 0.3) continue;
+        const st = Math.min(d - 0.25, 3 * dt); rlDrag(u, u.x + dx / d * st, u.y + dy / d * st);
+      }
+      z.acc += dt; while (z.acc >= 0.5 && z.t <= z.dur + 1e-6) { z.acc -= 0.5; rlBlast(z.side, z.x, z.y, z.r, z.k === 'dot' ? z.dmg * 0.5 : z.dmg, z.tw, true); }
+    }
     else if (z.k === 'wave') {
       z.y = z.y0 + z.dir * 6 * Math.min(z.t, z.dur);
       for (const u of RL.U) {
@@ -217,6 +315,12 @@ function rlZones(dt) {
     }
   }
   RL.Z = RL.Z.filter(z => z.t < z.dur + (z.k === 'wave' ? 0.4 : 0));
+  for (const a of RL.U) {
+    if (a.hp <= 0 || a.dep > 0) continue;
+    const ab = RL_CARD[a.c].ab;
+    if (ab === 'rally') { for (const u of RL.U) if (u !== a && u.side === a.side && !u.bld && rlD(u, a) <= 4) u.ral = 1; }
+    else if (ab === 'tar') { const r = RL_CARD[a.c].rng; for (const u of RL.U) if (u.side !== a.side && !u.bld && !u.air && rlD(u, a) <= r + u.size * 0.5) u.tar = 1; }
+  }
 }
 
 // ---------- the units ----------
@@ -238,8 +342,9 @@ function rlPick(u, C) {
   // a Bell Buoy draws every walker within its reach
   if (!u.air && !u.bld && C.tg !== 'build') { let bb = null, bd = 1e9; for (const b of RL.U) if (b.side !== u.side && b.hp > 0 && b.c === 'bellbuoy') { const d = rlD(u, b); if (d <= RL_CARD.bellbuoy.rng && d < bd) { bd = d; bb = b; } } if (bb) return bb; }
   let best = null, bd = 1e9;
-  for (const e of RL.U) { if (!rlCanHit(C.tg, u.side, e)) continue; const d = rlD(u, e) - e.size; if (d <= sight && d < bd) { bd = d; best = e; } }
-  for (const t of RL.T) { if (!rlCanHit(C.tg, u.side, t)) continue; const d = rlD(u, t) - t.r; if (d <= sight && d < bd) { bd = d; best = t; } }
+  const mr = C.minr || 0;   // (a Mortar Pit can't drop a shell on anything nearer than this)
+  for (const e of RL.U) { if (!rlCanHit(C.tg, u.side, e)) continue; const d = rlD(u, e) - e.size; if (d <= sight && d < bd && !(mr && d < mr)) { bd = d; best = e; } }
+  for (const t of RL.T) { if (!rlCanHit(C.tg, u.side, t)) continue; const d = rlD(u, t) - t.r; if (d <= sight && d < bd && !(mr && d < mr)) { bd = d; best = t; } }
   if (best || u.bld) return best;
   return rlLaneTower(u);
 }
@@ -253,6 +358,11 @@ function rlWay(u, tx, ty) {
   const ey = side0 < 0 ? R0 - 0.35 : R1 + 0.35;
   if (Math.abs(u.x - cx) < 0.65 && Math.abs(u.y - ey) < 0.9) return [cx, side0 < 0 ? R1 + 0.5 : R0 - 0.5];
   return [cx, ey];
+}
+// is the straight way from a to b all on dry rock (the banks, or along a causeway)? (a leap never crosses the race)
+function rlDry(ax, ay, bx, by) {
+  for (let i = 0; i <= 8; i++) { const x = ax + (bx - ax) * i / 8, y = ay + (by - ay) * i / 8; if (y > RLC.R0 && y < RLC.R1 && !RLC.LX.some(c => Math.abs(x - c) <= RLC.CW)) return false; }
+  return true;
 }
 // keep a walker out of the race: on a causeway, or back on the bank it came from
 function rlWater(u) {
@@ -269,47 +379,110 @@ function rlUnit(u, dt) {
   if (u.dep > 0) { u.dep -= dt; u.st = 'idle'; return; }
   if (u.cloak > 0) u.cloak -= dt;
   if (u.slow > 0) u.slow -= dt;
+  if (u.lpcd > 0) u.lpcd -= dt;
   if (u.bld) {
     u.hp -= u.max / (u.life || 30) * dt;
-    if (C.ab === 'spawn') { u.ev -= dt; if (u.ev <= 0) { u.ev = C.ev || 5; const s = RL_CARD[C.sp] ? C.sp : 'wreckers', dir = u.side ? -1 : 1, w = rlSpawn(u.side, s, u.x + (RL.rng() - 0.5) * 0.8, u.y + dir * (u.size + 0.4), 0); w.dep = 0.4; rlFx('spawn', { c: s, x: w.x, y: w.y, side: u.side }); } }
+    if (C.ab === 'spawn') { u.ev -= dt; if (u.ev <= 0) { u.ev = C.ev || 5; const s = RL_CARD[C.sp] ? C.sp : 'wreckers', dir = u.side ? -1 : 1; for (let i = 0, n = C.sn || 1; i < n; i++) { const w = rlSpawn(u.side, s, u.x + (RL.rng() - 0.5) * 0.8 + (n > 1 ? (i - (n - 1) / 2) * 0.6 : 0), u.y + dir * (u.size + 0.4), 0); w.dep = 0.4; rlFx('spawn', { c: s, x: w.x, y: w.y, side: u.side }); } } }
     if (C.ab === 'lure') { u.ring -= dt; if (u.ring <= 0) { u.ring = C.hit || 4; for (const e of RL.U) if (e.side !== u.side && !e.air && !e.bld && e.hp > 0 && rlD(u, e) <= C.rng) e.slow = Math.max(e.slow, 1); rlFx('ring', { c: u.c, x: u.x, y: u.y, side: u.side, r: C.rng }); } }
+    if (C.ab === 'oil') { u.ev -= dt; if (u.ev <= 0) { u.ev = C.ev || 8; RL.oil[u.side] = Math.min(RLC.MAXOIL, RL.oil[u.side] + 1); rlFx('oil', { c: u.c, x: u.x, y: u.y, side: u.side }); } }
+    if (C.ab === 'blast') {
+      // the Fog Horn: when its breath is back and a walker is near, it bellows: damage, and everyone on foot knocked away
+      u.ring -= dt; u.st = 'idle';
+      if (u.ring <= 0) {
+        const hit = RL.U.filter(e => e.side !== u.side && e.hp > 0 && !e.air && !e.bld && e.dep <= 0 && !(e.cloak > 0) && rlD(u, e) <= C.rng + e.size * 0.5);
+        if (hit.length) {
+          u.ring = C.hit || 3; u.st = 'hit';
+          for (const e of hit) { rlHurt(e, C.dmg, u.side); const d = rlD(u, e) || 1e-3; rlDrag(e, e.x + (e.x - u.x) / d * (C.kb || 1), e.y + (e.y - u.y) / d * (C.kb || 1)); e.stun = Math.max(e.stun, 0.2); }
+          rlFx('blast', { c: u.c, x: u.x, y: u.y, side: u.side, r: C.rng });
+        }
+      }
+      return;
+    }
     if (!C.dmg) { u.st = 'idle'; return; }
   }
   if (u.stun > 0) { u.stun -= dt; u.st = 'idle'; return; }
-  const k = (u.slow > 0 ? 0.65 : 1) * (u.fog ? 0.55 : 1);
-  if (u.cd > 0) u.cd -= dt * k;
+  // how fast it moves (k, and half again in tar) and strikes (k, and 30% faster rallied)
+  const k = (u.slow > 0 ? 0.65 : 1) * (u.fog ? 0.55 : 1) * (u.hs ? 1.4 : 1);
+  if (u.cd > 0) u.cd -= dt * k * (u.ral ? 1.3 : 1);
+  if (C.ab === 'heal') { rlHealer(u, C, dt, k); return; }
   // the target: kept while it's being struck and still in reach; else looked for again now and then
   let T = u.tg ? RL.by.get(u.tg) : null;
-  const inReach = e => e && rlD(u, e) - rlR(e) - u.size * 0.6 <= C.rng;
+  const inReach = e => e && rlD(u, e) - rlR(e) - u.size * 0.6 <= C.rng && !(C.minr && rlD(u, e) - rlR(e) < C.minr);
   if (T && !(T.k ? T.hp > 0 && T.side !== u.side : rlCanHit(C.tg, u.side, T))) T = null;
+  if (T && C.minr && rlD(u, T) - rlR(T) < C.minr) T = null;
   u.rt -= dt;
-  if (!T || (u.rt <= 0 && !(u.st === 'hit' && inReach(T)))) { const was = T; T = rlPick(u, C); u.rt = 0.35 + RL.rng() * 0.15; if (T !== was) u.lock = 0; }
+  if (!T || (u.rt <= 0 && !(u.st === 'hit' && inReach(T)))) { const was = T; T = rlPick(u, C); u.rt = 0.35 + RL.rng() * 0.15; if (T !== was) { u.lock = 0; u.rpT = 0; } }
   u.tg = T ? T.id : 0;
-  if (!T) { u.st = 'idle'; return; }
+  if (!T) { u.st = 'idle'; u.rpT = 0; u.rp = 0; return; }
+  // the Ship's Cat pounces on anything near enough on its own bank, and bites as it lands
+  if (C.ab === 'leap' && u.lpcd <= 0 && !inReach(T)) {
+    const d = rlD(u, T), gap = d - rlR(T) - u.size * 0.6;
+    if (gap <= (C.lp || 3) && d > 1e-3 && rlDry(u.x, u.y, T.x, T.y)) {
+      const back = rlR(T) + u.size * 0.6 + C.rng * 0.4, fx = u.x, fy = u.y;
+      u.px = u.x; u.py = u.y; u.x = T.x - (T.x - u.x) / d * back; u.y = T.y - (T.y - u.y) / d * back; rlWater(u);
+      rlFx('leap', { c: u.c, x: fx, y: fy, tx: u.x, ty: u.y, side: u.side });
+      u.lpcd = 3; u.cd = 0; u.st = 'hit'; u.face = Math.atan2(T.x - u.x, T.y - u.y); rlStrike(u, T, C); u.cd = C.hit; return;
+    }
+  }
   if (inReach(T)) {
     if (u.st !== 'hit') { u.cd = Math.max(u.cd, C.hit * 0.35); u.run = 0; }
     u.st = 'hit'; u.face = Math.atan2(T.x - u.x, T.y - u.y);
+    if (C.ab === 'ramp') { u.rpT += dt; u.rp = u.rpT >= 4 ? 2 : u.rpT >= 2 ? 1 : 0; }
     if (u.cd <= 0) { rlStrike(u, T, C); u.cd = C.hit; }
     return;
   }
+  u.rpT = 0; u.rp = 0;
   if (u.bld) { u.st = 'idle'; return; }
-  // walking (or flying) on
-  const [wx, wy] = rlWay(u, T.x, T.y), dx = wx - u.x, dy = wy - u.y, d = Math.hypot(dx, dy) || 1e-6;
+  rlMove(u, C, T.x, T.y, k, dt);
+}
+// walking (or flying) on towards (tx, ty), by the causeway if need be
+function rlMove(u, C, tx, ty, k, dt) {
+  const [wx, wy] = rlWay(u, tx, ty), dx = wx - u.x, dy = wy - u.y, d = Math.hypot(dx, dy) || 1e-6;
   if (C.ab === 'charge' && !u.chg && u.run >= 2) { u.chg = 1; rlFx('flash', { c: u.c, x: u.x, y: u.y, side: u.side, r: 0 }); }
-  const sp = C.spd * k * (u.chg ? 2 : 1), step = Math.min(d, sp * dt);
+  const sp = C.spd * k * (u.chg ? 2 : 1) * (u.tar ? 0.5 : 1), step = Math.min(d, sp * dt);
   u.x += dx / d * step; u.y += dy / d * step; u.run += step; u.st = 'walk';
   const fa = Math.atan2(dx, dy); let da = fa - u.face; da = Math.atan2(Math.sin(da), Math.cos(da)); u.face += da * Math.min(1, dt * 10);
+}
+// the Ship's Surgeon never strikes: once a second it mends every friend within its reach, and it keeps close behind
+// the friend nearest it (the one furthest forward if there's a choice), or failing any, walks its lane to stand
+// a little short of the enemy tower
+function rlHealer(u, C, dt, k) {
+  u.hlT -= dt;
+  if (u.hlT <= 0) {
+    u.hlT = 1; let n = 0;
+    for (const f of RL.U) if (f !== u && f.side === u.side && !f.bld && f.hp > 0 && f.dep <= 0 && rlD(u, f) <= C.rng + f.size * 0.5) { if (f.hp < f.max) n++; f.hp = Math.min(f.max, f.hp + (C.hl || 0)); f.mendT = 1.1; }
+    if (n) rlFx('heal', { c: u.c, x: u.x, y: u.y, side: u.side, r: C.rng });
+  }
+  const fwd = e => u.side ? -e.y : e.y;
+  let F = null, bs = -1e9;
+  for (const f of RL.U) { if (f === u || f.side !== u.side || f.bld || f.hp <= 0 || RL_CARD[f.c].ab === 'heal') continue; const d = rlD(u, f); if (d > 8) continue; const s = fwd(f) * 0.5 - d; if (s > bs) { bs = s; F = f; } }
+  u.tg = F ? F.id : 0;
+  if (F) { if (rlD(u, F) <= Math.max(1, C.rng * 0.5)) { u.st = 'idle'; return; } rlMove(u, C, F.x, F.y, k, dt); return; }
+  const T = rlLaneTower(u); if (!T) { u.st = 'idle'; return; }
+  if (rlD(u, T) <= RL_TW[T.k].rng + 1) { u.st = 'idle'; return; }
+  rlMove(u, C, T.x, T.y, k, dt);
 }
 function rlStrike(u, T, C) {
   const dmg = C.dmg * (u.chg ? 2 : 1); u.chg = 0; u.run = 0;
   if (C.ab === 'bomb') { rlBlast(u.side, u.x, u.y, C.sp || 1.2, C.dmg, 1, false); u.hp = 0; u.boom = 1; rlFx('boom', { c: u.c, x: u.x, y: u.y, side: u.side, r: C.sp || 1.2 }); return; }
+  if (C.ab === 'burst') { const bx = T.k ? u.x : T.x, by = T.k ? u.y : T.y; rlBlast(u.side, bx, by, C.sp || 1.5, C.dmg, 1, true); u.hp = 0; u.boom = 1; rlFx('burst', { c: u.c, x: bx, y: by, side: u.side, r: C.sp || 1.5 }); return; }
+  if (C.ab === 'ramp') { rlHurt(T, dmg * [1, 3, 8][u.rp || 0], u.side); return; }
   if (C.rng >= 1.2) {
-    const k = RL_SHOT[u.c] || 'shot', h = u.air ? 2.2 : 0, d = rlD(u, T);
-    RL.P.push({ id: RL.nid++, k, side: u.side, sx: u.x + Math.sin(u.face) * u.size * 0.6, sy: u.y + Math.cos(u.face) * u.size * 0.6, x: u.x, y: u.y, tx: T.x, ty: T.y, t: 0, dur: Math.max(0.12, d / (RL_PSPD[k] || 12)), tg: T.id, dmg, sp: C.sp || 0, c: u.c, tw: 1, air: C.tg === 'any' ? 1 : 0, h, slow: C.ab === 'slowhit' });
+    const k = RL_SHOT[u.c] || 'shot', h = u.air ? 2.2 : u.bld ? 1.2 : 0, d = rlD(u, T), arc = RL_ARC[k];
+    RL.P.push({ id: RL.nid++, k, side: u.side, sx: u.x + Math.sin(u.face) * u.size * 0.6, sy: u.y + Math.cos(u.face) * u.size * 0.6, x: u.x, y: u.y, tx: T.x, ty: T.y, t: 0,
+      dur: Math.max(0.12, d / (RL_PSPD[k] || 12)) + (arc ? 0.25 : 0), tg: arc ? 0 : T.id, dmg, sp: C.sp || 0, c: u.c, tw: 1, air: C.tg === 'any' ? 1 : 0, h, slow: C.ab === 'slowhit',
+      from: C.ab === 'drain' ? u.id : 0, ch: C.ab === 'chain' ? C.ch || 2 : 0 });
     return;
   }
-  rlHurt(T, dmg, u.side);
-  if (C.sp) rlBlast(u.side, T.x, T.y, C.sp, dmg * 0.6, 1, C.tg === 'any');
+  if (C.ab === 'spin') {
+    rlFx('spin', { c: u.c, x: u.x, y: u.y, side: u.side, r: C.sp || 1.5 });
+    const all = rlEnemiesIn(u.side, u.x, u.y, C.sp || 1.5, true, C.tg === 'any'); if (!all.includes(T)) all.push(T);
+    for (const e of all) rlHurt(e, dmg, u.side);
+  } else {
+    rlHurt(T, dmg, u.side);
+    if (C.sp) rlBlast(u.side, T.x, T.y, C.sp, dmg * 0.6, 1, C.tg === 'any');
+  }
+  if (C.ab === 'drain' && u.hp > 0) { u.hp = Math.min(u.max, u.hp + dmg * 0.5); rlFx('heal', { c: u.c, x: u.x, y: u.y, side: u.side, r: 0 }); }
   if (C.ab === 'slowhit' && !T.k) T.slow = Math.max(T.slow, 2);
   rlFx('hit', { c: u.c, x: T.x, y: T.y, side: u.side, r: dmg >= 200 ? 2 : dmg >= 110 ? 1 : 0 });
 }
@@ -362,7 +535,22 @@ function rlShots(dt) {
     if (f < 1) { keep.push(p); continue; }
     if (p.k === 'lob' || p.k === 'keg') { rlBlast(p.side, p.tx, p.ty, p.sp, p.dmg, p.tw, true); rlFx('boom', { c: p.c, x: p.tx, y: p.ty, side: p.side, r: p.sp }); continue; }
     if (p.sp) { rlBlast(p.side, p.tx, p.ty, p.sp, p.dmg, 1, !!p.air); rlFx('boom', { c: p.c, x: p.tx, y: p.ty, side: p.side, r: p.sp * 0.6 }); continue; }
-    if (T && T.hp > 0) { rlHurt(T, p.dmg, p.side); if (p.slow && !T.k) T.slow = Math.max(T.slow, 2); rlFx('hit', { c: p.c || p.k, x: p.tx, y: p.ty, side: p.side, r: p.dmg >= 200 ? 2 : p.dmg >= 110 ? 1 : 0 }); }
+    if (T && T.hp > 0) {
+      rlHurt(T, p.dmg, p.side); if (p.slow && !T.k) T.slow = Math.max(T.slow, 2); rlFx('hit', { c: p.c || p.k, x: p.tx, y: p.ty, side: p.side, r: p.dmg >= 200 ? 2 : p.dmg >= 110 ? 1 : 0 });
+      // a Siren's song mends her by half of what it dealt
+      if (p.from) { const S = RL.by.get(p.from); if (S && S.hp > 0) { S.hp = Math.min(S.max, S.hp + p.dmg * 0.5); S.mendT = 0.4; rlFx('heal', { c: S.c, x: S.x, y: S.y, side: S.side, r: 0 }); } }
+      // the Stormcaller's lightning leaps on to the nearest not yet struck, within 3 tiles of the last, at full damage
+      if (p.ch) {
+        const done = new Set([T.id]), pts = [[T.x, T.y]]; let last = T;
+        for (let i = 0; i < p.ch; i++) {
+          let nx = null, nd = 3;
+          for (const e of RL.U.concat(RL.T)) { if (done.has(e.id) || !rlCanHit('any', p.side, e)) continue; const d = rlD(last, e) - rlR(e) * 0.5; if (d <= nd) { nd = d; nx = e; } }
+          if (!nx) break;
+          done.add(nx.id); pts.push([nx.x, nx.y]); rlHurt(nx, p.dmg, p.side); last = nx;
+        }
+        rlFx('chain', { c: p.c, pts, side: p.side, x: T.x, y: T.y });
+      }
+    }
   }
   RL.P = keep;
 }
@@ -374,6 +562,11 @@ function rlDeaths() {
     const C = RL_CARD[u.c];
     if (C.ab === 'revive' && !u.rv && !u.boom) { u.rv = 1; u.hp = u.max * 0.5; u.stun = 1.2; u.tg = 0; u.st = 'idle'; rlFx('revive', { c: u.c, x: u.x, y: u.y, side: u.side }); keep.push(u); continue; }
     if (!u.boom) rlFx('die', { c: u.c, x: u.x, y: u.y, side: u.side, r: u.air ? 1 : 0 });
+    // the Crab Mother's brood scatters from where she fell
+    if (C.ab === 'deathspawn' && RL_CARD[C.sp]) for (let i = 0, n = C.sn || 1; i < n; i++) {
+      const a = i / n * Math.PI * 2, w = rlSpawn(u.side, C.sp, u.x + Math.sin(a) * 0.6, u.y + Math.cos(a) * 0.6, 0);
+      w.px = u.x; w.py = u.y; rlWater(w); w.dep = 0.3; rlFx('spawn', { c: C.sp, x: w.x, y: w.y, side: u.side });
+    }
   }
   RL.U = keep;
   for (const t of RL.T) {
@@ -412,15 +605,19 @@ const RL_CI = {}; RL_CARDS.forEach((c, i) => { RL_CI[c.id] = i; });
 const rlCi = c => c in RL_CI ? RL_CI[c] : -1;
 const rlCo = i => i >= 0 && RL_CARDS[i] ? RL_CARDS[i].id : '';
 function rlSnap() {
-  const fl = u => (u.air ? 1 : 0) | (u.bld ? 2 : 0) | (u.cloak > 0 ? 4 : 0) | (u.slow > 0 ? 8 : 0) | (u.stun > 0 ? 16 : 0) | (u.fog ? 32 : 0) | (u.chg ? 64 : 0) | (u.dep > 0 ? 128 : 0) | (u.rv ? 256 : 0);
+  const fl = u => (u.air ? 1 : 0) | (u.bld ? 2 : 0) | (u.cloak > 0 ? 4 : 0) | (u.slow > 0 ? 8 : 0) | (u.stun > 0 ? 16 : 0) | (u.fog ? 32 : 0) | (u.chg ? 64 : 0) | (u.dep > 0 ? 128 : 0) | (u.rv ? 256 : 0) | (u.hs ? 512 : 0) | (u.ral ? 1024 : 0) | (u.tar ? 2048 : 0) | (u.mend ? 4096 : 0);
+  // (a unit's shell left and a lens's ramp go on the end, only when there's something to say)
+  const ux = u => u.sh > 0 || u.rp ? [Math.round(u.sh || 0), u.rp | 0] : [];
+  // (the extra points of a leap or a chain, in tenths)
+  const fx = f => f.k === 'leap' ? [[rlQ(f.tx), rlQ(f.ty)]] : f.k === 'chain' ? [f.pts.map(q => [rlQ(q[0]), rlQ(q[1])])] : [];
   return {
     v: 1, ph: RL.ph, k: rlQ(RL.clk), t: rlQ(RL.t), l: rlQ(RL.left), f: (RL.ot ? 1 : 0) | (RL.dbl ? 2 : 0), cn: rlQ(RL.cnt), o: RL.oil.map(rlQ), h: RL.hand, n: RL.next,
     cr: RL.crowns, w: RL.win, nm: RL.names, sk: RL.skins, lv: RL.bot.lvl,
     T: RL.T.map(t => [Math.round(Math.max(0, t.hp)), (t.awake ? 1 : 0) | (t.down ? 2 : 0), t.tg | 0, t.shotAt != null ? rlQ(RL.clk - t.shotAt) : 99]),
-    U: RL.U.map(u => [u.id, rlCi(u.c), u.side, rlQ(u.x), rlQ(u.y), Math.round(u.hp), fl(u), Math.round(u.face * 20), RL_ST.indexOf(u.st), u.tg | 0, Math.round(u.max)]),
+    U: RL.U.map(u => [u.id, rlCi(u.c), u.side, rlQ(u.x), rlQ(u.y), Math.round(u.hp), fl(u), Math.round(u.face * 20), RL_ST.indexOf(u.st), u.tg | 0, Math.round(u.max), ...ux(u)]),
     P: RL.P.map(p => [p.id, RL_PK.indexOf(p.k), p.side, rlQ(p.sx), rlQ(p.sy), rlQ(p.tx), rlQ(p.ty), Math.round(p.t * 100), Math.round(p.dur * 100), rlCi(p.c), rlQ(p.h || 0), p.tg | 0]),
-    Z: RL.Z.map(z => [z.id, z.k === 'wave' ? 1 : 0, z.side, rlQ(z.x), rlQ(z.y), Math.round(z.t * 100), Math.round(z.dur * 100), rlQ(z.r), rlQ(z.w || 0), z.dir || 0]),
-    FX: RL.FX.filter(f => f.k !== 'hit' || RL.clk - f.at < 0.4).slice(-28).map(f => [f.id, RL_FK.indexOf(f.k), f.c in RL_CI ? RL_CI[f.c] : (f.c ? String(f.c) : -1), rlQ(f.x || 0), rlQ(f.y || 0), f.side | 0, rlQ(f.at), f.r == null ? 0 : Math.round(f.r * 10)]),
+    Z: RL.Z.map(z => [z.id, Math.max(0, RL_ZK.indexOf(z.k)), z.side, rlQ(z.x), rlQ(z.y), Math.round(z.t * 100), Math.round(z.dur * 100), rlQ(z.r), rlQ(z.w || 0), z.dir || 0]),
+    FX: RL.FX.filter(f => !rlFxShort(f) || RL.clk - f.at < 0.4).slice(-28).map(f => [f.id, RL_FK.indexOf(f.k), f.c in RL_CI ? RL_CI[f.c] : (f.c ? String(f.c) : -1), rlQ(f.x || 0), rlQ(f.y || 0), f.side | 0, rlQ(f.at), f.r == null ? 0 : Math.round(f.r * 10), ...fx(f)]),
   };
 }
 // on the guest: the snapshot becomes the state; every unit starts its glide from where it's drawn now
@@ -439,13 +636,18 @@ function rlApply(s) {
     u.px = o ? o.px + (o.x - o.px) * a : x; u.py = o ? o.py + (o.y - o.py) * a : y;
     u.c = rlCo(e[1]); u.side = e[2]; u.x = x; u.y = y; u.hp = e[5]; const f = e[6];
     u.air = !!(f & 1); u.bld = !!(f & 2); u.cloak = f & 4 ? 1 : 0; u.slow = f & 8 ? 1 : 0; u.stun = f & 16 ? 1 : 0; u.fog = f & 32 ? 1 : 0; u.chg = f & 64 ? 1 : 0; u.dep = f & 128 ? 1 : 0; u.rv = f & 256 ? 1 : 0;
+    u.hs = f & 512 ? 1 : 0; u.ral = f & 1024 ? 1 : 0; u.tar = f & 2048 ? 1 : 0; u.mend = f & 4096 ? 1 : 0; u.mendT = u.mend; u.sh = e[11] || 0; u.rp = e[12] || 0;
     u.face = e[7] / 20; u.st = RL_ST[e[8]] || 'idle'; u.tg = e[9]; u.max = e[10]; u.size = (RL_CARD[u.c] || {}).size || 0.4;
     return u;
   });
   RL.P = s.P.map(e => ({ id: e[0], k: RL_PK[e[1]] || 'shot', side: e[2], sx: d(e[3]), sy: d(e[4]), tx: d(e[5]), ty: d(e[6]), t: e[7] / 100, dur: e[8] / 100, c: rlCo(e[9]), h: d(e[10]), tg: e[11] }));
   RL.P.forEach(p => { const f = Math.min(1, p.t / p.dur); p.x = p.sx + (p.tx - p.sx) * f; p.y = p.sy + (p.ty - p.sy) * f; });
-  RL.Z = s.Z.map(e => ({ id: e[0], k: e[1] ? 'wave' : 'haar', side: e[2], x: d(e[3]), y: d(e[4]), t: e[5] / 100, dur: e[6] / 100, r: d(e[7]), w: d(e[8]), dir: e[9] }));
-  RL.FX = s.FX.map(e => ({ id: e[0], k: RL_FK[e[1]], c: typeof e[2] === 'string' ? e[2] : rlCo(e[2]), x: d(e[3]), y: d(e[4]), side: e[5], at: d(e[6]), r: e[7] / 10 }));
+  RL.Z = s.Z.map(e => ({ id: e[0], k: RL_ZK[e[1]] || 'haar', side: e[2], x: d(e[3]), y: d(e[4]), t: e[5] / 100, dur: e[6] / 100, r: d(e[7]), w: d(e[8]), dir: e[9] }));
+  RL.FX = s.FX.map(e => {
+    const f = { id: e[0], k: RL_FK[e[1]], c: typeof e[2] === 'string' ? e[2] : rlCo(e[2]), x: d(e[3]), y: d(e[4]), side: e[5], at: d(e[6]), r: e[7] / 10 };
+    if (e[8]) { if (f.k === 'leap') { f.tx = d(e[8][0]); f.ty = d(e[8][1]); } else if (f.k === 'chain') f.pts = e[8].map(q => [d(q[0]), d(q[1])]); }
+    return f;
+  });
   if (RL.pend && (now - RL.pend.at > 1500 || RL.oil[RL.me] < RL.pend.oil - 0.5)) RL.pend = null;
   if (wasPh !== 'over' && s.ph === 'over') { RL.ph = wasPh; rlEnd(s.w); }
   RL.win = s.w;
@@ -530,6 +732,9 @@ function rlSnd(k, o) {
     else if (k === 'crownlost') { [0, 0.14].forEach((d, i) => tone(330 - i * 80, 'triangle', 0.01, 0.12, 0.6, { delay: 0.4 + d })); }
     else if (k === 'dbl' || k === 'ot') { sfxHorn(0, 0.8); }
     else if (k === 'ring') sfxBellFar(0, 0.45 * v);
+    else if (k === 'horn') sfxHorn(0, 0.5);
+    else if (k === 'heal') tone(520, 'sine', 0.02, 0.05, 0.35, { to: 780 });
+    else if (k === 'oil') tone(880, 'triangle', 0.005, 0.06, 0.18, { to: 1100 });
     else if (k === 'revive') { if (!P('moan', { vol: 0.35, gap: 0.4 })) tone(180, 'sawtooth', 0.1, 0.05, 0.6, { to: 120 }); }
     else if (k === 'win') { if (!P('raidwin', { vol: 0.6 })) { if (!P('frwin', { vol: 0.6 })) sfxReveal(3); } }
     else if (k === 'lose') { if (!P('gameover', { vol: 0.55 })) tone(220, 'sine', 0.02, 0.2, 1.4, { to: 110 }); }
@@ -542,6 +747,9 @@ function rlSnd(k, o) {
       else if (c === 'lightkeeper') P('flaregun', { vol: 0.3, gap: 0.2 }) || noise('bandpass', 900, 1, 0.002, 0.1, 0.2);
       else if (c === 'battery') P('cannon', { vol: 0.25, gap: 0.2 }) || sfxCannon();
       else if (c === 'swivel') P('pepperbox', { vol: 0.2, gap: 0.15 }) || noise('highpass', 1800, 1, 0.001, 0.1, 0.06);
+      else if (c === 'mortar' || c === 'martello') P('cannon', { vol: 0.25, gap: 0.2 }) || sfxCannon();
+      else if (c === 'rocketcrew') P('flaregun', { vol: 0.3, gap: 0.2 }) || noise('bandpass', 700, 1, 0.002, 0.12, 0.3);
+      else if (c === 'stormcaller') P('stormbolt', { vol: 0.3, gap: 0.3 }) || noise('highpass', 1800, 0.7, 0.002, 0.2, 0.3);
       else P('swish', { vol: 0.18, gap: 0.12 });
     }
     else if (k === 'card') { const s = { gulls: 'gull', diver: 'diver', mooncusser: 'mooncusser', keelback: 'keelback', crabking: 'bosscrab', kelp: 'moan', fogwraith: 'moan' }[o.c]; if (s) P(s, { vol: s === 'bosscrab' ? 0.15 : 0.3, gap: 0.5 }); }
@@ -556,7 +764,14 @@ function rlFxSound() {
     if (f.id <= RL.sndSeen) continue; hi = Math.max(hi, f.id);
     const C = RL_CARD[f.c];
     if (f.k === 'deploy') { rlSnd(C && C.type === 'building' ? 'build' : 'deploy', { vol: mine(f.side) ? 1 : 0.6 }); rlSnd('card', { c: f.c }); }
-    else if (f.k === 'spell') rlSnd(!C ? 'spell' : C.ab === 'lob' ? 'launch' : C.ab === 'wave' ? 'wave' : C.ab === 'haar' ? 'haar' : C.ab === 'bolts' ? 'spell' : 'flare');
+    else if (f.k === 'spell') rlSnd(!C ? 'spell' : C.ab === 'lob' || C.ab === 'summon' ? 'launch' : C.ab === 'wave' || C.ab === 'pull' || C.ab === 'whirl' ? 'wave' : C.ab === 'haar' || C.ab === 'dot' ? 'haar' : C.ab === 'bolts' || C.ab === 'mend' || C.ab === 'haste' ? 'spell' : 'flare');
+    else if (f.k === 'burst' || f.k === 'summon') rlSnd('boom', { vol: 0.6 });
+    else if (f.k === 'chain') rlSnd('bolt');
+    else if (f.k === 'blast') rlSnd('horn');
+    else if (f.k === 'heal' && f.r) rlSnd('heal');
+    else if (f.k === 'oil' && mine(f.side)) rlSnd('oil');
+    else if (f.k === 'shield') rlSnd('hit', { vol: 1.4 });
+    else if (f.k === 'leap' || f.k === 'spin') rlSnd('spell');
     else if (f.k === 'boom') rlSnd('boom', { vol: f.r > 1.5 ? 1 : 0.6 });
     else if (f.k === 'bolt') rlSnd('bolt');
     else if (f.k === 'hit') rlSnd('hit', { vol: 0.6 + f.r * 0.25 });

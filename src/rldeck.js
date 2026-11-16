@@ -7,7 +7,7 @@
 // (src/rlcrates.js, hooked into src/crates.js beside the golf's), and like every save there it is only ever merged,
 // never replaced. This file loads it; src/rlcrates.js checks the skins in it once it knows them.
 //
-// The decks. Three slots, Deck 1 to 3, each exactly 8 different cards from the 32 in src/rlcards.js, and the one you
+// The decks. Three slots, Deck 1 to 3, each exactly 8 different cards from the 64 in src/rlcards.js, and the one you
 // last chose is the one you play (rlDeckMine()). A fresh slot holds the starter deck (RL_DEFAULT_DECK). An id that is
 // no longer a card, a duplicate or a short deck is mended from the starter deck on load, so a deck is always whole.
 //
@@ -69,22 +69,40 @@ function rlCardWords(id) {
   const reach = r => r < 1.2 ? 'Close quarters' : r + ' tiles';
   const tg = { ground: 'Troops on the ground, and buildings', any: 'Anything, flyers too', build: 'Only buildings and towers' };
   const every = (d, h) => d + (h ? ' every ' + h + ' s' : '') + (h ? ' (' + Math.round(d / h) + ' a second)' : '');
+  const S = c.sp && rlCardById(c.sp), sn = c.sn || 1, them = (n, C) => n > 1 ? n + ' ' + (C ? C.n : c.sp) : (C ? C.n : c.sp);
   if (c.type === 'troop') {
     rows.push(['Comes', c.cnt > 1 ? c.cnt + ' of them' : 'Alone']);
     rows.push(['Hit points', c.hp + (c.cnt > 1 ? ' each' : '')]);
-    rows.push(['Damage', every(c.dmg, c.hit) + (c.sp ? ', splashing ' + c.sp + ' tiles round' : '')]);
-    rows.push(['Reach', reach(c.rng)]);
+    if (c.sh) rows.push(['Shell', c.sh + ', spent before its hit points']);
+    if (c.ab === 'heal') rows.push(['Mends', c.hl + ' a second, every friend within ' + c.rng + ' tiles']);
+    else if (c.ab === 'burst') rows.push(['Damage', c.dmg + ' once, as it bursts, ' + c.sp + ' tiles round']);
+    else rows.push(['Damage', every(c.dmg, c.hit) + (c.ab === 'spin' ? ', on everyone within ' + c.sp + ' tiles of it' : c.sp && typeof c.sp === 'number' ? ', splashing ' + c.sp + ' tiles round' : '') + (c.ab === 'chain' ? ', leaping on to ' + c.ch + ' more' : '')]);
+    if (c.ab !== 'heal') rows.push(['Reach', reach(c.rng)]);
+    if (c.ab === 'leap') rows.push(['Pounce', 'Up to ' + c.lp + ' tiles']);
     rows.push(['Speed', sp(c.spd)]);
-    rows.push(['Goes for', tg[c.tg] || c.tg]);
+    rows.push(['Goes for', c.ab === 'heal' ? 'Its friends: it keeps beside them' : tg[c.tg] || c.tg]);
     rows.push(['Moves', c.air ? 'Flies, straight over the race; only what hits flyers can touch it' : 'On foot, over the causeways']);
+    if (c.ab === 'deathspawn' && S) rows.push(['When it falls', them(sn, S) + ' come out']);
   } else if (c.type === 'spell') {
     rows.push(['Where', 'Anywhere on the rocks or the race']);
     rows.push(['Radius', c.r + ' tiles']);
-    if (c.dmg) { rows.push(['Damage', c.dmg + ' to troops and buildings']); rows.push(['To towers', Math.round(c.dmg * c.tw) + ' (' + Math.round(c.tw * 100) + '%)']); }
+    if (c.dur) rows.push(['Lasts', c.dur + ' seconds']);
+    if (c.ab === 'dot') { rows.push(['Damage', c.dmg + ' a second to troops and buildings, ' + c.dmg * c.dur + ' in all']); rows.push(['To towers', Math.round(c.dmg * c.tw) + ' a second (' + Math.round(c.tw * 100) + '%), ' + Math.round(c.dmg * c.tw * c.dur) + ' in all']); }
+    else if (c.ab === 'whirl') { rows.push(['Damage', c.dmg + ' every half second (' + c.dmg * 2 + ' a second), ' + c.dmg * 2 * c.dur + ' in all']); rows.push(['To towers', Math.round(c.dmg * 2 * c.tw) + ' a second (' + Math.round(c.tw * 100) + '%)']); }
+    else if (c.dmg) { rows.push(['Damage', c.dmg + ' to troops and buildings']); rows.push(['To towers', Math.round(c.dmg * c.tw) + ' (' + Math.round(c.tw * 100) + '%)']); }
+    if (c.ab === 'mend') rows.push(['Mends', c.hl + ' a second, ' + c.hl * c.dur + ' in all']);
+    if (c.ab === 'summon' && S) rows.push(['Brings', S.n + ' (' + (S.cnt > 1 ? S.cnt + ' of them, ' : '') + S.hp + ' hit points' + (S.cnt > 1 ? ' each' : '') + ')']);
   } else {
     rows.push(['Hit points', String(c.hp)]);
     rows.push(['Lasts', c.life + ' s, wearing down as it stands']);
-    if (c.dmg) { rows.push(['Damage', every(c.dmg, c.hit)]); rows.push(['Range', reach(c.rng)]); rows.push(['Shoots at', tg[c.tg] || c.tg]); }
+    if (c.dmg) {
+      rows.push(['Damage', c.ab === 'ramp' ? every(c.dmg, c.hit) + ', climbing to three times that after 2 s on one target and eight times after 4 s' : every(c.dmg, c.hit) + (c.sp ? ', splashing ' + c.sp + ' tiles round' : '')]);
+      rows.push(['Range', c.minr ? c.minr + ' to ' + c.rng + ' tiles (nothing nearer)' : reach(c.rng)]);
+      rows.push(['Shoots at', c.ab === 'blast' ? 'Walkers all round it' : tg[c.tg] || c.tg]);
+    }
+    if (c.ab === 'tar') rows.push(['Mires', 'Enemy walkers within ' + c.rng + ' tiles, to half speed']);
+    if (c.ab === 'oil') rows.push(['Oil', 'One every ' + c.ev + ' s, about ' + Math.floor(c.life / c.ev) + ' over its life']);
+    if (c.ab === 'spawn' && S) rows.push(['Sends', (S.cnt > 1 ? (sn > 1 ? sn : 'One') + ' of the ' + S.n : them(sn, S)) + ' every ' + c.ev + ' s']);
   }
   const ab = {
     revive: 'Rises once more at half his hit points when he falls.',
@@ -92,13 +110,32 @@ function rlCardWords(id) {
     cloak: 'Nothing can strike it for its first ' + c.cl + ' seconds.',
     charge: 'After 2 tiles of running it charges at twice the speed, and its first blow does double.',
     slowhit: 'Each blow slows what it hits by 35% for 2 seconds.',
-    lob: 'Lands ' + c.fl + ' s after you cast it, so lead a moving target.',
+    lob: c.type === 'building' ? 'Its shells arc high and come down where the target stood, bursting ' + c.sp + ' tiles round, so a quick walker can dodge them; it can\'t aim at anything within ' + c.minr + ' tiles.' : 'Lands ' + c.fl + ' s after you cast it, so lead a moving target.',
     stun: 'Stuns everything under it for ' + c.st + ' s.',
     wave: 'Rolls ' + c.len + ' tiles forward from where you cast it, ' + c.w + ' tiles wide, knocking walkers back ' + c.kb + ' tiles.',
     haar: 'A fog bank for ' + c.dur + ' seconds: enemies inside move and strike 45% slower.',
     bolts: 'Strikes the ' + c.k + ' enemies with the most hit points inside it.',
     lure: 'Every walker within ' + c.rng + ' tiles turns on it, and each toll of its bell (every 4 s) slows them for a moment.',
-    spawn: 'Calls a wrecker to it every ' + c.ev + ' seconds while it stands.',
+    spawn: 'Calls ' + (sn > 1 ? sn + ' ' + (S ? S.n : 'wreckers') : 'a wrecker') + ' to it every ' + c.ev + ' seconds while it stands.',
+    burst: 'Drifts at the nearest enemy, bird or walker or tower, and bursts on it for ' + c.dmg + ' all round (' + c.sp + ' tiles), going out with it.',
+    leap: 'Pounces on anything within ' + c.lp + ' tiles on the same rock, and its first bite lands as it does; it can pounce again 3 s later.',
+    shield: 'Its shell soaks the first ' + c.sh + ' damage, whatever strikes it, before its hit points take any.',
+    drain: 'Half of every hit she lands mends her (' + Math.round(c.dmg / 2) + ' a hit).',
+    heal: 'Never strikes. Once a second it mends every friend within ' + c.rng + ' tiles by ' + c.hl + ', and it keeps close behind the friend nearest it.',
+    spin: 'Each swing lands on every enemy within ' + c.sp + ' tiles of her, not only the one she aims at.',
+    rally: 'Friends within 4 tiles of him strike 30% faster.',
+    deathspawn: 'When she falls, ' + them(sn, S) + ' scatter from where she stood.',
+    chain: 'Each bolt strikes its target, then leaps on to ' + c.ch + ' more enemies, each within 3 tiles of the last, at full damage.',
+    pull: 'Drags every enemy on foot in the circle to its middle at once (never over the race), then strikes everything there.',
+    mend: 'For ' + c.dur + ' seconds your troops in the circle mend ' + c.hl + ' a second.',
+    haste: 'For ' + c.dur + ' seconds your troops in the circle move and strike 40% faster.',
+    dot: 'For ' + c.dur + ' seconds everything of the enemy\'s in the circle takes ' + c.dmg + ' a second, towers ' + Math.round(c.tw * 100) + '% of it.',
+    summon: 'Strikes everything in the circle, then ' + (S ? (S.cnt > 1 ? 'the ' + S.n + ' climb' : S.n + ' climbs') : 'a crew climbs') + ' out on your side, there, wherever you cast it (on the nearer bank if it lands in the race).',
+    whirl: 'For ' + c.dur + ' seconds it drags enemies on foot to its middle, 3 tiles a second, striking everything inside every half second.',
+    tar: 'Enemy walkers within ' + c.rng + ' tiles move at half speed (they strike as fast as ever). Fires nothing.',
+    blast: 'Every ' + c.hit + ' seconds, if a walker is within ' + c.rng + ' tiles, it bellows: ' + c.dmg + ' to every walker there, knocking them ' + c.kb + ' tiles back.',
+    ramp: 'It burns hotter the longer it holds one target: three times after 2 s, eight times after 4 s; a new target starts it cool again.',
+    oil: 'Gives you one lamp oil every ' + c.ev + ' seconds while it stands. Keep it out of reach at the back.',
   }[c.ab] || '';
   return { rows, ab };
 }
