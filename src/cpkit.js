@@ -47,7 +47,7 @@ function cpkNpcPose(F, o) {
   const dt = o.dt == null ? Math.min(0.05, FPS.dtLast || 0.016) : o.dt;
   F.ph = (F.ph || 0) + dt * (o.spd || 0) * 8 / FPSC.SPEED;
   try { fbPose(F, { dt, x: o.x, y: o.y, jz: o.jz || 0, vz: 0, h: o.h || 0, p: o.p || 0, spd: o.spd || 0, ph: F.ph, cr: o.cr || 0, id: o.id || 'pepperbox', plain: true, pap: 0, rec: 0, draw: 0, rl: 0, slash: -1, lan: o.lan !== false, t: g.t, see: o.see == null ? 1 : o.see, op: o.op == null ? 1 : o.op, noGun: o.noGun }); } catch (e) {}
-  if (o.noGun && F.wpn) for (const k in F.wpn) if (F.wpn[k] && F.wpn[k].visible != null) F.wpn[k].visible = false;
+  if (o.noGun && F.wpn) for (const k in F.wpn) { const w = F.wpn[k]; if (w && w.root) w.root.visible = false; }
 }
 function cpkNpcFree(F) { if (F && typeof fbDispose === 'function') try { fbDispose(F); } catch (e) {} }
 

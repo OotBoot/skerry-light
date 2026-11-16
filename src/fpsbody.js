@@ -428,6 +428,7 @@ function fpsBodySync(show) {
     see: clamp(0.5 + 0.5 * fpsSeeAt(m.x, m.y, m.lan), 0.45, 1),
     op: FPS.camPull == null ? 1 : clamp(0.3 + (FPS.camPull - 0.15) / 0.35 * 0.7, 0.3, 1),
   });
+  { const cine = typeof cpCineOn === 'function' && cpCineOn(); for (const k in F.wpn) { const w = F.wpn[k]; if (w && w.root) w.root.visible = !cine && k === FPS.weapon; } }   // [campaign] no gun in your hands in a cinematic
   return true;
 }
 function fpsBodyHide() { if (FBODY.fig) FBODY.fig.root.visible = false; }
