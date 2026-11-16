@@ -130,6 +130,7 @@ function zbMake(z, kind) {
 }
 // everyone hears it come
 function zbArrive(z) {
+  if (zbT(z).quiet) return;   // [campaign] a quiet kind comes in unannounced (src/cpm02g.js)
   const T = zbT(z), zn = z.win ? zmZoneName(z.win.zone) : '';
   ZM.banner = { text: T.N, t: 3.6, col: T.col, sub: T.sub };
   fpsFeed(T.arriveLine(zn));
@@ -284,6 +285,7 @@ function zbFlash(z) { if (zbT(z).noFlash && zbT(z).noFlash(z)) return; z.hp = Ma
 function zbKilled(z, how, by) {
   const T = zbT(z);
   zmPoints(T.pts, false, by);
+  if (T.quiet) { zbDeathFx(z); return; }   // [campaign] a quiet kind: no salvage, no line (src/cpm02g.js)
   const r = Math.random(), k = typeof zmInfRes === 'function' && zmInfRes() ? 'double' : r < 0.35 ? 'keg' : r < 0.6 ? 'double' : r < 0.8 ? 'spot' : 'flash';
   ZM.drops.push({ k, x: z.x, y: z.y, z: z.jz || 0, t: 30, ph: Math.random() * 6, id: ++ZM.zc });
   zmSound('drop');
@@ -297,7 +299,7 @@ function zbDeathFx(z) {
   if (z.dfx) return; z.dfx = true;
   const m = FPS.me, T = zbT(z);
   if (z.bt === 'moon' && ZB.lure && ZB.lure.zn === z.zn) ZB.lure = null;
-  ZM.banner = { text: T.N + ' goes down', t: 3, small: true, col: T.col };
+  if (!T.quiet) ZM.banner = { text: T.N + ' goes down', t: 3, small: true, col: T.col };   // [campaign] (a quiet kind: no banner)
   T.sound('die', Math.hypot(z.x - m.x, z.y - m.y));
   for (let i = 0; i < 4; i++) fpsPuff(z.x + (Math.random() - 0.5) * 1.2, z.y + (Math.random() - 0.5) * 1.2, FPSC.GROUND + (z.jz || 0) + 0.8 + i * 0.4, T.puff || '90,140,120', 8);
 }
@@ -387,7 +389,7 @@ function zbHud(phone, top) {
     gr.addColorStop(0, `rgba(255,252,236,${a})`); gr.addColorStop(0.35, `rgba(255,236,180,${a * 0.95})`); gr.addColorStop(1, `rgba(255,190,90,${a * 0.85})`);
     ctx.fillStyle = gr; ctx.fillRect(0, 0, W, H);
   }
-  const nob = typeof RAID !== 'undefined' && RAID.on && raidStage() && raidStage().noBars, live = ZM.z.filter(q => q.boss && !q.gone && (!q.dead || (q.deadT || 0) < 2) && (!nob || q.bt === 'verity'));   // [raid] no bars in the Swallow ([verity] but his)
+  const nob = typeof RAID !== 'undefined' && RAID.on && raidStage() && raidStage().noBars, live = ZM.z.filter(q => q.boss && !q.gone && (!q.dead || (q.deadT || 0) < 2) && (!nob || q.bt === 'verity') && !zbT(q).quiet);   // [raid] no bars in the Swallow ([verity] but his) [campaign] (nor a quiet kind's)
   for (const q of live) ZB.bars.set(q.zn, Math.min(1, (ZB.bars.get(q.zn) || 0) + dt * 3));
   for (const [zn, v] of ZB.bars) if (!live.some(q => q.zn === zn)) { if (v - dt * 3 <= 0) ZB.bars.delete(zn); else ZB.bars.set(zn, v - dt * 3); }
   if (!live.length) return;
