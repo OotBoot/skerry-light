@@ -199,7 +199,7 @@ const RL_CARDS = [
 //     plimsoll  Blood in the Water: he lunges up to r tiles on to the enemy with the most hit points (on the same dry
 //               rock), bites for mul times his damage as he lands, then strikes fast times as fast for dur seconds
 //     verity    I Want to Help: he shows what he really looks like; every enemy troop within r tiles is stunned for st
-//               seconds, and for dur seconds his hits do mul times and land on everyone within sp tiles of him.
+//               seconds, he mends hl, and for dur seconds his hits do mul times and land on everyone within sp tiles of him.
 //               And always: nothing slows or stuns him (the bell does nothing to him)
 const RL_CHAMPS = [
   { id: 'maren', n: 'Maren Holm', cost: 5, type: 'troop', hp: 1900, dmg: 175, hit: 1.2, rng: 3, spd: RL_SPD.med, tg: 'any', cnt: 1, size: 0.5,
@@ -209,7 +209,7 @@ const RL_CHAMPS = [
     champ: { n: 'Blood in the Water', cost: 1, cd: 11, cd0: 2, dur: 4, r: 6, mul: 3, fast: 2, d: 'He lunges up to 6 tiles on to the strongest enemy near him, bites for triple, then strikes twice as fast for 4 seconds.' },
     d: 'The shark in the cabin boy\u2019s blue shoes. He knows the way through the skerries.' },
   { id: 'verity', n: 'Verity', cost: 4, type: 'troop', hp: 1300, dmg: 150, hit: 1.0, rng: 0.8, spd: RL_SPD.med, tg: 'ground', cnt: 1, size: 0.45,
-    champ: { n: 'I Want to Help', cost: 3, cd: 20, cd0: 4, dur: 6, r: 4, st: 1.5, mul: 2.5, sp: 1.6, d: 'He stops smiling: enemy troops within 4 tiles freeze for 1.5 s, and for 6 seconds his hits do two and a half times, on everyone round him.' },
+    champ: { n: 'I Want to Help', cost: 3, cd: 20, cd0: 4, dur: 6, r: 4, st: 1.5, mul: 2.5, sp: 1.6, hl: 500, d: 'He stops smiling and mends 500: enemy troops within 4 tiles freeze for 1.5 s, and for 6 seconds his hits do two and a half times, on everyone round him.' },
     d: 'A small yellow orb, smiling, who says he wants to help. Nothing slows him or stuns him.' },
 ];
 const RL_CARD = {}; for (const c of RL_CARDS.concat(RL_CHAMPS)) RL_CARD[c.id] = c;

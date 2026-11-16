@@ -221,6 +221,7 @@ function rlAbility(side) {
     rlFx('hit', { c: u.c, x: T.x, y: T.y, side, r: 2 });
   } else if (u.c === 'verity') {
     for (const e of rlEnemiesIn(side, u.x, u.y, A.r, false, true)) if (!e.bld) { e.stun = Math.max(e.stun, A.st); e.lock = 0; }
+    u.hp = Math.min(u.max, u.hp + (A.hl || 0)); u.mendT = 1; rlFx('heal', { c: u.c, x: u.x, y: u.y, side, r: 0 });   // (and he mends)
   }
   rlFx('champ', { c: u.c, x: u.x, y: u.y, side, r: A.r });
   return true;
@@ -776,6 +777,7 @@ function rlEnter() {
   $('rlUI').hidden = false; $('rlPause').hidden = true; $('rlEnd').hidden = true;
   document.body.classList.add('rlon');
   RL.sndSeen = RL.nid; RL.sndP = 0;
+  try { if (typeof loadVerityVoice === 'function') loadVerityVoice(); } catch (e) {}   // (Verity's voice, ready for when he's set down)
   if (typeof rl3dReset === 'function') rl3dReset();
   if (typeof rlHudReset === 'function') rlHudReset();
   rlSnd('start');
@@ -827,6 +829,7 @@ function rlSnd(k, o) {
     else if (k === 'dbl' || k === 'ot') { sfxHorn(0, 0.8); }
     else if (k === 'ring') sfxBellFar(0, 0.45 * v);
     else if (k === 'horn') sfxHorn(0, 0.5);
+    else if (k === 'verity') { try { loadVerityVoice(); } catch (e) {} if (typeof sfxVerity === 'function') sfxVerity(1, 0.9); }   // (set down, he says he wants to help)
     else if (k === 'champ') {   // a champion's ability: Maren's moan and a swell, Plimsoll's splash, Verity's own voice dropping low
       if (o.c === 'maren') { if (!P('moan', { vol: 0.45 })) tone(160, 'sawtooth', 0.1, 0.06, 0.8, { to: 110 }); tone(392, 'sine', 0.2, 0.05, 1.2, { to: 523 }); }
       else if (o.c === 'plimsoll') { sfxSplash(0, 0.8); noise('lowpass', 600, 0.8, 0.005, 0.25, 0.3); }
@@ -862,7 +865,7 @@ function rlFxSound() {
   for (const f of RL.FX) {
     if (f.id <= RL.sndSeen) continue; hi = Math.max(hi, f.id);
     const C = RL_CARD[f.c];
-    if (f.k === 'deploy') { rlSnd(C && C.type === 'building' ? 'build' : 'deploy', { vol: mine(f.side) ? 1 : 0.6 }); rlSnd('card', { c: f.c }); }
+    if (f.k === 'deploy') { rlSnd(C && C.type === 'building' ? 'build' : 'deploy', { vol: mine(f.side) ? 1 : 0.6 }); rlSnd('card', { c: f.c }); if (f.c === 'verity') rlSnd('verity'); }
     else if (f.k === 'spell') rlSnd(!C ? 'spell' : C.ab === 'lob' || C.ab === 'summon' ? 'launch' : C.ab === 'wave' || C.ab === 'pull' || C.ab === 'whirl' ? 'wave' : C.ab === 'haar' || C.ab === 'dot' ? 'haar' : C.ab === 'bolts' || C.ab === 'mend' || C.ab === 'haste' ? 'spell' : 'flare');
     else if (f.k === 'champ') rlSnd('champ', { c: f.c });
     else if (f.k === 'burst' || f.k === 'summon') rlSnd('boom', { vol: 0.6 });

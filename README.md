@@ -606,7 +606,7 @@ A ninth game, on its own card on the title screen (**Duel the bot**, or **Triple
   |---|---|---|---|
   | **Maren Holm** | 5 | 1900 hit points, 175 every 1.2 s from 3 tiles, hits flyers too | **Sea-Green Light** (2, 16 s): for 4 seconds nothing can hurt her, and every enemy within 3 tiles is slowed and takes 130 a second (towers a third of it) |
   | **Plimsoll** | 4 | 1500 hit points, 210 every 1.1 s up close, fast | **Blood in the Water** (1, 11 s): he lunges up to 6 tiles onto the enemy with the most hit points (a tower too) on the same bank, bites for three times his damage, then strikes twice as fast for 4 seconds |
-  | **Verity** | 4 | 1300 hit points, 150 a second up close; nothing slows or stuns him | **I Want to Help** (3, 20 s): he stands up as what he really looks like, enemy troops within 4 tiles freeze for 1.5 s, and for 6 seconds his hits do two and a half times, on everyone round him |
+  | **Verity** | 4 | 1300 hit points, 150 a second up close; nothing slows or stuns him, and he says he wants to help as he's set down | **I Want to Help** (3, 20 s): he stands up as what he really looks like and mends 500 hit points, enemy troops within 4 tiles freeze for 1.5 s, and for 6 seconds his hits do two and a half times, on everyone round him |
 
   The bot sometimes brings a champion too, and uses its ability when it counts. Online, the guest's button goes through the host like a card.
 - **Crowns.** Every tower you fell is a crown. Fell the Great Light and you take all three at once and the match ends there.

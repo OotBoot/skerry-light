@@ -6,6 +6,8 @@
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 208, date: '2026-11-16', title: "Skerry Clash: champion tweaks", Changes: [
+    "Skerry Clash: small sound and balance tweaks to a champion." ] },
   { v: 207, date: '2026-11-16', title: "Skerry Clash: Triple Draft", New: [
     "Skerry Clash: a new Triple Draft mode. Instead of bringing your own deck, both keepers build one on the spot: eight rounds, three cards each round, take one and the other two are gone.",
     "Skerry Clash: both keepers are offered exactly the same cards, and no card comes up twice in one draft. Each round has a theme (a big hitter, something that hits flyers, a spell that strikes, a cheap troop, a building or a spell, or anything goes), so every drafted deck has a fighting chance.",
