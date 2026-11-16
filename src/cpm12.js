@@ -198,3 +198,5 @@ cpCineDef('m12_outro', { music: 'cpm12rest',
     { d: 5, card: { eye: 'Mission complete', t: 'Maren’s End', sub: 'The Dry Night, 1890. The sea came back, and so, some say, did she.' },
       lines: [[0.5, 'log', 'She is still seen, on every sea, a little nearer every time.', 'cp_m12_10']] },
   ] });
+// (between the Dry Bed and the Old Drain: down the lodged wreck's mast, into the dark under the bed)
+cpCineDef('m12_down', { music: 'cpcave', shots: [{ d: 4, card: { eye: 'The Dry Night, 1890', t: 'Down the Mast', sub: 'Hand over hand down the wreck’s mast, into the old drain under the bed of the sea.' }, lines: [[1.2, 'log', 'Below the wreck the sea had left a road of its own, and we took it.', 'cp_m12_47']] }] });
