@@ -64526,7 +64526,7 @@ function rlnBackToLobby() {
   if (!$('rlMp')) return;
   if ($('rlMpHost')) $('rlMpHost').addEventListener('click', () => { RLN.draft = false; RLN.n3 = false; rlnHost(); });
   if ($('rlMpHostDr')) $('rlMpHostDr').addEventListener('click', () => { RLN.draft = true; RLN.n3 = false; rlnHost(); });
-  if ($('rlMpHost3')) $('rlMpHost3').addEventListener('click', () => { RLN.draft = false; RLN.n3 = true; rlnHost(); });   // (a match for three from the start, room for three keepers)   // (a triple draft from the start; the host can still change it in the lobby)
+  if ($('rlMpHost3')) $('rlMpHost3').addEventListener('click', () => { RLN.draft = false; RLN.n3 = true; rlnHost(); });   // (a match for three from the start, room for three keepers; the host can still change either in the lobby)
   if ($('rlMpStart')) $('rlMpStart').addEventListener('click', rlnStart);
   if ($('rlMpLeave')) $('rlMpLeave').addEventListener('click', rlnLeave);
   if ($('rlMpDraft')) $('rlMpDraft').addEventListener('change', e => { if (!rlnAmHost()) return; RLN.draft = !!e.target.checked; rlnSendLobby(); rlnRender(); });
