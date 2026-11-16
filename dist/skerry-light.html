@@ -1490,6 +1490,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 .rl-score .mine { border-top: 3px solid var(--rl-me); } .rl-score .theirs { border-top: 3px solid var(--rl-them); }
 .rl-score .rl-pips i { width: 22px; height: 22px; }
 .rl-endov .btnrow { justify-content: center; }
+.rl-mmr { margin: -6px 0 16px; font-family: var(--body); font-size: 15px; letter-spacing: 0.02em; color: var(--ink); } .rl-mmr.up { color: #ffe09a; } .rl-mmr.down { color: #c8b8c8; }   /* [rival] the rating's change (src/rlmmr.js) */
 @media (max-width: 560px) {
   .rl-top { grid-template-columns: 1fr auto 1fr auto; gap: 5px; left: 5px; right: 5px; }
   .rl-who { padding: 4px 6px; } .rl-who b { font-size: 0.9rem; }
@@ -2074,6 +2075,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
         <button class="tool" id="rlSkinBtn" type="button">Towers</button>
       </div>
       <p class="muted rlstats" id="rlStats"></p>
+      <p class="muted rlstats rlmmr" id="rlMmr"></p><!-- [rival] the rating (src/rlmmr.js) -->
       <section class="warmp zmmp" id="rlMp" aria-labelledby="rlMpHead"><!-- [rival] the lobby is src/rlnet.js -->
         <h2 id="rlMpHead">Duel online · one against one</h2>
         <p class="muted" id="rlMpNote">Looking for another keeper…</p>
@@ -2100,6 +2102,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
         <p><b>The Great Light wakes.</b> The Great Light sleeps until it's hit or one of its Lamp Towers falls. Then it wakes and shoots too, harder than the lamps.</p>
         <p><b>Double oil and overtime.</b> In the last minute oil comes twice as fast. At time, more crowns wins. Level, and there's a minute of overtime at double oil, where the next tower to fall wins. Still level, whoever's most damaged tower has less health left loses.</p>
         <p><b>Decks.</b> Deck opens the deck builder: three slots, eight cards each from the 64, no two the same. Tap a card to read everything about it, and swap cards in and out one for one. Watch the average oil: a cheap deck cycles fast, a heavy one hits hard but slowly.</p>
+        <p><b>Rating (MMR).</b> Every finished match moves your rating, which starts at 1000: up for a win, down for a loss, by more when the odds were against it. Duels online count most; the bot counts for less, against a rating of its own (easy 800, normal 1100, hard 1300). Leaving a duel early counts as a loss. The rating belongs to your username, and the Skerry Clash board ranks everyone by it. A username already rated on someone else's save can't be used for a rating, and renaming yourself starts a fresh rating under the new name.</p>
         <p><b>Tower skins.</b> Every duel you finish earns a tower crate, and a win earns another; the first is free. The Lampwright's Crate holds a set of towers for your rock, the Great Light and both lamps, with the same grades as the other crates: Mates shimmer, Captains glow, Admirals are alive. Whatever you raise, your side's colour is on the rails and the pennants.</p>
       </details>
     </div>
@@ -2183,6 +2186,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
         <h1 id="rlEndHead">Victory</h1>
         <p class="muted" id="rlEndSub"></p>
         <div class="rl-score"><div class="mine"><span id="rlEndMeN"></span><span class="rl-pips" id="rlEndMe"></span></div><div class="theirs"><span id="rlEndThemN"></span><span class="rl-pips" id="rlEndThem"></span></div></div>
+        <p class="rl-mmr" id="rlEndMmr" hidden></p>
         <div class="btnrow"><button class="primary" id="rlAgain" type="button">Again</button><button class="tool" id="rlMenu" type="button">Back to the menu</button></div>
       </div>
     </div>
@@ -2654,7 +2658,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 // ---- src/config.js ----
 'use strict';
 // The game's version, shown at the top of the main menu. Bump it by one with every change pushed to main.
-var VERSION = 201;
+var VERSION = 202;
 // Skerry Light: tuning, asset paths and lore.
 // World units are metres. The lighthouse stands at the origin on the shoreline (y = 0);
 // north (+y) is open sea. Bearings: 0 = north, positive = east.
@@ -2829,6 +2833,13 @@ document.addEventListener('visibilitychange', () => {
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 202, date: '2026-11-16', title: "Skerry Clash: ratings and a leaderboard", New: [
+    "Skerry Clash: every player now has an MMR rating, starting at 1000. It belongs to your username, and only your save can play under that name.",
+    "Skerry Clash: online duels move your rating the most, depending on how your rating compares to your rival's. Matches against the bot count at half weight, against a fixed rating for each level: Easy 800, Normal 1100, Hard 1300. A draw counts as half a win.",
+    "Skerry Clash: a new Skerry Clash board on the scoreboard ranks everyone by rating, with their wins and matches played.",
+    "Skerry Clash: the end screen shows how much your rating went up or down, the game's card shows your rating and your best, and the online lobby shows each keeper's rating beside their name." ], Changes: [
+    "Skerry Clash: leaving an online duel before it ends counts as a loss. A duel cut off by a lost connection isn't rated.",
+    "Skerry Clash: changing your username starts a fresh rating under the new name. If the name you pick is already taken, you'll be asked to choose another." ] },
   { v: 201, date: '2026-11-16', title: "Rival Lights is now Skerry Clash", Changes: [
     "Skerry Clash: the duel of lights for two has a new name. Rival Lights is now Skerry Clash on the main menu, its card, the pause menu and invites. Your decks, record and tower skins carry over untouched." ] },
   { v: 200, date: '2026-11-16', title: "Skerry Clash: 32 new cards and a full rebalance", New: [
@@ -51573,6 +51584,9 @@ rcRender();
 // Your bests are part of your save (src/crates.js saveData: `best`, merged by taking the higher of each), so they
 // follow your recovery code (src/cloudsave.js) to every device, and on the game's own site you're on the board once,
 // under an id made from that code (not the code itself): a browser's own entry from before moves across to it.
+// And one board that isn't games: Skerry Clash's ratings (clash, src/rlmmr.js), a row for each username with its
+// rating (s), wins (b) and matches rated (c), kept by the server (or, on claude.ai, in each player's own document as
+// clash: { n, r, b, w, l, d }); boardKeys() is every board but that one, for the games' own keeping.
 // Your name on the board is your username: one name for every game, kept on this device (and in your save), typed
 // in any of the name boxes (the board's, the crew's, Wreckers' Night's, the Lighthouse's) and filled into the rest.
 
@@ -51595,9 +51609,14 @@ const BOARD = {
     // [golf] src/golf.js: s is 200 less the round to par (so the lowest round ranks first), shown as strokes and to par
     golf: { name: 'Skerry Links', s: 'Round', b: 'Holes', c: 'Birdies', what: 'Each round of nine on the cliffs: the score (and to par), the holes played, and the birdies or better.',
       fs: v => v > 0 ? `${GF_PAR + 200 - v} (${(t => t === 0 ? 'E' : t > 0 ? '+' + t : '−' + -t)(200 - v)})` : '—' },
+    // [rival] src/rlmmr.js: not games but players, one row a username, by rating (mmr: none of the games' own keeping)
+    clash: { name: 'Skerry Clash', s: 'MMR', b: 'Wins', c: 'Matches', mmr: 1, what: 'Each keeper’s rating in Skerry Clash (from 1000, by wins and losses online and against the bot), their wins and the matches rated.' },
   },
   open: {}, mine: null, via: null, db: null, user: null, uid: null, data: null, loading: false, err: '', lastT: 0, sendT: 0, store: '',
 };
+
+// the boards of games (all but the rating's)
+function boardKeys() { return Object.keys(BOARD.games).filter(g => !BOARD.games[g].mmr); }
 
 // ---------- your games: each one an entry on the board ----------
 // BOARD.runs[game]: [{ r: its id, s, b, c, f: played to its end, at, u: not yet on the board }]; BOARD.cur[game]: the
@@ -51605,11 +51624,11 @@ const BOARD = {
 function runsLoad() {
   let o = {}; try { o = JSON.parse(localStorage.getItem('skerry-runs') || '{}') || {}; } catch (e) {}
   BOARD.runs = {}; BOARD.cur = {};
-  for (const g of Object.keys(BOARD.games)) BOARD.runs[g] = Array.isArray(o[g]) ? o[g].filter(r => r && typeof r.r === 'string') : [];
+  for (const g of boardKeys()) BOARD.runs[g] = Array.isArray(o[g]) ? o[g].filter(r => r && typeof r.r === 'string') : [];
 }
 const runKey = r => (r.s | 0) * 1e9 + (r.b | 0) + (r.c | 0) * 1e-3;
 function runsSave() {
-  for (const g of Object.keys(BOARD.games)) {
+  for (const g of boardKeys()) {
     // your best 25, the one under way, and any not on the board yet
     const L = BOARD.runs[g].slice().sort((a, b) => runKey(b) - runKey(a));
     BOARD.runs[g] = L.filter((r, k) => k < 25 || r.r === BOARD.cur[g] || r.u);
@@ -51638,7 +51657,7 @@ function scoreRunEnd(game) { if (BOARD.cur) BOARD.cur[game] = null; }
 // ---------- your bests, here ----------
 function boardLoadMine() {
   let m = {}; try { m = JSON.parse(localStorage.getItem('skerry-bests') || '{}') || {}; } catch (e) {}
-  for (const g of Object.keys(BOARD.games)) {
+  for (const g of boardKeys()) {
     const o = m[g] || {};
     m[g] = { s: Math.max(0, o.s | 0), b: Math.max(0, o.b | 0) }; if (BOARD.games[g].c) m[g].c = Math.max(0, (o.c | 0) || 0);
     const any = m[g].s + m[g].b + (m[g].c | 0) > 0;
@@ -51720,7 +51739,7 @@ function boardBests() { return BOARD.mine; }
 function boardNick() { return (typeof NET !== 'undefined' && NET.nick) || ''; }
 function boardMerge(best, nick, takeLooks) {
   let changed = false;
-  if (best && typeof best === 'object' && BOARD.mine) for (const g of Object.keys(BOARD.games)) {
+  if (best && typeof best === 'object' && BOARD.mine) for (const g of boardKeys()) {
     const o = best[g]; if (!o) continue;
     const m = BOARD.mine[g], s = Math.max(m.s, Math.max(0, o.s | 0)), b = Math.max(m.b, Math.max(0, o.b | 0)), c = Math.max(m.c | 0, Math.max(0, o.c | 0));
     const p = m.p || o.p || (o.s | 0) + (o.b | 0) + (o.c | 0) > 0 ? 1 : 0, f = m.f || ('f' in o ? o.f : boardOldF(g, o)) ? 1 : 0;
@@ -51765,7 +51784,7 @@ async function boardInit() {
       if (db && uid) {
         BOARD.via = 'claude'; BOARD.db = db; BOARD.user = user; BOARD.uid = uid;
         // what the board already has for you counts as your best too
-        try { const snap = await db.doc('scores/' + uid).get(); const d = snap.exists ? snap.data() : null; if (d) for (const g of Object.keys(BOARD.games)) { const M = BOARD.mine[g]; M.s = Math.max(M.s, d[g + '_s'] | 0); M.c = Math.max(M.c | 0, d[g + '_c'] | 0); M.b = Math.max(M.b, d[g + '_b'] | 0); if ((d[g + '_k'] || 0) > 0) { M.p = 1; if (boardDocF(d, g)) M.f = 1; } if (!BOARD.games[g].c) delete M.c; } } catch (e) {}
+        try { const snap = await db.doc('scores/' + uid).get(); const d = snap.exists ? snap.data() : null; if (d) for (const g of boardKeys()) { const M = BOARD.mine[g]; M.s = Math.max(M.s, d[g + '_s'] | 0); M.c = Math.max(M.c | 0, d[g + '_c'] | 0); M.b = Math.max(M.b, d[g + '_b'] | 0); if ((d[g + '_k'] || 0) > 0) { M.p = 1; if (boardDocF(d, g)) M.f = 1; } if (!BOARD.games[g].c) delete M.c; } } catch (e) {}
         boardSaveMine(); boardSendSoon('all');
       } else BOARD.err = 'Sign in to claude.ai to see the scoreboard.';
     } catch (e) { BOARD.err = 'The scoreboard isn’t available here.'; }
@@ -51793,17 +51812,18 @@ async function boardSend() {
       // one document for you: your games (best 25 of each, as [id, s, b, c, f, at]), and your bests as the board from
       // before kept them (so a page from before still shows you)
       const doc = { nick: boardName(), at: Date.now() };
-      for (const g of Object.keys(BOARD.games)) {
+      for (const g of boardKeys()) {
         if (m[g].s + m[g].b + (m[g].c | 0) > 0) { doc[g + '_s'] = m[g].s; doc[g + '_b'] = m[g].b; doc[g + '_k'] = m[g].s * 1e9 + m[g].b + ((m[g].c | 0) > 0 && !m[g].s && !m[g].b ? 0.5 : 0); doc[g + '_f'] = m[g].f ? 1 : 0; if (BOARD.games[g].c) doc[g + '_c'] = m[g].c | 0; }
         doc[g + '_runs'] = R[g].filter(has).sort((a, b) => runKey(b) - runKey(a)).slice(0, 25).map(r => [r.r, r.s, r.b, r.c | 0, r.f ? 1 : 0, Math.floor(r.at || 0)]);
       }
+      const mm = typeof rlmDoc === 'function' ? rlmDoc() : null; if (mm) doc.clash = mm;   // [rival] your rating (src/rlmmr.js)
       await BOARD.db.doc('scores/' + BOARD.uid).set(doc);
-      for (const g of Object.keys(BOARD.games)) for (const r of R[g]) delete r.u;
+      for (const g of boardKeys()) for (const r of R[g]) delete r.u;
       runsSave();
     } else {
       const id = await boardIdNow(); if (!id) { BOARD.sending = false; return; }
       let all = true;
-      for (const g of Object.keys(BOARD.games)) for (const r of R[g].filter(x => x.u)) {
+      for (const g of boardKeys()) for (const r of R[g].filter(x => x.u)) {
         if (!has(r)) { delete r.u; continue; }
         const sent = { s: r.s, b: r.b, c: r.c, f: r.f };
         const res = await fetch(boardApiUrl(), { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ id, rid: r.r, name: boardName(), game: g, s: r.s, b: r.b, c: r.c | 0, f: r.f ? 1 : 0 }) });
@@ -51837,7 +51857,7 @@ async function boardFetch(force) {
       // its best, as one game
       const data = {}, q = await BOARD.db.collection('scores').orderBy('at', 'desc').limit(500).get();
       const docs = q.docs.map(d => ({ id: d.id, d: d.data() || {} }));
-      for (const g of Object.keys(BOARD.games)) {
+      for (const g of boardKeys()) {
         const L = [];
         for (const { id, d } of docs) {
           const base = { id, n: '', nick: String(d.nick || ''), me: id === BOARD.uid };
@@ -51846,6 +51866,9 @@ async function boardFetch(force) {
         }
         data[g] = L.filter(e => e.s + e.b + e.c > 0).sort((a, b) => runKey(b) - runKey(a)).slice(0, 500);
       }
+      // [rival] the ratings: each player's own, as their document says
+      data.clash = docs.filter(({ d }) => d.clash && typeof d.clash === 'object' && Number.isFinite(+d.clash.r)).map(({ id, d }) => { const c = d.clash, n = v => Math.max(0, Math.floor(+v || 0)); return { id, n: '', nick: String(c.n || d.nick || ''), me: id === BOARD.uid, s: n(c.r), b: n(c.w), c: n(c.w) + n(c.l) + n(c.d), f: 1 }; })
+        .filter(e => e.c > 0).sort((a, b) => b.s - a.s || b.b - a.b).slice(0, 500);
       // names, as this viewer's claude.ai shows them
       const ids = [...new Set(Object.values(data).flat().map(e => e.id))];
       let ps = {}; try { ps = ids.length ? await BOARD.user.profiles(ids) : {}; } catch (e) {}
@@ -51856,6 +51879,7 @@ async function boardFetch(force) {
       const r = await fetch(boardApiUrl(), { cache: 'no-store', headers: id ? { 'x-board-id': id } : {} });
       if (!r.ok) throw new Error(r.status);
       const j = await r.json(); BOARD.data = j.games || {}; BOARD.store = j.store || ''; BOARD.err = '';
+      if (typeof rlmFromBoard === 'function') rlmFromBoard();   // [rival] your rating as the server has it
     }
   } catch (e) { BOARD.err = 'Couldn’t reach the scoreboard just now. Try Refresh in a moment.'; }
   BOARD.loading = false; boardRender();
@@ -51892,6 +51916,8 @@ function boardRender() {
       ol.append(li);
     });
     sec.append(ol);
+    // [rival] your rating, under its board if you're not in its top ten
+    if (G.mmr) { const c = typeof rlmCur === 'function' ? rlmCur() : null; if (c && !meShown && c.w + c.l + c.d > 0) sec.append(mk('p', 'boardmine', `You: ${c.r} MMR · ${c.w} ${c.w === 1 ? 'win' : 'wins'} · ${c.w + c.l + c.d} rated`)); box.append(sec); continue; }
     // your best game, under a board you're not on as far as it shows
     const m = BOARD.runs && BOARD.runs[g] && BOARD.runs[g].filter(r => r.s + r.b + (r.c | 0) > 0).sort((a, b) => runKey(b) - runKey(a))[0];
     if (m && !meShown) {
@@ -60164,7 +60190,8 @@ function rl3dSpellIcon(c, id, W, H) {
 // Playing a card: tap or click it, then the arena (the zone you may use shows light, the rest red, and a ghost shows
 // the troop or the spell's reach where it would go); or drag it from the hand onto the arena; or keys 1 to 4 and a
 // click. Escape (or the menu button) opens the pause card: Resume, Leave. The end card: the result, the lights put
-// out, and Again (against the bot) or Back to the menu.
+// out, the rating's change (#rlEndMmr, filled by src/rlmmr.js, and again when the server answers), and Again
+// (against the bot) or Back to the menu.
 // Card faces come from rlCardArt(id, canvas) (src/rlart.js, Meta's) when it's there; else a plain coloured face.
 
 const RH = { sel: -1, drag: null, hover: null, faces: ['', '', '', '', ''], say: 0, key: '', sayQ: [], seen: 0, cntShown: -1, flashT: 0 };
@@ -60268,6 +60295,7 @@ function rlHudEnd() {
   rlPips(RL.crowns[me], $('rlEndMe'), true); rlPips(RL.crowns[1 - me], $('rlEndThem'), false);
   $('rlEndMeN').textContent = RL.names[me]; $('rlEndThemN').textContent = RL.names[1 - me];
   $('rlAgain').hidden = RL.mode !== 'bot';
+  if (typeof rlmShow === 'function') rlmShow(); else if ($('rlEndMmr')) $('rlEndMmr').hidden = true;   // the rating's change (src/rlmmr.js)
   el.hidden = false; setTimeout(() => ($('rlAgain').hidden ? $('rlMenu') : $('rlAgain')).focus({ preventScroll: true }), 40);
 }
 
@@ -61839,7 +61867,8 @@ rlDeckBtnLabel();
 //             tower, or the Drowned Light hung with weed with its bubbles rising
 //
 // The record (rlRecord(r), which src/rl.js calls as each match ends): played, won, lost, drawn, the streak and the
-// best streak, crowns taken. And the earnings: a crate for every match finished and one more for a win; the first
+// best streak, crowns taken; it hands the match on to the rating, src/rlmmr.js (rlmReport), whose part of the save
+// rides along in rkData as m. And the earnings: a crate for every match finished and one more for a win; the first
 // crate is free. All of it is in the one save, 'skerry-rival' (src/rldeck.js RLV), merged into the game's save by
 // rkData() / rkMerge(d, takeLooks) from src/crates.js.
 //
@@ -62267,6 +62296,7 @@ function rlRecord(r) {
   s.p++; s.cr += Math.max(0, Math.min(3, r.crowns | 0));
   if (draw) { s.d++; s.s = 0; } else if (win) { s.w++; s.s++; s.bs = Math.max(s.bs, s.s); } else { s.l++; s.s = 0; }
   const got = 1 + (win ? 1 : 0); RLV.c = Math.min(99999, RLV.c + got); rlvSave(); rlkRender();
+  if (typeof rlmReport === 'function') { try { rlmReport(r); } catch (e) { console.error(e); } }   // the rating (src/rlmmr.js)
   const what = draw ? 'A draw' : win ? (s.s > 2 ? s.s + ' wins running' : 'A win') : 'Duel over';
   if (typeof toast === 'function') toast(what + ': +' + got + ' tower crate' + (got > 1 ? 's' : '') + '. Open them from the Skerry Clash card.', '+' + got + ' tower crate' + (got > 1 ? 's' : ''));
 }
@@ -62274,7 +62304,7 @@ function rlRecord(r) {
 // ---------- the one save (src/crates.js saveData / mergeSave) ----------
 // decks, record, crates and skins; merged so nothing is lost: every skin either side has, the counts by the larger,
 // crates by everything ever earned, and the deck you play and the skin you raise only if takeLooks
-function rkData() { return { d: RLV.decks, k: RLV.dk, s: RLV.st, c: RLV.c, n: RLV.n, o: RLV.o, e: RLV.e }; }
+function rkData() { return { d: RLV.decks, k: RLV.dk, s: RLV.st, c: RLV.c, n: RLV.n, o: RLV.o, e: RLV.e, m: typeof rlmData === 'function' ? rlmData() : undefined }; }
 function rkMerge(d, takeLooks) {
   if (!d || typeof d !== 'object') return false;
   let changed = false; const n = v => Math.max(0, Math.min(999999, v | 0));
@@ -62286,6 +62316,7 @@ function rkMerge(d, takeLooks) {
     for (const k of ['p', 'w', 'l', 'd', 'cr', 'bs']) if (n(d.s[k]) > RLV.st[k]) { RLV.st[k] = n(d.s[k]); changed = true; }
     if (theirsNewer && n(d.s.s) !== RLV.st.s) { RLV.st.s = n(d.s.s); changed = true; }
   }
+  if (d.m && typeof rlmMerge === 'function' && rlmMerge(d.m)) changed = true;   // the rating, each name's newest (src/rlmmr.js)
   if (takeLooks) {
     if (Array.isArray(d.d)) for (let i = 0; i < 3; i++) if (Array.isArray(d.d[i])) { const fx = rlDeckFix(d.d[i]); if (fx.join() !== RLV.decks[i].join()) { RLV.decks[i] = fx; changed = true; } }
     if ((d.k | 0) >= 0 && (d.k | 0) <= 2 && (d.k | 0) !== RLV.dk && d.k != null) { RLV.dk = d.k | 0; changed = true; }
@@ -62322,7 +62353,8 @@ function rkMerge(d, takeLooks) {
 // Like Skerry Links' lobby (src/golfnet.js), it all goes through the room the crews sail in (src/net.js), on its own
 // key (`rl`) in each player's presence. In the lobby that is { room, sid, nick, at, dk, sk }: the duel's code, who
 // you are, when you came in (the first in is the host, who adds lob, how many are in), and your own deck (dk, the 8
-// card ids of rlDeckMine()) and tower skin (sk, rlSkinMine()), so the host can start with both. Two at most.
+// card ids of rlDeckMine()) and tower skin (sk, rlSkinMine()), so the host can start with both, and your rating (mr,
+// src/rlmmr.js), shown beside your name in the lists and used for the rating's sums on claude.ai. Two at most.
 // The host presses Start and adds st { g the duel's id, sids, names, decks, skins, seed } (cut to { g } once the guest
 // has started, to leave the room for the snapshot); both screens then call
 // rlStart({ mode: 'net', me: 0 for the host and 1 for the guest, names, decks, skins, seed, net: { host } }).
@@ -62338,7 +62370,9 @@ function rkMerge(d, takeLooks) {
 // wins (rlEnd(0)). If the host's snapshots stop for ten seconds the guest's match ends, shown as a win but not
 // recorded (RL.net.gone is set for rl.js), and the guest goes back to the lobby without the host. Quitting the
 // match on purpose (rlnBackToLobby before the end) puts quit: the duel's id in the presence, so the other side
-// hears of it at once rather than in ten seconds. Afterwards both are back in the same lobby for a rematch.
+// hears of it at once rather than in ten seconds; for the rating it's a loss, and the other side's a win (rlmReport).
+// Each side reports a finished duel to the rating itself, by the duel's id g (rlnMmrInfo); the server rates it only
+// when both reports agree. Afterwards both are back in the same lobby for a rematch.
 
 var RLN = { code: null, at: 0, msg: '', st: null, doneG: null, g: null, role: null, seq: 0, q: [], lastQ: 0, ws: 0, wsSeen: -1, wsSeenAny: -1, sendT: 0, sentAt: 0, seen: 0, beat: 0, lastB: null, chunks: null, quit: null, ended: false, bytes: 0, lobT: 0 };
 const RLN_MAX = 2;
@@ -62359,7 +62393,10 @@ function rlnDeck(d) {
 function rlnMyDeck() { let d = null; try { if (typeof rlDeckMine === 'function') d = rlDeckMine(); } catch (e) {} return rlnDeck(d); }
 function rlnSkin(s) { return typeof s === 'string' && /^[a-z0-9_-]{0,24}$/i.test(s) ? s : ''; }
 function rlnMySkin() { let s = ''; try { if (typeof rlSkinMine === 'function') s = rlSkinMine(); } catch (e) {} return rlnSkin(s); }
-function rlnBase(lean) { const z = { room: RLN.code, sid: NET.sid, nick: rlnNick(), at: RLN.at }; if (!lean) { z.dk = rlnMyDeck(); z.sk = rlnMySkin(); } return z; }
+function rlnBase(lean) { const z = { room: RLN.code, sid: NET.sid, nick: rlnNick(), at: RLN.at }; if (!lean) { z.dk = rlnMyDeck(); z.sk = rlnMySkin(); const mr = typeof rlmMine === 'function' ? rlmMine() : null; if (Number.isFinite(mr)) z.mr = mr; } return z; }
+const rlnMr = z => z && Number.isFinite(z.mr) ? ' · ' + Math.max(0, Math.round(z.mr)) + ' MMR' : '';
+// the duel as the rating wants it (src/rlmmr.js): its id, my side, the other's name and rating
+function rlnMmrInfo() { if (!RLN.st || !RLN.g) return null; const side = RLN.role === 'host' ? 0 : 1; return { g: RLN.st.g, side, host: side === 0, opp: RLN.st.names[1 - side], omr: RLN.omr }; }
 function rlnPeers(code) {
   const out = NET.peers.filter(p => { const z = rlnOf(p); return z && z.room === code && fresh(p) && !(p.isMe && p.sameTab); });
   if (RLN.code === code) out.push({ isMe: true, sameTab: true, presence: { rl: rlnBase() } });
@@ -62392,7 +62429,7 @@ function rlnOpen() {
   for (const [code, list] of rooms) {
     if (code === RLN.code) continue;
     list.sort((a, b) => (rlnOf(a).at || 0) - (rlnOf(b).at || 0));
-    const h = rlnOf(list[0]); out.push({ code, host: rlnClean(h.nick, 16) || 'Someone', n: list.length, started: !!(h.st && h.st.g) });
+    const h = rlnOf(list[0]); out.push({ code, host: rlnClean(h.nick, 16) || 'Someone', mr: rlnMr(h), n: list.length, started: !!(h.st && h.st.g) });
   }
   return out;
 }
@@ -62410,7 +62447,7 @@ function rlnRender() {
     if (!L.length) { const p = document.createElement('p'); p.className = 'muted'; p.textContent = 'No one is hosting a duel right now. Host one, and send the keeper you want to face to this page.'; el.append(p); return; }
     for (const n of L) {
       const b = document.createElement('button'); b.type = 'button'; b.className = 'warlobbyrow';
-      const nm = document.createElement('span'); nm.className = 'nm'; nm.textContent = `${n.host}’s duel`;
+      const nm = document.createElement('span'); nm.className = 'nm'; nm.textContent = `${n.host}’s duel${n.mr}`;
       const sm = document.createElement('small'); sm.textContent = n.started ? 'under way' : n.n >= RLN_MAX ? 'full' : 'tap to join';
       b.append(nm, sm); b.disabled = n.started || n.n >= RLN_MAX; b.addEventListener('click', () => rlnJoin(n.code)); el.append(b);
     }
@@ -62418,12 +62455,12 @@ function rlnRender() {
   }
   const m = rlnMembers(), host = rlnAmHost(), hz = m.length ? rlnOf(m[0]) : null, o = rlnOther(), oz = o ? rlnOf(o) : null;
   const away = !!(oz && oz.g);   // (the other one still has the last duel's end card up)
-  const key = m.map(p => rlnOf(p).sid + rlnOf(p).nick).join('|') + host + away + RLN.msg;
+  const key = m.map(p => rlnOf(p).sid + rlnOf(p).nick + rlnOf(p).mr).join('|') + host + away + RLN.msg;
   if (q('MpStart')) { q('MpStart').hidden = !host; q('MpStart').disabled = m.length < 2 || away; }
   const L = q('Lobby'); if (L.dataset.k === key) return; L.dataset.k = key;
   if (q('LobbyHead')) q('LobbyHead').textContent = host ? 'Your duel' : `${rlnClean(hz && hz.nick, 16) || 'Someone'}’s duel`;
   const ol = q('LobbyList');
-  if (ol) { ol.textContent = ''; m.forEach((p, k) => { const li = document.createElement('li'), z = rlnOf(p); li.textContent = (rlnClean(z.nick, 16) || 'A keeper') + (rlnMine(p) ? ' (you)' : '') + (k === 0 ? ' · hosting' : ''); if (rlnMine(p)) li.className = 'me'; ol.append(li); }); }
+  if (ol) { ol.textContent = ''; m.forEach((p, k) => { const li = document.createElement('li'), z = rlnOf(p); li.textContent = (rlnClean(z.nick, 16) || 'A keeper') + (rlnMine(p) ? ' (you)' : '') + rlnMr(z) + (k === 0 ? ' · hosting' : ''); if (rlnMine(p)) li.className = 'me'; ol.append(li); }); }
   if (q('LobbyMsg')) q('LobbyMsg').textContent = RLN.msg || (host ? (m.length < 2 ? 'Waiting for a rival to join. Share an invite, or wait for someone to tap your duel in their list.' : away ? `Waiting for ${rlnClean(oz.nick, 16) || 'your rival'} to come back from the last duel.` : 'Both keepers are here. Start when you’re ready.') : 'Waiting for the host to start the duel.');
 }
 // the host starts, with both decks and skins as each put them in their lobby presence
@@ -62435,7 +62472,8 @@ function rlnStart() {
   rlnBegin(st, 'host');
 }
 function rlnBegin(st, role) {
-  const now = performance.now();
+  const now = performance.now(), oz = rlnOther() && rlnOf(rlnOther());
+  RLN.omr = oz && Number.isFinite(oz.mr) ? oz.mr : null;   // (the other's rating as their lobby gave it, for the rating's sums)
   Object.assign(RLN, { st, g: st.g, doneG: st.g, role, seq: 0, q: [], lastQ: 0, ws: 0, wsSeen: -1, wsSeenAny: -1, sendT: 0, sentAt: 0, seen: now, lastB: null, chunks: null, quit: null, ended: false, acked: false, msg: '' });
   rlStart({ mode: 'net', me: role === 'host' ? 0 : 1, names: st.names.slice(), decks: st.decks.map(d => d.slice()), skins: st.skins.slice(), seed: st.seed, net: { host: role === 'host' } });
   rlnSendNow();
@@ -62507,7 +62545,10 @@ function rlnGone(why) {
   const host = RLN.role === 'host', nm = RLN.st ? RLN.st.names[host ? 1 : 0] : 'Your rival';
   if (typeof toast === 'function') toast(`${nm} ${why === 'quit' ? 'has left' : 'has lost the connection'}, so the duel is yours.`, 'Rival gone');
   if (!host && RL.net) RL.net.gone = true;
+  // (the host left on purpose: the guest's win is rated, as the host's screen reports the loss; a lost connection isn't)
+  const info = !host && why === 'quit' ? rlnMmrInfo() : null;
   if (typeof rlEnd === 'function') rlEnd(host ? 0 : 1);
+  if (info && typeof rlmReport === 'function') { try { rlmReport({ win: true }, info); } catch (e) { console.error(e); } }
   if (host) rlnSendNow();   // (the end, out to anyone still listening)
 }
 // each frame (rl.js, in net mode): the host's snapshots about twelve times a second; anyone who's gone
@@ -62557,6 +62598,8 @@ function rlnRead() {
 function rlnBackToLobby() {
   const was = RLN.g, mid = !!was && typeof RL !== 'undefined' && RL.ph !== 'over' && !RLN.ended;
   const hostGone = RLN.role === 'guest' && !rlnMembers().some(p => !rlnMine(p) && rlnOf(p).sid === (RLN.st && RLN.st.sids[0]));
+  // (left before the end: a loss for the rating, so the other keeper's win counts; src/rlmmr.js)
+  if (mid && typeof rlmReport === 'function') { try { rlmReport({ win: false }, rlnMmrInfo()); } catch (e) { console.error(e); } }
   RLN.g = null; RLN.role = null; RLN.chunks = null; RLN.q = [];
   if (mid) RLN.quit = was;   // (left before the end: tell the other side straight away)
   setTimeout(() => {
@@ -62583,6 +62626,174 @@ function rlnBackToLobby() {
     if (RLN.role === 'guest' && now - RLN.sentAt > 1000) { RLN.beat++; rlnSendNow(); }
   }, 250);
   rlnRender();
+})();
+
+// ---- src/rlmmr.js ----
+'use strict';
+// Skerry Clash's rating (MMR): one number for each username, from 1000, up for a win and down for a loss by how
+// likely it was (Elo). A duel online counts at K 32 against the other keeper's rating; a match against the bot counts
+// at K 16 against the bot's own fixed rating (easy 800, normal 1100, hard 1300), so you have a rating alone but the
+// duels online move it more. A draw is half a win, and nobody goes below 0. The board 'clash' (src/scores.js) ranks
+// everyone by it: rating, wins, matches.
+//
+// Where it's kept. On the game's own site the server is the judge (server/scores.js postMmr): each finished match is
+// sent there under your username and your board id (src/scores.js boardIdNow, made from your recovery code), and the
+// answer is your new rating. A username belongs to the first save rated under it: another save using it is told it's
+// taken (a toast suggests a different one), and its matches aren't rated. A duel online is rated only once both
+// keepers' screens have said the same thing about it (its id g, one won and one lost, or both drew), so this page
+// asks again every so often until the other side's result is in. On claude.ai there's no server: your rating is
+// worked out here, from the other keeper's rating as their lobby presence gave it (mr, src/rlnet.js), and written
+// into your own board document with your scores (self-reported, like everything else on that board). Opened from a
+// file, it's worked out here and kept on this device only.
+// Leaving an online duel before its end counts as a loss (and the other keeper's screen reports the win), so walking
+// off can't save a rating; a duel cut off by a lost connection isn't rated.
+//
+// Kept on this device under 'skerry-rival-mmr' (RLM.s: { name key: { n, r, b best, w, l, d, at last played } }, a
+// few names), and in the save (src/rlcrates.js rkData's m, merged by rlmMerge: the newest of each name by at).
+// Renaming yourself starts a new rating under the new name; the old one stays with the old name.
+// The hooks: rlmReport(r, net) from rlRecord (src/rlcrates.js) and from src/rlnet.js for a duel left early; rlmMine()
+// for the lobby presence; rlmEndLine() for the end card (src/rlhud.js); rlmRender() the card's line (#rlMmr);
+// rlmFromBoard() when the board's read (src/scores.js); rlmDoc() the claude.ai document's part; rlmData/rlmMerge.
+
+var RLM = { s: {}, last: null, done: new Set(), q: [], busy: false };
+var RLM_R0 = 1000, RLM_BOT = { easy: 800, normal: 1100, hard: 1300 }, RLM_K = { net: 32, bot: 16 };   // (vars and function declarations: the build runs every file as one script, and src/scores.js may ask first)
+function rlmKey(v) { return String(v || '').replace(/[\u0000-\u001f\u007f-\u009f​-‏‪-‮⁠-⁯<>&"]/g, '').trim().slice(0, 16).toLowerCase().replace(/\s+/g, ' '); }
+function rlmElo(ra, rb, s, k) { return Math.max(0, Math.round(ra + k * (s - 1 / (1 + Math.pow(10, (rb - ra) / 400))))); }
+// the username as it's rated (the one in the name boxes; none: not rated)
+function rlmName() { const n = typeof boardNick === 'function' ? boardNick() : ''; return String(n || '').replace(/[\u0000-\u001f\u007f-\u009f<>&"]/g, '').trim().slice(0, 16); }
+function rlmLoad() {
+  try { const o = JSON.parse(localStorage.getItem('skerry-rival-mmr') || '{}'); if (o && typeof o === 'object') for (const [k, e] of Object.entries(o)) { const f = rlmFix(e); if (f && k === rlmKey(f.n)) RLM.s[k] = f; } } catch (e) {}
+}
+function rlmFix(e) {
+  if (!e || typeof e !== 'object' || typeof e.n !== 'string' || !rlmKey(e.n)) return null;
+  const n = v => Math.max(0, Math.min(99999, Math.floor(+v || 0)));
+  return { n: e.n.slice(0, 16), r: n(e.r), b: Math.max(n(e.b), n(e.r)), w: n(e.w), l: n(e.l), d: n(e.d), at: Math.max(0, +e.at || 0) };
+}
+function rlmSave() {
+  // (the eight played most lately)
+  const L = Object.entries(RLM.s).sort((a, b) => b[1].at - a[1].at).slice(0, 8); RLM.s = Object.fromEntries(L);
+  try { localStorage.setItem('skerry-rival-mmr', JSON.stringify(RLM.s)); } catch (e) {}
+}
+// yours, under the name you have now (a new name: 1000, nothing played)
+function rlmCur() { const n = rlmName(), k = rlmKey(n); return k ? RLM.s[k] || { n, r: RLM_R0, b: RLM_R0, w: 0, l: 0, d: 0, at: 0, fresh: true } : null; }
+function rlmMine() { const c = rlmCur(); return c ? c.r : null; }
+function rlmVia() { return typeof BOARD !== 'undefined' ? BOARD.via : null; }
+
+// ---------- a match over ----------
+// r = { win, draw } as rlRecord has it; net = { g, side, opp, omr } for a duel online (src/rlnet.js rlnMmrInfo)
+function rlmReport(r, net) {
+  const name = rlmName(), k = rlmKey(name), cur = rlmCur();
+  const res = r && r.draw ? 'd' : r && r.win ? 'w' : 'l', s = res === 'w' ? 1 : res === 'd' ? 0.5 : 0;
+  if (!net && typeof RL !== 'undefined' && RL.mode === 'net') net = typeof rlnMmrInfo === 'function' ? rlnMmrInfo() : null;
+  if (typeof RL !== 'undefined' && RL.mode === 'net' && !net) return;
+  if (net && (RLM.done.has(net.g) || !net.opp)) return;
+  if (!k) { RLM.last = { none: 1 }; rlmShow(); return; }
+  if (net) RLM.done.add(net.g);
+  const lvl = net ? null : (RL_BOTNM[RL.bot.lvl] ? RL.bot.lvl : 'normal'), opp = net ? (Number.isFinite(net.omr) ? net.omr : RLM_R0) : RLM_BOT[lvl];
+  const nr = rlmElo(cur.r, opp, s, RLM_K[net ? 'net' : 'bot']);
+  RLM.last = { d: nr - cur.r, r: nr, sure: false, net: !!net, opp: net ? net.opp : '', k };
+  const via = rlmVia();
+  if (via === 'server') {
+    RLM.q.push({ body: { mmr: 1, name, kind: net ? 'net' : 'bot', res, lvl: lvl || undefined, g: net ? net.g : undefined, side: net ? net.side : undefined, opp: net ? net.opp : undefined, host: net ? !!net.host : undefined }, last: RLM.last, tries: 0 });
+    rlmSend();
+  } else {
+    // (worked out here: claude.ai's board, or this device alone)
+    rlmSet(k, name, nr, res); RLM.last.sure = true;
+    if (via === 'claude' && typeof boardSendSoon === 'function') boardSendSoon('all');
+  }
+  rlmShow();
+}
+function rlmSet(k, name, r, res, o) {
+  const e = RLM.s[k] || { n: name, r: RLM_R0, b: RLM_R0, w: 0, l: 0, d: 0, at: 0 };
+  e.n = name; e.r = r; e.at = Date.now();
+  if (o) { e.w = o.w | 0; e.l = o.l | 0; e.d = o.dr | 0; e.b = Math.max(o.b | 0, r); }
+  else { e[res === 'w' ? 'w' : res === 'd' ? 'd' : 'l']++; e.b = Math.max(e.b, r); }
+  RLM.s[k] = e; rlmSave();
+}
+// to the server, one at a time; a duel's asked about again until the other side is in (about eight minutes)
+var RLM_WAIT = [3000, 5000, 8000, 12000, 20000, 30000, 45000, 60000, 90000, 120000, 120000];
+async function rlmSend() {
+  if (RLM.busy || !RLM.q.length) return;
+  RLM.busy = true;
+  const job = RLM.q[0], L = job.last, again = ms => { RLM.busy = false; setTimeout(rlmSend, ms); };
+  let out = null, code = 0;
+  try {
+    const id = typeof boardIdNow === 'function' ? await boardIdNow() : null;
+    if (!id) { RLM.q.shift(); L.off = 1; RLM.busy = false; rlmShow(); return; }
+    const res = await fetch(boardApiUrl(), { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(Object.assign({ id }, job.body)) });
+    code = res.status; out = await res.json().catch(() => ({}));
+  } catch (e) { code = 0; }
+  if (code === 200 && out && out.rated) {
+    RLM.q.shift(); rlmSet(L.k, job.body.name, out.r | 0, job.body.res, out); Object.assign(L, { d: out.d | 0, r: out.r | 0, sure: true, wait: 0 });
+    if (typeof BOARD !== 'undefined') { BOARD.lastT = 0; setTimeout(() => typeof boardFetch === 'function' && boardFetch(true), 800); }
+  } else if (code === 200 && out && out.pending) {
+    L.wait = 1;
+    if (job.tries < RLM_WAIT.length) { RLM.q.push(RLM.q.shift()); rlmShow(); return again(RLM_WAIT[job.tries++]); }   // (to the back: a bot match after it needn't wait)
+    RLM.q.shift(); L.wait = 0; L.unrated = 'never';
+  } else if (code === 409) {
+    RLM.q.shift(); L.taken = 1;
+    if (typeof toast === 'function') toast(`The username “${job.body.name}” already has a rating on another save, so this match wasn’t rated. Pick a different username to have a rating of your own.`, 'Username taken');
+  } else if (code === 200) { RLM.q.shift(); L.unrated = out && out.why || 'no'; }
+  else if (code === 429 && out && out.soon) { RLM.q.shift(); L.unrated = 'soon'; }
+  else if ((code === 429 || code === 0 || code >= 500) && job.tries < RLM_WAIT.length) { rlmShow(); return again(Math.max(3500, RLM_WAIT[job.tries++])); }
+  else { RLM.q.shift(); L.unrated = 'no'; }
+  RLM.busy = false; rlmShow();
+  if (RLM.q.length) setTimeout(rlmSend, 3200);
+}
+
+// ---------- what's shown ----------
+function rlmSigned(d) { return (d > 0 ? '+' : d < 0 ? '−' : '±') + Math.abs(d); }
+// the end card's line: the change, and whether it's in yet
+function rlmEndLine() {
+  const L = RLM.last; if (!L) return '';
+  if (L.none) return 'Set a username (on the scoreboard) to have a rating.';
+  if (L.taken) return 'Not rated: that username is already rated on another save.';
+  if (L.unrated) return L.unrated === 'never' ? `Not rated: ${L.opp || 'your rival'}’s result never came in.` : L.unrated === 'soon' ? 'Not rated: one match against the bot a minute counts.' : 'Not rated: the two results didn’t agree.';
+  if (L.off) return `${rlmSigned(L.d)} MMR (on this device only)`;
+  if (L.sure) return `${rlmSigned(L.d)} MMR · now ${L.r}`;
+  return L.wait ? `${rlmSigned(L.d)} MMR, once ${L.opp || 'your rival'}’s result is in` : `${rlmSigned(L.d)} MMR…`;
+}
+function rlmShow() {
+  const el = $('rlEndMmr');
+  if (el) { const t = rlmEndLine(); el.textContent = t; el.hidden = !t; el.classList.toggle('up', !!RLM.last && RLM.last.d > 0 && !RLM.last.unrated && !RLM.last.taken); el.classList.toggle('down', !!RLM.last && RLM.last.d < 0 && !RLM.last.unrated && !RLM.last.taken); }
+  rlmRender();
+}
+// the card's line, under the record
+function rlmRender() {
+  const el = $('rlMmr'); if (!el) return;
+  const c = rlmCur(), n = c ? c.w + c.l + c.d : 0;
+  el.textContent = !c ? 'Set a username on the scoreboard to have a rating (MMR).'
+    : !n ? `MMR ${c.r}: no rated matches yet as ${c.n}.` : `MMR ${c.r} (best ${c.b}) · ${n} rated ${n === 1 ? 'match' : 'matches'} as ${c.n}`;
+}
+// the board as the server has it: yours there is the truth (another device may have played since)
+function rlmFromBoard() {
+  if (rlmVia() !== 'server' || typeof BOARD === 'undefined' || !BOARD.data || !Array.isArray(BOARD.data.clash)) return;
+  const n = rlmName(), k = rlmKey(n); if (!k) return;
+  const e = BOARD.data.clash.find(x => x.me && rlmKey(x.n) === k); if (!e) return;
+  const m = RLM.s[k], played = m ? m.w + m.l + m.d : 0;
+  if (e.c >= played && (!m || m.r !== e.s || m.w !== e.b || played !== e.c)) {
+    const x = m || { n, r: RLM_R0, b: RLM_R0, w: 0, l: 0, d: 0, at: 0 };
+    x.r = e.s; x.b = Math.max(x.b, e.s); if (e.c > played) { x.w = e.b; x.l = Math.max(0, e.c - e.b - x.d); x.at = Date.now(); }
+    RLM.s[k] = x; rlmSave(); rlmRender();
+  }
+}
+// your part of the claude.ai board document
+function rlmDoc() { const c = rlmCur(); return c && c.w + c.l + c.d > 0 ? { n: c.n, r: c.r, b: c.b, w: c.w, l: c.l, d: c.d } : null; }
+
+// ---------- the save (src/rlcrates.js rkData / rkMerge) ----------
+function rlmData() { return RLM.s; }
+function rlmMerge(m) {
+  if (!m || typeof m !== 'object') return false;
+  let changed = false;
+  for (const [k, e] of Object.entries(m)) { const f = rlmFix(e); if (f && k === rlmKey(f.n) && (!RLM.s[k] || f.at > RLM.s[k].at)) { RLM.s[k] = f; changed = true; } }
+  if (changed) { rlmSave(); rlmRender(); }
+  return changed;
+}
+
+(function rlmInit() {
+  rlmLoad(); rlmRender();
+  // (the name boxes: the line follows the username as it's typed)
+  for (const id of typeof NICK_BOXES !== 'undefined' ? NICK_BOXES : []) { const el = $(id); if (el) el.addEventListener('input', () => setTimeout(rlmRender, 0)); }
 })();
 
 // ---- src/menudesk.js ----
@@ -62806,5 +63017,6 @@ requestAnimationFrame(frame);
 <!-- [rival] your decks, the deck builder, the save -->
 <!-- [rival] tower skins and crates, your record, the card -->
 <!-- [rival] Skerry Clash online: the lobby and the duel -->
+<!-- [rival] Skerry Clash's rating (MMR) -->
 </body>
 </html>

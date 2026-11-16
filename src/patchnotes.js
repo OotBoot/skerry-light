@@ -6,6 +6,13 @@
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 202, date: '2026-11-16', title: "Skerry Clash: ratings and a leaderboard", New: [
+    "Skerry Clash: every player now has an MMR rating, starting at 1000. It belongs to your username, and only your save can play under that name.",
+    "Skerry Clash: online duels move your rating the most, depending on how your rating compares to your rival's. Matches against the bot count at half weight, against a fixed rating for each level: Easy 800, Normal 1100, Hard 1300. A draw counts as half a win.",
+    "Skerry Clash: a new Skerry Clash board on the scoreboard ranks everyone by rating, with their wins and matches played.",
+    "Skerry Clash: the end screen shows how much your rating went up or down, the game's card shows your rating and your best, and the online lobby shows each keeper's rating beside their name." ], Changes: [
+    "Skerry Clash: leaving an online duel before it ends counts as a loss. A duel cut off by a lost connection isn't rated.",
+    "Skerry Clash: changing your username starts a fresh rating under the new name. If the name you pick is already taken, you'll be asked to choose another." ] },
   { v: 201, date: '2026-11-16', title: "Rival Lights is now Skerry Clash", Changes: [
     "Skerry Clash: the duel of lights for two has a new name. Rival Lights is now Skerry Clash on the main menu, its card, the pause menu and invites. Your decks, record and tower skins carry over untouched." ] },
   { v: 200, date: '2026-11-16', title: "Skerry Clash: 32 new cards and a full rebalance", New: [
