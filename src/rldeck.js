@@ -130,7 +130,7 @@ function rlCardWords(id) {
     mend: 'For ' + c.dur + ' seconds your troops in the circle mend ' + c.hl + ' a second.',
     haste: 'For ' + c.dur + ' seconds your troops in the circle move and strike 40% faster.',
     dot: 'For ' + c.dur + ' seconds everything of the enemy\'s in the circle takes ' + c.dmg + ' a second, towers ' + Math.round(c.tw * 100) + '% of it.',
-    summon: 'Strikes everything in the circle, then ' + (S ? (S.cnt > 1 ? 'the ' + S.n + ' climb' : S.n + ' climbs') : 'a crew climbs') + ' out on your side, there, wherever you cast it (on the nearer bank if it lands in the race).',
+    summon: 'Strikes everything in the circle, then ' + (S ? (S.cnt > 1 ? 'the ' + S.n + ' climb' : S.n + ' climbs') : 'a crew climbs') + ' out there for you. It can only be dropped on your own rock, where a troop could go.',
     whirl: 'For ' + c.dur + ' seconds it drags enemies on foot to its middle, 3 tiles a second, striking everything inside every half second.',
     tar: 'Enemy walkers within ' + c.rng + ' tiles move at half speed (they strike as fast as ever). Fires nothing.',
     blast: 'Every ' + c.hit + ' seconds, if a walker is within ' + c.rng + ' tiles, it bellows: ' + c.dmg + ' to every walker there, knocking them ' + c.kb + ' tiles back.',

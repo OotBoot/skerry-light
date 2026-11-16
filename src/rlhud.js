@@ -83,7 +83,7 @@ function rlHud(dt) {
   $('rlOilN').textContent = ok; $('rlOil').classList.toggle('dbl', RL.dbl);
   // the zone and the ghost
   const selId = RH.drag && RH.drag.on ? RL.hand[me][RH.drag.i] : RH.sel >= 0 ? RL.hand[me][RH.sel] : null, selC = RL_CARD[selId];
-  if (typeof rl3dZone === 'function') rl3dZone(!!selC && selC.type !== 'spell' && RL.ph !== 'over');
+  if (typeof rl3dZone === 'function') rl3dZone(!!selC && (selC.type !== 'spell' || selC.ab === 'summon') && RL.ph !== 'over');
   if (typeof rl3dGhost === 'function') {
     if (selC && RH.hover) rl3dGhost({ c: selId, x: RH.hover.x, y: RH.hover.y, ok: !rlWhyNot(me, selId, RH.hover.x, RH.hover.y) });
     else if (RL.pend) rl3dGhost({ c: RL.pend.c, x: RL.pend.x, y: RL.pend.y, ok: true });

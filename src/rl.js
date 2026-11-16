@@ -137,7 +137,8 @@ function rlPlayBot(lvl) {
 // beyond the race opened when the enemy Lamp Tower of that lane falls; never on a standing tower)
 function rlCanPlace(side, c, x, y) {
   const C = RL_CARD[c]; if (!C || !(x >= 0.4 && x <= RLC.W - 0.4 && y >= 0.4 && y <= RLC.H - 0.4)) return false;
-  if (C.type === 'spell') return true;
+  // (spells fall anywhere, but the Shipwreck's crew must land on your own rock, so it goes down only where a troop could)
+  if (C.type === 'spell' && C.ab !== 'summon') return true;
   let ok = side === 0 ? y < RLC.R0 - 0.1 : y > RLC.R1 + 0.1;
   if (!ok) { const et = RL.T.find(t => t.side !== side && t.k === 'lamp' && t.lane === rlLaneOf(x)); if (et && et.hp <= 0) ok = side === 0 ? y > RLC.R1 + 0.1 && y < RLC.R1 + RLC.POCKET : y < RLC.R0 - 0.1 && y > RLC.R0 - RLC.POCKET; }
   if (!ok) return false;
@@ -149,7 +150,7 @@ function rlWhyNot(side, c, x, y) {
   const C = RL_CARD[c]; if (!C) return 'No card';
   if (RL.ph !== 'play') return RL.ph === 'count' ? 'Not yet' : 'Over';
   if (RL.oil[side] < C.cost - 1e-6) return 'Not enough oil';
-  if (x != null && !rlCanPlace(side, c, x, y)) return C.type === 'spell' ? 'Off the arena' : 'Only on your own rock';
+  if (x != null && !rlCanPlace(side, c, x, y)) return C.type === 'spell' && C.ab !== 'summon' ? 'Off the arena' : 'Only on your own rock';
   return '';
 }
 // a card played (by this screen's player, the bot, or the guest through the host): checked, then done
