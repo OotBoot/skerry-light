@@ -22,10 +22,15 @@
 // recorded (RL.net.gone is set for rl.js), and the guest goes back to the lobby without the host. Quitting the
 // match on purpose (rlnBackToLobby before the end) puts quit: the duel's id in the presence, so the other side
 // hears of it at once rather than in ten seconds; for the rating it's a loss, and the other side's a win (rlmReport).
+// The triple draft (src/rldraft.js): the host may tick Triple draft in the lobby (dr: 1 in its presence, so the
+// guest sees it). Then Start puts st { g, sids, names, skins, seed, dr: 1 } (no decks) in the host's lobby presence
+// (RLN.dst) and both screens open the draft from that seed. Each says how far it has got as dd { g, n picks, dk the 8
+// once done }. When both are done the host checks the guest's 8 against the offers (rldValid) and starts the duel
+// as above, with a new st and both decks. If either side drops out of the lobby the draft is called off.
 // Each side reports a finished duel to the rating itself, by the duel's id g (rlnMmrInfo); the server rates it only
 // when both reports agree. Afterwards both are back in the same lobby for a rematch.
 
-var RLN = { code: null, at: 0, msg: '', st: null, doneG: null, g: null, role: null, seq: 0, q: [], lastQ: 0, ws: 0, wsSeen: -1, wsSeenAny: -1, sendT: 0, sentAt: 0, seen: 0, beat: 0, lastB: null, chunks: null, quit: null, ended: false, bytes: 0, lobT: 0 };
+var RLN = { draft: false, dst: null, ddk: null, dlost: 0, code: null, at: 0, msg: '', st: null, doneG: null, g: null, role: null, seq: 0, q: [], lastQ: 0, ws: 0, wsSeen: -1, wsSeenAny: -1, sendT: 0, sentAt: 0, seen: 0, beat: 0, lastB: null, chunks: null, quit: null, ended: false, bytes: 0, lobT: 0 };
 const RLN_MAX = 2;
 const RLN_GONE = 10000;   // ms without a word before the other side is taken to have left
 const rlnClean = (v, n) => String(v == null ? '' : v).replace(/[\u0000-\u001f\u007f-\u009f<>&"]/g, '').trim().slice(0, n);
@@ -59,7 +64,8 @@ const rlnMine = p => !!(p && p.isMe && p.sameTab);
 function rlnAmHost() { const m = rlnMembers(); return !!m.length && rlnMine(m[0]); }
 function rlnOther() { return rlnMembers().find(p => !rlnMine(p)) || null; }
 function rlnSend(z) { if (NET.room) NET.room.presence({ rl: z }).catch(() => {}); }
-function rlnSendLobby() { if (!RLN.code) return; const z = rlnBase(); if (rlnAmHost()) z.lob = { n: rlnMembers().length }; if (RLN.quit) z.quit = RLN.quit; rlnSend(z); }
+function rlnSendLobby() { if (!RLN.code) return; const z = rlnBase(); if (rlnAmHost()) { z.lob = { n: rlnMembers().length }; if (RLN.draft) z.dr = 1; }
+  if (RLN.dst) { if (RLN.role === 'dhost') z.st = RLN.dst; z.dd = { g: RLN.dst.g, n: typeof RLDR !== 'undefined' ? RLDR.picks.length : 0 }; if (RLN.ddk) z.dd.dk = RLN.ddk; } if (RLN.quit) z.quit = RLN.quit; rlnSend(z); }
 function rlnHost() {
   if (!rlnOnline() || rlnInMatch()) return;
   RLN.code = 'r' + Math.random().toString(36).slice(2, 8); RLN.at = Date.now(); RLN.msg = ''; RLN.quit = null;
@@ -71,7 +77,7 @@ function rlnJoin(code) {
   RLN.code = code; RLN.at = Date.now(); RLN.msg = ''; RLN.quit = null;
   rlnSendLobby(); rlnRender();
 }
-function rlnLeave() { RLN.code = null; RLN.st = null; RLN.g = null; RLN.role = null; RLN.quit = null; if (NET.room) NET.room.presence({ rl: null }).catch(() => {}); rlnRender(); }
+function rlnLeave() { rlnDraftOff(); RLN.code = null; RLN.st = null; RLN.g = null; RLN.role = null; RLN.quit = null; if (NET.room) NET.room.presence({ rl: null }).catch(() => {}); rlnRender(); }
 // the duels being hosted here
 function rlnOpen() {
   const rooms = new Map();
@@ -80,7 +86,7 @@ function rlnOpen() {
   for (const [code, list] of rooms) {
     if (code === RLN.code) continue;
     list.sort((a, b) => (rlnOf(a).at || 0) - (rlnOf(b).at || 0));
-    const h = rlnOf(list[0]); out.push({ code, host: rlnClean(h.nick, 16) || 'Someone', mr: rlnMr(h), n: list.length, started: !!(h.st && h.st.g) });
+    const h = rlnOf(list[0]); out.push({ code, host: rlnClean(h.nick, 16) || 'Someone', mr: rlnMr(h), n: list.length, started: !!(h.st && h.st.g), dr: !!h.dr });
   }
   return out;
 }
@@ -98,7 +104,7 @@ function rlnRender() {
     if (!L.length) { const p = document.createElement('p'); p.className = 'muted'; p.textContent = 'No one is hosting a duel right now. Host one, and send the keeper you want to face to this page.'; el.append(p); return; }
     for (const n of L) {
       const b = document.createElement('button'); b.type = 'button'; b.className = 'warlobbyrow';
-      const nm = document.createElement('span'); nm.className = 'nm'; nm.textContent = `${n.host}’s duel${n.mr}`;
+      const nm = document.createElement('span'); nm.className = 'nm'; nm.textContent = `${n.host}’s duel${n.mr}${n.dr ? ' · triple draft' : ''}`;
       const sm = document.createElement('small'); sm.textContent = n.started ? 'under way' : n.n >= RLN_MAX ? 'full' : 'tap to join';
       b.append(nm, sm); b.disabled = n.started || n.n >= RLN_MAX; b.addEventListener('click', () => rlnJoin(n.code)); el.append(b);
     }
@@ -106,27 +112,65 @@ function rlnRender() {
   }
   const m = rlnMembers(), host = rlnAmHost(), hz = m.length ? rlnOf(m[0]) : null, o = rlnOther(), oz = o ? rlnOf(o) : null;
   const away = !!(oz && oz.g);   // (the other one still has the last duel's end card up)
-  const key = m.map(p => rlnOf(p).sid + rlnOf(p).nick + rlnOf(p).mr).join('|') + host + away + RLN.msg;
-  if (q('MpStart')) { q('MpStart').hidden = !host; q('MpStart').disabled = m.length < 2 || away; }
+  const dr = host ? RLN.draft : !!(hz && hz.dr);
+  const key = m.map(p => rlnOf(p).sid + rlnOf(p).nick + rlnOf(p).mr).join('|') + host + away + dr + RLN.msg;
+  if (q('MpStart')) { q('MpStart').hidden = !host; q('MpStart').disabled = m.length < 2 || away || !!RLN.dst; }
+  if (q('MpDraft')) { q('MpDraft').checked = dr; q('MpDraft').disabled = !host; }
   const L = q('Lobby'); if (L.dataset.k === key) return; L.dataset.k = key;
   if (q('LobbyHead')) q('LobbyHead').textContent = host ? 'Your duel' : `${rlnClean(hz && hz.nick, 16) || 'Someone'}’s duel`;
   const ol = q('LobbyList');
   if (ol) { ol.textContent = ''; m.forEach((p, k) => { const li = document.createElement('li'), z = rlnOf(p); li.textContent = (rlnClean(z.nick, 16) || 'A keeper') + (rlnMine(p) ? ' (you)' : '') + rlnMr(z) + (k === 0 ? ' · hosting' : ''); if (rlnMine(p)) li.className = 'me'; ol.append(li); }); }
-  if (q('LobbyMsg')) q('LobbyMsg').textContent = RLN.msg || (host ? (m.length < 2 ? 'Waiting for a rival to join. Share an invite, or wait for someone to tap your duel in their list.' : away ? `Waiting for ${rlnClean(oz.nick, 16) || 'your rival'} to come back from the last duel.` : 'Both keepers are here. Start when you’re ready.') : 'Waiting for the host to start the duel.');
+  if (q('LobbyMsg')) q('LobbyMsg').textContent = RLN.msg || (host ? (m.length < 2 ? 'Waiting for a rival to join. Share an invite, or wait for someone to tap your duel in their list.' : away ? `Waiting for ${rlnClean(oz.nick, 16) || 'your rival'} to come back from the last duel.` : 'Both keepers are here. Start when you’re ready.') : 'Waiting for the host to start the duel.') + (dr && !RLN.msg ? ' It’s a triple draft: you’ll both build a deck on the spot.' : '');
 }
 // the host starts, with both decks and skins as each put them in their lobby presence
 function rlnStart() {
   if (!rlnAmHost() || rlnInMatch() || typeof rlStart !== 'function') return;
   const m = rlnMembers(); if (m.length < 2) return;
-  const z = m.map(rlnOf); if (z[1].g) return;
+  const z = m.map(rlnOf); if (z[1].g || RLN.dst) return;
+  if (RLN.draft && typeof rldOpen === 'function') {
+    rlnDraftGo({ g: Math.random().toString(36).slice(2, 9), sids: z.map(x => x.sid), names: [rlnNick(), rlnClean(z[1].nick, 16) || 'A keeper'], skins: [rlnMySkin(), rlnSkin(z[1].sk)], seed: (Math.random() * 4294967295) >>> 0, dr: 1 }, 'dhost');
+    return;
+  }
   const st = { g: Math.random().toString(36).slice(2, 9), sids: z.map(x => x.sid), names: [rlnNick(), rlnClean(z[1].nick, 16) || 'A keeper'], decks: [rlnMyDeck(), rlnDeck(z[1].dk)], skins: [rlnMySkin(), rlnSkin(z[1].sk)], seed: (Math.random() * 4294967295) >>> 0 };
   rlnBegin(st, 'host');
 }
+// ---------- the triple draft (src/rldraft.js) ----------
+function rlnDraftGo(st, role) {
+  RLN.dst = st; RLN.ddk = null; RLN.role = role; RLN.doneG = st.g; RLN.dlost = 0; RLN.msg = '';
+  const me = role === 'dhost' ? 0 : 1;
+  rldOpen({ seed: st.seed, net: true, vs: st.names[1 - me], done: d => { RLN.ddk = d.slice(); rlnSendLobby(); rlnDraftCheck(); } });
+  rlnSendLobby(); rlnRender();
+}
+function rlnDraftOff(msg) {
+  if (!RLN.dst) return;
+  RLN.dst = null; RLN.ddk = null; if (RLN.role === 'dhost' || RLN.role === 'dguest') RLN.role = null;
+  if (typeof rldClose === 'function') rldClose();
+  if (msg) RLN.msg = msg;
+  if (RLN.code) rlnSendLobby(); rlnRender();
+}
+// while drafting: the rival's progress; the host starts once both are done; called off if the other has gone
+function rlnDraftCheck() {
+  if (!RLN.dst) return;
+  const o = rlnOther(), z = o ? rlnOf(o) : null, want = RLN.dst.sids[RLN.role === 'dhost' ? 1 : 0];
+  const dd = z && z.sid === want && z.dd && z.dd.g === RLN.dst.g ? z.dd : null;
+  if (!z || z.sid !== want) { if (!RLN.dlost) RLN.dlost = performance.now(); else if (performance.now() - RLN.dlost > 8000) rlnDraftOff('Your rival left the draft.'); return; }
+  RLN.dlost = 0;
+  if (RLN.role === 'dguest' && z.g) return;   // (the host has started the duel: rlNetPeers begins it here)
+  if (RLN.role === 'dguest' && !(z.st && z.st.g === RLN.dst.g)) { rlnDraftOff('The host called off the draft.'); return; }
+  if (typeof rldRival === 'function') rldRival(dd ? Math.min(8, dd.n | 0) : 0);
+  if (RLN.role !== 'dhost' || !RLN.ddk || !dd || !Array.isArray(dd.dk)) return;
+  const theirs = rlnDeck(dd.dk), st = RLN.dst;
+  if (!rldValid(st.seed, dd.dk) || theirs.join() !== dd.dk.join()) { rlnDraftOff('Your rival’s drafted deck didn’t match the offers, so the draft was called off.'); return; }
+  const go = { g: Math.random().toString(36).slice(2, 9), sids: st.sids.slice(), names: st.names.slice(), decks: [RLN.ddk.slice(), theirs], skins: st.skins.slice(), seed: (Math.random() * 4294967295) >>> 0, dr: 2 };
+  RLN.dst = null; RLN.ddk = null; if (typeof rldClose === 'function') rldClose();
+  rlnBegin(go, 'host');
+}
 function rlnBegin(st, role) {
+  if (RLN.dst) { RLN.dst = null; RLN.ddk = null; if (typeof rldClose === 'function') rldClose(); }
   const now = performance.now(), oz = rlnOther() && rlnOf(rlnOther());
   RLN.omr = oz && Number.isFinite(oz.mr) ? oz.mr : null;   // (the other's rating as their lobby gave it, for the rating's sums)
   Object.assign(RLN, { st, g: st.g, doneG: st.g, role, seq: 0, q: [], lastQ: 0, ws: 0, wsSeen: -1, wsSeenAny: -1, sendT: 0, sentAt: 0, seen: now, lastB: null, chunks: null, quit: null, ended: false, acked: false, msg: '' });
-  rlStart({ mode: 'net', me: role === 'host' ? 0 : 1, names: st.names.slice(), decks: st.decks.map(d => d.slice()), skins: st.skins.slice(), seed: st.seed, net: { host: role === 'host' } });
+  rlStart({ mode: 'net', me: role === 'host' ? 0 : 1, names: st.names.slice(), decks: st.decks.map(d => d.slice()), skins: st.skins.slice(), seed: st.seed, net: { host: role === 'host' }, draft: st.dr === 2 });
   rlnSendNow();
 }
 // every change in the room (src/net.js): keep the lobby current, start when the host does, and the duel's traffic
@@ -138,13 +182,19 @@ function rlNetPeers() {
     if (!m.some(rlnMine)) { RLN.msg = 'That duel filled up before you got in.'; rlnLeave(); return; }
     const h = m[0], hz = h ? rlnOf(h) : null, s = hz && hz.st;
     if (h && !rlnMine(h) && s && typeof s.g === 'string' && s.g !== RLN.doneG && Array.isArray(s.sids) && !(typeof RL !== 'undefined' && RL.on)) {
+      if (s.sids[1] === NET.sid && s.dr === 1 && typeof rldOpen === 'function') {
+        const nm = Array.isArray(s.names) ? s.names : [], sk = Array.isArray(s.skins) ? s.skins : [];
+        rlnDraftGo({ g: s.g.slice(0, 12), sids: [String(s.sids[0]), NET.sid], names: [rlnClean(nm[0], 16) || 'A keeper', rlnClean(nm[1], 16) || rlnNick()], skins: [rlnSkin(sk[0]), rlnSkin(sk[1])], seed: s.seed >>> 0, dr: 1 }, 'dguest');
+        return;
+      }
       if (s.sids[1] === NET.sid && typeof rlStart === 'function') {
         const nm = Array.isArray(s.names) ? s.names : [], dk = Array.isArray(s.decks) ? s.decks : [], sk = Array.isArray(s.skins) ? s.skins : [];
-        rlnBegin({ g: s.g.slice(0, 12), sids: [String(s.sids[0]), NET.sid], names: [rlnClean(nm[0], 16) || 'A keeper', rlnClean(nm[1], 16) || rlnNick()], decks: [rlnDeck(dk[0]), rlnDeck(dk[1])], skins: [rlnSkin(sk[0]), rlnSkin(sk[1])], seed: s.seed >>> 0 }, 'guest');
+        rlnBegin({ g: s.g.slice(0, 12), sids: [String(s.sids[0]), NET.sid], names: [rlnClean(nm[0], 16) || 'A keeper', rlnClean(nm[1], 16) || rlnNick()], decks: [rlnDeck(dk[0]), rlnDeck(dk[1])], skins: [rlnSkin(sk[0]), rlnSkin(sk[1])], seed: s.seed >>> 0, dr: s.dr === 2 ? 2 : 0 }, 'guest');
         return;
       }
       RLN.doneG = s.g; RLN.msg = 'They started without you. Host your own duel, or wait for the next.';
     }
+    if (RLN.dst) rlnDraftCheck();
     if (rlnAmHost() && performance.now() - RLN.lobT > 3000) { RLN.lobT = performance.now(); rlnSendLobby(); }
   }
   rlnRender();
@@ -265,6 +315,8 @@ function rlnBackToLobby() {
   if ($('rlMpHost')) $('rlMpHost').addEventListener('click', rlnHost);
   if ($('rlMpStart')) $('rlMpStart').addEventListener('click', rlnStart);
   if ($('rlMpLeave')) $('rlMpLeave').addEventListener('click', rlnLeave);
+  if ($('rlMpDraft')) $('rlMpDraft').addEventListener('change', e => { if (!rlnAmHost()) return; RLN.draft = !!e.target.checked; rlnSendLobby(); rlnRender(); });
+  setInterval(() => { if (RLN.dst) { rlnDraftCheck(); if (RLN.dst) rlnSendLobby(); } }, 1000);   // (the draft: progress out, and anyone gone)
   setInterval(() => { if (typeof state === 'undefined' || state === 'title') rlnRender(); }, 1500);
   // (in the lobby, both say they're still here every few seconds, so a long wait doesn't look like leaving)
   setInterval(() => { if (RLN.code && !RLN.g) rlnSendLobby(); }, 4000);

@@ -108,14 +108,14 @@ function rlMyName() { const v = (typeof NET !== 'undefined' && NET.nick) || ''; 
 function rlDeckOk(d) { return Array.isArray(d) && d.length === 8 && d.every(c => RL_CARD[c]) && new Set(d).size === 8 ? d.slice() : RL_DEFAULT_DECK.slice(); }
 
 // ---------- the match begins ----------
-// o = { mode: 'bot' | 'net', me, names, decks: [[8], [8]], skins: [a, b], lvl, seed, net: { host } }
+// o = { mode: 'bot' | 'net', me, names, decks: [[8], [8]], skins: [a, b], lvl, seed, net: { host }, draft (the decks were drafted, src/rldraft.js) }
 function rlStart(o) {
   o = o || {};
   const seed = (o.seed >>> 0) || ((Math.random() * 4294967295) >>> 0);
   Object.assign(RL, { on: true, mode: o.mode === 'net' ? 'net' : 'bot', me: o.me === 1 ? 1 : 0, net: o.net || null, ph: 'count', t: 0, left: RLC.LEN, ot: false, dbl: false,
     oil: [RLC.OIL0, RLC.OIL0], names: [0, 1].map(i => String((o.names && o.names[i]) || (i ? 'Rival' : 'You')).slice(0, 16)), skins: [0, 1].map(i => (o.skins && o.skins[i]) || ''),
     decks: [0, 1].map(i => rlDeckOk(o.decks && o.decks[i])), U: [], P: [], Z: [], FX: [], crowns: [0, 0], win: -1, bot: { lvl: o.lvl || 'normal' }, nid: 1, clk: 0, cnt: RLC.COUNT, acc: 0,
-    seed, rng: rlRng(seed), pend: null, recorded: false, lastSnap: 0, snapDur: 90, both: RL.both || false });
+    seed, rng: rlRng(seed), draft: !!o.draft, pend: null, recorded: false, lastSnap: 0, snapDur: 90, both: RL.both || false });
   RL.hand = [[], []]; RL.next = ['', '']; RL.queue = [[], []];
   for (const s of [0, 1]) { const d = RL.decks[s].slice(); for (let i = d.length - 1; i > 0; i--) { const j = (RL.rng() * (i + 1)) | 0; [d[i], d[j]] = [d[j], d[i]]; } RL.hand[s] = d.slice(0, 4); RL.next[s] = d[4]; RL.queue[s] = d.slice(5); }
   RL.T = [];

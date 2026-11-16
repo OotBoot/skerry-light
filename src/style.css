@@ -1619,6 +1619,47 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 }
 @media (prefers-reduced-motion: reduce) { .rldk-c, .rldk-c.flash, .rldk-c.swap::after { transition: none; animation: none; } }
 
+/* the triple draft (src/rldraft.js) */
+.rldraftcard { z-index: 21; }
+.rldraftcard .card { max-width: 56rem; gap: 10px; }
+.rldraftcard h1 { color: #f4b866; margin-bottom: 0; }
+.rldraftcard p.rldr-theme { margin: 0; font-family: var(--log); font-size: 13px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--lamp); min-height: 1.2em; }
+.rldr-time { position: relative; height: 8px; background: rgba(255,255,255,0.08); border: 1px solid var(--rule); }
+.rldr-time i { position: absolute; inset: 0 auto 0 0; background: linear-gradient(90deg, #f0b030, #ffd88a); transition: width 0.1s linear; }
+.rldr-time.low i { background: linear-gradient(90deg, #d04a30, #ff9a7a); }
+.rldr-time b { position: absolute; right: 0; top: 10px; font-family: var(--log); font-weight: 400; font-size: 11px; color: var(--muted); }
+.rldr-time.low b { color: #ff9a7a; }
+.rldr-offer { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin-top: 8px; }
+.rldr-c { display: flex; flex-direction: column; gap: 8px; padding: 10px; cursor: pointer; color: var(--ink); text-align: left; background: radial-gradient(ellipse at 50% 0, rgba(232,160,80,0.16), transparent 70%), rgba(4,7,14,0.7); border: 1px solid rgba(232,160,80,0.35); transition: transform 0.14s ease, filter 0.2s ease, opacity 0.3s ease, border-color 0.14s; -webkit-tap-highlight-color: transparent; }
+.rldr-c .rlface { width: min(100%, 170px); align-self: center; }
+.rldr-c:hover, .rldr-c:focus-visible { transform: translateY(-3px); border-color: var(--lamp); outline: none; filter: drop-shadow(0 0 8px rgba(255,216,138,0.45)); }
+.rldr-c.took { transform: translateY(-6px) scale(1.04); border-color: var(--lamp); filter: drop-shadow(0 0 12px rgba(255,216,138,0.9)); }
+.rldr-c.left { opacity: 0.25; transform: scale(0.96); }
+.rldr-txt { display: flex; flex-direction: column; gap: 6px; flex: 1; }
+.rldr-line { margin: 0; font-style: italic; font-size: 0.95rem; line-height: 1.35; }
+.rldr-txt dl { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 2px 8px; margin: 0; font-family: var(--log); font-size: 11px; line-height: 1.35; }
+.rldr-txt dt { color: var(--muted); }
+.rldr-txt dd { margin: 0; }
+.rldr-key { margin-top: auto; align-self: flex-start; padding: 4px 10px; background: var(--lamp); color: var(--night); font-family: var(--log); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; }
+.rldraftcard p.rldr-hint { margin: 0; min-height: 1.4em; font-family: var(--log); font-size: 13px; color: var(--lamp); }
+.rldr-deckhead { display: flex; justify-content: space-between; font-family: var(--log); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+.rldr-deck { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 6px; padding: 8px; background: rgba(4,7,14,0.6); border: 1px solid rgba(232,160,80,0.3); }
+.rldr-slot { display: grid; place-items: center; min-height: 3rem; border: 1px dashed rgba(255,255,255,0.14); }
+.rldr-slot:has(.rlface) { border: 0; }
+.rldr-slot.now { border-color: var(--lamp); }
+.rldr-slot span { font-family: var(--display); color: var(--muted); font-size: 1.2rem; }
+.rldr-opt { display: flex; align-items: center; gap: 8px; margin: 6px 0; font-family: var(--log); font-size: 13px; }
+.rldr-opt input { width: 18px; height: 18px; accent-color: #e8a050; }
+.rldr-opt input:disabled + * , .rldr-opt:has(input:disabled) { opacity: 0.85; }
+@media (max-width: 640px) {
+  .rldraftcard .card { padding: 18px 12px 14px; }
+  .rldr-offer { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+  .rldr-c { flex-direction: row; align-items: stretch; padding: 8px; }
+  .rldr-c .rlface { width: 92px; flex: none; align-self: start; }
+  .rldr-deck { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+@media (prefers-reduced-motion: reduce) { .rldr-c, .rldr-time i { transition: none; } }
+
 /* the tower crates */
 .cratebox.rlkbox { background: linear-gradient(#5a3a1e, #2a1a0c); border-color: #e8a050; box-shadow: inset 0 -8px 0 rgba(0,0,0,0.3), inset 0 0 0 3px rgba(232,160,80,0.3), 0 0 10px -2px rgba(255,200,120,0.6); }
 .skincard canvas.rlkprev { display: block; margin-block: 4px 2px; border-radius: 4px; }

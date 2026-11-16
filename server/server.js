@@ -180,6 +180,7 @@ function rlLite(p) {
   const z = p.rl; if (!z || typeof z !== 'object') return p;
   const lite = { room: z.room, sid: z.sid, nick: z.nick, at: z.at };
   if (z.lob) lite.lob = z.lob; if (z.st && typeof z.st === 'object') lite.st = { g: z.st.g };
+  if (z.dr) lite.dr = 1; if (Number.isFinite(z.mr)) lite.mr = z.mr;   // (a triple draft, and the host's rating, for the list)
   return Object.assign({}, p, { rl: lite });
 }
 // what someone in another war, another night, another round, another duel or the lobby hears of this player

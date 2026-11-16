@@ -437,6 +437,7 @@
       </div>
       <div class="btnrow">
         <button class="primary" id="rlPlay" type="button">Duel the bot</button>
+        <button class="primary" id="rlDraftBot" type="button">Triple draft</button><!-- [rival] src/rldraft.js -->
         <button class="tool" id="rlDeckBtn" type="button">Deck</button>
       </div>
       <div class="btnrow rlcrates"><!-- [rival] tower skins (src/rlcrates.js) -->
@@ -456,6 +457,7 @@
           <h3 id="rlLobbyHead">Your duel</h3>
           <ol class="warlobbylist" id="rlLobbyList"></ol>
           <p class="muted" id="rlLobbyMsg"></p>
+          <label class="rldr-opt" id="rlMpDraftRow"><input type="checkbox" id="rlMpDraft"> Triple draft: build both decks on the spot, three cards a round</label><!-- [rival] the host chooses (src/rldraft.js) -->
           <div class="btnrow"><button class="primary" id="rlMpStart" type="button">Light the lamps</button><button class="tool shareBtn" id="rlMpShare" type="button" data-mode="rival">Share invite</button><button class="tool" id="rlMpLeave" type="button">Leave</button></div>
         </div>
       </section>
@@ -835,6 +837,19 @@
     </div>
   </div>
 
+  <div class="overlay rldraftcard" id="rlDraftCard" hidden role="dialog" aria-modal="true" aria-labelledby="rlDrHead"><!-- [rival] the triple draft (src/rldraft.js) -->
+    <div class="card">
+      <div class="cardtop sticky"><span class="eyebrow" id="rlDrEye">Skerry Clash · triple draft</span><button class="tool closebtn" id="rlDrLeave" type="button">✕ Leave</button></div>
+      <h1 id="rlDrHead">Round 1 of 8</h1>
+      <p class="rldr-theme" id="rlDrTheme"></p>
+      <div class="rldr-time" id="rlDrTime" hidden><i></i><b></b></div>
+      <div class="rldr-offer" id="rlDrOffer" aria-label="Three cards: take one"></div>
+      <p class="rldr-hint" id="rlDrHint" aria-live="polite"></p>
+      <div class="rldr-deckhead"><span>Your deck</span><span id="rlDrAvg"></span></div>
+      <div class="rldr-deck" id="rlDrDeck" aria-label="The cards you have taken"></div>
+    </div>
+  </div>
+
   <div class="overlay cratecard wcratecard rlkratecard" id="rlCrateCard" hidden role="dialog" aria-modal="true" aria-labelledby="rlkHead"><!-- [rival] tower crates and skins (src/rlcrates.js) -->
     <div class="card">
       <div class="cardtop sticky"><span class="eyebrow">Skerry Clash · the lampwright</span><button class="tool closebtn" id="rlkClose" type="button">✕ Close</button></div>
@@ -1129,6 +1144,7 @@
 <script src="src/rlart.js"></script><!-- [rival] the cards' pictures and faces -->
 <script src="src/rldeck.js"></script><!-- [rival] your decks, the deck builder, the save -->
 <script src="src/rlcrates.js"></script><!-- [rival] tower skins and crates, your record, the card -->
+<script src="src/rldraft.js"></script><!-- [rival] the triple draft -->
 <script src="src/rlnet.js"></script><!-- [rival] Skerry Clash online: the lobby and the duel -->
 <script src="src/rlmmr.js"></script><!-- [rival] Skerry Clash's rating (MMR) -->
 <script src="src/menudesk.js"></script>
