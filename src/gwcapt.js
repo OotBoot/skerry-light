@@ -752,7 +752,7 @@ function gcCraneGeo() {
   Q.hook = new THREE.TorusGeometry(0.055, 0.011, 5, 12, Math.PI * 1.3);
   Q.spike = new THREE.ConeGeometry(0.014, 0.12, 6);
   Q.horn = new THREE.CylinderGeometry(0.1, 0.016, 0.46, 18, 3, true); Q.horn.translate(0, 0.23, 0);   // (narrow end at the origin, its bell out along +y)
-  { const P = Q.horn.attributes.position; for (let i = 0; i < P.count; i++) { const y = P.getY(i) / 0.46, k = 0.16 + 0.84 * Math.pow(y, 2.2); const r = Math.hypot(P.getX(i), P.getZ(i)) || 1, a = Math.atan2(P.getZ(i), P.getX(i)), rr = 0.016 + 0.084 * k; P.setX(i, Math.cos(a) * rr); P.setZ(i, Math.sin(a) * rr); } Q.horn.computeVertexNormals(); }
+  { const P = Q.horn.attributes.position; for (let i = 0; i < P.count; i++) { const y = P.getY(i) / 0.46, k = 0.16 + 0.84 * Math.pow(Math.max(0, y), 2.2); const r = Math.hypot(P.getX(i), P.getZ(i)) || 1, a = Math.atan2(P.getZ(i), P.getX(i)), rr = 0.016 + 0.084 * k; P.setX(i, Math.cos(a) * rr); P.setZ(i, Math.sin(a) * rr); } Q.horn.computeVertexNormals(); }   // [campaign] (y a hair under 0 at the narrow end made a NaN there)
   Q.weed = new THREE.BoxGeometry(0.018, 0.3, 0.006); Q.weed.translate(0, -0.15, 0);
   Q.halo = z3Soft('rgba(150,230,210,0.8)', 'rgba(120,200,200,0)');
   Q.gold = z3Soft('rgba(255,220,140,0.9)', 'rgba(255,190,90,0)');
