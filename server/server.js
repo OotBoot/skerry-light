@@ -174,11 +174,14 @@ function gfLite(p) {
   return Object.assign({}, p, { gf: lite });
 }
 // Skerry Clash played online: the same, for the two in one duel (the host's snapshot, about twelve times a second,
-// and the guest's taps, are for the other one only; everyone else hears enough to list the duel)
+// and the guest's taps, are for the other one and the duel's watchers only; everyone else hears enough to list it).
+// A watcher (spec: 1) is in the duel's room too, so it hears the host at full rate; its own presence is a few bytes
+// sent every few seconds, so the keepers hearing it at full rate costs nothing worth saving.
 const rlRoom = c => (c.presence && c.presence.rl && typeof c.presence.rl.room === 'string' ? c.presence.rl.room : null);
 function rlLite(p) {
   const z = p.rl; if (!z || typeof z !== 'object') return p;
   const lite = { room: z.room, sid: z.sid, nick: z.nick, at: z.at };
+  if (z.spec) lite.spec = 1;
   if (z.lob) lite.lob = z.lob; if (z.st && typeof z.st === 'object') lite.st = { g: z.st.g };
   return Object.assign({}, p, { rl: lite });
 }
