@@ -2817,7 +2817,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 // ---- src/config.js ----
 'use strict';
 // The game's version, shown at the top of the main menu. Bump it by one with every change pushed to main.
-var VERSION = 215;
+var VERSION = 216;
 // Skerry Light: tuning, asset paths and lore.
 // World units are metres. The lighthouse stands at the origin on the shoreline (y = 0);
 // north (+y) is open sea. Bearings: 0 = north, positive = east.
@@ -2992,11 +2992,16 @@ document.addEventListener('visibilitychange', () => {
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
-  { v: 215, date: '2026-11-16', title: "Skerry Clash: room for three", Fixes: [
+  { v: 216, date: '2026-11-16', title: "Skerry Clash: room for three", Fixes: [
     "Skerry Clash: invite links to a Three keepers match turned the third keeper away as if the room were full. All three can now join from an invite.",
     "Skerry Clash: Host a duel now always hosts a duel, even if your last room was set to Three keepers.",
     "Skerry Clash: a keeper on a slower device is no longer counted as gone while their arena is still loading at the start of a Three keepers match." ], Changes: [
     "Skerry Clash: a new Host three keepers button beside Host a duel and Host a triple draft opens a room for three straight away." ] },
+  { v: 215, date: '2026-11-16', title: "Lore compendium: three new tales", New: [
+    "Lore compendium: Skerry Clash now has its own tale, with new pages for the Race, the Threefold Skerry, the keepers of the Race, the Great Lights and Lamp Towers (and the Lampwright's Crate), the hands that cross the causeways, and the triple draft.",
+    "Lore compendium: Skerry Links has its own tale, with all nine holes, the view of the Light from the course, and the ball and club crates.",
+    "Lore compendium: The Original has its own tale, The Early Watches, from the years the keeper swung the beam by hand.",
+    "Lore compendium: Maren Holm and Plimsoll's pages now tell how they fight on the Race, and the timeline, the main page and Did you know have caught up with the new tales." ] },
   { v: 214, date: '2026-11-16', title: "Skerry Clash: Triple Draft, your own cards", Changes: [
     "Skerry Clash: in a Triple Draft each keeper is now offered their own cards instead of the same ones. Both of you still get the same theme each round, but never the same three.",
     "Skerry Clash: you can now see your rival's three options each round, just under your own. You never see which one they took. Online it shows the round your rival is on, against the bot the same round as yours." ] },
@@ -54575,14 +54580,15 @@ function origIsOpen() { return !!(ORIG.el && !ORIG.el.hidden); }
 'use strict';
 // The Skerry Compendium: the lore book on the main menu, written like a wiki (src/loreui.js draws it).
 // It ties every game into one history: the voyages (Skerry Light), Wreckers' Night, Drowned Reach, Keeper's Last Light,
-// the two raids (Maren's End, The Gannet's Wake), Fog Run and Freebooters' Sea [fbsea]. Where the game itself says nothing, the gaps are filled
+// the two raids (Maren's End, The Gannet's Wake), Fog Run, Freebooters' Sea [fbsea], The Original (as The Early Watches),
+// Skerry Links and Skerry Clash (with the Race, the Threefold Skerry, the triple draft and the towers). Where the game itself says nothing, the gaps are filled
 // with lore that fits; the keeper's log (SK.LOG in config.js) is the spine and is never contradicted.
 // An article: { id, t: title, cat: [categories], img: a picture key (see loreImg in loreui.js), gal: visitors' picture keys for a gallery, box: [[label, value], ...]
 //   (the infobox), sum: the opening paragraph, secs: [{ h: heading, p: [paragraphs] }], also: [ids for See also] }.
 // In any text, [[id]] links to an article by its title and [[id|words]] links with other words.
 // Keep secrets out entirely: no Easter egg, nothing hidden in any map, no secret bosses or hidden buttons, not even a hint.
 var LORE_CATS = [
-  { k: 'Chronicles', d: 'The eight great tales of the Skerries, each told by one of the games.' },
+  { k: 'Chronicles', d: 'The eleven great tales of the Skerries, each told by one of the games.' },
   { k: 'Characters', d: 'People, and things that were once people.' },
   { k: 'Creatures', d: 'What walks, swims, flies or crawls in the waters round the Light.' },
   { k: 'Places', d: 'Rocks, shores, buildings and the far seas.' },
@@ -54602,7 +54608,8 @@ var LORE = [
   ]},
   { h: 'The Light', p: [
     "<b>1841.</b> [[skerrylight]] is built on its rock and lit. Its great lens is set by [[lampwright|the Lampwright]]. The fire on Lantern Rock is put out for good, and its keeper with it.",
-    "<b>c. 1879.</b> The keeper Holm comes to the Light, with his wife [[maren]].",
+    "<b>c. 1879.</b> The keeper Holm comes to the Light, with his wife [[maren]]. In his early years he swings the beam by hand to show each ship the rocks: see [[ch_original]].",
+    "<b>c. 1883.</b> The keepers lay out nine holes of golf along the headland: see [[ch_links]].",
     "<b>14 December 1887.</b> [[wreck1887|The Night of the Gannet]]. The lamp fails in the second hour. Maren rows out with a hand lantern to warn the brig [[gannet|Gannet]]. The brig breaks up on the skerries with all hands. The skiff comes back empty, [[marenslantern|her lantern]] still lit.",
     "<b>15 December 1887.</b> The sea freezes from the harbour steps to the horizon. It is the first of [[sixseas|the six seas]].",
   ]},
@@ -54629,6 +54636,7 @@ var LORE = [
   ]},
   { h: 'The years after', p: [
     "<b>Undated.</b> The sea comes back, and with it the people of every sea and every year that ever sailed through the skerries. They settle the islands and go to war for them: see [[ch_reach]].",
+    "<b>Undated.</b> A second light is lit across the tidal race called [[race|the Race]], and its keepers begin to settle at every slack water whose light is the false one: see [[ch_clash]].",
     "<b>Still.</b> The tales do not keep to their order. On any night, on any of the six seas, the Light is turning and [[maren]] is still rowing out to the Gannet. As the last page of the log says, she will take any ship that lets her come aboard.",
   ]},
 ], also: ['log', 'skerrylight', 'maren'] },
@@ -54735,9 +54743,51 @@ var LORE = [
     "The sea came back. Nobody claims it did not. And on every sea, every night, the fishermen still see a woman standing on the water when the lamp turns. Whether the raid ended her or only ended one of her is the oldest argument in [[wrackhaven]]'s inn.",
   ]},
 ], also: ['maren', 'seafort', 'callings'] },
+// The Original (src/original.html), Skerry Links (src/golf*.js) and Skerry Clash (src/rl*.js)
+{ id: 'ch_original', t: 'The Early Watches', cat: ['Chronicles', 'Events'], box: [['Told in', 'The Original'], ['When', 'c. 1879 to 1887'], ['Where', 'The lantern room of [[skerrylight]]'], ['Who', '[[keeper|The keeper Holm]]'], ['Tools', 'The beam, by hand, and [[bell|the fog bell]]'], ['Rule', 'Three ships lost in a night, and he starts again']], sum: "The first tale, from before anything went wrong. In his early years at the Light, before the lens had its clockwork right, the keeper Holm swung the beam round by hand, and showed each ship coming in the rocks she could not see. It is the tale the others are told against: the years when a keeper and his lamp were enough.", secs: [
+  { h: 'Showing the rocks', p: [
+    "Ships stood in from the open sea and from along the coast for [[harbour|the harbour]] under the cliffs, and the rocks lay between. A master knew the shore and the Light's own rock without being told, but the skerries had to be shown to him. While the beam was on his ship he could see by it, and he set down every rock it had shown him and steered round the lot. Left in the dark for long, he lost them all again, and came on as if the water were clear.",
+    "So the keeper swung the beam from ship to ship all night, a few seconds on each, never long off any of them. The busier the night, the harder it was to keep every master's memory fresh at once.",
+  ]},
+  { h: 'The fog bell', p: [
+    "When too many came in together, the keeper rang the fog bell. Every master who heard it shortened sail for a few seconds, and that bought him the time to reach them all. The bell had to be left to swing still before it could be rung again, which is why the station's bell rope is worn through in two places.",
+  ]},
+  { h: 'The keeper\'s rule', p: [
+    "The traffic grew every night of those years: one more ship each night than the last, and more rocks with the shifting of the banks. The keeper made a rule for himself, which the log repeats on its flyleaf: <i>three lost in one night, and I begin again as if I had never kept a light.</i> He never wrote down how many times he began again. On 14 December 1887 there was only one ship, and he did not reach her: see [[wreck1887]].",
+  ]},
+], also: ['keeper', 'skerrylight', 'wreck1887'] },
+{ id: 'ch_links', t: 'Skerry Links', cat: ['Chronicles', 'Places'], box: [['Told in', 'Skerry Links'], ['When', 'Still evenings, from c. 1883'], ['Where', 'The headland above [[harbour|the harbour]]'], ['Who', 'One to four players, taking turns'], ['Holes', 'Nine, par 36'], ['Laid out by', 'The keepers of [[skerrylight]]']], sum: "Nine holes of golf along the cliffs of the headland, laid out by the keepers in the years before the lamp failed. The round starts at midday on the inland holes, turns north along the cliff tops, and comes in by moonlight with the Light turning off the point. On a still evening you can still play it.", secs: [
+  { h: 'The nine holes', p: [
+    "<b>1. The Gate</b>, a dogleg right with a bunker in the corner. <b>2. The Long Road</b>, a par five with a creek across the fairway short of the green. <b>3. Down to the Cove</b>, running downhill to the left. <b>4. First Sight of the Sea</b>, a short four with the sea and a low cliff all down the right. <b>5. Cliff's Edge</b>, a par three along the cliff top. <b>6. The Climb</b>, a steep pull up to a green on the headland. <b>7. The Point</b>, a little par three to a tiny green with the sea on three sides. <b>8. The Chasm</b>, a second shot over a sea-filled gully. <b>9. Homeward Cliff</b>, a long four leaning towards the sea.",
+    "The first three run south down the inland side and the other six come back north along the cliffs, each tee a little past the last green, so the whole course can be seen from most of it.",
+  ]},
+  { h: 'From the course', p: [
+    "[[skerrylight]] stands off in sight of every hole, out on its rock or, from the inland holes, over a far hill. Its lamp is dark while the sun is up. From the sixth, where the sun sets, it turns once every ten seconds, and the keeper's cottage window is lit. Under the cliffs lies the harbour with its stone quay, its breakwater and its cottages, and ships come in past the Light all evening, swinging out round each of the skerries in turn.",
+    "The round is always played into the night, and the last three holes by moonlight, which the keepers said kept the game honest: nobody could find a lost ball on the 8th in the dark, so nobody went looking.",
+  ]},
+  { h: 'Balls and clubs', p: [
+    "The keepers played with whatever the coast gave them, and the habit stuck. The Chandler's Crate holds balls made from the stores of a ship's chandler, gull's eggs, buoys, net floats, sea glass, and some that glow or shimmer in flight. The Shipwright's Crate holds whole sets of clubs made from a ship's gear: oars, belaying pins, boat-hooks, harpoons, a narwhal's tusk, a kraken's arm. The finest of them are said to be <b>The Keeper's Beam</b>, with a little lighthouse for a head and its lamp lit, and <b>The Drowned Trident</b>. None of them plays better than any other. See [[crates]].",
+  ]},
+  { h: 'In the log', p: [ "[[log|The keeper's log]] never mentions the course. The station's coal book records twelve golf balls bought from a Wrackhaven chandler in 1884, and eleven of them lost by the end of that summer." ] },
+], also: ['skerrylight', 'harbour', 'crates'] },
+{ id: 'ch_clash', t: 'Skerry Clash', cat: ['Chronicles', 'Events'], box: [['Told in', 'Skerry Clash'], ['When', 'The years after, at every slack water'], ['Where', '[[race|The Race]], and [[threeskerry|the Threefold Skerry]]'], ['Who', '[[racekeepers|The keepers of the Race]]'], ['Champions', '[[maren]], [[plimsoll]]'], ['Fought with', '[[clashhands|Crews, crabs, birds and worse]], spells, and lamp oil'], ['Prize', 'The other keeper\'s [[greatlight|Great Light]]']], sum: "The tale of the rival lights. In the years after, a second light was lit on a rock across the tidal race from the first, and each keeper was sure the other's was the false one that puts ships on the reef. Since then they have settled it at every slack water, three minutes at a time, across the causeways the falling tide uncovers.", secs: [
+  { h: 'Why they fight', p: [
+    "The coast had learnt from [[mooncussers|the Mooncussers]] that a light is not to be trusted because it is a light. Two lights on two rocks, close enough to shout across, cannot both be honest, and ships cannot steer by both. Neither keeper will put theirs out. So each sends everything they can muster across the water to put out the other's.",
+  ]},
+  { h: 'Slack water', p: [
+    "The fight lasts as long as the tide lets it: about three minutes while the two causeways stand dry. Every hand sent over costs lamp oil, which each keeper draws off their own store a little at a time, and in the last minute, as the tide begins to turn, the oil comes twice as fast. A keeper who fells one of the other's [[greatlight|Lamp Towers]] takes a crown, and the one who puts out the other's Great Light takes all three and the night with it. If the tide turns with the crowns level, they fight on for one more minute, and the next tower to fall settles it.",
+  ]},
+  { h: 'Who comes when called', p: [
+    "Anyone on the coast who will cross for a keeper: mudlarks and deckhands, wrecker gangs and press gangs, harpooners, fishwives, the drowned, crabs of every size from shore crabs to the Crab King, and birds that go straight over the water. Even [[diver|the Diver]], [[mooncusser|the Mooncusser]] and [[keelback|the Keelback]] have been seen on the causeways. See [[clashhands]].",
+    "The greatest of the coast have answered too. [[maren]] has crossed with her lantern, and [[plimsoll]] has walked the causeway for whichever keeper he thought was in the right. A keeper may have only one of them on a side.",
+  ]},
+  { h: 'The other ways of it', p: [
+    "Some nights neither keeper brings their own hands, and they pick them on the spot: see [[tripledraft|the triple draft]]. And on the [[threeskerry|Threefold Skerry]], three keepers fight it out at once, every one for themselves.",
+  ]},
+], also: ['race', 'racekeepers', 'greatlight'] },
 
 // ---------------- characters ----------------
-{ id: 'maren', t: 'Maren Holm', cat: ['Characters', 'Creatures'], img: 'maren', box: [['Also called', 'The woman on the water, the keeper\'s wife'], ['Born', 'c. 1852'], ['Lost', '14 December 1887, off the Skerries'], ['Kin', 'The keeper Holm (husband)'], ['Carried', '[[marenslantern]]'], ['Weakness', '[[bell]], and [[plimsoll]]'], ['Appears in', '[[ch_voyages]], [[ch_gannetswake]], [[ch_marensend]]']], sum: "The keeper's wife at [[skerrylight]]. On the night the lamp failed she rowed out alone with a hand lantern to warn the brig [[gannet|Gannet]]. The Gannet broke up with all hands and her skiff came back empty. Since then she has stood on the water when the lamp turns, a little nearer every time.", secs: [
+{ id: 'maren', t: 'Maren Holm', cat: ['Characters', 'Creatures'], img: 'maren', box: [['Also called', 'The woman on the water, the keeper\'s wife'], ['Born', 'c. 1852'], ['Lost', '14 December 1887, off the Skerries'], ['Kin', 'The keeper Holm (husband)'], ['Carried', '[[marenslantern]]'], ['Weakness', '[[bell]], and [[plimsoll]]'], ['Appears in', '[[ch_voyages]], [[ch_gannetswake]], [[ch_marensend]], [[ch_clash]]']], sum: "The keeper's wife at [[skerrylight]]. On the night the lamp failed she rowed out alone with a hand lantern to warn the brig [[gannet|Gannet]]. The Gannet broke up with all hands and her skiff came back empty. Since then she has stood on the water when the lamp turns, a little nearer every time.", secs: [
   { h: 'Life', p: [
     "Little is written of her before the wreck. She came to the Light with her husband some years before 1887, kept the station's garden in its drystone walls and, by the account of the Wrackhaven fishermen, rowed better than most of them. The log's first entry says only: <i>I could not stop her.</i>",
   ]},
@@ -54747,6 +54797,9 @@ var LORE = [
   ]},
   { h: 'Maren\'s End', p: [
     "In 1890 she was fought at [[seafort|the sea fort]] by the raiders of [[ch_marensend]]: three times a man's height, in a long dark dress, one arm raised, with a sea-green light about her that nothing could get through while her soul was out of her. She called up storms and bells from under the sea. She was laid to rest there, and yet she is still seen on every sea. See [[ch_marensend]] for the argument.",
+  ]},
+  { h: 'On the Race', p: [
+    "In the years after, she has crossed the causeways of [[race|the Race]] for one keeper or the other, lantern in hand, its light reaching even the birds overhead. When she lets the sea-green light out of her, nothing can hurt her for a few seconds, and everything round her slows and drowns. Which keeper she favours, and why, nobody on either rock will say. See [[ch_clash]].",
   ]},
 ], also: ['wreck1887', 'marenslantern', 'keeper'] },
 { id: 'keeper', t: 'The keeper Holm', cat: ['Characters'], box: [['Post', 'Principal keeper, [[skerrylight]]'], ['Kin', '[[maren]] (wife)'], ['Known for', '[[log|The keeper\'s log]]'], ['Appears in', 'Every tale, mostly offstage']], sum: "The principal keeper of Skerry Light from about 1879, husband of [[maren]], and the author of [[log|the keeper's log]]. Almost everything known about 1888 is known because he wrote it down.", secs: [
@@ -54758,7 +54811,7 @@ var LORE = [
     "The log is never signed, and the station's books give only <i>Holm, Principal Keeper</i>. This compendium does not guess.",
   ]},
 ], also: ['log', 'station', 'maren'] },
-{ id: 'plimsoll', t: 'Plimsoll', cat: ['Characters', 'Creatures'], img: 'plim', box: [['Kind', 'A shark, walking'], ['First seen', '2 January 1888, at dawn'], ['Wears', 'The blue shoes of the Gannet\'s cabin boy'], ['Named by', 'The hands of [[wren]]'], ['Known for', 'Walking ships through the deep water'], ['Appears in', '[[ch_voyages]], [[ch_gannetswake]], [[ch_fogrun]]']], sum: "A shark who walked up out of the surf the winter the Gannet was lost, wearing the blue shoes of her cabin boy. He knows the deep water through the skerries and walks ahead of ships to the harbour. [[maren]] will not go near him.", secs: [
+{ id: 'plimsoll', t: 'Plimsoll', cat: ['Characters', 'Creatures'], img: 'plim', box: [['Kind', 'A shark, walking'], ['First seen', '2 January 1888, at dawn'], ['Wears', 'The blue shoes of the Gannet\'s cabin boy'], ['Named by', 'The hands of [[wren]]'], ['Known for', 'Walking ships through the deep water'], ['Appears in', '[[ch_voyages]], [[ch_gannetswake]], [[ch_fogrun]], [[ch_clash]]']], sum: "A shark who walked up out of the surf the winter the Gannet was lost, wearing the blue shoes of her cabin boy. He knows the deep water through the skerries and walks ahead of ships to the harbour. [[maren]] will not go near him.", secs: [
   { h: 'First sighting', p: [
     "The keeper saw him first, standing on the sand at dawn, looking up at the Light. A week later the schooner [[wren|Wren]] came in without a scratch with him walking ahead on the water the whole way, and her hands named him for his shoes.",
   ]},
@@ -54767,6 +54820,9 @@ var LORE = [
   ]},
   { h: 'The cabin boy', p: [
     "The cabin boy's name went down with the Gannet's articles. Whether Plimsoll is the boy, ate the boy, or simply liked the shoes is not something anyone has asked him. He sheds his teeth as sharks do, and some say [[cutlassplimsoll|the Cutlasses of Plimsoll]] are set with them.",
+  ]},
+  { h: 'On the Race', p: [
+    "On [[race|the Race]] he walks the causeway for whichever keeper he thinks is in the right, quicker than any hand there. When he smells blood he lunges a long way onto the strongest thing near him, bites hard, and for a while strikes twice as fast. See [[ch_clash]].",
   ]},
 ], also: ['cutlassplimsoll', 'gannet', 'maren'] },
 { id: 'crane', t: 'Absalom Crane', cat: ['Characters'], box: [['Post', 'Master of the brig [[gannet|Gannet]]'], ['Lost', '14 December 1887'], ['Carries', 'A speaking trumpet and a boat hook'], ['Weakness', 'Light'], ['Appears in', '[[ch_gannetswake]]']], sum: "Master of the brig Gannet when she broke up on the skerries, and the one who would not let her go. On the night she rose in 1888 he was waiting on her quarterdeck, tall and drowned in a rotted greatcoat and hat, sea-water running off him.", secs: [
@@ -54791,7 +54847,7 @@ var LORE = [
 { id: 'lampwright', t: 'The Lampwright', cat: ['Characters', 'Objects'], box: [['Real name', 'Unrecorded'], ['Made', 'The lens of [[skerrylight]], 1841'], ['Left behind', 'The Lampwright\'s Bench'], ['Appears in', '[[ch_lastlight]], [[ch_marensend]], [[ch_fogrun]]']], sum: "The craftsman who ground and set the great lens of Skerry Light in 1841, and whose workbench still stands in [[station|the keeper's station]]. Anything worked over on it comes back the better for it, and nobody can say quite how.", secs: [
   { h: 'The bench', p: [
     "The bench was left in the Lamp-Wright's Store when the lens was finished, with his tools still on it. In the winter of 1888 the defenders of the station found that a gun left on it came back reforged, harder hitting and changed in its look, often with a trick of its own. A second bench turned up in Wrackhaven's town hall, and a third in the Governor's Rooms of [[seafort|the sea fort]], where it worked on the drowned but would not help against Maren.",
-    "In Fog Run the cutter's crew found his sparks in the salvage, and took them for his blessing.",
+    "In Fog Run the cutter's crew found his sparks in the salvage, and took them for his blessing. The keepers of [[race|the Race]] dress their towers out of a crate that bears his name: see [[greatlight]].",
   ]},
   { h: 'The Fresnel Lamp', p: [ "His own signal lantern, with a piece of the Light's lens in it, is [[fresnellamp|the Fresnel Lamp]]." ] },
 ], also: ['fresnellamp', 'skerrylight', 'station'] },
@@ -55120,8 +55176,53 @@ var LORE = [
   { h: '', p: [ "The lighthouse beam shows them for what they are: they go dark when it passes over them, and snuff out for good when a ship gets close. Nobody has ever found who lights them." ] },
 ], also: ['mooncussers', 'harbour'] },
 { id: 'crates', t: 'The drifting crates', cat: ['Objects'], box: [['First seen', '30 October 1888'], ['Marked by', 'A little lamp on each'], ['Set adrift by', 'Unknown']], sum: "Crates floating in the water, each with its own little lamp. The boats that haul them aboard come in painted every colour of the sea: ice, ember, coral, gold.", secs: [
-  { h: '', p: [ "The keeper did not know who set them adrift. <i>Whoever it is, they want us to keep sailing.</i> In later years the same crates turned up on the wreckers' islands, at the station and in the Reach, full of coats, gun finishes and banners. Nobody has caught anyone putting one in the water." ] },
+  { h: '', p: [ "The keeper did not know who set them adrift. <i>Whoever it is, they want us to keep sailing.</i> In later years the same crates turned up on the wreckers' islands, at the station and in the Reach, full of coats, gun finishes and banners, and on the headland and the Race they held golf balls, clubs and whole lighthouses: see [[ch_links]] and [[greatlight]]. Nobody has caught anyone putting one in the water." ] },
 ], also: ['boats', 'log'] },
+
+// ---------------- Skerry Clash: the Race and its keepers ----------------
+{ id: 'racekeepers', t: 'The keepers of the Race', cat: ['Characters', 'Factions'], box: [['Post', 'Keepers of the two lights on [[race|the Race]]'], ['Since', 'The years after'], ['Dispute', 'Whose light is the false one'], ['Shouts', 'Ahoy!, Well played, Nooo…'], ['Appears in', '[[ch_clash]]']], sum: "The keepers of the rival lights across the tidal race, each in an oilskin and a keeper's cap, each certain that the other's lamp is the one that wrecks ships. Who they are changes from night to night. What they are arguing about never does.", secs: [
+  { h: 'Across the water', p: [
+    "The two rocks are close enough that the keepers can hear each other, and they do not keep quiet. A keeper shouts across when the fight starts, when a tower falls and when it is over, and the coast's own folk join in: shore crabs, a puffin, a drowned sailor, the herring gulls and a grey seal, each with an opinion. A keeper who has heard enough can stop listening for the rest of the night.",
+  ]},
+  { h: 'Their standing', p: [
+    "The Race keeps a reckoning of every keeper who has fought on it, a figure that rises with every win and falls with every loss, and more when the odds were long. It is kept by name, and a name once taken is not given to anyone else. Folk come down to the shore in numbers to watch the better ones, up to eight at a time, and nothing they see counts for them.",
+  ]},
+], also: ['ch_clash', 'race', 'keeper'] },
+{ id: 'race', t: 'The Race', cat: ['Places'], box: [['Kind', 'A tidal race between two rocks'], ['Crossed by', 'Two causeways, dry only at slack water'], ['Lights', 'A [[greatlight|Great Light]] and two Lamp Towers on each rock'], ['Appears in', '[[ch_clash]]']], sum: "A fast tidal race between two rocks, each with a light on it. At slack water two causeways come up out of it, one in each lane, and for three minutes the two keepers can reach each other. The rest of the time the water runs too fast for anything to cross but a bird.", secs: [
+  { h: 'The rocks', p: [
+    "Each rock has its Great Light at the back, in the middle, and two Lamp Towers forward, one over each causeway. Hands are set down only on dry rock, never in the water or on a tower, and only on a keeper's own side, until a Lamp Tower across the water falls and the rock behind it is open to them too.",
+  ]},
+  { h: 'Where it is', p: [ "No chart agrees. The Race is said to lie somewhere in the outer skerries, out of sight of [[skerrylight]], and on some nights it seems to lie on any of the [[sixseas|six seas]]. The causeways are always there at slack water." ] },
+], also: ['ch_clash', 'threeskerry', 'greatlight'] },
+{ id: 'threeskerry', t: 'The Threefold Skerry', cat: ['Places'], box: [['Kind', 'A round skerry cut three ways'], ['Lights', 'Three, one on each rock'], ['Crossed by', 'Three causeways, one over each channel'], ['Appears in', '[[ch_clash]]']], sum: "A round skerry cut into three rocks by channels that run out from a pool in the middle, each crossed by a causeway to the next rock. Three keepers keep three lights there, and every one of them is sure the other two are false.", secs: [
+  { h: 'Every keeper for themselves', p: [
+    "Each keeper has a Great Light at the back of their rock and a Lamp Tower beside each causeway, a little less stout than those on [[race|the Race]], since every keeper's oil must go two ways. Hands sent over cross the nearer causeway and go for that neighbour, and once they have picked a rival they stay with them.",
+    "A keeper whose Great Light goes out is finished: their towers crumble, their hands melt away, and the other two fight on. The last light burning wins. If the tide turns before then, the keeper with the most towers still standing has the night.",
+  ]},
+], also: ['race', 'ch_clash', 'racekeepers'] },
+{ id: 'greatlight', t: 'The Great Lights and Lamp Towers', cat: ['Objects', 'Places'], box: [['Kind', 'The towers of the rival lights'], ['On each rock', 'One Great Light, two Lamp Towers'], ['Dressed by', 'The Lampwright\'s Crate'], ['Appears in', '[[ch_clash]]']], sum: "The towers the keepers of the Race fight over. The Lamp Towers stand forward over the causeways and shoot at anything that comes in range, on the rock or in the air. The Great Light behind them sleeps until it is struck or one of its towers falls, then wakes and shoots harder than either.", secs: [
+  { h: 'Crowns', p: [ "Every tower felled is a crown to the keeper who felled it. Put out the Great Light and all three go with it, and the night is over." ] },
+  { h: 'The Lampwright\'s Crate', p: [
+    "Keepers dress their towers from the Lampwright's Crate, named for [[lampwright|the Lampwright]], though nobody thinks he packed it. It holds whole sets of towers: whitewash and red, granite courses, iron screw-piles on their legs, a squat Martello stone, sea glass, hoarfrost, ember light and corpse light, and three that are alive, their beams turning: <b>Northern Lights</b>, <b>The Maelstrom</b> and <b>The Drowned Light</b>, hung with weed. Every one of them fights the same. Whatever a keeper raises, their own colour stays on the gallery rail, the door and the pennant, so the two sides can always be told apart.",
+  ]},
+], also: ['lampwright', 'race', 'crates'] },
+{ id: 'clashhands', t: 'The hands of the Race', cat: ['Factions'], box: [['Kinds', 'Troops, spells and buildings'], ['How many', 'Sixty-four, by the keepers\' count'], ['Paid in', 'Lamp oil'], ['Appears in', '[[ch_clash]]']], sum: "Everyone and everything that will cross the causeways for a keeper, and the tricks of the weather and the tide that a keeper can call down. The keepers count sixty-four, and each keeper brings eight of them to a fight.", secs: [
+  { h: 'Who crosses', p: [
+    "On foot: Mudlarks off the mudflats, Bilge Rats, Deckhands, Powder Monkeys with a lit cask, Wrecker Gangs and their Chief, the Press Gang, Smugglers, the Cutlass Bosun, the Anchor Swinger, Harpooners, Fishwives, the Lamplighter with her burning pole, the Head Keeper, the Ship's Surgeon, the Siren. From the sea: the Drowned Sailor, who rises once more, and the whole Drowned Crew; the Fog Wraith; [[diver|the Diver]]; [[mooncusser|the Mooncusser]] with his false light; the Kelp Horror and Kraken's Arm. The crabs: Shore Crabs, the Lobster Knight, the Hermit Crab, the Crab Mother, the Crab King and [[keelback|the Keelback]]. And the birds, over the water: gulls, puffins, the Cormorant, the Gannet, the Storm Petrel and the Sea Eagle, and the Will-o'-the-Wisp.",
+  ]},
+  { h: 'What a keeper calls down', p: [
+    "A Signal Flare, a Cannon Shot, a Powder Keg, a Rogue Wave, [[haar|the haar]] itself, Brine Rain, a Whirlpool, a Tide Pull, Storm Glass, a Fair Wind, Lamp Oil to mend, and a Shipwreck that a Wrecker Gang climbs out of.",
+  ]},
+  { h: 'What a keeper builds', p: [
+    "Sea Batteries, Swivel Guns, a Martello Tower, a Mortar Pit, a Burning Lens, a Fog Horn, a Bell Buoy, a Tar Barrel, a Wreckers' Fire that calls a wrecker to it, and an Oil Store, which keeps a keeper in oil as long as it stands.",
+  ]},
+  { h: 'Champions', p: [ "Above them all, a keeper may bring one champion: [[maren]] or [[plimsoll]]. A champion fights like any hand, but has a power of their own that a keeper can call on for a little oil." ] },
+], also: ['ch_clash', 'tripledraft', 'racekeepers'] },
+{ id: 'tripledraft', t: 'The triple draft', cat: ['Events'], box: [['Kind', 'A way of choosing hands'], ['Rounds', 'Eight, three offered each round'], ['Appears in', '[[ch_clash]]']], sum: "The custom of the Race when neither keeper trusts the other's hands. Each keeper comes with nobody, and the hands are offered on the shore three at a time. Each keeper takes one; the other two go home. After eight rounds, the fight begins.", secs: [
+  { h: 'The rounds', p: [
+    "Each round asks for something: a big hitter, something that can bring down birds (twice), a spell that strikes, two cheap hands, a building or a spell, and one where anything goes, in an order nobody knows beforehand. Both keepers are asked for the same thing each round, but never offered the same three, and each can see across the shore what the other is being offered, though never which one they take. No hand is offered to a keeper twice in one draft, and the champions are never offered at all: they come for a keeper, not for a draft.",
+  ]},
+], also: ['clashhands', 'ch_clash'] },
 ];
 
 // ---- src/loreui.js ----
@@ -55204,12 +55305,15 @@ function lwMain() {
     "…that [[maren]] is not in [[ch_reach|the Drowned Reach]], but the [[drowned]] are?",
     "…that [[bellmen|the Bellmen]] ring every drowned captain's bell once on the quay at [[saltcote]] before they strike his ship off the roll?",
     "…that [[pascoe|Old Pascoe]] once came home three days late with a day's beard?",
+    "…that the causeways of [[race|the Race]] are only dry for about three minutes at slack water?",
+    "…that the last three holes of [[ch_links|Skerry Links]] are always played by moonlight?",
+    "…that before the clockwork was right, [[ch_original|the keeper swung the beam by hand]]?",
   ];
   const did = [0, 1, 2, 3].map(i => facts[(day + i * 3) % facts.length]);
-  const chron = ['ch_voyages', 'ch_wreckers', 'ch_gannetswake', 'ch_lastlight', 'ch_fbsea', 'ch_fogrun', 'ch_marensend', 'ch_reach'].map(id => LW.byId[id]);
+  const chron = ['ch_original', 'ch_links', 'ch_voyages', 'ch_wreckers', 'ch_gannetswake', 'ch_lastlight', 'ch_fbsea', 'ch_fogrun', 'ch_marensend', 'ch_reach', 'ch_clash'].map(id => LW.byId[id]);
   return '<h1 class="lw-h1 lw-welcome" id="loreHead">Welcome to the Skerry Compendium</h1><p class="lw-from">The record of the Light that anyone can read. ' + LORE.length + ' articles, from the first fire on Lantern Rock to the wars of the Reach.</p>' +
     '<div class="lw-mp">' +
-    '<section class="lw-panel lw-wide"><h2>The eight tales</h2><p>Every game is one chapter of the same history. Read them in the order they happened, or start with the <a href="#" class="lw-a" data-a="timeline">timeline</a>.</p><ol class="lw-chron">' + chron.map(a => '<li><a href="#" class="lw-a" data-a="' + a.id + '"><b>' + lwEsc(a.t) + '</b><span>' + lwEsc(a.box.find(r => r[0] === 'When')[1]) + '</span></a></li>').join('') + '</ol></section>' +
+    '<section class="lw-panel lw-wide"><h2>The eleven tales</h2><p>Every game is one chapter of the same history. Read them in the order they happened, or start with the <a href="#" class="lw-a" data-a="timeline">timeline</a>.</p><ol class="lw-chron">' + chron.map(a => '<li><a href="#" class="lw-a" data-a="' + a.id + '"><b>' + lwEsc(a.t) + '</b><span>' + lwEsc(a.box.find(r => r[0] === 'When')[1]) + '</span></a></li>').join('') + '</ol></section>' +
     '<section class="lw-panel"><h2>Today\'s featured article</h2>' + (fimg ? '<img class="lw-feat" src="' + fimg + '" alt="">' : '') + '<p>' + lwLinks(feat.sum) + ' (<a href="#" class="lw-a" data-a="' + feat.id + '">Read more</a>)</p></section>' +
     '<section class="lw-panel"><h2>Did you know</h2><ul class="lw-list">' + did.map(f => '<li>' + lwLinks(f) + '</li>').join('') + '</ul></section>' +
     (page ? '<section class="lw-panel"><h2>From the keeper\'s log</h2><p class="lw-logdate">' + lwEsc(page.date) + '</p><blockquote>' + lwEsc(page.text) + '</blockquote><p><a href="#" class="lw-a" data-a="log">About the log</a></p></section>' : '') +
