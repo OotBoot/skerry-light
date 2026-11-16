@@ -202,14 +202,14 @@ const RL_CARDS = [
 //               seconds, he mends hl, and for dur seconds his hits do mul times and land on everyone within sp tiles of him.
 //               And always: nothing slows or stuns him (the bell does nothing to him)
 const RL_CHAMPS = [
-  { id: 'maren', n: 'Maren Holm', cost: 5, type: 'troop', hp: 1900, dmg: 175, hit: 1.2, rng: 3, spd: RL_SPD.med, tg: 'any', cnt: 1, size: 0.5,
-    champ: { n: 'Sea-Green Light', cost: 2, cd: 16, cd0: 3, dur: 4, r: 3, dps: 130, tw: 0.35, d: 'For 4 seconds nothing can hurt her, and every enemy within 3 tiles is slowed and drowns 130 a second.' },
+  { id: 'maren', n: 'Maren Holm', cost: 5, type: 'troop', hp: 2300, dmg: 210, hit: 1.2, rng: 3, spd: RL_SPD.med, tg: 'any', cnt: 1, size: 0.5,
+    champ: { n: 'Sea-Green Light', cost: 2, cd: 13, cd0: 3, dur: 5, r: 3, dps: 170, tw: 0.35, d: 'For 5 seconds nothing can hurt her, and every enemy within 3 tiles is slowed and drowns 170 a second.' },
     d: 'The keeper\u2019s wife, come back over the rocks with her lantern. Its light reaches flyers too.' },
-  { id: 'plimsoll', n: 'Plimsoll', cost: 4, type: 'troop', hp: 1500, dmg: 210, hit: 1.1, rng: 0.9, spd: RL_SPD.fast, tg: 'ground', cnt: 1, size: 0.5,
-    champ: { n: 'Blood in the Water', cost: 1, cd: 11, cd0: 2, dur: 4, r: 6, mul: 3, fast: 2, d: 'He lunges up to 6 tiles on to the strongest enemy near him, bites for triple, then strikes twice as fast for 4 seconds.' },
+  { id: 'plimsoll', n: 'Plimsoll', cost: 4, type: 'troop', hp: 1800, dmg: 250, hit: 1.1, rng: 0.9, spd: RL_SPD.fast, tg: 'ground', cnt: 1, size: 0.5,
+    champ: { n: 'Blood in the Water', cost: 1, cd: 9, cd0: 2, dur: 5, r: 6, mul: 3.5, fast: 2, d: 'He lunges up to 6 tiles on to the strongest enemy near him, bites for three and a half times, then strikes twice as fast for 5 seconds.' },
     d: 'The shark in the cabin boy\u2019s blue shoes. He knows the way through the skerries.' },
-  { id: 'verity', n: 'Verity', cost: 4, type: 'troop', hp: 1300, dmg: 150, hit: 1.0, rng: 0.8, spd: RL_SPD.med, tg: 'ground', cnt: 1, size: 0.45,
-    champ: { n: 'I Want to Help', cost: 3, cd: 20, cd0: 4, dur: 6, r: 4, st: 1.5, mul: 2.5, sp: 1.6, hl: 500, d: 'He stops smiling and mends 500: enemy troops within 4 tiles freeze for 1.5 s, and for 6 seconds his hits do two and a half times, on everyone round him.' },
+  { id: 'verity', n: 'Verity', cost: 4, type: 'troop', hp: 1600, dmg: 180, hit: 1.0, rng: 0.8, spd: RL_SPD.med, tg: 'ground', cnt: 1, size: 0.45,
+    champ: { n: 'I Want to Help', cost: 2, cd: 16, cd0: 4, dur: 6, r: 4, st: 1.5, mul: 2.5, sp: 1.6, hl: 650, d: 'He stops smiling and mends 650: enemy troops within 4 tiles freeze for 1.5 s, and for 6 seconds his hits do two and a half times, on everyone round him.' },
     d: 'A small yellow orb, smiling, who says he wants to help. Nothing slows him or stuns him.' },
 ];
 const RL_CARD = {}; for (const c of RL_CARDS.concat(RL_CHAMPS)) RL_CARD[c.id] = c;

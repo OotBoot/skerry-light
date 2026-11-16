@@ -2742,7 +2742,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 // ---- src/config.js ----
 'use strict';
 // The game's version, shown at the top of the main menu. Bump it by one with every change pushed to main.
-var VERSION = 208;
+var VERSION = 209;
 // Skerry Light: tuning, asset paths and lore.
 // World units are metres. The lighthouse stands at the origin on the shoreline (y = 0);
 // north (+y) is open sea. Bearings: 0 = north, positive = east.
@@ -2917,6 +2917,10 @@ document.addEventListener('visibilitychange', () => {
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 209, date: '2026-11-16', title: "Skerry Clash: champions buffed", Balance: [
+    "Skerry Clash: all champions are stronger.",
+    "Skerry Clash: Maren Holm: hit points 1900 to 2300, damage 175 to 210. Sea-Green Light lasts 5 seconds (was 4), deals 170 a second (was 130), and its cooldown is 13 seconds (was 16).",
+    "Skerry Clash: Plimsoll: hit points 1500 to 1800, damage 210 to 250. Blood in the Water bites for 3.5 times his damage (was 3), his faster attacks last 5 seconds (was 4), and its cooldown is 9 seconds (was 11)." ] },
   { v: 208, date: '2026-11-16', title: "Skerry Clash: champion tweaks", Changes: [
     "Skerry Clash: small sound and balance tweaks to a champion." ] },
   { v: 207, date: '2026-11-16', title: "Skerry Clash: Triple Draft", New: [
@@ -58084,14 +58088,14 @@ const RL_CARDS = [
 //               seconds, he mends hl, and for dur seconds his hits do mul times and land on everyone within sp tiles of him.
 //               And always: nothing slows or stuns him (the bell does nothing to him)
 const RL_CHAMPS = [
-  { id: 'maren', n: 'Maren Holm', cost: 5, type: 'troop', hp: 1900, dmg: 175, hit: 1.2, rng: 3, spd: RL_SPD.med, tg: 'any', cnt: 1, size: 0.5,
-    champ: { n: 'Sea-Green Light', cost: 2, cd: 16, cd0: 3, dur: 4, r: 3, dps: 130, tw: 0.35, d: 'For 4 seconds nothing can hurt her, and every enemy within 3 tiles is slowed and drowns 130 a second.' },
+  { id: 'maren', n: 'Maren Holm', cost: 5, type: 'troop', hp: 2300, dmg: 210, hit: 1.2, rng: 3, spd: RL_SPD.med, tg: 'any', cnt: 1, size: 0.5,
+    champ: { n: 'Sea-Green Light', cost: 2, cd: 13, cd0: 3, dur: 5, r: 3, dps: 170, tw: 0.35, d: 'For 5 seconds nothing can hurt her, and every enemy within 3 tiles is slowed and drowns 170 a second.' },
     d: 'The keeper\u2019s wife, come back over the rocks with her lantern. Its light reaches flyers too.' },
-  { id: 'plimsoll', n: 'Plimsoll', cost: 4, type: 'troop', hp: 1500, dmg: 210, hit: 1.1, rng: 0.9, spd: RL_SPD.fast, tg: 'ground', cnt: 1, size: 0.5,
-    champ: { n: 'Blood in the Water', cost: 1, cd: 11, cd0: 2, dur: 4, r: 6, mul: 3, fast: 2, d: 'He lunges up to 6 tiles on to the strongest enemy near him, bites for triple, then strikes twice as fast for 4 seconds.' },
+  { id: 'plimsoll', n: 'Plimsoll', cost: 4, type: 'troop', hp: 1800, dmg: 250, hit: 1.1, rng: 0.9, spd: RL_SPD.fast, tg: 'ground', cnt: 1, size: 0.5,
+    champ: { n: 'Blood in the Water', cost: 1, cd: 9, cd0: 2, dur: 5, r: 6, mul: 3.5, fast: 2, d: 'He lunges up to 6 tiles on to the strongest enemy near him, bites for three and a half times, then strikes twice as fast for 5 seconds.' },
     d: 'The shark in the cabin boy\u2019s blue shoes. He knows the way through the skerries.' },
-  { id: 'verity', n: 'Verity', cost: 4, type: 'troop', hp: 1300, dmg: 150, hit: 1.0, rng: 0.8, spd: RL_SPD.med, tg: 'ground', cnt: 1, size: 0.45,
-    champ: { n: 'I Want to Help', cost: 3, cd: 20, cd0: 4, dur: 6, r: 4, st: 1.5, mul: 2.5, sp: 1.6, hl: 500, d: 'He stops smiling and mends 500: enemy troops within 4 tiles freeze for 1.5 s, and for 6 seconds his hits do two and a half times, on everyone round him.' },
+  { id: 'verity', n: 'Verity', cost: 4, type: 'troop', hp: 1600, dmg: 180, hit: 1.0, rng: 0.8, spd: RL_SPD.med, tg: 'ground', cnt: 1, size: 0.45,
+    champ: { n: 'I Want to Help', cost: 2, cd: 16, cd0: 4, dur: 6, r: 4, st: 1.5, mul: 2.5, sp: 1.6, hl: 650, d: 'He stops smiling and mends 650: enemy troops within 4 tiles freeze for 1.5 s, and for 6 seconds his hits do two and a half times, on everyone round him.' },
     d: 'A small yellow orb, smiling, who says he wants to help. Nothing slows him or stuns him.' },
 ];
 const RL_CARD = {}; for (const c of RL_CARDS.concat(RL_CHAMPS)) RL_CARD[c.id] = c;

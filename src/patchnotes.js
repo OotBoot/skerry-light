@@ -6,6 +6,10 @@
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 209, date: '2026-11-16', title: "Skerry Clash: champions buffed", Balance: [
+    "Skerry Clash: all champions are stronger.",
+    "Skerry Clash: Maren Holm: hit points 1900 to 2300, damage 175 to 210. Sea-Green Light lasts 5 seconds (was 4), deals 170 a second (was 130), and its cooldown is 13 seconds (was 16).",
+    "Skerry Clash: Plimsoll: hit points 1500 to 1800, damage 210 to 250. Blood in the Water bites for 3.5 times his damage (was 3), his faster attacks last 5 seconds (was 4), and its cooldown is 9 seconds (was 11)." ] },
   { v: 208, date: '2026-11-16', title: "Skerry Clash: champion tweaks", Changes: [
     "Skerry Clash: small sound and balance tweaks to a champion." ] },
   { v: 207, date: '2026-11-16', title: "Skerry Clash: Triple Draft", New: [
