@@ -1,5 +1,5 @@
 'use strict';
-// Rival Lights in 3D (three.js, its own canvas #rlCv): the two keepers' rocks on the sea at dusk, the race running
+// Skerry Clash in 3D (three.js, its own canvas #rlCv): the two keepers' rocks on the sea at dusk, the race running
 // between them, the two stone causeways, the six towers, every troop and building as a small low-poly model, the
 // shots in flight, the spells, the deaths and the towers coming down. src/rl.js owns the state; this only reads it.
 // Arena tiles to three.js: (x, y, height) is (x - 9, height, 16 - y), so the middle of the race is the origin and

@@ -1,5 +1,5 @@
 'use strict';
-// Rival Lights: the cards' pictures, and the card face the deck builder shows.
+// Skerry Clash: the cards' pictures, and the card face the deck builder shows.
 //
 // Every one of the 64 cards (src/rlcards.js) has a portrait of its own, painted here in 2D canvas with paths and
 // gradients and no image files: a backdrop of sky and sea tinted for its type (troops at dusk over the race, spells

@@ -1,5 +1,5 @@
 'use strict';
-// Rival Lights: the keeper across the water when you play alone (src/rl.js runs the match; this plays a side through
+// Skerry Clash: the keeper across the water when you play alone (src/rl.js runs the match; this plays a side through
 // rlPlay, the same door a person's tap goes through, so it can do nothing a player couldn't).
 // It thinks a few times a second (less often, and more carelessly, on easy). Each think, in this order:
 //   1. Something on its rock (or about to cross): defend. It weighs what's coming (hit points and the oil it cost),

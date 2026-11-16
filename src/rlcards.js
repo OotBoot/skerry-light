@@ -1,5 +1,5 @@
 'use strict';
-// Rival Lights: the 64 cards. Data only; the rules that read it are in src/rl.js.
+// Skerry Clash: the 64 cards. Data only; the rules that read it are in src/rl.js.
 //
 // Two keepers' rocks face each other across a tidal race, each with its Great Light and two Lamp Towers. Each player
 // builds a deck of 8 from these 64 (src/rldeck.js), holds 4 in hand, and spends lamp oil (0 to 10, filling over

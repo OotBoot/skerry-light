@@ -9,7 +9,7 @@
 //   fogrun      a Fog Run (the same lobby again, on its own card: src/frrun.js) [fogrun]
 //   fbsea       a Freebooters' Sea crew (the same lobby again, on its own card: src/fbsea.js) [fbsea]
 //   golf        a round of Skerry Links (its own lobby: src/golfnet.js, g...) [golf]
-//   rival       a Rival Lights duel (its own lobby: src/rlnet.js, r...) [rival]
+//   rival       a Skerry Clash duel (its own lobby: src/rlnet.js, r...) [rival]
 // On a phone or tablet the button opens the share sheet; on a computer it copies the text to the clipboard.
 // On claude.ai everyone plays in the artifact's own room, which the live site can't reach, so there the link is the
 // artifact itself: it can't carry a code, but the friend sees the lobby in the list and taps it.

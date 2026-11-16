@@ -1405,7 +1405,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 #gfHeatBtn[aria-pressed="true"] { background: #3fd44a; color: #0b1a0c; }
 @media (max-width: 720px) { .gf-heatkey { top: 324px; } }
 
-/* [rival] Rival Lights (src/rl.js, src/rlhud.js): the screen over its 3D view, the hand of cards, the oil, the end card */
+/* [rival] Skerry Clash (src/rl.js, src/rlhud.js): the screen over its 3D view, the hand of cards, the oil, the end card */
 #rlUI { position: fixed; inset: 0; z-index: 30; font-family: var(--log); color: var(--ink); -webkit-user-select: none; user-select: none; touch-action: none; --rl-me: #5aa2ff; --rl-them: #ff6352; --rl-oil: #ffb347; }
 #rlCv { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
 #rlUI.picking #rlCv { cursor: crosshair; }
@@ -1502,7 +1502,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
   .rl-nm { font-size: 10px; } .rl-oilbar { height: 10px; } .rl-oil b { width: 24px; height: 24px; font-size: 14px; } .rl-card kbd { display: none; }
   .rl-toast.warn { left: auto; right: 12px; transform: none; }
 }
-/* [rival] meta: Rival Lights' card on the title screen, the card faces, the deck builder and the tower crates
+/* [rival] meta: Skerry Clash' card on the title screen, the card faces, the deck builder and the tower crates
    (src/rlart.js, src/rldeck.js, src/rlcrates.js). Its colour is lamp-oil amber. A card's shape says its type: troops
    are cut at the corners, spells arched like a lantern's window, buildings square and notched. */
 .newgame.rlbanner { border-color: rgba(232,160,80,0.6); background: linear-gradient(90deg, rgba(220,140,60,0.3), rgba(220,140,60,0.08)); }
@@ -1703,7 +1703,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
     <button class="newgame frbanner" id="frBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">And <b>Fog Run</b>: sail the keeper's cutter out into the haar and light the islands, alone or with up to four</span><span class="ng-go" aria-hidden="true">↓</span></button>
     <button class="newgame fbbanner" id="fbBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">And <b>Freebooters' Sea</b>: an open sea of islands to sail, salvage and sell, alone or with up to four</span><span class="ng-go" aria-hidden="true">↓</span></button><!-- [fbsea] -->
     <button class="newgame gfbanner" id="gfBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">And <b>Skerry Links</b>: nine holes of golf along the cliffs, alone or with up to four</span><span class="ng-go" aria-hidden="true">↓</span></button><!-- [golf] -->
-    <button class="newgame rlbanner" id="rlBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">And a ninth, <b>Rival Lights</b>: a duel of lights across the race, one keeper against another</span><span class="ng-go" aria-hidden="true">↓</span></button><!-- [rival] -->
+    <button class="newgame rlbanner" id="rlBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">And a ninth, <b>Skerry Clash</b>: a duel of lights across the race, one keeper against another</span><span class="ng-go" aria-hidden="true">↓</span></button><!-- [rival] -->
     <div class="menulinks"><button class="tool notesbtn" id="notesBtn" type="button">Patch notes</button><button class="tool notesbtn lorebtn" id="loreBtn" type="button">Lore compendium</button></div>
     <div class="card boardcard" id="boardCard" aria-labelledby="boardHead">
       <div class="cardtop"><span class="eyebrow">Best on record · every game</span><span class="boardminititle">The Scoreboard</span><span class="boardbtns"><button class="tool closebtn" id="boardRefresh" type="button">Refresh</button><button class="tool closebtn" id="boardMin" type="button" aria-expanded="true" aria-controls="boardCard" title="Make the scoreboard small">– Minimise</button></span></div>
@@ -2050,9 +2050,9 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
         <p><b>Turns and the card.</b> Everyone tees off in turn, the best on the last hole first; after that whoever's furthest from the hole plays. Tab (or Y) shows the scorecard. A full round of nine goes on the scoreboard, under the first player's name on a shared screen.</p>
       </details>
     </div>
-    <div class="card zmcard rlcard" id="rlTitle" aria-labelledby="rlHead"><!-- [rival] Rival Lights: its own card (src/rl.js the duel, src/rldeck.js, src/rlcrates.js, src/rlnet.js) -->
+    <div class="card zmcard rlcard" id="rlTitle" aria-labelledby="rlHead"><!-- [rival] Skerry Clash: its own card (src/rl.js the duel, src/rldeck.js, src/rlcrates.js, src/rlnet.js) -->
       <div class="cardtop"><span class="eyebrow">A ninth game · a duel of lights · one against one</span></div>
-      <h1 id="rlHead">Rival Lights</h1>
+      <h1 id="rlHead">Skerry Clash</h1>
       <p>Two keepers, two rocks, and the race running fast between them. Each kept a light, and each swore the other's was the false one that put ships on the reef. Now they settle it the old way: crews over the causeways at low water, crabs and gulls and worse called up out of the shallows, and lamp oil for whatever the night needs. Put out the other keeper's Great Light before they put out yours.</p>
       <p class="muted">Three minutes. Spend oil to play cards from your hand of four; your troops cross the race by the two causeways and go for the other side's towers. Every tower you fell is a crown. Fell the Great Light and it's over at once.</p>
       <div class="rlopts">
@@ -2139,7 +2139,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
     </div>
   </div>
 
-  <!-- Rival Lights: the 3D view and what's over it (src/rl.js, src/rlhud.js, src/rl3d.js) -->
+  <!-- Skerry Clash: the 3D view and what's over it (src/rl.js, src/rlhud.js, src/rl3d.js) -->
   <div id="rlUI" hidden>
     <canvas id="rlCv"></canvas>
     <div class="rl-flash" id="rlFlash" aria-hidden="true"></div>
@@ -2165,7 +2165,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
     <div class="rl-drag" id="rlDrag" hidden aria-hidden="true"><canvas width="150" height="176"></canvas></div>
     <div class="overlay pausecard" id="rlPause" hidden role="dialog" aria-modal="true" aria-labelledby="rlPauseHead">
       <div class="card">
-        <h1 id="rlPauseHead">Rival Lights</h1>
+        <h1 id="rlPauseHead">Skerry Clash</h1>
         <p class="muted" id="rlPauseSub">The match waits while this is open.</p>
         <div class="btnrow"><button class="primary" id="rlResume" type="button">Resume</button><button class="tool" id="rlLeave" type="button">Leave the match</button></div>
         <div class="lookrow"><label for="rlVol">Volume <output id="rlVolOut">100%</output></label><input id="rlVol" class="lookslider volslider" type="range" min="0" max="100" step="5" value="100"></div>
@@ -2439,7 +2439,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 
   <div class="overlay rldeckcard" id="rlDeckCard" hidden role="dialog" aria-modal="true" aria-labelledby="rlDeckHead"><!-- [rival] the deck builder (src/rldeck.js) -->
     <div class="card">
-      <div class="cardtop sticky"><span class="eyebrow">Rival Lights · the keeper's locker</span><button class="tool closebtn" id="rlDeckClose" type="button">✕ Close</button></div>
+      <div class="cardtop sticky"><span class="eyebrow">Skerry Clash · the keeper's locker</span><button class="tool closebtn" id="rlDeckClose" type="button">✕ Close</button></div>
       <h1 id="rlDeckHead">Your Deck</h1>
       <div class="rldk-tabs" id="rlDkTabs" role="tablist" aria-label="Deck slots"></div>
       <div class="rldk-deck" id="rlDkDeck" aria-label="The eight cards in this deck"></div>
@@ -2457,7 +2457,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 
   <div class="overlay cratecard wcratecard rlkratecard" id="rlCrateCard" hidden role="dialog" aria-modal="true" aria-labelledby="rlkHead"><!-- [rival] tower crates and skins (src/rlcrates.js) -->
     <div class="card">
-      <div class="cardtop sticky"><span class="eyebrow">Rival Lights · the lampwright</span><button class="tool closebtn" id="rlkClose" type="button">✕ Close</button></div>
+      <div class="cardtop sticky"><span class="eyebrow">Skerry Clash · the lampwright</span><button class="tool closebtn" id="rlkClose" type="button">✕ Close</button></div>
       <h1 id="rlkHead">The Lampwright's Crate</h1>
       <p>A set of towers for your rock: the Great Light and both Lamp Towers, built and painted to match. Deckhand towers are honest paint and stone, Bosun ones are finer work, Mate towers shimmer, Captain towers glow and pulse, and the Admirals' are alive, their beams turning. Whatever you raise, your side's colour stays on the rails, the plinths and the pennants. Same grades and odds as the other crates: if you see gold in the reel, it's yours.</p>
       <div class="wcprogress"><span id="rlkProgress"></span></div>
@@ -2647,7 +2647,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 // ---- src/config.js ----
 'use strict';
 // The game's version, shown at the top of the main menu. Bump it by one with every change pushed to main.
-var VERSION = 200;
+var VERSION = 201;
 // Skerry Light: tuning, asset paths and lore.
 // World units are metres. The lighthouse stands at the origin on the shoreline (y = 0);
 // north (+y) is open sea. Bearings: 0 = north, positive = east.
@@ -2822,35 +2822,37 @@ document.addEventListener('visibilitychange', () => {
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
-  { v: 200, date: '2026-11-16', title: "Rival Lights: 32 new cards and a full rebalance", New: [
-    "Rival Lights: 32 new cards, 64 in all. Troops: Bilge Rats, Will-o'-the-Wisp, Ship's Cat, Puffin Squadron, Fishwives, Net Thrower, Grenadier, Lobster Knight, Storm Petrel, Press Gang, Siren, Ship's Surgeon, Rocket Crew, Anchor Swinger, Sea Eagle, Wrecker Chief, Smugglers, Crab Mother, Kraken's Arm and Stormcaller.",
-    "Rival Lights: new spells: Tide Pull, Lamp Oil, Fair Wind, Brine Rain, Shipwreck and Whirlpool. New buildings: Tar Barrel, Fog Horn, Mortar Pit, Burning Lens, Martello Tower and Oil Store.",
-    "Rival Lights: new abilities to go with them: pouncing, shells that soak damage, healing, life drain, spinning splash, rallying cries, chain lightning, pulls, damage over time, haste, knockback, a long-range mortar, a lens that burns hotter the longer it holds a target, and an oil store that pays you lamp oil.",
-    "Rival Lights: every new card has its own portrait, 3D model and effects, and the deck builder explains each new ability in plain words.",
-    "Rival Lights: the bot knows all 64 cards and builds its decks from the whole set." ], Balance: [
-    "Rival Lights: every card and tower rescaled to a new health and damage curve. Lamp Towers now have 3,050 health and the Great Light 4,800, and both hit for 109. Troops and buildings are much sturdier to match: the Deckhand has 900 health, The Diver 1,360 and hits for 700, the Crab King has 5,600.",
-    "Rival Lights: spells now deal 25 to 30% of their damage to towers.",
-    "Rival Lights: many cards tuned after hundreds of test matches, so no card wins far more or less often than the rest." ], Changes: [
-    "Rival Lights: a match still level when overtime ends now goes to whoever's most damaged tower has more health left. Only an exact tie is a draw." ] },
-  { v: 199, date: '2026-11-15', title: "Rival Lights: sturdier big cards, softer towers", Balance: [
-    "Rival Lights: Lamp Tower damage down from 58 to 51 a shot, and the Great Light's from 80 to 70.",
-    "Rival Lights: Hermit Crab health up from 2,000 to 2,450.",
-    "Rival Lights: Drowned Crew health up from 120 to 140 each.",
-    "Rival Lights: Mooncusser health up from 720 to 900.",
-    "Rival Lights: Head Keeper health up from 680 to 850.",
-    "Rival Lights: Wreckers' Fire health up from 820 to 1,000.",
-    "Rival Lights: Keelback health up from 1,650 to 2,050.",
-    "Rival Lights: Kelp Horror health up from 2,700 to 3,300.",
-    "Rival Lights: Crab King health up from 3,500 to 4,300." ] },
-  { v: 198, date: '2026-11-15', title: "New game: Rival Lights", New: [
-    "Rival Lights: a new game for two, with its own card on the main menu. Two keepers face each other across a tidal race, each guarding a Great Light and two Lamp Towers. Spend lamp oil to play cards from your hand of four, send your troops over the two causeways, and put out the other keeper's lights.",
-    "Rival Lights: 32 cards to choose from: 22 troops (Mudlarks, Shore Crabs, the Wrecker Gang, Gull Flock, the Fog Wraith, The Diver, the Mooncusser, the Keelback, the Kelp Horror, the Crab King and more), 6 spells (Signal Flare, Cannon Shot, Rogue Wave, The Haar, Powder Keg, Storm Glass) and 4 buildings (Sea Battery, Swivel Gun, Bell Buoy, Wreckers' Fire).",
-    "Rival Lights: build a deck of 8 in the Keeper's Locker. Three deck slots, filters, every card's numbers in plain words, and a warning if your deck can't hit anything in the air.",
-    "Rival Lights: three-minute matches. Every tower you fell puts out a light; fell the Great Light and you win at once. Oil comes twice as fast in the last minute, and a level match goes to a minute of sudden death overtime.",
-    "Rival Lights: duel a bot (Easy, Normal or Hard), or play online against a friend: host a duel, share the invite, and the host starts it.",
-    "Rival Lights: 18 tower skins from the Lampwright's Crate, from red-and-white bands and an iron screw-pile to glowing and living Admiral towers. Your towers wear your skin in every match, and online your rival sees it too.",
-    "Rival Lights: earn a tower crate for every match you finish and another for every win. Your first crate is free.",
-    "Saves: your Rival Lights decks, record and tower skins are kept in your save link, code, file and cloud save with everything else." ] },
+  { v: 201, date: '2026-11-16', title: "Rival Lights is now Skerry Clash", Changes: [
+    "Skerry Clash: the duel of lights for two has a new name. Rival Lights is now Skerry Clash on the main menu, its card, the pause menu and invites. Your decks, record and tower skins carry over untouched." ] },
+  { v: 200, date: '2026-11-16', title: "Skerry Clash: 32 new cards and a full rebalance", New: [
+    "Skerry Clash: 32 new cards, 64 in all. Troops: Bilge Rats, Will-o'-the-Wisp, Ship's Cat, Puffin Squadron, Fishwives, Net Thrower, Grenadier, Lobster Knight, Storm Petrel, Press Gang, Siren, Ship's Surgeon, Rocket Crew, Anchor Swinger, Sea Eagle, Wrecker Chief, Smugglers, Crab Mother, Kraken's Arm and Stormcaller.",
+    "Skerry Clash: new spells: Tide Pull, Lamp Oil, Fair Wind, Brine Rain, Shipwreck and Whirlpool. New buildings: Tar Barrel, Fog Horn, Mortar Pit, Burning Lens, Martello Tower and Oil Store.",
+    "Skerry Clash: new abilities to go with them: pouncing, shells that soak damage, healing, life drain, spinning splash, rallying cries, chain lightning, pulls, damage over time, haste, knockback, a long-range mortar, a lens that burns hotter the longer it holds a target, and an oil store that pays you lamp oil.",
+    "Skerry Clash: every new card has its own portrait, 3D model and effects, and the deck builder explains each new ability in plain words.",
+    "Skerry Clash: the bot knows all 64 cards and builds its decks from the whole set." ], Balance: [
+    "Skerry Clash: every card and tower rescaled to a new health and damage curve. Lamp Towers now have 3,050 health and the Great Light 4,800, and both hit for 109. Troops and buildings are much sturdier to match: the Deckhand has 900 health, The Diver 1,360 and hits for 700, the Crab King has 5,600.",
+    "Skerry Clash: spells now deal 25 to 30% of their damage to towers.",
+    "Skerry Clash: many cards tuned after hundreds of test matches, so no card wins far more or less often than the rest." ], Changes: [
+    "Skerry Clash: a match still level when overtime ends now goes to whoever's most damaged tower has more health left. Only an exact tie is a draw." ] },
+  { v: 199, date: '2026-11-15', title: "Skerry Clash: sturdier big cards, softer towers", Balance: [
+    "Skerry Clash: Lamp Tower damage down from 58 to 51 a shot, and the Great Light's from 80 to 70.",
+    "Skerry Clash: Hermit Crab health up from 2,000 to 2,450.",
+    "Skerry Clash: Drowned Crew health up from 120 to 140 each.",
+    "Skerry Clash: Mooncusser health up from 720 to 900.",
+    "Skerry Clash: Head Keeper health up from 680 to 850.",
+    "Skerry Clash: Wreckers' Fire health up from 820 to 1,000.",
+    "Skerry Clash: Keelback health up from 1,650 to 2,050.",
+    "Skerry Clash: Kelp Horror health up from 2,700 to 3,300.",
+    "Skerry Clash: Crab King health up from 3,500 to 4,300." ] },
+  { v: 198, date: '2026-11-15', title: "New game: Skerry Clash", New: [
+    "Skerry Clash: a new game for two, with its own card on the main menu. Two keepers face each other across a tidal race, each guarding a Great Light and two Lamp Towers. Spend lamp oil to play cards from your hand of four, send your troops over the two causeways, and put out the other keeper's lights.",
+    "Skerry Clash: 32 cards to choose from: 22 troops (Mudlarks, Shore Crabs, the Wrecker Gang, Gull Flock, the Fog Wraith, The Diver, the Mooncusser, the Keelback, the Kelp Horror, the Crab King and more), 6 spells (Signal Flare, Cannon Shot, Rogue Wave, The Haar, Powder Keg, Storm Glass) and 4 buildings (Sea Battery, Swivel Gun, Bell Buoy, Wreckers' Fire).",
+    "Skerry Clash: build a deck of 8 in the Keeper's Locker. Three deck slots, filters, every card's numbers in plain words, and a warning if your deck can't hit anything in the air.",
+    "Skerry Clash: three-minute matches. Every tower you fell puts out a light; fell the Great Light and you win at once. Oil comes twice as fast in the last minute, and a level match goes to a minute of sudden death overtime.",
+    "Skerry Clash: duel a bot (Easy, Normal or Hard), or play online against a friend: host a duel, share the invite, and the host starts it.",
+    "Skerry Clash: 18 tower skins from the Lampwright's Crate, from red-and-white bands and an iron screw-pile to glowing and living Admiral towers. Your towers wear your skin in every match, and online your rival sees it too.",
+    "Skerry Clash: earn a tower crate for every match you finish and another for every win. Your first crate is free.",
+    "Saves: your Skerry Clash decks, record and tower skins are kept in your save link, code, file and cloud save with everything else." ] },
   { v: 197, date: '2026-11-14', title: "Much faster loading", Changes: [
     "The online game's page is now about 1.7 MB to download instead of 15 MB, so the menu appears several times sooner, most of all on slower connections.",
     "Sound effects and music now download in the background after the menu appears, and your browser keeps them. Until a sound arrives you'll hear the game's built-in version of it.",
@@ -13082,7 +13084,7 @@ function onPeersChange(change) {
   if (typeof warNetPeers === 'function') warNetPeers();
   if (typeof zmNetPeers === 'function') zmNetPeers();
   if (typeof gfNetPeers === 'function') gfNetPeers();   // [golf] Skerry Links' lobby (src/golfnet.js)
-  if (typeof rlNetPeers === 'function') rlNetPeers();   // [rival] Rival Lights' lobby and duel (src/rlnet.js)
+  if (typeof rlNetPeers === 'function') rlNetPeers();   // [rival] Skerry Clash' lobby and duel (src/rlnet.js)
 }
 
 // ---------- crew bookkeeping ----------
@@ -54084,7 +54086,7 @@ csInit();
 //   fogrun      a Fog Run (the same lobby again, on its own card: src/frrun.js) [fogrun]
 //   fbsea       a Freebooters' Sea crew (the same lobby again, on its own card: src/fbsea.js) [fbsea]
 //   golf        a round of Skerry Links (its own lobby: src/golfnet.js, g...) [golf]
-//   rival       a Rival Lights duel (its own lobby: src/rlnet.js, r...) [rival]
+//   rival       a Skerry Clash duel (its own lobby: src/rlnet.js, r...) [rival]
 // On a phone or tablet the button opens the share sheet; on a computer it copies the text to the clipboard.
 // On claude.ai everyone plays in the artifact's own room, which the live site can't reach, so there the link is the
 // artifact itself: it can't carry a code, but the friend sees the lobby in the list and taps it.
@@ -57727,7 +57729,7 @@ if (typeof gf3dDraw === 'function') {
 
 // ---- src/rlcards.js ----
 'use strict';
-// Rival Lights: the 64 cards. Data only; the rules that read it are in src/rl.js.
+// Skerry Clash: the 64 cards. Data only; the rules that read it are in src/rl.js.
 //
 // Two keepers' rocks face each other across a tidal race, each with its Great Light and two Lamp Towers. Each player
 // builds a deck of 8 from these 64 (src/rldeck.js), holds 4 in hand, and spends lamp oil (0 to 10, filling over
@@ -57922,7 +57924,7 @@ const RL_DEFAULT_DECK = ['deckhand', 'shorecrabs', 'harpooner', 'gulls', 'diver'
 
 // ---- src/rl.js ----
 'use strict';
-// Rival Lights: a duel of lights for two, in real time. Two keepers' rocks face each other across a tidal race; each
+// Skerry Clash: a duel of lights for two, in real time. Two keepers' rocks face each other across a tidal race; each
 // keeps a Great Light (at the back, in the middle) and two Lamp Towers (one forward on each lane). Each player holds
 // four cards from a deck of eight (src/rlcards.js) and spends lamp oil on them: crews, crabs, the drowned and the
 // birds walk or fly over the two causeways at the towers across the water; spells fall anywhere; buildings stand
@@ -58609,7 +58611,7 @@ function rlFrame(dt) {
 // ---------- the screen ----------
 function rlEnter() {
   try { audioInit(); } catch (e) {}
-  if (typeof rl3dInit === 'function' && !rl3dInit()) { if (typeof toast === 'function') toast('Rival Lights needs WebGL, which this browser has turned off.', 'No 3D'); }
+  if (typeof rl3dInit === 'function' && !rl3dInit()) { if (typeof toast === 'function') toast('Skerry Clash needs WebGL, which this browser has turned off.', 'No 3D'); }
   state = 'rival'; paused = false;
   for (const id of ['titleCard', 'hud', 'logbox', 'biomeBanner']) { const e = $(id); if (e) e.hidden = true; }
   $('rlUI').hidden = false; $('rlPause').hidden = true; $('rlEnd').hidden = true;
@@ -58723,7 +58725,7 @@ function rlDebugBots(on) { RL.both = !!on; return RL.both; }
 
 // ---- src/rlbot.js ----
 'use strict';
-// Rival Lights: the keeper across the water when you play alone (src/rl.js runs the match; this plays a side through
+// Skerry Clash: the keeper across the water when you play alone (src/rl.js runs the match; this plays a side through
 // rlPlay, the same door a person's tap goes through, so it can do nothing a player couldn't).
 // It thinks a few times a second (less often, and more carelessly, on easy). Each think, in this order:
 //   1. Something on its rock (or about to cross): defend. It weighs what's coming (hit points and the oil it cost),
@@ -58915,7 +58917,7 @@ function rlBotTick(dt, side) {
 
 // ---- src/rl3d.js ----
 'use strict';
-// Rival Lights in 3D (three.js, its own canvas #rlCv): the two keepers' rocks on the sea at dusk, the race running
+// Skerry Clash in 3D (three.js, its own canvas #rlCv): the two keepers' rocks on the sea at dusk, the race running
 // between them, the two stone causeways, the six towers, every troop and building as a small low-poly model, the
 // shots in flight, the spells, the deaths and the towers coming down. src/rl.js owns the state; this only reads it.
 // Arena tiles to three.js: (x, y, height) is (x - 9, height, 16 - y), so the middle of the race is the origin and
@@ -60148,7 +60150,7 @@ function rl3dSpellIcon(c, id, W, H) {
 
 // ---- src/rlhud.js ----
 'use strict';
-// Rival Lights: what's over the 3D view (#rlUI in index.html). Along the top, the rival's name and the lights they've
+// Skerry Clash: what's over the 3D view (#rlUI in index.html). Along the top, the rival's name and the lights they've
 // put out (the crowns), the clock, and yours; over each tower its strength; along the bottom the next card, your hand
 // of four (each with its oil cost; a card you can't yet pay for is dimmed, filling as the oil comes), and the oil bar
 // in ten segments. Word of the match (double oil, overtime, a light out) comes up in the middle.
@@ -60326,7 +60328,7 @@ function rlPlace(i, p) {
 
 // ---- src/rlart.js ----
 'use strict';
-// Rival Lights: the cards' pictures, and the card face the deck builder shows.
+// Skerry Clash: the cards' pictures, and the card face the deck builder shows.
 //
 // Every one of the 64 cards (src/rlcards.js) has a portrait of its own, painted here in 2D canvas with paths and
 // gradients and no image files: a backdrop of sky and sea tinted for its type (troops at dusk over the race, spells
@@ -61526,9 +61528,9 @@ function rlCardFace(id, el, px) {
 
 // ---- src/rldeck.js ----
 'use strict';
-// Rival Lights: your decks, the deck builder, and the one save the meta layer keeps.
+// Skerry Clash: your decks, the deck builder, and the one save the meta layer keeps.
 //
-// The save. Everything Rival Lights keeps between matches lives in one object under localStorage 'skerry-rival'
+// The save. Everything Skerry Clash keeps between matches lives in one object under localStorage 'skerry-rival'
 // (RLV): the three deck slots and which one you play, your record (src/rlcrates.js rlRecord), and the tower crates
 // and skins (src/rlcrates.js). It goes into the game's one save with everything else through rkData() / rkMerge()
 // (src/rlcrates.js, hooked into src/crates.js beside the golf's), and like every save there it is only ever merged,
@@ -61538,7 +61540,7 @@ function rlCardFace(id, el, px) {
 // last chose is the one you play (rlDeckMine()). A fresh slot holds the starter deck (RL_DEFAULT_DECK). An id that is
 // no longer a card, a duplicate or a short deck is mended from the starter deck on load, so a deck is always whole.
 //
-// The deck builder (#rlDeckCard, opened by #rlDeckBtn on the Rival Lights card): the slot tabs, your 8 cards across
+// The deck builder (#rlDeckCard, opened by #rlDeckBtn on the Skerry Clash card): the slot tabs, your 8 cards across
 // the top with their average oil and a few words on the deck's shape (how cheap its cheapest four are, whether
 // anything in it can hit flyers), then the whole collection below, filtered by type and sorted by cost, name or type.
 // Tap any card for everything about it in plain words. To change the deck you swap, one for one, so it always holds
@@ -61809,7 +61811,7 @@ rlDeckBtnLabel();
 
 // ---- src/rlcrates.js ----
 'use strict';
-// Rival Lights: tower skins, the Lampwright's Crate they come from, your record, and the wiring of the card.
+// Skerry Clash: tower skins, the Lampwright's Crate they come from, your record, and the wiring of the card.
 //
 // The towers. Each side's rock has its Great Light and two Lamp Towers, and a skin dresses all three at once: the
 // tower's paint or stone, its lantern, the colour of its lamp, and how it shines. rlTowerMesh(id, kind, side) builds
@@ -62259,7 +62261,7 @@ function rlRecord(r) {
   if (draw) { s.d++; s.s = 0; } else if (win) { s.w++; s.s++; s.bs = Math.max(s.bs, s.s); } else { s.l++; s.s = 0; }
   const got = 1 + (win ? 1 : 0); RLV.c = Math.min(99999, RLV.c + got); rlvSave(); rlkRender();
   const what = draw ? 'A draw' : win ? (s.s > 2 ? s.s + ' wins running' : 'A win') : 'Duel over';
-  if (typeof toast === 'function') toast(what + ': +' + got + ' tower crate' + (got > 1 ? 's' : '') + '. Open them from the Rival Lights card.', '+' + got + ' tower crate' + (got > 1 ? 's' : ''));
+  if (typeof toast === 'function') toast(what + ': +' + got + ' tower crate' + (got > 1 ? 's' : '') + '. Open them from the Skerry Clash card.', '+' + got + ' tower crate' + (got > 1 ? 's' : ''));
 }
 
 // ---------- the one save (src/crates.js saveData / mergeSave) ----------
@@ -62308,7 +62310,7 @@ function rkMerge(d, takeLooks) {
 
 // ---- src/rlnet.js ----
 'use strict';
-// Rival Lights played online: a lobby on its card, and a duel for two, each on their own screen.
+// Skerry Clash played online: a lobby on its card, and a duel for two, each on their own screen.
 //
 // Like Skerry Links' lobby (src/golfnet.js), it all goes through the room the crews sail in (src/net.js), on its own
 // key (`rl`) in each player's presence. In the lobby that is { room, sid, nick, at, dk, sk }: the duel's code, who
@@ -62596,7 +62598,7 @@ const MD_GAMES = [
   { id: 'frTitle', sub: 'Light the islands in the haar', c: '#a8b8c8' },
   { id: 'fbTitle', sub: 'An open sea of islands and salvage', c: '#d8b060' },   // [fbsea]
   { id: 'gfTitle', sub: 'Nine holes of golf on the cliffs', c: '#8fc26a' },   // [golf] src/golf.js
-  { id: 'rlTitle', sub: 'A duel of lights for two', c: '#e8a050', tag: 'New' },   // [rival] Rival Lights (src/rl.js, src/rlcrates.js)
+  { id: 'rlTitle', sub: 'A duel of lights for two', c: '#e8a050', tag: 'New' },   // [rival] Skerry Clash (src/rl.js, src/rlcrates.js)
 ];
 const mdStore = { get() { try { return localStorage.getItem('skerryDeskGame'); } catch (e) { return null; } }, set(v) { try { localStorage.setItem('skerryDeskGame', v); } catch (e) {} } };
 
@@ -62715,7 +62717,7 @@ function frame(now) {
     if (state === 'war') { warFrame(dt); requestAnimationFrame(frame); return; }
     // and so does Skerry Links (src/golf.js)
     if (state === 'golf') { gfFrame(dt); requestAnimationFrame(frame); return; }
-    // and so does Rival Lights (src/rl.js)
+    // and so does Skerry Clash (src/rl.js)
     if (state === 'rival') { rlFrame(dt); requestAnimationFrame(frame); return; }
     pollPad(dt);
     // paused: nothing moves, but the scene is still drawn under the pause card
@@ -62788,7 +62790,7 @@ requestAnimationFrame(frame);
 <!-- [golf] played together -->
 <!-- [golf] ball and club crates -->
 <!-- [golf] the golfer, ball and clubs dressed -->
-<!-- [rival] Rival Lights: the 64 cards -->
+<!-- [rival] Skerry Clash: the 64 cards -->
 <!-- [rival] the rules, the match, the snapshots -->
 <!-- [rival] the keeper across the water -->
 <!-- [rival] the 3D view -->
@@ -62796,4 +62798,4 @@ requestAnimationFrame(frame);
 <!-- [rival] the cards' pictures and faces -->
 <!-- [rival] your decks, the deck builder, the save -->
 <!-- [rival] tower skins and crates, your record, the card -->
-<!-- [rival] Rival Lights online: the lobby and the duel -->
+<!-- [rival] Skerry Clash online: the lobby and the duel -->

@@ -119,7 +119,7 @@ function onPeersChange(change) {
   if (typeof warNetPeers === 'function') warNetPeers();
   if (typeof zmNetPeers === 'function') zmNetPeers();
   if (typeof gfNetPeers === 'function') gfNetPeers();   // [golf] Skerry Links' lobby (src/golfnet.js)
-  if (typeof rlNetPeers === 'function') rlNetPeers();   // [rival] Rival Lights' lobby and duel (src/rlnet.js)
+  if (typeof rlNetPeers === 'function') rlNetPeers();   // [rival] Skerry Clash' lobby and duel (src/rlnet.js)
 }
 
 // ---------- crew bookkeeping ----------

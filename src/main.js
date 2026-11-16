@@ -30,7 +30,7 @@ function frame(now) {
     if (state === 'war') { warFrame(dt); requestAnimationFrame(frame); return; }
     // and so does Skerry Links (src/golf.js)
     if (state === 'golf') { gfFrame(dt); requestAnimationFrame(frame); return; }
-    // and so does Rival Lights (src/rl.js)
+    // and so does Skerry Clash (src/rl.js)
     if (state === 'rival') { rlFrame(dt); requestAnimationFrame(frame); return; }
     pollPad(dt);
     // paused: nothing moves, but the scene is still drawn under the pause card

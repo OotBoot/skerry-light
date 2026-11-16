@@ -1,5 +1,5 @@
 'use strict';
-// Rival Lights: what's over the 3D view (#rlUI in index.html). Along the top, the rival's name and the lights they've
+// Skerry Clash: what's over the 3D view (#rlUI in index.html). Along the top, the rival's name and the lights they've
 // put out (the crowns), the clock, and yours; over each tower its strength; along the bottom the next card, your hand
 // of four (each with its oil cost; a card you can't yet pay for is dimmed, filling as the oil comes), and the oil bar
 // in ten segments. Word of the match (double oil, overtime, a light out) comes up in the middle.

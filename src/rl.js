@@ -1,5 +1,5 @@
 'use strict';
-// Rival Lights: a duel of lights for two, in real time. Two keepers' rocks face each other across a tidal race; each
+// Skerry Clash: a duel of lights for two, in real time. Two keepers' rocks face each other across a tidal race; each
 // keeps a Great Light (at the back, in the middle) and two Lamp Towers (one forward on each lane). Each player holds
 // four cards from a deck of eight (src/rlcards.js) and spends lamp oil on them: crews, crabs, the drowned and the
 // birds walk or fly over the two causeways at the towers across the water; spells fall anywhere; buildings stand
@@ -686,7 +686,7 @@ function rlFrame(dt) {
 // ---------- the screen ----------
 function rlEnter() {
   try { audioInit(); } catch (e) {}
-  if (typeof rl3dInit === 'function' && !rl3dInit()) { if (typeof toast === 'function') toast('Rival Lights needs WebGL, which this browser has turned off.', 'No 3D'); }
+  if (typeof rl3dInit === 'function' && !rl3dInit()) { if (typeof toast === 'function') toast('Skerry Clash needs WebGL, which this browser has turned off.', 'No 3D'); }
   state = 'rival'; paused = false;
   for (const id of ['titleCard', 'hud', 'logbox', 'biomeBanner']) { const e = $(id); if (e) e.hidden = true; }
   $('rlUI').hidden = false; $('rlPause').hidden = true; $('rlEnd').hidden = true;

@@ -80,7 +80,7 @@
     <button class="newgame frbanner" id="frBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">And <b>Fog Run</b>: sail the keeper's cutter out into the haar and light the islands, alone or with up to four</span><span class="ng-go" aria-hidden="true">↓</span></button>
     <button class="newgame fbbanner" id="fbBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">And <b>Freebooters' Sea</b>: an open sea of islands to sail, salvage and sell, alone or with up to four</span><span class="ng-go" aria-hidden="true">↓</span></button><!-- [fbsea] -->
     <button class="newgame gfbanner" id="gfBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">And <b>Skerry Links</b>: nine holes of golf along the cliffs, alone or with up to four</span><span class="ng-go" aria-hidden="true">↓</span></button><!-- [golf] -->
-    <button class="newgame rlbanner" id="rlBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">And a ninth, <b>Rival Lights</b>: a duel of lights across the race, one keeper against another</span><span class="ng-go" aria-hidden="true">↓</span></button><!-- [rival] -->
+    <button class="newgame rlbanner" id="rlBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">And a ninth, <b>Skerry Clash</b>: a duel of lights across the race, one keeper against another</span><span class="ng-go" aria-hidden="true">↓</span></button><!-- [rival] -->
     <div class="menulinks"><button class="tool notesbtn" id="notesBtn" type="button">Patch notes</button><button class="tool notesbtn lorebtn" id="loreBtn" type="button">Lore compendium</button></div>
     <div class="card boardcard" id="boardCard" aria-labelledby="boardHead">
       <div class="cardtop"><span class="eyebrow">Best on record · every game</span><span class="boardminititle">The Scoreboard</span><span class="boardbtns"><button class="tool closebtn" id="boardRefresh" type="button">Refresh</button><button class="tool closebtn" id="boardMin" type="button" aria-expanded="true" aria-controls="boardCard" title="Make the scoreboard small">– Minimise</button></span></div>
@@ -427,9 +427,9 @@
         <p><b>Turns and the card.</b> Everyone tees off in turn, the best on the last hole first; after that whoever's furthest from the hole plays. Tab (or Y) shows the scorecard. A full round of nine goes on the scoreboard, under the first player's name on a shared screen.</p>
       </details>
     </div>
-    <div class="card zmcard rlcard" id="rlTitle" aria-labelledby="rlHead"><!-- [rival] Rival Lights: its own card (src/rl.js the duel, src/rldeck.js, src/rlcrates.js, src/rlnet.js) -->
+    <div class="card zmcard rlcard" id="rlTitle" aria-labelledby="rlHead"><!-- [rival] Skerry Clash: its own card (src/rl.js the duel, src/rldeck.js, src/rlcrates.js, src/rlnet.js) -->
       <div class="cardtop"><span class="eyebrow">A ninth game · a duel of lights · one against one</span></div>
-      <h1 id="rlHead">Rival Lights</h1>
+      <h1 id="rlHead">Skerry Clash</h1>
       <p>Two keepers, two rocks, and the race running fast between them. Each kept a light, and each swore the other's was the false one that put ships on the reef. Now they settle it the old way: crews over the causeways at low water, crabs and gulls and worse called up out of the shallows, and lamp oil for whatever the night needs. Put out the other keeper's Great Light before they put out yours.</p>
       <p class="muted">Three minutes. Spend oil to play cards from your hand of four; your troops cross the race by the two causeways and go for the other side's towers. Every tower you fell is a crown. Fell the Great Light and it's over at once.</p>
       <div class="rlopts">
@@ -516,7 +516,7 @@
     </div>
   </div>
 
-  <!-- Rival Lights: the 3D view and what's over it (src/rl.js, src/rlhud.js, src/rl3d.js) -->
+  <!-- Skerry Clash: the 3D view and what's over it (src/rl.js, src/rlhud.js, src/rl3d.js) -->
   <div id="rlUI" hidden>
     <canvas id="rlCv"></canvas>
     <div class="rl-flash" id="rlFlash" aria-hidden="true"></div>
@@ -542,7 +542,7 @@
     <div class="rl-drag" id="rlDrag" hidden aria-hidden="true"><canvas width="150" height="176"></canvas></div>
     <div class="overlay pausecard" id="rlPause" hidden role="dialog" aria-modal="true" aria-labelledby="rlPauseHead">
       <div class="card">
-        <h1 id="rlPauseHead">Rival Lights</h1>
+        <h1 id="rlPauseHead">Skerry Clash</h1>
         <p class="muted" id="rlPauseSub">The match waits while this is open.</p>
         <div class="btnrow"><button class="primary" id="rlResume" type="button">Resume</button><button class="tool" id="rlLeave" type="button">Leave the match</button></div>
         <div class="lookrow"><label for="rlVol">Volume <output id="rlVolOut">100%</output></label><input id="rlVol" class="lookslider volslider" type="range" min="0" max="100" step="5" value="100"></div>
@@ -816,7 +816,7 @@
 
   <div class="overlay rldeckcard" id="rlDeckCard" hidden role="dialog" aria-modal="true" aria-labelledby="rlDeckHead"><!-- [rival] the deck builder (src/rldeck.js) -->
     <div class="card">
-      <div class="cardtop sticky"><span class="eyebrow">Rival Lights · the keeper's locker</span><button class="tool closebtn" id="rlDeckClose" type="button">✕ Close</button></div>
+      <div class="cardtop sticky"><span class="eyebrow">Skerry Clash · the keeper's locker</span><button class="tool closebtn" id="rlDeckClose" type="button">✕ Close</button></div>
       <h1 id="rlDeckHead">Your Deck</h1>
       <div class="rldk-tabs" id="rlDkTabs" role="tablist" aria-label="Deck slots"></div>
       <div class="rldk-deck" id="rlDkDeck" aria-label="The eight cards in this deck"></div>
@@ -834,7 +834,7 @@
 
   <div class="overlay cratecard wcratecard rlkratecard" id="rlCrateCard" hidden role="dialog" aria-modal="true" aria-labelledby="rlkHead"><!-- [rival] tower crates and skins (src/rlcrates.js) -->
     <div class="card">
-      <div class="cardtop sticky"><span class="eyebrow">Rival Lights · the lampwright</span><button class="tool closebtn" id="rlkClose" type="button">✕ Close</button></div>
+      <div class="cardtop sticky"><span class="eyebrow">Skerry Clash · the lampwright</span><button class="tool closebtn" id="rlkClose" type="button">✕ Close</button></div>
       <h1 id="rlkHead">The Lampwright's Crate</h1>
       <p>A set of towers for your rock: the Great Light and both Lamp Towers, built and painted to match. Deckhand towers are honest paint and stone, Bosun ones are finer work, Mate towers shimmer, Captain towers glow and pulse, and the Admirals' are alive, their beams turning. Whatever you raise, your side's colour stays on the rails, the plinths and the pennants. Same grades and odds as the other crates: if you see gold in the reel, it's yours.</p>
       <div class="wcprogress"><span id="rlkProgress"></span></div>
@@ -1118,7 +1118,7 @@
 <script src="src/golfnet.js"></script><!-- [golf] played together -->
 <script src="src/gfcrates.js"></script><!-- [golf] ball and club crates -->
 <script src="src/gfdress.js"></script><!-- [golf] the golfer, ball and clubs dressed -->
-<script src="src/rlcards.js"></script><!-- [rival] Rival Lights: the 64 cards -->
+<script src="src/rlcards.js"></script><!-- [rival] Skerry Clash: the 64 cards -->
 <script src="src/rl.js"></script><!-- [rival] the rules, the match, the snapshots -->
 <script src="src/rlbot.js"></script><!-- [rival] the keeper across the water -->
 <script src="src/rl3d.js"></script><!-- [rival] the 3D view -->
@@ -1126,7 +1126,7 @@
 <script src="src/rlart.js"></script><!-- [rival] the cards' pictures and faces -->
 <script src="src/rldeck.js"></script><!-- [rival] your decks, the deck builder, the save -->
 <script src="src/rlcrates.js"></script><!-- [rival] tower skins and crates, your record, the card -->
-<script src="src/rlnet.js"></script><!-- [rival] Rival Lights online: the lobby and the duel -->
+<script src="src/rlnet.js"></script><!-- [rival] Skerry Clash online: the lobby and the duel -->
 <script src="src/menudesk.js"></script>
 <script src="src/main.js"></script>
 </body>

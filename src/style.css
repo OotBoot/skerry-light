@@ -1399,7 +1399,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 #gfHeatBtn[aria-pressed="true"] { background: #3fd44a; color: #0b1a0c; }
 @media (max-width: 720px) { .gf-heatkey { top: 324px; } }
 
-/* [rival] Rival Lights (src/rl.js, src/rlhud.js): the screen over its 3D view, the hand of cards, the oil, the end card */
+/* [rival] Skerry Clash (src/rl.js, src/rlhud.js): the screen over its 3D view, the hand of cards, the oil, the end card */
 #rlUI { position: fixed; inset: 0; z-index: 30; font-family: var(--log); color: var(--ink); -webkit-user-select: none; user-select: none; touch-action: none; --rl-me: #5aa2ff; --rl-them: #ff6352; --rl-oil: #ffb347; }
 #rlCv { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
 #rlUI.picking #rlCv { cursor: crosshair; }
@@ -1496,7 +1496,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
   .rl-nm { font-size: 10px; } .rl-oilbar { height: 10px; } .rl-oil b { width: 24px; height: 24px; font-size: 14px; } .rl-card kbd { display: none; }
   .rl-toast.warn { left: auto; right: 12px; transform: none; }
 }
-/* [rival] meta: Rival Lights' card on the title screen, the card faces, the deck builder and the tower crates
+/* [rival] meta: Skerry Clash' card on the title screen, the card faces, the deck builder and the tower crates
    (src/rlart.js, src/rldeck.js, src/rlcrates.js). Its colour is lamp-oil amber. A card's shape says its type: troops
    are cut at the corners, spells arched like a lantern's window, buildings square and notched. */
 .newgame.rlbanner { border-color: rgba(232,160,80,0.6); background: linear-gradient(90deg, rgba(220,140,60,0.3), rgba(220,140,60,0.08)); }

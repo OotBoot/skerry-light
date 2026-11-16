@@ -1,5 +1,5 @@
 'use strict';
-// Rival Lights played online: a lobby on its card, and a duel for two, each on their own screen.
+// Skerry Clash played online: a lobby on its card, and a duel for two, each on their own screen.
 //
 // Like Skerry Links' lobby (src/golfnet.js), it all goes through the room the crews sail in (src/net.js), on its own
 // key (`rl`) in each player's presence. In the lobby that is { room, sid, nick, at, dk, sk }: the duel's code, who

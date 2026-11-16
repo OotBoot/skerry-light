@@ -17,7 +17,7 @@ const MD_GAMES = [
   { id: 'frTitle', sub: 'Light the islands in the haar', c: '#a8b8c8' },
   { id: 'fbTitle', sub: 'An open sea of islands and salvage', c: '#d8b060' },   // [fbsea]
   { id: 'gfTitle', sub: 'Nine holes of golf on the cliffs', c: '#8fc26a' },   // [golf] src/golf.js
-  { id: 'rlTitle', sub: 'A duel of lights for two', c: '#e8a050', tag: 'New' },   // [rival] Rival Lights (src/rl.js, src/rlcrates.js)
+  { id: 'rlTitle', sub: 'A duel of lights for two', c: '#e8a050', tag: 'New' },   // [rival] Skerry Clash (src/rl.js, src/rlcrates.js)
 ];
 const mdStore = { get() { try { return localStorage.getItem('skerryDeskGame'); } catch (e) { return null; } }, set(v) { try { localStorage.setItem('skerryDeskGame', v); } catch (e) {} } };
 

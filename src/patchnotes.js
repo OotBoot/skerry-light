@@ -6,35 +6,37 @@
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
-  { v: 200, date: '2026-11-16', title: "Rival Lights: 32 new cards and a full rebalance", New: [
-    "Rival Lights: 32 new cards, 64 in all. Troops: Bilge Rats, Will-o'-the-Wisp, Ship's Cat, Puffin Squadron, Fishwives, Net Thrower, Grenadier, Lobster Knight, Storm Petrel, Press Gang, Siren, Ship's Surgeon, Rocket Crew, Anchor Swinger, Sea Eagle, Wrecker Chief, Smugglers, Crab Mother, Kraken's Arm and Stormcaller.",
-    "Rival Lights: new spells: Tide Pull, Lamp Oil, Fair Wind, Brine Rain, Shipwreck and Whirlpool. New buildings: Tar Barrel, Fog Horn, Mortar Pit, Burning Lens, Martello Tower and Oil Store.",
-    "Rival Lights: new abilities to go with them: pouncing, shells that soak damage, healing, life drain, spinning splash, rallying cries, chain lightning, pulls, damage over time, haste, knockback, a long-range mortar, a lens that burns hotter the longer it holds a target, and an oil store that pays you lamp oil.",
-    "Rival Lights: every new card has its own portrait, 3D model and effects, and the deck builder explains each new ability in plain words.",
-    "Rival Lights: the bot knows all 64 cards and builds its decks from the whole set." ], Balance: [
-    "Rival Lights: every card and tower rescaled to a new health and damage curve. Lamp Towers now have 3,050 health and the Great Light 4,800, and both hit for 109. Troops and buildings are much sturdier to match: the Deckhand has 900 health, The Diver 1,360 and hits for 700, the Crab King has 5,600.",
-    "Rival Lights: spells now deal 25 to 30% of their damage to towers.",
-    "Rival Lights: many cards tuned after hundreds of test matches, so no card wins far more or less often than the rest." ], Changes: [
-    "Rival Lights: a match still level when overtime ends now goes to whoever's most damaged tower has more health left. Only an exact tie is a draw." ] },
-  { v: 199, date: '2026-11-15', title: "Rival Lights: sturdier big cards, softer towers", Balance: [
-    "Rival Lights: Lamp Tower damage down from 58 to 51 a shot, and the Great Light's from 80 to 70.",
-    "Rival Lights: Hermit Crab health up from 2,000 to 2,450.",
-    "Rival Lights: Drowned Crew health up from 120 to 140 each.",
-    "Rival Lights: Mooncusser health up from 720 to 900.",
-    "Rival Lights: Head Keeper health up from 680 to 850.",
-    "Rival Lights: Wreckers' Fire health up from 820 to 1,000.",
-    "Rival Lights: Keelback health up from 1,650 to 2,050.",
-    "Rival Lights: Kelp Horror health up from 2,700 to 3,300.",
-    "Rival Lights: Crab King health up from 3,500 to 4,300." ] },
-  { v: 198, date: '2026-11-15', title: "New game: Rival Lights", New: [
-    "Rival Lights: a new game for two, with its own card on the main menu. Two keepers face each other across a tidal race, each guarding a Great Light and two Lamp Towers. Spend lamp oil to play cards from your hand of four, send your troops over the two causeways, and put out the other keeper's lights.",
-    "Rival Lights: 32 cards to choose from: 22 troops (Mudlarks, Shore Crabs, the Wrecker Gang, Gull Flock, the Fog Wraith, The Diver, the Mooncusser, the Keelback, the Kelp Horror, the Crab King and more), 6 spells (Signal Flare, Cannon Shot, Rogue Wave, The Haar, Powder Keg, Storm Glass) and 4 buildings (Sea Battery, Swivel Gun, Bell Buoy, Wreckers' Fire).",
-    "Rival Lights: build a deck of 8 in the Keeper's Locker. Three deck slots, filters, every card's numbers in plain words, and a warning if your deck can't hit anything in the air.",
-    "Rival Lights: three-minute matches. Every tower you fell puts out a light; fell the Great Light and you win at once. Oil comes twice as fast in the last minute, and a level match goes to a minute of sudden death overtime.",
-    "Rival Lights: duel a bot (Easy, Normal or Hard), or play online against a friend: host a duel, share the invite, and the host starts it.",
-    "Rival Lights: 18 tower skins from the Lampwright's Crate, from red-and-white bands and an iron screw-pile to glowing and living Admiral towers. Your towers wear your skin in every match, and online your rival sees it too.",
-    "Rival Lights: earn a tower crate for every match you finish and another for every win. Your first crate is free.",
-    "Saves: your Rival Lights decks, record and tower skins are kept in your save link, code, file and cloud save with everything else." ] },
+  { v: 201, date: '2026-11-16', title: "Rival Lights is now Skerry Clash", Changes: [
+    "Skerry Clash: the duel of lights for two has a new name. Rival Lights is now Skerry Clash on the main menu, its card, the pause menu and invites. Your decks, record and tower skins carry over untouched." ] },
+  { v: 200, date: '2026-11-16', title: "Skerry Clash: 32 new cards and a full rebalance", New: [
+    "Skerry Clash: 32 new cards, 64 in all. Troops: Bilge Rats, Will-o'-the-Wisp, Ship's Cat, Puffin Squadron, Fishwives, Net Thrower, Grenadier, Lobster Knight, Storm Petrel, Press Gang, Siren, Ship's Surgeon, Rocket Crew, Anchor Swinger, Sea Eagle, Wrecker Chief, Smugglers, Crab Mother, Kraken's Arm and Stormcaller.",
+    "Skerry Clash: new spells: Tide Pull, Lamp Oil, Fair Wind, Brine Rain, Shipwreck and Whirlpool. New buildings: Tar Barrel, Fog Horn, Mortar Pit, Burning Lens, Martello Tower and Oil Store.",
+    "Skerry Clash: new abilities to go with them: pouncing, shells that soak damage, healing, life drain, spinning splash, rallying cries, chain lightning, pulls, damage over time, haste, knockback, a long-range mortar, a lens that burns hotter the longer it holds a target, and an oil store that pays you lamp oil.",
+    "Skerry Clash: every new card has its own portrait, 3D model and effects, and the deck builder explains each new ability in plain words.",
+    "Skerry Clash: the bot knows all 64 cards and builds its decks from the whole set." ], Balance: [
+    "Skerry Clash: every card and tower rescaled to a new health and damage curve. Lamp Towers now have 3,050 health and the Great Light 4,800, and both hit for 109. Troops and buildings are much sturdier to match: the Deckhand has 900 health, The Diver 1,360 and hits for 700, the Crab King has 5,600.",
+    "Skerry Clash: spells now deal 25 to 30% of their damage to towers.",
+    "Skerry Clash: many cards tuned after hundreds of test matches, so no card wins far more or less often than the rest." ], Changes: [
+    "Skerry Clash: a match still level when overtime ends now goes to whoever's most damaged tower has more health left. Only an exact tie is a draw." ] },
+  { v: 199, date: '2026-11-15', title: "Skerry Clash: sturdier big cards, softer towers", Balance: [
+    "Skerry Clash: Lamp Tower damage down from 58 to 51 a shot, and the Great Light's from 80 to 70.",
+    "Skerry Clash: Hermit Crab health up from 2,000 to 2,450.",
+    "Skerry Clash: Drowned Crew health up from 120 to 140 each.",
+    "Skerry Clash: Mooncusser health up from 720 to 900.",
+    "Skerry Clash: Head Keeper health up from 680 to 850.",
+    "Skerry Clash: Wreckers' Fire health up from 820 to 1,000.",
+    "Skerry Clash: Keelback health up from 1,650 to 2,050.",
+    "Skerry Clash: Kelp Horror health up from 2,700 to 3,300.",
+    "Skerry Clash: Crab King health up from 3,500 to 4,300." ] },
+  { v: 198, date: '2026-11-15', title: "New game: Skerry Clash", New: [
+    "Skerry Clash: a new game for two, with its own card on the main menu. Two keepers face each other across a tidal race, each guarding a Great Light and two Lamp Towers. Spend lamp oil to play cards from your hand of four, send your troops over the two causeways, and put out the other keeper's lights.",
+    "Skerry Clash: 32 cards to choose from: 22 troops (Mudlarks, Shore Crabs, the Wrecker Gang, Gull Flock, the Fog Wraith, The Diver, the Mooncusser, the Keelback, the Kelp Horror, the Crab King and more), 6 spells (Signal Flare, Cannon Shot, Rogue Wave, The Haar, Powder Keg, Storm Glass) and 4 buildings (Sea Battery, Swivel Gun, Bell Buoy, Wreckers' Fire).",
+    "Skerry Clash: build a deck of 8 in the Keeper's Locker. Three deck slots, filters, every card's numbers in plain words, and a warning if your deck can't hit anything in the air.",
+    "Skerry Clash: three-minute matches. Every tower you fell puts out a light; fell the Great Light and you win at once. Oil comes twice as fast in the last minute, and a level match goes to a minute of sudden death overtime.",
+    "Skerry Clash: duel a bot (Easy, Normal or Hard), or play online against a friend: host a duel, share the invite, and the host starts it.",
+    "Skerry Clash: 18 tower skins from the Lampwright's Crate, from red-and-white bands and an iron screw-pile to glowing and living Admiral towers. Your towers wear your skin in every match, and online your rival sees it too.",
+    "Skerry Clash: earn a tower crate for every match you finish and another for every win. Your first crate is free.",
+    "Saves: your Skerry Clash decks, record and tower skins are kept in your save link, code, file and cloud save with everything else." ] },
   { v: 197, date: '2026-11-14', title: "Much faster loading", Changes: [
     "The online game's page is now about 1.7 MB to download instead of 15 MB, so the menu appears several times sooner, most of all on slower connections.",
     "Sound effects and music now download in the background after the menu appears, and your browser keeps them. Until a sound arrives you'll hear the game's built-in version of it.",

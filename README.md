@@ -591,7 +591,7 @@ An eighth game, on its own card on the title screen (**Tee off**; on the desk me
 
 How it's built: `src/golfcourse.js` (the nine holes: their shapes, heights, cliffs, sea, bunkers and trees; what's underfoot anywhere), `src/golf.js` (the round, the turns, the swing, the ball's flight and roll, the scores, the keys, the sounds and the card), `src/golfhud.js` (the screen over the 3D view, the meter, the map, the wind and the scorecard), `src/golf3d.js` (the 3D view, its own WebGL canvas: the land wearing a painted picture of the course, the sea, the trees, the pin, the golfer and the camera), `src/golfworld.js` (the nine holes on one map, and the other holes drawn at low detail round the one being played), `src/golfsky.js` (the time of day hole by hole, the sky, the stars and the moon, the lighthouse and its beams, the skerries and the ships), `src/gfcrates.js` (the ball and club crates), `src/gfdress.js` (the golfer, ball and clubs dressed in your outfit and what you play with) and `src/golfnet.js` (the lobby and the round together, on the presence key `gf`; `server/server.js` relays a round's players to each other at full rate). For tests, `gfDebug(hole)` starts a round alone on one hole (0 to 8) and `gfDebugShot(club, power, strike, aim)` strikes a shot.
 
-## Rival Lights (a duel of lights, one against one)
+## Skerry Clash (a duel of lights, one against one)
 
 A ninth game, on its own card on the title screen (**Duel the bot**; on the desk menu it's number 9). Two keepers on two rocks face each other across a tidal race, each sure the other's light is the false one that puts ships on the reef. They settle it in three minutes: crews, crabs, gulls and worse sent over the causeways, spells cast from the rocks, and lamp oil for all of it. Fell the other keeper's towers before they fell yours. Everything in it, the cards, the towers and the pictures, is drawn in the game's own world: keepers, wreckers, the drowned, the Diver, the Mooncusser, the Keelback, the haar.
 
@@ -886,10 +886,10 @@ src/golf3d.js       Skerry Links: the 3D view (its own WebGL canvas) and the cam
 src/golfnet.js      Skerry Links: the lobby and a round together online
 src/gfcrates.js     Skerry Links: the ball and club crates
 src/gfdress.js      Skerry Links: the golfer in your outfit, your ball and clubs in 3D
-src/rlcards.js      Rival Lights: the 64 cards
-src/rlart.js        Rival Lights: the cards' painted portraits and faces
-src/rldeck.js       Rival Lights: your three decks, the deck builder, the save
-src/rlcrates.js     Rival Lights: tower skins and their 3D towers, the Lampwright's Crate, your record
+src/rlcards.js      Skerry Clash: the 64 cards
+src/rlart.js        Skerry Clash: the cards' painted portraits and faces
+src/rldeck.js       Skerry Clash: your three decks, the deck builder, the save
+src/rlcrates.js     Skerry Clash: tower skins and their 3D towers, the Lampwright's Crate, your record
 src/main.js         starts the main loop
 assets/maren.png    Maren cutout
 assets/plimsoll.png Plimsoll cutout

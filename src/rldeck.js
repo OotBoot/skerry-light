@@ -1,7 +1,7 @@
 'use strict';
-// Rival Lights: your decks, the deck builder, and the one save the meta layer keeps.
+// Skerry Clash: your decks, the deck builder, and the one save the meta layer keeps.
 //
-// The save. Everything Rival Lights keeps between matches lives in one object under localStorage 'skerry-rival'
+// The save. Everything Skerry Clash keeps between matches lives in one object under localStorage 'skerry-rival'
 // (RLV): the three deck slots and which one you play, your record (src/rlcrates.js rlRecord), and the tower crates
 // and skins (src/rlcrates.js). It goes into the game's one save with everything else through rkData() / rkMerge()
 // (src/rlcrates.js, hooked into src/crates.js beside the golf's), and like every save there it is only ever merged,
@@ -11,7 +11,7 @@
 // last chose is the one you play (rlDeckMine()). A fresh slot holds the starter deck (RL_DEFAULT_DECK). An id that is
 // no longer a card, a duplicate or a short deck is mended from the starter deck on load, so a deck is always whole.
 //
-// The deck builder (#rlDeckCard, opened by #rlDeckBtn on the Rival Lights card): the slot tabs, your 8 cards across
+// The deck builder (#rlDeckCard, opened by #rlDeckBtn on the Skerry Clash card): the slot tabs, your 8 cards across
 // the top with their average oil and a few words on the deck's shape (how cheap its cheapest four are, whether
 // anything in it can hit flyers), then the whole collection below, filtered by type and sorted by cost, name or type.
 // Tap any card for everything about it in plain words. To change the deck you swap, one for one, so it always holds

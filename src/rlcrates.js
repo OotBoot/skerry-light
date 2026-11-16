@@ -1,5 +1,5 @@
 'use strict';
-// Rival Lights: tower skins, the Lampwright's Crate they come from, your record, and the wiring of the card.
+// Skerry Clash: tower skins, the Lampwright's Crate they come from, your record, and the wiring of the card.
 //
 // The towers. Each side's rock has its Great Light and two Lamp Towers, and a skin dresses all three at once: the
 // tower's paint or stone, its lantern, the colour of its lamp, and how it shines. rlTowerMesh(id, kind, side) builds
@@ -449,7 +449,7 @@ function rlRecord(r) {
   if (draw) { s.d++; s.s = 0; } else if (win) { s.w++; s.s++; s.bs = Math.max(s.bs, s.s); } else { s.l++; s.s = 0; }
   const got = 1 + (win ? 1 : 0); RLV.c = Math.min(99999, RLV.c + got); rlvSave(); rlkRender();
   const what = draw ? 'A draw' : win ? (s.s > 2 ? s.s + ' wins running' : 'A win') : 'Duel over';
-  if (typeof toast === 'function') toast(what + ': +' + got + ' tower crate' + (got > 1 ? 's' : '') + '. Open them from the Rival Lights card.', '+' + got + ' tower crate' + (got > 1 ? 's' : ''));
+  if (typeof toast === 'function') toast(what + ': +' + got + ' tower crate' + (got > 1 ? 's' : '') + '. Open them from the Skerry Clash card.', '+' + got + ' tower crate' + (got > 1 ? 's' : ''));
 }
 
 // ---------- the one save (src/crates.js saveData / mergeSave) ----------

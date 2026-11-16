@@ -173,7 +173,7 @@ function gfLite(p) {
   if (z.lob) lite.lob = z.lob; if (z.st && typeof z.st === 'object') lite.st = { g: z.st.g };
   return Object.assign({}, p, { gf: lite });
 }
-// Rival Lights played online: the same, for the two in one duel (the host's snapshot, about twelve times a second,
+// Skerry Clash played online: the same, for the two in one duel (the host's snapshot, about twelve times a second,
 // and the guest's taps, are for the other one only; everyone else hears enough to list the duel)
 const rlRoom = c => (c.presence && c.presence.rl && typeof c.presence.rl.room === 'string' ? c.presence.rl.room : null);
 function rlLite(p) {
