@@ -10,7 +10,7 @@
 // whatever moves. A plain whitewashed tower for '' or an unknown id.
 //
 // A crate system of its own, like the golf's (src/gfcrates.js): it borrows the boat crates' grades and odds
-// (RARITIES), their card styles and the reel sounds, without changing any of them. 18 skins across the grades, and
+// (RARITIES), their card styles, the reel itself (src/crates.js spinReel) and its sounds, without changing any of them. 18 skins across the grades, and
 // the better the grade, the more it does:
 //   Deckhand  a paint or a stone: whitewash and red bands, a black coil, granite, an iron screw-pile, tarred timber
 //   Bosun     a richer finish: a brass lantern room, a Martello tower of dressed stone, daymark chequers, lichen
@@ -397,17 +397,8 @@ function rlkOpen() {
   $('rlkResult').hidden = true; rlkRender();
   rlkSpin(prize, reduceMotion ? 600 : 6000, () => rlkFinish(prize));
 }
-function rlkSpin(prize, dur, done) {
-  requestAnimationFrame(() => { const sheet = $('rlCrateCard'), r = $('rlkReel').getBoundingClientRect(), sr = sheet.getBoundingClientRect(); if (r.top < sr.top + 70 || r.bottom > sr.bottom - 10) sheet.scrollTo({ top: sheet.scrollTop + r.top - sr.top - sr.height * 0.25, behavior: reduceMotion ? 'auto' : 'smooth' }); });
-  const reel = $('rlkReel'), strip = $('rlkStrip'); strip.textContent = '';
-  const N = 56, WIN = 48;
-  for (let i = 0; i < N; i++) strip.appendChild(rlkCard(i === WIN ? prize : rlkFiller(), 'reelitem'));
-  const cardW = strip.firstChild.getBoundingClientRect().width + 8, viewW = reel.getBoundingClientRect().width;
-  const end = WIN * cardW + cardW / 2 - viewW / 2 + (Math.random() - 0.5) * cardW * 0.7, t0 = performance.now();
-  let lastIdx = -1;
-  const step = now => { const t = Math.min(1, (now - t0) / dur), x = end * (1 - Math.pow(1 - t, 4)); strip.style.transform = 'translateX(' + (-x) + 'px)'; const idx = Math.floor((x + viewW / 2) / cardW); if (idx !== lastIdx) { lastIdx = idx; try { sfxTick(); } catch (e) {} } if (t < 1) requestAnimationFrame(step); else done(); };
-  strip.style.transform = 'translateX(0)'; requestAnimationFrame(step);
-}
+// the boat crates' own reel (src/crates.js spinReel), on this card's reel with tower cards in it
+function rlkSpin(prize, dur, done) { spinReel(prize, null, dur, done, { sheet: 'rlCrateCard', reel: 'rlkReel', strip: 'rlkStrip', card: rlkCard, filler: rlkFiller }); }
 function rlkFinish(prize) {
   RLK.opening = false; RLV.o[prize.id] = (RLV.o[prize.id] | 0) + 1; RLV.pending = null; rlvSave();
   const ra = rlkRarity(prize);
@@ -426,6 +417,12 @@ function rlkOpenAll() {
   const byGrade = {}, fresh = []; let best = null;
   for (let i = 0; i < count; i++) { const p = rlkRoll(); if (!RLV.o[p.id] && !fresh.includes(p)) fresh.push(p); RLV.o[p.id] = (RLV.o[p.id] | 0) + 1; byGrade[p.rarity] = (byGrade[p.rarity] | 0) + 1; if (!best || rlkLevel(p) > rlkLevel(best)) best = p; }
   RLV.c = 0; RLV.n += count; rlvSave();
+  // a quick spin of the reel that lands on your best pull, then the whole haul (as the boat crates' Open all)
+  RLK.opening = true; $('rlkResult').hidden = true; rlkRender();
+  rlkSpin(best, reduceMotion ? 400 : 2600, () => rlkHaul(count, byGrade, fresh, best));
+}
+function rlkHaul(count, byGrade, fresh, best) {
+  RLK.opening = false;
   const ra = rlkRarity(best); try { sfxReveal(RARITIES.indexOf(ra)); } catch (e) {}
   const res = $('rlkResult'); res.textContent = ''; res.style.setProperty('--rc', ra.color); res.className = 'result haul r-' + ra.id;
   const h = document.createElement('p'); h.className = 'won'; h.textContent = count + ' crates opened';
