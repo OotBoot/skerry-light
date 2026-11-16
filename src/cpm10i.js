@@ -384,6 +384,8 @@ cpCineDef('m10_open', { music: 'cpboss', shots: [
 
 // ---------- IV. Saltcote ----------
 const C10P3 = { f: null, c: null };
+// a figure standing about, empty-handed (src/cpkit.js's pose, its weapon hidden, the hands low as if on a table's edge)
+function c10NpcPose(F, o) { cpkNpcPose(F, o); if (F && F.wpn) for (const k in F.wpn) if (F.wpn[k] && F.wpn[k].root) F.wpn[k].root.visible = false; }
 cpStage('m10port', {
   n: 'Saltcote', map: C10I_MAP, mend: true, open: true,
   music: () => 'cpm10port',
@@ -417,10 +419,11 @@ cpStage('m10port', {
     if (k === 'c10sell') {
       const o = S.loot.find(q => q.by === sid); if (!o) return;
       S.loot.splice(S.loot.indexOf(o), 1); S.sold++; C10.gold += fbLootOf(o.k).v;
-      if (S.sold === 1) cpSay('factor', o.k === 'c10half' ? 'A strongbox, and a Mooncusser’s by the look of it. I’ll not ask how.' : 'Ironbound, and heavy. Set it down gently on my table.', 'cp_m10_42');
+      if (S.sold === 1) { if (o.k === 'c10half') cpSay('factor', 'A strongbox, and a Mooncusser’s by the look of it. I’ll not ask how.', 'cp_m10_44'); else cpSay('factor', 'Ironbound, and heavy. Set it down gently on my table.', 'cp_m10_42'); }
       if (!S.loot.length) {
         const rest = FB.hold.slice(), v = rest.reduce((n, k2) => n + fbLootOf(k2).v, 0); C10.gold += v; FB.hold = [];
-        cpSay('factor', rest.length ? `And the rest of your hold besides. ${fbSov(C10.gold)}, all told.` : `${fbSov(C10.gold)}, all told. A fair night’s work.`, 'cp_m10_43');
+        if (rest.length) cpSay('factor', 'And the rest of your hold besides. A fair night’s work, all told.', 'cp_m10_43'); else cpSay('factor', 'Both halves of it. A fair night’s work, all told.', 'cp_m10_45');
+        fpsFeed(`The factor writes it down: ${fbSov(C10.gold)}.`);
         cpObjective(''); cpWaypoint(null);
         setTimeout(() => { if (RAID.on && CP.on && raidStage() === RAID_STAGES.cp_m10port) cpDone(); }, 2600);
       }
@@ -452,8 +455,8 @@ cpStage('m10port', {
     fbi3d(dt);
     const C = c10iZ(); if (!C) return;
     const m = FPS.me, [tx, ty] = c10iW(C.table), a = C.tableA || 0, fx = tx - Math.sin(a) * 0.95, fy = ty + Math.cos(a) * 0.95;
-    if (C10P3.f) cpkNpcPose(C10P3.f, { x: fx, y: fy, h: bearingOf(m.x - fx, m.y - fy), noGun: true, lan: false });
-    if (C10P3.c && C.board) { const [bx, by] = c10iW(C.board), cx2 = bx + 1.2, cy2 = by - 0.6; cpkNpcPose(C10P3.c, { x: cx2, y: cy2, h: bearingOf(m.x - cx2, m.y - cy2), noGun: true, lan: true }); }
+    if (C10P3.f) c10NpcPose(C10P3.f, { x: fx, y: fy, h: bearingOf(tx - fx, ty - fy), p: -0.6, noGun: true, lan: false });
+    if (C10P3.c && C.board) { const [bx, by] = c10iW(C.board), cx2 = bx + 1.2, cy2 = by - 0.6; c10NpcPose(C10P3.c, { x: cx2, y: cy2, h: bearingOf(m.x - cx2, m.y - cy2), p: -0.5, noGun: true, lan: true }); }
   },
   exit() { cpkNpcFree(C10P3.f); cpkNpcFree(C10P3.c); C10P3.f = C10P3.c = null; FBI3.on = false; },
 });

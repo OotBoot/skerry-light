@@ -197,7 +197,7 @@ cpCineDef('m10_ambush', { music: 'cpm10fight', shots: [
   c10Live(4.5, (t, k) => { const s = c10Quarry(), [u, v] = s ? c10Deck(s.x, s.y) : [-300, 300], n = Math.hypot(u, v) || 1; return { cam: c10Mix([u / n * 2, v / n * 2 - 1, 3.4], [u / n * 3.2, v / n * 3.2, 2.8], k), look: [u, v, 4] }; },
     { lines: [[0.2, 'crew', 'Sails! Out from under St Brannoc’s, black as tar.', 'cp_m10_27']], sfx: [[0.3, 'mooncusser', 0.7]] }),
   c10Live(5.5, (t, k) => { const s = c10Quarry(), [u, v] = s ? c10Deck(s.x, s.y) : [-300, 300], n = Math.hypot(u, v) || 1, d = Math.hypot(u, v); return { cam: c10Mix([u - u / n * 26 + 8, v - v / n * 26, 7], [u - u / n * 16 + 4, v - v / n * 16, 3], k), look: [u, v, 5] }; },
-    { lines: [[0.3, 'moon', 'Give it back, keeper’s men. The sea only lent it you.', 'cp_m10_28'], [3.3, 'mate', 'A gold lamp at her masthead. That’s the Gallows Bird.', 'cp_m10_29']], fade: [0.3, 0] }),
+    { lines: [[0.3, 'moon', 'Give it back, keeper’s men. The sea only lent it you.', 'cp_m10_28'], [3.3, 'mate', 'Green lamps on all of them, and a gold one at her masthead. That’s the Gallows Bird.', 'cp_m10_29']], fade: [0.3, 0] }),
 ] });
 cpCineDef('m10_down', { music: 'cpm10cine', shots: [
   c10Live(4.5, (t, k) => { const s = c10Quarry(), [u, v] = s ? c10Deck(s.x, s.y) : [-60, 60], n = Math.hypot(u, v) || 1; return { cam: c10Mix([u - u / n * 30, v - v / n * 30, 5], [u - u / n * 22, v - v / n * 22, 3], k), look: [u, v, 1] }; },

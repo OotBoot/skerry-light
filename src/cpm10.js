@@ -83,16 +83,18 @@ cpCineDef('m10_away', { music: 'cpm10cine', shots: [
 cpCineDef('m10_quay', { music: 'cpm10cine', shots: [
   c10Live(5.5, (t, k) => { const P = c10Port(); return { cam: c10Mix([P.land[0] * 1.5, P.land[1] * 1.5, 9], [P.land[0] * 1.15, P.land[1] * 1.15, 4], k), look: [P.table[0], P.table[1], 1.6] }; },
     { fade: [0.8, 0], lines: [[0.4, 'log', 'Saltcote’s lamps, and not a black sail behind us. They keep off its light, and nobody here will say why.', 'cp_m10_12']] }),
-  c10Live(4.5, (t, k) => { const P = c10Port(), T = P.table; return { cam: c10Mix([T[0] + 4, T[1] + 5, 2.6], [T[0] + 2.6, T[1] + 3.4, 2], k), look: [T[0], T[1], 1.4] }; },
+  c10Live(4.5, (t, k) => { const T = c10Port().table; return { cam: c10Mix(c10Across(5, 2.5, 2.6), c10Across(3.4, 1.2, 2), k), look: [T[0], T[1], 1.4] }; },
     { lines: [[0.3, 'factor', 'You’re back, and with something heavy. Bring it up to the table.', 'cp_m10_13']] }),
 ] });
-function c10Port() { const Z = FPS.g && FPS.g.isle && FPS.g.isle.zm, c = Z && Z.c10; return c && c.table ? c : { land: [20, -30], table: [12, -26], boat: [24, -36] }; }
+function c10Port() { const Z = FPS.g && FPS.g.isle && FPS.g.isle.zm, c = Z && Z.c10; return c && c.table ? c : { land: [20, -30], table: [12, -26], boat: [24, -36], tableA: 0 }; }
+// a point on the near side of the factor's table (he stands across it): d out from it, s along it, at height h
+function c10Across(d, s, h) { const P = c10Port(), T = P.table, a = P.tableA || 0; return [T[0] + Math.sin(a) * d + Math.cos(a) * s, T[1] - Math.cos(a) * d + Math.sin(a) * s, h]; }
 
 // ---------- the outro: weighed and paid ----------
 cpCineDef('m10_outro', { music: 'cpm10cine', shots: [
-  c10Live(5.5, (t, k) => { const P = c10Port(), T = P.table; return { cam: c10Mix([T[0] + 3.4, T[1] - 3, 2.2], [T[0] + 2.2, T[1] - 1.8, 1.8], k), look: [T[0], T[1], 1.0] }; },
+  c10Live(5.5, (t, k) => { const T = c10Port().table; return { cam: c10Mix(c10Across(2.4, 2.6, 2.1), c10Across(1.6, 1.7, 1.8), k), look: [T[0], T[1], 0.95] }; },
     { lines: [[0.3, 'factor', 'Spanish gold, and English, and a little Dutch. It was somebody’s, once.', 'cp_m10_14'], [3.4, 'factor', 'Weighed, and written down, and paid.', 'cp_m10_15']], sfx: [[3.6, 'buy', 0.8], [0.8, 'chest', 0.6]] }),
-  c10Live(5, (t, k) => { const P = c10Port(), T = P.table; return { cam: c10Mix([T[0] - 2, T[1] - 4, 3], [T[0] - 6, T[1] - 9, 7], k), look: [T[0], T[1], 1.4] }; },
+  c10Live(5, (t, k) => { const T = c10Port().table; return { cam: c10Mix(c10Across(3, 2, 2.6), c10Across(9, 5, 7), k), look: [T[0], T[1], 1.4] }; },
     { lines: [[0.4, 'gilt', 'The chart was true, then. Gilt and Gull will remember the crew that proved it.', 'cp_m10_16']], f(t, k) { C10.paidShow = 1; } }),
   { d: 5, card: { eye: 'Mission complete', t: "Freebooters' Sea", sub: 'Spring 1889. The first crew out of Saltcote came home with the hold full.' },
     lines: [[0.5, 'log', 'They went out again, and others after them, all that summer, until the haar came down in the autumn.', 'cp_m10_17']] },
