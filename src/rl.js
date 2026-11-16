@@ -5,7 +5,7 @@
 // birds walk or fly over the two causeways at the towers across the water; spells fall anywhere; buildings stand
 // where they're set down and wear away. A fallen Lamp Tower is a crown, the Great Light falling is all three and ends
 // it. Three minutes; the last minute fills oil twice as fast; level at time is a minute of overtime, sudden death;
-// still level, a draw. Against the bot (src/rlbot.js) or online (src/rlnet.js, the host runs the match).
+// still level, the side whose weakest tower is lower loses (rlTieBreak). Against the bot (src/rlbot.js) or online (src/rlnet.js, the host runs the match).
 //
 // This file is the rules and the match: the state (RL, its shape agreed in design.md, read by the view src/rl3d.js,
 // the HUD src/rlhud.js, the bot and the net code), the simulation, the snapshots that carry it to another screen, and
@@ -275,7 +275,7 @@ function rlTick() {
   for (const u of RL.U) u.mend = u.mendT > 0 ? 1 : 0;
   if (RL.ph === 'play' && RL.left <= 0) {
     if (!RL.ot) { if (RL.crowns[0] !== RL.crowns[1]) rlEnd(RL.crowns[0] > RL.crowns[1] ? 0 : 1); else { RL.ot = true; RL.left = RLC.OT; rlFx('ot', { x: 9, y: 16, side: 0 }); } }
-    else rlEnd(RL.crowns[0] === RL.crowns[1] ? 2 : RL.crowns[0] > RL.crowns[1] ? 0 : 1);
+    else rlEnd(RL.crowns[0] !== RL.crowns[1] ? (RL.crowns[0] > RL.crowns[1] ? 0 : 1) : rlTieBreak());
   }
   rlFxTrim();
 }
@@ -583,6 +583,9 @@ function rlDeaths() {
 
 // ---------- the end ----------
 // win: 0 or 1 (the side that won), 2 a draw. o.norec: shown but not recorded (an online match whose host went)
+// still level when overtime runs out: whoever's weakest standing tower has the least health left loses (a draw only
+// if they're within a whisker of each other)
+function rlTieBreak() { const low = sd => Math.min(...RL.T.filter(t => t.side === sd && t.hp > 0).map(t => t.hp / t.max), 1); const a = low(0), b = low(1); return Math.abs(a - b) < 0.005 ? 2 : a > b ? 0 : 1; }
 function rlEnd(win, o) {
   if (!RL.on || RL.ph === 'over') return;
   RL.ph = 'over'; RL.win = win; RL.endAt = RL.clk;

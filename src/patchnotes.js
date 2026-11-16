@@ -6,6 +6,16 @@
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 200, date: '2026-11-16', title: "Rival Lights: 32 new cards and a full rebalance", New: [
+    "Rival Lights: 32 new cards, 64 in all. Troops: Bilge Rats, Will-o'-the-Wisp, Ship's Cat, Puffin Squadron, Fishwives, Net Thrower, Grenadier, Lobster Knight, Storm Petrel, Press Gang, Siren, Ship's Surgeon, Rocket Crew, Anchor Swinger, Sea Eagle, Wrecker Chief, Smugglers, Crab Mother, Kraken's Arm and Stormcaller.",
+    "Rival Lights: new spells: Tide Pull, Lamp Oil, Fair Wind, Brine Rain, Shipwreck and Whirlpool. New buildings: Tar Barrel, Fog Horn, Mortar Pit, Burning Lens, Martello Tower and Oil Store.",
+    "Rival Lights: new abilities to go with them: pouncing, shells that soak damage, healing, life drain, spinning splash, rallying cries, chain lightning, pulls, damage over time, haste, knockback, a long-range mortar, a lens that burns hotter the longer it holds a target, and an oil store that pays you lamp oil.",
+    "Rival Lights: every new card has its own portrait, 3D model and effects, and the deck builder explains each new ability in plain words.",
+    "Rival Lights: the bot knows all 64 cards and builds its decks from the whole set." ], Balance: [
+    "Rival Lights: every card and tower rescaled to a new health and damage curve. Lamp Towers now have 3,050 health and the Great Light 4,800, and both hit for 109. Troops and buildings are much sturdier to match: the Deckhand has 900 health, The Diver 1,360 and hits for 700, the Crab King has 5,600.",
+    "Rival Lights: spells now deal 25 to 30% of their damage to towers.",
+    "Rival Lights: many cards tuned after hundreds of test matches, so no card wins far more or less often than the rest." ], Changes: [
+    "Rival Lights: a match still level when overtime ends now goes to whoever's most damaged tower has more health left. Only an exact tie is a draw." ] },
   { v: 199, date: '2026-11-15', title: "Rival Lights: sturdier big cards, softer towers", Balance: [
     "Rival Lights: Lamp Tower damage down from 58 to 51 a shot, and the Great Light's from 80 to 70.",
     "Rival Lights: Hermit Crab health up from 2,000 to 2,450.",
