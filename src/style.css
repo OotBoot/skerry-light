@@ -1682,3 +1682,21 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 .rlkratecard .inv { grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); }
 @media (max-width: 520px) { .reel.rlkreel { height: 186px; } }
 .rlcrates .tool { white-space: normal; line-height: 1.3; text-align: center; }
+/* [rival] the champion's ability button (src/rlhud.js), over the right end of the hand */
+.rl-ab { position: absolute; right: 4px; bottom: calc(100% + 10px); width: 68px; height: 68px; padding: 0; border-radius: 50%; border: 3px solid #b88a3a; background: #111826; cursor: pointer; overflow: visible; color: inherit; font: inherit; box-shadow: 0 4px 14px rgba(0,0,0,0.5); transition: transform 0.12s, border-color 0.15s, box-shadow 0.15s; touch-action: manipulation; }
+.rl-ab canvas { width: 100%; height: 100%; border-radius: 50%; display: block; filter: grayscale(0.6) brightness(0.65); }
+.rl-ab .rl-abcd { position: absolute; inset: 0; border-radius: 50%; pointer-events: none; }
+.rl-ab .rl-abcost { position: absolute; left: -6px; top: -6px; width: 24px; height: 24px; display: grid; place-items: center; font-size: 13px; color: #2a1404; background: radial-gradient(circle at 40% 35%, #ffe0a0, #e08a26 60%, #8a4a10); border: 1px solid #ffe8b8; border-radius: 50%; }
+.rl-ab .rl-abnm { position: absolute; left: 50%; top: calc(100% + 1px); transform: translateX(-50%); white-space: nowrap; font-size: 10px; letter-spacing: 0.04em; color: #ffe8b8; text-shadow: 0 1px 3px #000, 0 0 6px #000; pointer-events: none; }
+.rl-ab kbd { position: absolute; right: -2px; top: -4px; font: 10px var(--log); color: rgba(236,228,207,0.6); pointer-events: none; }
+.rl-ab.ready { border-color: #ffd070; box-shadow: 0 0 0 2px rgba(255,208,112,0.35), 0 0 22px rgba(255,190,90,0.65); animation: rlabpulse 1.4s ease-in-out infinite; }
+.rl-ab.ready canvas { filter: none; }
+.rl-ab.on { border-color: #9affd8; box-shadow: 0 0 26px rgba(140,255,210,0.8); animation: none; }
+.rl-ab.on canvas { filter: brightness(1.2) saturate(1.3); }
+.rl-ab.short .rl-abcost { filter: grayscale(0.8) brightness(0.7); }
+.rl-ab:hover, .rl-ab:focus-visible { transform: scale(1.06); outline: none; }
+@keyframes rlabpulse { 50% { box-shadow: 0 0 0 4px rgba(255,208,112,0.2), 0 0 30px rgba(255,190,90,0.85); } }
+@media (max-width: 520px) { .rl-ab { width: 56px; height: 56px; } .rl-ab kbd { display: none; } }
+/* [rival] champions in the deck builder: a gold frame and a crown */
+.rlface.rl-champ .rlpic { box-shadow: inset 0 0 0 2px #ffd070, 0 0 12px rgba(255,200,90,0.45); }
+.rlface.rl-champ::after { content: '\265B'; position: absolute; right: 4px; top: 2px; font-size: 15px; color: #ffd070; text-shadow: 0 1px 3px #000; pointer-events: none; }

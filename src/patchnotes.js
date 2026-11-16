@@ -6,12 +6,19 @@
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
-  { v: 206, date: '2026-11-16', title: "Skerry Clash: Triple Draft", New: [
+  { v: 207, date: '2026-11-16', title: "Skerry Clash: Triple Draft", New: [
     "Skerry Clash: a new Triple Draft mode. Instead of bringing your own deck, both keepers build one on the spot: eight rounds, three cards each round, take one and the other two are gone.",
     "Skerry Clash: both keepers are offered exactly the same cards, and no card comes up twice in one draft. Each round has a theme (a big hitter, something that hits flyers, a spell that strikes, a cheap troop, a building or a spell, or anything goes), so every drafted deck has a fighting chance.",
     "Skerry Clash: play it against the bot with the new Triple draft button on the Skerry Clash card. The bot drafts from the same offers, and Again on the end screen starts a fresh draft.",
     "Skerry Clash: online, the host can tick Triple draft in the lobby, and the list of duels shows which ones are drafts. Each pick has 15 seconds, you can see how far your rival has got, and the duel starts as soon as both decks are done." ], Fixes: [
     "Skerry Clash: the list of online duels now shows the host's rating beside their name, as it was meant to." ] },
+  { v: 206, date: '2026-11-16', title: "Skerry Clash: champions", New: [
+    "Skerry Clash: champions are here. Maren Holm and Plimsoll join the deck builder as champion cards, with a gold frame and their own Champions filter. A deck can hold one champion.",
+    "Skerry Clash: a champion plays like a troop, but its card stays out of your hand while it's on the field and only comes back once it falls.",
+    "Skerry Clash: while your champion is out, a round ability button appears above your hand (or press Q). Using it costs oil, then it has a cooldown before you can use it again.",
+    "Skerry Clash: Maren Holm (5 oil) carries her lantern into battle and can hit flyers. Her ability, Sea-Green Light (2 oil, 16 s cooldown), makes her untouchable for 4 seconds while every enemy within 3 tiles is slowed and takes 130 damage a second.",
+    "Skerry Clash: Plimsoll (4 oil) is a fast melee fighter. His ability, Blood in the Water (1 oil, 11 s cooldown), lunges up to 6 tiles onto the strongest enemy nearby for triple damage, then doubles his attack speed for 4 seconds.",
+    "Skerry Clash: the bot sometimes brings a champion and uses its ability when it counts." ] },
   { v: 205, date: '2026-11-16', title: "Skerry Clash: Shipwreck cost", Balance: [
     "Skerry Clash: Shipwreck now costs 5 oil, down from 6. Now that it can only land on your own rock it's a defensive card, and its price comes down to match. Its damage and size are unchanged." ] },
   { v: 204, date: '2026-11-16', title: "Skerry Clash: watch duels live", New: [

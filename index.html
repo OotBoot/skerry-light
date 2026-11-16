@@ -543,6 +543,7 @@
         <button class="rl-card" id="rlC2" type="button"><canvas width="150" height="176"></canvas><span class="rl-wait"></span><span class="rl-cost"></span><span class="rl-nm"></span><kbd>3</kbd></button>
         <button class="rl-card" id="rlC3" type="button"><canvas width="150" height="176"></canvas><span class="rl-wait"></span><span class="rl-cost"></span><span class="rl-nm"></span><kbd>4</kbd></button>
       </div>
+      <button class="rl-ab" id="rlAb" type="button" hidden><!-- [rival] the champion's ability (src/rlhud.js, src/rlchamp.js) --><canvas width="120" height="120"></canvas><span class="rl-abcd"></span><b class="rl-abcost"></b><small class="rl-abnm"></small><kbd>Q</kbd></button>
       <div class="rl-oil" id="rlOil"><b id="rlOilN">5</b><div class="rl-oilbar" id="rlOilBar"><span><i></i></span><span><i></i></span><span><i></i></span><span><i></i></span><span><i></i></span><span><i></i></span><span><i></i></span><span><i></i></span><span><i></i></span><span><i></i></span></div><small>Lamp oil</small></div>
     </div>
     <div class="rl-specbar" id="rlSpecBar" hidden><span class="rl-specbadge">Watching</span><span class="rl-specn" id="rlSpecN"></span><button class="tool" id="rlSpecFlip" type="button" title="Watch from the other keeper's end">Swap ends</button></div><!-- [rival] a watcher's bar, in place of the hand (src/rlhud.js) -->
@@ -1145,6 +1146,7 @@
 <script src="src/rl3d.js"></script><!-- [rival] the 3D view -->
 <script src="src/rlhud.js"></script><!-- [rival] the hand, the oil, the clock, the end card -->
 <script src="src/rlart.js"></script><!-- [rival] the cards' pictures and faces -->
+<script src="src/rlchamp.js"></script><!-- [rival] the champions: their models, pictures, ability button and the bot's use of them -->
 <script src="src/rldeck.js"></script><!-- [rival] your decks, the deck builder, the save -->
 <script src="src/rlcrates.js"></script><!-- [rival] tower skins and crates, your record, the card -->
 <script src="src/rldraft.js"></script><!-- [rival] the triple draft -->

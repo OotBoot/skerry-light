@@ -52,6 +52,8 @@ function rlBotDeal() {
     if (Math.random() < 0.5) add(all.filter(C => C.type === 'spell'));
     while (d.length < 8) add(all.filter(C => C.type === 'troop' && !win.includes(C) || C.type === 'spell' && Math.random() < 0.2));
     const avg = d.reduce((a, id) => a + RL_CARD[id].cost, 0) / 8, sp = d.filter(id => RL_CARD[id].type === 'spell').length, bl = d.filter(id => RL_CARD[id].type === 'building').length;
+    // (half its dealt decks take a champion, in place of a troop)
+    if (typeof RL_CHAMPS !== 'undefined' && Math.random() < 0.5) { const k = d.findIndex((id, i) => i >= 4 && RL_CARD[id].type === 'troop'); if (k >= 0) d[k] = RL_CHAMPS[(Math.random() * RL_CHAMPS.length) | 0].id; }
     if (avg >= 3 && avg <= 4.3 && sp <= 3 && bl <= 2 && new Set(d).size === 8) return d;
   }
   return RL_BOT_DECKS[0].slice();
@@ -73,6 +75,7 @@ function rlBotTick(dt, side) {
   if (!RLB.S[side]) rlBotReset();
   const B = RLB.S[side], L = RLB.lv[side === RL.me && RL.both ? 'hard' : RL.bot.lvl] || RLB.lv.normal;
   B.t -= dt; if (B.t > 0) return; B.t = L.think * (0.8 + Math.random() * 0.4);
+  if (typeof rlBotChamp === 'function' && rlBotChamp(side, L)) return;   // (its champion's ability, src/rlchamp.js)
   const fy = y => side ? RLC.H - y : y, oil = RL.oil[side], hand = RL.hand[side].map(c => RL_CARD[c]).filter(Boolean), can = C => C && C.cost <= oil + 1e-6;
   const foes = RL.U.filter(u => u.side !== side && u.hp > 0), mine = RL.U.filter(u => u.side === side && u.hp > 0);
   const jit = v => v + (Math.random() - 0.5) * 2 * L.slop;

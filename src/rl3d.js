@@ -517,7 +517,7 @@ function rl3dBuild(c, trim) {
       return g;
     }
   }
-  return rl3dBuild2(c, TR) || rlPerson({ coat: 0x6a6a6a, trim: TR });
+  return rl3dBuild2(c, TR) || (typeof rlChampModel === 'function' && rlChampModel(c, TR)) || rlPerson({ coat: 0x6a6a6a, trim: TR });
 }
 // the second 32's models (v200), built as the first: facing +z, a person about a tile high, trim the side's colour.
 // A model drawn at its natural size and then shrunk or grown sits in a group of its own (rlWrap), so the placement
@@ -794,6 +794,7 @@ function rl3dFx() {
     else if (f.k === 'summon') { rl3dHulk(f.x, f.y, f.side); rl3dRing(P(0.06), (f.r || 2.5) + 0.3, mineCol, 0.8, 0.6); }
     else if (f.k === 'spin') { const r = f.r || 1.6; rl3dRing(P(0.5), r, 0xd8d8e0, 0.35, 0.6); for (let i = 0; i < 8; i++) { const a = i / 8 * 6.283; rl3dPart(false, rv(f.x + Math.cos(a) * r * 0.8, f.y + Math.sin(a) * r * 0.8, RL_G0 + 0.2), { v: [-Math.sin(a) * 2, 0.3, -Math.cos(a) * 2], s0: 0.2, s1: 0.45, life: 0.4, col: 0xc8b898, op: 0.55, drag: 2 }); } }
     else if (f.k === 'spell' && C && ['mend', 'haste', 'dot', 'whirl', 'pull'].includes(C.ab)) { const col = { mend: 0xd8e070, haste: 0xe8f4ff, dot: 0x8ab0d0, whirl: 0x5ab0c0, pull: 0x9ad8e0 }[C.ab]; rl3dRing(P(0.06), (C.r || 3), col, 0.6, 0.7); }
+    else if (f.k === 'champ') { if (typeof rlChampFx === 'function') rlChampFx(f, P, smoke, sparks); }
     else if (f.k === 'go') {}
   }
   RL3.seen = hi;
@@ -893,6 +894,7 @@ function rl3dDraw(dt) {
     if (u.c === 'fogwraith') { const op = u.cloak > 0 ? 0.16 + Math.sin(t * 6) * 0.05 : 0.5; H.m.traverse(o => { if (o.material && o.material.transparent && o.material.opacity !== undefined && o.material.blending !== THREE.AdditiveBlending) o.material.opacity = op; }); H.g.position.y += Math.sin(t * 2 + H.ph) * 0.08 + 0.1; }
     if (u.stun > 0) H.m.rotation.y += Math.sin(t * 14) * 0.15;
     rl3dAnim2(u, H, x, y, t, dt, walk, hit, pulse);
+    if (C.champ && typeof rlChampAnim === 'function') rlChampAnim(u, H, x, y, t, dt, walk, hit, pulse);   // (src/rlchamp.js)
     // its health, once it's hurt
     if (u.hp < H.hpLast - 0.5) H.flash = 0.12; H.hpLast = u.hp;
     const showBar = u.hp < u.max - 0.5 || u.bld;

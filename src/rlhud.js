@@ -5,7 +5,8 @@
 // in ten segments. Word of the match (double oil, overtime, a light out) comes up in the middle.
 // Playing a card: tap or click it, then the arena (the zone you may use shows light, the rest red, and a ghost shows
 // the troop or the spell's reach where it would go); or drag it from the hand onto the arena; or keys 1 to 4 and a
-// click. Escape (or the menu button) opens the pause card: Resume, Leave. The end card: the result, the lights put
+// click. Your champion, while it's on the field, has its ability on a button of its own over the hand (Q or 5).
+// Escape (or the menu button) opens the pause card: Resume, Leave. The end card: the result, the lights put
 // out, the rating's change (#rlEndMmr, filled by src/rlmmr.js, and again when the server answers), and Again
 // (against the bot) or Back to the menu.
 // Online, the clock shows how many are watching (rlnWatchers, src/rlnet.js). A watcher (rlIsSpec) has no hand: in its
@@ -17,7 +18,7 @@ const RH = { sel: -1, drag: null, hover: null, faces: ['', '', '', '', ''], say:
 const RL_TYPECOL = { troop: ['#2d4f6e', '#16283a'], spell: ['#8a5a1e', '#3e2a10'], building: ['#5a554e', '#2a2724'] };
 
 function rlHudReset() {
-  RH.sel = -1; RH.drag = null; RH.hover = null; RH.faces = ['', '', '', '', '']; RH.key = ''; RH.sayQ = []; RH.seen = RL.nid - 1; RH.cntShown = -1;
+  RH.sel = -1; RH.drag = null; RH.hover = null; RH.faces = ['', '', '', '', '']; RH.key = ''; RH.sayQ = []; RH.seen = RL.nid - 1; RH.cntShown = -1; RH.abFace = '';
   $('rlName0').textContent = RL.names[1 - RL.me]; $('rlName1').textContent = RL.names[RL.me];
   const sp = rlIsSpec(); $('rlUI').classList.toggle('spec', sp); if ($('rlSpecBar')) $('rlSpecBar').hidden = !sp; for (const i of [0, 1]) if ($('rlWOil' + i)) $('rlWOil' + i).hidden = !sp;
   RH.watchK = '';
@@ -93,6 +94,7 @@ function rlHud(dt) {
     b.querySelector('.rl-wait').style.height = short ? ((1 - oil / C.cost) * 100).toFixed(1) + '%' : '0%';
   }
   const nx = RL.next[me]; if (RH.faces[4] !== nx && RL_CARD[nx]) { RH.faces[4] = nx; rlFace($('rlNextCv'), nx); $('rlNextCost').textContent = RL_CARD[nx].cost; }
+  rlHudAb(oil);
   // the oil
   const ok = Math.floor(oil + 1e-6), segs = $('rlOilBar').children;
   for (let i = 0; i < 10; i++) { const s = segs[i], f = Math.max(0, Math.min(1, oil - i)); s.firstChild.style.width = (f * 100).toFixed(1) + '%'; s.classList.toggle('full', f >= 1); }
@@ -117,6 +119,17 @@ function rlHud(dt) {
   RH.seen = hi;
   if (RH.say > 0) { RH.say -= dt; if (RH.say <= 0) $('rlToast').classList.remove('on'); }
   rlHudTowers(false);
+}
+// the champion's ability button (v204): over the hand's right end while your champion is on the field, with its
+// face, the ability's oil cost and the cooldown sweeping round; lit while it can be used, glowing while it's on
+function rlHudAb(oil) {
+  const b = $('rlAb'); if (!b) return;
+  const u = typeof rlChampUnit === 'function' ? rlChampUnit(RL.me) : null, C = u && RL_CARD[u.c], A = C && C.champ;
+  b.hidden = !A || RL.ph === 'over' || (typeof rlIsSpec === 'function' && rlIsSpec()); if (b.hidden) { RH.abFace = ''; return; }
+  if (RH.abFace !== u.c) { RH.abFace = u.c; rlFace(b.querySelector('canvas'), u.c); b.querySelector('.rl-abcost').textContent = A.cost; b.querySelector('.rl-abnm').textContent = A.n; b.title = A.n + ' (' + A.cost + ' oil, Q): ' + A.d; b.setAttribute('aria-label', A.n + ', ' + A.cost + ' oil'); }
+  const cd = RL.ch[RL.me].cd, f = cd > 0 ? Math.min(1, cd / A.cd) : 0, why = rlAbWhy(RL.me);
+  b.querySelector('.rl-abcd').style.background = f > 0 ? `conic-gradient(rgba(6,8,16,0.78) ${(f * 360).toFixed(1)}deg, transparent 0)` : 'none';
+  b.classList.toggle('ready', !why); b.classList.toggle('on', u.abT > 0); b.classList.toggle('short', oil < A.cost - 1e-6);
 }
 // the end card
 function rlHudEnd() {
@@ -187,6 +200,7 @@ function rlPlace(i, p) {
     const p = rl3dPick(e.clientX, e.clientY); RH.hover = p;
     if (p) rlPlace(RH.sel, p);
   });
+  if ($('rlAb')) $('rlAb').addEventListener('click', e => { e.preventDefault(); if (RL.on && RL.ph !== 'over' && typeof rlTryAb === 'function') rlTryAb(); });
   $('rlMenuBtn').addEventListener('click', () => rlPauseOpen(true));
   if ($('rlSpecFlip')) $('rlSpecFlip').addEventListener('click', () => { if (typeof rlSpecFlip === 'function') rlSpecFlip(); });
   $('rlResume').addEventListener('click', () => rlPauseOpen(false));
@@ -200,6 +214,7 @@ function rlPlace(i, p) {
     if (e.key === 'Escape') { e.preventDefault(); if (!$('rlEnd').hidden) return; if (RH.sel >= 0) { RH.sel = -1; return; } rlPauseOpen($('rlPause').hidden); return; }
     if (!$('rlPause').hidden || e.repeat) return;
     const n = '1234'.indexOf(e.key); if (n >= 0) { e.preventDefault(); rlSel(n); }
+    else if ((e.key === 'q' || e.key === 'Q' || e.key === '5') && typeof rlTryAb === 'function') { e.preventDefault(); rlTryAb(); }
   }, true);
   addEventListener('keyup', e => { if (state === 'rival') e.stopImmediatePropagation(); }, true);
   addEventListener('resize', () => { if (RL.on && typeof rl3dResize === 'function') rl3dResize(); });
