@@ -472,6 +472,7 @@
         <p><b>Double oil and overtime.</b> In the last minute oil comes twice as fast. At time, more crowns wins. Level, and there's a minute of overtime at double oil, where the next tower to fall wins. Still level, whoever's most damaged tower has less health left loses.</p>
         <p><b>Decks.</b> Deck opens the deck builder: three slots, eight cards each from the 64, no two the same. Tap a card to read everything about it, and swap cards in and out one for one. Watch the average oil: a cheap deck cycles fast, a heavy one hits hard but slowly.</p>
         <p><b>Rating (MMR).</b> Every finished match moves your rating, which starts at 1000: up for a win, down for a loss, by more when the odds were against it. Duels online count most; the bot counts for less, against a rating of its own (easy 800, normal 1100, hard 1300). Leaving a duel early counts as a loss. The rating belongs to your username, and the Skerry Clash board ranks everyone by it. A username already rated on someone else's save can't be used for a rating, and renaming yourself starts a fresh rating under the new name.</p>
+        <p><b>Watching.</b> Any duel online can be watched, while it waits for its keepers or once it's under way: tap Watch beside it in the list (or open an invite to a duel that's full). Up to eight can watch one duel. You see the whole field from the host's end, blue the near side (Swap ends turns it round), with both keepers' oil, crowns and the clock, but you can't play, and nothing you watch counts for your record, crates or rating. Leave from the menu any time; the keepers see how many are watching, nothing more.</p>
         <p><b>Tower skins.</b> Every duel you finish earns a tower crate, and a win earns another; the first is free. The Lampwright's Crate holds a set of towers for your rock, the Great Light and both lamps, with the same grades as the other crates: Mates shimmer, Captains glow, Admirals are alive. Whatever you raise, your side's colour is on the rails and the pennants.</p>
       </details>
     </div>
@@ -523,9 +524,9 @@
     <canvas id="rlCv"></canvas>
     <div class="rl-flash" id="rlFlash" aria-hidden="true"></div>
     <div class="rl-top" id="rlTop">
-      <div class="rl-who theirs"><b id="rlName0">Rival</b><span class="rl-pips" id="rlCr0" aria-label="Lights they have put out"></span></div>
-      <div class="rl-clock" id="rlClockBox"><b id="rlClock">3:00</b><small id="rlClockSub">Time left</small></div>
-      <div class="rl-who mine"><b id="rlName1">You</b><span class="rl-pips" id="rlCr1" aria-label="Lights you have put out"></span></div>
+      <div class="rl-who theirs"><b id="rlName0">Rival</b><span class="rl-pips" id="rlCr0" aria-label="Lights they have put out"></span><small class="rl-woil" id="rlWOil0" hidden></small></div>
+      <div class="rl-clock" id="rlClockBox"><b id="rlClock">3:00</b><small id="rlClockSub">Time left</small><small class="rl-watchn" id="rlWatchN" hidden></small></div>
+      <div class="rl-who mine"><b id="rlName1">You</b><span class="rl-pips" id="rlCr1" aria-label="Lights you have put out"></span><small class="rl-woil" id="rlWOil1" hidden></small></div>
       <button class="rl-menu" id="rlMenuBtn" type="button" aria-label="Menu" title="Menu (Esc)">&#9776;</button>
     </div>
     <div class="rl-tw" id="rlTw" aria-hidden="true"></div>
@@ -541,6 +542,7 @@
       </div>
       <div class="rl-oil" id="rlOil"><b id="rlOilN">5</b><div class="rl-oilbar" id="rlOilBar"><span><i></i></span><span><i></i></span><span><i></i></span><span><i></i></span><span><i></i></span><span><i></i></span><span><i></i></span><span><i></i></span><span><i></i></span><span><i></i></span></div><small>Lamp oil</small></div>
     </div>
+    <div class="rl-specbar" id="rlSpecBar" hidden><span class="rl-specbadge">Watching</span><span class="rl-specn" id="rlSpecN"></span><button class="tool" id="rlSpecFlip" type="button" title="Watch from the other keeper's end">Swap ends</button></div><!-- [rival] a watcher's bar, in place of the hand (src/rlhud.js) -->
     <div class="rl-drag" id="rlDrag" hidden aria-hidden="true"><canvas width="150" height="176"></canvas></div>
     <div class="overlay pausecard" id="rlPause" hidden role="dialog" aria-modal="true" aria-labelledby="rlPauseHead">
       <div class="card">

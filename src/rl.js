@@ -53,6 +53,8 @@
 // Hooks into the other parts, all optional (typeof checks): rlDeckMine(), rlSkinMine() (the deck and the tower skin,
 // src/rldeck.js, src/rlcrates.js), rlRecord(r) at the end (stats and crates), rlnRequest(play) for the guest's cards,
 // rlnTick(dt) every frame online, rlnStop() on leaving an online match, rlnBackToLobby() back on the title card.
+// Watching online (net: { spec: true }, src/rlnet.js): a watcher is a guest that never plays (rlTry does nothing), is
+// never recorded or rated, sees the board from side 0's end (rlSpecFlip turns it round) and has no hand on its HUD.
 // Tests: rlDebugSpeed(x) runs the clock x times as fast; rlDebugBots(on) lets a second bot play side 0 as well.
 //
 // For the view (what src/rl3d.js and the sound may key off, on the host and, through rlSnap/rlApply, the guest; the
@@ -102,6 +104,7 @@ function rlRng(seed) { let a = seed >>> 0 || 1; return () => { a = (a + 0x6d2b79
 const rlD = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
 const rlR = e => e.r != null ? e.r : e.size;   // (a tower's radius, or a unit's body)
 const rlIsGuest = () => RL.mode === 'net' && !!RL.net && !RL.net.host;
+const rlIsSpec = () => RL.mode === 'net' && !!RL.net && !!RL.net.spec;   // (watching: a guest that never plays)
 const rlLaneOf = x => x < RLC.W / 2 ? 0 : 1;
 function rlFx(k, o) { const f = Object.assign({ id: RL.nid++, k, at: RL.clk }, o); RL.FX.push(f); return f; }
 function rlMyName() { const v = (typeof NET !== 'undefined' && NET.nick) || ''; return String(v).replace(/[\u0000-\u001f<>&"]/g, '').trim().slice(0, 16) || 'You'; }
@@ -169,6 +172,7 @@ function rlPlay(side, c, x, y) {
 }
 // the local player's tap or drop (the guest asks the host instead, and shows a ghost until the snapshot has it)
 function rlTry(c, x, y) {
+  if (rlIsSpec()) return false;
   const why = rlWhyNot(RL.me, c, x, y);
   if (why) { if (typeof rlHudSay === 'function') rlHudSay(why, 1.2, true); return false; }
   if (rlIsGuest()) { if (typeof rlnRequest === 'function') rlnRequest({ c, x: Math.round(x * 10) / 10, y: Math.round(y * 10) / 10 }); RL.pend = { c, x, y, at: performance.now(), oil: RL.oil[RL.me] }; return true; }
@@ -591,8 +595,8 @@ function rlEnd(win, o) {
   RL.ph = 'over'; RL.win = win; RL.endAt = RL.clk;
   if (!rlIsGuest()) rlFx('end', { x: 9, y: 16, side: win === 2 ? 0 : win, r: win });
   const me = RL.me, rec = { win: win === me, draw: win === 2, crowns: RL.crowns[me], lost: RL.crowns[1 - me], bot: RL.mode === 'bot', lvl: RL.bot.lvl };
-  if (!RL.recorded && !(o && o.norec) && !(RL.net && RL.net.gone) && typeof rlRecord === 'function') { RL.recorded = true; try { rlRecord(rec); } catch (e) { console.error(e); } }
-  rlSnd(win === 2 ? 'draw' : win === me ? 'win' : 'lose');
+  if (!RL.recorded && !(o && o.norec) && !(RL.net && RL.net.gone) && !rlIsSpec() && typeof rlRecord === 'function') { RL.recorded = true; try { rlRecord(rec); } catch (e) { console.error(e); } }
+  rlSnd(win === 2 ? 'draw' : win === me || rlIsSpec() ? 'win' : 'lose');
   if (typeof rlHudEnd === 'function') setTimeout(() => { if (RL.on && RL.ph === 'over') rlHudEnd(); }, 1600);
 }
 function rlQuit() {
@@ -704,10 +708,17 @@ function rlExit() {
   if (typeof rlnBackToLobby === 'function') { try { rlnBackToLobby(); } catch (e) {} }
   setTimeout(() => { const c = $('rlTitle'); if (c) c.scrollIntoView({ block: 'start' }); if (typeof rlCardRender === 'function') rlCardRender(); }, 60);
 }
+// a watcher turns the board round, to watch from the other keeper's end (blue is always the near side)
+function rlSpecFlip() {
+  if (!RL.on || !rlIsSpec()) return;
+  RL.me = 1 - RL.me;
+  if (typeof rl3dReset === 'function') rl3dReset();
+  if (typeof rlHudReset === 'function') rlHudReset();
+}
 function rlPauseOpen(on) {
   if (!RL.on) return;
   $('rlPause').hidden = !on;
-  if (on) { const s = $('rlPauseSub'); if (s) s.textContent = RL.mode === 'bot' ? 'The match waits while this is open.' : 'Online, the match goes on while this is open.'; setTimeout(() => $('rlResume').focus({ preventScroll: true }), 30); }
+  if (on) { const s = $('rlPauseSub'); if (s) s.textContent = RL.mode === 'bot' ? 'The match waits while this is open.' : rlIsSpec() ? 'You’re watching: the duel goes on without you.' : 'Online, the match goes on while this is open.'; const lv = $('rlLeave'); if (lv) lv.textContent = rlIsSpec() ? 'Stop watching' : 'Leave the match'; setTimeout(() => $('rlResume').focus({ preventScroll: true }), 30); }
 }
 
 // ---------- the sound (from what's in src/audio.js and the recordings in src/sfxbank.js) ----------
