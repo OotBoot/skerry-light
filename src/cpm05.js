@@ -128,7 +128,7 @@ cpCineDef('m05_wren', {
     { d: 4.2, card: { eye: 'One week on', t: '9 January 1888', sub: 'Night, off the Skerries. The schooner Wren, coming in' } },
     { d: 6, cam: [2.4, -10.6, 3.6], to: [1.6, -6.5, 3.2], look: [0, 6, 4.5], lookTo: [0, 12, 3.5], fade: [0.8, 0],
       lines: [[0.4, 'wren', 'Keeper’s word, by the pilot cutter: follow the shark in, and ring if she comes.', 'cp_m05_09'], [3.8, 'hand', 'The shark, he says. As if there were a choice of them.', 'cp_m05_10']] },
-    { d: 5.5, cam: [0, 9.6, 3.1], to: [0, 10.4, 3.0], look: [0, 120, 1.6],
+    { d: 5.5, cam: [-1.8, 11.4, 4.6], to: [-1.5, 12, 4.3], look: [0, 120, 1.6],
       sfx: [[1.0, 'squeak', 0.3], [2.2, 'squeak', 0.3]],
       lines: [[0.5, 'wren', 'There. Walking on the water, ahead of the bowsprit, and his shoes alight.', 'cp_m05_11']] },
     { d: 5, cam: [-2.6, 2, 2.8], to: [-2.2, 5, 3.2], look: [0, 120, 1.6],

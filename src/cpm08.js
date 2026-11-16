@@ -82,7 +82,7 @@ cpCineDef('m08_sea', {
     const [lu, lv] = cpm8SeaL(0, 0); this.shots[0].look = [lu, lv, 30];
   },
   shots: [
-    { d: 5, cam: [1.8, 8, 3.4], to: [1.6, 4, 3.0], look: [0, -200, 30], fade: [0.8, 0],
+    { d: 5, cam: [0.8, -10.4, 2.9], to: [0.4, -10.8, 3.1], look: [0, -200, 30], fade: [0.8, 0],
       lines: [[0.4, 'log', 'I sent the cutter out, and stood on the gallery to watch her go.', 'cp_m08_13']] },
     { d: 5.5, cam: [0, 9.6, 3.1], to: [0, 10.4, 3.0], look: [0, 80, 0.8],
       lines: [[0.4, 'm8cox', 'There. A lantern, low on the water, and a skiff under it.', 'cp_m08_14']] },
