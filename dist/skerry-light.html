@@ -49434,9 +49434,9 @@ cpCineDef('m05_dive', {
     C.pl = [u, v, 1.4]; this.shots[0].look = C.pl; this.shots[1].look = [u, v, 0.6];
   },
   shots: [
-    { d: 4, cam: [0, 9.8, 3.2], to: [0.4, 10.2, 3.0], look: [0, 80, 1.4],
+    { d: 4, cam: [-1.8, 11.4, 4.5], to: [-1.4, 11.9, 4.3], look: [0, 80, 1.4],
       lines: [[0.3, 'hand', 'He’s stopped. He’s looking back at us.', 'cp_m05_13']] },
-    { d: 4.5, cam: [1.2, 10.0, 3.0], look: [0, 80, 0.6], sfx: [[2.4, 'splash', 0.6]],
+    { d: 4.5, cam: [1.6, 11.6, 4.4], look: [0, 80, 0.6], sfx: [[2.4, 'splash', 0.6]],
       lines: [[0.4, 'wren', 'He’s gone under, among the hulks. Every man to his post: we’re on our own till he comes up.', 'cp_m05_14']] },
   ],
 });
@@ -49484,7 +49484,7 @@ cpCineDef('m05_outro', {
     this.shots[0].look = [u, v, 3.4]; this.shots[1].look = [u, v, 3.2];
   },
   shots: [
-    { d: 6, cam: [0, 9.4, 3.2], to: [0.6, 10.2, 3.6], look: [0, 40, 3.4], fade: [0.5, 0],
+    { d: 6, cam: [-1.8, 11.2, 4.4], to: [-1.2, 11.8, 4.6], look: [0, 40, 3.4], fade: [0.5, 0],
       lines: [[0.4, 'hand', 'Not a scratch on her. And look at him: sat down on the pier, taking his shoes off.', 'cp_m05_20']] },
     { d: 6, cam: [-2.8, 6, 3.0], to: [-2.6, 8, 3.2], look: [0, 40, 3.2],
       lines: [[0.3, 'hand', 'Blue plimsolls, on a shark.', 'cp_m05_21'], [2.8, 'wren', 'Then that’s his name, and he’s earned it. Plimsoll.', 'cp_m05_22']] },
@@ -50081,7 +50081,7 @@ cpCineDef('m08_sea', {
   shots: [
     { d: 5, cam: [0.8, -10.4, 2.9], to: [0.4, -10.8, 3.1], look: [0, -200, 30], fade: [0.8, 0],
       lines: [[0.4, 'log', 'I sent the cutter out, and stood on the gallery to watch her go.', 'cp_m08_13']] },
-    { d: 5.5, cam: [0, 9.6, 3.1], to: [0, 10.4, 3.0], look: [0, 80, 0.8],
+    { d: 5.5, cam: [-1.8, 11.4, 4.6], to: [-1.5, 12, 4.3], look: [0, 80, 0.8],
       lines: [[0.4, 'm8cox', 'There. A lantern, low on the water, and a skiff under it.', 'cp_m08_14']] },
     { d: 6, cam: [-2.6, 2, 2.8], to: [-2.2, 5, 3.2], look: [0, 80, 0.8],
       lines: [[0.3, 'm8cox', 'Keep her lantern over the bowsprit. When the Gannet tolls, answer with ours, or they’ll be up the sides.', 'cp_m08_33']] },
@@ -50096,7 +50096,7 @@ cpCineDef('m08_ring', {
     const [mu, mv] = cpm8SeaL(GWS.MARK[0], GWS.MARK[1]); this.shots[2].look = [mu, mv, 6];
   },
   shots: [
-    { d: 5, cam: [0.6, 9.6, 3.0], to: [0.3, 10.4, 3.1], look: [0, 60, 1.2], fade: [0.4, 0], sfx: [[0.6, 'whisper', 0.5]],
+    { d: 5, cam: [-1.8, 11.4, 4.4], to: [-1.4, 12, 4.1], look: [0, 60, 1.2], fade: [0.4, 0], sfx: [[0.6, 'whisper', 0.5]],
       lines: [[0.4, 'm8cox', 'The ring of her spars. The skiff’s stopped dead in the middle of it.', 'cp_m08_18']] },
     { d: 5.5, cam: [-1.4, 8, 2.4], to: [-1.0, 9.5, 2.2], look: [0, 60, 1.4],
       lines: [[0.6, 'maren', 'Light them. Light them, so they can see where she lies.', 'cp_m08_19']] },
@@ -50109,10 +50109,10 @@ cpCineDef('m08_board', {
   music: 'cpm08rise',
   b3(grp, C) { C.rang = 0; },
   shots: [
-    { d: 5.5, cam: [2.6, -3, 2.6], to: [2.0, 1, 2.8], look: [-9.6, -6, 5.5], lookTo: [-9.6, 4, 5.0],
+    { d: 5.5, cam: [2, 26, 6], to: [1.4, 22, 5.6], look: [-8, 0, 3], lookTo: [-8, -2, 3.2],
       f(t, k, C) { if (!C.rang) { C.rang = 1; try { if (!soundOff()) sfxBell(); } catch (e) {} } },
       lines: [[0.4, 'log', 'The Gannet came up alongside, inside the ring of her spars, the water pouring off her, and her bell was ringing.', 'cp_m08_22']] },
-    { d: 5, cam: [0.5, 9, 3.0], to: [0.2, 10, 3.2], look: [-9.6, 16, 4.6], sfx: [[1.2, 'creak', 0.6]],
+    { d: 5, cam: [-1.6, 11, 4.2], to: [-1.8, 11.8, 4.3], look: [-9.6, 16, 4.6], sfx: [[1.2, 'creak', 0.6]],
       lines: [[0.4, 'm8cox', 'Her figurehead’s gone from her bow. There’s nothing on the stem at all.', 'cp_m08_23']] },
     { d: 4.5, cam: [-3.2, -1, 2.2], to: [-6.4, 0, 6.0], look: [-9.6, 1, 7.5], fade: [0, 0.7],
       lines: [[0.3, 'm8cox', 'Up her side, all of you. I’ll hold the cutter off.', 'cp_m08_24']] },

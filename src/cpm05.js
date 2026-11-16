@@ -142,9 +142,9 @@ cpCineDef('m05_dive', {
     C.pl = [u, v, 1.4]; this.shots[0].look = C.pl; this.shots[1].look = [u, v, 0.6];
   },
   shots: [
-    { d: 4, cam: [0, 9.8, 3.2], to: [0.4, 10.2, 3.0], look: [0, 80, 1.4],
+    { d: 4, cam: [-1.8, 11.4, 4.5], to: [-1.4, 11.9, 4.3], look: [0, 80, 1.4],
       lines: [[0.3, 'hand', 'He’s stopped. He’s looking back at us.', 'cp_m05_13']] },
-    { d: 4.5, cam: [1.2, 10.0, 3.0], look: [0, 80, 0.6], sfx: [[2.4, 'splash', 0.6]],
+    { d: 4.5, cam: [1.6, 11.6, 4.4], look: [0, 80, 0.6], sfx: [[2.4, 'splash', 0.6]],
       lines: [[0.4, 'wren', 'He’s gone under, among the hulks. Every man to his post: we’re on our own till he comes up.', 'cp_m05_14']] },
   ],
 });
@@ -192,7 +192,7 @@ cpCineDef('m05_outro', {
     this.shots[0].look = [u, v, 3.4]; this.shots[1].look = [u, v, 3.2];
   },
   shots: [
-    { d: 6, cam: [0, 9.4, 3.2], to: [0.6, 10.2, 3.6], look: [0, 40, 3.4], fade: [0.5, 0],
+    { d: 6, cam: [-1.8, 11.2, 4.4], to: [-1.2, 11.8, 4.6], look: [0, 40, 3.4], fade: [0.5, 0],
       lines: [[0.4, 'hand', 'Not a scratch on her. And look at him: sat down on the pier, taking his shoes off.', 'cp_m05_20']] },
     { d: 6, cam: [-2.8, 6, 3.0], to: [-2.6, 8, 3.2], look: [0, 40, 3.2],
       lines: [[0.3, 'hand', 'Blue plimsolls, on a shark.', 'cp_m05_21'], [2.8, 'wren', 'Then that’s his name, and he’s earned it. Plimsoll.', 'cp_m05_22']] },
