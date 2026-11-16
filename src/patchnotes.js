@@ -6,10 +6,20 @@
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
-  { v: 215, date: '2026-11-16', title: "Skerry Clash: better watching", New: [
+  { v: 217, date: '2026-11-16', title: "Skerry Clash: better watching", New: [
     "Skerry Clash: you can now watch a Triple Draft online. Both keepers show side by side over the arena, each with the round they're on, the three cards they're choosing from, the card they take, and the deck they're building. When the draft ends you carry straight on into watching the duel.",
     "Skerry Clash: watchers now see every keeper's hand and next card under their name, with an oil bar beside their oil, and the card each keeper has picked up to play lights up. Cards a keeper can't afford yet are dimmed." ], Fixes: [
     "Skerry Clash: watching a Triple Draft no longer leaves you stuck in the lobby until the duel starts." ] },
+  { v: 216, date: '2026-11-16', title: "Skerry Clash: room for three", Fixes: [
+    "Skerry Clash: invite links to a Three keepers match turned the third keeper away as if the room were full. All three can now join from an invite.",
+    "Skerry Clash: Host a duel now always hosts a duel, even if your last room was set to Three keepers.",
+    "Skerry Clash: a keeper on a slower device is no longer counted as gone while their arena is still loading at the start of a Three keepers match." ], Changes: [
+    "Skerry Clash: a new Host three keepers button beside Host a duel and Host a triple draft opens a room for three straight away." ] },
+  { v: 215, date: '2026-11-16', title: "Lore compendium: three new tales", New: [
+    "Lore compendium: Skerry Clash now has its own tale, with new pages for the Race, the Threefold Skerry, the keepers of the Race, the Great Lights and Lamp Towers (and the Lampwright's Crate), the hands that cross the causeways, and the triple draft.",
+    "Lore compendium: Skerry Links has its own tale, with all nine holes, the view of the Light from the course, and the ball and club crates.",
+    "Lore compendium: The Original has its own tale, The Early Watches, from the years the keeper swung the beam by hand.",
+    "Lore compendium: Maren Holm and Plimsoll's pages now tell how they fight on the Race, and the timeline, the main page and Did you know have caught up with the new tales." ] },
   { v: 214, date: '2026-11-16', title: "Skerry Clash: Triple Draft, your own cards", Changes: [
     "Skerry Clash: in a Triple Draft each keeper is now offered their own cards instead of the same ones. Both of you still get the same theme each round, but never the same three.",
     "Skerry Clash: you can now see your rival's three options each round, just under your own. You never see which one they took. Online it shows the round your rival is on, against the bot the same round as yours." ] },

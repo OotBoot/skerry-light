@@ -142,8 +142,8 @@ function shareArrive() {
       if (r) {
         clearInterval(iv); shareShow('rival');
         // (under way or full: offered to watch instead, the duel's Watch button in the list made ready)
-        if (r.started || r.n >= 2) {
-          toast(r.started ? 'That duel has already started. Tap Watch to see it.' : 'That duel already has two keepers. Tap Watch to see it.', 'Watch instead');
+        if (r.started || r.n >= (r.max || 2)) {   // (a match for three takes three keepers, a duel two)
+          toast(r.started ? 'That duel has already started. Tap Watch to see it.' : r.max > 2 ? 'That match already has three keepers. Tap Watch to see it.' : 'That duel already has two keepers. Tap Watch to see it.', 'Watch instead');
           RLN.msg = `${r.host}’s duel is ${r.started ? 'under way' : 'full'}: you can watch it.`; rlnRender();
           setTimeout(() => { const b = document.querySelector(`#rlLobbies .rlwatch[data-code="${J.code}"]`); if (b) { b.classList.add('glow'); b.focus({ preventScroll: true }); } }, 120);
         } else rlnJoin(J.code);
