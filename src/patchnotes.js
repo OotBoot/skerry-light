@@ -6,6 +6,8 @@
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 203, date: '2026-11-16', title: "Skerry Clash: random decks", New: [
+    "Skerry Clash: a new Random button in the deck builder fills the deck you're editing with 8 random cards. It always builds something playable: a damage spell, a card that goes for towers or hits hard, at least two cards that can hit flyers, a few cheap cards, and an average cost between 2.8 and 4.2 oil. Tap it again for another." ] },
   { v: 202, date: '2026-11-16', title: "Skerry Clash: ratings and a leaderboard", New: [
     "Skerry Clash: every player now has an MMR rating, starting at 1000. It belongs to your username, and only your save can play under that name.",
     "Skerry Clash: online duels move your rating the most, depending on how your rating compares to your rival's. Matches against the bot count at half weight, against a fixed rating for each level: Easy 800, Normal 1100, Hard 1300. A draw counts as half a win.",
