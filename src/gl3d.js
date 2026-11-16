@@ -506,6 +506,7 @@ function gl3dRender(roll, sx, sy, beamOn) {
   findOccluders();
   for (const [o, m] of GL3D.objs) if (m.seen !== GL3D.frame) dropThing(o, m);
   if (typeof gwsGL === 'function') gwsGL(u);   // [gannet] out on the cutter: the sea in her frame (src/gwsail.js)
+  if (typeof rchGL === 'function') rchGL(u);   // [campaign] the Drowned Reach: its sea at its own level (src/cpm14.js)
   if (typeof glbTick === 'function') glbTick();   // (the first-person modes: still meshes drawn together, src/glbatch.js)
   GL3D.r.render(GL3D.scene, cam3);
   return shown;

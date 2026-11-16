@@ -469,6 +469,13 @@ function rch3dBuild(grp) {
 function rchFreeAll() { if (RCH.npc) for (const k in RCH.npc) cpkNpcFree(RCH.npc[k]); RCH.npc = null; for (const F of RCH.F) if (F) cpkNpcFree(F); RCH.F = []; RCH3.on = false; }
 // (cpkNpcPose's noGun looks for .visible on the weapon; its model is .root)
 function rchNoGun(F) { if (F && F.wpn) for (const k in F.wpn) if (F.wpn[k] && F.wpn[k].root) F.wpn[k].root.visible = false; }
+// the sea at a part's own level (the tide out on the holm, far below the lantern): called by src/gl3d.js just before
+// it draws, after it has laid the sea at 0; the sea's shading reckons the horizon from the eye's height over it
+function rchGL(u) {
+  const St = typeof RAID !== 'undefined' && RAID.on && RCH3.on && raidStage(); if (!St || (St.rchSeaY == null && !St.rchSea)) return;
+  const y = St.rchSea ? St.rchSea() : St.rchSeaY; if (!isFinite(y)) return;
+  GL3D.sea.position.y = y; if (u && u.uCamH) u.uCamH.value = Math.max(0.3, u.uCamH.value - y);
+}
 function rch3d(dt) {
   if (!RCH3.on || !RAID.st.rch) return;
   const S = RAID.st, St = raidStage() || {}, t = g.t, G0 = FPSC.GROUND, CX = FPSC.CX, CY = FPSC.CY, m = FPS.me;
@@ -483,7 +490,6 @@ function rch3d(dt) {
   const d = 1 - night, sky = St.rchSky ? St.rchSky() : [0.03 + 0.1 * d, 0.035 + 0.08 * d, 0.06 + 0.1 * d];
   if (GL3D.scene.fog) { const F = GL3D.scene.fog; F.color.setRGB(sky[0], sky[1], sky[2]); F.near = St.rchFogNear || 30; F.far = (St.rchFogFar || 260) + 340 * d + 120 * lit; RAID.fog0 = true; }
   if (GL3D.scene.background && GL3D.scene.background.isColor) GL3D.scene.background.setRGB(sky[0], sky[1], sky[2]);
-  if (GL3D.sea) { if (St.rchSeaY != null || St.rchSea) GL3D.sea.position.y = St.rchSea ? St.rchSea() : St.rchSeaY; }
   // ---- the Reach: its beacons flicker, the fire-ships burn ----
   for (const f of RCH3.fires) f.s.material.opacity = f.k * (reduceMotion ? 1 : 0.75 + 0.25 * Math.sin(t * 3 + f.ph) * Math.sin(t * 1.3 + f.ph * 2)) * (St.rchFarDip ? St.rchFarDip(f) : 1);
   for (const [i, s] of RCH3.burn.entries()) s.material.opacity = reduceMotion ? 0.8 : 0.6 + 0.3 * Math.sin(t * 5 + i) * Math.sin(t * 2.1 + i);
