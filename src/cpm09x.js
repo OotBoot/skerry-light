@@ -301,11 +301,12 @@ function c9Act(kind, x, y, jz, h, seed) {
     sp: kind === 'jog' ? 3.4 : kind === 'skit' ? 3.5 : 1.6, swing: -1, hitT: 0, dead: 0, seed: seed == null ? (Math.random() * 1e6) | 0 : seed, rise: 1, hist: [], walk: false, act: null, at: 0, hp: 1, max: 1, lane: 0 };
   if (boss) zbMake(z, kind);
   if (kind === 'skit') zwDress(z);
-  try { zmModel(z); } catch (e) { console.warn('c9Act', e); }
+  if (typeof Z3 !== 'undefined' && Z3.grp) try { zmModel(z); } catch (e) {}   // (the world not ready yet: c9ActPose builds it)
   return z;
 }
 function c9ActAt(z, x, y, jz, h, walk) { const [wx, wy] = c9L(x, y); if (walk == null) walk = Math.hypot(wx - z.x, wy - z.y) > 0.002; z.x = wx; z.y = wy; if (jz != null) z.jz = jz; if (h != null) z.h = h; z.walk = walk; }
-function c9ActPose(z) { if (!z || !z.mdl) return; const dt = Math.min(0.05, FPS.dtLast || 0.016); z.t += dt; z.groanT = 99; try { zmPose(z, z.mdl, dt); } catch (e) {} }
+function c9ActPose(z) { if (z && !z.mdl && !z.noMdl && typeof Z3 !== 'undefined' && Z3.grp) { try { zmModel(z); } catch (e) { z.tries = (z.tries || 0) + 1; if (z.tries > 30) z.noMdl = 1; } }   // (built late, when the world wasn't ready for it yet)
+  if (!z || !z.mdl) return; const dt = Math.min(0.05, FPS.dtLast || 0.016); z.t += dt; z.groanT = 99; try { zmPose(z, z.mdl, dt); } catch (e) {} }
 function c9ActFree(list) { for (const z of list || []) if (z && z.mdl) zmFreeModel(z); }
 // a person for a cinematic (local x, y): cpkit's figure, and posed the same way
 function c9Fig(cols, x, y, jz, h) { const F = cpkNpc(cols); if (F) { F.c9 = { x, y, jz: jz || 0, h: h || 0, spd: 0 }; c9FigPose(F); } return F; }

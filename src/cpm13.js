@@ -107,21 +107,21 @@ function c13Boat(grp) {
 cpCineDef('m13_outro', { music: 'cpm13fall',
   b3(grp, C) {
     C.b = [0, 1, 2].map(() => c13Boat(grp));
-    C.a = [[-4, -24], [2, -28], [6, -20], [-2, -14], [10, -6], [-9, 2]].map(([x, y], i) => c9Act(i % 3 ? 'walk' : 'jog', x, y, -0.7, Math.random() * 6, 71 + i));
+    C.a = [[-4, -24], [2, -28], [6, -20], [-2, -14], [10, -6], [-9, 2]].map(([x, y], i) => c9Act(i % 3 ? 'walk' : 'jog', x, y, -0.4, Math.random() * 6, 71 + i));
   },
   exit(C) { c9ActFree(C.a); c13cFloodBack(C); },
   shots: [
-    { d: 6, cam: [8, -30, 3.2], to: [4, -20, 4.4], look: [0, -4, 4], fade: [0.8, 0], enter(C) { c13cFlood(C, 80, 1.5); }, sfx: [[0.2, 'sea', 0.5], [2.4, 'gull', 0.4]],
+    { d: 6, cam: [0.4, -36, 3.4], to: [0, -27, 4.0], look: [0, -8, 2.4], fade: [0.8, 0], enter(C) { c13cFlood(C, 80, 1.5); }, sfx: [[0.2, 'sea', 0.5], [2.4, 'gull', 0.4]],
       lines: [[0.5, 'log', 'Dawn. The boats from the Light came in across the Square, over the tops of the market stalls.', 'cp_m13_43']],
       f(t, k, C) {
-        C.b.forEach((b, i) => { const [x, y] = c9L(-6 + i * 6, -40 + t * 3.2 - i * 2.4); b.position.copy(z3v(x, y, FPSC.GROUND + 1.55)); b.rotation.y = Math.sin(t + i) * 0.05; });
-        C.a.forEach((z, i) => { const [x, y] = [[-4, -24], [2, -28], [6, -20], [-2, -14], [10, -6], [-9, 2]][i]; c9ActAt(z, x + Math.sin(t * 0.4 + i) * 0.8, y + Math.cos(t * 0.3 + i), -0.7, null, true); c9ActPose(z); });
+        C.b.forEach((b, i) => { const [x, y] = c9L(-3 + i * 3, -19 + t * 1.0 - i * 2.6); b.position.copy(z3v(x, y, FPSC.GROUND + 1.55)); b.rotation.y = Math.sin(t + i) * 0.05; });
+        C.a.forEach((z, i) => { const [x, y] = [[-4, -24], [2, -28], [6, -20], [-2, -14], [10, -6], [-9, 2]][i]; c9ActAt(z, x + Math.sin(t * 0.4 + i) * 0.8, y + Math.cos(t * 0.3 + i), -0.4, null, true); c9ActPose(z); });
       } },
     { d: 5.4, cam: [-6, -6.4, C13K.F2 + 2.0], to: [-3, -7.2, C13K.F2 + 1.8], look: [0, -14, 1.2],
       lines: [[0.4, 'mayor', 'Look at it once. Then do not look again. It is theirs now.', 'cp_m13_44']],
-      f(t, k, C) { C.b.forEach((b, i) => { const [x, y] = c9L(-4 + i * 4, -13.5 - i * 0.6); b.position.copy(z3v(x, y, FPSC.GROUND + 1.55)); b.rotation.y = 0.1 * i; }); C.a.forEach((z, i) => { c9ActAt(z, z.x - FPSC.CX, z.y - FPSC.CY + 0.01, -0.7, null, true); c9ActPose(z); }); } },
-    { d: 7, cam: [0, -46, 2.2], to: [-2, -52, 2.0], look: [0, -20, 4], lookTo: C13K.LIGHT, fade: [0, 0.8], sfx: [[0.6, 'sea', 0.5]],
+      f(t, k, C) { C.b.forEach((b, i) => { const [x, y] = c9L(-4 + i * 4, -13.5 - i * 0.6); b.position.copy(z3v(x, y, FPSC.GROUND + 1.55)); b.rotation.y = 0.1 * i; }); C.a.forEach((z, i) => { c9ActAt(z, z.x - FPSC.CX, z.y - FPSC.CY + 0.01, -0.4, null, true); c9ActPose(z); }); } },
+    { d: 7, cam: [1.5, -54, 3.2], to: [0, -58, 3.0], look: [0, -20, 4], lookTo: C13K.LIGHT, fade: [0, 0.8], sfx: [[0.6, 'sea', 0.5]],
       lines: [[0.6, 'log', 'Out past the quay we looked back. And across the harbour the Light was still lit.', 'cp_m13_45']],
-      f(t, k, C) { C.b.forEach((b, i) => { const [x, y] = c9L(-3 + i * 3.4, -48 - t * 1.4 - i * 3); b.position.copy(z3v(x, y, FPSC.GROUND + 1.55)); b.rotation.y = Math.PI + Math.sin(t + i) * 0.05; }); C.a.forEach(z => { if (z.mdl) z.mdl.root.visible = false; }); } },
+      f(t, k, C) { C.b.forEach((b, i) => { const [x, y] = c9L(-3 + i * 3.4, -62 - t * 1.2 - i * 2.5); b.position.copy(z3v(x, y, FPSC.GROUND + 1.55)); b.rotation.y = Math.PI + Math.sin(t + i) * 0.05; }); C.a.forEach(z => { if (z.mdl) z.mdl.root.visible = false; }); } },
     { d: 5, card: { eye: 'Mission complete', t: 'The Fall of Wrackhaven', sub: 'The sea came up Fish Street one night and did not go back. The drowned live there now.' } },
   ] });
