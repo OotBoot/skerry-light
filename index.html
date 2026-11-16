@@ -451,7 +451,7 @@
         <h2 id="rlMpHead">Duel online · one against one</h2>
         <p class="muted" id="rlMpNote">Looking for another keeper…</p>
         <div id="rlMpOpen" hidden>
-          <div class="btnrow"><button class="tool" id="rlMpHost" type="button">Host a duel</button></div>
+          <div class="btnrow"><button class="tool" id="rlMpHost" type="button">Host a duel</button><button class="tool" id="rlMpHostDr" type="button">Host a triple draft</button></div>
           <div class="warlobbies" id="rlLobbies"></div>
         </div>
         <div class="warlobby" id="rlLobby" hidden>
@@ -552,6 +552,18 @@
     </div>
     <div class="rl-specbar" id="rlSpecBar" hidden><span class="rl-specbadge">Watching</span><span class="rl-specn" id="rlSpecN"></span><button class="tool" id="rlSpecFlip" type="button" title="Watch from the other keeper's end">Swap ends</button></div><!-- [rival] a watcher's bar, in place of the hand (src/rlhud.js) -->
     <div class="rl-drag" id="rlDrag" hidden aria-hidden="true"><canvas width="150" height="176"></canvas></div>
+    <div class="overlay rldraftcard" id="rlDraftCard" hidden role="dialog" aria-modal="true" aria-labelledby="rlDrHead"><!-- [rival] the triple draft, over the arena (src/rldraft.js) -->
+      <div class="card">
+        <div class="cardtop sticky"><span class="eyebrow" id="rlDrEye">Skerry Clash · triple draft</span><button class="tool closebtn" id="rlDrLeave" type="button">✕ Leave</button></div>
+        <h1 id="rlDrHead">Round 1 of 8</h1>
+        <p class="rldr-theme" id="rlDrTheme"></p>
+        <div class="rldr-time" id="rlDrTime" hidden><i></i><b></b></div>
+        <div class="rldr-offer" id="rlDrOffer" aria-label="Three cards: take one"></div>
+        <p class="rldr-hint" id="rlDrHint" aria-live="polite"></p>
+        <div class="rldr-deckhead"><span>Your deck</span><span id="rlDrAvg"></span></div>
+        <div class="rldr-deck" id="rlDrDeck" aria-label="The cards you have taken"></div>
+      </div>
+    </div>
     <div class="overlay pausecard" id="rlPause" hidden role="dialog" aria-modal="true" aria-labelledby="rlPauseHead">
       <div class="card">
         <h1 id="rlPauseHead">Skerry Clash</h1>
@@ -842,19 +854,6 @@
         </div>
         <aside class="rldk-detail" id="rlDkDetail" hidden aria-live="polite"></aside>
       </div>
-    </div>
-  </div>
-
-  <div class="overlay rldraftcard" id="rlDraftCard" hidden role="dialog" aria-modal="true" aria-labelledby="rlDrHead"><!-- [rival] the triple draft (src/rldraft.js) -->
-    <div class="card">
-      <div class="cardtop sticky"><span class="eyebrow" id="rlDrEye">Skerry Clash · triple draft</span><button class="tool closebtn" id="rlDrLeave" type="button">✕ Leave</button></div>
-      <h1 id="rlDrHead">Round 1 of 8</h1>
-      <p class="rldr-theme" id="rlDrTheme"></p>
-      <div class="rldr-time" id="rlDrTime" hidden><i></i><b></b></div>
-      <div class="rldr-offer" id="rlDrOffer" aria-label="Three cards: take one"></div>
-      <p class="rldr-hint" id="rlDrHint" aria-live="polite"></p>
-      <div class="rldr-deckhead"><span>Your deck</span><span id="rlDrAvg"></span></div>
-      <div class="rldr-deck" id="rlDrDeck" aria-label="The cards you have taken"></div>
     </div>
   </div>
 
@@ -1150,6 +1149,7 @@
 <script src="src/rl3.js"></script><!-- [rival] Skerry Clash for three (1v1v1): the skerry, its rules, its bot -->
 <script src="src/rl3d.js"></script><!-- [rival] the 3D view -->
 <script src="src/rlhud.js"></script><!-- [rival] the hand, the oil, the clock, the end card -->
+<script src="src/rlemote.js"></script><!-- [rival] the emotes: picker, bubbles, sounds, the bot's say -->
 <script src="src/rlart.js"></script><!-- [rival] the cards' pictures and faces -->
 <script src="src/rlchamp.js"></script><!-- [rival] the champions: their models, pictures, ability button and the bot's use of them -->
 <script src="src/rldeck.js"></script><!-- [rival] your decks, the deck builder, the save -->

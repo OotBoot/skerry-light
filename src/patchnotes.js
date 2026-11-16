@@ -6,6 +6,21 @@
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 211, date: '2026-11-16', title: "Skerry Clash: Triple Draft in the arena", Changes: [
+    "Skerry Clash: the Triple Draft now happens inside the game. The arena comes up with both keepers' towers, and you pick your cards at the foot of the screen, then the duel starts right there.",
+    "Skerry Clash: hosting online now has its own Host a triple draft button next to Host a duel. You can still switch it on or off in the lobby before you start." ] },
+  { v: 210, date: '2026-11-16', title: "Skerry Clash: emotes", New: [
+    "Skerry Clash: emotes. A new button at the bottom left of the match (or the E key) opens ten of them: Ahoy!, Well played, Ha ha ha!, Nooo…, Grrr!, Wow!, Hmm…, Oops!, Good luck! and Thanks!, starring the keeper, a shore crab, a puffin, a drowned sailor, a herring gull and a grey seal.",
+    "Skerry Clash: the emote you pick pops up in an animated bubble over your Great Light, with its own sound. Your rival sees and hears it online, and so does everyone watching.",
+    "Skerry Clash: Mute rival in the emote picker hides the other keeper's emotes for the rest of the match.",
+    "Skerry Clash: the bot now emotes now and then: a hello at the start, a laugh when it takes a tower, a grumble when it loses one, and sometimes an answer to yours." ], Changes: [
+    "Skerry Clash: you can send one emote every 1.2 seconds and up to four in any ten seconds. The button dims while you wait." ] },
+  { v: 209, date: '2026-11-16', title: "Skerry Clash: champions buffed", Balance: [
+    "Skerry Clash: all champions are stronger.",
+    "Skerry Clash: Maren Holm: hit points 1900 to 2300, damage 175 to 210. Sea-Green Light lasts 5 seconds (was 4), deals 170 a second (was 130), and its cooldown is 13 seconds (was 16).",
+    "Skerry Clash: Plimsoll: hit points 1500 to 1800, damage 210 to 250. Blood in the Water bites for 3.5 times his damage (was 3), his faster attacks last 5 seconds (was 4), and its cooldown is 9 seconds (was 11)." ] },
+  { v: 208, date: '2026-11-16', title: "Skerry Clash: champion tweaks", Changes: [
+    "Skerry Clash: small sound and balance tweaks to a champion." ] },
   { v: 207, date: '2026-11-16', title: "Skerry Clash: Triple Draft", New: [
     "Skerry Clash: a new Triple Draft mode. Instead of bringing your own deck, both keepers build one on the spot: eight rounds, three cards each round, take one and the other two are gone.",
     "Skerry Clash: both keepers are offered exactly the same cards, and no card comes up twice in one draft. Each round has a theme (a big hitter, something that hits flyers, a spell that strikes, a cheap troop, a building or a spell, or anything goes), so every drafted deck has a fighting chance.",

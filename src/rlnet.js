@@ -191,7 +191,7 @@ function rlnStart() {
 function rlnDraftGo(st, role) {
   RLN.dst = st; RLN.ddk = null; RLN.role = role; RLN.doneG = st.g; RLN.dlost = 0; RLN.msg = '';
   const me = role === 'dhost' ? 0 : 1;
-  rldOpen({ seed: st.seed, net: true, vs: st.names[1 - me], done: d => { RLN.ddk = d.slice(); rlnSendLobby(); rlnDraftCheck(); } });
+  rldOpen({ seed: st.seed, net: true, vs: st.names[1 - me], me, names: st.names.slice(), skins: st.skins.slice(), done: d => { RLN.ddk = d.slice(); rlnSendLobby(); rlnDraftCheck(); } });
   rlnSendLobby(); rlnRender();
 }
 function rlnDraftOff(msg) {
@@ -215,11 +215,11 @@ function rlnDraftCheck() {
   const theirs = rlnDeck(dd.dk), st = RLN.dst;
   if (!rldValid(st.seed, dd.dk) || theirs.join() !== dd.dk.join()) { rlnDraftOff('Your rival’s drafted deck didn’t match the offers, so the draft was called off.'); return; }
   const go = { g: Math.random().toString(36).slice(2, 9), sids: st.sids.slice(), names: st.names.slice(), decks: [RLN.ddk.slice(), theirs], skins: st.skins.slice(), seed: (Math.random() * 4294967295) >>> 0, dr: 2 };
-  RLN.dst = null; RLN.ddk = null; if (typeof rldClose === 'function') rldClose();
+  RLN.dst = null; RLN.ddk = null; if (typeof rldClose === 'function') rldClose(true);
   rlnBegin(go, 'host');
 }
 function rlnBegin(st, role) {
-  if (RLN.dst) { RLN.dst = null; RLN.ddk = null; if (typeof rldClose === 'function') rldClose(); }
+  if (RLN.dst) { RLN.dst = null; RLN.ddk = null; if (typeof rldClose === 'function') rldClose(true); }
   const now = performance.now(), oz = rlnOther() && rlnOf(rlnOther());
   RLN.omr = oz && Number.isFinite(oz.mr) ? oz.mr : null;   // (the other's rating as their lobby gave it, for the rating's sums)
   RLN.side = role === 'host' ? 0 : Math.max(0, st.sids.indexOf(NET.sid)); RLN.gS = {}; RLN.gB = {}; RLN.gQ = {}; RLN.gOut = {};
@@ -367,6 +367,7 @@ function rlnRead() {
     for (const r of z.q) {
       if (!Array.isArray(r) || !Number.isInteger(r[0]) || r[0] <= RLN.lastQ) continue;
       RLN.lastQ = r[0]; took = true; RLN.seen = now;
+      if (typeof r[1] === 'string' && r[1].startsWith('e:')) { if (typeof rlEmote === 'function') rlEmote(1, r[1].slice(2)); continue; }   // (an emote: src/rlemote.js)
       if (typeof r[1] === 'string' && Number.isFinite(r[2]) && Number.isFinite(r[3])) { try { rlPlay(1, r[1], r[2], r[3]); } catch (e) { console.error(e); } }
     }
     if (took) RLN.sendT = Math.min(RLN.sendT, 0.02);   // (the ack and the new unit out with the next frame)
@@ -399,6 +400,7 @@ function rlnRead3() {
       for (const r of z.q) {
         if (!Array.isArray(r) || !Number.isInteger(r[0]) || r[0] <= (RLN.gQ[i] || 0)) continue;
         RLN.gQ[i] = r[0]; took = true; RLN.gS[i] = now;
+        if (typeof r[1] === 'string' && r[1].startsWith('e:')) { if (typeof rlEmote === 'function') rlEmote(i, r[1].slice(2)); continue; }   // (an emote: src/rlemote.js)
         if (typeof r[1] === 'string' && Number.isFinite(r[2]) && Number.isFinite(r[3])) { try { rlPlay(i, r[1], r[2], r[3]); } catch (e) { console.error(e); } }
       }
       if (took) RLN.sendT = Math.min(RLN.sendT, 0.02);
@@ -457,7 +459,8 @@ function rlnBackToLobby() {
 
 (function rlnInit() {
   if (!$('rlMp')) return;
-  if ($('rlMpHost')) $('rlMpHost').addEventListener('click', rlnHost);
+  if ($('rlMpHost')) $('rlMpHost').addEventListener('click', () => { RLN.draft = false; rlnHost(); });
+  if ($('rlMpHostDr')) $('rlMpHostDr').addEventListener('click', () => { RLN.draft = true; rlnHost(); });   // (a triple draft from the start; the host can still change it in the lobby)
   if ($('rlMpStart')) $('rlMpStart').addEventListener('click', rlnStart);
   if ($('rlMpLeave')) $('rlMpLeave').addEventListener('click', rlnLeave);
   if ($('rlMpDraft')) $('rlMpDraft').addEventListener('change', e => { if (!rlnAmHost()) return; RLN.draft = !!e.target.checked; rlnSendLobby(); rlnRender(); });

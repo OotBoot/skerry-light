@@ -880,7 +880,7 @@ function rl3dZone(on) {
   RL3.zoneTex.needsUpdate = true;
 }
 function rl3dDraw(dt) {
-  if (!RL3.ok || !RL.on) return;
+  if (!RL3.ok || !(RL.on || RL.ph === 'draft')) return;   // (and the empty arena behind the triple draft)
   RL3.t += dt; const t = RL3.t, S = RL3.scene;
   rl3dFit();
   RL3.seaU.t.value = t; RL3.seaU.cp.value.copy(RL3.cam.position);

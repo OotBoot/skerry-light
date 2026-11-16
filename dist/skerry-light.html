@@ -1645,6 +1645,18 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 
 /* the triple draft (src/rldraft.js) */
 .rldraftcard { z-index: 21; }
+/* in the arena: the towers stand above, the draft at the foot of the screen */
+#rlUI.drafting .rl-bottom, #rlUI.drafting .rl-emobtn, #rlUI.drafting .rl-emopick, #rlUI.drafting .rl-clock, #rlUI.drafting .rl-pips, #rlUI.drafting .rl-menu, #rlUI.drafting .rl-tw { display: none; }
+#rlUI .rldraftcard { z-index: 45; background: linear-gradient(rgba(7,12,24,0) 0%, rgba(7,12,24,0.25) 35%, rgba(7,12,24,0.75)); place-items: end center; touch-action: pan-y; }
+#rlUI .rldraftcard .card { margin-block: auto 0; background: rgba(10,16,30,0.9); backdrop-filter: blur(2px); gap: 8px; padding-top: 14px; }
+#rlUI .rldraftcard .card h1 { font-size: clamp(1.6rem, 4.5vw, 2.4rem); }
+#rlUI .rldraftcard .rldr-c .rlface { width: min(100%, 112px); }
+#rlUI .rldraftcard .rldr-c { padding: 8px; gap: 6px; }
+#rlUI .rldraftcard .rldr-deck { grid-template-columns: repeat(8, minmax(0, 64px)); justify-content: center; }
+@media (max-height: 900px) { #rlUI .rldraftcard .rldr-txt dl { display: none; } }
+#rlUI .rldraftcard .rldr-line { font-size: 0.88rem; }
+#rlUI .rldraftcard .rldr-slot { min-height: 2.2rem; }
+#rlUI .rldraftcard .rldr-deck .rlface .rlname { display: none; }
 .rldraftcard .card { max-width: 56rem; gap: 10px; }
 .rldraftcard h1 { color: #f4b866; margin-bottom: 0; }
 .rldraftcard p.rldr-theme { margin: 0; font-family: var(--log); font-size: 13px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--lamp); min-height: 1.2em; }
@@ -1677,6 +1689,9 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 .rldr-opt input:disabled + * , .rldr-opt:has(input:disabled) { opacity: 0.85; }
 @media (max-width: 640px) {
   .rldraftcard .card { padding: 18px 12px 14px; }
+  #rlUI .rldraftcard .rldr-txt dl { display: none; }
+  #rlUI .rldraftcard .rldr-c .rlface { width: 72px; }
+  #rlUI .rldraftcard .rldr-deck { grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 3px; padding: 4px; }
   .rldr-offer { grid-template-columns: minmax(0, 1fr); gap: 8px; }
   .rldr-c { flex-direction: row; align-items: stretch; padding: 8px; }
   .rldr-c .rlface { width: 92px; flex: none; align-self: start; }
@@ -1711,6 +1726,33 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 /* [rival] champions in the deck builder: a gold frame and a crown */
 .rlface.rl-champ .rlpic { box-shadow: inset 0 0 0 2px #ffd070, 0 0 12px rgba(255,200,90,0.45); }
 .rlface.rl-champ::after { content: '\265B'; position: absolute; right: 4px; top: 2px; font-size: 15px; color: #ffd070; text-shadow: 0 1px 3px #000; pointer-events: none; }
+/* [rival] the emotes (src/rlemote.js): the button at the bottom left, the picker above it, the bubbles over the Great Lights */
+.rl-emobtn { position: absolute; left: max(10px, env(safe-area-inset-left, 0px)); bottom: max(10px, env(safe-area-inset-bottom, 0px)); width: 50px; height: 50px; border-radius: 50%; display: grid; place-items: center; color: #fff4d6; background: radial-gradient(circle at 50% 35%, rgba(60,80,130,0.95), rgba(14,20,38,0.95)); border: 2px solid rgba(255,216,138,0.55); box-shadow: 0 4px 14px rgba(0,0,0,0.5); cursor: pointer; pointer-events: auto; z-index: 6; transition: transform 0.12s, opacity 0.2s; }
+.rl-emobtn:hover, .rl-emobtn:focus-visible, .rl-emobtn.on { border-color: var(--lamp); color: var(--lamp); outline: none; transform: scale(1.06); }
+.rl-emobtn.wait { opacity: 0.45; }
+.rl-emopick { position: absolute; left: max(10px, env(safe-area-inset-left, 0px)); bottom: calc(max(10px, env(safe-area-inset-bottom, 0px)) + 58px); z-index: 7; pointer-events: auto; padding: 8px; background: rgba(10,14,28,0.94); border: 1px solid rgba(255,216,138,0.4); box-shadow: 0 8px 30px rgba(0,0,0,0.6); border-radius: 12px; display: flex; flex-direction: column; gap: 6px; animation: rlemoin 0.16s ease-out; }
+.rl-emogrid { display: grid; grid-template-columns: repeat(5, 66px); gap: 5px; }
+.rl-emoi { font: inherit; display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 4px 2px 3px; background: rgba(236,228,207,0.07); border: 1px solid rgba(236,228,207,0.16); border-radius: 10px; color: var(--ink); cursor: pointer; }
+.rl-emoi:hover, .rl-emoi:focus-visible { background: rgba(255,216,138,0.16); border-color: var(--lamp); outline: none; }
+.rl-emoi canvas { width: 50px; height: 50px; } .rl-emoi span { font-size: 9.5px; line-height: 1.1; white-space: nowrap; color: var(--muted); }
+.rl-emomute { align-self: stretch; font-size: 12px; padding: 4px 8px; } .rl-emomute.on { border-color: #ff8a70; color: #ffb4a0; }
+#rlName0.muted::after { content: ' (muted)'; font-size: 0.7em; color: var(--muted); font-weight: 400; }
+@keyframes rlemoin { 0% { opacity: 0; transform: translateY(8px) scale(0.96); } 100% { opacity: 1; transform: none; } }
+.rl-emob { position: absolute; left: 0; top: 0; z-index: 5; pointer-events: none; display: flex; flex-direction: column; align-items: center; padding: 4px 10px 6px; background: #fffaf0; border: 3px solid #3a7fe0; border-radius: 18px; box-shadow: 0 6px 20px rgba(0,0,0,0.5); transform: translate(-50%, -100%); transform-origin: 50% 100%; }
+.rl-emob.theirs { border-color: #d8402e; }
+.rl-emob::after { content: ''; position: absolute; left: 50%; bottom: -13px; margin-left: -10px; border: 10px solid transparent; border-top: 11px solid #3a7fe0; border-bottom: 0; }
+.rl-emob.theirs::after { border-top-color: #d8402e; }
+.rl-emob.top { transform: translate(-50%, 0); transform-origin: 50% 0; }
+.rl-emob.top::after { bottom: auto; top: -13px; border-top: 0; border-bottom: 11px solid #d8402e; }
+.rl-emob.top.mine::after { border-bottom-color: #3a7fe0; }
+.rl-emob canvas { width: 84px; height: 84px; }
+.rl-emob b { font-family: var(--display); font-weight: 400; font-size: 15px; color: #1b1e2a; white-space: nowrap; line-height: 1.1; }
+.rl-emob.pop { animation: rlemopop 0.42s cubic-bezier(.2,1.6,.4,1); } .rl-emob.top.pop { animation-name: rlemopopt; }
+.rl-emob.out { opacity: 0; transition: opacity 0.3s; }
+@keyframes rlemopop { 0% { transform: translate(-50%, -100%) scale(0.2); opacity: 0; } 60% { opacity: 1; } 100% { transform: translate(-50%, -100%) scale(1); } }
+@keyframes rlemopopt { 0% { transform: translate(-50%, 0) scale(0.2); opacity: 0; } 60% { opacity: 1; } 100% { transform: translate(-50%, 0) scale(1); } }
+@media (max-width: 560px) { .rl-emobtn { width: 42px; height: 42px; bottom: calc(var(--rl-bot, 170px) + 8px); } .rl-emopick { bottom: calc(var(--rl-bot, 170px) + 56px); } .rl-emogrid { grid-template-columns: repeat(5, 56px); } .rl-emoi canvas { width: 42px; height: 42px; } .rl-emoi span { font-size: 8.5px; } .rl-emob canvas { width: 64px; height: 64px; } }
+#rlUI.spec .rl-emobtn, #rlUI.spec .rl-emopick { display: none; }
 </style>
 </head>
 <body>
@@ -2153,7 +2195,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
         <h2 id="rlMpHead">Duel online · one against one</h2>
         <p class="muted" id="rlMpNote">Looking for another keeper…</p>
         <div id="rlMpOpen" hidden>
-          <div class="btnrow"><button class="tool" id="rlMpHost" type="button">Host a duel</button></div>
+          <div class="btnrow"><button class="tool" id="rlMpHost" type="button">Host a duel</button><button class="tool" id="rlMpHostDr" type="button">Host a triple draft</button></div>
           <div class="warlobbies" id="rlLobbies"></div>
         </div>
         <div class="warlobby" id="rlLobby" hidden>
@@ -2251,6 +2293,18 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
     </div>
     <div class="rl-specbar" id="rlSpecBar" hidden><span class="rl-specbadge">Watching</span><span class="rl-specn" id="rlSpecN"></span><button class="tool" id="rlSpecFlip" type="button" title="Watch from the other keeper's end">Swap ends</button></div><!-- [rival] a watcher's bar, in place of the hand (src/rlhud.js) -->
     <div class="rl-drag" id="rlDrag" hidden aria-hidden="true"><canvas width="150" height="176"></canvas></div>
+    <div class="overlay rldraftcard" id="rlDraftCard" hidden role="dialog" aria-modal="true" aria-labelledby="rlDrHead"><!-- [rival] the triple draft, over the arena (src/rldraft.js) -->
+      <div class="card">
+        <div class="cardtop sticky"><span class="eyebrow" id="rlDrEye">Skerry Clash · triple draft</span><button class="tool closebtn" id="rlDrLeave" type="button">✕ Leave</button></div>
+        <h1 id="rlDrHead">Round 1 of 8</h1>
+        <p class="rldr-theme" id="rlDrTheme"></p>
+        <div class="rldr-time" id="rlDrTime" hidden><i></i><b></b></div>
+        <div class="rldr-offer" id="rlDrOffer" aria-label="Three cards: take one"></div>
+        <p class="rldr-hint" id="rlDrHint" aria-live="polite"></p>
+        <div class="rldr-deckhead"><span>Your deck</span><span id="rlDrAvg"></span></div>
+        <div class="rldr-deck" id="rlDrDeck" aria-label="The cards you have taken"></div>
+      </div>
+    </div>
     <div class="overlay pausecard" id="rlPause" hidden role="dialog" aria-modal="true" aria-labelledby="rlPauseHead">
       <div class="card">
         <h1 id="rlPauseHead">Skerry Clash</h1>
@@ -2544,19 +2598,6 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
     </div>
   </div>
 
-  <div class="overlay rldraftcard" id="rlDraftCard" hidden role="dialog" aria-modal="true" aria-labelledby="rlDrHead"><!-- [rival] the triple draft (src/rldraft.js) -->
-    <div class="card">
-      <div class="cardtop sticky"><span class="eyebrow" id="rlDrEye">Skerry Clash · triple draft</span><button class="tool closebtn" id="rlDrLeave" type="button">✕ Leave</button></div>
-      <h1 id="rlDrHead">Round 1 of 8</h1>
-      <p class="rldr-theme" id="rlDrTheme"></p>
-      <div class="rldr-time" id="rlDrTime" hidden><i></i><b></b></div>
-      <div class="rldr-offer" id="rlDrOffer" aria-label="Three cards: take one"></div>
-      <p class="rldr-hint" id="rlDrHint" aria-live="polite"></p>
-      <div class="rldr-deckhead"><span>Your deck</span><span id="rlDrAvg"></span></div>
-      <div class="rldr-deck" id="rlDrDeck" aria-label="The cards you have taken"></div>
-    </div>
-  </div>
-
   <div class="overlay cratecard wcratecard rlkratecard" id="rlCrateCard" hidden role="dialog" aria-modal="true" aria-labelledby="rlkHead"><!-- [rival] tower crates and skins (src/rlcrates.js) -->
     <div class="card">
       <div class="cardtop sticky"><span class="eyebrow">Skerry Clash · the lampwright</span><button class="tool closebtn" id="rlkClose" type="button">✕ Close</button></div>
@@ -2749,7 +2790,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 // ---- src/config.js ----
 'use strict';
 // The game's version, shown at the top of the main menu. Bump it by one with every change pushed to main.
-var VERSION = 207;
+var VERSION = 211;
 // Skerry Light: tuning, asset paths and lore.
 // World units are metres. The lighthouse stands at the origin on the shoreline (y = 0);
 // north (+y) is open sea. Bearings: 0 = north, positive = east.
@@ -2924,6 +2965,21 @@ document.addEventListener('visibilitychange', () => {
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 211, date: '2026-11-16', title: "Skerry Clash: Triple Draft in the arena", Changes: [
+    "Skerry Clash: the Triple Draft now happens inside the game. The arena comes up with both keepers' towers, and you pick your cards at the foot of the screen, then the duel starts right there.",
+    "Skerry Clash: hosting online now has its own Host a triple draft button next to Host a duel. You can still switch it on or off in the lobby before you start." ] },
+  { v: 210, date: '2026-11-16', title: "Skerry Clash: emotes", New: [
+    "Skerry Clash: emotes. A new button at the bottom left of the match (or the E key) opens ten of them: Ahoy!, Well played, Ha ha ha!, Nooo…, Grrr!, Wow!, Hmm…, Oops!, Good luck! and Thanks!, starring the keeper, a shore crab, a puffin, a drowned sailor, a herring gull and a grey seal.",
+    "Skerry Clash: the emote you pick pops up in an animated bubble over your Great Light, with its own sound. Your rival sees and hears it online, and so does everyone watching.",
+    "Skerry Clash: Mute rival in the emote picker hides the other keeper's emotes for the rest of the match.",
+    "Skerry Clash: the bot now emotes now and then: a hello at the start, a laugh when it takes a tower, a grumble when it loses one, and sometimes an answer to yours." ], Changes: [
+    "Skerry Clash: you can send one emote every 1.2 seconds and up to four in any ten seconds. The button dims while you wait." ] },
+  { v: 209, date: '2026-11-16', title: "Skerry Clash: champions buffed", Balance: [
+    "Skerry Clash: all champions are stronger.",
+    "Skerry Clash: Maren Holm: hit points 1900 to 2300, damage 175 to 210. Sea-Green Light lasts 5 seconds (was 4), deals 170 a second (was 130), and its cooldown is 13 seconds (was 16).",
+    "Skerry Clash: Plimsoll: hit points 1500 to 1800, damage 210 to 250. Blood in the Water bites for 3.5 times his damage (was 3), his faster attacks last 5 seconds (was 4), and its cooldown is 9 seconds (was 11)." ] },
+  { v: 208, date: '2026-11-16', title: "Skerry Clash: champion tweaks", Changes: [
+    "Skerry Clash: small sound and balance tweaks to a champion." ] },
   { v: 207, date: '2026-11-16', title: "Skerry Clash: Triple Draft", New: [
     "Skerry Clash: a new Triple Draft mode. Instead of bringing your own deck, both keepers build one on the spot: eight rounds, three cards each round, take one and the other two are gone.",
     "Skerry Clash: both keepers are offered exactly the same cards, and no card comes up twice in one draft. Each round has a theme (a big hitter, something that hits flyers, a spell that strikes, a cheap troop, a building or a spell, or anything goes), so every drafted deck has a fighting chance.",
@@ -58086,17 +58142,17 @@ const RL_CARDS = [
 //     plimsoll  Blood in the Water: he lunges up to r tiles on to the enemy with the most hit points (on the same dry
 //               rock), bites for mul times his damage as he lands, then strikes fast times as fast for dur seconds
 //     verity    I Want to Help: he shows what he really looks like; every enemy troop within r tiles is stunned for st
-//               seconds, and for dur seconds his hits do mul times and land on everyone within sp tiles of him.
+//               seconds, he mends hl, and for dur seconds his hits do mul times and land on everyone within sp tiles of him.
 //               And always: nothing slows or stuns him (the bell does nothing to him)
 const RL_CHAMPS = [
-  { id: 'maren', n: 'Maren Holm', cost: 5, type: 'troop', hp: 1900, dmg: 175, hit: 1.2, rng: 3, spd: RL_SPD.med, tg: 'any', cnt: 1, size: 0.5,
-    champ: { n: 'Sea-Green Light', cost: 2, cd: 16, cd0: 3, dur: 4, r: 3, dps: 130, tw: 0.35, d: 'For 4 seconds nothing can hurt her, and every enemy within 3 tiles is slowed and drowns 130 a second.' },
+  { id: 'maren', n: 'Maren Holm', cost: 5, type: 'troop', hp: 2300, dmg: 210, hit: 1.2, rng: 3, spd: RL_SPD.med, tg: 'any', cnt: 1, size: 0.5,
+    champ: { n: 'Sea-Green Light', cost: 2, cd: 13, cd0: 3, dur: 5, r: 3, dps: 170, tw: 0.35, d: 'For 5 seconds nothing can hurt her, and every enemy within 3 tiles is slowed and drowns 170 a second.' },
     d: 'The keeper\u2019s wife, come back over the rocks with her lantern. Its light reaches flyers too.' },
-  { id: 'plimsoll', n: 'Plimsoll', cost: 4, type: 'troop', hp: 1500, dmg: 210, hit: 1.1, rng: 0.9, spd: RL_SPD.fast, tg: 'ground', cnt: 1, size: 0.5,
-    champ: { n: 'Blood in the Water', cost: 1, cd: 11, cd0: 2, dur: 4, r: 6, mul: 3, fast: 2, d: 'He lunges up to 6 tiles on to the strongest enemy near him, bites for triple, then strikes twice as fast for 4 seconds.' },
+  { id: 'plimsoll', n: 'Plimsoll', cost: 4, type: 'troop', hp: 1800, dmg: 250, hit: 1.1, rng: 0.9, spd: RL_SPD.fast, tg: 'ground', cnt: 1, size: 0.5,
+    champ: { n: 'Blood in the Water', cost: 1, cd: 9, cd0: 2, dur: 5, r: 6, mul: 3.5, fast: 2, d: 'He lunges up to 6 tiles on to the strongest enemy near him, bites for three and a half times, then strikes twice as fast for 5 seconds.' },
     d: 'The shark in the cabin boy\u2019s blue shoes. He knows the way through the skerries.' },
-  { id: 'verity', n: 'Verity', cost: 4, type: 'troop', hp: 1300, dmg: 150, hit: 1.0, rng: 0.8, spd: RL_SPD.med, tg: 'ground', cnt: 1, size: 0.45,
-    champ: { n: 'I Want to Help', cost: 3, cd: 20, cd0: 4, dur: 6, r: 4, st: 1.5, mul: 2.5, sp: 1.6, d: 'He stops smiling: enemy troops within 4 tiles freeze for 1.5 s, and for 6 seconds his hits do two and a half times, on everyone round him.' },
+  { id: 'verity', n: 'Verity', cost: 4, type: 'troop', hp: 1600, dmg: 180, hit: 1.0, rng: 0.8, spd: RL_SPD.med, tg: 'ground', cnt: 1, size: 0.45,
+    champ: { n: 'I Want to Help', cost: 2, cd: 16, cd0: 4, dur: 6, r: 4, st: 1.5, mul: 2.5, sp: 1.6, hl: 650, d: 'He stops smiling and mends 650: enemy troops within 4 tiles freeze for 1.5 s, and for 6 seconds his hits do two and a half times, on everyone round him.' },
     d: 'A small yellow orb, smiling, who says he wants to help. Nothing slows him or stuns him.' },
 ];
 const RL_CARD = {}; for (const c of RL_CARDS.concat(RL_CHAMPS)) RL_CARD[c.id] = c;
@@ -58203,7 +58259,7 @@ const RL_PSPD = { bolt: 15, harpoon: 11, shot: 20, stone: 10, oil: 7, lantern: 6
 const RL_ARC = { grenade: 1, mortar: 1 };
 const RL_PK = ['bolt', 'harpoon', 'shot', 'stone', 'oil', 'lantern', 'flare', 'ball', 'lob', 'keg', 'herring', 'net', 'grenade', 'rocket', 'song', 'bolt2', 'mortar', 'gale'];
 const RL_FK = ['deploy', 'spell', 'die', 'tower', 'hit', 'boom', 'revive', 'bolt', 'ring', 'flash', 'go', 'dbl', 'ot', 'spawn', 'end', 'crown', 'splash',
-  'heal', 'leap', 'chain', 'pull', 'blast', 'oil', 'shield', 'burst', 'summon', 'spin', 'champ'];
+  'heal', 'leap', 'chain', 'pull', 'blast', 'oil', 'shield', 'burst', 'summon', 'spin', 'champ', 'emote'];   // (emote: { c the emote's id, side }, src/rlemote.js)
 const RL_ZK = ['haar', 'wave', 'mend', 'haste', 'dot', 'whirl'];
 const RL_ST = ['idle', 'walk', 'hit'];
 const RL_BOTNM = { easy: 'Apprentice Pell', normal: 'Keeper Morrow', hard: 'Old Grisewood' };
@@ -58328,6 +58384,7 @@ function rlAbility(side) {
     rlFx('hit', { c: u.c, x: T.x, y: T.y, side, r: 2 });
   } else if (u.c === 'verity') {
     for (const e of rlEnemiesIn(side, u.x, u.y, A.r, false, true)) if (!e.bld) { e.stun = Math.max(e.stun, A.st); e.lock = 0; }
+    u.hp = Math.min(u.max, u.hp + (A.hl || 0)); u.mendT = 1; rlFx('heal', { c: u.c, x: u.x, y: u.y, side, r: 0 });   // (and he mends)
   }
   rlFx('champ', { c: u.c, x: u.x, y: u.y, side, r: A.r });
   return true;
@@ -58855,7 +58912,7 @@ function rlPos(u) { const a = rlAlpha(), px = u.px == null ? u.x : u.px, py = u.
 
 // ---------- every frame ----------
 function rlFrame(dt) {
-  if (!RL.on) return;
+  if (!RL.on) { if (RL.ph === 'draft' && typeof rl3dDraw === 'function') { RL.clk += dt; rl3dDraw(dt); } return; }   // (the triple draft, over the empty arena: src/rldraft.js)
   const paused = !$('rlPause').hidden && RL.mode === 'bot';
   if (RL.mode === 'net' && typeof rlnTick === 'function') { try { rlnTick(dt); } catch (e) { console.error(e); } }
   if (!paused) {
@@ -58883,6 +58940,7 @@ function rlEnter() {
   $('rlUI').hidden = false; $('rlPause').hidden = true; $('rlEnd').hidden = true;
   document.body.classList.add('rlon');
   RL.sndSeen = RL.nid; RL.sndP = 0;
+  try { if (typeof loadVerityVoice === 'function') loadVerityVoice(); } catch (e) {}   // (Verity's voice, ready for when he's set down)
   if (typeof rl3dReset === 'function') rl3dReset();
   if (typeof rlHudReset === 'function') rlHudReset();
   rlSnd('start');
@@ -58934,6 +58992,7 @@ function rlSnd(k, o) {
     else if (k === 'dbl' || k === 'ot') { sfxHorn(0, 0.8); }
     else if (k === 'ring') sfxBellFar(0, 0.45 * v);
     else if (k === 'horn') sfxHorn(0, 0.5);
+    else if (k === 'verity') { try { loadVerityVoice(); } catch (e) {} if (typeof sfxVerity === 'function') sfxVerity(1, 0.9); }   // (set down, he says he wants to help)
     else if (k === 'champ') {   // a champion's ability: Maren's moan and a swell, Plimsoll's splash, Verity's own voice dropping low
       if (o.c === 'maren') { if (!P('moan', { vol: 0.45 })) tone(160, 'sawtooth', 0.1, 0.06, 0.8, { to: 110 }); tone(392, 'sine', 0.2, 0.05, 1.2, { to: 523 }); }
       else if (o.c === 'plimsoll') { sfxSplash(0, 0.8); noise('lowpass', 600, 0.8, 0.005, 0.25, 0.3); }
@@ -58969,7 +59028,7 @@ function rlFxSound() {
   for (const f of RL.FX) {
     if (f.id <= RL.sndSeen) continue; hi = Math.max(hi, f.id);
     const C = RL_CARD[f.c];
-    if (f.k === 'deploy') { rlSnd(C && C.type === 'building' ? 'build' : 'deploy', { vol: mine(f.side) ? 1 : 0.6 }); rlSnd('card', { c: f.c }); }
+    if (f.k === 'deploy') { rlSnd(C && C.type === 'building' ? 'build' : 'deploy', { vol: mine(f.side) ? 1 : 0.6 }); rlSnd('card', { c: f.c }); if (f.c === 'verity') rlSnd('verity'); }
     else if (f.k === 'spell') rlSnd(!C ? 'spell' : C.ab === 'lob' || C.ab === 'summon' ? 'launch' : C.ab === 'wave' || C.ab === 'pull' || C.ab === 'whirl' ? 'wave' : C.ab === 'haar' || C.ab === 'dot' ? 'haar' : C.ab === 'bolts' || C.ab === 'mend' || C.ab === 'haste' ? 'spell' : 'flare');
     else if (f.k === 'champ') rlSnd('champ', { c: f.c });
     else if (f.k === 'burst' || f.k === 'summon') rlSnd('boom', { vol: 0.6 });
@@ -60056,7 +60115,7 @@ function rl3dZone(on) {
   RL3.zoneTex.needsUpdate = true;
 }
 function rl3dDraw(dt) {
-  if (!RL3.ok || !RL.on) return;
+  if (!RL3.ok || !(RL.on || RL.ph === 'draft')) return;   // (and the empty arena behind the triple draft)
   RL3.t += dt; const t = RL3.t, S = RL3.scene;
   rl3dFit();
   RL3.seaU.t.value = t; RL3.seaU.cp.value.copy(RL3.cam.position);
@@ -60462,6 +60521,7 @@ function rlHudReset() {
   $('rlToast').classList.remove('on'); $('rlCount').classList.remove('on');
   if (typeof rl3dGhost === 'function') rl3dGhost(null);
   rlHudTowers(true);
+  if (typeof rlEmoReset === 'function') rlEmoReset();
 }
 // a card's face: Meta's art if it's there, else a coloured face with the name
 function rlFace(cv, id) {
@@ -60500,6 +60560,7 @@ function rlHudTowers(force) {
 // every frame
 function rlHud(dt) {
   if (!RL.on) return;
+  if (typeof rlEmoHud === 'function') rlEmoHud(dt);   // the emotes (src/rlemote.js)
   const me = RL.me, they = 1 - me, oil = RL.oil[me];
   // the clock and the lights out
   const ck = $('rlClock'), cs = rlClock(RL.ph === 'count' ? RLC.LEN : RL.left);
@@ -60646,16 +60707,309 @@ function rlPlace(i, p) {
   $('rlAgain').addEventListener('click', () => { if (RL.mode !== 'bot') return; const lvl = RL.bot.lvl; $('rlEnd').hidden = true; if (RL.draft && typeof rldBot === 'function') { rlQuit(); rldBot(lvl); return; } RL.on = false; rlPlayBot(lvl); });   // (a drafted duel: draft again)
   addEventListener('keydown', e => {
     if (state !== 'rival') return;
+    if (typeof RLDR !== 'undefined' && RLDR.on) return;   // (the triple draft has the keys: src/rldraft.js)
     if (e.target && /INPUT|TEXTAREA|SELECT/.test(e.target.tagName) && e.key !== 'Escape') return;
     e.stopImmediatePropagation();
-    if (e.key === 'Escape') { e.preventDefault(); if (!$('rlEnd').hidden) return; if (RH.sel >= 0) { RH.sel = -1; return; } rlPauseOpen($('rlPause').hidden); return; }
+    if (e.key === 'Escape') { e.preventDefault(); if (!$('rlEnd').hidden) return; if (typeof EM !== 'undefined' && EM.open) { rlEmoOpen(false); return; } if (RH.sel >= 0) { RH.sel = -1; return; } rlPauseOpen($('rlPause').hidden); return; }
     if (!$('rlPause').hidden || e.repeat) return;
     const n = '1234'.indexOf(e.key); if (n >= 0) { e.preventDefault(); rlSel(n); }
     else if ((e.key === 'q' || e.key === 'Q' || e.key === '5') && typeof rlTryAb === 'function') { e.preventDefault(); rlTryAb(); }
+    if ((e.key === 'e' || e.key === 'E') && typeof rlEmoOpen === 'function') { e.preventDefault(); rlEmoOpen(); }
   }, true);
   addEventListener('keyup', e => { if (state === 'rival') e.stopImmediatePropagation(); }, true);
   addEventListener('resize', () => { if (RL.on && typeof rl3dResize === 'function') rl3dResize(); });
   ui.addEventListener('contextmenu', e => e.preventDefault());
+})();
+
+// ---- src/rlemote.js ----
+'use strict';
+// Skerry Clash: the emotes. Ten little pictures of the coast's own folk (the keeper, a shore crab, a herring gull, a
+// puffin, a drowned sailor, a grey seal), each with a word and its own few notes, that a keeper may send in the middle
+// of a duel. The button at the bottom left (or E) opens the picker; the one chosen pops up as a bubble over the
+// sender's Great Light for a couple of seconds, moving (the keeper waves, the crab laughs till it shakes, the gull's
+// fish falls), and both keepers and everyone watching see and hear it. Mute in the picker hides the rival's.
+//
+// How it travels: an emote is an event like any other (rlFx('emote', { c: its id, side })), so it rides in the host's
+// snapshot (src/rl.js, rlSnap) to the guest and the watchers; the guest's goes to the host in its list of taps as the
+// card 'e:<id>' (rlnRequest, src/rlnet.js), and the host's rlnRead hands it to rlEmote. The guest shows its own at
+// once rather than waiting for it to come back. Spam: a keeper may send one every 1.2 s and four in any ten seconds
+// (the host allows a little more, so a guest's sends bunched up by the network still go through).
+// The bot (against the computer) now and then has its say too: a greeting at the start, a laugh when it puts out a
+// light, a grumble when it loses one, and sometimes an answer to yours; never more than seven in a match.
+// Drawn here on small canvases each frame (rlEmoDraw); the sound is synth (tone and noise, src/audio.js).
+
+const RL_EMO = [
+  { id: 'em_ahoy', w: 'Ahoy!', who: 'keeper' }, { id: 'em_gg', w: 'Well played', who: 'keeper' },
+  { id: 'em_laugh', w: 'Ha ha ha!', who: 'crab' }, { id: 'em_cry', w: 'Nooo…', who: 'keeper' },
+  { id: 'em_angry', w: 'Grrr!', who: 'crab' }, { id: 'em_wow', w: 'Wow!', who: 'puffin' },
+  { id: 'em_think', w: 'Hmm…', who: 'drowned' }, { id: 'em_oops', w: 'Oops!', who: 'gull' },
+  { id: 'em_luck', w: 'Good luck!', who: 'seal' }, { id: 'em_thanks', w: 'Thanks!', who: 'gull' },
+];
+const RL_EMI = {}; RL_EMO.forEach(e => { RL_EMI[e.id] = e; });
+const RLE = { GAP: 1.2, N: 4, WIN: 10, LIFE: 2.6, BOTMAX: 7 };
+const EM = { open: false, mute: false, seen: 0, bub: [null, null], sent: [], host: [[], []], bot: { n: 0, at: 0, q: [], seen: 0 }, cv: [] };
+
+// ---------- the rules (on the host) ----------
+// may this side send now? t is the clock of whoever's counting; gap and n the limits
+function rlEmoOk(list, t, gap, n) { while (list.length && t - list[0] > RLE.WIN) list.shift(); return !(list.length && t - list[list.length - 1] < gap) && list.length < n; }
+// the host (or the screen against the bot) puts an emote out for side
+function rlEmote(side, id) {
+  if (!RL.on || !RL_EMI[id] || (side !== 0 && side !== 1) || (RL.ph !== 'play' && RL.ph !== 'count')) return false;
+  const t = performance.now() / 1000; if (!rlEmoOk(EM.host[side], t, RLE.GAP * 0.6, RLE.N + 1)) return false;
+  EM.host[side].push(t); rlFx('emote', { c: id, x: 9, y: side ? 29 : 3, side }); return true;
+}
+
+// ---------- this screen's keeper ----------
+function rlEmoCan() { return RL.on && !rlIsSpec() && (RL.ph === 'play' || RL.ph === 'count'); }
+function rlEmoWait() { const t = performance.now() / 1000; return rlEmoOk(EM.sent, t, RLE.GAP, RLE.N) ? 0 : 1; }
+function rlEmoSend(id) {
+  if (!rlEmoCan() || !RL_EMI[id]) return false;
+  const t = performance.now() / 1000; if (!rlEmoOk(EM.sent, t, RLE.GAP, RLE.N)) { if (typeof rlHudSay === 'function') rlHudSay('Wait a moment before the next one', 1, true); return false; }
+  EM.sent.push(t); rlEmoOpen(false);
+  if (rlIsGuest()) { if (typeof rlnRequest === 'function') rlnRequest({ c: 'e:' + id, x: 0, y: 0 }); rlEmoShow(RL.me, id); }
+  else rlEmote(RL.me, id);
+  if (RL.mode === 'bot') rlEmoBotHear(id);
+  return true;
+}
+function rlEmoOpen(on) {
+  EM.open = on == null ? !EM.open : !!on; if (!rlEmoCan()) EM.open = false;
+  const p = $('rlEmoPick'); if (!p) return; p.hidden = !EM.open; $('rlEmoBtn').classList.toggle('on', EM.open);
+  if (EM.open) EM.cv.forEach((cv, i) => rlEmoDraw(cv, RL_EMO[i].id, 0.7, true));
+}
+function rlEmoMute(on) {
+  EM.mute = on == null ? !EM.mute : !!on;
+  const b = $('rlEmoMute'); if (b) { b.textContent = EM.mute ? 'Unmute rival' : 'Mute rival'; b.classList.toggle('on', EM.mute); }
+  if ($('rlName0')) $('rlName0').classList.toggle('muted', EM.mute);
+  if (EM.mute) EM.bub[1 - RL.me] = null;
+}
+
+// ---------- the bubbles ----------
+function rlEmoShow(side, id) {
+  if (EM.mute && side !== RL.me && !rlIsSpec()) return;
+  EM.bub[side] = { id, t0: performance.now() / 1000 };
+  rlEmoSnd(id, side === RL.me || rlIsSpec() ? 1 : 0.8);
+}
+function rlEmoReset() {
+  EM.open = false; EM.seen = RL.nid - 1; EM.bub = [null, null]; EM.sent = []; EM.host = [[], []]; EM.bot = { n: 0, at: 0, q: [], seen: RL.nid - 1 };
+  rlEmoMute(false); rlEmoOpen(false);
+  const b = $('rlEmoBtn'); if (b) b.hidden = rlIsSpec();
+  for (const i of [0, 1]) { const d = $('rlEmoB' + i); if (d) d.hidden = true; }
+}
+// every frame, from rlHud: new emotes in the events, the bot's, and the bubbles where the Great Lights are
+function rlEmoHud(dt) {
+  if (!RL.on) return;
+  let hi = EM.seen;
+  for (const f of RL.FX) {
+    if (f.k !== 'emote' || f.id <= EM.seen) continue; hi = Math.max(hi, f.id);
+    if (rlIsGuest() && !rlIsSpec() && f.side === RL.me) continue;   // (the guest showed its own already)
+    rlEmoShow(f.side, f.c);
+  }
+  EM.seen = hi;
+  if (RL.mode === 'bot') rlEmoBot();
+  if (EM.open && !rlEmoCan()) rlEmoOpen(false);
+  const btn = $('rlEmoBtn'); if (btn) btn.classList.toggle('wait', !!rlEmoWait());
+  const now = performance.now() / 1000;
+  for (const side of [0, 1]) {
+    const d = $('rlEmoB' + side), b = EM.bub[side]; if (!d) continue;
+    if (!b || now - b.t0 > RLE.LIFE || RL.ph === 'over') { EM.bub[side] = null; if (!d.hidden) d.hidden = true; continue; }
+    const T = RL.T[side * 3], p = T && typeof rl3dProject === 'function' ? rl3dProject(T.x, T.y, (typeof RL_G0 !== 'undefined' ? RL_G0 : 0.6) + 7.4) : null;
+    const mine = side === RL.me, top = !mine;   // (a watcher's RL.me is the end it watches from)
+    let x = p ? p.x : innerWidth / 2, y = p ? p.y : (top ? 120 : innerHeight - 220);
+    // (keep it on the screen and clear of the bars at the top and the hand at the bottom)
+    const bot = $('rlBottom') && !$('rlBottom').hidden && !rlIsSpec() ? $('rlBottom').getBoundingClientRect().top : innerHeight;
+    x = Math.max(80, Math.min(innerWidth - 80, x)); y = top ? Math.max(66, y + 10) : Math.min(bot - 8, y);
+    if (d.hidden || d.dataset.t !== String(b.t0)) { d.dataset.t = String(b.t0); d.hidden = false; d.className = 'rl-emob ' + (mine ? 'mine' : 'theirs') + (top ? ' top' : ''); d.lastChild.textContent = RL_EMI[b.id].w; d.classList.remove('pop'); void d.offsetWidth; d.classList.add('pop'); }
+    d.classList.toggle('out', now - b.t0 > RLE.LIFE - 0.3);
+    d.style.left = Math.round(x) + 'px'; d.style.top = Math.round(y) + 'px';
+    rlEmoDraw(d.firstChild, b.id, now - b.t0);
+  }
+}
+
+// ---------- the bot's say ----------
+function rlEmoBotQ(id, delay, p) { if (EM.bot.n + EM.bot.q.length >= RLE.BOTMAX || Math.random() > p) return; EM.bot.q.push({ id, at: performance.now() / 1000 + delay }); }
+const rlEmoPickOf = a => a[Math.floor(Math.random() * a.length)];
+function rlEmoBotHear(id) {
+  const ans = { em_ahoy: ['em_ahoy', 'em_luck'], em_luck: ['em_thanks', 'em_luck'], em_gg: ['em_thanks', 'em_gg'], em_laugh: ['em_angry', 'em_think'], em_angry: ['em_laugh', 'em_oops'], em_cry: ['em_laugh', 'em_think'], em_wow: ['em_thanks'], em_thanks: ['em_gg'] }[id] || ['em_think', 'em_wow'];
+  rlEmoBotQ(rlEmoPickOf(ans), 1 + Math.random() * 1.4, 0.4);
+}
+function rlEmoBot() {
+  const B = EM.bot, bot = 1 - RL.me, now = performance.now() / 1000;
+  if (!B.started && RL.ph === 'count') { B.started = true; rlEmoBotQ(rlEmoPickOf(['em_ahoy', 'em_luck']), 0.6 + Math.random(), 0.35); }
+  let hi = B.seen;
+  for (const f of RL.FX) {
+    if (f.id <= B.seen) continue; hi = Math.max(hi, f.id);
+    if (f.k === 'crown') { if (f.side === bot) rlEmoBotQ(rlEmoPickOf(['em_laugh', 'em_wow', 'em_laugh']), 0.8 + Math.random(), 0.6); else rlEmoBotQ(rlEmoPickOf(['em_cry', 'em_angry', 'em_oops']), 0.8 + Math.random(), 0.5); }
+  }
+  B.seen = hi;
+  if (RL.ph === 'play' && RL.left < 20 && !B.late && RL.crowns[bot] > RL.crowns[RL.me]) { B.late = true; rlEmoBotQ('em_gg', 0.5, 0.3); }
+  if (B.q.length && B.q[0].at <= now) { const e = B.q.shift(); if ($('rlPause').hidden && rlEmote(bot, e.id)) { B.n++; } }
+}
+
+// ---------- the sounds ----------
+function rlEmoSnd(id, v) {
+  if (typeof AUD === 'undefined' || !AUD.ctx || typeof tone !== 'function') return;
+  v = (v == null ? 1 : v) * 0.8;
+  const T = (f, ty, a, p, d, o) => tone(f, ty, a, p * v, d, o);
+  try {
+    if (id === 'em_ahoy') { T(700, 'sine', 0.02, 0.14, 0.22, { to: 1250 }); T(1250, 'sine', 0.01, 0.12, 0.35, { delay: 0.22, to: 1050 }); }
+    else if (id === 'em_gg') { [523, 659, 784].forEach((f, i) => T(f, 'triangle', 0.01, 0.12, 0.5, { delay: i * 0.09 })); }
+    else if (id === 'em_laugh') { for (let i = 0; i < 5; i++) { T(520 - i * 30, 'square', 0.005, 0.05, 0.08, { delay: i * 0.11, to: 420 - i * 30 }); } }
+    else if (id === 'em_cry') { T(620, 'sine', 0.05, 0.14, 0.5, { to: 380 }); T(560, 'sine', 0.05, 0.12, 0.6, { delay: 0.45, to: 300 }); }
+    else if (id === 'em_angry') { T(110, 'sawtooth', 0.02, 0.1, 0.45, { to: 85 }); T(140, 'sawtooth', 0.02, 0.06, 0.4, { delay: 0.05, to: 100 }); if (typeof noise === 'function') noise('lowpass', 500, 1, 0.01, 0.06 * v, 0.35); }
+    else if (id === 'em_wow') { T(320, 'triangle', 0.02, 0.14, 0.45, { to: 960 }); T(960, 'sine', 0.01, 0.08, 0.4, { delay: 0.35 }); }
+    else if (id === 'em_think') { T(196, 'sine', 0.05, 0.12, 0.6); T(247, 'sine', 0.05, 0.1, 0.6, { delay: 0.3 }); }
+    else if (id === 'em_oops') { T(880, 'triangle', 0.01, 0.12, 0.35, { to: 260 }); if (typeof noise === 'function') noise('bandpass', 1400, 1.5, 0.01, 0.07 * v, 0.25, { delay: 0.32 }); }
+    else if (id === 'em_luck') { [392, 494, 587, 784].forEach((f, i) => T(f, 'sine', 0.01, 0.11, 0.35, { delay: i * 0.08 })); }
+    else if (id === 'em_thanks') { T(784, 'sine', 0.01, 0.13, 0.3); T(1047, 'sine', 0.01, 0.13, 0.45, { delay: 0.14 }); }
+  } catch (e) {}
+}
+
+// ---------- the pictures ----------
+// each drawn on a square canvas, s its size; t seconds since it popped (fixed for the picker's still faces)
+function rlEmoDraw(cv, id, t, still) {
+  const E = RL_EMI[id]; if (!cv || !E) return;
+  const c = cv.getContext('2d'), s = cv.width, k = s / 100, P = Math.PI;
+  c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, s, s); c.setTransform(k, 0, 0, k, 0, 0);
+  c.lineJoin = c.lineCap = 'round';
+  const W = Math.sin(t * 9), bob = still ? 0 : Math.sin(t * 5) * 1.6;
+  const circ = (x, y, r, f, st, lw) => { c.beginPath(); c.arc(x, y, r, 0, P * 2); if (f) { c.fillStyle = f; c.fill(); } if (st) { c.strokeStyle = st; c.lineWidth = lw || 2.5; c.stroke(); } };
+  const ell = (x, y, rx, ry, rot, f, st, lw) => { c.beginPath(); c.ellipse(x, y, rx, ry, rot || 0, 0, P * 2); if (f) { c.fillStyle = f; c.fill(); } if (st) { c.strokeStyle = st; c.lineWidth = lw || 2.5; c.stroke(); } };
+  const line = (pts, st, lw) => { c.beginPath(); pts.forEach((q, i) => i ? c.lineTo(q[0], q[1]) : c.moveTo(q[0], q[1])); c.strokeStyle = st; c.lineWidth = lw || 2.5; c.stroke(); };
+  const INK = '#1b1e2a';
+  // the eyes and mouths every face shares
+  const eyes = (x, y, gap, kind, r) => {
+    r = r || 4;
+    for (const sx of [-1, 1]) {
+      const ex = x + sx * gap;
+      if (kind === 'shut') line([[ex - r, y], [ex, y + r * 0.7], [ex + r, y]], INK, 2.4);
+      else if (kind === 'happy') line([[ex - r, y + 1], [ex, y - r * 0.8], [ex + r, y + 1]], INK, 2.4);
+      else if (kind === 'cross') { line([[ex - r, y - r * 0.4 - sx * 2], [ex + r, y + r * 0.4 - sx * 2]], INK, 2.6); circ(ex, y + 2, r * 0.6, INK); }
+      else if (kind === 'big') { circ(ex, y, r * 1.6, '#fff', INK, 2); circ(ex, y + 0.5, r * 0.8, INK); circ(ex + 1, y - 1, r * 0.3, '#fff'); }
+      else if (kind === 'up') { circ(ex, y, r * 1.1, '#fff', INK, 1.8); circ(ex + 1.5, y - 1.8, r * 0.55, INK); }
+      else if (kind === 'wink' && sx > 0) line([[ex - r, y], [ex, y - r * 0.6], [ex + r, y]], INK, 2.4);
+      else { circ(ex, y, r * 0.75, INK); circ(ex + 1, y - 1, r * 0.25, '#fff'); }
+    }
+  };
+  // characters, centred about (50, 52)
+  const keeper = (face, mouth, opt) => {
+    opt = opt || {}; const y = 52 + bob;
+    ell(50, y + 6, 26, 24, 0, '#f1c9a0', INK, 2.5);                                  // the face
+    c.beginPath(); c.moveTo(26, y + 6); c.quadraticCurveTo(28, y + 40, 50, y + 42); c.quadraticCurveTo(72, y + 40, 74, y + 6); c.quadraticCurveTo(62, y + 22, 50, y + 20); c.quadraticCurveTo(38, y + 22, 26, y + 6); c.fillStyle = '#eef0f2'; c.fill(); c.strokeStyle = INK; c.lineWidth = 2.2; c.stroke();   // the beard
+    ell(39, y + 13, 5, 3, 0, 'rgba(230,110,100,0.45)'); ell(61, y + 13, 5, 3, 0, 'rgba(230,110,100,0.45)');
+    eyes(50, y + 4, 10, face);
+    if (mouth === 'smile') { c.beginPath(); c.arc(50, y + 17, 7, 0.15 * P, 0.85 * P); c.strokeStyle = INK; c.lineWidth = 2.4; c.stroke(); }
+    else if (mouth === 'open') ell(50, y + 21, 6, 5 + (still ? 0 : Math.abs(W)), 0, '#7a2a2a', INK, 2);
+    else if (mouth === 'sad') { c.beginPath(); c.arc(50, y + 26, 7, 1.15 * P, 1.85 * P); c.strokeStyle = INK; c.lineWidth = 2.4; c.stroke(); }
+    const tip = opt.tip || 0;                                                          // the cap (tipped by tip)
+    c.save(); c.translate(50, y - 14 - tip * 6); c.rotate(-tip * 0.35);
+    c.beginPath(); c.moveTo(-27, 2); c.lineTo(27, 2); c.lineTo(22, -14); c.quadraticCurveTo(0, -22, -22, -14); c.closePath(); c.fillStyle = '#1f3a66'; c.fill(); c.strokeStyle = INK; c.lineWidth = 2.4; c.stroke();
+    c.fillStyle = '#16233d'; c.fillRect(-28, 0, 56, 6); c.strokeRect(-28, 0, 56, 6);
+    circ(0, -8, 4, '#ffcf5a', INK, 1.5);                                               // the lamp badge
+    c.restore();
+  };
+  const crab = (face, mouth, shake, col) => {
+    const jx = shake ? Math.sin(t * 38) * 2 : 0, y = 58 + bob; col = col || '#e0502e';
+    c.save(); c.translate(jx, 0);
+    for (const sx of [-1, 1]) {
+      line([[50 + sx * 22, y + 8], [50 + sx * 34, y + 22], [50 + sx * 30, y + 30]], INK, 3);
+      line([[50 + sx * 18, y + 12], [50 + sx * 26, y + 28]], INK, 3);
+      const cl = shake ? Math.abs(Math.sin(t * 14)) * 0.5 : 0.25;                       // the claws, snapping
+      c.save(); c.translate(50 + sx * 34, y - 14); c.rotate(sx * -0.4);
+      ell(0, 0, 11, 9, 0, col, INK, 2.4); c.beginPath(); c.moveTo(0, 0); c.lineTo(sx * -4, -10); c.lineTo(sx * 10, -6 + cl * 12); c.closePath(); c.fillStyle = '#fff6e6'; c.fill();
+      c.restore();
+      line([[50 + sx * 22, y - 4], [50 + sx * 30, y - 8]], INK, 3);
+      line([[50 + sx * 8, y - 14], [50 + sx * 10, y - 24]], INK, 2.4);                      // the eyestalks
+    }
+    ell(50, y, 26, 18, 0, col, INK, 2.6);
+    eyes(50, y - 26, 10, face, 4.2);
+    if (mouth === 'laugh') { c.beginPath(); c.arc(50, y + 2, 9, 0, P); c.closePath(); c.fillStyle = '#6a1c1c'; c.fill(); c.strokeStyle = INK; c.lineWidth = 2; c.stroke(); }
+    else if (mouth === 'grit') { c.fillStyle = '#fff'; c.fillRect(40, y + 2, 20, 7); c.strokeStyle = INK; c.lineWidth = 2; c.strokeRect(40, y + 2, 20, 7); line([[45, y + 2], [45, y + 9]], INK, 1.5); line([[50, y + 2], [50, y + 9]], INK, 1.5); line([[55, y + 2], [55, y + 9]], INK, 1.5); }
+    c.restore();
+  };
+  const gull = (face, mouth, opt) => {
+    opt = opt || {}; const y = 54 + bob;
+    ell(50, y + 26, 30, 16, 0, '#d8dde3', INK, 2.4);                                    // the body
+    ell(50, y, 22, 21, 0, '#fbfcfd', INK, 2.5);                                         // the head
+    eyes(50, y - 4, 9, face, 3.6);
+    c.beginPath(); c.moveTo(42, y + 6); c.lineTo(72, y + 9); c.lineTo(42, y + 14); c.closePath(); c.fillStyle = '#f5c631'; c.fill(); c.strokeStyle = INK; c.lineWidth = 2; c.stroke();   // the beak
+    circ(64, y + 11, 2, '#d9402a');
+    if (mouth === 'open') { c.beginPath(); c.moveTo(42, y + 12); c.lineTo(66, y + 16); c.lineTo(42, y + 18); c.closePath(); c.fillStyle = '#f5c631'; c.fill(); c.stroke(); }
+  };
+  const puffin = (face) => {
+    const hop = still ? 0 : -Math.abs(Math.sin(t * 7)) * 5, y = 54 + hop;
+    ell(50, y + 26, 26, 17, 0, '#22252e', INK, 2.4); ell(50, y + 30, 16, 12, 0, '#f4f2ee');
+    circ(50, y, 23, '#22252e', INK, 2.5); ell(50, y + 3, 17, 15, 0, '#f2f0ea');
+    eyes(50, y - 2, 8, face, 3.4);
+    c.beginPath(); c.moveTo(43, y + 7); c.quadraticCurveTo(50, y + 2, 57, y + 7); c.lineTo(50, y + 26); c.closePath(); c.fillStyle = '#ee7a2a'; c.fill(); c.strokeStyle = INK; c.lineWidth = 2; c.stroke();
+    line([[45, y + 12], [55, y + 12]], '#f6c742', 2);
+    ell(50, y + 19, 4, 3, 0, '#7a2a2a');                                                // a gasp
+  };
+  const drowned = (face) => {
+    const y = 52 + bob;
+    ell(50, y + 4, 24, 26, 0, '#8fb8a8', INK, 2.5);
+    for (let i = 0; i < 6; i++) { const x = 30 + i * 8, sw = still ? 0 : Math.sin(t * 3 + i) * 2.5; line([[x, y - 18], [x - 2 + sw, y - 6], [x + sw, y + 8]], '#2f6a3a', 3.2); }   // the weed hair
+    eyes(50, y + 2, 9, face, 3.8);
+    line([[44, y + 17], [52, y + 15], [57, y + 17]], INK, 2.4);
+    c.save(); c.translate(64, y + 22); c.rotate(-0.4); ell(0, 0, 7, 9, 0, '#8fb8a8', INK, 2.2); c.restore();   // a hand at the chin
+    const q = still ? 1 : Math.min(1, t * 2);                                           // the question mark, rising
+    c.globalAlpha = q; c.font = 'bold 26px Georgia, serif'; c.fillStyle = '#ffd88a'; c.strokeStyle = INK; c.lineWidth = 3; c.strokeText('?', 76, y - 14 - (still ? 0 : (t % 1.2) * 6)); c.fillText('?', 76, y - 14 - (still ? 0 : (t % 1.2) * 6)); c.globalAlpha = 1;
+  };
+  const seal = (face) => {
+    const y = 56 + bob, fl = still ? 0.3 : Math.sin(t * 10) * 0.5;
+    ell(50, y + 20, 30, 20, 0, '#8d96a3', INK, 2.4);
+    circ(50, y, 22, '#9aa3b0', INK, 2.5);
+    for (const sx of [-1, 1]) { c.save(); c.translate(50 + sx * 26, y + 18); c.rotate(sx * (0.9 + fl)); ell(0, -8, 6, 12, 0, '#7f8896', INK, 2.2); c.restore(); }
+    eyes(50, y - 4, 9, face, 4.6);
+    ell(50, y + 6, 8, 5, 0, '#b9c0ca'); circ(50, y + 3, 3, INK);
+    c.beginPath(); c.arc(50, y + 8, 5, 0.1 * P, 0.9 * P); c.strokeStyle = INK; c.lineWidth = 2; c.stroke();
+    for (const sx of [-1, 1]) for (let i = -1; i <= 1; i++) line([[50 + sx * 9, y + 6 + i * 2], [50 + sx * 20, y + 4 + i * 4]], INK, 1);
+  };
+  // the extras: tears, steam, a heart, a fish, a waving hand, sparkles
+  const tears = () => { for (const sx of [-1, 1]) { const d = still ? 0.5 : (t * 1.4 + (sx > 0 ? 0.5 : 0)) % 1; c.globalAlpha = 1 - d * 0.6; ell(50 + sx * 12, 60 + d * 26 + bob, 3, 4.5, 0, '#6ac0ff', INK, 1.2); c.globalAlpha = 1; } };
+  const steam = () => { for (const sx of [-1, 1]) for (let i = 0; i < 2; i++) { const d = still ? 0.4 : (t * 1.6 + i * 0.5) % 1; c.globalAlpha = 1 - d; circ(50 + sx * (20 + d * 10), 22 - d * 18, 4 + d * 5, '#e8e8f0', INK, 1.2); c.globalAlpha = 1; } };
+  const heart = (x, y, r) => { c.beginPath(); c.moveTo(x, y + r * 0.9); c.bezierCurveTo(x - r * 1.6, y - r * 0.2, x - r * 0.6, y - r * 1.4, x, y - r * 0.4); c.bezierCurveTo(x + r * 0.6, y - r * 1.4, x + r * 1.6, y - r * 0.2, x, y + r * 0.9); c.fillStyle = '#ff5a7a'; c.fill(); c.strokeStyle = INK; c.lineWidth = 2; c.stroke(); };
+  const sparks = n => { for (let i = 0; i < n; i++) { const a = i / n * P * 2 + t, r = 40 + (still ? 0 : Math.sin(t * 6 + i) * 3), x = 50 + Math.cos(a) * r, y = 50 + Math.sin(a) * r * 0.8; line([[x - 3, y], [x + 3, y]], '#ffd84a', 2); line([[x, y - 3], [x, y + 3]], '#ffd84a', 2); } };
+  if (id === 'em_ahoy') {
+    keeper('happy', 'open');
+    const a = still ? 0.3 : Math.sin(t * 10) * 0.45; c.save(); c.translate(84, 64 + bob); c.rotate(a);   // the hand, waving
+    line([[0, 18], [0, 0]], '#1f3a66', 7); circ(0, -6, 8, '#f1c9a0', INK, 2.2); for (let i = -1; i <= 1; i++) line([[i * 4, -12], [i * 5, -19]], INK, 2); c.restore();
+  } else if (id === 'em_gg') {
+    keeper('shut', 'smile', { tip: still ? 0.6 : Math.max(0, Math.sin(Math.min(t, 1.6) * P / 1.6 * 2)) }); sparks(still ? 0 : 5);
+  } else if (id === 'em_laugh') { crab('shut', 'laugh', true); if (!still) { c.font = 'bold 13px Georgia, serif'; c.fillStyle = '#ffe6a0'; c.strokeStyle = INK; c.lineWidth = 3; const o = (t * 2) % 1; c.globalAlpha = 1 - o; c.strokeText('HA', 70, 20 - o * 10); c.fillText('HA', 70, 20 - o * 10); c.strokeText('HA', 8, 30 - o * 10); c.fillText('HA', 8, 30 - o * 10); c.globalAlpha = 1; } }
+  else if (id === 'em_cry') { keeper('shut', 'sad'); tears(); }
+  else if (id === 'em_angry') { const pu = still ? 0 : (Math.sin(t * 12) + 1) / 2; crab('cross', 'grit', !still && t < 0.8, `rgb(${210 + pu * 40},${60 - pu * 30},${30})`); steam(); }
+  else if (id === 'em_wow') { puffin('big'); sparks(still ? 4 : 6); }
+  else if (id === 'em_think') drowned('up');
+  else if (id === 'em_oops') {
+    gull('big', 'open');
+    const d = still ? 0.4 : Math.min(1, t * 0.9);                                       // the herring, falling
+    c.save(); c.translate(58 + d * 12, 72 + d * d * 16); c.rotate(0.6 + d * 2.5); ell(0, 0, 12, 4.5, 0, '#b8c8d8', INK, 1.8); c.beginPath(); c.moveTo(11, 0); c.lineTo(17, -5); c.lineTo(17, 5); c.closePath(); c.fillStyle = '#b8c8d8'; c.fill(); c.stroke(); c.restore();
+  } else if (id === 'em_luck') { seal('happy'); const s = still ? 1 : 0.85 + Math.sin(t * 6) * 0.15; c.save(); c.translate(82, 22); c.scale(s, s); c.font = 'bold 22px Georgia, serif'; c.fillStyle = '#ffd84a'; c.strokeStyle = INK; c.lineWidth = 3; c.strokeText('★', -9, 8); c.fillText('★', -9, 8); c.restore(); }
+  else if (id === 'em_thanks') { gull('happy'); const hy = still ? 0 : -((t * 0.9) % 1) * 16, s = still ? 1 : 1 + Math.sin(t * 8) * 0.12; c.globalAlpha = still ? 1 : 1 - Math.max(0, (t * 0.9) % 1 - 0.6) * 2; heart(80, 26 + hy, 9 * s); heart(18, 36 + hy * 0.7, 6 * s); c.globalAlpha = 1; }
+}
+
+// ---------- the controls ----------
+(function rlEmoInit() {
+  const ui = $('rlUI'); if (!ui) return;
+  const btn = document.createElement('button'); btn.id = 'rlEmoBtn'; btn.className = 'rl-emobtn'; btn.type = 'button'; btn.title = 'Emotes (E)'; btn.setAttribute('aria-label', 'Emotes');
+  btn.innerHTML = '<svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="M4 4h16a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-9l-5 4v-4H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z" fill="currentColor"/><circle cx="8.5" cy="10" r="1.3" fill="#141a2c"/><circle cx="15.5" cy="10" r="1.3" fill="#141a2c"/><path d="M8.5 13q3.5 2.6 7 0" stroke="#141a2c" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>';
+  const pick = document.createElement('div'); pick.id = 'rlEmoPick'; pick.className = 'rl-emopick'; pick.hidden = true; pick.setAttribute('role', 'menu');
+  const grid = document.createElement('div'); grid.className = 'rl-emogrid';
+  RL_EMO.forEach((e, i) => {
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'rl-emoi'; b.title = e.w; b.setAttribute('role', 'menuitem');
+    const cv = document.createElement('canvas'); cv.width = cv.height = 96; EM.cv[i] = cv;
+    const s = document.createElement('span'); s.textContent = e.w; b.append(cv, s);
+    b.addEventListener('click', ev => { ev.stopPropagation(); rlEmoSend(e.id); });
+    grid.append(b);
+  });
+  const mute = document.createElement('button'); mute.type = 'button'; mute.id = 'rlEmoMute'; mute.className = 'tool rl-emomute'; mute.textContent = 'Mute rival';
+  mute.addEventListener('click', ev => { ev.stopPropagation(); rlEmoMute(); });
+  pick.append(grid, mute);
+  btn.addEventListener('click', ev => { ev.stopPropagation(); rlEmoOpen(); });
+  for (const side of [0, 1]) { const d = document.createElement('div'); d.id = 'rlEmoB' + side; d.className = 'rl-emob'; d.hidden = true; d.setAttribute('aria-hidden', 'true'); const cv = document.createElement('canvas'); cv.width = cv.height = 160; const w = document.createElement('b'); d.append(cv, w); ui.append(d); }
+  ui.append(btn, pick);
+  // (a click anywhere else closes the picker)
+  ui.addEventListener('pointerdown', e => { if (EM.open && !pick.contains(e.target) && e.target !== btn && !btn.contains(e.target)) rlEmoOpen(false); });
 })();
 
 // ---- src/rlart.js ----
@@ -62883,6 +63237,10 @@ function rkMerge(d, takeLooks) {
 // own: a big hitter, two rounds of things that hit flyers, a striking spell, two cheap troops, a building or a spell,
 // and one where anything goes. The order of the rounds is shuffled by the seed.
 //
+// The draft happens in the game itself: the arena comes up, empty but for the six towers, seen from your own end
+// (rldScene: RL.ph 'draft' with RL.on false, so the match doesn't run and the online code still counts it as the lobby;
+// src/rl.js's rlFrame only draws), and the three cards sit over it at the foot of the screen. When both decks are
+// done rlStart begins the duel on the same screen; leaving or a draft called off goes back to the menu (rlExit).
 // Against the bot (rldBot, #rlDraftBot on the Skerry Clash card) there's no clock; the bot drafts from the same offers
 // (rldBotPicks: easy at random, normal and hard keeping its average oil near 3.6 and taking the stronger card). Online
 // (src/rlnet.js) each pick has 15 seconds, and a card is taken for you at random when it runs out; when you're done
@@ -62892,8 +63250,10 @@ function rkMerge(d, takeLooks) {
 // The global API:
 //   rldOffers(seed)          -> [[3 ids] x 8] and .th, the theme of each round
 //   rldValid(seed, deck)     -> true if each of the 8 was one of its round's three
-//   rldOpen(o)               the draft screen: o = { seed, net (online, with the clock), vs (the rival's name), done(deck) }
-//   rldClose()               shuts it without finishing (rldOpen's done is not called)
+//   rldOpen(o)               the draft, in the arena: o = { seed, net (online, with the clock), vs (the rival's name),
+//                            me (0 or 1, which end you see it from), names, skins, done(deck) }
+//   rldClose(keep)           shuts it without finishing (done is not called), and leaves the arena unless keep (the
+//                            duel is about to begin there)
 //   rldRival(n)              online: how many the rival has picked, for the line under the offers
 //   RLDR                     the draft under way (on, seed, offers, picks, net)
 
@@ -62946,10 +63306,22 @@ function rldOpen(o) {
   try { audioInit(); } catch (e) {}
   const card = $('rlDraftCard'); if (!card) return;
   for (const id of ['rlDeckCard', 'rlCrateCard']) { const e = $(id); if (e) e.hidden = true; }
+  rldScene(o);
   card.hidden = false; card.scrollTop = 0; rldRender();
   clearInterval(RLDR.tm); RLDR.tm = setInterval(rldClock, 100);
 }
-function rldClose() { RLDR.on = false; RLDR.done = null; clearInterval(RLDR.tm); RLDR.tm = null; const c = $('rlDraftCard'); if (c) c.hidden = true; }
+function rldClose(keep) {
+  RLDR.on = false; RLDR.done = null; clearInterval(RLDR.tm); RLDR.tm = null; const c = $('rlDraftCard'); if (c) c.hidden = true;
+  if ($('rlUI')) $('rlUI').classList.remove('drafting');
+  if (!keep && RL.ph === 'draft' && !RL.on && typeof rlExit === 'function') rlExit();
+}
+// the arena for the draft: the match set up as rlStart does (towers, names, skins), then held before it begins
+function rldScene(o) {
+  if (RL.on || typeof rlStart !== 'function') return;
+  rlStart({ mode: 'bot', me: o.me === 1 ? 1 : 0, names: o.names, skins: o.skins });
+  Object.assign(RL, { on: false, ph: 'draft', FX: [] });
+  $('rlUI').classList.add('drafting'); $('rlPause').hidden = true;
+}
 function rldRival(n) { if (RLDR.rival === n) return; RLDR.rival = n; if (RLDR.on) rldHint(); }
 function rldPick(id) {
   const r = RLDR.picks.length;
@@ -63014,14 +63386,15 @@ function rldLeave() {
   if (!RLDR.on) return;
   const net = RLDR.net; rldClose();
   if (net && typeof rlnLeave === 'function') rlnLeave();
+  try { sfxTick(); } catch (e) {}
 }
 // against the bot: draft, the bot drafts from the same offers, and the duel begins
 function rldBot(lvl) {
   lvl = typeof lvl === 'string' ? lvl : ($('rlBotLvl') && $('rlBotLvl').value) || 'normal'; if (!RL_BOTNM[lvl]) lvl = 'normal';
   const seed = (Math.random() * 4294967295) >>> 0;
-  rldOpen({ seed, vs: RL_BOTNM[lvl], done: deck => {
-    rldClose();
-    const sk = typeof rlSkinMine === 'function' ? rlSkinMine() : '';
+  const sk = typeof rlSkinMine === 'function' ? rlSkinMine() : '';
+  rldOpen({ seed, vs: RL_BOTNM[lvl], me: 0, names: [rlMyName(), RL_BOTNM[lvl]], skins: [sk || '', ''], done: deck => {
+    rldClose(true);
     rlStart({ mode: 'bot', me: 0, names: [rlMyName(), RL_BOTNM[lvl]], decks: [deck, rldBotPicks(rldOffers(seed), lvl)], skins: [sk || '', ''], lvl, draft: 1 });
   } });
 }
@@ -63208,7 +63581,7 @@ function rlnStart() {
 function rlnDraftGo(st, role) {
   RLN.dst = st; RLN.ddk = null; RLN.role = role; RLN.doneG = st.g; RLN.dlost = 0; RLN.msg = '';
   const me = role === 'dhost' ? 0 : 1;
-  rldOpen({ seed: st.seed, net: true, vs: st.names[1 - me], done: d => { RLN.ddk = d.slice(); rlnSendLobby(); rlnDraftCheck(); } });
+  rldOpen({ seed: st.seed, net: true, vs: st.names[1 - me], me, names: st.names.slice(), skins: st.skins.slice(), done: d => { RLN.ddk = d.slice(); rlnSendLobby(); rlnDraftCheck(); } });
   rlnSendLobby(); rlnRender();
 }
 function rlnDraftOff(msg) {
@@ -63232,11 +63605,11 @@ function rlnDraftCheck() {
   const theirs = rlnDeck(dd.dk), st = RLN.dst;
   if (!rldValid(st.seed, dd.dk) || theirs.join() !== dd.dk.join()) { rlnDraftOff('Your rival’s drafted deck didn’t match the offers, so the draft was called off.'); return; }
   const go = { g: Math.random().toString(36).slice(2, 9), sids: st.sids.slice(), names: st.names.slice(), decks: [RLN.ddk.slice(), theirs], skins: st.skins.slice(), seed: (Math.random() * 4294967295) >>> 0, dr: 2 };
-  RLN.dst = null; RLN.ddk = null; if (typeof rldClose === 'function') rldClose();
+  RLN.dst = null; RLN.ddk = null; if (typeof rldClose === 'function') rldClose(true);
   rlnBegin(go, 'host');
 }
 function rlnBegin(st, role) {
-  if (RLN.dst) { RLN.dst = null; RLN.ddk = null; if (typeof rldClose === 'function') rldClose(); }
+  if (RLN.dst) { RLN.dst = null; RLN.ddk = null; if (typeof rldClose === 'function') rldClose(true); }
   const now = performance.now(), oz = rlnOther() && rlnOf(rlnOther());
   RLN.omr = oz && Number.isFinite(oz.mr) ? oz.mr : null;   // (the other's rating as their lobby gave it, for the rating's sums)
   Object.assign(RLN, { st, g: st.g, doneG: st.g, role, seq: 0, q: [], lastQ: 0, ws: 0, wsSeen: -1, wsSeenAny: -1, sendT: 0, sentAt: 0, seen: now, lastB: null, chunks: null, quit: null, ended: false, acked: false, msg: '' });
@@ -63368,6 +63741,7 @@ function rlnRead() {
     for (const r of z.q) {
       if (!Array.isArray(r) || !Number.isInteger(r[0]) || r[0] <= RLN.lastQ) continue;
       RLN.lastQ = r[0]; took = true; RLN.seen = now;
+      if (typeof r[1] === 'string' && r[1].startsWith('e:')) { if (typeof rlEmote === 'function') rlEmote(1, r[1].slice(2)); continue; }   // (an emote: src/rlemote.js)
       if (typeof r[1] === 'string' && Number.isFinite(r[2]) && Number.isFinite(r[3])) { try { rlPlay(1, r[1], r[2], r[3]); } catch (e) { console.error(e); } }
     }
     if (took) RLN.sendT = Math.min(RLN.sendT, 0.02);   // (the ack and the new unit out with the next frame)
@@ -63422,7 +63796,8 @@ function rlnBackToLobby() {
 
 (function rlnInit() {
   if (!$('rlMp')) return;
-  if ($('rlMpHost')) $('rlMpHost').addEventListener('click', rlnHost);
+  if ($('rlMpHost')) $('rlMpHost').addEventListener('click', () => { RLN.draft = false; rlnHost(); });
+  if ($('rlMpHostDr')) $('rlMpHostDr').addEventListener('click', () => { RLN.draft = true; rlnHost(); });   // (a triple draft from the start; the host can still change it in the lobby)
   if ($('rlMpStart')) $('rlMpStart').addEventListener('click', rlnStart);
   if ($('rlMpLeave')) $('rlMpLeave').addEventListener('click', rlnLeave);
   if ($('rlMpDraft')) $('rlMpDraft').addEventListener('change', e => { if (!rlnAmHost()) return; RLN.draft = !!e.target.checked; rlnSendLobby(); rlnRender(); });
@@ -63826,6 +64201,7 @@ requestAnimationFrame(frame);
 <!-- [rival] the keeper across the water -->
 <!-- [rival] the 3D view -->
 <!-- [rival] the hand, the oil, the clock, the end card -->
+<!-- [rival] the emotes: picker, bubbles, sounds, the bot's say -->
 <!-- [rival] the cards' pictures and faces -->
 <!-- [rival] the champions: their models, pictures, ability button and the bot's use of them -->
 <!-- [rival] your decks, the deck builder, the save -->
