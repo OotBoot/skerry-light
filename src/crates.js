@@ -1003,18 +1003,21 @@ function openCrate(type) {
   spinReel(prize, type, reduceMotion ? 600 : 6000, () => finishOpen(prize));
 }
 
-// scroll the reel into view, then spin a strip of loot that settles on `prize` under the marker
-function spinReel(prize, type, dur, done) {
+// scroll the reel into view, then spin a strip of loot that settles on `prize` under the marker. Other crates borrow it
+// (src/rlcrates.js): `o` names their own sheet, reel and strip ids, how to draw a card, and what fills the reel.
+function spinReel(prize, type, dur, done, o) {
+  o = o || {};
+  const card = o.card || itemCard, filler = o.filler || (() => rollFiller(type));
   // bring the reel into view by scrolling the sheet up and down only (never sideways)
   requestAnimationFrame(() => {
-    const sheet = $('crateCard'), r = $('crateReel').getBoundingClientRect(), sr = sheet.getBoundingClientRect();
+    const sheet = $(o.sheet || 'crateCard'), r = $(o.reel || 'crateReel').getBoundingClientRect(), sr = sheet.getBoundingClientRect();
     if (sheet.scrollLeft) sheet.scrollLeft = 0;   // (before the smooth scroll: setting it after cancels it)
     if (r.top < sr.top + 70 || r.bottom > sr.bottom - 10) sheet.scrollTo({ top: sheet.scrollTop + r.top - sr.top - sr.height * 0.25, behavior: reduceMotion ? 'auto' : 'smooth' });
   });
-  const reel = $('crateReel'), strip = $('crateStrip');
+  const reel = $(o.reel || 'crateReel'), strip = $(o.strip || 'crateStrip');
   strip.textContent = '';
   const N = 56, WIN = 48;
-  for (let i = 0; i < N; i++) strip.appendChild(itemCard(i === WIN ? prize : rollFiller(type), 'reelitem'));
+  for (let i = 0; i < N; i++) strip.appendChild(card(i === WIN ? prize : filler(), 'reelitem'));
   const cardW = strip.firstChild.getBoundingClientRect().width + 8;   // card plus gap
   const viewW = reel.getBoundingClientRect().width;
   const end = WIN * cardW + cardW / 2 - viewW / 2 + (Math.random() - 0.5) * cardW * 0.7;
@@ -1026,7 +1029,7 @@ function spinReel(prize, type, dur, done) {
     const x = end * e;
     strip.style.transform = 'translateX(' + (-x) + 'px)';
     const idx = Math.floor((x + viewW / 2) / cardW);
-    if (idx !== lastIdx) { lastIdx = idx; sfxTick(); }
+    if (idx !== lastIdx) { lastIdx = idx; try { sfxTick(); } catch (e) {} }
     if (t < 1) requestAnimationFrame(step);
     else done();
   };

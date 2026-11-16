@@ -6,7 +6,7 @@
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
-  { v: 212, date: '2026-11-16', title: "Skerry Clash: Three keepers", New: [
+  { v: 213, date: '2026-11-16', title: "Skerry Clash: Three keepers", New: [
     "Skerry Clash: a new Three keepers mode, every keeper for themselves. Three rocks share one round skerry, cut apart by three channels, with a causeway over each one to your two neighbours.",
     "Skerry Clash: each keeper has a Great Light and two Lamp Towers, one facing each neighbour. Your troops go for whichever rival is nearer, so you can send a push at either side.",
     "Skerry Clash: lose your Great Light and you're out, with your other towers and troops. A keeper who leaves an online match is out too. The last Great Light burning wins. At time the keeper with the most towers standing wins, with overtime if it's level.",
@@ -14,6 +14,9 @@ var PATCH_NOTES = [
     "Skerry Clash: the third keeper plays in gold, with their name, oil and towers in a plate of their own, and the end card shows the finishing order.",
     "Skerry Clash: Three keepers matches earn tower crates, one for finishing and one more for a win, but aren't rated and don't change your duel record." ], Balance: [
     "Skerry Clash: in Three keepers, towers have four fifths of a duel tower's health, since every keeper's oil is split between two rivals." ] },
+  { v: 212, date: '2026-11-16', title: "Skerry Clash: crate opening", Changes: [
+    "Skerry Clash: the Lampwright's Crate now opens with the same reel as the Skerry Crate, spinning through towers and settling on your prize.",
+    "Skerry Clash: Open all on the Lampwright's Crate now spins the reel to your best pull before showing the haul, like the other crates." ] },
   { v: 211, date: '2026-11-16', title: "Skerry Clash: Triple Draft in the arena", Changes: [
     "Skerry Clash: the Triple Draft now happens inside the game. The arena comes up with both keepers' towers, and you pick your cards at the foot of the screen, then the duel starts right there.",
     "Skerry Clash: hosting online now has its own Host a triple draft button next to Host a duel. You can still switch it on or off in the lobby before you start." ] },
