@@ -6,6 +6,13 @@
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 203, date: '2026-11-16', title: "Skerry Clash: watch duels live", New: [
+    "Skerry Clash: watch any online duel live. Every duel in the list now has a Watch button, whether it's waiting, full or under way. Up to 8 people can watch one duel.",
+    "Skerry Clash: watchers see the whole board, both keepers' names, lights put out, oil and the clock, and can swap ends to follow either keeper. They can't play, and watching never touches anyone's rating or crates.",
+    "Skerry Clash: both keepers see how many people are watching, and the lobby lists the watchers by name.",
+    "Skerry Clash: an invite link to a duel that's full or already started now lets you watch it instead.",
+    "Skerry Clash: watchers stay for the rematch, and you can stop watching at any time from the menu." ], Balance: [
+    "Skerry Clash: Shipwreck can now only be dropped on your own rock, wherever a troop could go, instead of anywhere on the arena." ] },
   { v: 202, date: '2026-11-16', title: "Skerry Clash: ratings and a leaderboard", New: [
     "Skerry Clash: every player now has an MMR rating, starting at 1000. It belongs to your username, and only your save can play under that name.",
     "Skerry Clash: online duels move your rating the most, depending on how your rating compares to your rival's. Matches against the bot count at half weight, against a fixed rating for each level: Easy 800, Normal 1100, Hard 1300. A draw counts as half a win.",
