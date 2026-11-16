@@ -6,6 +6,8 @@
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 205, date: '2026-11-16', title: "Skerry Clash: Shipwreck cost", Balance: [
+    "Skerry Clash: Shipwreck now costs 5 oil, down from 6. Now that it can only land on your own rock it's a defensive card, and its price comes down to match. Its damage and size are unchanged." ] },
   { v: 204, date: '2026-11-16', title: "Skerry Clash: watch duels live", New: [
     "Skerry Clash: watch any online duel live. Every duel in the list now has a Watch button, whether it's waiting, full or under way. Up to 8 people can watch one duel.",
     "Skerry Clash: watchers see the whole board, both keepers' names, lights put out, oil and the clock, and can swap ends to follow either keeper. They can't play, and watching never touches anyone's rating or crates.",
