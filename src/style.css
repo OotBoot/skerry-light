@@ -1481,6 +1481,34 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 .rl-endov .btnrow { justify-content: center; }
 /* [rival] watching a duel (src/rlnet.js, src/rlhud.js): no hand, a bar with the watchers and Swap ends instead */
 .rl-woil { font-size: 11px; color: var(--rl-oil); font-variant-numeric: tabular-nums; }
+.rl-woil::after { content: ''; display: block; width: 100%; min-width: 60px; height: 4px; margin-top: 2px; background: linear-gradient(90deg, var(--rl-oil) calc(var(--o, 0) * 100%), rgba(255,255,255,0.12) 0); }
+.rl-whand { display: flex; gap: 3px; margin-top: 3px; }
+.rl-whand[hidden] { display: none; }
+.rl-wc { position: relative; display: block; width: 42px; flex: none; border: 1px solid rgba(236,228,207,0.18); transition: transform 0.15s ease, border-color 0.15s; }
+.rl-wc canvas { display: block; width: 100%; height: auto; }
+#rlUI .rl-wc b { position: absolute; overflow: visible; text-overflow: clip; left: -4px; top: -5px; min-width: 16px; height: 16px; padding: 0 2px; border-radius: 50%; background: var(--rl-oil); color: #10162a; font-family: var(--log); font-weight: 700; font-size: 11px; line-height: 16px; text-align: center; z-index: 1; }
+.rl-wc.short canvas { filter: grayscale(0.7) brightness(0.6); }
+.rl-wc.nx { width: 32px; margin-left: 4px; opacity: 0.7; align-self: flex-end; }
+.rl-wc.sel { border-color: var(--lamp); transform: translateY(-4px); box-shadow: 0 0 10px rgba(255,200,90,0.85); }
+.rl-who.mine .rl-whand { flex-direction: row-reverse; } .rl-who.mine .rl-wc.nx { margin: 0 4px 0 0; }
+/* [rival] a watcher's view of a triple draft (src/rldraft.js rldWatch) */
+.rldr-watch { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.rldr-watch[hidden] { display: none; }
+.rldr-wk { display: flex; flex-direction: column; gap: 6px; padding: 8px; background: rgba(4,7,14,0.6); border: 1px solid rgba(236,228,207,0.14); border-top: 3px solid var(--rl-me); min-width: 0; }
+.rldr-wk.them { border-top-color: var(--rl-them); }
+.rldr-wkhead { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.rldr-wkhead b { font-family: var(--display); font-weight: 400; font-size: 1.1rem; color: #b4d4ff; } .rldr-wk.them .rldr-wkhead b { color: #ffb0a4; }
+.rldr-wkhead span { font-family: var(--log); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--lamp); }
+.rldr-woffer { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; min-height: 4rem; align-items: center; }
+.rldr-woffer p { grid-column: 1 / -1; margin: 0; text-align: center; }
+.rldr-wc { display: grid; place-items: center; transition: transform 0.2s ease, opacity 0.3s ease, filter 0.2s; }
+.rldr-wc .rlface { width: min(100%, 92px); }
+.rldr-wc.took { transform: translateY(-4px) scale(1.05); filter: drop-shadow(0 0 10px rgba(255,216,138,0.9)); }
+.rldr-wc.left { opacity: 0.25; transform: scale(0.94); }
+#rlUI .rldraftcard .rldr-wdeck { grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 3px; padding: 4px; }
+.rldr-wdeck .rlface .rlname { display: none; }
+.rldr-wavg { font-family: var(--log); font-size: 11px; color: var(--muted); }
+@media (max-width: 560px) { .rldr-watch { gap: 6px; } .rldr-wk { padding: 5px; } .rldr-wkhead span { font-size: 9px; } .rl-wc { width: 22px; } .rl-wc.nx { width: 18px; } #rlUI .rl-wc b { min-width: 12px; height: 12px; font-size: 8px; line-height: 12px; } }
 .rl-watchn { display: block; margin-top: 2px; font-size: 10px; letter-spacing: 0.06em; color: #cfe4ff; opacity: 0.85; }
 #rlUI.spec .rl-bottom { display: none; }
 .rl-specbar { position: absolute; left: 50%; transform: translateX(-50%); bottom: max(10px, env(safe-area-inset-bottom, 0px)); display: flex; align-items: center; gap: 10px; padding: 6px 8px 6px 12px; max-width: calc(100% - 32px); background: rgba(10,14,28,0.82); border: 1px solid rgba(236,228,207,0.2); }

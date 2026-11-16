@@ -530,10 +530,10 @@
     <canvas id="rlCv"></canvas>
     <div class="rl-flash" id="rlFlash" aria-hidden="true"></div>
     <div class="rl-top" id="rlTop">
-      <div class="rl-who theirs"><b id="rlName0">Rival</b><span class="rl-pips" id="rlCr0" aria-label="Lights they have put out"></span><small class="rl-woil" id="rlWOil0" hidden></small></div>
-      <div class="rl-who theirs gold" id="rlWho2" hidden><b id="rlName2">Rival</b><span class="rl-pips" id="rlCr2" aria-label="Lights still burning"></span><small class="rl-woil" id="rlWOil2" hidden></small></div><!-- [rival] the third keeper (src/rl3.js) -->
+      <div class="rl-who theirs"><b id="rlName0">Rival</b><span class="rl-pips" id="rlCr0" aria-label="Lights they have put out"></span><small class="rl-woil" id="rlWOil0" hidden></small><span class="rl-whand" id="rlWHand0" hidden aria-label="Their hand"></span></div>
+      <div class="rl-who theirs gold" id="rlWho2" hidden><b id="rlName2">Rival</b><span class="rl-pips" id="rlCr2" aria-label="Lights still burning"></span><small class="rl-woil" id="rlWOil2" hidden></small><span class="rl-whand" id="rlWHand2" hidden aria-label="Their hand"></span></div><!-- [rival] the third keeper (src/rl3.js) -->
       <div class="rl-clock" id="rlClockBox"><b id="rlClock">3:00</b><small id="rlClockSub">Time left</small><small class="rl-watchn" id="rlWatchN" hidden></small></div>
-      <div class="rl-who mine"><b id="rlName1">You</b><span class="rl-pips" id="rlCr1" aria-label="Lights you have put out"></span><small class="rl-woil" id="rlWOil1" hidden></small></div>
+      <div class="rl-who mine"><b id="rlName1">You</b><span class="rl-pips" id="rlCr1" aria-label="Lights you have put out"></span><small class="rl-woil" id="rlWOil1" hidden></small><span class="rl-whand" id="rlWHand1" hidden aria-label="Their hand"></span></div>
       <button class="rl-menu" id="rlMenuBtn" type="button" aria-label="Menu" title="Menu (Esc)">&#9776;</button>
     </div>
     <div class="rl-tw" id="rlTw" aria-hidden="true"></div>
@@ -557,6 +557,7 @@
         <div class="cardtop sticky"><span class="eyebrow" id="rlDrEye">Skerry Clash · triple draft</span><button class="tool closebtn" id="rlDrLeave" type="button">✕ Leave</button></div>
         <h1 id="rlDrHead">Round 1 of 8</h1>
         <p class="rldr-theme" id="rlDrTheme"></p>
+        <div class="rldr-watch" id="rlDrWatch" hidden aria-live="polite"></div><!-- [rival] a watcher sees both keepers drafting (src/rldraft.js rldWatch) -->
         <div class="rldr-time" id="rlDrTime" hidden><i></i><b></b></div>
         <div class="rldr-offer" id="rlDrOffer" aria-label="Three cards: take one"></div>
         <div class="rldr-rival" id="rlDrRival" hidden aria-label="Your rival's three this round"></div>

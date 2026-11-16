@@ -29,9 +29,13 @@
 //   rldClose(keep)           shuts it without finishing (done is not called), and leaves the arena unless keep (the
 //                            duel is about to begin there)
 //   rldRival(n)              online: how many the rival has picked, for the line under the offers
-//   RLDR                     the draft under way (on, seed, offers, picks, net)
+//   rldWatch(o)              a watcher's view of an online draft (src/rlnet.js): o = { seed, names, skins }; the same
+//                            arena and card, but with both keepers side by side, each with the round they're on, the
+//                            three they're choosing from and the deck so far. A watcher can't pick.
+//   rldWatchSet(i, picks)    how far keeper i has got (their picks so far, from their lobby presence's dd.pk)
+//   RLDR                     the draft under way (as above; spec, wo both keepers' offers, wp [picks, picks] when watching)
 
-var RLDR = { on: false, seed: 0, offers: [], picks: [], net: false, vs: '', done: null, rival: -1, t0: 0, tm: null, lock: false };
+var RLDR = { spec: false, wp: [[], []], wn: ['', ''], pick: null, on: false, seed: 0, offers: [], picks: [], net: false, vs: '', done: null, rival: -1, t0: 0, tm: null, lock: false };
 const RLD_ROUNDS = 8, RLD_PICK = 15;   // (seconds a pick online)
 const RLD_TH = { win: 'A big hitter', air: 'Something that hits flyers', hit: 'A spell that strikes', cheap: 'A cheap troop', tool: 'A building or a spell', any: 'Anything goes' };
 // the pools each theme draws from (as the bot deals its decks, src/rlbot.js)
@@ -83,7 +87,7 @@ function rldBotPicks(O, lvl) {
 function rldOpen(o) {
   o = o || {};
   const me = o.me === 1 ? 1 : 0, OB = rldOffersBoth(o.seed >>> 0);
-  Object.assign(RLDR, { on: true, seed: o.seed >>> 0, me, offers: OB[me], ro: OB[1 - me], picks: [], net: !!o.net, vs: o.vs || '', done: o.done || null, rival: -1, t0: performance.now(), lock: false });
+  Object.assign(RLDR, { spec: false, on: true, seed: o.seed >>> 0, me, offers: OB[me], ro: OB[1 - me], picks: [], net: !!o.net, vs: o.vs || '', done: o.done || null, pick: o.pick || null, rival: -1, t0: performance.now(), lock: false });
   try { audioInit(); } catch (e) {}
   const card = $('rlDraftCard'); if (!card) return;
   for (const id of ['rlDeckCard', 'rlCrateCard']) { const e = $(id); if (e) e.hidden = true; }
@@ -92,7 +96,7 @@ function rldOpen(o) {
   clearInterval(RLDR.tm); RLDR.tm = setInterval(rldClock, 100);
 }
 function rldClose(keep) {
-  RLDR.on = false; RLDR.done = null; clearInterval(RLDR.tm); RLDR.tm = null; const c = $('rlDraftCard'); if (c) c.hidden = true;
+  RLDR.on = false; RLDR.spec = false; RLDR.pick = null; if ($('rlDraftCard')) $('rlDraftCard').classList.remove('spec'); RLDR.done = null; clearInterval(RLDR.tm); RLDR.tm = null; const c = $('rlDraftCard'); if (c) c.hidden = true;
   if ($('rlUI')) $('rlUI').classList.remove('drafting');
   if (!keep && RL.ph === 'draft' && !RL.on && typeof rlExit === 'function') rlExit();
 }
@@ -116,8 +120,9 @@ function rldTheirs() {
 }
 function rldPick(id) {
   const r = RLDR.picks.length;
-  if (!RLDR.on || RLDR.lock || r >= RLD_ROUNDS || !RLDR.offers[r].includes(id)) return;
+  if (!RLDR.on || RLDR.spec || RLDR.lock || r >= RLD_ROUNDS || !RLDR.offers[r].includes(id)) return;
   RLDR.picks.push(id); RLDR.lock = true;
+  if (RLDR.pick) { try { RLDR.pick(RLDR.picks.slice()); } catch (e) { console.error(e); } }   // (online: the pick out to the rival and the watchers at once)
   try { sfxTick(); } catch (e) {}
   const el = $('rlDrOffer'); if (el) for (const b of el.children) b.classList.add(b.dataset.id === id ? 'took' : 'left');
   setTimeout(() => {
@@ -128,7 +133,7 @@ function rldPick(id) {
 }
 // online, the clock on each pick: at nought a card is taken at random
 function rldClock() {
-  if (!RLDR.on || !RLDR.net || RLDR.lock || RLDR.picks.length >= RLD_ROUNDS) return;
+  if (!RLDR.on || RLDR.spec || !RLDR.net || RLDR.lock || RLDR.picks.length >= RLD_ROUNDS) return;
   const left = RLD_PICK - (performance.now() - RLDR.t0) / 1000, bar = $('rlDrTime');
   if (bar) { bar.hidden = false; bar.firstChild.style.width = Math.max(0, left / RLD_PICK * 100) + '%'; bar.classList.toggle('low', left < 5); bar.lastChild.textContent = Math.max(0, Math.ceil(left)) + ' s'; }
   if (left <= 0) { const o = RLDR.offers[RLDR.picks.length]; rldPick(o[(Math.random() * o.length) | 0]); }
@@ -143,6 +148,11 @@ function rldHint() {
 const rlnCleanName = v => String(v == null ? '' : v).replace(/[\u0000-\u001f<>&"]/g, '').trim().slice(0, 16);
 function rldRender() {
   const card = $('rlDraftCard'); if (!card || card.hidden) return;
+  const wv = $('rlDrWatch'); if (wv) wv.hidden = !RLDR.spec;
+  for (const id of ['rlDrHint', 'rlDrDeck', 'rlDrAvg']) { const e = $(id); if (e) e.hidden = RLDR.spec; }
+  for (const id of ['rlDrOffer', 'rlDrRival', 'rlDrTime']) { const e = $(id); if (e && RLDR.spec) e.hidden = true; }
+  const dh = card.querySelector('.rldr-deckhead'); if (dh) dh.hidden = RLDR.spec;
+  if (RLDR.spec) { rldRenderWatch(); return; }
   const n = RLDR.picks.length, fin = n >= RLD_ROUNDS, th = RLDR.offers.th || [];
   $('rlDrEye').textContent = 'Skerry Clash · triple draft' + (RLDR.vs ? ' · against ' + rlnCleanName(RLDR.vs) : '');
   $('rlDrHead').textContent = fin ? 'Your deck is ready' : 'Round ' + (n + 1) + ' of 8';
@@ -172,6 +182,52 @@ function rldRender() {
   $('rlDrAvg').textContent = cs.length ? avg.toFixed(1) + ' average oil' : '';
   rldHint();
   if (!fin) setTimeout(() => { const f = of.firstChild; if (f && RLDR.on && document.activeElement === document.body) f.focus({ preventScroll: true }); }, 30);
+}
+// ---------- watching a draft online ----------
+function rldWatch(o) {
+  o = o || {};
+  const OB = rldOffersBoth(o.seed >>> 0);
+  Object.assign(RLDR, { on: true, spec: true, seed: o.seed >>> 0, me: 0, offers: OB[0], ro: OB[1], wo: OB, picks: [], wp: [[], []], wn: (o.names || []).slice(0, 2).map(rlnCleanName), net: true, vs: '', done: null, pick: null, rival: -1, t0: performance.now(), lock: false, wk: '', wl: null });
+  const card = $('rlDraftCard'); if (!card) return;
+  for (const id of ['rlDeckCard', 'rlCrateCard']) { const e = $(id); if (e) e.hidden = true; }
+  rldScene({ me: 0, names: o.names, skins: o.skins });
+  card.classList.add('spec'); card.hidden = false; card.scrollTop = 0; clearInterval(RLDR.tm); RLDR.tm = null; rldRender();
+}
+// keeper i's picks so far (only cards that were really on offer in that round, in order, eight at most)
+function rldWatchSet(i, picks) {
+  if (!RLDR.on || !RLDR.spec || (i !== 0 && i !== 1)) return;
+  const P = []; if (Array.isArray(picks)) for (let r = 0; r < Math.min(RLD_ROUNDS, picks.length); r++) { if (!RLDR.wo[i][r].includes(picks[r])) break; P.push(picks[r]); }
+  if (P.length < RLDR.wp[i].length && P.join() === RLDR.wp[i].slice(0, P.length).join()) return;   // (an older word than we've had)
+  RLDR.wp[i] = P; rldRenderWatch();
+}
+// both keepers side by side: who, which round and its theme, the three they're choosing from (for a moment after a
+// pick, the round just gone with the card they took lit up), and the deck so far with its average oil
+function rldRenderWatch() {
+  const wv = $('rlDrWatch'), card = $('rlDraftCard'); if (!wv || !card || card.hidden) return;
+  const now = performance.now(), L = RLDR.wl || (RLDR.wl = { n: [0, 0], at: [0, 0] });
+  RLDR.wp.forEach((P, i) => { if (P.length > L.n[i]) { L.at[i] = now + 900; setTimeout(rldRenderWatch, 920); } L.n[i] = P.length; });
+  const lit = L.at.map(t => t > now), key = JSON.stringify(RLDR.wp) + lit.join() + RLDR.wn.join('|'); if (RLDR.wk === key) return; RLDR.wk = key;
+  const done = RLDR.wp.map(p => p.length >= RLD_ROUNDS);
+  $('rlDrEye').textContent = 'Skerry Clash · triple draft · watching';
+  $('rlDrHead').textContent = done[0] && done[1] ? 'Both decks are drafted' : 'Watching the draft';
+  $('rlDrTheme').textContent = done[0] && done[1] ? 'Lighting the lamps…' : 'Each keeper’s three, and the deck they’re building';
+  wv.textContent = '';
+  RLDR.wp.forEach((P, i) => {
+    const n = P.length, col = document.createElement('section'); col.className = 'rldr-wk' + (i ? ' them' : ' us');
+    const hd = document.createElement('div'); hd.className = 'rldr-wkhead';
+    const nm = document.createElement('b'); nm.textContent = RLDR.wn[i] || (i ? 'The guest' : 'The host');
+    const rd = document.createElement('span'); const th = RLDR.wo[i].th || []; rd.textContent = n >= RLD_ROUNDS ? 'Deck done' : `Round ${n + 1} of 8 · ${RLD_TH[th[n]] || ''}`;
+    hd.append(nm, rd); col.appendChild(hd);
+    const r = lit[i] ? n - 1 : n, of = document.createElement('div'); of.className = 'rldr-woffer';
+    if (r < RLD_ROUNDS) RLDR.wo[i][r].forEach(id => { const c = document.createElement('div'); c.className = 'rldr-wc' + (lit[i] ? (P[r] === id ? ' took' : ' left') : ''); c.title = RL_CARD[id].n + ' (' + RL_CARD[id].cost + '): ' + RL_CARD[id].d; c.appendChild(rlCardFace(id, null, 96)); of.appendChild(c); });
+    else { const p = document.createElement('p'); p.className = 'muted'; p.textContent = done[1 - i] ? 'Ready.' : 'Waiting for the other deck.'; of.appendChild(p); }
+    col.appendChild(of);
+    const dv = document.createElement('div'); dv.className = 'rldr-deck rldr-wdeck';
+    for (let k = 0; k < RLD_ROUNDS; k++) { const s = document.createElement('div'); s.className = 'rldr-slot' + (k === n ? ' now' : ''); if (P[k]) s.appendChild(rlCardFace(P[k], null, 48)); else { const e = document.createElement('span'); e.textContent = k + 1; s.appendChild(e); } dv.appendChild(s); }
+    col.appendChild(dv);
+    const avg = n ? P.reduce((a, id) => a + RL_CARD[id].cost, 0) / n : 0, ft = document.createElement('small'); ft.className = 'rldr-wavg'; ft.textContent = n ? `${n} of 8 taken · ${avg.toFixed(1)} average oil` : 'Nothing taken yet';
+    col.appendChild(ft); wv.appendChild(col);
+  });
 }
 // leaving the draft: against the bot, back to the card; online, out of the lobby too (the other side hears of it)
 function rldLeave() {

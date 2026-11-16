@@ -43,8 +43,15 @@
 // keepers' nicks; the snapshot brings the names, skins and both hands anyway) and only ever applies snapshots, from
 // side 0's end (Swap ends turns it round). It sends no taps, beats or quits, and nothing it does reaches the rating,
 // the record or the crates. The keepers' HUDs show how many are watching (rlnWatchers).
+// A watcher sees each keeper's hand, next card and oil (all in the snapshot), and the card each has picked up to play:
+// in a duel every keeper puts sl, the card selected in its hand (src/rlhud.js rlHudSel), in its duel presence, the
+// guest sending at once when it changes, and the watcher reads them by place (rlnSelOf).
+// A triple draft can be watched too: while drafting each keeper's dd also carries pk, its picks so far (sent at each
+// pick), and a watcher who finds a draft st (dr: 1) in the host's lobby presence opens the draft in the arena as a
+// watcher (rldWatch, src/rldraft.js), showing both keepers' rounds, offers and decks; when the duel starts there it
+// carries straight on into watching it.
 
-var RLN = { spec: false, draft: false, n3: false, side: 0, gS: {}, gB: {}, gQ: {}, gOut: {}, dst: null, ddk: null, dlost: 0, code: null, at: 0, msg: '', st: null, doneG: null, g: null, role: null, seq: 0, q: [], lastQ: 0, ws: 0, wsSeen: -1, wsSeenAny: -1, sendT: 0, sentAt: 0, seen: 0, beat: 0, lastB: null, chunks: null, quit: null, ended: false, bytes: 0, lobT: 0 };
+var RLN = { ssl: [], slSent: '', sdg: null, spec: false, draft: false, n3: false, side: 0, gS: {}, gB: {}, gQ: {}, gOut: {}, dst: null, ddk: null, dlost: 0, code: null, at: 0, msg: '', st: null, doneG: null, g: null, role: null, seq: 0, q: [], lastQ: 0, ws: 0, wsSeen: -1, wsSeenAny: -1, sendT: 0, sentAt: 0, seen: 0, beat: 0, lastB: null, chunks: null, quit: null, ended: false, bytes: 0, lobT: 0 };
 const RLN_MAX = 2;
 const RLN_WATCH = 8;      // watchers a duel takes at most (each hears the host's snapshots at full rate)
 const RLN_GONE = 10000;   // ms without a word before the other side is taken to have left
@@ -89,7 +96,7 @@ function rlnAmHost() { const m = rlnMembers(); return !!m.length && rlnMine(m[0]
 function rlnOther() { return rlnMembers().find(p => !rlnMine(p)) || null; }
 function rlnSend(z) { if (NET.room) NET.room.presence({ rl: z }).catch(() => {}); }
 function rlnSendLobby() { if (!RLN.code) return; const z = rlnBase(); if (RLN.spec) { rlnSend(z); return; } if (rlnAmHost()) { z.lob = { n: rlnMembers().length }; if (RLN.n3) z.lob.n3 = 1; else if (RLN.draft) z.dr = 1; }
-  if (RLN.dst) { if (RLN.role === 'dhost') z.st = RLN.dst; z.dd = { g: RLN.dst.g, n: typeof RLDR !== 'undefined' ? RLDR.picks.length : 0 }; if (RLN.ddk) z.dd.dk = RLN.ddk; } if (RLN.quit) z.quit = RLN.quit; rlnSend(z); }
+  if (RLN.dst) { if (RLN.role === 'dhost') z.st = RLN.dst; z.dd = { g: RLN.dst.g, n: typeof RLDR !== 'undefined' ? RLDR.picks.length : 0, pk: typeof RLDR !== 'undefined' && !RLDR.spec ? RLDR.picks.slice(0, 8) : [] }; if (RLN.ddk) z.dd.dk = RLN.ddk; } if (RLN.quit) z.quit = RLN.quit; rlnSend(z); }
 function rlnHost() {
   if (!rlnOnline() || rlnInMatch()) return;
   RLN.code = 'r' + Math.random().toString(36).slice(2, 8); RLN.at = Date.now(); RLN.msg = ''; RLN.quit = null; RLN.spec = false;
@@ -109,7 +116,7 @@ function rlnWatch(code) {
   RLN.n3 = false; RLN.code = code; RLN.at = Date.now(); RLN.msg = ''; RLN.quit = null; RLN.spec = true; RLN.doneG = null;
   rlnSendLobby(); rlnRender(); rlNetPeers();
 }
-function rlnLeave() { rlnDraftOff(); RLN.spec = false; RLN.code = null; RLN.st = null; RLN.g = null; RLN.role = null; RLN.quit = null; if (NET.room) NET.room.presence({ rl: null }).catch(() => {}); rlnRender(); }
+function rlnLeave() { rlnDraftOff(); const wd = typeof RLDR !== 'undefined' && RLDR.on && RLDR.spec; RLN.spec = false; RLN.sdg = null; RLN.code = null; RLN.st = null; RLN.g = null; RLN.role = null; RLN.quit = null; if (NET.room) NET.room.presence({ rl: null }).catch(() => {}); if (wd) rldClose(); rlnRender(); }   // (a watcher of a draft: out of it too)
 // the duels being hosted here
 function rlnOpen() {
   const rooms = new Map();
@@ -191,7 +198,7 @@ function rlnStart() {
 function rlnDraftGo(st, role) {
   RLN.dst = st; RLN.ddk = null; RLN.role = role; RLN.doneG = st.g; RLN.dlost = 0; RLN.msg = '';
   const me = role === 'dhost' ? 0 : 1;
-  rldOpen({ seed: st.seed, net: true, vs: st.names[1 - me], me, names: st.names.slice(), skins: st.skins.slice(), done: d => { RLN.ddk = d.slice(); rlnSendLobby(); rlnDraftCheck(); } });
+  rldOpen({ seed: st.seed, net: true, vs: st.names[1 - me], me, names: st.names.slice(), skins: st.skins.slice(), pick: () => rlnSendLobby(), done: d => { RLN.ddk = d.slice(); rlnSendLobby(); rlnDraftCheck(); } });
   rlnSendLobby(); rlnRender();
 }
 function rlnDraftOff(msg) {
@@ -220,6 +227,8 @@ function rlnDraftCheck() {
 }
 function rlnBegin(st, role) {
   if (RLN.dst) { RLN.dst = null; RLN.ddk = null; if (typeof rldClose === 'function') rldClose(true); }
+  if (typeof RLDR !== 'undefined' && RLDR.on && RLDR.spec) { RLN.sdg = null; rldClose(true); }   // (a watcher of the draft: the duel starts in the same arena)
+  RLN.ssl = []; RLN.slSent = '';
   const now = performance.now(), oz = rlnOther() && rlnOf(rlnOther());
   RLN.omr = oz && Number.isFinite(oz.mr) ? oz.mr : null;   // (the other's rating as their lobby gave it, for the rating's sums)
   RLN.side = role === 'host' ? 0 : Math.max(0, st.sids.indexOf(NET.sid)); RLN.gS = {}; RLN.gB = {}; RLN.gQ = {}; RLN.gOut = {};
@@ -234,6 +243,7 @@ function rlnSpecPeers() {
   const m = rlnMembers(), h = m[0], hz = h ? rlnOf(h) : null;
   if (!hz) { RLN.msg = 'The host has left, so that duel is closed.'; rlnLeave(); return; }
   const g = typeof hz.g === 'string' ? hz.g.slice(0, 12) : null;
+  if (rlnSpecDraft(m, hz, g)) return;
   if (!g || g === RLN.doneG || hz.quit === g || (typeof RL !== 'undefined' && RL.on)) return;
   if (hz.w && hz.w.ph === 'over') { RLN.doneG = g; return; }   // (come in just as it ended: wait for the next)
   const s = hz.st && typeof hz.st === 'object' ? hz.st : {}, nm = Array.isArray(s.names) ? s.names : [], sk = Array.isArray(s.skins) ? s.skins : [];
@@ -241,6 +251,20 @@ function rlnSpecPeers() {
   if (s.n3) { const n = [0, 1, 2].map(i => rlnClean(nm[i] || (m[i] && rlnOf(m[i]).nick), 16) || 'A keeper'); rlnBegin({ g, sids: [String(hz.sid), String(sids[1] || ''), String(sids[2] || '')], names: n, decks: [[], [], []], skins: [0, 1, 2].map(i => rlnSkin(sk[i])), seed: s.seed >>> 0, n3: 1 }, 'spec'); return; }
   rlnBegin({ g, sids: [String(hz.sid), String(sids[1] || '')], names: [rlnClean(nm[0] || hz.nick, 16) || 'A keeper', rlnClean(nm[1] || (gz && gz.nick), 16) || 'A keeper'], decks: [[], []], skins: [rlnSkin(sk[0]), rlnSkin(sk[1])], seed: s.seed >>> 0 }, 'spec');
 }
+// a watcher and a triple draft: while the host's lobby presence has a draft's st (dr: 1) and no duel yet, watch the
+// draft (src/rldraft.js rldWatch), with each keeper's picks from their dd; true while it's under way
+function rlnSpecDraft(m, hz, g) {
+  if (typeof rldWatch !== 'function' || typeof RLDR === 'undefined') return false;
+  const s = hz.st && typeof hz.st === 'object' ? hz.st : null, on = !g && s && s.dr === 1 && typeof s.g === 'string' && Array.isArray(s.sids) && !(typeof RL !== 'undefined' && RL.on);
+  if (!on) { if (RLDR.on && RLDR.spec && !g) { RLN.sdg = null; RLN.msg = 'The draft was called off.'; rldClose(); } return false; }
+  const dg = s.g.slice(0, 12), nm = Array.isArray(s.names) ? s.names : [], sk = Array.isArray(s.skins) ? s.skins : [];
+  if (!RLDR.on || !RLDR.spec || RLN.sdg !== dg) { if (RLDR.on && !RLDR.spec) return false; RLN.sdg = dg; RLN.msg = ''; rldWatch({ seed: s.seed >>> 0, names: [rlnClean(nm[0] || hz.nick, 16) || 'A keeper', rlnClean(nm[1], 16) || 'A keeper'], skins: [rlnSkin(sk[0]), rlnSkin(sk[1])] }); }
+  [0, 1].forEach(i => { const p = m.find(q => rlnOf(q).sid === s.sids[i]), z = p ? rlnOf(p) : null; rldWatchSet(i, z && z.dd && z.dd.g === dg && Array.isArray(z.dd.pk) ? z.dd.pk : []); });
+  return true;
+}
+// a watcher: the card each keeper has picked up to play (sl in their duel presence), by place
+function rlnSpecSel() { const M = rlnMembers(); RLN.ssl = RLN.st.sids.map(sid => { const p = sid ? M.find(q => rlnOf(q).sid === sid) : null, z = p ? rlnOf(p) : null; return z && z.g === RLN.g && typeof z.sl === 'string' ? z.sl.slice(0, 24) : ''; }); }
+function rlnSelOf(side) { return RLN.role === 'spec' && RLN.ssl[side] || ''; }
 // every change in the room (src/net.js): keep the lobby current, start when the host does, and the duel's traffic
 function rlNetPeers() {
   if (rlnInMatch() && RLN.g) { rlnRead(); return; }
@@ -292,6 +316,7 @@ function rlnSendNow() {
   if (!RLN.code || !RLN.g) return;
   const z = rlnBase(true); z.g = RLN.g;   // (no deck or skin in a duel: they're in st, and the room is small)
   if (RLN.quit) z.quit = RLN.quit;
+  const sl = typeof rlHudSel === 'function' ? rlHudSel() : ''; RLN.slSent = sl; if (sl) z.sl = sl;   // (the card in my hand I've picked up, for the watchers)
   if (RLN.role === 'host') {
     z.st = RLN.acked ? (RLN.st.n3 ? { g: RLN.g, n3: 1 } : { g: RLN.g }) : RLN.st; z.ak = RLN.st.n3 ? [0, RLN.gQ[1] || 0, RLN.gQ[2] || 0] : RLN.lastQ;   // (the whole of st only until the guest has started)
     let snap = null; try { snap = rlSnap(); } catch (e) { console.error(e); }
@@ -348,7 +373,7 @@ function rlnTick(dt) {
   if (RLN.role === 'host') {
     RLN.sendT -= dt || 0;
     if (RLN.sendT <= 0) { RLN.sendT += NET.via === 'claude' ? 0.1 : 1 / 12; if (RLN.sendT < -0.2) RLN.sendT = 0; rlnSendNow(); }
-  } else if (RLN.role === 'guest' && now - RLN.sentAt > 1000) { RLN.beat++; rlnSendNow(); }   // (a watcher sends nothing)
+  } else if (RLN.role === 'guest' && (now - RLN.sentAt > 1000 || (typeof rlHudSel === 'function' && rlHudSel() !== RLN.slSent && now - RLN.sentAt > 60))) { RLN.beat++; rlnSendNow(); }   // (a watcher sends nothing)
   if (RLN.role === 'host' && RLN.st.n3) { for (const i of [1, 2]) if (RLN.gS[i] && !RLN.gOut[i] && now - RLN.gS[i] > RLN_GONE) rlnOut3(i, 'lost'); return; }
   if (RL.ph !== 'over' && now - RLN.seen > RLN_GONE) rlnGone('lost');
 }
@@ -377,7 +402,7 @@ function rlnRead() {
     // (a watcher hears the host straight, and reads its snapshots as the guest does; its quit or its going ends it)
     const h = rlnMembers().find(p => rlnOf(p).sid === RLN.st.sids[0]), hz = h ? rlnOf(h) : null;
     if (hz && hz.quit === RLN.g) { rlnGone('quit'); return; }
-    rlnSnapIn(hz, now);
+    rlnSnapIn(hz, now); rlnSpecSel();
     const sk = RL.skins.join('|'); if (sk !== RLN.specSk) { RLN.specSk = sk; if (typeof rl3dReset === 'function') rl3dReset(); }   // (the towers as the keepers raised them)
     return;
   }
@@ -411,7 +436,7 @@ function rlnRead3() {
   const h = rlnHostP(), hz = h ? rlnOf(h) : null;
   if (hz && hz.quit === RLN.g) { rlnGone('quit'); return; }
   rlnSnapIn(hz, now);
-  if (RLN.role === 'spec') { const sk = RL.skins.join('|'); if (sk !== RLN.specSk) { RLN.specSk = sk; if (typeof rl3dReset === 'function') rl3dReset(); } }
+  if (RLN.role === 'spec') { rlnSpecSel(); const sk = RL.skins.join('|'); if (sk !== RLN.specSk) { RLN.specSk = sk; if (typeof rl3dReset === 'function') rl3dReset(); } }
 }
 // a guest has quit or gone quiet: out of the match for three, which goes on without them
 function rlnOut3(i, why) {
@@ -439,7 +464,7 @@ function rlnSnapIn(z, now) {
 function rlnBackToLobby() {
   if (RLN.role === 'spec' || (RLN.spec && RLN.code)) {
     // (a watcher: back to the list of duels if it left part way or the host has gone; else it stays, for the next)
-    const mid = !!RLN.g && typeof RL !== 'undefined' && RL.win === -1 && !RLN.ended, hostGone = !rlnMembers().some(p => RLN.st && rlnOf(p).sid === RLN.st.sids[0]);
+    const mid = !!RLN.g && typeof RL !== 'undefined' && RL.win === -1 && !RLN.ended, hostGone = !!RLN.st && !rlnMembers().some(p => rlnOf(p).sid === RLN.st.sids[0]);
     RLN.g = null; RLN.role = null; RLN.chunks = null; RLN.specWhy = null;
     setTimeout(() => { if (mid || hostGone || RLN.ended) { const was = RLN.ended && !mid; rlnLeave(); if (was) RLN.msg = 'The host has left, so that duel is closed.'; } else rlnSendLobby(); rlnRender(); }, 50);
     return;

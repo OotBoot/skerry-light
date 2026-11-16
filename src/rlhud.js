@@ -10,7 +10,8 @@
 // out, the rating's change (#rlEndMmr, filled by src/rlmmr.js, and again when the server answers), and Again
 // (against the bot) or Back to the menu.
 // Online, the clock shows how many are watching (rlnWatchers, src/rlnet.js). A watcher (rlIsSpec) has no hand: in its
-// place a bar (#rlSpecBar) with the watchers and Swap ends (rlSpecFlip), each keeper's oil under their name, and an end
+// place a bar (#rlSpecBar) with the watchers and Swap ends (rlSpecFlip), each keeper's oil, hand and next card under
+// their name (rlSpecKeeper, the card they've picked up to play lit, from src/rlnet.js rlnSelOf), and an end
 // card that says who won, with only Back to the menu.
 // Card faces come from rlCardArt(id, canvas) (src/rlart.js, Meta's) when it's there; else a plain coloured face.
 
@@ -23,12 +24,27 @@ function rlHudReset() {
   const n3 = !!RL.n3; $('rlUI').classList.toggle('n3', n3); if ($('rlWho2')) $('rlWho2').hidden = !n3;
   $('rlName0').textContent = RL.names[n3 ? (RL.me + 1) % 3 : 1 - RL.me]; $('rlName1').textContent = RL.names[RL.me]; if (n3 && $('rlName2')) $('rlName2').textContent = RL.names[(RL.me + 2) % 3];
   RH.outSeen = n3 ? RL.alive.slice() : null;
-  const sp = rlIsSpec(); $('rlUI').classList.toggle('spec', sp); if ($('rlSpecBar')) $('rlSpecBar').hidden = !sp; for (const i of [0, 1, 2]) if ($('rlWOil' + i)) $('rlWOil' + i).hidden = !sp;
+  const sp = rlIsSpec(); $('rlUI').classList.toggle('spec', sp); if ($('rlSpecBar')) $('rlSpecBar').hidden = !sp; for (const i of [0, 1, 2]) { if ($('rlWOil' + i)) $('rlWOil' + i).hidden = !sp; const h = $('rlWHand' + i); if (h) { h.hidden = !sp; h.textContent = ''; } }
   RH.watchK = '';
   $('rlToast').classList.remove('on'); $('rlCount').classList.remove('on');
   if (typeof rl3dGhost === 'function') rl3dGhost(null);
   rlHudTowers(true);
   if (typeof rlEmoReset === 'function') rlEmoReset();
+}
+// the card in my hand I've picked up (selected, or being dragged), for the watchers online (src/rlnet.js)
+function rlHudSel() { if (!RL.on || rlIsSpec() || RL.ph === 'over') return ''; const h = RL.hand[RL.me] || [], i = RH.drag && RH.drag.on ? RH.drag.i : RH.sel; return i >= 0 && h[i] ? h[i] : ''; }
+// a watcher: keeper k's oil, hand and next card under their name on plate i, the card they've picked up lit
+function rlSpecKeeper(i, k) {
+  const oil = RL.oil[k] || 0, o = $('rlWOil' + i), v = 'Oil ' + Math.floor(oil + 1e-6);
+  if (o) { if (o.textContent !== v) o.textContent = v; o.style.setProperty('--o', Math.max(0, Math.min(1, oil / 10)).toFixed(3)); }
+  const el = $('rlWHand' + i); if (!el) return;
+  if (el.children.length !== 5) { el.textContent = ''; for (let j = 0; j < 5; j++) { const d = document.createElement('span'); d.className = 'rl-wc' + (j === 4 ? ' nx' : ''); const cv = document.createElement('canvas'); cv.width = 64; cv.height = 75; const c = document.createElement('b'); d.append(cv, c); el.append(d); } }
+  const H = RL.hand[k] || [], ids = [H[0], H[1], H[2], H[3], RL.next[k]], sl = typeof rlnSelOf === 'function' ? rlnSelOf(k) : '';
+  ids.forEach((id, j) => {
+    const d = el.children[j], C = RL_CARD[id];
+    if (d.dataset.id !== (id || '')) { d.dataset.id = id || ''; if (C) { rlFace(d.firstChild, id); d.lastChild.textContent = C.cost; d.title = (j === 4 ? 'Next: ' : '') + C.n + ' (' + C.cost + ')'; } else { d.firstChild.getContext('2d').clearRect(0, 0, 64, 75); d.lastChild.textContent = ''; d.title = ''; } }
+    d.classList.toggle('sel', j < 4 && !!sl && id === sl); d.classList.toggle('short', j < 4 && !!C && oil < C.cost - 1e-6);
+  });
 }
 // a card's face: Meta's art if it's there, else a coloured face with the name
 function rlFace(cv, id) {
@@ -88,11 +104,10 @@ function rlHud(dt) {
     if (RH.watchK !== wk) { RH.watchK = wk; const w = $('rlWatchN'); if (w) { w.hidden = spec || !n; w.textContent = n + ' watching'; } if ($('rlSpecN')) $('rlSpecN').textContent = n > 1 ? `${n} watching` : 'just you'; }
   }
   if (spec && n3) {
-    const nm = [A, me, Bk]; nm.forEach((k, i) => { const el = $('rlName' + i); if (el && el.textContent !== RL.names[k]) el.textContent = RL.names[k]; const o = $('rlWOil' + i), v = 'Oil ' + Math.floor(RL.oil[k] + 1e-6); if (o && o.textContent !== v) o.textContent = v; });
+    const nm = [A, me, Bk]; nm.forEach((k, i) => { const el = $('rlName' + i); if (el && el.textContent !== RL.names[k]) el.textContent = RL.names[k]; rlSpecKeeper(i, k); });
   } else if (spec) {
     if ($('rlName0').textContent !== RL.names[they]) $('rlName0').textContent = RL.names[they]; if ($('rlName1').textContent !== RL.names[me]) $('rlName1').textContent = RL.names[me];
-    const o0 = 'Oil ' + Math.floor(RL.oil[they] + 1e-6), o1 = 'Oil ' + Math.floor(RL.oil[me] + 1e-6);
-    if ($('rlWOil0').textContent !== o0) $('rlWOil0').textContent = o0; if ($('rlWOil1').textContent !== o1) $('rlWOil1').textContent = o1;
+    rlSpecKeeper(0, they); rlSpecKeeper(1, me);
   }
   // the countdown
   if (RL.ph === 'count') { const n = Math.ceil(RL.cnt); if (n !== RH.cntShown) { RH.cntShown = n; const el = $('rlCount'); el.textContent = n > 0 ? String(n) : ''; el.classList.remove('on'); void el.offsetWidth; el.classList.add('on'); if (n > 0) rlSnd('tick'); } }
