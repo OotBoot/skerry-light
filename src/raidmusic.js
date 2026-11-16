@@ -36,7 +36,7 @@
 // Once it's over otherwise (all of you down, or left), nothing plays. While the raid's on, the Lighthouse's boss
 // themes (src/zmtheme.js) keep quiet: this is the music. Nothing plays until its recording has loaded.
 const RM = { WIND: 0.1, wind: null, bolt: null, fell: false, cur: null, src: null, gain: null, vol: 0.55, rate: 1 };
-const RM_LOOP = { raidfall: false, raidwin: false, gwwin: false, frwin: false };
+const RM_LOOP = { raidfall: false, raidwin: false, gwwin: false, frwin: false, cpwin: false };   // [campaign]
 const RM_FALLK = 1.3;   // (the fall's track played this much quicker, the fall being that much quicker than it was made for)
 const RM_TAIL = 2.5;   // (the fall's track runs on this long after its climax: tools/sfx/music.py TAIL)
 
@@ -45,6 +45,7 @@ function rmWant() {
   if (!RAID.on) RM.fell = RM.wonDone = false;
   // Maren down: the sunset, played once through (on to the end card), then quiet
   // (the Gannet's Wake has its own: dawn after the Captain goes down, gwwin)
+  { const v = typeof cpMusic === 'function' ? cpMusic() : undefined; if (v !== undefined) return v; }   // [campaign] (src/cp.js: a cinematic's, or a campaign stage's own)
   const WIN = RAID.map === 'fogrun' ? 'frwin' : RAID.map === 'gannet' ? 'gwwin' : 'raidwin';   // [fogrun]
   if (RAID.on && (RAID.won || (RAID_ORDER[RAID.stage] === 'fort' && typeof RF !== 'undefined' && RF.st === 'won') || (RAID_ORDER[RAID.stage] === 'gwcapt' && typeof GCW !== 'undefined' && GCW.st === 'won'))) { if (RM.cur === WIN && RM.done) RM.wonDone = true; return RM.wonDone ? null : WIN; }
   if (!RAID.on || ZM.over) return null;

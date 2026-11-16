@@ -606,6 +606,7 @@ function fpsIncoming(sh, f) {
   if (!(m.dead > 0) && !(m.protect > 0)) { const hit = fpsShotHits(sh, m); if (hit) fpsHurt(hit.dmg, by, fpsNameOf(by)); }
 }
 function fpsShoot() {
+  if (FPS.zm && typeof cpHold === 'function' && cpHold()) return;   // [campaign] not in a cinematic
   if (FPS.zm && typeof fagShoot === 'function' && fagShoot()) return;   // [fbsea] at a swivel gun: fire it (src/fbguns.js)
   if (FPS.zm && typeof fbNoGun === 'function' && fbNoGun()) return;   // [fbsea] your arms full: no gun (src/fbsea.js)
   if (FPS.zm && typeof rclShoot === 'function' && rclShoot()) return;   // [classes] an ultimate in place of the weapon (src/rclass.js)
@@ -1118,13 +1119,14 @@ function fpsDraw() {
   else focal = fb;
   try {
     try { fpsDrawScene(); } finally { focal = fb; setCamPitch(camPitch); hy = H * 0.5 + pitchY; }
-    fpsDrawHands();
+    const cine = FPS.zm && typeof cpCineOn === 'function' && cpCineOn();   // [campaign] a cinematic: no hands, no HUD
+    if (!cine) fpsDrawHands();
     // under a roof (src/fpsisle.js), the weather stays outside, and so, muffled, do the sea and the wind
     GFX.wx = 1 - FPS.inK;
     try { drawAtmosphere(); } finally { GFX.wx = 1; }
     if (typeof audioOutdoors === 'function') audioOutdoors(1 - FPS.inK);
     if (FPS.scoped && fpsW().scope) fpsDrawScope();
-    if (FPS.zm) zmHud(); else fpsHud();
+    if (FPS.zm) { if (!(typeof cpcHud === 'function' && cpcHud())) zmHud(); } else fpsHud();
   } finally { focal = f0; setCamPitch(0); }
 }
 function fpsDrawScene() {
@@ -1150,8 +1152,12 @@ function fpsDrawScene() {
     camH = Math.max(FPSC.GROUND + 0.4, eye + FPSC.TP_UP - sp * FPSC.TP_BACK * pull - (FPS.landed || 0) * 0.3);
     FPS.camAt = [camX, camY, camH];
   } else { FPS.camAt = null; FPS.camPull = null; }
+  // [campaign] a cinematic flies the camera itself (src/cpcine.js), and you're seen in it, as over the shoulder
+  let pitch = m.p;
+  const cine = FPS.zm && typeof cpcCam === 'function' ? cpcCam() : null;
+  if (cine) { camX = cine[0]; camY = cine[1]; camH = cine[2]; yaw = cine[3]; pitch = cine[4]; }
   // the camera tilts with your look (render.js cam/proj, and gl3d's camera): hy is where the horizon falls
-  setCamPitch(m.p); hy = H * 0.5 + pitchY;
+  setCamPitch(pitch); hy = H * 0.5 + pitchY;
   // indoors or out (where the camera is): eased over a quarter of a second or so, going through a door
   // ([raid] no weather at all in Maren's End)
   { const want = (FPS.zm && typeof RAID !== 'undefined' && RAID.on && !(raidStage() || {}).open) || fpsUnderRoof(FPS.g, camX, camY, camH) ? 1 : 0, k = Math.min(1, (FPS.dtLast || 0.016) * 5);   // [gannet] (an open stage is out in the weather)
@@ -1169,7 +1175,7 @@ function fpsDrawScene() {
   let shown = 0;
   // over the shoulder with the 3D renderer, you're a 3D figure in the scene (src/fpsbody.js)
   let body = false;
-  if (gl && third && typeof fpsBodySync === 'function') { try { body = fpsBodySync(true); } catch (e) { console.warn(e); body = false; } }
+  if (gl && (third || cine) && typeof fpsBodySync === 'function') { try { body = fpsBodySync(true); } catch (e) { console.warn(e); body = false; } }
   else if (typeof fpsBodyHide === 'function') fpsBodyHide();
   // and everyone else, as 3D figures too (src/fpsbody.js), so walls hide them and lanterns light them
   if (gl && typeof fpsFiguresSync === 'function') { try { fpsFiguresSync(); } catch (e) { console.warn(e); } }

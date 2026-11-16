@@ -38,6 +38,7 @@
 // (hosting or alone) lays out the next, and everyone follows the stage number in the host's word. Past the last, the
 // raid is won.
 
+// [campaign] The Chronicle of the Light (src/cp.js) is a raid too: its hooks here are marked [campaign].
 // [fbsea] Freebooters' Sea (src/fbsea.js) is a raid too, with no end: its hooks here are marked [fbsea] (raidBegin,
 // raidAfterStart, raidStop, raidMe, raidNextStage (never won), raidReport, raidHostSend, raidApply, raidHud, and
 // raidMapFor's map.seed).
@@ -114,6 +115,7 @@ function raidBegin(map) {
   RAID_ORDER.length = 0; RAID_ORDER.push(...raidInfo().order);
   if (typeof frBegin === 'function') frBegin();   // [fogrun] its seed, and its first stop (src/frrun.js)
   if (typeof fbBegin === 'function') fbBegin();   // [fbsea] the session's state, and the sea (src/fbsea.js)
+  if (typeof cpBegin === 'function') cpBegin();   // [campaign] the mission's stages (src/cp.js)
   Object.assign(RAID, { stage: 0, won: false, st: {}, t: 0, boss: 0, told: false, sta: 1, tired: false, tiredN: 0, runNow: false, practice: 0 });   // (practice: src/raidmaren2.js rf2Practice)
   if (typeof rmvReset === 'function') rmvReset();   // [mvp] src/raidmvp.js
   raidMapFor(0);
@@ -129,6 +131,7 @@ function raidAfterStart() {
   RAID.st = {}; raidCall('enter');
   if (typeof frAfterStart === 'function' && FR.on) frAfterStart();   // [fogrun]
   if (typeof fbAfterStart === 'function' && FB.on) fbAfterStart();   // [fbsea]
+  if (typeof cpAfterStart === 'function' && CP.on) cpAfterStart();   // [campaign] its intro, or a checkpoint
 }
 const RAIDC = { ROUND: 4, CALM: 0.7, BOSS_HP: 1.15 };   // (BOSS_HP: every boss's strength here, against the Lighthouse's)
 // what you carry down: a pepperbox and a blunderbuss, both full (and Maren's Lantern, which never leaves your hand)
@@ -146,6 +149,7 @@ function raidStop() {
   RAID.on = false; FPSC.R = FPSC_R0;   // [fogrun]
   if (typeof frStop === 'function') frStop();   // [fogrun]
   if (typeof fbStop === 'function') fbStop();   // [fbsea]
+  if (typeof cpStop === 'function') cpStop();   // [campaign]
   if (typeof GL3D !== 'undefined' && GL3D.scene && RAID.fog0) { GL3D.scene.fog = null; RAID.fog0 = null; }
 }
 // alone or hosting, each frame
@@ -195,6 +199,7 @@ function raidMe(dt) {
   raidCall('me', dt);
   if (typeof frMe === 'function' && FR.on) frMe(dt);   // [fogrun] the wait for your extra life
   if (typeof fbMe === 'function' && FB.on) fbMe(dt);   // [fbsea] the wait to be back on your feet
+  if (typeof cpMe === 'function' && CP.on) cpMe(dt);   // [campaign] subtitles, lives, the cinematic's clock
   if (typeof rclTick === 'function') rclTick(dt);   // [classes] src/rclass.js
   if (typeof rmvTick === 'function') rmvTick(dt);   // [mvp] src/raidmvp.js: what each of you did, counted
   // joined: the host's world has moved on to the next part
@@ -202,7 +207,8 @@ function raidMe(dt) {
 // who the drowned can come after
 function raidPlayers(P) { const r = raidCall('players', P); return r || P; }
 // hosting: a joined player's ask
-function raidRequest(sid, a) { if (!Array.isArray(a)) return; if (typeof frcQ === 'function' && FR.on && /^frc/.test(String(a[0]))) { frcQ(sid, String(a[0]), a[1]); return; } raidCall('q', sid, String(a[0]), a[1]); }   // [fogrun cards] (the salvage's picks: src/frcards.js)
+function raidRequest(sid, a) { if (!Array.isArray(a)) return; if (typeof cpQ === 'function' && CP.on && /^cp/.test(String(a[0]))) { cpQ(sid, String(a[0]), a[1]); return; }   // [campaign]
+  if (typeof frcQ === 'function' && FR.on && /^frc/.test(String(a[0]))) { frcQ(sid, String(a[0]), a[1]); return; } raidCall('q', sid, String(a[0]), a[1]); }   // [fogrun cards] (the salvage's picks: src/frcards.js)
 // hosting: one sent back
 function raidKill(d, how, by) { if (RAID.on) raidCall('kill', d, how, by); }
 function raidHurtK(d, dmg, code, by) { if (!RAID.on) return dmg; const r = raidCall('hurt', d, dmg, code, by); return r == null ? dmg : r; }
@@ -219,6 +225,7 @@ function raidNextStage() {
   if (!RAID.on || ZM.net === 'client' || ZM.over) return;
   if (typeof frGrow === 'function' && FR.on && RAID.stage + 1 >= RAID_ORDER.length) frGrow();   // [fogrun] the next stage, chosen now
   if (typeof FB !== 'undefined' && FB.on && RAID.stage + 1 >= RAID_ORDER.length) return;   // [fbsea] (never won: the next stage is always grown first, src/fbsea.js fbGo)
+  if (typeof cpNextHold === 'function' && CP.on && cpNextHold()) return;   // [campaign] the stage's 'after' cinematic first
   if (RAID.stage + 1 >= RAID_ORDER.length) { raidWin(); return; }
   raidUseStage(RAID.stage + 1);
 }
@@ -243,10 +250,12 @@ function raidUseStage(i) {
   RAID.st = {}; raidCall('enter');
   { const S = RAID_STAGES[RAID_ORDER[i]]; ZM.banner = S.banner ? S.banner() : { text: S.n, t: 4, sub: 'Part ' + raidNumeral(i + 1) }; }   // [fogrun] (a part can say its own)
   if (i === 0 || RAID.map === 'raid') fpsFeed(MAP.land(0));   // (the Gannet's Wake: each part says its own as it begins)
+  if (typeof cpStageBegun === 'function' && CP.on) cpStageBegun(i);   // [campaign] the stage's own cutscene
 }
 const raidNumeral = n => ['', 'I', 'II', 'III', 'IV', 'V', 'VI'][n] || String(n);
 function raidWin() {
   if (RAID.won) return;
+  if (typeof cpWinHold === 'function' && CP.on && cpWinHold()) return;   // [campaign] its outro first
   RAID.won = true;
   if (!(typeof FR !== 'undefined' && FR.on) && !(typeof FB !== 'undefined' && FB.on)) { if (typeof wcEarn === 'function') { wcEarn('round'); wcEarn('round'); } if (typeof ocEarn === 'function') { ocEarn('round'); ocEarn('round'); } }   // [fogrun] (a fog run pays its own: src/frkeep.js frPay)
   zmEnd();
@@ -255,6 +264,7 @@ function raidWin() {
 function raidBossDamage(n) { if (RAID.on && n > 0) RAID.boss += n; }
 // (zmEnd) the scoreboard: the time, if won; the bosses' damage; and this raid's kills added to all the rest
 function raidReport() {
+  if (typeof CP !== 'undefined' && CP.on) { cpReport(); return; }   // [campaign] marked done (src/cp.js)
   if (typeof frReport === 'function' && FR.on && !RAID.told) { frReport(); return; }   // [fogrun] its own board and what it pays (src/frkeep.js)
   if (typeof FB !== 'undefined' && FB.on) { if (!RAID.told && typeof fbReport === 'function') fbReport(); return; }   // [fbsea] its own (src/fbsea.js)
   const G = RAID.map;   // (each raid its own game on the board)
@@ -265,6 +275,7 @@ function raidReport() {
   if (typeof scoreRun === 'function') { scoreRun(G, RAID.won ? Math.max(1, 100000 - Math.round(RAID.t)) : 0, Math.round(RAID.boss), ZM.kills, RAID.won); scoreRunEnd(G); }
 }
 function raidShowOver() {
+  if (typeof cpShowOver === 'function' && CP.on && cpShowOver()) return;   // [campaign] its own end card
   if (RAID.won && typeof rmvShow === 'function' && rmvShow()) return;   // [mvp] won at the very end: everyone together (src/raidmvp.js)
   const S = RAID_STAGES[RAID_ORDER[RAID.stage]], cleared = RAID.won ? RAID_ORDER.length : RAID.stage;
   if ($('zmOverEye')) $('zmOverEye').textContent = raidName();
@@ -289,6 +300,7 @@ function raidHostSend(z) {
   const o = {}; raidCall('pack', o); z.rs = o;
   if (typeof frPack === 'function' && FR.on) frPack(z);   // [fogrun] the run: its plan, its events
   if (typeof fbPack === 'function' && FB.on) fbPack(z);   // [fbsea] the session: its stages, the ship, the hold, the purse
+  if (typeof cpPack === 'function' && CP.on) cpPack(z);   // [campaign] the objective, lines said, the cinematic
   if (typeof rmvPack === 'function') rmvPack(z);   // [mvp]
 }
 function raidApply(hz) {
@@ -300,6 +312,7 @@ function raidApply(hz) {
   RAID.won = !!hz.rd[1]; RAID.t = +hz.rd[2] || RAID.t; RAID.tAt = performance.now() / 1000;
   if (hz.rs && typeof hz.rs === 'object') raidCall('apply', hz.rs);
   if (typeof rmvApply === 'function') rmvApply(hz);   // [mvp]
+  if (typeof cpApply === 'function' && CP.on) cpApply(hz);   // [campaign] (last: a cinematic plays in the stage as it's now laid out)
 }
 
 // ---------- in 3D ----------
@@ -333,7 +346,7 @@ function raid3d(dt) {
   // the lantern: down at your left, swinging a little as you walk; not while you're down or out
   // (only in a part that asks for it: Part I's lantern stage; gone once you're through its door)
   const St = raidStage(), has = !!(St && St.lantern);
-  const show = has && !(m.dead > 0) && !zmIsDown() && !fpsThird() && !zmSpecOn();
+  const show = has && !(m.dead > 0) && !zmIsDown() && !fpsThird() && !zmSpecOn() && !(typeof cpCineOn === 'function' && cpCineOn());   // [campaign]
   R3.lan.visible = show;
   const h = m.h, p = m.p, ez = G0 + FPSC.EYE + (m.jz || 0) - (FPS.eyeLag || 0) - (FPS.downEye || 0) - (FPS.crouchEye || 0);
   const fx = Math.sin(h), fy = Math.cos(h), sw = reduceMotion ? 0 : Math.sin((FPS.step || 0) * 0.5) * 0.03;
@@ -402,13 +415,14 @@ function raidHud(phone, mono, fell) {
   ctx.textAlign = 'left'; ctx.textBaseline = 'top';
   const L = Math.max(14, FPS.safeLeft || 0);
   ctx.font = fell(phone ? 15 : 19); ctx.fillStyle = 'rgba(236,228,207,0.85)';
-  ctx.fillText(typeof fbHudTitle === 'function' && FB.on ? fbHudTitle(S) : typeof frHudTitle === 'function' && FR.on ? frHudTitle(S) : `${raidName()} · ${raidNumeral(RAID.stage + 1)} · ${S.n}`, L, top, W * 0.5);   // [fogrun]
+  ctx.fillText(typeof cpHudTitle === 'function' && CP.on ? cpHudTitle(S) : typeof fbHudTitle === 'function' && FB.on ? fbHudTitle(S) : typeof frHudTitle === 'function' && FR.on ? frHudTitle(S) : `${raidName()} · ${raidNumeral(RAID.stage + 1)} · ${S.n}`, L, top, W * 0.5);   // [fogrun]
   ctx.font = mono(phone ? 10 : 12); ctx.fillStyle = 'rgba(236,228,207,0.55)';
   ctx.fillText(raidClock(RAID.t), L, top + (phone ? 18 : 26));
   fpsHudNote(top + (phone ? 30 : 40));
   raidCall('hud', phone, mono, fell);
   if (typeof frHud === 'function' && FR.on) frHud(phone, mono, fell);   // [fogrun] lost, or waiting on your extra life
   if (typeof fbHud === 'function' && FB.on) fbHud(phone, mono, fell);   // [fbsea] the purse and the hold; back on your feet in...
+  if (typeof cpHud === 'function' && CP.on) cpHud(phone, mono, fell);   // [campaign] the objective, and the subtitles
 }
 
 // ---------- its card on the title screen ----------

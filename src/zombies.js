@@ -2102,7 +2102,7 @@ function zmStart(opts) {
   const slot = Math.max(0, ZM.hum.findIndex(h => h[0] === FPS.me.id));
   if (ZM.net) { FPS.me.x += [0, 1.5, -1.5, 0][slot % 4]; FPS.me.y += [0, -1.6, -1.6, 1.8][slot % 4]; }
   zmNavBuild();
-  $('zmOver').hidden = true;
+  $('zmOver').hidden = true; if (typeof cpOverHide === 'function') cpOverHide();   // [campaign]
   $('zmAgain').textContent = ZM.net ? 'Back to the lobby' : 'Hold it again';
   fpsFeed(MAP.land(ZM.net ? ZM.hum.length : 0));
   if (typeof raidAfterStart === 'function') raidAfterStart();   // [raid]
@@ -2139,7 +2139,7 @@ function zmFrame(dt) {
     // (alone, the menu holds everything still; together, the night goes on)
     const live = (!FPS.menu || ZM.net) && !ZM.over;
     if (live && !FPS.menu && zmSpecOn()) zmSpecInput();   // (out, watching someone: src below, zmSpecTick)
-    else if (live && !FPS.menu) { const was = [m.x, m.y]; fpsInput(dt); if (zmIsDown()) zmCrawl(m, was, dt); }
+    else if (live && !FPS.menu && !(typeof cpHold === 'function' && cpHold())) { const was = [m.x, m.y]; fpsInput(dt); if (zmIsDown()) zmCrawl(m, was, dt); }
     else { FPS.look = [0, 0]; FPS.mlook = [0, 0]; m.walk = false; }
     if (FPS.menu) fpsMenuPad(dt);
     if (live) {
@@ -2206,8 +2206,9 @@ function zmTick(dt) {
     // the grid's distances from everyone standing, a few times a second
     ZM.navT -= dt;
     if (ZM.navT <= 0) { ZM.navT = 0.25; zmNavFrom(ZM.players); }
-    if ((typeof RAID !== 'undefined' && RAID.on)) raidHostTick(dt); else zmRounds(dt);   // [raid] no rounds there: its parts instead
-    zmZombies(dt);
+    const held = typeof cpHold === 'function' && cpHold();   // [campaign] a cinematic: everything stands still
+    if (held) {} else if ((typeof RAID !== 'undefined' && RAID.on)) raidHostTick(dt); else zmRounds(dt);   // [raid] no rounds there: its parts instead
+    if (!held) zmZombies(dt);
     zmDropsTick(dt);
     zmBoxTick(dt);
     if (ZM.double > 0) ZM.double -= dt; if (ZM.insta > 0) ZM.insta -= dt;
@@ -3163,6 +3164,7 @@ function zmBleedOut() {
   ZM.downT = 0; ZM.ghost = true; ZM.downKit = null; m.dead = FPSC.RESPAWN - 0.6; m.reload = 0; FPS.scoped = false;
   if (typeof frBledOut === 'function' && typeof FR !== 'undefined' && FR.on) { frBledOut(kit); return; }   // [fogrun] an extra life, or lost in the fog (src/frrun.js)
   if (typeof fbBledOut === 'function' && typeof FB !== 'undefined' && FB.on) { fbBledOut(kit); return; }   // [fbsea] back on your feet in ten seconds (src/fbsea.js)
+  if (typeof cpBledOut === 'function' && typeof CP !== 'undefined' && CP.on && cpBledOut(kit)) return;   // [campaign] an extra life (src/cp.js)
   fpsFeed('You bled out. You’ll be back next round, if anyone holds that long.');
 }
 // up again (a friend got to you): your own weapons back in your hands

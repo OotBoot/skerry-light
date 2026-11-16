@@ -37,6 +37,9 @@
 // [fbsea] Freebooters' Sea (src/fbsea.js) has a fourth, the same way (ZN.mode 'fb', prefix fb, ZM_MAPS.fbsea.fb). Its
 // world is fixed (the same sea on every screen), so nothing goes out in the start; the session's state goes in the
 // host's word (fbw, src/fbsea.js fbPack).
+// [campaign] The Chronicle of the Light (src/cp.js) has a fifth (ZN.mode 'cp', prefix cp, ZM_MAPS.campaign.cp). The
+// mission the host picked goes out in the start (st.cm, and st.cf: the stage to start from, a checkpoint), and in its
+// lobby (lob.cm) so the others can see which.
 
 const ZN = { code: null, at: 0, doneG: null, msg: '', g: null, sendT: 0, hseq: 0, seq: 0, q: [], hq: [], hits: new Map(), shots: [], shotSeq: 0,
   lastQ: {}, lastH: {}, lastShot: {}, seenT: {}, ev: [], eseq: 0, evSeen: 0, lastHseq: -1, hostT: 0, creditSeen: [0, 0, 0], lobT: 0, j: '', rj: null };
@@ -73,12 +76,12 @@ function znAt(o, t) {
 // ---------- the lobby ----------
 function znOnline() { return !!(typeof NET !== 'undefined' && NET.room && NET.status === 'ready'); }
 // the map a lobby's for: the raid's, or the one picked on the Lighthouse's card
-const znMap = () => ZN.mode === 'fb' ? 'fbsea' : ZN.mode === 'fr' ? 'fogrun' : ZN.mode === 'raid' ? (typeof RD_PICK !== 'undefined' ? RD_PICK : 'raid') : ZM_PICK;   // [raid] (which raid: src/raid.js) [fogrun]
+const znMap = () => ZN.mode === 'cp' ? 'campaign' : ZN.mode === 'fb' ? 'fbsea' : ZN.mode === 'fr' ? 'fogrun' : ZN.mode === 'raid' ? (typeof RD_PICK !== 'undefined' ? RD_PICK : 'raid') : ZM_PICK;   // [raid] (which raid: src/raid.js) [fogrun]
 const znIsRaid = m => !!(ZM_MAPS[m] && ZM_MAPS[m].raid);
 // [fogrun] which card a map's lobby belongs on: 'fr' (Fog Run), 'raid' or 'zm'; and a mode from what's asked
-const znKind = m => ZM_MAPS[m] && ZM_MAPS[m].fb ? 'fb' : ZM_MAPS[m] && ZM_MAPS[m].fr ? 'fr' : znIsRaid(m) ? 'raid' : 'zm';   // [fbsea]
-const znModeOf = mode => mode === 'raid' || mode === 'fr' || mode === 'fb' ? mode : 'zm';
-const ZN_NICK = { zm: 'zmNick', raid: 'rdNick', fr: 'frNick', fb: 'fbNick' }, ZN_CARD = { zm: 'zmTitle', raid: 'rdTitle', fr: 'frTitle', fb: 'fbTitle' };   // [fbsea]
+const znKind = m => ZM_MAPS[m] && ZM_MAPS[m].cp ? 'cp' : ZM_MAPS[m] && ZM_MAPS[m].fb ? 'fb' : ZM_MAPS[m] && ZM_MAPS[m].fr ? 'fr' : znIsRaid(m) ? 'raid' : 'zm';   // [fbsea]
+const znModeOf = mode => mode === 'raid' || mode === 'fr' || mode === 'fb' || mode === 'cp' ? mode : 'zm';   // [campaign]
+const ZN_NICK = { zm: 'zmNick', raid: 'rdNick', fr: 'frNick', fb: 'fbNick', cp: 'cpNick' }, ZN_CARD = { zm: 'zmTitle', raid: 'rdTitle', fr: 'frTitle', fb: 'fbTitle', cp: 'cpTitle' };   // [campaign]   // [fbsea]
 function znNick() { const b = $(ZN_NICK[ZN.mode] || 'zmNick'); return znClean((b && b.value) || '', 16) || (NET.nick ? znClean(NET.nick, 16) : '') || 'Keeper ' + String(NET.sid || '').slice(0, 3).toUpperCase(); }
 function znOf(p) { const z = p && p.presence && p.presence.zm; return z && typeof z === 'object' && typeof z.room === 'string' && typeof z.sid === 'string' ? z : null; }
 function znBase() { return { room: ZN.code, sid: NET.sid, nick: znNick(), at: ZN.at }; }
@@ -96,6 +99,7 @@ function znSendLobby() {
   if (!ZN.code) return;
   const z = znBase();
   if (znAmHost()) z.lob = { n: znMembers().length, map: znMap() };
+  if (z.lob && ZN.mode === 'cp' && typeof CP !== 'undefined') z.lob.cm = CP.pick || '';   // [campaign] the mission picked
   znSend(z);
 }
 // still in another lobby (most often the one a game just ended back into, a win or a loss): out of it first, so a
@@ -145,13 +149,13 @@ function znOpenNights() {
 // only its own: a night whose map is the raid is a raid. Whichever card you host or join from, the lobby shows there.
 // [fogrun] and a third, Fog Run's (prefix fr): mode, which ZN.mode is its; each lists only nights of its own kind (znKind)
 const ZN_UI = [{ p: 'zm', mode: 'zm', raid: false, what: 'night', who: 'A keeper' }, { p: 'rd', mode: 'raid', raid: true, what: 'raid', who: 'A keeper' }, { p: 'fr', mode: 'fr', raid: true, fr: true, what: 'run', who: 'A keeper' },
-  { p: 'fb', mode: 'fb', raid: true, fb: true, what: 'crew', who: 'A freebooter' }];   // [fbsea]
+  { p: 'fb', mode: 'fb', raid: true, fb: true, what: 'crew', who: 'A freebooter' }, { p: 'cp', mode: 'cp', raid: true, cp: true, what: 'mission', who: 'A keeper' }];   // [campaign]   // [fbsea]
 function znRender() { for (const U of ZN_UI) znRenderUI(U); }
 function znRenderUI(U) {
   const q = id => $(U.p + id);
   if (!q('Mp')) return;
   const on = znOnline(), mine = !!ZN.code && ZN.mode === U.mode, W = U.what;
-  q('MpNote').textContent = on ? (ZN.code && !mine ? `You’re in a ${{ zm: 'Lighthouse night', raid: 'raid', fr: 'fog run', fb: 'freebooters’ crew' }[ZN.mode] || 'game'}’s lobby on another card. Host or join a ${W} here and you’ll leave it.` : U.fb ? 'Up to four on one ship. One of you hosts; the others join, and the host sets sail when everyone’s aboard.' : `Up to four in one ${W}. One of you hosts; the others join, and the host starts the ${W} when everyone’s in.`) : (NET.status === 'connecting' ? 'Looking for other players…' : (NET.offReason || 'Playing together isn’t available here.'));   // [fbsea] (the host sets sail)
+  q('MpNote').textContent = on ? (ZN.code && !mine ? `You’re in a ${{ zm: 'Lighthouse night', raid: 'raid', fr: 'fog run', fb: 'freebooters’ crew', cp: 'campaign mission' }[ZN.mode] || 'game'}’s lobby on another card. Host or join a ${W} here and you’ll leave it.` : U.fb ? 'Up to four on one ship. One of you hosts; the others join, and the host sets sail when everyone’s aboard.' : `Up to four in one ${W}. One of you hosts; the others join, and the host starts the ${W} when everyone’s in.`) : (NET.status === 'connecting' ? 'Looking for other players…' : (NET.offReason || 'Playing together isn’t available here.'));   // [fbsea] (the host sets sail)
   q('MpOpen').hidden = !on || mine;
   q('Lobby').hidden = !mine;
   if (!on) return;
@@ -174,7 +178,7 @@ function znRenderUI(U) {
     return;
   }
   const m = znMembers(), host = znAmHost(), hz = m.length ? znOf(m[0]) : null;
-  const key = m.map(p => znOf(p).sid + znOf(p).nick).join('|') + host + ZN.msg + znMap() + (hz && hz.lob ? hz.lob.map : '');
+  const key = m.map(p => znOf(p).sid + znOf(p).nick).join('|') + host + ZN.msg + znMap() + (hz && hz.lob ? hz.lob.map + (hz.lob.cm || '') : '') + (U.cp && typeof CP !== 'undefined' ? CP.pick : '');   // [campaign]
   q('MpStart').hidden = !host;
   if (q('Lobby').dataset.k === key) return; q('Lobby').dataset.k = key;
   q('LobbyHead').textContent = host ? `Your ${W}` : `${znClean(hz && hz.nick, 16) || 'Someone'}’s ${W}`;
@@ -186,7 +190,10 @@ function znRenderUI(U) {
     ol.append(li);
   });
   const hm = hz && hz.lob && ZM_MAPS[hz.lob.map] ? hz.lob.map : 'light';
-  q('LobbyMsg').textContent = ZN.msg || (U.fb   // [fbsea]
+  const cpN = id => typeof CP_BY !== 'undefined' && CP_BY[id] ? CP_BY[id].n : 'a mission';   // [campaign]
+  q('LobbyMsg').textContent = ZN.msg || (U.cp   // [campaign]
+    ? (host ? (m.length > 1 ? `${m.length} of ${ZN_MAX} here, for ${cpN(CP.pick)}. Start when everyone’s in.` : `Waiting for others to join. You can start alone, too. The mission: ${cpN(CP.pick)} (pick above).`) : `Waiting for the host to start: ${cpN(hz && hz.lob && hz.lob.cm)}.`)
+    : U.fb   // [fbsea]
     ? (host ? (m.length > 1 ? `${m.length} of ${ZN_MAX} aboard. Set sail when everyone’s in.` : 'Waiting for others to join. You can set sail alone, too, whenever you like.') : 'Waiting for the host to set sail.')
     : U.fr   // [fogrun]
     ? (host ? (m.length > 1 ? `${m.length} of ${ZN_MAX} here. Set out when everyone’s in.` : 'Waiting for others to join. You can set out alone, too, whenever you like.') : 'Waiting for the host to set out.')
@@ -203,6 +210,7 @@ function znStart() {
   const m = znMembers();
   const st = { g: Math.random().toString(36).slice(2, 9), hum: m.map(p => [znOf(p).sid, znClean(znOf(p).nick, 16) || 'A keeper']), map: znMap() };
   if (ZM_MAPS[st.map] && ZM_MAPS[st.map].fr && typeof frSeedNew === 'function') st.fs = frSeedNew();   // [fogrun] the run's seed, drawn here and sent the once
+  if (ZM_MAPS[st.map] && ZM_MAPS[st.map].cp && typeof cpStartFor === 'function') cpStartFor(st);   // [campaign] the mission, and where in it
   znBegin(st, 'host');
 }
 function znBegin(st, role) {
@@ -210,6 +218,7 @@ function znBegin(st, role) {
   Object.assign(ZN, { j: Math.random().toString(36).slice(2, 6), rj, g: st.g, st, doneG: st.g, sendT: 0, hseq: 0, seq: 0, q: [], hq: [], shots: [], shotSeq: 0, lastQ: {}, lastH: {}, lastShot: {}, seenT: {}, ev: [], eseq: 0, evSeen: 0, lastHseq: -1, hostT: performance.now(), creditSeen: [0, 0, 0], est: null });
   ZN.hits.clear();
   if (typeof frSeedFrom === 'function') frSeedFrom(st);   // [fogrun]
+  if (typeof cpFrom === 'function') cpFrom(st);   // [campaign]
   zmStart({ net: role, hum: st.hum, map: st.map });
   for (const [sid] of st.hum) ZN.seenT[sid] = performance.now();
 }
@@ -224,6 +233,7 @@ function zmNetPeers() {
       if (hz.st.hum.some(x => Array.isArray(x) && x[0] === NET.sid)) {
         const st = { g: hz.st.g, hum: hz.st.hum.slice(0, ZN_MAX).filter(x => Array.isArray(x)).map(x => [String(x[0]), znClean(x[1], 16) || 'A keeper']), map: ZM_MAPS[hz.st.map] ? hz.st.map : 'light' };
         if (hz.st.fs) st.fs = hz.st.fs >>> 0;   // [fogrun] the run's seed
+        if (typeof hz.st.cm === 'string') { st.cm = hz.st.cm.slice(0, 8); st.cf = hz.st.cf | 0; }   // [campaign] the mission
         znBegin(st, 'client'); return;
       }
       ZN.doneG = hz.st.g; ZN.msg = ZN.mode === 'fb' ? 'They set sail without you. Host your own crew, or wait for the next.' : 'The night started without you. Host your own, or wait for the next.'; ZN.rjWant = null;   // [fbsea]
@@ -668,6 +678,7 @@ function znRjAfter(rj, gained) {
   $('zmMpStart').addEventListener('click', znStart);
   if ($('rdMpHost')) { $('rdMpHost').addEventListener('click', () => znHost('raid')); $('rdMpLeave').addEventListener('click', znLeave); $('rdMpStart').addEventListener('click', znStart); }   // [raid] Maren's End's card
   if ($('frMpHost')) { $('frMpHost').addEventListener('click', () => znHost('fr')); $('frMpLeave').addEventListener('click', znLeave); $('frMpStart').addEventListener('click', znStart); }   // [fogrun] Fog Run's card
+  if ($('cpMpHost')) { $('cpMpHost').addEventListener('click', () => znHost('cp')); $('cpMpLeave').addEventListener('click', znLeave); $('cpMpStart').addEventListener('click', znStart); }   // [campaign]
   if ($('fbMpHost')) { $('fbMpHost').addEventListener('click', () => znHost('fb')); $('fbMpLeave').addEventListener('click', znLeave); $('fbMpStart').addEventListener('click', znStart); }   // [fbsea] Freebooters' Sea's card
   setInterval(() => { if (!FPS.on && !$('zmTitle').closest('[hidden]')) { znRender(); if (ZN.code) znSendLobby(); } }, 1500);
   addEventListener('pagehide', () => { if (ZN.code && NET.room) NET.room.presence({ zm: null }).catch(() => {}); });

@@ -1792,3 +1792,26 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 @media (max-width: 560px) { .rl-emobtn { width: 42px; height: 42px; bottom: calc(var(--rl-bot, 170px) + 8px); } .rl-emopick { bottom: calc(var(--rl-bot, 170px) + 56px); } .rl-emogrid { grid-template-columns: repeat(5, 56px); } .rl-emoi canvas { width: 42px; height: 42px; } .rl-emoi span { font-size: 8.5px; } .rl-emob canvas { width: 64px; height: 64px; } }
 #rlUI.spec .rl-emobtn, #rlUI.spec .rl-emopick { display: none; }
 .rl-emob.gold { border-color: #d8a020; } .rl-emob.gold::after { border-top-color: #d8a020; } .rl-emob.top.gold::after { border-bottom-color: #d8a020; }   /* [rival] the third keeper's emotes (src/rl3.js) */
+
+/* [campaign] The Chronicle of the Light (src/cp.js): its card, and the list of missions by act */
+.cpcard { border-color: rgba(240,216,144,0.55); }
+.cpcard h1 { color: #f6e2a4; text-shadow: 0 0 30px rgba(240,216,144,0.45); }
+.newgame.cpbanner { border-color: rgba(240,216,144,0.6); background: linear-gradient(90deg, rgba(230,200,120,0.3), rgba(230,200,120,0.08)); }
+.newgame.cpbanner:hover, .newgame.cpbanner:focus-visible { background: linear-gradient(90deg, rgba(230,200,120,0.45), rgba(230,200,120,0.16)); }
+.newgame.cpbanner .ng-tag { background: #e0c070; color: #1a1406; }
+.cp-list { display: flex; flex-direction: column; flex: none; gap: 4px; margin: 14px 0 8px; max-height: 360px; overflow-y: auto; padding-right: 4px; }
+.cp-act { font: 400 15px "IM Fell English SC", serif; color: #f0d890; margin: 10px 0 2px; letter-spacing: 0.02em; }
+.cp-act:first-child { margin-top: 0; }
+.cp-act span { font: 600 11px "Courier Prime", monospace; color: rgba(240,216,144,0.7); text-transform: uppercase; margin-right: 6px; }
+.cp-act small { font: 12px "Courier Prime", monospace; color: rgba(236,228,207,0.45); margin-left: 6px; }
+.cp-m { display: grid; grid-template-columns: 30px 1fr auto; align-items: center; gap: 10px; width: 100%; text-align: left; padding: 7px 10px; border-radius: 8px; border: 1px solid rgba(236,228,207,0.12); background: rgba(8,10,14,0.35); color: #ece4cf; cursor: pointer; font: inherit; }
+.cp-m:hover:not(:disabled), .cp-m:focus-visible { border-color: rgba(240,216,144,0.55); background: rgba(240,216,144,0.08); }
+.cp-m.on { border-color: #f0d890; background: rgba(240,216,144,0.16); box-shadow: 0 0 0 1px rgba(240,216,144,0.3) inset; }
+.cp-m:disabled { opacity: 0.45; cursor: default; }
+.cp-n { font: 600 13px "Courier Prime", monospace; color: rgba(240,216,144,0.85); text-align: center; }
+.cp-t b { display: block; font: 400 16px "IM Fell English SC", serif; font-weight: 400; }
+.cp-t small { display: block; font: 11px "Courier Prime", monospace; color: rgba(236,228,207,0.55); }
+.cp-s { font: 600 11px "Courier Prime", monospace; color: rgba(236,228,207,0.6); white-space: nowrap; }
+.cp-m.done .cp-s { color: #9fd89a; }
+.cp-picked { font-size: 14px; line-height: 1.5; min-height: 2.6em; }
+.cp-picked b { font: 400 18px "IM Fell English SC", serif; color: #f6e2a4; }

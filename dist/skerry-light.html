@@ -1803,6 +1803,29 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 @media (max-width: 560px) { .rl-emobtn { width: 42px; height: 42px; bottom: calc(var(--rl-bot, 170px) + 8px); } .rl-emopick { bottom: calc(var(--rl-bot, 170px) + 56px); } .rl-emogrid { grid-template-columns: repeat(5, 56px); } .rl-emoi canvas { width: 42px; height: 42px; } .rl-emoi span { font-size: 8.5px; } .rl-emob canvas { width: 64px; height: 64px; } }
 #rlUI.spec .rl-emobtn, #rlUI.spec .rl-emopick { display: none; }
 .rl-emob.gold { border-color: #d8a020; } .rl-emob.gold::after { border-top-color: #d8a020; } .rl-emob.top.gold::after { border-bottom-color: #d8a020; }   /* [rival] the third keeper's emotes (src/rl3.js) */
+
+/* [campaign] The Chronicle of the Light (src/cp.js): its card, and the list of missions by act */
+.cpcard { border-color: rgba(240,216,144,0.55); }
+.cpcard h1 { color: #f6e2a4; text-shadow: 0 0 30px rgba(240,216,144,0.45); }
+.newgame.cpbanner { border-color: rgba(240,216,144,0.6); background: linear-gradient(90deg, rgba(230,200,120,0.3), rgba(230,200,120,0.08)); }
+.newgame.cpbanner:hover, .newgame.cpbanner:focus-visible { background: linear-gradient(90deg, rgba(230,200,120,0.45), rgba(230,200,120,0.16)); }
+.newgame.cpbanner .ng-tag { background: #e0c070; color: #1a1406; }
+.cp-list { display: flex; flex-direction: column; flex: none; gap: 4px; margin: 14px 0 8px; max-height: 360px; overflow-y: auto; padding-right: 4px; }
+.cp-act { font: 400 15px "IM Fell English SC", serif; color: #f0d890; margin: 10px 0 2px; letter-spacing: 0.02em; }
+.cp-act:first-child { margin-top: 0; }
+.cp-act span { font: 600 11px "Courier Prime", monospace; color: rgba(240,216,144,0.7); text-transform: uppercase; margin-right: 6px; }
+.cp-act small { font: 12px "Courier Prime", monospace; color: rgba(236,228,207,0.45); margin-left: 6px; }
+.cp-m { display: grid; grid-template-columns: 30px 1fr auto; align-items: center; gap: 10px; width: 100%; text-align: left; padding: 7px 10px; border-radius: 8px; border: 1px solid rgba(236,228,207,0.12); background: rgba(8,10,14,0.35); color: #ece4cf; cursor: pointer; font: inherit; }
+.cp-m:hover:not(:disabled), .cp-m:focus-visible { border-color: rgba(240,216,144,0.55); background: rgba(240,216,144,0.08); }
+.cp-m.on { border-color: #f0d890; background: rgba(240,216,144,0.16); box-shadow: 0 0 0 1px rgba(240,216,144,0.3) inset; }
+.cp-m:disabled { opacity: 0.45; cursor: default; }
+.cp-n { font: 600 13px "Courier Prime", monospace; color: rgba(240,216,144,0.85); text-align: center; }
+.cp-t b { display: block; font: 400 16px "IM Fell English SC", serif; font-weight: 400; }
+.cp-t small { display: block; font: 11px "Courier Prime", monospace; color: rgba(236,228,207,0.55); }
+.cp-s { font: 600 11px "Courier Prime", monospace; color: rgba(236,228,207,0.6); white-space: nowrap; }
+.cp-m.done .cp-s { color: #9fd89a; }
+.cp-picked { font-size: 14px; line-height: 1.5; min-height: 2.6em; }
+.cp-picked b { font: 400 18px "IM Fell English SC", serif; color: #f6e2a4; }
 </style>
 </head>
 <body>
@@ -1876,6 +1899,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
     <button class="newgame fbbanner" id="fbBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">And <b>Freebooters' Sea</b>: an open sea of islands to sail, salvage and sell, alone or with up to four</span><span class="ng-go" aria-hidden="true">↓</span></button><!-- [fbsea] -->
     <button class="newgame gfbanner" id="gfBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">And <b>Skerry Links</b>: nine holes of golf along the cliffs, alone or with up to four</span><span class="ng-go" aria-hidden="true">↓</span></button><!-- [golf] -->
     <button class="newgame rlbanner" id="rlBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">And a ninth, <b>Skerry Clash</b>: a duel of lights across the race, one keeper against another</span><span class="ng-go" aria-hidden="true">↓</span></button><!-- [rival] -->
+    <button class="newgame cpbanner" id="cpBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">And a tenth, <b>The Chronicle of the Light</b>: the whole history of the Skerries as a campaign, alone or with up to four</span><span class="ng-go" aria-hidden="true">↓</span></button><!-- [campaign] -->
     <div class="menulinks"><button class="tool notesbtn" id="notesBtn" type="button">Patch notes</button><button class="tool notesbtn lorebtn" id="loreBtn" type="button">Lore compendium</button></div>
     <div class="card boardcard" id="boardCard" aria-labelledby="boardHead">
       <div class="cardtop"><span class="eyebrow">Best on record · every game</span><span class="boardminititle">The Scoreboard</span><span class="boardbtns"><button class="tool closebtn" id="boardRefresh" type="button">Refresh</button><button class="tool closebtn" id="boardMin" type="button" aria-expanded="true" aria-controls="boardCard" title="Make the scoreboard small">– Minimise</button></span></div>
@@ -2275,6 +2299,42 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
         <p><b>Rating (MMR).</b> Every finished match moves your rating, which starts at 1000: up for a win, down for a loss, by more when the odds were against it. Duels online count most; the bot counts for less, against a rating of its own (easy 800, normal 1100, hard 1300). Leaving a duel early counts as a loss. The rating belongs to your username, and the Skerry Clash board ranks everyone by it. A username already rated on someone else's save can't be used for a rating, and renaming yourself starts a fresh rating under the new name.</p>
         <p><b>Watching.</b> Any duel online can be watched, while it waits for its keepers or once it's under way: tap Watch beside it in the list (or open an invite to a duel that's full). Up to eight can watch one duel. You see the whole field from the host's end, blue the near side (Swap ends turns it round), with both keepers' oil, crowns and the clock, but you can't play, and nothing you watch counts for your record, crates or rating. Leave from the menu any time; the keepers see how many are watching, nothing more.</p>
         <p><b>Tower skins.</b> Every duel you finish earns a tower crate, and a win earns another; the first is free. The Lampwright's Crate holds a set of towers for your rock, the Great Light and both lamps, with the same grades as the other crates: Mates shimmer, Captains glow, Admirals are alive. Whatever you raise, your side's colour is on the rails and the pennants.</p>
+      </details>
+    </div>
+    <div class="card zmcard cpcard" id="cpTitle" aria-labelledby="cpHead"><!-- [campaign] The Chronicle of the Light: its own card (src/cp.js, src/cpcine.js, src/cpm*.js) -->
+      <div class="cardtop"><span class="eyebrow">A tenth game · the whole tale · alone or up to four</span></div>
+      <h1 id="cpHead">The Chronicle of the Light</h1>
+      <p>Every story the Skerries tell, played from the beginning. From the first fire kept on Lantern Rock, through the night the Gannet went down and the strange year after it, to the war for the Drowned Reach: live through the history of the Light, one mission at a time, with cinematics at every turn of the tale.</p>
+      <p class="muted">Fourteen missions in five acts, each one opening when the one before it is done. Play alone, or together with up to four. Your progress is kept on this browser and in your save.</p>
+      <div class="cp-list" id="cpList" role="list"></div>
+      <p class="cp-picked" id="cpPicked"></p>
+      <p class="muted" id="cpProgress"></p>
+      <div class="btnrow">
+        <button class="primary" id="cpPlay" type="button">Play</button>
+        <button class="tool" id="cpSettings" type="button">Settings</button>
+      </div>
+      <section class="warmp zmmp" id="cpMp" aria-labelledby="cpMpHead">
+        <h2 id="cpMpHead">Play together · up to four</h2>
+        <p class="muted" id="cpMpNote">Looking for other players…</p>
+        <div class="nickrow"><label for="cpNick">Your name</label><input id="cpNick" type="text" maxlength="16" autocomplete="nickname" placeholder="Keeper"></div>
+        <div id="cpMpOpen" hidden>
+          <div class="btnrow"><button class="tool" id="cpMpHost" type="button">Host a mission</button></div>
+          <div class="warlobbies" id="cpLobbies"></div>
+        </div>
+        <div class="warlobby" id="cpLobby" hidden>
+          <h3 id="cpLobbyHead">Your mission</h3>
+          <ol class="warlobbylist" id="cpLobbyList"></ol>
+          <p class="muted" id="cpLobbyMsg"></p>
+          <div class="btnrow"><button class="primary" id="cpMpStart" type="button">Start together</button><button class="tool shareBtn" id="cpMpShare" type="button" data-mode="campaign">Share invite</button><button class="tool" id="cpMpLeave" type="button">Leave</button></div>
+        </div>
+      </section>
+      <details class="howto">
+        <summary>How to play</summary>
+        <p><b>Missions.</b> Pick a mission from the list and press Play. The first is open from the start, and each one after it opens once you've finished the one before. Finished missions can be played again any time, and your best time is kept.</p>
+        <p><b>Cinematics.</b> Each mission opens and closes with a cinematic, and the big moments play out on the way. Press Space, Enter, or A on a controller, or tap the screen, to skip one. Together, it's skipped once everyone has asked.</p>
+        <p><b>Objectives.</b> What to do next is shown at the top left, under the mission's name. People speak as you go, and what they say shows at the bottom of the screen.</p>
+        <p><b>Going down.</b> Alone, going down ends the mission, but you can try again from the part you'd reached. Together, someone holding Use beside you gets you up, and the first time you bleed out you're back on your feet ten seconds later. If everyone is down at once, the mission is lost.</p>
+        <p><b>Together.</b> One of you hosts and picks the mission. Everyone who sees it through has it marked done on their own browser.</p>
       </details>
     </div>
   </div>
@@ -2768,6 +2828,8 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
       <p id="zmOverStats"></p>
       <p class="muted" id="zmOverBest"></p>
       <div class="btnrow">
+        <button class="primary" id="cpNext" type="button" hidden>Next mission</button><!-- [campaign] -->
+        <button class="tool" id="cpRetry" type="button" hidden>Try again from here</button><!-- [campaign] -->
         <button class="primary" id="zmAgain" type="button">Hold it again</button>
         <button class="tool" id="zmLeave" type="button">Back to the harbour</button>
       </div>
@@ -14708,7 +14770,8 @@ function saveData() {
     fr: crOther('frData'),   // [fogrun] chart fragments (src/frkeep.js)
     fb: crOther('fbData'),   // [fbsea] sovereigns and standings (src/fbkeep.js)
     gc: crOther('gkData'),   // [golf] balls and clubs (src/gfcrates.js)
-    rv: crOther('rkData') };   // [rival] decks, record, tower crates and skins (src/rlcrates.js)
+    rv: crOther('rkData'),
+    cp: crOther('cpData') };   // [campaign] missions done (src/cp.js)   // [rival] decks, record, tower crates and skins (src/rlcrates.js)
 }
 function crOther(f) { try { return typeof window[f] === 'function' ? window[f]() : undefined; } catch (e) { return undefined; } }
 function saveCrates() {
@@ -14747,7 +14810,8 @@ function mergeSave(d, takeLooks) {
   if (typeof frMerge === 'function' && frMerge(d.fr)) changed = true;   // [fogrun] chart fragments (src/frkeep.js)
   if (typeof fbMerge === 'function' && fbMerge(d.fb)) changed = true;   // [fbsea] sovereigns and standings (src/fbkeep.js)
   if (typeof gkMerge === 'function' && gkMerge(d.gc, takeLooks)) changed = true;   // [golf] balls and clubs (src/gfcrates.js)
-  if (typeof rkMerge === 'function' && rkMerge(d.rv, takeLooks)) changed = true;   // [rival] decks, record, tower crates and skins (src/rlcrates.js)
+  if (typeof rkMerge === 'function' && rkMerge(d.rv, takeLooks)) changed = true;
+  if (typeof cpMerge === 'function' && cpMerge(d.cp)) changed = true;   // [campaign] missions done (src/cp.js)   // [rival] decks, record, tower crates and skins (src/rlcrates.js)
   if (takeLooks) {
     if (d.equipped && typeof d.equipped === 'object') for (const b of BOATS) {
       const sk = SKIN_BY_ID[d.equipped[b.id]];
@@ -14764,7 +14828,7 @@ function afterMerge() { saveCrates(); renderCrates(); updateCrateButtons(); rend
 // the save code: your save, packed into one line of text
 function saveCode() {
   const d = saveData();
-  const packed = { c: d.crates.skerry, n: d.opened | 0, o: d.owned, e: d.equipped, p: d.pennant, f: d.flare, b: d.boat, t: d.pt, w: d.w, q: d.oc, r: d.rc, s: d.best, u: d.nick, g: d.fr, v: d.fb };   // [pirate tokens] src/zmegg.js [fogrun] g: chart fragments [fbsea] v: sovereigns, standings
+  const packed = { c: d.crates.skerry, n: d.opened | 0, o: d.owned, e: d.equipped, p: d.pennant, f: d.flare, b: d.boat, t: d.pt, w: d.w, q: d.oc, r: d.rc, s: d.best, u: d.nick, g: d.fr, v: d.fb, k: d.cp };   // [pirate tokens] src/zmegg.js [fogrun] g: chart fragments [fbsea] v: sovereigns, standings
   return 'SKERRY-' + btoa(unescape(encodeURIComponent(JSON.stringify(packed)))).replace(/=+$/, '').replace(/\+/g, '-').replace(/\//g, '_');
 }
 function readSaveCode(text) {
@@ -14774,7 +14838,7 @@ function readSaveCode(text) {
   try {
     const b64 = m[1].replace(/-/g, '+').replace(/_/g, '/');
     const o = JSON.parse(decodeURIComponent(escape(atob(b64 + '==='.slice((b64.length + 3) % 4)))));
-    return { crates: o.c | 0, opened: o.n | 0, owned: o.o, equipped: o.e, pennant: o.p, flare: o.f, boat: o.b, pt: o.t, w: o.w, oc: o.q, rc: o.r, best: o.s, nick: o.u, fr: o.g, fb: o.v };   // [pirate tokens] src/zmegg.js [fogrun] [fbsea]
+    return { crates: o.c | 0, opened: o.n | 0, owned: o.o, equipped: o.e, pennant: o.p, flare: o.f, boat: o.b, pt: o.t, w: o.w, oc: o.q, rc: o.r, best: o.s, nick: o.u, fr: o.g, fb: o.v, cp: o.k };   // [pirate tokens] src/zmegg.js [fogrun] [fbsea]
   } catch (e) { return null; }
 }
 
@@ -16431,6 +16495,7 @@ function fpsIncoming(sh, f) {
   if (!(m.dead > 0) && !(m.protect > 0)) { const hit = fpsShotHits(sh, m); if (hit) fpsHurt(hit.dmg, by, fpsNameOf(by)); }
 }
 function fpsShoot() {
+  if (FPS.zm && typeof cpHold === 'function' && cpHold()) return;   // [campaign] not in a cinematic
   if (FPS.zm && typeof fagShoot === 'function' && fagShoot()) return;   // [fbsea] at a swivel gun: fire it (src/fbguns.js)
   if (FPS.zm && typeof fbNoGun === 'function' && fbNoGun()) return;   // [fbsea] your arms full: no gun (src/fbsea.js)
   if (FPS.zm && typeof rclShoot === 'function' && rclShoot()) return;   // [classes] an ultimate in place of the weapon (src/rclass.js)
@@ -16943,13 +17008,14 @@ function fpsDraw() {
   else focal = fb;
   try {
     try { fpsDrawScene(); } finally { focal = fb; setCamPitch(camPitch); hy = H * 0.5 + pitchY; }
-    fpsDrawHands();
+    const cine = FPS.zm && typeof cpCineOn === 'function' && cpCineOn();   // [campaign] a cinematic: no hands, no HUD
+    if (!cine) fpsDrawHands();
     // under a roof (src/fpsisle.js), the weather stays outside, and so, muffled, do the sea and the wind
     GFX.wx = 1 - FPS.inK;
     try { drawAtmosphere(); } finally { GFX.wx = 1; }
     if (typeof audioOutdoors === 'function') audioOutdoors(1 - FPS.inK);
     if (FPS.scoped && fpsW().scope) fpsDrawScope();
-    if (FPS.zm) zmHud(); else fpsHud();
+    if (FPS.zm) { if (!(typeof cpcHud === 'function' && cpcHud())) zmHud(); } else fpsHud();
   } finally { focal = f0; setCamPitch(0); }
 }
 function fpsDrawScene() {
@@ -16975,8 +17041,12 @@ function fpsDrawScene() {
     camH = Math.max(FPSC.GROUND + 0.4, eye + FPSC.TP_UP - sp * FPSC.TP_BACK * pull - (FPS.landed || 0) * 0.3);
     FPS.camAt = [camX, camY, camH];
   } else { FPS.camAt = null; FPS.camPull = null; }
+  // [campaign] a cinematic flies the camera itself (src/cpcine.js), and you're seen in it, as over the shoulder
+  let pitch = m.p;
+  const cine = FPS.zm && typeof cpcCam === 'function' ? cpcCam() : null;
+  if (cine) { camX = cine[0]; camY = cine[1]; camH = cine[2]; yaw = cine[3]; pitch = cine[4]; }
   // the camera tilts with your look (render.js cam/proj, and gl3d's camera): hy is where the horizon falls
-  setCamPitch(m.p); hy = H * 0.5 + pitchY;
+  setCamPitch(pitch); hy = H * 0.5 + pitchY;
   // indoors or out (where the camera is): eased over a quarter of a second or so, going through a door
   // ([raid] no weather at all in Maren's End)
   { const want = (FPS.zm && typeof RAID !== 'undefined' && RAID.on && !(raidStage() || {}).open) || fpsUnderRoof(FPS.g, camX, camY, camH) ? 1 : 0, k = Math.min(1, (FPS.dtLast || 0.016) * 5);   // [gannet] (an open stage is out in the weather)
@@ -16994,7 +17064,7 @@ function fpsDrawScene() {
   let shown = 0;
   // over the shoulder with the 3D renderer, you're a 3D figure in the scene (src/fpsbody.js)
   let body = false;
-  if (gl && third && typeof fpsBodySync === 'function') { try { body = fpsBodySync(true); } catch (e) { console.warn(e); body = false; } }
+  if (gl && (third || cine) && typeof fpsBodySync === 'function') { try { body = fpsBodySync(true); } catch (e) { console.warn(e); body = false; } }
   else if (typeof fpsBodyHide === 'function') fpsBodyHide();
   // and everyone else, as 3D figures too (src/fpsbody.js), so walls hide them and lanterns light them
   if (gl && typeof fpsFiguresSync === 'function') { try { fpsFiguresSync(); } catch (e) { console.warn(e); } }
@@ -23316,7 +23386,7 @@ function zmStart(opts) {
   const slot = Math.max(0, ZM.hum.findIndex(h => h[0] === FPS.me.id));
   if (ZM.net) { FPS.me.x += [0, 1.5, -1.5, 0][slot % 4]; FPS.me.y += [0, -1.6, -1.6, 1.8][slot % 4]; }
   zmNavBuild();
-  $('zmOver').hidden = true;
+  $('zmOver').hidden = true; if (typeof cpOverHide === 'function') cpOverHide();   // [campaign]
   $('zmAgain').textContent = ZM.net ? 'Back to the lobby' : 'Hold it again';
   fpsFeed(MAP.land(ZM.net ? ZM.hum.length : 0));
   if (typeof raidAfterStart === 'function') raidAfterStart();   // [raid]
@@ -23353,7 +23423,7 @@ function zmFrame(dt) {
     // (alone, the menu holds everything still; together, the night goes on)
     const live = (!FPS.menu || ZM.net) && !ZM.over;
     if (live && !FPS.menu && zmSpecOn()) zmSpecInput();   // (out, watching someone: src below, zmSpecTick)
-    else if (live && !FPS.menu) { const was = [m.x, m.y]; fpsInput(dt); if (zmIsDown()) zmCrawl(m, was, dt); }
+    else if (live && !FPS.menu && !(typeof cpHold === 'function' && cpHold())) { const was = [m.x, m.y]; fpsInput(dt); if (zmIsDown()) zmCrawl(m, was, dt); }
     else { FPS.look = [0, 0]; FPS.mlook = [0, 0]; m.walk = false; }
     if (FPS.menu) fpsMenuPad(dt);
     if (live) {
@@ -23420,8 +23490,9 @@ function zmTick(dt) {
     // the grid's distances from everyone standing, a few times a second
     ZM.navT -= dt;
     if (ZM.navT <= 0) { ZM.navT = 0.25; zmNavFrom(ZM.players); }
-    if ((typeof RAID !== 'undefined' && RAID.on)) raidHostTick(dt); else zmRounds(dt);   // [raid] no rounds there: its parts instead
-    zmZombies(dt);
+    const held = typeof cpHold === 'function' && cpHold();   // [campaign] a cinematic: everything stands still
+    if (held) {} else if ((typeof RAID !== 'undefined' && RAID.on)) raidHostTick(dt); else zmRounds(dt);   // [raid] no rounds there: its parts instead
+    if (!held) zmZombies(dt);
     zmDropsTick(dt);
     zmBoxTick(dt);
     if (ZM.double > 0) ZM.double -= dt; if (ZM.insta > 0) ZM.insta -= dt;
@@ -24377,6 +24448,7 @@ function zmBleedOut() {
   ZM.downT = 0; ZM.ghost = true; ZM.downKit = null; m.dead = FPSC.RESPAWN - 0.6; m.reload = 0; FPS.scoped = false;
   if (typeof frBledOut === 'function' && typeof FR !== 'undefined' && FR.on) { frBledOut(kit); return; }   // [fogrun] an extra life, or lost in the fog (src/frrun.js)
   if (typeof fbBledOut === 'function' && typeof FB !== 'undefined' && FB.on) { fbBledOut(kit); return; }   // [fbsea] back on your feet in ten seconds (src/fbsea.js)
+  if (typeof cpBledOut === 'function' && typeof CP !== 'undefined' && CP.on && cpBledOut(kit)) return;   // [campaign] an extra life (src/cp.js)
   fpsFeed('You bled out. You’ll be back next round, if anyone holds that long.');
 }
 // up again (a friend got to you): your own weapons back in your hands
@@ -32307,6 +32379,7 @@ function zhHud() {
 // (hosting or alone) lays out the next, and everyone follows the stage number in the host's word. Past the last, the
 // raid is won.
 
+// [campaign] The Chronicle of the Light (src/cp.js) is a raid too: its hooks here are marked [campaign].
 // [fbsea] Freebooters' Sea (src/fbsea.js) is a raid too, with no end: its hooks here are marked [fbsea] (raidBegin,
 // raidAfterStart, raidStop, raidMe, raidNextStage (never won), raidReport, raidHostSend, raidApply, raidHud, and
 // raidMapFor's map.seed).
@@ -32383,6 +32456,7 @@ function raidBegin(map) {
   RAID_ORDER.length = 0; RAID_ORDER.push(...raidInfo().order);
   if (typeof frBegin === 'function') frBegin();   // [fogrun] its seed, and its first stop (src/frrun.js)
   if (typeof fbBegin === 'function') fbBegin();   // [fbsea] the session's state, and the sea (src/fbsea.js)
+  if (typeof cpBegin === 'function') cpBegin();   // [campaign] the mission's stages (src/cp.js)
   Object.assign(RAID, { stage: 0, won: false, st: {}, t: 0, boss: 0, told: false, sta: 1, tired: false, tiredN: 0, runNow: false, practice: 0 });   // (practice: src/raidmaren2.js rf2Practice)
   if (typeof rmvReset === 'function') rmvReset();   // [mvp] src/raidmvp.js
   raidMapFor(0);
@@ -32398,6 +32472,7 @@ function raidAfterStart() {
   RAID.st = {}; raidCall('enter');
   if (typeof frAfterStart === 'function' && FR.on) frAfterStart();   // [fogrun]
   if (typeof fbAfterStart === 'function' && FB.on) fbAfterStart();   // [fbsea]
+  if (typeof cpAfterStart === 'function' && CP.on) cpAfterStart();   // [campaign] its intro, or a checkpoint
 }
 const RAIDC = { ROUND: 4, CALM: 0.7, BOSS_HP: 1.15 };   // (BOSS_HP: every boss's strength here, against the Lighthouse's)
 // what you carry down: a pepperbox and a blunderbuss, both full (and Maren's Lantern, which never leaves your hand)
@@ -32415,6 +32490,7 @@ function raidStop() {
   RAID.on = false; FPSC.R = FPSC_R0;   // [fogrun]
   if (typeof frStop === 'function') frStop();   // [fogrun]
   if (typeof fbStop === 'function') fbStop();   // [fbsea]
+  if (typeof cpStop === 'function') cpStop();   // [campaign]
   if (typeof GL3D !== 'undefined' && GL3D.scene && RAID.fog0) { GL3D.scene.fog = null; RAID.fog0 = null; }
 }
 // alone or hosting, each frame
@@ -32464,6 +32540,7 @@ function raidMe(dt) {
   raidCall('me', dt);
   if (typeof frMe === 'function' && FR.on) frMe(dt);   // [fogrun] the wait for your extra life
   if (typeof fbMe === 'function' && FB.on) fbMe(dt);   // [fbsea] the wait to be back on your feet
+  if (typeof cpMe === 'function' && CP.on) cpMe(dt);   // [campaign] subtitles, lives, the cinematic's clock
   if (typeof rclTick === 'function') rclTick(dt);   // [classes] src/rclass.js
   if (typeof rmvTick === 'function') rmvTick(dt);   // [mvp] src/raidmvp.js: what each of you did, counted
   // joined: the host's world has moved on to the next part
@@ -32471,7 +32548,8 @@ function raidMe(dt) {
 // who the drowned can come after
 function raidPlayers(P) { const r = raidCall('players', P); return r || P; }
 // hosting: a joined player's ask
-function raidRequest(sid, a) { if (!Array.isArray(a)) return; if (typeof frcQ === 'function' && FR.on && /^frc/.test(String(a[0]))) { frcQ(sid, String(a[0]), a[1]); return; } raidCall('q', sid, String(a[0]), a[1]); }   // [fogrun cards] (the salvage's picks: src/frcards.js)
+function raidRequest(sid, a) { if (!Array.isArray(a)) return; if (typeof cpQ === 'function' && CP.on && /^cp/.test(String(a[0]))) { cpQ(sid, String(a[0]), a[1]); return; }   // [campaign]
+  if (typeof frcQ === 'function' && FR.on && /^frc/.test(String(a[0]))) { frcQ(sid, String(a[0]), a[1]); return; } raidCall('q', sid, String(a[0]), a[1]); }   // [fogrun cards] (the salvage's picks: src/frcards.js)
 // hosting: one sent back
 function raidKill(d, how, by) { if (RAID.on) raidCall('kill', d, how, by); }
 function raidHurtK(d, dmg, code, by) { if (!RAID.on) return dmg; const r = raidCall('hurt', d, dmg, code, by); return r == null ? dmg : r; }
@@ -32488,6 +32566,7 @@ function raidNextStage() {
   if (!RAID.on || ZM.net === 'client' || ZM.over) return;
   if (typeof frGrow === 'function' && FR.on && RAID.stage + 1 >= RAID_ORDER.length) frGrow();   // [fogrun] the next stage, chosen now
   if (typeof FB !== 'undefined' && FB.on && RAID.stage + 1 >= RAID_ORDER.length) return;   // [fbsea] (never won: the next stage is always grown first, src/fbsea.js fbGo)
+  if (typeof cpNextHold === 'function' && CP.on && cpNextHold()) return;   // [campaign] the stage's 'after' cinematic first
   if (RAID.stage + 1 >= RAID_ORDER.length) { raidWin(); return; }
   raidUseStage(RAID.stage + 1);
 }
@@ -32512,10 +32591,12 @@ function raidUseStage(i) {
   RAID.st = {}; raidCall('enter');
   { const S = RAID_STAGES[RAID_ORDER[i]]; ZM.banner = S.banner ? S.banner() : { text: S.n, t: 4, sub: 'Part ' + raidNumeral(i + 1) }; }   // [fogrun] (a part can say its own)
   if (i === 0 || RAID.map === 'raid') fpsFeed(MAP.land(0));   // (the Gannet's Wake: each part says its own as it begins)
+  if (typeof cpStageBegun === 'function' && CP.on) cpStageBegun(i);   // [campaign] the stage's own cutscene
 }
 const raidNumeral = n => ['', 'I', 'II', 'III', 'IV', 'V', 'VI'][n] || String(n);
 function raidWin() {
   if (RAID.won) return;
+  if (typeof cpWinHold === 'function' && CP.on && cpWinHold()) return;   // [campaign] its outro first
   RAID.won = true;
   if (!(typeof FR !== 'undefined' && FR.on) && !(typeof FB !== 'undefined' && FB.on)) { if (typeof wcEarn === 'function') { wcEarn('round'); wcEarn('round'); } if (typeof ocEarn === 'function') { ocEarn('round'); ocEarn('round'); } }   // [fogrun] (a fog run pays its own: src/frkeep.js frPay)
   zmEnd();
@@ -32524,6 +32605,7 @@ function raidWin() {
 function raidBossDamage(n) { if (RAID.on && n > 0) RAID.boss += n; }
 // (zmEnd) the scoreboard: the time, if won; the bosses' damage; and this raid's kills added to all the rest
 function raidReport() {
+  if (typeof CP !== 'undefined' && CP.on) { cpReport(); return; }   // [campaign] marked done (src/cp.js)
   if (typeof frReport === 'function' && FR.on && !RAID.told) { frReport(); return; }   // [fogrun] its own board and what it pays (src/frkeep.js)
   if (typeof FB !== 'undefined' && FB.on) { if (!RAID.told && typeof fbReport === 'function') fbReport(); return; }   // [fbsea] its own (src/fbsea.js)
   const G = RAID.map;   // (each raid its own game on the board)
@@ -32534,6 +32616,7 @@ function raidReport() {
   if (typeof scoreRun === 'function') { scoreRun(G, RAID.won ? Math.max(1, 100000 - Math.round(RAID.t)) : 0, Math.round(RAID.boss), ZM.kills, RAID.won); scoreRunEnd(G); }
 }
 function raidShowOver() {
+  if (typeof cpShowOver === 'function' && CP.on && cpShowOver()) return;   // [campaign] its own end card
   if (RAID.won && typeof rmvShow === 'function' && rmvShow()) return;   // [mvp] won at the very end: everyone together (src/raidmvp.js)
   const S = RAID_STAGES[RAID_ORDER[RAID.stage]], cleared = RAID.won ? RAID_ORDER.length : RAID.stage;
   if ($('zmOverEye')) $('zmOverEye').textContent = raidName();
@@ -32558,6 +32641,7 @@ function raidHostSend(z) {
   const o = {}; raidCall('pack', o); z.rs = o;
   if (typeof frPack === 'function' && FR.on) frPack(z);   // [fogrun] the run: its plan, its events
   if (typeof fbPack === 'function' && FB.on) fbPack(z);   // [fbsea] the session: its stages, the ship, the hold, the purse
+  if (typeof cpPack === 'function' && CP.on) cpPack(z);   // [campaign] the objective, lines said, the cinematic
   if (typeof rmvPack === 'function') rmvPack(z);   // [mvp]
 }
 function raidApply(hz) {
@@ -32569,6 +32653,7 @@ function raidApply(hz) {
   RAID.won = !!hz.rd[1]; RAID.t = +hz.rd[2] || RAID.t; RAID.tAt = performance.now() / 1000;
   if (hz.rs && typeof hz.rs === 'object') raidCall('apply', hz.rs);
   if (typeof rmvApply === 'function') rmvApply(hz);   // [mvp]
+  if (typeof cpApply === 'function' && CP.on) cpApply(hz);   // [campaign] (last: a cinematic plays in the stage as it's now laid out)
 }
 
 // ---------- in 3D ----------
@@ -32602,7 +32687,7 @@ function raid3d(dt) {
   // the lantern: down at your left, swinging a little as you walk; not while you're down or out
   // (only in a part that asks for it: Part I's lantern stage; gone once you're through its door)
   const St = raidStage(), has = !!(St && St.lantern);
-  const show = has && !(m.dead > 0) && !zmIsDown() && !fpsThird() && !zmSpecOn();
+  const show = has && !(m.dead > 0) && !zmIsDown() && !fpsThird() && !zmSpecOn() && !(typeof cpCineOn === 'function' && cpCineOn());   // [campaign]
   R3.lan.visible = show;
   const h = m.h, p = m.p, ez = G0 + FPSC.EYE + (m.jz || 0) - (FPS.eyeLag || 0) - (FPS.downEye || 0) - (FPS.crouchEye || 0);
   const fx = Math.sin(h), fy = Math.cos(h), sw = reduceMotion ? 0 : Math.sin((FPS.step || 0) * 0.5) * 0.03;
@@ -32671,13 +32756,14 @@ function raidHud(phone, mono, fell) {
   ctx.textAlign = 'left'; ctx.textBaseline = 'top';
   const L = Math.max(14, FPS.safeLeft || 0);
   ctx.font = fell(phone ? 15 : 19); ctx.fillStyle = 'rgba(236,228,207,0.85)';
-  ctx.fillText(typeof fbHudTitle === 'function' && FB.on ? fbHudTitle(S) : typeof frHudTitle === 'function' && FR.on ? frHudTitle(S) : `${raidName()} · ${raidNumeral(RAID.stage + 1)} · ${S.n}`, L, top, W * 0.5);   // [fogrun]
+  ctx.fillText(typeof cpHudTitle === 'function' && CP.on ? cpHudTitle(S) : typeof fbHudTitle === 'function' && FB.on ? fbHudTitle(S) : typeof frHudTitle === 'function' && FR.on ? frHudTitle(S) : `${raidName()} · ${raidNumeral(RAID.stage + 1)} · ${S.n}`, L, top, W * 0.5);   // [fogrun]
   ctx.font = mono(phone ? 10 : 12); ctx.fillStyle = 'rgba(236,228,207,0.55)';
   ctx.fillText(raidClock(RAID.t), L, top + (phone ? 18 : 26));
   fpsHudNote(top + (phone ? 30 : 40));
   raidCall('hud', phone, mono, fell);
   if (typeof frHud === 'function' && FR.on) frHud(phone, mono, fell);   // [fogrun] lost, or waiting on your extra life
   if (typeof fbHud === 'function' && FB.on) fbHud(phone, mono, fell);   // [fbsea] the purse and the hold; back on your feet in...
+  if (typeof cpHud === 'function' && CP.on) cpHud(phone, mono, fell);   // [campaign] the objective, and the subtitles
 }
 
 // ---------- its card on the title screen ----------
@@ -36896,7 +36982,7 @@ setTimeout(() => {
 // Once it's over otherwise (all of you down, or left), nothing plays. While the raid's on, the Lighthouse's boss
 // themes (src/zmtheme.js) keep quiet: this is the music. Nothing plays until its recording has loaded.
 const RM = { WIND: 0.1, wind: null, bolt: null, fell: false, cur: null, src: null, gain: null, vol: 0.55, rate: 1 };
-const RM_LOOP = { raidfall: false, raidwin: false, gwwin: false, frwin: false };
+const RM_LOOP = { raidfall: false, raidwin: false, gwwin: false, frwin: false, cpwin: false };   // [campaign]
 const RM_FALLK = 1.3;   // (the fall's track played this much quicker, the fall being that much quicker than it was made for)
 const RM_TAIL = 2.5;   // (the fall's track runs on this long after its climax: tools/sfx/music.py TAIL)
 
@@ -36905,6 +36991,7 @@ function rmWant() {
   if (!RAID.on) RM.fell = RM.wonDone = false;
   // Maren down: the sunset, played once through (on to the end card), then quiet
   // (the Gannet's Wake has its own: dawn after the Captain goes down, gwwin)
+  { const v = typeof cpMusic === 'function' ? cpMusic() : undefined; if (v !== undefined) return v; }   // [campaign] (src/cp.js: a cinematic's, or a campaign stage's own)
   const WIN = RAID.map === 'fogrun' ? 'frwin' : RAID.map === 'gannet' ? 'gwwin' : 'raidwin';   // [fogrun]
   if (RAID.on && (RAID.won || (RAID_ORDER[RAID.stage] === 'fort' && typeof RF !== 'undefined' && RF.st === 'won') || (RAID_ORDER[RAID.stage] === 'gwcapt' && typeof GCW !== 'undefined' && GCW.st === 'won'))) { if (RM.cur === WIN && RM.done) RM.wonDone = true; return RM.wonDone ? null : WIN; }
   if (!RAID.on || ZM.over) return null;
@@ -48495,6 +48582,813 @@ function fbVoyDebug(kind, t) {
   return false;
 }
 
+// ---- src/cp.js ----
+'use strict';
+// The Chronicle of the Light: the tenth game, a campaign. The Skerry Compendium's timeline (src/lore.js, 'timeline'),
+// played through from the first fire on Lantern Rock to the war for the Drowned Reach, one mission for each of its
+// key moments, alone or up to four together. Each mission opens and closes with a cinematic (src/cpcine.js), and
+// plays its key moments as cutscenes on the way.
+//
+// How it's built. Like Fog Run and Freebooters' Sea, it's a raid (src/raid.js): its own map, ZM_MAPS.campaign (cp:
+// true), its own entry in RAIDS (kept off the raid card's picker: RAIDS.campaign.own), the callings (src/rclass.js),
+// going down and getting up, and playing together through the Lighthouse's lobby (src/zmnet.js, its own mode 'cp',
+// prefix cp, card cpTitle). The host's browser runs it. What's its own:
+//  - The missions, CP_MISSIONS (in order; each registered by its own file, src/cpm01.js to src/cpm14.js, with
+//    cpMission). A mission is a run of raid stages: its own, registered with cpStage(key, stage) as
+//    RAID_STAGES['cp_' + key], and any of the other raids' (e.g. 'gwsail', 'gwhold', 'gwcapt', 'descent', 'bridge',
+//    'fort'). Once the raid begins, RAID_ORDER is the mission's stages. The mission picked goes out with the start
+//    (st.cm: its id; st.cf: the stage to start at, for a checkpoint), so every screen lays out the same.
+//  - The story's state, CP (below): which mission (CP.mid), the objective shown at the top (CP.obj), lines said
+//    (CP.ev, events in the host's word like Freebooters' Sea's), and the cinematic playing (src/cpcine.js).
+//  - Progress, kept on this browser (localStorage 'skerry-campaign', and in the save: crates.js saveData 'cp'), and
+//    always merged, never replaced (cpMerge): each mission's times finished and best time. Missions open in order:
+//    the first always, each next one once the one before is done. Together, the host's open missions are the ones
+//    on offer, and everyone who sees a mission through has it marked done on their own browser.
+//  - Checkpoints: lose a mission and you can try again from the part you were on (solo: straight away; together the
+//    host's lobby starts the next one from it).
+//
+// The hook API, for the missions' own files:
+//  - cpMission(def): a mission. def: { id ('m01'), act (1 to 5), n (its name), when (the date, as the timeline gives
+//    it), where, blurb (a line or two for the card), stages: [RAID_STAGES keys, in order], intro / outro (cinematic
+//    ids: played as it begins, and once its last stage is won), cut: { i: cinematic id } (played as stage i begins,
+//    after it's laid out), after: { i: cinematic id } (played once stage i is done, before the next is laid out),
+//    music: { default: key, ... } (see cpMusic), lives: n (together, extra lives each, as Fog Run's: default 1),
+//    begin() / stop() (the raid beginning and ending: anything of yours set up or put back, on every screen) }.
+//  - cpStage(key, stage): a stage of the campaign's own (src/raid.js hooks), as RAID_STAGES['cp_' + key]. Its
+//    map can lay itself out from any FPI_GEN island (map.isle) or as the raid's own cave (left out).
+//  - cpCast(k, { n, c }): someone who speaks (a name and the colour it's shown in). CP_CAST has the timeline's people.
+//  - cpSay(who, text, vo) (hosting or alone): a line said, shown on everyone's screen as a subtitle and, where its
+//    recording has been made (src/sfxbank.js: 'vo_' + vo), heard. vo is the line's id: 'cp_m01_03' and so on, the
+//    names the sound thread records them under (see /campaign/sound-notes.md in the project files).
+//  - cpObjective(text) (hosting or alone): the objective shown at the top of everyone's screen ('' to clear).
+//  - cpCine(id, then) (hosting or alone): play a cinematic on every screen (src/cpcine.js); then() runs on the host
+//    when it's over (or skipped). cpCineOn() is true on any screen while one plays: nothing moves, nobody is hurt.
+//  - cpDone() (hosting or alone): this stage is done. On to the next (through its 'after' cinematic), or, past the
+//    last, the mission is won (through its outro). raidNextStage() and raidWin() go the same way here.
+//  - cpFail(why) (hosting or alone): the mission is lost (the over card says why).
+//  - cpAsk(k, a): a joined player asks the host something of the campaign (cpQ(sid, k, a) on the host): k begins 'cp'.
+//  - cpMusic(): the music key for now (src/raidmusic.js rmWant asks it first): the cinematic's own, else the stage's
+//    music(), else the mission's music.default. A key whose recording isn't made yet falls back (CP_MUSIC_FALL) to
+//    one that is, so there's always something playing.
+//  - cpDebug(mid, stage): straight into a mission alone (the calling picked for you), at a stage, for tests.
+// Hooks in shared files are marked [campaign]: src/raid.js (raidBegin, raidAfterStart, raidStop, raidNextStage,
+// raidWin, raidReport, raidShowOver, raidHostSend, raidApply, raidHud, raidRequest, raidMe), src/zombies.js
+// (zmFrame and zmTick: held still in a cinematic; zmAgain), src/fps.js (fpsDrawScene's camera, fpsDraw's HUD,
+// fpsShoot), src/zmnet.js (the lobby's fifth card, the mission in the start), src/raidmusic.js, src/crates.js (the
+// save), src/menudesk.js (the tenth game), src/share.js, index.html (its card), src/style.css.
+
+var CP_MISSIONS = [];
+const CP_BY = {};
+// the acts, in order
+const CP_ACTS = [null,
+  { n: 'Before the Light', when: 'c. 1200 to 1790' },
+  { n: 'The Light', when: '1841 to 1887' },
+  { n: 'The Strange Year', when: '1888' },
+  { n: 'After the Gannet', when: '1888 to 1891' },
+  { n: 'The Years After', when: 'Undated' }];
+// the people who speak: a name and a colour
+var CP_CAST = {
+  log: { n: 'The Keeper’s Log', c: '#e8dcc0', narr: true },
+  holm: { n: 'Holm', c: '#ffd88a' },
+  maren: { n: 'Maren', c: '#9fd8e8' },
+  plim: { n: 'Plimsoll', c: '#8ab4ff' },
+  lamp: { n: 'The Lampwright', c: '#f0c070' },
+  fire: { n: 'The Fire-Keeper', c: '#ff9a5a' },
+  fog: { n: 'The Fog-Keeper', c: '#b8c8d8' },
+  crane: { n: 'Captain Crane', c: '#c8a0a0' },
+  bosun: { n: 'The Bosun', c: '#a8b890' },
+  knock: { n: 'Knock', c: '#e0a060' },
+  verity: { n: 'Verity', c: '#f0f0f0' },
+  moon: { n: 'A Mooncusser', c: '#d8c070' },
+  wreck: { n: 'A Wrecker', c: '#d89070' },
+  factor: { n: 'The Factor', c: '#d8b060' },
+  mayor: { n: 'The Mayor of Wrackhaven', c: '#c0b090' },
+  crew: { n: 'Crew', c: '#ece4cf' },
+};
+function cpCast(k, def) { CP_CAST[k] = Object.assign({ n: k, c: '#ece4cf' }, def); return CP_CAST[k]; }
+// music that isn't made yet plays one that is (src/raidmusic.js): the campaign's keys, and what each falls back to
+const CP_MUSIC_FALL = { cpmenu: 'gwwin', cpwin: 'gwwin', cplose: null, cptense: 'gwhold', cpsail: 'gwsail', cpfight: 'frisle', cpboss: 'frboss', cpsad: 'raidpier', cpfog: 'frsail', cpcave: 'raidcave', cphope: 'gwwin' };
+
+const CPC = { LIVES: 1, BACK: 10, KEEP: 'skerry-campaign', PICK: 'skerry-cp-pick', SAY: 5.5 };
+var CP = { on: false, mid: null, want: null, from: 0, debug: null, obj: '', ev: [], eseq: 0, evSeen: -1, sub: null, subs: [], won: false, lost: '', fail: '', outroDone: false, nextOk: -1, life: 0, backT: 0, kit: null, startT: 0 };
+// progress on this browser: { done: { id: { n: times finished, t: best seconds, d: first finished (YYYY-MM-DD) } } }
+var CPS = { done: {} };
+
+// ---------- registering ----------
+function cpMission(def) {
+  const M = Object.assign({ act: 1, n: def.id, when: '', where: '', blurb: '', stages: [], cut: {}, after: {}, music: {}, lives: CPC.LIVES }, def);
+  if (CP_BY[M.id]) CP_MISSIONS.splice(CP_MISSIONS.indexOf(CP_BY[M.id]), 1, M); else CP_MISSIONS.push(M);
+  CP_BY[M.id] = M;
+  CP_MISSIONS.sort((a, b) => a.id < b.id ? -1 : 1);
+  return M;
+}
+function cpStage(key, stage) { stage.cp = key; RAID_STAGES['cp_' + key] = stage; return stage; }
+const cpNow = () => CP.on ? CP_BY[CP.mid] || null : null;
+const cpIndex = id => CP_MISSIONS.findIndex(M => M.id === id);
+
+// ---------- the map, as src/zombies.js and src/raid.js see it ----------
+ZM_MAPS.campaign = Object.assign({}, ZM_MAPS.raid, { n: 'The Chronicle of the Light', N: 'The Chronicle of the Light', seed: 0xc4a91, cp: true,
+  blurb: 'A campaign through the whole history of the Light, alone or up to four.',
+  land: n => { const M = CP_BY[CP.mid]; return M ? `${M.when}. ${M.where}${n ? ', ' + n + ' of you' : ''}.` : 'The Chronicle of the Light.'; } });
+RAIDS.campaign = { n: 'The Chronicle of the Light', own: true, at: {}, mvp: '-',
+  // (the mission's stages, as raidBegin takes them: the one wanted, or the one picked on the card)
+  get order() { const M = CP_BY[CP.want] || CP_BY[CP.pick] || CP_MISSIONS[0]; const o = M ? M.stages.filter(k => RAID_STAGES[k]) : []; return o.length ? o : ['descent']; },
+  lost: n => CP.fail || `The tale ends at ${n}`, won: 'Mission complete', again: 'Play it again' };
+
+// ---------- progress ----------
+function cpLoad() { try { const d = JSON.parse(localStorage.getItem(CPC.KEEP) || 'null'); if (d) cpMerge(d, true); } catch (e) {} }
+function cpSave() { try { localStorage.setItem(CPC.KEEP, JSON.stringify(CPS)); } catch (e) {} }
+// (crates.js saveData) what goes in the save
+function cpData() { return Object.keys(CPS.done).length ? { done: CPS.done } : undefined; }
+// (crates.js mergeSave, and loading) a save's progress merged with this browser's: more times, the better time
+function cpMerge(d, quiet) {
+  if (!d || typeof d !== 'object' || !d.done || typeof d.done !== 'object') return false;
+  let ch = false;
+  for (const [id, v] of Object.entries(d.done)) {
+    if (!/^m\d\d$/.test(id) || !v || typeof v !== 'object') continue;
+    const o = CPS.done[id] || (CPS.done[id] = { n: 0, t: 0, d: '' }), n = clamp(v.n | 0, 0, 99999), t = Math.max(0, +v.t || 0);
+    if (n > o.n) { o.n = n; ch = true; }
+    if (t > 0 && (!o.t || t < o.t)) { o.t = Math.round(t); ch = true; }
+    if (typeof v.d === 'string' && /^\d{4}-\d\d-\d\d$/.test(v.d) && (!o.d || v.d < o.d)) { o.d = v.d; ch = true; }
+    if (!o.n && !o.t) delete CPS.done[id];
+  }
+  if (ch && !quiet) { cpSave(); cpCard(); }
+  return ch;
+}
+const cpIsDone = id => !!(CPS.done[id] && CPS.done[id].n > 0);
+// open: the first, and each one after a mission done
+function cpIsOpen(id) { const i = cpIndex(id); if (i <= 0) return i === 0; return cpIsDone(CP_MISSIONS[i - 1].id) || cpIsDone(id); }
+function cpComplete(id, secs) {
+  const o = CPS.done[id] || (CPS.done[id] = { n: 0, t: 0, d: '' });
+  const first = !o.n;
+  o.n++; if (secs > 0 && (!o.t || secs < o.t)) o.t = Math.round(secs);
+  if (!o.d) o.d = new Date().toISOString().slice(0, 10);
+  cpSave();
+  try { if (typeof saveCrates === 'function') saveCrates(); } catch (e) {}
+  return first;
+}
+
+// ---------- starting, and stopping (src/raid.js) ----------
+// (src/zmnet.js znBegin) the mission the host picked, and where in it to start
+function cpFrom(st) { if (st && ZM_MAPS[st.map] && ZM_MAPS[st.map].cp && CP_BY[st.cm]) { CP.want = st.cm; CP.from = clamp(st.cf | 0, 0, CP_BY[st.cm].stages.length - 1); } }
+// (raidBegin, with RAID.map set) is this the campaign? Its mission's stages into the raid's order
+function cpBegin() {
+  CP.on = RAID.map === 'campaign';
+  if (!CP.on) return;
+  const M = CP_BY[CP.want] || CP_BY[CP.pick] || CP_MISSIONS[0];
+  Object.assign(CP, { mid: M.id, wp: null, obj: '', ev: [], eseq: 0, evSeen: -1, sub: null, subs: [], won: false, lost: '', fail: '', outroDone: false, nextOk: -1, life: 0, backT: 0, kit: null, startT: 0 });
+  CP.want = M.id;
+  RAID_ORDER.length = 0; RAID_ORDER.push(...RAIDS.campaign.order);
+  if (typeof cpcReset === 'function') cpcReset();
+  try { if (M.begin) M.begin(); } catch (e) { console.warn('cp begin', e); }
+}
+// (raidAfterStart) laid out, and we know who's in it: the intro, or straight to the checkpoint
+function cpAfterStart() {
+  const M = cpNow(); if (!M) return;
+  CP.life = ZM.net ? (M.lives == null ? CPC.LIVES : M.lives) : 0;
+  { const e = document.querySelector('#fpsMenu .eyebrow'); if (e) e.textContent = M.n; $('fpsLeave').textContent = 'Leave the mission'; $('fpsResume').textContent = 'Back to the mission'; }
+  const from = CP.debug ? CP.debug.stage | 0 : CP.from | 0; CP.from = 0;
+  const dbg = CP.debug; CP.debug = null;
+  if (dbg && typeof RCL !== 'undefined' && RCL.picking) rclChoose(RCL.last || 'merc');
+  if (ZM.net === 'client') return;
+  // (a checkpoint, or a test: no intro; raidUseStage plays the stage's own cutscene)
+  if (from > 0 && from < RAID_ORDER.length) { raidUseStage(from); return; }
+  if (dbg && dbg.noCine) return;
+  if (M.intro && typeof cpCine === 'function') cpCine(M.intro, () => cpStageBegun(0)); else cpStageBegun(0);
+}
+// (each stage laid out, hosting or alone: raidUseStage, and the first after its intro) its own cutscene
+function cpStageBegun(i) {
+  const M = cpNow(); if (!M || ZM.net === 'client') return;
+  const c = M.cut && M.cut[i];
+  if (c && typeof cpCine === 'function') cpCine(c);
+}
+function cpStop() {
+  const M = CP_BY[CP.mid];
+  if (CP.on && M && M.stop) try { M.stop(); } catch (e) { console.warn('cp stop', e); }
+  if (typeof cpcStop === 'function') cpcStop();
+  CP.on = false; CP.obj = ''; CP.sub = null; CP.subs = [];
+}
+
+// ---------- the parts, one after another ----------
+// (raidNextStage, hosting or alone) true: held for a cinematic first (it calls raidNextStage again once it's over)
+function cpNextHold() {
+  const M = cpNow(); if (!M) return false;
+  const i = RAID.stage, c = M.after && M.after[i];
+  if (c && CP.nextOk !== i && typeof cpCine === 'function') { cpCine(c, () => { CP.nextOk = i; raidNextStage(); }); return true; }
+  return false;
+}
+function cpDone() { if (!CP.on || ZM.net === 'client' || ZM.over) return; if (typeof cpCineOn === 'function' && cpCineOn()) return; raidNextStage(); }
+// (raidWin, hosting or alone) true: held for the outro (it calls raidWin again once it's over)
+function cpWinHold() {
+  const M = cpNow(); if (!M) return false;
+  if (M.outro && !CP.outroDone && typeof cpCine === 'function') { CP.outroDone = true; cpCine(M.outro, () => raidWin()); return true; }
+  return false;
+}
+function cpFail(why) { if (!CP.on || ZM.net === 'client' || ZM.over) return; CP.fail = String(why || ''); cpEvent('fail', CP.fail); zmEnd(); }
+// (raidReport, as it ends) won: marked done on this screen, and the crates a raid pays
+function cpReport() {
+  if (RAID.told) return; RAID.told = true;
+  const M = cpNow(); if (!M) return;
+  if (RAID.won) { CP.first = cpComplete(M.id, RAID.t); if (CP.first) { if (typeof wcEarn === 'function') wcEarn('round'); if (typeof ocEarn === 'function') ocEarn('round'); } }
+}
+
+// ---------- lines, the objective, and what happens ----------
+function cpSay(who, text, vo) { if (!CP.on || ZM.net === 'client') return; cpEvent('say', [String(who || ''), String(text || ''), String(vo || '')]); }
+function cpObjective(text) { if (!CP.on || ZM.net === 'client') return; CP.obj = String(text || ''); }
+// (hosting or alone) an event, here and in the host's word: 'say' ([who, text, vo]), 'fail' (why), or a mission's own
+function cpEvent(k, a) {
+  if (ZM.net === 'client') return;
+  CP.ev.push([++CP.eseq, k, a == null ? null : a]); if (CP.ev.length > 12) CP.ev.shift();
+  cpEventHere(k, a);
+}
+const CP_ON = {};
+function cpOn(k, cb) { (CP_ON[k] || (CP_ON[k] = [])).push(cb); }
+function cpEventHere(k, a) {
+  if (k === 'say' && Array.isArray(a)) cpSub(a[0], a[1], a[2]);
+  else if (k === 'fail') CP.fail = String(a || '');
+  for (const cb of CP_ON[k] || []) try { cb(a); } catch (e) { console.warn('cpOn ' + k, e); }
+}
+// a subtitle on this screen (and its recording, if there is one): queued behind whatever's still showing
+function cpSub(who, text, vo) {
+  text = String(text || '').slice(0, 300); if (!text) return;
+  const C = CP_CAST[who] || { n: who, c: '#ece4cf' };
+  const d = clamp(1.6 + text.length * 0.055, 2.4, 8);
+  CP.subs.push({ who: C.n, c: C.c, narr: !!C.narr, text, vo: vo || '', d, t: 0 });
+  if (CP.subs.length > 4) CP.subs.shift();
+}
+function cpVoice(vo) { if (!vo || typeof sfxPlay !== 'function') return false; try { return sfxPlay('vo_' + vo, { vol: 0.95, vary: 0 }); } catch (e) { return false; } }
+// (each frame, everyone) the subtitles' clock
+function cpSubTick(dt) {
+  const s = CP.subs[0]; if (!s) return;
+  if (s.t === 0) cpVoice(s.vo);
+  s.t += dt; if (s.t >= s.d) CP.subs.shift();
+}
+
+// ---------- each frame, everyone (raidMe) ----------
+function cpMe(dt) {
+  cpSubTick(dt);
+  if (CP.backT > 0 && !ZM.over) { CP.backT -= dt; if (CP.backT <= 0) cpBack(); }
+  if (!ZM.ghost && CP.backT > 0 && !zmIsDown()) CP.backT = 0;
+  if (typeof cpcTick === 'function') cpcTick(dt);
+}
+// lives (together): the first bleed-out, back on your feet CPC.BACK seconds later at the stage's start
+function cpBledOut(kit) {
+  if (!CP.on || CP.life <= 0) return false;
+  CP.life--; CP.kit = kit || null; CP.backT = CPC.BACK;
+  ZM.banner = { text: 'You bled out', t: 3, sub: `Back on your feet in ${CPC.BACK} seconds`, col: '#ffe2a8' };
+  return true;
+}
+function cpBack() {
+  CP.backT = 0; if (!ZM.ghost) return;
+  const m = FPS.me;
+  ZM.ghost = false; ZM.downT = 0; m.dead = 0; m.hp = ZMC.HP; m.protect = 3; m.iframe = ZMC.IFRAME_UP;
+  if (CP.kit) { ZM.downKit = CP.kit; CP.kit = null; zmDownDisarm(); } else raidLoadout();
+  const slot = Math.max(0, ZM.hum.findIndex(h => h[0] === m.id));
+  m.x = FPSC.CX + ZMD.START[0] + [0, 1.5, -1.5, 0][slot % 4]; m.y = FPSC.CY + ZMD.START[1] + [0, -1.6, -1.6, 1.8][slot % 4]; m.jz = m.fl = ZMD.TOP; m.vz = 0;
+  ZM.banner = { text: 'Back on your feet', t: 2.5, small: true, col: '#ffe2a8' };
+}
+
+// ---------- playing together (src/zmnet.js, through src/raid.js) ----------
+// the host's word: cpw = [mission, objective, events]; and the cinematic (src/cpcine.js cpcPack)
+function cpPack(z) {
+  z.cpw = [CP.mid, CP.obj, CP.ev];
+  if (typeof cpWpPack === 'function') cpWpPack(z);   // (src/cpkit.js)
+  if (typeof cpcPack === 'function') cpcPack(z);
+}
+function cpApply(hz) {
+  const a = hz.cpw; if (!Array.isArray(a)) return;
+  CP.obj = znClean(a[1], 140);
+  if (Array.isArray(a[2])) {
+    if (CP.evSeen < 0) { CP.evSeen = 0; for (const e of a[2]) if (Array.isArray(e)) CP.evSeen = Math.max(CP.evSeen, e[0] | 0); }
+    for (const e of a[2]) {
+      if (!Array.isArray(e) || !((e[0] | 0) > CP.evSeen)) continue; CP.evSeen = e[0] | 0;
+      const k = String(e[1] || ''), v = e[2];
+      cpEventHere(k, k === 'say' && Array.isArray(v) ? [znClean(v[0], 16), znClean(v[1], 300), znClean(v[2], 40)] : v);
+    }
+  }
+  if (typeof cpWpApply === 'function') cpWpApply(hz);
+  if (typeof cpcApply === 'function') cpcApply(hz);
+}
+function cpAsk(k, a) { if (ZM.net === 'client') zmnRequest('raid', [k, a]); else cpQ(FPS.me.id, k, a); }
+// (hosting) a joined player's ask
+function cpQ(sid, k, a) { if (k === 'cpskip' && typeof cpcSkipVote === 'function') cpcSkipVote(sid); }
+
+// ---------- painted on top (raidHud) ----------
+function cpHudTitle(S) { const M = cpNow(); return M ? `${M.n} · ${S && S.n || ''}` : ''; }
+function cpHud(phone, mono, fell) {
+  // the objective, under the title at the top left
+  if (CP.obj && !ZM.over) {
+    const top = fpsHudTop() + (phone ? 46 : 62), L = Math.max(14, FPS.safeLeft || 0);
+    ctx.textAlign = 'left'; ctx.textBaseline = 'top'; ctx.font = mono(phone ? 11 : 13);
+    const tx = '◆ ' + CP.obj, w = Math.min(W * 0.55, ctx.measureText(tx).width + 16);
+    ctx.fillStyle = 'rgba(8,10,14,0.5)'; ctx.fillRect(L - 6, top - 4, w, phone ? 20 : 24);
+    ctx.fillStyle = '#ffd88a'; ctx.fillText(tx, L, top, W * 0.55 - 12);
+  }
+  if (typeof cpWpHud === 'function') cpWpHud(phone, mono);
+  if (CP.backT > 0 && ZM.ghost) { ctx.textAlign = 'center'; ctx.font = fell(phone ? 18 : 24); ctx.fillStyle = '#ffe2a8'; ctx.fillText(`Back on your feet in ${Math.max(1, Math.ceil(CP.backT))} s`, cx, H * 0.36); }
+  cpSubHud(phone, mono, fell, false);
+  ctx.textBaseline = 'alphabetic';
+}
+// the subtitle now showing: low in the middle (in a cinematic, in the bar under the picture)
+function cpSubHud(phone, mono, fell, cine) {
+  const s = CP.subs[0]; if (!s) return;
+  const a = clamp(Math.min(s.t * 5, (s.d - s.t) * 3), 0, 1), y = cine ? H - H * 0.055 : H - (phone ? 190 : 150);
+  ctx.save(); ctx.globalAlpha = a; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.font = (s.narr ? 'italic ' : '') + fell(phone ? 16 : 22);
+  const lines = cpWrap(s.text, Math.min(W - 40, phone ? W - 30 : 900));
+  const lh = phone ? 20 : 28, h0 = lines.length * lh + (phone ? 18 : 24);
+  if (!cine) { ctx.fillStyle = 'rgba(8,10,14,0.55)'; ctx.fillRect(cx - Math.min(W - 20, (phone ? W : 940)) / 2, y - h0 / 2 - 8, Math.min(W - 20, phone ? W : 940), h0 + 12); }
+  const y0 = y - (lines.length - 1) * lh / 2 + (phone ? 8 : 10);
+  ctx.font = mono(phone ? 10 : 12); ctx.fillStyle = s.c; ctx.fillText(s.narr ? '' : s.who.toUpperCase(), cx, y0 - (phone ? 18 : 24));
+  ctx.font = (s.narr ? 'italic ' : '') + fell(phone ? 16 : 22); ctx.fillStyle = s.narr ? '#e8dcc0' : '#f4eedf';
+  lines.forEach((l, i) => ctx.fillText(l, cx, y0 + i * lh));
+  ctx.restore();
+}
+function cpWrap(text, w) {
+  const out = []; let cur = '';
+  for (const word of text.split(/\s+/)) { const t = cur ? cur + ' ' + word : word; if (ctx.measureText(t).width > w && cur) { out.push(cur); cur = word; } else cur = t; }
+  if (cur) out.push(cur); return out.slice(0, 4);
+}
+
+// ---------- the end of a mission (raidShowOver) ----------
+function cpShowOver() {
+  const M = cpNow(); if (!M) return false;
+  const i = cpIndex(M.id), next = CP_MISSIONS[i + 1], S = RAID_STAGES[RAID_ORDER[RAID.stage]];
+  if ($('zmOverEye')) $('zmOverEye').textContent = `The Chronicle of the Light · ${M.n}`;
+  $('zmOverHead').textContent = RAID.won ? (next ? 'Mission complete' : 'The Chronicle is told') : (CP.fail || `The tale ends at ${S ? S.n : 'the dark'}`);
+  $('zmOverStats').textContent = (ZM.net ? `${ZM.hum.length} of you. ` : '') + (RAID.won ? `${M.n} done in ${raidClock(RAID.t)}. ` : `${RAID.stage} of ${RAID_ORDER.length} parts done. `) + `${ZM.kills} of the drowned sent back.`;
+  const o = CPS.done[M.id];
+  $('zmOverBest').textContent = RAID.won ? (CP.first ? 'First time through: a weapon crate and an outfit crate. ' : '') + (o && o.t ? `Your best: ${raidClock(o.t)}. ` : '') + (next ? `Next: ${next.n} (${next.when}).` : 'Every tale of the Light, told.') : 'Try again from the part you reached, or from the start.';
+  const nb = $('cpNext'), rb = $('cpRetry');
+  if (nb) { nb.hidden = !(RAID.won && next && !ZM.net); nb.textContent = next ? `Next: ${next.n}` : ''; nb.onclick = () => { CP.pick = next.id; cpPickSave(); fpsStop(); setTimeout(() => cpPlay(next.id), 0); }; }
+  if (rb) { rb.hidden = !!(RAID.won || ZM.net || RAID.stage === 0); rb.textContent = `Try again from part ${raidNumeral(RAID.stage + 1)}`; const st = RAID.stage; rb.onclick = () => { fpsStop(); setTimeout(() => cpPlay(M.id, st), 0); }; }
+  // together, the lobby's next start picks up from the checkpoint
+  CP.retry = !RAID.won ? { id: M.id, st: RAID.stage } : null;
+  $('zmOver').hidden = false;
+  try { document.exitPointerLock && document.exitPointerLock(); } catch (e) {}
+  setTimeout(() => { const b = nb && !nb.hidden ? nb : $('zmAgain'); b.focus(); }, 30);
+  return true;
+}
+// (the over card hides these elsewhere)
+function cpOverHide() { if ($('cpNext')) $('cpNext').hidden = true; if ($('cpRetry')) $('cpRetry').hidden = true; }
+
+// ---------- music (src/raidmusic.js) ----------
+const cpHas = k => !!(k && typeof SFXB !== 'undefined' && SFXB.buf[k] && SFXB.buf[k].length);
+function cpMusicKey(k) { let n = 0; while (k && !cpHas(k) && n++ < 4) k = CP_MUSIC_FALL[k] !== undefined ? CP_MUSIC_FALL[k] : null; return k || null; }
+function cpMusic() {
+  if (!CP.on || !RAID.on) return undefined;
+  if (ZM.over) return RAID.won ? cpMusicKey('cpwin') : null;
+  const c = typeof cpcMusic === 'function' ? cpcMusic() : undefined; if (c !== undefined) return cpMusicKey(c);
+  const S = raidStage(), M = cpNow();
+  if (S && S.cp && typeof S.music === 'function') return cpMusicKey(S.music());
+  if (S && !S.cp) return undefined;   // (another raid's stage: its own music, as ever)
+  return cpMusicKey(M && M.music && M.music.default || 'cptense');
+}
+
+// ---------- its card on the title screen ----------
+CP.pick = null;
+try { CP.pick = localStorage.getItem(CPC.PICK); } catch (e) {}
+function cpPickSave() { try { localStorage.setItem(CPC.PICK, CP.pick || ''); } catch (e) {} }
+// (src/zmnet.js) together, the host's mission and checkpoint for the start
+function cpStartFor(st) {
+  const id = CP_BY[CP.pick] && cpIsOpen(CP.pick) ? CP.pick : (CP_MISSIONS.find(M => cpIsOpen(M.id) && !cpIsDone(M.id)) || CP_MISSIONS[0] || {}).id;
+  st.cm = id; if (CP.retry && CP.retry.id === id) st.cf = CP.retry.st; CP.retry = null;
+}
+function cpPlay(id, from) {
+  if (FPS.on || !CP_BY[id]) return;
+  if (typeof znSoloOk === 'function' && !znSoloOk('cp')) return;
+  CP.want = id; CP.from = from | 0; CP.pick = id; cpPickSave();
+  zmStart({ map: 'campaign' });
+}
+const cpEsc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+function cpCard() {
+  const box = $('cpList'); if (!box) return;
+  if (!CP_BY[CP.pick] || !cpIsOpen(CP.pick)) CP.pick = (CP_MISSIONS.find(M => cpIsOpen(M.id) && !cpIsDone(M.id)) || CP_MISSIONS.filter(M => cpIsOpen(M.id)).pop() || CP_MISSIONS[0] || {}).id;
+  const done = CP_MISSIONS.filter(M => cpIsDone(M.id)).length;
+  let h = '', act = 0;
+  for (const M of CP_MISSIONS) {
+    if (M.act !== act) { act = M.act; const A = CP_ACTS[act] || {}; h += `<div class="cp-act"><span>Act ${raidNumeral(act)}</span> ${cpEsc(A.n || '')} <small>${cpEsc(A.when || '')}</small></div>`; }
+    const open = cpIsOpen(M.id), dn = cpIsDone(M.id), on = M.id === CP.pick, n = cpIndex(M.id) + 1;
+    h += `<button type="button" class="cp-m${on ? ' on' : ''}${dn ? ' done' : ''}" data-m="${M.id}"${open ? '' : ' disabled'} aria-pressed="${on}"><span class="cp-n">${n}</span><span class="cp-t"><b>${cpEsc(open ? M.n : 'Not yet told')}</b><small>${cpEsc(M.when)}${open && M.where ? ' · ' + cpEsc(M.where) : ''}</small></span><span class="cp-s">${dn ? '✓' + (CPS.done[M.id].t ? ' ' + raidClock(CPS.done[M.id].t) : '') : open ? 'New' : '🔒'}</span></button>`;
+  }
+  box.innerHTML = h;
+  for (const b of box.querySelectorAll('.cp-m')) b.addEventListener('click', () => { if (typeof ZN !== 'undefined' && ZN.code && !znAmHost()) return; CP.pick = b.dataset.m; cpPickSave(); cpCard(); if (typeof znSendLobby === 'function' && ZN.code) znSendLobby(); });
+  const M = CP_BY[CP.pick];
+  if ($('cpPicked')) $('cpPicked').innerHTML = M ? `<b>${cpEsc(M.n)}</b> <span class="muted">${cpEsc(M.when)}</span><br>${cpEsc(M.blurb)}` : '';
+  if ($('cpProgress')) $('cpProgress').textContent = `${done} of ${CP_MISSIONS.length} missions done.`;
+  if ($('cpPlay')) $('cpPlay').textContent = M && cpIsDone(M.id) ? 'Play it again' : 'Play';
+}
+// (a test, or the console) straight into a mission alone, at a stage
+function cpDebug(id, stage, noCine) {
+  if (FPS.on) return false;
+  id = CP_BY[id] ? id : CP_MISSIONS[0].id;
+  CP.debug = { stage: stage | 0, noCine: !!noCine }; CP.want = id; CP.from = stage | 0;
+  zmStart({ map: 'campaign' });
+  return true;
+}
+
+(() => {
+  cpLoad();
+  if (!$('cpTitle')) return;
+  $('cpPlay').addEventListener('click', () => { if (CP.pick) cpPlay(CP.pick); });
+  $('cpSettings').addEventListener('click', () => $('titleSettings').click());
+  if ($('cpBanner')) $('cpBanner').addEventListener('click', () => { $('cpTitle').scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' }); setTimeout(() => $('cpPlay').focus({ preventScroll: true }), 400); });
+  // (the missions' own files load after this one: draw the list once they have)
+  window.addEventListener('load', cpCard);
+  setTimeout(cpCard, 0);
+})();
+
+// ---- src/cpcine.js ----
+'use strict';
+// The Chronicle of the Light: its cinematics. A cinematic is a run of shots played in the game's own 3D world (the
+// stage as it's laid out), with the picture letterboxed, the camera flown along its own path, lines said as
+// subtitles under the picture (and heard, once they're recorded: src/cp.js cpVoice), title cards on black, and actors
+// of its own built for it and moved as it plays. While one plays nothing else moves: the drowned stand where they
+// are, nobody can be hurt, and the stage's clock waits (src/zombies.js zmFrame and zmTick ask cpCineOn).
+//
+// Together: the host starts it (cpCine) and says which, and how far in, in its word (cpc); every screen plays the
+// same shots from its own clock, kept within half a second of the host's. Anyone can ask to skip (Space, Enter, a
+// click or tap, A on a controller): alone it ends there and then; together, once everyone has asked.
+//
+// A cinematic (cpCineDef(id, def)): { n: its name, music: a music key (src/cp.js cpMusic) while it plays,
+//   b3(grp, C): its actors built (every screen, as it begins: grp is a THREE.Group in the scene, emptied after;
+//   C is the cinematic's own state, for anything to keep), exit(C): as it ends (every screen),
+//   shots: [ shot, ... ] }
+// A shot: { d: seconds,
+//   cam: [x, y, h] where the camera is (x, y about the island's middle, as a stage's map.start; h above the ground),
+//   to: [x, y, h] where it ends up (eased from cam over the shot; left out, it stays),
+//   look: [x, y, h] what it looks at, lookTo: what it ends looking at (or hd: [yaw, pitch], hdTo: [yaw, pitch]),
+//   ease: 'io' (default: in and out), 'lin', 'in', 'out',
+//   card: { eye, t, sub } a title card on black instead of the picture (eye: a small line over it, t: the title,
+//     sub: under it), cam ignored,
+//   fade: [in seconds, out seconds] from and to black (default [0, 0]; a card's [0.6, 0.6]),
+//   lines: [[at seconds, who (CP_CAST key), text, vo id], ...] subtitles said during the shot,
+//   sfx: [[at, name, vol], ...] sounds (src/sfxbank.js names) during the shot,
+//   shake: 0..1 the camera shaking, f(t, k, C): each frame (t: seconds into the shot, k: 0 to 1), for its actors,
+//   enter(C) / exit(C): the shot beginning and ending, on every screen }
+// Helpers: cpLook(from, to) gives [yaw, pitch]; cpLerp3(a, b, k).
+var CP_CINES = {};
+function cpCineDef(id, def) { def.id = id; def.shots = def.shots || []; def.T = def.shots.reduce((a, s) => a + (s.d || 0), 0); CP_CINES[id] = def; return def; }
+const CPN = { rate: 1, on: null, t: 0, seq: 0, then: null, skip: new Set(), grp: null, C: null, shot: -1, hostT: 0, bar: 0, skipped: false };
+
+const cpLerp3 = (a, b, k) => [a[0] + (b[0] - a[0]) * k, a[1] + (b[1] - a[1]) * k, a[2] + (b[2] - a[2]) * k];
+function cpLook(f, t) { const dx = t[0] - f[0], dy = t[1] - f[1], dz = t[2] - f[2]; return [Math.atan2(dx, dy), Math.atan2(dz, Math.hypot(dx, dy))]; }
+const cpEase = (k, e) => e === 'lin' ? k : e === 'in' ? k * k : e === 'out' ? 1 - (1 - k) * (1 - k) : k * k * (3 - 2 * k);
+function cpCineOn() { return !!(CPN.on && typeof CP !== 'undefined' && CP.on); }
+// (the camera, cinematic or not: zmFrame holds input while it's on)
+const cpHold = () => cpCineOn();
+
+// ---------- starting and ending ----------
+// (hosting or alone) play cinematic id on every screen; then() on the host once it's over
+function cpCine(id, then) {
+  if (!CP.on || ZM.net === 'client' || ZM.over) return false;
+  const D = CP_CINES[id];
+  if (!D || !D.shots.length) { if (then) then(); return false; }
+  if (CPN.on) cpcEnd(true);   // (one already playing: it's over)
+  CPN.seq++; cpcBegin(D, 0); CPN.then = then || null;
+  return true;
+}
+function cpcBegin(D, t) {
+  CPN.on = D; CPN.t = t || 0; CPN.shot = -1; CPN.skip = new Set(); CPN.C = {}; CPN.skipped = false;
+  CP.subs = [];
+  try { FPS.scoped = false; } catch (e) {}
+  try { if (typeof GL3D !== 'undefined' && GL3D.scene && typeof THREE !== 'undefined') { CPN.grp = new THREE.Group(); GL3D.scene.add(CPN.grp); if (D.b3) D.b3(CPN.grp, CPN.C); } } catch (e) { console.warn('cine b3', e); }
+  // (any lines already past, joining late: not said)
+  CPN.said = new Set();
+  try { document.exitPointerLock && document.exitPointerLock(); } catch (e) {}
+}
+// (everyone) the end of it: its actors gone; hosting or alone, then()
+function cpcEnd(quiet) {
+  const D = CPN.on; if (!D) return;
+  const S = D.shots[CPN.shot]; if (S && S.exit) try { S.exit(CPN.C); } catch (e) {}
+  try { if (D.exit) D.exit(CPN.C); } catch (e) { console.warn('cine exit', e); }
+  if (CPN.grp) { try { CPN.grp.parent && CPN.grp.parent.remove(CPN.grp); cpcDispose(CPN.grp); } catch (e) {} CPN.grp = null; }
+  CPN.on = null; CPN.shot = -1; CP.subs = [];
+  const then = CPN.then; CPN.then = null;
+  if (!quiet && then && ZM.net !== 'client') try { then(); } catch (e) { console.warn('cine then', e); }
+  // (on again: look where you were looking)
+  try { cv.focus(); } catch (e) {}
+}
+function cpcDispose(o) { o.traverse(n => { if (n.geometry) n.geometry.dispose(); if (n.material) for (const m of [].concat(n.material)) { if (m.map && m.map.dispose && !m.map.keep) m.map.dispose(); m.dispose(); } }); }
+function cpcReset() { if (CPN.on) cpcEnd(true); CPN.seq = 0; CPN.hostT = 0; }
+function cpcStop() { cpcReset(); }
+
+// ---------- each frame (src/cp.js cpMe) ----------
+function cpcTick(dt) {
+  const D = CPN.on; if (!D) { CPN.bar = Math.max(0, CPN.bar - dt * 3); return; }
+  CPN.bar = Math.min(1, CPN.bar + dt * 2.5);
+  FPS.me.protect = Math.max(FPS.me.protect || 0, 1); FPS.me.iframe = Math.max(FPS.me.iframe || 0, 1);
+  CPN.t += dt * CPN.rate;   // (rate: a test can play them quicker)
+  // (A on a controller skips, as Space does)
+  try { const P = navigator.getGamepads ? [...navigator.getGamepads()].filter(Boolean) : []; const a = P.some(p => p.buttons[0] && p.buttons[0].pressed); if (a && !CPN.padA && CPN.t > 0.4) cpcSkip(); CPN.padA = a; } catch (e) {}
+  // (joined: kept near the host's own clock)
+  if (ZM.net === 'client' && Math.abs(CPN.t - CPN.hostT) > 0.5) CPN.t = CPN.hostT;
+  if (CPN.t >= D.T) { if (ZM.net !== 'client') cpcEnd(); else CPN.t = D.T - 0.001; return; }
+  // which shot
+  let a = 0, i = 0; while (i < D.shots.length - 1 && CPN.t >= a + D.shots[i].d) { a += D.shots[i].d; i++; }
+  if (i !== CPN.shot) {
+    const P = D.shots[CPN.shot]; if (P && P.exit) try { P.exit(CPN.C); } catch (e) {}
+    CPN.shot = i; const S = D.shots[i]; if (S.enter) try { S.enter(CPN.C); } catch (e) { console.warn('shot enter', e); }
+  }
+  const S = D.shots[i], st = CPN.t - a, k = clamp(st / Math.max(0.001, S.d), 0, 1);
+  CPN.st = st; CPN.k = k; CPN.a = a;
+  for (const [j, L] of (S.lines || []).entries()) { const key = i + ':' + j; if (st >= L[0] && !CPN.said.has(key)) { CPN.said.add(key); if (st - L[0] < 1.5) cpSub(L[1], L[2], L[3]); } }
+  for (const [j, F] of (S.sfx || []).entries()) { const key = i + 's' + j; if (st >= F[0] && !CPN.said.has(key)) { CPN.said.add(key); if (st - F[0] < 0.5) try { sfxPlay(F[1], { vol: F[2] == null ? 0.8 : F[2] }); } catch (e) {} } }
+  if (S.f) try { S.f(st, k, CPN.C); } catch (e) { if (!CPN.warned) { CPN.warned = true; console.warn('shot f', e); } }
+}
+// (src/fps.js fpsDrawScene, a cinematic on) the camera for now: [x, y, h, yaw, pitch] in the world, or null
+function cpcCam() {
+  const D = CPN.on; if (!D || CPN.shot < 0) return null;
+  const S = D.shots[CPN.shot]; if (!S || S.card || !S.cam) return null;
+  const e = cpEase(CPN.k || 0, S.ease), p = S.to ? cpLerp3(S.cam, S.to, e) : S.cam;
+  let hd;
+  if (S.look) { const l = S.lookTo ? cpLerp3(S.look, S.lookTo, e) : S.look; hd = cpLook(p, l); }
+  else if (S.hd) { const a = S.hd, b = S.hdTo || S.hd; hd = [a[0] + angDiff(b[0], a[0]) * e, a[1] + (b[1] - a[1]) * e]; }
+  else hd = [0, 0];
+  let x = FPSC.CX + p[0], y = FPSC.CY + p[1], h = FPSC.GROUND + p[2];
+  if (S.shake && !reduceMotion) { const t = g.t, s = S.shake * 0.12; x += Math.sin(t * 37) * s; y += Math.cos(t * 41) * s; h += Math.sin(t * 53) * s * 0.6; }
+  return [x, y, h, hd[0], clamp(hd[1], -1.4, 1.4)];
+}
+
+// ---------- painted on top (src/fps.js fpsDraw: in place of the HUD) ----------
+function cpcHud() {
+  const D = CPN.on; if (!D && CPN.bar <= 0) return false;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const phone = FPS.touch, mono = px => `600 ${px}px "Courier Prime", monospace`, fell = px => `400 ${px}px "IM Fell English SC", serif`;
+  const S = D && D.shots[CPN.shot];
+  if (S) {
+    const fd = S.fade || (S.card ? [0.6, 0.6] : [0, 0]), st = CPN.st || 0;
+    let blk = S.card ? 1 : 0;
+    if (!S.card) { if (fd[0] > 0 && st < fd[0]) blk = Math.max(blk, 1 - st / fd[0]); if (fd[1] > 0 && st > S.d - fd[1]) blk = Math.max(blk, (st - (S.d - fd[1])) / fd[1]); }
+    if (blk > 0) { ctx.fillStyle = `rgba(0,0,0,${clamp(blk, 0, 1)})`; ctx.fillRect(0, 0, W, H); }
+    if (S.card) {
+      const a = clamp(Math.min(st / Math.max(0.01, fd[0]), (S.d - st) / Math.max(0.01, fd[1])), 0, 1);
+      ctx.save(); ctx.globalAlpha = a; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      const C = S.card;
+      if (C.eye) { ctx.font = mono(phone ? 11 : 14); ctx.fillStyle = 'rgba(255,216,138,0.85)'; ctx.fillText(String(C.eye).toUpperCase(), cx, H * 0.4); }
+      if (C.t) { ctx.font = fell(phone ? 30 : 54); ctx.fillStyle = '#f4eedf'; ctx.fillText(C.t, cx, H * 0.48, W - 30); }
+      if (C.sub) { ctx.font = 'italic ' + fell(phone ? 15 : 22); ctx.fillStyle = 'rgba(232,220,192,0.85)'; const L = cpWrap(C.sub, Math.min(W - 40, 820)); L.forEach((l, i) => ctx.fillText(l, cx, H * 0.57 + i * (phone ? 20 : 30))); }
+      ctx.restore();
+    }
+  }
+  // the letterbox
+  const bh = H * 0.11 * cpEase(CPN.bar, 'io');
+  if (bh > 0.5) { ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, bh); ctx.fillRect(0, H - bh, W, bh); }
+  if (D) {
+    cpSubHud(phone, mono, fell, true);
+    // skip
+    ctx.textAlign = 'right'; ctx.textBaseline = 'middle'; ctx.font = mono(phone ? 9 : 11); ctx.fillStyle = 'rgba(236,228,207,0.5)';
+    const n = ZM.net ? (ZM.hum || []).length : 1, k = CPN.skip.size;
+    ctx.fillText(CPN.skipped ? (ZM.net ? `WAITING TO SKIP · ${k}/${n}` : '') : (phone ? 'TAP TO SKIP' : FPS.pad ? 'A TO SKIP' : 'SPACE TO SKIP') + (ZM.net && k ? ` · ${k}/${n}` : ''), W - Math.max(14, FPS.safeRight || 0), bh * 0.5 || 14);
+  }
+  ctx.textBaseline = 'alphabetic';
+  return !!D;
+}
+// (src/cp.js cpMusic) the cinematic's own music, if it says one
+function cpcMusic() { return CPN.on && CPN.on.music ? CPN.on.music : undefined; }
+
+// ---------- skipping ----------
+function cpcSkip() {
+  if (!CPN.on || CPN.skipped) return;
+  CPN.skipped = true;
+  if (!ZM.net) { cpcEnd(); return; }
+  cpAsk('cpskip');
+}
+// (hosting) someone asked to skip: once everyone has, it's over
+function cpcSkipVote(sid) {
+  if (!CPN.on) return;
+  CPN.skip.add(sid);
+  const all = (ZM.hum || []).map(h => h[0]).filter(s => s === FPS.me.id || FPS.remote.has(s));
+  if (all.every(s => CPN.skip.has(s))) cpcEnd();
+}
+addEventListener('keydown', e => { if (!cpCineOn() || FPS.menu) return; if (e.code === 'Space' || e.code === 'Enter' || e.code === 'NumpadEnter') { e.preventDefault(); e.stopPropagation(); cpcSkip(); } }, true);
+addEventListener('pointerdown', e => { if (!cpCineOn() || FPS.menu) return; if (e.target && e.target.closest && e.target.closest('#fpsMenu, button')) return; cpcSkip(); }, true);
+
+// ---------- playing together ----------
+// cpc = [seq, id, seconds in, who's asked to skip]; null when nothing is playing
+function cpcPack(z) { z.cpc = CPN.on ? [CPN.seq, CPN.on.id, Math.round(CPN.t * 20) / 20, [...CPN.skip]] : null; }
+function cpcApply(hz) {
+  const c = hz.cpc;
+  if (!Array.isArray(c)) { if (CPN.on) cpcEnd(true); return; }
+  const seq = c[0] | 0, D = CP_CINES[String(c[1])]; if (!D) return;
+  CPN.hostT = +c[2] || 0;
+  if (!CPN.on || seq !== CPN.seq) { if (CPN.on) cpcEnd(true); CPN.seq = seq; cpcBegin(D, CPN.hostT); }
+  CPN.skip = new Set(Array.isArray(c[3]) ? c[3].map(String) : []);
+}
+
+// ---- src/cpkit.js ----
+'use strict';
+// The Chronicle of the Light: tools shared by the missions (src/cpm01.js to src/cpm14.js).
+//  - cpWaypoint(x, y, label, h) (hosting or alone): a marker on everyone's screen at (x, y) about the island's middle
+//    (h metres up; label under it, with the distance), drawn over the world and held at the screen's edge when it's
+//    behind you; cpWaypoint(null) clears it. It goes in the host's word (src/cp.js cpw).
+//  - cpTitleShot(M, d): a cinematic's opening card for mission M: the act, the date, the name, the place.
+//  - cpkNpc(cols, outfit): a person in the period's clothes (src/fpsbody.js's figure: cols [coat, shirt, trim,
+//    lantern], outfit an outfit id or ''), standing in the scene; cpkNpcPose(F, { x, y, h, spd, p, lan, dt, cr })
+//    each frame (x, y in the world: FPSC.CX + ..., FPSC.CY + ...); cpkNpcFree(F). In a cinematic, build them in its
+//    b3 and free them in its exit.
+//  - cpkNear(x, y, r): is anyone (you, or hosting, anyone else standing) within r of (x, y), world coordinates.
+//  - cpkW(x, y): about the island's middle, into the world: [FPSC.CX + x, FPSC.CY + y].
+//  - The placeholder stage 'cp_wip' (a mission still being written): walk to the light and it's done.
+
+// ---------- the waypoint ----------
+function cpWaypoint(x, y, label, h) { if (!CP.on || ZM.net === 'client') return; CP.wp = x == null ? null : [+x || 0, +y || 0, +h || 1.2, String(label || '')]; }
+function cpWpPack(z) { z.cpwp = CP.wp || null; }
+function cpWpApply(hz) { const w = hz.cpwp; CP.wp = Array.isArray(w) ? [+w[0] || 0, +w[1] || 0, +w[2] || 1.2, znClean(w[3], 40)] : null; }
+// (src/cp.js cpHud) the marker
+function cpWpHud(phone, mono) {
+  const w = CP.wp; if (!w || ZM.over) return;
+  const X = FPSC.CX + w[0], Y = FPSC.CY + w[1], Z = FPSC.GROUND + w[2], m = FPS.me;
+  const c = cam(X, Y, Z), d = Math.hypot(X - m.x, Y - m.y);
+  let px, py, edge = false;
+  if (c.f > 0.3) { const p = proj(c); px = p.x; py = p.y; } else { px = c.r >= 0 ? W - 30 : 30; py = H * 0.5; edge = true; }
+  const mg = 30; if (px < mg || px > W - mg || py < mg + 40 || py > H - mg - 60) edge = true;
+  px = clamp(px, mg, W - mg); py = clamp(py, mg + 40, H - mg - 60);
+  const t = g.t, s = (phone ? 7 : 9) * (1 + 0.12 * Math.sin(t * 4));
+  ctx.save(); ctx.translate(px, py);
+  ctx.fillStyle = 'rgba(255,216,138,0.9)'; ctx.strokeStyle = 'rgba(8,10,14,0.8)'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(0, -s); ctx.lineTo(s, 0); ctx.lineTo(0, s); ctx.lineTo(-s, 0); ctx.closePath(); ctx.stroke(); ctx.fill();
+  ctx.textAlign = 'center'; ctx.textBaseline = 'top'; ctx.font = mono(phone ? 9 : 11); ctx.fillStyle = 'rgba(255,236,190,0.95)';
+  ctx.fillText((w[3] ? w[3].toUpperCase() + ' · ' : '') + Math.round(d) + ' M' + (edge ? (c.r >= 0 ? ' ›' : ' ‹') : ''), 0, s + 4);
+  ctx.restore();
+}
+
+// ---------- the opening card ----------
+function cpTitleShot(M, d) {
+  const A = CP_ACTS[M.act] || {}, n = cpIndex(M.id) + 1;
+  return { d: d || 4.5, card: { eye: `Act ${raidNumeral(M.act)} · ${A.n || ''} · Mission ${n}`, t: M.n, sub: [M.when, M.where].filter(Boolean).join(' · ') } };
+}
+
+// ---------- people ----------
+function cpkNpc(cols, outfit) { if (typeof fbFigure !== 'function' || typeof GL3D === 'undefined' || !GL3D.scene) return null; try { return fbFigure(cols || ['#3a2a1e', '#d8d0bc', '#7a5a3a', '#ffd88a'], outfit || ''); } catch (e) { console.warn('cpkNpc', e); return null; } }
+function cpkNpcPose(F, o) {
+  if (!F) return;
+  const dt = o.dt == null ? Math.min(0.05, FPS.dtLast || 0.016) : o.dt;
+  F.ph = (F.ph || 0) + dt * (o.spd || 0) * 8 / FPSC.SPEED;
+  try { fbPose(F, { dt, x: o.x, y: o.y, jz: o.jz || 0, vz: 0, h: o.h || 0, p: o.p || 0, spd: o.spd || 0, ph: F.ph, cr: o.cr || 0, id: o.id || 'pepperbox', plain: true, pap: 0, rec: 0, draw: 0, rl: 0, slash: -1, lan: o.lan !== false, t: g.t, see: o.see == null ? 1 : o.see, op: o.op == null ? 1 : o.op, noGun: o.noGun }); } catch (e) {}
+  if (o.noGun && F.wpn) for (const k in F.wpn) if (F.wpn[k] && F.wpn[k].visible != null) F.wpn[k].visible = false;
+}
+function cpkNpcFree(F) { if (F && typeof fbDispose === 'function') try { fbDispose(F); } catch (e) {} }
+
+// ---------- where people are ----------
+const cpkW = (x, y) => [FPSC.CX + x, FPSC.CY + y];
+function cpkNear(x, y, r) {
+  const m = FPS.me;
+  if (!(m.dead > 0) && !zmIsDown() && Math.hypot(m.x - x, m.y - y) < r) return true;
+  if (ZM.net === 'host') for (const o of FPS.remote.values()) if (!o.dead && !o.down && o.x != null && Math.hypot(o.x - x, o.y - y) < r) return true;
+  return false;
+}
+
+// ---------- the placeholder stage ----------
+cpStage('wip', {
+  n: 'Still being written',
+  map: { start: [0, -60], top: 0, nav: [-80, 80, -80, 80] },
+  set(H, K, Z) {},
+  enter() { if (ZM.net !== 'client') { cpObjective('Walk to the light'); cpWaypoint(0, 0, 'The light'); } },
+  tick(dt) { const [x, y] = cpkW(0, 0); if (cpkNear(x, y, 4)) cpDone(); },
+  mend: true,
+});
+
+// ---- src/cpm01.js ----
+'use strict';
+// The Chronicle of the Light, mission 1: The First Fire (c. 1200s). A placeholder until the mission is written: its place in
+// the campaign (src/cp.js cpMission), a title card, and the stage still being written (src/cpkit.js 'cp_wip').
+cpMission({ id: 'm01', act: 1, n: 'The First Fire', when: 'c. 1200s', where: 'Lantern Rock',
+  blurb: "Before there was a lighthouse there was a fire. Keep the fire-keepers' beacon burning on Lantern Rock through a night of haar, against what comes out of the fog.",
+  stages: ['cp_wip'], intro: 'm01_intro', outro: 'm01_outro', music: { default: 'cptense' } });
+cpCineDef('m01_intro', { shots: [cpTitleShot(CP_BY.m01), { d: 4, cam: [0, -70, 6], to: [0, -55, 4], look: [0, 0, 1], lines: [[0.3, 'log', 'This page of the log is still being written.', '']] }] });
+cpCineDef('m01_outro', { shots: [{ d: 3, card: { eye: 'Mission complete', t: 'The First Fire', sub: 'c. 1200s' } }] });
+
+// ---- src/cpm02.js ----
+'use strict';
+// The Chronicle of the Light, mission 2: The Mooncussers (The 1600s). A placeholder until the mission is written: its place in
+// the campaign (src/cp.js cpMission), a title card, and the stage still being written (src/cpkit.js 'cp_wip').
+cpMission({ id: 'm02', act: 1, n: 'The Mooncussers', when: 'The 1600s', where: 'The headland below the sea fort',
+  blurb: 'The wrecking years. Mooncussers hang false lights on the rocks to draw ships in. Put the lights out before the ship strikes, and take the Mooncusser who hung them.',
+  stages: ['cp_wip'], intro: 'm02_intro', outro: 'm02_outro', music: { default: 'cptense' } });
+cpCineDef('m02_intro', { shots: [cpTitleShot(CP_BY.m02), { d: 4, cam: [0, -70, 6], to: [0, -55, 4], look: [0, 0, 1], lines: [[0.3, 'log', 'This page of the log is still being written.', '']] }] });
+cpCineDef('m02_outro', { shots: [{ d: 3, card: { eye: 'Mission complete', t: 'The Mooncussers', sub: 'The 1600s' } }] });
+
+// ---- src/cpm03.js ----
+'use strict';
+// The Chronicle of the Light, mission 3: Lighting the Light (1841). A placeholder until the mission is written: its place in
+// the campaign (src/cp.js cpMission), a title card, and the stage still being written (src/cpkit.js 'cp_wip').
+cpMission({ id: 'm03', act: 2, n: 'Lighting the Light', when: '1841', where: 'Skerry Light',
+  blurb: "The Light is built on its rock. Carry the Lampwright's lens up the tower, set it, and light it for the first time.",
+  stages: ['cp_wip'], intro: 'm03_intro', outro: 'm03_outro', music: { default: 'cptense' } });
+cpCineDef('m03_intro', { shots: [cpTitleShot(CP_BY.m03), { d: 4, cam: [0, -70, 6], to: [0, -55, 4], look: [0, 0, 1], lines: [[0.3, 'log', 'This page of the log is still being written.', '']] }] });
+cpCineDef('m03_outro', { shots: [{ d: 3, card: { eye: 'Mission complete', t: 'Lighting the Light', sub: '1841' } }] });
+
+// ---- src/cpm04.js ----
+'use strict';
+// The Chronicle of the Light, mission 4: The Night of the Gannet (14 December 1887). A placeholder until the mission is written: its place in
+// the campaign (src/cp.js cpMission), a title card, and the stage still being written (src/cpkit.js 'cp_wip').
+cpMission({ id: 'm04', act: 2, n: 'The Night of the Gannet', when: '14 December 1887', where: 'Skerry Light',
+  blurb: 'Keep the beam on the brig Gannet as she comes in. In the second hour the lamp fails.',
+  stages: ['cp_wip'], intro: 'm04_intro', outro: 'm04_outro', music: { default: 'cptense' } });
+cpCineDef('m04_intro', { shots: [cpTitleShot(CP_BY.m04), { d: 4, cam: [0, -70, 6], to: [0, -55, 4], look: [0, 0, 1], lines: [[0.3, 'log', 'This page of the log is still being written.', '']] }] });
+cpCineDef('m04_outro', { shots: [{ d: 3, card: { eye: 'Mission complete', t: 'The Night of the Gannet', sub: '14 December 1887' } }] });
+
+// ---- src/cpm05.js ----
+'use strict';
+// The Chronicle of the Light, mission 5: The Wren Comes In (9 January 1888). A placeholder until the mission is written: its place in
+// the campaign (src/cp.js cpMission), a title card, and the stage still being written (src/cpkit.js 'cp_wip').
+cpMission({ id: 'm05', act: 3, n: 'The Wren Comes In', when: '9 January 1888', where: 'The Skerries',
+  blurb: 'A boy in blue shoes walks ahead through the deep water. Sail the cutter in behind Plimsoll, with Maren coming nearer every turn of the lamp.',
+  stages: ['cp_wip'], intro: 'm05_intro', outro: 'm05_outro', music: { default: 'cptense' } });
+cpCineDef('m05_intro', { shots: [cpTitleShot(CP_BY.m05), { d: 4, cam: [0, -70, 6], to: [0, -55, 4], look: [0, 0, 1], lines: [[0.3, 'log', 'This page of the log is still being written.', '']] }] });
+cpCineDef('m05_outro', { shots: [{ d: 3, card: { eye: 'Mission complete', t: 'The Wren Comes In', sub: '9 January 1888' } }] });
+
+// ---- src/cpm06.js ----
+'use strict';
+// The Chronicle of the Light, mission 6: The Kittiwake (28 February 1888). A placeholder until the mission is written: its place in
+// the campaign (src/cp.js cpMission), a title card, and the stage still being written (src/cpkit.js 'cp_wip').
+cpMission({ id: 'm06', act: 3, n: 'The Kittiwake', when: '28 February 1888', where: 'Aboard the Kittiwake',
+  blurb: 'The first account of Verity, from a hand off the Kittiwake. Something sat down in front of the last flare on board.',
+  stages: ['cp_wip'], intro: 'm06_intro', outro: 'm06_outro', music: { default: 'cptense' } });
+cpCineDef('m06_intro', { shots: [cpTitleShot(CP_BY.m06), { d: 4, cam: [0, -70, 6], to: [0, -55, 4], look: [0, 0, 1], lines: [[0.3, 'log', 'This page of the log is still being written.', '']] }] });
+cpCineDef('m06_outro', { shots: [{ d: 3, card: { eye: 'Mission complete', t: 'The Kittiwake', sub: '28 February 1888' } }] });
+
+// ---- src/cpm07.js ----
+'use strict';
+// The Chronicle of the Light, mission 7: Wreckers' Night (1888). A placeholder until the mission is written: its place in
+// the campaign (src/cp.js cpMission), a title card, and the stage still being written (src/cpkit.js 'cp_wip').
+cpMission({ id: 'm07', act: 3, n: "Wreckers' Night", when: '1888', where: 'The Bonded Quay',
+  blurb: 'A dark night ashore. The wreckers fight over what the sea has left, and the drowned wade in to take it back.',
+  stages: ['cp_wip'], intro: 'm07_intro', outro: 'm07_outro', music: { default: 'cptense' } });
+cpCineDef('m07_intro', { shots: [cpTitleShot(CP_BY.m07), { d: 4, cam: [0, -70, 6], to: [0, -55, 4], look: [0, 0, 1], lines: [[0.3, 'log', 'This page of the log is still being written.', '']] }] });
+cpCineDef('m07_outro', { shots: [{ d: 3, card: { eye: 'Mission complete', t: "Wreckers' Night", sub: '1888' } }] });
+
+// ---- src/cpm08.js ----
+'use strict';
+// The Chronicle of the Light, mission 8: The Gannet's Wake (14 December 1888). A placeholder until the mission is written: its place in
+// the campaign (src/cp.js cpMission), a title card, and the stage still being written (src/cpkit.js 'cp_wip').
+cpMission({ id: 'm08', act: 3, n: "The Gannet's Wake", when: '14 December 1888', where: 'Off the Skerries, and aboard the risen Gannet',
+  blurb: "A year to the night, the Gannet's bell. Sail out to where she went down, go aboard, and face Knock, the Bosun and Captain Crane.",
+  stages: ['cp_wip'], intro: 'm08_intro', outro: 'm08_outro', music: { default: 'cptense' } });
+cpCineDef('m08_intro', { shots: [cpTitleShot(CP_BY.m08), { d: 4, cam: [0, -70, 6], to: [0, -55, 4], look: [0, 0, 1], lines: [[0.3, 'log', 'This page of the log is still being written.', '']] }] });
+cpCineDef('m08_outro', { shots: [{ d: 3, card: { eye: 'Mission complete', t: "The Gannet's Wake", sub: '14 December 1888' } }] });
+
+// ---- src/cpm09.js ----
+'use strict';
+// The Chronicle of the Light, mission 9: Keeper's Last Light (Winter 1888 to 1889). A placeholder until the mission is written: its place in
+// the campaign (src/cp.js cpMission), a title card, and the stage still being written (src/cpkit.js 'cp_wip').
+cpMission({ id: 'm09', act: 4, n: "Keeper's Last Light", when: 'Winter 1888 to 1889', where: "The keeper's station",
+  blurb: 'The drowned stop waiting for ships and come for the station itself. Hold it through the worst night of the winter.',
+  stages: ['cp_wip'], intro: 'm09_intro', outro: 'm09_outro', music: { default: 'cptense' } });
+cpCineDef('m09_intro', { shots: [cpTitleShot(CP_BY.m09), { d: 4, cam: [0, -70, 6], to: [0, -55, 4], look: [0, 0, 1], lines: [[0.3, 'log', 'This page of the log is still being written.', '']] }] });
+cpCineDef('m09_outro', { shots: [{ d: 3, card: { eye: 'Mission complete', t: "Keeper's Last Light", sub: 'Winter 1888 to 1889' } }] });
+
+// ---- src/cpm10.js ----
+'use strict';
+// The Chronicle of the Light, mission 10: Freebooters' Sea (Spring 1889). A placeholder until the mission is written: its place in
+// the campaign (src/cp.js cpMission), a title card, and the stage still being written (src/cpkit.js 'cp_wip').
+cpMission({ id: 'm10', act: 4, n: "Freebooters' Sea", when: 'Spring 1889', where: 'The Wide Water, out of Saltcote',
+  blurb: 'Beyond the Near Skerries lies a sea the charts gave up on. Take a voyage off the Saltcote board and bring the hoard home past the Black Sloops.',
+  stages: ['cp_wip'], intro: 'm10_intro', outro: 'm10_outro', music: { default: 'cptense' } });
+cpCineDef('m10_intro', { shots: [cpTitleShot(CP_BY.m10), { d: 4, cam: [0, -70, 6], to: [0, -55, 4], look: [0, 0, 1], lines: [[0.3, 'log', 'This page of the log is still being written.', '']] }] });
+cpCineDef('m10_outro', { shots: [{ d: 3, card: { eye: 'Mission complete', t: "Freebooters' Sea", sub: 'Spring 1889' } }] });
+
+// ---- src/cpm11.js ----
+'use strict';
+// The Chronicle of the Light, mission 11: Fog Run (Autumn 1889). A placeholder until the mission is written: its place in
+// the campaign (src/cp.js cpMission), a title card, and the stage still being written (src/cpkit.js 'cp_wip').
+cpMission({ id: 'm11', act: 4, n: 'Fog Run', when: 'Autumn 1889', where: 'The outer rocks, in the haar',
+  blurb: "Something in the haar is putting out the lights of the outer rocks. Light them again, and find what's doing it on Lantern Rock.",
+  stages: ['cp_wip'], intro: 'm11_intro', outro: 'm11_outro', music: { default: 'cptense' } });
+cpCineDef('m11_intro', { shots: [cpTitleShot(CP_BY.m11), { d: 4, cam: [0, -70, 6], to: [0, -55, 4], look: [0, 0, 1], lines: [[0.3, 'log', 'This page of the log is still being written.', '']] }] });
+cpCineDef('m11_outro', { shots: [{ d: 3, card: { eye: 'Mission complete', t: 'Fog Run', sub: 'Autumn 1889' } }] });
+
+// ---- src/cpm12.js ----
+'use strict';
+// The Chronicle of the Light, mission 12: Maren's End (The Dry Night, 1890). A placeholder until the mission is written: its place in
+// the campaign (src/cp.js cpMission), a title card, and the stage still being written (src/cpkit.js 'cp_wip').
+cpMission({ id: 'm12', act: 4, n: "Maren's End", when: 'The Dry Night, 1890', where: 'The Swallow, and the sea fort',
+  blurb: "The sea drains away down the Swallow. Go down after it with Maren's lantern, cross the black river, and face Maren in her fort.",
+  stages: ['cp_wip'], intro: 'm12_intro', outro: 'm12_outro', music: { default: 'cptense' } });
+cpCineDef('m12_intro', { shots: [cpTitleShot(CP_BY.m12), { d: 4, cam: [0, -70, 6], to: [0, -55, 4], look: [0, 0, 1], lines: [[0.3, 'log', 'This page of the log is still being written.', '']] }] });
+cpCineDef('m12_outro', { shots: [{ d: 3, card: { eye: 'Mission complete', t: "Maren's End", sub: 'The Dry Night, 1890' } }] });
+
+// ---- src/cpm13.js ----
+'use strict';
+// The Chronicle of the Light, mission 13: The Fall of Wrackhaven (Winter 1891). A placeholder until the mission is written: its place in
+// the campaign (src/cp.js cpMission), a title card, and the stage still being written (src/cpkit.js 'cp_wip').
+cpMission({ id: 'm13', act: 4, n: 'The Fall of Wrackhaven', when: 'Winter 1891', where: 'Wrackhaven',
+  blurb: 'One night the sea comes up Fish Street and does not go back. Get the townsfolk to the town hall and hold the Belfry until dawn.',
+  stages: ['cp_wip'], intro: 'm13_intro', outro: 'm13_outro', music: { default: 'cptense' } });
+cpCineDef('m13_intro', { shots: [cpTitleShot(CP_BY.m13), { d: 4, cam: [0, -70, 6], to: [0, -55, 4], look: [0, 0, 1], lines: [[0.3, 'log', 'This page of the log is still being written.', '']] }] });
+cpCineDef('m13_outro', { shots: [{ d: 3, card: { eye: 'Mission complete', t: 'The Fall of Wrackhaven', sub: 'Winter 1891' } }] });
+
+// ---- src/cpm14.js ----
+'use strict';
+// The Chronicle of the Light, mission 14: The Drowned Reach (The years after). A placeholder until the mission is written: its place in
+// the campaign (src/cp.js cpMission), a title card, and the stage still being written (src/cpkit.js 'cp_wip').
+cpMission({ id: 'm14', act: 5, n: 'The Drowned Reach', when: 'The years after', where: 'The Light, in the middle of the Reach',
+  blurb: "The sea came back with the people of every sea and year. Take the Light's rock through the war for the islands, and light it.",
+  stages: ['cp_wip'], intro: 'm14_intro', outro: 'm14_outro', music: { default: 'cptense' } });
+cpCineDef('m14_intro', { shots: [cpTitleShot(CP_BY.m14), { d: 4, cam: [0, -70, 6], to: [0, -55, 4], look: [0, 0, 1], lines: [[0.3, 'log', 'This page of the log is still being written.', '']] }] });
+cpCineDef('m14_outro', { shots: [{ d: 3, card: { eye: 'Mission complete', t: 'The Drowned Reach', sub: 'The years after' } }] });
+
 // ---- src/zmnet.js ----
 // The Lighthouse, played together: a lobby, and up to four in one night.
 //
@@ -48535,6 +49429,9 @@ function fbVoyDebug(kind, t) {
 // [fbsea] Freebooters' Sea (src/fbsea.js) has a fourth, the same way (ZN.mode 'fb', prefix fb, ZM_MAPS.fbsea.fb). Its
 // world is fixed (the same sea on every screen), so nothing goes out in the start; the session's state goes in the
 // host's word (fbw, src/fbsea.js fbPack).
+// [campaign] The Chronicle of the Light (src/cp.js) has a fifth (ZN.mode 'cp', prefix cp, ZM_MAPS.campaign.cp). The
+// mission the host picked goes out in the start (st.cm, and st.cf: the stage to start from, a checkpoint), and in its
+// lobby (lob.cm) so the others can see which.
 
 const ZN = { code: null, at: 0, doneG: null, msg: '', g: null, sendT: 0, hseq: 0, seq: 0, q: [], hq: [], hits: new Map(), shots: [], shotSeq: 0,
   lastQ: {}, lastH: {}, lastShot: {}, seenT: {}, ev: [], eseq: 0, evSeen: 0, lastHseq: -1, hostT: 0, creditSeen: [0, 0, 0], lobT: 0, j: '', rj: null };
@@ -48571,12 +49468,12 @@ function znAt(o, t) {
 // ---------- the lobby ----------
 function znOnline() { return !!(typeof NET !== 'undefined' && NET.room && NET.status === 'ready'); }
 // the map a lobby's for: the raid's, or the one picked on the Lighthouse's card
-const znMap = () => ZN.mode === 'fb' ? 'fbsea' : ZN.mode === 'fr' ? 'fogrun' : ZN.mode === 'raid' ? (typeof RD_PICK !== 'undefined' ? RD_PICK : 'raid') : ZM_PICK;   // [raid] (which raid: src/raid.js) [fogrun]
+const znMap = () => ZN.mode === 'cp' ? 'campaign' : ZN.mode === 'fb' ? 'fbsea' : ZN.mode === 'fr' ? 'fogrun' : ZN.mode === 'raid' ? (typeof RD_PICK !== 'undefined' ? RD_PICK : 'raid') : ZM_PICK;   // [raid] (which raid: src/raid.js) [fogrun]
 const znIsRaid = m => !!(ZM_MAPS[m] && ZM_MAPS[m].raid);
 // [fogrun] which card a map's lobby belongs on: 'fr' (Fog Run), 'raid' or 'zm'; and a mode from what's asked
-const znKind = m => ZM_MAPS[m] && ZM_MAPS[m].fb ? 'fb' : ZM_MAPS[m] && ZM_MAPS[m].fr ? 'fr' : znIsRaid(m) ? 'raid' : 'zm';   // [fbsea]
-const znModeOf = mode => mode === 'raid' || mode === 'fr' || mode === 'fb' ? mode : 'zm';
-const ZN_NICK = { zm: 'zmNick', raid: 'rdNick', fr: 'frNick', fb: 'fbNick' }, ZN_CARD = { zm: 'zmTitle', raid: 'rdTitle', fr: 'frTitle', fb: 'fbTitle' };   // [fbsea]
+const znKind = m => ZM_MAPS[m] && ZM_MAPS[m].cp ? 'cp' : ZM_MAPS[m] && ZM_MAPS[m].fb ? 'fb' : ZM_MAPS[m] && ZM_MAPS[m].fr ? 'fr' : znIsRaid(m) ? 'raid' : 'zm';   // [fbsea]
+const znModeOf = mode => mode === 'raid' || mode === 'fr' || mode === 'fb' || mode === 'cp' ? mode : 'zm';   // [campaign]
+const ZN_NICK = { zm: 'zmNick', raid: 'rdNick', fr: 'frNick', fb: 'fbNick', cp: 'cpNick' }, ZN_CARD = { zm: 'zmTitle', raid: 'rdTitle', fr: 'frTitle', fb: 'fbTitle', cp: 'cpTitle' };   // [campaign]   // [fbsea]
 function znNick() { const b = $(ZN_NICK[ZN.mode] || 'zmNick'); return znClean((b && b.value) || '', 16) || (NET.nick ? znClean(NET.nick, 16) : '') || 'Keeper ' + String(NET.sid || '').slice(0, 3).toUpperCase(); }
 function znOf(p) { const z = p && p.presence && p.presence.zm; return z && typeof z === 'object' && typeof z.room === 'string' && typeof z.sid === 'string' ? z : null; }
 function znBase() { return { room: ZN.code, sid: NET.sid, nick: znNick(), at: ZN.at }; }
@@ -48594,6 +49491,7 @@ function znSendLobby() {
   if (!ZN.code) return;
   const z = znBase();
   if (znAmHost()) z.lob = { n: znMembers().length, map: znMap() };
+  if (z.lob && ZN.mode === 'cp' && typeof CP !== 'undefined') z.lob.cm = CP.pick || '';   // [campaign] the mission picked
   znSend(z);
 }
 // still in another lobby (most often the one a game just ended back into, a win or a loss): out of it first, so a
@@ -48643,13 +49541,13 @@ function znOpenNights() {
 // only its own: a night whose map is the raid is a raid. Whichever card you host or join from, the lobby shows there.
 // [fogrun] and a third, Fog Run's (prefix fr): mode, which ZN.mode is its; each lists only nights of its own kind (znKind)
 const ZN_UI = [{ p: 'zm', mode: 'zm', raid: false, what: 'night', who: 'A keeper' }, { p: 'rd', mode: 'raid', raid: true, what: 'raid', who: 'A keeper' }, { p: 'fr', mode: 'fr', raid: true, fr: true, what: 'run', who: 'A keeper' },
-  { p: 'fb', mode: 'fb', raid: true, fb: true, what: 'crew', who: 'A freebooter' }];   // [fbsea]
+  { p: 'fb', mode: 'fb', raid: true, fb: true, what: 'crew', who: 'A freebooter' }, { p: 'cp', mode: 'cp', raid: true, cp: true, what: 'mission', who: 'A keeper' }];   // [campaign]   // [fbsea]
 function znRender() { for (const U of ZN_UI) znRenderUI(U); }
 function znRenderUI(U) {
   const q = id => $(U.p + id);
   if (!q('Mp')) return;
   const on = znOnline(), mine = !!ZN.code && ZN.mode === U.mode, W = U.what;
-  q('MpNote').textContent = on ? (ZN.code && !mine ? `You’re in a ${{ zm: 'Lighthouse night', raid: 'raid', fr: 'fog run', fb: 'freebooters’ crew' }[ZN.mode] || 'game'}’s lobby on another card. Host or join a ${W} here and you’ll leave it.` : U.fb ? 'Up to four on one ship. One of you hosts; the others join, and the host sets sail when everyone’s aboard.' : `Up to four in one ${W}. One of you hosts; the others join, and the host starts the ${W} when everyone’s in.`) : (NET.status === 'connecting' ? 'Looking for other players…' : (NET.offReason || 'Playing together isn’t available here.'));   // [fbsea] (the host sets sail)
+  q('MpNote').textContent = on ? (ZN.code && !mine ? `You’re in a ${{ zm: 'Lighthouse night', raid: 'raid', fr: 'fog run', fb: 'freebooters’ crew', cp: 'campaign mission' }[ZN.mode] || 'game'}’s lobby on another card. Host or join a ${W} here and you’ll leave it.` : U.fb ? 'Up to four on one ship. One of you hosts; the others join, and the host sets sail when everyone’s aboard.' : `Up to four in one ${W}. One of you hosts; the others join, and the host starts the ${W} when everyone’s in.`) : (NET.status === 'connecting' ? 'Looking for other players…' : (NET.offReason || 'Playing together isn’t available here.'));   // [fbsea] (the host sets sail)
   q('MpOpen').hidden = !on || mine;
   q('Lobby').hidden = !mine;
   if (!on) return;
@@ -48672,7 +49570,7 @@ function znRenderUI(U) {
     return;
   }
   const m = znMembers(), host = znAmHost(), hz = m.length ? znOf(m[0]) : null;
-  const key = m.map(p => znOf(p).sid + znOf(p).nick).join('|') + host + ZN.msg + znMap() + (hz && hz.lob ? hz.lob.map : '');
+  const key = m.map(p => znOf(p).sid + znOf(p).nick).join('|') + host + ZN.msg + znMap() + (hz && hz.lob ? hz.lob.map + (hz.lob.cm || '') : '') + (U.cp && typeof CP !== 'undefined' ? CP.pick : '');   // [campaign]
   q('MpStart').hidden = !host;
   if (q('Lobby').dataset.k === key) return; q('Lobby').dataset.k = key;
   q('LobbyHead').textContent = host ? `Your ${W}` : `${znClean(hz && hz.nick, 16) || 'Someone'}’s ${W}`;
@@ -48684,7 +49582,10 @@ function znRenderUI(U) {
     ol.append(li);
   });
   const hm = hz && hz.lob && ZM_MAPS[hz.lob.map] ? hz.lob.map : 'light';
-  q('LobbyMsg').textContent = ZN.msg || (U.fb   // [fbsea]
+  const cpN = id => typeof CP_BY !== 'undefined' && CP_BY[id] ? CP_BY[id].n : 'a mission';   // [campaign]
+  q('LobbyMsg').textContent = ZN.msg || (U.cp   // [campaign]
+    ? (host ? (m.length > 1 ? `${m.length} of ${ZN_MAX} here, for ${cpN(CP.pick)}. Start when everyone’s in.` : `Waiting for others to join. You can start alone, too. The mission: ${cpN(CP.pick)} (pick above).`) : `Waiting for the host to start: ${cpN(hz && hz.lob && hz.lob.cm)}.`)
+    : U.fb   // [fbsea]
     ? (host ? (m.length > 1 ? `${m.length} of ${ZN_MAX} aboard. Set sail when everyone’s in.` : 'Waiting for others to join. You can set sail alone, too, whenever you like.') : 'Waiting for the host to set sail.')
     : U.fr   // [fogrun]
     ? (host ? (m.length > 1 ? `${m.length} of ${ZN_MAX} here. Set out when everyone’s in.` : 'Waiting for others to join. You can set out alone, too, whenever you like.') : 'Waiting for the host to set out.')
@@ -48701,6 +49602,7 @@ function znStart() {
   const m = znMembers();
   const st = { g: Math.random().toString(36).slice(2, 9), hum: m.map(p => [znOf(p).sid, znClean(znOf(p).nick, 16) || 'A keeper']), map: znMap() };
   if (ZM_MAPS[st.map] && ZM_MAPS[st.map].fr && typeof frSeedNew === 'function') st.fs = frSeedNew();   // [fogrun] the run's seed, drawn here and sent the once
+  if (ZM_MAPS[st.map] && ZM_MAPS[st.map].cp && typeof cpStartFor === 'function') cpStartFor(st);   // [campaign] the mission, and where in it
   znBegin(st, 'host');
 }
 function znBegin(st, role) {
@@ -48708,6 +49610,7 @@ function znBegin(st, role) {
   Object.assign(ZN, { j: Math.random().toString(36).slice(2, 6), rj, g: st.g, st, doneG: st.g, sendT: 0, hseq: 0, seq: 0, q: [], hq: [], shots: [], shotSeq: 0, lastQ: {}, lastH: {}, lastShot: {}, seenT: {}, ev: [], eseq: 0, evSeen: 0, lastHseq: -1, hostT: performance.now(), creditSeen: [0, 0, 0], est: null });
   ZN.hits.clear();
   if (typeof frSeedFrom === 'function') frSeedFrom(st);   // [fogrun]
+  if (typeof cpFrom === 'function') cpFrom(st);   // [campaign]
   zmStart({ net: role, hum: st.hum, map: st.map });
   for (const [sid] of st.hum) ZN.seenT[sid] = performance.now();
 }
@@ -48722,6 +49625,7 @@ function zmNetPeers() {
       if (hz.st.hum.some(x => Array.isArray(x) && x[0] === NET.sid)) {
         const st = { g: hz.st.g, hum: hz.st.hum.slice(0, ZN_MAX).filter(x => Array.isArray(x)).map(x => [String(x[0]), znClean(x[1], 16) || 'A keeper']), map: ZM_MAPS[hz.st.map] ? hz.st.map : 'light' };
         if (hz.st.fs) st.fs = hz.st.fs >>> 0;   // [fogrun] the run's seed
+        if (typeof hz.st.cm === 'string') { st.cm = hz.st.cm.slice(0, 8); st.cf = hz.st.cf | 0; }   // [campaign] the mission
         znBegin(st, 'client'); return;
       }
       ZN.doneG = hz.st.g; ZN.msg = ZN.mode === 'fb' ? 'They set sail without you. Host your own crew, or wait for the next.' : 'The night started without you. Host your own, or wait for the next.'; ZN.rjWant = null;   // [fbsea]
@@ -49166,6 +50070,7 @@ function znRjAfter(rj, gained) {
   $('zmMpStart').addEventListener('click', znStart);
   if ($('rdMpHost')) { $('rdMpHost').addEventListener('click', () => znHost('raid')); $('rdMpLeave').addEventListener('click', znLeave); $('rdMpStart').addEventListener('click', znStart); }   // [raid] Maren's End's card
   if ($('frMpHost')) { $('frMpHost').addEventListener('click', () => znHost('fr')); $('frMpLeave').addEventListener('click', znLeave); $('frMpStart').addEventListener('click', znStart); }   // [fogrun] Fog Run's card
+  if ($('cpMpHost')) { $('cpMpHost').addEventListener('click', () => znHost('cp')); $('cpMpLeave').addEventListener('click', znLeave); $('cpMpStart').addEventListener('click', znStart); }   // [campaign]
   if ($('fbMpHost')) { $('fbMpHost').addEventListener('click', () => znHost('fb')); $('fbMpLeave').addEventListener('click', znLeave); $('fbMpStart').addEventListener('click', znStart); }   // [fbsea] Freebooters' Sea's card
   setInterval(() => { if (!FPS.on && !$('zmTitle').closest('[hidden]')) { znRender(); if (ZN.code) znSendLobby(); } }, 1500);
   addEventListener('pagehide', () => { if (ZN.code && NET.room) NET.room.presence({ zm: null }).catch(() => {}); });
@@ -54386,9 +55291,9 @@ csInit();
 const SHARE_SITE = 'https://skerry-light.onrender.com/';
 const SHARE_ARTIFACT = 'https://claude.ai/artifact/4abbzGK8dMDsPyR5KdssJv';
 const SHARE_TEXT = 'Join my game on Skerry Light!';
-const SHARE_MODES = ['sail', 'wreckers', 'war', 'lighthouse', 'raid', 'fogrun', 'fbsea', 'golf', 'rival'];   // [fogrun] [fbsea] [golf] [rival]
+const SHARE_MODES = ['sail', 'wreckers', 'war', 'lighthouse', 'raid', 'fogrun', 'fbsea', 'golf', 'rival', 'campaign'];   // [campaign]   // [fogrun] [fbsea] [golf] [rival]
 // the Lighthouse's lobby's own word for each of the modes it serves (src/zmnet.js ZN.mode) [fogrun]
-var SHARE_ZN = { lighthouse: 'zm', raid: 'raid', fogrun: 'fr', fbsea: 'fb' };
+var SHARE_ZN = { lighthouse: 'zm', raid: 'raid', fogrun: 'fr', fbsea: 'fb', campaign: 'cp' };
 const shareOnClaude = () => (typeof NET !== 'undefined' && NET.via === 'claude') || !!(window.claude && typeof window.claude.use === 'function');
 
 function shareUrl(mode, code) {
@@ -54405,7 +55310,7 @@ function shareCode(mode) {
   if (mode === 'war') return typeof WN !== 'undefined' ? WN.code : null;
   if (mode === 'golf') return typeof GFN !== 'undefined' ? GFN.code : null;   // [golf]
   if (mode === 'rival') return typeof RLN !== 'undefined' ? RLN.code : null;   // [rival]
-  if (mode === 'lighthouse' || mode === 'raid' || mode === 'fogrun' || mode === 'fbsea') return typeof ZN !== 'undefined' && ZN.mode === SHARE_ZN[mode] ? ZN.code : null;   // [fogrun]
+  if (mode === 'lighthouse' || mode === 'raid' || mode === 'fogrun' || mode === 'fbsea' || mode === 'campaign') return typeof ZN !== 'undefined' && ZN.mode === SHARE_ZN[mode] ? ZN.code : null;   // [fogrun]
   return null;
 }
 function shareIsPhone() {
@@ -54460,8 +55365,8 @@ if (SHARE_JOIN && /[?&](mode|lobby)=/.test(location.search)) {
   // tidy the address bar, so a reload later doesn't drag you back into an old lobby
   try { const q = new URLSearchParams(location.search); q.delete('mode'); q.delete('lobby'); const s = q.toString(); history.replaceState(null, '', location.pathname + (s ? '?' + s : '') + location.hash); } catch (e) {}
 }
-const SHARE_CARD = { sail: 'together', wreckers: 'fpsTitle', war: 'warTitle', lighthouse: 'zmTitle', raid: 'rdTitle', fogrun: 'frTitle', fbsea: 'fbTitle', golf: 'gfTitle', rival: 'rlTitle' };
-const SHARE_WHAT = { sail: 'crew', war: 'war', lighthouse: 'night', raid: 'raid', fogrun: 'run', fbsea: 'crew', golf: 'round', rival: 'duel' };
+const SHARE_CARD = { sail: 'together', wreckers: 'fpsTitle', war: 'warTitle', lighthouse: 'zmTitle', raid: 'rdTitle', fogrun: 'frTitle', fbsea: 'fbTitle', golf: 'gfTitle', rival: 'rlTitle', campaign: 'cpTitle' };
+const SHARE_WHAT = { sail: 'crew', war: 'war', lighthouse: 'night', raid: 'raid', fogrun: 'run', fbsea: 'crew', golf: 'round', rival: 'duel', campaign: 'mission' };
 function shareShow(mode) { const c = $(SHARE_CARD[mode]); if (c) c.scrollIntoView({ block: 'start' }); }
 function shareArrive() {
   const J = SHARE_JOIN; if (!J) return;
@@ -54521,7 +55426,7 @@ function shareArrive() {
       if (ZN.code === J.code) return clearInterval(iv);
       const n = znOpenNights().find(x => x.code === J.code);
       if (n) {
-        clearInterval(iv); const mode = ZM_MAPS[n.map] && ZM_MAPS[n.map].fb ? 'fbsea' : ZM_MAPS[n.map] && ZM_MAPS[n.map].fr ? 'fogrun' : ZM_MAPS[n.map] && ZM_MAPS[n.map].raid ? 'raid' : 'lighthouse'; shareShow(mode);   // [fogrun]
+        clearInterval(iv); const mode = ZM_MAPS[n.map] && ZM_MAPS[n.map].cp ? 'campaign' : ZM_MAPS[n.map] && ZM_MAPS[n.map].fb ? 'fbsea' : ZM_MAPS[n.map] && ZM_MAPS[n.map].fr ? 'fogrun' : ZM_MAPS[n.map] && ZM_MAPS[n.map].raid ? 'raid' : 'lighthouse'; shareShow(mode);   // [fogrun]
         if (n.started && typeof znRjFor === 'function' && znRjFor(J.code)) znRejoin(znRjFor(J.code));   // (one I dropped out of: back in)
         else if (n.started) toast(`That ${SHARE_WHAT[mode]} has already started.`, 'Already started'); else znJoin(J.code, SHARE_ZN[mode]);
         return;
@@ -64870,7 +65775,8 @@ const MD_GAMES = [
   { id: 'frTitle', sub: 'Light the islands in the haar', c: '#a8b8c8' },
   { id: 'fbTitle', sub: 'An open sea of islands and salvage', c: '#d8b060' },   // [fbsea]
   { id: 'gfTitle', sub: 'Nine holes of golf on the cliffs', c: '#8fc26a' },   // [golf] src/golf.js
-  { id: 'rlTitle', sub: 'A duel of lights for two', c: '#e8a050', tag: 'New' },   // [rival] Skerry Clash (src/rl.js, src/rlcrates.js)
+  { id: 'rlTitle', sub: 'A duel of lights for two', c: '#e8a050' },
+  { id: 'cpTitle', sub: 'The whole tale of the Light, as a campaign', c: '#f0d890', tag: 'New' },   // [campaign] The Chronicle of the Light (src/cp.js)   // [rival] Skerry Clash (src/rl.js, src/rlcrates.js)
 ];
 const mdStore = { get() { try { return localStorage.getItem('skerryDeskGame'); } catch (e) { return null; } }, set(v) { try { localStorage.setItem('skerryDeskGame', v); } catch (e) {} } };
 
@@ -65053,6 +65959,23 @@ requestAnimationFrame(frame);
 <!-- [fbsea] the sea's looks: island silhouettes, Saltcote's light, the cutter at anchor from ashore -->
 <!-- [fbsea] what you keep: sovereigns, standings, crates, its board, rejoin -->
 <!-- [fbsea voyages] the voyage board, hoards, bounties, salvage, the chart table -->
+<!-- [campaign] The Chronicle of the Light: missions, progress, lines, the lobby -->
+<!-- [campaign] its cinematics -->
+<!-- [campaign] shared tools for the missions -->
+<!-- [campaign] mission 1 -->
+<!-- [campaign] mission 2 -->
+<!-- [campaign] mission 3 -->
+<!-- [campaign] mission 4 -->
+<!-- [campaign] mission 5 -->
+<!-- [campaign] mission 6 -->
+<!-- [campaign] mission 7 -->
+<!-- [campaign] mission 8 -->
+<!-- [campaign] mission 9 -->
+<!-- [campaign] mission 10 -->
+<!-- [campaign] mission 11 -->
+<!-- [campaign] mission 12 -->
+<!-- [campaign] mission 13 -->
+<!-- [campaign] mission 14 -->
 <!-- [golf] Skerry Links: the course -->
 <!-- [golf] the round, the ball, the swing -->
 <!-- [golf] the screen over the 3D view, the scorecard -->

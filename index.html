@@ -81,6 +81,7 @@
     <button class="newgame fbbanner" id="fbBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">And <b>Freebooters' Sea</b>: an open sea of islands to sail, salvage and sell, alone or with up to four</span><span class="ng-go" aria-hidden="true">↓</span></button><!-- [fbsea] -->
     <button class="newgame gfbanner" id="gfBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">And <b>Skerry Links</b>: nine holes of golf along the cliffs, alone or with up to four</span><span class="ng-go" aria-hidden="true">↓</span></button><!-- [golf] -->
     <button class="newgame rlbanner" id="rlBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">And a ninth, <b>Skerry Clash</b>: a duel of lights across the race, one keeper against another</span><span class="ng-go" aria-hidden="true">↓</span></button><!-- [rival] -->
+    <button class="newgame cpbanner" id="cpBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">And a tenth, <b>The Chronicle of the Light</b>: the whole history of the Skerries as a campaign, alone or with up to four</span><span class="ng-go" aria-hidden="true">↓</span></button><!-- [campaign] -->
     <div class="menulinks"><button class="tool notesbtn" id="notesBtn" type="button">Patch notes</button><button class="tool notesbtn lorebtn" id="loreBtn" type="button">Lore compendium</button></div>
     <div class="card boardcard" id="boardCard" aria-labelledby="boardHead">
       <div class="cardtop"><span class="eyebrow">Best on record · every game</span><span class="boardminititle">The Scoreboard</span><span class="boardbtns"><button class="tool closebtn" id="boardRefresh" type="button">Refresh</button><button class="tool closebtn" id="boardMin" type="button" aria-expanded="true" aria-controls="boardCard" title="Make the scoreboard small">– Minimise</button></span></div>
@@ -480,6 +481,42 @@
         <p><b>Rating (MMR).</b> Every finished match moves your rating, which starts at 1000: up for a win, down for a loss, by more when the odds were against it. Duels online count most; the bot counts for less, against a rating of its own (easy 800, normal 1100, hard 1300). Leaving a duel early counts as a loss. The rating belongs to your username, and the Skerry Clash board ranks everyone by it. A username already rated on someone else's save can't be used for a rating, and renaming yourself starts a fresh rating under the new name.</p>
         <p><b>Watching.</b> Any duel online can be watched, while it waits for its keepers or once it's under way: tap Watch beside it in the list (or open an invite to a duel that's full). Up to eight can watch one duel. You see the whole field from the host's end, blue the near side (Swap ends turns it round), with both keepers' oil, crowns and the clock, but you can't play, and nothing you watch counts for your record, crates or rating. Leave from the menu any time; the keepers see how many are watching, nothing more.</p>
         <p><b>Tower skins.</b> Every duel you finish earns a tower crate, and a win earns another; the first is free. The Lampwright's Crate holds a set of towers for your rock, the Great Light and both lamps, with the same grades as the other crates: Mates shimmer, Captains glow, Admirals are alive. Whatever you raise, your side's colour is on the rails and the pennants.</p>
+      </details>
+    </div>
+    <div class="card zmcard cpcard" id="cpTitle" aria-labelledby="cpHead"><!-- [campaign] The Chronicle of the Light: its own card (src/cp.js, src/cpcine.js, src/cpm*.js) -->
+      <div class="cardtop"><span class="eyebrow">A tenth game · the whole tale · alone or up to four</span></div>
+      <h1 id="cpHead">The Chronicle of the Light</h1>
+      <p>Every story the Skerries tell, played from the beginning. From the first fire kept on Lantern Rock, through the night the Gannet went down and the strange year after it, to the war for the Drowned Reach: live through the history of the Light, one mission at a time, with cinematics at every turn of the tale.</p>
+      <p class="muted">Fourteen missions in five acts, each one opening when the one before it is done. Play alone, or together with up to four. Your progress is kept on this browser and in your save.</p>
+      <div class="cp-list" id="cpList" role="list"></div>
+      <p class="cp-picked" id="cpPicked"></p>
+      <p class="muted" id="cpProgress"></p>
+      <div class="btnrow">
+        <button class="primary" id="cpPlay" type="button">Play</button>
+        <button class="tool" id="cpSettings" type="button">Settings</button>
+      </div>
+      <section class="warmp zmmp" id="cpMp" aria-labelledby="cpMpHead">
+        <h2 id="cpMpHead">Play together · up to four</h2>
+        <p class="muted" id="cpMpNote">Looking for other players…</p>
+        <div class="nickrow"><label for="cpNick">Your name</label><input id="cpNick" type="text" maxlength="16" autocomplete="nickname" placeholder="Keeper"></div>
+        <div id="cpMpOpen" hidden>
+          <div class="btnrow"><button class="tool" id="cpMpHost" type="button">Host a mission</button></div>
+          <div class="warlobbies" id="cpLobbies"></div>
+        </div>
+        <div class="warlobby" id="cpLobby" hidden>
+          <h3 id="cpLobbyHead">Your mission</h3>
+          <ol class="warlobbylist" id="cpLobbyList"></ol>
+          <p class="muted" id="cpLobbyMsg"></p>
+          <div class="btnrow"><button class="primary" id="cpMpStart" type="button">Start together</button><button class="tool shareBtn" id="cpMpShare" type="button" data-mode="campaign">Share invite</button><button class="tool" id="cpMpLeave" type="button">Leave</button></div>
+        </div>
+      </section>
+      <details class="howto">
+        <summary>How to play</summary>
+        <p><b>Missions.</b> Pick a mission from the list and press Play. The first is open from the start, and each one after it opens once you've finished the one before. Finished missions can be played again any time, and your best time is kept.</p>
+        <p><b>Cinematics.</b> Each mission opens and closes with a cinematic, and the big moments play out on the way. Press Space, Enter, or A on a controller, or tap the screen, to skip one. Together, it's skipped once everyone has asked.</p>
+        <p><b>Objectives.</b> What to do next is shown at the top left, under the mission's name. People speak as you go, and what they say shows at the bottom of the screen.</p>
+        <p><b>Going down.</b> Alone, going down ends the mission, but you can try again from the part you'd reached. Together, someone holding Use beside you gets you up, and the first time you bleed out you're back on your feet ten seconds later. If everyone is down at once, the mission is lost.</p>
+        <p><b>Together.</b> One of you hosts and picks the mission. Everyone who sees it through has it marked done on their own browser.</p>
       </details>
     </div>
   </div>
@@ -973,6 +1010,8 @@
       <p id="zmOverStats"></p>
       <p class="muted" id="zmOverBest"></p>
       <div class="btnrow">
+        <button class="primary" id="cpNext" type="button" hidden>Next mission</button><!-- [campaign] -->
+        <button class="tool" id="cpRetry" type="button" hidden>Try again from here</button><!-- [campaign] -->
         <button class="primary" id="zmAgain" type="button">Hold it again</button>
         <button class="tool" id="zmLeave" type="button">Back to the harbour</button>
       </div>
@@ -1119,6 +1158,23 @@
 <script src="src/fbdress.js"></script><!-- [fbsea] the sea's looks: island silhouettes, Saltcote's light, the cutter at anchor from ashore -->
 <script src="src/fbkeep.js"></script><!-- [fbsea] what you keep: sovereigns, standings, crates, its board, rejoin -->
 <script src="src/fbvoy.js"></script><!-- [fbsea voyages] the voyage board, hoards, bounties, salvage, the chart table -->
+<script src="src/cp.js"></script><!-- [campaign] The Chronicle of the Light: missions, progress, lines, the lobby -->
+<script src="src/cpcine.js"></script><!-- [campaign] its cinematics -->
+<script src="src/cpkit.js"></script><!-- [campaign] shared tools for the missions -->
+<script src="src/cpm01.js"></script><!-- [campaign] mission 1 -->
+<script src="src/cpm02.js"></script><!-- [campaign] mission 2 -->
+<script src="src/cpm03.js"></script><!-- [campaign] mission 3 -->
+<script src="src/cpm04.js"></script><!-- [campaign] mission 4 -->
+<script src="src/cpm05.js"></script><!-- [campaign] mission 5 -->
+<script src="src/cpm06.js"></script><!-- [campaign] mission 6 -->
+<script src="src/cpm07.js"></script><!-- [campaign] mission 7 -->
+<script src="src/cpm08.js"></script><!-- [campaign] mission 8 -->
+<script src="src/cpm09.js"></script><!-- [campaign] mission 9 -->
+<script src="src/cpm10.js"></script><!-- [campaign] mission 10 -->
+<script src="src/cpm11.js"></script><!-- [campaign] mission 11 -->
+<script src="src/cpm12.js"></script><!-- [campaign] mission 12 -->
+<script src="src/cpm13.js"></script><!-- [campaign] mission 13 -->
+<script src="src/cpm14.js"></script><!-- [campaign] mission 14 -->
 <script src="src/zmnet.js"></script>
 <script src="src/war.js"></script>
 <script src="src/warview.js"></script>
