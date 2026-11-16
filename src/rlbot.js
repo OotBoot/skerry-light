@@ -162,9 +162,10 @@ function rlBotTick(dt, side) {
     }
     const lx = RLC.LX[B.lane], pushing = mine.filter(u => !u.bld && rlLaneOf(u.x) === B.lane && fy(u.y) > 8);
     const troops = hand.filter(C => can(C) && C.type === 'troop' && C.cost <= oil - (L.keep && !pushing.length ? Math.max(0, L.keep - 2) : 0));
-    // a Shipwreck dropped by the enemy Lamp Tower of the lane, its crew landing at the tower's foot
+    // a Shipwreck dropped on its own bank by the causeway of the lane (it can go down only on its own rock), its crew
+    // joining the push over the race
     const wreck = hand.find(C => can(C) && C.ab === 'summon');
-    if (wreck && (pushing.length || oil >= 9)) { const t = rlLaneTower({ x: lx, side }); if (t && rlPlay(side, wreck.id, jit(t.x) * 0.3 + t.x * 0.7, t.y - (side ? -1 : 1) * (t.r + 1.2))) return; }
+    if (wreck && (pushing.length || oil >= 9) && play(wreck, jit(lx), 13.2)) return;
     if (troops.length) {
       if (!pushing.length && troops.some(C => C.ab !== 'heal')) {
         // a big walker at the back, on the side of the lane (never the Surgeon alone)

@@ -231,9 +231,10 @@ function rl3dScale(dt) {
 }
 function rl3dPower(first) { if (!RL3.r) return; RL3.prMax = Math.min(RL3.lite ? 1.25 : 1.5, RL3.dprRaw || 1, typeof pwSaver === 'function' && pwSaver() ? 1.25 : 9); RL3.pr = RL3.prMax; RL3.r.setPixelRatio(RL3.pr); if (!first) rl3dResize(); }
 function rl3dResize() { if (!RL3.r) return; RL3.r.setSize(innerWidth, innerHeight, false); RL3.fitKey = ''; }
-// the camera, fitted so the whole arena shows in the room between the HUD's top and its hand of cards
+// the camera, fitted so the whole arena shows in the room between the HUD's top and its hand of cards (or a watcher's bar)
 function rl3dFit() {
-  const w = innerWidth, h = innerHeight, top = $('rlTop'), bot = $('rlBottom');
+  // (a watcher has no hand: its Watching bar, src/rlhud.js, stands in for it)
+  const w = innerWidth, h = innerHeight, top = $('rlTop'), hb = $('rlBottom'), sb = $('rlSpecBar'), bot = hb && hb.offsetParent ? hb : sb && !sb.hidden ? sb : null;
   const br = bot ? bot.getBoundingClientRect() : { left: 0, right: w, top: h - 140 }, tr = top ? [...top.children].map(e => e.getBoundingClientRect()) : [];
   // the room for the arena: under the top bar and over the hand; or, when the hand sits to one side (a short wide
   // screen), between the names on the left and the hand on the right, top to bottom

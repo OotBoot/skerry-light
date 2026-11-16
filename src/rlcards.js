@@ -170,8 +170,8 @@ const RL_CARDS = [
     d: 'Your troops in the circle move and strike 40% faster for 6 seconds.' },
   { id: 'brinerain', n: 'Brine Rain', cost: 4, type: 'spell', r: 3.5, dmg: 90, tw: 0.3, ab: 'dot', dur: 4,
     d: 'Stinging rain: 90 damage a second for 4 seconds, towers too.' },
-  { id: 'shipwreck', n: 'Shipwreck', cost: 6, type: 'spell', r: 2.5, dmg: 260, tw: 0.3, ab: 'summon', sp: 'wreckers',
-    d: 'A hulk crashes down, and the Wrecker Gang climbs out of the wreck.' },
+  { id: 'shipwreck', n: 'Shipwreck', cost: 5, type: 'spell', r: 2.5, dmg: 260, tw: 0.3, ab: 'summon', sp: 'wreckers',
+    d: 'A hulk crashes down on your own rock, and the Wrecker Gang climbs out of the wreck.' },
   { id: 'whirlpool', n: 'Whirlpool', cost: 5, type: 'spell', r: 3.5, dmg: 70, tw: 0.25, ab: 'whirl', dur: 3,
     d: 'For 3 seconds it drags enemies on foot to its middle, 140 damage a second.' },
   // buildings

@@ -9,7 +9,7 @@
 //   fogrun      a Fog Run (the same lobby again, on its own card: src/frrun.js) [fogrun]
 //   fbsea       a Freebooters' Sea crew (the same lobby again, on its own card: src/fbsea.js) [fbsea]
 //   golf        a round of Skerry Links (its own lobby: src/golfnet.js, g...) [golf]
-//   rival       a Skerry Clash duel (its own lobby: src/rlnet.js, r...) [rival]
+//   rival       a Skerry Clash duel (its own lobby: src/rlnet.js, r...; one full or under way offers Watch) [rival]
 // On a phone or tablet the button opens the share sheet; on a computer it copies the text to the clipboard.
 // On claude.ai everyone plays in the artifact's own room, which the live site can't reach, so there the link is the
 // artifact itself: it can't carry a code, but the friend sees the lobby in the list and taps it.
@@ -139,7 +139,16 @@ function shareArrive() {
       if (typeof RLN === 'undefined') return give('');
       if (RLN.code === J.code) return clearInterval(iv);
       const r = rlnOpen().find(x => x.code === J.code);
-      if (r) { clearInterval(iv); shareShow('rival'); if (r.started) toast('That duel has already started.', 'Already started'); else if (r.n >= 2) toast('That duel already has two keepers.', 'Duel full'); else rlnJoin(J.code); return; }
+      if (r) {
+        clearInterval(iv); shareShow('rival');
+        // (under way or full: offered to watch instead, the duel's Watch button in the list made ready)
+        if (r.started || r.n >= 2) {
+          toast(r.started ? 'That duel has already started. Tap Watch to see it.' : 'That duel already has two keepers. Tap Watch to see it.', 'Watch instead');
+          RLN.msg = `${r.host}’s duel is ${r.started ? 'under way' : 'full'}: you can watch it.`; rlnRender();
+          setTimeout(() => { const b = document.querySelector(`#rlLobbies .rlwatch[data-code="${J.code}"]`); if (b) { b.classList.add('glow'); b.focus({ preventScroll: true }); } }, 120);
+        } else rlnJoin(J.code);
+        return;
+      }
     } else {
       if (ZN.code === J.code) return clearInterval(iv);
       const n = znOpenNights().find(x => x.code === J.code);

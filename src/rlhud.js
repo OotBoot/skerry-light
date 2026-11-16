@@ -8,6 +8,9 @@
 // click. Escape (or the menu button) opens the pause card: Resume, Leave. The end card: the result, the lights put
 // out, the rating's change (#rlEndMmr, filled by src/rlmmr.js, and again when the server answers), and Again
 // (against the bot) or Back to the menu.
+// Online, the clock shows how many are watching (rlnWatchers, src/rlnet.js). A watcher (rlIsSpec) has no hand: in its
+// place a bar (#rlSpecBar) with the watchers and Swap ends (rlSpecFlip), each keeper's oil under their name, and an end
+// card that says who won, with only Back to the menu.
 // Card faces come from rlCardArt(id, canvas) (src/rlart.js, Meta's) when it's there; else a plain coloured face.
 
 const RH = { sel: -1, drag: null, hover: null, faces: ['', '', '', '', ''], say: 0, key: '', sayQ: [], seen: 0, cntShown: -1, flashT: 0 };
@@ -16,6 +19,8 @@ const RL_TYPECOL = { troop: ['#2d4f6e', '#16283a'], spell: ['#8a5a1e', '#3e2a10'
 function rlHudReset() {
   RH.sel = -1; RH.drag = null; RH.hover = null; RH.faces = ['', '', '', '', '']; RH.key = ''; RH.sayQ = []; RH.seen = RL.nid - 1; RH.cntShown = -1;
   $('rlName0').textContent = RL.names[1 - RL.me]; $('rlName1').textContent = RL.names[RL.me];
+  const sp = rlIsSpec(); $('rlUI').classList.toggle('spec', sp); if ($('rlSpecBar')) $('rlSpecBar').hidden = !sp; for (const i of [0, 1]) if ($('rlWOil' + i)) $('rlWOil' + i).hidden = !sp;
+  RH.watchK = '';
   $('rlToast').classList.remove('on'); $('rlCount').classList.remove('on');
   if (typeof rl3dGhost === 'function') rl3dGhost(null);
   rlHudTowers(true);
@@ -65,6 +70,17 @@ function rlHud(dt) {
   const sub = RL.ot ? 'Overtime' : RL.dbl ? 'Double oil' : 'Time left'; if ($('rlClockSub').textContent !== sub) $('rlClockSub').textContent = sub;
   $('rlClockBox').classList.toggle('hot', RL.dbl || RL.ot);
   rlPips(RL.crowns[they], $('rlCr0'), false); rlPips(RL.crowns[me], $('rlCr1'), true);
+  // online: how many are watching; a watcher: both names as the snapshot has them, and both keepers' oil
+  const spec = rlIsSpec();
+  if (RL.mode === 'net') {
+    const n = typeof rlnWatchers === 'function' ? rlnWatchers() : 0, wk = n + '|' + spec;
+    if (RH.watchK !== wk) { RH.watchK = wk; const w = $('rlWatchN'); if (w) { w.hidden = spec || !n; w.textContent = n + ' watching'; } if ($('rlSpecN')) $('rlSpecN').textContent = n > 1 ? `${n} watching` : 'just you'; }
+  }
+  if (spec) {
+    if ($('rlName0').textContent !== RL.names[they]) $('rlName0').textContent = RL.names[they]; if ($('rlName1').textContent !== RL.names[me]) $('rlName1').textContent = RL.names[me];
+    const o0 = 'Oil ' + Math.floor(RL.oil[they] + 1e-6), o1 = 'Oil ' + Math.floor(RL.oil[me] + 1e-6);
+    if ($('rlWOil0').textContent !== o0) $('rlWOil0').textContent = o0; if ($('rlWOil1').textContent !== o1) $('rlWOil1').textContent = o1;
+  }
   // the countdown
   if (RL.ph === 'count') { const n = Math.ceil(RL.cnt); if (n !== RH.cntShown) { RH.cntShown = n; const el = $('rlCount'); el.textContent = n > 0 ? String(n) : ''; el.classList.remove('on'); void el.offsetWidth; el.classList.add('on'); if (n > 0) rlSnd('tick'); } }
   else if (RH.cntShown !== 0 && RL.ph === 'play') { RH.cntShown = 0; const el = $('rlCount'); el.textContent = 'Light the lamps!'; el.classList.remove('on'); void el.offsetWidth; el.classList.add('on', 'go'); setTimeout(() => el.classList.remove('on', 'go'), 1100); }
@@ -83,7 +99,7 @@ function rlHud(dt) {
   $('rlOilN').textContent = ok; $('rlOil').classList.toggle('dbl', RL.dbl);
   // the zone and the ghost
   const selId = RH.drag && RH.drag.on ? RL.hand[me][RH.drag.i] : RH.sel >= 0 ? RL.hand[me][RH.sel] : null, selC = RL_CARD[selId];
-  if (typeof rl3dZone === 'function') rl3dZone(!!selC && selC.type !== 'spell' && RL.ph !== 'over');
+  if (typeof rl3dZone === 'function') rl3dZone(!!selC && (selC.type !== 'spell' || selC.ab === 'summon') && RL.ph !== 'over');
   if (typeof rl3dGhost === 'function') {
     if (selC && RH.hover) rl3dGhost({ c: selId, x: RH.hover.x, y: RH.hover.y, ok: !rlWhyNot(me, selId, RH.hover.x, RH.hover.y) });
     else if (RL.pend) rl3dGhost({ c: RL.pend.c, x: RL.pend.x, y: RL.pend.y, ok: true });
@@ -96,7 +112,7 @@ function rlHud(dt) {
     if (f.id <= RH.seen) continue; hi = Math.max(hi, f.id);
     if (f.k === 'dbl') rlHudSay('Double oil!', 2.4);
     else if (f.k === 'ot') rlHudSay('Overtime: the next light out wins', 3);
-    else if (f.k === 'crown') rlHudSay(f.side === me ? 'You put out a light!' : `${RL.names[they]} puts out a light`, 2.4);
+    else if (f.k === 'crown') rlHudSay(spec ? `${RL.names[f.side]} puts out a light` : f.side === me ? 'You put out a light!' : `${RL.names[they]} puts out a light`, 2.4);
   }
   RH.seen = hi;
   if (RH.say > 0) { RH.say -= dt; if (RH.say <= 0) $('rlToast').classList.remove('on'); }
@@ -105,6 +121,18 @@ function rlHud(dt) {
 // the end card
 function rlHudEnd() {
   const me = RL.me, w = RL.win, el = $('rlEnd');
+  if (rlIsSpec()) {
+    // (a watcher: who won, the lights each put out, and back to the menu; no rating, no Again)
+    const gone = RL.net && RL.net.gone, nm = s => RL.names[s];
+    $('rlEndHead').textContent = w === 2 ? (gone ? 'Duel over' : 'A draw') : `${nm(w)} wins`;
+    el.classList.remove('won', 'lost');
+    $('rlEndSub').textContent = gone ? `${nm(0)} has left the duel.` : w === 2 ? 'Neither light gave way.' : RL.crowns[w] >= 3 ? `${nm(1 - w)}'s Great Light is out.` : `${nm(w)} held the water.`;
+    rlPips(RL.crowns[me], $('rlEndMe'), true); rlPips(RL.crowns[1 - me], $('rlEndThem'), false);
+    $('rlEndMeN').textContent = nm(me); $('rlEndThemN').textContent = nm(1 - me);
+    $('rlAgain').hidden = true; if ($('rlEndMmr')) $('rlEndMmr').hidden = true;
+    el.hidden = false; setTimeout(() => $('rlMenu').focus({ preventScroll: true }), 40);
+    return;
+  }
   $('rlEndHead').textContent = w === 2 ? 'A draw' : w === me ? 'Victory' : 'Defeat';
   el.classList.toggle('won', w === me); el.classList.toggle('lost', w !== me && w !== 2);
   $('rlEndSub').textContent = w === 2 ? 'Neither light gave way.' : w === me ? (RL.crowns[me] >= 3 ? `${RL.names[1 - me]}'s Great Light is out.` : 'Your lights burn on.') : (RL.crowns[1 - me] >= 3 ? 'Your Great Light is out.' : `${RL.names[1 - me]} held the water.`);
@@ -117,7 +145,7 @@ function rlHudEnd() {
 
 // ---------- the controls ----------
 function rlSel(i) {
-  if (!RL.on || RL.ph === 'over') return;
+  if (!RL.on || RL.ph === 'over' || rlIsSpec()) return;
   RH.sel = RH.sel === i ? -1 : i;
   if (RH.sel >= 0) { const C = RL_CARD[RL.hand[RL.me][i]]; if (C && RL.oil[RL.me] < C.cost - 1e-6) rlHudSay(`${C.n} needs ${C.cost} oil`, 1, true); }
 }
@@ -160,6 +188,7 @@ function rlPlace(i, p) {
     if (p) rlPlace(RH.sel, p);
   });
   $('rlMenuBtn').addEventListener('click', () => rlPauseOpen(true));
+  if ($('rlSpecFlip')) $('rlSpecFlip').addEventListener('click', () => { if (typeof rlSpecFlip === 'function') rlSpecFlip(); });
   $('rlResume').addEventListener('click', () => rlPauseOpen(false));
   $('rlLeave').addEventListener('click', rlQuit);
   $('rlMenu').addEventListener('click', rlQuit);

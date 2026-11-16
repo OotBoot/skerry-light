@@ -29,9 +29,18 @@
 // as above, with a new st and both decks. If either side drops out of the lobby the draft is called off.
 // Each side reports a finished duel to the rating itself, by the duel's id g (rlnMmrInfo); the server rates it only
 // when both reports agree. Afterwards both are back in the same lobby for a rematch.
+// Watching: anyone else may watch a duel, waiting or under way (RLN_WATCH at most, to spare the room). A watcher puts
+// { room, sid, nick, at, spec: 1 } in its presence: in the duel's room, so the server relays the host's snapshots to it
+// at full rate as it does to the guest, but never one of the two keepers (rlnMembers leaves watchers out), never the
+// host and never in the way of Start. When the host's presence carries a duel's id (g) the watcher calls
+// rlStart({ mode: 'net', me: 0, names, net: { host: false, spec: true } }) (the names from st, or from the two
+// keepers' nicks; the snapshot brings the names, skins and both hands anyway) and only ever applies snapshots, from
+// side 0's end (Swap ends turns it round). It sends no taps, beats or quits, and nothing it does reaches the rating,
+// the record or the crates. The keepers' HUDs show how many are watching (rlnWatchers).
 
-var RLN = { draft: false, dst: null, ddk: null, dlost: 0, code: null, at: 0, msg: '', st: null, doneG: null, g: null, role: null, seq: 0, q: [], lastQ: 0, ws: 0, wsSeen: -1, wsSeenAny: -1, sendT: 0, sentAt: 0, seen: 0, beat: 0, lastB: null, chunks: null, quit: null, ended: false, bytes: 0, lobT: 0 };
+var RLN = { spec: false, draft: false, dst: null, ddk: null, dlost: 0, code: null, at: 0, msg: '', st: null, doneG: null, g: null, role: null, seq: 0, q: [], lastQ: 0, ws: 0, wsSeen: -1, wsSeenAny: -1, sendT: 0, sentAt: 0, seen: 0, beat: 0, lastB: null, chunks: null, quit: null, ended: false, bytes: 0, lobT: 0 };
 const RLN_MAX = 2;
+const RLN_WATCH = 8;      // watchers a duel takes at most (each hears the host's snapshots at full rate)
 const RLN_GONE = 10000;   // ms without a word before the other side is taken to have left
 const rlnClean = (v, n) => String(v == null ? '' : v).replace(/[\u0000-\u001f\u007f-\u009f<>&"]/g, '').trim().slice(0, n);
 const RLN_ENC = typeof TextEncoder === 'function' ? new TextEncoder() : null;
@@ -49,35 +58,48 @@ function rlnDeck(d) {
 function rlnMyDeck() { let d = null; try { if (typeof rlDeckMine === 'function') d = rlDeckMine(); } catch (e) {} return rlnDeck(d); }
 function rlnSkin(s) { return typeof s === 'string' && /^[a-z0-9_-]{0,24}$/i.test(s) ? s : ''; }
 function rlnMySkin() { let s = ''; try { if (typeof rlSkinMine === 'function') s = rlSkinMine(); } catch (e) {} return rlnSkin(s); }
-function rlnBase(lean) { const z = { room: RLN.code, sid: NET.sid, nick: rlnNick(), at: RLN.at }; if (!lean) { z.dk = rlnMyDeck(); z.sk = rlnMySkin(); const mr = typeof rlmMine === 'function' ? rlmMine() : null; if (Number.isFinite(mr)) z.mr = mr; } return z; }
+function rlnBase(lean) { const z = { room: RLN.code, sid: NET.sid, nick: rlnNick(), at: RLN.at }; if (RLN.spec) { z.spec = 1; return z; } if (!lean) { z.dk = rlnMyDeck(); z.sk = rlnMySkin(); const mr = typeof rlmMine === 'function' ? rlmMine() : null; if (Number.isFinite(mr)) z.mr = mr; } return z; }
 const rlnMr = z => z && Number.isFinite(z.mr) ? ' · ' + Math.max(0, Math.round(z.mr)) + ' MMR' : '';
 // the duel as the rating wants it (src/rlmmr.js): its id, my side, the other's name and rating
-function rlnMmrInfo() { if (!RLN.st || !RLN.g) return null; const side = RLN.role === 'host' ? 0 : 1; return { g: RLN.st.g, side, host: side === 0, opp: RLN.st.names[1 - side], omr: RLN.omr }; }
-function rlnPeers(code) {
+function rlnMmrInfo() { if (!RLN.st || !RLN.g || RLN.spec) return null; const side = RLN.role === 'host' ? 0 : 1; return { g: RLN.st.g, side, host: side === 0, opp: RLN.st.names[1 - side], omr: RLN.omr }; }
+// everyone in a duel's room, keepers and watchers (rlnPeers: the keepers only; rlnSpecs: the watchers)
+function rlnAll(code) {
   const out = NET.peers.filter(p => { const z = rlnOf(p); return z && z.room === code && fresh(p) && !(p.isMe && p.sameTab); });
   if (RLN.code === code) out.push({ isMe: true, sameTab: true, presence: { rl: rlnBase() } });
   const seen = new Set();
   return out.filter(p => { const s = rlnOf(p).sid; if (seen.has(s)) return false; seen.add(s); return true; }).sort((a, b) => (rlnOf(a).at || 0) - (rlnOf(b).at || 0) || (rlnOf(a).sid < rlnOf(b).sid ? -1 : 1));
 }
+function rlnPeers(code) { return rlnAll(code).filter(p => !rlnOf(p).spec); }
+function rlnSpecs(code) { return rlnAll(code).filter(p => !!rlnOf(p).spec); }
+// how many are watching my duel (for the HUD: src/rlhud.js), counted at most twice a second
+function rlnWatchers() { if (!RLN.code || !rlnOnline()) return 0; const now = performance.now(); if (now - (RLN.wT || 0) > 500) { RLN.wT = now; RLN.wN = rlnSpecs(RLN.code).length; } return RLN.wN | 0; }
 function rlnMembers() { return RLN.code ? rlnPeers(RLN.code).slice(0, RLN_MAX) : []; }
 const rlnMine = p => !!(p && p.isMe && p.sameTab);
 function rlnAmHost() { const m = rlnMembers(); return !!m.length && rlnMine(m[0]); }
 function rlnOther() { return rlnMembers().find(p => !rlnMine(p)) || null; }
 function rlnSend(z) { if (NET.room) NET.room.presence({ rl: z }).catch(() => {}); }
-function rlnSendLobby() { if (!RLN.code) return; const z = rlnBase(); if (rlnAmHost()) { z.lob = { n: rlnMembers().length }; if (RLN.draft) z.dr = 1; }
+function rlnSendLobby() { if (!RLN.code) return; const z = rlnBase(); if (RLN.spec) { rlnSend(z); return; } if (rlnAmHost()) { z.lob = { n: rlnMembers().length }; if (RLN.draft) z.dr = 1; }
   if (RLN.dst) { if (RLN.role === 'dhost') z.st = RLN.dst; z.dd = { g: RLN.dst.g, n: typeof RLDR !== 'undefined' ? RLDR.picks.length : 0 }; if (RLN.ddk) z.dd.dk = RLN.ddk; } if (RLN.quit) z.quit = RLN.quit; rlnSend(z); }
 function rlnHost() {
   if (!rlnOnline() || rlnInMatch()) return;
-  RLN.code = 'r' + Math.random().toString(36).slice(2, 8); RLN.at = Date.now(); RLN.msg = ''; RLN.quit = null;
+  RLN.code = 'r' + Math.random().toString(36).slice(2, 8); RLN.at = Date.now(); RLN.msg = ''; RLN.quit = null; RLN.spec = false;
   rlnSendLobby(); rlnRender();
 }
 function rlnJoin(code) {
   if (!rlnOnline() || !code || rlnInMatch()) return;
   if (rlnPeers(code).length >= RLN_MAX) { RLN.msg = 'That duel already has two keepers.'; rlnRender(); return; }
-  RLN.code = code; RLN.at = Date.now(); RLN.msg = ''; RLN.quit = null;
+  RLN.code = code; RLN.at = Date.now(); RLN.msg = ''; RLN.quit = null; RLN.spec = false;
   rlnSendLobby(); rlnRender();
 }
-function rlnLeave() { rlnDraftOff(); RLN.code = null; RLN.st = null; RLN.g = null; RLN.role = null; RLN.quit = null; if (NET.room) NET.room.presence({ rl: null }).catch(() => {}); rlnRender(); }
+// watch a duel, waiting or under way: in its room, as neither keeper (the duel itself starts in rlNetPeers)
+function rlnWatch(code) {
+  if (!rlnOnline() || !code || rlnInMatch()) return;
+  if (!rlnPeers(code).length) { RLN.msg = 'That duel has closed.'; rlnRender(); return; }
+  if (rlnSpecs(code).length >= RLN_WATCH) { RLN.msg = `That duel already has ${RLN_WATCH} watching.`; rlnRender(); return; }
+  RLN.code = code; RLN.at = Date.now(); RLN.msg = ''; RLN.quit = null; RLN.spec = true; RLN.doneG = null;
+  rlnSendLobby(); rlnRender(); rlNetPeers();
+}
+function rlnLeave() { rlnDraftOff(); RLN.spec = false; RLN.code = null; RLN.st = null; RLN.g = null; RLN.role = null; RLN.quit = null; if (NET.room) NET.room.presence({ rl: null }).catch(() => {}); rlnRender(); }
 // the duels being hosted here
 function rlnOpen() {
   const rooms = new Map();
@@ -85,8 +107,8 @@ function rlnOpen() {
   const out = [];
   for (const [code, list] of rooms) {
     if (code === RLN.code) continue;
-    list.sort((a, b) => (rlnOf(a).at || 0) - (rlnOf(b).at || 0));
-    const h = rlnOf(list[0]); out.push({ code, host: rlnClean(h.nick, 16) || 'Someone', mr: rlnMr(h), n: list.length, started: !!(h.st && h.st.g), dr: !!h.dr });
+    const keep = list.filter(p => !rlnOf(p).spec).sort((a, b) => (rlnOf(a).at || 0) - (rlnOf(b).at || 0)); if (!keep.length) continue;
+    const h = rlnOf(keep[0]); out.push({ code, host: rlnClean(h.nick, 16) || 'Someone', mr: rlnMr(h), n: keep.length, w: list.length - keep.length, started: !!(h.st && h.st.g), dr: !!h.dr });
   }
   return out;
 }
@@ -103,24 +125,32 @@ function rlnRender() {
     if (RLN.msg) { const p = document.createElement('p'); p.className = 'muted'; p.textContent = RLN.msg; el.append(p); }
     if (!L.length) { const p = document.createElement('p'); p.className = 'muted'; p.textContent = 'No one is hosting a duel right now. Host one, and send the keeper you want to face to this page.'; el.append(p); return; }
     for (const n of L) {
+      // (the row joins; beside it, Watch, for any duel with room for another watcher)
+      const row = document.createElement('div'); row.className = 'rlrow';
       const b = document.createElement('button'); b.type = 'button'; b.className = 'warlobbyrow';
       const nm = document.createElement('span'); nm.className = 'nm'; nm.textContent = `${n.host}’s duel${n.mr}${n.dr ? ' · triple draft' : ''}`;
-      const sm = document.createElement('small'); sm.textContent = n.started ? 'under way' : n.n >= RLN_MAX ? 'full' : 'tap to join';
-      b.append(nm, sm); b.disabled = n.started || n.n >= RLN_MAX; b.addEventListener('click', () => rlnJoin(n.code)); el.append(b);
+      const sm = document.createElement('small'); sm.textContent = (n.started ? 'under way' : n.n >= RLN_MAX ? 'full' : 'tap to join') + (n.w ? ` · watching: ${n.w}` : '');
+      b.append(nm, sm); b.disabled = n.started || n.n >= RLN_MAX; b.addEventListener('click', () => rlnJoin(n.code)); row.append(b);
+      const wb = document.createElement('button'); wb.type = 'button'; wb.className = 'tool rlwatch'; wb.textContent = 'Watch'; wb.dataset.code = n.code;
+      wb.disabled = n.w >= RLN_WATCH; wb.title = wb.disabled ? 'As many as can are watching already' : `Watch ${n.host}’s duel`; wb.addEventListener('click', () => rlnWatch(n.code)); row.append(wb);
+      el.append(row);
     }
     return;
   }
   const m = rlnMembers(), host = rlnAmHost(), hz = m.length ? rlnOf(m[0]) : null, o = rlnOther(), oz = o ? rlnOf(o) : null;
-  const away = !!(oz && oz.g);   // (the other one still has the last duel's end card up)
+  const away = !!(oz && oz.g), W = rlnSpecs(RLN.code);   // (away: the other one still has the last duel's end card up)
   const dr = host ? RLN.draft : !!(hz && hz.dr);
-  const key = m.map(p => rlnOf(p).sid + rlnOf(p).nick + rlnOf(p).mr).join('|') + host + away + dr + RLN.msg;
+  const key = m.map(p => rlnOf(p).sid + rlnOf(p).nick + rlnOf(p).mr).join('|') + '/' + W.map(p => rlnOf(p).sid + rlnOf(p).nick).join('|') + host + away + dr + RLN.spec + RLN.msg;
   if (q('MpStart')) { q('MpStart').hidden = !host; q('MpStart').disabled = m.length < 2 || away || !!RLN.dst; }
   if (q('MpDraft')) { q('MpDraft').checked = dr; q('MpDraft').disabled = !host; }
   const L = q('Lobby'); if (L.dataset.k === key) return; L.dataset.k = key;
   if (q('LobbyHead')) q('LobbyHead').textContent = host ? 'Your duel' : `${rlnClean(hz && hz.nick, 16) || 'Someone'}’s duel`;
   const ol = q('LobbyList');
-  if (ol) { ol.textContent = ''; m.forEach((p, k) => { const li = document.createElement('li'), z = rlnOf(p); li.textContent = (rlnClean(z.nick, 16) || 'A keeper') + (rlnMine(p) ? ' (you)' : '') + rlnMr(z) + (k === 0 ? ' · hosting' : ''); if (rlnMine(p)) li.className = 'me'; ol.append(li); }); }
-  if (q('LobbyMsg')) q('LobbyMsg').textContent = RLN.msg || (host ? (m.length < 2 ? 'Waiting for a rival to join. Share an invite, or wait for someone to tap your duel in their list.' : away ? `Waiting for ${rlnClean(oz.nick, 16) || 'your rival'} to come back from the last duel.` : 'Both keepers are here. Start when you’re ready.') : 'Waiting for the host to start the duel.') + (dr && !RLN.msg ? ' It’s a triple draft: you’ll both build a deck on the spot.' : '');
+  if (ol) {
+    ol.textContent = ''; m.forEach((p, k) => { const li = document.createElement('li'), z = rlnOf(p); li.textContent = (rlnClean(z.nick, 16) || 'A keeper') + (rlnMine(p) ? ' (you)' : '') + rlnMr(z) + (k === 0 ? ' · hosting' : ''); if (rlnMine(p)) li.className = 'me'; ol.append(li); });
+    if (W.length) { const li = document.createElement('li'); li.className = 'rlwatchers' + (RLN.spec ? ' me' : ''); li.textContent = `watching: ${W.length} (` + W.map(p => (rlnClean(rlnOf(p).nick, 16) || 'someone') + (rlnMine(p) ? ', you' : '')).join('; ') + ')'; ol.append(li); }
+  }
+  if (q('LobbyMsg')) q('LobbyMsg').textContent = RLN.msg || (RLN.spec ? (m.length < 2 ? 'You’re watching. The duel shows here once a rival has joined and the host starts it.' : 'You’re watching. The duel shows here when the host starts it.') : host ? (m.length < 2 ? 'Waiting for a rival to join. Share an invite, or wait for someone to tap your duel in their list.' : away ? `Waiting for ${rlnClean(oz.nick, 16) || 'your rival'} to come back from the last duel.` : 'Both keepers are here. Start when you’re ready.') : 'Waiting for the host to start the duel.') + (dr && !RLN.msg ? ' It’s a triple draft: you’ll both build a deck on the spot.' : '');
 }
 // the host starts, with both decks and skins as each put them in their lobby presence
 function rlnStart() {
@@ -170,14 +200,27 @@ function rlnBegin(st, role) {
   const now = performance.now(), oz = rlnOther() && rlnOf(rlnOther());
   RLN.omr = oz && Number.isFinite(oz.mr) ? oz.mr : null;   // (the other's rating as their lobby gave it, for the rating's sums)
   Object.assign(RLN, { st, g: st.g, doneG: st.g, role, seq: 0, q: [], lastQ: 0, ws: 0, wsSeen: -1, wsSeenAny: -1, sendT: 0, sentAt: 0, seen: now, lastB: null, chunks: null, quit: null, ended: false, acked: false, msg: '' });
+  if (role === 'spec') { RLN.specSk = st.skins.join('|'); rlStart({ mode: 'net', me: 0, names: st.names.slice(), skins: st.skins.slice(), seed: st.seed, net: { host: false, spec: true } }); return; }
   rlStart({ mode: 'net', me: role === 'host' ? 0 : 1, names: st.names.slice(), decks: st.decks.map(d => d.slice()), skins: st.skins.slice(), seed: st.seed, net: { host: role === 'host' }, draft: st.dr === 2 });
   rlnSendNow();
+}
+// a watcher: the duel the host has started (or is in the middle of), from the host's presence
+function rlnSpecPeers() {
+  const m = rlnMembers(), h = m[0], hz = h ? rlnOf(h) : null;
+  if (!hz) { RLN.msg = 'The host has left, so that duel is closed.'; rlnLeave(); return; }
+  const g = typeof hz.g === 'string' ? hz.g.slice(0, 12) : null;
+  if (!g || g === RLN.doneG || hz.quit === g || (typeof RL !== 'undefined' && RL.on)) return;
+  if (hz.w && hz.w.ph === 'over') { RLN.doneG = g; return; }   // (come in just as it ended: wait for the next)
+  const s = hz.st && typeof hz.st === 'object' ? hz.st : {}, nm = Array.isArray(s.names) ? s.names : [], sk = Array.isArray(s.skins) ? s.skins : [];
+  const gz = m[1] ? rlnOf(m[1]) : null, sids = Array.isArray(s.sids) ? s.sids : [hz.sid, gz ? gz.sid : ''];
+  rlnBegin({ g, sids: [String(hz.sid), String(sids[1] || '')], names: [rlnClean(nm[0] || hz.nick, 16) || 'A keeper', rlnClean(nm[1] || (gz && gz.nick), 16) || 'A keeper'], decks: [[], []], skins: [rlnSkin(sk[0]), rlnSkin(sk[1])], seed: s.seed >>> 0 }, 'spec');
 }
 // every change in the room (src/net.js): keep the lobby current, start when the host does, and the duel's traffic
 function rlNetPeers() {
   if (rlnInMatch() && RLN.g) { rlnRead(); return; }
   if (RLN.code && typeof RL !== 'undefined' && RL.on && RL.mode !== 'net') rlnLeave();   // (gone off to duel the bot)
-  if (RLN.code) {
+  if (RLN.code && RLN.spec) rlnSpecPeers();
+  else if (RLN.code) {
     const m = rlnMembers();
     if (!m.some(rlnMine)) { RLN.msg = 'That duel filled up before you got in.'; rlnLeave(); return; }
     const h = m[0], hz = h ? rlnOf(h) : null, s = hz && hz.st;
@@ -243,6 +286,14 @@ function rlnSendNow() {
 function rlnGone(why) {
   if (RLN.ended || !rlnInMatch() || RL.ph === 'over') return;
   RLN.ended = true;
+  if (RLN.role === 'spec') {
+    // (a watcher: the host has gone, on purpose or not; the guest's screen has the win, and nothing is recorded here)
+    const nm = RLN.st ? RLN.st.names[0] : 'The host';
+    if (typeof toast === 'function') toast(`${nm} ${why === 'quit' ? 'has left the duel' : 'has lost the connection'}.`, 'Duel over');
+    if (RL.net) RL.net.gone = true; RLN.specWhy = why;
+    if (typeof rlEnd === 'function') rlEnd(why === 'quit' ? 1 : 2, { norec: true });
+    return;
+  }
   const host = RLN.role === 'host', nm = RLN.st ? RLN.st.names[host ? 1 : 0] : 'Your rival';
   if (typeof toast === 'function') toast(`${nm} ${why === 'quit' ? 'has left' : 'has lost the connection'}, so the duel is yours.`, 'Rival gone');
   if (!host && RL.net) RL.net.gone = true;
@@ -260,7 +311,7 @@ function rlnTick(dt) {
   if (RLN.role === 'host') {
     RLN.sendT -= dt || 0;
     if (RLN.sendT <= 0) { RLN.sendT += NET.via === 'claude' ? 0.1 : 1 / 12; if (RLN.sendT < -0.2) RLN.sendT = 0; rlnSendNow(); }
-  } else if (now - RLN.sentAt > 1000) { RLN.beat++; rlnSendNow(); }
+  } else if (RLN.role === 'guest' && now - RLN.sentAt > 1000) { RLN.beat++; rlnSendNow(); }   // (a watcher sends nothing)
   if (RL.ph !== 'over' && now - RLN.seen > RLN_GONE) rlnGone('lost');
 }
 // the room changed during the duel: the host reads the guest's beat and taps; the guest reads the host's snapshot
@@ -282,6 +333,18 @@ function rlnRead() {
     if (took) RLN.sendT = Math.min(RLN.sendT, 0.02);   // (the ack and the new unit out with the next frame)
     return;
   }
+  if (RLN.role === 'spec') {
+    // (a watcher hears the host straight, and reads its snapshots as the guest does; its quit or its going ends it)
+    const h = rlnMembers().find(p => rlnOf(p).sid === RLN.st.sids[0]), hz = h ? rlnOf(h) : null;
+    if (hz && hz.quit === RLN.g) { rlnGone('quit'); return; }
+    rlnSnapIn(hz, now);
+    const sk = RL.skins.join('|'); if (sk !== RLN.specSk) { RLN.specSk = sk; if (typeof rl3dReset === 'function') rl3dReset(); }   // (the towers as the keepers raised them)
+    return;
+  }
+  rlnSnapIn(z, now);
+}
+// a snapshot from the host's presence z, whole (w) or in pieces (wc), put into RL once each (the guest and watchers)
+function rlnSnapIn(z, now) {
   if (!z || z.g !== RLN.g || z.sid !== RLN.st.sids[0]) return;
   if (Number.isInteger(z.ak) && RLN.q.length && RLN.q[0][0] <= z.ak) RLN.q = RLN.q.filter(r => r[0] > z.ak);
   let snap = null, ws = z.ws;
@@ -297,6 +360,13 @@ function rlnRead() {
 }
 // back from the duel (rl.js's rlExit): into the same lobby for a rematch, or out of it if the host has gone
 function rlnBackToLobby() {
+  if (RLN.role === 'spec' || (RLN.spec && RLN.code)) {
+    // (a watcher: back to the list of duels if it left part way or the host has gone; else it stays, for the next)
+    const mid = !!RLN.g && typeof RL !== 'undefined' && RL.win === -1 && !RLN.ended, hostGone = !rlnMembers().some(p => RLN.st && rlnOf(p).sid === RLN.st.sids[0]);
+    RLN.g = null; RLN.role = null; RLN.chunks = null; RLN.specWhy = null;
+    setTimeout(() => { if (mid || hostGone || RLN.ended) { const was = RLN.ended && !mid; rlnLeave(); if (was) RLN.msg = 'The host has left, so that duel is closed.'; } else rlnSendLobby(); rlnRender(); }, 50);
+    return;
+  }
   const was = RLN.g, mid = !!was && typeof RL !== 'undefined' && RL.ph !== 'over' && !RLN.ended;
   const hostGone = RLN.role === 'guest' && !rlnMembers().some(p => !rlnMine(p) && rlnOf(p).sid === (RLN.st && RLN.st.sids[0]));
   // (left before the end: a loss for the rating, so the other keeper's win counts; src/rlmmr.js)
@@ -319,7 +389,7 @@ function rlnBackToLobby() {
   setInterval(() => { if (RLN.dst) { rlnDraftCheck(); if (RLN.dst) rlnSendLobby(); } }, 1000);   // (the draft: progress out, and anyone gone)
   setInterval(() => { if (typeof state === 'undefined' || state === 'title') rlnRender(); }, 1500);
   // (in the lobby, both say they're still here every few seconds, so a long wait doesn't look like leaving)
-  setInterval(() => { if (RLN.code && !RLN.g) rlnSendLobby(); }, 4000);
+  setInterval(() => { if (RLN.code && (!RLN.g || RLN.spec)) rlnSendLobby(); }, 4000);   // (a watcher, all along)
   // (and during a duel, a backstop for a tab whose frames have stopped, say in the background: the beat and the
   //  snapshot still go out, if only once a second there)
   setInterval(() => {

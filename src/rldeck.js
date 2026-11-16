@@ -17,11 +17,13 @@
 // Tap any card for everything about it in plain words. To change the deck you swap, one for one, so it always holds
 // 8 and never the same card twice: pick a card from the collection and then the deck card it replaces, or a deck card
 // and then the collection card to put in its place. Every card is a button (Tab, Enter, Escape to let go or close),
-// and on a phone the details sit in a panel along the foot of the screen.
+// and on a phone the details sit in a panel along the foot of the screen. Random (rlDeckRandom) fills the slot with
+// a random but sensible 8, and Starter deck puts the starter deck back.
 //
 // The global API:
 //   rlDeckMine()        -> the 8 ids of the deck you play
 //   rlDeckShow() / rlDeckHide()
+//   rlDeckRandom()      fills the open slot with a random, sensible 8
 //   rlCardWords(id)     -> { rows: [[label, value]...], ab: a sentence on its ability or '' } (the HUD may use it)
 //   RLV, rlvSave()      the save (src/rlcrates.js reads and writes its parts)
 
@@ -130,7 +132,7 @@ function rlCardWords(id) {
     mend: 'For ' + c.dur + ' seconds your troops in the circle mend ' + c.hl + ' a second.',
     haste: 'For ' + c.dur + ' seconds your troops in the circle move and strike 40% faster.',
     dot: 'For ' + c.dur + ' seconds everything of the enemy\'s in the circle takes ' + c.dmg + ' a second, towers ' + Math.round(c.tw * 100) + '% of it.',
-    summon: 'Strikes everything in the circle, then ' + (S ? (S.cnt > 1 ? 'the ' + S.n + ' climb' : S.n + ' climbs') : 'a crew climbs') + ' out on your side, there, wherever you cast it (on the nearer bank if it lands in the race).',
+    summon: 'Strikes everything in the circle, then ' + (S ? (S.cnt > 1 ? 'the ' + S.n + ' climb' : S.n + ' climbs') : 'a crew climbs') + ' out there for you. It can only be dropped on your own rock, where a troop could go.',
     whirl: 'For ' + c.dur + ' seconds it drags enemies on foot to its middle, 3 tiles a second, striking everything inside every half second.',
     tar: 'Enemy walkers within ' + c.rng + ' tiles move at half speed (they strike as fast as ever). Fires nothing.',
     blast: 'Every ' + c.hit + ' seconds, if a walker is within ' + c.rng + ' tiles, it bellows: ' + c.dmg + ' to every walker there, knocking them ' + c.kb + ' tiles back.',
@@ -262,6 +264,33 @@ function rlDeckRender() {
     col.appendChild(b);
   }
 }
+// a random deck with a sensible shape: a damage spell (and now and then a second spell), at most one building,
+// the rest troops, one of them a tower-taker or a big hitter, at least two cards that can hit flyers besides the
+// spell, three or more cheap cards (2 oil or less) and an average between 2.8 and 4.2. It draws at random and
+// draws again until a deck fits, so it is never quite the same deck twice and never the one you had.
+function rlDeckRandom() {
+  const cards = rlCardList(); if (cards.length < 8) return;
+  const pick = (a, n, out) => { a = a.filter(c => !out.includes(c)); for (let i = 0; i < n && a.length; i++) out.push(a.splice(Math.floor(Math.random() * a.length), 1)[0]); };
+  const old = RLV.decks[RLV.dk].slice().sort().join();
+  let best = null;
+  for (let t = 0; t < 400; t++) {
+    const out = [];
+    pick(cards.filter(c => c.type === 'spell' && c.dmg > 0), 1, out);
+    if (Math.random() < 0.35) pick(cards.filter(c => c.type === 'spell'), 1, out);
+    if (Math.random() < 0.55) pick(cards.filter(c => c.type === 'building'), 1, out);
+    pick(cards.filter(c => c.type === 'troop' && (c.tg === 'build' || c.cost >= 5)), 1, out);
+    pick(cards.filter(c => c.type === 'troop'), 8 - out.length, out);
+    if (out.length !== 8) continue;
+    const avg = out.reduce((a, c) => a + c.cost, 0) / 8, air = out.filter(c => c.type !== 'spell' && c.tg === 'any').length, cheap = out.filter(c => c.cost <= 2).length;
+    best = out;
+    if (avg >= 2.8 && avg <= 4.2 && air >= 2 && cheap >= 3 && out.map(c => c.id).sort().join() !== old) break;
+  }
+  if (!best) return;
+  const ord = { troop: 0, spell: 1, building: 2 };
+  RLV.decks[RLV.dk] = rlDeckFix(best.sort((a, b) => a.cost - b.cost || ord[a.type] - ord[b.type]).map(c => c.id)); RLD.sel = null; rlvSave();
+  try { sfxTick(); } catch (err) {}
+  rlDeckSay('A random deck in Deck ' + (RLV.dk + 1) + '. Tap Random again for another.');
+}
 function rlDeckReset() {
   RLV.decks[RLV.dk] = rlDeckFix(rlStarter()); RLD.sel = null; rlvSave();
   rlDeckSay('Deck ' + (RLV.dk + 1) + ' is the starter deck again.');
@@ -270,6 +299,7 @@ function rlDeckReset() {
 rlvLoad();
 if ($('rlDeckBtn')) $('rlDeckBtn').addEventListener('click', rlDeckShow);
 if ($('rlDeckClose')) $('rlDeckClose').addEventListener('click', rlDeckHide);
+if ($('rlDkRandom')) $('rlDkRandom').addEventListener('click', rlDeckRandom);
 if ($('rlDkReset')) $('rlDkReset').addEventListener('click', rlDeckReset);
 if ($('rlDkSort')) $('rlDkSort').addEventListener('change', e => { RLD.sort = e.target.value; rlDeckRender(); });
 addEventListener('keydown', e => {
