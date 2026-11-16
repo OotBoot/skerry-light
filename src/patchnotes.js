@@ -6,6 +6,13 @@
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 218, date: '2026-11-16', title: "The Chronicle of the Light", New: [
+    "The Chronicle of the Light: a tenth game, a story campaign for one to four. Fourteen missions play the Skerries' timeline from the lore compendium, from the first fire on Lantern Rock to the war on the Drowned Reach, in five acts.",
+    "The Chronicle of the Light: every mission has its own ground, goals and fights, often in parts of known places you haven't walked before: carry the lens up the new tower, sail behind Plimsoll, hold the keeper's station through the winter, get the townsfolk out of drowning Wrackhaven, and more, each with a fight to finish it.",
+    "The Chronicle of the Light: cinematics open and close every mission and mark the key moments inside it, with the people of the story speaking their parts. Space, Enter, a tap or A skips one; together, once everyone has asked.",
+    "The Chronicle of the Light: The Kittiwake tells the first account of Verity, aboard a fishing smack off the Near Skerries in February 1888.",
+    "The Chronicle of the Light: progress is kept in your browser and your save code, and missions open in order. Finishing a mission the first time gives a weapon crate and an outfit crate. A failed mission can be tried again from the part you reached.",
+    "The Chronicle of the Light: play together from the card's own lobby or an invite link. The host runs the mission and the fights grow with the crew." ] },
   { v: 217, date: '2026-11-16', title: "Skerry Clash: better watching", New: [
     "Skerry Clash: you can now watch a Triple Draft online. Both keepers show side by side over the arena, each with the round they're on, the three cards they're choosing from, the card they take, and the deck they're building. When the draft ends you carry straight on into watching the duel.",
     "Skerry Clash: watchers now see every keeper's hand and next card under their name, with an oil bar beside their oil, and the card each keeper has picked up to play lights up. Cards a keeper can't afford yet are dimmed." ], Fixes: [
