@@ -328,6 +328,7 @@ function rlnRead() {
     for (const r of z.q) {
       if (!Array.isArray(r) || !Number.isInteger(r[0]) || r[0] <= RLN.lastQ) continue;
       RLN.lastQ = r[0]; took = true; RLN.seen = now;
+      if (typeof r[1] === 'string' && r[1].startsWith('e:')) { if (typeof rlEmote === 'function') rlEmote(1, r[1].slice(2)); continue; }   // (an emote: src/rlemote.js)
       if (typeof r[1] === 'string' && Number.isFinite(r[2]) && Number.isFinite(r[3])) { try { rlPlay(1, r[1], r[2], r[3]); } catch (e) { console.error(e); } }
     }
     if (took) RLN.sendT = Math.min(RLN.sendT, 0.02);   // (the ack and the new unit out with the next frame)

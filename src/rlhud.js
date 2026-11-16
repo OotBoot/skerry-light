@@ -25,6 +25,7 @@ function rlHudReset() {
   $('rlToast').classList.remove('on'); $('rlCount').classList.remove('on');
   if (typeof rl3dGhost === 'function') rl3dGhost(null);
   rlHudTowers(true);
+  if (typeof rlEmoReset === 'function') rlEmoReset();
 }
 // a card's face: Meta's art if it's there, else a coloured face with the name
 function rlFace(cv, id) {
@@ -63,6 +64,7 @@ function rlHudTowers(force) {
 // every frame
 function rlHud(dt) {
   if (!RL.on) return;
+  if (typeof rlEmoHud === 'function') rlEmoHud(dt);   // the emotes (src/rlemote.js)
   const me = RL.me, they = 1 - me, oil = RL.oil[me];
   // the clock and the lights out
   const ck = $('rlClock'), cs = rlClock(RL.ph === 'count' ? RLC.LEN : RL.left);
@@ -211,10 +213,11 @@ function rlPlace(i, p) {
     if (state !== 'rival') return;
     if (e.target && /INPUT|TEXTAREA|SELECT/.test(e.target.tagName) && e.key !== 'Escape') return;
     e.stopImmediatePropagation();
-    if (e.key === 'Escape') { e.preventDefault(); if (!$('rlEnd').hidden) return; if (RH.sel >= 0) { RH.sel = -1; return; } rlPauseOpen($('rlPause').hidden); return; }
+    if (e.key === 'Escape') { e.preventDefault(); if (!$('rlEnd').hidden) return; if (typeof EM !== 'undefined' && EM.open) { rlEmoOpen(false); return; } if (RH.sel >= 0) { RH.sel = -1; return; } rlPauseOpen($('rlPause').hidden); return; }
     if (!$('rlPause').hidden || e.repeat) return;
     const n = '1234'.indexOf(e.key); if (n >= 0) { e.preventDefault(); rlSel(n); }
     else if ((e.key === 'q' || e.key === 'Q' || e.key === '5') && typeof rlTryAb === 'function') { e.preventDefault(); rlTryAb(); }
+    if ((e.key === 'e' || e.key === 'E') && typeof rlEmoOpen === 'function') { e.preventDefault(); rlEmoOpen(); }
   }, true);
   addEventListener('keyup', e => { if (state === 'rival') e.stopImmediatePropagation(); }, true);
   addEventListener('resize', () => { if (RL.on && typeof rl3dResize === 'function') rl3dResize(); });

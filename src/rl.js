@@ -96,7 +96,7 @@ const RL_PSPD = { bolt: 15, harpoon: 11, shot: 20, stone: 10, oil: 7, lantern: 6
 const RL_ARC = { grenade: 1, mortar: 1 };
 const RL_PK = ['bolt', 'harpoon', 'shot', 'stone', 'oil', 'lantern', 'flare', 'ball', 'lob', 'keg', 'herring', 'net', 'grenade', 'rocket', 'song', 'bolt2', 'mortar', 'gale'];
 const RL_FK = ['deploy', 'spell', 'die', 'tower', 'hit', 'boom', 'revive', 'bolt', 'ring', 'flash', 'go', 'dbl', 'ot', 'spawn', 'end', 'crown', 'splash',
-  'heal', 'leap', 'chain', 'pull', 'blast', 'oil', 'shield', 'burst', 'summon', 'spin', 'champ'];
+  'heal', 'leap', 'chain', 'pull', 'blast', 'oil', 'shield', 'burst', 'summon', 'spin', 'champ', 'emote'];   // (emote: { c the emote's id, side }, src/rlemote.js)
 const RL_ZK = ['haar', 'wave', 'mend', 'haste', 'dot', 'whirl'];
 const RL_ST = ['idle', 'walk', 'hit'];
 const RL_BOTNM = { easy: 'Apprentice Pell', normal: 'Keeper Morrow', hard: 'Old Grisewood' };

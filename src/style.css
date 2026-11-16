@@ -1700,3 +1700,30 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 /* [rival] champions in the deck builder: a gold frame and a crown */
 .rlface.rl-champ .rlpic { box-shadow: inset 0 0 0 2px #ffd070, 0 0 12px rgba(255,200,90,0.45); }
 .rlface.rl-champ::after { content: '\265B'; position: absolute; right: 4px; top: 2px; font-size: 15px; color: #ffd070; text-shadow: 0 1px 3px #000; pointer-events: none; }
+/* [rival] the emotes (src/rlemote.js): the button at the bottom left, the picker above it, the bubbles over the Great Lights */
+.rl-emobtn { position: absolute; left: max(10px, env(safe-area-inset-left, 0px)); bottom: max(10px, env(safe-area-inset-bottom, 0px)); width: 50px; height: 50px; border-radius: 50%; display: grid; place-items: center; color: #fff4d6; background: radial-gradient(circle at 50% 35%, rgba(60,80,130,0.95), rgba(14,20,38,0.95)); border: 2px solid rgba(255,216,138,0.55); box-shadow: 0 4px 14px rgba(0,0,0,0.5); cursor: pointer; pointer-events: auto; z-index: 6; transition: transform 0.12s, opacity 0.2s; }
+.rl-emobtn:hover, .rl-emobtn:focus-visible, .rl-emobtn.on { border-color: var(--lamp); color: var(--lamp); outline: none; transform: scale(1.06); }
+.rl-emobtn.wait { opacity: 0.45; }
+.rl-emopick { position: absolute; left: max(10px, env(safe-area-inset-left, 0px)); bottom: calc(max(10px, env(safe-area-inset-bottom, 0px)) + 58px); z-index: 7; pointer-events: auto; padding: 8px; background: rgba(10,14,28,0.94); border: 1px solid rgba(255,216,138,0.4); box-shadow: 0 8px 30px rgba(0,0,0,0.6); border-radius: 12px; display: flex; flex-direction: column; gap: 6px; animation: rlemoin 0.16s ease-out; }
+.rl-emogrid { display: grid; grid-template-columns: repeat(5, 66px); gap: 5px; }
+.rl-emoi { font: inherit; display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 4px 2px 3px; background: rgba(236,228,207,0.07); border: 1px solid rgba(236,228,207,0.16); border-radius: 10px; color: var(--ink); cursor: pointer; }
+.rl-emoi:hover, .rl-emoi:focus-visible { background: rgba(255,216,138,0.16); border-color: var(--lamp); outline: none; }
+.rl-emoi canvas { width: 50px; height: 50px; } .rl-emoi span { font-size: 9.5px; line-height: 1.1; white-space: nowrap; color: var(--muted); }
+.rl-emomute { align-self: stretch; font-size: 12px; padding: 4px 8px; } .rl-emomute.on { border-color: #ff8a70; color: #ffb4a0; }
+#rlName0.muted::after { content: ' (muted)'; font-size: 0.7em; color: var(--muted); font-weight: 400; }
+@keyframes rlemoin { 0% { opacity: 0; transform: translateY(8px) scale(0.96); } 100% { opacity: 1; transform: none; } }
+.rl-emob { position: absolute; left: 0; top: 0; z-index: 5; pointer-events: none; display: flex; flex-direction: column; align-items: center; padding: 4px 10px 6px; background: #fffaf0; border: 3px solid #3a7fe0; border-radius: 18px; box-shadow: 0 6px 20px rgba(0,0,0,0.5); transform: translate(-50%, -100%); transform-origin: 50% 100%; }
+.rl-emob.theirs { border-color: #d8402e; }
+.rl-emob::after { content: ''; position: absolute; left: 50%; bottom: -13px; margin-left: -10px; border: 10px solid transparent; border-top: 11px solid #3a7fe0; border-bottom: 0; }
+.rl-emob.theirs::after { border-top-color: #d8402e; }
+.rl-emob.top { transform: translate(-50%, 0); transform-origin: 50% 0; }
+.rl-emob.top::after { bottom: auto; top: -13px; border-top: 0; border-bottom: 11px solid #d8402e; }
+.rl-emob.top.mine::after { border-bottom-color: #3a7fe0; }
+.rl-emob canvas { width: 84px; height: 84px; }
+.rl-emob b { font-family: var(--display); font-weight: 400; font-size: 15px; color: #1b1e2a; white-space: nowrap; line-height: 1.1; }
+.rl-emob.pop { animation: rlemopop 0.42s cubic-bezier(.2,1.6,.4,1); } .rl-emob.top.pop { animation-name: rlemopopt; }
+.rl-emob.out { opacity: 0; transition: opacity 0.3s; }
+@keyframes rlemopop { 0% { transform: translate(-50%, -100%) scale(0.2); opacity: 0; } 60% { opacity: 1; } 100% { transform: translate(-50%, -100%) scale(1); } }
+@keyframes rlemopopt { 0% { transform: translate(-50%, 0) scale(0.2); opacity: 0; } 60% { opacity: 1; } 100% { transform: translate(-50%, 0) scale(1); } }
+@media (max-width: 560px) { .rl-emobtn { width: 42px; height: 42px; bottom: calc(var(--rl-bot, 170px) + 8px); } .rl-emopick { bottom: calc(var(--rl-bot, 170px) + 56px); } .rl-emogrid { grid-template-columns: repeat(5, 56px); } .rl-emoi canvas { width: 42px; height: 42px; } .rl-emoi span { font-size: 8.5px; } .rl-emob canvas { width: 64px; height: 64px; } }
+#rlUI.spec .rl-emobtn, #rlUI.spec .rl-emopick { display: none; }
