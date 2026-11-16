@@ -1583,6 +1583,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 .rldk-mix { flex: 1; min-width: 12rem; }
 .rldk-mix.warn { color: #ff9a7a; }
 .rldk-meta .tool { margin-left: auto; }
+.rldk-meta .tool + .tool { margin-left: 0; }
 .rldeckcard p.rldk-hint { margin: 0; min-height: 1.4em; font-family: var(--log); font-size: 13px; color: var(--lamp); }
 .rldk-body { display: grid; grid-template-columns: minmax(0, 1fr) 19rem; gap: 14px; align-items: start; }
 .rldk-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 10px; }
@@ -2468,7 +2469,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
       <h1 id="rlDeckHead">Your Deck</h1>
       <div class="rldk-tabs" id="rlDkTabs" role="tablist" aria-label="Deck slots"></div>
       <div class="rldk-deck" id="rlDkDeck" aria-label="The eight cards in this deck"></div>
-      <div class="rldk-meta"><span class="rldk-avg" id="rlDkAvg"></span><span class="rldk-mix" id="rlDkMix"></span><button class="tool" id="rlDkReset" type="button">Starter deck</button></div>
+      <div class="rldk-meta"><span class="rldk-avg" id="rlDkAvg"></span><span class="rldk-mix" id="rlDkMix"></span><button class="tool" id="rlDkRandom" type="button" title="Fill this deck with 8 random cards">🎲 Random</button><button class="tool" id="rlDkReset" type="button">Starter deck</button></div>
       <p class="rldk-hint" id="rlDkHint" aria-live="polite"></p>
       <div class="rldk-body">
         <div class="rldk-colwrap">
@@ -2672,7 +2673,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 // ---- src/config.js ----
 'use strict';
 // The game's version, shown at the top of the main menu. Bump it by one with every change pushed to main.
-var VERSION = 203;
+var VERSION = 204;
 // Skerry Light: tuning, asset paths and lore.
 // World units are metres. The lighthouse stands at the origin on the shoreline (y = 0);
 // north (+y) is open sea. Bearings: 0 = north, positive = east.
@@ -2847,13 +2848,15 @@ document.addEventListener('visibilitychange', () => {
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
-  { v: 203, date: '2026-11-16', title: "Skerry Clash: watch duels live", New: [
+  { v: 204, date: '2026-11-16', title: "Skerry Clash: watch duels live", New: [
     "Skerry Clash: watch any online duel live. Every duel in the list now has a Watch button, whether it's waiting, full or under way. Up to 8 people can watch one duel.",
     "Skerry Clash: watchers see the whole board, both keepers' names, lights put out, oil and the clock, and can swap ends to follow either keeper. They can't play, and watching never touches anyone's rating or crates.",
     "Skerry Clash: both keepers see how many people are watching, and the lobby lists the watchers by name.",
     "Skerry Clash: an invite link to a duel that's full or already started now lets you watch it instead.",
     "Skerry Clash: watchers stay for the rematch, and you can stop watching at any time from the menu." ], Balance: [
     "Skerry Clash: Shipwreck can now only be dropped on your own rock, wherever a troop could go, instead of anywhere on the arena." ] },
+  { v: 203, date: '2026-11-16', title: "Skerry Clash: random decks", New: [
+    "Skerry Clash: a new Random button in the deck builder fills the deck you're editing with 8 random cards. It always builds something playable: a damage spell, a card that goes for towers or hits hard, at least two cards that can hit flyers, a few cheap cards, and an average cost between 2.8 and 4.2 oil. Tap it again for another." ] },
   { v: 202, date: '2026-11-16', title: "Skerry Clash: ratings and a leaderboard", New: [
     "Skerry Clash: every player now has an MMR rating, starting at 1000. It belongs to your username, and only your save can play under that name.",
     "Skerry Clash: online duels move your rating the most, depending on how your rating compares to your rival's. Matches against the bot count at half weight, against a fixed rating for each level: Easy 800, Normal 1100, Hard 1300. A draw counts as half a win.",
@@ -61654,11 +61657,13 @@ function rlCardFace(id, el, px) {
 // Tap any card for everything about it in plain words. To change the deck you swap, one for one, so it always holds
 // 8 and never the same card twice: pick a card from the collection and then the deck card it replaces, or a deck card
 // and then the collection card to put in its place. Every card is a button (Tab, Enter, Escape to let go or close),
-// and on a phone the details sit in a panel along the foot of the screen.
+// and on a phone the details sit in a panel along the foot of the screen. Random (rlDeckRandom) fills the slot with
+// a random but sensible 8, and Starter deck puts the starter deck back.
 //
 // The global API:
 //   rlDeckMine()        -> the 8 ids of the deck you play
 //   rlDeckShow() / rlDeckHide()
+//   rlDeckRandom()      fills the open slot with a random, sensible 8
 //   rlCardWords(id)     -> { rows: [[label, value]...], ab: a sentence on its ability or '' } (the HUD may use it)
 //   RLV, rlvSave()      the save (src/rlcrates.js reads and writes its parts)
 
@@ -61899,6 +61904,33 @@ function rlDeckRender() {
     col.appendChild(b);
   }
 }
+// a random deck with a sensible shape: a damage spell (and now and then a second spell), at most one building,
+// the rest troops, one of them a tower-taker or a big hitter, at least two cards that can hit flyers besides the
+// spell, three or more cheap cards (2 oil or less) and an average between 2.8 and 4.2. It draws at random and
+// draws again until a deck fits, so it is never quite the same deck twice and never the one you had.
+function rlDeckRandom() {
+  const cards = rlCardList(); if (cards.length < 8) return;
+  const pick = (a, n, out) => { a = a.filter(c => !out.includes(c)); for (let i = 0; i < n && a.length; i++) out.push(a.splice(Math.floor(Math.random() * a.length), 1)[0]); };
+  const old = RLV.decks[RLV.dk].slice().sort().join();
+  let best = null;
+  for (let t = 0; t < 400; t++) {
+    const out = [];
+    pick(cards.filter(c => c.type === 'spell' && c.dmg > 0), 1, out);
+    if (Math.random() < 0.35) pick(cards.filter(c => c.type === 'spell'), 1, out);
+    if (Math.random() < 0.55) pick(cards.filter(c => c.type === 'building'), 1, out);
+    pick(cards.filter(c => c.type === 'troop' && (c.tg === 'build' || c.cost >= 5)), 1, out);
+    pick(cards.filter(c => c.type === 'troop'), 8 - out.length, out);
+    if (out.length !== 8) continue;
+    const avg = out.reduce((a, c) => a + c.cost, 0) / 8, air = out.filter(c => c.type !== 'spell' && c.tg === 'any').length, cheap = out.filter(c => c.cost <= 2).length;
+    best = out;
+    if (avg >= 2.8 && avg <= 4.2 && air >= 2 && cheap >= 3 && out.map(c => c.id).sort().join() !== old) break;
+  }
+  if (!best) return;
+  const ord = { troop: 0, spell: 1, building: 2 };
+  RLV.decks[RLV.dk] = rlDeckFix(best.sort((a, b) => a.cost - b.cost || ord[a.type] - ord[b.type]).map(c => c.id)); RLD.sel = null; rlvSave();
+  try { sfxTick(); } catch (err) {}
+  rlDeckSay('A random deck in Deck ' + (RLV.dk + 1) + '. Tap Random again for another.');
+}
 function rlDeckReset() {
   RLV.decks[RLV.dk] = rlDeckFix(rlStarter()); RLD.sel = null; rlvSave();
   rlDeckSay('Deck ' + (RLV.dk + 1) + ' is the starter deck again.');
@@ -61907,6 +61939,7 @@ function rlDeckReset() {
 rlvLoad();
 if ($('rlDeckBtn')) $('rlDeckBtn').addEventListener('click', rlDeckShow);
 if ($('rlDeckClose')) $('rlDeckClose').addEventListener('click', rlDeckHide);
+if ($('rlDkRandom')) $('rlDkRandom').addEventListener('click', rlDeckRandom);
 if ($('rlDkReset')) $('rlDkReset').addEventListener('click', rlDeckReset);
 if ($('rlDkSort')) $('rlDkSort').addEventListener('change', e => { RLD.sort = e.target.value; rlDeckRender(); });
 addEventListener('keydown', e => {

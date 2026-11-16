@@ -1572,6 +1572,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 .rldk-mix { flex: 1; min-width: 12rem; }
 .rldk-mix.warn { color: #ff9a7a; }
 .rldk-meta .tool { margin-left: auto; }
+.rldk-meta .tool + .tool { margin-left: 0; }
 .rldeckcard p.rldk-hint { margin: 0; min-height: 1.4em; font-family: var(--log); font-size: 13px; color: var(--lamp); }
 .rldk-body { display: grid; grid-template-columns: minmax(0, 1fr) 19rem; gap: 14px; align-items: start; }
 .rldk-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 10px; }
