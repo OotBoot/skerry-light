@@ -65,7 +65,7 @@ function faSession() {
   if (FA.sid === FB.sid) return;
   Object.assign(FA, { sid: FB.sid, sl: [], fl: [], balls: [], ev: [], eseq: 0, evSeen: -1, seq: 0, bseq: 0, spT: 0, init: false, my: -1, fx: [] });
 }
-const faOn = () => typeof FB !== 'undefined' && FB.on && RAID.on && RAID_ORDER[RAID.stage] === 'fbsail' && !!(RAID.st && RAID.st.B);
+const faOn = () => typeof FB !== 'undefined' && RAID.on && ((FB.on && RAID_ORDER[RAID.stage] === 'fbsail') || !!(raidStage() || {}).fbGuns) && !!(RAID.st && RAID.st.B);   // [campaign] (or a mission's own sea stage that asks for the guns: S.fbGuns)
 const faHost = () => ZM.net !== 'client';
 const faV = () => RAID.st.V || RAID.st.B;
 // the sea's frame and the deck's (u across, v along her), at her pose V
@@ -100,7 +100,7 @@ function faFarSpot(x, y, lo, hi) {
   return [clamp(x, FBS.SEA[0] + 200, FBS.SEA[1] - 200), FBS.SEA[3] - 300];
 }
 function fbSloopSpawn(x, y, opts) {
-  if (ZM.net === 'client' || !(typeof FB !== 'undefined' && FB.on)) return null;
+  if (ZM.net === 'client' || !(typeof FB !== 'undefined' && (FB.on || faOn()))) return null;   // [campaign] (a mission's own sea stage too)
   faSession(); opts = opts || {};
   const used = new Set(FA.sl.map(s => s.n)), names = FA_NAMES.filter(n => !used.has(n));
   const loot = opts.loot ? [].concat(opts.loot).filter(k => FB_LOOT[k]) : null;
@@ -314,7 +314,7 @@ const fagPin = () => FA.my >= 0 && faOn();
 const fagManning = () => FA.my >= 0 && faOn();
 
 // ---------- the hooks ----------
-fbHook('sail', {
+var FA_HOOK = fbHook('sail', {   // [campaign] (kept by name, so a mission's own sea stage can call its hooks: src/cpm10s.js)
   enter() { faSession(); FA.my = -1; FA.balls = []; FA.fx = []; FA.pend = 0; faGuns(); },
   exit() { if (FA.my >= 0) FA.my = -1; FA.balls = []; FA.fx = []; FA3.on = false; },
   tick(dt) {
