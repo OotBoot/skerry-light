@@ -21,6 +21,10 @@
 //                      this player was on the board under before (a browser's own, before its save had a recovery
 //                      code): that entry goes, and its bests carry over, so no one is on the board twice
 //
+// POST /api/scores  <- { mmr: 1, id, name, kind: 'bot' | 'net', res: 'w' | 'l' | 'd', lvl?, g?, side?, opp?, host? }
+//                      a finished Skerry Clash match, for its rating (MMR); see the section below. The GET's games
+//                      gain `clash`: one entry a username, { n, s: rating, b: wins, c: matches, f: 1, me? }, by rating
+//
 // `id` is a random secret each browser makes for itself; it is never shown. Anyone can send a score, so
 // this is an honest-players board: the numbers are capped at what the games can plausibly produce, each
 // address may send a score every few seconds, and each browser has one entry per game.
@@ -109,9 +113,10 @@ async function readAll() {
 }
 
 async function getBoard(me) {
-  if (!cache || Date.now() - cacheAt >= 15000) { cache = { store: STORE, games: await readAll() }; cacheAt = Date.now(); }
+  if (!cache || Date.now() - cacheAt >= 15000) { cache = { store: STORE, games: await readAll(), clash: await mmrBoard() }; cacheAt = Date.now(); }
   // (the ids stay here: each row goes out with only its name and numbers, and "me" for the asker's own)
   const games = {};
+  cache.games.clash = cache.clash || [];
   for (const [g, list] of Object.entries(cache.games)) games[g] = list.map(e => me && e.id === me ? { n: e.n, s: e.s, b: e.b, c: e.c, f: e.f, me: true } : { n: e.n, s: e.s, b: e.b, c: e.c, f: e.f });
   return { store: STORE, games };
 }
@@ -149,6 +154,7 @@ async function postRun(body, id, game, addr) {
 
 async function postScore(body, addr) {
   const { id, game } = body || {};
+  if (body && body.mmr) return postMmr(body, addr);
   if (typeof id !== 'string' || !/^[a-z0-9]{12,40}$/.test(id) || !GAMES[game]) return [400, { error: 'bad score' }];
   if (body.rid != null) return postRun(body, id, game, addr);
   const [maxS, maxB, maxC] = GAMES[game];
@@ -179,6 +185,117 @@ async function postScore(body, addr) {
   else { if (!memory.has(game)) memory.set(game, new Map()); memory.get(game).set(id, e); }
   cache = null;
   return [200, { ok: true }];
+}
+
+// ---------- Skerry Clash's rating (MMR) ----------
+// One rating a username (the scoreboard name, trimmed, lower-cased, its spaces run together), from 1000, by Elo:
+// K 32 for a duel online, and K 16 for a match against the bot, counted as a match against a fixed rating (easy 800,
+// normal 1100, hard 1300), so a player alone still has one but the online duels count for more. A draw is half a
+// win; nobody goes below 0. Each name is kept as { n: as shown, id, r, w, l, d, b: the best r, at: last played }.
+// A name is claimed by the first board id rated under it (the x-board-id, made from the save's recovery code, so the
+// same save on another device is the same id): another id sending under that name is told it's taken (409) and its
+// match isn't rated. A new username starts again from 1000.
+// Against the bot: rated at once, but at most one result a minute for each id. Online: each side reports the duel by
+// its id g, with its side, its result and the other's name; the report waits (15 minutes) until the other side's
+// comes, and only when the two agree (one won and one lost, or both drew; two different ids; each names the other)
+// are both names rated, together. The first word from each side stands; the same report again is answered with
+// what it did (so a page can ask again until the other side is in). The two halves of a duel are matched under a
+// short lock (SET NX), so two reports at the same moment can't both miss each other or both apply.
+// Keys: skerry:mmr:p:<name> the player, skerry:mmr:rank by rating, :g:<g>:<side> a report, :done:<g> what a duel
+// did (a day), :lock:<g>, :bot:<id> the minute between bot results. In memory alike without Upstash.
+const MK = { p: n => 'skerry:mmr:p:' + n, rank: 'skerry:mmr:rank', g: (g, s) => 'skerry:mmr:g:' + g + ':' + s, done: g => 'skerry:mmr:done:' + g, lock: g => 'skerry:mmr:lock:' + g, bot: id => 'skerry:mmr:bot:' + id };
+const MMR0 = 1000, MMR_BOT = { easy: 800, normal: 1100, hard: 1300 }, K_NET = 32, K_BOT = 16;
+const mmrNorm = v => cleanName(v).toLowerCase().replace(/\s+/g, ' ');
+const elo = (ra, rb, s, k) => Math.max(0, Math.round(ra + k * (s - 1 / (1 + Math.pow(10, (rb - ra) / 400)))));
+const mmrMem = new Map(), mmrRank = new Map(), lastMmr = new Map();   // (key -> { v, exp }; name -> rating; address.id -> time)
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+async function kvGet(keys) {
+  if (STORE === 'upstash') { const [vals] = await redis([['MGET', ...keys]]); return (vals || []).map(v => { try { return v ? JSON.parse(v) : null; } catch (e) { return null; } }); }
+  const now = Date.now(); return keys.map(k => { const e = mmrMem.get(k); return e && (!e.exp || e.exp > now) ? e.v : null; });
+}
+// (nx: only if it isn't there; ttl in ms; true if it was set)
+async function kvSet(key, v, ttl, nx) {
+  if (STORE === 'upstash') { const c = ['SET', key, JSON.stringify(v)]; if (ttl) c.push('PX', ttl); if (nx) c.push('NX'); const [r] = await redis([c]); return r === 'OK'; }
+  const now = Date.now(), e = mmrMem.get(key); if (nx && e && (!e.exp || e.exp > now)) return false;
+  mmrMem.set(key, { v, exp: ttl ? now + ttl : 0 });
+  if (mmrMem.size > 20000) for (const [k, x] of mmrMem) if (x.exp && x.exp <= now) mmrMem.delete(k);
+  return true;
+}
+async function kvDel(key) { if (STORE === 'upstash') await redis([['DEL', key]]); else mmrMem.delete(key); }
+// the players, all in one go, and their places by rating
+async function mmrPut(list) {
+  if (STORE === 'upstash') await redis(list.flatMap(([k, P]) => [['SET', MK.p(k), JSON.stringify(P)], ['ZADD', MK.rank, P.r, k]]));
+  else for (const [k, P] of list) { mmrMem.set(MK.p(k), { v: P, exp: 0 }); mmrRank.set(k, P.r); }
+  cache = null;
+}
+async function mmrBoard() {
+  let keys;
+  if (STORE === 'upstash') [keys] = await redis([['ZREVRANGE', MK.rank, 0, TOP - 1]]);
+  else keys = [...mmrRank.entries()].sort((a, b) => b[1] - a[1]).slice(0, TOP).map(e => e[0]);
+  if (!keys || !keys.length) return [];
+  const P = await kvGet(keys.map(MK.p));
+  return P.filter(p => p && p.w + p.l + p.d > 0).sort((a, b) => b.r - a.r || b.w - a.w).map(p => ({ id: p.id, n: cleanName(p.n), s: p.r | 0, b: p.w | 0, c: (p.w + p.l + p.d) | 0, f: 1 }));
+}
+function mmrApply(P, res, opp, k, name, now) {
+  const was = P.r; P.r = elo(P.r, opp, res === 'w' ? 1 : res === 'd' ? 0.5 : 0, k);
+  P[res === 'w' ? 'w' : res === 'd' ? 'd' : 'l']++; P.b = Math.max(P.b, P.r); P.n = name; P.at = now;
+  return P.r - was;
+}
+const mmrNew = id => ({ n: '', id, r: MMR0, w: 0, l: 0, d: 0, b: MMR0, at: 0 });
+const mmrOut = (P, d) => ({ ok: true, rated: 1, r: P.r, d, b: P.b, w: P.w, l: P.l, dr: P.d });
+// what a duel did, for the side asking
+function mmrAnswer(done, id) {
+  if (done.err) return done.err === 'taken' && done.who === id ? [409, { error: 'taken', taken: 1 }] : [200, { ok: true, rated: 0, why: done.err }];
+  const e = (done.s || []).find(x => x.id === id);
+  return e ? [200, Object.assign({ ok: true, rated: 1 }, e.o)] : [200, { ok: true, rated: 0, why: 'not yours' }];
+}
+async function postMmr(body, addr) {
+  const id = body.id, kind = body.kind, res = body.res;
+  if (typeof id !== 'string' || !/^[a-z0-9]{12,40}$/.test(id) || (kind !== 'bot' && kind !== 'net') || !['w', 'l', 'd'].includes(res)) return [400, { error: 'bad result' }];
+  if (!String(body.name || '').trim()) return [400, { error: 'no name' }];
+  const name = cleanName(body.name), key = mmrNorm(body.name), now = Date.now();
+  // (each browser every few seconds: two keepers on one address can both send)
+  const lk = addr + '.' + id;
+  if (now - (lastMmr.get(lk) || 0) < 3000) return [429, { error: 'slow down' }];
+  lastMmr.set(lk, now);
+  if (lastMmr.size > 5000) for (const [k, t] of lastMmr) if (now - t > 60000) lastMmr.delete(k);
+  const [mine] = await kvGet([MK.p(key)]);
+  if (mine && mine.id !== id) return [409, { error: 'taken', taken: 1 }];
+  if (kind === 'bot') {
+    if (!MMR_BOT[body.lvl]) return [400, { error: 'bad level' }];
+    if (!(await kvSet(MK.bot(id), 1, 60000, true))) return [429, { error: 'too soon', soon: 1 }];
+    const P = mine || mmrNew(id), d = mmrApply(P, res, MMR_BOT[body.lvl], K_BOT, name, now);
+    await mmrPut([[key, P]]);
+    return [200, mmrOut(P, d)];
+  }
+  const g = body.g, side = body.side, okey = mmrNorm(body.opp);
+  if (typeof g !== 'string' || !/^[a-z0-9]{4,12}$/.test(g) || (side !== 0 && side !== 1) || !String(body.opp || '').trim() || okey === key) return [400, { error: 'bad duel' }];
+  let [done] = await kvGet([MK.done(g)]);
+  if (done) return mmrAnswer(done, id);
+  await kvSet(MK.g(g, side), { id, k: key, n: name, res, o: okey, at: now }, 15 * 60000, true);
+  let locked = false;
+  for (let i = 0; i < 12 && !locked; i++) { locked = await kvSet(MK.lock(g), 1, 4000, true); if (!locked) await sleep(150); }
+  if (!locked) return [200, { ok: true, pending: 1 }];
+  try {
+    const [d2, r0, r1] = await kvGet([MK.done(g), MK.g(g, 0), MK.g(g, 1)]);
+    if (d2) return mmrAnswer(d2, id);
+    if (!r0 || !r1) return [200, { ok: true, pending: 1 }];
+    const agree = r0.id !== r1.id && r0.k !== r1.k && r0.o === r1.k && r1.o === r0.k && (r0.res === 'd' ? r1.res === 'd' : r0.res !== r1.res && r1.res !== 'd');
+    if (!agree) done = { err: 'mismatch' };
+    else {
+      const [p0, p1] = await kvGet([MK.p(r0.k), MK.p(r1.k)]);
+      const bad = p0 && p0.id !== r0.id ? r0 : p1 && p1.id !== r1.id ? r1 : null;
+      if (bad) done = { err: 'taken', who: bad.id };
+      else {
+        const P0 = p0 || mmrNew(r0.id), P1 = p1 || mmrNew(r1.id), a = P0.r, b = P1.r;
+        const d0 = mmrApply(P0, r0.res, b, K_NET, r0.n, now), d1 = mmrApply(P1, r1.res, a, K_NET, r1.n, now);
+        await mmrPut([[r0.k, P0], [r1.k, P1]]);
+        done = { s: [{ id: r0.id, o: mmrOut(P0, d0) }, { id: r1.id, o: mmrOut(P1, d1) }] };
+      }
+    }
+    await kvSet(MK.done(g), done, 24 * 3600000);
+    return mmrAnswer(done, id);
+  } finally { await kvDel(MK.lock(g)).catch(() => {}); }
 }
 
 // the HTTP side: returns true if it handled the request

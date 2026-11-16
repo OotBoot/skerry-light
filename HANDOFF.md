@@ -153,6 +153,7 @@ The source files:
     - The `x-board-id` header (sha256 of `'skerry-board:'+code`) marks the player's own rows.
     - Sends are serialized, with a `skerry-board-used` list to prevent duplicates.
   - Server: `server/scores.js`.
+  - Skerry Clash's rating (MMR, board `clash`): `src/rlmmr.js` on the client (Elo per username, the end card's change, the card's line, `mr` in the rl lobby presence); `server/scores.js` `postMmr` (POST `{ mmr: 1, ... }`; a name is claimed by the first board id; online duels rated only when both sides' reports of the duel id agree; keys under `skerry:mmr:`). On claude.ai it's self-reported in each player's own `scores/` document as `clash`.
   - Placement: the board card is at the top of the title card, under the banners.
 - **Past bugs to avoid:**
   - TDZ crashes from load order. That's why `CS` is a `var`, and why `boardBests` and `boardNick` are function declarations.

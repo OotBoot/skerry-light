@@ -43,6 +43,9 @@
 // Your bests are part of your save (src/crates.js saveData: `best`, merged by taking the higher of each), so they
 // follow your recovery code (src/cloudsave.js) to every device, and on the game's own site you're on the board once,
 // under an id made from that code (not the code itself): a browser's own entry from before moves across to it.
+// And one board that isn't games: Skerry Clash's ratings (clash, src/rlmmr.js), a row for each username with its
+// rating (s), wins (b) and matches rated (c), kept by the server (or, on claude.ai, in each player's own document as
+// clash: { n, r, b, w, l, d }); boardKeys() is every board but that one, for the games' own keeping.
 // Your name on the board is your username: one name for every game, kept on this device (and in your save), typed
 // in any of the name boxes (the board's, the crew's, Wreckers' Night's, the Lighthouse's) and filled into the rest.
 
@@ -65,9 +68,14 @@ const BOARD = {
     // [golf] src/golf.js: s is 200 less the round to par (so the lowest round ranks first), shown as strokes and to par
     golf: { name: 'Skerry Links', s: 'Round', b: 'Holes', c: 'Birdies', what: 'Each round of nine on the cliffs: the score (and to par), the holes played, and the birdies or better.',
       fs: v => v > 0 ? `${GF_PAR + 200 - v} (${(t => t === 0 ? 'E' : t > 0 ? '+' + t : '−' + -t)(200 - v)})` : '—' },
+    // [rival] src/rlmmr.js: not games but players, one row a username, by rating (mmr: none of the games' own keeping)
+    clash: { name: 'Skerry Clash', s: 'MMR', b: 'Wins', c: 'Matches', mmr: 1, what: 'Each keeper’s rating in Skerry Clash (from 1000, by wins and losses online and against the bot), their wins and the matches rated.' },
   },
   open: {}, mine: null, via: null, db: null, user: null, uid: null, data: null, loading: false, err: '', lastT: 0, sendT: 0, store: '',
 };
+
+// the boards of games (all but the rating's)
+function boardKeys() { return Object.keys(BOARD.games).filter(g => !BOARD.games[g].mmr); }
 
 // ---------- your games: each one an entry on the board ----------
 // BOARD.runs[game]: [{ r: its id, s, b, c, f: played to its end, at, u: not yet on the board }]; BOARD.cur[game]: the
@@ -75,11 +83,11 @@ const BOARD = {
 function runsLoad() {
   let o = {}; try { o = JSON.parse(localStorage.getItem('skerry-runs') || '{}') || {}; } catch (e) {}
   BOARD.runs = {}; BOARD.cur = {};
-  for (const g of Object.keys(BOARD.games)) BOARD.runs[g] = Array.isArray(o[g]) ? o[g].filter(r => r && typeof r.r === 'string') : [];
+  for (const g of boardKeys()) BOARD.runs[g] = Array.isArray(o[g]) ? o[g].filter(r => r && typeof r.r === 'string') : [];
 }
 const runKey = r => (r.s | 0) * 1e9 + (r.b | 0) + (r.c | 0) * 1e-3;
 function runsSave() {
-  for (const g of Object.keys(BOARD.games)) {
+  for (const g of boardKeys()) {
     // your best 25, the one under way, and any not on the board yet
     const L = BOARD.runs[g].slice().sort((a, b) => runKey(b) - runKey(a));
     BOARD.runs[g] = L.filter((r, k) => k < 25 || r.r === BOARD.cur[g] || r.u);
@@ -108,7 +116,7 @@ function scoreRunEnd(game) { if (BOARD.cur) BOARD.cur[game] = null; }
 // ---------- your bests, here ----------
 function boardLoadMine() {
   let m = {}; try { m = JSON.parse(localStorage.getItem('skerry-bests') || '{}') || {}; } catch (e) {}
-  for (const g of Object.keys(BOARD.games)) {
+  for (const g of boardKeys()) {
     const o = m[g] || {};
     m[g] = { s: Math.max(0, o.s | 0), b: Math.max(0, o.b | 0) }; if (BOARD.games[g].c) m[g].c = Math.max(0, (o.c | 0) || 0);
     const any = m[g].s + m[g].b + (m[g].c | 0) > 0;
@@ -190,7 +198,7 @@ function boardBests() { return BOARD.mine; }
 function boardNick() { return (typeof NET !== 'undefined' && NET.nick) || ''; }
 function boardMerge(best, nick, takeLooks) {
   let changed = false;
-  if (best && typeof best === 'object' && BOARD.mine) for (const g of Object.keys(BOARD.games)) {
+  if (best && typeof best === 'object' && BOARD.mine) for (const g of boardKeys()) {
     const o = best[g]; if (!o) continue;
     const m = BOARD.mine[g], s = Math.max(m.s, Math.max(0, o.s | 0)), b = Math.max(m.b, Math.max(0, o.b | 0)), c = Math.max(m.c | 0, Math.max(0, o.c | 0));
     const p = m.p || o.p || (o.s | 0) + (o.b | 0) + (o.c | 0) > 0 ? 1 : 0, f = m.f || ('f' in o ? o.f : boardOldF(g, o)) ? 1 : 0;
@@ -235,7 +243,7 @@ async function boardInit() {
       if (db && uid) {
         BOARD.via = 'claude'; BOARD.db = db; BOARD.user = user; BOARD.uid = uid;
         // what the board already has for you counts as your best too
-        try { const snap = await db.doc('scores/' + uid).get(); const d = snap.exists ? snap.data() : null; if (d) for (const g of Object.keys(BOARD.games)) { const M = BOARD.mine[g]; M.s = Math.max(M.s, d[g + '_s'] | 0); M.c = Math.max(M.c | 0, d[g + '_c'] | 0); M.b = Math.max(M.b, d[g + '_b'] | 0); if ((d[g + '_k'] || 0) > 0) { M.p = 1; if (boardDocF(d, g)) M.f = 1; } if (!BOARD.games[g].c) delete M.c; } } catch (e) {}
+        try { const snap = await db.doc('scores/' + uid).get(); const d = snap.exists ? snap.data() : null; if (d) for (const g of boardKeys()) { const M = BOARD.mine[g]; M.s = Math.max(M.s, d[g + '_s'] | 0); M.c = Math.max(M.c | 0, d[g + '_c'] | 0); M.b = Math.max(M.b, d[g + '_b'] | 0); if ((d[g + '_k'] || 0) > 0) { M.p = 1; if (boardDocF(d, g)) M.f = 1; } if (!BOARD.games[g].c) delete M.c; } } catch (e) {}
         boardSaveMine(); boardSendSoon('all');
       } else BOARD.err = 'Sign in to claude.ai to see the scoreboard.';
     } catch (e) { BOARD.err = 'The scoreboard isn’t available here.'; }
@@ -263,17 +271,18 @@ async function boardSend() {
       // one document for you: your games (best 25 of each, as [id, s, b, c, f, at]), and your bests as the board from
       // before kept them (so a page from before still shows you)
       const doc = { nick: boardName(), at: Date.now() };
-      for (const g of Object.keys(BOARD.games)) {
+      for (const g of boardKeys()) {
         if (m[g].s + m[g].b + (m[g].c | 0) > 0) { doc[g + '_s'] = m[g].s; doc[g + '_b'] = m[g].b; doc[g + '_k'] = m[g].s * 1e9 + m[g].b + ((m[g].c | 0) > 0 && !m[g].s && !m[g].b ? 0.5 : 0); doc[g + '_f'] = m[g].f ? 1 : 0; if (BOARD.games[g].c) doc[g + '_c'] = m[g].c | 0; }
         doc[g + '_runs'] = R[g].filter(has).sort((a, b) => runKey(b) - runKey(a)).slice(0, 25).map(r => [r.r, r.s, r.b, r.c | 0, r.f ? 1 : 0, Math.floor(r.at || 0)]);
       }
+      const mm = typeof rlmDoc === 'function' ? rlmDoc() : null; if (mm) doc.clash = mm;   // [rival] your rating (src/rlmmr.js)
       await BOARD.db.doc('scores/' + BOARD.uid).set(doc);
-      for (const g of Object.keys(BOARD.games)) for (const r of R[g]) delete r.u;
+      for (const g of boardKeys()) for (const r of R[g]) delete r.u;
       runsSave();
     } else {
       const id = await boardIdNow(); if (!id) { BOARD.sending = false; return; }
       let all = true;
-      for (const g of Object.keys(BOARD.games)) for (const r of R[g].filter(x => x.u)) {
+      for (const g of boardKeys()) for (const r of R[g].filter(x => x.u)) {
         if (!has(r)) { delete r.u; continue; }
         const sent = { s: r.s, b: r.b, c: r.c, f: r.f };
         const res = await fetch(boardApiUrl(), { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ id, rid: r.r, name: boardName(), game: g, s: r.s, b: r.b, c: r.c | 0, f: r.f ? 1 : 0 }) });
@@ -307,7 +316,7 @@ async function boardFetch(force) {
       // its best, as one game
       const data = {}, q = await BOARD.db.collection('scores').orderBy('at', 'desc').limit(500).get();
       const docs = q.docs.map(d => ({ id: d.id, d: d.data() || {} }));
-      for (const g of Object.keys(BOARD.games)) {
+      for (const g of boardKeys()) {
         const L = [];
         for (const { id, d } of docs) {
           const base = { id, n: '', nick: String(d.nick || ''), me: id === BOARD.uid };
@@ -316,6 +325,9 @@ async function boardFetch(force) {
         }
         data[g] = L.filter(e => e.s + e.b + e.c > 0).sort((a, b) => runKey(b) - runKey(a)).slice(0, 500);
       }
+      // [rival] the ratings: each player's own, as their document says
+      data.clash = docs.filter(({ d }) => d.clash && typeof d.clash === 'object' && Number.isFinite(+d.clash.r)).map(({ id, d }) => { const c = d.clash, n = v => Math.max(0, Math.floor(+v || 0)); return { id, n: '', nick: String(c.n || d.nick || ''), me: id === BOARD.uid, s: n(c.r), b: n(c.w), c: n(c.w) + n(c.l) + n(c.d), f: 1 }; })
+        .filter(e => e.c > 0).sort((a, b) => b.s - a.s || b.b - a.b).slice(0, 500);
       // names, as this viewer's claude.ai shows them
       const ids = [...new Set(Object.values(data).flat().map(e => e.id))];
       let ps = {}; try { ps = ids.length ? await BOARD.user.profiles(ids) : {}; } catch (e) {}
@@ -326,6 +338,7 @@ async function boardFetch(force) {
       const r = await fetch(boardApiUrl(), { cache: 'no-store', headers: id ? { 'x-board-id': id } : {} });
       if (!r.ok) throw new Error(r.status);
       const j = await r.json(); BOARD.data = j.games || {}; BOARD.store = j.store || ''; BOARD.err = '';
+      if (typeof rlmFromBoard === 'function') rlmFromBoard();   // [rival] your rating as the server has it
     }
   } catch (e) { BOARD.err = 'Couldn’t reach the scoreboard just now. Try Refresh in a moment.'; }
   BOARD.loading = false; boardRender();
@@ -362,6 +375,8 @@ function boardRender() {
       ol.append(li);
     });
     sec.append(ol);
+    // [rival] your rating, under its board if you're not in its top ten
+    if (G.mmr) { const c = typeof rlmCur === 'function' ? rlmCur() : null; if (c && !meShown && c.w + c.l + c.d > 0) sec.append(mk('p', 'boardmine', `You: ${c.r} MMR · ${c.w} ${c.w === 1 ? 'win' : 'wins'} · ${c.w + c.l + c.d} rated`)); box.append(sec); continue; }
     // your best game, under a board you're not on as far as it shows
     const m = BOARD.runs && BOARD.runs[g] && BOARD.runs[g].filter(r => r.s + r.b + (r.c | 0) > 0).sort((a, b) => runKey(b) - runKey(a))[0];
     if (m && !meShown) {

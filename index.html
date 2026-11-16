@@ -444,6 +444,7 @@
         <button class="tool" id="rlSkinBtn" type="button">Towers</button>
       </div>
       <p class="muted rlstats" id="rlStats"></p>
+      <p class="muted rlstats rlmmr" id="rlMmr"></p><!-- [rival] the rating (src/rlmmr.js) -->
       <section class="warmp zmmp" id="rlMp" aria-labelledby="rlMpHead"><!-- [rival] the lobby is src/rlnet.js -->
         <h2 id="rlMpHead">Duel online · one against one</h2>
         <p class="muted" id="rlMpNote">Looking for another keeper…</p>
@@ -470,6 +471,7 @@
         <p><b>The Great Light wakes.</b> The Great Light sleeps until it's hit or one of its Lamp Towers falls. Then it wakes and shoots too, harder than the lamps.</p>
         <p><b>Double oil and overtime.</b> In the last minute oil comes twice as fast. At time, more crowns wins. Level, and there's a minute of overtime at double oil, where the next tower to fall wins. Still level, whoever's most damaged tower has less health left loses.</p>
         <p><b>Decks.</b> Deck opens the deck builder: three slots, eight cards each from the 64, no two the same. Tap a card to read everything about it, and swap cards in and out one for one. Watch the average oil: a cheap deck cycles fast, a heavy one hits hard but slowly.</p>
+        <p><b>Rating (MMR).</b> Every finished match moves your rating, which starts at 1000: up for a win, down for a loss, by more when the odds were against it. Duels online count most; the bot counts for less, against a rating of its own (easy 800, normal 1100, hard 1300). Leaving a duel early counts as a loss. The rating belongs to your username, and the Skerry Clash board ranks everyone by it. A username already rated on someone else's save can't be used for a rating, and renaming yourself starts a fresh rating under the new name.</p>
         <p><b>Tower skins.</b> Every duel you finish earns a tower crate, and a win earns another; the first is free. The Lampwright's Crate holds a set of towers for your rock, the Great Light and both lamps, with the same grades as the other crates: Mates shimmer, Captains glow, Admirals are alive. Whatever you raise, your side's colour is on the rails and the pennants.</p>
       </details>
     </div>
@@ -553,6 +555,7 @@
         <h1 id="rlEndHead">Victory</h1>
         <p class="muted" id="rlEndSub"></p>
         <div class="rl-score"><div class="mine"><span id="rlEndMeN"></span><span class="rl-pips" id="rlEndMe"></span></div><div class="theirs"><span id="rlEndThemN"></span><span class="rl-pips" id="rlEndThem"></span></div></div>
+        <p class="rl-mmr" id="rlEndMmr" hidden></p>
         <div class="btnrow"><button class="primary" id="rlAgain" type="button">Again</button><button class="tool" id="rlMenu" type="button">Back to the menu</button></div>
       </div>
     </div>
@@ -1127,6 +1130,7 @@
 <script src="src/rldeck.js"></script><!-- [rival] your decks, the deck builder, the save -->
 <script src="src/rlcrates.js"></script><!-- [rival] tower skins and crates, your record, the card -->
 <script src="src/rlnet.js"></script><!-- [rival] Skerry Clash online: the lobby and the duel -->
+<script src="src/rlmmr.js"></script><!-- [rival] Skerry Clash's rating (MMR) -->
 <script src="src/menudesk.js"></script>
 <script src="src/main.js"></script>
 </body>

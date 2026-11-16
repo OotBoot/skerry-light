@@ -6,7 +6,8 @@
 // Playing a card: tap or click it, then the arena (the zone you may use shows light, the rest red, and a ghost shows
 // the troop or the spell's reach where it would go); or drag it from the hand onto the arena; or keys 1 to 4 and a
 // click. Escape (or the menu button) opens the pause card: Resume, Leave. The end card: the result, the lights put
-// out, and Again (against the bot) or Back to the menu.
+// out, the rating's change (#rlEndMmr, filled by src/rlmmr.js, and again when the server answers), and Again
+// (against the bot) or Back to the menu.
 // Card faces come from rlCardArt(id, canvas) (src/rlart.js, Meta's) when it's there; else a plain coloured face.
 
 const RH = { sel: -1, drag: null, hover: null, faces: ['', '', '', '', ''], say: 0, key: '', sayQ: [], seen: 0, cntShown: -1, flashT: 0 };
@@ -110,6 +111,7 @@ function rlHudEnd() {
   rlPips(RL.crowns[me], $('rlEndMe'), true); rlPips(RL.crowns[1 - me], $('rlEndThem'), false);
   $('rlEndMeN').textContent = RL.names[me]; $('rlEndThemN').textContent = RL.names[1 - me];
   $('rlAgain').hidden = RL.mode !== 'bot';
+  if (typeof rlmShow === 'function') rlmShow(); else if ($('rlEndMmr')) $('rlEndMmr').hidden = true;   // the rating's change (src/rlmmr.js)
   el.hidden = false; setTimeout(() => ($('rlAgain').hidden ? $('rlMenu') : $('rlAgain')).focus({ preventScroll: true }), 40);
 }
 

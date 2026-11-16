@@ -20,7 +20,8 @@
 //             tower, or the Drowned Light hung with weed with its bubbles rising
 //
 // The record (rlRecord(r), which src/rl.js calls as each match ends): played, won, lost, drawn, the streak and the
-// best streak, crowns taken. And the earnings: a crate for every match finished and one more for a win; the first
+// best streak, crowns taken; it hands the match on to the rating, src/rlmmr.js (rlmReport), whose part of the save
+// rides along in rkData as m. And the earnings: a crate for every match finished and one more for a win; the first
 // crate is free. All of it is in the one save, 'skerry-rival' (src/rldeck.js RLV), merged into the game's save by
 // rkData() / rkMerge(d, takeLooks) from src/crates.js.
 //
@@ -448,6 +449,7 @@ function rlRecord(r) {
   s.p++; s.cr += Math.max(0, Math.min(3, r.crowns | 0));
   if (draw) { s.d++; s.s = 0; } else if (win) { s.w++; s.s++; s.bs = Math.max(s.bs, s.s); } else { s.l++; s.s = 0; }
   const got = 1 + (win ? 1 : 0); RLV.c = Math.min(99999, RLV.c + got); rlvSave(); rlkRender();
+  if (typeof rlmReport === 'function') { try { rlmReport(r); } catch (e) { console.error(e); } }   // the rating (src/rlmmr.js)
   const what = draw ? 'A draw' : win ? (s.s > 2 ? s.s + ' wins running' : 'A win') : 'Duel over';
   if (typeof toast === 'function') toast(what + ': +' + got + ' tower crate' + (got > 1 ? 's' : '') + '. Open them from the Skerry Clash card.', '+' + got + ' tower crate' + (got > 1 ? 's' : ''));
 }
@@ -455,7 +457,7 @@ function rlRecord(r) {
 // ---------- the one save (src/crates.js saveData / mergeSave) ----------
 // decks, record, crates and skins; merged so nothing is lost: every skin either side has, the counts by the larger,
 // crates by everything ever earned, and the deck you play and the skin you raise only if takeLooks
-function rkData() { return { d: RLV.decks, k: RLV.dk, s: RLV.st, c: RLV.c, n: RLV.n, o: RLV.o, e: RLV.e }; }
+function rkData() { return { d: RLV.decks, k: RLV.dk, s: RLV.st, c: RLV.c, n: RLV.n, o: RLV.o, e: RLV.e, m: typeof rlmData === 'function' ? rlmData() : undefined }; }
 function rkMerge(d, takeLooks) {
   if (!d || typeof d !== 'object') return false;
   let changed = false; const n = v => Math.max(0, Math.min(999999, v | 0));
@@ -467,6 +469,7 @@ function rkMerge(d, takeLooks) {
     for (const k of ['p', 'w', 'l', 'd', 'cr', 'bs']) if (n(d.s[k]) > RLV.st[k]) { RLV.st[k] = n(d.s[k]); changed = true; }
     if (theirsNewer && n(d.s.s) !== RLV.st.s) { RLV.st.s = n(d.s.s); changed = true; }
   }
+  if (d.m && typeof rlmMerge === 'function' && rlmMerge(d.m)) changed = true;   // the rating, each name's newest (src/rlmmr.js)
   if (takeLooks) {
     if (Array.isArray(d.d)) for (let i = 0; i < 3; i++) if (Array.isArray(d.d[i])) { const fx = rlDeckFix(d.d[i]); if (fx.join() !== RLV.decks[i].join()) { RLV.decks[i] = fx; changed = true; } }
     if ((d.k | 0) >= 0 && (d.k | 0) <= 2 && (d.k | 0) !== RLV.dk && d.k != null) { RLV.dk = d.k | 0; changed = true; }

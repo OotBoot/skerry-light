@@ -1479,6 +1479,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 .rl-score .mine { border-top: 3px solid var(--rl-me); } .rl-score .theirs { border-top: 3px solid var(--rl-them); }
 .rl-score .rl-pips i { width: 22px; height: 22px; }
 .rl-endov .btnrow { justify-content: center; }
+.rl-mmr { margin: -6px 0 16px; font-family: var(--body); font-size: 15px; letter-spacing: 0.02em; color: var(--ink); } .rl-mmr.up { color: #ffe09a; } .rl-mmr.down { color: #c8b8c8; }   /* [rival] the rating's change (src/rlmmr.js) */
 @media (max-width: 560px) {
   .rl-top { grid-template-columns: 1fr auto 1fr auto; gap: 5px; left: 5px; right: 5px; }
   .rl-who { padding: 4px 6px; } .rl-who b { font-size: 0.9rem; }
