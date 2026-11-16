@@ -284,16 +284,19 @@ function c12b3d(dt) {
 
 // ---------- its cutscenes: she hears the first bell; she's driven down ----------
 const c12bM = () => { const z = ZM.z.find(q => q.bt === 'maren' && !q.dead); return z ? c12bLoc(z.x, z.y) : C12B.POSTS[0]; };
-cpCineDef('m12_rim', { music: 'cpm12cine', shots: [
+// (the drowned are drawn only near you, so in these she's an actor of her own, stood where the boss is, its model hidden)
+function c12bAct(C) { const z = ZM.z.find(q => q.bt === 'maren' && !q.dead); if (z && z.mdl) z.mdl.root.visible = false; if (!C.mar) return; C.mar.M.root.visible = !!z; if (z) c12MarenPose(C.mar, 0.016, { x: z.x, y: z.y, jz: z.jz || 0, h: z.h || 0, act: z.act, at: z.at }); }
+const c12bActEnd = () => { const z = ZM.z.find(q => q.bt === 'maren'); if (z && z.mdl) z.mdl.root.visible = true; };
+cpCineDef('m12_rim', { music: 'cpm12cine', b3(grp, C) { C.mar = c12MarenActor(grp, 0, 0, 0); }, exit: c12bActEnd, shots: [
   { d: 4.5, cam: [22, 24, 3], to: [20, 30, 4.2], look: [10, 50, 4.5], lookTo: [9, 49, 5.5],
-    f(t, k, C) { const [x, y] = c12bM(); this.look = [x, y, 4.5]; this.lookTo = [x, y, 5.5]; },
+    f(t, k, C) { const [x, y] = c12bM(); this.look = [x, y, 4.5]; this.lookTo = [x, y, 5.5]; c12bAct(C); },
     lines: [[0.3, 'ruth', 'There, on the lip, by the wreck. That’s no one of ours.', 'cp_m12_15']], sfx: [[0.2, 'wind', 0.5]] },
   { d: 5.5, cam: [16, 36, 2.2], to: [15, 40, 2.6], look: [10, 50, 5], lookTo: [10, 50, 5.6],
-    f(t, k, C) { const [x, y] = c12bM(); this.cam = [x + 6, y - 14, 2.2]; this.to = [x + 5, y - 10, 2.6]; this.look = [x, y, 5]; this.lookTo = [x, y, 5.6]; },
+    f(t, k, C) { const [x, y] = c12bM(); this.cam = [x + 6, y - 14, 2.2]; this.to = [x + 5, y - 10, 2.6]; this.look = [x, y, 5]; this.lookTo = [x, y, 5.6]; c12bAct(C); },
     lines: [[0.4, 'maren', 'You’ve brought my lamp. Bring it to me, then.', 'cp_m12_16'], [3.3, 'log', 'They had heard the bell carry, and so had she. She gave a step.', 'cp_m12_17']], sfx: [[0.3, 'sea', 0.5]] },
 ] });
-cpCineDef('m12_sink', { music: 'cpm12cine', shots: [
+cpCineDef('m12_sink', { music: 'cpm12cine', b3(grp, C) { C.mar = c12MarenActor(grp, 0, 0, 0); }, exit: c12bActEnd, shots: [
   { d: 6, cam: [24, 30, 5], to: [20, 26, 9], look: [5, 44, 3], lookTo: [0, 40, -2],
-    f(t, k, C) { const z = ZM.z.find(q => q.bt === 'maren' && !q.dead); if (z) { const [px, py] = C12B.POSTS[2]; z.x = FPSC.CX + px * (1 - k); z.y = FPSC.CY + C12B.SW[1] + (py - C12B.SW[1]) * (1 - k); z.jz = -k * k * 7; } },
+    f(t, k, C) { const z = ZM.z.find(q => q.bt === 'maren' && !q.dead); if (z) { const [px, py] = C12B.POSTS[2]; z.x = FPSC.CX + px * (1 - k); z.y = FPSC.CY + C12B.SW[1] + (py - C12B.SW[1]) * (1 - k); z.jz = -k * k * 7; } c12bAct(C); },
     lines: [[0.4, 'maren', 'Down, then. Come down to me.', 'cp_m12_18'], [3.2, 'log', 'She went back over the lip of the Swallow, and down, and the last of the water went with her.', 'cp_m12_19']], sfx: [[0.2, 'sea', 0.8], [2.8, 'thunder', 0.4]] },
 ] });
