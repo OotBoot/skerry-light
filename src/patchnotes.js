@@ -6,6 +6,9 @@
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 211, date: '2026-11-16', title: "Skerry Clash: Triple Draft in the arena", Changes: [
+    "Skerry Clash: the Triple Draft now happens inside the game. The arena comes up with both keepers' towers, and you pick your cards at the foot of the screen, then the duel starts right there.",
+    "Skerry Clash: hosting online now has its own Host a triple draft button next to Host a duel. You can still switch it on or off in the lobby before you start." ] },
   { v: 210, date: '2026-11-16', title: "Skerry Clash: emotes", New: [
     "Skerry Clash: emotes. A new button at the bottom left of the match (or the E key) opens ten of them: Ahoy!, Well played, Ha ha ha!, Nooo…, Grrr!, Wow!, Hmm…, Oops!, Good luck! and Thanks!, starring the keeper, a shore crab, a puffin, a drowned sailor, a herring gull and a grey seal.",
     "Skerry Clash: the emote you pick pops up in an animated bubble over your Great Light, with its own sound. Your rival sees and hears it online, and so does everyone watching.",

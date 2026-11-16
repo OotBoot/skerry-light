@@ -168,7 +168,7 @@ function rlnStart() {
 function rlnDraftGo(st, role) {
   RLN.dst = st; RLN.ddk = null; RLN.role = role; RLN.doneG = st.g; RLN.dlost = 0; RLN.msg = '';
   const me = role === 'dhost' ? 0 : 1;
-  rldOpen({ seed: st.seed, net: true, vs: st.names[1 - me], done: d => { RLN.ddk = d.slice(); rlnSendLobby(); rlnDraftCheck(); } });
+  rldOpen({ seed: st.seed, net: true, vs: st.names[1 - me], me, names: st.names.slice(), skins: st.skins.slice(), done: d => { RLN.ddk = d.slice(); rlnSendLobby(); rlnDraftCheck(); } });
   rlnSendLobby(); rlnRender();
 }
 function rlnDraftOff(msg) {
@@ -192,11 +192,11 @@ function rlnDraftCheck() {
   const theirs = rlnDeck(dd.dk), st = RLN.dst;
   if (!rldValid(st.seed, dd.dk) || theirs.join() !== dd.dk.join()) { rlnDraftOff('Your rival’s drafted deck didn’t match the offers, so the draft was called off.'); return; }
   const go = { g: Math.random().toString(36).slice(2, 9), sids: st.sids.slice(), names: st.names.slice(), decks: [RLN.ddk.slice(), theirs], skins: st.skins.slice(), seed: (Math.random() * 4294967295) >>> 0, dr: 2 };
-  RLN.dst = null; RLN.ddk = null; if (typeof rldClose === 'function') rldClose();
+  RLN.dst = null; RLN.ddk = null; if (typeof rldClose === 'function') rldClose(true);
   rlnBegin(go, 'host');
 }
 function rlnBegin(st, role) {
-  if (RLN.dst) { RLN.dst = null; RLN.ddk = null; if (typeof rldClose === 'function') rldClose(); }
+  if (RLN.dst) { RLN.dst = null; RLN.ddk = null; if (typeof rldClose === 'function') rldClose(true); }
   const now = performance.now(), oz = rlnOther() && rlnOf(rlnOther());
   RLN.omr = oz && Number.isFinite(oz.mr) ? oz.mr : null;   // (the other's rating as their lobby gave it, for the rating's sums)
   Object.assign(RLN, { st, g: st.g, doneG: st.g, role, seq: 0, q: [], lastQ: 0, ws: 0, wsSeen: -1, wsSeenAny: -1, sendT: 0, sentAt: 0, seen: now, lastB: null, chunks: null, quit: null, ended: false, acked: false, msg: '' });
@@ -383,7 +383,8 @@ function rlnBackToLobby() {
 
 (function rlnInit() {
   if (!$('rlMp')) return;
-  if ($('rlMpHost')) $('rlMpHost').addEventListener('click', rlnHost);
+  if ($('rlMpHost')) $('rlMpHost').addEventListener('click', () => { RLN.draft = false; rlnHost(); });
+  if ($('rlMpHostDr')) $('rlMpHostDr').addEventListener('click', () => { RLN.draft = true; rlnHost(); });   // (a triple draft from the start; the host can still change it in the lobby)
   if ($('rlMpStart')) $('rlMpStart').addEventListener('click', rlnStart);
   if ($('rlMpLeave')) $('rlMpLeave').addEventListener('click', rlnLeave);
   if ($('rlMpDraft')) $('rlMpDraft').addEventListener('change', e => { if (!rlnAmHost()) return; RLN.draft = !!e.target.checked; rlnSendLobby(); rlnRender(); });

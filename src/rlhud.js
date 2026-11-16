@@ -211,6 +211,7 @@ function rlPlace(i, p) {
   $('rlAgain').addEventListener('click', () => { if (RL.mode !== 'bot') return; const lvl = RL.bot.lvl; $('rlEnd').hidden = true; if (RL.draft && typeof rldBot === 'function') { rlQuit(); rldBot(lvl); return; } RL.on = false; rlPlayBot(lvl); });   // (a drafted duel: draft again)
   addEventListener('keydown', e => {
     if (state !== 'rival') return;
+    if (typeof RLDR !== 'undefined' && RLDR.on) return;   // (the triple draft has the keys: src/rldraft.js)
     if (e.target && /INPUT|TEXTAREA|SELECT/.test(e.target.tagName) && e.key !== 'Escape') return;
     e.stopImmediatePropagation();
     if (e.key === 'Escape') { e.preventDefault(); if (!$('rlEnd').hidden) return; if (typeof EM !== 'undefined' && EM.open) { rlEmoOpen(false); return; } if (RH.sel >= 0) { RH.sel = -1; return; } rlPauseOpen($('rlPause').hidden); return; }

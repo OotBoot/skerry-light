@@ -1640,6 +1640,18 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 
 /* the triple draft (src/rldraft.js) */
 .rldraftcard { z-index: 21; }
+/* in the arena: the towers stand above, the draft at the foot of the screen */
+#rlUI.drafting .rl-bottom, #rlUI.drafting .rl-emobtn, #rlUI.drafting .rl-emopick, #rlUI.drafting .rl-clock, #rlUI.drafting .rl-pips, #rlUI.drafting .rl-menu, #rlUI.drafting .rl-tw { display: none; }
+#rlUI .rldraftcard { z-index: 45; background: linear-gradient(rgba(7,12,24,0) 0%, rgba(7,12,24,0.25) 35%, rgba(7,12,24,0.75)); place-items: end center; touch-action: pan-y; }
+#rlUI .rldraftcard .card { margin-block: auto 0; background: rgba(10,16,30,0.9); backdrop-filter: blur(2px); gap: 8px; padding-top: 14px; }
+#rlUI .rldraftcard .card h1 { font-size: clamp(1.6rem, 4.5vw, 2.4rem); }
+#rlUI .rldraftcard .rldr-c .rlface { width: min(100%, 112px); }
+#rlUI .rldraftcard .rldr-c { padding: 8px; gap: 6px; }
+#rlUI .rldraftcard .rldr-deck { grid-template-columns: repeat(8, minmax(0, 64px)); justify-content: center; }
+@media (max-height: 900px) { #rlUI .rldraftcard .rldr-txt dl { display: none; } }
+#rlUI .rldraftcard .rldr-line { font-size: 0.88rem; }
+#rlUI .rldraftcard .rldr-slot { min-height: 2.2rem; }
+#rlUI .rldraftcard .rldr-deck .rlface .rlname { display: none; }
 .rldraftcard .card { max-width: 56rem; gap: 10px; }
 .rldraftcard h1 { color: #f4b866; margin-bottom: 0; }
 .rldraftcard p.rldr-theme { margin: 0; font-family: var(--log); font-size: 13px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--lamp); min-height: 1.2em; }
@@ -1672,6 +1684,9 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 .rldr-opt input:disabled + * , .rldr-opt:has(input:disabled) { opacity: 0.85; }
 @media (max-width: 640px) {
   .rldraftcard .card { padding: 18px 12px 14px; }
+  #rlUI .rldraftcard .rldr-txt dl { display: none; }
+  #rlUI .rldraftcard .rldr-c .rlface { width: 72px; }
+  #rlUI .rldraftcard .rldr-deck { grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 3px; padding: 4px; }
   .rldr-offer { grid-template-columns: minmax(0, 1fr); gap: 8px; }
   .rldr-c { flex-direction: row; align-items: stretch; padding: 8px; }
   .rldr-c .rlface { width: 92px; flex: none; align-self: start; }
@@ -2173,7 +2188,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
         <h2 id="rlMpHead">Duel online · one against one</h2>
         <p class="muted" id="rlMpNote">Looking for another keeper…</p>
         <div id="rlMpOpen" hidden>
-          <div class="btnrow"><button class="tool" id="rlMpHost" type="button">Host a duel</button></div>
+          <div class="btnrow"><button class="tool" id="rlMpHost" type="button">Host a duel</button><button class="tool" id="rlMpHostDr" type="button">Host a triple draft</button></div>
           <div class="warlobbies" id="rlLobbies"></div>
         </div>
         <div class="warlobby" id="rlLobby" hidden>
@@ -2271,6 +2286,18 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
     </div>
     <div class="rl-specbar" id="rlSpecBar" hidden><span class="rl-specbadge">Watching</span><span class="rl-specn" id="rlSpecN"></span><button class="tool" id="rlSpecFlip" type="button" title="Watch from the other keeper's end">Swap ends</button></div><!-- [rival] a watcher's bar, in place of the hand (src/rlhud.js) -->
     <div class="rl-drag" id="rlDrag" hidden aria-hidden="true"><canvas width="150" height="176"></canvas></div>
+    <div class="overlay rldraftcard" id="rlDraftCard" hidden role="dialog" aria-modal="true" aria-labelledby="rlDrHead"><!-- [rival] the triple draft, over the arena (src/rldraft.js) -->
+      <div class="card">
+        <div class="cardtop sticky"><span class="eyebrow" id="rlDrEye">Skerry Clash · triple draft</span><button class="tool closebtn" id="rlDrLeave" type="button">✕ Leave</button></div>
+        <h1 id="rlDrHead">Round 1 of 8</h1>
+        <p class="rldr-theme" id="rlDrTheme"></p>
+        <div class="rldr-time" id="rlDrTime" hidden><i></i><b></b></div>
+        <div class="rldr-offer" id="rlDrOffer" aria-label="Three cards: take one"></div>
+        <p class="rldr-hint" id="rlDrHint" aria-live="polite"></p>
+        <div class="rldr-deckhead"><span>Your deck</span><span id="rlDrAvg"></span></div>
+        <div class="rldr-deck" id="rlDrDeck" aria-label="The cards you have taken"></div>
+      </div>
+    </div>
     <div class="overlay pausecard" id="rlPause" hidden role="dialog" aria-modal="true" aria-labelledby="rlPauseHead">
       <div class="card">
         <h1 id="rlPauseHead">Skerry Clash</h1>
@@ -2564,19 +2591,6 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
     </div>
   </div>
 
-  <div class="overlay rldraftcard" id="rlDraftCard" hidden role="dialog" aria-modal="true" aria-labelledby="rlDrHead"><!-- [rival] the triple draft (src/rldraft.js) -->
-    <div class="card">
-      <div class="cardtop sticky"><span class="eyebrow" id="rlDrEye">Skerry Clash · triple draft</span><button class="tool closebtn" id="rlDrLeave" type="button">✕ Leave</button></div>
-      <h1 id="rlDrHead">Round 1 of 8</h1>
-      <p class="rldr-theme" id="rlDrTheme"></p>
-      <div class="rldr-time" id="rlDrTime" hidden><i></i><b></b></div>
-      <div class="rldr-offer" id="rlDrOffer" aria-label="Three cards: take one"></div>
-      <p class="rldr-hint" id="rlDrHint" aria-live="polite"></p>
-      <div class="rldr-deckhead"><span>Your deck</span><span id="rlDrAvg"></span></div>
-      <div class="rldr-deck" id="rlDrDeck" aria-label="The cards you have taken"></div>
-    </div>
-  </div>
-
   <div class="overlay cratecard wcratecard rlkratecard" id="rlCrateCard" hidden role="dialog" aria-modal="true" aria-labelledby="rlkHead"><!-- [rival] tower crates and skins (src/rlcrates.js) -->
     <div class="card">
       <div class="cardtop sticky"><span class="eyebrow">Skerry Clash · the lampwright</span><button class="tool closebtn" id="rlkClose" type="button">✕ Close</button></div>
@@ -2769,7 +2783,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 // ---- src/config.js ----
 'use strict';
 // The game's version, shown at the top of the main menu. Bump it by one with every change pushed to main.
-var VERSION = 210;
+var VERSION = 211;
 // Skerry Light: tuning, asset paths and lore.
 // World units are metres. The lighthouse stands at the origin on the shoreline (y = 0);
 // north (+y) is open sea. Bearings: 0 = north, positive = east.
@@ -2944,6 +2958,9 @@ document.addEventListener('visibilitychange', () => {
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 211, date: '2026-11-16', title: "Skerry Clash: Triple Draft in the arena", Changes: [
+    "Skerry Clash: the Triple Draft now happens inside the game. The arena comes up with both keepers' towers, and you pick your cards at the foot of the screen, then the duel starts right there.",
+    "Skerry Clash: hosting online now has its own Host a triple draft button next to Host a duel. You can still switch it on or off in the lobby before you start." ] },
   { v: 210, date: '2026-11-16', title: "Skerry Clash: emotes", New: [
     "Skerry Clash: emotes. A new button at the bottom left of the match (or the E key) opens ten of them: Ahoy!, Well played, Ha ha ha!, Nooo…, Grrr!, Wow!, Hmm…, Oops!, Good luck! and Thanks!, starring the keeper, a shore crab, a puffin, a drowned sailor, a herring gull and a grey seal.",
     "Skerry Clash: the emote you pick pops up in an animated bubble over your Great Light, with its own sound. Your rival sees and hears it online, and so does everyone watching.",
@@ -58888,7 +58905,7 @@ function rlPos(u) { const a = rlAlpha(), px = u.px == null ? u.x : u.px, py = u.
 
 // ---------- every frame ----------
 function rlFrame(dt) {
-  if (!RL.on) return;
+  if (!RL.on) { if (RL.ph === 'draft' && typeof rl3dDraw === 'function') { RL.clk += dt; rl3dDraw(dt); } return; }   // (the triple draft, over the empty arena: src/rldraft.js)
   const paused = !$('rlPause').hidden && RL.mode === 'bot';
   if (RL.mode === 'net' && typeof rlnTick === 'function') { try { rlnTick(dt); } catch (e) { console.error(e); } }
   if (!paused) {
@@ -60091,7 +60108,7 @@ function rl3dZone(on) {
   RL3.zoneTex.needsUpdate = true;
 }
 function rl3dDraw(dt) {
-  if (!RL3.ok || !RL.on) return;
+  if (!RL3.ok || !(RL.on || RL.ph === 'draft')) return;   // (and the empty arena behind the triple draft)
   RL3.t += dt; const t = RL3.t, S = RL3.scene;
   rl3dFit();
   RL3.seaU.t.value = t; RL3.seaU.cp.value.copy(RL3.cam.position);
@@ -60683,6 +60700,7 @@ function rlPlace(i, p) {
   $('rlAgain').addEventListener('click', () => { if (RL.mode !== 'bot') return; const lvl = RL.bot.lvl; $('rlEnd').hidden = true; if (RL.draft && typeof rldBot === 'function') { rlQuit(); rldBot(lvl); return; } RL.on = false; rlPlayBot(lvl); });   // (a drafted duel: draft again)
   addEventListener('keydown', e => {
     if (state !== 'rival') return;
+    if (typeof RLDR !== 'undefined' && RLDR.on) return;   // (the triple draft has the keys: src/rldraft.js)
     if (e.target && /INPUT|TEXTAREA|SELECT/.test(e.target.tagName) && e.key !== 'Escape') return;
     e.stopImmediatePropagation();
     if (e.key === 'Escape') { e.preventDefault(); if (!$('rlEnd').hidden) return; if (typeof EM !== 'undefined' && EM.open) { rlEmoOpen(false); return; } if (RH.sel >= 0) { RH.sel = -1; return; } rlPauseOpen($('rlPause').hidden); return; }
@@ -63212,6 +63230,10 @@ function rkMerge(d, takeLooks) {
 // own: a big hitter, two rounds of things that hit flyers, a striking spell, two cheap troops, a building or a spell,
 // and one where anything goes. The order of the rounds is shuffled by the seed.
 //
+// The draft happens in the game itself: the arena comes up, empty but for the six towers, seen from your own end
+// (rldScene: RL.ph 'draft' with RL.on false, so the match doesn't run and the online code still counts it as the lobby;
+// src/rl.js's rlFrame only draws), and the three cards sit over it at the foot of the screen. When both decks are
+// done rlStart begins the duel on the same screen; leaving or a draft called off goes back to the menu (rlExit).
 // Against the bot (rldBot, #rlDraftBot on the Skerry Clash card) there's no clock; the bot drafts from the same offers
 // (rldBotPicks: easy at random, normal and hard keeping its average oil near 3.6 and taking the stronger card). Online
 // (src/rlnet.js) each pick has 15 seconds, and a card is taken for you at random when it runs out; when you're done
@@ -63221,8 +63243,10 @@ function rkMerge(d, takeLooks) {
 // The global API:
 //   rldOffers(seed)          -> [[3 ids] x 8] and .th, the theme of each round
 //   rldValid(seed, deck)     -> true if each of the 8 was one of its round's three
-//   rldOpen(o)               the draft screen: o = { seed, net (online, with the clock), vs (the rival's name), done(deck) }
-//   rldClose()               shuts it without finishing (rldOpen's done is not called)
+//   rldOpen(o)               the draft, in the arena: o = { seed, net (online, with the clock), vs (the rival's name),
+//                            me (0 or 1, which end you see it from), names, skins, done(deck) }
+//   rldClose(keep)           shuts it without finishing (done is not called), and leaves the arena unless keep (the
+//                            duel is about to begin there)
 //   rldRival(n)              online: how many the rival has picked, for the line under the offers
 //   RLDR                     the draft under way (on, seed, offers, picks, net)
 
@@ -63275,10 +63299,22 @@ function rldOpen(o) {
   try { audioInit(); } catch (e) {}
   const card = $('rlDraftCard'); if (!card) return;
   for (const id of ['rlDeckCard', 'rlCrateCard']) { const e = $(id); if (e) e.hidden = true; }
+  rldScene(o);
   card.hidden = false; card.scrollTop = 0; rldRender();
   clearInterval(RLDR.tm); RLDR.tm = setInterval(rldClock, 100);
 }
-function rldClose() { RLDR.on = false; RLDR.done = null; clearInterval(RLDR.tm); RLDR.tm = null; const c = $('rlDraftCard'); if (c) c.hidden = true; }
+function rldClose(keep) {
+  RLDR.on = false; RLDR.done = null; clearInterval(RLDR.tm); RLDR.tm = null; const c = $('rlDraftCard'); if (c) c.hidden = true;
+  if ($('rlUI')) $('rlUI').classList.remove('drafting');
+  if (!keep && RL.ph === 'draft' && !RL.on && typeof rlExit === 'function') rlExit();
+}
+// the arena for the draft: the match set up as rlStart does (towers, names, skins), then held before it begins
+function rldScene(o) {
+  if (RL.on || typeof rlStart !== 'function') return;
+  rlStart({ mode: 'bot', me: o.me === 1 ? 1 : 0, names: o.names, skins: o.skins });
+  Object.assign(RL, { on: false, ph: 'draft', FX: [] });
+  $('rlUI').classList.add('drafting'); $('rlPause').hidden = true;
+}
 function rldRival(n) { if (RLDR.rival === n) return; RLDR.rival = n; if (RLDR.on) rldHint(); }
 function rldPick(id) {
   const r = RLDR.picks.length;
@@ -63343,14 +63379,15 @@ function rldLeave() {
   if (!RLDR.on) return;
   const net = RLDR.net; rldClose();
   if (net && typeof rlnLeave === 'function') rlnLeave();
+  try { sfxTick(); } catch (e) {}
 }
 // against the bot: draft, the bot drafts from the same offers, and the duel begins
 function rldBot(lvl) {
   lvl = typeof lvl === 'string' ? lvl : ($('rlBotLvl') && $('rlBotLvl').value) || 'normal'; if (!RL_BOTNM[lvl]) lvl = 'normal';
   const seed = (Math.random() * 4294967295) >>> 0;
-  rldOpen({ seed, vs: RL_BOTNM[lvl], done: deck => {
-    rldClose();
-    const sk = typeof rlSkinMine === 'function' ? rlSkinMine() : '';
+  const sk = typeof rlSkinMine === 'function' ? rlSkinMine() : '';
+  rldOpen({ seed, vs: RL_BOTNM[lvl], me: 0, names: [rlMyName(), RL_BOTNM[lvl]], skins: [sk || '', ''], done: deck => {
+    rldClose(true);
     rlStart({ mode: 'bot', me: 0, names: [rlMyName(), RL_BOTNM[lvl]], decks: [deck, rldBotPicks(rldOffers(seed), lvl)], skins: [sk || '', ''], lvl, draft: 1 });
   } });
 }
@@ -63537,7 +63574,7 @@ function rlnStart() {
 function rlnDraftGo(st, role) {
   RLN.dst = st; RLN.ddk = null; RLN.role = role; RLN.doneG = st.g; RLN.dlost = 0; RLN.msg = '';
   const me = role === 'dhost' ? 0 : 1;
-  rldOpen({ seed: st.seed, net: true, vs: st.names[1 - me], done: d => { RLN.ddk = d.slice(); rlnSendLobby(); rlnDraftCheck(); } });
+  rldOpen({ seed: st.seed, net: true, vs: st.names[1 - me], me, names: st.names.slice(), skins: st.skins.slice(), done: d => { RLN.ddk = d.slice(); rlnSendLobby(); rlnDraftCheck(); } });
   rlnSendLobby(); rlnRender();
 }
 function rlnDraftOff(msg) {
@@ -63561,11 +63598,11 @@ function rlnDraftCheck() {
   const theirs = rlnDeck(dd.dk), st = RLN.dst;
   if (!rldValid(st.seed, dd.dk) || theirs.join() !== dd.dk.join()) { rlnDraftOff('Your rival’s drafted deck didn’t match the offers, so the draft was called off.'); return; }
   const go = { g: Math.random().toString(36).slice(2, 9), sids: st.sids.slice(), names: st.names.slice(), decks: [RLN.ddk.slice(), theirs], skins: st.skins.slice(), seed: (Math.random() * 4294967295) >>> 0, dr: 2 };
-  RLN.dst = null; RLN.ddk = null; if (typeof rldClose === 'function') rldClose();
+  RLN.dst = null; RLN.ddk = null; if (typeof rldClose === 'function') rldClose(true);
   rlnBegin(go, 'host');
 }
 function rlnBegin(st, role) {
-  if (RLN.dst) { RLN.dst = null; RLN.ddk = null; if (typeof rldClose === 'function') rldClose(); }
+  if (RLN.dst) { RLN.dst = null; RLN.ddk = null; if (typeof rldClose === 'function') rldClose(true); }
   const now = performance.now(), oz = rlnOther() && rlnOf(rlnOther());
   RLN.omr = oz && Number.isFinite(oz.mr) ? oz.mr : null;   // (the other's rating as their lobby gave it, for the rating's sums)
   Object.assign(RLN, { st, g: st.g, doneG: st.g, role, seq: 0, q: [], lastQ: 0, ws: 0, wsSeen: -1, wsSeenAny: -1, sendT: 0, sentAt: 0, seen: now, lastB: null, chunks: null, quit: null, ended: false, acked: false, msg: '' });
@@ -63752,7 +63789,8 @@ function rlnBackToLobby() {
 
 (function rlnInit() {
   if (!$('rlMp')) return;
-  if ($('rlMpHost')) $('rlMpHost').addEventListener('click', rlnHost);
+  if ($('rlMpHost')) $('rlMpHost').addEventListener('click', () => { RLN.draft = false; rlnHost(); });
+  if ($('rlMpHostDr')) $('rlMpHostDr').addEventListener('click', () => { RLN.draft = true; rlnHost(); });   // (a triple draft from the start; the host can still change it in the lobby)
   if ($('rlMpStart')) $('rlMpStart').addEventListener('click', rlnStart);
   if ($('rlMpLeave')) $('rlMpLeave').addEventListener('click', rlnLeave);
   if ($('rlMpDraft')) $('rlMpDraft').addEventListener('change', e => { if (!rlnAmHost()) return; RLN.draft = !!e.target.checked; rlnSendLobby(); rlnRender(); });

@@ -1634,6 +1634,18 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 
 /* the triple draft (src/rldraft.js) */
 .rldraftcard { z-index: 21; }
+/* in the arena: the towers stand above, the draft at the foot of the screen */
+#rlUI.drafting .rl-bottom, #rlUI.drafting .rl-emobtn, #rlUI.drafting .rl-emopick, #rlUI.drafting .rl-clock, #rlUI.drafting .rl-pips, #rlUI.drafting .rl-menu, #rlUI.drafting .rl-tw { display: none; }
+#rlUI .rldraftcard { z-index: 45; background: linear-gradient(rgba(7,12,24,0) 0%, rgba(7,12,24,0.25) 35%, rgba(7,12,24,0.75)); place-items: end center; touch-action: pan-y; }
+#rlUI .rldraftcard .card { margin-block: auto 0; background: rgba(10,16,30,0.9); backdrop-filter: blur(2px); gap: 8px; padding-top: 14px; }
+#rlUI .rldraftcard .card h1 { font-size: clamp(1.6rem, 4.5vw, 2.4rem); }
+#rlUI .rldraftcard .rldr-c .rlface { width: min(100%, 112px); }
+#rlUI .rldraftcard .rldr-c { padding: 8px; gap: 6px; }
+#rlUI .rldraftcard .rldr-deck { grid-template-columns: repeat(8, minmax(0, 64px)); justify-content: center; }
+@media (max-height: 900px) { #rlUI .rldraftcard .rldr-txt dl { display: none; } }
+#rlUI .rldraftcard .rldr-line { font-size: 0.88rem; }
+#rlUI .rldraftcard .rldr-slot { min-height: 2.2rem; }
+#rlUI .rldraftcard .rldr-deck .rlface .rlname { display: none; }
 .rldraftcard .card { max-width: 56rem; gap: 10px; }
 .rldraftcard h1 { color: #f4b866; margin-bottom: 0; }
 .rldraftcard p.rldr-theme { margin: 0; font-family: var(--log); font-size: 13px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--lamp); min-height: 1.2em; }
@@ -1666,6 +1678,9 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 .rldr-opt input:disabled + * , .rldr-opt:has(input:disabled) { opacity: 0.85; }
 @media (max-width: 640px) {
   .rldraftcard .card { padding: 18px 12px 14px; }
+  #rlUI .rldraftcard .rldr-txt dl { display: none; }
+  #rlUI .rldraftcard .rldr-c .rlface { width: 72px; }
+  #rlUI .rldraftcard .rldr-deck { grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 3px; padding: 4px; }
   .rldr-offer { grid-template-columns: minmax(0, 1fr); gap: 8px; }
   .rldr-c { flex-direction: row; align-items: stretch; padding: 8px; }
   .rldr-c .rlface { width: 92px; flex: none; align-self: start; }

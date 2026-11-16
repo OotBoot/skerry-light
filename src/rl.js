@@ -749,7 +749,7 @@ function rlPos(u) { const a = rlAlpha(), px = u.px == null ? u.x : u.px, py = u.
 
 // ---------- every frame ----------
 function rlFrame(dt) {
-  if (!RL.on) return;
+  if (!RL.on) { if (RL.ph === 'draft' && typeof rl3dDraw === 'function') { RL.clk += dt; rl3dDraw(dt); } return; }   // (the triple draft, over the empty arena: src/rldraft.js)
   const paused = !$('rlPause').hidden && RL.mode === 'bot';
   if (RL.mode === 'net' && typeof rlnTick === 'function') { try { rlnTick(dt); } catch (e) { console.error(e); } }
   if (!paused) {

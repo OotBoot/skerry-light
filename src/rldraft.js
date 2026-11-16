@@ -9,6 +9,10 @@
 // own: a big hitter, two rounds of things that hit flyers, a striking spell, two cheap troops, a building or a spell,
 // and one where anything goes. The order of the rounds is shuffled by the seed.
 //
+// The draft happens in the game itself: the arena comes up, empty but for the six towers, seen from your own end
+// (rldScene: RL.ph 'draft' with RL.on false, so the match doesn't run and the online code still counts it as the lobby;
+// src/rl.js's rlFrame only draws), and the three cards sit over it at the foot of the screen. When both decks are
+// done rlStart begins the duel on the same screen; leaving or a draft called off goes back to the menu (rlExit).
 // Against the bot (rldBot, #rlDraftBot on the Skerry Clash card) there's no clock; the bot drafts from the same offers
 // (rldBotPicks: easy at random, normal and hard keeping its average oil near 3.6 and taking the stronger card). Online
 // (src/rlnet.js) each pick has 15 seconds, and a card is taken for you at random when it runs out; when you're done
@@ -18,8 +22,10 @@
 // The global API:
 //   rldOffers(seed)          -> [[3 ids] x 8] and .th, the theme of each round
 //   rldValid(seed, deck)     -> true if each of the 8 was one of its round's three
-//   rldOpen(o)               the draft screen: o = { seed, net (online, with the clock), vs (the rival's name), done(deck) }
-//   rldClose()               shuts it without finishing (rldOpen's done is not called)
+//   rldOpen(o)               the draft, in the arena: o = { seed, net (online, with the clock), vs (the rival's name),
+//                            me (0 or 1, which end you see it from), names, skins, done(deck) }
+//   rldClose(keep)           shuts it without finishing (done is not called), and leaves the arena unless keep (the
+//                            duel is about to begin there)
 //   rldRival(n)              online: how many the rival has picked, for the line under the offers
 //   RLDR                     the draft under way (on, seed, offers, picks, net)
 
@@ -72,10 +78,22 @@ function rldOpen(o) {
   try { audioInit(); } catch (e) {}
   const card = $('rlDraftCard'); if (!card) return;
   for (const id of ['rlDeckCard', 'rlCrateCard']) { const e = $(id); if (e) e.hidden = true; }
+  rldScene(o);
   card.hidden = false; card.scrollTop = 0; rldRender();
   clearInterval(RLDR.tm); RLDR.tm = setInterval(rldClock, 100);
 }
-function rldClose() { RLDR.on = false; RLDR.done = null; clearInterval(RLDR.tm); RLDR.tm = null; const c = $('rlDraftCard'); if (c) c.hidden = true; }
+function rldClose(keep) {
+  RLDR.on = false; RLDR.done = null; clearInterval(RLDR.tm); RLDR.tm = null; const c = $('rlDraftCard'); if (c) c.hidden = true;
+  if ($('rlUI')) $('rlUI').classList.remove('drafting');
+  if (!keep && RL.ph === 'draft' && !RL.on && typeof rlExit === 'function') rlExit();
+}
+// the arena for the draft: the match set up as rlStart does (towers, names, skins), then held before it begins
+function rldScene(o) {
+  if (RL.on || typeof rlStart !== 'function') return;
+  rlStart({ mode: 'bot', me: o.me === 1 ? 1 : 0, names: o.names, skins: o.skins });
+  Object.assign(RL, { on: false, ph: 'draft', FX: [] });
+  $('rlUI').classList.add('drafting'); $('rlPause').hidden = true;
+}
 function rldRival(n) { if (RLDR.rival === n) return; RLDR.rival = n; if (RLDR.on) rldHint(); }
 function rldPick(id) {
   const r = RLDR.picks.length;
@@ -140,14 +158,15 @@ function rldLeave() {
   if (!RLDR.on) return;
   const net = RLDR.net; rldClose();
   if (net && typeof rlnLeave === 'function') rlnLeave();
+  try { sfxTick(); } catch (e) {}
 }
 // against the bot: draft, the bot drafts from the same offers, and the duel begins
 function rldBot(lvl) {
   lvl = typeof lvl === 'string' ? lvl : ($('rlBotLvl') && $('rlBotLvl').value) || 'normal'; if (!RL_BOTNM[lvl]) lvl = 'normal';
   const seed = (Math.random() * 4294967295) >>> 0;
-  rldOpen({ seed, vs: RL_BOTNM[lvl], done: deck => {
-    rldClose();
-    const sk = typeof rlSkinMine === 'function' ? rlSkinMine() : '';
+  const sk = typeof rlSkinMine === 'function' ? rlSkinMine() : '';
+  rldOpen({ seed, vs: RL_BOTNM[lvl], me: 0, names: [rlMyName(), RL_BOTNM[lvl]], skins: [sk || '', ''], done: deck => {
+    rldClose(true);
     rlStart({ mode: 'bot', me: 0, names: [rlMyName(), RL_BOTNM[lvl]], decks: [deck, rldBotPicks(rldOffers(seed), lvl)], skins: [sk || '', ''], lvl, draft: 1 });
   } });
 }
