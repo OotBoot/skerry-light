@@ -59,6 +59,8 @@
 // the field its card stays out of the cycle (RL.ch[side]: { c, u its unit, cd }), and its ability is played through
 // rlPlay(side, '!ab') (rlAbility), for oil, once its cooldown is over; u.abT is the time the ability has left.
 // FX champ { c, x, y, side, r } as one is used. Snapshot: ch [[card, unit, cd]...], and flag 8192 on a unit while abT.
+// For three (v208, src/rl3.js): RL.n3 set, three of everything, and the parts of the rules that depend on the ground
+// (rlCanPlace, rlWay, rlWater, rlDry, rlDrag, rlLaneTower, the towers falling and the end) handed to rl3* there.
 // Tests: rlDebugSpeed(x) runs the clock x times as fast; rlDebugBots(on) lets a second bot play side 0 as well.
 //
 // For the view (what src/rl3d.js and the sound may key off, on the host and, through rlSnap/rlApply, the guest; the
@@ -96,12 +98,12 @@ const RL_PSPD = { bolt: 15, harpoon: 11, shot: 20, stone: 10, oil: 7, lantern: 6
 const RL_ARC = { grenade: 1, mortar: 1 };
 const RL_PK = ['bolt', 'harpoon', 'shot', 'stone', 'oil', 'lantern', 'flare', 'ball', 'lob', 'keg', 'herring', 'net', 'grenade', 'rocket', 'song', 'bolt2', 'mortar', 'gale'];
 const RL_FK = ['deploy', 'spell', 'die', 'tower', 'hit', 'boom', 'revive', 'bolt', 'ring', 'flash', 'go', 'dbl', 'ot', 'spawn', 'end', 'crown', 'splash',
-  'heal', 'leap', 'chain', 'pull', 'blast', 'oil', 'shield', 'burst', 'summon', 'spin', 'champ'];
+  'heal', 'leap', 'chain', 'pull', 'blast', 'oil', 'shield', 'burst', 'summon', 'spin', 'champ', 'out'];
 const RL_ZK = ['haar', 'wave', 'mend', 'haste', 'dot', 'whirl'];
 const RL_ST = ['idle', 'walk', 'hit'];
 const RL_BOTNM = { easy: 'Apprentice Pell', normal: 'Keeper Morrow', hard: 'Old Grisewood' };
 var RL = { on: false, mode: 'bot', me: 0, ph: 'off', t: 0, left: RLC.LEN, ot: false, dbl: false, oil: [0, 0], hand: [[], []], next: ['', ''], queue: [[], []],
-  names: ['', ''], skins: ['', ''], decks: [[], []], T: [], U: [], P: [], Z: [], FX: [], crowns: [0, 0], win: -1, bot: { lvl: 'normal' }, nid: 1, clk: 0, cnt: 0, acc: 0, speed: 1, net: null };
+  names: ['', ''], skins: ['', ''], decks: [[], []], T: [], U: [], P: [], Z: [], FX: [], crowns: [0, 0], win: -1, bot: { lvl: 'normal' }, nid: 1, clk: 0, cnt: 0, acc: 0, speed: 1, net: null, n3: false, alive: [1, 1], outs: [], bots: [] };
 
 // ---------- small things ----------
 function rlRng(seed) { let a = seed >>> 0 || 1; return () => { a = (a + 0x6d2b79f5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
@@ -118,15 +120,16 @@ function rlDeckOk(d) { return Array.isArray(d) && d.length === 8 && d.every(c =>
 // o = { mode: 'bot' | 'net', me, names, decks: [[8], [8]], skins: [a, b], lvl, seed, net: { host }, draft (the decks were drafted, src/rldraft.js) }
 function rlStart(o) {
   o = o || {};
-  const seed = (o.seed >>> 0) || ((Math.random() * 4294967295) >>> 0);
-  Object.assign(RL, { on: true, mode: o.mode === 'net' ? 'net' : 'bot', me: o.me === 1 ? 1 : 0, net: o.net || null, ph: 'count', t: 0, left: RLC.LEN, ot: false, dbl: false,
-    oil: [RLC.OIL0, RLC.OIL0], names: [0, 1].map(i => String((o.names && o.names[i]) || (i ? 'Rival' : 'You')).slice(0, 16)), skins: [0, 1].map(i => (o.skins && o.skins[i]) || ''),
-    decks: [0, 1].map(i => rlDeckOk(o.decks && o.decks[i])), U: [], P: [], Z: [], FX: [], crowns: [0, 0], win: -1, bot: { lvl: o.lvl || 'normal' }, nid: 1, clk: 0, cnt: RLC.COUNT, acc: 0,
-    seed, rng: rlRng(seed), draft: !!o.draft, pend: null, ch: [rlChNew(), rlChNew()], recorded: false, lastSnap: 0, snapDur: 90, both: RL.both || false });
-  RL.hand = [[], []]; RL.next = ['', '']; RL.queue = [[], []];
-  for (const s of [0, 1]) { const d = RL.decks[s].slice(); for (let i = d.length - 1; i > 0; i--) { const j = (RL.rng() * (i + 1)) | 0; [d[i], d[j]] = [d[j], d[i]]; } RL.hand[s] = d.slice(0, 4); RL.next[s] = d[4]; RL.queue[s] = d.slice(5); }
-  RL.T = [];
-  for (const s of [0, 1]) { const Y = y => s ? RLC.H - y : y; RL.T.push(rlTower(s, 'great', -1, 9, Y(3.5)), rlTower(s, 'lamp', 0, RLC.LX[0], Y(7)), rlTower(s, 'lamp', 1, RLC.LX[1], Y(7))); }
+  const seed = (o.seed >>> 0) || ((Math.random() * 4294967295) >>> 0), n3 = !!o.n3, SS = n3 ? [0, 1, 2] : [0, 1];   // (n3: three keepers, src/rl3.js)
+  Object.assign(RL, { on: true, mode: o.mode === 'net' ? 'net' : 'bot', me: n3 ? Math.max(0, Math.min(2, o.me | 0)) : o.me === 1 ? 1 : 0, net: o.net || null, ph: 'count', t: 0, left: RLC.LEN, ot: false, dbl: false,
+    oil: SS.map(() => RLC.OIL0), names: SS.map(i => String((o.names && o.names[i]) || (i ? 'Rival' : 'You')).slice(0, 16)), skins: SS.map(i => (o.skins && o.skins[i]) || ''),
+    decks: SS.map(i => rlDeckOk(o.decks && o.decks[i])), U: [], P: [], Z: [], FX: [], crowns: SS.map(() => 0), win: -1, bot: { lvl: o.lvl || 'normal' }, nid: 1, clk: 0, cnt: RLC.COUNT, acc: 0,
+    seed, rng: rlRng(seed), draft: !!o.draft, pend: null, ch: SS.map(() => rlChNew()), recorded: false, lastSnap: 0, snapDur: 90, both: RL.both || false,
+    n3, alive: SS.map(() => 1), outs: [], bots: n3 ? (Array.isArray(o.bots) ? o.bots.filter(s => s >= 0 && s < 3) : o.mode === 'net' ? [] : [1, 2]) : [] });
+  RL.hand = SS.map(() => []); RL.next = SS.map(() => ''); RL.queue = SS.map(() => []);
+  for (const s of SS) { const d = RL.decks[s].slice(); for (let i = d.length - 1; i > 0; i--) { const j = (RL.rng() * (i + 1)) | 0; [d[i], d[j]] = [d[j], d[i]]; } RL.hand[s] = d.slice(0, 4); RL.next[s] = d[4]; RL.queue[s] = d.slice(5); }
+  RL.T = n3 ? rl3Towers() : [];
+  if (!n3) for (const s of [0, 1]) { const Y = y => s ? RLC.H - y : y; RL.T.push(rlTower(s, 'great', -1, 9, Y(3.5)), rlTower(s, 'lamp', 0, RLC.LX[0], Y(7)), rlTower(s, 'lamp', 1, RLC.LX[1], Y(7))); }
   if (typeof rlBotReset === 'function') rlBotReset();
   rlEnter();
   rlFx('go', { x: 9, y: 16, side: 0 });
@@ -145,6 +148,7 @@ function rlPlayBot(lvl) {
 // may this side set this card down here? (spells: anywhere on the arena; the rest on your own bank, or the pocket
 // beyond the race opened when the enemy Lamp Tower of that lane falls; never on a standing tower)
 function rlCanPlace(side, c, x, y) {
+  if (RL.n3) return rl3CanPlace(side, c, x, y);
   const C = RL_CARD[c]; if (!C || !(x >= 0.4 && x <= RLC.W - 0.4 && y >= 0.4 && y <= RLC.H - 0.4)) return false;
   // (spells fall anywhere, but the Shipwreck's crew must land on your own rock, so it goes down only where a troop could)
   if (C.type === 'spell' && C.ab !== 'summon') return true;
@@ -158,13 +162,14 @@ function rlCanPlace(side, c, x, y) {
 function rlWhyNot(side, c, x, y) {
   const C = RL_CARD[c]; if (!C) return 'No card';
   if (RL.ph !== 'play') return RL.ph === 'count' ? 'Not yet' : 'Over';
+  if (RL.n3 && !RL.alive[side]) return 'Your light is out';
   if (RL.oil[side] < C.cost - 1e-6) return 'Not enough oil';
   if (x != null && !rlCanPlace(side, c, x, y)) return C.type === 'spell' && C.ab !== 'summon' ? 'Off the arena' : 'Only on your own rock';
   return '';
 }
 // a card played (by this screen's player, the bot, or the guest through the host): checked, then done
 function rlPlay(side, c, x, y) {
-  if (!RL.on || RL.ph !== 'play' || (side !== 0 && side !== 1)) return false;
+  if (!RL.on || RL.ph !== 'play' || !(side >= 0 && side < RL.oil.length) || (RL.n3 && !RL.alive[side])) return false;
   if (c === '!ab') return rlAbility(side);   // (the champion's ability: the guest's taps come this way too)
   const i = RL.hand[side].indexOf(c), C = RL_CARD[c]; if (i < 0 || !C) return false;
   x = +x; y = +y; if (!isFinite(x) || !isFinite(y) || RL.oil[side] < C.cost - 1e-6 || !rlCanPlace(side, c, x, y)) return false;
@@ -209,7 +214,7 @@ function rlPlimTarget(u, A) {
   return best;
 }
 function rlAbility(side) {
-  if (!RL.on || (side !== 0 && side !== 1) || rlAbWhy(side)) return false;
+  if (!RL.on || !(side >= 0 && side < RL.oil.length) || rlAbWhy(side)) return false;
   const u = rlChampUnit(side), C = RL_CARD[u.c], A = C.champ;
   RL.oil[side] -= A.cost; RL.ch[side].cd = A.cd; u.abT = A.dur; u.abA = 0;
   if (u.c === 'plimsoll') {
@@ -235,7 +240,7 @@ function rlTryAb() {
 }
 // every tick: the cooldowns, and what an ability does while it lasts (Maren's light slows and drowns all round her)
 function rlChampTick(dt) {
-  for (const s of [0, 1]) { const h = RL.ch[s]; if (h.cd > 0) h.cd = Math.max(0, h.cd - dt); }
+  for (const h of RL.ch) if (h.cd > 0) h.cd = Math.max(0, h.cd - dt);
   for (const u of RL.U) {
     if (!(u.abT > 0) || u.hp <= 0) continue;
     u.abT -= dt;
@@ -254,6 +259,7 @@ function rlCrowd(side, C, x, y, late, near) {
   for (let k = 0; k < n; k++) {
     const r = n > 1 ? 0.5 * Math.sqrt(k + 0.5) : 0, a = k * 2.4 + (side ? Math.PI : 0);
     let px = x + Math.sin(a) * r, py = y + Math.cos(a) * r * 0.8;
+    if (RL.n3) { [px, py] = rl3Fix(px, py, side, near, C.air); out.push(rlSpawn(side, C.id, px, py, late + k * 0.05)); continue; }
     px = Math.max(0.4, Math.min(RLC.W - 0.4, px)); py = Math.max(0.4, Math.min(RLC.H - 0.4, py));
     if (!C.air && py > RLC.R0 && py < RLC.R1) py = (near ? py > (RLC.R0 + RLC.R1) / 2 : side) ? RLC.R1 + 0.2 : RLC.R0 - 0.2;
     out.push(rlSpawn(side, C.id, px, py, late + k * 0.05));
@@ -264,6 +270,7 @@ function rlCrowd(side, C, x, y, late, near) {
 // edge; whoever is moved looks for a target afresh
 function rlDrag(u, nx, ny) {
   if (u.bld) return;
+  if (RL.n3) { rl3Drag(u, nx, ny); return; }
   const bank = y => y <= RLC.R0 ? -1 : y >= RLC.R1 ? 1 : 0, b0 = bank(u.y);
   if (!u.air && b0 && bank(ny) !== b0) ny = b0 < 0 ? Math.min(ny, RLC.R0) : Math.max(ny, RLC.R1);
   u.px = u.x; u.py = u.y;
@@ -272,7 +279,7 @@ function rlDrag(u, nx, ny) {
 }
 function rlSpawn(side, c, x, y, late) {
   const C = RL_CARD[c];
-  const u = { id: RL.nid++, c, side, x, y, px: x, py: y, hp: C.hp, max: C.hp, air: !!C.air, size: C.size || 0.4, tg: 0, cd: 0, st: 'idle', face: side ? Math.PI : 0,
+  const u = { id: RL.nid++, c, side, x, y, px: x, py: y, hp: C.hp, max: C.hp, air: !!C.air, size: C.size || 0.4, tg: 0, cd: 0, st: 'idle', face: rlFace0(side),
     cloak: C.ab === 'cloak' ? C.cl || 3 : 0, slow: 0, stun: 0, bld: C.type === 'building', life: C.life || 0, dep: RLC.DEP + (late || 0), run: 0, chg: 0, rv: 0, fog: 0, ev: C.ev || 0, ring: C.hit || 4, rt: 0, lock: 0,
     sh: C.ab === 'shield' ? C.sh || 0 : 0, rp: 0, rpT: 0, hs: 0, ral: 0, tar: 0, mendT: 0, lpcd: 0, hlT: 1, abT: 0, abA: 0 };
   RL.U.push(u); return u;
@@ -285,6 +292,10 @@ function rlCast(side, C, x, y) {
   if (C.ab === 'lob') {
     const g = RL.T.find(t => t.side === side && t.k === 'great'), sx = g ? g.x : 9, sy = g ? g.y : (side ? RLC.H - 3 : 3);
     RL.P.push({ id: RL.nid++, k: C.id === 'powderkeg' ? 'keg' : 'lob', side, sx, sy, x: sx, y: sy, tx: x, ty: y, t: 0, dur: C.fl || 1, tg: 0, dmg: C.dmg, sp: C.r, tw: C.tw, c: C.id, air: 1 });
+  } else if (C.ab === 'wave' && RL.n3) {
+    // (for three: it rolls out from the caster's Great Light through where it was cast)
+    const g = RL.T.find(t => t.side === side && t.k === 'great'), ang = g ? Math.atan2(y - g.y, x - g.x) : Math.atan2(rl3Fwd(side)[1], rl3Fwd(side)[0]);
+    RL.Z.push({ id: RL.nid++, k: 'wave', side, x, y, x0: x, y0: y, ang, t: 0, dur: (C.len || 9) / 6, r: C.r, w: C.w || 3, dir: 1, dmg: C.dmg, tw: C.tw, kb: C.kb || 1.5, hit: [] });
   } else if (C.ab === 'wave') {
     RL.Z.push({ id: RL.nid++, k: 'wave', side, x, y, y0: y, t: 0, dur: (C.len || 9) / 6, r: C.r, w: C.w || 3, dir, dmg: C.dmg, tw: C.tw, kb: C.kb || 1.5, hit: [] });
   } else if (C.ab === 'haar') {
@@ -326,7 +337,7 @@ function rlHurt(e, dmg, by) {
   // a shell soaks the first of it
   if (e.sh > 0) { const a = Math.min(e.sh, dmg); e.sh -= a; dmg -= a; if (e.sh <= 0) { e.sh = 0; rlFx('shield', { c: e.c, x: e.x, y: e.y, side: e.side }); } if (!(dmg > 0)) return; }
   e.hp -= dmg;
-  if (e.k) { if (e.k === 'great') e.awake = true; e.hitAt = RL.clk; }
+  if (e.k) { if (e.k === 'great') e.awake = true; e.hitAt = RL.clk; if (by != null) e.by = by; }
 }
 
 // ---------- the clock ----------
@@ -336,8 +347,9 @@ function rlTick() {
   if (RL.ph !== 'play') { rlFxTrim(); return; }
   RL.t += dt; RL.left -= dt;
   if (!RL.dbl && (RL.ot || RL.left <= RLC.DBL)) { RL.dbl = true; rlFx('dbl', { x: 9, y: 16, side: 0 }); }
-  for (const s of [0, 1]) RL.oil[s] = Math.min(RLC.MAXOIL, RL.oil[s] + dt / RLC.OILT * (RL.dbl ? 2 : 1));
-  if (typeof rlBotTick === 'function') { if (RL.mode === 'bot') rlBotTick(dt, 1); if (RL.both) rlBotTick(dt, 0); }
+  for (let s = 0; s < RL.oil.length; s++) if (!RL.n3 || RL.alive[s]) RL.oil[s] = Math.min(RLC.MAXOIL, RL.oil[s] + dt / RLC.OILT * (RL.dbl ? 2 : 1));
+  if (RL.n3) { for (const s of RL.bots) rl3BotTick(dt, s); if (RL.both) rl3BotTick(dt, RL.me); }
+  else if (typeof rlBotTick === 'function') { if (RL.mode === 'bot') rlBotTick(dt, 1); if (RL.both) rlBotTick(dt, 0); }
   for (const u of RL.U) { u.px = u.x; u.py = u.y; }
   RL.by = new Map(); for (const e of RL.T) RL.by.set(e.id, e); for (const u of RL.U) RL.by.set(u.id, u);
   rlZones(dt);
@@ -348,7 +360,8 @@ function rlTick() {
   rlShots(dt);
   rlDeaths();
   for (const u of RL.U) u.mend = u.mendT > 0 ? 1 : 0;
-  if (RL.ph === 'play' && RL.left <= 0) {
+  if (RL.ph === 'play' && RL.left <= 0 && RL.n3) rl3Time();
+  else if (RL.ph === 'play' && RL.left <= 0) {
     if (!RL.ot) { if (RL.crowns[0] !== RL.crowns[1]) rlEnd(RL.crowns[0] > RL.crowns[1] ? 0 : 1); else { RL.ot = true; RL.left = RLC.OT; rlFx('ot', { x: 9, y: 16, side: 0 }); } }
     else rlEnd(RL.crowns[0] !== RL.crowns[1] ? (RL.crowns[0] > RL.crowns[1] ? 0 : 1) : rlTieBreak());
   }
@@ -377,6 +390,18 @@ function rlZones(dt) {
         const st = Math.min(d - 0.25, 3 * dt); rlDrag(u, u.x + dx / d * st, u.y + dy / d * st);
       }
       z.acc += dt; while (z.acc >= 0.5 && z.t <= z.dur + 1e-6) { z.acc -= 0.5; rlBlast(z.side, z.x, z.y, z.r, z.k === 'dot' ? z.dmg * 0.5 : z.dmg, z.tw, true); }
+    }
+    else if (z.k === 'wave' && z.ang != null) {
+      // (for three: rolling along its own way, ax ay; across it, w wide; along it, r deep)
+      const ax = Math.cos(z.ang), ay = Math.sin(z.ang), f = 6 * Math.min(z.t, z.dur); z.x = z.x0 + ax * f; z.y = z.y0 + ay * f;
+      const inW = (e, rr, k) => { const dx = e.x - z.x, dy = e.y - z.y; return Math.abs(dx * -ay + dy * ax) <= z.w / 2 + rr && Math.abs(dx * ax + dy * ay) <= z.r + rr * k; };
+      for (const u of RL.U) {
+        if (u.side === z.side || u.air || u.hp <= 0 || z.hit.includes(u.id) || !inW(u, u.size * 0.5, 1)) continue;
+        z.hit.push(u.id); rlHurt(u, z.dmg, z.side);
+        if (!u.bld) { u.px = u.x; u.py = u.y; u.x += ax * z.kb; u.y += ay * z.kb; rlWater(u); u.px = u.x; u.py = u.y; u.stun = Math.max(u.stun, 0.3); u.lock = 0; }
+        rlFx('splash', { x: u.x, y: u.y, side: z.side });
+      }
+      for (const t of RL.T) if (t.side !== z.side && t.hp > 0 && !z.hit.includes(t.id) && inW(t, t.r, 0.5)) { z.hit.push(t.id); rlHurt(t, z.dmg * z.tw, z.side); rlFx('splash', { x: t.x, y: t.y, side: z.side }); }
     }
     else if (z.k === 'wave') {
       z.y = z.y0 + z.dir * 6 * Math.min(z.t, z.dur);
@@ -409,6 +434,7 @@ function rlCanHit(tg, side, e) {
 }
 // the next enemy tower down this unit's lane: its Lamp Tower, or the Great Light once that's down
 function rlLaneTower(u) {
+  if (RL.n3) return rl3LaneTower(u);
   const lane = rlLaneOf(u.x), L = RL.T.find(t => t.side !== u.side && t.k === 'lamp' && t.lane === lane && t.hp > 0);
   return L || RL.T.find(t => t.side !== u.side && t.k === 'great' && t.hp > 0) || RL.T.find(t => t.side !== u.side && t.hp > 0);
 }
@@ -425,6 +451,7 @@ function rlPick(u, C) {
 }
 // where a walker heads for, to reach (tx, ty): over a causeway if the race lies between
 function rlWay(u, tx, ty) {
+  if (RL.n3) return rl3Way(u, tx, ty);
   if (u.air) return [tx, ty];
   const R0 = RLC.R0, R1 = RLC.R1, side0 = u.y <= R0 ? -1 : u.y >= R1 ? 1 : 0, side1 = ty <= (R0 + R1) / 2 ? -1 : 1;
   if (side0 === 0) { const cx = Math.abs(u.x - RLC.LX[0]) < Math.abs(u.x - RLC.LX[1]) ? RLC.LX[0] : RLC.LX[1]; return [cx + Math.max(-0.5, Math.min(0.5, tx - cx)) * 0.4, side1 < 0 ? R0 - 0.5 : R1 + 0.5]; }
@@ -436,11 +463,13 @@ function rlWay(u, tx, ty) {
 }
 // is the straight way from a to b all on dry rock (the banks, or along a causeway)? (a leap never crosses the race)
 function rlDry(ax, ay, bx, by) {
+  if (RL.n3) return rl3Dry(ax, ay, bx, by);
   for (let i = 0; i <= 8; i++) { const x = ax + (bx - ax) * i / 8, y = ay + (by - ay) * i / 8; if (y > RLC.R0 && y < RLC.R1 && !RLC.LX.some(c => Math.abs(x - c) <= RLC.CW)) return false; }
   return true;
 }
 // keep a walker out of the race: on a causeway, or back on the bank it came from
 function rlWater(u) {
+  if (RL.n3) { rl3Water(u); return; }
   if (u.air || !(u.y > RLC.R0 && u.y < RLC.R1)) return;
   const cx = Math.abs(u.x - RLC.LX[0]) < Math.abs(u.x - RLC.LX[1]) ? RLC.LX[0] : RLC.LX[1], hw = RLC.CW - Math.min(0.45, u.size * 0.6);
   if (Math.abs(u.x - cx) <= hw) return;
@@ -458,7 +487,7 @@ function rlUnit(u, dt) {
   if (u.lpcd > 0) u.lpcd -= dt;
   if (u.bld) {
     u.hp -= u.max / (u.life || 30) * dt;
-    if (C.ab === 'spawn') { u.ev -= dt; if (u.ev <= 0) { u.ev = C.ev || 5; const s = RL_CARD[C.sp] ? C.sp : 'wreckers', dir = u.side ? -1 : 1; for (let i = 0, n = C.sn || 1; i < n; i++) { const w = rlSpawn(u.side, s, u.x + (RL.rng() - 0.5) * 0.8 + (n > 1 ? (i - (n - 1) / 2) * 0.6 : 0), u.y + dir * (u.size + 0.4), 0); w.dep = 0.4; rlFx('spawn', { c: s, x: w.x, y: w.y, side: u.side }); } } }
+    if (C.ab === 'spawn') { u.ev -= dt; if (u.ev <= 0) { u.ev = C.ev || 5; const s = RL_CARD[C.sp] ? C.sp : 'wreckers', dir = u.side ? -1 : 1, fw = RL.n3 ? rl3Fwd(u.side) : null; for (let i = 0, n = C.sn || 1; i < n; i++) { const off = (RL.rng() - 0.5) * 0.8 + (n > 1 ? (i - (n - 1) / 2) * 0.6 : 0); const w = fw ? rlSpawn(u.side, s, u.x + fw[0] * (u.size + 0.4) - fw[1] * off, u.y + fw[1] * (u.size + 0.4) + fw[0] * off, 0) : rlSpawn(u.side, s, u.x + off, u.y + dir * (u.size + 0.4), 0); if (fw) rlWater(w); w.dep = 0.4; rlFx('spawn', { c: s, x: w.x, y: w.y, side: u.side }); } } }
     if (C.ab === 'lure') { u.ring -= dt; if (u.ring <= 0) { u.ring = C.hit || 4; for (const e of RL.U) if (e.side !== u.side && !e.air && !e.bld && e.hp > 0 && rlD(u, e) <= C.rng) e.slow = Math.max(e.slow, 1); rlFx('ring', { c: u.c, x: u.x, y: u.y, side: u.side, r: C.rng }); } }
     if (C.ab === 'oil') { u.ev -= dt; if (u.ev <= 0) { u.ev = C.ev || 8; RL.oil[u.side] = Math.min(RLC.MAXOIL, RL.oil[u.side] + 1); rlFx('oil', { c: u.c, x: u.x, y: u.y, side: u.side }); } }
     if (C.ab === 'blast') {
@@ -529,7 +558,7 @@ function rlHealer(u, C, dt, k) {
     for (const f of RL.U) if (f !== u && f.side === u.side && !f.bld && f.hp > 0 && f.dep <= 0 && rlD(u, f) <= C.rng + f.size * 0.5) { if (f.hp < f.max) n++; f.hp = Math.min(f.max, f.hp + (C.hl || 0)); f.mendT = 1.1; }
     if (n) rlFx('heal', { c: u.c, x: u.x, y: u.y, side: u.side, r: C.rng });
   }
-  const fwd = e => u.side ? -e.y : e.y;
+  const fwd = RL.n3 ? (e => -Math.hypot(e.x - RL3C.CX, e.y - RL3C.CY) * (rl3Bank(e.x, e.y) === u.side ? 1 : -1)) : (e => u.side ? -e.y : e.y);
   let F = null, bs = -1e9;
   for (const f of RL.U) { if (f === u || f.side !== u.side || f.bld || f.hp <= 0 || RL_CARD[f.c].ab === 'heal') continue; const d = rlD(u, f); if (d > 8) continue; const s = fwd(f) * 0.5 - d; if (s > bs) { bs = s; F = f; } }
   u.tg = F ? F.id : 0;
@@ -585,7 +614,7 @@ function rlSeparate() {
   for (const u of U) {
     if (u.hp <= 0 || u.bld) continue;
     if (!u.air) for (const t of RL.T) { if (t.hp <= 0) continue; const dx = u.x - t.x, dy = u.y - t.y, m = t.r + u.size * 0.5, d = Math.hypot(dx, dy); if (d < m && d > 1e-4) { u.x = t.x + dx / d * m; u.y = t.y + dy / d * m; } }
-    u.x = Math.max(0.3, Math.min(RLC.W - 0.3, u.x)); u.y = Math.max(0.3, Math.min(RLC.H - 0.3, u.y));
+    if (!RL.n3) { u.x = Math.max(0.3, Math.min(RLC.W - 0.3, u.x)); u.y = Math.max(0.3, Math.min(RLC.H - 0.3, u.y)); }
     rlWater(u);
   }
 }
@@ -645,7 +674,7 @@ function rlDeaths() {
     if (!u.boom) rlFx('die', { c: u.c, x: u.x, y: u.y, side: u.side, r: u.air ? 1 : 0 });
     if (C.champ && RL.ch && RL.ch[u.side].u === u.id) { RL.queue[u.side].push(u.c); RL.ch[u.side] = rlChNew(); }
     // the Crab Mother's brood scatters from where she fell
-    if (C.ab === 'deathspawn' && RL_CARD[C.sp]) for (let i = 0, n = C.sn || 1; i < n; i++) {
+    if (C.ab === 'deathspawn' && RL_CARD[C.sp] && !(RL.n3 && !RL.alive[u.side])) for (let i = 0, n = C.sn || 1; i < n; i++) {
       const a = i / n * Math.PI * 2, w = rlSpawn(u.side, C.sp, u.x + Math.sin(a) * 0.6, u.y + Math.cos(a) * 0.6, 0);
       w.px = u.x; w.py = u.y; rlWater(w); w.dep = 0.3; rlFx('spawn', { c: C.sp, x: w.x, y: w.y, side: u.side });
     }
@@ -653,12 +682,15 @@ function rlDeaths() {
   RL.U = keep;
   for (const t of RL.T) {
     if (t.hp > 0 || t.down) continue;
-    t.down = 1; t.hp = 0; const o = 1 - t.side;
+    t.down = 1; t.hp = 0;
+    if (RL.n3) { rl3Down(t); continue; }
+    const o = 1 - t.side;
     rlFx('tower', { c: t.k, x: t.x, y: t.y, side: t.side, r: RL.T.indexOf(t) });
     if (t.k === 'great') RL.crowns[o] = 3; else { RL.crowns[o] = Math.min(3, RL.crowns[o] + 1); const g = RL.T.find(q => q.side === t.side && q.k === 'great'); if (g) g.awake = true; }
     rlFx('crown', { x: t.x, y: t.y, side: o, r: RL.crowns[o] });
   }
   if (RL.ph !== 'play') return;
+  if (RL.n3) { rl3Check(); return; }
   if (RL.crowns[0] >= 3 || RL.crowns[1] >= 3) rlEnd(RL.crowns[0] >= 3 && RL.crowns[1] >= 3 ? 2 : RL.crowns[0] >= 3 ? 0 : 1);
   else if (RL.ot && RL.crowns[0] !== RL.crowns[1]) rlEnd(RL.crowns[0] > RL.crowns[1] ? 0 : 1);
 }
@@ -671,6 +703,7 @@ function rlTieBreak() { const low = sd => Math.min(...RL.T.filter(t => t.side ==
 function rlEnd(win, o) {
   if (!RL.on || RL.ph === 'over') return;
   RL.ph = 'over'; RL.win = win; RL.endAt = RL.clk;
+  if (RL.n3) { rl3End(win); return; }
   if (!rlIsGuest()) rlFx('end', { x: 9, y: 16, side: win === 2 ? 0 : win, r: win });
   const me = RL.me, rec = { win: win === me, draw: win === 2, crowns: RL.crowns[me], lost: RL.crowns[1 - me], bot: RL.mode === 'bot', lvl: RL.bot.lvl };
   if (!RL.recorded && !(o && o.norec) && !(RL.net && RL.net.gone) && !rlIsSpec() && typeof rlRecord === 'function') { RL.recorded = true; try { rlRecord(rec); } catch (e) { console.error(e); } }
@@ -696,12 +729,13 @@ function rlSnap() {
   // (the extra points of a leap or a chain, in tenths)
   const fx = f => f.k === 'leap' ? [[rlQ(f.tx), rlQ(f.ty)]] : f.k === 'chain' ? [f.pts.map(q => [rlQ(q[0]), rlQ(q[1])])] : [];
   return {
+    ...(RL.n3 ? { n3: 1, al: RL.alive, ou: RL.outs } : {}),
     v: 1, ph: RL.ph, k: rlQ(RL.clk), t: rlQ(RL.t), l: rlQ(RL.left), f: (RL.ot ? 1 : 0) | (RL.dbl ? 2 : 0), cn: rlQ(RL.cnt), o: RL.oil.map(rlQ), h: RL.hand, n: RL.next,
     ch: RL.ch.map(h => [rlCi(h.c), h.u | 0, rlQ(h.cd)]), cr: RL.crowns, w: RL.win, nm: RL.names, sk: RL.skins, lv: RL.bot.lvl,
     T: RL.T.map(t => [Math.round(Math.max(0, t.hp)), (t.awake ? 1 : 0) | (t.down ? 2 : 0), t.tg | 0, t.shotAt != null ? rlQ(RL.clk - t.shotAt) : 99]),
     U: RL.U.map(u => [u.id, rlCi(u.c), u.side, rlQ(u.x), rlQ(u.y), Math.round(u.hp), fl(u), Math.round(u.face * 20), RL_ST.indexOf(u.st), u.tg | 0, Math.round(u.max), ...ux(u)]),
     P: RL.P.map(p => [p.id, RL_PK.indexOf(p.k), p.side, rlQ(p.sx), rlQ(p.sy), rlQ(p.tx), rlQ(p.ty), Math.round(p.t * 100), Math.round(p.dur * 100), rlCi(p.c), rlQ(p.h || 0), p.tg | 0]),
-    Z: RL.Z.map(z => [z.id, Math.max(0, RL_ZK.indexOf(z.k)), z.side, rlQ(z.x), rlQ(z.y), Math.round(z.t * 100), Math.round(z.dur * 100), rlQ(z.r), rlQ(z.w || 0), z.dir || 0]),
+    Z: RL.Z.map(z => [z.id, Math.max(0, RL_ZK.indexOf(z.k)), z.side, rlQ(z.x), rlQ(z.y), Math.round(z.t * 100), Math.round(z.dur * 100), rlQ(z.r), rlQ(z.w || 0), z.dir || 0, ...(z.ang != null ? [Math.round(z.ang * 100)] : [])]),
     FX: RL.FX.filter(f => !rlFxShort(f) || RL.clk - f.at < 0.4).slice(-28).map(f => [f.id, RL_FK.indexOf(f.k), f.c in RL_CI ? RL_CI[f.c] : (f.c ? String(f.c) : -1), rlQ(f.x || 0), rlQ(f.y || 0), f.side | 0, rlQ(f.at), f.r == null ? 0 : Math.round(f.r * 10), ...fx(f)]),
   };
 }
@@ -711,6 +745,9 @@ function rlApply(s) {
   const now = performance.now(), a = rlAlpha();
   if (RL.lastSnap) RL.snapDur = Math.max(40, Math.min(300, RL.snapDur * 0.7 + (now - RL.lastSnap) * 0.3));
   RL.lastSnap = now;
+  // (the match is for three, or isn't: the towers and the arrays as the host has them)
+  if (!!s.n3 !== !!RL.n3) { RL.n3 = !!s.n3; const SS = RL.n3 ? [0, 1, 2] : [0, 1]; RL.T = RL.n3 ? rl3Towers() : RL.T; RL.alive = SS.map(() => 1); RL.outs = []; RL.ch = SS.map(() => rlChNew()); RL.me = Math.min(RL.me, SS.length - 1); if (typeof rl3dReset === 'function') rl3dReset(); if (typeof rlHudReset === 'function') rlHudReset(); }
+  if (RL.n3) { if (Array.isArray(s.al)) RL.alive = s.al.slice(0, 3); if (Array.isArray(s.ou)) RL.outs = s.ou.slice(0, 3); }
   const wasPh = RL.ph, d = v => v / 10;
   RL.ph = s.ph; RL.clk = d(s.k); RL.t = d(s.t); RL.left = d(s.l); RL.ot = !!(s.f & 1); RL.dbl = !!(s.f & 2); RL.cnt = d(s.cn); RL.oil = s.o.map(d);
   if (Array.isArray(s.ch)) RL.ch = s.ch.map(e => ({ c: rlCo(e[0]), u: e[1], cd: d(e[2]) }));
@@ -728,7 +765,7 @@ function rlApply(s) {
   });
   RL.P = s.P.map(e => ({ id: e[0], k: RL_PK[e[1]] || 'shot', side: e[2], sx: d(e[3]), sy: d(e[4]), tx: d(e[5]), ty: d(e[6]), t: e[7] / 100, dur: e[8] / 100, c: rlCo(e[9]), h: d(e[10]), tg: e[11] }));
   RL.P.forEach(p => { const f = Math.min(1, p.t / p.dur); p.x = p.sx + (p.tx - p.sx) * f; p.y = p.sy + (p.ty - p.sy) * f; });
-  RL.Z = s.Z.map(e => ({ id: e[0], k: RL_ZK[e[1]] || 'haar', side: e[2], x: d(e[3]), y: d(e[4]), t: e[5] / 100, dur: e[6] / 100, r: d(e[7]), w: d(e[8]), dir: e[9] }));
+  RL.Z = s.Z.map(e => ({ id: e[0], k: RL_ZK[e[1]] || 'haar', side: e[2], x: d(e[3]), y: d(e[4]), t: e[5] / 100, dur: e[6] / 100, r: d(e[7]), w: d(e[8]), dir: e[9], ang: e[10] != null ? e[10] / 100 : undefined }));
   RL.FX = s.FX.map(e => {
     const f = { id: e[0], k: RL_FK[e[1]], c: typeof e[2] === 'string' ? e[2] : rlCo(e[2]), x: d(e[3]), y: d(e[4]), side: e[5], at: d(e[6]), r: e[7] / 10 };
     if (e[8]) { if (f.k === 'leap') { f.tx = d(e[8][0]); f.ty = d(e[8][1]); } else if (f.k === 'chain') f.pts = e[8].map(q => [d(q[0]), d(q[1])]); }
@@ -758,7 +795,7 @@ function rlFrame(dt) {
       for (const p of RL.P) { p.t += dt; const f = Math.min(1, p.t / p.dur); p.x = p.sx + (p.tx - p.sx) * f; p.y = p.sy + (p.ty - p.sy) * f; }
       for (const z of RL.Z) z.t += dt;
       if (RL.ch) for (const h of RL.ch) if (h.cd > 0) h.cd = Math.max(0, h.cd - dt);
-      if (RL.ph === 'play') { RL.left = Math.max(0, RL.left - dt); for (const s of [0, 1]) RL.oil[s] = Math.min(RLC.MAXOIL, RL.oil[s] + dt / RLC.OILT * (RL.dbl ? 2 : 1)); }
+      if (RL.ph === 'play') { RL.left = Math.max(0, RL.left - dt); for (let s = 0; s < RL.oil.length; s++) if (!RL.n3 || RL.alive[s]) RL.oil[s] = Math.min(RLC.MAXOIL, RL.oil[s] + dt / RLC.OILT * (RL.dbl ? 2 : 1)); }
       RL.clk += dt;
     }
   }
@@ -791,7 +828,7 @@ function rlExit() {
 // a watcher turns the board round, to watch from the other keeper's end (blue is always the near side)
 function rlSpecFlip() {
   if (!RL.on || !rlIsSpec()) return;
-  RL.me = 1 - RL.me;
+  RL.me = (RL.me + 1) % RL.oil.length;
   if (typeof rl3dReset === 'function') rl3dReset();
   if (typeof rlHudReset === 'function') rlHudReset();
 }
@@ -878,7 +915,7 @@ function rlFxSound() {
     else if (f.k === 'die') rlSnd('die');
     else if (f.k === 'splash') rlSnd('splash', { vol: 0.5 });
     else if (f.k === 'tower') rlSnd('tower');
-    else if (f.k === 'crown') rlSnd(f.side === RL.me ? 'crown' : 'crownlost');
+    else if (f.k === 'crown') { if (!RL.n3 || f.side === RL.me || f.r - 1 === RL.me) rlSnd(f.side === RL.me ? 'crown' : 'crownlost'); }
     else if (f.k === 'dbl' || f.k === 'ot') rlSnd(f.k);
     else if (f.k === 'ring') rlSnd('ring', { vol: 0.6 });
     else if (f.k === 'revive') rlSnd('revive');

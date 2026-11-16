@@ -29,7 +29,7 @@
 //   rlSkinMine()                 -> the chosen skin's id ('' plain)
 //   rlSkin(id)                   -> the skin's data, or null
 //   rlTowerMesh(id, kind, side)  -> THREE.Group ('great' | 'lamp', side 0 | 1)
-//   rlRecord(r)                  r = { win, draw, crowns, lost, bot, lvl }
+//   rlRecord(r)                  r = { win, draw, crowns, lost, bot, lvl } (n3, place: a match for three, crates only)
 //   rkData() / rkMerge(d, takeLooks) for the one save (src/crates.js)
 
 const RLK_ROWS = [
@@ -56,7 +56,7 @@ const RLK_ROWS = [
 const RLK_SKINS = RLK_ROWS.map(([id, name, rarity, pat, c1, c2, x]) => Object.freeze(Object.assign({ id, name, rarity, pat, c1, c2 }, x || {})));
 const RLK_BY_ID = Object.fromEntries(RLK_SKINS.map(s => [s.id, s]));
 const RLK_PLAIN = Object.freeze({ id: '', name: 'Plain Whitewash', pat: 'plain', c1: '#efebe0', c2: '#d8d2c4', cap: '#22242a' });
-const RLK_SIDE = ['#3a8ae8', '#e0483a'];
+const RLK_SIDE = ['#3a8ae8', '#e0483a', '#e8b030'];   // (yours, the rival's, and the third keeper's in a match for three)
 var RLK = { opening: false, opener: null, prev: {}, gl: null, tex: {} };
 function rlSkin(id) { return (typeof id === 'string' && RLK_BY_ID[id]) || null; }
 function rlSkinMine() { return RLV.o[RLV.e] && RLK_BY_ID[RLV.e] ? RLV.e : ''; }
@@ -142,7 +142,7 @@ function rlkSheen() {
 // ---------- the mesh ----------
 function rlTowerMesh(id, kind, side) {
   const sk = rlSkin(id) || RLK_PLAIN, great = kind !== 'lamp', H = great ? 5 : 3.5, R = great ? 1.6 : 1.2;
-  const G = new THREE.Group(), C = v => new THREE.Color(v), trim = C(RLK_SIDE[side === 1 ? 1 : 0]);
+  const G = new THREE.Group(), C = v => new THREE.Color(v), trim = C(RLK_SIDE[side === 1 || side === 2 ? side : 0]);
   const lam = (c, x) => new THREE.MeshLambertMaterial(Object.assign({ color: C(c) }, x || {}));
   const add = (geo, mat, x, y, z) => { const m = new THREE.Mesh(geo, mat); m.position.set(x || 0, y || 0, z || 0); G.add(m); return m; };
   const T = rlkTex(sk), lampC = C(sk.lamp || '#fff0c0'), glowC = C(sk.glow || sk.lamp || '#ffe8a0');
@@ -445,7 +445,10 @@ function rlStatsRender() {
     : `${s.p} ${s.p === 1 ? 'duel' : 'duels'}: ${s.w} won, ${s.l} lost${s.d ? ', ' + s.d + ' drawn' : ''} · ${s.cr} ${s.cr === 1 ? 'crown' : 'crowns'} taken · ` + (s.s > 1 ? `${s.s} wins running (best ${s.bs})` : `best run ${s.bs} ${s.bs === 1 ? 'win' : 'wins'}`);
 }
 function rlRecord(r) {
-  r = r || {}; const s = RLV.st, win = !!r.win && !r.draw, draw = !!r.draw;
+  r = r || {};
+  // (a match for three, src/rl3.js: crates as for a duel, but it isn't in the duel record or the rating)
+  if (r.n3) { const got = 1 + (r.win ? 1 : 0); RLV.c = Math.min(99999, RLV.c + got); rlvSave(); rlkRender(); if (typeof toast === 'function') toast((r.win ? 'Last light burning' : r.place === 2 ? 'Second place' : r.draw ? 'A draw' : 'Match over') + ': +' + got + ' tower crate' + (got > 1 ? 's' : '') + '.', '+' + got + ' tower crate' + (got > 1 ? 's' : '')); return; }
+  const s = RLV.st, win = !!r.win && !r.draw, draw = !!r.draw;
   s.p++; s.cr += Math.max(0, Math.min(3, r.crowns | 0));
   if (draw) { s.d++; s.s = 0; } else if (win) { s.w++; s.s++; s.bs = Math.max(s.bs, s.s); } else { s.l++; s.s = 0; }
   const got = 1 + (win ? 1 : 0); RLV.c = Math.min(99999, RLV.c + got); rlvSave(); rlkRender();

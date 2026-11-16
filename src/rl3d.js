@@ -88,26 +88,30 @@ function rl3dInit() {
     fragmentShader: 'uniform vec3 sd, top, mid, hor, glow; varying vec3 vd; void main(){ float h = clamp(vd.y, -0.2, 1.0); vec3 c = mix(hor, mid, smoothstep(0.0, 0.22, h)); c = mix(c, top, smoothstep(0.18, 0.75, h)); float s = max(dot(vd, sd), 0.0); c += glow * (pow(s, 6.0) * 0.45 + pow(s, 120.0) * 1.4) * (1.0 - smoothstep(0.1, 0.6, h)); gl_FragColor = vec4(c, 1.0); }' }));
   sky.renderOrder = -2; S.add(sky);
   // the sea and the race: one sheet of water, the current running hard between the rocks
-  RL3.seaU = { t: { value: 0 }, deep: { value: new THREE.Color(0x1d3a52) }, shal: { value: new THREE.Color(0x3d6e7c) }, glow: { value: new THREE.Color(0xffb070) }, haze: { value: new THREE.Color(0x8a6c86) }, cp: { value: new THREE.Vector3() } };
+  RL3.seaU = { t: { value: 0 }, deep: { value: new THREE.Color(0x1d3a52) }, shal: { value: new THREE.Color(0x3d6e7c) }, glow: { value: new THREE.Color(0xffb070) }, haze: { value: new THREE.Color(0x8a6c86) }, cp: { value: new THREE.Vector3() }, tri: { value: 0 } };
   const sea = new THREE.Mesh(new THREE.PlaneGeometry(900, 900, 1, 1), new THREE.ShaderMaterial({ uniforms: RL3.seaU, fog: false,
     vertexShader: 'varying vec3 wp; void main(){ vec4 w = modelMatrix * vec4(position, 1.0); wp = w.xyz; gl_Position = projectionMatrix * viewMatrix * w; }',
     fragmentShader: [
-      'uniform float t; uniform vec3 deep, shal, glow, haze, cp; varying vec3 wp;',
+      'uniform float t, tri; uniform vec3 deep, shal, glow, haze, cp; varying vec3 wp;',
       'float h2(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }',
       'float vn(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f); return mix(mix(h2(i), h2(i + vec2(1, 0)), f.x), mix(h2(i + vec2(0, 1)), h2(i + vec2(1, 1)), f.x), f.y); }',
       'void main(){ vec2 p = wp.xz; float race = (1.0 - smoothstep(0.7, 2.2, abs(p.y))) * (1.0 - smoothstep(14.0, 30.0, abs(p.x)));',
+      // (for three, src/rl3.js: the current runs in the three channels out from the pool in the middle instead)
+      ' if (tri > 0.5) { race = 1.0 - smoothstep(2.0, 4.0, length(p)); for (int i = 0; i < 3; i++) { float a = -0.5236 + 2.0944 * float(i); vec2 d = vec2(cos(a), -sin(a)); float al = dot(p, d), pe = abs(p.x * d.y - p.y * d.x); race = max(race, (1.0 - smoothstep(0.7, 2.2, pe)) * step(0.0, al) * (1.0 - smoothstep(16.0, 24.0, al))); } }',
       ' float fl = t * (0.25 + race * 1.7);',
       ' float n = vn(vec2(p.x * 0.55 - fl * 1.4, p.y * 1.1 + t * 0.07)) * 0.6 + vn(vec2(p.x * 1.7 - fl * 2.6, p.y * 2.4 - t * 0.2)) * 0.4;',
       ' vec3 c = mix(deep, shal, n * 0.65 + race * 0.2);',
       ' float st = smoothstep(0.7, 0.95, vn(vec2(p.x * 0.9 - t * 2.6, p.y * 5.0))) * race;',
-      ' float cw = 0.0; for (int i = 0; i < 2; i++) { float cx = i == 0 ? -5.5 : 5.5; float e = abs(abs(p.x - cx) - 1.05); cw += smoothstep(0.35, 0.0, e) * race * (0.5 + 0.5 * vn(vec2(p.y * 3.0 + t * 3.0, p.x))); }',
-      ' float bank = smoothstep(0.28, 0.0, abs(abs(p.y) - 1.0)) * step(abs(p.x), 11.2) * (0.45 + 0.55 * vn(vec2(p.x * 2.0 - t * 3.0, t)));',
+      ' float cw = 0.0; if (tri < 0.5) for (int i = 0; i < 2; i++) { float cx = i == 0 ? -5.5 : 5.5; float e = abs(abs(p.x - cx) - 1.05); cw += smoothstep(0.35, 0.0, e) * race * (0.5 + 0.5 * vn(vec2(p.y * 3.0 + t * 3.0, p.x))); }',
+      ' float bank = smoothstep(0.28, 0.0, abs(abs(p.y) - 1.0)) * step(abs(p.x), 11.2) * (0.45 + 0.55 * vn(vec2(p.x * 2.0 - t * 3.0, t))) * (1.0 - tri);',
       ' c += vec3(0.75, 0.78, 0.8) * (st * 0.32 + cw * 0.55 + bank * 0.4);',
       ' c += glow * pow(n, 5.0) * 0.35 * (0.5 + race);',
       ' float d = length(p - cp.xz); c = mix(c, haze, smoothstep(50.0, 240.0, d));',
       ' gl_FragColor = vec4(c, 1.0); }'].join('\n') }));
   sea.rotation.x = -Math.PI / 2; S.add(sea);
-  rl3dRocks(); rl3dCauseways(); rl3dDecor();
+  // (the duel's two rocks in a group of their own, so the skerry for three, src/rl3.js rl3dArena3, can stand in for them)
+  const n0 = S.children.length; rl3dRocks(); rl3dCauseways(); rl3dDecor();
+  RL3.arena2 = new THREE.Group(); for (const o of S.children.slice(n0)) RL3.arena2.add(o); S.add(RL3.arena2);
   // the deploy zone (shown while a troop or building is picked), the placement ghost, the effects' pools
   const zc = RL3.zoneCv = document.createElement('canvas'); zc.width = 18 * 8; zc.height = 32 * 8;
   RL3.zoneTex = new THREE.CanvasTexture(zc); RL3.zoneTex.magFilter = THREE.NearestFilter;
@@ -241,19 +245,23 @@ function rl3dFit() {
   const side = br.left > w * 0.3 && br.right > w - 30;
   let x0 = 0, x1 = w, y0 = (top ? top.getBoundingClientRect().bottom : 46) + 4, y1 = br.top - 4;
   if (side) { x0 = Math.max(0, ...tr.filter(r => r.right < w / 2).map(r => r.right)) + 6; x1 = br.left - 6; y0 = 6; y1 = h - 6; }
-  const key = [w, h, x0, x1, y0, y1, RL.me].map(Math.round).join(','); if (key === RL3.fitKey) return; RL3.fitKey = key;
+  const key = [w, h, x0, x1, y0, y1, RL.me, RL.n3 ? 1 : 0].map(Math.round).join(','); if (key === RL3.fitKey) return; RL3.fitKey = key;
   const C = RL3.cam, availH = Math.max(80, y1 - y0), availW = Math.max(80, x1 - x0 - (w < 600 ? 4 : 20));
   C.aspect = w / h; C.fov = w < h ? 38 : 34; C.clearViewOffset(); C.updateProjectionMatrix();
-  const pitch = (w < h ? 58 : side ? 50 : 54) * Math.PI / 180, dir = RL.me ? -1 : 1, corners = [];
-  for (const x of [-0.2, 18.2]) for (const y of [-0.6, 32.6]) for (const hh of [RL_G0, RL_G0 + 1.2]) corners.push(rv(x, y, hh));
-  for (const y of [3.5, 28.5]) corners.push(rv(9, y, RL_G0 + 7.4));   // (and the Great Lights' heads, with their labels)
+  // (D: which way your own rock lies from the middle, in three.js's x and z; the camera stands off that way)
+  const pitch = (w < h ? 58 : side ? 50 : 54) * Math.PI / 180, dir = RL.me ? -1 : 1, corners = [], ang = RL.n3 ? rl3Phi(RL.me) : RL.me ? Math.PI / 2 : -Math.PI / 2, D = [Math.cos(ang), -Math.sin(ang)];
+  if (RL.n3) { for (let i = 0; i < 24; i++) { const a = i / 24 * Math.PI * 2; for (const hh of [RL_G0, RL_G0 + 1.2]) corners.push(rv(9 + Math.cos(a) * (RL3C.R + 0.2), 16 + Math.sin(a) * (RL3C.R + 0.2), hh)); } for (const t of RL.T) if (t.k === 'great') corners.push(rv(t.x, t.y, RL_G0 + 7.4)); }
+  else {
+    for (const x of [-0.2, 18.2]) for (const y of [-0.6, 32.6]) for (const hh of [RL_G0, RL_G0 + 1.2]) corners.push(rv(x, y, hh));
+    for (const y of [3.5, 28.5]) corners.push(rv(9, y, RL_G0 + 7.4));   // (and the Great Lights' heads, with their labels)
+  }
   const v = new THREE.Vector3();
-  const place = d => { C.position.set(0, Math.sin(pitch) * d, Math.cos(pitch) * d * dir); C.lookAt(0, RL_G0, 0); C.updateMatrixWorld(); C.matrixWorldInverse.copy(C.matrixWorld).invert(); let a0 = 1e9, a1 = -1e9, b0 = 1e9, b1 = -1e9; for (const c of corners) { v.copy(c).project(C); const px = (v.x + 1) / 2 * w, py = (1 - v.y) / 2 * h; a0 = Math.min(a0, px); a1 = Math.max(a1, px); b0 = Math.min(b0, py); b1 = Math.max(b1, py); } return [a0, a1, b0, b1]; };
+  const place = d => { C.position.set(D[0] * Math.cos(pitch) * d, Math.sin(pitch) * d, D[1] * Math.cos(pitch) * d); C.lookAt(0, RL_G0, 0); C.updateMatrixWorld(); C.matrixWorldInverse.copy(C.matrixWorld).invert(); let a0 = 1e9, a1 = -1e9, b0 = 1e9, b1 = -1e9; for (const c of corners) { v.copy(c).project(C); const px = (v.x + 1) / 2 * w, py = (1 - v.y) / 2 * h; a0 = Math.min(a0, px); a1 = Math.max(a1, px); b0 = Math.min(b0, py); b1 = Math.max(b1, py); } return [a0, a1, b0, b1]; };
   let lo = 8, hi = 400;
   for (let i = 0; i < 40; i++) { const m = (lo + hi) / 2, b = place(m); if (b[1] - b[0] <= availW && b[3] - b[2] <= availH) hi = m; else lo = m; }
   const b = place(hi), cx = (b[0] + b[1]) / 2, cy = (b[2] + b[3]) / 2;
   C.setViewOffset(w, h, cx - (x0 + x1) / 2, cy - (y0 + y1) / 2, w, h); C.updateProjectionMatrix();
-  RL3.right = new THREE.Vector3(dir, 0, 0);
+  RL3.right = new THREE.Vector3(D[1], 0, -D[0]);
 }
 // a tap on the screen to arena tiles (null off the arena's ground)
 function rl3dPick(cx, cy) {
@@ -269,7 +277,7 @@ function rl3dProject(x, y, h) { if (!RL3.ok) return null; const v = rv(x, y, h).
 
 // ---------- the towers ----------
 function rl3dTowerPlain(kind, side) {
-  const g = new THREE.Group(), great = kind === 'great', H = great ? 4.4 : 3.0, R = great ? 1.35 : 0.95, trim = side ? RL_THEIRS : RL_MINE;
+  const g = new THREE.Group(), great = kind === 'great', H = great ? 4.4 : 3.0, R = great ? 1.35 : 0.95, trim = [RL_MINE, RL_THEIRS, RL_GOLD][side] || RL_MINE;
   rlAdd(g, gCyl(R * 1.18, R * 1.3, 0.5, 10), rlMat(0x8a8178), [0, 0.25, 0]);
   rlAdd(g, gCyl(R * 0.72, R, H, 12), rlMat(0xf0ece2), [0, 0.5 + H / 2, 0]);
   for (const f of [0.3, 0.62]) rlAdd(g, gCyl(R * (1 - f * 0.28) * 1.015, R * (1 - (f - 0.06) * 0.28) * 1.015, H * 0.09, 12), rlMat(trim), [0, 0.5 + H * f, 0]);
@@ -288,11 +296,11 @@ function rl3dTowersBuild() {
   for (const T of RL3.towers) { RL3.scene.remove(T.g); if (T.rubble) RL3.scene.remove(T.rubble); }
   RL3.towers = [];
   RL.T.forEach((t, i) => {
-    const rel = t.side === RL.me ? 0 : 1, sk = RL.skins[t.side] || '';
+    const rel = rlRel(t.side), sk = RL.skins[t.side] || '';
     let m = null;
     if (typeof rlTowerMesh === 'function') { try { m = rlTowerMesh(sk, t.k, rel); } catch (e) { console.error(e); m = null; } }
     if (!m) m = rl3dTowerPlain(t.k, rel);
-    const g = new THREE.Group(); g.add(m); g.position.copy(rv(t.x, t.y, RL_G0)); g.rotation.y = t.side ? Math.PI : 0; RL3.scene.add(g);
+    const g = new THREE.Group(); g.add(m); g.position.copy(rv(t.x, t.y, RL_G0)); g.rotation.y = rlRotY(t.side); RL3.scene.add(g);
     const lampObj = m.userData && m.userData.lamp, lh = t.k === 'great' ? 5.4 : 3.9;
     // the glow round the lamp, and the beam that turns while the light's awake
     const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: rlTex('glow'), color: 0xffd890, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false })); glow.position.set(0, lh, 0); glow.scale.setScalar(t.k === 'great' ? 3.2 : 2.4); g.add(glow);
@@ -731,14 +739,15 @@ function rl3dBuild2(c, TR) {
   return null;
 }
 // a card's model (built once for each side colour, then cloned)
-function rl3dProto(c, mine) { const k = c + (mine ? 'm' : 't'); if (!RL3.protos[k]) { RL3.protos[k] = rl3dBuild(c, mine ? RL_MINE : RL_THEIRS); } return RL3.protos[k]; }
+// (mine: true for your colour, false for the rival's, or a colour of its own for the third keeper's)
+function rl3dProto(c, mine) { const hex = mine === true ? RL_MINE : mine === false ? RL_THEIRS : mine, k = c + hex; if (!RL3.protos[k]) { RL3.protos[k] = rl3dBuild(c, hex); } return RL3.protos[k]; }
 function rl3dParts(m) { const P = {}; m.traverse(o => { if (o.name) P[o.name] = o; }); return P; }
 function rl3dUnitNew(u) {
-  const C = RL_CARD[u.c] || {}, mine = u.side === RL.me, g = new THREE.Group(), m = rl3dProto(u.c, mine).clone(true);
+  const C = RL_CARD[u.c] || {}, mine = u.side === RL.me, hex = rlSideHex(u.side), g = new THREE.Group(), m = rl3dProto(u.c, hex).clone(true);
   if (u.c === 'fogwraith') m.traverse(o => { if (o.material && o.material.transparent) o.material = o.material.clone(); });
   g.add(m); RL3.scene.add(g);
   const sz = C.size || 0.4, sh = rlAdd(RL3.scene, new THREE.CircleGeometry(1, 20), new THREE.MeshBasicMaterial({ map: rlTex('shadow'), transparent: true, depthWrite: false }), null, [-Math.PI / 2, 0, 0], sz * 1.5);
-  const ring = C.type === 'building' || ['hermit', 'kelp', 'crabking', 'keelback', 'shorecrabs', 'fogwraith', 'crabmother', 'krakenarm'].includes(u.c) ? null : rlAdd(g, new THREE.RingGeometry(sz * 0.8, sz * 0.98, 20), new THREE.MeshBasicMaterial({ color: mine ? RL_MINE : RL_THEIRS, transparent: true, opacity: 0.85, depthWrite: false, side: THREE.DoubleSide }), [0, 0.03, 0], [-Math.PI / 2, 0, 0]);
+  const ring = C.type === 'building' || ['hermit', 'kelp', 'crabking', 'keelback', 'shorecrabs', 'fogwraith', 'crabmother', 'krakenarm'].includes(u.c) ? null : rlAdd(g, new THREE.RingGeometry(sz * 0.8, sz * 0.98, 20), new THREE.MeshBasicMaterial({ color: hex, transparent: true, opacity: 0.85, depthWrite: false, side: THREE.DoubleSide }), [0, 0.03, 0], [-Math.PI / 2, 0, 0]);
   const H = { g, m, sh, ring, P: rl3dParts(m), ph: Math.random() * 6, bar: null, sz, air: !!C.air, hpLast: u.hp, flash: 0, rise: u.dep > 0 ? 0 : 1, C, kick: 0 };
   if (C.ab === 'rally') { H.aura = rlAdd(RL3.scene, rlGeo('auraRing', () => new THREE.RingGeometry(0.95, 1, 64)), new THREE.MeshBasicMaterial({ color: 0xffd070, transparent: true, opacity: 0.15, depthWrite: false, side: THREE.DoubleSide }), null, [-Math.PI / 2, 0, 0], 4); H.aura.renderOrder = 3; }
   return H;
@@ -764,7 +773,7 @@ function rl3dFx() {
   let hi = RL3.seen;
   for (const f of RL.FX) {
     if (f.id <= RL3.seen) continue; hi = Math.max(hi, f.id);
-    const C = RL_CARD[f.c], mineCol = f.side === RL.me ? RL_MINE : RL_THEIRS, P = h => rv(f.x, f.y, RL_G0 + (h || 0));
+    const C = RL_CARD[f.c], mineCol = rlSideHex(f.side), P = h => rv(f.x, f.y, RL_G0 + (h || 0));
     const smoke = (n, col, s, life, up) => { for (let i = 0; i < n; i++) { const a = Math.random() * 6.283, sp = 0.4 + Math.random() * 0.9; rl3dPart(false, P(0.3 + Math.random() * 0.4), { v: [Math.cos(a) * sp, (up || 0.6) + Math.random() * 0.6, Math.sin(a) * sp], s0: s * 0.5, s1: s * (1.2 + Math.random()), life: life * (0.7 + Math.random() * 0.6), col, op: 0.7, drag: 1.5 }); } };
     const sparks = (n, col, sp, h) => { for (let i = 0; i < n; i++) { const a = Math.random() * 6.283, e = Math.random() * 1.2; rl3dPart(true, P(h || 0.6), { v: [Math.cos(a) * sp * (0.4 + Math.random()), sp * (0.5 + e), Math.sin(a) * sp * (0.4 + Math.random())], g: 9, s0: 0.22, s1: 0.05, life: 0.4 + Math.random() * 0.3, col }); } };
     if (f.k === 'deploy') { rl3dRing(P(0.05), f.r + 0.5, mineCol, 0.55); smoke(5, 0xc8c0a8, 0.6, 0.7, 0.3); }
@@ -788,7 +797,7 @@ function rl3dFx() {
       for (let i = 0; i < pts.length; i++) { const p = at(pts[i]); rl3dPart(true, p, { s0: 1.2, s1: 0.2, life: 0.3, col: 0xb8d0ff, delay: i * 0.08 }); for (let j = 0; j < 4; j++) rl3dPart(true, p, { v: [(Math.random() - 0.5) * 4, Math.random() * 3, (Math.random() - 0.5) * 4], g: 6, s0: 0.15, s1: 0.03, life: 0.35, col: 0xe0ecff, delay: i * 0.08 }); if (i) rl3dArc(at(pts[i - 1]), p, (i - 1) * 0.08); } }
     else if (f.k === 'pull') { const r = f.r || 3; rl3dRing(P(0.06), r, 0x9ad8e0, 0.6, 0.7, true); rl3dRing(P(0.06), r * 0.7, 0xd8f4f4, 0.5, 0.6, true); for (let i = 0; i < 18; i++) { const a = i / 18 * 6.283, d = r * (0.8 + Math.random() * 0.25); rl3dPart(false, rv(f.x + Math.cos(a) * d, f.y + Math.sin(a) * d, RL_G0 + 0.3), { v: [-Math.cos(a) * d * 2.2, 0.8, Math.sin(a) * d * 2.2], s0: 0.3, s1: 0.15, life: 0.45, col: 0xd8f0f0, op: 0.85 }); } }
     else if (f.k === 'blast') { const r = f.r || 4; rl3dKick(f.c, f.side, f.x, f.y); for (let i = 0; i < 3; i++) rl3dRing(P(0.1 + i * 0.25), r * (0.75 + i * 0.12), 0xe8eef4, 0.7, 0.55 - i * 0.12, false, i * 0.12); smoke(4, 0xdce4ea, 0.6, 0.6, 0.4); }
-    else if (f.k === 'oil') { rl3dKick(f.c, f.side, f.x, f.y); const top = P(1.6); rl3dPart(true, top, { v: [0, 1.6, 0], s0: 0.7, s1: 0.2, life: 0.9, col: 0xffc040 }); for (let i = 0; i < 4; i++) rl3dPart(true, P(1.0), { v: [(Math.random() - 0.5) * 0.6, 1.2 + Math.random(), (Math.random() - 0.5) * 0.6], s0: 0.25, s1: 0.05, life: 0.7, col: 0xffe080, delay: i * 0.06 }); rl3dWord(P(2.4), '+1', f.side === RL.me ? '#ffd060' : '#ffa898'); }
+    else if (f.k === 'oil') { rl3dKick(f.c, f.side, f.x, f.y); const top = P(1.6); rl3dPart(true, top, { v: [0, 1.6, 0], s0: 0.7, s1: 0.2, life: 0.9, col: 0xffc040 }); for (let i = 0; i < 4; i++) rl3dPart(true, P(1.0), { v: [(Math.random() - 0.5) * 0.6, 1.2 + Math.random(), (Math.random() - 0.5) * 0.6], s0: 0.25, s1: 0.05, life: 0.7, col: 0xffe080, delay: i * 0.06 }); rl3dWord(P(2.4), '+1', f.side === RL.me ? '#ffd060' : rlRel(f.side) === 2 ? '#ffe0a0' : '#ffa898'); }
     else if (f.k === 'shield') { for (let i = 0; i < 10; i++) { const a = Math.random() * 6.28; rl3dPart(true, P(1.0), { v: [Math.cos(a) * 2.2, 1.5 + Math.random() * 1.5, Math.sin(a) * 2.2], g: 9, s0: 0.22, s1: 0.06, life: 0.55, col: i % 3 ? 0x8ac8d8 : 0xff8a50 }); } rl3dPart(true, P(1.0), { s0: 1.4, s1: 0.3, life: 0.25, col: 0xe8f8ff }); rl3dRing(P(0.06), 0.9, 0x8ac8d8, 0.45, 0.8); }
     else if (f.k === 'burst') { const r = f.r || 1.5, h = 1.7; rl3dPart(true, P(h), { s0: r * 1.4, s1: r * 3, life: 0.4, col: 0xc8ff90 }); rl3dPart(true, P(h), { s0: r, s1: 0.2, life: 0.6, col: 0xffffe0 }); rl3dRing(P(0.06), r, 0xb8ff80, 0.55, 0.8); for (let i = 0; i < 14; i++) { const a = Math.random() * 6.28, e = Math.random() * 2; rl3dPart(true, P(h), { v: [Math.cos(a) * 3, e - 0.5, Math.sin(a) * 3], g: 3, s0: 0.25, s1: 0.04, life: 0.6, col: 0xd8ffb0, drag: 1.5 }); } }
     else if (f.k === 'summon') { rl3dHulk(f.x, f.y, f.side); rl3dRing(P(0.06), (f.r || 2.5) + 0.3, mineCol, 0.8, 0.6); }
@@ -812,6 +821,10 @@ function rl3dReset(clear) {
   for (const T of RL3.towers) { RL3.scene.remove(T.g, T.shadow); if (T.rubble) RL3.scene.remove(T.rubble); } RL3.towers = [];
   RL3.seen = RL.nid - 1; RL3.fitKey = ''; RL3.zoneKey = ''; RL3.flash = 0; RL3.shake = 0;
   if (clear) return;
+  // the ground for this match: the duel's two rocks, or the skerry for three
+  if (RL.n3 && !RL3.arena3 && typeof rl3dArena3 === 'function') RL3.arena3 = rl3dArena3();
+  if (RL3.arena2) RL3.arena2.visible = !RL.n3; if (RL3.arena3) RL3.arena3.visible = !!RL.n3; RL3.seaU.tri.value = RL.n3 ? 1 : 0;
+  rl3dZoneSet();
   rl3dTowersBuild();
 }
 function rl3dUnitDrop(H) { RL3.scene.remove(H.g, H.sh); rl3dBarDrop(H.bar); if (H.aura) RL3.scene.remove(H.aura); if (H.beam) RL3.scene.remove(H.beam); }
@@ -827,30 +840,42 @@ function rl3dGhost(o) {
     if (G.userData.model) G.remove(G.userData.model); G.userData.model = null; G.userData.c = o.c;
     if (C.type !== 'spell') { const m = rl3dProto(o.c, true).clone(true); m.traverse(q => { if (q.isSprite) q.visible = false; else if (q.material) q.material = RL3.ghostMat; }); m.scale.setScalar(1.55); if (C.air) m.position.y = 2.2; G.add(m); G.userData.model = m; }
   }
-  if (G.userData.model) { G.userData.model.rotation.y = RL.me ? 0 : Math.PI; G.userData.model.visible = true; }
+  if (G.userData.model) { G.userData.model.rotation.y = Math.PI - rlFace0(RL.me); G.userData.model.visible = true; }
   RL3.ghostMat.color.setHex(o.ok ? 0xbfe0ff : 0xff8070);
 }
-// the deploy zone: light where this card may go, red where not (repainted when a lane opens)
+// the deploy zone: light where this card may go, red where not (repainted when a lane opens). Its sheet covers the
+// duel's field, or the whole skerry for three (rl3dZoneSet sizes it for the match).
+const rl3dZB = () => RL.n3 ? { x0: -7, y0: 0, w: 32, h: 32 } : { x0: 0, y0: 0, w: 18, h: 32 };
+function rl3dZoneSet() {
+  const n3 = !!RL.n3; if (!RL3.zone || RL3.zoneN3 === n3) return; RL3.zoneN3 = n3;
+  const B = rl3dZB(); RL3.zoneCv.width = B.w * 8; RL3.zoneCv.height = B.h * 8;
+  RL3.zoneTex.dispose(); RL3.zoneTex = new THREE.CanvasTexture(RL3.zoneCv); RL3.zoneTex.magFilter = THREE.NearestFilter; RL3.zone.material.map = RL3.zoneTex; RL3.zone.material.needsUpdate = true;
+  RL3.zone.geometry.dispose(); RL3.zone.geometry = new THREE.PlaneGeometry(B.w, B.h); RL3.zone.position.copy(rv(B.x0 + B.w / 2, B.y0 + B.h / 2, RL_G0 + 0.03)); RL3.zoneKey = '';
+}
 function rl3dZone(on) {
   if (!RL3.ok) return;
   RL3.zone.visible = !!on; if (!on) return;
-  const key = RL.T.map(t => t.hp > 0 ? 1 : 0).join('') + RL.me; if (key === RL3.zoneKey) return; RL3.zoneKey = key;
-  const c = RL3.zoneCv.getContext('2d'), n = 8; c.clearRect(0, 0, 18 * n, 32 * n);
-  for (let j = 0; j < 32 * 2; j++) for (let i = 0; i < 18 * 2; i++) {
-    const x = (i + 0.5) / 2, y = (j + 0.5) / 2, ok = rlCanPlace(RL.me, 'deckhand', x, y) || (RL.T.some(t => t.hp > 0 && Math.hypot(x - t.x, y - t.y) < t.r + 0.35) && (RL.me ? y > RLC.R1 : y < RLC.R0));
-    const water = y > RLC.R0 && y < RLC.R1;
-    c.fillStyle = ok ? 'rgba(190,225,255,0.16)' : water ? 'rgba(255,70,50,0.12)' : 'rgba(255,60,40,0.3)';
-    c.fillRect(i * n / 2, (32 * 2 - 1 - j) * n / 2, n / 2, n / 2);
+  const key = RL.T.map(t => t.hp > 0 ? 1 : 0).join('') + RL.me + (RL.alive || []).join(''); if (key === RL3.zoneKey) return; RL3.zoneKey = key;
+  const B = rl3dZB(), c = RL3.zoneCv.getContext('2d'), n = 8, me = RL.me; c.clearRect(0, 0, B.w * n, B.h * n);
+  const off = (x, y) => RL.n3 && Math.hypot(x - RL3C.CX, y - RL3C.CY) > RL3C.R - 0.4;
+  const home = (x, y) => RL.n3 ? rl3Bank(x, y) === me && !rl3Wet(x, y) && rl3Strip(x, y) < 0 : me ? y > RLC.R1 : y < RLC.R0;
+  const wet = (x, y) => RL.n3 ? rl3Wet(x, y) || rl3Strip(x, y) >= 0 : y > RLC.R0 && y < RLC.R1;
+  const okAt = (x, y) => x > B.x0 && x < B.x0 + B.w && y > B.y0 && y < B.y0 + B.h && !off(x, y) && (rlCanPlace(me, 'deckhand', x, y) || home(x, y) && RL.T.some(t => t.hp > 0 && Math.hypot(x - t.x, y - t.y) < t.r + 0.35));
+  const NX = B.w * 2, NY = B.h * 2, X = i => B.x0 + (i + 0.5) / 2, Y = j => B.y0 + (j + 0.5) / 2, ok = [];
+  for (let j = 0; j < NY; j++) for (let i = 0; i < NX; i++) {
+    const x = X(i), y = Y(j), o = okAt(x, y); ok[j * NX + i] = o; if (off(x, y)) continue;
+    c.fillStyle = o ? 'rgba(190,225,255,0.16)' : wet(x, y) ? 'rgba(255,70,50,0.12)' : 'rgba(255,60,40,0.3)';
+    c.fillRect(i * n / 2, (NY - 1 - j) * n / 2, n / 2, n / 2);
   }
   // the edge of where you may go, drawn bright
   c.strokeStyle = 'rgba(210,235,255,0.75)'; c.lineWidth = 2;
-  for (let j = 0; j < 64; j++) for (let i = 0; i < 36; i++) {
-    const x = (i + 0.5) / 2, y = (j + 0.5) / 2, ok = rlCanPlace(RL.me, 'deckhand', x, y) || (RL.me ? y > RLC.R1 : y < RLC.R0) && RL.T.some(t => t.hp > 0 && Math.hypot(x - t.x, y - t.y) < t.r + 0.35);
-    if (!ok) continue; const up = (j + 1.5) / 2, okUp = up < 32 && (rlCanPlace(RL.me, 'deckhand', x, up) || (RL.me ? up > RLC.R1 : up < RLC.R0) && RL.T.some(t => t.hp > 0 && Math.hypot(x - t.x, up - t.y) < t.r + 0.35));
-    const dn = (j - 0.5) / 2, okDn = dn > 0 && (rlCanPlace(RL.me, 'deckhand', x, dn) || (RL.me ? dn > RLC.R1 : dn < RLC.R0) && RL.T.some(t => t.hp > 0 && Math.hypot(x - t.x, dn - t.y) < t.r + 0.35));
-    const py = (32 * 2 - 1 - j) * n / 2;
-    if (!okUp) { c.beginPath(); c.moveTo(i * n / 2, py); c.lineTo((i + 1) * n / 2, py); c.stroke(); }
-    if (!okDn) { c.beginPath(); c.moveTo(i * n / 2, py + n / 2); c.lineTo((i + 1) * n / 2, py + n / 2); c.stroke(); }
+  const at = (i, j) => i >= 0 && j >= 0 && i < NX && j < NY && ok[j * NX + i];
+  for (let j = 0; j < NY; j++) for (let i = 0; i < NX; i++) {
+    if (!at(i, j)) continue; const px = i * n / 2, py = (NY - 1 - j) * n / 2;
+    if (!at(i, j + 1)) { c.beginPath(); c.moveTo(px, py); c.lineTo(px + n / 2, py); c.stroke(); }
+    if (!at(i, j - 1)) { c.beginPath(); c.moveTo(px, py + n / 2); c.lineTo(px + n / 2, py + n / 2); c.stroke(); }
+    if (RL.n3 && !at(i - 1, j)) { c.beginPath(); c.moveTo(px, py); c.lineTo(px, py + n / 2); c.stroke(); }
+    if (RL.n3 && !at(i + 1, j)) { c.beginPath(); c.moveTo(px + n / 2, py); c.lineTo(px + n / 2, py + n / 2); c.stroke(); }
   }
   RL3.zoneTex.needsUpdate = true;
 }
@@ -899,7 +924,7 @@ function rl3dDraw(dt) {
     if (u.hp < H.hpLast - 0.5) H.flash = 0.12; H.hpLast = u.hp;
     const showBar = u.hp < u.max - 0.5 || u.bld;
     if (showBar && !H.bar) H.bar = rl3dBar(Math.max(0.6, H.sz * 1.6), 0.1);
-    if (H.bar) { const top = (H.air ? 3.4 : (u.bld ? 1.9 : 1.7) * Math.max(0.8, H.sz * 1.6)) + RL_G0; rl3dBarSet(H.bar, rv(x, y, top), u.hp / u.max, u.side === RL.me ? meCol : thCol, showBar); }
+    if (H.bar) { const top = (H.air ? 3.4 : (u.bld ? 1.9 : 1.7) * Math.max(0.8, H.sz * 1.6)) + RL_G0; rl3dBarSet(H.bar, rv(x, y, top), u.hp / u.max, RL.n3 ? rlSideHex(u.side) : u.side === RL.me ? meCol : thCol, showBar); }
   }
   for (const [id, H] of RL3.units) if (!live.has(id)) { RL3.units.delete(id); rl3dBarSet(H.bar || { bg: { visible: 0 }, fg: { visible: 0 } }, null, 0, 0, false); H.die = 0.5; if (H.aura) H.aura.visible = false; if (H.beam) H.beam.visible = false; RL3.dying.push(H); }
   RL3.dying = RL3.dying.filter(H => { H.die -= dt; const f = Math.max(0, H.die / 0.5); H.g.scale.setScalar(Math.max(0.01, f) * 1.55); H.g.position.y -= dt * (H.air ? 3 : 0.6); H.m.rotation.z += dt * 3; H.sh.material.opacity = f; if (H.die <= 0) { rl3dUnitDrop(H); return false; } return true; });
@@ -952,6 +977,7 @@ function rl3dDraw(dt) {
     const f = z.t / z.dur, fade = Math.min(1, z.t * 3, Math.max(0, (z.dur + (z.k === 'wave' ? 0.4 : 0) - z.t) * 2));
     if (z.k === 'haar') { Z.g.position.copy(rv(z.x, z.y, RL_G0)); Z.puffs.forEach((q, i) => { const a = t * 0.25 + i * 1.3; q.position.set(Math.cos(a) * z.r * 0.55 * (0.4 + (i % 3) * 0.3), 0.6 + (i % 2) * 0.5, Math.sin(a) * z.r * 0.55 * (0.4 + (i % 3) * 0.3)); q.material.opacity = 0.42 * fade; }); }
     else if (Z.k2) rl3dZone2(z, Z, t, dt, fade);
+    else if (z.ang != null) { const f6 = 6 * Math.min(z.t, z.dur), x = z.x0 != null ? z.x0 + Math.cos(z.ang) * f6 : z.x, y = z.y0 != null ? z.y0 + Math.sin(z.ang) * f6 : z.y; Z.g.position.copy(rv(x, y, 0)); Z.g.rotation.y = Math.atan2(-Math.cos(z.ang), Math.sin(z.ang)); Z.mat.opacity = 0.7 * fade; Z.foam.material.opacity = 0.9 * fade; Z.g.scale.y = 0.6 + 0.4 * Math.sin(Math.min(1, f) * Math.PI); if (Math.random() < 0.6) rl3dPart(false, rv(x, y, RL_G0 + 1), { v: [0, 1.5, 0], g: 5, s0: 0.3, s1: 0.5, life: 0.5, col: 0xe8f8f8, op: 0.8 * fade }); }
     else { const y = z.y0 != null ? z.y0 + z.dir * 6 * Math.min(z.t, z.dur) : z.y; Z.g.position.copy(rv(z.x, y, 0)); Z.g.rotation.y = z.dir * (RL.me ? 1 : 1) > 0 ? 0 : Math.PI; Z.mat.opacity = 0.7 * fade; Z.foam.material.opacity = 0.9 * fade; Z.g.scale.y = 0.6 + 0.4 * Math.sin(Math.min(1, f) * Math.PI); if (Math.random() < 0.6) rl3dPart(false, rv(z.x + (Math.random() - 0.5) * z.w, y, RL_G0 + 1), { v: [0, 1.5, z.dir * -2], g: 5, s0: 0.3, s1: 0.5, life: 0.5, col: 0xe8f8f8, op: 0.8 * fade }); }
   }
   for (const [id, Z] of RL3.zones) if (!zl.has(id)) { S.remove(Z.g); RL3.zones.delete(id); }
@@ -992,14 +1018,14 @@ function rl3dShotNew(p) {
     else rlAdd(g, gSph(0.3, 10), rlMat(0x202024));
     s.sh = rlAdd(S, new THREE.CircleGeometry(1, 20), new THREE.MeshBasicMaterial({ map: rlTex('shadow'), transparent: true, depthWrite: false }), null, [-Math.PI / 2, 0, 0]);
     // (where it'll come down: a ring in the caster's colour)
-    const C = RL_CARD[p.c]; s.ring = rlAdd(S, new THREE.RingGeometry(0.9, 1, 40), new THREE.MeshBasicMaterial({ color: p.side === RL.me ? 0x9cc8ff : 0xff9a8a, transparent: true, opacity: 0.5, depthWrite: false, side: THREE.DoubleSide }), null, [-Math.PI / 2, 0, 0], (C && C.r) || 2.5); s.ring.position.copy(rv(p.tx, p.ty, RL_G0 + 0.04)); s.ring.renderOrder = 3;
+    const C = RL_CARD[p.c]; s.ring = rlAdd(S, new THREE.RingGeometry(0.9, 1, 40), new THREE.MeshBasicMaterial({ color: p.side === RL.me ? 0x9cc8ff : rlRel(p.side) === 2 ? 0xffd890 : 0xff9a8a, transparent: true, opacity: 0.5, depthWrite: false, side: THREE.DoubleSide }), null, [-Math.PI / 2, 0, 0], (C && C.r) || 2.5); s.ring.position.copy(rv(p.tx, p.ty, RL_G0 + 0.04)); s.ring.renderOrder = 3;
   }
   else if (p.k === 'herring') { const f = rlGrp(g, [0, 0, 0], 'spin'); rlAdd(f, gCone(0.07, 0.36, 5), rlMat(0xc8d8e0, { em: 0x202830 }), [0, 0, 0.04], [Math.PI / 2, 0, 0], [1, 0.45, 1]); rlAdd(f, gCone(0.07, 0.12, 4), rlMat(0x8a9aa8), [0, 0, -0.18], [-Math.PI / 2, 0, 0], [1, 0.3, 1]); s.spin = f; }
   else if (p.k === 'net') { const n = rlGrp(g, [0, 0, 0], 'spin'); rlAdd(n, gCone(0.34, 0.2, 8), rlNetMat(), [0, 0, 0], [-Math.PI / 2, 0, 0]); for (let i = 0; i < 6; i++) { const a = i / 6 * 6.283; rlAdd(n, gSph(0.04, 4), rlMat(0xe08a30), [Math.cos(a) * 0.34, Math.sin(a) * 0.34, -0.1]); } s.spin = n; s.grow = 1; }
   else if (p.k === 'grenade' || p.k === 'mortar') {
     const big = p.k === 'mortar'; rlAdd(g, gSph(big ? 0.24 : 0.12, 8), rlMat(0x1a1a1e)); glow(0xffb050, big ? 0.6 : 0.45);
     s.sh = rlAdd(S, new THREE.CircleGeometry(1, 20), new THREE.MeshBasicMaterial({ map: rlTex('shadow'), transparent: true, depthWrite: false }), null, [-Math.PI / 2, 0, 0]);
-    s.ring = rlAdd(S, new THREE.RingGeometry(0.9, 1, 40), new THREE.MeshBasicMaterial({ color: p.side === RL.me ? 0x9cc8ff : 0xff9a8a, transparent: true, opacity: 0.5, depthWrite: false, side: THREE.DoubleSide }), null, [-Math.PI / 2, 0, 0], p.sp || (big ? 1.8 : 1.5)); s.ring.position.copy(rv(p.tx, p.ty, RL_G0 + 0.04)); s.ring.renderOrder = 3;
+    s.ring = rlAdd(S, new THREE.RingGeometry(0.9, 1, 40), new THREE.MeshBasicMaterial({ color: p.side === RL.me ? 0x9cc8ff : rlRel(p.side) === 2 ? 0xffd890 : 0xff9a8a, transparent: true, opacity: 0.5, depthWrite: false, side: THREE.DoubleSide }), null, [-Math.PI / 2, 0, 0], p.sp || (big ? 1.8 : 1.5)); s.ring.position.copy(rv(p.tx, p.ty, RL_G0 + 0.04)); s.ring.renderOrder = 3;
   }
   else if (p.k === 'rocket') { g.scale.setScalar(1.4); rlAdd(g, gCyl(0.06, 0.06, 0.44, 7), rlMat(0xe8e2d4), [0, 0, -0.05], [Math.PI / 2, 0, 0]); rlAdd(g, gCone(0.065, 0.16, 7), rlMat(0xd83a2a), [0, 0, 0.25], [Math.PI / 2, 0, 0]); rlAdd(g, gBox(0.2, 0.02, 0.1), rlMat(0xd83a2a), [0, 0, -0.24]); glow(0xffa040, 0.7); s.glow.position.z = -0.32; }
   else if (p.k === 'song') { glow(0x90ffe0, 1.0); rlAdd(g, gTor(0.2, 0.03, 12), rlMat(0xb8fff0, { add: 1, op: 0.8 }), [0, 0, 0], null, null, 'spin'); rlAdd(g, gTor(0.32, 0.02, 14), rlMat(0x80e0ff, { add: 1, op: 0.5 }), [0, 0, -0.25]); s.spin = g.getObjectByName('spin'); s.pulse = 1; }

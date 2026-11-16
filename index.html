@@ -438,6 +438,7 @@
       <div class="btnrow">
         <button class="primary" id="rlPlay" type="button">Duel the bot</button>
         <button class="primary" id="rlDraftBot" type="button">Triple draft</button><!-- [rival] src/rldraft.js -->
+        <button class="primary" id="rl3Play" type="button">Three keepers</button><!-- [rival] 1v1v1 against two bots (src/rl3.js) -->
         <button class="tool" id="rlDeckBtn" type="button">Deck</button>
       </div>
       <div class="btnrow rlcrates"><!-- [rival] tower skins (src/rlcrates.js) -->
@@ -458,12 +459,14 @@
           <ol class="warlobbylist" id="rlLobbyList"></ol>
           <p class="muted" id="rlLobbyMsg"></p>
           <label class="rldr-opt" id="rlMpDraftRow"><input type="checkbox" id="rlMpDraft"> Triple draft: build both decks on the spot, three cards a round</label><!-- [rival] the host chooses (src/rldraft.js) -->
+          <label class="rldr-opt" id="rlMpN3Row"><input type="checkbox" id="rlMpN3"> Three keepers: every keeper for themselves, a bot in any empty seat</label><!-- [rival] the host chooses (src/rl3.js) -->
           <div class="btnrow"><button class="primary" id="rlMpStart" type="button">Light the lamps</button><button class="tool shareBtn" id="rlMpShare" type="button" data-mode="rival">Share invite</button><button class="tool" id="rlMpLeave" type="button">Leave</button></div>
         </div>
       </section>
       <details class="howto">
         <summary>How to play</summary>
         <p><b>Oil.</b> Every card costs lamp oil, shown in the drop on its corner. You start with 5 and fill by one every 2.8 seconds, up to 10. Oil you can't hold is wasted, so spend before you're full.</p>
+        <p><b>Three keepers.</b> Every keeper for themselves on one round skerry cut three ways by channels, a causeway to each neighbour. The last Great Light burning wins; at time, the most towers standing. Against two bots, or online with up to three (a bot takes any empty seat). It isn't rated.</p>
         <p><b>Triple draft.</b> No deck of your own: eight rounds, three cards a round, take one and the other two are gone. Both keepers are offered the same cards. Online each pick has 15 seconds.</p>
         <p><b>Your hand.</b> You hold four cards from your deck of eight, and the next one waits beside them. Play a card and it goes to the back of the queue, so every card comes round again in turn.</p>
         <p><b>Playing.</b> Pick a card, then tap the rocks where you want it. Troops and buildings go down on your own side of the race, on dry rock, not on the water or a tower. Spells go anywhere.</p>
@@ -528,6 +531,7 @@
     <div class="rl-flash" id="rlFlash" aria-hidden="true"></div>
     <div class="rl-top" id="rlTop">
       <div class="rl-who theirs"><b id="rlName0">Rival</b><span class="rl-pips" id="rlCr0" aria-label="Lights they have put out"></span><small class="rl-woil" id="rlWOil0" hidden></small></div>
+      <div class="rl-who theirs gold" id="rlWho2" hidden><b id="rlName2">Rival</b><span class="rl-pips" id="rlCr2" aria-label="Lights still burning"></span><small class="rl-woil" id="rlWOil2" hidden></small></div><!-- [rival] the third keeper (src/rl3.js) -->
       <div class="rl-clock" id="rlClockBox"><b id="rlClock">3:00</b><small id="rlClockSub">Time left</small><small class="rl-watchn" id="rlWatchN" hidden></small></div>
       <div class="rl-who mine"><b id="rlName1">You</b><span class="rl-pips" id="rlCr1" aria-label="Lights you have put out"></span><small class="rl-woil" id="rlWOil1" hidden></small></div>
       <button class="rl-menu" id="rlMenuBtn" type="button" aria-label="Menu" title="Menu (Esc)">&#9776;</button>
@@ -560,7 +564,7 @@
       <div class="card">
         <h1 id="rlEndHead">Victory</h1>
         <p class="muted" id="rlEndSub"></p>
-        <div class="rl-score"><div class="mine"><span id="rlEndMeN"></span><span class="rl-pips" id="rlEndMe"></span></div><div class="theirs"><span id="rlEndThemN"></span><span class="rl-pips" id="rlEndThem"></span></div></div>
+        <div class="rl-score" id="rlEndScore"><div class="mine"><span id="rlEndMeN"></span><span class="rl-pips" id="rlEndMe"></span></div><div class="theirs"><span id="rlEndThemN"></span><span class="rl-pips" id="rlEndThem"></span></div></div>
         <p class="rl-mmr" id="rlEndMmr" hidden></p>
         <div class="btnrow"><button class="primary" id="rlAgain" type="button">Again</button><button class="tool" id="rlMenu" type="button">Back to the menu</button></div>
       </div>
@@ -1143,6 +1147,7 @@
 <script src="src/rlcards.js"></script><!-- [rival] Skerry Clash: the 64 cards -->
 <script src="src/rl.js"></script><!-- [rival] the rules, the match, the snapshots -->
 <script src="src/rlbot.js"></script><!-- [rival] the keeper across the water -->
+<script src="src/rl3.js"></script><!-- [rival] Skerry Clash for three (1v1v1): the skerry, its rules, its bot -->
 <script src="src/rl3d.js"></script><!-- [rival] the 3D view -->
 <script src="src/rlhud.js"></script><!-- [rival] the hand, the oil, the clock, the end card -->
 <script src="src/rlart.js"></script><!-- [rival] the cards' pictures and faces -->

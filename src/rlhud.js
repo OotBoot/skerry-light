@@ -19,8 +19,11 @@ const RL_TYPECOL = { troop: ['#2d4f6e', '#16283a'], spell: ['#8a5a1e', '#3e2a10'
 
 function rlHudReset() {
   RH.sel = -1; RH.drag = null; RH.hover = null; RH.faces = ['', '', '', '', '']; RH.key = ''; RH.sayQ = []; RH.seen = RL.nid - 1; RH.cntShown = -1; RH.abFace = '';
-  $('rlName0').textContent = RL.names[1 - RL.me]; $('rlName1').textContent = RL.names[RL.me];
-  const sp = rlIsSpec(); $('rlUI').classList.toggle('spec', sp); if ($('rlSpecBar')) $('rlSpecBar').hidden = !sp; for (const i of [0, 1]) if ($('rlWOil' + i)) $('rlWOil' + i).hidden = !sp;
+  // (for three, src/rl3.js: the next keeper round on the left in red, the other under them in gold, you on the right)
+  const n3 = !!RL.n3; $('rlUI').classList.toggle('n3', n3); if ($('rlWho2')) $('rlWho2').hidden = !n3;
+  $('rlName0').textContent = RL.names[n3 ? (RL.me + 1) % 3 : 1 - RL.me]; $('rlName1').textContent = RL.names[RL.me]; if (n3 && $('rlName2')) $('rlName2').textContent = RL.names[(RL.me + 2) % 3];
+  RH.outSeen = n3 ? RL.alive.slice() : null;
+  const sp = rlIsSpec(); $('rlUI').classList.toggle('spec', sp); if ($('rlSpecBar')) $('rlSpecBar').hidden = !sp; for (const i of [0, 1, 2]) if ($('rlWOil' + i)) $('rlWOil' + i).hidden = !sp;
   RH.watchK = '';
   $('rlToast').classList.remove('on'); $('rlCount').classList.remove('on');
   if (typeof rl3dGhost === 'function') rl3dGhost(null);
@@ -56,7 +59,7 @@ function rlHudTowers(force) {
     const d = box.children[i], p = typeof rl3dProject === 'function' ? rl3dProject(t.x, t.y, RL_G0 + (t.k === 'great' ? 6.4 : 4.7)) : null;
     if (!p || t.hp <= 0 || (t.k === 'great' && !t.awake && t.hp >= t.max && false)) { d.hidden = true; return; }
     d.hidden = false; d.style.transform = `translate(${Math.round(p.x)}px, ${Math.round(p.y)}px) translate(-50%, -100%)`;
-    d.className = 'rl-twl ' + (t.side === RL.me ? 'mine' : 'theirs') + (t.k === 'great' ? ' great' : '') + (t.awake ? '' : ' sleep');
+    d.className = 'rl-twl ' + (t.side === RL.me ? 'mine' : 'theirs') + (RL.n3 && rlRel(t.side) === 2 ? ' gold' : '') + (t.k === 'great' ? ' great' : '') + (t.awake ? '' : ' sleep');
     const hp = Math.ceil(t.hp); if (d.dataset.hp !== String(hp)) { d.dataset.hp = String(hp); d.firstChild.textContent = hp; d.lastChild.firstChild.style.width = (t.hp / t.max * 100).toFixed(1) + '%'; }
   });
 }
@@ -70,14 +73,21 @@ function rlHud(dt) {
   ck.classList.toggle('low', RL.ph === 'play' && RL.left <= 10);
   const sub = RL.ot ? 'Overtime' : RL.dbl ? 'Double oil' : 'Time left'; if ($('rlClockSub').textContent !== sub) $('rlClockSub').textContent = sub;
   $('rlClockBox').classList.toggle('hot', RL.dbl || RL.ot);
-  rlPips(RL.crowns[they], $('rlCr0'), false); rlPips(RL.crowns[me], $('rlCr1'), true);
+  const n3 = !!RL.n3, A = (me + 1) % 3, Bk = (me + 2) % 3;
+  if (n3) {
+    // (for three: each keeper's lights still burning, and their plate dimmed once they're out)
+    rlPips(rl3Standing(A), $('rlCr0'), false); rlPips(rl3Standing(me), $('rlCr1'), true); rlPips(rl3Standing(Bk), $('rlCr2'), false);
+    $('rlCr0').parentNode.classList.toggle('out', !RL.alive[A]); $('rlCr1').parentNode.classList.toggle('out', !RL.alive[me]); $('rlCr2').parentNode.classList.toggle('out', !RL.alive[Bk]);
+  } else { rlPips(RL.crowns[they], $('rlCr0'), false); rlPips(RL.crowns[me], $('rlCr1'), true); }
   // online: how many are watching; a watcher: both names as the snapshot has them, and both keepers' oil
   const spec = rlIsSpec();
   if (RL.mode === 'net') {
     const n = typeof rlnWatchers === 'function' ? rlnWatchers() : 0, wk = n + '|' + spec;
     if (RH.watchK !== wk) { RH.watchK = wk; const w = $('rlWatchN'); if (w) { w.hidden = spec || !n; w.textContent = n + ' watching'; } if ($('rlSpecN')) $('rlSpecN').textContent = n > 1 ? `${n} watching` : 'just you'; }
   }
-  if (spec) {
+  if (spec && n3) {
+    const nm = [A, me, Bk]; nm.forEach((k, i) => { const el = $('rlName' + i); if (el && el.textContent !== RL.names[k]) el.textContent = RL.names[k]; const o = $('rlWOil' + i), v = 'Oil ' + Math.floor(RL.oil[k] + 1e-6); if (o && o.textContent !== v) o.textContent = v; });
+  } else if (spec) {
     if ($('rlName0').textContent !== RL.names[they]) $('rlName0').textContent = RL.names[they]; if ($('rlName1').textContent !== RL.names[me]) $('rlName1').textContent = RL.names[me];
     const o0 = 'Oil ' + Math.floor(RL.oil[they] + 1e-6), o1 = 'Oil ' + Math.floor(RL.oil[me] + 1e-6);
     if ($('rlWOil0').textContent !== o0) $('rlWOil0').textContent = o0; if ($('rlWOil1').textContent !== o1) $('rlWOil1').textContent = o1;
@@ -114,6 +124,8 @@ function rlHud(dt) {
     if (f.id <= RH.seen) continue; hi = Math.max(hi, f.id);
     if (f.k === 'dbl') rlHudSay('Double oil!', 2.4);
     else if (f.k === 'ot') rlHudSay('Overtime: the next light out wins', 3);
+    else if (f.k === 'crown' && n3) { const v = (f.r | 0) - 1; rlHudSay(f.side === me ? `You put out ${RL.names[v]}’s light!` : v === me ? `${RL.names[f.side]} puts out one of your lights` : `${RL.names[f.side]} puts out ${RL.names[v]}’s light`, 2.4); }
+    else if (f.k === 'out') rlHudSay(f.side === me ? (spec ? `${RL.names[me]} is out` : 'Your Great Light is out. Watch on, or leave from the menu.') : `${RL.names[f.side]}’s Great Light is out`, 3.2);
     else if (f.k === 'crown') rlHudSay(spec ? `${RL.names[f.side]} puts out a light` : f.side === me ? 'You put out a light!' : `${RL.names[they]} puts out a light`, 2.4);
   }
   RH.seen = hi;
@@ -134,6 +146,8 @@ function rlHudAb(oil) {
 // the end card
 function rlHudEnd() {
   const me = RL.me, w = RL.win, el = $('rlEnd');
+  if (RL.n3) { rl3HudEnd(); return; }
+  if ($('rlEndScore')) $('rlEndScore').hidden = false; if ($('rl3Score')) $('rl3Score').hidden = true;
   if (rlIsSpec()) {
     // (a watcher: who won, the lights each put out, and back to the menu; no rating, no Again)
     const gone = RL.net && RL.net.gone, nm = s => RL.names[s];
@@ -156,6 +170,26 @@ function rlHudEnd() {
   el.hidden = false; setTimeout(() => ($('rlAgain').hidden ? $('rlMenu') : $('rlAgain')).focus({ preventScroll: true }), 40);
 }
 
+// the end card for three: who won, then each keeper in order with the lights they still had
+function rl3HudEnd() {
+  const me = RL.me, w = RL.win, el = $('rlEnd'), spec = rlIsSpec(), rank = rl3Rank(), place = rank.indexOf(me) + 1, nm = s => RL.names[s];
+  $('rlEndHead').textContent = spec ? (w === 3 ? 'A draw' : `${nm(w)} wins`) : w === 3 ? 'A draw' : w === me ? 'Victory' : place === 2 ? 'Second place' : 'Third place';
+  el.classList.toggle('won', !spec && w === me); el.classList.toggle('lost', !spec && w !== me && w !== 3);
+  if (RL.net && RL.net.gone) $('rlEndHead').textContent = 'Match over';
+  $('rlEndSub').textContent = RL.net && RL.net.gone ? `${nm(0)} has left the match.` : w === 3 ? 'The lights still burning were too evenly matched to split.' : RL.alive.filter(Boolean).length === 1 ? `${w === me && !spec ? 'Yours is' : nm(w) + '’s is'} the last light burning.` : `${w === me && !spec ? 'You' : nm(w)} kept the most lights burning.`;
+  const box = $('rlEndScore'); if (box) box.hidden = true;
+  let ol = $('rl3Score'); if (!ol) { ol = document.createElement('ol'); ol.id = 'rl3Score'; ol.className = 'rl3score'; (box || $('rlEndSub')).after(ol); }
+  ol.hidden = false; ol.textContent = '';
+  rank.forEach((s, i) => {
+    const li = document.createElement('li'), rel = rlRel(s); li.className = rel === 0 ? 'mine' : rel === 2 ? 'gold' : 'theirs';
+    const n = document.createElement('span'); n.textContent = `${i + 1}. ${nm(s)}${s === me && !spec && nm(s) !== 'You' ? ' (you)' : ''}`;
+    const p = document.createElement('span'); p.className = 'rl-pips'; rlPips(rl3Standing(s), p, rel === 0);
+    const c = document.createElement('small'); c.textContent = RL.alive[s] ? `${RL.crowns[s]} put out` : `out · ${RL.crowns[s]} put out`;
+    li.append(n, p, c); ol.append(li);
+  });
+  $('rlAgain').hidden = RL.mode !== 'bot' || spec; if ($('rlEndMmr')) $('rlEndMmr').hidden = true;
+  el.hidden = false; setTimeout(() => ($('rlAgain').hidden ? $('rlMenu') : $('rlAgain')).focus({ preventScroll: true }), 40);
+}
 // ---------- the controls ----------
 function rlSel(i) {
   if (!RL.on || RL.ph === 'over' || rlIsSpec()) return;
@@ -206,7 +240,7 @@ function rlPlace(i, p) {
   $('rlResume').addEventListener('click', () => rlPauseOpen(false));
   $('rlLeave').addEventListener('click', rlQuit);
   $('rlMenu').addEventListener('click', rlQuit);
-  $('rlAgain').addEventListener('click', () => { if (RL.mode !== 'bot') return; const lvl = RL.bot.lvl; $('rlEnd').hidden = true; if (RL.draft && typeof rldBot === 'function') { rlQuit(); rldBot(lvl); return; } RL.on = false; rlPlayBot(lvl); });   // (a drafted duel: draft again)
+  $('rlAgain').addEventListener('click', () => { if (RL.mode !== 'bot') return; const lvl = RL.bot.lvl; $('rlEnd').hidden = true; if (RL.n3) { RL.on = false; rl3PlayBot(lvl); return; } if (RL.draft && typeof rldBot === 'function') { rlQuit(); rldBot(lvl); return; } RL.on = false; rlPlayBot(lvl); });   // (a drafted duel: draft again)
   addEventListener('keydown', e => {
     if (state !== 'rival') return;
     if (e.target && /INPUT|TEXTAREA|SELECT/.test(e.target.tagName) && e.key !== 'Escape') return;
