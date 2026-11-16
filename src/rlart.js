@@ -23,6 +23,7 @@ var RL_TYPE = {
   troop: { n: 'Troop', many: 'Troops', c: '#5fa8d8', dark: '#16324a' },
   spell: { n: 'Spell', many: 'Spells', c: '#b88aff', dark: '#2c1a4a' },
   building: { n: 'Building', many: 'Buildings', c: '#e8a050', dark: '#4a2a12' },
+  champ: { n: 'Champion', many: 'Champions', c: '#ffd070', dark: '#4a3608' },   // (a champion is a troop, framed in gold: src/rlchamp.js)
 };
 var RLA = { cache: {}, grain: null };
 
@@ -1160,14 +1161,14 @@ function rlaPaint(id, px) {
   const key = id + ':' + px; if (RLA.cache[key]) return RLA.cache[key];
   const c = document.createElement('canvas'); c.width = c.height = px; const g = c.getContext('2d');
   g.save(); g.scale(px / 100, px / 100);
-  const card = typeof RL_CARD !== 'undefined' && RL_CARD[id], fn = RL_ART[id];
+  const card = typeof RL_CARD !== 'undefined' && RL_CARD[id], fn = RL_ART[id] || (typeof RL_CHAMP_ART !== 'undefined' && RL_CHAMP_ART[id]);
   try {
     if (fn) fn(g, rlaRand(id));
     else { const T = RL_TYPE[card ? card.type : 'troop'] || RL_TYPE.troop; g.fillStyle = rlaLin(g, 0, 0, 0, 100, [T.dark, '#05070c']); g.fillRect(0, 0, 100, 100); g.fillStyle = T.c; g.font = '40px Georgia, serif'; g.textAlign = 'center'; g.fillText('?', 50, 64); }
   } catch (e) { g.restore(); g.save(); g.scale(px / 100, px / 100); g.fillStyle = '#2a2a34'; g.fillRect(0, 0, 100, 100); }
   g.restore();
   // a wash of the type's colour round the edges, the grain, the vignette
-  const T = RL_TYPE[card ? card.type : 'troop'] || RL_TYPE.troop;
+  const T = card && card.champ ? RL_TYPE.champ : RL_TYPE[card ? card.type : 'troop'] || RL_TYPE.troop;
   g.save(); g.globalCompositeOperation = 'overlay'; g.globalAlpha = px <= 64 ? 0.22 : 0.32; g.drawImage(rlaGrain(), 0, 0, px, px); g.restore();
   g.save(); g.globalCompositeOperation = 'soft-light'; g.fillStyle = rlaRad(g, px / 2, px / 2, px * 0.2, px * 0.75, ['rgba(0,0,0,0)', T.c]); g.globalAlpha = 0.5; g.fillRect(0, 0, px, px); g.restore();
   g.fillStyle = rlaRad(g, px * 0.45, px * 0.42, px * 0.3, px * 0.78, ['rgba(0,0,0,0)', 'rgba(4,5,10,0.55)']); g.fillRect(0, 0, px, px);
@@ -1186,8 +1187,8 @@ function rlCardArt(id, canvas) {
 function rlCardFace(id, el, px) {
   const c = typeof RL_CARD !== 'undefined' && RL_CARD[id], d = el || document.createElement('div');
   px = px || 96; d.textContent = '';
-  d.className = 'rlface rl-' + (c ? c.type : 'troop'); d.dataset.id = id;
-  const T = RL_TYPE[c ? c.type : 'troop'] || RL_TYPE.troop; d.style.setProperty('--tc', T.c); d.style.setProperty('--td', T.dark);
+  d.className = 'rlface rl-' + (c ? c.type : 'troop') + (c && c.champ ? ' rl-champ' : ''); d.dataset.id = id;
+  const T = c && c.champ ? RL_TYPE.champ : RL_TYPE[c ? c.type : 'troop'] || RL_TYPE.troop; d.style.setProperty('--tc', T.c); d.style.setProperty('--td', T.dark);
   const pic = document.createElement('span'); pic.className = 'rlpic';
   const cv = document.createElement('canvas'), dpr = Math.min(2, window.devicePixelRatio || 1); cv.width = cv.height = Math.round(px * dpr); cv.setAttribute('aria-hidden', 'true');
   rlCardArt(id, cv); pic.appendChild(cv);

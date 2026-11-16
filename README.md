@@ -601,6 +601,14 @@ A ninth game, on its own card on the title screen (**Duel the bot**; on the desk
 - **Your hand.** You hold four cards from your deck of eight, with the next one shown beside them. Playing a card sends it to the back of the queue, so the eight come round in turn.
 - **Playing a card.** Pick it, then tap where it goes. Troops and buildings go down on your own half, on dry rock: not on the water, not on a tower. When one of their Lamp Towers falls, the front of their rock in that lane opens to you as well. Spells go anywhere.
 - **How troops move.** On foot they walk to the nearer causeway, cross, and go for the nearest thing they can hit within about five tiles; with nothing near, for the next tower down their lane. Some (the Powder Monkey, the Hermit Crab, the Crab King, the Crab Mother, the Rocket Crew) go only for buildings and towers. Flyers (the Gull Flock, the Puffin Squadron, the Cormorant, the Gannet, the Storm Petrel, the Sea Eagle, the Will-o'-the-Wisp) go straight over the water, and only what can hit the air can touch them: towers, spells, and the cards that go for anything (the Harpooner, the Coastguard Pair, the Lamplighter, the Head Keeper, the Fishwives, the Siren, the Stormcaller, the Swivel Gun, the Martello Tower, the Burning Lens, and the Gulls, Puffins, Petrel, Cormorant and Sea Eagle themselves). Troops jostle and push apart; buildings wear down over their life.
+- **Champions.** Three champions sit beside the 64 cards, framed in gold at the front of the deck builder (they have their own filter). A deck may hold **one** champion, in one of its eight places; to put a second one in you swap it for the first. Play a champion like any troop, but while it's on the field its card stays out of your hand, and comes back into the queue only once it falls. While it stands, a round button over the right end of your hand (or **Q**) uses its **ability** for a little oil; then the button sweeps round while the ability comes back. It glows when it's ready.
+  | Champion | Oil | Fighter | Ability (oil, then the wait before it's back) |
+  |---|---|---|---|
+  | **Maren Holm** | 5 | 1900 hit points, 175 every 1.2 s from 3 tiles, hits flyers too | **Sea-Green Light** (2, 16 s): for 4 seconds nothing can hurt her, and every enemy within 3 tiles is slowed and takes 130 a second (towers a third of it) |
+  | **Plimsoll** | 4 | 1500 hit points, 210 every 1.1 s up close, fast | **Blood in the Water** (1, 11 s): he lunges up to 6 tiles onto the enemy with the most hit points (a tower too) on the same bank, bites for three times his damage, then strikes twice as fast for 4 seconds |
+  | **Verity** | 4 | 1300 hit points, 150 a second up close; nothing slows or stuns him | **I Want to Help** (3, 20 s): he stands up as what he really looks like, enemy troops within 4 tiles freeze for 1.5 s, and for 6 seconds his hits do two and a half times, on everyone round him |
+
+  The bot sometimes brings a champion too, and uses its ability when it counts. Online, the guest's button goes through the host like a card.
 - **Crowns.** Every tower you fell is a crown. Fell the Great Light and you take all three at once and the match ends there.
 - **The Great Light wakes.** It sleeps until it's hit or one of its own Lamp Towers falls, then it wakes and shoots as well, harder than a lamp.
 - **Time, double oil and overtime.** A match is three minutes, and in the last minute oil comes twice as fast. At time, more crowns wins. Level, and there's a minute of overtime at double oil where the next tower to fall wins. Still level at the end of that, whoever's most damaged standing tower has less health left loses (an exact tie is a draw).
@@ -891,6 +899,7 @@ src/gfcrates.js     Skerry Links: the ball and club crates
 src/gfdress.js      Skerry Links: the golfer in your outfit, your ball and clubs in 3D
 src/rlcards.js      Skerry Clash: the 64 cards
 src/rlart.js        Skerry Clash: the cards' painted portraits and faces
+src/rlchamp.js      Skerry Clash: the champions' models, portraits, ability effects and the bot's use of them
 src/rldeck.js       Skerry Clash: your three decks, the deck builder, the save
 src/rlcrates.js     Skerry Clash: tower skins and their 3D towers, the Lampwright's Crate, your record
 src/main.js         starts the main loop

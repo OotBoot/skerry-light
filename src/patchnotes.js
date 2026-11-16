@@ -6,6 +6,13 @@
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 206, date: '2026-11-16', title: "Skerry Clash: champions", New: [
+    "Skerry Clash: champions are here. Maren Holm and Plimsoll join the deck builder as champion cards, with a gold frame and their own Champions filter. A deck can hold one champion.",
+    "Skerry Clash: a champion plays like a troop, but its card stays out of your hand while it's on the field and only comes back once it falls.",
+    "Skerry Clash: while your champion is out, a round ability button appears above your hand (or press Q). Using it costs oil, then it has a cooldown before you can use it again.",
+    "Skerry Clash: Maren Holm (5 oil) carries her lantern into battle and can hit flyers. Her ability, Sea-Green Light (2 oil, 16 s cooldown), makes her untouchable for 4 seconds while every enemy within 3 tiles is slowed and takes 130 damage a second.",
+    "Skerry Clash: Plimsoll (4 oil) is a fast melee fighter. His ability, Blood in the Water (1 oil, 11 s cooldown), lunges up to 6 tiles onto the strongest enemy nearby for triple damage, then doubles his attack speed for 4 seconds.",
+    "Skerry Clash: the bot sometimes brings a champion and uses its ability when it counts." ] },
   { v: 205, date: '2026-11-16', title: "Skerry Clash: Shipwreck cost", Balance: [
     "Skerry Clash: Shipwreck now costs 5 oil, down from 6. Now that it can only land on your own rock it's a defensive card, and its price comes down to match. Its damage and size are unchanged." ] },
   { v: 204, date: '2026-11-16', title: "Skerry Clash: watch duels live", New: [

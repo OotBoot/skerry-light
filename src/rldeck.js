@@ -17,7 +17,9 @@
 // Tap any card for everything about it in plain words. To change the deck you swap, one for one, so it always holds
 // 8 and never the same card twice: pick a card from the collection and then the deck card it replaces, or a deck card
 // and then the collection card to put in its place. Every card is a button (Tab, Enter, Escape to let go or close),
-// and on a phone the details sit in a panel along the foot of the screen. Random (rlDeckRandom) fills the slot with
+// and on a phone the details sit in a panel along the foot of the screen.
+// The champions (src/rlcards.js RL_CHAMPS) lead the collection in gold, with a filter of their own; a deck holds one
+// at most, so putting a second in asks you to swap it for the first. Random (rlDeckRandom) fills the slot with
 // a random but sensible 8, and Starter deck puts the starter deck back.
 //
 // The global API:
@@ -33,11 +35,14 @@ var RLD = { sel: null, filter: 'all', sort: 'cost', opener: null, msg: '', flash
 
 function rlCardList() { return typeof RL_CARDS !== 'undefined' ? RL_CARDS : []; }
 function rlCardById(id) { return typeof RL_CARD !== 'undefined' ? RL_CARD[id] || null : null; }
+// a champion (src/rlcards.js RL_CHAMPS): one at most in a deck
+function rlChampOf(id) { const c = rlCardById(id); return !!(c && c.champ); }
+function rlChampList() { return typeof RL_CHAMPS !== 'undefined' ? RL_CHAMPS : []; }
 function rlStarter() { return typeof RL_DEFAULT_DECK !== 'undefined' ? RL_DEFAULT_DECK.slice() : []; }
 // a deck made whole: 8 different real cards, filled from the starter deck (then the cheapest cards) where it falls short
 function rlDeckFix(d) {
   const known = rlCardList().length > 0, out = [];
-  for (const id of Array.isArray(d) ? d : []) if (typeof id === 'string' && (!known || rlCardById(id)) && !out.includes(id) && out.length < 8) out.push(id);
+  for (const id of Array.isArray(d) ? d : []) if (typeof id === 'string' && (!known || rlCardById(id)) && !out.includes(id) && out.length < 8 && !(rlChampOf(id) && out.some(rlChampOf))) out.push(id);   // (one champion at most)
   for (const id of rlStarter().concat(rlCardList().slice().sort((a, b) => a.cost - b.cost).map(c => c.id))) { if (out.length >= 8) break; if (!out.includes(id)) out.push(id); }
   return out;
 }
@@ -139,6 +144,12 @@ function rlCardWords(id) {
     ramp: 'It burns hotter the longer it holds one target: three times after 2 s, eight times after 4 s; a new target starts it cool again.',
     oil: 'Gives you one lamp oil every ' + c.ev + ' seconds while it stands. Keep it out of reach at the back.',
   }[c.ab] || '';
+  if (c.champ) {
+    const A = c.champ;
+    rows.unshift(['Champion', 'One a deck. Its card comes round again only once it has fallen']);
+    rows.push(['Ability', A.n + ': ' + A.cost + ' oil, then ' + A.cd + ' s to come back']);
+    return { rows, ab: A.n + '. ' + A.d + (c.id === 'verity' ? ' And always: nothing slows him or stuns him.' : '') + ' Tap the round button over your hand (or Q) while ' + (c.id === 'maren' ? 'she' : 'he') + '\u2019s on the field.' };
+  }
   return { rows, ab };
 }
 
@@ -168,6 +179,8 @@ function rlDeckPick(from, id) {
   // a swap: one from the deck and one from the collection that isn't in it
   if (s && s.from !== from) {
     const out = from === 'deck' ? id : s.id, inn = from === 'deck' ? s.id : id;
+    const other = deck.find(x => x !== out && rlChampOf(x));
+    if (rlChampOf(inn) && other) { RLD.sel = null; RLD.msg = 'One champion a deck: swap ' + (rlCardById(inn) || {}).n + ' in for ' + (rlCardById(other) || {}).n + '.'; rlDeckRender(); return; }
     if (deck.includes(out) && !deck.includes(inn)) {
       deck[deck.indexOf(out)] = inn; rlvSave(); RLD.sel = null; RLD.flash = inn;
       try { sfxTick(); } catch (err) {}
@@ -183,7 +196,7 @@ function rlDeckSay(t) { RLD.msg = t; const h = $('rlDkHint'); if (h && !$('rlDec
 function rlDeckRender() {
   rlDeckBtnLabel();
   const card = $('rlDeckCard'); if (!card || card.hidden) return;
-  const deck = RLV.decks[RLV.dk], s = RLD.sel, cards = rlCardList();
+  const deck = RLV.decks[RLV.dk], s = RLD.sel, cards = rlCardList(), champs = rlChampList();
   // the slot tabs
   const tabs = $('rlDkTabs'); tabs.textContent = '';
   for (let i = 0; i < 3; i++) {
@@ -220,7 +233,7 @@ function rlDeckRender() {
   // the details
   const det = $('rlDkDetail'); det.textContent = ''; det.hidden = false; det.classList.toggle('empty', !(s && rlCardById(s.id)));
   if (s && rlCardById(s.id)) {
-    const c = rlCardById(s.id), W = rlCardWords(s.id), T = RL_TYPE[c.type];
+    const c = rlCardById(s.id), W = rlCardWords(s.id), T = c.champ && RL_TYPE.champ ? RL_TYPE.champ : RL_TYPE[c.type];
     det.style.setProperty('--tc', T.c);
     const big = rlCardFace(s.id, null, 180); big.classList.add('big');
     const txt = document.createElement('div'); txt.className = 'rldk-dtxt';
@@ -241,10 +254,10 @@ function rlDeckRender() {
     }
     const x = document.createElement('button'); x.type = 'button'; x.className = 'tool rldk-dx'; x.textContent = '✕'; x.setAttribute('aria-label', 'Let go of ' + c.n); x.addEventListener('click', () => { RLD.sel = null; rlDeckRender(); });
     det.append(big, txt, x);
-  } else { const p = document.createElement('p'); p.innerHTML = '<b>' + cards.length + ' cards</b> from the rocks, the race and the haar. Tap any of them to read it.'; det.appendChild(p); }
+  } else { const p = document.createElement('p'); p.innerHTML = '<b>' + cards.length + ' cards</b> from the rocks, the race and the haar, and <b>' + champs.length + ' champions</b> (one a deck). Tap any of them to read it.'; det.appendChild(p); }
   // the filters
   const fl = $('rlDkFilter'); fl.textContent = '';
-  for (const [k, n] of [['all', 'All ' + cards.length], ['troop', 'Troops'], ['spell', 'Spells'], ['building', 'Buildings']]) {
+  for (const [k, n] of [['all', 'All ' + (cards.length + champs.length)], ['champ', 'Champions'], ['troop', 'Troops'], ['spell', 'Spells'], ['building', 'Buildings']]) {
     const b = document.createElement('button'); b.type = 'button'; b.className = 'rldk-chip' + (RLD.filter === k ? ' on' : '') + ' f-' + k; b.textContent = n; b.setAttribute('aria-pressed', RLD.filter === k ? 'true' : 'false');
     b.addEventListener('click', () => { RLD.filter = k; rlDeckRender(); }); fl.appendChild(b);
   }
@@ -252,7 +265,8 @@ function rlDeckRender() {
   // the collection
   const col = $('rlDkCol'); col.textContent = '';
   const ord = { troop: 0, spell: 1, building: 2 };
-  const list = cards.filter(c => RLD.filter === 'all' || c.type === RLD.filter).slice().sort((a, b) => RLD.sort === 'name' ? a.n.localeCompare(b.n) : RLD.sort === 'type' ? ord[a.type] - ord[b.type] || a.cost - b.cost : a.cost - b.cost || ord[a.type] - ord[b.type] || a.n.localeCompare(b.n));
+  // (the champions lead, in gold, then the rest as sorted)
+  const list = (RLD.filter === 'all' || RLD.filter === 'champ' ? champs : []).concat(RLD.filter === 'champ' ? [] : cards.filter(c => RLD.filter === 'all' || c.type === RLD.filter).slice().sort((a, b) => RLD.sort === 'name' ? a.n.localeCompare(b.n) : RLD.sort === 'type' ? ord[a.type] - ord[b.type] || a.cost - b.cost : a.cost - b.cost || ord[a.type] - ord[b.type] || a.n.localeCompare(b.n)));
   const swapIn = s && s.from === 'deck';
   for (const c of list) {
     const inDeck = deck.includes(c.id), b = document.createElement('button'); b.type = 'button';
