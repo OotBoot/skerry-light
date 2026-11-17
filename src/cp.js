@@ -45,7 +45,8 @@
 //  - cpMusic(): the music key for now (src/raidmusic.js rmWant asks it first): the cinematic's own, else the stage's
 //    music(), else the mission's music.default. A key whose recording isn't made yet falls back (CP_MUSIC_FALL) to
 //    one that is, so there's always something playing.
-//  - cpDebug(mid, stage): straight into a mission alone (the calling picked for you), at a stage, for tests.
+//  - cpDebug(mid, stage, noCine, cls): straight into a mission alone (the calling cls, or the last one, picked for
+//    you), at a stage, for tests.
 // Hooks in shared files are marked [campaign]: src/raid.js (raidBegin, raidAfterStart, raidStop, raidNextStage,
 // raidWin, raidReport, raidShowOver, raidHostSend, raidApply, raidHud, raidRequest, raidMe), src/zombies.js
 // (zmFrame and zmTick: held still in a cinematic; zmAgain), src/fps.js (fpsDrawScene's camera, fpsDraw's HUD,
@@ -88,7 +89,8 @@ Object.assign(RM_LOOP, { cphope: false });   // (the hopeful closing theme: play
 const CPC = { LIVES: 1, BACK: 10, KEEP: 'skerry-campaign', PICK: 'skerry-cp-pick', SAY: 5.5 };
 var CP = { on: false, mid: null, want: null, from: 0, debug: null, obj: '', ev: [], eseq: 0, evSeen: -1, sub: null, subs: [], won: false, lost: '', fail: '', outroDone: false, nextOk: -1, life: 0, backT: 0, kit: null, startT: 0 };
 // progress on this browser: { done: { id: { n: times finished, t: best seconds, d: first finished (YYYY-MM-DD) } } }
-var CPS = { done: {} };
+// and cls: { calling: missions seen through as it } (src/cpclass.js)
+var CPS = { done: {}, cls: {} };
 
 // ---------- registering ----------
 function cpMission(def) {
@@ -115,11 +117,14 @@ RAIDS.campaign = { n: 'The Chronicle of the Light', own: true, at: {}, mvp: '-',
 function cpLoad() { try { const d = JSON.parse(localStorage.getItem(CPC.KEEP) || 'null'); if (d) cpMerge(d, true); } catch (e) {} }
 function cpSave() { try { localStorage.setItem(CPC.KEEP, JSON.stringify(CPS)); } catch (e) {} }
 // (crates.js saveData) what goes in the save
-function cpData() { return Object.keys(CPS.done).length ? { done: CPS.done } : undefined; }
+function cpData() { const c = Object.keys(CPS.cls).length; return Object.keys(CPS.done).length || c ? Object.assign({ done: CPS.done }, c ? { cls: CPS.cls } : {}) : undefined; }
 // (crates.js mergeSave, and loading) a save's progress merged with this browser's: more times, the better time
 function cpMerge(d, quiet) {
-  if (!d || typeof d !== 'object' || !d.done || typeof d.done !== 'object') return false;
+  if (!d || typeof d !== 'object') return false;
   let ch = false;
+  // (each calling's missions: the higher count)
+  if (d.cls && typeof d.cls === 'object') for (const [k, v] of Object.entries(d.cls)) { if (!/^[a-z]{2,12}$/.test(k)) continue; const n = clamp(v | 0, 0, 99999); if (n > (CPS.cls[k] | 0)) { CPS.cls[k] = n; ch = true; } }
+  if (!d.done || typeof d.done !== 'object') { if (ch && !quiet) cpSave(); return ch; }
   for (const [id, v] of Object.entries(d.done)) {
     if (!/^m\d\d$/.test(id) || !v || typeof v !== 'object') continue;
     const o = CPS.done[id] || (CPS.done[id] = { n: 0, t: 0, d: '' }), n = clamp(v.n | 0, 0, 99999), t = Math.max(0, +v.t || 0);
@@ -138,6 +143,7 @@ function cpComplete(id, secs) {
   const o = CPS.done[id] || (CPS.done[id] = { n: 0, t: 0, d: '' });
   const first = !o.n;
   o.n++; if (secs > 0 && (!o.t || secs < o.t)) o.t = Math.round(secs);
+  if (typeof RCL !== 'undefined' && typeof CPCL_ORDER !== 'undefined' && CPCL_ORDER.includes(RCL.cls)) CPS.cls[RCL.cls] = (CPS.cls[RCL.cls] | 0) + 1;   // [cpclass]
   if (!o.d) o.d = new Date().toISOString().slice(0, 10);
   cpSave();
   try { if (typeof saveCrates === 'function') saveCrates(); } catch (e) {}
@@ -165,7 +171,7 @@ function cpAfterStart() {
   { const e = document.querySelector('#fpsMenu .eyebrow'); if (e) e.textContent = M.n; $('fpsLeave').textContent = 'Leave the mission'; $('fpsResume').textContent = 'Back to the mission'; }
   const from = CP.debug ? CP.debug.stage | 0 : CP.from | 0; CP.from = 0;
   const dbg = CP.debug; CP.debug = null;
-  if (dbg && typeof RCL !== 'undefined' && RCL.picking) rclChoose(RCL.last || 'merc');
+  if (dbg && typeof RCL !== 'undefined' && RCL.picking) rclChoose(dbg.cls && RCL_CLASSES[dbg.cls] ? dbg.cls : rclLast());
   if (ZM.net === 'client') return;
   // (a checkpoint, or a test: no intro; raidUseStage plays the stage's own cutscene)
   if (from > 0 && from < RAID_ORDER.length) { raidUseStage(from); return; }
@@ -411,10 +417,10 @@ function cpCard() {
   if ($('cpPlay')) $('cpPlay').textContent = M && cpIsDone(M.id) ? 'Play it again' : 'Play';
 }
 // (a test, or the console) straight into a mission alone, at a stage
-function cpDebug(id, stage, noCine) {
+function cpDebug(id, stage, noCine, cls) {
   if (FPS.on) return false;
   id = CP_BY[id] ? id : CP_MISSIONS[0].id;
-  CP.debug = { stage: stage | 0, noCine: !!noCine }; CP.want = id; CP.from = stage | 0;
+  CP.debug = { stage: stage | 0, noCine: !!noCine, cls: cls || '' }; CP.want = id; CP.from = stage | 0;
   zmStart({ map: 'campaign' });
   return true;
 }

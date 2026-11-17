@@ -6,6 +6,16 @@
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 220, date: '2026-11-17', title: "Callings for the Chronicle", New: [
+    "The Chronicle of the Light: four callings of its own, picked at the start of each mission in place of Maren's End's three. Each has two weapons, a trait that is always on, its own jump, a grenade (G) and an ultimate (X).",
+    "The Chronicle of the Light: the Keeper carries the Fresnel Lamp and Pepperbox. Lantern-Bearer mends you and friends within 9 m a knock every five seconds; Lamp Step bursts a ring of light under you in mid-air; the Storm Lantern lights, slows and scorches everything near it for twelve seconds; Rekindle burns and throws back everything within 14 m, mends every friend there to full and gets the fallen up.",
+    "The Chronicle of the Light: the Wrecker carries the Punt Gun and Cutlass. Hard as Nails takes a quarter off every knock; Lunge hurls you forward through them in mid-air; the Grapple-Chain drags everything within 8 m into a heap, then bursts; Wreckers' Fury turns every shot into a wide cleave for twelve seconds, halves knocks and mends a knock for each one dropped.",
+    "The Chronicle of the Light: the Riding Officer carries the Longarm and Pepperbox. Dead Eye makes head shots hit a third harder and every gun load a quarter quicker; Hang Fire holds you steady in mid-air for up to two seconds; the Rescue Rocket flies nearly flat and bursts where it strikes, lighting what survives; Rocket Barrage brings twelve rockets down about the spot you're looking at.",
+    "The Chronicle of the Light: the Lampwright carries the Avtomat and Harpoon gun. Gunsmith makes your guns hit 15% harder; Grapnel Line hauls you to whatever you're looking at, up to 22 m; the Lens Sentry burns the nearest enemy within 16 m for fourteen seconds; the Great Lens burns three at a time within 20 m for sixteen seconds, slows them and halves the knocks on friends beside it.",
+    "The Chronicle of the Light: the picker shows how many missions you've seen through with each calling. That count is kept in your save code and merges with your other devices.",
+  ], Changes: [
+    "The Chronicle of the Light: in co-op each player picks their own calling and everyone sees what the others throw and set down. A crew is strongest with one of each, but any calling can carry a mission alone.",
+  ] },
   { v: 219, date: '2026-11-17', title: "The Chronicle of the Light, voiced", Sound: [
     "The Chronicle of the Light: every line in all fourteen missions is now spoken aloud, 615 in all, with each character keeping the same voice from mission to mission. Distant shouts carry across the water, and the drowned sound like the drowned.",
     "The Chronicle of the Light: new music for the campaign: themes for tense nights, sailing, fighting, bosses, sorrow and fog, a hopeful closing theme and a victory theme, plus a flamenco cove fight in The Mooncussers, the first lighting of the Light, and a last hymn for The Drowned Reach. Elsewhere the missions draw on the other games' music.",

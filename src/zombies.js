@@ -2717,6 +2717,7 @@ function zmHurt(d, dmg, head, code, by, how) {
   if (typeof zmpDmg === 'function') dmg = zmpDmg(dmg, code, by, d);   // [pap] reforged weapons hit harder (the shooter's side)
   if (typeof raidHurtK === 'function') dmg = raidHurtK(d, dmg, code, by);   // [raid] the stage's say (the shooter's side)
   if (typeof frcHurt === 'function') dmg = frcHurt(d, dmg, code, by);   // [fogrun cards] a relic's say (the shooter's side)
+  if (typeof rclDmg === 'function') dmg = rclDmg(d, dmg, head, code, by);   // [cpclass] a calling's trait (the shooter's side)
   if (!(dmg > 0)) return;   // [raid3] (nothing at all: Maren, while her soul's out of her)
   if (ZM.net === 'client') { zmnHit(d, dmg, head, code, how); return; }
   const k = (ZM_DMG[code] == null ? 1 : ZM_DMG[code]) * (d.mark > 0 ? 1.5 : 1);   // [pap] (lit by the Leading Light: hurt worse)

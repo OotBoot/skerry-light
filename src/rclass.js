@@ -25,6 +25,9 @@
 // Hooks (// [classes]): raidLoadout calls rclApply, raidMe calls rclTick; fpsJump (rclJump), fpsShoot (rclShoot),
 // fpsHurt (rclHurtK), the controller (rclPad), zmHud (rclHud), zmDrawOver (rclDrawOver), znPresence (rclPresence) and
 // znReadPlayers (rclHeard).
+// [cpclass] The Chronicle of the Light has callings of its own (src/cpclass.js): they're in RCL_CLASSES and RCL_ORDER
+// too (after these three, so the numbers on the wire never change), each with its hooks in RCL_EXT[k]. rclSet() is
+// the callings on offer here (the campaign's four, or Maren's End's three), and rclPickKey() where the last pick is kept.
 
 const RCLC = { UFILL: 1 / 150, UKILL: 0.025, U_MERC: 12, U_BRUTE: 14, U_APO: 15, SHOTS: 6, WELL_R: 9, CLOUD_R: 6.8, CLOUD_T: 7, DRIFT: 3, SLAM_CD: 3 };
 const RCL_ORDER = ['merc', 'brute', 'apo'];
@@ -45,6 +48,12 @@ const RCL_CLASSES = {
     gren: ['Brimstone Vial', 'A cloud of green fire: it burns and slows them, and mends friends in it.'],
     ult: ['Wellspring', 'A ring of light for fifteen seconds: mend fast, half the knocks, and the fallen get up.'] },
 };
+const RCL_EXT = {};   // [cpclass] a calling's own hooks: jump, fuse, gr, sticky, burst, tick, ult, shoot, hurt, reload, heard, draw, reset
+const rclX = () => RCL_EXT[RCL.cls] || null;
+// the callings on offer in this raid, and where the last one picked is kept
+const rclSet = () => typeof CP !== 'undefined' && CP.on && typeof CPCL_ORDER !== 'undefined' ? CPCL_ORDER : RCL_ORDER.slice(0, 3);
+const rclPickKey = () => typeof CP !== 'undefined' && CP.on ? 'skerry-cp-class' : 'skerry-raid-class';
+function rclLast() { let c = null; try { c = localStorage.getItem(rclPickKey()); } catch (e) {} const S = rclSet(); return S.includes(c) ? c : S.includes(RCL.last) ? RCL.last : S[0]; }
 const RCL = { cls: null, run: null, picking: false, gT: 0, uK: 0, ultT: 0, shots: 0, air: 0, drift: 0, slam: false, slamCd: 0, kills: 0,
   proj: [], clouds: [], wells: [], quakes: [], ev: [], eseq: 0, seen: {}, healT: 0, upT: 0, padWas: null, padCur: 0 };
 try { const c = localStorage.getItem('skerry-raid-class'); if (RCL_CLASSES[c]) RCL.last = c; } catch (e) {}
@@ -71,13 +80,14 @@ function rclApply() {
   FPS.weapon = ZM.own[0]; FPS.last = ZM.own[1]; m.ammo = rclMag(FPS.weapon); m.reload = 0; m.cd = 0; FPS.drawT = 0.45; FPS.scoped = false;
 }
 function rclReset() {
+  for (const k in RCL_EXT) if (RCL_EXT[k].reset) try { RCL_EXT[k].reset(); } catch (e) {}
   Object.assign(RCL, { gT: 0, uK: 0, ultT: 0, shots: 0, air: 0, drift: 0, slam: false, slamCd: 0, kills: ZM.kills || 0, proj: [], clouds: [], wells: [], quakes: [], ev: [], seen: {}, healT: 0, upT: 0 });
 }
 function rclChoose(k) {
   if (!RCL_CLASSES[k]) return;
   if (RCL.cls !== k) Object.assign(RCL, { ultT: 0, shots: 0, gT: 0, air: 0, drift: 0, slam: false });
   RCL.cls = k; RCL.last = k;
-  try { localStorage.setItem('skerry-raid-class', k); } catch (e) {}
+  try { localStorage.setItem(rclPickKey(), k); } catch (e) {}
   rclClosePick();
   rclApply();
   const C = rclC();
@@ -93,23 +103,26 @@ const RCL_ICON = {
   apo: '<path d="M9 3h6M10 3v5l-5 9a3 3 0 0 0 2.6 4.5h8.8A3 3 0 0 0 19 17l-5-9V3"/><path d="M8 15h8"/>',
 };
 function rclBuildPick() {
-  if ($('rclPick')) return $('rclPick');
+  const S = rclSet(), key = S.join(',');
+  if ($('rclPick') && $('rclPick').dataset.set === key) return $('rclPick');
+  if ($('rclPick')) $('rclPick').remove();
   const o = document.createElement('div');
-  o.className = 'overlay pausecard rcpick'; o.id = 'rclPick'; o.hidden = true;
+  o.className = 'overlay pausecard rcpick' + (S.length > 3 ? ' rcfour' : ''); o.id = 'rclPick'; o.hidden = true; o.dataset.set = key;
   o.setAttribute('role', 'dialog'); o.setAttribute('aria-modal', 'true'); o.setAttribute('aria-labelledby', 'rclPickHead');
   const card = document.createElement('div'); card.className = 'card';
-  const eb = document.createElement('p'); eb.className = 'eyebrow'; eb.id = 'rclEye'; eb.textContent = 'Maren’s End';
+  const eb = document.createElement('p'); eb.className = 'eyebrow'; eb.id = 'rclEye'; eb.textContent = typeof raidName === 'function' && typeof RAID !== 'undefined' && RAID.on ? raidName() : 'Maren’s End';
   const h = document.createElement('h1'); h.id = 'rclPickHead'; h.textContent = 'Choose your calling';
-  const sub = document.createElement('p'); sub.className = 'muted'; sub.textContent = 'Your weapon skins and your outfit go down with you.';
+  const sub = document.createElement('p'); sub.className = 'muted'; sub.textContent = S.length > 3 ? 'Each of you can take a different one: the crew is strongest with all four. Your weapon skins and your outfit go with you.' : 'Your weapon skins and your outfit go down with you.';
   const row = document.createElement('div'); row.className = 'rcrow';
-  for (const k of RCL_ORDER) {
+  for (const k of S) {
     const C = RCL_CLASSES[k], b = document.createElement('button');
     b.type = 'button'; b.className = 'rcclass'; b.dataset.k = k; b.style.setProperty('--rc', C.c); b.style.setProperty('--rcr', C.rgb);
     const ic = `<svg viewBox="0 0 24 24" aria-hidden="true">${RCL_ICON[k]}</svg>`;
     const li = (lab, a) => `<li><b>${lab}</b> ${a[0]}<small>${a[1]}</small></li>`;
     b.innerHTML = `${ic}<span class="nm">${C.n}</span><span class="tg">${C.tag}</span><ul>`
       + `<li><b>Primary</b> ${FPSW[C.w[0]].n}</li><li><b>Secondary</b> ${FPSW[C.w[1]].n}</li>`
-      + li('Jump', C.jump) + li('Grenade', C.gren) + li('Ultimate', C.ult) + '</ul>';
+      + (C.trait ? li('Trait', C.trait) : '') + li('Jump', C.jump) + li('Grenade', C.gren) + li('Ultimate', C.ult) + '</ul>'
+      + (C.won ? `<span class="rcwon">${C.won()}</span>` : '');
     b.addEventListener('click', () => { rclChoose(k); try { if (!FPS.touch) cv.requestPointerLock(); } catch (e) {} });
     row.append(b);
   }
@@ -121,7 +134,7 @@ function rclOpenPick() {
   const o = rclBuildPick();
   RCL.picking = true; FPS.menu = true; o.hidden = false;
   try { document.exitPointerLock && document.exitPointerLock(); } catch (e) {}
-  RCL.padCur = Math.max(0, RCL_ORDER.indexOf(RCL.last || 'merc'));
+  RCL.last = rclLast(); RCL.padCur = Math.max(0, rclSet().indexOf(RCL.last));
   const bs = [...o.querySelectorAll('.rcclass')];
   bs.forEach((b, i) => b.classList.toggle('last', b.dataset.k === RCL.last));
   setTimeout(() => { const b = bs[RCL.padCur]; if (b) b.focus(); }, 30);
@@ -147,7 +160,7 @@ function rclPickPad() {
   const bs = [...document.querySelectorAll('#rclPick .rcclass')];
   const d = (now[15] && !was[15]) || (now.dir === 1 && was.dir !== 1) ? 1 : (now[14] && !was[14]) || (now.dir === -1 && was.dir !== -1) ? -1 : 0;
   if (d) { RCL.padCur = (RCL.padCur + d + bs.length) % bs.length; bs[RCL.padCur].focus(); }
-  if (now[0] && !was[0]) rclChoose(RCL_ORDER[RCL.padCur]);
+  if (now[0] && !was[0]) rclChoose(rclSet()[RCL.padCur]);
 }
 
 // ---------- each frame (raidMe) ----------
@@ -156,8 +169,9 @@ function rclTick(dt) {
   const C = rclC(), m = FPS.me, down = zmIsDown(), dead = m.dead > 0 || ZM.ghost;
   // the meters: the grenade comes back; the ultimate fills with time, and with every kill
   if (RCL.gT > 0) RCL.gT = Math.max(0, RCL.gT - dt);
-  if (RCL.ultT <= 0 && !dead) RCL.uK = Math.min(1, RCL.uK + dt * RCLC.UFILL);
-  const k = ZM.kills || 0; if (k > RCL.kills) { if (RCL.ultT <= 0) RCL.uK = Math.min(1, RCL.uK + (k - RCL.kills) * RCLC.UKILL); } RCL.kills = k;
+  const uk = C.uk || 1;
+  if (RCL.ultT <= 0 && !dead) RCL.uK = Math.min(1, RCL.uK + dt * RCLC.UFILL * uk);
+  const k = ZM.kills || 0; if (k > RCL.kills) { if (RCL.ultT <= 0) RCL.uK = Math.min(1, RCL.uK + (k - RCL.kills) * RCLC.UKILL * uk); if (rclX() && rclX().kill) rclX().kill(k - RCL.kills); } RCL.kills = k;
   if (RCL.ultT > 0) { RCL.ultT -= dt; if (RCL.ultT <= 0 || (RCL.cls === 'merc' && RCL.shots <= 0) || down || dead) rclUltEnd(); }
   if (RCL.slamCd > 0) RCL.slamCd -= dt;
   // jumping: back on the ground, the air's own moves come back
@@ -170,6 +184,7 @@ function rclTick(dt) {
     if (!reduceMotion && Math.random() < dt * 20) FPS.parts.push({ x: m.x + (Math.random() - 0.5) * 0.6, y: m.y + (Math.random() - 0.5) * 0.6, z: FPSC.GROUND + (m.jz || 0) + 0.2, vx: 0, vy: 0, vz: -0.4, t: 0.6, c: C.rgb, up: false });
   } else if (RCL.slam) m.vz = Math.min(m.vz, -16);
   // what's thrown, and what it leaves
+  for (const k in RCL_EXT) if (RCL_EXT[k].tick) try { RCL_EXT[k].tick(dt, k === RCL.cls, down, dead); } catch (e) { console.warn('rcl tick', k, e); }
   for (const P of RCL.proj) rclProjTick(P, dt);
   RCL.proj = RCL.proj.filter(P => !P.done);
   rclClouds(dt); rclWells(dt);
@@ -191,7 +206,8 @@ function rclCan() { const m = FPS.me; return rclOn() && RCL.cls && !RCL.picking 
 // ---------- jumping (fpsJump: true if the calling took it) ----------
 function rclJump(m, air) {
   if (!rclOn() || !RCL.cls || RCL.picking) return false;
-  const k = RCL.cls;
+  const k = RCL.cls, X = rclX();
+  if (X && X.jump) return X.jump(m, air);
   if (!air) {
     if (k !== 'brute') return false;
     m.vz = FPSC.JUMP * 1.22; m.jz = (m.fl || 0) + 0.001; FPS.landed = 0; rclTone('jump');
@@ -227,7 +243,7 @@ function rclQuake(x, y, fz, mine, ahead) {
 // ---------- the grenade (G) ----------
 function rclGrenade() {
   if (!rclCan() || RCL.gT > 0) return;
-  const m = FPS.me, C = rclC(), z = FPSC.GROUND + FPSC.EYE + (m.jz || 0) - 0.2, p = clamp(m.p + 0.22, -1.2, 1.3), sp = RCL.cls === 'brute' ? 13 : 17;
+  const m = FPS.me, C = rclC(), z = FPSC.GROUND + FPSC.EYE + (m.jz || 0) - 0.2, p = clamp(m.p + (rclX() && rclX().flat ? 0.04 : 0.22), -1.2, 1.3), sp = rclX() && rclX().sp ? rclX().sp : RCL.cls === 'brute' ? 13 : 17;
   const cp = Math.cos(p), v = [Math.sin(m.h) * cp * sp, Math.cos(m.h) * cp * sp, Math.sin(p) * sp];
   RCL.gT = C.gcd;
   rclLaunch(RCL.cls, m.x, m.y, z, v[0], v[1], v[2], true, m.id);
@@ -236,18 +252,19 @@ function rclGrenade() {
   try { zxSound('throw', 0); } catch (e) {}
 }
 function rclLaunch(k, x, y, z, vx, vy, vz, mine, by) {
-  RCL.proj.push({ k, x: x + vx * 0.03, y: y + vy * 0.03, z, vx, vy, vz, t: 0, fuse: k === 'merc' ? 1.3 : k === 'brute' ? 1.9 : 3, mine, by, spin: 0 });
+  const X = RCL_EXT[k];
+  RCL.proj.push({ k, x: x + vx * 0.03, y: y + vy * 0.03, z, vx, vy, vz, t: 0, fuse: X && X.fuse ? X.fuse : k === 'merc' ? 1.3 : k === 'brute' ? 1.9 : 3, gr: X && X.gr != null ? X.gr : 14, stick: k === 'apo' || !!(X && X.sticky), mine, by, spin: 0 });
 }
 function rclProjTick(P, dt) {
   P.t += dt; P.spin += dt * 12;
   if (P.t >= P.fuse) { rclBurst(P); return; }
-  if (!reduceMotion && Math.random() < dt * 30) FPS.parts.push({ x: P.x, y: P.y, z: P.z, vx: 0, vy: 0, vz: 0.3, t: 0.4, c: P.k === 'apo' ? '160,220,90' : '255,200,120', up: true });
+  if (!reduceMotion && Math.random() < dt * 30) FPS.parts.push({ x: P.x, y: P.y, z: P.z, vx: 0, vy: 0, vz: 0.3, t: 0.4, c: RCL_EXT[P.k] && RCL_EXT[P.k].trail ? RCL_EXT[P.k].trail : P.k === 'apo' ? '160,220,90' : '255,200,120', up: true });
   const steps = 4, s = dt / steps;
   for (let i = 0; i < steps && !P.done; i++) {
     const ox = P.x, oy = P.y, oz = P.z;
-    P.vz -= 14 * s; P.x += P.vx * s; P.y += P.vy * s; P.z += P.vz * s;
+    P.vz -= P.gr * s; P.x += P.vx * s; P.y += P.vy * s; P.z += P.vz * s;
     const seg = Math.hypot(P.x - ox, P.y - oy, P.z - oz);
-    const tg = P.mine && P.k !== 'brute' ? ZM.z.filter(q => !q.dead) : [];
+    const tg = (P.mine || P.stick) && P.k !== 'brute' ? ZM.z.filter(q => !q.dead) : [];
     const r = fpsRay(ox, oy, oz, bearingOf(P.vx, P.vy), Math.atan2(P.vz, Math.max(0.01, Math.hypot(P.vx, P.vy))), P.by, tg, seg + 0.05);
     const fl = FPSC.GROUND + rclFloor(P.x, P.y, P.z - FPSC.GROUND);
     if (r.kind === 'body') { P.x = r.x; P.y = r.y; P.z = r.z; rclBurst(P); return; }
@@ -255,13 +272,13 @@ function rclProjTick(P, dt) {
     //  it, it's a floor)
     const deck = r.kind !== 'none' && r.kind !== 'ground' && P.vz < 0 && r.z - (FPSC.GROUND + rclFloor(r.x, r.y, r.z - FPSC.GROUND + 0.3)) < 0.35;
     if (deck) {
-      if (P.k === 'apo') { P.x = r.x; P.y = r.y; P.z = r.z; rclBurst(P); return; }
+      if (P.stick) { P.x = r.x; P.y = r.y; P.z = r.z; rclBurst(P); return; }
       P.x = r.x; P.y = r.y; P.z = r.z + 0.03; P.vz = Math.abs(P.vz) > 2 ? -P.vz * 0.35 : 0; P.vx *= 0.6; P.vy *= 0.6; if (Math.abs(P.vz) > 1) rclTone('tink', P);
     } else if (r.kind !== 'none' && r.kind !== 'ground') {
-      if (P.k === 'apo') { P.x = ox; P.y = oy; P.z = oz; rclBurst(P); return; }
+      if (P.stick) { P.x = ox; P.y = oy; P.z = oz; rclBurst(P); return; }
       P.x = ox; P.y = oy; P.z = oz; P.vx *= -0.4; P.vy *= -0.4; rclTone('tink', P);
     } else if (P.z < fl) {
-      if (P.k === 'apo') { P.z = fl; rclBurst(P); return; }
+      if (P.stick) { P.z = fl; rclBurst(P); return; }
       P.z = fl + 0.01; P.vz = Math.abs(P.vz) > 2 ? -P.vz * 0.35 : 0; P.vx *= 0.6; P.vy *= 0.6; if (Math.abs(P.vz) > 1) rclTone('tink', P);
     }
   }
@@ -270,6 +287,7 @@ function rclProjTick(P, dt) {
 function rclBurst(P) {
   P.done = true;
   const fz = rclFloor(P.x, P.y, P.z - FPSC.GROUND);
+  if (RCL_EXT[P.k] && RCL_EXT[P.k].burst) { RCL_EXT[P.k].burst(P, fz); return; }
   if (P.k === 'merc') zxBoom(P.x, P.y, P.z + 0.2, 7.2, rclHp() * 3.2, 'M', P.mine, 0.8);
   else if (P.k === 'brute') zxBoom(P.x, P.y, P.z + 0.3, 10.4, rclHp() * 2.6, 'B', P.mine, 2.4);
   else {
@@ -297,9 +315,10 @@ function rclClouds(dt) {
 // ---------- the ultimate (X) ----------
 function rclUlt() {
   if (!rclCan() || RCL.uK < 1 || RCL.ultT > 0) return;
-  const m = FPS.me, C = rclC();
+  const m = FPS.me, C = rclC(), X = rclX();
   RCL.uK = 0;
-  if (RCL.cls === 'apo') {
+  if (X && X.ult) X.ult(m);
+  else if (RCL.cls === 'apo') {
     const fz = m.fl || 0;
     RCL.wells.push({ x: m.x, y: m.y, fz, t: RCLC.U_APO, T: RCLC.U_APO, k: 0, mine: true, by: m.id });
     rclEvent('w', m.x - FPSC.CX, m.y - FPSC.CY, fz);
@@ -315,6 +334,7 @@ function rclUltEnd() { RCL.ultT = 0; RCL.shots = 0; FPS.drawT = 0.35; }
 // (fpsShoot) the Mercenary's pistol or the Brute's quake in place of the weapon in hand: true if it took the pull
 function rclShoot() {
   if (!rclOn() || RCL.ultT <= 0 || RCL.cls === 'apo') return false;
+  if (rclX()) { const X = rclX(), m = FPS.me; if (!X.shoot) return false; if (m.dead > 0 || FPS.menu || m.cd > 0 || FPS.heldFire) return true; FPS.heldFire = true; m.protect = 0; X.shoot(m); return true; }
   const m = FPS.me;
   if (m.dead > 0 || FPS.menu || m.cd > 0 || FPS.heldFire) return true;
   FPS.heldFire = true; m.protect = 0;
@@ -352,12 +372,13 @@ function rclW(w, id) {
 }
 const rclMag = id => zmMag(id);
 // (zmReloadK) in Maren's End the blunderbuss loads 30% quicker, whoever carries it
-function rclReloadK() { return rclOn() && FPS.weapon === 'blunderbuss' ? 0.7 : 1; }
+function rclReloadK() { const X = rclOn() && rclX(); return (rclOn() && FPS.weapon === 'blunderbuss' ? 0.7 : 1) * (X && X.reload ? X.reload : 1); }
 // (fpsHurt) a knock coming: Bulwark stops it, a Wellspring halves it
 function rclHurtK(n) {
   if (!rclOn() || !RCL.cls) return n;
   const m = FPS.me;
   if (RCL.cls === 'brute' && RCL.ultT > 0) { fpsPuff(m.x, m.y, FPSC.GROUND + (m.jz || 0) + 1.2, '255,170,110', 5); return 0; }
+  for (const k in RCL_EXT) if (RCL_EXT[k].hurt) { n = RCL_EXT[k].hurt(n, k === RCL.cls); if (!(n > 0)) return 0; }
   if (rclInWell(m.x, m.y, m.jz || 0)) return n * 0.5;
   return n;
 }
@@ -371,6 +392,9 @@ function rclWells(dt) {
   }
   RCL.wells = RCL.wells.filter(w => w.t > 0);
 }
+
+// (src/zombies.js zmHurt, the shooter's side) a calling's trait on my own hits
+function rclDmg(d, dmg, head, code, by) { if (!rclOn() || (by && by !== FPS.me.id)) return dmg; const X = rclX(); return X && X.dmg ? X.dmg(d, dmg, head, code) : dmg; }
 
 // ---------- the controls ----------
 // G (or Q) the grenade, X the ultimate; Q is still the last weapon outside Maren's End
@@ -406,6 +430,7 @@ function rclHeard(r, z) {
     if (e[1] === 'g' && k && a.length >= 6) rclLaunch(k, CX + a[0], CY + a[1], a[2], clamp(a[3], -30, 30), clamp(a[4], -30, 30), clamp(a[5], -30, 30), false, r.id);
     else if (e[1] === 'w' && a.length >= 3) { RCL.wells.push({ x: CX + a[0], y: CY + a[1], fz: a[2], t: RCLC.U_APO, T: RCLC.U_APO, k: 0, mine: false, by: r.id }); fpsFeed(`${r.n} set down a Wellspring.`); }
     else if (e[1] === 'q' && a.length >= 3) rclQuake(CX + a[0], CY + a[1], a[2], false);
+    else if (k && RCL_EXT[k] && RCL_EXT[k].heard) try { RCL_EXT[k].heard(r, e[1], a); } catch (er) {}
   }
 }
 
@@ -441,11 +466,12 @@ function rclDrawOver() {
   for (const q of RCL.quakes) { const k = q.t / 0.7; stroke(ringPts(q.x, q.y, q.z + 0.05, q.R * (0.2 + 0.8 * k), 28), `rgba(255,190,130,${0.8 * (1 - k)})`, 3); }
   for (const P of RCL.proj) {
     const c = cam(P.x, P.y, P.z); if (c.f < 0.4) continue;
-    const q = proj(c), s = Math.max(2, (P.k === 'brute' ? 0.16 : 0.09) * q.s), col = RCL_CLASSES[P.k].rgb;
+    const q = proj(c), s = Math.max(2, (P.k === 'brute' ? 0.16 : 0.09) * q.s), col = RCL_CLASSES[P.k].rgb, X = RCL_EXT[P.k];
     const gr = ctx.createRadialGradient(q.x, q.y, 0, q.x, q.y, s * 4); gr.addColorStop(0, `rgba(${col},0.6)`); gr.addColorStop(1, `rgba(${col},0)`);
     ctx.fillStyle = gr; ctx.beginPath(); ctx.arc(q.x, q.y, s * 4, 0, 6.283); ctx.fill();
-    ctx.fillStyle = P.k === 'brute' ? '#5a3e24' : P.k === 'apo' ? '#cfe89a' : '#3a3a40'; ctx.beginPath(); ctx.arc(q.x, q.y, s, 0, 6.283); ctx.fill();
+    ctx.fillStyle = X && X.ball ? X.ball : P.k === 'brute' ? '#5a3e24' : P.k === 'apo' ? '#cfe89a' : '#3a3a40'; ctx.beginPath(); ctx.arc(q.x, q.y, s, 0, 6.283); ctx.fill();
   }
+  for (const k in RCL_EXT) if (RCL_EXT[k].draw) try { RCL_EXT[k].draw(stroke, ringPts, tm); } catch (e) {}
   // the others' callings: a mark over each, in its colour (lit while their ultimate is up)
   for (const r of FPS.remote.values()) {
     if (!r.rc || r.dead || r.x == null) continue;

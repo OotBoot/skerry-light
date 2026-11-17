@@ -1046,7 +1046,11 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 .rcpick .card { max-width: 60rem; width: min(60rem, calc(100vw - 32px)); max-height: calc(100vh - 32px); overflow-y: auto; }
 .rcpick h1 { color: #e8d6a0; margin-bottom: 4px; }
 .rcrow { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 14px; }
-@media (max-width: 720px) { .rcrow { grid-template-columns: minmax(0, 1fr); } }
+.rcfour .card { max-width: 76rem; width: min(76rem, calc(100vw - 32px)); }
+.rcfour .rcrow { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+@media (max-width: 1100px) { .rcfour .rcrow { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 720px) { .rcrow, .rcfour .rcrow { grid-template-columns: minmax(0, 1fr); } }
+.rcclass .rcwon { margin-top: auto; padding-top: 4px; font: 600 10px "Courier Prime", monospace; letter-spacing: 0.08em; text-transform: uppercase; color: var(--rc); opacity: 0.75; }
 .rcclass { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; text-align: left; padding: 14px; border-radius: 10px; border: 1px solid rgba(var(--rcr), 0.45); background: linear-gradient(180deg, rgba(var(--rcr), 0.16), rgba(var(--rcr), 0.03)); color: var(--ink, #ece4cf); cursor: pointer; font: inherit; min-height: 44px; }
 .rcclass:hover, .rcclass:focus-visible { border-color: var(--rc); background: linear-gradient(180deg, rgba(var(--rcr), 0.3), rgba(var(--rcr), 0.08)); outline: none; box-shadow: 0 0 0 2px rgba(var(--rcr), 0.5); }
 .rcclass.last::after { content: 'Last time'; position: absolute; }
