@@ -2912,7 +2912,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 // ---- src/config.js ----
 'use strict';
 // The game's version, shown at the top of the main menu. Bump it by one with every change pushed to main.
-var VERSION = 221;
+var VERSION = 222;
 // Skerry Light: tuning, asset paths and lore.
 // World units are metres. The lighthouse stands at the origin on the shoreline (y = 0);
 // north (+y) is open sea. Bearings: 0 = north, positive = east.
@@ -3087,6 +3087,9 @@ document.addEventListener('visibilitychange', () => {
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 222, date: '2026-11-17', title: "Fresnel Lamp toned down in the Chronicle", Balance: [
+    "The Chronicle of the Light: the Keeper's Fresnel Lamp burns for 70% less, in line with the other guns. It still burns everything caught in its beam at once. Keeper's Last Light and the raids are unchanged.",
+  ] },
   { v: 221, date: '2026-11-17', title: "Callings for the Chronicle", New: [
     "The Chronicle of the Light: four callings of its own, picked at the start of each mission in place of Maren's End's three. Each has two weapons, a trait that is always on, its own jump, a grenade (G) and an ultimate (X).",
     "The Chronicle of the Light: the Keeper carries the Fresnel Lamp and Pepperbox. Lantern-Bearer mends you and friends within 9 m a knock every five seconds; Lamp Step bursts a ring of light under you in mid-air; the Storm Lantern lights, slows and scorches everything near it for twelve seconds; Rekindle burns and throws back everything within 14 m, mends every friend there to full and gets the fallen up.",
@@ -24908,7 +24911,7 @@ function zmBeam() {
   // how far it reaches before a wall
   const wall = fpsRay(ex, ey, ez, m.h, m.p, m.id, [], w.range);
   FPS.beamLen = Math.max(1.5, wall.t);
-  const burn = Math.max(1.2, zmHp(Math.max(1, ZM.round)) * 0.36);
+  const burn = Math.max(1.2, zmHp(Math.max(1, ZM.round)) * 0.36) * (typeof CP !== 'undefined' && CP.on && typeof CPCLC !== 'undefined' ? CPCLC.FRESNEL : 1);   // [cpclass] (the Chronicle: about a gun's worth)
   let any = false; const lit = [];
   for (const o of ZM.z) {
     if (o.dead) continue;
@@ -50094,7 +50097,9 @@ cpStage('wip', {
 // Nothing here touches a boat: the callings are on foot only.
 
 const CPCL_ORDER = ['keeper', 'wrecker', 'officer', 'lampw'];
-const CPCLC = { AURA: 9, AURA_T: 5, LAN_R: 7, LAN_T: 12, STEP_R: 4.5, STEP_CD: 4, REK_R: 14, CHAIN_R: 8, DASH_V: 15, DASH_T: 0.28, DASH_CD: 2.4,
+// FRESNEL: in the campaign the Fresnel Lamp burns this much as hard as elsewhere (src/zombies.js zmBeam), so it's about
+// a pepperbox's worth on one of them (an avtomat's, if it's sweeping a crowd)
+const CPCLC = { FRESNEL: 0.3, AURA: 9, AURA_T: 5, LAN_R: 7, LAN_T: 12, STEP_R: 4.5, STEP_CD: 4, REK_R: 14, CHAIN_R: 8, DASH_V: 15, DASH_T: 0.28, DASH_CD: 2.4,
   FURY: 12, CLEAVE_R: 4, HOVER: 2, ROCK_R: 6, BAR_N: 12, BAR_T: 4, BAR_R: 7, HOOK_R: 22, HOOK_V: 24, HOOK_CD: 3.5, SEN_R: 16, SEN_T: 14, LENS_R: 20, LENS_T: 16, LENS_SAFE: 6 };
 const CPCL = { lan: [], rings: [], chains: [], bar: [], sen: [], lens: [], dash: null, dashCd: 0, stepCd: 0, hover: 0, hook: null, hookCd: 0, mendT: 0, cleaves: [] };
 Object.assign(ZM_DMG, { K: 1, W: 1, R: 1, S: 1, E: 1 });

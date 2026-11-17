@@ -2854,7 +2854,7 @@ function zmBeam() {
   // how far it reaches before a wall
   const wall = fpsRay(ex, ey, ez, m.h, m.p, m.id, [], w.range);
   FPS.beamLen = Math.max(1.5, wall.t);
-  const burn = Math.max(1.2, zmHp(Math.max(1, ZM.round)) * 0.36);
+  const burn = Math.max(1.2, zmHp(Math.max(1, ZM.round)) * 0.36) * (typeof CP !== 'undefined' && CP.on && typeof CPCLC !== 'undefined' ? CPCLC.FRESNEL : 1);   // [cpclass] (the Chronicle: about a gun's worth)
   let any = false; const lit = [];
   for (const o of ZM.z) {
     if (o.dead) continue;

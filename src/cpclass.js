@@ -35,7 +35,9 @@
 // Nothing here touches a boat: the callings are on foot only.
 
 const CPCL_ORDER = ['keeper', 'wrecker', 'officer', 'lampw'];
-const CPCLC = { AURA: 9, AURA_T: 5, LAN_R: 7, LAN_T: 12, STEP_R: 4.5, STEP_CD: 4, REK_R: 14, CHAIN_R: 8, DASH_V: 15, DASH_T: 0.28, DASH_CD: 2.4,
+// FRESNEL: in the campaign the Fresnel Lamp burns this much as hard as elsewhere (src/zombies.js zmBeam), so it's about
+// a pepperbox's worth on one of them (an avtomat's, if it's sweeping a crowd)
+const CPCLC = { FRESNEL: 0.3, AURA: 9, AURA_T: 5, LAN_R: 7, LAN_T: 12, STEP_R: 4.5, STEP_CD: 4, REK_R: 14, CHAIN_R: 8, DASH_V: 15, DASH_T: 0.28, DASH_CD: 2.4,
   FURY: 12, CLEAVE_R: 4, HOVER: 2, ROCK_R: 6, BAR_N: 12, BAR_T: 4, BAR_R: 7, HOOK_R: 22, HOOK_V: 24, HOOK_CD: 3.5, SEN_R: 16, SEN_T: 14, LENS_R: 20, LENS_T: 16, LENS_SAFE: 6 };
 const CPCL = { lan: [], rings: [], chains: [], bar: [], sen: [], lens: [], dash: null, dashCd: 0, stepCd: 0, hover: 0, hook: null, hookCd: 0, mendT: 0, cleaves: [] };
 Object.assign(ZM_DMG, { K: 1, W: 1, R: 1, S: 1, E: 1 });

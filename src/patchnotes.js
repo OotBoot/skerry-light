@@ -6,6 +6,9 @@
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 222, date: '2026-11-17', title: "Fresnel Lamp toned down in the Chronicle", Balance: [
+    "The Chronicle of the Light: the Keeper's Fresnel Lamp burns for 70% less, in line with the other guns. It still burns everything caught in its beam at once. Keeper's Last Light and the raids are unchanged.",
+  ] },
   { v: 221, date: '2026-11-17', title: "Callings for the Chronicle", New: [
     "The Chronicle of the Light: four callings of its own, picked at the start of each mission in place of Maren's End's three. Each has two weapons, a trait that is always on, its own jump, a grenade (G) and an ultimate (X).",
     "The Chronicle of the Light: the Keeper carries the Fresnel Lamp and Pepperbox. Lantern-Bearer mends you and friends within 9 m a knock every five seconds; Lamp Step bursts a ring of light under you in mid-air; the Storm Lantern lights, slows and scorches everything near it for twelve seconds; Rekindle burns and throws back everything within 14 m, mends every friend there to full and gets the fallen up.",
