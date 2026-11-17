@@ -87,7 +87,7 @@ cpCineDef('m04_fail', {
   shots: [
     { d: 4.5, cam: [1.4, M4TY - 2.3, M4L5 + 1.6], to: [1.2, M4TY - 2.0, M4L5 + 1.55], look: [0, M4TY, M4L5 + 1.2],
       f(t, k) { CPL.ov = { k: k < 0.75 ? 1 - k * 0.6 : Math.max(0, 0.55 - (k - 0.75) * 2.4), ang: 1.2, o: { flicker: true } }; },
-      enter() { try { if (!soundOff()) sfxLightsOut(); } catch (e) {} },
+      enter() { try { if (!sfxPlay('lampout', { vol: 0.8 }) && !soundOff()) sfxLightsOut(); } catch (e) {} },
       lines: [[1.6, 'holm', 'No. No, no, no.', 'cp_m04_07']] },
     { d: 5.5, cam: [-70, -40, 10], to: [-62, -30, 12], look: [0, M4TY, 22], shake: 0.2,
       f() { CPL.ov = { k: 0, ang: 1.2 }; },
@@ -128,7 +128,7 @@ cpCineDef('m04_late', {
       lines: [[1.2, 'holm', 'There! There she is!', 'cp_m04_17'], [3.6, 'maren', 'Gannet! Gannet! Bear away! Rocks!', 'cp_m04_18']] },
     { d: 7.5, cam: [96, -46, 7], to: [100, -54, 6], look: [124, -86, 4], shake: 0.3,
       f(t, k, C) { CPL.ov = { k: 1, ang: 2.3 + Math.sin(t * 0.8) * 0.05 }; const hit = Math.max(0, t - 2.4); M4.ov = { s: Math.min(M4.STRIKE, C.s0 + 42 + t * 7), heel: Math.min(0.42, hit * 0.16), sink: hit * 0.25, lan: 1 }; m4CineSkiff(C, t + 6);
-        if (hit > 0 && !C.bell) { C.bell = 1; try { if (!soundOff()) { sfxSmash(1, 0); sfxBell(); } } catch (e) {} } if (hit > 1.4 && !C.bell2) { C.bell2 = 1; try { if (!soundOff()) sfxBellFar(0, 0.8); } catch (e) {} } },
+        if (hit > 0 && !C.bell) { C.bell = 1; try { const rec = sfxPlay('shipstrike', { vol: 0.9 }); if (!soundOff()) { if (!rec) sfxSmash(1, 0); sfxBell(); } } catch (e) {} } if (hit > 1.4 && !C.bell2) { C.bell2 = 1; try { if (!soundOff()) sfxBellFar(0, 0.8); } catch (e) {} } },
       lines: [[3.0, 'sea', 'She’s struck! She’s on the rocks!', 'cp_m04_19']] },
     { d: 6, cam: [-9.6, M4TY + 1.2, M4L5 + 1.7], to: [-9.8, M4TY + 1.6, M4L5 + 1.8], look: [60, -40, 6], shake: 0.15, fade: [0, 1.5],
       f(t, k, C) { CPL.ov = { k: 1, ang: (2.3 + t * 0.6) % 6.283 }; M4.ov = { s: M4.STRIKE, heel: 0.5, sink: 1 + t * 0.2, lan: 0 }; m4HolmPose(C, -8.6, M4TY + 0.4, 0.9, M4L5); if (C.skiff) C.skiff.visible = false; if (C.lan) C.lan.root.visible = false; },
@@ -165,7 +165,7 @@ cpCineDef('m04_outro', {
       lines: [[0.8, 'log', 'Maren’s lantern was still lit.', 'cp_m04_23']] },
     { d: 3.5, card: { eye: '15 December 1887', t: 'That night' } },
     { d: 9, cam: [0, -36, 9], to: [0, -30, 30], look: [0, -120, 0], lookTo: [0, -400, 20], fade: [0.6, 0],
-      f(t, k, C) { const r = 2 + Math.pow(k, 1.6) * 1400; C.ice.scale.setScalar(r); if (Math.random() < 0.25) fpsPuff(FPSC.CX + (Math.random() - 0.5) * 30, FPSC.CY - 50 - Math.random() * 40, FPSC.GROUND + 0.4, '230,240,250', 1.4); if (!C.crk && t > 1) { C.crk = 1; try { if (!soundOff()) sfxCreak(); } catch (e) {} } },
+      f(t, k, C) { const r = 2 + Math.pow(k, 1.6) * 1400; C.ice.scale.setScalar(r); if (Math.random() < 0.25) fpsPuff(FPSC.CX + (Math.random() - 0.5) * 30, FPSC.CY - 50 - Math.random() * 40, FPSC.GROUND + 0.4, '230,240,250', 1.4); if (!C.crk && t > 1) { C.crk = 1; try { if (!sfxPlay('icefreeze', { vol: 0.8 }) && !soundOff()) sfxCreak(); } catch (e) {} } },
       lines: [[1.2, 'log', 'That night the sea froze from the steps to the horizon,', 'cp_m04_24']] },
     { d: 9, cam: [0, -30, 30], to: [0, -24, 34], look: [0, -400, 20], lookTo: [0, -900, 160],
       f(t, k, C) { C.ice.scale.setScalar(1400); C.mts.forEach((m, i) => { const h = m.userData.h, u = clamp(k * 1.5 - i * 0.05, 0, 1); m.position.y = FPSC.GROUND - h * (1 - u * u * (3 - 2 * u)); }); },

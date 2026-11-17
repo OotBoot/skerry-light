@@ -374,11 +374,14 @@ function rchMe(dt) {
   // (their muskets: one bang for each shot fired, and the pan's flash before it for whoever he's aiming at)
   for (const s of S.so) {
     const seen = RCH.fseen[s.i] == null ? s.fs : RCH.fseen[s.i];
-    if (s.fs !== seen) { const d = Math.hypot(s.x - FPS.me.x, s.y - FPS.me.y); try { if (!soundOff()) sfxPlay(s.boss ? 'blunderbuss' : 'longarm', { vol: clamp(1.1 - d / 70, 0.15, 0.9), pan: fpsEar(s.x, s.y), rate: s.k === 'ice' ? 1.1 : 0.95 }); } catch (e) {} }
+    if (s.fs !== seen) { const d = Math.hypot(s.x - FPS.me.x, s.y - FPS.me.y); try { if (!soundOff()) { const o = { vol: clamp(1.1 - d / 70, 0.15, 0.9), pan: fpsEar(s.x, s.y), rate: s.k === 'ice' ? 1.1 : 0.95 }; if (s.boss || !sfxPlay('rchmusket', o)) sfxPlay(s.boss ? 'blunderbuss' : 'longarm', o); } } catch (e) {} }
     RCH.fseen[s.i] = s.fs;
     if (s.st === 1 && s.tg === FPS.me.id && !s.aimSaid) { s.aimSaid = 1; try { if (!soundOff()) sfxPlay('reload', { vol: 0.35, pan: fpsEar(s.x, s.y), rate: 1.3 }); } catch (e) {} }
     if (s.st !== 1) s.aimSaid = 0;
   }
+  // (a beacon or a cairn catching, and fed, heard from where it stands: off the host's word, so every screen)
+  { const B = S.bc || []; if (!RCH.bcW || RCH.bcW.st !== RAID.stage || RCH.bcW.length !== B.length) { RCH.bcW = B.map(b => [b[2], b[3]]); RCH.bcW.st = RAID.stage; }
+    else B.forEach((b, i) => { const w = RCH.bcW[i], [x, y] = rchW(b[0], b[1]), o = { vol: clamp(1 - Math.hypot(x - FPS.me.x, y - FPS.me.y) / 80, 0.12, 0.9), pan: fpsEar(x, y) }; try { if (!soundOff()) { if (b[3] && !w[1]) sfxPlay('rchbeacon', o); else if (b[3] && b[2] > w[0] + 0.2) sfxPlay('rchfeed', Object.assign(o, { gap: 1 })); } } catch (e) {} w[0] = b[2]; w[1] = b[3]; }); }
   const St = raidStage() || {}; if (St.rchMe) St.rchMe(dt);
 }
 RCH.fseen = {};

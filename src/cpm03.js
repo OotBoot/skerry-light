@@ -433,7 +433,7 @@ cpCineDef('m03_outro', {
   shots: [
     { d: 4, cam: [1.3, ZMT.Y - 2.4, 26.5], to: [1.5, ZMT.Y - 2.6, 26.6], look: [0, ZMT.Y, 26.1],
       f(t, k, C) { CPL.ov.k = k < 0.4 ? 0.02 : 0.02 + (k - 0.4) * 0.5; CPL.ov.ang = 0.4; CPL.ov.o = { rings: 11, noBeam: true, flicker: true }; },
-      enter() { try { if (!soundOff()) sfxChime(); } catch (e) {} },
+      enter() { try { if (!sfxPlay('lampcatch', { vol: 0.8 }) && !soundOff()) sfxChime(); } catch (e) {} },
       lines: [[0.4, 'lamp', 'Gently, now. Let her take it.', 'cp_m03_15']] },
     { d: 4.5, cam: [3.8, ZMT.Y - 3.2, 26.8], to: [5.4, ZMT.Y - 4.8, 27.4], look: [0, ZMT.Y, 26.2],
       f(t, k, C) { CPL.ov.k = 0.32 + 0.68 * Math.min(1, k * 1.6); CPL.ov.ang = 0.4 + k * 0.9; CPL.ov.o = { rings: 11 }; },

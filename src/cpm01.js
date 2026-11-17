@@ -348,12 +348,12 @@ function cpaSound(k, d) {
   const v = clamp(1 - (d || 0) / 50, 0.15, 1), play = (n, vol) => { try { return typeof sfxPlay === 'function' && sfxPlay(n, { vol: vol * v, vary: 0.08 }); } catch (e) { return false; } };
   const syn = f => { try { if (!soundOff() && AUD.ctx) f(); } catch (e) {} };
   if (k === 'take') { play('pickup', 0.5); syn(() => noise('lowpass', 500, 1, 0.005, 0.12, 0.25)); return; }
-  if (k === 'feed') { play('debris', 0.5); syn(() => { noise('bandpass', 900, 1, 0.01, 0.1, 0.5); noise('lowpass', 300, 1, 0.05, 0.1, 0.9); }); return; }
-  if (k === 'brand') { syn(() => { noise('highpass', 1800, 1, 0.01, 0.08, 0.4); tone(180, 'triangle', 0.01, 0.03, 0.3, { to: 260 }); }); return; }
-  if (k === 'catch') { try { if (!soundOff() && typeof sfxFlare === 'function') sfxFlare(); } catch (e) {} syn(() => noise('lowpass', 700, 1, 0.2, 0.12, 2.2)); return; }
-  if (k === 'smother') { play('foghorn', 0.5); syn(() => { noise('highpass', 2400, 1, 0.01, 0.1, 0.9); tone(200, 'sine', 0.01, 0.04, 0.6, { to: 110 }); }); return; }
-  if (k === 'burn') { syn(() => { noise('bandpass', 1400, 1, 0.01, 0.1, 0.6); tone(520, 'sine', 0.01, 0.02, 0.4, { to: 760 }); }); return; }
-  if (k === 'horn') { play('frhorn', 0.9); return; }
+  if (k === 'feed') { if (play('firefeed', 0.7)) return; play('debris', 0.5); syn(() => { noise('bandpass', 900, 1, 0.01, 0.1, 0.5); noise('lowpass', 300, 1, 0.05, 0.1, 0.9); }); return; }
+  if (k === 'brand') { if (play('brandtake', 0.7)) return; syn(() => { noise('highpass', 1800, 1, 0.01, 0.08, 0.4); tone(180, 'triangle', 0.01, 0.03, 0.3, { to: 260 }); }); return; }
+  if (k === 'catch') { if (play('fireroar', 0.9)) return; try { if (!soundOff() && typeof sfxFlare === 'function') sfxFlare(); } catch (e) {} syn(() => noise('lowpass', 700, 1, 0.2, 0.12, 2.2)); return; }
+  if (k === 'smother') { if (play('fogsmother', 0.8)) return; play('foghorn', 0.5); syn(() => { noise('highpass', 2400, 1, 0.01, 0.1, 0.9); tone(200, 'sine', 0.01, 0.04, 0.6, { to: 110 }); }); return; }
+  if (k === 'burn') { if (play('fogburn', 0.7)) return; syn(() => { noise('bandpass', 1400, 1, 0.01, 0.1, 0.6); tone(520, 'sine', 0.01, 0.02, 0.4, { to: 760 }); }); return; }
+  if (k === 'horn') { if (!play('coghorn', 0.9)) play('frhorn', 0.9); return; }
 }
 
 // ---------- the fire, the strand, the fog and what you carry, in 3D ----------

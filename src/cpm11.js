@@ -133,7 +133,7 @@ cpStage('m11sail', Object.assign({}, RAID_STAGES.gwsail, {
     const S = RAID.st, W = S.m11, Sn = S.m11Seen; if (!W) return;
     const nq = W.q.filter(Boolean).length;
     if (W.sh !== Sn.sh) { if (W.sh) c11Sound('catch', 0); Sn.sh = W.sh; }
-    if (nq !== Sn.q) { if (nq > Sn.q) c11Sound('lamp', 0); Sn.q = nq; }
+    if (nq !== Sn.q) { if (nq > Sn.q) c11Sound('quay', 0); Sn.q = nq; }
     // the bow: where the lighting pole is
     if (cpaN() > 1 && c11Next(S) === 'quay' && FPS.me.y - FPSC.CY > C11.BOW_V && !FPS.helm) S.m11Bow = 1; else S.m11Bow = 0;
   },
@@ -151,13 +151,15 @@ function c11Whisper() { cpaOnce('fw', 'fog', 'Every light that is not mine…', 
 function c11Sound(k, d) {
   const v = clamp(1 - (d || 0) / 60, 0.15, 1), play = (n, vol) => { try { return typeof sfxPlay === 'function' && sfxPlay(n, { vol: vol * v, vary: 0.06 }); } catch (e) { return false; } };
   const syn = f => { try { if (!soundOff() && AUD.ctx) f(); } catch (e) {} };
-  if (k === 'catch') { try { if (!soundOff() && typeof sfxFlare === 'function') sfxFlare(); } catch (e) {} syn(() => { for (const [f, dl] of [[392, 0], [523, 0.2], [659, 0.4]]) tone(f, 'sine', 0.02, 0.04, 1.6, { delay: dl }); }); return; }
+  // (each its recording where there's one, else the stand-in: the flare and a rising chord, a lamp's chime, the wind)
+  if (k === 'catch') { if (play('beaconcatch', 0.9)) return; try { if (!soundOff() && typeof sfxFlare === 'function') sfxFlare(); } catch (e) {} syn(() => { for (const [f, dl] of [[392, 0], [523, 0.2], [659, 0.4]]) tone(f, 'sine', 0.02, 0.04, 1.6, { delay: dl }); }); return; }
+  if (k === 'quay') { if (play('quaylamp', 0.85)) return; k = 'lamp'; }
   if (k === 'lamp') { syn(() => { noise('bandpass', 1200, 1, 0.01, 0.06, 0.4); tone(660, 'sine', 0.01, 0.03, 0.8); tone(880, 'sine', 0.01, 0.02, 0.8, { delay: 0.12 }); }); return; }
-  if (k === 'gust') { play('stormwind', 0.7); syn(() => noise('bandpass', 500, 0.7, 0.6, 0.1, 1.6)); return; }
+  if (k === 'gust') { if (play('tapergust', 0.85)) return; play('stormwind', 0.7); syn(() => noise('bandpass', 500, 0.7, 0.6, 0.1, 1.6)); return; }
   if (k === 'warn') { play('wind', 0.6); syn(() => noise('lowpass', 400, 1, 1.2, 0.05, 1.8)); return; }
   if (k === 'snuff') { syn(() => { noise('highpass', 2600, 1, 0.005, 0.08, 0.3); tone(330, 'sine', 0.005, 0.03, 0.4, { to: 160 }); }); return; }
-  if (k === 'taper') { syn(() => { noise('highpass', 1800, 1, 0.01, 0.06, 0.3); tone(440, 'triangle', 0.01, 0.02, 0.3, { to: 520 }); }); return; }
-  if (k === 'candles') { try { if (!soundOff() && typeof sfxBell === 'function') sfxBell(); } catch (e) {} syn(() => { for (const [f, dl] of [[523, 0], [659, 0.25], [784, 0.5], [1046, 0.75]]) tone(f, 'sine', 0.02, 0.04, 2, { delay: dl }); }); return; }
+  if (k === 'taper') { if (play('taperlight', 0.8)) return; syn(() => { noise('highpass', 1800, 1, 0.01, 0.06, 0.3); tone(440, 'triangle', 0.01, 0.02, 0.3, { to: 520 }); }); return; }
+  if (k === 'candles') { if (play('candles', 0.9)) return; try { if (!soundOff() && typeof sfxBell === 'function') sfxBell(); } catch (e) {} syn(() => { for (const [f, dl] of [[523, 0], [659, 0.25], [784, 0.5], [1046, 0.75]]) tone(f, 'sine', 0.02, 0.04, 2, { delay: dl }); }); return; }
 }
 // ---------- Signal Head, the quays and Chapel Islet out on the water (the sea's group) ----------
 const C11S3 = {};
@@ -279,7 +281,7 @@ cpStage('m11chapel', {
   banner: () => ({ text: 'Chapel Islet', t: 4.5, sub: 'Part II · the candles on the altar', col: '#c8d4e0' }),
   music: () => 'cpm11chapel',
   enter() {
-    Object.assign(RAID.st, { c: { taper: '', relay: [0, 0, 0], cand: 0, done: 0, gph: 'calm', gT: 14, gDir: 0, gN: 0, snuffN: 0, lee: 1 }, cSeen: { gN: 0, gph: 'calm', snuffN: 0, relay: 0, taper: '' }, spT: 6, t: 0, pend: 0, useT: 0, hp0: FPS.me.hp });
+    Object.assign(RAID.st, { c: { taper: '', relay: [0, 0, 0], cand: 0, done: 0, gph: 'calm', gT: 14, gDir: 0, gN: 0, snuffN: 0, lee: 1 }, cSeen: { gN: 0, gph: 'calm', snuffN: 0, relay: 0, taper: '', cand: 0 }, spT: 6, t: 0, pend: 0, useT: 0, hp0: FPS.me.hp });
     ZM.round = Math.max(ZM.round, 9);
     if (ZM.net !== 'client') { cpObjective('Take a lit taper from the boat’s lamp'); const Z = c11cZ(); if (Z) cpWaypoint(Z.src[0], Z.src[1], 'The boat’s lamp', 1.8); }
   },
@@ -331,6 +333,7 @@ cpStage('m11chapel', {
     if (C.snuffN !== Sn.snuffN) { if (C.snuffN > Sn.snuffN) c11Sound('snuff', 0); Sn.snuffN = C.snuffN; }
     const nr = C.relay.filter(Boolean).length; if (nr !== Sn.relay) { if (nr > Sn.relay) c11Sound('lamp', 0); Sn.relay = nr; }
     if (C.taper !== Sn.taper) { if (C.taper) c11Sound('taper', 0); Sn.taper = C.taper; }
+    if (C.cand !== Sn.cand) { if (C.cand) c11Sound('candles', 0); Sn.cand = C.cand; }
     // the gust: mist streaming across, and pushing a little
     if (C.gph === 'blow' && !reduceMotion) { const sx = -Math.sin(C.gDir), sy = -Math.cos(C.gDir); for (let i = 0; i < 3; i++) { const ox = (Math.random() - 0.5) * 30, oy = (Math.random() - 0.5) * 30; FPS.parts.push({ x: m.x + ox - sx * 10, y: m.y + oy - sy * 10, z: FPSC.GROUND + 0.3 + Math.random() * 2.5, vx: sx * 16, vy: sy * 16, vz: 0, t: 1.2, c: '170,180,190' }); } }
     // hold Use at the altar with the taper

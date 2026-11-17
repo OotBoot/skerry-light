@@ -9,15 +9,29 @@ const SFXB = { buf: {}, loading: false, last: {}, amb: null };
 function sfxbLoad() {
   if (SFXB.loading || !AUD.ctx || typeof SFX_FILES === 'undefined') return;
   SFXB.loading = true;
-  for (const k in SFX_FILES) {
-    SFXB.buf[k] = [];
-    for (const url of SFX_FILES[k]) {
-      fetch(url).then(r => r.arrayBuffer())
-        .then(a => new Promise((ok, no) => AUD.ctx.decodeAudioData(a, ok, no)))
-        .then(b => { SFXB.buf[k].push(b); if (k === 'sea' || k === 'wind') sfxbAmbient(); })
-        .catch(() => {});
-    }
+  for (const k in SFX_FILES) if (!sfxbLazy(k)) sfxbFetch(k);
+  if (SFXB.want) sfxbWant(SFXB.want);
+}
+function sfxbFetch(k) {
+  if (SFXB.buf[k] || !SFX_FILES[k]) return;
+  const L = SFXB.buf[k] = [];
+  for (const url of SFX_FILES[k]) {
+    fetch(url).then(r => r.arrayBuffer())
+      .then(a => new Promise((ok, no) => AUD.ctx.decodeAudioData(a, ok, no)))
+      .then(b => { L.push(b); if (k === 'sea' || k === 'wind') sfxbAmbient(); })
+      .catch(() => {});
   }
+}
+// The Chronicle of the Light's recordings (src/cpaudio.js: CP_AUDIO, its music, sound effects and voice lines, a list
+// for each mission and one for all of them) are far too many to hold at once, so they're fetched only for the mission
+// being played (sfxbWant, from src/cp.js), and the last mission's let go. Until a recording is in, its fallback plays.
+const sfxbLazy = k => typeof CP_AUDIO_LAZY !== 'undefined' && CP_AUDIO_LAZY.has(k);
+function sfxbWant(names) {
+  SFXB.want = names;
+  if (!AUD.ctx || !SFXB.loading) return;
+  const keep = new Set(names);
+  for (const k in SFXB.buf) if (sfxbLazy(k) && !keep.has(k)) delete SFXB.buf[k];
+  for (const k of names) sfxbFetch(k);
 }
 
 // play a recording: o.vol (0..1, before the master), o.pan (-1..1, or a direction from earDir), o.rate (playback speed), o.vary (random speed
@@ -25,7 +39,7 @@ function sfxbLoad() {
 // o.out (through the outdoor bus, muffled indoors). True if it played (or would have, with the sound off).
 function sfxPlay(name, o) {
   o = o || {};
-  const L = SFXB.buf[name], c = AUD.ctx;
+  name = sfxbName(name); const L = SFXB.buf[name], c = AUD.ctx;
   if (!c || !L || !L.length) return false;
   if (soundOff()) return true;
   const now = c.currentTime;
@@ -47,7 +61,9 @@ function sfxPlay(name, o) {
   return true;
 }
 // is there a recording for this name yet?
-const sfxHas = name => !!(SFXB.buf[name] && SFXB.buf[name].length && AUD.ctx);
+const sfxHas = name => { name = sfxbName(name); return !!(SFXB.buf[name] && SFXB.buf[name].length && AUD.ctx); };
+// (a sound recorded once and used for another: src/cpaudio.js CP_SFX_ALIAS, e.g. the Reach's beacon is Signal Head's)
+function sfxbName(n) { return SFXB.buf[n] || typeof CP_SFX_ALIAS === 'undefined' || !CP_SFX_ALIAS[n] ? n : CP_SFX_ALIAS[n]; }
 
 // the sea and the wind: recorded loops under the synthesised swell, through the outdoor bus (muffled indoors); once
 // they're in, the synthesised sea and wind drop back to a whisper beneath them

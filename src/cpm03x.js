@@ -162,10 +162,11 @@ cpStage('m03land', {
     // a sea breaking: anyone out on the outer pier is knocked down and thrown back
     if (S.wseq !== S.wseen) {
       if (S.wseen != null && m3InSea(m.x, m.y, m.jz) && !(m.dead > 0)) { m.vz = 4.5; m.y += 1.2; FPS.shake = Math.max(FPS.shake || 0, 0.8); ZM.banner = { text: 'The sea knocked you down', t: 1.8, small: true, col: '#cfe6ff' }; }
-      if (S.wseen != null) { try { if (!soundOff()) sfxSplash(0, 1); } catch (e) {} S.crestT = 0; }
+      if (S.wseen != null) { try { if (!sfxPlay('wavesweep', { vol: 0.9 }) && !soundOff()) sfxSplash(0, 1); } catch (e) {} S.crestT = 0; }
       S.wseen = S.wseq;
     }
     if (S.crestT != null) S.crestT += dt;
+    m3WinchSnd(S);
   },
   pack(o) { const S = RAID.st; o.m = [S.N, S.boat, S.foot, S.up, Math.round(S.lift * 100) / 100, S.wseq, S.warn, Math.round(S.waveT * 10) / 10]; o.c = S.carry; },
   apply(o) {
@@ -247,6 +248,8 @@ function m3LandSay(k) {
 // (every stage) Lantern Rock out to the north, and the carried things
 function m3Common3d(grp) { cplLanternRock(grp); cplCarryBuild(grp); }
 cpOn('m3warn', () => { try { if (!soundOff()) sfxSwell(0); } catch (e) {} });
+// (every stage with the hoist, on every screen) the crab winch clanking round while anyone's at the handle
+function m3WinchSnd(S) { if (S.liftSeen != null && S.lift > S.liftSeen) try { sfxPlay('winchclank', { vol: 0.6, gap: 1.8 }); } catch (e) {} S.liftSeen = S.lift; }
 
 // ---------- II. The Haar ----------
 // a cold brazier (or a lit one): an iron bowl on three legs, its fire, its light
@@ -333,6 +336,9 @@ cpStage('m03haar', {
     if (o && o.k === 'm3brz' && cplHold('m3brz', dt, 1.4)) raidAsk('light', o.i);
     S.myWind = cplHeld() && o && o.k === 'm3winch' && S.heart === 'foot' && !cpCineOn();
     if (S.myWind) { S.windAsk = (S.windAsk || 0) - dt; if (S.windAsk <= 0) { S.windAsk = 0.2; raidAsk('wind'); } } else S.windAsk = 0;
+    m3WinchSnd(S);
+    // a brazier catching, on every screen (one going out is the m3huff event's)
+    const bz = (S.brz || []).join(''); if (S.bzSeen != null && bz !== S.bzSeen && [...bz].some((c, i) => c === '1' && S.bzSeen[i] !== '1')) try { if (!sfxPlay('brazierlight', { vol: 0.8 }) && !soundOff()) sfxWhoosh(); } catch (e) {} S.bzSeen = bz;
   },
   pack(o) { const S = RAID.st; o.m = [S.brz.join(''), S.heart, Math.round(S.hx * 10) / 10, Math.round(S.hy * 10) / 10, Math.round(S.lift * 100) / 100]; o.c = S.carry; },
   apply(o) {
@@ -399,7 +405,7 @@ cpStage('m03haar', {
   music() { return 'cpm03haar'; },
   mend: true,
 });
-cpOn('m3huff', i => { fpsFeed('A breath of the haar off Lantern Rock: a brazier’s out.'); try { if (!soundOff()) sfxWhoosh(); } catch (e) {} });
+cpOn('m3huff', i => { fpsFeed('A breath of the haar off Lantern Rock: a brazier’s out.'); try { if (!sfxPlay('brazierhuff', { vol: 0.8 }) && !soundOff()) sfxWhoosh(); } catch (e) {} });
 
 // ---------- III. The Lantern ----------
 const M3L = { SOCK_R: 1.55, STAND_R: 2.4, CRATES: [0, ZMT.Y - 8.3], OIL: [ZMT.X - 6, ZMT.Y + 5.2], NUM: ['I', 'II', 'III', 'IV', 'V', 'VI'] };
@@ -519,4 +525,4 @@ cpStage('m03lamp', {
   music() { return 'cpm03lamp'; },
   mend: true,
 });
-cpOn('m3seat', i => { try { if (!soundOff()) sfxChime(); } catch (e) {} fpsFeed(`Panel ${M3L.NUM[i]} seated in the frame.`); });
+cpOn('m3seat', i => { try { if (!sfxPlay('glassseat', { vol: 0.8 }) && !soundOff()) sfxChime(); } catch (e) {} fpsFeed(`Panel ${M3L.NUM[i]} seated in the frame.`); });

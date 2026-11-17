@@ -188,7 +188,7 @@ cpStage('m12drain', {
     const a = o.c12d; if (!Array.isArray(a)) return; const S = RAID.st;
     const L = a[0] | 0, B = a[1] | 0, ch = L !== (S.lamps | 0) || B !== (S.braz | 0);
     for (let i = 0; i < C12D.BRAZ.length; i++) if ((B & (1 << i)) && !((S.braz | 0) & (1 << i))) c12dLitFx(i, null);
-    if (L !== (S.lamps | 0)) { for (let i = 0; i < 9; i++) if (((L ^ (S.lamps | 0)) >> i) & 1) { C12D3.flash[i] = 1; } try { if (!soundOff()) tone(520, 'triangle', 0.005, 0.06, 0.12, { to: 660 }); } catch (e) {} }
+    if (L !== (S.lamps | 0)) { for (let i = 0; i < 9; i++) if (((L ^ (S.lamps | 0)) >> i) & 1) { C12D3.flash[i] = 1; } try { if (!soundOff() && !sfxPlay('c12lamp', { vol: 0.75 })) tone(520, 'triangle', 0.005, 0.06, 0.12, { to: 660 }); } catch (e) {} }
     S.lamps = L; S.braz = B;
     if ((a[2] | 0) && !S.gate) c12dOpen(); S.gate = a[2] | 0;
     if (!(S.pend > 0)) S.lan = String(a[3] || '');
@@ -290,11 +290,11 @@ function c12dLitFx(i, by) {
   if (ZM.net !== 'client') { const n = c12dBits(S.braz); if (n === 1) cpSay('ruth', 'It takes. Stay in its light while you can.', 'cp_m12_23'); raidRespawn(); }
 }
 // (hosting) a lamp turned
-function c12dTurnFx(i) { const S = RAID.st, v = S.lamps | 0; for (let j = 0; j < 9; j++) if (((v ^ c12dFlip(v, i)) >> j) & 1) C12D3.flash[j] = 1; try { if (!soundOff()) tone(520, 'triangle', 0.005, 0.06, 0.12, { to: 660 }); } catch (e) {} }
+function c12dTurnFx(i) { const S = RAID.st, v = S.lamps | 0; for (let j = 0; j < 9; j++) if (((v ^ c12dFlip(v, i)) >> j) & 1) C12D3.flash[j] = 1; try { if (!soundOff() && !sfxPlay('c12lamp', { vol: 0.75 })) tone(520, 'triangle', 0.005, 0.06, 0.12, { to: 660 }); } catch (e) {} }
 // (every screen) all nine lit: the grate goes up
 function c12dOpen() {
   const S = RAID.st; if (S.gateFx) return; S.gate = 1; S.gateFx = 1; C12D3.gateT = 0.001;
-  try { if (!soundOff()) { noise('lowpass', 300, 1, 0.05, 0.6, 2.2, { to: 90 }); tone(98, 'sawtooth', 0.1, 0.12, 2.0, { to: 130 }); } } catch (e) {}
+  try { if (!soundOff() && !sfxPlay('c12grate', { vol: 0.95 })) { noise('lowpass', 300, 1, 0.05, 0.6, 2.2, { to: 90 }); tone(98, 'sawtooth', 0.1, 0.12, 2.0, { to: 130 }); } } catch (e) {}
   if (ZM.net !== 'client') {
     cpObjective('The grate is up. Set the lantern down on the ledge beside it: it will not go through');
     cpWaypoint(C12D.LEDGE[0], C12D.LEDGE[1], 'The ledge', 1.3);

@@ -47,7 +47,7 @@ cpStage('kwnets', kwStage({
   n: 'The Nets', kwSail: false, kwHolds: ['kwcap', 'kwlamp'], kwEvery: [30, 36],
   q: (sid, k, a) => kwQ(sid, k, a),
   enter() {
-    kwState({ lk: 8, ph: 'haul', haul: 0, nets: 0, lampT: [0, 0, 0], night: 0.25, said: {} });
+    kwState({ lk: 8, ph: 'haul', haul: 0, nets: 0, netSeen: 0, lampT: [0, 0, 0], night: 0.25, said: {} });
     RAID.st.v.next = 1e9;   // (not yet)
     FPS.me.h = 0;
     if (ZM.net !== 'client') { cpObjective('Haul the nets in at the capstan'); cpWaypoint(KW_AT.capstan[0], KW_AT.capstan[1] - 0.9, 'The capstan'); }
@@ -81,7 +81,13 @@ cpStage('kwnets', kwStage({
       if (!S.said.lh && S.lamps.every(x => !x) && (S.lampsHintT = (S.lampsHintT || 0) + dt) > 12) kwSay('lh', 'jory', 'Lamps want lighting before it’s full dark.', 'cp_m06_62');
     }
   },
-  me(dt) { kwMe(dt); },
+  me(dt) {
+    kwMe(dt);
+    // the capstan going round while anyone heaves at it, and each net as it comes in over the rail
+    const S = RAID.st;
+    if (S.ph === 'haul' && S.heave > 0) { const [x, y] = kwW(KW_AT.capstan[0], KW_AT.capstan[1]); kwLoop('kwcapstan', x, y, 0.7); }
+    if (S.nets > (S.netSeen | 0)) { S.netSeen = S.nets; const [x, y] = kwW(KW_AT.nets[0], KW_AT.nets[1]); try { sfxPlay('kwnet', { vol: 0.85, pan: fpsEar(x, y) }); } catch (e) {} }
+  },
   kwConsider(c) {
     const S = RAID.st;
     if (S.ph === 'haul') { const [x, y] = kwW(KW_AT.capstan[0], KW_AT.capstan[1] - 0.9); c({ k: 'kwcap', i: 0 }, x, y, 0, 1.6, false); }
@@ -151,7 +157,12 @@ cpStage('kwwatch', kwStage({
   me(dt) {
     kwMe(dt);
     const S = RAID.st;
-    if (S.bells !== KW.bellsSeen) { const n = S.bells - (KW.bellsSeen | 0); KW.bellsSeen = S.bells; if (n > 0 && S.bells > 0) for (let i = 0; i < S.bells; i++) setTimeout(() => { try { if (!soundOff()) sfxBellFar(0, i % 2 ? 0.45 : 0.55); } catch (e) {} }, (i >> 1) * 900 + (i % 2) * 320); }
+    if (S.bells !== KW.bellsSeen) { const n = S.bells - (KW.bellsSeen | 0); KW.bellsSeen = S.bells; if (n > 0 && S.bells > 0) {
+      // (the watch bells struck in pairs: a recorded pair for each two, the synth's far bell for an odd one over, or for all of them with no recording)
+      const rec = sfxHas('kwbell'), step = rec ? Math.max(900, SFXB.buf.kwbell[0].duration * 900) : 900;
+      for (let i = 0; i < S.bells; i++) { if (rec && i % 2) continue; const pair = rec && i + 1 < S.bells; setTimeout(() => { try { if (!(pair && sfxPlay('kwbell', { vol: 0.8, vary: 0.02 })) && !soundOff()) sfxBellFar(0, i % 2 ? 0.45 : 0.55); } catch (e) {} }, (i >> 1) * step + (i % 2) * 320); }
+    }
+  }
   },
   kwPrompt(o) { const S = RAID.st; if (o.k === 'kwv' && S.v.npc) return { text: 'The skipper won’t let you near it' }; return null; },
   kwUse(o) { const S = RAID.st; if (o.k === 'kwv' && S.v.npc) { zmSound('no'); fpsFeed('“Leave it be, I said!” The skipper shoves you off.'); return true; } return false; },
@@ -181,7 +192,7 @@ cpStage('kwwreck', kwStage({
   enter() {
     const n = kwN(), fl = {};
     for (const h of ZM.hum || [[FPS.me.id]]) fl[h[0]] = 1;
-    kwState({ lk: 0, lkw: 2, sv: [6, -1], lamps: [0, 0, 0], ph: 'cut', lash: [0, 0], launch: 0, said: {}, fl, sunk: 0, lastT: 0, endT: 0, boarded: {} });
+    kwState({ lk: 0, lkw: 2, sv: [6, -1], lamps: [0, 0, 0], ph: 'cut', lash: [0, 0], lashSeen: [0, 0], launch: 0, said: {}, fl, sunk: 0, lastT: 0, endT: 0, boarded: {} });
     RAID.st.v.next = 9;
     FPS.me.h = 0;
     if (ZM.net !== 'client') { cpObjective('Cut the punt free: both lashings'); cpWaypoint(KW_AT.punt[0] + 0.7, KW_AT.punt[1], 'The punt'); }
@@ -220,6 +231,8 @@ cpStage('kwwreck', kwStage({
     kwMe(dt);
     const S = RAID.st, m = FPS.me;
     if (S.boarded && S.boarded[m.id] && !S.inPunt && S.puntOn) S.inPunt = true;
+    // a knife going through a lashing, while anyone saws at it
+    if (S.ph === 'cut' && S.lashSeen) { for (const i of [0, 1]) if (S.lash[i] > S.lashSeen[i] && S.lash[i] < KWX.LASH) { const [x, y] = kwW(KW_AT.punt[0] + 0.8, KW_AT.punt[1] + (i ? -0.8 : 0.8)); kwLoop('kwlash', x, y, 0.75); } S.lashSeen = S.lash.slice(); }
   },
   kwConsider(c) {
     const S = RAID.st;
@@ -289,7 +302,7 @@ cpCineDef('m06_sits', { music: 'cpm06verity', exit: kwCineEnd, shots: [
 ] });
 // four bells: a sea comes aboard
 cpCineDef('m06_wave', { music: 'cpm06watch', exit: kwCineEnd, shots: [
-  { d: 3.2, cam: [0, -4.5, 2.6], to: [0, -3.8, 2.4], look: [0, 9.5, 3.2], lookTo: [0, 9.5, 1.2], shake: 0.3, sfx: [[0.2, 'sea', 0.9], [1.6, 'splash', 1]],
+  { d: 3.2, cam: [0, -4.5, 2.6], to: [0, -3.8, 2.4], look: [0, 9.5, 3.2], lookTo: [0, 9.5, 1.2], shake: 0.3, get sfx() { return [[0.2, 'sea', 0.9], [1.6, sfxHas('kwwave') ? 'kwwave' : 'splash', 1]]; },
     f(t) { KW.cineAt = { skip: { x: 0.5, y: 7.4, h: Math.PI, spd: 3 }, jory: { x: -0.7, y: -3.7, h: 0 } }; if (Math.random() < 0.6) for (let i = 0; i < 6; i++) FPS.parts.push({ x: FPSC.CX + (Math.random() - 0.5) * 4, y: FPSC.CY + 8 + Math.random() * 2, z: FPSC.GROUND + 1 + Math.random() * 2, vx: (Math.random() - 0.5) * 2, vy: -5 - Math.random() * 6, vz: 1 + Math.random() * 3, t: 0.9, c: '170,200,215' }); },
     lines: [[0.3, 'jory', 'Sea coming aboard! Hold on!', 'cp_m06_27']] },
   { d: 4.2, cam: [0.4, -3.6, 1.4], to: [0.8, -4.2, 1.2], look: [1.72, -5.3, 0.4], shake: 0.12,
@@ -317,7 +330,7 @@ cpCineDef('m06_strike', { music: 'cpm06wreck', exit: kwCineEnd, shots: [
   { d: 3.6, cam: [0.2, 4.6, 2.2], to: [0.2, 6.6, 2.0], look: [0, 14, 0.6], shake: 0.2, sfx: [[0.3, 'sea', 0.8]],
     f() { KW.cineAt = { jory: { x: 0.4, y: 7.8, h: 0, spd: 2 } }; },
     lines: [[0.4, 'jory', 'Rocks! Rocks under her bow!', 'cp_m06_38']] },
-  { d: 3, cam: [12, -6, 4], to: [11, -5, 3.8], look: [0, 2, 1], shake: 1, sfx: [[0.1, 'debris', 1], [0.2, 'creak', 1], [0.9, 'splash', 1]] },
+  { d: 3, cam: [12, -6, 4], to: [11, -5, 3.8], look: [0, 2, 1], shake: 1, get sfx() { return sfxHas('kwstrike') ? [[0.1, 'kwstrike', 1], [0.9, 'splash', 0.8]] : [[0.1, 'debris', 1], [0.2, 'creak', 1], [0.9, 'splash', 1]]; } },
   { d: 5.5, card: { eye: 'A little before eight bells', t: 'On the Near Skerries', sub: 'Her lamps out, her rudder gone, and the skipper with it' },
     lines: [[0.8, 'log', 'She struck on the Near Skerries a little before eight bells, and the sea came up over her deck.', 'cp_m06_39']] },
 ] });

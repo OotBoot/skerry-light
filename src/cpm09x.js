@@ -366,7 +366,7 @@ cpStage('m09dusk', {
     }
   },
   tick(dt) { c9dTick(dt); },
-  me(dt) { c9AmmoTick(dt); if (ZM.net === 'client') c9NpcEase(RAID.st.npc || [], dt); },
+  me(dt) { c9AmmoTick(dt); if (ZM.net === 'client') c9NpcEase(RAID.st.npc || [], dt); c9LadderSnd(); },
   players(P) { return c9NpcTargets(P, RAID.st.npc || []); },
   kill(d) { },
   pack(o) { const S = RAID.st; o.a = [C9D_PH.indexOf(S.ph), Math.round(S.T * 10) / 10, Math.round(S.dark * 100) / 100, S.wleft + c9Alive(S.wv)]; o.np = c9NpcPack(S.npc); },
@@ -389,6 +389,10 @@ cpStage('m09dusk', {
   exit() { c9NpcFreeAll(); c9SkyBack(); c9Tower(false); },
 });
 function c9dSay(k, who, text, vo) { const S = RAID.st; if (S.said[k]) return; S.said[k] = 1; cpSay(who, text, vo); }
+// a recording at world (x, y), quieter with distance and from its side, as src/zombies.js zmSound does (false: none)
+function c9Snd(name, x, y, vol, o) { const m = FPS.me, d = Math.hypot(x - m.x, y - m.y); return sfxPlay(name, Object.assign({ vol: vol * Math.max(0.05, 1 - d / 40), pan: fpsDir(fpsEar(x, y)) }, o || {})); }
+// the drowned hauling themselves up the jetty's ladders (each once, on every screen: the state is the host's word)
+function c9LadderSnd() { for (const z of ZM.z) if (!z.dead && !z.c9lad && z.st === 'climb' && z.win && z.win.sea) { z.c9lad = 1; c9Snd('ladderclimb', z.x, z.y, 0.8); } }
 function c9dTick(dt) {
   const S = RAID.st, n = c9N(), H = S.npc[0];
   if (!S.ph || typeof cpCineOn === 'function' && cpCineOn()) return;
@@ -482,12 +486,16 @@ cpStage('m09oil', {
     if (ZM.net !== 'client') cpObjective('');
   },
   tick(dt) { c9oTick(dt); },
-  me(dt) { c9AmmoTick(dt); if (ZM.net === 'client') c9NpcEase(RAID.st.npc || [], dt); },
+  me(dt) {
+    c9AmmoTick(dt); if (ZM.net === 'client') c9NpcEase(RAID.st.npc || [], dt);
+    // the wick coughing while the oil's under a quarter: faint, and fainter the further from the lamp you are
+    const S = RAID.st; if (S.ph === 'go' && S.L > 0 && S.L < 25 && !(typeof cpCineOn === 'function' && cpCineOn())) { const [x, y] = c9L(...C9O.LAMP), m = FPS.me; c9Snd('wickcough', x, y, 0.35 * Math.max(0.3, 1 - Math.abs(C9O.LAMP_Z - (m.jz || 0)) / 40), { gap: 2.6 }); }
+  },
   speedK() { return RAID.st.car && RAID.st.car[FPS.me.id] ? C9O.SPEED : 1; },
   players(P) { return P; },
   q(sid, k, a) { if (k === 'c9take') c9oTake(sid, a | 0); },
   pack(o) { const S = RAID.st; o.a = [Math.round(S.L * 10) / 10, S.got, S.need, S.tide]; o.cr = Object.keys(S.car); o.np = c9NpcPack(S.npc); },
-  apply(o) { const S = RAID.st; if (Array.isArray(o.a)) { S.L = +o.a[0] || 0; S.got = o.a[1] | 0; S.need = o.a[2] | 0; S.tide = o.a[3] | 0; } S.car = {}; if (Array.isArray(o.cr)) for (const s of o.cr) S.car[String(s)] = 1; S.npc = S.npc || []; c9NpcApply(S.npc, o.np, k => C9D_COLS[k]); },
+  apply(o) { const S = RAID.st; if (Array.isArray(o.a)) { S.L = +o.a[0] || 0; if ((o.a[1] | 0) === (S.got | 0) + 1 && !sfxPlay('caskthud', { vol: 0.8 })) zmSound('drink'); S.got = o.a[1] | 0; S.need = o.a[2] | 0; S.tide = o.a[3] | 0; } S.car = {}; if (Array.isArray(o.cr)) for (const s of o.cr) S.car[String(s)] = 1; S.npc = S.npc || []; c9NpcApply(S.npc, o.np, k => C9D_COLS[k]); },
   consider(c) {
     c9AmmoConsider(c, [...c9L(...C9O.AMMO), 0]);
     if (!RAID.st.car || RAID.st.car[FPS.me.id]) return;
@@ -529,7 +537,7 @@ function c9oTick(dt) {
     if (down) { delete S.car[sid]; continue; }   // (dropped, going down)
     if (jz > C9O.LAMP_Z - 1.5 && Math.hypot(x - lx, y - ly) < 6.2) {
       delete S.car[sid]; S.got++; S.L = Math.min(100, S.L + C9O.CASK);
-      zmSound('drink');
+      if (!sfxPlay('caskthud', { vol: 0.8 })) zmSound('drink');
       const left = S.need - S.got;
       if (left > 0) cpSay('holm', ...(left === 1 ? ['One more and she will see the night out.', 'cp_m09_26'] : S.got === 1 ? ['That is one. Back down for the next.', 'cp_m09_24'] : ['Another. More yet, and quick about it.', 'cp_m09_25']));
       if (S.got === 1 && !S.tide) { S.tide = 1; cpCine('m09_tide'); }
@@ -607,7 +615,9 @@ cpStage('m09worst', {
     if (ZM.net === 'client') c9NpcEase(S.npc || [], dt);
     // the storm: lightning now and then, and the thunder after it
     S.boltT = (S.boltT == null ? 6 : S.boltT) - dt; S.flash = Math.max(0, (S.flash || 0) - dt * 3);
-    if (S.boltT <= 0 && S.ph !== 'won') { S.boltT = 7 + Math.random() * 9; S.flash = 1; setTimeout(() => { try { sfxPlay('thunder', { vol: 0.7 }); } catch (e) {} }, 300 + Math.random() * 900); }
+    if (S.boltT <= 0 && S.ph !== 'won') { S.boltT = 7 + Math.random() * 9; S.flash = 1; if (!sfxPlay('gallerybolt', { vol: 0.8 })) setTimeout(() => { try { sfxPlay('thunder', { vol: 0.7 }); } catch (e) {} }, 300 + Math.random() * 900); }
+    // the drowned pawing at the lamp's glass (where the host reckons the drain: in the lantern room, close by the lamp)
+    if (S.ph !== 'won' && !(typeof cpCineOn === 'function' && cpCineOn())) { const [cx0, cy0] = c9L(...C9W.C), z = ZM.z.find(z => !z.dead && z.st === 'in' && (z.jz || 0) >= C9W.Z - 1.2 && Math.hypot(z.x - cx0, z.y - cy0) < C9W.NEAR + 1); if (z) c9Snd('glassscrape', z.x, z.y, 0.7, { gap: 2.2 }); }
   },
   players(P) { return c9NpcTargets(P, RAID.st.npc || []); },
   pack(o) { const S = RAID.st; o.a = [C9W_PH.indexOf(S.ph), Math.round(S.night * 1000) / 1000, Math.round(S.L * 10) / 10]; o.np = c9NpcPack(S.npc); },

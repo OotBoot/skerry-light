@@ -144,7 +144,8 @@ cpCineDef('m01_outro', {
   exit(C) { cp1xFree(C); },
   shots: [
     { d: 5, cam: [-24, 4, 3], to: [-27, 1, 3.4], look: [-70, -30, 4], lookTo: [-80, -50, 4],
-      lines: [[0.5, 'm01mast', 'Light on the rock! Hard over! Hard over!', 'cp_m01_25']], sfx: [[0.2, 'frhorn', 0.7]],
+      lines: [[0.5, 'm01mast', 'Light on the rock! Hard over! Hard over!', 'cp_m01_25']],
+      enter() { try { if (!sfxPlay('coghorn', { vol: 0.7, delay: 0.2 })) sfxPlay('frhorn', { vol: 0.7, delay: 0.2 }); } catch (e) {} },
       f(t, k, C) { cp1xFogPose(C.wall, -200, 0, 0, 0, t); C.lan.position.copy(z3v(FPSC.CX - 72 - 14 * k, FPSC.CY - 28 - 26 * k, FPSC.GROUND + 3)); C.lan.material.opacity = 0.8; } },
     { d: 4.6, cam: [3.2, 17, 1.9], to: [2.6, 17.8, 2.0], look: [-2.6, 19.8, 1.6],
       lines: [[0.4, 'fire', 'That’s what the fire’s for. Six hundred years, if it takes it.', 'cp_m01_26']],

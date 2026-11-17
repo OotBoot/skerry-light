@@ -102,7 +102,11 @@ cpStage('rchrock', rchStage({
     // (a fire-pot burning where I stand)
     const S = RAID.st, m = FPS.me, [lx, ly] = rchL(m.x, m.y);
     if (S.pots && S.pots.some(p => p[2] > 0 && Math.hypot(lx - p[0], ly - p[1]) < RCHY.POT) && !(m.dead > 0) && !zmIsDown() && !cpCineOn()) { RCH.potT = (RCH.potT || 0) - (FPS.dtLast || 0.016); if (RCH.potT <= 0) { RCH.potT = 0.8; fpsHurt(1, '', 'A fire-pot'); } }
-    for (const p of S.pots || []) if (p[3] !== RCH.potSeen && p[2] > 0) { RCH.potSeen = p[3]; const [wx, wy] = rchW(p[0], p[1]); try { if (!soundOff()) sfxPlay('explode', { vol: clamp(0.8 - Math.hypot(wx - m.x, wy - m.y) / 60, 0.1, 0.7), pan: fpsEar(wx, wy), rate: 1.3 }); } catch (e) {} }
+    for (const p of S.pots || []) if (p[3] !== RCH.potSeen && p[2] > 0) { RCH.potSeen = p[3]; const [wx, wy] = rchW(p[0], p[1]); try { if (!soundOff()) { const v = clamp(0.8 - Math.hypot(wx - m.x, wy - m.y) / 60, 0.1, 0.7); if (!sfxPlay('rchpot', { vol: Math.min(0.85, v * 1.15), pan: fpsEar(wx, wy) })) sfxPlay('explode', { vol: v, pan: fpsEar(wx, wy), rate: 1.3 }); } } catch (e) {} }
+    // (a cask set down: handed in at the back door, or dropped where its carrier fell)
+    const oil = S.oil | 0, dn = (S.drop || []).length; if (RCH.caskW == null || oil < RCH.caskW[0]) RCH.caskW = [oil, dn];
+    if (oil > RCH.caskW[0] || dn > RCH.caskW[1]) { const [wx, wy] = oil > RCH.caskW[0] ? rchW(RCHY.DOOR[0], RCHY.DOOR[1]) : rchW(S.drop[dn - 1][0], S.drop[dn - 1][1]); try { if (!soundOff()) sfxPlay('rchcask', { vol: clamp(0.9 - Math.hypot(wx - m.x, wy - m.y) / 50, 0.1, 0.8), pan: fpsEar(wx, wy) }); } catch (e) {} }
+    RCH.caskW = [oil, dn];
   },
   rchConsider(c) {
     const S = RAID.st;
@@ -228,6 +232,13 @@ cpStage('rchlamp', rchStage({
     const want = L.lit && L.oil > 0 ? 1 : 0; L.k = clamp((L.k || 0) + (want ? dt / 2.2 : -dt / 1.2), 0, 1);
     if (L.k > 0 && L.wind > 0) L.ang = wrapPi((L.ang || 0) + dt * 2 * Math.PI / RCHY.TURN);
     if (ZM.lamp) { ZM.lamp.k = RCH.lensK != null ? RCH.lensK : L.k; ZM.lamp.ang = RCH.lensA != null ? RCH.lensA : L.ang; ZM.lamp.t = 0; }
+    // (the pump and the clock's crank worked: my own hands, or the host's word that someone's at them; laid again about every take's length)
+    if (S.ph === 'keep') { const C = RCHG.C, ear = (p) => fpsEar(...rchW(C[0] + p[0], C[1] + p[1]));
+      try { if (!soundOff()) { if (S.holdNow === 'rchpump:0' || L.oil > (RCH.oilW == null ? 9 : RCH.oilW) + 0.002) sfxPlay('rchpump', { vol: 0.7, pan: ear(RCHG.PUMP), gap: 1.2 }); if (S.holdNow === 'rchwind:0' || L.wind > (RCH.windW == null ? 9 : RCH.windW) + 0.002) sfxPlay('rchwind', { vol: 0.7, pan: ear(RCHG.WIND), gap: 1.2 }); } } catch (e) {}
+      // (a fire-ship close in, burning: the nearest heard)
+      let nd = 1e9, na = 0; for (const sh of S.ships || []) if ((sh.st === 0 || sh.st === 3 && sh.t < 3) && sh.d < nd) { nd = sh.d; na = sh.a; }
+      if (nd < 160 && !cpCineOn()) try { if (!soundOff()) sfxPlay('rchship', { vol: clamp(1 - nd / 180, 0.15, 0.9), pan: fpsDir(na - FPS.me.h), gap: 4 }); } catch (e) {} }
+    RCH.oilW = L.oil; RCH.windW = L.wind;
     // (the hum of it, the clock's tick)
     if (L.k > 0.3) { RCH.humT = (RCH.humT || 0) - dt; if (RCH.humT <= 0) { RCH.humT = 1.6; try { if (!soundOff() && typeof zmlSound === 'function') zmlSound('hum'); } catch (e) {} } }
   },

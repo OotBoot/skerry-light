@@ -130,8 +130,9 @@ FPI_K.c12light = {
 // ---------- the bell, rung (every screen, as the host says) ----------
 // B: { x, y } (world); the sound from where it hangs, the bed shaking a little near it, and a ring in the air
 function c12BellFx(x, y) {
-  const d = Math.hypot(x - FPS.me.x, y - FPS.me.y);
-  try { if (d < 14) sfxBell(); else if (typeof fpsBellSound === 'function') fpsBellSound(d, bearingOf(x - FPS.me.x, y - FPS.me.y) - FPS.me.h); } catch (e) {}
+  const d = Math.hypot(x - FPS.me.x, y - FPS.me.y), b = bearingOf(x - FPS.me.x, y - FPS.me.y) - FPS.me.h;
+  // the wreck's own bell, recorded (from where it hangs); else the Light's, synthesised
+  try { if (!sfxPlay('c12bellwreck', { vol: d < 14 ? 0.95 : Math.max(0.15, 1 - d / 400) * 0.9, pan: d < 14 ? 0 : fpsDir(b), vary: 0.06 })) { if (d < 14) sfxBell(); else if (typeof fpsBellSound === 'function') fpsBellSound(d, b); } } catch (e) {}
   for (let i = 0; i < 24; i++) { const a = i / 24 * 6.283; fpsPuff(x + Math.cos(a) * 1.4, y + Math.sin(a) * 1.4, FPSC.GROUND + 3 + Math.random() * 0.4, '255,230,170', 2); }
 }
 // (hosting) a rung bell sinks the drowned near it (src/lore.js: the bell)

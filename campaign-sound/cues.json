@@ -1,0 +1,5181 @@
+{
+ "music": [
+  {
+   "key": "cpm01dusk",
+   "once": false,
+   "prompt": "Medieval folk at dusk, a lone bowed lyre and low hand drum, wind over a bare sea rock, gulls far off, slow and watchful, open fifths, sparse and cold, 70 BPM",
+   "m": "m01"
+  },
+  {
+   "key": "cpm01haar",
+   "once": false,
+   "prompt": "Tense dark folk, droning bagpipe chanter low in the mix, frame drum pulse, ghostly wordless women's voices, fog horn-like low brass swells, crackling fire, uneasy and steady, 84 BPM",
+   "m": "m01"
+  },
+  {
+   "key": "cpm01ship",
+   "once": false,
+   "prompt": "Urgent medieval folk, driving frame drums and hurdy-gurdy, rising strings, a ship's bell far off in fog, hopeful but desperate, building, 96 BPM",
+   "m": "m01"
+  },
+  {
+   "key": "cpm01keel",
+   "once": false,
+   "prompt": "Heavy dark folk battle, pounding drums, low growling brass, creaking timbers and clattering wood, hurdy-gurdy drone, menacing, 100 BPM",
+   "m": "m01"
+  },
+  {
+   "key": "cpm02lights",
+   "once": false,
+   "prompt": "Tense night on a rocky headland, late sixteenth century Spain, a low nylon guitar picking a slow minor ostinato, a soft frame drum like a heartbeat, surf breaking on rocks, wind over the cliff, a far-off ship's bell, suspense, 84 BPM, instrumental, loopable",
+   "m": "m02"
+  },
+  {
+   "key": "cpm02cove",
+   "once": false,
+   "prompt": "Driving night fight on a beach, dark flamenco guitar strummed hard, castanets, low brass stabs, hand drums, the surf and the shingle under it, urgent, 120 BPM, instrumental, loopable",
+   "m": "m02"
+  },
+  {
+   "key": "cpm02wall",
+   "once": false,
+   "prompt": "Siege on a stone sea wall at night, Spanish fort, low brass and snare, a dark guitar, wind through iron chains, the creak of a gibbet, distant breakers far below, grim and steady, 100 BPM, instrumental, loopable",
+   "m": "m02"
+  },
+  {
+   "key": "cpm02boss",
+   "once": false,
+   "prompt": "Ghostly boss fight, a waltz in three, a wailing choir, war drums, a detuned guitar and a hurdy-gurdy drone, lanterns hissing, chains rattling, the sea booming against the wall, menacing and grand, 132 BPM, instrumental, loopable",
+   "m": "m02"
+  },
+  {
+   "key": "cpm02sad",
+   "once": true,
+   "prompt": "Melancholy dawn over a Spanish sea fort, a slow solo guitar and a cello, a far-off monastery bell, gulls and quiet waves, sorrowful and still, 66 BPM, instrumental",
+   "m": "m02"
+  },
+  {
+   "key": "cpm03work",
+   "once": false,
+   "prompt": "a hopeful, hard-working sea shanty at dusk, men hauling on ropes, a stamping rhythm, fiddle and concertina over low strings, a block and tackle creaking, waves breaking on a stone jetty, 1840s, 100 bpm, steady and loopable",
+   "m": "m03"
+  },
+  {
+   "key": "cpm03haar",
+   "once": false,
+   "prompt": "eerie fog at sea, a low drone, a slow lonely concertina, a far-off fog bell, a crackling fire close by, a cold wind, something clicking on wet rocks, tense and quiet, folk horror, steady and loopable",
+   "m": "m03"
+  },
+  {
+   "key": "cpm03lamp",
+   "once": false,
+   "prompt": "quiet anticipation high in a lighthouse at night, a music box, soft plucked harp, a slow ticking clockwork, warm low strings swelling slowly, glass chiming, reverent, steady and loopable",
+   "m": "m03"
+  },
+  {
+   "key": "cpm03light",
+   "once": true,
+   "prompt": "a great swelling orchestral theme as a lighthouse is lit for the first time, low brass and strings rising to a full warm chord, a choir coming in, a slow sweeping melody, then quietening to a lonely solo fiddle as a far fire goes out, bittersweet, played once",
+   "m": "m03"
+  },
+  {
+   "key": "cpm04watch",
+   "once": false,
+   "prompt": "a tense driving piece for a lighthouse in a winter gale at night, low strings pulsing, a slow heavy drum like a heartbeat, a ship's bell far off on the wind, sleet hissing on glass, wind howling round iron, rising dread, steady and loopable",
+   "m": "m04"
+  },
+  {
+   "key": "cpm04dark",
+   "once": false,
+   "prompt": "panic in the dark, fast ticking clockwork, staccato low strings, a frantic fiddle, footsteps hurrying on an iron stair, wind and sleet, a ship's bell ringing far off, urgent, steady and loopable",
+   "m": "m04"
+  },
+  {
+   "key": "cpm04maren",
+   "once": false,
+   "prompt": "a lone woman rowing out into a storm, a slow brave folk melody on solo fiddle over a deep drone, oars creaking in rowlocks, big waves, a hand lantern swinging, aching and heroic, steady and loopable",
+   "m": "m04"
+  },
+  {
+   "key": "cpm04late",
+   "once": true,
+   "prompt": "a tragic orchestral swell as a ship strikes rocks in a storm, low brass and a choir rising to a dissonant cry, timber splintering, a ship's bell, then falling away to a single held low note and the wind, played once",
+   "m": "m04"
+  },
+  {
+   "key": "cpm04dawn",
+   "once": false,
+   "prompt": "a grey still dawn after a shipwreck, a slow lament on solo cello, a far fog bell, gulls, small waves lapping on stone steps, empty and grieving, quiet, steady and loopable",
+   "m": "m04"
+  },
+  {
+   "key": "cpm04ice",
+   "once": true,
+   "prompt": "the sea freezing in the night, a slow eerie lament on a solo woman's voice without words, glassy high strings, ice creaking and groaning, a deep bell, a vast cold silence opening out, haunting and final, played once",
+   "m": "m04"
+  },
+  {
+   "key": "cpm05dawn",
+   "once": false,
+   "prompt": "\"Eerie dawn on a cold beach, 1880s maritime, a slow low cello and a distant wordless female voice, soft surf on sand, a faint hiss of steam, an old iron bell tolling once far off, the sky red as if the hills were burning, uneasy and beautiful, cinematic, slow, 60 bpm, seamless loop\"",
+   "m": "m05"
+  },
+  {
+   "key": "cpm05sail",
+   "once": false,
+   "prompt": "\"Night sailing through warm green water among rocks, 1880s, a tense but wondering sea shanty on fiddle and concertina over low strings, a soft squeak of footsteps on water keeping time, creaking timbers, waves on the hull, a far-off harbour bell, mysterious and driving, 92 bpm, seamless loop\"",
+   "m": "m05"
+  },
+  {
+   "key": "cpm05last",
+   "once": false,
+   "prompt": "\"Desperate final run into harbour at night, 1880s maritime, driving war drums and low brass under a quick shanty fiddle, a ghostly female choir rising behind, a ship's bell rung hard and often, waves crashing, urgent and frightening, 120 bpm, seamless loop\"",
+   "m": "m05"
+  },
+  {
+   "key": "cpm06nets",
+   "once": false,
+   "prompt": "Slow Cornish fishing shanty at dusk, a lone concertina and a low fiddle drone, a capstan's ratchet as rhythm, wooden hull creaking, gentle swell, distant gulls, grey and uneasy, 70 bpm, sparse, no vocals",
+   "m": "m06"
+  },
+  {
+   "key": "cpm06watch",
+   "once": false,
+   "prompt": "Tense night at sea in a small sailing boat, low sustained cello and double bass, soft irregular knocks on wood, rigging creaking, wind in a gaff sail, a ship's bell far off, slow suspense, 60 bpm, dark and cold, no melody to speak of",
+   "m": "m06"
+  },
+  {
+   "key": "cpm06verity",
+   "once": false,
+   "prompt": "Unsettling childlike music box slightly out of tune, playing a simple sweet melody too slowly over a deep sub drone, faint detuned celesta, a distant wordless child's hum, a dry wooden heartbeat, sinister and gentle at once, 55 bpm",
+   "m": "m06"
+  },
+  {
+   "key": "cpm06wreck",
+   "once": false,
+   "prompt": "Desperate shipwreck at night, pounding low drums, rushing water and breaking timber, strained low brass, a frantic fiddle ostinato, surf on rocks, urgent, 120 bpm",
+   "m": "m06"
+  },
+  {
+   "key": "cpm07dark",
+   "once": false,
+   "prompt": "Stealth at night on a Victorian harbour quay, very sparse, a low bowed double bass drone, a muted concertina breathing a few notes, water lapping against stone, a rope creaking on a bollard, a far-off dog, held breath, 70 BPM, instrumental, loopable",
+   "m": "m07"
+  },
+  {
+   "key": "cpm07yard",
+   "once": false,
+   "prompt": "Tense search in a dark customs yard, a lighthouse beam sweeping past, low pizzicato strings ticking like a clock, a soft swell every few bars as the beam comes round, a fiddle's single high note, wind over tarpaulins, 90 BPM, instrumental, loopable",
+   "m": "m07"
+  },
+  {
+   "key": "cpm07nell",
+   "once": false,
+   "prompt": "Boss fight on a Victorian quay at night, a hard driving shanty on fiddle and concertina, stamping boots, low brass, war drums, a ship's bell clanging, a woman's wordless war cry far off, gunfire echo, fierce, 128 BPM, instrumental, loopable",
+   "m": "m07"
+  },
+  {
+   "key": "cpm07sad",
+   "once": true,
+   "prompt": "Grey dawn over a quiet harbour, a slow hymn-like melody on a lone concertina over warm low strings, gulls, oars dipping, a far-off church bell, tired and tender, 64 BPM, instrumental",
+   "m": "m07"
+  },
+  {
+   "key": "cpm08rock",
+   "once": false,
+   "prompt": "\"Cold winter night at a lighthouse on a rock, 1880s maritime, slow low strings and a lone concertina, wind round stone, the sea in a narrow gully, a ship's bell tolling far out at sea every few bars, lonely and dreadful, 66 bpm, seamless loop\"",
+   "m": "m08"
+  },
+  {
+   "key": "cpm08sail",
+   "once": false,
+   "prompt": "\"Following a single lantern across a dark sea at night, 1880s, a hushed and tense shanty on fiddle over low pulsing strings, oars creaking in rowlocks, waves against a small hull, a distant bell answered by a nearer one, mournful and driving, 88 bpm, seamless loop\"",
+   "m": "m08"
+  },
+  {
+   "key": "cpm08rise",
+   "once": false,
+   "prompt": "\"A drowned ship rising from the sea at night, deep swelling brass and a low choir, rushing water pouring off timbers, groaning wood, a ship's bell ringing faster and faster, awe and terror, 70 bpm, seamless loop\"",
+   "m": "m08"
+  },
+  {
+   "key": "cpm08deck",
+   "once": false,
+   "prompt": "\"Creeping dread on a ghost ship's deck in the dark, 1880s, sparse low drums, creaking rigging, slow wooden knocks in threes, a whispered sailors' chant far off, suspense, 72 bpm, seamless loop\"",
+   "m": "m08"
+  },
+  {
+   "key": "cpm08crane",
+   "once": false,
+   "prompt": "\"Battle with a drowned sea captain by flarelight, heavy war drums and low brass, a drowned crew chanting a shanty, hissing flares, a ship's bell, wind in torn sails, relentless, 112 bpm, seamless loop\"",
+   "m": "m08"
+  },
+  {
+   "key": "cpm08last",
+   "once": false,
+   "prompt": "\"Climax of a ghost ship battle, a lone female voice rising over war drums and strings, a great bell tolling, fire roaring in canvas, the sea rushing in, tragic and triumphant, 118 bpm, seamless loop\"",
+   "m": "m08"
+  },
+  {
+   "key": "cpm08end",
+   "once": true,
+   "prompt": "\"A ship going down at dawn, quiet strings and a slow solo fiddle, the sea closing over timbers, a last far bell, a lighthouse keeper's grief, bittersweet and still, slow, plays once with a long tail\"",
+   "m": "m08"
+  },
+  {
+   "key": "cpm09dusk",
+   "once": false,
+   "prompt": "a lonely lighthouse at dusk in winter, a slow mournful cello and a solo fiddle, a far-off foghorn, cold wind over rocks, waves on a stone jetty, gulls fading, a sense of dread gathering, 1880s, steady and loopable",
+   "m": "m09"
+  },
+  {
+   "key": "cpm09night",
+   "once": false,
+   "prompt": "a tense desperate fight at night on a lighthouse station, pounding low drums, sawing low strings, hammering on wood, a creaking shanty concertina, moaning wind, waves crashing, folk horror, 120 bpm, steady and loopable",
+   "m": "m09"
+  },
+  {
+   "key": "cpm09diver",
+   "once": false,
+   "prompt": "a heavy boss fight with a drowned salvage diver, deep slow brass, a clanking iron chain rhythm, a hissing air pump, booming drums, a choir of drowned men, the sea surging, steady and loopable",
+   "m": "m09"
+  },
+  {
+   "key": "cpm09oil",
+   "once": false,
+   "prompt": "urgent suspense inside a lighthouse tower at night, a ticking clockwork rhythm, footsteps on iron stairs, a guttering flame, tremolo strings rising slowly, a low drone, steady and loopable",
+   "m": "m09"
+  },
+  {
+   "key": "cpm09tide",
+   "once": false,
+   "prompt": "a frantic swarm, skittering clicking percussion like claws on stone, fast plucked low strings, a driving drum, the tide rushing in over shingle, tense and quick, 140 bpm, steady and loopable",
+   "m": "m09"
+  },
+  {
+   "key": "cpm09storm",
+   "once": false,
+   "prompt": "a siege at the top of a lighthouse in a winter storm, howling wind, thunder, rain on glass, a great iron bell tolling, war drums, a screaming choir, a desperate shanty fiddle, steady and loopable",
+   "m": "m09"
+  },
+  {
+   "key": "cpm09moon",
+   "once": false,
+   "prompt": "a sinister waltz for a wrecker in chains, a detuned music box, a swinging lantern creaking, low brass, rattling chains, storm wind and thunder, folk horror, 3/4 time, steady and loopable",
+   "m": "m09"
+  },
+  {
+   "key": "cpm09dawn",
+   "once": false,
+   "prompt": "dawn after a terrible night at a lighthouse, a slow hopeful melody on fiddle and concertina over warm strings, the lamp's hum, calm waves, gulls returning, bittersweet and weary, steady and loopable",
+   "m": "m09"
+  },
+  {
+   "key": "cpm10sail",
+   "once": false,
+   "prompt": "Brisk sea shanty at night on open water, a fiddle and a squeezebox over low strings, a stamping deck rhythm, the hull creaking, spray and wind in the rigging, adventurous with an undertow of menace, 104 BPM, instrumental, loopable",
+   "m": "m10"
+  },
+  {
+   "key": "cpm10isle",
+   "once": false,
+   "prompt": "Mysterious treasure hunt on a windswept rock island at night, a plucked cittern and a music box, soft frame drum ticking like a clock, low wind over crags, a gibbet chain creaking, curious and eerie, 88 BPM, instrumental, loopable",
+   "m": "m10"
+  },
+  {
+   "key": "cpm10dig",
+   "once": false,
+   "prompt": "Tense digging at night, a spade striking earth on the beat, low strings rising, a muffled drum, distant surf, mounting suspense, 96 BPM, instrumental, loopable",
+   "m": "m10"
+  },
+  {
+   "key": "cpm10fight",
+   "once": false,
+   "prompt": "Naval battle at night, war drums and swivel-gun thuds, a driving fiddle shanty in a minor key, low brass, a ghostly choir underneath, the sea crashing, urgent, 132 BPM, instrumental, loopable",
+   "m": "m10"
+  },
+  {
+   "key": "cpm10port",
+   "once": false,
+   "prompt": "Warm harbour at night after a voyage, a slow concertina waltz, a tavern fiddle far off, lanterns, gentle waves on a shingle quay, relieved and a little weary, 76 BPM, instrumental, loopable",
+   "m": "m10"
+  },
+  {
+   "key": "cpm10cine",
+   "once": false,
+   "prompt": "Cinematic maritime adventure, a lone fiddle over warm strings, a soft drum, waves and gulls, wistful and hopeful with a hint of mystery, 80 BPM, instrumental, loopable",
+   "m": "m10"
+  },
+  {
+   "key": "cpm11sail",
+   "once": false,
+   "prompt": "Slow foggy sea shanty at night, concertina and low cello, a fog horn deep under it, hull creaking, waves lapping, a far-off bell buoy, eerie and patient, 76 BPM",
+   "m": "m11"
+  },
+  {
+   "key": "cpm11chapel",
+   "once": false,
+   "prompt": "Quiet eerie hymn, a wheezing harmonium and soft music box, gusting wind through ruined stone, distant choir humming, ticking suspense, 66 BPM",
+   "m": "m11"
+  },
+  {
+   "key": "cpm11boss",
+   "once": false,
+   "prompt": "Ghostly boss fight, wailing choir, slow war drums, a shanty fiddle, a deep fog horn on the downbeats, cold glassy chimes, 90 BPM",
+   "m": "m11"
+  },
+  {
+   "key": "cpm11boss2",
+   "once": false,
+   "prompt": "Frantic dark sea battle, fast war drums, screaming choir, shattering glass hits, low brass, a great bell tolling, 112 BPM",
+   "m": "m11"
+  },
+  {
+   "key": "cpm11fire",
+   "once": false,
+   "prompt": "Defiant folk battle theme, roaring drums, fiddle and bagpipe melody over cold choir, a crackling bonfire, triumphant but desperate, an old medieval melody returning, 104 BPM",
+   "m": "m11"
+  },
+  {
+   "key": "cpm12bed",
+   "once": false,
+   "prompt": "Eerie night on a drained sea bed, a slow bowed cello and a far-off wordless woman's voice, wind over salt flats, distant rushing water, old timbers creaking, a bell tolling very far away, desolate and uneasy, 72 BPM, instrumental, loopable",
+   "m": "m12"
+  },
+  {
+   "key": "cpm12drain",
+   "once": false,
+   "prompt": "Underground stone tunnels, low drones, slow dripping water, a lonely concertina playing a few notes of a sea shanty, distant knocking, ticking tension like a music box running down, 80 BPM, instrumental, loopable",
+   "m": "m12"
+  },
+  {
+   "key": "cpm12maren",
+   "once": false,
+   "prompt": "Ghostly boss fight at the foot of a Spanish fort at night, wailing choir, war drums, a dark flamenco guitar and a shanty fiddle, bells clanging off the beat, the sea booming, 128 BPM, instrumental, loopable",
+   "m": "m12"
+  },
+  {
+   "key": "cpm12tide",
+   "once": false,
+   "prompt": "Climactic storm at sea, a great iron bell tolling, a screaming choir, pounding drums, rushing surf surging and ebbing in waves, low brass, desperate and huge, 136 BPM, instrumental, loopable",
+   "m": "m12"
+  },
+  {
+   "key": "cpm12cine",
+   "once": false,
+   "prompt": "Melancholy cinematic, a solo cello over soft strings, a distant wordless female voice, the hush of water draining away, wind, sorrowful and strange, 66 BPM, instrumental, loopable",
+   "m": "m12"
+  },
+  {
+   "key": "cpm12rest",
+   "once": true,
+   "prompt": "Bittersweet resolution at night, the sea returning softly over sand, a slow fiddle and concertina lament over warm strings, a far-off ship's horn, a single bell, gentle and sad, 70 BPM, instrumental",
+   "m": "m12"
+  },
+  {
+   "key": "cpm13flood",
+   "once": false,
+   "prompt": "a fishing town flooding at night, urgent low strings and a slow heavy drum, water rushing through cobbled streets, rain, doors banging, a church bell far off, a mournful concertina, folk horror, steady and loopable",
+   "m": "m13"
+  },
+  {
+   "key": "cpm13hall",
+   "once": false,
+   "prompt": "suspense inside an old town hall at night, hammering on boards, creaking timber, a low drone, a ticking clock, muffled moaning outside, tremolo strings rising, steady and loopable",
+   "m": "m13"
+  },
+  {
+   "key": "cpm13keel",
+   "once": false,
+   "prompt": "a monstrous crab made of shipwrecks, crashing timbers and splintering wood as percussion, deep brass, pounding drums, water surging, a choir of drowned sailors, heavy and relentless, steady and loopable",
+   "m": "m13"
+  },
+  {
+   "key": "cpm13belfry",
+   "once": false,
+   "prompt": "a last stand on a town hall roof in the rain, driving war drums, a desperate shanty fiddle, howling wind, a bell humming faintly, a screaming choir rising, tense and relentless, steady and loopable",
+   "m": "m13"
+  },
+  {
+   "key": "cpm13bell",
+   "once": false,
+   "prompt": "dawn breaking over a flooded town, a great bronze bell tolling as the beat, heroic low brass and strings, a choir swelling, the drowned's clanking diver's boots, defiant and hopeful, steady and loopable",
+   "m": "m13"
+  },
+  {
+   "key": "cpm13dawn",
+   "once": false,
+   "prompt": "grey dawn over a harbour, a slow warm melody on fiddle over soft strings, oars in water, gulls, relief and exhaustion, steady and loopable",
+   "m": "m13"
+  },
+  {
+   "key": "cpm13fall",
+   "once": true,
+   "prompt": "a sad farewell to a drowned fishing town at dawn, a slow lament on solo fiddle and concertina, oars pulling through still water, a far-off lighthouse foghorn, warm strings swelling into a bittersweet final chord, played once",
+   "m": "m13"
+  },
+  {
+   "key": "cpm14war",
+   "once": false,
+   "prompt": "Grim 19th century naval skirmish at dusk, military snare and muffled bass drum, low brass chorale in a minor key, distant musket volleys, surf on shingle, a fife far off, determined and weary, 96 bpm",
+   "m": "m14"
+  },
+  {
+   "key": "cpm14dark",
+   "once": false,
+   "prompt": "Dread at night on a cold shore, slow sub drone, bowed cymbals and scraped low strings, waves dragging over stones, a faint choir of drowned voices far under the water, no beat, 50 bpm, sparse and dark",
+   "m": "m14"
+  },
+  {
+   "key": "cpm14shoal",
+   "once": false,
+   "prompt": "Urgent tidal chase across wet sands at night, pulsing low strings ostinato, rising water hiss, a buoy bell tolling irregularly, taiko-like low drums building slowly, footfalls splashing, tense and onward, 110 bpm",
+   "m": "m14"
+  },
+  {
+   "key": "cpm14rock",
+   "once": false,
+   "prompt": "Boss battle on a lighthouse rock, heavy war drums, brass stabs, a defiant martial theme on low horns, crackle of burning, musket fire, storm wind, 128 bpm, dramatic",
+   "m": "m14"
+  },
+  {
+   "key": "cpm14lamp",
+   "once": false,
+   "prompt": "Heroic swelling orchestral theme at night, a lighthouse beam sweeping, full strings and horns over steady timpani, a clockwork tick as rhythm, hopeful against danger, 112 bpm, building",
+   "m": "m14"
+  },
+  {
+   "key": "cpm14keep",
+   "once": true,
+   "prompt": "Warm triumphant hymn for strings and solo horn, a lighthouse lit at last, slow and broad, a quiet concertina echoing the theme, sea and wind beneath, deeply moving, 72 bpm",
+   "m": "m14"
+  },
+  {
+   "key": "cpm14end",
+   "once": true,
+   "prompt": "Quiet bittersweet ending, a lone concertina playing a simple sea air, soft piano, very gentle sea on rocks, an oar creaking in a rowlock, a far bell, fading slowly to silence, 60 bpm, tender, no drums",
+   "m": "m14"
+  }
+ ],
+ "voice": [
+  {
+   "id": "cp_m01_01",
+   "who": "The Keeper’s Log (narrator)",
+   "line": "Before the Light there was a fire, and a family to keep it.",
+   "how": "Narration; grave, unhurried, an old storyteller by a fire. Dry, close, no effects.",
+   "m": "m01"
+  },
+  {
+   "id": "cp_m01_02",
+   "who": "The Fire-Keeper",
+   "line": "Haar coming. I can smell it on the wind.",
+   "how": "Gruff, low, weathered man in his fifties; sniffing the air, half to himself.",
+   "m": "m01"
+  },
+  {
+   "id": "cp_m01_03",
+   "who": "The Fire-Keeper",
+   "line": "Down to the strand, all of you. Bring me every stick the sea has given.",
+   "how": "Raised over wind, commanding but not shouting; a father giving orders.",
+   "m": "m01"
+  },
+  {
+   "id": "cp_m01_04",
+   "who": "The Fire-Keeper",
+   "line": "Wet wood smokes. Dry wood burns. Bring me the dry.",
+   "how": "Matter-of-fact, a craftsman’s rule of thumb.",
+   "m": "m01"
+  },
+  {
+   "id": "cp_m01_05",
+   "who": "Wenna",
+   "line": "There’s a deal of wrack on the west strand, and it’s dry above the weed.",
+   "how": "Young woman (about 17), quick and practical, a little breathless from the climb.",
+   "m": "m01"
+  },
+  {
+   "id": "cp_m01_06",
+   "who": "The Fire-Keeper",
+   "line": "Enough. Put a flame to it and let her catch.",
+   "how": "Satisfied, quiet; “let her catch” said almost tenderly.",
+   "m": "m01"
+  },
+  {
+   "id": "cp_m01_07",
+   "who": "The Fire-Keeper",
+   "line": "Something moved on the strand. Keep your eyes to the water.",
+   "how": "Low, wary, dropping his voice.",
+   "m": "m01"
+  },
+  {
+   "id": "cp_m01_08",
+   "who": "The Fire-Keeper",
+   "line": "There. Let the ships see it, and keep off.",
+   "how": "Soft pride over the crackle of the fire.",
+   "m": "m01"
+  },
+  {
+   "id": "cp_m01_09",
+   "who": "Wenna",
+   "line": "Father. The fog’s coming in against the wind.",
+   "how": "Uneasy, hushed; she has never seen fog do this.",
+   "m": "m01"
+  },
+  {
+   "id": "cp_m01_10",
+   "who": "The Fire-Keeper",
+   "line": "That’s no common haar. Take brands from the fire, and burn it back.",
+   "how": "Firm, urgent; a man who knows more than he says.",
+   "m": "m01"
+  },
+  {
+   "id": "cp_m01_11",
+   "who": "The Fire-Keeper",
+   "line": "Feed her, or she’ll starve before morning.",
+   "how": "Brisk, over wind; encouraging.",
+   "m": "m01"
+  },
+  {
+   "id": "cp_m01_12",
+   "who": "The Fire-Keeper",
+   "line": "Fog on the rock! Meet it with fire before it reaches her.",
+   "how": "Shouted warning, sharp.",
+   "m": "m01"
+  },
+  {
+   "id": "cp_m01_13",
+   "who": "Wenna",
+   "line": "The dead from the old wrecks. They want the fire out.",
+   "how": "Fearful, near a whisper.",
+   "m": "m01"
+  },
+  {
+   "id": "cp_m01_14",
+   "who": "The Fire-Keeper",
+   "line": "Fresh wood on the strand. The sea’s breaking something up out there.",
+   "how": "Grim, thoughtful; the sea giving up a wreck.",
+   "m": "m01"
+  },
+  {
+   "id": "cp_m01_15",
+   "who": "The Fire-Keeper",
+   "line": "She’s down to embers! Wood, now!",
+   "how": "Alarmed, loud, clipped.",
+   "m": "m01"
+  },
+  {
+   "id": "cp_m01_16",
+   "who": "The Fire-Keeper",
+   "line": "Hold her. Dawn’s a long way yet.",
+   "how": "Steady, tired, bracing the others.",
+   "m": "m01"
+  },
+  {
+   "id": "cp_m01_17",
+   "who": "Wenna",
+   "line": "A light! Out to the west, low on the water.",
+   "how": "Excited, pointing, raised voice.",
+   "m": "m01"
+  },
+  {
+   "id": "cp_m01_18",
+   "who": "The Fire-Keeper",
+   "line": "A ship’s lantern. She’s standing in for the rock, and doesn’t know it.",
+   "how": "Grave, slow; dread under it.",
+   "m": "m01"
+  },
+  {
+   "id": "cp_m01_19",
+   "who": "The Fire-Keeper",
+   "line": "Build the fire high. Higher than ever it’s been.",
+   "how": "Fierce determination, rising.",
+   "m": "m01"
+  },
+  {
+   "id": "cp_m01_20",
+   "who": "The Fire-Keeper",
+   "line": "Higher! She can’t see a glimmer through this.",
+   "how": "Shouted, frustrated.",
+   "m": "m01"
+  },
+  {
+   "id": "cp_m01_21",
+   "who": "The Fire-Keeper",
+   "line": "She’s seen us. She’s going about. Keep it high!",
+   "how": "Relief breaking through, then urgency.",
+   "m": "m01"
+  },
+  {
+   "id": "cp_m01_22",
+   "who": "Wenna",
+   "line": "The water’s heaving by the old wreck.",
+   "how": "Frightened, staring; quiet.",
+   "m": "m01"
+  },
+  {
+   "id": "cp_m01_23",
+   "who": "The Fire-Keeper",
+   "line": "The keels. The old keels, walking. Mind your legs!",
+   "how": "Horrified, then barked warning.",
+   "m": "m01"
+  },
+  {
+   "id": "cp_m01_24",
+   "who": "The Fire-Keeper",
+   "line": "She’s lost us! Feed the fire!",
+   "how": "Alarmed, angry.",
+   "m": "m01"
+  },
+  {
+   "id": "cp_m01_25",
+   "who": "The Shipmaster",
+   "line": "Light on the rock! Hard over! Hard over!",
+   "how": "Distant shout across water, heavy reverb/echo; a ship’s master, panicked, West Country.",
+   "m": "m01"
+  },
+  {
+   "id": "cp_m01_26",
+   "who": "The Fire-Keeper",
+   "line": "That’s what the fire’s for. Six hundred years, if it takes it.",
+   "how": "Warm, quiet, a little proud; a closing line.",
+   "m": "m01"
+  },
+  {
+   "id": "cp_m01_27",
+   "who": "The Keeper’s Log (narrator)",
+   "line": "1841. A light is lit on the Skerry rock, and the fire on Lantern Rock is no longer wanted.",
+   "how": "Narration, as 01; plain and final.",
+   "m": "m01"
+  },
+  {
+   "id": "cp_m01_28",
+   "who": "The Last Fire-Keeper",
+   "line": "They say the new light sees further. I dare say it does.",
+   "how": "Old man (seventies), dry wit, a touch bitter; soft.",
+   "m": "m01"
+  },
+  {
+   "id": "cp_m01_29",
+   "who": "The Last Fire-Keeper",
+   "line": "Go on, then. I’ll keep it a while longer.",
+   "how": "Old man, gentle, resigned, almost to himself; fog closing in (slight muffle).",
+   "m": "m01"
+  },
+  {
+   "id": "cp_m01_30",
+   "who": "The Keeper’s Log (narrator)",
+   "line": "He would not leave the rock. He is remembered only as the Fog-Keeper.",
+   "how": "Narration, slow, the last word heavy. Leave a breath after “rock.”",
+   "m": "m01"
+  },
+  {
+   "id": "cp_m02_01",
+   "who": "The Keeper's Log",
+   "line": "The parish ledgers call them the wrecking years. On a night with no moon, a lantern on the rocks could look like a harbour.",
+   "how": "The narrator: measured, low, over the surf; a little reverb",
+   "m": "m02"
+  },
+  {
+   "id": "cp_m02_02",
+   "who": "A Lookout",
+   "line": "Lights under the headland! Red and green, a harbour mouth. Bring her round!",
+   "how": "Shouted from the masthead, relieved, wind-blown; far off",
+   "m": "m02"
+  },
+  {
+   "id": "cp_m02_03",
+   "who": "The Governor",
+   "line": "Lights on the point again. Red and green, as if there were a harbour there.",
+   "how": "Cold, quiet, aristocratic; looking down from the wall",
+   "m": "m02"
+  },
+  {
+   "id": "cp_m02_04",
+   "who": "Sergeant Ybarra",
+   "line": "There is a merchantman standing in, Excellency. She has seen them.",
+   "how": "Clipped, urgent but respectful",
+   "m": "m02"
+  },
+  {
+   "id": "cp_m02_05",
+   "who": "The Governor",
+   "line": "Then put them out, Sergeant. Every one. And bring me the man who hung them.",
+   "how": "An order, unhurried, with steel in it",
+   "m": "m02"
+  },
+  {
+   "id": "cp_m02_06",
+   "who": "Sergeant Ybarra",
+   "line": "Down the cliff path, quick. Put out every light on the point before she strikes.",
+   "how": "Hurried, low, to his men",
+   "m": "m02"
+  },
+  {
+   "id": "cp_m02_07",
+   "who": "Sergeant Ybarra",
+   "line": "One out. She has not seen it yet. Keep on.",
+   "how": "Breathless, steady",
+   "m": "m02"
+  },
+  {
+   "id": "cp_m02_08",
+   "who": "Sergeant Ybarra",
+   "line": "They have lit one again! Get back to it.",
+   "how": "Angry, shouted",
+   "m": "m02"
+  },
+  {
+   "id": "cp_m02_09",
+   "who": "Sergeant Ybarra",
+   "line": "She is in among the outer rocks. Faster!",
+   "how": "Alarmed, shouting over the surf",
+   "m": "m02"
+  },
+  {
+   "id": "cp_m02_10",
+   "who": "Sergeant Ybarra",
+   "line": "Two more burning. Two!",
+   "how": "Urgent, counting",
+   "m": "m02"
+  },
+  {
+   "id": "cp_m02_11",
+   "who": "Sergeant Ybarra",
+   "line": "That is the last of them. Now let her see the dark.",
+   "how": "Relief, quiet, almost a prayer",
+   "m": "m02"
+  },
+  {
+   "id": "cp_m02_12",
+   "who": "A Lookout",
+   "line": "Breakers! Breakers under the point! Hard over, hard over!",
+   "how": "Panic, far off, from the ship",
+   "m": "m02"
+  },
+  {
+   "id": "cp_m02_13",
+   "who": "The Keeper's Log",
+   "line": "She bore away to the west with her yards braced round, and never knew how near it had been.",
+   "how": "The narrator, gently",
+   "m": "m02"
+  },
+  {
+   "id": "cp_m02_14",
+   "who": "Sergeant Ybarra",
+   "line": "Their boats are drawn up in the cove. Stave them in, and they have nowhere to run.",
+   "how": "Grim, practical",
+   "m": "m02"
+  },
+  {
+   "id": "cp_m02_15",
+   "who": "Black Jago",
+   "line": "You will not take Jago on his own rocks, soldier.",
+   "how": "Contemptuous, a rough West Country burr, shouted from the dark",
+   "m": "m02"
+  },
+  {
+   "id": "cp_m02_16",
+   "who": "Sergeant Ybarra",
+   "line": "That is him. Black Jago. Alive, the Governor said. Bring him to his knees, but do not kill him.",
+   "how": "Tight, controlled",
+   "m": "m02"
+  },
+  {
+   "id": "cp_m02_17",
+   "who": "Sergeant Ybarra",
+   "line": "That is one boat holed.",
+   "how": "Satisfied, brief",
+   "m": "m02"
+  },
+  {
+   "id": "cp_m02_18",
+   "who": "Black Jago",
+   "line": "Enough! Enough. I will walk.",
+   "how": "Beaten, panting, bitter",
+   "m": "m02"
+  },
+  {
+   "id": "cp_m02_19",
+   "who": "The Governor",
+   "line": "Jago Penhallow. You have hung your last light.",
+   "how": "Quiet, final",
+   "m": "m02"
+  },
+  {
+   "id": "cp_m02_20",
+   "who": "Black Jago",
+   "line": "Hang me where the ships can see, then. I will show them a light yet.",
+   "how": "A low threat, almost amused",
+   "m": "m02"
+  },
+  {
+   "id": "cp_m02_21",
+   "who": "The Governor",
+   "line": "In chains, on the sea wall. Let every master who passes count the price.",
+   "how": "Cold, formal",
+   "m": "m02"
+  },
+  {
+   "id": "cp_m02_22",
+   "who": "The Keeper's Log",
+   "line": "They hanged him in chains on the sea wall, where the ships could see. Three nights after, his gang came for him.",
+   "how": "The narrator, sombre",
+   "m": "m02"
+  },
+  {
+   "id": "cp_m02_23",
+   "who": "Sergeant Ybarra",
+   "line": "Boats under the wall! They are coming up on lines. Keep them off the gibbet!",
+   "how": "Shouted along the wall",
+   "m": "m02"
+  },
+  {
+   "id": "cp_m02_24",
+   "who": "Sergeant Ybarra",
+   "line": "They mean to cut him down. Not one of them reaches that cage.",
+   "how": "Hard, determined",
+   "m": "m02"
+  },
+  {
+   "id": "cp_m02_25",
+   "who": "Sergeant Ybarra",
+   "line": "One is at the cage! Shoot him off it!",
+   "how": "Urgent",
+   "m": "m02"
+  },
+  {
+   "id": "cp_m02_26",
+   "who": "Sergeant Ybarra",
+   "line": "The tide has turned. The lanterns... who lit the lanterns?",
+   "how": "Unease turning to fear, quiet",
+   "m": "m02"
+  },
+  {
+   "id": "cp_m02_27",
+   "who": "A Mooncusser",
+   "line": "I said I would show them a light.",
+   "how": "Jago's voice made hollow: slow, cold, with a wet echo as if from under water",
+   "m": "m02"
+  },
+  {
+   "id": "cp_m02_28",
+   "who": "Sergeant Ybarra",
+   "line": "Lead will not touch him while those lamps burn. Put them out!",
+   "how": "Shouted, desperate",
+   "m": "m02"
+  },
+  {
+   "id": "cp_m02_29",
+   "who": "Sergeant Ybarra",
+   "line": "The lamps are dark! Now, while he is open!",
+   "how": "Fierce",
+   "m": "m02"
+  },
+  {
+   "id": "cp_m02_30",
+   "who": "A Mooncusser",
+   "line": "Burn, my lights. Burn.",
+   "how": "A whisper with an underwater echo",
+   "m": "m02"
+  },
+  {
+   "id": "cp_m02_31",
+   "who": "Sergeant Ybarra",
+   "line": "He is calling them up again! Every lamp on the wall!",
+   "how": "Shouted, alarmed",
+   "m": "m02"
+  },
+  {
+   "id": "cp_m02_32",
+   "who": "A Mooncusser",
+   "line": "There will be lights on these rocks long after your fort is fallen.",
+   "how": "Fading, hollow, the echo deepening",
+   "m": "m02"
+  },
+  {
+   "id": "cp_m02_33",
+   "who": "The Keeper's Log",
+   "line": "He went over the wall with his light, and it went down into the sea still burning. It has been seen on the rocks ever since.",
+   "how": "The narrator, hushed",
+   "m": "m02"
+  },
+  {
+   "id": "cp_m02_34",
+   "who": "The Governor",
+   "line": "Write it in the ledger, Sergeant. And double the watch on the wall.",
+   "how": "Tired, dry",
+   "m": "m02"
+  },
+  {
+   "id": "cp_m03_01",
+   "who": "The Lampwright",
+   "line": "Forty years they have talked of a light on this rock. Tonight she has her tower.",
+   "how": "Quiet, to himself, looking up at the finished tower at dusk; wonder in it.",
+   "m": "m03"
+  },
+  {
+   "id": "cp_m03_02",
+   "who": "The Lampwright",
+   "line": "Tomorrow, if the sea allows, she has her eye.",
+   "how": "Half a smile; a craftsman's hope.",
+   "m": "m03"
+  },
+  {
+   "id": "cp_m03_03",
+   "who": "The Last Fire-Keeper",
+   "line": "Six hundred years my fathers kept a fire on this rock.",
+   "how": "Old, slow, heard across water from Lantern Rock; wind on the voice.",
+   "m": "m03"
+  },
+  {
+   "id": "cp_m03_04",
+   "who": "The Last Fire-Keeper",
+   "line": "Let them build their tower. We will see whose light the sea minds.",
+   "how": "Bitter and proud, a threat without raising his voice.",
+   "m": "m03"
+  },
+  {
+   "id": "cp_m03_05",
+   "who": "The Foreman",
+   "line": "Sea’s getting up, sir. We want her unloaded before dark.",
+   "how": "Shouted down the jetty over the surf; urgent but cheerful.",
+   "m": "m03"
+  },
+  {
+   "id": "cp_m03_06",
+   "who": "The Lampwright",
+   "line": "Every prism in those crates I ground with my own hands.",
+   "how": "Fierce, protective; a hand on the crate.",
+   "m": "m03"
+  },
+  {
+   "id": "cp_m03_07",
+   "who": "The Lampwright",
+   "line": "Carry them as you would carry a child.",
+   "how": "Softer; meant.",
+   "m": "m03"
+  },
+  {
+   "id": "cp_m03_08",
+   "who": "The Lampwright",
+   "line": "Haar. Off Lantern Rock, and quick with it.",
+   "how": "Sharp alarm, low; looking out to sea.",
+   "m": "m03"
+  },
+  {
+   "id": "cp_m03_09",
+   "who": "The Foreman",
+   "line": "Sir! The big crate, the heart of her. The last sea had it off the lugger.",
+   "how": "Running up, out of breath, shouting.",
+   "m": "m03"
+  },
+  {
+   "id": "cp_m03_10",
+   "who": "The Foreman",
+   "line": "It fetched up on the north rocks. Something’s out there with it.",
+   "how": "Uneasy, quieter; peering into the fog.",
+   "m": "m03"
+  },
+  {
+   "id": "cp_m03_11",
+   "who": "The Lampwright",
+   "line": "Then we fetch it. Light the braziers as you go, and keep together.",
+   "how": "Resolute, an order; no fear shown.",
+   "m": "m03"
+  },
+  {
+   "id": "cp_m03_12",
+   "who": "The Lampwright",
+   "line": "Steady. Steady. There she goes.",
+   "how": "Tense whisper as the crate rises on the rope.",
+   "m": "m03"
+  },
+  {
+   "id": "cp_m03_13",
+   "who": "The Lampwright",
+   "line": "The fog is lifting. As if it knew.",
+   "how": "Wondering, quiet; almost suspicious.",
+   "m": "m03"
+  },
+  {
+   "id": "cp_m03_14",
+   "who": "The Lampwright",
+   "line": "Up, all of you. We set her tonight.",
+   "how": "Brisk, a leader again.",
+   "m": "m03"
+  },
+  {
+   "id": "cp_m03_15",
+   "who": "The Lampwright",
+   "line": "Gently, now. Let her take it.",
+   "how": "Hushed, tender, as the lamp catches.",
+   "m": "m03"
+  },
+  {
+   "id": "cp_m03_16",
+   "who": "The Lampwright",
+   "line": "There she is.",
+   "how": "Barely a breath; overcome.",
+   "m": "m03"
+  },
+  {
+   "id": "cp_m03_17",
+   "who": "The Lampwright",
+   "line": "Let every master on this coast see her, and steer by her.",
+   "how": "Rising, proud, a blessing spoken over the sea.",
+   "m": "m03"
+  },
+  {
+   "id": "cp_m03_18",
+   "who": "The Foreman",
+   "line": "You can see her from Wrackhaven, sir. I’d stake my wages on it.",
+   "how": "Delighted, a little choked; a big man moved.",
+   "m": "m03"
+  },
+  {
+   "id": "cp_m03_19",
+   "who": "The Last Fire-Keeper",
+   "line": "There. You have no more need of me.",
+   "how": "Very quiet, far off across water; defeated, not angry.",
+   "m": "m03"
+  },
+  {
+   "id": "cp_m03_20",
+   "who": "The Last Fire-Keeper",
+   "line": "Then I will keep it cold. Someone must.",
+   "how": "Quietest of all; final. A breath of fog under it.",
+   "m": "m03"
+  },
+  {
+   "id": "cp_m03_21",
+   "who": "The Foreman",
+   "line": "That sea had it out of your arms! It’s fetched up back aboard the lugger. Go between the seas.",
+   "how": "Shouted down the pier over the surf; alarmed, then practical.",
+   "m": "m03"
+  },
+  {
+   "id": "cp_m03_22",
+   "who": "The Lampwright",
+   "line": "Gently with them. There’s a year of grinding in every one of those crates.",
+   "how": "Fussing, anxious.",
+   "m": "m03"
+  },
+  {
+   "id": "cp_m03_23",
+   "who": "The Lampwright",
+   "line": "Half of her up. The light’s going; keep at it.",
+   "how": "Urging, a glance at the sky.",
+   "m": "m03"
+  },
+  {
+   "id": "cp_m03_24",
+   "who": "The Foreman",
+   "line": "That’s it. Up the pier with her, and mind the seas.",
+   "how": "Hearty encouragement, shouted.",
+   "m": "m03"
+  },
+  {
+   "id": "cp_m03_25",
+   "who": "The Lampwright",
+   "line": "Now wind her up. Steady at the handle.",
+   "how": "Calling down from the scaffold.",
+   "m": "m03"
+  },
+  {
+   "id": "cp_m03_26",
+   "who": "The Lampwright",
+   "line": "First of her safe on the gallery.",
+   "how": "Relieved, warm.",
+   "m": "m03"
+  },
+  {
+   "id": "cp_m03_27",
+   "who": "The Lampwright",
+   "line": "That’s the last of the prisms. Every one. Well done, all of you.",
+   "how": "Proud and grateful; a little emotional.",
+   "m": "m03"
+  },
+  {
+   "id": "cp_m03_28",
+   "who": "The Lampwright",
+   "line": "Pick it up! Don’t leave it lying for them!",
+   "how": "Shouted in alarm, in the fog.",
+   "m": "m03"
+  },
+  {
+   "id": "cp_m03_29",
+   "who": "The Lampwright",
+   "line": "It’s putting them out. Stand by them, or light them again.",
+   "how": "Grim, quick instruction.",
+   "m": "m03"
+  },
+  {
+   "id": "cp_m03_30",
+   "who": "The Foreman",
+   "line": "Something on the rocks, sir. Moving.",
+   "how": "Low, uneasy, shouted across the rocks.",
+   "m": "m03"
+  },
+  {
+   "id": "cp_m03_31",
+   "who": "The Lampwright",
+   "line": "Crabs. Big as dogs. They hate the fire; keep the braziers lit.",
+   "how": "Disgust and resolve; quick.",
+   "m": "m03"
+  },
+  {
+   "id": "cp_m03_32",
+   "who": "The Lampwright",
+   "line": "That’s all five. Now the heart, and quick.",
+   "how": "Breathless urgency.",
+   "m": "m03"
+  },
+  {
+   "id": "cp_m03_33",
+   "who": "The Lampwright",
+   "line": "That’s her. Not a scratch on the crate. Now bring her home.",
+   "how": "Relief, almost laughing.",
+   "m": "m03"
+  },
+  {
+   "id": "cp_m03_34",
+   "who": "The Lampwright",
+   "line": "Hook her on. Wind, and don’t stop for anything.",
+   "how": "Hard, urgent order.",
+   "m": "m03"
+  },
+  {
+   "id": "cp_m03_35",
+   "who": "The Lampwright",
+   "line": "Each panel has its numeral, and so has its place in the frame. Match them.",
+   "how": "Patient, a teacher; in the echoing lantern room (slight room reverb).",
+   "m": "m03"
+  },
+  {
+   "id": "cp_m03_36",
+   "who": "The Lampwright",
+   "line": "Look at her. She’s taking the lamp’s glow already, and there’s no lamp.",
+   "how": "Awed whisper.",
+   "m": "m03"
+  },
+  {
+   "id": "cp_m03_37",
+   "who": "The Lampwright",
+   "line": "All six. Now oil, from the Service Room. The best colza; don’t spill it.",
+   "how": "Pleased but exacting.",
+   "m": "m03"
+  },
+  {
+   "id": "cp_m03_38",
+   "who": "The Lampwright",
+   "line": "Full. Here: take the taper. She’s yours to light.",
+   "how": "Warm; handing over the honour.",
+   "m": "m03"
+  },
+  {
+   "id": "cp_m04_01",
+   "who": "Holm",
+   "line": "Wind’s gone round east-north-east. A full gale before midnight, and sleet with it.",
+   "how": "Matter-of-fact, looking out at the weather; inside the lantern room (slight reverb).",
+   "m": "m04"
+  },
+  {
+   "id": "cp_m04_02",
+   "who": "Maren",
+   "line": "There’s a sail, Holm. North-east, standing in for the harbour.",
+   "how": "Calling in from the gallery door, wind behind her.",
+   "m": "m04"
+  },
+  {
+   "id": "cp_m04_03",
+   "who": "Holm",
+   "line": "In this? Who would bring a ship in, in this?",
+   "how": "Disbelief, coming to look.",
+   "m": "m04"
+  },
+  {
+   "id": "cp_m04_04",
+   "who": "Holm",
+   "line": "A brig, by her lights. The Gannet. That’s Crane, bringing his cargo in early again.",
+   "how": "Grim recognition; a sigh at Crane.",
+   "m": "m04"
+  },
+  {
+   "id": "cp_m04_05",
+   "who": "Holm",
+   "line": "Take the lens off the clockwork. We’ll hand her in, as I did in the old days.",
+   "how": "Decision, an old hand's authority.",
+   "m": "m04"
+  },
+  {
+   "id": "cp_m04_06",
+   "who": "Maren",
+   "line": "I’ll stand by the bell.",
+   "how": "Cheerful, already going; brave.",
+   "m": "m04"
+  },
+  {
+   "id": "cp_m04_07",
+   "who": "Holm",
+   "line": "No. No, no, no.",
+   "how": "Horrified whisper rising; as the light dies.",
+   "m": "m04"
+  },
+  {
+   "id": "cp_m04_08",
+   "who": "Maren",
+   "line": "Holm! The light!",
+   "how": "A scream from the gallery, half lost in the wind.",
+   "m": "m04"
+  },
+  {
+   "id": "cp_m04_09",
+   "who": "Holm",
+   "line": "There’s oil in her. The wick is sound. She simply went out.",
+   "how": "Bewildered, almost calm; he can't understand it.",
+   "m": "m04"
+  },
+  {
+   "id": "cp_m04_10",
+   "who": "Holm",
+   "line": "Oil from below, a new wick, and wind the clock. Go!",
+   "how": "Snapping back to command; a shout down the stair.",
+   "m": "m04"
+  },
+  {
+   "id": "cp_m04_11",
+   "who": "Maren",
+   "line": "She’s in among the rocks, and blind. I’ll take the skiff out with a lantern.",
+   "how": "Firm, already decided; pulling on her oilskin.",
+   "m": "m04"
+  },
+  {
+   "id": "cp_m04_12",
+   "who": "Holm",
+   "line": "Maren. Not in this sea.",
+   "how": "A plea, low; he knows he can't stop her.",
+   "m": "m04"
+  },
+  {
+   "id": "cp_m04_13",
+   "who": "Maren",
+   "line": "You light the lamp. I’ll be back before you’ve trimmed it.",
+   "how": "Warm, a quick smile in it; brave.",
+   "m": "m04"
+  },
+  {
+   "id": "cp_m04_14",
+   "who": "Maren",
+   "line": "I row better than any man in Wrackhaven. You’ve said so yourself.",
+   "how": "Teasing him, going; the last thing she says to him.",
+   "m": "m04"
+  },
+  {
+   "id": "cp_m04_15",
+   "who": "Holm",
+   "line": "Maren.",
+   "how": "Only her name; to an empty doorway.",
+   "m": "m04"
+  },
+  {
+   "id": "cp_m04_16",
+   "who": "Holm",
+   "line": "She’s lit. She’s lit! Swing her round, east, east!",
+   "how": "Wild relief, shouting.",
+   "m": "m04"
+  },
+  {
+   "id": "cp_m04_17",
+   "who": "Holm",
+   "line": "There! There she is!",
+   "how": "A shout of hope.",
+   "m": "m04"
+  },
+  {
+   "id": "cp_m04_18",
+   "who": "Maren",
+   "line": "Gannet! Gannet! Bear away! Rocks!",
+   "how": "Far off across water, shouting with all her strength; wind tearing at it.",
+   "m": "m04"
+  },
+  {
+   "id": "cp_m04_19",
+   "who": "A voice off the sea",
+   "line": "She’s struck! She’s on the rocks!",
+   "how": "Distant, terrified cry across the water; wind-torn.",
+   "m": "m04"
+  },
+  {
+   "id": "cp_m04_20",
+   "who": "Holm",
+   "line": "Maren! Maren!",
+   "how": "A raw scream of her name from the gallery; breaks.",
+   "m": "m04"
+  },
+  {
+   "id": "cp_m04_21",
+   "who": "The Keeper’s Log",
+   "line": "The Gannet is on the skerries with all hands.",
+   "how": "Holm writing: flat, exhausted, quiet; slight paper intimacy.",
+   "m": "m04"
+  },
+  {
+   "id": "cp_m04_22",
+   "who": "The Keeper’s Log",
+   "line": "The skiff came ashore at the harbour steps this morning, empty.",
+   "how": "Flat; a catch on 'empty'.",
+   "m": "m04"
+  },
+  {
+   "id": "cp_m04_23",
+   "who": "The Keeper’s Log",
+   "line": "Maren’s lantern was still lit.",
+   "how": "Barely holding together.",
+   "m": "m04"
+  },
+  {
+   "id": "cp_m04_24",
+   "who": "The Keeper’s Log",
+   "line": "That night the sea froze from the steps to the horizon,",
+   "how": "Slower; wonder creeping in.",
+   "m": "m04"
+  },
+  {
+   "id": "cp_m04_25",
+   "who": "The Keeper’s Log",
+   "line": "and there were mountains behind the headland, white to the top.",
+   "how": "Hushed, as if seeing it again.",
+   "m": "m04"
+  },
+  {
+   "id": "cp_m04_26",
+   "who": "The Keeper’s Log",
+   "line": "We have no mountains.",
+   "how": "Bewildered, almost a whisper. Let it hang.",
+   "m": "m04"
+  },
+  {
+   "id": "cp_m04_27",
+   "who": "Maren",
+   "line": "Sleet! It’s crusting the glass. I can’t see her through it.",
+   "how": "Shouted in from the gallery, frustrated.",
+   "m": "m04"
+  },
+  {
+   "id": "cp_m04_28",
+   "who": "Holm",
+   "line": "That’s it. She heard; she’s shortening sail.",
+   "how": "Relieved, short.",
+   "m": "m04"
+  },
+  {
+   "id": "cp_m04_29",
+   "who": "Holm",
+   "line": "Every rock the beam shows him, he remembers. Leave him in the dark and he forgets them all.",
+   "how": "Grim teaching, half to himself.",
+   "m": "m04"
+  },
+  {
+   "id": "cp_m04_30",
+   "who": "Maren",
+   "line": "She’s coming on fast, Holm. Under all plain sail, in this.",
+   "how": "Worried, shouted.",
+   "m": "m04"
+  },
+  {
+   "id": "cp_m04_31",
+   "who": "Holm",
+   "line": "If she crowds the rocks, ring the bell. He’ll shorten sail and give us time.",
+   "how": "Calm instruction.",
+   "m": "m04"
+  },
+  {
+   "id": "cp_m04_32",
+   "who": "Holm",
+   "line": "She’s in among them now. Don’t you leave her.",
+   "how": "Low and intent.",
+   "m": "m04"
+  },
+  {
+   "id": "cp_m04_33",
+   "who": "Maren",
+   "line": "She’s losing them! Back on her, back on her!",
+   "how": "Urgent, shouted.",
+   "m": "m04"
+  },
+  {
+   "id": "cp_m04_34",
+   "who": "Holm",
+   "line": "Good. Good. She knows where she is.",
+   "how": "Quiet satisfaction.",
+   "m": "m04"
+  },
+  {
+   "id": "cp_m04_35",
+   "who": "Maren",
+   "line": "I can see her figurehead in the beam. A woman, carved, with her arm out.",
+   "how": "Hushed, fascinated; a strange moment of beauty.",
+   "m": "m04"
+  },
+  {
+   "id": "cp_m04_36",
+   "who": "Holm",
+   "line": "Nearly through. One more mile of it.",
+   "how": "Tired hope.",
+   "m": "m04"
+  },
+  {
+   "id": "cp_m04_37",
+   "who": "Holm",
+   "line": "The weights are up. She’ll turn when she’s lit.",
+   "how": "Calling up the stair, echoing in the tower.",
+   "m": "m04"
+  },
+  {
+   "id": "cp_m04_38",
+   "who": "Holm",
+   "line": "Quick as you can on the stair. Ninety steps, and every one of them matters.",
+   "how": "Urgent, breathless, from the stairwell (tower reverb).",
+   "m": "m04"
+  },
+  {
+   "id": "cp_m04_39",
+   "who": "Holm",
+   "line": "I can see her lantern. She’s clear of the jetty. Pull, Maren, pull.",
+   "how": "At the glass, willing her on; voice catching.",
+   "m": "m04"
+  },
+  {
+   "id": "cp_m04_40",
+   "who": "Holm",
+   "line": "Hark. That’s the Gannet’s bell. She’s ringing for a pilot, God help her.",
+   "how": "Hushed, stricken; listening.",
+   "m": "m04"
+  },
+  {
+   "id": "cp_m04_41",
+   "who": "Holm",
+   "line": "Hurry. Oh, hurry.",
+   "how": "Almost a prayer.",
+   "m": "m04"
+  },
+  {
+   "id": "cp_m04_42",
+   "who": "Holm",
+   "line": "Oil. Good.",
+   "how": "Clipped, busy.",
+   "m": "m04"
+  },
+  {
+   "id": "cp_m04_43",
+   "who": "Holm",
+   "line": "The new wick’s in. Trimmed square.",
+   "how": "Clipped, busy.",
+   "m": "m04"
+  },
+  {
+   "id": "cp_m04_44",
+   "who": "Holm",
+   "line": "That’s our skiff.",
+   "how": "Morning, outdoors, very quiet; disbelief.",
+   "m": "m04"
+  },
+  {
+   "id": "cp_m04_45",
+   "who": "Holm",
+   "line": "Ring it. She always hears the bell. She’ll pull for it.",
+   "how": "Quiet, hollow; holding on to hope.",
+   "m": "m04"
+  },
+  {
+   "id": "cp_m04_46",
+   "who": "Holm",
+   "line": "The Wrackhaven boats are out at the rocks. They’re picking up spars.",
+   "how": "Flat; looking out to sea.",
+   "m": "m04"
+  },
+  {
+   "id": "cp_m04_47",
+   "who": "Holm",
+   "line": "Again.",
+   "how": "Barely audible.",
+   "m": "m04"
+  },
+  {
+   "id": "cp_m04_48",
+   "who": "Holm",
+   "line": "Nothing. Only the gulls.",
+   "how": "Empty; the end of hope.",
+   "m": "m04"
+  },
+  {
+   "id": "cp_m05_01",
+   "who": "The Keeper's Log (Holm reading)",
+   "line": "All night the sky over the headland had been red, as if the hills were burning.",
+   "how": "Holm's own voice, low and even, read from the page; close, dry, a little tired.",
+   "m": "m05"
+  },
+  {
+   "id": "cp_m05_02",
+   "who": "Holm",
+   "line": "The rocks in the bay are warm to the touch. In January.",
+   "how": "Quiet unease, on the beach at dawn; light wind.",
+   "m": "m05"
+  },
+  {
+   "id": "cp_m05_03",
+   "who": "Holm",
+   "line": "Something came up out of the surf in the night. Small prints. Shoes.",
+   "how": "Crouched, puzzled, lowering his voice.",
+   "m": "m05"
+  },
+  {
+   "id": "cp_m05_04",
+   "who": "Holm",
+   "line": "Follow them along the tide line, and keep your irons ready.",
+   "how": "Firm, an order to the crew.",
+   "m": "m05"
+  },
+  {
+   "id": "cp_m05_05",
+   "who": "The Keeper's Log",
+   "line": "A shark walked up out of the surf at dawn, wearing the blue shoes of the Gannet's cabin boy.",
+   "how": "Read flatly, as a man setting down what he cannot explain.",
+   "m": "m05"
+  },
+  {
+   "id": "cp_m05_06",
+   "who": "Holm",
+   "line": "Blue shoes. The Gannet's boy went down in blue shoes.",
+   "how": "Almost a whisper; grief under it.",
+   "m": "m05"
+  },
+  {
+   "id": "cp_m05_07",
+   "who": "The Keeper's Log",
+   "line": "He stood on the sand and looked at me, then walked back into the sea.",
+   "how": "Slow, wondering.",
+   "m": "m05"
+  },
+  {
+   "id": "cp_m05_08",
+   "who": "Holm",
+   "line": "The surf is full of them. Get to the old fog bell, and hold till the sun's up!",
+   "how": "Shouted over surf, urgent.",
+   "m": "m05"
+  },
+  {
+   "id": "cp_m05_09",
+   "who": "The Wren's Master",
+   "line": "Keeper's word, by the pilot cutter: follow the shark in, and ring if she comes.",
+   "how": "Gruff merchant master, 50s, West Country; dry.",
+   "m": "m05"
+  },
+  {
+   "id": "cp_m05_10",
+   "who": "A Hand off the Wren",
+   "line": "The shark, he says. As if there were a choice of them.",
+   "how": "Young sailor, nervous gallows humour, under his breath.",
+   "m": "m05"
+  },
+  {
+   "id": "cp_m05_11",
+   "who": "The Wren's Master",
+   "line": "There. Walking on the water, ahead of the bowsprit, and his shoes alight.",
+   "how": "Hushed awe, looking forward from the bow.",
+   "m": "m05"
+  },
+  {
+   "id": "cp_m05_12",
+   "who": "The Wren's Master",
+   "line": "Keep him close and keep a hand forward with the bow lantern. The rocks show only in the beam.",
+   "how": "Steady orders.",
+   "m": "m05"
+  },
+  {
+   "id": "cp_m05_13",
+   "who": "A Hand off the Wren",
+   "line": "He's stopped. He's looking back at us.",
+   "how": "Frightened, quiet.",
+   "m": "m05"
+  },
+  {
+   "id": "cp_m05_14",
+   "who": "The Wren's Master",
+   "line": "He's gone under, among the hulks. Every man to his post: we're on our own till he comes up.",
+   "how": "Hard and fast.",
+   "m": "m05"
+  },
+  {
+   "id": "cp_m05_15",
+   "who": "A Hand off the Wren",
+   "line": "Through the Gate, and the Light right ahead of us.",
+   "how": "Relief.",
+   "m": "m05"
+  },
+  {
+   "id": "cp_m05_16",
+   "who": "A Hand off the Wren",
+   "line": "Master. Those are palm trees on the cliffs.",
+   "how": "Disbelief, slow.",
+   "m": "m05"
+  },
+  {
+   "id": "cp_m05_17",
+   "who": "The Wren's Master",
+   "line": "And the wake's gone green behind us. Mind your helm, and never mind the trees.",
+   "how": "Dry, unflustered.",
+   "m": "m05"
+  },
+  {
+   "id": "cp_m05_18",
+   "who": "A Hand off the Wren",
+   "line": "Master, she's on the water astern. A woman, and her lantern.",
+   "how": "Terrified whisper.",
+   "m": "m05"
+  },
+  {
+   "id": "cp_m05_19",
+   "who": "The Wren's Master",
+   "line": "The shark's walked on to the pier. Ring that bell, and ring it again, and crack on all she'll carry!",
+   "how": "Roared over wind.",
+   "m": "m05"
+  },
+  {
+   "id": "cp_m05_20",
+   "who": "A Hand off the Wren",
+   "line": "Not a scratch on her. And look at him: sat down on the pier, taking his shoes off.",
+   "how": "Laughing with relief.",
+   "m": "m05"
+  },
+  {
+   "id": "cp_m05_21",
+   "who": "A Hand off the Wren",
+   "line": "Blue plimsolls, on a shark.",
+   "how": "Amused, fond.",
+   "m": "m05"
+  },
+  {
+   "id": "cp_m05_22",
+   "who": "The Wren's Master",
+   "line": "Then that's his name, and he's earned it. Plimsoll.",
+   "how": "Warm, final.",
+   "m": "m05"
+  },
+  {
+   "id": "cp_m05_23",
+   "who": "Holm",
+   "line": "Small feet, and turned in a little. A boy's, by the stride.",
+   "how": "Kneeling by a print; quiet.",
+   "m": "m05"
+  },
+  {
+   "id": "cp_m05_24",
+   "who": "Holm",
+   "line": "Look how the sand's glazed round them, as if something hot had stood here.",
+   "how": "Puzzled, uneasy.",
+   "m": "m05"
+  },
+  {
+   "id": "cp_m05_25",
+   "who": "Holm",
+   "line": "They go on to the point. Whatever it is, it's still here.",
+   "how": "Low, wary.",
+   "m": "m05"
+  },
+  {
+   "id": "cp_m05_26",
+   "who": "Holm",
+   "line": "Look east: the hills are going grey. Hold on!",
+   "how": "Shouted, hopeful.",
+   "m": "m05"
+  },
+  {
+   "id": "cp_m05_27",
+   "who": "Holm",
+   "line": "There's the rim of the sun. They hate it. Hold!",
+   "how": "Shouted, fierce.",
+   "m": "m05"
+  },
+  {
+   "id": "cp_m05_28",
+   "who": "Holm",
+   "line": "Sunrise. They're gone back under. And so is he, whatever he was.",
+   "how": "Spent, quiet.",
+   "m": "m05"
+  },
+  {
+   "id": "cp_m05_29",
+   "who": "The Wren's Master",
+   "line": "Good. Sing out what you see from the bow, lad.",
+   "how": "Approving, brisk.",
+   "m": "m05"
+  },
+  {
+   "id": "cp_m05_30",
+   "who": "A Hand off the Wren",
+   "line": "There! He's up again, ahead of us, and walking on.",
+   "how": "Joyful shout.",
+   "m": "m05"
+  },
+  {
+   "id": "cp_m05_31",
+   "who": "The Wren's Master",
+   "line": "The Hulks. Old wrecks on the rocks, and things coming out of them. Repel boarders!",
+   "how": "Bellowed order.",
+   "m": "m05"
+  },
+  {
+   "id": "cp_m05_32",
+   "who": "The Wren's Master",
+   "line": "The Narrows. Hold her in his wake, a ship's length either side and no more.",
+   "how": "Tense, careful.",
+   "m": "m05"
+  },
+  {
+   "id": "cp_m06_01",
+   "who": "The Keeper's Log",
+   "line": "28 February. The Kittiwake was out on the grounds past the Near Skerries, her nets down and the glass falling.",
+   "how": "Narration, quiet, measured; reading a page by lamplight",
+   "m": "m06"
+  },
+  {
+   "id": "cp_m06_02",
+   "who": "Skipper Penhallow",
+   "line": "Nets up before the dark, lads, and home by the Light.",
+   "how": "Gruff, matter-of-fact, calling down the deck",
+   "m": "m06"
+  },
+  {
+   "id": "cp_m06_03",
+   "who": "Jory Tregear",
+   "line": "Glass is down again, Skipper. There’s haar coming.",
+   "how": "Uneasy, looking at the sky",
+   "m": "m06"
+  },
+  {
+   "id": "cp_m06_04",
+   "who": "Skipper Penhallow",
+   "line": "Then haul quicker, Jory Tregear.",
+   "how": "Dry, dismissive",
+   "m": "m06"
+  },
+  {
+   "id": "cp_m06_05",
+   "who": "Skipper Penhallow",
+   "line": "Man the capstan. Heave, and keep heaving.",
+   "how": "Firm order, over the wind",
+   "m": "m06"
+  },
+  {
+   "id": "cp_m06_06",
+   "who": "Jory Tregear",
+   "line": "There’s weight in her. More than fish.",
+   "how": "Straining, then puzzled",
+   "m": "m06"
+  },
+  {
+   "id": "cp_m06_07",
+   "who": "Skipper Penhallow",
+   "line": "Drowned men in the mesh. Put them back where they came from.",
+   "how": "Grim, steady, a man not showing fear",
+   "m": "m06"
+  },
+  {
+   "id": "cp_m06_08",
+   "who": "Jory Tregear",
+   "line": "Second net’s coming. God, they’re in this one too.",
+   "how": "Breathless, horrified",
+   "m": "m06"
+  },
+  {
+   "id": "cp_m06_09",
+   "who": "Skipper Penhallow",
+   "line": "Last net. Heave!",
+   "how": "Shout, effort",
+   "m": "m06"
+  },
+  {
+   "id": "cp_m06_10",
+   "who": "Skipper Penhallow",
+   "line": "That’s the last of it. Now the lamps, the three of them. I’ll not be run down in the dark.",
+   "how": "Winded, relieved, back to business",
+   "m": "m06"
+  },
+  {
+   "id": "cp_m06_12",
+   "who": "Skipper Penhallow",
+   "line": "Good. Now we go home.",
+   "how": "Satisfied, low",
+   "m": "m06"
+  },
+  {
+   "id": "cp_m06_13",
+   "who": "Jory Tregear",
+   "line": "Skipper. There’s something on the hatch.",
+   "how": "Whisper, wary",
+   "m": "m06"
+  },
+  {
+   "id": "cp_m06_14",
+   "who": "Verity",
+   "line": "I can help.",
+   "how": "Sweet, small, close; a little too warm",
+   "m": "m06"
+  },
+  {
+   "id": "cp_m06_15",
+   "who": "Skipper Penhallow",
+   "line": "It’s a child’s toy, washed up in the nets.",
+   "how": "Dismissive, slightly too quick",
+   "m": "m06"
+  },
+  {
+   "id": "cp_m06_16",
+   "who": "Jory Tregear",
+   "line": "It’s smiling at us. It wasn’t, before.",
+   "how": "Quiet dread",
+   "m": "m06"
+  },
+  {
+   "id": "cp_m06_17",
+   "who": "Jory Tregear",
+   "line": "Old Pascoe says put a light in their face. A flare.",
+   "how": "Urgent, half pleading",
+   "m": "m06"
+  },
+  {
+   "id": "cp_m06_18",
+   "who": "Skipper Penhallow",
+   "line": "There’s eight flares in that locker and they’re for ships in trouble. Leave it be.",
+   "how": "Stern, final",
+   "m": "m06"
+  },
+  {
+   "id": "cp_m06_19",
+   "who": "Verity",
+   "line": "Let me help you.",
+   "how": "Sweet, closer than before, delighted",
+   "m": "m06"
+  },
+  {
+   "id": "cp_m06_20",
+   "who": "Skipper Penhallow",
+   "line": "Middle watch. Somebody take the tiller and keep her off the rocks.",
+   "how": "Tired, gruff",
+   "m": "m06"
+  },
+  {
+   "id": "cp_m06_22",
+   "who": "Skipper Penhallow",
+   "line": "Who fired that? I said those were for ships in trouble!",
+   "how": "Angry shout",
+   "m": "m06"
+  },
+  {
+   "id": "cp_m06_23",
+   "who": "Jory Tregear",
+   "line": "We are a ship in trouble, Skipper.",
+   "how": "Quiet, shaking, defiant",
+   "m": "m06"
+  },
+  {
+   "id": "cp_m06_24",
+   "who": "Skipper Penhallow",
+   "line": "Mind her head! She’s falling off towards the skerries!",
+   "how": "Alarmed shout",
+   "m": "m06"
+  },
+  {
+   "id": "cp_m06_25",
+   "who": "Skipper Penhallow",
+   "line": "Two bells. Keep her full and by.",
+   "how": "Low, routine",
+   "m": "m06"
+  },
+  {
+   "id": "cp_m06_26",
+   "who": "Jory Tregear",
+   "line": "I can see the Light. We’re nearly home.",
+   "how": "Hopeful, a breath of relief",
+   "m": "m06"
+  },
+  {
+   "id": "cp_m06_27",
+   "who": "Jory Tregear",
+   "line": "Sea coming aboard! Hold on!",
+   "how": "Yell over a crash of water",
+   "m": "m06"
+  },
+  {
+   "id": "cp_m06_28",
+   "who": "Skipper Penhallow",
+   "line": "The locker’s swamped. Every flare in it’s soaked.",
+   "how": "Grim, spluttering",
+   "m": "m06"
+  },
+  {
+   "id": "cp_m06_29",
+   "who": "Jory Tregear",
+   "line": "Dry them at the caboose. Two at a time, she’ll take them.",
+   "how": "Quick, practical",
+   "m": "m06"
+  },
+  {
+   "id": "cp_m06_30",
+   "who": "Skipper Penhallow",
+   "line": "Then dry them. And keep that thing off us.",
+   "how": "Gruff; his first crack of fear",
+   "m": "m06"
+  },
+  {
+   "id": "cp_m06_31",
+   "who": "Jory Tregear",
+   "line": "There’s two more were in the cuddy. Wet as the rest.",
+   "how": "Practical, out of breath",
+   "m": "m06"
+  },
+  {
+   "id": "cp_m06_32",
+   "who": "Verity",
+   "line": "You look so tired, Abel.",
+   "how": "Soft, intimate, almost a lullaby",
+   "m": "m06"
+  },
+  {
+   "id": "cp_m06_33",
+   "who": "Skipper Penhallow",
+   "line": "Leave it. It only wants to help.",
+   "how": "Dreamy, slow, wrong",
+   "m": "m06"
+  },
+  {
+   "id": "cp_m06_34",
+   "who": "Jory Tregear",
+   "line": "Skipper, no! A flare, somebody!",
+   "how": "Panicked scream",
+   "m": "m06"
+  },
+  {
+   "id": "cp_m06_35",
+   "who": "Skipper Penhallow",
+   "line": "I said leave it be. Let it help.",
+   "how": "Calm, far away",
+   "m": "m06"
+  },
+  {
+   "id": "cp_m06_36",
+   "who": "Verity",
+   "line": "There now.",
+   "how": "Tender, satisfied; a long tail of echo",
+   "m": "m06"
+  },
+  {
+   "id": "cp_m06_37",
+   "who": "Jory Tregear",
+   "line": "He’s gone. The skipper’s gone. And she won’t answer the tiller: her rudder’s broke!",
+   "how": "Shock, then rising panic",
+   "m": "m06"
+  },
+  {
+   "id": "cp_m06_38",
+   "who": "Jory Tregear",
+   "line": "Rocks! Rocks under her bow!",
+   "how": "Scream",
+   "m": "m06"
+  },
+  {
+   "id": "cp_m06_39",
+   "who": "The Keeper's Log",
+   "line": "She struck on the Near Skerries a little before eight bells, and the sea came up over her deck.",
+   "how": "Narration, heavy",
+   "m": "m06"
+  },
+  {
+   "id": "cp_m06_40",
+   "who": "Verity",
+   "line": "I can help.",
+   "how": "Sweet; said when he sits before someone (cycled)",
+   "m": "m06"
+  },
+  {
+   "id": "cp_m06_41",
+   "who": "Verity",
+   "line": "Let me help you.",
+   "how": "Sweet, eager",
+   "m": "m06"
+  },
+  {
+   "id": "cp_m06_42",
+   "who": "Verity",
+   "line": "You look so tired.",
+   "how": "Soft, sympathetic",
+   "m": "m06"
+  },
+  {
+   "id": "cp_m06_43",
+   "who": "Verity",
+   "line": "I only want to help.",
+   "how": "Hurt, wheedling",
+   "m": "m06"
+  },
+  {
+   "id": "cp_m06_44",
+   "who": "Verity",
+   "line": "Sit with me a while.",
+   "how": "Gentle, inviting",
+   "m": "m06"
+  },
+  {
+   "id": "cp_m06_45",
+   "who": "Verity",
+   "line": "I can take the tiller.",
+   "how": "Bright, helpful",
+   "m": "m06"
+  },
+  {
+   "id": "cp_m06_46",
+   "who": "Verity",
+   "line": "Nobody need know.",
+   "how": "Conspiratorial whisper",
+   "m": "m06"
+  },
+  {
+   "id": "cp_m06_47",
+   "who": "Verity",
+   "line": "There now.",
+   "how": "Tender",
+   "m": "m06"
+  },
+  {
+   "id": "cp_m06_48",
+   "who": "Jory Tregear",
+   "line": "She’s going. Cut the punt free, both lashings!",
+   "how": "Shouting over surf",
+   "m": "m06"
+  },
+  {
+   "id": "cp_m06_49",
+   "who": "Jory Tregear",
+   "line": "Over the side with her! All of us together!",
+   "how": "Strain, effort",
+   "m": "m06"
+  },
+  {
+   "id": "cp_m06_50",
+   "who": "Jory Tregear",
+   "line": "She’s in the water. Get in, get in!",
+   "how": "Urgent",
+   "m": "m06"
+  },
+  {
+   "id": "cp_m06_51",
+   "who": "Jory Tregear",
+   "line": "Don’t leave anyone on that deck.",
+   "how": "Fierce",
+   "m": "m06"
+  },
+  {
+   "id": "cp_m06_52",
+   "who": "Jory Tregear",
+   "line": "Pull. Don’t look back at her.",
+   "how": "Hushed, rowing",
+   "m": "m06"
+  },
+  {
+   "id": "cp_m06_53",
+   "who": "Verity",
+   "line": "I can help.",
+   "how": "Sweet, from a distance, carried over water",
+   "m": "m06"
+  },
+  {
+   "id": "cp_m06_54",
+   "who": "Jory Tregear",
+   "line": "It’s on her rail. It’s watching us go.",
+   "how": "Whisper",
+   "m": "m06"
+  },
+  {
+   "id": "cp_m06_55",
+   "who": "Jory Tregear",
+   "line": "It’s in the boat. In the bow. Oh God, it’s in the boat.",
+   "how": "Terrified whisper",
+   "m": "m06"
+  },
+  {
+   "id": "cp_m06_56",
+   "who": "Jory Tregear",
+   "line": "One left. That’s the last flare there is. Put it in its face.",
+   "how": "Shaking, steeling himself",
+   "m": "m06"
+  },
+  {
+   "id": "cp_m06_57",
+   "who": "Jory Tregear",
+   "line": "It rolled over the side and the sea took it. It never stopped smiling.",
+   "how": "Numb, exhausted, at dawn",
+   "m": "m06"
+  },
+  {
+   "id": "cp_m06_58",
+   "who": "The Keeper's Log",
+   "line": "A hand off the Kittiwake told me of a small yellow thing, round as a lamp glass and smiling, that sat on his deck and said it wanted to help.",
+   "how": "Narration (the log's own page)",
+   "m": "m06"
+  },
+  {
+   "id": "cp_m06_59",
+   "who": "The Keeper's Log",
+   "line": "He put a flare in its face and it rolled over the side. The ships that let it sit there do not come in.",
+   "how": "Narration, grave",
+   "m": "m06"
+  },
+  {
+   "id": "cp_m06_60",
+   "who": "Jory Tregear",
+   "line": "It told me its name, before. Verity, it said. Verity.",
+   "how": "Quiet, haunted; the last word almost to himself",
+   "m": "m06"
+  },
+  {
+   "id": "cp_m06_61",
+   "who": "Jory Tregear",
+   "line": "One left, and it’s mine.",
+   "how": "Grim resolve (when the punt had no flare left)",
+   "m": "m06"
+  },
+  {
+   "id": "cp_m06_62",
+   "who": "Jory Tregear",
+   "line": "Lamps want lighting before it’s full dark.",
+   "how": "Hint, practical",
+   "m": "m06"
+  },
+  {
+   "id": "cp_m07_01",
+   "who": "The Keeper's Log",
+   "line": "On the nights the lamp was out, the wreckers came down to the Bonded Quay as if they owned it.",
+   "how": "The narrator: low, measured, over lapping water",
+   "m": "m07"
+  },
+  {
+   "id": "cp_m07_02",
+   "who": "Mr Tregear, the Receiver",
+   "line": "The Gannet's dead sent their sea chests ashore the night she struck. Those chests belong to the widows, not to Kittow's gang.",
+   "how": "Quiet and firm, in the gig, close to the mic",
+   "m": "m07"
+  },
+  {
+   "id": "cp_m07_03",
+   "who": "Mr Tregear, the Receiver",
+   "line": "No lanterns, gentlemen. A lantern on this quay tonight is a target.",
+   "how": "A low order, almost whispered",
+   "m": "m07"
+  },
+  {
+   "id": "cp_m07_04",
+   "who": "Mr Tregear, the Receiver",
+   "line": "The keeper swears he will have the lamp lit before two. Get the yard gate open by then.",
+   "how": "Whispered, brisk",
+   "m": "m07"
+  },
+  {
+   "id": "cp_m07_05",
+   "who": "Mr Tregear, the Receiver",
+   "line": "Keep to the dark, gentlemen. They have lanterns, and we have none.",
+   "how": "Whispered, steady",
+   "m": "m07"
+  },
+  {
+   "id": "cp_m07_06",
+   "who": "A Wrecker",
+   "line": "There! On the quay! Out, lads, out!",
+   "how": "Shouted, rough, a coastal burr; echoing off the warehouses",
+   "m": "m07"
+  },
+  {
+   "id": "cp_m07_07",
+   "who": "Mr Tregear, the Receiver",
+   "line": "One down. Quietly, now. The rest have not heard.",
+   "how": "Whispered, tense",
+   "m": "m07"
+  },
+  {
+   "id": "cp_m07_08",
+   "who": "Mr Tregear, the Receiver",
+   "line": "The quay is ours. Now the bar on that gate, quick, before Nell hears of it.",
+   "how": "Urgent, half-voiced",
+   "m": "m07"
+  },
+  {
+   "id": "cp_m07_09",
+   "who": "Mr Tregear, the Receiver",
+   "line": "The gate is open. And look there, to the south.",
+   "how": "Relief, a little wonder",
+   "m": "m07"
+  },
+  {
+   "id": "cp_m07_10",
+   "who": "The Keeper's Log",
+   "line": "At twenty past one the lamp was lit again, and the beam came round over the town.",
+   "how": "The narrator, warmer",
+   "m": "m07"
+  },
+  {
+   "id": "cp_m07_11",
+   "who": "Black Nell",
+   "line": "Receiver's men on the quay. Douse your lanterns, lads, and let the beam find them for us.",
+   "how": "Cool and amused, a harbour woman's voice, carrying across the yard",
+   "m": "m07"
+  },
+  {
+   "id": "cp_m07_12",
+   "who": "Mr Tregear, the Receiver",
+   "line": "The Light is lit. When the beam comes round it shows them to us, and us to them. Keep to the shadows.",
+   "how": "Low, careful",
+   "m": "m07"
+  },
+  {
+   "id": "cp_m07_13",
+   "who": "Mr Tregear, the Receiver",
+   "line": "Three chests, somewhere in the stacks. The beam will show them, and it will show you. Mind the shadows.",
+   "how": "Low, steady",
+   "m": "m07"
+  },
+  {
+   "id": "cp_m07_14",
+   "who": "Mr Tregear, the Receiver",
+   "line": "There, by the stacks: a sea chest, brass on the corners. That is one of hers.",
+   "how": "Sharp whisper, pleased",
+   "m": "m07"
+  },
+  {
+   "id": "cp_m07_15",
+   "who": "Mr Tregear, the Receiver",
+   "line": "One aboard. Two more, and mind your backs on those steps.",
+   "how": "Brisk",
+   "m": "m07"
+  },
+  {
+   "id": "cp_m07_16",
+   "who": "Mr Tregear, the Receiver",
+   "line": "The bell! Every soul on the quay heard that.",
+   "how": "Startled, then grim",
+   "m": "m07"
+  },
+  {
+   "id": "cp_m07_17",
+   "who": "Mr Tregear, the Receiver",
+   "line": "The drowned are on the steps! They want the chests back.",
+   "how": "Alarmed, shouted",
+   "m": "m07"
+  },
+  {
+   "id": "cp_m07_18",
+   "who": "Mr Tregear, the Receiver",
+   "line": "The chest is down! Somebody get it up again!",
+   "how": "Shouted",
+   "m": "m07"
+  },
+  {
+   "id": "cp_m07_19",
+   "who": "Mr Tregear, the Receiver",
+   "line": "All three aboard. Get down to the boat, every one of you.",
+   "how": "Relief, still urgent",
+   "m": "m07"
+  },
+  {
+   "id": "cp_m07_20",
+   "who": "Black Nell",
+   "line": "You took what was mine, Receiver.",
+   "how": "Slow, cold, from along the quay",
+   "m": "m07"
+  },
+  {
+   "id": "cp_m07_21",
+   "who": "Mr Tregear, the Receiver",
+   "line": "It was never yours, Nell. It belongs to the widows of the Gannet.",
+   "how": "Even and unafraid",
+   "m": "m07"
+  },
+  {
+   "id": "cp_m07_22",
+   "who": "Black Nell",
+   "line": "Then let them come and fetch it.",
+   "how": "A sneer, the gun coming up",
+   "m": "m07"
+  },
+  {
+   "id": "cp_m07_23",
+   "who": "Mr Tregear, the Receiver",
+   "line": "Mind her long gun. When she lays it on you, get out of the line of it!",
+   "how": "Shouted warning",
+   "m": "m07"
+  },
+  {
+   "id": "cp_m07_24",
+   "who": "Black Nell",
+   "line": "Stand still, Receiver, and I will make it quick.",
+   "how": "Mocking, sing-song",
+   "m": "m07"
+  },
+  {
+   "id": "cp_m07_25",
+   "who": "Black Nell",
+   "line": "Let the sea have the lot of you!",
+   "how": "Furious, shrieked over the noise",
+   "m": "m07"
+  },
+  {
+   "id": "cp_m07_26",
+   "who": "Mr Tregear, the Receiver",
+   "line": "The drowned are coming up the steps! Keep on her!",
+   "how": "Shouted",
+   "m": "m07"
+  },
+  {
+   "id": "cp_m07_27",
+   "who": "Black Nell",
+   "line": "Light them up! Let us see them.",
+   "how": "Shouted, eager, as the flare goes up",
+   "m": "m07"
+  },
+  {
+   "id": "cp_m07_28",
+   "who": "Black Nell",
+   "line": "Take them, then. The sea will have them back one day.",
+   "how": "Beaten, breathless, still bitter; on her knees",
+   "m": "m07"
+  },
+  {
+   "id": "cp_m07_29",
+   "who": "Mr Tregear, the Receiver",
+   "line": "Pull, gentlemen. Easy, now. Mind the chests.",
+   "how": "Tired and gentle, from the gig, oars under it",
+   "m": "m07"
+  },
+  {
+   "id": "cp_m07_30",
+   "who": "The Keeper's Log",
+   "line": "The chests were opened at the Customs House on the Monday. The widows signed for them, and the fourth made her mark.",
+   "how": "The narrator, quiet and tender",
+   "m": "m07"
+  },
+  {
+   "id": "cp_m08_01",
+   "who": "The Keeper's Log (Holm reading)",
+   "line": "A year tonight. At the change of the watch we heard the Gannet's bell, out past the rocks.",
+   "how": "Holm reading his own page: low, steady, a year's grief in it.",
+   "m": "m08"
+  },
+  {
+   "id": "cp_m08_02",
+   "who": "Holm",
+   "line": "Her bell. A mile out, where she broke up. A year to the night.",
+   "how": "At the tower door, listening; hushed.",
+   "m": "m08"
+  },
+  {
+   "id": "cp_m08_03",
+   "who": "Holm",
+   "line": "I'll light the lamp and keep it. You get the cutter ready.",
+   "how": "Resolved, quiet authority.",
+   "m": "m08"
+  },
+  {
+   "id": "cp_m08_04",
+   "who": "The Coxswain",
+   "line": "Flares, the grapnel and line, and oil for her lamps. Down to the slip with them, lads.",
+   "how": "Brisk, practised; a working voice over the wind.",
+   "m": "m08"
+  },
+  {
+   "id": "cp_m08_05",
+   "who": "Holm",
+   "line": "That's one aboard. Mind the gully: they're climbing up out of it.",
+   "how": "Called down from the tower stair, carrying.",
+   "m": "m08"
+  },
+  {
+   "id": "cp_m08_06",
+   "who": "The Coxswain",
+   "line": "There she tolls again. Nearer, or I'm a Dutchman.",
+   "how": "Uneasy, half to himself.",
+   "m": "m08"
+  },
+  {
+   "id": "cp_m08_07",
+   "who": "The Coxswain",
+   "line": "One more load, and she's ready for the water.",
+   "how": "Encouraging.",
+   "m": "m08"
+  },
+  {
+   "id": "cp_m08_08",
+   "who": "Holm",
+   "line": "The lamp is lit. And there's another light on the water, and it isn't mine.",
+   "how": "On the gallery, high wind; disbelief turning to dread.",
+   "m": "m08"
+  },
+  {
+   "id": "cp_m08_09",
+   "who": "The Keeper's Log",
+   "line": "She was out there, rowing toward where the Gannet was, and the lantern in her skiff was still lit.",
+   "how": "Read slowly, close, nearly breaking.",
+   "m": "m08"
+  },
+  {
+   "id": "cp_m08_10",
+   "who": "Holm",
+   "line": "Maren! Follow her lantern. Knock the chocks out and go!",
+   "how": "Shouted down from the gallery: her name torn out of him, then the order.",
+   "m": "m08"
+  },
+  {
+   "id": "cp_m08_11",
+   "who": "The Coxswain",
+   "line": "One chock out. The other, quick, before they're all over her!",
+   "how": "Urgent, under attack.",
+   "m": "m08"
+  },
+  {
+   "id": "cp_m08_12",
+   "who": "The Coxswain",
+   "line": "She's running! Down the slip and jump aboard!",
+   "how": "Exultant shout over the rumble of the keel.",
+   "m": "m08"
+  },
+  {
+   "id": "cp_m08_13",
+   "who": "The Keeper's Log",
+   "line": "I sent the cutter out, and stood on the gallery to watch her go.",
+   "how": "Quiet, wind behind.",
+   "m": "m08"
+  },
+  {
+   "id": "cp_m08_14",
+   "who": "The Coxswain",
+   "line": "There. A lantern, low on the water, and a skiff under it.",
+   "how": "Hushed, at the bow.",
+   "m": "m08"
+  },
+  {
+   "id": "cp_m08_15",
+   "who": "The Coxswain",
+   "line": "Answered. Hear how the water goes quiet.",
+   "how": "Relieved whisper.",
+   "m": "m08"
+  },
+  {
+   "id": "cp_m08_16",
+   "who": "The Coxswain",
+   "line": "Too slow! Here they come, up over the rails!",
+   "how": "Shout.",
+   "m": "m08"
+  },
+  {
+   "id": "cp_m08_17",
+   "who": "The Coxswain",
+   "line": "We're losing her lantern. Crack on, or we'll lose her in the rocks!",
+   "how": "Urgent.",
+   "m": "m08"
+  },
+  {
+   "id": "cp_m08_18",
+   "who": "The Coxswain",
+   "line": "The ring of her spars. The skiff's stopped dead in the middle of it.",
+   "how": "Awed, low.",
+   "m": "m08"
+  },
+  {
+   "id": "cp_m08_19",
+   "who": "Maren",
+   "line": "Light them. Light them, so they can see where she lies.",
+   "how": "A woman in her thirties, Scots-Northern burr; soft, carried over water, with a faint underwater echo and a breath of whisper under it.",
+   "m": "m08"
+  },
+  {
+   "id": "cp_m08_20",
+   "who": "The Coxswain",
+   "line": "Two of them burning. Bring her round for the others.",
+   "how": "Steady order.",
+   "m": "m08"
+  },
+  {
+   "id": "cp_m08_21",
+   "who": "The Coxswain",
+   "line": "All four alight. God help us: something's coming up under us.",
+   "how": "Fear, a prayer under it.",
+   "m": "m08"
+  },
+  {
+   "id": "cp_m08_22",
+   "who": "The Keeper's Log",
+   "line": "The Gannet came up alongside, inside the ring of her spars, the water pouring off her, and her bell was ringing.",
+   "how": "Read with wonder and horror.",
+   "m": "m08"
+  },
+  {
+   "id": "cp_m08_23",
+   "who": "The Coxswain",
+   "line": "Her figurehead's gone from her bow. There's nothing on the stem at all.",
+   "how": "Quiet, chilled.",
+   "m": "m08"
+  },
+  {
+   "id": "cp_m08_24",
+   "who": "The Coxswain",
+   "line": "Up her side, all of you. I'll hold the cutter off.",
+   "how": "Firm.",
+   "m": "m08"
+  },
+  {
+   "id": "cp_m08_25",
+   "who": "The Bosun",
+   "line": "Nobody walks her deck without the captain's leave. Nobody.",
+   "how": "Huge drowned man: a deep wet growl, gargling, slow; echo as from a hatch.",
+   "m": "m08"
+  },
+  {
+   "id": "cp_m08_26",
+   "who": "The Coxswain",
+   "line": "Keep your eyes on that figurehead! It only moves while nobody's looking at it!",
+   "how": "Yelled up from the cutter alongside, a little distant.",
+   "m": "m08"
+  },
+  {
+   "id": "cp_m08_27",
+   "who": "Captain Crane",
+   "line": "Who comes aboard my ship without leave?",
+   "how": "Through a brass speaking trumpet: booming, metallic, waterlogged.",
+   "m": "m08"
+  },
+  {
+   "id": "cp_m08_28",
+   "who": "Captain Crane",
+   "line": "Douse that Light. Hoist the black!",
+   "how": "Trumpet, a command roared to his dead crew.",
+   "m": "m08"
+  },
+  {
+   "id": "cp_m08_29",
+   "who": "The Coxswain",
+   "line": "Only a flare will show him now. Cut the halyards on the port rail and that sail comes down!",
+   "how": "Shouted, distant (from the cutter).",
+   "m": "m08"
+  },
+  {
+   "id": "cp_m08_30",
+   "who": "The Coxswain",
+   "line": "Down she comes! The Light's on the deck again!",
+   "how": "Triumphant shout.",
+   "m": "m08"
+  },
+  {
+   "id": "cp_m08_31",
+   "who": "Captain Crane",
+   "line": "Hoist it again, you dogs! Shut that Light off my deck!",
+   "how": "Trumpet, furious.",
+   "m": "m08"
+  },
+  {
+   "id": "cp_m08_32",
+   "who": "The Coxswain",
+   "line": "A black sail, up her port side. The Light's cut off the deck!",
+   "how": "Alarmed.",
+   "m": "m08"
+  },
+  {
+   "id": "cp_m08_33",
+   "who": "The Coxswain",
+   "line": "Keep her lantern over the bowsprit. When the Gannet tolls, answer with ours, or they'll be up the sides.",
+   "how": "Clear instruction, steady.",
+   "m": "m08"
+  },
+  {
+   "id": "cp_m08_34",
+   "who": "The Coxswain",
+   "line": "Four of them still carry their tops. A flare into each, from the forward deck.",
+   "how": "Instruction, low.",
+   "m": "m08"
+  },
+  {
+   "id": "cp_m08_35",
+   "who": "The Coxswain",
+   "line": "The black sail's burning! Her lantern's on him: finish him!",
+   "how": "Roared.",
+   "m": "m08"
+  },
+  {
+   "id": "cp_m08_36",
+   "who": "Maren",
+   "line": "I came to warn you. I came too late, and I have come every year since.",
+   "how": "Soft, grieving, close; underwater echo, very still.",
+   "m": "m08"
+  },
+  {
+   "id": "cp_m08_37",
+   "who": "Captain Crane",
+   "line": "Who carries that lantern? Who is that, on my water?",
+   "how": "Trumpet lowered: for the first time unsure, almost afraid.",
+   "m": "m08"
+  },
+  {
+   "id": "cp_m08_38",
+   "who": "Captain Crane",
+   "line": "Let her go, then. Let her go down, and me with her.",
+   "how": "Without the trumpet: an old tired voice, wet, fading.",
+   "m": "m08"
+  },
+  {
+   "id": "cp_m08_39",
+   "who": "The Coxswain",
+   "line": "Over the side, all of you, and into the cutter! She's going!",
+   "how": "Urgent shout, timbers groaning under it.",
+   "m": "m08"
+  },
+  {
+   "id": "cp_m08_40",
+   "who": "The Keeper's Log",
+   "line": "I lit the lamp myself and stood on the gallery until dawn.",
+   "how": "Read slowly, at peace and not.",
+   "m": "m08"
+  },
+  {
+   "id": "cp_m08_41",
+   "who": "The Keeper's Log",
+   "line": "When the lamp turned, she looked up at me.",
+   "how": "Barely above a whisper; the last line.",
+   "m": "m08"
+  },
+  {
+   "id": "cp_m08_42",
+   "who": "The Coxswain",
+   "line": "Her skiff, under the port rail! And her lantern lifted up to him!",
+   "how": "Shout, wonder in it.",
+   "m": "m08"
+  },
+  {
+   "id": "cp_m09_01",
+   "who": "The Keeper’s Log",
+   "line": "Winter, 1888. Since the Gannet rose, the drowned no longer wait for ships to come to them.",
+   "how": "Narration, weary and plain: the log read aloud by a tired man by lamplight.",
+   "m": "m09"
+  },
+  {
+   "id": "cp_m09_02",
+   "who": "Holm",
+   "line": "You came, then. Good. They will be up out of the water by full dark.",
+   "how": "Gruff relief; a man who has not slept, calling down the jetty over the sea.",
+   "m": "m09"
+  },
+  {
+   "id": "cp_m09_03",
+   "who": "Holm",
+   "line": "Every window you leave open is a door for them. Every one.",
+   "how": "Low, hard, insistent; a knuckle rapping a window frame.",
+   "m": "m09"
+  },
+  {
+   "id": "cp_m09_04",
+   "who": "The Keeper’s Log",
+   "line": "He had not slept a night through since the fourteenth.",
+   "how": "Narration, flat and quiet; the worry kept out of the voice.",
+   "m": "m09"
+  },
+  {
+   "id": "cp_m09_05",
+   "who": "Holm",
+   "line": "Six windows on this yard, and the light going. Nail them shut while you can still see the nails.",
+   "how": "Brisk orders in the failing light; urgent but steady.",
+   "m": "m09"
+  },
+  {
+   "id": "cp_m09_06",
+   "who": "Holm",
+   "line": "Quicker. The sun is in the sea already.",
+   "how": "Sharp, impatient; a glance at the sunset.",
+   "m": "m09"
+  },
+  {
+   "id": "cp_m09_07",
+   "who": "Holm",
+   "line": "That will hold them a while. Not all night.",
+   "how": "Grudging approval, short of breath from hammering.",
+   "m": "m09"
+  },
+  {
+   "id": "cp_m09_08",
+   "who": "Holm",
+   "line": "No more time. Leave it, and get your back to the wall.",
+   "how": "Hard and final; no time left.",
+   "m": "m09"
+  },
+  {
+   "id": "cp_m09_09",
+   "who": "Holm",
+   "line": "Thinning. They will come again, harder.",
+   "how": "Breathing hard, wary; not relieved.",
+   "m": "m09"
+  },
+  {
+   "id": "cp_m09_10",
+   "who": "Holm",
+   "line": "They are on the jetty ladders. Mind the gate!",
+   "how": "Shouted alarm across the yard.",
+   "m": "m09"
+  },
+  {
+   "id": "cp_m09_11",
+   "who": "Holm",
+   "line": "Off me. Get them off me!",
+   "how": "Panicked, struggling, close to the mic; strained.",
+   "m": "m09"
+  },
+  {
+   "id": "cp_m09_12",
+   "who": "Holm",
+   "line": "They have hold of my coat! Shoot, man!",
+   "how": "Angry and frightened, wrestling with a grip on him.",
+   "m": "m09"
+  },
+  {
+   "id": "cp_m09_13",
+   "who": "Holm",
+   "line": "I am down to the bone here. Help me!",
+   "how": "Hurt badly, pleading through gritted teeth.",
+   "m": "m09"
+  },
+  {
+   "id": "cp_m09_14",
+   "who": "Holm",
+   "line": "Breathe while you can. Pick up what you dropped.",
+   "how": "Exhausted, kindly; a breath between waves.",
+   "m": "m09"
+  },
+  {
+   "id": "cp_m09_15",
+   "who": "Holm",
+   "line": "Hear that? Something heavy, coming up the T-head.",
+   "how": "Hushed, listening; dread rising.",
+   "m": "m09"
+  },
+  {
+   "id": "cp_m09_16",
+   "who": "Holm",
+   "line": "Hold the gate. Do not let him into the yard.",
+   "how": "Fierce command, shouted from the yard.",
+   "m": "m09"
+  },
+  {
+   "id": "cp_m09_17",
+   "who": "Holm",
+   "line": "His anchor! When the ring shows, get out of it!",
+   "how": "Shouted warning, sharp and quick.",
+   "m": "m09"
+  },
+  {
+   "id": "cp_m09_18",
+   "who": "Holm",
+   "line": "That is the first night. There will be others.",
+   "how": "Quiet, grim; spent, and certain it is not over.",
+   "m": "m09"
+  },
+  {
+   "id": "cp_m09_19",
+   "who": "Holm",
+   "line": "On the sea wall. Listen for the boards.",
+   "how": "Low warning, an ear cocked to the dark.",
+   "m": "m09"
+  },
+  {
+   "id": "cp_m09_20",
+   "who": "Holm",
+   "line": "Listen. On the ladders.",
+   "how": "A whisper, listening at the sea gate.",
+   "m": "m09"
+  },
+  {
+   "id": "cp_m09_21",
+   "who": "Holm",
+   "line": "Here they come. Up the ladders, same as every night.",
+   "how": "Grim weariness, almost resigned; raised over the moaning.",
+   "m": "m09"
+  },
+  {
+   "id": "cp_m09_22",
+   "who": "Holm",
+   "line": "Up the stair with it. Ninety steps, and do not drop it on the drowned.",
+   "how": "Urgent and practical; a hand on the shoulder.",
+   "m": "m09"
+  },
+  {
+   "id": "cp_m09_23",
+   "who": "Holm",
+   "line": "She is guttering! Oil, for pity’s sake!",
+   "how": "A desperate shout down the tower (stone stairwell echo).",
+   "m": "m09"
+  },
+  {
+   "id": "cp_m09_24",
+   "who": "Holm",
+   "line": "That is one. Back down for the next.",
+   "how": "Relieved, then business-like again; lantern-room echo.",
+   "m": "m09"
+  },
+  {
+   "id": "cp_m09_25",
+   "who": "Holm",
+   "line": "Another. More yet, and quick about it.",
+   "how": "Breathless urging; lantern-room echo.",
+   "m": "m09"
+  },
+  {
+   "id": "cp_m09_26",
+   "who": "Holm",
+   "line": "One more and she will see the night out.",
+   "how": "Hope creeping in; lantern-room echo.",
+   "m": "m09"
+  },
+  {
+   "id": "cp_m09_27",
+   "who": "Holm",
+   "line": "Full. She will burn till morning now.",
+   "how": "Deep relief, almost tender, to the lamp as much as to them.",
+   "m": "m09"
+  },
+  {
+   "id": "cp_m09_28",
+   "who": "Holm",
+   "line": "A salvage diver’s helmet. God keep the men who wore them down.",
+   "how": "Awe and dread; a sailor's blessing, quiet.",
+   "m": "m09"
+  },
+  {
+   "id": "cp_m09_29",
+   "who": "The Keeper’s Log",
+   "line": "Fourth night. Up the shingle again, and in at the Fog-Signal House. We held.",
+   "how": "Narration, flat; fatigue in every word.",
+   "m": "m09"
+  },
+  {
+   "id": "cp_m09_30",
+   "who": "The Keeper’s Log",
+   "line": "Seventh night. Crabs the size of dogs, in at every window at once.",
+   "how": "Narration, a shudder held back.",
+   "m": "m09"
+  },
+  {
+   "id": "cp_m09_31",
+   "who": "Holm",
+   "line": "They are at the lamp! Get them off the glass!",
+   "how": "Shouted over the storm; frantic.",
+   "m": "m09"
+  },
+  {
+   "id": "cp_m09_32",
+   "who": "Holm",
+   "line": "I cannot tend her with these on my back!",
+   "how": "Struggling and furious, shouting over the wind.",
+   "m": "m09"
+  },
+  {
+   "id": "cp_m09_33",
+   "who": "Holm",
+   "line": "Over the rail, the both sides. They climb like men who have nothing left to lose.",
+   "how": "Grim, half-shouted over the gale; a touch of pity in it.",
+   "m": "m09"
+  },
+  {
+   "id": "cp_m09_34",
+   "who": "Holm",
+   "line": "She is drinking the last of it. Hear that cough? That is the wick running dry.",
+   "how": "Quiet and anxious, half to himself; the lamp sputtering behind him.",
+   "m": "m09"
+  },
+  {
+   "id": "cp_m09_35",
+   "who": "Holm",
+   "line": "Casks in the Oil Store, the Boathouse, and two by the well. Bring them up to me.",
+   "how": "Clear instructions, firm; a man used to giving them.",
+   "m": "m09"
+  },
+  {
+   "id": "cp_m09_36",
+   "who": "Holm",
+   "line": "His light is drinking mine. Shoot him while he holds it up!",
+   "how": "Shouted, strained; the light failing.",
+   "m": "m09"
+  },
+  {
+   "id": "cp_m09_37",
+   "who": "Holm",
+   "line": "Get them off me! I cannot reach the wick!",
+   "how": "Pinned and furious, shouting.",
+   "m": "m09"
+  },
+  {
+   "id": "cp_m09_38",
+   "who": "Holm",
+   "line": "He is weakening. His light is going yellow.",
+   "how": "Fierce hope, shouted over the wind.",
+   "m": "m09"
+  },
+  {
+   "id": "cp_m09_39",
+   "who": "Holm",
+   "line": "Crabs. The whole harbour floor has got up and come.",
+   "how": "Disbelief and dread, quiet.",
+   "m": "m09"
+  },
+  {
+   "id": "cp_m09_40",
+   "who": "Holm",
+   "line": "A light on the rocks. That is no ship’s lamp.",
+   "how": "Low, cold certainty, looking out through the glass.",
+   "m": "m09"
+  },
+  {
+   "id": "cp_m09_41",
+   "who": "Holm",
+   "line": "There. The sun. Look at them go.",
+   "how": "Exhausted wonder, almost a laugh; dawn.",
+   "m": "m09"
+  },
+  {
+   "id": "cp_m09_42",
+   "who": "Holm",
+   "line": "They used to hang his kind in chains on the sea wall for that.",
+   "how": "Contempt, quiet; an old story he believes.",
+   "m": "m09"
+  },
+  {
+   "id": "cp_m09_43",
+   "who": "Holm",
+   "line": "Whatever comes over that rail, the lamp stays lit. That is the whole of the job.",
+   "how": "Steady over the storm; his creed, not a speech.",
+   "m": "m09"
+  },
+  {
+   "id": "cp_m09_44",
+   "who": "Holm",
+   "line": "Him. In his chains, on my own gallery.",
+   "how": "Hatred and fear together, low.",
+   "m": "m09"
+  },
+  {
+   "id": "cp_m09_45",
+   "who": "Holm",
+   "line": "Do not look into his light. Look at him, and shoot.",
+   "how": "A sharp practical order, shouted over the storm.",
+   "m": "m09"
+  },
+  {
+   "id": "cp_m09_46",
+   "who": "Holm",
+   "line": "Now. Turn her up, and let her burn.",
+   "how": "Fierce, triumphant; his decision.",
+   "m": "m09"
+  },
+  {
+   "id": "cp_m09_47",
+   "who": "The Keeper’s Log",
+   "line": "Lit her full. She burned them off the tower like moths off a lamp glass.",
+   "how": "Narration, quiet satisfaction, something like pride.",
+   "m": "m09"
+  },
+  {
+   "id": "cp_m09_48",
+   "who": "The Keeper’s Log",
+   "line": "Dawn. They went back down the ladders as though the tide had called them home.",
+   "how": "Narration, soft and strange; the dawn calm.",
+   "m": "m09"
+  },
+  {
+   "id": "cp_m09_49",
+   "who": "Holm",
+   "line": "Kept her lit. Write that down, whoever comes after me.",
+   "how": "Very tired, a small smile in it; meant for the log and whoever reads it.",
+   "m": "m09"
+  },
+  {
+   "id": "cp_m10_01",
+   "who": "The Keeper's Log",
+   "line": "Every rock beyond the Near Skerries has something on it now. Saltcote has never been so busy.",
+   "how": "The narrator: measured, low, a hint of wonder; a little reverb",
+   "m": "m10"
+  },
+  {
+   "id": "cp_m10_02",
+   "who": "The Gilt & Gull Clerk",
+   "line": "Crowsnest Rock, gentlemen. A Gilt and Gull chart, and a true one, by my oath.",
+   "how": "Oily, eager salesman's patter; a Bristol clerk's voice, rubbing his hands",
+   "m": "m10"
+  },
+  {
+   "id": "cp_m10_03",
+   "who": "The Factor",
+   "line": "True one time in three. Bring it home to my table and I weigh it honest.",
+   "how": "Dry, flat, unimpressed; a weigher who has heard it all",
+   "m": "m10"
+  },
+  {
+   "id": "cp_m10_04",
+   "who": "The Mate",
+   "line": "Four guns on her rails and a hold as empty as a parson’s purse. She’ll do.",
+   "how": "Wry, approving, slapping a rail; outdoors, wind",
+   "m": "m10"
+  },
+  {
+   "id": "cp_m10_05",
+   "who": "The Mate",
+   "line": "North by the Knoll, then. And keep an eye out for sails with no lamps.",
+   "how": "Practical, half a joke, the second half lower and meant",
+   "m": "m10"
+  },
+  {
+   "id": "cp_m10_06",
+   "who": "The Mate",
+   "line": "There’s the stair cut in the crags, and a stone at its head with a crow on it.",
+   "how": "Peering up, pointing; a little breathless from the beach",
+   "m": "m10"
+  },
+  {
+   "id": "cp_m10_07",
+   "who": "The Mate",
+   "line": "The old tower. Another sight on a post by its door.",
+   "how": "Matter-of-fact, moving on",
+   "m": "m10"
+  },
+  {
+   "id": "cp_m10_08",
+   "who": "The Mate",
+   "line": "And a gibbet, with somebody still in it. The Hanged Man.",
+   "how": "A grim pause before the last words",
+   "m": "m10"
+  },
+  {
+   "id": "cp_m10_09",
+   "who": "The Keeper's Log",
+   "line": "Turn each sight to the mark the chart gives it.",
+   "how": "The narrator, plain instruction, quiet",
+   "m": "m10"
+  },
+  {
+   "id": "cp_m10_10",
+   "who": "The Mate",
+   "line": "Half a hoard, and the Mooncussers’ lamp left on the lid to tell us whose the other half is.",
+   "how": "Bitter, tired, over the sea wind",
+   "m": "m10"
+  },
+  {
+   "id": "cp_m10_11",
+   "who": "Crew",
+   "line": "The Gallows Bird. Green lamp, black sails.",
+   "how": "Young crewman, uneasy, almost a whisper",
+   "m": "m10"
+  },
+  {
+   "id": "cp_m10_12",
+   "who": "The Keeper's Log",
+   "line": "Saltcote’s lamps, and not a black sail behind us. They keep off its light, and nobody here will say why.",
+   "how": "The narrator, relief and unease together",
+   "m": "m10"
+  },
+  {
+   "id": "cp_m10_13",
+   "who": "The Factor",
+   "line": "You’re back, and with something heavy. Bring it up to the table.",
+   "how": "Brisk, interested despite himself; across a table",
+   "m": "m10"
+  },
+  {
+   "id": "cp_m10_14",
+   "who": "The Factor",
+   "line": "Spanish gold, and English, and a little Dutch. It was somebody’s, once.",
+   "how": "Slow, turning coins in his fingers; quiet",
+   "m": "m10"
+  },
+  {
+   "id": "cp_m10_15",
+   "who": "The Factor",
+   "line": "Weighed, and written down, and paid.",
+   "how": "Satisfied, final, with the scratch of a pen",
+   "m": "m10"
+  },
+  {
+   "id": "cp_m10_16",
+   "who": "The Gilt & Gull Clerk",
+   "line": "The chart was true, then. Gilt and Gull will remember the crew that proved it.",
+   "how": "Delighted, a touch too loud; the salesman vindicated",
+   "m": "m10"
+  },
+  {
+   "id": "cp_m10_17",
+   "who": "The Keeper's Log",
+   "line": "They went out again, and others after them, all that summer, until the haar came down in the autumn.",
+   "how": "The narrator, wistful, closing the book",
+   "m": "m10"
+  },
+  {
+   "id": "cp_m10_18",
+   "who": "The Mate",
+   "line": "The rocks only show close to, or in a flare. Steer by the strip at the top, and patch what we hit.",
+   "how": "Advice to the helm, calm, over wind and spray",
+   "m": "m10"
+  },
+  {
+   "id": "cp_m10_19",
+   "who": "The Mate",
+   "line": "Let her watch. We’ve a chart to dig, and she hasn’t.",
+   "how": "Steady, dismissive, to keep the crew's nerve",
+   "m": "m10"
+  },
+  {
+   "id": "cp_m10_20",
+   "who": "Crew",
+   "line": "Sail, under the Knoll. No lights.",
+   "how": "Shouted down from the rail, sharp, then quieter",
+   "m": "m10"
+  },
+  {
+   "id": "cp_m10_21",
+   "who": "The Mate",
+   "line": "Not one. Only that green lamp at her stern. A black sloop, and she’s seen us.",
+   "how": "Low, careful, watching through a glass",
+   "m": "m10"
+  },
+  {
+   "id": "cp_m10_22",
+   "who": "The Keeper's Log",
+   "line": "Nobody aboard one has ever been taken alive. In Saltcote they say the hanged men came down out of their chains to go back to sea.",
+   "how": "The narrator, hushed, eerie",
+   "m": "m10"
+  },
+  {
+   "id": "cp_m10_23",
+   "who": "The Mate",
+   "line": "Keep a hand on a gun. If she’s the Gallows Bird, she’ll want the rest of it.",
+   "how": "Low, serious, a hand on someone's shoulder",
+   "m": "m10"
+  },
+  {
+   "id": "cp_m10_24",
+   "who": "The Mate",
+   "line": "Guns! The gold-lamp ship is the Gallows Bird. Sink her and the rest is ours.",
+   "how": "Shouted, urgent, over the guns",
+   "m": "m10"
+  },
+  {
+   "id": "cp_m10_25",
+   "who": "The Mate",
+   "line": "Both halves aboard. Now run, and let them chase us into Saltcote’s light if they dare.",
+   "how": "Breathless, fierce, half laughing",
+   "m": "m10"
+  },
+  {
+   "id": "cp_m10_26",
+   "who": "Crew",
+   "line": "They’re bearing away! They won’t come near the light.",
+   "how": "Shouted, astonished relief",
+   "m": "m10"
+  },
+  {
+   "id": "cp_m10_27",
+   "who": "Crew",
+   "line": "Sails! Out from under St Brannoc’s, black as tar.",
+   "how": "Panicked shout from the masthead",
+   "m": "m10"
+  },
+  {
+   "id": "cp_m10_28",
+   "who": "A Mooncusser",
+   "line": "Give it back, keeper’s men. The sea only lent it you.",
+   "how": "Hollow, slow, carried over water, a wet underwater echo",
+   "m": "m10"
+  },
+  {
+   "id": "cp_m10_29",
+   "who": "The Mate",
+   "line": "Green lamps on all of them, and a gold one at her masthead. That’s the Gallows Bird.",
+   "how": "Quiet certainty, grim",
+   "m": "m10"
+  },
+  {
+   "id": "cp_m10_30",
+   "who": "Crew",
+   "line": "She’s holed through! Down by the stern!",
+   "how": "Elated shout over splintering timber",
+   "m": "m10"
+  },
+  {
+   "id": "cp_m10_31",
+   "who": "The Mate",
+   "line": "And there it floats. Bring us alongside, and haul it in at the rail.",
+   "how": "Calm, practical, catching his breath",
+   "m": "m10"
+  },
+  {
+   "id": "cp_m10_32",
+   "who": "The Mate",
+   "line": "The chart says the Crow looks to the Tower, the Tower to the Hanged Man, and the Hanged Man back to the Crow.",
+   "how": "Reading from the chart, slow, careful",
+   "m": "m10"
+  },
+  {
+   "id": "cp_m10_33",
+   "who": "The Mate",
+   "line": "Spades! And somebody watch the shore. They’ll have heard us.",
+   "how": "Brisk orders, with a glance over the shoulder",
+   "m": "m10"
+  },
+  {
+   "id": "cp_m10_34",
+   "who": "Crew",
+   "line": "Wood! There’s wood under here!",
+   "how": "Excited, muffled from down in a pit",
+   "m": "m10"
+  },
+  {
+   "id": "cp_m10_35",
+   "who": "The Mate",
+   "line": "He’s down. Take up the chest, and the rest of you keep them off whoever carries it.",
+   "how": "Breathing hard, urgent orders",
+   "m": "m10"
+  },
+  {
+   "id": "cp_m10_36",
+   "who": "The Mate",
+   "line": "In the boat with it. Back aboard, all of you, and quick.",
+   "how": "Hurried, low, looking back up the rock",
+   "m": "m10"
+  },
+  {
+   "id": "cp_m10_37",
+   "who": "Crew",
+   "line": "All three true! And look where they’re pointing now.",
+   "how": "Excited shout, then awed",
+   "m": "m10"
+  },
+  {
+   "id": "cp_m10_38",
+   "who": "The Keeper's Log",
+   "line": "Where the hoarder’s sights agreed, the turf was older than the rest.",
+   "how": "The narrator, quiet, a little uncanny",
+   "m": "m10"
+  },
+  {
+   "id": "cp_m10_39",
+   "who": "The Mate",
+   "line": "Somebody’s had the lid off before us. Half of it’s gone.",
+   "how": "Disgusted, flat",
+   "m": "m10"
+  },
+  {
+   "id": "cp_m10_40",
+   "who": "Crew",
+   "line": "And a green lamp left on top. Mooncussers.",
+   "how": "Spooked, low",
+   "m": "m10"
+  },
+  {
+   "id": "cp_m10_41",
+   "who": "The Keeper's Log",
+   "line": "Gilt and Gull’s charts are true one time in three. The other times there is something worse than nothing under them. This time there was both.",
+   "how": "The narrator, sombre, a slow wry turn at the end",
+   "m": "m10"
+  },
+  {
+   "id": "cp_m10_42",
+   "who": "The Factor",
+   "line": "Ironbound, and heavy. Set it down gently on my table.",
+   "how": "Grudging approval, a hand on the lid",
+   "m": "m10"
+  },
+  {
+   "id": "cp_m10_43",
+   "who": "The Factor",
+   "line": "And the rest of your hold besides. A fair night’s work, all told.",
+   "how": "Pleased, dry, writing it down",
+   "m": "m10"
+  },
+  {
+   "id": "cp_m10_44",
+   "who": "The Factor",
+   "line": "A strongbox, and a Mooncusser’s by the look of it. I’ll not ask how.",
+   "how": "Raised eyebrow; deliberately incurious",
+   "m": "m10"
+  },
+  {
+   "id": "cp_m10_45",
+   "who": "The Factor",
+   "line": "Both halves of it. A fair night’s work, all told.",
+   "how": "Pleased, dry, writing it down",
+   "m": "m10"
+  },
+  {
+   "id": "cp_m11_01",
+   "who": "The Keeper’s Log (narrator)",
+   "line": "Autumn, 1889. One by one the lights of the outer rocks have gone dark.",
+   "how": "Narration; a keeper reading from his log, measured and sombre.",
+   "m": "m11"
+  },
+  {
+   "id": "cp_m11_02",
+   "who": "Holm",
+   "line": "Something’s putting them out. Take the cutter and light them again.",
+   "how": "Holm, fifties, Scots-tinged, clipped and grim; giving an order he does not like.",
+   "m": "m11"
+  },
+  {
+   "id": "cp_m11_03",
+   "who": "Holm",
+   "line": "And if you find what’s doing it, bring the light to it.",
+   "how": "Holm, lower; meaning more than he says.",
+   "m": "m11"
+  },
+  {
+   "id": "cp_m11_04",
+   "who": "The Mate",
+   "line": "Signal Head first. Then the old quays, then the chapel.",
+   "how": "The Mate, forties, Northumbrian burr, brisk at the helm; over wind and rigging.",
+   "m": "m11"
+  },
+  {
+   "id": "cp_m11_05",
+   "who": "The Mate",
+   "line": "Signal Head, fine on the port bow. Her beacon’s cold.",
+   "how": "Calling from the bow, steady.",
+   "m": "m11"
+  },
+  {
+   "id": "cp_m11_06",
+   "who": "The Mate",
+   "line": "Close enough! A flare into the basket, from the locker aft.",
+   "how": "Urgent, shouted over the sea.",
+   "m": "m11"
+  },
+  {
+   "id": "cp_m11_07",
+   "who": "The Mate",
+   "line": "She’s caught! Signal Head is burning again.",
+   "how": "Triumphant shout.",
+   "m": "m11"
+  },
+  {
+   "id": "cp_m11_08",
+   "who": "The Mate",
+   "line": "The old quays. Bring her close along the lamps, and someone up in the bows with the pole.",
+   "how": "Calm instruction, raised over wind.",
+   "m": "m11"
+  },
+  {
+   "id": "cp_m11_09",
+   "who": "The Mate",
+   "line": "That’s the last of the quay lamps. Steer for Chapel Islet.",
+   "how": "Pleased, brisk.",
+   "m": "m11"
+  },
+  {
+   "id": "cp_m11_10",
+   "who": "The Fog-Keeper",
+   "line": "Every light that is not mine…",
+   "how": "The Fog-Keeper: a whisper out of the fog; breathy, cold, heavy reverb, slightly pitched down, panned wide.",
+   "m": "m11"
+  },
+  {
+   "id": "cp_m11_11",
+   "who": "The Mate",
+   "line": "Chapel Islet. Not a candle burning on it.",
+   "how": "Hushed, uneasy, on the water.",
+   "m": "m11"
+  },
+  {
+   "id": "cp_m11_12",
+   "who": "The Mate",
+   "line": "A taper from the boat’s lamp. We’ll carry a light up to the altar, and mind the wind.",
+   "how": "Practical, low.",
+   "m": "m11"
+  },
+  {
+   "id": "cp_m11_13",
+   "who": "The Mate",
+   "line": "Keep it in the lee of the walls and stones. The gusts will have it otherwise.",
+   "how": "Earnest advice, quiet.",
+   "m": "m11"
+  },
+  {
+   "id": "cp_m11_14",
+   "who": "The Mate",
+   "line": "Here comes a gust! Get behind something!",
+   "how": "Shouted warning; wind howling.",
+   "m": "m11"
+  },
+  {
+   "id": "cp_m11_15",
+   "who": "The Mate",
+   "line": "Taper’s out. Back to the last lantern and light it again.",
+   "how": "Frustrated, quick.",
+   "m": "m11"
+  },
+  {
+   "id": "cp_m11_16",
+   "who": "The Mate",
+   "line": "That lantern will hold. If the taper goes out, light it again from there.",
+   "how": "Relieved, steady.",
+   "m": "m11"
+  },
+  {
+   "id": "cp_m11_17",
+   "who": "The Mate",
+   "line": "Into the chapel. The candles on the altar.",
+   "how": "Hushed, reverent; inside stone walls (small room reverb).",
+   "m": "m11"
+  },
+  {
+   "id": "cp_m11_18",
+   "who": "The Mate",
+   "line": "There. Every light on the outer rocks burns again, but one.",
+   "how": "Quiet relief, then weight on “but one.”",
+   "m": "m11"
+  },
+  {
+   "id": "cp_m11_19",
+   "who": "The Fog-Keeper",
+   "line": "You light them. I put them out. So it has always been.",
+   "how": "Fog-Keeper: slow, hollow, close, as if inside the listener’s head; reverb tail.",
+   "m": "m11"
+  },
+  {
+   "id": "cp_m11_20",
+   "who": "The Mate",
+   "line": "Lantern Rock. That’s where it comes from. Back to the boat.",
+   "how": "Grim resolve.",
+   "m": "m11"
+  },
+  {
+   "id": "cp_m11_21",
+   "who": "The Mate",
+   "line": "Lantern Rock. Her braziers are cold.",
+   "how": "Low, wary, across the water.",
+   "m": "m11"
+  },
+  {
+   "id": "cp_m11_22",
+   "who": "The Fog-Keeper",
+   "line": "Six hundred years I have kept this rock. Go home.",
+   "how": "Fog-Keeper: deep, vast, echoing off rock; weary rather than angry.",
+   "m": "m11"
+  },
+  {
+   "id": "cp_m11_23",
+   "who": "The Mate",
+   "line": "The braziers! Light them! He’s only to be hurt where the light falls on him.",
+   "how": "Shouted orders, urgent.",
+   "m": "m11"
+  },
+  {
+   "id": "cp_m11_24",
+   "who": "The Mate",
+   "line": "That’s one! Get him in its light!",
+   "how": "Shouted encouragement.",
+   "m": "m11"
+  },
+  {
+   "id": "cp_m11_25",
+   "who": "The Fog-Keeper",
+   "line": "Dark. Let it be dark.",
+   "how": "Fog-Keeper: a cold murmur, almost tender.",
+   "m": "m11"
+  },
+  {
+   "id": "cp_m11_26",
+   "who": "The Mate",
+   "line": "He’s gone into the fog. Watch your backs!",
+   "how": "Alarmed, shouted.",
+   "m": "m11"
+  },
+  {
+   "id": "cp_m11_27",
+   "who": "The Fog-Keeper",
+   "line": "Enough.",
+   "how": "Fog-Keeper: one word, flat and final, huge reverb.",
+   "m": "m11"
+  },
+  {
+   "id": "cp_m11_28",
+   "who": "The Mate",
+   "line": "He’s up his tower! The braziers are going out, all of them!",
+   "how": "Panicked, shouted.",
+   "m": "m11"
+  },
+  {
+   "id": "cp_m11_29",
+   "who": "The Mate",
+   "line": "There, under the crags: an old hearth. The fire-keepers kept the first fire on this coast there.",
+   "how": "Quick, thinking aloud, then decisive.",
+   "m": "m11"
+  },
+  {
+   "id": "cp_m11_30",
+   "who": "The Mate",
+   "line": "Timber from the wreck, up to the old hearth. Mind what he throws!",
+   "how": "Shouted orders over wind.",
+   "m": "m11"
+  },
+  {
+   "id": "cp_m11_31",
+   "who": "The Mate",
+   "line": "She’s stacked. Put a flame to her!",
+   "how": "Breathless, urgent.",
+   "m": "m11"
+  },
+  {
+   "id": "cp_m11_32",
+   "who": "The Fog-Keeper",
+   "line": "That fire. I knew that fire.",
+   "how": "Fog-Keeper: wonder, grief; quieter, the reverb thinning (more human).",
+   "m": "m11"
+  },
+  {
+   "id": "cp_m11_33",
+   "who": "The Keeper’s Log (narrator)",
+   "line": "The fire on the Fire Step, lit again for the first time since 1841.",
+   "how": "Narration, solemn.",
+   "m": "m11"
+  },
+  {
+   "id": "cp_m11_34",
+   "who": "The Fog-Keeper",
+   "line": "Then I will put it out with my own hands.",
+   "how": "Fog-Keeper: anger at last, rising to a roar; full reverb.",
+   "m": "m11"
+  },
+  {
+   "id": "cp_m11_35",
+   "who": "The Mate",
+   "line": "Keep him by the fire! He burns where its light reaches him.",
+   "how": "Shouted, urgent.",
+   "m": "m11"
+  },
+  {
+   "id": "cp_m11_36",
+   "who": "The Mate",
+   "line": "He’s breathing fog at the fire! Brands, quick, and burn it off!",
+   "how": "Shouted warning.",
+   "m": "m11"
+  },
+  {
+   "id": "cp_m11_37",
+   "who": "The Mate",
+   "line": "She’s down to embers! Wood on her, quick!",
+   "how": "Alarmed, shouted.",
+   "m": "m11"
+  },
+  {
+   "id": "cp_m11_38",
+   "who": "The Fog-Keeper",
+   "line": "Kept.",
+   "how": "Fog-Keeper: barely a breath, peaceful; almost no reverb, a plain old man’s voice.",
+   "m": "m11"
+  },
+  {
+   "id": "cp_m11_39",
+   "who": "The Mate",
+   "line": "The light on his tower. Look. It’s lit.",
+   "how": "Awed, quiet.",
+   "m": "m11"
+  },
+  {
+   "id": "cp_m11_40",
+   "who": "The Keeper’s Log (narrator)",
+   "line": "Autumn, 1889. The lights of the outer rocks burn again, and the haar goes out with the tide.",
+   "how": "Narration, warm, closing.",
+   "m": "m11"
+  },
+  {
+   "id": "cp_m11_41",
+   "who": "Holm",
+   "line": "Every light, and his own besides. Bring her home.",
+   "how": "Holm, gruff but warm; a rare smile in it.",
+   "m": "m11"
+  },
+  {
+   "id": "cp_m12_01",
+   "who": "The Keeper's Log",
+   "line": "At the turn of the tide it went on going out. By midnight there was no sea at all.",
+   "how": "The narrator: measured, low, hushed; a little reverb",
+   "m": "m12"
+  },
+  {
+   "id": "cp_m12_02",
+   "who": "The Keeper's Log",
+   "line": "It ran north across the bed faster than a horse could gallop, and down a hole that had not been there the night before.",
+   "how": "The narrator: measured, low, hushed; a little reverb",
+   "m": "m12"
+  },
+  {
+   "id": "cp_m12_03",
+   "who": "Holm",
+   "line": "She rowed out with this. The skiff came back without her, and it was still lit.",
+   "how": "Old, worn, quiet; a keeper handing over something precious, holding back grief",
+   "m": "m12"
+  },
+  {
+   "id": "cp_m12_04",
+   "who": "Holm",
+   "line": "It has not gone out since. Take it down after the water.",
+   "how": "Old, worn, quiet; a keeper handing over something precious, holding back grief",
+   "m": "m12"
+  },
+  {
+   "id": "cp_m12_05",
+   "who": "Holm",
+   "line": "Mind the runnels. The last of the sea is still going down them, and it goes in a rush.",
+   "how": "Old, worn, quiet; a keeper handing over something precious, holding back grief",
+   "m": "m12"
+  },
+  {
+   "id": "cp_m12_06",
+   "who": "The Keeper's Log",
+   "line": "The sea came back before morning, quietly, as if it had only stepped out.",
+   "how": "The narrator: measured, low, hushed; a little reverb",
+   "m": "m12"
+  },
+  {
+   "id": "cp_m12_07",
+   "who": "The Keeper's Log",
+   "line": "The fort on the headland has been called Maren’s End ever since.",
+   "how": "The narrator: measured, low, hushed; a little reverb",
+   "m": "m12"
+  },
+  {
+   "id": "cp_m12_08",
+   "who": "Ruth Carrow",
+   "line": "There. Out on the water, when the lamp turns.",
+   "how": "Steady, practical, low; a Wrackhaven boatwoman giving orders in the dark",
+   "m": "m12"
+  },
+  {
+   "id": "cp_m12_09",
+   "who": "The Keeper's Log",
+   "line": "Whether they ended her, or only one of her, is the oldest argument in Wrackhaven’s inn.",
+   "how": "The narrator: measured, low, hushed; a little reverb",
+   "m": "m12"
+  },
+  {
+   "id": "cp_m12_10",
+   "who": "The Keeper's Log",
+   "line": "She is still seen, on every sea, a little nearer every time.",
+   "how": "very quiet, ending the tale; a chill",
+   "m": "m12"
+  },
+  {
+   "id": "cp_m12_11",
+   "who": "Ruth Carrow",
+   "line": "Lamp’s lit. Keep together, and watch the runnels before you cross.",
+   "how": "Steady, practical, low; a Wrackhaven boatwoman giving orders in the dark",
+   "m": "m12"
+  },
+  {
+   "id": "cp_m12_12",
+   "who": "Ruth Carrow",
+   "line": "She’s gone down ahead of us. Then so do we. Down the mast, and mind the lamp.",
+   "how": "Steady, practical, low; a Wrackhaven boatwoman giving orders in the dark",
+   "m": "m12"
+  },
+  {
+   "id": "cp_m12_13",
+   "who": "Ruth Carrow",
+   "line": "She felt that. Two more bells, and she’ll have to give up the rim.",
+   "how": "Steady, practical, low; a Wrackhaven boatwoman giving orders in the dark",
+   "m": "m12"
+  },
+  {
+   "id": "cp_m12_14",
+   "who": "Maren",
+   "line": "Ring, then. They rang it for me the night I went. It did not bring me home.",
+   "how": "bitter, slow, from far off across the bed",
+   "m": "m12"
+  },
+  {
+   "id": "cp_m12_15",
+   "who": "Ruth Carrow",
+   "line": "There, on the lip, by the wreck. That’s no one of ours.",
+   "how": "Steady, practical, low; a Wrackhaven boatwoman giving orders in the dark",
+   "m": "m12"
+  },
+  {
+   "id": "cp_m12_16",
+   "who": "Maren",
+   "line": "You’ve brought my lamp. Bring it to me, then.",
+   "how": "A woman's voice made hollow: slow, cold and sad rather than cruel, with a wet underwater echo",
+   "m": "m12"
+  },
+  {
+   "id": "cp_m12_17",
+   "who": "The Keeper's Log",
+   "line": "They had heard the bell carry, and so had she. She gave a step.",
+   "how": "The narrator: measured, low, hushed; a little reverb",
+   "m": "m12"
+  },
+  {
+   "id": "cp_m12_18",
+   "who": "Maren",
+   "line": "Down, then. Come down to me.",
+   "how": "A woman's voice made hollow: slow, cold and sad rather than cruel, with a wet underwater echo",
+   "m": "m12"
+  },
+  {
+   "id": "cp_m12_19",
+   "who": "The Keeper's Log",
+   "line": "She went back over the lip of the Swallow, and down, and the last of the water went with her.",
+   "how": "The narrator: measured, low, hushed; a little reverb",
+   "m": "m12"
+  },
+  {
+   "id": "cp_m12_20",
+   "who": "Ruth Carrow",
+   "line": "Nine lamps, and a grate. Turn one and the ones beside it turn too. Bring the lantern.",
+   "how": "Steady, practical, low; a Wrackhaven boatwoman giving orders in the dark",
+   "m": "m12"
+  },
+  {
+   "id": "cp_m12_21",
+   "who": "Ruth Carrow",
+   "line": "The water went this way. There’s an old Spanish drain under the bed, running for the fort.",
+   "how": "Steady, practical, low; a Wrackhaven boatwoman giving orders in the dark",
+   "m": "m12"
+  },
+  {
+   "id": "cp_m12_22",
+   "who": "Ruth Carrow",
+   "line": "Nearly. Think before you turn the next.",
+   "how": "tense, low",
+   "m": "m12"
+  },
+  {
+   "id": "cp_m12_23",
+   "who": "Ruth Carrow",
+   "line": "It takes. Stay in its light while you can.",
+   "how": "Steady, practical, low; a Wrackhaven boatwoman giving orders in the dark",
+   "m": "m12"
+  },
+  {
+   "id": "cp_m12_24",
+   "who": "Ruth Carrow",
+   "line": "All nine. There, it’s lifting. Bring the lamp up to it.",
+   "how": "Steady, practical, low; a Wrackhaven boatwoman giving orders in the dark",
+   "m": "m12"
+  },
+  {
+   "id": "cp_m12_25",
+   "who": "Ruth Carrow",
+   "line": "Dry stone, cut square. Somebody built this, and long ago.",
+   "how": "Steady, practical, low; a Wrackhaven boatwoman giving orders in the dark",
+   "m": "m12"
+  },
+  {
+   "id": "cp_m12_26",
+   "who": "The Keeper's Log",
+   "line": "Out of the light the dark took the strength out of them, a little at a time.",
+   "how": "The narrator: measured, low, hushed; a little reverb",
+   "m": "m12"
+  },
+  {
+   "id": "cp_m12_27",
+   "who": "The Keeper's Log",
+   "line": "They tried it at the grate, and the lantern would not go. It was not a weight, or a wind. It would not.",
+   "how": "The narrator: measured, low, hushed; a little reverb",
+   "m": "m12"
+  },
+  {
+   "id": "cp_m12_28",
+   "who": "Ruth Carrow",
+   "line": "Then it stays. Leave it lit for her.",
+   "how": "Steady, practical, low; a Wrackhaven boatwoman giving orders in the dark",
+   "m": "m12"
+  },
+  {
+   "id": "cp_m12_29",
+   "who": "The Keeper's Log",
+   "line": "Where it is now, nobody will say.",
+   "how": "The narrator: measured, low, hushed; a little reverb",
+   "m": "m12"
+  },
+  {
+   "id": "cp_m12_30",
+   "who": "Ruth Carrow",
+   "line": "Get up on something! The decks, the rocks, the apron by the drain!",
+   "how": "shouted over rushing water, urgent",
+   "m": "m12"
+  },
+  {
+   "id": "cp_m12_31",
+   "who": "Ruth Carrow",
+   "line": "She’s failing. All the bells at once, and she’ll not stand it. Split up and ring them together!",
+   "how": "fierce, breathless, shouted",
+   "m": "m12"
+  },
+  {
+   "id": "cp_m12_32",
+   "who": "Maren",
+   "line": "They rang every bell on the coast for me. Every one. I heard them all, under the water.",
+   "how": "A woman's voice made hollow: slow, cold and sad rather than cruel, with a wet underwater echo",
+   "m": "m12"
+  },
+  {
+   "id": "cp_m12_33",
+   "who": "Ruth Carrow",
+   "line": "There, over the water! That light. Shoot it!",
+   "how": "sharp, pointing, shouted",
+   "m": "m12"
+  },
+  {
+   "id": "cp_m12_34",
+   "who": "Ruth Carrow",
+   "line": "Lead won’t touch her. Draw her to a bell, and ring it under her nose.",
+   "how": "Steady, practical, low; a Wrackhaven boatwoman giving orders in the dark",
+   "m": "m12"
+  },
+  {
+   "id": "cp_m12_35",
+   "who": "Maren",
+   "line": "That bell. I know that bell.",
+   "how": "A woman's voice made hollow: slow, cold and sad rather than cruel, with a wet underwater echo",
+   "m": "m12"
+  },
+  {
+   "id": "cp_m12_36",
+   "who": "Ruth Carrow",
+   "line": "All three! Now, while she’s open, everything you have!",
+   "how": "shouted, exultant",
+   "m": "m12"
+  },
+  {
+   "id": "cp_m12_37",
+   "who": "Ruth Carrow",
+   "line": "Out under the fort. Mind the chains; there’s men still in them.",
+   "how": "Steady, practical, low; a Wrackhaven boatwoman giving orders in the dark",
+   "m": "m12"
+  },
+  {
+   "id": "cp_m12_38",
+   "who": "Maren",
+   "line": "I rowed out to warn them. Nobody rowed out for me.",
+   "how": "A woman's voice made hollow: slow, cold and sad rather than cruel, with a wet underwater echo",
+   "m": "m12"
+  },
+  {
+   "id": "cp_m12_39",
+   "who": "Maren",
+   "line": "Give me back my light.",
+   "how": "A woman's voice made hollow: slow, cold and sad rather than cruel, with a wet underwater echo",
+   "m": "m12"
+  },
+  {
+   "id": "cp_m12_40",
+   "who": "Crew",
+   "line": "Listen. Out past the wrecks. That roar.",
+   "how": "A young crewman, uneasy, half a whisper",
+   "m": "m12"
+  },
+  {
+   "id": "cp_m12_41",
+   "who": "Ruth Carrow",
+   "line": "The tide’s turned. The sea’s coming back.",
+   "how": "Steady, practical, low; a Wrackhaven boatwoman giving orders in the dark",
+   "m": "m12"
+  },
+  {
+   "id": "cp_m12_42",
+   "who": "Maren",
+   "line": "The sea is coming home. So am I.",
+   "how": "A woman's voice made hollow: slow, cold and sad rather than cruel, with a wet underwater echo",
+   "m": "m12"
+  },
+  {
+   "id": "cp_m12_43",
+   "who": "Maren",
+   "line": "Tell him I saw the light. Tell him I was nearly home.",
+   "how": "barely a whisper, the echo fading out, almost gentle",
+   "m": "m12"
+  },
+  {
+   "id": "cp_m12_44",
+   "who": "The Keeper's Log",
+   "line": "She went down on her knees in the last pool, and the sea took her back.",
+   "how": "The narrator: measured, low, hushed; a little reverb",
+   "m": "m12"
+  },
+  {
+   "id": "cp_m12_45",
+   "who": "The Keeper's Log",
+   "line": "Then the sea came back. It came in over the bed without a sound, and it did not stop at the wrecks.",
+   "how": "The narrator: measured, low, hushed; a little reverb",
+   "m": "m12"
+  },
+  {
+   "id": "cp_m12_46",
+   "who": "Ruth Carrow",
+   "line": "Up the wall! Up, before it has us too!",
+   "how": "panic breaking through, shouted",
+   "m": "m12"
+  },
+  {
+   "id": "cp_m12_47",
+   "who": "The Keeper’s Log (narrator)",
+   "line": "Below the wreck the sea had left a road of its own, and we took it.",
+   "how": "the log's narrator: low, even, a little awed (the down-the-mast card, m12_down)",
+   "m": "m12"
+  },
+  {
+   "id": "cp_m13_01",
+   "who": "The Keeper’s Log",
+   "line": "Winter, 1891. The tide came into Wrackhaven at dusk, and at the turn it did not go out.",
+   "how": "Narration, sombre; a log entry written long after, by lamplight.",
+   "m": "m13"
+  },
+  {
+   "id": "cp_m13_02",
+   "who": "The Mayor of Wrackhaven",
+   "line": "You came across from the Light. God bless you for it.",
+   "how": "Called from the quay over rain and sea; an old man relieved almost to tears.",
+   "m": "m13"
+  },
+  {
+   "id": "cp_m13_03",
+   "who": "The Mayor of Wrackhaven",
+   "line": "They are still in their houses. Knock them up and bring them to the hall.",
+   "how": "Urgent and practical; a man used to being obeyed, frightened under it.",
+   "m": "m13"
+  },
+  {
+   "id": "cp_m13_04",
+   "who": "The Mayor of Wrackhaven",
+   "line": "Fish Street first. The houses by the quay will be under before the hour is out.",
+   "how": "Pointing up the street; brisk, breathless.",
+   "m": "m13"
+  },
+  {
+   "id": "cp_m13_05",
+   "who": "The Keeper’s Log",
+   "line": "Eight households, and the water already over the cobbles.",
+   "how": "Narration, low; water heard under it.",
+   "m": "m13"
+  },
+  {
+   "id": "cp_m13_06",
+   "who": "The Mayor of Wrackhaven",
+   "line": "Bar it. Every window too. They will come up out of that water for us.",
+   "how": "Shouted as the doors bang shut; grim.",
+   "m": "m13"
+  },
+  {
+   "id": "cp_m13_07",
+   "who": "The chandler",
+   "line": "The water is in my shop! Lead on, I am behind you.",
+   "how": "A tradesman, flustered and grateful; Wrackhaven accent.",
+   "m": "m13"
+  },
+  {
+   "id": "cp_m13_08",
+   "who": "A fishwife",
+   "line": "Fish boxes floating out the door. Mind your feet, it is cold.",
+   "how": "Brisk, sharp-tongued, middle-aged; cold and cross more than afraid.",
+   "m": "m13"
+  },
+  {
+   "id": "cp_m13_09",
+   "who": "The smokehouse hand",
+   "line": "Thank God. I thought the fires going out was the end of me.",
+   "how": "A young man shaking with cold and relief.",
+   "m": "m13"
+  },
+  {
+   "id": "cp_m13_10",
+   "who": "The cooper",
+   "line": "I was stopping the door with casks. The casks went first.",
+   "how": "Gruff and rueful; a big man ashamed to be rescued.",
+   "m": "m13"
+  },
+  {
+   "id": "cp_m13_11",
+   "who": "Old Pascoe",
+   "line": "Forty years I have drunk here. The sea can have the bar, not me.",
+   "how": "Old and stubborn, a gravelly laugh in it; a drink or two in him.",
+   "m": "m13"
+  },
+  {
+   "id": "cp_m13_12",
+   "who": "The schoolmaster",
+   "line": "I sent the children up the hill road at dusk with their mothers. Go on.",
+   "how": "Precise and anxious, an educated voice; proud of his charges.",
+   "m": "m13"
+  },
+  {
+   "id": "cp_m13_13",
+   "who": "The chaplain",
+   "line": "I was praying for the boats. It seems they sent you.",
+   "how": "Gentle and wry, with real faith; a clergyman's measured voice.",
+   "m": "m13"
+  },
+  {
+   "id": "cp_m13_14",
+   "who": "The smith",
+   "line": "Fire is out. Never thought I would see the forge drowned.",
+   "how": "Deep and slow; a heavy man's grief for his trade.",
+   "m": "m13"
+  },
+  {
+   "id": "cp_m13_15",
+   "who": "The Mayor of Wrackhaven",
+   "line": "The sea has taken one of them. God rest them.",
+   "how": "Shocked, then a quick prayer; shouted across the water.",
+   "m": "m13"
+  },
+  {
+   "id": "cp_m13_16",
+   "who": "The Mayor of Wrackhaven",
+   "line": "Another gone under. Keep the rest close.",
+   "how": "Grim and steadier; holding the others together.",
+   "m": "m13"
+  },
+  {
+   "id": "cp_m13_17",
+   "who": "The Mayor of Wrackhaven",
+   "line": "Too many in the water tonight. Too many.",
+   "how": "Breaking a little; despair held down.",
+   "m": "m13"
+  },
+  {
+   "id": "cp_m13_18",
+   "who": "The Mayor of Wrackhaven",
+   "line": "In, in. Sit on the benches, keep your feet up.",
+   "how": "Fussing, kindly, hurrying them in; the echo of a large hall.",
+   "m": "m13"
+  },
+  {
+   "id": "cp_m13_19",
+   "who": "The Mayor of Wrackhaven",
+   "line": "They are in the water too long! Get them out of it!",
+   "how": "Alarm, shouted across the water.",
+   "m": "m13"
+  },
+  {
+   "id": "cp_m13_20",
+   "who": "The Mayor of Wrackhaven",
+   "line": "It is in the Square now. Hurry!",
+   "how": "Shouted from the hall door; panic in it.",
+   "m": "m13"
+  },
+  {
+   "id": "cp_m13_21",
+   "who": "The Mayor of Wrackhaven",
+   "line": "That is all who are coming. Shut the doors.",
+   "how": "Heavy and final; hall echo.",
+   "m": "m13"
+  },
+  {
+   "id": "cp_m13_22",
+   "who": "The Mayor of Wrackhaven",
+   "line": "Barred. Now we pray the door holds.",
+   "how": "Quiet, grim relief; hall echo.",
+   "m": "m13"
+  },
+  {
+   "id": "cp_m13_23",
+   "who": "The Mayor of Wrackhaven",
+   "line": "They are in the Square, by the dozen. Nail faster!",
+   "how": "Shouted over hammering; hall echo.",
+   "m": "m13"
+  },
+  {
+   "id": "cp_m13_24",
+   "who": "The Mayor of Wrackhaven",
+   "line": "No more time. Stand ready.",
+   "how": "Hard and resigned; hall echo.",
+   "m": "m13"
+  },
+  {
+   "id": "cp_m13_25",
+   "who": "The Mayor of Wrackhaven",
+   "line": "They have dragged one into the water!",
+   "how": "A cry of horror; hall echo.",
+   "m": "m13"
+  },
+  {
+   "id": "cp_m13_26",
+   "who": "Old Pascoe",
+   "line": "Its shell is splitting. There is a whole ship in that thing.",
+   "how": "Awe and a fisherman's fear, quick; hall echo.",
+   "m": "m13"
+  },
+  {
+   "id": "cp_m13_27",
+   "who": "The Mayor of Wrackhaven",
+   "line": "It is on its back! Its belly, shoot its belly!",
+   "how": "Shouted, urgent, almost exultant.",
+   "m": "m13"
+  },
+  {
+   "id": "cp_m13_28",
+   "who": "The Mayor of Wrackhaven",
+   "line": "Up the stair, all of you. Mind the old ones. The sea is coming in behind it.",
+   "how": "Commanding, shouting over the water pouring in.",
+   "m": "m13"
+  },
+  {
+   "id": "cp_m13_29",
+   "who": "The Mayor of Wrackhaven",
+   "line": "Something in the street. Big as a boat, and coming.",
+   "how": "Low and frightened, looking out through the shutters.",
+   "m": "m13"
+  },
+  {
+   "id": "cp_m13_30",
+   "who": "Old Pascoe",
+   "line": "The Keelback. A whole wreck walking. Keep out of its road.",
+   "how": "Hoarse and quick; an old man who has seen one before.",
+   "m": "m13"
+  },
+  {
+   "id": "cp_m13_31",
+   "who": "The Mayor of Wrackhaven",
+   "line": "They have taken one of us out of the window!",
+   "how": "A wail of grief, shouted.",
+   "m": "m13"
+  },
+  {
+   "id": "cp_m13_32",
+   "who": "Old Pascoe",
+   "line": "They are coming up the walls like crabs up a pier.",
+   "how": "Grim gallows humour; old and hoarse.",
+   "m": "m13"
+  },
+  {
+   "id": "cp_m13_33",
+   "who": "The Mayor of Wrackhaven",
+   "line": "The leads! They are over the parapet onto the roof!",
+   "how": "Shouted in alarm up the Belfry stair.",
+   "m": "m13"
+  },
+  {
+   "id": "cp_m13_34",
+   "who": "The schoolmaster",
+   "line": "The sky over the harbour. Is that grey? I think that is grey.",
+   "how": "Hesitant hope; afraid to believe it.",
+   "m": "m13"
+  },
+  {
+   "id": "cp_m13_35",
+   "who": "The schoolmaster",
+   "line": "They are standing in the hall. Under the water, standing in rows, like a congregation.",
+   "how": "A horrified whisper, looking down the stairwell into the water.",
+   "m": "m13"
+  },
+  {
+   "id": "cp_m13_36",
+   "who": "The Mayor of Wrackhaven",
+   "line": "Again! They have to hear it across the harbour!",
+   "how": "Exhilarated, shouting over the bell's hum.",
+   "m": "m13"
+  },
+  {
+   "id": "cp_m13_37",
+   "who": "Old Pascoe",
+   "line": "One more. The Light’s boats will be watching for it.",
+   "how": "Fierce encouragement, old and hoarse; the bell still humming.",
+   "m": "m13"
+  },
+  {
+   "id": "cp_m13_38",
+   "who": "The Mayor of Wrackhaven",
+   "line": "Boats. Boats on the water, coming from the Light.",
+   "how": "Overcome; a sob of relief, then shouted.",
+   "m": "m13"
+  },
+  {
+   "id": "cp_m13_39",
+   "who": "The Mayor of Wrackhaven",
+   "line": "The leads are open. Up there you will see them come, and see the Light.",
+   "how": "Breathless and hopeful; wind on the roof.",
+   "m": "m13"
+  },
+  {
+   "id": "cp_m13_40",
+   "who": "The schoolmaster",
+   "line": "There. Grey over the harbour. It is first light.",
+   "how": "Quiet wonder; dawn wind.",
+   "m": "m13"
+  },
+  {
+   "id": "cp_m13_41",
+   "who": "The Mayor of Wrackhaven",
+   "line": "Ring the bell! Ring it, so the Light knows we are alive!",
+   "how": "Shouted, desperate joy.",
+   "m": "m13"
+  },
+  {
+   "id": "cp_m13_42",
+   "who": "Old Pascoe",
+   "line": "Up the wall, the old salvage diver. The bell has woken him.",
+   "how": "Low and uneasy over the wind.",
+   "m": "m13"
+  },
+  {
+   "id": "cp_m13_43",
+   "who": "The Keeper’s Log",
+   "line": "Dawn. The boats from the Light came in across the Square, over the tops of the market stalls.",
+   "how": "Narration, calm and sad.",
+   "m": "m13"
+  },
+  {
+   "id": "cp_m13_44",
+   "who": "The Mayor of Wrackhaven",
+   "line": "Look at it once. Then do not look again. It is theirs now.",
+   "how": "Old, grieving, steady; from the boat, oars and water under it.",
+   "m": "m13"
+  },
+  {
+   "id": "cp_m13_45",
+   "who": "The Keeper’s Log",
+   "line": "Out past the quay we looked back. And across the harbour the Light was still lit.",
+   "how": "Narration, the softest of all; the last line of the mission, a small light at the end of it.",
+   "m": "m13"
+  },
+  {
+   "id": "cp_m14_01",
+   "who": "The Keeper's Log",
+   "line": "The sea came back, and with it the people of every sea and every year that ever sailed through the skerries.",
+   "how": "Narration, slow, weary; the opening of the last chapter",
+   "m": "m14"
+  },
+  {
+   "id": "cp_m14_02",
+   "who": "The Keeper's Log",
+   "line": "They landed on the islands round the Light, and went to war for them. The charts call it the Drowned Reach.",
+   "how": "Narration, grave",
+   "m": "m14"
+  },
+  {
+   "id": "cp_m14_03",
+   "who": "The Wren's Mate",
+   "line": "That’s the Light, out in the middle of it all. Dark, these many years.",
+   "how": "Quiet, looking across water",
+   "m": "m14"
+  },
+  {
+   "id": "cp_m14_04",
+   "who": "The Wren's Mate",
+   "line": "Every nation in the Reach wants the name of Keeper. Not one of them can light it.",
+   "how": "Dry, bitter",
+   "m": "m14"
+  },
+  {
+   "id": "cp_m14_05",
+   "who": "The Wren's Mate",
+   "line": "So we will. Up the beach, and mind their muskets. They show a flash in the pan before they fire.",
+   "how": "Brisk; briefing a landing party",
+   "m": "m14"
+  },
+  {
+   "id": "cp_m14_10",
+   "who": "The Wren's Mate",
+   "line": "Ember Isles. They’ve held this holm since the last pact broke. Up the beach and through them.",
+   "how": "Low, urgent, crouched behind cover",
+   "m": "m14"
+  },
+  {
+   "id": "cp_m14_11",
+   "who": "Ember Isles Captain",
+   "line": "Second section, down! Hold the beacon. No lamp-man sets foot on it!",
+   "how": "Barked order, foreign-accented, off",
+   "m": "m14"
+  },
+  {
+   "id": "cp_m14_12",
+   "who": "The Wren's Mate",
+   "line": "Their beacon’s cold. They won’t burn the wood, and the drowned have the shore every night for it. Light it.",
+   "how": "Practical, quick",
+   "m": "m14"
+  },
+  {
+   "id": "cp_m14_13",
+   "who": "The Wren's Mate",
+   "line": "There. Now keep it fed. Their woodpile’s in the camp. When the tide’s out, the shoal’s a road.",
+   "how": "Relieved, then businesslike",
+   "m": "m14"
+  },
+  {
+   "id": "cp_m14_14",
+   "who": "The Wren's Mate",
+   "line": "And here they come. Every shore the light doesn’t reach is theirs at night.",
+   "how": "Grim, watching the tideline",
+   "m": "m14"
+  },
+  {
+   "id": "cp_m14_15",
+   "who": "The Wren's Mate",
+   "line": "It’s getting dark. Light that beacon.",
+   "how": "Urgent",
+   "m": "m14"
+  },
+  {
+   "id": "cp_m14_16",
+   "who": "The Wren's Mate",
+   "line": "The beacon’s low. Feed it!",
+   "how": "Sharp warning",
+   "m": "m14"
+  },
+  {
+   "id": "cp_m14_17",
+   "who": "The Wren's Mate",
+   "line": "It’s out! Bring wood, and light it again!",
+   "how": "Alarmed shout",
+   "m": "m14"
+  },
+  {
+   "id": "cp_m14_18",
+   "who": "The Wren's Mate",
+   "line": "She’s ebbing. I can see the shoal under the water.",
+   "how": "Hopeful, peering",
+   "m": "m14"
+  },
+  {
+   "id": "cp_m14_19",
+   "who": "The Wren's Mate",
+   "line": "Low water. Down to the north beach, all of you.",
+   "how": "Calling out, carrying",
+   "m": "m14"
+  },
+  {
+   "id": "cp_m14_20",
+   "who": "Ember Isles Captain",
+   "line": "Oath-breakers! The Commodore will hear of this!",
+   "how": "Furious, retreating",
+   "m": "m14"
+  },
+  {
+   "id": "cp_m14_21",
+   "who": "The Wren's Mate",
+   "line": "There’s the road. And there’s the one who knows it. Keep him close.",
+   "how": "Warm surprise, a smile in it",
+   "m": "m14"
+  },
+  {
+   "id": "cp_m14_22",
+   "who": "The Wren's Mate",
+   "line": "He’s stopped. He won’t walk on into the dark. Light the cairn for him.",
+   "how": "Gentle, explaining",
+   "m": "m14"
+  },
+  {
+   "id": "cp_m14_23",
+   "who": "The Wren's Mate",
+   "line": "Another cairn. Light it, quick.",
+   "how": "Hurried",
+   "m": "m14"
+  },
+  {
+   "id": "cp_m14_24",
+   "who": "The Wren's Mate",
+   "line": "The last cairn before the rock.",
+   "how": "Steady, nearly there",
+   "m": "m14"
+  },
+  {
+   "id": "cp_m14_25",
+   "who": "The Wren's Mate",
+   "line": "Ice-folk, on that hulk. He won’t walk into their muskets, and neither should we. Clear them.",
+   "how": "Low, tactical",
+   "m": "m14"
+  },
+  {
+   "id": "cp_m14_26",
+   "who": "Ice-folk Sergeant",
+   "line": "Lamp-men on the shoal! Make ready! Present!",
+   "how": "Shouted drill orders, clipped, off",
+   "m": "m14"
+  },
+  {
+   "id": "cp_m14_27",
+   "who": "The Wren's Mate",
+   "line": "The flood’s turned. It’s coming up the road behind us. Don’t dawdle.",
+   "how": "Tense, looking back",
+   "m": "m14"
+  },
+  {
+   "id": "cp_m14_28",
+   "who": "The Wren's Mate",
+   "line": "The water’s at your heels!",
+   "how": "Shout",
+   "m": "m14"
+  },
+  {
+   "id": "cp_m14_29",
+   "who": "The Wren's Mate",
+   "line": "Good. He’s walking again. Keep up with him.",
+   "how": "Relieved",
+   "m": "m14"
+  },
+  {
+   "id": "cp_m14_30",
+   "who": "The Wren's Mate",
+   "line": "That’s it. Ring it! They’ll not abide a bell.",
+   "how": "Urgent, pointing",
+   "m": "m14"
+  },
+  {
+   "id": "cp_m14_31",
+   "who": "The Wren's Mate",
+   "line": "An old buoy’s bell, there on the bank. Keep the bell ready, the keeper wrote.",
+   "how": "Reading from memory, half to himself",
+   "m": "m14"
+  },
+  {
+   "id": "cp_m14_32",
+   "who": "The Wren's Mate",
+   "line": "The Light’s rock. We’re over. Look behind you: the road’s gone.",
+   "how": "Breathless, awed",
+   "m": "m14"
+  },
+  {
+   "id": "cp_m14_33",
+   "who": "The Wren's Mate",
+   "line": "That’s the last of them. On, after him.",
+   "how": "Winded, brisk",
+   "m": "m14"
+  },
+  {
+   "id": "cp_m14_34",
+   "who": "The Wren's Mate",
+   "line": "Look at her go. The whole Reach is draining.",
+   "how": "Awed, quiet",
+   "m": "m14"
+  },
+  {
+   "id": "cp_m14_35",
+   "who": "The Wren's Mate",
+   "line": "And there he is. Blue shoes and all. I’d know him in any year.",
+   "how": "Fond, almost laughing",
+   "m": "m14"
+  },
+  {
+   "id": "cp_m14_36",
+   "who": "The Keeper's Log",
+   "line": "The only things that never change are the light, the shark in his shoes, and her.",
+   "how": "Narration, tender",
+   "m": "m14"
+  },
+  {
+   "id": "cp_m14_40",
+   "who": "The Wren's Mate",
+   "line": "The keeper’s station, from the back. In all the years I never once saw it from this side.",
+   "how": "Quiet, strange recognition",
+   "m": "m14"
+  },
+  {
+   "id": "cp_m14_41",
+   "who": "The Ember Commodore",
+   "line": "Whoever you are: this rock is the Ember Isles’. We hold it, so we are its Keepers.",
+   "how": "Imperious, carrying, from a height",
+   "m": "m14"
+  },
+  {
+   "id": "cp_m14_42",
+   "who": "The Wren's Mate",
+   "line": "You hold it dark.",
+   "how": "Flat, contemptuous, not raised",
+   "m": "m14"
+  },
+  {
+   "id": "cp_m14_44",
+   "who": "The Ember Commodore",
+   "line": "Lamp-men. On my rock. I have hanged better men for less.",
+   "how": "Cold fury",
+   "m": "m14"
+  },
+  {
+   "id": "cp_m14_45",
+   "who": "The Ember Commodore",
+   "line": "Every nation remembers an oath-breaker. Nobody remembers a lamp-man.",
+   "how": "Sneering",
+   "m": "m14"
+  },
+  {
+   "id": "cp_m14_50",
+   "who": "The Wren's Mate",
+   "line": "Ember guns on the north rock. They’ve been shelling the shoal with them. Take the battery.",
+   "how": "Clipped, tactical",
+   "m": "m14"
+  },
+  {
+   "id": "cp_m14_51",
+   "who": "Ember Isles Captain",
+   "line": "Fall back to the station! Fetch the Commodore!",
+   "how": "Panicked shout",
+   "m": "m14"
+  },
+  {
+   "id": "cp_m14_52",
+   "who": "The Ember Commodore",
+   "line": "Fire-pots! Burn them off my rock!",
+   "how": "Roaring command",
+   "m": "m14"
+  },
+  {
+   "id": "cp_m14_53",
+   "who": "The Ember Commodore",
+   "line": "Guards! To me! If the Ember Isles can’t keep it, nobody keeps it!",
+   "how": "Desperate, half mad",
+   "m": "m14"
+  },
+  {
+   "id": "cp_m14_54",
+   "who": "The Ember Commodore",
+   "line": "Light it, then. Light it, if you can. We never could.",
+   "how": "Beaten, bitter, almost a laugh",
+   "m": "m14"
+  },
+  {
+   "id": "cp_m14_55",
+   "who": "The Wren's Mate",
+   "line": "They hoarded the Light’s oil in the west yard. A cask at a time, to the back door. I’ll hold it open.",
+   "how": "Practical, quick",
+   "m": "m14"
+  },
+  {
+   "id": "cp_m14_56",
+   "who": "The Wren's Mate",
+   "line": "Mind the rock. The Light’s dark, so the drowned have this shore too. Even this one.",
+   "how": "Wary",
+   "m": "m14"
+  },
+  {
+   "id": "cp_m14_57",
+   "who": "The Wren's Mate",
+   "line": "That’s the last of it. Ninety treads to the lantern. Up you go.",
+   "how": "Tired, a little moved",
+   "m": "m14"
+  },
+  {
+   "id": "cp_m14_58",
+   "who": "The Wren's Mate",
+   "line": "One in. It smells like the station always did.",
+   "how": "Wistful, under effort",
+   "m": "m14"
+  },
+  {
+   "id": "cp_m14_60",
+   "who": "The Lampwright",
+   "line": "The wick’s trimmed and the oil’s in. Put a light to it, and stand back.",
+   "how": "Old, calm, precise; a craftsman",
+   "m": "m14"
+  },
+  {
+   "id": "cp_m14_61",
+   "who": "The Lampwright",
+   "line": "There she is. Now keep her. Oil to the lamp, and wind the clock, or she stops turning.",
+   "how": "Proud, then firm instruction",
+   "m": "m14"
+  },
+  {
+   "id": "cp_m14_62",
+   "who": "The Wren's Mate",
+   "line": "They’ve seen it. Every nation in the Reach has seen it. Fire-ships, coming in.",
+   "how": "Alarmed, looking out to sea",
+   "m": "m14"
+  },
+  {
+   "id": "cp_m14_63",
+   "who": "The Lampwright",
+   "line": "She’s starving for oil! Pump!",
+   "how": "Sharp, urgent",
+   "m": "m14"
+  },
+  {
+   "id": "cp_m14_64",
+   "who": "The Lampwright",
+   "line": "The clock’s run down. She’s stopped turning. Wind her!",
+   "how": "Urgent",
+   "m": "m14"
+  },
+  {
+   "id": "cp_m14_65",
+   "who": "The Lampwright",
+   "line": "They’re at the lens! Get them off my glass!",
+   "how": "Angry, protective",
+   "m": "m14"
+  },
+  {
+   "id": "cp_m14_66",
+   "who": "The Wren's Mate",
+   "line": "There’s the first. Burning, and coming straight for the rock.",
+   "how": "Tense",
+   "m": "m14"
+  },
+  {
+   "id": "cp_m14_67",
+   "who": "The Wren's Mate",
+   "line": "More of them. Every nation’s sent one.",
+   "how": "Grim",
+   "m": "m14"
+  },
+  {
+   "id": "cp_m14_68",
+   "who": "The Wren's Mate",
+   "line": "She’s seen the rocks! She’s going about!",
+   "how": "Exultant shout",
+   "m": "m14"
+  },
+  {
+   "id": "cp_m14_69",
+   "who": "The Wren's Mate",
+   "line": "Another one sheering off!",
+   "how": "Relief",
+   "m": "m14"
+  },
+  {
+   "id": "cp_m14_70",
+   "who": "The Wren's Mate",
+   "line": "She’s turned! In its light they see what’s really there.",
+   "how": "Wonder, half shouted",
+   "m": "m14"
+  },
+  {
+   "id": "cp_m14_71",
+   "who": "The Lampwright",
+   "line": "She’s struck the rock! The whole tower shook!",
+   "how": "Shaken shout",
+   "m": "m14"
+  },
+  {
+   "id": "cp_m14_72",
+   "who": "The Lampwright",
+   "line": "Another! The glass won’t take a third!",
+   "how": "Desperate",
+   "m": "m14"
+  },
+  {
+   "id": "cp_m14_73",
+   "who": "The Lampwright",
+   "line": "That’s the last of them. Look at it. Every shore in the Reach, lit.",
+   "how": "Quiet triumph, tired",
+   "m": "m14"
+  },
+  {
+   "id": "cp_m14_75",
+   "who": "The Lampwright",
+   "line": "Mind the forty-first tread. It always did creak.",
+   "how": "Dry, off, from up the stair",
+   "m": "m14"
+  },
+  {
+   "id": "cp_m14_76",
+   "who": "The Wren's Mate",
+   "line": "Who’s that up there?",
+   "how": "Startled, calling up",
+   "m": "m14"
+  },
+  {
+   "id": "cp_m14_77",
+   "who": "The Lampwright",
+   "line": "Who else would it be? Come up. The glass is clean.",
+   "how": "Warm, wry",
+   "m": "m14"
+  },
+  {
+   "id": "cp_m14_80",
+   "who": "The Lampwright",
+   "line": "I ground this glass in eighteen forty-one. I never once saw it lit from the outside.",
+   "how": "Soft, almost reverent",
+   "m": "m14"
+  },
+  {
+   "id": "cp_m14_81",
+   "who": "The Lampwright",
+   "line": "Holm kept her through the worst year there ever was. He left you his book.",
+   "how": "Gentle, respectful",
+   "m": "m14"
+  },
+  {
+   "id": "cp_m14_82",
+   "who": "The Lampwright",
+   "line": "Whoever holds the rock, they call the Keeper. Holding it was never the trick of it.",
+   "how": "Wise, unhurried; the point of the whole tale",
+   "m": "m14"
+  },
+  {
+   "id": "cp_m14_86",
+   "who": "The Wren's Mate",
+   "line": "Look at it. Every shore it touches, they sink back.",
+   "how": "Quiet wonder",
+   "m": "m14"
+  },
+  {
+   "id": "cp_m14_87",
+   "who": "The Wren's Mate",
+   "line": "They’re dipping their beacons. All of them. Every nation in the Reach.",
+   "how": "Moved, voice catching",
+   "m": "m14"
+  },
+  {
+   "id": "cp_m14_88",
+   "who": "The Lampwright",
+   "line": "That’s all the name of Keeper ever was. Keeping it lit. It’s yours now.",
+   "how": "Gentle, final; a handing-over",
+   "m": "m14"
+  },
+  {
+   "id": "cp_m14_91",
+   "who": "The Keeper's Log",
+   "line": "If you are reading this, keep Plimsoll close and keep the bell ready.",
+   "how": "Narration, intimate; written to the reader",
+   "m": "m14"
+  },
+  {
+   "id": "cp_m14_92",
+   "who": "The Keeper's Log",
+   "line": "Whatever sea you wake on, the light is still turning, and she is still rowing out to the Gannet.",
+   "how": "Narration, very quiet; the last words of the campaign, let it breathe",
+   "m": "m14"
+  },
+  {
+   "id": "cp_m14_93",
+   "who": "The Keeper's Log",
+   "line": "The tales don’t keep to their order. They never did. They come round again, as regular as the lamp.",
+   "how": "Narration, wry and tired",
+   "m": "m14"
+  },
+  {
+   "id": "cp_m14_94",
+   "who": "The Keeper's Log",
+   "line": "She was out there, rowing toward where the Gannet was, and the lantern in her skiff was still lit.",
+   "how": "Narration, slow",
+   "m": "m14"
+  },
+  {
+   "id": "cp_m14_95",
+   "who": "The Keeper's Log",
+   "line": "When the lamp turned, she looked up at me.",
+   "how": "Narration, barely above a whisper",
+   "m": "m14"
+  }
+ ],
+ "sfx": [
+  {
+   "name": "fireroar",
+   "desc": "A big open fire catching and roaring up (when the fire is lit; now sfxFlare plus synth)",
+   "m": "m01"
+  },
+  {
+   "name": "firefeed",
+   "desc": "An armful of dry driftwood thrown on a fire, crackle and spit (feeding the fire; now debris)",
+   "m": "m01"
+  },
+  {
+   "name": "fogsmother",
+   "desc": "A wet hiss and dull whump as fog rolls over a fire and smothers it",
+   "m": "m01"
+  },
+  {
+   "name": "fogburn",
+   "desc": "A brand sizzling through fog, a soft hiss and sparks (a fog bank burnt off)",
+   "m": "m01"
+  },
+  {
+   "name": "brandtake",
+   "desc": "Pulling a burning brand from a fire, a crackle and whoosh",
+   "m": "m01"
+  },
+  {
+   "name": "coghorn",
+   "desc": "A medieval ship's horn (a cow horn) far off in fog (the ship going about)",
+   "m": "m01"
+  },
+  {
+   "name": "hull_hole",
+   "desc": "an axe staving in a boat's planking, with a wet crunch and water gurgling in (Part II)",
+   "m": "m02"
+  },
+  {
+   "name": "gibbet_chain",
+   "desc": "a cage swinging on its chain in the wind, creaking iron (Part III ambience)",
+   "m": "m02"
+  },
+  {
+   "name": "lantern_douse",
+   "desc": "a lantern's flame smothered with a cloth, a hiss and a puff (putting out a false light)",
+   "m": "m02"
+  },
+  {
+   "name": "winchclank",
+   "desc": "a crab winch's ratchet and pawl, clanking slowly as the handle goes round (looped while winding)",
+   "m": "m03"
+  },
+  {
+   "name": "wavesweep",
+   "desc": "a green sea breaking over a jetty and sluicing off it (stage one's waves; sfxSwell and sfxSplash stand in)",
+   "m": "m03"
+  },
+  {
+   "name": "brazierlight",
+   "desc": "a brazier catching: a whump of flame and crackle (sfxWhoosh stands in)",
+   "m": "m03"
+  },
+  {
+   "name": "brazierhuff",
+   "desc": "a fire put out by a cold breath of fog: a hiss and a sigh",
+   "m": "m03"
+  },
+  {
+   "name": "glassseat",
+   "desc": "a heavy prism panel settling into a brass frame: a soft clunk and a ringing glass chime (sfxChime stands in)",
+   "m": "m03"
+  },
+  {
+   "name": "lampcatch",
+   "desc": "the colza lamp catching: a soft pop, then a rising roar of flame",
+   "m": "m03"
+  },
+  {
+   "name": "beamswing",
+   "desc": "the lens turned by hand on its rollers: a heavy, smooth grinding rumble with a creak when it stops (looped while the bar is held)",
+   "m": "m04"
+  },
+  {
+   "name": "sleetglass",
+   "desc": "sleet driving against the lantern glass, a hiss and patter (looped during a squall)",
+   "m": "m04"
+  },
+  {
+   "name": "glasswipe",
+   "desc": "a cloth wiping a wet, frosted pane: a squeak and smear",
+   "m": "m04"
+  },
+  {
+   "name": "gallerybell",
+   "desc": "a ship's-size bell rung hard on a gallery in a gale (sfxBell stands in)",
+   "m": "m04"
+  },
+  {
+   "name": "lampout",
+   "desc": "a colza lamp dying: a gutter, a sputter, then silence (sfxLightsOut stands in)",
+   "m": "m04"
+  },
+  {
+   "name": "clockwind",
+   "desc": "the lens clockwork's weights wound up: a heavy ratchet, slow and loud on the iron",
+   "m": "m04"
+  },
+  {
+   "name": "shipstrike",
+   "desc": "a wooden brig striking rock in a storm: a deep crunch, splintering timber, a mast going (sfxSmash and sfxCreak stand in)",
+   "m": "m04"
+  },
+  {
+   "name": "icefreeze",
+   "desc": "a sea freezing over: a creeping crackle, a deep groan of ice settling",
+   "m": "m04"
+  },
+  {
+   "name": "steam",
+   "desc": "a short hiss of steam as surf runs over a hot rock",
+   "m": "m05"
+  },
+  {
+   "name": "kwcapstan",
+   "desc": "A wooden capstan's pawl clacking as it turns, with a wet rope groaning round the barrel",
+   "m": "m06"
+  },
+  {
+   "name": "kwnet",
+   "desc": "A heavy wet net coming over the rail: water pouring off, cork floats knocking",
+   "m": "m06"
+  },
+  {
+   "name": "kwlamp",
+   "desc": "A deck lantern's glass opened, a match struck, the wick catching",
+   "m": "m06"
+  },
+  {
+   "name": "kwbell",
+   "desc": "A small ship's bell struck in pairs (the watch bells), close and dry, for the bells in Part II (it uses sfxBellFar meanwhile)",
+   "m": "m06"
+  },
+  {
+   "name": "kwwave",
+   "desc": "A green sea coming aboard a small boat: a heavy slap, then water sluicing across the deck",
+   "m": "m06"
+  },
+  {
+   "name": "kwstrike",
+   "desc": "A wooden hull grinding onto rock, timbers splitting",
+   "m": "m06"
+  },
+  {
+   "name": "kwstove",
+   "desc": "A cast-iron caboose stove's door opening, coals ticking, a hiss as a wet flare goes in",
+   "m": "m06"
+  },
+  {
+   "name": "kwlash",
+   "desc": "A knife sawing through tarred rope",
+   "m": "m06"
+  },
+  {
+   "name": "gate_bar",
+   "desc": "a heavy timber bar lifted out of its iron keeps and a great gate swinging back on dry hinges (end of Part I)",
+   "m": "m07"
+  },
+  {
+   "name": "chest_lift",
+   "desc": "a heavy sea chest hoisted onto a shoulder, wood and brass creaking, coins shifting inside",
+   "m": "m07"
+  },
+  {
+   "name": "longarm_lay",
+   "desc": "a long gun's hammer drawn back, slow and deliberate (Nell laying her shot, before the red line locks)",
+   "m": "m07"
+  },
+  {
+   "name": "flare_rocket",
+   "desc": "a signal rocket fired from a locker, a whoosh up and a fizzing burst (the shared flare sound covers it for now)",
+   "m": "m07"
+  },
+  {
+   "name": "whisper",
+   "desc": "Maren's breath over the water (the ring and the port rail cinematics ask for it by name; nothing plays yet)",
+   "m": "m08"
+  },
+  {
+   "name": "chock",
+   "desc": "a wooden chock knocked out from under a keel with a maul, and the hull lurching on the slip",
+   "m": "m08"
+  },
+  {
+   "name": "halyard",
+   "desc": "a heavy rope parting under strain, and a sail's weight falling",
+   "m": "m08"
+  },
+  {
+   "name": "sailfire",
+   "desc": "canvas catching and roaring up in flame",
+   "m": "m08"
+  },
+  {
+   "name": "caskthud",
+   "desc": "a full oil cask set down on an iron floor (a heavy wooden knock, oil sloshing), for each delivery (drink stands in)",
+   "m": "m09"
+  },
+  {
+   "name": "wickcough",
+   "desc": "the lamp guttering, a sputter and cough of flame, looped faintly while the oil is under a quarter",
+   "m": "m09"
+  },
+  {
+   "name": "ladderclimb",
+   "desc": "wet hands and feet on iron rungs coming up out of the sea, for the drowned up the jetty ladders",
+   "m": "m09"
+  },
+  {
+   "name": "glassscrape",
+   "desc": "nails and fingers dragged on lantern glass, for the drowned pawing at the lamp",
+   "m": "m09"
+  },
+  {
+   "name": "gallerybolt",
+   "desc": "lightning very close, a white crack and a ring of iron from the gallery rail (thunder stands in)",
+   "m": "m09"
+  },
+  {
+   "name": "c10vane",
+   "desc": "a heavy brass sight turning on a stone post, a grinding click into each of eight notches",
+   "m": "m10"
+  },
+  {
+   "name": "c10dig",
+   "desc": "a spade biting into turf and stony earth, a few takes, and one striking wood",
+   "m": "m10"
+  },
+  {
+   "name": "c10chestopen",
+   "desc": "an old ironbound chest lid forced back on rusted hinges",
+   "m": "m10"
+  },
+  {
+   "name": "c10weigh",
+   "desc": "coins poured onto a brass scale pan, the beam settling",
+   "m": "m10"
+  },
+  {
+   "name": "fkgaze",
+   "desc": "A cold, glassy, rising whine as the Fog-Keeper's lamp-glass turns on you, then a sustained frosty hum while the beam sweeps",
+   "m": "m11"
+  },
+  {
+   "name": "fkchill",
+   "desc": "Frost cracking, a sharp icy tinkle (hit by his gaze)",
+   "m": "m11"
+  },
+  {
+   "name": "fklantern",
+   "desc": "A lantern whistling through the air, then shattering glass with a cold whoomph (his thrown lantern)",
+   "m": "m11"
+  },
+  {
+   "name": "fkfade",
+   "desc": "A low exhale dissolving into hissing fog (he fades and reappears)",
+   "m": "m11"
+  },
+  {
+   "name": "tapergust",
+   "desc": "A sudden gust tearing past stone, with a candle flame guttering out",
+   "m": "m11"
+  },
+  {
+   "name": "taperlight",
+   "desc": "A taper catching from a lantern, a tiny soft flare",
+   "m": "m11"
+  },
+  {
+   "name": "candles",
+   "desc": "Seven altar candles catching one after another, soft pops, a faint reverberant hum in stone",
+   "m": "m11"
+  },
+  {
+   "name": "quaylamp",
+   "desc": "A lighting pole touching an old oil lamp, a clink and a soft whump as it catches",
+   "m": "m11"
+  },
+  {
+   "name": "beaconcatch",
+   "desc": "A flare striking an iron fire basket on a cliff top, then a big beacon fire roaring up, distant",
+   "m": "m11"
+  },
+  {
+   "name": "c12surge",
+   "desc": "the last of the sea rushing down a channel, a roar coming from upstream and passing, foam and shingle",
+   "m": "m12"
+  },
+  {
+   "name": "c12bellwreck",
+   "desc": "an old ship's bell, salt-crusted, rung hard: duller and more cracked than the Light's",
+   "m": "m12"
+  },
+  {
+   "name": "c12grate",
+   "desc": "a heavy iron grate grinding up in stone slots",
+   "m": "m12"
+  },
+  {
+   "name": "c12lamp",
+   "desc": "an oil lamp catching in an iron cage, a soft whump",
+   "m": "m12"
+  },
+  {
+   "name": "c12tide",
+   "desc": "a broad wash of sea coming in over flat sand, rising and falling",
+   "m": "m12"
+  },
+  {
+   "name": "bellpeal",
+   "desc": "Wrackhaven's old Belfry bell: one heavy bronze stroke with a long hum (synthesised in src/cpm13x.js c13Bell until recorded)",
+   "m": "m13"
+  },
+  {
+   "name": "wade",
+   "desc": "wading footsteps, knee- to chest-deep, sloshing (looped while you move in the flood)",
+   "m": "m13"
+  },
+  {
+   "name": "floodrush",
+   "desc": "water pouring through a doorway and down a street, rising",
+   "m": "m13"
+  },
+  {
+   "name": "doorstove",
+   "desc": "a great oak door smashed in by something huge, splintering, with water flooding through after it",
+   "m": "m13"
+  },
+  {
+   "name": "ropecreak",
+   "desc": "the bell rope's creak and the frame's groan while it is pulled",
+   "m": "m13"
+  },
+  {
+   "name": "oars",
+   "desc": "oars in rowlocks and pulling through still water, for the outro's boats",
+   "m": "m13"
+  },
+  {
+   "name": "rchmusket",
+   "desc": "A flintlock musket at range: the pan's flash fizz, a short pause, then the shot, so players learn to hear the telegraph (it uses longarm meanwhile)",
+   "m": "m14"
+  },
+  {
+   "name": "rchbeacon",
+   "desc": "A beacon of dry faggots catching: a whoomp and a rising roar of flame, crackling",
+   "m": "m14"
+  },
+  {
+   "name": "rchfeed",
+   "desc": "An armful of wood thrown onto a big fire, sparks spitting",
+   "m": "m14"
+  },
+  {
+   "name": "rchbell",
+   "desc": "An old buoy bell on a sandbank swung hard, cracked and ringing long over water",
+   "m": "m14"
+  },
+  {
+   "name": "rchflood",
+   "desc": "The flood tide running fast over sand: hiss and gurgle, rising",
+   "m": "m14"
+  },
+  {
+   "name": "rchpot",
+   "desc": "A clay fire-pot smashing and the oil going up in flame",
+   "m": "m14"
+  },
+  {
+   "name": "rchcask",
+   "desc": "A heavy oil cask set down on stone, sloshing",
+   "m": "m14"
+  },
+  {
+   "name": "rchpump",
+   "desc": "A brass hand pump on a lighthouse lamp, oil squelching through",
+   "m": "m14"
+  },
+  {
+   "name": "rchwind",
+   "desc": "A lighthouse clockwork being wound with a crank: heavy ratchet clicks, a weight rising",
+   "m": "m14"
+  },
+  {
+   "name": "rchship",
+   "desc": "A burning ship close by: roaring fire, timbers cracking, sails going up",
+   "m": "m14"
+  },
+  {
+   "name": "rchoar",
+   "desc": "Oars in rowlocks, slow, a small skiff on calm water at night, for the very end",
+   "m": "m14"
+  }
+ ],
+ "cast": {
+  "m01": "- **The Fire-Keeper** (cast `fire`, shared with the campaign): head of the fire-keeping family, fifties, broad-chested, weathered; low, gravelly, few words. An old northern coastal accent (Northumbrian/Scots edge), unhurried even in danger.\n- **Wenna** (new, cast `wenna`): his daughter, about seventeen. Quick, clear, practical, braver than she sounds; the same accent, lighter.\n- **The Shipmaster** (new, cast `m01mast`): master of a cog lost in the fog; heard only once, shouting from his deck far off. West Country, hoarse, frightened. Heavy distance/echo.\n- **The Last Fire-Keeper** (new, cast `lastfire`): the family's last keeper in 1841, an old man in oilskins. Soft, dry, stubborn; a little bitter humour. He becomes the Fog-Keeper: keep a faint likeness to that voice (mission 11's line `cp_m11_38`, “Kept.”, should sound like him).\n- **The Keeper's Log** (`log`, shared): narration.",
+  "m02": "- **Sergeant Ybarra**: a Spanish garrison sergeant in his forties. Rough-edged and loyal, he gives short orders and speaks English with a light Castilian accent. He sounds like a man who has done this for years and hates it.\n- **The Governor**: the fort's governor, in his sixties. Cultured, cold and unhurried, he never raises his voice. He speaks English with a Castilian accent.\n- **Black Jago (Jago Penhallow)**: the wreckers' leader, in his thirties. He is a big Cornish-coast man with a rough West Country burr, scornful and proud. He comes back as the Mooncusser, keeping the same voice but slowed and hollowed, with an underwater echo.\n- **A Lookout**: a young English sailor at the masthead, heard from far off.",
+  "m03": "- **The Lampwright** (new speaker): a craftsman in his fifties, the man who ground every prism of the lens by hand. Precise, gentle, proud; speaks of the lens as \"she\" and as something alive. Educated working-man's English, faintly Northern (a Tyneside glassworks man). Quick and sharp when the work is at risk, soft and almost hushed when it goes right.\n- **The Foreman**: the builders' foreman, forties, a big voice used to carrying over wind and surf. Plain and practical; calls the Lampwright \"sir\". West Country. Shouted over weather in stage one; loyal and a little in awe at the end.\n- **The Last Fire-Keeper**: the last of the family who kept the fire on Lantern Rock for six hundred years (the man the stories later call the Fog-Keeper, still a living man here). Old, slow, bitter and proud; a deep, worn voice, broad old coastal dialect. Heard across water: a little distance and wind on him. His last line, \"Then I will keep it cold. Someone must.\", is quiet and final, almost to himself.",
+  "m04": "- **Holm** (existing; the principal keeper, Maren's husband): eight years at the Light, in his forties; steady and dry most of the night, a man of few words. Scottish east-coast. He breaks twice: the lamp going out (\"No. No, no, no.\") and Maren's name at the end. In stage three he is hollow and very quiet.\n- **Maren** (existing; his wife, heard alive here): about thirty-five, bright, quick, fearless, a boatwoman's confidence and a little teasing with Holm. Same accent as Holm, softer. Shouted against the gale at the gallery; on the water, a raw shout that the wind carries away.\n- **A voice off the sea** (new speaker): one of the Gannet's crew, a cry across the water as she strikes; a young man, terrified, heavily distant, wind-torn, almost lost under the storm.\n- **The Keeper's Log** (existing narrator): read in Holm's voice the next morning, flat and exhausted, as he writes; the last sentence, \"We have no mountains.\", almost bewildered.",
+  "m07": "- **Mr Tregear, the Receiver**: the Receiver of Wreck for the port, in his fifties. He is a Cornish gentleman official, careful and precise, and speaks in a low voice with a soft West Country lilt. He calls his boat crew \"gentlemen\" and never swears.\n- **Black Nell**: the wrecker gangs' leader on the quay, in her forties. She has a hard harbour voice with a strong West Country accent, cool and amused until she is crossed, and then savage.\n- **A Wrecker** (the shared `wreck` speaker): one of Kittow's men, a rough coastal voice, shouting.",
+  "m09": "- **Holm** (the keeper): in his fifties, the man who has kept Skerry Light since before the Gannet, a widower since 1887 (his wife Maren lost that winter). Weathered, plain-spoken, a Northumbrian or Scots-Borders coast voice, low and dry; says \"she\" and \"her\" of the lamp. Never panics in words, though his breath does; fierce when the lamp is threatened, tender only to the lamp. On the lantern floor, add a little glass-room reverb; in stage one, open air and surf. His last line (cp_m09_49) is the quietest, and the closest he comes to a smile.\n- **The Keeper's Log**: narration, Holm's own written voice read aloud, slower and flatter than his speech, as if read back years later by lamplight. A faint room tone, no effects.",
+  "m10": "- **The Mate**: the cutter's mate, a weathered Saltcote man in his forties with a soft Northumbrian burr. Unflappable and dry, he keeps the crew steady with short practical orders and the odd sour joke.\n- **The Gilt & Gull Clerk**: a chart-seller for Gilt & Gull, in his thirties. A smooth, eager Bristol clerk with a salesman's patter, always a little too sure of his charts.\n- **The Factor**: Saltcote's factor, in his fifties. Dry, exact and unimpressed; he weighs honest and says little.",
+  "m11": "- **The Mate** (new, cast `mate`): the keeper's cutter's mate, forties, an experienced Northumbrian seaman. Brisk, practical, dry, steady under pressure; he shouts a lot (over wind, sea and the fight), so record those lines shouted, not just loud.\n- **Holm** (`holm`, shared): the keeper of Skerry Light in 1889. Fifties, clipped, grim, Scots-tinged.\n- **The Fog-Keeper** (`fog`, shared): the last fire-keeper of Lantern Rock (mission 1's `lastfire`), drowned in the fog he kept. A deep, slow, hollow voice with heavy reverb, slightly pitched down, always a little too close. As the old fire is lit (`cp_m11_32`) the reverb thins and the man shows through, and his last word (`cp_m11_38`, “Kept.”) is an old man's plain voice, like mission 1's last fire-keeper.\n- **The Keeper's Log** (`log`, shared): narration.",
+  "m12": "- **Ruth Carrow**: a Wrackhaven boatwoman in her thirties who leads the party down. Low, steady and practical, with a soft Cornish-coast burr. She sounds like someone who has pulled bodies out of the sea before and won't panic now.\n- **Maren**: Maren Holm, the keeper's wife, drowned in 1887. Her voice is a woman's in her thirties, slowed, hollowed and wet with an underwater echo. She is sad and reproachful rather than monstrous, and at the very end almost tender.\n- **Holm** (existing speaker): the old keeper, grief held in check, few words.",
+  "m13": "- **The Mayor of Wrackhaven**: in his sixties, portly, chain of office over his nightshirt and greatcoat. A town worthy used to speeches, now giving orders in a flood; a warm West Country burr, breathless, his voice cracking with each one lost. Inside the town hall, give him the hall's echo.\n- **The chandler** (new): forties, a shopkeeper's quick, anxious politeness. Wrackhaven accent.\n- **A fishwife** (new): fifties, sharp-tongued, strong, more cross than afraid; broad local accent.\n- **The smokehouse hand** (new): a lad of about twenty, teeth chattering with cold.\n- **The cooper** (new): a big gruff man in his forties, embarrassed to be rescued.\n- **Old Pascoe**: the old fisherman who drank at the Drowned Man for forty years. Seventies, hoarse and gravelly, a dry dark humour; he has seen the Keelback before and knows it. Broad old coastal dialect.\n- **The schoolmaster**: forties, thin and precise, an educated voice (not local); anxious, observant, the one who notices things (the grey sky, the drowned standing in rows).\n- **The chaplain** (new): fifties, gentle and wry, a measured pulpit voice with real faith in it.\n- **The smith** (new): fifties, a deep slow bass, few words.\n- **The Keeper's Log**: narration, as in m09: slow and flat, read back years later by lamplight."
+ }
+}

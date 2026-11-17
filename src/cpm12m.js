@@ -207,6 +207,8 @@ cpStage('m12end', {
     if (ZM.net === 'client') { if (S.vul > 0) { S.vul = Math.max(0, S.vul - dt); RF.vul = S.vul; } if (S.orbS && S.orb) { const k = Math.min(1, dt * 8); for (let i = 0; i < 3; i++) S.orb[i] += (S.orbS[i] - S.orb[i]) * k; } S.orbSend -= dt; if (S.orbAcc > 0 && S.orbSend <= 0) { S.orbSend = 0.15; raidAsk('c12morb', S.orbAcc); S.orbAcc = 0; } }
     // in the surge, up to your knees: it drains you
     const L = c12mTide(S, ct); S.wet = 0;
+    // each surge heard coming in over the sand (every screen, off the shared clock)
+    if (L > 0.02 && !S.tideHd) { S.tideHd = 1; try { if (!soundOff() && !(typeof cpCineOn === 'function' && cpCineOn()) && !sfxPlay('c12tide', { vol: 0.85 })) sfxPlay('sea', { vol: 0.8 }); } catch (e) {} } else if (L <= 0) S.tideHd = 0;
     if (alive && L > 0.3 && (m.jz || 0) < L - C12M.KNEE && c12mLoc(m.x, m.y)[1] < C12M.WALL && !(typeof cpCineOn === 'function' && cpCineOn())) {
       S.wet = 1;
       if (!(m.protect > 0)) { m.hp -= C12M.TDRAIN * dt; FPS.calm = 0; if (m.hp <= 0) { m.hp = 0; fpsFeed('The sea came back over you.'); fpsDie(null, null); } }
@@ -330,7 +332,8 @@ cpCineDef('m12_rise', { music: 'cpm12maren', shots: [
 cpCineDef('m12_tide', { music: 'cpm12tide', exit() { const M = c12mMaren(); if (M) { M.act = null; M.at = 0; } }, shots: [
   { d: 5.5, cam: [0, -30, 4.5], to: [0, -34, 6], look: [0, -120, 1], lookTo: [0, -140, 0.5],
     f(t, k, C) { const M = c12mMaren(); if (M) { M.act = 'call'; M.at = Math.min(0.6, t); } },
-    lines: [[0.4, 'crew', 'Listen. Out past the wrecks. That roar.', 'cp_m12_40'], [2.8, 'ruth', 'The tide’s turned. The sea’s coming back.', 'cp_m12_41']], sfx: [[0.2, 'sea', 1], [1.6, 'wind', 0.6]] },
+    enter() { try { if (!sfxPlay('c12tide', { vol: 1, delay: 0.2 })) sfxPlay('sea', { vol: 1, delay: 0.2 }); } catch (e) {} },
+    lines: [[0.4, 'crew', 'Listen. Out past the wrecks. That roar.', 'cp_m12_40'], [2.8, 'ruth', 'The tide’s turned. The sea’s coming back.', 'cp_m12_41']], sfx: [[1.6, 'wind', 0.6]] },
   { d: 5, cam: [14, -50, 2.4], to: [12, -54, 3.2], look: [0, -64, 5],
     f(t, k, C) { const M = c12mMaren(); if (M) { this.look = [M.x - FPSC.CX, M.y - FPSC.CY, 5]; M.act = 'call'; M.at = Math.min(0.6, 0.6 + t); } },
     exit() { const M = c12mMaren(); if (M) { M.act = null; M.at = 0; } },
@@ -342,5 +345,6 @@ cpCineDef('m12_rest', { music: 'cpm12rest', exit() { C12.seaK = 1; }, shots: [
     lines: [[0.5, 'maren', 'Tell him I saw the light. Tell him I was nearly home.', 'cp_m12_43'], [3.6, 'log', 'She went down on her knees in the last pool, and the sea took her back.', 'cp_m12_44']], sfx: [[0.3, 'sea', 0.7]] },
   { d: 7, cam: [0, -26, 5.5], to: [0, -26, 7.5], look: [0, -80, 1], lookTo: [0, -60, 1.5],
     f(t, k, C) { C12.seaK = Math.max(C12.seaK || 0, Math.min(1, k * 1.1)); },
-    lines: [[0.5, 'log', 'Then the sea came back. It came in over the bed without a sound, and it did not stop at the wrecks.', 'cp_m12_45'], [4.2, 'ruth', 'Up the wall! Up, before it has us too!', 'cp_m12_46']], sfx: [[0.2, 'sea', 1], [3, 'wind', 0.5]] },
+    enter() { try { if (!sfxPlay('c12tide', { vol: 1, delay: 0.2 })) sfxPlay('sea', { vol: 1, delay: 0.2 }); } catch (e) {} },
+    lines: [[0.5, 'log', 'Then the sea came back. It came in over the bed without a sound, and it did not stop at the wrecks.', 'cp_m12_45'], [4.2, 'ruth', 'Up the wall! Up, before it has us too!', 'cp_m12_46']], sfx: [[3, 'wind', 0.5]] },
 ] });

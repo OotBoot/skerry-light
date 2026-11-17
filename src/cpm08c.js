@@ -183,7 +183,7 @@ cpOn('m8kn', sid => {
 });
 cpOn('m8kbell', () => fpsFeed('At the bell Knock stops dead where he stands, like the carving he is.'));
 cpOn('m8crane', () => { if (typeof raidRespawn === 'function') raidRespawn(); ZM.banner = { text: 'Captain Absalom Crane', t: 4.5, col: '#c8e0d0', sub: 'by flarelight: his black sail is up · cut its halyards on the port rail' }; });
-cpOn('m8hal', i => { try { if (!soundOff()) { noise('bandpass', 1800, 2, 0.002, 0.25, 0.4); tone(90, 'sine', 0.01, 0.3, 0.3, { to: 50 }); } } catch (e) {} fpsFeed(`The ${i ? 'forward' : 'after'} halyard parts with a crack.`); });
+cpOn('m8hal', i => { try { const [x, y] = cpkW(...CPM8D.HAL[clamp(i | 0, 0, 1)]); if (!soundOff() && !sfxPlay('halyard', { vol: 0.9, pan: fpsEar(x, y), out: true })) { noise('bandpass', 1800, 2, 0.002, 0.25, 0.4); tone(90, 'sine', 0.01, 0.3, 0.3, { to: 50 }); } } catch (e) {} fpsFeed(`The ${i ? 'forward' : 'after'} halyard parts with a crack.`); });
 cpOn('m8down', () => { try { if (!soundOff()) sfxSplash(0, 0.7); } catch (e) {} ZM.banner = { text: 'The black sail comes down', t: 3.4, small: true, col: '#ffe0a0', sub: 'the Light’s beam crosses the deck again · shoot when it’s on him' }; });
 cpOn('m8maren', () => { if (typeof raidRespawn === 'function') raidRespawn(); ZM.banner = { text: 'Her lantern', t: 4, col: '#ffd890', sub: 'the black sail burns · her lantern lights him on the port side' }; });
 

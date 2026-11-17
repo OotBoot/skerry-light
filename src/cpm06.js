@@ -241,7 +241,7 @@ function kwState(o) {
   Object.assign(RAID.st, {
     kw: true, fl: {}, fw: {}, lk: 8, lkw: 0, sv: [-1, -1], lamps: [0, 0, 0], drift: 0, helm: '', bells: 0, flares: [], fseq: 0, fseen: 0,
     v: { on: 0, sid: '', t: 0, mo: 0, x: 0, y: 0, gone: 0, gx: 0, gy: 0, seq: 0, next: 30, lost: 0, n: 0, npc: 0 },
-    vseen: 0, hold: {}, holdAcc: 0, holdK: '', holdT: 0, lastHint: 0, beat: 0, pend: 0, said: {}, puntOn: false, inPunt: false,
+    vseen: 0, kwSeen: null, hold: {}, holdAcc: 0, holdK: '', holdT: 0, lastHint: 0, beat: 0, pend: 0, said: {}, puntOn: false, inPunt: false,
   }, o || {});
 }
 const kwN = () => Math.max(1, (ZM.hum || []).length);
@@ -306,6 +306,8 @@ function kwQ(sid, k, a) {
   const St = raidStage(); if (St && St.kwq) St.kwq(sid, k, a);
 }
 function kwSfx(sid, k) { if (sid === FPS.me.id) zmSound(k); }
+// (everyone, each frame while it goes on) a recording kept going: played again as each take runs out
+function kwLoop(name, x, y, vol) { try { const b = SFXB.buf[name]; sfxPlay(name, { vol, pan: fpsEar(x, y), gap: b && b[0] ? b[0].duration * 0.92 : 2 }); } catch (e) {} }
 
 // ---------- Verity (hosting or alone) ----------
 // where he sits for someone (p: { x, y, h }): a few steps in front, a little to one side, on her planks
@@ -466,6 +468,11 @@ function kwMe(dt) {
   const m = FPS.me, v = S.v;
   // a flare gone up: the bang of it, here
   for (const f of S.flares) if (f[3] !== KW.fseen && f[2] > KWC.FLARE - 1) { KW.fseen = f[3]; try { sfxFlare(); } catch (e) {} }
+  // a lamp lit, a wet flare into the caboose: their sounds, where they happen (recordings only)
+  const sn = S.kwSeen || (S.kwSeen = { lm: S.lamps.slice(), sv: S.sv.slice() });
+  S.lamps.forEach((l, i) => { if (l && !sn.lm[i]) { const [x, y] = kwW(KW_AT.lamps[i][0], KW_AT.lamps[i][1]); try { sfxPlay('kwlamp', { vol: 0.7, pan: fpsEar(x, y) }); } catch (e) {} } });
+  S.sv.forEach((s, i) => { if (s > 0 && !(sn.sv[i] > 0)) { const [x, y] = kwW(KW_AT.stove[0], KW_AT.stove[1]); try { sfxPlay('kwstove', { vol: 0.75, pan: fpsEar(x, y) }); } catch (e) {} } });
+  sn.lm = S.lamps.slice(); sn.sv = S.sv.slice();
   // Verity coming, sitting, standing: his voice, and the heart going faster as his time runs out (only for the one
   // he's sitting in front of: the rest hear him)
   if (v.on && v.seq !== KW.vseq) { KW.vseq = v.seq; try { loadVerityVoice(); sfxVerity(1, v.sid === m.id ? 0.95 : 0.5); } catch (e) {} KW.v10 = false; KW.vst = false; }

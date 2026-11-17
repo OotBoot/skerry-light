@@ -153,7 +153,7 @@ function cp7Gang() { return ZM.z.filter(z => (z.bt === 'cpgang' || z.bt === 'cpn
 // (the gang's eyes) close to, or lit and in range
 function cp7Sees(z, p, d) { return d < CP7.SEE || (d < CP7.SEE_LIT && cp7Lit(p.x, p.y) > 0.3); }
 // (hosting) a flare up from a locker (or from Nell, over whoever she likes): [x, y, seconds left]
-function cp7Flare(x, y, t) { const S = RAID.st; S.fl = (S.fl || []).filter(f => f[2] > 0); S.fl.push([x, y, t || CP7.FLARE_T]); S.flN = (S.flN | 0) + 1; S.flSeen = S.flN; try { sfxFlare(); } catch (e) {} for (const z of cp7Gang()) if (Math.hypot(z.x - FPSC.CX - x, z.y - FPSC.CY - y) < CP7.FLARE_R) z.shownT = CP7.FLARE_T; }
+function cp7Flare(x, y, t) { const S = RAID.st; S.fl = (S.fl || []).filter(f => f[2] > 0); S.fl.push([x, y, t || CP7.FLARE_T]); S.flN = (S.flN | 0) + 1; S.flSeen = S.flN; try { if (!sfxPlay('flare_rocket', { vol: 0.85, out: true })) sfxFlare(); } catch (e) {} for (const z of cp7Gang()) if (Math.hypot(z.x - FPSC.CX - x, z.y - FPSC.CY - y) < CP7.FLARE_R) z.shownT = CP7.FLARE_T; }
 // (hosting) the bell rung: every wrecker shown and knowing where it was rung; the drowned near it sink
 function cp7Bell(sid) {
   const S = RAID.st; if ((S.bellCd || 0) > 0) return;
@@ -186,7 +186,7 @@ function cp7LightApply(o) {
   const S = RAID.st, a = o.m7l; if (!Array.isArray(a)) return;
   S.beam = !!a[0]; S.fl = Array.isArray(a[1]) ? a[1].map(f => [+f[0] || 0, +f[1] || 0, (+f[2] || 0) / 10]) : []; S.bellT = (a[2] | 0) / 10; S.bellCd = (a[3] | 0) / 10;
   if ((a[4] | 0) > (S.bellSeen | 0)) { S.bellSeen = a[4] | 0; try { sfxBell(); } catch (e) {} }
-  if ((a[6] | 0) > (S.flSeen | 0)) { S.flSeen = a[6] | 0; try { sfxFlare(); } catch (e) {} }
+  if ((a[6] | 0) > (S.flSeen | 0)) { S.flSeen = a[6] | 0; try { if (!sfxPlay('flare_rocket', { vol: 0.85, out: true })) sfxFlare(); } catch (e) {} }
   if (Array.isArray(a[5])) for (const zn of a[5]) { const z = ZM.z.find(q => q.zn === zn); if (z) z.shownT = Math.max(z.shownT || 0, 0.4); }
 }
 // (every screen) the lockers and the bell, to use; the gate, in Part I
@@ -336,7 +336,7 @@ cpStage('m07quay', Object.assign({}, CP7_HOOKS, {
   music: () => cpgAll().some(z => z.aware) ? 'cpfight' : 'cpm07dark',
   enter() {
     const S = RAID.st;
-    cp7Fresh(S, false); Object.assign(S, { ph: 'quay', spawned: 0, need: 0, gate: 0, rf: 0 });
+    cp7Fresh(S, false); Object.assign(S, { ph: 'quay', spawned: 0, need: 0, gate: 0, rf: 0, gateHeard: 0 });
     CP7.useDone = o => { if (o.k === 'cp7gate') raidAsk('gate'); };
     if (ZM.net === 'client') return;
     const n = cp7N(), list = CP7_WATCH.slice(0, 7 + Math.min(2, n - 1));
@@ -375,7 +375,11 @@ cpStage('m07quay', Object.assign({}, CP7_HOOKS, {
   },
   pack(o) { const S = RAID.st; cp7PackAll(o); o.m7q = [CP7Q_PH.indexOf(S.ph)]; },
   apply(o) { const S = RAID.st; cp7ApplyAll(o); if (Array.isArray(o.m7q)) S.ph = CP7Q_PH[o.m7q[0] | 0] || 'quay'; },
-  me(dt) { cp7MeAll(dt, o => o.k === 'cp7gate' ? CP7.GATE_T : 0); },
+  me(dt) {
+    cp7MeAll(dt, o => o.k === 'cp7gate' ? CP7.GATE_T : 0);
+    // the bar out of its keeps and the gate swinging back, on every screen
+    const S = RAID.st; if (S.ph === 'open' && !S.gateHeard) { S.gateHeard = 1; try { sfxPlay('gate_bar', { vol: 0.9, pan: fpsEar(...cp7W(0, -0.9)), out: true }); } catch (e) {} }
+  },
   consider(c) { cp7Consider(c); if (RAID.st.ph === 'gate') c({ k: 'cp7gate' }, ...cp7W(0, -0.9), 0, 2.6, false); },
   prompt(o) { return o.k === 'cp7gate' ? { text: 'Hold to lift the bar on the gate', hold: true } : cp7Prompt(o); },
   use(o) { return /^cp7/.test(o.k); },
@@ -416,7 +420,7 @@ cpStage('m07yard', Object.assign({}, CP7_HOOKS, {
   speedK() { return cp7Mine() >= 0 ? CP7.CARRY_K : 1; },
   enter() {
     const S = RAID.st;
-    cp7Fresh(S, true); Object.assign(S, { ch: [], spT: 16, dT: 8, wave: 0 });
+    cp7Fresh(S, true); Object.assign(S, { ch: [], chSeen: [], spT: 16, dT: 8, wave: 0 });
     CP7.useDone = o => { if (o.k === 'cp7ch') raidAsk('lift', o.i); else if (o.k === 'cp7drop') raidAsk('drop'); };
     if (ZM.net === 'client') return;
     // three of the spots, at random; Nell's men among the stacks (the rest of the spots, and the crane)
@@ -468,7 +472,12 @@ cpStage('m07yard', Object.assign({}, CP7_HOOKS, {
   },
   pack(o) { const S = RAID.st; cp7PackAll(o); o.m7c = S.ch.map(c => [Math.round(c.x * 10), Math.round(c.y * 10), c.s, c.by || '']); },
   apply(o) { const S = RAID.st; cp7ApplyAll(o); if (Array.isArray(o.m7c)) S.ch = o.m7c.map(a => ({ x: (a[0] | 0) / 10, y: (a[1] | 0) / 10, s: a[2] | 0, by: String(a[3] || '') })); },
-  me(dt) { cp7MeAll(dt, o => o.k === 'cp7ch' ? CP7.LIFT : o.k === 'cp7drop' ? 0.5 : 0); },
+  me(dt) {
+    cp7MeAll(dt, o => o.k === 'cp7ch' ? CP7.LIFT : o.k === 'cp7drop' ? 0.5 : 0);
+    // a chest up onto somebody's shoulder, wherever it is
+    const S = RAID.st, seen = S.chSeen || (S.chSeen = []);
+    (S.ch || []).forEach((c, i) => { if (c.s === 2 && seen[i] !== 2) { const [x, y] = cp7W(c.x, c.y), d = Math.hypot(x - FPS.me.x, y - FPS.me.y); try { sfxPlay('chest_lift', { vol: 0.85 * Math.max(0.1, 1 - d / 50), pan: fpsEar(x, y), out: true }); } catch (e) {} } seen[i] = c.s; });
+  },
   consider(c) {
     cp7Consider(c);
     const S = RAID.st, mine = cp7Mine();

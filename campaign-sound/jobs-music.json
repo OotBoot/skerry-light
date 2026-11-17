@@ -1,0 +1,90 @@
+[
+ {
+  "name": "cpm02cove",
+  "prompt": "Driving night fight on a beach, dark flamenco guitar strummed hard, castanets, low brass stabs, hand drums, the surf and the shingle under it, urgent, 120 BPM, instrumental, loopable",
+  "seconds": 95,
+  "takes": 3,
+  "seed": 20000,
+  "once": false
+ },
+ {
+  "name": "cpm03light",
+  "prompt": "a great swelling orchestral theme as a lighthouse is lit for the first time, low brass and strings rising to a full warm chord, a choir coming in, a slow sweeping melody, then quietening to a lonely solo fiddle as a far fire goes out, bittersweet, played once",
+  "seconds": 70,
+  "takes": 3,
+  "seed": 20101,
+  "once": true
+ },
+ {
+  "name": "cpm14keep",
+  "prompt": "Warm triumphant hymn for strings and solo horn, a lighthouse lit at last, slow and broad, a quiet concertina echoing the theme, sea and wind beneath, deeply moving, 72 bpm",
+  "seconds": 70,
+  "takes": 3,
+  "seed": 20202,
+  "once": true
+ },
+ {
+  "name": "cptense",
+  "prompt": "tense suspense on a dark coast at night, a low string ostinato, a soft frame drum pulse, wind and distant surf, uneasy and steady, 90 bpm, loopable",
+  "seconds": 95,
+  "takes": 3,
+  "seed": 20303,
+  "once": false
+ },
+ {
+  "name": "cpsail",
+  "prompt": "a brisk sea shanty sailing at night, fiddle and concertina, a stamping rhythm, creaking rigging and waves against the hull, 104 bpm, loopable",
+  "seconds": 95,
+  "takes": 3,
+  "seed": 20404,
+  "once": false
+ },
+ {
+  "name": "cpfight",
+  "prompt": "a driving folk battle on a rocky shore at night, pounding war drums, a fierce fiddle and low brass, urgent and steady, 112 bpm, loopable",
+  "seconds": 95,
+  "takes": 3,
+  "seed": 20505,
+  "once": false
+ },
+ {
+  "name": "cpboss",
+  "prompt": "a heavy dark boss battle by the sea, huge drums, low growling brass, a wailing choir, a hurdy-gurdy drone, menacing, 96 bpm, loopable",
+  "seconds": 95,
+  "takes": 3,
+  "seed": 20606,
+  "once": false
+ },
+ {
+  "name": "cpsad",
+  "prompt": "a melancholy lament at dawn by the sea, solo cello over soft strings, gentle waves, slow and quiet, 64 bpm, loopable",
+  "seconds": 95,
+  "takes": 3,
+  "seed": 20707,
+  "once": false
+ },
+ {
+  "name": "cpfog",
+  "prompt": "eerie fog at sea, a low drone, a slow lonely concertina, a far-off fog horn, creaking wet timber, quiet and tense, 70 bpm, loopable",
+  "seconds": 95,
+  "takes": 3,
+  "seed": 20808,
+  "once": false
+ },
+ {
+  "name": "cpwin",
+  "prompt": "a short triumphant maritime folk finale, fiddle and full strings rising to a warm major chord, drums, a ship horn, waves, hopeful",
+  "seconds": 70,
+  "takes": 3,
+  "seed": 20909,
+  "once": true
+ },
+ {
+  "name": "cphope",
+  "prompt": "a hopeful closing theme as dawn breaks over a lighthouse, a solo fiddle, then warm strings and a horn swelling slowly, gentle waves, bittersweet",
+  "seconds": 70,
+  "takes": 3,
+  "seed": 21010,
+  "once": true
+ }
+]

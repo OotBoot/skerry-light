@@ -1,0 +1,5537 @@
+[
+ {
+  "id": "cp_m01_01",
+  "text": "Before the Light there was a fire, and a family to keep it.",
+  "voice": "bm_george",
+  "speed": 0.837,
+  "pitch": 0.95,
+  "room": "dry",
+  "soft": false
+ },
+ {
+  "id": "cp_m01_02",
+  "text": "Haar coming. I can smell it on the wind.",
+  "voice": "am_onyx",
+  "speed": 0.92,
+  "pitch": 0.88,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m01_03",
+  "text": "Down to the strand, all of you. Bring me every stick the sea has given.",
+  "voice": "am_onyx",
+  "speed": 0.975,
+  "pitch": 0.88,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m01_04",
+  "text": "Wet wood smokes. Dry wood burns. Bring me the dry.",
+  "voice": "am_onyx",
+  "speed": 0.92,
+  "pitch": 0.88,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m01_05",
+  "text": "There's a deal of wrack on the west strand, and it's dry above the weed.",
+  "voice": "bf_lily",
+  "speed": 1.05,
+  "pitch": 1.04,
+  "room": "room",
+  "soft": true
+ },
+ {
+  "id": "cp_m01_06",
+  "text": "Enough. Put a flame to it and let her catch.",
+  "voice": "am_onyx",
+  "speed": 0.92,
+  "pitch": 0.88,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m01_07",
+  "text": "Something moved on the strand. Keep your eyes to the water.",
+  "voice": "am_onyx",
+  "speed": 0.92,
+  "pitch": 0.88,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m01_08",
+  "text": "There. Let the ships see it, and keep off.",
+  "voice": "am_onyx",
+  "speed": 0.92,
+  "pitch": 0.88,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m01_09",
+  "text": "Father. The fog's coming in against the wind.",
+  "voice": "bf_lily",
+  "speed": 0.977,
+  "pitch": 1.04,
+  "room": "room",
+  "soft": true
+ },
+ {
+  "id": "cp_m01_10",
+  "text": "That's no common haar. Take brands from the fire, and burn it back.",
+  "voice": "am_onyx",
+  "speed": 0.975,
+  "pitch": 0.88,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m01_11",
+  "text": "Feed her, or she'll starve before morning.",
+  "voice": "am_onyx",
+  "speed": 0.92,
+  "pitch": 0.88,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m01_12",
+  "text": "Fog on the rock! Meet it with fire before it reaches her.",
+  "voice": "am_onyx",
+  "speed": 0.975,
+  "pitch": 0.88,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m01_13",
+  "text": "The dead from the old wrecks. They want the fire out.",
+  "voice": "bf_lily",
+  "speed": 0.977,
+  "pitch": 1.04,
+  "room": "room",
+  "soft": true
+ },
+ {
+  "id": "cp_m01_14",
+  "text": "Fresh wood on the strand. The sea's breaking something up out there.",
+  "voice": "am_onyx",
+  "speed": 0.92,
+  "pitch": 0.88,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m01_15",
+  "text": "She's down to embers! Wood, now!",
+  "voice": "am_onyx",
+  "speed": 0.975,
+  "pitch": 0.88,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m01_16",
+  "text": "Hold her. Dawn's a long way yet.",
+  "voice": "am_onyx",
+  "speed": 0.856,
+  "pitch": 0.88,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m01_17",
+  "text": "A light! Out to the west, low on the water.",
+  "voice": "bf_lily",
+  "speed": 1.05,
+  "pitch": 1.04,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m01_18",
+  "text": "A ship's lantern. She's standing in for the rock, and doesn't know it.",
+  "voice": "am_onyx",
+  "speed": 0.856,
+  "pitch": 0.88,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m01_19",
+  "text": "Build the fire high. Higher than ever it's been.",
+  "voice": "am_onyx",
+  "speed": 0.92,
+  "pitch": 0.88,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m01_20",
+  "text": "Higher! She can't see a glimmer through this.",
+  "voice": "am_onyx",
+  "speed": 0.975,
+  "pitch": 0.88,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m01_21",
+  "text": "She's seen us. She's going about. Keep it high!",
+  "voice": "am_onyx",
+  "speed": 0.92,
+  "pitch": 0.88,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m01_22",
+  "text": "The water's heaving by the old wreck.",
+  "voice": "bf_lily",
+  "speed": 1.05,
+  "pitch": 1.04,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m01_23",
+  "text": "The keels. The old keels, walking. Mind your legs!",
+  "voice": "am_onyx",
+  "speed": 0.975,
+  "pitch": 0.88,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m01_24",
+  "text": "She's lost us! Feed the fire!",
+  "voice": "am_onyx",
+  "speed": 0.975,
+  "pitch": 0.88,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m01_25",
+  "text": "Light on the rock! Hard over! Hard over!",
+  "voice": "am_eric",
+  "speed": 1.035,
+  "pitch": 0.95,
+  "room": "far",
+  "soft": false
+ },
+ {
+  "id": "cp_m01_26",
+  "text": "That's what the fire's for. Six hundred years, if it takes it.",
+  "voice": "am_onyx",
+  "speed": 0.92,
+  "pitch": 0.88,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m01_27",
+  "text": "1841. A light is lit on the Skerry rock, and the fire on Lantern Rock is no longer wanted.",
+  "voice": "bm_george",
+  "speed": 0.9,
+  "pitch": 0.95,
+  "room": "dry",
+  "soft": false
+ },
+ {
+  "id": "cp_m01_28",
+  "text": "They say the new light sees further. I dare say it does.",
+  "voice": "bm_lewis",
+  "speed": 0.88,
+  "pitch": 0.9,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m01_29",
+  "text": "Go on, then. I'll keep it a while longer.",
+  "voice": "bm_lewis",
+  "speed": 0.88,
+  "pitch": 0.9,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m01_30",
+  "text": "He would not leave the rock. He is remembered only as the Fog-Keeper.",
+  "voice": "bm_george",
+  "speed": 0.837,
+  "pitch": 0.95,
+  "room": "dry",
+  "soft": true
+ },
+ {
+  "id": "cp_m02_01",
+  "text": "The parish ledgers call them the wrecking years. On a night with no moon, a lantern on the rocks could look like a harbour.",
+  "voice": "bm_george",
+  "speed": 0.9,
+  "pitch": 0.95,
+  "room": "dry",
+  "soft": false
+ },
+ {
+  "id": "cp_m02_02",
+  "text": "Lights under the headland! Red and green, a harbour mouth. Bring her round!",
+  "voice": "am_liam",
+  "speed": 1.113,
+  "pitch": 1.0,
+  "room": "far",
+  "soft": false
+ },
+ {
+  "id": "cp_m02_03",
+  "text": "Lights on the point again. Red and green, as if there were a harbour there.",
+  "voice": "bm_george",
+  "speed": 0.95,
+  "pitch": 0.9,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m02_04",
+  "text": "There is a merchantman standing in, Excellency. She has seen them.",
+  "voice": "am_michael",
+  "speed": 1.06,
+  "pitch": 0.94,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m02_05",
+  "text": "Then put them out, Sergeant. Every one. And bring me the man who hung them.",
+  "voice": "bm_george",
+  "speed": 0.95,
+  "pitch": 0.9,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m02_06",
+  "text": "Down the cliff path, quick. Put out every light on the point before she strikes.",
+  "voice": "am_michael",
+  "speed": 1.0,
+  "pitch": 0.94,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m02_07",
+  "text": "One out. She has not seen it yet. Keep on.",
+  "voice": "am_michael",
+  "speed": 1.0,
+  "pitch": 0.94,
+  "room": "room",
+  "soft": true
+ },
+ {
+  "id": "cp_m02_08",
+  "text": "They have lit one again! Get back to it.",
+  "voice": "am_michael",
+  "speed": 1.06,
+  "pitch": 0.94,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m02_09",
+  "text": "She is in among the outer rocks. Faster!",
+  "voice": "am_michael",
+  "speed": 1.06,
+  "pitch": 0.94,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m02_10",
+  "text": "Two more burning. Two!",
+  "voice": "am_michael",
+  "speed": 1.06,
+  "pitch": 0.94,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m02_11",
+  "text": "That is the last of them. Now let her see the dark.",
+  "voice": "am_michael",
+  "speed": 1.0,
+  "pitch": 0.94,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m02_12",
+  "text": "Breakers! Breakers under the point! Hard over, hard over!",
+  "voice": "am_liam",
+  "speed": 1.113,
+  "pitch": 1.0,
+  "room": "far",
+  "soft": false
+ },
+ {
+  "id": "cp_m02_13",
+  "text": "She bore away to the west with her yards braced round, and never knew how near it had been.",
+  "voice": "bm_george",
+  "speed": 0.9,
+  "pitch": 0.95,
+  "room": "dry",
+  "soft": false
+ },
+ {
+  "id": "cp_m02_14",
+  "text": "Their boats are drawn up in the cove. Stave them in, and they have nowhere to run.",
+  "voice": "am_michael",
+  "speed": 1.0,
+  "pitch": 0.94,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m02_15",
+  "text": "You will not take Jago on his own rocks, soldier.",
+  "voice": "am_puck",
+  "speed": 1.007,
+  "pitch": 0.86,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m02_16",
+  "text": "That is him. Black Jago. Alive, the Governor said. Bring him to his knees, but do not kill him.",
+  "voice": "am_michael",
+  "speed": 1.0,
+  "pitch": 0.94,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m02_17",
+  "text": "That is one boat holed.",
+  "voice": "am_michael",
+  "speed": 1.0,
+  "pitch": 0.94,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m02_18",
+  "text": "Enough! Enough. I will walk.",
+  "voice": "am_puck",
+  "speed": 0.95,
+  "pitch": 0.86,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m02_19",
+  "text": "Jago Penhallow. You have hung your last light.",
+  "voice": "bm_george",
+  "speed": 0.95,
+  "pitch": 0.9,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m02_20",
+  "text": "Hang me where the ships can see, then. I will show them a light yet.",
+  "voice": "am_puck",
+  "speed": 0.95,
+  "pitch": 0.86,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m02_21",
+  "text": "In chains, on the sea wall. Let every master who passes count the price.",
+  "voice": "bm_george",
+  "speed": 0.95,
+  "pitch": 0.9,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m02_22",
+  "text": "They hanged him in chains on the sea wall, where the ships could see. Three nights after, his gang came for him.",
+  "voice": "bm_george",
+  "speed": 0.9,
+  "pitch": 0.95,
+  "room": "dry",
+  "soft": false
+ },
+ {
+  "id": "cp_m02_23",
+  "text": "Boats under the wall! They are coming up on lines. Keep them off the gibbet!",
+  "voice": "am_michael",
+  "speed": 1.06,
+  "pitch": 0.94,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m02_24",
+  "text": "They mean to cut him down. Not one of them reaches that cage.",
+  "voice": "am_michael",
+  "speed": 1.0,
+  "pitch": 0.94,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m02_25",
+  "text": "One is at the cage! Shoot him off it!",
+  "voice": "am_michael",
+  "speed": 1.06,
+  "pitch": 0.94,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m02_26",
+  "text": "The tide has turned. The lanterns... who lit the lanterns?",
+  "voice": "am_michael",
+  "speed": 1.0,
+  "pitch": 0.94,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m02_27",
+  "text": "I said I would show them a light.",
+  "voice": "am_echo",
+  "speed": 0.883,
+  "pitch": 0.85,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m02_28",
+  "text": "Lead will not touch him while those lamps burn. Put them out!",
+  "voice": "am_michael",
+  "speed": 1.06,
+  "pitch": 0.94,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m02_29",
+  "text": "The lamps are dark! Now, while he is open!",
+  "voice": "am_michael",
+  "speed": 1.0,
+  "pitch": 0.94,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m02_30",
+  "text": "Burn, my lights. Burn.",
+  "voice": "am_echo",
+  "speed": 0.883,
+  "pitch": 0.85,
+  "room": "room",
+  "soft": true
+ },
+ {
+  "id": "cp_m02_31",
+  "text": "He is calling them up again! Every lamp on the wall!",
+  "voice": "am_michael",
+  "speed": 1.06,
+  "pitch": 0.94,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m02_32",
+  "text": "There will be lights on these rocks long after your fort is fallen.",
+  "voice": "am_echo",
+  "speed": 0.95,
+  "pitch": 0.85,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m02_33",
+  "text": "He went over the wall with his light, and it went down into the sea still burning. It has been seen on the rocks ever since.",
+  "voice": "bm_george",
+  "speed": 0.837,
+  "pitch": 0.95,
+  "room": "dry",
+  "soft": true
+ },
+ {
+  "id": "cp_m02_34",
+  "text": "Write it in the ledger, Sergeant. And double the watch on the wall.",
+  "voice": "bm_george",
+  "speed": 0.883,
+  "pitch": 0.9,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m03_01",
+  "text": "Forty years they have talked of a light on this rock. Tonight she has her tower.",
+  "voice": "bm_fable",
+  "speed": 1.0,
+  "pitch": 1.0,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m03_02",
+  "text": "Tomorrow, if the sea allows, she has her eye.",
+  "voice": "bm_fable",
+  "speed": 1.0,
+  "pitch": 1.0,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m03_03",
+  "text": "Six hundred years my fathers kept a fire on this rock.",
+  "voice": "bm_lewis",
+  "speed": 0.818,
+  "pitch": 0.9,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m03_04",
+  "text": "Let them build their tower. We will see whose light the sea minds.",
+  "voice": "bm_lewis",
+  "speed": 0.88,
+  "pitch": 0.9,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m03_05",
+  "text": "Sea's getting up, sir. We want her unloaded before dark.",
+  "voice": "am_adam",
+  "speed": 1.081,
+  "pitch": 0.96,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m03_06",
+  "text": "Every prism in those crates I ground with my own hands.",
+  "voice": "bm_fable",
+  "speed": 1.0,
+  "pitch": 1.0,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m03_07",
+  "text": "Carry them as you would carry a child.",
+  "voice": "bm_fable",
+  "speed": 1.0,
+  "pitch": 1.0,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m03_08",
+  "text": "Haar. Off Lantern Rock, and quick with it.",
+  "voice": "bm_fable",
+  "speed": 1.06,
+  "pitch": 1.0,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m03_09",
+  "text": "Sir! The big crate, the heart of her. The last sea had it off the lugger.",
+  "voice": "am_adam",
+  "speed": 1.081,
+  "pitch": 0.96,
+  "room": "room",
+  "soft": true
+ },
+ {
+  "id": "cp_m03_10",
+  "text": "It fetched up on the north rocks. Something's out there with it.",
+  "voice": "am_adam",
+  "speed": 1.02,
+  "pitch": 0.96,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m03_11",
+  "text": "Then we fetch it. Light the braziers as you go, and keep together.",
+  "voice": "bm_fable",
+  "speed": 1.0,
+  "pitch": 1.0,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m03_12",
+  "text": "Steady. Steady. There she goes.",
+  "voice": "bm_fable",
+  "speed": 0.93,
+  "pitch": 1.0,
+  "room": "room",
+  "soft": true
+ },
+ {
+  "id": "cp_m03_13",
+  "text": "The fog is lifting. As if it knew.",
+  "voice": "bm_fable",
+  "speed": 1.0,
+  "pitch": 1.0,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m03_14",
+  "text": "Up, all of you. We set her tonight.",
+  "voice": "bm_fable",
+  "speed": 1.0,
+  "pitch": 1.0,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m03_15",
+  "text": "Gently, now. Let her take it.",
+  "voice": "bm_fable",
+  "speed": 0.93,
+  "pitch": 1.0,
+  "room": "room",
+  "soft": true
+ },
+ {
+  "id": "cp_m03_16",
+  "text": "There she is.",
+  "voice": "bm_fable",
+  "speed": 1.0,
+  "pitch": 1.0,
+  "room": "room",
+  "soft": true
+ },
+ {
+  "id": "cp_m03_17",
+  "text": "Let every master on this coast see her, and steer by her.",
+  "voice": "bm_fable",
+  "speed": 1.0,
+  "pitch": 1.0,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m03_18",
+  "text": "You can see her from Wrackhaven, sir. I'd stake my wages on it.",
+  "voice": "am_adam",
+  "speed": 1.02,
+  "pitch": 0.96,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m03_19",
+  "text": "There. You have no more need of me.",
+  "voice": "bm_lewis",
+  "speed": 0.88,
+  "pitch": 0.9,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m03_20",
+  "text": "Then I will keep it cold. Someone must.",
+  "voice": "bm_lewis",
+  "speed": 0.88,
+  "pitch": 0.9,
+  "room": "room",
+  "soft": true
+ },
+ {
+  "id": "cp_m03_21",
+  "text": "That sea had it out of your arms! It's fetched up back aboard the lugger. Go between the seas.",
+  "voice": "am_adam",
+  "speed": 1.081,
+  "pitch": 0.96,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m03_22",
+  "text": "Gently with them. There's a year of grinding in every one of those crates.",
+  "voice": "bm_fable",
+  "speed": 1.0,
+  "pitch": 1.0,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m03_23",
+  "text": "Half of her up. The light's going; keep at it.",
+  "voice": "bm_fable",
+  "speed": 1.0,
+  "pitch": 1.0,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m03_24",
+  "text": "That's it. Up the pier with her, and mind the seas.",
+  "voice": "am_adam",
+  "speed": 1.081,
+  "pitch": 0.96,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m03_25",
+  "text": "Now wind her up. Steady at the handle.",
+  "voice": "bm_fable",
+  "speed": 1.0,
+  "pitch": 1.0,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m03_26",
+  "text": "First of her safe on the gallery.",
+  "voice": "bm_fable",
+  "speed": 1.0,
+  "pitch": 1.0,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m03_27",
+  "text": "That's the last of the prisms. Every one. Well done, all of you.",
+  "voice": "bm_fable",
+  "speed": 1.0,
+  "pitch": 1.0,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m03_28",
+  "text": "Pick it up! Don't leave it lying for them!",
+  "voice": "bm_fable",
+  "speed": 1.06,
+  "pitch": 1.0,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m03_29",
+  "text": "It's putting them out. Stand by them, or light them again.",
+  "voice": "bm_fable",
+  "speed": 1.0,
+  "pitch": 1.0,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m03_30",
+  "text": "Something on the rocks, sir. Moving.",
+  "voice": "am_adam",
+  "speed": 1.081,
+  "pitch": 0.96,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m03_31",
+  "text": "Crabs. Big as dogs. They hate the fire; keep the braziers lit.",
+  "voice": "bm_fable",
+  "speed": 1.0,
+  "pitch": 1.0,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m03_32",
+  "text": "That's all five. Now the heart, and quick.",
+  "voice": "bm_fable",
+  "speed": 1.0,
+  "pitch": 1.0,
+  "room": "room",
+  "soft": true
+ },
+ {
+  "id": "cp_m03_33",
+  "text": "That's her. Not a scratch on the crate. Now bring her home.",
+  "voice": "bm_fable",
+  "speed": 1.0,
+  "pitch": 1.0,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m03_34",
+  "text": "Hook her on. Wind, and don't stop for anything.",
+  "voice": "bm_fable",
+  "speed": 1.06,
+  "pitch": 1.0,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m03_35",
+  "text": "Each panel has its numeral, and so has its place in the frame. Match them.",
+  "voice": "bm_fable",
+  "speed": 1.0,
+  "pitch": 1.0,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m03_36",
+  "text": "Look at her. She's taking the lamp's glow already, and there's no lamp.",
+  "voice": "bm_fable",
+  "speed": 0.93,
+  "pitch": 1.0,
+  "room": "room",
+  "soft": true
+ },
+ {
+  "id": "cp_m03_37",
+  "text": "All six. Now oil, from the Service Room. The best colza; don't spill it.",
+  "voice": "bm_fable",
+  "speed": 1.0,
+  "pitch": 1.0,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m03_38",
+  "text": "Full. Here: take the taper. She's yours to light.",
+  "voice": "bm_fable",
+  "speed": 1.0,
+  "pitch": 1.0,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m04_01",
+  "text": "Wind's gone round east-north-east. A full gale before midnight, and sleet with it.",
+  "voice": "bm_daniel",
+  "speed": 1.0,
+  "pitch": 0.97,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m04_02",
+  "text": "There's a sail, Holm. North-east, standing in for the harbour.",
+  "voice": "bf_isabella",
+  "speed": 0.92,
+  "pitch": 0.98,
+  "room": "ghost",
+  "soft": false
+ },
+ {
+  "id": "cp_m04_03",
+  "text": "In this? Who would bring a ship in, in this?",
+  "voice": "bm_daniel",
+  "speed": 1.0,
+  "pitch": 0.97,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m04_04",
+  "text": "A brig, by her lights. The Gannet. That's Crane, bringing his cargo in early again.",
+  "voice": "bm_daniel",
+  "speed": 1.0,
+  "pitch": 0.97,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m04_05",
+  "text": "Take the lens off the clockwork. We'll hand her in, as I did in the old days.",
+  "voice": "bm_daniel",
+  "speed": 1.0,
+  "pitch": 0.97,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m04_06",
+  "text": "I'll stand by the bell.",
+  "voice": "bf_isabella",
+  "speed": 0.92,
+  "pitch": 0.98,
+  "room": "ghost",
+  "soft": false
+ },
+ {
+  "id": "cp_m04_07",
+  "text": "No. No, no, no.",
+  "voice": "bm_daniel",
+  "speed": 0.93,
+  "pitch": 0.97,
+  "room": "room",
+  "soft": true
+ },
+ {
+  "id": "cp_m04_08",
+  "text": "Holm! The light!",
+  "voice": "bf_isabella",
+  "speed": 0.975,
+  "pitch": 0.98,
+  "room": "ghost",
+  "soft": false
+ },
+ {
+  "id": "cp_m04_09",
+  "text": "There's oil in her. The wick is sound. She simply went out.",
+  "voice": "bm_daniel",
+  "speed": 1.0,
+  "pitch": 0.97,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m04_10",
+  "text": "Oil from below, a new wick, and wind the clock. Go!",
+  "voice": "bm_daniel",
+  "speed": 1.06,
+  "pitch": 0.97,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m04_11",
+  "text": "She's in among the rocks, and blind. I'll take the skiff out with a lantern.",
+  "voice": "bf_isabella",
+  "speed": 0.92,
+  "pitch": 0.98,
+  "room": "ghost",
+  "soft": false
+ },
+ {
+  "id": "cp_m04_12",
+  "text": "Maren. Not in this sea.",
+  "voice": "bm_daniel",
+  "speed": 1.0,
+  "pitch": 0.97,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m04_13",
+  "text": "You light the lamp. I'll be back before you've trimmed it.",
+  "voice": "bf_isabella",
+  "speed": 0.92,
+  "pitch": 0.98,
+  "room": "ghost",
+  "soft": false
+ },
+ {
+  "id": "cp_m04_14",
+  "text": "I row better than any man in Wrackhaven. You've said so yourself.",
+  "voice": "bf_isabella",
+  "speed": 0.92,
+  "pitch": 0.98,
+  "room": "ghost",
+  "soft": false
+ },
+ {
+  "id": "cp_m04_15",
+  "text": "Maren.",
+  "voice": "bm_daniel",
+  "speed": 1.0,
+  "pitch": 0.97,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m04_16",
+  "text": "She's lit. She's lit! Swing her round, east, east!",
+  "voice": "bm_daniel",
+  "speed": 1.06,
+  "pitch": 0.97,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m04_17",
+  "text": "There! There she is!",
+  "voice": "bm_daniel",
+  "speed": 1.06,
+  "pitch": 0.97,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m04_18",
+  "text": "Gannet! Gannet! Bear away! Rocks!",
+  "voice": "bf_isabella",
+  "speed": 0.975,
+  "pitch": 0.98,
+  "room": "ghost",
+  "soft": false
+ },
+ {
+  "id": "cp_m04_19",
+  "text": "She's struck! She's on the rocks!",
+  "voice": "af_nicole",
+  "speed": 0.85,
+  "pitch": 0.95,
+  "room": "ghost",
+  "soft": false
+ },
+ {
+  "id": "cp_m04_20",
+  "text": "Maren! Maren!",
+  "voice": "bm_daniel",
+  "speed": 1.06,
+  "pitch": 0.97,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m04_21",
+  "text": "The Gannet is on the skerries with all hands.",
+  "voice": "bm_george",
+  "speed": 0.9,
+  "pitch": 0.95,
+  "room": "dry",
+  "soft": false
+ },
+ {
+  "id": "cp_m04_22",
+  "text": "The skiff came ashore at the harbour steps this morning, empty.",
+  "voice": "bm_george",
+  "speed": 0.9,
+  "pitch": 0.95,
+  "room": "dry",
+  "soft": false
+ },
+ {
+  "id": "cp_m04_23",
+  "text": "Maren's lantern was still lit.",
+  "voice": "bm_george",
+  "speed": 0.9,
+  "pitch": 0.95,
+  "room": "dry",
+  "soft": false
+ },
+ {
+  "id": "cp_m04_24",
+  "text": "That night the sea froze from the steps to the horizon,",
+  "voice": "bm_george",
+  "speed": 0.837,
+  "pitch": 0.95,
+  "room": "dry",
+  "soft": false
+ },
+ {
+  "id": "cp_m04_25",
+  "text": "and there were mountains behind the headland, white to the top.",
+  "voice": "bm_george",
+  "speed": 0.837,
+  "pitch": 0.95,
+  "room": "dry",
+  "soft": true
+ },
+ {
+  "id": "cp_m04_26",
+  "text": "We have no mountains.",
+  "voice": "bm_george",
+  "speed": 0.837,
+  "pitch": 0.95,
+  "room": "dry",
+  "soft": true
+ },
+ {
+  "id": "cp_m04_27",
+  "text": "Sleet! It's crusting the glass. I can't see her through it.",
+  "voice": "bf_isabella",
+  "speed": 0.975,
+  "pitch": 0.98,
+  "room": "ghost",
+  "soft": false
+ },
+ {
+  "id": "cp_m04_28",
+  "text": "That's it. She heard; she's shortening sail.",
+  "voice": "bm_daniel",
+  "speed": 1.0,
+  "pitch": 0.97,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m04_29",
+  "text": "Every rock the beam shows him, he remembers. Leave him in the dark and he forgets them all.",
+  "voice": "bm_daniel",
+  "speed": 1.0,
+  "pitch": 0.97,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m04_30",
+  "text": "She's coming on fast, Holm. Under all plain sail, in this.",
+  "voice": "bf_isabella",
+  "speed": 0.975,
+  "pitch": 0.98,
+  "room": "ghost",
+  "soft": false
+ },
+ {
+  "id": "cp_m04_31",
+  "text": "If she crowds the rocks, ring the bell. He'll shorten sail and give us time.",
+  "voice": "bm_daniel",
+  "speed": 1.0,
+  "pitch": 0.97,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m04_32",
+  "text": "She's in among them now. Don't you leave her.",
+  "voice": "bm_daniel",
+  "speed": 1.0,
+  "pitch": 0.97,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m04_33",
+  "text": "She's losing them! Back on her, back on her!",
+  "voice": "bf_isabella",
+  "speed": 0.975,
+  "pitch": 0.98,
+  "room": "ghost",
+  "soft": false
+ },
+ {
+  "id": "cp_m04_34",
+  "text": "Good. Good. She knows where she is.",
+  "voice": "bm_daniel",
+  "speed": 1.0,
+  "pitch": 0.97,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m04_35",
+  "text": "I can see her figurehead in the beam. A woman, carved, with her arm out.",
+  "voice": "bf_isabella",
+  "speed": 0.856,
+  "pitch": 0.98,
+  "room": "ghost",
+  "soft": true
+ },
+ {
+  "id": "cp_m04_36",
+  "text": "Nearly through. One more mile of it.",
+  "voice": "bm_daniel",
+  "speed": 0.93,
+  "pitch": 0.97,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m04_37",
+  "text": "The weights are up. She'll turn when she's lit.",
+  "voice": "bm_daniel",
+  "speed": 1.0,
+  "pitch": 0.97,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m04_38",
+  "text": "Quick as you can on the stair. Ninety steps, and every one of them matters.",
+  "voice": "bm_daniel",
+  "speed": 1.06,
+  "pitch": 0.97,
+  "room": "room",
+  "soft": true
+ },
+ {
+  "id": "cp_m04_39",
+  "text": "I can see her lantern. She's clear of the jetty. Pull, Maren, pull.",
+  "voice": "bm_daniel",
+  "speed": 1.0,
+  "pitch": 0.97,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m04_40",
+  "text": "Hark. That's the Gannet's bell. She's ringing for a pilot, God help her.",
+  "voice": "bm_daniel",
+  "speed": 0.93,
+  "pitch": 0.97,
+  "room": "room",
+  "soft": true
+ },
+ {
+  "id": "cp_m04_41",
+  "text": "Hurry. Oh, hurry.",
+  "voice": "bm_daniel",
+  "speed": 1.0,
+  "pitch": 0.97,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m04_42",
+  "text": "Oil. Good.",
+  "voice": "bm_daniel",
+  "speed": 1.0,
+  "pitch": 0.97,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m04_43",
+  "text": "The new wick's in. Trimmed square.",
+  "voice": "bm_daniel",
+  "speed": 1.0,
+  "pitch": 0.97,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m04_44",
+  "text": "That's our skiff.",
+  "voice": "bm_daniel",
+  "speed": 1.0,
+  "pitch": 0.97,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m04_45",
+  "text": "Ring it. She always hears the bell. She'll pull for it.",
+  "voice": "bm_daniel",
+  "speed": 1.0,
+  "pitch": 0.97,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m04_46",
+  "text": "The Wrackhaven boats are out at the rocks. They're picking up spars.",
+  "voice": "bm_daniel",
+  "speed": 1.0,
+  "pitch": 0.97,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m04_47",
+  "text": "Again.",
+  "voice": "bm_daniel",
+  "speed": 1.0,
+  "pitch": 0.97,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m04_48",
+  "text": "Nothing. Only the gulls.",
+  "voice": "bm_daniel",
+  "speed": 1.0,
+  "pitch": 0.97,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m05_01",
+  "text": "All night the sky over the headland had been red, as if the hills were burning.",
+  "voice": "bm_daniel",
+  "speed": 0.856,
+  "pitch": 0.97,
+  "room": "dry",
+  "soft": false
+ },
+ {
+  "id": "cp_m05_02",
+  "text": "The rocks in the bay are warm to the touch. In January.",
+  "voice": "bm_daniel",
+  "speed": 1.0,
+  "pitch": 0.97,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m05_03",
+  "text": "Something came up out of the surf in the night. Small prints. Shoes.",
+  "voice": "bm_daniel",
+  "speed": 1.0,
+  "pitch": 0.97,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m05_04",
+  "text": "Follow them along the tide line, and keep your irons ready.",
+  "voice": "bm_daniel",
+  "speed": 1.0,
+  "pitch": 0.97,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m05_05",
+  "text": "A shark walked up out of the surf at dawn, wearing the blue shoes of the Gannet's cabin boy.",
+  "voice": "bm_george",
+  "speed": 0.9,
+  "pitch": 0.95,
+  "room": "dry",
+  "soft": false
+ },
+ {
+  "id": "cp_m05_06",
+  "text": "Blue shoes. The Gannet's boy went down in blue shoes.",
+  "voice": "bm_daniel",
+  "speed": 0.93,
+  "pitch": 0.97,
+  "room": "room",
+  "soft": true
+ },
+ {
+  "id": "cp_m05_07",
+  "text": "He stood on the sand and looked at me, then walked back into the sea.",
+  "voice": "bm_george",
+  "speed": 0.837,
+  "pitch": 0.95,
+  "room": "dry",
+  "soft": false
+ },
+ {
+  "id": "cp_m05_08",
+  "text": "The surf is full of them. Get to the old fog bell, and hold till the sun's up!",
+  "voice": "bm_daniel",
+  "speed": 1.06,
+  "pitch": 0.97,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m05_09",
+  "text": "Keeper's word, by the pilot cutter: follow the shark in, and ring if she comes.",
+  "voice": "am_fenrir",
+  "speed": 1.0,
+  "pitch": 0.92,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m05_10",
+  "text": "The shark, he says. As if there were a choice of them.",
+  "voice": "am_liam",
+  "speed": 1.05,
+  "pitch": 1.02,
+  "room": "room",
+  "soft": true
+ },
+ {
+  "id": "cp_m05_11",
+  "text": "There. Walking on the water, ahead of the bowsprit, and his shoes alight.",
+  "voice": "am_fenrir",
+  "speed": 0.93,
+  "pitch": 0.92,
+  "room": "room",
+  "soft": true
+ },
+ {
+  "id": "cp_m05_12",
+  "text": "Keep him close and keep a hand forward with the bow lantern. The rocks show only in the beam.",
+  "voice": "am_fenrir",
+  "speed": 1.0,
+  "pitch": 0.92,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m05_13",
+  "text": "He's stopped. He's looking back at us.",
+  "voice": "am_liam",
+  "speed": 1.05,
+  "pitch": 1.02,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m05_14",
+  "text": "He's gone under, among the hulks. Every man to his post: we're on our own till he comes up.",
+  "voice": "am_fenrir",
+  "speed": 1.0,
+  "pitch": 0.92,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m05_15",
+  "text": "Through the Gate, and the Light right ahead of us.",
+  "voice": "am_liam",
+  "speed": 1.05,
+  "pitch": 1.02,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m05_16",
+  "text": "Master. Those are palm trees on the cliffs.",
+  "voice": "am_liam",
+  "speed": 0.977,
+  "pitch": 1.02,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m05_17",
+  "text": "And the wake's gone green behind us. Mind your helm, and never mind the trees.",
+  "voice": "am_fenrir",
+  "speed": 1.0,
+  "pitch": 0.92,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m05_18",
+  "text": "Master, she's on the water astern. A woman, and her lantern.",
+  "voice": "am_liam",
+  "speed": 0.977,
+  "pitch": 1.02,
+  "room": "room",
+  "soft": true
+ },
+ {
+  "id": "cp_m05_19",
+  "text": "The shark's walked on to the pier. Ring that bell, and ring it again, and crack on all she'll carry!",
+  "voice": "am_fenrir",
+  "speed": 1.06,
+  "pitch": 0.92,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m05_20",
+  "text": "Not a scratch on her. And look at him: sat down on the pier, taking his shoes off.",
+  "voice": "am_liam",
+  "speed": 1.05,
+  "pitch": 1.02,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m05_21",
+  "text": "Blue plimsolls, on a shark.",
+  "voice": "am_liam",
+  "speed": 1.05,
+  "pitch": 1.02,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m05_22",
+  "text": "Then that's his name, and he's earned it. Plimsoll.",
+  "voice": "am_fenrir",
+  "speed": 1.0,
+  "pitch": 0.92,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m05_23",
+  "text": "Small feet, and turned in a little. A boy's, by the stride.",
+  "voice": "bm_daniel",
+  "speed": 1.0,
+  "pitch": 0.97,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m05_24",
+  "text": "Look how the sand's glazed round them, as if something hot had stood here.",
+  "voice": "bm_daniel",
+  "speed": 1.0,
+  "pitch": 0.97,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m05_25",
+  "text": "They go on to the point. Whatever it is, it's still here.",
+  "voice": "bm_daniel",
+  "speed": 1.0,
+  "pitch": 0.97,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m05_26",
+  "text": "Look east: the hills are going grey. Hold on!",
+  "voice": "bm_daniel",
+  "speed": 1.06,
+  "pitch": 0.97,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m05_27",
+  "text": "There's the rim of the sun. They hate it. Hold!",
+  "voice": "bm_daniel",
+  "speed": 1.06,
+  "pitch": 0.97,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m05_28",
+  "text": "Sunrise. They're gone back under. And so is he, whatever he was.",
+  "voice": "bm_daniel",
+  "speed": 1.0,
+  "pitch": 0.97,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m05_29",
+  "text": "Good. Sing out what you see from the bow, lad.",
+  "voice": "am_fenrir",
+  "speed": 1.0,
+  "pitch": 0.92,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m05_30",
+  "text": "There! He's up again, ahead of us, and walking on.",
+  "voice": "am_liam",
+  "speed": 1.113,
+  "pitch": 1.02,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m05_31",
+  "text": "The Hulks. Old wrecks on the rocks, and things coming out of them. Repel boarders!",
+  "voice": "am_fenrir",
+  "speed": 1.0,
+  "pitch": 0.92,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m05_32",
+  "text": "The Narrows. Hold her in his wake, a ship's length either side and no more.",
+  "voice": "am_fenrir",
+  "speed": 1.0,
+  "pitch": 0.92,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m06_01",
+  "text": "28 February. The Kittiwake was out on the grounds past the Near Skerries, her nets down and the glass falling.",
+  "voice": "bm_george",
+  "speed": 0.9,
+  "pitch": 0.95,
+  "room": "dry",
+  "soft": false
+ },
+ {
+  "id": "cp_m06_02",
+  "text": "Nets up before the dark, lads, and home by the Light.",
+  "voice": "am_santa",
+  "speed": 0.95,
+  "pitch": 0.92,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m06_03",
+  "text": "Glass is down again, Skipper. There's haar coming.",
+  "voice": "am_puck",
+  "speed": 1.05,
+  "pitch": 1.06,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m06_04",
+  "text": "Then haul quicker, Jory Tregear.",
+  "voice": "am_santa",
+  "speed": 0.95,
+  "pitch": 0.92,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m06_05",
+  "text": "Man the capstan. Heave, and keep heaving.",
+  "voice": "am_santa",
+  "speed": 0.95,
+  "pitch": 0.92,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m06_06",
+  "text": "There's weight in her. More than fish.",
+  "voice": "am_puck",
+  "speed": 1.05,
+  "pitch": 1.06,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m06_07",
+  "text": "Drowned men in the mesh. Put them back where they came from.",
+  "voice": "am_santa",
+  "speed": 0.95,
+  "pitch": 0.92,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m06_08",
+  "text": "Second net's coming. God, they're in this one too.",
+  "voice": "am_puck",
+  "speed": 1.05,
+  "pitch": 1.06,
+  "room": "room",
+  "soft": true
+ },
+ {
+  "id": "cp_m06_09",
+  "text": "Last net. Heave!",
+  "voice": "am_santa",
+  "speed": 1.007,
+  "pitch": 0.92,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m06_10",
+  "text": "That's the last of it. Now the lamps, the three of them. I'll not be run down in the dark.",
+  "voice": "am_santa",
+  "speed": 0.95,
+  "pitch": 0.92,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m06_12",
+  "text": "Good. Now we go home.",
+  "voice": "am_santa",
+  "speed": 0.95,
+  "pitch": 0.92,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m06_13",
+  "text": "Skipper. There's something on the hatch.",
+  "voice": "am_puck",
+  "speed": 0.977,
+  "pitch": 1.06,
+  "room": "room",
+  "soft": true
+ },
+ {
+  "id": "cp_m06_14",
+  "text": "I can help.",
+  "voice": "af_sky",
+  "speed": 0.95,
+  "pitch": 1.08,
+  "room": "ghost",
+  "soft": false
+ },
+ {
+  "id": "cp_m06_15",
+  "text": "It's a child's toy, washed up in the nets.",
+  "voice": "am_santa",
+  "speed": 0.95,
+  "pitch": 0.92,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m06_16",
+  "text": "It's smiling at us. It wasn't, before.",
+  "voice": "am_puck",
+  "speed": 1.05,
+  "pitch": 1.06,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m06_17",
+  "text": "Old Pascoe says put a light in their face. A flare.",
+  "voice": "am_puck",
+  "speed": 1.113,
+  "pitch": 1.06,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m06_18",
+  "text": "There's eight flares in that locker and they're for ships in trouble. Leave it be.",
+  "voice": "am_santa",
+  "speed": 0.95,
+  "pitch": 0.92,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m06_19",
+  "text": "Let me help you.",
+  "voice": "af_sky",
+  "speed": 0.95,
+  "pitch": 1.08,
+  "room": "ghost",
+  "soft": false
+ },
+ {
+  "id": "cp_m06_20",
+  "text": "Middle watch. Somebody take the tiller and keep her off the rocks.",
+  "voice": "am_santa",
+  "speed": 0.883,
+  "pitch": 0.92,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m06_22",
+  "text": "Who fired that? I said those were for ships in trouble!",
+  "voice": "am_santa",
+  "speed": 1.007,
+  "pitch": 0.92,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m06_23",
+  "text": "We are a ship in trouble, Skipper.",
+  "voice": "am_puck",
+  "speed": 1.05,
+  "pitch": 1.06,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m06_24",
+  "text": "Mind her head! She's falling off towards the skerries!",
+  "voice": "am_santa",
+  "speed": 1.007,
+  "pitch": 0.92,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m06_25",
+  "text": "Two bells. Keep her full and by.",
+  "voice": "am_santa",
+  "speed": 0.95,
+  "pitch": 0.92,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m06_26",
+  "text": "I can see the Light. We're nearly home.",
+  "voice": "am_puck",
+  "speed": 1.05,
+  "pitch": 1.06,
+  "room": "room",
+  "soft": true
+ },
+ {
+  "id": "cp_m06_27",
+  "text": "Sea coming aboard! Hold on!",
+  "voice": "am_puck",
+  "speed": 1.113,
+  "pitch": 1.06,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m06_28",
+  "text": "The locker's swamped. Every flare in it's soaked.",
+  "voice": "am_santa",
+  "speed": 0.95,
+  "pitch": 0.92,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m06_29",
+  "text": "Dry them at the caboose. Two at a time, she'll take them.",
+  "voice": "am_puck",
+  "speed": 1.05,
+  "pitch": 1.06,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m06_30",
+  "text": "Then dry them. And keep that thing off us.",
+  "voice": "am_santa",
+  "speed": 0.95,
+  "pitch": 0.92,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m06_31",
+  "text": "There's two more were in the cuddy. Wet as the rest.",
+  "voice": "am_puck",
+  "speed": 1.05,
+  "pitch": 1.06,
+  "room": "room",
+  "soft": true
+ },
+ {
+  "id": "cp_m06_32",
+  "text": "You look so tired, Abel.",
+  "voice": "af_sky",
+  "speed": 0.95,
+  "pitch": 1.08,
+  "room": "ghost",
+  "soft": false
+ },
+ {
+  "id": "cp_m06_33",
+  "text": "Leave it. It only wants to help.",
+  "voice": "am_santa",
+  "speed": 0.883,
+  "pitch": 0.92,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m06_34",
+  "text": "Skipper, no! A flare, somebody!",
+  "voice": "am_puck",
+  "speed": 1.113,
+  "pitch": 1.06,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m06_35",
+  "text": "I said leave it be. Let it help.",
+  "voice": "am_santa",
+  "speed": 0.95,
+  "pitch": 0.92,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m06_36",
+  "text": "There now.",
+  "voice": "af_sky",
+  "speed": 0.95,
+  "pitch": 1.08,
+  "room": "ghost",
+  "soft": false
+ },
+ {
+  "id": "cp_m06_37",
+  "text": "He's gone. The skipper's gone. And she won't answer the tiller: her rudder's broke!",
+  "voice": "am_puck",
+  "speed": 1.113,
+  "pitch": 1.06,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m06_38",
+  "text": "Rocks! Rocks under her bow!",
+  "voice": "am_puck",
+  "speed": 1.113,
+  "pitch": 1.06,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m06_39",
+  "text": "She struck on the Near Skerries a little before eight bells, and the sea came up over her deck.",
+  "voice": "bm_george",
+  "speed": 0.837,
+  "pitch": 0.95,
+  "room": "dry",
+  "soft": false
+ },
+ {
+  "id": "cp_m06_40",
+  "text": "I can help.",
+  "voice": "af_sky",
+  "speed": 0.95,
+  "pitch": 1.08,
+  "room": "ghost",
+  "soft": false
+ },
+ {
+  "id": "cp_m06_41",
+  "text": "Let me help you.",
+  "voice": "af_sky",
+  "speed": 0.95,
+  "pitch": 1.08,
+  "room": "ghost",
+  "soft": false
+ },
+ {
+  "id": "cp_m06_42",
+  "text": "You look so tired.",
+  "voice": "af_sky",
+  "speed": 0.95,
+  "pitch": 1.08,
+  "room": "ghost",
+  "soft": false
+ },
+ {
+  "id": "cp_m06_43",
+  "text": "I only want to help.",
+  "voice": "af_sky",
+  "speed": 0.95,
+  "pitch": 1.08,
+  "room": "ghost",
+  "soft": false
+ },
+ {
+  "id": "cp_m06_44",
+  "text": "Sit with me a while.",
+  "voice": "af_sky",
+  "speed": 0.95,
+  "pitch": 1.08,
+  "room": "ghost",
+  "soft": false
+ },
+ {
+  "id": "cp_m06_45",
+  "text": "I can take the tiller.",
+  "voice": "af_sky",
+  "speed": 0.95,
+  "pitch": 1.08,
+  "room": "ghost",
+  "soft": false
+ },
+ {
+  "id": "cp_m06_46",
+  "text": "Nobody need know.",
+  "voice": "af_sky",
+  "speed": 0.883,
+  "pitch": 1.08,
+  "room": "ghost",
+  "soft": true
+ },
+ {
+  "id": "cp_m06_47",
+  "text": "There now.",
+  "voice": "af_sky",
+  "speed": 0.95,
+  "pitch": 1.08,
+  "room": "ghost",
+  "soft": false
+ },
+ {
+  "id": "cp_m06_48",
+  "text": "She's going. Cut the punt free, both lashings!",
+  "voice": "am_puck",
+  "speed": 1.113,
+  "pitch": 1.06,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m06_49",
+  "text": "Over the side with her! All of us together!",
+  "voice": "am_puck",
+  "speed": 1.05,
+  "pitch": 1.06,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m06_50",
+  "text": "She's in the water. Get in, get in!",
+  "voice": "am_puck",
+  "speed": 1.113,
+  "pitch": 1.06,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m06_51",
+  "text": "Don't leave anyone on that deck.",
+  "voice": "am_puck",
+  "speed": 1.05,
+  "pitch": 1.06,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m06_52",
+  "text": "Pull. Don't look back at her.",
+  "voice": "am_puck",
+  "speed": 0.977,
+  "pitch": 1.06,
+  "room": "room",
+  "soft": true
+ },
+ {
+  "id": "cp_m06_53",
+  "text": "I can help.",
+  "voice": "af_sky",
+  "speed": 0.95,
+  "pitch": 1.08,
+  "room": "ghost",
+  "soft": false
+ },
+ {
+  "id": "cp_m06_54",
+  "text": "It's on her rail. It's watching us go.",
+  "voice": "am_puck",
+  "speed": 0.977,
+  "pitch": 1.06,
+  "room": "room",
+  "soft": true
+ },
+ {
+  "id": "cp_m06_55",
+  "text": "It's in the boat. In the bow. Oh God, it's in the boat.",
+  "voice": "am_puck",
+  "speed": 0.977,
+  "pitch": 1.06,
+  "room": "room",
+  "soft": true
+ },
+ {
+  "id": "cp_m06_56",
+  "text": "One left. That's the last flare there is. Put it in its face.",
+  "voice": "am_puck",
+  "speed": 1.05,
+  "pitch": 1.06,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m06_57",
+  "text": "It rolled over the side and the sea took it. It never stopped smiling.",
+  "voice": "am_puck",
+  "speed": 1.05,
+  "pitch": 1.06,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m06_58",
+  "text": "A hand off the Kittiwake told me of a small yellow thing, round as a lamp glass and smiling, that sat on his deck and said it wanted to help.",
+  "voice": "bm_george",
+  "speed": 0.9,
+  "pitch": 0.95,
+  "room": "dry",
+  "soft": false
+ },
+ {
+  "id": "cp_m06_59",
+  "text": "He put a flare in its face and it rolled over the side. The ships that let it sit there do not come in.",
+  "voice": "bm_george",
+  "speed": 0.837,
+  "pitch": 0.95,
+  "room": "dry",
+  "soft": false
+ },
+ {
+  "id": "cp_m06_60",
+  "text": "It told me its name, before. Verity, it said. Verity.",
+  "voice": "am_puck",
+  "speed": 1.05,
+  "pitch": 1.06,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m06_61",
+  "text": "One left, and it's mine.",
+  "voice": "am_puck",
+  "speed": 1.05,
+  "pitch": 1.06,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m06_62",
+  "text": "Lamps want lighting before it's full dark.",
+  "voice": "am_puck",
+  "speed": 1.05,
+  "pitch": 1.06,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m07_01",
+  "text": "On the nights the lamp was out, the wreckers came down to the Bonded Quay as if they owned it.",
+  "voice": "bm_george",
+  "speed": 0.9,
+  "pitch": 0.95,
+  "room": "dry",
+  "soft": false
+ },
+ {
+  "id": "cp_m07_02",
+  "text": "The Gannet's dead sent their sea chests ashore the night she struck. Those chests belong to the widows, not to Kittow's gang.",
+  "voice": "am_eric",
+  "speed": 0.97,
+  "pitch": 0.95,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m07_03",
+  "text": "No lanterns, gentlemen. A lantern on this quay tonight is a target.",
+  "voice": "am_eric",
+  "speed": 0.902,
+  "pitch": 0.95,
+  "room": "room",
+  "soft": true
+ },
+ {
+  "id": "cp_m07_04",
+  "text": "The keeper swears he will have the lamp lit before two. Get the yard gate open by then.",
+  "voice": "am_eric",
+  "speed": 0.902,
+  "pitch": 0.95,
+  "room": "room",
+  "soft": true
+ },
+ {
+  "id": "cp_m07_05",
+  "text": "Keep to the dark, gentlemen. They have lanterns, and we have none.",
+  "voice": "am_eric",
+  "speed": 0.902,
+  "pitch": 0.95,
+  "room": "room",
+  "soft": true
+ },
+ {
+  "id": "cp_m07_06",
+  "text": "There! On the quay! Out, lads, out!",
+  "voice": "am_echo",
+  "speed": 1.06,
+  "pitch": 0.9,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m07_07",
+  "text": "One down. Quietly, now. The rest have not heard.",
+  "voice": "am_eric",
+  "speed": 0.902,
+  "pitch": 0.95,
+  "room": "room",
+  "soft": true
+ },
+ {
+  "id": "cp_m07_08",
+  "text": "The quay is ours. Now the bar on that gate, quick, before Nell hears of it.",
+  "voice": "am_eric",
+  "speed": 1.028,
+  "pitch": 0.95,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m07_09",
+  "text": "The gate is open. And look there, to the south.",
+  "voice": "am_eric",
+  "speed": 0.97,
+  "pitch": 0.95,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m07_10",
+  "text": "At twenty past one the lamp was lit again, and the beam came round over the town.",
+  "voice": "bm_george",
+  "speed": 0.9,
+  "pitch": 0.95,
+  "room": "dry",
+  "soft": false
+ },
+ {
+  "id": "cp_m07_11",
+  "text": "Receiver's men on the quay. Douse your lanterns, lads, and let the beam find them for us.",
+  "voice": "bf_emma",
+  "speed": 1.0,
+  "pitch": 0.92,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m07_12",
+  "text": "The Light is lit. When the beam comes round it shows them to us, and us to them. Keep to the shadows.",
+  "voice": "am_eric",
+  "speed": 0.97,
+  "pitch": 0.95,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m07_13",
+  "text": "Three chests, somewhere in the stacks. The beam will show them, and it will show you. Mind the shadows.",
+  "voice": "am_eric",
+  "speed": 0.97,
+  "pitch": 0.95,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m07_14",
+  "text": "There, by the stacks: a sea chest, brass on the corners. That is one of hers.",
+  "voice": "am_eric",
+  "speed": 0.902,
+  "pitch": 0.95,
+  "room": "room",
+  "soft": true
+ },
+ {
+  "id": "cp_m07_15",
+  "text": "One aboard. Two more, and mind your backs on those steps.",
+  "voice": "am_eric",
+  "speed": 0.97,
+  "pitch": 0.95,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m07_16",
+  "text": "The bell! Every soul on the quay heard that.",
+  "voice": "am_eric",
+  "speed": 0.97,
+  "pitch": 0.95,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m07_17",
+  "text": "The drowned are on the steps! They want the chests back.",
+  "voice": "am_eric",
+  "speed": 1.028,
+  "pitch": 0.95,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m07_18",
+  "text": "The chest is down! Somebody get it up again!",
+  "voice": "am_eric",
+  "speed": 1.028,
+  "pitch": 0.95,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m07_19",
+  "text": "All three aboard. Get down to the boat, every one of you.",
+  "voice": "am_eric",
+  "speed": 1.028,
+  "pitch": 0.95,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m07_20",
+  "text": "You took what was mine, Receiver.",
+  "voice": "bf_emma",
+  "speed": 0.93,
+  "pitch": 0.92,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m07_21",
+  "text": "It was never yours, Nell. It belongs to the widows of the Gannet.",
+  "voice": "am_eric",
+  "speed": 0.97,
+  "pitch": 0.95,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m07_22",
+  "text": "Then let them come and fetch it.",
+  "voice": "bf_emma",
+  "speed": 1.0,
+  "pitch": 0.92,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m07_23",
+  "text": "Mind her long gun. When she lays it on you, get out of the line of it!",
+  "voice": "am_eric",
+  "speed": 1.028,
+  "pitch": 0.95,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m07_24",
+  "text": "Stand still, Receiver, and I will make it quick.",
+  "voice": "bf_emma",
+  "speed": 1.0,
+  "pitch": 0.92,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m07_25",
+  "text": "Let the sea have the lot of you!",
+  "voice": "bf_emma",
+  "speed": 1.0,
+  "pitch": 0.92,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m07_26",
+  "text": "The drowned are coming up the steps! Keep on her!",
+  "voice": "am_eric",
+  "speed": 1.028,
+  "pitch": 0.95,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m07_27",
+  "text": "Light them up! Let us see them.",
+  "voice": "bf_emma",
+  "speed": 1.06,
+  "pitch": 0.92,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m07_28",
+  "text": "Take them, then. The sea will have them back one day.",
+  "voice": "bf_emma",
+  "speed": 1.0,
+  "pitch": 0.92,
+  "room": "room",
+  "soft": true
+ },
+ {
+  "id": "cp_m07_29",
+  "text": "Pull, gentlemen. Easy, now. Mind the chests.",
+  "voice": "am_eric",
+  "speed": 0.902,
+  "pitch": 0.95,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m07_30",
+  "text": "The chests were opened at the Customs House on the Monday. The widows signed for them, and the fourth made her mark.",
+  "voice": "bm_george",
+  "speed": 0.9,
+  "pitch": 0.95,
+  "room": "dry",
+  "soft": false
+ },
+ {
+  "id": "cp_m08_01",
+  "text": "A year tonight. At the change of the watch we heard the Gannet's bell, out past the rocks.",
+  "voice": "bm_daniel",
+  "speed": 0.92,
+  "pitch": 0.97,
+  "room": "dry",
+  "soft": false
+ },
+ {
+  "id": "cp_m08_02",
+  "text": "Her bell. A mile out, where she broke up. A year to the night.",
+  "voice": "bm_daniel",
+  "speed": 0.93,
+  "pitch": 0.97,
+  "room": "room",
+  "soft": true
+ },
+ {
+  "id": "cp_m08_03",
+  "text": "I'll light the lamp and keep it. You get the cutter ready.",
+  "voice": "bm_daniel",
+  "speed": 1.0,
+  "pitch": 0.97,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m08_04",
+  "text": "Flares, the grapnel and line, and oil for her lamps. Down to the slip with them, lads.",
+  "voice": "am_michael",
+  "speed": 1.02,
+  "pitch": 1.02,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m08_05",
+  "text": "That's one aboard. Mind the gully: they're climbing up out of it.",
+  "voice": "bm_daniel",
+  "speed": 1.0,
+  "pitch": 0.97,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m08_06",
+  "text": "There she tolls again. Nearer, or I'm a Dutchman.",
+  "voice": "am_michael",
+  "speed": 1.02,
+  "pitch": 1.02,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m08_07",
+  "text": "One more load, and she's ready for the water.",
+  "voice": "am_michael",
+  "speed": 1.02,
+  "pitch": 1.02,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m08_08",
+  "text": "The lamp is lit. And there's another light on the water, and it isn't mine.",
+  "voice": "bm_daniel",
+  "speed": 1.0,
+  "pitch": 0.97,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m08_09",
+  "text": "She was out there, rowing toward where the Gannet was, and the lantern in her skiff was still lit.",
+  "voice": "bm_george",
+  "speed": 0.837,
+  "pitch": 0.95,
+  "room": "dry",
+  "soft": false
+ },
+ {
+  "id": "cp_m08_10",
+  "text": "Maren! Follow her lantern. Knock the chocks out and go!",
+  "voice": "bm_daniel",
+  "speed": 1.06,
+  "pitch": 0.97,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m08_11",
+  "text": "One chock out. The other, quick, before they're all over her!",
+  "voice": "am_michael",
+  "speed": 1.081,
+  "pitch": 1.02,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m08_12",
+  "text": "She's running! Down the slip and jump aboard!",
+  "voice": "am_michael",
+  "speed": 1.081,
+  "pitch": 1.02,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m08_13",
+  "text": "I sent the cutter out, and stood on the gallery to watch her go.",
+  "voice": "bm_george",
+  "speed": 0.9,
+  "pitch": 0.95,
+  "room": "dry",
+  "soft": false
+ },
+ {
+  "id": "cp_m08_14",
+  "text": "There. A lantern, low on the water, and a skiff under it.",
+  "voice": "am_michael",
+  "speed": 0.949,
+  "pitch": 1.02,
+  "room": "room",
+  "soft": true
+ },
+ {
+  "id": "cp_m08_15",
+  "text": "Answered. Hear how the water goes quiet.",
+  "voice": "am_michael",
+  "speed": 0.949,
+  "pitch": 1.02,
+  "room": "room",
+  "soft": true
+ },
+ {
+  "id": "cp_m08_16",
+  "text": "Too slow! Here they come, up over the rails!",
+  "voice": "am_michael",
+  "speed": 1.081,
+  "pitch": 1.02,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m08_17",
+  "text": "We're losing her lantern. Crack on, or we'll lose her in the rocks!",
+  "voice": "am_michael",
+  "speed": 1.081,
+  "pitch": 1.02,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m08_18",
+  "text": "The ring of her spars. The skiff's stopped dead in the middle of it.",
+  "voice": "am_michael",
+  "speed": 1.02,
+  "pitch": 1.02,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m08_19",
+  "text": "Light them. Light them, so they can see where she lies.",
+  "voice": "bf_isabella",
+  "speed": 0.856,
+  "pitch": 0.98,
+  "room": "ghost",
+  "soft": true
+ },
+ {
+  "id": "cp_m08_20",
+  "text": "Two of them burning. Bring her round for the others.",
+  "voice": "am_michael",
+  "speed": 1.02,
+  "pitch": 1.02,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m08_21",
+  "text": "All four alight. God help us: something's coming up under us.",
+  "voice": "am_michael",
+  "speed": 1.02,
+  "pitch": 1.02,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m08_22",
+  "text": "The Gannet came up alongside, inside the ring of her spars, the water pouring off her, and her bell was ringing.",
+  "voice": "bm_george",
+  "speed": 0.9,
+  "pitch": 0.95,
+  "room": "dry",
+  "soft": false
+ },
+ {
+  "id": "cp_m08_23",
+  "text": "Her figurehead's gone from her bow. There's nothing on the stem at all.",
+  "voice": "am_michael",
+  "speed": 1.02,
+  "pitch": 1.02,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m08_24",
+  "text": "Up her side, all of you. I'll hold the cutter off.",
+  "voice": "am_michael",
+  "speed": 1.02,
+  "pitch": 1.02,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m08_25",
+  "text": "Nobody walks her deck without the captain's leave. Nobody.",
+  "voice": "am_onyx",
+  "speed": 0.93,
+  "pitch": 0.95,
+  "room": "ghost",
+  "soft": false
+ },
+ {
+  "id": "cp_m08_26",
+  "text": "Keep your eyes on that figurehead! It only moves while nobody's looking at it!",
+  "voice": "am_michael",
+  "speed": 1.081,
+  "pitch": 1.02,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m08_27",
+  "text": "Who comes aboard my ship without leave?",
+  "voice": "am_adam",
+  "speed": 0.9,
+  "pitch": 0.84,
+  "room": "ghost",
+  "soft": false
+ },
+ {
+  "id": "cp_m08_28",
+  "text": "Douse that Light. Hoist the black!",
+  "voice": "am_adam",
+  "speed": 0.954,
+  "pitch": 0.84,
+  "room": "ghost",
+  "soft": false
+ },
+ {
+  "id": "cp_m08_29",
+  "text": "Only a flare will show him now. Cut the halyards on the port rail and that sail comes down!",
+  "voice": "am_michael",
+  "speed": 1.081,
+  "pitch": 1.02,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m08_30",
+  "text": "Down she comes! The Light's on the deck again!",
+  "voice": "am_michael",
+  "speed": 1.081,
+  "pitch": 1.02,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m08_31",
+  "text": "Hoist it again, you dogs! Shut that Light off my deck!",
+  "voice": "am_adam",
+  "speed": 0.9,
+  "pitch": 0.84,
+  "room": "ghost",
+  "soft": false
+ },
+ {
+  "id": "cp_m08_32",
+  "text": "A black sail, up her port side. The Light's cut off the deck!",
+  "voice": "am_michael",
+  "speed": 1.081,
+  "pitch": 1.02,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m08_33",
+  "text": "Keep her lantern over the bowsprit. When the Gannet tolls, answer with ours, or they'll be up the sides.",
+  "voice": "am_michael",
+  "speed": 1.02,
+  "pitch": 1.02,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m08_34",
+  "text": "Four of them still carry their tops. A flare into each, from the forward deck.",
+  "voice": "am_michael",
+  "speed": 1.02,
+  "pitch": 1.02,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m08_35",
+  "text": "The black sail's burning! Her lantern's on him: finish him!",
+  "voice": "am_michael",
+  "speed": 1.081,
+  "pitch": 1.02,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m08_36",
+  "text": "I came to warn you. I came too late, and I have come every year since.",
+  "voice": "bf_isabella",
+  "speed": 0.92,
+  "pitch": 0.98,
+  "room": "ghost",
+  "soft": false
+ },
+ {
+  "id": "cp_m08_37",
+  "text": "Who carries that lantern? Who is that, on my water?",
+  "voice": "am_adam",
+  "speed": 0.9,
+  "pitch": 0.84,
+  "room": "ghost",
+  "soft": false
+ },
+ {
+  "id": "cp_m08_38",
+  "text": "Let her go, then. Let her go down, and me with her.",
+  "voice": "am_adam",
+  "speed": 0.837,
+  "pitch": 0.84,
+  "room": "ghost",
+  "soft": false
+ },
+ {
+  "id": "cp_m08_39",
+  "text": "Over the side, all of you, and into the cutter! She's going!",
+  "voice": "am_michael",
+  "speed": 1.081,
+  "pitch": 1.02,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m08_40",
+  "text": "I lit the lamp myself and stood on the gallery until dawn.",
+  "voice": "bm_george",
+  "speed": 0.837,
+  "pitch": 0.95,
+  "room": "dry",
+  "soft": false
+ },
+ {
+  "id": "cp_m08_41",
+  "text": "When the lamp turned, she looked up at me.",
+  "voice": "bm_george",
+  "speed": 0.837,
+  "pitch": 0.95,
+  "room": "dry",
+  "soft": true
+ },
+ {
+  "id": "cp_m08_42",
+  "text": "Her skiff, under the port rail! And her lantern lifted up to him!",
+  "voice": "am_michael",
+  "speed": 1.081,
+  "pitch": 1.02,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m09_01",
+  "text": "Winter, 1888. Since the Gannet rose, the drowned no longer wait for ships to come to them.",
+  "voice": "bm_george",
+  "speed": 0.837,
+  "pitch": 0.95,
+  "room": "dry",
+  "soft": false
+ },
+ {
+  "id": "cp_m09_02",
+  "text": "You came, then. Good. They will be up out of the water by full dark.",
+  "voice": "bm_daniel",
+  "speed": 1.0,
+  "pitch": 0.97,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m09_03",
+  "text": "Every window you leave open is a door for them. Every one.",
+  "voice": "bm_daniel",
+  "speed": 1.0,
+  "pitch": 0.97,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m09_04",
+  "text": "He had not slept a night through since the fourteenth.",
+  "voice": "bm_george",
+  "speed": 0.9,
+  "pitch": 0.95,
+  "room": "dry",
+  "soft": false
+ },
+ {
+  "id": "cp_m09_05",
+  "text": "Six windows on this yard, and the light going. Nail them shut while you can still see the nails.",
+  "voice": "bm_daniel",
+  "speed": 1.06,
+  "pitch": 0.97,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m09_06",
+  "text": "Quicker. The sun is in the sea already.",
+  "voice": "bm_daniel",
+  "speed": 1.0,
+  "pitch": 0.97,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m09_07",
+  "text": "That will hold them a while. Not all night.",
+  "voice": "bm_daniel",
+  "speed": 1.0,
+  "pitch": 0.97,
+  "room": "room",
+  "soft": true
+ },
+ {
+  "id": "cp_m09_08",
+  "text": "No more time. Leave it, and get your back to the wall.",
+  "voice": "bm_daniel",
+  "speed": 1.0,
+  "pitch": 0.97,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m09_09",
+  "text": "Thinning. They will come again, harder.",
+  "voice": "bm_daniel",
+  "speed": 1.0,
+  "pitch": 0.97,
+  "room": "room",
+  "soft": true
+ },
+ {
+  "id": "cp_m09_10",
+  "text": "They are on the jetty ladders. Mind the gate!",
+  "voice": "bm_daniel",
+  "speed": 1.06,
+  "pitch": 0.97,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m09_11",
+  "text": "Off me. Get them off me!",
+  "voice": "bm_daniel",
+  "speed": 1.06,
+  "pitch": 0.97,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m09_12",
+  "text": "They have hold of my coat! Shoot, man!",
+  "voice": "bm_daniel",
+  "speed": 1.0,
+  "pitch": 0.97,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m09_13",
+  "text": "I am down to the bone here. Help me!",
+  "voice": "bm_daniel",
+  "speed": 1.0,
+  "pitch": 0.97,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m09_14",
+  "text": "Breathe while you can. Pick up what you dropped.",
+  "voice": "bm_daniel",
+  "speed": 1.0,
+  "pitch": 0.97,
+  "room": "room",
+  "soft": true
+ },
+ {
+  "id": "cp_m09_15",
+  "text": "Hear that? Something heavy, coming up the T-head.",
+  "voice": "bm_daniel",
+  "speed": 0.93,
+  "pitch": 0.97,
+  "room": "room",
+  "soft": true
+ },
+ {
+  "id": "cp_m09_16",
+  "text": "Hold the gate. Do not let him into the yard.",
+  "voice": "bm_daniel",
+  "speed": 1.06,
+  "pitch": 0.97,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m09_17",
+  "text": "His anchor! When the ring shows, get out of it!",
+  "voice": "bm_daniel",
+  "speed": 1.06,
+  "pitch": 0.97,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m09_18",
+  "text": "That is the first night. There will be others.",
+  "voice": "bm_daniel",
+  "speed": 1.0,
+  "pitch": 0.97,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m09_19",
+  "text": "On the sea wall. Listen for the boards.",
+  "voice": "bm_daniel",
+  "speed": 1.0,
+  "pitch": 0.97,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m09_20",
+  "text": "Listen. On the ladders.",
+  "voice": "bm_daniel",
+  "speed": 0.93,
+  "pitch": 0.97,
+  "room": "room",
+  "soft": true
+ },
+ {
+  "id": "cp_m09_21",
+  "text": "Here they come. Up the ladders, same as every night.",
+  "voice": "bm_daniel",
+  "speed": 1.0,
+  "pitch": 0.97,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m09_22",
+  "text": "Up the stair with it. Ninety steps, and do not drop it on the drowned.",
+  "voice": "bm_daniel",
+  "speed": 1.06,
+  "pitch": 0.97,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m09_23",
+  "text": "She is guttering! Oil, for pity's sake!",
+  "voice": "bm_daniel",
+  "speed": 1.06,
+  "pitch": 0.97,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m09_24",
+  "text": "That is one. Back down for the next.",
+  "voice": "bm_daniel",
+  "speed": 1.0,
+  "pitch": 0.97,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m09_25",
+  "text": "Another. More yet, and quick about it.",
+  "voice": "bm_daniel",
+  "speed": 1.0,
+  "pitch": 0.97,
+  "room": "room",
+  "soft": true
+ },
+ {
+  "id": "cp_m09_26",
+  "text": "One more and she will see the night out.",
+  "voice": "bm_daniel",
+  "speed": 1.0,
+  "pitch": 0.97,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m09_27",
+  "text": "Full. She will burn till morning now.",
+  "voice": "bm_daniel",
+  "speed": 1.0,
+  "pitch": 0.97,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m09_28",
+  "text": "A salvage diver's helmet. God keep the men who wore them down.",
+  "voice": "bm_daniel",
+  "speed": 1.0,
+  "pitch": 0.97,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m09_29",
+  "text": "Fourth night. Up the shingle again, and in at the Fog-Signal House. We held.",
+  "voice": "bm_george",
+  "speed": 0.9,
+  "pitch": 0.95,
+  "room": "dry",
+  "soft": false
+ },
+ {
+  "id": "cp_m09_30",
+  "text": "Seventh night. Crabs the size of dogs, in at every window at once.",
+  "voice": "bm_george",
+  "speed": 0.9,
+  "pitch": 0.95,
+  "room": "dry",
+  "soft": false
+ },
+ {
+  "id": "cp_m09_31",
+  "text": "They are at the lamp! Get them off the glass!",
+  "voice": "bm_daniel",
+  "speed": 1.06,
+  "pitch": 0.97,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m09_32",
+  "text": "I cannot tend her with these on my back!",
+  "voice": "bm_daniel",
+  "speed": 1.06,
+  "pitch": 0.97,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m09_33",
+  "text": "Over the rail, the both sides. They climb like men who have nothing left to lose.",
+  "voice": "bm_daniel",
+  "speed": 1.06,
+  "pitch": 0.97,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m09_34",
+  "text": "She is drinking the last of it. Hear that cough? That is the wick running dry.",
+  "voice": "bm_daniel",
+  "speed": 1.0,
+  "pitch": 0.97,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m09_35",
+  "text": "Casks in the Oil Store, the Boathouse, and two by the well. Bring them up to me.",
+  "voice": "bm_daniel",
+  "speed": 1.0,
+  "pitch": 0.97,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m09_36",
+  "text": "His light is drinking mine. Shoot him while he holds it up!",
+  "voice": "bm_daniel",
+  "speed": 1.06,
+  "pitch": 0.97,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m09_37",
+  "text": "Get them off me! I cannot reach the wick!",
+  "voice": "bm_daniel",
+  "speed": 1.06,
+  "pitch": 0.97,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m09_38",
+  "text": "He is weakening. His light is going yellow.",
+  "voice": "bm_daniel",
+  "speed": 1.06,
+  "pitch": 0.97,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m09_39",
+  "text": "Crabs. The whole harbour floor has got up and come.",
+  "voice": "bm_daniel",
+  "speed": 1.0,
+  "pitch": 0.97,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m09_40",
+  "text": "A light on the rocks. That is no ship's lamp.",
+  "voice": "bm_daniel",
+  "speed": 1.0,
+  "pitch": 0.97,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m09_41",
+  "text": "There. The sun. Look at them go.",
+  "voice": "bm_daniel",
+  "speed": 1.0,
+  "pitch": 0.97,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m09_42",
+  "text": "They used to hang his kind in chains on the sea wall for that.",
+  "voice": "bm_daniel",
+  "speed": 1.0,
+  "pitch": 0.97,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m09_43",
+  "text": "Whatever comes over that rail, the lamp stays lit. That is the whole of the job.",
+  "voice": "bm_daniel",
+  "speed": 1.0,
+  "pitch": 0.97,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m09_44",
+  "text": "Him. In his chains, on my own gallery.",
+  "voice": "bm_daniel",
+  "speed": 1.0,
+  "pitch": 0.97,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m09_45",
+  "text": "Do not look into his light. Look at him, and shoot.",
+  "voice": "bm_daniel",
+  "speed": 1.06,
+  "pitch": 0.97,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m09_46",
+  "text": "Now. Turn her up, and let her burn.",
+  "voice": "bm_daniel",
+  "speed": 1.0,
+  "pitch": 0.97,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m09_47",
+  "text": "Lit her full. She burned them off the tower like moths off a lamp glass.",
+  "voice": "bm_george",
+  "speed": 0.9,
+  "pitch": 0.95,
+  "room": "dry",
+  "soft": false
+ },
+ {
+  "id": "cp_m09_48",
+  "text": "Dawn. They went back down the ladders as though the tide had called them home.",
+  "voice": "bm_george",
+  "speed": 0.9,
+  "pitch": 0.95,
+  "room": "dry",
+  "soft": false
+ },
+ {
+  "id": "cp_m09_49",
+  "text": "Kept her lit. Write that down, whoever comes after me.",
+  "voice": "bm_daniel",
+  "speed": 0.93,
+  "pitch": 0.97,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m10_01",
+  "text": "Every rock beyond the Near Skerries has something on it now. Saltcote has never been so busy.",
+  "voice": "bm_george",
+  "speed": 0.9,
+  "pitch": 0.95,
+  "room": "dry",
+  "soft": false
+ },
+ {
+  "id": "cp_m10_02",
+  "text": "Crowsnest Rock, gentlemen. A Gilt and Gull chart, and a true one, by my oath.",
+  "voice": "bm_lewis",
+  "speed": 1.05,
+  "pitch": 1.06,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m10_03",
+  "text": "True one time in three. Bring it home to my table and I weigh it honest.",
+  "voice": "am_eric",
+  "speed": 0.95,
+  "pitch": 0.9,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m10_04",
+  "text": "Four guns on her rails and a hold as empty as a parson's purse. She'll do.",
+  "voice": "am_fenrir",
+  "speed": 1.0,
+  "pitch": 0.98,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m10_05",
+  "text": "North by the Knoll, then. And keep an eye out for sails with no lamps.",
+  "voice": "am_fenrir",
+  "speed": 1.0,
+  "pitch": 0.98,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m10_06",
+  "text": "There's the stair cut in the crags, and a stone at its head with a crow on it.",
+  "voice": "am_fenrir",
+  "speed": 1.0,
+  "pitch": 0.98,
+  "room": "room",
+  "soft": true
+ },
+ {
+  "id": "cp_m10_07",
+  "text": "The old tower. Another sight on a post by its door.",
+  "voice": "am_fenrir",
+  "speed": 1.0,
+  "pitch": 0.98,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m10_08",
+  "text": "And a gibbet, with somebody still in it. The Hanged Man.",
+  "voice": "am_fenrir",
+  "speed": 1.0,
+  "pitch": 0.98,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m10_09",
+  "text": "Turn each sight to the mark the chart gives it.",
+  "voice": "bm_george",
+  "speed": 0.9,
+  "pitch": 0.95,
+  "room": "dry",
+  "soft": false
+ },
+ {
+  "id": "cp_m10_10",
+  "text": "Half a hoard, and the Mooncussers' lamp left on the lid to tell us whose the other half is.",
+  "voice": "am_fenrir",
+  "speed": 0.93,
+  "pitch": 0.98,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m10_11",
+  "text": "The Gallows Bird. Green lamp, black sails.",
+  "voice": "am_liam",
+  "speed": 0.977,
+  "pitch": 0.98,
+  "room": "room",
+  "soft": true
+ },
+ {
+  "id": "cp_m10_12",
+  "text": "Saltcote's lamps, and not a black sail behind us. They keep off its light, and nobody here will say why.",
+  "voice": "bm_george",
+  "speed": 0.9,
+  "pitch": 0.95,
+  "room": "dry",
+  "soft": false
+ },
+ {
+  "id": "cp_m10_13",
+  "text": "You're back, and with something heavy. Bring it up to the table.",
+  "voice": "am_eric",
+  "speed": 0.95,
+  "pitch": 0.9,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m10_14",
+  "text": "Spanish gold, and English, and a little Dutch. It was somebody's, once.",
+  "voice": "am_eric",
+  "speed": 0.883,
+  "pitch": 0.9,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m10_15",
+  "text": "Weighed, and written down, and paid.",
+  "voice": "am_eric",
+  "speed": 0.95,
+  "pitch": 0.9,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m10_16",
+  "text": "The chart was true, then. Gilt and Gull will remember the crew that proved it.",
+  "voice": "bm_lewis",
+  "speed": 1.05,
+  "pitch": 1.06,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m10_17",
+  "text": "They went out again, and others after them, all that summer, until the haar came down in the autumn.",
+  "voice": "bm_george",
+  "speed": 0.9,
+  "pitch": 0.95,
+  "room": "dry",
+  "soft": false
+ },
+ {
+  "id": "cp_m10_18",
+  "text": "The rocks only show close to, or in a flare. Steer by the strip at the top, and patch what we hit.",
+  "voice": "am_fenrir",
+  "speed": 1.0,
+  "pitch": 0.98,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m10_19",
+  "text": "Let her watch. We've a chart to dig, and she hasn't.",
+  "voice": "am_fenrir",
+  "speed": 1.0,
+  "pitch": 0.98,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m10_20",
+  "text": "Sail, under the Knoll. No lights.",
+  "voice": "am_liam",
+  "speed": 1.113,
+  "pitch": 0.98,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m10_21",
+  "text": "Not one. Only that green lamp at her stern. A black sloop, and she's seen us.",
+  "voice": "am_fenrir",
+  "speed": 1.0,
+  "pitch": 0.98,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m10_22",
+  "text": "Nobody aboard one has ever been taken alive. In Saltcote they say the hanged men came down out of their chains to go back to sea.",
+  "voice": "bm_george",
+  "speed": 0.837,
+  "pitch": 0.95,
+  "room": "dry",
+  "soft": true
+ },
+ {
+  "id": "cp_m10_23",
+  "text": "Keep a hand on a gun. If she's the Gallows Bird, she'll want the rest of it.",
+  "voice": "am_fenrir",
+  "speed": 1.0,
+  "pitch": 0.98,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m10_24",
+  "text": "Guns! The gold-lamp ship is the Gallows Bird. Sink her and the rest is ours.",
+  "voice": "am_fenrir",
+  "speed": 1.06,
+  "pitch": 0.98,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m10_25",
+  "text": "Both halves aboard. Now run, and let them chase us into Saltcote's light if they dare.",
+  "voice": "am_fenrir",
+  "speed": 1.0,
+  "pitch": 0.98,
+  "room": "room",
+  "soft": true
+ },
+ {
+  "id": "cp_m10_26",
+  "text": "They're bearing away! They won't come near the light.",
+  "voice": "am_liam",
+  "speed": 1.113,
+  "pitch": 0.98,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m10_27",
+  "text": "Sails! Out from under St Brannoc's, black as tar.",
+  "voice": "am_liam",
+  "speed": 1.113,
+  "pitch": 0.98,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m10_28",
+  "text": "Give it back, keeper's men. The sea only lent it you.",
+  "voice": "am_echo",
+  "speed": 0.883,
+  "pitch": 0.85,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m10_29",
+  "text": "Green lamps on all of them, and a gold one at her masthead. That's the Gallows Bird.",
+  "voice": "am_fenrir",
+  "speed": 1.0,
+  "pitch": 0.98,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m10_30",
+  "text": "She's holed through! Down by the stern!",
+  "voice": "am_liam",
+  "speed": 1.113,
+  "pitch": 0.98,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m10_31",
+  "text": "And there it floats. Bring us alongside, and haul it in at the rail.",
+  "voice": "am_fenrir",
+  "speed": 1.0,
+  "pitch": 0.98,
+  "room": "room",
+  "soft": true
+ },
+ {
+  "id": "cp_m10_32",
+  "text": "The chart says the Crow looks to the Tower, the Tower to the Hanged Man, and the Hanged Man back to the Crow.",
+  "voice": "am_fenrir",
+  "speed": 0.93,
+  "pitch": 0.98,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m10_33",
+  "text": "Spades! And somebody watch the shore. They'll have heard us.",
+  "voice": "am_fenrir",
+  "speed": 1.0,
+  "pitch": 0.98,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m10_34",
+  "text": "Wood! There's wood under here!",
+  "voice": "am_liam",
+  "speed": 1.05,
+  "pitch": 0.98,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m10_35",
+  "text": "He's down. Take up the chest, and the rest of you keep them off whoever carries it.",
+  "voice": "am_fenrir",
+  "speed": 1.06,
+  "pitch": 0.98,
+  "room": "room",
+  "soft": true
+ },
+ {
+  "id": "cp_m10_36",
+  "text": "In the boat with it. Back aboard, all of you, and quick.",
+  "voice": "am_fenrir",
+  "speed": 1.0,
+  "pitch": 0.98,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m10_37",
+  "text": "All three true! And look where they're pointing now.",
+  "voice": "am_liam",
+  "speed": 1.113,
+  "pitch": 0.98,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m10_38",
+  "text": "Where the hoarder's sights agreed, the turf was older than the rest.",
+  "voice": "bm_george",
+  "speed": 0.9,
+  "pitch": 0.95,
+  "room": "dry",
+  "soft": false
+ },
+ {
+  "id": "cp_m10_39",
+  "text": "Somebody's had the lid off before us. Half of it's gone.",
+  "voice": "am_fenrir",
+  "speed": 1.0,
+  "pitch": 0.98,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m10_40",
+  "text": "And a green lamp left on top. Mooncussers.",
+  "voice": "am_liam",
+  "speed": 1.05,
+  "pitch": 0.98,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m10_41",
+  "text": "Gilt and Gull's charts are true one time in three. The other times there is something worse than nothing under them. This time there was both.",
+  "voice": "bm_george",
+  "speed": 0.837,
+  "pitch": 0.95,
+  "room": "dry",
+  "soft": false
+ },
+ {
+  "id": "cp_m10_42",
+  "text": "Ironbound, and heavy. Set it down gently on my table.",
+  "voice": "am_eric",
+  "speed": 0.95,
+  "pitch": 0.9,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m10_43",
+  "text": "And the rest of your hold besides. A fair night's work, all told.",
+  "voice": "am_eric",
+  "speed": 0.95,
+  "pitch": 0.9,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m10_44",
+  "text": "A strongbox, and a Mooncusser's by the look of it. I'll not ask how.",
+  "voice": "am_eric",
+  "speed": 0.95,
+  "pitch": 0.9,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m10_45",
+  "text": "Both halves of it. A fair night's work, all told.",
+  "voice": "am_eric",
+  "speed": 0.95,
+  "pitch": 0.9,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m11_01",
+  "text": "Autumn, 1889. One by one the lights of the outer rocks have gone dark.",
+  "voice": "bm_george",
+  "speed": 0.9,
+  "pitch": 0.95,
+  "room": "dry",
+  "soft": false
+ },
+ {
+  "id": "cp_m11_02",
+  "text": "Something's putting them out. Take the cutter and light them again.",
+  "voice": "bm_daniel",
+  "speed": 1.0,
+  "pitch": 0.97,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m11_03",
+  "text": "And if you find what's doing it, bring the light to it.",
+  "voice": "bm_daniel",
+  "speed": 1.0,
+  "pitch": 0.97,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m11_04",
+  "text": "Signal Head first. Then the old quays, then the chapel.",
+  "voice": "am_fenrir",
+  "speed": 1.0,
+  "pitch": 0.98,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m11_05",
+  "text": "Signal Head, fine on the port bow. Her beacon's cold.",
+  "voice": "am_fenrir",
+  "speed": 1.0,
+  "pitch": 0.98,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m11_06",
+  "text": "Close enough! A flare into the basket, from the locker aft.",
+  "voice": "am_fenrir",
+  "speed": 1.06,
+  "pitch": 0.98,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m11_07",
+  "text": "She's caught! Signal Head is burning again.",
+  "voice": "am_fenrir",
+  "speed": 1.06,
+  "pitch": 0.98,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m11_08",
+  "text": "The old quays. Bring her close along the lamps, and someone up in the bows with the pole.",
+  "voice": "am_fenrir",
+  "speed": 1.0,
+  "pitch": 0.98,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m11_09",
+  "text": "That's the last of the quay lamps. Steer for Chapel Islet.",
+  "voice": "am_fenrir",
+  "speed": 1.0,
+  "pitch": 0.98,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m11_10",
+  "text": "Every light that is not mine...",
+  "voice": "bm_lewis",
+  "speed": 0.79,
+  "pitch": 0.84,
+  "room": "fog",
+  "soft": true
+ },
+ {
+  "id": "cp_m11_11",
+  "text": "Chapel Islet. Not a candle burning on it.",
+  "voice": "am_fenrir",
+  "speed": 0.93,
+  "pitch": 0.98,
+  "room": "room",
+  "soft": true
+ },
+ {
+  "id": "cp_m11_12",
+  "text": "A taper from the boat's lamp. We'll carry a light up to the altar, and mind the wind.",
+  "voice": "am_fenrir",
+  "speed": 1.0,
+  "pitch": 0.98,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m11_13",
+  "text": "Keep it in the lee of the walls and stones. The gusts will have it otherwise.",
+  "voice": "am_fenrir",
+  "speed": 1.0,
+  "pitch": 0.98,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m11_14",
+  "text": "Here comes a gust! Get behind something!",
+  "voice": "am_fenrir",
+  "speed": 1.06,
+  "pitch": 0.98,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m11_15",
+  "text": "Taper's out. Back to the last lantern and light it again.",
+  "voice": "am_fenrir",
+  "speed": 1.0,
+  "pitch": 0.98,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m11_16",
+  "text": "That lantern will hold. If the taper goes out, light it again from there.",
+  "voice": "am_fenrir",
+  "speed": 1.0,
+  "pitch": 0.98,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m11_17",
+  "text": "Into the chapel. The candles on the altar.",
+  "voice": "am_fenrir",
+  "speed": 0.93,
+  "pitch": 0.98,
+  "room": "room",
+  "soft": true
+ },
+ {
+  "id": "cp_m11_18",
+  "text": "There. Every light on the outer rocks burns again, but one.",
+  "voice": "am_fenrir",
+  "speed": 1.0,
+  "pitch": 0.98,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m11_19",
+  "text": "You light them. I put them out. So it has always been.",
+  "voice": "bm_lewis",
+  "speed": 0.79,
+  "pitch": 0.84,
+  "room": "fog",
+  "soft": false
+ },
+ {
+  "id": "cp_m11_20",
+  "text": "Lantern Rock. That's where it comes from. Back to the boat.",
+  "voice": "am_fenrir",
+  "speed": 1.0,
+  "pitch": 0.98,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m11_21",
+  "text": "Lantern Rock. Her braziers are cold.",
+  "voice": "am_fenrir",
+  "speed": 1.0,
+  "pitch": 0.98,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m11_22",
+  "text": "Six hundred years I have kept this rock. Go home.",
+  "voice": "bm_lewis",
+  "speed": 0.79,
+  "pitch": 0.84,
+  "room": "fog",
+  "soft": false
+ },
+ {
+  "id": "cp_m11_23",
+  "text": "The braziers! Light them! He's only to be hurt where the light falls on him.",
+  "voice": "am_fenrir",
+  "speed": 1.06,
+  "pitch": 0.98,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m11_24",
+  "text": "That's one! Get him in its light!",
+  "voice": "am_fenrir",
+  "speed": 1.06,
+  "pitch": 0.98,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m11_25",
+  "text": "Dark. Let it be dark.",
+  "voice": "bm_lewis",
+  "speed": 0.85,
+  "pitch": 0.84,
+  "room": "fog",
+  "soft": true
+ },
+ {
+  "id": "cp_m11_26",
+  "text": "He's gone into the fog. Watch your backs!",
+  "voice": "am_fenrir",
+  "speed": 1.06,
+  "pitch": 0.98,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m11_27",
+  "text": "Enough.",
+  "voice": "bm_lewis",
+  "speed": 0.85,
+  "pitch": 0.84,
+  "room": "fog",
+  "soft": false
+ },
+ {
+  "id": "cp_m11_28",
+  "text": "He's up his tower! The braziers are going out, all of them!",
+  "voice": "am_fenrir",
+  "speed": 1.06,
+  "pitch": 0.98,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m11_29",
+  "text": "There, under the crags: an old hearth. The fire-keepers kept the first fire on this coast there.",
+  "voice": "am_fenrir",
+  "speed": 1.0,
+  "pitch": 0.98,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m11_30",
+  "text": "Timber from the wreck, up to the old hearth. Mind what he throws!",
+  "voice": "am_fenrir",
+  "speed": 1.06,
+  "pitch": 0.98,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m11_31",
+  "text": "She's stacked. Put a flame to her!",
+  "voice": "am_fenrir",
+  "speed": 1.06,
+  "pitch": 0.98,
+  "room": "room",
+  "soft": true
+ },
+ {
+  "id": "cp_m11_32",
+  "text": "That fire. I knew that fire.",
+  "voice": "bm_lewis",
+  "speed": 0.85,
+  "pitch": 0.84,
+  "room": "fog",
+  "soft": false
+ },
+ {
+  "id": "cp_m11_33",
+  "text": "The fire on the Fire Step, lit again for the first time since 1841.",
+  "voice": "bm_george",
+  "speed": 0.9,
+  "pitch": 0.95,
+  "room": "dry",
+  "soft": false
+ },
+ {
+  "id": "cp_m11_34",
+  "text": "Then I will put it out with my own hands.",
+  "voice": "bm_lewis",
+  "speed": 0.901,
+  "pitch": 0.84,
+  "room": "fog",
+  "soft": false
+ },
+ {
+  "id": "cp_m11_35",
+  "text": "Keep him by the fire! He burns where its light reaches him.",
+  "voice": "am_fenrir",
+  "speed": 1.06,
+  "pitch": 0.98,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m11_36",
+  "text": "He's breathing fog at the fire! Brands, quick, and burn it off!",
+  "voice": "am_fenrir",
+  "speed": 1.06,
+  "pitch": 0.98,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m11_37",
+  "text": "She's down to embers! Wood on her, quick!",
+  "voice": "am_fenrir",
+  "speed": 1.06,
+  "pitch": 0.98,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m11_38",
+  "text": "Kept.",
+  "voice": "bm_lewis",
+  "speed": 0.85,
+  "pitch": 0.84,
+  "room": "fog",
+  "soft": true
+ },
+ {
+  "id": "cp_m11_39",
+  "text": "The light on his tower. Look. It's lit.",
+  "voice": "am_fenrir",
+  "speed": 1.0,
+  "pitch": 0.98,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m11_40",
+  "text": "Autumn, 1889. The lights of the outer rocks burn again, and the haar goes out with the tide.",
+  "voice": "bm_george",
+  "speed": 0.9,
+  "pitch": 0.95,
+  "room": "dry",
+  "soft": false
+ },
+ {
+  "id": "cp_m11_41",
+  "text": "Every light, and his own besides. Bring her home.",
+  "voice": "bm_daniel",
+  "speed": 1.0,
+  "pitch": 0.97,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m12_01",
+  "text": "At the turn of the tide it went on going out. By midnight there was no sea at all.",
+  "voice": "bm_george",
+  "speed": 0.837,
+  "pitch": 0.95,
+  "room": "dry",
+  "soft": true
+ },
+ {
+  "id": "cp_m12_02",
+  "text": "It ran north across the bed faster than a horse could gallop, and down a hole that had not been there the night before.",
+  "voice": "bm_george",
+  "speed": 0.837,
+  "pitch": 0.95,
+  "room": "dry",
+  "soft": true
+ },
+ {
+  "id": "cp_m12_03",
+  "text": "She rowed out with this. The skiff came back without her, and it was still lit.",
+  "voice": "bm_daniel",
+  "speed": 1.0,
+  "pitch": 0.97,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m12_04",
+  "text": "It has not gone out since. Take it down after the water.",
+  "voice": "bm_daniel",
+  "speed": 1.0,
+  "pitch": 0.97,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m12_05",
+  "text": "Mind the runnels. The last of the sea is still going down them, and it goes in a rush.",
+  "voice": "bm_daniel",
+  "speed": 1.0,
+  "pitch": 0.97,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m12_06",
+  "text": "The sea came back before morning, quietly, as if it had only stepped out.",
+  "voice": "bm_george",
+  "speed": 0.837,
+  "pitch": 0.95,
+  "room": "dry",
+  "soft": true
+ },
+ {
+  "id": "cp_m12_07",
+  "text": "The fort on the headland has been called Maren's End ever since.",
+  "voice": "bm_george",
+  "speed": 0.837,
+  "pitch": 0.95,
+  "room": "dry",
+  "soft": true
+ },
+ {
+  "id": "cp_m12_08",
+  "text": "There. Out on the water, when the lamp turns.",
+  "voice": "bf_alice",
+  "speed": 1.0,
+  "pitch": 1.0,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m12_09",
+  "text": "Whether they ended her, or only one of her, is the oldest argument in Wrackhaven's inn.",
+  "voice": "bm_george",
+  "speed": 0.837,
+  "pitch": 0.95,
+  "room": "dry",
+  "soft": true
+ },
+ {
+  "id": "cp_m12_10",
+  "text": "She is still seen, on every sea, a little nearer every time.",
+  "voice": "bm_george",
+  "speed": 0.9,
+  "pitch": 0.95,
+  "room": "dry",
+  "soft": false
+ },
+ {
+  "id": "cp_m12_11",
+  "text": "Lamp's lit. Keep together, and watch the runnels before you cross.",
+  "voice": "bf_alice",
+  "speed": 1.0,
+  "pitch": 1.0,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m12_12",
+  "text": "She's gone down ahead of us. Then so do we. Down the mast, and mind the lamp.",
+  "voice": "bf_alice",
+  "speed": 1.0,
+  "pitch": 1.0,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m12_13",
+  "text": "She felt that. Two more bells, and she'll have to give up the rim.",
+  "voice": "bf_alice",
+  "speed": 1.0,
+  "pitch": 1.0,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m12_14",
+  "text": "Ring, then. They rang it for me the night I went. It did not bring me home.",
+  "voice": "bf_isabella",
+  "speed": 0.856,
+  "pitch": 0.98,
+  "room": "ghost",
+  "soft": false
+ },
+ {
+  "id": "cp_m12_15",
+  "text": "There, on the lip, by the wreck. That's no one of ours.",
+  "voice": "bf_alice",
+  "speed": 1.0,
+  "pitch": 1.0,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m12_16",
+  "text": "You've brought my lamp. Bring it to me, then.",
+  "voice": "bf_isabella",
+  "speed": 0.856,
+  "pitch": 0.98,
+  "room": "ghost",
+  "soft": false
+ },
+ {
+  "id": "cp_m12_17",
+  "text": "They had heard the bell carry, and so had she. She gave a step.",
+  "voice": "bm_george",
+  "speed": 0.837,
+  "pitch": 0.95,
+  "room": "dry",
+  "soft": true
+ },
+ {
+  "id": "cp_m12_18",
+  "text": "Down, then. Come down to me.",
+  "voice": "bf_isabella",
+  "speed": 0.856,
+  "pitch": 0.98,
+  "room": "ghost",
+  "soft": false
+ },
+ {
+  "id": "cp_m12_19",
+  "text": "She went back over the lip of the Swallow, and down, and the last of the water went with her.",
+  "voice": "bm_george",
+  "speed": 0.837,
+  "pitch": 0.95,
+  "room": "dry",
+  "soft": true
+ },
+ {
+  "id": "cp_m12_20",
+  "text": "Nine lamps, and a grate. Turn one and the ones beside it turn too. Bring the lantern.",
+  "voice": "bf_alice",
+  "speed": 1.0,
+  "pitch": 1.0,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m12_21",
+  "text": "The water went this way. There's an old Spanish drain under the bed, running for the fort.",
+  "voice": "bf_alice",
+  "speed": 1.0,
+  "pitch": 1.0,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m12_22",
+  "text": "Nearly. Think before you turn the next.",
+  "voice": "bf_alice",
+  "speed": 1.0,
+  "pitch": 1.0,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m12_23",
+  "text": "It takes. Stay in its light while you can.",
+  "voice": "bf_alice",
+  "speed": 1.0,
+  "pitch": 1.0,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m12_24",
+  "text": "All nine. There, it's lifting. Bring the lamp up to it.",
+  "voice": "bf_alice",
+  "speed": 1.0,
+  "pitch": 1.0,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m12_25",
+  "text": "Dry stone, cut square. Somebody built this, and long ago.",
+  "voice": "bf_alice",
+  "speed": 1.0,
+  "pitch": 1.0,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m12_26",
+  "text": "Out of the light the dark took the strength out of them, a little at a time.",
+  "voice": "bm_george",
+  "speed": 0.837,
+  "pitch": 0.95,
+  "room": "dry",
+  "soft": true
+ },
+ {
+  "id": "cp_m12_27",
+  "text": "They tried it at the grate, and the lantern would not go. It was not a weight, or a wind. It would not.",
+  "voice": "bm_george",
+  "speed": 0.837,
+  "pitch": 0.95,
+  "room": "dry",
+  "soft": true
+ },
+ {
+  "id": "cp_m12_28",
+  "text": "Then it stays. Leave it lit for her.",
+  "voice": "bf_alice",
+  "speed": 1.0,
+  "pitch": 1.0,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m12_29",
+  "text": "Where it is now, nobody will say.",
+  "voice": "bm_george",
+  "speed": 0.837,
+  "pitch": 0.95,
+  "room": "dry",
+  "soft": true
+ },
+ {
+  "id": "cp_m12_30",
+  "text": "Get up on something! The decks, the rocks, the apron by the drain!",
+  "voice": "bf_alice",
+  "speed": 1.06,
+  "pitch": 1.0,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m12_31",
+  "text": "She's failing. All the bells at once, and she'll not stand it. Split up and ring them together!",
+  "voice": "bf_alice",
+  "speed": 1.06,
+  "pitch": 1.0,
+  "room": "room",
+  "soft": true
+ },
+ {
+  "id": "cp_m12_32",
+  "text": "They rang every bell on the coast for me. Every one. I heard them all, under the water.",
+  "voice": "bf_isabella",
+  "speed": 0.856,
+  "pitch": 0.98,
+  "room": "ghost",
+  "soft": false
+ },
+ {
+  "id": "cp_m12_33",
+  "text": "There, over the water! That light. Shoot it!",
+  "voice": "bf_alice",
+  "speed": 1.06,
+  "pitch": 1.0,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m12_34",
+  "text": "Lead won't touch her. Draw her to a bell, and ring it under her nose.",
+  "voice": "bf_alice",
+  "speed": 1.0,
+  "pitch": 1.0,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m12_35",
+  "text": "That bell. I know that bell.",
+  "voice": "bf_isabella",
+  "speed": 0.856,
+  "pitch": 0.98,
+  "room": "ghost",
+  "soft": false
+ },
+ {
+  "id": "cp_m12_36",
+  "text": "All three! Now, while she's open, everything you have!",
+  "voice": "bf_alice",
+  "speed": 1.06,
+  "pitch": 1.0,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m12_37",
+  "text": "Out under the fort. Mind the chains; there's men still in them.",
+  "voice": "bf_alice",
+  "speed": 1.0,
+  "pitch": 1.0,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m12_38",
+  "text": "I rowed out to warn them. Nobody rowed out for me.",
+  "voice": "bf_isabella",
+  "speed": 0.856,
+  "pitch": 0.98,
+  "room": "ghost",
+  "soft": false
+ },
+ {
+  "id": "cp_m12_39",
+  "text": "Give me back my light.",
+  "voice": "bf_isabella",
+  "speed": 0.856,
+  "pitch": 0.98,
+  "room": "ghost",
+  "soft": false
+ },
+ {
+  "id": "cp_m12_40",
+  "text": "Listen. Out past the wrecks. That roar.",
+  "voice": "am_liam",
+  "speed": 0.977,
+  "pitch": 0.98,
+  "room": "room",
+  "soft": true
+ },
+ {
+  "id": "cp_m12_41",
+  "text": "The tide's turned. The sea's coming back.",
+  "voice": "bf_alice",
+  "speed": 1.0,
+  "pitch": 1.0,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m12_42",
+  "text": "The sea is coming home. So am I.",
+  "voice": "bf_isabella",
+  "speed": 0.856,
+  "pitch": 0.98,
+  "room": "ghost",
+  "soft": false
+ },
+ {
+  "id": "cp_m12_43",
+  "text": "Tell him I saw the light. Tell him I was nearly home.",
+  "voice": "bf_isabella",
+  "speed": 0.856,
+  "pitch": 0.98,
+  "room": "ghost",
+  "soft": true
+ },
+ {
+  "id": "cp_m12_44",
+  "text": "She went down on her knees in the last pool, and the sea took her back.",
+  "voice": "bm_george",
+  "speed": 0.837,
+  "pitch": 0.95,
+  "room": "dry",
+  "soft": true
+ },
+ {
+  "id": "cp_m12_45",
+  "text": "Then the sea came back. It came in over the bed without a sound, and it did not stop at the wrecks.",
+  "voice": "bm_george",
+  "speed": 0.837,
+  "pitch": 0.95,
+  "room": "dry",
+  "soft": true
+ },
+ {
+  "id": "cp_m12_46",
+  "text": "Up the wall! Up, before it has us too!",
+  "voice": "bf_alice",
+  "speed": 1.06,
+  "pitch": 1.0,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m12_47",
+  "text": "Below the wreck the sea had left a road of its own, and we took it.",
+  "voice": "bm_george",
+  "speed": 0.9,
+  "pitch": 0.95,
+  "room": "dry",
+  "soft": false
+ },
+ {
+  "id": "cp_m13_01",
+  "text": "Winter, 1891. The tide came into Wrackhaven at dusk, and at the turn it did not go out.",
+  "voice": "bm_george",
+  "speed": 0.9,
+  "pitch": 0.95,
+  "room": "dry",
+  "soft": false
+ },
+ {
+  "id": "cp_m13_02",
+  "text": "You came across from the Light. God bless you for it.",
+  "voice": "bm_fable",
+  "speed": 0.95,
+  "pitch": 0.9,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m13_03",
+  "text": "They are still in their houses. Knock them up and bring them to the hall.",
+  "voice": "bm_fable",
+  "speed": 1.007,
+  "pitch": 0.9,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m13_04",
+  "text": "Fish Street first. The houses by the quay will be under before the hour is out.",
+  "voice": "bm_fable",
+  "speed": 0.95,
+  "pitch": 0.9,
+  "room": "room",
+  "soft": true
+ },
+ {
+  "id": "cp_m13_05",
+  "text": "Eight households, and the water already over the cobbles.",
+  "voice": "bm_george",
+  "speed": 0.9,
+  "pitch": 0.95,
+  "room": "dry",
+  "soft": false
+ },
+ {
+  "id": "cp_m13_06",
+  "text": "Bar it. Every window too. They will come up out of that water for us.",
+  "voice": "bm_fable",
+  "speed": 1.007,
+  "pitch": 0.9,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m13_07",
+  "text": "The water is in my shop! Lead on, I am behind you.",
+  "voice": "am_puck",
+  "speed": 1.0,
+  "pitch": 1.0,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m13_08",
+  "text": "Fish boxes floating out the door. Mind your feet, it is cold.",
+  "voice": "bf_emma",
+  "speed": 1.05,
+  "pitch": 1.05,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m13_09",
+  "text": "Thank God. I thought the fires going out was the end of me.",
+  "voice": "am_liam",
+  "speed": 1.0,
+  "pitch": 0.95,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m13_10",
+  "text": "I was stopping the door with casks. The casks went first.",
+  "voice": "am_santa",
+  "speed": 1.0,
+  "pitch": 0.95,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m13_11",
+  "text": "Forty years I have drunk here. The sea can have the bar, not me.",
+  "voice": "bm_lewis",
+  "speed": 0.818,
+  "pitch": 0.88,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m13_12",
+  "text": "I sent the children up the hill road at dusk with their mothers. Go on.",
+  "voice": "bm_daniel",
+  "speed": 1.0,
+  "pitch": 1.06,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m13_13",
+  "text": "I was praying for the boats. It seems they sent you.",
+  "voice": "bm_george",
+  "speed": 0.92,
+  "pitch": 1.03,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m13_14",
+  "text": "Fire is out. Never thought I would see the forge drowned.",
+  "voice": "am_onyx",
+  "speed": 0.93,
+  "pitch": 0.92,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m13_15",
+  "text": "The sea has taken one of them. God rest them.",
+  "voice": "bm_fable",
+  "speed": 1.007,
+  "pitch": 0.9,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m13_16",
+  "text": "Another gone under. Keep the rest close.",
+  "voice": "bm_fable",
+  "speed": 0.95,
+  "pitch": 0.9,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m13_17",
+  "text": "Too many in the water tonight. Too many.",
+  "voice": "bm_fable",
+  "speed": 0.95,
+  "pitch": 0.9,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m13_18",
+  "text": "In, in. Sit on the benches, keep your feet up.",
+  "voice": "bm_fable",
+  "speed": 0.95,
+  "pitch": 0.9,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m13_19",
+  "text": "They are in the water too long! Get them out of it!",
+  "voice": "bm_fable",
+  "speed": 1.007,
+  "pitch": 0.9,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m13_20",
+  "text": "It is in the Square now. Hurry!",
+  "voice": "bm_fable",
+  "speed": 1.007,
+  "pitch": 0.9,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m13_21",
+  "text": "That is all who are coming. Shut the doors.",
+  "voice": "bm_fable",
+  "speed": 0.883,
+  "pitch": 0.9,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m13_22",
+  "text": "Barred. Now we pray the door holds.",
+  "voice": "bm_fable",
+  "speed": 0.95,
+  "pitch": 0.9,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m13_23",
+  "text": "They are in the Square, by the dozen. Nail faster!",
+  "voice": "bm_fable",
+  "speed": 1.007,
+  "pitch": 0.9,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m13_24",
+  "text": "No more time. Stand ready.",
+  "voice": "bm_fable",
+  "speed": 0.95,
+  "pitch": 0.9,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m13_25",
+  "text": "They have dragged one into the water!",
+  "voice": "bm_fable",
+  "speed": 0.95,
+  "pitch": 0.9,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m13_26",
+  "text": "Its shell is splitting. There is a whole ship in that thing.",
+  "voice": "bm_lewis",
+  "speed": 0.88,
+  "pitch": 0.88,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m13_27",
+  "text": "It is on its back! Its belly, shoot its belly!",
+  "voice": "bm_fable",
+  "speed": 1.007,
+  "pitch": 0.9,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m13_28",
+  "text": "Up the stair, all of you. Mind the old ones. The sea is coming in behind it.",
+  "voice": "bm_fable",
+  "speed": 1.007,
+  "pitch": 0.9,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m13_29",
+  "text": "Something in the street. Big as a boat, and coming.",
+  "voice": "bm_fable",
+  "speed": 0.95,
+  "pitch": 0.9,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m13_30",
+  "text": "The Keelback. A whole wreck walking. Keep out of its road.",
+  "voice": "bm_lewis",
+  "speed": 0.88,
+  "pitch": 0.88,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m13_31",
+  "text": "They have taken one of us out of the window!",
+  "voice": "bm_fable",
+  "speed": 1.007,
+  "pitch": 0.9,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m13_32",
+  "text": "They are coming up the walls like crabs up a pier.",
+  "voice": "bm_lewis",
+  "speed": 0.88,
+  "pitch": 0.88,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m13_33",
+  "text": "The leads! They are over the parapet onto the roof!",
+  "voice": "bm_fable",
+  "speed": 1.007,
+  "pitch": 0.9,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m13_34",
+  "text": "The sky over the harbour. Is that grey? I think that is grey.",
+  "voice": "bm_daniel",
+  "speed": 1.0,
+  "pitch": 1.06,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m13_35",
+  "text": "They are standing in the hall. Under the water, standing in rows, like a congregation.",
+  "voice": "bm_daniel",
+  "speed": 0.93,
+  "pitch": 1.06,
+  "room": "room",
+  "soft": true
+ },
+ {
+  "id": "cp_m13_36",
+  "text": "Again! They have to hear it across the harbour!",
+  "voice": "bm_fable",
+  "speed": 1.007,
+  "pitch": 0.9,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m13_37",
+  "text": "One more. The Light's boats will be watching for it.",
+  "voice": "bm_lewis",
+  "speed": 0.88,
+  "pitch": 0.88,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m13_38",
+  "text": "Boats. Boats on the water, coming from the Light.",
+  "voice": "bm_fable",
+  "speed": 1.007,
+  "pitch": 0.9,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m13_39",
+  "text": "The leads are open. Up there you will see them come, and see the Light.",
+  "voice": "bm_fable",
+  "speed": 0.95,
+  "pitch": 0.9,
+  "room": "room",
+  "soft": true
+ },
+ {
+  "id": "cp_m13_40",
+  "text": "There. Grey over the harbour. It is first light.",
+  "voice": "bm_daniel",
+  "speed": 1.0,
+  "pitch": 1.06,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m13_41",
+  "text": "Ring the bell! Ring it, so the Light knows we are alive!",
+  "voice": "bm_fable",
+  "speed": 1.007,
+  "pitch": 0.9,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m13_42",
+  "text": "Up the wall, the old salvage diver. The bell has woken him.",
+  "voice": "bm_lewis",
+  "speed": 0.88,
+  "pitch": 0.88,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m13_43",
+  "text": "Dawn. The boats from the Light came in across the Square, over the tops of the market stalls.",
+  "voice": "bm_george",
+  "speed": 0.9,
+  "pitch": 0.95,
+  "room": "dry",
+  "soft": false
+ },
+ {
+  "id": "cp_m13_44",
+  "text": "Look at it once. Then do not look again. It is theirs now.",
+  "voice": "bm_fable",
+  "speed": 0.95,
+  "pitch": 0.9,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m13_45",
+  "text": "Out past the quay we looked back. And across the harbour the Light was still lit.",
+  "voice": "bm_george",
+  "speed": 0.9,
+  "pitch": 0.95,
+  "room": "dry",
+  "soft": false
+ },
+ {
+  "id": "cp_m14_01",
+  "text": "The sea came back, and with it the people of every sea and every year that ever sailed through the skerries.",
+  "voice": "bm_george",
+  "speed": 0.837,
+  "pitch": 0.95,
+  "room": "dry",
+  "soft": false
+ },
+ {
+  "id": "cp_m14_02",
+  "text": "They landed on the islands round the Light, and went to war for them. The charts call it the Drowned Reach.",
+  "voice": "bm_george",
+  "speed": 0.837,
+  "pitch": 0.95,
+  "room": "dry",
+  "soft": false
+ },
+ {
+  "id": "cp_m14_03",
+  "text": "That's the Light, out in the middle of it all. Dark, these many years.",
+  "voice": "am_michael",
+  "speed": 1.0,
+  "pitch": 0.92,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m14_04",
+  "text": "Every nation in the Reach wants the name of Keeper. Not one of them can light it.",
+  "voice": "am_michael",
+  "speed": 1.0,
+  "pitch": 0.92,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m14_05",
+  "text": "So we will. Up the beach, and mind their muskets. They show a flash in the pan before they fire.",
+  "voice": "am_michael",
+  "speed": 1.0,
+  "pitch": 0.92,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m14_10",
+  "text": "Ember Isles. They've held this holm since the last pact broke. Up the beach and through them.",
+  "voice": "am_michael",
+  "speed": 1.06,
+  "pitch": 0.92,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m14_11",
+  "text": "Second section, down! Hold the beacon. No lamp-man sets foot on it!",
+  "voice": "am_eric",
+  "speed": 1.081,
+  "pitch": 0.9,
+  "room": "far",
+  "soft": false
+ },
+ {
+  "id": "cp_m14_12",
+  "text": "Their beacon's cold. They won't burn the wood, and the drowned have the shore every night for it. Light it.",
+  "voice": "am_michael",
+  "speed": 1.0,
+  "pitch": 0.92,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m14_13",
+  "text": "There. Now keep it fed. Their woodpile's in the camp. When the tide's out, the shoal's a road.",
+  "voice": "am_michael",
+  "speed": 1.0,
+  "pitch": 0.92,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m14_14",
+  "text": "And here they come. Every shore the light doesn't reach is theirs at night.",
+  "voice": "am_michael",
+  "speed": 1.0,
+  "pitch": 0.92,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m14_15",
+  "text": "It's getting dark. Light that beacon.",
+  "voice": "am_michael",
+  "speed": 1.06,
+  "pitch": 0.92,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m14_16",
+  "text": "The beacon's low. Feed it!",
+  "voice": "am_michael",
+  "speed": 1.0,
+  "pitch": 0.92,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m14_17",
+  "text": "It's out! Bring wood, and light it again!",
+  "voice": "am_michael",
+  "speed": 1.06,
+  "pitch": 0.92,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m14_18",
+  "text": "She's ebbing. I can see the shoal under the water.",
+  "voice": "am_michael",
+  "speed": 1.0,
+  "pitch": 0.92,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m14_19",
+  "text": "Low water. Down to the north beach, all of you.",
+  "voice": "am_michael",
+  "speed": 1.0,
+  "pitch": 0.92,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m14_20",
+  "text": "Oath-breakers! The Commodore will hear of this!",
+  "voice": "am_eric",
+  "speed": 1.02,
+  "pitch": 0.9,
+  "room": "far",
+  "soft": false
+ },
+ {
+  "id": "cp_m14_21",
+  "text": "There's the road. And there's the one who knows it. Keep him close.",
+  "voice": "am_michael",
+  "speed": 1.0,
+  "pitch": 0.92,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m14_22",
+  "text": "He's stopped. He won't walk on into the dark. Light the cairn for him.",
+  "voice": "am_michael",
+  "speed": 1.0,
+  "pitch": 0.92,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m14_23",
+  "text": "Another cairn. Light it, quick.",
+  "voice": "am_michael",
+  "speed": 1.0,
+  "pitch": 0.92,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m14_24",
+  "text": "The last cairn before the rock.",
+  "voice": "am_michael",
+  "speed": 1.0,
+  "pitch": 0.92,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m14_25",
+  "text": "Ice-folk, on that hulk. He won't walk into their muskets, and neither should we. Clear them.",
+  "voice": "am_michael",
+  "speed": 1.0,
+  "pitch": 0.92,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m14_26",
+  "text": "Lamp-men on the shoal! Make ready! Present!",
+  "voice": "am_echo",
+  "speed": 1.06,
+  "pitch": 0.95,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m14_27",
+  "text": "The flood's turned. It's coming up the road behind us. Don't dawdle.",
+  "voice": "am_michael",
+  "speed": 1.0,
+  "pitch": 0.92,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m14_28",
+  "text": "The water's at your heels!",
+  "voice": "am_michael",
+  "speed": 1.06,
+  "pitch": 0.92,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m14_29",
+  "text": "Good. He's walking again. Keep up with him.",
+  "voice": "am_michael",
+  "speed": 1.0,
+  "pitch": 0.92,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m14_30",
+  "text": "That's it. Ring it! They'll not abide a bell.",
+  "voice": "am_michael",
+  "speed": 1.06,
+  "pitch": 0.92,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m14_31",
+  "text": "An old buoy's bell, there on the bank. Keep the bell ready, the keeper wrote.",
+  "voice": "am_michael",
+  "speed": 1.0,
+  "pitch": 0.92,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m14_32",
+  "text": "The Light's rock. We're over. Look behind you: the road's gone.",
+  "voice": "am_michael",
+  "speed": 1.0,
+  "pitch": 0.92,
+  "room": "room",
+  "soft": true
+ },
+ {
+  "id": "cp_m14_33",
+  "text": "That's the last of them. On, after him.",
+  "voice": "am_michael",
+  "speed": 1.0,
+  "pitch": 0.92,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m14_34",
+  "text": "Look at her go. The whole Reach is draining.",
+  "voice": "am_michael",
+  "speed": 1.0,
+  "pitch": 0.92,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m14_35",
+  "text": "And there he is. Blue shoes and all. I'd know him in any year.",
+  "voice": "am_michael",
+  "speed": 1.0,
+  "pitch": 0.92,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m14_36",
+  "text": "The only things that never change are the light, the shark in his shoes, and her.",
+  "voice": "bm_george",
+  "speed": 0.9,
+  "pitch": 0.95,
+  "room": "dry",
+  "soft": false
+ },
+ {
+  "id": "cp_m14_40",
+  "text": "The keeper's station, from the back. In all the years I never once saw it from this side.",
+  "voice": "am_michael",
+  "speed": 1.0,
+  "pitch": 0.92,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m14_41",
+  "text": "Whoever you are: this rock is the Ember Isles'. We hold it, so we are its Keepers.",
+  "voice": "am_onyx",
+  "speed": 0.95,
+  "pitch": 0.86,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m14_42",
+  "text": "You hold it dark.",
+  "voice": "am_michael",
+  "speed": 1.0,
+  "pitch": 0.92,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m14_44",
+  "text": "Lamp-men. On my rock. I have hanged better men for less.",
+  "voice": "am_onyx",
+  "speed": 0.95,
+  "pitch": 0.86,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m14_45",
+  "text": "Every nation remembers an oath-breaker. Nobody remembers a lamp-man.",
+  "voice": "am_onyx",
+  "speed": 0.95,
+  "pitch": 0.86,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m14_50",
+  "text": "Ember guns on the north rock. They've been shelling the shoal with them. Take the battery.",
+  "voice": "am_michael",
+  "speed": 1.0,
+  "pitch": 0.92,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m14_51",
+  "text": "Fall back to the station! Fetch the Commodore!",
+  "voice": "am_eric",
+  "speed": 1.081,
+  "pitch": 0.9,
+  "room": "far",
+  "soft": false
+ },
+ {
+  "id": "cp_m14_52",
+  "text": "Fire-pots! Burn them off my rock!",
+  "voice": "am_onyx",
+  "speed": 1.007,
+  "pitch": 0.86,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m14_53",
+  "text": "Guards! To me! If the Ember Isles can't keep it, nobody keeps it!",
+  "voice": "am_onyx",
+  "speed": 0.95,
+  "pitch": 0.86,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m14_54",
+  "text": "Light it, then. Light it, if you can. We never could.",
+  "voice": "am_onyx",
+  "speed": 0.95,
+  "pitch": 0.86,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m14_55",
+  "text": "They hoarded the Light's oil in the west yard. A cask at a time, to the back door. I'll hold it open.",
+  "voice": "am_michael",
+  "speed": 1.0,
+  "pitch": 0.92,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m14_56",
+  "text": "Mind the rock. The Light's dark, so the drowned have this shore too. Even this one.",
+  "voice": "am_michael",
+  "speed": 1.0,
+  "pitch": 0.92,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m14_57",
+  "text": "That's the last of it. Ninety treads to the lantern. Up you go.",
+  "voice": "am_michael",
+  "speed": 0.93,
+  "pitch": 0.92,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m14_58",
+  "text": "One in. It smells like the station always did.",
+  "voice": "am_michael",
+  "speed": 1.0,
+  "pitch": 0.92,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m14_60",
+  "text": "The wick's trimmed and the oil's in. Put a light to it, and stand back.",
+  "voice": "bm_fable",
+  "speed": 1.0,
+  "pitch": 1.0,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m14_61",
+  "text": "There she is. Now keep her. Oil to the lamp, and wind the clock, or she stops turning.",
+  "voice": "bm_fable",
+  "speed": 1.0,
+  "pitch": 1.0,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m14_62",
+  "text": "They've seen it. Every nation in the Reach has seen it. Fire-ships, coming in.",
+  "voice": "am_michael",
+  "speed": 1.06,
+  "pitch": 0.92,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m14_63",
+  "text": "She's starving for oil! Pump!",
+  "voice": "bm_fable",
+  "speed": 1.06,
+  "pitch": 1.0,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m14_64",
+  "text": "The clock's run down. She's stopped turning. Wind her!",
+  "voice": "bm_fable",
+  "speed": 1.06,
+  "pitch": 1.0,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m14_65",
+  "text": "They're at the lens! Get them off my glass!",
+  "voice": "bm_fable",
+  "speed": 1.0,
+  "pitch": 1.0,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m14_66",
+  "text": "There's the first. Burning, and coming straight for the rock.",
+  "voice": "am_michael",
+  "speed": 1.0,
+  "pitch": 0.92,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m14_67",
+  "text": "More of them. Every nation's sent one.",
+  "voice": "am_michael",
+  "speed": 1.0,
+  "pitch": 0.92,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m14_68",
+  "text": "She's seen the rocks! She's going about!",
+  "voice": "am_michael",
+  "speed": 1.06,
+  "pitch": 0.92,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m14_69",
+  "text": "Another one sheering off!",
+  "voice": "am_michael",
+  "speed": 1.0,
+  "pitch": 0.92,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m14_70",
+  "text": "She's turned! In its light they see what's really there.",
+  "voice": "am_michael",
+  "speed": 1.06,
+  "pitch": 0.92,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m14_71",
+  "text": "She's struck the rock! The whole tower shook!",
+  "voice": "bm_fable",
+  "speed": 1.06,
+  "pitch": 1.0,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m14_72",
+  "text": "Another! The glass won't take a third!",
+  "voice": "bm_fable",
+  "speed": 1.0,
+  "pitch": 1.0,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m14_73",
+  "text": "That's the last of them. Look at it. Every shore in the Reach, lit.",
+  "voice": "bm_fable",
+  "speed": 0.93,
+  "pitch": 1.0,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m14_75",
+  "text": "Mind the forty-first tread. It always did creak.",
+  "voice": "bm_fable",
+  "speed": 1.0,
+  "pitch": 1.0,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m14_76",
+  "text": "Who's that up there?",
+  "voice": "am_michael",
+  "speed": 1.0,
+  "pitch": 0.92,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m14_77",
+  "text": "Who else would it be? Come up. The glass is clean.",
+  "voice": "bm_fable",
+  "speed": 1.0,
+  "pitch": 1.0,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m14_80",
+  "text": "I ground this glass in eighteen forty-one. I never once saw it lit from the outside.",
+  "voice": "bm_fable",
+  "speed": 1.0,
+  "pitch": 1.0,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m14_81",
+  "text": "Holm kept her through the worst year there ever was. He left you his book.",
+  "voice": "bm_fable",
+  "speed": 1.0,
+  "pitch": 1.0,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m14_82",
+  "text": "Whoever holds the rock, they call the Keeper. Holding it was never the trick of it.",
+  "voice": "bm_fable",
+  "speed": 1.0,
+  "pitch": 1.0,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m14_86",
+  "text": "Look at it. Every shore it touches, they sink back.",
+  "voice": "am_michael",
+  "speed": 1.0,
+  "pitch": 0.92,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m14_87",
+  "text": "They're dipping their beacons. All of them. Every nation in the Reach.",
+  "voice": "am_michael",
+  "speed": 1.0,
+  "pitch": 0.92,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m14_88",
+  "text": "That's all the name of Keeper ever was. Keeping it lit. It's yours now.",
+  "voice": "bm_fable",
+  "speed": 1.0,
+  "pitch": 1.0,
+  "room": "room",
+  "soft": false
+ },
+ {
+  "id": "cp_m14_91",
+  "text": "If you are reading this, keep Plimsoll close and keep the bell ready.",
+  "voice": "bm_george",
+  "speed": 0.9,
+  "pitch": 0.95,
+  "room": "dry",
+  "soft": false
+ },
+ {
+  "id": "cp_m14_92",
+  "text": "Whatever sea you wake on, the light is still turning, and she is still rowing out to the Gannet.",
+  "voice": "bm_george",
+  "speed": 0.9,
+  "pitch": 0.95,
+  "room": "dry",
+  "soft": true
+ },
+ {
+  "id": "cp_m14_93",
+  "text": "The tales don't keep to their order. They never did. They come round again, as regular as the lamp.",
+  "voice": "bm_george",
+  "speed": 0.837,
+  "pitch": 0.95,
+  "room": "dry",
+  "soft": false
+ },
+ {
+  "id": "cp_m14_94",
+  "text": "She was out there, rowing toward where the Gannet was, and the lantern in her skiff was still lit.",
+  "voice": "bm_george",
+  "speed": 0.837,
+  "pitch": 0.95,
+  "room": "dry",
+  "soft": false
+ },
+ {
+  "id": "cp_m14_95",
+  "text": "When the lamp turned, she looked up at me.",
+  "voice": "bm_george",
+  "speed": 0.837,
+  "pitch": 0.95,
+  "room": "dry",
+  "soft": true
+ }
+]

@@ -190,7 +190,7 @@ cpStage('m12bed', {
     }
     if (S.shove && S.shove[2] > 0) { const k = dt / 0.4; zmMove(m, S.shove[0] * k, S.shove[1] * k); S.shove[2] -= dt; }
     // each surge heard coming, from upstream
-    c12bRun.forEach((R, i) => { const cyc = Math.floor((ct + R.ph) / R.T); if (cyc !== S.heard[i]) { const [x, y] = c12bLoc(m.x, m.y), px = x - R.ax, py = y - R.ay, t = px * R.ux + py * R.uy, o = Math.abs(-px * R.uy + py * R.ux); if (o < 40 && t > -10 && t < R.L + 10 && c12bFront(R, ct) > Math.max(0, t - 40)) { S.heard[i] = cyc; try { if (!soundOff() && typeof sfxPlay === 'function') sfxPlay('sea', { vol: clamp(0.9 - o / 50, 0.2, 0.9), vary: 0.08 }); } catch (e) {} } } });
+    c12bRun.forEach((R, i) => { const cyc = Math.floor((ct + R.ph) / R.T); if (cyc !== S.heard[i]) { const [x, y] = c12bLoc(m.x, m.y), px = x - R.ax, py = y - R.ay, t = px * R.ux + py * R.uy, o = Math.abs(-px * R.uy + py * R.ux); if (o < 40 && t > -10 && t < R.L + 10 && c12bFront(R, ct) > Math.max(0, t - 40)) { S.heard[i] = cyc; try { if (!soundOff() && typeof sfxPlay === 'function') { const v = clamp(0.9 - o / 50, 0.2, 0.9); if (!sfxPlay('c12surge', { vol: v, vary: 0.06 })) sfxPlay('sea', { vol: v, vary: 0.08 }); } } catch (e) {} } } });
     // hold Use: a bell, or the mast
     const o = ZM.near, hold = c12Hold() && alive;
     if (hold && o && (o.k === 'c12bell' || o.k === 'c12down') && !(S.pend > 0)) {

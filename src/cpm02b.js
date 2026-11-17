@@ -163,6 +163,9 @@ cpStage('m02wall', {
     const S = RAID.st, L = CPL.list;
     if (!CPM2.cineLamps) (S.lan || []).forEach((v, i) => { if (L[i]) cplSet(L[i], !!v); });
     if (CP2W.shT > 0) CP2W.shT -= dt;
+    // the cages creaking on their chains in the wind, all the while; a gibbet's lantern put out, on every screen
+    try { sfxPlay('gibbet_chain', { vol: 0.35, gap: 6 + Math.random() * 3 }); } catch (e) {}
+    const lanN = (S.lan || []).filter(Boolean).length; if (S.ph === 'boss' && CP2W.lanN != null && lanN < CP2W.lanN) try { sfxPlay('lantern_douse', { vol: 0.7 }); } catch (e) {} CP2W.lanN = lanN;
     cphTick(dt, ZM.near, ZM.near && ZM.near.k === 'cp2lan' ? CP2W.LAN : 0, o => raidAsk('lan', o.i));
   },
   consider(c) { const S = RAID.st; if (S.ph !== 'boss') return; S.lan.forEach((v, i) => { if (v) c({ k: 'cp2lan', i }, FPSC.CX + CP2W.GIB[i], FPSC.CY + CP2W.GY + 0.6, 0, 2.4, false); }); },
@@ -181,7 +184,7 @@ cpStage('m02wall', {
   },
   b3(grp) { cp2wBuild3D(grp); },
   f3(dt) { cp2wFrame3D(dt); },
-  exit() { cplReset(); if (typeof GL3D !== 'undefined' && GL3D.sea) GL3D.sea.visible = true; },
+  exit() { cplReset(); CP2W.lanN = null; if (typeof GL3D !== 'undefined' && GL3D.sea) GL3D.sea.visible = true; },
   mend: false,
 });
 // (hosting) a gang man stood at the foot of the gibbet: the tick counts it

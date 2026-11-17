@@ -180,6 +180,12 @@ cpStage('m04watch', {
     if (o && o.k === 'm4wipe' && cplHold('m4wipe', dt, 0.8)) raidAsk('wipe', o.i);
     if (S.bellSeq !== S.bellSeen) { if (S.bellSeen != null) S.swing = 1; S.bellSeen = S.bellSeq; }
     S.swing = Math.max(0, (S.swing || 0) - dt * 0.12);
+    // (on every screen) the lens grinding round on its rollers while it's turned, the sleet on the glass through a squall, and a pane wiped clear
+    if (S.baSeen != null && S.bar && dt > 0 && Math.abs(angDiff(S.ba, S.baSeen)) / dt > 0.12) try { sfxPlay('beamswing', { vol: 0.5, gap: 2 }); } catch (e) {}
+    S.baSeen = S.ba;
+    if (S.sq && !cpCineOn()) try { sfxPlay('sleetglass', { vol: 0.45, gap: 4.5 }); } catch (e) {}
+    if (S.crSeen && S.crust.some((c, i) => c < 0.05 && S.crSeen[i] > 0.15)) try { sfxPlay('glasswipe', { vol: 0.7 }); } catch (e) {}
+    S.crSeen = S.crust.slice();
   },
   pack(o) { const S = RAID.st; o.m = [Math.round(S.s * 10) / 10, Math.round(S.sight * 100) / 100, Math.round(S.ba * 1000) / 1000, S.bar, Math.round(S.bellT * 10) / 10, Math.round(S.bellCd * 10) / 10, S.bellSeq, S.sq, Math.round(S.lostT * 10) / 10, Math.round(S.on * 100) / 100]; o.cr = S.crust.map(c => Math.round(c * 20)); },
   apply(o) {
@@ -258,8 +264,8 @@ function m4WatchSay(S) {
   say('g', 'maren', 'I can see her figurehead in the beam. A woman, carved, with her arm out.', 'cp_m04_35', S.on > 0.5 && S.s > M4.DANGER + 120);
   say('h', 'holm', 'Nearly through. One more mile of it.', 'cp_m04_36', S.s > M4.FAIL - 110);
 }
-cpOn('m4bell', () => { try { if (!soundOff()) sfxBell(); } catch (e) {} });
-cpOn('m4squall', () => { try { if (!soundOff()) sfxWhoosh(); } catch (e) {} fpsFeed('A squall of sleet off the sea.'); });
+cpOn('m4bell', () => { try { if (!sfxPlay('gallerybell', { vol: 0.9 }) && !soundOff()) sfxBell(); } catch (e) {} });
+cpOn('m4squall', () => { try { if (!sfxPlay('sleetglass', { vol: 0.55, gap: 4.5 }) && !soundOff()) sfxWhoosh(); } catch (e) {} fpsFeed('A squall of sleet off the sea.'); });
 
 // ---------- II. The Second Hour ----------
 cpStage('m04dark', {
@@ -313,6 +319,9 @@ cpStage('m04dark', {
     const S = RAID.st, o = ZM.near;
     S.myWind = cplHeld() && o && o.k === 'm4clock' && S.clock < 1 && !cpCineOn();
     if (S.myWind) { S.windAsk = (S.windAsk || 0) - dt; if (S.windAsk <= 0) { S.windAsk = 0.2; raidAsk('wind'); } } else S.windAsk = 0;
+    // (on every screen) the clockwork's weights ratcheting up while anyone winds
+    if (S.clSeen != null && S.clock > S.clSeen) try { sfxPlay('clockwind', { vol: 0.6, gap: 1.8 }); } catch (e) {}
+    S.clSeen = S.clock;
     if (o && o.k === 'm4light' && cplHold('m4light', dt, 3.5)) raidAsk('light');
   },
   pack(o) { const S = RAID.st; o.m = [Math.round(S.s * 10) / 10, S.oil === 'carried' ? 2 : S.oil ? 1 : 0, S.wick === 'carried' ? 2 : S.wick ? 1 : 0, Math.round(S.clock * 100) / 100, S.lit, S.maren, Math.round(S.mk * 1000) / 1000]; o.c = S.carry; },

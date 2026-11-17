@@ -149,7 +149,7 @@ cpOn('m5bell', a => {
   const who = Array.isArray(a) && a[0] ? ((ZM.hum || []).find(h => h[0] === a[0]) || [])[1] || 'Someone' : '', n = Array.isArray(a) ? a[1] | 0 : 0;
   fpsFeed((who ? `${who} rang the old fog bell` : 'The old fog bell rings out over the strand') + (n ? `, and ${n} of them sink back under the sand.` : '.'));
 });
-cpOn('m5print', i => { try { if (!soundOff()) sfxSqueak(0, 0.35); } catch (e) {} if (i === 1) fpsFeed('A print in the wet sand, glowing faintly blue. Another beyond it.'); });
+cpOn('m5print', i => { try { if (!soundOff() && !sfxPlay('squeak', { vol: 0.5 })) sfxSqueak(0, 0.35); } catch (e) {} if (i === 1) fpsFeed('A print in the wet sand, glowing faintly blue. Another beyond it.'); });
 cpOn('m5surge', () => { ZM.banner = { text: 'Hold the strand', t: 4, sub: 'until the sun is up · the old fog bell by the point sends them back', col: '#ffd0a0' }; try { if (!soundOff()) sfxSplash(0, 0.8); } catch (e) {} });
 cpOn('m5dawn', () => { ZM.banner = { text: 'Sunrise', t: 4, sub: 'they sink away into the sand', col: '#ffe2a8' }; if (typeof raidRespawn === 'function') raidRespawn(); });
 
@@ -159,7 +159,7 @@ function cpm5sMe(dt) {
   if (S.pend > 0) S.pend -= dt;
   if (ZM.net === 'client' && S.bellCd > 0) S.bellCd = Math.max(0, S.bellCd - dt);
   // the surf, and now and then a hiss off the warm rocks
-  S.ambT -= dt; if (S.ambT <= 0) { S.ambT = 3 + Math.random() * 4; try { if (!soundOff()) noise('bandpass', 2400, 1.2, 0.3, 0.9, 0.05, { pan: (Math.random() - 0.5) * 1.4 }); } catch (e) {} }
+  S.ambT -= dt; if (S.ambT <= 0) { S.ambT = 3 + Math.random() * 4; try { const pan = (Math.random() - 0.5) * 1.4; if (!soundOff() && !sfxPlay('steam', { vol: 0.45, pan, out: true })) noise('bandpass', 2400, 1.2, 0.3, 0.9, 0.05, { pan }); } catch (e) {} }
 }
 function cpm5sHud(phone, mono, fell) {
   const S = RAID.st; if (!S.m5 || S.ph !== 'surge') return;

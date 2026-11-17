@@ -93,7 +93,9 @@ function c10Across(d, s, h) { const P = c10Port(), T = P.table, a = P.tableA || 
 // ---------- the outro: weighed and paid ----------
 cpCineDef('m10_outro', { music: 'cpm10cine', shots: [
   c10Live(5.5, (t, k) => { const T = c10Port().table; return { cam: c10Mix(c10Across(2.4, 2.6, 2.1), c10Across(1.6, 1.7, 1.8), k), look: [T[0], T[1], 0.95] }; },
-    { lines: [[0.3, 'factor', 'Spanish gold, and English, and a little Dutch. It was somebody’s, once.', 'cp_m10_14'], [3.4, 'factor', 'Weighed, and written down, and paid.', 'cp_m10_15']], sfx: [[3.6, 'buy', 0.8], [0.8, 'chest', 0.6]] }),
+    { lines: [[0.3, 'factor', 'Spanish gold, and English, and a little Dutch. It was somebody’s, once.', 'cp_m10_14'], [3.4, 'factor', 'Weighed, and written down, and paid.', 'cp_m10_15']], sfx: [[3.6, 'buy', 0.8], [0.8, 'chest', 0.6]],
+      // (the coins poured on his scale while he talks, where there's a recording of it)
+      f(t) { if (t < 1.8) C10.weighSnd = 0; else if (!C10.weighSnd) { C10.weighSnd = 1; try { sfxPlay('c10weigh', { vol: 0.8 }); } catch (e) {} } } }),
   c10Live(5, (t, k) => { const T = c10Port().table; return { cam: c10Mix(c10Across(3, 2, 2.6), c10Across(9, 5, 7), k), look: [T[0], T[1], 1.4] }; },
     { lines: [[0.4, 'gilt', 'The chart was true, then. Gilt and Gull will remember the crew that proved it.', 'cp_m10_16']], f(t, k) { C10.paidShow = 1; } }),
   { d: 5, card: { eye: 'Mission complete', t: "Freebooters' Sea", sub: 'Spring 1889. The first crew out of Saltcote came home with the hold full.' },

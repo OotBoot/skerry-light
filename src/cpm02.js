@@ -26,7 +26,7 @@ cpCast('sarg', { n: 'Sergeant Ybarra', c: '#e8c27a' });
 cpCast('gov', { n: 'The Governor', c: '#d8c8a8' });
 cpCast('jago', { n: 'Black Jago', c: '#d8a060' });
 cpCast('look', { n: 'A Lookout', c: '#c8d0d8' });
-Object.assign(CP_MUSIC_FALL, { cpm02lights: 'gwhold', cpm02cove: 'frisle', cpm02wall: 'raidfort', cpm02boss: 'frboss', cpm02sad: 'raidpier' });
+Object.assign(CP_MUSIC_FALL, { cpm02lights: 'gwhold', cpm02cove: 'frisle', cpm02wall: 'raidfort', cpm02boss: 'bossmoon', cpm02sad: 'raidpier' });
 
 cpMission({ id: 'm02', act: 1, n: 'The Mooncussers', when: 'The 1600s', where: 'The point below the sea fort',
   blurb: 'The wrecking years. Mooncussers hang false lights on the rocks to draw ships in. Put the lights out before the merchantman strikes, take their master alive, and see him hanged in chains on the sea wall. Some of them came back.',
@@ -249,8 +249,8 @@ cpStage('m02lights', {
   me(dt) {
     const S = RAID.st, L = cplLamps();
     if (!CPM2.cineLamps) (S.lit || []).forEach((v, i) => { if (L[i]) cplSet(L[i], !!v); });
-    // (a light lit again: everyone hears it catch)
-    const lit = cp2LitN(); if (S.seen >= 0 && lit > S.seen) { try { sfxFlare(); } catch (e) {} ZM.banner = { text: 'They have lit a light again', t: 2.6, small: true, col: '#ff9070' }; } S.seen = lit;
+    // (a light lit again: everyone hears it catch; one put out, everyone hears it smothered)
+    const lit = cp2LitN(); if (S.seen >= 0 && lit > S.seen) { try { sfxFlare(); } catch (e) {} ZM.banner = { text: 'They have lit a light again', t: 2.6, small: true, col: '#ff9070' }; } else if (S.seen >= 0 && lit < S.seen) { try { sfxPlay('lantern_douse', { vol: 0.7 }); } catch (e) {} } S.seen = lit;
     cphTick(dt, ZM.near, ZM.near && ZM.near.k === 'cp2fl' ? CPM2.DOUSE : 0, o => raidAsk('douse', o.i));
   },
   consider(c) { const S = RAID.st; if (S.ph !== 'lights') return; cp2Z().fl.forEach((f, i) => { if (S.lit[i]) c({ k: 'cp2fl', i }, FPSC.CX + f[0], FPSC.CY + f[1], 0, 2.7, false); }); },
@@ -382,9 +382,9 @@ cpStage('m02cove', {
   b3(grp) { cp2Build3D(grp, false); CP2_3D.holes = []; },
   f3(dt) {
     cp2Frame3D(dt);
-    // a holed boat sits down on the shingle, broken-backed
-    if (!CP2_3D.splint) CP2_3D.splint = {};
-    (RAID.st.holed || []).forEach((v, i) => { if (v && !CP2_3D.splint[i]) { CP2_3D.splint[i] = 1; const b = cp2Z().boats[i]; for (let k = 0; k < 10; k++) fpsPuff(FPSC.CX + b[0], FPSC.CY + b[1], FPSC.GROUND + 0.6, '110,90,60', 2); } });
+    // a holed boat sits down on the shingle, broken-backed, with the sea gurgling in (not for the ones holed before you came)
+    const fresh = !CP2_3D.splint; if (fresh) CP2_3D.splint = {};
+    (RAID.st.holed || []).forEach((v, i) => { if (v && !CP2_3D.splint[i]) { CP2_3D.splint[i] = 1; if (!fresh) try { sfxPlay('hull_hole', { vol: 0.8 }); } catch (e) {} const b = cp2Z().boats[i]; for (let k = 0; k < 10; k++) fpsPuff(FPSC.CX + b[0], FPSC.CY + b[1], FPSC.GROUND + 0.6, '110,90,60', 2); } });
   },
   exit() { cplReset(); CP2_3D.splint = null; },
   mend: false,

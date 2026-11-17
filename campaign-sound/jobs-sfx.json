@@ -1,0 +1,562 @@
+[
+ {
+  "name": "fireroar",
+  "prompt": "realistic foley recording, a big open fire catching and roaring up",
+  "seconds": 6,
+  "takes": 3,
+  "seed": 50000
+ },
+ {
+  "name": "firefeed",
+  "prompt": "realistic foley recording, an armful of dry driftwood thrown on a fire, crackle and spit",
+  "seconds": 4,
+  "takes": 3,
+  "seed": 50101
+ },
+ {
+  "name": "fogsmother",
+  "prompt": "realistic foley recording, a wet hiss and dull whump as fog rolls over a fire and smothers it",
+  "seconds": 4,
+  "takes": 3,
+  "seed": 50202
+ },
+ {
+  "name": "fogburn",
+  "prompt": "realistic foley recording, a brand sizzling through fog, a soft hiss and sparks",
+  "seconds": 4,
+  "takes": 3,
+  "seed": 50303
+ },
+ {
+  "name": "brandtake",
+  "prompt": "realistic foley recording, pulling a burning brand from a fire, a crackle and whoosh",
+  "seconds": 4,
+  "takes": 3,
+  "seed": 50404
+ },
+ {
+  "name": "coghorn",
+  "prompt": "realistic foley recording, a medieval ship's horn far off in fog",
+  "seconds": 6,
+  "takes": 3,
+  "seed": 50505
+ },
+ {
+  "name": "hull_hole",
+  "prompt": "realistic foley recording, an axe staving in a boat's planking, with a wet crunch and water gurgling in",
+  "seconds": 4,
+  "takes": 3,
+  "seed": 50606
+ },
+ {
+  "name": "gibbet_chain",
+  "prompt": "realistic foley recording, a cage swinging on its chain in the wind, creaking iron",
+  "seconds": 10,
+  "takes": 3,
+  "seed": 50707
+ },
+ {
+  "name": "lantern_douse",
+  "prompt": "realistic foley recording, a lantern's flame smothered with a cloth, a hiss and a puff",
+  "seconds": 4,
+  "takes": 3,
+  "seed": 50808
+ },
+ {
+  "name": "winchclank",
+  "prompt": "realistic foley recording, a crab winch's ratchet and pawl, clanking slowly as the handle goes round",
+  "seconds": 8,
+  "takes": 3,
+  "seed": 50909
+ },
+ {
+  "name": "wavesweep",
+  "prompt": "realistic foley recording, a green sea breaking over a jetty and sluicing off it",
+  "seconds": 4,
+  "takes": 3,
+  "seed": 51010
+ },
+ {
+  "name": "brazierlight",
+  "prompt": "realistic foley recording, a brazier catching: a whump of flame and crackle",
+  "seconds": 4,
+  "takes": 3,
+  "seed": 51111
+ },
+ {
+  "name": "brazierhuff",
+  "prompt": "realistic foley recording, a fire put out by a cold breath of fog: a hiss and a sigh",
+  "seconds": 4,
+  "takes": 3,
+  "seed": 51212
+ },
+ {
+  "name": "glassseat",
+  "prompt": "realistic foley recording, a heavy prism panel settling into a brass frame: a soft clunk and a ringing glass chime",
+  "seconds": 4,
+  "takes": 3,
+  "seed": 51313
+ },
+ {
+  "name": "lampcatch",
+  "prompt": "realistic foley recording, the colza lamp catching: a soft pop, then a rising roar of flame",
+  "seconds": 4,
+  "takes": 3,
+  "seed": 51414
+ },
+ {
+  "name": "beamswing",
+  "prompt": "realistic foley recording, the lens turned by hand on its rollers: a heavy, smooth grinding rumble with a creak when it stops",
+  "seconds": 7,
+  "takes": 3,
+  "seed": 51515
+ },
+ {
+  "name": "sleetglass",
+  "prompt": "realistic foley recording, sleet driving against the lantern glass, a hiss and patter",
+  "seconds": 10,
+  "takes": 3,
+  "seed": 51616
+ },
+ {
+  "name": "glasswipe",
+  "prompt": "realistic foley recording, a cloth wiping a wet, frosted pane: a squeak and smear",
+  "seconds": 4,
+  "takes": 3,
+  "seed": 51717
+ },
+ {
+  "name": "gallerybell",
+  "prompt": "realistic foley recording, a ship's-size bell rung hard on a gallery in a gale",
+  "seconds": 6,
+  "takes": 3,
+  "seed": 51818
+ },
+ {
+  "name": "lampout",
+  "prompt": "realistic foley recording, a colza lamp dying: a gutter, a sputter, then silence",
+  "seconds": 4,
+  "takes": 3,
+  "seed": 51919
+ },
+ {
+  "name": "clockwind",
+  "prompt": "realistic foley recording, the lens clockwork's weights wound up: a heavy ratchet, slow and loud on the iron",
+  "seconds": 6,
+  "takes": 3,
+  "seed": 52020
+ },
+ {
+  "name": "shipstrike",
+  "prompt": "realistic foley recording, a wooden brig striking rock in a storm: a deep crunch, splintering timber, a mast going",
+  "seconds": 6,
+  "takes": 3,
+  "seed": 52121
+ },
+ {
+  "name": "icefreeze",
+  "prompt": "realistic foley recording, a sea freezing over: a creeping crackle, a deep groan of ice settling",
+  "seconds": 7,
+  "takes": 3,
+  "seed": 52222
+ },
+ {
+  "name": "steam",
+  "prompt": "realistic foley recording, a short hiss of steam as surf runs over a hot rock",
+  "seconds": 4,
+  "takes": 3,
+  "seed": 52323
+ },
+ {
+  "name": "kwcapstan",
+  "prompt": "realistic foley recording, a wooden capstan's pawl clacking as it turns, with a wet rope groaning round the barrel",
+  "seconds": 7,
+  "takes": 3,
+  "seed": 52424
+ },
+ {
+  "name": "kwnet",
+  "prompt": "realistic foley recording, a heavy wet net coming over the rail: water pouring off, cork floats knocking",
+  "seconds": 4,
+  "takes": 3,
+  "seed": 52525
+ },
+ {
+  "name": "kwlamp",
+  "prompt": "realistic foley recording, a deck lantern's glass opened, a match struck, the wick catching",
+  "seconds": 4,
+  "takes": 3,
+  "seed": 52626
+ },
+ {
+  "name": "kwbell",
+  "prompt": "realistic foley recording, a small ship's bell struck in pairs, close and dry, for the bells in Part II",
+  "seconds": 4,
+  "takes": 3,
+  "seed": 52727
+ },
+ {
+  "name": "kwwave",
+  "prompt": "realistic foley recording, a green sea coming aboard a small boat: a heavy slap, then water sluicing across the deck",
+  "seconds": 4,
+  "takes": 3,
+  "seed": 52828
+ },
+ {
+  "name": "kwstrike",
+  "prompt": "realistic foley recording, a wooden hull grinding onto rock, timbers splitting",
+  "seconds": 4,
+  "takes": 3,
+  "seed": 52929
+ },
+ {
+  "name": "kwstove",
+  "prompt": "realistic foley recording, a cast-iron caboose stove's door opening, coals ticking, a hiss as a wet flare goes in",
+  "seconds": 4,
+  "takes": 3,
+  "seed": 53030
+ },
+ {
+  "name": "kwlash",
+  "prompt": "realistic foley recording, a knife sawing through tarred rope",
+  "seconds": 4,
+  "takes": 3,
+  "seed": 53131
+ },
+ {
+  "name": "gate_bar",
+  "prompt": "realistic foley recording, a heavy timber bar lifted out of its iron keeps and a great gate swinging back on dry hinges",
+  "seconds": 4,
+  "takes": 3,
+  "seed": 53232
+ },
+ {
+  "name": "chest_lift",
+  "prompt": "realistic foley recording, a heavy sea chest hoisted onto a shoulder, wood and brass creaking, coins shifting inside",
+  "seconds": 4,
+  "takes": 3,
+  "seed": 53333
+ },
+ {
+  "name": "longarm_lay",
+  "prompt": "realistic foley recording, a long gun's hammer drawn back, slow and deliberate",
+  "seconds": 4,
+  "takes": 3,
+  "seed": 53434
+ },
+ {
+  "name": "flare_rocket",
+  "prompt": "realistic foley recording, a signal rocket fired from a locker, a whoosh up and a fizzing burst",
+  "seconds": 4,
+  "takes": 3,
+  "seed": 53535
+ },
+ {
+  "name": "whisper",
+  "prompt": "realistic foley recording, maren's breath over the water",
+  "seconds": 4,
+  "takes": 3,
+  "seed": 53636
+ },
+ {
+  "name": "chock",
+  "prompt": "realistic foley recording, a wooden chock knocked out from under a keel with a maul, and the hull lurching on the slip",
+  "seconds": 4,
+  "takes": 3,
+  "seed": 53737
+ },
+ {
+  "name": "halyard",
+  "prompt": "realistic foley recording, a heavy rope parting under strain, and a sail's weight falling",
+  "seconds": 4,
+  "takes": 3,
+  "seed": 53838
+ },
+ {
+  "name": "sailfire",
+  "prompt": "realistic foley recording, canvas catching and roaring up in flame",
+  "seconds": 4,
+  "takes": 3,
+  "seed": 53939
+ },
+ {
+  "name": "caskthud",
+  "prompt": "realistic foley recording, a full oil cask set down on an iron floor, for each delivery",
+  "seconds": 4,
+  "takes": 3,
+  "seed": 54040
+ },
+ {
+  "name": "wickcough",
+  "prompt": "realistic foley recording, the lamp guttering, a sputter and cough of flame, looped faintly while the oil is under a quarter",
+  "seconds": 8,
+  "takes": 3,
+  "seed": 54141
+ },
+ {
+  "name": "ladderclimb",
+  "prompt": "realistic foley recording, wet hands and feet on iron rungs coming up out of the sea, for the drowned up the jetty ladders",
+  "seconds": 6,
+  "takes": 3,
+  "seed": 54242
+ },
+ {
+  "name": "glassscrape",
+  "prompt": "realistic foley recording, nails and fingers dragged on lantern glass, for the drowned pawing at the lamp",
+  "seconds": 4,
+  "takes": 3,
+  "seed": 54343
+ },
+ {
+  "name": "gallerybolt",
+  "prompt": "realistic foley recording, lightning very close, a white crack and a ring of iron from the gallery rail",
+  "seconds": 4,
+  "takes": 3,
+  "seed": 54444
+ },
+ {
+  "name": "c10vane",
+  "prompt": "realistic foley recording, a heavy brass sight turning on a stone post, a grinding click into each of eight notches",
+  "seconds": 4,
+  "takes": 3,
+  "seed": 54545
+ },
+ {
+  "name": "c10dig",
+  "prompt": "realistic foley recording, a spade biting into turf and stony earth, a few takes, and one striking wood",
+  "seconds": 4,
+  "takes": 3,
+  "seed": 54646
+ },
+ {
+  "name": "c10chestopen",
+  "prompt": "realistic foley recording, an old ironbound chest lid forced back on rusted hinges",
+  "seconds": 4,
+  "takes": 3,
+  "seed": 54747
+ },
+ {
+  "name": "c10weigh",
+  "prompt": "realistic foley recording, coins poured onto a brass scale pan, the beam settling",
+  "seconds": 4,
+  "takes": 3,
+  "seed": 54848
+ },
+ {
+  "name": "fkgaze",
+  "prompt": "realistic foley recording, a cold, glassy, rising whine as the Fog-Keeper's lamp-glass turns on you, then a sustained frosty hum while the beam sweeps",
+  "seconds": 6,
+  "takes": 3,
+  "seed": 54949
+ },
+ {
+  "name": "fkchill",
+  "prompt": "realistic foley recording, frost cracking, a sharp icy tinkle",
+  "seconds": 4,
+  "takes": 3,
+  "seed": 55050
+ },
+ {
+  "name": "fklantern",
+  "prompt": "realistic foley recording, a lantern whistling through the air, then shattering glass with a cold whoomph",
+  "seconds": 4,
+  "takes": 3,
+  "seed": 55151
+ },
+ {
+  "name": "fkfade",
+  "prompt": "realistic foley recording, a low exhale dissolving into hissing fog",
+  "seconds": 4,
+  "takes": 3,
+  "seed": 55252
+ },
+ {
+  "name": "tapergust",
+  "prompt": "realistic foley recording, a sudden gust tearing past stone, with a candle flame guttering out",
+  "seconds": 4,
+  "takes": 3,
+  "seed": 55353
+ },
+ {
+  "name": "taperlight",
+  "prompt": "realistic foley recording, a taper catching from a lantern, a tiny soft flare",
+  "seconds": 4,
+  "takes": 3,
+  "seed": 55454
+ },
+ {
+  "name": "candles",
+  "prompt": "realistic foley recording, seven altar candles catching one after another, soft pops, a faint reverberant hum in stone",
+  "seconds": 7,
+  "takes": 3,
+  "seed": 55555
+ },
+ {
+  "name": "quaylamp",
+  "prompt": "realistic foley recording, a lighting pole touching an old oil lamp, a clink and a soft whump as it catches",
+  "seconds": 4,
+  "takes": 3,
+  "seed": 55656
+ },
+ {
+  "name": "beaconcatch",
+  "prompt": "realistic foley recording, a flare striking an iron fire basket on a cliff top, then a big beacon fire roaring up, distant",
+  "seconds": 7,
+  "takes": 3,
+  "seed": 55757
+ },
+ {
+  "name": "c12surge",
+  "prompt": "realistic foley recording, the last of the sea rushing down a channel, a roar coming from upstream and passing, foam and shingle",
+  "seconds": 8,
+  "takes": 3,
+  "seed": 55858
+ },
+ {
+  "name": "c12bellwreck",
+  "prompt": "realistic foley recording, an old ship's bell, salt-crusted, rung hard: duller and more cracked than the Light's",
+  "seconds": 7,
+  "takes": 3,
+  "seed": 55959
+ },
+ {
+  "name": "c12grate",
+  "prompt": "realistic foley recording, a heavy iron grate grinding up in stone slots",
+  "seconds": 4,
+  "takes": 3,
+  "seed": 56060
+ },
+ {
+  "name": "c12lamp",
+  "prompt": "realistic foley recording, an oil lamp catching in an iron cage, a soft whump",
+  "seconds": 4,
+  "takes": 3,
+  "seed": 56161
+ },
+ {
+  "name": "c12tide",
+  "prompt": "realistic foley recording, a broad wash of sea coming in over flat sand, rising and falling",
+  "seconds": 10,
+  "takes": 3,
+  "seed": 56262
+ },
+ {
+  "name": "bellpeal",
+  "prompt": "realistic foley recording, wrackhaven's old Belfry bell: one heavy bronze stroke with a long hum",
+  "seconds": 8,
+  "takes": 3,
+  "seed": 56363
+ },
+ {
+  "name": "wade",
+  "prompt": "realistic foley recording, wading footsteps, knee- to chest-deep, sloshing",
+  "seconds": 8,
+  "takes": 3,
+  "seed": 56464
+ },
+ {
+  "name": "floodrush",
+  "prompt": "realistic foley recording, water pouring through a doorway and down a street, rising",
+  "seconds": 8,
+  "takes": 3,
+  "seed": 56565
+ },
+ {
+  "name": "doorstove",
+  "prompt": "realistic foley recording, a great oak door smashed in by something huge, splintering, with water flooding through after it",
+  "seconds": 4,
+  "takes": 3,
+  "seed": 56666
+ },
+ {
+  "name": "ropecreak",
+  "prompt": "realistic foley recording, the bell rope's creak and the frame's groan while it is pulled",
+  "seconds": 6,
+  "takes": 3,
+  "seed": 56767
+ },
+ {
+  "name": "oars",
+  "prompt": "realistic foley recording, oars in rowlocks and pulling through still water, for the outro's boats",
+  "seconds": 8,
+  "takes": 3,
+  "seed": 56868
+ },
+ {
+  "name": "rchmusket",
+  "prompt": "realistic foley recording, a flintlock musket at range: the pan's flash fizz, a short pause, then the shot, so players learn to hear the telegraph",
+  "seconds": 4,
+  "takes": 3,
+  "seed": 56969
+ },
+ {
+  "name": "rchbeacon",
+  "prompt": "realistic foley recording, a beacon of dry faggots catching: a whoomp and a rising roar of flame, crackling",
+  "seconds": 7,
+  "takes": 3,
+  "seed": 57070
+ },
+ {
+  "name": "rchfeed",
+  "prompt": "realistic foley recording, an armful of wood thrown onto a big fire, sparks spitting",
+  "seconds": 4,
+  "takes": 3,
+  "seed": 57171
+ },
+ {
+  "name": "rchbell",
+  "prompt": "realistic foley recording, an old buoy bell on a sandbank swung hard, cracked and ringing long over water",
+  "seconds": 7,
+  "takes": 3,
+  "seed": 57272
+ },
+ {
+  "name": "rchflood",
+  "prompt": "realistic foley recording, the flood tide running fast over sand: hiss and gurgle, rising",
+  "seconds": 10,
+  "takes": 3,
+  "seed": 57373
+ },
+ {
+  "name": "rchpot",
+  "prompt": "realistic foley recording, a clay fire-pot smashing and the oil going up in flame",
+  "seconds": 4,
+  "takes": 3,
+  "seed": 57474
+ },
+ {
+  "name": "rchcask",
+  "prompt": "realistic foley recording, a heavy oil cask set down on stone, sloshing",
+  "seconds": 4,
+  "takes": 3,
+  "seed": 57575
+ },
+ {
+  "name": "rchpump",
+  "prompt": "realistic foley recording, a brass hand pump on a lighthouse lamp, oil squelching through",
+  "seconds": 4,
+  "takes": 3,
+  "seed": 57676
+ },
+ {
+  "name": "rchwind",
+  "prompt": "realistic foley recording, a lighthouse clockwork being wound with a crank: heavy ratchet clicks, a weight rising",
+  "seconds": 6,
+  "takes": 3,
+  "seed": 57777
+ },
+ {
+  "name": "rchship",
+  "prompt": "realistic foley recording, a burning ship close by: roaring fire, timbers cracking, sails going up",
+  "seconds": 10,
+  "takes": 3,
+  "seed": 57878
+ },
+ {
+  "name": "rchoar",
+  "prompt": "realistic foley recording, oars in rowlocks, slow, a small skiff on calm water at night, for the very end",
+  "seconds": 8,
+  "takes": 3,
+  "seed": 57979
+ }
+]

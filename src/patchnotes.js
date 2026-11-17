@@ -6,6 +6,13 @@
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 219, date: '2026-11-17', title: "The Chronicle of the Light, voiced", Sound: [
+    "The Chronicle of the Light: every line in all fourteen missions is now spoken aloud, 615 in all, with each character keeping the same voice from mission to mission. Distant shouts carry across the water, and the drowned sound like the drowned.",
+    "The Chronicle of the Light: new music for the campaign: themes for tense nights, sailing, fighting, bosses, sorrow and fog, a hopeful closing theme and a victory theme, plus a flamenco cove fight in The Mooncussers, the first lighting of the Light, and a last hymn for The Drowned Reach. Elsewhere the missions draw on the other games' music.",
+    "The Chronicle of the Light: real recordings for the campaign's sound effects: fires catching and fed, fog smothering flame, winches, capstans and clockwork, sleet on the lantern glass, ships striking rock, muskets, oars, the flood in Wrackhaven's streets and more.",
+  ], Changes: [
+    "The Chronicle of the Light: a mission's music, sounds and voices load when you start it, so the game stays light on memory. Subtitles now stay up for as long as a line is spoken.",
+  ] },
   { v: 218, date: '2026-11-16', title: "The Chronicle of the Light", New: [
     "The Chronicle of the Light: a tenth game, a story campaign for one to four. Fourteen missions play the Skerries' timeline from the lore compendium, from the first fire on Lantern Rock to the war on the Drowned Reach, in five acts.",
     "The Chronicle of the Light: every mission has its own ground, goals and fights, often in parts of known places you haven't walked before: carry the lens up the new tower, sail behind Plimsoll, hold the keeper's station through the winter, get the townsfolk out of drowning Wrackhaven, and more, each with a fight to finish it.",

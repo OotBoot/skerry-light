@@ -449,12 +449,13 @@ function c11rPose(z, M, dt) {
 function c11rSound(k, d) {
   const v = clamp(1 - (d || 0) / 60, 0.15, 1), play = (n, vol) => { try { return typeof sfxPlay === 'function' && sfxPlay(n, { vol: vol * v, vary: 0.05 }); } catch (e) { return false; } };
   const syn = f => { try { if (!soundOff() && AUD.ctx) f(); } catch (e) {} };
-  if (k === 'look') { syn(() => { tone(1320, 'sine', 0.3, 0.025 * v, 0.9, { to: 1180 }); tone(1980, 'sine', 0.3, 0.012 * v, 0.9); }); return; }
-  if (k === 'gaze') { syn(() => { noise('highpass', 3000, 1, 0.05, 0.05 * v, 2); tone(990, 'sine', 0.05, 0.03 * v, 2, { to: 880 }); tone(1480, 'triangle', 0.05, 0.012 * v, 2); }); return; }
-  if (k === 'chill') { syn(() => { noise('highpass', 4000, 1, 0.01, 0.08, 0.6); tone(2600, 'sine', 0.005, 0.03, 0.5, { to: 1800 }); }); return; }
-  if (k === 'throw') { play('swish', 0.8); syn(() => noise('bandpass', 900, 1, 0.3, 0.05 * v, 0.6)); return; }
-  if (k === 'smash') { play('glass', 0.8); syn(() => { noise('highpass', 2600, 1, 0.005, 0.12 * v, 0.5); tone(1760, 'sine', 0.005, 0.03 * v, 0.6, { to: 900 }); }); return; }
-  if (k === 'fade') { play('foghorn', 0.4); syn(() => noise('lowpass', 500, 1, 0.3, 0.08 * v, 1.4)); return; }
+  // (his own recordings where there are: the gaze's whine carries its hum, the lantern's whistle its smash)
+  if (k === 'look') { if (play('fkgaze', 0.8)) return; syn(() => { tone(1320, 'sine', 0.3, 0.025 * v, 0.9, { to: 1180 }); tone(1980, 'sine', 0.3, 0.012 * v, 0.9); }); return; }
+  if (k === 'gaze') { if (sfxHas('fkgaze')) return; syn(() => { noise('highpass', 3000, 1, 0.05, 0.05 * v, 2); tone(990, 'sine', 0.05, 0.03 * v, 2, { to: 880 }); tone(1480, 'triangle', 0.05, 0.012 * v, 2); }); return; }
+  if (k === 'chill') { if (play('fkchill', 0.8)) return; syn(() => { noise('highpass', 4000, 1, 0.01, 0.08, 0.6); tone(2600, 'sine', 0.005, 0.03, 0.5, { to: 1800 }); }); return; }
+  if (k === 'throw') { if (play('fklantern', 0.85)) return; play('swish', 0.8); syn(() => noise('bandpass', 900, 1, 0.3, 0.05 * v, 0.6)); return; }
+  if (k === 'smash') { if (sfxHas('fklantern')) return; play('glass', 0.8); syn(() => { noise('highpass', 2600, 1, 0.005, 0.12 * v, 0.5); tone(1760, 'sine', 0.005, 0.03 * v, 0.6, { to: 900 }); }); return; }
+  if (k === 'fade') { if (play('fkfade', 0.8)) return; play('foghorn', 0.4); syn(() => noise('lowpass', 500, 1, 0.3, 0.08 * v, 1.4)); return; }
 }
 
 // ---------- on top ----------

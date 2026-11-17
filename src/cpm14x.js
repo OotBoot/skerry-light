@@ -109,7 +109,7 @@ cpStage('rchland', rchStage({
   rchUse(o) {
     if (o.k === 'rchlight') return true;
     if (o.k === 'rchtake') { if (!rchMine()) raidAsk('take'); return true; }
-    if (o.k === 'rchfeed') { raidAsk('feed'); try { if (!soundOff()) sfxPlay('flare', { vol: 0.4, rate: 0.7 }); } catch (e) {} return true; }
+    if (o.k === 'rchfeed') { raidAsk('feed'); try { if (!soundOff() && !sfxPlay('rchfeed', { vol: 0.8, gap: 1 })) sfxPlay('flare', { vol: 0.4, rate: 0.7 }); } catch (e) {} return true; }
     if (o.k === 'rchpick') { if (!rchMine()) raidAsk('pick', [o.i]); return true; }
     return false;
   },
@@ -234,8 +234,10 @@ cpStage('rchshoal', rchStage({
       if (RCH.flT <= 0) { RCH.flT = 1.3; if (!zmIsDown()) fpsHurt(1, '', 'The flood'); try { if (!soundOff()) sfxSplash(0, 0.5); } catch (e) {} }
       if (sv < S.fl - 7) { const [px, py] = P.at(S.fl + 4), [wx, wy] = rchW(px, py); m.x = wx; m.y = wy; fpsFeed('The flood threw you up the road.'); }
     }
-    // (the bell, heard)
-    if (S.bellSeen !== S.bellN && S.bellN) { S.bellSeen = S.bellN; const [bx, by] = rchW(...RCHS.BELL); for (let i = 0; i < 3; i++) setTimeout(() => { try { if (!soundOff()) sfxBellFar(fpsEar(bx, by), 0.9 - i * 0.2); } catch (e) {} }, i * 700); }
+    // (the flood coming up the road behind you, heard the nearer it is: laid again about every take's length)
+    if (S.fl > -25 && !cpCineOn() && sv - S.fl < 30) try { if (!soundOff()) sfxPlay('rchflood', { vol: clamp(0.85 - (sv - S.fl) / 36, 0.12, 0.85), gap: 3.5 }); } catch (e) {}
+    // (the bell, heard: the buoy's own, recorded; else three far strokes of the synth's)
+    if (S.bellSeen !== S.bellN && S.bellN) { S.bellSeen = S.bellN; const [bx, by] = rchW(...RCHS.BELL); let rec = false; try { rec = sfxPlay('rchbell', { vol: clamp(1 - Math.hypot(bx - m.x, by - m.y) / 120, 0.3, 0.95), pan: fpsEar(bx, by), vary: 0.05 }); } catch (e) {} if (!rec) for (let i = 0; i < 3; i++) setTimeout(() => { try { if (!soundOff()) sfxBellFar(fpsEar(bx, by), 0.9 - i * 0.2); } catch (e) {} }, i * 700); }
     // (Plimsoll's shoes squeaking as he walks)
     if (S.pl && S.pl.w) { RCH.sq = (RCH.sq || 0) + (FPS.dtLast || 0.016) * 3; if (RCH.sq > 1) { RCH.sq = 0; const d = Math.hypot(S.pl.x - m.x, S.pl.y - m.y); if (d < 40) try { if (!soundOff() && typeof sfxSqueak === 'function') sfxSqueak(fpsEar(S.pl.x, S.pl.y), clamp(0.5 - d / 80, 0.05, 0.5)); } catch (e) {} } }
   },

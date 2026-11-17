@@ -178,7 +178,7 @@ cpOn('m8take', a => { try { if (!soundOff()) sfxPlay('pickup', { vol: 0.5 }); } 
 cpOn('m8stow', a => { try { if (!soundOff()) sfxPlay('chest', { vol: 0.5 }); } catch (e) {} const L = CPM8R.LOADS[Array.isArray(a) ? a[0] | 0 : 0], n = Array.isArray(a) ? a[2] | 0 : 0; ZM.banner = { text: `${n} of 3 aboard`, t: 2.6, small: true, col: L ? L.c : '#ffd88a', sub: L ? L.n + ', stowed' : '' }; });
 cpOn('m8drop', i => { const L = CPM8R.LOADS[i | 0]; if (L) fpsFeed(`${L.n[0].toUpperCase() + L.n.slice(1)} falls where its bearer went down. Someone take it up.`); });
 cpOn('m8chocks', () => { ZM.banner = { text: 'Knock out the chocks', t: 4, sub: 'one each side of her keel · then she runs', col: '#ffd8a0' }; if (typeof raidRespawn === 'function') raidRespawn(); });
-cpOn('m8chock', () => { try { if (!soundOff()) { tone(140, 'square', 0.002, 0.12, 0.2, { to: 70 }); noise('bandpass', 700, 2, 0.002, 0.2, 0.3); } } catch (e) {} CPM8R3.shake = 0.5; });
+cpOn('m8chock', i => { try { const [x, y] = cpkW(...CPM8R.CHOCKS[clamp(i | 0, 0, 1)]); if (!soundOff() && !sfxPlay('chock', { vol: 0.9, pan: fpsEar(x, y), out: true })) { tone(140, 'square', 0.002, 0.12, 0.2, { to: 70 }); noise('bandpass', 700, 2, 0.002, 0.2, 0.3); } } catch (e) {} CPM8R3.shake = 0.5; });
 
 // ---------- everyone ----------
 function cpm8rMe(dt) {

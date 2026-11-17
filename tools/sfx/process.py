@@ -39,6 +39,14 @@ LOOPS = {'sea', 'wind', 'rain', 'stormwind', 'bossdiver', 'bossmoon', 'bosscrab'
 SKIP = {'bell', 'bellfar'}
 # (keep the start: for these the swell is the point, not an attack)
 NOTRIM = LOOPS | {'roundstart', 'roundend', 'gameover', 'foghorn', 'frhorn', 'thunder', 'stormbolt', 'forge', 'mooncusser', 'diver', 'creak'}
+# the Chronicle of the Light's sound effects (campaign-sound/jobs-sfx.json, from tools/sfx/cpjobs.py): kept as long as
+# they were made, at a lower rate (they're many, and fetched a mission at a time)
+CPSFX = set()
+try:
+    for j in json.load(open(os.path.join(ROOT, 'campaign-sound', 'jobs-sfx.json'), encoding='utf-8')):
+        CPSFX.add(j['name']); LEN.setdefault(j['name'], float(j['seconds'])); PEAK.setdefault(j['name'], -3)
+except FileNotFoundError:
+    pass
 
 
 # sounds that must stay low (the boards: a deep thud like a knock on a door, nothing high): filtered as they're read
@@ -107,7 +115,7 @@ def main(src):
     os.makedirs(OUT, exist_ok=True)
     takes = {}
     for f in sorted(os.listdir(src)):
-        m = re.match(r'^([a-z]+)_(\d+)_\d+_?\.flac$', f)
+        m = re.match(r'^([a-z0-9_]+?)_(\d+)_\d+_?\.flac$', f)
         if not m:
             continue
         name, k = m.group(1), int(m.group(2))
@@ -118,7 +126,7 @@ def main(src):
         if x is None:
             continue
         out = f'{name}_{k}.mp3'
-        write(os.path.join(OUT, out), x, '112k' if name.startswith('boss') else '64k')
+        write(os.path.join(OUT, out), x, '112k' if name.startswith('boss') else '48k' if name in CPSFX else '64k')
         takes.setdefault(name, []).append('assets/sfx/' + out)
     # every file in assets/sfx (earlier runs included), by name
     allf = {}

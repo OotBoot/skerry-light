@@ -67,6 +67,8 @@ function c13Depth(x, y, feet) {
 }
 // what wading does to you (the stage's speedK)
 function c13Wade() { const m = FPS.me, d = c13Depth(m.x, m.y, m.jz || 0); return d > 1.3 ? 0.55 : d > 0.85 ? 0.72 : d > 0.4 ? 0.88 : 1; }
+// (each screen, a stage's me) your own wading heard while you move in it, deeper the louder (the recording laid again about every take's length)
+function c13WadeSfx() { const m = FPS.me; if (!m.walk || m.dead > 0 || zmIsDown() || typeof cpCineOn === 'function' && cpCineOn()) return; const d = c13Depth(m.x, m.y, m.jz || 0); if (d > 0.3) try { sfxPlay('wade', { vol: Math.min(0.85, 0.35 + d * 0.35), gap: 1.5, rate: d > 1.1 ? 0.92 : 1 }); } catch (e) {} }
 // the sheet of water over the town: a grid whose height the shader sets (the front and the depth as uniforms)
 var C13W = { m: null, u: null };
 function c13Water(grp) {
@@ -156,7 +158,7 @@ cpStage('m13flood', {
   enter() {
     c13Ready(4);
     const S = RAID.st;
-    Object.assign(S, { ph: 'go', t: 0, sp: 6, wsp: 9, lost: 0, safe: 0, said: {}, npc: [] });
+    Object.assign(S, { ph: 'go', t: 0, sp: 6, wsp: 9, lost: 0, safe: 0, said: {}, npc: [], rushHd: 0 });
     C13F.front = C13A.FRONT[0]; C13F.max = C13A.MAX[0];
     if (ZM.net !== 'client') {
       C13.saved = null;
@@ -166,7 +168,11 @@ cpStage('m13flood', {
     }
   },
   tick(dt) { c13aTick(dt); },
-  me(dt) { c9AmmoTick(dt); if (ZM.net === 'client') c9NpcEase(RAID.st.npc || [], dt); },
+  me(dt) {
+    c9AmmoTick(dt); if (ZM.net === 'client') c9NpcEase(RAID.st.npc || [], dt); c13WadeSfx();
+    // (every screen, off the host's front) the sea pouring into the Square
+    const S = RAID.st; if (S.ph === 'go' && C13F.front > -16 && !S.rushHd) { S.rushHd = 1; try { sfxPlay('floodrush', { vol: 0.8 }); } catch (e) {} }
+  },
   speedK() { return c13Wade(); },
   players(P) { return c9NpcTargets(P, RAID.st.npc || []); },
   q(sid, k, a) { if (k === 'c13take') c13Take(sid, a | 0); },
@@ -276,7 +282,7 @@ cpStage('m13hall', {
     }
   },
   tick(dt) { c13bTick(dt); },
-  me(dt) { c9AmmoTick(dt); if (ZM.net === 'client') c9NpcEase(RAID.st.npc || [], dt); },
+  me(dt) { c9AmmoTick(dt); if (ZM.net === 'client') c9NpcEase(RAID.st.npc || [], dt); c13WadeSfx(); },
   speedK() { return c13Wade(); },
   players(P) { return c9NpcTargets(P, RAID.st.npc || []); },
   pack(o) { const S = RAID.st; o.a = [C13B_PH.indexOf(S.ph), Math.round(S.T * 10) / 10, Math.round(C13F.max * 1000) / 1000, c13Door('square', 'moot') && c13Door('square', 'moot').open ? 1 : 0]; o.np = c9NpcPack(S.npc); },
@@ -391,6 +397,9 @@ cpStage('m13belfry', {
     if (S.ph === 'bell' && hold && ZM.near && ZM.near.k === 'c13bell' && !zmIsDown()) { S.myPull = (S.myPull || 0) - dt; if (S.myPull <= 0) { S.myPull = 0.2; raidAsk('c13pull', 1); } }
     // (the bell, as it swings: a peal each time it's pulled through)
     if ((S.peal | 0) > (S.pealSeen | 0)) { S.pealSeen = S.peal; c13Bell(); }
+    // (every screen, off the host's word) the rope's creak and the frame's groan while it's being pulled
+    if (S.ph === 'bell' && !(S.swing > 0) && (S.pull || 0) > (S.pullWas || 0) + 0.001) try { sfxPlay('ropecreak', { vol: 0.7, gap: 1.4 }); } catch (e) {}
+    S.pullWas = S.pull || 0; c13WadeSfx();
   },
   speedK() { return c13Wade(); },
   players(P) { return c9NpcTargets(P, RAID.st.npc || []); },
@@ -426,7 +435,7 @@ cpStage('m13belfry', {
 // a peal of the bell (every screen): a great bronze stroke, its hum, and the overtones dying away
 function c13Bell() {
   try {
-    if (soundOff()) return;
+    if (soundOff() || sfxPlay('bellpeal', { vol: 1, vary: 0.03 })) return;
     for (const [f, v, d] of [[110, 0.22, 4.5], [220, 0.16, 3.8], [264, 0.1, 3.2], [330, 0.08, 2.6], [440, 0.05, 2.0], [587, 0.03, 1.6]]) tone(f, 'sine', 0.004, v, d);
     noise('bandpass', 1400, 3, 0.002, 0.18, 0.12);
   } catch (e) {}

@@ -153,7 +153,7 @@ cpCineDef('m08_maren', {
       lines: [[0.5, 'maren', 'I came to warn you. I came too late, and I have come every year since.', 'cp_m08_36']] },
     { d: 5, cam: [2, 8, 2.0], to: [1.4, 6, 2.6], look: [-5.5, 3.5, 8], lookTo: [-5.5, 3.5, 4],
       f(t, k, C) { GCW.sail = Math.max(0, 1 - t / 3.8); },
-      sfx: [[0.6, 'tear', 0.7]], lines: [[0.4, 'crane', 'Who carries that lantern? Who is that, on my water?', 'cp_m08_37']] },
+      get sfx() { return [[0.6, sfxHas('sailfire') ? 'sailfire' : 'tear', 0.7]]; }, lines: [[0.4, 'crane', 'Who carries that lantern? Who is that, on my water?', 'cp_m08_37']] },
   ],
 });
 // he falls: the Gannet goes down under them all, and the keeper's page

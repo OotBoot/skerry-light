@@ -83,6 +83,7 @@ var CP_CAST = {
 function cpCast(k, def) { CP_CAST[k] = Object.assign({ n: k, c: '#ece4cf' }, def); return CP_CAST[k]; }
 // music that isn't made yet plays one that is (src/raidmusic.js): the campaign's keys, and what each falls back to
 const CP_MUSIC_FALL = { cpmenu: 'gwwin', cpwin: 'gwwin', cplose: null, cptense: 'gwhold', cpsail: 'gwsail', cpfight: 'frisle', cpboss: 'frboss', cpsad: 'raidpier', cpfog: 'frsail', cpcave: 'raidcave', cphope: 'gwwin' };
+Object.assign(RM_LOOP, { cphope: false });   // (the hopeful closing theme: played once through, as the outros end)
 
 const CPC = { LIVES: 1, BACK: 10, KEEP: 'skerry-campaign', PICK: 'skerry-cp-pick', SAY: 5.5 };
 var CP = { on: false, mid: null, want: null, from: 0, debug: null, obj: '', ev: [], eseq: 0, evSeen: -1, sub: null, subs: [], won: false, lost: '', fail: '', outroDone: false, nextOk: -1, life: 0, backT: 0, kit: null, startT: 0 };
@@ -145,14 +146,14 @@ function cpComplete(id, secs) {
 
 // ---------- starting, and stopping (src/raid.js) ----------
 // (src/zmnet.js znBegin) the mission the host picked, and where in it to start
-function cpFrom(st) { if (st && ZM_MAPS[st.map] && ZM_MAPS[st.map].cp && CP_BY[st.cm]) { CP.want = st.cm; CP.from = clamp(st.cf | 0, 0, CP_BY[st.cm].stages.length - 1); } }
+function cpFrom(st) { if (st && ZM_MAPS[st.map] && ZM_MAPS[st.map].cp && CP_BY[st.cm]) { CP.want = st.cm; CP.from = clamp(st.cf | 0, 0, CP_BY[st.cm].stages.length - 1); cpAudioWant(st.cm); } }
 // (raidBegin, with RAID.map set) is this the campaign? Its mission's stages into the raid's order
 function cpBegin() {
   CP.on = RAID.map === 'campaign';
   if (!CP.on) return;
   const M = CP_BY[CP.want] || CP_BY[CP.pick] || CP_MISSIONS[0];
   Object.assign(CP, { mid: M.id, wp: null, obj: '', ev: [], eseq: 0, evSeen: -1, sub: null, subs: [], won: false, lost: '', fail: '', outroDone: false, nextOk: -1, life: 0, backT: 0, kit: null, startT: 0 });
-  CP.want = M.id;
+  CP.want = M.id; cpAudioWant(M.id);
   RAID_ORDER.length = 0; RAID_ORDER.push(...RAIDS.campaign.order);
   if (typeof cpcReset === 'function') cpcReset();
   try { if (M.begin) M.begin(); } catch (e) { console.warn('cp begin', e); }
@@ -227,11 +228,27 @@ function cpEventHere(k, a) {
 function cpSub(who, text, vo) {
   text = String(text || '').slice(0, 300); if (!text) return;
   const C = CP_CAST[who] || { n: who, c: '#ece4cf' };
-  const d = clamp(1.6 + text.length * 0.055, 2.4, 8);
+  const V = vo && typeof CP_VO !== 'undefined' && CP_VO[vo];   // (shown at least as long as it's said)
+  const d = Math.max(clamp(1.6 + text.length * 0.055, 2.4, 8), V ? V[2] + 0.4 : 0);
   CP.subs.push({ who: C.n, c: C.c, narr: !!C.narr, text, vo: vo || '', d, t: 0 });
   if (CP.subs.length > 4) CP.subs.shift();
 }
-function cpVoice(vo) { if (!vo || typeof sfxPlay !== 'function') return false; try { return sfxPlay('vo_' + vo, { vol: 0.95, vary: 0 }); } catch (e) { return false; } }
+// a line said aloud: its stretch of the mission's voice recording (src/cpaudio.js CP_VO: [mission, start, length]; the
+// lines one after another in assets/sfx/cpvo_<mission>_1.mp3, made by tools/sfx/cpvoice.py), else a recording of its own
+function cpVoice(vo) {
+  if (!vo || typeof sfxPlay !== 'function') return false;
+  try {
+    const V = typeof CP_VO !== 'undefined' && CP_VO[vo], L = V && SFXB.buf['cpvo_' + V[0]], c = AUD.ctx;
+    if (!V || !L || !L.length || !c) return sfxPlay('vo_' + vo, { vol: 0.95, vary: 0 });
+    if (soundOff()) return true;
+    const s = c.createBufferSource(); s.buffer = L[0];
+    const g = c.createGain(); g.gain.value = 0.95;
+    s.connect(g).connect(AUD.master); s.start(c.currentTime, V[1], V[2]);
+    return true;
+  } catch (e) { return false; }
+}
+// (as a mission is picked or begun) its recordings fetched, and the last one's let go (src/sfxbank.js sfxbWant)
+function cpAudioWant(mid) { if (mid && typeof CP_AUDIO !== 'undefined' && typeof sfxbWant === 'function') sfxbWant([...(CP_AUDIO.all || []), ...(CP_AUDIO[mid] || [])]); }
 // (each frame, everyone) the subtitles' clock
 function cpSubTick(dt) {
   const s = CP.subs[0]; if (!s) return;

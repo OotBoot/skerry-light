@@ -25,6 +25,12 @@ TARGET = 40.0           # the loop, about this long (s)
 TARGETS = {'raidsong': 16.0}
 ONCE = {'raidfall'}
 WHOLE = {'raidwin', 'gwwin', 'frwin'}   # played once, kept whole (only faded in and out)
+# the Chronicle of the Light's (cp*: campaign-sound/jobs-music.json, from tools/sfx/cpjobs.py): those played once kept whole
+try:
+    import json
+    WHOLE |= {j['name'] for j in json.load(open(os.path.join(ROOT, 'campaign-sound', 'jobs-music.json'), encoding='utf-8')) if j.get('once')}
+except FileNotFoundError:
+    pass
 TAIL = 2.5              # (its tail after the climax, s)
 RAMP = 14.0             # (its swell, dB)
 PITCH = {'raidfall': 2 ** (-3 / 12)}   # taken down (and slowed) this much: three semitones
@@ -126,7 +132,7 @@ def main(src, every=None):
     os.makedirs(OUT, exist_ok=True)
     takes = {}
     for f in sorted(os.listdir(src)):
-        m = re.match(r'^((?:boss|raid|gw|fr)(?!horn)[a-z0-9]+)_(\d+)_\d+_?\.(?:flac|wav|mp3|ogg)$', f)
+        m = re.match(r'^((?:boss|raid|gw|cp|fr)(?!horn)[a-z0-9]+)_(\d+)_\d+_?\.(?:flac|wav|mp3|ogg)$', f)
         if m: takes.setdefault(m.group(1), []).append(os.path.join(src, f))
     for name, files in sorted(takes.items()):
         res = []
@@ -135,7 +141,7 @@ def main(src, every=None):
             body, info = whole(x) if name in WHOLE else once(x) if name in ONCE else best_loop(name, x)
             print(f'{os.path.basename(f)}: ' + ', '.join(f'{k} {v:.2f}' for k, v in info.items()))
             res.append((info['score'], body, f))
-        rate = '96k' if name.startswith(('raid', 'gw', 'fr')) else '112k'
+        rate = '80k' if name.startswith('cp') else '96k' if name.startswith(('raid', 'gw', 'fr')) else '112k'
         if every:
             os.makedirs(every, exist_ok=True)
             for _, b, f in res: mp3(b, os.path.join(every, f'{name}_{re.match(r"^[a-z0-9]+_(\d+)", os.path.basename(f)).group(1)}.mp3'), rate)

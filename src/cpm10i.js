@@ -132,6 +132,8 @@ FPI_K.c10gibbet = {
 
 // ---------- shared on both islands: what's carried ----------
 const c10iW = a => [FPSC.CX + a[0], FPSC.CY + a[1]];
+// a recording at world (x, y), quieter with distance and from its side, as src/zombies.js zmSound does (false: none)
+function c10Snd(name, x, y, vol, o) { const m = FPS.me, d = Math.hypot(x - m.x, y - m.y); return sfxPlay(name, Object.assign({ vol: vol * Math.max(0.05, 1 - d / 40), pan: fpsDir(fpsEar(x, y)) }, o || {})); }
 const c10iZ = () => FPS.g && FPS.g.isle && FPS.g.isle.zm && FPS.g.isle.zm.c10 || null;
 const c10iGround = (x, y) => FPSC.GROUND + (typeof fpsIsleH === 'function' && FPS.g ? fpsIsleH(FPS.g.isle, x, y) : 0);
 const c10iAble = () => { const m = FPS.me; return !(m.dead > 0) && !zmIsDown() && !ZM.over; };
@@ -263,10 +265,14 @@ cpStage('m10crow', {
   me(dt) {
     const S = RAID.st, C = c10iZ(), m = FPS.me; if (!C) return;
     c10LootMe(dt);
+    // a sight turned by someone else, heard from where it stands (yours you hear at the Use; none for the first moments, while the host's word comes in)
+    S.vT = (S.vT || 0) + dt;
+    if (S.vT > 2 && S.vSeen && S.vane) S.vane.forEach((v, i) => { if (v !== S.vSeen[i]) { const [x, y] = c10iW(C[C10_MARKS[i].k]); c10Snd('c10vane', x, y, 0.8); } });
+    S.vSeen = (S.vane || []).slice();
     // digging: hold Use at the spot
     const o = ZM.near, hold = c10Hold() && o && o.k === 'c10dig' && c10iAble() && (S.c10ph | 0) === 1;
     S.myDig = hold ? 1 : 0;
-    if (hold) { if (ZM.net === 'client') { S.digAsk = (S.digAsk || 0) - dt; if (S.digAsk <= 0) { S.digAsk = 0.25; raidAsk('c10dig'); } } else S.dgr[m.id] = RAID.t; S.digSnd = (S.digSnd || 0) - dt; if (S.digSnd <= 0) { S.digSnd = 0.55; try { if (!soundOff()) noise('lowpass', 700, 1, 0.005, 0.22, 0.25, { to: 200 }); } catch (e) {} } }
+    if (hold) { if (ZM.net === 'client') { S.digAsk = (S.digAsk || 0) - dt; if (S.digAsk <= 0) { S.digAsk = 0.25; raidAsk('c10dig'); } } else S.dgr[m.id] = RAID.t; S.digSnd = (S.digSnd || 0) - dt; if (S.digSnd <= 0) { S.digSnd = sfxHas('c10dig') ? 1.1 : 0.55; try { if (!sfxPlay('c10dig', { vol: 0.75 }) && !soundOff()) noise('lowpass', 700, 1, 0.005, 0.22, 0.25, { to: 200 }); } catch (e) {} } }
   },
   q(sid, k, a) {
     const S = RAID.st, C = c10iZ(); if (!C) return;
@@ -297,7 +303,7 @@ cpStage('m10crow', {
   },
   use(o) {
     const S = RAID.st;
-    if (o.k === 'c10vane') { raidAsk('c10turn', o.i); if (ZM.net === 'client') { S.vane[o.i] = ((S.vane[o.i] | 0) + 1) % 8; S.turnP = 0.6; setTimeout(() => { S.turnP = 0; }, 600); } try { if (!soundOff()) { tone(520, 'triangle', 0.005, 0.06, 0.08, { to: 640 }); noise('bandpass', 2400, 3, 0.002, 0.05, 0.06); } } catch (e) {} return true; }
+    if (o.k === 'c10vane') { raidAsk('c10turn', o.i); if (ZM.net === 'client') { S.vane[o.i] = ((S.vane[o.i] | 0) + 1) % 8; S.turnP = 0.6; setTimeout(() => { S.turnP = 0; }, 600); } S.vSeen = (S.vane || []).slice(); try { if (!sfxPlay('c10vane', { vol: 0.8 }) && !soundOff()) { tone(520, 'triangle', 0.005, 0.06, 0.08, { to: 640 }); noise('bandpass', 2400, 3, 0.002, 0.05, 0.06); } } catch (e) {} return true; }
     if (o.k === 'c10dig') return true;
     if (o.k === 'c10stow') { raidAsk('c10stow'); return true; }
     return c10LootUse(o);
@@ -377,7 +383,9 @@ cpCineDef('m10_agree', { music: 'cpm10cine', shots: [
 // the chest, opened before you, and what keeps it
 cpCineDef('m10_open', { music: 'cpboss', shots: [
   c10Live(4.5, (t, k) => { const X = c10Marks().x; return { cam: c10Mix([X[0] + 2.6, X[1] - 2.6, 2.6], [X[0] + 1.6, X[1] - 1.6, 1.8], k), look: [X[0], X[1], 0] }; },
-    { lines: [[0.3, 'mate', 'Somebody’s had the lid off before us. Half of it’s gone.', 'cp_m10_39'], [2.6, 'crew', 'And a green lamp left on top. Mooncussers.', 'cp_m10_40']], sfx: [[0.2, 'chest', 0.8]] }),
+    { lines: [[0.3, 'mate', 'Somebody’s had the lid off before us. Half of it’s gone.', 'cp_m10_39'], [2.6, 'crew', 'And a green lamp left on top. Mooncussers.', 'cp_m10_40']],
+      // (the lid forced back on its hinges: the recording, else the chest's own)
+      f(t) { if (t < 0.2) C10I3.lidSnd = 0; else if (!C10I3.lidSnd) { C10I3.lidSnd = 1; try { if (!sfxPlay('c10chestopen', { vol: 0.85 })) sfxPlay('chest', { vol: 0.8 }); } catch (e) {} } } }),
   c10Live(4, (t, k) => { const X = c10Marks().x; return { cam: c10Mix([X[0] + 8, X[1] - 7, 3], [X[0] + 9, X[1] - 9, 4.5], k), look: [X[0], X[1], 1.6 + k] }; },
     { lines: [[0.4, 'log', 'Gilt and Gull’s charts are true one time in three. The other times there is something worse than nothing under them. This time there was both.', 'cp_m10_41']], sfx: [[0.3, 'bossmoon', 0.9]], shake: 0.4 }),
 ] });
@@ -412,7 +420,11 @@ cpStage('m10port', {
     const carrying = S.loot.some(q => q.by), key = carrying ? 't' : S.loot.length ? 'b' : '';
     if (key !== S.sentWp) { S.sentWp = key; if (key === 't') cpWaypoint(C.table[0], C.table[1], 'The factor’s table', 1.2); else if (key === 'b') cpWaypoint(S.loot[0].x - FPSC.CX, S.loot[0].y - FPSC.CY, 'The hoard', 0.6); else cpWaypoint(null); }
   },
-  me(dt) { c10LootMe(dt); },
+  me(dt) {
+    c10LootMe(dt);
+    // the coins on the factor's scale, each time a half of it is weighed (here and on every screen)
+    const S = RAID.st, C = c10iZ(); if (C && (S.sold | 0) > (S.soldSnd | 0)) { const [tx, ty] = c10iW(C.table); c10Snd('c10weigh', tx, ty, 0.85); } S.soldSnd = S.sold | 0;
+  },
   q(sid, k, a) {
     const S = RAID.st;
     if (c10LootQ(sid, k, a)) return;
@@ -438,7 +450,7 @@ cpStage('m10port', {
     c10LootConsider(c);
   },
   prompt(o) { if (o.k === 'c10sell') { const mine = c10Mine(); return mine ? { text: `Set ${fbLootOf(mine.k).n} on the factor’s table`, free: true } : null; } return c10LootPrompt(o); },
-  use(o) { if (o.k === 'c10sell') { raidAsk('c10sell'); try { if (!soundOff()) for (let i = 0; i < 4; i++) tone(1400 + i * 120, 'triangle', 0.002, 0.08, 0.05, { delay: i * 0.07 }); } catch (e) {} return true; } return c10LootUse(o); },
+  use(o) { if (o.k === 'c10sell') { raidAsk('c10sell'); try { if (!sfxHas('c10weigh') && !soundOff()) for (let i = 0; i < 4; i++) tone(1400 + i * 120, 'triangle', 0.002, 0.08, 0.05, { delay: i * 0.07 }); } catch (e) {} return true; } return c10LootUse(o); },
   hud(phone, mono) {
     const S = RAID.st; if (ZM.over) return;
     const R = Math.max(14, FPS.safeRight || 0); ctx.textAlign = 'right'; ctx.textBaseline = 'top'; ctx.font = mono(phone ? 10 : 12); ctx.fillStyle = '#ffd88a';

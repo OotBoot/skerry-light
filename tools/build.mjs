@@ -31,7 +31,9 @@ js = js.split("'src/original.html'").join(JSON.stringify(read('src/original.html
 const foeAssets = readdirSync(join(root, 'assets/foes')).filter(f => f.endsWith('.webp')).map(f => 'assets/foes/' + f);
 // the recorded sound effects (src/sfxlist.js names each one)
 let sfxAssets = []; try { sfxAssets = readdirSync(join(root, 'assets/sfx')).filter(f => f.endsWith('.mp3')).map(f => 'assets/sfx/' + f); } catch (e) {}
-const MUSIC = a => /^assets\/sfx\/(boss|raid|gw|fr(?!horn))[a-z0-9]*_\d+\.mp3$/.test(a);
+// (and the Chronicle of the Light's recordings, fetched a mission at a time: src/cpaudio.js CP_AUDIO_LAZY names them)
+let cpLazy = new Set(); try { cpLazy = new Set(JSON.parse(read('src/cpaudio.js').match(/CP_AUDIO_LAZY = new Set\((\[[^\]]*\])\)/)[1])); } catch (e) {}
+const MUSIC = a => /^assets\/sfx\/(boss|raid|gw|fr(?!horn))[a-z0-9]*_\d+\.mp3$/.test(a) || cpLazy.has((a.match(/^assets\/sfx\/([a-z0-9_]+?)_\d+\.mp3$/) || [])[1]);
 let jsArt = null;
 // The served page (dist/web.html, what the server sends) inlines everything but the sound: each recording stays a file of
 // its own, fetched after the page is up and kept by the browser for good (the ?v= fingerprint changes when the file does),

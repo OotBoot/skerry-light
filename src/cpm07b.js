@@ -60,7 +60,7 @@ ZBT.cpnell = Object.assign({}, ZBT.cpgang, {
     if (ok) { fpsHurt(CPN7.SNIPE_DMG, null, null); zmSound('hit'); FPS.hurtT = 1.0; FPS.tracers.push({ a: [mx, my, mz], b: [m.x, m.y, ez], t: 0.14, k: 'p' }); }
     else { const r = fpsRay(mx, my, mz, z.h, 0, null, [], CPN7.RANGE); FPS.tracers.push({ a: [mx, my, mz], b: [r.x, r.y, r.z], t: 0.14, k: 'p' }); }
   },
-  actSound(z, act) { if (act === 'snipe') cpgSound('click', z.x, z.y); },
+  actSound(z, act) { if (act !== 'snipe') return; const d = Math.hypot(z.x - FPS.me.x, z.y - FPS.me.y); try { if (sfxPlay('longarm_lay', { vol: 0.9 * Math.max(0.05, 1 - d / 60), pan: fpsEar(z.x, z.y), out: true })) return; } catch (e) {} cpgSound('click', z.x, z.y); },
   reset(z, M) {
     const F = M.F;
     if (F && F.M) for (const [k, v] of [['coat', '#2a1416'], ['trim', '#8a2a24'], ['hat', '#141010']]) { const mt = F.M[k]; if (mt) { mt.userData.base.set(v); mt.color.set(v); } }
