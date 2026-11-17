@@ -1052,7 +1052,11 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 .rcpick .card { max-width: 60rem; width: min(60rem, calc(100vw - 32px)); max-height: calc(100vh - 32px); overflow-y: auto; }
 .rcpick h1 { color: #e8d6a0; margin-bottom: 4px; }
 .rcrow { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 14px; }
-@media (max-width: 720px) { .rcrow { grid-template-columns: minmax(0, 1fr); } }
+.rcfour .card { max-width: 76rem; width: min(76rem, calc(100vw - 32px)); }
+.rcfour .rcrow { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+@media (max-width: 1100px) { .rcfour .rcrow { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 720px) { .rcrow, .rcfour .rcrow { grid-template-columns: minmax(0, 1fr); } }
+.rcclass .rcwon { margin-top: auto; padding-top: 4px; font: 600 10px "Courier Prime", monospace; letter-spacing: 0.08em; text-transform: uppercase; color: var(--rc); opacity: 0.75; }
 .rcclass { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; text-align: left; padding: 14px; border-radius: 10px; border: 1px solid rgba(var(--rcr), 0.45); background: linear-gradient(180deg, rgba(var(--rcr), 0.16), rgba(var(--rcr), 0.03)); color: var(--ink, #ece4cf); cursor: pointer; font: inherit; min-height: 44px; }
 .rcclass:hover, .rcclass:focus-visible { border-color: var(--rc); background: linear-gradient(180deg, rgba(var(--rcr), 0.3), rgba(var(--rcr), 0.08)); outline: none; box-shadow: 0 0 0 2px rgba(var(--rcr), 0.5); }
 .rcclass.last::after { content: 'Last time'; position: absolute; }
@@ -2901,7 +2905,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 // ---- src/config.js ----
 'use strict';
 // The game's version, shown at the top of the main menu. Bump it by one with every change pushed to main.
-var VERSION = 219;
+var VERSION = 221;
 // Skerry Light: tuning, asset paths and lore.
 // World units are metres. The lighthouse stands at the origin on the shoreline (y = 0);
 // north (+y) is open sea. Bearings: 0 = north, positive = east.
@@ -3076,6 +3080,23 @@ document.addEventListener('visibilitychange', () => {
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 221, date: '2026-11-17', title: "Callings for the Chronicle", New: [
+    "The Chronicle of the Light: four callings of its own, picked at the start of each mission in place of Maren's End's three. Each has two weapons, a trait that is always on, its own jump, a grenade (G) and an ultimate (X).",
+    "The Chronicle of the Light: the Keeper carries the Fresnel Lamp and Pepperbox. Lantern-Bearer mends you and friends within 9 m a knock every five seconds; Lamp Step bursts a ring of light under you in mid-air; the Storm Lantern lights, slows and scorches everything near it for twelve seconds; Rekindle burns and throws back everything within 14 m, mends every friend there to full and gets the fallen up.",
+    "The Chronicle of the Light: the Wrecker carries the Punt Gun and Cutlass. Hard as Nails takes a quarter off every knock; Lunge hurls you forward through them in mid-air; the Grapple-Chain drags everything within 8 m into a heap, then bursts; Wreckers' Fury turns every shot into a wide cleave for twelve seconds, halves knocks and mends a knock for each one dropped.",
+    "The Chronicle of the Light: the Riding Officer carries the Longarm and Pepperbox. Dead Eye makes head shots hit a third harder and every gun load a quarter quicker; Hang Fire holds you steady in mid-air for up to two seconds; the Rescue Rocket flies nearly flat and bursts where it strikes, lighting what survives; Rocket Barrage brings twelve rockets down about the spot you're looking at.",
+    "The Chronicle of the Light: the Lampwright carries the Avtomat and Harpoon gun. Gunsmith makes your guns hit 15% harder; Grapnel Line hauls you to whatever you're looking at, up to 22 m; the Lens Sentry burns the nearest enemy within 16 m for fourteen seconds; the Great Lens burns three at a time within 20 m for sixteen seconds, slows them and halves the knocks on friends beside it.",
+    "The Chronicle of the Light: the picker shows how many missions you've seen through with each calling. That count is kept in your save code and merges with your other devices.",
+  ], Changes: [
+    "The Chronicle of the Light: in co-op each player picks their own calling and everyone sees what the others throw and set down. A crew is strongest with one of each, but any calling can carry a mission alone.",
+  ] },
+  { v: 220, date: '2026-11-17', title: "The First Fire, kinder", Balance: [
+    "The Chronicle of the Light: The First Fire is easier to keep alight in every part. Driftwood: one bundle fewer to stack before you can light it.",
+    "The Chronicle of the Light: The First Fire: in The Haar and The Ship the fire burns down about a third slower, starts fuller, and each bundle of driftwood gives more. Fog banks come less often, drift in slower and smother less of it, and the drowned kick it apart about half as fast.",
+    "The Chronicle of the Light: The First Fire: brands last longer, more driftwood washes up, and once the fire's down to embers you have 24 seconds to feed it instead of 14. In The Ship, the ship loses sight of a dimmed fire more slowly.",
+  ], Changes: [
+    "The Chronicle of the Light: cinematics can no longer be skipped. Each plays through to the end, for everyone together.",
+  ] },
   { v: 219, date: '2026-11-17', title: "The Chronicle of the Light, voiced", Sound: [
     "The Chronicle of the Light: every line in all fourteen missions is now spoken aloud, 615 in all, with each character keeping the same voice from mission to mission. Distant shouts carry across the water, and the drowned sound like the drowned.",
     "The Chronicle of the Light: new music for the campaign: themes for tense nights, sailing, fighting, bosses, sorrow and fog, a hopeful closing theme and a victory theme, plus a flamenco cove fight in The Mooncussers, the first lighting of the Light, and a last hymn for The Drowned Reach. Elsewhere the missions draw on the other games' music.",
@@ -24743,6 +24764,7 @@ function zmHurt(d, dmg, head, code, by, how) {
   if (typeof zmpDmg === 'function') dmg = zmpDmg(dmg, code, by, d);   // [pap] reforged weapons hit harder (the shooter's side)
   if (typeof raidHurtK === 'function') dmg = raidHurtK(d, dmg, code, by);   // [raid] the stage's say (the shooter's side)
   if (typeof frcHurt === 'function') dmg = frcHurt(d, dmg, code, by);   // [fogrun cards] a relic's say (the shooter's side)
+  if (typeof rclDmg === 'function') dmg = rclDmg(d, dmg, head, code, by);   // [cpclass] a calling's trait (the shooter's side)
   if (!(dmg > 0)) return;   // [raid3] (nothing at all: Maren, while her soul's out of her)
   if (ZM.net === 'client') { zmnHit(d, dmg, head, code, how); return; }
   const k = (ZM_DMG[code] == null ? 1 : ZM_DMG[code]) * (d.mark > 0 ? 1.5 : 1);   // [pap] (lit by the Leading Light: hurt worse)
@@ -41730,6 +41752,9 @@ function gc3d(dt) {
 // Hooks (// [classes]): raidLoadout calls rclApply, raidMe calls rclTick; fpsJump (rclJump), fpsShoot (rclShoot),
 // fpsHurt (rclHurtK), the controller (rclPad), zmHud (rclHud), zmDrawOver (rclDrawOver), znPresence (rclPresence) and
 // znReadPlayers (rclHeard).
+// [cpclass] The Chronicle of the Light has callings of its own (src/cpclass.js): they're in RCL_CLASSES and RCL_ORDER
+// too (after these three, so the numbers on the wire never change), each with its hooks in RCL_EXT[k]. rclSet() is
+// the callings on offer here (the campaign's four, or Maren's End's three), and rclPickKey() where the last pick is kept.
 
 const RCLC = { UFILL: 1 / 150, UKILL: 0.025, U_MERC: 12, U_BRUTE: 14, U_APO: 15, SHOTS: 6, WELL_R: 9, CLOUD_R: 6.8, CLOUD_T: 7, DRIFT: 3, SLAM_CD: 3 };
 const RCL_ORDER = ['merc', 'brute', 'apo'];
@@ -41750,6 +41775,12 @@ const RCL_CLASSES = {
     gren: ['Brimstone Vial', 'A cloud of green fire: it burns and slows them, and mends friends in it.'],
     ult: ['Wellspring', 'A ring of light for fifteen seconds: mend fast, half the knocks, and the fallen get up.'] },
 };
+const RCL_EXT = {};   // [cpclass] a calling's own hooks: jump, fuse, gr, sticky, burst, tick, ult, shoot, hurt, reload, heard, draw, reset
+const rclX = () => RCL_EXT[RCL.cls] || null;
+// the callings on offer in this raid, and where the last one picked is kept
+const rclSet = () => typeof CP !== 'undefined' && CP.on && typeof CPCL_ORDER !== 'undefined' ? CPCL_ORDER : RCL_ORDER.slice(0, 3);
+const rclPickKey = () => typeof CP !== 'undefined' && CP.on ? 'skerry-cp-class' : 'skerry-raid-class';
+function rclLast() { let c = null; try { c = localStorage.getItem(rclPickKey()); } catch (e) {} const S = rclSet(); return S.includes(c) ? c : S.includes(RCL.last) ? RCL.last : S[0]; }
 const RCL = { cls: null, run: null, picking: false, gT: 0, uK: 0, ultT: 0, shots: 0, air: 0, drift: 0, slam: false, slamCd: 0, kills: 0,
   proj: [], clouds: [], wells: [], quakes: [], ev: [], eseq: 0, seen: {}, healT: 0, upT: 0, padWas: null, padCur: 0 };
 try { const c = localStorage.getItem('skerry-raid-class'); if (RCL_CLASSES[c]) RCL.last = c; } catch (e) {}
@@ -41776,13 +41807,14 @@ function rclApply() {
   FPS.weapon = ZM.own[0]; FPS.last = ZM.own[1]; m.ammo = rclMag(FPS.weapon); m.reload = 0; m.cd = 0; FPS.drawT = 0.45; FPS.scoped = false;
 }
 function rclReset() {
+  for (const k in RCL_EXT) if (RCL_EXT[k].reset) try { RCL_EXT[k].reset(); } catch (e) {}
   Object.assign(RCL, { gT: 0, uK: 0, ultT: 0, shots: 0, air: 0, drift: 0, slam: false, slamCd: 0, kills: ZM.kills || 0, proj: [], clouds: [], wells: [], quakes: [], ev: [], seen: {}, healT: 0, upT: 0 });
 }
 function rclChoose(k) {
   if (!RCL_CLASSES[k]) return;
   if (RCL.cls !== k) Object.assign(RCL, { ultT: 0, shots: 0, gT: 0, air: 0, drift: 0, slam: false });
   RCL.cls = k; RCL.last = k;
-  try { localStorage.setItem('skerry-raid-class', k); } catch (e) {}
+  try { localStorage.setItem(rclPickKey(), k); } catch (e) {}
   rclClosePick();
   rclApply();
   const C = rclC();
@@ -41798,23 +41830,26 @@ const RCL_ICON = {
   apo: '<path d="M9 3h6M10 3v5l-5 9a3 3 0 0 0 2.6 4.5h8.8A3 3 0 0 0 19 17l-5-9V3"/><path d="M8 15h8"/>',
 };
 function rclBuildPick() {
-  if ($('rclPick')) return $('rclPick');
+  const S = rclSet(), key = S.join(',');
+  if ($('rclPick') && $('rclPick').dataset.set === key) return $('rclPick');
+  if ($('rclPick')) $('rclPick').remove();
   const o = document.createElement('div');
-  o.className = 'overlay pausecard rcpick'; o.id = 'rclPick'; o.hidden = true;
+  o.className = 'overlay pausecard rcpick' + (S.length > 3 ? ' rcfour' : ''); o.id = 'rclPick'; o.hidden = true; o.dataset.set = key;
   o.setAttribute('role', 'dialog'); o.setAttribute('aria-modal', 'true'); o.setAttribute('aria-labelledby', 'rclPickHead');
   const card = document.createElement('div'); card.className = 'card';
-  const eb = document.createElement('p'); eb.className = 'eyebrow'; eb.id = 'rclEye'; eb.textContent = 'Maren’s End';
+  const eb = document.createElement('p'); eb.className = 'eyebrow'; eb.id = 'rclEye'; eb.textContent = typeof raidName === 'function' && typeof RAID !== 'undefined' && RAID.on ? raidName() : 'Maren’s End';
   const h = document.createElement('h1'); h.id = 'rclPickHead'; h.textContent = 'Choose your calling';
-  const sub = document.createElement('p'); sub.className = 'muted'; sub.textContent = 'Your weapon skins and your outfit go down with you.';
+  const sub = document.createElement('p'); sub.className = 'muted'; sub.textContent = S.length > 3 ? 'Each of you can take a different one: the crew is strongest with all four. Your weapon skins and your outfit go with you.' : 'Your weapon skins and your outfit go down with you.';
   const row = document.createElement('div'); row.className = 'rcrow';
-  for (const k of RCL_ORDER) {
+  for (const k of S) {
     const C = RCL_CLASSES[k], b = document.createElement('button');
     b.type = 'button'; b.className = 'rcclass'; b.dataset.k = k; b.style.setProperty('--rc', C.c); b.style.setProperty('--rcr', C.rgb);
     const ic = `<svg viewBox="0 0 24 24" aria-hidden="true">${RCL_ICON[k]}</svg>`;
     const li = (lab, a) => `<li><b>${lab}</b> ${a[0]}<small>${a[1]}</small></li>`;
     b.innerHTML = `${ic}<span class="nm">${C.n}</span><span class="tg">${C.tag}</span><ul>`
       + `<li><b>Primary</b> ${FPSW[C.w[0]].n}</li><li><b>Secondary</b> ${FPSW[C.w[1]].n}</li>`
-      + li('Jump', C.jump) + li('Grenade', C.gren) + li('Ultimate', C.ult) + '</ul>';
+      + (C.trait ? li('Trait', C.trait) : '') + li('Jump', C.jump) + li('Grenade', C.gren) + li('Ultimate', C.ult) + '</ul>'
+      + (C.won ? `<span class="rcwon">${C.won()}</span>` : '');
     b.addEventListener('click', () => { rclChoose(k); try { if (!FPS.touch) cv.requestPointerLock(); } catch (e) {} });
     row.append(b);
   }
@@ -41826,7 +41861,7 @@ function rclOpenPick() {
   const o = rclBuildPick();
   RCL.picking = true; FPS.menu = true; o.hidden = false;
   try { document.exitPointerLock && document.exitPointerLock(); } catch (e) {}
-  RCL.padCur = Math.max(0, RCL_ORDER.indexOf(RCL.last || 'merc'));
+  RCL.last = rclLast(); RCL.padCur = Math.max(0, rclSet().indexOf(RCL.last));
   const bs = [...o.querySelectorAll('.rcclass')];
   bs.forEach((b, i) => b.classList.toggle('last', b.dataset.k === RCL.last));
   setTimeout(() => { const b = bs[RCL.padCur]; if (b) b.focus(); }, 30);
@@ -41852,7 +41887,7 @@ function rclPickPad() {
   const bs = [...document.querySelectorAll('#rclPick .rcclass')];
   const d = (now[15] && !was[15]) || (now.dir === 1 && was.dir !== 1) ? 1 : (now[14] && !was[14]) || (now.dir === -1 && was.dir !== -1) ? -1 : 0;
   if (d) { RCL.padCur = (RCL.padCur + d + bs.length) % bs.length; bs[RCL.padCur].focus(); }
-  if (now[0] && !was[0]) rclChoose(RCL_ORDER[RCL.padCur]);
+  if (now[0] && !was[0]) rclChoose(rclSet()[RCL.padCur]);
 }
 
 // ---------- each frame (raidMe) ----------
@@ -41861,8 +41896,9 @@ function rclTick(dt) {
   const C = rclC(), m = FPS.me, down = zmIsDown(), dead = m.dead > 0 || ZM.ghost;
   // the meters: the grenade comes back; the ultimate fills with time, and with every kill
   if (RCL.gT > 0) RCL.gT = Math.max(0, RCL.gT - dt);
-  if (RCL.ultT <= 0 && !dead) RCL.uK = Math.min(1, RCL.uK + dt * RCLC.UFILL);
-  const k = ZM.kills || 0; if (k > RCL.kills) { if (RCL.ultT <= 0) RCL.uK = Math.min(1, RCL.uK + (k - RCL.kills) * RCLC.UKILL); } RCL.kills = k;
+  const uk = C.uk || 1;
+  if (RCL.ultT <= 0 && !dead) RCL.uK = Math.min(1, RCL.uK + dt * RCLC.UFILL * uk);
+  const k = ZM.kills || 0; if (k > RCL.kills) { if (RCL.ultT <= 0) RCL.uK = Math.min(1, RCL.uK + (k - RCL.kills) * RCLC.UKILL * uk); if (rclX() && rclX().kill) rclX().kill(k - RCL.kills); } RCL.kills = k;
   if (RCL.ultT > 0) { RCL.ultT -= dt; if (RCL.ultT <= 0 || (RCL.cls === 'merc' && RCL.shots <= 0) || down || dead) rclUltEnd(); }
   if (RCL.slamCd > 0) RCL.slamCd -= dt;
   // jumping: back on the ground, the air's own moves come back
@@ -41875,6 +41911,7 @@ function rclTick(dt) {
     if (!reduceMotion && Math.random() < dt * 20) FPS.parts.push({ x: m.x + (Math.random() - 0.5) * 0.6, y: m.y + (Math.random() - 0.5) * 0.6, z: FPSC.GROUND + (m.jz || 0) + 0.2, vx: 0, vy: 0, vz: -0.4, t: 0.6, c: C.rgb, up: false });
   } else if (RCL.slam) m.vz = Math.min(m.vz, -16);
   // what's thrown, and what it leaves
+  for (const k in RCL_EXT) if (RCL_EXT[k].tick) try { RCL_EXT[k].tick(dt, k === RCL.cls, down, dead); } catch (e) { console.warn('rcl tick', k, e); }
   for (const P of RCL.proj) rclProjTick(P, dt);
   RCL.proj = RCL.proj.filter(P => !P.done);
   rclClouds(dt); rclWells(dt);
@@ -41896,7 +41933,8 @@ function rclCan() { const m = FPS.me; return rclOn() && RCL.cls && !RCL.picking 
 // ---------- jumping (fpsJump: true if the calling took it) ----------
 function rclJump(m, air) {
   if (!rclOn() || !RCL.cls || RCL.picking) return false;
-  const k = RCL.cls;
+  const k = RCL.cls, X = rclX();
+  if (X && X.jump) return X.jump(m, air);
   if (!air) {
     if (k !== 'brute') return false;
     m.vz = FPSC.JUMP * 1.22; m.jz = (m.fl || 0) + 0.001; FPS.landed = 0; rclTone('jump');
@@ -41932,7 +41970,7 @@ function rclQuake(x, y, fz, mine, ahead) {
 // ---------- the grenade (G) ----------
 function rclGrenade() {
   if (!rclCan() || RCL.gT > 0) return;
-  const m = FPS.me, C = rclC(), z = FPSC.GROUND + FPSC.EYE + (m.jz || 0) - 0.2, p = clamp(m.p + 0.22, -1.2, 1.3), sp = RCL.cls === 'brute' ? 13 : 17;
+  const m = FPS.me, C = rclC(), z = FPSC.GROUND + FPSC.EYE + (m.jz || 0) - 0.2, p = clamp(m.p + (rclX() && rclX().flat ? 0.04 : 0.22), -1.2, 1.3), sp = rclX() && rclX().sp ? rclX().sp : RCL.cls === 'brute' ? 13 : 17;
   const cp = Math.cos(p), v = [Math.sin(m.h) * cp * sp, Math.cos(m.h) * cp * sp, Math.sin(p) * sp];
   RCL.gT = C.gcd;
   rclLaunch(RCL.cls, m.x, m.y, z, v[0], v[1], v[2], true, m.id);
@@ -41941,18 +41979,19 @@ function rclGrenade() {
   try { zxSound('throw', 0); } catch (e) {}
 }
 function rclLaunch(k, x, y, z, vx, vy, vz, mine, by) {
-  RCL.proj.push({ k, x: x + vx * 0.03, y: y + vy * 0.03, z, vx, vy, vz, t: 0, fuse: k === 'merc' ? 1.3 : k === 'brute' ? 1.9 : 3, mine, by, spin: 0 });
+  const X = RCL_EXT[k];
+  RCL.proj.push({ k, x: x + vx * 0.03, y: y + vy * 0.03, z, vx, vy, vz, t: 0, fuse: X && X.fuse ? X.fuse : k === 'merc' ? 1.3 : k === 'brute' ? 1.9 : 3, gr: X && X.gr != null ? X.gr : 14, stick: k === 'apo' || !!(X && X.sticky), mine, by, spin: 0 });
 }
 function rclProjTick(P, dt) {
   P.t += dt; P.spin += dt * 12;
   if (P.t >= P.fuse) { rclBurst(P); return; }
-  if (!reduceMotion && Math.random() < dt * 30) FPS.parts.push({ x: P.x, y: P.y, z: P.z, vx: 0, vy: 0, vz: 0.3, t: 0.4, c: P.k === 'apo' ? '160,220,90' : '255,200,120', up: true });
+  if (!reduceMotion && Math.random() < dt * 30) FPS.parts.push({ x: P.x, y: P.y, z: P.z, vx: 0, vy: 0, vz: 0.3, t: 0.4, c: RCL_EXT[P.k] && RCL_EXT[P.k].trail ? RCL_EXT[P.k].trail : P.k === 'apo' ? '160,220,90' : '255,200,120', up: true });
   const steps = 4, s = dt / steps;
   for (let i = 0; i < steps && !P.done; i++) {
     const ox = P.x, oy = P.y, oz = P.z;
-    P.vz -= 14 * s; P.x += P.vx * s; P.y += P.vy * s; P.z += P.vz * s;
+    P.vz -= P.gr * s; P.x += P.vx * s; P.y += P.vy * s; P.z += P.vz * s;
     const seg = Math.hypot(P.x - ox, P.y - oy, P.z - oz);
-    const tg = P.mine && P.k !== 'brute' ? ZM.z.filter(q => !q.dead) : [];
+    const tg = (P.mine || P.stick) && P.k !== 'brute' ? ZM.z.filter(q => !q.dead) : [];
     const r = fpsRay(ox, oy, oz, bearingOf(P.vx, P.vy), Math.atan2(P.vz, Math.max(0.01, Math.hypot(P.vx, P.vy))), P.by, tg, seg + 0.05);
     const fl = FPSC.GROUND + rclFloor(P.x, P.y, P.z - FPSC.GROUND);
     if (r.kind === 'body') { P.x = r.x; P.y = r.y; P.z = r.z; rclBurst(P); return; }
@@ -41960,13 +41999,13 @@ function rclProjTick(P, dt) {
     //  it, it's a floor)
     const deck = r.kind !== 'none' && r.kind !== 'ground' && P.vz < 0 && r.z - (FPSC.GROUND + rclFloor(r.x, r.y, r.z - FPSC.GROUND + 0.3)) < 0.35;
     if (deck) {
-      if (P.k === 'apo') { P.x = r.x; P.y = r.y; P.z = r.z; rclBurst(P); return; }
+      if (P.stick) { P.x = r.x; P.y = r.y; P.z = r.z; rclBurst(P); return; }
       P.x = r.x; P.y = r.y; P.z = r.z + 0.03; P.vz = Math.abs(P.vz) > 2 ? -P.vz * 0.35 : 0; P.vx *= 0.6; P.vy *= 0.6; if (Math.abs(P.vz) > 1) rclTone('tink', P);
     } else if (r.kind !== 'none' && r.kind !== 'ground') {
-      if (P.k === 'apo') { P.x = ox; P.y = oy; P.z = oz; rclBurst(P); return; }
+      if (P.stick) { P.x = ox; P.y = oy; P.z = oz; rclBurst(P); return; }
       P.x = ox; P.y = oy; P.z = oz; P.vx *= -0.4; P.vy *= -0.4; rclTone('tink', P);
     } else if (P.z < fl) {
-      if (P.k === 'apo') { P.z = fl; rclBurst(P); return; }
+      if (P.stick) { P.z = fl; rclBurst(P); return; }
       P.z = fl + 0.01; P.vz = Math.abs(P.vz) > 2 ? -P.vz * 0.35 : 0; P.vx *= 0.6; P.vy *= 0.6; if (Math.abs(P.vz) > 1) rclTone('tink', P);
     }
   }
@@ -41975,6 +42014,7 @@ function rclProjTick(P, dt) {
 function rclBurst(P) {
   P.done = true;
   const fz = rclFloor(P.x, P.y, P.z - FPSC.GROUND);
+  if (RCL_EXT[P.k] && RCL_EXT[P.k].burst) { RCL_EXT[P.k].burst(P, fz); return; }
   if (P.k === 'merc') zxBoom(P.x, P.y, P.z + 0.2, 7.2, rclHp() * 3.2, 'M', P.mine, 0.8);
   else if (P.k === 'brute') zxBoom(P.x, P.y, P.z + 0.3, 10.4, rclHp() * 2.6, 'B', P.mine, 2.4);
   else {
@@ -42002,9 +42042,10 @@ function rclClouds(dt) {
 // ---------- the ultimate (X) ----------
 function rclUlt() {
   if (!rclCan() || RCL.uK < 1 || RCL.ultT > 0) return;
-  const m = FPS.me, C = rclC();
+  const m = FPS.me, C = rclC(), X = rclX();
   RCL.uK = 0;
-  if (RCL.cls === 'apo') {
+  if (X && X.ult) X.ult(m);
+  else if (RCL.cls === 'apo') {
     const fz = m.fl || 0;
     RCL.wells.push({ x: m.x, y: m.y, fz, t: RCLC.U_APO, T: RCLC.U_APO, k: 0, mine: true, by: m.id });
     rclEvent('w', m.x - FPSC.CX, m.y - FPSC.CY, fz);
@@ -42020,6 +42061,7 @@ function rclUltEnd() { RCL.ultT = 0; RCL.shots = 0; FPS.drawT = 0.35; }
 // (fpsShoot) the Mercenary's pistol or the Brute's quake in place of the weapon in hand: true if it took the pull
 function rclShoot() {
   if (!rclOn() || RCL.ultT <= 0 || RCL.cls === 'apo') return false;
+  if (rclX()) { const X = rclX(), m = FPS.me; if (!X.shoot) return false; if (m.dead > 0 || FPS.menu || m.cd > 0 || FPS.heldFire) return true; FPS.heldFire = true; m.protect = 0; X.shoot(m); return true; }
   const m = FPS.me;
   if (m.dead > 0 || FPS.menu || m.cd > 0 || FPS.heldFire) return true;
   FPS.heldFire = true; m.protect = 0;
@@ -42057,12 +42099,13 @@ function rclW(w, id) {
 }
 const rclMag = id => zmMag(id);
 // (zmReloadK) in Maren's End the blunderbuss loads 30% quicker, whoever carries it
-function rclReloadK() { return rclOn() && FPS.weapon === 'blunderbuss' ? 0.7 : 1; }
+function rclReloadK() { const X = rclOn() && rclX(); return (rclOn() && FPS.weapon === 'blunderbuss' ? 0.7 : 1) * (X && X.reload ? X.reload : 1); }
 // (fpsHurt) a knock coming: Bulwark stops it, a Wellspring halves it
 function rclHurtK(n) {
   if (!rclOn() || !RCL.cls) return n;
   const m = FPS.me;
   if (RCL.cls === 'brute' && RCL.ultT > 0) { fpsPuff(m.x, m.y, FPSC.GROUND + (m.jz || 0) + 1.2, '255,170,110', 5); return 0; }
+  for (const k in RCL_EXT) if (RCL_EXT[k].hurt) { n = RCL_EXT[k].hurt(n, k === RCL.cls); if (!(n > 0)) return 0; }
   if (rclInWell(m.x, m.y, m.jz || 0)) return n * 0.5;
   return n;
 }
@@ -42076,6 +42119,9 @@ function rclWells(dt) {
   }
   RCL.wells = RCL.wells.filter(w => w.t > 0);
 }
+
+// (src/zombies.js zmHurt, the shooter's side) a calling's trait on my own hits
+function rclDmg(d, dmg, head, code, by) { if (!rclOn() || (by && by !== FPS.me.id)) return dmg; const X = rclX(); return X && X.dmg ? X.dmg(d, dmg, head, code) : dmg; }
 
 // ---------- the controls ----------
 // G (or Q) the grenade, X the ultimate; Q is still the last weapon outside Maren's End
@@ -42111,6 +42157,7 @@ function rclHeard(r, z) {
     if (e[1] === 'g' && k && a.length >= 6) rclLaunch(k, CX + a[0], CY + a[1], a[2], clamp(a[3], -30, 30), clamp(a[4], -30, 30), clamp(a[5], -30, 30), false, r.id);
     else if (e[1] === 'w' && a.length >= 3) { RCL.wells.push({ x: CX + a[0], y: CY + a[1], fz: a[2], t: RCLC.U_APO, T: RCLC.U_APO, k: 0, mine: false, by: r.id }); fpsFeed(`${r.n} set down a Wellspring.`); }
     else if (e[1] === 'q' && a.length >= 3) rclQuake(CX + a[0], CY + a[1], a[2], false);
+    else if (k && RCL_EXT[k] && RCL_EXT[k].heard) try { RCL_EXT[k].heard(r, e[1], a); } catch (er) {}
   }
 }
 
@@ -42146,11 +42193,12 @@ function rclDrawOver() {
   for (const q of RCL.quakes) { const k = q.t / 0.7; stroke(ringPts(q.x, q.y, q.z + 0.05, q.R * (0.2 + 0.8 * k), 28), `rgba(255,190,130,${0.8 * (1 - k)})`, 3); }
   for (const P of RCL.proj) {
     const c = cam(P.x, P.y, P.z); if (c.f < 0.4) continue;
-    const q = proj(c), s = Math.max(2, (P.k === 'brute' ? 0.16 : 0.09) * q.s), col = RCL_CLASSES[P.k].rgb;
+    const q = proj(c), s = Math.max(2, (P.k === 'brute' ? 0.16 : 0.09) * q.s), col = RCL_CLASSES[P.k].rgb, X = RCL_EXT[P.k];
     const gr = ctx.createRadialGradient(q.x, q.y, 0, q.x, q.y, s * 4); gr.addColorStop(0, `rgba(${col},0.6)`); gr.addColorStop(1, `rgba(${col},0)`);
     ctx.fillStyle = gr; ctx.beginPath(); ctx.arc(q.x, q.y, s * 4, 0, 6.283); ctx.fill();
-    ctx.fillStyle = P.k === 'brute' ? '#5a3e24' : P.k === 'apo' ? '#cfe89a' : '#3a3a40'; ctx.beginPath(); ctx.arc(q.x, q.y, s, 0, 6.283); ctx.fill();
+    ctx.fillStyle = X && X.ball ? X.ball : P.k === 'brute' ? '#5a3e24' : P.k === 'apo' ? '#cfe89a' : '#3a3a40'; ctx.beginPath(); ctx.arc(q.x, q.y, s, 0, 6.283); ctx.fill();
   }
+  for (const k in RCL_EXT) if (RCL_EXT[k].draw) try { RCL_EXT[k].draw(stroke, ringPts, tm); } catch (e) {}
   // the others' callings: a mark over each, in its colour (lit while their ultimate is up)
   for (const r of FPS.remote.values()) {
     if (!r.rc || r.dead || r.x == null) continue;
@@ -49374,7 +49422,8 @@ function fbVoyDebug(kind, t) {
 //  - cpMusic(): the music key for now (src/raidmusic.js rmWant asks it first): the cinematic's own, else the stage's
 //    music(), else the mission's music.default. A key whose recording isn't made yet falls back (CP_MUSIC_FALL) to
 //    one that is, so there's always something playing.
-//  - cpDebug(mid, stage): straight into a mission alone (the calling picked for you), at a stage, for tests.
+//  - cpDebug(mid, stage, noCine, cls): straight into a mission alone (the calling cls, or the last one, picked for
+//    you), at a stage, for tests.
 // Hooks in shared files are marked [campaign]: src/raid.js (raidBegin, raidAfterStart, raidStop, raidNextStage,
 // raidWin, raidReport, raidShowOver, raidHostSend, raidApply, raidHud, raidRequest, raidMe), src/zombies.js
 // (zmFrame and zmTick: held still in a cinematic; zmAgain), src/fps.js (fpsDrawScene's camera, fpsDraw's HUD,
@@ -49417,7 +49466,8 @@ Object.assign(RM_LOOP, { cphope: false });   // (the hopeful closing theme: play
 const CPC = { LIVES: 1, BACK: 10, KEEP: 'skerry-campaign', PICK: 'skerry-cp-pick', SAY: 5.5 };
 var CP = { on: false, mid: null, want: null, from: 0, debug: null, obj: '', ev: [], eseq: 0, evSeen: -1, sub: null, subs: [], won: false, lost: '', fail: '', outroDone: false, nextOk: -1, life: 0, backT: 0, kit: null, startT: 0 };
 // progress on this browser: { done: { id: { n: times finished, t: best seconds, d: first finished (YYYY-MM-DD) } } }
-var CPS = { done: {} };
+// and cls: { calling: missions seen through as it } (src/cpclass.js)
+var CPS = { done: {}, cls: {} };
 
 // ---------- registering ----------
 function cpMission(def) {
@@ -49444,11 +49494,14 @@ RAIDS.campaign = { n: 'The Chronicle of the Light', own: true, at: {}, mvp: '-',
 function cpLoad() { try { const d = JSON.parse(localStorage.getItem(CPC.KEEP) || 'null'); if (d) cpMerge(d, true); } catch (e) {} }
 function cpSave() { try { localStorage.setItem(CPC.KEEP, JSON.stringify(CPS)); } catch (e) {} }
 // (crates.js saveData) what goes in the save
-function cpData() { return Object.keys(CPS.done).length ? { done: CPS.done } : undefined; }
+function cpData() { const c = Object.keys(CPS.cls).length; return Object.keys(CPS.done).length || c ? Object.assign({ done: CPS.done }, c ? { cls: CPS.cls } : {}) : undefined; }
 // (crates.js mergeSave, and loading) a save's progress merged with this browser's: more times, the better time
 function cpMerge(d, quiet) {
-  if (!d || typeof d !== 'object' || !d.done || typeof d.done !== 'object') return false;
+  if (!d || typeof d !== 'object') return false;
   let ch = false;
+  // (each calling's missions: the higher count)
+  if (d.cls && typeof d.cls === 'object') for (const [k, v] of Object.entries(d.cls)) { if (!/^[a-z]{2,12}$/.test(k)) continue; const n = clamp(v | 0, 0, 99999); if (n > (CPS.cls[k] | 0)) { CPS.cls[k] = n; ch = true; } }
+  if (!d.done || typeof d.done !== 'object') { if (ch && !quiet) cpSave(); return ch; }
   for (const [id, v] of Object.entries(d.done)) {
     if (!/^m\d\d$/.test(id) || !v || typeof v !== 'object') continue;
     const o = CPS.done[id] || (CPS.done[id] = { n: 0, t: 0, d: '' }), n = clamp(v.n | 0, 0, 99999), t = Math.max(0, +v.t || 0);
@@ -49467,6 +49520,7 @@ function cpComplete(id, secs) {
   const o = CPS.done[id] || (CPS.done[id] = { n: 0, t: 0, d: '' });
   const first = !o.n;
   o.n++; if (secs > 0 && (!o.t || secs < o.t)) o.t = Math.round(secs);
+  if (typeof RCL !== 'undefined' && typeof CPCL_ORDER !== 'undefined' && CPCL_ORDER.includes(RCL.cls)) CPS.cls[RCL.cls] = (CPS.cls[RCL.cls] | 0) + 1;   // [cpclass]
   if (!o.d) o.d = new Date().toISOString().slice(0, 10);
   cpSave();
   try { if (typeof saveCrates === 'function') saveCrates(); } catch (e) {}
@@ -49494,7 +49548,7 @@ function cpAfterStart() {
   { const e = document.querySelector('#fpsMenu .eyebrow'); if (e) e.textContent = M.n; $('fpsLeave').textContent = 'Leave the mission'; $('fpsResume').textContent = 'Back to the mission'; }
   const from = CP.debug ? CP.debug.stage | 0 : CP.from | 0; CP.from = 0;
   const dbg = CP.debug; CP.debug = null;
-  if (dbg && typeof RCL !== 'undefined' && RCL.picking) rclChoose(RCL.last || 'merc');
+  if (dbg && typeof RCL !== 'undefined' && RCL.picking) rclChoose(dbg.cls && RCL_CLASSES[dbg.cls] ? dbg.cls : rclLast());
   if (ZM.net === 'client') return;
   // (a checkpoint, or a test: no intro; raidUseStage plays the stage's own cutscene)
   if (from > 0 && from < RAID_ORDER.length) { raidUseStage(from); return; }
@@ -49740,10 +49794,10 @@ function cpCard() {
   if ($('cpPlay')) $('cpPlay').textContent = M && cpIsDone(M.id) ? 'Play it again' : 'Play';
 }
 // (a test, or the console) straight into a mission alone, at a stage
-function cpDebug(id, stage, noCine) {
+function cpDebug(id, stage, noCine, cls) {
   if (FPS.on) return false;
   id = CP_BY[id] ? id : CP_MISSIONS[0].id;
-  CP.debug = { stage: stage | 0, noCine: !!noCine }; CP.want = id; CP.from = stage | 0;
+  CP.debug = { stage: stage | 0, noCine: !!noCine, cls: cls || '' }; CP.want = id; CP.from = stage | 0;
   zmStart({ map: 'campaign' });
   return true;
 }
@@ -49768,8 +49822,8 @@ function cpDebug(id, stage, noCine) {
 // are, nobody can be hurt, and the stage's clock waits (src/zombies.js zmFrame and zmTick ask cpCineOn).
 //
 // Together: the host starts it (cpCine) and says which, and how far in, in its word (cpc); every screen plays the
-// same shots from its own clock, kept within half a second of the host's. Anyone can ask to skip (Space, Enter, a
-// click or tap, A on a controller): alone it ends there and then; together, once everyone has asked.
+// same shots from its own clock, kept within half a second of the host's. A cinematic can't be skipped: it plays to its
+// end on every screen (Space, Enter, a click or tap are swallowed while it plays, so nothing fires or jumps).
 //
 // A cinematic (cpCineDef(id, def)): { n: its name, music: a music key (src/cp.js cpMusic) while it plays,
 //   b3(grp, C): its actors built (every screen, as it begins: grp is a THREE.Group in the scene, emptied after;
@@ -49840,8 +49894,8 @@ function cpcTick(dt) {
   CPN.bar = Math.min(1, CPN.bar + dt * 2.5);
   FPS.me.protect = Math.max(FPS.me.protect || 0, 1); FPS.me.iframe = Math.max(FPS.me.iframe || 0, 1);
   CPN.t += dt * CPN.rate;   // (rate: a test can play them quicker)
-  // (A on a controller skips, as Space does)
-  try { const P = navigator.getGamepads ? [...navigator.getGamepads()].filter(Boolean) : []; const a = P.some(p => p.buttons[0] && p.buttons[0].pressed); if (a && !CPN.padA && CPN.t > 0.4) cpcSkip(); CPN.padA = a; } catch (e) {}
+  // (a controller's A is only watched, so it doesn't fire the moment the cinematic ends)
+  try { const P = navigator.getGamepads ? [...navigator.getGamepads()].filter(Boolean) : []; CPN.padA = P.some(p => p.buttons[0] && p.buttons[0].pressed); } catch (e) {}
   // (joined: kept near the host's own clock)
   if (ZM.net === 'client' && Math.abs(CPN.t - CPN.hostT) > 0.5) CPN.t = CPN.hostT;
   if (CPN.t >= D.T) { if (ZM.net !== 'client') cpcEnd(); else CPN.t = D.T - 0.001; return; }
@@ -49897,10 +49951,6 @@ function cpcHud() {
   if (bh > 0.5) { ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, bh); ctx.fillRect(0, H - bh, W, bh); }
   if (D) {
     cpSubHud(phone, mono, fell, true);
-    // skip
-    ctx.textAlign = 'right'; ctx.textBaseline = 'middle'; ctx.font = mono(phone ? 9 : 11); ctx.fillStyle = 'rgba(236,228,207,0.5)';
-    const n = ZM.net ? (ZM.hum || []).length : 1, k = CPN.skip.size;
-    ctx.fillText(CPN.skipped ? (ZM.net ? `WAITING TO SKIP · ${k}/${n}` : '') : (phone ? 'TAP TO SKIP' : FPS.pad ? 'A TO SKIP' : 'SPACE TO SKIP') + (ZM.net && k ? ` · ${k}/${n}` : ''), W - Math.max(14, FPS.safeRight || 0), bh * 0.5 || 14);
   }
   ctx.textBaseline = 'alphabetic';
   return !!D;
@@ -49908,22 +49958,11 @@ function cpcHud() {
 // (src/cp.js cpMusic) the cinematic's own music, if it says one
 function cpcMusic() { return CPN.on && CPN.on.music ? CPN.on.music : undefined; }
 
-// ---------- skipping ----------
-function cpcSkip() {
-  if (!CPN.on || CPN.skipped) return;
-  CPN.skipped = true;
-  if (!ZM.net) { cpcEnd(); return; }
-  cpAsk('cpskip');
-}
-// (hosting) someone asked to skip: once everyone has, it's over
-function cpcSkipVote(sid) {
-  if (!CPN.on) return;
-  CPN.skip.add(sid);
-  const all = (ZM.hum || []).map(h => h[0]).filter(s => s === FPS.me.id || FPS.remote.has(s));
-  if (all.every(s => CPN.skip.has(s))) cpcEnd();
-}
-addEventListener('keydown', e => { if (!cpCineOn() || FPS.menu) return; if (e.code === 'Space' || e.code === 'Enter' || e.code === 'NumpadEnter') { e.preventDefault(); e.stopPropagation(); cpcSkip(); } }, true);
-addEventListener('pointerdown', e => { if (!cpCineOn() || FPS.menu) return; if (e.target && e.target.closest && e.target.closest('#fpsMenu, button')) return; cpcSkip(); }, true);
+// ---------- no skipping ----------
+// Cinematics play to the end. These stay so an older screen asking to skip (cpQ 'cpskip') is simply ignored.
+function cpcSkip() {}
+function cpcSkipVote() {}
+addEventListener('keydown', e => { if (!cpCineOn() || FPS.menu) return; if (e.code === 'Space' || e.code === 'Enter' || e.code === 'NumpadEnter') { e.preventDefault(); e.stopPropagation(); } }, true);
 
 // ---------- playing together ----------
 // cpc = [seq, id, seconds in, who's asked to skip]; null when nothing is playing
@@ -50010,6 +50049,354 @@ cpStage('wip', {
   mend: true,
 });
 
+// ---- src/cpclass.js ----
+'use strict';
+// The Chronicle of the Light: the campaign's own four callings, in place of Maren's End's three (src/rclass.js) while
+// a mission is played. Each has two weapons, a trait that's always on, its own jump, a grenade that comes back (G) and
+// an ultimate that fills as you fight (X). They're built to cover each other: a crew of four is strongest with one of
+// each, but each can carry a mission alone.
+//  - Keeper: carries the Light. Fresnel Lamp and Pepperbox. Lantern-Bearer: you, and friends within 9 m of you, mend
+//    a knock every five seconds. Lamp Step: jump again in the air and a ring of light bursts under you, lighting them
+//    (hurt half again as hard, by anyone) and pushing them off. Storm Lantern: it stands where it lands for twelve
+//    seconds, and everything within 7 m of it is lit, slowed and scorched. Rekindle: a flash of the Light 14 m round
+//    you that burns and hurls back every one of them, mends every friend in it to full, and gets the fallen up.
+//  - Wrecker: fights close and dirty. Punt Gun and Cutlass. Hard as Nails: knocks land a quarter lighter. Lunge: jump
+//    again in the air to hurl yourself forward through them. Grapple-Chain: everything within 8 m of where it lands is
+//    dragged into a heap, and then it bursts. Wreckers' Fury: twelve seconds when every pull of the trigger is a wide
+//    cleave that throws them back, knocks are halved, and every one dropped mends a knock.
+//  - Riding Officer (the Coastguard's man): picks them off from far away. Longarm and Pepperbox. Dead Eye: head shots
+//    hit a third harder and every gun loads a quarter quicker. Hang Fire: jump again in the air to hang there, steady,
+//    for up to two seconds. Rescue Rocket: flies fast and nearly flat, and bursts where it strikes, lighting what it
+//    doesn't kill. Rocket Barrage: twelve rockets fall over four seconds about the spot you're looking at.
+//  - Lampwright: brass and glass. Avtomat and Harpoon gun. Gunsmith: guns hit 15% harder. Grapnel Line: jump again in
+//    the air to fire a line at what you're looking at (up to 22 m) and be hauled to it. Lens Sentry: a little brass lamp
+//    on a tripod that burns the nearest of them within 16 m for fourteen seconds. The Great Lens: for sixteen seconds,
+//    a great lens that burns three of them at a time within 20 m, slows them, and halves the knocks on friends near it.
+// Balance (in the drowned's strength, rclHp, against five of them in reach): every grenade does about 0.5 to 0.8 a
+// second over its wait, as Maren's End's do (the Keeper's less, for the light it throws on them), and every ultimate
+// about 50 to 100, against the Brute's Bulwark's 75 (the Keeper's less, for the mending and the fallen got up).
+// The grenades and ultimates are on the same budget as the three callings the missions were first tuned with
+// (a blast's worth of damage every fifteen to twenty-two seconds, an ultimate about every two minutes, sooner with
+// kills); each trait is the calling's own edge. Rekindle, which does most, fills a little slower (uk).
+// Together: as for the callings (src/rclass.js), everything is judged on the thrower's screen and the hits go to the
+// host through zmHurt and zmpStatus; the others see what's thrown and set down through the presence's events
+// (rclEvent: 'g' a grenade, 'l' a Lamp Step, 'k' a Rekindle, 'b' a barrage, 'L' a Great Lens). Each player mends
+// themselves near a Keeper or in a Rekindle; the Keeper who calls a Rekindle gets the fallen near them up (zmnRevive).
+// The pick is kept on this browser (localStorage 'skerry-cp-class'), and each calling's missions seen through are in
+// the campaign's progress (src/cp.js CPS.cls, in the save, merged: the higher count wins).
+// Nothing here touches a boat: the callings are on foot only.
+
+const CPCL_ORDER = ['keeper', 'wrecker', 'officer', 'lampw'];
+const CPCLC = { AURA: 9, AURA_T: 5, LAN_R: 7, LAN_T: 12, STEP_R: 4.5, STEP_CD: 4, REK_R: 14, CHAIN_R: 8, DASH_V: 15, DASH_T: 0.28, DASH_CD: 2.4,
+  FURY: 12, CLEAVE_R: 4, HOVER: 2, ROCK_R: 6, BAR_N: 12, BAR_T: 4, BAR_R: 7, HOOK_R: 22, HOOK_V: 24, HOOK_CD: 3.5, SEN_R: 16, SEN_T: 14, LENS_R: 20, LENS_T: 16, LENS_SAFE: 6 };
+const CPCL = { lan: [], rings: [], chains: [], bar: [], sen: [], lens: [], dash: null, dashCd: 0, stepCd: 0, hover: 0, hook: null, hookCd: 0, mendT: 0, cleaves: [] };
+Object.assign(ZM_DMG, { K: 1, W: 1, R: 1, S: 1, E: 1 });
+const cpclWon = k => () => { const n = typeof CPS !== 'undefined' && CPS.cls ? CPS.cls[k] | 0 : 0; return n ? `${n} mission${n === 1 ? '' : 's'} seen through as one` : 'Not yet taken into a mission'; };
+Object.assign(RCL_CLASSES, {
+  keeper: { n: 'Keeper', c: '#ffd88a', rgb: '255,216,138', tag: 'Carries the Light: burns them where they stand, and keeps the crew on its feet.',
+    w: ['fresnel', 'pepperbox'], gcd: 20, uk: 0.85, won: cpclWon('keeper'),
+    trait: ['Lantern-Bearer', 'You, and friends within 9 m of you, mend a knock every five seconds.'],
+    jump: ['Lamp Step', 'Jump again in the air: a ring of light bursts under you, lighting them and pushing them off.'],
+    gren: ['Storm Lantern', 'It stands where it lands for twelve seconds: all near it are lit, slowed and scorched.'],
+    ult: ['Rekindle', 'A flash 14 m round you: burns and hurls them back, mends friends to full, and the fallen get up.'] },
+  wrecker: { n: 'Wrecker', c: '#e06a50', rgb: '224,106,80', tag: 'Fights close and dirty: drags them in, and carves through the crowd.',
+    w: ['puntgun', 'cutlass'], gcd: 18, won: cpclWon('wrecker'),
+    trait: ['Hard as Nails', 'Every knock on you lands a quarter lighter.'],
+    jump: ['Lunge', 'Jump again in the air to hurl yourself forward, through any in the way.'],
+    gren: ['Grapple-Chain', 'All within 8 m of where it lands are dragged into a heap, and then it bursts.'],
+    ult: ['Wreckers’ Fury', 'Twelve seconds: every shot a wide cleave, knocks halved, every one dropped mends a knock.'] },
+  officer: { n: 'Riding Officer', c: '#8ab4ff', rgb: '138,180,255', tag: 'The Coastguard’s man: picks them off from far away, and calls the rockets down.',
+    w: ['longarm', 'pepperbox'], gcd: 15, won: cpclWon('officer'),
+    trait: ['Dead Eye', 'Head shots hit a third harder, and every gun loads a quarter quicker.'],
+    jump: ['Hang Fire', 'Jump again in the air to hang there, steady, for up to two seconds.'],
+    gren: ['Rescue Rocket', 'Flies fast and nearly flat, and bursts where it strikes, lighting what it doesn’t kill.'],
+    ult: ['Rocket Barrage', 'Twelve rockets fall over four seconds about the spot you’re looking at.'] },
+  lampw: { n: 'Lampwright', c: '#c09aff', rgb: '192,154,255', tag: 'Brass and glass: sets down lenses that fight beside the crew.',
+    w: ['avtomat', 'harpoon'], gcd: 22, won: cpclWon('lampw'),
+    trait: ['Gunsmith', 'Your guns hit 15% harder.'],
+    jump: ['Grapnel Line', 'Jump again in the air to fire a line at what you look at, and be hauled to it.'],
+    gren: ['Lens Sentry', 'A brass lamp on a tripod that burns the nearest of them for fourteen seconds.'],
+    ult: ['The Great Lens', 'Sixteen seconds: burns three at a time, slows them, halves the knocks on friends near it.'] },
+});
+RCL_ORDER.push(...CPCL_ORDER);
+Object.assign(RCL_ICON, {
+  keeper: '<path d="M9 21h6M10 21V11h4v10M8 11h8l-1-3H9zM12 8V5"/><path d="M4 7l3 1.5M20 7l-3 1.5M4 12h3M20 12h-3"/>',
+  wrecker: '<path d="M5 19L15 9M13 7l4 4M15 5l4 4-2 2-4-4z"/><circle cx="6.5" cy="17.5" r="2.5"/><path d="M14 18c2 0 4-1 5-3"/>',
+  officer: '<path d="M12 2l2 5h-4zM10 7h4v9h-4zM9 16l-2 4M15 16l2 4M12 16v5"/><path d="M5 11c2 1 3 3 3 5M19 11c-2 1-3 3-3 5"/>',
+  lampw: '<circle cx="12" cy="8" r="4"/><path d="M12 12v4M12 16l-5 5M12 16l5 5M12 16v5"/><path d="M10 8h4M12 6v4"/>',
+});
+
+// ---------- shared bits ----------
+const cpclG = () => FPSC.GROUND;
+const cpclAlive = o => o && !o.dead;
+const cpclMine = () => FPS.me;
+const cpclSnd = (k, x, y) => { try { if (soundOff()) return; const v = x == null ? 1 : Math.max(0.08, 1 - Math.hypot(x - FPS.me.x, y - FPS.me.y) / 45);
+  if (k === 'step') { tone(520, 'sine', 0.005, 0.12 * v, 0.4, { to: 1040 }); noise('highpass', 2500, 0.8, 0.01, 0.08 * v, 0.35); }
+  else if (k === 'lan') { tone(330, 'triangle', 0.01, 0.1 * v, 0.5, { to: 660 }); noise('bandpass', 1200, 2, 0.02, 0.06 * v, 0.4); }
+  else if (k === 'rek') { tone(220, 'sine', 0.02, 0.2 * v, 1.4, { to: 880 }); tone(660, 'sine', 0.05, 0.14 * v, 1.2, { to: 1320 }); noise('highpass', 1800, 0.6, 0.05, 0.14 * v, 1.0); }
+  else if (k === 'chain') { for (let i = 0; i < 4; i++) tone(700 + i * 160, 'square', 0.002 + i * 0.03, 0.03 * v, 0.06); noise('bandpass', 2200, 3, 0.005, 0.08 * v, 0.3); }
+  else if (k === 'dash') noise('bandpass', 900, 1, 0.01, 0.16 * v, 0.25, { to: 300 });
+  else if (k === 'cleave') { noise('bandpass', 1600, 1.5, 0.005, 0.18 * v, 0.2, { to: 500 }); tone(180, 'sawtooth', 0.005, 0.06 * v, 0.15, { to: 90 }); }
+  else if (k === 'hover') tone(440, 'sine', 0.05, 0.06, 0.5, { to: 470 });
+  else if (k === 'rocket') noise('highpass', 1400, 0.7, 0.01, 0.12 * v, 0.6, { to: 3000 });
+  else if (k === 'whistle') tone(1800, 'sine', 0.02, 0.05 * v, 0.6, { to: 600 });
+  else if (k === 'hook') { tone(900, 'square', 0.002, 0.04, 0.08); noise('bandpass', 1800, 2, 0.005, 0.1, 0.4, { to: 800 }); }
+  else if (k === 'zap') tone(1300 + Math.random() * 300, 'sine', 0.003, 0.025 * v, 0.07);
+  else if (k === 'mend') { tone(660, 'sine', 0.02, 0.05, 0.3, { to: 880 }); }
+  else if (k === 'lens') { tone(165, 'triangle', 0.05, 0.16 * v, 1.2, { to: 330 }); tone(990, 'sine', 0.1, 0.06 * v, 1.0); }
+} catch (e) {} };
+// those of them within r of (x, y), on about the same floor
+const cpclNear = (x, y, fz, r, dz) => ZM.z.filter(o => cpclAlive(o) && Math.abs((o.jz || 0) - fz) < (dz || 1.8) && Math.hypot(o.x - x, o.y - y) < r + (o.rad || 0.3));
+const cpclSees = (x, y, z, o, range) => { const hd = Math.hypot(o.x - x, o.y - y), cz = FPSC.GROUND + (o.jz || 0) + 1.1; return hd < 0.6 || fpsRay(x, y, z, bearingOf(o.x - x, o.y - y), Math.atan2(cz - z, hd), FPS.me.id, [o], (range || hd) + 2).kind === 'body'; };
+const cpclKb = (o, x, y, k, stun) => { const d = Math.hypot(o.x - x, o.y - y); if (d > 0.05 && typeof zmpStatus === 'function') zmpStatus(o, 'kb', (o.x - x) / d * k, (o.y - y) / d * k, stun || 0.6); };
+const cpclAir = m => (m.jz || 0) > (m.fl || 0) + 0.02 || (m.vz || 0) > 0;
+const cpclMax = () => rclMax();
+function cpclMend(n) { const m = FPS.me; if (m.dead > 0 || zmIsDown() || ZM.ghost || m.hp >= cpclMax()) return false; m.hp = Math.min(cpclMax(), m.hp + n); FPS.calm = 0; return true; }
+// the others standing, and where
+const cpclOthers = () => [...FPS.remote.values()].filter(r => r.x != null && !r.dead);
+
+// ---------- the Keeper ----------
+RCL_EXT.keeper = {
+  sticky: true, fuse: 3, trail: '255,220,150', ball: '#ffe2a0',
+  reset() { CPCL.lan = []; CPCL.rings = []; CPCL.mendT = 0; CPCL.stepCd = 0; },
+  jump(m, air) {
+    if (!air) return false;
+    if (RCL.air >= 1 || CPCL.stepCd > 0) return true;
+    RCL.air = 1; CPCL.stepCd = CPCLC.STEP_CD; m.vz = Math.max(m.vz, FPSC.JUMP * 0.8);
+    cpclStep(m.x, m.y, m.jz || 0, true);
+    rclEvent('l', m.x - FPSC.CX, m.y - FPSC.CY, m.jz || 0);
+    return true;
+  },
+  burst(P, fz) { CPCL.lan.push({ x: P.x, y: P.y, fz, t: CPCLC.LAN_T, T: CPCLC.LAN_T, k: 0, mine: P.mine }); fpsPuff(P.x, P.y, P.z, '255,220,150', 12); cpclSnd('lan', P.x, P.y); },
+  ult(m) { cpclRekindle(m.x, m.y, m.fl || 0, true); rclEvent('k', m.x - FPSC.CX, m.y - FPSC.CY, m.fl || 0); },
+  tick(dt, mine, down, dead) {
+    if (mine && CPCL.stepCd > 0) CPCL.stepCd -= dt;
+    for (const L of CPCL.lan) {
+      L.t -= dt; L.k -= dt;
+      if (!L.mine || L.k > 0) continue;
+      L.k = 0.5;
+      for (const o of cpclNear(L.x, L.y, L.fz, CPCLC.LAN_R)) { if (typeof zmpStatus === 'function') { zmpStatus(o, 'mark', 1.2); zmpStatus(o, 'slow', 0.8); } zmHurt(o, rclHp() * 0.06, false, 'K', FPS.me.id); }
+    }
+    CPCL.lan = CPCL.lan.filter(L => L.t > 0);
+    for (const q of CPCL.rings) q.t += dt; CPCL.rings = CPCL.rings.filter(q => q.t < q.T);
+    // Lantern-Bearer: near a Keeper (or one yourself), a knock mended every few seconds
+    const m = FPS.me;
+    const near = (RCL.cls === 'keeper' && !down && !dead) || cpclOthers().some(r => r.rc === 'keeper' && !r.down && Math.hypot(r.x - m.x, r.y - m.y) < CPCLC.AURA);
+    if (near && !down && !dead && m.hp < cpclMax()) { CPCL.mendT += dt; if (CPCL.mendT >= CPCLC.AURA_T) { CPCL.mendT = 0; if (cpclMend(1)) cpclSnd('mend'); } } else CPCL.mendT = Math.min(CPCL.mendT, CPCLC.AURA_T * 0.6);
+  },
+  heard(r, k, a) {
+    if (k === 'l' && a.length >= 3) cpclStep(FPSC.CX + a[0], FPSC.CY + a[1], a[2], false);
+    else if (k === 'k' && a.length >= 3) { cpclRekindle(FPSC.CX + a[0], FPSC.CY + a[1], a[2], false); fpsFeed(`${r.n}: Rekindle.`); }
+  },
+  draw(stroke, ring, tm) {
+    const G0 = cpclG();
+    for (const L of CPCL.lan) {
+      const f = Math.min(1, L.t / 1.2) * Math.min(1, (L.T - L.t) / 0.3), z = G0 + L.fz, fl = 0.8 + 0.2 * Math.sin(tm * 9 + L.x);
+      stroke(ring(L.x, L.y, z + 0.04, CPCLC.LAN_R, 32), `rgba(255,220,140,${0.7 * f})`, 2, `rgba(255,200,110,${0.09 * f * fl})`);
+      stroke([[L.x, L.y, z], [L.x, L.y, z + 1.1]], `rgba(60,48,36,${f})`, 3);
+      cpclGlow(L.x, L.y, z + 1.2, '255,220,140', 0.16 * fl, f);
+    }
+    for (const q of CPCL.rings) { const k = q.t / q.T; stroke(ring(q.x, q.y, G0 + q.fz + 0.06, q.R * (0.15 + 0.85 * k), 40), `rgba(255,226,150,${0.9 * (1 - k)})`, q.R > 8 ? 5 : 3, q.R > 8 ? `rgba(255,230,160,${0.12 * (1 - k)})` : null); }
+  },
+};
+function cpclStep(x, y, fz, mine) {
+  CPCL.rings.push({ x, y, fz, R: CPCLC.STEP_R, t: 0, T: 0.6 });
+  fpsPuff(x, y, cpclG() + fz + 0.2, '255,226,150', 14); cpclSnd('step', x, y);
+  if (!mine) return;
+  let any = false;
+  for (const o of cpclNear(x, y, fz, CPCLC.STEP_R, 2.6)) { if (typeof zmpStatus === 'function') zmpStatus(o, 'mark', 5); cpclKb(o, x, y, 2.6, 0.7); any = true; }
+  if (any) rclMark();
+}
+function cpclRekindle(x, y, fz, mine) {
+  CPCL.rings.push({ x, y, fz, R: CPCLC.REK_R, t: 0, T: 1.1 });
+  fpsPuff(x, y, cpclG() + fz + 1, '255,230,160', 40); cpclSnd('rek', x, y);
+  const m = FPS.me;
+  if (!(m.dead > 0) && !zmIsDown() && Math.hypot(m.x - x, m.y - y) < CPCLC.REK_R) { m.hp = cpclMax(); FPS.calm = 0; if (!mine) ZM.banner = { text: 'Rekindled', t: 2, small: true, col: '#ffd88a' }; }
+  if (!mine) return;
+  let any = false;
+  for (const o of cpclNear(x, y, fz, CPCLC.REK_R, 3)) { if (!cpclSees(x, y, cpclG() + fz + 1.2, o, CPCLC.REK_R)) continue; zmHurt(o, rclHp() * 2.5, false, 'K', m.id, 'burn'); cpclKb(o, x, y, 3, 1.1); if (typeof zmpStatus === 'function') zmpStatus(o, 'mark', 4); any = true; }
+  if (any) rclMark();
+  // the fallen near me get up
+  if (ZM.net) for (const r of cpclOthers()) if (r.down && Math.hypot(r.x - x, r.y - y) < CPCLC.REK_R) zmnRevive(r.id);
+}
+
+// ---------- the Wrecker ----------
+RCL_EXT.wrecker = {
+  sticky: true, fuse: 3, sp: 15, trail: '200,120,90', ball: '#4a3a30',
+  reset() { CPCL.chains = []; CPCL.dash = null; CPCL.dashCd = 0; CPCL.cleaves = []; },
+  jump(m, air) {
+    if (!air) return false;
+    if (CPCL.dash || CPCL.dashCd > 0) return true;
+    CPCL.dash = { vx: Math.sin(m.h) * CPCLC.DASH_V, vy: Math.cos(m.h) * CPCLC.DASH_V, t: CPCLC.DASH_T, hit: new Set() }; CPCL.dashCd = CPCLC.DASH_CD;
+    m.vz = Math.max(m.vz, 2.2); cpclSnd('dash'); fpsPuff(m.x, m.y, cpclG() + (m.jz || 0) + 0.6, '224,140,110', 8);
+    return true;
+  },
+  burst(P, fz) {
+    const C = { x: P.x, y: P.y, fz, t: 0, mine: P.mine, done: false };
+    CPCL.chains.push(C); cpclSnd('chain', P.x, P.y);
+    if (!P.mine) return;
+    for (const o of cpclNear(P.x, P.y, fz, CPCLC.CHAIN_R, 2.4)) {
+      if (o.boss) continue;
+      const d = Math.hypot(o.x - P.x, o.y - P.y); if (d < 0.9) continue;
+      if (typeof zmpStatus === 'function') zmpStatus(o, 'kb', (P.x - o.x) / d * Math.min(7, d - 0.8), (P.y - o.y) / d * Math.min(7, d - 0.8), 1.0);
+      o.hitT = 0.2;
+    }
+  },
+  ult(m) { RCL.ultT = CPCLC.FURY; rclEvent('u'); FPS.scoped = false; },
+  shoot(m) {
+    m.cd = 0.5; FPS.recoil = 1.0;
+    const x = m.x, y = m.y, fz = m.jz || 0;
+    CPCL.cleaves.push({ x, y, z: cpclG() + fz + 1.1, h: m.h, t: 0 }); cpclSnd('cleave');
+    let any = false;
+    for (const o of cpclNear(x, y, fz, CPCLC.CLEAVE_R, 2)) {
+      const d = Math.hypot(o.x - x, o.y - y);
+      if (d > 0.8 && Math.abs(angDiff(bearingOf(o.x - x, o.y - y), m.h)) > 1.4) continue;
+      zmHurt(o, rclHp() * 1.1, false, 'W', m.id); o.hitT = 0.3; cpclKb(o, x, y, 2.4, 0.8); any = true;
+      fpsPuff(o.x, o.y, cpclG() + (o.jz || 0) + 1.1, '224,120,90', 5);
+    }
+    if (any) rclMark();
+    if (typeof zmnShot === 'function') zmnShot('c', m.h, m.p);
+  },
+  // (rclTick: kills since the last frame) in the Fury, every one dropped mends a knock
+  kill(n) { if (RCL.cls === 'wrecker' && RCL.ultT > 0) cpclMend(n); },
+  hurt(n, mine) { if (!mine) return n; return n * (RCL.ultT > 0 ? 0.5 : 0.75); },
+  tick(dt, mine) {
+    if (!mine) return;
+    if (CPCL.dashCd > 0) CPCL.dashCd -= dt;
+    const m = FPS.me, D = CPCL.dash;
+    if (D) {
+      D.t -= dt; fpsMove(m, D.vx * dt, D.vy * dt);
+      for (const o of cpclNear(m.x, m.y, m.jz || 0, 1.7, 2)) if (!D.hit.has(o)) { D.hit.add(o); zmHurt(o, rclHp() * 0.8, false, 'W', m.id); o.hitT = 0.25; cpclKb(o, m.x - D.vy * 0.05, m.y + D.vx * 0.05, 2, 0.7); rclMark(); }
+      if (D.t <= 0) CPCL.dash = null;
+    }
+    for (const C of CPCL.chains) { C.t += dt; if (!C.done && C.t > 0.5) { C.done = true; zxBoom(C.x, C.y, cpclG() + C.fz + 0.4, 5.4, rclHp() * 2.5, 'W', C.mine, 0.5); } }
+    CPCL.chains = CPCL.chains.filter(C => C.t < 0.9);
+    for (const c of CPCL.cleaves) c.t += dt; CPCL.cleaves = CPCL.cleaves.filter(c => c.t < 0.25);
+  },
+  draw(stroke, ring, tm) {
+    const G0 = cpclG();
+    for (const C of CPCL.chains) { const k = Math.min(1, C.t / 0.5); stroke(ring(C.x, C.y, G0 + C.fz + 0.05, CPCLC.CHAIN_R * (1 - 0.85 * k), 36), `rgba(224,120,90,${0.85 * (1 - 0.6 * k)})`, 3); for (let i = 0; i < 6; i++) { const a = i / 6 * 6.283 + C.x, r = CPCLC.CHAIN_R * (1 - 0.85 * k); stroke([[C.x + Math.sin(a) * r, C.y + Math.cos(a) * r, G0 + C.fz + 0.3], [C.x, C.y, G0 + C.fz + 0.3]], `rgba(150,130,120,${0.6 * (1 - k)})`, 2); } }
+    for (const c of CPCL.cleaves) { const k = c.t / 0.25, pts = []; for (let i = 0; i <= 14; i++) { const a = c.h - 1.4 + 2.8 * i / 14; pts.push([c.x + Math.sin(a) * CPCLC.CLEAVE_R * (0.6 + 0.4 * k), c.y + Math.cos(a) * CPCLC.CLEAVE_R * (0.6 + 0.4 * k), c.z]); } stroke(pts, `rgba(255,170,130,${0.9 * (1 - k)})`, 4); }
+  },
+};
+
+// ---------- the Riding Officer ----------
+RCL_EXT.officer = {
+  sticky: true, fuse: 2.5, gr: 2.5, sp: 36, flat: true, trail: '255,160,90', ball: '#d8d0c0', reload: 0.75,
+  reset() { CPCL.bar = []; CPCL.hover = 0; },
+  dmg(d, dmg, head, code) { return head && /^[a-z]$/.test(code || '') ? dmg * 1.35 : dmg; },
+  jump(m, air) {
+    if (!air) return false;
+    if (CPCL.hover > 0) { CPCL.hover = 0; return true; }
+    if (RCL.air >= 1) return true;
+    RCL.air = 1; CPCL.hover = CPCLC.HOVER; m.vz = Math.max(m.vz, 0.4); cpclSnd('hover');
+    return true;
+  },
+  burst(P, fz) {
+    zxBoom(P.x, P.y, P.z + 0.2, CPCLC.ROCK_R, rclHp() * 3, 'R', P.mine, 1.2);
+    if (P.mine) for (const o of cpclNear(P.x, P.y, fz, CPCLC.ROCK_R, 2.5)) if (typeof zmpStatus === 'function') zmpStatus(o, 'mark', 4);
+  },
+  ult(m) {
+    const ez = cpclG() + FPSC.EYE + (m.jz || 0), r = fpsRay(m.x, m.y, ez, m.h, m.p, m.id, [], 90);
+    const t = r.kind === 'none' ? 40 : Math.max(6, r.t), x = m.x + Math.sin(m.h) * t, y = m.y + Math.cos(m.h) * t, fz = rclFloor(x, y, Math.max(0, ez + Math.tan(m.p) * t - cpclG() + 0.5));
+    cpclBarrage(x, y, fz, true); rclEvent('b', x - FPSC.CX, y - FPSC.CY, fz);
+  },
+  tick(dt, mine) {
+    if (mine) {
+      const m = FPS.me;
+      if (CPCL.hover > 0) { if (!cpclAir(m)) CPCL.hover = 0; else { CPCL.hover -= dt; if (m.vz < 0) m.vz = -0.12; if (!reduceMotion && Math.random() < dt * 14) FPS.parts.push({ x: m.x + (Math.random() - 0.5) * 0.5, y: m.y + (Math.random() - 0.5) * 0.5, z: cpclG() + (m.jz || 0) + 0.1, vx: 0, vy: 0, vz: -0.6, t: 0.5, c: '170,200,255', up: false }); } }
+    }
+    for (const B of CPCL.bar) { B.t += dt; for (const s of B.s) if (!s.done && B.t >= s.at) { s.done = true; zxBoom(s.x, s.y, cpclG() + s.fz + 0.3, 5, rclHp() * 2.4, 'R', B.mine, 1); } }
+    CPCL.bar = CPCL.bar.filter(B => B.t < CPCLC.BAR_T + 1.5);
+  },
+  heard(r, k, a) { if (k === 'b' && a.length >= 3) { cpclBarrage(FPSC.CX + a[0], FPSC.CY + a[1], a[2], false); fpsFeed(`${r.n}: Rocket Barrage.`); } },
+  draw(stroke, ring, tm) {
+    const G0 = cpclG();
+    for (const B of CPCL.bar) {
+      const f = Math.min(1, (CPCLC.BAR_T + 1.5 - B.t) / 1);
+      stroke(ring(B.x, B.y, G0 + B.fz + 0.05, CPCLC.BAR_R, 36), `rgba(138,180,255,${0.6 * f * (0.7 + 0.3 * Math.sin(tm * 8))})`, 2, `rgba(138,180,255,${0.06 * f})`);
+      for (const s of B.s) { const k = (B.t - (s.at - 0.6)) / 0.6; if (s.done || k < 0) continue; const z = G0 + s.fz + 40 * (1 - k); stroke([[s.x - 3 * (1 - k), s.y, z + 3], [s.x - 3 * (1 - k) * 0.9, s.y, z]], 'rgba(255,190,120,0.95)', 3); cpclGlow(s.x - 3 * (1 - k) * 0.9, s.y, z, '255,180,110', 0.1, 1); }
+    }
+  },
+};
+function cpclBarrage(x, y, fz, mine) {
+  const s = [];
+  for (let i = 0; i < CPCLC.BAR_N; i++) { const a = Math.random() * 6.283, r = Math.sqrt(Math.random()) * CPCLC.BAR_R, px = x + Math.sin(a) * r, py = y + Math.cos(a) * r; s.push({ x: px, y: py, fz: rclFloor(px, py, fz + 0.5), at: 0.6 + CPCLC.BAR_T * i / CPCLC.BAR_N, done: false }); }
+  CPCL.bar.push({ x, y, fz, t: 0, s, mine }); cpclSnd('whistle', x, y);
+}
+
+// ---------- the Lampwright ----------
+RCL_EXT.lampw = {
+  sticky: true, fuse: 3, sp: 14, trail: '200,170,255', ball: '#b08a40',
+  reset() { CPCL.sen = []; CPCL.lens = []; CPCL.hook = null; CPCL.hookCd = 0; },
+  dmg(d, dmg, head, code) { return /^[a-z]$/.test(code || '') ? dmg * 1.15 : dmg; },
+  jump(m, air) {
+    if (!air) return false;
+    if (CPCL.hook) { CPCL.hook = null; return true; }
+    if (CPCL.hookCd > 0) return true;
+    const ez = cpclG() + FPSC.EYE + (m.jz || 0), r = fpsRay(m.x, m.y, ez, m.h, m.p, m.id, [], CPCLC.HOOK_R);
+    if (r.kind === 'none' || r.kind === 'body' || r.t < 2) { rclTone('tink'); return true; }
+    const t = r.t - 0.8;
+    CPCL.hook = { x: m.x + Math.sin(m.h) * t, y: m.y + Math.cos(m.h) * t, z: ez + Math.tan(m.p) * t, t: 1.1 }; CPCL.hookCd = CPCLC.HOOK_CD; cpclSnd('hook');
+    return true;
+  },
+  burst(P, fz) { CPCL.sen.push({ x: P.x, y: P.y, fz, t: CPCLC.SEN_T, T: CPCLC.SEN_T, k: 0.3, tg: [], beam: 0, mine: P.mine, r: CPCLC.SEN_R, n: 1, dmg: 0.3, ev: 0.3 }); cpclSnd('lan', P.x, P.y); },
+  // (set down a few steps ahead, where it's clear, so it isn't stood in your eyes)
+  ult(m) {
+    let x = m.x, y = m.y; for (let d = 3; d > 0.4; d -= 0.5) { const tx = m.x + Math.sin(m.h) * d, ty = m.y + Math.cos(m.h) * d; if (!zmBlockedAt(tx, ty, 0.4, m.fl || 0)) { x = tx; y = ty; break; } }
+    const fz = rclFloor(x, y, (m.fl || 0) + 0.4); cpclLens(x, y, fz, true); rclEvent('L', x - FPSC.CX, y - FPSC.CY, fz);
+  },
+  hurt(n) { const m = FPS.me; return CPCL.lens.some(L => Math.hypot(m.x - L.x, m.y - L.y) < CPCLC.LENS_SAFE && Math.abs((m.jz || 0) - L.fz) < 2) ? n * 0.5 : n; },
+  tick(dt, mine) {
+    const m = FPS.me;
+    if (mine) {
+      if (CPCL.hookCd > 0) CPCL.hookCd -= dt;
+      const H = CPCL.hook;
+      if (H) {
+        H.t -= dt;
+        const dx = H.x - m.x, dy = H.y - m.y, d = Math.hypot(dx, dy), dz = H.z - (cpclG() + (m.jz || 0) + 1);
+        if (d < 1 || H.t <= 0) CPCL.hook = null;
+        else {
+          const st = Math.min(d, CPCLC.HOOK_V * dt);
+          if (!fpsMove(m, dx / d * st, dy / d * st) && d > 2) CPCL.hook = null;
+          if (dz > -0.5) { m.vz = clamp(dz * 5, 2, 12); if (!((m.jz || 0) > (m.fl || 0))) m.jz = (m.fl || 0) + 0.001; }
+        }
+      }
+    }
+    for (const S of [...CPCL.sen, ...CPCL.lens]) {
+      S.t -= dt; S.k -= dt; S.beam -= dt;
+      if (S.k > 0) continue;
+      S.k = S.ev;
+      const top = cpclG() + S.fz + (S.big ? 2.4 : 1.0);
+      const c = cpclNear(S.x, S.y, S.fz, S.r, 4).sort((a, b) => Math.hypot(a.x - S.x, a.y - S.y) - Math.hypot(b.x - S.x, b.y - S.y)).filter(o => cpclSees(S.x, S.y, top, o, S.r)).slice(0, S.n);
+      S.tg = c; if (c.length) { S.beam = S.ev * 0.8; if (Math.random() < 0.5) cpclSnd('zap', S.x, S.y); }
+      if (S.mine) for (const o of c) { o.scorch = Math.min(1, (o.scorch || 0) + 0.3); zmHurt(o, rclHp() * S.dmg, false, S.big ? 'E' : 'S', m.id, 'burn'); if (S.big && typeof zmpStatus === 'function') zmpStatus(o, 'slow', 0.6); }
+    }
+    CPCL.sen = CPCL.sen.filter(S => S.t > 0); CPCL.lens = CPCL.lens.filter(S => S.t > 0);
+  },
+  heard(r, k, a) { if (k === 'L' && a.length >= 3) { cpclLens(FPSC.CX + a[0], FPSC.CY + a[1], a[2], false); fpsFeed(`${r.n} set down the Great Lens.`); } },
+  draw(stroke, ring, tm) {
+    const G0 = cpclG(), m = FPS.me;
+    if (CPCL.hook && RCL.cls === 'lampw') stroke([[m.x + Math.sin(m.h + 0.5) * 0.4, m.y + Math.cos(m.h + 0.5) * 0.4, G0 + (m.jz || 0) + 1.2], [CPCL.hook.x, CPCL.hook.y, CPCL.hook.z]], 'rgba(200,190,170,0.9)', 2);
+    for (const S of [...CPCL.sen, ...CPCL.lens]) {
+      const f = Math.min(1, S.t / 1.2) * Math.min(1, (S.T - S.t) / 0.3), z = G0 + S.fz, h = S.big ? 2.4 : 1.0, w = S.big ? 0.9 : 0.4;
+      for (let i = 0; i < 3; i++) { const a = i / 3 * 6.283; stroke([[S.x + Math.sin(a) * w, S.y + Math.cos(a) * w, z], [S.x, S.y, z + h]], `rgba(176,138,64,${f})`, S.big ? 4 : 2); }
+      if (S.big) stroke(ring(S.x, S.y, z + 0.05, CPCLC.LENS_SAFE, 32), `rgba(192,154,255,${0.6 * f * (0.75 + 0.25 * Math.sin(tm * 4))})`, 2, `rgba(192,154,255,${0.08 * f})`);
+      cpclGlow(S.x, S.y, z + h, '210,180,255', S.big ? 0.4 : 0.16, f);
+      if (S.beam > 0) for (const o of S.tg) if (!o.dead) stroke([[S.x, S.y, z + h], [o.x, o.y, G0 + (o.jz || 0) + 1.1]], `rgba(230,210,255,${0.9 * f})`, S.big ? 4 : 2);
+    }
+  },
+};
+function cpclLens(x, y, fz, mine) { CPCL.lens.push({ x, y, fz, t: CPCLC.LENS_T, T: CPCLC.LENS_T, k: 0.25, tg: [], beam: 0, mine, r: CPCLC.LENS_R, n: 3, dmg: 0.3, ev: 0.25, big: true }); cpclSnd('lens', x, y); fpsPuff(x, y, cpclG() + fz + 1.5, '210,180,255', 20); }
+
+// a glow at a point in the world: r, its size in metres
+function cpclGlow(x, y, z, rgb, r, f) {
+  const c = cam(x, y, z); if (c.f < 0.4) return;
+  const q = proj(c), s = Math.max(3, r * q.s);
+  const gr = ctx.createRadialGradient(q.x, q.y, 0, q.x, q.y, s * 3); gr.addColorStop(0, `rgba(${rgb},${0.9 * f})`); gr.addColorStop(0.3, `rgba(${rgb},${0.35 * f})`); gr.addColorStop(1, `rgba(${rgb},0)`);
+  ctx.fillStyle = gr; ctx.beginPath(); ctx.arc(q.x, q.y, s * 3, 0, 6.283); ctx.fill();
+}
+
 // ---- src/cpm01.js ----
 'use strict';
 // The Chronicle of the Light, mission 1: The First Fire (c. 1200s, Lantern Rock). Its stages and the tools it shares
@@ -50038,7 +50425,7 @@ cpStage('wip', {
 // the stage's word (ka); a joined player asks (raidAsk 'take' i, 'feed', 'brand', 'light').
 //
 // The mission (three stages, through the night of the haar):
-//  I.   Driftwood (cp_m01wood): dusk. Carry driftwood up from the strand and stack it on the Fire Step (3 + one for each
+//  I.   Driftwood (cp_m01wood): dusk. Carry driftwood up from the strand and stack it on the Fire Step (2 + one for each
 //       of you), then hold Use at it to light the fire. The first of the drowned come up as the light goes.
 //  II.  The Haar (cp_m01haar): the night. Keep the fire fed through it (CPA.NIGHT seconds) while the haar rolls in
 //       in banks and the drowned of the old wrecks come up the strand for it; wood washes up as the sea breaks
@@ -50166,7 +50553,8 @@ FPI_K.cpahearth = {
 
 // ---------- the fire-keeping kit ----------
 // (any stage, everyone, as it's entered) cfg: { lit, fuel, need, piles (true: every spot has a bundle), drain,
-//   bankEvery: [min, max] seconds between banks (0: none), wash: seconds between bundles washing up (0: none) }
+//   bankEvery: [min, max] seconds between banks (0: none), wash: seconds between bundles washing up (0: none),
+//   and, to make a stage kinder or harder than the kit's own: wood, bankHit, bankSp, kick, ember, brand (as CPA's) }
 function cpkEnter(cfg) {
   const S = RAID.st;
   S.kcfg = cfg;
@@ -50189,9 +50577,9 @@ function cpkTick(dt) {
     let kick = 0; for (const z of ZM.z) if (!z.dead && !z.boss && !(z.rr > 0) && Math.hypot(z.x - fx, z.y - fy) < CPA.KICK_R) kick++;
     K.kick = kick;
     const was = K.fuel;
-    K.fuel = Math.max(0, K.fuel - (cfg.drain || 0) * (1 + 0.22 * (n - 1)) * dt - kick * CPA.KICK * dt);
+    K.fuel = Math.max(0, K.fuel - (cfg.drain || 0) * (1 + 0.22 * (n - 1)) * dt - kick * (cfg.kick || CPA.KICK) * dt);
     if (kick && was > 0 && Math.random() < dt * 0.6) cpaFeed('The drowned are kicking the fire apart!');
-    if (K.fuel <= 0 && was > 0) { K.emb = CPA.EMBER; if (cfg.onEmbers) cfg.onEmbers(); }
+    if (K.fuel <= 0 && was > 0) { K.emb = cfg.ember || CPA.EMBER; if (cfg.onEmbers) cfg.onEmbers(); }
     if (K.fuel <= 0) { K.emb -= dt; if (K.emb <= 0 && cfg.onOut) { K.emb = 0; cfg.onOut(); } }
   }
   // the sea gives up more wood
@@ -50213,7 +50601,7 @@ function cpkTick(dt) {
     if (k) { B.hp -= dt * k / CPA.BURN; if (B.hp <= 0) { K.banks.splice(i, 1); K.burnt++; continue; } }
     if (d < 2.6) {
       K.banks.splice(i, 1); K.hits++;
-      if (K.lit && K.fuel > 0) { const was = K.fuel; K.fuel = Math.max(0, K.fuel - (cfg.bankHit || CPA.BANK_HIT)); if (K.fuel <= 0 && was > 0) { K.emb = CPA.EMBER; if (cfg.onEmbers) cfg.onEmbers(); } }
+      if (K.lit && K.fuel > 0) { const was = K.fuel; K.fuel = Math.max(0, K.fuel - (cfg.bankHit || CPA.BANK_HIT)); if (K.fuel <= 0 && was > 0) { K.emb = cfg.ember || CPA.EMBER; if (cfg.onEmbers) cfg.onEmbers(); } }
       if (cfg.onSmother) cfg.onSmother();
     }
   }
@@ -50239,7 +50627,7 @@ function cpkQ(sid, k, a) {
     if (cfg.onFeed) cfg.onFeed(sid);
     return true;
   }
-  if (k === 'brand') { if (K.lit && K.fuel > 0 && !K.carry[sid] && cpaUp(sid)) K.brand[sid] = CPA.BRAND; return true; }
+  if (k === 'brand') { if (K.lit && K.fuel > 0 && !K.carry[sid] && cpaUp(sid)) K.brand[sid] = cfg.brand || CPA.BRAND; return true; }
   if (k === 'light') { if (!K.lit && K.stack >= K.need) { K.lit = 1; K.fuel = Math.max(K.fuel, Math.min(100, 30 + K.stack * 12)); if (cfg.onLight) cfg.onLight(sid); } else if (K.lit && K.fuel <= 0 && cfg.relight) { K.fuel = cfg.relight; K.emb = 0; if (cfg.onLight) cfg.onLight(sid); } return true; }
   if (k === 'drop') { delete K.carry[sid]; return true; }
   return false;
@@ -50530,9 +50918,9 @@ cpStage('m01wood', cp1Stage({
   music: () => 'cpm01dusk',
   enter() {
     const n = cpaN();
-    cpkEnter({ lit: false, need: 3 + n, piles: true, drain: 0, onFeed: sid => cp1WoodFed(sid), onLight: sid => cp1Lit(sid) });
+    cpkEnter({ lit: false, need: 2 + n, piles: true, drain: 0, onFeed: sid => cp1WoodFed(sid), onLight: sid => cp1Lit(sid) });
     Object.assign(RAID.st, { spT: 30, t: 0 });
-    if (ZM.net !== 'client') { cpObjective(`Carry driftwood up from the strand to the Fire Step (0 of ${3 + n})`); cpWaypoint(CPA_SPOTS[3][0], CPA_SPOTS[3][1], 'Driftwood'); }
+    if (ZM.net !== 'client') { cpObjective(`Carry driftwood up from the strand to the Fire Step (0 of ${2 + n})`); cpWaypoint(CPA_SPOTS[3][0], CPA_SPOTS[3][1], 'Driftwood'); }
     ZM.round = Math.max(ZM.round, 4);
   },
   tick(dt) {
@@ -50566,7 +50954,8 @@ cpStage('m01haar', cp1Stage({
   music: () => 'cpm01haar',
   enter() {
     const n = cpaN();
-    cpkEnter({ lit: true, fuel: 85, piles: false, drain: 0.62, wash: 7.5, bankEvery: [13, 19], bankFirst: 9, bankTwo: 0.25,
+    // (mission 1 is the first: a forgiving fire, slow to burn down, hard to smother, long on embers)
+    cpkEnter({ lit: true, fuel: 95, piles: false, drain: 0.4, wash: 5.5, bankEvery: [17, 24], bankFirst: 12, bankTwo: 0.12, wood: 30, bankHit: 16, bankSp: 1.7, kick: 1.2, ember: 24, brand: 40,
       onEmbers: () => { cpaOnce('h5', 'fire', 'She’s down to embers! Wood, now!', 'cp_m01_15'); cpaBan('Embers', 'feed the fire before it goes out', '#ff9a7a'); },
       onOut: () => cpFail('The fire went out, and the haar came in over the rock'),
       onBank: () => { if (cpaOnce('h2', 'fire', 'Fog on the rock! Meet it with fire before it reaches her.', 'cp_m01_12')) cpaBan('The haar rolls in', 'take a brand from the fire (Use) and walk into the fog to burn it off'); },
@@ -50606,7 +50995,7 @@ cpStage('m01ship', cp1Stage({
   n: 'The Ship', sub: 'a light in the fog',
   music: () => RAID.st.keel ? 'cpm01keel' : 'cpm01ship',
   enter() {
-    cpkEnter({ lit: true, fuel: 70, piles: false, drain: 0.85, wash: 5.2, bankEvery: [11, 16], bankFirst: 8, bankTwo: 0.35,
+    cpkEnter({ lit: true, fuel: 85, piles: false, drain: 0.55, wash: 4, bankEvery: [15, 21], bankFirst: 11, bankTwo: 0.18, wood: 30, bankHit: 16, bankSp: 1.7, kick: 1.2, ember: 24, brand: 40,
       onEmbers: () => cpaBan('Embers', 'feed the fire before it goes out', '#ff9a7a'),
       onOut: () => cpFail('The fire went out, and the ship came on in the dark'),
       onSmother: () => cpaFeed('Fog over the fire: it’s lost its height. Feed it!') });
@@ -50621,7 +51010,7 @@ cpStage('m01ship', cp1Stage({
     if (S.turned) { S.turnT -= dt; if (S.turnT <= 0 && S.turnT > -50) { S.turnT = -99; cpDone(); } return; }
     // she sees it only while it blazes
     const high = K.fuel >= CPA.HIGH;
-    if (high) { S.see += dt; S.seenLast = S.t; } else S.see = Math.max(0, S.see - dt * 0.15);
+    if (high) { S.see += dt; S.seenLast = S.t; } else S.see = Math.max(0, S.see - dt * 0.08);
     S.ship = clamp(S.t / CPA.SHIP, 0, 1);
     if (S.t > 6 && !high) cpaOnce('s1', 'fire', 'Higher! She can’t see a glimmer through this.', 'cp_m01_20');
     if (S.see > CPA.SEE * 0.45) cpaOnce('s2', 'fire', 'She’s seen us. She’s going about. Keep it high!', 'cp_m01_21');
@@ -69214,7 +69603,7 @@ function closeNotes() {
 // opened from the featured banner at the top of the menu (and the featured button above the list on the desk menu).
 // Going back hides the frame and pauses it, so the night you were on is still there when you come back.
 // The frame calls origClose (its Menu button, Esc) and the sfx functions in audio.js, so it follows the volume setting.
-var ORIG_PAGE = "<!doctype html>\r\n<html lang=\"en\">\r\n<head>\r\n<meta charset=\"utf-8\">\r\n<meta name=\"viewport\" content=\"width=device-width,initial-scale=1,viewport-fit=cover\">\r\n<title>Skerry Light<\/title>\r\n<style>\r\n/* Skerry Light (the original 2D game, remade): you are the keeper. Swing the lighthouse beam to show the ships\r\n   the rocks, and bring them into harbour. One self-contained file: no libraries, no downloads.\r\n   In the full game it's \"The Original\" on the main menu: src/original.js shows it in a frame over the menu, and the build\r\n   inlines this file there. Its sounds are the main game's own (the bell, a chime, a crunch), played through the parent\r\n   page so they follow the volume setting; opened on its own, it plays silent. Esc or the Menu button go back. */\r\n*{box-sizing:border-box;margin:0;padding:0}\r\nhtml,body{height:100%;background:#050b16;color:#e9d9a6;font-family:Georgia,\"Times New Roman\",serif;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none}\r\ncanvas{display:block;width:100vw;height:100vh;cursor:crosshair}\r\n#hud{position:fixed;top:0;left:0;right:0;display:flex;justify-content:space-between;padding:12px 16px 12px 104px;font:13px/1.3 \"Courier New\",monospace;letter-spacing:.08em;text-transform:uppercase;pointer-events:none;color:#8f8a78}\r\n#hud b{display:block;color:#e9d9a6;font-size:20px;letter-spacing:0}\r\n#hud .r{text-align:right}\r\n#log{position:fixed;left:0;right:0;bottom:18px;text-align:center;font-style:italic;font-size:17px;opacity:0;transition:opacity .6s;pointer-events:none;padding:0 16px}\r\n.card{position:fixed;inset:0;display:flex;align-items:safe center;justify-content:center;background:rgba(3,6,12,.75);padding:16px;overflow-y:auto;z-index:3}\r\n.card>div{margin:auto 0}\r\n.card[hidden]{display:none}\r\n.card>div{max-width:520px;width:100%;border:1px solid #3a3a33;background:#080c16;padding:28px 28px 24px}\r\n.card small{display:block;font:12px \"Courier New\",monospace;letter-spacing:.2em;text-transform:uppercase;color:#8f8a78;margin-bottom:10px}\r\n.card h1{font-weight:normal;font-size:clamp(38px,9vw,60px);line-height:1;color:#ffd98a;margin-bottom:14px}\r\n.card p{color:#cfc6a8;font-size:16px;line-height:1.5;margin-bottom:10px}\r\n.card ul{margin:6px 0 16px 18px;color:#cfc6a8;font-size:15px;line-height:1.5}\r\n.card button{margin-top:10px;font:inherit;font-size:19px;padding:10px 22px;background:#ffd98a;color:#14110a;border:0;cursor:pointer}\r\n.stats{display:flex;gap:24px;margin:14px 0;border-top:1px solid #333;border-bottom:1px solid #333;padding:10px 0}\r\n.stats div{font:12px \"Courier New\",monospace;letter-spacing:.15em;color:#8f8a78;text-transform:uppercase}\r\n.stats b{display:block;font-size:22px;color:#ffd98a;letter-spacing:0}\r\n.card ul b{color:#ffd98a;font-weight:normal}\r\n#menuBtn{position:fixed;top:12px;left:16px;font:13px \"Courier New\",monospace;letter-spacing:.08em;text-transform:uppercase;padding:7px 11px;background:rgba(8,12,22,.85);color:#e9d9a6;border:1px solid #3a3a33;cursor:pointer;z-index:2}\r\n#menuBtn:hover,#menuBtn:focus-visible{border-color:#ffd98a;color:#ffd98a;outline:none}\r\n<\/style>\r\n<\/head>\r\n<body>\r\n<canvas id=\"c\"><\/canvas>\r\n<div id=\"hud\">\r\n  <div>Night<b id=\"hNight\">1<\/b><\/div>\r\n  <div style=\"text-align:center\">Safe in harbour<b id=\"hSafe\">0 / 0<\/b><\/div>\r\n  <div class=\"r\">Wrecked<b id=\"hLost\">0 / 3<\/b><\/div>\r\n<\/div>\r\n<div id=\"log\"><\/div>\r\n<button id=\"menuBtn\" type=\"button\" title=\"Back to the main menu (Esc)\">‹ Menu<\/button>\r\n\r\n<div class=\"card\" id=\"intro\"><div>\r\n  <small>The Original · Skerry Light as it began<\/small>\r\n  <h1>Skerry Light<\/h1>\r\n  <p>You are the keeper. Ships are standing in for the harbour through the skerries, and they can't see the rocks. Swing the beam to show them.<\/p>\r\n  <ul>\r\n    <li><b>Aim<\/b> the beam with the mouse, ← → or A / D, or drag a finger<\/li>\r\n    <li><b>The ring<\/b> round a ship fills while your beam is on her. While it holds any light she remembers every rock you show her; let it run dry and she forgets them all<\/li>\r\n    <li><b>Ships gather speed<\/b> all night, with no top speed<\/li>\r\n    <li><b>The fog bell<\/b> (Space, or double tap) slows every ship for a few seconds. It swings again in 18 seconds<\/li>\r\n    <li>Lose three ships in a night and you're relieved of duty<\/li>\r\n  <\/ul>\r\n  <div class=\"stats\"><div>Best night<b id=\"iBest\">0<\/b><\/div><\/div>\r\n  <button id=\"startBtn\">Light the lamp<\/button>\r\n<\/div><\/div>\r\n\r\n<div class=\"card\" id=\"between\" hidden><div>\r\n  <small id=\"bSmall\">Night 1 · dawn<\/small>\r\n  <h1 id=\"bHead\">Dawn<\/h1>\r\n  <p id=\"bText\"><\/p>\r\n  <div class=\"stats\"><div>Safe<b id=\"bSafe\">0<\/b><\/div><div>Wrecked<b id=\"bLost\">0<\/b><\/div><div>Best night<b id=\"bBest\">0<\/b><\/div><\/div>\r\n  <button id=\"nextBtn\">Next night<\/button>\r\n<\/div><\/div>\r\n\r\n<script>\r\n'use strict';\r\n// the main game's sounds, through the page this sits in (none when opened on its own)\r\nconst sfx = (name, ...a) => { try { if (parent !== window && typeof parent[name] === 'function') parent[name](...a); } catch (e) {} };\r\nconst toMenu = () => { try { if (parent !== window && typeof parent.origClose === 'function') parent.origClose(); } catch (e) {} };\r\n// ---- the world, in its own units (1200 × 800), fitted to the screen ----\r\nconst W = 1200, H = 800;\r\nconst LIGHT = { x: 40, y: 760 };               // the lighthouse, in the far bottom-left corner\r\nconst HARBOUR = { x: 1110, y: 752, r: 46 };    // the harbour mouth, bottom right\r\nconst BEAM = { len: 1500, half: 0.09, turn: 2.6 }; // reach, half-width (radians), turn speed (rad/s)\r\nconst FADE = 3;          // a lit rock fades away this long after the beam leaves it\r\nconst MEMORY = 6;        // a full ring drains away over this long (s)\r\nconst FILL = 0.7;        // and fills from empty in this long, with the beam on her (s)\r\nconst SHORE = 718;       // the top of the shore along the bottom (its drawn edge is 720)\r\nconst GROW = 0.035;      // ships gather speed exponentially: this much faster per second (3.5%), with no top speed\r\nconst cv = document.getElementById('c'), cx = cv.getContext('2d');\r\nlet scale = 1, offX = 0, offY = 0, dpr = 1;\r\nfunction fit() {\r\n  dpr = Math.min(window.devicePixelRatio || 1, 2);\r\n  cv.width = innerWidth * dpr; cv.height = innerHeight * dpr;\r\n  scale = Math.min(innerWidth / W, innerHeight / H);\r\n  offX = (innerWidth - W * scale) / 2; offY = (innerHeight - H * scale) / 2;\r\n}\r\naddEventListener('resize', fit); fit();\r\n\r\nconst rnd = (a, b) => a + Math.random() * (b - a);\r\nconst ang = (a) => Math.atan2(Math.sin(a), Math.cos(a));\r\nconst dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);\r\n\r\n// ---- state ----\r\nconst G = {\r\n  on: false, night: 1, best: 0, aim: -0.6, beam: -0.6, keys: {}, mouse: null,\r\n  rocks: [], ships: [], wrecks: [], toSpawn: 0, spawnT: 0, safe: 0, lost: 0, total: 0,\r\n  bell: 0, bellSlow: 0, t: 0, msgT: 0,\r\n};\r\ntry { G.best = +localStorage.getItem('skerry2d-best') || 0; } catch (e) {}\r\n\r\nfunction say(text, secs) { const el = document.getElementById('log'); el.textContent = text; el.style.opacity = 1; G.msgT = secs || 4; }\r\n\r\n// ---- a night ----\r\nfunction rock(x, y, r) { return { x, y, r, lit: -99 }; }\r\nfunction okSpot(r, rocks) {\r\n  return dist(r, LIGHT) > 110 && dist(r, HARBOUR) > 130 && !rocks.some(o => dist(o, r) < o.r + r.r + 34);\r\n}\r\nfunction makeRocks(n) {\r\n  const rocks = [];\r\n  for (let tries = 0; rocks.length < n && tries < 4000; tries++) {\r\n    const r = rock(rnd(60, W - 60), rnd(110, 680), rnd(10, 22));\r\n    if (okSpot(r, rocks)) rocks.push(r);\r\n  }\r\n  // and a few clusters, the true skerries\r\n  for (let k = 0; k < 2 + Math.floor(G.night / 2); k++) {\r\n    const x0 = rnd(250, W - 200), y0 = rnd(220, 580);\r\n    for (let j = 0; j < 4; j++) {\r\n      const r = rock(x0 + rnd(-40, 40), y0 + rnd(-30, 30), rnd(7, 13));\r\n      if (dist(r, HARBOUR) > 130 && dist(r, LIGHT) > 110) rocks.push(r);\r\n    }\r\n  }\r\n  return rocks;\r\n}\r\nfunction startNight() {\r\n  const n = G.night;\r\n  G.rocks = makeRocks(12 + n * 3);\r\n  G.ships = []; G.wrecks = []; G.safe = 0; G.lost = 0;\r\n  G.total = 3 + n; G.toSpawn = G.total; G.spawnT = 1.5;\r\n  G.bell = 0; G.bellSlow = 0;\r\n  G.on = true;\r\n  say(n === 1 ? 'The first ship is standing in. Show her the rocks.' : `Night ${n}. ${G.total} ships expected.`, 5);\r\n  hud();\r\n}\r\nconst NAMES = ['Gannet', 'Kittiwake', 'Margaret Ann', 'Brothers', 'Hopewell', 'Sea Holly', 'Providence', 'Fulmar', 'Endeavour', 'Two Sisters', 'Curlew', 'Patience'];\r\nfunction spawnShip() {\r\n  // in from the top, or from the left side above the lighthouse's corner\r\n  const s = Math.random() < 0.3 ? { x: -20, y: rnd(120, 380) } : { x: rnd(100, W - 250), y: -20 };\r\n  s.h = Math.atan2(HARBOUR.y - s.y, HARBOUR.x - s.x);\r\n  s.speed = rnd(22, 28) + G.night;\r\n  s.known = new Map(); s.state = 'sail'; s.mem = 0;\r\n  s.name = NAMES[(Math.random() * NAMES.length) | 0];\r\n  G.ships.push(s);\r\n}\r\n\r\n// ---- every frame ----\r\nfunction update(dt) {\r\n  G.t += dt;\r\n  // the beam swings towards where you aim, at its own pace\r\n  if (G.keys.left) G.aim -= BEAM.turn * dt;\r\n  if (G.keys.right) G.aim += BEAM.turn * dt;\r\n  if (G.mouse) G.aim = Math.atan2(G.mouse.y - LIGHT.y, G.mouse.x - LIGHT.x);\r\n  const d = ang(G.aim - G.beam), step = BEAM.turn * dt;\r\n  G.beam = ang(Math.abs(d) < step ? G.aim : G.beam + Math.sign(d) * step);\r\n\r\n  const inBeam = (p, pad) => {\r\n    const dd = dist(p, LIGHT); if (dd > BEAM.len) return false;\r\n    return Math.abs(ang(Math.atan2(p.y - LIGHT.y, p.x - LIGHT.x) - G.beam)) < BEAM.half + (pad || 0) / Math.max(dd, 1);\r\n  };\r\n  for (const r of G.rocks) if (inBeam(r, r.r)) r.lit = G.t;\r\n\r\n  if (G.bell > 0) G.bell -= dt;\r\n  if (G.bellSlow > 0) G.bellSlow -= dt;\r\n\r\n  if (G.toSpawn > 0 && (G.spawnT -= dt) <= 0) { spawnShip(); G.toSpawn--; G.spawnT = rnd(6, 10) - Math.min(G.night, 4) * 0.6; }\r\n\r\n  for (const s of G.ships) {\r\n    if (s.state !== 'sail') continue;\r\n    // the ring: lit, it fills; dark, it drains. While it holds any light, she learns every rock the beam shows;\r\n    // when it runs dry, she forgets them all\r\n    if (inBeam(s, 10)) s.mem = Math.min(1, s.mem + dt / FILL);\r\n    else s.mem = Math.max(0, s.mem - dt / MEMORY);\r\n    if (s.mem > 0) { for (const r of G.rocks) if (G.t - r.lit < 0.05) s.known.set(r, G.t); }\r\n    else s.known.clear();\r\n    // where she wants to go: she plots a course to the harbour round every rock she remembers, the lighthouse rock\r\n    // and the shore (replotted a few times a second, and at once when she learns a new rock), and steers for a point\r\n    // a little way along it. The harbour mouth faces up, so every course comes into it from above\r\n    if (!s.path || G.t >= s.planT || s.known.size !== s.planN) plot(s);\r\n    const aim = pathAim(s);\r\n    let want = Math.atan2(aim.y - s.y, aim.x - s.x);\r\n    // no top speed: she gathers way the whole time (the bell checks her)\r\n    s.speed *= Math.exp(GROW * dt);\r\n    const sp = s.speed * (G.bellSlow > 0 ? 0.35 : 1);\r\n    const turnRate = 1.1 + s.speed / 60;   // a faster ship answers her helm faster\r\n    s.h += Math.max(-turnRate * dt, Math.min(turnRate * dt, ang(want - s.h)));\r\n    // move in small steps, so a fast ship can't skip over a rock\r\n    const steps = Math.max(1, Math.ceil(sp * dt / 4));\r\n    for (let k = 0; k < steps && s.state === 'sail'; k++) {\r\n      s.x += Math.cos(s.h) * sp * dt / steps; s.y += Math.sin(s.h) * sp * dt / steps;\r\n      for (const r of G.rocks) if (dist(r, s) < r.r + 6) { wreck(s); break; }\r\n      if (s.state !== 'sail') break;\r\n      if (dist(s, LIGHT) < 60 || (s.y > 715 && s.x < HARBOUR.x - HARBOUR.r)) { wreck(s); break; }   // the lighthouse rock, the shore\r\n      if (dist(s, HARBOUR) < HARBOUR.r) { s.state = 'safe'; G.safe++; sfx('sfxChime'); say(`The ${s.name} is safe in harbour.`, 3); hud(); }\r\n    }\r\n    // off the chart: she turns back for the harbour\r\n    if (s.x < -60 || s.x > W + 60 || s.y < -60) { s.h = Math.atan2(H / 2 - s.y, W / 2 - s.x); s.planT = 0; }\r\n  }\r\n  G.ships = G.ships.filter(s => s.state === 'sail' || (s.fade = (s.fade ?? 1) - dt * 0.6) > 0);\r\n\r\n  if (G.lost >= 3) endNight(false);\r\n  else if (G.toSpawn === 0 && !G.ships.some(s => s.state === 'sail')) endNight(true);\r\n\r\n  if (G.msgT > 0 && (G.msgT -= dt) <= 0) document.getElementById('log').style.opacity = 0;\r\n}\r\n// ---- plotting a course: A* over a grid of CELL-sized squares, blocked by the rocks she remembers, the lighthouse\r\n// rock and the shore, except the harbour mouth. The water close round a rock (2 in the grid) costs a lot to cross,\r\n// so she keeps her distance but can still thread a narrow gap, or get clear when she's already close in ----\r\nconst CELL = 16, GW = Math.ceil(W / CELL), GH = Math.ceil(H / CELL), CLEAR = 22;\r\nconst SEA = new Uint8Array(GW * GH);   // the fixed coast: 1 where no ship may go\r\nfor (let j = 0; j < GH; j++) for (let i = 0; i < GW; i++) {\r\n  const x = (i + 0.5) * CELL, y = (j + 0.5) * CELL;\r\n  const mouth = Math.abs(x - HARBOUR.x) < HARBOUR.r - 12;\r\n  if ((y > SHORE - 24 && !mouth) || Math.hypot(x - LIGHT.x, y - LIGHT.y) < 60 + CLEAR) SEA[j * GW + i] = 1;\r\n}\r\nfunction blockedFor(s) {\r\n  const g = SEA.slice();\r\n  for (const [r] of s.known) {\r\n    const R = r.r + CLEAR, i0 = Math.max(0, ((r.x - R) / CELL) | 0), i1 = Math.min(GW - 1, ((r.x + R) / CELL) | 0), j0 = Math.max(0, ((r.y - R) / CELL) | 0), j1 = Math.min(GH - 1, ((r.y + R) / CELL) | 0);\r\n    for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) {\r\n      const d = Math.hypot((i + 0.5) * CELL - r.x, (j + 0.5) * CELL - r.y), k = j * GW + i;\r\n      if (d < r.r + 9 + CELL * 0.35) g[k] = 1;              // the rock itself: never\r\n      else if (d < R + CELL * 0.35 && !g[k]) g[k] = 2;       // the water close round it: only through a gap with no way round\r\n    }\r\n  }\r\n  return g;\r\n}\r\nfunction plot(s) {\r\n  s.planT = G.t + 0.4; s.planN = s.known.size;\r\n  const g = blockedFor(s), cl = (v, n) => Math.max(0, Math.min(n - 1, v | 0));\r\n  const si = cl(s.x / CELL, GW), sj = cl(s.y / CELL, GH), gi = cl(HARBOUR.x / CELL, GW), gj = cl(HARBOUR.y / CELL, GH);\r\n  const start = sj * GW + si, goal = gj * GW + gi, N = GW * GH;\r\n  const cost = new Float32Array(N).fill(Infinity), from = new Int32Array(N).fill(-1), done = new Uint8Array(N);\r\n  const h = k => { const dx = Math.abs(k % GW - gi), dy = Math.abs(((k / GW) | 0) - gj); return Math.max(dx, dy) + 0.414 * Math.min(dx, dy); };\r\n  const open = [start]; cost[start] = 0;   // a small binary heap on cost + h\r\n  const f = k => cost[k] + h(k);\r\n  const push = k => { open.push(k); let c = open.length - 1; while (c > 0) { const p = (c - 1) >> 1; if (f(open[p]) <= f(open[c])) break; [open[p], open[c]] = [open[c], open[p]]; c = p; } };\r\n  const pop = () => { const top = open[0], last = open.pop(); if (open.length) { open[0] = last; let c = 0; for (;;) { const l = 2 * c + 1, r = l + 1; let m = c; if (l < open.length && f(open[l]) < f(open[m])) m = l; if (r < open.length && f(open[r]) < f(open[m])) m = r; if (m === c) break; [open[m], open[c]] = [open[c], open[m]]; c = m; } } return top; };\r\n  let found = false;\r\n  while (open.length) {\r\n    const k = pop(); if (done[k]) continue; done[k] = 1;\r\n    if (k === goal) { found = true; break; }\r\n    const i = k % GW, j = (k / GW) | 0;\r\n    for (let dj = -1; dj <= 1; dj++) for (let di = -1; di <= 1; di++) {\r\n      if (!di && !dj) continue;\r\n      const ni = i + di, nj = j + dj; if (ni < 0 || nj < 0 || ni >= GW || nj >= GH) continue;\r\n      const n = nj * GW + ni; if (g[n] === 1 && n !== goal) continue;\r\n      if (di && dj && (g[j * GW + ni] === 1 || g[nj * GW + i] === 1)) continue;   // no cutting a corner past a rock\r\n      const c = cost[k] + (di && dj ? 1.414 : 1) * (g[n] === 2 ? 30 : 1);\r\n      if (c < cost[n]) { cost[n] = c; from[n] = k; push(n); }\r\n    }\r\n  }\r\n  if (!found) { s.path = [{ x: HARBOUR.x, y: HARBOUR.y }]; return; }   // boxed in: she makes straight for home\r\n  const path = [];\r\n  for (let k = goal; k !== -1 && k !== start; k = from[k]) path.push({ x: (k % GW + 0.5) * CELL, y: (((k / GW) | 0) + 0.5) * CELL });\r\n  path.reverse(); path.push({ x: HARBOUR.x, y: HARBOUR.y });\r\n  s.path = path; s.grid = g;\r\n}\r\n// a clear line across the grid, from her to a point on her course?\r\nfunction clearLine(g, a, b) {\r\n  const n = Math.ceil(dist(a, b) / (CELL / 2));\r\n  const i0 = (a.x / CELL) | 0, j0 = (a.y / CELL) | 0, from = g[j0 * GW + i0] || 0;   // already in close water: only the rock itself counts\r\n  for (let t = 1; t <= n; t++) {\r\n    const x = a.x + (b.x - a.x) * t / n, y = a.y + (b.y - a.y) * t / n, i = (x / CELL) | 0, j = (y / CELL) | 0, v = g[j * GW + i];\r\n    if (i >= 0 && j >= 0 && i < GW && j < GH && v > from && !(Math.abs(x - HARBOUR.x) < HARBOUR.r && y > SHORE - 30)) return false;\r\n  }\r\n  return true;\r\n}\r\n// the furthest point along her course she can see clear to, up to a little way ahead (further the faster she goes)\r\nfunction pathAim(s) {\r\n  const p = s.path; if (!p || !p.length) return HARBOUR;\r\n  while (p.length > 1 && dist(s, p[0]) < CELL) p.shift();\r\n  const reach = 70 + s.speed * 0.8;\r\n  let best = p[0];\r\n  for (let k = 0; k < p.length; k++) {\r\n    if (dist(s, p[k]) > reach) break;\r\n    if (!s.grid || clearLine(s.grid, s, p[k])) best = p[k];\r\n  }\r\n  return best;\r\n}\r\nfunction wreck(s) {\r\n  s.state = 'wreck'; G.lost++; sfx('sfxSmash', 0.8, Math.max(-1, Math.min(1, (s.x / W) * 2 - 1)));\r\n  G.wrecks.push({ x: s.x, y: s.y, t: G.t });\r\n  say(`The ${s.name} has struck the rocks.`, 4);\r\n  hud();\r\n}\r\nfunction endNight(won) {\r\n  if (!G.on) return;\r\n  G.on = false;\r\n  if (won) { G.best = Math.max(G.best, G.night); try { localStorage.setItem('skerry2d-best', G.best); } catch (e) {} }\r\n  document.getElementById('bSmall').textContent = `Night ${G.night} · ${won ? 'dawn' : 'relieved of duty'}`;\r\n  document.getElementById('bHead').textContent = won ? 'Dawn' : 'The light failed';\r\n  document.getElementById('bText').textContent = won\r\n    ? (G.lost ? 'Grey light over the skerries. Not every ship came home, but enough did.' : 'Grey light over the skerries, and every ship in harbour.')\r\n    : 'Three ships lost in one night. The Board of Trade sends a new keeper out on the morning boat.';\r\n  document.getElementById('bSafe').textContent = G.safe;\r\n  document.getElementById('bLost').textContent = G.lost;\r\n  document.getElementById('bBest').textContent = G.best;\r\n  document.getElementById('nextBtn').textContent = won ? 'Next night' : 'Start again';\r\n  G.nextNight = won ? G.night + 1 : 1;\r\n  document.getElementById('between').hidden = false;\r\n}\r\nfunction hud() {\r\n  document.getElementById('hNight').textContent = G.night;\r\n  document.getElementById('hSafe').textContent = `${G.safe} / ${G.total}`;\r\n  document.getElementById('hLost').textContent = `${G.lost} / 3`;\r\n}\r\n\r\n// ---- drawing: flat and simple ----\r\nfunction circle(x, y, r) { cx.beginPath(); cx.arc(x, y, r, 0, Math.PI * 2); cx.fill(); }\r\nfunction draw() {\r\n  cx.setTransform(dpr, 0, 0, dpr, 0, 0);\r\n  cx.fillStyle = '#03070f'; cx.fillRect(0, 0, innerWidth, innerHeight);\r\n  cx.setTransform(dpr * scale, 0, 0, dpr * scale, dpr * offX, dpr * offY);\r\n  cx.save(); cx.beginPath(); cx.rect(0, 0, W, H); cx.clip();\r\n\r\n  cx.fillStyle = '#06101f'; cx.fillRect(0, 0, W, H);   // the sea\r\n\r\n  // the beam\r\n  cx.fillStyle = 'rgba(255,228,150,0.16)';\r\n  cx.beginPath(); cx.moveTo(LIGHT.x, LIGHT.y); cx.arc(LIGHT.x, LIGHT.y, BEAM.len, G.beam - BEAM.half, G.beam + BEAM.half); cx.closePath(); cx.fill();\r\n\r\n  // rocks: seen only while lit, fading after\r\n  cx.fillStyle = '#8b8170';\r\n  for (const r of G.rocks) {\r\n    const a = Math.max(0, 1 - (G.t - r.lit) / FADE);\r\n    if (a > 0) { cx.globalAlpha = a; circle(r.x, r.y, r.r); }\r\n  }\r\n  cx.globalAlpha = 1;\r\n\r\n  // wrecks\r\n  cx.fillStyle = '#5a4a36';\r\n  for (const w of G.wrecks) { cx.globalAlpha = Math.max(0.2, 1 - (G.t - w.t) / 20); cx.fillRect(w.x - 6, w.y - 2, 12, 4); }\r\n  cx.globalAlpha = 1;\r\n\r\n  // ships: a hull, and the ring of what she remembers\r\n  for (const s of G.ships) {\r\n    cx.globalAlpha = s.state === 'sail' ? 1 : Math.max(0, s.fade || 0);\r\n    cx.save(); cx.translate(s.x, s.y); cx.rotate(s.h);\r\n    cx.fillStyle = '#ffd98a';\r\n    cx.beginPath(); cx.moveTo(14, 0); cx.lineTo(-9, -7); cx.lineTo(-9, 7); cx.closePath(); cx.fill();\r\n    cx.restore();\r\n    if (s.state === 'sail') {\r\n      cx.lineWidth = 3;\r\n      cx.strokeStyle = 'rgba(255,255,255,0.12)'; cx.beginPath(); cx.arc(s.x, s.y, 20, 0, Math.PI * 2); cx.stroke();\r\n      if (s.mem > 0) { cx.strokeStyle = '#ffe7a8'; cx.beginPath(); cx.arc(s.x, s.y, 20, -Math.PI / 2, -Math.PI / 2 + s.mem * Math.PI * 2); cx.stroke(); }\r\n    }\r\n  }\r\n  cx.globalAlpha = 1;\r\n\r\n  // the coast, the harbour and the lighthouse\r\n  cx.fillStyle = '#121110';\r\n  cx.fillRect(0, 720, HARBOUR.x - HARBOUR.r, H - 720);           // the shore, along the bottom\r\n  cx.fillRect(HARBOUR.x + HARBOUR.r, 720, W, H - 720);\r\n  cx.beginPath(); cx.arc(LIGHT.x, LIGHT.y, 60, 0, Math.PI * 2); cx.fill();   // the lighthouse rock\r\n  cx.strokeStyle = '#ffd98a'; cx.lineWidth = 2; cx.setLineDash([6, 6]);\r\n  cx.beginPath(); cx.arc(HARBOUR.x, HARBOUR.y, HARBOUR.r, Math.PI, 0); cx.stroke(); cx.setLineDash([]);\r\n  cx.fillStyle = '#e9e2cf'; circle(LIGHT.x, LIGHT.y, 12);\r\n  cx.fillStyle = '#fff1c4'; circle(LIGHT.x, LIGHT.y, 6);\r\n\r\n  // the bell\r\n  if (G.bellSlow > 0) { cx.strokeStyle = `rgba(255,230,170,${G.bellSlow / 4 * 0.4})`; cx.lineWidth = 2; cx.beginPath(); cx.arc(LIGHT.x, LIGHT.y, 40 + (4 - G.bellSlow) * 220, 0, Math.PI * 2); cx.stroke(); }\r\n  cx.font = '13px \"Courier New\",monospace'; cx.fillStyle = G.bell > 0 ? '#5d5848' : '#e9d9a6'; cx.textAlign = 'left';\r\n  cx.fillText(G.bell > 0 ? `BELL ${Math.ceil(G.bell)}s` : 'BELL READY · SPACE', 110, 785);\r\n  cx.restore();\r\n}\r\n\r\n// ---- controls ----\r\nfunction toWorld(e) { return { x: (e.clientX - offX) / scale, y: (e.clientY - offY) / scale }; }\r\ncv.addEventListener('pointermove', e => { if (e.pointerType === 'mouse' || e.buttons) G.mouse = toWorld(e); });\r\ncv.addEventListener('pointerdown', e => {\r\n  G.mouse = toWorld(e);\r\n  if (e.pointerType !== 'mouse') { const now = performance.now(); if (G.lastTap && now - G.lastTap < 300) ringBell(); G.lastTap = now; }\r\n});\r\nconst isLeft = k => k === 'ArrowLeft' || k === 'a' || k === 'A', isRight = k => k === 'ArrowRight' || k === 'd' || k === 'D';\r\naddEventListener('keydown', e => {\r\n  if (e.key === 'Escape') { e.preventDefault(); toMenu(); return; }\r\n  if (!G.on) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); const b = document.querySelector('.card:not([hidden]) button'); if (b) b.click(); } return; }\r\n  if (isLeft(e.key)) { G.keys.left = true; G.mouse = null; }\r\n  if (isRight(e.key)) { G.keys.right = true; G.mouse = null; }\r\n  if (e.key === ' ') { e.preventDefault(); ringBell(); }\r\n});\r\naddEventListener('keyup', e => { if (isLeft(e.key)) G.keys.left = false; if (isRight(e.key)) G.keys.right = false; });\r\nfunction ringBell() { if (!G.on || G.bell > 0) return; G.bell = 18; G.bellSlow = 4; sfx('sfxBell'); say('The fog bell. Every ship slows and listens.', 3); }\r\n\r\ndocument.getElementById('nextBtn').onclick = () => { document.getElementById('between').hidden = true; G.night = G.nextNight; startNight(); };\r\n\r\nlet last = performance.now();\r\nfunction frame(now) {\r\n  const dt = Math.min(0.05, (now - last) / 1000); last = now;\r\n  // paused while the frame is hidden behind the main menu (src/original.js sets ORIG_PAUSED)\r\n  if (window.ORIG_PAUSED) { requestAnimationFrame(frame); return; }\r\n  if (G.on) update(dt); else G.t += dt;\r\n  draw();\r\n  requestAnimationFrame(frame);\r\n}\r\n// a controller, from the main game's gamepad.js: the stick swings the beam, A rings the bell or presses the card's button\r\nwindow.ORIG_PAD = (ax, a) => {\r\n  if (Math.abs(ax) > 0.25) { G.mouse = null; G.keys.left = ax < 0; G.keys.right = ax > 0; G.padHeld = true; }\r\n  else if (G.padHeld) { G.keys.left = G.keys.right = false; G.padHeld = false; }\r\n  if (a) { if (G.on) ringBell(); else { const b = document.querySelector('.card:not([hidden]) button'); if (b) b.click(); } }\r\n};\r\ndocument.getElementById('menuBtn').onclick = toMenu;\r\ndocument.getElementById('iBest').textContent = G.best;\r\ndocument.getElementById('startBtn').onclick = () => { document.getElementById('intro').hidden = true; G.night = 1; startNight(); };\r\n// the empty sea shows behind the first card, with a few rocks lit, until the lamp is lit\r\nG.night = 1; G.rocks = makeRocks(15); hud();\r\nrequestAnimationFrame(frame);\r\n<\/script>\r\n<\/body>\r\n<\/html>\r\n";
+var ORIG_PAGE = "<!doctype html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<meta name=\"viewport\" content=\"width=device-width,initial-scale=1,viewport-fit=cover\">\n<title>Skerry Light<\/title>\n<style>\n/* Skerry Light (the original 2D game, remade): you are the keeper. Swing the lighthouse beam to show the ships\n   the rocks, and bring them into harbour. One self-contained file: no libraries, no downloads.\n   In the full game it's \"The Original\" on the main menu: src/original.js shows it in a frame over the menu, and the build\n   inlines this file there. Its sounds are the main game's own (the bell, a chime, a crunch), played through the parent\n   page so they follow the volume setting; opened on its own, it plays silent. Esc or the Menu button go back. */\n*{box-sizing:border-box;margin:0;padding:0}\nhtml,body{height:100%;background:#050b16;color:#e9d9a6;font-family:Georgia,\"Times New Roman\",serif;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none}\ncanvas{display:block;width:100vw;height:100vh;cursor:crosshair}\n#hud{position:fixed;top:0;left:0;right:0;display:flex;justify-content:space-between;padding:12px 16px 12px 104px;font:13px/1.3 \"Courier New\",monospace;letter-spacing:.08em;text-transform:uppercase;pointer-events:none;color:#8f8a78}\n#hud b{display:block;color:#e9d9a6;font-size:20px;letter-spacing:0}\n#hud .r{text-align:right}\n#log{position:fixed;left:0;right:0;bottom:18px;text-align:center;font-style:italic;font-size:17px;opacity:0;transition:opacity .6s;pointer-events:none;padding:0 16px}\n.card{position:fixed;inset:0;display:flex;align-items:safe center;justify-content:center;background:rgba(3,6,12,.75);padding:16px;overflow-y:auto;z-index:3}\n.card>div{margin:auto 0}\n.card[hidden]{display:none}\n.card>div{max-width:520px;width:100%;border:1px solid #3a3a33;background:#080c16;padding:28px 28px 24px}\n.card small{display:block;font:12px \"Courier New\",monospace;letter-spacing:.2em;text-transform:uppercase;color:#8f8a78;margin-bottom:10px}\n.card h1{font-weight:normal;font-size:clamp(38px,9vw,60px);line-height:1;color:#ffd98a;margin-bottom:14px}\n.card p{color:#cfc6a8;font-size:16px;line-height:1.5;margin-bottom:10px}\n.card ul{margin:6px 0 16px 18px;color:#cfc6a8;font-size:15px;line-height:1.5}\n.card button{margin-top:10px;font:inherit;font-size:19px;padding:10px 22px;background:#ffd98a;color:#14110a;border:0;cursor:pointer}\n.stats{display:flex;gap:24px;margin:14px 0;border-top:1px solid #333;border-bottom:1px solid #333;padding:10px 0}\n.stats div{font:12px \"Courier New\",monospace;letter-spacing:.15em;color:#8f8a78;text-transform:uppercase}\n.stats b{display:block;font-size:22px;color:#ffd98a;letter-spacing:0}\n.card ul b{color:#ffd98a;font-weight:normal}\n#menuBtn{position:fixed;top:12px;left:16px;font:13px \"Courier New\",monospace;letter-spacing:.08em;text-transform:uppercase;padding:7px 11px;background:rgba(8,12,22,.85);color:#e9d9a6;border:1px solid #3a3a33;cursor:pointer;z-index:2}\n#menuBtn:hover,#menuBtn:focus-visible{border-color:#ffd98a;color:#ffd98a;outline:none}\n<\/style>\n<\/head>\n<body>\n<canvas id=\"c\"><\/canvas>\n<div id=\"hud\">\n  <div>Night<b id=\"hNight\">1<\/b><\/div>\n  <div style=\"text-align:center\">Safe in harbour<b id=\"hSafe\">0 / 0<\/b><\/div>\n  <div class=\"r\">Wrecked<b id=\"hLost\">0 / 3<\/b><\/div>\n<\/div>\n<div id=\"log\"><\/div>\n<button id=\"menuBtn\" type=\"button\" title=\"Back to the main menu (Esc)\">‹ Menu<\/button>\n\n<div class=\"card\" id=\"intro\"><div>\n  <small>The Original · Skerry Light as it began<\/small>\n  <h1>Skerry Light<\/h1>\n  <p>You are the keeper. Ships are standing in for the harbour through the skerries, and they can't see the rocks. Swing the beam to show them.<\/p>\n  <ul>\n    <li><b>Aim<\/b> the beam with the mouse, ← → or A / D, or drag a finger<\/li>\n    <li><b>The ring<\/b> round a ship fills while your beam is on her. While it holds any light she remembers every rock you show her; let it run dry and she forgets them all<\/li>\n    <li><b>Ships gather speed<\/b> all night, with no top speed<\/li>\n    <li><b>The fog bell<\/b> (Space, or double tap) slows every ship for a few seconds. It swings again in 18 seconds<\/li>\n    <li>Lose three ships in a night and you're relieved of duty<\/li>\n  <\/ul>\n  <div class=\"stats\"><div>Best night<b id=\"iBest\">0<\/b><\/div><\/div>\n  <button id=\"startBtn\">Light the lamp<\/button>\n<\/div><\/div>\n\n<div class=\"card\" id=\"between\" hidden><div>\n  <small id=\"bSmall\">Night 1 · dawn<\/small>\n  <h1 id=\"bHead\">Dawn<\/h1>\n  <p id=\"bText\"><\/p>\n  <div class=\"stats\"><div>Safe<b id=\"bSafe\">0<\/b><\/div><div>Wrecked<b id=\"bLost\">0<\/b><\/div><div>Best night<b id=\"bBest\">0<\/b><\/div><\/div>\n  <button id=\"nextBtn\">Next night<\/button>\n<\/div><\/div>\n\n<script>\n'use strict';\n// the main game's sounds, through the page this sits in (none when opened on its own)\nconst sfx = (name, ...a) => { try { if (parent !== window && typeof parent[name] === 'function') parent[name](...a); } catch (e) {} };\nconst toMenu = () => { try { if (parent !== window && typeof parent.origClose === 'function') parent.origClose(); } catch (e) {} };\n// ---- the world, in its own units (1200 × 800), fitted to the screen ----\nconst W = 1200, H = 800;\nconst LIGHT = { x: 40, y: 760 };               // the lighthouse, in the far bottom-left corner\nconst HARBOUR = { x: 1110, y: 752, r: 46 };    // the harbour mouth, bottom right\nconst BEAM = { len: 1500, half: 0.09, turn: 2.6 }; // reach, half-width (radians), turn speed (rad/s)\nconst FADE = 3;          // a lit rock fades away this long after the beam leaves it\nconst MEMORY = 6;        // a full ring drains away over this long (s)\nconst FILL = 0.7;        // and fills from empty in this long, with the beam on her (s)\nconst SHORE = 718;       // the top of the shore along the bottom (its drawn edge is 720)\nconst GROW = 0.035;      // ships gather speed exponentially: this much faster per second (3.5%), with no top speed\nconst cv = document.getElementById('c'), cx = cv.getContext('2d');\nlet scale = 1, offX = 0, offY = 0, dpr = 1;\nfunction fit() {\n  dpr = Math.min(window.devicePixelRatio || 1, 2);\n  cv.width = innerWidth * dpr; cv.height = innerHeight * dpr;\n  scale = Math.min(innerWidth / W, innerHeight / H);\n  offX = (innerWidth - W * scale) / 2; offY = (innerHeight - H * scale) / 2;\n}\naddEventListener('resize', fit); fit();\n\nconst rnd = (a, b) => a + Math.random() * (b - a);\nconst ang = (a) => Math.atan2(Math.sin(a), Math.cos(a));\nconst dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);\n\n// ---- state ----\nconst G = {\n  on: false, night: 1, best: 0, aim: -0.6, beam: -0.6, keys: {}, mouse: null,\n  rocks: [], ships: [], wrecks: [], toSpawn: 0, spawnT: 0, safe: 0, lost: 0, total: 0,\n  bell: 0, bellSlow: 0, t: 0, msgT: 0,\n};\ntry { G.best = +localStorage.getItem('skerry2d-best') || 0; } catch (e) {}\n\nfunction say(text, secs) { const el = document.getElementById('log'); el.textContent = text; el.style.opacity = 1; G.msgT = secs || 4; }\n\n// ---- a night ----\nfunction rock(x, y, r) { return { x, y, r, lit: -99 }; }\nfunction okSpot(r, rocks) {\n  return dist(r, LIGHT) > 110 && dist(r, HARBOUR) > 130 && !rocks.some(o => dist(o, r) < o.r + r.r + 34);\n}\nfunction makeRocks(n) {\n  const rocks = [];\n  for (let tries = 0; rocks.length < n && tries < 4000; tries++) {\n    const r = rock(rnd(60, W - 60), rnd(110, 680), rnd(10, 22));\n    if (okSpot(r, rocks)) rocks.push(r);\n  }\n  // and a few clusters, the true skerries\n  for (let k = 0; k < 2 + Math.floor(G.night / 2); k++) {\n    const x0 = rnd(250, W - 200), y0 = rnd(220, 580);\n    for (let j = 0; j < 4; j++) {\n      const r = rock(x0 + rnd(-40, 40), y0 + rnd(-30, 30), rnd(7, 13));\n      if (dist(r, HARBOUR) > 130 && dist(r, LIGHT) > 110) rocks.push(r);\n    }\n  }\n  return rocks;\n}\nfunction startNight() {\n  const n = G.night;\n  G.rocks = makeRocks(12 + n * 3);\n  G.ships = []; G.wrecks = []; G.safe = 0; G.lost = 0;\n  G.total = 3 + n; G.toSpawn = G.total; G.spawnT = 1.5;\n  G.bell = 0; G.bellSlow = 0;\n  G.on = true;\n  say(n === 1 ? 'The first ship is standing in. Show her the rocks.' : `Night ${n}. ${G.total} ships expected.`, 5);\n  hud();\n}\nconst NAMES = ['Gannet', 'Kittiwake', 'Margaret Ann', 'Brothers', 'Hopewell', 'Sea Holly', 'Providence', 'Fulmar', 'Endeavour', 'Two Sisters', 'Curlew', 'Patience'];\nfunction spawnShip() {\n  // in from the top, or from the left side above the lighthouse's corner\n  const s = Math.random() < 0.3 ? { x: -20, y: rnd(120, 380) } : { x: rnd(100, W - 250), y: -20 };\n  s.h = Math.atan2(HARBOUR.y - s.y, HARBOUR.x - s.x);\n  s.speed = rnd(22, 28) + G.night;\n  s.known = new Map(); s.state = 'sail'; s.mem = 0;\n  s.name = NAMES[(Math.random() * NAMES.length) | 0];\n  G.ships.push(s);\n}\n\n// ---- every frame ----\nfunction update(dt) {\n  G.t += dt;\n  // the beam swings towards where you aim, at its own pace\n  if (G.keys.left) G.aim -= BEAM.turn * dt;\n  if (G.keys.right) G.aim += BEAM.turn * dt;\n  if (G.mouse) G.aim = Math.atan2(G.mouse.y - LIGHT.y, G.mouse.x - LIGHT.x);\n  const d = ang(G.aim - G.beam), step = BEAM.turn * dt;\n  G.beam = ang(Math.abs(d) < step ? G.aim : G.beam + Math.sign(d) * step);\n\n  const inBeam = (p, pad) => {\n    const dd = dist(p, LIGHT); if (dd > BEAM.len) return false;\n    return Math.abs(ang(Math.atan2(p.y - LIGHT.y, p.x - LIGHT.x) - G.beam)) < BEAM.half + (pad || 0) / Math.max(dd, 1);\n  };\n  for (const r of G.rocks) if (inBeam(r, r.r)) r.lit = G.t;\n\n  if (G.bell > 0) G.bell -= dt;\n  if (G.bellSlow > 0) G.bellSlow -= dt;\n\n  if (G.toSpawn > 0 && (G.spawnT -= dt) <= 0) { spawnShip(); G.toSpawn--; G.spawnT = rnd(6, 10) - Math.min(G.night, 4) * 0.6; }\n\n  for (const s of G.ships) {\n    if (s.state !== 'sail') continue;\n    // the ring: lit, it fills; dark, it drains. While it holds any light, she learns every rock the beam shows;\n    // when it runs dry, she forgets them all\n    if (inBeam(s, 10)) s.mem = Math.min(1, s.mem + dt / FILL);\n    else s.mem = Math.max(0, s.mem - dt / MEMORY);\n    if (s.mem > 0) { for (const r of G.rocks) if (G.t - r.lit < 0.05) s.known.set(r, G.t); }\n    else s.known.clear();\n    // where she wants to go: she plots a course to the harbour round every rock she remembers, the lighthouse rock\n    // and the shore (replotted a few times a second, and at once when she learns a new rock), and steers for a point\n    // a little way along it. The harbour mouth faces up, so every course comes into it from above\n    if (!s.path || G.t >= s.planT || s.known.size !== s.planN) plot(s);\n    const aim = pathAim(s);\n    let want = Math.atan2(aim.y - s.y, aim.x - s.x);\n    // no top speed: she gathers way the whole time (the bell checks her)\n    s.speed *= Math.exp(GROW * dt);\n    const sp = s.speed * (G.bellSlow > 0 ? 0.35 : 1);\n    const turnRate = 1.1 + s.speed / 60;   // a faster ship answers her helm faster\n    s.h += Math.max(-turnRate * dt, Math.min(turnRate * dt, ang(want - s.h)));\n    // move in small steps, so a fast ship can't skip over a rock\n    const steps = Math.max(1, Math.ceil(sp * dt / 4));\n    for (let k = 0; k < steps && s.state === 'sail'; k++) {\n      s.x += Math.cos(s.h) * sp * dt / steps; s.y += Math.sin(s.h) * sp * dt / steps;\n      for (const r of G.rocks) if (dist(r, s) < r.r + 6) { wreck(s); break; }\n      if (s.state !== 'sail') break;\n      if (dist(s, LIGHT) < 60 || (s.y > 715 && s.x < HARBOUR.x - HARBOUR.r)) { wreck(s); break; }   // the lighthouse rock, the shore\n      if (dist(s, HARBOUR) < HARBOUR.r) { s.state = 'safe'; G.safe++; sfx('sfxChime'); say(`The ${s.name} is safe in harbour.`, 3); hud(); }\n    }\n    // off the chart: she turns back for the harbour\n    if (s.x < -60 || s.x > W + 60 || s.y < -60) { s.h = Math.atan2(H / 2 - s.y, W / 2 - s.x); s.planT = 0; }\n  }\n  G.ships = G.ships.filter(s => s.state === 'sail' || (s.fade = (s.fade ?? 1) - dt * 0.6) > 0);\n\n  if (G.lost >= 3) endNight(false);\n  else if (G.toSpawn === 0 && !G.ships.some(s => s.state === 'sail')) endNight(true);\n\n  if (G.msgT > 0 && (G.msgT -= dt) <= 0) document.getElementById('log').style.opacity = 0;\n}\n// ---- plotting a course: A* over a grid of CELL-sized squares, blocked by the rocks she remembers, the lighthouse\n// rock and the shore, except the harbour mouth. The water close round a rock (2 in the grid) costs a lot to cross,\n// so she keeps her distance but can still thread a narrow gap, or get clear when she's already close in ----\nconst CELL = 16, GW = Math.ceil(W / CELL), GH = Math.ceil(H / CELL), CLEAR = 22;\nconst SEA = new Uint8Array(GW * GH);   // the fixed coast: 1 where no ship may go\nfor (let j = 0; j < GH; j++) for (let i = 0; i < GW; i++) {\n  const x = (i + 0.5) * CELL, y = (j + 0.5) * CELL;\n  const mouth = Math.abs(x - HARBOUR.x) < HARBOUR.r - 12;\n  if ((y > SHORE - 24 && !mouth) || Math.hypot(x - LIGHT.x, y - LIGHT.y) < 60 + CLEAR) SEA[j * GW + i] = 1;\n}\nfunction blockedFor(s) {\n  const g = SEA.slice();\n  for (const [r] of s.known) {\n    const R = r.r + CLEAR, i0 = Math.max(0, ((r.x - R) / CELL) | 0), i1 = Math.min(GW - 1, ((r.x + R) / CELL) | 0), j0 = Math.max(0, ((r.y - R) / CELL) | 0), j1 = Math.min(GH - 1, ((r.y + R) / CELL) | 0);\n    for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) {\n      const d = Math.hypot((i + 0.5) * CELL - r.x, (j + 0.5) * CELL - r.y), k = j * GW + i;\n      if (d < r.r + 9 + CELL * 0.35) g[k] = 1;              // the rock itself: never\n      else if (d < R + CELL * 0.35 && !g[k]) g[k] = 2;       // the water close round it: only through a gap with no way round\n    }\n  }\n  return g;\n}\nfunction plot(s) {\n  s.planT = G.t + 0.4; s.planN = s.known.size;\n  const g = blockedFor(s), cl = (v, n) => Math.max(0, Math.min(n - 1, v | 0));\n  const si = cl(s.x / CELL, GW), sj = cl(s.y / CELL, GH), gi = cl(HARBOUR.x / CELL, GW), gj = cl(HARBOUR.y / CELL, GH);\n  const start = sj * GW + si, goal = gj * GW + gi, N = GW * GH;\n  const cost = new Float32Array(N).fill(Infinity), from = new Int32Array(N).fill(-1), done = new Uint8Array(N);\n  const h = k => { const dx = Math.abs(k % GW - gi), dy = Math.abs(((k / GW) | 0) - gj); return Math.max(dx, dy) + 0.414 * Math.min(dx, dy); };\n  const open = [start]; cost[start] = 0;   // a small binary heap on cost + h\n  const f = k => cost[k] + h(k);\n  const push = k => { open.push(k); let c = open.length - 1; while (c > 0) { const p = (c - 1) >> 1; if (f(open[p]) <= f(open[c])) break; [open[p], open[c]] = [open[c], open[p]]; c = p; } };\n  const pop = () => { const top = open[0], last = open.pop(); if (open.length) { open[0] = last; let c = 0; for (;;) { const l = 2 * c + 1, r = l + 1; let m = c; if (l < open.length && f(open[l]) < f(open[m])) m = l; if (r < open.length && f(open[r]) < f(open[m])) m = r; if (m === c) break; [open[m], open[c]] = [open[c], open[m]]; c = m; } } return top; };\n  let found = false;\n  while (open.length) {\n    const k = pop(); if (done[k]) continue; done[k] = 1;\n    if (k === goal) { found = true; break; }\n    const i = k % GW, j = (k / GW) | 0;\n    for (let dj = -1; dj <= 1; dj++) for (let di = -1; di <= 1; di++) {\n      if (!di && !dj) continue;\n      const ni = i + di, nj = j + dj; if (ni < 0 || nj < 0 || ni >= GW || nj >= GH) continue;\n      const n = nj * GW + ni; if (g[n] === 1 && n !== goal) continue;\n      if (di && dj && (g[j * GW + ni] === 1 || g[nj * GW + i] === 1)) continue;   // no cutting a corner past a rock\n      const c = cost[k] + (di && dj ? 1.414 : 1) * (g[n] === 2 ? 30 : 1);\n      if (c < cost[n]) { cost[n] = c; from[n] = k; push(n); }\n    }\n  }\n  if (!found) { s.path = [{ x: HARBOUR.x, y: HARBOUR.y }]; return; }   // boxed in: she makes straight for home\n  const path = [];\n  for (let k = goal; k !== -1 && k !== start; k = from[k]) path.push({ x: (k % GW + 0.5) * CELL, y: (((k / GW) | 0) + 0.5) * CELL });\n  path.reverse(); path.push({ x: HARBOUR.x, y: HARBOUR.y });\n  s.path = path; s.grid = g;\n}\n// a clear line across the grid, from her to a point on her course?\nfunction clearLine(g, a, b) {\n  const n = Math.ceil(dist(a, b) / (CELL / 2));\n  const i0 = (a.x / CELL) | 0, j0 = (a.y / CELL) | 0, from = g[j0 * GW + i0] || 0;   // already in close water: only the rock itself counts\n  for (let t = 1; t <= n; t++) {\n    const x = a.x + (b.x - a.x) * t / n, y = a.y + (b.y - a.y) * t / n, i = (x / CELL) | 0, j = (y / CELL) | 0, v = g[j * GW + i];\n    if (i >= 0 && j >= 0 && i < GW && j < GH && v > from && !(Math.abs(x - HARBOUR.x) < HARBOUR.r && y > SHORE - 30)) return false;\n  }\n  return true;\n}\n// the furthest point along her course she can see clear to, up to a little way ahead (further the faster she goes)\nfunction pathAim(s) {\n  const p = s.path; if (!p || !p.length) return HARBOUR;\n  while (p.length > 1 && dist(s, p[0]) < CELL) p.shift();\n  const reach = 70 + s.speed * 0.8;\n  let best = p[0];\n  for (let k = 0; k < p.length; k++) {\n    if (dist(s, p[k]) > reach) break;\n    if (!s.grid || clearLine(s.grid, s, p[k])) best = p[k];\n  }\n  return best;\n}\nfunction wreck(s) {\n  s.state = 'wreck'; G.lost++; sfx('sfxSmash', 0.8, Math.max(-1, Math.min(1, (s.x / W) * 2 - 1)));\n  G.wrecks.push({ x: s.x, y: s.y, t: G.t });\n  say(`The ${s.name} has struck the rocks.`, 4);\n  hud();\n}\nfunction endNight(won) {\n  if (!G.on) return;\n  G.on = false;\n  if (won) { G.best = Math.max(G.best, G.night); try { localStorage.setItem('skerry2d-best', G.best); } catch (e) {} }\n  document.getElementById('bSmall').textContent = `Night ${G.night} · ${won ? 'dawn' : 'relieved of duty'}`;\n  document.getElementById('bHead').textContent = won ? 'Dawn' : 'The light failed';\n  document.getElementById('bText').textContent = won\n    ? (G.lost ? 'Grey light over the skerries. Not every ship came home, but enough did.' : 'Grey light over the skerries, and every ship in harbour.')\n    : 'Three ships lost in one night. The Board of Trade sends a new keeper out on the morning boat.';\n  document.getElementById('bSafe').textContent = G.safe;\n  document.getElementById('bLost').textContent = G.lost;\n  document.getElementById('bBest').textContent = G.best;\n  document.getElementById('nextBtn').textContent = won ? 'Next night' : 'Start again';\n  G.nextNight = won ? G.night + 1 : 1;\n  document.getElementById('between').hidden = false;\n}\nfunction hud() {\n  document.getElementById('hNight').textContent = G.night;\n  document.getElementById('hSafe').textContent = `${G.safe} / ${G.total}`;\n  document.getElementById('hLost').textContent = `${G.lost} / 3`;\n}\n\n// ---- drawing: flat and simple ----\nfunction circle(x, y, r) { cx.beginPath(); cx.arc(x, y, r, 0, Math.PI * 2); cx.fill(); }\nfunction draw() {\n  cx.setTransform(dpr, 0, 0, dpr, 0, 0);\n  cx.fillStyle = '#03070f'; cx.fillRect(0, 0, innerWidth, innerHeight);\n  cx.setTransform(dpr * scale, 0, 0, dpr * scale, dpr * offX, dpr * offY);\n  cx.save(); cx.beginPath(); cx.rect(0, 0, W, H); cx.clip();\n\n  cx.fillStyle = '#06101f'; cx.fillRect(0, 0, W, H);   // the sea\n\n  // the beam\n  cx.fillStyle = 'rgba(255,228,150,0.16)';\n  cx.beginPath(); cx.moveTo(LIGHT.x, LIGHT.y); cx.arc(LIGHT.x, LIGHT.y, BEAM.len, G.beam - BEAM.half, G.beam + BEAM.half); cx.closePath(); cx.fill();\n\n  // rocks: seen only while lit, fading after\n  cx.fillStyle = '#8b8170';\n  for (const r of G.rocks) {\n    const a = Math.max(0, 1 - (G.t - r.lit) / FADE);\n    if (a > 0) { cx.globalAlpha = a; circle(r.x, r.y, r.r); }\n  }\n  cx.globalAlpha = 1;\n\n  // wrecks\n  cx.fillStyle = '#5a4a36';\n  for (const w of G.wrecks) { cx.globalAlpha = Math.max(0.2, 1 - (G.t - w.t) / 20); cx.fillRect(w.x - 6, w.y - 2, 12, 4); }\n  cx.globalAlpha = 1;\n\n  // ships: a hull, and the ring of what she remembers\n  for (const s of G.ships) {\n    cx.globalAlpha = s.state === 'sail' ? 1 : Math.max(0, s.fade || 0);\n    cx.save(); cx.translate(s.x, s.y); cx.rotate(s.h);\n    cx.fillStyle = '#ffd98a';\n    cx.beginPath(); cx.moveTo(14, 0); cx.lineTo(-9, -7); cx.lineTo(-9, 7); cx.closePath(); cx.fill();\n    cx.restore();\n    if (s.state === 'sail') {\n      cx.lineWidth = 3;\n      cx.strokeStyle = 'rgba(255,255,255,0.12)'; cx.beginPath(); cx.arc(s.x, s.y, 20, 0, Math.PI * 2); cx.stroke();\n      if (s.mem > 0) { cx.strokeStyle = '#ffe7a8'; cx.beginPath(); cx.arc(s.x, s.y, 20, -Math.PI / 2, -Math.PI / 2 + s.mem * Math.PI * 2); cx.stroke(); }\n    }\n  }\n  cx.globalAlpha = 1;\n\n  // the coast, the harbour and the lighthouse\n  cx.fillStyle = '#121110';\n  cx.fillRect(0, 720, HARBOUR.x - HARBOUR.r, H - 720);           // the shore, along the bottom\n  cx.fillRect(HARBOUR.x + HARBOUR.r, 720, W, H - 720);\n  cx.beginPath(); cx.arc(LIGHT.x, LIGHT.y, 60, 0, Math.PI * 2); cx.fill();   // the lighthouse rock\n  cx.strokeStyle = '#ffd98a'; cx.lineWidth = 2; cx.setLineDash([6, 6]);\n  cx.beginPath(); cx.arc(HARBOUR.x, HARBOUR.y, HARBOUR.r, Math.PI, 0); cx.stroke(); cx.setLineDash([]);\n  cx.fillStyle = '#e9e2cf'; circle(LIGHT.x, LIGHT.y, 12);\n  cx.fillStyle = '#fff1c4'; circle(LIGHT.x, LIGHT.y, 6);\n\n  // the bell\n  if (G.bellSlow > 0) { cx.strokeStyle = `rgba(255,230,170,${G.bellSlow / 4 * 0.4})`; cx.lineWidth = 2; cx.beginPath(); cx.arc(LIGHT.x, LIGHT.y, 40 + (4 - G.bellSlow) * 220, 0, Math.PI * 2); cx.stroke(); }\n  cx.font = '13px \"Courier New\",monospace'; cx.fillStyle = G.bell > 0 ? '#5d5848' : '#e9d9a6'; cx.textAlign = 'left';\n  cx.fillText(G.bell > 0 ? `BELL ${Math.ceil(G.bell)}s` : 'BELL READY · SPACE', 110, 785);\n  cx.restore();\n}\n\n// ---- controls ----\nfunction toWorld(e) { return { x: (e.clientX - offX) / scale, y: (e.clientY - offY) / scale }; }\ncv.addEventListener('pointermove', e => { if (e.pointerType === 'mouse' || e.buttons) G.mouse = toWorld(e); });\ncv.addEventListener('pointerdown', e => {\n  G.mouse = toWorld(e);\n  if (e.pointerType !== 'mouse') { const now = performance.now(); if (G.lastTap && now - G.lastTap < 300) ringBell(); G.lastTap = now; }\n});\nconst isLeft = k => k === 'ArrowLeft' || k === 'a' || k === 'A', isRight = k => k === 'ArrowRight' || k === 'd' || k === 'D';\naddEventListener('keydown', e => {\n  if (e.key === 'Escape') { e.preventDefault(); toMenu(); return; }\n  if (!G.on) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); const b = document.querySelector('.card:not([hidden]) button'); if (b) b.click(); } return; }\n  if (isLeft(e.key)) { G.keys.left = true; G.mouse = null; }\n  if (isRight(e.key)) { G.keys.right = true; G.mouse = null; }\n  if (e.key === ' ') { e.preventDefault(); ringBell(); }\n});\naddEventListener('keyup', e => { if (isLeft(e.key)) G.keys.left = false; if (isRight(e.key)) G.keys.right = false; });\nfunction ringBell() { if (!G.on || G.bell > 0) return; G.bell = 18; G.bellSlow = 4; sfx('sfxBell'); say('The fog bell. Every ship slows and listens.', 3); }\n\ndocument.getElementById('nextBtn').onclick = () => { document.getElementById('between').hidden = true; G.night = G.nextNight; startNight(); };\n\nlet last = performance.now();\nfunction frame(now) {\n  const dt = Math.min(0.05, (now - last) / 1000); last = now;\n  // paused while the frame is hidden behind the main menu (src/original.js sets ORIG_PAUSED)\n  if (window.ORIG_PAUSED) { requestAnimationFrame(frame); return; }\n  if (G.on) update(dt); else G.t += dt;\n  draw();\n  requestAnimationFrame(frame);\n}\n// a controller, from the main game's gamepad.js: the stick swings the beam, A rings the bell or presses the card's button\nwindow.ORIG_PAD = (ax, a) => {\n  if (Math.abs(ax) > 0.25) { G.mouse = null; G.keys.left = ax < 0; G.keys.right = ax > 0; G.padHeld = true; }\n  else if (G.padHeld) { G.keys.left = G.keys.right = false; G.padHeld = false; }\n  if (a) { if (G.on) ringBell(); else { const b = document.querySelector('.card:not([hidden]) button'); if (b) b.click(); } }\n};\ndocument.getElementById('menuBtn').onclick = toMenu;\ndocument.getElementById('iBest').textContent = G.best;\ndocument.getElementById('startBtn').onclick = () => { document.getElementById('intro').hidden = true; G.night = 1; startNight(); };\n// the empty sea shows behind the first card, with a few rocks lit, until the lamp is lit\nG.night = 1; G.rocks = makeRocks(15); hud();\nrequestAnimationFrame(frame);\n<\/script>\n<\/body>\n<\/html>\n";
 const ORIG = { el: null, frame: null, back: null };
 
 function origOpen() {
@@ -79699,6 +80088,7 @@ requestAnimationFrame(frame);
 <!-- [campaign] The Chronicle of the Light: missions, progress, lines, the lobby -->
 <!-- [campaign] its cinematics -->
 <!-- [campaign] shared tools for the missions -->
+<!-- [cpclass] the campaign's own four callings -->
 <!-- [campaign] mission 1 -->
 <!-- [campaign] mission 1: its cinematics -->
 <!-- [campaign] mission 2 -->

@@ -25,7 +25,7 @@
 // the stage's word (ka); a joined player asks (raidAsk 'take' i, 'feed', 'brand', 'light').
 //
 // The mission (three stages, through the night of the haar):
-//  I.   Driftwood (cp_m01wood): dusk. Carry driftwood up from the strand and stack it on the Fire Step (3 + one for each
+//  I.   Driftwood (cp_m01wood): dusk. Carry driftwood up from the strand and stack it on the Fire Step (2 + one for each
 //       of you), then hold Use at it to light the fire. The first of the drowned come up as the light goes.
 //  II.  The Haar (cp_m01haar): the night. Keep the fire fed through it (CPA.NIGHT seconds) while the haar rolls in
 //       in banks and the drowned of the old wrecks come up the strand for it; wood washes up as the sea breaks
@@ -153,7 +153,8 @@ FPI_K.cpahearth = {
 
 // ---------- the fire-keeping kit ----------
 // (any stage, everyone, as it's entered) cfg: { lit, fuel, need, piles (true: every spot has a bundle), drain,
-//   bankEvery: [min, max] seconds between banks (0: none), wash: seconds between bundles washing up (0: none) }
+//   bankEvery: [min, max] seconds between banks (0: none), wash: seconds between bundles washing up (0: none),
+//   and, to make a stage kinder or harder than the kit's own: wood, bankHit, bankSp, kick, ember, brand (as CPA's) }
 function cpkEnter(cfg) {
   const S = RAID.st;
   S.kcfg = cfg;
@@ -176,9 +177,9 @@ function cpkTick(dt) {
     let kick = 0; for (const z of ZM.z) if (!z.dead && !z.boss && !(z.rr > 0) && Math.hypot(z.x - fx, z.y - fy) < CPA.KICK_R) kick++;
     K.kick = kick;
     const was = K.fuel;
-    K.fuel = Math.max(0, K.fuel - (cfg.drain || 0) * (1 + 0.22 * (n - 1)) * dt - kick * CPA.KICK * dt);
+    K.fuel = Math.max(0, K.fuel - (cfg.drain || 0) * (1 + 0.22 * (n - 1)) * dt - kick * (cfg.kick || CPA.KICK) * dt);
     if (kick && was > 0 && Math.random() < dt * 0.6) cpaFeed('The drowned are kicking the fire apart!');
-    if (K.fuel <= 0 && was > 0) { K.emb = CPA.EMBER; if (cfg.onEmbers) cfg.onEmbers(); }
+    if (K.fuel <= 0 && was > 0) { K.emb = cfg.ember || CPA.EMBER; if (cfg.onEmbers) cfg.onEmbers(); }
     if (K.fuel <= 0) { K.emb -= dt; if (K.emb <= 0 && cfg.onOut) { K.emb = 0; cfg.onOut(); } }
   }
   // the sea gives up more wood
@@ -200,7 +201,7 @@ function cpkTick(dt) {
     if (k) { B.hp -= dt * k / CPA.BURN; if (B.hp <= 0) { K.banks.splice(i, 1); K.burnt++; continue; } }
     if (d < 2.6) {
       K.banks.splice(i, 1); K.hits++;
-      if (K.lit && K.fuel > 0) { const was = K.fuel; K.fuel = Math.max(0, K.fuel - (cfg.bankHit || CPA.BANK_HIT)); if (K.fuel <= 0 && was > 0) { K.emb = CPA.EMBER; if (cfg.onEmbers) cfg.onEmbers(); } }
+      if (K.lit && K.fuel > 0) { const was = K.fuel; K.fuel = Math.max(0, K.fuel - (cfg.bankHit || CPA.BANK_HIT)); if (K.fuel <= 0 && was > 0) { K.emb = cfg.ember || CPA.EMBER; if (cfg.onEmbers) cfg.onEmbers(); } }
       if (cfg.onSmother) cfg.onSmother();
     }
   }
@@ -226,7 +227,7 @@ function cpkQ(sid, k, a) {
     if (cfg.onFeed) cfg.onFeed(sid);
     return true;
   }
-  if (k === 'brand') { if (K.lit && K.fuel > 0 && !K.carry[sid] && cpaUp(sid)) K.brand[sid] = CPA.BRAND; return true; }
+  if (k === 'brand') { if (K.lit && K.fuel > 0 && !K.carry[sid] && cpaUp(sid)) K.brand[sid] = cfg.brand || CPA.BRAND; return true; }
   if (k === 'light') { if (!K.lit && K.stack >= K.need) { K.lit = 1; K.fuel = Math.max(K.fuel, Math.min(100, 30 + K.stack * 12)); if (cfg.onLight) cfg.onLight(sid); } else if (K.lit && K.fuel <= 0 && cfg.relight) { K.fuel = cfg.relight; K.emb = 0; if (cfg.onLight) cfg.onLight(sid); } return true; }
   if (k === 'drop') { delete K.carry[sid]; return true; }
   return false;
@@ -517,9 +518,9 @@ cpStage('m01wood', cp1Stage({
   music: () => 'cpm01dusk',
   enter() {
     const n = cpaN();
-    cpkEnter({ lit: false, need: 3 + n, piles: true, drain: 0, onFeed: sid => cp1WoodFed(sid), onLight: sid => cp1Lit(sid) });
+    cpkEnter({ lit: false, need: 2 + n, piles: true, drain: 0, onFeed: sid => cp1WoodFed(sid), onLight: sid => cp1Lit(sid) });
     Object.assign(RAID.st, { spT: 30, t: 0 });
-    if (ZM.net !== 'client') { cpObjective(`Carry driftwood up from the strand to the Fire Step (0 of ${3 + n})`); cpWaypoint(CPA_SPOTS[3][0], CPA_SPOTS[3][1], 'Driftwood'); }
+    if (ZM.net !== 'client') { cpObjective(`Carry driftwood up from the strand to the Fire Step (0 of ${2 + n})`); cpWaypoint(CPA_SPOTS[3][0], CPA_SPOTS[3][1], 'Driftwood'); }
     ZM.round = Math.max(ZM.round, 4);
   },
   tick(dt) {
@@ -553,7 +554,8 @@ cpStage('m01haar', cp1Stage({
   music: () => 'cpm01haar',
   enter() {
     const n = cpaN();
-    cpkEnter({ lit: true, fuel: 85, piles: false, drain: 0.62, wash: 7.5, bankEvery: [13, 19], bankFirst: 9, bankTwo: 0.25,
+    // (mission 1 is the first: a forgiving fire, slow to burn down, hard to smother, long on embers)
+    cpkEnter({ lit: true, fuel: 95, piles: false, drain: 0.4, wash: 5.5, bankEvery: [17, 24], bankFirst: 12, bankTwo: 0.12, wood: 30, bankHit: 16, bankSp: 1.7, kick: 1.2, ember: 24, brand: 40,
       onEmbers: () => { cpaOnce('h5', 'fire', 'She’s down to embers! Wood, now!', 'cp_m01_15'); cpaBan('Embers', 'feed the fire before it goes out', '#ff9a7a'); },
       onOut: () => cpFail('The fire went out, and the haar came in over the rock'),
       onBank: () => { if (cpaOnce('h2', 'fire', 'Fog on the rock! Meet it with fire before it reaches her.', 'cp_m01_12')) cpaBan('The haar rolls in', 'take a brand from the fire (Use) and walk into the fog to burn it off'); },
@@ -593,7 +595,7 @@ cpStage('m01ship', cp1Stage({
   n: 'The Ship', sub: 'a light in the fog',
   music: () => RAID.st.keel ? 'cpm01keel' : 'cpm01ship',
   enter() {
-    cpkEnter({ lit: true, fuel: 70, piles: false, drain: 0.85, wash: 5.2, bankEvery: [11, 16], bankFirst: 8, bankTwo: 0.35,
+    cpkEnter({ lit: true, fuel: 85, piles: false, drain: 0.55, wash: 4, bankEvery: [15, 21], bankFirst: 11, bankTwo: 0.18, wood: 30, bankHit: 16, bankSp: 1.7, kick: 1.2, ember: 24, brand: 40,
       onEmbers: () => cpaBan('Embers', 'feed the fire before it goes out', '#ff9a7a'),
       onOut: () => cpFail('The fire went out, and the ship came on in the dark'),
       onSmother: () => cpaFeed('Fog over the fire: it’s lost its height. Feed it!') });
@@ -608,7 +610,7 @@ cpStage('m01ship', cp1Stage({
     if (S.turned) { S.turnT -= dt; if (S.turnT <= 0 && S.turnT > -50) { S.turnT = -99; cpDone(); } return; }
     // she sees it only while it blazes
     const high = K.fuel >= CPA.HIGH;
-    if (high) { S.see += dt; S.seenLast = S.t; } else S.see = Math.max(0, S.see - dt * 0.15);
+    if (high) { S.see += dt; S.seenLast = S.t; } else S.see = Math.max(0, S.see - dt * 0.08);
     S.ship = clamp(S.t / CPA.SHIP, 0, 1);
     if (S.t > 6 && !high) cpaOnce('s1', 'fire', 'Higher! She can’t see a glimmer through this.', 'cp_m01_20');
     if (S.see > CPA.SEE * 0.45) cpaOnce('s2', 'fire', 'She’s seen us. She’s going about. Keep it high!', 'cp_m01_21');
