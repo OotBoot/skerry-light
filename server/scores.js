@@ -192,9 +192,10 @@ async function postScore(body, addr) {
 // K 32 for a duel online, and K 16 for a match against the bot, counted as a match against a fixed rating (easy 800,
 // normal 1100, hard 1300), so a player alone still has one but the online duels count for more. A draw is half a
 // win; nobody goes below 0. Each name is kept as { n: as shown, id, r, w, l, d, b: the best r, at: last played }.
-// A name is claimed by the first board id rated under it (the x-board-id, made from the save's recovery code, so the
-// same save on another device is the same id): another id sending under that name is told it's taken (409) and its
-// match isn't rated. A new username starts again from 1000.
+// The rating belongs to the username alone: any save on any device playing under that name adds to the same rating
+// (id is only the board id that played under it last). A new username starts again from 1000.
+// GET /api/scores?mmr=<name> -> { ok, p: { n, r, b, w, l, d, at } | null }: a username's rating, so a device that's
+// never played under it shows the real one.
 // Against the bot: rated at once, but at most one result a minute for each id. Online: each side reports the duel by
 // its id g, with its side, its result and the other's name; the report waits (15 minutes) until the other side's
 // comes, and only when the two agree (one won and one lost, or both drew; two different ids; each names the other)
@@ -245,9 +246,16 @@ const mmrNew = id => ({ n: '', id, r: MMR0, w: 0, l: 0, d: 0, b: MMR0, at: 0 });
 const mmrOut = (P, d) => ({ ok: true, rated: 1, r: P.r, d, b: P.b, w: P.w, l: P.l, dr: P.d });
 // what a duel did, for the side asking
 function mmrAnswer(done, id) {
-  if (done.err) return done.err === 'taken' && done.who === id ? [409, { error: 'taken', taken: 1 }] : [200, { ok: true, rated: 0, why: done.err }];
+  if (done.err) return [200, { ok: true, rated: 0, why: done.err }];
   const e = (done.s || []).find(x => x.id === id);
   return e ? [200, Object.assign({ ok: true, rated: 1 }, e.o)] : [200, { ok: true, rated: 0, why: 'not yours' }];
+}
+// one username's rating, as it stands
+async function getMmr(name) {
+  if (!String(name || '').trim()) return { ok: true, p: null };
+  const key = mmrNorm(name);
+  const [P] = await kvGet([MK.p(key)]);
+  return { ok: true, p: P ? { n: cleanName(P.n), r: P.r | 0, b: P.b | 0, w: P.w | 0, l: P.l | 0, d: P.d | 0, at: +P.at || 0 } : null };
 }
 async function postMmr(body, addr) {
   const id = body.id, kind = body.kind, res = body.res;
@@ -255,16 +263,15 @@ async function postMmr(body, addr) {
   if (!String(body.name || '').trim()) return [400, { error: 'no name' }];
   const name = cleanName(body.name), key = mmrNorm(body.name), now = Date.now();
   // (each browser every few seconds: two keepers on one address can both send)
-  const lk = addr + '.' + id;
+  const lk = addr + '.' + id + '.' + key;
   if (now - (lastMmr.get(lk) || 0) < 3000) return [429, { error: 'slow down' }];
   lastMmr.set(lk, now);
   if (lastMmr.size > 5000) for (const [k, t] of lastMmr) if (now - t > 60000) lastMmr.delete(k);
   const [mine] = await kvGet([MK.p(key)]);
-  if (mine && mine.id !== id) return [409, { error: 'taken', taken: 1 }];
   if (kind === 'bot') {
     if (!MMR_BOT[body.lvl]) return [400, { error: 'bad level' }];
     if (!(await kvSet(MK.bot(id), 1, 60000, true))) return [429, { error: 'too soon', soon: 1 }];
-    const P = mine || mmrNew(id), d = mmrApply(P, res, MMR_BOT[body.lvl], K_BOT, name, now);
+    const P = mine || mmrNew(id); P.id = id; const d = mmrApply(P, res, MMR_BOT[body.lvl], K_BOT, name, now);
     await mmrPut([[key, P]]);
     return [200, mmrOut(P, d)];
   }
@@ -284,14 +291,10 @@ async function postMmr(body, addr) {
     if (!agree) done = { err: 'mismatch' };
     else {
       const [p0, p1] = await kvGet([MK.p(r0.k), MK.p(r1.k)]);
-      const bad = p0 && p0.id !== r0.id ? r0 : p1 && p1.id !== r1.id ? r1 : null;
-      if (bad) done = { err: 'taken', who: bad.id };
-      else {
-        const P0 = p0 || mmrNew(r0.id), P1 = p1 || mmrNew(r1.id), a = P0.r, b = P1.r;
-        const d0 = mmrApply(P0, r0.res, b, K_NET, r0.n, now), d1 = mmrApply(P1, r1.res, a, K_NET, r1.n, now);
-        await mmrPut([[r0.k, P0], [r1.k, P1]]);
-        done = { s: [{ id: r0.id, o: mmrOut(P0, d0) }, { id: r1.id, o: mmrOut(P1, d1) }] };
-      }
+      const P0 = p0 || mmrNew(r0.id), P1 = p1 || mmrNew(r1.id), a = P0.r, b = P1.r; P0.id = r0.id; P1.id = r1.id;
+      const d0 = mmrApply(P0, r0.res, b, K_NET, r0.n, now), d1 = mmrApply(P1, r1.res, a, K_NET, r1.n, now);
+      await mmrPut([[r0.k, P0], [r1.k, P1]]);
+      done = { s: [{ id: r0.id, o: mmrOut(P0, d0) }, { id: r1.id, o: mmrOut(P1, d1) }] };
     }
     await kvSet(MK.done(g), done, 24 * 3600000);
     return mmrAnswer(done, id);
@@ -300,12 +303,14 @@ async function postMmr(body, addr) {
 
 // the HTTP side: returns true if it handled the request
 export function scoresRoute(req, res) {
-  const url = (req.url || '/').split('?')[0];
+  const [url, qs] = (req.url || '/').split('?');
   if (url !== '/api/scores') return false;
   const headers = { 'content-type': 'application/json', 'access-control-allow-origin': '*', 'access-control-allow-headers': 'content-type, x-board-id', 'cache-control': 'no-store' };
   const reply = (code, obj) => { res.writeHead(code, headers); res.end(JSON.stringify(obj)); };
   if (req.method === 'OPTIONS') { res.writeHead(204, headers); res.end(); return true; }
   const me = String(req.headers['x-board-id'] || ''), meOk = /^[a-z0-9]{12,40}$/.test(me) ? me : '';
+  const mq = new URLSearchParams(qs || '').get('mmr');
+  if (req.method === 'GET' && mq != null) { getMmr(mq.slice(0, 40)).then(b => reply(200, b), err => { console.error('scores:', err.message); reply(503, { error: 'scores unavailable' }); }); return true; }
   if (req.method === 'GET') { getBoard(meOk).then(b => reply(200, b), err => { console.error('scores:', err.message); reply(503, { error: 'scores unavailable' }); }); return true; }
   if (req.method === 'POST') {
     let body = '', big = false;

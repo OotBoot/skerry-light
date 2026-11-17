@@ -6,6 +6,10 @@
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 223, date: '2026-11-17', title: "Skerry Clash rating follows your username", Changes: [
+    "Skerry Clash: your rating (MMR) now belongs to your username alone. Play under the same name on any device and every win or loss moves the same rating, with no more \"username taken\" for a name rated on another save.",
+    "Skerry Clash: a device that has never played under your name shows that name's real rating as soon as you type it in, instead of starting from 1000.",
+  ] },
   { v: 222, date: '2026-11-17', title: "Fresnel Lamp toned down in the Chronicle", Balance: [
     "The Chronicle of the Light: the Keeper's Fresnel Lamp burns for 70% less, in line with the other guns. It still burns everything caught in its beam at once. Keeper's Last Light and the raids are unchanged.",
   ] },

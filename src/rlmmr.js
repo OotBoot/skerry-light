@@ -7,8 +7,10 @@
 //
 // Where it's kept. On the game's own site the server is the judge (server/scores.js postMmr): each finished match is
 // sent there under your username and your board id (src/scores.js boardIdNow, made from your recovery code), and the
-// answer is your new rating. A username belongs to the first save rated under it: another save using it is told it's
-// taken (a toast suggests a different one), and its matches aren't rated. A duel online is rated only once both
+// answer is your new rating. The rating belongs to the username alone: play under it on any device, with any save,
+// and every match moves the same rating. The page asks the server for the username's rating (rlmPull, GET
+// /api/scores?mmr=<name>) when it opens, when the name changes and whenever the board's read, so a device that's
+// never played under the name still shows the real one (the server's is the truth). A duel online is rated only once both
 // keepers' screens have said the same thing about it (its id g, one won and one lost, or both drew), so this page
 // asks again every so often until the other side's result is in. On claude.ai there's no server: your rating is
 // worked out here, from the other keeper's rating as their lobby presence gave it (mr, src/rlnet.js), and written
@@ -19,7 +21,7 @@
 //
 // Kept on this device under 'skerry-rival-mmr' (RLM.s: { name key: { n, r, b best, w, l, d, at last played } }, a
 // few names), and in the save (src/rlcrates.js rkData's m, merged by rlmMerge: the newest of each name by at).
-// Renaming yourself starts a new rating under the new name; the old one stays with the old name.
+// Renaming yourself moves to the rating of the new name (from 1000 if it's new); the old one stays with the old name.
 // The hooks: rlmReport(r, net) from rlRecord (src/rlcrates.js) and from src/rlnet.js for a duel left early; rlmMine()
 // for the lobby presence; rlmEndLine() for the end card (src/rlhud.js); rlmRender() the card's line (#rlMmr);
 // rlmFromBoard() when the board's read (src/scores.js); rlmDoc() the claude.ai document's part; rlmData/rlmMerge.
@@ -99,9 +101,6 @@ async function rlmSend() {
     L.wait = 1;
     if (job.tries < RLM_WAIT.length) { RLM.q.push(RLM.q.shift()); rlmShow(); return again(RLM_WAIT[job.tries++]); }   // (to the back: a bot match after it needn't wait)
     RLM.q.shift(); L.wait = 0; L.unrated = 'never';
-  } else if (code === 409) {
-    RLM.q.shift(); L.taken = 1;
-    if (typeof toast === 'function') toast(`The username “${job.body.name}” already has a rating on another save, so this match wasn’t rated. Pick a different username to have a rating of your own.`, 'Username taken');
   } else if (code === 200) { RLM.q.shift(); L.unrated = out && out.why || 'no'; }
   else if (code === 429 && out && out.soon) { RLM.q.shift(); L.unrated = 'soon'; }
   else if ((code === 429 || code === 0 || code >= 500) && job.tries < RLM_WAIT.length) { rlmShow(); return again(Math.max(3500, RLM_WAIT[job.tries++])); }
@@ -116,7 +115,6 @@ function rlmSigned(d) { return (d > 0 ? '+' : d < 0 ? '−' : '±') + Math.abs(d
 function rlmEndLine() {
   const L = RLM.last; if (!L) return '';
   if (L.none) return 'Set a username (on the scoreboard) to have a rating.';
-  if (L.taken) return 'Not rated: that username is already rated on another save.';
   if (L.unrated) return L.unrated === 'never' ? `Not rated: ${L.opp || 'your rival'}’s result never came in.` : L.unrated === 'soon' ? 'Not rated: one match against the bot a minute counts.' : 'Not rated: the two results didn’t agree.';
   if (L.off) return `${rlmSigned(L.d)} MMR (on this device only)`;
   if (L.sure) return `${rlmSigned(L.d)} MMR · now ${L.r}`;
@@ -124,7 +122,7 @@ function rlmEndLine() {
 }
 function rlmShow() {
   const el = $('rlEndMmr');
-  if (el) { const t = rlmEndLine(); el.textContent = t; el.hidden = !t; el.classList.toggle('up', !!RLM.last && RLM.last.d > 0 && !RLM.last.unrated && !RLM.last.taken); el.classList.toggle('down', !!RLM.last && RLM.last.d < 0 && !RLM.last.unrated && !RLM.last.taken); }
+  if (el) { const t = rlmEndLine(); el.textContent = t; el.hidden = !t; el.classList.toggle('up', !!RLM.last && RLM.last.d > 0 && !RLM.last.unrated); el.classList.toggle('down', !!RLM.last && RLM.last.d < 0 && !RLM.last.unrated); }
   rlmRender();
 }
 // the card's line, under the record
@@ -134,17 +132,26 @@ function rlmRender() {
   el.textContent = !c ? 'Set a username on the scoreboard to have a rating (MMR).'
     : !n ? `MMR ${c.r}: no rated matches yet as ${c.n}.` : `MMR ${c.r} (best ${c.b}) · ${n} rated ${n === 1 ? 'match' : 'matches'} as ${c.n}`;
 }
-// the board as the server has it: yours there is the truth (another device may have played since)
-function rlmFromBoard() {
-  if (rlmVia() !== 'server' || typeof BOARD === 'undefined' || !BOARD.data || !Array.isArray(BOARD.data.clash)) return;
+// the username's rating as the server has it: the truth (another device may have played under it since). Not while
+// one of this page's own matches is still on its way there (its answer brings the rating anyway).
+function rlmFromBoard() { rlmPull(); }
+var RLM_PULL = { t: 0, k: '', busy: false, timer: 0 };
+function rlmPullSoon(ms) { clearTimeout(RLM_PULL.timer); RLM_PULL.timer = setTimeout(() => rlmPull(true), ms || 900); }
+async function rlmPull(force) {
+  if (rlmVia() !== 'server' || RLM_PULL.busy || typeof boardApiUrl !== 'function' || !boardApiUrl()) return;
   const n = rlmName(), k = rlmKey(n); if (!k) return;
-  const e = BOARD.data.clash.find(x => x.me && rlmKey(x.n) === k); if (!e) return;
-  const m = RLM.s[k], played = m ? m.w + m.l + m.d : 0;
-  if (e.c >= played && (!m || m.r !== e.s || m.w !== e.b || played !== e.c)) {
-    const x = m || { n, r: RLM_R0, b: RLM_R0, w: 0, l: 0, d: 0, at: 0 };
-    x.r = e.s; x.b = Math.max(x.b, e.s); if (e.c > played) { x.w = e.b; x.l = Math.max(0, e.c - e.b - x.d); x.at = Date.now(); }
-    RLM.s[k] = x; rlmSave(); rlmRender();
-  }
+  if (!force && RLM_PULL.k === k && Date.now() - RLM_PULL.t < 20000) return;
+  RLM_PULL.busy = true; RLM_PULL.k = k; RLM_PULL.t = Date.now();
+  try {
+    const r = await fetch(boardApiUrl() + '?mmr=' + encodeURIComponent(n), { cache: 'no-store' });
+    const j = r.ok ? await r.json() : null, P = j && j.p;
+    if (P && rlmKey(rlmName()) === k && !RLM.q.some(q => rlmKey(q.body.name) === k)) {
+      const f = rlmFix(Object.assign({}, P, { n: (RLM.s[k] && RLM.s[k].n) || n, at: Math.max(+P.at || 0, RLM.s[k] ? RLM.s[k].at : 0) }));
+      const m = RLM.s[k];
+      if (f && (!m || m.r !== f.r || m.w !== f.w || m.l !== f.l || m.d !== f.d || m.b !== f.b)) { RLM.s[k] = f; rlmSave(); rlmRender(); }
+    }
+  } catch (e) {}
+  RLM_PULL.busy = false;
 }
 // your part of the claude.ai board document
 function rlmDoc() { const c = rlmCur(); return c && c.w + c.l + c.d > 0 ? { n: c.n, r: c.r, b: c.b, w: c.w, l: c.l, d: c.d } : null; }
@@ -162,5 +169,6 @@ function rlmMerge(m) {
 (function rlmInit() {
   rlmLoad(); rlmRender();
   // (the name boxes: the line follows the username as it's typed)
-  for (const id of typeof NICK_BOXES !== 'undefined' ? NICK_BOXES : []) { const el = $(id); if (el) el.addEventListener('input', () => setTimeout(rlmRender, 0)); }
+  for (const id of typeof NICK_BOXES !== 'undefined' ? NICK_BOXES : []) { const el = $(id); if (el) el.addEventListener('input', () => { setTimeout(rlmRender, 0); rlmPullSoon(); }); }
+  setTimeout(() => rlmPull(true), 2500);   // (once the board knows where it lives)
 })();
