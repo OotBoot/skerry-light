@@ -6,6 +6,13 @@
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 220, date: '2026-11-17', title: "The First Fire, kinder", Balance: [
+    "The Chronicle of the Light: The First Fire is easier to keep alight in every part. Driftwood: one bundle fewer to stack before you can light it.",
+    "The Chronicle of the Light: The First Fire: in The Haar and The Ship the fire burns down about a third slower, starts fuller, and each bundle of driftwood gives more. Fog banks come less often, drift in slower and smother less of it, and the drowned kick it apart about half as fast.",
+    "The Chronicle of the Light: The First Fire: brands last longer, more driftwood washes up, and once the fire's down to embers you have 24 seconds to feed it instead of 14. In The Ship, the ship loses sight of a dimmed fire more slowly.",
+  ], Changes: [
+    "The Chronicle of the Light: cinematics can no longer be skipped. Each plays through to the end, for everyone together.",
+  ] },
   { v: 219, date: '2026-11-17', title: "The Chronicle of the Light, voiced", Sound: [
     "The Chronicle of the Light: every line in all fourteen missions is now spoken aloud, 615 in all, with each character keeping the same voice from mission to mission. Distant shouts carry across the water, and the drowned sound like the drowned.",
     "The Chronicle of the Light: new music for the campaign: themes for tense nights, sailing, fighting, bosses, sorrow and fog, a hopeful closing theme and a victory theme, plus a flamenco cove fight in The Mooncussers, the first lighting of the Light, and a last hymn for The Drowned Reach. Elsewhere the missions draw on the other games' music.",

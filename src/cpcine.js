@@ -6,8 +6,8 @@
 // are, nobody can be hurt, and the stage's clock waits (src/zombies.js zmFrame and zmTick ask cpCineOn).
 //
 // Together: the host starts it (cpCine) and says which, and how far in, in its word (cpc); every screen plays the
-// same shots from its own clock, kept within half a second of the host's. Anyone can ask to skip (Space, Enter, a
-// click or tap, A on a controller): alone it ends there and then; together, once everyone has asked.
+// same shots from its own clock, kept within half a second of the host's. A cinematic can't be skipped: it plays to its
+// end on every screen (Space, Enter, a click or tap are swallowed while it plays, so nothing fires or jumps).
 //
 // A cinematic (cpCineDef(id, def)): { n: its name, music: a music key (src/cp.js cpMusic) while it plays,
 //   b3(grp, C): its actors built (every screen, as it begins: grp is a THREE.Group in the scene, emptied after;
@@ -78,8 +78,8 @@ function cpcTick(dt) {
   CPN.bar = Math.min(1, CPN.bar + dt * 2.5);
   FPS.me.protect = Math.max(FPS.me.protect || 0, 1); FPS.me.iframe = Math.max(FPS.me.iframe || 0, 1);
   CPN.t += dt * CPN.rate;   // (rate: a test can play them quicker)
-  // (A on a controller skips, as Space does)
-  try { const P = navigator.getGamepads ? [...navigator.getGamepads()].filter(Boolean) : []; const a = P.some(p => p.buttons[0] && p.buttons[0].pressed); if (a && !CPN.padA && CPN.t > 0.4) cpcSkip(); CPN.padA = a; } catch (e) {}
+  // (a controller's A is only watched, so it doesn't fire the moment the cinematic ends)
+  try { const P = navigator.getGamepads ? [...navigator.getGamepads()].filter(Boolean) : []; CPN.padA = P.some(p => p.buttons[0] && p.buttons[0].pressed); } catch (e) {}
   // (joined: kept near the host's own clock)
   if (ZM.net === 'client' && Math.abs(CPN.t - CPN.hostT) > 0.5) CPN.t = CPN.hostT;
   if (CPN.t >= D.T) { if (ZM.net !== 'client') cpcEnd(); else CPN.t = D.T - 0.001; return; }
@@ -135,10 +135,6 @@ function cpcHud() {
   if (bh > 0.5) { ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, bh); ctx.fillRect(0, H - bh, W, bh); }
   if (D) {
     cpSubHud(phone, mono, fell, true);
-    // skip
-    ctx.textAlign = 'right'; ctx.textBaseline = 'middle'; ctx.font = mono(phone ? 9 : 11); ctx.fillStyle = 'rgba(236,228,207,0.5)';
-    const n = ZM.net ? (ZM.hum || []).length : 1, k = CPN.skip.size;
-    ctx.fillText(CPN.skipped ? (ZM.net ? `WAITING TO SKIP · ${k}/${n}` : '') : (phone ? 'TAP TO SKIP' : FPS.pad ? 'A TO SKIP' : 'SPACE TO SKIP') + (ZM.net && k ? ` · ${k}/${n}` : ''), W - Math.max(14, FPS.safeRight || 0), bh * 0.5 || 14);
   }
   ctx.textBaseline = 'alphabetic';
   return !!D;
@@ -146,22 +142,11 @@ function cpcHud() {
 // (src/cp.js cpMusic) the cinematic's own music, if it says one
 function cpcMusic() { return CPN.on && CPN.on.music ? CPN.on.music : undefined; }
 
-// ---------- skipping ----------
-function cpcSkip() {
-  if (!CPN.on || CPN.skipped) return;
-  CPN.skipped = true;
-  if (!ZM.net) { cpcEnd(); return; }
-  cpAsk('cpskip');
-}
-// (hosting) someone asked to skip: once everyone has, it's over
-function cpcSkipVote(sid) {
-  if (!CPN.on) return;
-  CPN.skip.add(sid);
-  const all = (ZM.hum || []).map(h => h[0]).filter(s => s === FPS.me.id || FPS.remote.has(s));
-  if (all.every(s => CPN.skip.has(s))) cpcEnd();
-}
-addEventListener('keydown', e => { if (!cpCineOn() || FPS.menu) return; if (e.code === 'Space' || e.code === 'Enter' || e.code === 'NumpadEnter') { e.preventDefault(); e.stopPropagation(); cpcSkip(); } }, true);
-addEventListener('pointerdown', e => { if (!cpCineOn() || FPS.menu) return; if (e.target && e.target.closest && e.target.closest('#fpsMenu, button')) return; cpcSkip(); }, true);
+// ---------- no skipping ----------
+// Cinematics play to the end. These stay so an older screen asking to skip (cpQ 'cpskip') is simply ignored.
+function cpcSkip() {}
+function cpcSkipVote() {}
+addEventListener('keydown', e => { if (!cpCineOn() || FPS.menu) return; if (e.code === 'Space' || e.code === 'Enter' || e.code === 'NumpadEnter') { e.preventDefault(); e.stopPropagation(); } }, true);
 
 // ---------- playing together ----------
 // cpc = [seq, id, seconds in, who's asked to skip]; null when nothing is playing
