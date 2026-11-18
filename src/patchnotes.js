@@ -6,6 +6,15 @@
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 237, date: '2026-11-18', title: "The Compendium catches up with the Chronicle", New: [
+    "Skerry Compendium: The Chronicle of the Light joins the tales, with its fourteen missions laid out act by act and linked to the nights they tell.",
+    "Skerry Compendium: 40 new articles from the campaign. People: Wenna, Black Jago, the Spanish garrison and Sergeant Ybarra, Abel Penhallow, Jory Tregear, the Receiver of Wreck, Black Nell, Ruth Carrow, the cutter's crew, the Mayor and folk of Wrackhaven, and the Wren's mate.",
+    "Skerry Compendium: new places (the Skerries, the Fire Step, the sea wall, Crowsnest Rock, the dry bed of the sea, the Old Drain, the Moot Hall), ships (the Kittiwake, the Gallows Bird, the fire-ships of the Reach), the Ember Isles and the Ice-folk, and the Old Keel.",
+    "Skerry Compendium: new event pages for the First Fire, the hanging of Black Jago, the lighting of the Light, the Wren coming in, the night of the sea chests, the Dry Night, the Fall of Wrackhaven and the Light lit again.",
+    "Skerry Compendium: a new Eras category, one page for each age of the coast: Before the Light, the wrecking years, the Light, the Strange Year, After the Gannet and the Years After.",
+  ], Changes: [
+    "Skerry Compendium: the timeline, Verity, the Mooncusser, the Fog-Keeper, the Lampwright, Wrackhaven and a dozen other pages now link to the new ones. Verity is listed among the Skerry Clash champions, and the main page has new Did you know facts.",
+  ] },
   { v: 236, date: '2026-11-18', title: "Maren's End: free to move under the sea wall", Fixes: [
     "The Chronicle of the Light, Maren's End: in the last part, under the fort's sea wall, everyone was held fast where they came out of the old drain and couldn't move. The bed below the wall is open again, so you can reach the bells and the wrecks.",
   ] },
