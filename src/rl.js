@@ -127,7 +127,7 @@ function rlStart(o) {
     oil: SS.map(() => RLC.OIL0), names: SS.map(i => String((o.names && o.names[i]) || (i ? 'Rival' : 'You')).slice(0, 16)), skins: SS.map(i => (o.skins && o.skins[i]) || ''),
     decks: SS.map(i => rlDeckOk(o.decks && o.decks[i])), U: [], P: [], Z: [], FX: [], crowns: SS.map(() => 0), win: -1, bot: { lvl: o.lvl || 'normal' }, nid: 1, clk: 0, cnt: RLC.COUNT, acc: 0,
     seed, rng: rlRng(seed), draft: !!o.draft, pend: null, ch: SS.map(() => rlChNew()), recorded: false, lastSnap: 0, snapDur: 90, both: RL.both || false,
-    fp: !n3 && !!o.fp, fpc: [null, null], fpU: null, n3, alive: SS.map(() => 1), outs: [], bots: n3 ? (Array.isArray(o.bots) ? o.bots.filter(s => s >= 0 && s < 3) : o.mode === 'net' ? [] : [1, 2]) : [] });
+    fp: !!o.fp, fpc: SS.map(() => null), fpU: null, n3, alive: SS.map(() => 1), outs: [], bots: n3 ? (Array.isArray(o.bots) ? o.bots.filter(s => s >= 0 && s < 3) : o.mode === 'net' ? [] : [1, 2]) : [] });
   RL.hand = SS.map(() => []); RL.next = SS.map(() => ''); RL.queue = SS.map(() => []);
   for (const s of SS) { const d = RL.decks[s].slice(); for (let i = d.length - 1; i > 0; i--) { const j = (RL.rng() * (i + 1)) | 0; [d[i], d[j]] = [d[j], d[i]]; } RL.hand[s] = d.slice(0, 4); RL.next[s] = d[4]; RL.queue[s] = d.slice(5); }
   RL.T = n3 ? rl3Towers() : [];
@@ -352,7 +352,7 @@ function rlTick() {
   RL.t += dt; RL.left -= dt;
   if (!RL.dbl && (RL.ot || RL.left <= RLC.DBL)) { RL.dbl = true; rlFx('dbl', { x: 9, y: 16, side: 0 }); }
   for (let s = 0; s < RL.oil.length; s++) if (!RL.n3 || RL.alive[s]) RL.oil[s] = Math.min(RLC.MAXOIL, RL.oil[s] + dt / RLC.OILT * (RL.dbl ? 2 : 1));
-  if (RL.n3) { for (const s of RL.bots) rl3BotTick(dt, s); if (RL.both) rl3BotTick(dt, RL.me); }
+  if (RL.n3) { if (RL.fp) { for (let s = 0; s < 3; s++) rl3BotTick(dt, s); } else { for (const s of RL.bots) rl3BotTick(dt, s); if (RL.both) rl3BotTick(dt, RL.me); } }   // (first person: a bot plays every keeper's cards, src/rlfp.js)
   else if (typeof rlBotTick === 'function') { if (RL.fp) { rlBotTick(dt, 0); rlBotTick(dt, 1); } else { if (RL.mode === 'bot') rlBotTick(dt, 1); if (RL.both) rlBotTick(dt, 0); } }   // (first person: a bot plays each side's cards, src/rlfp.js)
   for (const u of RL.U) { u.px = u.x; u.py = u.y; }
   RL.by = new Map(); for (const e of RL.T) RL.by.set(e.id, e); for (const u of RL.U) RL.by.set(u.id, u);
@@ -734,7 +734,7 @@ function rlSnap() {
   // (the extra points of a leap or a chain, in tenths)
   const fx = f => f.k === 'leap' ? [[rlQ(f.tx), rlQ(f.ty)]] : f.k === 'chain' ? [f.pts.map(q => [rlQ(q[0]), rlQ(q[1])])] : [];
   return {
-    ...(RL.n3 ? { n3: 1, al: RL.alive, ou: RL.outs } : {}), ...(RL.fp ? { fp: [0, 1].map(s => typeof rlfpHeld === 'function' ? rlfpHeld(s) : 0) } : {}),
+    ...(RL.n3 ? { n3: 1, al: RL.alive, ou: RL.outs } : {}), ...(RL.fp ? { fp: RL.oil.map((o, s) => typeof rlfpHeld === 'function' ? rlfpHeld(s) : 0) } : {}),
     v: 1, ph: RL.ph, k: rlQ(RL.clk), t: rlQ(RL.t), l: rlQ(RL.left), f: (RL.ot ? 1 : 0) | (RL.dbl ? 2 : 0), cn: rlQ(RL.cnt), o: RL.oil.map(rlQ), h: RL.hand, n: RL.next,
     ch: RL.ch.map(h => [rlCi(h.c), h.u | 0, rlQ(h.cd)]), cr: RL.crowns, w: RL.win, nm: RL.names, sk: RL.skins, lv: RL.bot.lvl,
     T: RL.T.map(t => [Math.round(Math.max(0, t.hp)), (t.awake ? 1 : 0) | (t.down ? 2 : 0), t.tg | 0, t.shotAt != null ? rlQ(RL.clk - t.shotAt) : 99]),
@@ -753,7 +753,7 @@ function rlApply(s) {
   // (the match is for three, or isn't: the towers and the arrays as the host has them)
   if (!!s.n3 !== !!RL.n3) { RL.n3 = !!s.n3; const SS = RL.n3 ? [0, 1, 2] : [0, 1]; RL.T = RL.n3 ? rl3Towers() : RL.T; RL.alive = SS.map(() => 1); RL.outs = []; RL.ch = SS.map(() => rlChNew()); RL.me = Math.min(RL.me, SS.length - 1); if (typeof rl3dReset === 'function') rl3dReset(); if (typeof rlHudReset === 'function') rlHudReset(); }
   if (RL.n3) { if (Array.isArray(s.al)) RL.alive = s.al.slice(0, 3); if (Array.isArray(s.ou)) RL.outs = s.ou.slice(0, 3); }
-  RL.fp = !!s.fp; RL.fpU = Array.isArray(s.fp) ? s.fp.slice(0, 2) : null;
+  RL.fp = !!s.fp; RL.fpU = Array.isArray(s.fp) ? s.fp.slice(0, 3) : null;
   const wasPh = RL.ph, d = v => v / 10;
   RL.ph = s.ph; RL.clk = d(s.k); RL.t = d(s.t); RL.left = d(s.l); RL.ot = !!(s.f & 1); RL.dbl = !!(s.f & 2); RL.cnt = d(s.cn); RL.oil = s.o.map(d);
   if (Array.isArray(s.ch)) RL.ch = s.ch.map(e => ({ c: rlCo(e[0]), u: e[1], cd: d(e[2]) }));

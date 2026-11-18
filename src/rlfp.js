@@ -1,5 +1,5 @@
 'use strict';
-// Skerry Clash, first person (v224): a duel where two bots play the cards and each keeper takes the field as one of
+// Skerry Clash, first person (v224; for three keepers too, v225, rlfpPlay3 and fp with n3 online): a duel where two bots play the cards and each keeper takes the field as one of
 // their own troops. Your side's bot (src/rlbot.js rlBotTick, run for both sides while RL.fp) spends the oil and sets
 // the cards down; whenever a troop of yours is on the field you may take it over and fight as it, in first person,
 // and swap to any other of yours as more come down. Alone, the other side is the bot at the level on the card; online,
@@ -37,7 +37,7 @@ function rlfpPlayBot(lvl) {
   rlStart({ mode: 'bot', me: 0, fp: true, names: [rlMyName(), RL_BOTNM[lvl]], decks: [mine, typeof rlBotDeck === 'function' ? rlBotDeck(lvl) : RL_DEFAULT_DECK], skins: [sk || '', ''], lvl });
 }
 function rlfpReset() {
-  Object.assign(RLFP, { u: 0, yaw: RL.me ? Math.PI : 0, pitch: -0.12, keys: {}, atk: false, mAtk: false, tAtk: false, autoT: 0, free: false, seenU: RL.nid, offer: 0, offerT: 0, netK: '', eyeFor: 0, camOn: false, hpLast: 0, hurt: 0, pickK: '', tgK: '', meK: '', said: 0 });
+  Object.assign(RLFP, { u: 0, yaw: typeof rlFace0 === 'function' ? rlFace0(RL.me) : RL.me ? Math.PI : 0, pitch: -0.12, keys: {}, atk: false, mAtk: false, tAtk: false, autoT: 0, free: false, seenU: RL.nid, offer: 0, offerT: 0, netK: '', eyeFor: 0, camOn: false, hpLast: 0, hurt: 0, pickK: '', tgK: '', meK: '', said: 0 });
   rlfpUiBuild();
   const el = $('rlFp'); if (el) el.hidden = !RL.fp;
   $('rlUI').classList.toggle('fp', !!RL.fp);
@@ -47,7 +47,7 @@ function rlfpReset() {
 // ---------- the rules (host or alone) ----------
 // what a keeper says they're doing with the troop they hold (checked: their own, standing, not a building)
 function rlfpCtl(side, uid, mx, my, f, a) {
-  if (!RL.fp || !RL.fpc || !(side === 0 || side === 1)) return;
+  if (!RL.fp || !RL.fpc || !(side >= 0 && side < RL.fpc.length)) return;
   uid = uid | 0; const u = uid ? RL.U.find(q => q.id === uid) : null;
   if (!u || u.side !== side || u.bld || u.hp <= 0) { RL.fpc[side] = null; return; }
   mx = +mx || 0; my = +my || 0; const m = Math.hypot(mx, my); if (m > 1) { mx /= m; my /= m; }
@@ -68,7 +68,7 @@ function rlfpAim(u, C, f) {
     const s = da * 1.6 + Math.max(0, gap) * 0.12 + (e.k ? 0.05 : 0); if (s < bs) { bs = s; best = { T: e, reach: gap <= lim, gap }; }
   };
   for (const e of RL.U) if (rlCanHit(C.tg, u.side, e) && !(e.dep > 0)) look(e, e.size || 0.4);
-  for (const t of RL.T) if (t.hp > 0 && t.side !== u.side && !(RL.n3)) look(t, t.r);
+  for (const t of RL.T) if (t.hp > 0 && t.side !== u.side) look(t, t.r);
   return best;
 }
 // a held unit's tick (from rlUnit, after its slows and stuns): true when it was held and has been moved here
@@ -114,7 +114,7 @@ const rlfpMine = () => RL.U.filter(u => u.side === RL.me && !u.bld && u.hp > 0);
 function rlfpUnitMine() { if (!RLFP.u) return null; const u = RL.U.find(q => q.id === RLFP.u); return u && u.hp > 0 && u.side === RL.me ? u : null; }
 function rlfpTake(u) {
   if (!u || rlIsSpec()) return;
-  if (RLFP.u !== u.id) { RLFP.yaw = isFinite(u.face) ? u.face : (RL.me ? Math.PI : 0); RLFP.pitch = u.air ? -0.32 : -0.12; RLFP.hpLast = u.hp; RLFP.eyeFor = 0; }
+  if (RLFP.u !== u.id) { RLFP.yaw = isFinite(u.face) ? u.face : rlFace0(RL.me); RLFP.pitch = u.air ? -0.32 : -0.12; RLFP.hpLast = u.hp; RLFP.eyeFor = 0; }
   RLFP.u = u.id; RLFP.free = false; RLFP.offer = 0; RLFP.hurt = 0;
   if (typeof rlHudSay === 'function') { const C = RL_CARD[u.c] || {}; rlHudSay(C.cnt > 1 ? `You are one of the ${C.n}` : `You are the ${C.n || 'troop'}`, 1.4); }
 }
@@ -297,27 +297,55 @@ function rlfpHud(dt) {
   for (const b of pick.children) { const q = RL.U.find(z => z.id === +b.dataset.id); if (q) b.querySelector('s').style.width = (Math.max(0, q.hp) / q.max * 100).toFixed(0) + '%'; }
   rlfpMap(); rlfpRivalTag();
 }
-// the map of the race: your rock at the bottom, the towers, everyone on the field, and you with your view
+// the map of the race: your rock at the bottom, the towers, everyone on the field, and you with your view (for three,
+// the round skerry turned so your rock is at the bottom, the other two keepers in their own colours)
 function rlfpMap() {
-  const cv = $('rlFpMap'); if (!cv) return; const g = cv.getContext('2d'), W = cv.width, Hh = cv.height, me = RL.me;
-  const X = x => (me ? RLC.W - x : x) / RLC.W * W, Y = y => (me ? y : RLC.H - y) / RLC.H * Hh;
-  g.clearRect(0, 0, W, Hh); g.fillStyle = 'rgba(14,30,48,0.82)'; g.fillRect(0, 0, W, Hh);
-  g.fillStyle = 'rgba(96,104,84,0.9)'; g.fillRect(0, Math.min(Y(0), Y(RLC.R0)), W, Math.abs(Y(RLC.R0) - Y(0))); g.fillRect(0, Math.min(Y(RLC.R1), Y(RLC.H)), W, Math.abs(Y(RLC.H) - Y(RLC.R1)));
-  g.fillStyle = 'rgba(150,140,120,0.95)'; for (const cx of RLC.LX) g.fillRect(Math.min(X(cx - RLC.CW), X(cx + RLC.CW)), Math.min(Y(RLC.R0), Y(RLC.R1)), Math.abs(X(cx + RLC.CW) - X(cx - RLC.CW)), Math.abs(Y(RLC.R1) - Y(RLC.R0)));
-  const held = [rlfpHeld(0), rlfpHeld(1)];
-  for (const t of RL.T) { if (t.hp <= 0) continue; const s = t.k === 'great' ? 9 : 7; g.fillStyle = t.side === me ? '#5aa2ff' : '#ff6352'; g.fillRect(X(t.x) - s / 2, Y(t.y) - s / 2, s, s); }
-  for (const u of RL.U) { if (u.hp <= 0) continue; const h = held[u.side] === u.id; g.fillStyle = h ? '#fff4c0' : u.side === me ? '#9cc8ff' : '#ff9a8a'; const r = h ? 3.2 : u.bld ? 2.6 : 1.8; g.beginPath(); g.arc(X(u.x), Y(u.y), r, 0, 7); g.fill(); }
+  const cv = $('rlFpMap'); if (!cv) return; const g = cv.getContext('2d'), me = RL.me, n3 = !!RL.n3;
+  if (cv.dataset.n3 !== String(n3)) { cv.dataset.n3 = String(n3); cv.width = 108; cv.height = n3 ? 108 : 192; cv.classList.toggle('round', n3); }
+  const W = cv.width, Hh = cv.height, sc = n3 ? W / 2 / (RL3C.R + 0.6) : 0, rot = n3 ? -(rl3Phi(me) - rl3Phi(0)) : 0, cr = Math.cos(rot), sr = Math.sin(rot);
+  // (P: arena tiles to the map; D: a way in tiles to the map's way)
+  const P = n3 ? (x, y) => { const dx = x - RL3C.CX, dy = y - RL3C.CY; return [W / 2 + (dx * cr - dy * sr) * sc, Hh / 2 - (dx * sr + dy * cr) * sc]; } : (x, y) => [(me ? RLC.W - x : x) / RLC.W * W, (me ? y : RLC.H - y) / RLC.H * Hh];
+  const D = n3 ? (dx, dy) => [dx * cr - dy * sr, -(dx * sr + dy * cr)] : (dx, dy) => [me ? -dx : dx, me ? dy : -dy];
+  const col = s => ['#5aa2ff', '#ff6352', '#e8b030'][typeof rlRel === 'function' ? rlRel(s) : s === me ? 0 : 1], lite = s => ['#9cc8ff', '#ff9a8a', '#f4d488'][typeof rlRel === 'function' ? rlRel(s) : s === me ? 0 : 1];
+  g.clearRect(0, 0, W, Hh);
+  if (n3) {
+    g.fillStyle = 'rgba(14,30,48,0.82)'; g.beginPath(); g.arc(W / 2, Hh / 2, W / 2, 0, 7); g.fill();
+    g.fillStyle = 'rgba(96,104,84,0.9)'; g.beginPath(); g.arc(W / 2, Hh / 2, RL3C.R * sc, 0, 7); g.fill();
+    g.fillStyle = 'rgba(14,30,48,0.95)'; g.beginPath(); g.arc(W / 2, Hh / 2, RL3C.P * sc, 0, 7); g.fill();
+    for (let k = 0; k < 3; k++) {
+      const quad = (a0, a1, w, fill) => { const c = [rl3Pt(k, a0, -w), rl3Pt(k, a1, -w), rl3Pt(k, a1, w), rl3Pt(k, a0, w)].map(q => P(q[0], q[1])); g.fillStyle = fill; g.beginPath(); g.moveTo(c[0][0], c[0][1]); for (const q of c.slice(1)) g.lineTo(q[0], q[1]); g.fill(); };
+      quad(0, RL3C.R, RL3C.WH, 'rgba(14,30,48,0.95)'); quad(RL3C.RC - RL3C.CW, RL3C.RC + RL3C.CW, RL3C.WH, 'rgba(150,140,120,0.95)');
+    }
+  } else {
+    const X = x => P(x, 0)[0], Y = y => P(0, y)[1];
+    g.fillStyle = 'rgba(14,30,48,0.82)'; g.fillRect(0, 0, W, Hh);
+    g.fillStyle = 'rgba(96,104,84,0.9)'; g.fillRect(0, Math.min(Y(0), Y(RLC.R0)), W, Math.abs(Y(RLC.R0) - Y(0))); g.fillRect(0, Math.min(Y(RLC.R1), Y(RLC.H)), W, Math.abs(Y(RLC.H) - Y(RLC.R1)));
+    g.fillStyle = 'rgba(150,140,120,0.95)'; for (const cx of RLC.LX) g.fillRect(Math.min(X(cx - RLC.CW), X(cx + RLC.CW)), Math.min(Y(RLC.R0), Y(RLC.R1)), Math.abs(X(cx + RLC.CW) - X(cx - RLC.CW)), Math.abs(Y(RLC.R1) - Y(RLC.R0)));
+  }
+  const held = RL.oil.map((o, sd) => rlfpHeld(sd));
+  for (const t of RL.T) { if (t.hp <= 0) continue; const s = t.k === 'great' ? 9 : 7, [x, y] = P(t.x, t.y); g.fillStyle = col(t.side); g.fillRect(x - s / 2, y - s / 2, s, s); }
+  for (const u of RL.U) { if (u.hp <= 0) continue; const h = held[u.side] === u.id, [x, y] = P(u.x, u.y); g.fillStyle = h ? '#fff4c0' : lite(u.side); const r = h ? 3.2 : u.bld ? 2.6 : 1.8; g.beginPath(); g.arc(x, y, r, 0, 7); g.fill(); }
   const u = rlfpUnitMine();
-  if (u && RLFP.camOn) { const [x, y] = rlPos(u), s = me ? -1 : 1, f = RLFP.yaw, px = X(x), py = Y(y); g.strokeStyle = 'rgba(255,244,192,0.85)'; g.lineWidth = 1.5; g.beginPath(); for (const a of [-0.55, 0.55]) { g.moveTo(px, py); g.lineTo(px + Math.sin(f + a) * 16 * s, py - Math.cos(f + a) * 16 * s); } g.stroke(); }
+  if (u && RLFP.camOn) { const [ux, uy] = rlPos(u), [px, py] = P(ux, uy), f = RLFP.yaw; g.strokeStyle = 'rgba(255,244,192,0.85)'; g.lineWidth = 1.5; g.beginPath(); for (const a of [-0.55, 0.55]) { const [dx, dy] = D(Math.sin(f + a), Math.cos(f + a)); g.moveTo(px, py); g.lineTo(px + dx * 16, py + dy * 16); } g.stroke(); }
 }
-// a name plate over the troop the rival holds (src/rl3d.js puts it there through rl3dProject)
+// a name plate over the troop each rival holds (put there through src/rl3d.js rl3dProject; for three, in their colour)
 function rlfpRivalTag() {
-  let tag = $('rlFpRival'); const id = RL.fp && !rlIsSpec() ? rlfpHeld(1 - RL.me) : 0, u = id ? RL.U.find(q => q.id === id && q.hp > 0) : null;
-  if (!u) { if (tag) tag.hidden = true; return; }
-  if (!tag) { tag = document.createElement('div'); tag.id = 'rlFpRival'; tag.className = 'rl-fprival'; $('rlUI').insertBefore(tag, $('rlDrag')); }
-  const [x, y] = rlPos(u), p = rl3dProject(x, y, RL_G0 + (u.air ? 3.6 : 2.2));
-  if (!p || !p.on) { tag.hidden = true; return; }
-  const nm = RL.names[1 - RL.me] || 'Rival'; if (tag.textContent !== nm) tag.textContent = nm;
-  tag.hidden = false; tag.style.transform = `translate(${Math.round(p.x)}px, ${Math.round(p.y)}px) translate(-50%, -100%)`;
+  RLFP.tags = RLFP.tags || [];
+  for (let s = 0; s < 3; s++) {
+    let tag = RLFP.tags[s]; const id = RL.fp && !rlIsSpec() && s !== RL.me && s < RL.oil.length ? rlfpHeld(s) : 0, u = id ? RL.U.find(q => q.id === id && q.hp > 0) : null;
+    if (!u) { if (tag) tag.hidden = true; continue; }
+    if (!tag) { tag = RLFP.tags[s] = document.createElement('div'); tag.className = 'rl-fprival'; $('rlUI').insertBefore(tag, $('rlDrag')); }
+    const [x, y] = rlPos(u), p = rl3dProject(x, y, RL_G0 + (u.air ? 3.6 : 2.2));
+    if (!p || !p.on) { tag.hidden = true; continue; }
+    const nm = RL.names[s] || 'Rival'; if (tag.textContent !== nm) tag.textContent = nm;
+    tag.classList.toggle('gold', !!RL.n3 && typeof rlRel === 'function' && rlRel(s) === 2);
+    tag.hidden = false; tag.style.transform = `translate(${Math.round(p.x)}px, ${Math.round(p.y)}px) translate(-50%, -100%)`;
+  }
 }
-(function rlfpInit() { const b = typeof $ === 'function' && $('rlFpPlay'); if (b) b.addEventListener('click', () => rlfpPlayBot()); })();
+// against two bots for three, in first person (src/rl3.js's own start, with fp)
+function rlfpPlay3(lvl) {
+  lvl = lvl || ($('rlBotLvl') && $('rlBotLvl').value) || 'normal'; if (!RL3_BOTNM[lvl]) lvl = 'normal';
+  const mine = typeof rlDeckMine === 'function' ? rlDeckMine() : RL_DEFAULT_DECK, sk = typeof rlSkinMine === 'function' ? rlSkinMine() : '', bd = () => typeof rlBotDeck === 'function' ? rlBotDeck(lvl) : RL_DEFAULT_DECK;
+  rlStart({ mode: 'bot', n3: true, fp: true, me: 0, names: [rlMyName(), RL3_BOTNM[lvl][0], RL3_BOTNM[lvl][1]], decks: [mine, bd(), bd()], skins: [sk || '', '', ''], lvl, bots: [1, 2] });
+}
+(function rlfpInit() { if (typeof $ !== 'function') return; const b = $('rlFpPlay'), b3 = $('rl3FpPlay'); if (b) b.addEventListener('click', () => rlfpPlayBot()); if (b3) b3.addEventListener('click', () => rlfpPlay3()); })();

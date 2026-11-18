@@ -257,7 +257,7 @@ function rlPlace(i, p) {
   $('rlResume').addEventListener('click', () => rlPauseOpen(false));
   $('rlLeave').addEventListener('click', rlQuit);
   $('rlMenu').addEventListener('click', rlQuit);
-  $('rlAgain').addEventListener('click', () => { if (RL.mode !== 'bot') return; const lvl = RL.bot.lvl; $('rlEnd').hidden = true; if (RL.n3) { RL.on = false; rl3PlayBot(lvl); return; } if (RL.draft && typeof rldBot === 'function') { rlQuit(); rldBot(lvl); return; } RL.on = false; if (RL.fp && typeof rlfpPlayBot === 'function') { rlfpPlayBot(lvl); return; } rlPlayBot(lvl); });   // (a drafted duel: draft again)
+  $('rlAgain').addEventListener('click', () => { if (RL.mode !== 'bot') return; const lvl = RL.bot.lvl; $('rlEnd').hidden = true; if (RL.n3) { RL.on = false; if (RL.fp && typeof rlfpPlay3 === 'function') rlfpPlay3(lvl); else rl3PlayBot(lvl); return; } if (RL.draft && typeof rldBot === 'function') { rlQuit(); rldBot(lvl); return; } RL.on = false; if (RL.fp && typeof rlfpPlayBot === 'function') { rlfpPlayBot(lvl); return; } rlPlayBot(lvl); });   // (a drafted duel: draft again)
   addEventListener('keydown', e => {
     if (state !== 'rival') return;
     if (typeof RLDR !== 'undefined' && RLDR.on) return;   // (the triple draft has the keys: src/rldraft.js)

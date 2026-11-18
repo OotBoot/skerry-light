@@ -227,7 +227,7 @@ function rl3PlayBot(lvl) {
 function rl3BotTick(dt, side) {
   if (!RL.alive[side]) return;
   if (!RLB.S[side]) RLB.S[side] = { t: 0.8 + Math.random() * 0.6, seen: new Map(), lane: -1, pushT: 0, foe: -1 };
-  const B = RLB.S[side], L = RLB.lv[side === RL.me && RL.both ? 'hard' : RL.bot.lvl] || RLB.lv.normal;
+  const B = RLB.S[side], L = RLB.lv[RL.fp ? (RL.mode === 'bot' && side !== RL.me ? RL.bot.lvl : 'normal') : side === RL.me && RL.both ? 'hard' : RL.bot.lvl] || RLB.lv.normal;   // (first person, src/rlfp.js: your own keeper's bot plays at Normal)
   B.t -= dt; if (B.t > 0) return; B.t = L.think * (0.8 + Math.random() * 0.4);
   if (typeof rlBotChamp === 'function' && rlBotChamp(side, L)) return;
   const G = RL.T.find(t => t.side === side && t.k === 'great'); if (!G) return;

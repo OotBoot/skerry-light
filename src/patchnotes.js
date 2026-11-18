@@ -6,6 +6,11 @@
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 225, date: '2026-11-18', title: "Skerry Clash: First person for three keepers", New: [
+    "Skerry Clash: Three keepers now has a First person option. Press Three keepers, first person on the card: a bot plays the cards for all three keepers, and you fight as your own troops on the round skerry.",
+    "Skerry Clash: online, tick First person in a match for three. Every keeper takes the field as their own troops, and a bot takes any empty seat.",
+    "Skerry Clash: in First person for three, the map is round with your rock at the bottom, and each rival's held troop has a name tag in their colour.",
+  ] },
   { v: 224, date: '2026-11-18', title: "Skerry Clash: First person", New: [
     "Skerry Clash: new First person mode. A bot plays the cards for each side, and you take the field as any troop yours sends: walk it, look round and strike what's in front of you, in first person.",
     "Skerry Clash: swap to any of your troops on the field at any time from the row along the bottom (1 to 9, or Tab). When your bot sends a new one, press F to take it. If yours falls, you take the newest straight away.",

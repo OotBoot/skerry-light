@@ -1855,3 +1855,5 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 @media (pointer: coarse) { .rl-fp.held .rl-fpstrike { display: block; } .rl-fphint { display: none; } .rl-fpme { bottom: max(66px, calc(env(safe-area-inset-bottom, 0px) + 66px)); left: max(10px, env(safe-area-inset-left, 0px)); } }
 @media (max-width: 560px) { .rl-fpu { width: 36px; } .rl-fpu canvas { width: 30px; height: 36px; } .rl-fpme small { display: none; } .rl-fpmap { width: 54px; height: 96px; top: 96px; } }
 .rl-fp:not(.held) .rl-fphint { display: none; }
+.rl-fpmap.round { height: 108px; width: 108px; border: 0; border-radius: 50%; } .rl-fprival.gold { background: rgba(120,90,14,0.85); border-color: #f4d488; }
+@media (max-width: 560px) { .rl-fpmap.round { width: 80px; height: 80px; } }
