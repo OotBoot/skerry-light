@@ -2947,7 +2947,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 // ---- src/config.js ----
 'use strict';
 // The game's version, shown at the top of the main menu. Bump it by one with every change pushed to main.
-var VERSION = 228;
+var VERSION = 229;
 // Skerry Light: tuning, asset paths and lore.
 // World units are metres. The lighthouse stands at the origin on the shoreline (y = 0);
 // north (+y) is open sea. Bearings: 0 = north, positive = east.
@@ -3122,6 +3122,11 @@ document.addEventListener('visibilitychange', () => {
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 229, date: '2026-11-18', title: "Flares for the Gannet's spars", Changes: [
+    "The Chronicle of the Light: The Gannet's Wake, Her Lantern: when you reach the ring of spars, everyone aboard is handed a flare pistol (slot 3). Shoot a flare into each of the four tall spars to light it. You no longer need to bring the cutter alongside and fire from the forward deck.",
+    "The Chronicle of the Light: The Gannet's Wake, Her Lantern: the tall spars are much easier to hit, catching a flare anywhere within 9 m of the mast, from the water to well above its top.",
+    "The Chronicle of the Light: The Gannet's Wake, Her Lantern: firing the cutter's flare locker in the ring always lights one of the spars, the nearest one still dark.",
+  ] },
   { v: 228, date: '2026-11-18', title: "The next mission opens straight away", Fixes: [
     "The Chronicle of the Light: finishing a mission now opens the next one straight away, with no need to reload the page. The mission list also moves on to it for you, and in co-op the host's lobby picks it too.",
   ] },
@@ -57165,15 +57170,19 @@ function cpm8r3d(dt) {
 //    seconds of the toll and the water goes quiet for a while (no drowned come up the sides); miss it and a wave of
 //    them comes up the rails at once, more of you more of them.
 //  - The ring of her spars (a cinematic, m08_ring): the skiff stops in the middle of it and Maren speaks. Four of the
-//    broken masts in the ring still carry their tops and rigging: sail in close to each and fire a flare into it
-//    from the forward deck. With all four burning, the Gannet comes up alongside (gwsail's own rising, driven by this
+//    broken masts in the ring still carry their tops and rigging, and everyone aboard is handed a flare pistol (a
+//    third weapon, slot 3, for as long as the ring lasts): shoot a flare into each of them. Each spar's mark is
+//    generous (CPM8B.HIT_R round it, and from the water to well over its top), and the shot is judged by where the
+//    flare flies, on the shooter's screen (cpm8Flares: each of my flare pistol's flares followed out over the sea from
+//    the deck). The cutter's own flare locker at the stern always lights one too: the unlit spar nearest her. With all
+//    four burning, the Gannet comes up alongside (gwsail's own rising, driven by this
 //    stage), and the part is done; the next part's cinematic (m08_board) takes you up her side.
 // Host-authoritative: the skiff, the bell's answering, the spars and the rising are the host's, sent in m8s with the
-// Gannet's Wake's own word; a joined player asks to fire into a spar ('m8spar'). Lines through cpSay (cp_m08_15 on).
+// Gannet's Wake's own word; a joined player whose flare strikes a spar asks to light it ('m8spar'). Lines through cpSay (cp_m08_15 on).
 
 const CPM8B = {
   START: [-26, 104], TOLL: [22, 16], WIN: 7, CALM: 13, SPARS: [1, 5, 9, 13], SPAR_R: 26, RING_SEE: 120,
-  SKIFF: [60, 170], SKIFF_LAN: 46, FWD: [0, 6.2],
+  SKIFF: [60, 170], SKIFF_LAN: 46, FWD: [0, 6.2], HIT_R: 9, HIT_UP: 6, FLY: 5, REACH: 320,
 };
 
 // ---------- the sea: the raid's own (its rocks and its ring of spars, from its seed), with the skiff's way out ----------
@@ -57204,7 +57213,7 @@ function cpm8Line(S, dm) {
   if (S.ph === 'sunk') return 'She’s going down.';
   if (S.ph === 'rise') return `Hold her inside the ring of spars: the Gannet is coming up (${Math.round(S.riseT / GWS.RISE * 100)}%)`;
   if (S.ph === 'ladder') return 'The Gannet is alongside.';
-  if (S.m8ring) return `Sail in close to each of her four tall spars and fire a flare into it, from the forward deck (${cpm8Lit()} of 4 burning)`;
+  if (S.m8ring) return `Shoot a flare into each of her four tall spars with your flare pistol (3), or fire the flare locker (${cpm8Lit()} of 4 burning)`;
   return `Follow Maren’s lantern out to the Gannet’s spars: ${Math.round(dm).toLocaleString('en')} m · answer her bell with ours`;
 }
 function cpm8Row() {
@@ -57235,18 +57244,15 @@ const CPM8_MAP = Object.assign({}, GWS_MAP, { isle: 'cpm08sea' });
     },
     tick(dt) { G0.tick(dt); cpm8Tick(dt); },
     me(dt) { G0.me(dt); cpm8Me(dt); },
-    q(sid, k, a) { if (k === 'm8spar') return cpm8Spar(sid, a | 0); return G0.q(sid, k, a); },
+    q(sid, k, a) {
+      if (k === 'm8spar') return cpm8Spar(sid, a | 0);
+      // (the flare locker: always lights one of her spars, the unlit one nearest her)
+      if (k === 'flare') { const S = RAID.st, n0 = S.flN | 0, r = G0.q(sid, k, a); if ((S.flN | 0) > n0 && S.m8ring && S.ph === 'sail') { const i = cpm8NearSpar(1e9); if (i >= 0) cpm8Spar(sid, i, true); } return r; }
+      return G0.q(sid, k, a);
+    },
     pack(o) { G0.pack(o); const S = RAID.st, K = S.m8k, B = S.m8b; o.m8s = [Math.round(K.x), Math.round(K.y), Math.round(K.h * 100), S.m8lit | 0, Math.round(B.win * 10), Math.round(B.calm * 10), S.m8ring | 0]; },
     apply(o) { G0.apply(o); const S = RAID.st, a = o.m8s; if (!Array.isArray(a) || !S.m8k) return; const K = S.m8k; K.tx = +a[0] || 0; K.ty = +a[1] || 0; K.h = (+a[2] || 0) / 100; S.m8lit = a[3] | 0; S.m8b.win = (+a[4] || 0) / 10; S.m8b.calm = (+a[5] || 0) / 10; S.m8ring = a[6] | 0; },
-    consider(c) { G0.consider(c); const S = RAID.st; if (S.B && S.m8ring && S.ph === 'sail') { const [x, y] = gwsW(...CPM8B.FWD); c({ k: 'm8spar' }, x, y, GWS.D, 2.6, false); } },
-    prompt(o) {
-      if (o.k === 'm8spar') { const i = cpm8NearSpar(); return i < 0 ? { text: 'Bring her in close to one of the four tall spars, then fire into it from here' } : { text: 'Fire a flare into the spar’s rigging', free: true }; }
-      return G0.prompt(o);
-    },
-    use(o) {
-      if (o.k === 'm8spar') { const S = RAID.st, i = cpm8NearSpar(); if (i < 0 || S.m8pend > 0) { zmSound('no'); return true; } S.m8pend = 1; raidAsk('m8spar', i); return true; }
-      return G0.use(o);
-    },
+
     hud(phone, mono, fell) { G0.hud(phone, mono, fell); cpm8Hud(phone, mono, fell); },
     exit() { G0.exit(); GWS_LEG = null; CPM8B3.on = false; },
   }));
@@ -57254,15 +57260,15 @@ const CPM8_MAP = Object.assign({}, GWS_MAP, { isle: 'cpm08sea' });
 
 // ---------- hosting or alone ----------
 // the target spar nearest her, if she's close enough to fire into it (-1: none)
-function cpm8NearSpar() {
+function cpm8NearSpar(within) {
   const S = RAID.st, V = S.V || S.B, sea = cpm8Sea(); if (!V) return -1;
-  let best = -1, bd = CPM8B.SPAR_R;
+  let best = -1, bd = within || CPM8B.SPAR_R;
   CPM8B.SPARS.forEach((si, i) => { if ((S.m8lit | 0) & (1 << i)) return; const p = sea.spars[si]; if (!p) return; const d = Math.hypot(p.x - V.x, p.y - V.y); if (d < bd) { bd = d; best = i; } });
   return best;
 }
-function cpm8Spar(sid, i) {
+function cpm8Spar(sid, i, locker) {
   const S = RAID.st; if (!S.m8ring || S.ph !== 'sail' || i < 0 || i >= CPM8B.SPARS.length || ((S.m8lit | 0) & (1 << i))) return;
-  const p = cpm8Sea().spars[CPM8B.SPARS[i]], B = S.B; if (!p || Math.hypot(p.x - B.x, p.y - B.y) > CPM8B.SPAR_R + 6) return;
+  const p = cpm8Sea().spars[CPM8B.SPARS[i]], B = S.B; if (!p || (!locker && Math.hypot(p.x - B.x, p.y - B.y) > CPM8B.REACH + 40)) return;
   S.m8lit = (S.m8lit | 0) | (1 << i); const n = cpm8Lit();
   cpEvent('m8spar', [i, sid, n]);
   if (n === 2) cpSay('m8cox', 'Two of them burning. Bring her round for the others.', 'cp_m08_20');
@@ -57298,7 +57304,7 @@ function cpm8Tick(dt) {
 }
 cpOn('m8toll2', v => { try { if (!soundOff()) sfxBellFar(0, clamp((v | 0) / 100, 0.15, 1)); } catch (e) {} ZM.banner = { text: 'The Gannet’s bell', t: 2.6, small: true, sub: 'answer it: ring ours at the mast', col: '#ffc890' }; });
 cpOn('m8ans', ok => { if (ok) { fpsFeed('Her bell answered. The water round the cutter goes still.'); CPM8B3.calm = 1; } else fpsFeed('Her bell unanswered: the drowned come up the cutter’s sides.'); });
-cpOn('m8ring', () => { ZM.banner = { text: 'The ring of her spars', t: 4.5, sub: 'fire a flare into each of the four tall spars · from the forward deck', col: '#ffd8a0' }; if (typeof raidRespawn === 'function') raidRespawn(); });
+cpOn('m8ring', () => { ZM.banner = { text: 'The ring of her spars', t: 4.5, sub: 'shoot a flare into each of the four tall spars · flare pistol (3)', col: '#ffd8a0' }; if (typeof raidRespawn === 'function') raidRespawn(); });
 cpOn('m8spar', a => { try { if (!soundOff()) { sfxFlare(); sfxSplash(0, 0.3); } } catch (e) {} const n = Array.isArray(a) ? a[2] | 0 : 0, sid = Array.isArray(a) ? a[1] : ''; fpsFeed(`${gwsNick(sid)} ${sid === FPS.me.id ? 'fire' : 'fires'} a flare into the spar’s old rigging, and it takes. ${n} of 4 burning.`); CPM8B3.flash = 1; });
 cpOn('m8rise', () => { ZM.banner = { text: 'Something is coming up', t: 4.5, sub: 'hold her inside the ring of spars', col: '#bfe0d8' }; });
 cpOn('m8up', () => { try { if (!soundOff()) sfxBell(); } catch (e) {} fpsFeed('The Gannet lies alongside, her bell ringing, the water pouring off her.'); });
@@ -57307,6 +57313,7 @@ cpOn('m8up', () => { try { if (!soundOff()) sfxBell(); } catch (e) {} fpsFeed('T
 function cpm8Me(dt) {
   const S = RAID.st, K = S.m8k, sea = cpm8Sea(); if (!K) return;
   if (S.m8pend > 0) S.m8pend -= dt;
+  cpm8Pistol(); cpm8Flares(dt);
   if (ZM.net === 'client') { if (K.tx != null) { const k = Math.min(1, dt * 4); K.x += (K.tx - K.x) * k; K.y += (K.ty - K.y) * k; } if (S.m8b.win > 0) S.m8b.win = Math.max(0, S.m8b.win - dt); if (S.m8b.calm > 0) S.m8b.calm = Math.max(0, S.m8b.calm - dt); }
   // her lantern shows the rocks round the skiff, for everyone
   for (const r of sea.rocks) { const dx = r.x - K.x, dy = r.y - K.y; if (Math.abs(dx) > 80 || Math.abs(dy) > 80) continue; const d = Math.hypot(dx, dy) - r.r; if (d < CPM8B.SKIFF_LAN) r.lit = Math.max(r.lit, 0.3 + 0.5 * (1 - Math.max(0, d) / CPM8B.SKIFF_LAN)); }
@@ -57315,7 +57322,40 @@ function cpm8Me(dt) {
 }
 function cpm8Hud(phone, mono, fell) {
   const S = RAID.st; if (!S.m8k || !S.B) return;
-  if (S.m8ring && S.ph === 'sail') { const i = cpm8NearSpar(); if (i >= 0) { ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = mono(phone ? 10 : 12); ctx.fillStyle = `rgba(255,200,140,${0.75 + 0.25 * Math.sin(g.t * 6)})`; ctx.fillText('A TALL SPAR CLOSE ALONGSIDE · FIRE INTO IT FROM THE FORWARD DECK', cx, H - (phone ? 130 : 96)); ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic'; } }
+  if (S.m8ring && S.ph === 'sail') { const i = cpm8NearSpar(); if (i >= 0) { ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = mono(phone ? 10 : 12); ctx.fillStyle = `rgba(255,200,140,${0.75 + 0.25 * Math.sin(g.t * 6)})`; ctx.fillText('A TALL SPAR CLOSE ALONGSIDE · SHOOT A FLARE INTO IT', cx, H - (phone ? 130 : 96)); ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic'; } }
+}
+
+// ---------- the flare pistol ----------
+// (everyone, every frame) in the ring, a flare pistol as a third weapon (handed again after bleeding out); drawn
+// the first time, and put away (raidLoadout) once the part is done
+function cpm8Pistol() {
+  const S = RAID.st, m = FPS.me, want = S.m8ring && S.ph === 'sail' && !(m.dead > 0) && !ZM.ghost;
+  if (!want) return;
+  if (!ZM.own.includes('flaregun')) {
+    ZM.own.push('flaregun'); ZM.res.flaregun = ZM_AMMO.flaregun; m.mags.flaregun = zmMag('flaregun');
+    if (!S.m8gun) { S.m8gun = 1; FPS.last = FPS.weapon; FPS.weapon = 'flaregun'; m.ammo = m.mags.flaregun; m.reload = 0; FPS.drawT = 0.45; fpsFeed('A flare pistol (3): shoot a flare into each of her four tall spars.'); }
+  }
+}
+// (everyone) my flare pistol's flares, followed out over the sea from where they leave the deck: one that passes
+// through a spar's mark (CPM8B.HIT_R round it, from the water to CPM8B.HIT_UP over its top) lights it as it gets there
+function cpm8Flares(dt) {
+  const S = RAID.st; if (!S.m8ring || S.ph !== 'sail' || typeof ZX === 'undefined') return;
+  const V = S.V || S.B; if (!V) return;
+  for (const P of ZX.proj) {
+    if (P.k !== 's' || !P.mine || P.m8) continue;
+    P.m8 = 1;
+    // (the deck's frame into the sea's: the bow is +v, starboard +u, and she's heading V.h; she carries it on with her)
+    const ch = Math.cos(V.h), sh = Math.sin(V.h), toSea = (u, v) => [u * ch + v * sh, -u * sh + v * ch];
+    let [x, y] = toSea(P.x - FPSC.CX, P.y - FPSC.CY); x += V.x; y += V.y;
+    let [vx, vy] = toSea(P.vx, P.vy); vx += Math.sin(V.h) * (V.v || 0); vy += Math.cos(V.h) * (V.v || 0);
+    let z = P.z - FPSC.GROUND, vz = P.vz, t = 0; const gr = P.gr || 7, step = 1 / 60, sea = cpm8Sea();
+    let hit = -1;
+    while (t < CPM8B.FLY && hit < 0 && z > -2) {
+      t += step; vz -= gr * step; x += vx * step; y += vy * step; z += vz * step;
+      CPM8B.SPARS.forEach((si, i) => { if (hit >= 0 || ((S.m8lit | 0) & (1 << i))) return; const p = sea.spars[si]; if (!p) return; const top = Math.max(9, p.h + 4) + CPM8B.HIT_UP; if (z < top && Math.hypot(p.x - x, p.y - y) < CPM8B.HIT_R) hit = i; });
+    }
+    if (hit >= 0) { const i = hit; setTimeout(() => { if (RAID.on && RAID.st === S && !((S.m8lit | 0) & (1 << i))) raidAsk('m8spar', i); }, Math.min(2500, t * 1000)); }
+  }
 }
 
 // ---------- in 3D: the skiff and her lantern, the four tall spars (and their fires), the quiet when answered ----------

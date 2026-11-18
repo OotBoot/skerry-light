@@ -6,6 +6,11 @@
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 229, date: '2026-11-18', title: "Flares for the Gannet's spars", Changes: [
+    "The Chronicle of the Light: The Gannet's Wake, Her Lantern: when you reach the ring of spars, everyone aboard is handed a flare pistol (slot 3). Shoot a flare into each of the four tall spars to light it. You no longer need to bring the cutter alongside and fire from the forward deck.",
+    "The Chronicle of the Light: The Gannet's Wake, Her Lantern: the tall spars are much easier to hit, catching a flare anywhere within 9 m of the mast, from the water to well above its top.",
+    "The Chronicle of the Light: The Gannet's Wake, Her Lantern: firing the cutter's flare locker in the ring always lights one of the spars, the nearest one still dark.",
+  ] },
   { v: 228, date: '2026-11-18', title: "The next mission opens straight away", Fixes: [
     "The Chronicle of the Light: finishing a mission now opens the next one straight away, with no need to reload the page. The mission list also moves on to it for you, and in co-op the host's lobby picks it too.",
   ] },
