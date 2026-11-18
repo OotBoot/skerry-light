@@ -1634,6 +1634,7 @@ addEventListener('keydown', e => {
   if (!FPS.on) return;
   if (e.target && /INPUT|TEXTAREA/.test(e.target.tagName)) return;
   e.stopImmediatePropagation();
+  if (FPS.zm && typeof cpcKey === 'function' && cpcKey(e, true)) return;   // [campaign] a cinematic: Space or Enter held, to skip (src/cpcine.js)
   if (typeof frChartKey === 'function' && frChartKey(e)) return;   // [fogrun] the chart, open (src/frchart.js)
   if (typeof frcKey === 'function' && frcKey(e)) return;   // [fogrun cards] the salvage's keys (src/frcards.js)
   if (typeof fvKey === 'function' && fvKey(e)) return;   // [fbsea voyages] the voyage board, the charts, and M (src/fbvoy.js)
@@ -1648,6 +1649,7 @@ addEventListener('keydown', e => {
 addEventListener('keyup', e => {
   if (!FPS.on) return;
   e.stopImmediatePropagation();
+  if (typeof cpcKey === 'function') cpcKey(e, false);   // [campaign] (letting go of skip)
   FPS.keys[e.code] = false;
   if (e.code === 'Tab') FPS.board = false;
 }, true);

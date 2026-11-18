@@ -6,6 +6,10 @@
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 233, date: '2026-11-18', title: "Hold to skip cutscenes", New: [
+    "The Chronicle of the Light: cutscenes can be skipped again. Hold Space or Enter (A on a controller, or a finger on the screen) for a second. A ring in the corner fills while you hold, and a tap does nothing.",
+    "The Chronicle of the Light: in co-op, holding casts your vote to skip, and the cutscene only skips once everyone has voted. The corner shows how many have voted, who has, and who's still watching.",
+  ] },
   { v: 232, date: '2026-11-18', title: "Maren's End: the Old Drain for the whole crew", Changes: [
     "Maren's End, The Old Drain: the drowned stop coming once anyone reaches the Cistern Hall. Any already up sink back, so you can work out the lamps in peace.",
     "Maren's End, The Old Drain: everyone can now turn the cistern lamps, not just whoever carries Maren's Lantern.",
