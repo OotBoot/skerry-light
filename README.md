@@ -827,7 +827,7 @@ To put it online, use any host that runs a Node web service and allows WebSocket
 3. Set the **Build Command** to `npm run build` and the **Start Command** to `npm start`.
 4. Deploy, then share the address Render gives you.
 
-The server reads the port from the `PORT` environment variable, which these hosts set for you. `MAX_PLAYERS` (default 300) caps how many people can be connected at once. Nothing is stored on disk; restarting the server just empties the lobby. `/healthz` reports how many players are connected.
+The server reads the port from the `PORT` environment variable, which these hosts set for you. `MAX_PLAYERS` (default 300) caps how many people can be connected at once, and `MAX_PER_ADDR` (default 12) how many connections one address may hold. The rate limits and that cap read the visitor's address from `True-Client-IP` (set by Cloudflare in front of Render), not from `X-Forwarded-For`, which a visitor can fill in themselves. Nothing is stored on disk; restarting the server just empties the lobby. `/healthz` reports how many players are connected.
 
 ### Game on a static host, crews on a separate server
 

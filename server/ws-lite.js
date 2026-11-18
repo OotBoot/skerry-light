@@ -84,7 +84,7 @@ export class LiteSocket extends EventEmitter {
   }
 }
 
-// Attach to an http.Server; calls onConnection(socket) for each upgrade to `path`.
+// Attach to an http.Server; calls onConnection(socket, req) for each upgrade to `path`.
 export function attachWebSocket(server, path, maxPayload, onConnection) {
   server.on('upgrade', (req, socket) => {
     const url = (req.url || '').split('?')[0];
@@ -96,6 +96,6 @@ export function attachWebSocket(server, path, maxPayload, onConnection) {
     }
     const accept = createHash('sha1').update(key + GUID).digest('base64');
     socket.write('HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: ' + accept + '\r\n\r\n');
-    onConnection(new LiteSocket(socket, maxPayload));
+    onConnection(new LiteSocket(socket, maxPayload), req);
   });
 }

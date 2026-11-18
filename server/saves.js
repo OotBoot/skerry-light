@@ -15,6 +15,7 @@
 // never stored as it is, only its SHA-256. The save itself is the game's own JSON, at most 48 KB, and a save not
 // touched for 400 days is let go.
 import { createHash } from 'node:crypto';
+import { clientAddr } from './addr.js';
 
 const URL_ = (process.env.UPSTASH_REDIS_REST_URL || '').replace(/\/+$/, '');
 const TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN || '';
@@ -104,7 +105,7 @@ export function savesRoute(req, res) {
   req.on('end', () => {
     if (big) return;
     let data = null; try { data = JSON.parse(body); } catch (e) { reply(400, { error: 'bad json' }); return; }
-    const addr = String(req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').split(',')[0].trim();
+    const addr = clientAddr(req);
     handle(data, addr).then(([code, obj]) => reply(code, obj), err => { console.error('saves:', err.message); reply(503, { error: 'saves unavailable' }); });
   });
   return true;

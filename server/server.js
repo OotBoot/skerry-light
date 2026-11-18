@@ -23,12 +23,16 @@ import { randomBytes } from 'node:crypto';
 import { attachWebSocket } from './ws-lite.js';
 import { scoresRoute, SCORE_STORE } from './scores.js';
 import { savesRoute, SAVE_STORE } from './saves.js';
+import { clientAddr } from './addr.js';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const PORT = Number(process.env.PORT) || 8080;
 const MAX_PLAYERS = Number(process.env.MAX_PLAYERS) || 300;
 const MAX_PRESENCE_BYTES = 12 * 1024;   // (a lighthouse night's host with forty drowned, bosses and a full feed comes to about 3 KB)
 const LOBBY_INTERVAL_MS = 1000;
+// at most this many connections from one address (a household or a classroom shares one), so nobody can fill the harbour alone
+const MAX_PER_ADDR = Number(process.env.MAX_PER_ADDR) || 12;
+const perAddr = new Map();   // address -> connections open
 
 // dist/web.html is the page without its sound inlined (the recordings are served below, as files); an older build
 // without it falls back to the all-in-one page.
@@ -246,8 +250,13 @@ setInterval(() => {
   }
 }, 250);
 
-attachWebSocket(server, '/ws', 16 * 1024, ws => {
+attachWebSocket(server, '/ws', 16 * 1024, (ws, req) => {
   if (clients.size >= MAX_PLAYERS) { ws.close(1013, 'The harbour is full. Try again later.'); return; }
+  const addr = clientAddr(req);
+  if ((perAddr.get(addr) || 0) >= MAX_PER_ADDR) { ws.close(1013, 'Too many connections from one place. Close a tab or two and try again.'); return; }
+  perAddr.set(addr, (perAddr.get(addr) || 0) + 1);
+  let counted = true;
+  const uncount = () => { if (!counted) return; counted = false; const n = (perAddr.get(addr) || 1) - 1; if (n > 0) perAddr.set(addr, n); else perAddr.delete(addr); };
   const id = randomBytes(8).toString('hex');
   const c = { id, ws, presence: {}, alive: true, lastMsg: Date.now(), tokens: 80, last: Date.now(), lastLobbySend: new Map(), lastCrewSeen: new Map(), pending: new Set(), upToDate: new Set(), v2: false };
   clients.set(id, c);
@@ -278,6 +287,7 @@ attachWebSocket(server, '/ws', 16 * 1024, ws => {
     relay(c, m.t === 'patch' ? m : null);
   });
   ws.on('close', () => {
+    uncount();
     clients.delete(id);
     const msg = JSON.stringify({ t: 'leave', peer: id });
     for (const o of clients.values()) { send(o, msg); o.lastLobbySend.delete(id); o.lastCrewSeen.delete(id); o.pending.delete(id); o.upToDate.delete(id); }

@@ -6,6 +6,10 @@
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 234, date: '2026-11-18', title: "Fairer online play", Changes: [
+    "Online: one address can now hold at most 12 connections at once, so a single person can no longer fill the server and lock everyone else out. A busy household or classroom still fits.",
+    "Scoreboards and cloud saves: the limits on how often scores and saves can be sent now go by each player's real address, so they can't be dodged.",
+  ] },
   { v: 233, date: '2026-11-18', title: "Hold to skip cutscenes", New: [
     "The Chronicle of the Light: cutscenes can be skipped again. Hold Space or Enter (A on a controller, or a finger on the screen) for a second. A ring in the corner fills while you hold, and a tap does nothing.",
     "The Chronicle of the Light: in co-op, holding casts your vote to skip, and the cutscene only skips once everyone has voted. The corner shows how many have voted, who has, and who's still watching.",
