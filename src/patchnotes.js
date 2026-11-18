@@ -6,6 +6,9 @@
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 228, date: '2026-11-18', title: "The next mission opens straight away", Fixes: [
+    "The Chronicle of the Light: finishing a mission now opens the next one straight away, with no need to reload the page. The mission list also moves on to it for you, and in co-op the host's lobby picks it too.",
+  ] },
   { v: 227, date: '2026-11-18', title: "Missions wait for every calling", Changes: [
     "The Chronicle of the Light: a mission no longer starts until everyone in the crew has picked a calling. The opening cutscene, the clock and the enemies all wait, and anyone who has already picked sees who is still choosing. If someone hasn't picked after 90 seconds, the mission starts without waiting for them, and they stay safe at the picker until they choose.",
   ] },

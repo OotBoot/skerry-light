@@ -2954,7 +2954,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 // ---- src/config.js ----
 'use strict';
 // The game's version, shown at the top of the main menu. Bump it by one with every change pushed to main.
-var VERSION = 227;
+var VERSION = 228;
 // Skerry Light: tuning, asset paths and lore.
 // World units are metres. The lighthouse stands at the origin on the shoreline (y = 0);
 // north (+y) is open sea. Bearings: 0 = north, positive = east.
@@ -3129,6 +3129,9 @@ document.addEventListener('visibilitychange', () => {
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 228, date: '2026-11-18', title: "The next mission opens straight away", Fixes: [
+    "The Chronicle of the Light: finishing a mission now opens the next one straight away, with no need to reload the page. The mission list also moves on to it for you, and in co-op the host's lobby picks it too.",
+  ] },
   { v: 227, date: '2026-11-18', title: "Missions wait for every calling", Changes: [
     "The Chronicle of the Light: a mission no longer starts until everyone in the crew has picked a calling. The opening cutscene, the clock and the enemies all wait, and anyone who has already picked sees who is still choosing. If someone hasn't picked after 90 seconds, the mission starts without waiting for them, and they stay safe at the picker until they choose.",
   ] },
@@ -49603,6 +49606,9 @@ function cpComplete(id, secs) {
   if (!o.d) o.d = new Date().toISOString().slice(0, 10);
   cpSave();
   try { if (typeof saveCrates === 'function') saveCrates(); } catch (e) {}
+  // (the next mission opens at once, no reload: the card redrawn, and the next one picked for you the first time through)
+  if (first && CP.pick === id) { const nx = CP_MISSIONS[cpIndex(id) + 1]; if (nx) { CP.pick = nx.id; cpPickSave(); } }
+  try { cpCard(); } catch (e) {}
   return first;
 }
 
@@ -49671,6 +49677,8 @@ function cpStop() {
   if (CP.on && M && M.stop) try { M.stop(); } catch (e) { console.warn('cp stop', e); }
   if (typeof cpcStop === 'function') cpcStop();
   CP.on = false; CP.obj = ''; CP.sub = null; CP.subs = []; CP.wait = false; CP.go = null;
+  // (back to the card or the lobby: drawn from what's open now, and the crew told the host's pick)
+  setTimeout(() => { try { cpCard(); if (typeof ZN !== 'undefined' && ZN.code && typeof znAmHost === 'function' && znAmHost() && typeof znSendLobby === 'function') znSendLobby(); } catch (e) {} }, 0);
 }
 
 // ---------- the parts, one after another ----------

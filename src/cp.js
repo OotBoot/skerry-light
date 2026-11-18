@@ -149,6 +149,9 @@ function cpComplete(id, secs) {
   if (!o.d) o.d = new Date().toISOString().slice(0, 10);
   cpSave();
   try { if (typeof saveCrates === 'function') saveCrates(); } catch (e) {}
+  // (the next mission opens at once, no reload: the card redrawn, and the next one picked for you the first time through)
+  if (first && CP.pick === id) { const nx = CP_MISSIONS[cpIndex(id) + 1]; if (nx) { CP.pick = nx.id; cpPickSave(); } }
+  try { cpCard(); } catch (e) {}
   return first;
 }
 
@@ -217,6 +220,8 @@ function cpStop() {
   if (CP.on && M && M.stop) try { M.stop(); } catch (e) { console.warn('cp stop', e); }
   if (typeof cpcStop === 'function') cpcStop();
   CP.on = false; CP.obj = ''; CP.sub = null; CP.subs = []; CP.wait = false; CP.go = null;
+  // (back to the card or the lobby: drawn from what's open now, and the crew told the host's pick)
+  setTimeout(() => { try { cpCard(); if (typeof ZN !== 'undefined' && ZN.code && typeof znAmHost === 'function' && znAmHost() && typeof znSendLobby === 'function') znSendLobby(); } catch (e) {} }, 0);
 }
 
 // ---------- the parts, one after another ----------
