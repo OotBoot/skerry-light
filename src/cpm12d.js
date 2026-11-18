@@ -6,11 +6,11 @@
 // the fort at its end.
 //  - The dark: out of the light it drains you, as on the Deep Path; in the light you get back what it took. Light is
 //    a lit brazier, a lit lamp in the cistern hall, or Maren's Lantern, which one of you carries (whoever came down
-//    first: anyone can take it up where it falls, if its carrier goes down). Only the lantern lights the braziers
-//    (hold Use at one, carrying it).
+//    first: anyone can take it up where it falls, if its carrier goes down). Only the lantern lights the braziers:
+//    any of you can hold Use at one while the lantern is near it (whoever carries it, or where it lies).
 //  - The cistern hall: the grate up into the fort opens to nine lamps lit all together, set in three rows of three
-//    in front of it. Turn a lamp with the lantern (hold Use) and the lamps beside it in its row and column turn too.
-//    The drowned come up out of the cistern the whole while.
+//    in front of it. Any of you can turn a lamp (hold Use), and the lamps beside it in its row and column turn too.
+//    The drowned leave you to it: once any of you reaches the hall, those already up sink back and no more come.
 //  - The grate: open, the lantern won't go through it (src/lore.js: it would not go through the door at the end).
 //    Set it down on the ledge beside it (a cutscene, m12_lantern), and through: up the drain to the fort's sea wall.
 // The host's word: c12d [lamps (bits), braziers lit (bits), the gate, the lantern's carrier ('' lying, '@' on the
@@ -108,6 +108,10 @@ function c12dLanXY() {
   const r = FPS.remote && FPS.remote.get(S.lan); return r && r.x != null ? [r.x, r.y] : null;
 }
 const c12dMine = () => RAID.st.lan === FPS.me.id;
+// (every screen) is the lantern near enough to brazier i to light it? (its carrier, or where it lies, within its light)
+function c12dLanNear(i) { const L = c12dLanXY(), [bx, by] = c12W(C12D.BRAZ[i][0], C12D.BRAZ[i][1]); return !!(L && RAID.st.lan !== '@' && Math.hypot(L[0] - bx, L[1] - by) < C12D.LAN_R); }
+// (host) someone's still on their feet, to light or turn a thing
+const c12dUp = sid => { if (sid === FPS.me.id) return c12Able(); const r = FPS.remote.get(sid); return !!(r && !r.down && !r.dead); };
 // in the light? (a world place)
 function c12dInLight(x, y) {
   const S = RAID.st;
@@ -133,7 +137,7 @@ cpStage('m12drain', {
   set(H, K, Z) { c12dSet(H, K, Z); },
   enter() {
     const S = RAID.st;
-    Object.assign(S, { lamps: 0, braz: 0, gate: 0, lan: '', lanAt: null, dark: 0, spT: 5, useT: 0, useI: '', pend: 0, said: {}, thru: false, inLight: true });
+    Object.assign(S, { calm: 0, lamps: 0, braz: 0, gate: 0, lan: '', lanAt: null, dark: 0, spT: 5, useT: 0, useI: '', pend: 0, said: {}, thru: false, inLight: true });
     FPS.me.h = 0; ZM.open = new Set(['raid', 'drain', 'hall', 'up']);
     if (ZM.net !== 'client') {
       // the lamps scrambled from all lit by a few turns (so a few turns put them right), never all lit to begin with
@@ -159,7 +163,9 @@ cpStage('m12drain', {
     // the drowned, out of the dark
     S.spT -= dt;
     const inHall = P.some(p => { const [x, y] = c12dLoc(p.x, p.y); return x > -16 && x < 12 && y > 6 && y < 40; });
-    if (S.spT <= 0 && !S.thru) {
+    // (the puzzle's left in peace: once any of you reaches the hall, the drowned up sink back, and no more come)
+    if (inHall && !S.calm && ZM.net !== 'client') { S.calm = 1; for (const z of ZM.z) if (!z.dead && !z.boss) { z.dead = 1; z.deadT = 0; try { zmKillFx(z); } catch (e) {} } }
+    if (S.spT <= 0 && !S.thru && !S.calm) {
       S.spT = (inHall && !S.gate ? 1.5 : 2.4) * (0.75 + Math.random() * 0.5) / Math.sqrt(n);
       if (ZM.z.filter(z => !z.dead && !z.boss).length < (inHall ? 6 : 4) + 3 * n) c12dSpawn(inHall);
     }
@@ -174,8 +180,8 @@ cpStage('m12drain', {
   },
   q(sid, k, a) {
     const S = RAID.st;
-    if (k === 'c12lit') { const i = a | 0; if (S.lan === sid && i >= 0 && i < C12D.BRAZ.length && !((S.braz | 0) & (1 << i))) { S.braz |= 1 << i; c12dLitFx(i, sid); c12dLights(); } return; }
-    if (k === 'c12turn') { const i = a | 0; if (S.lan === sid && !S.gate && i >= 0 && i < 9) { S.lamps = c12dFlip(S.lamps | 0, i); c12dTurnFx(i); c12dLights(); if (S.lamps === 511) c12dOpen(); } return; }
+    if (k === 'c12lit') { const i = a | 0; if (c12dUp(sid) && i >= 0 && i < C12D.BRAZ.length && c12dLanNear(i) && !((S.braz | 0) & (1 << i))) { S.braz |= 1 << i; c12dLitFx(i, sid); c12dLights(); } return; }
+    if (k === 'c12turn') { const i = a | 0; if (c12dUp(sid) && !S.gate && i >= 0 && i < 9) { S.lamps = c12dFlip(S.lamps | 0, i); c12dTurnFx(i); c12dLights(); if (S.lamps === 511) c12dOpen(); } return; }
     if (k === 'c12take') { if (!S.lan) { S.lan = sid; S.lanAt = null; fpsFeed(`${c12Nick(sid)} took up Maren’s Lantern.`); } return; }
     if (k === 'c12ledge') { if (S.lan === sid && S.gate) { S.lan = '@'; C12.lanLeft = true; cpCine('m12_lantern', () => { cpObjective('Through the grate, and up the drain to the fort'); cpWaypoint(-2, 50, 'Up to the fort', 1.2); }); } return; }
   },
@@ -198,9 +204,10 @@ cpStage('m12drain', {
   consider(c) {
     const S = RAID.st, m = FPS.me, mz = m.jz || 0, mine = c12dMine();
     if (!S.lan) { const L = c12dLanXY(); if (L) c({ k: 'c12take' }, L[0], L[1], mz, 2.0, false); }
-    if (!mine) return;
-    if (S.gate) { const [x, y] = c12W(C12D.LEDGE[0], C12D.LEDGE[1]); c({ k: 'c12ledge' }, x, y, mz, 2.4, false); }
-    C12D.BRAZ.forEach(([bx, by], i) => { if (!((S.braz | 0) & (1 << i))) { const [x, y] = c12W(bx, by); c({ k: 'c12b', i }, x, y, mz, 2.0, false); } });
+    if (!c12Able()) return;
+    // (the braziers and the lamps: any of you, a brazier only with the lantern near it; the ledge, only its carrier)
+    if (mine && S.gate) { const [x, y] = c12W(C12D.LEDGE[0], C12D.LEDGE[1]); c({ k: 'c12ledge' }, x, y, mz, 2.4, false); }
+    C12D.BRAZ.forEach(([bx, by], i) => { if (!((S.braz | 0) & (1 << i)) && c12dLanNear(i)) { const [x, y] = c12W(bx, by); c({ k: 'c12b', i }, x, y, mz, 2.0, false); } });
     if (!S.gate) C12D.LAMPS.forEach(([lx, ly], i) => { const [x, y] = c12W(lx, ly); c({ k: 'c12l', i }, x, y, mz, 1.6, false); });
   },
   prompt(o) {
@@ -233,7 +240,7 @@ cpStage('m12drain', {
     }
     // hold Use: a brazier lit, a lamp turned (only with the lantern)
     const o = ZM.near, hold = c12Hold() && alive;
-    if (hold && o && (o.k === 'c12b' || o.k === 'c12l') && c12dMine() && !(S.pend > 0)) {
+    if (hold && o && (o.k === 'c12b' || o.k === 'c12l') && !(S.pend > 0)) {
       const key = o.k + o.i, need = o.k === 'c12l' ? C12D.TURN : C12D.USE;
       if (S.useI !== key) { S.useI = key; S.useT = 0; }
       S.useT += dt;

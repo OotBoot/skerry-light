@@ -6,6 +6,11 @@
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 232, date: '2026-11-18', title: "Maren's End: the Old Drain for the whole crew", Changes: [
+    "Maren's End, The Old Drain: the drowned stop coming once anyone reaches the Cistern Hall. Any already up sink back, so you can work out the lamps in peace.",
+    "Maren's End, The Old Drain: everyone can now turn the cistern lamps, not just whoever carries Maren's Lantern.",
+    "Maren's End, The Old Drain: anyone can light a brazier while the lantern is close to it, whether someone is carrying it or it's lying on the stones. If the carrier goes down, the rest of the crew can still light the braziers around them.",
+  ] },
   { v: 231, date: '2026-11-18', title: "Weapons back in hand on Freebooters' Sea", Fixes: [
     "The Chronicle of the Light: Freebooters' Sea, Crowsnest Rock and Saltcote: you can draw and fire your weapons again after the cutscene. Your gun is now only put away while your arms are full with the hoard.",
   ] },
