@@ -786,7 +786,7 @@ If neither is available (for example, the file opened straight from your compute
 Every mode with a lobby has a **Share invite** button: the crew screen (Skerry Light), the war lobby (Drowned Reach), the night lobby (Keeper's Last Light) and the raid lobby (Maren's End). Wreckers' Night has one on its card, since everyone there shares one island.
 
 - On a phone or tablet it opens the share sheet; on a computer it copies the invite to the clipboard. Either way it reads "Join my game on Skerry Light!" followed by the link.
-- Opening the link takes your friend straight into your lobby, on the right game's card. If the lobby has closed or the game has already started, they're told so and can host their own. A Wreckers' Night link opens that card, ready to tap **Go ashore**.
+- Opening the link takes your friend straight into your lobby, on the right game's card. If the lobby has closed or the game has already started, they're told so and can host their own. The link is used once: it's cleared from the address bar, so a reload or a reopened tab starts on the main menu. If they pick another game before the lobby turns up, the invite steps aside and leaves them on the game they chose. A Wreckers' Night link opens that card, ready to tap **Go ashore**.
 - On claude.ai the link is the game's page itself, as everyone there plays in the page's own room: your friend opens it and taps your lobby in the list.
 - Links look like `https://skerry-light.onrender.com/?mode=raid&lobby=z1ab2cd` (modes: sail, wreckers, war, lighthouse, raid, fogrun, fbsea, golf). Old crew links ending in `#gannet-12` still work.
 

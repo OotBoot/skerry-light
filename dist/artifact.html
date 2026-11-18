@@ -2947,7 +2947,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 // ---- src/config.js ----
 'use strict';
 // The game's version, shown at the top of the main menu. Bump it by one with every change pushed to main.
-var VERSION = 225;
+var VERSION = 226;
 // Skerry Light: tuning, asset paths and lore.
 // World units are metres. The lighthouse stands at the origin on the shoreline (y = 0);
 // north (+y) is open sea. Bearings: 0 = north, positive = east.
@@ -3122,6 +3122,11 @@ document.addEventListener('visibilitychange', () => {
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 226, date: '2026-11-18', title: "The menu stays where you put it", Fixes: [
+    "Opening the game from an old invite link, or from a tab left open on a Skerry Light crew, no longer sends you to Skerry Light on every launch.",
+    "Picking another game on the main menu while an invite was still being looked for could jump you back to Skerry Light. Once you choose something yourself, the invite now steps aside.",
+    "The address bar no longer keeps an old crew's name after an invite has been used, so a reload or a reopened tab starts on the main menu.",
+  ] },
   { v: 225, date: '2026-11-18', title: "Skerry Clash: First person for three keepers", New: [
     "Skerry Clash: Three keepers now has a First person option. Press Three keepers, first person on the card: a bot plays the cards for all three keepers, and you fight as your own troops on the round skerry.",
     "Skerry Clash: online, tick First person in a match for three. Every keeper takes the field as their own troops, and a bot takes any empty seat.",
@@ -69550,9 +69555,23 @@ const SHARE_JOIN = (() => {
   } catch (e) {}
   return null;
 })();
-if (SHARE_JOIN && /[?&](mode|lobby)=/.test(location.search)) {
-  // tidy the address bar, so a reload later doesn't drag you back into an old lobby
-  try { const q = new URLSearchParams(location.search); q.delete('mode'); q.delete('lobby'); const s = q.toString(); history.replaceState(null, '', location.pathname + (s ? '?' + s : '') + location.hash); } catch (e) {}
+if (SHARE_JOIN) {
+  // tidy the address bar, so a reload later (or a browser reopening the tab days on) doesn't drag you back into an old lobby.
+  // The crew's #name goes too: joining puts it back (net.js enterCrew), and a tab left on it used to read as an invite every launch.
+  try { const q = new URLSearchParams(location.search); q.delete('mode'); q.delete('lobby'); const s = q.toString(), h = /^#[a-z]+-\d{1,4}$/.test(location.hash) ? '' : location.hash; history.replaceState(null, '', location.pathname + (s ? '?' + s : '') + h); } catch (e) {}
+}
+// once the player starts choosing for themselves, an invite still being looked for stops: it must never pull the menu
+// back to its game, or join a lobby, under someone who has gone to pick another mode
+var SHARE_MINE = false;
+{
+  const mine = e => {
+    if (SHARE_MINE || !e.isTrusted) return;
+    const card = SHARE_JOIN && $(SHARE_CARD[SHARE_JOIN.mode]), t = e.target;
+    const desk = card && typeof MD !== 'undefined' && MD.cards.find(c => c.contains(card));
+    if (t && t.nodeType === 1 && ((card && card.contains(t)) || (desk && desk.contains(t)))) return;   // (inside the invite's own card is fine)
+    SHARE_MINE = true;
+  };
+  for (const k of ['pointerdown', 'keydown', 'wheel', 'touchmove']) document.addEventListener(k, mine, { capture: true, passive: true });
 }
 const SHARE_CARD = { sail: 'together', wreckers: 'fpsTitle', war: 'warTitle', lighthouse: 'zmTitle', raid: 'rdTitle', fogrun: 'frTitle', fbsea: 'fbTitle', golf: 'gfTitle', rival: 'rlTitle', campaign: 'cpTitle' };
 const SHARE_WHAT = { sail: 'crew', war: 'war', lighthouse: 'night', raid: 'raid', fogrun: 'run', fbsea: 'crew', golf: 'round', rival: 'duel', campaign: 'mission' };
@@ -69567,12 +69586,17 @@ function shareArrive() {
   }
   let readyAt = 0;
   const t0 = performance.now(), what = SHARE_WHAT[J.mode];
-  const give = msg => { clearInterval(iv); shareShow(J.mode); if (msg && typeof toast === 'function') toast(msg, 'Invite closed'); };
+  const give = msg => {
+    clearInterval(iv);
+    if (J.mode === 'sail' && NET.pendingJoin === J.code) NET.pendingJoin = null;   // (the crew list stops saying you were invited to it)
+    if (!SHARE_MINE) shareShow(J.mode);
+    if (msg && typeof toast === 'function') toast(msg, 'Invite closed');
+  };
   const iv = setInterval(() => {
     if (typeof NET === 'undefined' || NET.status === 'off') return give('Couldn’t reach the other players, so the invite couldn’t be used.');
     if (NET.status !== 'ready') { if (performance.now() - t0 > 20000) give('Couldn’t reach the other players, so the invite couldn’t be used.'); return; }
     if (!readyAt) readyAt = performance.now();
-    if (typeof state !== 'undefined' && state !== 'title') return;
+    if (SHARE_MINE || (typeof state !== 'undefined' && state !== 'title')) return clearInterval(iv);   // (gone off to play something: the invite is dropped)
     const waited = performance.now() - readyAt;
     if (J.mode === 'sail') {
       NET.pendingJoin = J.code;

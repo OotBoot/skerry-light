@@ -6,6 +6,11 @@
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 226, date: '2026-11-18', title: "The menu stays where you put it", Fixes: [
+    "Opening the game from an old invite link, or from a tab left open on a Skerry Light crew, no longer sends you to Skerry Light on every launch.",
+    "Picking another game on the main menu while an invite was still being looked for could jump you back to Skerry Light. Once you choose something yourself, the invite now steps aside.",
+    "The address bar no longer keeps an old crew's name after an invite has been used, so a reload or a reopened tab starts on the main menu.",
+  ] },
   { v: 225, date: '2026-11-18', title: "Skerry Clash: First person for three keepers", New: [
     "Skerry Clash: Three keepers now has a First person option. Press Three keepers, first person on the card: a bot plays the cards for all three keepers, and you fight as your own troops on the round skerry.",
     "Skerry Clash: online, tick First person in a match for three. Every keeper takes the field as their own troops, and a bot takes any empty seat.",
