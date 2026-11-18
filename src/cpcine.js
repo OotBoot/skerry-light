@@ -55,7 +55,8 @@ function cpcBegin(D, t) {
   try { if (typeof GL3D !== 'undefined' && GL3D.scene && typeof THREE !== 'undefined') { CPN.grp = new THREE.Group(); GL3D.scene.add(CPN.grp); if (D.b3) D.b3(CPN.grp, CPN.C); } } catch (e) { console.warn('cine b3', e); }
   // (any lines already past, joining late: not said)
   CPN.said = new Set();
-  try { document.exitPointerLock && document.exitPointerLock(); } catch (e) {}
+  // (the mouse stays held: letting it go meant a press of Escape during the picture took the browser out of full
+  // screen, as nothing else had it. The camera ignores it while this plays: src/zombies.js zeroes the look)
 }
 // (everyone) the end of it: its actors gone; hosting or alone, then()
 function cpcEnd(quiet) {

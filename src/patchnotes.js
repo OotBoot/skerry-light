@@ -6,6 +6,9 @@
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 230, date: '2026-11-18', title: "Full screen stays on after cutscenes", Fixes: [
+    "The Chronicle of the Light: cutscenes no longer let go of your mouse, so pressing Escape while one plays no longer takes the game out of full screen. When the cutscene ends you're straight back in control, with no click needed to look around again.",
+  ] },
   { v: 229, date: '2026-11-18', title: "Flares for the Gannet's spars", Changes: [
     "The Chronicle of the Light: The Gannet's Wake, Her Lantern: when you reach the ring of spars, everyone aboard is handed a flare pistol (slot 3). Shoot a flare into each of the four tall spars to light it. You no longer need to bring the cutter alongside and fire from the forward deck.",
     "The Chronicle of the Light: The Gannet's Wake, Her Lantern: the tall spars are much easier to hit, catching a flare anywhere within 9 m of the mast, from the water to well above its top.",

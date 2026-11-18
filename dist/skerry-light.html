@@ -2954,7 +2954,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 // ---- src/config.js ----
 'use strict';
 // The game's version, shown at the top of the main menu. Bump it by one with every change pushed to main.
-var VERSION = 229;
+var VERSION = 230;
 // Skerry Light: tuning, asset paths and lore.
 // World units are metres. The lighthouse stands at the origin on the shoreline (y = 0);
 // north (+y) is open sea. Bearings: 0 = north, positive = east.
@@ -3129,6 +3129,9 @@ document.addEventListener('visibilitychange', () => {
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 230, date: '2026-11-18', title: "Full screen stays on after cutscenes", Fixes: [
+    "The Chronicle of the Light: cutscenes no longer let go of your mouse, so pressing Escape while one plays no longer takes the game out of full screen. When the cutscene ends you're straight back in control, with no click needed to look around again.",
+  ] },
   { v: 229, date: '2026-11-18', title: "Flares for the Gannet's spars", Changes: [
     "The Chronicle of the Light: The Gannet's Wake, Her Lantern: when you reach the ring of spars, everyone aboard is handed a flare pistol (slot 3). Shoot a flare into each of the four tall spars to light it. You no longer need to bring the cutter alongside and fire from the forward deck.",
     "The Chronicle of the Light: The Gannet's Wake, Her Lantern: the tall spars are much easier to hit, catching a flare anywhere within 9 m of the mast, from the water to well above its top.",
@@ -18393,6 +18396,7 @@ addEventListener('blur', () => { FPS.keys = {}; FPS.mouseDown = false; FPS.mbWas
 // comes as a pointermove, not a pointerdown or pointerup, so aiming and firing at once would otherwise be lost)
 function fpsMouseButtons(e) {
   const now = e.buttons | 0, was = FPS.mbWas | 0; FPS.mbWas = now;
+  if (FPS.zm && typeof cpCineOn === 'function' && cpCineOn()) { FPS.mouseDown = false; return; }   // [campaign] a cinematic: clicks swallowed (the mouse stays held)
   const down = bit => (now & bit) && !(was & bit), up = bit => !(now & bit) && (was & bit);
   if (down(1)) FPS.mouseDown = true; if (up(1)) FPS.mouseDown = false;
   if (down(2)) fpsScope(aimToggle() ? !FPS.scoped : true); if (up(2) && !aimToggle()) fpsScope(false);
@@ -49999,7 +50003,8 @@ function cpcBegin(D, t) {
   try { if (typeof GL3D !== 'undefined' && GL3D.scene && typeof THREE !== 'undefined') { CPN.grp = new THREE.Group(); GL3D.scene.add(CPN.grp); if (D.b3) D.b3(CPN.grp, CPN.C); } } catch (e) { console.warn('cine b3', e); }
   // (any lines already past, joining late: not said)
   CPN.said = new Set();
-  try { document.exitPointerLock && document.exitPointerLock(); } catch (e) {}
+  // (the mouse stays held: letting it go meant a press of Escape during the picture took the browser out of full
+  // screen, as nothing else had it. The camera ignores it while this plays: src/zombies.js zeroes the look)
 }
 // (everyone) the end of it: its actors gone; hosting or alone, then()
 function cpcEnd(quiet) {

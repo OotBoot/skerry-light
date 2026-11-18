@@ -1657,6 +1657,7 @@ addEventListener('blur', () => { FPS.keys = {}; FPS.mouseDown = false; FPS.mbWas
 // comes as a pointermove, not a pointerdown or pointerup, so aiming and firing at once would otherwise be lost)
 function fpsMouseButtons(e) {
   const now = e.buttons | 0, was = FPS.mbWas | 0; FPS.mbWas = now;
+  if (FPS.zm && typeof cpCineOn === 'function' && cpCineOn()) { FPS.mouseDown = false; return; }   // [campaign] a cinematic: clicks swallowed (the mouse stays held)
   const down = bit => (now & bit) && !(was & bit), up = bit => !(now & bit) && (was & bit);
   if (down(1)) FPS.mouseDown = true; if (up(1)) FPS.mouseDown = false;
   if (down(2)) fpsScope(aimToggle() ? !FPS.scoped : true); if (up(2) && !aimToggle()) fpsScope(false);
