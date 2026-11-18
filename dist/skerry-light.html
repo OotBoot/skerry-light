@@ -2954,7 +2954,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 // ---- src/config.js ----
 'use strict';
 // The game's version, shown at the top of the main menu. Bump it by one with every change pushed to main.
-var VERSION = 230;
+var VERSION = 231;
 // Skerry Light: tuning, asset paths and lore.
 // World units are metres. The lighthouse stands at the origin on the shoreline (y = 0);
 // north (+y) is open sea. Bearings: 0 = north, positive = east.
@@ -3129,6 +3129,9 @@ document.addEventListener('visibilitychange', () => {
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 231, date: '2026-11-18', title: "Weapons back in hand on Freebooters' Sea", Fixes: [
+    "The Chronicle of the Light: Freebooters' Sea, Crowsnest Rock and Saltcote: you can draw and fire your weapons again after the cutscene. Your gun is now only put away while your arms are full with the hoard.",
+  ] },
   { v: 230, date: '2026-11-18', title: "Full screen stays on after cutscenes", Fixes: [
     "The Chronicle of the Light: cutscenes no longer let go of your mouse, so pressing Escape while one plays no longer takes the game out of full screen. When the cutscene ends you're straight back in control, with no click needed to look around again.",
   ] },
@@ -52682,7 +52685,9 @@ if (typeof fbNoGun === 'function') { const g0 = fbNoGun; fbNoGun = function () {
 // (a stage marked noGun: a keeper's night, nobody armed; src/cpm04x.js)
 // (a figure posed with noGun: its weapons' roots hidden too, which cpkNpcPose's noGun misses)
 function cplGunAway(F) { if (F && F.wpn) for (const k in F.wpn) if (F.wpn[k] && F.wpn[k].root) F.wpn[k].root.visible = false; }
-function cplNoGunStage() { return !!(typeof CP !== 'undefined' && CP.on && RAID.on && RAID_ORDER && (RAID_STAGES[RAID_ORDER[RAID.stage]] || {}).noGun); }
+// (only a stage marked noGun: true: one whose noGun is a function, as Freebooters' Sea's islands, asks it each time
+// through src/fbsea.js fbNoGun's raidCall, and a function here would have counted as no gun the whole stage long)
+function cplNoGunStage() { return !!(typeof CP !== 'undefined' && CP.on && RAID.on && RAID_ORDER && (RAID_STAGES[RAID_ORDER[RAID.stage]] || {}).noGun === true); }
 // (each stage's f3) what everyone carries, in front of them: a model for each kind (made once, kept)
 const CPLC = { grp: null, mine: null, theirs: new Map(), mk: {} };
 function cplCarryBuild(grp) { CPLC.grp = new THREE.Group(); grp.add(CPLC.grp); CPLC.mine = null; CPLC.theirs = new Map(); }

@@ -6,6 +6,9 @@
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 231, date: '2026-11-18', title: "Weapons back in hand on Freebooters' Sea", Fixes: [
+    "The Chronicle of the Light: Freebooters' Sea, Crowsnest Rock and Saltcote: you can draw and fire your weapons again after the cutscene. Your gun is now only put away while your arms are full with the hoard.",
+  ] },
   { v: 230, date: '2026-11-18', title: "Full screen stays on after cutscenes", Fixes: [
     "The Chronicle of the Light: cutscenes no longer let go of your mouse, so pressing Escape while one plays no longer takes the game out of full screen. When the cutscene ends you're straight back in control, with no click needed to look around again.",
   ] },

@@ -193,7 +193,9 @@ if (typeof fbNoGun === 'function') { const g0 = fbNoGun; fbNoGun = function () {
 // (a stage marked noGun: a keeper's night, nobody armed; src/cpm04x.js)
 // (a figure posed with noGun: its weapons' roots hidden too, which cpkNpcPose's noGun misses)
 function cplGunAway(F) { if (F && F.wpn) for (const k in F.wpn) if (F.wpn[k] && F.wpn[k].root) F.wpn[k].root.visible = false; }
-function cplNoGunStage() { return !!(typeof CP !== 'undefined' && CP.on && RAID.on && RAID_ORDER && (RAID_STAGES[RAID_ORDER[RAID.stage]] || {}).noGun); }
+// (only a stage marked noGun: true: one whose noGun is a function, as Freebooters' Sea's islands, asks it each time
+// through src/fbsea.js fbNoGun's raidCall, and a function here would have counted as no gun the whole stage long)
+function cplNoGunStage() { return !!(typeof CP !== 'undefined' && CP.on && RAID.on && RAID_ORDER && (RAID_STAGES[RAID_ORDER[RAID.stage]] || {}).noGun === true); }
 // (each stage's f3) what everyone carries, in front of them: a model for each kind (made once, kept)
 const CPLC = { grp: null, mine: null, theirs: new Map(), mk: {} };
 function cplCarryBuild(grp) { CPLC.grp = new THREE.Group(); grp.add(CPLC.grp); CPLC.mine = null; CPLC.theirs = new Map(); }
