@@ -439,6 +439,7 @@
       <div class="btnrow">
         <button class="primary" id="rlPlay" type="button">Duel the bot</button>
         <button class="primary" id="rlDraftBot" type="button">Triple draft</button><!-- [rival] src/rldraft.js -->
+        <button class="primary" id="rlFpPlay" type="button">First person</button><!-- [rival] two bots play the cards, you take the field as your troops (src/rlfp.js) -->
         <button class="primary" id="rl3Play" type="button">Three keepers</button><!-- [rival] 1v1v1 against two bots (src/rl3.js) -->
         <button class="tool" id="rlDeckBtn" type="button">Deck</button>
       </div>
@@ -452,7 +453,7 @@
         <h2 id="rlMpHead">Duel online · one against one, or three keepers</h2>
         <p class="muted" id="rlMpNote">Looking for another keeper…</p>
         <div id="rlMpOpen" hidden>
-          <div class="btnrow"><button class="tool" id="rlMpHost" type="button">Host a duel</button><button class="tool" id="rlMpHostDr" type="button">Host a triple draft</button><button class="tool" id="rlMpHost3" type="button">Host three keepers</button></div>
+          <div class="btnrow"><button class="tool" id="rlMpHost" type="button">Host a duel</button><button class="tool" id="rlMpHostDr" type="button">Host a triple draft</button><button class="tool" id="rlMpHost3" type="button">Host three keepers</button><button class="tool" id="rlMpHostFp" type="button">Host first person</button></div>
           <div class="warlobbies" id="rlLobbies"></div>
         </div>
         <div class="warlobby" id="rlLobby" hidden>
@@ -460,6 +461,7 @@
           <ol class="warlobbylist" id="rlLobbyList"></ol>
           <p class="muted" id="rlLobbyMsg"></p>
           <label class="rldr-opt" id="rlMpDraftRow"><input type="checkbox" id="rlMpDraft"> Triple draft: build both decks on the spot, three cards a round</label><!-- [rival] the host chooses (src/rldraft.js) -->
+          <label class="rldr-opt" id="rlMpFpRow"><input type="checkbox" id="rlMpFp"> First person: a bot plays each side's cards, and you each take the field as your own troops</label><!-- [rival] the host chooses (src/rlfp.js) -->
           <label class="rldr-opt" id="rlMpN3Row"><input type="checkbox" id="rlMpN3"> Three keepers: every keeper for themselves, a bot in any empty seat</label><!-- [rival] the host chooses (src/rl3.js) -->
           <div class="btnrow"><button class="primary" id="rlMpStart" type="button">Light the lamps</button><button class="tool shareBtn" id="rlMpShare" type="button" data-mode="rival">Share invite</button><button class="tool" id="rlMpLeave" type="button">Leave</button></div>
         </div>
@@ -467,6 +469,7 @@
       <details class="howto">
         <summary>How to play</summary>
         <p><b>Oil.</b> Every card costs lamp oil, shown in the drop on its corner. You start with 5 and fill by one every 2.8 seconds, up to 10. Oil you can't hold is wasted, so spend before you're full.</p>
+        <p><b>First person.</b> A bot plays the cards for each side, and you take the field as any troop of yours it sends: walk it (WASD, or the stick), look round (the mouse once you click, or drag on the right), and strike what's in front of you (Space, a click, or Strike). Tab or the row along the bottom swaps to another of yours; F takes the newest. Online, your rival does the same with the other bot. It isn't rated.</p>
         <p><b>Three keepers.</b> Every keeper for themselves on one round skerry cut three ways by channels, a causeway to each neighbour. The last Great Light burning wins; at time, the most towers standing. Against two bots, or online with up to three (a bot takes any empty seat). It isn't rated.</p>
         <p><b>Triple draft.</b> No deck of your own: eight rounds, three cards a round, take one and the other two are gone. Each keeper gets different cards, and you can see your rival's three each round, but not which they take. Online each pick has 15 seconds.</p>
         <p><b>Your hand.</b> You hold four cards from your deck of eight, and the next one waits beside them. Play a card and it goes to the back of the queue, so every card comes round again in turn.</p>
@@ -1235,6 +1238,7 @@
 <script src="src/rl3.js"></script><!-- [rival] Skerry Clash for three (1v1v1): the skerry, its rules, its bot -->
 <script src="src/rl3d.js"></script><!-- [rival] the 3D view -->
 <script src="src/rlhud.js"></script><!-- [rival] the hand, the oil, the clock, the end card -->
+<script src="src/rlfp.js"></script><!-- [rival] first person: bots play the cards, you fight as your troops -->
 <script src="src/rlemote.js"></script><!-- [rival] the emotes: picker, bubbles, sounds, the bot's say -->
 <script src="src/rlart.js"></script><!-- [rival] the cards' pictures and faces -->
 <script src="src/rlchamp.js"></script><!-- [rival] the champions: their models, pictures, ability button and the bot's use of them -->

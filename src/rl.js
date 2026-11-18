@@ -61,6 +61,8 @@
 // FX champ { c, x, y, side, r } as one is used. Snapshot: ch [[card, unit, cd]...], and flag 8192 on a unit while abT.
 // For three (v208, src/rl3.js): RL.n3 set, three of everything, and the parts of the rules that depend on the ground
 // (rlCanPlace, rlWay, rlWater, rlDry, rlDrag, rlLaneTower, the towers falling and the end) handed to rl3* there.
+// First person (v224, src/rlfp.js): RL.fp, a bot plays each side's cards and each keeper holds one of their own troops
+// (RL.fpc[side]); rlUnit hands a held troop to rlfpUnit, and the snapshot carries fp, the troop each side holds.
 // Tests: rlDebugSpeed(x) runs the clock x times as fast; rlDebugBots(on) lets a second bot play side 0 as well.
 //
 // For the view (what src/rl3d.js and the sound may key off, on the host and, through rlSnap/rlApply, the guest; the
@@ -125,13 +127,14 @@ function rlStart(o) {
     oil: SS.map(() => RLC.OIL0), names: SS.map(i => String((o.names && o.names[i]) || (i ? 'Rival' : 'You')).slice(0, 16)), skins: SS.map(i => (o.skins && o.skins[i]) || ''),
     decks: SS.map(i => rlDeckOk(o.decks && o.decks[i])), U: [], P: [], Z: [], FX: [], crowns: SS.map(() => 0), win: -1, bot: { lvl: o.lvl || 'normal' }, nid: 1, clk: 0, cnt: RLC.COUNT, acc: 0,
     seed, rng: rlRng(seed), draft: !!o.draft, pend: null, ch: SS.map(() => rlChNew()), recorded: false, lastSnap: 0, snapDur: 90, both: RL.both || false,
-    n3, alive: SS.map(() => 1), outs: [], bots: n3 ? (Array.isArray(o.bots) ? o.bots.filter(s => s >= 0 && s < 3) : o.mode === 'net' ? [] : [1, 2]) : [] });
+    fp: !n3 && !!o.fp, fpc: [null, null], fpU: null, n3, alive: SS.map(() => 1), outs: [], bots: n3 ? (Array.isArray(o.bots) ? o.bots.filter(s => s >= 0 && s < 3) : o.mode === 'net' ? [] : [1, 2]) : [] });
   RL.hand = SS.map(() => []); RL.next = SS.map(() => ''); RL.queue = SS.map(() => []);
   for (const s of SS) { const d = RL.decks[s].slice(); for (let i = d.length - 1; i > 0; i--) { const j = (RL.rng() * (i + 1)) | 0; [d[i], d[j]] = [d[j], d[i]]; } RL.hand[s] = d.slice(0, 4); RL.next[s] = d[4]; RL.queue[s] = d.slice(5); }
   RL.T = n3 ? rl3Towers() : [];
   if (!n3) for (const s of [0, 1]) { const Y = y => s ? RLC.H - y : y; RL.T.push(rlTower(s, 'great', -1, 9, Y(3.5)), rlTower(s, 'lamp', 0, RLC.LX[0], Y(7)), rlTower(s, 'lamp', 1, RLC.LX[1], Y(7))); }
   if (typeof rlBotReset === 'function') rlBotReset();
   rlEnter();
+  if (typeof rlfpReset === 'function') rlfpReset();
   rlFx('go', { x: 9, y: 16, side: 0 });
 }
 // each side's champion: c its card while it's on the field, u its unit's id, cd the seconds before its ability is ready
@@ -350,7 +353,7 @@ function rlTick() {
   if (!RL.dbl && (RL.ot || RL.left <= RLC.DBL)) { RL.dbl = true; rlFx('dbl', { x: 9, y: 16, side: 0 }); }
   for (let s = 0; s < RL.oil.length; s++) if (!RL.n3 || RL.alive[s]) RL.oil[s] = Math.min(RLC.MAXOIL, RL.oil[s] + dt / RLC.OILT * (RL.dbl ? 2 : 1));
   if (RL.n3) { for (const s of RL.bots) rl3BotTick(dt, s); if (RL.both) rl3BotTick(dt, RL.me); }
-  else if (typeof rlBotTick === 'function') { if (RL.mode === 'bot') rlBotTick(dt, 1); if (RL.both) rlBotTick(dt, 0); }
+  else if (typeof rlBotTick === 'function') { if (RL.fp) { rlBotTick(dt, 0); rlBotTick(dt, 1); } else { if (RL.mode === 'bot') rlBotTick(dt, 1); if (RL.both) rlBotTick(dt, 0); } }   // (first person: a bot plays each side's cards, src/rlfp.js)
   for (const u of RL.U) { u.px = u.x; u.py = u.y; }
   RL.by = new Map(); for (const e of RL.T) RL.by.set(e.id, e); for (const u of RL.U) RL.by.set(u.id, u);
   rlZones(dt);
@@ -510,6 +513,7 @@ function rlUnit(u, dt) {
   // how fast it moves (k, and half again in tar) and strikes (k, and 30% faster rallied)
   const k = (u.slow > 0 ? 0.65 : 1) * (u.fog ? 0.55 : 1) * (u.hs ? 1.4 : 1);
   if (u.cd > 0) u.cd -= dt * k * (u.ral ? 1.3 : 1) * (u.abT > 0 && C.champ && C.champ.fast ? C.champ.fast : 1);
+  if (RL.fp && typeof rlfpUnit === 'function' && rlfpUnit(u, C, dt, k)) return;   // (a troop a keeper holds in first person, src/rlfp.js)
   if (C.ab === 'heal') { rlHealer(u, C, dt, k); return; }
   // the target: kept while it's being struck and still in reach; else looked for again now and then
   let T = u.tg ? RL.by.get(u.tg) : null;
@@ -706,7 +710,7 @@ function rlEnd(win, o) {
   RL.ph = 'over'; RL.win = win; RL.endAt = RL.clk;
   if (RL.n3) { rl3End(win); return; }
   if (!rlIsGuest()) rlFx('end', { x: 9, y: 16, side: win === 2 ? 0 : win, r: win });
-  const me = RL.me, rec = { win: win === me, draw: win === 2, crowns: RL.crowns[me], lost: RL.crowns[1 - me], bot: RL.mode === 'bot', lvl: RL.bot.lvl };
+  const me = RL.me, rec = { win: win === me, draw: win === 2, crowns: RL.crowns[me], lost: RL.crowns[1 - me], bot: RL.mode === 'bot', lvl: RL.bot.lvl, fp: !!RL.fp };
   if (!RL.recorded && !(o && o.norec) && !(RL.net && RL.net.gone) && !rlIsSpec() && typeof rlRecord === 'function') { RL.recorded = true; try { rlRecord(rec); } catch (e) { console.error(e); } }
   rlSnd(win === 2 ? 'draw' : win === me || rlIsSpec() ? 'win' : 'lose');
   if (typeof rlHudEnd === 'function') setTimeout(() => { if (RL.on && RL.ph === 'over') rlHudEnd(); }, 1600);
@@ -730,7 +734,7 @@ function rlSnap() {
   // (the extra points of a leap or a chain, in tenths)
   const fx = f => f.k === 'leap' ? [[rlQ(f.tx), rlQ(f.ty)]] : f.k === 'chain' ? [f.pts.map(q => [rlQ(q[0]), rlQ(q[1])])] : [];
   return {
-    ...(RL.n3 ? { n3: 1, al: RL.alive, ou: RL.outs } : {}),
+    ...(RL.n3 ? { n3: 1, al: RL.alive, ou: RL.outs } : {}), ...(RL.fp ? { fp: [0, 1].map(s => typeof rlfpHeld === 'function' ? rlfpHeld(s) : 0) } : {}),
     v: 1, ph: RL.ph, k: rlQ(RL.clk), t: rlQ(RL.t), l: rlQ(RL.left), f: (RL.ot ? 1 : 0) | (RL.dbl ? 2 : 0), cn: rlQ(RL.cnt), o: RL.oil.map(rlQ), h: RL.hand, n: RL.next,
     ch: RL.ch.map(h => [rlCi(h.c), h.u | 0, rlQ(h.cd)]), cr: RL.crowns, w: RL.win, nm: RL.names, sk: RL.skins, lv: RL.bot.lvl,
     T: RL.T.map(t => [Math.round(Math.max(0, t.hp)), (t.awake ? 1 : 0) | (t.down ? 2 : 0), t.tg | 0, t.shotAt != null ? rlQ(RL.clk - t.shotAt) : 99]),
@@ -749,6 +753,7 @@ function rlApply(s) {
   // (the match is for three, or isn't: the towers and the arrays as the host has them)
   if (!!s.n3 !== !!RL.n3) { RL.n3 = !!s.n3; const SS = RL.n3 ? [0, 1, 2] : [0, 1]; RL.T = RL.n3 ? rl3Towers() : RL.T; RL.alive = SS.map(() => 1); RL.outs = []; RL.ch = SS.map(() => rlChNew()); RL.me = Math.min(RL.me, SS.length - 1); if (typeof rl3dReset === 'function') rl3dReset(); if (typeof rlHudReset === 'function') rlHudReset(); }
   if (RL.n3) { if (Array.isArray(s.al)) RL.alive = s.al.slice(0, 3); if (Array.isArray(s.ou)) RL.outs = s.ou.slice(0, 3); }
+  RL.fp = !!s.fp; RL.fpU = Array.isArray(s.fp) ? s.fp.slice(0, 2) : null;
   const wasPh = RL.ph, d = v => v / 10;
   RL.ph = s.ph; RL.clk = d(s.k); RL.t = d(s.t); RL.left = d(s.l); RL.ot = !!(s.f & 1); RL.dbl = !!(s.f & 2); RL.cnt = d(s.cn); RL.oil = s.o.map(d);
   if (Array.isArray(s.ch)) RL.ch = s.ch.map(e => ({ c: rlCo(e[0]), u: e[1], cd: d(e[2]) }));
@@ -789,6 +794,7 @@ function rlFrame(dt) {
   if (!RL.on) { if (RL.ph === 'draft' && typeof rl3dDraw === 'function') { RL.clk += dt; rl3dDraw(dt); } return; }   // (the triple draft, over the empty arena: src/rldraft.js)
   const paused = !$('rlPause').hidden && RL.mode === 'bot';
   if (RL.mode === 'net' && typeof rlnTick === 'function') { try { rlnTick(dt); } catch (e) { console.error(e); } }
+  if (RL.fp && typeof rlfpFrame === 'function') { try { rlfpFrame(paused ? 0 : dt); } catch (e) { console.error(e); } }
   if (!paused) {
     if (!rlIsGuest()) { RL.acc += dt * (RL.speed || 1); let n = 0; while (RL.acc >= RLC.DT && n++ < 40) { RL.acc -= RLC.DT; rlTick(); } if (n >= 40) RL.acc = 0; }
     else {
@@ -821,7 +827,7 @@ function rlEnter() {
 }
 function rlExit() {
   RL.on = false; if (RL.ph !== 'off') RL.ph = 'off';
-  $('rlUI').hidden = true; document.body.classList.remove('rlon');
+  $('rlUI').hidden = true; document.body.classList.remove('rlon'); $('rlUI').classList.remove('fp'); if (typeof rlfpUnlock === 'function') rlfpUnlock();
   if (typeof rl3dReset === 'function') rl3dReset(true);
   state = 'title'; toTitle();
   if (typeof rlnBackToLobby === 'function') { try { rlnBackToLobby(); } catch (e) {} }
@@ -836,7 +842,7 @@ function rlSpecFlip() {
 }
 function rlPauseOpen(on) {
   if (!RL.on) return;
-  $('rlPause').hidden = !on;
+  $('rlPause').hidden = !on; if (on && typeof rlfpUnlock === 'function') rlfpUnlock();
   if (on) { const s = $('rlPauseSub'); if (s) s.textContent = RL.mode === 'bot' ? 'The match waits while this is open.' : rlIsSpec() ? 'You’re watching: the duel goes on without you.' : 'Online, the match goes on while this is open.'; const lv = $('rlLeave'); if (lv) lv.textContent = rlIsSpec() ? 'Stop watching' : 'Leave the match'; setTimeout(() => $('rlResume').focus({ preventScroll: true }), 30); }
 }
 

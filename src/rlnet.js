@@ -33,6 +33,10 @@
 // host's screen runs the bots for the empty seats. The guests' taps come as before, and the host acks each guest by
 // its place, ak [0, a1, a2]. A guest who quits or goes quiet for ten seconds is out of the match (rl3Leave), and it
 // goes on without them; the host going ends it for everyone else, unrecorded. Nothing of it reaches the rating.
+// First person (src/rlfp.js): the host may tick First person in the lobby (fp: 1 in its presence; not with the draft or
+// three keepers). Start puts fp: 1 in st, and both screens start with rlStart({ fp: true }): the host's screen runs a
+// bot for each side, and the guest's word of the troop it holds goes in its duel presence as fi (rlfpNetOut), read by
+// the host each frame (rlfpNetIn). It isn't rated.
 // Each side reports a finished duel to the rating itself, by the duel's id g (rlnMmrInfo); the server rates it only
 // when both reports agree. Afterwards both are back in the same lobby for a rematch.
 // Watching: anyone else may watch a duel, waiting or under way (RLN_WATCH at most, to spare the room). A watcher puts
@@ -51,7 +55,7 @@
 // watcher (rldWatch, src/rldraft.js), showing both keepers' rounds, offers and decks; when the duel starts there it
 // carries straight on into watching it.
 
-var RLN = { ssl: [], slSent: '', sdg: null, spec: false, draft: false, n3: false, side: 0, gS: {}, gB: {}, gQ: {}, gOut: {}, dst: null, ddk: null, dlost: 0, code: null, at: 0, msg: '', st: null, doneG: null, g: null, role: null, seq: 0, q: [], lastQ: 0, ws: 0, wsSeen: -1, wsSeenAny: -1, sendT: 0, sentAt: 0, seen: 0, beat: 0, lastB: null, chunks: null, quit: null, ended: false, bytes: 0, lobT: 0 };
+var RLN = { ssl: [], slSent: '', sdg: null, spec: false, draft: false, n3: false, fp: false, side: 0, gS: {}, gB: {}, gQ: {}, gOut: {}, dst: null, ddk: null, dlost: 0, code: null, at: 0, msg: '', st: null, doneG: null, g: null, role: null, seq: 0, q: [], lastQ: 0, ws: 0, wsSeen: -1, wsSeenAny: -1, sendT: 0, sentAt: 0, seen: 0, beat: 0, lastB: null, chunks: null, quit: null, ended: false, bytes: 0, lobT: 0 };
 const RLN_MAX = 2;
 const RLN_WATCH = 8;      // watchers a duel takes at most (each hears the host's snapshots at full rate)
 const RLN_GONE = 10000;   // ms without a word before the other side is taken to have left
@@ -74,7 +78,7 @@ function rlnMySkin() { let s = ''; try { if (typeof rlSkinMine === 'function') s
 function rlnBase(lean) { const z = { room: RLN.code, sid: NET.sid, nick: rlnNick(), at: RLN.at }; if (RLN.spec) { z.spec = 1; return z; } if (!lean) { z.dk = rlnMyDeck(); z.sk = rlnMySkin(); const mr = typeof rlmMine === 'function' ? rlmMine() : null; if (Number.isFinite(mr)) z.mr = mr; } return z; }
 const rlnMr = z => z && Number.isFinite(z.mr) ? ' · ' + Math.max(0, Math.round(z.mr)) + ' MMR' : '';
 // the duel as the rating wants it (src/rlmmr.js): its id, my side, the other's name and rating
-function rlnMmrInfo() { if (!RLN.st || !RLN.g || RLN.spec || RLN.st.n3) return null; const side = RLN.role === 'host' ? 0 : 1; return { g: RLN.st.g, side, host: side === 0, opp: RLN.st.names[1 - side], omr: RLN.omr }; }
+function rlnMmrInfo() { if (!RLN.st || !RLN.g || RLN.spec || RLN.st.n3 || RLN.st.fp) return null; const side = RLN.role === 'host' ? 0 : 1; return { g: RLN.st.g, side, host: side === 0, opp: RLN.st.names[1 - side], omr: RLN.omr }; }
 // everyone in a duel's room, keepers and watchers (rlnPeers: the keepers only; rlnSpecs: the watchers)
 function rlnAll(code) {
   const out = NET.peers.filter(p => { const z = rlnOf(p); return z && z.room === code && fresh(p) && !(p.isMe && p.sameTab); });
@@ -95,7 +99,7 @@ const rlnMine = p => !!(p && p.isMe && p.sameTab);
 function rlnAmHost() { const m = rlnMembers(); return !!m.length && rlnMine(m[0]); }
 function rlnOther() { return rlnMembers().find(p => !rlnMine(p)) || null; }
 function rlnSend(z) { if (NET.room) NET.room.presence({ rl: z }).catch(() => {}); }
-function rlnSendLobby() { if (!RLN.code) return; const z = rlnBase(); if (RLN.spec) { rlnSend(z); return; } if (rlnAmHost()) { z.lob = { n: rlnMembers().length }; if (RLN.n3) z.lob.n3 = 1; else if (RLN.draft) z.dr = 1; }
+function rlnSendLobby() { if (!RLN.code) return; const z = rlnBase(); if (RLN.spec) { rlnSend(z); return; } if (rlnAmHost()) { z.lob = { n: rlnMembers().length }; if (RLN.n3) z.lob.n3 = 1; else if (RLN.draft) z.dr = 1; else if (RLN.fp) z.fp = 1; }
   if (RLN.dst) { if (RLN.role === 'dhost') z.st = RLN.dst; z.dd = { g: RLN.dst.g, n: typeof RLDR !== 'undefined' ? RLDR.picks.length : 0, pk: typeof RLDR !== 'undefined' && !RLDR.spec ? RLDR.picks.slice(0, 8) : [] }; if (RLN.ddk) z.dd.dk = RLN.ddk; } if (RLN.quit) z.quit = RLN.quit; rlnSend(z); }
 function rlnHost() {
   if (!rlnOnline() || rlnInMatch()) return;
@@ -127,7 +131,7 @@ function rlnOpen() {
   for (const [code, list] of rooms) {
     if (code === RLN.code) continue;
     const keep = list.filter(p => !rlnOf(p).spec).sort((a, b) => (rlnOf(a).at || 0) - (rlnOf(b).at || 0)); if (!keep.length) continue;
-    const h = rlnOf(keep[0]); out.push({ code, host: rlnClean(h.nick, 16) || 'Someone', mr: rlnMr(h), n: keep.length, w: list.length - keep.length, started: !!(h.st && h.st.g), dr: !!h.dr, n3: !!(h.lob && h.lob.n3), max: h.lob && h.lob.n3 ? 3 : RLN_MAX });
+    const h = rlnOf(keep[0]); out.push({ code, host: rlnClean(h.nick, 16) || 'Someone', mr: rlnMr(h), n: keep.length, w: list.length - keep.length, started: !!(h.st && h.st.g), dr: !!h.dr, fp: !!h.fp, n3: !!(h.lob && h.lob.n3), max: h.lob && h.lob.n3 ? 3 : RLN_MAX });
   }
   return out;
 }
@@ -147,7 +151,7 @@ function rlnRender() {
       // (the row joins; beside it, Watch, for any duel with room for another watcher)
       const row = document.createElement('div'); row.className = 'rlrow';
       const b = document.createElement('button'); b.type = 'button'; b.className = 'warlobbyrow';
-      const nm = document.createElement('span'); nm.className = 'nm'; nm.textContent = n.n3 ? `${n.host}’s three keepers${n.mr} · ${n.n} of 3` : `${n.host}’s duel${n.mr}${n.dr ? ' · triple draft' : ''}`;
+      const nm = document.createElement('span'); nm.className = 'nm'; nm.textContent = n.n3 ? `${n.host}’s three keepers${n.mr} · ${n.n} of 3` : `${n.host}’s duel${n.mr}${n.dr ? ' · triple draft' : n.fp ? ' · first person' : ''}`;
       const sm = document.createElement('small'); sm.textContent = (n.started ? 'under way' : n.n >= n.max ? 'full' : 'tap to join') + (n.w ? ` · watching: ${n.w}` : '');
       b.append(nm, sm); b.disabled = n.started || n.n >= n.max; b.addEventListener('click', () => rlnJoin(n.code)); row.append(b);
       const wb = document.createElement('button'); wb.type = 'button'; wb.className = 'tool rlwatch'; wb.textContent = 'Watch'; wb.dataset.code = n.code;
@@ -158,11 +162,12 @@ function rlnRender() {
   }
   const m = rlnMembers(), host = rlnAmHost(), hz = m.length ? rlnOf(m[0]) : null, o = rlnOther(), oz = o ? rlnOf(o) : null;
   const away = m.some(p => !rlnMine(p) && rlnOf(p).g), W = rlnSpecs(RLN.code), n3 = host ? RLN.n3 : !!(hz && hz.lob && hz.lob.n3);   // (away: the other one still has the last duel's end card up)
-  const dr = !n3 && (host ? RLN.draft : !!(hz && hz.dr));
-  const key = m.map(p => rlnOf(p).sid + rlnOf(p).nick + rlnOf(p).mr).join('|') + '/' + W.map(p => rlnOf(p).sid + rlnOf(p).nick).join('|') + host + away + dr + n3 + RLN.spec + RLN.msg;
+  const dr = !n3 && (host ? RLN.draft : !!(hz && hz.dr)), fp = !n3 && !dr && (host ? RLN.fp : !!(hz && hz.fp));
+  const key = m.map(p => rlnOf(p).sid + rlnOf(p).nick + rlnOf(p).mr).join('|') + '/' + W.map(p => rlnOf(p).sid + rlnOf(p).nick).join('|') + host + away + dr + fp + n3 + RLN.spec + RLN.msg;
   if (q('MpStart')) { q('MpStart').hidden = !host; q('MpStart').disabled = m.length < 2 || away || !!RLN.dst; }
   if (q('MpDraft')) { q('MpDraft').checked = dr; q('MpDraft').disabled = !host || n3; }
   if (q('MpN3')) { q('MpN3').checked = n3; q('MpN3').disabled = !host; }
+  if (q('MpFp')) { q('MpFp').checked = fp; q('MpFp').disabled = !host || n3; }
   const L = q('Lobby'); if (L.dataset.k === key) return; L.dataset.k = key;
   if (q('LobbyHead')) q('LobbyHead').textContent = host ? (n3 ? 'Your match for three' : 'Your duel') : `${rlnClean(hz && hz.nick, 16) || 'Someone'}’s ${n3 ? 'match for three' : 'duel'}`;
   const ol = q('LobbyList');
@@ -189,11 +194,11 @@ function rlnStart() {
     }
     rlnBegin(st, 'host'); return;
   }
-  if (RLN.draft && typeof rldOpen === 'function') {
+  if (RLN.draft && !RLN.fp && typeof rldOpen === 'function') {
     rlnDraftGo({ g: Math.random().toString(36).slice(2, 9), sids: z.map(x => x.sid), names: [rlnNick(), rlnClean(z[1].nick, 16) || 'A keeper'], skins: [rlnMySkin(), rlnSkin(z[1].sk)], seed: (Math.random() * 4294967295) >>> 0, dr: 1 }, 'dhost');
     return;
   }
-  const st = { g: Math.random().toString(36).slice(2, 9), sids: z.map(x => x.sid), names: [rlnNick(), rlnClean(z[1].nick, 16) || 'A keeper'], decks: [rlnMyDeck(), rlnDeck(z[1].dk)], skins: [rlnMySkin(), rlnSkin(z[1].sk)], seed: (Math.random() * 4294967295) >>> 0 };
+  const st = { g: Math.random().toString(36).slice(2, 9), sids: z.map(x => x.sid), names: [rlnNick(), rlnClean(z[1].nick, 16) || 'A keeper'], decks: [rlnMyDeck(), rlnDeck(z[1].dk)], skins: [rlnMySkin(), rlnSkin(z[1].sk)], seed: (Math.random() * 4294967295) >>> 0, ...(RLN.fp ? { fp: 1 } : {}) };
   rlnBegin(st, 'host');
 }
 // ---------- the triple draft (src/rldraft.js) ----------
@@ -237,7 +242,7 @@ function rlnBegin(st, role) {
   Object.assign(RLN, { st, g: st.g, doneG: st.g, role, seq: 0, q: [], lastQ: 0, ws: 0, wsSeen: -1, wsSeenAny: -1, sendT: 0, sentAt: 0, seen: now, lastB: null, chunks: null, quit: null, ended: false, acked: false, msg: '' });
   if (role === 'spec') { RLN.specSk = st.skins.join('|'); rlStart({ mode: 'net', me: 0, n3: !!st.n3, names: st.names.slice(), skins: st.skins.slice(), seed: st.seed, net: { host: false, spec: true } }); return; }
   if (st.n3) { const now2 = performance.now() + RLN_GONE; st.sids.forEach((sid, i) => { if (i && sid) RLN.gS[i] = now2; }); }   // (twenty seconds' grace for each guest's first word, while a slow phone builds the arena)
-  rlStart({ mode: 'net', me: role === 'host' ? 0 : st.n3 ? RLN.side : 1, n3: !!st.n3, bots: st.bots, names: st.names.slice(), decks: st.decks.map(d => d.slice()), skins: st.skins.slice(), seed: st.seed, net: { host: role === 'host' }, draft: st.dr === 2 });
+  rlStart({ mode: 'net', me: role === 'host' ? 0 : st.n3 ? RLN.side : 1, n3: !!st.n3, bots: st.bots, names: st.names.slice(), decks: st.decks.map(d => d.slice()), skins: st.skins.slice(), seed: st.seed, net: { host: role === 'host' }, draft: st.dr === 2, fp: !!st.fp });
   rlnSendNow();
 }
 // a watcher: the duel the host has started (or is in the middle of), from the host's presence
@@ -289,7 +294,7 @@ function rlNetPeers() {
       }
       if (s.sids[1] === NET.sid && typeof rlStart === 'function') {
         const nm = Array.isArray(s.names) ? s.names : [], dk = Array.isArray(s.decks) ? s.decks : [], sk = Array.isArray(s.skins) ? s.skins : [];
-        rlnBegin({ g: s.g.slice(0, 12), sids: [String(s.sids[0]), NET.sid], names: [rlnClean(nm[0], 16) || 'A keeper', rlnClean(nm[1], 16) || rlnNick()], decks: [rlnDeck(dk[0]), rlnDeck(dk[1])], skins: [rlnSkin(sk[0]), rlnSkin(sk[1])], seed: s.seed >>> 0, dr: s.dr === 2 ? 2 : 0 }, 'guest');
+        rlnBegin({ g: s.g.slice(0, 12), sids: [String(s.sids[0]), NET.sid], names: [rlnClean(nm[0], 16) || 'A keeper', rlnClean(nm[1], 16) || rlnNick()], decks: [rlnDeck(dk[0]), rlnDeck(dk[1])], skins: [rlnSkin(sk[0]), rlnSkin(sk[1])], seed: s.seed >>> 0, dr: s.dr === 2 ? 2 : 0, fp: s.fp === 1 ? 1 : 0 }, 'guest');
         return;
       }
       RLN.doneG = s.g; RLN.msg = 'They started without you. Host your own duel, or wait for the next.';
@@ -337,7 +342,7 @@ function rlnSendNow() {
         const C = RLN.chunks; z.wc = [C.ws, C.k, C.p.length, C.p[C.k]]; C.k++;
       }
     }
-  } else { z.b = RLN.beat; if (RLN.q.length) z.q = RLN.q.slice(); }
+  } else { z.b = RLN.beat; if (RLN.q.length) z.q = RLN.q.slice(); if (RL.fp && typeof rlfpNetOut === 'function') z.fi = rlfpNetOut(); }   // (fi: the troop the guest holds in first person, src/rlfp.js)
   rlnSend(z); RLN.sentAt = performance.now();
 }
 // the other side has gone: the host wins; the guest's match ends (as a win, not recorded) and it leaves the lobby
@@ -375,7 +380,7 @@ function rlnTick(dt) {
   if (RLN.role === 'host') {
     RLN.sendT -= dt || 0;
     if (RLN.sendT <= 0) { RLN.sendT += NET.via === 'claude' ? 0.1 : 1 / 12; if (RLN.sendT < -0.2) RLN.sendT = 0; rlnSendNow(); }
-  } else if (RLN.role === 'guest' && (now - RLN.sentAt > 1000 || (typeof rlHudSel === 'function' && rlHudSel() !== RLN.slSent && now - RLN.sentAt > 60))) { RLN.beat++; rlnSendNow(); }   // (a watcher sends nothing)
+  } else if (RLN.role === 'guest' && (now - RLN.sentAt > 1000 || (RL.fp && typeof rlfpNetDue === 'function' && rlfpNetDue(now - RLN.sentAt)) || (typeof rlHudSel === 'function' && rlHudSel() !== RLN.slSent && now - RLN.sentAt > 60))) { RLN.beat++; rlnSendNow(); }   // (a watcher sends nothing)
   if (RLN.role === 'host' && RLN.st.n3) { for (const i of [1, 2]) if (RLN.gS[i] && !RLN.gOut[i] && now - RLN.gS[i] > RLN_GONE) rlnOut3(i, 'lost'); return; }
   if (RL.ph !== 'over' && now - RLN.seen > RLN_GONE) rlnGone('lost');
 }
@@ -389,6 +394,7 @@ function rlnRead() {
     if (!z || z.g !== RLN.g || z.sid !== RLN.st.sids[1]) return;
     if (!RLN.acked) RLN.acked = true;
     if (z.b !== RLN.lastB) { RLN.lastB = z.b; RLN.seen = now; }
+    if (RL.fp && typeof rlfpNetIn === 'function' && RL.ph === 'play') rlfpNetIn(1, z.fi);   // (the troop the guest holds, src/rlfp.js)
     if (!Array.isArray(z.q) || RL.ph === 'over') return;
     let took = false;
     for (const r of z.q) {
@@ -486,13 +492,15 @@ function rlnBackToLobby() {
 
 (function rlnInit() {
   if (!$('rlMp')) return;
-  if ($('rlMpHost')) $('rlMpHost').addEventListener('click', () => { RLN.draft = false; RLN.n3 = false; rlnHost(); });
-  if ($('rlMpHostDr')) $('rlMpHostDr').addEventListener('click', () => { RLN.draft = true; RLN.n3 = false; rlnHost(); });
-  if ($('rlMpHost3')) $('rlMpHost3').addEventListener('click', () => { RLN.draft = false; RLN.n3 = true; rlnHost(); });   // (a match for three from the start, room for three keepers; the host can still change either in the lobby)
+  if ($('rlMpHost')) $('rlMpHost').addEventListener('click', () => { RLN.draft = false; RLN.n3 = false; RLN.fp = false; rlnHost(); });
+  if ($('rlMpHostDr')) $('rlMpHostDr').addEventListener('click', () => { RLN.draft = true; RLN.n3 = false; RLN.fp = false; rlnHost(); });
+  if ($('rlMpHost3')) $('rlMpHost3').addEventListener('click', () => { RLN.draft = false; RLN.n3 = true; RLN.fp = false; rlnHost(); });
+  if ($('rlMpHostFp')) $('rlMpHostFp').addEventListener('click', () => { RLN.draft = false; RLN.n3 = false; RLN.fp = true; rlnHost(); });   // (first person, src/rlfp.js)   // (a match for three from the start, room for three keepers; the host can still change either in the lobby)
   if ($('rlMpStart')) $('rlMpStart').addEventListener('click', rlnStart);
   if ($('rlMpLeave')) $('rlMpLeave').addEventListener('click', rlnLeave);
-  if ($('rlMpDraft')) $('rlMpDraft').addEventListener('change', e => { if (!rlnAmHost()) return; RLN.draft = !!e.target.checked; rlnSendLobby(); rlnRender(); });
-  if ($('rlMpN3')) $('rlMpN3').addEventListener('change', e => { if (!rlnAmHost()) return; RLN.n3 = !!e.target.checked; if (RLN.n3) RLN.draft = false; rlnSendLobby(); rlnRender(); });
+  if ($('rlMpDraft')) $('rlMpDraft').addEventListener('change', e => { if (!rlnAmHost()) return; RLN.draft = !!e.target.checked; if (RLN.draft) RLN.fp = false; rlnSendLobby(); rlnRender(); });
+  if ($('rlMpFp')) $('rlMpFp').addEventListener('change', e => { if (!rlnAmHost()) return; RLN.fp = !!e.target.checked; if (RLN.fp) RLN.draft = false; rlnSendLobby(); rlnRender(); });
+  if ($('rlMpN3')) $('rlMpN3').addEventListener('change', e => { if (!rlnAmHost()) return; RLN.n3 = !!e.target.checked; if (RLN.n3) { RLN.draft = false; RLN.fp = false; } rlnSendLobby(); rlnRender(); });
   setInterval(() => { if (RLN.dst) { rlnDraftCheck(); if (RLN.dst) rlnSendLobby(); } }, 1000);   // (the draft: progress out, and anyone gone)
   setInterval(() => { if (typeof state === 'undefined' || state === 'title') rlnRender(); }, 1500);
   // (in the lobby, both say they're still here every few seconds, so a long wait doesn't look like leaving)

@@ -74,7 +74,7 @@ function rlHudTowers(force) {
   if (force || box.children.length !== RL.T.length) { box.textContent = ''; for (const t of RL.T) { const d = document.createElement('div'); d.className = 'rl-twl'; d.innerHTML = '<b></b><i><s></s></i>'; box.append(d); } }
   RL.T.forEach((t, i) => {
     const d = box.children[i], p = typeof rl3dProject === 'function' ? rl3dProject(t.x, t.y, RL_G0 + (t.k === 'great' ? 6.4 : 4.7)) : null;
-    if (!p || t.hp <= 0 || (t.k === 'great' && !t.awake && t.hp >= t.max && false)) { d.hidden = true; return; }
+    if (!p || t.hp <= 0 || (RL.fp && !p.on) || (t.k === 'great' && !t.awake && t.hp >= t.max && false)) { d.hidden = true; return; }
     d.hidden = false; d.style.transform = `translate(${Math.round(p.x)}px, ${Math.round(p.y)}px) translate(-50%, -100%)`;
     d.className = 'rl-twl ' + (t.side === RL.me ? 'mine' : 'theirs') + (RL.n3 && rlRel(t.side) === 2 ? ' gold' : '') + (t.k === 'great' ? ' great' : '') + (t.awake ? '' : ' sleep');
     const hp = Math.ceil(t.hp); if (d.dataset.hp !== String(hp)) { d.dataset.hp = String(hp); d.firstChild.textContent = hp; d.lastChild.firstChild.style.width = (t.hp / t.max * 100).toFixed(1) + '%'; }
@@ -257,19 +257,20 @@ function rlPlace(i, p) {
   $('rlResume').addEventListener('click', () => rlPauseOpen(false));
   $('rlLeave').addEventListener('click', rlQuit);
   $('rlMenu').addEventListener('click', rlQuit);
-  $('rlAgain').addEventListener('click', () => { if (RL.mode !== 'bot') return; const lvl = RL.bot.lvl; $('rlEnd').hidden = true; if (RL.n3) { RL.on = false; rl3PlayBot(lvl); return; } if (RL.draft && typeof rldBot === 'function') { rlQuit(); rldBot(lvl); return; } RL.on = false; rlPlayBot(lvl); });   // (a drafted duel: draft again)
+  $('rlAgain').addEventListener('click', () => { if (RL.mode !== 'bot') return; const lvl = RL.bot.lvl; $('rlEnd').hidden = true; if (RL.n3) { RL.on = false; rl3PlayBot(lvl); return; } if (RL.draft && typeof rldBot === 'function') { rlQuit(); rldBot(lvl); return; } RL.on = false; if (RL.fp && typeof rlfpPlayBot === 'function') { rlfpPlayBot(lvl); return; } rlPlayBot(lvl); });   // (a drafted duel: draft again)
   addEventListener('keydown', e => {
     if (state !== 'rival') return;
     if (typeof RLDR !== 'undefined' && RLDR.on) return;   // (the triple draft has the keys: src/rldraft.js)
     if (e.target && /INPUT|TEXTAREA|SELECT/.test(e.target.tagName) && e.key !== 'Escape') return;
     e.stopImmediatePropagation();
+    if (RL.fp && typeof rlfpKey === 'function' && rlfpKey(e, true)) return;   // (first person: walking, striking, picking a troop, src/rlfp.js)
     if (e.key === 'Escape') { e.preventDefault(); if (!$('rlEnd').hidden) return; if (typeof EM !== 'undefined' && EM.open) { rlEmoOpen(false); return; } if (RH.sel >= 0) { RH.sel = -1; return; } rlPauseOpen($('rlPause').hidden); return; }
     if (!$('rlPause').hidden || e.repeat) return;
     const n = '1234'.indexOf(e.key); if (n >= 0) { e.preventDefault(); rlSel(n); }
     else if ((e.key === 'q' || e.key === 'Q' || e.key === '5') && typeof rlTryAb === 'function') { e.preventDefault(); rlTryAb(); }
     if ((e.key === 'e' || e.key === 'E') && typeof rlEmoOpen === 'function') { e.preventDefault(); rlEmoOpen(); }
   }, true);
-  addEventListener('keyup', e => { if (state === 'rival') e.stopImmediatePropagation(); }, true);
+  addEventListener('keyup', e => { if (state === 'rival') { if (RL.fp && typeof rlfpKey === 'function') rlfpKey(e, false); e.stopImmediatePropagation(); } }, true);
   addEventListener('resize', () => { if (RL.on && typeof rl3dResize === 'function') rl3dResize(); });
   ui.addEventListener('contextmenu', e => e.preventDefault());
 })();

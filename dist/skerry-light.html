@@ -1830,6 +1830,42 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 .cp-m.done .cp-s { color: #9fd89a; }
 .cp-picked { font-size: 14px; line-height: 1.5; min-height: 2.6em; }
 .cp-picked b { font: 400 18px "IM Fell English SC", serif; color: #f6e2a4; }
+/* [rival] Skerry Clash first person (src/rlfp.js): the crosshair, your troop, the row to pick from, the map */
+#rlUI.fp .rl-bottom { display: none; }
+.rl-fp { position: absolute; inset: 0; pointer-events: none; z-index: 5; }
+.rl-fphurt { position: absolute; inset: 0; opacity: 0; background: radial-gradient(ellipse at center, rgba(0,0,0,0) 55%, rgba(200,20,10,0.75) 100%); }
+.rl-fpx { position: absolute; left: 50%; top: 50%; width: 22px; height: 22px; margin: -11px 0 0 -11px; display: none; }
+.rl-fp.held .rl-fpx { display: block; }
+.rl-fpx::before, .rl-fpx::after { content: ''; position: absolute; background: rgba(255,248,230,0.85); box-shadow: 0 0 3px rgba(0,0,0,0.8); }
+.rl-fpx::before { left: 10px; top: 0; width: 2px; height: 22px; } .rl-fpx::after { top: 10px; left: 0; height: 2px; width: 22px; }
+.rl-fpx i { position: absolute; inset: 5px; border: 2px solid transparent; border-radius: 50%; }
+.rl-fpx.on::before, .rl-fpx.on::after { background: #ffd070; } .rl-fpx.on i { border-color: rgba(255,120,90,0.9); }
+.rl-fptg { position: absolute; left: 50%; top: calc(50% + 22px); transform: translateX(-50%); text-align: center; padding: 3px 9px 5px; background: rgba(10,14,28,0.7); border: 1px solid rgba(255,120,90,0.5); min-width: 120px; }
+.rl-fptg b { display: block; font-size: 0.82rem; font-weight: 600; color: #ffd4c8; white-space: nowrap; }
+.rl-fptg i, .rl-fpme i, .rl-fpu i { display: block; height: 4px; margin-top: 3px; background: rgba(255,255,255,0.15); } .rl-fptg s { display: block; height: 100%; background: var(--rl-them); }
+.rl-fptg.far { opacity: 0.6; border-color: rgba(236,228,207,0.25); }
+.rl-fpme { position: absolute; left: calc(max(10px, env(safe-area-inset-left, 0px)) + 62px); bottom: max(10px, env(safe-area-inset-bottom, 0px)); display: flex; gap: 8px; align-items: center; padding: 5px 10px 5px 5px; background: rgba(10,14,28,0.78); border: 1px solid rgba(90,162,255,0.45); max-width: 46vw; }
+.rl-fpme canvas { width: 44px; height: 52px; display: block; }
+.rl-fpme b { display: block; font-family: var(--display); font-weight: 400; color: #b4d4ff; font-size: 1rem; white-space: nowrap; }
+.rl-fpme i { width: 150px; max-width: 30vw; height: 6px; } .rl-fpme s, .rl-fpu s { display: block; height: 100%; background: var(--rl-me); }
+.rl-fpme small { display: block; font-size: 0.7rem; opacity: 0.8; margin-top: 2px; }
+.rl-fppick { position: absolute; left: 50%; transform: translateX(-50%); bottom: max(10px, env(safe-area-inset-bottom, 0px)); display: flex; gap: 4px; pointer-events: auto; }
+.rl-fpu { position: relative; width: 44px; padding: 2px; background: rgba(10,14,28,0.72); border: 1px solid rgba(236,228,207,0.2); cursor: pointer; }
+.rl-fpu canvas { width: 38px; height: 44px; display: block; } .rl-fpu.sel { border-color: #ffd070; box-shadow: 0 0 8px rgba(255,200,90,0.6); }
+.rl-fpu kbd { position: absolute; top: 1px; left: 3px; font-size: 10px; color: #fff4d6; text-shadow: 0 1px 2px #000; }
+.rl-fpmap { position: absolute; right: max(8px, env(safe-area-inset-right, 0px)); top: 74px; width: 72px; height: 128px; border: 1px solid rgba(236,228,207,0.25); }
+.rl-fpnew { position: absolute; left: 50%; bottom: 74px; transform: translateX(-50%); padding: 6px 14px; background: rgba(40,60,100,0.88); border: 1px solid #ffd070; color: #fff4d6; font-size: 0.9rem; pointer-events: auto; cursor: pointer; white-space: nowrap; }
+.rl-fpwait { position: absolute; left: 50%; top: 40%; transform: translateX(-50%); padding: 8px 16px; background: rgba(10,14,28,0.78); border: 1px solid rgba(236,228,207,0.2); font-size: 0.95rem; text-align: center; max-width: 86vw; }
+.rl-fphint { position: absolute; left: 50%; top: 74px; transform: translateX(-50%); font-size: 0.72rem; opacity: 0.75; padding: 2px 8px; background: rgba(10,14,28,0.5); white-space: nowrap; transition: opacity 0.4s; }
+.rl-fphint.dim { opacity: 0.25; }
+.rl-fpstick { position: absolute; width: 100px; height: 100px; margin: -50px 0 0 -50px; border-radius: 50%; border: 2px solid rgba(236,228,207,0.35); background: rgba(10,14,28,0.25); }
+.rl-fpstick i { position: absolute; left: 30px; top: 30px; width: 40px; height: 40px; border-radius: 50%; background: rgba(236,228,207,0.45); }
+.rl-fpstrike { display: none; position: absolute; right: max(14px, env(safe-area-inset-right, 0px)); bottom: max(80px, calc(env(safe-area-inset-bottom, 0px) + 80px)); width: 84px; height: 84px; border-radius: 50%; border: 2px solid #ffd070; background: radial-gradient(circle at 50% 35%, rgba(150,60,40,0.9), rgba(70,20,14,0.9)); color: #fff4d6; font-family: var(--display); font-size: 1rem; pointer-events: auto; touch-action: none; }
+.rl-fprival { position: absolute; left: 0; top: 0; padding: 1px 7px; background: rgba(120,20,14,0.82); border: 1px solid #ff9a8a; color: #fff; font-size: 0.75rem; pointer-events: none; white-space: nowrap; z-index: 5; }
+.rl-fp.spec .rl-fpme, .rl-fp.spec .rl-fppick, .rl-fp.spec .rl-fphint, .rl-fp.spec .rl-fpstrike { display: none; }
+@media (pointer: coarse) { .rl-fp.held .rl-fpstrike { display: block; } .rl-fphint { display: none; } .rl-fpme { bottom: max(66px, calc(env(safe-area-inset-bottom, 0px) + 66px)); left: max(10px, env(safe-area-inset-left, 0px)); } }
+@media (max-width: 560px) { .rl-fpu { width: 36px; } .rl-fpu canvas { width: 30px; height: 36px; } .rl-fpme small { display: none; } .rl-fpmap { width: 54px; height: 96px; top: 96px; } }
+.rl-fp:not(.held) .rl-fphint { display: none; }
 </style>
 </head>
 <body>
@@ -2261,6 +2297,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
       <div class="btnrow">
         <button class="primary" id="rlPlay" type="button">Duel the bot</button>
         <button class="primary" id="rlDraftBot" type="button">Triple draft</button><!-- [rival] src/rldraft.js -->
+        <button class="primary" id="rlFpPlay" type="button">First person</button><!-- [rival] two bots play the cards, you take the field as your troops (src/rlfp.js) -->
         <button class="primary" id="rl3Play" type="button">Three keepers</button><!-- [rival] 1v1v1 against two bots (src/rl3.js) -->
         <button class="tool" id="rlDeckBtn" type="button">Deck</button>
       </div>
@@ -2274,7 +2311,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
         <h2 id="rlMpHead">Duel online · one against one, or three keepers</h2>
         <p class="muted" id="rlMpNote">Looking for another keeper…</p>
         <div id="rlMpOpen" hidden>
-          <div class="btnrow"><button class="tool" id="rlMpHost" type="button">Host a duel</button><button class="tool" id="rlMpHostDr" type="button">Host a triple draft</button><button class="tool" id="rlMpHost3" type="button">Host three keepers</button></div>
+          <div class="btnrow"><button class="tool" id="rlMpHost" type="button">Host a duel</button><button class="tool" id="rlMpHostDr" type="button">Host a triple draft</button><button class="tool" id="rlMpHost3" type="button">Host three keepers</button><button class="tool" id="rlMpHostFp" type="button">Host first person</button></div>
           <div class="warlobbies" id="rlLobbies"></div>
         </div>
         <div class="warlobby" id="rlLobby" hidden>
@@ -2282,6 +2319,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
           <ol class="warlobbylist" id="rlLobbyList"></ol>
           <p class="muted" id="rlLobbyMsg"></p>
           <label class="rldr-opt" id="rlMpDraftRow"><input type="checkbox" id="rlMpDraft"> Triple draft: build both decks on the spot, three cards a round</label><!-- [rival] the host chooses (src/rldraft.js) -->
+          <label class="rldr-opt" id="rlMpFpRow"><input type="checkbox" id="rlMpFp"> First person: a bot plays each side's cards, and you each take the field as your own troops</label><!-- [rival] the host chooses (src/rlfp.js) -->
           <label class="rldr-opt" id="rlMpN3Row"><input type="checkbox" id="rlMpN3"> Three keepers: every keeper for themselves, a bot in any empty seat</label><!-- [rival] the host chooses (src/rl3.js) -->
           <div class="btnrow"><button class="primary" id="rlMpStart" type="button">Light the lamps</button><button class="tool shareBtn" id="rlMpShare" type="button" data-mode="rival">Share invite</button><button class="tool" id="rlMpLeave" type="button">Leave</button></div>
         </div>
@@ -2289,6 +2327,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
       <details class="howto">
         <summary>How to play</summary>
         <p><b>Oil.</b> Every card costs lamp oil, shown in the drop on its corner. You start with 5 and fill by one every 2.8 seconds, up to 10. Oil you can't hold is wasted, so spend before you're full.</p>
+        <p><b>First person.</b> A bot plays the cards for each side, and you take the field as any troop of yours it sends: walk it (WASD, or the stick), look round (the mouse once you click, or drag on the right), and strike what's in front of you (Space, a click, or Strike). Tab or the row along the bottom swaps to another of yours; F takes the newest. Online, your rival does the same with the other bot. It isn't rated.</p>
         <p><b>Three keepers.</b> Every keeper for themselves on one round skerry cut three ways by channels, a causeway to each neighbour. The last Great Light burning wins; at time, the most towers standing. Against two bots, or online with up to three (a bot takes any empty seat). It isn't rated.</p>
         <p><b>Triple draft.</b> No deck of your own: eight rounds, three cards a round, take one and the other two are gone. Each keeper gets different cards, and you can see your rival's three each round, but not which they take. Online each pick has 15 seconds.</p>
         <p><b>Your hand.</b> You hold four cards from your deck of eight, and the next one waits beside them. Play a card and it goes to the back of the queue, so every card comes round again in turn.</p>
@@ -2912,7 +2951,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 // ---- src/config.js ----
 'use strict';
 // The game's version, shown at the top of the main menu. Bump it by one with every change pushed to main.
-var VERSION = 223;
+var VERSION = 224;
 // Skerry Light: tuning, asset paths and lore.
 // World units are metres. The lighthouse stands at the origin on the shoreline (y = 0);
 // north (+y) is open sea. Bearings: 0 = north, positive = east.
@@ -3087,6 +3126,14 @@ document.addEventListener('visibilitychange', () => {
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 224, date: '2026-11-18', title: "Skerry Clash: First person", New: [
+    "Skerry Clash: new First person mode. A bot plays the cards for each side, and you take the field as any troop yours sends: walk it, look round and strike what's in front of you, in first person.",
+    "Skerry Clash: swap to any of your troops on the field at any time from the row along the bottom (1 to 9, or Tab). When your bot sends a new one, press F to take it. If yours falls, you take the newest straight away.",
+    "Skerry Clash: First person online: host it from the lobby (Host first person, or tick First person). Your rival gets the other bot and does the same, and you can see which troop they're holding.",
+    "Skerry Clash: First person works with mouse and keyboard, a controller (sticks to walk and look, RT to strike, LB/RB to swap) and touch (a stick on the left, drag on the right to look, and a Strike button). A small map shows the race and where you are.",
+  ], Changes: [
+    "Skerry Clash: in First person, the troop you hold walks a bit faster than it would on its own. First person matches give crates but aren't rated.",
+  ] },
   { v: 223, date: '2026-11-17', title: "Skerry Clash rating follows your username", Changes: [
     "Skerry Clash: your rating (MMR) now belongs to your username alone. Play under the same name on any device and every win or loss moves the same rating, with no more \"username taken\" for a name rated on another save.",
     "Skerry Clash: a device that has never played under your name shows that name's real rating as soon as you type it in, instead of starting from 1000.",
@@ -73456,6 +73503,8 @@ const RL_DEFAULT_DECK = ['deckhand', 'shorecrabs', 'harpooner', 'gulls', 'diver'
 // FX champ { c, x, y, side, r } as one is used. Snapshot: ch [[card, unit, cd]...], and flag 8192 on a unit while abT.
 // For three (v208, src/rl3.js): RL.n3 set, three of everything, and the parts of the rules that depend on the ground
 // (rlCanPlace, rlWay, rlWater, rlDry, rlDrag, rlLaneTower, the towers falling and the end) handed to rl3* there.
+// First person (v224, src/rlfp.js): RL.fp, a bot plays each side's cards and each keeper holds one of their own troops
+// (RL.fpc[side]); rlUnit hands a held troop to rlfpUnit, and the snapshot carries fp, the troop each side holds.
 // Tests: rlDebugSpeed(x) runs the clock x times as fast; rlDebugBots(on) lets a second bot play side 0 as well.
 //
 // For the view (what src/rl3d.js and the sound may key off, on the host and, through rlSnap/rlApply, the guest; the
@@ -73520,13 +73569,14 @@ function rlStart(o) {
     oil: SS.map(() => RLC.OIL0), names: SS.map(i => String((o.names && o.names[i]) || (i ? 'Rival' : 'You')).slice(0, 16)), skins: SS.map(i => (o.skins && o.skins[i]) || ''),
     decks: SS.map(i => rlDeckOk(o.decks && o.decks[i])), U: [], P: [], Z: [], FX: [], crowns: SS.map(() => 0), win: -1, bot: { lvl: o.lvl || 'normal' }, nid: 1, clk: 0, cnt: RLC.COUNT, acc: 0,
     seed, rng: rlRng(seed), draft: !!o.draft, pend: null, ch: SS.map(() => rlChNew()), recorded: false, lastSnap: 0, snapDur: 90, both: RL.both || false,
-    n3, alive: SS.map(() => 1), outs: [], bots: n3 ? (Array.isArray(o.bots) ? o.bots.filter(s => s >= 0 && s < 3) : o.mode === 'net' ? [] : [1, 2]) : [] });
+    fp: !n3 && !!o.fp, fpc: [null, null], fpU: null, n3, alive: SS.map(() => 1), outs: [], bots: n3 ? (Array.isArray(o.bots) ? o.bots.filter(s => s >= 0 && s < 3) : o.mode === 'net' ? [] : [1, 2]) : [] });
   RL.hand = SS.map(() => []); RL.next = SS.map(() => ''); RL.queue = SS.map(() => []);
   for (const s of SS) { const d = RL.decks[s].slice(); for (let i = d.length - 1; i > 0; i--) { const j = (RL.rng() * (i + 1)) | 0; [d[i], d[j]] = [d[j], d[i]]; } RL.hand[s] = d.slice(0, 4); RL.next[s] = d[4]; RL.queue[s] = d.slice(5); }
   RL.T = n3 ? rl3Towers() : [];
   if (!n3) for (const s of [0, 1]) { const Y = y => s ? RLC.H - y : y; RL.T.push(rlTower(s, 'great', -1, 9, Y(3.5)), rlTower(s, 'lamp', 0, RLC.LX[0], Y(7)), rlTower(s, 'lamp', 1, RLC.LX[1], Y(7))); }
   if (typeof rlBotReset === 'function') rlBotReset();
   rlEnter();
+  if (typeof rlfpReset === 'function') rlfpReset();
   rlFx('go', { x: 9, y: 16, side: 0 });
 }
 // each side's champion: c its card while it's on the field, u its unit's id, cd the seconds before its ability is ready
@@ -73745,7 +73795,7 @@ function rlTick() {
   if (!RL.dbl && (RL.ot || RL.left <= RLC.DBL)) { RL.dbl = true; rlFx('dbl', { x: 9, y: 16, side: 0 }); }
   for (let s = 0; s < RL.oil.length; s++) if (!RL.n3 || RL.alive[s]) RL.oil[s] = Math.min(RLC.MAXOIL, RL.oil[s] + dt / RLC.OILT * (RL.dbl ? 2 : 1));
   if (RL.n3) { for (const s of RL.bots) rl3BotTick(dt, s); if (RL.both) rl3BotTick(dt, RL.me); }
-  else if (typeof rlBotTick === 'function') { if (RL.mode === 'bot') rlBotTick(dt, 1); if (RL.both) rlBotTick(dt, 0); }
+  else if (typeof rlBotTick === 'function') { if (RL.fp) { rlBotTick(dt, 0); rlBotTick(dt, 1); } else { if (RL.mode === 'bot') rlBotTick(dt, 1); if (RL.both) rlBotTick(dt, 0); } }   // (first person: a bot plays each side's cards, src/rlfp.js)
   for (const u of RL.U) { u.px = u.x; u.py = u.y; }
   RL.by = new Map(); for (const e of RL.T) RL.by.set(e.id, e); for (const u of RL.U) RL.by.set(u.id, u);
   rlZones(dt);
@@ -73905,6 +73955,7 @@ function rlUnit(u, dt) {
   // how fast it moves (k, and half again in tar) and strikes (k, and 30% faster rallied)
   const k = (u.slow > 0 ? 0.65 : 1) * (u.fog ? 0.55 : 1) * (u.hs ? 1.4 : 1);
   if (u.cd > 0) u.cd -= dt * k * (u.ral ? 1.3 : 1) * (u.abT > 0 && C.champ && C.champ.fast ? C.champ.fast : 1);
+  if (RL.fp && typeof rlfpUnit === 'function' && rlfpUnit(u, C, dt, k)) return;   // (a troop a keeper holds in first person, src/rlfp.js)
   if (C.ab === 'heal') { rlHealer(u, C, dt, k); return; }
   // the target: kept while it's being struck and still in reach; else looked for again now and then
   let T = u.tg ? RL.by.get(u.tg) : null;
@@ -74101,7 +74152,7 @@ function rlEnd(win, o) {
   RL.ph = 'over'; RL.win = win; RL.endAt = RL.clk;
   if (RL.n3) { rl3End(win); return; }
   if (!rlIsGuest()) rlFx('end', { x: 9, y: 16, side: win === 2 ? 0 : win, r: win });
-  const me = RL.me, rec = { win: win === me, draw: win === 2, crowns: RL.crowns[me], lost: RL.crowns[1 - me], bot: RL.mode === 'bot', lvl: RL.bot.lvl };
+  const me = RL.me, rec = { win: win === me, draw: win === 2, crowns: RL.crowns[me], lost: RL.crowns[1 - me], bot: RL.mode === 'bot', lvl: RL.bot.lvl, fp: !!RL.fp };
   if (!RL.recorded && !(o && o.norec) && !(RL.net && RL.net.gone) && !rlIsSpec() && typeof rlRecord === 'function') { RL.recorded = true; try { rlRecord(rec); } catch (e) { console.error(e); } }
   rlSnd(win === 2 ? 'draw' : win === me || rlIsSpec() ? 'win' : 'lose');
   if (typeof rlHudEnd === 'function') setTimeout(() => { if (RL.on && RL.ph === 'over') rlHudEnd(); }, 1600);
@@ -74125,7 +74176,7 @@ function rlSnap() {
   // (the extra points of a leap or a chain, in tenths)
   const fx = f => f.k === 'leap' ? [[rlQ(f.tx), rlQ(f.ty)]] : f.k === 'chain' ? [f.pts.map(q => [rlQ(q[0]), rlQ(q[1])])] : [];
   return {
-    ...(RL.n3 ? { n3: 1, al: RL.alive, ou: RL.outs } : {}),
+    ...(RL.n3 ? { n3: 1, al: RL.alive, ou: RL.outs } : {}), ...(RL.fp ? { fp: [0, 1].map(s => typeof rlfpHeld === 'function' ? rlfpHeld(s) : 0) } : {}),
     v: 1, ph: RL.ph, k: rlQ(RL.clk), t: rlQ(RL.t), l: rlQ(RL.left), f: (RL.ot ? 1 : 0) | (RL.dbl ? 2 : 0), cn: rlQ(RL.cnt), o: RL.oil.map(rlQ), h: RL.hand, n: RL.next,
     ch: RL.ch.map(h => [rlCi(h.c), h.u | 0, rlQ(h.cd)]), cr: RL.crowns, w: RL.win, nm: RL.names, sk: RL.skins, lv: RL.bot.lvl,
     T: RL.T.map(t => [Math.round(Math.max(0, t.hp)), (t.awake ? 1 : 0) | (t.down ? 2 : 0), t.tg | 0, t.shotAt != null ? rlQ(RL.clk - t.shotAt) : 99]),
@@ -74144,6 +74195,7 @@ function rlApply(s) {
   // (the match is for three, or isn't: the towers and the arrays as the host has them)
   if (!!s.n3 !== !!RL.n3) { RL.n3 = !!s.n3; const SS = RL.n3 ? [0, 1, 2] : [0, 1]; RL.T = RL.n3 ? rl3Towers() : RL.T; RL.alive = SS.map(() => 1); RL.outs = []; RL.ch = SS.map(() => rlChNew()); RL.me = Math.min(RL.me, SS.length - 1); if (typeof rl3dReset === 'function') rl3dReset(); if (typeof rlHudReset === 'function') rlHudReset(); }
   if (RL.n3) { if (Array.isArray(s.al)) RL.alive = s.al.slice(0, 3); if (Array.isArray(s.ou)) RL.outs = s.ou.slice(0, 3); }
+  RL.fp = !!s.fp; RL.fpU = Array.isArray(s.fp) ? s.fp.slice(0, 2) : null;
   const wasPh = RL.ph, d = v => v / 10;
   RL.ph = s.ph; RL.clk = d(s.k); RL.t = d(s.t); RL.left = d(s.l); RL.ot = !!(s.f & 1); RL.dbl = !!(s.f & 2); RL.cnt = d(s.cn); RL.oil = s.o.map(d);
   if (Array.isArray(s.ch)) RL.ch = s.ch.map(e => ({ c: rlCo(e[0]), u: e[1], cd: d(e[2]) }));
@@ -74184,6 +74236,7 @@ function rlFrame(dt) {
   if (!RL.on) { if (RL.ph === 'draft' && typeof rl3dDraw === 'function') { RL.clk += dt; rl3dDraw(dt); } return; }   // (the triple draft, over the empty arena: src/rldraft.js)
   const paused = !$('rlPause').hidden && RL.mode === 'bot';
   if (RL.mode === 'net' && typeof rlnTick === 'function') { try { rlnTick(dt); } catch (e) { console.error(e); } }
+  if (RL.fp && typeof rlfpFrame === 'function') { try { rlfpFrame(paused ? 0 : dt); } catch (e) { console.error(e); } }
   if (!paused) {
     if (!rlIsGuest()) { RL.acc += dt * (RL.speed || 1); let n = 0; while (RL.acc >= RLC.DT && n++ < 40) { RL.acc -= RLC.DT; rlTick(); } if (n >= 40) RL.acc = 0; }
     else {
@@ -74216,7 +74269,7 @@ function rlEnter() {
 }
 function rlExit() {
   RL.on = false; if (RL.ph !== 'off') RL.ph = 'off';
-  $('rlUI').hidden = true; document.body.classList.remove('rlon');
+  $('rlUI').hidden = true; document.body.classList.remove('rlon'); $('rlUI').classList.remove('fp'); if (typeof rlfpUnlock === 'function') rlfpUnlock();
   if (typeof rl3dReset === 'function') rl3dReset(true);
   state = 'title'; toTitle();
   if (typeof rlnBackToLobby === 'function') { try { rlnBackToLobby(); } catch (e) {} }
@@ -74231,7 +74284,7 @@ function rlSpecFlip() {
 }
 function rlPauseOpen(on) {
   if (!RL.on) return;
-  $('rlPause').hidden = !on;
+  $('rlPause').hidden = !on; if (on && typeof rlfpUnlock === 'function') rlfpUnlock();
   if (on) { const s = $('rlPauseSub'); if (s) s.textContent = RL.mode === 'bot' ? 'The match waits while this is open.' : rlIsSpec() ? 'You’re watching: the duel goes on without you.' : 'Online, the match goes on while this is open.'; const lv = $('rlLeave'); if (lv) lv.textContent = rlIsSpec() ? 'Stop watching' : 'Leave the match'; setTimeout(() => $('rlResume').focus({ preventScroll: true }), 30); }
 }
 
@@ -74406,7 +74459,7 @@ const rlBotNoFight = C => C.ab === 'heal' || C.ab === 'oil' || C.ab === 'mend' |
 function rlBotTick(dt, side) {
   side = side === 0 ? 0 : 1;
   if (!RLB.S[side]) rlBotReset();
-  const B = RLB.S[side], L = RLB.lv[side === RL.me && RL.both ? 'hard' : RL.bot.lvl] || RLB.lv.normal;
+  const B = RLB.S[side], L = RLB.lv[RL.fp ? (RL.mode === 'bot' && side !== RL.me ? RL.bot.lvl : 'normal') : side === RL.me && RL.both ? 'hard' : RL.bot.lvl] || RLB.lv.normal;   // (first person, src/rlfp.js: your own keeper's bot plays at Normal)
   B.t -= dt; if (B.t > 0) return; B.t = L.think * (0.8 + Math.random() * 0.4);
   if (typeof rlBotChamp === 'function' && rlBotChamp(side, L)) return;   // (its champion's ability, src/rlchamp.js)
   const fy = y => side ? RLC.H - y : y, oil = RL.oil[side], hand = RL.hand[side].map(c => RL_CARD[c]).filter(Boolean), can = C => C && C.cost <= oil + 1e-6;
@@ -75188,7 +75241,7 @@ function rl3dPick(cx, cy) {
   return { x: o.x + d.x * k + 9, y: 16 - (o.z + d.z * k) };
 }
 // arena tiles to the screen (for the HUD's labels over the towers)
-function rl3dProject(x, y, h) { if (!RL3.ok) return null; const v = rv(x, y, h).project(RL3.cam); return { x: (v.x + 1) / 2 * innerWidth, y: (1 - v.y) / 2 * innerHeight, on: v.z < 1 }; }
+function rl3dProject(x, y, h) { if (!RL3.ok) return null; const w = rv(x, y, h), front = w.clone().applyMatrix4(RL3.cam.matrixWorldInverse).z < 0, v = w.project(RL3.cam); return { x: (v.x + 1) / 2 * innerWidth, y: (1 - v.y) / 2 * innerHeight, on: v.z < 1 && front }; }   // (on: in front of the camera, which matters in first person)
 
 // ---------- the towers ----------
 function rl3dTowerPlain(kind, side) {
@@ -75797,10 +75850,10 @@ function rl3dZone(on) {
 function rl3dDraw(dt) {
   if (!RL3.ok || !(RL.on || RL.ph === 'draft')) return;   // (and the empty arena behind the triple draft)
   RL3.t += dt; const t = RL3.t, S = RL3.scene;
-  rl3dFit();
+  if (!(RL.fp && typeof rlfpCam === 'function' && rlfpCam(dt))) rl3dFit();   // (first person: the camera at your troop's eyes, src/rlfp.js)
   RL3.seaU.t.value = t; RL3.seaU.cp.value.copy(RL3.cam.position);
   rl3dFx();
-  const meCol = RL_MINE, thCol = RL_THEIRS;
+  const meCol = RL_MINE, thCol = RL_THEIRS, fpHide = RL.fp && typeof rlfpHidden === 'function' ? rlfpHidden() : 0;
   // the units: new ones built, gone ones left to fall, the rest placed and moving
   const live = new Set();
   for (const u of RL.U) {
@@ -75810,7 +75863,7 @@ function rl3dDraw(dt) {
     if (u.dep > 0) H.rise = Math.min(1, H.rise + dt * 0.9); else H.rise = Math.min(1, H.rise + dt * 3);
     const rise = H.rise, k = (0.35 + 0.65 * rise) * 1.55;
     H.g.position.copy(rv(x, y, RL_G0 + fly * (H.air ? rise : 1) - (1 - rise) * (H.air ? 0 : 0.35)));
-    H.m.rotation.y = Math.PI - (u.face || 0); H.g.scale.setScalar(k);
+    H.m.rotation.y = Math.PI - (u.face || 0); H.g.scale.setScalar(k); H.g.visible = u.id !== fpHide && !(fpHide && H.g.position.distanceToSquared(RL3.cam.position) < 0.8);   // (first person: nothing drawn right in your eyes)
     H.sh.position.copy(rv(x, y, RL_G0 + 0.015)); H.sh.scale.setScalar(H.sz * (H.air ? 1.1 : 1.5)); H.sh.material.opacity = H.air ? 0.5 : 1;
     // walk, strike, idle
     const P = H.P, walk = u.st === 'walk', hit = u.st === 'hit', spd = (C.spd || 1) * (u.slow || u.fog ? 0.6 : 1) * (u.chg ? 2 : 1);
@@ -75837,7 +75890,7 @@ function rl3dDraw(dt) {
     if (C.champ && typeof rlChampAnim === 'function') rlChampAnim(u, H, x, y, t, dt, walk, hit, pulse);   // (src/rlchamp.js)
     // its health, once it's hurt
     if (u.hp < H.hpLast - 0.5) H.flash = 0.12; H.hpLast = u.hp;
-    const showBar = u.hp < u.max - 0.5 || u.bld;
+    const showBar = (u.hp < u.max - 0.5 || u.bld) && u.id !== fpHide;
     if (showBar && !H.bar) H.bar = rl3dBar(Math.max(0.6, H.sz * 1.6), 0.1);
     if (H.bar) { const top = (H.air ? 3.4 : (u.bld ? 1.9 : 1.7) * Math.max(0.8, H.sz * 1.6)) + RL_G0; rl3dBarSet(H.bar, rv(x, y, top), u.hp / u.max, RL.n3 ? rlSideHex(u.side) : u.side === RL.me ? meCol : thCol, showBar); }
   }
@@ -76251,7 +76304,7 @@ function rlHudTowers(force) {
   if (force || box.children.length !== RL.T.length) { box.textContent = ''; for (const t of RL.T) { const d = document.createElement('div'); d.className = 'rl-twl'; d.innerHTML = '<b></b><i><s></s></i>'; box.append(d); } }
   RL.T.forEach((t, i) => {
     const d = box.children[i], p = typeof rl3dProject === 'function' ? rl3dProject(t.x, t.y, RL_G0 + (t.k === 'great' ? 6.4 : 4.7)) : null;
-    if (!p || t.hp <= 0 || (t.k === 'great' && !t.awake && t.hp >= t.max && false)) { d.hidden = true; return; }
+    if (!p || t.hp <= 0 || (RL.fp && !p.on) || (t.k === 'great' && !t.awake && t.hp >= t.max && false)) { d.hidden = true; return; }
     d.hidden = false; d.style.transform = `translate(${Math.round(p.x)}px, ${Math.round(p.y)}px) translate(-50%, -100%)`;
     d.className = 'rl-twl ' + (t.side === RL.me ? 'mine' : 'theirs') + (RL.n3 && rlRel(t.side) === 2 ? ' gold' : '') + (t.k === 'great' ? ' great' : '') + (t.awake ? '' : ' sleep');
     const hp = Math.ceil(t.hp); if (d.dataset.hp !== String(hp)) { d.dataset.hp = String(hp); d.firstChild.textContent = hp; d.lastChild.firstChild.style.width = (t.hp / t.max * 100).toFixed(1) + '%'; }
@@ -76434,22 +76487,348 @@ function rlPlace(i, p) {
   $('rlResume').addEventListener('click', () => rlPauseOpen(false));
   $('rlLeave').addEventListener('click', rlQuit);
   $('rlMenu').addEventListener('click', rlQuit);
-  $('rlAgain').addEventListener('click', () => { if (RL.mode !== 'bot') return; const lvl = RL.bot.lvl; $('rlEnd').hidden = true; if (RL.n3) { RL.on = false; rl3PlayBot(lvl); return; } if (RL.draft && typeof rldBot === 'function') { rlQuit(); rldBot(lvl); return; } RL.on = false; rlPlayBot(lvl); });   // (a drafted duel: draft again)
+  $('rlAgain').addEventListener('click', () => { if (RL.mode !== 'bot') return; const lvl = RL.bot.lvl; $('rlEnd').hidden = true; if (RL.n3) { RL.on = false; rl3PlayBot(lvl); return; } if (RL.draft && typeof rldBot === 'function') { rlQuit(); rldBot(lvl); return; } RL.on = false; if (RL.fp && typeof rlfpPlayBot === 'function') { rlfpPlayBot(lvl); return; } rlPlayBot(lvl); });   // (a drafted duel: draft again)
   addEventListener('keydown', e => {
     if (state !== 'rival') return;
     if (typeof RLDR !== 'undefined' && RLDR.on) return;   // (the triple draft has the keys: src/rldraft.js)
     if (e.target && /INPUT|TEXTAREA|SELECT/.test(e.target.tagName) && e.key !== 'Escape') return;
     e.stopImmediatePropagation();
+    if (RL.fp && typeof rlfpKey === 'function' && rlfpKey(e, true)) return;   // (first person: walking, striking, picking a troop, src/rlfp.js)
     if (e.key === 'Escape') { e.preventDefault(); if (!$('rlEnd').hidden) return; if (typeof EM !== 'undefined' && EM.open) { rlEmoOpen(false); return; } if (RH.sel >= 0) { RH.sel = -1; return; } rlPauseOpen($('rlPause').hidden); return; }
     if (!$('rlPause').hidden || e.repeat) return;
     const n = '1234'.indexOf(e.key); if (n >= 0) { e.preventDefault(); rlSel(n); }
     else if ((e.key === 'q' || e.key === 'Q' || e.key === '5') && typeof rlTryAb === 'function') { e.preventDefault(); rlTryAb(); }
     if ((e.key === 'e' || e.key === 'E') && typeof rlEmoOpen === 'function') { e.preventDefault(); rlEmoOpen(); }
   }, true);
-  addEventListener('keyup', e => { if (state === 'rival') e.stopImmediatePropagation(); }, true);
+  addEventListener('keyup', e => { if (state === 'rival') { if (RL.fp && typeof rlfpKey === 'function') rlfpKey(e, false); e.stopImmediatePropagation(); } }, true);
   addEventListener('resize', () => { if (RL.on && typeof rl3dResize === 'function') rl3dResize(); });
   ui.addEventListener('contextmenu', e => e.preventDefault());
 })();
+
+// ---- src/rlfp.js ----
+'use strict';
+// Skerry Clash, first person (v224): a duel where two bots play the cards and each keeper takes the field as one of
+// their own troops. Your side's bot (src/rlbot.js rlBotTick, run for both sides while RL.fp) spends the oil and sets
+// the cards down; whenever a troop of yours is on the field you may take it over and fight as it, in first person,
+// and swap to any other of yours as more come down. Alone, the other side is the bot at the level on the card; online,
+// the other keeper has the other bot and does the same (the host's screen runs both bots, as it runs the match).
+//
+// The rules side (on the host, or alone): RL.fpc[side] is what that side's keeper is doing with the troop they hold,
+// { u its unit's id, mx my the way they're walking (arena tiles, length at most 1), f the way they face (as u.face:
+// atan2(dx, dy)), a 1 while they strike, at the clock when it was last heard }. rlUnit (src/rl.js) hands a held unit
+// to rlfpUnit, which walks it by mx my (the race and the towers still in the way, through rlSeparate), faces it by f,
+// 1.6 times its own pace (RLFP_PACE), and strikes, on its own rhythm, whatever is in reach in front of it (rlfpAim: the nearest in a cone round f, wider
+// for the ones that strike up close). A held troop that isn't heard from for four seconds goes back to its own wits.
+// Buildings can't be held, and spells are cast by the bot as ever. Q uses your champion's ability, as in a duel.
+// The snapshot carries fp [u0, u1], the troop each side holds, so the guest and the watchers see who is where (a name
+// plate over the rival's). The guest's input goes to the host as fi [u, mx*100, my*100, f*100, a] in its duel
+// presence (src/rlnet.js), at most about every 50 to 100 ms while it changes; the host puts it in RL.fpc[1].
+//
+// This screen's side (RLFP): which troop you hold (u), your view (yaw, pitch: the view is your own, so it turns at
+// once even on the guest), the keys, the mouse (pointer lock on the canvas), a controller (left stick walk, right
+// stick look, RT or A strike, LB/RB the previous or next troop, Y the newest, B let go), and on a touch screen a stick
+// on the left, a look pad on the right and a Strike button. The view: rlfpCam (called by src/rl3d.js rl3dDraw)
+// puts the camera at the held troop's eyes and hides its model; with nothing held the board shows as in a duel. The
+// HUD (#rlFp, built here): a crosshair, what you're aiming at and its strength, your troop's card and health, the
+// row of your troops on the field to pick from (1 to 9, Tab for the next), a word when your bot sends a new one
+// (F takes it), a map of the race with you on it, and red at the edges when you're hurt.
+
+var RLFP = { u: 0, yaw: 0, pitch: -0.12, keys: {}, atk: false, mAtk: false, tAtk: false, lock: false, autoT: 0, free: false, seenU: 0, offer: 0, offerT: 0, netK: '', eyeFor: 0, eye: 1.3, camOn: false,
+  hpLast: 0, hurt: 0, bob: 0, pickK: '', stick: null, look: null, padPrev: [], tgK: '', meK: '', ui: false, said: 0 };
+const RLFP_STALE = 4;   // seconds without a word before a held troop goes back to its own wits
+const RLFP_PACE = 1.6;  // a held troop walks this much quicker than on its own (the duel's pace is slow for first person)
+
+// ---------- starting ----------
+function rlfpPlayBot(lvl) {
+  lvl = lvl || ($('rlBotLvl') && $('rlBotLvl').value) || 'normal'; if (!RL_BOTNM[lvl]) lvl = 'normal';
+  const mine = typeof rlDeckMine === 'function' ? rlDeckMine() : RL_DEFAULT_DECK, sk = typeof rlSkinMine === 'function' ? rlSkinMine() : '';
+  rlStart({ mode: 'bot', me: 0, fp: true, names: [rlMyName(), RL_BOTNM[lvl]], decks: [mine, typeof rlBotDeck === 'function' ? rlBotDeck(lvl) : RL_DEFAULT_DECK], skins: [sk || '', ''], lvl });
+}
+function rlfpReset() {
+  Object.assign(RLFP, { u: 0, yaw: RL.me ? Math.PI : 0, pitch: -0.12, keys: {}, atk: false, mAtk: false, tAtk: false, autoT: 0, free: false, seenU: RL.nid, offer: 0, offerT: 0, netK: '', eyeFor: 0, camOn: false, hpLast: 0, hurt: 0, pickK: '', tgK: '', meK: '', said: 0 });
+  rlfpUiBuild();
+  const el = $('rlFp'); if (el) el.hidden = !RL.fp;
+  $('rlUI').classList.toggle('fp', !!RL.fp);
+  if (!RL.fp) rlfpUnlock();
+}
+
+// ---------- the rules (host or alone) ----------
+// what a keeper says they're doing with the troop they hold (checked: their own, standing, not a building)
+function rlfpCtl(side, uid, mx, my, f, a) {
+  if (!RL.fp || !RL.fpc || !(side === 0 || side === 1)) return;
+  uid = uid | 0; const u = uid ? RL.U.find(q => q.id === uid) : null;
+  if (!u || u.side !== side || u.bld || u.hp <= 0) { RL.fpc[side] = null; return; }
+  mx = +mx || 0; my = +my || 0; const m = Math.hypot(mx, my); if (m > 1) { mx /= m; my /= m; }
+  RL.fpc[side] = { u: uid, mx, my, f: isFinite(+f) ? +f : u.face, a: a ? 1 : 0, at: RL.clk };
+}
+// the held unit's id for a side ('' on the guest comes from the snapshot)
+function rlfpHeld(side) { if (!RL.fp) return 0; if (RL.fpU && rlIsGuest()) return RL.fpU[side] | 0; const c = RL.fpc && RL.fpc[side]; return c && RL.clk - c.at <= RLFP_STALE ? c.u : 0; }
+// what's in front of u to strike, facing f: { T, reach (it can be struck now), gap }
+function rlfpAim(u, C, f) {
+  if (!u || !C) return null;
+  const near = C.rng < 1.2, cone = near ? 1.05 : 0.42, lim = C.rng + (near ? 0.45 : 0.25), leap = C.ab === 'leap' && !(u.lpcd > 0) ? (C.lp || 3) : 0;
+  let best = null, bs = 1e9;
+  const look = (e, r) => {
+    const d = rlD(u, e), gap = d - r - u.size * 0.6; if (gap > Math.max(lim, leap)) return;
+    if (C.minr && d - r < C.minr) return;
+    let da = Math.atan2(e.x - u.x, e.y - u.y) - f; da = Math.abs(Math.atan2(Math.sin(da), Math.cos(da)));
+    if (da > cone && d > r + u.size + 0.2) return;
+    const s = da * 1.6 + Math.max(0, gap) * 0.12 + (e.k ? 0.05 : 0); if (s < bs) { bs = s; best = { T: e, reach: gap <= lim, gap }; }
+  };
+  for (const e of RL.U) if (rlCanHit(C.tg, u.side, e) && !(e.dep > 0)) look(e, e.size || 0.4);
+  for (const t of RL.T) if (t.hp > 0 && t.side !== u.side && !(RL.n3)) look(t, t.r);
+  return best;
+}
+// a held unit's tick (from rlUnit, after its slows and stuns): true when it was held and has been moved here
+function rlfpUnit(u, C, dt, k) {
+  if (!RL.fp || u.bld || !RL.fpc) return false;
+  const c = RL.fpc[u.side]; if (!c || c.u !== u.id || RL.clk - c.at > RLFP_STALE) return false;
+  // (the Surgeon mends as it always does, wherever it's walked)
+  if (C.ab === 'heal') {
+    u.hlT -= dt;
+    if (u.hlT <= 0) { u.hlT = 1; let n = 0; for (const q of RL.U) if (q !== u && q.side === u.side && !q.bld && q.hp > 0 && q.dep <= 0 && rlD(u, q) <= C.rng + q.size * 0.5) { if (q.hp < q.max) n++; q.hp = Math.min(q.max, q.hp + (C.hl || 0)); q.mendT = 1.1; } if (n) rlFx('heal', { c: u.c, x: u.x, y: u.y, side: u.side, r: C.rng }); }
+  }
+  u.face = c.f; u.rt = 0; let struck = false;
+  if (c.a && C.dmg && C.ab !== 'heal') {
+    const A = rlfpAim(u, C, c.f), T = A && A.T;
+    if (T) {
+      u.tg = T.id;
+      if (!A.reach && C.ab === 'leap' && !(u.lpcd > 0) && rlDry(u.x, u.y, T.x, T.y)) {
+        // (the Ship's Cat: a pounce onto it, biting as it lands)
+        const d = rlD(u, T) || 1e-3, back = rlR(T) + u.size * 0.6 + C.rng * 0.4, fx = u.x, fy = u.y;
+        u.px = u.x; u.py = u.y; u.x = T.x - (T.x - u.x) / d * back; u.y = T.y - (T.y - u.y) / d * back; rlWater(u);
+        rlFx('leap', { c: u.c, x: fx, y: fy, tx: u.x, ty: u.y, side: u.side }); u.lpcd = 3; u.st = 'hit'; rlStrike(u, T, C); u.cd = C.hit; return true;
+      }
+      if (A.reach) {
+        struck = true; u.st = 'hit';
+        if (C.ab === 'ramp') { u.rpT += dt; u.rp = u.rpT >= 4 ? 2 : u.rpT >= 2 ? 1 : 0; }
+        if (u.cd <= 0) { rlStrike(u, T, C); u.cd = C.hit; }
+      }
+    }
+  }
+  if (!struck) { u.rpT = 0; u.rp = 0; if (!c.a) u.tg = 0; }
+  const m = Math.hypot(c.mx, c.my);
+  if (m > 0.05) {
+    if (C.ab === 'charge' && !u.chg && u.run >= 2) { u.chg = 1; rlFx('flash', { c: u.c, x: u.x, y: u.y, side: u.side, r: 0 }); }
+    const sp = C.spd * RLFP_PACE * k * (u.chg ? 2 : 1) * (u.tar ? 0.5 : 1) * (struck ? 0.6 : 1), step = sp * dt;
+    u.x += c.mx * step; u.y += c.my * step; u.run += step * m;
+    if (!struck) u.st = 'walk';
+  } else { u.run = 0; u.chg = 0; if (!struck) u.st = 'idle'; }
+  return true;
+}
+
+// ---------- this screen ----------
+const rlfpMine = () => RL.U.filter(u => u.side === RL.me && !u.bld && u.hp > 0);
+function rlfpUnitMine() { if (!RLFP.u) return null; const u = RL.U.find(q => q.id === RLFP.u); return u && u.hp > 0 && u.side === RL.me ? u : null; }
+function rlfpTake(u) {
+  if (!u || rlIsSpec()) return;
+  if (RLFP.u !== u.id) { RLFP.yaw = isFinite(u.face) ? u.face : (RL.me ? Math.PI : 0); RLFP.pitch = u.air ? -0.32 : -0.12; RLFP.hpLast = u.hp; RLFP.eyeFor = 0; }
+  RLFP.u = u.id; RLFP.free = false; RLFP.offer = 0; RLFP.hurt = 0;
+  if (typeof rlHudSay === 'function') { const C = RL_CARD[u.c] || {}; rlHudSay(C.cnt > 1 ? `You are one of the ${C.n}` : `You are the ${C.n || 'troop'}`, 1.4); }
+}
+function rlfpLetGo() { RLFP.u = 0; RLFP.free = true; RLFP.atk = false; rlfpUnlock(); }
+function rlfpCycle(d) { const L = rlfpMine(); if (!L.length) return; let i = L.findIndex(u => u.id === RLFP.u); i = i < 0 ? (d > 0 ? 0 : L.length - 1) : (i + d + L.length) % L.length; rlfpTake(L[i]); }
+function rlfpNewest() { const L = rlfpMine(); return L.length ? L[L.length - 1] : null; }
+function rlfpUnlock() { try { if (document.pointerLockElement === $('rlCv')) document.exitPointerLock(); } catch (e) {} }
+// keys (from src/rlhud.js's own key handler, so nothing else hears them): true when taken
+function rlfpKey(e, down) {
+  if (!RL.on || !RL.fp || rlIsSpec()) return false;
+  const k = e.key, K = k.length === 1 ? k.toLowerCase() : k;
+  if (K === 'Escape') { if (down) { RLFP.keys = {}; RLFP.atk = false; } return false; }
+  if (!$('rlPause').hidden) return false;
+  const move = ['w', 'a', 's', 'd', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' ', 'Shift'];
+  if (move.includes(K)) { e.preventDefault(); RLFP.keys[K] = down; if (K === ' ') RLFP.atk = down; return true; }
+  if (!down || e.repeat) return true;
+  if (K === 'Tab') { e.preventDefault(); rlfpCycle(e.shiftKey ? -1 : 1); return true; }
+  if (K === 'f') { const n = RLFP.offer ? RL.U.find(u => u.id === RLFP.offer && u.hp > 0) : rlfpNewest(); if (n) rlfpTake(n); return true; }
+  if (K === 'r') { rlfpLetGo(); return true; }
+  const n = '123456789'.indexOf(k); if (n >= 0) { const L = rlfpMine().slice(-9); if (L[n]) rlfpTake(L[n]); return true; }
+  if ((K === 'q' || k === '0') && typeof rlTryAb === 'function') { rlTryAb(); return true; }
+  return false;
+}
+// the input as the way you walk (arena tiles) and strike
+function rlfpInput(dt) {
+  const K = RLFP.keys; let fw = (K.w || K.ArrowUp ? 1 : 0) - (K.s || K.ArrowDown ? 1 : 0), st = (K.d ? 1 : 0) - (K.a ? 1 : 0);
+  RLFP.yaw += ((K.ArrowRight ? 1 : 0) - (K.ArrowLeft ? 1 : 0)) * dt * 2.4;
+  // a controller (read here: src/gamepad.js only drives menus on this screen)
+  const p = typeof firstPad === 'function' ? firstPad() : null; let padAtk = false;
+  if (p) {
+    const z = v => Math.abs(v) < 0.18 ? 0 : (v - Math.sign(v) * 0.18) / 0.82, now = p.buttons.map(b => b.pressed), dn = i => now[i] && !RLFP.padPrev[i];
+    const lx = z(p.axes[0] || 0), ly = z(p.axes[1] || 0), rx = z(p.axes[2] || 0), ry = z(p.axes[3] || 0);
+    if (lx || ly) { st += lx; fw -= ly; }
+    RLFP.yaw += rx * Math.abs(rx) * dt * 3.2; RLFP.pitch -= ry * Math.abs(ry) * dt * 2;
+    padAtk = (p.buttons[7] && p.buttons[7].value > 0.4) || !!now[0];
+    if (dn(5)) rlfpCycle(1); if (dn(4)) rlfpCycle(-1); if (dn(3)) { const n = RLFP.offer ? RL.U.find(u => u.id === RLFP.offer && u.hp > 0) : rlfpNewest(); if (n) rlfpTake(n); }
+    if (dn(1)) rlfpLetGo(); if (dn(2) && typeof rlTryAb === 'function') rlTryAb(); if (dn(9)) rlPauseOpen($('rlPause').hidden);
+    RLFP.padPrev = now;
+  }
+  // a touch screen: the stick on the left
+  if (RLFP.stick) { const s = RLFP.stick, dx = (s.x - s.x0) / 50, dy = (s.y - s.y0) / 50; st += Math.max(-1, Math.min(1, dx)); fw -= Math.max(-1, Math.min(1, dy)); }
+  RLFP.pitch = Math.max(-1.2, Math.min(0.9, RLFP.pitch));
+  const f = RLFP.yaw, sf = Math.sin(f), cf = Math.cos(f);
+  let mx = fw * sf + st * cf, my = fw * cf - st * sf; const m = Math.hypot(mx, my); if (m > 1) { mx /= m; my /= m; }
+  return { mx, my, f, a: RLFP.atk || RLFP.mAtk || RLFP.tAtk || padAtk };
+}
+// every frame (src/rl.js rlFrame, before the ticks): what you hold, and what you're doing with it
+function rlfpFrame(dt) {
+  if (!RL.on || !RL.fp) return;
+  if (!RLFP.ui) rlfpReset();
+  const spec = rlIsSpec(), paused = !$('rlPause').hidden;
+  // (new troops of yours: a word, and one to take straight away if you hold nothing)
+  if (!spec) {
+    let newest = null; for (const u of RL.U) if (u.id > RLFP.seenU && u.side === RL.me && !u.bld && u.hp > 0) { if (!newest || u.id > newest.id) newest = u; }
+    const hi = RL.U.reduce((a, u) => Math.max(a, u.id), RLFP.seenU); RLFP.seenU = hi;
+    if (newest && RLFP.u && newest.id !== RLFP.u) { RLFP.offer = newest.id; RLFP.offerT = 4; }
+    if (RLFP.offerT > 0) { RLFP.offerT -= dt; if (RLFP.offerT <= 0) RLFP.offer = 0; }
+    const u = rlfpUnitMine();
+    if (RLFP.u && !u) { RLFP.u = 0; RLFP.autoT = 1.2; RLFP.atk = RLFP.mAtk = false; if (typeof rlHudSay === 'function') rlHudSay('Your troop has fallen', 1.6, true); }
+    if (!RLFP.u && !RLFP.free && RL.ph !== 'over') { RLFP.autoT -= dt; if (RLFP.autoT <= 0) { const n = rlfpNewest(); if (n) rlfpTake(n); } }
+    if (u && u.hp < RLFP.hpLast - 0.5) RLFP.hurt = Math.min(1, RLFP.hurt + (RLFP.hpLast - u.hp) / u.max * 4 + 0.15);
+    RLFP.hpLast = u ? u.hp : 0;
+  }
+  RLFP.hurt = Math.max(0, RLFP.hurt - dt * 1.6);
+  const I = !spec && !paused && RL.ph === 'play' ? rlfpInput(dt) : { mx: 0, my: 0, f: RLFP.yaw, a: false };
+  if (!RLFP.u) { I.mx = I.my = 0; I.a = false; }
+  RLFP.cur = I;
+  if (!spec && !rlIsGuest()) rlfpCtl(RL.me, RLFP.u, I.mx, I.my, I.f, I.a);
+  rlfpHud(dt);
+}
+// the guest's word to the host (src/rlnet.js), and whether it's time to send it
+function rlfpNetOut() { const I = RLFP.cur || {}; return [RLFP.u | 0, Math.round((I.mx || 0) * 100), Math.round((I.my || 0) * 100), Math.round((I.f || 0) * 50) * 2, I.a ? 1 : 0]; }
+function rlfpNetDue(ms) { if (!RL.fp) return false; const k = rlfpNetOut().join(','); if (k !== RLFP.netK && ms > (typeof NET !== 'undefined' && NET.via === 'claude' ? 100 : 50)) { RLFP.netK = k; return true; } return false; }
+function rlfpNetIn(side, fi) { if (!Array.isArray(fi)) { rlfpCtl(side, 0); return; } rlfpCtl(side, fi[0], (+fi[1] || 0) / 100, (+fi[2] || 0) / 100, (+fi[3] || 0) / 100, fi[4]); }
+
+// ---------- the view (from src/rl3d.js rl3dDraw): true when the camera is at your troop's eyes ----------
+function rlfpCam(dt) {
+  const C = RL3.cam, u = RL.fp && !rlIsSpec() ? rlfpUnitMine() : null;
+  if (!u) { if (RLFP.camOn) { RLFP.camOn = false; C.near = 0.5; C.updateProjectionMatrix(); RL3.fitKey = ''; } return false; }
+  const H = RL3.units.get(u.id), [x, y] = rlPos(u);
+  if (H && RLFP.eyeFor !== u.id && H.rise >= 1) { const b = new THREE.Box3().setFromObject(H.g); RLFP.eye = Math.max(0.55, Math.min(4, (b.max.y - H.g.position.y) * 0.9)); RLFP.eyeFor = u.id; }
+  const walk = u.st === 'walk'; RLFP.bob += dt * (walk ? 9 : 0);
+  const bob = walk && !u.air ? Math.sin(RLFP.bob) * 0.04 : u.air ? Math.sin(RL3.t * 2) * 0.06 : 0, base = H ? H.g.position.y : RL_G0;
+  C.fov = innerWidth < innerHeight ? 80 : 72; C.near = 0.05; C.aspect = innerWidth / innerHeight; C.clearViewOffset(); C.updateProjectionMatrix();
+  const p = rv(x, y, 0); C.position.set(p.x, base + RLFP.eye + bob, p.z);
+  const f = RLFP.yaw, pt = RLFP.pitch;
+  C.lookAt(C.position.x + Math.sin(f) * Math.cos(pt), C.position.y + Math.sin(pt), C.position.z - Math.cos(f) * Math.cos(pt));
+  RL3.fitKey = ''; RLFP.camOn = true;
+  return true;
+}
+// (src/rl3d.js asks which unit not to draw: the one you're looking out of)
+function rlfpHidden() { return RLFP.camOn ? RLFP.u : 0; }
+
+// ---------- the HUD ----------
+function rlfpUiBuild() {
+  if (RLFP.ui || !$('rlUI')) return; RLFP.ui = true;
+  const el = document.createElement('div'); el.className = 'rl-fp'; el.id = 'rlFp'; el.hidden = true;
+  el.innerHTML = '<div class="rl-fphurt" id="rlFpHurt"></div><div class="rl-fpx" id="rlFpX"><i></i></div><div class="rl-fptg" id="rlFpTg" hidden><b></b><i><s></s></i></div>'
+    + '<div class="rl-fpme" id="rlFpMe" hidden><canvas width="96" height="112"></canvas><div><b></b><i><s></s></i><small></small></div></div>'
+    + '<canvas class="rl-fpmap" id="rlFpMap" width="108" height="192"></canvas><div class="rl-fpnew" id="rlFpNew" hidden></div>'
+    + '<div class="rl-fpwait" id="rlFpWait" hidden></div><div class="rl-fppick" id="rlFpPick" aria-label="Your troops on the field"></div>'
+    + '<div class="rl-fpstick" id="rlFpStick" hidden><i></i></div><button class="rl-fpstrike" id="rlFpStrike" type="button">Strike</button>'
+    + '<div class="rl-fphint" id="rlFpHint">Click to look round · WASD walk · Space or click strike · Tab next troop · F take the new one · R let go</div>';
+  $('rlUI').insertBefore(el, $('rlDrag'));
+  const cv = $('rlCv'), nw = $('rlFpNew');
+  nw.addEventListener('click', () => { const n = RLFP.offer && RL.U.find(u => u.id === RLFP.offer && u.hp > 0); if (n) rlfpTake(n); });
+  const sb = $('rlFpStrike');
+  sb.addEventListener('pointerdown', e => { e.preventDefault(); RLFP.tAtk = true; try { sb.setPointerCapture(e.pointerId); } catch (er) {} });
+  for (const ev of ['pointerup', 'pointercancel']) sb.addEventListener(ev, () => { RLFP.tAtk = false; });
+  // the mouse: a click locks the pointer to look round, then the left button strikes
+  cv.addEventListener('pointerdown', e => {
+    if (!RL.on || !RL.fp || rlIsSpec()) return;
+    if (e.pointerType === 'mouse') {
+      if (e.button !== 0) return;
+      if (!RLFP.u) { const n = rlfpNewest(); if (n) rlfpTake(n); return; }
+      if (document.pointerLockElement !== cv) { try { cv.requestPointerLock(); } catch (er) {} return; }
+      RLFP.mAtk = true; return;
+    }
+    // a touch: the left of the screen is the stick, the right looks round
+    if (!RLFP.u) { const n = rlfpNewest(); if (n) rlfpTake(n); }
+    const t = { id: e.pointerId, x0: e.clientX, y0: e.clientY, x: e.clientX, y: e.clientY };
+    if (e.clientX < innerWidth * 0.45 && !RLFP.stick) { RLFP.stick = t; const s = $('rlFpStick'); s.hidden = false; s.style.left = e.clientX + 'px'; s.style.top = e.clientY + 'px'; s.firstChild.style.transform = ''; }
+    else if (!RLFP.look) RLFP.look = t;
+    try { cv.setPointerCapture(e.pointerId); } catch (er) {}
+  });
+  cv.addEventListener('pointermove', e => {
+    if (!RL.fp) return;
+    if (e.pointerType === 'mouse') { if (document.pointerLockElement === cv) { RLFP.yaw += (e.movementX || 0) * 0.0032; RLFP.pitch -= (e.movementY || 0) * 0.0028; } return; }
+    const S = RLFP.stick, L = RLFP.look;
+    if (S && S.id === e.pointerId) { S.x = e.clientX; S.y = e.clientY; const dx = Math.max(-50, Math.min(50, S.x - S.x0)), dy = Math.max(-50, Math.min(50, S.y - S.y0)); $('rlFpStick').firstChild.style.transform = `translate(${dx}px, ${dy}px)`; }
+    if (L && L.id === e.pointerId) { RLFP.yaw += (e.clientX - L.x) * 0.006; RLFP.pitch -= (e.clientY - L.y) * 0.005; L.x = e.clientX; L.y = e.clientY; }
+  });
+  const end = e => { if (RLFP.stick && RLFP.stick.id === e.pointerId) { RLFP.stick = null; $('rlFpStick').hidden = true; } if (RLFP.look && RLFP.look.id === e.pointerId) RLFP.look = null; if (e.pointerType === 'mouse') RLFP.mAtk = false; };
+  cv.addEventListener('pointerup', end); cv.addEventListener('pointercancel', end);
+  document.addEventListener('pointerlockchange', () => { RLFP.lock = document.pointerLockElement === cv; if (!RLFP.lock) RLFP.mAtk = false; const h = $('rlFpHint'); if (h) h.classList.toggle('dim', RLFP.lock); });
+  addEventListener('blur', () => { RLFP.keys = {}; RLFP.atk = RLFP.mAtk = RLFP.tAtk = false; });
+}
+function rlfpHud(dt) {
+  const el = $('rlFp'); if (!el) return;
+  if (el.hidden) el.hidden = false; if (!$('rlUI').classList.contains('fp')) $('rlUI').classList.add('fp');
+  const spec = rlIsSpec(), u = rlfpUnitMine(), C = u ? RL_CARD[u.c] : null, cam = RLFP.camOn;
+  el.classList.toggle('held', !!cam); el.classList.toggle('spec', spec);
+  $('rlFpHurt').style.opacity = (RLFP.hurt * 0.85).toFixed(2);
+  // what's in front of you
+  const A = u && C && C.dmg && C.ab !== 'heal' ? rlfpAim(u, C, RLFP.yaw) : null, tg = $('rlFpTg');
+  if (A && cam) {
+    const T = A.T, nm = T.k ? (T.k === 'great' ? 'Great Light' : 'Lamp Tower') : (RL_CARD[T.c] || {}).n || '', key = nm + Math.ceil(T.hp) + A.reach;
+    if (RLFP.tgK !== key) { RLFP.tgK = key; tg.firstChild.textContent = nm + ' · ' + Math.max(0, Math.ceil(T.hp)); tg.lastChild.firstChild.style.width = (Math.max(0, T.hp) / (T.max || 1) * 100).toFixed(1) + '%'; tg.classList.toggle('far', !A.reach); }
+    tg.hidden = false; $('rlFpX').classList.toggle('on', A.reach);
+  } else { tg.hidden = true; $('rlFpX').classList.remove('on'); }
+  // your troop
+  const me = $('rlFpMe');
+  if (u) {
+    const key = u.id + '|' + Math.ceil(u.hp);
+    if (RLFP.meK !== key) {
+      if (!RLFP.meK.startsWith(u.id + '|')) rlFace(me.querySelector('canvas'), u.c);
+      RLFP.meK = key; me.querySelector('b').textContent = C.n; me.querySelector('s').style.width = (u.hp / u.max * 100).toFixed(1) + '%';
+      me.querySelector('small').textContent = Math.ceil(u.hp) + ' / ' + Math.round(u.max) + (C.ab === 'heal' ? ' · mends all round it' : C.tg === 'build' ? ' · strikes buildings and towers' : C.air ? ' · flies' : '');
+    }
+    me.hidden = false;
+  } else me.hidden = true;
+  // the word: waiting, or a new one to take
+  const wait = $('rlFpWait'), mine = spec ? [] : rlfpMine();
+  const ws = spec ? '' : RL.ph === 'count' ? 'Your keeper plays the cards. Take the field as any troop they send.' : !u && RL.ph === 'play' ? (mine.length ? (RLFP.free ? 'Pick a troop below, or press F' : 'Taking the field…') : 'Waiting for your keeper to send a troop…') : '';
+  if (wait.textContent !== ws) wait.textContent = ws; wait.hidden = !ws;
+  const nw = $('rlFpNew'), on = RLFP.offer && RL.U.find(q => q.id === RLFP.offer && q.hp > 0);
+  if (on) { const s = `New: ${(RL_CARD[on.c] || {}).n || 'troop'} · F to take it`; if (nw.textContent !== s) nw.textContent = s; nw.hidden = false; } else nw.hidden = true;
+  // the row of your troops
+  const pick = $('rlFpPick'), L = mine.slice(-9), pk = L.map(q => q.id).join(',') + '/' + RLFP.u;
+  if (pk !== RLFP.pickK) {
+    RLFP.pickK = pk; pick.textContent = '';
+    L.forEach((q, i) => {
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'rl-fpu' + (q.id === RLFP.u ? ' sel' : ''); b.dataset.id = q.id; b.title = (RL_CARD[q.c] || {}).n || '';
+      b.innerHTML = '<canvas width="96" height="112"></canvas><i><s></s></i><kbd>' + (i + 1) + '</kbd>';
+      rlFace(b.querySelector('canvas'), q.c);
+      b.addEventListener('click', e => { e.preventDefault(); const t = RL.U.find(z => z.id === q.id && z.hp > 0); if (t) rlfpTake(t); });
+      pick.append(b);
+    });
+  }
+  for (const b of pick.children) { const q = RL.U.find(z => z.id === +b.dataset.id); if (q) b.querySelector('s').style.width = (Math.max(0, q.hp) / q.max * 100).toFixed(0) + '%'; }
+  rlfpMap(); rlfpRivalTag();
+}
+// the map of the race: your rock at the bottom, the towers, everyone on the field, and you with your view
+function rlfpMap() {
+  const cv = $('rlFpMap'); if (!cv) return; const g = cv.getContext('2d'), W = cv.width, Hh = cv.height, me = RL.me;
+  const X = x => (me ? RLC.W - x : x) / RLC.W * W, Y = y => (me ? y : RLC.H - y) / RLC.H * Hh;
+  g.clearRect(0, 0, W, Hh); g.fillStyle = 'rgba(14,30,48,0.82)'; g.fillRect(0, 0, W, Hh);
+  g.fillStyle = 'rgba(96,104,84,0.9)'; g.fillRect(0, Math.min(Y(0), Y(RLC.R0)), W, Math.abs(Y(RLC.R0) - Y(0))); g.fillRect(0, Math.min(Y(RLC.R1), Y(RLC.H)), W, Math.abs(Y(RLC.H) - Y(RLC.R1)));
+  g.fillStyle = 'rgba(150,140,120,0.95)'; for (const cx of RLC.LX) g.fillRect(Math.min(X(cx - RLC.CW), X(cx + RLC.CW)), Math.min(Y(RLC.R0), Y(RLC.R1)), Math.abs(X(cx + RLC.CW) - X(cx - RLC.CW)), Math.abs(Y(RLC.R1) - Y(RLC.R0)));
+  const held = [rlfpHeld(0), rlfpHeld(1)];
+  for (const t of RL.T) { if (t.hp <= 0) continue; const s = t.k === 'great' ? 9 : 7; g.fillStyle = t.side === me ? '#5aa2ff' : '#ff6352'; g.fillRect(X(t.x) - s / 2, Y(t.y) - s / 2, s, s); }
+  for (const u of RL.U) { if (u.hp <= 0) continue; const h = held[u.side] === u.id; g.fillStyle = h ? '#fff4c0' : u.side === me ? '#9cc8ff' : '#ff9a8a'; const r = h ? 3.2 : u.bld ? 2.6 : 1.8; g.beginPath(); g.arc(X(u.x), Y(u.y), r, 0, 7); g.fill(); }
+  const u = rlfpUnitMine();
+  if (u && RLFP.camOn) { const [x, y] = rlPos(u), s = me ? -1 : 1, f = RLFP.yaw, px = X(x), py = Y(y); g.strokeStyle = 'rgba(255,244,192,0.85)'; g.lineWidth = 1.5; g.beginPath(); for (const a of [-0.55, 0.55]) { g.moveTo(px, py); g.lineTo(px + Math.sin(f + a) * 16 * s, py - Math.cos(f + a) * 16 * s); } g.stroke(); }
+}
+// a name plate over the troop the rival holds (src/rl3d.js puts it there through rl3dProject)
+function rlfpRivalTag() {
+  let tag = $('rlFpRival'); const id = RL.fp && !rlIsSpec() ? rlfpHeld(1 - RL.me) : 0, u = id ? RL.U.find(q => q.id === id && q.hp > 0) : null;
+  if (!u) { if (tag) tag.hidden = true; return; }
+  if (!tag) { tag = document.createElement('div'); tag.id = 'rlFpRival'; tag.className = 'rl-fprival'; $('rlUI').insertBefore(tag, $('rlDrag')); }
+  const [x, y] = rlPos(u), p = rl3dProject(x, y, RL_G0 + (u.air ? 3.6 : 2.2));
+  if (!p || !p.on) { tag.hidden = true; return; }
+  const nm = RL.names[1 - RL.me] || 'Rival'; if (tag.textContent !== nm) tag.textContent = nm;
+  tag.hidden = false; tag.style.transform = `translate(${Math.round(p.x)}px, ${Math.round(p.y)}px) translate(-50%, -100%)`;
+}
+(function rlfpInit() { const b = typeof $ === 'function' && $('rlFpPlay'); if (b) b.addEventListener('click', () => rlfpPlayBot()); })();
 
 // ---- src/rlemote.js ----
 'use strict';
@@ -78906,7 +79285,7 @@ function rlRecord(r) {
   s.p++; s.cr += Math.max(0, Math.min(3, r.crowns | 0));
   if (draw) { s.d++; s.s = 0; } else if (win) { s.w++; s.s++; s.bs = Math.max(s.bs, s.s); } else { s.l++; s.s = 0; }
   const got = 1 + (win ? 1 : 0); RLV.c = Math.min(99999, RLV.c + got); rlvSave(); rlkRender();
-  if (typeof rlmReport === 'function') { try { rlmReport(r); } catch (e) { console.error(e); } }   // the rating (src/rlmmr.js)
+  if (typeof rlmReport === 'function' && !r.fp) { try { rlmReport(r); } catch (e) { console.error(e); } }   // the rating (src/rlmmr.js)
   const what = draw ? 'A draw' : win ? (s.s > 2 ? s.s + ' wins running' : 'A win') : 'Duel over';
   if (typeof toast === 'function') toast(what + ': +' + got + ' tower crate' + (got > 1 ? 's' : '') + '. Open them from the Skerry Clash card.', '+' + got + ' tower crate' + (got > 1 ? 's' : ''));
 }
@@ -79253,6 +79632,10 @@ function rldBot(lvl) {
 // host's screen runs the bots for the empty seats. The guests' taps come as before, and the host acks each guest by
 // its place, ak [0, a1, a2]. A guest who quits or goes quiet for ten seconds is out of the match (rl3Leave), and it
 // goes on without them; the host going ends it for everyone else, unrecorded. Nothing of it reaches the rating.
+// First person (src/rlfp.js): the host may tick First person in the lobby (fp: 1 in its presence; not with the draft or
+// three keepers). Start puts fp: 1 in st, and both screens start with rlStart({ fp: true }): the host's screen runs a
+// bot for each side, and the guest's word of the troop it holds goes in its duel presence as fi (rlfpNetOut), read by
+// the host each frame (rlfpNetIn). It isn't rated.
 // Each side reports a finished duel to the rating itself, by the duel's id g (rlnMmrInfo); the server rates it only
 // when both reports agree. Afterwards both are back in the same lobby for a rematch.
 // Watching: anyone else may watch a duel, waiting or under way (RLN_WATCH at most, to spare the room). A watcher puts
@@ -79271,7 +79654,7 @@ function rldBot(lvl) {
 // watcher (rldWatch, src/rldraft.js), showing both keepers' rounds, offers and decks; when the duel starts there it
 // carries straight on into watching it.
 
-var RLN = { ssl: [], slSent: '', sdg: null, spec: false, draft: false, n3: false, side: 0, gS: {}, gB: {}, gQ: {}, gOut: {}, dst: null, ddk: null, dlost: 0, code: null, at: 0, msg: '', st: null, doneG: null, g: null, role: null, seq: 0, q: [], lastQ: 0, ws: 0, wsSeen: -1, wsSeenAny: -1, sendT: 0, sentAt: 0, seen: 0, beat: 0, lastB: null, chunks: null, quit: null, ended: false, bytes: 0, lobT: 0 };
+var RLN = { ssl: [], slSent: '', sdg: null, spec: false, draft: false, n3: false, fp: false, side: 0, gS: {}, gB: {}, gQ: {}, gOut: {}, dst: null, ddk: null, dlost: 0, code: null, at: 0, msg: '', st: null, doneG: null, g: null, role: null, seq: 0, q: [], lastQ: 0, ws: 0, wsSeen: -1, wsSeenAny: -1, sendT: 0, sentAt: 0, seen: 0, beat: 0, lastB: null, chunks: null, quit: null, ended: false, bytes: 0, lobT: 0 };
 const RLN_MAX = 2;
 const RLN_WATCH = 8;      // watchers a duel takes at most (each hears the host's snapshots at full rate)
 const RLN_GONE = 10000;   // ms without a word before the other side is taken to have left
@@ -79294,7 +79677,7 @@ function rlnMySkin() { let s = ''; try { if (typeof rlSkinMine === 'function') s
 function rlnBase(lean) { const z = { room: RLN.code, sid: NET.sid, nick: rlnNick(), at: RLN.at }; if (RLN.spec) { z.spec = 1; return z; } if (!lean) { z.dk = rlnMyDeck(); z.sk = rlnMySkin(); const mr = typeof rlmMine === 'function' ? rlmMine() : null; if (Number.isFinite(mr)) z.mr = mr; } return z; }
 const rlnMr = z => z && Number.isFinite(z.mr) ? ' · ' + Math.max(0, Math.round(z.mr)) + ' MMR' : '';
 // the duel as the rating wants it (src/rlmmr.js): its id, my side, the other's name and rating
-function rlnMmrInfo() { if (!RLN.st || !RLN.g || RLN.spec || RLN.st.n3) return null; const side = RLN.role === 'host' ? 0 : 1; return { g: RLN.st.g, side, host: side === 0, opp: RLN.st.names[1 - side], omr: RLN.omr }; }
+function rlnMmrInfo() { if (!RLN.st || !RLN.g || RLN.spec || RLN.st.n3 || RLN.st.fp) return null; const side = RLN.role === 'host' ? 0 : 1; return { g: RLN.st.g, side, host: side === 0, opp: RLN.st.names[1 - side], omr: RLN.omr }; }
 // everyone in a duel's room, keepers and watchers (rlnPeers: the keepers only; rlnSpecs: the watchers)
 function rlnAll(code) {
   const out = NET.peers.filter(p => { const z = rlnOf(p); return z && z.room === code && fresh(p) && !(p.isMe && p.sameTab); });
@@ -79315,7 +79698,7 @@ const rlnMine = p => !!(p && p.isMe && p.sameTab);
 function rlnAmHost() { const m = rlnMembers(); return !!m.length && rlnMine(m[0]); }
 function rlnOther() { return rlnMembers().find(p => !rlnMine(p)) || null; }
 function rlnSend(z) { if (NET.room) NET.room.presence({ rl: z }).catch(() => {}); }
-function rlnSendLobby() { if (!RLN.code) return; const z = rlnBase(); if (RLN.spec) { rlnSend(z); return; } if (rlnAmHost()) { z.lob = { n: rlnMembers().length }; if (RLN.n3) z.lob.n3 = 1; else if (RLN.draft) z.dr = 1; }
+function rlnSendLobby() { if (!RLN.code) return; const z = rlnBase(); if (RLN.spec) { rlnSend(z); return; } if (rlnAmHost()) { z.lob = { n: rlnMembers().length }; if (RLN.n3) z.lob.n3 = 1; else if (RLN.draft) z.dr = 1; else if (RLN.fp) z.fp = 1; }
   if (RLN.dst) { if (RLN.role === 'dhost') z.st = RLN.dst; z.dd = { g: RLN.dst.g, n: typeof RLDR !== 'undefined' ? RLDR.picks.length : 0, pk: typeof RLDR !== 'undefined' && !RLDR.spec ? RLDR.picks.slice(0, 8) : [] }; if (RLN.ddk) z.dd.dk = RLN.ddk; } if (RLN.quit) z.quit = RLN.quit; rlnSend(z); }
 function rlnHost() {
   if (!rlnOnline() || rlnInMatch()) return;
@@ -79347,7 +79730,7 @@ function rlnOpen() {
   for (const [code, list] of rooms) {
     if (code === RLN.code) continue;
     const keep = list.filter(p => !rlnOf(p).spec).sort((a, b) => (rlnOf(a).at || 0) - (rlnOf(b).at || 0)); if (!keep.length) continue;
-    const h = rlnOf(keep[0]); out.push({ code, host: rlnClean(h.nick, 16) || 'Someone', mr: rlnMr(h), n: keep.length, w: list.length - keep.length, started: !!(h.st && h.st.g), dr: !!h.dr, n3: !!(h.lob && h.lob.n3), max: h.lob && h.lob.n3 ? 3 : RLN_MAX });
+    const h = rlnOf(keep[0]); out.push({ code, host: rlnClean(h.nick, 16) || 'Someone', mr: rlnMr(h), n: keep.length, w: list.length - keep.length, started: !!(h.st && h.st.g), dr: !!h.dr, fp: !!h.fp, n3: !!(h.lob && h.lob.n3), max: h.lob && h.lob.n3 ? 3 : RLN_MAX });
   }
   return out;
 }
@@ -79367,7 +79750,7 @@ function rlnRender() {
       // (the row joins; beside it, Watch, for any duel with room for another watcher)
       const row = document.createElement('div'); row.className = 'rlrow';
       const b = document.createElement('button'); b.type = 'button'; b.className = 'warlobbyrow';
-      const nm = document.createElement('span'); nm.className = 'nm'; nm.textContent = n.n3 ? `${n.host}’s three keepers${n.mr} · ${n.n} of 3` : `${n.host}’s duel${n.mr}${n.dr ? ' · triple draft' : ''}`;
+      const nm = document.createElement('span'); nm.className = 'nm'; nm.textContent = n.n3 ? `${n.host}’s three keepers${n.mr} · ${n.n} of 3` : `${n.host}’s duel${n.mr}${n.dr ? ' · triple draft' : n.fp ? ' · first person' : ''}`;
       const sm = document.createElement('small'); sm.textContent = (n.started ? 'under way' : n.n >= n.max ? 'full' : 'tap to join') + (n.w ? ` · watching: ${n.w}` : '');
       b.append(nm, sm); b.disabled = n.started || n.n >= n.max; b.addEventListener('click', () => rlnJoin(n.code)); row.append(b);
       const wb = document.createElement('button'); wb.type = 'button'; wb.className = 'tool rlwatch'; wb.textContent = 'Watch'; wb.dataset.code = n.code;
@@ -79378,11 +79761,12 @@ function rlnRender() {
   }
   const m = rlnMembers(), host = rlnAmHost(), hz = m.length ? rlnOf(m[0]) : null, o = rlnOther(), oz = o ? rlnOf(o) : null;
   const away = m.some(p => !rlnMine(p) && rlnOf(p).g), W = rlnSpecs(RLN.code), n3 = host ? RLN.n3 : !!(hz && hz.lob && hz.lob.n3);   // (away: the other one still has the last duel's end card up)
-  const dr = !n3 && (host ? RLN.draft : !!(hz && hz.dr));
-  const key = m.map(p => rlnOf(p).sid + rlnOf(p).nick + rlnOf(p).mr).join('|') + '/' + W.map(p => rlnOf(p).sid + rlnOf(p).nick).join('|') + host + away + dr + n3 + RLN.spec + RLN.msg;
+  const dr = !n3 && (host ? RLN.draft : !!(hz && hz.dr)), fp = !n3 && !dr && (host ? RLN.fp : !!(hz && hz.fp));
+  const key = m.map(p => rlnOf(p).sid + rlnOf(p).nick + rlnOf(p).mr).join('|') + '/' + W.map(p => rlnOf(p).sid + rlnOf(p).nick).join('|') + host + away + dr + fp + n3 + RLN.spec + RLN.msg;
   if (q('MpStart')) { q('MpStart').hidden = !host; q('MpStart').disabled = m.length < 2 || away || !!RLN.dst; }
   if (q('MpDraft')) { q('MpDraft').checked = dr; q('MpDraft').disabled = !host || n3; }
   if (q('MpN3')) { q('MpN3').checked = n3; q('MpN3').disabled = !host; }
+  if (q('MpFp')) { q('MpFp').checked = fp; q('MpFp').disabled = !host || n3; }
   const L = q('Lobby'); if (L.dataset.k === key) return; L.dataset.k = key;
   if (q('LobbyHead')) q('LobbyHead').textContent = host ? (n3 ? 'Your match for three' : 'Your duel') : `${rlnClean(hz && hz.nick, 16) || 'Someone'}’s ${n3 ? 'match for three' : 'duel'}`;
   const ol = q('LobbyList');
@@ -79409,11 +79793,11 @@ function rlnStart() {
     }
     rlnBegin(st, 'host'); return;
   }
-  if (RLN.draft && typeof rldOpen === 'function') {
+  if (RLN.draft && !RLN.fp && typeof rldOpen === 'function') {
     rlnDraftGo({ g: Math.random().toString(36).slice(2, 9), sids: z.map(x => x.sid), names: [rlnNick(), rlnClean(z[1].nick, 16) || 'A keeper'], skins: [rlnMySkin(), rlnSkin(z[1].sk)], seed: (Math.random() * 4294967295) >>> 0, dr: 1 }, 'dhost');
     return;
   }
-  const st = { g: Math.random().toString(36).slice(2, 9), sids: z.map(x => x.sid), names: [rlnNick(), rlnClean(z[1].nick, 16) || 'A keeper'], decks: [rlnMyDeck(), rlnDeck(z[1].dk)], skins: [rlnMySkin(), rlnSkin(z[1].sk)], seed: (Math.random() * 4294967295) >>> 0 };
+  const st = { g: Math.random().toString(36).slice(2, 9), sids: z.map(x => x.sid), names: [rlnNick(), rlnClean(z[1].nick, 16) || 'A keeper'], decks: [rlnMyDeck(), rlnDeck(z[1].dk)], skins: [rlnMySkin(), rlnSkin(z[1].sk)], seed: (Math.random() * 4294967295) >>> 0, ...(RLN.fp ? { fp: 1 } : {}) };
   rlnBegin(st, 'host');
 }
 // ---------- the triple draft (src/rldraft.js) ----------
@@ -79457,7 +79841,7 @@ function rlnBegin(st, role) {
   Object.assign(RLN, { st, g: st.g, doneG: st.g, role, seq: 0, q: [], lastQ: 0, ws: 0, wsSeen: -1, wsSeenAny: -1, sendT: 0, sentAt: 0, seen: now, lastB: null, chunks: null, quit: null, ended: false, acked: false, msg: '' });
   if (role === 'spec') { RLN.specSk = st.skins.join('|'); rlStart({ mode: 'net', me: 0, n3: !!st.n3, names: st.names.slice(), skins: st.skins.slice(), seed: st.seed, net: { host: false, spec: true } }); return; }
   if (st.n3) { const now2 = performance.now() + RLN_GONE; st.sids.forEach((sid, i) => { if (i && sid) RLN.gS[i] = now2; }); }   // (twenty seconds' grace for each guest's first word, while a slow phone builds the arena)
-  rlStart({ mode: 'net', me: role === 'host' ? 0 : st.n3 ? RLN.side : 1, n3: !!st.n3, bots: st.bots, names: st.names.slice(), decks: st.decks.map(d => d.slice()), skins: st.skins.slice(), seed: st.seed, net: { host: role === 'host' }, draft: st.dr === 2 });
+  rlStart({ mode: 'net', me: role === 'host' ? 0 : st.n3 ? RLN.side : 1, n3: !!st.n3, bots: st.bots, names: st.names.slice(), decks: st.decks.map(d => d.slice()), skins: st.skins.slice(), seed: st.seed, net: { host: role === 'host' }, draft: st.dr === 2, fp: !!st.fp });
   rlnSendNow();
 }
 // a watcher: the duel the host has started (or is in the middle of), from the host's presence
@@ -79509,7 +79893,7 @@ function rlNetPeers() {
       }
       if (s.sids[1] === NET.sid && typeof rlStart === 'function') {
         const nm = Array.isArray(s.names) ? s.names : [], dk = Array.isArray(s.decks) ? s.decks : [], sk = Array.isArray(s.skins) ? s.skins : [];
-        rlnBegin({ g: s.g.slice(0, 12), sids: [String(s.sids[0]), NET.sid], names: [rlnClean(nm[0], 16) || 'A keeper', rlnClean(nm[1], 16) || rlnNick()], decks: [rlnDeck(dk[0]), rlnDeck(dk[1])], skins: [rlnSkin(sk[0]), rlnSkin(sk[1])], seed: s.seed >>> 0, dr: s.dr === 2 ? 2 : 0 }, 'guest');
+        rlnBegin({ g: s.g.slice(0, 12), sids: [String(s.sids[0]), NET.sid], names: [rlnClean(nm[0], 16) || 'A keeper', rlnClean(nm[1], 16) || rlnNick()], decks: [rlnDeck(dk[0]), rlnDeck(dk[1])], skins: [rlnSkin(sk[0]), rlnSkin(sk[1])], seed: s.seed >>> 0, dr: s.dr === 2 ? 2 : 0, fp: s.fp === 1 ? 1 : 0 }, 'guest');
         return;
       }
       RLN.doneG = s.g; RLN.msg = 'They started without you. Host your own duel, or wait for the next.';
@@ -79557,7 +79941,7 @@ function rlnSendNow() {
         const C = RLN.chunks; z.wc = [C.ws, C.k, C.p.length, C.p[C.k]]; C.k++;
       }
     }
-  } else { z.b = RLN.beat; if (RLN.q.length) z.q = RLN.q.slice(); }
+  } else { z.b = RLN.beat; if (RLN.q.length) z.q = RLN.q.slice(); if (RL.fp && typeof rlfpNetOut === 'function') z.fi = rlfpNetOut(); }   // (fi: the troop the guest holds in first person, src/rlfp.js)
   rlnSend(z); RLN.sentAt = performance.now();
 }
 // the other side has gone: the host wins; the guest's match ends (as a win, not recorded) and it leaves the lobby
@@ -79595,7 +79979,7 @@ function rlnTick(dt) {
   if (RLN.role === 'host') {
     RLN.sendT -= dt || 0;
     if (RLN.sendT <= 0) { RLN.sendT += NET.via === 'claude' ? 0.1 : 1 / 12; if (RLN.sendT < -0.2) RLN.sendT = 0; rlnSendNow(); }
-  } else if (RLN.role === 'guest' && (now - RLN.sentAt > 1000 || (typeof rlHudSel === 'function' && rlHudSel() !== RLN.slSent && now - RLN.sentAt > 60))) { RLN.beat++; rlnSendNow(); }   // (a watcher sends nothing)
+  } else if (RLN.role === 'guest' && (now - RLN.sentAt > 1000 || (RL.fp && typeof rlfpNetDue === 'function' && rlfpNetDue(now - RLN.sentAt)) || (typeof rlHudSel === 'function' && rlHudSel() !== RLN.slSent && now - RLN.sentAt > 60))) { RLN.beat++; rlnSendNow(); }   // (a watcher sends nothing)
   if (RLN.role === 'host' && RLN.st.n3) { for (const i of [1, 2]) if (RLN.gS[i] && !RLN.gOut[i] && now - RLN.gS[i] > RLN_GONE) rlnOut3(i, 'lost'); return; }
   if (RL.ph !== 'over' && now - RLN.seen > RLN_GONE) rlnGone('lost');
 }
@@ -79609,6 +79993,7 @@ function rlnRead() {
     if (!z || z.g !== RLN.g || z.sid !== RLN.st.sids[1]) return;
     if (!RLN.acked) RLN.acked = true;
     if (z.b !== RLN.lastB) { RLN.lastB = z.b; RLN.seen = now; }
+    if (RL.fp && typeof rlfpNetIn === 'function' && RL.ph === 'play') rlfpNetIn(1, z.fi);   // (the troop the guest holds, src/rlfp.js)
     if (!Array.isArray(z.q) || RL.ph === 'over') return;
     let took = false;
     for (const r of z.q) {
@@ -79706,13 +80091,15 @@ function rlnBackToLobby() {
 
 (function rlnInit() {
   if (!$('rlMp')) return;
-  if ($('rlMpHost')) $('rlMpHost').addEventListener('click', () => { RLN.draft = false; RLN.n3 = false; rlnHost(); });
-  if ($('rlMpHostDr')) $('rlMpHostDr').addEventListener('click', () => { RLN.draft = true; RLN.n3 = false; rlnHost(); });
-  if ($('rlMpHost3')) $('rlMpHost3').addEventListener('click', () => { RLN.draft = false; RLN.n3 = true; rlnHost(); });   // (a match for three from the start, room for three keepers; the host can still change either in the lobby)
+  if ($('rlMpHost')) $('rlMpHost').addEventListener('click', () => { RLN.draft = false; RLN.n3 = false; RLN.fp = false; rlnHost(); });
+  if ($('rlMpHostDr')) $('rlMpHostDr').addEventListener('click', () => { RLN.draft = true; RLN.n3 = false; RLN.fp = false; rlnHost(); });
+  if ($('rlMpHost3')) $('rlMpHost3').addEventListener('click', () => { RLN.draft = false; RLN.n3 = true; RLN.fp = false; rlnHost(); });
+  if ($('rlMpHostFp')) $('rlMpHostFp').addEventListener('click', () => { RLN.draft = false; RLN.n3 = false; RLN.fp = true; rlnHost(); });   // (first person, src/rlfp.js)   // (a match for three from the start, room for three keepers; the host can still change either in the lobby)
   if ($('rlMpStart')) $('rlMpStart').addEventListener('click', rlnStart);
   if ($('rlMpLeave')) $('rlMpLeave').addEventListener('click', rlnLeave);
-  if ($('rlMpDraft')) $('rlMpDraft').addEventListener('change', e => { if (!rlnAmHost()) return; RLN.draft = !!e.target.checked; rlnSendLobby(); rlnRender(); });
-  if ($('rlMpN3')) $('rlMpN3').addEventListener('change', e => { if (!rlnAmHost()) return; RLN.n3 = !!e.target.checked; if (RLN.n3) RLN.draft = false; rlnSendLobby(); rlnRender(); });
+  if ($('rlMpDraft')) $('rlMpDraft').addEventListener('change', e => { if (!rlnAmHost()) return; RLN.draft = !!e.target.checked; if (RLN.draft) RLN.fp = false; rlnSendLobby(); rlnRender(); });
+  if ($('rlMpFp')) $('rlMpFp').addEventListener('change', e => { if (!rlnAmHost()) return; RLN.fp = !!e.target.checked; if (RLN.fp) RLN.draft = false; rlnSendLobby(); rlnRender(); });
+  if ($('rlMpN3')) $('rlMpN3').addEventListener('change', e => { if (!rlnAmHost()) return; RLN.n3 = !!e.target.checked; if (RLN.n3) { RLN.draft = false; RLN.fp = false; } rlnSendLobby(); rlnRender(); });
   setInterval(() => { if (RLN.dst) { rlnDraftCheck(); if (RLN.dst) rlnSendLobby(); } }, 1000);   // (the draft: progress out, and anyone gone)
   setInterval(() => { if (typeof state === 'undefined' || state === 'title') rlnRender(); }, 1500);
   // (in the lobby, both say they're still here every few seconds, so a long wait doesn't look like leaving)
@@ -80168,6 +80555,7 @@ requestAnimationFrame(frame);
 <!-- [rival] Skerry Clash for three (1v1v1): the skerry, its rules, its bot -->
 <!-- [rival] the 3D view -->
 <!-- [rival] the hand, the oil, the clock, the end card -->
+<!-- [rival] first person: bots play the cards, you fight as your troops -->
 <!-- [rival] the emotes: picker, bubbles, sounds, the bot's say -->
 <!-- [rival] the cards' pictures and faces -->
 <!-- [rival] the champions: their models, pictures, ability button and the bot's use of them -->

@@ -73,7 +73,7 @@ const rlBotNoFight = C => C.ab === 'heal' || C.ab === 'oil' || C.ab === 'mend' |
 function rlBotTick(dt, side) {
   side = side === 0 ? 0 : 1;
   if (!RLB.S[side]) rlBotReset();
-  const B = RLB.S[side], L = RLB.lv[side === RL.me && RL.both ? 'hard' : RL.bot.lvl] || RLB.lv.normal;
+  const B = RLB.S[side], L = RLB.lv[RL.fp ? (RL.mode === 'bot' && side !== RL.me ? RL.bot.lvl : 'normal') : side === RL.me && RL.both ? 'hard' : RL.bot.lvl] || RLB.lv.normal;   // (first person, src/rlfp.js: your own keeper's bot plays at Normal)
   B.t -= dt; if (B.t > 0) return; B.t = L.think * (0.8 + Math.random() * 0.4);
   if (typeof rlBotChamp === 'function' && rlBotChamp(side, L)) return;   // (its champion's ability, src/rlchamp.js)
   const fy = y => side ? RLC.H - y : y, oil = RL.oil[side], hand = RL.hand[side].map(c => RL_CARD[c]).filter(Boolean), can = C => C && C.cost <= oil + 1e-6;

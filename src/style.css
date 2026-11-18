@@ -1819,3 +1819,39 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 .cp-m.done .cp-s { color: #9fd89a; }
 .cp-picked { font-size: 14px; line-height: 1.5; min-height: 2.6em; }
 .cp-picked b { font: 400 18px "IM Fell English SC", serif; color: #f6e2a4; }
+/* [rival] Skerry Clash first person (src/rlfp.js): the crosshair, your troop, the row to pick from, the map */
+#rlUI.fp .rl-bottom { display: none; }
+.rl-fp { position: absolute; inset: 0; pointer-events: none; z-index: 5; }
+.rl-fphurt { position: absolute; inset: 0; opacity: 0; background: radial-gradient(ellipse at center, rgba(0,0,0,0) 55%, rgba(200,20,10,0.75) 100%); }
+.rl-fpx { position: absolute; left: 50%; top: 50%; width: 22px; height: 22px; margin: -11px 0 0 -11px; display: none; }
+.rl-fp.held .rl-fpx { display: block; }
+.rl-fpx::before, .rl-fpx::after { content: ''; position: absolute; background: rgba(255,248,230,0.85); box-shadow: 0 0 3px rgba(0,0,0,0.8); }
+.rl-fpx::before { left: 10px; top: 0; width: 2px; height: 22px; } .rl-fpx::after { top: 10px; left: 0; height: 2px; width: 22px; }
+.rl-fpx i { position: absolute; inset: 5px; border: 2px solid transparent; border-radius: 50%; }
+.rl-fpx.on::before, .rl-fpx.on::after { background: #ffd070; } .rl-fpx.on i { border-color: rgba(255,120,90,0.9); }
+.rl-fptg { position: absolute; left: 50%; top: calc(50% + 22px); transform: translateX(-50%); text-align: center; padding: 3px 9px 5px; background: rgba(10,14,28,0.7); border: 1px solid rgba(255,120,90,0.5); min-width: 120px; }
+.rl-fptg b { display: block; font-size: 0.82rem; font-weight: 600; color: #ffd4c8; white-space: nowrap; }
+.rl-fptg i, .rl-fpme i, .rl-fpu i { display: block; height: 4px; margin-top: 3px; background: rgba(255,255,255,0.15); } .rl-fptg s { display: block; height: 100%; background: var(--rl-them); }
+.rl-fptg.far { opacity: 0.6; border-color: rgba(236,228,207,0.25); }
+.rl-fpme { position: absolute; left: calc(max(10px, env(safe-area-inset-left, 0px)) + 62px); bottom: max(10px, env(safe-area-inset-bottom, 0px)); display: flex; gap: 8px; align-items: center; padding: 5px 10px 5px 5px; background: rgba(10,14,28,0.78); border: 1px solid rgba(90,162,255,0.45); max-width: 46vw; }
+.rl-fpme canvas { width: 44px; height: 52px; display: block; }
+.rl-fpme b { display: block; font-family: var(--display); font-weight: 400; color: #b4d4ff; font-size: 1rem; white-space: nowrap; }
+.rl-fpme i { width: 150px; max-width: 30vw; height: 6px; } .rl-fpme s, .rl-fpu s { display: block; height: 100%; background: var(--rl-me); }
+.rl-fpme small { display: block; font-size: 0.7rem; opacity: 0.8; margin-top: 2px; }
+.rl-fppick { position: absolute; left: 50%; transform: translateX(-50%); bottom: max(10px, env(safe-area-inset-bottom, 0px)); display: flex; gap: 4px; pointer-events: auto; }
+.rl-fpu { position: relative; width: 44px; padding: 2px; background: rgba(10,14,28,0.72); border: 1px solid rgba(236,228,207,0.2); cursor: pointer; }
+.rl-fpu canvas { width: 38px; height: 44px; display: block; } .rl-fpu.sel { border-color: #ffd070; box-shadow: 0 0 8px rgba(255,200,90,0.6); }
+.rl-fpu kbd { position: absolute; top: 1px; left: 3px; font-size: 10px; color: #fff4d6; text-shadow: 0 1px 2px #000; }
+.rl-fpmap { position: absolute; right: max(8px, env(safe-area-inset-right, 0px)); top: 74px; width: 72px; height: 128px; border: 1px solid rgba(236,228,207,0.25); }
+.rl-fpnew { position: absolute; left: 50%; bottom: 74px; transform: translateX(-50%); padding: 6px 14px; background: rgba(40,60,100,0.88); border: 1px solid #ffd070; color: #fff4d6; font-size: 0.9rem; pointer-events: auto; cursor: pointer; white-space: nowrap; }
+.rl-fpwait { position: absolute; left: 50%; top: 40%; transform: translateX(-50%); padding: 8px 16px; background: rgba(10,14,28,0.78); border: 1px solid rgba(236,228,207,0.2); font-size: 0.95rem; text-align: center; max-width: 86vw; }
+.rl-fphint { position: absolute; left: 50%; top: 74px; transform: translateX(-50%); font-size: 0.72rem; opacity: 0.75; padding: 2px 8px; background: rgba(10,14,28,0.5); white-space: nowrap; transition: opacity 0.4s; }
+.rl-fphint.dim { opacity: 0.25; }
+.rl-fpstick { position: absolute; width: 100px; height: 100px; margin: -50px 0 0 -50px; border-radius: 50%; border: 2px solid rgba(236,228,207,0.35); background: rgba(10,14,28,0.25); }
+.rl-fpstick i { position: absolute; left: 30px; top: 30px; width: 40px; height: 40px; border-radius: 50%; background: rgba(236,228,207,0.45); }
+.rl-fpstrike { display: none; position: absolute; right: max(14px, env(safe-area-inset-right, 0px)); bottom: max(80px, calc(env(safe-area-inset-bottom, 0px) + 80px)); width: 84px; height: 84px; border-radius: 50%; border: 2px solid #ffd070; background: radial-gradient(circle at 50% 35%, rgba(150,60,40,0.9), rgba(70,20,14,0.9)); color: #fff4d6; font-family: var(--display); font-size: 1rem; pointer-events: auto; touch-action: none; }
+.rl-fprival { position: absolute; left: 0; top: 0; padding: 1px 7px; background: rgba(120,20,14,0.82); border: 1px solid #ff9a8a; color: #fff; font-size: 0.75rem; pointer-events: none; white-space: nowrap; z-index: 5; }
+.rl-fp.spec .rl-fpme, .rl-fp.spec .rl-fppick, .rl-fp.spec .rl-fphint, .rl-fp.spec .rl-fpstrike { display: none; }
+@media (pointer: coarse) { .rl-fp.held .rl-fpstrike { display: block; } .rl-fphint { display: none; } .rl-fpme { bottom: max(66px, calc(env(safe-area-inset-bottom, 0px) + 66px)); left: max(10px, env(safe-area-inset-left, 0px)); } }
+@media (max-width: 560px) { .rl-fpu { width: 36px; } .rl-fpu canvas { width: 30px; height: 36px; } .rl-fpme small { display: none; } .rl-fpmap { width: 54px; height: 96px; top: 96px; } }
+.rl-fp:not(.held) .rl-fphint { display: none; }

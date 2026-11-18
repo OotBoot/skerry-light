@@ -273,7 +273,7 @@ function rl3dPick(cx, cy) {
   return { x: o.x + d.x * k + 9, y: 16 - (o.z + d.z * k) };
 }
 // arena tiles to the screen (for the HUD's labels over the towers)
-function rl3dProject(x, y, h) { if (!RL3.ok) return null; const v = rv(x, y, h).project(RL3.cam); return { x: (v.x + 1) / 2 * innerWidth, y: (1 - v.y) / 2 * innerHeight, on: v.z < 1 }; }
+function rl3dProject(x, y, h) { if (!RL3.ok) return null; const w = rv(x, y, h), front = w.clone().applyMatrix4(RL3.cam.matrixWorldInverse).z < 0, v = w.project(RL3.cam); return { x: (v.x + 1) / 2 * innerWidth, y: (1 - v.y) / 2 * innerHeight, on: v.z < 1 && front }; }   // (on: in front of the camera, which matters in first person)
 
 // ---------- the towers ----------
 function rl3dTowerPlain(kind, side) {
@@ -882,10 +882,10 @@ function rl3dZone(on) {
 function rl3dDraw(dt) {
   if (!RL3.ok || !(RL.on || RL.ph === 'draft')) return;   // (and the empty arena behind the triple draft)
   RL3.t += dt; const t = RL3.t, S = RL3.scene;
-  rl3dFit();
+  if (!(RL.fp && typeof rlfpCam === 'function' && rlfpCam(dt))) rl3dFit();   // (first person: the camera at your troop's eyes, src/rlfp.js)
   RL3.seaU.t.value = t; RL3.seaU.cp.value.copy(RL3.cam.position);
   rl3dFx();
-  const meCol = RL_MINE, thCol = RL_THEIRS;
+  const meCol = RL_MINE, thCol = RL_THEIRS, fpHide = RL.fp && typeof rlfpHidden === 'function' ? rlfpHidden() : 0;
   // the units: new ones built, gone ones left to fall, the rest placed and moving
   const live = new Set();
   for (const u of RL.U) {
@@ -895,7 +895,7 @@ function rl3dDraw(dt) {
     if (u.dep > 0) H.rise = Math.min(1, H.rise + dt * 0.9); else H.rise = Math.min(1, H.rise + dt * 3);
     const rise = H.rise, k = (0.35 + 0.65 * rise) * 1.55;
     H.g.position.copy(rv(x, y, RL_G0 + fly * (H.air ? rise : 1) - (1 - rise) * (H.air ? 0 : 0.35)));
-    H.m.rotation.y = Math.PI - (u.face || 0); H.g.scale.setScalar(k);
+    H.m.rotation.y = Math.PI - (u.face || 0); H.g.scale.setScalar(k); H.g.visible = u.id !== fpHide && !(fpHide && H.g.position.distanceToSquared(RL3.cam.position) < 0.8);   // (first person: nothing drawn right in your eyes)
     H.sh.position.copy(rv(x, y, RL_G0 + 0.015)); H.sh.scale.setScalar(H.sz * (H.air ? 1.1 : 1.5)); H.sh.material.opacity = H.air ? 0.5 : 1;
     // walk, strike, idle
     const P = H.P, walk = u.st === 'walk', hit = u.st === 'hit', spd = (C.spd || 1) * (u.slow || u.fog ? 0.6 : 1) * (u.chg ? 2 : 1);
@@ -922,7 +922,7 @@ function rl3dDraw(dt) {
     if (C.champ && typeof rlChampAnim === 'function') rlChampAnim(u, H, x, y, t, dt, walk, hit, pulse);   // (src/rlchamp.js)
     // its health, once it's hurt
     if (u.hp < H.hpLast - 0.5) H.flash = 0.12; H.hpLast = u.hp;
-    const showBar = u.hp < u.max - 0.5 || u.bld;
+    const showBar = (u.hp < u.max - 0.5 || u.bld) && u.id !== fpHide;
     if (showBar && !H.bar) H.bar = rl3dBar(Math.max(0.6, H.sz * 1.6), 0.1);
     if (H.bar) { const top = (H.air ? 3.4 : (u.bld ? 1.9 : 1.7) * Math.max(0.8, H.sz * 1.6)) + RL_G0; rl3dBarSet(H.bar, rv(x, y, top), u.hp / u.max, RL.n3 ? rlSideHex(u.side) : u.side === RL.me ? meCol : thCol, showBar); }
   }

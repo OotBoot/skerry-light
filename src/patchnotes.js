@@ -6,6 +6,14 @@
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 224, date: '2026-11-18', title: "Skerry Clash: First person", New: [
+    "Skerry Clash: new First person mode. A bot plays the cards for each side, and you take the field as any troop yours sends: walk it, look round and strike what's in front of you, in first person.",
+    "Skerry Clash: swap to any of your troops on the field at any time from the row along the bottom (1 to 9, or Tab). When your bot sends a new one, press F to take it. If yours falls, you take the newest straight away.",
+    "Skerry Clash: First person online: host it from the lobby (Host first person, or tick First person). Your rival gets the other bot and does the same, and you can see which troop they're holding.",
+    "Skerry Clash: First person works with mouse and keyboard, a controller (sticks to walk and look, RT to strike, LB/RB to swap) and touch (a stick on the left, drag on the right to look, and a Strike button). A small map shows the race and where you are.",
+  ], Changes: [
+    "Skerry Clash: in First person, the troop you hold walks a bit faster than it would on its own. First person matches give crates but aren't rated.",
+  ] },
   { v: 223, date: '2026-11-17', title: "Skerry Clash rating follows your username", Changes: [
     "Skerry Clash: your rating (MMR) now belongs to your username alone. Play under the same name on any device and every win or loss moves the same rating, with no more \"username taken\" for a name rated on another save.",
     "Skerry Clash: a device that has never played under your name shows that name's real rating as soon as you type it in, instead of starting from 1000.",

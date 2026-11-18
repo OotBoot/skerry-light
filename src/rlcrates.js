@@ -449,7 +449,7 @@ function rlRecord(r) {
   s.p++; s.cr += Math.max(0, Math.min(3, r.crowns | 0));
   if (draw) { s.d++; s.s = 0; } else if (win) { s.w++; s.s++; s.bs = Math.max(s.bs, s.s); } else { s.l++; s.s = 0; }
   const got = 1 + (win ? 1 : 0); RLV.c = Math.min(99999, RLV.c + got); rlvSave(); rlkRender();
-  if (typeof rlmReport === 'function') { try { rlmReport(r); } catch (e) { console.error(e); } }   // the rating (src/rlmmr.js)
+  if (typeof rlmReport === 'function' && !r.fp) { try { rlmReport(r); } catch (e) { console.error(e); } }   // the rating (src/rlmmr.js)
   const what = draw ? 'A draw' : win ? (s.s > 2 ? s.s + ' wins running' : 'A win') : 'Duel over';
   if (typeof toast === 'function') toast(what + ': +' + got + ' tower crate' + (got > 1 ? 's' : '') + '. Open them from the Skerry Clash card.', '+' + got + ' tower crate' + (got > 1 ? 's' : ''));
 }
