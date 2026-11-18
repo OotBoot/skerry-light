@@ -6,6 +6,9 @@
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 238, date: '2026-11-18', title: "Wrackhaven: up to the leads", Fixes: [
+    "The Chronicle of the Light, The Fall of Wrackhaven: in the Belfry, the staircase from the Council Chamber up to the leads stopped you halfway, under the boards laid over the roof. The stairwell is open now, so you can walk all the way up.",
+  ] },
   { v: 237, date: '2026-11-18', title: "The Compendium catches up with the Chronicle", New: [
     "Skerry Compendium: The Chronicle of the Light joins the tales, with its fourteen missions laid out act by act and linked to the nights they tell.",
     "Skerry Compendium: 40 new articles from the campaign. People: Wenna, Black Jago, the Spanish garrison and Sergeant Ybarra, Abel Penhallow, Jory Tregear, the Receiver of Wreck, Black Nell, Ruth Carrow, the cutter's crew, the Mayor and folk of Wrackhaven, and the Wren's mate.",

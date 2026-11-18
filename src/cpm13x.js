@@ -47,7 +47,9 @@ FPI_GEN.cp13 = {
 function c13Leads(H, K, Z) {
   const I = H.I, F2 = C13.F2, OX = FPSC.CX, OY = FPSC.CY;
   for (const p of I.props.slice()) if ((p.k === 'vlouvre' || (p.k === 'glasspane' && Math.abs((p.z0 || 0) - F2) < 0.01)) && Math.abs(Math.abs(p.x - OX) - 3.5) < 0.05 && Math.abs(p.y - OY - 10) < 0.05) fpiDrop(I, p);
-  for (const [x0, x1, y0, y1] of [[-11, 11, -9, 7], [-11, -3.75, 7, 13], [3.75, 11, 7, 13]]) K.put('slab', (x0 + x1) / 2, (y0 + y1) / 2, 0, { w: x1 - x0, d: y1 - y0, top: F2 });
+  // (the boards leave the stairwell open: the stair up from the Council Chamber runs east to west under the east side,
+  // y 7.45 to 8.85, and boarded over it, it hit its head on them and stopped halfway up)
+  for (const [x0, x1, y0, y1] of [[-11, 11, -9, 7], [-11, -3.75, 7, 13], [3.75, 11, 9.1, 13], [9.5, 11, 7, 9.1]]) K.put('slab', (x0 + x1) / 2, (y0 + y1) / 2, 0, { w: x1 - x0, d: y1 - y0, top: F2 });
   (Z.keep = Z.keep || []).push({ b: [OX - 11.6, OX + 11.6, OY - 9.6, OY - 9.0], z0: F2 + 0.5 }, { b: [OX - 11.6, OX + 11.6, OY + 13.0, OY + 13.6], z0: F2 + 0.5 },
     { b: [OX - 11.6, OX - 11.0, OY - 9.6, OY + 13.6], z0: F2 + 0.5 }, { b: [OX + 11.0, OX + 11.6, OY - 9.6, OY + 13.6], z0: F2 + 0.5 });
   // a lantern at each corner of the leads, and the chimney pots and the lead's rolls to see by
