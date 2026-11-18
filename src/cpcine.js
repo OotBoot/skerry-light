@@ -35,7 +35,8 @@ function cpLook(f, t) { const dx = t[0] - f[0], dy = t[1] - f[1], dz = t[2] - f[
 const cpEase = (k, e) => e === 'lin' ? k : e === 'in' ? k * k : e === 'out' ? 1 - (1 - k) * (1 - k) : k * k * (3 - 2 * k);
 function cpCineOn() { return !!(CPN.on && typeof CP !== 'undefined' && CP.on); }
 // (the camera, cinematic or not: zmFrame holds input while it's on)
-const cpHold = () => cpCineOn();
+// (and while the crew are still choosing their callings: src/cp.js cpWaitOn)
+const cpHold = () => cpCineOn() || (typeof cpWaitOn === 'function' && cpWaitOn());
 
 // ---------- starting and ending ----------
 // (hosting or alone) play cinematic id on every screen; then() on the host once it's over

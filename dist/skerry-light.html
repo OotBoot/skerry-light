@@ -2954,7 +2954,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 // ---- src/config.js ----
 'use strict';
 // The game's version, shown at the top of the main menu. Bump it by one with every change pushed to main.
-var VERSION = 226;
+var VERSION = 227;
 // Skerry Light: tuning, asset paths and lore.
 // World units are metres. The lighthouse stands at the origin on the shoreline (y = 0);
 // north (+y) is open sea. Bearings: 0 = north, positive = east.
@@ -3129,6 +3129,9 @@ document.addEventListener('visibilitychange', () => {
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 227, date: '2026-11-18', title: "Missions wait for every calling", Changes: [
+    "The Chronicle of the Light: a mission no longer starts until everyone in the crew has picked a calling. The opening cutscene, the clock and the enemies all wait, and anyone who has already picked sees who is still choosing. If someone hasn't picked after 90 seconds, the mission starts without waiting for them, and they stay safe at the picker until they choose.",
+  ] },
   { v: 226, date: '2026-11-18', title: "The menu stays where you put it", Fixes: [
     "Opening the game from an old invite link, or from a tab left open on a Skerry Light crew, no longer sends you to Skerry Light on every launch.",
     "Picking another game on the main menu while an invite was still being looked for could jump you back to Skerry Light. Once you choose something yourself, the invite now steps aside.",
@@ -49496,6 +49499,8 @@ function fbVoyDebug(kind, t) {
 //  - cpMusic(): the music key for now (src/raidmusic.js rmWant asks it first): the cinematic's own, else the stage's
 //    music(), else the mission's music.default. A key whose recording isn't made yet falls back (CP_MUSIC_FALL) to
 //    one that is, so there's always something playing.
+//  - Nothing starts (not the intro, not the stage's clock, not the drowned) until every player has picked a calling
+//    (cpWaitTick, held through cpHold: src/cpcine.js); the host's word carries cpwait, who's still choosing.
 //  - cpDebug(mid, stage, noCine, cls): straight into a mission alone (the calling cls, or the last one, picked for
 //    you), at a stage, for tests.
 // Hooks in shared files are marked [campaign]: src/raid.js (raidBegin, raidAfterStart, raidStop, raidNextStage,
@@ -49537,7 +49542,7 @@ function cpCast(k, def) { CP_CAST[k] = Object.assign({ n: k, c: '#ece4cf' }, def
 const CP_MUSIC_FALL = { cpmenu: 'gwwin', cpwin: 'gwwin', cplose: null, cptense: 'gwhold', cpsail: 'gwsail', cpfight: 'frisle', cpboss: 'frboss', cpsad: 'raidpier', cpfog: 'frsail', cpcave: 'raidcave', cphope: 'gwwin' };
 Object.assign(RM_LOOP, { cphope: false });   // (the hopeful closing theme: played once through, as the outros end)
 
-const CPC = { LIVES: 1, BACK: 10, KEEP: 'skerry-campaign', PICK: 'skerry-cp-pick', SAY: 5.5 };
+const CPC = { LIVES: 1, BACK: 10, KEEP: 'skerry-campaign', PICK: 'skerry-cp-pick', SAY: 5.5, WAIT: 90 };
 var CP = { on: false, mid: null, want: null, from: 0, debug: null, obj: '', ev: [], eseq: 0, evSeen: -1, sub: null, subs: [], won: false, lost: '', fail: '', outroDone: false, nextOk: -1, life: 0, backT: 0, kit: null, startT: 0 };
 // progress on this browser: { done: { id: { n: times finished, t: best seconds, d: first finished (YYYY-MM-DD) } } }
 // and cls: { calling: missions seen through as it } (src/cpclass.js)
@@ -49623,12 +49628,38 @@ function cpAfterStart() {
   const from = CP.debug ? CP.debug.stage | 0 : CP.from | 0; CP.from = 0;
   const dbg = CP.debug; CP.debug = null;
   if (dbg && typeof RCL !== 'undefined' && RCL.picking) rclChoose(dbg.cls && RCL_CLASSES[dbg.cls] ? dbg.cls : rclLast());
-  if (ZM.net === 'client') return;
-  // (a checkpoint, or a test: no intro; raidUseStage plays the stage's own cutscene)
-  if (from > 0 && from < RAID_ORDER.length) { raidUseStage(from); return; }
-  if (dbg && dbg.noCine) return;
-  if (M.intro && typeof cpCine === 'function') cpCine(M.intro, () => cpStageBegun(0)); else cpStageBegun(0);
+  // (nothing starts, not even the intro, until everyone has picked a calling: cpWaitTick; everything's held meanwhile)
+  CP.wait = true; CP.waitT = 0;
+  if (ZM.net === 'client') { CP.go = null; return; }
+  CP.go = () => {
+    // (a checkpoint, or a test: no intro; raidUseStage plays the stage's own cutscene)
+    if (from > 0 && from < RAID_ORDER.length) { raidUseStage(from); return; }
+    if (dbg && dbg.noCine) return;
+    if (M.intro && typeof cpCine === 'function') cpCine(M.intro, () => cpStageBegun(0)); else cpStageBegun(0);
+  };
+  cpWaitTick();
 }
+// ---------- waiting for the crew's callings ----------
+// Who's still choosing: their names (empty once all of us have). Hosting, the others' callings are in their presence
+// (src/rclass.js rclHeard: r.rc); one who hasn't been heard from yet counts as still choosing.
+function cpChoosing() {
+  const out = [];
+  if (typeof RCL === 'undefined') return out;
+  if (!RCL.cls) out.push('you');
+  if (ZM.net) for (const h of ZM.hum || []) { if (h[0] === FPS.me.id) continue; const r = FPS.remote.get(h[0]); if (!r || !r.rc) out.push(String(h[1] || 'A keeper').slice(0, 20)); }
+  return out;
+}
+// (hosting or alone, a few times a second) everyone's chosen: on with the mission. One who never chooses doesn't hold
+// the rest for ever: after CPC.WAIT s it starts anyway (whoever's still choosing is safe at the picker until they do).
+function cpWaitTick() {
+  if (!CP.on || !CP.wait || ZM.net === 'client' || !RAID.on) return;
+  const left = cpChoosing();
+  if (left.length && !(CP.waitT > CPC.WAIT && !left.includes('you'))) return;
+  CP.wait = false; const go = CP.go; CP.go = null;
+  if (go) try { go(); } catch (e) { console.warn('cp go', e); }
+}
+setInterval(() => { if (CP.on && CP.wait) { CP.waitT += 0.2; cpWaitTick(); } }, 200);
+const cpWaitOn = () => !!(CP.on && CP.wait);
 // (each stage laid out, hosting or alone: raidUseStage, and the first after its intro) its own cutscene
 function cpStageBegun(i) {
   const M = cpNow(); if (!M || ZM.net === 'client') return;
@@ -49639,7 +49670,7 @@ function cpStop() {
   const M = CP_BY[CP.mid];
   if (CP.on && M && M.stop) try { M.stop(); } catch (e) { console.warn('cp stop', e); }
   if (typeof cpcStop === 'function') cpcStop();
-  CP.on = false; CP.obj = ''; CP.sub = null; CP.subs = [];
+  CP.on = false; CP.obj = ''; CP.sub = null; CP.subs = []; CP.wait = false; CP.go = null;
 }
 
 // ---------- the parts, one after another ----------
@@ -49741,11 +49772,13 @@ function cpBack() {
 // the host's word: cpw = [mission, objective, events]; and the cinematic (src/cpcine.js cpcPack)
 function cpPack(z) {
   z.cpw = [CP.mid, CP.obj, CP.ev];
+  z.cpwait = CP.wait ? cpChoosing().map(n => n === 'you' ? (ZM.hum.find(h => h[0] === FPS.me.id) || [])[1] || 'The host' : n) : 0;   // (still waiting on callings: who for)
   if (typeof cpWpPack === 'function') cpWpPack(z);   // (src/cpkit.js)
   if (typeof cpcPack === 'function') cpcPack(z);
 }
 function cpApply(hz) {
   const a = hz.cpw; if (!Array.isArray(a)) return;
+  CP.wait = Array.isArray(hz.cpwait); CP.waitWho = CP.wait ? hz.cpwait.slice(0, 4).map(n => znClean(n, 20)) : [];
   CP.obj = znClean(a[1], 140);
   if (Array.isArray(a[2])) {
     if (CP.evSeen < 0) { CP.evSeen = 0; for (const e of a[2]) if (Array.isArray(e)) CP.evSeen = Math.max(CP.evSeen, e[0] | 0); }
@@ -49774,6 +49807,14 @@ function cpHud(phone, mono, fell) {
     ctx.fillStyle = '#ffd88a'; ctx.fillText(tx, L, top, W * 0.55 - 12);
   }
   if (typeof cpWpHud === 'function') cpWpHud(phone, mono);
+  // waiting on the crew's callings (once I've picked mine)
+  if (CP.wait && !ZM.over && typeof RCL !== 'undefined' && RCL.cls && !RCL.picking) {
+    const who = ZM.net === 'client' ? (CP.waitWho || []).filter(n => n !== ((ZM.hum || []).find(h => h[0] === FPS.me.id) || [])[1]) : cpChoosing().filter(n => n !== 'you');
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillStyle = 'rgba(8,10,14,0.6)'; ctx.fillRect(cx - Math.min(W * 0.45, 300), H * 0.2 - 34, Math.min(W * 0.9, 600), 68);
+    ctx.font = fell(phone ? 18 : 24); ctx.fillStyle = '#ffe2a8'; ctx.fillText('Waiting for the crew to choose', cx, H * 0.2 - 10);
+    ctx.font = mono(phone ? 10 : 12); ctx.fillStyle = 'rgba(236,228,207,0.8)'; ctx.fillText(who.length ? 'Still choosing: ' + who.join(', ') : 'Starting…', cx, H * 0.2 + 16, Math.min(W * 0.85, 560));
+  }
   if (CP.backT > 0 && ZM.ghost) { ctx.textAlign = 'center'; ctx.font = fell(phone ? 18 : 24); ctx.fillStyle = '#ffe2a8'; ctx.fillText(`Back on your feet in ${Math.max(1, Math.ceil(CP.backT))} s`, cx, H * 0.36); }
   cpSubHud(phone, mono, fell, false);
   ctx.textBaseline = 'alphabetic';
@@ -49925,7 +49966,8 @@ function cpLook(f, t) { const dx = t[0] - f[0], dy = t[1] - f[1], dz = t[2] - f[
 const cpEase = (k, e) => e === 'lin' ? k : e === 'in' ? k * k : e === 'out' ? 1 - (1 - k) * (1 - k) : k * k * (3 - 2 * k);
 function cpCineOn() { return !!(CPN.on && typeof CP !== 'undefined' && CP.on); }
 // (the camera, cinematic or not: zmFrame holds input while it's on)
-const cpHold = () => cpCineOn();
+// (and while the crew are still choosing their callings: src/cp.js cpWaitOn)
+const cpHold = () => cpCineOn() || (typeof cpWaitOn === 'function' && cpWaitOn());
 
 // ---------- starting and ending ----------
 // (hosting or alone) play cinematic id on every screen; then() on the host once it's over
