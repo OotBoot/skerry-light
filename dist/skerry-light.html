@@ -2954,7 +2954,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 // ---- src/config.js ----
 'use strict';
 // The game's version, shown at the top of the main menu. Bump it by one with every change pushed to main.
-var VERSION = 235;
+var VERSION = 236;
 // Skerry Light: tuning, asset paths and lore.
 // World units are metres. The lighthouse stands at the origin on the shoreline (y = 0);
 // north (+y) is open sea. Bearings: 0 = north, positive = east.
@@ -3129,6 +3129,9 @@ document.addEventListener('visibilitychange', () => {
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 236, date: '2026-11-18', title: "Maren's End: free to move under the sea wall", Fixes: [
+    "The Chronicle of the Light, Maren's End: in the last part, under the fort's sea wall, everyone was held fast where they came out of the old drain and couldn't move. The bed below the wall is open again, so you can reach the bells and the wrecks.",
+  ] },
   { v: 235, date: '2026-11-18', title: "Online limits, made safer", Fixes: [
     "Online: if the server can't tell where a player is connecting from, it no longer counts everyone as one address, so the new 12-connection limit can never shut out a crowd of real players.",
   ] },
@@ -61551,7 +61554,11 @@ FPI_K.c12pool = {
 
 // ---------- laying it out: the fort as it is, and the bed below its sea wall ----------
 function c12mSet(H, K, Z) {
-  rfLay(H, K, Z);
+  // (the fort as the raid lays it, but for its sea guard: the raid's unseen wall keeping you off the sea is the very bed
+  // this stage is played on, and left in it held everyone fast where they came out of the drain)
+  rfLay(H, Object.assign({}, K, { put: (k, ...a) => k === 'seaguard' ? undefined : K.put(k, ...a) }), Z);
+  // (in its place, only the bed's two ends past the sea wall's, so no one walks round behind the fort)
+  for (const sx of [-1, 1]) K.put('seaguard', sx * 52, -9.4, 0, { w: 26, d: 26 });
   const { put, light } = K;
   put('c12far', 0, -60, 0, { r: C12M.R + 30, sd: 9 });
   put('c12salt', 0, 0, 0, { r: [-60, 60, -96, -26], n: 70, skip: [[C12M.POOL[0], C12M.POOL[1], 9]], sd: 12 });

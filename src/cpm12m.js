@@ -67,7 +67,11 @@ FPI_K.c12pool = {
 
 // ---------- laying it out: the fort as it is, and the bed below its sea wall ----------
 function c12mSet(H, K, Z) {
-  rfLay(H, K, Z);
+  // (the fort as the raid lays it, but for its sea guard: the raid's unseen wall keeping you off the sea is the very bed
+  // this stage is played on, and left in it held everyone fast where they came out of the drain)
+  rfLay(H, Object.assign({}, K, { put: (k, ...a) => k === 'seaguard' ? undefined : K.put(k, ...a) }), Z);
+  // (in its place, only the bed's two ends past the sea wall's, so no one walks round behind the fort)
+  for (const sx of [-1, 1]) K.put('seaguard', sx * 52, -9.4, 0, { w: 26, d: 26 });
   const { put, light } = K;
   put('c12far', 0, -60, 0, { r: C12M.R + 30, sd: 9 });
   put('c12salt', 0, 0, 0, { r: [-60, 60, -96, -26], n: 70, skip: [[C12M.POOL[0], C12M.POOL[1], 9]], sd: 12 });

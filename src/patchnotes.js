@@ -6,6 +6,9 @@
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 236, date: '2026-11-18', title: "Maren's End: free to move under the sea wall", Fixes: [
+    "The Chronicle of the Light, Maren's End: in the last part, under the fort's sea wall, everyone was held fast where they came out of the old drain and couldn't move. The bed below the wall is open again, so you can reach the bells and the wrecks.",
+  ] },
   { v: 235, date: '2026-11-18', title: "Online limits, made safer", Fixes: [
     "Online: if the server can't tell where a player is connecting from, it no longer counts everyone as one address, so the new 12-connection limit can never shut out a crowd of real players.",
   ] },
