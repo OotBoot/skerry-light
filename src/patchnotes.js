@@ -6,6 +6,9 @@
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 235, date: '2026-11-18', title: "Online limits, made safer", Fixes: [
+    "Online: if the server can't tell where a player is connecting from, it no longer counts everyone as one address, so the new 12-connection limit can never shut out a crowd of real players.",
+  ] },
   { v: 234, date: '2026-11-18', title: "Fairer online play", Changes: [
     "Online: one address can now hold at most 12 connections at once, so a single person can no longer fill the server and lock everyone else out. A busy household or classroom still fits.",
     "Scoreboards and cloud saves: the limits on how often scores and saves can be sent now go by each player's real address, so they can't be dodged.",
