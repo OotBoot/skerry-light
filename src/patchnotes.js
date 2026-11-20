@@ -6,6 +6,13 @@
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 239, date: '2026-11-20', title: "New game: Skerry League", New: [
+    "Skerry League: a new game on the main menu. Sail into a great striped buoy and knock it into the other side's goal, in the Harbour Pool between two lighthouses.",
+    "Skerry League: one, two or three ships a side, with bots on your team and against you, at Easy, Fair or Hard. Matches of 3, 5 or 7 minutes, with golden goal overtime if it's level.",
+    "Skerry League: sail your own Brig, Cutter, Barque or Carrier in the skin you have on her. She handles as she does at sea, and turns more sharply in the pool.",
+    "Skerry League: the Gale. Hold Shift or Space for a burst of speed, and fill the gauge again from the gale buoys on the water.",
+    "Skerry League: Ball cam and Ship cam, a chart of the pool in the corner, controller and touch controls, and your record of wins, draws and losses on the card.",
+  ] },
   { v: 238, date: '2026-11-18', title: "Wrackhaven: up to the leads", Fixes: [
     "The Chronicle of the Light, The Fall of Wrackhaven: in the Belfry, the staircase from the Council Chamber up to the leads stopped you halfway, under the boards laid over the roof. The stairwell is open now, so you can walk all the way up.",
   ] },

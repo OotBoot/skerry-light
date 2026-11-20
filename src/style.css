@@ -1857,3 +1857,51 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 .rl-fp:not(.held) .rl-fphint { display: none; }
 .rl-fpmap.round { height: 108px; width: 108px; border: 0; border-radius: 50%; } .rl-fprival.gold { background: rgba(120,90,14,0.85); border-color: #f4d488; }
 @media (max-width: 560px) { .rl-fpmap.round { width: 80px; height: 80px; } }
+
+/* [league] Skerry League (src/league.js): its card, banner and the screen over the 3D view */
+.lgcard { border-color: rgba(74,168,255,0.55); }
+.lgcard h1 { color: #9fd0ff; text-shadow: 0 0 30px rgba(74,168,255,0.45); }
+.newgame.lgbanner { border-color: rgba(74,168,255,0.6); background: linear-gradient(90deg, rgba(74,168,255,0.3), rgba(255,140,58,0.1)); }
+.newgame.lgbanner:hover, .newgame.lgbanner:focus-visible { background: linear-gradient(90deg, rgba(74,168,255,0.45), rgba(255,140,58,0.18)); }
+.newgame.lgbanner .ng-tag { background: #4aa8ff; color: #04121f; }
+.lgopts { margin: 10px 0; }
+.lgrecord { margin-top: 8px; }
+#lgUI { position: fixed; inset: 0; z-index: 30; font-family: var(--log); color: var(--ink); -webkit-user-select: none; user-select: none; touch-action: none; }
+#lgCv { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+#lgUI .lg-score, #lgUI .lg-msg, #lgUI .lg-count, #lgUI .lg-gauge, #lgUI .lg-speed, #lgMap { pointer-events: none; }
+.lg-score { position: absolute; top: max(10px, env(safe-area-inset-top, 0px)); left: 50%; transform: translateX(-50%); display: flex; align-items: stretch; background: rgba(8,12,22,0.78); border: 1px solid rgba(236,228,207,0.18); }
+.lg-score > * { display: flex; align-items: center; padding: 6px 12px; }
+.lg-score b { font-family: var(--log); font-weight: 700; font-size: 1.7rem; min-width: 2.2ch; justify-content: center; }
+.lg-score #lgSB { background: rgba(74,168,255,0.85); color: #04121f; }
+.lg-score #lgSO { background: rgba(255,140,58,0.88); color: #1f0c02; }
+.lg-score time { font-size: 1.3rem; letter-spacing: 0.04em; min-width: 4.2ch; justify-content: center; font-variant-numeric: tabular-nums; }
+.lg-score time.ot { color: #ffd34d; }
+.lg-t { font-size: 12px; text-transform: uppercase; letter-spacing: 0.12em; }
+.lg-blue { color: #9fd0ff; } .lg-orange { color: #ffc49a; }
+#lgMap { position: absolute; top: max(10px, env(safe-area-inset-top, 0px)); right: 12px; width: 92px; height: 148px; }
+.lg-tools { position: absolute; top: max(10px, env(safe-area-inset-top, 0px)); left: 12px; display: flex; gap: 6px; }
+.lg-count { position: absolute; top: 32%; left: 50%; transform: translate(-50%, -50%); font-family: var(--log); font-weight: 700; font-size: clamp(4rem, 14vw, 9rem); color: #fff; text-shadow: 0 0 30px rgba(0,0,0,0.6), 0 0 60px rgba(74,168,255,0.5); }
+.lg-msg { position: absolute; top: 20%; left: 50%; transform: translateX(-50%); font-family: var(--display); font-size: clamp(1.6rem, 5vw, 3rem); color: #fff; text-align: center; text-shadow: 0 2px 20px rgba(0,0,0,0.7); opacity: 0; transition: opacity 0.25s; white-space: nowrap; }
+.lg-msg.on { opacity: 1; }
+.lg-gauge { position: absolute; right: 18px; bottom: max(18px, env(safe-area-inset-bottom, 0px)); }
+.lg-ring { --p: 33%; width: 96px; height: 96px; border-radius: 50%; background: radial-gradient(closest-side, rgba(8,12,22,0.88) 78%, transparent 80% 100%), conic-gradient(#ffd34d var(--p), rgba(255,255,255,0.12) 0); display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.lg-ring b { font-family: var(--log); font-weight: 700; font-size: 1.6rem; line-height: 1; }
+.lg-ring small { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; }
+.lg-gauge.on .lg-ring { box-shadow: 0 0 24px rgba(255,211,77,0.7); }
+.lg-speed { position: absolute; left: 18px; bottom: max(18px, env(safe-area-inset-bottom, 0px)); background: rgba(8,12,22,0.72); border: 1px solid rgba(236,228,207,0.16); padding: 6px 12px; display: flex; flex-direction: column; align-items: center; }
+.lg-speed b { font-family: var(--log); font-weight: 700; font-size: 1.4rem; font-variant-numeric: tabular-nums; }
+.lg-speed small { font-size: 11px; color: var(--muted); }
+.lg-pad { position: absolute; left: 0; right: 0; bottom: max(12px, env(safe-area-inset-bottom, 0px)); display: flex; justify-content: space-between; padding: 0 12px; pointer-events: none; }
+.lg-pad > div { display: flex; gap: 10px; pointer-events: auto; }
+.lg-pad .gfbtn { min-width: 64px; min-height: 64px; font-size: 22px; }
+.lg-pad .gfbtn.on { border-color: var(--lamp); color: var(--lamp); }
+.lg-pad .gfbtn.swing { min-width: 84px; background: rgba(255,211,77,0.85); color: #1f1600; border-color: #ffe9a0; }
+#lgUI:has(.lg-pad:not([hidden])) .lg-gauge { bottom: 100px; }
+#lgUI:has(.lg-pad:not([hidden])) .lg-speed { bottom: 100px; }
+#lgUI .overlay { position: absolute; z-index: 40; }
+.lgendov .card { max-width: min(40rem, 100%); }
+.lg-endscore { font-family: var(--display); font-size: 1.6rem; margin: 4px 0 12px; }
+.lgtable tr.me td { color: var(--lamp); }
+.lgtable small { color: var(--muted); margin-left: 4px; }
+@media (max-width: 600px) { .lg-score b { font-size: 1.4rem; } .lg-t { display: none !important; } #lgMap { width: 64px; height: 104px; } .lg-ring { width: 76px; height: 76px; } }
+@media (max-height: 500px) { .lg-ring { width: 72px; height: 72px; } .lg-ring b { font-size: 1.2rem; } .lg-speed b { font-size: 1.1rem; } #lgMap { width: 60px; height: 98px; } }

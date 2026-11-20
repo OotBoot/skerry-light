@@ -24,12 +24,14 @@ function frame(now) {
   const dt = Math.min(0.05, (now - last) / 1000); last = now;
   try {
     // Wreckers' Night runs its own loop (and the menu cursor never stays over a game)
-    if (state === 'fps' || state === 'war' || state === 'golf' || state === 'rival') hideCursor();
+    if (state === 'fps' || state === 'war' || state === 'golf' || state === 'rival' || state === 'league') hideCursor();
     if (state === 'fps') { fpsFrame(dt); requestAnimationFrame(frame); return; }
     // and so does The Drowned Reach
     if (state === 'war') { warFrame(dt); requestAnimationFrame(frame); return; }
     // and so does Skerry Links (src/golf.js)
     if (state === 'golf') { gfFrame(dt); requestAnimationFrame(frame); return; }
+    // and so does Skerry League (src/league.js)
+    if (state === 'league') { lgFrame(dt); requestAnimationFrame(frame); return; }
     // and so does Skerry Clash (src/rl.js)
     if (state === 'rival') { rlFrame(dt); requestAnimationFrame(frame); return; }
     pollPad(dt);

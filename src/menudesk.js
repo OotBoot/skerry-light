@@ -19,6 +19,7 @@ const MD_GAMES = [
   { id: 'gfTitle', sub: 'Nine holes of golf on the cliffs', c: '#8fc26a' },   // [golf] src/golf.js
   { id: 'rlTitle', sub: 'A duel of lights for two', c: '#e8a050' },
   { id: 'cpTitle', sub: 'The whole tale of the Light, as a campaign', c: '#f0d890', tag: 'New' },   // [campaign] The Chronicle of the Light (src/cp.js)   // [rival] Skerry Clash (src/rl.js, src/rlcrates.js)
+  { id: 'lgTitle', sub: 'Ships and a ball · one to three a side', c: '#4aa8ff', tag: 'New' },   // [league] Skerry League (src/league.js)
 ];
 const mdStore = { get() { try { return localStorage.getItem('skerryDeskGame'); } catch (e) { return null; } }, set(v) { try { localStorage.setItem('skerryDeskGame', v); } catch (e) {} } };
 

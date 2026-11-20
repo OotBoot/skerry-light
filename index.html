@@ -82,6 +82,7 @@
     <button class="newgame gfbanner" id="gfBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">And <b>Skerry Links</b>: nine holes of golf along the cliffs, alone or with up to four</span><span class="ng-go" aria-hidden="true">↓</span></button><!-- [golf] -->
     <button class="newgame rlbanner" id="rlBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">And a ninth, <b>Skerry Clash</b>: a duel of lights across the race, one keeper against another</span><span class="ng-go" aria-hidden="true">↓</span></button><!-- [rival] -->
     <button class="newgame cpbanner" id="cpBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">And a tenth, <b>The Chronicle of the Light</b>: the whole history of the Skerries as a campaign, alone or with up to four</span><span class="ng-go" aria-hidden="true">↓</span></button><!-- [campaign] -->
+    <button class="newgame lgbanner" id="lgBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">And an eleventh, <b>Skerry League</b>: sail into a great buoy and knock it into the other side's goal</span><span class="ng-go" aria-hidden="true">↓</span></button><!-- [league] -->
     <div class="menulinks"><button class="tool notesbtn" id="notesBtn" type="button">Patch notes</button><button class="tool notesbtn lorebtn" id="loreBtn" type="button">Lore compendium</button></div>
     <div class="card boardcard" id="boardCard" aria-labelledby="boardHead">
       <div class="cardtop"><span class="eyebrow">Best on record · every game</span><span class="boardminititle">The Scoreboard</span><span class="boardbtns"><button class="tool closebtn" id="boardRefresh" type="button">Refresh</button><button class="tool closebtn" id="boardMin" type="button" aria-expanded="true" aria-controls="boardCard" title="Make the scoreboard small">– Minimise</button></span></div>
@@ -522,6 +523,65 @@
         <p><b>Going down.</b> Alone, going down ends the mission, but you can try again from the part you'd reached. Together, someone holding Use beside you gets you up, and the first time you bleed out you're back on your feet ten seconds later. If everyone is down at once, the mission is lost.</p>
         <p><b>Together.</b> One of you hosts and picks the mission. Everyone who sees it through has it marked done on their own browser.</p>
       </details>
+    </div>
+    <div class="card zmcard lgcard" id="lgTitle" aria-labelledby="lgHead"><!-- [league] Skerry League: its own card (src/league.js, src/league3d.js) -->
+      <div class="cardtop"><span class="eyebrow">An eleventh game · ships and a ball · one to three a side</span></div>
+      <h1 id="lgHead">Skerry League</h1>
+      <p>Down in the Harbour Pool, between the two lights, the crews have a game of their own: sail into the great striped buoy and knock it into the other side's goal. Your own ship, in your own skin, handling just as she does at sea, with a Gale in a bottle when you need to get there first.</p>
+      <p class="muted">W makes sail, S shortens it (hold it to go astern), A and D steer, Shift or Space lets loose the Gale. Pick up gale buoys on the water to fill it again. C swaps between Ball cam and Ship cam.</p>
+      <div class="gfopts lgopts">
+        <label>Ships a side <select id="lgSize"><option value="1">1 against 1</option><option value="2" selected>2 against 2</option><option value="3">3 against 3</option></select></label>
+        <label>Match <select id="lgMins"><option value="3">3 minutes</option><option value="5" selected>5 minutes</option><option value="7">7 minutes</option></select></label>
+        <label>Bots <select id="lgSkill"><option value="easy">Easy</option><option value="fair" selected>Fair</option><option value="hard">Hard</option></select></label>
+        <label>Your ship <select id="lgBoat"></select></label>
+        <label>The others sail <select id="lgFleet"><option value="mixed">Any ship</option><option value="same">The same ship as you</option></select></label>
+      </div>
+      <div class="nickrow"><label for="lgNick">Your name</label><input id="lgNick" type="text" maxlength="16" autocomplete="nickname" placeholder="You"></div>
+      <div class="btnrow">
+        <button class="primary" id="lgPlay" type="button">Kick off</button>
+        <button class="tool" id="lgSettings" type="button">Settings</button>
+      </div>
+      <p class="muted lgrecord" id="lgRecord"></p>
+      <details class="howto">
+        <summary>How to play</summary>
+        <p><b>The match.</b> You sail for Blue, with bots on your side and against you. Get the ball over Orange's goal line, under the crossbar, and it's a goal. After each goal everyone goes back to their marks for a count of three. Ahead when the clock runs out and you've won; level, and it goes to overtime, where the next goal wins.</p>
+        <p><b>Sailing.</b> Your ship handles as she does on a voyage: hold W and the sail keeps climbing, faster the longer you hold it, with no top speed. S shortens sail; keep holding it with the sail short and she backs her sails and goes astern. The Cutter turns quickest, the Carrier hits hardest, and every ship turns more sharply here than out at sea.</p>
+        <p><b>The Gale.</b> Shift or Space (A on a controller) blows her on much faster for as long as the gauge lasts. The yellow gale buoys fill it: a small one gives a third, a big one (in the corners and at the middle of each side) fills it right up. They come back a few seconds after they're taken.</p>
+        <p><b>Hitting the ball.</b> The faster you're going, the harder it flies. Hit it hard and it leaps out of the water. It bounces off the walls and the posts, so a shot off the wall can still go in.</p>
+        <p><b>The camera.</b> Ball cam (the default) keeps the ball in view behind your ship; Ship cam looks the way she's heading. C (or Y on a controller, or the button at the top) swaps them.</p>
+        <p><b>Controller.</b> Left stick or D-pad steers, RT makes sail, LT shortens it, A or B the Gale, Y the camera, Start the menu. On a phone, the buttons at the bottom: steer on the left, sail, shorten and the Gale on the right.</p>
+      </details>
+    </div>
+  </div>
+
+  <!-- Skerry League: the 3D view and what's over it (src/league.js, src/league3d.js) -->
+  <div id="lgUI" hidden>
+    <canvas id="lgCv"></canvas>
+    <div class="lg-score"><span class="lg-t lg-blue">Blue</span><b id="lgSB">0</b><time id="lgClock">5:00</time><b id="lgSO">0</b><span class="lg-t lg-orange">Orange</span></div>
+    <canvas id="lgMap" aria-label="Chart of the pool"></canvas>
+    <div class="lg-count" id="lgCount" hidden>3</div>
+    <div class="lg-msg" id="lgMsg" role="status"></div>
+    <div class="lg-gauge" id="lgGaleBox"><div class="lg-ring" id="lgGale"><b id="lgGaleN">33</b><small>Gale</small></div></div>
+    <div class="lg-speed"><b id="lgSpeed">0</b><small>knots</small></div>
+    <div class="lg-tools"><button class="gfbtn sm" id="lgCamBtn" type="button" title="Swap the camera (C)">Ball cam</button><button class="gfbtn sm" id="lgMenuBtn" type="button" aria-label="Menu" title="Menu (Esc)">☰</button></div>
+    <div class="lg-pad" id="lgPadBox" hidden>
+      <div class="lg-padl"><button class="gfbtn" id="lgTL" type="button" aria-label="Steer to port">◀</button><button class="gfbtn" id="lgTR" type="button" aria-label="Steer to starboard">▶</button></div>
+      <div class="lg-padr"><button class="gfbtn" id="lgTD" type="button" aria-label="Shorten sail">▼</button><button class="gfbtn swing" id="lgTG" type="button">Gale</button><button class="gfbtn" id="lgTU" type="button" aria-label="Make sail">▲</button></div>
+    </div>
+    <div class="overlay pausecard" id="lgPause" hidden role="dialog" aria-modal="true" aria-labelledby="lgPauseHead">
+      <div class="card">
+        <h1 id="lgPauseHead">Skerry League</h1>
+        <p class="muted">The match stops while this is open.</p>
+        <div class="btnrow"><button class="primary" id="lgResume" type="button">Back to the match</button><button class="tool" id="lgRestart" type="button">Start again</button><button class="tool" id="lgLeave" type="button">Leave the match</button></div>
+      </div>
+    </div>
+    <div class="overlay pausecard lgendov" id="lgEnd" hidden role="dialog" aria-modal="true" aria-labelledby="lgEndHead">
+      <div class="card">
+        <h1 id="lgEndHead">Full time</h1>
+        <p class="lg-endscore" id="lgEndSub"></p>
+        <div class="gfc-wrap"><table class="gfc lgtable" id="lgEndTable"></table></div>
+        <div class="btnrow"><button class="primary" id="lgAgain" type="button">Play again</button><button class="tool" id="lgEndMenu" type="button">Back to the menu</button></div>
+      </div>
     </div>
   </div>
 
@@ -1233,6 +1293,8 @@
 <script src="src/golfnet.js"></script><!-- [golf] played together -->
 <script src="src/gfcrates.js"></script><!-- [golf] ball and club crates -->
 <script src="src/gfdress.js"></script><!-- [golf] the golfer, ball and clubs dressed -->
+<script src="src/league.js"></script><!-- [league] Skerry League: the match, the ships, the ball, the bots -->
+<script src="src/league3d.js"></script><!-- [league] the 3D view -->
 <script src="src/rlcards.js"></script><!-- [rival] Skerry Clash: the 64 cards -->
 <script src="src/rl.js"></script><!-- [rival] the rules, the match, the snapshots -->
 <script src="src/rlbot.js"></script><!-- [rival] the keeper across the water -->

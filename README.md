@@ -592,6 +592,22 @@ An eighth game, on its own card on the title screen (**Tee off**; on the desk me
 
 How it's built: `src/golfcourse.js` (the nine holes: their shapes, heights, cliffs, sea, bunkers and trees; what's underfoot anywhere), `src/golf.js` (the round, the turns, the swing, the ball's flight and roll, the scores, the keys, the sounds and the card), `src/golfhud.js` (the screen over the 3D view, the meter, the map, the wind and the scorecard), `src/golf3d.js` (the 3D view, its own WebGL canvas: the land wearing a painted picture of the course, the sea, the trees, the pin, the golfer and the camera), `src/golfworld.js` (the nine holes on one map, and the other holes drawn at low detail round the one being played), `src/golfsky.js` (the time of day hole by hole, the sky, the stars and the moon, the lighthouse and its beams, the skerries and the ships), `src/gfcrates.js` (the ball and club crates), `src/gfdress.js` (the golfer, ball and clubs dressed in your outfit and what you play with) and `src/golfnet.js` (the lobby and the round together, on the presence key `gf`; `server/server.js` relays a round's players to each other at full rate). For tests, `gfDebug(hole)` starts a round alone on one hole (0 to 8) and `gfDebugShot(club, power, strike, aim)` strikes a shot.
 
+## Skerry League (ships and a ball, one to three a side)
+
+An eleventh game, on its own card on the title screen (**Kick off**; on the desk menu it's number 11). Down in the Harbour Pool, a walled basin of still water between two lighthouses, two sides of ships, Blue and Orange, try to knock a great striped buoy into each other's goal. You sail for Blue, with bots on your side and against you.
+
+- **On the card:** ships a side (1 against 1, 2 against 2 or 3 against 3), the length of the match (3, 5 or 7 minutes), how good the bots are (Easy, Fair or Hard), your ship (the Brig, the Cutter, the Barque or the Carrier, in the skin you have on her), and whether the others sail any ship or the same as yours. Your record (won, drawn, lost, and your goals) is shown under the buttons and kept on this browser.
+- **Sailing.** Your ship handles as she does on a voyage: W (or ↑) makes sail and it keeps climbing the longer you hold it, with no top speed; S (or ↓) shortens it. Keep holding S with the sail already short and she backs her sails and goes astern. A and D (or ← →) steer. Each ship keeps her own feel (the Cutter is quickest to answer, the Carrier the heaviest), and every ship turns more sharply in the pool than at sea. Hitting a wall knocks some way off her, as a rock does at sea.
+- **The Gale.** Shift or Space blows her on much faster for as long as the gauge (bottom right) lasts. The yellow gale buoys on the water fill it: the small ones by a third, the big ones (in the four corners and at the middle of each side) right up. A buoy comes back a few seconds after it's taken.
+- **The ball.** It floats, slows on the water, and bounces off the walls, the posts and the crossbar. The faster you hit it, the harder it flies, and a hard knock lifts it out of the water; a heavy ship moves it more and is moved less. It's a goal when the whole ball is over the line, under the crossbar. The bell rings and the lighthouse behind the goal flashes, and everyone goes back to their marks for a count of three.
+- **The match.** The clock at the top counts down. Ahead when it runs out and you've won; level, and it's overtime, where the next goal wins (the clock counts up in gold). The card at the end shows the score and each ship's goals and touches.
+- **The camera.** Ball cam (the default) sits behind your ship and keeps the ball in view; Ship cam looks the way she's heading. C (or the button top left) swaps them, and the game remembers which you like. The chart at the top right shows the pool, every ship and the ball.
+- **The bots.** On each side, the ship best placed goes for the ball and lines up behind it on the line to the goal; with more than one, another keeps goal and any third waits behind the play. Your bot team-mates count you in: if you're closer, they leave it to you. Easy bots are slower and see less of where the ball is going; Hard ones go flat out and use the Gale.
+- **Controller:** left stick or D-pad steers, RT makes sail, LT shortens it, A or B the Gale, Y the camera, Start the menu. **Phone:** steer with the buttons bottom left; shorten, the Gale and make sail bottom right.
+- **Esc** (or ☰) pauses: back to the match, start again, or leave.
+
+How it's built: `src/league.js` (the match, the ships' handling, the ball, the walls and goals, the bots, the screen and the controls) and `src/league3d.js` (the 3D view: the pool, the walls and lamps, the cliffs, the goals and lighthouses, the ships built from their boats' shapes and skins, the wakes, the Gale's spray, the goal bursts and the camera). Online play is not in yet.
+
 ## Skerry Clash (a duel of lights, one against one)
 
 A ninth game, on its own card on the title screen (**Duel the bot**, **Triple draft** to build a deck on the spot, or **First person** to fight as your own troops while bots play the cards; on the desk menu it's number 9). Two keepers on two rocks face each other across a tidal race, each sure the other's light is the false one that puts ships on the reef. They settle it in three minutes: crews, crabs, gulls and worse sent over the causeways, spells cast from the rocks, and lamp oil for all of it. Fell the other keeper's towers before they fell yours. Everything in it, the cards, the towers and the pictures, is drawn in the game's own world: keepers, wreckers, the drowned, the Diver, the Mooncusser, the Keelback, the haar.
@@ -867,6 +883,8 @@ src/style.css       HUD, cards and buttons
 src/config.js       tuning numbers, asset paths and the keeper's log
 src/patchnotes.js   the patch notes log (one entry per version, newest first)
 src/patchnotesui.js the main menu's Patch Notes page
+src/league.js       Skerry League: the match, the ships, the ball, the bots
+src/league3d.js     Skerry League's 3D view
 src/audio.js        sound, made with the Web Audio API (plus Verity's voice clip)
 src/biomes.js       the seas: palettes, landscapes, rock skins, weather, the Nether portal
 src/nether.js       the Nether's three enemies
