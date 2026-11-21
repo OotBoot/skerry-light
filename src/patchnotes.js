@@ -6,6 +6,13 @@
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 240, date: '2026-11-21', title: "Skerry League online", New: [
+    "Skerry League: play together online, up to six of you, each on your own screen. Host a match on the League card, and your friends join it from the list there or from the invite you share.",
+    "Skerry League: pick a side in the lobby (Change sides) or let it put you where there's room. The sides grow to fit everyone, and bots sail any empty seats.",
+    "Skerry League: the host picks the ships a side, the minutes and the bots, and kicks off for everyone. Names float over the other players' ships, so you can tell a friend from a bot.",
+    "Skerry League: drop out and a bot sails your ship until you rejoin from the lobby. If the host leaves, the match ends.",
+    "Skerry League: online results are kept as their own line on the card, apart from your record against the bots.",
+  ] },
   { v: 239, date: '2026-11-20', title: "New game: Skerry League", New: [
     "Skerry League: a new game on the main menu. Sail into a great striped buoy and knock it into the other side's goal, in the Harbour Pool between two lighthouses.",
     "Skerry League: one, two or three ships a side, with bots on your team and against you, at Easy, Fair or Hard. Matches of 3, 5 or 7 minutes, with golden goal overtime if it's level.",

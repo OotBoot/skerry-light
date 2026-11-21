@@ -1905,3 +1905,6 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 .lgtable small { color: var(--muted); margin-left: 4px; }
 @media (max-width: 600px) { .lg-score b { font-size: 1.4rem; } .lg-t { display: none !important; } #lgMap { width: 64px; height: 104px; } .lg-ring { width: 76px; height: 76px; } }
 @media (max-height: 500px) { .lg-ring { width: 72px; height: 72px; } .lg-ring b { font-size: 1.2rem; } .lg-speed b { font-size: 1.1rem; } #lgMap { width: 60px; height: 98px; } }
+/* [league] online: names over the other people's ships (src/lgnet.js) */
+.lg-tags { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.lg-tags span { position: absolute; left: 0; top: 0; font: 600 0.78rem/1.2 var(--ui, system-ui), sans-serif; padding: 2px 6px; border-radius: 6px; background: rgba(0,0,0,0.45); white-space: nowrap; text-shadow: 0 1px 2px rgba(0,0,0,0.6); }

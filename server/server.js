@@ -190,13 +190,23 @@ function rlLite(p) {
   if (z.dr) lite.dr = 1; if (Number.isFinite(z.mr)) lite.mr = z.mr;   // (a triple draft, and the host's rating, for the list)
   return Object.assign({}, p, { rl: lite });
 }
-// what someone in another war, another night, another round, another duel or the lobby hears of this player
+// Skerry League played online: the same, for the six (at most) in one match. The host's snapshot (the ball, the clock,
+// the bots) and every player's own ship, about fifteen times a second, are for the others in that match only.
+const lgRoom = c => (c.presence && c.presence.lg && typeof c.presence.lg.room === 'string' ? c.presence.lg.room : null);
+function lgLite(p) {
+  const z = p.lg; if (!z || typeof z !== 'object') return p;
+  const lite = { room: z.room, sid: z.sid, nick: z.nick, at: z.at };
+  if (z.lob) lite.lob = z.lob; if (z.st && typeof z.st === 'object') lite.st = { g: z.st.g, seats: Array.isArray(z.st.seats) ? z.st.seats.map(s => [Array.isArray(s) ? s[0] : '']) : undefined };
+  return Object.assign({}, p, { lg: lite });
+}
+// what someone in another war, another night, another round, another duel, another match or the lobby hears of this player
 const liteFor = (from, c) => {
   let p = from.presence;
   if (warRoom(from) && warRoom(from) !== warRoom(c)) p = warLite(p);
   if (zmRoom(from) && zmRoom(from) !== zmRoom(c)) p = zmLite(p);
   if (gfRoom(from) && gfRoom(from) !== gfRoom(c)) p = gfLite(p);
   if (rlRoom(from) && rlRoom(from) !== rlRoom(c)) p = rlLite(p);
+  if (lgRoom(from) && lgRoom(from) !== lgRoom(c)) p = lgLite(p);
   return p;
 };
 const crewOf = c => (c.presence && typeof c.presence.crew === 'string' ? c.presence.crew : null);
@@ -205,7 +215,7 @@ function relay(from, patch) {
   let msg = null, pmsg = null;
   const full = () => msg || (msg = JSON.stringify({ t: 'state', peer: from.id, presence: from.presence }));
   const part = () => pmsg || (pmsg = JSON.stringify({ t: 'patch', peer: from.id, d: patch.d, x: patch.x }));
-  const room = warRoom(from), night = zmRoom(from), round = gfRoom(from), duel = rlRoom(from);
+  const room = warRoom(from), night = zmRoom(from), round = gfRoom(from), duel = rlRoom(from), match = lgRoom(from);
   const crew = crewOf(from);
   const now = Date.now();
   for (const c of clients.values()) {
@@ -216,9 +226,10 @@ function relay(from, patch) {
       (room && warRoom(c) === room) ||
       (night && zmRoom(c) === night) ||
       (round && gfRoom(c) === round) ||
-      (duel && rlRoom(c) === duel);
+      (duel && rlRoom(c) === duel) ||
+      (match && lgRoom(c) === match);
     if (mate || now - (c.lastLobbySend.get(from.id) || 0) >= LOBBY_INTERVAL_MS) {
-      if (mate || (!room && !night && !round && !duel)) {
+      if (mate || (!room && !night && !round && !duel && !match)) {
         // (a patch only to someone who has had every change of this player's since a whole copy)
         if (patch && c.v2 && c.upToDate.has(from.id)) send(c, part());
         else { send(c, full()); c.upToDate.add(from.id); }

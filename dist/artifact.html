@@ -1911,6 +1911,9 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 .lgtable small { color: var(--muted); margin-left: 4px; }
 @media (max-width: 600px) { .lg-score b { font-size: 1.4rem; } .lg-t { display: none !important; } #lgMap { width: 64px; height: 104px; } .lg-ring { width: 76px; height: 76px; } }
 @media (max-height: 500px) { .lg-ring { width: 72px; height: 72px; } .lg-ring b { font-size: 1.2rem; } .lg-speed b { font-size: 1.1rem; } #lgMap { width: 60px; height: 98px; } }
+/* [league] online: names over the other people's ships (src/lgnet.js) */
+.lg-tags { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.lg-tags span { position: absolute; left: 0; top: 0; font: 600 0.78rem/1.2 var(--ui, system-ui), sans-serif; padding: 2px 6px; border-radius: 6px; background: rgba(0,0,0,0.45); white-space: nowrap; text-shadow: 0 1px 2px rgba(0,0,0,0.6); }
 </style>
 <div id="stage">
   <canvas id="bg" class="under" aria-hidden="true"></canvas>
@@ -2443,11 +2446,26 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
         <button class="tool" id="lgSettings" type="button">Settings</button>
       </div>
       <p class="muted lgrecord" id="lgRecord"></p>
+      <section class="warmp zmmp" id="lgMp" aria-labelledby="lgMpHead">
+        <h2 id="lgMpHead">Play together online · up to six</h2>
+        <p class="muted" id="lgMpNote">Looking for other players…</p>
+        <div id="lgMpOpen" hidden>
+          <div class="btnrow"><button class="tool" id="lgMpHost" type="button">Host a match</button></div>
+          <div class="warlobbies" id="lgLobbies"></div>
+        </div>
+        <div class="warlobby" id="lgLobby" hidden>
+          <h3 id="lgLobbyHead">Your match</h3>
+          <ol class="warlobbylist" id="lgLobbyList"></ol>
+          <p class="muted" id="lgLobbyMsg"></p>
+          <div class="btnrow"><button class="primary" id="lgMpStart" type="button">Kick off together</button><button class="primary" id="lgMpRejoin" type="button" hidden>Rejoin the match</button><button class="tool" id="lgMpSwap" type="button">Change sides</button><button class="tool shareBtn" id="lgMpShare" type="button" data-mode="league">Share invite</button><button class="tool" id="lgMpLeave" type="button">Leave</button></div>
+        </div>
+      </section>
       <details class="howto">
         <summary>How to play</summary>
         <p><b>The match.</b> You sail for Blue, with bots on your side and against you. Get the ball over Orange's goal line, under the crossbar, and it's a goal. After each goal everyone goes back to their marks for a count of three. Ahead when the clock runs out and you've won; level, and it goes to overtime, where the next goal wins.</p>
         <p><b>Sailing.</b> Your ship handles as she does on a voyage: hold W and the sail keeps climbing, faster the longer you hold it, with no top speed. S shortens sail; keep holding it with the sail short and she backs her sails and goes astern. The Cutter turns quickest, the Carrier hits hardest, and every ship turns more sharply here than out at sea.</p>
         <p><b>The Gale.</b> Shift or Space (A on a controller) blows her on much faster for as long as the gauge lasts. The yellow gale buoys fill it: a small one gives a third, a big one (in the corners and at the middle of each side) fills it right up. They come back a few seconds after they're taken.</p>
+        <p><b>Online.</b> Host a match and your friends join it from this card (or from the invite you share), up to six of you, each on their own screen. Everyone picks a side (Change sides), the sides grow to fit, and bots sail any empty seats. The host picks the match and kicks off; the match runs on the host’s screen, so the host keeps that tab in front. Anyone who drops out is sailed by a bot until they rejoin. If the host leaves, the match ends.</p>
         <p><b>Hitting the ball.</b> The faster you're going, the harder it flies. Hit it hard and it leaps out of the water. It bounces off the walls and the posts, so a shot off the wall can still go in.</p>
         <p><b>The camera.</b> Ball cam (the default) keeps the ball in view behind your ship; Ship cam looks the way she's heading. C (or Y on a controller, or the button at the top) swaps them.</p>
         <p><b>Controller.</b> Left stick or D-pad steers, RT makes sail, LT shortens it, A or B the Gale, Y the camera, Start the menu. On a phone, the buttons at the bottom: steer on the left, sail, shorten and the Gale on the right.</p>
@@ -3055,7 +3073,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 // ---- src/config.js ----
 'use strict';
 // The game's version, shown at the top of the main menu. Bump it by one with every change pushed to main.
-var VERSION = 239;
+var VERSION = 240;
 // Skerry Light: tuning, asset paths and lore.
 // World units are metres. The lighthouse stands at the origin on the shoreline (y = 0);
 // north (+y) is open sea. Bearings: 0 = north, positive = east.
@@ -3230,6 +3248,13 @@ document.addEventListener('visibilitychange', () => {
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 240, date: '2026-11-21', title: "Skerry League online", New: [
+    "Skerry League: play together online, up to six of you, each on your own screen. Host a match on the League card, and your friends join it from the list there or from the invite you share.",
+    "Skerry League: pick a side in the lobby (Change sides) or let it put you where there's room. The sides grow to fit everyone, and bots sail any empty seats.",
+    "Skerry League: the host picks the ships a side, the minutes and the bots, and kicks off for everyone. Names float over the other players' ships, so you can tell a friend from a bot.",
+    "Skerry League: drop out and a bot sails your ship until you rejoin from the lobby. If the host leaves, the match ends.",
+    "Skerry League: online results are kept as their own line on the card, apart from your record against the bots.",
+  ] },
   { v: 239, date: '2026-11-20', title: "New game: Skerry League", New: [
     "Skerry League: a new game on the main menu. Sail into a great striped buoy and knock it into the other side's goal, in the Harbour Pool between two lighthouses.",
     "Skerry League: one, two or three ships a side, with bots on your team and against you, at Easy, Fair or Hard. Matches of 3, 5 or 7 minutes, with golden goal overtime if it's level.",
@@ -14412,6 +14437,7 @@ function onPeersChange(change) {
   if (typeof zmNetPeers === 'function') zmNetPeers();
   if (typeof gfNetPeers === 'function') gfNetPeers();   // [golf] Skerry Links' lobby (src/golfnet.js)
   if (typeof rlNetPeers === 'function') rlNetPeers();   // [rival] Skerry Clash' lobby and duel (src/rlnet.js)
+  if (typeof lgNetPeers === 'function') lgNetPeers();   // [league] Skerry League's lobby and match (src/lgnet.js)
 }
 
 // ---------- crew bookkeeping ----------
@@ -69793,6 +69819,7 @@ csInit();
 //   fbsea       a Freebooters' Sea crew (the same lobby again, on its own card: src/fbsea.js) [fbsea]
 //   golf        a round of Skerry Links (its own lobby: src/golfnet.js, g...) [golf]
 //   rival       a Skerry Clash duel (its own lobby: src/rlnet.js, r...; one full or under way offers Watch) [rival]
+//   league      a Skerry League match (its own lobby: src/lgnet.js, l...; one under way with your seat offers Rejoin) [league]
 // On a phone or tablet the button opens the share sheet; on a computer it copies the text to the clipboard.
 // On claude.ai everyone plays in the artifact's own room, which the live site can't reach, so there the link is the
 // artifact itself: it can't carry a code, but the friend sees the lobby in the list and taps it.
@@ -69801,7 +69828,7 @@ csInit();
 const SHARE_SITE = 'https://skerry-light.onrender.com/';
 const SHARE_ARTIFACT = 'https://claude.ai/artifact/4abbzGK8dMDsPyR5KdssJv';
 const SHARE_TEXT = 'Join my game on Skerry Light!';
-const SHARE_MODES = ['sail', 'wreckers', 'war', 'lighthouse', 'raid', 'fogrun', 'fbsea', 'golf', 'rival', 'campaign'];   // [campaign]   // [fogrun] [fbsea] [golf] [rival]
+const SHARE_MODES = ['sail', 'wreckers', 'war', 'lighthouse', 'raid', 'fogrun', 'fbsea', 'golf', 'rival', 'league', 'campaign'];   // [campaign]   // [fogrun] [fbsea] [golf] [rival]
 // the Lighthouse's lobby's own word for each of the modes it serves (src/zmnet.js ZN.mode) [fogrun]
 var SHARE_ZN = { lighthouse: 'zm', raid: 'raid', fogrun: 'fr', fbsea: 'fb', campaign: 'cp' };
 const shareOnClaude = () => (typeof NET !== 'undefined' && NET.via === 'claude') || !!(window.claude && typeof window.claude.use === 'function');
@@ -69819,6 +69846,7 @@ function shareCode(mode) {
   if (mode === 'sail') return NET.crew;
   if (mode === 'war') return typeof WN !== 'undefined' ? WN.code : null;
   if (mode === 'golf') return typeof GFN !== 'undefined' ? GFN.code : null;   // [golf]
+  if (mode === 'league') return typeof LGN !== 'undefined' ? LGN.code : null;   // [league]
   if (mode === 'rival') return typeof RLN !== 'undefined' ? RLN.code : null;   // [rival]
   if (mode === 'lighthouse' || mode === 'raid' || mode === 'fogrun' || mode === 'fbsea' || mode === 'campaign') return typeof ZN !== 'undefined' && ZN.mode === SHARE_ZN[mode] ? ZN.code : null;   // [fogrun]
   return null;
@@ -69889,8 +69917,8 @@ var SHARE_MINE = false;
   };
   for (const k of ['pointerdown', 'keydown', 'wheel', 'touchmove']) document.addEventListener(k, mine, { capture: true, passive: true });
 }
-const SHARE_CARD = { sail: 'together', wreckers: 'fpsTitle', war: 'warTitle', lighthouse: 'zmTitle', raid: 'rdTitle', fogrun: 'frTitle', fbsea: 'fbTitle', golf: 'gfTitle', rival: 'rlTitle', campaign: 'cpTitle' };
-const SHARE_WHAT = { sail: 'crew', war: 'war', lighthouse: 'night', raid: 'raid', fogrun: 'run', fbsea: 'crew', golf: 'round', rival: 'duel', campaign: 'mission' };
+const SHARE_CARD = { sail: 'together', wreckers: 'fpsTitle', war: 'warTitle', lighthouse: 'zmTitle', raid: 'rdTitle', fogrun: 'frTitle', fbsea: 'fbTitle', golf: 'gfTitle', rival: 'rlTitle', league: 'lgTitle', campaign: 'cpTitle' };
+const SHARE_WHAT = { sail: 'crew', war: 'war', lighthouse: 'night', raid: 'raid', fogrun: 'run', fbsea: 'crew', golf: 'round', rival: 'duel', league: 'match', campaign: 'mission' };
 function shareShow(mode) { const c = $(SHARE_CARD[mode]); if (c) c.scrollIntoView({ block: 'start' }); }
 function shareArrive() {
   const J = SHARE_JOIN; if (!J) return;
@@ -69937,6 +69965,11 @@ function shareArrive() {
       if (GFN.code === J.code) return clearInterval(iv);
       const r = gfnOpen().find(x => x.code === J.code);
       if (r) { clearInterval(iv); shareShow('golf'); if (r.started) toast('That round has already started.', 'Already started'); else gfnJoin(J.code); return; }
+    } else if (J.mode === 'league') {   // [league]
+      if (typeof LGN === 'undefined') return give('');
+      if (LGN.code === J.code) return clearInterval(iv);
+      const r = lgnOpen().find(x => x.code === J.code);
+      if (r) { clearInterval(iv); shareShow('league'); if (r.started && !r.mine) toast('That match has already started.', 'Already started'); else lgnJoin(J.code, r.mine); return; }
     } else if (J.mode === 'rival') {   // [rival]
       if (typeof RLN === 'undefined') return give('');
       if (RLN.code === J.code) return clearInterval(iv);
@@ -73882,13 +73915,17 @@ if (typeof gf3dDraw === 'function') {
 // they see where the ball is going, and whether they use the Gale.
 // What's kept (localStorage 'skerry-league'): the settings and your record (wins, draws, losses, goals).
 // Debug and tests: lgDebug(o) starts a match (o as lgStart's); LG is the state; lgDebugGoal(team) scores one.
+// Played online (src/lgnet.js): lgStart({ net: { role, seats, g } }) seats everyone from the host's list, and LG.net is
+// set. Then each screen sails only its own ship (and the host the bots too: lgOwn), places the others from what it
+// hears, and only the host's screen decides the ball, the clock, the score and the goals; everyone else's ball is a
+// forecast, put right by the host's snapshots, and a hit there is sent to the host as a claim (lgnHit).
 
 const LGC = { AX: 85, AY: 140, CH: 26, GW: 52, GD: 16, BAR: 16, WALLH: 9, R: 6, FLOAT: 3.4, G: 26, TURN: 2.4, GALE: 30, GALE_USE: 30, SAIL0: 0.15, KICK: 3, CELEB: 3.2, HIT: 0.45 };
 const LG_TEAMS = [{ id: 'blue', name: 'Blue', col: '#4aa8ff', hex: 0x4aa8ff, dark: '#1d4f86' }, { id: 'orange', name: 'Orange', col: '#ff8c3a', hex: 0xff8c3a, dark: '#8a3f12' }];
 const LG_SKILL = { easy: { v: 30, see: 0.35, gale: 0, err: 0.35, react: 0.45 }, fair: { v: 46, see: 0.7, gale: 0.5, err: 0.15, react: 0.22 }, hard: { v: 70, see: 1, gale: 1, err: 0.04, react: 0.1 } };
 const LG_MASS = { cutter: 1, brig: 1.5, barque: 2.3, carrier: 4.2 };
 const LG_BOTNAMES = ['Gull', 'Tern', 'Skua', 'Petrel', 'Shag', 'Fulmar', 'Puffin', 'Gannet', 'Kittiwake', 'Eider', 'Scoter', 'Curlew'];
-const LG = { on: false, ph: 'off', ships: [], ball: null, pads: [], score: [0, 0], clock: 0, len: 300, ot: false, t: 0, phT: 0, keys: {}, cam: 'ball', msg: '', msgT: 0, set: null, me: 0, last: null, touch: {}, hits: 0, goals: [] };
+const LG = { net: null, ko: 0, lastHitT: -9, lastHitBy: null, on: false, ph: 'off', ships: [], ball: null, pads: [], score: [0, 0], clock: 0, len: 300, ot: false, t: 0, phT: 0, keys: {}, cam: 'ball', msg: '', msgT: 0, set: null, me: 0, last: null, touch: {}, hits: 0, goals: [] };
 const lgStore = { get() { try { return JSON.parse(localStorage.getItem('skerry-league') || '{}') || {}; } catch (e) { return {}; } }, set(v) { try { localStorage.setItem('skerry-league', JSON.stringify(v)); } catch (e) {} } };
 const lgClamp = (v, a, b) => v < a ? a : v > b ? b : v;
 const lgAng = a => { while (a > Math.PI) a -= 2 * Math.PI; while (a < -Math.PI) a += 2 * Math.PI; return a; };
@@ -73929,6 +73966,13 @@ function lgSkinOf(boatId, mine) {
   } catch (e) {}
   return { hull: '#4b3a2b', sail: '#d8cdb0', rail: '#1e140c', deck: ['#1a130d', '#0c0806'], wood: '#140d08', lantern: '#ffcf86' };
 }
+// a skin by its id (someone else's, online), else the boat's plain one
+function lgSkinById(boatId, skId) { try { if (skId && typeof SKIN_BY_ID !== 'undefined' && SKIN_BY_ID[skId] && (!SKIN_BY_ID[skId].boat || SKIN_BY_ID[skId].boat === boatId)) return SKIN_BY_ID[skId]; } catch (e) {} return lgSkinOf(boatId, false); }
+// my skin's id on a boat, for the others online
+function lgMySkinId(boatId) { try { if (typeof CRATES !== 'undefined' && CRATES.equipped && typeof CRATES.equipped[boatId] === 'string') return CRATES.equipped[boatId]; } catch (e) {} return ''; }
+// which ships this screen sails: alone, all of them; online, my own (and on the host's screen the bots too)
+function lgOwn(s) { return !LG.net || s.me || (LG.net.role === 'host' && s.bot); }
+const lgHost = () => !LG.net || LG.net.role === 'host';
 function lgMyName() { const v = ($('lgNick') && $('lgNick').value) || (typeof NET !== 'undefined' && NET.nick) || ''; return String(v).replace(/[\u0000-\u001f<>&"]/g, '').trim().slice(0, 16) || 'You'; }
 // o: { size: ships a side (1 to 3), mins, skill, boat (yours), fleet ('mixed' or 'same') }
 function lgStart(o) {
@@ -73936,17 +73980,28 @@ function lgStart(o) {
   const size = lgClamp(o.size | 0 || 2, 1, 3), skill = LG_SKILL[o.skill] ? o.skill : 'fair', mins = [3, 5, 7].includes(+o.mins) ? +o.mins : 5;
   const myBoatId = lgBoatOf(o.boat || (typeof CRATES !== 'undefined' && CRATES.boat) || 'brig').id;
   LG.set = { size, skill, mins, boat: myBoatId, fleet: o.fleet === 'same' ? 'same' : 'mixed' };
-  const st = lgStore.get(); st.set = LG.set; lgStore.set(st);
+  LG.net = o.net || null;
+  const st = lgStore.get(); if (!LG.net) { st.set = LG.set; lgStore.set(st); }
   const ids = (typeof BOATS !== 'undefined' ? BOATS.map(b => b.id) : ['brig']), names = LG_BOTNAMES.slice().sort(() => Math.random() - 0.5);
   LG.ships = [];
-  for (let tm = 0; tm < 2; tm++) for (let i = 0; i < size; i++) {
+  const mk = (tm, i, me, bot, bid, nm, skin, sid) => ({ i: LG.ships.length, team: tm, slot: i, bot, me, sid: sid || '', nm, boat: lgBoatOf(bid), skin, m: LG_MASS[bid] || 1.5, x: 0, y: 0, h: 0, v: 0, sail: LGC.SAIL0, rudder: 0, held: 0, astern: 0, bv: 0, gale: 33, galeOn: false, px: 0, py: 0, bob: Math.random() * 9, w: 0, goals: 0, saves: 0, touches: 0, ai: { t: 0, steer: 0, sail: 0, gale: false, stuck: 0, back: 0, role: 'go' } });
+  // online: the seats the host dealt, [sid ('' for a bot), team, slot, boat, skin, name], in order
+  if (LG.net) {
+    for (const z of LG.net.seats) {
+      const sid = z[0] || '', me = !!sid && typeof NET !== 'undefined' && sid === NET.sid, bid = lgBoatOf(z[3]).id;
+      LG.ships.push(mk(z[1], z[2], me, !sid, bid, me ? lgMyName() : String(z[5] || 'A sailor'), me ? lgSkinOf(bid, true) : lgSkinById(bid, z[4]), sid));
+    }
+    LG.me = Math.max(0, LG.ships.findIndex(s => s.me));
+  }
+  for (let tm = 0; tm < 2 && !LG.net; tm++) for (let i = 0; i < size; i++) {
     const me = tm === 0 && i === 0;
     // the bots sail the handier ships more often than the Carrier
     const pick = LG.set.fleet === 'same' ? myBoatId : ids[Math.floor(Math.random() * ids.length)] === 'carrier' && Math.random() < 0.6 ? 'brig' : ids[Math.floor(Math.random() * ids.length)];
     const bid = me ? myBoatId : pick, boat = lgBoatOf(bid);
     LG.ships.push({ i: LG.ships.length, team: tm, slot: i, bot: !me, me, nm: me ? lgMyName() : names[LG.ships.length % names.length], boat, skin: lgSkinOf(bid, me), m: LG_MASS[bid] || 1.5, x: 0, y: 0, h: 0, v: 0, sail: LGC.SAIL0, rudder: 0, held: 0, astern: 0, bv: 0, gale: 33, galeOn: false, px: 0, py: 0, bob: Math.random() * 9, w: 0, goals: 0, saves: 0, touches: 0, ai: { t: 0, steer: 0, sail: 0, gale: false, stuck: 0, back: 0, role: 'go' } });
   }
-  LG.me = 0; LG.score = [0, 0]; LG.len = mins * 60; LG.clock = LG.len; LG.ot = false; LG.t = 0; LG.hits = 0; LG.goals = []; LG.last = null;
+  if (!LG.net) LG.me = 0;
+  LG.score = [0, 0]; LG.ko = 0; LG.lastHitT = -9; LG.lastHitBy = null; LG.len = mins * 60; LG.clock = LG.len; LG.ot = false; LG.t = 0; LG.hits = 0; LG.goals = []; LG.last = null;
   LG.ball = { x: 0, y: 0, z: LGC.FLOAT, vx: 0, vy: 0, vz: 0, rx: 0, ry: 0, q: null, gone: false };
   LG.pads = lgPadsNew(); LG.keys = {}; LG.touch = {};
   LG.cam = st.cam === 'ship' ? 'ship' : 'ball';
@@ -73966,7 +74021,7 @@ function lgKickoff() {
   }
   const B = LG.ball; Object.assign(B, { x: 0, y: 0, z: LGC.FLOAT, vx: 0, vy: 0, vz: 0, gone: false });
   for (const p of LG.pads) p.t = 0;
-  LG.ph = 'count'; LG.phT = LGC.KICK; LG.last = null;
+  LG.ph = 'count'; LG.phT = LGC.KICK; LG.last = null; LG.ko++;
   lgSnd('tick');
 }
 function LGC_size() { return LG.set ? LG.set.size : 2; }
@@ -73976,9 +74031,18 @@ function lgMeShip() { return LG.ships[LG.me]; }
 function lgFrame(dt) {
   LG.t += dt;
   lgPadPoll(dt);
-  const paused = !$('lgPause').hidden;
+  lgSim(dt);
+  if (typeof lg3dDraw === 'function') lg3dDraw(dt);
+  lgHud();
+  if (LG.net && typeof lgnTags === 'function') lgnTags();
+}
+// the match, without drawing it (the host's screen in a background tab runs this on a timer: src/lgnet.js)
+function lgSim(dt) {
+  // (alone, the pause card stops the match; online it never stops for one sailor)
+  const paused = !$('lgPause').hidden && !LG.net;
   if (!paused && LG.on) {
-    if (LG.ph === 'count') { LG.phT -= dt; const n = Math.ceil(LG.phT); if (n !== LG.cn) { LG.cn = n; if (n > 0) lgSnd('tick'); } if (LG.phT <= 0) { LG.ph = 'play'; lgSnd('go'); lgSay('Go!', 0.8); } }
+    if (!lgHost()) lgGuestPhase(dt);
+    else if (LG.ph === 'count') { LG.phT -= dt; const n = Math.ceil(LG.phT); if (n !== LG.cn) { LG.cn = n; if (n > 0) lgSnd('tick'); } if (LG.phT <= 0) { LG.ph = 'play'; lgSnd('go'); lgSay('Go!', 0.8); } }
     else if (LG.ph === 'goal') { LG.phT -= dt; if (LG.phT <= 0) { if (lgOver()) lgEnd(); else lgKickoff(); } }
     else if (LG.ph === 'play') { LG.clock = LG.ot ? LG.clock + dt : LG.clock - dt; if (!LG.ot && LG.clock <= 0) { LG.clock = 0; if (LG.score[0] !== LG.score[1]) { lgEnd(); } else { LG.ot = true; LG.clock = 0; lgSay('Overtime! Next goal wins', 2.5); lgSnd('horn'); lgKickoff(); } } }
     // the ships sail through the countdown only on their marks (held), and freely the rest of the time
@@ -73986,12 +74050,19 @@ function lgFrame(dt) {
     for (let k = 0; k < n; k++) lgStep(step / n);
     if (LG.msgT > 0) { LG.msgT -= dt; if (LG.msgT <= 0) { const el = $('lgMsg'); if (el) el.classList.remove('on'); } }
   }
-  if (typeof lg3dDraw === 'function') lg3dDraw(dt);
-  lgHud();
+  if (LG.net && LG.on && typeof lgnTick === 'function') lgnTick(dt);
+}
+// online, on everyone's screen but the host's: the phase, the count and the clock run on between the host's snapshots
+// (which set them: lgnApply), and nothing here ends a phase
+function lgGuestPhase(dt) {
+  if (LG.ph === 'count') { LG.phT = Math.max(0, LG.phT - dt); const n = Math.ceil(LG.phT); if (n !== LG.cn) { LG.cn = n; if (n > 0) lgSnd('tick'); } }
+  else if (LG.ph === 'goal') LG.phT = Math.max(0, LG.phT - dt);
+  else if (LG.ph === 'play') LG.clock = LG.ot ? LG.clock + dt : Math.max(0, LG.clock - dt);
 }
 function lgStep(dt) {
   const frozen = LG.ph === 'count' || LG.ph === 'end';
   for (const s of LG.ships) {
+    if (!lgOwn(s)) { s.bob += dt; continue; }   // (someone else's ship: src/lgnet.js puts her where she's heard to be)
     let steer = 0, sailIn = 0, gale = false;
     if (s.bot) { lgBot(s, dt); steer = s.ai.steer; sailIn = s.ai.sail; gale = s.ai.gale; }
     else { const K = LG.keys, T = LG.touch; steer = (K.r || T.r ? 1 : 0) - (K.l || T.l ? 1 : 0) + (LG.padSteer || 0); sailIn = (K.u || T.u ? 1 : 0) - (K.d || T.d ? 1 : 0) + (LG.padSail || 0); gale = !!(K.g || T.g || LG.padGale); }
@@ -74027,7 +74098,7 @@ function lgSail(s, dt, steer, sailIn, gale) {
   s.bob += dt;
   lgShipWalls(s);
   // the gale buoys
-  for (const p of LG.pads) if (p.t <= 0 && s.gale < 100 && Math.hypot(p.x - s.x, p.y - s.y) < (p.big ? 7 : 5) + s.boat.len * 0.3) { s.gale = Math.min(100, s.gale + p.amt); p.t = p.back; if (s.me) lgSnd('pad', p.big ? 1 : 0.6); }
+  for (const p of LG.pads) if (p.t <= 0 && s.gale < 100 && Math.hypot(p.x - s.x, p.y - s.y) < (p.big ? 7 : 5) + s.boat.len * 0.3) { s.gale = Math.min(100, s.gale + p.amt); p.t = p.back; if (s.me) lgSnd('pad', p.big ? 1 : 0.6); if (LG.net && !lgHost() && s.me && typeof lgnPad === 'function') lgnPad(LG.pads.indexOf(p)); }
 }
 // three circles along her (bow, waist, stern) against the walls: pushed back in, and the way she had into the wall
 // taken off her as a knock on a rock is at sea (src/game.js: never below steerage way), the rest kept as she glances off
@@ -74068,12 +74139,13 @@ function lgShipsBump() {
       const dx = q[0] - p[0], dy = q[1] - p[1], d = Math.hypot(dx, dy), rr = p[2] + q[2];
       if (d >= rr || d < 1e-4) continue;
       const nx = dx / d, ny = dy / d, pen = rr - d, ma = a.m, mb = b.m, ta = mb / (ma + mb), tb = ma / (ma + mb);
-      a.x -= nx * pen * ta; a.y -= ny * pen * ta; b.x += nx * pen * tb; b.y += ny * pen * tb;
+      const oa = lgOwn(a), ob = lgOwn(b); if (!oa && !ob) continue;
+      if (oa) { a.x -= nx * pen * ta; a.y -= ny * pen * ta; } if (ob) { b.x += nx * pen * tb; b.y += ny * pen * tb; }
       const Va = a.v + a.bv, Vb = b.v + b.bv;
       const rel = (Math.sin(b.h) * Vb + b.px - Math.sin(a.h) * Va - a.px) * nx + (Math.cos(b.h) * Vb + b.py - Math.cos(a.h) * Va - a.py) * ny;
       if (rel < 0) {
         const J = -rel * 1.2 / (1 / ma + 1 / mb);
-        a.px -= nx * J / ma; a.py -= ny * J / ma; b.px += nx * J / mb; b.py += ny * J / mb;
+        if (oa) { a.px -= nx * J / ma; a.py -= ny * J / ma; } if (ob) { b.px += nx * J / mb; b.py += ny * J / mb; }
         if ((a.me || b.me) && -rel > 6) lgSnd('bump', Math.min(1, -rel / 30));
       }
     }
@@ -74096,10 +74168,10 @@ function lgBall(dt) {
     // the posts
     for (const px of [gw, -gw]) { const dx = B.x - px, dy = B.y - line, d = Math.hypot(dx, dy); if (d < R + 0.8 && d > 1e-4 && B.z < LGC.BAR + R) lgBallBounce(B, { nx: dx / d, ny: dy / d, pen: R + 0.8 - d }, 0.8, true); }
   }
-  // the ships
-  for (const s of LG.ships) lgBallShip(B, s);
-  // a goal: the whole ball over the line, inside the box
-  if (LG.ph === 'play' || LG.ph === 'count') for (const sg of [1, -1]) if (sg * B.y > LGC.AY + R && Math.abs(B.x) < LGC.GW / 2) { lgGoal(sg > 0 ? 0 : 1); break; }
+  // the ships (on the host's screen, a ship sailed elsewhere strikes the ball only by her own screen's claim: lgnHit)
+  for (const s of LG.ships) if (!LG.net || lgOwn(s) || !lgHost()) lgBallShip(B, s);
+  // a goal: the whole ball over the line, inside the box (online, only the host's screen says so)
+  if (lgHost() && (LG.ph === 'play' || LG.ph === 'count')) for (const sg of [1, -1]) if (sg * B.y > LGC.AY + R && Math.abs(B.x) < LGC.GW / 2) { lgGoal(sg > 0 ? 0 : 1); break; }
   // the ball's roll, for the view
   const sp = Math.hypot(B.vx, B.vy); if (sp > 0.01) { B.rx += B.vy * dt / R; B.ry += B.vx * dt / R; }
 }
@@ -74128,8 +74200,10 @@ function lgBallShip(B, s) {
   s.px -= nx * J / s.m * 0.5; s.py -= ny * J / s.m * 0.5;
   const hard = -vn; if (hard > 10) B.vz = Math.max(B.vz, Math.min(26, (hard - 10) * 0.45 + (s.galeOn ? 4 : 0)));
   const sp = Math.hypot(B.vx, B.vy); if (sp > 120) { B.vx *= 120 / sp; B.vy *= 120 / sp; }
+  // (online, a strike by someone else's ship on my screen is only a forecast: the host's word on it is coming)
+  if (LG.net && !lgHost()) { if (s.me && typeof lgnHit === 'function') lgnHit(B); if (hard > 3 && s.me) lgSnd('hit', Math.min(1, hard / 45)); return; }
   if (LG.last !== s || hard > 4) { s.touches++; LG.hits++; }
-  LG.prev = LG.last && LG.last !== s ? LG.last : LG.prev; LG.last = s;
+  LG.prev = LG.last && LG.last !== s ? LG.last : LG.prev; LG.last = s; LG.lastHitT = LG.t; LG.lastHitBy = s;
   if (hard > 3) lgSnd('hit', Math.min(1, hard / 45));
 }
 function lgGoal(team) {
@@ -74140,10 +74214,15 @@ function lgGoal(team) {
   const by = LG.last && LG.last.team === team ? LG.last : (LG.prev && LG.prev.team === team ? LG.prev : null);
   if (by) by.goals++;
   const own = !by && LG.last && LG.last.team !== team;
-  LG.goals.push({ team, by: by ? by.nm : null, own, t: LG.ot ? LG.len : LG.len - LG.clock });
+  LG.goals.push({ team, by: by ? by.nm : null, byI: by ? by.i : null, own, t: LG.ot ? LG.len : LG.len - LG.clock });
+  LG.ph = 'goal'; LG.phT = LGC.CELEB;
+  lgGoalShow(team, by, own);
+}
+// a goal, as everyone sees and hears it (online, the others' screens call this from the host's word: src/lgnet.js)
+function lgGoalShow(team, by, own) {
   const T = LG_TEAMS[team];
   lgSay(own ? `Own goal! ${T.name} scores` : by ? `${by.me ? 'You score!' : by.nm + ' scores for ' + T.name}` : `${T.name} scores!`, LGC.CELEB);
-  LG.ball.gone = true; LG.ph = 'goal'; LG.phT = LGC.CELEB; LG.goalAt = { team, x: LG.ball.x, y: LG.ball.y, t: LG.t };
+  LG.ball.gone = true; LG.goalAt = { team, x: LG.ball.x, y: LG.ball.y, t: LG.t };
   lgSnd('goal', team === lgMeShip().team ? 1 : 0.6);
   if (typeof lg3dGoal === 'function') lg3dGoal(team);
   if (typeof padRumble === 'function') padRumble(0.6, 0.6, 400);
@@ -74152,14 +74231,16 @@ function lgOver() { return LG.ot || (LG.clock <= 0 && LG.score[0] !== LG.score[1
 function lgEnd() {
   LG.ph = 'end'; LG.msgT = 0; { const el = $('lgMsg'); if (el) el.classList.remove('on'); }
   const me = lgMeShip(), mine = LG.score[me.team], theirs = LG.score[1 - me.team], res = mine > theirs ? 'win' : mine < theirs ? 'loss' : 'draw';
-  const st = lgStore.get(); st.rec = st.rec || { w: 0, d: 0, l: 0, g: 0, m: 0 };
-  st.rec.m++; st.rec.g += me.goals; if (res === 'win') st.rec.w++; else if (res === 'loss') st.rec.l++; else st.rec.d++;
+  // (online matches are kept apart from those against bots alone)
+  const st = lgStore.get(), rk = LG.net ? 'onl' : 'rec'; st[rk] = st[rk] || { w: 0, d: 0, l: 0, g: 0, m: 0 };
+  st[rk].m++; st[rk].g += me.goals; if (res === 'win') st[rk].w++; else if (res === 'loss') st[rk].l++; else st[rk].d++;
   lgStore.set(st);
   lgSnd(res === 'win' ? 'win' : 'horn');
   $('lgEndHead').textContent = res === 'win' ? 'Victory' : res === 'loss' ? 'Defeat' : 'A draw';
   $('lgEndSub').textContent = `Blue ${LG.score[0]} · ${LG.score[1]} Orange${LG.ot ? ' (after overtime)' : ''}`;
   const rows = LG.ships.slice().sort((a, b) => a.team - b.team || b.goals - a.goals || b.touches - a.touches);
-  $('lgEndTable').innerHTML = '<tr><th>Ship</th><th>Side</th><th>Goals</th><th>Touches</th></tr>' + rows.map(s => `<tr class="${s.me ? 'me' : ''}"><td>${lgEsc(s.nm)} <small>${lgEsc(s.boat.name || s.boat.id)}</small></td><td style="color:${LG_TEAMS[s.team].col}">${LG_TEAMS[s.team].name}</td><td>${s.goals}</td><td>${s.touches}</td></tr>`).join('');
+  $('lgAgain').textContent = LG.net ? 'Back to the lobby' : 'Play again';
+  $('lgEndTable').innerHTML = '<tr><th>Ship</th><th>Side</th><th>Goals</th><th>Touches</th></tr>' + rows.map(s => `<tr class="${s.me ? 'me' : ''}"><td>${lgEsc(s.nm)} <small>${lgEsc(s.boat.name || s.boat.id)}${LG.net && s.bot ? ' · bot' : ''}</small></td><td style="color:${LG_TEAMS[s.team].col}">${LG_TEAMS[s.team].name}</td><td>${s.goals}</td><td>${s.touches}</td></tr>`).join('');
   $('lgEnd').hidden = false;
   setTimeout(() => { const b = $('lgAgain'); if (b && !$('lgEnd').hidden) b.focus({ preventScroll: true }); }, 60);
   lgCardRender();
@@ -74238,13 +74319,15 @@ function lgEnter() {
   lgHud(true);
 }
 function lgExit() {
-  LG.on = false; LG.ph = 'off';
+  const wasNet = !!LG.net;
+  LG.on = false; LG.ph = 'off'; LG.net = null;
+  if (wasNet && typeof lgnStop === 'function') lgnStop();
   $('lgUI').hidden = true; document.body.classList.remove('lgon');
   state = 'title'; toTitle();
   setTimeout(() => { const c = $('lgTitle'); if (c) c.scrollIntoView({ block: 'start' }); lgCardRender(); }, 60);
 }
 function lgQuit() { if (!LG.on) return; lgExit(); }
-function lgPauseOpen(on) { if (!LG.on || LG.ph === 'end') return; $('lgPause').hidden = !on; if (on) setTimeout(() => $('lgResume').focus({ preventScroll: true }), 30); }
+function lgPauseOpen(on) { if (!LG.on || LG.ph === 'end') return; $('lgPause').hidden = !on; $('lgRestart').hidden = !!LG.net; if (on) setTimeout(() => $('lgResume').focus({ preventScroll: true }), 30); }
 function lgSay(t, s) { LG.msg = t; LG.msgT = s || 2; const el = $('lgMsg'); if (el) { el.textContent = t; el.classList.add('on'); } }
 const lgTime = s => { s = Math.max(0, Math.ceil(s)); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
 function lgHud(full) {
@@ -74341,9 +74424,12 @@ function lgSnd(k, v) {
 function lgCardRender() {
   const el = $('lgRecord'); if (!el) return;
   const r = (lgStore.get().rec) || null;
-  el.textContent = r && r.m ? `Your record: ${r.w} won, ${r.d} drawn, ${r.l} lost · ${r.g} goal${r.g === 1 ? '' : 's'} in ${r.m} match${r.m === 1 ? '' : 'es'}` : 'No matches played yet.';
+  const o = (lgStore.get().onl) || null, line = (r, w) => `${w}: ${r.w} won, ${r.d} drawn, ${r.l} lost · ${r.g} goal${r.g === 1 ? '' : 's'} in ${r.m} match${r.m === 1 ? '' : 'es'}`;
+  el.textContent = r && r.m ? line(r, 'Your record') : 'No matches played yet.';
+  if (o && o.m) el.textContent += ' · ' + line(o, 'Online');
 }
 function lgPlayLocal() {
+  if (typeof LGN !== 'undefined' && LGN.code && typeof lgnLeave === 'function') lgnLeave();
   lgStart({ size: +$('lgSize').value, mins: +$('lgMins').value, skill: $('lgSkill').value, boat: $('lgBoat').value, fleet: $('lgFleet').value });
 }
 function lgDebug(o) { lgStart(Object.assign({ size: 2, mins: 5, skill: 'fair' }, o || {})); }
@@ -74368,7 +74454,7 @@ function lgDebugGoal(team) { if (LG.ph !== 'play') { LG.ph = 'play'; } LG.ball.x
   $('lgLeave').addEventListener('click', lgQuit);
   $('lgMenuBtn').addEventListener('click', () => lgPauseOpen(true));
   $('lgCamBtn').addEventListener('click', lgCam);
-  $('lgAgain').addEventListener('click', () => { $('lgEnd').hidden = true; lgStart(LG.set); });
+  $('lgAgain').addEventListener('click', () => { $('lgEnd').hidden = true; if (LG.net) lgQuit(); else lgStart(LG.set); });
   $('lgEndMenu').addEventListener('click', lgQuit);
   // touch: hold the buttons
   for (const [id, key] of [['lgTL', 'l'], ['lgTR', 'r'], ['lgTU', 'u'], ['lgTD', 'd'], ['lgTG', 'g']]) {
@@ -74707,6 +74793,421 @@ function lg3dCamera(dt) {
   if (L3.camP.y < 3) L3.camP.y = 3;
   L3.cam.position.copy(L3.camP); L3.cam.lookAt(L3.camL);
 }
+
+// ---- src/lgnet.js ----
+'use strict';
+// Skerry League played online: a lobby on its card, and up to six in one match, each on their own screen.
+//
+// Like Skerry Links' lobby (src/golfnet.js), it all goes through the room the crews sail in (src/net.js), on its own key
+// (`lg`) in each player's presence: { room, sid, nick, at, bt, sk, tm } in the lobby (the match's code, who you are, when
+// you came in, your ship and her skin, and the side you'd like: tm 0 Blue, 1 Orange, -1 either). The first in is the
+// host, who adds lob { n, sz, mn, sk, fl }: how many are in and the match the host has picked on the card (ships a side,
+// minutes, the bots, the fleet). server/server.js relays one match's players to each other at full rate, and only
+// that much to everyone else, for the list.
+// The seats (lgnSeats): everyone in the lobby goes on the side they asked for while it has room, the rest to whichever
+// side has fewer people, and the sides grow to fit (four people make at least two a side; six, three). Every seat left
+// over is a bot. The host presses Kick off together and puts st { g the match's id, sz, mn, sk, fl, seats } in its
+// presence, each seat [sid ('' for a bot), team, slot, boat, skin, name]; every screen then starts the match with
+// lgStart({ net: { role, seats, g } }) (src/league.js).
+// During the match each screen sails its own ship with no delay, and about fifteen times a second (ten on claude.ai)
+// puts where she is in its presence as p [seq, x, y, h, v, bv, rudder, w, gale, galeOn, sail]. The host's screen
+// also runs the bots, the ball, the gale buoys, the clock and the score, and sends them as w (lgnWord): the phase and
+// its timer, the clock, overtime, the score, the kickoff count (ko), the ball [x, y, z, vx, vy, vz], the buoys that
+// are down (pd, a bit each), the bots' ships (bt), each seat's goals and touches, the goals so far (gs, and the last
+// as ge), and for each player the last pose it has heard (pk, so each can time the round trip) and its word on their
+// last hit (hk [seq, 1 taken or 0 not]).
+// The others' ships are drawn where they were last heard to be, carried on by their speed and turn for as long ago as
+// that was, and slid there smoothly (lgnPlace).
+// The ball, on everyone's screen but the host's, is a forecast: it flies, bounces and is struck here as on the host's,
+// and each snapshot pulls it back to the host's ball carried on by half the round trip (lgnBall). When your own ship
+// strikes it, your screen sends the hit as hq [seq, x, y, z, vx, vy, vz]: where you saw the ball and how it flew off.
+// The host takes it if its own ball was within LGN_HIT_NEAR of there and nobody else struck it in the last tenth of a
+// second, and puts its ball there and so; until the host's word on the hit comes back, your ball isn't pulled back.
+// A gale buoy your ship takes is sent the same way (q [seq, buoy]); the host marks it down.
+// Leaving: a player gone quiet for ten seconds, or out of the match (Leave, or the end card's way back), hands their
+// ship to a bot on the host's screen; one who comes back (the lobby's list offers Rejoin to anyone whose seat it is)
+// takes her back. If the host goes, the match ends for everyone else, and isn't recorded.
+// The host's screen in a background tab: the browser stops drawing it, so a timer runs the match on there (lgnHidden);
+// a background tab is also slowed by the browser, so the lobby asks the host to keep it in front.
+
+var LGN = { code: null, at: 0, msg: '', tm: -1, st: null, doneG: null, g: null, role: null, seq: 0, sendT: 0, lobT: 0, seen: {}, hostSeen: 0,
+  wSeen: -1, first: true, koSeen: 0, gSeen: 0, phSeen: '', otSeen: false, ended: false, lastP: {}, lastHq: {}, lastQ: {}, hk: {}, pk: {}, sentAt: {}, rtt: 160,
+  hq: null, hseq: 0, hitAt: -1e9, q: null, qseq: 0, padAt: {}, samp: {}, back: {} };
+const LGN_MAX = 6;
+const LGN_GONE = 10000;     // ms without a word before a player (or the host) is taken to have gone
+const LGN_HIT_NEAR = 16;    // m: how far the host's ball may be from where a player says they struck it
+const lgnClean = (v, n) => String(v == null ? '' : v).replace(/[\u0000-\u001f\u007f-\u009f<>&"]/g, '').trim().slice(0, n);
+const lgnR = (v, k) => Math.round((+v || 0) * k) / k;
+function lgnOnline() { return !!(typeof NET !== 'undefined' && NET.room && NET.status === 'ready'); }
+function lgnInMatch() { return !!(LG.on && LG.net); }
+function lgnNick() { return lgnClean(lgMyName() === 'You' ? (NET.nick || '') : lgMyName(), 16) || 'Sailor ' + String(NET.sid || '').slice(0, 3).toUpperCase(); }
+function lgnOf(p) { const z = p && p.presence && p.presence.lg; return z && typeof z === 'object' && typeof z.room === 'string' && typeof z.sid === 'string' ? z : null; }
+const lgnMine = p => !!(p && p.isMe && p.sameTab);
+function lgnMyBoat() { const b = $('lgBoat'); return lgBoatOf((b && b.value) || 'brig').id; }
+function lgnBase() { const bt = lgnMyBoat(); return { room: LGN.code, sid: NET.sid, nick: lgnNick(), at: LGN.at, bt, sk: lgMySkinId(bt), tm: LGN.tm }; }
+function lgnPeers(code) {
+  const out = NET.peers.filter(p => { const z = lgnOf(p); return z && z.room === code && fresh(p) && !lgnMine(p); });
+  if (LGN.code === code) out.push({ isMe: true, sameTab: true, presence: { lg: lgnBase() } });
+  const seen = new Set();
+  return out.filter(p => { const s = lgnOf(p).sid; if (seen.has(s)) return false; seen.add(s); return true; }).sort((a, b) => (lgnOf(a).at || 0) - (lgnOf(b).at || 0) || (lgnOf(a).sid < lgnOf(b).sid ? -1 : 1));
+}
+function lgnMembers() { return LGN.code ? lgnPeers(LGN.code).slice(0, LGN_MAX) : []; }
+function lgnAmHost() { const m = lgnMembers(); return !!m.length && lgnMine(m[0]); }
+function lgnHostZ() { const m = lgnMembers(); return m.length && !lgnMine(m[0]) ? lgnOf(m[0]) : null; }
+function lgnSend(z) { if (NET.room) NET.room.presence({ lg: z }).catch(() => {}); }
+// the match the host has picked on the card
+function lgnPick() { const v = id => $(id) ? $(id).value : ''; return { sz: lgClamp(+v('lgSize') || 2, 1, 3), mn: [3, 5, 7].includes(+v('lgMins')) ? +v('lgMins') : 5, sk: LG_SKILL[v('lgSkill')] ? v('lgSkill') : 'fair', fl: v('lgFleet') === 'same' ? 'same' : 'mixed' }; }
+function lgnLob() { if (lgnAmHost()) return lgnPick(); const h = lgnHostZ(), l = h && h.lob; return l ? { sz: lgClamp(l.sz | 0 || 2, 1, 3), mn: [3, 5, 7].includes(l.mn) ? l.mn : 5, sk: LG_SKILL[l.sk] ? l.sk : 'fair', fl: l.fl === 'same' ? 'same' : 'mixed' } : lgnPick(); }
+function lgnSendLobby() {
+  if (!LGN.code) return;
+  const z = lgnBase();
+  if (lgnAmHost()) z.lob = Object.assign({ n: lgnMembers().length }, lgnPick());
+  lgnSend(z);
+}
+function lgnHost() {
+  if (!lgnOnline() || lgnInMatch()) return;
+  LGN.code = 'l' + Math.random().toString(36).slice(2, 8); LGN.at = Date.now(); LGN.msg = ''; LGN.doneG = null;
+  lgnSendLobby(); lgnRender();
+}
+// join a match's lobby (or, with rejoin, step back into a match under way that has a seat for me)
+function lgnJoin(code, rejoin) {
+  if (!lgnOnline() || !code || lgnInMatch()) return;
+  if (!rejoin && lgnPeers(code).length >= LGN_MAX) { LGN.msg = 'That match is full (six players).'; lgnRender(); return; }
+  // (my join time goes after everyone already in, whatever my clock says, so a slow clock never puts me ahead of the host)
+  const late = Math.max(0, ...lgnPeers(code).map(p => lgnOf(p).at || 0));
+  LGN.code = code; LGN.at = Math.max(Date.now(), late + 1); LGN.msg = ''; LGN.doneG = null;
+  lgnSendLobby(); lgnRender(); lgNetPeers();
+}
+function lgnLeave() { if (lgnInMatch()) return; LGN.code = null; LGN.st = null; LGN.g = null; LGN.role = null; if (NET.room) NET.room.presence({ lg: null }).catch(() => {}); lgnRender(); }
+function lgnSide() { const seat = lgnSeats().find(z => z[0] === NET.sid); LGN.tm = seat ? 1 - seat[1] : (LGN.tm === 0 ? 1 : 0); lgnSendLobby(); lgnRender(); }
+// the matches being hosted here
+function lgnOpen() {
+  const rooms = new Map();
+  for (const p of NET.peers) { const z = lgnOf(p); if (!z || !fresh(p) || lgnMine(p)) continue; if (!rooms.has(z.room)) rooms.set(z.room, []); rooms.get(z.room).push(p); }
+  const out = [];
+  for (const [code, list] of rooms) {
+    if (code === LGN.code) continue;
+    list.sort((a, b) => (lgnOf(a).at || 0) - (lgnOf(b).at || 0));
+    const h = lgnOf(list[0]), st = h.st && typeof h.st.g === 'string' ? h.st : null;
+    const mine = !!(st && Array.isArray(st.seats) && st.seats.some(x => Array.isArray(x) && x[0] === NET.sid));
+    out.push({ code, host: lgnClean(h.nick, 16) || 'Someone', n: list.length, started: !!st, mine });
+  }
+  return out;
+}
+
+// ---------- the seats ----------
+// who sails where: everyone in the lobby (in the order they came), on the side they asked for while it has room and
+// otherwise the side with fewer people; the sides as big as the host picked, or bigger to fit everyone; bots for the rest
+function lgnSeats() {
+  const m = lgnMembers(), L = lgnLob(), n = m.length, size = lgClamp(Math.max(L.sz, Math.ceil(n / 2)), 1, 3);
+  const side = [[], []];
+  const left = [];
+  for (const p of m) { const z = lgnOf(p); if ((z.tm === 0 || z.tm === 1) && side[z.tm].length < size) side[z.tm].push(z); else left.push(z); }
+  for (const z of left) { const t = side[0].length <= side[1].length ? 0 : 1; if (side[t].length < size) side[t].push(z); else if (side[1 - t].length < size) side[1 - t].push(z); }
+  const host = m.length ? lgnOf(m[0]) : null, ids = typeof BOATS !== 'undefined' ? BOATS.map(b => b.id) : ['brig'];
+  const names = LG_BOTNAMES.slice(), seats = [];
+  let k = 0;
+  for (let t = 0; t < 2; t++) for (let i = 0; i < size; i++) {
+    const z = side[t][i];
+    if (z) { seats.push([z.sid, t, i, lgBoatOf(z.bt).id, typeof z.sk === 'string' ? z.sk.slice(0, 24) : '', lgnClean(z.nick, 16) || 'A sailor']); continue; }
+    // (the bots sail the handier ships more often than the Carrier; or, with one fleet, the host's own ship)
+    const r = ids[(k * 7 + t * 3 + i) % ids.length], bid = L.fl === 'same' && host ? lgBoatOf(host.bt).id : r === 'carrier' && (k % 3) ? 'brig' : r;
+    seats.push(['', t, i, bid, '', names[(k * 5 + 3) % names.length]]); k++;
+  }
+  return seats;
+}
+
+function lgnRender() {
+  const q = id => $('lg' + id); if (!q('Mp')) return;
+  const on = lgnOnline(), mine = !!LGN.code;
+  q('MpNote').textContent = on ? 'Up to six, each on their own screen, with bots in any empty seats. One of you hosts; the others join, and the host kicks off when everyone’s in.' : (NET.status === 'connecting' ? 'Looking for other players…' : (NET.offReason || 'Playing together isn’t available here. You can still play against the bots.'));
+  q('MpOpen').hidden = !on || mine; q('Lobby').hidden = !mine;
+  if (!on) return;
+  if (!mine) {
+    const L = lgnOpen(), el = q('Lobbies'), key = JSON.stringify(L) + LGN.msg;
+    if (el.dataset.k === key) return; el.dataset.k = key; el.textContent = '';
+    if (LGN.msg) { const p = document.createElement('p'); p.className = 'muted'; p.textContent = LGN.msg; el.append(p); }
+    if (!L.length) { const p = document.createElement('p'); p.className = 'muted'; p.textContent = 'No one is hosting a match right now. Host one, and send the people you want to play with to this page.'; el.append(p); return; }
+    for (const n of L) {
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'warlobbyrow';
+      const nm = document.createElement('span'); nm.className = 'nm'; nm.textContent = `${n.host}’s match`;
+      const sm = document.createElement('small'); sm.textContent = n.mine ? 'under way · tap to rejoin' : n.started ? 'under way' : `${n.n}/${LGN_MAX} players · tap to join`;
+      b.append(nm, sm); b.disabled = !n.mine && (n.started || n.n >= LGN_MAX); b.addEventListener('click', () => lgnJoin(n.code, n.mine)); el.append(b);
+    }
+    return;
+  }
+  const m = lgnMembers(), host = lgnAmHost(), hz = m.length ? lgnOf(m[0]) : null, seats = lgnSeats(), L = lgnLob();
+  const sideOf = sid => { const z = seats.find(x => x[0] === sid); return z ? LG_TEAMS[z[1]] : null; };
+  // (a match under way that I dropped out of, with my seat still in it: back in)
+  const st = !host && hz && hz.st && typeof hz.st.g === 'string' ? hz.st : null, back = !!(st && Array.isArray(st.seats) && st.seats.some(x => Array.isArray(x) && x[0] === NET.sid) && !(hz.w && hz.w.ph === 'e'));
+  const key = JSON.stringify(m.map(p => [lgnOf(p).sid, lgnOf(p).nick, lgnOf(p).tm, lgnOf(p).bt])) + JSON.stringify(L) + host + back + !!st + LGN.msg;
+  q('MpStart').hidden = !host; q('MpRejoin').hidden = !back; q('MpSwap').hidden = back || !!st;
+  if (q('Lobby').dataset.k === key) return; q('Lobby').dataset.k = key;
+  q('LobbyHead').textContent = host ? 'Your match' : `${lgnClean(hz && hz.nick, 16) || 'Someone'}’s match`;
+  const ol = q('LobbyList'); ol.textContent = '';
+  m.forEach((p, k) => {
+    const li = document.createElement('li'), z = lgnOf(p), T = sideOf(z.sid), b = lgBoatOf(z.bt);
+    li.textContent = (lgnClean(z.nick, 16) || 'A sailor') + (lgnMine(p) ? ' (you)' : '') + ` · ${b.name || b.id}` + (T ? ` · ${T.name}` : '') + (k === 0 ? ' · hosting' : '');
+    if (T) li.style.color = T.col; if (lgnMine(p)) li.className = 'me'; ol.append(li);
+  });
+  const size = seats.length / 2, bots = seats.filter(z => !z[0]).length;
+  const what = `${size} against ${size} · ${L.mn} minutes${bots ? ` · ${bots} ${LG_SKILL[L.sk] ? ({ easy: 'Easy', fair: 'Fair', hard: 'Hard' })[L.sk] : 'Fair'} bot${bots === 1 ? '' : 's'}` : ''}`;
+  q('LobbyMsg').textContent = back ? 'Your match is still going. Rejoin it, and a bot hands your ship back.' : st && !host ? 'A match is under way. Wait here for the next one.' : LGN.msg || (host ? `${what}. Kick off when everyone’s in (the match is yours to pick above). Keep this tab in front while you host: the match runs on your screen.` : `${what}. Waiting for the host to kick off.`);
+}
+
+// ---------- starting ----------
+function lgnStart() {
+  if (!lgnAmHost() || lgnInMatch()) return;
+  const L = lgnPick(), seats = lgnSeats(), st = { g: Math.random().toString(36).slice(2, 9), sz: seats.length / 2, mn: L.mn, sk: L.sk, fl: L.fl, seats };
+  lgnBegin(st, 'host');
+}
+// the host's st, checked over before it's used on anyone else's screen
+function lgnStOk(s) {
+  if (!s || typeof s.g !== 'string' || !Array.isArray(s.seats)) return null;
+  const seats = s.seats.slice(0, 6).filter(z => Array.isArray(z) && (z[1] === 0 || z[1] === 1)).map(z => [typeof z[0] === 'string' ? z[0].slice(0, 16) : '', z[1], lgClamp(z[2] | 0, 0, 2), lgBoatOf(z[3]).id, typeof z[4] === 'string' ? z[4].slice(0, 24) : '', lgnClean(z[5], 16) || 'A sailor']);
+  if (!seats.length || seats.length % 2) return null;
+  return { g: s.g.slice(0, 12), sz: seats.length / 2, mn: [3, 5, 7].includes(s.mn) ? s.mn : 5, sk: LG_SKILL[s.sk] ? s.sk : 'fair', fl: s.fl === 'same' ? 'same' : 'mixed', seats };
+}
+function lgnBegin(st, role) {
+  // (my counts start from the clock, so after a rejoin the host takes my ship, hits and buoys as newer than before I left)
+  const base = Date.now();
+  Object.assign(LGN, { st, g: st.g, doneG: st.g, role, seq: base, sendT: 0, seen: {}, hostSeen: performance.now(), wSeen: -1, first: true, koSeen: 0, gSeen: 0, phSeen: '', otSeen: false, ended: false,
+    lastP: {}, lastHq: {}, lastQ: {}, hk: {}, pk: {}, sentAt: {}, hq: null, hseq: base, hitAt: -1e9, q: null, qseq: base, padAt: {}, samp: {}, back: {} });
+  for (const z of st.seats) if (z[0]) LGN.seen[z[0]] = performance.now();
+  lgStart({ size: st.sz, mins: st.mn, skill: st.sk, fleet: st.fl, boat: lgnMyBoat(), net: { role, seats: st.seats, g: st.g } });
+  LGN.koSeen = LG.ko;
+  lgnSendNow();
+}
+// every change in the room (src/net.js): keep the lobby current, start when the host does, and read the match
+function lgNetPeers() {
+  if (lgnInMatch()) { lgnRead(); return; }
+  if (LGN.code) {
+    const m = lgnMembers();
+    if (!m.some(lgnMine)) { LGN.msg = 'That match filled up before you got in.'; lgnLeave(); return; }
+    const h = m[0], hz = h ? lgnOf(h) : null;
+    if (h && !lgnMine(h) && hz.st && typeof hz.st.g === 'string' && hz.st.g !== LGN.doneG && !LG.on) {
+      const st = lgnStOk(hz.st);
+      if (st && st.seats.some(x => x[0] === NET.sid)) { lgnBegin(st, 'client'); return; }
+      LGN.doneG = hz.st.g; LGN.msg = 'They kicked off without you. Wait here for the next match, or host your own.';
+    }
+    if (lgnAmHost() && performance.now() - (LGN.lobT || 0) > 3000) { LGN.lobT = performance.now(); lgnSendLobby(); }
+  }
+  lgnRender();
+}
+// out of the match (its end, Leave, or the host gone): back in the lobby
+function lgnStop() {
+  // (the side I sailed for stays my pick for the next match, unless I'd picked one already)
+  const mine = LGN.st && LGN.st.seats.find(x => x[0] === NET.sid); if (mine && LGN.tm < 0) LGN.tm = mine[1];
+  LGN.g = null; LGN.st = null; LGN.role = null;
+  if (LGN.code) lgnSendLobby();
+  setTimeout(lgnRender, 50);
+}
+
+// ---------- during the match ----------
+function lgnSeatOf(sid) { return LG.ships.find(s => s.sid === sid) || null; }
+// a ship as heard: [x, y, h, v, bv, rudder, w, gale, galeOn, sail]
+function lgnPose(s) { return [lgnR(s.x, 100), lgnR(s.y, 100), lgnR(s.h, 1000), lgnR(s.v, 100), lgnR(s.bv, 100), lgnR(s.rudder, 100), lgnR(s.w, 1000), Math.round(s.gale), s.galeOn ? 1 : 0, lgnR(s.sail, 100)]; }
+function lgnHeard(s, a, now) {
+  if (!Array.isArray(a) || a.length < 10 || !a.slice(0, 7).every(Number.isFinite)) return;
+  const x = lgClamp(a[0], -LGC.AX - 5, LGC.AX + 5), y = lgClamp(a[1], -LGC.AY - LGC.GD, LGC.AY + LGC.GD);
+  const first = !LGN.samp[s.i];
+  LGN.samp[s.i] = { t: now, x, y, h: lgAng(a[2]), v: lgClamp(a[3], -20, 200), bv: lgClamp(a[4], 0, 60), rudder: lgClamp(a[5], -1, 1), w: lgClamp(a[6], -6, 6), gale: lgClamp(+a[7] || 0, 0, 100), galeOn: !!a[8], sail: Math.max(LGC.SAIL0, +a[9] || 0) };
+  if (first) { s.x = x; s.y = y; s.h = lgAng(a[2]); }
+}
+// each frame: the others' ships where they are, the host's word or my own out, and anyone who's gone
+function lgnTick(dt) {
+  const now = performance.now();
+  lgnPlace(dt, now);
+  LGN.sendT -= dt;
+  if (LGN.sendT <= 0) { LGN.sendT = NET.via === 'claude' ? 0.1 : 1 / 15; lgnSendNow(); }
+  if (LGN.role === 'host') {
+    const here = new Map(lgnMembers().map(p => [lgnOf(p).sid, lgnOf(p)]));
+    for (const s of LG.ships) {
+      if (!s.sid || s.me) continue;
+      const z = here.get(s.sid), inMatch = z && z.g === LGN.g;
+      if (inMatch) LGN.seen[s.sid] = now;
+      // gone quiet, or out of the match: a bot takes her over from where she is
+      if (!s.bot && (!inMatch && (z || now - (LGN.seen[s.sid] || 0) > LGN_GONE))) { s.bot = true; delete LGN.samp[s.i]; s.ai.t = 0; if (LG.ph !== 'end') lgSay(`${s.nm} has left. A bot sails her now.`, 2.5); }
+    }
+  } else if (!LGN.ended) {
+    const hz = lgnHostZ();
+    if (hz && hz.g === LGN.g) LGN.hostSeen = now;
+    if ((hz && hz.g !== LGN.g && LGN.wSeen >= 0) || now - LGN.hostSeen > LGN_GONE) { LGN.ended = true; lgSay('The host has left, so the match is over.', 4); setTimeout(() => { if (lgnInMatch()) lgQuit(); }, 2500); }
+  }
+}
+// what goes in my presence: the base, the match, my ship, and (the host) the match's state, (the others) my claims
+function lgnSendNow() {
+  if (!LGN.code || !LGN.g) return;
+  const z = lgnBase(), me = lgMeShip(); z.g = LGN.g;
+  if (me) { z.p = [++LGN.seq].concat(lgnPose(me)); LGN.sentAt[LGN.seq] = performance.now(); delete LGN.sentAt[LGN.seq - 40]; }
+  if (LGN.role === 'host') { z.st = LGN.st; z.w = lgnWord(); }
+  else { if (LGN.hq) z.hq = LGN.hq; if (LGN.q) z.q = LGN.q; }
+  lgnSend(z);
+}
+const LGN_PH = { count: 'c', play: 'p', goal: 'g', end: 'e' }, LGN_PHR = { c: 'count', p: 'play', g: 'goal', e: 'end' };
+LGN.n = 0;
+function lgnWord() {
+  const B = LG.ball, last = LG.goals[LG.goals.length - 1];
+  let pd = 0; LG.pads.forEach((p, i) => { if (p.t > 0) pd |= 1 << i; });
+  return { n: ++LGN.n, ph: LGN_PH[LG.ph] || 'p', pt: lgnR(LG.phT, 100), ck: lgnR(LG.clock, 100), ot: LG.ot ? 1 : 0, sc: LG.score.slice(), ko: LG.ko,
+    b: [lgnR(B.x, 100), lgnR(B.y, 100), lgnR(B.z, 100), lgnR(B.vx, 100), lgnR(B.vy, 100), lgnR(B.vz, 100)], bg: B.gone ? 1 : 0, pd,
+    bt: LG.ships.filter(s => s.bot).map(s => [s.i].concat(lgnPose(s))),
+    gl: LG.ships.map(s => s.goals), tc: LG.ships.map(s => s.touches), gs: LG.goals.length, ge: last ? [last.team, last.byI == null ? -1 : last.byI, last.own ? 1 : 0] : null,
+    pk: Object.assign({}, LGN.pk), hk: Object.assign({}, LGN.hk) };
+}
+// the room changed: the host reads everyone's ship, hits and buoys; the others read the host's word and everyone's ship
+function lgnRead() {
+  const now = performance.now(), host = LGN.role === 'host';
+  for (const p of lgnMembers()) {
+    if (lgnMine(p)) continue;
+    const z = lgnOf(p); if (!z || z.g !== LGN.g) continue;
+    const s = lgnSeatOf(z.sid);
+    if (s && Array.isArray(z.p) && z.p[0] > (LGN.lastP[z.sid] || 0)) {
+      LGN.lastP[z.sid] = z.p[0];
+      if (host) { LGN.pk[z.sid] = z.p[0]; if (s.bot && LG.ph !== 'end') { s.bot = false; lgSay(`${s.nm} is back.`, 2); } }
+      if (!s.bot || !host) lgnHeard(s, z.p.slice(1), now);
+    }
+    if (host && s && !s.bot) {
+      if (Array.isArray(z.hq) && z.hq[0] > (LGN.lastHq[z.sid] || 0)) { LGN.lastHq[z.sid] = z.hq[0]; LGN.hk[z.sid] = [z.hq[0], lgnTakeHit(s, z.hq) ? 1 : 0]; }
+      if (Array.isArray(z.q) && z.q[0] > (LGN.lastQ[z.sid] || 0)) { LGN.lastQ[z.sid] = z.q[0]; const pd = LG.pads[z.q[1] | 0]; if (pd && pd.t <= 0) pd.t = pd.back; }
+    }
+  }
+  if (host) return;
+  const hz = lgnHostZ(); if (!hz || hz.g !== LGN.g || !hz.w || typeof hz.w !== 'object') return;
+  if (!(hz.w.n > LGN.wSeen)) return;
+  LGN.wSeen = hz.w.n;
+  lgnApply(hz.w, now);
+}
+// the host: a player's word that their ship struck the ball
+function lgnTakeHit(s, h) {
+  const B = LG.ball;
+  if (LG.ph !== 'play' || B.gone || h.length < 7 || !h.slice(1, 7).every(Number.isFinite)) return false;
+  if (Math.hypot(B.x - h[1], B.y - h[2]) > LGN_HIT_NEAR) return false;
+  if (LG.lastHitBy && LG.lastHitBy !== s && LG.t - LG.lastHitT < 0.1) return false;   // (someone else got there first)
+  B.x = lgClamp(h[1], -LGC.AX + LGC.R, LGC.AX - LGC.R); B.y = lgClamp(h[2], -LGC.AY - LGC.GD + LGC.R, LGC.AY + LGC.GD - LGC.R); B.z = lgClamp(h[3], LGC.FLOAT, 70);
+  B.vx = h[4]; B.vy = h[5]; B.vz = lgClamp(h[6], -40, 30);
+  const sp = Math.hypot(B.vx, B.vy); if (sp > 120) { B.vx *= 120 / sp; B.vy *= 120 / sp; }
+  if (LG.last !== s || LG.t - LG.lastHitT > 0.3) { s.touches++; LG.hits++; }
+  LG.prev = LG.last && LG.last !== s ? LG.last : LG.prev; LG.last = s; LG.lastHitT = LG.t; LG.lastHitBy = s;
+  lgSnd('hit', Math.min(1, sp / 60));
+  return true;
+}
+// my own ship struck the ball here: to the host
+function lgnHit(B) {
+  LGN.hq = [++LGN.hseq, lgnR(B.x, 100), lgnR(B.y, 100), lgnR(B.z, 100), lgnR(B.vx, 100), lgnR(B.vy, 100), lgnR(B.vz, 100)];
+  LGN.hitAt = performance.now();
+  LGN.sendT = Math.min(LGN.sendT, 0.01);
+}
+// my own ship took a gale buoy here: to the host
+function lgnPad(i) { if (i < 0) return; LGN.q = [++LGN.qseq, i]; LGN.padAt[i] = performance.now(); LGN.sendT = Math.min(LGN.sendT, 0.01); }
+// everyone but the host: the host's word on the match
+function lgnApply(w, now) {
+  const ph = LGN_PHR[w.ph] || 'play';
+  // the round trip, from the last ship of mine the host has heard
+  const pk = w.pk && w.pk[NET.sid], at = LGN.sentAt[pk];
+  if (at) { LGN.rtt += (lgClamp(now - at, 20, 1500) - LGN.rtt) * 0.2; delete LGN.sentAt[pk]; }
+  // a new kickoff: everyone on their marks
+  if (w.ko !== LGN.koSeen) { LGN.koSeen = w.ko; if (ph === 'count') { const g = LG.ships.map(s => s.goals), t = LG.ships.map(s => s.touches); lgKickoff(); LG.ships.forEach((s, i) => { s.goals = g[i]; s.touches = t[i]; }); for (const k in LGN.samp) delete LGN.samp[k]; } }
+  if (LGN.phSeen === 'count' && ph === 'play') { lgSnd('go'); lgSay('Go!', 0.8); }
+  if (w.ot && !LGN.otSeen && !LGN.first) { lgSay('Overtime! Next goal wins', 2.5); lgSnd('horn'); }
+  LGN.otSeen = !!w.ot; LGN.phSeen = ph;
+  LG.ph = ph; LG.phT = +w.pt || 0; LG.clock = +w.ck || 0; LG.ot = !!w.ot;
+  if (Array.isArray(w.sc)) LG.score = [w.sc[0] | 0, w.sc[1] | 0];
+  if (Array.isArray(w.gl)) w.gl.forEach((v, i) => { if (LG.ships[i]) LG.ships[i].goals = v | 0; });
+  if (Array.isArray(w.tc)) w.tc.forEach((v, i) => { if (LG.ships[i]) LG.ships[i].touches = v | 0; });
+  // the bots (and any ship a bot has taken over: mine, if I've just come back, is put where the bot left her)
+  const bots = new Set();
+  if (Array.isArray(w.bt)) for (const a of w.bt) {
+    if (!Array.isArray(a)) continue; const s = LG.ships[a[0] | 0]; if (!s) continue; bots.add(s.i);
+    if (s.me) { if (LGN.first) { s.x = +a[1] || 0; s.y = +a[2] || 0; s.h = +a[3] || 0; } continue; }
+    s.bot = true; lgnHeard(s, a.slice(1), now);
+  }
+  for (const s of LG.ships) if (s.sid && !s.me && s.bot && !bots.has(s.i)) s.bot = false;
+  // the goals
+  if (LGN.first) LGN.gSeen = w.gs | 0;
+  if ((w.gs | 0) > LGN.gSeen && Array.isArray(w.ge)) { LGN.gSeen = w.gs | 0; const by = w.ge[1] >= 0 ? LG.ships[w.ge[1]] || null : null; lgGoalShow(w.ge[0] ? 1 : 0, by, !!w.ge[2]); }
+  // the gale buoys: down where the host says, up again where it says (unless I've only just taken one)
+  const pd = w.pd | 0;
+  LG.pads.forEach((p, i) => { const down = !!(pd & (1 << i)); if (down && p.t <= 0) p.t = p.back * 0.9; else if (!down && p.t > 0 && now - (LGN.padAt[i] || -1e9) > 900) p.t = 0; });
+  lgnBall(w, now);
+  LGN.first = false;
+  if (ph === 'end' && !LGN.ended) { LGN.ended = true; LG.ball.gone = !!w.bg; lgEnd(); }
+}
+// the ball: the host's, carried on by half the round trip; mine is pulled to it, unless my own hit is still on its way
+function lgnBall(w, now) {
+  const B = LG.ball, b = w.b; if (!Array.isArray(b) || b.length < 6 || !b.every(Number.isFinite)) return;
+  const was = B.gone; B.gone = !!w.bg;
+  const hk = w.hk && w.hk[NET.sid], acked = Array.isArray(hk) && hk[0] >= LGN.hseq;
+  if (!acked && now - LGN.hitAt < 700 && !B.gone) return;
+  const T = { x: b[0], y: b[1], z: b[2], vx: b[3], vy: b[4], vz: b[5], rx: 0, ry: 0, gone: B.gone };
+  const lead = lgClamp(LGN.rtt / 2000, 0, 0.3);
+  if (!T.gone && (LG.ph === 'play')) for (let t = 0; t < lead; t += 1 / 60) lgBallFly(T, Math.min(1 / 60, lead - t));
+  const err = Math.hypot(T.x - B.x, T.y - B.y, T.z - B.z);
+  if (was !== B.gone || err > 10 || LG.ph !== 'play') { B.x = T.x; B.y = T.y; B.z = T.z; B.vx = T.vx; B.vy = T.vy; B.vz = T.vz; return; }
+  const k = 0.35; B.x += (T.x - B.x) * k; B.y += (T.y - B.y) * k; B.z += (T.z - B.z) * k; B.vx = T.vx; B.vy = T.vy; B.vz = T.vz;
+}
+// the ball's own flight a moment on (the water, the air and the walls; no ships, no goals), for the forecast
+function lgBallFly(B, dt) {
+  if (B.z > LGC.FLOAT + 0.05 || B.vz > 0) { B.vz -= LGC.G * dt; const k = Math.exp(-dt * 0.08); B.vx *= k; B.vy *= k; }
+  else { const k = Math.exp(-dt * 0.32); B.vx *= k; B.vy *= k; B.vz = 0; B.z = LGC.FLOAT; }
+  B.x += B.vx * dt; B.y += B.vy * dt; B.z += B.vz * dt;
+  if (B.z < LGC.FLOAT) { B.z = LGC.FLOAT; B.vz = B.vz < -3 ? -B.vz * 0.42 : 0; }
+  for (const wl of lgWalls()) { const d = lgSegHit(wl, B.x, B.y, LGC.R); if (d) { B.x += d.nx * d.pen; B.y += d.ny * d.pen; const vn = B.vx * d.nx + B.vy * d.ny; if (vn < 0) { B.vx -= 1.78 * vn * d.nx; B.vy -= 1.78 * vn * d.ny; } } }
+}
+// the others' ships: where each was last heard to be, carried on for as long ago as that was, and slid there
+function lgnPlace(dt, now) {
+  const lead = lgClamp(LGN.rtt / 2000, 0, 0.15);
+  for (const s of LG.ships) {
+    if (lgOwn(s)) continue;
+    const S = LGN.samp[s.i]; if (!S) continue;
+    const age = lgClamp((now - S.t) / 1000 + lead, 0, 0.35), V = S.v + S.bv, hm = S.h + S.w * age / 2;
+    const frozen = LG.ph === 'count' || LG.ph === 'end';
+    const tx = frozen ? S.x : S.x + Math.sin(hm) * V * age, ty = frozen ? S.y : S.y + Math.cos(hm) * V * age, th = frozen ? S.h : lgAng(S.h + S.w * age);
+    const d = Math.hypot(tx - s.x, ty - s.y);
+    if (d > 30) { s.x = tx; s.y = ty; s.h = th; }
+    else { const k = Math.min(1, dt * 14); s.x += (tx - s.x) * k; s.y += (ty - s.y) * k; s.h = lgAng(s.h + lgAng(th - s.h) * k); }
+    s.v = S.v; s.bv = S.bv; s.rudder = S.rudder; s.w = S.w; s.gale = S.gale; s.galeOn = S.galeOn; s.sail = S.sail;
+  }
+}
+// names over the other people's ships, so a friend is told from a bot
+function lgnTags() {
+  let box = $('lgTags');
+  if (!box) { box = document.createElement('div'); box.id = 'lgTags'; box.className = 'lg-tags'; $('lgUI').append(box); }
+  if (typeof L3 === 'undefined' || !L3.cam || typeof THREE === 'undefined') return;
+  const w = innerWidth, h = innerHeight, v = new THREE.Vector3();
+  for (const s of LG.ships) {
+    let el = box.querySelector(`[data-i="${s.i}"]`);
+    if (!s.sid || s.me || LG.ph === 'end') { if (el) el.hidden = true; continue; }
+    if (!el) { el = document.createElement('span'); el.dataset.i = s.i; el.style.color = LG_TEAMS[s.team].col; box.append(el); }
+    const t = s.nm + (s.bot ? ' · bot' : ''); if (el.textContent !== t) el.textContent = t;
+    v.copy(lv(s.x, s.y, 10 + s.boat.len * 0.75)).project(L3.cam);
+    if (v.z > 1 || Math.abs(v.x) > 1.1 || Math.abs(v.y) > 1.1) { el.hidden = true; continue; }
+    el.hidden = false; el.style.transform = `translate(${Math.round((v.x + 1) / 2 * w)}px, ${Math.round((1 - v.y) / 2 * h)}px) translate(-50%, -100%)`;
+  }
+}
+// the host's screen in a background tab isn't drawn, so the match runs on here (the browser slows this timer too)
+function lgnHidden() {
+  const now = performance.now(), dt = Math.min(1.5, (now - (LGN.hidT || now)) / 1000); LGN.hidT = now;
+  if (!document.hidden || !lgnInMatch() || LGN.role !== 'host' || dt <= 0) return;
+  LG.t += dt;
+  for (let left = dt; left > 1e-4; left -= 0.05) lgSim(Math.min(0.05, left));
+}
+
+(function lgnInit() {
+  if (!$('lgMp')) return;
+  $('lgMpHost').addEventListener('click', lgnHost);
+  $('lgMpStart').addEventListener('click', lgnStart);
+  $('lgMpSwap').addEventListener('click', lgnSide);
+  $('lgMpLeave').addEventListener('click', lgnLeave);
+  $('lgMpRejoin').addEventListener('click', () => { if (lgnInMatch()) return; LGN.doneG = null; LGN.msg = ''; lgNetPeers(); });
+  // (the host's picks and anyone's ship, out to the lobby as they change)
+  for (const id of ['lgSize', 'lgMins', 'lgSkill', 'lgFleet', 'lgBoat', 'lgNick']) { const el = $(id); if (el) el.addEventListener('change', () => { if (LGN.code && !lgnInMatch()) { lgnSendLobby(); lgnRender(); } }); }
+  setInterval(() => { if (state === 'title') lgnRender(); }, 1500);
+  // (in the lobby, everyone says they're still here every few seconds, so a long wait doesn't look like leaving)
+  setInterval(() => { if (LGN.code && !lgnInMatch()) lgnSendLobby(); }, 4000);
+  setInterval(lgnHidden, 100);
+  lgnRender();
+})();
 
 // ---- src/rlcards.js ----
 'use strict';
@@ -82072,6 +82573,7 @@ requestAnimationFrame(frame);
 <!-- [golf] the golfer, ball and clubs dressed -->
 <!-- [league] Skerry League: the match, the ships, the ball, the bots -->
 <!-- [league] the 3D view -->
+<!-- [league] online matches: the lobby and keeping the screens together -->
 <!-- [rival] Skerry Clash: the 64 cards -->
 <!-- [rival] the rules, the match, the snapshots -->
 <!-- [rival] the keeper across the water -->

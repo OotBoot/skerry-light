@@ -606,7 +606,7 @@ An eleventh game, on its own card on the title screen (**Kick off**; on the desk
 - **Controller:** left stick or D-pad steers, RT makes sail, LT shortens it, A or B the Gale, Y the camera, Start the menu. **Phone:** steer with the buttons bottom left; shorten, the Gale and make sail bottom right.
 - **Esc** (or ☰) pauses: back to the match, start again, or leave.
 
-How it's built: `src/league.js` (the match, the ships' handling, the ball, the walls and goals, the bots, the screen and the controls) and `src/league3d.js` (the 3D view: the pool, the walls and lamps, the cliffs, the goals and lighthouses, the ships built from their boats' shapes and skins, the wakes, the Gale's spray, the goal bursts and the camera). Online play is not in yet.
+How it's built: `src/league.js` (the match, the ships' handling, the ball, the walls and goals, the bots, the screen and the controls) and `src/league3d.js` (the 3D view: the pool, the walls and lamps, the cliffs, the goals and lighthouses, the ships built from their boats' shapes and skins, the wakes, the Gale's spray, the goal bursts and the camera). Online play is `src/lgnet.js`: a lobby on the card for up to six, seated by side with bots in the empty seats; each screen sails its own ship, and the host's screen runs the ball, the bots, the gale buoys, the clock and the score and sends them to the rest, who forecast the ball between snapshots and send their own hits for the host to check. `server/server.js` relays one match's players to each other at full rate (the `lg` room key).
 
 ## Skerry Clash (a duel of lights, one against one)
 
@@ -885,6 +885,7 @@ src/patchnotes.js   the patch notes log (one entry per version, newest first)
 src/patchnotesui.js the main menu's Patch Notes page
 src/league.js       Skerry League: the match, the ships, the ball, the bots
 src/league3d.js     Skerry League's 3D view
+src/lgnet.js        Skerry League online: the lobby, the seats, and keeping the screens together
 src/audio.js        sound, made with the Web Audio API (plus Verity's voice clip)
 src/biomes.js       the seas: palettes, landscapes, rock skins, weather, the Nether portal
 src/nether.js       the Nether's three enemies

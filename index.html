@@ -542,11 +542,26 @@
         <button class="tool" id="lgSettings" type="button">Settings</button>
       </div>
       <p class="muted lgrecord" id="lgRecord"></p>
+      <section class="warmp zmmp" id="lgMp" aria-labelledby="lgMpHead">
+        <h2 id="lgMpHead">Play together online · up to six</h2>
+        <p class="muted" id="lgMpNote">Looking for other players…</p>
+        <div id="lgMpOpen" hidden>
+          <div class="btnrow"><button class="tool" id="lgMpHost" type="button">Host a match</button></div>
+          <div class="warlobbies" id="lgLobbies"></div>
+        </div>
+        <div class="warlobby" id="lgLobby" hidden>
+          <h3 id="lgLobbyHead">Your match</h3>
+          <ol class="warlobbylist" id="lgLobbyList"></ol>
+          <p class="muted" id="lgLobbyMsg"></p>
+          <div class="btnrow"><button class="primary" id="lgMpStart" type="button">Kick off together</button><button class="primary" id="lgMpRejoin" type="button" hidden>Rejoin the match</button><button class="tool" id="lgMpSwap" type="button">Change sides</button><button class="tool shareBtn" id="lgMpShare" type="button" data-mode="league">Share invite</button><button class="tool" id="lgMpLeave" type="button">Leave</button></div>
+        </div>
+      </section>
       <details class="howto">
         <summary>How to play</summary>
         <p><b>The match.</b> You sail for Blue, with bots on your side and against you. Get the ball over Orange's goal line, under the crossbar, and it's a goal. After each goal everyone goes back to their marks for a count of three. Ahead when the clock runs out and you've won; level, and it goes to overtime, where the next goal wins.</p>
         <p><b>Sailing.</b> Your ship handles as she does on a voyage: hold W and the sail keeps climbing, faster the longer you hold it, with no top speed. S shortens sail; keep holding it with the sail short and she backs her sails and goes astern. The Cutter turns quickest, the Carrier hits hardest, and every ship turns more sharply here than out at sea.</p>
         <p><b>The Gale.</b> Shift or Space (A on a controller) blows her on much faster for as long as the gauge lasts. The yellow gale buoys fill it: a small one gives a third, a big one (in the corners and at the middle of each side) fills it right up. They come back a few seconds after they're taken.</p>
+        <p><b>Online.</b> Host a match and your friends join it from this card (or from the invite you share), up to six of you, each on their own screen. Everyone picks a side (Change sides), the sides grow to fit, and bots sail any empty seats. The host picks the match and kicks off; the match runs on the host’s screen, so the host keeps that tab in front. Anyone who drops out is sailed by a bot until they rejoin. If the host leaves, the match ends.</p>
         <p><b>Hitting the ball.</b> The faster you're going, the harder it flies. Hit it hard and it leaps out of the water. It bounces off the walls and the posts, so a shot off the wall can still go in.</p>
         <p><b>The camera.</b> Ball cam (the default) keeps the ball in view behind your ship; Ship cam looks the way she's heading. C (or Y on a controller, or the button at the top) swaps them.</p>
         <p><b>Controller.</b> Left stick or D-pad steers, RT makes sail, LT shortens it, A or B the Gale, Y the camera, Start the menu. On a phone, the buttons at the bottom: steer on the left, sail, shorten and the Gale on the right.</p>
@@ -1295,6 +1310,7 @@
 <script src="src/gfdress.js"></script><!-- [golf] the golfer, ball and clubs dressed -->
 <script src="src/league.js"></script><!-- [league] Skerry League: the match, the ships, the ball, the bots -->
 <script src="src/league3d.js"></script><!-- [league] the 3D view -->
+<script src="src/lgnet.js"></script><!-- [league] online matches: the lobby and keeping the screens together -->
 <script src="src/rlcards.js"></script><!-- [rival] Skerry Clash: the 64 cards -->
 <script src="src/rl.js"></script><!-- [rival] the rules, the match, the snapshots -->
 <script src="src/rlbot.js"></script><!-- [rival] the keeper across the water -->
