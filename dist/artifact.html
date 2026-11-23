@@ -1986,6 +1986,13 @@ svg.chrock .foam { fill: rgba(235,245,250,0.55); } svg.chrock .rk { fill: #4b4d5
 @media (max-height: 520px) and (min-aspect-ratio: 1/1) { .ch-wrap { --bs: calc(100vh - 96px); padding: 8px 12px; gap: 4px 16px; flex-direction: row; justify-content: center; align-items: center; } .ch-side { width: min(300px, calc(100vw - var(--bs) - 60px)); max-height: var(--bs); } .ch-moves { max-height: none; flex: 1; } }
 #chPromo .card { max-width: min(30rem, 100%); } .ch-promobtns { flex-wrap: nowrap; } @media (max-width: 420px) { .chpromo { width: 70px; } .chpromo svg.chp { width: 52px; height: 52px; } }
 @media (max-height: 520px) and (min-aspect-ratio: 1/1) { .ch-boardcol { gap: 4px; } .ch-player { min-height: 22px; font-size: 13px; } }
+/* [chess] Skerry rules: the tower's beam, and the guide to the pieces beside the board */
+.chbeam { position: absolute; height: 6px; margin-top: -3px; transform-origin: 0 50%; z-index: 6; pointer-events: none; border-radius: 3px; background: linear-gradient(90deg, rgba(255,240,180,0.95), rgba(255,200,90,0.9)); box-shadow: 0 0 14px 4px rgba(255,210,110,0.75); animation: chbeam 0.65s ease-out forwards; }
+@keyframes chbeam { 0% { opacity: 0; clip-path: inset(0 100% 0 0); } 25% { opacity: 1; clip-path: inset(0 0 0 0); } 100% { opacity: 0; } }
+.chsq.hit { animation: chhit 0.65s ease-out; } @keyframes chhit { 30% { box-shadow: inset 0 0 0 100px rgba(255,230,150,0.7); } }
+.ch-guide { font-size: 13px; } .ch-guide summary { cursor: pointer; font-family: var(--log); font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--lamp); }
+.ch-guide ul { margin: 6px 0 0 1.1em; padding: 0; } .ch-guide li { margin: 2px 0; line-height: 1.35; }
+@media (prefers-reduced-motion: reduce) { .chbeam { animation-duration: 0.3s; } }
 </style>
 <div id="stage">
   <canvas id="bg" class="under" aria-hidden="true"></canvas>
@@ -2049,17 +2056,8 @@ svg.chrock .foam { fill: rgba(235,245,250,0.55); } svg.chrock .rk { fill: #4b4d5
     <p class="verline" id="verLine" aria-label="Game version"></p>
     <div class="rejoinbar" id="rejoinBar" role="status" hidden><span class="rj-text" id="rejoinText"></span><button class="tool rj-go" id="rejoinGo" type="button">Rejoin</button><button class="tool rj-no" id="rejoinNo" type="button">Not now</button></div>
     <button class="origfeat" id="origBanner" type="button" aria-label="Play The Original: Skerry Light as it began"><span class="of-tag">Featured</span><span class="of-main"><b>The Original</b><small>Skerry Light as it began: keep the light, show the ships the rocks, bring them home</small></span><span class="of-go" aria-hidden="true">Play ›</span></button>
-    <button class="newgame" id="fpsBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">Try the new game, <b>Wreckers' Night</b>: a multiplayer shootout on the skerry</span><span class="ng-go" aria-hidden="true">↓</span></button>
-    <button class="newgame warbanner" id="warBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">And another, <b>Drowned Reach</b>: a war for the islands, alone or with up to ten players</span><span class="ng-go" aria-hidden="true">↓</span></button>
-    <button class="newgame zmbanner" id="zmBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">And a fourth, <b>Keeper's Last Light</b>: hold the keeper's station against the drowned, round after round</span><span class="ng-go" aria-hidden="true">↓</span></button>
-    <button class="newgame rdbanner" id="rdBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">And raids, alone or with up to four: <b>Maren's End</b>, and new, <b>The Gannet's Wake</b></span><span class="ng-go" aria-hidden="true">↓</span></button>
-    <button class="newgame frbanner" id="frBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">And <b>Fog Run</b>: sail the keeper's cutter out into the haar and light the islands, alone or with up to four</span><span class="ng-go" aria-hidden="true">↓</span></button>
-    <button class="newgame fbbanner" id="fbBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">And <b>Freebooters' Sea</b>: an open sea of islands to sail, salvage and sell, alone or with up to four</span><span class="ng-go" aria-hidden="true">↓</span></button><!-- [fbsea] -->
-    <button class="newgame gfbanner" id="gfBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">And <b>Skerry Links</b>: nine holes of golf along the cliffs, alone or with up to four</span><span class="ng-go" aria-hidden="true">↓</span></button><!-- [golf] -->
-    <button class="newgame rlbanner" id="rlBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">And a ninth, <b>Skerry Clash</b>: a duel of lights across the race, one keeper against another</span><span class="ng-go" aria-hidden="true">↓</span></button><!-- [rival] -->
-    <button class="newgame cpbanner" id="cpBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">And a tenth, <b>The Chronicle of the Light</b>: the whole history of the Skerries as a campaign, alone or with up to four</span><span class="ng-go" aria-hidden="true">↓</span></button><!-- [campaign] -->
-    <button class="newgame lgbanner" id="lgBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">And an eleventh, <b>Skerry League</b>: sail into a great buoy and knock it into the other side's goal</span><span class="ng-go" aria-hidden="true">↓</span></button><!-- [league] -->
-    <button class="newgame chbanner" id="chBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">And a twelfth, <b>Skerry Chess</b>: chess against three bots or a friend, and a variant on the reef</span><span class="ng-go" aria-hidden="true">↓</span></button><!-- [chess] -->
+    <button class="newgame lgbanner" id="lgBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">Try the new game, <b>Skerry League</b>: sail into a great buoy and knock it into the other side's goal</span><span class="ng-go" aria-hidden="true">↓</span></button><!-- [league] -->
+    <button class="newgame chbanner" id="chBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">And another, <b>Skerry Chess</b>: chess against three bots or a friend, and a variant on the reef</span><span class="ng-go" aria-hidden="true">↓</span></button><!-- [chess] -->
     <div class="menulinks"><button class="tool notesbtn" id="notesBtn" type="button">Patch notes</button><button class="tool notesbtn lorebtn" id="loreBtn" type="button">Lore compendium</button></div>
     <div class="card boardcard" id="boardCard" aria-labelledby="boardHead">
       <div class="cardtop"><span class="eyebrow">Best on record · every game</span><span class="boardminititle">The Scoreboard</span><span class="boardbtns"><button class="tool closebtn" id="boardRefresh" type="button">Refresh</button><button class="tool closebtn" id="boardMin" type="button" aria-expanded="true" aria-controls="boardCard" title="Make the scoreboard small">– Minimise</button></span></div>
@@ -2240,7 +2238,7 @@ svg.chrock .foam { fill: rgba(235,245,250,0.55); } svg.chrock .rk { fill: #4b4d5
       <div class="zmmaps" id="rdRaids" role="group" aria-label="Which raid">
         <span class="zmmapshead">Raid</span>
         <button class="tool" type="button" data-raid="raid" aria-pressed="true">Maren's End</button>
-        <button class="tool" type="button" data-raid="gannet" aria-pressed="false">The Gannet's Wake <span class="ng-tag">New</span></button>
+        <button class="tool" type="button" data-raid="gannet" aria-pressed="false">The Gannet's Wake</button>
       </div>
       <div data-for="raid">
       <p>The sea round the Light has drained away. Where it was is a dry bed of salt and wrecks, and a long pier running out over it to the Swallow, the hole the water went down. Take Maren's Lantern, the one she rowed out with in 1887, and go down after it.</p>
@@ -2547,7 +2545,7 @@ svg.chrock .foam { fill: rgba(235,245,250,0.55); } svg.chrock .rk { fill: #4b4d5
     <div class="card zmcard chcard" id="chTitle" aria-labelledby="chHead"><!-- [chess] Skerry Chess: its own card (src/chess.js, src/chessui.js, src/chnet.js) -->
       <div class="cardtop"><span class="eyebrow">A twelfth game · chess · against a bot or one other player</span></div>
       <h1 id="chHead">Skerry Chess</h1>
-      <p>The keepers' game, played on long nights in the lamp room. Standard chess with every rule of it, or Skerry rules: the same armies on a reef, with rocks in the way and the Light in the middle of the board. Bring your keeper to the Light and you win on the spot.</p>
+      <p>The keepers' game, played on long nights in the lamp room. Standard chess with every rule of it, or Skerry rules: the station's own pieces, each with a move or a power of its own, on a reef with rocks in the way and the Light in the middle of the board. Bring your keeper to the Light and you win on the spot.</p>
       <p class="muted">Tap a piece and then where it goes, or drag it. The arrow keys and Enter work too, and so does a controller.</p>
       <div class="gfopts chopts">
         <label>Rules <select id="chVar"><option value="std">Standard chess</option><option value="sk">Skerry rules</option></select></label>
@@ -2578,10 +2576,19 @@ svg.chrock .foam { fill: rgba(235,245,250,0.55); } svg.chrock .rk { fill: #4b4d5
       <details class="howto">
         <summary>How to play</summary>
         <p><b>Standard chess.</b> Every rule, as in a tournament: castling (not out of, through or into check), en passant, promotion to any piece, check, checkmate and stalemate. A game is drawn at once by stalemate, by the same position coming up three times, by fifty moves each with no capture and no pawn move, or when neither side has enough left to checkmate.</p>
-        <p><b>Skerry rules.</b> The Light (cream and brass) plays the Wreckers (tar and red), and White still moves first. The pieces are the keeper (king), the lantern (queen), the tower (rook), the cutter (bishop), the gannet (knight) and the hand (pawn), and they move just as their namesakes do. What's different:</p>
+        <p><b>Skerry rules.</b> The Light (cream and brass) plays the Wreckers (tar and red), and the Light moves first. The armies stand where the standard pieces do, but each piece is the station's own, with a move or a power no chess piece has:</p>
         <ul>
-          <li><b>The reef.</b> Four rocks stand at c4, f4, c5 and f5. Nothing can stand on a rock or move through one, but gannets fly over them, as knights jump anything. A hand on the c or f file can't step forward past its rock.</li>
-          <li><b>The Light.</b> The four squares in the middle, d4, e4, d5 and e5, are lit. Move your keeper onto one of them and you win at once. Your keeper still can't step into check, so the Light has to be safe to reach.</li>
+          <li><b>Keeper</b> (king's place): one step in any direction, or swaps places with one of your own hands next to it. No castling.</li>
+          <li><b>Lantern</b> (queen's place): sails any distance diagonally, or leaps as a knight does.</li>
+          <li><b>Tower</b> (rook's place): a lighthouse. It walks one step in any direction onto an empty square, and takes with its <b>beam</b>: the first enemy along its rank or file, at any distance, without moving.</li>
+          <li><b>Cutter</b> (bishop's place): sails any distance diagonally, or tacks one step straight, so it can change colour.</li>
+          <li><b>Gannet</b> (knight's place): dives exactly three squares in a straight line or diagonal, over anything in the way (rocks too), or takes one step straight.</li>
+          <li><b>Hand</b> (pawn's place): one step forward, or one step sideways onto an empty square; takes one step diagonally forward. No double step and no en passant. On the far rank it becomes a lantern, tower, cutter or gannet.</li>
+        </ul>
+        <p>And the board:</p>
+        <ul>
+          <li><b>The reef.</b> Four rocks stand at c4, f4, c5 and f5. Nothing can stand on a rock or move or shine through one; only the gannet dives over them.</li>
+          <li><b>The Light.</b> The four squares in the middle, d4, e4, d5 and e5, are lit. Put your keeper on one of them (by a step or a swap) and you win at once. It still can't move into check.</li>
           <li><b>No dead draws.</b> A lone keeper can always make for the Light, so a game never ends just because one side has too little left. Stalemate, repetition and the fifty-move rule still draw.</li>
         </ul>
         <p><b>The bots.</b> Hob the deckhand (Easy) looks one move ahead and makes careless moves. Mate Tamsin (Fair) looks three moves deep. The Old Keeper (Hard) thinks for up to two seconds a move, as deep as he can get. Against a bot you can take back your last move, and a game you leave is kept for you to resume.</p>
@@ -2602,6 +2609,14 @@ svg.chrock .foam { fill: rgba(235,245,250,0.55); } svg.chrock .rk { fill: #4b4d5
       <aside class="ch-side">
         <div class="ch-head"><h2>Skerry Chess</h2><button class="tool" id="chMenuBtn" type="button" aria-label="Menu" title="Menu (Esc)">☰</button></div>
         <p class="muted ch-rules" id="chRules"></p>
+        <details class="ch-guide" id="chGuide" hidden><summary>The pieces</summary><ul>
+          <li><b>Keeper</b> one step any way, or swaps with your hand next to it. Reach the Light to win.</li>
+          <li><b>Lantern</b> sails any distance diagonally, or leaps like a knight.</li>
+          <li><b>Tower</b> walks one step. Its beam takes the first enemy along a rank or file without moving.</li>
+          <li><b>Cutter</b> sails any distance diagonally, or one step straight.</li>
+          <li><b>Gannet</b> dives exactly three squares in any straight line or diagonal, over anything, or one step straight.</li>
+          <li><b>Hand</b> one step forward or sideways; takes diagonally forward. No double step.</li>
+        </ul></details>
         <p class="ch-status" id="chStatus" role="status" aria-live="polite"></p>
         <ol class="ch-moves" id="chMoves" aria-label="The moves"></ol>
         <div class="btnrow ch-btns"><button class="tool" id="chUndo" type="button">Take back</button><button class="tool" id="chDraw" type="button" hidden>Offer a draw</button><button class="tool" id="chFlip" type="button" title="Turn the board round (F)">Turn board</button><button class="tool" id="chResign" type="button">Resign</button></div>
@@ -3226,7 +3241,7 @@ svg.chrock .foam { fill: rgba(235,245,250,0.55); } svg.chrock .rk { fill: #4b4d5
 // ---- src/config.js ----
 'use strict';
 // The game's version, shown at the top of the main menu. Bump it by one with every change pushed to main.
-var VERSION = 241;
+var VERSION = 245;
 // Skerry Light: tuning, asset paths and lore.
 // World units are metres. The lighthouse stands at the origin on the shoreline (y = 0);
 // north (+y) is open sea. Bearings: 0 = north, positive = east.
@@ -3401,6 +3416,24 @@ document.addEventListener('visibilitychange', () => {
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 245, date: '2026-11-23', title: "Main menu: fewer banners", Changes: [
+    "Main menu: the banners for the older games, from Wreckers' Night through The Chronicle of the Light, are gone from the top of the menu. Every game is still in the list below; only Skerry League and Skerry Chess keep a banner.",
+  ] },
+  { v: 244, date: '2026-11-23', title: "Skerry Chess: new pieces for Skerry rules", Changes: [
+    "Skerry Chess, Skerry rules: every piece now has a move or a power of its own, instead of moving like its standard chess counterpart.",
+    "Skerry Chess: the keeper steps one square, or swaps places with one of your hands next to it. No castling under Skerry rules.",
+    "Skerry Chess: the lantern sails diagonally or leaps like a knight. The cutter sails diagonally or tacks one step straight.",
+    "Skerry Chess: the tower walks one step and takes with its beam, hitting the first enemy along its rank or file without moving.",
+    "Skerry Chess: the gannet dives exactly three squares in any line, over anything, or takes one step straight.",
+    "Skerry Chess: the hand steps forward or sideways and takes diagonally forward. No double step.",
+    "Skerry Chess: a guide to the pieces sits beside the board in Skerry rules games, and all three bots play the new pieces.",
+  ] },
+  { v: 243, date: '2026-11-23', title: "Main menu tidy-up", Changes: [
+    "Main menu: the New tags are gone from the older games, from Skerry Light through The Chronicle of the Light, and from The Gannet's Wake on the raid list. Only Skerry League and Skerry Chess still carry one.",
+  ] },
+  { v: 242, date: '2026-11-23', title: "Lore compendium: the harbour games", New: [
+    "Lore compendium: six new articles for the newer games. The Harbour Pool, The Blue and the Orange and The Gale for Skerry League; The players of the lamp room (Hob, Mate Tamsin and the Old Keeper) for Skerry Chess; The headland for Skerry Links; and Crossing in person for Skerry Clash's First person.",
+    "Lore compendium: the League, Chess and Links chronicles link to their new pages, and the era of the Light now lists the Harbour Pool and the lamp room's chessboards." ] },
   { v: 241, date: '2026-11-23', title: "New game: Skerry Chess", New: [
     "Skerry Chess: a new game on the main menu. Chess against a bot or another player, with every rule of the game: castling, en passant, promotion, check, checkmate and stalemate, and draws by repetition, the fifty-move rule and insufficient material.",
     "Skerry Chess: Skerry rules, a variant on the reef. Four rocks block the board, gannets (knights) fly over them, and a keeper (king) that reaches the Light, the four centre squares, wins outright. The pieces are the station's own: keeper, lantern, tower, cutter, gannet and hand.",
@@ -18826,7 +18859,6 @@ const fpsTouchEnd = e => {
 addEventListener('touchend', fpsTouchEnd, true); addEventListener('touchcancel', fpsTouchEnd, true);
 
 // the buttons
-$('fpsBanner').addEventListener('click', () => { const c = $('fpsTitle'); c.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' }); setTimeout(() => $('fpsPlay').focus({ preventScroll: true }), 400); });
 $('fpsPlay').addEventListener('click', fpsStart);
 $('fpsSettings').addEventListener('click', () => $('titleSettings').click());
 $('fpsNick').addEventListener('keydown', e => { if (e.key === 'Enter') fpsStart(); });
@@ -26921,7 +26953,6 @@ const ZM_KEYS = { KeyF: () => zmUse(), KeyE: () => zmUse(), KeyV: () => zmKnife(
   for (const b of document.querySelectorAll('#zmMaps [data-map]')) b.addEventListener('click', () => zmPickMap(b.dataset.map));
   zmMapCard();
   $('zmSettings').addEventListener('click', () => $('titleSettings').click());
-  $('zmBanner').addEventListener('click', () => { $('zmTitle').scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' }); setTimeout(() => $('zmPlay').focus({ preventScroll: true }), 400); });
   $('zmAgain').addEventListener('click', zmAgain);
   $('zmLeave').addEventListener('click', () => fpsStop());
   // the shared crates: the same buttons as on Wreckers' Night's card
@@ -33978,7 +34009,6 @@ function raidCard() {
   $('rdSettings').addEventListener('click', () => $('titleSettings').click());
   $('rdWcrate').addEventListener('click', () => $('wcrateBtn').click());
   $('rdOcrate').addEventListener('click', () => $('ocrateBtn').click());
-  $('rdBanner').addEventListener('click', () => { $('rdTitle').scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' }); setTimeout(() => $('rdPlay').focus({ preventScroll: true }), 400); });
   // your bests, on the card
   setInterval(() => {
     const b = typeof BOARD !== 'undefined' && BOARD.mine && BOARD.mine[RD_PICK], el = $('rdRecord'); if (!el || !b) return;
@@ -42979,7 +43009,6 @@ function frJump(key) {
   $('frSettings').addEventListener('click', () => $('titleSettings').click());
   $('frWcrate').addEventListener('click', () => $('wcrateBtn').click());
   $('frOcrate').addEventListener('click', () => $('ocrateBtn').click());
-  if ($('frBanner')) $('frBanner').addEventListener('click', () => { $('frTitle').scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' }); setTimeout(() => $('frPlay').focus({ preventScroll: true }), 400); });
 })();
 
 // ---- src/frsail.js ----
@@ -47137,7 +47166,6 @@ function fbDebug(key, i) {
   $('fbSettings').addEventListener('click', () => $('titleSettings').click());
   $('fbWcrate').addEventListener('click', () => $('wcrateBtn').click());
   $('fbOcrate').addEventListener('click', () => $('ocrateBtn').click());
-  if ($('fbBanner')) $('fbBanner').addEventListener('click', () => { $('fbTitle').scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' }); setTimeout(() => $('fbPlay').focus({ preventScroll: true }), 400); });
 })();
 
 // ---- src/fbsail.js ----
@@ -50272,7 +50300,6 @@ function cpDebug(id, stage, noCine, cls) {
   if (!$('cpTitle')) return;
   $('cpPlay').addEventListener('click', () => { if (CP.pick) cpPlay(CP.pick); });
   $('cpSettings').addEventListener('click', () => $('titleSettings').click());
-  if ($('cpBanner')) $('cpBanner').addEventListener('click', () => { $('cpTitle').scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' }); setTimeout(() => $('cpPlay').focus({ preventScroll: true }), 400); });
   // (the missions' own files load after this one: draw the list once they have)
   window.addEventListener('load', cpCard);
   setTimeout(cpCard, 0);
@@ -66406,7 +66433,6 @@ addEventListener('contextmenu', e => { if (WAR.on && e.target === cv) e.preventD
 addEventListener('resize', () => { if (WAR.on) wvFit(); });
 (() => {
   $('warPlay').addEventListener('click', warGo);
-  $('warBanner').addEventListener('click', () => { $('warTitle').scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' }); setTimeout(() => $('warPlay').focus({ preventScroll: true }), 400); });
   $('warNick').addEventListener('keydown', e => { if (e.key === 'Enter') warGo(); });
   try { const b = localStorage.getItem('skerry-war-bots'); if (b) $('warBots').value = b; const d = localStorage.getItem('skerry-war-diff'); if (d && WAR_DIFF[d]) $('warDiff').value = d; } catch (e) {}
   $('warPactsBtn').addEventListener('click', () => wvPactsOpen(!$('warPacts').classList.contains('open')));
@@ -70267,7 +70293,8 @@ function origIsOpen() { return !!(ORIG.el && !ORIG.el.hidden); }
 // The Skerry Compendium: the lore book on the main menu, written like a wiki (src/loreui.js draws it).
 // It ties every game into one history: the voyages (Skerry Light), Wreckers' Night, Drowned Reach, Keeper's Last Light,
 // the two raids (Maren's End, The Gannet's Wake), The Chronicle of the Light (its people, places, nights and five eras), Fog Run, Freebooters' Sea [fbsea], The Original (as The Early Watches),
-// Skerry Links and Skerry Clash (with the Race, the Threefold Skerry, the triple draft and the towers). Where the game itself says nothing, the gaps are filled
+// Skerry Links (with the headland), Skerry League (the Harbour Pool, its two sides and the Gale), Skerry Chess (the players of the lamp room)
+// and Skerry Clash (with the Race, the Threefold Skerry, the triple draft, the towers and crossing in person). Where the game itself says nothing, the gaps are filled
 // with lore that fits; the keeper's log (SK.LOG in config.js) is the spine and is never contradicted.
 // An article: { id, t: title, cat: [categories], img: a picture key (see loreImg in loreui.js), gal: visitors' picture keys for a gallery, box: [[label, value], ...]
 //   (the infobox), sum: the opening paragraph, secs: [{ h: heading, p: [paragraphs] }], also: [ids for See also] }.
@@ -70445,7 +70472,7 @@ var LORE = [
     "The traffic grew every night of those years: one more ship each night than the last, and more rocks with the shifting of the banks. The keeper made a rule for himself, which the log repeats on its flyleaf: <i>three lost in one night, and I begin again as if I had never kept a light.</i> He never wrote down how many times he began again. On 14 December 1887 there was only one ship, and he did not reach her: see [[wreck1887]].",
   ]},
 ], also: ['keeper', 'skerrylight', 'wreck1887'] },
-{ id: 'ch_links', t: 'Skerry Links', cat: ['Chronicles', 'Places'], box: [['Told in', 'Skerry Links'], ['When', 'Still evenings, from c. 1883'], ['Where', 'The headland above [[harbour|the harbour]]'], ['Who', 'One to four players, taking turns'], ['Holes', 'Nine, par 36'], ['Laid out by', 'The keepers of [[skerrylight]]']], sum: "Nine holes of golf along the cliffs of the headland, laid out by the keepers in the years before the lamp failed. The round starts at midday on the inland holes, turns north along the cliff tops, and comes in by moonlight with the Light turning off the point. On a still evening you can still play it.", secs: [
+{ id: 'ch_links', t: 'Skerry Links', cat: ['Chronicles', 'Places'], box: [['Told in', 'Skerry Links'], ['When', 'Still evenings, from c. 1883'], ['Where', '[[headland|The headland]] above [[harbour|the harbour]]'], ['Who', 'One to four players, taking turns'], ['Holes', 'Nine, par 36'], ['Laid out by', 'The keepers of [[skerrylight]]']], sum: "Nine holes of golf along the cliffs of the headland, laid out by the keepers in the years before the lamp failed. The round starts at midday on the inland holes, turns north along the cliff tops, and comes in by moonlight with the Light turning off the point. On a still evening you can still play it.", secs: [
   { h: 'The nine holes', p: [
     "<b>1. The Gate</b>, a dogleg right with a bunker in the corner. <b>2. The Long Road</b>, a par five with a creek across the fairway short of the green. <b>3. Down to the Cove</b>, running downhill to the left. <b>4. First Sight of the Sea</b>, a short four with the sea and a low cliff all down the right. <b>5. Cliff's Edge</b>, a par three along the cliff top. <b>6. The Climb</b>, a steep pull up to a green on the headland. <b>7. The Point</b>, a little par three to a tiny green with the sea on three sides. <b>8. The Chasm</b>, a second shot over a sea-filled gully. <b>9. Homeward Cliff</b>, a long four leaning towards the sea.",
     "The first three run south down the inland side and the other six come back north along the cliffs, each tee a little past the last green, so the whole course can be seen from most of it.",
@@ -70458,8 +70485,8 @@ var LORE = [
     "The keepers played with whatever the coast gave them, and the habit stuck. The Chandler's Crate holds balls made from the stores of a ship's chandler, gull's eggs, buoys, net floats, sea glass, and some that glow or shimmer in flight. The Shipwright's Crate holds whole sets of clubs made from a ship's gear: oars, belaying pins, boat-hooks, harpoons, a narwhal's tusk, a kraken's arm. The finest of them are said to be <b>The Keeper's Beam</b>, with a little lighthouse for a head and its lamp lit, and <b>The Drowned Trident</b>. None of them plays better than any other. See [[crates]].",
   ]},
   { h: 'In the log', p: [ "[[log|The keeper's log]] never mentions the course. The station's coal book records twelve golf balls bought from a Wrackhaven chandler in 1884, and eleven of them lost by the end of that summer." ] },
-], also: ['skerrylight', 'harbour', 'crates'] },
-{ id: 'ch_league', t: 'Skerry League', cat: ['Chronicles', 'Places'], box: [['Told in', 'Skerry League'], ['When', 'Summer evenings, from c. 1885'], ['Where', 'The Harbour Pool, under the cliffs by [[harbour|the harbour]]'], ['Who', 'Two crews, Blue and Orange, one to three ships a side'], ['Played with', 'A great striped buoy'], ['Ships', 'Brigs, cutters, barques, and in later years a carrier']], sum: "A game the harbour crews made up between voyages: a walled basin of still water under the cliffs, a goal at each end with a little light behind it, and a great red and white buoy to knock into the other crew's goal with nothing but your own ship. Nobody is quite sure who played it first, and every crew says it was theirs.", secs: [
+], also: ['headland', 'skerrylight', 'harbour', 'crates'] },
+{ id: 'ch_league', t: 'Skerry League', cat: ['Chronicles', 'Places'], box: [['Told in', 'Skerry League'], ['When', 'Summer evenings, from c. 1885'], ['Where', '[[harbourpool|The Harbour Pool]], under the cliffs by [[harbour|the harbour]]'], ['Who', 'Two crews, Blue and Orange, one to three ships a side'], ['Played with', 'A great striped buoy'], ['Ships', 'Brigs, cutters, barques, and in later years a carrier']], sum: "A game the harbour crews made up between voyages: a walled basin of still water under the cliffs, a goal at each end with a little light behind it, and a great red and white buoy to knock into the other crew's goal with nothing but your own ship. Nobody is quite sure who played it first, and every crew says it was theirs.", secs: [
   { h: 'The Harbour Pool', p: [
     "The pool was built as a fitting-out basin for the harbour, a square of sea wall with a lamp every few yards along the top, and was never finished: the gates were never hung, and the cove's tide never quite empties it. The crews laid the two goals across its ends with spare spars and old net, and the harbour board, finding it could not stop them, put up two small lighthouses behind them and painted one blue and one orange.",
     "The buoy is a spent channel marker, striped red and white and big enough that a cutter has to put her shoulder into it. A hard knock lifts it clean out of the water.",
@@ -70468,8 +70495,8 @@ var LORE = [
     "A match runs on the harbour clock for a few minutes. A goal rings the bell and sets the lighthouse behind it flashing, and both crews go back to their marks to start again. Level at the end and it goes on until somebody scores. The crews keep a Gale in a bottle, a burst of wind let loose from a cask on deck, and fill it again from the yellow gale buoys moored about the pool.",
   ]},
   { h: 'In the log', p: [ "[[log|The keeper's log]] never mentions the game, though the harbour board's minutes record the cost of two lighthouses, 'small, for the amusement of the crews', and of a great deal of new net." ] },
-], also: ['harbour', 'ch_links', 'crates'] },
-{ id: 'ch_chess', t: 'Skerry Chess', cat: ['Chronicles', 'Places'], box: [['Told in', 'Skerry Chess'], ['When', 'Long winter nights, from c. 1886'], ['Where', 'The lamp room of [[skerrylight]]'], ['Who', 'The keepers, the harbour crews, anyone who would sit down'], ['Played with', 'Two boards: a plain one, and the reef board'], ['Pieces', 'Keeper, lantern, tower, cutter, gannet and hand']], sum: "The keepers' game. On the long nights of the watch the keeper on duty and the one off it played chess by the light of the lamp, on a board one of them carved from a ship's hatch cover. A second board followed, cut with the reef on it, and a game of its own grew up around it: the Light against the Wreckers.", secs: [
+], also: ['harbourpool', 'leaguecrews', 'gale', 'harbour'] },
+{ id: 'ch_chess', t: 'Skerry Chess', cat: ['Chronicles', 'Places'], box: [['Told in', 'Skerry Chess'], ['When', 'Long winter nights, from c. 1886'], ['Where', 'The lamp room of [[skerrylight]]'], ['Who', 'The keepers, the harbour crews, [[lamproom|anyone who would sit down]]'], ['Played with', 'Two boards: a plain one, and the reef board'], ['Pieces', 'Keeper, lantern, tower, cutter, gannet and hand']], sum: "The keepers' game. On the long nights of the watch the keeper on duty and the one off it played chess by the light of the lamp, on a board one of them carved from a ship's hatch cover. A second board followed, cut with the reef on it, and a game of its own grew up around it: the Light against the Wreckers.", secs: [
   { h: 'The plain board', p: [
     "The first board is a plain one, played by the rules any harbour club would know. The keepers kept a tally of games in pencil on the underside, and it runs to several hundred before the pencil gives out.",
   ]},
@@ -70477,7 +70504,7 @@ var LORE = [
     "The second board was carved with four rocks standing up out of it, where the skerries would be if the board were the sea, and the four squares between them painted gold for the Light. Its pieces were whittled to look like the station's own: a keeper in his cap, a hand lantern, the tower, a cutter, a gannet, and the hands. On the reef board a keeper who reaches the Light wins outright, as any keeper would tell you is only right.",
   ]},
   { h: 'In the log', p: [ "[[log|The keeper's log]] says nothing of either board, though the station's stores list records 'one set chessmen (spare), whittled', and two pots of gold paint nobody could account for." ] },
-], also: ['skerrylight', 'harbour', 'ch_league'] },
+], also: ['lamproom', 'skerrylight', 'harbour'] },
 { id: 'ch_clash', t: 'Skerry Clash', cat: ['Chronicles', 'Events'], box: [['Told in', 'Skerry Clash'], ['When', 'The years after, at every slack water'], ['Where', '[[race|The Race]], and [[threeskerry|the Threefold Skerry]]'], ['Who', '[[racekeepers|The keepers of the Race]]'], ['Champions', '[[maren]], [[plimsoll]], [[verity]]'], ['Fought with', '[[clashhands|Crews, crabs, birds and worse]], spells, and lamp oil'], ['Prize', 'The other keeper\'s [[greatlight|Great Light]]']], sum: "The tale of the rival lights. In the years after, a second light was lit on a rock across the tidal race from the first, and each keeper was sure the other's was the false one that puts ships on the reef. Since then they have settled it at every slack water, three minutes at a time, across the causeways the falling tide uncovers.", secs: [
   { h: 'Why they fight', p: [
     "The coast had learnt from [[mooncussers|the Mooncussers]] that a light is not to be trusted because it is a light. Two lights on two rocks, close enough to shout across, cannot both be honest, and ships cannot steer by both. Neither keeper will put theirs out. So each sends everything they can muster across the water to put out the other's.",
@@ -70490,7 +70517,7 @@ var LORE = [
     "The greatest of the coast have answered too. [[maren]] has crossed with her lantern, and [[plimsoll]] has walked the causeway for whichever keeper he thought was in the right. Even [[verity]] has been set down on a causeway, smiling and saying he wants to help, and on the Race, for once, the keeper who brought him swears he does. A keeper may have only one of them on a side.",
   ]},
   { h: 'The other ways of it', p: [
-    "Some nights neither keeper brings their own hands, and they pick them on the spot: see [[tripledraft|the triple draft]]. And on the [[threeskerry|Threefold Skerry]], three keepers fight it out at once, every one for themselves.",
+    "Some nights neither keeper brings their own hands, and they pick them on the spot: see [[tripledraft|the triple draft]]. And on the [[threeskerry|Threefold Skerry]], three keepers fight it out at once, every one for themselves. Some nights a keeper will not stay behind the lamp at all, and goes over with the hands: see [[crossing|crossing in person]].",
   ]},
 ], also: ['race', 'racekeepers', 'greatlight'] },
 
@@ -71173,6 +71200,69 @@ var LORE = [
     "Each round asks for something: a big hitter, something that can bring down birds (twice), a spell that strikes, two cheap hands, a building or a spell, and one where anything goes, in an order nobody knows beforehand. Both keepers are asked for the same thing each round, but never offered the same three, and each can see across the shore what the other is being offered, though never which one they take. No hand is offered to a keeper twice in one draft, and the champions are never offered at all: they come for a keeper, not for a draft.",
   ]},
 ], also: ['clashhands', 'ch_clash'] },
+// ---------------- the harbour games: the pool, the headland and the lamp room (Skerry League, Skerry Links, Skerry Chess) ----------------
+{ id: 'harbourpool', t: 'The Harbour Pool', cat: ['Places'], box: [['Kind', 'An unfinished fitting-out basin'], ['Where', 'Under the cliffs by [[harbour|the harbour]]'], ['Built', 'c. 1880, never finished'], ['Goals', 'Two, each with a small lighthouse behind it'], ['Appears in', '[[ch_league]]']], sum: "A square of still water walled off from the cove under the cliffs, meant for fitting out ships and never used for it. The harbour crews took it over for their ball game, and it has been theirs ever since. See [[ch_league]].", secs: [
+  { h: 'The basin', p: [
+    "The harbour board built it to fit out new hulls out of the weather, with a sea wall on all four sides and a lamp every few yards along the top so the shipwrights could work after dark. The money ran out before the gates were hung. The cove's tide comes and goes through the gap and never quite empties it, so the water inside stays flat while the sea outside is anything but.",
+    "Its walls are hard on a careless helmsman. A ship that runs into one loses her way as surely as on a rock, though the only damage is to her pride.",
+  ]},
+  { h: 'The two lighthouses', p: [
+    "At each end of the pool stands a small lighthouse, one painted blue and one orange, put up by the harbour board when it found it could not stop the game. They are lit for every match and flash when a goal goes in. From the far end they look, on a dark evening, uncomfortably like a pair of false lights, and old hands at the harbour say that is the joke.",
+  ]},
+  { h: 'The gale buoys', p: [
+    "Yellow buoys are moored about the water, small ones along the sides and big ones in the corners and at the middle of each wall. Each holds a charge of wind for [[gale|the Gale]], and is filled again by the harbour lads a few seconds after a ship has emptied it.",
+  ]},
+], also: ['ch_league', 'leaguecrews', 'harbour'] },
+{ id: 'leaguecrews', t: 'The Blue and the Orange', cat: ['Factions'], box: [['Kind', 'The two sides of the Harbour Pool'], ['Colours', 'Blue, and Orange'], ['Ships a side', 'One to three, and more when friends come'], ['Ships sailed', 'Brigs, cutters, barques, and a carrier'], ['Appears in', '[[ch_league]]']], sum: "The two sides of [[ch_league|the harbour crews' game]]. Nobody belongs to either for long: a crew is Blue one evening and Orange the next, and the only loyalty that lasts is to the ship.", secs: [
+  { h: 'Picking sides', p: [
+    "The sides are made up on the quay, as many ships to each as there are crews willing. When friends come down from the town the sides grow to fit them all, up to three ships a side and sometimes six on the water at once, each crew sailing its own ship. Any berth left empty is filled by harbour lads who know the pool, some sharper than others. The quay calls them Easy, Fair and Hard, and not to their faces.",
+  ]},
+  { h: 'How they play', p: [
+    "On each side the ship best placed goes for the buoy and comes in behind it on the line to the goal. Another hangs back to keep goal, and a third waits behind the play for whatever comes loose. A good crew lets a team-mate have the buoy when the team-mate is nearer, which is the hardest thing in the game to teach.",
+    "A crew that has to leave mid-match leaves its ship with the harbour lads until it can get back aboard. If the crew that called the match leaves, the match is over, by long custom and because they took the ball.",
+  ]},
+  { h: 'The ships', p: [
+    "Each crew brings her own ship in her own colours, and she handles in the pool as she does at sea, only turning more sharply in the still water. The cutter answers quickest. The carrier, which the harbour has never quite explained, is the heaviest, and moves the buoy more and is moved less. See [[boats]].",
+  ]},
+], also: ['ch_league', 'harbourpool', 'gale'] },
+{ id: 'gale', t: 'The Gale', cat: ['Objects'], box: [['Kind', 'Wind, kept in a cask on deck'], ['Filled from', 'The yellow gale buoys of [[harbourpool|the Harbour Pool]]'], ['Used for', 'A burst of speed'], ['Appears in', '[[ch_league]]']], sum: "A charge of wind stoppered up in a cask on deck and let go all at once, which drives a ship across the pool far faster than any sail. The crews of [[ch_league|Skerry League]] call it a Gale in a bottle.", secs: [
+  { h: '', p: [
+    "Nobody at the harbour will say where the wind comes from. The crews take it from the gale buoys moored about the pool, a third of a cask from a small one and a whole cask from a big one, and it lasts only as long as the cask does. The Hard crews spend it freely. The Easy ones keep forgetting they have it.",
+    "Since [[sixseas|the strange year]] the coast has grown used to things that should not be kept being kept, and a cask of wind is among the milder of them.",
+  ]},
+], also: ['ch_league', 'harbourpool', 'leaguecrews'] },
+{ id: 'headland', t: 'The headland', cat: ['Places'], box: [['Where', 'Above [[harbour|the harbour]], facing [[skerrylight]]'], ['Holds', 'The nine holes of the keepers\' links'], ['Landmarks', 'The Gate, the Cove, the Point, the Chasm'], ['Appears in', '[[ch_links]]']], sum: "The long hill of turf and cliff above the harbour, from the field gate inland round to the point that looks straight out at the Light. The keepers laid their nine holes of golf along it, and it is mostly remembered for those. See [[ch_links]].", secs: [
+  { h: 'The lie of it', p: [
+    "Inland, the headland is farmland running gently down to a small cove, crossed by a creek that the course has to clear. Seaward it rises to a long cliff top, with the sea and the skerries all along one side, until it ends at the Point, a tiny green with the sea on three sides. Beyond the Point the cliff is split by the Chasm, a gully the sea fills at every tide, which the eighth hole crosses in one shot or not at all.",
+  ]},
+  { h: 'Its view', p: [
+    "From almost anywhere on it you can see [[skerrylight]], white with its two red bands, and the ships swinging round each of [[skerries|the skerries]] in turn on their way into the harbour. In the evening the Light comes on, turning once every ten seconds, and the keeper's cottage window is lit. It is said to be the best view of the Light on the coast, and the keepers made a golf course of it so they could look at their own lamp on their evenings off.",
+  ]},
+], also: ['ch_links', 'harbour', 'skerrylight'] },
+{ id: 'lamproom', t: 'The players of the lamp room', cat: ['Characters'], box: [['Who', 'Hob the deckhand, Mate Tamsin, the Old Keeper'], ['Where', 'The lamp room of [[skerrylight]]'], ['Played', 'On the plain board and the reef board'], ['Appears in', '[[ch_chess]]']], sum: "The three who will always sit down to a game in [[ch_chess|the lamp room]], when nobody else will: a deckhand, a mate and an old keeper. Between them they are said to have played everyone who ever climbed the stair.", secs: [
+  { h: 'Hob the deckhand', p: [
+    "A boy off the harbour boats who comes up with the oil and stays for a game. Hob looks about one move ahead and guesses at the rest, and makes the odd careless move that a kinder player would not take. He has never once missed a mate in one, and he will tell you so.",
+  ]},
+  { h: 'Mate Tamsin', p: [
+    "The mate of one of the coasting schooners, who plays while her ship waits on the tide. She thinks a few moves deep, plays a steady game with a little daring in it, and takes a man's pieces with the same face she takes his money. Half the harbour has lost to her and the other half has not played her yet.",
+  ]},
+  { h: 'The Old Keeper', p: [
+    "Nobody agrees whose old keeper he is. Some say he kept the Light before [[keeper|Holm]], and some that he is Holm himself in later years, and he will not settle it. He thinks a long while over every move and plays his best every time, on either board. The tally on the underside of the board, which runs to several hundred games, has very few marks against him.",
+  ]},
+  { h: 'On the reef board', p: [
+    "All three know the reef board as well as the plain one, its rocks and its Light, and all three will tell you the same thing about it: that a keeper belongs on the Light, and a game that forgets it is not worth playing.",
+  ]},
+], also: ['ch_chess', 'skerrylight', 'keeper'] },
+// ---------------- the Race, crossed in person (Skerry Clash, First person) ----------------
+{ id: 'crossing', t: 'Crossing in person', cat: ['Events'], box: [['Kind', 'A way of fighting on [[race|the Race]]'], ['Who', 'Any hand who will carry a keeper\'s will across'], ['Cards played by', 'The keepers\' clerks'], ['Appears in', '[[ch_clash]]']], sum: "A custom of [[race|the Race]] for those who would rather be on the causeway than behind a lamp. Each keeper's hands are sent over as usual, but one of the keepers' own goes over with them, inside the fight, wearing whichever hand is out on the water.", secs: [
+  { h: 'How it is done', p: [
+    "On these nights neither keeper calls their own hands. A clerk on each rock does it for them, by the book and the oil, and the keeper goes down to the causeway and takes the part of one of the hands crossing over: a deckhand with a cutlass, a harpooner, a crab, whatever is out there. When that hand falls the keeper takes up another, so a keeper crossing in person is never out of the fight for long.",
+    "The other keeper may cross in person too, and then the two meet on the causeway with the whole of both sides round them. The coast likes these nights best, because for once the keepers have to look at each other.",
+  ]},
+  { h: 'On the Threefold Skerry', p: [
+    "On [[threeskerry|the Threefold Skerry]] all three keepers may cross in person at once, each with a clerk at home calling their hands. It is the nearest thing the Race has to a brawl, and the keepers' standing is reckoned from it as from any other night: see [[racekeepers]].",
+  ]},
+], also: ['ch_clash', 'racekeepers', 'clashhands'] },
 // ---------------- eras: the ages of the coast (the five acts of The Chronicle of the Light) ----------------
 { id: 'era_before', t: 'Before the Light', cat: ['Eras'], box: [["From", "c. 1200s"], ["To", "1841"], ["Lit by", "The fire on [[lanternrock]]"], ["Within it", "[[wreckingyears]]"]], sum: "The six hundred years when the only light on this coast was a fire on Lantern Rock, kept by one family. It was the age of the fire-keepers, the Spanish fort and the Mooncussers, and it ended the night the Skerry rock had a light of its own.", secs: [
   { h: '', p: [
@@ -71186,7 +71276,7 @@ var LORE = [
 ], also: ['mooncussers', 'jagohanging', 'era_before'] },
 { id: 'era_light', t: 'The Light', cat: ['Eras'], box: [["From", "1841"], ["To", "14 December 1887"], ["Lit by", "[[skerrylight]]"], ["Keepers", "Unrecorded, then [[keeper|Holm]] from c. 1879"]], sum: "The forty-six years Skerry Light burned as a light should, from the night the Lampwright lit it to the night its lamp went out with the Gannet coming in. The coast remembers them as the ordinary years, and there have been none since.", secs: [
   { h: '', p: [
-    "It holds [[lighting1841|the lighting of the Light]], [[ch_original|the keeper's early watches]] when he swung the beam by hand, [[ch_links|the nine holes on the headland]] from about 1883, and its end, [[wreck1887|the Night of the Gannet]].",
+    "It holds [[lighting1841|the lighting of the Light]], [[ch_original|the keeper's early watches]] when he swung the beam by hand, [[ch_links|the nine holes on the headland]] from about 1883, [[ch_league|the crews' game in the Harbour Pool]] from about 1885, [[ch_chess|the chessboards of the lamp room]] from about 1886, and its end, [[wreck1887|the Night of the Gannet]].",
   ]},
 ], also: ['era_before', 'era_strange', 'skerrylight'] },
 { id: 'era_strange', t: 'The Strange Year', cat: ['Eras'], box: [["From", "15 December 1887"], ["To", "14 December 1888"], ["Began", "When the sea froze to the horizon"], ["Recorded in", "[[log|The keeper's log]]"]], sum: "1888, the year after the Gannet, when the sea stopped being one sea. In it came [[plimsoll]], Maren on the water, [[knock]], [[verity]], the six seas, the visitors and the drifting crates, and it ended a year to the night with the Gannet rising.", secs: [
@@ -72189,7 +72279,6 @@ function gfDebugShot(club, power, acc, aim) { if (GF.ph !== 'aim') return null; 
   for (const id of ['gfWindSel', 'gfMeterSel', 'gfHolesSel']) $(id).addEventListener('change', gfOptions);
   $('gfPlay').addEventListener('click', gfPlayLocal);
   $('gfSettings').addEventListener('click', () => $('titleSettings').click());
-  if ($('gfBanner')) $('gfBanner').addEventListener('click', () => { $('gfTitle').scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' }); setTimeout(() => $('gfPlay').focus({ preventScroll: true }), 400); });
   $('gfResume').addEventListener('click', () => gfPauseOpen(false));
   $('gfPauseCard').addEventListener('click', () => { gfPauseOpen(false); gfCardShow(true, true); });
   $('gfLeave').addEventListener('click', gfQuit);
@@ -75419,13 +75508,26 @@ function lgnHidden() {
 //    on them or pass through them, though the gannets (knights) fly over as ever. The four centre squares, d4, e4, d5
 //    and e5, are the Light: a keeper (king) that ends its move on one of them wins outright. Since a lone keeper can
 //    always try for the Light, there are no draws for insufficient material; repetition and the fifty moves stand.
-//    The pieces are drawn and named for the Skerries (keeper, lantern, tower, cutter, gannet, hand; src/chessui.js).
+//    And the pieces are the Skerries' own, each with a move or a power of its own (CH_SK_PIECES; drawn in
+//    src/chessui.js). They use the same numbers on the board as the standard pieces they stand in for:
+//      1 hand (pawn's place): one step forward, or one step sideways onto an empty square; takes one step diagonally
+//        forward. No double step, so no en passant. Promotes on the far rank to a lantern, tower, cutter or gannet.
+//      2 gannet (knight's place): dives, leaping exactly three squares in a straight line or a diagonal over anything
+//        (rocks too), or takes one step straight; takes where it lands.
+//      3 cutter (bishop's place): sails any distance diagonally, or tacks one step straight, so it can change colour.
+//      4 tower (rook's place): a lighthouse. It walks one step in any direction, never onto a piece, and takes with its
+//        beam: the first enemy piece along a straight line (rank or file), at any distance, without moving. Rocks and
+//        pieces block the beam.
+//      5 lantern (queen's place): sails any distance diagonally, or leaps as a knight does.
+//      6 keeper (king's place): one step in any direction, or swaps places with one of its own hands next to it (the
+//        hand may not land on its own far rank). No castling. Reaching the Light wins.
 //
 // The board: an Int8Array of 64, square = rank * 8 + file (a1 = 0, h1 = 7, a8 = 56). Pieces: 1 pawn, 2 knight,
 // 3 bishop, 4 rook, 5 queen, 6 king; white positive, black negative. Side to move: 1 white, -1 black. Castling rights
-// as bits: 1 white king's side, 2 white queen's side, 4 black king's side, 8 black queen's side. ep: the square a pawn
+// as bits (standard chess only): 1 white king's side, 2 white queen's side, 4 black king's side, 8 black queen's side. ep: the square a pawn
 // just skipped over, or -1. A move: { f, t, pc, cap, pr, k } (from, to, the piece, what it takes, what it becomes,
-// and its kind: 0 plain, 1 double step, 2 en passant, 3 castles short, 4 castles long). Moves go over the wire in UCI
+// and its kind: 0 plain, 1 double step, 2 en passant, 3 castles short, 4 castles long, and under Skerry rules 5 a
+// tower's beam, which takes on t while the tower stays on f, and 6 the keeper's swap with its own hand on t). Moves go over the wire in UCI
 // form ("e2e4", "e7e8q").
 //
 // The bots (chBot): a negamax search with alpha-beta, quiescence on captures, MVV-LVA ordering and killer moves,
@@ -75439,8 +75541,11 @@ const CH_VARIANTS = { std: { id: 'std', name: 'Standard chess' }, sk: { id: 'sk'
 const CH_ROCKS = [26, 29, 34, 37];          // c4 f4 c5 f5
 const CH_LIGHT = [27, 28, 35, 36];          // d4 e4 d5 e5
 const CH_START = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
+const CH_START_SK = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - - 0 1';
 const CH_VAL = [0, 100, 320, 330, 500, 900, 0];
+const CH_VALS = { std: CH_VAL, sk: [0, 100, 290, 400, 470, 820, 0] };
 const CH_LET = ' PNBRQK';
+const CH_LETS = { std: CH_LET, sk: ' HGCTLK' };
 const chFile = s => s & 7, chRank = s => s >> 3;
 const chSqName = s => 'abcdefgh'[s & 7] + (1 + (s >> 3));
 const chSqOf = n => (typeof n === 'string' && /^[a-h][1-8]$/.test(n)) ? (n.charCodeAt(0) - 97) + (n.charCodeAt(1) - 49) * 8 : -1;
@@ -75448,7 +75553,7 @@ const chSqOf = n => (typeof n === 'string' && /^[a-h][1-8]$/.test(n)) ? (n.charC
 // ---------- tables made once ----------
 const CHT = (() => {
   const on = (f, r) => f >= 0 && f < 8 && r >= 0 && r < 8;
-  const kn = [], kg = [], rays = [];
+  const kn = [], kg = [], rays = [], gn = [], wz = [];
   const KN = [[1, 2], [2, 1], [2, -1], [1, -2], [-1, -2], [-2, -1], [-2, 1], [-1, 2]], KG = [[1, 0], [1, 1], [0, 1], [-1, 1], [-1, 0], [-1, -1], [0, -1], [1, -1]];
   // rays 0-3 straight (rook), 4-7 diagonal (bishop)
   const DIRS = [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]];
@@ -75456,6 +75561,8 @@ const CHT = (() => {
     const f = s & 7, r = s >> 3;
     kn[s] = KN.filter(([a, b]) => on(f + a, r + b)).map(([a, b]) => s + a + b * 8);
     kg[s] = KG.filter(([a, b]) => on(f + a, r + b)).map(([a, b]) => s + a + b * 8);
+    wz[s] = DIRS.slice(0, 4).filter(([a, b]) => on(f + a, r + b)).map(([a, b]) => s + a + b * 8);
+    gn[s] = DIRS.filter(([a, b]) => on(f + 3 * a, r + 3 * b)).map(([a, b]) => s + 3 * a + 3 * b * 8);
     rays[s] = DIRS.map(([a, b]) => { const out = []; let x = f + a, y = r + b; while (on(x, y)) { out.push(x + y * 8); x += a; y += b; } return out; });
   }
   // Zobrist keys (32-bit), from a fixed seed so every screen agrees
@@ -75477,14 +75584,14 @@ const CHT = (() => {
   const kend = T(`-50 -40 -30 -20 -20 -30 -40 -50  -30 -20 -10 0 0 -10 -20 -30  -30 -10 20 30 30 20 -10 -30  -30 -10 30 40 40 30 -10 -30  -30 -10 30 40 40 30 -10 -30  -30 -10 20 30 30 20 -10 -30  -30 -30 0 0 0 0 -30 -30  -50 -30 -30 -30 -30 -30 -30 -50`);
   // how far each square is from the Light, in king steps
   const ldist = new Int8Array(64); for (let s = 0; s < 64; s++) ldist[s] = Math.min(...CH_LIGHT.map(l => Math.max(Math.abs((l & 7) - (s & 7)), Math.abs((l >> 3) - (s >> 3)))));
-  return { kn, kg, rays, zp, zc, ze, zs, pst, kend, ldist };
+  return { kn, kg, rays, gn, wz, zp, zc, ze, zs, pst, kend, ldist };
 })();
 
 // ---------- positions ----------
 function chNew(variant, fen) {
   const P = { b: new Int8Array(64), side: 1, cas: 0, ep: -1, half: 0, full: 1, v: variant === 'sk' ? 'sk' : 'std', rock: new Uint8Array(64), light: new Uint8Array(64), ks: { 1: -1, '-1': -1 }, z: 0, hist: [] };
   if (P.v === 'sk') { for (const s of CH_ROCKS) P.rock[s] = 1; for (const s of CH_LIGHT) P.light[s] = 1; }
-  chLoadFen(P, fen || CH_START);
+  chLoadFen(P, fen || (P.v === 'sk' ? CH_START_SK : CH_START));
   return P;
 }
 function chLoadFen(P, fen) {
@@ -75514,6 +75621,7 @@ function chFen(P) {
 
 // is square s attacked by side `by`?
 function chAttacked(P, s, by) {
+  if (P.v === 'sk') return chAttackedSk(P, s, by);
   const b = P.b, R = CHT.rays[s];
   for (const t of CHT.kn[s]) if (b[t] === 2 * by) return true;
   for (const t of CHT.kg[s]) if (b[t] === 6 * by) return true;
@@ -75526,10 +75634,26 @@ function chAttacked(P, s, by) {
   }
   return false;
 }
+// Skerry rules: what each piece threatens (the hand's swap and the tower's steps take nothing, so don't count)
+function chAttackedSk(P, s, by) {
+  const b = P.b, R = CHT.rays[s];
+  for (const t of CHT.kn[s]) if (b[t] === 5 * by) return true;
+  for (const t of CHT.kg[s]) if (b[t] === 6 * by) return true;
+  for (const t of CHT.wz[s]) if (b[t] === 2 * by || b[t] === 3 * by) return true;
+  for (const t of CHT.gn[s]) if (b[t] === 2 * by) return true;
+  const pr = (s >> 3) - by, f = s & 7;
+  if (pr >= 0 && pr < 8) { if (f > 0 && b[pr * 8 + f - 1] === by) return true; if (f < 7 && b[pr * 8 + f + 1] === by) return true; }
+  for (let d = 0; d < 8; d++) {
+    const ray = R[d];
+    for (let i = 0; i < ray.length; i++) { const t = ray[i]; if (P.rock[t]) break; const p = b[t]; if (!p) continue; if (d < 4 ? p === 4 * by : (p === 3 * by || p === 5 * by)) return true; break; }
+  }
+  return false;
+}
 const chInCheck = (P, side) => chAttacked(P, P.ks[side == null ? P.side : side], -(side == null ? P.side : side));
 
 // every move by the side to move, legal or not as to its own king (chLegal filters)
 function chPseudo(P, capsOnly) {
+  if (P.v === 'sk') return chPseudoSk(P, capsOnly);
   const b = P.b, me = P.side, out = [], rock = P.rock;
   const add = (f, t, pc, cap, pr, k) => out.push({ f, t, pc, cap, pr: pr || 0, k: k || 0 });
   for (let s = 0; s < 64; s++) {
@@ -75561,11 +75685,61 @@ function chPseudo(P, capsOnly) {
   return out;
 }
 
+function chPseudoSk(P, capsOnly) {
+  const b = P.b, me = P.side, out = [], rock = P.rock;
+  const add = (f, t, pc, cap, pr, k) => out.push({ f, t, pc, cap, pr: pr || 0, k: k || 0 });
+  const foe = c => c && (c > 0) !== (me > 0);
+  // a step or a leap onto t: empty, or an enemy to take
+  const go = (s, pc, t) => { if (rock[t]) return; const c = b[t]; if (!c) { if (!capsOnly) add(s, t, pc, 0); } else if (foe(c)) add(s, t, pc, c); };
+  const slide = (s, pc, d0, d1) => { const R = CHT.rays[s]; for (let d = d0; d < d1; d++) for (const t of R[d]) { if (rock[t]) break; const c = b[t]; if (!c) { if (!capsOnly) add(s, t, pc, 0); continue; } if (foe(c)) add(s, t, pc, c); break; } };
+  for (let s = 0; s < 64; s++) {
+    const pc = b[s]; if (!pc || (pc > 0) !== (me > 0)) continue;
+    const ty = pc * me, f = s & 7;
+    if (ty === 1) {
+      const last = me > 0 ? 7 : 0, fw = s + 8 * me;
+      const put = (t, cap) => { if ((t >> 3) === last) for (const pr of [5, 4, 3, 2]) add(s, t, pc, cap, pr); else add(s, t, pc, cap); };
+      if (fw >= 0 && fw < 64) {
+        if (!b[fw] && !rock[fw] && (!capsOnly || (fw >> 3) === last)) put(fw, 0);
+        for (const df of [-1, 1]) { if (f + df < 0 || f + df > 7) continue; const t = fw + df; if (foe(b[t])) put(t, b[t]); }
+      }
+      if (!capsOnly) for (const df of [-1, 1]) { if (f + df < 0 || f + df > 7) continue; const t = s + df; if (!b[t] && !rock[t]) add(s, t, pc, 0); }
+    } else if (ty === 2) { for (const t of CHT.gn[s]) go(s, pc, t); for (const t of CHT.wz[s]) go(s, pc, t); }
+    else if (ty === 3) { slide(s, pc, 4, 8); for (const t of CHT.wz[s]) go(s, pc, t); }
+    else if (ty === 4) {
+      if (!capsOnly) for (const t of CHT.kg[s]) if (!b[t] && !rock[t]) add(s, t, pc, 0);
+      // the beam: the first thing along each rank and file; an enemy there is taken where it stands
+      const R = CHT.rays[s];
+      for (let d = 0; d < 4; d++) for (const t of R[d]) { if (rock[t]) break; const c = b[t]; if (!c) continue; if (foe(c)) add(s, t, pc, c, 0, 5); break; }
+    } else if (ty === 5) { slide(s, pc, 4, 8); for (const t of CHT.kn[s]) go(s, pc, t); }
+    else {
+      for (const t of CHT.kg[s]) {
+        go(s, pc, t);
+        // the swap with its own hand, unless the hand would land on its own far rank
+        if (!capsOnly && b[t] === me && (s >> 3) !== (me > 0 ? 7 : 0)) add(s, t, pc, 0, 0, 6);
+      }
+    }
+  }
+  return out;
+}
+
 // make and unmake (the hash kept as it goes)
 function chMake(P, m) {
   const b = P.b, me = P.side, Z = CHT.zp;
   P.hist.push({ m, cas: P.cas, ep: P.ep, half: P.half, z: P.z });
   let z = P.z ^ CHT.zc[P.cas] ^ (P.ep >= 0 ? CHT.ze[P.ep & 7] : 0) ^ CHT.zs;
+  if (m.k === 5) {
+    // the beam: the tower stays, what it hit goes
+    z ^= Z[m.cap + 6][m.t]; b[m.t] = 0;
+    P.ep = -1; P.half = 0; if (me < 0) P.full++; P.side = -me;
+    P.z = (z ^ CHT.zc[P.cas]) >>> 0; return;
+  }
+  if (m.k === 6) {
+    // the keeper's swap with its own hand
+    z ^= Z[m.pc + 6][m.f] ^ Z[me + 6][m.t] ^ Z[m.pc + 6][m.t] ^ Z[me + 6][m.f];
+    b[m.f] = me; b[m.t] = m.pc; P.ks[me] = m.t;
+    P.ep = -1; P.half++; if (me < 0) P.full++; P.side = -me;
+    P.z = (z ^ CHT.zc[P.cas]) >>> 0; return;
+  }
   z ^= Z[m.pc + 6][m.f]; b[m.f] = 0;
   if (m.k === 2) { const cs = m.t - 8 * me; z ^= Z[b[cs] + 6][cs]; b[cs] = 0; }
   else if (m.cap) z ^= Z[m.cap + 6][m.t];
@@ -75583,6 +75757,9 @@ function chMake(P, m) {
 function chUnmake(P) {
   const h = P.hist.pop(), m = h.m, b = P.b, me = -P.side;
   P.side = me; if (me < 0) P.full--;
+  P.cas = h.cas; P.ep = h.ep; P.half = h.half; P.z = h.z;
+  if (m.k === 5) { b[m.t] = m.cap; return; }
+  if (m.k === 6) { b[m.f] = m.pc; b[m.t] = me; P.ks[me] = m.f; return; }
   b[m.f] = m.pc; b[m.t] = m.k === 2 ? 0 : m.cap;
   if (m.k === 2) b[m.t - 8 * me] = -me;
   if (m.k === 3 || m.k === 4) { const base = m.f - 4, rf = m.k === 3 ? base + 7 : base, rt = m.k === 3 ? base + 5 : base + 3; b[rt] = 0; b[rf] = 4 * me; }
@@ -75627,16 +75804,20 @@ function chDead(P) {
 // the move in standard algebraic notation (worked out before it's made)
 function chSan(P, m, legal) {
   legal = legal || chLegal(P);
-  let s;
+  let s; const LET = CH_LETS[P.v] || CH_LET;
   if (m.k === 3) s = 'O-O'; else if (m.k === 4) s = 'O-O-O';
-  else {
+  else if (m.k === 6) s = 'K~' + chSqName(m.t);          // (the keeper's swap)
+  else if (m.k === 5) {                                    // (a tower's beam: T*e5, the tower staying put)
+    const rivals = legal.filter(o => o !== m && o.pc === m.pc && o.t === m.t && o.k === 5);
+    s = 'T' + (rivals.length ? (rivals.some(o => (o.f & 7) === (m.f & 7)) ? String(1 + (m.f >> 3)) : 'abcdefgh'[m.f & 7]) : '') + '*' + chSqName(m.t);
+  } else {
     const ty = Math.abs(m.pc), to = chSqName(m.t), cap = m.cap || m.k === 2;
-    if (ty === 1) s = (cap ? 'abcdefgh'[m.f & 7] + 'x' : '') + to + (m.pr ? '=' + CH_LET[m.pr] : '');
+    if (ty === 1) s = (cap || (P.v === 'sk' && (m.f & 7) !== (m.t & 7)) ? 'abcdefgh'[m.f & 7] + (cap ? 'x' : '') : '') + to + (m.pr ? '=' + LET[m.pr] : '');
     else {
-      const rivals = legal.filter(o => o !== m && o.pc === m.pc && o.t === m.t && o.f !== m.f);
+      const rivals = legal.filter(o => o !== m && o.pc === m.pc && o.t === m.t && o.f !== m.f && o.k === m.k);
       let dis = '';
       if (rivals.length) { const sf = !rivals.some(o => (o.f & 7) === (m.f & 7)), sr = !rivals.some(o => (o.f >> 3) === (m.f >> 3)); dis = sf ? 'abcdefgh'[m.f & 7] : sr ? String(1 + (m.f >> 3)) : chSqName(m.f); }
-      s = CH_LET[ty] + dis + (cap ? 'x' : '') + to;
+      s = LET[ty] + dis + (cap ? 'x' : '') + to;
     }
   }
   chMake(P, m);
@@ -75685,13 +75866,13 @@ const CH_BOTS = {
 const CH_MATE = 100000;
 function chEval(P) {
   // from the side to move's view
-  const b = P.b, pst = CHT.pst; let sc = 0, mat = 0;
-  for (let s = 0; s < 64; s++) { const p = b[s]; if (!p) continue; const ty = p > 0 ? p : -p; if (ty !== 6 && ty !== 1) mat += CH_VAL[ty]; }
+  const b = P.b, pst = CHT.pst, VAL = CH_VALS[P.v] || CH_VAL; let sc = 0, mat = 0;
+  for (let s = 0; s < 64; s++) { const p = b[s]; if (!p) continue; const ty = p > 0 ? p : -p; if (ty !== 6 && ty !== 1) mat += VAL[ty]; }
   const end = mat <= 2600;   // (both sides together have little but pawns and a couple of pieces left)
   for (let s = 0; s < 64; s++) {
     const p = b[s]; if (!p) continue;
     const ty = p > 0 ? p : -p, sq = p > 0 ? s : (7 - (s >> 3)) * 8 + (s & 7);
-    let v = CH_VAL[ty] + (ty === 6 ? (end ? CHT.kend[sq] : pst[6][sq]) : pst[ty][sq]);
+    let v = VAL[ty] + (ty === 6 ? (end ? CHT.kend[sq] : pst[6][sq]) : pst[ty][sq]);
     if (ty === 6 && P.v === 'sk') { const d = CHT.ldist[s]; v += (end ? 60 : 22) * (3 - Math.min(3, d)) * (d <= 1 ? 2 : 1); }
     sc += p > 0 ? v : -v;
   }
@@ -75702,13 +75883,14 @@ function chLightStep(P) {
   if (P.v !== 'sk') return false;
   const me = P.side, k = P.ks[me];
   for (const t of CHT.kg[k]) {
-    if (!P.light[t]) continue; const c = P.b[t]; if (c && (c > 0) === (me > 0)) continue;
+    if (!P.light[t]) continue; const c = P.b[t]; if (c && (c > 0) === (me > 0) && c !== me) continue;   // (its own hand there: a swap)
     // (taking the king off its square first, so it can't shelter behind itself)
     P.b[k] = 0; const att = chAttacked(P, t, -me); P.b[k] = 6 * me; if (!att) return true;
   }
   return false;
 }
 function chOrder(P, ms, killers, best) {
+  const CH_VAL = CH_VALS[P.v] || CH_VALS.std;
   for (const m of ms) {
     let o = 0;
     if (best && m.f === best.f && m.t === best.t && m.pr === best.pr) o = 1e7;
@@ -75752,7 +75934,7 @@ function chQuiet(P, alpha, beta, ply, S) {
   if (stand > alpha) alpha = stand;
   if (ply > 40) return stand;
   for (const m of chOrder(P, chPseudo(P, true))) {
-    if (stand + CH_VAL[Math.abs(m.cap || 1)] + (m.pr ? 800 : 0) + 200 < alpha) continue;   // (delta pruning)
+    if (stand + (CH_VALS[P.v] || CH_VAL)[Math.abs(m.cap || 1)] + (m.pr ? 800 : 0) + 200 < alpha) continue;   // (delta pruning)
     chMake(P, m);
     if (chAttacked(P, P.ks[-P.side], P.side)) { chUnmake(P); continue; }
     const v = -chQuiet(P, -beta, -alpha, ply + 1, S);
@@ -75868,7 +76050,7 @@ const CH_ROCK_SVG = '<svg class="chrock" viewBox="0 0 45 45" aria-hidden="true">
 
 // ---------- the board ----------
 function chBuildBoard() {
-  const bd = $('chBoard'); if (!bd || bd.childElementCount === 64) return;
+  const bd = $('chBoard'); if (!bd || bd.querySelectorAll('.chsq').length === 64) return;
   bd.textContent = '';
   for (let i = 0; i < 64; i++) {
     const b = document.createElement('button'); b.type = 'button'; b.className = 'chsq'; b.dataset.i = i; b.tabIndex = -1;
@@ -75895,7 +76077,7 @@ function chRender() {
     if (last && (s === last.f || s === last.t)) c += ' last';
     if (s === CHS.sel) c += ' sel';
     const tg = targets.find(m => m.t === s);
-    if (tg) c += (p || tg.k === 2) ? ' cap' : ' to';
+    if (tg) c += ((p && tg.k !== 6) || tg.k === 2) ? ' cap' : ' to';   // (the keeper's swap onto its own hand shows as a move)
     if (s === chk) c += ' check';
     if (s === CHS.cur && CHS.kb) c += ' cur';
     if (p && CHS.mine(p) && !G.res) c += ' own';
@@ -75916,19 +76098,36 @@ function chRender() {
 }
 function chAnimate(m) {
   const bd = $('chBoard'); if (!bd || !m) return;
-  const from = bd.children[chSqCell(m.f)], to = bd.children[chSqCell(m.t)], svg = to && to.querySelector('svg.chp');
-  if (!from || !svg || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-  const a = from.getBoundingClientRect(), b = to.getBoundingClientRect();
-  svg.style.transition = 'none'; svg.style.transform = `translate(${a.left - b.left}px, ${a.top - b.top}px)`; svg.style.zIndex = 5;
-  void svg.offsetWidth;
-  svg.style.transition = 'transform 0.18s ease-out'; svg.style.transform = '';
-  setTimeout(() => { svg.style.zIndex = ''; }, 220);
+  const from = bd.children[chSqCell(m.f)], to = bd.children[chSqCell(m.t)];
+  if (!from || !to) return;
+  if (m.k === 5) { chBeam(from, to); return; }
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const slide = (el, src, dst) => {
+    const svg = dst.querySelector('svg.chp'); if (!svg) return;
+    const a = src.getBoundingClientRect(), b = dst.getBoundingClientRect();
+    svg.style.transition = 'none'; svg.style.transform = `translate(${a.left - b.left}px, ${a.top - b.top}px)`; svg.style.zIndex = 5;
+    void svg.offsetWidth;
+    svg.style.transition = 'transform 0.18s ease-out'; svg.style.transform = '';
+    setTimeout(() => { svg.style.zIndex = ''; }, 220);
+  };
+  slide(null, from, to);
+  if (m.k === 6) slide(null, to, from);   // (the keeper's swap: the hand goes the other way)
+}
+// a tower's beam: a line of light from the tower to what it hits, there and gone
+function chBeam(from, to) {
+  const bd = $('chBoard'), r = bd.getBoundingClientRect(), a = from.getBoundingClientRect(), b = to.getBoundingClientRect();
+  const x0 = a.left + a.width / 2 - r.left, y0 = a.top + a.height / 2 - r.top, x1 = b.left + b.width / 2 - r.left, y1 = b.top + b.height / 2 - r.top;
+  const el = document.createElement('div'); el.className = 'chbeam';
+  el.style.left = x0 + 'px'; el.style.top = y0 + 'px'; el.style.width = Math.hypot(x1 - x0, y1 - y0) + 'px'; el.style.transform = `rotate(${Math.atan2(y1 - y0, x1 - x0)}rad)`;
+  bd.append(el); to.classList.add('hit');
+  setTimeout(() => { el.remove(); to.classList.remove('hit'); }, 650);
 }
 // the names, what each side has taken, the status and the moves
 function chRenderSide() {
   const G = CHS.G, v = G.v;
   const taken = side => G.caps.filter(c => (c > 0) !== (side > 0)).map(c => Math.abs(c)).sort((a, b) => b - a);
-  const worth = side => taken(side).reduce((s, t) => s + [0, 1, 3, 3, 5, 9, 0][t], 0);
+  const pts = v === 'sk' ? [0, 1, 3, 4, 5, 8, 0] : [0, 1, 3, 3, 5, 9, 0];
+  const worth = side => taken(side).reduce((s, t) => s + pts[t], 0);
   const row = (id, side) => {
     const el = $(id); if (!el) return;
     const diff = worth(side) - worth(-side), nm = side === CHS.me ? CHS.names[0] : CHS.names[1];
@@ -75940,6 +76139,7 @@ function chRenderSide() {
   };
   row('chTopRow', CHS.flip ? 1 : -1); row('chBotRow', CHS.flip ? -1 : 1);
   $('chStatus').textContent = chStatusText();
+  $('chGuide').hidden = v !== 'sk';
   $('chRules').textContent = CH_VARIANTS[v].name + (CHS.net ? ' · online' : ` · against ${CH_BOTS[CHS.opp].name} (${CH_SKILLN[CHS.opp]})`);
   const ol = $('chMoves'), n = Math.ceil(G.san.length / 2);
   if (ol.dataset.n !== String(G.san.length)) {
@@ -76045,7 +76245,9 @@ function chPointerDown(e) {
   const cell = e.target.closest('.chsq'); if (!cell) return;
   const s = chCellSq(+cell.dataset.i); CHS.kb = false;
   const p = CHS.G && CHS.G.P.b[s];
-  if (!(chCanMove() && p && CHS.mine(p))) { chClickSq(s); return; }
+  // (a tap on one of your own pieces that the chosen piece can move to, such as the keeper's swap, makes that move)
+  const swap = CHS.sel >= 0 && CHS.G && CHS.G.legal.some(m => m.f === CHS.sel && m.t === s);
+  if (swap || !(chCanMove() && p && CHS.mine(p))) { chClickSq(s); return; }
   e.preventDefault();
   const svg = cell.querySelector('svg.chp'), r0 = cell.getBoundingClientRect(), x0 = e.clientX, y0 = e.clientY;
   let drag = false;
@@ -82635,7 +82837,6 @@ function rkMerge(d, takeLooks) {
   rlvSave(true);
   const lv = $('rlBotLvl'); if (lv) { try { const v = localStorage.getItem('skerry-rival-lvl'); if (v && [...lv.options].some(o => o.value === v)) lv.value = v; } catch (e) {} lv.addEventListener('change', () => { try { localStorage.setItem('skerry-rival-lvl', lv.value); } catch (e) {} }); }
   if ($('rlPlay')) $('rlPlay').addEventListener('click', () => { if (typeof rlPlayBot === 'function') rlPlayBot(); else if (typeof toast === 'function') toast('The duel isn\'t ready in this build yet.'); });
-  if ($('rlBanner')) $('rlBanner').addEventListener('click', () => { const c = $('rlTitle'); if (!c) return; if (typeof MD !== 'undefined' && MD.on && typeof mdPick === 'function') mdPick('rlTitle', true); c.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' }); setTimeout(() => $('rlPlay').focus({ preventScroll: true }), 400); });
   if ($('rlCrateBtn')) $('rlCrateBtn').addEventListener('click', e => rlkShow(e));
   if ($('rlSkinBtn')) $('rlSkinBtn').addEventListener('click', e => rlkShow(e, true));
   if ($('rlkClose')) $('rlkClose').addEventListener('click', rlkHide);
@@ -83621,7 +83822,7 @@ const MD_GAMES = [
   { id: 'fbTitle', sub: 'An open sea of islands and salvage', c: '#d8b060' },   // [fbsea]
   { id: 'gfTitle', sub: 'Nine holes of golf on the cliffs', c: '#8fc26a' },   // [golf] src/golf.js
   { id: 'rlTitle', sub: 'A duel of lights for two', c: '#e8a050' },
-  { id: 'cpTitle', sub: 'The whole tale of the Light, as a campaign', c: '#f0d890', tag: 'New' },   // [campaign] The Chronicle of the Light (src/cp.js)   // [rival] Skerry Clash (src/rl.js, src/rlcrates.js)
+  { id: 'cpTitle', sub: 'The whole tale of the Light, as a campaign', c: '#f0d890' },   // [campaign] The Chronicle of the Light (src/cp.js)   // [rival] Skerry Clash (src/rl.js, src/rlcrates.js)
   { id: 'lgTitle', sub: 'Ships and a ball · one to three a side', c: '#4aa8ff', tag: 'New' },   // [league] Skerry League (src/league.js)
   { id: 'chTitle', sub: 'Chess, and chess on the reef · for one or two', c: '#d9b56a', tag: 'New' },   // [chess] Skerry Chess (src/chessui.js)
 ];

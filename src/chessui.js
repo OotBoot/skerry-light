@@ -59,7 +59,7 @@ const CH_ROCK_SVG = '<svg class="chrock" viewBox="0 0 45 45" aria-hidden="true">
 
 // ---------- the board ----------
 function chBuildBoard() {
-  const bd = $('chBoard'); if (!bd || bd.childElementCount === 64) return;
+  const bd = $('chBoard'); if (!bd || bd.querySelectorAll('.chsq').length === 64) return;
   bd.textContent = '';
   for (let i = 0; i < 64; i++) {
     const b = document.createElement('button'); b.type = 'button'; b.className = 'chsq'; b.dataset.i = i; b.tabIndex = -1;
@@ -86,7 +86,7 @@ function chRender() {
     if (last && (s === last.f || s === last.t)) c += ' last';
     if (s === CHS.sel) c += ' sel';
     const tg = targets.find(m => m.t === s);
-    if (tg) c += (p || tg.k === 2) ? ' cap' : ' to';
+    if (tg) c += ((p && tg.k !== 6) || tg.k === 2) ? ' cap' : ' to';   // (the keeper's swap onto its own hand shows as a move)
     if (s === chk) c += ' check';
     if (s === CHS.cur && CHS.kb) c += ' cur';
     if (p && CHS.mine(p) && !G.res) c += ' own';
@@ -107,19 +107,36 @@ function chRender() {
 }
 function chAnimate(m) {
   const bd = $('chBoard'); if (!bd || !m) return;
-  const from = bd.children[chSqCell(m.f)], to = bd.children[chSqCell(m.t)], svg = to && to.querySelector('svg.chp');
-  if (!from || !svg || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-  const a = from.getBoundingClientRect(), b = to.getBoundingClientRect();
-  svg.style.transition = 'none'; svg.style.transform = `translate(${a.left - b.left}px, ${a.top - b.top}px)`; svg.style.zIndex = 5;
-  void svg.offsetWidth;
-  svg.style.transition = 'transform 0.18s ease-out'; svg.style.transform = '';
-  setTimeout(() => { svg.style.zIndex = ''; }, 220);
+  const from = bd.children[chSqCell(m.f)], to = bd.children[chSqCell(m.t)];
+  if (!from || !to) return;
+  if (m.k === 5) { chBeam(from, to); return; }
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const slide = (el, src, dst) => {
+    const svg = dst.querySelector('svg.chp'); if (!svg) return;
+    const a = src.getBoundingClientRect(), b = dst.getBoundingClientRect();
+    svg.style.transition = 'none'; svg.style.transform = `translate(${a.left - b.left}px, ${a.top - b.top}px)`; svg.style.zIndex = 5;
+    void svg.offsetWidth;
+    svg.style.transition = 'transform 0.18s ease-out'; svg.style.transform = '';
+    setTimeout(() => { svg.style.zIndex = ''; }, 220);
+  };
+  slide(null, from, to);
+  if (m.k === 6) slide(null, to, from);   // (the keeper's swap: the hand goes the other way)
+}
+// a tower's beam: a line of light from the tower to what it hits, there and gone
+function chBeam(from, to) {
+  const bd = $('chBoard'), r = bd.getBoundingClientRect(), a = from.getBoundingClientRect(), b = to.getBoundingClientRect();
+  const x0 = a.left + a.width / 2 - r.left, y0 = a.top + a.height / 2 - r.top, x1 = b.left + b.width / 2 - r.left, y1 = b.top + b.height / 2 - r.top;
+  const el = document.createElement('div'); el.className = 'chbeam';
+  el.style.left = x0 + 'px'; el.style.top = y0 + 'px'; el.style.width = Math.hypot(x1 - x0, y1 - y0) + 'px'; el.style.transform = `rotate(${Math.atan2(y1 - y0, x1 - x0)}rad)`;
+  bd.append(el); to.classList.add('hit');
+  setTimeout(() => { el.remove(); to.classList.remove('hit'); }, 650);
 }
 // the names, what each side has taken, the status and the moves
 function chRenderSide() {
   const G = CHS.G, v = G.v;
   const taken = side => G.caps.filter(c => (c > 0) !== (side > 0)).map(c => Math.abs(c)).sort((a, b) => b - a);
-  const worth = side => taken(side).reduce((s, t) => s + [0, 1, 3, 3, 5, 9, 0][t], 0);
+  const pts = v === 'sk' ? [0, 1, 3, 4, 5, 8, 0] : [0, 1, 3, 3, 5, 9, 0];
+  const worth = side => taken(side).reduce((s, t) => s + pts[t], 0);
   const row = (id, side) => {
     const el = $(id); if (!el) return;
     const diff = worth(side) - worth(-side), nm = side === CHS.me ? CHS.names[0] : CHS.names[1];
@@ -131,6 +148,7 @@ function chRenderSide() {
   };
   row('chTopRow', CHS.flip ? 1 : -1); row('chBotRow', CHS.flip ? -1 : 1);
   $('chStatus').textContent = chStatusText();
+  $('chGuide').hidden = v !== 'sk';
   $('chRules').textContent = CH_VARIANTS[v].name + (CHS.net ? ' · online' : ` · against ${CH_BOTS[CHS.opp].name} (${CH_SKILLN[CHS.opp]})`);
   const ol = $('chMoves'), n = Math.ceil(G.san.length / 2);
   if (ol.dataset.n !== String(G.san.length)) {
@@ -236,7 +254,9 @@ function chPointerDown(e) {
   const cell = e.target.closest('.chsq'); if (!cell) return;
   const s = chCellSq(+cell.dataset.i); CHS.kb = false;
   const p = CHS.G && CHS.G.P.b[s];
-  if (!(chCanMove() && p && CHS.mine(p))) { chClickSq(s); return; }
+  // (a tap on one of your own pieces that the chosen piece can move to, such as the keeper's swap, makes that move)
+  const swap = CHS.sel >= 0 && CHS.G && CHS.G.legal.some(m => m.f === CHS.sel && m.t === s);
+  if (swap || !(chCanMove() && p && CHS.mine(p))) { chClickSq(s); return; }
   e.preventDefault();
   const svg = cell.querySelector('svg.chp'), r0 = cell.getBoundingClientRect(), x0 = e.clientX, y0 = e.clientY;
   let drag = false;

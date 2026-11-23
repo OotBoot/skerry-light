@@ -450,7 +450,6 @@ function raidCard() {
   $('rdSettings').addEventListener('click', () => $('titleSettings').click());
   $('rdWcrate').addEventListener('click', () => $('wcrateBtn').click());
   $('rdOcrate').addEventListener('click', () => $('ocrateBtn').click());
-  $('rdBanner').addEventListener('click', () => { $('rdTitle').scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' }); setTimeout(() => $('rdPlay').focus({ preventScroll: true }), 400); });
   // your bests, on the card
   setInterval(() => {
     const b = typeof BOARD !== 'undefined' && BOARD.mine && BOARD.mine[RD_PICK], el = $('rdRecord'); if (!el || !b) return;

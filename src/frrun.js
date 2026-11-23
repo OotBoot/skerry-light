@@ -310,5 +310,4 @@ function frJump(key) {
   $('frSettings').addEventListener('click', () => $('titleSettings').click());
   $('frWcrate').addEventListener('click', () => $('wcrateBtn').click());
   $('frOcrate').addEventListener('click', () => $('ocrateBtn').click());
-  if ($('frBanner')) $('frBanner').addEventListener('click', () => { $('frTitle').scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' }); setTimeout(() => $('frPlay').focus({ preventScroll: true }), 400); });
 })();

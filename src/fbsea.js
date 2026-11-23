@@ -310,5 +310,4 @@ function fbDebug(key, i) {
   $('fbSettings').addEventListener('click', () => $('titleSettings').click());
   $('fbWcrate').addEventListener('click', () => $('wcrateBtn').click());
   $('fbOcrate').addEventListener('click', () => $('ocrateBtn').click());
-  if ($('fbBanner')) $('fbBanner').addEventListener('click', () => { $('fbTitle').scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' }); setTimeout(() => $('fbPlay').focus({ preventScroll: true }), 400); });
 })();

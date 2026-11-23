@@ -474,7 +474,6 @@ function cpDebug(id, stage, noCine, cls) {
   if (!$('cpTitle')) return;
   $('cpPlay').addEventListener('click', () => { if (CP.pick) cpPlay(CP.pick); });
   $('cpSettings').addEventListener('click', () => $('titleSettings').click());
-  if ($('cpBanner')) $('cpBanner').addEventListener('click', () => { $('cpTitle').scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' }); setTimeout(() => $('cpPlay').focus({ preventScroll: true }), 400); });
   // (the missions' own files load after this one: draw the list once they have)
   window.addEventListener('load', cpCard);
   setTimeout(cpCard, 0);
