@@ -13,8 +13,11 @@
 // The rules of it, for you (each of you is one of the Light's pieces):
 //  - You walk where you like on your own ledge, but the channels between are too wide to step: you cross only by
 //    your piece's move. Look at a square (the ones your piece can reach are marked gold) and press Use: you're carried
-//    there. The gannet leaps (over rocks and pieces, in its L); the cutter runs the diagonals, the tower the straight
-//    lines and the lantern both, as far as the way is clear (a rock stops them; a Wrecker stops them on his own square).
+//    there. The pieces move as Skerry rules has them (src/chess.js): the hand a step forward or sideways (taking a
+//    step diagonally forward); the gannet dives three squares in any line over anything, or a step straight; the
+//    cutter runs the diagonals or tacks a step straight; the tower walks a step, and its beam carries it to the first
+//    man in a straight line; the lantern runs the diagonals or leaps in an L (a rock stops a run; a Wrecker stops it
+//    on his own square).
 //    Land on a Wrecker's square and he's taken. Before you take up a piece you're on foot: one step any way.
 //  - The Light's pieces stand carved on their plinths along rank 1: stand on one's square and hold Use to take it up
 //    (one of you to a piece; your old one goes back to its plinth). The keeper on e1 is Holm's.
@@ -37,7 +40,7 @@
 
 const M17 = { S: 6, GAP: 0.45, BEAT: 5.2, WARN: 2.2, CD: 0.55, CD5: 1.3, TAKEN: 1.5, BK_EVERY: 2, DOUSE: 9, LAMP_DRAIN: 115, LAMP_MEND: 22, POOL: [5, 3], OV: 0.05,
   ROCKS: [26, 29, 34, 37], LIGHT: [27, 28, 35, 36], HOME: [3, 2, 5, 6], TOWER: [0, -74], NAMES: ['on foot', 'hand', 'gannet', 'cutter', 'tower', 'lantern', 'keeper'],
-  HOW: ['one step any way', 'one step forward', 'leaps in an L, over anything', 'the diagonals, as far as is clear', 'the straight lines, as far as is clear', 'every line, as far as is clear', 'one step any way'],
+  HOW: ['one step any way', 'a step forward or sideways, takes a step diagonally forward', 'dives three squares in any line, over anything, or a step straight', 'the diagonals, as far as is clear, or a step straight', 'a step any way, and its beam carries it to the first man in a straight line', 'the diagonals, as far as is clear, or a leap in an L', 'one step any way'],
   RANK1: [4, 2, 3, 5, 6, 3, 2, 4] };
 var M17S = { arc: null, cd: 0, aim: -1, legal: [], prev: {}, emb: null, anim: {}, home: -1, said: {} };   // (this screen's own: my move, what I'm aiming at, the pieces' slides)
 
@@ -55,16 +58,24 @@ const m17Step = (s, df, dr) => { const f = (s & 7) + df, r = (s >> 3) + dr; retu
 // where a piece of type t on s can go. occ(s2): 0 empty, 1 its own side's, 2 the other side's (taken by landing), 3 not
 // to be landed on (a keeper); att: the squares it attacks instead (for a hand, only its diagonals). dir: a hand's
 // forward (+1 the Light's, -1 the Wreckers')
+// (the Skerry rules pieces, src/chess.js CH_SK_PIECES, as near as a board you walk allows: the tower's beam carries
+// the tower itself to the first man in its line, since a piece you stand on can't take without moving)
 function m17Moves(t, s, occ, dir, att) {
-  const out = [], push = q => { if (q >= 0 && !m17Rock(q)) out.push(q); };
-  if (t === 1) {
-    for (const df of [-1, 1]) { const q = m17Step(s, df, dir); if (q < 0 || m17Rock(q)) continue; if (att || occ(q) === 2) out.push(q); }
-    if (!att) { const q = m17Step(s, 0, dir); if (q >= 0 && !m17Rock(q) && occ(q) === 0) { out.push(q); const q2 = m17Step(q, 0, dir); if ((s >> 3) === (dir > 0 ? 1 : 6) && q2 >= 0 && !m17Rock(q2) && occ(q2) === 0) out.push(q2); } }
-    return out;
-  }
-  if (t === 0 || t === 6 || t === 2) { for (const [a, b] of t === 2 ? M17N : M17K) { const q = m17Step(s, a, b); if (q < 0 || m17Rock(q)) continue; const o = occ(q); if (att || o === 0 || o === 2) out.push(q); } return out; }
-  const dirs = t === 3 ? M17K.filter((d, i) => i % 2) : t === 4 ? M17K.filter((d, i) => !(i % 2)) : M17K;
-  for (const [a, b] of dirs) { let q = s; for (;;) { q = m17Step(q, a, b); if (q < 0 || m17Rock(q)) break; const o = occ(q); if (o === 0) { out.push(q); continue; } if (att || o === 2) out.push(q); break; } }
+  const out = [], ok = q => q >= 0 && !m17Rock(q), land = q => { if (!ok(q)) return; const o = occ(q); if (att || o === 0 || o === 2) out.push(q); };
+  const ORTH = M17K.filter((d, i) => !(i % 2)), DIAG = M17K.filter((d, i) => i % 2);
+  const slide = dirs => { for (const [a, b] of dirs) { let q = s; for (;;) { q = m17Step(q, a, b); if (!ok(q)) break; const o = occ(q); if (o === 0) { out.push(q); continue; } if (att || o === 2) out.push(q); break; } } };
+  // the hand: a step forward or sideways onto an empty square; takes a step diagonally forward
+  if (t === 1) { for (const df of [-1, 1]) { const q = m17Step(s, df, dir); if (ok(q) && (att || occ(q) === 2)) out.push(q); } if (!att) for (const [a, b] of [[0, dir], [-1, 0], [1, 0]]) { const q = m17Step(s, a, b); if (ok(q) && occ(q) === 0) out.push(q); } return out; }
+  // on foot and the keeper: a step any way
+  if (t === 0 || t === 6) { for (const [a, b] of M17K) land(m17Step(s, a, b)); return out; }
+  // the gannet: dives exactly three squares in any line, over anything, or takes a step straight
+  if (t === 2) { for (const [a, b] of M17K) land(m17Step(s, 3 * a, 3 * b)); for (const [a, b] of ORTH) land(m17Step(s, a, b)); return out; }
+  // the cutter: the diagonals as far as is clear, or tacks a step straight
+  if (t === 3) { slide(DIAG); for (const [a, b] of ORTH) land(m17Step(s, a, b)); return out; }
+  // the tower: a step any way onto an empty square, and its beam, the first man along a straight line
+  if (t === 4) { for (const [a, b] of M17K) { const q = m17Step(s, a, b); if (ok(q) && (att || occ(q) === 0)) out.push(q); } for (const [a, b] of ORTH) { let q = s; for (;;) { q = m17Step(q, a, b); if (!ok(q)) break; const o = occ(q); if (o === 0) continue; if (att || o === 2) out.push(q); break; } } return out; }
+  // the lantern: the diagonals as far as is clear, or leaps as a gannet did of old, in an L
+  slide(DIAG); for (const [a, b] of M17N) land(m17Step(s, a, b));
   return out;
 }
 
