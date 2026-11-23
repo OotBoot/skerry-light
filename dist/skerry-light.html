@@ -49904,7 +49904,7 @@ function cpMission(def) {
   const M = Object.assign({ act: 1, n: def.id, when: '', where: '', blurb: '', stages: [], cut: {}, after: {}, music: {}, lives: CPC.LIVES }, def);
   if (CP_BY[M.id]) CP_MISSIONS.splice(CP_MISSIONS.indexOf(CP_BY[M.id]), 1, M); else CP_MISSIONS.push(M);
   CP_BY[M.id] = M;
-  CP_MISSIONS.sort((a, b) => a.id < b.id ? -1 : 1);
+  CP_MISSIONS.sort((a, b) => (a.o || a.id) < (b.o || b.id) ? -1 : 1);   // (def.o: where it falls in the timeline, when that isn't its id's place, e.g. 'm03b' between m03 and m04)
   return M;
 }
 function cpStage(key, stage) { stage.cp = key; RAID_STAGES['cp_' + key] = stage; return stage; }
@@ -49945,7 +49945,8 @@ function cpMerge(d, quiet) {
 }
 const cpIsDone = id => !!(CPS.done[id] && CPS.done[id].n > 0);
 // open: the first, and each one after a mission done
-function cpIsOpen(id) { const i = cpIndex(id); if (i <= 0) return i === 0; return cpIsDone(CP_MISSIONS[i - 1].id) || cpIsDone(id); }
+// (a tale added later, def.side, opens with the mission before it but holds nothing shut: the next one looks past it)
+function cpIsOpen(id) { let i = cpIndex(id); if (i <= 0) return i === 0; if (cpIsDone(id)) return true; while (--i > 0 && CP_MISSIONS[i].side); return cpIsDone(CP_MISSIONS[i].id); }
 function cpComplete(id, secs) {
   const o = CPS.done[id] || (CPS.done[id] = { n: 0, t: 0, d: '' });
   const first = !o.n;
@@ -64093,6 +64094,22 @@ cpCineDef('m14_outro', { music: 'cpm14end', exit: rchCineEnd,
       f(t, k, C) { RCH.lensK = 1; RCH.lensA = wrapPi(-2.6 + 8 * 0.97 + t * 0.97); if (C.skiff) { const x = C.sk[0] - 14 - 6 * k, y = C.sk[1] - 15 - 6 * k; C.skiff.position.copy(z3v(x, y, FPSC.GROUND - ZMT.L[5] + 0.1)); } if (C.mar && t > 1.4 && !C.up) { C.up = 1; C.mar.material.map = gwsImgTex(IMG.maren, false, true) || C.mar.material.map; C.mar.material.needsUpdate = true; } } },
     { d: 6, card: { eye: 'The Chronicle of the Light', t: 'The light is still turning', sub: 'And she is still rowing out to the Gannet' }, fade: [1.2, 1.5] },
   ] });
+
+// ---- src/cpm15.js ----
+'use strict';
+// The Chronicle of the Light, mission 15: a placeholder, replaced by the mission's own file.
+
+// ---- src/cpm16.js ----
+'use strict';
+// The Chronicle of the Light, mission 16: a placeholder, replaced by the mission's own file.
+
+// ---- src/cpm17.js ----
+'use strict';
+// The Chronicle of the Light, mission 17: a placeholder, replaced by the mission's own file.
+
+// ---- src/cpm18.js ----
+'use strict';
+// The Chronicle of the Light, mission 18: a placeholder, replaced by the mission's own file.
 
 // ---- src/zmnet.js ----
 // The Lighthouse, played together: a lobby, and up to four in one night.
@@ -83845,6 +83862,10 @@ requestAnimationFrame(frame);
 <!-- [campaign] mission 14, parts I and II -->
 <!-- [campaign] mission 14, parts III and IV -->
 <!-- [campaign] mission 14, cinematics -->
+<!-- [campaign] mission 15 -->
+<!-- [campaign] mission 16 -->
+<!-- [campaign] mission 17 -->
+<!-- [campaign] mission 18 -->
 <!-- [golf] Skerry Links: the course -->
 <!-- [golf] the round, the ball, the swing -->
 <!-- [golf] the screen over the 3D view, the scorecard -->
