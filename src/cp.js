@@ -99,7 +99,7 @@ function cpMission(def) {
   const M = Object.assign({ act: 1, n: def.id, when: '', where: '', blurb: '', stages: [], cut: {}, after: {}, music: {}, lives: CPC.LIVES }, def);
   if (CP_BY[M.id]) CP_MISSIONS.splice(CP_MISSIONS.indexOf(CP_BY[M.id]), 1, M); else CP_MISSIONS.push(M);
   CP_BY[M.id] = M;
-  CP_MISSIONS.sort((a, b) => a.id < b.id ? -1 : 1);
+  CP_MISSIONS.sort((a, b) => (a.o || a.id) < (b.o || b.id) ? -1 : 1);   // (def.o: where it falls in the timeline, when that isn't its id's place, e.g. 'm03b' between m03 and m04)
   return M;
 }
 function cpStage(key, stage) { stage.cp = key; RAID_STAGES['cp_' + key] = stage; return stage; }
@@ -140,7 +140,8 @@ function cpMerge(d, quiet) {
 }
 const cpIsDone = id => !!(CPS.done[id] && CPS.done[id].n > 0);
 // open: the first, and each one after a mission done
-function cpIsOpen(id) { const i = cpIndex(id); if (i <= 0) return i === 0; return cpIsDone(CP_MISSIONS[i - 1].id) || cpIsDone(id); }
+// (a tale added later, def.side, opens with the mission before it but holds nothing shut: the next one looks past it)
+function cpIsOpen(id) { let i = cpIndex(id); if (i <= 0) return i === 0; if (cpIsDone(id)) return true; while (--i > 0 && CP_MISSIONS[i].side); return cpIsDone(CP_MISSIONS[i].id); }
 function cpComplete(id, secs) {
   const o = CPS.done[id] || (CPS.done[id] = { n: 0, t: 0, d: '' });
   const first = !o.n;
