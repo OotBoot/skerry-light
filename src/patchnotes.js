@@ -6,6 +6,14 @@
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 241, date: '2026-11-23', title: "New game: Skerry Chess", New: [
+    "Skerry Chess: a new game on the main menu. Chess against a bot or another player, with every rule of the game: castling, en passant, promotion, check, checkmate and stalemate, and draws by repetition, the fifty-move rule and insufficient material.",
+    "Skerry Chess: Skerry rules, a variant on the reef. Four rocks block the board, gannets (knights) fly over them, and a keeper (king) that reaches the Light, the four centre squares, wins outright. The pieces are the station's own: keeper, lantern, tower, cutter, gannet and hand.",
+    "Skerry Chess: three bots. Hob the deckhand (Easy), Mate Tamsin (Fair) and The Old Keeper (Hard). Play White, Black or either, take back a move, and pick up an unfinished game from the card.",
+    "Skerry Chess: play someone online, one against one. Set up a board, share the invite, offer a draw or resign, and rematch with the colours swapped.",
+    "Skerry Chess: tap or drag the pieces, or use the arrow keys, Enter and a controller. Your record against each bot and online is shown on the card.",
+    "Lore compendium: a new chronicle, Skerry Chess.",
+  ] },
   { v: 240, date: '2026-11-21', title: "Skerry League online", New: [
     "Skerry League: play together online, up to six of you, each on your own screen. Host a match on the League card, and your friends join it from the list there or from the invite you share.",
     "Skerry League: pick a side in the lobby (Change sides) or let it put you where there's room. The sides grow to fit everyone, and bots sail any empty seats.",

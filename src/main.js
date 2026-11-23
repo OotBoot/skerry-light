@@ -32,6 +32,8 @@ function frame(now) {
     if (state === 'golf') { gfFrame(dt); requestAnimationFrame(frame); return; }
     // and so does Skerry League (src/league.js)
     if (state === 'league') { lgFrame(dt); requestAnimationFrame(frame); return; }
+    // and so does Skerry Chess (src/chessui.js), with the cursor left alone for the board
+    if (state === 'chess') { chFrame(dt); requestAnimationFrame(frame); return; }
     // and so does Skerry Clash (src/rl.js)
     if (state === 'rival') { rlFrame(dt); requestAnimationFrame(frame); return; }
     pollPad(dt);

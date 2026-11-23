@@ -10,6 +10,7 @@
 //   fbsea       a Freebooters' Sea crew (the same lobby again, on its own card: src/fbsea.js) [fbsea]
 //   golf        a round of Skerry Links (its own lobby: src/golfnet.js, g...) [golf]
 //   rival       a Skerry Clash duel (its own lobby: src/rlnet.js, r...; one full or under way offers Watch) [rival]
+//   chess       a Skerry Chess board (its own lobby: src/chnet.js, c...; your game under way offers going back to it) [chess]
 //   league      a Skerry League match (its own lobby: src/lgnet.js, l...; one under way with your seat offers Rejoin) [league]
 // On a phone or tablet the button opens the share sheet; on a computer it copies the text to the clipboard.
 // On claude.ai everyone plays in the artifact's own room, which the live site can't reach, so there the link is the
@@ -19,7 +20,7 @@
 const SHARE_SITE = 'https://skerry-light.onrender.com/';
 const SHARE_ARTIFACT = 'https://claude.ai/artifact/4abbzGK8dMDsPyR5KdssJv';
 const SHARE_TEXT = 'Join my game on Skerry Light!';
-const SHARE_MODES = ['sail', 'wreckers', 'war', 'lighthouse', 'raid', 'fogrun', 'fbsea', 'golf', 'rival', 'league', 'campaign'];   // [campaign]   // [fogrun] [fbsea] [golf] [rival]
+const SHARE_MODES = ['sail', 'wreckers', 'war', 'lighthouse', 'raid', 'fogrun', 'fbsea', 'golf', 'rival', 'league', 'chess', 'campaign'];   // [campaign]   // [fogrun] [fbsea] [golf] [rival]
 // the Lighthouse's lobby's own word for each of the modes it serves (src/zmnet.js ZN.mode) [fogrun]
 var SHARE_ZN = { lighthouse: 'zm', raid: 'raid', fogrun: 'fr', fbsea: 'fb', campaign: 'cp' };
 const shareOnClaude = () => (typeof NET !== 'undefined' && NET.via === 'claude') || !!(window.claude && typeof window.claude.use === 'function');
@@ -38,6 +39,7 @@ function shareCode(mode) {
   if (mode === 'war') return typeof WN !== 'undefined' ? WN.code : null;
   if (mode === 'golf') return typeof GFN !== 'undefined' ? GFN.code : null;   // [golf]
   if (mode === 'league') return typeof LGN !== 'undefined' ? LGN.code : null;   // [league]
+  if (mode === 'chess') return typeof CHN !== 'undefined' ? CHN.code : null;   // [chess]
   if (mode === 'rival') return typeof RLN !== 'undefined' ? RLN.code : null;   // [rival]
   if (mode === 'lighthouse' || mode === 'raid' || mode === 'fogrun' || mode === 'fbsea' || mode === 'campaign') return typeof ZN !== 'undefined' && ZN.mode === SHARE_ZN[mode] ? ZN.code : null;   // [fogrun]
   return null;
@@ -108,8 +110,8 @@ var SHARE_MINE = false;
   };
   for (const k of ['pointerdown', 'keydown', 'wheel', 'touchmove']) document.addEventListener(k, mine, { capture: true, passive: true });
 }
-const SHARE_CARD = { sail: 'together', wreckers: 'fpsTitle', war: 'warTitle', lighthouse: 'zmTitle', raid: 'rdTitle', fogrun: 'frTitle', fbsea: 'fbTitle', golf: 'gfTitle', rival: 'rlTitle', league: 'lgTitle', campaign: 'cpTitle' };
-const SHARE_WHAT = { sail: 'crew', war: 'war', lighthouse: 'night', raid: 'raid', fogrun: 'run', fbsea: 'crew', golf: 'round', rival: 'duel', league: 'match', campaign: 'mission' };
+const SHARE_CARD = { sail: 'together', wreckers: 'fpsTitle', war: 'warTitle', lighthouse: 'zmTitle', raid: 'rdTitle', fogrun: 'frTitle', fbsea: 'fbTitle', golf: 'gfTitle', rival: 'rlTitle', league: 'lgTitle', chess: 'chTitle', campaign: 'cpTitle' };
+const SHARE_WHAT = { sail: 'crew', war: 'war', lighthouse: 'night', raid: 'raid', fogrun: 'run', fbsea: 'crew', golf: 'round', rival: 'duel', league: 'match', chess: 'board', campaign: 'mission' };
 function shareShow(mode) { const c = $(SHARE_CARD[mode]); if (c) c.scrollIntoView({ block: 'start' }); }
 function shareArrive() {
   const J = SHARE_JOIN; if (!J) return;
@@ -161,6 +163,11 @@ function shareArrive() {
       if (LGN.code === J.code) return clearInterval(iv);
       const r = lgnOpen().find(x => x.code === J.code);
       if (r) { clearInterval(iv); shareShow('league'); if (r.started && !r.mine) toast('That match has already started.', 'Already started'); else lgnJoin(J.code, r.mine); return; }
+    } else if (J.mode === 'chess') {   // [chess]
+      if (typeof CHN === 'undefined') return give('');
+      if (CHN.code === J.code) return clearInterval(iv);
+      const r = chnOpen().find(x => x.code === J.code);
+      if (r) { clearInterval(iv); shareShow('chess'); if ((r.started || r.n >= 2) && !r.mine) toast('Someone is already playing at that board.', 'Board taken'); else chnJoin(J.code, r.mine); return; }
     } else if (J.mode === 'rival') {   // [rival]
       if (typeof RLN === 'undefined') return give('');
       if (RLN.code === J.code) return clearInterval(iv);

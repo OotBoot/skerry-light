@@ -83,6 +83,7 @@
     <button class="newgame rlbanner" id="rlBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">And a ninth, <b>Skerry Clash</b>: a duel of lights across the race, one keeper against another</span><span class="ng-go" aria-hidden="true">↓</span></button><!-- [rival] -->
     <button class="newgame cpbanner" id="cpBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">And a tenth, <b>The Chronicle of the Light</b>: the whole history of the Skerries as a campaign, alone or with up to four</span><span class="ng-go" aria-hidden="true">↓</span></button><!-- [campaign] -->
     <button class="newgame lgbanner" id="lgBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">And an eleventh, <b>Skerry League</b>: sail into a great buoy and knock it into the other side's goal</span><span class="ng-go" aria-hidden="true">↓</span></button><!-- [league] -->
+    <button class="newgame chbanner" id="chBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">And a twelfth, <b>Skerry Chess</b>: chess against three bots or a friend, and a variant on the reef</span><span class="ng-go" aria-hidden="true">↓</span></button><!-- [chess] -->
     <div class="menulinks"><button class="tool notesbtn" id="notesBtn" type="button">Patch notes</button><button class="tool notesbtn lorebtn" id="loreBtn" type="button">Lore compendium</button></div>
     <div class="card boardcard" id="boardCard" aria-labelledby="boardHead">
       <div class="cardtop"><span class="eyebrow">Best on record · every game</span><span class="boardminititle">The Scoreboard</span><span class="boardbtns"><button class="tool closebtn" id="boardRefresh" type="button">Refresh</button><button class="tool closebtn" id="boardMin" type="button" aria-expanded="true" aria-controls="boardCard" title="Make the scoreboard small">– Minimise</button></span></div>
@@ -566,6 +567,86 @@
         <p><b>The camera.</b> Ball cam (the default) keeps the ball in view behind your ship; Ship cam looks the way she's heading. C (or Y on a controller, or the button at the top) swaps them.</p>
         <p><b>Controller.</b> Left stick or D-pad steers, RT makes sail, LT shortens it, A or B the Gale, Y the camera, Start the menu. On a phone, the buttons at the bottom: steer on the left, sail, shorten and the Gale on the right.</p>
       </details>
+    </div>
+    <div class="card zmcard chcard" id="chTitle" aria-labelledby="chHead"><!-- [chess] Skerry Chess: its own card (src/chess.js, src/chessui.js, src/chnet.js) -->
+      <div class="cardtop"><span class="eyebrow">A twelfth game · chess · against a bot or one other player</span></div>
+      <h1 id="chHead">Skerry Chess</h1>
+      <p>The keepers' game, played on long nights in the lamp room. Standard chess with every rule of it, or Skerry rules: the same armies on a reef, with rocks in the way and the Light in the middle of the board. Bring your keeper to the Light and you win on the spot.</p>
+      <p class="muted">Tap a piece and then where it goes, or drag it. The arrow keys and Enter work too, and so does a controller.</p>
+      <div class="gfopts chopts">
+        <label>Rules <select id="chVar"><option value="std">Standard chess</option><option value="sk">Skerry rules</option></select></label>
+        <label>Bot <select id="chSkill"><option value="easy">Easy · Hob the deckhand</option><option value="fair" selected>Fair · Mate Tamsin</option><option value="hard">Hard · The Old Keeper</option></select></label>
+        <label>You play <select id="chSide"><option value="w">White (moves first)</option><option value="b">Black</option><option value="r">Either, at random</option></select></label>
+      </div>
+      <div class="nickrow"><label for="chNick">Your name</label><input id="chNick" type="text" maxlength="16" autocomplete="nickname" placeholder="You"></div>
+      <div class="btnrow">
+        <button class="primary" id="chPlay" type="button">Play the bot</button>
+        <button class="tool" id="chResume" type="button" hidden>Resume your game</button>
+        <button class="tool" id="chSettings" type="button">Settings</button>
+      </div>
+      <p class="muted chrecord" id="chRecord"></p>
+      <section class="warmp zmmp" id="chMp" aria-labelledby="chMpHead">
+        <h2 id="chMpHead">Play someone online · one against one</h2>
+        <p class="muted" id="chMpNote">Looking for other players…</p>
+        <div id="chMpOpen" hidden>
+          <div class="btnrow"><button class="tool" id="chMpHost" type="button">Set up a board</button></div>
+          <div class="warlobbies" id="chLobbies"></div>
+        </div>
+        <div class="warlobby" id="chLobby" hidden>
+          <h3 id="chLobbyHead">Your board</h3>
+          <ol class="warlobbylist" id="chLobbyList"></ol>
+          <p class="muted" id="chLobbyMsg"></p>
+          <div class="btnrow"><button class="primary" id="chMpStart" type="button">Start the game</button><button class="primary" id="chMpRejoin" type="button" hidden>Back to the game</button><button class="tool shareBtn" id="chMpShare" type="button" data-mode="chess">Share invite</button><button class="tool" id="chMpLeave" type="button">Leave</button></div>
+        </div>
+      </section>
+      <details class="howto">
+        <summary>How to play</summary>
+        <p><b>Standard chess.</b> Every rule, as in a tournament: castling (not out of, through or into check), en passant, promotion to any piece, check, checkmate and stalemate. A game is drawn at once by stalemate, by the same position coming up three times, by fifty moves each with no capture and no pawn move, or when neither side has enough left to checkmate.</p>
+        <p><b>Skerry rules.</b> The Light (cream and brass) plays the Wreckers (tar and red), and White still moves first. The pieces are the keeper (king), the lantern (queen), the tower (rook), the cutter (bishop), the gannet (knight) and the hand (pawn), and they move just as their namesakes do. What's different:</p>
+        <ul>
+          <li><b>The reef.</b> Four rocks stand at c4, f4, c5 and f5. Nothing can stand on a rock or move through one, but gannets fly over them, as knights jump anything. A hand on the c or f file can't step forward past its rock.</li>
+          <li><b>The Light.</b> The four squares in the middle, d4, e4, d5 and e5, are lit. Move your keeper onto one of them and you win at once. Your keeper still can't step into check, so the Light has to be safe to reach.</li>
+          <li><b>No dead draws.</b> A lone keeper can always make for the Light, so a game never ends just because one side has too little left. Stalemate, repetition and the fifty-move rule still draw.</li>
+        </ul>
+        <p><b>The bots.</b> Hob the deckhand (Easy) looks one move ahead and makes careless moves. Mate Tamsin (Fair) looks three moves deep. The Old Keeper (Hard) thinks for up to two seconds a move, as deep as he can get. Against a bot you can take back your last move, and a game you leave is kept for you to resume.</p>
+        <p><b>Online.</b> Set up a board and the other player joins it from this card or from the invite you share. The one who set it up picks the rules and the colours (on the card above, under Rules and You play). Either of you can offer a draw or resign. At the end, Rematch plays again with the colours swapped. If your opponent leaves and doesn't come back, you win.</p>
+        <p><b>Keys and controller.</b> Arrow keys move a cursor, Enter or Space picks up and puts down, Esc lets go of a piece or opens the menu, F turns the board round. On a controller: the D-pad or left stick moves, A picks up and puts down, B lets go, Y turns the board, Start opens the menu.</p>
+      </details>
+    </div>
+  </div>
+
+  <!-- Skerry Chess: the board and what's round it (src/chessui.js) -->
+  <div id="chUI" hidden>
+    <div class="ch-wrap">
+      <div class="ch-boardcol">
+        <div class="ch-player" id="chTopRow"></div>
+        <div class="ch-board" id="chBoard" role="grid" aria-label="The chess board"></div>
+        <div class="ch-player" id="chBotRow"></div>
+      </div>
+      <aside class="ch-side">
+        <div class="ch-head"><h2>Skerry Chess</h2><button class="tool" id="chMenuBtn" type="button" aria-label="Menu" title="Menu (Esc)">☰</button></div>
+        <p class="muted ch-rules" id="chRules"></p>
+        <p class="ch-status" id="chStatus" role="status" aria-live="polite"></p>
+        <ol class="ch-moves" id="chMoves" aria-label="The moves"></ol>
+        <div class="btnrow ch-btns"><button class="tool" id="chUndo" type="button">Take back</button><button class="tool" id="chDraw" type="button" hidden>Offer a draw</button><button class="tool" id="chFlip" type="button" title="Turn the board round (F)">Turn board</button><button class="tool" id="chResign" type="button">Resign</button></div>
+      </aside>
+    </div>
+    <div class="overlay pausecard" id="chPromo" hidden role="dialog" aria-modal="true" aria-labelledby="chPromoHead">
+      <div class="card"><h1 id="chPromoHead">Promote to</h1><div class="ch-promobtns" id="chPromoBtns"></div><div class="btnrow"><button class="tool" id="chPromoCancel" type="button">Cancel</button></div></div>
+    </div>
+    <div class="overlay pausecard" id="chMenu" hidden role="dialog" aria-modal="true" aria-labelledby="chMenuHead">
+      <div class="card">
+        <h1 id="chMenuHead">Skerry Chess</h1>
+        <div class="btnrow"><button class="primary" id="chMenuResume" type="button">Back to the game</button><button class="tool" id="chMenuResign" type="button">Resign</button><button class="tool" id="chMenuLeave" type="button">Leave</button></div>
+      </div>
+    </div>
+    <div class="overlay pausecard chendov" id="chEnd" hidden role="dialog" aria-modal="true" aria-labelledby="chEndHead">
+      <div class="card">
+        <h1 id="chEndHead">Game over</h1>
+        <p class="ch-endsub" id="chEndSub"></p>
+        <p class="muted" id="chEndMoves"></p>
+        <div class="btnrow"><button class="primary" id="chAgain" type="button">Play again</button><button class="tool" id="chEndLook" type="button">Look at the board</button><button class="tool" id="chEndMenu" type="button">Back to the menu</button></div>
+      </div>
     </div>
   </div>
 
@@ -1311,6 +1392,9 @@
 <script src="src/league.js"></script><!-- [league] Skerry League: the match, the ships, the ball, the bots -->
 <script src="src/league3d.js"></script><!-- [league] the 3D view -->
 <script src="src/lgnet.js"></script><!-- [league] online matches: the lobby and keeping the screens together -->
+<script src="src/chess.js"></script><!-- [chess] Skerry Chess: the rules and the bots -->
+<script src="src/chessui.js"></script><!-- [chess] the board, the card and the game -->
+<script src="src/chnet.js"></script><!-- [chess] online games: the lobby and the moves -->
 <script src="src/rlcards.js"></script><!-- [rival] Skerry Clash: the 64 cards -->
 <script src="src/rl.js"></script><!-- [rival] the rules, the match, the snapshots -->
 <script src="src/rlbot.js"></script><!-- [rival] the keeper across the water -->

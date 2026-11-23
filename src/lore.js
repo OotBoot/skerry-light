@@ -9,7 +9,7 @@
 // In any text, [[id]] links to an article by its title and [[id|words]] links with other words.
 // Keep secrets out entirely: no Easter egg, nothing hidden in any map, no secret bosses or hidden buttons, not even a hint.
 var LORE_CATS = [
-  { k: 'Chronicles', d: 'The thirteen great tales of the Skerries, each told by one of the games.' },
+  { k: 'Chronicles', d: 'The fourteen great tales of the Skerries, each told by one of the games.' },
   { k: 'Characters', d: 'People, and things that were once people.' },
   { k: 'Creatures', d: 'What walks, swims, flies or crawls in the waters round the Light.' },
   { k: 'Places', d: 'Rocks, shores, buildings and the far seas.' },
@@ -33,6 +33,7 @@ var LORE = [
     "<b>c. 1879.</b> The keeper Holm comes to the Light, with his wife [[maren]]. In his early years he swings the beam by hand to show each ship the rocks: see [[ch_original]].",
     "<b>c. 1883.</b> The keepers lay out nine holes of golf along the headland: see [[ch_links]].",
     "<b>c. 1885.</b> The harbour crews start playing their ball game in the Harbour Pool: see [[ch_league]].",
+    "<b>c. 1886.</b> The keepers carve a chessboard for the lamp room, and then a second one with the reef on it: see [[ch_chess]].",
     "<b>14 December 1887.</b> [[wreck1887|The Night of the Gannet]]. The lamp fails in the second hour. Maren rows out with a hand lantern to warn the brig [[gannet|Gannet]]. The brig breaks up on the skerries with all hands. The skiff comes back empty, [[marenslantern|her lantern]] still lit.",
     "<b>15 December 1887.</b> The sea freezes from the harbour steps to the horizon. It is the first of [[sixseas|the six seas]].",
   ]},
@@ -203,6 +204,15 @@ var LORE = [
   ]},
   { h: 'In the log', p: [ "[[log|The keeper's log]] never mentions the game, though the harbour board's minutes record the cost of two lighthouses, 'small, for the amusement of the crews', and of a great deal of new net." ] },
 ], also: ['harbour', 'ch_links', 'crates'] },
+{ id: 'ch_chess', t: 'Skerry Chess', cat: ['Chronicles', 'Places'], box: [['Told in', 'Skerry Chess'], ['When', 'Long winter nights, from c. 1886'], ['Where', 'The lamp room of [[skerrylight]]'], ['Who', 'The keepers, the harbour crews, anyone who would sit down'], ['Played with', 'Two boards: a plain one, and the reef board'], ['Pieces', 'Keeper, lantern, tower, cutter, gannet and hand']], sum: "The keepers' game. On the long nights of the watch the keeper on duty and the one off it played chess by the light of the lamp, on a board one of them carved from a ship's hatch cover. A second board followed, cut with the reef on it, and a game of its own grew up around it: the Light against the Wreckers.", secs: [
+  { h: 'The plain board', p: [
+    "The first board is a plain one, played by the rules any harbour club would know. The keepers kept a tally of games in pencil on the underside, and it runs to several hundred before the pencil gives out.",
+  ]},
+  { h: 'The reef board', p: [
+    "The second board was carved with four rocks standing up out of it, where the skerries would be if the board were the sea, and the four squares between them painted gold for the Light. Its pieces were whittled to look like the station's own: a keeper in his cap, a hand lantern, the tower, a cutter, a gannet, and the hands. On the reef board a keeper who reaches the Light wins outright, as any keeper would tell you is only right.",
+  ]},
+  { h: 'In the log', p: [ "[[log|The keeper's log]] says nothing of either board, though the station's stores list records 'one set chessmen (spare), whittled', and two pots of gold paint nobody could account for." ] },
+], also: ['skerrylight', 'harbour', 'ch_league'] },
 { id: 'ch_clash', t: 'Skerry Clash', cat: ['Chronicles', 'Events'], box: [['Told in', 'Skerry Clash'], ['When', 'The years after, at every slack water'], ['Where', '[[race|The Race]], and [[threeskerry|the Threefold Skerry]]'], ['Who', '[[racekeepers|The keepers of the Race]]'], ['Champions', '[[maren]], [[plimsoll]], [[verity]]'], ['Fought with', '[[clashhands|Crews, crabs, birds and worse]], spells, and lamp oil'], ['Prize', 'The other keeper\'s [[greatlight|Great Light]]']], sum: "The tale of the rival lights. In the years after, a second light was lit on a rock across the tidal race from the first, and each keeper was sure the other's was the false one that puts ships on the reef. Since then they have settled it at every slack water, three minutes at a time, across the causeways the falling tide uncovers.", secs: [
   { h: 'Why they fight', p: [
     "The coast had learnt from [[mooncussers|the Mooncussers]] that a light is not to be trusted because it is a light. Two lights on two rocks, close enough to shout across, cannot both be honest, and ships cannot steer by both. Neither keeper will put theirs out. So each sends everything they can muster across the water to put out the other's.",

@@ -608,6 +608,24 @@ An eleventh game, on its own card on the title screen (**Kick off**; on the desk
 
 How it's built: `src/league.js` (the match, the ships' handling, the ball, the walls and goals, the bots, the screen and the controls) and `src/league3d.js` (the 3D view: the pool, the walls and lamps, the cliffs, the goals and lighthouses, the ships built from their boats' shapes and skins, the wakes, the Gale's spray, the goal bursts and the camera). Online play is `src/lgnet.js`: a lobby on the card for up to six, seated by side with bots in the empty seats; each screen sails its own ship, and the host's screen runs the ball, the bots, the gale buoys, the clock and the score and sends them to the rest, who forecast the ball between snapshots and send their own hits for the host to check. `server/server.js` relays one match's players to each other at full rate (the `lg` room key).
 
+## Skerry Chess (chess, and chess on the reef, for one or two)
+
+A twelfth game, on its own card on the title screen (**Play the bot**; on the desk menu it's number 12). The keepers' game, played in the lamp room on long nights: standard chess with every rule, or Skerry rules, a variant on a reef. Play one of three bots, or one other person online.
+
+- **On the card:** the rules (Standard chess or Skerry rules), the bot (Easy, Fair or Hard), and the colour you play (White, Black, or either at random). Your record against each bot and online, for each set of rules, is shown under the buttons. A game against a bot that you leave is kept, and **Resume your game** picks it up.
+- **Moving.** Tap or click a piece and its moves are marked (a dot for a move, a ring for a capture); tap where it goes. Or drag it there. A pawn reaching the far side asks what it becomes. The last move is shaded, and a king in check glows red.
+- **Standard chess**, every rule as in a tournament: castling (not out of, through or into check, and only with the king and that rook unmoved), en passant, promotion to a queen, rook, bishop or knight, check, checkmate and stalemate. A game is drawn at once by stalemate, by the same position coming up a third time (same pieces, same side to move, same castling and en passant chances), by fifty moves each with no capture and no pawn move, or when neither side has enough left to checkmate (king against king, king and bishop or knight against king, or kings and bishops all on one colour of square).
+- **Skerry rules.** The Light (cream and brass) plays the Wreckers (tar and red); the Light moves first. The pieces are the keeper (king), the lantern (queen), the tower (rook), the cutter (bishop), the gannet (knight) and the hand (pawn), and they move as the standard pieces do. Three rules change:
+  - **The reef:** rocks stand at c4, f4, c5 and f5. Nothing may stand on a rock or move through one; gannets fly over them as knights jump anything. A hand on the c or f file can't go past its rock (it can still take diagonally).
+  - **The Light:** the four centre squares (d4, e4, d5, e5) glow gold. A keeper that ends its move on one wins outright. It still can't move into check, so the Light must be safe to step on. Other pieces may stand on the Light and block it.
+  - **No dead draws:** a lone keeper can always make for the Light, so there's no draw for insufficient material. Stalemate, threefold repetition and the fifty-move rule still draw.
+- **The bots.** Hob the deckhand (Easy) looks about one move ahead, with plenty of guesswork and the odd careless move, but never misses a mate in one. Mate Tamsin (Fair) looks three moves deep with a little guesswork. The Old Keeper (Hard) thinks for up to two seconds a move, searching as deep as he can, and plays his best every time. All three know Skerry rules, the reef and the Light. **Take back** undoes your last move and the bot's reply.
+- **Online, one against one.** **Set up a board** and the other player joins from the card's list or from the invite you share (**Share invite**). The one who set it up picks the rules and their colour on the card, and presses **Start the game**. Each of you plays on your own screen. **Offer a draw** (the other sees **Accept their draw**; making a move withdraws it) or **Resign**. At the end, **Rematch** goes back to the board and starts again with the colours swapped once you've both asked. If your opponent closes the game or isn't heard from for 45 seconds, you win; if your page reloads mid-game, open the card and tap your board to go back to it.
+- **Keys:** the arrow keys move a cursor round the board, Enter or Space picks up and puts down, Esc lets go of a piece or opens the menu, F turns the board round. **Controller:** D-pad or left stick moves the cursor, A picks up and puts down, B lets go, Y turns the board, Start opens the menu. **Turn board** does the same on screen.
+- **Esc** (or ☰) opens the menu: back to the game, resign, or leave (against a bot the game is kept; online, leaving resigns).
+
+How it's built: `src/chess.js` (the rules: the board, every move and the draws, the notation, and the bots' search and evaluation), `src/chessui.js` (the board on the screen with its two sets of pieces drawn in SVG, the card, the game against a bot, the keys and controller, the sounds) and `src/chnet.js` (online games, on the presence key `ch`: the lobby, and each screen's moves sent as the whole game so far and checked on the other screen; `server/server.js` relays one board's two players to each other at once). For tests, `chDebug({ v, opp, me })` starts a game, `chDebugMoves(['e2e4', ...])` plays moves, `CHS` is the state, and `chPerft(chNew('std'), 4)` counts positions (197281 from the start, as it should).
+
 ## Skerry Clash (a duel of lights, one against one)
 
 A ninth game, on its own card on the title screen (**Duel the bot**, **Triple draft** to build a deck on the spot, or **First person** to fight as your own troops while bots play the cards; on the desk menu it's number 9). Two keepers on two rocks face each other across a tidal race, each sure the other's light is the false one that puts ships on the reef. They settle it in three minutes: crews, crabs, gulls and worse sent over the causeways, spells cast from the rocks, and lamp oil for all of it. Fell the other keeper's towers before they fell yours. Everything in it, the cards, the towers and the pictures, is drawn in the game's own world: keepers, wreckers, the drowned, the Diver, the Mooncusser, the Keelback, the haar.
@@ -805,7 +823,7 @@ Every mode with a lobby has a **Share invite** button: the crew screen (Skerry L
 - On a phone or tablet it opens the share sheet; on a computer it copies the invite to the clipboard. Either way it reads "Join my game on Skerry Light!" followed by the link.
 - Opening the link takes your friend straight into your lobby, on the right game's card. If the lobby has closed or the game has already started, they're told so and can host their own. The link is used once: it's cleared from the address bar, so a reload or a reopened tab starts on the main menu. If they pick another game before the lobby turns up, the invite steps aside and leaves them on the game they chose. A Wreckers' Night link opens that card, ready to tap **Go ashore**.
 - On claude.ai the link is the game's page itself, as everyone there plays in the page's own room: your friend opens it and taps your lobby in the list.
-- Links look like `https://skerry-light.onrender.com/?mode=raid&lobby=z1ab2cd` (modes: sail, wreckers, war, lighthouse, raid, fogrun, fbsea, golf). Old crew links ending in `#gannet-12` still work.
+- Links look like `https://skerry-light.onrender.com/?mode=raid&lobby=z1ab2cd` (modes: sail, wreckers, war, lighthouse, raid, fogrun, fbsea, golf, rival, league, chess, campaign). Old crew links ending in `#gannet-12` still work.
 
 ## Rejoining a game in progress
 
@@ -885,6 +903,9 @@ src/patchnotes.js   the patch notes log (one entry per version, newest first)
 src/patchnotesui.js the main menu's Patch Notes page
 src/league.js       Skerry League: the match, the ships, the ball, the bots
 src/league3d.js     Skerry League's 3D view
+src/chess.js        Skerry Chess: the rules and the bots
+src/chessui.js      Skerry Chess: the board, the card and the game
+src/chnet.js        Skerry Chess online
 src/lgnet.js        Skerry League online: the lobby, the seats, and keeping the screens together
 src/audio.js        sound, made with the Web Audio API (plus Verity's voice clip)
 src/biomes.js       the seas: palettes, landscapes, rock skins, weather, the Nether portal

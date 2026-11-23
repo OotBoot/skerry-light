@@ -1914,6 +1914,78 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 /* [league] online: names over the other people's ships (src/lgnet.js) */
 .lg-tags { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
 .lg-tags span { position: absolute; left: 0; top: 0; font: 600 0.78rem/1.2 var(--ui, system-ui), sans-serif; padding: 2px 6px; border-radius: 6px; background: rgba(0,0,0,0.45); white-space: nowrap; text-shadow: 0 1px 2px rgba(0,0,0,0.6); }
+
+/* [chess] Skerry Chess (src/chessui.js): its card, banner, and the board screen */
+.chcard { border-color: rgba(217,181,106,0.55); }
+.chcard h1 { color: #f0d79a; text-shadow: 0 0 30px rgba(217,181,106,0.45); }
+.chcard ul { margin: 4px 0 8px 1.2em; padding: 0; } .chcard li { margin: 3px 0; }
+.newgame.chbanner { border-color: rgba(217,181,106,0.6); background: linear-gradient(90deg, rgba(217,181,106,0.3), rgba(59,111,136,0.12)); }
+.newgame.chbanner:hover, .newgame.chbanner:focus-visible { background: linear-gradient(90deg, rgba(217,181,106,0.45), rgba(59,111,136,0.2)); }
+.newgame.chbanner .ng-tag { background: #d9b56a; color: #1a1204; }
+.chopts { margin: 10px 0; } .chrecord { margin-top: 8px; }
+#chUI { position: fixed; inset: 0; z-index: 30; color: var(--ink); font-family: var(--body); background: radial-gradient(ellipse at 50% 30%, #16233a 0%, #0a1020 60%, #05080f 100%); overflow: auto; -webkit-user-select: none; user-select: none; }
+.ch-wrap { --bs: min(calc(100vh - 120px), calc(100vw - 400px), 760px); min-height: 100%; display: flex; align-items: center; justify-content: center; gap: 24px; padding: 16px; box-sizing: border-box; }
+.ch-boardcol { display: flex; flex-direction: column; gap: 8px; width: var(--bs); }
+.ch-board { width: var(--bs); height: var(--bs); display: grid; grid-template-columns: repeat(8, 1fr); grid-template-rows: repeat(8, 1fr); border: 6px solid #3a2c1a; border-radius: 4px; box-shadow: 0 0 0 1px #b08a4a, 0 14px 50px rgba(0,0,0,0.6); touch-action: none; position: relative; }
+.chsq { position: relative; border: 0; margin: 0; padding: 0; cursor: default; display: flex; align-items: center; justify-content: center; min-width: 0; min-height: 0; overflow: visible; font: inherit; color: inherit; }
+.chsq.lt { background: #e7dbbf; } .chsq.dk { background: #6c7f93; }
+.ch-board.sk .chsq.lt { background: #dcc893; } .ch-board.sk .chsq.dk { background: #3d7089; }
+.ch-board.sk .chsq.rock { background: #2f5a70; }
+.ch-board.sk .chsq.light { background: radial-gradient(circle, #fff3c4 0%, #f2cf74 55%, #c89a3c 100%); box-shadow: inset 0 0 0 2px rgba(255,236,170,0.9), 0 0 22px rgba(255,216,138,0.35); z-index: 1; }
+.chsq.own { cursor: pointer; } .chsq.to, .chsq.cap { cursor: pointer; }
+.chsq.last::before { content: ''; position: absolute; inset: 0; background: rgba(255,214,90,0.38); pointer-events: none; }
+.chsq.sel::before { content: ''; position: absolute; inset: 0; background: rgba(120,210,140,0.5); pointer-events: none; }
+.chsq.to::after { content: ''; position: absolute; width: 28%; height: 28%; border-radius: 50%; background: rgba(20,40,30,0.38); pointer-events: none; z-index: 3; }
+.chsq.cap::after { content: ''; position: absolute; inset: 4%; border-radius: 50%; border: 5px solid rgba(20,40,30,0.38); pointer-events: none; z-index: 3; }
+.chsq.check { background: radial-gradient(circle, #ff6a4a 0%, #d23a24 45%, transparent 80%) !important; }
+.chsq.cur { outline: 3px solid #5fd3ff; outline-offset: -3px; z-index: 4; }
+.chsq .crd { position: absolute; font-family: var(--log); font-size: clamp(9px, 1.4vmin, 13px); font-weight: 700; pointer-events: none; opacity: 0.75; }
+.chsq .crd.rk { top: 2px; left: 3px; } .chsq .crd.fl { bottom: 1px; right: 3px; }
+.chsq.lt .crd { color: #6c7f93; } .chsq.dk .crd { color: #e7dbbf; }
+.ch-board.sk .chsq.lt .crd { color: #3d7089; } .ch-board.sk .chsq.dk .crd, .ch-board.sk .chsq.rock .crd { color: #dcc893; }
+svg.chp { width: 88%; height: 88%; position: relative; z-index: 2; pointer-events: none; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.45)); }
+svg.chp.drag { z-index: 20; transition: none !important; filter: drop-shadow(0 8px 8px rgba(0,0,0,0.5)); }
+svg.chp g > * { stroke-width: 1.4; stroke-linejoin: round; stroke-linecap: round; }
+svg.chp.std.w g > * { fill: #f7f0e0; stroke: #2a2418; } svg.chp.std.w .d { stroke: #2a2418; fill: #2a2418; }
+svg.chp.std.b g > * { fill: #23272f; stroke: #07080b; } svg.chp.std.b .d { stroke: #d8cfb8; fill: #d8cfb8; }
+svg.chp.sk.w g > * { fill: #f4dfa6; stroke: #5a3a10; } svg.chp.sk.w .d { stroke: #8a5a1c; fill: none; } svg.chp.sk.w .g { fill: #ffb030; stroke: #7a4a08; }
+svg.chp.sk.b g > * { fill: #1c1b20; stroke: #000; } svg.chp.sk.b .d { stroke: #d2493a; fill: none; } svg.chp.sk.b .g { fill: #e4472f; stroke: #400; }
+svg.chp .d[fill="none"], svg.chp path[fill="none"] { fill: none !important; }
+svg.chrock { width: 100%; height: 100%; position: relative; z-index: 2; pointer-events: none; }
+svg.chrock .foam { fill: rgba(235,245,250,0.55); } svg.chrock .rk { fill: #4b4d52; stroke: #222; stroke-width: 1.2; } svg.chrock .rkl { stroke: #77797e; stroke-width: 1.2; }
+.ch-player { display: flex; align-items: center; gap: 8px; min-height: 30px; padding: 2px 6px; border-radius: 4px; font-family: var(--log); font-size: 15px; }
+.ch-player.turn { background: rgba(255,216,138,0.12); box-shadow: inset 3px 0 0 var(--lamp); }
+.ch-player .nm { font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 45%; }
+.ch-player .caps { display: flex; align-items: center; flex-wrap: wrap; gap: 0; }
+.ch-player .caps svg.chp { width: 20px; height: 20px; filter: none; margin-right: -5px; }
+.ch-player .caps b { margin-left: 10px; color: var(--muted); font-size: 13px; }
+.chdot { width: 14px; height: 14px; border-radius: 50%; border: 1px solid #000; flex: none; }
+.chdot.w { background: #f7f0e0; } .chdot.b { background: #23272f; border-color: #888; }
+.chdot.w.sk { background: #f4dfa6; box-shadow: 0 0 8px #ffb030; } .chdot.b.sk { background: #1c1b20; border-color: #d2493a; }
+.ch-side { width: 340px; flex: none; background: var(--card); border: 1px solid var(--rule); padding: 14px 16px; box-sizing: border-box; display: flex; flex-direction: column; gap: 8px; max-height: var(--bs); }
+.ch-head { display: flex; align-items: center; justify-content: space-between; }
+.ch-head h2 { margin: 0; font-family: var(--display); font-size: 1.6rem; color: #f0d79a; font-weight: 400; }
+.ch-rules { margin: 0; font-size: 14px; }
+.ch-status { margin: 0; font-family: var(--log); font-size: 15px; min-height: 2.6em; color: var(--lamp); }
+.ch-moves { list-style: none; margin: 0; padding: 0; overflow-y: auto; flex: 1; min-height: 80px; font-family: var(--log); font-size: 14px; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); }
+.ch-moves li { display: grid; grid-template-columns: 3.2em 1fr 1fr; padding: 2px 4px; } .ch-moves li:nth-child(odd) { background: rgba(255,255,255,0.04); }
+.ch-moves .mn { color: var(--muted); }
+.ch-btns { flex-wrap: wrap; gap: 6px; } .ch-btns .tool { flex: 1 1 auto; }
+#chUI .overlay { position: fixed; z-index: 40; }
+.ch-promobtns { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin: 10px 0; }
+.chpromo { background: #e7dbbf; border: 2px solid #3a2c1a; border-radius: 6px; width: 84px; padding: 6px 4px; display: flex; flex-direction: column; align-items: center; cursor: pointer; color: #2a2418; font-family: var(--log); font-size: 12px; }
+.chpromo:hover, .chpromo:focus-visible { border-color: var(--lamp); box-shadow: 0 0 12px rgba(255,216,138,0.7); }
+.chpromo svg.chp { width: 64px; height: 64px; }
+.ch-endsub { font-family: var(--display); font-size: 1.4rem; margin: 4px 0 6px; }
+@media (max-width: 900px), (max-aspect-ratio: 1/1) {
+  .ch-wrap { --bs: min(calc(100vw - 24px), calc(100vh - 290px), 640px); flex-direction: column; justify-content: flex-start; gap: 10px; padding: max(10px, env(safe-area-inset-top, 0px)) 12px 12px; }
+  .ch-side { width: var(--bs); max-height: none; padding: 10px 12px; }
+  .ch-moves { max-height: 84px; min-height: 0; flex: none; }
+  .ch-head h2 { font-size: 1.2rem; }
+}
+@media (max-height: 520px) and (min-aspect-ratio: 1/1) { .ch-wrap { --bs: calc(100vh - 96px); padding: 8px 12px; gap: 4px 16px; flex-direction: row; justify-content: center; align-items: center; } .ch-side { width: min(300px, calc(100vw - var(--bs) - 60px)); max-height: var(--bs); } .ch-moves { max-height: none; flex: 1; } }
+#chPromo .card { max-width: min(30rem, 100%); } .ch-promobtns { flex-wrap: nowrap; } @media (max-width: 420px) { .chpromo { width: 70px; } .chpromo svg.chp { width: 52px; height: 52px; } }
+@media (max-height: 520px) and (min-aspect-ratio: 1/1) { .ch-boardcol { gap: 4px; } .ch-player { min-height: 22px; font-size: 13px; } }
 </style>
 <div id="stage">
   <canvas id="bg" class="under" aria-hidden="true"></canvas>
@@ -1987,6 +2059,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
     <button class="newgame rlbanner" id="rlBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">And a ninth, <b>Skerry Clash</b>: a duel of lights across the race, one keeper against another</span><span class="ng-go" aria-hidden="true">↓</span></button><!-- [rival] -->
     <button class="newgame cpbanner" id="cpBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">And a tenth, <b>The Chronicle of the Light</b>: the whole history of the Skerries as a campaign, alone or with up to four</span><span class="ng-go" aria-hidden="true">↓</span></button><!-- [campaign] -->
     <button class="newgame lgbanner" id="lgBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">And an eleventh, <b>Skerry League</b>: sail into a great buoy and knock it into the other side's goal</span><span class="ng-go" aria-hidden="true">↓</span></button><!-- [league] -->
+    <button class="newgame chbanner" id="chBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">And a twelfth, <b>Skerry Chess</b>: chess against three bots or a friend, and a variant on the reef</span><span class="ng-go" aria-hidden="true">↓</span></button><!-- [chess] -->
     <div class="menulinks"><button class="tool notesbtn" id="notesBtn" type="button">Patch notes</button><button class="tool notesbtn lorebtn" id="loreBtn" type="button">Lore compendium</button></div>
     <div class="card boardcard" id="boardCard" aria-labelledby="boardHead">
       <div class="cardtop"><span class="eyebrow">Best on record · every game</span><span class="boardminititle">The Scoreboard</span><span class="boardbtns"><button class="tool closebtn" id="boardRefresh" type="button">Refresh</button><button class="tool closebtn" id="boardMin" type="button" aria-expanded="true" aria-controls="boardCard" title="Make the scoreboard small">– Minimise</button></span></div>
@@ -2470,6 +2543,86 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
         <p><b>The camera.</b> Ball cam (the default) keeps the ball in view behind your ship; Ship cam looks the way she's heading. C (or Y on a controller, or the button at the top) swaps them.</p>
         <p><b>Controller.</b> Left stick or D-pad steers, RT makes sail, LT shortens it, A or B the Gale, Y the camera, Start the menu. On a phone, the buttons at the bottom: steer on the left, sail, shorten and the Gale on the right.</p>
       </details>
+    </div>
+    <div class="card zmcard chcard" id="chTitle" aria-labelledby="chHead"><!-- [chess] Skerry Chess: its own card (src/chess.js, src/chessui.js, src/chnet.js) -->
+      <div class="cardtop"><span class="eyebrow">A twelfth game · chess · against a bot or one other player</span></div>
+      <h1 id="chHead">Skerry Chess</h1>
+      <p>The keepers' game, played on long nights in the lamp room. Standard chess with every rule of it, or Skerry rules: the same armies on a reef, with rocks in the way and the Light in the middle of the board. Bring your keeper to the Light and you win on the spot.</p>
+      <p class="muted">Tap a piece and then where it goes, or drag it. The arrow keys and Enter work too, and so does a controller.</p>
+      <div class="gfopts chopts">
+        <label>Rules <select id="chVar"><option value="std">Standard chess</option><option value="sk">Skerry rules</option></select></label>
+        <label>Bot <select id="chSkill"><option value="easy">Easy · Hob the deckhand</option><option value="fair" selected>Fair · Mate Tamsin</option><option value="hard">Hard · The Old Keeper</option></select></label>
+        <label>You play <select id="chSide"><option value="w">White (moves first)</option><option value="b">Black</option><option value="r">Either, at random</option></select></label>
+      </div>
+      <div class="nickrow"><label for="chNick">Your name</label><input id="chNick" type="text" maxlength="16" autocomplete="nickname" placeholder="You"></div>
+      <div class="btnrow">
+        <button class="primary" id="chPlay" type="button">Play the bot</button>
+        <button class="tool" id="chResume" type="button" hidden>Resume your game</button>
+        <button class="tool" id="chSettings" type="button">Settings</button>
+      </div>
+      <p class="muted chrecord" id="chRecord"></p>
+      <section class="warmp zmmp" id="chMp" aria-labelledby="chMpHead">
+        <h2 id="chMpHead">Play someone online · one against one</h2>
+        <p class="muted" id="chMpNote">Looking for other players…</p>
+        <div id="chMpOpen" hidden>
+          <div class="btnrow"><button class="tool" id="chMpHost" type="button">Set up a board</button></div>
+          <div class="warlobbies" id="chLobbies"></div>
+        </div>
+        <div class="warlobby" id="chLobby" hidden>
+          <h3 id="chLobbyHead">Your board</h3>
+          <ol class="warlobbylist" id="chLobbyList"></ol>
+          <p class="muted" id="chLobbyMsg"></p>
+          <div class="btnrow"><button class="primary" id="chMpStart" type="button">Start the game</button><button class="primary" id="chMpRejoin" type="button" hidden>Back to the game</button><button class="tool shareBtn" id="chMpShare" type="button" data-mode="chess">Share invite</button><button class="tool" id="chMpLeave" type="button">Leave</button></div>
+        </div>
+      </section>
+      <details class="howto">
+        <summary>How to play</summary>
+        <p><b>Standard chess.</b> Every rule, as in a tournament: castling (not out of, through or into check), en passant, promotion to any piece, check, checkmate and stalemate. A game is drawn at once by stalemate, by the same position coming up three times, by fifty moves each with no capture and no pawn move, or when neither side has enough left to checkmate.</p>
+        <p><b>Skerry rules.</b> The Light (cream and brass) plays the Wreckers (tar and red), and White still moves first. The pieces are the keeper (king), the lantern (queen), the tower (rook), the cutter (bishop), the gannet (knight) and the hand (pawn), and they move just as their namesakes do. What's different:</p>
+        <ul>
+          <li><b>The reef.</b> Four rocks stand at c4, f4, c5 and f5. Nothing can stand on a rock or move through one, but gannets fly over them, as knights jump anything. A hand on the c or f file can't step forward past its rock.</li>
+          <li><b>The Light.</b> The four squares in the middle, d4, e4, d5 and e5, are lit. Move your keeper onto one of them and you win at once. Your keeper still can't step into check, so the Light has to be safe to reach.</li>
+          <li><b>No dead draws.</b> A lone keeper can always make for the Light, so a game never ends just because one side has too little left. Stalemate, repetition and the fifty-move rule still draw.</li>
+        </ul>
+        <p><b>The bots.</b> Hob the deckhand (Easy) looks one move ahead and makes careless moves. Mate Tamsin (Fair) looks three moves deep. The Old Keeper (Hard) thinks for up to two seconds a move, as deep as he can get. Against a bot you can take back your last move, and a game you leave is kept for you to resume.</p>
+        <p><b>Online.</b> Set up a board and the other player joins it from this card or from the invite you share. The one who set it up picks the rules and the colours (on the card above, under Rules and You play). Either of you can offer a draw or resign. At the end, Rematch plays again with the colours swapped. If your opponent leaves and doesn't come back, you win.</p>
+        <p><b>Keys and controller.</b> Arrow keys move a cursor, Enter or Space picks up and puts down, Esc lets go of a piece or opens the menu, F turns the board round. On a controller: the D-pad or left stick moves, A picks up and puts down, B lets go, Y turns the board, Start opens the menu.</p>
+      </details>
+    </div>
+  </div>
+
+  <!-- Skerry Chess: the board and what's round it (src/chessui.js) -->
+  <div id="chUI" hidden>
+    <div class="ch-wrap">
+      <div class="ch-boardcol">
+        <div class="ch-player" id="chTopRow"></div>
+        <div class="ch-board" id="chBoard" role="grid" aria-label="The chess board"></div>
+        <div class="ch-player" id="chBotRow"></div>
+      </div>
+      <aside class="ch-side">
+        <div class="ch-head"><h2>Skerry Chess</h2><button class="tool" id="chMenuBtn" type="button" aria-label="Menu" title="Menu (Esc)">☰</button></div>
+        <p class="muted ch-rules" id="chRules"></p>
+        <p class="ch-status" id="chStatus" role="status" aria-live="polite"></p>
+        <ol class="ch-moves" id="chMoves" aria-label="The moves"></ol>
+        <div class="btnrow ch-btns"><button class="tool" id="chUndo" type="button">Take back</button><button class="tool" id="chDraw" type="button" hidden>Offer a draw</button><button class="tool" id="chFlip" type="button" title="Turn the board round (F)">Turn board</button><button class="tool" id="chResign" type="button">Resign</button></div>
+      </aside>
+    </div>
+    <div class="overlay pausecard" id="chPromo" hidden role="dialog" aria-modal="true" aria-labelledby="chPromoHead">
+      <div class="card"><h1 id="chPromoHead">Promote to</h1><div class="ch-promobtns" id="chPromoBtns"></div><div class="btnrow"><button class="tool" id="chPromoCancel" type="button">Cancel</button></div></div>
+    </div>
+    <div class="overlay pausecard" id="chMenu" hidden role="dialog" aria-modal="true" aria-labelledby="chMenuHead">
+      <div class="card">
+        <h1 id="chMenuHead">Skerry Chess</h1>
+        <div class="btnrow"><button class="primary" id="chMenuResume" type="button">Back to the game</button><button class="tool" id="chMenuResign" type="button">Resign</button><button class="tool" id="chMenuLeave" type="button">Leave</button></div>
+      </div>
+    </div>
+    <div class="overlay pausecard chendov" id="chEnd" hidden role="dialog" aria-modal="true" aria-labelledby="chEndHead">
+      <div class="card">
+        <h1 id="chEndHead">Game over</h1>
+        <p class="ch-endsub" id="chEndSub"></p>
+        <p class="muted" id="chEndMoves"></p>
+        <div class="btnrow"><button class="primary" id="chAgain" type="button">Play again</button><button class="tool" id="chEndLook" type="button">Look at the board</button><button class="tool" id="chEndMenu" type="button">Back to the menu</button></div>
+      </div>
     </div>
   </div>
 
@@ -3073,7 +3226,7 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 // ---- src/config.js ----
 'use strict';
 // The game's version, shown at the top of the main menu. Bump it by one with every change pushed to main.
-var VERSION = 240;
+var VERSION = 241;
 // Skerry Light: tuning, asset paths and lore.
 // World units are metres. The lighthouse stands at the origin on the shoreline (y = 0);
 // north (+y) is open sea. Bearings: 0 = north, positive = east.
@@ -3248,6 +3401,14 @@ document.addEventListener('visibilitychange', () => {
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 241, date: '2026-11-23', title: "New game: Skerry Chess", New: [
+    "Skerry Chess: a new game on the main menu. Chess against a bot or another player, with every rule of the game: castling, en passant, promotion, check, checkmate and stalemate, and draws by repetition, the fifty-move rule and insufficient material.",
+    "Skerry Chess: Skerry rules, a variant on the reef. Four rocks block the board, gannets (knights) fly over them, and a keeper (king) that reaches the Light, the four centre squares, wins outright. The pieces are the station's own: keeper, lantern, tower, cutter, gannet and hand.",
+    "Skerry Chess: three bots. Hob the deckhand (Easy), Mate Tamsin (Fair) and The Old Keeper (Hard). Play White, Black or either, take back a move, and pick up an unfinished game from the card.",
+    "Skerry Chess: play someone online, one against one. Set up a board, share the invite, offer a draw or resign, and rematch with the colours swapped.",
+    "Skerry Chess: tap or drag the pieces, or use the arrow keys, Enter and a controller. Your record against each bot and online is shown on the card.",
+    "Lore compendium: a new chronicle, Skerry Chess.",
+  ] },
   { v: 240, date: '2026-11-21', title: "Skerry League online", New: [
     "Skerry League: play together online, up to six of you, each on your own screen. Host a match on the League card, and your friends join it from the list there or from the invite you share.",
     "Skerry League: pick a side in the lobby (Change sides) or let it put you where there's room. The sides grow to fit everyone, and bots sail any empty seats.",
@@ -14438,6 +14599,7 @@ function onPeersChange(change) {
   if (typeof gfNetPeers === 'function') gfNetPeers();   // [golf] Skerry Links' lobby (src/golfnet.js)
   if (typeof rlNetPeers === 'function') rlNetPeers();   // [rival] Skerry Clash' lobby and duel (src/rlnet.js)
   if (typeof lgNetPeers === 'function') lgNetPeers();   // [league] Skerry League's lobby and match (src/lgnet.js)
+  if (typeof chNetPeers === 'function') chNetPeers();   // [chess] Skerry Chess' lobby and game (src/chnet.js)
 }
 
 // ---------- crew bookkeeping ----------
@@ -69819,6 +69981,7 @@ csInit();
 //   fbsea       a Freebooters' Sea crew (the same lobby again, on its own card: src/fbsea.js) [fbsea]
 //   golf        a round of Skerry Links (its own lobby: src/golfnet.js, g...) [golf]
 //   rival       a Skerry Clash duel (its own lobby: src/rlnet.js, r...; one full or under way offers Watch) [rival]
+//   chess       a Skerry Chess board (its own lobby: src/chnet.js, c...; your game under way offers going back to it) [chess]
 //   league      a Skerry League match (its own lobby: src/lgnet.js, l...; one under way with your seat offers Rejoin) [league]
 // On a phone or tablet the button opens the share sheet; on a computer it copies the text to the clipboard.
 // On claude.ai everyone plays in the artifact's own room, which the live site can't reach, so there the link is the
@@ -69828,7 +69991,7 @@ csInit();
 const SHARE_SITE = 'https://skerry-light.onrender.com/';
 const SHARE_ARTIFACT = 'https://claude.ai/artifact/4abbzGK8dMDsPyR5KdssJv';
 const SHARE_TEXT = 'Join my game on Skerry Light!';
-const SHARE_MODES = ['sail', 'wreckers', 'war', 'lighthouse', 'raid', 'fogrun', 'fbsea', 'golf', 'rival', 'league', 'campaign'];   // [campaign]   // [fogrun] [fbsea] [golf] [rival]
+const SHARE_MODES = ['sail', 'wreckers', 'war', 'lighthouse', 'raid', 'fogrun', 'fbsea', 'golf', 'rival', 'league', 'chess', 'campaign'];   // [campaign]   // [fogrun] [fbsea] [golf] [rival]
 // the Lighthouse's lobby's own word for each of the modes it serves (src/zmnet.js ZN.mode) [fogrun]
 var SHARE_ZN = { lighthouse: 'zm', raid: 'raid', fogrun: 'fr', fbsea: 'fb', campaign: 'cp' };
 const shareOnClaude = () => (typeof NET !== 'undefined' && NET.via === 'claude') || !!(window.claude && typeof window.claude.use === 'function');
@@ -69847,6 +70010,7 @@ function shareCode(mode) {
   if (mode === 'war') return typeof WN !== 'undefined' ? WN.code : null;
   if (mode === 'golf') return typeof GFN !== 'undefined' ? GFN.code : null;   // [golf]
   if (mode === 'league') return typeof LGN !== 'undefined' ? LGN.code : null;   // [league]
+  if (mode === 'chess') return typeof CHN !== 'undefined' ? CHN.code : null;   // [chess]
   if (mode === 'rival') return typeof RLN !== 'undefined' ? RLN.code : null;   // [rival]
   if (mode === 'lighthouse' || mode === 'raid' || mode === 'fogrun' || mode === 'fbsea' || mode === 'campaign') return typeof ZN !== 'undefined' && ZN.mode === SHARE_ZN[mode] ? ZN.code : null;   // [fogrun]
   return null;
@@ -69917,8 +70081,8 @@ var SHARE_MINE = false;
   };
   for (const k of ['pointerdown', 'keydown', 'wheel', 'touchmove']) document.addEventListener(k, mine, { capture: true, passive: true });
 }
-const SHARE_CARD = { sail: 'together', wreckers: 'fpsTitle', war: 'warTitle', lighthouse: 'zmTitle', raid: 'rdTitle', fogrun: 'frTitle', fbsea: 'fbTitle', golf: 'gfTitle', rival: 'rlTitle', league: 'lgTitle', campaign: 'cpTitle' };
-const SHARE_WHAT = { sail: 'crew', war: 'war', lighthouse: 'night', raid: 'raid', fogrun: 'run', fbsea: 'crew', golf: 'round', rival: 'duel', league: 'match', campaign: 'mission' };
+const SHARE_CARD = { sail: 'together', wreckers: 'fpsTitle', war: 'warTitle', lighthouse: 'zmTitle', raid: 'rdTitle', fogrun: 'frTitle', fbsea: 'fbTitle', golf: 'gfTitle', rival: 'rlTitle', league: 'lgTitle', chess: 'chTitle', campaign: 'cpTitle' };
+const SHARE_WHAT = { sail: 'crew', war: 'war', lighthouse: 'night', raid: 'raid', fogrun: 'run', fbsea: 'crew', golf: 'round', rival: 'duel', league: 'match', chess: 'board', campaign: 'mission' };
 function shareShow(mode) { const c = $(SHARE_CARD[mode]); if (c) c.scrollIntoView({ block: 'start' }); }
 function shareArrive() {
   const J = SHARE_JOIN; if (!J) return;
@@ -69970,6 +70134,11 @@ function shareArrive() {
       if (LGN.code === J.code) return clearInterval(iv);
       const r = lgnOpen().find(x => x.code === J.code);
       if (r) { clearInterval(iv); shareShow('league'); if (r.started && !r.mine) toast('That match has already started.', 'Already started'); else lgnJoin(J.code, r.mine); return; }
+    } else if (J.mode === 'chess') {   // [chess]
+      if (typeof CHN === 'undefined') return give('');
+      if (CHN.code === J.code) return clearInterval(iv);
+      const r = chnOpen().find(x => x.code === J.code);
+      if (r) { clearInterval(iv); shareShow('chess'); if ((r.started || r.n >= 2) && !r.mine) toast('Someone is already playing at that board.', 'Board taken'); else chnJoin(J.code, r.mine); return; }
     } else if (J.mode === 'rival') {   // [rival]
       if (typeof RLN === 'undefined') return give('');
       if (RLN.code === J.code) return clearInterval(iv);
@@ -70088,7 +70257,7 @@ function origIsOpen() { return !!(ORIG.el && !ORIG.el.hidden); }
 // In any text, [[id]] links to an article by its title and [[id|words]] links with other words.
 // Keep secrets out entirely: no Easter egg, nothing hidden in any map, no secret bosses or hidden buttons, not even a hint.
 var LORE_CATS = [
-  { k: 'Chronicles', d: 'The thirteen great tales of the Skerries, each told by one of the games.' },
+  { k: 'Chronicles', d: 'The fourteen great tales of the Skerries, each told by one of the games.' },
   { k: 'Characters', d: 'People, and things that were once people.' },
   { k: 'Creatures', d: 'What walks, swims, flies or crawls in the waters round the Light.' },
   { k: 'Places', d: 'Rocks, shores, buildings and the far seas.' },
@@ -70112,6 +70281,7 @@ var LORE = [
     "<b>c. 1879.</b> The keeper Holm comes to the Light, with his wife [[maren]]. In his early years he swings the beam by hand to show each ship the rocks: see [[ch_original]].",
     "<b>c. 1883.</b> The keepers lay out nine holes of golf along the headland: see [[ch_links]].",
     "<b>c. 1885.</b> The harbour crews start playing their ball game in the Harbour Pool: see [[ch_league]].",
+    "<b>c. 1886.</b> The keepers carve a chessboard for the lamp room, and then a second one with the reef on it: see [[ch_chess]].",
     "<b>14 December 1887.</b> [[wreck1887|The Night of the Gannet]]. The lamp fails in the second hour. Maren rows out with a hand lantern to warn the brig [[gannet|Gannet]]. The brig breaks up on the skerries with all hands. The skiff comes back empty, [[marenslantern|her lantern]] still lit.",
     "<b>15 December 1887.</b> The sea freezes from the harbour steps to the horizon. It is the first of [[sixseas|the six seas]].",
   ]},
@@ -70282,6 +70452,15 @@ var LORE = [
   ]},
   { h: 'In the log', p: [ "[[log|The keeper's log]] never mentions the game, though the harbour board's minutes record the cost of two lighthouses, 'small, for the amusement of the crews', and of a great deal of new net." ] },
 ], also: ['harbour', 'ch_links', 'crates'] },
+{ id: 'ch_chess', t: 'Skerry Chess', cat: ['Chronicles', 'Places'], box: [['Told in', 'Skerry Chess'], ['When', 'Long winter nights, from c. 1886'], ['Where', 'The lamp room of [[skerrylight]]'], ['Who', 'The keepers, the harbour crews, anyone who would sit down'], ['Played with', 'Two boards: a plain one, and the reef board'], ['Pieces', 'Keeper, lantern, tower, cutter, gannet and hand']], sum: "The keepers' game. On the long nights of the watch the keeper on duty and the one off it played chess by the light of the lamp, on a board one of them carved from a ship's hatch cover. A second board followed, cut with the reef on it, and a game of its own grew up around it: the Light against the Wreckers.", secs: [
+  { h: 'The plain board', p: [
+    "The first board is a plain one, played by the rules any harbour club would know. The keepers kept a tally of games in pencil on the underside, and it runs to several hundred before the pencil gives out.",
+  ]},
+  { h: 'The reef board', p: [
+    "The second board was carved with four rocks standing up out of it, where the skerries would be if the board were the sea, and the four squares between them painted gold for the Light. Its pieces were whittled to look like the station's own: a keeper in his cap, a hand lantern, the tower, a cutter, a gannet, and the hands. On the reef board a keeper who reaches the Light wins outright, as any keeper would tell you is only right.",
+  ]},
+  { h: 'In the log', p: [ "[[log|The keeper's log]] says nothing of either board, though the station's stores list records 'one set chessmen (spare), whittled', and two pots of gold paint nobody could account for." ] },
+], also: ['skerrylight', 'harbour', 'ch_league'] },
 { id: 'ch_clash', t: 'Skerry Clash', cat: ['Chronicles', 'Events'], box: [['Told in', 'Skerry Clash'], ['When', 'The years after, at every slack water'], ['Where', '[[race|The Race]], and [[threeskerry|the Threefold Skerry]]'], ['Who', '[[racekeepers|The keepers of the Race]]'], ['Champions', '[[maren]], [[plimsoll]], [[verity]]'], ['Fought with', '[[clashhands|Crews, crabs, birds and worse]], spells, and lamp oil'], ['Prize', 'The other keeper\'s [[greatlight|Great Light]]']], sum: "The tale of the rival lights. In the years after, a second light was lit on a rock across the tidal race from the first, and each keeper was sure the other's was the false one that puts ships on the reef. Since then they have settled it at every slack water, three minutes at a time, across the causeways the falling tide uncovers.", secs: [
   { h: 'Why they fight', p: [
     "The coast had learnt from [[mooncussers|the Mooncussers]] that a light is not to be trusted because it is a light. Two lights on two rocks, close enough to shout across, cannot both be honest, and ships cannot steer by both. Neither keeper will put theirs out. So each sends everything they can muster across the water to put out the other's.",
@@ -71100,10 +71279,10 @@ function lwMain() {
     "…that the [[fogkeeper|Fog-Keeper]] put out the fire on Lantern Rock with his own hands, the night [[lighting1841|the Light was lit]]?",
   ];
   const did = [0, 1, 2, 3].map(i => facts[(day + i * 3) % facts.length]);
-  const chron = ['ch_original', 'ch_links', 'ch_league', 'ch_voyages', 'ch_wreckers', 'ch_gannetswake', 'ch_lastlight', 'ch_fbsea', 'ch_fogrun', 'ch_marensend', 'ch_reach', 'ch_clash', 'ch_chronicle'].map(id => LW.byId[id]);
+  const chron = ['ch_original', 'ch_links', 'ch_league', 'ch_chess', 'ch_voyages', 'ch_wreckers', 'ch_gannetswake', 'ch_lastlight', 'ch_fbsea', 'ch_fogrun', 'ch_marensend', 'ch_reach', 'ch_clash', 'ch_chronicle'].map(id => LW.byId[id]);
   return '<h1 class="lw-h1 lw-welcome" id="loreHead">Welcome to the Skerry Compendium</h1><p class="lw-from">The record of the Light that anyone can read. ' + LORE.length + ' articles, from the first fire on Lantern Rock to the wars of the Reach.</p>' +
     '<div class="lw-mp">' +
-    '<section class="lw-panel lw-wide"><h2>The thirteen tales</h2><p>Every game is one chapter of the same history, and the last of them tells it all again from end to end. Read them in the order they happened, or start with the <a href="#" class="lw-a" data-a="timeline">timeline</a>.</p><ol class="lw-chron">' + chron.map(a => '<li><a href="#" class="lw-a" data-a="' + a.id + '"><b>' + lwEsc(a.t) + '</b><span>' + lwEsc(a.box.find(r => r[0] === 'When')[1]) + '</span></a></li>').join('') + '</ol></section>' +
+    '<section class="lw-panel lw-wide"><h2>The fourteen tales</h2><p>Every game is one chapter of the same history, and the last of them tells it all again from end to end. Read them in the order they happened, or start with the <a href="#" class="lw-a" data-a="timeline">timeline</a>.</p><ol class="lw-chron">' + chron.map(a => '<li><a href="#" class="lw-a" data-a="' + a.id + '"><b>' + lwEsc(a.t) + '</b><span>' + lwEsc(a.box.find(r => r[0] === 'When')[1]) + '</span></a></li>').join('') + '</ol></section>' +
     '<section class="lw-panel"><h2>Today\'s featured article</h2>' + (fimg ? '<img class="lw-feat" src="' + fimg + '" alt="">' : '') + '<p>' + lwLinks(feat.sum) + ' (<a href="#" class="lw-a" data-a="' + feat.id + '">Read more</a>)</p></section>' +
     '<section class="lw-panel"><h2>Did you know</h2><ul class="lw-list">' + did.map(f => '<li>' + lwLinks(f) + '</li>').join('') + '</ul></section>' +
     (page ? '<section class="lw-panel"><h2>From the keeper\'s log</h2><p class="lw-logdate">' + lwEsc(page.date) + '</p><blockquote>' + lwEsc(page.text) + '</blockquote><p><a href="#" class="lw-a" data-a="log">About the log</a></p></section>' : '') +
@@ -75207,6 +75386,1100 @@ function lgnHidden() {
   setInterval(() => { if (LGN.code && !lgnInMatch()) lgnSendLobby(); }, 4000);
   setInterval(lgnHidden, 100);
   lgnRender();
+})();
+
+// ---- src/chess.js ----
+'use strict';
+// Skerry Chess: the rules and the bots. A twelfth game, on its own card on the title screen (id chTitle). This file has
+// no screen of its own: src/chessui.js draws the board and runs the game, src/chnet.js plays it online.
+//
+// Two sets of rules (CH_VARIANTS):
+//  - std, standard chess, every rule of it: castling (not out of, through or into check), en passant, promotion to any
+//    piece, check, checkmate and stalemate, and the draws: threefold repetition, the fifty-move rule (a hundred plies
+//    with no capture or pawn move) and insufficient material (a dead position: king against king, king and bishop or
+//    knight against king, or kings and bishops all on squares of one colour). The draws are applied automatically.
+//  - sk, Skerry rules: the same game on a reef. Four rocks (the skerries) stand at c4, f4, c5 and f5: nothing may stand
+//    on them or pass through them, though the gannets (knights) fly over as ever. The four centre squares, d4, e4, d5
+//    and e5, are the Light: a keeper (king) that ends its move on one of them wins outright. Since a lone keeper can
+//    always try for the Light, there are no draws for insufficient material; repetition and the fifty moves stand.
+//    The pieces are drawn and named for the Skerries (keeper, lantern, tower, cutter, gannet, hand; src/chessui.js).
+//
+// The board: an Int8Array of 64, square = rank * 8 + file (a1 = 0, h1 = 7, a8 = 56). Pieces: 1 pawn, 2 knight,
+// 3 bishop, 4 rook, 5 queen, 6 king; white positive, black negative. Side to move: 1 white, -1 black. Castling rights
+// as bits: 1 white king's side, 2 white queen's side, 4 black king's side, 8 black queen's side. ep: the square a pawn
+// just skipped over, or -1. A move: { f, t, pc, cap, pr, k } (from, to, the piece, what it takes, what it becomes,
+// and its kind: 0 plain, 1 double step, 2 en passant, 3 castles short, 4 castles long). Moves go over the wire in UCI
+// form ("e2e4", "e7e8q").
+//
+// The bots (chBot): a negamax search with alpha-beta, quiescence on captures, MVV-LVA ordering and killer moves,
+// iterative deepening under a time limit, a Zobrist hash for repetition inside the search, and an evaluation from
+// material and piece-square tables (and, under Skerry rules, how near each keeper is to the Light). Three of them:
+// Easy (a shallow look with a lot of noise and the odd careless move), Fair (three plies, a little noise) and Hard
+// (as deep as it gets in about two seconds).
+// Debug and tests: chPerft(pos, depth) counts the leaf positions (the standard perft numbers check the rules).
+
+const CH_VARIANTS = { std: { id: 'std', name: 'Standard chess' }, sk: { id: 'sk', name: 'Skerry rules' } };
+const CH_ROCKS = [26, 29, 34, 37];          // c4 f4 c5 f5
+const CH_LIGHT = [27, 28, 35, 36];          // d4 e4 d5 e5
+const CH_START = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
+const CH_VAL = [0, 100, 320, 330, 500, 900, 0];
+const CH_LET = ' PNBRQK';
+const chFile = s => s & 7, chRank = s => s >> 3;
+const chSqName = s => 'abcdefgh'[s & 7] + (1 + (s >> 3));
+const chSqOf = n => (typeof n === 'string' && /^[a-h][1-8]$/.test(n)) ? (n.charCodeAt(0) - 97) + (n.charCodeAt(1) - 49) * 8 : -1;
+
+// ---------- tables made once ----------
+const CHT = (() => {
+  const on = (f, r) => f >= 0 && f < 8 && r >= 0 && r < 8;
+  const kn = [], kg = [], rays = [];
+  const KN = [[1, 2], [2, 1], [2, -1], [1, -2], [-1, -2], [-2, -1], [-2, 1], [-1, 2]], KG = [[1, 0], [1, 1], [0, 1], [-1, 1], [-1, 0], [-1, -1], [0, -1], [1, -1]];
+  // rays 0-3 straight (rook), 4-7 diagonal (bishop)
+  const DIRS = [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]];
+  for (let s = 0; s < 64; s++) {
+    const f = s & 7, r = s >> 3;
+    kn[s] = KN.filter(([a, b]) => on(f + a, r + b)).map(([a, b]) => s + a + b * 8);
+    kg[s] = KG.filter(([a, b]) => on(f + a, r + b)).map(([a, b]) => s + a + b * 8);
+    rays[s] = DIRS.map(([a, b]) => { const out = []; let x = f + a, y = r + b; while (on(x, y)) { out.push(x + y * 8); x += a; y += b; } return out; });
+  }
+  // Zobrist keys (32-bit), from a fixed seed so every screen agrees
+  let seed = 0x2545F491; const rnd = () => { seed ^= seed << 13; seed ^= seed >>> 17; seed ^= seed << 5; return seed >>> 0; };
+  const zp = []; for (let p = 0; p < 13; p++) { zp[p] = new Uint32Array(64); for (let s = 0; s < 64; s++) zp[p][s] = rnd(); }
+  const zc = new Uint32Array(16); for (let i = 0; i < 16; i++) zc[i] = rnd();
+  const ze = new Uint32Array(8); for (let i = 0; i < 8; i++) ze[i] = rnd();
+  const zs = rnd();
+  // piece-square tables, from white's side, a8 first (as they're usually written), turned to a1-first here
+  const T = s => { const a = s.trim().split(/\s+/).map(Number), o = new Int16Array(64); for (let r = 0; r < 8; r++) for (let f = 0; f < 8; f++) o[(7 - r) * 8 + f] = a[r * 8 + f]; return o; };
+  const pst = [null,
+    T(`0 0 0 0 0 0 0 0  50 50 50 50 50 50 50 50  10 10 20 30 30 20 10 10  5 5 10 25 25 10 5 5  0 0 0 20 20 0 0 0  5 -5 -10 0 0 -10 -5 5  5 10 10 -20 -20 10 10 5  0 0 0 0 0 0 0 0`),
+    T(`-50 -40 -30 -30 -30 -30 -40 -50  -40 -20 0 0 0 0 -20 -40  -30 0 10 15 15 10 0 -30  -30 5 15 20 20 15 5 -30  -30 0 15 20 20 15 0 -30  -30 5 10 15 15 10 5 -30  -40 -20 0 5 5 0 -20 -40  -50 -40 -30 -30 -30 -30 -40 -50`),
+    T(`-20 -10 -10 -10 -10 -10 -10 -20  -10 0 0 0 0 0 0 -10  -10 0 5 10 10 5 0 -10  -10 5 5 10 10 5 5 -10  -10 0 10 10 10 10 0 -10  -10 10 10 10 10 10 10 -10  -10 5 0 0 0 0 5 -10  -20 -10 -10 -10 -10 -10 -10 -20`),
+    T(`0 0 0 0 0 0 0 0  5 10 10 10 10 10 10 5  -5 0 0 0 0 0 0 -5  -5 0 0 0 0 0 0 -5  -5 0 0 0 0 0 0 -5  -5 0 0 0 0 0 0 -5  -5 0 0 0 0 0 0 -5  0 0 0 5 5 0 0 0`),
+    T(`-20 -10 -10 -5 -5 -10 -10 -20  -10 0 0 0 0 0 0 -10  -10 0 5 5 5 5 0 -10  -5 0 5 5 5 5 0 -5  0 0 5 5 5 5 0 -5  -10 5 5 5 5 5 0 -10  -10 0 5 0 0 0 0 -10  -20 -10 -10 -5 -5 -10 -10 -20`),
+    T(`-30 -40 -40 -50 -50 -40 -40 -30  -30 -40 -40 -50 -50 -40 -40 -30  -30 -40 -40 -50 -50 -40 -40 -30  -30 -40 -40 -50 -50 -40 -40 -30  -20 -30 -30 -40 -40 -30 -30 -20  -10 -20 -20 -20 -20 -20 -20 -10  20 20 0 0 0 0 20 20  20 30 10 0 0 10 30 20`),
+  ];
+  const kend = T(`-50 -40 -30 -20 -20 -30 -40 -50  -30 -20 -10 0 0 -10 -20 -30  -30 -10 20 30 30 20 -10 -30  -30 -10 30 40 40 30 -10 -30  -30 -10 30 40 40 30 -10 -30  -30 -10 20 30 30 20 -10 -30  -30 -30 0 0 0 0 -30 -30  -50 -30 -30 -30 -30 -30 -30 -50`);
+  // how far each square is from the Light, in king steps
+  const ldist = new Int8Array(64); for (let s = 0; s < 64; s++) ldist[s] = Math.min(...CH_LIGHT.map(l => Math.max(Math.abs((l & 7) - (s & 7)), Math.abs((l >> 3) - (s >> 3)))));
+  return { kn, kg, rays, zp, zc, ze, zs, pst, kend, ldist };
+})();
+
+// ---------- positions ----------
+function chNew(variant, fen) {
+  const P = { b: new Int8Array(64), side: 1, cas: 0, ep: -1, half: 0, full: 1, v: variant === 'sk' ? 'sk' : 'std', rock: new Uint8Array(64), light: new Uint8Array(64), ks: { 1: -1, '-1': -1 }, z: 0, hist: [] };
+  if (P.v === 'sk') { for (const s of CH_ROCKS) P.rock[s] = 1; for (const s of CH_LIGHT) P.light[s] = 1; }
+  chLoadFen(P, fen || CH_START);
+  return P;
+}
+function chLoadFen(P, fen) {
+  const [bd, sd, cs, ep, hm, fm] = fen.split(' ');
+  P.b.fill(0); let r = 7, f = 0;
+  for (const c of bd) {
+    if (c === '/') { r--; f = 0; continue; }
+    if (/\d/.test(c)) { f += +c; continue; }
+    const t = 'pnbrqk'.indexOf(c.toLowerCase()) + 1; P.b[r * 8 + f] = c === c.toUpperCase() ? t : -t; f++;
+  }
+  P.side = sd === 'b' ? -1 : 1;
+  P.cas = (cs.includes('K') ? 1 : 0) | (cs.includes('Q') ? 2 : 0) | (cs.includes('k') ? 4 : 0) | (cs.includes('q') ? 8 : 0);
+  P.ep = ep && ep !== '-' ? chSqOf(ep) : -1; P.half = +hm || 0; P.full = +fm || 1;
+  for (let s = 0; s < 64; s++) { if (P.b[s] === 6) P.ks[1] = s; if (P.b[s] === -6) P.ks[-1] = s; }
+  P.z = chHash(P); P.hist = [];
+}
+function chHash(P) {
+  let z = 0; for (let s = 0; s < 64; s++) if (P.b[s]) z ^= CHT.zp[P.b[s] + 6][s];
+  z ^= CHT.zc[P.cas]; if (P.ep >= 0) z ^= CHT.ze[P.ep & 7]; if (P.side < 0) z ^= CHT.zs; return z >>> 0;
+}
+function chFen(P) {
+  let o = '';
+  for (let r = 7; r >= 0; r--) { let e = 0; for (let f = 0; f < 8; f++) { const p = P.b[r * 8 + f]; if (!p) { e++; continue; } if (e) { o += e; e = 0; } const c = 'pnbrqk'[Math.abs(p) - 1]; o += p > 0 ? c.toUpperCase() : c; } if (e) o += e; if (r) o += '/'; }
+  const cs = (P.cas & 1 ? 'K' : '') + (P.cas & 2 ? 'Q' : '') + (P.cas & 4 ? 'k' : '') + (P.cas & 8 ? 'q' : '');
+  return o + ' ' + (P.side > 0 ? 'w' : 'b') + ' ' + (cs || '-') + ' ' + (P.ep >= 0 ? chSqName(P.ep) : '-') + ' ' + P.half + ' ' + P.full;
+}
+
+// is square s attacked by side `by`?
+function chAttacked(P, s, by) {
+  const b = P.b, R = CHT.rays[s];
+  for (const t of CHT.kn[s]) if (b[t] === 2 * by) return true;
+  for (const t of CHT.kg[s]) if (b[t] === 6 * by) return true;
+  // a pawn of `by` attacks s from one rank behind s (behind from by's side)
+  const pr = (s >> 3) - by, f = s & 7;
+  if (pr >= 0 && pr < 8) { if (f > 0 && b[pr * 8 + f - 1] === by) return true; if (f < 7 && b[pr * 8 + f + 1] === by) return true; }
+  for (let d = 0; d < 8; d++) {
+    const ray = R[d], a = d < 4 ? 4 * by : 3 * by, q = 5 * by;
+    for (let i = 0; i < ray.length; i++) { const t = ray[i]; if (P.rock[t]) break; const p = b[t]; if (!p) continue; if (p === a || p === q) return true; break; }
+  }
+  return false;
+}
+const chInCheck = (P, side) => chAttacked(P, P.ks[side == null ? P.side : side], -(side == null ? P.side : side));
+
+// every move by the side to move, legal or not as to its own king (chLegal filters)
+function chPseudo(P, capsOnly) {
+  const b = P.b, me = P.side, out = [], rock = P.rock;
+  const add = (f, t, pc, cap, pr, k) => out.push({ f, t, pc, cap, pr: pr || 0, k: k || 0 });
+  for (let s = 0; s < 64; s++) {
+    const pc = b[s]; if (!pc || (pc > 0) !== (me > 0)) continue;
+    const ty = pc * me;
+    if (ty === 1) {
+      const r = s >> 3, f = s & 7, last = me > 0 ? 7 : 0, home = me > 0 ? 1 : 6, fw = s + 8 * me;
+      const push = (t, cap, k) => { if ((t >> 3) === last) for (const pr of [5, 4, 3, 2]) add(s, t, pc, cap, pr, k); else add(s, t, pc, cap, 0, k); };
+      if (!capsOnly || (fw >> 3) === last) if (fw >= 0 && fw < 64 && !b[fw] && !rock[fw]) { push(fw, 0, 0); const f2 = fw + 8 * me; if (!capsOnly && r === home && !b[f2] && !rock[f2]) add(s, f2, pc, 0, 0, 1); }
+      for (const df of [-1, 1]) {
+        if (f + df < 0 || f + df > 7) continue; const t = fw + df; if (t < 0 || t > 63) continue;
+        if (b[t] && (b[t] > 0) !== (me > 0)) push(t, b[t], 0);
+        else if (t === P.ep && !b[t]) add(s, t, pc, -me, 0, 2);
+      }
+    } else if (ty === 2 || ty === 6) {
+      for (const t of (ty === 2 ? CHT.kn : CHT.kg)[s]) { if (rock[t]) continue; const c = b[t]; if (c && (c > 0) === (me > 0)) continue; if (capsOnly && !c) continue; add(s, t, pc, c); }
+      if (ty === 6 && !capsOnly) {
+        const base = me > 0 ? 0 : 56, kb = me > 0 ? 1 : 4, qb = me > 0 ? 2 : 8;
+        if (s === base + 4 && P.cas & (kb | qb) && !chAttacked(P, s, -me)) {
+          if ((P.cas & kb) && b[base + 7] === 4 * me && !b[base + 5] && !b[base + 6] && !chAttacked(P, base + 5, -me) && !chAttacked(P, base + 6, -me)) add(s, base + 6, pc, 0, 0, 3);
+          if ((P.cas & qb) && b[base] === 4 * me && !b[base + 1] && !b[base + 2] && !b[base + 3] && !chAttacked(P, base + 3, -me) && !chAttacked(P, base + 2, -me)) add(s, base + 2, pc, 0, 0, 4);
+        }
+      }
+    } else {
+      const R = CHT.rays[s], d0 = ty === 3 ? 4 : 0, d1 = ty === 4 ? 4 : 8;
+      for (let d = d0; d < d1; d++) for (const t of R[d]) { if (rock[t]) break; const c = b[t]; if (!c) { if (!capsOnly) add(s, t, pc, 0); continue; } if ((c > 0) !== (me > 0)) add(s, t, pc, c); break; }
+    }
+  }
+  return out;
+}
+
+// make and unmake (the hash kept as it goes)
+function chMake(P, m) {
+  const b = P.b, me = P.side, Z = CHT.zp;
+  P.hist.push({ m, cas: P.cas, ep: P.ep, half: P.half, z: P.z });
+  let z = P.z ^ CHT.zc[P.cas] ^ (P.ep >= 0 ? CHT.ze[P.ep & 7] : 0) ^ CHT.zs;
+  z ^= Z[m.pc + 6][m.f]; b[m.f] = 0;
+  if (m.k === 2) { const cs = m.t - 8 * me; z ^= Z[b[cs] + 6][cs]; b[cs] = 0; }
+  else if (m.cap) z ^= Z[m.cap + 6][m.t];
+  const np = m.pr ? m.pr * me : m.pc; b[m.t] = np; z ^= Z[np + 6][m.t];
+  if (m.k === 3 || m.k === 4) { const base = m.f - 4, rf = m.k === 3 ? base + 7 : base, rt = m.k === 3 ? base + 5 : base + 3; b[rf] = 0; b[rt] = 4 * me; z ^= Z[4 * me + 6][rf] ^ Z[4 * me + 6][rt]; }
+  if (m.pc * me === 6) { P.ks[me] = m.t; P.cas &= me > 0 ? ~3 : ~12; }
+  for (const [sq, bit] of [[0, 2], [7, 1], [56, 8], [63, 4]]) if (m.f === sq || m.t === sq) P.cas &= ~bit;
+  P.ep = m.k === 1 ? m.f + 8 * me : -1;
+  P.half = (m.pc * me === 1 || m.cap) ? 0 : P.half + 1;
+  if (me < 0) P.full++;
+  P.side = -me;
+  z ^= CHT.zc[P.cas] ^ (P.ep >= 0 ? CHT.ze[P.ep & 7] : 0);
+  P.z = z >>> 0;
+}
+function chUnmake(P) {
+  const h = P.hist.pop(), m = h.m, b = P.b, me = -P.side;
+  P.side = me; if (me < 0) P.full--;
+  b[m.f] = m.pc; b[m.t] = m.k === 2 ? 0 : m.cap;
+  if (m.k === 2) b[m.t - 8 * me] = -me;
+  if (m.k === 3 || m.k === 4) { const base = m.f - 4, rf = m.k === 3 ? base + 7 : base, rt = m.k === 3 ? base + 5 : base + 3; b[rt] = 0; b[rf] = 4 * me; }
+  if (m.pc * me === 6) P.ks[me] = m.f;
+  P.cas = h.cas; P.ep = h.ep; P.half = h.half; P.z = h.z;
+}
+function chLegal(P) {
+  const out = [];
+  for (const m of chPseudo(P)) { chMake(P, m); if (!chAttacked(P, P.ks[-P.side], P.side)) out.push(m); chUnmake(P); }
+  return out;
+}
+function chPerft(P, d) {
+  if (!d) return 1; let n = 0;
+  for (const m of chPseudo(P)) { chMake(P, m); if (!chAttacked(P, P.ks[-P.side], P.side)) n += d === 1 ? 1 : chPerft(P, d - 1); chUnmake(P); }
+  return n;
+}
+const chUci = m => chSqName(m.f) + chSqName(m.t) + (m.pr ? ' pnbrqk'[m.pr] : '');
+function chFromUci(P, u, legal) {
+  if (typeof u !== 'string') return null;
+  const f = chSqOf(u.slice(0, 2)), t = chSqOf(u.slice(2, 4)), pr = u[4] ? ' pnbrqk'.indexOf(u[4]) : 0;
+  return (legal || chLegal(P)).find(m => m.f === f && m.t === t && (m.pr || 0) === (pr > 0 ? pr : 0)) || null;
+}
+
+// ---------- the game around a position: notation, the end, the draws ----------
+// the key a position is known by for repetition: the pieces, who's to move, the castling rights, and the en passant
+// square only when an en passant capture can really be made (as FIDE counts "the same position")
+function chKey(P, legal) {
+  let ep = '-';
+  if (P.ep >= 0 && (legal || chLegal(P)).some(m => m.k === 2)) ep = chSqName(P.ep);
+  return chFen(P).split(' ').slice(0, 3).join(' ') + ' ' + ep;
+}
+// dead positions: no way to checkmate by any series of legal moves (the cases FIDE's arbiters apply automatically)
+function chDead(P) {
+  if (P.v === 'sk') return false;
+  const minor = [], b = P.b;
+  for (let s = 0; s < 64; s++) { const p = Math.abs(b[s]); if (!p || p === 6) continue; if (p === 1 || p === 4 || p === 5) return false; minor.push([p, s]); }
+  if (minor.length <= 1) return true;
+  // kings and bishops only, every bishop on the one colour of square
+  if (minor.every(([p]) => p === 3)) { const c = (minor[0][1] & 7) + (minor[0][1] >> 3) & 1; return minor.every(([, s]) => (((s & 7) + (s >> 3)) & 1) === c); }
+  return false;
+}
+// the move in standard algebraic notation (worked out before it's made)
+function chSan(P, m, legal) {
+  legal = legal || chLegal(P);
+  let s;
+  if (m.k === 3) s = 'O-O'; else if (m.k === 4) s = 'O-O-O';
+  else {
+    const ty = Math.abs(m.pc), to = chSqName(m.t), cap = m.cap || m.k === 2;
+    if (ty === 1) s = (cap ? 'abcdefgh'[m.f & 7] + 'x' : '') + to + (m.pr ? '=' + CH_LET[m.pr] : '');
+    else {
+      const rivals = legal.filter(o => o !== m && o.pc === m.pc && o.t === m.t && o.f !== m.f);
+      let dis = '';
+      if (rivals.length) { const sf = !rivals.some(o => (o.f & 7) === (m.f & 7)), sr = !rivals.some(o => (o.f >> 3) === (m.f >> 3)); dis = sf ? 'abcdefgh'[m.f & 7] : sr ? String(1 + (m.f >> 3)) : chSqName(m.f); }
+      s = CH_LET[ty] + dis + (cap ? 'x' : '') + to;
+    }
+  }
+  chMake(P, m);
+  const light = P.v === 'sk' && Math.abs(m.pc) === 6 && P.light[m.t];
+  if (light) s += '#';
+  else if (chInCheck(P)) s += chLegal(P).length ? '+' : '#';
+  chUnmake(P);
+  return s;
+}
+
+// A game: the position, the moves so far (UCI and SAN), the keys of every position for repetition, and the result.
+// res: null while it's going; otherwise { w: 1 white won, -1 black won, 0 drawn, why: 'mate' | 'light' | 'stalemate' |
+// 'repetition' | 'fifty' | 'material' | 'resign' | 'agreed' | 'left' }
+function chGame(variant, fen) {
+  const G = { v: variant === 'sk' ? 'sk' : 'std', P: chNew(variant, fen), uci: [], san: [], keys: [], res: null, legal: null, caps: [] };
+  G.legal = chLegal(G.P); G.keys.push(chKey(G.P, G.legal));
+  return G;
+}
+function chPlay(G, m) {
+  if (G.res) return false;
+  const mv = G.legal.find(o => o.f === m.f && o.t === m.t && (o.pr || 0) === (m.pr || 0)); if (!mv) return false;
+  G.san.push(chSan(G.P, mv, G.legal)); G.uci.push(chUci(mv));
+  if (mv.cap) G.caps.push(mv.cap);
+  const mover = G.P.side;
+  chMake(G.P, mv);
+  G.legal = chLegal(G.P);
+  G.keys.push(chKey(G.P, G.legal));
+  G.last = mv;
+  if (G.v === 'sk' && mv.pc * mover === 6 && G.P.light[mv.t]) G.res = { w: mover, why: 'light' };
+  else if (!G.legal.length) G.res = chInCheck(G.P) ? { w: mover, why: 'mate' } : { w: 0, why: 'stalemate' };
+  else if (G.P.half >= 100) G.res = { w: 0, why: 'fifty' };
+  else if (G.keys.filter(k => k === G.keys[G.keys.length - 1]).length >= 3) G.res = { w: 0, why: 'repetition' };
+  else if (chDead(G.P)) G.res = { w: 0, why: 'material' };
+  return true;
+}
+function chPlayUci(G, u) { const m = chFromUci(G.P, u, G.legal); return m ? chPlay(G, m) : false; }
+// the same game with its last n moves taken back (replayed from the start, so everything stays right)
+function chReplay(variant, uci) { const G = chGame(variant); for (const u of uci) if (!chPlayUci(G, u)) break; return G; }
+
+// ---------- the bots ----------
+const CH_BOTS = {
+  easy: { name: 'Hob the deckhand', depth: 1, ms: 400, noise: 90, careless: 0.22 },
+  fair: { name: 'Mate Tamsin', depth: 3, ms: 1500, noise: 14, careless: 0 },
+  hard: { name: 'The Old Keeper', depth: 30, ms: 2000, noise: 0, careless: 0 },
+};
+const CH_MATE = 100000;
+function chEval(P) {
+  // from the side to move's view
+  const b = P.b, pst = CHT.pst; let sc = 0, mat = 0;
+  for (let s = 0; s < 64; s++) { const p = b[s]; if (!p) continue; const ty = p > 0 ? p : -p; if (ty !== 6 && ty !== 1) mat += CH_VAL[ty]; }
+  const end = mat <= 2600;   // (both sides together have little but pawns and a couple of pieces left)
+  for (let s = 0; s < 64; s++) {
+    const p = b[s]; if (!p) continue;
+    const ty = p > 0 ? p : -p, sq = p > 0 ? s : (7 - (s >> 3)) * 8 + (s & 7);
+    let v = CH_VAL[ty] + (ty === 6 ? (end ? CHT.kend[sq] : pst[6][sq]) : pst[ty][sq]);
+    if (ty === 6 && P.v === 'sk') { const d = CHT.ldist[s]; v += (end ? 60 : 22) * (3 - Math.min(3, d)) * (d <= 1 ? 2 : 1); }
+    sc += p > 0 ? v : -v;
+  }
+  return sc * P.side;
+}
+// the keeper to move has a safe step onto the Light (under Skerry rules that wins at once)
+function chLightStep(P) {
+  if (P.v !== 'sk') return false;
+  const me = P.side, k = P.ks[me];
+  for (const t of CHT.kg[k]) {
+    if (!P.light[t]) continue; const c = P.b[t]; if (c && (c > 0) === (me > 0)) continue;
+    // (taking the king off its square first, so it can't shelter behind itself)
+    P.b[k] = 0; const att = chAttacked(P, t, -me); P.b[k] = 6 * me; if (!att) return true;
+  }
+  return false;
+}
+function chOrder(P, ms, killers, best) {
+  for (const m of ms) {
+    let o = 0;
+    if (best && m.f === best.f && m.t === best.t && m.pr === best.pr) o = 1e7;
+    else if (m.cap || m.k === 2) o = 1e6 + CH_VAL[Math.abs(m.cap || 1)] * 10 - CH_VAL[Math.abs(m.pc)] / 10;
+    else if (m.pr) o = 9e5 + m.pr;
+    else if (killers && killers.some(k => k && k.f === m.f && k.t === m.t)) o = 8e5;
+    m.o = o;
+  }
+  ms.sort((a, b) => b.o - a.o);
+  return ms;
+}
+function chSearch(P, depth, alpha, beta, ply, S) {
+  if ((++S.n & 2047) === 0 && performance.now() > S.stop) throw S;
+  // the last move put the other keeper on the Light: lost
+  if (P.v === 'sk' && P.light[P.ks[-P.side]]) return -CH_MATE + ply;
+  if (ply && P.half >= 100) return 0;
+  if (ply) { const hs = P.hist; for (let i = hs.length - 2, n = 0; i >= 0 && n < P.half; i -= 2, n += 2) if (hs[i].z === P.z) return 0; if (S.past.has(P.z)) return 0; }
+  const check = chInCheck(P);
+  if (check) depth++;
+  if (depth <= 0) return chQuiet(P, alpha, beta, ply, S);
+  const ms = chOrder(P, chPseudo(P), S.killers[ply], ply === 0 ? S.best : null);
+  let legal = 0, bestM = null;
+  for (const m of ms) {
+    chMake(P, m);
+    if (chAttacked(P, P.ks[-P.side], P.side)) { chUnmake(P); continue; }
+    legal++;
+    const v = -chSearch(P, depth - 1, -beta, -alpha, ply + 1, S);
+    chUnmake(P);
+    if (v > alpha) { alpha = v; bestM = m; if (ply === 0) S.rootBest = m; }
+    if (alpha >= beta) { if (!m.cap) { const k = S.killers[ply] || (S.killers[ply] = [null, null]); if (!(k[0] && k[0].f === m.f && k[0].t === m.t)) { k[1] = k[0]; k[0] = m; } } break; }
+  }
+  if (!legal) return check ? -CH_MATE + ply : 0;
+  return alpha;
+}
+function chQuiet(P, alpha, beta, ply, S) {
+  if ((++S.n & 2047) === 0 && performance.now() > S.stop) throw S;
+  if (P.v === 'sk' && P.light[P.ks[-P.side]]) return -CH_MATE + ply;
+  if (chLightStep(P)) return CH_MATE - ply - 1;
+  const stand = chEval(P);
+  if (stand >= beta) return stand;
+  if (stand > alpha) alpha = stand;
+  if (ply > 40) return stand;
+  for (const m of chOrder(P, chPseudo(P, true))) {
+    if (stand + CH_VAL[Math.abs(m.cap || 1)] + (m.pr ? 800 : 0) + 200 < alpha) continue;   // (delta pruning)
+    chMake(P, m);
+    if (chAttacked(P, P.ks[-P.side], P.side)) { chUnmake(P); continue; }
+    const v = -chQuiet(P, -beta, -alpha, ply + 1, S);
+    chUnmake(P);
+    if (v > alpha) { alpha = v; if (alpha >= beta) break; }
+  }
+  return alpha;
+}
+// the bot's move for game G at skill k ('easy', 'fair', 'hard'); returns a move from G.legal
+function chBot(G, k) {
+  const B = CH_BOTS[k] || CH_BOTS.fair, legal = G.legal;
+  if (!legal.length) return null;
+  if (legal.length === 1) return legal[0];
+  const P = chNew(G.v); P.b.set(G.P.b); Object.assign(P, { side: G.P.side, cas: G.P.cas, ep: G.P.ep, half: G.P.half, full: G.P.full, ks: { 1: G.P.ks[1], '-1': G.P.ks[-1] } }); P.z = chHash(P);
+  // (an easy bot sometimes just plays something, though never past a mate in one it can see)
+  const S = { n: 0, stop: performance.now() + B.ms, killers: [], best: null, rootBest: null, past: new Set() };
+  // the positions already seen in the game count as draws if the search comes back to them
+  { const Q = chReplay(G.v, []); S.past.add(Q.P.z); for (const u of G.uci) { chPlayUci(Q, u); S.past.add(Q.P.z); } S.past.delete(P.z); }
+  let best = legal[0];
+  for (let d = 1; d <= B.depth && !B.noise; d++) {
+    S.rootBest = null;
+    try {
+      const v = chSearch(P, d, -CH_MATE - 1, CH_MATE + 1, 0, S);
+      if (S.rootBest) { best = S.rootBest; S.best = best; }
+      if (Math.abs(v) > CH_MATE - 200) break;
+    } catch (e) { if (e !== S) throw e; break; }
+  }
+  const pick = legal.find(m => m.f === best.f && m.t === best.t && m.pr === best.pr) || legal[0];
+  if (B.noise) {
+    // score every root move with a shallow look, add noise, and take the best of those
+    const rs = [];
+    const S2 = { n: 0, stop: performance.now() + B.ms, killers: [], best: null, rootBest: null, past: S.past };
+    for (const m of legal) {
+      chMake(P, m);
+      let v;
+      try { v = -chSearch(P, Math.max(0, B.depth - 1), -CH_MATE - 1, CH_MATE + 1, 1, S2); } catch (e) { if (e !== S2) throw e; v = -chEval(P); }
+      chUnmake(P);
+      rs.push([m, v]);
+    }
+    const mateNow = rs.find(([, v]) => v > CH_MATE - 200);
+    if (mateNow) return mateNow[0];
+    if (B.careless && Math.random() < B.careless) {
+      // a careless move: anything that doesn't hang a lot at once
+      const ok = rs.filter(([, v]) => v > Math.max(...rs.map(r => r[1])) - 350);
+      return ok[Math.floor(Math.random() * ok.length)][0];
+    }
+    let top = null, tv = -Infinity;
+    for (const [m, v] of rs) { const n = v + (Math.random() * 2 - 1) * B.noise; if (n > tv) { tv = n; top = m; } }
+    return top || pick;
+  }
+  return pick;
+}
+
+// ---- src/chessui.js ----
+'use strict';
+// Skerry Chess: the board on the screen, the card on the title screen, and a game against a bot or another player.
+// The rules and the bots are in src/chess.js; playing online is src/chnet.js.
+//
+// The screen (#chUI) is plain HTML over the menu: the board is 64 buttons, each piece an SVG drawn here (CH_SVG). There
+// are two sets: the classic set for standard chess, and the Skerry set for Skerry rules (keeper, lantern, tower,
+// cutter, gannet and hand, Light against the Wreckers), with the reef's rocks and the Light drawn on the board.
+// Tap or click a piece and then a square (its moves are marked), or drag it. Keys: the arrows move a cursor round the
+// board and Enter or Space picks up and puts down; Esc lets go, or opens the menu. Controller: the D-pad moves the
+// cursor, A picks up and puts down, B lets go, Start the menu.
+// Against a bot: you choose white, black or either, the bot thinks for up to two seconds (on Hard), and Take back
+// undoes your last move and its reply. An unfinished game against a bot is kept and offered again on the card.
+// What's kept (localStorage 'skerry-chess'): the settings, the unfinished game, and your record against each bot and
+// online, for each set of rules.
+// Debug and tests: CHS is the state; chDebug(o) starts a game (o as chStart's), chDebugMoves(['e2e4', ...]) plays moves.
+
+var CHS = { on: false, G: null, v: 'std', opp: 'fair', me: 1, flip: false, sel: -1, cur: 52, busy: false, net: null, endShown: false, padPrev: [], names: ['', ''], drawOffer: false };
+const chStore = { get() { try { return JSON.parse(localStorage.getItem('skerry-chess') || '{}') || {}; } catch (e) { return {}; } }, set(v) { try { localStorage.setItem('skerry-chess', JSON.stringify(v)); } catch (e) {} } };
+const chEsc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+const CH_NAMES = { std: ['', 'pawn', 'knight', 'bishop', 'rook', 'queen', 'king'], sk: ['', 'hand', 'gannet', 'cutter', 'tower', 'lantern', 'keeper'] };
+const CH_SIDES = { std: ['White', 'Black'], sk: ['the Light', 'the Wreckers'] };
+const CH_SKILLN = { easy: 'Easy', fair: 'Fair', hard: 'Hard' };
+
+// ---------- the pieces ----------
+// Each piece in a 45 by 45 box on a common foot. Colours by side and set: the classic set cream and ebony, the Skerry
+// set lamplit brass for the Light and tarred black and red for the Wreckers.
+const CH_BASE = '<path d="M9.5 40h26v-3.2c0-1.6-1.2-2.8-2.8-2.8H12.3c-1.6 0-2.8 1.2-2.8 2.8z"/>';
+const CH_SHAPES = {
+  std: {
+    1: '<path d="M15.5 34c0-5.5 2.7-9.6 5.2-11.5h3.6c2.5 1.9 5.2 6 5.2 11.5z"/><ellipse cx="22.5" cy="22" rx="6.2" ry="1.9"/><circle cx="22.5" cy="15" r="5.6"/>',
+    2: '<path d="M13.5 34c0-6.5 3.5-9.5 6.8-12.5-3.4.4-6.2 1.9-8.2 3.9-2-1.2-2.3-3.4-.8-5.4 3-4 7-7.8 9-12.2l1.8 3.3C28 12 33 17.5 33 25.5V34z"/><circle class="d" cx="19" cy="13.5" r="1.3"/>',
+    3: '<path d="M15 34c0-6 2.2-10 4.2-12.2h6.6C27.8 24 30 28 30 34z"/><path d="M22.5 8.5c-4.2 3.6-7.2 7.6-7.2 10.6 0 3 3.2 4.2 7.2 4.2s7.2-1.2 7.2-4.2c0-3-3-7-7.2-10.6z"/><circle cx="22.5" cy="6.8" r="2.2"/><path class="d" d="M24.8 12.5l-3.6 5" fill="none"/>',
+    4: '<path d="M14.5 34l1.6-15.2h12.8l1.6 15.2z"/><path d="M12 19.5h21v-9h-4.2v3.2h-3.6v-3.2h-5.4v3.2h-3.6v-3.2H12z"/>',
+    5: '<path d="M13.5 34l-2.6-17.5 5.6 8.2 2-11.4 4 10.6 4-10.6 2 11.4 5.6-8.2-2.6 17.5z"/><circle cx="10.6" cy="15" r="2.3"/><circle cx="18.4" cy="11.6" r="2.3"/><circle cx="22.5" cy="10.4" r="2.3"/><circle cx="26.6" cy="11.6" r="2.3"/><circle cx="34.4" cy="15" r="2.3"/>',
+    6: '<path d="M14.5 34c-1-6-4.6-9-4.6-13.4 0-3.4 3.4-5.4 6.6-3.4l6 3.8 6-3.8c3.2-2 6.6 0 6.6 3.4 0 4.4-3.6 7.4-4.6 13.4z"/><path d="M21 4h3v3.2h3.2v3H24v6.6h-3v-6.6h-3.2v-3H21z"/>',
+  },
+  sk: {
+    // a hand: a deckhand in a sou'wester
+    1: '<path d="M15.5 34c0-5.5 2.7-9.4 5-11h4c2.3 1.6 5 5.5 5 11z"/><circle cx="22.5" cy="17" r="4.8"/><path d="M13.8 15.6c2.4-1.2 5.4-1.8 8.7-1.8s6.3.6 8.7 1.8c-1.4-4.8-4.6-7.6-8.7-7.6s-7.3 2.8-8.7 7.6z"/>',
+    // a gannet: a seabird with its long bill, head up
+    2: '<path d="M12.5 34c.5-5.5 3.2-9.6 7-12 -1.2-3-1.4-6.4.6-9.4 1.6-2.4 4.4-3.4 6.8-2.6l9 3.2-8.6.6c.6 2.4.2 5-1 7.4 4.8 2.2 7.2 6.6 7.2 12.8z"/><circle class="d" cx="24.2" cy="12.6" r="1.2"/><path class="d" d="M19.5 27c3 1.2 6.4 1.2 9.5-.2" fill="none"/>',
+    // a cutter: a hull and one tall sail
+    3: '<path d="M11 28h23l-3.6 6H14.6z"/><path d="M23.4 5.5v21.5h9.2C31.4 18.6 28.4 11 23.4 5.5z"/><path d="M21.6 9.5v17.5h-8.4c1.6-6.6 4.6-12.6 8.4-17.5z"/><path class="d" d="M22.5 5v23" fill="none"/>',
+    // a tower: a lighthouse, banded, with its lantern room
+    4: '<path d="M15.8 34l2.6-18.5h8.2l2.6 18.5z"/><path class="d" d="M17.5 22.5h10M16.8 28h11.4" fill="none"/><path d="M16.4 15.5h12.2v-2.2H16.4z"/><path d="M18.6 13.3V9.4h7.8v3.9z"/><path d="M17.6 9.4l4.9-4.2 4.9 4.2z"/><circle class="g" cx="22.5" cy="11.4" r="1.5"/>',
+    // a lantern: Maren's hand lantern, ringed on top, its flame lit
+    5: '<path d="M14.8 34l1.6-3h12.2l1.6 3z"/><path d="M16 31V15.6h13V31z"/><path d="M14.6 15.6h15.8l-2.4-4.2H17z"/><path d="M19.2 11.4c0-2.4 1.4-4.2 3.3-4.2s3.3 1.8 3.3 4.2" fill="none"/><path class="g" d="M22.5 18.2c-2.2 2.6-3 4.6-3 6.4 0 2 1.4 3.4 3 3.4s3-1.4 3-3.4c0-1.8-.8-3.8-3-6.4z"/><path class="d" d="M18.6 15.6V31M26.4 15.6V31" fill="none"/>',
+    // a keeper: the keeper in his peaked cap, his lamp's badge on it
+    6: '<path d="M12.5 34c0-7 4-11.4 7.2-12.6h5.6c3.2 1.2 7.2 5.6 7.2 12.6z"/><circle cx="22.5" cy="16.4" r="5.4"/><path d="M15.2 12.4c.4-3.6 3.4-6 7.3-6s6.9 2.4 7.3 6z"/><path d="M14 12.4h17l-1.8 2H15.4z"/><circle class="g" cx="22.5" cy="9.6" r="1.4"/><path class="d" d="M22.5 22v12" fill="none"/>',
+  },
+};
+function chPieceSvg(p, v) {
+  if (!p) return '';
+  const ty = Math.abs(p), w = p > 0, set = v === 'sk' ? 'sk' : 'std';
+  const cls = 'chp ' + set + (w ? ' w' : ' b');
+  return `<svg class="${cls}" viewBox="0 0 45 45" aria-hidden="true"><g>${CH_BASE}${CH_SHAPES[set][ty]}</g></svg>`;
+}
+const CH_ROCK_SVG = '<svg class="chrock" viewBox="0 0 45 45" aria-hidden="true"><ellipse class="foam" cx="22.5" cy="31" rx="19" ry="7"/><path class="rk" d="M6 31c1-6 4-9 7-11 1-5 5-9 9-9 5 0 7 4 9 7 4 1 7 6 8 13z"/><path class="rkl" d="M13 20c2 1 3 3 3 6M22 11c-1 4 0 7 3 9M31 18c-1 3-1 6 1 9" fill="none"/></svg>';
+
+// ---------- the board ----------
+function chBuildBoard() {
+  const bd = $('chBoard'); if (!bd || bd.childElementCount === 64) return;
+  bd.textContent = '';
+  for (let i = 0; i < 64; i++) {
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'chsq'; b.dataset.i = i; b.tabIndex = -1;
+    bd.append(b);
+  }
+  bd.addEventListener('pointerdown', chPointerDown);
+}
+// screen cell i (0 top left) to board square, as the board is turned
+function chCellSq(i) { const r = i >> 3, f = i & 7; return CHS.flip ? r * 8 + (7 - f) : (7 - r) * 8 + f; }
+function chSqCell(s) { const r = s >> 3, f = s & 7; return CHS.flip ? r * 8 + (7 - f) : (7 - r) * 8 + f; }
+function chRender() {
+  if (!CHS.G) return;
+  chBuildBoard();
+  const G = CHS.G, P = G.P, bd = $('chBoard'), cells = bd.children, last = G.last;
+  const targets = CHS.sel >= 0 ? G.legal.filter(m => m.f === CHS.sel) : [];
+  const chk = chInCheck(P) ? P.ks[P.side] : -1;
+  bd.classList.toggle('sk', G.v === 'sk');
+  for (let i = 0; i < 64; i++) {
+    const s = chCellSq(i), el = cells[i], f = s & 7, r = s >> 3, p = P.b[s];
+    const dark = ((f + r) & 1) === 0;
+    let c = 'chsq ' + (dark ? 'dk' : 'lt');
+    if (P.rock[s]) c += ' rock';
+    if (P.light[s]) c += ' light';
+    if (last && (s === last.f || s === last.t)) c += ' last';
+    if (s === CHS.sel) c += ' sel';
+    const tg = targets.find(m => m.t === s);
+    if (tg) c += (p || tg.k === 2) ? ' cap' : ' to';
+    if (s === chk) c += ' check';
+    if (s === CHS.cur && CHS.kb) c += ' cur';
+    if (p && CHS.mine(p) && !G.res) c += ' own';
+    el.className = c;
+    const key = (P.rock[s] ? 'R' : '') + p + G.v + (i & 7 ? '' : r) + ((i >> 3) === 7 ? f : '') + CHS.flip;
+    if (el.dataset.k !== key) {
+      el.dataset.k = key;
+      let h = P.rock[s] ? CH_ROCK_SVG : chPieceSvg(p, G.v);
+      // the files and ranks along the edges
+      if ((i & 7) === 0) h += `<span class="crd rk">${r + 1}</span>`;
+      if ((i >> 3) === 7) h += `<span class="crd fl">${'abcdefgh'[f]}</span>`;
+      el.innerHTML = h;
+    }
+    const nm = P.rock[s] ? 'a rock' : p ? `${p > 0 ? CH_SIDES[G.v][0] : CH_SIDES[G.v][1]}'s ${CH_NAMES[G.v][Math.abs(p)]}` : 'empty';
+    el.setAttribute('aria-label', chSqName(s) + ', ' + nm + (P.light[s] ? ', the Light' : ''));
+  }
+  chRenderSide();
+}
+function chAnimate(m) {
+  const bd = $('chBoard'); if (!bd || !m) return;
+  const from = bd.children[chSqCell(m.f)], to = bd.children[chSqCell(m.t)], svg = to && to.querySelector('svg.chp');
+  if (!from || !svg || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const a = from.getBoundingClientRect(), b = to.getBoundingClientRect();
+  svg.style.transition = 'none'; svg.style.transform = `translate(${a.left - b.left}px, ${a.top - b.top}px)`; svg.style.zIndex = 5;
+  void svg.offsetWidth;
+  svg.style.transition = 'transform 0.18s ease-out'; svg.style.transform = '';
+  setTimeout(() => { svg.style.zIndex = ''; }, 220);
+}
+// the names, what each side has taken, the status and the moves
+function chRenderSide() {
+  const G = CHS.G, v = G.v;
+  const taken = side => G.caps.filter(c => (c > 0) !== (side > 0)).map(c => Math.abs(c)).sort((a, b) => b - a);
+  const worth = side => taken(side).reduce((s, t) => s + [0, 1, 3, 3, 5, 9, 0][t], 0);
+  const row = (id, side) => {
+    const el = $(id); if (!el) return;
+    const diff = worth(side) - worth(-side), nm = side === CHS.me ? CHS.names[0] : CHS.names[1];
+    const turn = !G.res && G.P.side === side;
+    el.classList.toggle('turn', turn);
+    const k = nm + side + turn + taken(side).join('') + diff + v;
+    if (el.dataset.k === k) return; el.dataset.k = k;
+    el.innerHTML = `<span class="chdot ${side > 0 ? 'w' : 'b'} ${v}"></span><span class="nm">${chEsc(nm)}</span><span class="caps">${taken(side).map(t => chPieceSvg(-side * t, v)).join('')}${diff > 0 ? `<b>+${diff}</b>` : ''}</span>`;
+  };
+  row('chTopRow', CHS.flip ? 1 : -1); row('chBotRow', CHS.flip ? -1 : 1);
+  $('chStatus').textContent = chStatusText();
+  $('chRules').textContent = CH_VARIANTS[v].name + (CHS.net ? ' · online' : ` · against ${CH_BOTS[CHS.opp].name} (${CH_SKILLN[CHS.opp]})`);
+  const ol = $('chMoves'), n = Math.ceil(G.san.length / 2);
+  if (ol.dataset.n !== String(G.san.length)) {
+    ol.dataset.n = G.san.length; ol.textContent = '';
+    for (let i = 0; i < n; i++) { const li = document.createElement('li'); li.innerHTML = `<span class="mn">${i + 1}.</span><span>${chEsc(G.san[i * 2])}</span><span>${chEsc(G.san[i * 2 + 1] || '')}</span>`; ol.append(li); }
+    ol.scrollTop = ol.scrollHeight;
+  }
+  $('chUndo').hidden = !!CHS.net; $('chUndo').disabled = CHS.busy || !!G.res || G.uci.length < (CHS.me > 0 ? 1 : 2);
+  $('chDraw').hidden = !CHS.net; $('chDraw').disabled = !!G.res;
+  $('chDraw').textContent = CHS.net && typeof chnDrawState === 'function' ? chnDrawState() : 'Offer a draw';
+  $('chResign').disabled = !!G.res;
+}
+function chStatusText() {
+  const G = CHS.G, v = G.v, side = G.P.side, sides = CH_SIDES[v];
+  if (G.res) return chResultText(G.res);
+  const who = side === CHS.me ? 'Your move' : CHS.net ? `${CHS.names[1]} to move` : `${CHS.names[1]} is thinking…`;
+  const col = side > 0 ? sides[0] : sides[1];
+  const chk = chInCheck(G.P) ? (v === 'sk' ? ' Your keeper is in check!' : ' Check!') : '';
+  const msg = CHS.netMsg ? ' ' + CHS.netMsg : '';
+  return `${who} (${col}).${side === CHS.me ? chk : chk ? ' Check.' : ''}${msg}`;
+}
+function chResultText(r) {
+  const v = CHS.G.v, sides = CH_SIDES[v], wn = r.w > 0 ? sides[0] : sides[1], ln = r.w > 0 ? sides[1] : sides[0];
+  const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+  const wins = cap(wn) + (v === 'sk' && r.w < 0 ? ' win.' : ' wins.');
+  switch (r.why) {
+    case 'mate': return `Checkmate. ${wins}`;
+    case 'light': return `${cap(wn)}'s keeper has reached the Light. ${wins}`;
+    case 'stalemate': return 'Stalemate. A draw.';
+    case 'repetition': return 'The same position three times. A draw.';
+    case 'fifty': return 'Fifty moves with no capture or pawn move. A draw.';
+    case 'material': return 'Neither side can checkmate any more. A draw.';
+    case 'agreed': return 'A draw, agreed.';
+    case 'resign': return `${cap(r.who || ln)} resigned. ${wins}`;
+    case 'left': return `${r.who || 'Your opponent'} left the game. You win.`;
+  }
+  return 'Game over.';
+}
+
+// ---------- moving ----------
+CHS.mine = p => !!p && (p > 0) === (CHS.me > 0);
+function chCanMove() { return CHS.on && CHS.G && !CHS.G.res && !CHS.busy && CHS.G.P.side === CHS.me && $('chPromo').hidden && $('chMenu').hidden; }
+function chClickSq(s) {
+  if (!CHS.G) return;
+  const G = CHS.G, p = G.P.b[s];
+  if (!chCanMove()) { if (p && CHS.mine(p)) { CHS.sel = -1; chRender(); } return; }
+  if (CHS.sel >= 0) {
+    const ms = G.legal.filter(m => m.f === CHS.sel && m.t === s);
+    if (ms.length) { if (ms.length > 1 || ms[0].pr) chAskPromo(ms); else chHumanMove(ms[0]); return; }
+  }
+  if (p && CHS.mine(p) && G.legal.some(m => m.f === s)) { CHS.sel = s === CHS.sel ? -1 : s; chSnd('pick'); }
+  else CHS.sel = -1;
+  chRender();
+}
+function chAskPromo(ms) {
+  const box = $('chPromoBtns'), v = CHS.G.v; box.textContent = '';
+  for (const pr of [5, 4, 3, 2]) {
+    const m = ms.find(x => x.pr === pr); if (!m) continue;
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'chpromo'; b.innerHTML = chPieceSvg(pr * CHS.me, v) + `<span>${CH_NAMES[v][pr]}</span>`;
+    b.addEventListener('click', () => { $('chPromo').hidden = true; chHumanMove(m); });
+    box.append(b);
+  }
+  $('chPromo').hidden = false; setTimeout(() => { const b = box.querySelector('button'); if (b) b.focus({ preventScroll: true }); }, 30);
+}
+function chHumanMove(m) {
+  if (!m || !chCanMove()) return;
+  chApply(m);
+  if (CHS.net) { if (typeof chnMoved === 'function') chnMoved(); }
+  else chBotTurn();
+}
+function chApply(m) {
+  const G = CHS.G, check0 = m.cap || m.k === 2;
+  if (!chPlay(G, m)) return false;
+  CHS.sel = -1; chRender(); chAnimate(G.last);
+  chSnd(G.res ? 'none' : chInCheck(G.P) ? 'check' : check0 ? 'take' : m.k >= 3 ? 'castle' : 'move');
+  chSave();
+  if (G.res) chEnded();
+  return true;
+}
+function chBotTurn() {
+  const G = CHS.G;
+  if (!CHS.on || G.res || G.P.side === CHS.me || CHS.net) return;
+  CHS.busy = true; chRenderSide();
+  const g0 = G, t0 = performance.now();
+  // (a moment first, so the move just made is drawn before the bot sits and thinks)
+  setTimeout(() => {
+    if (CHS.G !== g0 || !CHS.on) return;
+    let m = null; try { m = chBot(G, CHS.opp); } catch (e) { console.error(e); m = G.legal[0]; }
+    const wait = Math.max(0, 420 - (performance.now() - t0));
+    setTimeout(() => { if (CHS.G !== g0 || !CHS.on) return; CHS.busy = false; if (m) chApply(m); chRenderSide(); }, wait);
+  }, 60);
+}
+function chUndo() {
+  if (CHS.net || CHS.busy || !CHS.G || CHS.G.res) return;
+  const u = CHS.G.uci.slice();
+  // back to the last position with you to move: your move and the bot's reply
+  u.pop(); if ((u.length % 2 === 0) !== (CHS.me > 0)) u.pop();
+  CHS.G = chReplay(CHS.v, u); CHS.sel = -1; chSave(); chRender(); chSnd('pick');
+}
+
+// ---------- pointer: tap, or drag ----------
+function chPointerDown(e) {
+  const cell = e.target.closest('.chsq'); if (!cell) return;
+  const s = chCellSq(+cell.dataset.i); CHS.kb = false;
+  const p = CHS.G && CHS.G.P.b[s];
+  if (!(chCanMove() && p && CHS.mine(p))) { chClickSq(s); return; }
+  e.preventDefault();
+  const svg = cell.querySelector('svg.chp'), r0 = cell.getBoundingClientRect(), x0 = e.clientX, y0 = e.clientY;
+  let drag = false;
+  const wasSel = CHS.sel === s;
+  if (!wasSel) { CHS.sel = s; chSnd('pick'); chRender(); }
+  const live = $('chBoard').children[+cell.dataset.i].querySelector('svg.chp') || svg;
+  const move = ev => {
+    const dx = ev.clientX - x0, dy = ev.clientY - y0;
+    if (!drag && Math.hypot(dx, dy) > 6) { drag = true; live.classList.add('drag'); }
+    if (drag) live.style.transform = `translate(${dx}px, ${dy}px) scale(1.12)`;
+  };
+  const up = ev => {
+    removeEventListener('pointermove', move); removeEventListener('pointerup', up); removeEventListener('pointercancel', up);
+    live.classList.remove('drag'); live.style.transform = '';
+    if (!drag) { if (wasSel) { CHS.sel = -1; chRender(); } return; }
+    const el = document.elementFromPoint(ev.clientX, ev.clientY), c2 = el && el.closest && el.closest('.chsq');
+    const t = c2 ? chCellSq(+c2.dataset.i) : -1;
+    if (t >= 0 && t !== s) chClickSq(t); else chRender();
+    void r0;
+  };
+  addEventListener('pointermove', move); addEventListener('pointerup', up); addEventListener('pointercancel', up);
+}
+
+// ---------- keys and the controller ----------
+function chCursor(df, dr) {
+  // (the cursor moves as you see the board)
+  const sgn = CHS.flip ? -1 : 1, f = (CHS.cur & 7) + df * sgn, r = (CHS.cur >> 3) + dr * sgn;
+  if (f < 0 || f > 7 || r < 0 || r > 7) return;
+  CHS.cur = r * 8 + f; CHS.kb = true; chRender();
+}
+function chKeyDown(e) {
+  if (state !== 'chess') return;
+  if (e.target && /INPUT|TEXTAREA|SELECT/.test(e.target.tagName) && e.key !== 'Escape') return;
+  const k = e.key;
+  if (k === 'Escape') { e.preventDefault(); e.stopImmediatePropagation(); if (!$('chPromo').hidden) { $('chPromo').hidden = true; CHS.sel = -1; chRender(); } else if (!$('chEnd').hidden) return; else if (CHS.sel >= 0) { CHS.sel = -1; chRender(); } else chMenuOpen($('chMenu').hidden); return; }
+  if (!$('chMenu').hidden || !$('chPromo').hidden || !$('chEnd').hidden) return;
+  e.stopImmediatePropagation();
+  if (document.activeElement && document.activeElement.closest && document.activeElement.closest('.ch-side')) return;   // (the buttons beside the board keep their keys)
+  const d = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, 1], ArrowDown: [0, -1] }[k];
+  if (d) { e.preventDefault(); if (!CHS.kb) { CHS.kb = true; if (CHS.sel >= 0) CHS.cur = CHS.sel; chRender(); return; } chCursor(d[0], d[1]); return; }
+  if (k === 'Enter' || k === ' ') { e.preventDefault(); if (!CHS.kb) { CHS.kb = true; chRender(); return; } chClickSq(CHS.cur); }
+  else if ((k === 'f' || k === 'F') && !e.repeat) chFlip();
+}
+addEventListener("keydown", chKeyDown, true);
+function chPadPoll() {
+  const p = typeof firstPad === 'function' ? firstPad() : null; if (!p) return;
+  const now = p.buttons.map(b => b.pressed), prev = CHS.padPrev, down = i => now[i] && !prev[i]; CHS.padPrev = now;
+  const ov = !$('chPromo').hidden ? 'chPromo' : !$('chEnd').hidden ? 'chEnd' : !$('chMenu').hidden ? 'chMenu' : null;
+  if (ov) {
+    if (ov === 'chMenu' && (down(1) || down(9))) { chMenuOpen(false); return; }
+    const bs = [...$(ov).querySelectorAll('button:not([hidden])')], i = bs.indexOf(document.activeElement);
+    if (down(12) || down(14)) (bs[(i - 1 + bs.length) % bs.length] || bs[0]).focus(); if (down(13) || down(15)) (bs[(i + 1) % bs.length] || bs[0]).focus();
+    if (down(0) && document.activeElement && bs.includes(document.activeElement)) document.activeElement.click();
+    return;
+  }
+  CHS.padAx = CHS.padAx || [0, 0];
+  const ax = Math.abs(p.axes[0] || 0) > 0.5 ? Math.sign(p.axes[0]) : 0, ay = Math.abs(p.axes[1] || 0) > 0.5 ? -Math.sign(p.axes[1]) : 0;
+  const sx = ax !== CHS.padAx[0] ? ax : 0, sy = ay !== CHS.padAx[1] ? ay : 0; CHS.padAx = [ax, ay];
+  const df = (down(15) ? 1 : 0) - (down(14) ? 1 : 0) + sx, dr = (down(12) ? 1 : 0) - (down(13) ? 1 : 0) + sy;
+  if (df || dr) { if (!CHS.kb) { CHS.kb = true; chRender(); } else chCursor(Math.sign(df), Math.sign(dr)); }
+  if (down(0)) { if (!CHS.kb) { CHS.kb = true; chRender(); } else chClickSq(CHS.cur); }
+  if (down(1) && CHS.sel >= 0) { CHS.sel = -1; chRender(); }
+  if (down(3)) chFlip();
+  if (down(9)) chMenuOpen(true);
+}
+
+// ---------- sound (Web Audio, src/audio.js) ----------
+function chSnd(k) {
+  if (typeof AUD === 'undefined' || !AUD.ctx) return;
+  try {
+    if (k === 'pick') tone(1200, 'sine', 0.001, 0.03, 0.05);
+    else if (k === 'move') { noise('bandpass', 1800, 2.5, 0.001, 0.18, 0.06); tone(300, 'triangle', 0.001, 0.08, 0.07); }
+    else if (k === 'take') { noise('bandpass', 1100, 1.8, 0.001, 0.3, 0.1); tone(180, 'triangle', 0.001, 0.14, 0.12); }
+    else if (k === 'castle') { noise('bandpass', 1800, 2.5, 0.001, 0.16, 0.06); setTimeout(() => { try { noise('bandpass', 1500, 2.5, 0.001, 0.16, 0.06); } catch (e) {} }, 90); }
+    else if (k === 'check') { noise('bandpass', 1800, 2.5, 0.001, 0.16, 0.06); tone(660, 'triangle', 0.002, 0.1, 0.3); tone(990, 'sine', 0.002, 0.05, 0.3); }
+    else if (k === 'win') { if (typeof sfxChime === 'function') sfxChime(); if (typeof sfxBell === 'function') sfxBell(); }
+    else if (k === 'lose') { tone(330, 'triangle', 0.01, 0.1, 0.6, { to: 220 }); }
+    else if (k === 'draw') { tone(523, 'sine', 0.01, 0.08, 0.5); tone(392, 'sine', 0.01, 0.06, 0.6); }
+  } catch (e) {}
+}
+
+// ---------- the game: starting, saving, ending ----------
+// o: { v 'std' | 'sk', opp 'easy' | 'fair' | 'hard', me 1 | -1 (or 0 for either), uci (moves to replay, to resume),
+//      net { g, names } for a game online (src/chnet.js) }
+function chStart(o) {
+  o = o || {};
+  const v = o.v === 'sk' ? 'sk' : 'std', opp = CH_BOTS[o.opp] ? o.opp : 'fair';
+  const me = o.me === 1 || o.me === -1 ? o.me : (Math.random() < 0.5 ? 1 : -1);
+  Object.assign(CHS, { on: true, v, opp, me, flip: me < 0, sel: -1, cur: me > 0 ? 12 : 52, kb: false, busy: false, net: o.net || null, endShown: false, netMsg: '' });
+  CHS.G = o.uci && o.uci.length ? chReplay(v, o.uci) : chGame(v);
+  CHS.names = o.net ? [chMyName(), o.net.opp || 'Your opponent'] : [chMyName(), CH_BOTS[opp].name];
+  CHS.set = { v, opp, me: o.me || 0 };
+  chEnter();
+  chRender();
+  if (!o.net) { const st = chStore.get(); st.set = { v, opp, me: o.me || 0 }; chStore.set(st); chSave(); chBotTurn(); }
+}
+function chMyName() { const n = ($('chNick') && $('chNick').value.trim()) || (typeof NET !== 'undefined' && NET.nick) || ''; return n.slice(0, 16) || 'You'; }
+function chSave() {
+  if (CHS.net || !CHS.G) return;
+  const st = chStore.get();
+  st.game = CHS.G.res ? null : { v: CHS.v, opp: CHS.opp, me: CHS.me, uci: CHS.G.uci.slice() };
+  chStore.set(st);
+}
+function chRecord(res) {
+  const st = chStore.get(), key = CHS.net ? 'net' : CHS.opp;
+  st.rec = st.rec || {}; st.rec[CHS.v] = st.rec[CHS.v] || {};
+  const r = st.rec[CHS.v][key] || (st.rec[CHS.v][key] = { w: 0, d: 0, l: 0 });
+  if (res.w === 0) r.d++; else if (res.w === CHS.me) r.w++; else r.l++;
+  chStore.set(st);
+}
+function chEnded() {
+  const G = CHS.G; if (CHS.endShown || !G.res) return;
+  CHS.endShown = true; CHS.busy = false; chRecord(G.res); chSave();
+  chSnd(G.res.w === 0 ? 'draw' : G.res.w === CHS.me ? 'win' : 'lose');
+  chRender();
+  setTimeout(() => {
+    if (!CHS.on || CHS.G !== G) return;
+    const r = G.res;
+    $('chEndHead').textContent = r.w === 0 ? 'A draw' : r.w === CHS.me ? 'You win' : 'You lose';
+    $('chEndSub').textContent = chResultText(r);
+    $('chEndMoves').textContent = `${Math.ceil(G.san.length / 2)} move${Math.ceil(G.san.length / 2) === 1 ? '' : 's'}.`;
+    $('chAgain').textContent = CHS.net ? 'Rematch' : 'Play again';
+    $('chEnd').hidden = false; setTimeout(() => $('chAgain').focus({ preventScroll: true }), 30);
+  }, r0Delay(G.res));
+}
+const r0Delay = r => r.why === 'resign' || r.why === 'agreed' || r.why === 'left' ? 200 : 1100;
+// someone resigned (side), or a draw was agreed, or the other player left: the game ends by word, not by a move
+function chEndBy(res) { if (!CHS.G || CHS.G.res) return; CHS.G.res = res; chEnded(); }
+function chResign() {
+  if (!CHS.G || CHS.G.res) return;
+  chMenuOpen(false);
+  if (CHS.net && typeof chnResign === 'function') chnResign();
+  chEndBy({ w: -CHS.me, why: 'resign', who: 'You' });
+}
+function chFlip() { CHS.flip = !CHS.flip; chRender(); }
+function chMenuOpen(on) { if (!CHS.on) return; $('chMenu').hidden = !on; $('chMenuResume').hidden = false; $('chMenuResign').hidden = !!(CHS.G && CHS.G.res); $('chMenuLeave').textContent = CHS.net && CHS.G && !CHS.G.res ? 'Resign and leave' : CHS.net ? 'Leave' : 'Leave (the game is kept)'; if (on) setTimeout(() => $('chMenuResume').focus({ preventScroll: true }), 30); }
+
+function chEnter() {
+  try { audioInit(); } catch (e) {}
+  state = 'chess'; paused = false;
+  $('titleCard').hidden = true; $('hud').hidden = true; $('logbox').hidden = true; $('biomeBanner').hidden = true;
+  $('chUI').hidden = false; $('chMenu').hidden = true; $('chEnd').hidden = true; $('chPromo').hidden = true;
+  document.body.classList.add('chon');
+}
+function chExit() {
+  const wasNet = !!CHS.net;
+  if (wasNet && CHS.G && !CHS.G.res && typeof chnResign === 'function') chnResign();
+  CHS.on = false; CHS.net = null; CHS.busy = false;
+  if (wasNet && typeof chnStop === 'function') chnStop();
+  $('chUI').hidden = true; document.body.classList.remove('chon');
+  state = 'title'; toTitle();
+  setTimeout(() => { const c = $('chTitle'); if (c) c.scrollIntoView({ block: 'start' }); chCardRender(); }, 60);
+}
+function chFrame() {
+  chPadPoll();
+  if (CHS.net && typeof chnTick === 'function') chnTick();
+}
+
+// ---------- the card on the title screen ----------
+function chCardRender() {
+  const el = $('chRecord'); if (!el) return;
+  const st = chStore.get(), rec = st.rec || {}, out = [];
+  for (const v of ['std', 'sk']) {
+    const R = rec[v] || {}, parts = [];
+    for (const k of ['easy', 'fair', 'hard', 'net']) { const r = R[k]; if (r && r.w + r.d + r.l) parts.push(`${k === 'net' ? 'online' : CH_SKILLN[k]} ${r.w}–${r.d}–${r.l}`); }
+    if (parts.length) out.push(`${CH_VARIANTS[v].name}: ${parts.join(', ')}`);
+  }
+  el.textContent = out.length ? 'Your record (won–drawn–lost) · ' + out.join(' · ') : 'No games played yet.';
+  const g = st.game, rb = $('chResume');
+  if (rb) { rb.hidden = !(g && Array.isArray(g.uci) && g.uci.length); if (!rb.hidden) rb.textContent = `Resume your game (${CH_VARIANTS[g.v === 'sk' ? 'sk' : 'std'].name}, ${CH_SKILLN[g.opp] || 'Fair'}, move ${Math.floor(g.uci.length / 2) + 1})`; }
+}
+function chPlayLocal() {
+  if (typeof CHN !== 'undefined' && CHN.code && typeof chnLeave === 'function') chnLeave();
+  const me = { w: 1, b: -1 }[$('chSide').value] || 0;
+  chStart({ v: $('chVar').value, opp: $('chSkill').value, me });
+}
+function chResume() {
+  const g = chStore.get().game; if (!g || !Array.isArray(g.uci)) return;
+  chStart({ v: g.v, opp: g.opp, me: g.me === -1 ? -1 : 1, uci: g.uci.filter(u => typeof u === 'string').slice(0, 1200) });
+}
+function chDebug(o) { chStart(Object.assign({ v: 'std', opp: 'easy', me: 1 }, o || {})); }
+function chDebugMoves(list) { for (const u of list) { const m = chFromUci(CHS.G.P, u, CHS.G.legal); if (m) chApply(m); } chRender(); }
+
+(function chInit() {
+  if (!$('chTitle')) return;
+  const st = chStore.get(), set = st.set || {};
+  if (set.v) $('chVar').value = set.v === 'sk' ? 'sk' : 'std';
+  if (set.opp && CH_BOTS[set.opp]) $('chSkill').value = set.opp;
+  if (set.me) $('chSide').value = set.me > 0 ? 'w' : 'b';
+  if (st.nick) $('chNick').value = String(st.nick).slice(0, 16);
+  $('chNick').addEventListener('change', () => { const s = chStore.get(); s.nick = $('chNick').value.slice(0, 16); chStore.set(s); });
+  $('chPlay').addEventListener('click', chPlayLocal);
+  $('chResume').addEventListener('click', chResume);
+  $('chSettings').addEventListener('click', () => $('titleSettings').click());
+  if ($('chBanner')) $('chBanner').addEventListener('click', () => { $('chTitle').scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' }); setTimeout(() => $('chPlay').focus({ preventScroll: true }), 400); });
+  $('chUndo').addEventListener('click', chUndo);
+  $('chFlip').addEventListener('click', chFlip);
+  $('chResign').addEventListener('click', () => { if (CHS.G && !CHS.G.res) { $('chMenu').hidden = false; $('chMenuResign').hidden = false; setTimeout(() => $('chMenuResign').focus({ preventScroll: true }), 30); } });
+  $('chDraw').addEventListener('click', () => { if (typeof chnDraw === 'function') chnDraw(); });
+  $('chMenuBtn').addEventListener('click', () => chMenuOpen(true));
+  $('chMenuResume').addEventListener('click', () => chMenuOpen(false));
+  $('chMenuResign').addEventListener('click', chResign);
+  $('chMenuLeave').addEventListener('click', chExit);
+  $('chPromoCancel').addEventListener('click', () => { $('chPromo').hidden = true; CHS.sel = -1; chRender(); });
+  $('chAgain').addEventListener('click', () => { if (CHS.net) { if (typeof chnRematch === 'function') chnRematch(); return; } $('chEnd').hidden = true; chStart(Object.assign({}, CHS.set)); });
+  $('chEndMenu').addEventListener('click', chExit);
+  $('chEndLook').addEventListener('click', () => { $('chEnd').hidden = true; });
+  chCardRender();
+})();
+
+// ---- src/chnet.js ----
+'use strict';
+// Skerry Chess played online: one against one, each on their own screen, through the room the crews sail in
+// (src/net.js), on its own key (`ch`) in each player's presence, as Skerry League's lobby does (src/lgnet.js).
+//
+// In the lobby: { room, sid, nick, at } (the board's code, who you are, when you came in). The first in sets the board
+// up and adds lob { v, cl }: the rules ('std' or 'sk') and the colour they'll play ('w', 'b' or 'r' for either), as
+// picked on the card. Two at most; a third finds the board full.
+// The one who set it up presses Start, and puts st { g the game's id, v, w and b (the sids of White and Black), wn and
+// bn (their names) } in its presence. Both screens then start the game (chStart with net).
+// During the game each screen puts the whole game so far in its presence as mv, the moves in UCI joined by commas
+// ("e2e4,e7e5,..."), with g. There's no host for the moves: each screen plays its own and takes the other's from the
+// other's mv, checking each one is legal and made on the other's turn (only on coming back to a game in progress does
+// a screen take its own moves from there too). The rest, also in presence:
+//   rs: 1 once you've resigned this game (the other side wins);
+//   dr: the ply (moves made so far) at which you offer a draw, or -1; when both say the same ply, it's a draw. Making
+//       a move withdraws an offer;
+//   rm: the game's id, once you'd like a rematch at the end; when both ask, the one who set the board up starts the
+//       next game with the colours swapped.
+// A player not heard from in this game for CHN_GONE loses it (by leaving); one who comes back within that time picks
+// up where they were (the card's list offers it).
+// server/server.js relays one board's two players to each other at once, and only enough to list the board to others.
+
+var CHN = { leftG: null, code: null, at: 0, msg: '', st: null, g: null, doneG: null, seen: 0, rs: 0, dr: -1, rm: null, lobT: 0, sync: false, lastRm: null };
+const CHN_GONE = 45000;      // ms without a word in this game before the other player is taken to have left
+const chnClean = (v, n) => String(v == null ? '' : v).replace(/[\u0000-\u001f\u007f-\u009f<>&"]/g, '').trim().slice(0, n);
+function chnOnline() { return !!(typeof NET !== 'undefined' && NET.room && NET.status === 'ready'); }
+function chnInGame() { return !!(CHS.on && CHS.net); }
+function chnNick() { return chnClean(chMyName() === 'You' ? (NET.nick || '') : chMyName(), 16) || 'Keeper ' + String(NET.sid || '').slice(0, 3).toUpperCase(); }
+function chnOf(p) { const z = p && p.presence && p.presence.ch; return z && typeof z === 'object' && typeof z.room === 'string' && typeof z.sid === 'string' ? z : null; }
+const chnMine = p => !!(p && p.isMe && p.sameTab);
+function chnBase() { return { room: CHN.code, sid: NET.sid, nick: chnNick(), at: CHN.at }; }
+function chnPeers(code) {
+  const out = NET.peers.filter(p => { const z = chnOf(p); return z && z.room === code && fresh(p) && !chnMine(p); });
+  if (CHN.code === code) out.push({ isMe: true, sameTab: true, presence: { ch: chnBase() } });
+  const seen = new Set();
+  return out.filter(p => { const s = chnOf(p).sid; if (seen.has(s)) return false; seen.add(s); return true; }).sort((a, b) => (chnOf(a).at || 0) - (chnOf(b).at || 0) || (chnOf(a).sid < chnOf(b).sid ? -1 : 1));
+}
+function chnMembers() { return CHN.code ? chnPeers(CHN.code).slice(0, 2) : []; }
+function chnAmHost() { const m = chnMembers(); return !!m.length && chnMine(m[0]); }
+function chnHostZ() { const m = chnMembers(); return m.length && !chnMine(m[0]) ? chnOf(m[0]) : null; }
+function chnOther() { const m = chnMembers(); const p = m.find(x => !chnMine(x)); return p ? chnOf(p) : null; }
+function chnSend(z) { if (NET.room) NET.room.presence({ ch: z }).catch(() => {}); }
+function chnPick() { const v = $('chVar') && $('chVar').value === 'sk' ? 'sk' : 'std', c = $('chSide') ? $('chSide').value : 'w'; return { v, cl: c === 'b' ? 'b' : c === 'r' ? 'r' : 'w' }; }
+function chnLob() { if (chnAmHost()) return chnPick(); const h = chnHostZ(), l = h && h.lob; return l ? { v: l.v === 'sk' ? 'sk' : 'std', cl: ['w', 'b', 'r'].includes(l.cl) ? l.cl : 'w' } : chnPick(); }
+function chnSendLobby() {
+  if (!CHN.code) return;
+  const z = chnBase();
+  if (chnAmHost()) z.lob = chnPick();
+  // (after a game, the rematch ask stays up until it's answered)
+  if (CHN.lastRm) z.rm = CHN.lastRm;
+  // (and a game left unfinished stays resigned)
+  if (CHN.leftG) z.left = CHN.leftG;
+  chnSend(z);
+}
+function chnHost() {
+  if (!chnOnline() || chnInGame()) return;
+  CHN.code = 'c' + Math.random().toString(36).slice(2, 8); CHN.at = Date.now(); CHN.msg = ''; CHN.doneG = null; CHN.lastRm = null;
+  chnSendLobby(); chnRender();
+}
+function chnJoin(code, rejoin) {
+  if (!chnOnline() || !code || chnInGame()) return;
+  if (!rejoin && chnPeers(code).length >= 2) { CHN.msg = 'That board is taken (two players already).'; chnRender(); return; }
+  const late = Math.max(0, ...chnPeers(code).map(p => chnOf(p).at || 0));
+  CHN.code = code; CHN.at = Math.max(Date.now(), late + 1); CHN.msg = ''; CHN.doneG = null; CHN.lastRm = null;
+  chnSendLobby(); chnRender(); chNetPeers();
+}
+function chnLeave() { if (chnInGame()) return; CHN.code = null; CHN.st = null; CHN.g = null; CHN.lastRm = null; if (NET.room) NET.room.presence({ ch: null }).catch(() => {}); chnRender(); }
+// the boards being played or waiting here
+function chnOpen() {
+  const rooms = new Map();
+  for (const p of NET.peers) { const z = chnOf(p); if (!z || !fresh(p) || chnMine(p)) continue; if (!rooms.has(z.room)) rooms.set(z.room, []); rooms.get(z.room).push(p); }
+  const out = [];
+  for (const [code, list] of rooms) {
+    if (code === CHN.code) continue;
+    list.sort((a, b) => (chnOf(a).at || 0) - (chnOf(b).at || 0));
+    const h = chnOf(list[0]), st = h.st && typeof h.st.g === 'string' ? h.st : null;
+    const mine = !!(st && (st.w === NET.sid || st.b === NET.sid) && !h.over && h.left !== st.g);
+    const lob = h.lob && typeof h.lob === 'object' ? h.lob : {};
+    out.push({ code, host: chnClean(h.nick, 16) || 'Someone', n: list.length, started: !!st, mine, v: lob.v === 'sk' ? 'sk' : 'std' });
+  }
+  return out;
+}
+
+function chnRender() {
+  const q = id => $('ch' + id); if (!q('Mp')) return;
+  const on = chnOnline(), mine = !!CHN.code;
+  q('MpNote').textContent = on ? 'Set up a board, and the other player joins it from this card or from your invite. One of you against the other, each on your own screen.' : (NET.status === 'connecting' ? 'Looking for other players…' : (NET.offReason || 'Playing online isn’t available here. You can still play the bots.'));
+  q('MpOpen').hidden = !on || mine; q('Lobby').hidden = !mine;
+  if (!on) return;
+  if (!mine) {
+    const L = chnOpen(), el = q('Lobbies'), key = JSON.stringify(L) + CHN.msg;
+    if (el.dataset.k === key) return; el.dataset.k = key; el.textContent = '';
+    if (CHN.msg) { const p = document.createElement('p'); p.className = 'muted'; p.textContent = CHN.msg; el.append(p); }
+    if (!L.length) { const p = document.createElement('p'); p.className = 'muted'; p.textContent = 'Nobody has a board set up right now. Set one up, and send the person you want to play to this page.'; el.append(p); return; }
+    for (const n of L) {
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'warlobbyrow';
+      const nm = document.createElement('span'); nm.className = 'nm'; nm.textContent = `${n.host}’s board`;
+      const sm = document.createElement('small'); sm.textContent = (n.mine ? 'your game · tap to go back to it' : n.started || n.n >= 2 ? 'being played' : 'waiting for an opponent · tap to join') + ' · ' + CH_VARIANTS[n.v].name;
+      b.append(nm, sm); b.disabled = !n.mine && (n.started || n.n >= 2); b.addEventListener('click', () => chnJoin(n.code, n.mine)); el.append(b);
+    }
+    return;
+  }
+  const m = chnMembers(), host = chnAmHost(), hz = m.length ? chnOf(m[0]) : null, L = chnLob();
+  const st = !host && hz && hz.st && typeof hz.st.g === 'string' ? hz.st : null, back = !!(st && (st.w === NET.sid || st.b === NET.sid) && st.g !== CHN.doneG && !hz.over && !CHS.on);
+  const key = JSON.stringify(m.map(p => [chnOf(p).sid, chnOf(p).nick])) + JSON.stringify(L) + host + back + !!st + CHN.msg;
+  q('MpStart').hidden = !host; q('MpStart').disabled = m.length < 2; q('MpRejoin').hidden = !back;
+  if (q('Lobby').dataset.k === key) return; q('Lobby').dataset.k = key;
+  q('LobbyHead').textContent = host ? 'Your board' : `${chnClean(hz && hz.nick, 16) || 'Someone'}’s board`;
+  const ol = q('LobbyList'); ol.textContent = '';
+  m.forEach((p, k) => { const li = document.createElement('li'), z = chnOf(p); li.textContent = (chnClean(z.nick, 16) || 'A keeper') + (chnMine(p) ? ' (you)' : '') + (k === 0 ? ' · set up the board' : ''); if (chnMine(p)) li.className = 'me'; ol.append(li); });
+  const col = { w: 'White', b: 'Black', r: 'either colour' }[L.cl], what = `${CH_VARIANTS[L.v].name}, and ${host ? 'you play' : 'they play'} ${col}`;
+  q('LobbyMsg').textContent = CHN.msg || (m.length < 2 ? `${what}. Waiting for an opponent: share the invite, or wait for someone to join from their card.` : host ? `${what}. Start when you're ready (change the rules or your colour on the card above).` : `${what}. Waiting for them to start.`);
+}
+
+// ---------- starting a game ----------
+function chnStart() {
+  if (!chnAmHost() || chnInGame()) return;
+  const m = chnMembers(); if (m.length < 2) return;
+  const L = chnPick(), me = chnOf(m[0]), them = chnOf(m[1]);
+  const white = L.cl === 'w' || (L.cl === 'r' && Math.random() < 0.5);
+  chnBegin(chnSt(L.v, white ? me : them, white ? them : me));
+}
+const chnSt = (v, w, b) => ({ g: Math.random().toString(36).slice(2, 9), v, w: w.sid, b: b.sid, wn: chnClean(w.nick, 16) || 'A keeper', bn: chnClean(b.nick, 16) || 'A keeper' });
+function chnStOk(s) {
+  if (!s || typeof s.g !== 'string' || typeof s.w !== 'string' || typeof s.b !== 'string') return null;
+  return { g: s.g.slice(0, 12), v: s.v === 'sk' ? 'sk' : 'std', w: s.w.slice(0, 16), b: s.b.slice(0, 16), wn: chnClean(s.wn, 16) || 'A keeper', bn: chnClean(s.bn, 16) || 'A keeper' };
+}
+function chnBegin(st) {
+  Object.assign(CHN, { st, g: st.g, doneG: st.g, seen: performance.now(), rs: 0, dr: -1, rm: null, lastRm: null, leftG: null, sync: true });
+  const me = st.w === NET.sid ? 1 : -1;
+  chStart({ v: st.v, me, uci: [], net: { g: st.g, opp: me > 0 ? st.bn : st.wn } });
+  chnSendNow();
+}
+function chNetPeers() {
+  if (chnInGame()) { chnRead(); return; }
+  if (CHN.code) {
+    const m = chnMembers();
+    if (!m.some(chnMine)) { CHN.msg = 'Someone else took that board before you got there.'; chnLeave(); return; }
+    const hz = chnHostZ();
+    if (hz && hz.st && typeof hz.st.g === 'string' && hz.st.g !== CHN.doneG && !CHS.on && !hz.over && hz.left !== hz.st.g) {
+      const st = chnStOk(hz.st);
+      // (a new game, or one I was in and dropped out of: the moves so far come from the other screen)
+      if (st && (st.w === NET.sid || st.b === NET.sid)) { chnBegin(st); return; }
+      CHN.doneG = hz.st.g; CHN.msg = 'They started a game with someone else.';
+    }
+    // the rematch: both asked, and the one who set the board up starts it with the colours swapped
+    const o = chnOther();
+    if (chnAmHost() && CHN.lastRm && o && o.rm === CHN.lastRm && CHN.st && CHN.st.g === CHN.lastRm) {
+      const me = chnOf(m[0]), wasW = CHN.st.w === NET.sid;
+      chnBegin(chnSt(chnPick().v, wasW ? o : me, wasW ? me : o)); return;
+    }
+    if (chnAmHost() && performance.now() - (CHN.lobT || 0) > 3000) { CHN.lobT = performance.now(); chnSendLobby(); }
+  }
+  chnRender();
+}
+function chnStop() {
+  CHN.st = CHN.st || null;
+  if (CHN.code) chnSendLobby();
+  setTimeout(chnRender, 50);
+}
+
+// ---------- the game ----------
+function chnSendNow() {
+  if (!CHN.code || !CHN.g || !CHS.G) return;
+  const z = chnBase(); z.g = CHN.g; z.mv = CHS.G.uci.join(',');
+  z.st = CHN.st; if (chnAmHost()) z.lob = chnPick();
+  if (CHS.G.res) z.over = 1;
+  if (CHN.rs) z.rs = 1;
+  z.dr = CHN.dr;
+  if (CHN.rm) z.rm = CHN.rm;
+  chnSend(z);
+}
+function chnMoved() { CHN.dr = -1; chnSendNow(); chRenderSide(); }
+function chnRead() {
+  const G = CHS.G, o = chnOther(); if (!G) return;
+  if (o && o.left === CHN.g && !G.res) { chEndBy({ w: CHS.me, why: 'resign', who: CHS.names[1] }); return; }
+  if (!o || o.g !== CHN.g) return;
+  CHN.seen = performance.now(); CHS.netMsg = '';
+  const theirs = typeof o.mv === 'string' && o.mv ? o.mv.split(',').slice(0, 1200) : [];
+  const mine = G.uci;
+  if (!G.res && theirs.length > mine.length && mine.every((u, i) => theirs[i] === u)) {
+    for (let i = mine.length; i < theirs.length; i++) {
+      // (their moves only, on their turn; my own come from there only when I'm picking a game back up)
+      if (G.P.side === CHS.me && !CHN.sync) break;
+      const m = chFromUci(G.P, theirs[i], G.legal); if (!m) break;
+      chApply(m);
+      if (G.res) break;
+    }
+    CHN.sync = false;
+    chnSendNow();
+  } else if (CHN.sync && theirs.length <= mine.length) CHN.sync = false;
+  if (!G.res && o.rs === 1) chEndBy({ w: CHS.me, why: 'resign', who: CHS.names[1] });
+  if (!G.res && CHN.dr >= 0 && o.dr === CHN.dr && CHN.dr === G.uci.length) chEndBy({ w: 0, why: 'agreed' });
+  chRenderSide();
+}
+function chnTick() {
+  const now = performance.now();
+  if (now - (CHN.tickT || 0) < 250) return; CHN.tickT = now;
+  if (now - (CHN.sendT || 0) > 4000) { CHN.sendT = now; chnSendNow(); }
+  if (!CHS.G || CHS.G.res) return;
+  const quiet = now - CHN.seen;
+  const was = CHS.netMsg;
+  CHS.netMsg = quiet > 8000 ? `(Waiting for ${CHS.names[1]}: not heard from for ${Math.round(quiet / 1000)} seconds.)` : '';
+  if (quiet > CHN_GONE) { CHS.netMsg = ''; chEndBy({ w: CHS.me, why: 'left', who: CHS.names[1] }); }
+  if (was !== CHS.netMsg) chRenderSide();
+}
+// the draw button's words, as things stand
+function chnDrawState() {
+  const o = chnOther(), ply = CHS.G ? CHS.G.uci.length : 0;
+  if (o && o.g === CHN.g && o.dr === ply && CHN.dr !== ply) return 'Accept their draw';
+  if (CHN.dr === ply) return 'Draw offered';
+  return 'Offer a draw';
+}
+function chnDraw() {
+  if (!CHS.G || CHS.G.res) return;
+  const ply = CHS.G.uci.length;
+  CHN.dr = CHN.dr === ply ? -1 : ply;
+  chnSendNow(); chnRead(); chRenderSide();
+}
+function chnResign() { CHN.rs = 1; CHN.leftG = CHN.g; chnSendNow(); }
+function chnRematch() {
+  if (!CHS.G) return;
+  CHN.rm = CHN.g; CHN.lastRm = CHN.g; chnSendNow();
+  $('chAgain').textContent = 'Waiting for them…'; $('chAgain').disabled = true;
+  // (back to the card; the next game starts from there when both have asked)
+  setTimeout(() => { $('chAgain').disabled = false; if (CHS.on && CHS.net && CHS.G && CHS.G.res) { const keep = CHN.lastRm; chExit(); CHN.lastRm = keep; chnSendLobby(); chNetPeers(); } }, 700);
+}
+
+(function chnInit() {
+  if (!$('chMp')) return;
+  $('chMpHost').addEventListener('click', chnHost);
+  $('chMpStart').addEventListener('click', chnStart);
+  $('chMpLeave').addEventListener('click', chnLeave);
+  $('chMpRejoin').addEventListener('click', () => { if (chnInGame()) return; CHN.doneG = null; CHN.msg = ''; chNetPeers(); });
+  for (const id of ['chVar', 'chSide', 'chNick']) { const el = $(id); if (el) el.addEventListener('change', () => { if (CHN.code && !chnInGame()) { chnSendLobby(); chnRender(); } }); }
+  setInterval(() => { if (state === 'title') chnRender(); }, 1500);
+  setInterval(() => { if (CHN.code && !chnInGame()) chnSendLobby(); }, 4000);
+  // (a game in a background tab: the screen isn't drawn, but the moves still come and go)
+  setInterval(() => { if (chnInGame() && document.hidden) { chnRead(); chnTick(); } }, 1000);
+  chnRender();
 })();
 
 // ---- src/rlcards.js ----
@@ -82333,6 +83606,7 @@ const MD_GAMES = [
   { id: 'rlTitle', sub: 'A duel of lights for two', c: '#e8a050' },
   { id: 'cpTitle', sub: 'The whole tale of the Light, as a campaign', c: '#f0d890', tag: 'New' },   // [campaign] The Chronicle of the Light (src/cp.js)   // [rival] Skerry Clash (src/rl.js, src/rlcrates.js)
   { id: 'lgTitle', sub: 'Ships and a ball · one to three a side', c: '#4aa8ff', tag: 'New' },   // [league] Skerry League (src/league.js)
+  { id: 'chTitle', sub: 'Chess, and chess on the reef · for one or two', c: '#d9b56a', tag: 'New' },   // [chess] Skerry Chess (src/chessui.js)
 ];
 const mdStore = { get() { try { return localStorage.getItem('skerryDeskGame'); } catch (e) { return null; } }, set(v) { try { localStorage.setItem('skerryDeskGame', v); } catch (e) {} } };
 
@@ -82453,6 +83727,8 @@ function frame(now) {
     if (state === 'golf') { gfFrame(dt); requestAnimationFrame(frame); return; }
     // and so does Skerry League (src/league.js)
     if (state === 'league') { lgFrame(dt); requestAnimationFrame(frame); return; }
+    // and so does Skerry Chess (src/chessui.js), with the cursor left alone for the board
+    if (state === 'chess') { chFrame(dt); requestAnimationFrame(frame); return; }
     // and so does Skerry Clash (src/rl.js)
     if (state === 'rival') { rlFrame(dt); requestAnimationFrame(frame); return; }
     pollPad(dt);
@@ -82574,6 +83850,9 @@ requestAnimationFrame(frame);
 <!-- [league] Skerry League: the match, the ships, the ball, the bots -->
 <!-- [league] the 3D view -->
 <!-- [league] online matches: the lobby and keeping the screens together -->
+<!-- [chess] Skerry Chess: the rules and the bots -->
+<!-- [chess] the board, the card and the game -->
+<!-- [chess] online games: the lobby and the moves -->
 <!-- [rival] Skerry Clash: the 64 cards -->
 <!-- [rival] the rules, the match, the snapshots -->
 <!-- [rival] the keeper across the water -->
