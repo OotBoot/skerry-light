@@ -6,6 +6,9 @@
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 243, date: '2026-11-23', title: "Main menu tidy-up", Changes: [
+    "Main menu: the New tags are gone from the older games, from Skerry Light through The Chronicle of the Light, and from The Gannet's Wake on the raid list. Only Skerry League and Skerry Chess still carry one.",
+  ] },
   { v: 242, date: '2026-11-23', title: "Lore compendium: the harbour games", New: [
     "Lore compendium: six new articles for the newer games. The Harbour Pool, The Blue and the Orange and The Gale for Skerry League; The players of the lamp room (Hob, Mate Tamsin and the Old Keeper) for Skerry Chess; The headland for Skerry Links; and Crossing in person for Skerry Clash's First person.",
     "Lore compendium: the League, Chess and Links chronicles link to their new pages, and the era of the Light now lists the Harbour Pool and the lamp room's chessboards." ] },
