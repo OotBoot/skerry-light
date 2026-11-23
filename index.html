@@ -571,7 +571,7 @@
     <div class="card zmcard chcard" id="chTitle" aria-labelledby="chHead"><!-- [chess] Skerry Chess: its own card (src/chess.js, src/chessui.js, src/chnet.js) -->
       <div class="cardtop"><span class="eyebrow">A twelfth game · chess · against a bot or one other player</span></div>
       <h1 id="chHead">Skerry Chess</h1>
-      <p>The keepers' game, played on long nights in the lamp room. Standard chess with every rule of it, or Skerry rules: the same armies on a reef, with rocks in the way and the Light in the middle of the board. Bring your keeper to the Light and you win on the spot.</p>
+      <p>The keepers' game, played on long nights in the lamp room. Standard chess with every rule of it, or Skerry rules: the station's own pieces, each with a move or a power of its own, on a reef with rocks in the way and the Light in the middle of the board. Bring your keeper to the Light and you win on the spot.</p>
       <p class="muted">Tap a piece and then where it goes, or drag it. The arrow keys and Enter work too, and so does a controller.</p>
       <div class="gfopts chopts">
         <label>Rules <select id="chVar"><option value="std">Standard chess</option><option value="sk">Skerry rules</option></select></label>
@@ -602,10 +602,19 @@
       <details class="howto">
         <summary>How to play</summary>
         <p><b>Standard chess.</b> Every rule, as in a tournament: castling (not out of, through or into check), en passant, promotion to any piece, check, checkmate and stalemate. A game is drawn at once by stalemate, by the same position coming up three times, by fifty moves each with no capture and no pawn move, or when neither side has enough left to checkmate.</p>
-        <p><b>Skerry rules.</b> The Light (cream and brass) plays the Wreckers (tar and red), and White still moves first. The pieces are the keeper (king), the lantern (queen), the tower (rook), the cutter (bishop), the gannet (knight) and the hand (pawn), and they move just as their namesakes do. What's different:</p>
+        <p><b>Skerry rules.</b> The Light (cream and brass) plays the Wreckers (tar and red), and the Light moves first. The armies stand where the standard pieces do, but each piece is the station's own, with a move or a power no chess piece has:</p>
         <ul>
-          <li><b>The reef.</b> Four rocks stand at c4, f4, c5 and f5. Nothing can stand on a rock or move through one, but gannets fly over them, as knights jump anything. A hand on the c or f file can't step forward past its rock.</li>
-          <li><b>The Light.</b> The four squares in the middle, d4, e4, d5 and e5, are lit. Move your keeper onto one of them and you win at once. Your keeper still can't step into check, so the Light has to be safe to reach.</li>
+          <li><b>Keeper</b> (king's place): one step in any direction, or swaps places with one of your own hands next to it. No castling.</li>
+          <li><b>Lantern</b> (queen's place): sails any distance diagonally, or leaps as a knight does.</li>
+          <li><b>Tower</b> (rook's place): a lighthouse. It walks one step in any direction onto an empty square, and takes with its <b>beam</b>: the first enemy along its rank or file, at any distance, without moving.</li>
+          <li><b>Cutter</b> (bishop's place): sails any distance diagonally, or tacks one step straight, so it can change colour.</li>
+          <li><b>Gannet</b> (knight's place): dives exactly three squares in a straight line or diagonal, over anything in the way (rocks too), or takes one step straight.</li>
+          <li><b>Hand</b> (pawn's place): one step forward, or one step sideways onto an empty square; takes one step diagonally forward. No double step and no en passant. On the far rank it becomes a lantern, tower, cutter or gannet.</li>
+        </ul>
+        <p>And the board:</p>
+        <ul>
+          <li><b>The reef.</b> Four rocks stand at c4, f4, c5 and f5. Nothing can stand on a rock or move or shine through one; only the gannet dives over them.</li>
+          <li><b>The Light.</b> The four squares in the middle, d4, e4, d5 and e5, are lit. Put your keeper on one of them (by a step or a swap) and you win at once. It still can't move into check.</li>
           <li><b>No dead draws.</b> A lone keeper can always make for the Light, so a game never ends just because one side has too little left. Stalemate, repetition and the fifty-move rule still draw.</li>
         </ul>
         <p><b>The bots.</b> Hob the deckhand (Easy) looks one move ahead and makes careless moves. Mate Tamsin (Fair) looks three moves deep. The Old Keeper (Hard) thinks for up to two seconds a move, as deep as he can get. Against a bot you can take back your last move, and a game you leave is kept for you to resume.</p>
@@ -626,6 +635,14 @@
       <aside class="ch-side">
         <div class="ch-head"><h2>Skerry Chess</h2><button class="tool" id="chMenuBtn" type="button" aria-label="Menu" title="Menu (Esc)">☰</button></div>
         <p class="muted ch-rules" id="chRules"></p>
+        <details class="ch-guide" id="chGuide" hidden><summary>The pieces</summary><ul>
+          <li><b>Keeper</b> one step any way, or swaps with your hand next to it. Reach the Light to win.</li>
+          <li><b>Lantern</b> sails any distance diagonally, or leaps like a knight.</li>
+          <li><b>Tower</b> walks one step. Its beam takes the first enemy along a rank or file without moving.</li>
+          <li><b>Cutter</b> sails any distance diagonally, or one step straight.</li>
+          <li><b>Gannet</b> dives exactly three squares in any straight line or diagonal, over anything, or one step straight.</li>
+          <li><b>Hand</b> one step forward or sideways; takes diagonally forward. No double step.</li>
+        </ul></details>
         <p class="ch-status" id="chStatus" role="status" aria-live="polite"></p>
         <ol class="ch-moves" id="chMoves" aria-label="The moves"></ol>
         <div class="btnrow ch-btns"><button class="tool" id="chUndo" type="button">Take back</button><button class="tool" id="chDraw" type="button" hidden>Offer a draw</button><button class="tool" id="chFlip" type="button" title="Turn the board round (F)">Turn board</button><button class="tool" id="chResign" type="button">Resign</button></div>
