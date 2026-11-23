@@ -14,6 +14,7 @@ var PATCH_NOTES = [
     "Skerry Chess: the gannet dives exactly three squares in any line, over anything, or takes one step straight.",
     "Skerry Chess: the hand steps forward or sideways and takes diagonally forward. No double step.",
     "Skerry Chess: a guide to the pieces sits beside the board in Skerry rules games, and all three bots play the new pieces.",
+  ] },
   { v: 243, date: '2026-11-23', title: "Main menu tidy-up", Changes: [
     "Main menu: the New tags are gone from the older games, from Skerry Light through The Chronicle of the Light, and from The Gannet's Wake on the raid list. Only Skerry League and Skerry Chess still carry one.",
   ] },
