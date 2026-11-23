@@ -230,13 +230,16 @@ var LORE = [
   ]},
 ], also: ['race', 'racekeepers', 'greatlight'] },
 
-{ id: 'ch_chronicle', t: 'The Chronicle of the Light', cat: ['Chronicles', 'Events'], img: 'maren', box: [["Told in", "The Chronicle of the Light"], ["When", "c. 1200s to the years after"], ["Where", "Every rock, shore and sea in this compendium"], ["Who", "Whoever was there, one to four at a time"], ["Parts", "Fourteen tales, in five acts"]], sum: "The whole history of the Light, told once from end to end by the people who lived it: from the first fire on [[lanternrock]] to the night the Light was lit again in the middle of [[reachwars|the Reach Wars]]. It follows the [[timeline]] one key night at a time, and fills in a good deal that the other tales leave out.", secs: [
+{ id: 'ch_chronicle', t: 'The Chronicle of the Light', cat: ['Chronicles', 'Events'], img: 'maren', box: [["Told in", "The Chronicle of the Light"], ["When", "c. 1200s to the years after"], ["Where", "Every rock, shore and sea in this compendium"], ["Who", "Whoever was there, one to four at a time"], ["Parts", "Eighteen tales, in five acts"]], sum: "The whole history of the Light, told once from end to end by the people who lived it: from the first fire on [[lanternrock]] to the night the Light was lit again in the middle of [[reachwars|the Reach Wars]]. It follows the [[timeline]] one key night at a time, and fills in a good deal that the other tales leave out.", secs: [
   { h: 'Act I: Before the Light', p: [
     "<b>The First Fire</b> (c. 1200s). A night of haar on Lantern Rock, when the fire-keeper and his daughter [[wenna]] kept their beacon high enough for a lost ship to see it, and fought off [[oldkeel|the Old Keel]] when it walked up out of the sea. See [[firstfire]].",
     "<b>The Mooncussers</b> (the 1600s). Soldiers of [[seafort|the sea fort]] under [[garrison|Sergeant Ybarra]] put out the false lights on the point, took [[jago|Black Jago]] alive, and saw him hanged in chains on the sea wall. Three nights later his gang came for him. See [[jagohanging]].",
   ]},
   { h: 'Act II: The Light', p: [
     "<b>Lighting the Light</b> (1841). [[lampwright|The Lampwright]] and his crew carried the great lens up the new tower and lit it, and the fire on Lantern Rock was put out for good. See [[lighting1841]].",
+    "<b>The Nine Holes</b> (c. 1883). The still evening the keepers laid out the course on the headland and played it on into the night, and what climbed out of the Chasm on the 8th. See [[ch_links]].",
+    "<b>The Harbour Pool</b> (c. 1885). A summer match in the Harbour Pool that ended with the keeper's cutter shoving the old buoy out through the fog to the Hound, with Kittow's lugger after it. See [[ch_league]].",
+    "<b>The Reef Board</b> (c. 1886). A long winter night when Holm fell asleep over his reef board, and the game went on without him. See [[ch_chess]].",
     "<b>The Night of the Gannet</b> (14 December 1887). Holm and [[maren]] held the beam on the brig as she came in, until the lamp failed. See [[wreck1887]].",
   ]},
   { h: 'Act III: The Strange Year', p: [
@@ -251,6 +254,7 @@ var LORE = [
   ]},
   { h: 'Act V: The Years After', p: [
     "<b>The Drowned Reach</b>. [[wrenmate|The Wren's mate]] and a crew of lamp-men crossed the Reach at low water behind Plimsoll, took the Light's rock from [[emberisles|the Ember Isles]], and lit it. See [[relighting]].",
+    "<b>Slack Water</b>. The night a second light was lit across [[race|the Race]], and the first slack water the two keepers fought over which of them was honest. See [[ch_clash]].",
   ]},
   { h: 'How it is told', p: [
     "Each tale is told by those who were there, and [[log|the keeper's log]] carries the thread between them. Where the other tales show a night from one side, the Chronicle often shows it from another: the Night of the Gannet from the lantern room, the Dry Night with Ruth Carrow's crew, the Drowned Reach with the lamp-men rather than the nations. As the last page of the log says, the tales do not keep to their order, and the Chronicle ends where the history began, with Maren rowing out.",

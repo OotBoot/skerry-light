@@ -6,6 +6,15 @@
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 246, date: '2026-11-23', title: "The Chronicle of the Light: four new missions", New: [
+    "The Chronicle of the Light: four new missions for the newer games, each with its own cinematics and story, for one to four players. The campaign now has eighteen.",
+    "The Chronicle of the Light: The Nine Holes (Act II, c. 1883, from Skerry Links). The keepers lay out the course on the headland and play on into the night. Strike the ball hole by hole, keep it from the drowned at the Chasm, light warning fires with burning balls and face the Chasm Crab.",
+    "The Chronicle of the Light: The Harbour Pool (Act II, c. 1885, from Skerry League). Win a match in the Harbour Pool with the keeper's cutter, then shove the old buoy out through the fog to its mooring before the packet comes in, and take on Kittow's lugger, the Rook.",
+    "The Chronicle of the Light: The Reef Board (Act II, c. 1886, from Skerry Chess). Keep the lamp through the middle watch, then play the reef board as one of its pieces, moving by Skerry rules, light the four gold squares and see the keeper onto the Light.",
+    "The Chronicle of the Light: Slack Water (Act V, from Skerry Clash). A second light is lit across the Race. Hold your rock through the first slack water, cross the causeways to fell his towers for crowns, and face the champion who crosses for him before the tide turns.",
+  ], Changes: [
+    "The Chronicle of the Light: the four new missions open with the mission before them, but never lock the missions after them, so your progress through the campaign is just as it was.",
+  ] },
   { v: 245, date: '2026-11-23', title: "Main menu: fewer banners", Changes: [
     "Main menu: the banners for the older games, from Wreckers' Night through The Chronicle of the Light, are gone from the top of the menu. Every game is still in the list below; only Skerry League and Skerry Chess keep a banner.",
   ] },

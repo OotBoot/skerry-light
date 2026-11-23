@@ -669,7 +669,7 @@ cpStage('m17keep', m17Stage({
     // the objective
     const [hx, hy] = m17SqXY(S.holm);
     if (!lit) { cpObjective('Shoot out the false light on their keeper’s pole · the gold is dark while it burns'); const [bx, by] = m17SqXY(S.bk); cpWaypoint(bx, by, 'The false light', M17B.POLE); }
-    else { cpObjective(`${(S.hHeld | 0) >= 2 ? 'Holm is blocked: take the Wreckers who cover the squares ahead of him' : 'The gold is lit! Clear Holm’s way to it'}${S.bkDown ? '' : ` · ${Math.ceil(S.dark)} s`}`);   // (held two beats or more: the faint red marks show which squares) cpWaypoint(hx, hy, 'Holm', 2.4); }
+    else { cpObjective(`${(S.hHeld | 0) >= 2 ? 'Holm is blocked: take the Wreckers who cover the squares ahead of him' : 'The gold is lit! Clear Holm’s way to it'}${S.bkDown ? '' : ` · ${Math.ceil(S.dark)} s`}`); cpWaypoint(hx, hy, 'Holm', 2.4); }
     // what's said
     m17Say('a', S.t > 2, 'm17bk', 'The board is mine, keeper. It always was. Your lamp is going down.', 'cp_m17_30');
     m17Say('b', S.t > 7, 'holm', 'His light puts the gold out. Shoot the lantern off his pole, and I will walk.', 'cp_m17_31');
