@@ -547,7 +547,6 @@ function gfDebugShot(club, power, acc, aim) { if (GF.ph !== 'aim') return null; 
   for (const id of ['gfWindSel', 'gfMeterSel', 'gfHolesSel']) $(id).addEventListener('change', gfOptions);
   $('gfPlay').addEventListener('click', gfPlayLocal);
   $('gfSettings').addEventListener('click', () => $('titleSettings').click());
-  if ($('gfBanner')) $('gfBanner').addEventListener('click', () => { $('gfTitle').scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' }); setTimeout(() => $('gfPlay').focus({ preventScroll: true }), 400); });
   $('gfResume').addEventListener('click', () => gfPauseOpen(false));
   $('gfPauseCard').addEventListener('click', () => { gfPauseOpen(false); gfCardShow(true, true); });
   $('gfLeave').addEventListener('click', gfQuit);

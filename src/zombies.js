@@ -4453,7 +4453,6 @@ const ZM_KEYS = { KeyF: () => zmUse(), KeyE: () => zmUse(), KeyV: () => zmKnife(
   for (const b of document.querySelectorAll('#zmMaps [data-map]')) b.addEventListener('click', () => zmPickMap(b.dataset.map));
   zmMapCard();
   $('zmSettings').addEventListener('click', () => $('titleSettings').click());
-  $('zmBanner').addEventListener('click', () => { $('zmTitle').scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' }); setTimeout(() => $('zmPlay').focus({ preventScroll: true }), 400); });
   $('zmAgain').addEventListener('click', zmAgain);
   $('zmLeave').addEventListener('click', () => fpsStop());
   // the shared crates: the same buttons as on Wreckers' Night's card

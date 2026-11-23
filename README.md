@@ -345,7 +345,7 @@ How it's built (`src/zombies.js`): the station is laid out by the same island bu
 
 ## Maren's End (a raid, for one to four)
 
-A game of its own, with its own card on the title screen, **Skerry Raids**, which holds both raids (the raids banner at the top takes you there) and its own column on the scoreboard. It's built on Keeper's Last Light: the same drowned, the same way of playing together (host a raid, the others join from the card's **Play together** list, and the host starts it). You go in with a pepperbox and a blunderbuss, and your weapon and outfit crates open from the raid's own card.
+A game of its own, with its own card on the title screen, **Skerry Raids**, which holds both raids, and its own column on the scoreboard. It's built on Keeper's Last Light: the same drowned, the same way of playing together (host a raid, the others join from the card's **Play together** list, and the host starts it). You go in with a pepperbox and a blunderbuss, and your weapon and outfit crates open from the raid's own card.
 
 **Stamina.** In Maren's End sprinting tires you. A stamina bar sits beside your health bar: full, it's ten seconds of sprinting, and it fills back up from empty in fifteen seconds whenever you aren't sprinting. Run it dry and you're out of breath (the bar goes red and says so): you can't sprint again until it's back to a quarter. It works the same for all three callings and under Maren's Weight (the Weight slows your pace; stamina is how long you can sprint at it). The other modes are unchanged.
 

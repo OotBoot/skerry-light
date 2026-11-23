@@ -2063,17 +2063,8 @@ svg.chrock .foam { fill: rgba(235,245,250,0.55); } svg.chrock .rk { fill: #4b4d5
     <p class="verline" id="verLine" aria-label="Game version"></p>
     <div class="rejoinbar" id="rejoinBar" role="status" hidden><span class="rj-text" id="rejoinText"></span><button class="tool rj-go" id="rejoinGo" type="button">Rejoin</button><button class="tool rj-no" id="rejoinNo" type="button">Not now</button></div>
     <button class="origfeat" id="origBanner" type="button" aria-label="Play The Original: Skerry Light as it began"><span class="of-tag">Featured</span><span class="of-main"><b>The Original</b><small>Skerry Light as it began: keep the light, show the ships the rocks, bring them home</small></span><span class="of-go" aria-hidden="true">Play ›</span></button>
-    <button class="newgame" id="fpsBanner" type="button"><span class="ng-text">Try the new game, <b>Wreckers' Night</b>: a multiplayer shootout on the skerry</span><span class="ng-go" aria-hidden="true">↓</span></button>
-    <button class="newgame warbanner" id="warBanner" type="button"><span class="ng-text">And another, <b>Drowned Reach</b>: a war for the islands, alone or with up to ten players</span><span class="ng-go" aria-hidden="true">↓</span></button>
-    <button class="newgame zmbanner" id="zmBanner" type="button"><span class="ng-text">And a fourth, <b>Keeper's Last Light</b>: hold the keeper's station against the drowned, round after round</span><span class="ng-go" aria-hidden="true">↓</span></button>
-    <button class="newgame rdbanner" id="rdBanner" type="button"><span class="ng-text">And raids, alone or with up to four: <b>Maren's End</b>, and new, <b>The Gannet's Wake</b></span><span class="ng-go" aria-hidden="true">↓</span></button>
-    <button class="newgame frbanner" id="frBanner" type="button"><span class="ng-text">And <b>Fog Run</b>: sail the keeper's cutter out into the haar and light the islands, alone or with up to four</span><span class="ng-go" aria-hidden="true">↓</span></button>
-    <button class="newgame fbbanner" id="fbBanner" type="button"><span class="ng-text">And <b>Freebooters' Sea</b>: an open sea of islands to sail, salvage and sell, alone or with up to four</span><span class="ng-go" aria-hidden="true">↓</span></button><!-- [fbsea] -->
-    <button class="newgame gfbanner" id="gfBanner" type="button"><span class="ng-text">And <b>Skerry Links</b>: nine holes of golf along the cliffs, alone or with up to four</span><span class="ng-go" aria-hidden="true">↓</span></button><!-- [golf] -->
-    <button class="newgame rlbanner" id="rlBanner" type="button"><span class="ng-text">And a ninth, <b>Skerry Clash</b>: a duel of lights across the race, one keeper against another</span><span class="ng-go" aria-hidden="true">↓</span></button><!-- [rival] -->
-    <button class="newgame cpbanner" id="cpBanner" type="button"><span class="ng-text">And a tenth, <b>The Chronicle of the Light</b>: the whole history of the Skerries as a campaign, alone or with up to four</span><span class="ng-go" aria-hidden="true">↓</span></button><!-- [campaign] -->
-    <button class="newgame lgbanner" id="lgBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">And an eleventh, <b>Skerry League</b>: sail into a great buoy and knock it into the other side's goal</span><span class="ng-go" aria-hidden="true">↓</span></button><!-- [league] -->
-    <button class="newgame chbanner" id="chBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">And a twelfth, <b>Skerry Chess</b>: chess against three bots or a friend, and a variant on the reef</span><span class="ng-go" aria-hidden="true">↓</span></button><!-- [chess] -->
+    <button class="newgame lgbanner" id="lgBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">Try the new game, <b>Skerry League</b>: sail into a great buoy and knock it into the other side's goal</span><span class="ng-go" aria-hidden="true">↓</span></button><!-- [league] -->
+    <button class="newgame chbanner" id="chBanner" type="button"><span class="ng-tag">New</span><span class="ng-text">And another, <b>Skerry Chess</b>: chess against three bots or a friend, and a variant on the reef</span><span class="ng-go" aria-hidden="true">↓</span></button><!-- [chess] -->
     <div class="menulinks"><button class="tool notesbtn" id="notesBtn" type="button">Patch notes</button><button class="tool notesbtn lorebtn" id="loreBtn" type="button">Lore compendium</button></div>
     <div class="card boardcard" id="boardCard" aria-labelledby="boardHead">
       <div class="cardtop"><span class="eyebrow">Best on record · every game</span><span class="boardminititle">The Scoreboard</span><span class="boardbtns"><button class="tool closebtn" id="boardRefresh" type="button">Refresh</button><button class="tool closebtn" id="boardMin" type="button" aria-expanded="true" aria-controls="boardCard" title="Make the scoreboard small">– Minimise</button></span></div>
@@ -3257,7 +3248,7 @@ svg.chrock .foam { fill: rgba(235,245,250,0.55); } svg.chrock .rk { fill: #4b4d5
 // ---- src/config.js ----
 'use strict';
 // The game's version, shown at the top of the main menu. Bump it by one with every change pushed to main.
-var VERSION = 244;
+var VERSION = 245;
 // Skerry Light: tuning, asset paths and lore.
 // World units are metres. The lighthouse stands at the origin on the shoreline (y = 0);
 // north (+y) is open sea. Bearings: 0 = north, positive = east.
@@ -3432,6 +3423,9 @@ document.addEventListener('visibilitychange', () => {
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 245, date: '2026-11-23', title: "Main menu: fewer banners", Changes: [
+    "Main menu: the banners for the older games, from Wreckers' Night through The Chronicle of the Light, are gone from the top of the menu. Every game is still in the list below; only Skerry League and Skerry Chess keep a banner.",
+  ] },
   { v: 244, date: '2026-11-23', title: "Skerry Chess: new pieces for Skerry rules", Changes: [
     "Skerry Chess, Skerry rules: every piece now has a move or a power of its own, instead of moving like its standard chess counterpart.",
     "Skerry Chess: the keeper steps one square, or swaps places with one of your hands next to it. No castling under Skerry rules.",
@@ -18872,7 +18866,6 @@ const fpsTouchEnd = e => {
 addEventListener('touchend', fpsTouchEnd, true); addEventListener('touchcancel', fpsTouchEnd, true);
 
 // the buttons
-$('fpsBanner').addEventListener('click', () => { const c = $('fpsTitle'); c.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' }); setTimeout(() => $('fpsPlay').focus({ preventScroll: true }), 400); });
 $('fpsPlay').addEventListener('click', fpsStart);
 $('fpsSettings').addEventListener('click', () => $('titleSettings').click());
 $('fpsNick').addEventListener('keydown', e => { if (e.key === 'Enter') fpsStart(); });
@@ -26967,7 +26960,6 @@ const ZM_KEYS = { KeyF: () => zmUse(), KeyE: () => zmUse(), KeyV: () => zmKnife(
   for (const b of document.querySelectorAll('#zmMaps [data-map]')) b.addEventListener('click', () => zmPickMap(b.dataset.map));
   zmMapCard();
   $('zmSettings').addEventListener('click', () => $('titleSettings').click());
-  $('zmBanner').addEventListener('click', () => { $('zmTitle').scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' }); setTimeout(() => $('zmPlay').focus({ preventScroll: true }), 400); });
   $('zmAgain').addEventListener('click', zmAgain);
   $('zmLeave').addEventListener('click', () => fpsStop());
   // the shared crates: the same buttons as on Wreckers' Night's card
@@ -34024,7 +34016,6 @@ function raidCard() {
   $('rdSettings').addEventListener('click', () => $('titleSettings').click());
   $('rdWcrate').addEventListener('click', () => $('wcrateBtn').click());
   $('rdOcrate').addEventListener('click', () => $('ocrateBtn').click());
-  $('rdBanner').addEventListener('click', () => { $('rdTitle').scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' }); setTimeout(() => $('rdPlay').focus({ preventScroll: true }), 400); });
   // your bests, on the card
   setInterval(() => {
     const b = typeof BOARD !== 'undefined' && BOARD.mine && BOARD.mine[RD_PICK], el = $('rdRecord'); if (!el || !b) return;
@@ -43025,7 +43016,6 @@ function frJump(key) {
   $('frSettings').addEventListener('click', () => $('titleSettings').click());
   $('frWcrate').addEventListener('click', () => $('wcrateBtn').click());
   $('frOcrate').addEventListener('click', () => $('ocrateBtn').click());
-  if ($('frBanner')) $('frBanner').addEventListener('click', () => { $('frTitle').scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' }); setTimeout(() => $('frPlay').focus({ preventScroll: true }), 400); });
 })();
 
 // ---- src/frsail.js ----
@@ -47183,7 +47173,6 @@ function fbDebug(key, i) {
   $('fbSettings').addEventListener('click', () => $('titleSettings').click());
   $('fbWcrate').addEventListener('click', () => $('wcrateBtn').click());
   $('fbOcrate').addEventListener('click', () => $('ocrateBtn').click());
-  if ($('fbBanner')) $('fbBanner').addEventListener('click', () => { $('fbTitle').scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' }); setTimeout(() => $('fbPlay').focus({ preventScroll: true }), 400); });
 })();
 
 // ---- src/fbsail.js ----
@@ -50317,7 +50306,6 @@ function cpDebug(id, stage, noCine, cls) {
   if (!$('cpTitle')) return;
   $('cpPlay').addEventListener('click', () => { if (CP.pick) cpPlay(CP.pick); });
   $('cpSettings').addEventListener('click', () => $('titleSettings').click());
-  if ($('cpBanner')) $('cpBanner').addEventListener('click', () => { $('cpTitle').scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' }); setTimeout(() => $('cpPlay').focus({ preventScroll: true }), 400); });
   // (the missions' own files load after this one: draw the list once they have)
   window.addEventListener('load', cpCard);
   setTimeout(cpCard, 0);
@@ -66435,7 +66423,6 @@ addEventListener('contextmenu', e => { if (WAR.on && e.target === cv) e.preventD
 addEventListener('resize', () => { if (WAR.on) wvFit(); });
 (() => {
   $('warPlay').addEventListener('click', warGo);
-  $('warBanner').addEventListener('click', () => { $('warTitle').scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' }); setTimeout(() => $('warPlay').focus({ preventScroll: true }), 400); });
   $('warNick').addEventListener('keydown', e => { if (e.key === 'Enter') warGo(); });
   try { const b = localStorage.getItem('skerry-war-bots'); if (b) $('warBots').value = b; const d = localStorage.getItem('skerry-war-diff'); if (d && WAR_DIFF[d]) $('warDiff').value = d; } catch (e) {}
   $('warPactsBtn').addEventListener('click', () => wvPactsOpen(!$('warPacts').classList.contains('open')));
@@ -72282,7 +72269,6 @@ function gfDebugShot(club, power, acc, aim) { if (GF.ph !== 'aim') return null; 
   for (const id of ['gfWindSel', 'gfMeterSel', 'gfHolesSel']) $(id).addEventListener('change', gfOptions);
   $('gfPlay').addEventListener('click', gfPlayLocal);
   $('gfSettings').addEventListener('click', () => $('titleSettings').click());
-  if ($('gfBanner')) $('gfBanner').addEventListener('click', () => { $('gfTitle').scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' }); setTimeout(() => $('gfPlay').focus({ preventScroll: true }), 400); });
   $('gfResume').addEventListener('click', () => gfPauseOpen(false));
   $('gfPauseCard').addEventListener('click', () => { gfPauseOpen(false); gfCardShow(true, true); });
   $('gfLeave').addEventListener('click', gfQuit);
@@ -82841,7 +82827,6 @@ function rkMerge(d, takeLooks) {
   rlvSave(true);
   const lv = $('rlBotLvl'); if (lv) { try { const v = localStorage.getItem('skerry-rival-lvl'); if (v && [...lv.options].some(o => o.value === v)) lv.value = v; } catch (e) {} lv.addEventListener('change', () => { try { localStorage.setItem('skerry-rival-lvl', lv.value); } catch (e) {} }); }
   if ($('rlPlay')) $('rlPlay').addEventListener('click', () => { if (typeof rlPlayBot === 'function') rlPlayBot(); else if (typeof toast === 'function') toast('The duel isn\'t ready in this build yet.'); });
-  if ($('rlBanner')) $('rlBanner').addEventListener('click', () => { const c = $('rlTitle'); if (!c) return; if (typeof MD !== 'undefined' && MD.on && typeof mdPick === 'function') mdPick('rlTitle', true); c.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' }); setTimeout(() => $('rlPlay').focus({ preventScroll: true }), 400); });
   if ($('rlCrateBtn')) $('rlCrateBtn').addEventListener('click', e => rlkShow(e));
   if ($('rlSkinBtn')) $('rlSkinBtn').addEventListener('click', e => rlkShow(e, true));
   if ($('rlkClose')) $('rlkClose').addEventListener('click', rlkHide);

@@ -1757,7 +1757,6 @@ const fpsTouchEnd = e => {
 addEventListener('touchend', fpsTouchEnd, true); addEventListener('touchcancel', fpsTouchEnd, true);
 
 // the buttons
-$('fpsBanner').addEventListener('click', () => { const c = $('fpsTitle'); c.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' }); setTimeout(() => $('fpsPlay').focus({ preventScroll: true }), 400); });
 $('fpsPlay').addEventListener('click', fpsStart);
 $('fpsSettings').addEventListener('click', () => $('titleSettings').click());
 $('fpsNick').addEventListener('keydown', e => { if (e.key === 'Enter') fpsStart(); });

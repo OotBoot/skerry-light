@@ -491,7 +491,6 @@ function rkMerge(d, takeLooks) {
   rlvSave(true);
   const lv = $('rlBotLvl'); if (lv) { try { const v = localStorage.getItem('skerry-rival-lvl'); if (v && [...lv.options].some(o => o.value === v)) lv.value = v; } catch (e) {} lv.addEventListener('change', () => { try { localStorage.setItem('skerry-rival-lvl', lv.value); } catch (e) {} }); }
   if ($('rlPlay')) $('rlPlay').addEventListener('click', () => { if (typeof rlPlayBot === 'function') rlPlayBot(); else if (typeof toast === 'function') toast('The duel isn\'t ready in this build yet.'); });
-  if ($('rlBanner')) $('rlBanner').addEventListener('click', () => { const c = $('rlTitle'); if (!c) return; if (typeof MD !== 'undefined' && MD.on && typeof mdPick === 'function') mdPick('rlTitle', true); c.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' }); setTimeout(() => $('rlPlay').focus({ preventScroll: true }), 400); });
   if ($('rlCrateBtn')) $('rlCrateBtn').addEventListener('click', e => rlkShow(e));
   if ($('rlSkinBtn')) $('rlSkinBtn').addEventListener('click', e => rlkShow(e, true));
   if ($('rlkClose')) $('rlkClose').addEventListener('click', rlkHide);

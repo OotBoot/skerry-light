@@ -6,6 +6,9 @@
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 245, date: '2026-11-23', title: "Main menu: fewer banners", Changes: [
+    "Main menu: the banners for the older games, from Wreckers' Night through The Chronicle of the Light, are gone from the top of the menu. Every game is still in the list below; only Skerry League and Skerry Chess keep a banner.",
+  ] },
   { v: 244, date: '2026-11-23', title: "Skerry Chess: new pieces for Skerry rules", Changes: [
     "Skerry Chess, Skerry rules: every piece now has a move or a power of its own, instead of moving like its standard chess counterpart.",
     "Skerry Chess: the keeper steps one square, or swaps places with one of your hands next to it. No castling under Skerry rules.",
