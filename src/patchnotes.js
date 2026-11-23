@@ -6,7 +6,7 @@
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
-  { v: 243, date: '2026-11-23', title: "Skerry Chess: new pieces for Skerry rules", Changes: [
+  { v: 244, date: '2026-11-23', title: "Skerry Chess: new pieces for Skerry rules", Changes: [
     "Skerry Chess, Skerry rules: every piece now has a move or a power of its own, instead of moving like its standard chess counterpart.",
     "Skerry Chess: the keeper steps one square, or swaps places with one of your hands next to it. No castling under Skerry rules.",
     "Skerry Chess: the lantern sails diagonally or leaps like a knight. The cutter sails diagonally or tacks one step straight.",
@@ -14,6 +14,8 @@ var PATCH_NOTES = [
     "Skerry Chess: the gannet dives exactly three squares in any line, over anything, or takes one step straight.",
     "Skerry Chess: the hand steps forward or sideways and takes diagonally forward. No double step.",
     "Skerry Chess: a guide to the pieces sits beside the board in Skerry rules games, and all three bots play the new pieces.",
+  { v: 243, date: '2026-11-23', title: "Main menu tidy-up", Changes: [
+    "Main menu: the New tags are gone from the older games, from Skerry Light through The Chronicle of the Light, and from The Gannet's Wake on the raid list. Only Skerry League and Skerry Chess still carry one.",
   ] },
   { v: 242, date: '2026-11-23', title: "Lore compendium: the harbour games", New: [
     "Lore compendium: six new articles for the newer games. The Harbour Pool, The Blue and the Orange and The Gale for Skerry League; The players of the lamp room (Hob, Mate Tamsin and the Old Keeper) for Skerry Chess; The headland for Skerry Links; and Crossing in person for Skerry Clash's First person.",
