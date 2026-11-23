@@ -3250,7 +3250,7 @@ svg.chrock .foam { fill: rgba(235,245,250,0.55); } svg.chrock .rk { fill: #4b4d5
 // ---- src/config.js ----
 'use strict';
 // The game's version, shown at the top of the main menu. Bump it by one with every change pushed to main.
-var VERSION = 242;
+var VERSION = 243;
 // Skerry Light: tuning, asset paths and lore.
 // World units are metres. The lighthouse stands at the origin on the shoreline (y = 0);
 // north (+y) is open sea. Bearings: 0 = north, positive = east.
@@ -3425,7 +3425,7 @@ document.addEventListener('visibilitychange', () => {
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
-  { v: 242, date: '2026-11-23', title: "Skerry Chess: new pieces for Skerry rules", Changes: [
+  { v: 243, date: '2026-11-23', title: "Skerry Chess: new pieces for Skerry rules", Changes: [
     "Skerry Chess, Skerry rules: every piece now has a move or a power of its own, instead of moving like its standard chess counterpart.",
     "Skerry Chess: the keeper steps one square, or swaps places with one of your hands next to it. No castling under Skerry rules.",
     "Skerry Chess: the lantern sails diagonally or leaps like a knight. The cutter sails diagonally or tacks one step straight.",
@@ -3434,6 +3434,9 @@ var PATCH_NOTES = [
     "Skerry Chess: the hand steps forward or sideways and takes diagonally forward. No double step.",
     "Skerry Chess: a guide to the pieces sits beside the board in Skerry rules games, and all three bots play the new pieces.",
   ] },
+  { v: 242, date: '2026-11-23', title: "Lore compendium: the harbour games", New: [
+    "Lore compendium: six new articles for the newer games. The Harbour Pool, The Blue and the Orange and The Gale for Skerry League; The players of the lamp room (Hob, Mate Tamsin and the Old Keeper) for Skerry Chess; The headland for Skerry Links; and Crossing in person for Skerry Clash's First person.",
+    "Lore compendium: the League, Chess and Links chronicles link to their new pages, and the era of the Light now lists the Harbour Pool and the lamp room's chessboards." ] },
   { v: 241, date: '2026-11-23', title: "New game: Skerry Chess", New: [
     "Skerry Chess: a new game on the main menu. Chess against a bot or another player, with every rule of the game: castling, en passant, promotion, check, checkmate and stalemate, and draws by repetition, the fifty-move rule and insufficient material.",
     "Skerry Chess: Skerry rules, a variant on the reef. Four rocks block the board, gannets (knights) fly over them, and a keeper (king) that reaches the Light, the four centre squares, wins outright. The pieces are the station's own: keeper, lantern, tower, cutter, gannet and hand.",
@@ -70283,7 +70286,8 @@ function origIsOpen() { return !!(ORIG.el && !ORIG.el.hidden); }
 // The Skerry Compendium: the lore book on the main menu, written like a wiki (src/loreui.js draws it).
 // It ties every game into one history: the voyages (Skerry Light), Wreckers' Night, Drowned Reach, Keeper's Last Light,
 // the two raids (Maren's End, The Gannet's Wake), The Chronicle of the Light (its people, places, nights and five eras), Fog Run, Freebooters' Sea [fbsea], The Original (as The Early Watches),
-// Skerry Links and Skerry Clash (with the Race, the Threefold Skerry, the triple draft and the towers). Where the game itself says nothing, the gaps are filled
+// Skerry Links (with the headland), Skerry League (the Harbour Pool, its two sides and the Gale), Skerry Chess (the players of the lamp room)
+// and Skerry Clash (with the Race, the Threefold Skerry, the triple draft, the towers and crossing in person). Where the game itself says nothing, the gaps are filled
 // with lore that fits; the keeper's log (SK.LOG in config.js) is the spine and is never contradicted.
 // An article: { id, t: title, cat: [categories], img: a picture key (see loreImg in loreui.js), gal: visitors' picture keys for a gallery, box: [[label, value], ...]
 //   (the infobox), sum: the opening paragraph, secs: [{ h: heading, p: [paragraphs] }], also: [ids for See also] }.
@@ -70461,7 +70465,7 @@ var LORE = [
     "The traffic grew every night of those years: one more ship each night than the last, and more rocks with the shifting of the banks. The keeper made a rule for himself, which the log repeats on its flyleaf: <i>three lost in one night, and I begin again as if I had never kept a light.</i> He never wrote down how many times he began again. On 14 December 1887 there was only one ship, and he did not reach her: see [[wreck1887]].",
   ]},
 ], also: ['keeper', 'skerrylight', 'wreck1887'] },
-{ id: 'ch_links', t: 'Skerry Links', cat: ['Chronicles', 'Places'], box: [['Told in', 'Skerry Links'], ['When', 'Still evenings, from c. 1883'], ['Where', 'The headland above [[harbour|the harbour]]'], ['Who', 'One to four players, taking turns'], ['Holes', 'Nine, par 36'], ['Laid out by', 'The keepers of [[skerrylight]]']], sum: "Nine holes of golf along the cliffs of the headland, laid out by the keepers in the years before the lamp failed. The round starts at midday on the inland holes, turns north along the cliff tops, and comes in by moonlight with the Light turning off the point. On a still evening you can still play it.", secs: [
+{ id: 'ch_links', t: 'Skerry Links', cat: ['Chronicles', 'Places'], box: [['Told in', 'Skerry Links'], ['When', 'Still evenings, from c. 1883'], ['Where', '[[headland|The headland]] above [[harbour|the harbour]]'], ['Who', 'One to four players, taking turns'], ['Holes', 'Nine, par 36'], ['Laid out by', 'The keepers of [[skerrylight]]']], sum: "Nine holes of golf along the cliffs of the headland, laid out by the keepers in the years before the lamp failed. The round starts at midday on the inland holes, turns north along the cliff tops, and comes in by moonlight with the Light turning off the point. On a still evening you can still play it.", secs: [
   { h: 'The nine holes', p: [
     "<b>1. The Gate</b>, a dogleg right with a bunker in the corner. <b>2. The Long Road</b>, a par five with a creek across the fairway short of the green. <b>3. Down to the Cove</b>, running downhill to the left. <b>4. First Sight of the Sea</b>, a short four with the sea and a low cliff all down the right. <b>5. Cliff's Edge</b>, a par three along the cliff top. <b>6. The Climb</b>, a steep pull up to a green on the headland. <b>7. The Point</b>, a little par three to a tiny green with the sea on three sides. <b>8. The Chasm</b>, a second shot over a sea-filled gully. <b>9. Homeward Cliff</b>, a long four leaning towards the sea.",
     "The first three run south down the inland side and the other six come back north along the cliffs, each tee a little past the last green, so the whole course can be seen from most of it.",
@@ -70474,8 +70478,8 @@ var LORE = [
     "The keepers played with whatever the coast gave them, and the habit stuck. The Chandler's Crate holds balls made from the stores of a ship's chandler, gull's eggs, buoys, net floats, sea glass, and some that glow or shimmer in flight. The Shipwright's Crate holds whole sets of clubs made from a ship's gear: oars, belaying pins, boat-hooks, harpoons, a narwhal's tusk, a kraken's arm. The finest of them are said to be <b>The Keeper's Beam</b>, with a little lighthouse for a head and its lamp lit, and <b>The Drowned Trident</b>. None of them plays better than any other. See [[crates]].",
   ]},
   { h: 'In the log', p: [ "[[log|The keeper's log]] never mentions the course. The station's coal book records twelve golf balls bought from a Wrackhaven chandler in 1884, and eleven of them lost by the end of that summer." ] },
-], also: ['skerrylight', 'harbour', 'crates'] },
-{ id: 'ch_league', t: 'Skerry League', cat: ['Chronicles', 'Places'], box: [['Told in', 'Skerry League'], ['When', 'Summer evenings, from c. 1885'], ['Where', 'The Harbour Pool, under the cliffs by [[harbour|the harbour]]'], ['Who', 'Two crews, Blue and Orange, one to three ships a side'], ['Played with', 'A great striped buoy'], ['Ships', 'Brigs, cutters, barques, and in later years a carrier']], sum: "A game the harbour crews made up between voyages: a walled basin of still water under the cliffs, a goal at each end with a little light behind it, and a great red and white buoy to knock into the other crew's goal with nothing but your own ship. Nobody is quite sure who played it first, and every crew says it was theirs.", secs: [
+], also: ['headland', 'skerrylight', 'harbour', 'crates'] },
+{ id: 'ch_league', t: 'Skerry League', cat: ['Chronicles', 'Places'], box: [['Told in', 'Skerry League'], ['When', 'Summer evenings, from c. 1885'], ['Where', '[[harbourpool|The Harbour Pool]], under the cliffs by [[harbour|the harbour]]'], ['Who', 'Two crews, Blue and Orange, one to three ships a side'], ['Played with', 'A great striped buoy'], ['Ships', 'Brigs, cutters, barques, and in later years a carrier']], sum: "A game the harbour crews made up between voyages: a walled basin of still water under the cliffs, a goal at each end with a little light behind it, and a great red and white buoy to knock into the other crew's goal with nothing but your own ship. Nobody is quite sure who played it first, and every crew says it was theirs.", secs: [
   { h: 'The Harbour Pool', p: [
     "The pool was built as a fitting-out basin for the harbour, a square of sea wall with a lamp every few yards along the top, and was never finished: the gates were never hung, and the cove's tide never quite empties it. The crews laid the two goals across its ends with spare spars and old net, and the harbour board, finding it could not stop them, put up two small lighthouses behind them and painted one blue and one orange.",
     "The buoy is a spent channel marker, striped red and white and big enough that a cutter has to put her shoulder into it. A hard knock lifts it clean out of the water.",
@@ -70484,8 +70488,8 @@ var LORE = [
     "A match runs on the harbour clock for a few minutes. A goal rings the bell and sets the lighthouse behind it flashing, and both crews go back to their marks to start again. Level at the end and it goes on until somebody scores. The crews keep a Gale in a bottle, a burst of wind let loose from a cask on deck, and fill it again from the yellow gale buoys moored about the pool.",
   ]},
   { h: 'In the log', p: [ "[[log|The keeper's log]] never mentions the game, though the harbour board's minutes record the cost of two lighthouses, 'small, for the amusement of the crews', and of a great deal of new net." ] },
-], also: ['harbour', 'ch_links', 'crates'] },
-{ id: 'ch_chess', t: 'Skerry Chess', cat: ['Chronicles', 'Places'], box: [['Told in', 'Skerry Chess'], ['When', 'Long winter nights, from c. 1886'], ['Where', 'The lamp room of [[skerrylight]]'], ['Who', 'The keepers, the harbour crews, anyone who would sit down'], ['Played with', 'Two boards: a plain one, and the reef board'], ['Pieces', 'Keeper, lantern, tower, cutter, gannet and hand']], sum: "The keepers' game. On the long nights of the watch the keeper on duty and the one off it played chess by the light of the lamp, on a board one of them carved from a ship's hatch cover. A second board followed, cut with the reef on it, and a game of its own grew up around it: the Light against the Wreckers.", secs: [
+], also: ['harbourpool', 'leaguecrews', 'gale', 'harbour'] },
+{ id: 'ch_chess', t: 'Skerry Chess', cat: ['Chronicles', 'Places'], box: [['Told in', 'Skerry Chess'], ['When', 'Long winter nights, from c. 1886'], ['Where', 'The lamp room of [[skerrylight]]'], ['Who', 'The keepers, the harbour crews, [[lamproom|anyone who would sit down]]'], ['Played with', 'Two boards: a plain one, and the reef board'], ['Pieces', 'Keeper, lantern, tower, cutter, gannet and hand']], sum: "The keepers' game. On the long nights of the watch the keeper on duty and the one off it played chess by the light of the lamp, on a board one of them carved from a ship's hatch cover. A second board followed, cut with the reef on it, and a game of its own grew up around it: the Light against the Wreckers.", secs: [
   { h: 'The plain board', p: [
     "The first board is a plain one, played by the rules any harbour club would know. The keepers kept a tally of games in pencil on the underside, and it runs to several hundred before the pencil gives out.",
   ]},
@@ -70493,7 +70497,7 @@ var LORE = [
     "The second board was carved with four rocks standing up out of it, where the skerries would be if the board were the sea, and the four squares between them painted gold for the Light. Its pieces were whittled to look like the station's own: a keeper in his cap, a hand lantern, the tower, a cutter, a gannet, and the hands. On the reef board a keeper who reaches the Light wins outright, as any keeper would tell you is only right.",
   ]},
   { h: 'In the log', p: [ "[[log|The keeper's log]] says nothing of either board, though the station's stores list records 'one set chessmen (spare), whittled', and two pots of gold paint nobody could account for." ] },
-], also: ['skerrylight', 'harbour', 'ch_league'] },
+], also: ['lamproom', 'skerrylight', 'harbour'] },
 { id: 'ch_clash', t: 'Skerry Clash', cat: ['Chronicles', 'Events'], box: [['Told in', 'Skerry Clash'], ['When', 'The years after, at every slack water'], ['Where', '[[race|The Race]], and [[threeskerry|the Threefold Skerry]]'], ['Who', '[[racekeepers|The keepers of the Race]]'], ['Champions', '[[maren]], [[plimsoll]], [[verity]]'], ['Fought with', '[[clashhands|Crews, crabs, birds and worse]], spells, and lamp oil'], ['Prize', 'The other keeper\'s [[greatlight|Great Light]]']], sum: "The tale of the rival lights. In the years after, a second light was lit on a rock across the tidal race from the first, and each keeper was sure the other's was the false one that puts ships on the reef. Since then they have settled it at every slack water, three minutes at a time, across the causeways the falling tide uncovers.", secs: [
   { h: 'Why they fight', p: [
     "The coast had learnt from [[mooncussers|the Mooncussers]] that a light is not to be trusted because it is a light. Two lights on two rocks, close enough to shout across, cannot both be honest, and ships cannot steer by both. Neither keeper will put theirs out. So each sends everything they can muster across the water to put out the other's.",
@@ -70506,7 +70510,7 @@ var LORE = [
     "The greatest of the coast have answered too. [[maren]] has crossed with her lantern, and [[plimsoll]] has walked the causeway for whichever keeper he thought was in the right. Even [[verity]] has been set down on a causeway, smiling and saying he wants to help, and on the Race, for once, the keeper who brought him swears he does. A keeper may have only one of them on a side.",
   ]},
   { h: 'The other ways of it', p: [
-    "Some nights neither keeper brings their own hands, and they pick them on the spot: see [[tripledraft|the triple draft]]. And on the [[threeskerry|Threefold Skerry]], three keepers fight it out at once, every one for themselves.",
+    "Some nights neither keeper brings their own hands, and they pick them on the spot: see [[tripledraft|the triple draft]]. And on the [[threeskerry|Threefold Skerry]], three keepers fight it out at once, every one for themselves. Some nights a keeper will not stay behind the lamp at all, and goes over with the hands: see [[crossing|crossing in person]].",
   ]},
 ], also: ['race', 'racekeepers', 'greatlight'] },
 
@@ -71189,6 +71193,69 @@ var LORE = [
     "Each round asks for something: a big hitter, something that can bring down birds (twice), a spell that strikes, two cheap hands, a building or a spell, and one where anything goes, in an order nobody knows beforehand. Both keepers are asked for the same thing each round, but never offered the same three, and each can see across the shore what the other is being offered, though never which one they take. No hand is offered to a keeper twice in one draft, and the champions are never offered at all: they come for a keeper, not for a draft.",
   ]},
 ], also: ['clashhands', 'ch_clash'] },
+// ---------------- the harbour games: the pool, the headland and the lamp room (Skerry League, Skerry Links, Skerry Chess) ----------------
+{ id: 'harbourpool', t: 'The Harbour Pool', cat: ['Places'], box: [['Kind', 'An unfinished fitting-out basin'], ['Where', 'Under the cliffs by [[harbour|the harbour]]'], ['Built', 'c. 1880, never finished'], ['Goals', 'Two, each with a small lighthouse behind it'], ['Appears in', '[[ch_league]]']], sum: "A square of still water walled off from the cove under the cliffs, meant for fitting out ships and never used for it. The harbour crews took it over for their ball game, and it has been theirs ever since. See [[ch_league]].", secs: [
+  { h: 'The basin', p: [
+    "The harbour board built it to fit out new hulls out of the weather, with a sea wall on all four sides and a lamp every few yards along the top so the shipwrights could work after dark. The money ran out before the gates were hung. The cove's tide comes and goes through the gap and never quite empties it, so the water inside stays flat while the sea outside is anything but.",
+    "Its walls are hard on a careless helmsman. A ship that runs into one loses her way as surely as on a rock, though the only damage is to her pride.",
+  ]},
+  { h: 'The two lighthouses', p: [
+    "At each end of the pool stands a small lighthouse, one painted blue and one orange, put up by the harbour board when it found it could not stop the game. They are lit for every match and flash when a goal goes in. From the far end they look, on a dark evening, uncomfortably like a pair of false lights, and old hands at the harbour say that is the joke.",
+  ]},
+  { h: 'The gale buoys', p: [
+    "Yellow buoys are moored about the water, small ones along the sides and big ones in the corners and at the middle of each wall. Each holds a charge of wind for [[gale|the Gale]], and is filled again by the harbour lads a few seconds after a ship has emptied it.",
+  ]},
+], also: ['ch_league', 'leaguecrews', 'harbour'] },
+{ id: 'leaguecrews', t: 'The Blue and the Orange', cat: ['Factions'], box: [['Kind', 'The two sides of the Harbour Pool'], ['Colours', 'Blue, and Orange'], ['Ships a side', 'One to three, and more when friends come'], ['Ships sailed', 'Brigs, cutters, barques, and a carrier'], ['Appears in', '[[ch_league]]']], sum: "The two sides of [[ch_league|the harbour crews' game]]. Nobody belongs to either for long: a crew is Blue one evening and Orange the next, and the only loyalty that lasts is to the ship.", secs: [
+  { h: 'Picking sides', p: [
+    "The sides are made up on the quay, as many ships to each as there are crews willing. When friends come down from the town the sides grow to fit them all, up to three ships a side and sometimes six on the water at once, each crew sailing its own ship. Any berth left empty is filled by harbour lads who know the pool, some sharper than others. The quay calls them Easy, Fair and Hard, and not to their faces.",
+  ]},
+  { h: 'How they play', p: [
+    "On each side the ship best placed goes for the buoy and comes in behind it on the line to the goal. Another hangs back to keep goal, and a third waits behind the play for whatever comes loose. A good crew lets a team-mate have the buoy when the team-mate is nearer, which is the hardest thing in the game to teach.",
+    "A crew that has to leave mid-match leaves its ship with the harbour lads until it can get back aboard. If the crew that called the match leaves, the match is over, by long custom and because they took the ball.",
+  ]},
+  { h: 'The ships', p: [
+    "Each crew brings her own ship in her own colours, and she handles in the pool as she does at sea, only turning more sharply in the still water. The cutter answers quickest. The carrier, which the harbour has never quite explained, is the heaviest, and moves the buoy more and is moved less. See [[boats]].",
+  ]},
+], also: ['ch_league', 'harbourpool', 'gale'] },
+{ id: 'gale', t: 'The Gale', cat: ['Objects'], box: [['Kind', 'Wind, kept in a cask on deck'], ['Filled from', 'The yellow gale buoys of [[harbourpool|the Harbour Pool]]'], ['Used for', 'A burst of speed'], ['Appears in', '[[ch_league]]']], sum: "A charge of wind stoppered up in a cask on deck and let go all at once, which drives a ship across the pool far faster than any sail. The crews of [[ch_league|Skerry League]] call it a Gale in a bottle.", secs: [
+  { h: '', p: [
+    "Nobody at the harbour will say where the wind comes from. The crews take it from the gale buoys moored about the pool, a third of a cask from a small one and a whole cask from a big one, and it lasts only as long as the cask does. The Hard crews spend it freely. The Easy ones keep forgetting they have it.",
+    "Since [[sixseas|the strange year]] the coast has grown used to things that should not be kept being kept, and a cask of wind is among the milder of them.",
+  ]},
+], also: ['ch_league', 'harbourpool', 'leaguecrews'] },
+{ id: 'headland', t: 'The headland', cat: ['Places'], box: [['Where', 'Above [[harbour|the harbour]], facing [[skerrylight]]'], ['Holds', 'The nine holes of the keepers\' links'], ['Landmarks', 'The Gate, the Cove, the Point, the Chasm'], ['Appears in', '[[ch_links]]']], sum: "The long hill of turf and cliff above the harbour, from the field gate inland round to the point that looks straight out at the Light. The keepers laid their nine holes of golf along it, and it is mostly remembered for those. See [[ch_links]].", secs: [
+  { h: 'The lie of it', p: [
+    "Inland, the headland is farmland running gently down to a small cove, crossed by a creek that the course has to clear. Seaward it rises to a long cliff top, with the sea and the skerries all along one side, until it ends at the Point, a tiny green with the sea on three sides. Beyond the Point the cliff is split by the Chasm, a gully the sea fills at every tide, which the eighth hole crosses in one shot or not at all.",
+  ]},
+  { h: 'Its view', p: [
+    "From almost anywhere on it you can see [[skerrylight]], white with its two red bands, and the ships swinging round each of [[skerries|the skerries]] in turn on their way into the harbour. In the evening the Light comes on, turning once every ten seconds, and the keeper's cottage window is lit. It is said to be the best view of the Light on the coast, and the keepers made a golf course of it so they could look at their own lamp on their evenings off.",
+  ]},
+], also: ['ch_links', 'harbour', 'skerrylight'] },
+{ id: 'lamproom', t: 'The players of the lamp room', cat: ['Characters'], box: [['Who', 'Hob the deckhand, Mate Tamsin, the Old Keeper'], ['Where', 'The lamp room of [[skerrylight]]'], ['Played', 'On the plain board and the reef board'], ['Appears in', '[[ch_chess]]']], sum: "The three who will always sit down to a game in [[ch_chess|the lamp room]], when nobody else will: a deckhand, a mate and an old keeper. Between them they are said to have played everyone who ever climbed the stair.", secs: [
+  { h: 'Hob the deckhand', p: [
+    "A boy off the harbour boats who comes up with the oil and stays for a game. Hob looks about one move ahead and guesses at the rest, and makes the odd careless move that a kinder player would not take. He has never once missed a mate in one, and he will tell you so.",
+  ]},
+  { h: 'Mate Tamsin', p: [
+    "The mate of one of the coasting schooners, who plays while her ship waits on the tide. She thinks a few moves deep, plays a steady game with a little daring in it, and takes a man's pieces with the same face she takes his money. Half the harbour has lost to her and the other half has not played her yet.",
+  ]},
+  { h: 'The Old Keeper', p: [
+    "Nobody agrees whose old keeper he is. Some say he kept the Light before [[keeper|Holm]], and some that he is Holm himself in later years, and he will not settle it. He thinks a long while over every move and plays his best every time, on either board. The tally on the underside of the board, which runs to several hundred games, has very few marks against him.",
+  ]},
+  { h: 'On the reef board', p: [
+    "All three know the reef board as well as the plain one, its rocks and its Light, and all three will tell you the same thing about it: that a keeper belongs on the Light, and a game that forgets it is not worth playing.",
+  ]},
+], also: ['ch_chess', 'skerrylight', 'keeper'] },
+// ---------------- the Race, crossed in person (Skerry Clash, First person) ----------------
+{ id: 'crossing', t: 'Crossing in person', cat: ['Events'], box: [['Kind', 'A way of fighting on [[race|the Race]]'], ['Who', 'Any hand who will carry a keeper\'s will across'], ['Cards played by', 'The keepers\' clerks'], ['Appears in', '[[ch_clash]]']], sum: "A custom of [[race|the Race]] for those who would rather be on the causeway than behind a lamp. Each keeper's hands are sent over as usual, but one of the keepers' own goes over with them, inside the fight, wearing whichever hand is out on the water.", secs: [
+  { h: 'How it is done', p: [
+    "On these nights neither keeper calls their own hands. A clerk on each rock does it for them, by the book and the oil, and the keeper goes down to the causeway and takes the part of one of the hands crossing over: a deckhand with a cutlass, a harpooner, a crab, whatever is out there. When that hand falls the keeper takes up another, so a keeper crossing in person is never out of the fight for long.",
+    "The other keeper may cross in person too, and then the two meet on the causeway with the whole of both sides round them. The coast likes these nights best, because for once the keepers have to look at each other.",
+  ]},
+  { h: 'On the Threefold Skerry', p: [
+    "On [[threeskerry|the Threefold Skerry]] all three keepers may cross in person at once, each with a clerk at home calling their hands. It is the nearest thing the Race has to a brawl, and the keepers' standing is reckoned from it as from any other night: see [[racekeepers]].",
+  ]},
+], also: ['ch_clash', 'racekeepers', 'clashhands'] },
 // ---------------- eras: the ages of the coast (the five acts of The Chronicle of the Light) ----------------
 { id: 'era_before', t: 'Before the Light', cat: ['Eras'], box: [["From", "c. 1200s"], ["To", "1841"], ["Lit by", "The fire on [[lanternrock]]"], ["Within it", "[[wreckingyears]]"]], sum: "The six hundred years when the only light on this coast was a fire on Lantern Rock, kept by one family. It was the age of the fire-keepers, the Spanish fort and the Mooncussers, and it ended the night the Skerry rock had a light of its own.", secs: [
   { h: '', p: [
@@ -71202,7 +71269,7 @@ var LORE = [
 ], also: ['mooncussers', 'jagohanging', 'era_before'] },
 { id: 'era_light', t: 'The Light', cat: ['Eras'], box: [["From", "1841"], ["To", "14 December 1887"], ["Lit by", "[[skerrylight]]"], ["Keepers", "Unrecorded, then [[keeper|Holm]] from c. 1879"]], sum: "The forty-six years Skerry Light burned as a light should, from the night the Lampwright lit it to the night its lamp went out with the Gannet coming in. The coast remembers them as the ordinary years, and there have been none since.", secs: [
   { h: '', p: [
-    "It holds [[lighting1841|the lighting of the Light]], [[ch_original|the keeper's early watches]] when he swung the beam by hand, [[ch_links|the nine holes on the headland]] from about 1883, and its end, [[wreck1887|the Night of the Gannet]].",
+    "It holds [[lighting1841|the lighting of the Light]], [[ch_original|the keeper's early watches]] when he swung the beam by hand, [[ch_links|the nine holes on the headland]] from about 1883, [[ch_league|the crews' game in the Harbour Pool]] from about 1885, [[ch_chess|the chessboards of the lamp room]] from about 1886, and its end, [[wreck1887|the Night of the Gannet]].",
   ]},
 ], also: ['era_before', 'era_strange', 'skerrylight'] },
 { id: 'era_strange', t: 'The Strange Year', cat: ['Eras'], box: [["From", "15 December 1887"], ["To", "14 December 1888"], ["Began", "When the sea froze to the horizon"], ["Recorded in", "[[log|The keeper's log]]"]], sum: "1888, the year after the Gannet, when the sea stopped being one sea. In it came [[plimsoll]], Maren on the water, [[knock]], [[verity]], the six seas, the visitors and the drifting crates, and it ended a year to the night with the Gannet rising.", secs: [
