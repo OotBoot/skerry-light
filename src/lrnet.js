@@ -20,8 +20,8 @@
 // p [seq, sn, x, y, z, vx, vy, vz, yaw, pitch, mx, mz, held, tapped, flags]: where it is (sn, how many times it has
 // come back, so a pose from before a death is never taken), which buttons are held, and which were pressed at all
 // since the last send (so a tap between sends isn't lost); u [n, 1 | 2, x, y, z, yaw], the last movement ability it
-// used (Ballast Rush, Gull's Rise, the Wisp's blink, which its own screen moved it through), for the host to start its
-// cooldown and its effect; and h, a hero it asks for (taken in the pick, in its spawn or while it's down).
+// used (one its hero's def lists as own, such as Ballast Rush, Gull's Rise, the Wisp's blink, which its own screen moved
+// it through), for the host to start its cooldown and its effect (the def's ownHost); and h, a hero it asks for (taken in the pick, in its spawn or while it's down).
 // The host takes each person's pose as theirs (p.remote: its sim never moves that body), carried on by its speed for
 // as long ago as it was sent and slid there (lrnPlace), with a jump further than anyone can move clamped; their
 // buttons drive their shots and abilities there. On the others' screens every other body is slid the same way to where
@@ -242,7 +242,7 @@ function lrnPlace(dt) {
   const C = LRM.cart, W = LRN.cart;
   if (C && W) { const L = C.L || lrPathLen(), age = Math.min(0.25, (now - W.t) / 1000), tgt = lrClamp(W.s + W.v * age, W.floor, L); C.s += (tgt - C.s) * Math.min(1, dt * 8); if (Math.abs(tgt - C.s) > 3) C.s = tgt; lrPlaceCart(); C.px = C.x; C.pz = C.z; }
   if (LRM.ph === 'play' && !LRM.ot) LRM.clock = Math.max(0, LRM.clock - dt); else if (LRM.ph === 'pick' || LRM.ph === 'setup') LRM.phT = Math.max(0, LRM.phT - dt);
-  for (const j of LRM.proj) if (!j.own) { if (j.k !== 'bolt') j.vy -= LR_G * dt; j.x += j.vx * dt; j.y += j.vy * dt; j.z += j.vz * dt; }
+  for (const j of LRM.proj) if (!j.own) { if (!LR_PROJ[j.k] || LR_PROJ[j.k].grav) j.vy -= LR_G * dt; j.x += j.vx * dt; j.y += j.vy * dt; j.z += j.vz * dt; }
   lrOwnBolts(dt);
 }
 // each frame, after the ticks: my word out, and (the host) anyone gone, or (the others) the host gone
@@ -336,12 +336,9 @@ function lrnUse(p, u) {
   if (u.length < 6 || !u.slice(0, 6).every(Number.isFinite)) return;
   const H = LR_HEROES[p.hero], k = u[1] === 1 ? 'a1' : 'a2', can = LRM.ph === 'play' || (LRM.ph === 'setup' && p.team === 1);
   if (!H || !p.alive || !can || p.cd[k] > 0.6) return;
-  const own = (p.hero === 'bollard' && k === 'a1') || (p.hero === 'razorbill' && k === 'a1') || (p.hero === 'linnet' && k === 'a2'); if (!own) return;
+  if (!(H.own || []).includes(k) || p.stun > 0 || p.root > 0) return;   // (only the hero's own movement abilities: its def's own)
   p.cd[k] = H.cd[k]; p.act = { k, t: 0 };
-  const S = LRN.samp[p.i] || p;
-  if (p.hero === 'bollard') { p.rushYaw = lrAng(u[5]); p.rushHit = []; lrFxPush('rush', { x: p.x, y: p.y + 1, z: p.z, v: p.i }); }
-  else if (p.hero === 'razorbill') { p.glide = true; lrFxPush('rise', { x: u[2], y: u[3], z: u[4], v: p.i }); }
-  else lrFxPush('blink', { x: u[2], y: u[3] + 1, z: u[4], x2: S.x, y2: S.y + 1, z2: S.z, v: p.i });
+  if (H.ownHost) H.ownHost(p, k, u, LRN.samp[p.i] || p);
 }
 // everyone but the host: the host's word on the match
 function lrnWord(w, now) {

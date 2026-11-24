@@ -2079,17 +2079,29 @@ body.lron:not(.lrfree) #lrCv { cursor: crosshair; }
 @media (max-height: 460px) { .lr-padr { grid-template-columns: repeat(3, 56px); gap: 6px; } .lr-padr .gfbtn { height: 44px; font-size: 11px; padding: 4px 2px; } .lr-me { padding: 5px 8px 5px 5px; } .lr-mecol { min-width: 140px; } .lr-portrait { width: 40px; height: 40px; } .lr-msg { top: 30%; } }
 /* the hero select */
 .lr-pick { z-index: 25; background: rgba(4,7,14,0.72); place-items: center; }
-.lr-pick .card { max-width: 64rem; }
+.lr-pick .card { max-width: 78rem; }
 .lr-pickhead { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 16px; }
 .lr-pickhead h1 { font-size: clamp(2rem, 6vw, 3rem); }
 .lr-picksub { font-family: var(--log); font-size: 13px; color: var(--muted); }
-.lr-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: 12px; }
-.lr-hcard { font: inherit; color: var(--ink); text-align: left; display: flex; flex-direction: column; gap: 8px; padding: 14px; background: rgba(12,18,32,0.92); border: 1px solid rgba(236,228,207,0.22); cursor: pointer; }
-.lr-hcard:hover, .lr-hcard:focus-visible { border-color: #f6d47c; outline: none; box-shadow: 0 0 0 1px #f6d47c, 0 0 24px rgba(242,193,78,0.25); }
-.lr-hcard.cur { border-color: #8fd89a; }
-.lr-hc-top { display: flex; gap: 10px; align-items: center; } .lr-hc-top kbd { margin-left: auto; align-self: flex-start; }
-.lr-hc-face { width: 64px; height: 64px; }
-.lr-hc-name b { display: block; font-family: var(--display); font-weight: 400; font-size: 1.8rem; line-height: 1; color: #f6d47c; } .lr-hc-name small { font-family: var(--log); font-size: 11px; color: var(--muted); }
+.lr-pickgrid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(17rem, 23rem); gap: 14px; align-items: start; }
+.lr-cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; align-items: start; }
+.lr-rolecol { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.lr-rolehead { margin: 0; font-family: var(--log); font-size: 12px; font-weight: 400; text-transform: uppercase; letter-spacing: 0.1em; }
+.lr-rolehead em { font-style: normal; display: block; padding: 3px 8px; color: #0b0e14; }
+.lr-r-tank .lr-rolehead em { background: #7ac0ff; } .lr-r-damage .lr-rolehead em { background: #ff8a70; } .lr-r-support .lr-rolehead em { background: #9fe0a8; }
+.lr-hcard { position: relative; font: inherit; color: var(--ink); text-align: left; display: flex; align-items: center; gap: 9px; padding: 7px; min-height: 64px; background: rgba(12,18,32,0.92); border: 1px solid rgba(236,228,207,0.22); cursor: pointer; min-width: 0; }
+.lr-hcard:hover, .lr-hcard:focus-visible, .lr-hcard.see { border-color: #f6d47c; outline: none; box-shadow: 0 0 0 1px #f6d47c, 0 0 18px rgba(242,193,78,0.22); }
+.lr-hcard.cur { border-color: #8fd89a; box-shadow: inset 3px 0 0 #8fd89a; }
+.lr-hcard kbd { position: absolute; top: 5px; right: 5px; }
+.lr-hc-face { width: 48px; height: 48px; flex: none; font-size: 1.4rem; }
+.lr-hc-name { min-width: 0; padding-right: 22px; }
+.lr-hc-name b { display: block; font-family: var(--display); font-weight: 400; font-size: 1.3rem; line-height: 1.05; color: #f6d47c; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lr-hc-name small { display: block; font-family: var(--log); font-size: 11px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lr-hc-hp { display: block; font-family: var(--log); font-size: 11px; color: var(--ink); opacity: 0.8; } .lr-hc-hp i { display: block; font-style: normal; color: #ffd25a; }
+.lr-pickinfo { display: flex; flex-direction: column; gap: 8px; padding: 12px 14px; background: rgba(12,18,32,0.92); border: 1px solid rgba(236,228,207,0.22); min-width: 0; }
+.lr-pi-top { display: flex; gap: 10px; align-items: center; }
+.lr-pi-face { width: 64px; height: 64px; flex: none; }
+.lr-pickinfo .lr-hc-name b { font-size: 1.8rem; white-space: normal; }
 .lr-hc-role { display: flex; gap: 10px; font-family: var(--log); font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; }
 .lr-hc-role em { font-style: normal; padding: 1px 8px; color: #0b0e14; }
 .lr-r-tank .lr-hc-role em { background: #7ac0ff; } .lr-r-damage .lr-hc-role em { background: #ff8a70; } .lr-r-support .lr-hc-role em { background: #9fe0a8; }
@@ -2097,8 +2109,17 @@ body.lron:not(.lrfree) #lrCv { cursor: crosshair; }
 .lr-hc-kit { display: flex; flex-direction: column; gap: 5px; font-family: var(--log); font-size: 12px; color: var(--muted); }
 .lr-hc-kit b { color: var(--ink); }
 .lr-hcard kbd, .lr-hc-kit kbd { display: inline-block; min-width: 3.2em; text-align: center; font-family: var(--log); font-size: 10px; padding: 1px 4px; margin-right: 6px; border: 1px solid rgba(236,228,207,0.35); color: #f6d47c; }
-.lr-hc-go { margin-top: auto; font-family: var(--log); font-size: 13px; text-transform: uppercase; letter-spacing: 0.1em; color: #120d06; background: #f2c14e; text-align: center; padding: 7px; }
-.lr-hcard.cur .lr-hc-go { background: #8fd89a; }
+.lr-hcard kbd { min-width: 0; margin: 0; }
+.lr-hc-go { font: inherit; margin-top: 4px; font-family: var(--log); font-size: 13px; text-transform: uppercase; letter-spacing: 0.1em; color: #120d06; background: #f2c14e; text-align: center; padding: 8px; border: 0; cursor: pointer; }
+.lr-hc-go:hover, .lr-hc-go:focus-visible { outline: 2px solid #fff1b8; outline-offset: 1px; }
+@media (max-width: 820px) {
+  .lr-pickgrid { grid-template-columns: minmax(0, 1fr); }
+  .lr-cards { gap: 6px; } .lr-hcard { flex-direction: column; align-items: flex-start; gap: 4px; min-height: 0; padding: 6px; }
+  .lr-hc-face { width: 40px; height: 40px; } .lr-hc-name { padding-right: 0; } .lr-hc-name b { font-size: 1.1rem; } .lr-hc-name small { display: none; }
+  .lr-hc-blurb { font-size: 14px; }
+}
+.lr-hp i.lr-oh { left: auto; background: linear-gradient(90deg, #bfe4ff, #e8f6ff); }
+.lr-status { font-family: var(--log); font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: #0b0e14; background: #ffe070; padding: 1px 6px; align-self: flex-start; }
 .lr-pickcrew { font-size: 13px; margin: 0; }
 /* the scoreboard and the end card */
 .lr-board { z-index: 24; background: rgba(4,7,14,0.55); place-items: center; pointer-events: none; }

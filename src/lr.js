@@ -3,8 +3,9 @@
 // screen (id lrTitle). Two crews, the Lamplighters (team 0, attack) and the Wreckers (team 1, defend), fight down the
 // streets of Gullhaven (src/lrmap.js) over the Lamp Wain, the great lens of the Gullhaven Light on an iron carriage.
 // The Lamplighters push it from the west quay to the foot of the Light; if it gets there the Light is lit and they
-// win. The Wreckers hold it off until the clock runs out. Three heroes, each with a kit of five: Bollard the tank,
-// Razorbill the marksman, Linnet the keeper's apprentice who mends (LR_HEROES). Bots fill every empty seat.
+// win. The Wreckers hold it off until the clock runs out. Heroes, each with a kit of five, in three roles (tank, damage,
+// support), each registered by its own file (src/lrh_<id>.js: Bollard the tank, Razorbill the marksman, Linnet the
+// keeper's apprentice who mends; see "Adding a hero" below). Bots fill every empty seat.
 //
 // This file owns the state (LRM, its shape below), the heroes, the match and its rules, the sim, the input, the bots
 // (lrBot), the way in and out (state 'lamproad' in src/main.js's loop calls lrFrame(dt)), what's kept on this device
@@ -26,12 +27,89 @@
 // LRM = { on, mode: 'solo'|'net', ph: 'pick'|'setup'|'play'|'over', phT, t, clock, ot, otT, stage, win, me,
 //   P: ten players (seats 0-4 the Lamplighters, 5-9 the Wreckers), each { i, team, hero, name, bot, sid, x, y, z,
 //     vx, vy, vz, gnd, yaw, pitch, r, h, hp, maxHp, alive, deadT, spawnT, ammo, reload, fireT, alt, cd: {a1, a2, alt},
-//     ult (0..1), act: {k, t}, brace, slow, glide, kills, deaths, dmg, heal, elims, beam (whom Linnet's light is on, or
-//     -1), inp },
+//     ult (0..1), act: {k, t}, slow (what slows multiply to), slows: {key: [k, t]}, knockT, stun, root, oh
+//     (overhealth), dr and drT (damage taken times dr while drT lasts), firm, glide, kills, deaths, dmg, heal, elims,
+//     beam (whom a healing beam is on, or -1), inp, and whatever a hero's own hooks keep on it },
 //   cart: { s, x, y, z, yaw, st: 'push'|'contest'|'idle'|'back', n, nd, idleT },
-//   walls, zones, proj, packs, feed, FX }   (as in the design: walls are Bollard's bulkheads, zones the tar pools,
-//   hung lanterns, beacons and broadsides, proj the bolts, tar pots and thrown lanterns)
+//   walls, zones, proj, packs, feed, FX }   (walls { id, k, team, owner, x, y, z, yaw, w, h, hp, t }, zones { id, k,
+//   team, owner, x, y, z, r, t, yaw, ... }, proj { id, k, team, owner, x, y, z, vx, vy, vz, t, hit }, each of a kind
+//   some hero file registered)
 // Headings as in src/lrmap.js: you face (-sin yaw, 0, -cos yaw); pitch up is positive.
+//
+// ======== Adding a hero ========
+// One new file, src/lrh_<id>.js, with one script tag for it in index.html after the other heroes' (after the one for
+// src/lrh_linnet.js, before src/main.js's), written as theirs are. (Never write a closing script tag in a comment
+// here: the build inlines every file into one script, and the page would end there.) Nothing else needs an edit: the hero select, the number keys
+// (1-9, in LR_HERO_IDS order), the HUD, the scoreboard, the kill feed, the bots' crews and the snapshots all read the
+// registry. The file only registers (it runs before any match, after src/lr.js, src/lrhero.js and the rest), so its
+// top level calls nothing but the lrDef* functions. Every top-level name in it must be its own (the build joins all
+// the files into one script): prefix them, lrh<Id>... Copy src/lrh_razorbill.js for a shape to start from.
+//
+// lrDefHero({ the stats, and the hooks, all optional but id, role and kit):
+//   id, n (name), title, role 'tank'|'damage'|'support', hp, spd (m/s), r, h (body radius and height), mag (0: no
+//   magazine, melee), reloadT, ultCost (damage or mending to fill the ultimate), cd: { a1, a2, alt } (seconds), range
+//   (bots fire within it), blurb, kit: { pri, alt, a1, a2, ult: [name, what it does in a short line, short name for a
+//   phone button (optional)] }, how: { how: 'Name' } (the kill feed's words for the hows it passes to lrHurt), actT:
+//   { a1: 0.9 } (how long p.act shows an ability, for the art; 0.5, the ult 1.2), own: ['a1'] (abilities its body
+//   hook starts: moved by the owner's screen online), stepVol, zoom (2: the secondary is a glass that brings things
+//   in that much: the view, the look speed and the HUD's glass follow), and for the bots: melee (closes in, swings
+//   wide), botClose (m: goes for a target this near), botKeep (m: backs off from one this near), projSpeed (leads
+//   its shots by it), heals (its secondary mends: bots hold it on hurt allies within healRange, 15, and others come
+//   to it when hurt).
+//   Host side (the sim; each tick while it may fight, in this order, each checks its own button and cooldown):
+//     fire(p, dt, I, H), alt(p, dt, I, H), a1(p, dt, I, H), a2(p, dt, I, H); ult(p, H) when Q is pressed full
+//     (p.ult and p.act are already set). p is the player, I = p.inp ({ fire, alt, a1, a2, ult, jump, mx, mz, yaw,
+//     pitch }), H the def. Set p.cd[k] = H.cd[k] and p.act = { k, t: 0 } when one goes, and push an event (lrFxPush)
+//     for the view and the sound. A stunned hero's hooks aren't called.
+//   Owner side (lrBody, on whichever screen moves the body: the host for bots and itself, a guest for itself):
+//     body(p, dt, I, H, M) starts movement abilities (M = { wx, wz, wl: the walk direction and its length, sy, cy:
+//     sin and cos of yaw }); move(p, dt, I, H) -> true while it sets p.vx/p.vz itself (a charge: no walking or
+//     jumping then); speed(p, I) -> a multiplier on spd; tick(p, dt) its own timers (lrTimers, wherever it's moved).
+//     Set p.glide = true for a glide (holding jump floats down). Not called while stunned or rooted.
+//   Online (src/lrnet.js): a guest runs only body/move/tick for itself, and the cooldown jump of an own ability is sent
+//     to the host: ownUse(p, k) shows it on the guest at once (lrLocalFx), ownHost(p, k, u, S) is the host's side of
+//     it (u = [n, 1|2, x, y, z, yaw] where it started; S where the guest's body is now; p.cd and p.act already set).
+//     guestFire(p, I, H, ey, d) is the guest's instant feedback for its own shot (ey its eye height, d its look):
+//     check I.fire and the fire rate, set p.fireT = 0, p.ammo--, LRM.shotAt = performance.now(), and show a tracer
+//     or fly a local projectile ({ id: -(++LRM.nid), ..., own: 1 }, of a kind registered own). What it hits is the
+//     host's. Events the guest shows itself are registered { own: true } so the host's echo is skipped.
+//     snap(p) -> a few numbers of its own state for the snapshot (0 or [] for none), unsnap(p, x, mine) puts them
+//     back on a guest (mine: its own body, which it moves itself). Keep them few: the snapshot stays under 3000 bytes.
+//   hurt(q, amt, a, how) -> the damage it takes (after dr; before overhealth); reset(p, why) on 'hero' | 'spawn' |
+//     'death'; abil(p, k) -> { on, up } (the HUD lights k, or shows it "up" while what it made stands; default: alt
+//     lit while held); cross(c, cx, cy, me, zoom) draws its crosshair (2D canvas, stroke and fill already set).
+//   Bots (lrBot: the movement, path, target, aim, leading and reload are generic, from the stats above):
+//     bot(p, ai, B) a few times a second, B = { S (the skill: err, react, abil, clump...), I, tg (the target or null),
+//     hpF, hurt (hit in the last second), eye, foes, pals ([{ q, d }], nearest and most hurt first), C (the Wain), at(q,
+//     y) (a point on q to aim at), inCone(yaw, r, half) (how many foes), mode(o) (aim at o.at, lob speed o.lob, press
+//     o.press at o.pressAt) }: set I.a1/I.a2/I.ult/I.alt, or call mode; ai.tgtD is the target's distance,
+//     ai.retreat sends it to mend. botPick(p, foes, ai, S) -> a { q, d } to target instead; botAlt(p, ai, tg, d, S,
+//     hurt) -> true to hold the secondary at that target.
+// lrDefProj(kind, { grav (default true), own, step(j, dt, M) -> true when gone }) (M: sx sy sz (where it was), L (how far
+//   it goes this tick), dx dy dz, a (its owner)); lrLobLand(j, M, noBodies) for a lobbed thing that lands.
+// lrDefZone(kind, { tick(z, dt, a), touch(z, q, dt, a), nofall(z, q), turn, fix: {...}, sync: [...] }).
+// lrDefWall(kind, { w, h, gone(w, owner) }).
+// lrDefEvent(kind, { sound(f, at, me, mine), shake(f, me) -> 0..1, own }); lrDefSound(kind, fn); lrDefSnd(name,
+//   (v, e, rec, o) => {...}) for a named sound (tone, noise and sfx recordings, as src/audio.js has them).
+// The art, in the same file (src/lrhero.js's header has the shapes): lrDefHeroArt(id, { spec, model(team), view(V),
+//   portraitY }), lrDefProjArt(kind, fn), lrDefZoneArt(kind, fn), lrDefWallArt(kind, fn), lrDefFx(kind, fn | { init,
+//   spawn, update }). Without art a hero is drawn plain (a capsule in its crew's colours) and still plays.
+//
+// The toolkit a hero file uses (all here unless said):
+//   lrHurt(q, amt, a, how, head, dot) -> dealt     lrHeal(q, amt, a) -> mended     lrShield(q, amt, a, cap) overhealth
+//   lrKnock(q, vx, vy, vz, t) -> took (not if firm) lrSlow(q, k, t, key)            lrStun(q, t, a)   lrRoot(q, t, a)
+//   lrGuard(q, k, t, firm) (damage times k)        lrFirm(q)                       lrWallHurt(w, amt, a)
+//   lrRayHit(ox, oy, oz, dx, dy, dz, { team, skip, who: 'enemy'|'ally'|'any', pad, max, noWalls, noBodies }) -> { t, p,
+//     head, wall, x, y, z }   lrRay / lrSees(a, b) / lrGround(x, z, y) (src/lrmap.js)   lrBlockRay (the map and walls)
+//   lrFoesIn(p, x, z, r), lrAlliesIn(p, x, z, r) -> bodies     lrFacing(a, q, half)    lrBlinkTo(p, dx, dz, max)
+//   lrSpawnProj(p, kind, v, { dy, ... }) -> j      lrAddZone({ k, team, owner, x, y, z, r, t, ... })
+//   lrAddWall(p, kind, x, y, z, yaw, hp, t)       lrFxPush(kind, {...}) (host only)   lrLocalFx(f) (this screen only)
+//   lrDir(yaw, pitch), lrEyeH(p), lrAng, lrClamp, lrR, lrSay(text, s), lrSnd(name, x, y, z, vol), lrZoom(p), LR_G,
+//   LR_MAP, LRM (the match: LRM.P, LRM.walls, LRM.zones, LRM.proj, LRM.t, LRM.nid)
+// Testing: lrDebug({ hero: id, side: 0|1, skill }) starts a match as that hero; lrDebug({ allBots: true, setupT: 3 })
+//   with lrTick(LR_DT) called in a loop runs a bots' match fast; lrSnap() / lrApply(s) for the online shape;
+//   lrDebugWin(team) ends one. Check: every ability's event appears in LRM.FX, no NaN in LRM.P, JSON.stringify(lrSnap())
+//   under 3000 bytes.
 
 var LR_DT = 1 / 60;
 var LR_TEAMS = [
@@ -45,47 +123,42 @@ var LR_SKILL = {
   fair: { err: 0.04, turn: 6.5, react: 0.32, lead: 0.75, abil: 0.75, strafe: 0.6, head: 0.15, clump: 2 },
   hard: { err: 0.016, turn: 11, react: 0.16, lead: 1, abil: 1, strafe: 1, head: 0.4, clump: 2 },
 };
-// the three heroes: hp, speed, body, the magazine, the ultimate's cost (points of damage or healing to charge it),
-// the cooldowns, and the kit in plain short words for the hero select and the HUD
-var LR_HEROES = {
-  bollard: {
-    id: 'bollard', n: 'Bollard', title: 'The Harbourmaster', role: 'tank', roleN: 'Tank', hp: 600, spd: 4.8, r: 0.7, h: 2.3, mag: 0, reloadT: 0, ult: 1500,
-    cd: { a1: 8, a2: 10, alt: 12 }, range: 4.2,
-    blurb: 'A huge old harbourmaster in a riveted iron diving dress. He holds the line and takes the blows.',
-    kit: {
-      pri: ['Capstan Bar', 'Swing the bar: hits everyone in front of you, close in.'],
-      alt: ['Bulkhead', 'Set down an iron wall ahead. It stops shots and bodies, both sides’.'],
-      a1: ['Ballast Rush', 'Charge forward. Anyone in the way is hurt and shoved aside.'],
-      a2: ['Brace', 'Take half damage for three seconds, and stand firm.'],
-      ult: ['Spring Tide', 'Drive the anchor down: a wave ahead hurts, knocks back and slows.'],
-    },
-  },
-  razorbill: {
-    id: 'razorbill', n: 'Razorbill', title: 'The Wrecker’s Eye', role: 'damage', roleN: 'Damage', hp: 200, spd: 6.0, r: 0.4, h: 1.8, mag: 18, reloadT: 1.5, ult: 1700,
-    cd: { a1: 8, a2: 10, alt: 0 }, range: 70,
-    blurb: 'A lean marksman in a tarred oilskin with a long fowling piece. She picks people off from afar.',
-    kit: {
-      pri: ['Fowling Piece', 'Quick, accurate shots. Head shots do double.'],
-      alt: ['Sight', 'Hold to aim through the glass: closer, and dead steady.'],
-      a1: ['Gull’s Rise', 'Leap high into the air. Hold Space to glide down.'],
-      a2: ['Tar Pot', 'Lob a pot of burning tar that leaves a pool that burns and slows.'],
-      ult: ['Broadside', 'Mark a strip of ground ahead; a ship’s guns hammer it a moment later.'],
-    },
-  },
-  linnet: {
-    id: 'linnet', n: 'Linnet', title: 'The Keeper’s Apprentice', role: 'support', roleN: 'Support', hp: 225, spd: 5.6, r: 0.4, h: 1.7, mag: 20, reloadT: 1.4, ult: 1600,
-    cd: { a1: 12, a2: 7, alt: 0 }, range: 55,
-    blurb: 'A young keeper with a storm lantern on a long iron staff. Its light mends her crew and burns the rest.',
-    kit: {
-      pri: ['Lamp Bolt', 'A bolt of light: hurts enemies, mends allies it passes through.'],
-      alt: ['Mending Light', 'Hold on an ally near you to mend them steadily.'],
-      a1: ['Kindle', 'Throw a lantern that hangs where it lands and mends allies near it.'],
-      a2: ['Will-o’-the-Wisp', 'Blink a short way the way you’re moving.'],
-      ult: ['Beacon', 'Plant the staff: allies near it mend fast and can’t fall.'],
-    },
-  },
-};
-var LR_HERO_IDS = ['bollard', 'razorbill', 'linnet'];
+// ---------- the registry: every hero, and everything a hero owns, is registered by its own file ----------
+// (the guide at the top says what goes in each; registering only stores the def, so a hero file needs nothing that
+// loads after it). LR_HERO_IDS is the order of the hero select, the number keys and the snapshots' hero index: by
+// role (tank, damage, support), then in the order the files register, so it's the same for everyone on one build.
+var LR_ROLES = [['tank', 'Tank'], ['damage', 'Damage'], ['support', 'Support']];
+var LR_HEROES = {}, LR_HERO_IDS = [], LR_HOW = {};
+var LR_PROJ = {}, LR_JK = [], LR_ZONE = {}, LR_ZK = [], LR_WALL = {}, LR_WK = [], LR_EVENT = {}, LR_SNDS = {};
+var LR_OH_DECAY = 8;   // overhealth (p.oh) fades by this much a second
+function lrDefHero(def) {
+  if (!def || !def.id) throw new Error('lrDefHero: a hero needs an id');
+  const R = LR_ROLES.find(r => r[0] === def.role) || LR_ROLES[1];
+  const H = Object.assign({ n: def.id, title: '', role: R[0], roleN: R[1], hp: 200, spd: 5.5, r: 0.45, h: 1.8, mag: 0, reloadT: 0, ultCost: 1600, range: 40, blurb: '', actT: {}, own: [], how: {}, stepVol: 1 }, def);
+  H.cd = Object.assign({ a1: 0, a2: 0, alt: 0 }, def.cd || {}); H.kit = Object.assign({ pri: ['Fire', ''], alt: ['Secondary', ''], a1: ['Ability', ''], a2: ['Ability', ''], ult: ['Ultimate', ''] }, def.kit || {});
+  H.seq = LR_HEROES[H.id] ? LR_HEROES[H.id].seq : Object.keys(LR_HEROES).length;
+  LR_HEROES[H.id] = H; Object.assign(LR_HOW, H.how);
+  const ri = id => LR_ROLES.findIndex(r => r[0] === LR_HEROES[id].role);
+  LR_HERO_IDS.length = 0; LR_HERO_IDS.push(...Object.keys(LR_HEROES).sort((a, b) => ri(a) - ri(b) || LR_HEROES[a].seq - LR_HEROES[b].seq));
+  return H;
+}
+// a kind of thing in flight: { grav (false: flies straight), own (a guest flies its own and skips the host's echo),
+//   step(j, dt, M) -> true when it's gone, M = { sx, sy, sz, L, dx, dy, dz, a } (where it was, how far it goes this tick
+//   and which way, its owner) }; with no step it just flies for four seconds
+function lrDefProj(kind, d) { if (!LR_PROJ[kind]) LR_JK.push(kind); LR_PROJ[kind] = Object.assign({ grav: true, own: false }, d); }
+// a kind of zone on the ground: { tick(z, dt, a) every tick, touch(z, q, dt, a) for each living body within z.r (and 3 m
+//   up or down of z.gy, or z.y), nofall(z, q) -> true if q can't fall there, turn (drawn turned to z.yaw), fix (fields
+//   every zone of this kind has, restored on a guest), sync (names of further fields sent to guests, rounded to 0.1) }
+function lrDefZone(kind, d) { if (!LR_ZONE[kind]) LR_ZK.push(kind); LR_ZONE[kind] = Object.assign({ fix: {}, sync: [] }, d); }
+// a kind of wall (it stops shots and bodies, both sides'): { w, h, gone(w, owner) when it falls or runs out }
+function lrDefWall(kind, d) { if (!LR_WALL[kind]) LR_WK.push(kind); LR_WALL[kind] = Object.assign({ w: 6, h: 3 }, d); }
+// an event kind (LRM.FX): { sound(f, at, me, mine), shake(f, me) -> how hard it shakes my view (0..1), own (a guest
+//   shows its own at once, lrLocalFx, so the host's echo of it is skipped) }; lrDefSound is the sound alone
+function lrDefEvent(kind, d) { LR_EVENT[kind] = Object.assign(LR_EVENT[kind] || {}, d); }
+function lrDefSound(kind, fn) { lrDefEvent(kind, { sound: fn }); }
+// a named sound for lrSnd(name, x, y, z, vol): fn(v (loudness at my ear), e ({ pan }), rec(name, vol, opt) a recording,
+//   which is false if it isn't loaded, o ({ pan }) for tone and noise)
+function lrDefSnd(name, fn) { LR_SNDS[name] = fn; }
 var LR_BOTNAMES = [
   ['Hob Penrose', 'Tamsin Wick', 'Ezra Lamb', 'Jory Brass', 'Morwenna Hale', 'Kit Tallow', 'Nan Carrow', 'Abel Spence'],
   ['Silas Crane', 'Saul Kittow', 'Bess Polgrain', 'Long Amos', 'Hester Vane', 'Ned Tregarthen', 'Widow Pascoe', 'Black Jem'],
@@ -110,7 +183,7 @@ const lrSpawnOf = p => LR_MAP.spawns[p.team ? 'd' : 'a'][Math.min(LRM.stage, 3)]
 function lrNewP(i, team, name, bot, sid) {
   return { i, team, hero: '', name, bot: !!bot, sid: sid || '', x: 0, y: 0, z: 0, vx: 0, vy: 0, vz: 0, gnd: true, yaw: 0, pitch: 0, r: 0.45, h: 1.8,
     hp: 1, maxHp: 1, alive: false, deadT: 0, spawnT: 0, ammo: 0, reload: 0, fireT: 9, alt: false, cd: { a1: 0, a2: 0, alt: 0 }, ult: 0, act: { k: null, t: 0 },
-    brace: 0, slow: 1, slowT: 0, tarT: 0, knockT: 0, glide: false, kills: 0, deaths: 0, dmg: 0, heal: 0, elims: 0, beam: -1, spr: 0, hurtAt: -9, hurtFrom: -1,
+    slow: 1, slows: {}, knockT: 0, stun: 0, root: 0, oh: 0, dr: 1, drT: 0, firm: 0, glide: false, kills: 0, deaths: 0, dmg: 0, heal: 0, elims: 0, beam: -1, spr: 0, hurtAt: -9, hurtFrom: -1,
     hitBy: {}, sn: 0, dotAcc: 0, healAcc: 0, px: 0, py: 0, pz: 0, inp: lrInp0(), ai: bot ? {} : null, remote: false };
 }
 function lrMyName() { const el = typeof $ === 'function' ? $('lrNick') : null, v = (el && el.value) || (typeof NET !== 'undefined' && NET.nick) || ''; return String(v).replace(/[\u0000-\u001f<>&"]/g, '').trim().slice(0, 16) || 'You'; }
@@ -146,25 +219,37 @@ function lrStart(o) {
   if (typeof lr3dMatch === 'function') lr3dMatch();
   if (lrHost() && LRM.P.every(p => p.hero)) lrSetup();
 }
-// the bots pick for the make-up of a five: one tank, two damage, two support (less whatever the people took)
-function lrBotPicks(team) {
-  const crew = LRM.P.filter(p => p.team === team), need = { tank: 1, damage: 2, support: 2 }, byRole = { tank: 'bollard', damage: 'razorbill', support: 'linnet' };
-  for (const p of crew) if (p.hero) need[LR_HEROES[p.hero].role]--;
-  for (const p of crew) if (p.bot && !p.hero) { const role = Object.keys(need).sort((a, b) => need[b] - need[a])[0]; need[role]--; lrSetHero(p, byRole[role]); }
+// the bots pick for the make-up of a five: one tank, two damage, two support (less whatever the people took), each a
+// hero of the role it needs, at random, but one its crew hasn't got if there is one (or, picking again, the one it had)
+const LR_CREW = { tank: 1, damage: 2, support: 2 };
+function lrNeed(team) { const need = {}; for (const r of LR_ROLES) need[r[0]] = LR_CREW[r[0]] || 0; for (const q of LRM.P) if (q.team === team && q.hero) need[LR_HEROES[q.hero].role]--; return need; }
+function lrRolePick(team, role, prev) {
+  const all = LR_HERO_IDS.filter(id => LR_HEROES[id].role === role), list = all.length ? all : LR_HERO_IDS.slice(); if (prev && list.includes(prev)) return prev;
+  const have = LRM.P.filter(q => q.team === team && q.hero).map(q => q.hero), fresh = list.filter(id => !have.includes(id)), pool = fresh.length ? fresh : list;
+  return pool.length === 1 ? pool[0] : pool[Math.floor(Math.random() * pool.length)];
+}
+function lrBotPicks(team, prev) {
+  const crew = LRM.P.filter(p => p.team === team), need = lrNeed(team);
+  // (picking again: a bot whose old role is still wanted keeps its hero)
+  if (prev) for (const p of crew) if (p.bot && !p.hero && prev[p.i] && LR_HEROES[prev[p.i]] && need[LR_HEROES[prev[p.i]].role] > 0) { need[LR_HEROES[prev[p.i]].role]--; lrSetHero(p, prev[p.i]); }
+  for (const p of crew) if (p.bot && !p.hero) { const role = Object.keys(need).sort((a, b) => need[b] - need[a])[0]; need[role]--; lrSetHero(p, lrRolePick(team, role, prev && prev[p.i])); }
 }
 // before the doors open, the bots of a crew pick again round what its people chose
 function lrRebalance(team) {
   if (LRM.ph !== 'pick' && LRM.ph !== 'setup') return;
-  const bots = LRM.P.filter(p => p.team === team && p.bot), was = bots.map(p => p.hero);
-  for (const p of bots) p.hero = '';
-  lrBotPicks(team);
+  const bots = LRM.P.filter(p => p.team === team && p.bot), was = bots.map(p => p.hero), prev = {};
+  bots.forEach((p, k) => { prev[p.i] = was[k]; p.hero = ''; });
+  lrBotPicks(team, prev);
   bots.forEach((p, k) => { if (p.hero !== was[k] && p.alive) { const h = p.hero; p.hero = was[k]; lrSetHero(p, h); lrRespawn(p, true); } });
 }
+// the statuses every body has, cleared (on a new hero, coming back, going down)
+function lrClearStatus(p) { p.slows = {}; p.slow = 1; p.knockT = 0; p.stun = 0; p.root = 0; p.oh = 0; p.dr = 1; p.drT = 0; p.firm = 0; p.glide = false; p.beam = -1; }
 function lrSetHero(p, id) {
   const H = LR_HEROES[id]; if (!H) return;
   const was = p.hero; p.hero = id; p.r = H.r; p.h = H.h; p.maxHp = H.hp; p.hp = H.hp; p.ammo = H.mag; p.reload = 0; p.fireT = 9;
-  p.cd = { a1: 0, a2: 0, alt: 0 }; p.act = { k: null, t: 0 }; p.beam = -1; p.brace = 0; p.glide = false;
+  p.cd = { a1: 0, a2: 0, alt: 0 }; p.act = { k: null, t: 0 }; p.beam = -1; p.dr = 1; p.drT = 0; p.firm = 0; p.oh = 0; p.glide = false;
   if (was && was !== id) p.ult = 0;
+  if (H.reset) H.reset(p, 'hero');
   // (a bulkhead of his stays up when he changes; it just isn't his to put down again)
 }
 // back at your side's spawn for the stage the Wain has reached: full health, a full magazine, a moment's protection
@@ -175,7 +260,8 @@ function lrRespawn(p, quiet) {
   p.vx = p.vz = p.vy = 0; p.yaw = sp[2]; p.pitch = 0; p.inp.yaw = sp[2]; p.inp.pitch = 0; p.gnd = true;
   if (p.hero) { const H = LR_HEROES[p.hero]; p.r = H.r; p.h = H.h; p.maxHp = H.hp; p.hp = H.hp; p.ammo = H.mag; }
   lrMove(p, 0.0001); p.vx = p.vz = 0;
-  p.alive = !!p.hero; p.deadT = 0; p.spawnT = quiet ? 0 : 1.5; p.reload = 0; p.act = { k: null, t: 0 }; p.beam = -1; p.brace = 0; p.slowT = 0; p.tarT = 0; p.knockT = 0; p.glide = false; p.hitBy = {};
+  p.alive = !!p.hero; p.deadT = 0; p.spawnT = quiet ? 0 : 1.5; p.reload = 0; p.act = { k: null, t: 0 }; lrClearStatus(p); p.hitBy = {};
+  if (p.hero && LR_HEROES[p.hero].reset) LR_HEROES[p.hero].reset(p, 'spawn');
   p.px = p.x; p.py = p.y; p.pz = p.z; p.sn++;
   if (p.ai) { p.ai.path = null; p.ai.stuckT = 0; }
   if (!quiet && p.alive) lrFxPush('spawn', { x: p.x, y: p.y, z: p.z, team: p.team, v: p.i });
@@ -184,7 +270,7 @@ function lrInSpawn(p) { const sp = lrSpawnOf(p); return Math.hypot(p.x - sp[0], 
 function lrCanChange(p) { return LRM.ph === 'pick' || !p.alive || lrInSpawn(p); }
 // the pick is over (everyone has a hero, or the time's up): the attackers held in their boat house while the defence sets up
 function lrSetup() {
-  for (const p of LRM.P) if (!p.hero) { const crew = LRM.P.filter(q => q.team === p.team && q.hero), need = { tank: 1, damage: 2, support: 2 }; for (const q of crew) need[LR_HEROES[q.hero].role]--; const role = Object.keys(need).sort((a, b) => need[b] - need[a])[0]; lrSetHero(p, { tank: 'bollard', damage: 'razorbill', support: 'linnet' }[role]); lrRespawn(p, true); }
+  for (const p of LRM.P) if (!p.hero) { const need = lrNeed(p.team), role = Object.keys(need).sort((a, b) => need[b] - need[a])[0]; lrSetHero(p, lrRolePick(p.team, role)); lrRespawn(p, true); }
   for (const p of LRM.P) if (!p.alive) lrRespawn(p, true);
   LRM.ph = 'setup'; LRM.phT = LRM.set && LRM.set.setupT != null ? LRM.set.setupT : LRM.net ? 20 : 15; LRM.picking = false;
   lrSay(lrMe() && lrMe().team === 0 ? 'The Wreckers are setting up: get ready' : 'Set up the defence', 3);
@@ -250,24 +336,14 @@ function lrTick(dt) {
 function lrOwnUse(p, k) {
   if (!LRM.ownUse) LRM.ownUse = {}; LRM.ownUse[k] = performance.now();
   LRM.useN = (LRM.useN || 0) + 1; LRM.use = [LRM.useN, k === 'a1' ? 1 : 2, lrR(p.px), lrR(p.py), lrR(p.pz), lrR(p.yaw, 1000)];
-  if (p.hero === 'bollard' && k === 'a1') lrLocalFx({ k: 'rush', x: p.x, y: p.y + 1, z: p.z, v: p.i });
-  else if (p.hero === 'razorbill' && k === 'a1') lrLocalFx({ k: 'rise', x: p.x, y: p.y, z: p.z, v: p.i });
-  else if (p.hero === 'linnet' && k === 'a2') lrLocalFx({ k: 'blink', x: p.px, y: p.py + 1, z: p.pz, x2: p.x, y2: p.y + 1, z2: p.z, v: p.i });
+  const H = LR_HEROES[p.hero]; if (H && H.ownUse) H.ownUse(p, k);
 }
-// a guest's own shots, seen and heard the moment the button goes (what they hit is the host's to say): the tracer,
-// the bolt (flown here, and swapped for nothing when it lands: the host's own bolt does the work), the swing
+// a guest's own shots, seen and heard the moment the button goes (what they hit is the host's to say): the hero's
+// guestFire shows the tracer, flies the bolt (here, and swapped for nothing when it lands: the host's own bolt does the
+// work, so its kind is registered own), swings the bar
 function lrGuestFire(p) {
-  const I = p.inp, H = LR_HEROES[p.hero]; if (!H || !p.alive || !I.fire || !(LRM.ph === 'play' || (LRM.ph === 'setup' && p.team === 1))) return;
-  const ey = p.y + lrEyeH(p), d = lrDir(p.yaw, p.pitch);
-  if (p.hero === 'razorbill' && p.fireT >= 0.14 && p.ammo > 0 && p.reload <= 0) {
-    p.fireT = 0; p.ammo--; LRM.shotAt = performance.now();
-    const sp = I.alt ? 0 : 0.006, d2 = lrDir(p.yaw + (Math.random() - 0.5) * 2 * sp, p.pitch + (Math.random() - 0.5) * 2 * sp), h = lrRayHit(p.x, ey, p.z, d2[0], d2[1], d2[2], { team: p.team, skip: p.i, max: 120 });
-    lrLocalFx({ k: 'tracer', x: p.x, y: ey - 0.15, z: p.z, x2: h.x, y2: h.y, z2: h.z, team: p.team, v: p.i, a: p.i });
-  } else if (p.hero === 'linnet' && p.fireT >= 0.32 && p.ammo > 0 && p.reload <= 0) {
-    p.fireT = 0; p.ammo--; LRM.shotAt = performance.now();
-    LRM.proj.push({ id: -(++LRM.nid), k: 'bolt', team: p.team, owner: p.i, x: p.x, y: ey - 0.1, z: p.z, vx: d[0] * 60, vy: d[1] * 60, vz: d[2] * 60, t: 0, hit: [], own: 1 });
-    lrLocalFx({ k: 'cast', v: p.i, x: p.x, y: p.y + 1.4, z: p.z });
-  } else if (p.hero === 'bollard' && p.fireT >= 0.85) { p.fireT = 0; lrLocalFx({ k: 'sweep', x: p.x, y: p.y + 1.3, z: p.z, yaw: p.yaw, v: p.i }); }
+  const I = p.inp, H = LR_HEROES[p.hero]; if (!H || !H.guestFire || !p.alive || p.stun > 0 || !(LRM.ph === 'play' || (LRM.ph === 'setup' && p.team === 1))) return;
+  H.guestFire(p, I, H, p.y + lrEyeH(p), lrDir(p.yaw, p.pitch));
 }
 // a guest's own bolts in flight (until they meet something, as the host's would)
 function lrOwnBolts(dt) {
@@ -281,16 +357,22 @@ function lrOwnBolts(dt) {
   });
 }
 function lrLocalFx(f) { if (typeof lr3dLocalFx === 'function') lr3dLocalFx(f); else try { lrFxSound(f); } catch (e) {} }
-// a body's own timers (ticked wherever that body is moved)
+// a body's own timers (ticked wherever that body is moved), and how slowed it is
 function lrTimers(p, dt) {
+  const H = LR_HEROES[p.hero];
   p.fireT += dt; if (p.act.k) p.act.t += dt;
-  if (p.act.k && p.act.t > (p.act.k === 'a1' && p.hero === 'bollard' ? 0.9 : p.act.k === 'ult' ? 1.2 : 0.5)) p.act = { k: null, t: 0 };
+  if (p.act.k && p.act.t > ((H && H.actT[p.act.k]) || (p.act.k === 'ult' ? 1.2 : 0.5))) p.act = { k: null, t: 0 };
   for (const k of ['a1', 'a2', 'alt']) if (p.cd[k] > 0) p.cd[k] = Math.max(0, p.cd[k] - dt);
   if (p.spawnT > 0) p.spawnT = Math.max(0, p.spawnT - dt);
-  if (p.brace > 0) p.brace = Math.max(0, p.brace - dt);
-  if (p.slowT > 0) p.slowT = Math.max(0, p.slowT - dt);
-  if (p.tarT > 0) p.tarT = Math.max(0, p.tarT - dt);
+  if (p.drT > 0) { p.drT = Math.max(0, p.drT - dt); if (p.drT <= 0) p.dr = 1; }
+  if (p.firm > 0) p.firm = Math.max(0, p.firm - dt);
+  if (p.stun > 0) p.stun = Math.max(0, p.stun - dt);
+  if (p.root > 0) p.root = Math.max(0, p.root - dt);
+  if (p.oh > 0) p.oh = Math.max(0, p.oh - dt * LR_OH_DECAY);
+  let sl = 1; for (const k in p.slows) { const v = p.slows[k]; if (v[1] > 0) { v[1] = Math.max(0, v[1] - dt); if (v[1] > 0) sl *= v[0]; } }
+  p.slow = sl;
   if (p.knockT > 0) p.knockT = Math.max(0, p.knockT - dt);
+  if (H && H.tick) H.tick(p, dt);
 }
 function lrOwnStep(p, dt) { lrTimers(p, dt); lrBody(p, dt); }
 function lrSim(dt) {
@@ -320,7 +402,7 @@ function lrSim(dt) {
   lrProjTick(dt);
   lrZoneTick(dt);
   for (const w of LRM.walls) w.t -= dt;
-  if (LRM.walls.some(w => w.t <= 0 || w.hp <= 0)) LRM.walls = LRM.walls.filter(w => { if (w.t > 0 && w.hp > 0) return true; const o = LRM.P[w.owner]; if (o) o.cd.alt = LR_HEROES.bollard.cd.alt; lrFxPush('wallgone', { x: w.x, y: w.y + 1.5, z: w.z, yaw: w.yaw }); return false; });
+  if (LRM.walls.some(w => w.t <= 0 || w.hp <= 0)) LRM.walls = LRM.walls.filter(w => { if (w.t > 0 && w.hp > 0) return true; const o = LRM.P[w.owner], W = LR_WALL[w.k]; if (o && W && W.gone) W.gone(w, o); lrFxPush('wallgone', { x: w.x, y: w.y + 1.5, z: w.z, yaw: w.yaw }); return false; });
   if (LRM.FX.length > 0 && (LRM.FX.length > 160 || LRM.t - LRM.FX[0].t > 2)) LRM.FX = LRM.FX.filter(f => LRM.t - f.t <= 2).slice(-160);
   if (LRM.feed.length > 8) LRM.feed = LRM.feed.slice(-8);
 }
@@ -360,37 +442,37 @@ function lrCartTick(dt) {
 function lrPlaceCart() { const C = LRM.cart, at = lrPathAt(C.s); C.x = at.x; C.z = at.z; C.yaw = at.yaw; C.y = 0; }
 
 // ---------- moving a body ----------
-// walking, jumping and the movement abilities (Ballast Rush's charge, Gull's Rise and its glide, the Wisp's blink),
-// which start here when the input asks and the cooldown is ready, so a screen moving its own body has them at once
+// walking, jumping, gliding (p.glide, set by an ability: holding jump then floats the body down) and the movement
+// abilities (the hero's body hook: Ballast Rush's charge, Gull's Rise, the Wisp's blink), which start here when the
+// input asks and the cooldown is ready, so a screen moving its own body has them at once; a stunned or rooted body
+// doesn't walk, jump or use them, and a hero's move hook drives the body itself while it returns true (a charge)
 function lrBody(p, dt) {
   const H = LR_HEROES[p.hero], I = p.inp; if (!H) return;
   p.yaw = I.yaw; p.pitch = lrClamp(I.pitch, -1.5, 1.5);
   if (!p.alive) { p.vx *= 0.9; p.vz *= 0.9; lrMove(p, dt); return; }
-  const sy = Math.sin(p.yaw), cy = Math.cos(p.yaw), mz = lrClamp(I.mz, -1, 1), mx = lrClamp(I.mx, -1, 1);
+  const held = p.stun > 0 || p.root > 0;
+  const sy = Math.sin(p.yaw), cy = Math.cos(p.yaw), mz = held ? 0 : lrClamp(I.mz, -1, 1), mx = held ? 0 : lrClamp(I.mx, -1, 1);
   let wx = -sy * mz + cy * mx, wz = -cy * mz - sy * mx; const wl = Math.hypot(wx, wz); if (wl > 1) { wx /= wl; wz /= wl; }
-  p.slow = (p.slowT > 0 ? 0.6 : 1) * (p.tarT > 0 ? 0.7 : 1);
-  const spd = H.spd * p.slow * (p.hero === 'razorbill' && I.alt ? 0.7 : 1);
-  const can = LRM.ph === 'play' || (LRM.ph === 'setup' && p.team === 1);
-  if (can && p.hero === 'bollard' && I.a1 && p.cd.a1 <= 0 && p.act.k !== 'a1') { p.act = { k: 'a1', t: 0 }; p.cd.a1 = H.cd.a1; p.rushYaw = p.yaw; p.rushHit = []; lrFxPush('rush', { x: p.x, y: p.y + 1, z: p.z, v: p.i }); }
-  if (can && p.hero === 'razorbill' && I.a1 && p.cd.a1 <= 0) { p.vy = Math.sqrt(2 * LR_G * 8); p.gnd = false; p.glide = true; p.cd.a1 = H.cd.a1; p.act = { k: 'a1', t: 0 }; lrFxPush('rise', { x: p.x, y: p.y, z: p.z, v: p.i }); }
-  if (can && p.hero === 'linnet' && I.a2 && p.cd.a2 <= 0) lrBlink(p, wl > 0.2 ? wx : -sy, wl > 0.2 ? wz : -cy);
-  const rush = p.hero === 'bollard' && p.act.k === 'a1' && p.act.t < 0.9;
-  if (rush) { p.vx = -Math.sin(p.rushYaw) * 14; p.vz = -Math.cos(p.rushYaw) * 14; }
-  else { const k = Math.min(1, p.knockT > 0 ? dt * 0.8 : p.gnd ? dt * 14 : dt * (p.glide ? 3 : 2)); p.vx += (wx * spd - p.vx) * k; p.vz += (wz * spd - p.vz) * k; }
-  if (I.jump && p.gnd && !rush) { p.vy = 7.2; p.gnd = false; }
+  const spd = H.spd * p.slow * (H.speed ? H.speed(p, I) : 1);
+  const can = (LRM.ph === 'play' || (LRM.ph === 'setup' && p.team === 1)) && !held;
+  if (can && H.body) H.body(p, dt, I, H, { wx, wz, wl, sy, cy });
+  const rush = !(p.stun > 0) && !!H.move && !!H.move(p, dt, I, H);
+  if (held && p.knockT <= 0 && p.gnd) { p.vx = 0; p.vz = 0; }   // (held fast where it stands, unless knocked)
+  else if (!rush) { const k = Math.min(1, p.knockT > 0 ? dt * 0.8 : p.gnd ? dt * 14 : dt * (p.glide ? 3 : 2)); p.vx += (wx * spd - p.vx) * k; p.vz += (wz * spd - p.vz) * k; }
+  if (I.jump && p.gnd && !rush && !held) { p.vy = 7.2; p.gnd = false; }
   const gl = p.glide && I.jump && p.vy < -2.2; if (gl) p.vy = -2.2 + LR_G * dt;
   lrMove(p, dt);
   if (gl) p.vy = Math.max(p.vy, -2.2);
   lrPushBodies(p);
   if (p.gnd && p.vy <= 0 && p.act.k !== 'a1') p.glide = false;
 }
-function lrBlink(p, dx, dz) {
+// a blink: as far as max along (dx, dz) as the way is clear at the waist and the shoulders; returns where it was
+function lrBlinkTo(p, dx, dz, max) {
   const l = Math.hypot(dx, dz) || 1; dx /= l; dz /= l;
-  const far = Math.min(lrBlockRay(p.x, p.y + 1.0, p.z, dx, 0, dz, 8.6), lrBlockRay(p.x, p.y + 1.5, p.z, dx, 0, dz, 8.6)), d = Math.max(0, Math.min(8, far - p.r - 0.2));
-  const x0 = p.x, y0 = p.y, z0 = p.z;
+  const far = Math.min(lrBlockRay(p.x, p.y + 1.0, p.z, dx, 0, dz, max + 0.6), lrBlockRay(p.x, p.y + 1.5, p.z, dx, 0, dz, max + 0.6)), d = Math.max(0, Math.min(max, far - p.r - 0.2));
+  const from = { x: p.x, y: p.y, z: p.z };
   p.x += dx * d; p.z += dz * d; const g = lrGround(p.x, p.z, p.y + 0.6); if (g > p.y) p.y = g;
-  p.cd.a2 = LR_HEROES.linnet.cd.a2; p.act = { k: 'a2', t: 0 };
-  lrFxPush('blink', { x: x0, y: y0 + 1, z: z0, x2: p.x, y2: p.y + 1, z2: p.z, v: p.i });
+  return from;
 }
 // bodies don't stand inside each other: any two overlapping are eased apart (a body moved by its own screen online
 // is left where it is, and the other takes all of it)
@@ -468,10 +550,12 @@ function lrRayHit(ox, oy, oz, dx, dy, dz, o) {
 function lrHurt(q, amt, a, how, head, dot) {
   if (!q || !q.alive || q.spawnT > 0 || LRM.ph === 'over' || !(amt > 0)) return 0;
   if (a && a.team === q.team && a !== q) return 0;
-  if (q.brace > 0) amt *= 0.5;
-  let floor = false; for (const z of LRM.zones) if (z.k === 'beacon' && z.team === q.team && Math.hypot(q.x - z.x, q.z - z.z) < z.r) floor = true;
-  const was = q.hp; q.hp = Math.max(floor && was >= 1 ? 1 : -1, was - amt); const dealt = was - Math.max(0, q.hp);
-  if (a && a !== q) { a.dmg += dealt; a.ult = Math.min(1, a.ult + dealt / LR_HEROES[a.hero].ult); q.hitBy[a.i] = LRM.t; }
+  if (q.drT > 0) amt *= q.dr;
+  const QH = LR_HEROES[q.hero]; if (QH && QH.hurt) { amt = QH.hurt(q, amt, a, how); if (!(amt > 0)) return 0; }
+  let floor = false; for (const z of LRM.zones) { const Z = LR_ZONE[z.k]; if (Z && Z.nofall && Z.nofall(z, q)) floor = true; }
+  let ab = 0; if (q.oh > 0) { ab = Math.min(q.oh, amt); q.oh -= ab; amt -= ab; }
+  const was = q.hp; q.hp = Math.max(floor && was >= 1 ? 1 : -1, was - amt); const dealt = ab + was - Math.max(0, q.hp);
+  if (a && a !== q) { a.dmg += dealt; a.ult = Math.min(1, a.ult + dealt / LR_HEROES[a.hero].ultCost); q.hitBy[a.i] = LRM.t; }
   q.hurtAt = LRM.t; q.hurtFrom = a ? a.i : -1;
   if (dot) { q.dotAcc += dealt; if (q.dotAcc >= 10) { lrFxPush('hit', { x: q.x, y: q.y + q.h * 0.6, z: q.z, a: a ? a.i : -1, v: q.i, n: Math.round(q.dotAcc), dot: 1 }); q.dotAcc = 0; } }
   else lrFxPush('hit', { x: q.x, y: q.y + (head ? q.h - 0.15 : q.h * 0.6), z: q.z, a: a ? a.i : -1, v: q.i, n: Math.round(dealt), head: head ? 1 : 0 });
@@ -481,12 +565,13 @@ function lrHurt(q, amt, a, how, head, dot) {
 function lrHeal(q, amt, a) {
   if (!q || !q.alive || q.hp >= q.maxHp || !(amt > 0)) return 0;
   const d = Math.min(amt, q.maxHp - q.hp); q.hp += d;
-  if (a) { a.heal += d; a.ult = Math.min(1, a.ult + d / LR_HEROES[a.hero].ult); }
+  if (a) { a.heal += d; a.ult = Math.min(1, a.ult + d / LR_HEROES[a.hero].ultCost); }
   if (a) { q.healAcc += d; if (q.healAcc >= 20) { lrFxPush('heal', { x: q.x, y: q.y + q.h * 0.7, z: q.z, v: q.i, a: a.i, n: Math.round(q.healAcc) }); q.healAcc = 0; } }
   return d;
 }
 function lrKill(q, a, how) {
-  q.alive = false; q.hp = 0; q.deadT = 8; q.deaths++; q.beam = -1; q.act = { k: null, t: 0 }; q.reload = 0; q.glide = false;
+  q.alive = false; q.hp = 0; q.deadT = 8; q.deaths++; q.act = { k: null, t: 0 }; q.reload = 0; lrClearStatus(q);
+  if (LR_HEROES[q.hero] && LR_HEROES[q.hero].reset) LR_HEROES[q.hero].reset(q, 'death');
   for (const i in q.hitBy) if (LRM.t - q.hitBy[i] < 10 && LRM.P[i]) LRM.P[i].elims++;
   if (a && a !== q) a.kills++;
   q.hitBy = {};
@@ -494,158 +579,90 @@ function lrKill(q, a, how) {
   lrFxPush('death', { x: q.x, y: q.y, z: q.z, team: q.team, v: q.i, a: a ? a.i : -1, how });
 }
 function lrWallHurt(w, amt, a) { if (!w || (a && a.team === w.team)) return; w.hp -= amt; lrFxPush('hit', { x: w.x, y: w.y + 1.5, z: w.z, a: a ? a.i : -1, v: -1, n: Math.round(amt), wall: 1 }); }
+// overhealth: absorbs damage before health does, up to cap (the body's health by default), and fades (LR_OH_DECAY);
+// what a ally gives counts as their mending
+function lrShield(q, amt, a, cap) {
+  if (!q || !q.alive || !(amt > 0)) return 0;
+  const d = Math.max(0, Math.min(amt, (cap == null ? q.maxHp : cap) - q.oh)); q.oh += d;
+  if (a && d > 0) { a.heal += d; a.ult = Math.min(1, a.ult + d / LR_HEROES[a.hero].ultCost); }
+  return d;
+}
+// can't be knocked, stunned or rooted (Brace)
+const lrFirm = q => q.firm > 0;
+// a knock: the body's speed set, and it can't steer for t (unless it stands firm; a body just downed is flung too); a
+// body moved by its own screen is told (lrKnockFx). Returns whether it took
+function lrKnock(q, vx, vy, vz, t) { if (!q || lrFirm(q)) return false; q.vx = vx; q.vy = vy; q.vz = vz; q.gnd = false; q.knockT = t; lrKnockFx(q); return true; }
+// slowed to k of its speed for t (one slow for each key, the longest kept: a key set again starts again; all of a
+// body's slows multiply)
+function lrSlow(q, k, t, key) { if (!q || !q.alive) return; q.slows[key || 'slow'] = [k, t]; }
+// stunned (can't move, fire or use anything) or rooted (can't move or use a movement ability, can still shoot) for t
+function lrStun(q, t, a) { if (!q || !q.alive || lrFirm(q) || q.spawnT > 0) return false; q.stun = Math.max(q.stun, t); q.beam = -1; q.glide = false; lrFxPush('stun', { x: q.x, y: q.y + q.h, z: q.z, v: q.i, a: a ? a.i : -1, t }); return true; }
+function lrRoot(q, t, a) { if (!q || !q.alive || lrFirm(q) || q.spawnT > 0) return false; q.root = Math.max(q.root, t); lrFxPush('root', { x: q.x, y: q.y, z: q.z, v: q.i, a: a ? a.i : -1, t }); return true; }
+// damage taken times k for t (Brace's half); firm too if asked
+function lrGuard(q, k, t, firm) { q.dr = k; q.drT = t; if (firm) q.firm = Math.max(q.firm, t); }
+// the living enemies (or friends, p among them) of p (a body, or a team number) whose bodies come within r across of (x, z)
+function lrNear(team, x, z, r, foe) { const out = []; for (const q of LRM.P) { if (!q.alive || (foe ? q.team === team : q.team !== team)) continue; if (Math.hypot(q.x - x, q.z - z) <= r + q.r) out.push(q); } return out; }
+function lrFoesIn(p, x, z, r) { return lrNear(typeof p === 'number' ? p : p.team, x, z, r, true); }
+function lrAlliesIn(p, x, z, r) { return lrNear(typeof p === 'number' ? p : p.team, x, z, r, false); }
+// whether a is looking towards q, within half (radians) either side
+function lrFacing(a, q, half) { const dx = q.x - a.x, dz = q.z - a.z; return Math.abs(lrAng(Math.atan2(-dx, -dz) - a.yaw)) <= half; }
 
 // ---------- the kits (on the host) ----------
+// the magazine and the reload, then the hero's own hooks (fire, alt, a1, a2: each looks at its own button and cooldown),
+// then the ultimate when it's full and asked for; a stunned hero does nothing but reload
 function lrKit(p, dt) {
   const H = LR_HEROES[p.hero], I = p.inp;
   if (H.mag) {
     if (p.reload > 0) { p.reload -= dt; if (p.reload <= 0) { p.reload = 0; p.ammo = H.mag; } }
     else if ((I.reload && p.ammo < H.mag) || p.ammo <= 0) { p.reload = H.reloadT; lrFxPush('reload', { v: p.i, x: p.x, y: p.y + 1.4, z: p.z }); }
   }
+  if (p.stun > 0) { p.alt = false; p.beam = -1; return; }
   p.alt = !!I.alt;
-  if (p.hero === 'bollard') lrBollard(p, dt, I, H);
-  else if (p.hero === 'razorbill') lrRazorbill(p, dt, I, H);
-  else lrLinnet(p, dt, I, H);
+  if (H.fire) H.fire(p, dt, I, H);
+  if (H.alt) H.alt(p, dt, I, H);
+  if (H.a1) H.a1(p, dt, I, H);
+  if (H.a2) H.a2(p, dt, I, H);
   if (I.ult && p.ult >= 1 && p.alive) lrUlt(p);
 }
-function lrBollard(p, dt, I, H) {
-  if (I.fire && p.fireT >= 0.85) {
-    p.fireT = 0; lrFxPush('sweep', { x: p.x, y: p.y + 1.3, z: p.z, yaw: p.yaw, v: p.i });
-    const eye = { x: p.x, y: p.y + lrEyeH(p), z: p.z };
-    for (const q of LRM.P) {
-      if (!q.alive || q.team === p.team) continue;
-      const dx = q.x - p.x, dz = q.z - p.z, d = Math.hypot(dx, dz); if (d > H.range + q.r || Math.abs(q.y - p.y) > 2.5) continue;
-      const a = Math.abs(lrAng(Math.atan2(-dx, -dz) - p.yaw)); if (a > 0.87 && d > p.r + q.r + 0.3) continue;
-      if (!lrSees(eye, { x: q.x, y: q.y + q.h * 0.6, z: q.z })) continue;
-      lrHurt(q, 75, p, 'bar');
-    }
-    for (const w of LRM.walls) { if (w.team === p.team) continue; const dx = w.x - p.x, dz = w.z - p.z; if (Math.hypot(dx, dz) < H.range + 1 && Math.abs(lrAng(Math.atan2(-dx, -dz) - p.yaw)) < 1) lrWallHurt(w, 75, p); }
-  }
-  if (I.alt && p.cd.alt <= 0 && !LRM.walls.some(w => w.owner === p.i)) {
-    const fx = -Math.sin(p.yaw), fz = -Math.cos(p.yaw), d = Math.max(1.2, Math.min(4, lrRay(p.x, p.y + 1.2, p.z, fx, 0, fz, 4.6) - 0.6));
-    const x = p.x + fx * d, z = p.z + fz * d, y = lrGround(x, z, p.y + 0.6);
-    LRM.walls.push({ id: LRM.nid++, team: p.team, owner: p.i, x, y, z, yaw: p.yaw, w: 6, h: 3, hp: 800, t: 10 });
-    p.cd.alt = 99; p.act = { k: 'alt', t: 0 }; lrFxPush('wall', { x, y, z, yaw: p.yaw, team: p.team, v: p.i });
-  }
-  if (p.act.k === 'a1' && p.act.t < 0.9) {
-    for (const q of LRM.P) {
-      if (!q.alive || q.team === p.team || p.rushHit.includes(q.i)) continue;
-      const dx = q.x - p.x, dz = q.z - p.z, d = Math.hypot(dx, dz); if (d > p.r + q.r + 0.5 || Math.abs(q.y - p.y) > 2) continue;
-      p.rushHit.push(q.i); lrHurt(q, 50, p, 'rush');
-      if (q.brace <= 0) { const rx = Math.cos(p.rushYaw), rz = -Math.sin(p.rushYaw), sd = (dx * rx + dz * rz) >= 0 ? 1 : -1; q.vx = rx * sd * 9 - Math.sin(p.rushYaw) * 4; q.vz = rz * sd * 9 - Math.cos(p.rushYaw) * 4; q.vy = 3.5; q.gnd = false; q.knockT = 0.35; lrKnockFx(q); }
-    }
-  }
-  if (I.a2 && p.cd.a2 <= 0) { p.brace = 3; p.cd.a2 = H.cd.a2; p.act = { k: 'a2', t: 0 }; lrFxPush('brace', { x: p.x, y: p.y + 1, z: p.z, v: p.i }); }
+function lrUlt(p) { p.ult = 0; p.act = { k: 'ult', t: 0 }; const H = LR_HEROES[p.hero]; if (H.ult) H.ult(p, H); }
+// a thing thrown or fired by p, from its eye (dy below it) along its look at speed v: { k: kind, ... } more in o
+function lrSpawnProj(p, kind, v, o) {
+  const d = lrDir(p.yaw, p.pitch), dy = (o && o.dy) || 0;
+  const j = Object.assign({ id: LRM.nid++, k: kind, team: p.team, owner: p.i, x: p.x, y: p.y + lrEyeH(p) + dy, z: p.z, vx: d[0] * v, vy: d[1] * v, vz: d[2] * v, t: 0, hit: [] }, o || {});
+  delete j.dy; LRM.proj.push(j); return j;
 }
-function lrRazorbill(p, dt, I, H) {
-  if (p.fireT > 0.25) p.spr = Math.max(0, p.spr - dt * 0.12);
-  if (I.fire && p.fireT >= 0.14 && p.ammo > 0 && p.reload <= 0) {
-    p.fireT = 0; p.ammo--;
-    const sp = I.alt ? 0 : 0.006 + p.spr; p.spr = Math.min(0.045, p.spr + 0.005);
-    const d = lrDir(p.yaw + (Math.random() - 0.5) * 2 * sp, p.pitch + (Math.random() - 0.5) * 2 * sp), ey = p.y + lrEyeH(p);
-    const h = lrRayHit(p.x, ey, p.z, d[0], d[1], d[2], { team: p.team, skip: p.i, max: 120 });
-    lrFxPush('tracer', { x: p.x, y: ey - 0.15, z: p.z, x2: h.x, y2: h.y, z2: h.z, team: p.team, v: p.i, a: p.i });
-    if (h.p) { const fall = h.t <= 30 ? 1 : h.t >= 50 ? 0.6 : 1 - 0.4 * (h.t - 30) / 20; lrHurt(h.p, 26 * fall * (h.head ? 2 : 1), p, 'gun', h.head); }
-    else if (h.wall) lrWallHurt(h.wall, 26, p);
-    else if (h.t < 120) lrFxPush('spark', { x: h.x, y: h.y, z: h.z });
-  }
-  if (I.a2 && p.cd.a2 <= 0) {
-    p.cd.a2 = H.cd.a2; p.act = { k: 'a2', t: 0 };
-    const d = lrDir(p.yaw, p.pitch), v = 24; LRM.proj.push({ id: LRM.nid++, k: 'tar', team: p.team, owner: p.i, x: p.x, y: p.y + lrEyeH(p), z: p.z, vx: d[0] * v, vy: d[1] * v, vz: d[2] * v, t: 0, hit: [] });
-    lrFxPush('throw', { v: p.i, x: p.x, y: p.y + 1.5, z: p.z, w: 'tar' });
-  }
+// a zone set down: { k, team, owner, x, y, z, r, t, ... } (with its kind's fixed fields)
+function lrAddZone(o) { const Z = LR_ZONE[o.k] || {}; const z = Object.assign({ id: LRM.nid++ }, Z.fix || {}, o); LRM.zones.push(z); return z; }
+// a wall of a kind set down by p (its owner): hp, t (how long it stands)
+function lrAddWall(p, kind, x, y, z, yaw, hp, t) { const W = LR_WALL[kind] || { w: 6, h: 3 }; const w = { id: LRM.nid++, k: kind, team: p.team, owner: p.i, x, y, z, yaw, w: W.w, h: W.h, hp, t }; LRM.walls.push(w); return w; }
+// a lobbed thing landing (in a step hook): null while it flies, else { h (what it met), x, y, z (on the ground) }; it
+// lands on what it meets (or after four seconds); bodies stop it unless noBodies
+function lrLobLand(j, M, noBodies) {
+  const h = lrRayHit(M.sx, M.sy, M.sz, M.dx, M.dy, M.dz, { team: j.team, skip: j.owner, pad: 0.2, max: M.L, noBodies: !!noBodies });
+  if (!(h.t < M.L || j.t > 4)) return null;
+  const x = h.t < M.L ? h.x - M.dx * 0.1 : j.x, z = h.t < M.L ? h.z - M.dz * 0.1 : j.z, y = lrGround(x, z, (h.t < M.L ? h.y : j.y) + 0.3);
+  return { h, x, y, z, met: h.t < M.L };
 }
-function lrLinnet(p, dt, I, H) {
-  if (I.fire && p.fireT >= 0.32 && p.ammo > 0 && p.reload <= 0) {
-    p.fireT = 0; p.ammo--;
-    const d = lrDir(p.yaw, p.pitch), v = 60; LRM.proj.push({ id: LRM.nid++, k: 'bolt', team: p.team, owner: p.i, x: p.x, y: p.y + lrEyeH(p) - 0.1, z: p.z, vx: d[0] * v, vy: d[1] * v, vz: d[2] * v, t: 0, hit: [] });
-    lrFxPush('cast', { v: p.i, x: p.x, y: p.y + 1.4, z: p.z });
-  }
-  // Mending Light: held on an ally in view within 16 m, aimed within about 12 degrees, and kept once caught
-  p.beam = -1;
-  if (I.alt) {
-    const eye = { x: p.x, y: p.y + lrEyeH(p), z: p.z }, d = lrDir(p.yaw, p.pitch); let best = null, bestA = 0.21;
-    const ang = q => { const dx = q.x - eye.x, dy = q.y + q.h * 0.6 - eye.y, dz = q.z - eye.z, l = Math.hypot(dx, dy, dz) || 1; return { a: Math.acos(lrClamp((dx * d[0] + dy * d[1] + dz * d[2]) / l, -1, 1)), l }; };
-    const ok = (q, lim, far) => { if (!q || !q.alive || q.team !== p.team || q === p) return false; const g = ang(q); return g.l <= far && g.a <= lim && lrSees(eye, { x: q.x, y: q.y + q.h * 0.6, z: q.z }) && lrBlockRay(eye.x, eye.y, eye.z, (q.x - eye.x) / g.l, (q.y + q.h * 0.6 - eye.y) / g.l, (q.z - eye.z) / g.l, g.l) >= g.l - 0.1; };
-    const was = LRM.P[p.beamWas];
-    if (ok(was, 0.6, 17.5)) best = was;
-    else for (const q of LRM.P) { if (!ok(q, bestA, 16)) continue; const g = ang(q); if (g.a < bestA) { bestA = g.a; best = q; } }
-    if (best) { p.beam = best.i; lrHeal(best, 60 * dt, p); }
-  }
-  p.beamWas = p.beam;
-  if (I.a1 && p.cd.a1 <= 0) {
-    p.cd.a1 = H.cd.a1; p.act = { k: 'a1', t: 0 };
-    const d = lrDir(p.yaw, p.pitch), v = 16; LRM.proj.push({ id: LRM.nid++, k: 'lantern', team: p.team, owner: p.i, x: p.x, y: p.y + lrEyeH(p), z: p.z, vx: d[0] * v, vy: d[1] * v, vz: d[2] * v, t: 0, hit: [] });
-    lrFxPush('throw', { v: p.i, x: p.x, y: p.y + 1.5, z: p.z, w: 'lantern' });
-  }
-}
-function lrUlt(p) {
-  p.ult = 0; p.act = { k: 'ult', t: 0 };
-  const fx = -Math.sin(p.yaw), fz = -Math.cos(p.yaw);
-  if (p.hero === 'bollard') {
-    lrFxPush('wave', { x: p.x, y: p.y, z: p.z, yaw: p.yaw, v: p.i });
-    for (const q of LRM.P) {
-      if (!q.alive || q.team === p.team) continue;
-      const dx = q.x - p.x, dz = q.z - p.z, d = Math.hypot(dx, dz); if (d > 14 || Math.abs(q.y - p.y) > 3) continue;
-      if (Math.abs(lrAng(Math.atan2(-dx, -dz) - p.yaw)) > 0.61 && d > 1.5) continue;
-      if (lrRay(p.x, p.y + 0.8, p.z, dx / (d || 1), 0, dz / (d || 1), d) < d - 0.3) continue;
-      lrHurt(q, 120, p, 'tide');
-      if (q.alive && q.brace <= 0) { const k = 13 * (1 - d / 20); q.vx = (dx / (d || 1)) * k; q.vz = (dz / (d || 1)) * k; q.vy = 6; q.gnd = false; q.knockT = 0.6; lrKnockFx(q); }
-      q.slowT = 3;
-    }
-  } else if (p.hero === 'razorbill') {
-    const d = lrDir(p.yaw, p.pitch), ey = p.y + lrEyeH(p), t = lrRayHit(p.x, ey, p.z, d[0], d[1], d[2], { team: p.team, skip: p.i, max: 45, noBodies: true }).t;
-    let x = p.x + d[0] * t, z = p.z + d[2] * t; if (t >= 45) { x = p.x + fx * 45 * Math.cos(Math.min(0.5, Math.abs(p.pitch))); z = p.z + fz * 45 * Math.cos(Math.min(0.5, Math.abs(p.pitch))); }
-    const B = LR_MAP.bounds; x = lrClamp(x, B.x0 + 1, B.x1 - 1); z = lrClamp(z, B.z0 + 1, B.z1 - 1);
-    LRM.zones.push({ id: LRM.nid++, k: 'broadside', team: p.team, owner: p.i, x, y: lrGround(x, z), z, r: 11, w: 6, l: 22, yaw: p.yaw, t: 1.4 });
-    lrFxPush('broadside', { x, z, yaw: p.yaw, t: 1.4, team: p.team, v: p.i });
-  } else {
-    LRM.zones.push({ id: LRM.nid++, k: 'beacon', team: p.team, owner: p.i, x: p.x, y: p.y, z: p.z, r: 12, t: 6 });
-    lrFxPush('beacon', { x: p.x, y: p.y, z: p.z, team: p.team, v: p.i });
-  }
-}
-// the bolts, the tar pots and the thrown lanterns in flight
+// everything in flight: its kind's step says what it meets
 function lrProjTick(dt) {
   const keep = [];
   for (const j of LRM.proj) {
-    j.t += dt; if (j.k !== 'bolt') j.vy -= LR_G * dt;
+    const J = LR_PROJ[j.k];
+    j.t += dt; if (!J || J.grav) j.vy -= LR_G * dt;
     const sx = j.x, sy = j.y, sz = j.z, L = Math.hypot(j.vx, j.vy, j.vz) * dt, dx = j.vx * dt / L, dy = j.vy * dt / L, dz = j.vz * dt / L, a = LRM.P[j.owner];
-    let gone = false;
-    if (j.k === 'bolt') {
-      // through allies, mending each once
-      for (let k = 0; k < 4; k++) { const h = lrRayHit(sx, sy, sz, dx, dy, dz, { team: j.team, skip: j.owner, who: 'ally', pad: 0.12, max: L, noWalls: true }); if (!h.p || j.hit.includes(h.p.i)) break; j.hit.push(h.p.i); lrHeal(h.p, 30, a); }
-      const h = lrRayHit(sx, sy, sz, dx, dy, dz, { team: j.team, skip: j.owner, pad: 0.12, max: L });
-      if (h.t < L) { gone = true; if (h.p) lrHurt(h.p, 22 * (h.head ? 2 : 1), a, 'bolt', h.head); else if (h.wall) lrWallHurt(h.wall, 22, a); lrFxPush('spark', { x: h.x, y: h.y, z: h.z, bolt: 1 }); }
-      if (j.t > 1.2) gone = true;
-    } else {
-      const h = lrRayHit(sx, sy, sz, dx, dy, dz, { team: j.team, skip: j.owner, pad: 0.2, max: L, noBodies: j.k === 'lantern' });
-      if (h.t < L || j.t > 4) {
-        gone = true; const x = h.t < L ? h.x - dx * 0.1 : j.x, z = h.t < L ? h.z - dz * 0.1 : j.z, y = lrGround(x, z, (h.t < L ? h.y : j.y) + 0.3);
-        if (j.k === 'tar') { if (h.p) lrHurt(h.p, 30, a, 'tar'); LRM.zones.push({ id: LRM.nid++, k: 'tar', team: j.team, owner: j.owner, x, y, z, r: 4, t: 4 }); lrFxPush('blast', { x, y: y + 0.3, z, r: 4, k2: 'tar' }); }
-        else { const hy = Math.max(y + 0.6, Math.min(h.t < L ? h.y : j.y, y + 2.2)); LRM.zones.push({ id: LRM.nid++, k: 'lantern', team: j.team, owner: j.owner, x, y: hy, z, gy: y, r: 5, t: 6 }); lrFxPush('kindle', { x, y: hy, z, team: j.team }); }
-      }
-    }
+    const gone = J && J.step ? !!J.step(j, dt, { sx, sy, sz, L, dx, dy, dz, a }) : j.t > 4;
     if (!gone) { j.x += j.vx * dt; j.y += j.vy * dt; j.z += j.vz * dt; keep.push(j); }
   }
   LRM.proj = keep;
 }
+// the zones: their kind's tick, and its touch on each body in reach
 function lrZoneTick(dt) {
   for (const z of LRM.zones) {
-    z.t -= dt; const a = LRM.P[z.owner];
-    if (z.k === 'broadside') {
-      if (z.t <= 0) {
-        const fx = -Math.sin(z.yaw), fz = -Math.cos(z.yaw), rx = Math.cos(z.yaw), rz = -Math.sin(z.yaw);
-        lrFxPush('volley', { x: z.x, z: z.z, yaw: z.yaw, team: z.team });
-        for (const q of LRM.P) { if (!q.alive || q.team === z.team) continue; const ox = q.x - z.x, oz = q.z - z.z; if (Math.abs(ox * fx + oz * fz) <= z.l / 2 + q.r && Math.abs(ox * rx + oz * rz) <= z.w / 2 + q.r && q.y < z.y + 6) lrHurt(q, 220, a, 'broadside'); }
-        for (const w of LRM.walls) { const ox = w.x - z.x, oz = w.z - z.z; if (Math.abs(ox * fx + oz * fz) <= z.l / 2 + 2 && Math.abs(ox * rx + oz * rz) <= z.w / 2 + 2) lrWallHurt(w, 220, a); }
-      }
-      continue;
-    }
-    for (const q of LRM.P) {
+    z.t -= dt; const a = LRM.P[z.owner], Z = LR_ZONE[z.k]; if (!Z) continue;
+    if (Z.tick) Z.tick(z, dt, a);
+    if (Z.touch) for (const q of LRM.P) {
       if (!q.alive || Math.hypot(q.x - z.x, q.z - z.z) > z.r || Math.abs(q.y - (z.gy != null ? z.gy : z.y)) > 3) continue;
-      if (z.k === 'tar' && q.team !== z.team) { lrHurt(q, 25 * dt, a, 'tar', false, true); q.tarT = 0.25; }
-      else if (z.k === 'lantern' && q.team === z.team) lrHeal(q, 25 * dt, a);
-      else if (z.k === 'beacon' && q.team === z.team) lrHeal(q, 80 * dt, a);
+      Z.touch(z, q, dt, a);
     }
   }
   if (LRM.zones.some(z => z.t <= 0)) LRM.zones = LRM.zones.filter(z => z.t > 0);
@@ -719,9 +736,9 @@ function lrBotSee(p, ai, S) {
   foes.sort((a, b) => a.d - b.d); pals.sort((a, b) => a.q.hp / a.q.maxHp - b.q.hp / b.q.maxHp);
   ai.foes = foes; ai.pals = pals;
   const cur = foes.find(f => f.q.i === ai.tgt);
-  // keep the one it's on unless another is much nearer; a marksman picks off the weakest in range
-  let pick = foes[0] || null;
-  if (p.hero === 'razorbill' && foes.length > 1) { const w = foes.filter(f => f.d < 40).sort((a, b) => a.q.hp - b.q.hp)[0]; if (w && w.q.hp < 120) pick = w; }
+  // keep the one it's on unless another is much nearer; a hero's botPick may choose (a marksman picks off the weakest)
+  let pick = foes[0] || null; const H = LR_HEROES[p.hero];
+  if (H && H.botPick && foes.length > 1) { const w = H.botPick(p, foes, ai, S); if (w) pick = w; }
   if (cur && pick && cur.d < pick.d + 6) pick = cur;
   if (pick && pick.q.i !== ai.tgt) { ai.react = S.react * (0.8 + Math.random() * 0.5); ai.head = Math.random() < S.head; }
   ai.tgt = pick ? pick.q.i : -1; ai.tgtD = pick ? pick.d : 0;
@@ -734,7 +751,7 @@ function lrBotGoal(p, ai) {
   if (ai.retreat) {
     let best = null, bd = 40;
     for (const k of LRM.packs) { if (k.t > 2) continue; const d = Math.hypot(k.x - p.x, k.z - p.z) + (k.big ? -6 : 0); if (d < bd) { bd = d; best = [k.x, k.z]; } }
-    const med = LRM.P.find(q => q.alive && q.team === p.team && q.hero === 'linnet' && q !== p && Math.hypot(q.x - p.x, q.z - p.z) < 30);
+    const med = LRM.P.find(q => q.alive && q.team === p.team && q.hero && LR_HEROES[q.hero].heals && q !== p && Math.hypot(q.x - p.x, q.z - p.z) < 30);
     if (med && (!best || Math.hypot(med.x - p.x, med.z - p.z) < bd)) return [med.x, med.z];
     if (best) return best;
     const sp = lrSpawnOf(p); return [sp[0], sp[1]];
@@ -743,8 +760,8 @@ function lrBotGoal(p, ai) {
   const lat = [0, 3, -3, 2, -2][slot];
   if (p.team === 0) {
     const off = role === 'tank' ? 2.8 : role === 'damage' ? -0.5 : -3.5;
-    // a Linnet keeps near whoever's hurt in the push; otherwise everyone stays within reach of the Wain
-    if (role === 'support' && ai.pals && ai.pals.length && ai.pals[0].q.hp / ai.pals[0].q.maxHp < 0.8 && Math.hypot(ai.pals[0].q.x - C.x, ai.pals[0].q.z - C.z) < 14) { const q = ai.pals[0].q; return [q.x + Math.cos(q.yaw) * 2.5, q.z - Math.sin(q.yaw) * 2.5]; }
+    // a healer keeps near whoever's hurt in the push; otherwise everyone stays within reach of the Wain
+    if (role === 'support' && H.heals && ai.pals && ai.pals.length && ai.pals[0].q.hp / ai.pals[0].q.maxHp < 0.8 && Math.hypot(ai.pals[0].q.x - C.x, ai.pals[0].q.z - C.z) < 14) { const q = ai.pals[0].q; return [q.x + Math.cos(q.yaw) * 2.5, q.z - Math.sin(q.yaw) * 2.5]; }
     return lrRoadPt(lrClamp(C.s + off, 0, L), lat);
   }
   // the defence: the tank contests the Wain when it's being pushed, the rest hold the road ahead of it; with time
@@ -761,8 +778,8 @@ function lrBotGoal(p, ai) {
   // one stands on the Wain to stop it, with the others near enough to cover him: the tank, or with no tank near,
   // whoever of the rest is nearest; the others hold the line and shoot (all of them pile on only with time short or
   // a checkpoint close)
-  let lead = LRM.P.find(q => q.team === p.team && q.alive && q.hero === 'bollard' && Math.hypot(q.x - C.x, q.z - C.z) < 30);
-  if (!lead) { let bd = 30; for (const q of LRM.P) { if (q.team !== p.team || !q.alive || q.hero === 'linnet') continue; const d = Math.hypot(q.x - C.x, q.z - C.z); if (d < bd) { bd = d; lead = q; } } }
+  let lead = LRM.P.find(q => q.team === p.team && q.alive && q.hero && LR_HEROES[q.hero].role === 'tank' && Math.hypot(q.x - C.x, q.z - C.z) < 30);
+  if (!lead) { let bd = 30; for (const q of LRM.P) { if (q.team !== p.team || !q.alive || !q.hero || LR_HEROES[q.hero].heals) continue; const d = Math.hypot(q.x - C.x, q.z - C.z); if (d < bd) { bd = d; lead = q; } } }
   if (LRM.ph === 'play' && pushed && (urgent || (lead === p && gathered >= 2))) return lrRoadPt(C.s + 1.5, lat * 0.6);
   if (LRM.ph === 'play' && role === 'support' && lead && lead !== p && Math.hypot(lead.x - C.x, lead.z - C.z) < 12) { const a = lrPathAt(Math.min(L, lrPathNear(lead.x, lead.z) + 7)); return [a.x + Math.cos(a.yaw) * lat, a.z - Math.sin(a.yaw) * lat]; }
   return lrRoadPt(hold, lat * 1.4);
@@ -772,6 +789,7 @@ function lrBot(p, dt) {
   const I = p.inp, ai = p.ai || (p.ai = {}), S = LR_SKILL[(LRM.set && LRM.set.skill) || 'fair'] || LR_SKILL.fair, H = LR_HEROES[p.hero];
   I.fire = I.alt = I.a1 = I.a2 = I.ult = I.reload = I.jump = false; I.mx = I.mz = 0;
   if (!p.alive || !H) { ai.path = null; return; }
+  if (p.stun > 0) { ai.path = null; return; }   // (stunned: nothing to be done till it wears off)
   if (ai.yaw == null || ai.sn !== p.sn) Object.assign(ai, { yaw: p.yaw, pitch: 0, sn: p.sn, seeT: 0, tgt: -1, react: 0, ex: 0, ey: 0, exT: 0, abT: Math.random() * 0.3, path: null, repT: 0, stuckT: 0, lastX: p.x, lastZ: p.z, chkT: 1, uT: 0, sdT: 0, sd: 1, mode: null, foes: [], pals: [] });
   if (LRM.ph === 'pick' || LRM.ph === 'over') return;
   ai.seeT -= dt; if (ai.seeT <= 0) { ai.seeT = 0.12 + S.react * 0.5 * Math.random(); lrBotSee(p, ai, S); }
@@ -783,15 +801,16 @@ function lrBot(p, dt) {
   const eye = { x: p.x, y: p.y + lrEyeH(p), z: p.z };
   // ---- what to look at, and what to do
   let aimP = null, lob = 0, fire = false, alt = false, wantYaw = null;
-  const healT = p.hero === 'linnet' ? (ai.pals || []).find(f => f.q.alive && f.q.hp / f.q.maxHp < 0.85 && f.d < 15) : null;
+  // (a healer's secondary mends: held on whoever's hurt near it)
+  const healT = H.heals ? (ai.pals || []).find(f => f.q.alive && f.q.hp / f.q.maxHp < 0.85 && f.d < (H.healRange || 15)) : null;
   if (ai.mode && LRM.t > ai.mode.until) ai.mode = null;
   if (ai.mode) { aimP = ai.mode.at; lob = ai.mode.lob || 0; }
   else if (healT && (!tg || ai.tgtD > 9 || healT.q.hp / healT.q.maxHp < 0.5)) { const q = healT.q; aimP = { x: q.x, y: q.y + q.h * 0.6, z: q.z }; alt = true; }
   else if (tg) {
-    const d = Math.hypot(tg.x - eye.x, tg.z - eye.z), tt = p.hero === 'linnet' ? d / 60 : 0, ld = tt * S.lead;
-    aimP = { x: tg.x + tg.vx * ld, y: tg.y + (ai.head ? tg.h - lrHeadR(tg) : tg.h * 0.6) + (p.hero === 'linnet' ? 0 : 0), z: tg.z + tg.vz * ld };
-    fire = ai.react <= 0 && (p.hero !== 'bollard' || d < H.range + tg.r + 0.2) && d < H.range;
-    if (p.hero === 'razorbill' && d > 22 && S.strafe >= 0.5 && !hurt) alt = true;
+    const d = Math.hypot(tg.x - eye.x, tg.z - eye.z), tt = H.projSpeed ? d / H.projSpeed : 0, ld = tt * S.lead;
+    aimP = { x: tg.x + tg.vx * ld, y: tg.y + (ai.head ? tg.h - lrHeadR(tg) : tg.h * 0.6), z: tg.z + tg.vz * ld };
+    fire = ai.react <= 0 && (!H.melee || d < H.range + tg.r + 0.2) && d < H.range;
+    if (H.botAlt && H.botAlt(p, ai, tg, d, S, hurt)) alt = true;
   }
   // abilities, a few times a second
   ai.abT -= dt;
@@ -808,16 +827,16 @@ function lrBot(p, dt) {
     const tr = S.turn * dt; ai.yaw = lrAng(ai.yaw + lrClamp(dy, -tr, tr)); ai.pitch = lrClamp(ai.pitch + lrClamp(dp, -tr, tr), -1.45, 1.45);
     dy = lrAng(yaw - ai.yaw); dp = pitch - ai.pitch;
     const tol = tg && !alt ? Math.max(0.03, Math.atan2(tg.r * 1.1, Math.max(1, ai.tgtD))) + 0.02 : 0.08;
-    if (fire && Math.abs(dy) < (p.hero === 'bollard' ? 0.6 : tol) && Math.abs(dp) < tol * 1.5) I.fire = true;
-    if (alt && (p.hero !== 'linnet' || Math.abs(dy) < 0.18)) I.alt = true;
+    if (fire && Math.abs(dy) < (H.melee ? 0.6 : tol) && Math.abs(dp) < tol * 1.5) I.fire = true;
+    if (alt && (!H.heals || Math.abs(dy) < 0.18)) I.alt = true;
   }
   // ---- where to go
   let goal = lrBotGoal(p, ai);
   if (tg && !ai.retreat && LRM.ph === 'play') {
     // close in, or keep a distance, without going far from where it should be
     const d = ai.tgtD, ax = tg.x - p.x, az = tg.z - p.z;
-    if (p.hero === 'bollard' && d < 12 && Math.hypot(tg.x - goal[0], tg.z - goal[1]) < 12) goal = [tg.x, tg.z];
-    else if (p.hero === 'razorbill' && d < 9) goal = [p.x - ax / d * 4, p.z - az / d * 4];
+    if (H.botClose && d < H.botClose && Math.hypot(tg.x - goal[0], tg.z - goal[1]) < H.botClose) goal = [tg.x, tg.z];
+    else if (H.botKeep && d < H.botKeep) goal = [p.x - ax / d * 4, p.z - az / d * 4];
   }
   let mx = 0, mz = 0;
   const gd = Math.hypot(goal[0] - p.x, goal[1] - p.z);
@@ -841,9 +860,9 @@ function lrBot(p, dt) {
   if (tg && S.strafe && !alt && !ai.retreat) { ai.sdT -= dt; if (ai.sdT <= 0) { ai.sdT = 0.5 + Math.random() * 0.9; ai.sd = Math.random() < 0.5 ? -1 : 1; } const rx = Math.cos(ai.yaw), rz = -Math.sin(ai.yaw); mx += rx * ai.sd * 0.7 * S.strafe; mz += rz * ai.sd * 0.7 * S.strafe; if (S.strafe >= 1 && Math.random() < dt * 0.3) I.jump = true; }
   // stuck: hardly moved in a second while meaning to: sidestep and hop, and find the way again
   ai.chkT -= dt;
-  if (ai.chkT <= 0) { const moved = Math.hypot(p.x - ai.lastX, p.z - ai.lastZ); if (moved < 0.45 && gd > 2 && ai.uT <= 0 && p.act.k !== 'a1') { const s = Math.random() < 0.5 ? 1 : -1, l = Math.hypot(mx, mz) || 1; ai.ux = -mz / l * s; ai.uz = mx / l * s; ai.uT = 0.6; ai.path = null; } ai.lastX = p.x; ai.lastZ = p.z; ai.chkT = 1; }
-  // gliding down after Gull's Rise
-  if (p.hero === 'razorbill' && p.glide && p.vy < 0) I.jump = true;
+  if (ai.chkT <= 0) { const moved = Math.hypot(p.x - ai.lastX, p.z - ai.lastZ); if (moved < 0.45 && gd > 2 && ai.uT <= 0 && p.act.k !== 'a1' && !(p.root > 0)) { const s = Math.random() < 0.5 ? 1 : -1, l = Math.hypot(mx, mz) || 1; ai.ux = -mz / l * s; ai.uz = mx / l * s; ai.uT = 0.6; ai.path = null; } ai.lastX = p.x; ai.lastZ = p.z; ai.chkT = 1; }
+  // gliding down (after Gull's Rise)
+  if (p.glide && p.vy < 0) I.jump = true;
   // with nothing to aim at, look the way it's going (or along the road ahead)
   if (!aimP) {
     const l = Math.hypot(mx, mz); wantYaw = l > 0.3 ? Math.atan2(-mx, -mz) : p.team ? lrPathAt(C.s).yaw + Math.PI : lrPathAt(C.s).yaw;
@@ -859,46 +878,36 @@ function lrBotAbil(p, ai, S, I, tg, hpF, hurt, eye) {
   const foes = ai.foes || [], pals = ai.pals || [], C = LRM.cart, at = (q, y) => ({ x: q.x, y: q.y + (y == null ? q.h * 0.6 : y), z: q.z });
   const inCone = (yaw, r, half) => foes.filter(f => f.q.alive && f.d < r && Math.abs(lrAng(Math.atan2(-(f.q.x - p.x), -(f.q.z - p.z)) - yaw)) < half).length;
   const mode = (o) => { ai.mode = Object.assign({ until: LRM.t + 0.9, pressAt: LRM.t + 0.15, once: true }, o); };
-  if (p.hero === 'bollard') {
-    if (p.ult >= 1 && tg && inCone(Math.atan2(-(tg.x - p.x), -(tg.z - p.z)), 12, 0.5) >= S.clump) mode({ at: at(tg), press: 'ult', pressAt: LRM.t + 0.12 });
-    else if (p.cd.alt <= 0 && tg && hpF < 0.65 && hurt && ai.tgtD > 6 && ai.tgtD < 30 && !LRM.walls.some(w => w.owner === p.i)) mode({ at: at(tg), press: 'alt', pressAt: LRM.t + 0.1 });
-    else if (p.cd.a2 <= 0 && hurt && hpF < 0.75) I.a2 = true;
-    else if (p.cd.a1 <= 0 && tg && ai.tgtD > 4.5 && ai.tgtD < 11 && Math.abs(lrAng(Math.atan2(-(tg.x - p.x), -(tg.z - p.z)) - p.yaw)) < 0.2) I.a1 = true;
-  } else if (p.hero === 'razorbill') {
-    if (p.ult >= 1) {
-      // a clump of them, best of all on the Wain: the strip laid along the line to them
-      for (const f of foes) { if (f.d > 44 || f.d < 8) continue; const yaw = Math.atan2(-(f.q.x - p.x), -(f.q.z - p.z)), fx = -Math.sin(yaw), fz = -Math.cos(yaw); const n = foes.filter(g => { const ox = g.q.x - f.q.x, oz = g.q.z - f.q.z; return Math.abs(ox * fx + oz * fz) < 10 && Math.abs(-ox * fz + oz * fx) < 3; }).length; if (n >= S.clump || (n >= 2 && Math.hypot(f.q.x - C.x, f.q.z - C.z) < 6)) { mode({ at: at(f.q, 0), press: 'ult', pressAt: LRM.t + 0.35 }); return; } }
-    }
-    if (p.cd.a2 <= 0 && tg && ai.tgtD > 5 && ai.tgtD < 26) { const n = foes.filter(g => Math.hypot(g.q.x - tg.x, g.q.z - tg.z) < 4.5).length; if (n >= 2 || Math.hypot(tg.x - C.x, tg.z - C.z) < 5) { mode({ at: at(tg, 0), lob: 24, press: 'a2', pressAt: LRM.t + 0.3 }); return; } }
-    if (p.cd.a1 <= 0 && ((hurt && hpF < 0.45) || (tg && ai.tgtD > 18 && Math.random() < 0.12))) I.a1 = true;
-  } else {
-    const hurtN = pals.filter(f => f.q.alive && f.q.hp / f.q.maxHp < 0.6 && f.d < 12).length + (hpF < 0.6 ? 1 : 0);
-    if (p.ult >= 1 && (hurtN >= Math.max(2, S.clump) || (hurtN >= 1 && foes.length >= 3))) { I.ult = true; return; }
-    if (p.cd.a1 <= 0) {
-      const w = pals.find(f => f.q.alive && f.q.hp / f.q.maxHp < 0.7 && f.d < 13);
-      if (hpF < 0.55 && (!w || Math.random() < 0.5)) { mode({ at: { x: p.x - Math.sin(p.yaw) * 0.8, y: p.y, z: p.z - Math.cos(p.yaw) * 0.8 }, lob: 16, press: 'a1', pressAt: LRM.t + 0.25 }); return; }
-      if (w) { mode({ at: at(w.q, 0), lob: 16, press: 'a1', pressAt: LRM.t + 0.3 }); return; }
-    }
-    if (p.cd.a2 <= 0 && hurt && hpF < 0.4) { I.a2 = true; ai.retreat = true; }
-  }
+  const H = LR_HEROES[p.hero]; if (H.bot) H.bot(p, ai, { S, I, tg, hpF, hurt, eye, foes, pals, C, at, inCone, mode });
 }
 
 // ---------- snapshots (for online) ----------
-const LR_ACTS = [null, 'a1', 'a2', 'alt', 'ult'], LR_CST = ['push', 'contest', 'idle', 'back'], LR_ZK = ['tar', 'lantern', 'beacon', 'broadside'], LR_JK = ['bolt', 'tar', 'lantern'];
+const LR_ACTS = [null, 'a1', 'a2', 'alt', 'ult'], LR_CST = ['push', 'contest', 'idle', 'back'];   // (the kinds of zone, thing in flight and wall: LR_ZK, LR_JK, LR_WK, as registered)
 const lrR = (v, k) => Math.round(v * (k || 100)) / (k || 100);
-// the whole match, small: numbers rounded, players as arrays in seat order, and the events since the last snapshot
+// the whole match, small: numbers rounded, players as arrays in seat order, and the events since the last snapshot.
+// A player: [0 hero (its index in LR_HERO_IDS), 1-3 x y z, 4-6 vx vy vz, 7 yaw, 8 pitch, 9 hp, 10 flags (alive 1, on
+// the ground 2, secondary held 4, gliding 8), 11 deadT, 12 spawnT, 13 ammo, 14 reload, 15-17 cooldowns a1 a2 alt,
+// 18 ult %, 19 act (LR_ACTS), 20 its time, 21 drT, 22 slow, 23-27 kills deaths damage healing elims, 28 beam, 29 sn,
+// 30 fireT, 31 stun, 32 root, 33 oh, 34 dr (0 for none), 35 firm, 36 the hero's own (its snap hook's numbers)], the
+// trailing ones left off while they're nothing
+function lrSnapP(p) {
+  const H = LR_HEROES[p.hero], a = [LR_HERO_IDS.indexOf(p.hero), lrR(p.x), lrR(p.y), lrR(p.z), lrR(p.vx, 10), lrR(p.vy, 10), lrR(p.vz, 10), lrR(p.yaw), lrR(p.pitch),
+    Math.ceil(p.hp), (p.alive ? 1 : 0) | (p.gnd ? 2 : 0) | (p.alt ? 4 : 0) | (p.glide ? 8 : 0), lrR(p.deadT, 10), lrR(p.spawnT, 10), p.ammo, lrR(p.reload, 10),
+    lrR(p.cd.a1, 10), lrR(p.cd.a2, 10), lrR(p.cd.alt, 10), Math.floor(p.ult * 100), LR_ACTS.indexOf(p.act.k), lrR(p.act.t, 10), lrR(p.drT, 10), lrR(p.slow, 100),
+    p.kills, p.deaths, Math.round(p.dmg), Math.round(p.heal), p.elims, p.beam, p.sn, lrR(p.fireT, 10),
+    lrR(p.stun, 10), lrR(p.root, 10), Math.ceil(p.oh), p.drT > 0 ? lrR(p.dr, 100) : 0, lrR(p.firm, 10), (H && H.snap && H.snap(p)) || 0];
+  while (a.length > 31 && !a[a.length - 1]) a.pop();
+  return a;
+}
 function lrSnap() {
   const fx = LRM.FX.filter(f => f.id > (LRM.snapFx || 0)).slice(-12); if (LRM.FX.length) LRM.snapFx = LRM.FX[LRM.FX.length - 1].id;
   const C = LRM.cart;
   return {
     ph: LRM.ph, pt: lrR(LRM.phT, 10), t: lrR(LRM.t, 10), c: lrR(LRM.clock, 10), ot: LRM.ot ? 1 : 0, oT: lrR(LRM.otT, 10), st: LRM.stage, w: LRM.win,
-    P: LRM.P.map(p => [LR_HERO_IDS.indexOf(p.hero), lrR(p.x), lrR(p.y), lrR(p.z), lrR(p.vx, 10), lrR(p.vy, 10), lrR(p.vz, 10), lrR(p.yaw), lrR(p.pitch),
-      Math.ceil(p.hp), (p.alive ? 1 : 0) | (p.gnd ? 2 : 0) | (p.alt ? 4 : 0) | (p.glide ? 8 : 0), lrR(p.deadT, 10), lrR(p.spawnT, 10), p.ammo, lrR(p.reload, 10),
-      lrR(p.cd.a1, 10), lrR(p.cd.a2, 10), lrR(p.cd.alt, 10), Math.floor(p.ult * 100), LR_ACTS.indexOf(p.act.k), lrR(p.act.t, 10), lrR(p.brace, 10), lrR(p.slow, 10),
-      p.kills, p.deaths, Math.round(p.dmg), Math.round(p.heal), p.elims, p.beam, p.sn, lrR(p.fireT, 10)]),
+    P: LRM.P.map(lrSnapP),
     C: [lrR(C.s), LR_CST.indexOf(C.st), C.n, C.nd, lrR(C.idleT, 10)],
-    W: LRM.walls.map(w => [w.id, w.team, w.owner, lrR(w.x), lrR(w.y), lrR(w.z), lrR(w.yaw), Math.ceil(w.hp), lrR(w.t, 10)]),
-    Z: LRM.zones.map(z => [z.id, LR_ZK.indexOf(z.k), z.team, z.owner, lrR(z.x, 10), lrR(z.y, 10), lrR(z.z, 10), z.r, lrR(z.t, 10), lrR(z.yaw || 0)]),
+    W: LRM.walls.map(w => [w.id, w.team, w.owner, lrR(w.x), lrR(w.y), lrR(w.z), lrR(w.yaw), Math.ceil(w.hp), lrR(w.t, 10), LR_WK.indexOf(w.k)]),
+    Z: LRM.zones.map(z => [z.id, LR_ZK.indexOf(z.k), z.team, z.owner, lrR(z.x, 10), lrR(z.y, 10), lrR(z.z, 10), z.r, lrR(z.t, 10), lrR(z.yaw || 0)].concat(((LR_ZONE[z.k] || {}).sync || []).map(k => lrR(+z[k] || 0, 10)))),
     J: LRM.proj.map(j => [j.id, LR_JK.indexOf(j.k), j.team, j.owner, lrR(j.x, 10), lrR(j.y, 10), lrR(j.z, 10), lrR(j.vx, 10), lrR(j.vy, 10), lrR(j.vz, 10)]),
     K: LRM.packs.map(k => Math.ceil(k.t)),
     F: LRM.feed.slice(-5).map(f => [lrR(f.t, 10), f.a, f.v, f.how]),
@@ -930,17 +939,19 @@ function lrApply(s) {
     }
     const ownAmmo = mine && a[14] <= 0 && p.reload <= 0 && a[13] > p.ammo && now - (LRM.shotAt || -1e9) < 900 && a[29] === p.sn;
     p.hp = a[9]; p.alive = alive; if (!mine || a[29] !== p.sn || !alive) { p.gnd = !!(a[10] & 2); p.glide = !!(a[10] & 8); } p.alt = !!(a[10] & 4); p.deadT = a[11]; p.spawnT = a[12]; if (!ownAmmo) p.ammo = a[13]; p.reload = a[14];
-    p.cd = { a1: mine && now - (use.a1 || -1e9) < 1500 ? p.cd.a1 : a[15], a2: mine && now - (use.a2 || -1e9) < 1500 ? p.cd.a2 : a[16], alt: a[17] }; p.ult = a[18] / 100; const k = LR_ACTS[a[19]] || null; if (!mine || k !== null || p.act.k === null) p.act = { k, t: a[20] }; p.brace = a[21]; p.slow = a[22];
-    // (the slows as timers, so a body moved here is slowed as the host has it: 0.6 the wave's, 0.7 the tar's, 0.4 both)
-    p.slowT = p.slow < 0.65 && p.slow > 0.5 || p.slow < 0.45 ? 0.3 : 0; p.tarT = p.slow > 0.65 && p.slow < 0.75 || p.slow < 0.45 ? 0.3 : 0;
+    p.cd = { a1: mine && now - (use.a1 || -1e9) < 1500 ? p.cd.a1 : a[15], a2: mine && now - (use.a2 || -1e9) < 1500 ? p.cd.a2 : a[16], alt: a[17] }; p.ult = a[18] / 100; const k = LR_ACTS[a[19]] || null; if (!mine || k !== null || p.act.k === null) p.act = { k, t: a[20] };
+    // (the slow as one timer, so a body moved here is slowed as the host has it; the statuses as the host has them)
+    p.drT = a[21]; p.dr = a[34] || 1; p.slow = a[22]; p.slows = a[22] < 1 ? { net: [a[22], 0.3] } : {};
+    p.stun = a[31] || 0; p.root = a[32] || 0; p.oh = a[33] || 0; p.firm = a[35] || 0;
     p.kills = a[23]; p.deaths = a[24]; p.dmg = a[25]; p.heal = a[26]; p.elims = a[27]; p.beam = a[28]; p.sn = a[29]; if (!mine) p.fireT = a[30];
+    const H = LR_HEROES[p.hero]; if (H && H.unsnap) H.unsnap(p, Array.isArray(a[36]) ? a[36] : [], mine);
   });
   if (s.C && LRM.cart) { const C = LRM.cart; C.px = C.x; C.pz = C.z; C.s = s.C[0]; C.st = LR_CST[s.C[1]] || 'idle'; C.n = s.C[2]; C.nd = s.C[3]; C.idleT = s.C[4]; lrPlaceCart(); }
   else if (s.C) { const at = lrPathAt(s.C[0]); LRM.cart = { s: s.C[0], x: at.x, y: 0, z: at.z, yaw: at.yaw, st: LR_CST[s.C[1]] || 'idle', n: s.C[2], nd: s.C[3], idleT: s.C[4], px: at.x, pz: at.z, L: lrPathLen() }; }
-  LRM.walls = (s.W || []).map(w => ({ id: w[0], team: w[1], owner: w[2], x: w[3], y: w[4], z: w[5], yaw: w[6], w: 6, h: 3, hp: w[7], t: w[8] }));
-  LRM.zones = (s.Z || []).map(z => ({ id: z[0], k: LR_ZK[z[1]], team: z[2], owner: z[3], x: z[4], y: z[5], z: z[6], r: z[7], t: z[8], yaw: z[9], w: 6, l: 22 }));
+  LRM.walls = (s.W || []).map(w => { const k = LR_WK[w[9]] || LR_WK[0], W = LR_WALL[k] || { w: 6, h: 3 }; return { id: w[0], k, team: w[1], owner: w[2], x: w[3], y: w[4], z: w[5], yaw: w[6], w: W.w, h: W.h, hp: w[7], t: w[8] }; });
+  LRM.zones = (s.Z || []).map(z => { const k = LR_ZK[z[1]], Z = LR_ZONE[k] || {}, o = Object.assign({}, Z.fix || {}, { id: z[0], k, team: z[2], owner: z[3], x: z[4], y: z[5], z: z[6], r: z[7], t: z[8], yaw: z[9] }); (Z.sync || []).forEach((n, i) => { o[n] = z[10 + i]; }); return o; });
   const own = LRM.proj.filter(j => j.own), meI = LRM.net && !lrHost() ? LRM.me : -1;
-  LRM.proj = (s.J || []).filter(j => !(j[3] === meI && j[1] === 0)).map(j => ({ id: j[0], k: LR_JK[j[1]], team: j[2], owner: j[3], x: j[4], y: j[5], z: j[6], vx: j[7], vy: j[8], vz: j[9], t: 0, hit: [] })).concat(own);
+  LRM.proj = (s.J || []).filter(j => !(j[3] === meI && LR_PROJ[LR_JK[j[1]]] && LR_PROJ[LR_JK[j[1]]].own)).map(j => ({ id: j[0], k: LR_JK[j[1]], team: j[2], owner: j[3], x: j[4], y: j[5], z: j[6], vx: j[7], vy: j[8], vz: j[9], t: 0, hit: [] })).concat(own);
   if (!LRM.packs.length) LRM.packs = LR_MAP.packs.map(k => ({ x: k[0], z: k[1], big: !!k[2], t: 0 }));
   (s.K || []).forEach((t, i) => { if (LRM.packs[i]) LRM.packs[i].t = t; });
   LRM.feed = (s.F || []).map(f => ({ t: f[0], a: f[1], v: f[2], how: f[3] }));
@@ -956,12 +967,12 @@ function lrApply(s) {
 
 // ---------- your own input ----------
 // the look, every frame (mouse under pointer lock, the right stick, a finger dragged on the right of the screen),
-// turned by the look sensitivity settings; through Razorbill's glass it's slowed by the zoom
+// turned by the look sensitivity settings; through a hero's glass (its zoom) it's slowed by the zoom
 function lrLocalLook(dt) {
   const me = lrMe(); if (!me || me.bot) return;
   if (LRM.spawnSeen !== me.sn) { LRM.spawnSeen = me.sn; LRM.ly = me.yaw; LRM.lp = me.pitch; }
   const blocked = lrInputBlocked();
-  const zoom = me.hero === 'razorbill' && me.alt && me.alive ? 2 : 1, sens = 0.0031 / zoom;
+  const zoom = lrZoom(me), sens = 0.0031 / zoom;
   const mx = LRM.mlook[0], my = LRM.mlook[1]; LRM.mlook = [0, 0];
   if (blocked) return;
   const kx = typeof lookKX === 'function' ? lookKX() : 1, ky = typeof lookKY === 'function' ? lookKY() : 1;
@@ -969,6 +980,8 @@ function lrLocalLook(dt) {
   const P = LRM.pad; if (P.lx || P.ly) { const pk = (typeof FPS !== 'undefined' && FPS.padLookK) || 1; LRM.ly = lrAng(LRM.ly - P.lx * dt * 3.4 * pk / zoom); LRM.lp = lrClamp(LRM.lp - P.ly * dt * 2.3 * pk / zoom, -1.5, 1.5); }
   if (LRM.keys.ArrowLeft) LRM.ly = lrAng(LRM.ly + dt * 2.2); if (LRM.keys.ArrowRight) LRM.ly = lrAng(LRM.ly - dt * 2.2);
 }
+// how far a hero's glass brings things in while its secondary is held (its def's zoom), else 1
+function lrZoom(p) { const H = p && LR_HEROES[p.hero]; return H && H.zoom && p.alt && p.alive ? H.zoom : 1; }
 function lrInputBlocked() { return LRM.paused || LRM.picking || (LRM.ph === 'pick' && lrMe() && !lrMe().hero) || LRM.ph === 'over'; }
 function lrLocalInput(me) {
   const I = me.inp, K = LRM.keys, T = LRM.touch, P = LRM.pad, b = lrInputBlocked();
@@ -1007,7 +1020,7 @@ function lrKey(e, down) {
   if (LRM.paused) return;
   if (down && !e.repeat) {
     if (c === 'KeyH') { lrAskHero(); e.preventDefault(); return; }
-    if ((LRM.picking || (LRM.ph === 'pick' && !lrMe().hero)) && /^Digit[123]$/.test(c)) { lrChoose(LR_HERO_IDS[+c.slice(5) - 1]); e.preventDefault(); return; }
+    if ((LRM.picking || (LRM.ph === 'pick' && !lrMe().hero)) && /^Digit[1-9]$/.test(c) && LR_HERO_IDS[+c.slice(5) - 1]) { lrChoose(LR_HERO_IDS[+c.slice(5) - 1]); e.preventDefault(); return; }
   }
   if (/^(Key[WASDEQRH]|Space|Shift(Left|Right)|Arrow(Up|Down|Left|Right))$/.test(c)) { LRM.keys[c] = down; e.preventDefault(); }
 }
@@ -1097,26 +1110,18 @@ function lrSnd(k, x, y, z, vol) {
   if (v <= 0.01) return;
   const rec = (n, vv, opt) => typeof sfxPlay === 'function' && sfxPlay(n, Object.assign({ vol: vv, pan: e.pan, vary: 0.1 }, opt || {}));
   try {
+    const own = LR_SNDS[k]; if (own) { own(v, e, rec, o); return; }
     if (k === 'gun') { if (!rec('pepperbox', 0.55 * v, { rate: 1.25, gap: 0.04 })) { noise('lowpass', 2400 * v + 400, 0.8, 0.001, 0.4 * v, 0.14, o); tone(140, 'triangle', 0.001, 0.15 * v, 0.08, { to: 60, pan: e.pan }); } }
-    else if (k === 'bolt') { tone(1180, 'sine', 0.002, 0.12 * v, 0.16, { to: 1760, pan: e.pan }); noise('highpass', 4000, 1, 0.002, 0.05 * v, 0.1, o); }
-    else if (k === 'swing') { if (!rec('swish', 0.8 * v, { rate: 0.7 })) noise('bandpass', 900, 1.2, 0.03, 0.3 * v, 0.25, o); }
     else if (k === 'hitme') { tone(220, 'sawtooth', 0.001, 0.12, 0.12, { to: 110 }); noise('lowpass', 700, 1, 0.001, 0.18, 0.12); }
     else if (k === 'hitmark') tone(x ? 1300 : 950, 'square', 0.001, 0.05, 0.05);
     else if (k === 'kill') { tone(1500, 'square', 0.001, 0.06, 0.08); tone(1900, 'square', 0.001, 0.05, 0.1, { delay: 0.07 }); }
     else if (k === 'death') { if (!rec('snarl', 0.35 * v, { rate: 1.2 })) noise('lowpass', 500, 1, 0.01, 0.3 * v, 0.5, o); }
-    else if (k === 'tar') { if (!rec('splat', 0.8 * v)) noise('lowpass', 400, 0.8, 0.002, 0.5 * v, 0.4, o); noise('bandpass', 1800, 0.8, 0.05, 0.12 * v, 0.9, o); }
     else if (k === 'throw') noise('bandpass', 1200, 1.4, 0.02, 0.15 * v, 0.2, o);
+    else if (k === 'boom') { noise('lowpass', 420, 0.8, 0.002, 0.5 * v, 0.45, o); tone(60, 'sine', 0.005, 0.3 * v, 0.4, { pan: e.pan }); }
+    else if (k === 'stun') { tone(1400, 'triangle', 0.002, 0.08 * v, 0.25, { to: 700, pan: e.pan }); tone(1800, 'triangle', 0.002, 0.06 * v, 0.2, { delay: 0.08, to: 900, pan: e.pan }); }
+    else if (k === 'root') { noise('lowpass', 300, 1.2, 0.01, 0.3 * v, 0.35, o); tone(90, 'triangle', 0.005, 0.2 * v, 0.3, { pan: e.pan }); }
     else if (k === 'wall') { if (!rec('slam', 0.9 * v)) noise('lowpass', 260, 1, 0.001, 0.6 * v, 0.5, o); tone(70, 'triangle', 0.001, 0.4 * v, 0.4, { pan: e.pan }); }
     else if (k === 'wallgone') { if (!rec('debris', 0.6 * v)) noise('lowpass', 500, 1, 0.002, 0.4 * v, 0.6, o); }
-    else if (k === 'rush') { if (!rec('charge', 0.8 * v)) noise('lowpass', 300, 1, 0.05, 0.4 * v, 0.6, o); }
-    else if (k === 'brace') { if (!rec('chock', 0.8 * v)) tone(180, 'square', 0.001, 0.2 * v, 0.15, { pan: e.pan }); }
-    else if (k === 'wave') { if (!rec('wavesweep', 1 * v)) noise('lowpass', 600, 0.7, 0.05, 0.7 * v, 1.2, o); tone(55, 'sine', 0.01, 0.5 * v, 0.8, { pan: e.pan }); }
-    else if (k === 'rise') { if (!rec('gull', 0.5 * v)) tone(500, 'sine', 0.005, 0.12 * v, 0.3, { to: 1200, pan: e.pan }); noise('bandpass', 700, 1, 0.05, 0.2 * v, 0.5, o); }
-    else if (k === 'blink') { if (!rec('whisper', 0.5 * v, { rate: 1.6 })) tone(900, 'sine', 0.005, 0.12 * v, 0.25, { to: 300, pan: e.pan }); }
-    else if (k === 'kindle') { if (!rec('lampcatch', 0.7 * v)) tone(660, 'triangle', 0.005, 0.12 * v, 0.5, { pan: e.pan }); }
-    else if (k === 'beacon') { if (!rec('beaconcatch', 1 * v)) { tone(523, 'sine', 0.01, 0.2 * v, 1.4, { pan: e.pan }); tone(784, 'sine', 0.01, 0.15 * v, 1.6, { delay: 0.1, pan: e.pan }); } }
-    else if (k === 'warn') { if (typeof sfxHorn === 'function') sfxHorn(e.pan, 0.5 * v + 0.2); }
-    else if (k === 'volley') { for (let i = 0; i < 4; i++) if (!rec('cannon', 0.9 * Math.max(v, 0.35), { delay: i * 0.12 })) noise('lowpass', 500, 0.7, 0.002, 0.8 * Math.max(v, 0.35), 0.7, { pan: e.pan, delay: i * 0.12 }); }
     else if (k === 'reload') { if (!rec('reload', 0.45 * v)) tone(420, 'square', 0.001, 0.08 * v, 0.04, { to: 220 }); }
     else if (k === 'pack') { if (typeof sfxPickup === 'function') sfxPickup(); }
     else if (k === 'step') noise('lowpass', 380 + Math.random() * 160, 1, 0.002, 0.06 * (vol || 1), 0.07);
@@ -1132,25 +1137,17 @@ function lrSnd(k, x, y, z, vol) {
 // one event's sound (src/lr3d.js calls this once for each, as it handles them)
 function lrFxSound(f) {
   const me = lrMe(), mine = me && f.a === me.i, at = (k, v) => lrSnd(k, f.x, f.y, f.z, v);
+  const E = LR_EVENT[f.k]; if (E && E.sound) { E.sound(f, at, me, mine); return; }
   switch (f.k) {
     case 'tracer': at('gun', mine ? 1 : 0.8); break;
-    case 'cast': at('bolt'); break;
-    case 'sweep': at('swing'); break;
     case 'hit': if (me && f.v === me.i && !f.dot) lrSnd('hitme'); else if (mine && !f.wall) lrSnd('hitmark', f.head ? 1 : 0); break;
     case 'death': if (mine) lrSnd('kill'); else at('death'); break;
-    case 'blast': at('tar'); break;
+    case 'blast': at(f.k2 && LR_SNDS[f.k2] ? f.k2 : 'boom'); break;
     case 'throw': at('throw'); break;
     case 'wall': at('wall'); break;
     case 'wallgone': at('wallgone'); break;
-    case 'rush': at('rush'); break;
-    case 'brace': at('brace'); break;
-    case 'wave': at('wave', 1.4); break;
-    case 'rise': at('rise'); break;
-    case 'blink': at('blink'); break;
-    case 'kindle': at('kindle'); break;
-    case 'beacon': at('beacon', 1.3); break;
-    case 'broadside': lrSnd('warn', f.x, 0, f.z, 1.4); break;
-    case 'volley': lrSnd('volley', f.x, 0, f.z, 1.5); break;
+    case 'stun': at('stun'); break;
+    case 'root': at('root'); break;
     case 'reload': if (me && f.v === me.i) lrSnd('reload'); break;
     case 'pack': if (me && f.v === me.i) lrSnd('pack'); break;
     case 'go': lrSnd('go'); break;
@@ -1166,7 +1163,7 @@ function lrSteps(dt) {
   if (me.gnd && !LRM.wasGnd && LRM.lastVy < -6) lrSnd('land');
   LRM.wasGnd = me.gnd; LRM.lastVy = me.vy;
   if (!me.gnd || sp < 1.2) { LRM.stepT = 0.15; return; }
-  LRM.stepT = (LRM.stepT || 0) - dt * sp / 4.6; if (LRM.stepT <= 0) { LRM.stepT = 0.42; lrSnd('step', null, null, null, me.hero === 'bollard' ? 1.6 : 1); }
+  LRM.stepT = (LRM.stepT || 0) - dt * sp / 4.6; if (LRM.stepT <= 0) { LRM.stepT = 0.42; lrSnd('step', null, null, null, (LR_HEROES[me.hero] || {}).stepVol || 1); }
 }
 
 // ---------- in and out ----------

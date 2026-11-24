@@ -126,7 +126,7 @@ function lr3dFallbackWain() {
   } };
 }
 function lr3dFallbackHero(hero, team) {
-  const H = LR_HEROES[hero] || LR_HEROES.razorbill, T = LR_TEAMS[team], g = new THREE.Group(), r = H.r, h = H.h, hr = Math.max(0.22, r * 0.55);
+  const H = LR_HEROES[hero] || { r: 0.45, h: 1.8 }, T = LR_TEAMS[team], g = new THREE.Group(), r = H.r, h = H.h, hr = Math.max(0.22, r * 0.55);
   const main = lr3Mat(T.hex), trim = lr3Mat(T.hex2), skin = lr3Mat(0xd9b48f), dark = lr3Mat(0x222222);
   const body = new THREE.Group(); g.add(body);
   const legL = lr3Mesh(new THREE.CylinderGeometry(r * 0.28, r * 0.24, h * 0.42, 6), trim, -r * 0.4, h * 0.21, 0, body), legR = lr3Mesh(legL.geometry, trim, r * 0.4, h * 0.21, 0, body);
@@ -224,8 +224,8 @@ function lr3dDraw(dt) {
   }
   // the bulkheads, the zones, the things in flight: made as they come, dropped as they go
   const sync = (M, list, make, place) => { const live = new Set(); for (const o of list) { live.add(o.id); let v = M.get(o.id); if (!v) { v = make(o); if (!v) continue; M.set(o.id, v); S.add(v.group || v); } place(v, o); } for (const [id, v] of M) if (!live.has(id)) { S.remove(v.group || v); M.delete(id); } };
-  sync(LR3.walls, LRM.walls, w => { let m = null; if (typeof lrWallMesh === 'function') try { m = lrWallMesh(w.team); } catch (e) { m = null; } return m || lr3dFallbackWall(w.team); }, (v, w) => { v.position.set(w.x, w.y, w.z); v.rotation.y = w.yaw; });
-  sync(LR3.zones, LRM.zones, z => { let m = null; if (typeof lrZoneMesh === 'function') try { m = lrZoneMesh(z.k, z.team); } catch (e) { m = null; } return m && m.group ? m : lr3dFallbackZone(z); }, (v, z) => { v.group.position.set(z.x, z.k === 'lantern' && z.gy != null ? z.gy : z.y, z.z); if (z.k === 'broadside') v.group.rotation.y = z.yaw; try { v.update(z, dt); } catch (e) {} });
+  sync(LR3.walls, LRM.walls, w => { let m = null; if (typeof lrWallMesh === 'function') try { m = lrWallMesh(w.team, w.k); } catch (e) { m = null; } return m || lr3dFallbackWall(w.team); }, (v, w) => { v.position.set(w.x, w.y, w.z); v.rotation.y = w.yaw; });
+  sync(LR3.zones, LRM.zones, z => { let m = null; if (typeof lrZoneMesh === 'function') try { m = lrZoneMesh(z.k, z.team); } catch (e) { m = null; } return m && m.group ? m : lr3dFallbackZone(z); }, (v, z) => { v.group.position.set(z.x, z.gy != null ? z.gy : z.y, z.z); if (LR_ZONE[z.k] && LR_ZONE[z.k].turn) v.group.rotation.y = z.yaw; try { v.update(z, dt); } catch (e) {} });
   sync(LR3.proj, LRM.proj, j => { let m = null; if (typeof lrProjMesh === 'function') try { m = lrProjMesh(j.k, j.team); } catch (e) { m = null; } return m || lr3dFallbackProj(j.k, j.team); }, (v, j) => { v.position.set(j.x + j.vx * LR_DT * A, j.y + j.vy * LR_DT * A, j.z + j.vz * LR_DT * A); const l = Math.hypot(j.vx, j.vz); v.rotation.set(Math.atan2(j.vy, l), Math.atan2(-j.vx, -j.vz), 0, 'YXZ'); });
   // the events, each once (a guest's own shots and movement were shown as they happened, so the host's echo of them
   // is skipped: lr3dLocalFx)
@@ -233,7 +233,7 @@ function lr3dDraw(dt) {
   for (const f of LRM.FX) {
     if (f.id <= LR3.fxSeen) continue; LR3.fxSeen = f.id;
     if (LRM.t - f.t > 1) continue;
-    if (guest && me && ((f.k === 'tracer' && f.a === me.i) || (LR3_OWN.includes(f.k) && f.v === me.i))) continue;
+    if (guest && me && ((f.k === 'tracer' && f.a === me.i) || (LR_EVENT[f.k] && LR_EVENT[f.k].own && f.v === me.i))) continue;
     lr3dEvent(f, me);
   }
   if (LR3.fx && LR3.fx.update) try { LR3.fx.update(dt); } catch (e) {}
@@ -263,32 +263,29 @@ function lr3dRender(S) {
   S.background = null; r.autoClear = false; r.clearDepth(); cam.layers.set(1); r.render(S, cam);
   cam.layers.set(0); r.autoClear = ac; S.background = bg; cam.fov = fov; cam.updateProjectionMatrix();
 }
-const LR3_OWN = ['cast', 'sweep', 'rush', 'rise', 'blink'];
 // one event: its sound, its effect, and the shake it gives you
 function lr3dEvent(f, me) {
   try { lrFxSound(f); } catch (e) {}
   let ff = f;
   if (f.k === 'tracer' && me && f.a === me.i && LR3.cam) { const c = LR3.cam, v = lr3v(0.2, -0.16, -0.7).applyQuaternion(c.quaternion).add(c.position); ff = Object.assign({}, f, { x: v.x, y: v.y, z: v.z }); }
   if (me && f.k === 'hit' && f.v === me.i) LR3.shake = Math.min(0.6, LR3.shake + 0.12 + (f.n || 0) / 300);
-  if (f.k === 'volley' && me && Math.hypot(f.x - me.x, f.z - me.z) < 30) LR3.shake = 0.8;
-  if (f.k === 'wave' && me && Math.hypot(f.x - me.x, f.z - me.z) < 16) LR3.shake = Math.max(LR3.shake, 0.5);
-  const ok = ['tracer', 'hit', 'heal', 'blast', 'sweep', 'rush', 'wave', 'blink', 'death', 'spawn', 'broadside', 'volley'].includes(f.k) || (f.k === 'spark');
-  if (!ok) return;
+  const E = LR_EVENT[f.k]; if (E && E.shake && me) { const k = +E.shake(f, me) || 0; if (k > 0) LR3.shake = Math.max(LR3.shake, k); }
+  // (an effect for every kind the art knows, lrhero.js's own and the hero files' lrDefFx; the plain ones else)
   if (LR3.fx) { try { LR3.fx.spawn(f.k === 'spark' ? 'hit' : f.k, ff); } catch (e) {} } else lr3dFall(f.k, ff);
 }
 // an event of a guest's own, shown and heard at once rather than when the host's word comes back (src/lr.js lrGuestFire)
 function lr3dLocalFx(f) { if (!LR3.ok || !LRM.on) return; lr3dEvent(f, lrMe()); }
-// the camera: your eyes (or, while you're down, a little behind and above your body), with Razorbill's glass, the
+// the camera: your eyes (or, while you're down, a little behind and above your body), with a hero's glass, the
 // field of view setting, and a shake when you're hit
 function lr3dCamera(dt, me, fp) {
   const cam = LR3.cam, A = LRM.alpha || 0; if (!me) return;
-  const H = LR_HEROES[me.hero] || LR_HEROES.razorbill, h = me.hero ? me.h : 1.8;
+  const H = LR_HEROES[me.hero], h = me.hero ? me.h : 1.8;
   const x = lr3Lerp(me.px, me.x, A), y = lr3Lerp(me.py, me.y, A), z = lr3Lerp(me.pz, me.z, A), yaw = me.bot ? me.yaw : LRM.ly, pitch = me.bot ? me.pitch : LRM.lp;
   const ey = y + h * 0.88; if (LR3.eyeY == null || Math.abs(LR3.eyeY - ey) > 0.7 || !me.gnd) LR3.eyeY = ey; else LR3.eyeY += (ey - LR3.eyeY) * Math.min(1, dt * 22);   // (smoothed only for a step up or down)
   if (fp || LRM.ph === 'pick') { cam.position.set(x, LR3.eyeY, z); cam.rotation.set(pitch, yaw, 0); }
   else { const bx = x + Math.sin(yaw) * 4.5, bz = z + Math.cos(yaw) * 4.5; cam.position.set(bx, y + 3.2, bz); cam.lookAt(x, y + 1, z); }
   if (LR3.shake > 0) { const s = LR3.shake * 0.04 * (typeof flashK === 'function' ? Math.max(0.3, flashK()) : 1); cam.rotation.x += (Math.random() - 0.5) * s; cam.rotation.y += (Math.random() - 0.5) * s; LR3.shake = Math.max(0, LR3.shake - dt * 2.2); }
-  const zoomTo = fp && me.hero === 'razorbill' && me.alt ? 2 : 1; LR3.zoom += (zoomTo - LR3.zoom) * Math.min(1, dt * 14);
+  const zoomTo = fp ? lrZoom(me) : 1; LR3.zoom += (zoomTo - LR3.zoom) * Math.min(1, dt * 14);
   const hf = (typeof fovDeg === 'function' ? fovDeg() : 90) * Math.PI / 180, vf = 2 * Math.atan(Math.tan(hf / 2) / Math.max(0.4, cam.aspect)), v = 2 * Math.atan(Math.tan(Math.min(vf, 1.75) / 2) / LR3.zoom) * 180 / Math.PI;
   if (Math.abs(cam.fov - v) > 0.01) { cam.fov = v; cam.updateProjectionMatrix(); }
   // the hands and the weapon
@@ -297,7 +294,7 @@ function lr3dCamera(dt, me, fp) {
     LR3.view = null; LR3.viewHero = me.hero;
     if (me.hero) { let v = null; if (typeof lrViewModel === 'function') try { v = lrViewModel(me.hero); } catch (e) { console.error(e); v = null; } LR3.view = v || lr3dFallbackView(me.hero); cam.add(LR3.view.group); }
   }
-  if (LR3.view) { LR3.view.group.visible = fp && !(me.hero === 'razorbill' && LR3.zoom > 1.6); try { LR3.view.update({ fire: me.fireT, alt: me.alt, reload: me.reload, act: me.act, spd: Math.hypot(me.vx, me.vz), gnd: me.gnd, ult: me.ult, beam: me.beam }, dt); } catch (e) {} }
+  if (LR3.view) { LR3.view.group.visible = fp && !(H && H.zoom && LR3.zoom > 1 + (H.zoom - 1) * 0.6); try { LR3.view.update({ fire: me.fireT, alt: me.alt, reload: me.reload, act: me.act, spd: Math.hypot(me.vx, me.vz), gnd: me.gnd, ult: me.ult, beam: me.beam }, dt); } catch (e) {} }
 }
 // where a point in the world falls on the screen (for the HUD's names and bars): { x, y, on (in front of you) }
 function lr3dProject(x, y, z) {
