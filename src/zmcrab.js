@@ -44,6 +44,7 @@ function zrShot(x, y, z, h, p, by, mine, t) {
   if (mine) {
     if (typeof zeShot === 'function') zeShot(x, y, z, h, p, by);   // [egg hook] src/zmegg.js
     if (typeof zhShot === 'function') zhShot(x, y, z, h, p, by);   // [egg2 hook] src/zmegg2.js
+    if (typeof zsShot === 'function') zsShot(x, y, z, h, p, by);   // [egg3 hook] src/zmegg3.js
     // the snap's burst of water: all of them in front, near, hurt and thrown back
     let any = false;
     for (const o of ZM.z) {

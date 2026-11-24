@@ -396,6 +396,7 @@ function znRequestFrom(sid, k, a) {
   if (k === 'pst') { if (typeof zmpStatusFrom === 'function') zmpStatusFrom(sid, a); return; }   // [pap] what a reforged weapon did to them
   if (k === 'egg') { if (typeof zeRequest === 'function') zeRequest(sid, a); return; }   // [egg hook] src/zmegg.js
   if (k === 'egg2') { if (typeof zhRequest === 'function') zhRequest(sid, a); return; }   // [egg2 hook] src/zmegg2.js
+  if (k === 'egg3') { if (typeof zsRequest === 'function') zsRequest(sid, a); return; }   // [egg3 hook] src/zmegg3.js
   if (k === 'raid') { if (typeof raidRequest === 'function') raidRequest(sid, a); return; }   // [raid] src/raid.js
 }
 // someone (by) gets someone (sid) up: everyone's told who got whom up (and if it's me, up I get)
@@ -441,6 +442,7 @@ function znHostSend() {
   if (typeof zbHostSend === 'function') zbHostSend(z);   // [boss] the bosses: their kinds, strength and blows (src/zmboss.js)
   if (typeof zeHostSend === 'function') zeHostSend(z);   // [egg hook] src/zmegg.js
   if (typeof zhHostSend === 'function') zhHostSend(z);   // [egg2 hook] src/zmegg2.js
+  if (typeof zsHostSend === 'function') zsHostSend(z);   // [egg3 hook] src/zmegg3.js
   if (typeof zmlHostSend === 'function') zmlHostSend(z);   // [lamp] the Light: lit or not, its beam, its price
   if (typeof raidHostSend === 'function') raidHostSend(z);   // [raid] Maren's End: its part, and the part's own state
   znSend(z);
@@ -590,6 +592,7 @@ function znApply(hz) {
   }
   if (typeof zeApply === 'function') zeApply(hz);   // [egg hook] src/zmegg.js
   if (typeof zhApply === 'function') zhApply(hz);   // [egg2 hook] src/zmegg2.js
+  if (typeof zsApply === 'function') zsApply(hz);   // [egg3 hook] src/zmegg3.js
   if (typeof zmlApply === 'function') zmlApply(hz);   // [lamp] src/zmlamp.js
   // things that happen once
   if (Array.isArray(hz.ev)) for (const e of hz.ev) {

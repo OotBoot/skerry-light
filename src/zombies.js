@@ -2099,6 +2099,7 @@ function zmReset() {
   if (typeof zxReset === 'function') zxReset();   // [chest] src/zmchest.js
   if (typeof zeReset === 'function') zeReset();   // [egg hook] src/zmegg.js
   if (typeof zhReset === 'function') zhReset();   // [egg2 hook] src/zmegg2.js
+  if (typeof zsReset === 'function') zsReset();   // [egg3 hook] src/zmegg3.js
 }
 // opts: { map: which map (ZM_MAPS; else the one picked on the card) } and, playing together (src/zmnet.js),
 // { net: 'host' | 'client', hum: [[sid, nick], ...] }
@@ -2257,6 +2258,7 @@ function zmTick(dt) {
   if (typeof zxTick === 'function') zxTick(dt);   // [chest] what the chest's weapons throw, and what they leave burning
   if (typeof zeTick === 'function') zeTick(dt);   // [egg hook] src/zmegg.js
   if (typeof zhTick === 'function') zhTick(dt);   // [egg2 hook] src/zmegg2.js
+  if (typeof zsTick === 'function') zsTick(dt);   // [egg3 hook] src/zmegg3.js
   if ((typeof RAID !== 'undefined' && RAID.on)) raidMe(dt);   // [raid] your own side of it
   if (typeof zbMe === 'function') zbMe(dt);   // [boss] their blows running on (joined), and what they've done to me (src/zmboss.js)
   zmNearest();
@@ -2768,6 +2770,7 @@ function zmKill(d, head, code, how, by) {
   if (d.boss && typeof zbKilled === 'function') zbKilled(d, how, by);   // [boss] its reward and its salvage
   if (typeof zeKill === 'function') zeKill(d, how, by);   // [egg hook] src/zmegg.js
   if (typeof zhKill === 'function') zhKill(d, how, by);   // [egg2 hook] src/zmegg2.js
+  if (typeof zsKill === 'function') zsKill(d, how, by);   // [egg3 hook] src/zmegg3.js
   if (typeof raidKill === 'function') raidKill(d, how, by);   // [raid]
   if (typeof frcKill === 'function') frcKill(d, head, code, how, by);   // [fogrun cards] the relics a kill sets off
 }
@@ -2826,6 +2829,7 @@ function zmResolveShot(sh, mine) {
     FPS.tracers.push({ a: [x + Math.sin(lh) * 0.6, y + Math.cos(lh) * 0.6, z - 0.25], b: [last.x, last.y, last.z], t: w.pellets ? 0.06 : 0.08, k: w.code });
     if (typeof zeShot === 'function' && mine) zeShot(x, y, z, lh, lp, by);   // [egg hook] src/zmegg.js
     if (typeof zhShot === 'function' && mine) zhShot(x, y, z, lh, lp, by);   // [egg2 hook] src/zmegg2.js
+    if (typeof zsShot === 'function' && mine) zsShot(x, y, z, lh, lp, by);   // [egg3 hook] src/zmegg3.js
     if (typeof raidShot === 'function' && mine) raidShot(x, y, z, lh, lp, by, w.head);   // [raid] (and what it does to a weak spot)
     if (last.kind !== 'body' && last.kind !== 'none') fpsPuff(last.x, last.y, last.z, last.kind === 'ground' ? '150,140,120' : '190,190,180', w.pellets ? 2 : 6);
   }
@@ -2862,6 +2866,7 @@ function zmMelee(x, y, z, h, w, code) {
   code = code || 'c';
   if (typeof zeMelee === 'function') zeMelee(x, y, z, h, w, code);   // [egg hook] src/zmegg.js
   if (typeof zhMelee === 'function') zhMelee(x, y, z, h, w, code);   // [egg2 hook] src/zmegg2.js
+  if (typeof zsMelee === 'function') zsMelee(x, y, z, h, w, code);   // [egg3 hook] src/zmegg3.js
   if (code === 'c' && typeof zmpSwing === 'function') zmpSwing(x, y, z, h);   // [pap] the Keel-Splitter's crescent
   let any = false;
   for (const o of ZM.z) {
@@ -3042,6 +3047,7 @@ function zmNearest() {
   for (const w of ZM.windows) if (!w.sea && w.boards < 6 && zmOpen(w.zone)) consider({ k: 'win', w }, w.x - w.nx * 0.95, w.y - w.ny * 0.95, w.z || 0, w.hatch ? 1.6 : 1.9, false);
   if (typeof zeNearest === 'function') zeNearest(consider);   // [egg hook] src/zmegg.js
   if (typeof zhNearest === 'function') zhNearest(consider);   // [egg2 hook] src/zmegg2.js
+  if (typeof zsNearest === 'function') zsNearest(consider);   // [egg3 hook] src/zmegg3.js
   if (typeof raidConsider === 'function') raidConsider(consider);   // [raid]
   // (down on the floor, nothing's in reach but your pepperbox)
   ZM.near = zmIsDown() ? null : best;
@@ -3053,6 +3059,7 @@ function zmPrompt(o) {
   { const r = typeof raidPrompt === 'function' && raidPrompt(o); if (r) return r; }   // [raid]
   if (o.k === 'egg') return typeof zePrompt === 'function' ? zePrompt(o) : null;   // [egg hook] src/zmegg.js
   if (o.k === 'egg2') return typeof zhPrompt === 'function' ? zhPrompt(o) : null;   // [egg2 hook] src/zmegg2.js
+  if (o.k === 'egg3') return typeof zsPrompt === 'function' ? zsPrompt(o) : null;   // [egg3 hook] src/zmegg3.js
   if (o.k === 'buy') {
     const w = FPSW[o.b.id], own = ZM.own.includes(o.b.id);
     if (own && w.melee) return { text: `${w.n}: in hand` };
@@ -3073,6 +3080,7 @@ function zmUse() {
   if (typeof raidUse === 'function' && raidUse(o)) return;   // [raid]
   if (o.k === 'egg') { if (typeof zeUse === 'function') zeUse(o); return; }   // [egg hook] src/zmegg.js
   if (o.k === 'egg2') { if (typeof zhUse === 'function') zhUse(o); return; }   // [egg2 hook] src/zmegg2.js
+  if (o.k === 'egg3') { if (typeof zsUse === 'function') zsUse(o); return; }   // [egg3 hook] src/zmegg3.js
   const pay = c => { if (ZM.pts < c) { zmSound('no'); fpsFeed('Not enough points.'); return false; } ZM.pts -= c; ZM.spent += c; return true; };
   if (o.k === 'buy') {
     const id = o.b.id, w = FPSW[id], own = ZM.own.includes(id);
@@ -3473,6 +3481,7 @@ function zm3dBuild() {
   zm3dTonics(grp, G0);
   if (typeof ze3dBuild === 'function') ze3dBuild(grp);   // [egg hook] src/zmegg.js
   if (typeof zh3dBuild === 'function') zh3dBuild(grp);   // [egg2 hook] src/zmegg2.js
+  if (typeof zs3dBuild === 'function') zs3dBuild(grp);   // [egg3 hook] src/zmegg3.js
   if (typeof raid3dBuild === 'function') raid3dBuild(grp);   // [raid]
   zm3dTower(grp);
   zm3dLantern(grp);
@@ -4056,6 +4065,7 @@ function zmScene3D() {
   if (typeof zx3d === 'function') zx3d(dt);   // [chest] the light of flares and blasts
   if (typeof ze3d === 'function') ze3d(dt);   // [egg hook] src/zmegg.js
   if (typeof zh3d === 'function') zh3d(dt);   // [egg2 hook] src/zmegg2.js
+  if (typeof zs3d === 'function') zs3d(dt);   // [egg3 hook] src/zmegg3.js
   if (typeof raid3d === 'function') raid3d(dt);   // [raid] (its own light and fog)
 }
 // painted over the 3D view: sparks between the burning, the chest's offer, and anyone down
@@ -4269,6 +4279,7 @@ function zmHud() {
   if (!FPS.mouse && !phone && !FPS.menu && !ZM.over) { ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = mono(12); ctx.fillStyle = 'rgba(236,228,207,0.6)'; ctx.fillText('Click to aim with the mouse', cx, H * 0.5 + 40); }
   if (typeof zeHud === 'function') zeHud();   // [egg hook] src/zmegg.js
   if (typeof zhHud === 'function') zhHud();   // [egg2 hook] src/zmegg2.js
+  if (typeof zsHud === 'function') zsHud();   // [egg3 hook] src/zmegg3.js
   if (typeof raidHud === 'function') raidHud(phone, mono, fell);   // [raid]
 }
 // down: the edges of the screen going red, thumping with your heart, deeper as the time runs out

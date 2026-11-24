@@ -48,6 +48,7 @@ function zlShot(x, y, z, h, p, by, mine, t) {
   if (mine) {
     if (typeof zeShot === 'function') zeShot(x, y, z, h, p, by);   // [egg hook] src/zmegg.js
     if (typeof zhShot === 'function') zhShot(x, y, z, h, p, by);   // [egg2 hook] src/zmegg2.js
+    if (typeof zsShot === 'function') zsShot(x, y, z, h, p, by);   // [egg3 hook] src/zmegg3.js
   }
   const cp = Math.cos(p);
   let ox = x + Math.sin(h) * cp * 0.8, oy = y + Math.cos(h) * cp * 0.8, oz = z - 0.2 + Math.sin(p) * 0.8;
@@ -86,6 +87,7 @@ function zlDrift(O, dt) {
   const r = fpsRay(ox, oy, oz, hh, pp, O.by, [], hd + O.R * 0.5 + 0.02);
   if (r.kind !== 'none') { O.x = ox - Math.sin(hh) * 0.1; O.y = oy - Math.cos(hh) * 0.1; O.z = oz; zlBurst(O); return; }
   O.x = nx; O.y = ny; O.z = nz;
+  if (O.mine && typeof zsOrb === 'function') zsOrb(O);   // [egg3 hook] src/zmegg3.js: close by a stern lantern
   const G0 = FPSC.GROUND, fl = zxFloor(O.x, O.y, oz - G0);
   if (O.z <= G0 + fl + 0.12) { O.z = G0 + fl + 0.15; zlBurst(O); return; }
   if (Math.random() < dt * 30) FPS.parts.push({ x: O.x + (Math.random() - 0.5) * O.R, y: O.y + (Math.random() - 0.5) * O.R, z: O.z + (Math.random() - 0.5) * O.R, vx: (Math.random() - 0.5) * 0.8, vy: (Math.random() - 0.5) * 0.8, vz: 0.4 + Math.random() * 0.6, t: 0.35, c: Math.random() < 0.5 ? '200,230,255' : '140,190,255' });
