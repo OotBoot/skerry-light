@@ -617,6 +617,35 @@
         <p><b>Keys and controller.</b> Arrow keys move a cursor, Enter or Space picks up and puts down, Esc lets go of a piece or opens the menu, F turns the board round. On a controller: the D-pad or left stick moves, A picks up and puts down, B lets go, Y turns the board, Start opens the menu.</p>
       </details>
     </div>
+    <div class="card zmcard lrcard" id="lrTitle" aria-labelledby="lrHead"><!-- [lamproad] The Lamp Road: its own card (src/lr.js, src/lr3d.js, src/lrhud.js) -->
+      <div class="cardtop"><span class="eyebrow">A thirteenth game · five a side · first person · escort the Lamp</span></div>
+      <h1 id="lrHead">The Lamp Road</h1>
+      <p>The Wreckers have put out the Gullhaven Light. The Lamplighters mean to light it again: they must push the Lamp Wain, the great lens on its iron carriage, from the west quay through the town to the foot of the Light, while the Wreckers hold the streets against them. Five a side, three heroes, and bots in every empty seat.</p>
+      <p class="muted" id="lrKeys">Mouse to look, WASD to move, Space to jump. Left mouse fires, right mouse is your secondary, Shift and E your two abilities, Q your ultimate, R reloads. H changes hero in your spawn or while you're down, Tab shows the scores, Esc the menu.</p>
+      <div class="gfopts lropts">
+        <label>Your side <select id="lrSide"><option value="0">Lamplighters (attack)</option><option value="1">Wreckers (defend)</option><option value="r">Either, at random</option></select></label>
+        <label>Bots <select id="lrSkill"><option value="easy">Easy</option><option value="fair" selected>Fair</option><option value="hard">Hard</option></select></label>
+        <label>Your hero <select id="lrHeroOpt" disabled><option>You pick in the game</option></select></label>
+      </div>
+      <div class="nickrow"><label for="lrNick">Your name</label><input id="lrNick" type="text" maxlength="16" autocomplete="nickname" placeholder="You"></div>
+      <div class="btnrow">
+        <button class="primary" id="lrPlay" type="button">Play</button>
+        <button class="tool" id="lrSettings" type="button">Settings</button>
+      </div>
+      <p class="muted lrrecord" id="lrRecord"></p>
+      <section class="warmp zmmp" id="lrMp"></section>
+      <details class="howto">
+        <summary>How to play</summary>
+        <p><b>The match.</b> The Lamplighters attack: the Lamp Wain rolls while at least one of them is within five metres of it and no living Wrecker is (then it's contested and stops). The more pushing, the faster it goes, up to three. Leave it alone for eight seconds and it rolls back, though never behind a checkpoint it has passed. Lamplighters beside it slowly mend. Bring it to the foot of the Light and the Lamplighters win; hold it off until the clock runs out and the Wreckers do.</p>
+        <p><b>The clock.</b> Three minutes to the first checkpoint, and a minute and a half more for each one reached. If the clock runs out while a Lamplighter is touching the Wain, it's overtime: play goes on while one stays on it, and once none has been for a moment, it's over.</p>
+        <p><b>Before it starts.</b> Everyone picks a hero, then the Lamplighters wait in their boat house while the Wreckers set up. When you go down you're back in eight seconds at your side's spawn, which moves up the road as the Wain does. In your own spawn you mend at once, and you can change hero there (H) or while you're down. Oil cans and medicine chests in the streets mend you when you walk over them, and come back a little after.</p>
+        <p><b>Bollard</b> (tank, 600 health). An old harbourmaster in an iron diving dress. Capstan Bar: a great sweep that hits everyone close in front. Bulkhead (right mouse): an iron wall set down ahead that stops shots and bodies from both sides. Ballast Rush (Shift): a charge that hurts and shoves aside anyone in the way. Brace (E): three seconds of half damage. Spring Tide (Q): a wave rolls out ahead that hurts, knocks back and slows.</p>
+        <p><b>Razorbill</b> (damage, 200 health). A marksman with a long fowling piece. Quick accurate shots, double to the head. Sight (right mouse): hold to aim through the glass. Gull's Rise (Shift): leap high, and hold Space to glide down. Tar Pot (E): a pot of burning tar that leaves a pool that burns and slows. Broadside (Q): mark a strip of ground ahead, and a ship's guns hammer it a moment later.</p>
+        <p><b>Linnet</b> (support, 225 health). The keeper's apprentice, with a storm lantern on a staff. Lamp Bolt: hurts enemies and mends allies it passes through. Mending Light (right mouse): hold it on an ally near you to mend them. Kindle (Shift): a lantern that hangs where it lands and mends allies near it. Will-o'-the-Wisp (E): blink a short way. Beacon (Q): plant the staff, and allies near it mend fast and can't fall.</p>
+        <p><b>Ultimates</b> charge from the damage you do and the mending you give, and a little on their own. A crew of bots is one tank, two damage and two support.</p>
+        <p><b>Controller.</b> Left stick to move, right stick to look, RT fire, LT secondary, A jump, LB and RB the abilities, Y the ultimate, X reload, D-pad up to change hero, View the scores, Start the menu. On a phone: the left of the screen walks, drag on the right to look, and the buttons do the rest.</p>
+      </details>
+    </div>
   </div>
 
   <!-- Skerry Chess: the board and what's round it (src/chessui.js) -->
@@ -1440,6 +1469,12 @@
 <script src="src/rldraft.js"></script><!-- [rival] the triple draft -->
 <script src="src/rlnet.js"></script><!-- [rival] Skerry Clash online: the lobby and the duel -->
 <script src="src/rlmmr.js"></script><!-- [rival] Skerry Clash's rating (MMR) -->
+<script src="src/lrmap.js"></script><!-- [lamproad] The Lamp Road -->
+<script src="src/lrdress.js"></script>
+<script src="src/lrhero.js"></script>
+<script src="src/lr.js"></script>
+<script src="src/lr3d.js"></script>
+<script src="src/lrhud.js"></script>
 <script src="src/menudesk.js"></script>
 <script src="src/main.js"></script>
 </body>

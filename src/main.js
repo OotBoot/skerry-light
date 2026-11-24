@@ -24,7 +24,7 @@ function frame(now) {
   const dt = Math.min(0.05, (now - last) / 1000); last = now;
   try {
     // Wreckers' Night runs its own loop (and the menu cursor never stays over a game)
-    if (state === 'fps' || state === 'war' || state === 'golf' || state === 'rival' || state === 'league') hideCursor();
+    if (state === 'fps' || state === 'war' || state === 'golf' || state === 'rival' || state === 'league' || state === 'lamproad') hideCursor();
     if (state === 'fps') { fpsFrame(dt); requestAnimationFrame(frame); return; }
     // and so does The Drowned Reach
     if (state === 'war') { warFrame(dt); requestAnimationFrame(frame); return; }
@@ -32,6 +32,8 @@ function frame(now) {
     if (state === 'golf') { gfFrame(dt); requestAnimationFrame(frame); return; }
     // and so does Skerry League (src/league.js)
     if (state === 'league') { lgFrame(dt); requestAnimationFrame(frame); return; }
+    // and so does The Lamp Road (src/lr.js)
+    if (state === 'lamproad') { lrFrame(dt); requestAnimationFrame(frame); return; }
     // and so does Skerry Chess (src/chessui.js), with the cursor left alone for the board
     if (state === 'chess') { chFrame(dt); requestAnimationFrame(frame); return; }
     // and so does Skerry Clash (src/rl.js)

@@ -21,6 +21,7 @@ const MD_GAMES = [
   { id: 'cpTitle', sub: 'The whole tale of the Light, as a campaign', c: '#f0d890' },   // [campaign] The Chronicle of the Light (src/cp.js)   // [rival] Skerry Clash (src/rl.js, src/rlcrates.js)
   { id: 'lgTitle', sub: 'Ships and a ball · one to three a side', c: '#4aa8ff', tag: 'New' },   // [league] Skerry League (src/league.js)
   { id: 'chTitle', sub: 'Chess, and chess on the reef · for one or two', c: '#d9b56a', tag: 'New' },   // [chess] Skerry Chess (src/chessui.js)
+  { id: 'lrTitle', sub: 'Five a side · three heroes · escort the Lamp', c: '#f2c14e', tag: 'New' },   // [lamproad] The Lamp Road (src/lr.js)
 ];
 const mdStore = { get() { try { return localStorage.getItem('skerryDeskGame'); } catch (e) { return null; } }, set(v) { try { localStorage.setItem('skerryDeskGame', v); } catch (e) {} } };
 
