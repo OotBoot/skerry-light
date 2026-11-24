@@ -941,7 +941,7 @@ function lrApply(s) {
     p.hp = a[9]; p.alive = alive; if (!mine || a[29] !== p.sn || !alive) { p.gnd = !!(a[10] & 2); p.glide = !!(a[10] & 8); } p.alt = !!(a[10] & 4); p.deadT = a[11]; p.spawnT = a[12]; if (!ownAmmo) p.ammo = a[13]; p.reload = a[14];
     p.cd = { a1: mine && now - (use.a1 || -1e9) < 1500 ? p.cd.a1 : a[15], a2: mine && now - (use.a2 || -1e9) < 1500 ? p.cd.a2 : a[16], alt: a[17] }; p.ult = a[18] / 100; const k = LR_ACTS[a[19]] || null; if (!mine || k !== null || p.act.k === null) p.act = { k, t: a[20] };
     // (the slow as one timer, so a body moved here is slowed as the host has it; the statuses as the host has them)
-    p.drT = a[21]; p.dr = a[34] || 1; p.slow = a[22]; p.slows = a[22] < 1 ? { net: [a[22], 0.3] } : {};
+    p.drT = a[21]; p.dr = a[34] || 1; p.slow = a[22]; p.slows = a[22] !== 1 ? { net: [a[22], 0.3] } : {};
     p.stun = a[31] || 0; p.root = a[32] || 0; p.oh = a[33] || 0; p.firm = a[35] || 0;
     p.kills = a[23]; p.deaths = a[24]; p.dmg = a[25]; p.heal = a[26]; p.elims = a[27]; p.beam = a[28]; p.sn = a[29]; if (!mine) p.fireT = a[30];
     const H = LR_HEROES[p.hero]; if (H && H.unsnap) H.unsnap(p, Array.isArray(a[36]) ? a[36] : [], mine);
