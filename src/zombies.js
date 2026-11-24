@@ -168,8 +168,10 @@ function zmOutdoors(x, y, z) { const k = zmZoneAt(x, y, z); return !!(k && ZM_ZO
 const ZM_TC = [ZMT.X, ZMT.Y];   // the middle of the tower
 
 // ---------- the maps ----------
-// Two places to hold the night in: the Lighthouse (the keeper's station, above) and Wrackhaven, a fishing village the
-// sea took back (FPI_GEN.wrack, below). ZM_MAP is the one being played. zmUseMap swaps its rooms into ZM_ZONES and its
+// Three places to hold the night in: the Lighthouse (the keeper's station, above), Wrackhaven, a fishing village the
+// sea took back (FPI_GEN.wrack, below), and the San Telmo, the lost squadron's galleon stranded on the shingle (laid
+// out in src/zmgalleon.js, FPI_GEN.galleon; its rooms are here, so the pick kept on the device knows it at load).
+// ZM_MAP is the one being played. zmUseMap swaps its rooms into ZM_ZONES and its
 // landing into ZMD before the arena is laid out, so everything that asks which room a place is in, or where you come
 // ashore, asks the map being played. The tower (its floors, the lantern, the Roof Room and the Light's lever) and the
 // Easter egg belong to the Lighthouse alone. The pick on the card is kept on the device (ZM_PICK); together, the
@@ -210,6 +212,35 @@ const ZM_MAPS = {
       school: { n: 'the School House', r: [0, 18, 20, 44], floor: 'boards', wall: '#c0b69e' },
       yard: { n: 'the Churchyard', r: [18, 42, 20, 44], sky: true },
     } },
+  galleon: { n: 'the San Telmo', N: 'The San Telmo', isle: 'galleon', tower: false, noBox: ['fresnel', 'hermit'], start: [0, -19], top: 0, seed: 0x5a7e1, home: 'strand',
+    blurb: 'The San Telmo, flagship of the lost squadron, given back by the sea: a galleon stranded on the shingle, four decks of her from the hold up to the Quarterdeck under her stern lanterns.',
+    land: n => `The boat leaves you on the shingle under the San Telmo\u2019s side${n ? ', ' + n + ' of you' : ''}. Through the breach, and hold her.`,
+    // (home: the room you start in, open from the first; the sea's edge along the shingle bank, coming in round her
+    // ends; the grid the drowned walk by, over the whole ship, the shingle and the rocks on her far side)
+    shore: lx => -24 + Math.max(0, Math.abs(lx) - 46) * 0.5, nav: [-52, 52, -30, 26],
+    // She lies along x, broadside to the shore: the stern (aft) to the west, the bow to the east, her starboard side
+    // to the sea (south). Four decks, each 4.4 over the last: the Orlop on the ground (the hold and its stores), the
+    // Gun Deck, the Upper Deck (the Waist open to the sky between the Steerage and Great Cabin aft and the Forecastle
+    // forward), and over those the Quarterdeck and the Forecastle Deck, open to the sky. Upper rooms first, each
+    // with zr (as the town hall's); the rooms at her narrowing ends are given the whole width, their hull angled in.
+    zones: {
+      qdeck: { n: 'the Quarterdeck', r: [-46, -14, -11, 11], zr: [13.2, 99], sky: true },
+      fcdeck: { n: 'the Forecastle Deck', r: [22, 42, -11, 11], zr: [13.2, 99], sky: true },
+      cabin: { n: 'the Great Cabin', r: [-44, -28, -11, 11], zr: [8.8, 13.2] },
+      steer: { n: 'the Steerage', r: [-28, -14, -11, 11], zr: [8.8, 13.2] },
+      waist: { n: 'the Waist', r: [-14, 22, -11, 11], zr: [8.8, 13.2], sky: true },
+      fcastle: { n: 'the Forecastle', r: [22, 42, -11, 11], zr: [8.8, 13.2] },
+      gunroom: { n: 'the Gunroom', r: [-30, -14, -11, 11], zr: [4.4, 8.8] },
+      chapel: { n: 'the Chaplain\u2019s Berth', r: [-44, -30, -11, 11], zr: [4.4, 8.8] },
+      gundeck: { n: 'the Gun Deck', r: [-14, 22, -11, 11], zr: [4.4, 8.8] },
+      sick: { n: 'the Surgeon\u2019s Cockpit', r: [22, 40, -11, 11], zr: [4.4, 8.8] },
+      strong: { n: 'the Strong Room', r: [-44, -30, -11, 11], zr: [0, 4.4] },
+      powder: { n: 'the Powder Room', r: [-30, -14, 0, 11], zr: [0, 4.4] },
+      bread: { n: 'the Bread Room', r: [-30, -14, -11, 0], zr: [0, 4.4] },
+      hold: { n: 'the Main Hold', r: [-14, 22, -11, 11], zr: [0, 4.4] },
+      cable: { n: 'the Cable Tier', r: [22, 40, -11, 11], zr: [0, 4.4] },
+      strand: { n: 'the Strand', r: [-50, 50, -26, -11.25], sky: true },
+    } },
 };
 const ZM_MAP_IDS = Object.keys(ZM_MAPS);
 // the map picked on the card (kept on the device)
@@ -228,7 +259,7 @@ const zmTower = () => !!ZM_MAPS[ZM_MAP].tower;
 function zmMapCard() {
   for (const b of document.querySelectorAll('#zmMaps [data-map]')) b.setAttribute('aria-pressed', String(b.dataset.map === ZM_PICK));
   const d = $('zmMapNote'); if (d) d.textContent = ZM_MAPS[ZM_PICK].blurb;
-  const pl = $('zmPlay'); if (pl) pl.textContent = ZM_PICK === 'light' ? 'Hold the Light' : 'Hold ' + ZM_MAPS[ZM_PICK].N;
+  const pl = $('zmPlay'); if (pl) pl.textContent = ZM_PICK === 'light' ? 'Hold the Light' : 'Hold ' + ZM_MAPS[ZM_PICK].n;
 }
 
 FPS_ISLES.light = { name: 'the Lighthouse', ground: '#7a786e', ground2: '#5e5c54', wet: '#34363a', path: '#5c5a52', tint: 0.32, mound: 0, dune: 0,
@@ -2057,7 +2088,7 @@ function zmReset() {
   Object.assign(ZM, {
     on: true, own: ['pepperbox'], res: { pepperbox: 48 }, pts: ZMC.START, round: 0, phase: 'pre', t: 3, left: 0, spawnT: 0,
     z: [], drops: [], perks: {}, windBuys: 0, double: 0, insta: 0, dropsRound: 0, swarm: false, skitT: 0, kills: 0, heads: 0, downs: 0, spent: 0, doorsOpened: 0,
-    open: new Set(['dock']), zone: 'dock', zoneT: 4, banner: null, pops: [], fx: [], sparks: [], over: null, earnK: 0, navT: 0,
+    open: new Set([ZM_MAPS[ZM_MAP].home || 'dock']), zone: ZM_MAPS[ZM_MAP].home || 'dock', zoneT: 4, banner: null, pops: [], fx: [], sparks: [], over: null, earnK: 0, navT: 0,
     box: { at: 0, uses: 0, spins: 0, st: 'idle', t: 0, item: null, cyc: 0, show: 'avtomat', owner: null }, near: null, rebuildT: 0, groanT: 2,
     zc: 0, credit: {}, players: [], downT: 0, unstickAt: 0, unstickMine: 0, ghost: false, revT: 0, revOf: null, upT: {}, downNotes: [], downKit: null, beat: 0, boardBy: {}, boardPts: 0,
     doors: Zd.doors, windows: Zd.windows, buys: Zd.buys, perksAt: Zd.perks, spawns: Zd.spawns, glass: Zd.glass || [],
