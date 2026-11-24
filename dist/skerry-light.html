@@ -3431,7 +3431,7 @@ body.lron:not(.lrfree) #lrCv { cursor: crosshair; }
 // ---- src/config.js ----
 'use strict';
 // The game's version, shown at the top of the main menu. Bump it by one with every change pushed to main.
-var VERSION = 251;
+var VERSION = 252;
 // Skerry Light: tuning, asset paths and lore.
 // World units are metres. The lighthouse stands at the origin on the shoreline (y = 0);
 // north (+y) is open sea. Bearings: 0 = north, positive = east.
@@ -3606,6 +3606,11 @@ document.addEventListener('visibilitychange', () => {
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 252, date: '2026-11-24', title: "Lore compendium: The Lamp Road and the San Telmo", New: [
+    "Lore compendium: The Lamp Road is now one of the tales, with new articles for Gullhaven, the Gullhaven Light, the Lamp Wain, the Lamplighters, and the heroes Bollard, Razorbill and Linnet (each with their portrait).",
+    "Lore compendium: a new article for the Corposant, and the San Telmo's article now tells the fight aboard her. Keeper's Last Light and The Wreckers have new sections too.",
+    "Lore compendium: the timeline, The Years After and the main page's list of tales (now fifteen) include both, with three new Did you know facts.",
+  ] },
   { v: 251, date: '2026-11-24', title: "New game: The Lamp Road", New: [
     "The Lamp Road: a new game, a five-a-side hero shooter in first person. The Wreckers have put out the Gullhaven Light; the Lamplighters must push the Lamp Wain, the Light's great lens on its iron carriage, through the town to the foot of the Light while the Wreckers hold the streets. Its own card on the title screen.",
     "The Lamp Road: one map, Gullhaven, a harbour town on a headland at dusk: the west quay, the fish market, the chandlery and net loft, the Mermaid tavern and an old hulk on the hard, and the Light at the end of the road. Roofs, the hulk's deck and the rocks can be climbed for high ground.",
@@ -77061,14 +77066,14 @@ function origIsOpen() { return !!(ORIG.el && !ORIG.el.hidden); }
 // It ties every game into one history: the voyages (Skerry Light), Wreckers' Night, Drowned Reach, Keeper's Last Light,
 // the two raids (Maren's End, The Gannet's Wake), The Chronicle of the Light (its people, places, nights and five eras), Fog Run, Freebooters' Sea [fbsea], The Original (as The Early Watches),
 // Skerry Links (with the headland), Skerry League (the Harbour Pool, its two sides, the Gale, and Spindrift in the Sluice), Skerry Chess (the players of the lamp room)
-// and Skerry Clash (with the Race, the Threefold Skerry, the triple draft, the towers and crossing in person). Where the game itself says nothing, the gaps are filled
+// Skerry Clash (with the Race, the Threefold Skerry, the triple draft, the towers and crossing in person) and The Lamp Road (Gullhaven, its Light, the Wain, the two crews and the heroes). Where the game itself says nothing, the gaps are filled
 // with lore that fits; the keeper's log (SK.LOG in config.js) is the spine and is never contradicted.
 // An article: { id, t: title, cat: [categories], img: a picture key (see loreImg in loreui.js), gal: visitors' picture keys for a gallery, box: [[label, value], ...]
 //   (the infobox), sum: the opening paragraph, secs: [{ h: heading, p: [paragraphs] }], also: [ids for See also] }.
 // In any text, [[id]] links to an article by its title and [[id|words]] links with other words.
 // Keep secrets out entirely: no Easter egg, nothing hidden in any map, no secret bosses or hidden buttons, not even a hint.
 var LORE_CATS = [
-  { k: 'Chronicles', d: 'The fourteen great tales of the Skerries, each told by one of the games.' },
+  { k: 'Chronicles', d: 'The fifteen great tales of the Skerries, each told by one of the games.' },
   { k: 'Characters', d: 'People, and things that were once people.' },
   { k: 'Creatures', d: 'What walks, swims, flies or crawls in the waters round the Light.' },
   { k: 'Places', d: 'Rocks, shores, buildings and the far seas.' },
@@ -77121,6 +77126,8 @@ var LORE = [
   { h: 'The years after', p: [
     "<b>Undated.</b> The sea comes back, and with it the people of every sea and every year that ever sailed through the skerries. They settle the islands and go to war for them: see [[ch_reach]]. One night a crew of lamp-men with no nation behind them crosses at low water and lights the Light again: see [[relighting]].",
     "<b>Undated.</b> A second light is lit across the tidal race called [[race|the Race]], and its keepers begin to settle at every slack water whose light is the false one: see [[ch_clash]].",
+    "<b>Undated.</b> The Wreckers take the lens out of [[gullhavenlight|the Gullhaven Light]] up the coast, and the town's [[lamplighters]] push it home through the streets on [[lampwain|the Lamp Wain]]: see [[ch_lamproad]].",
+    "<b>Undated.</b> The sea gives back the Spanish galleon [[santelmo|San Telmo]] on a shingle bank, and her drowned crew come up to take her. The defenders of the station follow them aboard: see [[ch_lastlight]].",
     "<b>Still.</b> The tales do not keep to their order. On any night, on any of the six seas, the Light is turning and [[maren]] is still rowing out to the Gannet. As the last page of the log says, she will take any ship that lets her come aboard.",
   ]},
 ], also: ['log', 'skerrylight', 'maren'] },
@@ -77175,7 +77182,10 @@ var LORE = [
   { h: 'Wrackhaven', p: [
     "When the sea took [[wrackhaven]] in the winter of 1891, the drowned moved in, and the fight followed them there. From its quay you can see the Light across the harbour, still lit.",
   ]},
-], also: ['station', 'fresnellamp', 'wrackhaven'] },
+  { h: 'The San Telmo', p: [
+    "In the years after, the sea gave back [[santelmo|the San Telmo]], the flagship of the Spanish squadron, stranded on a shingle bank, and her crew came up out of the water to take her back. The defenders came ashore under her side and went in through the breach in her hull, and held her deck by deck from the hold to the quarterdeck. Her wreck chest held a weapon found nowhere else: [[corposant|the Corposant]].",
+  ]},
+], also: ['station', 'fresnellamp', 'wrackhaven', 'santelmo'] },
 { id: 'ch_gannetswake', t: "The Gannet's Wake", cat: ['Chronicles', 'Events'], img: 'knock', box: [['Told in', "The Gannet's Wake (raid)"], ['When', '14 December 1888'], ['Where', 'Off the Skerries, then aboard the risen [[gannet|Gannet]]'], ['Who', 'The crew of the [[cutter|keeper\'s cutter]]'], ['Foes', '[[knock]], [[bosun|the Bosun]], [[crane|Captain Crane]]'], ['Parts', 'I The Skerries · II Below Decks · III The Quarterdeck']], sum: "A year to the night after the wreck, the Gannet's bell was heard again off Skerry Light. The keeper sent his cutter out, and somewhere past the rocks the brig came back up, with her drowned crew, her walking figurehead and her captain, who had not let go of her.", secs: [
   { h: 'Part I: The Skerries', p: [
     "The cutter went out from the foot of the Light with one hand at the wheel and the rest on deck, the rocks showing only in the beam. [[maren]] stood on the water behind and came nearer at every turn of the lamp, [[drowned]] climbed over the rails, and [[plimsoll]] walked ahead. About a mile out a ring of the Gannet's old spars marked the place, and the Gannet rose out of the sea alongside, her bell ringing.",
@@ -77741,9 +77751,12 @@ var LORE = [
 { id: 'santelmo', t: 'The San Telmo', cat: ['Ships'], box: [['Rig', 'Galleon'], ['Of', 'The Spanish squadron of c. 1597, its flagship'], ['Lost', 'A winter gale, on the Skerries, with all hands'], ['Lies', 'On a shingle bank in a cove, given back by the sea'], ['Appears in', '[[ch_lastlight]]']], sum: "The flagship of the Spanish squadron that was blown north in the Armada years. The rest of the squadron wintered on the headland and built [[seafort|the sea fort]]. The San Telmo never got in. She struck the Skerries in a winter gale with the squadron's pay aboard and went down with every man. Centuries later the sea gave her back, far bigger than any ship has a right to be, and her crew came up out of the water to take her back.", secs: [
   { h: 'The ship', p: [
     "She lies upright on a shingle bank, black with weed, her masts still standing with their sails in rags and the three great lanterns on her stern. Four decks: the hold and its stores, with the Strong Room aft where the pay was kept; the Gun Deck, with its rows of bronze guns, the Gunroom, the Chaplain's Berth and the Surgeon's Cockpit; the Waist, the Steerage, the Great Cabin and the Forecastle; and above them the Quarterdeck and the Forecastle Deck with the ship's bell.",
-    "Her crew named her for Saint Elmo, the sailors' saint, whose blue fire burns on the mastheads in a storm. The one weapon found aboard her is the Corposant, a navigator's brass sphere with that fire caught inside it.",
+    "Her crew named her for Saint Elmo, the sailors' saint, whose blue fire burns on the mastheads in a storm. The one weapon found aboard her is [[corposant|the Corposant]], a navigator's brass sphere with that fire caught inside it.",
   ]},
-], also: ['seafort', 'garrison', 'ch_lastlight'] },
+  { h: 'The fight aboard', p: [
+    "Her drowned come for her from every side: up the hull to the gunports, over the bulwarks and the rails, in at the stern windows, and wading up the shingle. The defenders who hold her open her one room at a time, from the Main Hold, the Bread Room, the Powder Room and the Cable Tier up through the Gun Deck to the open Waist, the Great Cabin and the Forecastle, and at last the Quarterdeck. The guns on her walls, the tonics, [[lampwright|the Lampwright's Bench]] and [[wreckchest|the wreck chest]] all turned up aboard her, as they do wherever that fight goes. See [[ch_lastlight]].",
+  ]},
+], also: ['seafort', 'garrison', 'ch_lastlight', 'corposant'] },
 { id: 'gannet', t: 'The Gannet', cat: ['Ships'], box: [['Rig', 'Brig'], ['Master', '[[crane|Absalom Crane]]'], ['Lost', '14 December 1887, on the Skerries, with all hands'], ['Rose', '14 December 1888'], ['Figurehead', '[[knock]]'], ['Appears in', '[[ch_voyages]], [[ch_gannetswake]]']], sum: "The brig whose loss began everything. She was coming in under the cliffs on the night the lamp failed, and broke up on the skerries with all hands. A year to the night later, she rose again.", secs: [
   { h: 'The wreck', p: [
     "See [[wreck1887|the Night of the Gannet]]. Her bell was heard ringing as she went, and the Wrackhaven men found her spars on the rocks at first light. Her cabin boy's blue shoes were next seen on [[plimsoll]].",
@@ -77791,11 +77804,14 @@ var LORE = [
 ], also: ['relighting', 'reachwars'] },
 
 // ---------------- factions ----------------
-{ id: 'wreckers', t: 'The wreckers', cat: ['Factions'], box: [['Trade', 'Salvage, by any means'], ['Since', 'Before records'], ['Appears in', '[[ch_wreckers]]']], sum: "The salvage men of the Skerries. Their grandfathers lured ships onto the rocks with false lights. They only wait for the rocks to do it, now, and fight one another over what comes ashore.", secs: [
+{ id: 'wreckers', t: 'The wreckers', cat: ['Factions'], box: [['Trade', 'Salvage, by any means'], ['Since', 'Before records'], ['Appears in', '[[ch_wreckers]], [[ch_lamproad]]']], sum: "The salvage men of the Skerries. Their grandfathers lured ships onto the rocks with false lights. They only wait for the rocks to do it, now, and fight one another over what comes ashore.", secs: [
   { h: '', p: [
     "They go ashore on dark nights with a pepperbox and a lantern. Some wear outfits from the tailor's crates, some an admiral's coat that nobody remembers earning. Their law is simple: what is on the shore at dawn belongs to whoever is standing. See [[ch_wreckers]], [[mooncussers]] and [[wreckerslights]].",
   ] },
-], also: ['mooncussers', 'ch_wreckers'] },
+  { h: 'At Gullhaven', p: [
+    "In the years after, a crew of them went up the coast to [[gullhaven]] in tar black and rust red, took the lens out of [[gullhavenlight|its Light]] and held the town against [[lamplighters|the Lamplighters]] while they tried to get it away. It was the old trade done the old way, a dark coast and a full harbour: see [[ch_lamproad]].",
+  ] },
+], also: ['mooncussers', 'ch_wreckers', 'ch_lamproad'] },
 { id: 'mooncussers', t: 'The Mooncussers', cat: ['Factions'], box: [['Trade', 'Wrecking with false lights'], ['Active', '1600s to 1700s'], ['Fate', 'Hanged in chains, and came back']], sum: "The wreckers of the old days, who cursed the moon because a moonlit night showed ships the rocks. They hung false lights on poles to draw ships in, and the fort's governors hung them in chains on the sea wall for it.", secs: [
   { h: '', p: [ "Their lamps are the [[wreckerslights|wreckers' lights]] still seen over the rocks. Those that came back are [[mooncusser|the Mooncusser]]. Their name went to sea again in 1889 with [[blacksloops|the black sloops]] of the Wide Water." ] },
 ], also: ['mooncusser', 'wreckerslights', 'blacksloops'] },
@@ -78072,6 +78088,71 @@ var LORE = [
     "On [[threeskerry|the Threefold Skerry]] all three keepers may cross in person at once, each with a clerk at home calling their hands. It is the nearest thing the Race has to a brawl, and the keepers' standing is reckoned from it as from any other night: see [[racekeepers]].",
   ]},
 ], also: ['ch_clash', 'racekeepers', 'clashhands'] },
+// ---------------- The Lamp Road: Gullhaven, its Light, the Wain and the two crews ----------------
+{ id: 'ch_lamproad', t: 'The Lamp Road', cat: ['Chronicles', 'Events'], box: [['Told in', 'The Lamp Road'], ['When', 'The years after, at dusk'], ['Where', '[[gullhaven]], from the west quay to the foot of [[gullhavenlight|its Light]]'], ['Who', '[[lamplighters|The Lamplighters]] against [[wreckers|the Wreckers]], five a side'], ['Heroes', '[[bollard]], [[razorbill]], [[linnet]]'], ['Prize', '[[lampwain|The Lamp Wain]], and the Light']], sum: "The tale of the night the Wreckers put out the Gullhaven Light. They took its great lens down from the tower, set it on the iron carriage the town calls [[lampwain|the Lamp Wain]] and dragged it to the west quay to ship it away. The town's lamp-men took the quay back, and pushed the Wain home through the streets to the foot of the Light while the Wreckers held every corner of the road against them.", secs: [
+  { h: 'Why they fight', p: [
+    "A lens like Gullhaven's is worth more than any cargo that ever came ashore: a ton of brass and ground glass that no foundry on the coast could make again. Worth more still to the Wreckers is the dark it leaves behind. With [[skerrylight|Skerry Light]] long past keeping the whole coast safe, and [[wrackhaven]] gone to the drowned, a Gullhaven without its Light would be a wrecker's harbour again, as it was in the days of [[mooncussers|the Mooncussers]].",
+    "[[lamplighters|The Lamplighters]] are the men and women who keep the town's lamps lit, and the Light was always theirs. They would not let it go.",
+  ]},
+  { h: 'The road', p: [
+    "The Lamp Road is what the town calls the way the Wain goes: off the west quay past the warehouses and the boat sheds, down through the fish market, along by the chandlery and the net loft, past the Mermaid and the old hulk drawn up on the hard, and out over the headland to the foot of the Light. The Wain moves only while a Lamplighter has a shoulder to it and no Wrecker is standing beside it, and it rolls back down the road on its own weight if nobody pushes. Three places along the road where the townsfolk throw up a barricade behind it buy the Lamplighters more time before the tide turns and the Wreckers' boats can get away.",
+    "If the Wain reaches the foot of the Light, the lens goes back up the tower and the Light is lit. If it does not reach it by the turn of the tide, the Wreckers have their night.",
+  ]},
+  { h: 'Who comes to the road', p: [
+    "Five a side, and the best known of them walk the road for either crew. [[bollard|Bollard]], the old harbourmaster in his iron diving dress, holds the line. [[razorbill|Razorbill]], the Wreckers' Eye, picks off whoever stands still. [[linnet|Linnet]], the keeper's apprentice, carries the last of the Light's own flame in a lantern on a staff, and mends whoever stands in it.",
+  ]},
+  { h: 'Afterwards', p: [
+    "Some of the old hands on the coast say the lamp-men who crossed [[ch_reach|the Drowned Reach]] behind [[plimsoll]] learnt their trade on the Lamp Road. None of the Lamplighters will say either way.",
+  ]},
+], also: ['gullhaven', 'lampwain', 'lamplighters', 'wreckers'] },
+{ id: 'gullhaven', t: 'Gullhaven', cat: ['Places'], box: [['Kind', 'A harbour town on a headland'], ['Where', 'Up the coast from [[skerries|the Skerries]]'], ['Light', '[[gullhavenlight|The Gullhaven Light]]'], ['Inn', 'The Mermaid'], ['Appears in', '[[ch_lamproad]]']], sum: "A fishing and harbour town strung out along one long quay on a headland, with its Light at the far end. In the years after, the Wreckers took it for a night, and the fight for it ran the whole length of the town.", secs: [
+  { h: 'The town', p: [
+    "From the west, where the Lamplighters keep their boat house: the west quay with its warehouses, boat sheds and the old sail loft; the fish market, with its stalls under the awnings and crates stacked high; the chandlery and the net loft; the Mermaid, the tavern where every crew in the town drinks and nobody asks which; and the old hulk on the hard, a ship too rotten to sail and too big to break up, whose deck the children climb. Past them the road climbs over the rocks of the headland to the foot of [[gullhavenlight|the Light]].",
+    "Its roofs are low and close enough to cross, and a nimble hand can be up on the sail loft, the hulk's deck or the rocks of the headland in a moment. On the night of [[ch_lamproad|the Lamp Road]] both crews made a good deal of use of that.",
+  ]},
+  { h: 'In the log', p: [ "[[log|The keeper's log]] mentions Gullhaven only as a light seen far up the coast on a clear night, and once as the place the oil boat came from when the station's own did not." ] },
+], also: ['gullhavenlight', 'ch_lamproad', 'harbour'] },
+{ id: 'gullhavenlight', t: 'The Gullhaven Light', cat: ['Places', 'Objects'], box: [['Kind', 'Lighthouse'], ['Where', 'The end of the headland at [[gullhaven]]'], ['Kept by', '[[lamplighters|The Lamplighters]]'], ['Put out', 'By the Wreckers, the night of [[ch_lamproad|the Lamp Road]]'], ['Appears in', '[[ch_lamproad]]']], sum: "The light on the end of Gullhaven's headland, a smaller cousin of [[skerrylight|Skerry Light]] with a great lens of its own. The Wreckers put it out by the simplest means there is: they took the lens away.", secs: [
+  { h: 'The lens', p: [
+    "Its lens was ground in the years after [[lampwright|the Lampwright]] set Skerry Light's, by men who had learnt the work beside him, and it is very nearly as fine. For cleaning and mending it is lowered from the tower onto [[lampwain|the Lamp Wain]] and wheeled down to the quay, which is how the Wreckers knew it could be moved at all.",
+    "When it goes back up and is lit, its beam sweeps the whole town and the water beyond it, and every lamp along the Lamp Road is lit from it.",
+  ]},
+], also: ['lampwain', 'gullhaven', 'skerrylight'] },
+{ id: 'lampwain', t: 'The Lamp Wain', cat: ['Objects'], box: [['Kind', 'An iron carriage, with a lighthouse lens on it'], ['Wheels', 'Four'], ['Of', '[[gullhavenlight|The Gullhaven Light]]'], ['Moved by', 'Shoulders'], ['Appears in', '[[ch_lamproad]]']], sum: "The great lens of the Gullhaven Light on the heavy iron carriage built to move it. It is too heavy to carry and too precious to drop, and on the night of the Lamp Road it went the whole length of the town on its own four wheels, a few feet at a time.", secs: [
+  { h: '', p: [
+    "The more Lamplighters put their shoulders to it, the faster it goes, though never quickly. A single Wrecker standing beside it is enough to stop it dead, and left alone on the slope it rolls back the way it came. The lens is warm even unlit, and those who push it say it mends a cut or a bruise while they stand beside it. When it is fought over the glow in the glass turns a little red.",
+  ]},
+], also: ['gullhavenlight', 'ch_lamproad', 'fresnellamp'] },
+{ id: 'lamplighters', t: 'The Lamplighters', cat: ['Factions'], box: [['Trade', 'Keeping the lamps of [[gullhaven]] lit'], ['Colours', 'Gold and sea blue'], ['Keep', '[[gullhavenlight|The Gullhaven Light]]'], ['Against', '[[wreckers|The Wreckers]]'], ['Appears in', '[[ch_lamproad]]']], sum: "The lamp-men and lamp-women of Gullhaven, who light the town's street lamps at dusk, keep the harbour lamps, and keep the Light. They wear gold and sea blue, and they are the reason the Wain went home.", secs: [
+  { h: '', p: [
+    "They are not soldiers, and most of them carry what they work with. But a crew used to climbing ladders at dusk in any weather knows every roof and alley of the town, and on the night of [[ch_lamproad|the Lamp Road]] they put that to use. Their boat house on the west quay is where they gather, and where each of them comes back to after a fall. See [[ch_lamproad]].",
+  ]},
+], also: ['ch_lamproad', 'wreckers', 'gullhavenlight'] },
+{ id: 'bollard', t: 'Bollard', cat: ['Characters'], img: 'lr:bollard', box: [['Also called', 'The Harbourmaster'], ['Post', 'Harbourmaster of [[gullhaven]], long retired'], ['Wears', 'A riveted iron diving dress and brass helmet'], ['Carries', 'A capstan bar, and an anchor on a chain'], ['Appears in', '[[ch_lamproad]]']], sum: "Gullhaven's old harbourmaster, a huge man who has gone about in an iron diving dress since the day he came up out of the harbour in it. The town named him after the iron posts on the quay, because nothing moves him either.", secs: [
+  { h: '', p: [
+    "He fights with a capstan bar pulled from the quay's own capstan, sweeping it through anyone in front of him, and sets down iron bulkheads from the hulk on the hard as walls that stop shot and bodies alike. He can put his head down and charge like a ship coming in under ballast, or brace and take what comes. When he drives his anchor into the ground a wave rolls out ahead of him, like a spring tide coming up the quay.",
+    "He walks the Lamp Road for either crew. He says the harbour is his whoever wins, and that he would rather be there to see it.",
+  ]},
+], also: ['ch_lamproad', 'razorbill', 'linnet'] },
+{ id: 'razorbill', t: 'Razorbill', cat: ['Characters'], img: 'lr:razorbill', box: [['Also called', "The Wreckers' Eye"], ['Wears', 'A tarred oilskin longcoat and a tricorn with razorbill feathers'], ['Carries', 'A long rifled fowling piece'], ['Appears in', '[[ch_lamproad]]']], sum: "A lean marksman from the cliffs, who shot seabirds for the market until the Wreckers found better uses for her eye. She wears the black and white feathers of the birds she is named for.", secs: [
+  { h: '', p: [
+    "She shoots from far off and does not miss twice, looking through the glass on her fowling piece. She climbs like a cliff-bird too: one leap takes her up over the rooftops, and her coat lets her come down as slowly as she likes. She throws pots of burning tar, and when she marks a strip of ground, a ship lying off the harbour puts a broadside into it a moment later.",
+    "Most nights she shoots for the Wreckers. When she walks with the Lamplighters, the town calls her a turned wrecker, and takes care never to ask what turned her.",
+  ]},
+], also: ['ch_lamproad', 'bollard', 'linnet', 'wreckers'] },
+{ id: 'linnet', t: 'Linnet', cat: ['Characters'], img: 'lr:linnet', box: [['Also called', "The Keeper's Apprentice"], ['Post', 'Apprentice keeper of [[gullhavenlight|the Gullhaven Light]]'], ['Wears', 'A knitted gansey, a short oilskin cape and a satchel of wicks'], ['Carries', 'A brass storm lantern on a long iron staff'], ['Appears in', '[[ch_lamproad]]']], sum: "The youngest keeper at the Gullhaven Light, who was trimming the wick the night the Wreckers came for the lens. Before they could put it out she lit her storm lantern from it, and carried the Light's own flame down into the town.", secs: [
+  { h: '', p: [
+    "The light of her lantern mends her own crew and burns everyone else, and she throws bolts of it down the street, or holds a steady ray of it on a friend until they are whole again. She hangs spare lanterns where her crew are fighting, and steps through the dark from one place to the next like a will-o'-the-wisp on the marsh. When she plants her staff it blazes like a beacon, and while it burns nobody standing in its light can be put down.",
+    "She walks for either crew, which the other keepers do not like. She says a light that shows only one side of the road is not a light at all.",
+  ]},
+], also: ['ch_lamproad', 'gullhavenlight', 'bollard', 'razorbill'] },
+// ---------------- Keeper's Last Light: the San Telmo's wonder weapon ----------------
+{ id: 'corposant', t: 'The Corposant', cat: ['Objects'], box: [['Kind', "A navigator's brass armillary sphere"], ['Holds', "St Elmo's fire"], ['Found', "Only in [[wreckchest|the wreck chest]] aboard [[santelmo|the San Telmo]]"], ['Reforged', "At [[lampwright|the Lampwright's Bench]], into the Saint's Crown"], ['Appears in', '[[ch_lastlight]]']], sum: "The one weapon found aboard the San Telmo: her navigator's brass sphere of rings, with the blue fire of Saint Elmo caught inside it. Sailors call that fire a corposant, the saint's body, when it plays on the masthead in a storm.", secs: [
+  { h: '', p: [
+    "It throws a slow globe of the fire, which lashes lightning into the drowned round it as it goes, drags them in, and bursts. Worked over at the Lampwright's Bench it comes back as the Saint's Crown: a bigger globe with more arcs and a longer reach, which breaks into smaller globes when it bursts.",
+    "Nobody knows how the fire got into the sphere. The galleon's crew would have said the saint put it there, to light their way home.",
+  ]},
+], also: ['santelmo', 'ch_lastlight', 'wreckchest'] },
 // ---------------- eras: the ages of the coast (the five acts of The Chronicle of the Light) ----------------
 { id: 'era_before', t: 'Before the Light', cat: ['Eras'], box: [["From", "c. 1200s"], ["To", "1841"], ["Lit by", "The fire on [[lanternrock]]"], ["Within it", "[[wreckingyears]]"]], sum: "The six hundred years when the only light on this coast was a fire on Lantern Rock, kept by one family. It was the age of the fire-keepers, the Spanish fort and the Mooncussers, and it ended the night the Skerry rock had a light of its own.", secs: [
   { h: '', p: [
@@ -78100,7 +78181,7 @@ var LORE = [
 ], also: ['era_strange', 'era_years', 'timeline'] },
 { id: 'era_years', t: 'The Years After', cat: ['Eras'], box: [["From", "Undated"], ["To", "Still"], ["Who", "The people of every sea and year"], ["Prize", "The name of Keeper"]], sum: "The age that has no dates, after the sea came back up the Swallow full of nations. It is the age of [[reachwars|the Reach Wars]] and of [[race|the Race]], and of the night the Light was lit again.", secs: [
   { h: '', p: [
-    "It holds [[ch_reach|the Drowned Reach]], [[relighting|the Light lit again]] and [[ch_clash|the rival lights]]. <i>The only things that never change,</i> the log says of it, <i>are the light, the shark in his shoes, and her.</i>",
+    "It holds [[ch_reach|the Drowned Reach]], [[relighting|the Light lit again]], [[ch_clash|the rival lights]], [[ch_lamproad|the Lamp Road]] at Gullhaven and the fight aboard [[santelmo|the San Telmo]]. <i>The only things that never change,</i> the log says of it, <i>are the light, the shark in his shoes, and her.</i>",
   ]},
 ], also: ['era_after', 'reachwars', 'relighting'] },
 ];
@@ -78124,9 +78205,10 @@ function lwAllText(a) { return [a.sum, ...(a.box || []).map(r => r[1]), ...(a.se
 // (a bare link to a title beginning "The" says "the" in the middle of a sentence)
 function lwLinks(t) { return t.replace(/\[\[([a-z0-9_]+)(?:\|([^\]]+))?\]\]/g, (_, id, w, at, all) => { const a = LW.byId[id]; let x = w || (a ? a.t : id); if (!w && /^The /.test(x) && at > 0 && !/(^|[.!?:>]\s*)$/.test(all.slice(Math.max(0, at - 4), at))) x = 't' + x.slice(1); return a ? '<a href="#" class="lw-a" data-a="' + id + '">' + x + '</a>' : '<span class="lw-red">' + x + '</span>'; }); }
 function lwPlain(t) { return t.replace(/\[\[([a-z0-9_]+)(?:\|([^\]]+))?\]\]/g, (_, id, w) => w || (LW.byId[id] ? LW.byId[id].t : id)).replace(/<[^>]+>/g, ''); }
-// the pictures the game already has: Maren, Plimsoll, Knock, Verity, and the visitors' (foe:<key>)
+// the pictures the game already has: Maren, Plimsoll, Knock, Verity, the visitors' (foe:<key>) and The Lamp Road's heroes (lr:<hero>)
 function loreImg(k) {
   if (!k) return null;
+  if (k.startsWith('lr:')) { try { return typeof lrHeroPortrait === 'function' ? lrHeroPortrait(k.slice(3), 0) || null : null; } catch (e) { return null; } }   // The Lamp Road's heroes, drawn the first time they're asked for
   if (k.startsWith('foe:')) return typeof FOE_ASSETS !== 'undefined' ? FOE_ASSETS[k.slice(4)] : null;
   const A = typeof SK !== 'undefined' && SK.ASSETS; if (!A) return null;
   return ({ maren: A.maren, plim: A.plimsoll, knock: A.knock, verity: A.verity })[k] || null;
@@ -78192,13 +78274,16 @@ function lwMain() {
     "…that [[jago|Black Jago]] told the Governor he would show the ships a light yet, and three nights later did?",
     "…that the widows of the Gannet signed for their [[seachests|sea chests]] at the Customs House, and the fourth made her mark?",
     "…that [[lampwright|the Lampwright]] never once saw his lens lit from the outside?",
+    "…that the lens of [[gullhavenlight|the Gullhaven Light]] went home through the town on four wheels, a few feet at a time?",
+    "…that [[linnet]] lit her lantern from the Gullhaven Light before the Wreckers could put it out?",
+    "…that [[corposant|the Corposant]] is named for the blue fire sailors see on the masthead in a storm?",
     "…that the [[fogkeeper|Fog-Keeper]] put out the fire on Lantern Rock with his own hands, the night [[lighting1841|the Light was lit]]?",
   ];
   const did = [0, 1, 2, 3].map(i => facts[(day + i * 3) % facts.length]);
-  const chron = ['ch_original', 'ch_links', 'ch_league', 'ch_chess', 'ch_voyages', 'ch_wreckers', 'ch_gannetswake', 'ch_lastlight', 'ch_fbsea', 'ch_fogrun', 'ch_marensend', 'ch_reach', 'ch_clash', 'ch_chronicle'].map(id => LW.byId[id]);
+  const chron = ['ch_original', 'ch_links', 'ch_league', 'ch_chess', 'ch_voyages', 'ch_wreckers', 'ch_gannetswake', 'ch_lastlight', 'ch_fbsea', 'ch_fogrun', 'ch_marensend', 'ch_lamproad', 'ch_reach', 'ch_clash', 'ch_chronicle'].map(id => LW.byId[id]);
   return '<h1 class="lw-h1 lw-welcome" id="loreHead">Welcome to the Skerry Compendium</h1><p class="lw-from">The record of the Light that anyone can read. ' + LORE.length + ' articles, from the first fire on Lantern Rock to the wars of the Reach.</p>' +
     '<div class="lw-mp">' +
-    '<section class="lw-panel lw-wide"><h2>The fourteen tales</h2><p>Every game is one chapter of the same history, and the last of them tells it all again from end to end. Read them in the order they happened, or start with the <a href="#" class="lw-a" data-a="timeline">timeline</a>.</p><ol class="lw-chron">' + chron.map(a => '<li><a href="#" class="lw-a" data-a="' + a.id + '"><b>' + lwEsc(a.t) + '</b><span>' + lwEsc(a.box.find(r => r[0] === 'When')[1]) + '</span></a></li>').join('') + '</ol></section>' +
+    '<section class="lw-panel lw-wide"><h2>The fifteen tales</h2><p>Every game is one chapter of the same history, and the last of them tells it all again from end to end. Read them in the order they happened, or start with the <a href="#" class="lw-a" data-a="timeline">timeline</a>.</p><ol class="lw-chron">' + chron.map(a => '<li><a href="#" class="lw-a" data-a="' + a.id + '"><b>' + lwEsc(a.t) + '</b><span>' + lwEsc(a.box.find(r => r[0] === 'When')[1]) + '</span></a></li>').join('') + '</ol></section>' +
     '<section class="lw-panel"><h2>Today\'s featured article</h2>' + (fimg ? '<img class="lw-feat" src="' + fimg + '" alt="">' : '') + '<p>' + lwLinks(feat.sum) + ' (<a href="#" class="lw-a" data-a="' + feat.id + '">Read more</a>)</p></section>' +
     '<section class="lw-panel"><h2>Did you know</h2><ul class="lw-list">' + did.map(f => '<li>' + lwLinks(f) + '</li>').join('') + '</ul></section>' +
     (page ? '<section class="lw-panel"><h2>From the keeper\'s log</h2><p class="lw-logdate">' + lwEsc(page.date) + '</p><blockquote>' + lwEsc(page.text) + '</blockquote><p><a href="#" class="lw-a" data-a="log">About the log</a></p></section>' : '') +
