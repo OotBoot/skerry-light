@@ -69,12 +69,13 @@ function sdLayers() {
     b.fillStyle = 'rgba(60,54,52,0.9)'; b.beginPath(); b.moveTo(X(cx - 1.5), Y(H - len)); b.lineTo(X(cx + 1.5), Y(H - len)); b.lineTo(X(cx), Y(H - len - 3)); b.closePath(); b.fill();
   }
   // the gates' insides: the dark of the culvert, a rope net, the iron grate at the back
+  const GL = SDC.GL;
   for (const sg of [-1, 1]) {
     const x0 = sg > 0 ? W : -W - GD;
-    b.fillStyle = '#0d1418'; b.fillRect(X(x0), Y(GH), GD * k, (GH + D) * k);
+    b.fillStyle = '#0d1418'; b.fillRect(X(x0), Y(GH), GD * k, (GH - GL) * k);
     b.strokeStyle = 'rgba(220,200,160,0.22)'; b.lineWidth = 0.5 * k;
-    for (let y = -D; y < GH; y += 3) { b.beginPath(); b.moveTo(X(x0), Y(y)); b.lineTo(X(x0 + GD), Y(y)); b.stroke(); }
-    for (let x = x0; x <= x0 + GD; x += 3) { b.beginPath(); b.moveTo(X(x), Y(-D)); b.lineTo(X(x), Y(GH)); b.stroke(); }
+    for (let y = GL; y < GH; y += 3) { b.beginPath(); b.moveTo(X(x0), Y(y)); b.lineTo(X(x0 + GD), Y(y)); b.stroke(); }
+    for (let x = x0; x <= x0 + GD; x += 3) { b.beginPath(); b.moveTo(X(x), Y(GL)); b.lineTo(X(x), Y(GH)); b.stroke(); }
   }
   // in front of the water: the end walls above the lintels and behind the gates, the floor, the vault, the beams
   const F = mk(), f = F.getContext('2d'), rn2 = sdRng(11);
@@ -88,18 +89,20 @@ function sdLayers() {
   const XE = SD_LAY.x1;
   stone(X0, SDC.H, XE, Y1); stone(X0, SD_LAY.y0, XE, -D);
   stone(W, GH, XE, H); stone(X0, GH, -W, H); stone(W + GD, -D, XE, GH); stone(X0, -D, -W - GD, GH);
+  stone(W, -D, W + GD, GL); stone(-W - GD, -D, -W, GL);   // (below each gate's sill: the gates stand above the water)
   // the vault's arch over the chamber, and the sea's own light through a grating far above
   f.fillStyle = 'rgba(0,0,0,0.25)'; f.fillRect(X(-W), Y(H + 4), 2 * W * k, 4 * k);
   for (let x = -W + 20; x < W; x += 40) { f.fillStyle = 'rgba(255,220,180,0.06)'; f.fillRect(X(x - 3), Y(H + 30), 6 * k, 30 * k); }
   // the edges of the stone, lit from the lanterns
   f.strokeStyle = 'rgba(255,210,160,0.35)'; f.lineWidth = 1.1 * k;
-  f.beginPath(); f.moveTo(X(-W), Y(H)); f.lineTo(X(W), Y(H)); f.moveTo(X(-W), Y(-D)); f.lineTo(X(W), Y(-D)); f.moveTo(X(W), Y(H)); f.lineTo(X(W), Y(GH)); f.moveTo(X(-W), Y(H)); f.lineTo(X(-W), Y(GH)); f.stroke();
+  f.beginPath(); f.moveTo(X(-W), Y(H)); f.lineTo(X(W), Y(H)); f.moveTo(X(-W), Y(-D)); f.lineTo(X(W), Y(-D)); f.moveTo(X(W), Y(H)); f.lineTo(X(W), Y(GH)); f.moveTo(X(-W), Y(H)); f.lineTo(X(-W), Y(GH)); f.moveTo(X(W), Y(SDC.GL)); f.lineTo(X(W), Y(-D)); f.moveTo(X(-W), Y(SDC.GL)); f.lineTo(X(-W), Y(-D)); f.stroke();
   // the lintel beams, banded in each side's colour (Blue's gate on the left)
   for (const [sg, T] of [[-1, LG_TEAMS[0]], [1, LG_TEAMS[1]]]) {
     const x0 = sg > 0 ? W - 2 : -W - GD, x1 = x0 + GD + 2;
     f.fillStyle = '#3b2a1c'; f.fillRect(X(x0), Y(GH + 3), (x1 - x0) * k, 3 * k);
     f.fillStyle = T.col; f.fillRect(X(x0), Y(GH + 1.3), (x1 - x0) * k, 1.3 * k);
-    f.fillStyle = '#2a1d13'; f.fillRect(X(sg > 0 ? W - 2 : -W), Y(GH + 3), 2 * k, (GH + 3 + D) * k);   // (the gate post)
+    f.fillStyle = '#3b2a1c'; f.fillRect(X(x0), Y(SDC.GL), (x1 - x0) * k, 2.4 * k); f.fillStyle = T.col; f.fillRect(X(x0), Y(SDC.GL - 0.9), (x1 - x0) * k, 0.9 * k);   // (the sill)
+    f.fillStyle = '#2a1d13'; f.fillRect(X(sg > 0 ? W - 2 : -W), Y(GH + 3), 2 * k, (GH + 3 - SDC.GL + 2.4) * k);   // (the gate post)
   }
   SD2.back = B; SD2.front = F; SD2.bk = k;
 }
@@ -131,7 +134,7 @@ function sdDraw(dt) {
     c.fillStyle = '#fff6d8'; c.beginPath(); c.arc(sx, sy, 1.8 * k, 0, 7); c.fill();
   }
   // under the surface, the water's deep colour behind everything in it
-  { const [, sy] = sdW2S(0, 0), [, fy] = sdW2S(0, -SDC.D), [x0] = sdW2S(-SDC.W - SDC.GD, 0), [x1] = sdW2S(SDC.W + SDC.GD, 0); const g = c.createLinearGradient(0, sy, 0, fy); g.addColorStop(0, 'rgba(30,90,100,0.55)'); g.addColorStop(1, 'rgba(6,20,30,0.9)'); c.fillStyle = g; c.fillRect(x0, sy, x1 - x0, fy - sy); }
+  { const [, sy] = sdW2S(0, 0), [, fy] = sdW2S(0, -SDC.D), [x0] = sdW2S(-SDC.W, 0), [x1] = sdW2S(SDC.W, 0); const g = c.createLinearGradient(0, sy, 0, fy); g.addColorStop(0, 'rgba(30,90,100,0.55)'); g.addColorStop(1, 'rgba(6,20,30,0.9)'); c.fillStyle = g; c.fillRect(x0, sy, x1 - x0, fy - sy); }
   // the gale buoys
   for (const p of LG.pads) {
     const bob = Math.sin(SD2.t * 2.2 + p.x) * 0.5, [sx, sy] = sdW2S(p.x, p.y + 1.2 + bob), r = (p.big ? 2.8 : 1.9) * k, down = p.t > 0;
@@ -164,7 +167,7 @@ function sdDraw(dt) {
 }
 // the surface: a wave along it, a lighter line on top, and the water's tint over everything below it
 function sdWater(c) {
-  const k = SD2.k, t = SD2.t, x0 = -SDC.W - SDC.GD, x1 = SDC.W + SDC.GD, [, fy] = sdW2S(0, -SDC.D);
+  const k = SD2.k, t = SD2.t, x0 = -SDC.W, x1 = SDC.W, [, fy] = sdW2S(0, -SDC.D);
   const wave = x => Math.sin(x * 0.11 + t * 1.6) * 0.45 + Math.sin(x * 0.27 - t * 2.3) * 0.25;
   c.beginPath(); let first = true;
   for (let x = x0; x <= x1; x += 2) { const [sx, sy] = sdW2S(x, wave(x)); if (first) { c.moveTo(sx, sy); first = false; } else c.lineTo(sx, sy); }
@@ -262,6 +265,26 @@ function sdDrawFx(c, dt) {
 function sdGoalFx(team) {
   const into = team === 0 ? 1 : 0; SD2.flash[into] = 1;
   const gx = (team === 0 ? 1 : -1) * (SDC.W + SDC.GD * 0.4), T = LG_TEAMS[team];
-  for (let i = 0; i < 90; i++) { const a = Math.random() * Math.PI * 2, v = 10 + Math.random() * 40; SD2.fx.push({ x: gx, y: SDC.GH * 0.45, vx: Math.cos(a) * v - (team === 0 ? 20 : -20), vy: Math.sin(a) * v + 15, t: 1.2 + Math.random() * 0.8, c: i % 3 ? T.col : '#fff3c0', r: 0.55, g: 18 }); }
-  for (let i = 0; i < 30; i++) SD2.fx.push({ x: gx + (Math.random() - 0.5) * 10, y: 0.5, vx: (Math.random() - 0.5) * 30, vy: 10 + Math.random() * 25, t: 1, c: 'rgba(220,240,245,0.85)', r: 0.7 });
+  for (let i = 0; i < 90; i++) { const a = Math.random() * Math.PI * 2, v = 10 + Math.random() * 40; SD2.fx.push({ x: gx, y: (SDC.GL + SDC.GH) / 2, vx: Math.cos(a) * v - (team === 0 ? 20 : -20), vy: Math.sin(a) * v + 15, t: 1.2 + Math.random() * 0.8, c: i % 3 ? T.col : '#fff3c0', r: 0.55, g: 18 }); }
+  for (let i = 0; i < 30; i++) SD2.fx.push({ x: gx + (Math.random() - 0.5) * 10, y: SDC.GL + 1, vx: (Math.random() - 0.5) * 30, vy: 10 + Math.random() * 25, t: 1, c: 'rgba(220,240,245,0.85)', r: 0.7 });
 }
+
+// ---------- the phone's joystick ----------
+// On a touch screen Spindrift steers with a stick: put a thumb down anywhere on the left of the screen and the stick
+// appears under it; drag it left and right to sail and to turn her over in the air, down to dive. Leap and the Gale
+// are the two round buttons on the right (src/league.js's touch pad, its left-hand buttons hidden in this game).
+// It sets LG.stickX and LG.stickY (-1 to 1, y up), which src/lgside.js reads with the keys.
+function sdStickInit() {
+  const ui = $('lgUI'); if (!ui || $('sdStickZone')) return;
+  const zone = document.createElement('div'); zone.id = 'sdStickZone'; zone.className = 'sd-zone'; zone.hidden = true;
+  const base = document.createElement('div'); base.className = 'sd-stick'; base.hidden = true;
+  const knob = document.createElement('div'); knob.className = 'sd-knob'; base.append(knob); zone.append(base); ui.append(zone);
+  let id = null, cx = 0, cy = 0; const RAD = 52;
+  const set = (x, y) => { let dx = x - cx, dy = y - cy; const d = Math.hypot(dx, dy); if (d > RAD) { dx *= RAD / d; dy *= RAD / d; } knob.style.transform = `translate(${dx}px, ${dy}px)`; const nx = dx / RAD, ny = -dy / RAD; LG.stickX = Math.abs(nx) < 0.15 ? 0 : nx; LG.stickY = Math.abs(ny) < 0.15 ? 0 : ny; };
+  zone.addEventListener('pointerdown', e => { if (id !== null) return; e.preventDefault(); id = e.pointerId; try { zone.setPointerCapture(id); } catch (er) {} const r = zone.getBoundingClientRect(); cx = e.clientX; cy = e.clientY; base.style.left = (cx - r.left) + 'px'; base.style.top = (cy - r.top) + 'px'; base.hidden = false; set(cx, cy); });
+  zone.addEventListener('pointermove', e => { if (e.pointerId === id) { e.preventDefault(); set(e.clientX, e.clientY); } });
+  const up = e => { if (e.pointerId !== id) return; id = null; base.hidden = true; LG.stickX = 0; LG.stickY = 0; knob.style.transform = ''; };
+  for (const t of ['pointerup', 'pointercancel', 'lostpointercapture']) zone.addEventListener(t, up);
+}
+// shown in Spindrift on a touch screen, and only then
+function sdStickShow(on) { sdStickInit(); const z = $('sdStickZone'); if (z) z.hidden = !on; LG.stickX = 0; LG.stickY = 0; }

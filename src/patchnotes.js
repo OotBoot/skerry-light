@@ -6,7 +6,7 @@
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
-  { v: 249, date: '2026-11-24', title: "Keeper's Last Light: a third map, the San Telmo", New: [
+  { v: 250, date: '2026-11-24', title: "Keeper's Last Light: a third map, the San Telmo", New: [
     "Keeper's Last Light: a third map, the San Telmo. A giant Spanish galleon, lost with all hands in the Armada years, lies stranded on a shingle bank. Come ashore under her side, get in through the breach in her hull, and hold her from the hold up to the quarterdeck.",
     "Keeper's Last Light: the San Telmo has four decks and sixteen places to open: the Main Hold, Bread Room, Powder Room, Strong Room and Cable Tier below; the Gun Deck, Gunroom, Chaplain's Berth and Surgeon's Cockpit; the open Waist, the Steerage, the Great Cabin and the Forecastle; and up top the Quarterdeck and the Forecastle Deck.",
     "Keeper's Last Light: the drowned climb her hull to the gunports, come over the bulwarks and the rails, in at the stern windows, and wade up the shingle. Every wall weapon, all five tonics, the Lampwright's Bench and the wreck chest are aboard.",
@@ -14,6 +14,13 @@ var PATCH_NOTES = [
     "Keeper's Last Light: reforge the Corposant at the Lampwright's Bench into the Saint's Crown: a bigger globe, more arcs, a longer reach, and it splits into smaller globes when it bursts.",
     "Keeper's Last Light: pick the San Telmo from the Where picker on the card. Hosts can pick it for co-op nights too.",
     "Lore compendium: a new article, The San Telmo.",
+  ] },
+  { v: 249, date: '2026-11-24', title: "Spindrift: a joystick for phones, and raised goals", Changes: [
+    "Skerry League, Spindrift: the goals now sit in the end walls above the water, so the ball has to be lifted in. Leap and flip into it to get it up to the gate.",
+    "Skerry League, Spindrift: on phones and tablets you now steer with a joystick. Put your thumb down anywhere on the left of the screen and drag: left and right to sail and to turn your ship over in the air, down to dive. Leap and Gale are two big round buttons on the right.",
+    "Skerry League, Spindrift: on touch screens the Gale gauge moves to the top right, out of the way of the buttons.",
+  ], Balance: [
+    "Skerry League, Spindrift: the bots leap under the ball and flip it up when they're near the other side's gate.",
   ] },
   { v: 248, date: '2026-11-24', title: "Lore compendium: Spindrift", New: [
     "Lore compendium: two new articles, The Sluice (the old tide-lock under the Light where Spindrift is played) and Spindrift (how the crews' winter game began and how it's played).",

@@ -12,8 +12,9 @@
 // (sdPose, sdHeard, sdPlace, sdBallFly, sdTakeClamp). src/lgside2d.js draws it on a canvas of its own (#sdCv).
 //
 // The frame: x across (Blue's gate at x = -W, Orange's at +W), y up, the still water's surface at y = 0, the vault at
-// y = H, the floor at y = -D. Each gate is a box W..W+GD deep, open from the floor up to its lintel at GH. A goal is
-// the whole ball past the line under the lintel.
+// y = H, the floor at y = -D. Each gate is a box W..W+GD deep, set into the end wall above the water: open from its
+// sill at GL up to its lintel at GH, so the ball has to be lifted in. A goal is the whole ball past the line, between
+// sill and lintel.
 // A ship (fields shared with the Harbour Pool's where they fit, so the net code carries them): x, y her waist; h the
 // way her bow points (0 along +x, anticlockwise); v, bv her speed along x and y; w how fast she's turning in the air;
 // face (+1 or -1) which way she sails on the water; up (+1 or -1) which side of her is her deck in the air (h turned a
@@ -27,14 +28,14 @@
 // Bots (sdBot): the nearer of a side goes for the ball from behind it, leaps at a high one and flips into it; the
 // other keeps the gate. Skill sets their pace, how far ahead they see the ball and whether they use the Gale.
 
-var SDC = { W: 118, H: 74, D: 24, GH: 32, GD: 18, R: 7, BG: 30, G: 50, VMAX: 46, ACC: 44, BRAKE: 130, JUMP: 33, JUMP2: 25, FLIP: 36, FLIPT: 0.5, DJ: 1.6, SPIN: 4.4, GALE: 82, GALE_USE: 34, VCAP: 96, HIT: 0.5, BFLOAT: 2.2 };
+var SDC = { W: 118, H: 74, D: 24, GL: 10, GH: 42, GD: 18, R: 7, BG: 30, G: 50, VMAX: 46, ACC: 44, BRAKE: 130, JUMP: 33, JUMP2: 25, FLIP: 36, FLIPT: 0.5, DJ: 1.6, SPIN: 4.4, GALE: 82, GALE_USE: 34, VCAP: 96, HIT: 0.5, BFLOAT: 2.2 };
 
 // the solid stone round the chamber, as boxes (x0, y0, x1, y1): the vault, the floor, each end wall above its gate's
 // lintel, and the back of each gate. A circle against them is pushed out of the nearest.
 function sdSolids() {
   if (LG.sdSol) return LG.sdSol;
-  const { W, H, D, GH, GD } = SDC, F = 999;
-  return (LG.sdSol = [[-F, H, F, F], [-F, -F, F, -D], [W, GH, F, F], [-F, GH, -W, F], [W + GD, -F, F, F], [-F, -F, -W - GD, F]]);
+  const { W, H, D, GL, GH, GD } = SDC, F = 999;
+  return (LG.sdSol = [[-F, H, F, F], [-F, -F, F, -D], [W, GH, F, F], [-F, GH, -W, F], [W, -F, F, GL], [-F, -F, -W, GL], [W + GD, -F, F, F], [-F, -F, -W - GD, F]]);
 }
 function sdPush(x, y, r) {
   let best = null;
@@ -86,7 +87,7 @@ function sdStep(dt) {
     if (!lgOwn(s)) { s.bob += dt; sdLook(s, dt); continue; }
     let mv = 0, jump = false, dive = false, gale = false;
     if (s.bot) { sdBot(s, dt); mv = s.ai.steer; jump = s.ai.jump; dive = s.ai.dive; gale = s.ai.gale; }
-    else { const K = LG.keys, T = LG.touch; mv = (K.r || T.r ? 1 : 0) - (K.l || T.l ? 1 : 0) + (LG.padSteer || 0); jump = !!(K.u || T.u || LG.padJump); dive = !!(K.d || T.d || (LG.padSail || 0) < -0.5); gale = !!(K.g || T.g || LG.padGale); }
+    else { const K = LG.keys, T = LG.touch; mv = (K.r || T.r ? 1 : 0) - (K.l || T.l ? 1 : 0) + (LG.padSteer || 0) + (LG.stickX || 0); jump = !!(K.u || T.u || LG.padJump); dive = !!(K.d || T.d || (LG.padSail || 0) < -0.5 || (LG.stickY || 0) < -0.55); gale = !!(K.g || T.g || LG.padGale); }
     mv = lgClamp(mv, -1, 1);
     if (frozen) { s.bob += dt; s.jHeld = jump; sdLook(s, dt); continue; }
     sdShip(s, dt, mv, jump, dive, gale);
@@ -205,7 +206,7 @@ function sdBall(dt) {
   sdBallPhys(B, dt, true);
   for (const s of LG.ships) if (!LG.net || lgOwn(s) || !lgHost()) sdBallShip(B, s);
   // a goal: the whole ball past the line, under the lintel (online, only the host's screen says so)
-  if (lgHost() && LG.ph === 'play' && Math.abs(B.x) > SDC.W + SDC.R && B.y < SDC.GH) lgGoal(B.x > 0 ? 0 : 1);
+  if (lgHost() && LG.ph === 'play' && Math.abs(B.x) > SDC.W + SDC.R && B.y > SDC.GL && B.y < SDC.GH) lgGoal(B.x > 0 ? 0 : 1);
 }
 // a ship strikes the ball: her hull a line from stern to bow with her beam round it
 function sdBallShip(B, s) {
@@ -268,6 +269,8 @@ function sdBot(s, dt) {
     } else mv = Math.sign(tx - s.x) * pace;
     const dx = B.x - s.x, dy = B.y - s.y;
     if (!s.air && Math.abs(dx) < 18 + Math.abs(s.v) * 0.25 && dy > 9 && dy < 40) A.jump = true;
+    // near their gate the ball has to go up to the sill: leap under it and flip into it
+    if (!s.air && (dir * SDC.W - B.x) * dir < 60 && Math.abs(dx) < 15 + Math.abs(s.v) * 0.15 && dx * dir > 0 && !wrong) A.jump = true;
     if (s.air) {
       // in the air: turn the bow at the ball, flip into it when it's close, and fly at it on the Gale if she can
       const want = Math.atan2(dy, dx), err = lgAng(want - s.h);
@@ -316,4 +319,4 @@ function sdTakeClamp(B, h) {
   B.x = lgClamp(h[1], -SDC.W - SDC.GD + SDC.R, SDC.W + SDC.GD - SDC.R); B.y = lgClamp(h[2], -SDC.D + SDC.R, SDC.H - SDC.R); B.z = 0;
   B.vx = lgClamp(h[4], -115, 115); B.vy = lgClamp(h[5], -115, 115); B.vz = 0;
 }
-function sdDebugGoal(team) { if (LG.ph !== 'play') LG.ph = 'play'; const B = LG.ball; B.x = (SDC.W + SDC.R + 2) * (team === 0 ? 1 : -1); B.y = 10; B.vx = 0; B.vy = 0; sdBall(0.001); }
+function sdDebugGoal(team) { if (LG.ph !== 'play') LG.ph = 'play'; const B = LG.ball; B.x = (SDC.W + SDC.R + 2) * (team === 0 ? 1 : -1); B.y = SDC.GL + SDC.R + 2; B.vx = 0; B.vy = 0; sdBall(0.001); }

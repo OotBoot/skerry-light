@@ -427,6 +427,7 @@ function lgBot(s, dt) {
 }
 
 // ---------- the screen ----------
+const coarse0 = () => !!(window.matchMedia && matchMedia('(pointer: coarse)').matches);
 function lgEnter() {
   try { audioInit(); } catch (e) {}
   if (!LG.side && typeof lg3dInit === 'function' && !lg3dInit()) { if (typeof toast === 'function') toast('Skerry League needs WebGL, which this browser has turned off.', 'No 3D'); }
@@ -435,7 +436,7 @@ function lgEnter() {
   $('lgUI').hidden = false; $('lgPause').hidden = true; $('lgEnd').hidden = true;
   document.body.classList.add('lgon'); document.body.classList.toggle('lgside', !!LG.side);
   $('lgCv').hidden = !!LG.side; $('sdCv').hidden = !LG.side; $('lgMap').hidden = !!LG.side; $('lgCamBtn').hidden = !!LG.side;
-  $('lgTU').textContent = '▲'; $('lgTU').setAttribute('aria-label', LG.side ? 'Leap' : 'Make sail'); $('lgTD').setAttribute('aria-label', LG.side ? 'Dive' : 'Shorten sail');
+  $('lgTU').textContent = LG.side ? 'Leap' : '▲'; if (typeof sdStickShow === 'function') sdStickShow(!!LG.side && coarse0()); $('lgTU').setAttribute('aria-label', LG.side ? 'Leap' : 'Make sail'); $('lgTD').setAttribute('aria-label', LG.side ? 'Dive' : 'Shorten sail');
   $('lgPauseHead').textContent = LG.side ? 'Spindrift' : 'Skerry League';
   if (LG.side && typeof sdResize === 'function') sdResize();
   const coarse = matchMedia && matchMedia('(pointer: coarse)').matches; $('lgPadBox').hidden = !coarse;
@@ -447,6 +448,7 @@ function lgExit() {
   LG.on = false; LG.ph = 'off'; LG.net = null;
   if (wasNet && typeof lgnStop === 'function') lgnStop();
   $('lgUI').hidden = true; document.body.classList.remove('lgon', 'lgside');
+  if (typeof sdStickShow === 'function') sdStickShow(false);
   state = 'title'; toTitle();
   setTimeout(() => { const c = $('lgTitle'); if (c) c.scrollIntoView({ block: 'start' }); lgCardRender(); }, 60);
 }
