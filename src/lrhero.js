@@ -11,7 +11,7 @@
 //   lrFx(scene)               -> { spawn(kind, o), update(dt) }   pooled: nothing is made after it starts
 //   lrHeroPortrait(heroId, team) -> a data URL (a head-and-shoulders picture, rendered once and kept)
 
-const LRH = { pr: null, cache: {}, tex: {} };
+const LRHM = { pr: null, cache: {}, tex: {} };
 const LRH_TEAM = [
   { main: 0xf2c14e, trim: 0x3d7fb8, deep: 0x2c5a86, cloth: 0x34628c, glow: 0xffd27a, flame: 0xffc060 },   // the Lamplighters
   { main: 0xc8463a, trim: 0x2a2522, deep: 0x8a2e26, cloth: 0x2a2522, glow: 0xff6a48, flame: 0xff7a40 },   // the Wreckers
@@ -736,11 +736,11 @@ function lrhRingMesh(r0, r1, col, op) {
   m.rotation.x = -Math.PI / 2; m.position.y = 0.05; return m;
 }
 function lrhStripeTex() {
-  if (LRH.tex.stripe) return LRH.tex.stripe;
+  if (LRHM.tex.stripe) return LRHM.tex.stripe;
   const c = document.createElement('canvas'); c.width = 64; c.height = 64; const x = c.getContext('2d');
   x.fillStyle = '#000'; x.fillRect(0, 0, 64, 64); x.fillStyle = '#fff';
   for (let k = -64; k < 128; k += 32) { x.beginPath(); x.moveTo(k, 0); x.lineTo(k + 16, 0); x.lineTo(k + 16 + 64, 64); x.lineTo(k + 64, 64); x.fill(); }
-  const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; return (LRH.tex.stripe = t);
+  const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; return (LRHM.tex.stripe = t);
 }
 function lrZoneMesh(kind, team) {
   const TC = LRH_TEAM[team ? 1 : 0], g = new THREE.Group(); g.name = 'lrZone:' + kind;
@@ -924,19 +924,19 @@ function lrFx(scene) {
 // ---------- portraits ----------
 function lrHeroPortrait(heroId, team) {
   const key = heroId + (team ? 1 : 0);
-  if (LRH.cache[key]) return LRH.cache[key];
+  if (LRHM.cache[key]) return LRHM.cache[key];
   let url = '';
   try {
-    if (!LRH.pr) {
+    if (!LRHM.pr) {
       const c = document.createElement('canvas'); c.width = c.height = 160;
       const r = new THREE.WebGLRenderer({ canvas: c, antialias: true, alpha: true, preserveDrawingBuffer: true }); r.setClearColor(0x000000, 0);
       const sc = new THREE.Scene();
       sc.add(new THREE.HemisphereLight(0xc8d0f0, 0x5a4a40, 1.0));
       const k = new THREE.DirectionalLight(0xffd0a0, 0.9); k.position.set(-1, 1.2, -1.5); sc.add(k);
       const rim = new THREE.DirectionalLight(0x8aa8ff, 0.6); rim.position.set(1.5, 0.5, 1); sc.add(rim);
-      LRH.pr = { c, r, sc, cam: new THREE.PerspectiveCamera(30, 1, 0.05, 20) };
+      LRHM.pr = { c, r, sc, cam: new THREE.PerspectiveCamera(30, 1, 0.05, 20) };
     }
-    const P = LRH.pr, TC = LRH_TEAM[team ? 1 : 0];
+    const P = LRHM.pr, TC = LRH_TEAM[team ? 1 : 0];
     const m = lrHeroModel(heroId, team); m.update({ spd: 0, gnd: true, pitch: 0.05, act: {}, dead: -1, hurt: -1 }, 0.016);
     m.group.rotation.y = 0.45; P.sc.add(m.group);
     const h = m.height, hy = h - (heroId === 'bollard' ? 0.38 : 0.25);
@@ -958,5 +958,5 @@ function lrHeroPortrait(heroId, team) {
     x.fillStyle = '#' + TC.main.toString(16).padStart(6, '0'); x.font = 'bold 90px serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText((heroId || '?')[0].toUpperCase(), 80, 86);
     url = c.toDataURL('image/png');
   }
-  return (LRH.cache[key] = url);
+  return (LRHM.cache[key] = url);
 }
