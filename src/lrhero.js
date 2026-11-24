@@ -560,11 +560,11 @@ function lrViewModel(heroId) {
     muzzle = mk(bar, 0, 0.9, 0);
     anim = (s, dt) => {
       const f = s.fire != null && s.fire >= 0 && s.fire < 0.55 ? s.fire : -1, k = s.act && s.act.k, t = (s.act && s.act.t) || 0;
-      bar.position.set(0.24, -0.25, -0.36); bar.rotation.set(-0.95, 0, 0.42, 'YXZ'); gL.position.set(-0.24, -0.27, -0.42); gL.rotation.set(0.2, 0, 0.3);
+      bar.position.set(0.36, -0.32, -0.38); bar.rotation.set(-0.95, 0, 0.12, 'YXZ'); gL.position.set(-0.24, -0.27, -0.42); gL.rotation.set(0.2, 0, 0.3);
       if (f >= 0) {
         const a = lrhSm(0, 0.2, f), back = lrhSm(0.28, 0.55, f);
-        bar.position.set(lrhLerp(lrhLerp(0.34, -0.12, a), 0.2, back), lrhLerp(-0.1, -0.24, back), lrhLerp(-0.36, -0.38, back));
-        bar.rotation.set(lrhLerp(-1.4, -0.35, back), lrhLerp(lrhLerp(-0.6, 0.9, a), 0, back), lrhLerp(lrhLerp(1.3, 1.6, a), 0.55, back), 'YXZ');
+        bar.position.set(lrhLerp(lrhLerp(0.34, -0.12, a), 0.36, back), lrhLerp(-0.1, -0.32, back), lrhLerp(-0.36, -0.38, back));
+        bar.rotation.set(lrhLerp(-1.4, -0.35, back), lrhLerp(lrhLerp(-0.6, 0.9, a), 0, back), lrhLerp(lrhLerp(1.3, 1.6, a), 0.12, back), 'YXZ');
       }
       if (k === 'a1' && t < 1) { const q = lrhSm(0, 0.1, t) * (1 - lrhSm(0.85, 1, t)); bar.position.y -= 0.08 * q; bar.rotation.z += 0.9 * q; gL.position.set(-0.12 * q - 0.22 * (1 - q), -0.2, -0.42); }
       if (k === 'a2' && t < 3.1) { const q = lrhSm(0, 0.15, t) * (1 - lrhSm(2.9, 3.1, t)); bar.position.lerp(new THREE.Vector3(0.16, -0.34, -0.42), q); bar.rotation.set(-0.25, 0, lrhLerp(0.42, 0.12, q)); gL.position.lerp(new THREE.Vector3(-0.08, -0.12, -0.36), q); gL.rotation.set(0.9 * q, 0, 0.6 * q); }
@@ -625,8 +625,8 @@ function lrViewModel(heroId) {
     anim = (s, dt) => {
       const fl = s.fire != null && s.fire >= 0 && s.fire < 0.25 ? Math.sin(s.fire / 0.25 * Math.PI) : 0, aim = st.aim = lrhLerp(st.aim || 0, s.alt ? 1 : 0, Math.min(1, dt * 10));
       const k = s.act && s.act.k, t = (s.act && s.act.t) || 0;
-      sf.position.set(lrhLerp(0.2, 0.13, aim), lrhLerp(-0.32, -0.26, aim) - fl * 0.02, lrhLerp(-0.42, -0.48, aim) - fl * 0.08);
-      sf.rotation.set(lrhLerp(-0.15, -0.85, aim) - fl * 0.55, 0, lrhLerp(0.12, 0.08, aim));
+      sf.position.set(lrhLerp(0.31, 0.13, aim), lrhLerp(-0.4, -0.26, aim) - fl * 0.02, lrhLerp(-0.42, -0.48, aim) - fl * 0.08);
+      sf.rotation.set(lrhLerp(-0.15, -0.85, aim) - fl * 0.55, 0, lrhLerp(-0.06, 0.08, aim));
       hL.position.set(lrhLerp(-0.22, -0.04, aim), lrhLerp(-0.3, -0.2, aim), lrhLerp(-0.4, -0.38, aim)); hL.rotation.set(0.2 + aim * 0.6, 0, 0.3);
       kin.visible = false;
       let gk = 1 + aim * 0.6;

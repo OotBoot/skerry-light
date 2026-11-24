@@ -254,7 +254,19 @@ function lr3dDraw(dt) {
     } else if (LR3.beams[p.i]) LR3.beams[p.i].visible = false;
   }
   lr3dCamera(dt, me, fp);
-  LR3.r.render(S, LR3.cam);
+  lr3dRender(S);
+}
+// Two passes: the world at the player's own field of view, then the hands and weapon (on layer 1) over it at a fixed one,
+// so they take the same room on the screen whatever the field of view is set to (and don't poke into walls)
+function lr3dRender(S) {
+  const r = LR3.r, cam = LR3.cam, v = LR3.view && LR3.view.group;
+  if (!v || !v.visible) { cam.layers.set(0); r.render(S, cam); return; }
+  if (LR3.vmLay !== v) { LR3.vmLay = v; v.traverse(o => o.layers.set(1)); S.traverse(o => { if (o.isLight) o.layers.enable(1); }); }
+  cam.layers.set(0); r.render(S, cam);
+  const fov = cam.fov, bg = S.background, ac = r.autoClear;
+  cam.fov = 2 * Math.atan(Math.tan(36 * Math.PI / 180) / Math.max(1, cam.aspect / 1.78)) * 180 / Math.PI; cam.updateProjectionMatrix();
+  S.background = null; r.autoClear = false; r.clearDepth(); cam.layers.set(1); r.render(S, cam);
+  cam.layers.set(0); r.autoClear = ac; S.background = bg; cam.fov = fov; cam.updateProjectionMatrix();
 }
 // the camera: your eyes (or, while you're down, a little behind and above your body), with Razorbill's glass, the
 // field of view setting, and a shake when you're hit
