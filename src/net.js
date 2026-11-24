@@ -122,6 +122,7 @@ function onPeersChange(change) {
   if (typeof rlNetPeers === 'function') rlNetPeers();   // [rival] Skerry Clash' lobby and duel (src/rlnet.js)
   if (typeof lgNetPeers === 'function') lgNetPeers();   // [league] Skerry League's lobby and match (src/lgnet.js)
   if (typeof chNetPeers === 'function') chNetPeers();   // [chess] Skerry Chess' lobby and game (src/chnet.js)
+  if (typeof lrNetPeers === 'function') lrNetPeers();   // [lamproad] the Lamp Road's lobby and match (src/lrnet.js)
 }
 
 // ---------- crew bookkeeping ----------
