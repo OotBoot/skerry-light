@@ -6,6 +6,15 @@
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 249, date: '2026-11-24', title: "Keeper's Last Light: a third map, the San Telmo", New: [
+    "Keeper's Last Light: a third map, the San Telmo. A giant Spanish galleon, lost with all hands in the Armada years, lies stranded on a shingle bank. Come ashore under her side, get in through the breach in her hull, and hold her from the hold up to the quarterdeck.",
+    "Keeper's Last Light: the San Telmo has four decks and sixteen places to open: the Main Hold, Bread Room, Powder Room, Strong Room and Cable Tier below; the Gun Deck, Gunroom, Chaplain's Berth and Surgeon's Cockpit; the open Waist, the Steerage, the Great Cabin and the Forecastle; and up top the Quarterdeck and the Forecastle Deck.",
+    "Keeper's Last Light: the drowned climb her hull to the gunports, come over the bulwarks and the rails, in at the stern windows, and wade up the shingle. Every wall weapon, all five tonics, the Lampwright's Bench and the wreck chest are aboard.",
+    "Keeper's Last Light: a new wonder weapon, the Corposant, only from the San Telmo's chest. A brass armillary sphere holding St Elmo's fire. Each shot throws a slow globe of fire that lashes lightning into the drowned around it, drags them in, then bursts.",
+    "Keeper's Last Light: reforge the Corposant at the Lampwright's Bench into the Saint's Crown: a bigger globe, more arcs, a longer reach, and it splits into smaller globes when it bursts.",
+    "Keeper's Last Light: pick the San Telmo from the Where picker on the card. Hosts can pick it for co-op nights too.",
+    "Lore compendium: a new article, The San Telmo.",
+  ] },
   { v: 248, date: '2026-11-24', title: "Lore compendium: Spindrift", New: [
     "Lore compendium: two new articles, The Sluice (the old tide-lock under the Light where Spindrift is played) and Spindrift (how the crews' winter game began and how it's played).",
   ], Changes: [
