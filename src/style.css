@@ -1868,6 +1868,8 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 .lgrecord { margin-top: 8px; }
 #lgUI { position: fixed; inset: 0; z-index: 30; font-family: var(--log); color: var(--ink); -webkit-user-select: none; user-select: none; touch-action: none; }
 #lgCv { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+#sdCv { position: absolute; inset: 0; width: 100%; height: 100%; display: block; background: #16131a; }   /* [league] Spindrift */
+#sdCv[hidden], #lgCv[hidden] { display: none; }
 #lgUI .lg-score, #lgUI .lg-msg, #lgUI .lg-count, #lgUI .lg-gauge, #lgUI .lg-speed, #lgMap { pointer-events: none; }
 .lg-score { position: absolute; top: max(10px, env(safe-area-inset-top, 0px)); left: 50%; transform: translateX(-50%); display: flex; align-items: stretch; background: rgba(8,12,22,0.78); border: 1px solid rgba(236,228,207,0.18); }
 .lg-score > * { display: flex; align-items: center; padding: 6px 12px; }

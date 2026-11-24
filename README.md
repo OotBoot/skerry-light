@@ -608,6 +608,22 @@ An eleventh game, on its own card on the title screen (**Kick off**; on the desk
 
 How it's built: `src/league.js` (the match, the ships' handling, the ball, the walls and goals, the bots, the screen and the controls) and `src/league3d.js` (the 3D view: the pool, the walls and lamps, the cliffs, the goals and lighthouses, the ships built from their boats' shapes and skins, the wakes, the Gale's spray, the goal bursts and the camera). Online play is `src/lgnet.js`: a lobby on the card for up to six, seated by side with bots in the empty seats; each screen sails its own ship, and the host's screen runs the ball, the bots, the gale buoys, the clock and the score and sends them to the rest, who forecast the ball between snapshots and send their own hits for the host to check. `server/server.js` relays one match's players to each other at full rate (the `lg` room key).
 
+### Spindrift (Skerry League side-on, one or two a side)
+
+The League's second way to play, picked on the same card: set **Game** to **Spindrift (side-on)** and press Kick off (or host it online). It's played in the Sluice, the old tide-lock under the Light, seen side-on as if the near wall were cut away: a vaulted stone chamber half full of sea, with a lock gate for a goal in each end wall. Blue's gate is on the left, Orange's on the right. One against one or two against two, three, five or seven minutes, the same bots, ships and skins as the Harbour Pool.
+
+- **On the water.** A and D (or ← →) sail her left and right; she turns about at once. Every ship reaches the same speed on the water; a handier one (the Cutter) gets there sooner.
+- **Leaping.** W, ↑ or Space leaps her out of the water. Press it again in the air within a moment and a half and she flips the way you're holding: A or D for a flip forwards or back, S (↓) to dive. A ship that strikes the ball mid-flip hits it much harder. Hold nothing and the second press is a plain second jump.
+- **In the air.** A and D turn her over. She always lands the right way up, rolling over if she comes down on her deck.
+- **The Gale.** Shift (or K) drives her the way her bow points, in the air as well as on the water, so point her bow up and she flies. The gauge refills from the yellow gale buoys floating on the water: small ones a third, the big ones by the walls all of it.
+- **The ball.** The same striped buoy. It floats, bobs back up if it's knocked under, and bounces off the walls, the vault and the gate lintels. A goal is the whole ball past the gate's line, under its lintel; the lamp over that gate blazes.
+- **The bots.** The nearer of a side goes for the ball from behind it, leaps at a high one and flips into it, and (Hard) flies at it on the Gale; with two a side the other keeps the gate.
+- **Online.** In the League's lobby the host's Game pick decides what's played; a Spindrift match takes four people, and the lobby list marks it. Everything else (sides, bots in empty seats, rejoining, the host running the match) is as in the Harbour Pool.
+- **Controller:** left stick steers and turns her, A leaps and flips, B, X or RT the Gale, the stick held down to dive. On a phone: ◀ ▶ to sail and turn, ▲ to leap and flip, ▼ to dive, and Gale.
+- The card keeps a separate Spindrift record (and a separate one online).
+
+How it's built: `src/lgside.js` (the rules: the ships, the ball, the stone, the buoys, the bots, and the hooks the online code uses) and `src/lgside2d.js` (the view: a 2D canvas of its own). Everything else (the phases, the clock, the score, the end card, the lobby) is the Harbour Pool's, in `src/league.js` and `src/lgnet.js`, which hand over to these when `LG.side` is set. Debug: `lgDebug({ game: 'side', size: 2 })`, `lgDebugGoal(0)`.
+
 ## Skerry Chess (chess, and chess on the reef, for one or two)
 
 A twelfth game, on its own card on the title screen (**Play the bot**; on the desk menu it's number 12). The keepers' game, played in the lamp room on long nights: standard chess with every rule, or Skerry rules, a variant on a reef. Play one of three bots, or one other person online.
@@ -910,6 +926,8 @@ src/patchnotes.js   the patch notes log (one entry per version, newest first)
 src/patchnotesui.js the main menu's Patch Notes page
 src/league.js       Skerry League: the match, the ships, the ball, the bots
 src/league3d.js     Skerry League's 3D view
+src/lgside.js       Skerry League: Spindrift, the side-on game (its rules, ships, ball and bots)
+src/lgside2d.js     Spindrift's view
 src/chess.js        Skerry Chess: the rules and the bots
 src/chessui.js      Skerry Chess: the board, the card and the game
 src/chnet.js        Skerry Chess online
