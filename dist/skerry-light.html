@@ -3254,7 +3254,7 @@ svg.chrock .foam { fill: rgba(235,245,250,0.55); } svg.chrock .rk { fill: #4b4d5
 // ---- src/config.js ----
 'use strict';
 // The game's version, shown at the top of the main menu. Bump it by one with every change pushed to main.
-var VERSION = 247;
+var VERSION = 248;
 // Skerry Light: tuning, asset paths and lore.
 // World units are metres. The lighthouse stands at the origin on the shoreline (y = 0);
 // north (+y) is open sea. Bearings: 0 = north, positive = east.
@@ -3429,6 +3429,11 @@ document.addEventListener('visibilitychange', () => {
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 248, date: '2026-11-24', title: "Lore compendium: Spindrift", New: [
+    "Lore compendium: two new articles, The Sluice (the old tide-lock under the Light where Spindrift is played) and Spindrift (how the crews' winter game began and how it's played).",
+  ], Changes: [
+    "Lore compendium: Skerry League, The Harbour Pool, The Gale, the timeline and the era of the Light now cover Spindrift and the Sluice.",
+  ] },
   { v: 247, date: '2026-11-23', title: "Skerry League: Spindrift", New: [
     "Skerry League: Spindrift, a new way to play, side-on. Pick it under Game on the Skerry League card.",
     "Skerry League: Spindrift is played in the Sluice, the old tide-lock under the Light, with a lock gate for a goal in each end wall. One against one or two against two, against bots or online.",
@@ -75033,7 +75038,7 @@ function origIsOpen() { return !!(ORIG.el && !ORIG.el.hidden); }
 // The Skerry Compendium: the lore book on the main menu, written like a wiki (src/loreui.js draws it).
 // It ties every game into one history: the voyages (Skerry Light), Wreckers' Night, Drowned Reach, Keeper's Last Light,
 // the two raids (Maren's End, The Gannet's Wake), The Chronicle of the Light (its people, places, nights and five eras), Fog Run, Freebooters' Sea [fbsea], The Original (as The Early Watches),
-// Skerry Links (with the headland), Skerry League (the Harbour Pool, its two sides and the Gale), Skerry Chess (the players of the lamp room)
+// Skerry Links (with the headland), Skerry League (the Harbour Pool, its two sides, the Gale, and Spindrift in the Sluice), Skerry Chess (the players of the lamp room)
 // and Skerry Clash (with the Race, the Threefold Skerry, the triple draft, the towers and crossing in person). Where the game itself says nothing, the gaps are filled
 // with lore that fits; the keeper's log (SK.LOG in config.js) is the spine and is never contradicted.
 // An article: { id, t: title, cat: [categories], img: a picture key (see loreImg in loreui.js), gal: visitors' picture keys for a gallery, box: [[label, value], ...]
@@ -75065,6 +75070,7 @@ var LORE = [
     "<b>c. 1879.</b> The keeper Holm comes to the Light, with his wife [[maren]]. In his early years he swings the beam by hand to show each ship the rocks: see [[ch_original]].",
     "<b>c. 1883.</b> The keepers lay out nine holes of golf along the headland: see [[ch_links]].",
     "<b>c. 1885.</b> The harbour crews start playing their ball game in the Harbour Pool: see [[ch_league]].",
+    "<b>c. 1885 to 1886.</b> The first winter the gales shut the Harbour Pool, the crews take their game into the old tide-lock under the Light and play it side-on: see [[spindrift]] and [[sluice]].",
     "<b>c. 1886.</b> The keepers carve a chessboard for the lamp room, and then a second one with the reef on it: see [[ch_chess]].",
     "<b>14 December 1887.</b> [[wreck1887|The Night of the Gannet]]. The lamp fails in the second hour. Maren rows out with a hand lantern to warn the brig [[gannet|Gannet]]. The brig breaks up on the skerries with all hands. The skiff comes back empty, [[marenslantern|her lantern]] still lit.",
     "<b>15 December 1887.</b> The sea freezes from the harbour steps to the horizon. It is the first of [[sixseas|the six seas]].",
@@ -75226,7 +75232,7 @@ var LORE = [
   ]},
   { h: 'In the log', p: [ "[[log|The keeper's log]] never mentions the course. The station's coal book records twelve golf balls bought from a Wrackhaven chandler in 1884, and eleven of them lost by the end of that summer." ] },
 ], also: ['headland', 'skerrylight', 'harbour', 'crates'] },
-{ id: 'ch_league', t: 'Skerry League', cat: ['Chronicles', 'Places'], box: [['Told in', 'Skerry League'], ['When', 'Summer evenings, from c. 1885'], ['Where', '[[harbourpool|The Harbour Pool]], under the cliffs by [[harbour|the harbour]]'], ['Who', 'Two crews, Blue and Orange, one to three ships a side'], ['Played with', 'A great striped buoy'], ['Ships', 'Brigs, cutters, barques, and in later years a carrier']], sum: "A game the harbour crews made up between voyages: a walled basin of still water under the cliffs, a goal at each end with a little light behind it, and a great red and white buoy to knock into the other crew's goal with nothing but your own ship. Nobody is quite sure who played it first, and every crew says it was theirs.", secs: [
+{ id: 'ch_league', t: 'Skerry League', cat: ['Chronicles', 'Places'], box: [['Told in', 'Skerry League'], ['When', 'Summer evenings, from c. 1885'], ['Where', '[[harbourpool|The Harbour Pool]], under the cliffs by [[harbour|the harbour]], and in winter [[sluice|the Sluice]] under the Light'], ['Who', 'Two crews, Blue and Orange, one to three ships a side (one or two in the Sluice)'], ['Played with', 'A great striped buoy'], ['Ships', 'Brigs, cutters, barques, and in later years a carrier']], sum: "A game the harbour crews made up between voyages: a walled basin of still water under the cliffs, a goal at each end with a little light behind it, and a great red and white buoy to knock into the other crew's goal with nothing but your own ship. Nobody is quite sure who played it first, and every crew says it was theirs.", secs: [
   { h: 'The Harbour Pool', p: [
     "The pool was built as a fitting-out basin for the harbour, a square of sea wall with a lamp every few yards along the top, and was never finished: the gates were never hung, and the cove's tide never quite empties it. The crews laid the two goals across its ends with spare spars and old net, and the harbour board, finding it could not stop them, put up two small lighthouses behind them and painted one blue and one orange.",
     "The buoy is a spent channel marker, striped red and white and big enough that a cutter has to put her shoulder into it. A hard knock lifts it clean out of the water.",
@@ -75234,8 +75240,11 @@ var LORE = [
   { h: 'The game', p: [
     "A match runs on the harbour clock for a few minutes. A goal rings the bell and sets the lighthouse behind it flashing, and both crews go back to their marks to start again. Level at the end and it goes on until somebody scores. The crews keep a Gale in a bottle, a burst of wind let loose from a cask on deck, and fill it again from the yellow gale buoys moored about the pool.",
   ]},
+  { h: 'Spindrift', p: [
+    "When the winter gales shut the Harbour Pool the crews took the game under the Light, into [[sluice|the Sluice]], the old tide-lock in the rock, and played it there by lantern light with the sea slopping half way up the walls. In a chamber that narrow there is room for only one or two ships a side, and nowhere to go but up: the ships leap clean out of the water, turn over in the air, and ride the Gale across the vault after the buoy. The harbour calls it [[spindrift]], after what the ships throw up, and the younger crews will play nothing else.",
+  ]},
   { h: 'In the log', p: [ "[[log|The keeper's log]] never mentions the game, though the harbour board's minutes record the cost of two lighthouses, 'small, for the amusement of the crews', and of a great deal of new net." ] },
-], also: ['harbourpool', 'leaguecrews', 'gale', 'harbour'] },
+], also: ['harbourpool', 'sluice', 'spindrift', 'leaguecrews', 'gale', 'harbour'] },
 { id: 'ch_chess', t: 'Skerry Chess', cat: ['Chronicles', 'Places'], box: [['Told in', 'Skerry Chess'], ['When', 'Long winter nights, from c. 1886'], ['Where', 'The lamp room of [[skerrylight]]'], ['Who', 'The keepers, the harbour crews, [[lamproom|anyone who would sit down]]'], ['Played with', 'Two boards: a plain one, and the reef board'], ['Pieces', 'Keeper, lantern, tower, cutter, gannet and hand']], sum: "The keepers' game. On the long nights of the watch the keeper on duty and the one off it played chess by the light of the lamp, on a board one of them carved from a ship's hatch cover. A second board followed, cut with the reef on it, and a game of its own grew up around it: the Light against the Wreckers.", secs: [
   { h: 'The plain board', p: [
     "The first board is a plain one, played by the rules any harbour club would know. The keepers kept a tally of games in pencil on the underside, and it runs to several hundred before the pencil gives out.",
@@ -75956,7 +75965,7 @@ var LORE = [
   { h: 'The gale buoys', p: [
     "Yellow buoys are moored about the water, small ones along the sides and big ones in the corners and at the middle of each wall. Each holds a charge of wind for [[gale|the Gale]], and is filled again by the harbour lads a few seconds after a ship has emptied it.",
   ]},
-], also: ['ch_league', 'leaguecrews', 'harbour'] },
+], also: ['ch_league', 'leaguecrews', 'sluice', 'harbour'] },
 { id: 'leaguecrews', t: 'The Blue and the Orange', cat: ['Factions'], box: [['Kind', 'The two sides of the Harbour Pool'], ['Colours', 'Blue, and Orange'], ['Ships a side', 'One to three, and more when friends come'], ['Ships sailed', 'Brigs, cutters, barques, and a carrier'], ['Appears in', '[[ch_league]]']], sum: "The two sides of [[ch_league|the harbour crews' game]]. Nobody belongs to either for long: a crew is Blue one evening and Orange the next, and the only loyalty that lasts is to the ship.", secs: [
   { h: 'Picking sides', p: [
     "The sides are made up on the quay, as many ships to each as there are crews willing. When friends come down from the town the sides grow to fit them all, up to three ships a side and sometimes six on the water at once, each crew sailing its own ship. Any berth left empty is filled by harbour lads who know the pool, some sharper than others. The quay calls them Easy, Fair and Hard, and not to their faces.",
@@ -75969,12 +75978,40 @@ var LORE = [
     "Each crew brings her own ship in her own colours, and she handles in the pool as she does at sea, only turning more sharply in the still water. The cutter answers quickest. The carrier, which the harbour has never quite explained, is the heaviest, and moves the buoy more and is moved less. See [[boats]].",
   ]},
 ], also: ['ch_league', 'harbourpool', 'gale'] },
-{ id: 'gale', t: 'The Gale', cat: ['Objects'], box: [['Kind', 'Wind, kept in a cask on deck'], ['Filled from', 'The yellow gale buoys of [[harbourpool|the Harbour Pool]]'], ['Used for', 'A burst of speed'], ['Appears in', '[[ch_league]]']], sum: "A charge of wind stoppered up in a cask on deck and let go all at once, which drives a ship across the pool far faster than any sail. The crews of [[ch_league|Skerry League]] call it a Gale in a bottle.", secs: [
+{ id: 'gale', t: 'The Gale', cat: ['Objects'], box: [['Kind', 'Wind, kept in a cask on deck'], ['Filled from', 'The yellow gale buoys of [[harbourpool|the Harbour Pool]] and [[sluice|the Sluice]]'], ['Used for', 'A burst of speed, and in the Sluice, flight'], ['Appears in', '[[ch_league]]']], sum: "A charge of wind stoppered up in a cask on deck and let go all at once, which drives a ship across the pool far faster than any sail. The crews of [[ch_league|Skerry League]] call it a Gale in a bottle.", secs: [
   { h: '', p: [
     "Nobody at the harbour will say where the wind comes from. The crews take it from the gale buoys moored about the pool, a third of a cask from a small one and a whole cask from a big one, and it lasts only as long as the cask does. The Hard crews spend it freely. The Easy ones keep forgetting they have it.",
+    "In [[sluice|the Sluice]] the gale buoys float loose on the water instead of being moored, and the Gale is used differently. It drives a ship the way her bow points, wherever that is, so a crew that leaps, turns her bow to the vault and lets the cask go will fly. The harbour thinks this is the most dangerous thing anyone has done with a ship since [[wreck1887|the Gannet]], and turns out to watch every time.",
     "Since [[sixseas|the strange year]] the coast has grown used to things that should not be kept being kept, and a cask of wind is among the milder of them.",
   ]},
 ], also: ['ch_league', 'harbourpool', 'leaguecrews'] },
+{ id: 'sluice', t: 'The Sluice', cat: ['Places'], box: [['Kind', 'A tide-lock cut into the rock under the Light'], ['Where', 'Beneath [[skerrylight]]'], ['Built', '1841, with the tower'], ['Gates', 'Two, one in each end wall'], ['Appears in', '[[spindrift]]']], sum: "The old tide-lock under Skerry Light: a vaulted chamber cut into the rock and half full of sea, with a lock gate in each end wall. It was built to land the station's stores in any weather and has not been used for that in living memory. The harbour crews play [[spindrift]] in it.", secs: [
+  { h: 'The chamber', p: [
+    "When [[lampwright|the Lampwright]] built the tower he had his men cut a lock into the foot of the rock, so a stores boat could come in on the tide whatever the sea was doing outside, shut the gates behind it, and unload in the dry. The chamber is long and narrow and roofed with a stone vault, and the sea inside stands at half its height, flat and green, while the swell booms against the outer gate.",
+    "Along the back wall stand three great relieving arches, each with a barred window high up that lets in a little grey daylight. Lanterns hang between them. The chains and wheels of the old gate gear still hang under the vault, rusted solid, and a line of weed marks where the tide has stood for forty years. Worn into the stone of the middle arch is the mark of the Light, a lamp inside a ring, cut by the masons when the tower was finished.",
+  ]},
+  { h: 'The two gates', p: [
+    "The lock has a gate in each end wall, set low so that their timber lintels sit just above the water. The crews painted the left-hand lintel blue and the right-hand one orange and hung a lamp over each, and the gates have been goals ever since. A goal is the buoy carried right under the lintel, and the lamp above it is turned up full until the whole chamber blazes.",
+  ]},
+  { h: 'Watching', p: [
+    "Nobody can stand inside the Sluice during a match and expect to come out dry. The near wall was half broken out by the sea in the bad winter of 1859 and never rebuilt, and the crowd sits along the rocks in front of the gap with the whole length of the chamber laid out side-on before them like a stage.",
+  ]},
+  { h: 'In the log', p: [ "[[log|The keeper's log]] says nothing of the Sluice, though the station's oldest stores book has 'Lock: gates greased' at the top of every month until 1846, and then never again." ] },
+], also: ['spindrift', 'skerrylight', 'harbourpool', 'ch_league'] },
+{ id: 'spindrift', t: 'Spindrift', cat: ['Events'], box: [['Kind', 'The winter game of the harbour crews'], ['Where', '[[sluice|The Sluice]], under [[skerrylight]]'], ['When', 'Winter, from c. 1885'], ['Who', '[[leaguecrews|Blue and Orange]], one or two ships a side'], ['Played with', 'The great striped buoy'], ['Part of', '[[ch_league]]']], sum: "[[ch_league|Skerry League]] as the harbour crews play it in winter, in the narrow tide-lock under the Light, where there is not room for a proper game and so the ships go up instead. It is named for the spray they throw, which on a good night reaches the vault.", secs: [
+  { h: 'How it began', p: [
+    "The first winter the crews had their game, the gales came early and filled the Harbour Pool with sea every tide until no ship could keep station in it. Somebody remembered the old lock under the Light, which had sheltered stores boats from the same weather forty years before. They rowed the buoy out to it, opened the gates, and by the end of the evening had worked out that a ship leaping off a swell could clear the water entirely.",
+  ]},
+  { h: 'The game', p: [
+    "The rules are the Pool's: a match on the harbour clock, a goal rings the bell, and a level score goes on until somebody scores. The difference is the chamber. With a wall at each end, a vault overhead and only one or two ships a side, the buoy is as often in the air as on the water, and the ships have to go after it there.",
+    "A ship leaps from the water and, if her crew are quick, leaps again before she comes down, or throws herself over forwards, backwards or bow first at the water. A ship that strikes the buoy in the middle of a flip hits it far harder than one that only runs into it, and the best crews do little else. Whatever she does in the air she lands the right way up; the Sluice crews say a ship always knows which way is down, even when her helmsman does not.",
+    "Yellow gale buoys float loose on the water, a small one filling a third of the cask and a big one by the walls filling all of it, and [[gale|the Gale]] is let go the way the bow points, so a ship pointed at the vault flies.",
+  ]},
+  { h: 'The crews', p: [
+    "The same Blue and Orange as the Pool, and the same harbour lads filling empty berths, though fewer of them: two a side is a crowd in the Sluice. Lads who are steady in the Pool are often hopeless here, and the other way about. The Hard ones fly at the buoy on the Gale; the Easy ones are mostly to be found upside down.",
+  ]},
+  { h: 'In the log', p: [ "[[log|The keeper's log]] never mentions the Sluice games, though more than one winter entry records 'a great noise under the rock, as of ships', with no ship in sight." ] },
+], also: ['sluice', 'ch_league', 'leaguecrews', 'gale'] },
 { id: 'headland', t: 'The headland', cat: ['Places'], box: [['Where', 'Above [[harbour|the harbour]], facing [[skerrylight]]'], ['Holds', 'The nine holes of the keepers\' links'], ['Landmarks', 'The Gate, the Cove, the Point, the Chasm'], ['Appears in', '[[ch_links]]']], sum: "The long hill of turf and cliff above the harbour, from the field gate inland round to the point that looks straight out at the Light. The keepers laid their nine holes of golf along it, and it is mostly remembered for those. See [[ch_links]].", secs: [
   { h: 'The lie of it', p: [
     "Inland, the headland is farmland running gently down to a small cove, crossed by a creek that the course has to clear. Seaward it rises to a long cliff top, with the sea and the skerries all along one side, until it ends at the Point, a tiny green with the sea on three sides. Beyond the Point the cliff is split by the Chasm, a gully the sea fills at every tide, which the eighth hole crosses in one shot or not at all.",
@@ -76020,7 +76057,7 @@ var LORE = [
 ], also: ['mooncussers', 'jagohanging', 'era_before'] },
 { id: 'era_light', t: 'The Light', cat: ['Eras'], box: [["From", "1841"], ["To", "14 December 1887"], ["Lit by", "[[skerrylight]]"], ["Keepers", "Unrecorded, then [[keeper|Holm]] from c. 1879"]], sum: "The forty-six years Skerry Light burned as a light should, from the night the Lampwright lit it to the night its lamp went out with the Gannet coming in. The coast remembers them as the ordinary years, and there have been none since.", secs: [
   { h: '', p: [
-    "It holds [[lighting1841|the lighting of the Light]], [[ch_original|the keeper's early watches]] when he swung the beam by hand, [[ch_links|the nine holes on the headland]] from about 1883, [[ch_league|the crews' game in the Harbour Pool]] from about 1885, [[ch_chess|the chessboards of the lamp room]] from about 1886, and its end, [[wreck1887|the Night of the Gannet]].",
+    "It holds [[lighting1841|the lighting of the Light]], [[ch_original|the keeper's early watches]] when he swung the beam by hand, [[ch_links|the nine holes on the headland]] from about 1883, [[ch_league|the crews' game in the Harbour Pool]] from about 1885 (and [[spindrift|in the Sluice]] the winter after), [[ch_chess|the chessboards of the lamp room]] from about 1886, and its end, [[wreck1887|the Night of the Gannet]].",
   ]},
 ], also: ['era_before', 'era_strange', 'skerrylight'] },
 { id: 'era_strange', t: 'The Strange Year', cat: ['Eras'], box: [["From", "15 December 1887"], ["To", "14 December 1888"], ["Began", "When the sea froze to the horizon"], ["Recorded in", "[[log|The keeper's log]]"]], sum: "1888, the year after the Gannet, when the sea stopped being one sea. In it came [[plimsoll]], Maren on the water, [[knock]], [[verity]], the six seas, the visitors and the drifting crates, and it ended a year to the night with the Gannet rising.", secs: [

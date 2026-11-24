@@ -6,6 +6,11 @@
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 248, date: '2026-11-24', title: "Lore compendium: Spindrift", New: [
+    "Lore compendium: two new articles, The Sluice (the old tide-lock under the Light where Spindrift is played) and Spindrift (how the crews' winter game began and how it's played).",
+  ], Changes: [
+    "Lore compendium: Skerry League, The Harbour Pool, The Gale, the timeline and the era of the Light now cover Spindrift and the Sluice.",
+  ] },
   { v: 247, date: '2026-11-23', title: "Skerry League: Spindrift", New: [
     "Skerry League: Spindrift, a new way to play, side-on. Pick it under Game on the Skerry League card.",
     "Skerry League: Spindrift is played in the Sluice, the old tide-lock under the Light, with a lock gate for a goal in each end wall. One against one or two against two, against bots or online.",
