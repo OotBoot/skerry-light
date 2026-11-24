@@ -136,4 +136,5 @@ function lrRay(ox, oy, oz, dx, dy, dz, max) {
   return best;
 }
 // can a eye at a see b (both {x, y, z})?
-function lrSees(a, b) { const dx = b.x - a.x, dy = b.y - a.y, dz = b.z - a.z, d = Math.hypot(dx, dy, dz); if (d < 1e-6) return true; return lrRay(a.x, a.y, a.z, dx / d, dy / d, dz / d, d) >= d - 0.05; }
+// (and no zone of a kind that blinds, such as a cloud of smoke, is in the way: src/lr.js lrSightCut)
+function lrSees(a, b) { const dx = b.x - a.x, dy = b.y - a.y, dz = b.z - a.z, d = Math.hypot(dx, dy, dz); if (d < 1e-6) return true; if (typeof lrSightCut === 'function' && lrSightCut(a, b, d)) return false; return lrRay(a.x, a.y, a.z, dx / d, dy / d, dz / d, d) >= d - 0.05; }

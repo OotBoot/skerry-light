@@ -87,7 +87,7 @@
 //     hurt) -> true to hold the secondary at that target.
 // lrDefProj(kind, { grav (default true), own, step(j, dt, M) -> true when gone }) (M: sx sy sz (where it was), L (how far
 //   it goes this tick), dx dy dz, a (its owner)); lrLobLand(j, M, noBodies) for a lobbed thing that lands.
-// lrDefZone(kind, { tick(z, dt, a), touch(z, q, dt, a), nofall(z, q), turn, fix: {...}, sync: [...] }).
+// lrDefZone(kind, { tick(z, dt, a), touch(z, q, dt, a), nofall(z, q), blind(z, a, b, d), turn, fix: {...}, sync: [...] }).
 // lrDefWall(kind, { w, h, gone(w, owner) }).
 // lrDefEvent(kind, { sound(f, at, me, mine), shake(f, me) -> 0..1, own }); lrDefSound(kind, fn); lrDefSnd(name,
 //   (v, e, rec, o) => {...}) for a named sound (tone, noise and sfx recordings, as src/audio.js has them).
@@ -148,8 +148,11 @@ function lrDefHero(def) {
 function lrDefProj(kind, d) { if (!LR_PROJ[kind]) LR_JK.push(kind); LR_PROJ[kind] = Object.assign({ grav: true, own: false }, d); }
 // a kind of zone on the ground: { tick(z, dt, a) every tick, touch(z, q, dt, a) for each living body within z.r (and 3 m
 //   up or down of z.gy, or z.y), nofall(z, q) -> true if q can't fall there, turn (drawn turned to z.yaw), fix (fields
-//   every zone of this kind has, restored on a guest), sync (names of further fields sent to guests, rounded to 0.1) }
+//   every zone of this kind has, restored on a guest), sync (names of further fields sent to guests, rounded to 0.1),
+//   blind(z, a, b, d) -> true if the zone hides point b from an eye at a, d apart (lrSees, so the bots and the HUD, then
+//   fail: a cloud of smoke) }
 function lrDefZone(kind, d) { if (!LR_ZONE[kind]) LR_ZK.push(kind); LR_ZONE[kind] = Object.assign({ fix: {}, sync: [] }, d); }
+function lrSightCut(a, b, d) { for (const z of LRM.zones) { const Z = LR_ZONE[z.k]; if (Z && Z.blind && Z.blind(z, a, b, d)) return true; } return false; }
 // a kind of wall (it stops shots and bodies, both sides'): { w, h, gone(w, owner) when it falls or runs out }
 function lrDefWall(kind, d) { if (!LR_WALL[kind]) LR_WK.push(kind); LR_WALL[kind] = Object.assign({ w: 6, h: 3 }, d); }
 // an event kind (LRM.FX): { sound(f, at, me, mine), shake(f, me) -> how hard it shakes my view (0..1), own (a guest
