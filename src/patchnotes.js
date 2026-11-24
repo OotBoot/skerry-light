@@ -6,6 +6,15 @@
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 251, date: '2026-11-24', title: "New game: The Lamp Road", New: [
+    "The Lamp Road: a new game, a five-a-side hero shooter in first person. The Wreckers have put out the Gullhaven Light; the Lamplighters must push the Lamp Wain, the Light's great lens on its iron carriage, through the town to the foot of the Light while the Wreckers hold the streets. Its own card on the title screen.",
+    "The Lamp Road: one map, Gullhaven, a harbour town on a headland at dusk: the west quay, the fish market, the chandlery and net loft, the Mermaid tavern and an old hulk on the hard, and the Light at the end of the road. Roofs, the hulk's deck and the rocks can be climbed for high ground.",
+    "The Lamp Road: the Wain moves while Lamplighters stand beside it and no Wrecker does, faster with more pushing, and rolls back if left alone. Three checkpoints each add time to the clock. Overtime while a Lamplighter is still on it.",
+    "The Lamp Road: three heroes, each with their own look, weapon, two abilities and an ultimate. Bollard, the tank: an old harbourmaster in an iron diving dress with a capstan bar, iron bulkheads, a charge, a brace and Spring Tide. Razorbill, damage: a marksman with a fowling piece, Gull's Rise, Tar Pot and Broadside. Linnet, support: the keeper's apprentice with a lantern staff that heals and hurts, Kindle, Will-o'-the-Wisp and Beacon.",
+    "The Lamp Road: bots fill every empty seat, as one tank, two damage and two support, at Easy, Fair or Hard.",
+    "The Lamp Road: play online with up to ten people, five a side, with bots in the empty seats. Host from the card or share an invite; anyone who drops out can rejoin.",
+    "The Lamp Road: works with a controller and on phones.",
+  ] },
   { v: 250, date: '2026-11-24', title: "Keeper's Last Light: a third map, the San Telmo", New: [
     "Keeper's Last Light: a third map, the San Telmo. A giant Spanish galleon, lost with all hands in the Armada years, lies stranded on a shingle bank. Come ashore under her side, get in through the breach in her hull, and hold her from the hold up to the quarterdeck.",
     "Keeper's Last Light: the San Telmo has four decks and sixteen places to open: the Main Hold, Bread Room, Powder Room, Strong Room and Cable Tier below; the Gun Deck, Gunroom, Chaplain's Berth and Surgeon's Cockpit; the open Waist, the Steerage, the Great Cabin and the Forecastle; and up top the Quarterdeck and the Forecastle Deck.",

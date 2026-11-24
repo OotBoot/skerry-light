@@ -628,6 +628,25 @@ The League's second way to play, picked on the same card: set **Game** to **Spin
 
 How it's built: `src/lgside.js` (the rules: the ships, the ball, the stone, the buoys, the bots, and the hooks the online code uses) and `src/lgside2d.js` (the view: a 2D canvas of its own). Everything else (the phases, the clock, the score, the end card, the lobby) is the Harbour Pool's, in `src/league.js` and `src/lgnet.js`, which hand over to these when `LG.side` is set. Debug: `lgDebug({ game: 'side', size: 2 })`, `lgDebugGoal(0)`.
 
+## The Lamp Road (a five-a-side hero shooter, escort the Lamp)
+
+A thirteenth game, on its own card on the title screen (**Play**). The Wreckers have put out the Gullhaven Light, and the Lamplighters mean to light it again: they must push the **Lamp Wain**, the Light's great lens on its iron carriage, from the west quay of Gullhaven through the town to the foot of the Light, while the Wreckers hold the streets against them. First person, five a side, three heroes, and bots in every empty seat.
+
+- **On the card:** your side (the Lamplighters attack, the Wreckers defend, or either at random), how good the bots are (Easy, Fair or Hard) and your name. Your record is kept on this browser.
+- **The Wain.** It rolls while at least one Lamplighter is within five metres of it and no living Wrecker is; with a Wrecker beside it, it's contested and stops. One pushing moves it slowly, two faster, three or more fastest. Left alone for eight seconds it rolls back, but never behind a checkpoint it has passed. Lamplighters beside it slowly mend. The bar at the top shows how far it has come, its three checkpoints, and whether it's pushing, contested, halted or rolling back.
+- **The clock.** Three minutes to reach the first checkpoint, and a minute and a half more for each one reached. Bring the Wain to the foot of the Light and the Light is lit: the Lamplighters win. Run the clock out and the Wreckers win, unless a Lamplighter is touching the Wain, in which case it's overtime: play goes on while one stays on it.
+- **Before it starts.** Everyone picks a hero, then the Lamplighters wait in their boat house for a few seconds while the Wreckers set up.
+- **Going down.** You're back in eight seconds at your side's spawn, which moves up the road as the Wain does. In your own spawn you mend at once, and there (or while you're down) H changes hero. Oil cans and medicine chests in the streets mend you when you walk over them, and come back a little after.
+- **Ultimates** charge from the damage you do and the mending you give, and a little on their own. Q uses one when the ring at the bottom right is full.
+- **Bollard** (tank, 600 health), an old harbourmaster in an iron diving dress. *Capstan Bar:* a sweep that hits everyone close in front. *Bulkhead* (right mouse): sets down an iron wall that stops shots and bodies from both sides. *Ballast Rush* (Shift): a charge that hurts and shoves aside anyone in the way. *Brace* (E): three seconds of half damage, and nothing knocks him back. *Spring Tide* (Q): a wave rolls out ahead of him that hurts, knocks back and slows.
+- **Razorbill** (damage, 200 health), a marksman with a long fowling piece. *Fowling Piece:* quick accurate shots, double to the head. *Sight* (right mouse): hold to aim through the glass. *Gull's Rise* (Shift): leap high, and hold Space to glide down. *Tar Pot* (E): a pot of burning tar that leaves a pool that burns and slows. *Broadside* (Q): mark a strip of ground ahead, and a ship's guns hammer it a moment later.
+- **Linnet** (support, 225 health), the keeper's apprentice, with a storm lantern on a staff. *Lamp Bolt:* hurts enemies and mends allies it passes through. *Mending Light* (right mouse): hold it on an ally near you to mend them. *Kindle* (Shift): throws a lantern that hangs where it lands and mends allies near it. *Will-o'-the-Wisp* (E): blinks a short way. *Beacon* (Q): plants the staff, and allies near it mend fast and can't fall.
+- **The bots** make up a crew of one tank, two damage and two support, push or hold the Wain, use their abilities and ultimates, and go for a pack or a Linnet when they're hurt.
+- **Keys:** mouse to look, WASD to move, Space to jump, left mouse fires, right mouse the secondary, Shift and E the abilities, Q the ultimate, R reloads, H changes hero, Tab the scores, Esc (or ☰) the menu. **Controller:** left stick moves, right stick looks, RT fires, LT the secondary, A jumps, LB and RB the abilities, Y the ultimate, X reloads, D-pad up changes hero, View the scores, Start the menu. **Phone:** the left of the screen walks, drag on the right to look, and the buttons do the rest.
+- **Online.** Host a match and your friends join from the card (or the invite you share), up to ten of you, each on their own screen. Everyone picks a side, five a side at most, and bots take every empty seat at the host's skill. You pick your hero once the match starts. It runs on the host's screen, so the host keeps that tab in front; your own shots show at once, but what they hit is the host's to say. Anyone who drops out is played by a bot until they rejoin. If the host leaves, the match ends.
+
+How it's built: `src/lrmap.js` (Gullhaven as data: the solid blocks, ramps, the Wain's road, checkpoints, spawns and packs, and the sums for the ground, moving a body and a shot's line), `src/lr.js` (the match, the heroes' kits, the sim in fixed ticks, the bots, the controls), `src/lr3d.js` (the 3D view, with the hands and weapon drawn in a second pass at their own field of view), `src/lrhud.js` (the HUD, hero select, scoreboard, pause and end card), `src/lrdress.js` (the town dressed: houses, the market, the hulk, the Light, the sea and sky, and the Lamp Wain), `src/lrhero.js` (the three heroes' own models, their first-person hands and weapons, the projectiles, zones and effects) and `src/lrnet.js` (online: the lobby, the seats, the host's snapshots and each player's own body). `server/server.js` relays one match's players to each other at full rate (the `lr` room key). Debug: `lrDebug({ side: 0, skill: 'hard' })`, `lrDebugWin(0)`.
+
 ## Skerry Chess (chess, and chess on the reef, for one or two)
 
 A twelfth game, on its own card on the title screen (**Play the bot**; on the desk menu it's number 12). The keepers' game, played in the lamp room on long nights: standard chess with every rule, or Skerry rules, a variant on a reef. Play one of three bots, or one other person online.
@@ -936,6 +955,13 @@ src/chess.js        Skerry Chess: the rules and the bots
 src/chessui.js      Skerry Chess: the board, the card and the game
 src/chnet.js        Skerry Chess online
 src/lgnet.js        Skerry League online: the lobby, the seats, and keeping the screens together
+src/lrmap.js        The Lamp Road: Gullhaven as data, the ground and collisions
+src/lr.js           The Lamp Road: the match, the heroes, the sim, the bots
+src/lr3d.js         The Lamp Road's 3D view
+src/lrhud.js        The Lamp Road's HUD, hero select, scoreboard and end card
+src/lrdress.js      The Lamp Road: the town dressed in 3D, and the Lamp Wain
+src/lrhero.js       The Lamp Road: the heroes' models, hands and weapons, effects
+src/lrnet.js        The Lamp Road online
 src/audio.js        sound, made with the Web Audio API (plus Verity's voice clip)
 src/biomes.js       the seas: palettes, landscapes, rock skins, weather, the Nether portal
 src/nether.js       the Nether's three enemies
