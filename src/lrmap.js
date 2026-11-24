@@ -26,7 +26,7 @@ var LR_MAP = {
   cps: [0.34, 0.68, 1],
   spawns: {
     a: [[-97, 0, -Math.PI / 2], [-42, -6, -Math.PI / 2], [-4, 19, -Math.PI / 2], [-4, 19, -Math.PI / 2]],
-    d: [[46, 25, Math.PI / 2], [86, 28, Math.PI / 2], [101, 20, Math.PI / 2], [101, 20, Math.PI / 2]],
+    d: [[-5, 28, Math.PI / 2], [86, 28, Math.PI / 2], [101, 20, Math.PI / 2], [101, 20, Math.PI / 2]],
   },
   // the oil cans and the medicine chests: [x, z, big]; walked over, they mend you (a can 75, a chest 250), and come back
   packs: [[-64, -8, 0], [-50, 14, 1], [-24, 20, 0], [-6, -6, 1], [27, 6, 0], [33, -22, 1], [56, 16, 0], [72, -16, 1], [84, 4, 0]],
