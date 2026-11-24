@@ -44,7 +44,7 @@ ZM_BOXW.push(['duckfoot', 10], ['bomblance', 6], ['grapnel', 8], ['flaregun', 8]
 // (what each becomes at the Lampwright's Bench: ZM_PAP_W, in src/zmpap.js)
 const ZX_ID = { d: 'duckfoot', w: 'bomblance', g: 'grapnel', s: 'flaregun', x: 'axe', u: 'puntgun', n: 'netmortar', y: 'chainshot' };
 const ZX = { proj: [], pools: [], nets: [], booms: [], burn: [], later: [], shove: null, axeOut: false, n: 0 };
-function zxReset() { ZX.proj = []; ZX.pools = []; ZX.nets = []; ZX.booms = []; ZX.burn = []; ZX.later = []; ZX.shove = null; ZX.axeOut = false; if (typeof zrReset === 'function') zrReset(); }   // [crab] src/zmcrab.js
+function zxReset() { ZX.proj = []; ZX.pools = []; ZX.nets = []; ZX.booms = []; ZX.burn = []; ZX.later = []; ZX.shove = null; ZX.axeOut = false; if (typeof zrReset === 'function') zrReset(); if (typeof zlReset === 'function') zlReset(); }   // [crab] src/zmcrab.js [elmo] src/zmelmo.js
 const zxT = id => (typeof zmpTier === 'function' ? zmpTier(id) : 0);
 const zxG = o => FPSC.GROUND + (o.jz || 0);
 const zxHp = () => zmHp(Math.max(1, ZM.round));
@@ -61,6 +61,7 @@ function zxShot(sh, mine) {
   else if (code === 'd') zxVolley(x, y, z, h, p, by, mine, t);
   else if (code === 'u') zxPunt(x, y, z, h, p, by, seed, mine, t);
   else if (code === 'r') zrShot(x, y, z, h, p, by, mine, t);   // [crab] the Hermit's Claw (src/zmcrab.js)
+  else if (code === 'e') zlShot(x, y, z, h, p, by, mine, t);   // [elmo] the Corposant (src/zmelmo.js)
   else zxLaunch(code, x, y, z, h, p, by, mine, t);
   return true;
 }
@@ -70,6 +71,7 @@ function zxShotFx(r, code, x, y, z, h, p, d, pan) {
   sndFrom(fpsDir(pan), () => zxSound(code, d));   // (from where they stand: src/audio.js)
   if (code === 'x') { r.slashT = 0.3; return true; }
   if (code === 'r') { zrShot(x, y, z, h, p, r.id, false, 0); return true; }   // [crab]
+  if (code === 'e') { zlShot(x, y, z, h, p, r.id, false, r.rf | 0); return true; }   // [elmo] (as big as theirs is reforged, only to look at)
   if (code === 'd' || code === 'u') {
     const n = code === 'd' ? FPSW.duckfoot.fan : 6;
     for (let i = 0; i < n; i++) {
@@ -228,6 +230,7 @@ function zxTick(dt) {
   if (ZX.axeOut && FPS.weapon === 'axe') m.cd = Math.max(m.cd, 0.05);
   zxPools(dt); zxNets(dt);
   if (typeof zrTick === 'function') zrTick(dt);   // [crab]
+  if (typeof zlTick === 'function') zlTick(dt);   // [elmo]
   // set alight by a flare: they burn on a while
   for (const B of ZX.burn) {
     B.t -= dt; B.k -= dt;
@@ -548,11 +551,13 @@ const ZX3 = { grp: null, L: [] };
 function zx3d(dt) {
   if (!Z3.grp) return;
   if (typeof zr3d === 'function') zr3d(dt);   // [crab] the Hermit's Claw's crabs
+  if (typeof zl3d === 'function') zl3d(dt);   // [elmo] the Corposant's globes
   if (ZX3.grp !== Z3.grp) { ZX3.grp = Z3.grp; ZX3.L = []; for (let i = 0; i < 3; i++) { const L = new THREE.PointLight(0xff9a40, 0, 9, 1.6); Z3.grp.add(L); ZX3.L.push(L); } }
   const m = FPS.me, src = [], t = g.t;
   for (const F of ZX.pools) src.push([F.x, F.y, FPSC.GROUND + F.fz + 0.6, (F.small ? 1.0 : 1.8) * Math.min(1, F.t / 1.2) * (reduceMotion ? 1 : 0.85 + 0.15 * Math.sin(t * 19 + F.seed)), 0xff9a40, F.small ? 6 : 9]);
   for (const P of ZX.proj) if (P.k === 's' || P.k === 't') src.push([P.x, P.y, P.z, 1.6, 0xff6a3a, 8]);
   for (const b of ZX.booms) src.push([b.x, b.y, b.z, (b.star ? 3 : 5) * (1 - b.t / 0.55), b.star ? 0xffd0a0 : 0xffc070, b.R * 3.5]);
+  if (typeof zlLights === 'function') zlLights(src);   // [elmo] the Corposant's globes and bursts
   src.sort((a, b) => Math.hypot(a[0] - m.x, a[1] - m.y) - Math.hypot(b[0] - m.x, b[1] - m.y));
   ZX3.L.forEach((L, i) => {
     const s = src[i];
@@ -564,6 +569,7 @@ function zx3d(dt) {
 // ---------- painted over the view: what's flying, the fires, the nets, the blasts, the hauling lines ----------
 function zxDrawOver() {
   if (typeof zrDrawOver === 'function') zrDrawOver();   // [crab]
+  if (typeof zlDrawOver === 'function') zlDrawOver();   // [elmo]
   const tm = FPS.g ? FPS.g.t : 0, G0 = FPSC.GROUND;
   const line = (pts, col, lw) => { const p = polyProj(pts); if (p.length < 2) return; ctx.strokeStyle = col; ctx.lineWidth = lw; ctx.beginPath(); ctx.moveTo(p[0].x, p[0].y); for (const q of p.slice(1)) ctx.lineTo(q.x, q.y); ctx.stroke(); };
   const dot = (x, y, z, r, col, glow) => {
