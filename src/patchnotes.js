@@ -6,6 +6,13 @@
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 249, date: '2026-11-24', title: "Spindrift: a joystick for phones, and raised goals", Changes: [
+    "Skerry League, Spindrift: the goals now sit in the end walls above the water, so the ball has to be lifted in. Leap and flip into it to get it up to the gate.",
+    "Skerry League, Spindrift: on phones and tablets you now steer with a joystick. Put your thumb down anywhere on the left of the screen and drag: left and right to sail and to turn your ship over in the air, down to dive. Leap and Gale are two big round buttons on the right.",
+    "Skerry League, Spindrift: on touch screens the Gale gauge moves to the top right, out of the way of the buttons.",
+  ], Balance: [
+    "Skerry League, Spindrift: the bots leap under the ball and flip it up when they're near the other side's gate.",
+  ] },
   { v: 248, date: '2026-11-24', title: "Lore compendium: Spindrift", New: [
     "Lore compendium: two new articles, The Sluice (the old tide-lock under the Light where Spindrift is played) and Spindrift (how the crews' winter game began and how it's played).",
   ], Changes: [
