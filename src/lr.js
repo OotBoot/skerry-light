@@ -932,7 +932,7 @@ function lrKey(e, down) {
   if (e.target && /INPUT|TEXTAREA|SELECT/.test(e.target.tagName) && e.key !== 'Escape') return;
   const c = e.code;
   e.stopImmediatePropagation();
-  if (c === 'Escape') { if (down) { e.preventDefault(); if (LRM.picking) LRM.picking = false; else if (LRM.ph !== 'over') lrPause(!LRM.paused); } return; }
+  if (c === 'Escape') { if (down) { e.preventDefault(); if (performance.now() - (LRM.lockPauseAt || 0) < 400) return; if (LRM.picking) LRM.picking = false; else if (LRM.ph !== 'over') lrPause(!LRM.paused); } return; }
   if (c === 'Tab') { e.preventDefault(); LRM.board = down; return; }
   if (LRM.paused) return;
   if (down && !e.repeat) {
@@ -963,7 +963,13 @@ addEventListener('mousemove', e => {
   const dx = e.movementX || 0, dy = e.movementY || 0; if (Math.abs(dx) > 400 || Math.abs(dy) > 400) return;
   LRM.mlook[0] += dx; LRM.mlook[1] += dy;
 });
-document.addEventListener('pointerlockchange', () => { if (LRM.on && document.pointerLockElement !== lrCanvas()) LRM.mb = 0; });
+// (Esc under pointer lock is the browser's: it lets the pointer go, often without telling the page of the key, so
+// losing the lock mid-match opens the pause card, as Esc would have)
+document.addEventListener('pointerlockchange', () => {
+  if (!LRM.on || document.pointerLockElement === lrCanvas()) return;
+  LRM.mb = 0;
+  if (typeof state !== 'undefined' && state === 'lamproad' && !LRM.paused && !LRM.picking && LRM.ph !== 'over' && !(LRM.ph === 'pick' && lrMe() && !lrMe().hero)) { lrPause(true); LRM.lockPauseAt = performance.now(); }
+});
 // touch: the left of the screen is a stick to walk with, the right drags to look; the buttons are src/lrhud.js's
 addEventListener('touchstart', e => {
   if (!LRM.on || e.target !== lrCanvas()) return;

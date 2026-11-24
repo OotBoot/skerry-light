@@ -2074,7 +2074,7 @@ body.lron:not(.lrfree) #lrCv { cursor: crosshair; }
 #lrUI:has(.lr-pad:not([hidden])) .lr-abs { display: none; }
 #lrUI:has(.lr-pad:not([hidden])) .lr-kit { gap: 6px; } #lrUI:has(.lr-pad:not([hidden])) .lr-ultring { width: 64px; height: 64px; }
 #lrUI:has(.lr-pad:not([hidden])) .lr-ultname { display: none; }
-@media (max-width: 1000px) { .lr-top { width: min(560px, calc(100vw - 2 * 210px)); } }
+@media (max-width: 1000px) { .lr-top { width: min(560px, calc(100vw - 2 * 210px)); } .lr-feed { top: calc(max(10px, env(safe-area-inset-top, 0px)) + 74px); font-size: 11px; } }
 @media (max-width: 640px) { .lr-top { top: calc(max(10px, env(safe-area-inset-top, 0px)) + 44px); width: calc(100vw - 24px); } }
 @media (max-height: 460px) { .lr-padr { grid-template-columns: repeat(3, 56px); gap: 6px; } .lr-padr .gfbtn { height: 44px; font-size: 11px; padding: 4px 2px; } .lr-me { padding: 5px 8px 5px 5px; } .lr-mecol { min-width: 140px; } .lr-portrait { width: 40px; height: 40px; } .lr-msg { top: 30%; } }
 /* the hero select */

@@ -153,7 +153,7 @@ function lr3dFallbackView(hero) {
   const g = new THREE.Group(), iron = lr3Mat(0x4a4a52), wood = lr3Mat(0x5a3a22), brass = lr3Mat(0xb08a3a);
   if (hero === 'bollard') { lr3Mesh(new THREE.BoxGeometry(0.16, 0.16, 0.2), iron, 0.32, -0.32, -0.5, g); lr3Mesh(new THREE.BoxGeometry(0.16, 0.16, 0.2), iron, -0.3, -0.34, -0.5, g); const b = lr3Mesh(new THREE.CylinderGeometry(0.04, 0.04, 1.4, 8), wood, 0.1, -0.2, -0.75, g); b.rotation.set(1.2, 0, -0.7); }
   else if (hero === 'razorbill') { const br = lr3Mesh(new THREE.CylinderGeometry(0.014, 0.018, 1.0, 8), iron, 0.19, -0.17, -0.85, g); br.rotation.x = Math.PI / 2; lr3Mesh(new THREE.BoxGeometry(0.05, 0.08, 0.5), wood, 0.19, -0.2, -0.38, g); lr3Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.2, 8), brass, 0.19, -0.135, -0.62, g).rotation.x = Math.PI / 2; }
-  else { const s = lr3Mesh(new THREE.CylinderGeometry(0.02, 0.02, 1.2, 6), iron, 0.32, -0.35, -0.7, g); s.rotation.x = 1.25; const l = lr3Mesh(new THREE.SphereGeometry(0.07, 10, 8), lr3Mat(0xfff0c0, { em: 0xffb040 }), 0.32, -0.12, -1.25, g); const gl = lr3Glow(0xffd080, 0.6, 0.8); gl.position.copy(l.position); g.add(gl); }
+  else { const s = lr3Mesh(new THREE.CylinderGeometry(0.02, 0.02, 1.2, 6), iron, 0.32, -0.35, -0.7, g); s.rotation.x = 1.25; const l = lr3Mesh(new THREE.SphereGeometry(0.035, 10, 8), lr3Mat(0xfff0c0, { em: 0xffb040 }), 0.34, -0.2, -1.25, g); const gl = lr3Glow(0xffd080, 0.2, 0.6); gl.position.copy(l.position); g.add(gl); }
   const base = g.position.clone();
   return { group: g, update(st, dt) {
     const k = st.fire < 0.12 ? 1 - st.fire / 0.12 : 0, bob = st.gnd ? Math.sin(LR3.t * 9) * 0.012 * Math.min(1, st.spd / 5) : 0;
