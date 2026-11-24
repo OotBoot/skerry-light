@@ -227,19 +227,14 @@ function lr3dDraw(dt) {
   sync(LR3.walls, LRM.walls, w => { let m = null; if (typeof lrWallMesh === 'function') try { m = lrWallMesh(w.team); } catch (e) { m = null; } return m || lr3dFallbackWall(w.team); }, (v, w) => { v.position.set(w.x, w.y, w.z); v.rotation.y = w.yaw; });
   sync(LR3.zones, LRM.zones, z => { let m = null; if (typeof lrZoneMesh === 'function') try { m = lrZoneMesh(z.k, z.team); } catch (e) { m = null; } return m && m.group ? m : lr3dFallbackZone(z); }, (v, z) => { v.group.position.set(z.x, z.k === 'lantern' && z.gy != null ? z.gy : z.y, z.z); if (z.k === 'broadside') v.group.rotation.y = z.yaw; try { v.update(z, dt); } catch (e) {} });
   sync(LR3.proj, LRM.proj, j => { let m = null; if (typeof lrProjMesh === 'function') try { m = lrProjMesh(j.k, j.team); } catch (e) { m = null; } return m || lr3dFallbackProj(j.k, j.team); }, (v, j) => { v.position.set(j.x + j.vx * LR_DT * A, j.y + j.vy * LR_DT * A, j.z + j.vz * LR_DT * A); const l = Math.hypot(j.vx, j.vz); v.rotation.set(Math.atan2(j.vy, l), Math.atan2(-j.vx, -j.vz), 0, 'YXZ'); });
-  // the events, each once
+  // the events, each once (a guest's own shots and movement were shown as they happened, so the host's echo of them
+  // is skipped: lr3dLocalFx)
+  const guest = !!LRM.net && !lrHost();
   for (const f of LRM.FX) {
     if (f.id <= LR3.fxSeen) continue; LR3.fxSeen = f.id;
     if (LRM.t - f.t > 1) continue;
-    try { lrFxSound(f); } catch (e) {}
-    let ff = f;
-    if (f.k === 'tracer' && me && f.a === me.i && LR3.cam) { const c = LR3.cam, v = lr3v(0.2, -0.16, -0.7).applyQuaternion(c.quaternion).add(c.position); ff = Object.assign({}, f, { x: v.x, y: v.y, z: v.z }); }
-    if (me && f.k === 'hit' && f.v === me.i) LR3.shake = Math.min(0.6, LR3.shake + 0.12 + (f.n || 0) / 300);
-    if (f.k === 'volley' && me && Math.hypot(f.x - me.x, f.z - me.z) < 30) LR3.shake = 0.8;
-    if (f.k === 'wave' && me && Math.hypot(f.x - me.x, f.z - me.z) < 16) LR3.shake = Math.max(LR3.shake, 0.5);
-    const ok = ['tracer', 'hit', 'heal', 'blast', 'sweep', 'rush', 'wave', 'blink', 'death', 'spawn', 'broadside', 'volley'].includes(f.k) || (f.k === 'spark');
-    if (!ok) continue;
-    if (LR3.fx) { try { LR3.fx.spawn(f.k === 'spark' ? 'hit' : f.k, ff); } catch (e) {} } else lr3dFall(f.k, ff);
+    if (guest && me && ((f.k === 'tracer' && f.a === me.i) || (LR3_OWN.includes(f.k) && f.v === me.i))) continue;
+    lr3dEvent(f, me);
   }
   if (LR3.fx && LR3.fx.update) try { LR3.fx.update(dt); } catch (e) {}
   for (const f of LR3.ffx) { f.t += dt; f.upd && f.upd(f.o, Math.min(1, f.t / f.life), dt); }
@@ -268,6 +263,21 @@ function lr3dRender(S) {
   S.background = null; r.autoClear = false; r.clearDepth(); cam.layers.set(1); r.render(S, cam);
   cam.layers.set(0); r.autoClear = ac; S.background = bg; cam.fov = fov; cam.updateProjectionMatrix();
 }
+const LR3_OWN = ['cast', 'sweep', 'rush', 'rise', 'blink'];
+// one event: its sound, its effect, and the shake it gives you
+function lr3dEvent(f, me) {
+  try { lrFxSound(f); } catch (e) {}
+  let ff = f;
+  if (f.k === 'tracer' && me && f.a === me.i && LR3.cam) { const c = LR3.cam, v = lr3v(0.2, -0.16, -0.7).applyQuaternion(c.quaternion).add(c.position); ff = Object.assign({}, f, { x: v.x, y: v.y, z: v.z }); }
+  if (me && f.k === 'hit' && f.v === me.i) LR3.shake = Math.min(0.6, LR3.shake + 0.12 + (f.n || 0) / 300);
+  if (f.k === 'volley' && me && Math.hypot(f.x - me.x, f.z - me.z) < 30) LR3.shake = 0.8;
+  if (f.k === 'wave' && me && Math.hypot(f.x - me.x, f.z - me.z) < 16) LR3.shake = Math.max(LR3.shake, 0.5);
+  const ok = ['tracer', 'hit', 'heal', 'blast', 'sweep', 'rush', 'wave', 'blink', 'death', 'spawn', 'broadside', 'volley'].includes(f.k) || (f.k === 'spark');
+  if (!ok) return;
+  if (LR3.fx) { try { LR3.fx.spawn(f.k === 'spark' ? 'hit' : f.k, ff); } catch (e) {} } else lr3dFall(f.k, ff);
+}
+// an event of a guest's own, shown and heard at once rather than when the host's word comes back (src/lr.js lrGuestFire)
+function lr3dLocalFx(f) { if (!LR3.ok || !LRM.on) return; lr3dEvent(f, lrMe()); }
 // the camera: your eyes (or, while you're down, a little behind and above your body), with Razorbill's glass, the
 // field of view setting, and a shake when you're hit
 function lr3dCamera(dt, me, fp) {

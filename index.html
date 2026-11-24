@@ -633,7 +633,20 @@
         <button class="tool" id="lrSettings" type="button">Settings</button>
       </div>
       <p class="muted lrrecord" id="lrRecord"></p>
-      <section class="warmp zmmp" id="lrMp"></section>
+      <section class="warmp zmmp" id="lrMp" aria-labelledby="lrMpHead">
+        <h2 id="lrMpHead">Play together online · up to ten</h2>
+        <p class="muted" id="lrMpNote">Looking for other players…</p>
+        <div id="lrMpOpen" hidden>
+          <div class="btnrow"><button class="tool" id="lrMpHost" type="button">Host a match</button></div>
+          <div class="warlobbies" id="lrLobbies"></div>
+        </div>
+        <div class="warlobby" id="lrLobby" hidden>
+          <h3 id="lrLobbyHead">Your match</h3>
+          <ol class="warlobbylist" id="lrLobbyList"></ol>
+          <p class="muted" id="lrLobbyMsg"></p>
+          <div class="btnrow"><button class="primary" id="lrMpStart" type="button">Start together</button><button class="primary" id="lrMpRejoin" type="button" hidden>Rejoin the match</button><button class="tool" id="lrMpSwap" type="button">Change sides</button><button class="tool shareBtn" id="lrMpShare" type="button" data-mode="lamproad">Share invite</button><button class="tool" id="lrMpLeave" type="button">Leave</button></div>
+        </div>
+      </section>
       <details class="howto">
         <summary>How to play</summary>
         <p><b>The match.</b> The Lamplighters attack: the Lamp Wain rolls while at least one of them is within five metres of it and no living Wrecker is (then it's contested and stops). The more pushing, the faster it goes, up to three. Leave it alone for eight seconds and it rolls back, though never behind a checkpoint it has passed. Lamplighters beside it slowly mend. Bring it to the foot of the Light and the Lamplighters win; hold it off until the clock runs out and the Wreckers do.</p>
@@ -643,6 +656,7 @@
         <p><b>Razorbill</b> (damage, 200 health). A marksman with a long fowling piece. Quick accurate shots, double to the head. Sight (right mouse): hold to aim through the glass. Gull's Rise (Shift): leap high, and hold Space to glide down. Tar Pot (E): a pot of burning tar that leaves a pool that burns and slows. Broadside (Q): mark a strip of ground ahead, and a ship's guns hammer it a moment later.</p>
         <p><b>Linnet</b> (support, 225 health). The keeper's apprentice, with a storm lantern on a staff. Lamp Bolt: hurts enemies and mends allies it passes through. Mending Light (right mouse): hold it on an ally near you to mend them. Kindle (Shift): a lantern that hangs where it lands and mends allies near it. Will-o'-the-Wisp (E): blink a short way. Beacon (Q): plant the staff, and allies near it mend fast and can't fall.</p>
         <p><b>Ultimates</b> charge from the damage you do and the mending you give, and a little on their own. A crew of bots is one tank, two damage and two support.</p>
+        <p><b>Online.</b> Host a match and your friends join it from this card (or from the invite you share), up to ten of you, each on their own screen. Everyone picks a side with Your side (or Change sides in the lobby), five a side at most, and bots take every empty seat at the host’s skill. You pick your hero once the match starts. It runs on the host’s screen, so the host keeps that tab in front; your own shots show at once, but what they hit is the host’s to say. Anyone who drops out is played by a bot until they rejoin from this card. If the host leaves, the match ends.</p>
         <p><b>Controller.</b> Left stick to move, right stick to look, RT fire, LT secondary, A jump, LB and RB the abilities, Y the ultimate, X reload, D-pad up to change hero, View the scores, Start the menu. On a phone: the left of the screen walks, drag on the right to look, and the buttons do the rest.</p>
       </details>
     </div>
@@ -1475,6 +1489,7 @@
 <script src="src/lr.js"></script><!-- [lamproad] the match, the heroes' kits, the bots -->
 <script src="src/lr3d.js"></script><!-- [lamproad] the 3D view -->
 <script src="src/lrhud.js"></script><!-- [lamproad] the HUD and its cards -->
+<script src="src/lrnet.js"></script><!-- [lamproad] online matches: the lobby and keeping the screens together -->
 <script src="src/menudesk.js"></script>
 <script src="src/main.js"></script>
 </body>

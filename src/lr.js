@@ -18,7 +18,10 @@
 // the Wain, the clock) happens only on the host (lrHost()). A body with p.remote set is not moved here at all (its
 // own screen moves it and the network places it). lrSnap() packs the match into a small object for the others, and
 // lrApply(s) puts it back on their screens. One-off events (a shot, a hit, a death, a wave...) go into LRM.FX, each
-// with its own id, for the view and the sound to handle once.
+// with its own id, for the view and the sound to handle once. On a guest's screen its own shots and movement abilities
+// show and sound at once (lrGuestFire, lrOwnUse; the host's echo of them is skipped), the ability is told to the host
+// (LRM.use), and a knock the host gives a body moved by its own screen comes to that screen as an event (lrKnockFx).
+// src/lrnet.js does the rest of the online play: the lobby, the seats, the words between the screens.
 //
 // LRM = { on, mode: 'solo'|'net', ph: 'pick'|'setup'|'play'|'over', phT, t, clock, ot, otT, stage, win, me,
 //   P: ten players (seats 0-4 the Lamplighters, 5-9 the Wreckers), each { i, team, hero, name, bot, sid, x, y, z,
@@ -141,7 +144,7 @@ function lrStart(o) {
   LRM.on = true;
   if (typeof lrEnter === 'function') lrEnter();
   if (typeof lr3dMatch === 'function') lr3dMatch();
-  if (LRM.P.every(p => p.hero || !lrHost())) lrSetup();
+  if (lrHost() && LRM.P.every(p => p.hero)) lrSetup();
 }
 // the bots pick for the make-up of a five: one tank, two damage, two support (less whatever the people took)
 function lrBotPicks(team) {
@@ -198,6 +201,8 @@ function lrEnd(win) {
     r.m++; if (win === me.team) r.w++; else r.l++; r.e += me.elims; r.d += me.deaths; st[key] = r; lrStore.set(st);
   }
 }
+// (a body moved by its own screen online isn't moved here, so a knock on it goes to that screen as an event)
+function lrKnockFx(q) { if (q.remote) lrFxPush('knock', { v: q.i, vx: lrR(q.vx, 10), vy: lrR(q.vy, 10), vz: lrR(q.vz, 10), kt: q.knockT }); }
 function lrSay(t, s) { LRM.msg = t; LRM.msgT = s || 2.5; }
 function lrFxPush(k, o) { if (!lrHost()) return null; const f = Object.assign({ id: ++LRM.fxId, k, t: LRM.t }, o); LRM.FX.push(f); return f; }
 
@@ -207,10 +212,12 @@ function lrFrame(dt) {
   if (!LRM.on) return;
   lrPadPoll(dt);
   lrLocalLook(dt);
+  if (LRM.net && typeof lrnPlace === 'function') lrnPlace(dt);   // (online: the others where they're heard to be, before the ticks)
   if (!lrPaused()) {
-    LRM.acc += dt; let n = 0;
-    while (LRM.acc >= LR_DT && n < 6) { lrTick(LR_DT); LRM.acc -= LR_DT; n++; }
-    if (n >= 6) LRM.acc = 0;
+    // (online a slow frame catches up further, a quarter of a second, so a slow host doesn't slow everyone's match)
+    LRM.acc += dt; let n = 0; const most = LRM.net ? 15 : 6;
+    while (LRM.acc >= LR_DT && n < most) { lrTick(LR_DT); LRM.acc -= LR_DT; n++; }
+    if (n >= most) LRM.acc = 0;
     LRM.alpha = LRM.acc / LR_DT;
     if (LRM.ph === 'over') LRM.overT += dt;
     lrSteps(dt);
@@ -227,8 +234,53 @@ function lrTick(dt) {
   const me = lrMe();
   if (me && !me.bot) lrLocalInput(me);
   if (lrHost()) { for (const p of LRM.P) if (p.bot && p.hero) lrBot(p, dt); lrSim(dt); }
-  else { LRM.t += dt; if (me && me.hero && LRM.ph !== 'pick' && LRM.ph !== 'over') { me.px = me.x; me.py = me.y; me.pz = me.z; lrOwnStep(me, dt); if (LRM.ph === 'setup' && me.team === 0) me.x = Math.min(me.x, -89.6 - me.r); } }
+  else {
+    LRM.t += dt;
+    if (me && me.hero && LRM.ph !== 'pick' && LRM.ph !== 'over') {
+      me.px = me.x; me.py = me.y; me.pz = me.z; const c1 = me.cd.a1, c2 = me.cd.a2;
+      lrOwnStep(me, dt); if (LRM.ph === 'setup' && me.team === 0 && LRM.stage === 0) me.x = Math.min(me.x, -89.6 - me.r);
+      // (a movement ability just used here: told to the host, and seen and heard here at once)
+      if (me.cd.a1 > c1 + 0.5) lrOwnUse(me, 'a1'); if (me.cd.a2 > c2 + 0.5) lrOwnUse(me, 'a2');
+      lrGuestFire(me);
+    }
+  }
 }
+// a guest's own movement ability (lrBody started it): LRM.use for src/lrnet.js to send, [n, 1 a1 | 2 a2, x, y, z, yaw]
+// from where it started, and its effect here now (the host's echo of it is skipped: src/lr3d.js)
+function lrOwnUse(p, k) {
+  if (!LRM.ownUse) LRM.ownUse = {}; LRM.ownUse[k] = performance.now();
+  LRM.useN = (LRM.useN || 0) + 1; LRM.use = [LRM.useN, k === 'a1' ? 1 : 2, lrR(p.px), lrR(p.py), lrR(p.pz), lrR(p.yaw, 1000)];
+  if (p.hero === 'bollard' && k === 'a1') lrLocalFx({ k: 'rush', x: p.x, y: p.y + 1, z: p.z, v: p.i });
+  else if (p.hero === 'razorbill' && k === 'a1') lrLocalFx({ k: 'rise', x: p.x, y: p.y, z: p.z, v: p.i });
+  else if (p.hero === 'linnet' && k === 'a2') lrLocalFx({ k: 'blink', x: p.px, y: p.py + 1, z: p.pz, x2: p.x, y2: p.y + 1, z2: p.z, v: p.i });
+}
+// a guest's own shots, seen and heard the moment the button goes (what they hit is the host's to say): the tracer,
+// the bolt (flown here, and swapped for nothing when it lands: the host's own bolt does the work), the swing
+function lrGuestFire(p) {
+  const I = p.inp, H = LR_HEROES[p.hero]; if (!H || !p.alive || !I.fire || !(LRM.ph === 'play' || (LRM.ph === 'setup' && p.team === 1))) return;
+  const ey = p.y + lrEyeH(p), d = lrDir(p.yaw, p.pitch);
+  if (p.hero === 'razorbill' && p.fireT >= 0.14 && p.ammo > 0 && p.reload <= 0) {
+    p.fireT = 0; p.ammo--; LRM.shotAt = performance.now();
+    const sp = I.alt ? 0 : 0.006, d2 = lrDir(p.yaw + (Math.random() - 0.5) * 2 * sp, p.pitch + (Math.random() - 0.5) * 2 * sp), h = lrRayHit(p.x, ey, p.z, d2[0], d2[1], d2[2], { team: p.team, skip: p.i, max: 120 });
+    lrLocalFx({ k: 'tracer', x: p.x, y: ey - 0.15, z: p.z, x2: h.x, y2: h.y, z2: h.z, team: p.team, v: p.i, a: p.i });
+  } else if (p.hero === 'linnet' && p.fireT >= 0.32 && p.ammo > 0 && p.reload <= 0) {
+    p.fireT = 0; p.ammo--; LRM.shotAt = performance.now();
+    LRM.proj.push({ id: -(++LRM.nid), k: 'bolt', team: p.team, owner: p.i, x: p.x, y: ey - 0.1, z: p.z, vx: d[0] * 60, vy: d[1] * 60, vz: d[2] * 60, t: 0, hit: [], own: 1 });
+    lrLocalFx({ k: 'cast', v: p.i, x: p.x, y: p.y + 1.4, z: p.z });
+  } else if (p.hero === 'bollard' && p.fireT >= 0.85) { p.fireT = 0; lrLocalFx({ k: 'sweep', x: p.x, y: p.y + 1.3, z: p.z, yaw: p.yaw, v: p.i }); }
+}
+// a guest's own bolts in flight (until they meet something, as the host's would)
+function lrOwnBolts(dt) {
+  if (!LRM.proj.some(j => j.own)) return;
+  LRM.proj = LRM.proj.filter(j => {
+    if (!j.own) return true;
+    j.t += dt; const L = Math.hypot(j.vx, j.vy, j.vz) * dt; if (j.t > 1.2 || !(L > 0)) return false;
+    const h = lrRayHit(j.x, j.y, j.z, j.vx * dt / L, j.vy * dt / L, j.vz * dt / L, { team: j.team, skip: j.owner, pad: 0.12, max: L });
+    if (h.t < L) { lrLocalFx({ k: 'spark', x: h.x, y: h.y, z: h.z, bolt: 1 }); return false; }
+    j.x += j.vx * dt; j.y += j.vy * dt; j.z += j.vz * dt; return true;
+  });
+}
+function lrLocalFx(f) { if (typeof lr3dLocalFx === 'function') lr3dLocalFx(f); else try { lrFxSound(f); } catch (e) {} }
 // a body's own timers (ticked wherever that body is moved)
 function lrTimers(p, dt) {
   p.fireT += dt; if (p.act.k) p.act.t += dt;
@@ -250,7 +302,7 @@ function lrSim(dt) {
   const live = LRM.ph === 'setup' || LRM.ph === 'play';
   for (const p of LRM.P) {
     p.px = p.x; p.py = p.y; p.pz = p.z;
-    if (p.inp.hero) { const h = p.inp.hero; p.inp.hero = ''; if (LR_HEROES[h] && h !== p.hero && lrCanChange(p) && LRM.ph !== 'over') { const first = !p.hero; lrSetHero(p, h); if (first || LRM.ph === 'pick') lrRespawn(p, true); } }
+    if (p.inp.hero) { const h = p.inp.hero; p.inp.hero = ''; if (LR_HEROES[h] && h !== p.hero && lrCanChange(p) && LRM.ph !== 'over') { const first = !p.hero; lrSetHero(p, h); if (first || LRM.ph === 'pick') lrRespawn(p, true); if (!p.bot) lrRebalance(p.team); } }
     if (!p.hero) continue;
     if (!p.alive) { if (LRM.ph !== 'over') { p.deadT -= dt; if (p.deadT <= 0) lrRespawn(p); } if (!p.remote) { p.inp.mx = p.inp.mz = 0; lrBody(p, dt); } continue; }
     lrTimers(p, dt);
@@ -480,7 +532,7 @@ function lrBollard(p, dt, I, H) {
       if (!q.alive || q.team === p.team || p.rushHit.includes(q.i)) continue;
       const dx = q.x - p.x, dz = q.z - p.z, d = Math.hypot(dx, dz); if (d > p.r + q.r + 0.5 || Math.abs(q.y - p.y) > 2) continue;
       p.rushHit.push(q.i); lrHurt(q, 50, p, 'rush');
-      if (q.brace <= 0) { const rx = Math.cos(p.rushYaw), rz = -Math.sin(p.rushYaw), sd = (dx * rx + dz * rz) >= 0 ? 1 : -1; q.vx = rx * sd * 9 - Math.sin(p.rushYaw) * 4; q.vz = rz * sd * 9 - Math.cos(p.rushYaw) * 4; q.vy = 3.5; q.gnd = false; q.knockT = 0.35; }
+      if (q.brace <= 0) { const rx = Math.cos(p.rushYaw), rz = -Math.sin(p.rushYaw), sd = (dx * rx + dz * rz) >= 0 ? 1 : -1; q.vx = rx * sd * 9 - Math.sin(p.rushYaw) * 4; q.vz = rz * sd * 9 - Math.cos(p.rushYaw) * 4; q.vy = 3.5; q.gnd = false; q.knockT = 0.35; lrKnockFx(q); }
     }
   }
   if (I.a2 && p.cd.a2 <= 0) { p.brace = 3; p.cd.a2 = H.cd.a2; p.act = { k: 'a2', t: 0 }; lrFxPush('brace', { x: p.x, y: p.y + 1, z: p.z, v: p.i }); }
@@ -538,7 +590,7 @@ function lrUlt(p) {
       if (Math.abs(lrAng(Math.atan2(-dx, -dz) - p.yaw)) > 0.61 && d > 1.5) continue;
       if (lrRay(p.x, p.y + 0.8, p.z, dx / (d || 1), 0, dz / (d || 1), d) < d - 0.3) continue;
       lrHurt(q, 120, p, 'tide');
-      if (q.alive && q.brace <= 0) { const k = 13 * (1 - d / 20); q.vx = (dx / (d || 1)) * k; q.vz = (dz / (d || 1)) * k; q.vy = 6; q.gnd = false; q.knockT = 0.6; }
+      if (q.alive && q.brace <= 0) { const k = 13 * (1 - d / 20); q.vx = (dx / (d || 1)) * k; q.vz = (dz / (d || 1)) * k; q.vy = 6; q.gnd = false; q.knockT = 0.6; lrKnockFx(q); }
       q.slowT = 3;
     }
   } else if (p.hero === 'razorbill') {
@@ -836,7 +888,7 @@ const LR_ACTS = [null, 'a1', 'a2', 'alt', 'ult'], LR_CST = ['push', 'contest', '
 const lrR = (v, k) => Math.round(v * (k || 100)) / (k || 100);
 // the whole match, small: numbers rounded, players as arrays in seat order, and the events since the last snapshot
 function lrSnap() {
-  const fx = LRM.FX.filter(f => f.id > (LRM.snapFx || 0)).slice(-8); if (LRM.FX.length) LRM.snapFx = LRM.FX[LRM.FX.length - 1].id;
+  const fx = LRM.FX.filter(f => f.id > (LRM.snapFx || 0)).slice(-12); if (LRM.FX.length) LRM.snapFx = LRM.FX[LRM.FX.length - 1].id;
   const C = LRM.cart;
   return {
     ph: LRM.ph, pt: lrR(LRM.phT, 10), t: lrR(LRM.t, 10), c: lrR(LRM.clock, 10), ot: LRM.ot ? 1 : 0, oT: lrR(LRM.otT, 10), st: LRM.stage, w: LRM.win,
@@ -850,38 +902,56 @@ function lrSnap() {
     J: LRM.proj.map(j => [j.id, LR_JK.indexOf(j.k), j.team, j.owner, lrR(j.x, 10), lrR(j.y, 10), lrR(j.z, 10), lrR(j.vx, 10), lrR(j.vy, 10), lrR(j.vz, 10)]),
     K: LRM.packs.map(k => Math.ceil(k.t)),
     F: LRM.feed.slice(-5).map(f => [lrR(f.t, 10), f.a, f.v, f.how]),
-    X: fx.map(f => { const o = {}; for (const k in f) if (k !== 't') o[k] = typeof f[k] === 'number' && k !== 'id' ? lrR(f[k], 10) : f[k]; return o; }),
+    X: lrSnapFx(fx),
   };
 }
+// the events for a snapshot: up to twelve (a busy moment has more than eight), the oldest left out past about a kilobyte
+function lrSnapFx(fx) {
+  const X = fx.map(f => { const o = {}; for (const k in f) if (k !== 't') o[k] = typeof f[k] === 'number' && k !== 'id' ? lrR(f[k], 10) : f[k]; return o; });
+  let n = JSON.stringify(X).length; while (X.length > 8 && n > 1100) n -= JSON.stringify(X.shift()).length + 1;
+  return X;
+}
 // a snapshot onto this screen (a guest's): everything as the host has it, but its own body, which it moves itself
-// (put right only when it's far out, or it has died or come back)
+// (put right only when it's far out, or it has died or come back). Far out is measured against LRM.meRef when it's
+// set (src/lrnet.js: where this body was when it sent the pose the host last heard), so a quick body isn't pulled
+// back for the time the word takes. A movement ability just used here keeps its own cooldown until the host has
+// heard of it, a shot just fired here keeps its own count of the magazine, and this screen's own bolts fly on.
 function lrApply(s) {
   if (!s) return;
+  const now = performance.now(), use = LRM.ownUse || {};
   LRM.ph = s.ph; LRM.phT = s.pt; LRM.t = Math.max(LRM.t, s.t); LRM.clock = s.c; LRM.ot = !!s.ot; LRM.otT = s.oT; LRM.stage = s.st; LRM.win = s.w;
   (s.P || []).forEach((a, i) => {
     let p = LRM.P[i]; if (!p) { p = LRM.P[i] = lrNewP(i, i < 5 ? 0 : 1, 'Player ' + (i + 1), false); }
     const hero = LR_HERO_IDS[a[0]] || ''; if (hero !== p.hero) { if (hero) lrSetHero(p, hero); else p.hero = ''; }
-    const mine = i === LRM.me && !!LRM.net && !lrHost(), alive = !!(a[10] & 1), far = Math.hypot(a[1] - p.x, a[3] - p.z) > 3;
+    const mine = i === LRM.me && !!LRM.net && !lrHost(), alive = !!(a[10] & 1), ref = (mine && LRM.meRef) || p, far = Math.hypot(a[1] - ref.x, a[3] - ref.z) > 3;
     if (!mine || far || a[29] !== p.sn || !alive) {
       p.px = p.x; p.py = p.y; p.pz = p.z; p.x = a[1]; p.y = a[2]; p.z = a[3]; p.vx = a[4]; p.vy = a[5]; p.vz = a[6];
       if (!mine || a[29] !== p.sn) { p.yaw = a[7]; p.pitch = a[8]; p.inp.yaw = a[7]; p.inp.pitch = a[8]; }
     }
-    p.hp = a[9]; p.alive = alive; p.gnd = !!(a[10] & 2); p.alt = !!(a[10] & 4); p.glide = !!(a[10] & 8); p.deadT = a[11]; p.spawnT = a[12]; p.ammo = a[13]; p.reload = a[14];
-    p.cd = { a1: a[15], a2: a[16], alt: a[17] }; p.ult = a[18] / 100; const k = LR_ACTS[a[19]] || null; if (!mine || k !== null || p.act.k === null) p.act = { k, t: a[20] }; p.brace = a[21]; p.slow = a[22];
+    const ownAmmo = mine && a[14] <= 0 && p.reload <= 0 && a[13] > p.ammo && now - (LRM.shotAt || -1e9) < 900 && a[29] === p.sn;
+    p.hp = a[9]; p.alive = alive; if (!mine || a[29] !== p.sn || !alive) { p.gnd = !!(a[10] & 2); p.glide = !!(a[10] & 8); } p.alt = !!(a[10] & 4); p.deadT = a[11]; p.spawnT = a[12]; if (!ownAmmo) p.ammo = a[13]; p.reload = a[14];
+    p.cd = { a1: mine && now - (use.a1 || -1e9) < 1500 ? p.cd.a1 : a[15], a2: mine && now - (use.a2 || -1e9) < 1500 ? p.cd.a2 : a[16], alt: a[17] }; p.ult = a[18] / 100; const k = LR_ACTS[a[19]] || null; if (!mine || k !== null || p.act.k === null) p.act = { k, t: a[20] }; p.brace = a[21]; p.slow = a[22];
+    // (the slows as timers, so a body moved here is slowed as the host has it: 0.6 the wave's, 0.7 the tar's, 0.4 both)
+    p.slowT = p.slow < 0.65 && p.slow > 0.5 || p.slow < 0.45 ? 0.3 : 0; p.tarT = p.slow > 0.65 && p.slow < 0.75 || p.slow < 0.45 ? 0.3 : 0;
     p.kills = a[23]; p.deaths = a[24]; p.dmg = a[25]; p.heal = a[26]; p.elims = a[27]; p.beam = a[28]; p.sn = a[29]; if (!mine) p.fireT = a[30];
   });
   if (s.C && LRM.cart) { const C = LRM.cart; C.px = C.x; C.pz = C.z; C.s = s.C[0]; C.st = LR_CST[s.C[1]] || 'idle'; C.n = s.C[2]; C.nd = s.C[3]; C.idleT = s.C[4]; lrPlaceCart(); }
   else if (s.C) { const at = lrPathAt(s.C[0]); LRM.cart = { s: s.C[0], x: at.x, y: 0, z: at.z, yaw: at.yaw, st: LR_CST[s.C[1]] || 'idle', n: s.C[2], nd: s.C[3], idleT: s.C[4], px: at.x, pz: at.z, L: lrPathLen() }; }
   LRM.walls = (s.W || []).map(w => ({ id: w[0], team: w[1], owner: w[2], x: w[3], y: w[4], z: w[5], yaw: w[6], w: 6, h: 3, hp: w[7], t: w[8] }));
   LRM.zones = (s.Z || []).map(z => ({ id: z[0], k: LR_ZK[z[1]], team: z[2], owner: z[3], x: z[4], y: z[5], z: z[6], r: z[7], t: z[8], yaw: z[9], w: 6, l: 22 }));
-  LRM.proj = (s.J || []).map(j => ({ id: j[0], k: LR_JK[j[1]], team: j[2], owner: j[3], x: j[4], y: j[5], z: j[6], vx: j[7], vy: j[8], vz: j[9], t: 0, hit: [] }));
+  const own = LRM.proj.filter(j => j.own), meI = LRM.net && !lrHost() ? LRM.me : -1;
+  LRM.proj = (s.J || []).filter(j => !(j[3] === meI && j[1] === 0)).map(j => ({ id: j[0], k: LR_JK[j[1]], team: j[2], owner: j[3], x: j[4], y: j[5], z: j[6], vx: j[7], vy: j[8], vz: j[9], t: 0, hit: [] })).concat(own);
   if (!LRM.packs.length) LRM.packs = LR_MAP.packs.map(k => ({ x: k[0], z: k[1], big: !!k[2], t: 0 }));
   (s.K || []).forEach((t, i) => { if (LRM.packs[i]) LRM.packs[i].t = t; });
   LRM.feed = (s.F || []).map(f => ({ t: f[0], a: f[1], v: f[2], how: f[3] }));
-  const top = LRM.FX.length ? LRM.FX[LRM.FX.length - 1].id : 0;
-  for (const f of s.X || []) if (f.id > top) LRM.FX.push(Object.assign({}, f, { t: LRM.t }));
+  const top = LRM.FX.length ? LRM.FX[LRM.FX.length - 1].id : 0, me = LRM.P[LRM.me];
+  for (const f of s.X || []) if (f.id > top) {
+    LRM.FX.push(Object.assign({}, f, { t: LRM.t }));
+    // (a knock on my own body, which I move: its push, here)
+    if (f.k === 'knock' && me && f.v === me.i && meI >= 0 && me.alive) { me.vx = +f.vx || 0; me.vy = +f.vy || 0; me.vz = +f.vz || 0; me.gnd = false; me.knockT = +f.kt || 0.35; }
+  }
   if (LRM.FX.length > 120) LRM.FX = LRM.FX.slice(-120);
-  LRM.fxId = Math.max(LRM.fxId, top);
+  LRM.fxId = Math.max(LRM.fxId, LRM.FX.length ? LRM.FX[LRM.FX.length - 1].id : 0);
 }
 
 // ---------- your own input ----------
@@ -1131,7 +1201,7 @@ function lrCardRender() {
 }
 function lrPlayLocal() { if (typeof LRN !== 'undefined' && LRN.code && typeof lrnLeave === 'function') lrnLeave(); const sv = $('lrSide').value; lrStart({ side: sv === 'r' ? 'r' : +sv, skill: $('lrSkill').value }); }
 function lrDebug(o) { lrStart(Object.assign({ skill: 'fair', side: 0 }, o || {})); return LRM; }
-function lrDebugWin(team) { if (!LRM.on) return; if (LRM.ph === 'pick') lrSetup(); if (LRM.ph === 'setup') lrGo(); if (team === 0) { LRM.cart.s = LRM.cart.L || lrPathLen(); lrCartTick(0.001); } else lrEnd(1); }
+function lrDebugWin(team) { if (!LRM.on) return; if (LRM.ph === 'pick') lrSetup(); if (LRM.ph === 'setup') lrGo(); if (team === 0) { LRM.cart.s = LRM.cart.L || lrPathLen(); LRM.cart.idleT = 0; lrCartTick(0.001); } else lrEnd(1); }
 
 (function lrInit() {
   if (typeof $ !== 'function' || !$('lrTitle')) return;
