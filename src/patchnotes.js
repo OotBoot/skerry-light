@@ -6,6 +6,21 @@
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 253, date: '2026-11-24', title: "The Lamp Road: six new heroes", New: [
+    "The Lamp Road: six new heroes, two for each role, so there are now nine to pick from.",
+    "The Lamp Road: Cable (tank), a giant from the ropewalk. Hawser Lash hits everyone in a band ahead; Bight holds up a rope net; Haul Away hooks an enemy and drags them in; Belay ropes him down to stand firm; Snatch Block ropes in every enemy near him and holds them fast.",
+    "The Lamp Road: Keel (tank), the shipwright. A nail gun, a raised plank shield, Launch (a bound that stuns the first enemy he meets), Caulk (extra health for him and allies near him) and Launching Day, a slide down the slipway that knocks flat everyone in the way.",
+    "The Lamp Road: Fuse (damage), a powder monkey. A swivel mortar that lobs bouncing bombs, Short Fuse to burst them in the air, Powder Hop, Sea Mines, and the Fire Ship, a burning boat sent along the ground.",
+    "The Lamp Road: Dirk (damage), a boarder. A brace of pistols, a dirk for close work, a Boarding Hook to grapple about, Powder Smoke that nobody can see through, and Boarders Away, a run of blade-first dashes.",
+    "The Lamp Road: Fiddler (support), the old fiddler from the Mermaid. Sharp Notes, two tunes for the crew round him (Slow Air mends, Hornpipe quickens), Bosun's Call, Reel to knock enemies back, and All Hands.",
+    "The Lamp Road: Samphire (support), a shore-wife. Brine Bottles that mend allies and hurt enemies, a Shrimp Net, Rockpools that mend and free allies, Kelp Snares, and Second Tide, which calls back fallen allies where they fell.",
+  ], Changes: [
+    "The Lamp Road: the hero select is laid out by role, with each hero's full kit beside the list. Number keys 1 to 9 pick.",
+    "The Lamp Road: the bots pick from all nine heroes, keeping one tank, two damage and two support, and mix their heroes up.",
+    "The Lamp Road: stuns and holds now show on your HUD, and extra health shows as a band on your health bar.",
+  ], Fixes: [
+    "The Lamp Road: slows now work properly on other players online, and a stunned or held player stops at once instead of sliding.",
+  ] },
   { v: 252, date: '2026-11-24', title: "Lore compendium: The Lamp Road and the San Telmo", New: [
     "Lore compendium: The Lamp Road is now one of the tales, with new articles for Gullhaven, the Gullhaven Light, the Lamp Wain, the Lamplighters, and the heroes Bollard, Razorbill and Linnet (each with their portrait).",
     "Lore compendium: a new article for the Corposant, and the San Telmo's article now tells the fight aboard her. Keeper's Last Light and The Wreckers have new sections too.",
