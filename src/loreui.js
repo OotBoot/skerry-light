@@ -16,9 +16,10 @@ function lwAllText(a) { return [a.sum, ...(a.box || []).map(r => r[1]), ...(a.se
 // (a bare link to a title beginning "The" says "the" in the middle of a sentence)
 function lwLinks(t) { return t.replace(/\[\[([a-z0-9_]+)(?:\|([^\]]+))?\]\]/g, (_, id, w, at, all) => { const a = LW.byId[id]; let x = w || (a ? a.t : id); if (!w && /^The /.test(x) && at > 0 && !/(^|[.!?:>]\s*)$/.test(all.slice(Math.max(0, at - 4), at))) x = 't' + x.slice(1); return a ? '<a href="#" class="lw-a" data-a="' + id + '">' + x + '</a>' : '<span class="lw-red">' + x + '</span>'; }); }
 function lwPlain(t) { return t.replace(/\[\[([a-z0-9_]+)(?:\|([^\]]+))?\]\]/g, (_, id, w) => w || (LW.byId[id] ? LW.byId[id].t : id)).replace(/<[^>]+>/g, ''); }
-// the pictures the game already has: Maren, Plimsoll, Knock, Verity, and the visitors' (foe:<key>)
+// the pictures the game already has: Maren, Plimsoll, Knock, Verity, the visitors' (foe:<key>) and The Lamp Road's heroes (lr:<hero>)
 function loreImg(k) {
   if (!k) return null;
+  if (k.startsWith('lr:')) { try { return typeof lrHeroPortrait === 'function' ? lrHeroPortrait(k.slice(3), 0) || null : null; } catch (e) { return null; } }   // The Lamp Road's heroes, drawn the first time they're asked for
   if (k.startsWith('foe:')) return typeof FOE_ASSETS !== 'undefined' ? FOE_ASSETS[k.slice(4)] : null;
   const A = typeof SK !== 'undefined' && SK.ASSETS; if (!A) return null;
   return ({ maren: A.maren, plim: A.plimsoll, knock: A.knock, verity: A.verity })[k] || null;
@@ -84,13 +85,16 @@ function lwMain() {
     "…that [[jago|Black Jago]] told the Governor he would show the ships a light yet, and three nights later did?",
     "…that the widows of the Gannet signed for their [[seachests|sea chests]] at the Customs House, and the fourth made her mark?",
     "…that [[lampwright|the Lampwright]] never once saw his lens lit from the outside?",
+    "…that the lens of [[gullhavenlight|the Gullhaven Light]] went home through the town on four wheels, a few feet at a time?",
+    "…that [[linnet]] lit her lantern from the Gullhaven Light before the Wreckers could put it out?",
+    "…that [[corposant|the Corposant]] is named for the blue fire sailors see on the masthead in a storm?",
     "…that the [[fogkeeper|Fog-Keeper]] put out the fire on Lantern Rock with his own hands, the night [[lighting1841|the Light was lit]]?",
   ];
   const did = [0, 1, 2, 3].map(i => facts[(day + i * 3) % facts.length]);
-  const chron = ['ch_original', 'ch_links', 'ch_league', 'ch_chess', 'ch_voyages', 'ch_wreckers', 'ch_gannetswake', 'ch_lastlight', 'ch_fbsea', 'ch_fogrun', 'ch_marensend', 'ch_reach', 'ch_clash', 'ch_chronicle'].map(id => LW.byId[id]);
+  const chron = ['ch_original', 'ch_links', 'ch_league', 'ch_chess', 'ch_voyages', 'ch_wreckers', 'ch_gannetswake', 'ch_lastlight', 'ch_fbsea', 'ch_fogrun', 'ch_marensend', 'ch_lamproad', 'ch_reach', 'ch_clash', 'ch_chronicle'].map(id => LW.byId[id]);
   return '<h1 class="lw-h1 lw-welcome" id="loreHead">Welcome to the Skerry Compendium</h1><p class="lw-from">The record of the Light that anyone can read. ' + LORE.length + ' articles, from the first fire on Lantern Rock to the wars of the Reach.</p>' +
     '<div class="lw-mp">' +
-    '<section class="lw-panel lw-wide"><h2>The fourteen tales</h2><p>Every game is one chapter of the same history, and the last of them tells it all again from end to end. Read them in the order they happened, or start with the <a href="#" class="lw-a" data-a="timeline">timeline</a>.</p><ol class="lw-chron">' + chron.map(a => '<li><a href="#" class="lw-a" data-a="' + a.id + '"><b>' + lwEsc(a.t) + '</b><span>' + lwEsc(a.box.find(r => r[0] === 'When')[1]) + '</span></a></li>').join('') + '</ol></section>' +
+    '<section class="lw-panel lw-wide"><h2>The fifteen tales</h2><p>Every game is one chapter of the same history, and the last of them tells it all again from end to end. Read them in the order they happened, or start with the <a href="#" class="lw-a" data-a="timeline">timeline</a>.</p><ol class="lw-chron">' + chron.map(a => '<li><a href="#" class="lw-a" data-a="' + a.id + '"><b>' + lwEsc(a.t) + '</b><span>' + lwEsc(a.box.find(r => r[0] === 'When')[1]) + '</span></a></li>').join('') + '</ol></section>' +
     '<section class="lw-panel"><h2>Today\'s featured article</h2>' + (fimg ? '<img class="lw-feat" src="' + fimg + '" alt="">' : '') + '<p>' + lwLinks(feat.sum) + ' (<a href="#" class="lw-a" data-a="' + feat.id + '">Read more</a>)</p></section>' +
     '<section class="lw-panel"><h2>Did you know</h2><ul class="lw-list">' + did.map(f => '<li>' + lwLinks(f) + '</li>').join('') + '</ul></section>' +
     (page ? '<section class="lw-panel"><h2>From the keeper\'s log</h2><p class="lw-logdate">' + lwEsc(page.date) + '</p><blockquote>' + lwEsc(page.text) + '</blockquote><p><a href="#" class="lw-a" data-a="log">About the log</a></p></section>' : '') +

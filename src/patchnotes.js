@@ -6,6 +6,11 @@
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 252, date: '2026-11-24', title: "Lore compendium: The Lamp Road and the San Telmo", New: [
+    "Lore compendium: The Lamp Road is now one of the tales, with new articles for Gullhaven, the Gullhaven Light, the Lamp Wain, the Lamplighters, and the heroes Bollard, Razorbill and Linnet (each with their portrait).",
+    "Lore compendium: a new article for the Corposant, and the San Telmo's article now tells the fight aboard her. Keeper's Last Light and The Wreckers have new sections too.",
+    "Lore compendium: the timeline, The Years After and the main page's list of tales (now fifteen) include both, with three new Did you know facts.",
+  ] },
   { v: 251, date: '2026-11-24', title: "New game: The Lamp Road", New: [
     "The Lamp Road: a new game, a five-a-side hero shooter in first person. The Wreckers have put out the Gullhaven Light; the Lamplighters must push the Lamp Wain, the Light's great lens on its iron carriage, through the town to the foot of the Light while the Wreckers hold the streets. Its own card on the title screen.",
     "The Lamp Road: one map, Gullhaven, a harbour town on a headland at dusk: the west quay, the fish market, the chandlery and net loft, the Mermaid tavern and an old hulk on the hard, and the Light at the end of the road. Roofs, the hulk's deck and the rocks can be climbed for high ground.",
