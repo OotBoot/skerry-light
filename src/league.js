@@ -91,9 +91,10 @@ function lgMyName() { const v = ($('lgNick') && $('lgNick').value) || (typeof NE
 // o: { size: ships a side (1 to 3), mins, skill, boat (yours), fleet ('mixed' or 'same') }
 function lgStart(o) {
   o = Object.assign({}, lgStore.get().set || {}, o || {});
-  const size = lgClamp(o.size | 0 || 2, 1, 3), skill = LG_SKILL[o.skill] ? o.skill : 'fair', mins = [3, 5, 7].includes(+o.mins) ? +o.mins : 5;
+  const side = o.game === 'side', size = lgClamp(o.size | 0 || 2, 1, side ? 2 : 3), skill = LG_SKILL[o.skill] ? o.skill : 'fair', mins = [3, 5, 7].includes(+o.mins) ? +o.mins : 5;
   const myBoatId = lgBoatOf(o.boat || (typeof CRATES !== 'undefined' && CRATES.boat) || 'brig').id;
-  LG.set = { size, skill, mins, boat: myBoatId, fleet: o.fleet === 'same' ? 'same' : 'mixed' };
+  LG.set = { size, skill, mins, boat: myBoatId, fleet: o.fleet === 'same' ? 'same' : 'mixed', game: side ? 'side' : 'pool' };
+  LG.side = side;   // (Spindrift, side-on: src/lgside.js)
   LG.net = o.net || null;
   const st = lgStore.get(); if (!LG.net) { st.set = LG.set; lgStore.set(st); }
   const ids = (typeof BOATS !== 'undefined' ? BOATS.map(b => b.id) : ['brig']), names = LG_BOTNAMES.slice().sort(() => Math.random() - 0.5);
@@ -117,15 +118,17 @@ function lgStart(o) {
   if (!LG.net) LG.me = 0;
   LG.score = [0, 0]; LG.ko = 0; LG.lastHitT = -9; LG.lastHitBy = null; LG.len = mins * 60; LG.clock = LG.len; LG.ot = false; LG.t = 0; LG.hits = 0; LG.goals = []; LG.last = null;
   LG.ball = { x: 0, y: 0, z: LGC.FLOAT, vx: 0, vy: 0, vz: 0, rx: 0, ry: 0, q: null, gone: false };
-  LG.pads = lgPadsNew(); LG.keys = {}; LG.touch = {};
+  LG.pads = side ? sdPadsNew() : lgPadsNew(); LG.keys = {}; LG.touch = {};
+  if (side) for (const s of LG.ships) sdNew(s);
   LG.cam = st.cam === 'ship' ? 'ship' : 'ball';
   LG.on = true;
   lgEnter();
-  if (typeof lg3dMatch === 'function') lg3dMatch();
+  if (!side && typeof lg3dMatch === 'function') lg3dMatch();
   lgKickoff();
 }
 // everyone to their marks: the ball in the middle, each side's ships spread on their own half facing the middle
 function lgKickoff() {
+  if (LG.side) return sdKickoff();
   const marks = { 1: [[0, -0.62]], 2: [[-0.34, -0.62], [0.34, -0.62]], 3: [[-0.4, -0.6], [0.4, -0.6], [0, -0.86]] }[LGC_size()];
   for (const s of LG.ships) {
     const m = marks[s.slot] || [0, -0.6], sg = s.team === 0 ? 1 : -1;
@@ -146,7 +149,8 @@ function lgFrame(dt) {
   LG.t += dt;
   lgPadPoll(dt);
   lgSim(dt);
-  if (typeof lg3dDraw === 'function') lg3dDraw(dt);
+  if (LG.side) { if (typeof sdDraw === 'function') sdDraw(dt); }
+  else if (typeof lg3dDraw === 'function') lg3dDraw(dt);
   lgHud();
   if (LG.net && typeof lgnTags === 'function') lgnTags();
 }
@@ -174,6 +178,7 @@ function lgGuestPhase(dt) {
   else if (LG.ph === 'play') LG.clock = LG.ot ? LG.clock + dt : Math.max(0, LG.clock - dt);
 }
 function lgStep(dt) {
+  if (LG.side) return sdStep(dt);
   const frozen = LG.ph === 'count' || LG.ph === 'end';
   for (const s of LG.ships) {
     if (!lgOwn(s)) { s.bob += dt; continue; }   // (someone else's ship: src/lgnet.js puts her where she's heard to be)
@@ -338,7 +343,8 @@ function lgGoalShow(team, by, own) {
   lgSay(own ? `Own goal! ${T.name} scores` : by ? `${by.me ? 'You score!' : by.nm + ' scores for ' + T.name}` : `${T.name} scores!`, LGC.CELEB);
   LG.ball.gone = true; LG.goalAt = { team, x: LG.ball.x, y: LG.ball.y, t: LG.t };
   lgSnd('goal', team === lgMeShip().team ? 1 : 0.6);
-  if (typeof lg3dGoal === 'function') lg3dGoal(team);
+  if (LG.side) { if (typeof sdGoalFx === 'function') sdGoalFx(team); }
+  else if (typeof lg3dGoal === 'function') lg3dGoal(team);
   if (typeof padRumble === 'function') padRumble(0.6, 0.6, 400);
 }
 function lgOver() { return LG.ot || (LG.clock <= 0 && LG.score[0] !== LG.score[1]); }
@@ -346,7 +352,7 @@ function lgEnd() {
   LG.ph = 'end'; LG.msgT = 0; { const el = $('lgMsg'); if (el) el.classList.remove('on'); }
   const me = lgMeShip(), mine = LG.score[me.team], theirs = LG.score[1 - me.team], res = mine > theirs ? 'win' : mine < theirs ? 'loss' : 'draw';
   // (online matches are kept apart from those against bots alone)
-  const st = lgStore.get(), rk = LG.net ? 'onl' : 'rec'; st[rk] = st[rk] || { w: 0, d: 0, l: 0, g: 0, m: 0 };
+  const st = lgStore.get(), rk = (LG.side ? 's' : '') + (LG.net ? 'onl' : 'rec'); st[rk] = st[rk] || { w: 0, d: 0, l: 0, g: 0, m: 0 };
   st[rk].m++; st[rk].g += me.goals; if (res === 'win') st[rk].w++; else if (res === 'loss') st[rk].l++; else st[rk].d++;
   lgStore.set(st);
   lgSnd(res === 'win' ? 'win' : 'horn');
@@ -423,11 +429,15 @@ function lgBot(s, dt) {
 // ---------- the screen ----------
 function lgEnter() {
   try { audioInit(); } catch (e) {}
-  if (typeof lg3dInit === 'function' && !lg3dInit()) { if (typeof toast === 'function') toast('Skerry League needs WebGL, which this browser has turned off.', 'No 3D'); }
+  if (!LG.side && typeof lg3dInit === 'function' && !lg3dInit()) { if (typeof toast === 'function') toast('Skerry League needs WebGL, which this browser has turned off.', 'No 3D'); }
   state = 'league'; paused = false;
   $('titleCard').hidden = true; $('hud').hidden = true; $('logbox').hidden = true; $('biomeBanner').hidden = true;
   $('lgUI').hidden = false; $('lgPause').hidden = true; $('lgEnd').hidden = true;
-  document.body.classList.add('lgon');
+  document.body.classList.add('lgon'); document.body.classList.toggle('lgside', !!LG.side);
+  $('lgCv').hidden = !!LG.side; $('sdCv').hidden = !LG.side; $('lgMap').hidden = !!LG.side; $('lgCamBtn').hidden = !!LG.side;
+  $('lgTU').textContent = '▲'; $('lgTU').setAttribute('aria-label', LG.side ? 'Leap' : 'Make sail'); $('lgTD').setAttribute('aria-label', LG.side ? 'Dive' : 'Shorten sail');
+  $('lgPauseHead').textContent = LG.side ? 'Spindrift' : 'Skerry League';
+  if (LG.side && typeof sdResize === 'function') sdResize();
   const coarse = matchMedia && matchMedia('(pointer: coarse)').matches; $('lgPadBox').hidden = !coarse;
   if (typeof lg3dResize === 'function') lg3dResize();
   lgHud(true);
@@ -436,7 +446,7 @@ function lgExit() {
   const wasNet = !!LG.net;
   LG.on = false; LG.ph = 'off'; LG.net = null;
   if (wasNet && typeof lgnStop === 'function') lgnStop();
-  $('lgUI').hidden = true; document.body.classList.remove('lgon');
+  $('lgUI').hidden = true; document.body.classList.remove('lgon', 'lgside');
   state = 'title'; toTitle();
   setTimeout(() => { const c = $('lgTitle'); if (c) c.scrollIntoView({ block: 'start' }); lgCardRender(); }, 60);
 }
@@ -454,9 +464,9 @@ function lgHud(full) {
   if (LG.ph === 'count') { big.hidden = false; big.textContent = String(Math.max(1, Math.ceil(LG.phT))); } else big.hidden = true;
   const g = Math.round(me.gale); if (g !== LG.hudG) { LG.hudG = g; $('lgGale').style.setProperty('--p', g + '%'); $('lgGaleN').textContent = g; }
   $('lgGaleBox').classList.toggle('on', me.galeOn);
-  const kn = Math.round(Math.abs(me.v + me.bv) * 1.944); if (kn !== LG.hudK) { LG.hudK = kn; $('lgSpeed').textContent = (me.v + me.bv < -0.5 ? '−' : '') + kn; }
+  const kn = Math.round((LG.side ? Math.hypot(me.v, me.bv) : Math.abs(me.v + me.bv)) * 1.944); if (kn !== LG.hudK) { LG.hudK = kn; $('lgSpeed').textContent = (!LG.side && me.v + me.bv < -0.5 ? '−' : '') + kn; }
   $('lgCamBtn').textContent = LG.cam === 'ball' ? 'Ball cam' : 'Ship cam';
-  lgMap();
+  if (!LG.side) lgMap();
 }
 // the little chart of the pool in the corner: the walls, the goals, the ball and every ship
 function lgMap() {
@@ -487,8 +497,9 @@ function lgKey(e, down) {
   else if (k === 'ArrowRight' || k === 'd' || k === 'D') set('r');
   else if (k === 'ArrowUp' || k === 'w' || k === 'W') set('u');
   else if (k === 'ArrowDown' || k === 's' || k === 'S') set('d');
-  else if (k === 'Shift' || k === ' ') set('g');
-  else if ((k === 'c' || k === 'C' || k === 'v' || k === 'V') && down && !e.repeat) lgCam();
+  else if (k === 'Shift' || (k === ' ' && !LG.side) || (LG.side && (k === 'k' || k === 'K'))) set('g');
+  else if (k === ' ' || (LG.side && (k === 'j' || k === 'J'))) set('u');
+  else if (!LG.side && (k === 'c' || k === 'C' || k === 'v' || k === 'V') && down && !e.repeat) lgCam();
 }
 addEventListener('keydown', e => lgKey(e, true), true);
 addEventListener('keyup', e => lgKey(e, false), true);
@@ -511,7 +522,9 @@ function lgPadPoll(dt) {
   const lt = p.buttons[6] ? p.buttons[6].value : 0, rt = p.buttons[7] ? p.buttons[7].value : 0;
   LG.padSail = (rt > 0.15 ? rt : 0) - (lt > 0.15 ? lt : 0) + (now[12] ? 1 : 0) - (now[13] ? 1 : 0);
   LG.padGale = !!(now[0] || now[1]);
-  if (down(3)) lgCam();
+  // (Spindrift: A leaps and flips, B, X or RT the Gale, the stick down to dive)
+  if (LG.side) { LG.padJump = !!now[0]; LG.padGale = !!(now[1] || now[2] || rt > 0.3); LG.padSail = -(Math.abs(p.axes[1] || 0) > 0.5 ? p.axes[1] : 0) - (now[13] ? 1 : 0); }
+  else if (down(3)) lgCam();
   if (down(9)) lgPauseOpen(true);
 }
 
@@ -525,6 +538,8 @@ function lgSnd(k, v) {
     else if (k === 'hit') { noise('lowpass', 500 + 900 * v, 1, 0.001, 0.25 * v + 0.05, 0.18); tone(140 + 90 * v, 'sine', 0.001, 0.2 * v + 0.05, 0.2); }
     else if (k === 'wall' || k === 'thud') noise('lowpass', 300, 1, 0.001, 0.18 * v + 0.04, 0.22);
     else if (k === 'post') { tone(520, 'triangle', 0.001, 0.14 * v + 0.05, 0.6); tone(780, 'sine', 0.001, 0.06, 0.5); }
+    else if (k === 'jump') { noise('bandpass', 900, 1.2, 0.002, 0.12, 0.25); tone(220, 'sine', 0.002, 0.06, 0.18, { to: 440 }); }   // (Spindrift: the leap and the flip)
+    else if (k === 'flip') { noise('bandpass', 1600, 2, 0.01, 0.12, 0.35); tone(330, 'triangle', 0.005, 0.05, 0.3, { to: 880 }); }
     else if (k === 'bump') noise('bandpass', 220, 1.5, 0.001, 0.2 * v + 0.05, 0.25);
     else if (k === 'splash') { if (typeof sfxSplash === 'function') sfxSplash(0, 0.4 * v + 0.2); }
     else if (k === 'pad') { tone(660, 'sine', 0.005, 0.08 * v, 0.18, { to: 1320 }); noise('highpass', 3000, 1, 0.002, 0.04 * v, 0.2); }
@@ -541,13 +556,22 @@ function lgCardRender() {
   const o = (lgStore.get().onl) || null, line = (r, w) => `${w}: ${r.w} won, ${r.d} drawn, ${r.l} lost · ${r.g} goal${r.g === 1 ? '' : 's'} in ${r.m} match${r.m === 1 ? '' : 'es'}`;
   el.textContent = r && r.m ? line(r, 'Your record') : 'No matches played yet.';
   if (o && o.m) el.textContent += ' · ' + line(o, 'Online');
+  const sr = lgStore.get().srec, so = lgStore.get().sonl;
+  if (sr && sr.m) el.textContent += ' · ' + line(sr, 'Spindrift'); if (so && so.m) el.textContent += ' · ' + line(so, 'Spindrift online');
 }
 function lgPlayLocal() {
   if (typeof LGN !== 'undefined' && LGN.code && typeof lgnLeave === 'function') lgnLeave();
-  lgStart({ size: +$('lgSize').value, mins: +$('lgMins').value, skill: $('lgSkill').value, boat: $('lgBoat').value, fleet: $('lgFleet').value });
+  lgStart({ size: +$('lgSize').value, mins: +$('lgMins').value, skill: $('lgSkill').value, boat: $('lgBoat').value, fleet: $('lgFleet').value, game: $('lgGame') ? $('lgGame').value : 'pool' });
+}
+// the card follows the game picked: Spindrift has no three a side, and its own keys under the options
+function lgGameCard() {
+  const side = $('lgGame') && $('lgGame').value === 'side', sz = $('lgSize'), o3 = sz && sz.querySelector('option[value="3"]');
+  if (o3) { o3.disabled = side; o3.hidden = side; if (side && sz.value === '3') sz.value = '2'; }
+  const k = $('lgKeys'), ks = $('lgKeysSide'); if (k) k.hidden = side; if (ks) ks.hidden = !side;
+  $('lgTitle').classList.toggle('lgsidecard', side);
 }
 function lgDebug(o) { lgStart(Object.assign({ size: 2, mins: 5, skill: 'fair' }, o || {})); }
-function lgDebugGoal(team) { if (LG.ph !== 'play') { LG.ph = 'play'; } LG.ball.x = 0; LG.ball.y = (LGC.AY + LGC.R + 2) * (team === 0 ? 1 : -1); LG.ball.vx = 0; LG.ball.vy = 0; lgBall(0.001); }
+function lgDebugGoal(team) { if (LG.side) return sdDebugGoal(team); if (LG.ph !== 'play') { LG.ph = 'play'; } LG.ball.x = 0; LG.ball.y = (LGC.AY + LGC.R + 2) * (team === 0 ? 1 : -1); LG.ball.vx = 0; LG.ball.vy = 0; lgBall(0.001); }
 
 (function lgInit() {
   if (!$('lgTitle')) return;
@@ -558,6 +582,8 @@ function lgDebugGoal(team) { if (LG.ph !== 'play') { LG.ph = 'play'; } LG.ball.x
   if (set.mins) $('lgMins').value = String(set.mins);
   if (set.skill) $('lgSkill').value = set.skill;
   if (set.fleet) $('lgFleet').value = set.fleet;
+  // the game: the Harbour Pool, or Spindrift side-on (one or two a side, and its own help on the card)
+  if ($('lgGame')) { $('lgGame').value = set.game === 'side' ? 'side' : 'pool'; $('lgGame').addEventListener('change', lgGameCard); lgGameCard(); }
   if (st.nick) $('lgNick').value = String(st.nick).slice(0, 16);
   $('lgNick').addEventListener('change', () => { const s = lgStore.get(); s.nick = $('lgNick').value.slice(0, 16); lgStore.set(s); });
   $('lgPlay').addEventListener('click', lgPlayLocal);
@@ -576,6 +602,6 @@ function lgDebugGoal(team) { if (LG.ph !== 'play') { LG.ph = 'play'; } LG.ball.x
     const on = e => { e.preventDefault(); LG.touch[key] = true; b.classList.add('on'); }, off = () => { LG.touch[key] = false; b.classList.remove('on'); };
     b.addEventListener('pointerdown', on); for (const t of ['pointerup', 'pointerleave', 'pointercancel']) b.addEventListener(t, off);
   }
-  addEventListener('resize', () => { if (LG.on && typeof lg3dResize === 'function') lg3dResize(); });
+  addEventListener('resize', () => { if (LG.on && LG.side) { if (typeof sdResize === 'function') sdResize(); } else if (LG.on && typeof lg3dResize === 'function') lg3dResize(); });
   lgCardRender();
 })();

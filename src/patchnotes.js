@@ -6,6 +6,19 @@
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 248, date: '2026-11-24', title: "Lore compendium: Spindrift", New: [
+    "Lore compendium: two new articles, The Sluice (the old tide-lock under the Light where Spindrift is played) and Spindrift (how the crews' winter game began and how it's played).",
+  ], Changes: [
+    "Lore compendium: Skerry League, The Harbour Pool, The Gale, the timeline and the era of the Light now cover Spindrift and the Sluice.",
+  ] },
+  { v: 247, date: '2026-11-23', title: "Skerry League: Spindrift", New: [
+    "Skerry League: Spindrift, a new way to play, side-on. Pick it under Game on the Skerry League card.",
+    "Skerry League: Spindrift is played in the Sluice, the old tide-lock under the Light, with a lock gate for a goal in each end wall. One against one or two against two, against bots or online.",
+    "Skerry League: in Spindrift your ship leaps out of the water, flips in the air (a flip into the ball hits it much harder) and flies on the Gale, which drives her the way her bow points.",
+    "Skerry League: Spindrift matches can be hosted from the League lobby for up to four players. Empty seats are filled by bots, and the lobby list shows which game each match is.",
+  ], Changes: [
+    "Skerry League: the card keeps a separate record for Spindrift, alone and online.",
+  ] },
   { v: 246, date: '2026-11-23', title: "The Chronicle of the Light: four new missions", New: [
     "The Chronicle of the Light: four new missions for the newer games, each with its own cinematics and story, for one to four players. The campaign now has eighteen.",
     "The Chronicle of the Light: The Nine Holes (Act II, c. 1883, from Skerry Links). The keepers lay out the course on the headland and play on into the night. Strike the ball hole by hole, keep it from the drowned at the Chasm, light warning fires with burning balls and face the Chasm Crab.",

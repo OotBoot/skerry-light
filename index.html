@@ -518,11 +518,13 @@
       </details>
     </div>
     <div class="card zmcard lgcard" id="lgTitle" aria-labelledby="lgHead"><!-- [league] Skerry League: its own card (src/league.js, src/league3d.js) -->
-      <div class="cardtop"><span class="eyebrow">An eleventh game · ships and a ball · one to three a side</span></div>
+      <div class="cardtop"><span class="eyebrow">An eleventh game · ships and a ball · two ways to play</span></div>
       <h1 id="lgHead">Skerry League</h1>
       <p>Down in the Harbour Pool, between the two lights, the crews have a game of their own: sail into the great striped buoy and knock it into the other side's goal. Your own ship, in your own skin, handling just as she does at sea, with a Gale in a bottle when you need to get there first.</p>
-      <p class="muted">W makes sail, S shortens it (hold it to go astern), A and D steer, Shift or Space lets loose the Gale. Pick up gale buoys on the water to fill it again. C swaps between Ball cam and Ship cam.</p>
+      <p class="muted" id="lgKeys">W makes sail, S shortens it (hold it to go astern), A and D steer, Shift or Space lets loose the Gale. Pick up gale buoys on the water to fill it again. C swaps between Ball cam and Ship cam.</p>
+      <p class="muted" id="lgKeysSide" hidden><b>Spindrift</b>, the League seen side-on, in the old tide-lock under the Light: A and D sail left and right (and turn her over in the air), W or Space leaps out of the water, and again in the air flips her the way you hold (S to dive) or jumps again. Shift lets loose the Gale, which drives her the way her bow points, so she can fly. One or two a side.</p>
       <div class="gfopts lgopts">
+        <label>Game <select id="lgGame"><option value="pool" selected>The Harbour Pool</option><option value="side">Spindrift (side-on)</option></select></label><!-- [league] Spindrift: src/lgside.js -->
         <label>Ships a side <select id="lgSize"><option value="1">1 against 1</option><option value="2" selected>2 against 2</option><option value="3">3 against 3</option></select></label>
         <label>Match <select id="lgMins"><option value="3">3 minutes</option><option value="5" selected>5 minutes</option><option value="7">7 minutes</option></select></label>
         <label>Bots <select id="lgSkill"><option value="easy">Easy</option><option value="fair" selected>Fair</option><option value="hard">Hard</option></select></label>
@@ -555,6 +557,7 @@
         <p><b>Sailing.</b> Your ship handles as she does on a voyage: hold W and the sail keeps climbing, faster the longer you hold it, with no top speed. S shortens sail; keep holding it with the sail short and she backs her sails and goes astern. The Cutter turns quickest, the Carrier hits hardest, and every ship turns more sharply here than out at sea.</p>
         <p><b>The Gale.</b> Shift or Space (A on a controller) blows her on much faster for as long as the gauge lasts. The yellow gale buoys fill it: a small one gives a third, a big one (in the corners and at the middle of each side) fills it right up. They come back a few seconds after they're taken.</p>
         <p><b>Online.</b> Host a match and your friends join it from this card (or from the invite you share), up to six of you, each on their own screen. Everyone picks a side (Change sides), the sides grow to fit, and bots sail any empty seats. The host picks the match and kicks off; the match runs on the host’s screen, so the host keeps that tab in front. Anyone who drops out is sailed by a bot until they rejoin. If the host leaves, the match ends.</p>
+        <p><b>Spindrift.</b> Pick Spindrift under Game for the League side-on, in the Sluice: one or two a side, the gates in the end walls. On the water A and D sail her left and right; W or Space leaps her out of it. In the air A and D turn her over, and a second press within a moment and a half flips her the way you hold (A or D forwards or back, S to dive), with a harder hit if she strikes the ball while flipping; hold nothing and she jumps again. The Gale (Shift) drives her the way her bow points, so point her up and she flies. She always lands the right way up. The gale buoys float on the water. On a controller: A leaps and flips, B, X or RT the Gale, the stick steers and turns her, down to dive. Online, Spindrift matches take four.</p>
         <p><b>Hitting the ball.</b> The faster you're going, the harder it flies. Hit it hard and it leaps out of the water. It bounces off the walls and the posts, so a shot off the wall can still go in.</p>
         <p><b>The camera.</b> Ball cam (the default) keeps the ball in view behind your ship; Ship cam looks the way she's heading. C (or Y on a controller, or the button at the top) swaps them.</p>
         <p><b>Controller.</b> Left stick or D-pad steers, RT makes sail, LT shortens it, A or B the Gale, Y the camera, Start the menu. On a phone, the buttons at the bottom: steer on the left, sail, shorten and the Gale on the right.</p>
@@ -662,6 +665,7 @@
   <!-- Skerry League: the 3D view and what's over it (src/league.js, src/league3d.js) -->
   <div id="lgUI" hidden>
     <canvas id="lgCv"></canvas>
+    <canvas id="sdCv" hidden aria-label="The Sluice, side-on"></canvas><!-- [league] Spindrift's view (src/lgside2d.js) -->
     <div class="lg-score"><span class="lg-t lg-blue">Blue</span><b id="lgSB">0</b><time id="lgClock">5:00</time><b id="lgSO">0</b><span class="lg-t lg-orange">Orange</span></div>
     <canvas id="lgMap" aria-label="Chart of the pool"></canvas>
     <div class="lg-count" id="lgCount" hidden>3</div>
@@ -1415,6 +1419,8 @@
 <script src="src/gfdress.js"></script><!-- [golf] the golfer, ball and clubs dressed -->
 <script src="src/league.js"></script><!-- [league] Skerry League: the match, the ships, the ball, the bots -->
 <script src="src/league3d.js"></script><!-- [league] the 3D view -->
+<script src="src/lgside.js"></script><!-- [league] Spindrift: the side-on game's rules, ships, ball and bots -->
+<script src="src/lgside2d.js"></script><!-- [league] Spindrift's view -->
 <script src="src/lgnet.js"></script><!-- [league] online matches: the lobby and keeping the screens together -->
 <script src="src/chess.js"></script><!-- [chess] Skerry Chess: the rules and the bots -->
 <script src="src/chessui.js"></script><!-- [chess] the board, the card and the game -->

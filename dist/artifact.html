@@ -1874,6 +1874,8 @@ body:has(#specBar:not([hidden])) .toast { top: 170px; }
 .lgrecord { margin-top: 8px; }
 #lgUI { position: fixed; inset: 0; z-index: 30; font-family: var(--log); color: var(--ink); -webkit-user-select: none; user-select: none; touch-action: none; }
 #lgCv { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+#sdCv { position: absolute; inset: 0; width: 100%; height: 100%; display: block; background: #16131a; }   /* [league] Spindrift */
+#sdCv[hidden], #lgCv[hidden] { display: none; }
 #lgUI .lg-score, #lgUI .lg-msg, #lgUI .lg-count, #lgUI .lg-gauge, #lgUI .lg-speed, #lgMap { pointer-events: none; }
 .lg-score { position: absolute; top: max(10px, env(safe-area-inset-top, 0px)); left: 50%; transform: translateX(-50%); display: flex; align-items: stretch; background: rgba(8,12,22,0.78); border: 1px solid rgba(236,228,207,0.18); }
 .lg-score > * { display: flex; align-items: center; padding: 6px 12px; }
@@ -2500,11 +2502,13 @@ svg.chrock .foam { fill: rgba(235,245,250,0.55); } svg.chrock .rk { fill: #4b4d5
       </details>
     </div>
     <div class="card zmcard lgcard" id="lgTitle" aria-labelledby="lgHead"><!-- [league] Skerry League: its own card (src/league.js, src/league3d.js) -->
-      <div class="cardtop"><span class="eyebrow">An eleventh game · ships and a ball · one to three a side</span></div>
+      <div class="cardtop"><span class="eyebrow">An eleventh game · ships and a ball · two ways to play</span></div>
       <h1 id="lgHead">Skerry League</h1>
       <p>Down in the Harbour Pool, between the two lights, the crews have a game of their own: sail into the great striped buoy and knock it into the other side's goal. Your own ship, in your own skin, handling just as she does at sea, with a Gale in a bottle when you need to get there first.</p>
-      <p class="muted">W makes sail, S shortens it (hold it to go astern), A and D steer, Shift or Space lets loose the Gale. Pick up gale buoys on the water to fill it again. C swaps between Ball cam and Ship cam.</p>
+      <p class="muted" id="lgKeys">W makes sail, S shortens it (hold it to go astern), A and D steer, Shift or Space lets loose the Gale. Pick up gale buoys on the water to fill it again. C swaps between Ball cam and Ship cam.</p>
+      <p class="muted" id="lgKeysSide" hidden><b>Spindrift</b>, the League seen side-on, in the old tide-lock under the Light: A and D sail left and right (and turn her over in the air), W or Space leaps out of the water, and again in the air flips her the way you hold (S to dive) or jumps again. Shift lets loose the Gale, which drives her the way her bow points, so she can fly. One or two a side.</p>
       <div class="gfopts lgopts">
+        <label>Game <select id="lgGame"><option value="pool" selected>The Harbour Pool</option><option value="side">Spindrift (side-on)</option></select></label><!-- [league] Spindrift: src/lgside.js -->
         <label>Ships a side <select id="lgSize"><option value="1">1 against 1</option><option value="2" selected>2 against 2</option><option value="3">3 against 3</option></select></label>
         <label>Match <select id="lgMins"><option value="3">3 minutes</option><option value="5" selected>5 minutes</option><option value="7">7 minutes</option></select></label>
         <label>Bots <select id="lgSkill"><option value="easy">Easy</option><option value="fair" selected>Fair</option><option value="hard">Hard</option></select></label>
@@ -2537,6 +2541,7 @@ svg.chrock .foam { fill: rgba(235,245,250,0.55); } svg.chrock .rk { fill: #4b4d5
         <p><b>Sailing.</b> Your ship handles as she does on a voyage: hold W and the sail keeps climbing, faster the longer you hold it, with no top speed. S shortens sail; keep holding it with the sail short and she backs her sails and goes astern. The Cutter turns quickest, the Carrier hits hardest, and every ship turns more sharply here than out at sea.</p>
         <p><b>The Gale.</b> Shift or Space (A on a controller) blows her on much faster for as long as the gauge lasts. The yellow gale buoys fill it: a small one gives a third, a big one (in the corners and at the middle of each side) fills it right up. They come back a few seconds after they're taken.</p>
         <p><b>Online.</b> Host a match and your friends join it from this card (or from the invite you share), up to six of you, each on their own screen. Everyone picks a side (Change sides), the sides grow to fit, and bots sail any empty seats. The host picks the match and kicks off; the match runs on the host’s screen, so the host keeps that tab in front. Anyone who drops out is sailed by a bot until they rejoin. If the host leaves, the match ends.</p>
+        <p><b>Spindrift.</b> Pick Spindrift under Game for the League side-on, in the Sluice: one or two a side, the gates in the end walls. On the water A and D sail her left and right; W or Space leaps her out of it. In the air A and D turn her over, and a second press within a moment and a half flips her the way you hold (A or D forwards or back, S to dive), with a harder hit if she strikes the ball while flipping; hold nothing and she jumps again. The Gale (Shift) drives her the way her bow points, so point her up and she flies. She always lands the right way up. The gale buoys float on the water. On a controller: A leaps and flips, B, X or RT the Gale, the stick steers and turns her, down to dive. Online, Spindrift matches take four.</p>
         <p><b>Hitting the ball.</b> The faster you're going, the harder it flies. Hit it hard and it leaps out of the water. It bounces off the walls and the posts, so a shot off the wall can still go in.</p>
         <p><b>The camera.</b> Ball cam (the default) keeps the ball in view behind your ship; Ship cam looks the way she's heading. C (or Y on a controller, or the button at the top) swaps them.</p>
         <p><b>Controller.</b> Left stick or D-pad steers, RT makes sail, LT shortens it, A or B the Gale, Y the camera, Start the menu. On a phone, the buttons at the bottom: steer on the left, sail, shorten and the Gale on the right.</p>
@@ -2644,6 +2649,7 @@ svg.chrock .foam { fill: rgba(235,245,250,0.55); } svg.chrock .rk { fill: #4b4d5
   <!-- Skerry League: the 3D view and what's over it (src/league.js, src/league3d.js) -->
   <div id="lgUI" hidden>
     <canvas id="lgCv"></canvas>
+    <canvas id="sdCv" hidden aria-label="The Sluice, side-on"></canvas><!-- [league] Spindrift's view (src/lgside2d.js) -->
     <div class="lg-score"><span class="lg-t lg-blue">Blue</span><b id="lgSB">0</b><time id="lgClock">5:00</time><b id="lgSO">0</b><span class="lg-t lg-orange">Orange</span></div>
     <canvas id="lgMap" aria-label="Chart of the pool"></canvas>
     <div class="lg-count" id="lgCount" hidden>3</div>
@@ -3241,7 +3247,7 @@ svg.chrock .foam { fill: rgba(235,245,250,0.55); } svg.chrock .rk { fill: #4b4d5
 // ---- src/config.js ----
 'use strict';
 // The game's version, shown at the top of the main menu. Bump it by one with every change pushed to main.
-var VERSION = 246;
+var VERSION = 248;
 // Skerry Light: tuning, asset paths and lore.
 // World units are metres. The lighthouse stands at the origin on the shoreline (y = 0);
 // north (+y) is open sea. Bearings: 0 = north, positive = east.
@@ -3416,6 +3422,19 @@ document.addEventListener('visibilitychange', () => {
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 248, date: '2026-11-24', title: "Lore compendium: Spindrift", New: [
+    "Lore compendium: two new articles, The Sluice (the old tide-lock under the Light where Spindrift is played) and Spindrift (how the crews' winter game began and how it's played).",
+  ], Changes: [
+    "Lore compendium: Skerry League, The Harbour Pool, The Gale, the timeline and the era of the Light now cover Spindrift and the Sluice.",
+  ] },
+  { v: 247, date: '2026-11-23', title: "Skerry League: Spindrift", New: [
+    "Skerry League: Spindrift, a new way to play, side-on. Pick it under Game on the Skerry League card.",
+    "Skerry League: Spindrift is played in the Sluice, the old tide-lock under the Light, with a lock gate for a goal in each end wall. One against one or two against two, against bots or online.",
+    "Skerry League: in Spindrift your ship leaps out of the water, flips in the air (a flip into the ball hits it much harder) and flies on the Gale, which drives her the way her bow points.",
+    "Skerry League: Spindrift matches can be hosted from the League lobby for up to four players. Empty seats are filled by bots, and the lobby list shows which game each match is.",
+  ], Changes: [
+    "Skerry League: the card keeps a separate record for Spindrift, alone and online.",
+  ] },
   { v: 246, date: '2026-11-23', title: "The Chronicle of the Light: four new missions", New: [
     "The Chronicle of the Light: four new missions for the newer games, each with its own cinematics and story, for one to four players. The campaign now has eighteen.",
     "The Chronicle of the Light: The Nine Holes (Act II, c. 1883, from Skerry Links). The keepers lay out the course on the headland and play on into the night. Strike the ball hole by hole, keep it from the drowned at the Chasm, light warning fires with burning balls and face the Chasm Crab.",
@@ -75012,7 +75031,7 @@ function origIsOpen() { return !!(ORIG.el && !ORIG.el.hidden); }
 // The Skerry Compendium: the lore book on the main menu, written like a wiki (src/loreui.js draws it).
 // It ties every game into one history: the voyages (Skerry Light), Wreckers' Night, Drowned Reach, Keeper's Last Light,
 // the two raids (Maren's End, The Gannet's Wake), The Chronicle of the Light (its people, places, nights and five eras), Fog Run, Freebooters' Sea [fbsea], The Original (as The Early Watches),
-// Skerry Links (with the headland), Skerry League (the Harbour Pool, its two sides and the Gale), Skerry Chess (the players of the lamp room)
+// Skerry Links (with the headland), Skerry League (the Harbour Pool, its two sides, the Gale, and Spindrift in the Sluice), Skerry Chess (the players of the lamp room)
 // and Skerry Clash (with the Race, the Threefold Skerry, the triple draft, the towers and crossing in person). Where the game itself says nothing, the gaps are filled
 // with lore that fits; the keeper's log (SK.LOG in config.js) is the spine and is never contradicted.
 // An article: { id, t: title, cat: [categories], img: a picture key (see loreImg in loreui.js), gal: visitors' picture keys for a gallery, box: [[label, value], ...]
@@ -75044,6 +75063,7 @@ var LORE = [
     "<b>c. 1879.</b> The keeper Holm comes to the Light, with his wife [[maren]]. In his early years he swings the beam by hand to show each ship the rocks: see [[ch_original]].",
     "<b>c. 1883.</b> The keepers lay out nine holes of golf along the headland: see [[ch_links]].",
     "<b>c. 1885.</b> The harbour crews start playing their ball game in the Harbour Pool: see [[ch_league]].",
+    "<b>c. 1885 to 1886.</b> The first winter the gales shut the Harbour Pool, the crews take their game into the old tide-lock under the Light and play it side-on: see [[spindrift]] and [[sluice]].",
     "<b>c. 1886.</b> The keepers carve a chessboard for the lamp room, and then a second one with the reef on it: see [[ch_chess]].",
     "<b>14 December 1887.</b> [[wreck1887|The Night of the Gannet]]. The lamp fails in the second hour. Maren rows out with a hand lantern to warn the brig [[gannet|Gannet]]. The brig breaks up on the skerries with all hands. The skiff comes back empty, [[marenslantern|her lantern]] still lit.",
     "<b>15 December 1887.</b> The sea freezes from the harbour steps to the horizon. It is the first of [[sixseas|the six seas]].",
@@ -75205,7 +75225,7 @@ var LORE = [
   ]},
   { h: 'In the log', p: [ "[[log|The keeper's log]] never mentions the course. The station's coal book records twelve golf balls bought from a Wrackhaven chandler in 1884, and eleven of them lost by the end of that summer." ] },
 ], also: ['headland', 'skerrylight', 'harbour', 'crates'] },
-{ id: 'ch_league', t: 'Skerry League', cat: ['Chronicles', 'Places'], box: [['Told in', 'Skerry League'], ['When', 'Summer evenings, from c. 1885'], ['Where', '[[harbourpool|The Harbour Pool]], under the cliffs by [[harbour|the harbour]]'], ['Who', 'Two crews, Blue and Orange, one to three ships a side'], ['Played with', 'A great striped buoy'], ['Ships', 'Brigs, cutters, barques, and in later years a carrier']], sum: "A game the harbour crews made up between voyages: a walled basin of still water under the cliffs, a goal at each end with a little light behind it, and a great red and white buoy to knock into the other crew's goal with nothing but your own ship. Nobody is quite sure who played it first, and every crew says it was theirs.", secs: [
+{ id: 'ch_league', t: 'Skerry League', cat: ['Chronicles', 'Places'], box: [['Told in', 'Skerry League'], ['When', 'Summer evenings, from c. 1885'], ['Where', '[[harbourpool|The Harbour Pool]], under the cliffs by [[harbour|the harbour]], and in winter [[sluice|the Sluice]] under the Light'], ['Who', 'Two crews, Blue and Orange, one to three ships a side (one or two in the Sluice)'], ['Played with', 'A great striped buoy'], ['Ships', 'Brigs, cutters, barques, and in later years a carrier']], sum: "A game the harbour crews made up between voyages: a walled basin of still water under the cliffs, a goal at each end with a little light behind it, and a great red and white buoy to knock into the other crew's goal with nothing but your own ship. Nobody is quite sure who played it first, and every crew says it was theirs.", secs: [
   { h: 'The Harbour Pool', p: [
     "The pool was built as a fitting-out basin for the harbour, a square of sea wall with a lamp every few yards along the top, and was never finished: the gates were never hung, and the cove's tide never quite empties it. The crews laid the two goals across its ends with spare spars and old net, and the harbour board, finding it could not stop them, put up two small lighthouses behind them and painted one blue and one orange.",
     "The buoy is a spent channel marker, striped red and white and big enough that a cutter has to put her shoulder into it. A hard knock lifts it clean out of the water.",
@@ -75213,8 +75233,11 @@ var LORE = [
   { h: 'The game', p: [
     "A match runs on the harbour clock for a few minutes. A goal rings the bell and sets the lighthouse behind it flashing, and both crews go back to their marks to start again. Level at the end and it goes on until somebody scores. The crews keep a Gale in a bottle, a burst of wind let loose from a cask on deck, and fill it again from the yellow gale buoys moored about the pool.",
   ]},
+  { h: 'Spindrift', p: [
+    "When the winter gales shut the Harbour Pool the crews took the game under the Light, into [[sluice|the Sluice]], the old tide-lock in the rock, and played it there by lantern light with the sea slopping half way up the walls. In a chamber that narrow there is room for only one or two ships a side, and nowhere to go but up: the ships leap clean out of the water, turn over in the air, and ride the Gale across the vault after the buoy. The harbour calls it [[spindrift]], after what the ships throw up, and the younger crews will play nothing else.",
+  ]},
   { h: 'In the log', p: [ "[[log|The keeper's log]] never mentions the game, though the harbour board's minutes record the cost of two lighthouses, 'small, for the amusement of the crews', and of a great deal of new net." ] },
-], also: ['harbourpool', 'leaguecrews', 'gale', 'harbour'] },
+], also: ['harbourpool', 'sluice', 'spindrift', 'leaguecrews', 'gale', 'harbour'] },
 { id: 'ch_chess', t: 'Skerry Chess', cat: ['Chronicles', 'Places'], box: [['Told in', 'Skerry Chess'], ['When', 'Long winter nights, from c. 1886'], ['Where', 'The lamp room of [[skerrylight]]'], ['Who', 'The keepers, the harbour crews, [[lamproom|anyone who would sit down]]'], ['Played with', 'Two boards: a plain one, and the reef board'], ['Pieces', 'Keeper, lantern, tower, cutter, gannet and hand']], sum: "The keepers' game. On the long nights of the watch the keeper on duty and the one off it played chess by the light of the lamp, on a board one of them carved from a ship's hatch cover. A second board followed, cut with the reef on it, and a game of its own grew up around it: the Light against the Wreckers.", secs: [
   { h: 'The plain board', p: [
     "The first board is a plain one, played by the rules any harbour club would know. The keepers kept a tally of games in pencil on the underside, and it runs to several hundred before the pencil gives out.",
@@ -75935,7 +75958,7 @@ var LORE = [
   { h: 'The gale buoys', p: [
     "Yellow buoys are moored about the water, small ones along the sides and big ones in the corners and at the middle of each wall. Each holds a charge of wind for [[gale|the Gale]], and is filled again by the harbour lads a few seconds after a ship has emptied it.",
   ]},
-], also: ['ch_league', 'leaguecrews', 'harbour'] },
+], also: ['ch_league', 'leaguecrews', 'sluice', 'harbour'] },
 { id: 'leaguecrews', t: 'The Blue and the Orange', cat: ['Factions'], box: [['Kind', 'The two sides of the Harbour Pool'], ['Colours', 'Blue, and Orange'], ['Ships a side', 'One to three, and more when friends come'], ['Ships sailed', 'Brigs, cutters, barques, and a carrier'], ['Appears in', '[[ch_league]]']], sum: "The two sides of [[ch_league|the harbour crews' game]]. Nobody belongs to either for long: a crew is Blue one evening and Orange the next, and the only loyalty that lasts is to the ship.", secs: [
   { h: 'Picking sides', p: [
     "The sides are made up on the quay, as many ships to each as there are crews willing. When friends come down from the town the sides grow to fit them all, up to three ships a side and sometimes six on the water at once, each crew sailing its own ship. Any berth left empty is filled by harbour lads who know the pool, some sharper than others. The quay calls them Easy, Fair and Hard, and not to their faces.",
@@ -75948,12 +75971,40 @@ var LORE = [
     "Each crew brings her own ship in her own colours, and she handles in the pool as she does at sea, only turning more sharply in the still water. The cutter answers quickest. The carrier, which the harbour has never quite explained, is the heaviest, and moves the buoy more and is moved less. See [[boats]].",
   ]},
 ], also: ['ch_league', 'harbourpool', 'gale'] },
-{ id: 'gale', t: 'The Gale', cat: ['Objects'], box: [['Kind', 'Wind, kept in a cask on deck'], ['Filled from', 'The yellow gale buoys of [[harbourpool|the Harbour Pool]]'], ['Used for', 'A burst of speed'], ['Appears in', '[[ch_league]]']], sum: "A charge of wind stoppered up in a cask on deck and let go all at once, which drives a ship across the pool far faster than any sail. The crews of [[ch_league|Skerry League]] call it a Gale in a bottle.", secs: [
+{ id: 'gale', t: 'The Gale', cat: ['Objects'], box: [['Kind', 'Wind, kept in a cask on deck'], ['Filled from', 'The yellow gale buoys of [[harbourpool|the Harbour Pool]] and [[sluice|the Sluice]]'], ['Used for', 'A burst of speed, and in the Sluice, flight'], ['Appears in', '[[ch_league]]']], sum: "A charge of wind stoppered up in a cask on deck and let go all at once, which drives a ship across the pool far faster than any sail. The crews of [[ch_league|Skerry League]] call it a Gale in a bottle.", secs: [
   { h: '', p: [
     "Nobody at the harbour will say where the wind comes from. The crews take it from the gale buoys moored about the pool, a third of a cask from a small one and a whole cask from a big one, and it lasts only as long as the cask does. The Hard crews spend it freely. The Easy ones keep forgetting they have it.",
+    "In [[sluice|the Sluice]] the gale buoys float loose on the water instead of being moored, and the Gale is used differently. It drives a ship the way her bow points, wherever that is, so a crew that leaps, turns her bow to the vault and lets the cask go will fly. The harbour thinks this is the most dangerous thing anyone has done with a ship since [[wreck1887|the Gannet]], and turns out to watch every time.",
     "Since [[sixseas|the strange year]] the coast has grown used to things that should not be kept being kept, and a cask of wind is among the milder of them.",
   ]},
 ], also: ['ch_league', 'harbourpool', 'leaguecrews'] },
+{ id: 'sluice', t: 'The Sluice', cat: ['Places'], box: [['Kind', 'A tide-lock cut into the rock under the Light'], ['Where', 'Beneath [[skerrylight]]'], ['Built', '1841, with the tower'], ['Gates', 'Two, one in each end wall'], ['Appears in', '[[spindrift]]']], sum: "The old tide-lock under Skerry Light: a vaulted chamber cut into the rock and half full of sea, with a lock gate in each end wall. It was built to land the station's stores in any weather and has not been used for that in living memory. The harbour crews play [[spindrift]] in it.", secs: [
+  { h: 'The chamber', p: [
+    "When [[lampwright|the Lampwright]] built the tower he had his men cut a lock into the foot of the rock, so a stores boat could come in on the tide whatever the sea was doing outside, shut the gates behind it, and unload in the dry. The chamber is long and narrow and roofed with a stone vault, and the sea inside stands at half its height, flat and green, while the swell booms against the outer gate.",
+    "Along the back wall stand three great relieving arches, each with a barred window high up that lets in a little grey daylight. Lanterns hang between them. The chains and wheels of the old gate gear still hang under the vault, rusted solid, and a line of weed marks where the tide has stood for forty years. Worn into the stone of the middle arch is the mark of the Light, a lamp inside a ring, cut by the masons when the tower was finished.",
+  ]},
+  { h: 'The two gates', p: [
+    "The lock has a gate in each end wall, set low so that their timber lintels sit just above the water. The crews painted the left-hand lintel blue and the right-hand one orange and hung a lamp over each, and the gates have been goals ever since. A goal is the buoy carried right under the lintel, and the lamp above it is turned up full until the whole chamber blazes.",
+  ]},
+  { h: 'Watching', p: [
+    "Nobody can stand inside the Sluice during a match and expect to come out dry. The near wall was half broken out by the sea in the bad winter of 1859 and never rebuilt, and the crowd sits along the rocks in front of the gap with the whole length of the chamber laid out side-on before them like a stage.",
+  ]},
+  { h: 'In the log', p: [ "[[log|The keeper's log]] says nothing of the Sluice, though the station's oldest stores book has 'Lock: gates greased' at the top of every month until 1846, and then never again." ] },
+], also: ['spindrift', 'skerrylight', 'harbourpool', 'ch_league'] },
+{ id: 'spindrift', t: 'Spindrift', cat: ['Events'], box: [['Kind', 'The winter game of the harbour crews'], ['Where', '[[sluice|The Sluice]], under [[skerrylight]]'], ['When', 'Winter, from c. 1885'], ['Who', '[[leaguecrews|Blue and Orange]], one or two ships a side'], ['Played with', 'The great striped buoy'], ['Part of', '[[ch_league]]']], sum: "[[ch_league|Skerry League]] as the harbour crews play it in winter, in the narrow tide-lock under the Light, where there is not room for a proper game and so the ships go up instead. It is named for the spray they throw, which on a good night reaches the vault.", secs: [
+  { h: 'How it began', p: [
+    "The first winter the crews had their game, the gales came early and filled the Harbour Pool with sea every tide until no ship could keep station in it. Somebody remembered the old lock under the Light, which had sheltered stores boats from the same weather forty years before. They rowed the buoy out to it, opened the gates, and by the end of the evening had worked out that a ship leaping off a swell could clear the water entirely.",
+  ]},
+  { h: 'The game', p: [
+    "The rules are the Pool's: a match on the harbour clock, a goal rings the bell, and a level score goes on until somebody scores. The difference is the chamber. With a wall at each end, a vault overhead and only one or two ships a side, the buoy is as often in the air as on the water, and the ships have to go after it there.",
+    "A ship leaps from the water and, if her crew are quick, leaps again before she comes down, or throws herself over forwards, backwards or bow first at the water. A ship that strikes the buoy in the middle of a flip hits it far harder than one that only runs into it, and the best crews do little else. Whatever she does in the air she lands the right way up; the Sluice crews say a ship always knows which way is down, even when her helmsman does not.",
+    "Yellow gale buoys float loose on the water, a small one filling a third of the cask and a big one by the walls filling all of it, and [[gale|the Gale]] is let go the way the bow points, so a ship pointed at the vault flies.",
+  ]},
+  { h: 'The crews', p: [
+    "The same Blue and Orange as the Pool, and the same harbour lads filling empty berths, though fewer of them: two a side is a crowd in the Sluice. Lads who are steady in the Pool are often hopeless here, and the other way about. The Hard ones fly at the buoy on the Gale; the Easy ones are mostly to be found upside down.",
+  ]},
+  { h: 'In the log', p: [ "[[log|The keeper's log]] never mentions the Sluice games, though more than one winter entry records 'a great noise under the rock, as of ships', with no ship in sight." ] },
+], also: ['sluice', 'ch_league', 'leaguecrews', 'gale'] },
 { id: 'headland', t: 'The headland', cat: ['Places'], box: [['Where', 'Above [[harbour|the harbour]], facing [[skerrylight]]'], ['Holds', 'The nine holes of the keepers\' links'], ['Landmarks', 'The Gate, the Cove, the Point, the Chasm'], ['Appears in', '[[ch_links]]']], sum: "The long hill of turf and cliff above the harbour, from the field gate inland round to the point that looks straight out at the Light. The keepers laid their nine holes of golf along it, and it is mostly remembered for those. See [[ch_links]].", secs: [
   { h: 'The lie of it', p: [
     "Inland, the headland is farmland running gently down to a small cove, crossed by a creek that the course has to clear. Seaward it rises to a long cliff top, with the sea and the skerries all along one side, until it ends at the Point, a tiny green with the sea on three sides. Beyond the Point the cliff is split by the Chasm, a gully the sea fills at every tide, which the eighth hole crosses in one shot or not at all.",
@@ -75999,7 +76050,7 @@ var LORE = [
 ], also: ['mooncussers', 'jagohanging', 'era_before'] },
 { id: 'era_light', t: 'The Light', cat: ['Eras'], box: [["From", "1841"], ["To", "14 December 1887"], ["Lit by", "[[skerrylight]]"], ["Keepers", "Unrecorded, then [[keeper|Holm]] from c. 1879"]], sum: "The forty-six years Skerry Light burned as a light should, from the night the Lampwright lit it to the night its lamp went out with the Gannet coming in. The coast remembers them as the ordinary years, and there have been none since.", secs: [
   { h: '', p: [
-    "It holds [[lighting1841|the lighting of the Light]], [[ch_original|the keeper's early watches]] when he swung the beam by hand, [[ch_links|the nine holes on the headland]] from about 1883, [[ch_league|the crews' game in the Harbour Pool]] from about 1885, [[ch_chess|the chessboards of the lamp room]] from about 1886, and its end, [[wreck1887|the Night of the Gannet]].",
+    "It holds [[lighting1841|the lighting of the Light]], [[ch_original|the keeper's early watches]] when he swung the beam by hand, [[ch_links|the nine holes on the headland]] from about 1883, [[ch_league|the crews' game in the Harbour Pool]] from about 1885 (and [[spindrift|in the Sluice]] the winter after), [[ch_chess|the chessboards of the lamp room]] from about 1886, and its end, [[wreck1887|the Night of the Gannet]].",
   ]},
 ], also: ['era_before', 'era_strange', 'skerrylight'] },
 { id: 'era_strange', t: 'The Strange Year', cat: ['Eras'], box: [["From", "15 December 1887"], ["To", "14 December 1888"], ["Began", "When the sea froze to the horizon"], ["Recorded in", "[[log|The keeper's log]]"]], sum: "1888, the year after the Gannet, when the sea stopped being one sea. In it came [[plimsoll]], Maren on the water, [[knock]], [[verity]], the six seas, the visitors and the drifting crates, and it ended a year to the night with the Gannet rising.", secs: [
@@ -78985,9 +79036,10 @@ function lgMyName() { const v = ($('lgNick') && $('lgNick').value) || (typeof NE
 // o: { size: ships a side (1 to 3), mins, skill, boat (yours), fleet ('mixed' or 'same') }
 function lgStart(o) {
   o = Object.assign({}, lgStore.get().set || {}, o || {});
-  const size = lgClamp(o.size | 0 || 2, 1, 3), skill = LG_SKILL[o.skill] ? o.skill : 'fair', mins = [3, 5, 7].includes(+o.mins) ? +o.mins : 5;
+  const side = o.game === 'side', size = lgClamp(o.size | 0 || 2, 1, side ? 2 : 3), skill = LG_SKILL[o.skill] ? o.skill : 'fair', mins = [3, 5, 7].includes(+o.mins) ? +o.mins : 5;
   const myBoatId = lgBoatOf(o.boat || (typeof CRATES !== 'undefined' && CRATES.boat) || 'brig').id;
-  LG.set = { size, skill, mins, boat: myBoatId, fleet: o.fleet === 'same' ? 'same' : 'mixed' };
+  LG.set = { size, skill, mins, boat: myBoatId, fleet: o.fleet === 'same' ? 'same' : 'mixed', game: side ? 'side' : 'pool' };
+  LG.side = side;   // (Spindrift, side-on: src/lgside.js)
   LG.net = o.net || null;
   const st = lgStore.get(); if (!LG.net) { st.set = LG.set; lgStore.set(st); }
   const ids = (typeof BOATS !== 'undefined' ? BOATS.map(b => b.id) : ['brig']), names = LG_BOTNAMES.slice().sort(() => Math.random() - 0.5);
@@ -79011,15 +79063,17 @@ function lgStart(o) {
   if (!LG.net) LG.me = 0;
   LG.score = [0, 0]; LG.ko = 0; LG.lastHitT = -9; LG.lastHitBy = null; LG.len = mins * 60; LG.clock = LG.len; LG.ot = false; LG.t = 0; LG.hits = 0; LG.goals = []; LG.last = null;
   LG.ball = { x: 0, y: 0, z: LGC.FLOAT, vx: 0, vy: 0, vz: 0, rx: 0, ry: 0, q: null, gone: false };
-  LG.pads = lgPadsNew(); LG.keys = {}; LG.touch = {};
+  LG.pads = side ? sdPadsNew() : lgPadsNew(); LG.keys = {}; LG.touch = {};
+  if (side) for (const s of LG.ships) sdNew(s);
   LG.cam = st.cam === 'ship' ? 'ship' : 'ball';
   LG.on = true;
   lgEnter();
-  if (typeof lg3dMatch === 'function') lg3dMatch();
+  if (!side && typeof lg3dMatch === 'function') lg3dMatch();
   lgKickoff();
 }
 // everyone to their marks: the ball in the middle, each side's ships spread on their own half facing the middle
 function lgKickoff() {
+  if (LG.side) return sdKickoff();
   const marks = { 1: [[0, -0.62]], 2: [[-0.34, -0.62], [0.34, -0.62]], 3: [[-0.4, -0.6], [0.4, -0.6], [0, -0.86]] }[LGC_size()];
   for (const s of LG.ships) {
     const m = marks[s.slot] || [0, -0.6], sg = s.team === 0 ? 1 : -1;
@@ -79040,7 +79094,8 @@ function lgFrame(dt) {
   LG.t += dt;
   lgPadPoll(dt);
   lgSim(dt);
-  if (typeof lg3dDraw === 'function') lg3dDraw(dt);
+  if (LG.side) { if (typeof sdDraw === 'function') sdDraw(dt); }
+  else if (typeof lg3dDraw === 'function') lg3dDraw(dt);
   lgHud();
   if (LG.net && typeof lgnTags === 'function') lgnTags();
 }
@@ -79068,6 +79123,7 @@ function lgGuestPhase(dt) {
   else if (LG.ph === 'play') LG.clock = LG.ot ? LG.clock + dt : Math.max(0, LG.clock - dt);
 }
 function lgStep(dt) {
+  if (LG.side) return sdStep(dt);
   const frozen = LG.ph === 'count' || LG.ph === 'end';
   for (const s of LG.ships) {
     if (!lgOwn(s)) { s.bob += dt; continue; }   // (someone else's ship: src/lgnet.js puts her where she's heard to be)
@@ -79232,7 +79288,8 @@ function lgGoalShow(team, by, own) {
   lgSay(own ? `Own goal! ${T.name} scores` : by ? `${by.me ? 'You score!' : by.nm + ' scores for ' + T.name}` : `${T.name} scores!`, LGC.CELEB);
   LG.ball.gone = true; LG.goalAt = { team, x: LG.ball.x, y: LG.ball.y, t: LG.t };
   lgSnd('goal', team === lgMeShip().team ? 1 : 0.6);
-  if (typeof lg3dGoal === 'function') lg3dGoal(team);
+  if (LG.side) { if (typeof sdGoalFx === 'function') sdGoalFx(team); }
+  else if (typeof lg3dGoal === 'function') lg3dGoal(team);
   if (typeof padRumble === 'function') padRumble(0.6, 0.6, 400);
 }
 function lgOver() { return LG.ot || (LG.clock <= 0 && LG.score[0] !== LG.score[1]); }
@@ -79240,7 +79297,7 @@ function lgEnd() {
   LG.ph = 'end'; LG.msgT = 0; { const el = $('lgMsg'); if (el) el.classList.remove('on'); }
   const me = lgMeShip(), mine = LG.score[me.team], theirs = LG.score[1 - me.team], res = mine > theirs ? 'win' : mine < theirs ? 'loss' : 'draw';
   // (online matches are kept apart from those against bots alone)
-  const st = lgStore.get(), rk = LG.net ? 'onl' : 'rec'; st[rk] = st[rk] || { w: 0, d: 0, l: 0, g: 0, m: 0 };
+  const st = lgStore.get(), rk = (LG.side ? 's' : '') + (LG.net ? 'onl' : 'rec'); st[rk] = st[rk] || { w: 0, d: 0, l: 0, g: 0, m: 0 };
   st[rk].m++; st[rk].g += me.goals; if (res === 'win') st[rk].w++; else if (res === 'loss') st[rk].l++; else st[rk].d++;
   lgStore.set(st);
   lgSnd(res === 'win' ? 'win' : 'horn');
@@ -79317,11 +79374,15 @@ function lgBot(s, dt) {
 // ---------- the screen ----------
 function lgEnter() {
   try { audioInit(); } catch (e) {}
-  if (typeof lg3dInit === 'function' && !lg3dInit()) { if (typeof toast === 'function') toast('Skerry League needs WebGL, which this browser has turned off.', 'No 3D'); }
+  if (!LG.side && typeof lg3dInit === 'function' && !lg3dInit()) { if (typeof toast === 'function') toast('Skerry League needs WebGL, which this browser has turned off.', 'No 3D'); }
   state = 'league'; paused = false;
   $('titleCard').hidden = true; $('hud').hidden = true; $('logbox').hidden = true; $('biomeBanner').hidden = true;
   $('lgUI').hidden = false; $('lgPause').hidden = true; $('lgEnd').hidden = true;
-  document.body.classList.add('lgon');
+  document.body.classList.add('lgon'); document.body.classList.toggle('lgside', !!LG.side);
+  $('lgCv').hidden = !!LG.side; $('sdCv').hidden = !LG.side; $('lgMap').hidden = !!LG.side; $('lgCamBtn').hidden = !!LG.side;
+  $('lgTU').textContent = '▲'; $('lgTU').setAttribute('aria-label', LG.side ? 'Leap' : 'Make sail'); $('lgTD').setAttribute('aria-label', LG.side ? 'Dive' : 'Shorten sail');
+  $('lgPauseHead').textContent = LG.side ? 'Spindrift' : 'Skerry League';
+  if (LG.side && typeof sdResize === 'function') sdResize();
   const coarse = matchMedia && matchMedia('(pointer: coarse)').matches; $('lgPadBox').hidden = !coarse;
   if (typeof lg3dResize === 'function') lg3dResize();
   lgHud(true);
@@ -79330,7 +79391,7 @@ function lgExit() {
   const wasNet = !!LG.net;
   LG.on = false; LG.ph = 'off'; LG.net = null;
   if (wasNet && typeof lgnStop === 'function') lgnStop();
-  $('lgUI').hidden = true; document.body.classList.remove('lgon');
+  $('lgUI').hidden = true; document.body.classList.remove('lgon', 'lgside');
   state = 'title'; toTitle();
   setTimeout(() => { const c = $('lgTitle'); if (c) c.scrollIntoView({ block: 'start' }); lgCardRender(); }, 60);
 }
@@ -79348,9 +79409,9 @@ function lgHud(full) {
   if (LG.ph === 'count') { big.hidden = false; big.textContent = String(Math.max(1, Math.ceil(LG.phT))); } else big.hidden = true;
   const g = Math.round(me.gale); if (g !== LG.hudG) { LG.hudG = g; $('lgGale').style.setProperty('--p', g + '%'); $('lgGaleN').textContent = g; }
   $('lgGaleBox').classList.toggle('on', me.galeOn);
-  const kn = Math.round(Math.abs(me.v + me.bv) * 1.944); if (kn !== LG.hudK) { LG.hudK = kn; $('lgSpeed').textContent = (me.v + me.bv < -0.5 ? '−' : '') + kn; }
+  const kn = Math.round((LG.side ? Math.hypot(me.v, me.bv) : Math.abs(me.v + me.bv)) * 1.944); if (kn !== LG.hudK) { LG.hudK = kn; $('lgSpeed').textContent = (!LG.side && me.v + me.bv < -0.5 ? '−' : '') + kn; }
   $('lgCamBtn').textContent = LG.cam === 'ball' ? 'Ball cam' : 'Ship cam';
-  lgMap();
+  if (!LG.side) lgMap();
 }
 // the little chart of the pool in the corner: the walls, the goals, the ball and every ship
 function lgMap() {
@@ -79381,8 +79442,9 @@ function lgKey(e, down) {
   else if (k === 'ArrowRight' || k === 'd' || k === 'D') set('r');
   else if (k === 'ArrowUp' || k === 'w' || k === 'W') set('u');
   else if (k === 'ArrowDown' || k === 's' || k === 'S') set('d');
-  else if (k === 'Shift' || k === ' ') set('g');
-  else if ((k === 'c' || k === 'C' || k === 'v' || k === 'V') && down && !e.repeat) lgCam();
+  else if (k === 'Shift' || (k === ' ' && !LG.side) || (LG.side && (k === 'k' || k === 'K'))) set('g');
+  else if (k === ' ' || (LG.side && (k === 'j' || k === 'J'))) set('u');
+  else if (!LG.side && (k === 'c' || k === 'C' || k === 'v' || k === 'V') && down && !e.repeat) lgCam();
 }
 addEventListener('keydown', e => lgKey(e, true), true);
 addEventListener('keyup', e => lgKey(e, false), true);
@@ -79405,7 +79467,9 @@ function lgPadPoll(dt) {
   const lt = p.buttons[6] ? p.buttons[6].value : 0, rt = p.buttons[7] ? p.buttons[7].value : 0;
   LG.padSail = (rt > 0.15 ? rt : 0) - (lt > 0.15 ? lt : 0) + (now[12] ? 1 : 0) - (now[13] ? 1 : 0);
   LG.padGale = !!(now[0] || now[1]);
-  if (down(3)) lgCam();
+  // (Spindrift: A leaps and flips, B, X or RT the Gale, the stick down to dive)
+  if (LG.side) { LG.padJump = !!now[0]; LG.padGale = !!(now[1] || now[2] || rt > 0.3); LG.padSail = -(Math.abs(p.axes[1] || 0) > 0.5 ? p.axes[1] : 0) - (now[13] ? 1 : 0); }
+  else if (down(3)) lgCam();
   if (down(9)) lgPauseOpen(true);
 }
 
@@ -79419,6 +79483,8 @@ function lgSnd(k, v) {
     else if (k === 'hit') { noise('lowpass', 500 + 900 * v, 1, 0.001, 0.25 * v + 0.05, 0.18); tone(140 + 90 * v, 'sine', 0.001, 0.2 * v + 0.05, 0.2); }
     else if (k === 'wall' || k === 'thud') noise('lowpass', 300, 1, 0.001, 0.18 * v + 0.04, 0.22);
     else if (k === 'post') { tone(520, 'triangle', 0.001, 0.14 * v + 0.05, 0.6); tone(780, 'sine', 0.001, 0.06, 0.5); }
+    else if (k === 'jump') { noise('bandpass', 900, 1.2, 0.002, 0.12, 0.25); tone(220, 'sine', 0.002, 0.06, 0.18, { to: 440 }); }   // (Spindrift: the leap and the flip)
+    else if (k === 'flip') { noise('bandpass', 1600, 2, 0.01, 0.12, 0.35); tone(330, 'triangle', 0.005, 0.05, 0.3, { to: 880 }); }
     else if (k === 'bump') noise('bandpass', 220, 1.5, 0.001, 0.2 * v + 0.05, 0.25);
     else if (k === 'splash') { if (typeof sfxSplash === 'function') sfxSplash(0, 0.4 * v + 0.2); }
     else if (k === 'pad') { tone(660, 'sine', 0.005, 0.08 * v, 0.18, { to: 1320 }); noise('highpass', 3000, 1, 0.002, 0.04 * v, 0.2); }
@@ -79435,13 +79501,22 @@ function lgCardRender() {
   const o = (lgStore.get().onl) || null, line = (r, w) => `${w}: ${r.w} won, ${r.d} drawn, ${r.l} lost · ${r.g} goal${r.g === 1 ? '' : 's'} in ${r.m} match${r.m === 1 ? '' : 'es'}`;
   el.textContent = r && r.m ? line(r, 'Your record') : 'No matches played yet.';
   if (o && o.m) el.textContent += ' · ' + line(o, 'Online');
+  const sr = lgStore.get().srec, so = lgStore.get().sonl;
+  if (sr && sr.m) el.textContent += ' · ' + line(sr, 'Spindrift'); if (so && so.m) el.textContent += ' · ' + line(so, 'Spindrift online');
 }
 function lgPlayLocal() {
   if (typeof LGN !== 'undefined' && LGN.code && typeof lgnLeave === 'function') lgnLeave();
-  lgStart({ size: +$('lgSize').value, mins: +$('lgMins').value, skill: $('lgSkill').value, boat: $('lgBoat').value, fleet: $('lgFleet').value });
+  lgStart({ size: +$('lgSize').value, mins: +$('lgMins').value, skill: $('lgSkill').value, boat: $('lgBoat').value, fleet: $('lgFleet').value, game: $('lgGame') ? $('lgGame').value : 'pool' });
+}
+// the card follows the game picked: Spindrift has no three a side, and its own keys under the options
+function lgGameCard() {
+  const side = $('lgGame') && $('lgGame').value === 'side', sz = $('lgSize'), o3 = sz && sz.querySelector('option[value="3"]');
+  if (o3) { o3.disabled = side; o3.hidden = side; if (side && sz.value === '3') sz.value = '2'; }
+  const k = $('lgKeys'), ks = $('lgKeysSide'); if (k) k.hidden = side; if (ks) ks.hidden = !side;
+  $('lgTitle').classList.toggle('lgsidecard', side);
 }
 function lgDebug(o) { lgStart(Object.assign({ size: 2, mins: 5, skill: 'fair' }, o || {})); }
-function lgDebugGoal(team) { if (LG.ph !== 'play') { LG.ph = 'play'; } LG.ball.x = 0; LG.ball.y = (LGC.AY + LGC.R + 2) * (team === 0 ? 1 : -1); LG.ball.vx = 0; LG.ball.vy = 0; lgBall(0.001); }
+function lgDebugGoal(team) { if (LG.side) return sdDebugGoal(team); if (LG.ph !== 'play') { LG.ph = 'play'; } LG.ball.x = 0; LG.ball.y = (LGC.AY + LGC.R + 2) * (team === 0 ? 1 : -1); LG.ball.vx = 0; LG.ball.vy = 0; lgBall(0.001); }
 
 (function lgInit() {
   if (!$('lgTitle')) return;
@@ -79452,6 +79527,8 @@ function lgDebugGoal(team) { if (LG.ph !== 'play') { LG.ph = 'play'; } LG.ball.x
   if (set.mins) $('lgMins').value = String(set.mins);
   if (set.skill) $('lgSkill').value = set.skill;
   if (set.fleet) $('lgFleet').value = set.fleet;
+  // the game: the Harbour Pool, or Spindrift side-on (one or two a side, and its own help on the card)
+  if ($('lgGame')) { $('lgGame').value = set.game === 'side' ? 'side' : 'pool'; $('lgGame').addEventListener('change', lgGameCard); lgGameCard(); }
   if (st.nick) $('lgNick').value = String(st.nick).slice(0, 16);
   $('lgNick').addEventListener('change', () => { const s = lgStore.get(); s.nick = $('lgNick').value.slice(0, 16); lgStore.set(s); });
   $('lgPlay').addEventListener('click', lgPlayLocal);
@@ -79470,7 +79547,7 @@ function lgDebugGoal(team) { if (LG.ph !== 'play') { LG.ph = 'play'; } LG.ball.x
     const on = e => { e.preventDefault(); LG.touch[key] = true; b.classList.add('on'); }, off = () => { LG.touch[key] = false; b.classList.remove('on'); };
     b.addEventListener('pointerdown', on); for (const t of ['pointerup', 'pointerleave', 'pointercancel']) b.addEventListener(t, off);
   }
-  addEventListener('resize', () => { if (LG.on && typeof lg3dResize === 'function') lg3dResize(); });
+  addEventListener('resize', () => { if (LG.on && LG.side) { if (typeof sdResize === 'function') sdResize(); } else if (LG.on && typeof lg3dResize === 'function') lg3dResize(); });
   lgCardRender();
 })();
 
@@ -79802,6 +79879,596 @@ function lg3dCamera(dt) {
   L3.cam.position.copy(L3.camP); L3.cam.lookAt(L3.camL);
 }
 
+// ---- src/lgside.js ----
+'use strict';
+// Skerry League: Spindrift. The League's second way to play, picked on its card (Game: The Harbour Pool or Spindrift),
+// seen side-on: the Sluice, the old tide-lock under the Light, a vaulted stone chamber half full of sea, with a lock
+// gate for a goal in each end wall. One or two a side, Blue on the left (attacking the right-hand gate) and Orange on
+// the right. The ships ride the water, leap out of it, turn over in the air and fly on the Gale; the ball (the same
+// great striped buoy) floats, bounces off the walls and the vault and drops back into the water.
+//
+// It shares everything else with the Harbour Pool (src/league.js): LG's state, the phases (count, play, goal, end),
+// the clock, overtime, the score and the goals, the end card, the record (kept apart: srec and sonl), the bots' names
+// and skills, and the online lobby and its seats (src/lgnet.js, with md 'sd' on the host's lob and st). This file is
+// its rules: the ships, the ball, the buoys, the bots, and the net hooks lgnet.js calls when LG.side is set
+// (sdPose, sdHeard, sdPlace, sdBallFly, sdTakeClamp). src/lgside2d.js draws it on a canvas of its own (#sdCv).
+//
+// The frame: x across (Blue's gate at x = -W, Orange's at +W), y up, the still water's surface at y = 0, the vault at
+// y = H, the floor at y = -D. Each gate is a box W..W+GD deep, open from the floor up to its lintel at GH. A goal is
+// the whole ball past the line under the lintel.
+// A ship (fields shared with the Harbour Pool's where they fit, so the net code carries them): x, y her waist; h the
+// way her bow points (0 along +x, anticlockwise); v, bv her speed along x and y; w how fast she's turning in the air;
+// face (+1 or -1) which way she sails on the water; up (+1 or -1) which side of her is her deck in the air (h turned a
+// quarter towards up); air; jumps (0 on the water, 1 after the leap, 2 after the second); jt time since the leap;
+// flipT the flip's time left; gale and galeOn as in the Pool.
+// The controls: A and D (or the arrows) sail left and right on the water and turn her over in the air; W, Up or Space
+// leaps out of the water, and again in the air within SDC.DJ seconds flips her the way you're holding (A or D, S to
+// dive), or with nothing held jumps again; Shift (or K) the Gale, which drives her the way her bow points, in the air
+// too. Every ship goes as fast as the others on the water (accel sets how soon she gets there); the Gale and a flip
+// take her faster. Never slowed: there's no speed in this mode that's less than she had.
+// Bots (sdBot): the nearer of a side goes for the ball from behind it, leaps at a high one and flips into it; the
+// other keeps the gate. Skill sets their pace, how far ahead they see the ball and whether they use the Gale.
+
+var SDC = { W: 118, H: 74, D: 24, GH: 32, GD: 18, R: 7, BG: 30, G: 50, VMAX: 46, ACC: 44, BRAKE: 130, JUMP: 33, JUMP2: 25, FLIP: 36, FLIPT: 0.5, DJ: 1.6, SPIN: 4.4, GALE: 82, GALE_USE: 34, VCAP: 96, HIT: 0.5, BFLOAT: 2.2 };
+
+// the solid stone round the chamber, as boxes (x0, y0, x1, y1): the vault, the floor, each end wall above its gate's
+// lintel, and the back of each gate. A circle against them is pushed out of the nearest.
+function sdSolids() {
+  if (LG.sdSol) return LG.sdSol;
+  const { W, H, D, GH, GD } = SDC, F = 999;
+  return (LG.sdSol = [[-F, H, F, F], [-F, -F, F, -D], [W, GH, F, F], [-F, GH, -W, F], [W + GD, -F, F, F], [-F, -F, -W - GD, F]]);
+}
+function sdPush(x, y, r) {
+  let best = null;
+  for (const b of sdSolids()) {
+    const cx = lgClamp(x, b[0], b[2]), cy = lgClamp(y, b[1], b[3]), dx = x - cx, dy = y - cy, d = Math.hypot(dx, dy);
+    if (d >= r) continue;
+    let nx, ny, pen;
+    if (d > 1e-4) { nx = dx / d; ny = dy / d; pen = r - d; }
+    else { // (the centre inside the stone: out by the nearest face)
+      const o = [[x - b[0], -1, 0], [b[2] - x, 1, 0], [y - b[1], 0, -1], [b[3] - y, 0, 1]].sort((p, q) => p[0] - q[0])[0]; nx = o[1]; ny = o[2]; pen = o[0] + r;
+    }
+    if (!best || pen > best.pen) best = { nx, ny, pen };
+  }
+  return best;
+}
+
+// the gale buoys, on the water: small ones in the middle of each half, big ones by the walls
+function sdPadsNew() {
+  const P = [];
+  for (const x of [-78, -36, 36, 78]) P.push({ x, y: 0, big: false, amt: 34, back: 4, t: 0 });
+  for (const x of [-104, 104]) P.push({ x, y: 0, big: true, amt: 100, back: 10, t: 0 });
+  P.push({ x: 0, y: 0, big: false, amt: 34, back: 4, t: 0 });
+  return P;
+}
+function sdHalf(s) { return lgClamp(3.5 + s.boat.len * 0.27, 7, 14.5); }   // half her length, stem to stern, in this view
+function sdRad(s) { return 3 + Math.min(2, s.boat.beam * 0.3); }
+function sdNew(s) { Object.assign(s, { face: s.team === 0 ? 1 : -1, up: s.team === 0 ? 1 : -1, air: false, jumps: 0, jt: 9, flipT: 0, jHeld: false, roll: 1, turnP: s.team === 0 ? 1 : -1, pitch: 0 }); }
+
+function sdKickoff() {
+  const marks = { 1: [-62], 2: [-56, -96] }[Math.min(2, LGC_size())] || [-62];
+  for (const s of LG.ships) {
+    if (s.face == null) sdNew(s);
+    const sg = s.team === 0 ? 1 : -1;
+    s.x = (marks[s.slot] || -62) * sg; s.y = 0; s.v = 0; s.bv = 0; s.w = 0; s.h = sg > 0 ? 0 : Math.PI;
+    Object.assign(s, { face: sg, up: sg, air: false, jumps: 0, jt: 9, flipT: 0, jHeld: false, roll: 1, turnP: sg, pitch: 0 });
+    s.gale = Math.max(s.gale, 33); s.galeOn = false; s.ai.back = 0; s.ai.stuck = 0;
+  }
+  Object.assign(LG.ball, { x: 0, y: 26, z: 0, vx: 0, vy: 0, vz: 0, rx: 0, gone: false });
+  for (const p of LG.pads) p.t = 0;
+  LG.ph = 'count'; LG.phT = LGC.KICK; LG.last = null; LG.ko++;
+  lgSnd('tick');
+}
+
+// ---------- each step ----------
+function sdStep(dt) {
+  const frozen = LG.ph === 'count' || LG.ph === 'end';
+  for (const s of LG.ships) {
+    if (s.face == null) sdNew(s);
+    if (!lgOwn(s)) { s.bob += dt; sdLook(s, dt); continue; }
+    let mv = 0, jump = false, dive = false, gale = false;
+    if (s.bot) { sdBot(s, dt); mv = s.ai.steer; jump = s.ai.jump; dive = s.ai.dive; gale = s.ai.gale; }
+    else { const K = LG.keys, T = LG.touch; mv = (K.r || T.r ? 1 : 0) - (K.l || T.l ? 1 : 0) + (LG.padSteer || 0); jump = !!(K.u || T.u || LG.padJump); dive = !!(K.d || T.d || (LG.padSail || 0) < -0.5); gale = !!(K.g || T.g || LG.padGale); }
+    mv = lgClamp(mv, -1, 1);
+    if (frozen) { s.bob += dt; s.jHeld = jump; sdLook(s, dt); continue; }
+    sdShip(s, dt, mv, jump, dive, gale);
+    sdLook(s, dt);
+  }
+  if (frozen) return;
+  sdBump();
+  sdBall(dt);
+  for (const p of LG.pads) if (p.t > 0) p.t -= dt;
+}
+// one ship: on the water she sails, in the air she turns over; the leap, the flip and the Gale; then the stone
+function sdShip(s, dt, mv, jump, dive, gale) {
+  const b = s.boat, acc = b.accel || 1, spin = SDC.SPIN * (0.75 + 0.25 * (b.turn || 1));
+  const press = jump && !s.jHeld; s.jHeld = jump;
+  s.jt += dt; if (s.flipT > 0) s.flipT = Math.max(0, s.flipT - dt);
+  if (!s.air) {
+    // on the water: she turns about at once and gathers way (harder when she's going the wrong way)
+    if (mv) {
+      const want = Math.sign(mv); s.face = want;
+      const vt = mv * SDC.VMAX;
+      if (s.v * want < 0) s.v += want * SDC.BRAKE * dt;
+      else if (Math.abs(s.v) < Math.abs(vt)) s.v = want > 0 ? Math.min(vt, s.v + SDC.ACC * acc * Math.abs(mv) * dt * (1.4 - Math.min(0.9, Math.abs(s.v) / SDC.VMAX))) : Math.max(vt, s.v - SDC.ACC * acc * Math.abs(mv) * dt * (1.4 - Math.min(0.9, Math.abs(s.v) / SDC.VMAX)));
+    } else s.v *= Math.exp(-dt * 0.9);
+    s.h = s.face > 0 ? 0 : Math.PI; s.up = s.face; s.w = 0;
+    // she floats: the water holds her up at the surface, and a hard landing ducks her under for a moment
+    s.bv += (-s.y * 70 - s.bv * 11) * dt;
+    if (press) { s.air = true; s.jumps = 1; s.jt = 0; s.bv = Math.max(s.bv, 0) + SDC.JUMP; s.h = s.face > 0 ? 0.22 : Math.PI - 0.22; s.y = Math.max(s.y, 0.5); lgSnd('jump'); }
+  } else {
+    // in the air: she falls, and A and D turn her over
+    s.bv -= SDC.G * dt;
+    if (s.flipT <= 0) { const wt = -mv * spin; s.w += (wt - s.w) * Math.min(1, dt * (mv ? 9 : 3)); }
+    s.h = lgAng(s.h + s.w * dt);
+    if (press && s.jumps === 1 && s.jt < SDC.DJ) {
+      s.jumps = 2;
+      const dx = mv, dy = dive ? -1 : 0;
+      if (dx || dy) { // a flip: a shove the way you're holding, and over she goes
+        const L = Math.hypot(dx, dy), nx = dx / L, ny = dy / L;
+        s.bv = Math.max(s.bv, 0) * 0.3; s.v += nx * SDC.FLIP; s.bv += ny * SDC.FLIP * 0.9 + (dy ? 0 : 6);
+        s.flipT = SDC.FLIPT; s.w = (dx ? -Math.sign(dx) : -(Math.sign(Math.cos(s.h)) || 1)) * Math.PI * 2 / SDC.FLIPT;
+        lgSnd('flip');
+      } else { s.bv = Math.max(s.bv, 0) + SDC.JUMP2; lgSnd('jump'); }
+    }
+  }
+  // the Gale: the way her bow points
+  s.galeOn = gale && s.gale > 0;
+  if (s.galeOn) {
+    s.gale = Math.max(0, s.gale - SDC.GALE_USE * dt);
+    const k = SDC.GALE * Math.min(1, acc * 0.6 + 0.55) * dt; s.v += Math.cos(s.h) * k; s.bv += Math.sin(s.h) * k;
+    if (!s.air && Math.abs(s.v) > SDC.VMAX * 0.6 && s.v * s.face > 0) { /* skimming */ }
+  }
+  { const sp = Math.hypot(s.v, s.bv); if (sp > SDC.VCAP) { s.v *= SDC.VCAP / sp; s.bv *= SDC.VCAP / sp; } }
+  s.x += s.v * dt; s.y += s.bv * dt;
+  // down on the water again: she lands the right way up (rolling over if she came down on her deck)
+  if (s.air && s.y <= 0 && s.bv <= 0 && s.jt > 0.12) {
+    s.air = false; s.jumps = 0;
+    const c = Math.cos(s.h), upY = Math.cos(s.h) * s.up;   // (her deck's way up: the bow turned a quarter towards up)
+    s.face = Math.abs(c) > 0.25 ? Math.sign(c) : (s.v ? Math.sign(s.v) : s.face);
+    if (upY * s.face < 0 && Math.abs(c) > 0.25) s.roll = -1;
+    s.pitch = lgAng(s.h - (s.face > 0 ? 0 : Math.PI)) * s.face; s.turnP = s.face;
+    s.bv *= 0.35; if (s.bv < -10) lgSnd('splash', Math.min(1, -s.bv / 40));
+  }
+  // the stone: bow, waist and stern
+  const L = sdHalf(s), r = sdRad(s), c = Math.cos(s.h), sn = Math.sin(s.h);
+  for (const t of [L * 0.85, 0, -L * 0.85]) {
+    const d = sdPush(s.x + c * t, s.y + sn * t, r); if (!d) continue;
+    s.x += d.nx * d.pen; s.y += d.ny * d.pen;
+    const vn = s.v * d.nx + s.bv * d.ny; if (vn < 0) { s.v -= 1.25 * vn * d.nx; s.bv -= 1.25 * vn * d.ny; if (-vn > 12) lgSnd('wall', Math.min(1, -vn / 50)); }
+  }
+  s.bob += dt;
+  // the gale buoys
+  for (const p of LG.pads) if (p.t <= 0 && s.gale < 100 && Math.abs(p.x - s.x) < (p.big ? 7 : 5) + L * 0.6 && Math.abs(s.y - p.y) < 8) { s.gale = Math.min(100, s.gale + p.amt); p.t = p.back; if (s.me) lgSnd('pad', p.big ? 1 : 0.6); if (LG.net && !lgHost() && s.me && typeof lgnPad === 'function') lgnPad(LG.pads.indexOf(p)); }
+}
+// what's only for the eye: her turn about on the water, her roll upright, her pitch settling
+function sdLook(s, dt) {
+  if (s.turnP == null) { s.turnP = s.face || 1; s.roll = 1; s.pitch = 0; }
+  s.turnP += ((s.face || 1) - s.turnP) * Math.min(1, dt * 12);
+  s.roll += (1 - s.roll) * Math.min(1, dt * 7);
+  s.pitch *= Math.exp(-dt * 7);
+}
+// ships knock each other aside by their weight
+function sdBump() {
+  const S = LG.ships;
+  for (let i = 0; i < S.length; i++) for (let j = i + 1; j < S.length; j++) {
+    const a = S[i], b = S[j], dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy), rr = (sdHalf(a) + sdHalf(b)) * 0.62;
+    if (d >= rr || d < 1e-3) continue;
+    const nx = dx / d, ny = dy / d, pen = rr - d, ia = 1 / a.m, ib = 1 / b.m, sum = ia + ib;
+    const oa = lgOwn(a), ob = lgOwn(b);
+    if (oa) { a.x -= nx * pen * ia / sum; a.y -= ny * pen * ia / sum; }
+    if (ob) { b.x += nx * pen * ib / sum; b.y += ny * pen * ib / sum; }
+    const vn = (b.v - a.v) * nx + (b.bv - a.bv) * ny; if (vn >= 0) continue;
+    const J = -(1 + 0.4) * vn / sum;
+    if (oa) { a.v -= nx * J * ia; a.bv -= ny * J * ia; } if (ob) { b.v += nx * J * ib; b.bv += ny * J * ib; }
+    if (-vn > 10 && (a.me || b.me)) lgSnd('bump', Math.min(1, -vn / 50));
+  }
+}
+
+// ---------- the ball ----------
+// its flight: gravity in the air, the water holding it up at the surface and slowing it, the stone (no ships, no goals)
+function sdBallPhys(B, dt, loud) {
+  const R = SDC.R, fl = SDC.BFLOAT;
+  if (B.y < fl + 0.5) { // in the water
+    B.vy += ((fl - B.y) * 34 - B.vy * 3.2) * dt - (B.y > fl ? SDC.BG * dt : 0);
+    const k = Math.exp(-dt * 0.5); B.vx *= k;
+    if (loud && B.vy < -14 && B.y > fl - 1) lgSnd('splash', Math.min(1, -B.vy / 40));
+  } else { B.vy -= SDC.BG * dt; const k = Math.exp(-dt * 0.06); B.vx *= k; }
+  B.x += B.vx * dt; B.y += B.vy * dt;
+  const d = sdPush(B.x, B.y, R);
+  if (d) {
+    B.x += d.nx * d.pen; B.y += d.ny * d.pen;
+    const vn = B.vx * d.nx + B.vy * d.ny; if (vn < 0) { B.vx -= 1.8 * vn * d.nx; B.vy -= 1.8 * vn * d.ny; if (loud && -vn > 7) lgSnd(Math.abs(Math.abs(B.x) - SDC.W) < R + 2 && Math.abs(B.y - SDC.GH) < R + 2 ? 'post' : 'wall', Math.min(1, -vn / 40)); }
+  }
+  B.rx = (B.rx || 0) - B.vx * dt / R;
+}
+function sdBall(dt) {
+  const B = LG.ball; if (B.gone) return;
+  sdBallPhys(B, dt, true);
+  for (const s of LG.ships) if (!LG.net || lgOwn(s) || !lgHost()) sdBallShip(B, s);
+  // a goal: the whole ball past the line, under the lintel (online, only the host's screen says so)
+  if (lgHost() && LG.ph === 'play' && Math.abs(B.x) > SDC.W + SDC.R && B.y < SDC.GH) lgGoal(B.x > 0 ? 0 : 1);
+}
+// a ship strikes the ball: her hull a line from stern to bow with her beam round it
+function sdBallShip(B, s) {
+  const R = SDC.R, L = sdHalf(s), r = sdRad(s), c = Math.cos(s.h), sn = Math.sin(s.h);
+  const ox = B.x - s.x, oy = B.y - s.y, t = lgClamp(ox * c + oy * sn, -L, L);
+  const cx = s.x + c * t, cy = s.y + sn * t, dx = B.x - cx, dy = B.y - cy, d = Math.hypot(dx, dy), rr = R + r;
+  if (d >= rr || d < 1e-4) return;
+  const nx = dx / d, ny = dy / d;
+  B.x = cx + nx * rr; B.y = cy + ny * rr;
+  // her speed at that point, with her turning (the ends swing)
+  const svx = s.v - s.w * t * sn, svy = s.bv + s.w * t * c;
+  const rvx = B.vx - svx, rvy = B.vy - svy, vn = rvx * nx + rvy * ny;
+  if (vn >= 0) return;
+  const mb = 0.35, J = -(1 + 0.5) * vn / (1 / mb + 1 / s.m);
+  const push = Math.max(0, svx * nx + svy * ny) * SDC.HIT + (s.flipT > 0 ? 16 : 0) + (s.galeOn ? 4 : 0);
+  B.vx += nx * (J / mb + push); B.vy += ny * (J / mb + push);
+  if (lgOwn(s)) { s.v -= nx * J / s.m * 0.4; s.bv -= ny * J / s.m * 0.4; }
+  const sp = Math.hypot(B.vx, B.vy); if (sp > 115) { B.vx *= 115 / sp; B.vy *= 115 / sp; }
+  const hard = -vn;
+  if (LG.net && !lgHost()) { if (s.me && typeof lgnHit === 'function') lgnHit(B); if (hard > 3 && s.me) lgSnd('hit', Math.min(1, hard / 45)); return; }
+  if (LG.last !== s || hard > 4) { s.touches++; LG.hits++; }
+  LG.prev = LG.last && LG.last !== s ? LG.last : LG.prev; LG.last = s; LG.lastHitT = LG.t; LG.lastHitBy = s;
+  if (hard > 3) lgSnd('hit', Math.min(1, hard / 45));
+}
+
+// ---------- the bots ----------
+// where the ball will be in t seconds (roughly: its arc, the water and the end walls)
+function sdBallAt(t) {
+  const B = LG.ball, T = { x: B.x, y: B.y, vx: B.vx, vy: B.vy, rx: 0 };
+  for (let k = 0; k < t; k += 1 / 30) sdBallPhys(T, 1 / 30, false);
+  return T;
+}
+function sdBot(s, dt) {
+  const A = s.ai, K = LG_SKILL[LG.set.skill] || LG_SKILL.fair;
+  A.t -= dt; A.jump = false; A.dive = false;
+  const dir = s.team === 0 ? 1 : -1, B = LG.ball, own = -dir * SDC.W;
+  // the roles: the nearer of a side (to where it's going) goes for it, the other keeps the gate
+  if (A.t <= 0) {
+    A.t = K.react;
+    const mates = LG.ships.filter(o => o.team === s.team);
+    const far = o => Math.abs(o.x - B.x) + Math.abs(o.y - B.y) * 0.5 + ((o.x - B.x) * dir > 0 ? 30 : 0);
+    A.role = mates.length < 2 || mates.slice().sort((a, b) => far(a) - far(b))[0] === s ? 'go' : 'keep';
+    const P = sdBallAt(0.15 + K.see * 0.55);
+    A.tx = P.x + (Math.random() - 0.5) * K.err * 20; A.ty = P.y;
+  }
+  const pace = lgClamp(K.v / 70, 0.5, 1);
+  let tx = A.tx, mv = 0;
+  // the ball coming at our gate fast, near it: everyone goes
+  const danger = (B.x - own) * dir < 55 && B.vx * dir < -8;
+  if (A.role === 'keep' && !danger) {
+    tx = own + dir * 22; mv = Math.abs(tx - s.x) > 6 ? Math.sign(tx - s.x) * pace : 0;
+    if (!mv && !s.air) s.face = dir;
+    if (Math.abs(B.x - s.x) < 22 && B.y < 26 && B.y > 9 && !s.air) A.jump = true;
+  } else {
+    // from behind it: the right side of the ball is the side away from their gate
+    const wrong = (s.x - tx) * dir > -4;
+    if (wrong && !s.air) {
+      const back = tx - dir * 22; mv = Math.sign(back - s.x) * pace;
+      if (Math.abs(tx - s.x) < 16 && A.tx !== undefined && B.y < 14) A.jump = true;   // (over it, if it's in the way)
+    } else mv = Math.sign(tx - s.x) * pace;
+    const dx = B.x - s.x, dy = B.y - s.y;
+    if (!s.air && Math.abs(dx) < 18 + Math.abs(s.v) * 0.25 && dy > 9 && dy < 40) A.jump = true;
+    if (s.air) {
+      // in the air: turn the bow at the ball, flip into it when it's close, and fly at it on the Gale if she can
+      const want = Math.atan2(dy, dx), err = lgAng(want - s.h);
+      mv = lgClamp(-err * 1.6, -1, 1);
+      if (s.jumps === 1 && Math.hypot(dx, dy) < 18 && s.jt > 0.15) { A.jump = true; mv = Math.sign(dx) || dir; A.dive = dy < -4; }
+    }
+    A.gale = K.gale > 0 && s.gale > 5 && ((!s.air && Math.abs(dx) > 40 && Math.sign(dx) === s.face && (wrong ? false : true)) || (s.air && K.gale >= 1 && Math.abs(lgAng(Math.atan2(dy, dx) - s.h)) < 0.5 && Math.hypot(dx, dy) < 60));
+    if (!s.air && Math.abs(dx) < 30 && (B.x - s.x) * dir > 0 && Math.abs(dy) < 10 && K.gale >= 0.5 && s.gale > 20 && Math.sign(dx) === s.face) A.gale = true;
+  }
+  if (A.role === 'keep' && !danger) A.gale = false;
+  // stuck in a gate, or against a wall: out of it
+  if (Math.abs(s.x) > SDC.W - 2 && !s.air) mv = -Math.sign(s.x) * pace;
+  // (a held key: the leap is a press, so let go between them)
+  if (A.jump && s.jHeld) A.jump = false;
+  A.steer = mv;
+}
+
+// ---------- online (src/lgnet.js calls these when LG.side) ----------
+// a ship as heard: [x, y, h, v, bv, up/face, w, gale, galeOn, air, flipT]
+function sdPose(s) { return [lgnR(s.x, 100), lgnR(s.y, 100), lgnR(s.h, 1000), lgnR(s.v, 100), lgnR(s.bv, 100), (s.air ? s.up : s.face) || 1, lgnR(s.w, 1000), Math.round(s.gale), s.galeOn ? 1 : 0, s.air ? 1 : 0, lgnR(s.flipT, 100)]; }
+function sdHeard(s, a, now) {
+  if (!Array.isArray(a) || a.length < 11 || !a.slice(0, 7).every(Number.isFinite)) return;
+  const x = lgClamp(a[0], -SDC.W - SDC.GD, SDC.W + SDC.GD), y = lgClamp(a[1], -SDC.D, SDC.H);
+  const first = !LGN.samp[s.i], fu = a[5] < 0 ? -1 : 1, air = !!a[9];
+  LGN.samp[s.i] = { t: now, x, y, h: lgAng(a[2]), v: lgClamp(a[3], -120, 120), bv: lgClamp(a[4], -120, 120), w: lgClamp(a[6], -20, 20), gale: lgClamp(+a[7] || 0, 0, 100), galeOn: !!a[8], air, fu, flipT: lgClamp(+a[10] || 0, 0, 1) };
+  if (first) { s.x = x; s.y = y; s.h = lgAng(a[2]); }
+}
+function sdPlace(dt, now) {
+  const lead = lgClamp(LGN.rtt / 2000, 0, 0.15);
+  for (const s of LG.ships) {
+    if (lgOwn(s)) continue;
+    const S = LGN.samp[s.i]; if (!S) continue;
+    if (s.face == null) sdNew(s);
+    const age = lgClamp((now - S.t) / 1000 + lead, 0, 0.3), frozen = LG.ph === 'count' || LG.ph === 'end';
+    const tx = frozen ? S.x : S.x + S.v * age, ty = frozen ? S.y : Math.max(S.air ? -2 : -SDC.D, S.y + S.bv * age - (S.air ? SDC.G * age * age / 2 : 0)), th = frozen ? S.h : lgAng(S.h + S.w * age);
+    if (Math.hypot(tx - s.x, ty - s.y) > 30) { s.x = tx; s.y = ty; s.h = th; }
+    else { const k = Math.min(1, dt * 14); s.x += (tx - s.x) * k; s.y += (ty - s.y) * k; s.h = lgAng(s.h + lgAng(th - s.h) * k); }
+    if (s.air && !S.air) { s.pitch = 0; s.turnP = S.fu; }
+    s.air = S.air; if (S.air) s.up = S.fu; else s.face = S.fu;
+    s.v = S.v; s.bv = S.bv; s.w = S.w; s.gale = S.gale; s.galeOn = S.galeOn; s.flipT = S.flipT;
+  }
+}
+function sdBallFly(B, dt) { sdBallPhys(B, dt, false); }
+// the host: a player's hit, put where they saw it
+function sdTakeClamp(B, h) {
+  B.x = lgClamp(h[1], -SDC.W - SDC.GD + SDC.R, SDC.W + SDC.GD - SDC.R); B.y = lgClamp(h[2], -SDC.D + SDC.R, SDC.H - SDC.R); B.z = 0;
+  B.vx = lgClamp(h[4], -115, 115); B.vy = lgClamp(h[5], -115, 115); B.vz = 0;
+}
+function sdDebugGoal(team) { if (LG.ph !== 'play') LG.ph = 'play'; const B = LG.ball; B.x = (SDC.W + SDC.R + 2) * (team === 0 ? 1 : -1); B.y = 10; B.vx = 0; B.vy = 0; sdBall(0.001); }
+
+// ---- src/lgside2d.js ----
+'use strict';
+// Skerry League: Spindrift, drawn (a 2D canvas of its own, #sdCv): the Sluice seen side-on, as if the near wall of the
+// lock were cut away. Behind, the back wall's ashlar with three relieving arches, the weed of the tide line, lanterns
+// and the chains of the old gate gear under the vault; the two lock gates, each with its lintel beam and its side's
+// lamp; the water, clear enough to see a ship's keel and the buoy under the surface; the ships in profile in their
+// skins with their sails in their side's colour; the ball; the gale buoys; spray, wakes and the goal's burst.
+// src/lgside.js owns the state; this only reads it. The still parts are drawn once into two world-sized canvases
+// (behind and in front of the water) at the scale in use, and laid down each frame.
+// The camera shows the whole chamber when the screen is wide enough; on a tall narrow screen it follows the play.
+
+var SD2 = { cv: null, c: null, k: 1, camX: 0, camY: 0, back: null, front: null, bk: 0, fx: [], flash: [0, 0], w: 0, h: 0, dpr: 1, t: 0 };
+const SD_SPAN = { x0: -SDC.W - SDC.GD - 8, x1: SDC.W + SDC.GD + 8, y0: -SDC.D - 6, y1: SDC.H + 8 };
+// (the still layers reach well past what's fitted, so a screen of any shape is stone to its edges)
+const SD_LAY = { x0: SD_SPAN.x0 - 60, x1: SD_SPAN.x1 + 60, y0: SD_SPAN.y0 - 90, y1: SD_SPAN.y1 + 90 };
+
+function sdResize() {
+  const cv = SD2.cv = $('sdCv'); if (!cv) return;
+  const dpr = SD2.dpr = Math.min(2, window.devicePixelRatio || 1), w = SD2.w = innerWidth, h = SD2.h = innerHeight;
+  cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); SD2.c = cv.getContext('2d');
+  const sx = w / (SD_SPAN.x1 - SD_SPAN.x0), sy = (h * 0.9) / (SD_SPAN.y1 - SD_SPAN.y0);
+  // (a tall screen: the chamber's full height, and the camera follows along it)
+  SD2.k = w / h < 1.25 ? Math.max(Math.min(sx, sy), sy * 0.62) : Math.min(sx, sy);
+  SD2.back = null;
+}
+// a seeded random, so the stones lie the same every time
+function sdRng(seed) { let s = seed >>> 0; return () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; }; }
+function sdLayers() {
+  const k = SD2.k * SD2.dpr, X0 = SD_LAY.x0, Y1 = SD_LAY.y1, Wd = Math.ceil((SD_LAY.x1 - X0) * k), Ht = Math.ceil((Y1 - SD_LAY.y0) * k);
+  const mk = () => { const c = document.createElement('canvas'); c.width = Wd; c.height = Ht; return c; };
+  const X = x => (x - X0) * k, Y = y => (Y1 - y) * k, { W, H, D, GH, GD } = SDC;
+  // behind the water: the back wall, the arches, the weed, the vault's ribs, the inside of the gates
+  const B = mk(), b = B.getContext('2d'), rnd = sdRng(7);
+  let g = b.createLinearGradient(0, Y(H), 0, Y(-D)); g.addColorStop(0, '#2b2430'); g.addColorStop(0.55, '#3a3138'); g.addColorStop(1, '#1b2226');
+  b.fillStyle = g; b.fillRect(X(-W), Y(H), (2 * W) * k, (H + D) * k);
+  // the ashlar
+  for (let y = -D; y < H; y += 6) {
+    const off = ((y / 6) & 1) * 5;
+    for (let x = -W - off; x < W; x += 10) {
+      const l = 22 + rnd() * 14 | 0; b.fillStyle = `rgba(${l + 30},${l + 22},${l + 26},${0.35 + rnd() * 0.25})`;
+      b.fillRect(X(x) + 1, Y(y + 6) + 1, 10 * k - 2, 6 * k - 2);
+    }
+  }
+  // three relieving arches, each with a barred window on the dusk outside
+  for (const ax of [-62, 0, 62]) {
+    const r = 22, cy = 34;
+    b.fillStyle = 'rgba(10,8,14,0.55)'; b.beginPath(); b.moveTo(X(ax - r), Y(8)); b.lineTo(X(ax - r), Y(cy)); b.arc(X(ax), Y(cy), r * k, Math.PI, 0); b.lineTo(X(ax + r), Y(8)); b.closePath(); b.fill();
+    b.strokeStyle = 'rgba(150,130,120,0.35)'; b.lineWidth = 2.2 * k; b.beginPath(); b.arc(X(ax), Y(cy), (r + 1.5) * k, Math.PI, 0); b.stroke();
+    for (let i = 0; i <= 8; i++) { const a = Math.PI + i * Math.PI / 8; b.strokeStyle = 'rgba(0,0,0,0.25)'; b.lineWidth = 0.6 * k; b.beginPath(); b.moveTo(X(ax + Math.cos(a) * r), Y(cy - Math.sin(a) * r)); b.lineTo(X(ax + Math.cos(a) * (r + 3)), Y(cy - Math.sin(a) * (r + 3))); b.stroke(); }
+    if (ax === 0) continue;
+    const wx = ax, wy = 44, ww = 9, wh = 12;
+    g = b.createLinearGradient(0, Y(wy + wh), 0, Y(wy)); g.addColorStop(0, '#36355f'); g.addColorStop(0.6, '#b0667a'); g.addColorStop(1, '#f2a25e');
+    b.fillStyle = g; b.beginPath(); b.moveTo(X(wx - ww / 2), Y(wy)); b.lineTo(X(wx - ww / 2), Y(wy + wh - ww / 2)); b.arc(X(wx), Y(wy + wh - ww / 2), ww / 2 * k, Math.PI, 0); b.lineTo(X(wx + ww / 2), Y(wy)); b.closePath(); b.fill();
+    b.fillStyle = 'rgba(255,240,210,0.9)'; b.beginPath(); b.arc(X(wx + 2), Y(wy + 8), 0.9 * k, 0, 7); b.fill();   // (a star)
+    b.strokeStyle = '#120e12'; b.lineWidth = 0.8 * k; for (let i = -1; i <= 1; i++) { b.beginPath(); b.moveTo(X(wx + i * 2.6), Y(wy)); b.lineTo(X(wx + i * 2.6), Y(wy + wh)); b.stroke(); }
+  }
+  // the middle arch: the Light's own badge, a lamp in a ring, worn into the stone
+  b.strokeStyle = 'rgba(230,200,140,0.28)'; b.lineWidth = 1.2 * k; b.beginPath(); b.arc(X(0), Y(34), 9 * k, 0, 7); b.stroke();
+  b.fillStyle = 'rgba(230,200,140,0.22)'; b.beginPath(); b.moveTo(X(-2.5), Y(28)); b.lineTo(X(-1.5), Y(38)); b.lineTo(X(1.5), Y(38)); b.lineTo(X(2.5), Y(28)); b.closePath(); b.fill();
+  b.beginPath(); b.arc(X(0), Y(39.5), 2 * k, 0, 7); b.fill();
+  // the tide line's weed and the wet below it
+  g = b.createLinearGradient(0, Y(7), 0, Y(-2)); g.addColorStop(0, 'rgba(40,70,40,0)'); g.addColorStop(0.5, 'rgba(46,82,44,0.55)'); g.addColorStop(1, 'rgba(20,40,30,0.7)');
+  b.fillStyle = g; b.fillRect(X(-W), Y(7), 2 * W * k, 9 * k);
+  for (let x = -W; x < W; x += 1.6) { b.strokeStyle = `rgba(${50 + rnd() * 30 | 0},${90 + rnd() * 40 | 0},${40 + rnd() * 20 | 0},0.6)`; b.lineWidth = 0.5 * k; b.beginPath(); b.moveTo(X(x), Y(2)); b.lineTo(X(x + (rnd() - 0.5) * 1.5), Y(2 + 1.5 + rnd() * 4)); b.stroke(); }
+  // the vault's ribs and the chains of the gate gear
+  for (let x = -W + 20; x < W; x += 40) { b.strokeStyle = 'rgba(0,0,0,0.35)'; b.lineWidth = 3 * k; b.beginPath(); b.moveTo(X(x), Y(H)); b.lineTo(X(x), Y(H - 5)); b.stroke(); }
+  for (const cx of [-96, -30, 30, 96]) {
+    const len = 12 + rnd() * 10; b.strokeStyle = 'rgba(70,64,62,0.85)'; b.lineWidth = 0.7 * k;
+    for (let y = H; y > H - len; y -= 1.6) { b.beginPath(); b.ellipse(X(cx), Y(y - 0.8), 0.5 * k, 0.9 * k, 0, 0, 7); b.stroke(); }
+    b.fillStyle = 'rgba(60,54,52,0.9)'; b.beginPath(); b.moveTo(X(cx - 1.5), Y(H - len)); b.lineTo(X(cx + 1.5), Y(H - len)); b.lineTo(X(cx), Y(H - len - 3)); b.closePath(); b.fill();
+  }
+  // the gates' insides: the dark of the culvert, a rope net, the iron grate at the back
+  for (const sg of [-1, 1]) {
+    const x0 = sg > 0 ? W : -W - GD;
+    b.fillStyle = '#0d1418'; b.fillRect(X(x0), Y(GH), GD * k, (GH + D) * k);
+    b.strokeStyle = 'rgba(220,200,160,0.22)'; b.lineWidth = 0.5 * k;
+    for (let y = -D; y < GH; y += 3) { b.beginPath(); b.moveTo(X(x0), Y(y)); b.lineTo(X(x0 + GD), Y(y)); b.stroke(); }
+    for (let x = x0; x <= x0 + GD; x += 3) { b.beginPath(); b.moveTo(X(x), Y(-D)); b.lineTo(X(x), Y(GH)); b.stroke(); }
+  }
+  // in front of the water: the end walls above the lintels and behind the gates, the floor, the vault, the beams
+  const F = mk(), f = F.getContext('2d'), rn2 = sdRng(11);
+  const stone = (x0, y0, x1, y1) => {
+    g = f.createLinearGradient(X(x0), 0, X(x1), 0); g.addColorStop(0, '#4a4248'); g.addColorStop(1, '#2e292f');
+    f.fillStyle = g; f.fillRect(X(x0), Y(y1), (x1 - x0) * k, (y1 - y0) * k);
+    f.strokeStyle = 'rgba(0,0,0,0.35)'; f.lineWidth = 0.6 * k;
+    for (let y = Math.ceil(y0 / 7) * 7; y < y1; y += 7) { f.beginPath(); f.moveTo(X(x0), Y(y)); f.lineTo(X(x1), Y(y)); f.stroke(); const off = ((y / 7) & 1) * 6; for (let x = Math.floor(x0 / 12) * 12 + off; x < x1; x += 12) { if (x < x0) continue; f.beginPath(); f.moveTo(X(x), Y(y)); f.lineTo(X(x), Y(Math.min(y1, y + 7))); f.stroke(); } }
+    for (let i = 0; i < (x1 - x0) * (y1 - y0) / 60; i++) { f.fillStyle = `rgba(255,240,220,${rn2() * 0.05})`; f.fillRect(X(x0 + rn2() * (x1 - x0)), Y(y0 + rn2() * (y1 - y0)), 2 * k, 1.2 * k); }
+  };
+  const XE = SD_LAY.x1;
+  stone(X0, SDC.H, XE, Y1); stone(X0, SD_LAY.y0, XE, -D);
+  stone(W, GH, XE, H); stone(X0, GH, -W, H); stone(W + GD, -D, XE, GH); stone(X0, -D, -W - GD, GH);
+  // the vault's arch over the chamber, and the sea's own light through a grating far above
+  f.fillStyle = 'rgba(0,0,0,0.25)'; f.fillRect(X(-W), Y(H + 4), 2 * W * k, 4 * k);
+  for (let x = -W + 20; x < W; x += 40) { f.fillStyle = 'rgba(255,220,180,0.06)'; f.fillRect(X(x - 3), Y(H + 30), 6 * k, 30 * k); }
+  // the edges of the stone, lit from the lanterns
+  f.strokeStyle = 'rgba(255,210,160,0.35)'; f.lineWidth = 1.1 * k;
+  f.beginPath(); f.moveTo(X(-W), Y(H)); f.lineTo(X(W), Y(H)); f.moveTo(X(-W), Y(-D)); f.lineTo(X(W), Y(-D)); f.moveTo(X(W), Y(H)); f.lineTo(X(W), Y(GH)); f.moveTo(X(-W), Y(H)); f.lineTo(X(-W), Y(GH)); f.stroke();
+  // the lintel beams, banded in each side's colour (Blue's gate on the left)
+  for (const [sg, T] of [[-1, LG_TEAMS[0]], [1, LG_TEAMS[1]]]) {
+    const x0 = sg > 0 ? W - 2 : -W - GD, x1 = x0 + GD + 2;
+    f.fillStyle = '#3b2a1c'; f.fillRect(X(x0), Y(GH + 3), (x1 - x0) * k, 3 * k);
+    f.fillStyle = T.col; f.fillRect(X(x0), Y(GH + 1.3), (x1 - x0) * k, 1.3 * k);
+    f.fillStyle = '#2a1d13'; f.fillRect(X(sg > 0 ? W - 2 : -W), Y(GH + 3), 2 * k, (GH + 3 + D) * k);   // (the gate post)
+  }
+  SD2.back = B; SD2.front = F; SD2.bk = k;
+}
+
+// ---------- each frame ----------
+function sdW2S(x, y) { return [SD2.w / 2 + (x - SD2.camX) * SD2.k, SD2.h / 2 - (y - SD2.camY) * SD2.k]; }
+function sdDraw(dt) {
+  if (!SD2.c || SD2.w !== innerWidth || SD2.h !== innerHeight) sdResize();
+  const c = SD2.c; if (!c) return;
+  if (!SD2.back) sdLayers();
+  SD2.t += dt;
+  const k = SD2.k, w = SD2.w, h = SD2.h, B = LG.ball, me = lgMeShip();
+  // the camera: the middle of the chamber, or (a narrow screen) between the ball and my ship
+  const half = w / 2 / k, mid = (SD_SPAN.y0 + SD_SPAN.y1) / 2;
+  let tx = 0; if (half * 2 < SD_SPAN.x1 - SD_SPAN.x0) { const fx = me ? (B.x * 0.6 + me.x * 0.4) : B.x; tx = lgClamp(fx, SD_SPAN.x0 + half, SD_SPAN.x1 - half); }
+  SD2.camX += (tx - SD2.camX) * Math.min(1, dt * 4); SD2.camY = mid;
+  c.setTransform(SD2.dpr, 0, 0, SD2.dpr, 0, 0);
+  c.fillStyle = '#16131a'; c.fillRect(0, 0, w, h);
+  const [ox, oy] = sdW2S(SD_LAY.x0, SD_LAY.y1), bw = SD2.back.width / SD2.dpr, bh = SD2.back.height / SD2.dpr;
+  c.drawImage(SD2.back, ox, oy, bw, bh);
+  // the lanterns' glow on the back wall
+  for (const lx of [-92, -31, 31, 92]) { const [sx, sy] = sdW2S(lx, 52), r = 26 * k, fl = 0.85 + Math.sin(SD2.t * 7 + lx) * 0.05; const g = c.createRadialGradient(sx, sy, 0, sx, sy, r); g.addColorStop(0, `rgba(255,200,120,${0.32 * fl})`); g.addColorStop(1, 'rgba(255,200,120,0)'); c.fillStyle = g; c.fillRect(sx - r, sy - r, r * 2, r * 2); c.fillStyle = '#ffd890'; c.fillRect(sx - 1.2 * k, sy - 1.8 * k, 2.4 * k, 3.2 * k); c.strokeStyle = '#2a1d13'; c.lineWidth = Math.max(1, 0.5 * k); c.strokeRect(sx - 1.4 * k, sy - 2 * k, 2.8 * k, 3.6 * k); }
+  // each gate's lamp over its lintel (it blazes when a goal goes in there)
+  for (let tm = 0; tm < 2; tm++) {
+    SD2.flash[tm] = Math.max(0, SD2.flash[tm] - dt * 0.6);
+    const T = LG_TEAMS[tm], gx = tm === 0 ? -SDC.W - SDC.GD / 2 : SDC.W + SDC.GD / 2, [sx, sy] = sdW2S(gx, SDC.GH + 8), f = SD2.flash[tm];
+    const r = (14 + f * 60) * k, g = c.createRadialGradient(sx, sy, 0, sx, sy, r); g.addColorStop(0, T.col); g.addColorStop(1, 'rgba(0,0,0,0)');
+    c.globalAlpha = 0.45 + f * 0.5; c.fillStyle = g; c.fillRect(sx - r, sy - r, r * 2, r * 2); c.globalAlpha = 1;
+    c.fillStyle = '#fff6d8'; c.beginPath(); c.arc(sx, sy, 1.8 * k, 0, 7); c.fill();
+  }
+  // under the surface, the water's deep colour behind everything in it
+  { const [, sy] = sdW2S(0, 0), [, fy] = sdW2S(0, -SDC.D), [x0] = sdW2S(-SDC.W - SDC.GD, 0), [x1] = sdW2S(SDC.W + SDC.GD, 0); const g = c.createLinearGradient(0, sy, 0, fy); g.addColorStop(0, 'rgba(30,90,100,0.55)'); g.addColorStop(1, 'rgba(6,20,30,0.9)'); c.fillStyle = g; c.fillRect(x0, sy, x1 - x0, fy - sy); }
+  // the gale buoys
+  for (const p of LG.pads) {
+    const bob = Math.sin(SD2.t * 2.2 + p.x) * 0.5, [sx, sy] = sdW2S(p.x, p.y + 1.2 + bob), r = (p.big ? 2.8 : 1.9) * k, down = p.t > 0;
+    c.globalAlpha = down ? 0.3 : 1;
+    c.fillStyle = '#e8b830'; c.beginPath(); c.arc(sx, sy, r, 0, 7); c.fill(); c.fillStyle = '#7a4c10'; c.fillRect(sx - r, sy - r * 0.2, r * 2, r * 0.4);
+    if (!down) { const gl = c.createRadialGradient(sx, sy - r * 1.6, 0, sx, sy - r * 1.6, r * 3); gl.addColorStop(0, 'rgba(255,230,120,0.7)'); gl.addColorStop(1, 'rgba(255,230,120,0)'); c.fillStyle = gl; c.fillRect(sx - r * 3, sy - r * 4.6, r * 6, r * 6); c.fillStyle = '#fff3b0'; c.beginPath(); c.arc(sx, sy - r * 1.5, r * 0.45, 0, 7); c.fill(); }
+    c.globalAlpha = 1;
+  }
+  // the ball's shadow on the water when it's up
+  if (!B.gone && B.y > 6) { const [sx, sy] = sdW2S(B.x, 0.2), s = Math.max(0.2, 1 - B.y / 70); c.fillStyle = `rgba(0,0,0,${0.3 * s})`; c.beginPath(); c.ellipse(sx, sy, SDC.R * k * s, 1.2 * k * s, 0, 0, 7); c.fill(); }
+  // the ships, then the ball, then the water's surface over what's under it
+  for (const s of LG.ships) sdShipFx(s, dt);
+  for (const s of LG.ships) if (!s.me) sdDrawShip(c, s);
+  if (me) sdDrawShip(c, me);
+  if (!B.gone) sdDrawBall(c, B);
+  sdWater(c);
+  c.drawImage(SD2.front, ox, oy, bw, bh);
+  sdDrawFx(c, dt);
+  // names over the others' ships, and a ring round mine
+  c.font = `600 ${Math.max(11, Math.round(2.6 * k))}px system-ui, sans-serif`; c.textAlign = 'center';
+  for (const s of LG.ships) {
+    const [sx, sy] = sdW2S(s.x, s.y + sdHalf(s) * 1.5 + 4);
+    if (s.me) { c.fillStyle = '#fff'; c.beginPath(); c.moveTo(sx - 1.6 * k, sy - 1.6 * k); c.lineTo(sx + 1.6 * k, sy - 1.6 * k); c.lineTo(sx, sy + 0.4 * k); c.closePath(); c.fill(); continue; }
+    if (LG.ph === 'end') continue;
+    c.fillStyle = 'rgba(0,0,0,0.55)'; const t = s.nm + (LG.net && s.bot && s.sid ? ' · bot' : ''); const tw = c.measureText(t).width + 8; c.fillRect(sx - tw / 2, sy - 2.2 * k - 6, tw, 2.6 * k + 6);
+    c.fillStyle = LG_TEAMS[s.team].col; c.fillText(t, sx, sy - 2);
+  }
+  // off the screen (a narrow one): an arrow at the edge towards the ball
+  if (!B.gone) { const [bx, by] = sdW2S(B.x, B.y); if (bx < 0 || bx > w) { const x = bx < 0 ? 14 : w - 14; c.fillStyle = '#fff'; c.beginPath(); c.moveTo(x + (bx < 0 ? -8 : 8), by); c.lineTo(x + (bx < 0 ? 6 : -6), by - 8); c.lineTo(x + (bx < 0 ? 6 : -6), by + 8); c.closePath(); c.fill(); } }
+}
+// the surface: a wave along it, a lighter line on top, and the water's tint over everything below it
+function sdWater(c) {
+  const k = SD2.k, t = SD2.t, x0 = -SDC.W - SDC.GD, x1 = SDC.W + SDC.GD, [, fy] = sdW2S(0, -SDC.D);
+  const wave = x => Math.sin(x * 0.11 + t * 1.6) * 0.45 + Math.sin(x * 0.27 - t * 2.3) * 0.25;
+  c.beginPath(); let first = true;
+  for (let x = x0; x <= x1; x += 2) { const [sx, sy] = sdW2S(x, wave(x)); if (first) { c.moveTo(sx, sy); first = false; } else c.lineTo(sx, sy); }
+  const [ex] = sdW2S(x1, 0), [sx0] = sdW2S(x0, 0); c.lineTo(ex, fy); c.lineTo(sx0, fy); c.closePath();
+  const [, sy] = sdW2S(0, 0), g = c.createLinearGradient(0, sy, 0, fy); g.addColorStop(0, 'rgba(70,160,170,0.42)'); g.addColorStop(0.3, 'rgba(30,100,120,0.5)'); g.addColorStop(1, 'rgba(8,30,44,0.75)');
+  c.fillStyle = g; c.fill();
+  c.strokeStyle = 'rgba(210,240,240,0.7)'; c.lineWidth = Math.max(1, 0.5 * k); c.beginPath(); first = true;
+  for (let x = x0; x <= x1; x += 2) { const [px, py] = sdW2S(x, wave(x)); if (first) { c.moveTo(px, py); first = false; } else c.lineTo(px, py); }
+  c.stroke();
+  // light through the surface
+  c.strokeStyle = 'rgba(180,230,230,0.07)'; c.lineWidth = 3 * k;
+  for (let i = 0; i < 9; i++) { const x = -100 + i * 25 + Math.sin(t * 0.4 + i) * 6, [a, b] = sdW2S(x, 0), [d, e] = sdW2S(x - 8, -SDC.D); c.beginPath(); c.moveTo(a, b); c.lineTo(d, e); c.stroke(); }
+}
+function sdMix(a, b, t) { const p = h => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)]; try { const A = p(a), B = p(b); return `rgb(${A.map((v, i) => Math.round(v + (B[i] - v) * t)).join(',')})`; } catch (e) { return b; } }
+const sdHex = v => typeof v === 'string' && /^#[0-9a-f]{6}$/i.test(v) ? v : null;
+// a ship in profile: her hull in her skin, a band of her side's colour along her wale, her masts and sails, her pennant
+function sdDrawShip(c, s) {
+  const k = SD2.k, L = sdHalf(s), T = LG_TEAMS[s.team], sk = s.skin || {}, hull = sdHex(sk.hull) || '#4b3a2b', rail = sdHex(sk.rail) || '#1e140c', sailC = sdMix(sdHex(sk.sail) || '#d8cdb0', T.col, 0.45);
+  const [sx, sy] = sdW2S(s.x, s.y);
+  c.save(); c.translate(sx, sy);
+  if (s.air) { c.rotate(-s.h); c.scale(k, -k * (s.up || 1)); }
+  else { const bob = Math.sin(s.bob * 2.4) * 0.03; c.rotate(-(s.pitch || 0) * (s.face || 1) - bob); c.scale(k * (s.turnP == null ? 1 : s.turnP), -k * (s.roll == null ? 1 : s.roll)); }
+  // (in her own frame now: bow along +x, deck up +y, in metres)
+  const carrier = s.boat.id === 'carrier';
+  // the Gale's blast from her stern
+  if (s.galeOn) { const fl = 0.7 + Math.random() * 0.3, g = c.createLinearGradient(-L, 0, -L - 14 * fl, 0); g.addColorStop(0, 'rgba(255,250,220,0.95)'); g.addColorStop(0.4, 'rgba(160,220,255,0.6)'); g.addColorStop(1, 'rgba(160,220,255,0)'); c.fillStyle = g; c.beginPath(); c.moveTo(-L, 2.2); c.lineTo(-L - 14 * fl, 0.4); c.lineTo(-L, -1.6); c.closePath(); c.fill(); }
+  // the hull
+  c.beginPath();
+  if (carrier) { c.moveTo(-L, 2.4); c.lineTo(L * 1.05, 2.6); c.lineTo(L * 0.82, -1.8); c.lineTo(-L * 0.9, -2); c.lineTo(-L, -0.6); }
+  else { c.moveTo(-L * 0.98, 2.3); c.quadraticCurveTo(0, 1.3, L * 0.98, 2.9); c.quadraticCurveTo(L * 0.86, -1.2, L * 0.55, -2.3); c.lineTo(-L * 0.7, -2.3); c.quadraticCurveTo(-L * 0.95, -1.8, -L * 1.02, 0.4); }
+  c.closePath(); c.fillStyle = carrier ? sdMix(hull, '#7a8088', 0.5) : hull; c.fill();
+  c.lineWidth = 0.35; c.strokeStyle = rail; c.stroke();
+  // her side's band along the wale, and her keel
+  c.strokeStyle = T.col; c.lineWidth = 0.75; c.beginPath(); c.moveTo(-L * 0.92, 1.2); c.quadraticCurveTo(0, 0.4, L * 0.88, 1.7); c.stroke();
+  c.strokeStyle = 'rgba(0,0,0,0.45)'; c.lineWidth = 0.5; c.beginPath(); c.moveTo(-L * 0.7, -2.2); c.lineTo(L * 0.55, -2.2); c.stroke();
+  if (carrier) {
+    c.fillStyle = '#5a6068'; c.fillRect(L * 0.1, 2.5, L * 0.28, 4.5); c.fillStyle = '#ffd890'; c.fillRect(L * 0.14, 5.4, L * 0.2, 0.8);
+    c.fillStyle = T.col; c.fillRect(-L, 2.4, L * 2.02, 0.35);
+    c.strokeStyle = '#2b2f35'; c.lineWidth = 0.3; c.beginPath(); c.moveTo(L * 0.24, 7); c.lineTo(L * 0.24, 10); c.stroke();
+    c.fillStyle = T.col; c.beginPath(); c.moveTo(L * 0.24, 10); c.lineTo(L * 0.24 + 3, 9.4); c.lineTo(L * 0.24, 8.8); c.closePath(); c.fill();
+  } else {
+    // the bowsprit, the masts, and the sails (square, bellied by the wind she makes)
+    c.strokeStyle = sdHex(sk.wood) || '#3a2c20'; c.lineWidth = 0.35; c.beginPath(); c.moveTo(L * 0.9, 2.6); c.lineTo(L * 1.35, 4.2); c.stroke();
+    const masts = s.boat.masts && s.boat.masts.length ? s.boat.masts : [0], mh = L * 1.05 + 3.5, belly = Math.min(1.6, Math.abs(s.v) / 25 + (s.galeOn ? 0.8 : 0.2));
+    masts.forEach((m, i) => {
+      const x = m * L * 2, top = mh * (i === masts.length - 1 && masts.length > 1 ? 0.92 : 1);
+      c.strokeStyle = '#2a1d13'; c.lineWidth = 0.45; c.beginPath(); c.moveTo(x, 1.6); c.lineTo(x, 1.6 + top); c.stroke();
+      for (const [y0, y1, wd] of [[4, top * 0.55, 0.42], [top * 0.58, top * 0.92, 0.3]]) {
+        const hw = L * wd; c.fillStyle = sailC; c.beginPath(); c.moveTo(x - hw, 1.6 + y1); c.lineTo(x + hw, 1.6 + y1); c.quadraticCurveTo(x + hw + belly, 1.6 + (y0 + y1) / 2, x + hw * 0.9, 1.6 + y0); c.lineTo(x - hw * 0.9, 1.6 + y0); c.quadraticCurveTo(x - hw + belly, 1.6 + (y0 + y1) / 2, x - hw, 1.6 + y1); c.closePath(); c.fill();
+        c.strokeStyle = 'rgba(0,0,0,0.25)'; c.lineWidth = 0.2; c.stroke();
+      }
+      if (i === 0) { const fl = Math.sin(SD2.t * 9 + s.i) * 0.5; c.fillStyle = T.col; c.beginPath(); c.moveTo(x, 1.6 + top); c.lineTo(x - 4.2, 1.6 + top - 0.6 + fl); c.lineTo(x, 1.6 + top - 1.4); c.closePath(); c.fill(); }
+    });
+    // a lantern at her stern
+    c.fillStyle = sdHex(sk.lantern) || '#ffcf86'; c.beginPath(); c.arc(-L * 0.92, 3.3, 0.55, 0, 7); c.fill();
+  }
+  c.restore();
+}
+function sdDrawBall(c, B) {
+  const k = SD2.k, R = SDC.R, [sx, sy] = sdW2S(B.x, B.y);
+  c.save(); c.translate(sx, sy);
+  c.beginPath(); c.arc(0, 0, R * k, 0, 7); c.fillStyle = '#f3efe4'; c.fill();
+  c.save(); c.clip(); c.rotate(-(B.rx || 0));
+  c.fillStyle = '#c8322c'; for (const y of [-0.62, 0, 0.62]) c.fillRect(-R * k * 1.2, (y - 0.14) * R * k, R * k * 2.4, 0.28 * R * k);
+  c.restore();
+  const g = c.createRadialGradient(-R * k * 0.35, -R * k * 0.4, R * k * 0.1, 0, 0, R * k); g.addColorStop(0, 'rgba(255,255,255,0.45)'); g.addColorStop(0.6, 'rgba(255,255,255,0)'); g.addColorStop(1, 'rgba(0,0,0,0.35)');
+  c.fillStyle = g; c.beginPath(); c.arc(0, 0, R * k, 0, 7); c.fill();
+  c.strokeStyle = '#2a1d13'; c.lineWidth = Math.max(1, 0.35 * k); c.beginPath(); c.arc(0, 0, R * k, 0, 7); c.stroke();
+  c.restore();
+}
+// spray, wakes, the Gale's streaks and the goal's sparks, as particles in the world
+function sdShipFx(s, dt) {
+  if (s._air && !s.air) for (let i = 0; i < 14; i++) SD2.fx.push({ x: s.x + (Math.random() - 0.5) * sdHalf(s) * 2, y: 0.5, vx: (Math.random() - 0.5) * 18, vy: 8 + Math.random() * 16, t: 0.9, c: 'rgba(220,240,245,0.85)', r: 0.6 });
+  if (!s._air && s.air) for (let i = 0; i < 8; i++) SD2.fx.push({ x: s.x + (Math.random() - 0.5) * sdHalf(s) * 1.4, y: 0.5, vx: (Math.random() - 0.5) * 8, vy: 6 + Math.random() * 10, t: 0.7, c: 'rgba(220,240,245,0.8)', r: 0.5 });
+  s._air = s.air;
+  if (!s.air && Math.abs(s.v) > 12 && Math.random() < dt * Math.abs(s.v) * 0.5) SD2.fx.push({ x: s.x - Math.sign(s.v) * sdHalf(s), y: 0.4, vx: -s.v * 0.2, vy: 3 + Math.random() * 3, t: 0.5, c: 'rgba(230,245,250,0.7)', r: 0.5 });
+  if (s.galeOn && Math.random() < dt * 40) { const c0 = Math.cos(s.h), s0 = Math.sin(s.h); SD2.fx.push({ x: s.x - c0 * sdHalf(s) * 1.2, y: s.y - s0 * sdHalf(s) * 1.2, vx: -c0 * 30 + s.v * 0.3, vy: -s0 * 30 + s.bv * 0.3, t: 0.35, c: 'rgba(190,230,255,0.8)', r: 0.45, line: 1 }); }
+  if (s.flipT > 0 && Math.random() < dt * 30) SD2.fx.push({ x: s.x, y: s.y, vx: 0, vy: 0, t: 0.25, c: 'rgba(255,255,255,0.5)', r: sdHalf(s) * 0.9, ring: 1 });
+}
+function sdDrawFx(c, dt) {
+  const k = SD2.k, F = SD2.fx;
+  for (let i = F.length - 1; i >= 0; i--) {
+    const p = F[i]; p.t -= dt; if (p.t <= 0) { F.splice(i, 1); continue; }
+    if (!p.ring) { p.vy -= (p.g == null ? 30 : p.g) * dt; p.x += p.vx * dt; p.y += p.vy * dt; }
+    const [sx, sy] = sdW2S(p.x, p.y);
+    c.globalAlpha = Math.min(1, p.t * 2.5);
+    if (p.ring) { c.strokeStyle = p.c; c.lineWidth = 1; c.beginPath(); c.arc(sx, sy, p.r * k * (1.4 - p.t * 2), 0, 7); c.stroke(); }
+    else if (p.line) { c.strokeStyle = p.c; c.lineWidth = Math.max(1, p.r * k); c.beginPath(); c.moveTo(sx, sy); c.lineTo(sx - p.vx * 0.04 * k, sy + p.vy * 0.04 * k); c.stroke(); }
+    else { c.fillStyle = p.c; c.beginPath(); c.arc(sx, sy, Math.max(1, p.r * k), 0, 7); c.fill(); }
+  }
+  c.globalAlpha = 1;
+  if (F.length > 600) F.splice(0, F.length - 600);
+}
+// a goal: the lamp over that gate blazes, and the gate throws out sparks of the scoring side's colour
+function sdGoalFx(team) {
+  const into = team === 0 ? 1 : 0; SD2.flash[into] = 1;
+  const gx = (team === 0 ? 1 : -1) * (SDC.W + SDC.GD * 0.4), T = LG_TEAMS[team];
+  for (let i = 0; i < 90; i++) { const a = Math.random() * Math.PI * 2, v = 10 + Math.random() * 40; SD2.fx.push({ x: gx, y: SDC.GH * 0.45, vx: Math.cos(a) * v - (team === 0 ? 20 : -20), vy: Math.sin(a) * v + 15, t: 1.2 + Math.random() * 0.8, c: i % 3 ? T.col : '#fff3c0', r: 0.55, g: 18 }); }
+  for (let i = 0; i < 30; i++) SD2.fx.push({ x: gx + (Math.random() - 0.5) * 10, y: 0.5, vx: (Math.random() - 0.5) * 30, vy: 10 + Math.random() * 25, t: 1, c: 'rgba(220,240,245,0.85)', r: 0.7 });
+}
+
 // ---- src/lgnet.js ----
 'use strict';
 // Skerry League played online: a lobby on its card, and up to six in one match, each on their own screen.
@@ -79864,8 +80531,10 @@ function lgnAmHost() { const m = lgnMembers(); return !!m.length && lgnMine(m[0]
 function lgnHostZ() { const m = lgnMembers(); return m.length && !lgnMine(m[0]) ? lgnOf(m[0]) : null; }
 function lgnSend(z) { if (NET.room) NET.room.presence({ lg: z }).catch(() => {}); }
 // the match the host has picked on the card
-function lgnPick() { const v = id => $(id) ? $(id).value : ''; return { sz: lgClamp(+v('lgSize') || 2, 1, 3), mn: [3, 5, 7].includes(+v('lgMins')) ? +v('lgMins') : 5, sk: LG_SKILL[v('lgSkill')] ? v('lgSkill') : 'fair', fl: v('lgFleet') === 'same' ? 'same' : 'mixed' }; }
-function lgnLob() { if (lgnAmHost()) return lgnPick(); const h = lgnHostZ(), l = h && h.lob; return l ? { sz: lgClamp(l.sz | 0 || 2, 1, 3), mn: [3, 5, 7].includes(l.mn) ? l.mn : 5, sk: LG_SKILL[l.sk] ? l.sk : 'fair', fl: l.fl === 'same' ? 'same' : 'mixed' } : lgnPick(); }
+function lgnPick() { const v = id => $(id) ? $(id).value : ''; return { sz: lgClamp(+v('lgSize') || 2, 1, 3), mn: [3, 5, 7].includes(+v('lgMins')) ? +v('lgMins') : 5, sk: LG_SKILL[v('lgSkill')] ? v('lgSkill') : 'fair', fl: v('lgFleet') === 'same' ? 'same' : 'mixed', md: v('lgGame') === 'side' ? 'sd' : '' }; }
+function lgnLob() { if (lgnAmHost()) return lgnPick(); const h = lgnHostZ(), l = h && h.lob; return l ? { sz: lgClamp(l.sz | 0 || 2, 1, 3), mn: [3, 5, 7].includes(l.mn) ? l.mn : 5, sk: LG_SKILL[l.sk] ? l.sk : 'fair', fl: l.fl === 'same' ? 'same' : 'mixed', md: l.md === 'sd' ? 'sd' : '' } : lgnPick(); }
+// (Spindrift, md 'sd': two a side at most, so four in a match)
+function lgnMaxOf(code) { const p = lgnPeers(code)[0], z = p && lgnOf(p), l = z && z.lob; return l && l.md === 'sd' ? 4 : LGN_MAX; }
 function lgnSendLobby() {
   if (!LGN.code) return;
   const z = lgnBase();
@@ -79880,7 +80549,7 @@ function lgnHost() {
 // join a match's lobby (or, with rejoin, step back into a match under way that has a seat for me)
 function lgnJoin(code, rejoin) {
   if (!lgnOnline() || !code || lgnInMatch()) return;
-  if (!rejoin && lgnPeers(code).length >= LGN_MAX) { LGN.msg = 'That match is full (six players).'; lgnRender(); return; }
+  if (!rejoin && lgnPeers(code).length >= lgnMaxOf(code)) { LGN.msg = `That match is full (${lgnMaxOf(code) === 4 ? 'four' : 'six'} players).`; lgnRender(); return; }
   // (my join time goes after everyone already in, whatever my clock says, so a slow clock never puts me ahead of the host)
   const late = Math.max(0, ...lgnPeers(code).map(p => lgnOf(p).at || 0));
   LGN.code = code; LGN.at = Math.max(Date.now(), late + 1); LGN.msg = ''; LGN.doneG = null;
@@ -79898,7 +80567,7 @@ function lgnOpen() {
     list.sort((a, b) => (lgnOf(a).at || 0) - (lgnOf(b).at || 0));
     const h = lgnOf(list[0]), st = h.st && typeof h.st.g === 'string' ? h.st : null;
     const mine = !!(st && Array.isArray(st.seats) && st.seats.some(x => Array.isArray(x) && x[0] === NET.sid));
-    out.push({ code, host: lgnClean(h.nick, 16) || 'Someone', n: list.length, started: !!st, mine });
+    out.push({ code, host: lgnClean(h.nick, 16) || 'Someone', n: list.length, started: !!st, mine, max: h.lob && h.lob.md === 'sd' ? 4 : LGN_MAX, sd: !!(h.lob && h.lob.md === 'sd') });
   }
   return out;
 }
@@ -79907,7 +80576,7 @@ function lgnOpen() {
 // who sails where: everyone in the lobby (in the order they came), on the side they asked for while it has room and
 // otherwise the side with fewer people; the sides as big as the host picked, or bigger to fit everyone; bots for the rest
 function lgnSeats() {
-  const m = lgnMembers(), L = lgnLob(), n = m.length, size = lgClamp(Math.max(L.sz, Math.ceil(n / 2)), 1, 3);
+  const m = lgnMembers(), L = lgnLob(), n = m.length, size = lgClamp(Math.max(L.sz, Math.ceil(n / 2)), 1, L.md === 'sd' ? 2 : 3);
   const side = [[], []];
   const left = [];
   for (const p of m) { const z = lgnOf(p); if ((z.tm === 0 || z.tm === 1) && side[z.tm].length < size) side[z.tm].push(z); else left.push(z); }
@@ -79938,9 +80607,9 @@ function lgnRender() {
     if (!L.length) { const p = document.createElement('p'); p.className = 'muted'; p.textContent = 'No one is hosting a match right now. Host one, and send the people you want to play with to this page.'; el.append(p); return; }
     for (const n of L) {
       const b = document.createElement('button'); b.type = 'button'; b.className = 'warlobbyrow';
-      const nm = document.createElement('span'); nm.className = 'nm'; nm.textContent = `${n.host}’s match`;
-      const sm = document.createElement('small'); sm.textContent = n.mine ? 'under way · tap to rejoin' : n.started ? 'under way' : `${n.n}/${LGN_MAX} players · tap to join`;
-      b.append(nm, sm); b.disabled = !n.mine && (n.started || n.n >= LGN_MAX); b.addEventListener('click', () => lgnJoin(n.code, n.mine)); el.append(b);
+      const nm = document.createElement('span'); nm.className = 'nm'; nm.textContent = `${n.host}’s match${n.sd ? ' · Spindrift' : ''}`;
+      const sm = document.createElement('small'); sm.textContent = n.mine ? 'under way · tap to rejoin' : n.started ? 'under way' : `${n.n}/${n.max} players · tap to join`;
+      b.append(nm, sm); b.disabled = !n.mine && (n.started || n.n >= n.max); b.addEventListener('click', () => lgnJoin(n.code, n.mine)); el.append(b);
     }
     return;
   }
@@ -79959,14 +80628,14 @@ function lgnRender() {
     if (T) li.style.color = T.col; if (lgnMine(p)) li.className = 'me'; ol.append(li);
   });
   const size = seats.length / 2, bots = seats.filter(z => !z[0]).length;
-  const what = `${size} against ${size} · ${L.mn} minutes${bots ? ` · ${bots} ${LG_SKILL[L.sk] ? ({ easy: 'Easy', fair: 'Fair', hard: 'Hard' })[L.sk] : 'Fair'} bot${bots === 1 ? '' : 's'}` : ''}`;
+  const what = `${L.md === 'sd' ? 'Spindrift · ' : 'The Harbour Pool · '}${size} against ${size} · ${L.mn} minutes${bots ? ` · ${bots} ${LG_SKILL[L.sk] ? ({ easy: 'Easy', fair: 'Fair', hard: 'Hard' })[L.sk] : 'Fair'} bot${bots === 1 ? '' : 's'}` : ''}`;
   q('LobbyMsg').textContent = back ? 'Your match is still going. Rejoin it, and a bot hands your ship back.' : st && !host ? 'A match is under way. Wait here for the next one.' : LGN.msg || (host ? `${what}. Kick off when everyone’s in (the match is yours to pick above). Keep this tab in front while you host: the match runs on your screen.` : `${what}. Waiting for the host to kick off.`);
 }
 
 // ---------- starting ----------
 function lgnStart() {
   if (!lgnAmHost() || lgnInMatch()) return;
-  const L = lgnPick(), seats = lgnSeats(), st = { g: Math.random().toString(36).slice(2, 9), sz: seats.length / 2, mn: L.mn, sk: L.sk, fl: L.fl, seats };
+  const L = lgnPick(), seats = lgnSeats(), st = { g: Math.random().toString(36).slice(2, 9), sz: seats.length / 2, mn: L.mn, sk: L.sk, fl: L.fl, md: L.md, seats };
   lgnBegin(st, 'host');
 }
 // the host's st, checked over before it's used on anyone else's screen
@@ -79974,7 +80643,7 @@ function lgnStOk(s) {
   if (!s || typeof s.g !== 'string' || !Array.isArray(s.seats)) return null;
   const seats = s.seats.slice(0, 6).filter(z => Array.isArray(z) && (z[1] === 0 || z[1] === 1)).map(z => [typeof z[0] === 'string' ? z[0].slice(0, 16) : '', z[1], lgClamp(z[2] | 0, 0, 2), lgBoatOf(z[3]).id, typeof z[4] === 'string' ? z[4].slice(0, 24) : '', lgnClean(z[5], 16) || 'A sailor']);
   if (!seats.length || seats.length % 2) return null;
-  return { g: s.g.slice(0, 12), sz: seats.length / 2, mn: [3, 5, 7].includes(s.mn) ? s.mn : 5, sk: LG_SKILL[s.sk] ? s.sk : 'fair', fl: s.fl === 'same' ? 'same' : 'mixed', seats };
+  return { g: s.g.slice(0, 12), sz: seats.length / 2, mn: [3, 5, 7].includes(s.mn) ? s.mn : 5, sk: LG_SKILL[s.sk] ? s.sk : 'fair', fl: s.fl === 'same' ? 'same' : 'mixed', md: s.md === 'sd' && seats.length <= 4 ? 'sd' : '', seats };
 }
 function lgnBegin(st, role) {
   // (my counts start from the clock, so after a rejoin the host takes my ship, hits and buoys as newer than before I left)
@@ -79982,7 +80651,7 @@ function lgnBegin(st, role) {
   Object.assign(LGN, { st, g: st.g, doneG: st.g, role, seq: base, sendT: 0, seen: {}, hostSeen: performance.now(), wSeen: -1, first: true, koSeen: 0, gSeen: 0, phSeen: '', otSeen: false, ended: false,
     lastP: {}, lastHq: {}, lastQ: {}, hk: {}, pk: {}, sentAt: {}, hq: null, hseq: base, hitAt: -1e9, q: null, qseq: base, padAt: {}, samp: {}, back: {} });
   for (const z of st.seats) if (z[0]) LGN.seen[z[0]] = performance.now();
-  lgStart({ size: st.sz, mins: st.mn, skill: st.sk, fleet: st.fl, boat: lgnMyBoat(), net: { role, seats: st.seats, g: st.g } });
+  lgStart({ size: st.sz, mins: st.mn, skill: st.sk, fleet: st.fl, game: st.md === 'sd' ? 'side' : 'pool', boat: lgnMyBoat(), net: { role, seats: st.seats, g: st.g } });
   LGN.koSeen = LG.ko;
   lgnSendNow();
 }
@@ -80014,8 +80683,9 @@ function lgnStop() {
 // ---------- during the match ----------
 function lgnSeatOf(sid) { return LG.ships.find(s => s.sid === sid) || null; }
 // a ship as heard: [x, y, h, v, bv, rudder, w, gale, galeOn, sail]
-function lgnPose(s) { return [lgnR(s.x, 100), lgnR(s.y, 100), lgnR(s.h, 1000), lgnR(s.v, 100), lgnR(s.bv, 100), lgnR(s.rudder, 100), lgnR(s.w, 1000), Math.round(s.gale), s.galeOn ? 1 : 0, lgnR(s.sail, 100)]; }
+function lgnPose(s) { if (LG.side) return sdPose(s); return [lgnR(s.x, 100), lgnR(s.y, 100), lgnR(s.h, 1000), lgnR(s.v, 100), lgnR(s.bv, 100), lgnR(s.rudder, 100), lgnR(s.w, 1000), Math.round(s.gale), s.galeOn ? 1 : 0, lgnR(s.sail, 100)]; }
 function lgnHeard(s, a, now) {
+  if (LG.side) return sdHeard(s, a, now);
   if (!Array.isArray(a) || a.length < 10 || !a.slice(0, 7).every(Number.isFinite)) return;
   const x = lgClamp(a[0], -LGC.AX - 5, LGC.AX + 5), y = lgClamp(a[1], -LGC.AY - LGC.GD, LGC.AY + LGC.GD);
   const first = !LGN.samp[s.i];
@@ -80092,8 +80762,9 @@ function lgnTakeHit(s, h) {
   if (LG.ph !== 'play' || B.gone || h.length < 7 || !h.slice(1, 7).every(Number.isFinite)) return false;
   if (Math.hypot(B.x - h[1], B.y - h[2]) > LGN_HIT_NEAR) return false;
   if (LG.lastHitBy && LG.lastHitBy !== s && LG.t - LG.lastHitT < 0.1) return false;   // (someone else got there first)
-  B.x = lgClamp(h[1], -LGC.AX + LGC.R, LGC.AX - LGC.R); B.y = lgClamp(h[2], -LGC.AY - LGC.GD + LGC.R, LGC.AY + LGC.GD - LGC.R); B.z = lgClamp(h[3], LGC.FLOAT, 70);
-  B.vx = h[4]; B.vy = h[5]; B.vz = lgClamp(h[6], -40, 30);
+  if (LG.side) sdTakeClamp(B, h);
+  else { B.x = lgClamp(h[1], -LGC.AX + LGC.R, LGC.AX - LGC.R); B.y = lgClamp(h[2], -LGC.AY - LGC.GD + LGC.R, LGC.AY + LGC.GD - LGC.R); B.z = lgClamp(h[3], LGC.FLOAT, 70);
+  B.vx = h[4]; B.vy = h[5]; B.vz = lgClamp(h[6], -40, 30); }
   const sp = Math.hypot(B.vx, B.vy); if (sp > 120) { B.vx *= 120 / sp; B.vy *= 120 / sp; }
   if (LG.last !== s || LG.t - LG.lastHitT > 0.3) { s.touches++; LG.hits++; }
   LG.prev = LG.last && LG.last !== s ? LG.last : LG.prev; LG.last = s; LG.lastHitT = LG.t; LG.lastHitBy = s;
@@ -80156,6 +80827,7 @@ function lgnBall(w, now) {
 }
 // the ball's own flight a moment on (the water, the air and the walls; no ships, no goals), for the forecast
 function lgBallFly(B, dt) {
+  if (LG.side) return sdBallFly(B, dt);
   if (B.z > LGC.FLOAT + 0.05 || B.vz > 0) { B.vz -= LGC.G * dt; const k = Math.exp(-dt * 0.08); B.vx *= k; B.vy *= k; }
   else { const k = Math.exp(-dt * 0.32); B.vx *= k; B.vy *= k; B.vz = 0; B.z = LGC.FLOAT; }
   B.x += B.vx * dt; B.y += B.vy * dt; B.z += B.vz * dt;
@@ -80164,6 +80836,7 @@ function lgBallFly(B, dt) {
 }
 // the others' ships: where each was last heard to be, carried on for as long ago as that was, and slid there
 function lgnPlace(dt, now) {
+  if (LG.side) return sdPlace(dt, now);
   const lead = lgClamp(LGN.rtt / 2000, 0, 0.15);
   for (const s of LG.ships) {
     if (lgOwn(s)) continue;
@@ -80181,6 +80854,7 @@ function lgnPlace(dt, now) {
 function lgnTags() {
   let box = $('lgTags');
   if (!box) { box = document.createElement('div'); box.id = 'lgTags'; box.className = 'lg-tags'; $('lgUI').append(box); }
+  box.hidden = !!LG.side; if (LG.side) return;   // (Spindrift draws its names on its own canvas)
   if (typeof L3 === 'undefined' || !L3.cam || typeof THREE === 'undefined') return;
   const w = innerWidth, h = innerHeight, v = new THREE.Vector3();
   for (const s of LG.ships) {
@@ -80209,7 +80883,7 @@ function lgnHidden() {
   $('lgMpLeave').addEventListener('click', lgnLeave);
   $('lgMpRejoin').addEventListener('click', () => { if (lgnInMatch()) return; LGN.doneG = null; LGN.msg = ''; lgNetPeers(); });
   // (the host's picks and anyone's ship, out to the lobby as they change)
-  for (const id of ['lgSize', 'lgMins', 'lgSkill', 'lgFleet', 'lgBoat', 'lgNick']) { const el = $(id); if (el) el.addEventListener('change', () => { if (LGN.code && !lgnInMatch()) { lgnSendLobby(); lgnRender(); } }); }
+  for (const id of ['lgGame', 'lgSize', 'lgMins', 'lgSkill', 'lgFleet', 'lgBoat', 'lgNick']) { const el = $(id); if (el) el.addEventListener('change', () => { if (LGN.code && !lgnInMatch()) { lgnSendLobby(); lgnRender(); } }); }
   setInterval(() => { if (state === 'title') lgnRender(); }, 1500);
   // (in the lobby, everyone says they're still here every few seconds, so a long wait doesn't look like leaving)
   setInterval(() => { if (LGN.code && !lgnInMatch()) lgnSendLobby(); }, 4000);
@@ -88802,6 +89476,8 @@ requestAnimationFrame(frame);
 <!-- [golf] the golfer, ball and clubs dressed -->
 <!-- [league] Skerry League: the match, the ships, the ball, the bots -->
 <!-- [league] the 3D view -->
+<!-- [league] Spindrift: the side-on game's rules, ships, ball and bots -->
+<!-- [league] Spindrift's view -->
 <!-- [league] online matches: the lobby and keeping the screens together -->
 <!-- [chess] Skerry Chess: the rules and the bots -->
 <!-- [chess] the board, the card and the game -->

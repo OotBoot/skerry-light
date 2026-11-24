@@ -59,8 +59,10 @@ function lgnAmHost() { const m = lgnMembers(); return !!m.length && lgnMine(m[0]
 function lgnHostZ() { const m = lgnMembers(); return m.length && !lgnMine(m[0]) ? lgnOf(m[0]) : null; }
 function lgnSend(z) { if (NET.room) NET.room.presence({ lg: z }).catch(() => {}); }
 // the match the host has picked on the card
-function lgnPick() { const v = id => $(id) ? $(id).value : ''; return { sz: lgClamp(+v('lgSize') || 2, 1, 3), mn: [3, 5, 7].includes(+v('lgMins')) ? +v('lgMins') : 5, sk: LG_SKILL[v('lgSkill')] ? v('lgSkill') : 'fair', fl: v('lgFleet') === 'same' ? 'same' : 'mixed' }; }
-function lgnLob() { if (lgnAmHost()) return lgnPick(); const h = lgnHostZ(), l = h && h.lob; return l ? { sz: lgClamp(l.sz | 0 || 2, 1, 3), mn: [3, 5, 7].includes(l.mn) ? l.mn : 5, sk: LG_SKILL[l.sk] ? l.sk : 'fair', fl: l.fl === 'same' ? 'same' : 'mixed' } : lgnPick(); }
+function lgnPick() { const v = id => $(id) ? $(id).value : ''; return { sz: lgClamp(+v('lgSize') || 2, 1, 3), mn: [3, 5, 7].includes(+v('lgMins')) ? +v('lgMins') : 5, sk: LG_SKILL[v('lgSkill')] ? v('lgSkill') : 'fair', fl: v('lgFleet') === 'same' ? 'same' : 'mixed', md: v('lgGame') === 'side' ? 'sd' : '' }; }
+function lgnLob() { if (lgnAmHost()) return lgnPick(); const h = lgnHostZ(), l = h && h.lob; return l ? { sz: lgClamp(l.sz | 0 || 2, 1, 3), mn: [3, 5, 7].includes(l.mn) ? l.mn : 5, sk: LG_SKILL[l.sk] ? l.sk : 'fair', fl: l.fl === 'same' ? 'same' : 'mixed', md: l.md === 'sd' ? 'sd' : '' } : lgnPick(); }
+// (Spindrift, md 'sd': two a side at most, so four in a match)
+function lgnMaxOf(code) { const p = lgnPeers(code)[0], z = p && lgnOf(p), l = z && z.lob; return l && l.md === 'sd' ? 4 : LGN_MAX; }
 function lgnSendLobby() {
   if (!LGN.code) return;
   const z = lgnBase();
@@ -75,7 +77,7 @@ function lgnHost() {
 // join a match's lobby (or, with rejoin, step back into a match under way that has a seat for me)
 function lgnJoin(code, rejoin) {
   if (!lgnOnline() || !code || lgnInMatch()) return;
-  if (!rejoin && lgnPeers(code).length >= LGN_MAX) { LGN.msg = 'That match is full (six players).'; lgnRender(); return; }
+  if (!rejoin && lgnPeers(code).length >= lgnMaxOf(code)) { LGN.msg = `That match is full (${lgnMaxOf(code) === 4 ? 'four' : 'six'} players).`; lgnRender(); return; }
   // (my join time goes after everyone already in, whatever my clock says, so a slow clock never puts me ahead of the host)
   const late = Math.max(0, ...lgnPeers(code).map(p => lgnOf(p).at || 0));
   LGN.code = code; LGN.at = Math.max(Date.now(), late + 1); LGN.msg = ''; LGN.doneG = null;
@@ -93,7 +95,7 @@ function lgnOpen() {
     list.sort((a, b) => (lgnOf(a).at || 0) - (lgnOf(b).at || 0));
     const h = lgnOf(list[0]), st = h.st && typeof h.st.g === 'string' ? h.st : null;
     const mine = !!(st && Array.isArray(st.seats) && st.seats.some(x => Array.isArray(x) && x[0] === NET.sid));
-    out.push({ code, host: lgnClean(h.nick, 16) || 'Someone', n: list.length, started: !!st, mine });
+    out.push({ code, host: lgnClean(h.nick, 16) || 'Someone', n: list.length, started: !!st, mine, max: h.lob && h.lob.md === 'sd' ? 4 : LGN_MAX, sd: !!(h.lob && h.lob.md === 'sd') });
   }
   return out;
 }
@@ -102,7 +104,7 @@ function lgnOpen() {
 // who sails where: everyone in the lobby (in the order they came), on the side they asked for while it has room and
 // otherwise the side with fewer people; the sides as big as the host picked, or bigger to fit everyone; bots for the rest
 function lgnSeats() {
-  const m = lgnMembers(), L = lgnLob(), n = m.length, size = lgClamp(Math.max(L.sz, Math.ceil(n / 2)), 1, 3);
+  const m = lgnMembers(), L = lgnLob(), n = m.length, size = lgClamp(Math.max(L.sz, Math.ceil(n / 2)), 1, L.md === 'sd' ? 2 : 3);
   const side = [[], []];
   const left = [];
   for (const p of m) { const z = lgnOf(p); if ((z.tm === 0 || z.tm === 1) && side[z.tm].length < size) side[z.tm].push(z); else left.push(z); }
@@ -133,9 +135,9 @@ function lgnRender() {
     if (!L.length) { const p = document.createElement('p'); p.className = 'muted'; p.textContent = 'No one is hosting a match right now. Host one, and send the people you want to play with to this page.'; el.append(p); return; }
     for (const n of L) {
       const b = document.createElement('button'); b.type = 'button'; b.className = 'warlobbyrow';
-      const nm = document.createElement('span'); nm.className = 'nm'; nm.textContent = `${n.host}’s match`;
-      const sm = document.createElement('small'); sm.textContent = n.mine ? 'under way · tap to rejoin' : n.started ? 'under way' : `${n.n}/${LGN_MAX} players · tap to join`;
-      b.append(nm, sm); b.disabled = !n.mine && (n.started || n.n >= LGN_MAX); b.addEventListener('click', () => lgnJoin(n.code, n.mine)); el.append(b);
+      const nm = document.createElement('span'); nm.className = 'nm'; nm.textContent = `${n.host}’s match${n.sd ? ' · Spindrift' : ''}`;
+      const sm = document.createElement('small'); sm.textContent = n.mine ? 'under way · tap to rejoin' : n.started ? 'under way' : `${n.n}/${n.max} players · tap to join`;
+      b.append(nm, sm); b.disabled = !n.mine && (n.started || n.n >= n.max); b.addEventListener('click', () => lgnJoin(n.code, n.mine)); el.append(b);
     }
     return;
   }
@@ -154,14 +156,14 @@ function lgnRender() {
     if (T) li.style.color = T.col; if (lgnMine(p)) li.className = 'me'; ol.append(li);
   });
   const size = seats.length / 2, bots = seats.filter(z => !z[0]).length;
-  const what = `${size} against ${size} · ${L.mn} minutes${bots ? ` · ${bots} ${LG_SKILL[L.sk] ? ({ easy: 'Easy', fair: 'Fair', hard: 'Hard' })[L.sk] : 'Fair'} bot${bots === 1 ? '' : 's'}` : ''}`;
+  const what = `${L.md === 'sd' ? 'Spindrift · ' : 'The Harbour Pool · '}${size} against ${size} · ${L.mn} minutes${bots ? ` · ${bots} ${LG_SKILL[L.sk] ? ({ easy: 'Easy', fair: 'Fair', hard: 'Hard' })[L.sk] : 'Fair'} bot${bots === 1 ? '' : 's'}` : ''}`;
   q('LobbyMsg').textContent = back ? 'Your match is still going. Rejoin it, and a bot hands your ship back.' : st && !host ? 'A match is under way. Wait here for the next one.' : LGN.msg || (host ? `${what}. Kick off when everyone’s in (the match is yours to pick above). Keep this tab in front while you host: the match runs on your screen.` : `${what}. Waiting for the host to kick off.`);
 }
 
 // ---------- starting ----------
 function lgnStart() {
   if (!lgnAmHost() || lgnInMatch()) return;
-  const L = lgnPick(), seats = lgnSeats(), st = { g: Math.random().toString(36).slice(2, 9), sz: seats.length / 2, mn: L.mn, sk: L.sk, fl: L.fl, seats };
+  const L = lgnPick(), seats = lgnSeats(), st = { g: Math.random().toString(36).slice(2, 9), sz: seats.length / 2, mn: L.mn, sk: L.sk, fl: L.fl, md: L.md, seats };
   lgnBegin(st, 'host');
 }
 // the host's st, checked over before it's used on anyone else's screen
@@ -169,7 +171,7 @@ function lgnStOk(s) {
   if (!s || typeof s.g !== 'string' || !Array.isArray(s.seats)) return null;
   const seats = s.seats.slice(0, 6).filter(z => Array.isArray(z) && (z[1] === 0 || z[1] === 1)).map(z => [typeof z[0] === 'string' ? z[0].slice(0, 16) : '', z[1], lgClamp(z[2] | 0, 0, 2), lgBoatOf(z[3]).id, typeof z[4] === 'string' ? z[4].slice(0, 24) : '', lgnClean(z[5], 16) || 'A sailor']);
   if (!seats.length || seats.length % 2) return null;
-  return { g: s.g.slice(0, 12), sz: seats.length / 2, mn: [3, 5, 7].includes(s.mn) ? s.mn : 5, sk: LG_SKILL[s.sk] ? s.sk : 'fair', fl: s.fl === 'same' ? 'same' : 'mixed', seats };
+  return { g: s.g.slice(0, 12), sz: seats.length / 2, mn: [3, 5, 7].includes(s.mn) ? s.mn : 5, sk: LG_SKILL[s.sk] ? s.sk : 'fair', fl: s.fl === 'same' ? 'same' : 'mixed', md: s.md === 'sd' && seats.length <= 4 ? 'sd' : '', seats };
 }
 function lgnBegin(st, role) {
   // (my counts start from the clock, so after a rejoin the host takes my ship, hits and buoys as newer than before I left)
@@ -177,7 +179,7 @@ function lgnBegin(st, role) {
   Object.assign(LGN, { st, g: st.g, doneG: st.g, role, seq: base, sendT: 0, seen: {}, hostSeen: performance.now(), wSeen: -1, first: true, koSeen: 0, gSeen: 0, phSeen: '', otSeen: false, ended: false,
     lastP: {}, lastHq: {}, lastQ: {}, hk: {}, pk: {}, sentAt: {}, hq: null, hseq: base, hitAt: -1e9, q: null, qseq: base, padAt: {}, samp: {}, back: {} });
   for (const z of st.seats) if (z[0]) LGN.seen[z[0]] = performance.now();
-  lgStart({ size: st.sz, mins: st.mn, skill: st.sk, fleet: st.fl, boat: lgnMyBoat(), net: { role, seats: st.seats, g: st.g } });
+  lgStart({ size: st.sz, mins: st.mn, skill: st.sk, fleet: st.fl, game: st.md === 'sd' ? 'side' : 'pool', boat: lgnMyBoat(), net: { role, seats: st.seats, g: st.g } });
   LGN.koSeen = LG.ko;
   lgnSendNow();
 }
@@ -209,8 +211,9 @@ function lgnStop() {
 // ---------- during the match ----------
 function lgnSeatOf(sid) { return LG.ships.find(s => s.sid === sid) || null; }
 // a ship as heard: [x, y, h, v, bv, rudder, w, gale, galeOn, sail]
-function lgnPose(s) { return [lgnR(s.x, 100), lgnR(s.y, 100), lgnR(s.h, 1000), lgnR(s.v, 100), lgnR(s.bv, 100), lgnR(s.rudder, 100), lgnR(s.w, 1000), Math.round(s.gale), s.galeOn ? 1 : 0, lgnR(s.sail, 100)]; }
+function lgnPose(s) { if (LG.side) return sdPose(s); return [lgnR(s.x, 100), lgnR(s.y, 100), lgnR(s.h, 1000), lgnR(s.v, 100), lgnR(s.bv, 100), lgnR(s.rudder, 100), lgnR(s.w, 1000), Math.round(s.gale), s.galeOn ? 1 : 0, lgnR(s.sail, 100)]; }
 function lgnHeard(s, a, now) {
+  if (LG.side) return sdHeard(s, a, now);
   if (!Array.isArray(a) || a.length < 10 || !a.slice(0, 7).every(Number.isFinite)) return;
   const x = lgClamp(a[0], -LGC.AX - 5, LGC.AX + 5), y = lgClamp(a[1], -LGC.AY - LGC.GD, LGC.AY + LGC.GD);
   const first = !LGN.samp[s.i];
@@ -287,8 +290,9 @@ function lgnTakeHit(s, h) {
   if (LG.ph !== 'play' || B.gone || h.length < 7 || !h.slice(1, 7).every(Number.isFinite)) return false;
   if (Math.hypot(B.x - h[1], B.y - h[2]) > LGN_HIT_NEAR) return false;
   if (LG.lastHitBy && LG.lastHitBy !== s && LG.t - LG.lastHitT < 0.1) return false;   // (someone else got there first)
-  B.x = lgClamp(h[1], -LGC.AX + LGC.R, LGC.AX - LGC.R); B.y = lgClamp(h[2], -LGC.AY - LGC.GD + LGC.R, LGC.AY + LGC.GD - LGC.R); B.z = lgClamp(h[3], LGC.FLOAT, 70);
-  B.vx = h[4]; B.vy = h[5]; B.vz = lgClamp(h[6], -40, 30);
+  if (LG.side) sdTakeClamp(B, h);
+  else { B.x = lgClamp(h[1], -LGC.AX + LGC.R, LGC.AX - LGC.R); B.y = lgClamp(h[2], -LGC.AY - LGC.GD + LGC.R, LGC.AY + LGC.GD - LGC.R); B.z = lgClamp(h[3], LGC.FLOAT, 70);
+  B.vx = h[4]; B.vy = h[5]; B.vz = lgClamp(h[6], -40, 30); }
   const sp = Math.hypot(B.vx, B.vy); if (sp > 120) { B.vx *= 120 / sp; B.vy *= 120 / sp; }
   if (LG.last !== s || LG.t - LG.lastHitT > 0.3) { s.touches++; LG.hits++; }
   LG.prev = LG.last && LG.last !== s ? LG.last : LG.prev; LG.last = s; LG.lastHitT = LG.t; LG.lastHitBy = s;
@@ -351,6 +355,7 @@ function lgnBall(w, now) {
 }
 // the ball's own flight a moment on (the water, the air and the walls; no ships, no goals), for the forecast
 function lgBallFly(B, dt) {
+  if (LG.side) return sdBallFly(B, dt);
   if (B.z > LGC.FLOAT + 0.05 || B.vz > 0) { B.vz -= LGC.G * dt; const k = Math.exp(-dt * 0.08); B.vx *= k; B.vy *= k; }
   else { const k = Math.exp(-dt * 0.32); B.vx *= k; B.vy *= k; B.vz = 0; B.z = LGC.FLOAT; }
   B.x += B.vx * dt; B.y += B.vy * dt; B.z += B.vz * dt;
@@ -359,6 +364,7 @@ function lgBallFly(B, dt) {
 }
 // the others' ships: where each was last heard to be, carried on for as long ago as that was, and slid there
 function lgnPlace(dt, now) {
+  if (LG.side) return sdPlace(dt, now);
   const lead = lgClamp(LGN.rtt / 2000, 0, 0.15);
   for (const s of LG.ships) {
     if (lgOwn(s)) continue;
@@ -376,6 +382,7 @@ function lgnPlace(dt, now) {
 function lgnTags() {
   let box = $('lgTags');
   if (!box) { box = document.createElement('div'); box.id = 'lgTags'; box.className = 'lg-tags'; $('lgUI').append(box); }
+  box.hidden = !!LG.side; if (LG.side) return;   // (Spindrift draws its names on its own canvas)
   if (typeof L3 === 'undefined' || !L3.cam || typeof THREE === 'undefined') return;
   const w = innerWidth, h = innerHeight, v = new THREE.Vector3();
   for (const s of LG.ships) {
@@ -404,7 +411,7 @@ function lgnHidden() {
   $('lgMpLeave').addEventListener('click', lgnLeave);
   $('lgMpRejoin').addEventListener('click', () => { if (lgnInMatch()) return; LGN.doneG = null; LGN.msg = ''; lgNetPeers(); });
   // (the host's picks and anyone's ship, out to the lobby as they change)
-  for (const id of ['lgSize', 'lgMins', 'lgSkill', 'lgFleet', 'lgBoat', 'lgNick']) { const el = $(id); if (el) el.addEventListener('change', () => { if (LGN.code && !lgnInMatch()) { lgnSendLobby(); lgnRender(); } }); }
+  for (const id of ['lgGame', 'lgSize', 'lgMins', 'lgSkill', 'lgFleet', 'lgBoat', 'lgNick']) { const el = $(id); if (el) el.addEventListener('change', () => { if (LGN.code && !lgnInMatch()) { lgnSendLobby(); lgnRender(); } }); }
   setInterval(() => { if (state === 'title') lgnRender(); }, 1500);
   // (in the lobby, everyone says they're still here every few seconds, so a long wait doesn't look like leaving)
   setInterval(() => { if (LGN.code && !lgnInMatch()) lgnSendLobby(); }, 4000);
