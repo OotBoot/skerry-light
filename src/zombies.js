@@ -176,10 +176,10 @@ const ZM_TC = [ZMT.X, ZMT.Y];   // the middle of the tower
 // host's pick goes out with the start of the night (src/zmnet.js), and everyone lays out the same place.
 var ZM_MAP = 'light';
 const ZM_MAPS = {
-  light: { n: 'the Lighthouse', N: 'The Lighthouse', isle: 'light', tower: true, noBox: ['hermit'], zones: Object.assign({}, ZM_ZONES), start: [0, -56.5], top: 0.9, seed: 0x11947,
+  light: { n: 'the Lighthouse', N: 'The Lighthouse', isle: 'light', tower: true, noBox: ['hermit', 'corposant'], zones: Object.assign({}, ZM_ZONES), start: [0, -56.5], top: 0.9, seed: 0x11947,
     blurb: 'The keeper\u2019s station at the Light: a tower five floors high, the lantern at its top.',
     land: n => `The boat leaves you on the jetty below the Light${n ? ', ' + n + ' of you' : ''}. Up through the sea gate, and hold the Light.` },
-  wrack: { n: 'Wrackhaven', N: 'Wrackhaven', isle: 'wrack', tower: false, noBox: ['fresnel'], start: [0, -49], top: 0.45, seed: 0x3a71d,
+  wrack: { n: 'Wrackhaven', N: 'Wrackhaven', isle: 'wrack', tower: false, noBox: ['fresnel', 'corposant'], start: [0, -49], top: 0.45, seed: 0x3a71d,
     blurb: 'A fishing village the sea took back: the quay, Fish Street, the houses round the Square, and the town hall in the middle of it, three floors up to the Belfry.',
     land: n => `The boat leaves you on the quay at Wrackhaven${n ? ', ' + n + ' of you' : ''}. Up through the harbour gate, and hold the village.`,
     // (the harbour's edge, further out than at the Lighthouse; the grid the drowned walk by, over the whole village)

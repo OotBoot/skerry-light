@@ -72,6 +72,9 @@ const FPSW = {
   // [crab] only at Wrackhaven, only from its chest (in place of the Fresnel Lamp there): src/zmcrab.js. A crab's
   // claw on a gauntlet: its snap knocks back what's near, and it throws hermit crabs that cling on and nip
   hermit:      { n: "Hermit's Claw", code: 'r', mag: 3, rate: 0.55, reload: 2.5, dmg: 2, head: 2, pv: 15, gr: 13, range: 60, snap: 3.4, ads: 1.15, kick: 1.5 },
+  // [elmo] only aboard the San Telmo, only from her chest (in place of the Lamp and the Claw): src/zmelmo.js. St Elmo's
+  // fire in a brass armillary sphere: each pull throws a slow globe of it that lashes arcs of lightning into them
+  corposant:   { n: 'Corposant',    code: 'e', mag: 4, rate: 0.7, reload: 2.2, dmg: 0, head: 0, pv: 6.5, range: 40, ads: 1.15, kick: 0.9 },
 };
 const FPS_WORDER = ['pepperbox', 'blunderbuss', 'longarm', 'harpoon', 'cutlass', 'avtomat'];
 // how much closer the view comes when aiming (the longarm's telescope, the avtomat's iron sights)
