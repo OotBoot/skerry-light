@@ -2194,6 +2194,7 @@ svg.chrock .foam { fill: rgba(235,245,250,0.55); } svg.chrock .rk { fill: #4b4d5
         <span class="zmmapshead">Where</span>
         <button class="tool" type="button" data-map="light" aria-pressed="true">The Lighthouse</button>
         <button class="tool" type="button" data-map="wrack" aria-pressed="false">Wrackhaven</button>
+        <button class="tool" type="button" data-map="galleon" aria-pressed="false">The San Telmo</button>
       </div>
       <p class="muted" id="zmMapNote"></p>
       <div class="btnrow">
@@ -3247,7 +3248,7 @@ svg.chrock .foam { fill: rgba(235,245,250,0.55); } svg.chrock .rk { fill: #4b4d5
 // ---- src/config.js ----
 'use strict';
 // The game's version, shown at the top of the main menu. Bump it by one with every change pushed to main.
-var VERSION = 248;
+var VERSION = 249;
 // Skerry Light: tuning, asset paths and lore.
 // World units are metres. The lighthouse stands at the origin on the shoreline (y = 0);
 // north (+y) is open sea. Bearings: 0 = north, positive = east.
@@ -3422,6 +3423,15 @@ document.addEventListener('visibilitychange', () => {
 // Begin a line with the game it touches and a colon ("Maren's End: ...") and that part is shown in bold.
 // Write them like real patch notes: plain, short, from the player's side. Leave secrets out entirely: no Easter eggs, secret bosses, secret rewards or hidden options, not even a hint.
 var PATCH_NOTES = [
+  { v: 249, date: '2026-11-24', title: "Keeper's Last Light: a third map, the San Telmo", New: [
+    "Keeper's Last Light: a third map, the San Telmo. A giant Spanish galleon, lost with all hands in the Armada years, lies stranded on a shingle bank. Come ashore under her side, get in through the breach in her hull, and hold her from the hold up to the quarterdeck.",
+    "Keeper's Last Light: the San Telmo has four decks and sixteen places to open: the Main Hold, Bread Room, Powder Room, Strong Room and Cable Tier below; the Gun Deck, Gunroom, Chaplain's Berth and Surgeon's Cockpit; the open Waist, the Steerage, the Great Cabin and the Forecastle; and up top the Quarterdeck and the Forecastle Deck.",
+    "Keeper's Last Light: the drowned climb her hull to the gunports, come over the bulwarks and the rails, in at the stern windows, and wade up the shingle. Every wall weapon, all five tonics, the Lampwright's Bench and the wreck chest are aboard.",
+    "Keeper's Last Light: a new wonder weapon, the Corposant, only from the San Telmo's chest. A brass armillary sphere holding St Elmo's fire. Each shot throws a slow globe of fire that lashes lightning into the drowned around it, drags them in, then bursts.",
+    "Keeper's Last Light: reforge the Corposant at the Lampwright's Bench into the Saint's Crown: a bigger globe, more arcs, a longer reach, and it splits into smaller globes when it bursts.",
+    "Keeper's Last Light: pick the San Telmo from the Where picker on the card. Hosts can pick it for co-op nights too.",
+    "Lore compendium: a new article, The San Telmo.",
+  ] },
   { v: 248, date: '2026-11-24', title: "Lore compendium: Spindrift", New: [
     "Lore compendium: two new articles, The Sluice (the old tide-lock under the Light where Spindrift is played) and Spindrift (how the crews' winter game began and how it's played).",
   ], Changes: [
@@ -17202,6 +17212,9 @@ const FPSW = {
   // [crab] only at Wrackhaven, only from its chest (in place of the Fresnel Lamp there): src/zmcrab.js. A crab's
   // claw on a gauntlet: its snap knocks back what's near, and it throws hermit crabs that cling on and nip
   hermit:      { n: "Hermit's Claw", code: 'r', mag: 3, rate: 0.55, reload: 2.5, dmg: 2, head: 2, pv: 15, gr: 13, range: 60, snap: 3.4, ads: 1.15, kick: 1.5 },
+  // [elmo] only aboard the San Telmo, only from her chest (in place of the Lamp and the Claw): src/zmelmo.js. St Elmo's
+  // fire in a brass armillary sphere: each pull throws a slow globe of it that lashes arcs of lightning into them
+  corposant:   { n: 'Corposant',    code: 'e', mag: 4, rate: 0.7, reload: 2.2, dmg: 0, head: 0, pv: 6.5, range: 40, ads: 1.15, kick: 0.9 },
 };
 const FPS_WORDER = ['pepperbox', 'blunderbuss', 'longarm', 'harpoon', 'cutlass', 'avtomat'];
 // how much closer the view comes when aiming (the longarm's telescope, the avtomat's iron sights)
@@ -22696,18 +22709,20 @@ function zmOutdoors(x, y, z) { const k = zmZoneAt(x, y, z); return !!(k && ZM_ZO
 const ZM_TC = [ZMT.X, ZMT.Y];   // the middle of the tower
 
 // ---------- the maps ----------
-// Two places to hold the night in: the Lighthouse (the keeper's station, above) and Wrackhaven, a fishing village the
-// sea took back (FPI_GEN.wrack, below). ZM_MAP is the one being played. zmUseMap swaps its rooms into ZM_ZONES and its
+// Three places to hold the night in: the Lighthouse (the keeper's station, above), Wrackhaven, a fishing village the
+// sea took back (FPI_GEN.wrack, below), and the San Telmo, the lost squadron's galleon stranded on the shingle (laid
+// out in src/zmgalleon.js, FPI_GEN.galleon; its rooms are here, so the pick kept on the device knows it at load).
+// ZM_MAP is the one being played. zmUseMap swaps its rooms into ZM_ZONES and its
 // landing into ZMD before the arena is laid out, so everything that asks which room a place is in, or where you come
 // ashore, asks the map being played. The tower (its floors, the lantern, the Roof Room and the Light's lever) and the
 // Easter egg belong to the Lighthouse alone. The pick on the card is kept on the device (ZM_PICK); together, the
 // host's pick goes out with the start of the night (src/zmnet.js), and everyone lays out the same place.
 var ZM_MAP = 'light';
 const ZM_MAPS = {
-  light: { n: 'the Lighthouse', N: 'The Lighthouse', isle: 'light', tower: true, noBox: ['hermit'], zones: Object.assign({}, ZM_ZONES), start: [0, -56.5], top: 0.9, seed: 0x11947,
+  light: { n: 'the Lighthouse', N: 'The Lighthouse', isle: 'light', tower: true, noBox: ['hermit', 'corposant'], zones: Object.assign({}, ZM_ZONES), start: [0, -56.5], top: 0.9, seed: 0x11947,
     blurb: 'The keeper\u2019s station at the Light: a tower five floors high, the lantern at its top.',
     land: n => `The boat leaves you on the jetty below the Light${n ? ', ' + n + ' of you' : ''}. Up through the sea gate, and hold the Light.` },
-  wrack: { n: 'Wrackhaven', N: 'Wrackhaven', isle: 'wrack', tower: false, noBox: ['fresnel'], start: [0, -49], top: 0.45, seed: 0x3a71d,
+  wrack: { n: 'Wrackhaven', N: 'Wrackhaven', isle: 'wrack', tower: false, noBox: ['fresnel', 'corposant'], start: [0, -49], top: 0.45, seed: 0x3a71d,
     blurb: 'A fishing village the sea took back: the quay, Fish Street, the houses round the Square, and the town hall in the middle of it, three floors up to the Belfry.',
     land: n => `The boat leaves you on the quay at Wrackhaven${n ? ', ' + n + ' of you' : ''}. Up through the harbour gate, and hold the village.`,
     // (the harbour's edge, further out than at the Lighthouse; the grid the drowned walk by, over the whole village)
@@ -22738,6 +22753,35 @@ const ZM_MAPS = {
       school: { n: 'the School House', r: [0, 18, 20, 44], floor: 'boards', wall: '#c0b69e' },
       yard: { n: 'the Churchyard', r: [18, 42, 20, 44], sky: true },
     } },
+  galleon: { n: 'the San Telmo', N: 'The San Telmo', isle: 'galleon', tower: false, noBox: ['fresnel', 'hermit'], start: [0, -19], top: 0, seed: 0x5a7e1, home: 'strand',
+    blurb: 'The San Telmo, flagship of the lost squadron, given back by the sea: a galleon stranded on the shingle, four decks of her from the hold up to the Quarterdeck under her stern lanterns.',
+    land: n => `The boat leaves you on the shingle under the San Telmo\u2019s side${n ? ', ' + n + ' of you' : ''}. Through the breach, and hold her.`,
+    // (home: the room you start in, open from the first; the sea's edge along the shingle bank, coming in round her
+    // ends; the grid the drowned walk by, over the whole ship, the shingle and the rocks on her far side)
+    shore: lx => -24 + Math.max(0, Math.abs(lx) - 46) * 0.5, nav: [-52, 52, -30, 26],
+    // She lies along x, broadside to the shore: the stern (aft) to the west, the bow to the east, her starboard side
+    // to the sea (south). Four decks, each 4.4 over the last: the Orlop on the ground (the hold and its stores), the
+    // Gun Deck, the Upper Deck (the Waist open to the sky between the Steerage and Great Cabin aft and the Forecastle
+    // forward), and over those the Quarterdeck and the Forecastle Deck, open to the sky. Upper rooms first, each
+    // with zr (as the town hall's); the rooms at her narrowing ends are given the whole width, their hull angled in.
+    zones: {
+      qdeck: { n: 'the Quarterdeck', r: [-46, -14, -11, 11], zr: [13.2, 99], sky: true },
+      fcdeck: { n: 'the Forecastle Deck', r: [22, 42, -11, 11], zr: [13.2, 99], sky: true },
+      cabin: { n: 'the Great Cabin', r: [-44, -28, -11, 11], zr: [8.8, 13.2] },
+      steer: { n: 'the Steerage', r: [-28, -14, -11, 11], zr: [8.8, 13.2] },
+      waist: { n: 'the Waist', r: [-14, 22, -11, 11], zr: [8.8, 13.2], sky: true },
+      fcastle: { n: 'the Forecastle', r: [22, 42, -11, 11], zr: [8.8, 13.2] },
+      gunroom: { n: 'the Gunroom', r: [-30, -14, -11, 11], zr: [4.4, 8.8] },
+      chapel: { n: 'the Chaplain\u2019s Berth', r: [-44, -30, -11, 11], zr: [4.4, 8.8] },
+      gundeck: { n: 'the Gun Deck', r: [-14, 22, -11, 11], zr: [4.4, 8.8] },
+      sick: { n: 'the Surgeon\u2019s Cockpit', r: [22, 40, -11, 11], zr: [4.4, 8.8] },
+      strong: { n: 'the Strong Room', r: [-44, -30, -11, 11], zr: [0, 4.4] },
+      powder: { n: 'the Powder Room', r: [-30, -14, 0, 11], zr: [0, 4.4] },
+      bread: { n: 'the Bread Room', r: [-30, -14, -11, 0], zr: [0, 4.4] },
+      hold: { n: 'the Main Hold', r: [-14, 22, -11, 11], zr: [0, 4.4] },
+      cable: { n: 'the Cable Tier', r: [22, 40, -11, 11], zr: [0, 4.4] },
+      strand: { n: 'the Strand', r: [-50, 50, -26, -11.25], sky: true },
+    } },
 };
 const ZM_MAP_IDS = Object.keys(ZM_MAPS);
 // the map picked on the card (kept on the device)
@@ -22756,7 +22800,7 @@ const zmTower = () => !!ZM_MAPS[ZM_MAP].tower;
 function zmMapCard() {
   for (const b of document.querySelectorAll('#zmMaps [data-map]')) b.setAttribute('aria-pressed', String(b.dataset.map === ZM_PICK));
   const d = $('zmMapNote'); if (d) d.textContent = ZM_MAPS[ZM_PICK].blurb;
-  const pl = $('zmPlay'); if (pl) pl.textContent = ZM_PICK === 'light' ? 'Hold the Light' : 'Hold ' + ZM_MAPS[ZM_PICK].N;
+  const pl = $('zmPlay'); if (pl) pl.textContent = ZM_PICK === 'light' ? 'Hold the Light' : 'Hold ' + ZM_MAPS[ZM_PICK].n;
 }
 
 FPS_ISLES.light = { name: 'the Lighthouse', ground: '#7a786e', ground2: '#5e5c54', wet: '#34363a', path: '#5c5a52', tint: 0.32, mound: 0, dune: 0,
@@ -24585,7 +24629,7 @@ function zmReset() {
   Object.assign(ZM, {
     on: true, own: ['pepperbox'], res: { pepperbox: 48 }, pts: ZMC.START, round: 0, phase: 'pre', t: 3, left: 0, spawnT: 0,
     z: [], drops: [], perks: {}, windBuys: 0, double: 0, insta: 0, dropsRound: 0, swarm: false, skitT: 0, kills: 0, heads: 0, downs: 0, spent: 0, doorsOpened: 0,
-    open: new Set(['dock']), zone: 'dock', zoneT: 4, banner: null, pops: [], fx: [], sparks: [], over: null, earnK: 0, navT: 0,
+    open: new Set([ZM_MAPS[ZM_MAP].home || 'dock']), zone: ZM_MAPS[ZM_MAP].home || 'dock', zoneT: 4, banner: null, pops: [], fx: [], sparks: [], over: null, earnK: 0, navT: 0,
     box: { at: 0, uses: 0, spins: 0, st: 'idle', t: 0, item: null, cyc: 0, show: 'avtomat', owner: null }, near: null, rebuildT: 0, groanT: 2,
     zc: 0, credit: {}, players: [], downT: 0, unstickAt: 0, unstickMine: 0, ghost: false, revT: 0, revOf: null, upT: {}, downNotes: [], downKit: null, beat: 0, boardBy: {}, boardPts: 0,
     doors: Zd.doors, windows: Zd.windows, buys: Zd.buys, perksAt: Zd.perks, spawns: Zd.spawns, glass: Zd.glass || [],
@@ -24596,6 +24640,7 @@ function zmReset() {
   if (typeof zxReset === 'function') zxReset();   // [chest] src/zmchest.js
   if (typeof zeReset === 'function') zeReset();   // [egg hook] src/zmegg.js
   if (typeof zhReset === 'function') zhReset();   // [egg2 hook] src/zmegg2.js
+  if (typeof zsReset === 'function') zsReset();   // [egg3 hook] src/zmegg3.js
 }
 // opts: { map: which map (ZM_MAPS; else the one picked on the card) } and, playing together (src/zmnet.js),
 // { net: 'host' | 'client', hum: [[sid, nick], ...] }
@@ -24754,6 +24799,7 @@ function zmTick(dt) {
   if (typeof zxTick === 'function') zxTick(dt);   // [chest] what the chest's weapons throw, and what they leave burning
   if (typeof zeTick === 'function') zeTick(dt);   // [egg hook] src/zmegg.js
   if (typeof zhTick === 'function') zhTick(dt);   // [egg2 hook] src/zmegg2.js
+  if (typeof zsTick === 'function') zsTick(dt);   // [egg3 hook] src/zmegg3.js
   if ((typeof RAID !== 'undefined' && RAID.on)) raidMe(dt);   // [raid] your own side of it
   if (typeof zbMe === 'function') zbMe(dt);   // [boss] their blows running on (joined), and what they've done to me (src/zmboss.js)
   zmNearest();
@@ -25265,6 +25311,7 @@ function zmKill(d, head, code, how, by) {
   if (d.boss && typeof zbKilled === 'function') zbKilled(d, how, by);   // [boss] its reward and its salvage
   if (typeof zeKill === 'function') zeKill(d, how, by);   // [egg hook] src/zmegg.js
   if (typeof zhKill === 'function') zhKill(d, how, by);   // [egg2 hook] src/zmegg2.js
+  if (typeof zsKill === 'function') zsKill(d, how, by);   // [egg3 hook] src/zmegg3.js
   if (typeof raidKill === 'function') raidKill(d, how, by);   // [raid]
   if (typeof frcKill === 'function') frcKill(d, head, code, how, by);   // [fogrun cards] the relics a kill sets off
 }
@@ -25323,6 +25370,7 @@ function zmResolveShot(sh, mine) {
     FPS.tracers.push({ a: [x + Math.sin(lh) * 0.6, y + Math.cos(lh) * 0.6, z - 0.25], b: [last.x, last.y, last.z], t: w.pellets ? 0.06 : 0.08, k: w.code });
     if (typeof zeShot === 'function' && mine) zeShot(x, y, z, lh, lp, by);   // [egg hook] src/zmegg.js
     if (typeof zhShot === 'function' && mine) zhShot(x, y, z, lh, lp, by);   // [egg2 hook] src/zmegg2.js
+    if (typeof zsShot === 'function' && mine) zsShot(x, y, z, lh, lp, by);   // [egg3 hook] src/zmegg3.js
     if (typeof raidShot === 'function' && mine) raidShot(x, y, z, lh, lp, by, w.head);   // [raid] (and what it does to a weak spot)
     if (last.kind !== 'body' && last.kind !== 'none') fpsPuff(last.x, last.y, last.z, last.kind === 'ground' ? '150,140,120' : '190,190,180', w.pellets ? 2 : 6);
   }
@@ -25359,6 +25407,7 @@ function zmMelee(x, y, z, h, w, code) {
   code = code || 'c';
   if (typeof zeMelee === 'function') zeMelee(x, y, z, h, w, code);   // [egg hook] src/zmegg.js
   if (typeof zhMelee === 'function') zhMelee(x, y, z, h, w, code);   // [egg2 hook] src/zmegg2.js
+  if (typeof zsMelee === 'function') zsMelee(x, y, z, h, w, code);   // [egg3 hook] src/zmegg3.js
   if (code === 'c' && typeof zmpSwing === 'function') zmpSwing(x, y, z, h);   // [pap] the Keel-Splitter's crescent
   let any = false;
   for (const o of ZM.z) {
@@ -25539,6 +25588,7 @@ function zmNearest() {
   for (const w of ZM.windows) if (!w.sea && w.boards < 6 && zmOpen(w.zone)) consider({ k: 'win', w }, w.x - w.nx * 0.95, w.y - w.ny * 0.95, w.z || 0, w.hatch ? 1.6 : 1.9, false);
   if (typeof zeNearest === 'function') zeNearest(consider);   // [egg hook] src/zmegg.js
   if (typeof zhNearest === 'function') zhNearest(consider);   // [egg2 hook] src/zmegg2.js
+  if (typeof zsNearest === 'function') zsNearest(consider);   // [egg3 hook] src/zmegg3.js
   if (typeof raidConsider === 'function') raidConsider(consider);   // [raid]
   // (down on the floor, nothing's in reach but your pepperbox)
   ZM.near = zmIsDown() ? null : best;
@@ -25550,6 +25600,7 @@ function zmPrompt(o) {
   { const r = typeof raidPrompt === 'function' && raidPrompt(o); if (r) return r; }   // [raid]
   if (o.k === 'egg') return typeof zePrompt === 'function' ? zePrompt(o) : null;   // [egg hook] src/zmegg.js
   if (o.k === 'egg2') return typeof zhPrompt === 'function' ? zhPrompt(o) : null;   // [egg2 hook] src/zmegg2.js
+  if (o.k === 'egg3') return typeof zsPrompt === 'function' ? zsPrompt(o) : null;   // [egg3 hook] src/zmegg3.js
   if (o.k === 'buy') {
     const w = FPSW[o.b.id], own = ZM.own.includes(o.b.id);
     if (own && w.melee) return { text: `${w.n}: in hand` };
@@ -25570,6 +25621,7 @@ function zmUse() {
   if (typeof raidUse === 'function' && raidUse(o)) return;   // [raid]
   if (o.k === 'egg') { if (typeof zeUse === 'function') zeUse(o); return; }   // [egg hook] src/zmegg.js
   if (o.k === 'egg2') { if (typeof zhUse === 'function') zhUse(o); return; }   // [egg2 hook] src/zmegg2.js
+  if (o.k === 'egg3') { if (typeof zsUse === 'function') zsUse(o); return; }   // [egg3 hook] src/zmegg3.js
   const pay = c => { if (ZM.pts < c) { zmSound('no'); fpsFeed('Not enough points.'); return false; } ZM.pts -= c; ZM.spent += c; return true; };
   if (o.k === 'buy') {
     const id = o.b.id, w = FPSW[id], own = ZM.own.includes(id);
@@ -25970,6 +26022,7 @@ function zm3dBuild() {
   zm3dTonics(grp, G0);
   if (typeof ze3dBuild === 'function') ze3dBuild(grp);   // [egg hook] src/zmegg.js
   if (typeof zh3dBuild === 'function') zh3dBuild(grp);   // [egg2 hook] src/zmegg2.js
+  if (typeof zs3dBuild === 'function') zs3dBuild(grp);   // [egg3 hook] src/zmegg3.js
   if (typeof raid3dBuild === 'function') raid3dBuild(grp);   // [raid]
   zm3dTower(grp);
   zm3dLantern(grp);
@@ -26553,6 +26606,7 @@ function zmScene3D() {
   if (typeof zx3d === 'function') zx3d(dt);   // [chest] the light of flares and blasts
   if (typeof ze3d === 'function') ze3d(dt);   // [egg hook] src/zmegg.js
   if (typeof zh3d === 'function') zh3d(dt);   // [egg2 hook] src/zmegg2.js
+  if (typeof zs3d === 'function') zs3d(dt);   // [egg3 hook] src/zmegg3.js
   if (typeof raid3d === 'function') raid3d(dt);   // [raid] (its own light and fog)
 }
 // painted over the 3D view: sparks between the burning, the chest's offer, and anyone down
@@ -26766,6 +26820,7 @@ function zmHud() {
   if (!FPS.mouse && !phone && !FPS.menu && !ZM.over) { ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = mono(12); ctx.fillStyle = 'rgba(236,228,207,0.6)'; ctx.fillText('Click to aim with the mouse', cx, H * 0.5 + 40); }
   if (typeof zeHud === 'function') zeHud();   // [egg hook] src/zmegg.js
   if (typeof zhHud === 'function') zhHud();   // [egg2 hook] src/zmegg2.js
+  if (typeof zsHud === 'function') zsHud();   // [egg3 hook] src/zmegg3.js
   if (typeof raidHud === 'function') raidHud(phone, mono, fell);   // [raid]
 }
 // down: the edges of the screen going red, thumping with your heart, deeper as the time runs out
@@ -27611,6 +27666,941 @@ Object.assign(FPI_K, {
     },
   },
 });
+
+// ---- src/zmgalleon.js ----
+// The San Telmo: the third place to hold the night in Keeper's Last Light (src/zombies.js). The capitana of the
+// Spanish squadron blown north in the Armada years (src/lore.js: the squadron that wintered on the headland and built
+// the sea fort), lost on the Skerries in a winter gale with the squadron's pay chest aboard and every soul in her. The
+// sea has given her back: a galleon far bigger than any ship has a right to be, stranded upright on a shingle bank in
+// a cove, black with weed, her stern castle towering over the shingle and her masts still standing, the sails in rags
+// and the rigging slack. Her drowned crew come up out of the sea to take her back.
+// The map (its rooms are ZM_MAPS.galleon.zones, in src/zombies.js, so the pick kept on the device knows it at load):
+// you come ashore on the Strand under her starboard side, and in through the Breach, a stove-in hole in her planking,
+// to the Main Hold. Down there on the Orlop the Bread Room, the Powder Room and the Strong Room aft (the pay chest
+// behind its grille), the Cable Tier forward. A companion stair up to the Gun Deck, its great bronze guns run out at
+// the ports, the Gunroom and the Chaplain's Berth aft of it, the Surgeon's Cockpit forward. A wide stair up through
+// the main hatch into the Waist, open to the sky between the masts; aft of it, under the Quarterdeck, the Steerage
+// and the Great Cabin with its stern galleries, forward the Forecastle and its galley. And up top the Quarterdeck,
+// under the three great stern lanterns, and the Forecastle Deck with the ship's bell. The drowned wade up out of the
+// sea onto the shingle, climb her sides to the gunports and the gaps in her bulwarks, and come round her stern from
+// the water to the gallery windows.
+// How it's built: as Wrackhaven (FPI_GEN.wrack), with the same kit (zmKit) and its rooms on decks one over another
+// (zr), and a wall of its own (gw, below) that runs at any angle, so her bow and her stern can draw in. The props are
+// the same boxes and cylinders as everywhere (src/fpsisle.js), most with no solid at all: the hull and its planking,
+// the decks and their beams, the guns, the masts, yards, sails and rigging, the stern castle and the bow, and the
+// furniture of each room. Coordinates are from the island's middle, as ZM_MAPS.galleon.zones: x along her from the
+// stern (-x) to the bow (+x), y across her, her starboard (the sea's side) to -y.
+// Facing, as src/zmvillage.js: a prop's front is local -v, so with angle a it faces (sin a, -cos a); local u runs
+// along it. Heights are from the floor it stands on (lift: that floor's height).
+
+const ZGL = { F: [0, 4.4, 8.8, 13.2], RS: 4.4 / 16, TD: 0.6, WALES: [1.7, 3.3, 4.25, 6.7, 8.65, 11.3, 13.05], NAV: [-52, 52, -30, 26] };
+const ZG = {
+  oak: ['#4e3d2c', '#463728', '#56432f', '#3f3124'], tar: '#1c1712', wale: '#2a211a', oak2: '#5a4632', oak3: '#30251b',
+  ceil: ['#72583b', '#664f35', '#7c6342', '#5e4831'], rib: '#4e3b29', plank: ['#644b33', '#6e5338', '#5a432e'],
+  deck: ['#806a4a', '#745f43', '#8a7352', '#6c583e'], under: '#4e3e2c', beam: '#3e3022',
+  weed: '#2c3a20', weed2: '#3e4c28', barn: '#a8a496', bronze: '#94743a', verd: '#5a8070', red: '#6a2e24', red2: '#4e221a',
+  gilt: '#b08a40', cream: '#c4b894', sail: ['#9a9078', '#8a806a', '#a49a80', '#7e7460'], iron: '#26282c', mast: '#5e4a34', glow: '#ffcf80',
+};
+// her half-breadth at x (the line of her hull's walls), on the lower decks and on the upper (null: not there)
+const ZG_OUT = { lo: [[-44, 8.5], [-30, 11], [22, 11], [34, 8], [40, 4]], up: [[-44, 11], [22, 11], [36, 8.5], [42, 4]], q: [[-46.01, 11], [-14, 11]] };
+function zgHB(pts, x) {
+  if (x < pts[0][0] - 1e-6 || x > pts[pts.length - 1][0] + 1e-6) return -1;
+  for (let i = 0; i < pts.length - 1; i++) { const [a, ha] = pts[i], [b, hb] = pts[i + 1]; if (x <= b + 1e-6) return ha + (hb - ha) * clamp((x - a) / (b - a), 0, 1); }
+  return pts[pts.length - 1][1];
+}
+// a bar from one point to another (u, v, z), t tall and t2 deep about its line (a rope, a spar, a rail, a strake)
+function zgLine(A, c, u0, v0, z0, u1, v1, z1, t, t2) { const du = u1 - u0, dv = v1 - v0, dz = z1 - z0, h = Math.hypot(du, dv); A.part('box', c, (u0 + u1) / 2, (v0 + v1) / 2, (z0 + z1) / 2, Math.hypot(h, dz) + 0.01, t, t2 || t, Math.atan2(dv, du), 0, Math.atan2(dz, h)); }
+// a rope hanging slack between two points, in n lengths, sagging down by sag in the middle
+function zgSag(A, c, u0, v0, z0, u1, v1, z1, sag, n, t) {
+  let pu = u0, pv = v0, pz = z0;
+  for (let i = 1; i <= n; i++) { const k = i / n, u = u0 + (u1 - u0) * k, v = v0 + (v1 - v0) * k, z = z0 + (z1 - z0) * k - sag * 4 * k * (1 - k); zgLine(A, c, pu, pv, pz, u, v, z, t || 0.04); pu = u; pv = v; pz = z; }
+}
+const zgPick = (A, a) => a[Math.floor(A.r() * a.length) % a.length];
+
+// ---------- her timbers: the hull, the bulkheads, the decks, the stairs ----------
+// The faces of a wall (gw, below, sets which): 'hull' her side from outside (tarred strakes, the black wales, weed and
+// barnacles low down, the bilge curving under at the shingle), 'ceil' her side from inside (the ceiling planks on the
+// frames, curving in towards the deck beams, a hanging knee under every other beam), 'plank' a bulkhead of upright
+// boards, 'pan' the Great Cabin's panelling (red, gilt), 'raili' and 'railo' a bulwark's two faces (with its
+// timberheads), 'none'. f: [the face at -v, the face at +v]
+function zgFace(A, st, s, p) {
+  const L = p.len, T = p.th, H = p.hh, z0 = p.lift || 0, v = s * (T / 2 + 0.012);
+  if (st === 'hull' || st === 'railo') {
+    const n = Math.max(1, Math.round(H / 0.31)), h = H / n;
+    for (let i = 0; i < n; i++) A.box(zgPick(A, ZG.oak), 0, v + s * 0.006 * (i % 2), i * h + 0.012, L, 0.03, h - 0.024);
+    for (const zw of ZGL.WALES) if (zw > z0 + 0.2 && zw < z0 + H - 0.1) A.box(ZG.wale, 0, s * (T / 2 + 0.09), zw - z0 - 0.16, L + 0.02, 0.18, 0.3);
+    // weed and barnacles, thick low down where she lay longest under the sea; strands of weed off the wales
+    const low = Math.max(0, 7.5 - z0), m = Math.round(L * Math.min(H, low) * 0.55);
+    for (let i = 0; i < m; i++) { const u = (A.r() - 0.5) * L * 0.98, z = Math.pow(A.r(), 1.6) * Math.min(H, low); A.part('ico', A.r() < 0.6 ? ZG.barn : '#7a786c', u, s * (T / 2 + 0.03), z, 0.1 + A.r() * 0.12, 0.08 + A.r() * 0.1, 0.06); }
+    for (const zw of ZGL.WALES) if (zw > z0 + 0.2 && zw < z0 + H - 0.1 && zw < 9.5) for (let i = 0, k = Math.round(L * 0.7); i < k; i++) { const u = (A.r() - 0.5) * L * 0.96, len = 0.3 + A.r() * (zw < 5 ? 1.3 : 0.6); A.box(A.r() < 0.5 ? ZG.weed : ZG.weed2, u, s * (T / 2 + 0.16), zw - z0 - 0.15 - len, 0.05 + A.r() * 0.08, 0.02, len); }
+    if (z0 < 0.1 && st === 'hull') {
+      // (the turn of her bilge, going down under the shingle)
+      for (const [o, za, zb] of [[0.42, -0.2, 0.35], [0.28, 0.35, 0.8], [0.14, 0.8, 1.25]]) A.box(zgPick(A, ZG.oak), 0, s * (T / 2 + o / 2), za, L + 0.02, o, zb - za);
+      A.box(ZG.weed, 0, s * (T / 2 + 0.44), -0.05, L, 0.06, 0.14);
+    }
+    return;
+  }
+  if (st === 'ceil' || st === 'raili') {
+    const n = Math.max(1, Math.round(H / 0.36)), h = H / n;
+    for (let i = 0; i < n; i++) A.box(zgPick(A, ZG.ceil), 0, v, i * h + 0.01, L, 0.025, h - 0.02);
+    if (st === 'raili') { for (let u = -L / 2 + 0.5; u < L / 2 - 0.2; u += 1.6) A.box(ZG.rib, u, s * (T / 2 + 0.08), -0.05, 0.2, 0.16, H + 0.28); return; }
+    // the frames, curving in towards the beam above, and a hanging knee under every other beam
+    let k = 0;
+    for (let u = -L / 2 + 0.55; u < L / 2 - 0.2; u += 1.25, k++) {
+      A.box(ZG.rib, u, s * (T / 2 + 0.13), -0.05, 0.24, 0.26, H * 0.34); A.box(ZG.rib, u, s * (T / 2 + 0.1), H * 0.34 - 0.05, 0.23, 0.2, H * 0.33); A.box(ZG.rib, u, s * (T / 2 + 0.07), H * 0.67 - 0.1, 0.22, 0.14, H * 0.33 - 0.2);
+      if (k % 2 === 0 && H > 3) zmvBarV(A, ZG.beam, u, s * (T / 2 + 0.05), H - 1.25, s * (T / 2 + 0.85), H - 0.58, 0.2, 0.22);
+    }
+    if (H > 3) { A.box(ZG.beam, 0, s * (T / 2 + 0.12), H - 0.75, L, 0.22, 0.32); A.box(ZG.beam, 0, s * (T / 2 + 0.1), 0.05, L, 0.2, 0.22); }
+    if (z0 < 0.1) A.box('#2a2a20', 0, s * (T / 2 + 0.02), 0, L, 0.03, 0.45);   // (damp, low down in the hold)
+    return;
+  }
+  if (st === 'plank') {
+    const n = Math.max(1, Math.round(L / 0.3)), w = L / n;
+    for (let i = 0; i < n; i++) A.box(zgPick(A, ZG.plank), -L / 2 + (i + 0.5) * w, v, 0, w - 0.025, 0.025, H);
+    for (const z of [0, 1.05, H - 0.42]) A.box(ZG.beam, 0, s * (T / 2 + 0.05), z, L, 0.08, z ? 0.12 : 0.22);
+    return;
+  }
+  if (st === 'pan') {
+    // red panels in gilt between pilasters, a dark dado under, a frieze over
+    A.box(ZG.red2, 0, v, 0, L, 0.025, H); A.box('#3a2a1e', 0, s * (T / 2 + 0.04), 0, L, 0.05, 0.95); A.box(ZG.gilt, 0, s * (T / 2 + 0.07), 0.92, L, 0.04, 0.06);
+    const n = Math.max(1, Math.round(L / 1.2)), w = L / n;
+    for (let i = 0; i < n; i++) {
+      const u = -L / 2 + (i + 0.5) * w;
+      A.box(ZG.red, u, s * (T / 2 + 0.03), 1.2, w - 0.42, 0.03, H - 2.0); A.box(ZG.gilt, u, s * (T / 2 + 0.045), 1.15, w - 0.36, 0.02, 0.05); A.box(ZG.gilt, u, s * (T / 2 + 0.045), H - 0.82, w - 0.36, 0.02, 0.05);
+      A.box('#3e2a1c', -L / 2 + i * w, s * (T / 2 + 0.06), 0.95, 0.2, 0.08, H - 1.3); A.box(ZG.gilt, -L / 2 + i * w, s * (T / 2 + 0.1), H - 0.5, 0.26, 0.04, 0.12);
+    }
+    A.box('#3a2a1e', 0, s * (T / 2 + 0.06), H - 0.62, L, 0.1, 0.35); A.box(ZG.gilt, 0, s * (T / 2 + 0.12), H - 0.5, L, 0.03, 0.04);
+  }
+}
+Object.assign(FPI_K, {
+  // a length of wall, her side or a bulkhead (solids as the islands' walls; see zgFace for its faces). A bulwark's
+  // (f 'raili' / 'railo') cap rail runs along its top
+  gwall: {
+    noShadow: true, col: ZG.oak[0], gen: FPI_K.wall.gen, sol: FPI_K.wall.sol,
+    b3(p, A) {
+      const f = p.f || ['plank', 'plank'];
+      A.box(ZG.oak3, 0, 0, -0.05, p.len, p.th * 0.94, p.hh + 0.04);
+      zgFace(A, f[0], -1, p); zgFace(A, f[1], 1, p);
+      if (f[0] === 'raili' || f[0] === 'railo') A.box(ZG.oak2, 0, 0, p.hh - 0.02, p.len + 0.04, p.th + 0.24, 0.14);
+    },
+  },
+  // a deck: its planks fore and aft, cut to her hull (hb: which line, ZG_OUT), on beams across her every 1.25 (cx,
+  // cy: where it lies in her, to cut it; top: its upper face)
+  gdeck: {
+    noShadow: true,
+    sol(p) { return [fpiBox(p, 0, 0, p.w / 2, p.d / 2, p.top, { z0: p.top - 0.3, fl: true, col: '#5a4634' })]; },
+    b3(p, A) {
+      const HB = ZG_OUT[p.hb || 'up'], T = p.top, x0 = p.cx - p.w / 2, x1 = p.cx + p.w / 2;
+      const span = y => { let a = null, b = null; for (let x = x0; x <= x1 + 1e-6; x += 0.2) if (zgHB(HB, x) >= Math.abs(y) - 0.1) { if (a === null) a = x; b = x; } return a === null ? null : [a, Math.min(x1, b)]; };
+      const n = Math.max(1, Math.round(p.d / 0.32)), sw = p.d / n;
+      for (let i = 0; i < n; i++) {
+        const v = -p.d / 2 + (i + 0.5) * sw, s = span(p.cy + v); if (!s || s[1] - s[0] < 0.1) continue;
+        A.box(ZG.under, (s[0] + s[1]) / 2 - p.cx, v, T - 0.3, s[1] - s[0], sw * 1.002, 0.22);
+        const cuts = [s[0]]; for (let x = s[0] + 0.8 + (i * 1.7) % 4.2; x < s[1] - 0.6; x += 4.2) cuts.push(x); cuts.push(s[1]);
+        for (let k = 0; k < cuts.length - 1; k++) A.box(zgPick(A, ZG.deck), (cuts[k] + cuts[k + 1]) / 2 - p.cx, v, T - 0.09, cuts[k + 1] - cuts[k] - 0.03, sw - 0.035, 0.09);
+      }
+      for (let x = Math.ceil(x0 / 1.25) * 1.25; x <= x1 - 0.1; x += 1.25) {
+        const h = zgHB(HB, x); if (h <= 0) continue;
+        const ya = Math.max(p.cy - p.d / 2, -h + 0.25), yb = Math.min(p.cy + p.d / 2, h - 0.25); if (yb - ya < 0.3) continue;
+        A.box(ZG.beam, x - p.cx, (ya + yb) / 2 - p.cy, T - 0.64, 0.3, yb - ya, 0.36);
+      }
+    },
+  },
+  // a tread of a companion stair (the solid a column down to the deck it stands on), and the stair's stringers and
+  // its man-ropes on their stanchions, up one side (len along +u, rise; w across)
+  gstep: {
+    noShadow: true,
+    sol(p) { return [fpiBox(p, 0, 0, p.w / 2, p.d / 2, p.hh, { fl: true, col: FPI_C.wood2 })]; },
+    b3(p, A) { A.box(zgPick(A, ZG.deck), 0, 0, p.hh - 0.08, p.w - 0.3, p.d + 0.05, 0.08); A.box(ZG.oak3, 0, p.d * 0.3, p.hh - 0.3, p.w - 0.35, 0.06, 0.22); },
+  },
+  gstairs: {
+    noShadow: true, sol() { return []; },
+    b3(p, A) {
+      const L = p.len, R = p.rise, w = p.w;
+      for (const s of [-1, 1]) {
+        zgLine(A, ZG.oak3, -0.2, s * (w / 2 - 0.09), 0.1, L, s * (w / 2 - 0.09), R - 0.12, 0.42, 0.14);
+        for (let k = 0; k <= 4; k++) { const u = 0.3 + k * (L - 0.6) / 4, z = R * u / L; A.box(ZG.iron, u, s * (w / 2 - 0.05), z, 0.05, 0.05, 1.0); }
+        zgSag(A, FPI_C.rope, 0.3, s * (w / 2 - 0.05), 1.0, L - 0.3, s * (w / 2 - 0.05), R + 0.95, 0.12, 6, 0.045);
+      }
+    },
+  },
+  // the frames round an opening in her side or a bulkhead (kind: 'port' a gunport, its lid hinged up outside;
+  // 'rail' a gap in a bulwark between two timberheads; 'glass' a glazed window, carved outside; 'gal' a stern
+  // gallery's window; 'door'; 'breach' the stove-in hole she was holed by). ob: which side (along v) is outboard
+  gframe: {
+    noShadow: true, sol() { return []; },
+    b3(p, A) {
+      const w = p.w, T = p.th, o = p.ob || -1, vo = o * (T / 2 + 0.06), vi = -o * (T / 2 + 0.05);
+      if (p.kind === 'port') {
+        for (const v of [vo, vi]) { A.box(ZG.oak3, 0, v, 0.88, w + 0.36, 0.12, 0.14); A.box(ZG.oak3, 0, v, 2.33, w + 0.36, 0.12, 0.14); for (const s of [-1, 1]) A.box(ZG.oak3, s * (w / 2 + 0.1), v, 0.9, 0.16, 0.12, 1.55); }
+        // the lid, red inside, swung up and out on its hinges, its lanyard up to the rail
+        const hz = 2.48, L = 1.4, a = 0.95, tv = o * (T / 2 + 0.12);
+        zmvBarV(A, ZG.red, 0, tv, hz, tv + o * L * Math.sin(a), hz + L * Math.cos(a), w + 0.12, 0.1);
+        for (const s of [-0.3, 0.3]) A.box(ZG.iron, s * w, tv + o * 0.15, hz - 0.05, 0.05, 0.3, 0.05);
+        zgLine(A, FPI_C.rope, 0, tv + o * L * Math.sin(a), hz + L * Math.cos(a), 0, o * (T / 2 + 0.1), Math.min(p.hh, 3.9), 0.03);
+        return;
+      }
+      if (p.kind === 'rail') {
+        for (const s of [-1, 1]) { const u = s * (w / 2 + 0.12); A.box(ZG.rib, u, 0, -0.05, 0.24, T + 0.06, 2.5); A.part('sph', ZG.oak2, u, 0, 2.55, 0.3, 0.2, 0.3); A.box(ZG.oak2, u, 0, 1.25, 0.3, T + 0.16, 0.12); }
+        A.cyl(ZG.iron, 0, 0, 2.3, 0.04, 0.1, 0, 0, Math.PI / 2);
+        return;
+      }
+      if (p.kind === 'glass' || p.kind === 'gal') {
+        // pilasters either side, a sill on brackets, a cornice, a cartouche over it (outside); a plain frame inside
+        const z0 = 0.95, z1 = 2.4;
+        for (const s of [-1, 1]) { A.box(ZG.gilt, s * (w / 2 + 0.12), vo, z0 - 0.1, 0.16, 0.1, z1 - z0 + 0.25); A.box(ZG.oak3, s * (w / 2 + 0.06), vi, z0, 0.12, 0.1, z1 - z0); A.part('sph', ZG.gilt, s * (w / 2 + 0.12), vo, z1 + 0.25, 0.22, 0.22, 0.14); }
+        A.box(ZG.gilt, 0, vo, z1 + 0.02, w + 0.5, 0.14, 0.14); A.box(ZG.oak3, 0, vo + o * 0.04, z0 - 0.16, w + 0.4, 0.16, 0.14);
+        for (const s of [-1, 1]) zmvBarV(A, ZG.gilt, s * w * 0.3, o * (T / 2), z0 - 0.6, vo + o * 0.06, z0 - 0.16, 0.1, 0.1);
+        if (p.kind === 'gal') { A.part('half', ZG.red, 0, vo, z1 + 0.18, w * 0.7, 0.1, 0.5, 0, Math.PI / 2, 0); A.part('sph', ZG.gilt, 0, vo + o * 0.02, z1 + 0.42, 0.2, 0.2, 0.1); }
+        else A.part('sph', ZG.gilt, 0, vo, z1 + 0.22, 0.32, 0.22, 0.1);
+        A.box(ZG.oak3, 0, vi, z1 - 0.02, w + 0.2, 0.1, 0.1); A.box(ZG.oak3, 0, vi, z0 - 0.08, w + 0.2, 0.12, 0.1);
+        return;
+      }
+      if (p.kind === 'door') {
+        for (const v of [vo, vi]) { for (const s of [-1, 1]) A.box(ZG.oak3, s * (w / 2 + 0.08), v, -0.05, 0.16, 0.1, 2.6); A.box(ZG.oak3, 0, v, 2.48, w + 0.36, 0.12, 0.2); }
+        if (p.carved) for (const v of [vo, vi]) { A.box(ZG.gilt, 0, v + Math.sign(v) * 0.04, 2.7, w * 0.7, 0.05, 0.08); A.part('sph', ZG.gilt, 0, v + Math.sign(v) * 0.04, 2.9, 0.4, 0.28, 0.08); }
+        return;
+      }
+      if (p.kind === 'breach') {
+        // splintered planks bent in round the hole, broken frames, weed on the edges
+        for (let i = 0; i < 26; i++) {
+          const a = A.r() * Math.PI * 2, rr = 1.2 + A.r() * 0.6, u = Math.cos(a) * (w / 2 + 0.1) * (0.9 + A.r() * 0.3), z = 1.3 + Math.sin(a) * rr * 1.05;
+          if (z < 0.05 || z > p.hh - 0.2) continue;
+          const len = 0.5 + A.r() * 0.9, b = A.r() < 0.7 ? 1 : -1;
+          zgLine(A, zgPick(A, ZG.oak), u, o * (T / 2), z, u - Math.cos(a) * len * 0.5, o * (T / 2) - o * len * (0.4 + A.r() * 0.6) * b, z - Math.sin(a) * len * 0.4, 0.22, 0.05);
+        }
+        for (const s of [-1, 1]) { zgLine(A, ZG.rib, s * (w / 2 + 0.2), -o * 0.3, 0, s * (w / 2 - 0.1), -o * 0.9, 1.5, 0.24, 0.22); zgLine(A, ZG.rib, s * (w / 2 + 0.25), -o * 0.25, 2.9, s * (w / 2 - 0.2), -o * 0.7, 2.2, 0.22, 0.2); }
+        for (let i = 0; i < 10; i++) { const u = (A.r() - 0.5) * (w + 1.4), z = 2.6 + A.r() * 0.5; A.box(A.r() < 0.5 ? ZG.weed : ZG.weed2, u, o * (T / 2 + 0.08), z - 0.6, 0.08, 0.02, 0.6); }
+      }
+    },
+  },
+  // a gunport with a gun run out through it (no opening: the wall goes on behind): outside its frame, the dark
+  // port, the lid up and the muzzle out; inside the frame and the dark port the gun's barrel runs into
+  gport: {
+    noShadow: true, sol() { return []; },
+    b3(p, A) {
+      const T = p.th, o = p.ob || -1, w = 1.25, z0 = 0.95, h = 1.05;
+      for (const s of [-1, 1]) {
+        const v = s * (T / 2 + 0.03);
+        A.box('#0a0907', 0, v, z0, w, 0.03, h);
+        A.box(ZG.oak3, 0, v + s * 0.04, z0 - 0.12, w + 0.3, 0.08, 0.12); A.box(ZG.oak3, 0, v + s * 0.04, z0 + h, w + 0.3, 0.08, 0.12);
+        for (const k of [-1, 1]) A.box(ZG.oak3, k * (w / 2 + 0.08), v + s * 0.04, z0, 0.14, 0.08, h);
+      }
+      const tv = o * (T / 2 + 0.1), a = 0.85, L = 1.15;
+      zmvBarV(A, ZG.red, 0, tv, z0 + h + 0.12, tv + o * L * Math.sin(a), z0 + h + 0.12 + L * Math.cos(a), w + 0.1, 0.09);
+      zgLine(A, FPI_C.rope, 0, tv + o * L * Math.sin(a), z0 + h + 0.12 + L * Math.cos(a), 0, o * (T / 2 + 0.1), Math.min(p.hh || 3.9, 3.9), 0.03);
+      A.log(ZG.bronze, 0, o * (T / 2 + 0.3), z0 + h * 0.48, 0.17, 0.62, Math.PI / 2); A.log(ZG.bronze, 0, o * (T / 2 + 0.6), z0 + h * 0.48, 0.21, 0.1, Math.PI / 2);
+      A.part('cyl8', '#0a0907', 0, o * (T / 2 + 0.66), z0 + h * 0.48, 0.2, 0.02, 0.2, 0, Math.PI / 2, 0, 'decal');
+      A.part('sph', ZG.verd, 0.06, o * (T / 2 + 0.4), z0 + h * 0.48 + 0.12, 0.16, 0.06, 0.24);
+    },
+  },
+  // a great bronze gun on its four-wheeled carriage, run out (its front, -v, to the port), the tackle to her side,
+  // shot by it, a rammer (raise: up on a platform, over a rail)
+  ggun: {
+    col: ZG.red2,
+    sol(p) { return [fpiBox(p, 0, 0.3, 0.62, 1.2, (p.raise || 0) + 1.1)]; },
+    b3(p, A) {
+      const b = p.raise || 0, hc = b + 0.95, F = Math.PI / 2;
+      if (b) A.box(ZG.oak3, 0, 0.3, -0.05, 1.8, 2.8, b + 0.05);
+      for (const s of [-1, 1]) {
+        A.box(ZG.red2, s * 0.4, 0.35, b + 0.18, 0.13, 1.9, 0.42); A.box(ZG.red2, s * 0.4, 0.75, b + 0.6, 0.13, 1.0, 0.22); A.box(ZG.red2, s * 0.4, -0.25, b + 0.6, 0.13, 0.75, 0.3);
+        for (const v of [-0.45, 1.05]) A.log('#3a2a1c', s * 0.42, v, b + 0.2, 0.2, 0.12);
+        zgLine(A, FPI_C.rope, s * 0.48, 0.9, b + 0.55, s * 1.1, -1.25, b + 1.0, 0.04); zgLine(A, FPI_C.rope, s * 0.48, 0.95, b + 0.5, s * 0.75, -1.3, b + 0.8, 0.035);
+        A.part('torus', ZG.iron, s * 1.1, -1.28, b + 1.0, 0.16, 0.16, 0.16, 0, F, 0);
+      }
+      for (const v of [-0.45, 1.05]) A.log(ZG.oak3, 0, v, b + 0.2, 0.06, 1.0);
+      A.box(ZG.oak3, 0, 0.35, b + 0.42, 0.7, 1.6, 0.1);
+      // the barrel: tapering to the muzzle, its rings, the dolphins (handles) on top, the knob at the breech
+      A.part('cannon', ZG.bronze, 0, -0.35, hc, 0.66, 2.9, 0.66, 0, F, 0);
+      for (const [v, r] of [[1.0, 0.36], [0.55, 0.34], [-0.2, 0.3], [-1.55, 0.25], [-1.75, 0.27]]) A.part('cyl8', ZG.bronze, 0, v, hc, r * 2, 0.08, r * 2, 0, F, 0);
+      A.part('sph', ZG.bronze, 0, 1.15, hc, 0.6, 0.6, 0.5); A.part('sph', ZG.bronze, 0, 1.45, hc, 0.18, 0.18, 0.18);
+      for (const s of [-1, 1]) A.part('torus', ZG.bronze, s * 0.1, 0.35, hc + 0.3, 0.22, 0.22, 0.4, 0, 0, F);
+      A.part('sph', ZG.verd, 0.12, -0.6, hc + 0.18, 0.3, 0.06, 0.5); A.part('sph', ZG.verd, -0.1, 0.4, hc + 0.22, 0.24, 0.05, 0.3);
+      A.log(ZG.iron, 0, 0.35, b + 0.78, 0.04, 0.9);
+      if (!p.bare) { for (let i = 0; i < 5; i++) A.part('sph', '#1a1a1c', 0.85 + (i % 3) * 0.22 - 0.2, 1.4 + (i > 2 ? 0.2 : 0), b + 0.11 + (i > 2 ? 0.17 : 0), 0.22, 0.22, 0.22); zgLine(A, ZG.oak2, -0.85, 1.3, b, -0.95, 0.2, b + 2.2, 0.05); A.part('cyl8', '#3a3020', -0.95, 0.18, b + 2.25, 0.16, 0.25, 0.16, 0, 0.45, 0); }
+    },
+  },
+  // a mast: up from her keel through the decks, banded and wedged at each, the top and crosstrees, the cap, the
+  // topmast; its yards across her, the sails hanging off them in rags; the shrouds and their ratlines from the
+  // channels on her sides, the backstays, slack lines off the yardarms (lateen: the mizzen's long yard instead)
+  gmast: {
+    col: ZG.mast,
+    sol(p) { return [fpiCirc(p, 0, 0, p.r + 0.08, p.h2)]; },
+    b3(p, A) {
+      const r = p.r, h = p.h, h2 = p.h2, F = Math.PI / 2;
+      A.cyl(ZG.mast, 0, 0, -0.1, r, h + 0.1, 0, 0, 0, 'cyl8'); A.cyl(ZG.mast, 0, 0, h - 4, r * 1.06, 3.2, 0, 0, 0, 'cyl8');
+      for (let z = 1.2; z < h - 4; z += 1.4) A.cyl('#2e241a', 0, 0, z, r * 1.05, 0.1, 0, 0, 0, 'cyl8');
+      for (const d of p.decks || []) { A.box(ZG.oak3, 0, 0, d - 0.12, r * 2.9, r * 2.9, 0.32); for (let i = 0; i < 8; i++) { const a = i / 8 * Math.PI * 2; A.box(ZG.oak2, Math.cos(a) * r * 1.08, Math.sin(a) * r * 1.08, d + 0.18, 0.14, 0.14, 0.3, a); } }
+      A.box(ZG.oak3, 0, 0, -0.1, r * 3.4, r * 3.4, 0.6);
+      for (let i = 0; i < 14; i++) { const a = A.r() * 6.28, z = A.r() * 3.2; A.part('ico', A.r() < 0.5 ? ZG.barn : ZG.weed, Math.cos(a) * r, Math.sin(a) * r, z, 0.16, 0.12, 0.16); }
+      // the top: its platform and rim, the crosstrees under it, the cap and the topmast
+      const tz = h - 1.1;
+      A.box(ZG.oak3, 0, 0, tz - 0.45, 0.3, r * 7, 0.3); A.box(ZG.oak3, 0, 0, tz - 0.45, r * 6, 0.3, 0.3);
+      A.cyl(ZG.oak2, 0, 0, tz - 0.15, r * 3.4, 0.25, 0, 0, 0, 'cyl8'); A.part('torus', ZG.oak3, 0, 0, tz + 0.55, r * 6.8, r * 6.8, r * 6, 0, F, 0);
+      for (let i = 0; i < 10; i++) { const a = i / 10 * Math.PI * 2; A.box(ZG.oak3, Math.cos(a) * r * 3.3, Math.sin(a) * r * 3.3, tz + 0.1, 0.07, 0.07, 0.5); }
+      A.box(ZG.oak3, r * 0.8, 0, h, r * 3.6, r * 2, 0.4);
+      A.cyl(ZG.mast, r * 1.5, 0, h - 2.6, r * 0.62, h2 - h + 2.6, 0, 0, 0, 'cyl8'); A.part('sph', ZG.oak2, r * 1.5, 0, h2 + 0.1, r * 0.9, r * 0.5, r * 0.9);
+      A.box(ZG.oak3, r * 1.5, 0, h2 - 3.2, 0.2, r * 4, 0.2);
+      // the yards, the sails off them
+      for (const [z, len, sail, bot] of p.yards || []) {
+        const uy = (z > h ? r * 1.5 : 0) + r + 0.3;
+        A.log(ZG.mast, uy, 0, z, 0.26 * len / 30 + 0.12, len * 0.5, F); for (const s of [-1, 1]) A.log(ZG.mast, uy, s * len * 0.37, z, 0.16 * len / 30 + 0.08, len * 0.27, F);
+        for (const s of [-1, 1]) { zgLine(A, FPI_C.rope, uy, s * len * 0.48, z, uy - 0.3, 0, z > h ? h2 - 0.6 : h - 0.3, 0.04); zgSag(A, FPI_C.rope, uy + 0.25, s * 0.6, z - 0.2, uy + 0.25, s * len * 0.47, z - 0.25, 0.6, 5, 0.03); }
+        if (sail) zgSail(A, uy + 0.25, z, len, bot, sail);
+      }
+      if (p.lateen) {
+        const [ua, za, ub, zb] = p.lateen; zgLine(A, ZG.mast, ua, 0.2, za, ub, 0.2, zb, 0.3);
+        for (let i = 0; i < 9; i++) { const k = 0.1 + i * 0.09, u = ua + (ub - ua) * k, z = za + (zb - za) * k, L = (zb - za) * k * 0.9 * (0.4 + A.r() * 0.6); if (A.r() < 0.25) continue; A.box(zgPick(A, ZG.sail), u, 0.35, z - L, 0.9 * (ub - ua) / 10, 0.04, L); }
+      }
+      // the shrouds from the channels, their ratlines, and the topmast's own from the top's rim
+      if (p.chan) {
+        const [ua, ub, cz, cv] = p.chan, n = 6;
+        for (const s of [-1, 1]) {
+          A.box(ZG.oak3, (ua + ub) / 2, s * (cv - 0.42), cz - 0.16, ub - ua + 0.6, 0.95, 0.16);
+          const sh = [];
+          for (let k = 0; k < n; k++) {
+            const u0 = ua + k * (ub - ua) / (n - 1), b0 = [u0, s * cv, cz + 0.25], t = [-0.2 + (k - 2.5) * 0.12, s * (r + 0.35), tz - 0.5];
+            zgLine(A, '#2e2a22', ...b0, ...t, 0.05); sh.push([b0, t]);
+            A.part('sph', ZG.oak3, u0, s * cv, cz + 0.25, 0.28, 0.32, 0.14); zgLine(A, ZG.iron, u0, s * (cv - 0.1), cz, u0 + 0.1, s * (cv - 0.75), cz - 1.9, 0.05);
+          }
+          for (let z = cz + 1.0; z < tz - 1.2; z += 0.9) for (let k = 0; k < n - 1; k++) {
+            const P = i => { const [b0, t] = sh[i], q = (z - b0[2]) / (t[2] - b0[2]); return [b0[0] + (t[0] - b0[0]) * q, b0[1] + (t[1] - b0[1]) * q, z]; };
+            if (A.r() < 0.1) continue; zgLine(A, '#3a3428', ...P(k), ...P(k + 1), 0.025);
+          }
+          for (let k = 0; k < 3; k++) zgLine(A, '#2e2a22', (k - 1) * 0.9, s * r * 3.2, tz + 0.1, r * 1.5, s * 0.25, h2 - 2.2, 0.04);
+          zgLine(A, '#2e2a22', ua - 2.5, s * cv, cz + 0.2, r * 1.5, s * 0.3, h2 - 1.2, 0.045);
+        }
+      }
+      // slack ends hanging off the yardarms
+      for (const [z, len] of (p.yards || []).slice(0, 2)) for (const s of [-1, 1]) if (A.r() < 0.7) { const uy = (z > h ? r * 1.5 : 0) + r + 0.3; zgSag(A, FPI_C.rope, uy, s * len * 0.45, z, uy + 0.6, s * len * (0.25 + A.r() * 0.15), z - 6 - A.r() * 6, 1.2, 6, 0.035); }
+    },
+  },
+});
+// a square sail off a yard at height z, len long, down to bot (or eight metres), torn: a ragged foot, strips
+// hanging, billowing a little forward (u). k: how much of it is left (1 whole, 0.3 a few rags)
+function zgSail(A, u, z, len, bot, k) {
+  // (each cloth hangs whole from the yard down to where it tore, ragged along the foot, and a few tatters below it)
+  const zb = bot || z - 8, H = z - zb, nx = 9, ny = 6, cw = len * 0.86 / nx, ch = H / ny, c0 = zgPick(A, ZG.sail);
+  for (let i = 0; i < nx; i++) {
+    const v = -len * 0.43 + (i + 0.5) * cw, edge = i === 0 || i === nx - 1, keep = Math.round(ny * clamp(k + (A.r() - 0.5) * 0.7 - (edge ? 0.15 : 0), 0.17, 1)), c = A.r() < 0.3 ? zgPick(A, ZG.sail) : c0;
+    for (let j = 0; j < keep; j++) { const zc = z - (j + 0.5) * ch, b = 0.25 + 0.9 * Math.sin(Math.PI * (i + 0.5) / nx) * Math.sin(Math.PI * (j + 0.8) / (ny + 0.6)); A.part('box', c, u + b, v, zc, 0.05, ch * 1.02, cw * 1.01, 0, (A.r() - 0.5) * 0.06, 0); }
+    if (keep < ny && A.r() < 0.6) { const L = ch * (0.4 + A.r() * 1.2), b = 0.25 + 0.6 * Math.sin(Math.PI * (i + 0.5) / nx); A.box(c, u + b, v + (A.r() - 0.5) * cw * 0.4, z - keep * ch - L, 0.04, cw * (0.25 + A.r() * 0.35), L); }
+  }
+  A.box(FPI_C.rope, u + 0.2, 0, z - 0.15, 0.06, len * 0.86, 0.06);
+}
+
+// ---------- outside: her stern castle, her bow, the stern lanterns ----------
+Object.assign(FPI_K, {
+  // all of her that isn't a wall or a deck, seen from outside (one prop at her middle): the stern's two galleries
+  // and the quarter galleries, the carved transom with the arms of Castile and Leon, the rudder, the taffrail over
+  // the Quarterdeck; the bow drawing in to the stem, the beakhead, the lion at her head, the bowsprit and its sail,
+  // the catheads and the anchors; the ensign, the stays between the masts
+  gship: {
+    noShadow: true, sol() { return []; },
+    b3(p, A) {
+      const F = Math.PI / 2, G = ZG.gilt;
+      // ---- the stern: the lower transom (x -44, |y| to 8.5) and the upper (to 11) are her walls; here what's on them
+      const X = -44.25;
+      // the galleries: a balcony at each of the two decks, balusters, pilasters, a roof, brackets under
+      for (const [z, hw] of [[4.4, 7.6], [8.8, 10.2]]) {
+        A.box(ZG.oak3, X - 1.0, 0, z - 0.25, 2.1, hw * 2, 0.25);
+        for (let y = -hw + 0.2; y <= hw - 0.15; y += 0.32) A.cyl(ZG.oak2, X - 1.95, y, z, 0.05, 1.0, 0, 0, 0, 'cyl6');
+        A.box(G, X - 1.95, 0, z + 1.0, 0.16, hw * 2, 0.12); A.box(ZG.oak3, X - 1.95, 0, z + 0.02, 0.16, hw * 2, 0.12);
+        for (const s of [-1, 1]) { A.box(ZG.oak3, X - 1.0, s * hw, z - 0.25, 2.1, 0.16, 1.4); }
+        for (let y = -hw + 0.4; y <= hw; y += (hw * 2 - 0.8) / 5) { A.box(G, X - 1.95, y, z, 0.2, 0.2, 3.9); zgLine(A, G, X - 0.1, y, z - 1.4, X - 1.8, y, z - 0.3, 0.2, 0.18); }
+        A.box(ZG.red2, X - 1.05, 0, z + 3.85, 2.3, hw * 2 + 0.3, 0.12);
+      }
+      // carved work on the transom: the arms under the lower gallery, gilt mouldings, the counter's rail
+      A.box(ZG.red, X - 0.06, 0, 1.6, 0.08, 5.2, 2.4); A.box(G, X - 0.1, 0, 1.45, 0.06, 5.5, 0.12); A.box(G, X - 0.1, 0, 4.0, 0.06, 5.5, 0.12);
+      for (const [y, z, k] of [[-1.25, 3.0, 0], [1.25, 3.0, 1], [-1.25, 2.0, 1], [1.25, 2.0, 0]]) {
+        if (k === 0) { A.box(G, X - 0.14, y, z - 0.35, 0.06, 0.9, 0.55); for (const dy of [-0.35, 0, 0.35]) A.box(G, X - 0.14, y + dy, z + 0.2, 0.06, 0.18, 0.2); }
+        else { A.part('sph', '#8a2a20', X - 0.16, y, z, 0.12, 0.7, 0.5); A.part('sph', G, X - 0.18, y, z + 0.35, 0.1, 0.22, 0.22); }
+      }
+      A.part('cone', G, X - 0.15, 0, 4.25, 0.5, 0.6, 0.12); A.part('sph', G, X - 0.15, 0, 4.5, 0.3, 0.3, 0.2);
+      for (const s of [-1, 1]) { zgLine(A, G, X - 0.1, s * 8.2, 0.6, X - 0.1, s * 8.4, 4.2, 0.18, 0.12); zgLine(A, G, X - 0.1, s * 10.8, 8.9, X - 0.1, s * 10.8, 13.0, 0.2, 0.14); }
+      A.box(G, X - 0.12, 0, 8.55, 0.08, 17.4, 0.14);
+      // the counter: the overhang of the upper stern out over the lower, planked under
+      for (const s of [-1, 1]) for (let i = 0; i < 6; i++) { const y0 = s * (8.5 + i * 0.42); A.box(zgPick(A, ZG.oak), -44 + 7 - i * 1.15, y0 + s * 0.21, 8.42, 14 - i * 2.3, 0.42, 0.12); }
+      // the rudder, and its iron
+      A.box(ZG.oak3, X - 1.1, 0, -0.1, 2.1, 0.55, 9.2); A.box(ZG.oak3, X - 0.3, 0, 8.9, 0.6, 0.5, 0.9);
+      for (const z of [1.2, 3.4, 5.6, 7.6]) A.box(ZG.iron, X - 0.7, 0, z, 1.3, 0.62, 0.14);
+      for (let i = 0; i < 18; i++) A.part('ico', A.r() < 0.5 ? ZG.barn : ZG.weed, X - 1.1 + (A.r() - 0.5) * 2, (A.r() < 0.5 ? -1 : 1) * 0.29, A.r() * 4, 0.2, 0.18, 0.08);
+      // the quarter galleries: a turret each side of the Great Cabin, windows lit, a little dome on top
+      for (const s of [-1, 1]) {
+        const y = s * 12.0, yo = s * 12.75;
+        A.box(ZG.red2, -38.5, y, 8.6, 6.0, 1.5, 4.4); A.box(G, -38.5, y, 8.55, 6.2, 1.62, 0.14); A.box(G, -38.5, y, 12.95, 6.2, 1.62, 0.14);
+        for (const x of [-40.6, -38.5, -36.4]) { A.box('#2a1e16', x, yo, 9.9, 1.3, 0.04, 1.9); A.part('box', '#ffc46a', x, yo + s * 0.02, 10.85, 1.1, 1.7, 0.02, 0, 0, 0, 'glow'); for (const k of [-0.3, 0.3]) A.box('#1a1410', x + k, yo + s * 0.04, 9.95, 0.04, 0.03, 1.8); A.box('#1a1410', x, yo + s * 0.04, 10.85, 1.2, 0.03, 0.04); }
+        for (const x of [-41.5, -39.55, -37.45, -35.5]) A.box(G, x, yo + s * 0.04, 8.8, 0.14, 0.08, 4.2);
+        A.part('half', ZG.red2, -38.5, y, 13.1, 6.0, 1.5, 3.0, 0, 0, F); A.part('cone', G, -38.5, y + s * 0.3, 14.9, 0.4, 0.8, 0.4);
+        zgLine(A, G, -41.2, s * 11.25, 7.4, -38.5, y, 8.6, 0.3, 0.6); zgLine(A, G, -35.8, s * 11.25, 7.4, -38.5, y, 8.6, 0.3, 0.6);
+        // and below them, the narrower lower quarter galleries off the Chaplain's Berth
+        A.box(ZG.red2, -38, s * 10.2, 4.6, 4.4, 1.3, 3.6); A.box(G, -38, s * 10.2, 8.15, 4.6, 1.42, 0.14);
+        for (const x of [-39.3, -36.7]) { A.part('box', '#ffb860', x, s * 10.87, 6.4, 0.9, 1.4, 0.02, 0, 0, 0, 'glow'); A.box('#1a1410', x, s * 10.9, 6.35, 0.04, 0.03, 1.45); }
+      }
+      // the taffrail: carved work over the Quarterdeck's stern rail, arched, gilt, the brackets for the lanterns
+      const TZ = 14.4;
+      for (let y = -10.5; y <= 10.5; y += 0.7) { const k = 1 - Math.pow(y / 11, 2); A.box(ZG.red2, -46.15, y, TZ - 0.1, 0.2, 0.72, 0.4 + k * 2.1); }
+      A.box(G, -46.25, 0, TZ + 0.3, 0.1, 21, 0.12);
+      for (let i = -6; i <= 6; i++) { const y = i * 1.6, k = 1 - Math.pow(y / 11, 2); A.part('sph', G, -46.28, y, TZ + 0.4 + k * 1.9, 0.18, 0.36, 0.36); }
+      A.part('sph', G, -46.3, 0, TZ + 1.4, 0.2, 1.3, 1.1); A.box('#8a2a20', -46.32, 0, TZ + 1.0, 0.08, 0.7, 0.9); for (const s of [-1, 1]) A.part('sph', G, -46.32, s * 1.2, TZ + 1.3, 0.14, 0.6, 0.8);
+      for (const y of [-6, 0, 6]) { zgLine(A, ZG.iron, -46.2, y, TZ + (y ? 1.2 : 2.2), -47.2, y, TZ + (y ? 1.6 : 2.6), 0.1); zgLine(A, ZG.iron, -46.2, y, TZ + (y ? 0.2 : 1.2), -47.0, y, TZ + (y ? 1.5 : 2.5), 0.07); }
+      // the ensign: the cross of Burgundy, in rags, off its staff over the stern
+      A.cyl(ZG.oak2, -46.6, 3.2, 13.0, 0.09, 8.5, 0, 0, 0, 'cyl8'); A.part('sph', G, -46.6, 3.2, 21.6, 0.25, 0.25, 0.25);
+      for (let i = 0; i < 5; i++) for (let j = 0; j < 4; j++) { if (A.r() < 0.25 + i * 0.1) continue; const u = -46.6 - 0.45 - i * 0.62, z = 20.9 - j * 0.6 - i * 0.12; A.part('box', i === j || i === 3 - j ? '#7a2a24' : '#b4ac94', u, 3.2 + 0.03 * i, z, 0.62, 0.6, 0.03, 0, 0, 0.12 * i); }
+      // ---- the bow: her sides drawn in to the stem, the stem rising forward to the knee of the head
+      const lo = [40.25, 4.25, 43.8], up = [42.25, 4.25, 45.6];
+      for (let z = 0.1; z < 14.3; z += 0.4) {
+        const k = clamp((z - 7.6) / 1.6, 0, 1), xe = lo[0] + (up[0] - lo[0]) * k, xs = lo[2] + (up[2] - lo[2]) * k + z * 0.05;
+        for (const s of [-1, 1]) zgLine(A, zgPick(A, ZG.oak), xe - 0.3, s * 4.25, z + 0.2, xs, s * 0.25, z + 0.2, 0.37, 0.12);
+      }
+      for (const s of [-1, 1]) { for (const zw of [3.3, 6.7, 11.3]) { const k = clamp((zw - 7.6) / 1.6, 0, 1); zgLine(A, ZG.wale, lo[0] + 2 * k - 0.3, s * 4.4, zw, lo[2] + 1.8 * k + zw * 0.05, s * 0.4, zw, 0.3, 0.18); }
+        A.part('cyl8', '#0a0907', 41.6 + 0.6, s * 2.45, 7.3, 0.7, 0.05, 0.7, 0, F, -s * 0.65, 'decal'); A.part('torus', ZG.iron, 42.2, s * 2.5, 7.3, 0.72, 0.72, 0.8, s * 0.95, F, 0); }
+      // (barnacles thick on her forefoot)
+      for (let i = 0; i < 60; i++) { const z = A.r() * 5, s = A.r() < 0.5 ? -1 : 1, t = A.r(), x = 40.4 + (43.8 + z * 0.05 - 40.4) * t; A.part('ico', A.r() < 0.6 ? ZG.barn : ZG.weed, x, s * (4.3 * (1 - t) + 0.35), z, 0.18, 0.14, 0.1); }
+      const stem = [[43.8, 0], [44.2, 4], [45.2, 8], [46.2, 11], [47.4, 13.6], [48.5, 15.4]];
+      for (let i = 0; i < stem.length - 1; i++) zgLine(A, ZG.oak3, stem[i][0], 0, stem[i][1], stem[i + 1][0], 0, stem[i + 1][1], 0.6, 0.5);
+      // the knee of the head and the beakhead out ahead of her, its gratings, the head rails, the lion
+      const kn = [[44.6, 4.5], [47.5, 7.2], [50.6, 9.2], [53, 10.6]];
+      for (let i = 0; i < kn.length - 1; i++) zgLine(A, ZG.oak3, kn[i][0], 0, kn[i][1], kn[i + 1][0], 0, kn[i + 1][1], 0.9, 0.4);
+      A.box(ZG.oak3, 46.8, 0, 10.9, 7.2, 6.2, 0.22); for (let x = 43.6; x < 50; x += 0.45) A.box('#2a2016', x, 0, 11.12, 0.2, 5.8 - (x - 43.6) * 0.5, 0.05);
+      for (const s of [-1, 1]) {
+        zgLine(A, G, 42.2, s * 4.2, 13.1, 52.5, s * 0.3, 11.4, 0.14); zgLine(A, ZG.red2, 42.2, s * 4.2, 12.2, 51.5, s * 0.6, 10.9, 0.2, 0.12); zgLine(A, ZG.oak3, 42.4, s * 4.0, 10.9, 50.5, s * 0.9, 10.9, 0.22, 0.16);
+        for (let x = 43.4; x < 50.5; x += 1.3) { const t = (x - 42.2) / 10.3; A.box(ZG.oak3, x, s * (4.2 - t * 3.6), 10.9, 0.12, 0.12, 13.1 - t * 1.6 - 10.9); }
+        // the catheads, an anchor hanging off each
+        zgLine(A, ZG.oak3, 37.5, s * 8.5, 12.9, 39.6, s * 11.6, 13.3, 0.45, 0.45); A.box(G, 39.7, s * 11.7, 13.05, 0.4, 0.4, 0.5);
+        const ax = 39.4, ay = s * 11.5;
+        A.box(ZG.iron, ax, ay, 6.3, 0.26, 0.26, 6.2); A.part('half', ZG.iron, ax, ay, 6.5, 0.28, 3.2, 2.6, 0, 0, F);
+        for (const k of [-1, 1]) A.part('cone', ZG.iron, ax, ay + k * 1.3, 7.3, 0.5, 0.7, 0.2, 0, 0, k * 0.6);
+        zgLine(A, ZG.oak3, ax, ay - 1.4, 12.1, ax, ay + 1.4, 12.1, 0.35, 0.3); A.part('torus', ZG.iron, ax, ay, 12.8, 0.5, 0.5, 0.6, 0, F, 0);
+        zgLine(A, FPI_C.rope, ax, ay, 12.9, 39.6, s * 11.6, 13.2, 0.07);
+        for (let i = 0; i < 7; i++) A.box(A.r() < 0.5 ? ZG.weed : ZG.weed2, ax + (A.r() - 0.5) * 0.3, ay + (A.r() - 0.5) * 2.6, 6.2 - A.r(), 0.05, 0.05, 0.6 + A.r() * 1.2);
+        // the anchor cables out of the hawse holes, down onto the shingle ahead of her
+        zgSag(A, '#4a4030', 42.4, s * 2.5, 7.2, 58, s * 7, 0.15, 1.2, 8, 0.2);
+      }
+      // the lion: crowned, rampant, leaning out over the sea, weed hanging off him
+      const LX = 52.8, LZ = 10.6, L = '#8a3a24';
+      zgLine(A, L, LX - 1.6, 0, LZ - 1.4, LX + 0.4, 0, LZ + 1.2, 1.0, 1.0);
+      A.part('ico', '#9a6a30', LX + 0.6, 0, LZ + 1.9, 1.5, 1.5, 1.4, 0, 0, 0.4); A.part('sph', L, LX + 1.15, 0, LZ + 1.85, 0.8, 0.9, 0.75);
+      A.part('sph', '#5a2a1a', LX + 1.55, 0, LZ + 1.65, 0.35, 0.3, 0.35); for (const s of [-1, 1]) A.part('sph', '#ffd08a', LX + 1.45, s * 0.22, LZ + 2.05, 0.1, 0.1, 0.1, 0, 0, 0, 'glow');
+      A.cyl(G, LX + 0.75, 0, LZ + 2.55, 0.36, 0.3, 0, 0, 0, 'cyl8'); for (let i = 0; i < 5; i++) { const a = i / 5 * Math.PI * 2; A.part('cone', G, LX + 0.75 + Math.cos(a) * 0.3, Math.sin(a) * 0.3, LZ + 3.0, 0.14, 0.3, 0.14); }
+      for (const s of [-1, 1]) { zgLine(A, L, LX + 0.3, s * 0.4, LZ + 0.8, LX + 1.5, s * 0.45, LZ + 0.4, 0.3); zgLine(A, L, LX + 1.5, s * 0.45, LZ + 0.4, LX + 1.9, s * 0.5, LZ + 0.9, 0.24); zgLine(A, L, LX - 0.9, s * 0.4, LZ - 1.0, LX - 0.3, s * 0.45, LZ - 1.9, 0.32); }
+      zgSag(A, L, LX - 1.6, 0, LZ - 1.2, LX - 3.2, 0, LZ - 0.4, -0.5, 4, 0.12);
+      for (let i = 0; i < 12; i++) A.box(A.r() < 0.5 ? ZG.weed : ZG.weed2, LX - 1 + A.r() * 2.2, (A.r() - 0.5) * 1.0, LZ - 0.6 - A.r() * 1.2, 0.05, 0.05, 0.5 + A.r());
+      // the bowsprit, its gammoning, the spritsail yard and its rag of sail, the stays down to it
+      const bs = [41, 0, 14.0, 64, 0, 23.4];
+      zgLine(A, ZG.mast, bs[0], 0, bs[2], (bs[0] + bs[3]) / 2, 0, (bs[2] + bs[5]) / 2, 1.1, 1.1); zgLine(A, ZG.mast, (bs[0] + bs[3]) / 2, 0, (bs[2] + bs[5]) / 2, bs[3], 0, bs[5], 0.75, 0.75);
+      for (let i = 0; i < 6; i++) A.part('torus', FPI_C.rope, 46.6 + i * 0.22, 0, 16.2 + i * 0.09, 1.3, 1.3, 1.6, 0, 0, F - 0.39);
+      A.log(ZG.mast, 57.5, 0, 19.9, 0.25, 15, F); zgSail(A, 57.8, 19.6, 15, 14.5, 0.45);
+      // the ship's stays, mast to mast and down to the bowsprit, slack
+      const mt = p.mt || [];
+      for (let i = 0; i < mt.length - 1; i++) { const a = mt[i], b = mt[i + 1]; zgSag(A, '#2e2a22', a[0] + 0.6, 0, a[1] - 1, b[0] - 0.4, 0, b[2], 0.8, 6, 0.07); }
+      if (mt.length) { const f = mt[mt.length - 1]; zgSag(A, '#2e2a22', f[0] + 0.6, 0, f[1] - 1, 58, 0, 20.5, 1.1, 8, 0.08); zgSag(A, '#2e2a22', f[0] + 0.6, 0, f[1] + 8, 63, 0, 23.0, 1.4, 8, 0.05); }
+    },
+  },
+  // one of the three great stern lanterns: a glazed hexagon in gilt on a bracket, a dome, a finial (s: its size)
+  glantern: {
+    noShadow: true, sol() { return []; },
+    b3(p, A) {
+      const s = p.s || 1, z = p.z, G = ZG.gilt;
+      A.part('cyl6', '#ffd890', 0, 0, z, 0.9 * s, 1.3 * s, 0.9 * s, 0, 0, 0, 'glow');
+      for (let i = 0; i < 6; i++) { const a = i / 6 * Math.PI * 2; A.box(G, Math.cos(a) * 0.5 * s, Math.sin(a) * 0.5 * s, z - 0.7 * s, 0.07 * s, 0.07 * s, 1.4 * s); }
+      A.part('cyl6', G, 0, 0, z - 0.72 * s, 1.15 * s, 0.16 * s, 1.15 * s); A.part('cone', G, 0, 0, z - 1.0 * s, 0.7 * s, 0.45 * s, 0.7 * s, 0, 0, Math.PI);
+      A.part('cyl6', G, 0, 0, z + 0.7 * s, 1.15 * s, 0.14 * s, 1.15 * s); A.part('sph', '#7a5a2a', 0, 0, z + 0.95 * s, 1.0 * s, 0.6 * s, 1.0 * s); A.part('cone', G, 0, 0, z + 1.4 * s, 0.3 * s, 0.6 * s, 0.3 * s); A.part('sph', G, 0, 0, z + 1.75 * s, 0.2 * s, 0.2 * s, 0.2 * s);
+    },
+  },
+});
+
+// ---------- below decks: what's in her ----------
+Object.assign(FPI_K, {
+  // a heap of ballast stones in the hold, wet, weed on them (r: how far it spreads)
+  gballast: {
+    col: '#4a4a46',
+    sol(p) { return [fpiCirc(p, 0, 0, p.r * 0.7, 0.5)]; },
+    b3(p, A) { for (let i = 0; i < Math.round(p.r * p.r * 9); i++) { const a = A.r() * 6.28, d = Math.sqrt(A.r()) * p.r, h = 0.55 * (1 - d / p.r); A.part('ico', A.r() < 0.15 ? ZG.weed : A.r() < 0.5 ? '#55554f' : '#45453f', Math.cos(a) * d, Math.sin(a) * d, h * A.r() + 0.08, 0.3 + A.r() * 0.3, 0.2 + A.r() * 0.2, 0.3 + A.r() * 0.25, A.r() * 3, A.r() * 3); } },
+  },
+  // sea water left standing in the bilge, and weed and wrack round its edge (w, d)
+  gpool: {
+    noShadow: true, sol() { return []; },
+    b3(p, A) {
+      A.part('disc', '#24404a', 0, 0, 0.1, p.w, 1, p.d, 0, 0, 0, 'water');
+      for (let i = 0; i < Math.round((p.w + p.d) * 2); i++) { const a = A.r() * 6.28; A.box(A.r() < 0.5 ? ZG.weed : '#3a321e', Math.cos(a) * p.w * 0.5, Math.sin(a) * p.d * 0.5, 0.06, 0.4 + A.r() * 0.6, 0.12, 0.04, a); }
+    },
+  },
+  // weed hanging off the beams overhead, and the odd fish-bone and crab shell (z: the beams' underside)
+  gweed: {
+    noShadow: true, sol() { return []; },
+    b3(p, A) { for (let i = 0; i < (p.n || 14); i++) { const u = (A.r() - 0.5) * (p.w || 6), v = (A.r() - 0.5) * (p.d || 4), L = 0.4 + A.r() * 1.3; A.box(A.r() < 0.5 ? ZG.weed : ZG.weed2, u, v, p.z - L, 0.05 + A.r() * 0.06, 0.02, L); } },
+  },
+  // great coils of anchor cable, flaked down (r: the coil's radius)
+  gcable: {
+    col: FPI_C.rope,
+    sol(p) { return [fpiCirc(p, 0, 0, p.r, 0.8)]; },
+    b3(p, A) { for (let l = 0; l < 5; l++) for (let k = 0; k < 4; k++) { const rr = p.r * (0.35 + k * 0.2) * 2; A.part('torus', l % 2 ? '#6a5a40' : FPI_C.rope, 0, 0, 0.1 + l * 0.16, rr, rr, rr * 1.4, 0, Math.PI / 2, 0); } A.part('cyl8', '#2a2218', 0, 0, 0.2, p.r * 0.6, 0.3, p.r * 0.6); },
+  },
+  // the riding bitts: two great posts and the crosspiece the cables are made fast to
+  gbitts: {
+    col: ZG.oak3,
+    sol(p) { return [fpiBox(p, -1.1, 0, 0.3, 0.3, 2.0), fpiBox(p, 1.1, 0, 0.3, 0.3, 2.0)]; },
+    b3(p, A) { for (const s of [-1, 1]) { A.box(ZG.oak3, s * 1.1, 0, -0.05, 0.55, 0.55, 2.4); A.box(ZG.iron, s * 1.1, 0, 1.6, 0.6, 0.6, 0.08); } A.box(ZG.oak2, 0, 0.1, 1.2, 3.0, 0.4, 0.4); for (const s of [-1, 1]) A.part('torus', FPI_C.rope, s * 0.6, 0.12, 1.4, 0.7, 0.7, 0.7, 0, Math.PI / 2, 0); },
+  },
+  // the chain pumps by the mainmast's foot: two tall cases, their winch, a cistern
+  gpump: {
+    col: ZG.oak3,
+    sol(p) { return [fpiBox(p, 0, 0, 0.9, 0.4, 1.4)]; },
+    b3(p, A) { for (const s of [-1, 1]) { A.box(ZG.oak3, s * 0.6, 0, -0.05, 0.45, 0.45, 4.3); A.box(ZG.iron, s * 0.6, 0, 1.0, 0.5, 0.5, 0.06); } A.box(ZG.oak2, 0, 0, 0.1, 1.9, 0.7, 0.5); A.log(ZG.iron, 0, -0.32, 1.25, 0.05, 2.2); for (const s of [-1, 1]) A.box(ZG.iron, s * 1.15, -0.32, 0.9, 0.05, 0.05, 0.4); },
+  },
+  // kegs of powder in their racks, a felt screen before them (n: how many)
+  gkegs: {
+    col: '#5a4430',
+    sol(p) { return [fpiBox(p, 0, 0, p.w / 2, 0.45, 1.6)]; },
+    b3(p, A) {
+      A.box(ZG.oak3, 0, 0.1, -0.05, p.w, 0.8, 0.1); A.box(ZG.oak3, 0, 0.1, 0.78, p.w, 0.8, 0.06);
+      for (const z of [0.05, 0.84]) for (let u = -p.w / 2 + 0.3; u < p.w / 2 - 0.2; u += 0.5) { A.log('#6a4a2c', u, 0.05, z + 0.25, 0.25, 0.7, Math.PI / 2, 0, 'cyl8'); for (const k of [-0.22, 0.22]) A.log(ZG.iron, u, 0.05 + k, z + 0.25, 0.26, 0.04, Math.PI / 2, 0, 'cyl8'); }
+    },
+  },
+  // the light room's window: a copper lantern behind thick glass in the bulkhead, lighting the powder from outside
+  // it (glowing; its light is the map's)
+  glightbox: { noShadow: true, sol() { return []; }, b3(p, A) { A.box('#7a4a2a', 0, 0, 1.55, 0.95, 0.4, 0.95); A.part('box', '#ffc070', 0, -0.21, 2.02, 0.7, 0.7, 0.02, 0, 0, 0, 'glow'); for (const k of [-0.18, 0.18]) A.box('#3a2416', k, -0.23, 1.68, 0.04, 0.02, 0.7); A.box('#3a2416', 0, -0.23, 2.02, 0.7, 0.02, 0.04); } },
+  // sacks of biscuit and flour, piled (n)
+  gsacks: {
+    col: '#7a6a4a',
+    sol(p) { return [fpiBox(p, 0, 0, p.w / 2, 0.55, 0.9)]; },
+    b3(p, A) { for (let u = -p.w / 2 + 0.35; u < p.w / 2 - 0.2; u += 0.62) for (const [v, z] of [[-0.25, 0.25], [0.28, 0.25], [0, 0.68]]) { if (A.r() < 0.15) continue; A.part('sph', A.r() < 0.5 ? '#7e6e4e' : '#6e5e42', u + (A.r() - 0.5) * 0.1, v, z, 0.6, 0.48, 0.5, A.r() * 0.6); } },
+  },
+  // bins of ship's biscuit, lidded, along a wall
+  gbins: { col: ZG.oak2, sol(p) { return [fpiBox(p, 0, 0, p.w / 2, 0.4, 1.0)]; }, b3(p, A) { A.box(ZG.oak2, 0, 0, -0.05, p.w, 0.8, 1.0); for (let u = -p.w / 2 + 0.55; u < p.w / 2; u += 1.1) { A.box(ZG.oak3, u - 0.55, 0, 0, 0.06, 0.82, 1.02); A.box(zgPick(A, ZG.plank), u, 0.05, 0.98, 1.0, 0.7, 0.05, 0, A.r() < 0.3 ? 0.3 : 0); } A.part('ico', '#b8a070', p.w * 0.2, -0.45, 0.06, 0.3, 0.12, 0.3); } },
+  // the squadron's pay chest: iron-bound, three locks, the lid sprung and coin spilling
+  gpaychest: {
+    col: '#3e2a1c',
+    sol(p) { return [fpiBox(p, 0, 0, 1.05, 0.65, 1.1)]; },
+    b3(p, A) {
+      A.box('#3e2a1c', 0, 0, 0, 2.0, 1.2, 0.95); for (const u of [-0.85, -0.3, 0.3, 0.85]) A.box(ZG.iron, u, 0, -0.01, 0.1, 1.24, 0.98);
+      for (const v of [-0.62, 0.62]) A.box(ZG.iron, 0, v, 0.4, 2.04, 0.04, 0.1);
+      A.part('half', '#4a3222', 0, 0.55, 1.3, 1.2, 2.04, 0.55, 0, -1.1, Math.PI / 2);
+      for (const u of [-0.5, 0, 0.5]) { A.box('#8a7a4a', u, -0.62, 0.55, 0.16, 0.04, 0.22); A.box('#141210', u, -0.64, 0.6, 0.03, 0.02, 0.08); }
+      for (let i = 0; i < 70; i++) { const a = A.r() * 6.28, d = Math.sqrt(A.r()) * (i < 30 ? 0.8 : 1.4); A.part('cyl8', i % 4 ? '#c8a050' : '#d8d0c0', (i < 30 ? 0 : -0.2) + Math.cos(a) * d * (i < 30 ? 1 : 0.9), (i < 30 ? 0 : -1.2) + Math.sin(a) * d * 0.6, i < 30 ? 0.96 + A.r() * 0.08 : 0.02, 0.14, 0.02, 0.14, 0, (A.r() - 0.5) * 0.6, (A.r() - 0.5) * 0.6, i % 7 ? undefined : 'glow'); }
+    },
+  },
+  // an iron grille across a room, floor to beams, (w long), its gate standing open (gate: where along it)
+  ggrille: {
+    noShadow: true, sol(p) { return []; },
+    b3(p, A) { const H = p.hh || 3.7; for (let u = -p.w / 2; u <= p.w / 2 + 1e-6; u += 0.22) { if (p.gate != null && Math.abs(u - p.gate) < 0.6) continue; A.box(ZG.iron, u, 0, -0.05, 0.05, 0.05, H); } for (const z of [0.1, 1.4, 2.6, H - 0.15]) A.box(ZG.iron, 0, 0, z, p.w, 0.08, 0.08); if (p.gate != null) { for (let k = 0; k < 6; k++) A.box(ZG.iron, p.gate - 0.6 + 0.08, -0.15 - k * 0.2, -0.05, 0.05, 0.05, 2.4); A.box(ZG.iron, p.gate - 0.52, -0.6, 2.3, 0.05, 1.1, 0.06); } },
+  },
+  // a hammock slung between the beams (lo: how low it hangs), a blanket in it, maybe a sea-bag
+  ghammock: {
+    noShadow: true, sol() { return []; },
+    b3(p, A) {
+      const L = p.len || 2.4, z = p.z, lo = p.lo || 0.45, c = p.c || zgPick(A, ['#8a826a', '#7a725c', '#6a6450']);
+      for (let i = 0; i < 4; i++) { const u0 = -L / 2 + i * L / 4, u1 = u0 + L / 4, f = x => z - lo * (1 - Math.pow(2 * x / L, 2)); zgLine(A, c, u0, 0, f(u0), u1, 0, f(u1), 0.5, 0.08); }
+      for (const s of [-1, 1]) zgLine(A, FPI_C.rope, s * L / 2, 0, z, s * (L / 2 + 0.5), 0, z + 0.7, 0.03);
+      A.box(A.r() < 0.5 ? '#5a2a24' : '#3a4a5a', 0, 0, z - lo + 0.05, L * 0.4, 0.45, 0.12);
+    },
+  },
+  // a hanging cot (the surgeon's): a framed canvas box on its four lines
+  gcot: { noShadow: true, sol() { return []; }, b3(p, A) { const z = p.z; A.box('#8a826a', 0, 0, z, 2.0, 0.8, 0.35); A.box('#c8c0a8', 0, 0, z + 0.3, 1.8, 0.65, 0.08); A.box('#6a3a2a', 0.3, 0, z + 0.36, 1.0, 0.7, 0.06); for (const su of [-1, 1]) for (const sv of [-1, 1]) zgLine(A, FPI_C.rope, su * 1.0, sv * 0.4, z + 0.35, su * 0.6, 0, p.top, 0.025); } },
+  // a seaman's chest
+  gchest: { col: ZG.oak2, sol(p) { return [fpiBox(p, 0, 0, 0.5, 0.3, 0.6)]; }, b3(p, A) { A.box(p.c || zgPick(A, ['#4a3a2a', '#3a4a3a', '#5a3a2a']), 0, 0, 0, 0.95, 0.55, 0.5); A.box(ZG.oak3, 0, 0, 0.48, 1.0, 0.6, 0.08); for (const s of [-1, 1]) A.part('torus', FPI_C.rope, s * 0.5, 0, 0.35, 0.2, 0.2, 0.2, 0, 0, Math.PI / 2); } },
+  // the officers' or the crew's mess table, slung from the beams on ropes, benches either side (w)
+  gmess: {
+    col: ZG.oak2,
+    sol(p) { return [fpiBox(p, 0, 0, p.w / 2, 0.45, 0.82)]; },
+    b3(p, A) {
+      A.box(ZG.oak2, 0, 0, 0.74, p.w, 0.85, 0.07); for (const s of [-1, 1]) { zgLine(A, FPI_C.rope, s * (p.w / 2 - 0.15), 0, 0.8, s * (p.w / 2 - 0.15), 0, p.top || 3.5, 0.03); A.box(ZG.oak3, s * (p.w / 2 - 0.2), 0, -0.05, 0.08, 0.6, 0.78); }
+      for (let i = 0; i < 5; i++) { const u = (A.r() - 0.5) * p.w * 0.8, v = (A.r() - 0.5) * 0.5; if (A.r() < 0.5) A.cyl('#7a7a74', u, v, 0.81, 0.07, 0.12); else A.cyl('#5a4a30', u, v, 0.81, 0.16, 0.05); }
+    },
+  },
+  // the captain's table: long, on carved legs, a cloth, charts and dividers, candlesticks lit, a decanter, a chair
+  // at its head (the chairs are their own)
+  gctable: {
+    col: ZG.oak2,
+    sol(p) { return [fpiBox(p, 0, 0, p.w / 2, p.d / 2, 0.84)]; },
+    b3(p, A) {
+      const w = p.w, d = p.d;
+      A.box('#4a2e1e', 0, 0, 0.74, w, d, 0.1); A.box(ZG.gilt, 0, 0, 0.73, w + 0.04, d + 0.04, 0.03);
+      for (const su of [-1, 1]) for (const sv of [-1, 1]) { A.cyl('#3a2418', su * (w / 2 - 0.2), sv * (d / 2 - 0.15), -0.05, 0.08, 0.8, 0, 0, 0, 'cyl6'); A.part('sph', '#3a2418', su * (w / 2 - 0.2), sv * (d / 2 - 0.15), 0.35, 0.22, 0.22, 0.22); }
+      A.box('#5a1e1e', 0, 0, 0.84, w * 0.75, d + 0.12, 0.02); for (const s of [-1, 1]) A.box('#5a1e1e', 0, s * (d / 2 + 0.06), 0.45, w * 0.75, 0.02, 0.4);
+      A.box('#c8bc98', -0.6, 0.05, 0.86, 1.4, 0.95, 0.01, 0.15); A.box('#b8a880', 0.8, -0.1, 0.86, 1.0, 0.8, 0.012, -0.3); A.box('#6a8098', -0.5, 0.05, 0.87, 0.5, 0.3, 0.005, 0.15);
+      A.box('#8a8070', 0.35, 0.25, 0.87, 0.35, 0.03, 0.015, 0.5); A.box('#8a8070', 0.4, 0.3, 0.87, 0.35, 0.03, 0.015, 0.9);
+      for (const u of [-w * 0.3, w * 0.3]) { A.cyl(ZG.gilt, u, 0, 0.86, 0.09, 0.05); A.cyl(ZG.gilt, u, 0, 0.9, 0.03, 0.28); A.cyl('#e8e0c8', u, 0, 1.18, 0.03, 0.14); A.glow('#ffd890', u, 0, 1.38, 0.08); }
+      A.part('sph', '#3a5a3a', 1.6, 0.25, 0.97, 0.22, 0.24, 0.22); A.cyl('#3a5a3a', 1.6, 0.25, 1.05, 0.04, 0.16); A.cyl('#b8b0a0', 1.3, 0.3, 0.86, 0.04, 0.12); A.cyl('#b8b0a0', -1.6, -0.25, 0.86, 0.04, 0.12);
+      A.part('sph', '#8a7a5a', -1.9, -0.1, 0.92, 0.18, 0.12, 0.18); A.box(ZG.iron, -1.2, -0.3, 0.86, 0.08, 0.3, 0.06, 0.3);
+    },
+  },
+  // a high-backed chair, carved, leather
+  gchair: {
+    col: '#3a2418',
+    sol(p) { return [fpiBox(p, 0, 0, 0.3, 0.3, 0.5)]; },
+    b3(p, A) { const c = '#3a2418'; for (const su of [-1, 1]) for (const sv of [-1, 1]) A.box(c, su * 0.24, sv * 0.22, -0.05, 0.06, 0.06, 0.5); A.box('#5a2a1e', 0, 0, 0.45, 0.58, 0.55, 0.08); for (const s of [-1, 1]) A.box(c, s * 0.24, 0.25, 0.45, 0.07, 0.07, (p.tall ? 1.15 : 0.75)); A.box('#5a2a1e', 0, 0.26, 0.6, 0.44, 0.04, p.tall ? 0.9 : 0.5); A.box(ZG.gilt, 0, 0.26, p.tall ? 1.55 : 1.15, 0.56, 0.05, 0.08); if (p.tall) A.part('sph', ZG.gilt, 0, 0.26, 1.7, 0.18, 0.18, 0.06); },
+  },
+  // the binnacle: a cabinet, its glass dome, the compass card lit from inside
+  gbinn: {
+    col: '#4a3020',
+    sol(p) { return [fpiBox(p, 0, 0, 0.45, 0.35, 1.2)]; },
+    b3(p, A) { A.box('#4a3020', 0, 0, -0.05, 0.9, 0.7, 1.1); A.box(ZG.gilt, 0, 0, 1.0, 0.95, 0.75, 0.06); for (const s of [-1, 1]) { A.part('sph', '#d8d0a8', s * 0.22, 0, 1.2, 0.36, 0.25, 0.36, 0, 0, 0, 'glow'); A.cyl(ZG.gilt, s * 0.22, 0, 1.06, 0.19, 0.06); } A.part('cone', ZG.gilt, 0, 0, 1.45, 0.2, 0.25, 0.2); A.box('#2a2018', 0, -0.36, 0.3, 0.6, 0.02, 0.5); },
+  },
+  // the whipstaff: the long lever she was steered by, up from the tiller below through its rowle in the deck
+  gwhip: { col: ZG.oak3, sol(p) { return [fpiCirc(p, 0, 0, 0.18, 2.6)]; }, b3(p, A) { A.box(ZG.oak3, 0, 0, -0.05, 0.7, 0.7, 0.35); A.part('sph', ZG.gilt, 0, 0, 0.3, 0.6, 0.35, 0.6); zgLine(A, ZG.oak2, 0, 0, 0.2, 0.2, 0.5, 3.4, 0.14); A.part('sph', ZG.oak3, 0.2, 0.5, 3.4, 0.2, 0.2, 0.2); } },
+  // the hourglass rack on the bulkhead: four glasses in a frame, one running, a bell to strike the half-hours
+  ghour: {
+    noShadow: true, sol() { return []; },
+    b3(p, A) {
+      A.box(ZG.oak3, 0, 0.05, 1.3, 1.5, 0.12, 0.9); A.box(ZG.oak3, 0, -0.1, 1.3, 1.5, 0.3, 0.06); A.box(ZG.oak3, 0, -0.1, 2.12, 1.5, 0.3, 0.06);
+      for (const u of [-0.5, -0.17, 0.17, 0.5]) { A.part('cone', '#d8e0d8', u, -0.12, 1.53, 0.18, 0.4, 0.18, 0, 0, Math.PI); A.part('cone', '#d8e0d8', u, -0.12, 1.92, 0.18, 0.4, 0.18); A.part('cone', '#c8a868', u, -0.12, u === -0.17 ? 1.43 : 1.82, 0.12, 0.15, 0.12); A.box(ZG.oak3, u - 0.11, -0.1, 1.36, 0.03, 0.03, 0.76); }
+      A.part('cone', ZG.bronze, 0.95, -0.12, 1.75, 0.3, 0.32, 0.3); A.box(ZG.iron, 0.95, -0.02, 1.9, 0.04, 0.2, 0.04);
+    },
+  },
+  // the altar of the Chaplain's Berth: a vested table, candles lit, a crucifix over it, a reliquary
+  galtar: {
+    col: '#6a5a4a',
+    sol(p) { return [fpiBox(p, 0, 0, 1.0, 0.45, 1.0)]; },
+    b3(p, A) {
+      A.box('#5a4232', 0, 0, -0.05, 2.0, 0.9, 1.0); A.box('#e0d8c4', 0, -0.02, 0.98, 2.1, 0.96, 0.03); A.box('#e0d8c4', 0, -0.47, 0.55, 2.1, 0.02, 0.45); A.box('#7a2420', 0, -0.48, 0.3, 0.9, 0.02, 0.7); A.box(ZG.gilt, 0, -0.49, 0.62, 0.2, 0.02, 0.4); A.box(ZG.gilt, 0, -0.49, 0.75, 0.5, 0.02, 0.1);
+      A.box('#5a4232', 0, 0.3, 1.0, 2.0, 0.3, 0.25);
+      for (const u of [-0.8, -0.45, 0.45, 0.8]) { A.cyl(ZG.gilt, u, 0.3, 1.25, 0.07, 0.25); A.cyl('#e8e0c8', u, 0.3, 1.5, 0.035, 0.22); A.glow('#ffd890', u, 0.3, 1.78, 0.08); }
+      A.box('#6a5a3a', 0, 0.2, 1.25, 0.5, 0.3, 0.35); A.part('half', ZG.gilt, 0, 0.2, 1.62, 0.5, 0.3, 0.2, 0, 0, Math.PI / 2); A.part('sph', '#c8b8a0', 0, 0.04, 1.42, 0.12, 0.12, 0.08, 0, 0, 0, 'glow');
+      A.box('#3a2a1e', 0, 0.42, 1.8, 0.14, 0.08, 1.8); A.box('#3a2a1e', 0, 0.42, 2.95, 1.0, 0.08, 0.14); A.part('sph', '#c8b8a0', 0, 0.36, 3.05, 0.12, 0.14, 0.1); A.box('#c8b8a0', 0, 0.36, 2.35, 0.14, 0.06, 0.6);
+    },
+  },
+  // a little chamber organ, its pipes, a stool
+  gorgan: {
+    col: '#4a3020',
+    sol(p) { return [fpiBox(p, 0, 0, 0.7, 0.4, 1.4)]; },
+    b3(p, A) { A.box('#4a3020', 0, 0.05, -0.05, 1.4, 0.7, 1.0); A.box('#e0d8c0', 0, -0.33, 0.85, 1.1, 0.14, 0.04); A.box('#4a3020', 0, 0.2, 1.0, 1.4, 0.35, 1.0); for (let i = 0; i < 11; i++) { const u = -0.55 + i * 0.11, h = 0.5 + Math.abs(5 - i) * -0.05 + 0.3; A.cyl(ZG.gilt, u, 0.05, 1.0, 0.04, h + 0.4, 0, 0, 0, 'cyl6'); } A.box(ZG.gilt, 0, 0.05, 2.0, 1.4, 0.4, 0.06); A.cyl('#3a2418', 0, -0.75, -0.05, 0.2, 0.5); },
+  },
+  // the surgeon's table: a heavy board on trestles, the saws and knives laid out, bowls, a lamp over (the lamp's
+  // light is the map's), a sea chest of instruments
+  gsurg: {
+    col: ZG.oak2,
+    sol(p) { return [fpiBox(p, 0, 0, 1.1, 0.5, 0.9)]; },
+    b3(p, A) {
+      A.box('#5a4430', 0, 0, 0.8, 2.2, 1.0, 0.1); A.box('#4a1a16', 0.3, 0.1, 0.9, 0.9, 0.6, 0.01); for (const s of [-1, 1]) { A.box(ZG.oak3, s * 0.85, 0, -0.05, 0.1, 0.9, 0.86); A.box(ZG.oak3, s * 0.85, 0, 0.15, 0.1, 1.0, 0.08); }
+      A.box('#9a9a94', -0.7, -0.3, 0.91, 0.5, 0.12, 0.01, 0.2); A.box('#3a2a1a', -0.95, -0.32, 0.91, 0.14, 0.06, 0.04, 0.2); A.box('#9a9a94', -0.55, -0.1, 0.91, 0.25, 0.03, 0.01, -0.3); A.box('#9a9a94', -0.3, -0.35, 0.91, 0.2, 0.03, 0.01, 0.6);
+      A.cyl('#8a8070', 0.75, -0.25, 0.9, 0.16, 0.08); A.cyl('#6a2a20', 0.75, -0.25, 0.92, 0.13, 0.07); A.cyl('#b8b0a0', 0.9, 0.25, 0.9, 0.05, 0.14);
+      A.box('#3a2a1a', -1.6, 0.0, -0.05, 0.55, 0.9, 0.55); A.box(ZG.iron, -1.6, 0.0, 0.48, 0.6, 0.95, 0.04);
+    },
+  },
+  // the galley hearth: a brick firebox on the deck, the fire in it, copper kettles, the chimney up through the deck
+  ghearth: {
+    col: '#6a3a2a',
+    sol(p) { return [fpiBox(p, 0, 0, 1.4, 0.9, 1.5)]; },
+    b3(p, A) {
+      const B = ['#6a3a2a', '#5a3224', '#743e2c'];
+      for (let z = 0; z < 1.4; z += 0.2) for (let u = -1.35; u < 1.35; u += 0.45) A.box(zgPick(A, B), u + (z * 5 % 2 ? 0.11 : 0) + 0.2, 0, z - 0.05, 0.43, 1.78, 0.19);
+      A.box('#140c08', 0, -0.9, 0.2, 1.6, 0.04, 0.7); A.part('ico', '#ff8a30', -0.2, -0.75, 0.4, 0.6, 0.35, 0.3, 0, 0, 0, 'glow'); A.part('ico', '#ffb050', 0.3, -0.72, 0.35, 0.4, 0.25, 0.25, 0, 0, 0, 'glow');
+      A.box(ZG.iron, 0, 0, 1.38, 2.9, 1.9, 0.08);
+      for (const [u, r, h] of [[-0.7, 0.42, 0.7], [0.55, 0.34, 0.55]]) { A.cyl('#a8603a', u, 0, 1.45, r, h, 0, 0, 0, 'cyl8'); A.cyl('#8a4a2a', u, 0, 1.45 + h, r * 1.04, 0.06, 0, 0, 0, 'cyl8'); A.part('torus', ZG.iron, u, 0, 1.45 + h + 0.25, r, r, r, 0, Math.PI / 2, 0); }
+      A.cyl('#3a2a22', 0.9, 0.6, 1.45, 0.25, p.top - 1.45, 0, 0, 0, 'cyl8');
+      for (let i = 0; i < 6; i++) A.part('torus', '#a8603a', -1.2 + i * 0.4, 0.95, 2.3, 0.3, 0.3, 0.3, 0, 0, 0);
+    },
+  },
+  // the capstan in the Waist: its drum, its whelps, the bars standing out of its head, a messenger round it
+  gcapstan: {
+    col: ZG.oak2,
+    sol(p) { return [fpiCirc(p, 0, 0, 0.85, 1.4)]; },
+    b3(p, A) {
+      A.cyl(ZG.oak3, 0, 0, -0.05, 0.9, 0.2, 0, 0, 0, 'cyl8'); A.cyl(ZG.oak2, 0, 0, 0.1, 0.6, 1.0, 0, 0, 0, 'cyl8');
+      for (let i = 0; i < 8; i++) { const a = i / 8 * Math.PI * 2; A.box(ZG.oak3, Math.cos(a) * 0.62, Math.sin(a) * 0.62, 0.1, 0.16, 0.16, 0.9, a); }
+      A.cyl(ZG.oak3, 0, 0, 1.05, 0.8, 0.35, 0, 0, 0, 'cyl8'); A.cyl(ZG.gilt, 0, 0, 1.4, 0.3, 0.06, 0, 0, 0, 'cyl8');
+      for (let i = 0; i < 6; i++) { if (i === 2 || i === 5) continue; const a = i / 6 * Math.PI * 2 + 0.3; zgLine(A, ZG.oak2, Math.cos(a) * 0.5, Math.sin(a) * 0.5, 1.25, Math.cos(a) * 2.4, Math.sin(a) * 2.4, 1.2, 0.1); }
+      for (let i = 0; i < 3; i++) A.part('torus', FPI_C.rope, 0, 0, 0.4 + i * 0.15, 1.35, 1.35, 1.6, 0, Math.PI / 2, 0);
+    },
+  },
+  // a ship's boat on its chocks in the Waist, upturned to the weather, stove in (len, beam)
+  gboatc: {
+    col: ZG.oak2,
+    sol(p) { return [fpiBox(p, 0, 0, p.len / 2, p.beam / 2, 1.5)]; },
+    b3(p, A) {
+      for (const u of [-p.len * 0.3, p.len * 0.3]) for (const s of [-1, 1]) A.box(ZG.oak3, u, s * p.beam * 0.35, -0.05, 0.3, 0.4, 0.45);
+      A.part('half', p.paint || '#3a3a2c', 0, 0, 0.95, p.beam * 0.95, p.len, p.beam * 1.05, 0, 0, -Math.PI / 2);
+      A.part('half', '#2a2218', 0, 0, 0.93, p.beam * 0.85, p.len * 0.92, p.beam * 0.95, 0, 0, -Math.PI / 2);
+      A.box(ZG.oak3, 0, 0, 0.45, p.len + 0.2, 0.16, 0.14); A.box('#0a0907', p.len * 0.15, -p.beam * 0.38, 0.6, 0.8, 0.06, 0.5, 0.3);
+      for (let i = 0; i < 10; i++) A.part('ico', ZG.barn, (A.r() - 0.5) * p.len * 0.8, (A.r() - 0.5) * p.beam * 0.8, 1.4 + A.r() * 0.1, 0.14, 0.08, 0.12);
+      for (const u of [-1.2, 0.5]) zgLine(A, FPI_C.rope, u, -p.beam / 2 - 0.2, 0, u, p.beam / 2 + 0.2, 0, 0.04);
+    },
+  },
+  // a grating over a hatch: its coaming and the lattice (only to look at: you walk over it)
+  ggrate: {
+    noShadow: true, sol() { return []; },
+    b3(p, A) { A.box(ZG.oak3, 0, 0, -0.02, p.w + 0.3, p.d + 0.3, 0.12); for (let u = -p.w / 2 + 0.1; u < p.w / 2; u += 0.22) A.box('#2a2016', u, 0, 0.09, 0.08, p.d, 0.05); for (let v = -p.d / 2 + 0.1; v < p.d / 2; v += 0.22) A.box('#3a2c20', 0, v, 0.1, p.w, 0.08, 0.05); },
+  },
+  // a pin rail along a bulwark: belaying pins, coils of rope hanging off them
+  gpins: { noShadow: true, sol() { return []; }, b3(p, A) { A.box(ZG.oak3, 0, 0, 0.95, p.w, 0.2, 0.1); for (let u = -p.w / 2 + 0.2; u < p.w / 2; u += 0.4) { A.cyl(ZG.oak2, u, -0.02, 0.85, 0.03, 0.35, 0, 0, 0, 'cyl6'); if (A.r() < 0.5) A.part('torus', FPI_C.rope, u, -0.1, 0.65, 0.4, 0.55, 0.4, 0, Math.PI / 2, 0); } } },
+  // the belfry on the Forecastle Deck: two carved posts, a canopy, the ship's bell, green with age, its rope
+  gbelfry: {
+    col: ZG.oak3,
+    sol(p) { return [fpiCirc(p, -0.95, 0, 0.18, 3.2), fpiCirc(p, 0.95, 0, 0.18, 3.2), fpiCirc(p, 0, 0, 0.45, 2.6, { z0: 1.6 })]; },
+    b3(p, A) {
+      for (const s of [-1, 1]) { A.box(ZG.oak3, s * 0.95, 0, -0.05, 0.3, 0.3, 3.0); A.part('sph', ZG.gilt, s * 0.95, 0, 3.05, 0.3, 0.3, 0.3); zmvBarV(A, ZG.oak3, s * 0.95, -0.6, 0, 0, 1.0, 0.2, 0.16); zmvBarV(A, ZG.oak3, s * 0.95, 0.6, 0, 0, 1.0, 0.2, 0.16); }
+      A.box(ZG.oak2, 0, 0, 2.6, 2.3, 0.35, 0.3); A.part('tri', ZG.red2, 0, 0, 3.15, 2.6, 0.9, 0.8, 0, 0, 0);
+      A.part('cone', ZG.bronze, 0, 0, 1.95, 0.9, 0.85, 0.9); A.part('sph', ZG.bronze, 0, 0, 2.35, 0.6, 0.4, 0.6); A.cyl(ZG.bronze, 0, 0, 1.5, 0.47, 0.08, 0, 0, 0, 'cyl8'); A.part('sph', ZG.verd, 0.2, -0.3, 2.0, 0.3, 0.4, 0.06); A.part('sph', '#222', 0, 0, 1.55, 0.15, 0.15, 0.15);
+      zgSag(A, FPI_C.rope, 0, 0, 1.6, 0.4, -0.5, 0.6, 0.15, 3, 0.03);
+    },
+  },
+  // the wheel-house over the head of the whipstaff on the Quarterdeck: a little hood, its lamp
+  gwheelh: { col: ZG.oak3, sol(p) { return [fpiBox(p, 0, 0, 0.9, 0.7, 2.2)]; }, b3(p, A) { A.box(ZG.red2, 0, 0.1, -0.05, 1.8, 1.2, 2.1); A.box(ZG.gilt, 0, 0.1, 2.0, 2.0, 1.4, 0.1); A.part('half', ZG.red2, 0, 0.1, 2.1, 1.8, 0.4, 1.2, 0, 0, Math.PI / 2); A.box('#120e0a', 0, -0.52, 0.2, 1.2, 0.04, 1.6); A.part('sph', '#ffc070', 0, -0.4, 1.6, 0.2, 0.2, 0.2, 0, 0, 0, 'glow'); zgLine(A, ZG.oak2, 0, -0.3, 0.1, 0.25, -0.45, 1.3, 0.12); } },
+});
+
+// ---------- laying her out ----------
+FPS_ISLES.galleon = Object.assign({}, FPS_ISLES.light, { name: 'the San Telmo', ground: '#6e6c64', ground2: '#56544c', wet: '#2e3236', path: '#5e5c54', fog: ['#0b0e12', 70, 560], nLights: 8 });
+FPI_GEN.galleon = {
+  built: true,
+  set(H) {
+    const { I } = H, OX = FPSC.CX, OY = FPSC.CY, [F0, F1, F2, F3] = ZGL.F, DK = 4.4, RS = ZGL.RS, TD = ZGL.TD;
+    const Z = I.zm = { doors: [], windows: [], buys: [], perks: [], spawns: [], lights: [] };
+    const { W, put, light, lamp, buy, perk, spot } = zmKit(H, Z);
+    // ---- the wall: from (x0, y0) to (x1, y1) at any angle. o: hh, lift, th, f (its faces, zgFace), hull (her side:
+    // which face is outboard found from where she is, and her faces 'hull' and o.in), rail (a bulwark). opens: { k:
+    // 'win' | 'glass' | 'door' | 'debris' | 'gun', at (along the wall's own axis, x or y, as zmKit's), or t (a
+    // fraction along it), w, z (the room, or [the two]), cost, shore }
+    const gw = (x0, y0, x1, y1, o, opens) => {
+      const dx = x1 - x0, dy = y1 - y0, L = Math.hypot(dx, dy), ux = dx / L, uy = dy / L, vx = -uy, vy = ux, ang = Math.atan2(dy, dx);
+      const th = o.th || 0.5, hh = o.hh || DK, lift = o.lift || 0, mx = (x0 + x1) / 2, my = (y0 + y1) / 2, cx = clamp(mx, -36, 30);
+      // (which way is out of her, along v: the side away from her middle)
+      const ob = o.hull || o.rail ? ((mx - cx) * vx + my * vy > 0 ? 1 : -1) : 0, inner = o.in || 'ceil';
+      const f = o.f || (o.rail ? (ob < 0 ? ['railo', 'raili'] : ['raili', 'railo']) : o.hull ? (ob < 0 ? ['hull', inner] : [inner, 'hull']) : ['plank', 'plank']);
+      const nx = ob * vx, ny = ob * vy, gaps = [];
+      for (const op of opens || []) {
+        const w = op.w || (op.k === 'win' ? (o.rail ? 1.6 : 1.4) : op.k === 'glass' ? 1.5 : op.k === 'gun' ? 0 : 2.2);
+        const s = op.t != null ? op.t * L : Math.abs(ux) > 0.7 ? (op.at - x0) / ux : (op.at - y0) / uy, px = x0 + ux * s, py = y0 + uy * s, [wx, wy] = W(px, py);
+        if (op.k === 'gun') {
+          put('gport', px, py, ang, { th, ob, lift, hh });
+          if (!op.bare) { const gx = px - nx * 1.75, gy = py - ny * 1.75; put('ggun', gx, gy, Math.atan2(nx, -ny), { lift }); }
+          continue;
+        }
+        gaps.push([s - w / 2, s + w / 2]);
+        const lc = ZG.oak3, block = (h, z0) => put('block', px, py, ang, Object.assign({ w: w + 0.04, d: th + 0.02, hh: h, col: lc, lift }, z0 ? { z0 } : {}));
+        if (op.k === 'door' || op.k === 'debris') {
+          if (hh > 2.6) block(hh, 2.5);
+          const p = put('zdoor', px, py, ang, { w: w + 0.1, d: th * 0.8, hh: 2.5, lift });
+          Z.doors.push({ x: wx, y: wy, z: lift, ang, w, cost: op.cost, zones: op.z, also: op.also, kind: op.k, solids: p.sol.slice(), prop: p, open: false, id: Z.doors.length });
+          put('gframe', px, py, ang, { w, th, ob: ob || -1, kind: op.k === 'debris' && o.hull ? 'breach' : 'door', carved: op.carved, hh, lift });
+        } else if (op.k === 'win') {
+          if (o.rail) { put('block', px, py, ang, { w: w + 0.04, d: th, hh: 0.45, col: lc, lift }); put('gframe', px, py, ang, { w, th, ob, kind: 'rail', hh, lift }); }
+          else { block(1.0); if (hh > 2.4) block(hh, 2.35); put('gframe', px, py, ang, { w, th, ob, kind: op.gal ? 'gal' : 'port', hh, lift }); }
+          Z.windows.push({ x: wx, y: wy, nx, ny, zone: op.z, z: lift || undefined, boards: 6, id: Z.windows.length, q: [], hw: w / 2, th: th / 2, shore: op.shore || undefined, tw: w < 1.5 || undefined });
+        } else if (op.k === 'glass') {
+          block(1.0); if (hh > 2.4) block(hh, 2.35);
+          put('glasspane', px, py, ang, { w, z0: lift + 1.0, z1: lift + 2.35 });
+          (Z.glassQ = Z.glassQ || []).push({ x: wx, y: wy, ang, w: w + 0.02, z0: lift + 1.0, z1: lift + 2.35, frame: true, flat: true });
+          put('gframe', px, py, ang, { w, th, ob: ob || -1, kind: 'glass', hh, lift });
+        }
+      }
+      // the lengths of wall between the openings (each end run on by half its thickness, so corners close)
+      const cuts = [-th / 2]; for (const [a, b] of gaps.sort((p, q) => p[0] - q[0])) cuts.push(a, b); cuts.push(L + th / 2);
+      for (let i = 0; i < cuts.length; i += 2) {
+        const a = cuts[i], b = cuts[i + 1], len = b - a; if (len < 0.3) continue;
+        const m = (a + b) / 2; put('gwall', x0 + ux * m, y0 + uy * m, ang, { len, th, hh, lift, f, mat: 'wood' });
+      }
+    };
+    // a run of her side along a list of points (each length a gw), its openings by which length they're in
+    const side = (pts, o, opens) => { for (let i = 0; i < pts.length - 1; i++) gw(...pts[i], ...pts[i + 1], o, (opens || []).filter(q => (q.seg || 0) === i)); };
+    const deckRect = (x0, x1, y0, y1, top, hb) => put('gdeck', (x0 + x1) / 2, (y0 + y1) / 2, 0, { w: x1 - x0, d: y1 - y0, top, hb, cx: (x0 + x1) / 2, cy: (y0 + y1) / 2 });
+    // a deck over [x0, x1] x [y0, y1] with a hole in it (h: [x0, x1, y0, y1], or none)
+    const deck = (x0, x1, y0, y1, top, hb, h) => {
+      if (!h) return deckRect(x0, x1, y0, y1, top, hb);
+      deckRect(x0, x1, y0, h[2], top, hb); deckRect(x0, x1, h[3], y1, top, hb); deckRect(x0, h[0], h[2], h[3], top, hb); deckRect(h[1], x1, h[2], h[3], top, hb);
+    };
+    // a companion stair: from (x, y) along x (dir +1 or -1), w wide, up from base one deck; its gate on the third
+    // tread; unseen panes along its sides as far as a jump reaches (as Wrackhaven's); the hole it comes up through
+    const stair = (x, y, dir, w, base, cost, zones) => {
+      for (let n = 1; n <= 16; n++) put('gstep', x + dir * (n - 0.5) * TD, y, Math.PI / 2, { w, d: TD, hh: n * RS, lift: base || undefined });
+      put('gstairs', x, y, dir > 0 ? 0 : Math.PI, { len: 16 * TD, rise: DK, w, lift: base || undefined });
+      for (let n = 1; n <= 10; n++) for (const s of [-1, 1]) put('glasspane', x + dir * (n - 0.5) * TD, y + s * (w / 2 + 0.05), 0, { w: TD + 0.02, z0: base, z1: base + n * RS + 1.7 });
+      const gx = x + dir * 3 * TD, h = base + 3 * RS, p = put('zdoor', gx, y, Math.PI / 2, { w: w + 0.1, d: 0.16, hh: 2.6, lift: h - 0.3 }), [wx, wy] = W(gx, y);
+      Z.doors.push({ x: wx, y: wy, z: h, ang: Math.PI / 2, w, cost, zones, kind: 'gate', solids: p.sol.slice(), prop: p, open: false, id: Z.doors.length });
+      return [Math.min(x, x + dir * 16 * TD) - 0.1, Math.max(x, x + dir * 16 * TD) + 0.1, y - w / 2 - 0.1, y + w / 2 + 0.1];
+    };
+    const HULL = (lift, extra) => Object.assign({ hull: true, lift }, extra || {}), RAIL = lift => ({ rail: true, lift, hh: 1.3 });
+    // ================= the Orlop (the ground): the hold and its stores =================
+    side([[-44, -8.5], [-30, -11], [22, -11], [34, -8], [40, -4]], HULL(F0), [
+      { seg: 1, k: 'win', at: -22, z: 'bread', shore: true }, { seg: 1, k: 'win', at: -9, z: 'hold', shore: true }, { seg: 1, k: 'debris', at: 0, w: 2.6, cost: 750, z: ['strand', 'hold'] }, { seg: 1, k: 'win', at: 13, z: 'hold', shore: true },
+      { seg: 2, k: 'win', t: 0.5, z: 'cable', shore: true }]);
+    side([[-44, 8.5], [-30, 11], [22, 11], [34, 8], [40, 4]], HULL(F0), [
+      { seg: 1, k: 'win', at: -20, z: 'powder' }, { seg: 1, k: 'win', at: -6, z: 'hold' }, { seg: 1, k: 'win', at: 12, z: 'hold' }, { seg: 2, k: 'win', t: 0.5, z: 'cable' }]);
+    gw(-44, -8.5, -44, 8.5, HULL(F0)); gw(40, -4, 40, 4, HULL(F0));
+    gw(-30, -11, -30, 11, { lift: F0 }, [{ k: 'debris', at: 4.5, cost: 1250, z: ['powder', 'strong'] }]);
+    gw(-14, -11, -14, 11, { lift: F0 }, [{ k: 'door', at: -5.5, cost: 1000, z: ['hold', 'bread'] }]);
+    gw(-30, 0, -14, 0, { lift: F0 }, [{ k: 'door', at: -22, cost: 750, z: ['bread', 'powder'] }]);
+    gw(22, -11, 22, 11, { lift: F0 }, [{ k: 'door', at: -3, cost: 1000, z: ['hold', 'cable'] }]);
+    // ================= the Gun Deck =================
+    const S1 = stair(8, 3.55, 1, 2.0, F0, 1000, ['hold', 'gundeck']);
+    side([[-44, -8.5], [-30, -11], [22, -11], [34, -8], [40, -4]], HULL(F1), [
+      { seg: 1, k: 'win', at: -24, z: 'gunroom' }, { seg: 1, k: 'gun', at: -18 }, { seg: 1, k: 'gun', at: -11 }, { seg: 1, k: 'win', at: -5.5, z: 'gundeck' }, { seg: 1, k: 'gun', at: 0 },
+      { seg: 1, k: 'win', at: 5.5, z: 'gundeck' }, { seg: 1, k: 'gun', at: 11 }, { seg: 1, k: 'win', at: 16.5, z: 'gundeck' }, { seg: 2, k: 'win', t: 0.5, z: 'sick' }]);
+    side([[-44, 8.5], [-30, 11], [22, 11], [34, 8], [40, 4]], HULL(F1), [
+      { seg: 1, k: 'gun', at: -26.5 }, { seg: 1, k: 'win', at: -17.5, z: 'gunroom' }, { seg: 1, k: 'win', at: -11, z: 'gundeck' }, { seg: 1, k: 'gun', at: -5.5 }, { seg: 1, k: 'win', at: 0, z: 'gundeck' },
+      { seg: 1, k: 'gun', at: 5.5 }, { seg: 1, k: 'win', at: 11, z: 'gundeck' }, { seg: 1, k: 'gun', at: 16.5, bare: true }, { seg: 2, k: 'win', t: 0.5, z: 'sick' }]);
+    gw(-44, -8.5, -44, 8.5, HULL(F1, { in: 'plank' }), [{ k: 'win', at: -4, z: 'chapel', gal: true }, { k: 'win', at: 4, z: 'chapel', gal: true }]);
+    gw(40, -4, 40, 4, HULL(F1));
+    gw(-30, -11, -30, 11, { lift: F1 }, [{ k: 'door', at: 0, cost: 750, z: ['gunroom', 'chapel'] }]);
+    gw(-14, -11, -14, 11, { lift: F1 }, [{ k: 'door', at: -4, cost: 1000, z: ['gundeck', 'gunroom'] }]);
+    gw(22, -11, 22, 11, { lift: F1 }, [{ k: 'door', at: 2, cost: 1000, z: ['gundeck', 'sick'] }]);
+    deck(-44, 22, -11, 11, F1, 'lo', S1); deck(22, 34, -11, 11, F1, 'lo'); deck(34, 40, -8, 8, F1, 'lo');
+    // ================= the Upper Deck: the Waist, the Steerage and the Great Cabin aft, the Forecastle =================
+    const S2 = stair(0, -3.0, 1, 3.0, F1, 1250, ['gundeck', 'waist']);
+    side([[-44, -11], [-14, -11]], HULL(F2, { in: 'pan' }), [{ k: 'glass', at: -38.5 }, { k: 'win', at: -21, z: 'steer' }]);
+    side([[-44, 11], [-14, 11]], HULL(F2, { in: 'pan' }), [{ k: 'glass', at: -38.5 }, { k: 'win', at: -21, z: 'steer' }]);
+    gw(-14, -11, 22, -11, RAIL(F2), [{ k: 'win', at: -8, z: 'waist' }, { k: 'win', at: 3, z: 'waist' }, { k: 'win', at: 15, z: 'waist' }]);
+    gw(-14, 11, 22, 11, RAIL(F2), [{ k: 'win', at: -2, z: 'waist' }, { k: 'win', at: 14, z: 'waist' }]);
+    side([[22, -11], [36, -8.5], [42, -4]], HULL(F2, { in: 'plank' }), [{ seg: 0, k: 'win', t: 0.55, z: 'fcastle' }]);
+    side([[22, 11], [36, 8.5], [42, 4]], HULL(F2, { in: 'plank' }), [{ seg: 0, k: 'win', t: 0.55, z: 'fcastle' }]);
+    gw(42, -4, 42, 4, HULL(F2, { in: 'plank' }));
+    gw(-44, -11, -44, 11, HULL(F2, { in: 'pan' }), [{ k: 'win', at: -7.5, z: 'cabin', gal: true }, { k: 'glass', at: -3.6 }, { k: 'glass', at: 0 }, { k: 'glass', at: 3.6 }, { k: 'win', at: 7.5, z: 'cabin', gal: true }]);
+    gw(-14, -11, -14, 11, { lift: F2, f: ['plank', 'pan'] }, [{ k: 'door', at: 3, cost: 1000, z: ['waist', 'steer'], carved: true }]);
+    gw(-28, -11, -28, 11, { lift: F2, f: ['pan', 'pan'] }, [{ k: 'door', at: 0, cost: 1250, z: ['steer', 'cabin'], carved: true }]);
+    gw(22, -11, 22, 11, { lift: F2 }, [{ k: 'door', at: -3, cost: 1000, z: ['waist', 'fcastle'], carved: true }]);
+    deck(-44, 22, -11, 11, F2, 'up', S2); deck(22, 36, -11, 11, F2, 'up'); deck(36, 42, -8.5, 8.5, F2, 'up');
+    // ================= the Quarterdeck and the Forecastle Deck =================
+    const S4 = stair(-30.5, 8.0, -1, 2.0, F2, 1500, ['cabin', 'qdeck']), S3 = stair(26, 6.0, 1, 2.0, F2, 1250, ['fcastle', 'fcdeck']);
+    const QR = { rail: true, lift: F3, hh: 1.25 };
+    gw(-46, -11, -14, -11, QR, [{ k: 'win', at: -24, z: 'qdeck' }]); gw(-46, 11, -14, 11, QR, [{ k: 'win', at: -33, z: 'qdeck' }]);
+    gw(-46, -11, -46, 11, QR); gw(-14, -11, -14, 11, { lift: F3, hh: 1.15, f: ['raili', 'raili'] });
+    side([[22, -11], [36, -8.5], [42, -4]], QR, [{ seg: 0, k: 'win', t: 0.6, z: 'fcdeck' }]); side([[22, 11], [36, 8.5], [42, 4]], QR, [{ seg: 0, k: 'win', t: 0.4, z: 'fcdeck' }]);
+    gw(42, -4, 42, 4, QR); gw(22, -11, 22, 11, { lift: F3, hh: 1.15, f: ['raili', 'raili'] });
+    deck(-46, -14, -11, 11, F3, 'q', S4); deck(22, 36, -11, 11, F3, 'up', S3); deck(36, 42, -8.5, 8.5, F3, 'up');
+    // ---- the masts, and the stays between them; her outside
+    const MASTS = [
+      { x: -24, r: 0.55, h: 27, h2: 34, decks: [F1, F2, F3], yards: [], lateen: [-8, 17, 7, 31], chan: [-26.5, -22, F3 + 0.6, 12.0] },
+      { x: -4, r: 0.85, h: 36, h2: 52, decks: [F1, F2], yards: [[33.5, 30, 0.7, 17], [47, 21, 0.55, 37]], chan: [-7, -1, F2 + 1.6, 12.2] },
+      { x: 15, r: 0.75, h: 32, h2: 46, decks: [F1, F2], yards: [[29.5, 26, 0.4, 17], [42, 18, 0.6, 33]], chan: [12.5, 17.5, F2 + 1.6, 12.2] },
+    ];
+    for (const m of MASTS) put('gmast', m.x, 0, 0, m);
+    put('gship', 0, 0, 0, { mt: MASTS.map(m => [m.x, m.h, m.h2]) });
+    // the three great stern lanterns over the taffrail, their lights
+    for (const [y, s, z] of [[-6, 1.0, 16.2], [0, 1.35, 17.6], [6, 1.0, 16.2]]) { put('glantern', -47.3, y, 0, { s, z }); light(-47.3, y, z, '#ffc870', 16, 'lantern'); }
+    // ---- the Strand: the shingle under her side, the sea, the boat that brought you
+    {
+      Z.bay = true; Z.decks = [];
+      put('seaguard', 0, -40.3, 0, { w: 124, d: 31.8 });
+      const seaWin = (x, y) => { const [wx, wy] = W(x, y); Z.windows.push({ x: wx, y: wy, nx: 0, ny: -1, zone: 'strand', z: 0, boards: 0, sea: true, id: Z.windows.length, q: [], hw: 0.9, th: 0.1 }); };
+      for (const x of [-38, -22, -7, 9, 24, 38]) seaWin(x, -24);
+      put('rowboat', 3.5, -25.6, 0.25, { paint: '#3a3a2c', rope: 0.4 });
+      buy('pepperbox', 250, -5, -11.55, 0, -1);
+      for (const [x, y] of [[-14, -14], [14, -14.5], [-32, -15.5], [30, -16]]) fpiLanternPost(H, OX + x, OY + y, x < 0 ? 0 : Math.PI);
+      put('anchor', -18, -19.5, 0.6, {}); put('anchor', 34.5, -20, 2.2, {});
+      for (const [x, y, a] of [[-27, -21, 0.4], [19, -21.5, -0.3], [44, -14, 1.2]]) put('log', x, y, a, { len: 4 + Math.abs(x) % 3, rad: 0.25 });
+      put('barrels', -12.8, -18, 0, { items: [{ u: 0, v: 0, r: 0.4, hh: 1.0, lie: true, ry: 0.5 }, { u: 0.9, v: 0.5, r: 0.38, hh: 0.95 }] });
+      put('gcable', 7.5, -15, 0, { r: 0.9 });
+      for (const [x, y, w, hh, gl] of [[-48, -19, 2.6, 1.6, 1], [48, -17, 2.8, 2.0, 0], [-40, -27.5, 2.0, 1.2, 1], [42, -26, 2.4, 1.4, 0], [10, -31, 1.8, 0.9, 1]]) put('gullrock', x, y, w * 1.7, { w, d: w * 0.8, hh, gull: !!gl });
+    }
+    // the rocks on her port side, where they come round to her
+    { const rr = seeded(0x5e1a);
+      for (let i = 0; i < 26; i++) { const x = -54 + rr() * 108, y = 16 + rr() * 12; if (Math.hypot(x, y) > FPSC.R - 6) continue; put('stone', x, y, rr() * 6.28, { w: 1.0 + rr() * 1.6, d: 0.8 + rr(), hh: 0.6 + rr() * 1.8, lean: (rr() - 0.5) * 0.4 }); }
+      for (let i = 0; i < 18; i++) { const a = rr() * 6.28, d = 56 + rr() * 22, x = Math.cos(a) * d, y = Math.sin(a) * d * 0.9; if (Math.hypot(x, y) < FPSC.R - 6 && y > ZM_SHORE(x) + 2) put('stone', x, y, rr() * 6.28, { w: 1.5 + rr() * 2, d: 1 + rr(), hh: 1 + rr() * 2.5, lean: (rr() - 0.5) * 0.3 }); }
+    }
+    // ================= the rooms =================
+    const L1 = F1 - 0.75, L2 = F2 - 0.75, L3 = F3 - 0.75;   // (where a lamp hangs from, under each deck's beams)
+    // ---- the Main Hold: ballast, casks, the pumps by the mainmast's foot, sea water in the bilge
+    put('gpump', -4, 2.0, 0, {}); put('gballast', -10, -6, 0, { r: 1.6 }); put('gballast', 4, 6.8, 0, { r: 1.4 }); put('gballast', 18.5, -7.5, 0, { r: 1.2 });
+    put('gpool', -1, -6.8, 0.2, { w: 5, d: 2.6 }); put('gpool', 10, -2, 0, { w: 3.5, d: 2 }); put('gpool', 17, 6, 0, { w: 2.4, d: 1.6 });
+    put('barrels', -11.5, 8.5, 0, { items: [{ u: 0, v: 0, r: 0.5, hh: 1.2 }, { u: 1.05, v: 0.1, r: 0.5, hh: 1.2 }, { u: 0.5, v: -0.85, r: 0.5, hh: 1.2 }, { u: 2.3, v: -0.3, r: 0.5, hh: 1.3, lie: true, ry: 0.3 }] });
+    put('barrels', 19.5, 9.5, 0, { items: [{ u: 0, v: 0, r: 0.5, hh: 1.2 }, { u: -1.05, v: 0, r: 0.5, hh: 1.2 }] });
+    put('crates', 5, -9.3, 0.1, { items: [{ u: 0, v: 0, s: 1.0, h0: 0, ry: 0.1 }, { u: 1.1, v: 0, s: 0.9, h0: 0, ry: -0.1 }, { u: 0.5, v: 0, s: 0.8, h0: 1.0, ry: 0.3 }] });
+    put('gweed', 2, 0, 0, { w: 30, d: 18, z: L1 + 0.4, n: 50 });
+    put('sacks', 14.5, -9.6, 0.1, { c: '#4a4a36' });
+    lamp(-8, 0, 2.7, '#ffb860', L1); lamp(5, -4, 2.7, '#ffb860', L1); lamp(17, 1, 2.7, '#ffb860', L1); lamp(-1, 7, 2.7, '#ffb860', L1);
+    buy('cutlass', 750, -13.7, 1, 1, 0); buy('longarm', 500, 4, 10.7, 0, -1);
+    perk('wind', -13.3, 6.5, Math.PI / 2);
+    spot(-9.5, 10.3, 0, -1, 0, 'hold');
+    // ---- the Bread Room, the Powder Room and the light room's window, the Strong Room and the pay chest
+    put('gsacks', -26, -1.3, 0, { w: 7 }); put('gbins', -24.9, -10.25, 0, { w: 2.6 }); put('gbins', -18.2, -10.25, 0, { w: 3.0 }); put('barrels', -16, -8.5, 0, { items: [{ u: 0, v: 0, r: 0.45, hh: 1.1 }, { u: 0, v: -1, r: 0.45, hh: 1.1 }] });
+    lamp(-22, -5.5, 2.7, '#ffb860', L1);
+    buy('harpoon', 1000, -29.7, -5.5, 1, 0);
+    spot(-27, -10.3, 0, 1, 0, 'bread');
+    put('gkegs', -25.2, 10.2, 0, { w: 4 }); put('gkegs', -29.2, 7.8, Math.PI / 2, { w: 3 }); put('glightbox', -14.25, 6, -Math.PI / 2, {}); light(-13.6, 6, 2.0, '#ffc070', 8, 'lantern');
+    perk('quick', -17.5, 0.7, Math.PI);
+    put('ggrille', -37, 0, Math.PI / 2, { w: 15, hh: 3.75, gate: 3.5 });
+    put('gpaychest', -40.5, 0, -Math.PI / 2, {}); put('gchest', -41.5, -4.5, Math.PI / 2, { c: '#3a2a1e' }); put('gchest', -41.5, 4, Math.PI / 2, { c: '#3a2a1e' });
+    lamp(-40, 0, 2.6, '#ffc070', L1); lamp(-33, -4, 2.7, '#ffb860', L1);
+    spot(-30.75, -6, -1, 0, 0, 'strong');
+    // ---- the Cable Tier: the coils, the riding bitts
+    put('gcable', 27, -5, 0, { r: 1.6 }); put('gcable', 27.5, 5, 0, { r: 1.5 }); put('gcable', 34.5, 0, 0, { r: 1.3 }); put('gbitts', 31, 0, Math.PI / 2, {});
+    lamp(30, -2, 2.6, '#ffb860', L1);
+    buy('harpoon', 1000, 22.3, 6, 1, 0);
+    // ---- the Gun Deck: the guns at their ports (laid by gw), hammocks, shot, mess tables
+    for (const x of [-9, -3, 3, 15, 20]) for (const y of [-6, 6]) if (!(y > 0 && x > 6 && x < 19)) put('ghammock', x, y, Math.PI / 2, { z: 3.0, lo: 0.5, lift: F1 });
+    for (const [x, y] of [[-9, -8.2], [3, 8.2], [-3, 8.2]]) put('gmess', x, y, 0, { w: 2.4, top: 3.4, lift: F1 });
+    for (const [x, y] of [[-12, -1], [20, -8.5], [-12.5, 8]]) put('gchest', x, y, Math.PI / 2, { lift: F1 });
+    lamp(-7, -4, F1 + 2.8, '#ffb860', L2); lamp(5, 3, F1 + 2.8, '#ffb860', L2); lamp(16, -3, F1 + 2.8, '#ffb860', L2); lamp(-7, 5, F1 + 2.8, '#ffb860', L2);
+    buy('blunderbuss', 500, -13.7, 5.5, 1, 0, F1);
+    perk('stout', 21.3, -7, -Math.PI / 2, F1);
+    // ---- the Gunroom: the officers' table, the Lampwright's Bench
+    put('gmess', -23, -2, 0, { w: 4.2, top: 3.4, lift: F1 }); for (const [x, y, a] of [[-24.5, -3, 0], [-21.5, -3, 0], [-24.5, -1, Math.PI], [-21.5, -1, Math.PI]]) put('gchair', x, y, a, { lift: F1 });
+    put('gchest', -29, -8, Math.PI / 2, { lift: F1 }); put('shelf', -15, -9, -Math.PI / 2, { w: 2.2, goods: 'jars', lift: F1 });
+    lamp(-23, -2, F1 + 2.8, '#ffc070', L2); lamp(-18, 5, F1 + 2.8, '#ffb860', L2);
+    if (typeof zmpPlace === 'function') zmpPlace(put, light, W, Z, { x: -22, y: 10.25, z: F1, nx: 0, ny: -1, zone: 'gunroom' });   // [pap] in the Gunroom
+    // ---- the Chaplain's Berth: the altar between the gallery windows, the organ, benches
+    put('galtar', -42.5, 0, Math.PI / 2, { lift: F1 }); put('rug', -37, 0, Math.PI / 2, { w: 9, d: 2.2, c: '#5a2a24', lift: F1 });
+    put('gorgan', -33, 6.8, Math.PI, { lift: F1 }); for (const x of [-38, -35.5, -33]) for (const s of [-1, 1]) put('bench', x, s * 3, Math.PI / 2, { w: 2.6, lift: F1 });
+    put('picture', -30.3, -5, -Math.PI / 2, { z: 1.7, w: 1.2, h: 1.6, c: '#8a6a40', lift: F1 });
+    lamp(-41, 0, F1 + 2.9, '#ffd890', L2); lamp(-35, 0, F1 + 2.8, '#ffc070', L2); light(-42.0, 0, F1 + 1.6, '#ffd890', 5, 'lantern');
+    // ---- the Surgeon's Cockpit
+    put('gsurg', 29, 0, 0, { lift: F1 }); put('gcot', 26, -6.5, 0, { z: 1.3, top: 3.6, lift: F1 }); put('gcot', 26, 6.6, 0, { z: 1.3, top: 3.6, lift: F1 }); put('gcot', 33.5, -4.8, 0.5, { z: 1.4, top: 3.6, lift: F1 });
+    put('shelf', 22.55, -4.3, Math.PI / 2, { w: 2.2, goods: 'jars', lift: F1 });
+    lamp(29, 0, F1 + 2.4, '#ffd890', L2); lamp(34, 2, F1 + 2.8, '#ffb860', L2);
+    spot(22.75, 6.5, 1, 0, F1, 'sick');
+    // ---- the Waist: the masts, the capstan, the boats, the gratings, the pin rails
+    put('gcapstan', -10, 2.5, 0, { lift: F2 }); put('gboatc', 6.5, 6.2, 0, { len: 7, beam: 2.3, lift: F2 }); put('gboatc', 19.6, -6.4, 0.04, { len: 4.5, beam: 1.6, paint: '#2e3a2e', lift: F2 });
+    put('ggrate', -9.5, -5.5, 0, { w: 3, d: 2.4, lift: F2 }); put('ggrate', 11.5, -3.5, 0, { w: 2.4, d: 2.4, lift: F2 });
+    for (const [x, y, a] of [[-10, -10.75, 0], [10, -10.75, 0], [-7, 10.75, Math.PI], [7, 10.75, Math.PI]]) put('gpins', x, y, a, { w: 3.5, lift: F2 });
+    put('gcable', 17.5, 3.5, 0, { r: 0.8, lift: F2 }); put('barrels', -12.5, -9.2, 0, { items: [{ u: 0, v: 0, r: 0.4, hh: 1.0 }, { u: 0.85, v: 0, r: 0.4, hh: 1.0 }], lift: F2 });
+    light(-13, -8.6, F2 + 2.2, '#ffc070', 10, 'lantern'); put('wlamp', -13, -10.7, Math.PI, { z: 2.0, lift: F2 });
+    light(2, -8, F2 + 2.2, '#ffc070', 10, 'lantern'); put('wlamp', 2, -10.7, Math.PI, { z: 2.0, lift: F2 }); light(-2, 9.2, F2 + 2.2, '#ffc070', 10, 'lantern'); put('wlamp', -2, 10.6, 0, { z: 2.0, lift: F2 });
+    buy('avtomat', 1200, -13.7, -6, 1, 0, F2);
+    perk('fleet', 21.3, 6.5, -Math.PI / 2, F2);
+    spot(18, -10.3, 0, 1, F2, 'waist');
+    // ---- the Steerage: the whipstaff, the binnacle, the glasses
+    put('gwhip', -19, 0, 0, { lift: F2 }); put('gbinn', -16.5, 0, Math.PI / 2, { lift: F2 }); put('ghour', -14.3, -5, -Math.PI / 2, { lift: F2 });
+    put('table', -25, -8, 0, { w: 2.2, d: 1.0, lift: F2 }); put('gchair', -25, -7, Math.PI, { lift: F2 }); put('picture', -25, -10.7, 0, { z: 1.8, w: 1.6, h: 1.0, c: '#b8a878', sea: true, lift: F2 });
+    lamp(-20, -4, F2 + 2.9, '#ffc070', L3); lamp(-21, 5, F2 + 2.9, '#ffc070', L3);
+    buy('longarm', 500, -27.7, 6, -1, 0, F2);
+    // ---- the Great Cabin: the captain's table, the chairs, the stern windows
+    put('gctable', -37, -2, 0, { w: 4.6, d: 1.6, lift: F2 }); put('rug', -37, -2, 0, { w: 7, d: 4.4, c: '#4a2030', lift: F2 });
+    put('gchair', -40, -2, -Math.PI / 2, { tall: true, lift: F2 }); for (const x of [-38, -36, -34]) { put('gchair', x, -3.3, 0, { lift: F2 }); put('gchair', x, -0.7, Math.PI, { lift: F2 }); }
+    put('globe', -42.5, -9.2, 0, { lift: F2 }); put('gchest', -30, -9.8, 0, { c: '#4a2a1e', lift: F2 }); put('shelf', -33, -10.4, 0, { w: 2.4, goods: 'books', lift: F2 });
+    lamp(-37, -2, F2 + 2.9, '#ffd890', L3); lamp(-33, 4, F2 + 2.9, '#ffc070', L3); lamp(-42, 6, F2 + 2.9, '#ffc070', L3);
+    // ---- the Forecastle: the crew's mess, hammocks, the galley hearth
+    put('ghearth', 37.2, -3.6, Math.PI / 2, { top: 4.4, lift: F2 }); light(36.0, -3.6, F2 + 0.6, '#ff8a30', 8, 'fire');
+    put('gmess', 28, -5, 0, { w: 3, top: 3.5, lift: F2 }); put('bench', 28, -6, 0, { w: 2.8, lift: F2 }); put('bench', 28, -4, 0, { w: 2.8, lift: F2 });
+    for (const [x, y] of [[25, -2], [31, -2.2], [33, -6.5]]) put('ghammock', x, y, 0, { z: 3.0, lo: 0.5, lift: F2 });
+    put('barrels', 38.8, 2.2, 0, { items: [{ u: 0, v: 0, r: 0.45, hh: 1.1 }], lift: F2 }); put('gchest', 24.5, -9.0, 0.3, { lift: F2 });
+    put('log', 39, 0, 0, { len: 3.2, rad: 0.5, lift: F2 + 3.2 });
+    lamp(28, -3, F2 + 2.8, '#ffb860', L3); lamp(34, 3, F2 + 2.8, '#ffb860', L3);
+    buy('blunderbuss', 500, 22.3, 2.5, 1, 0, F2);
+    perk('grog', 22.7, -7.2, Math.PI / 2, F2);
+    // ---- the Quarterdeck: the mizzen, the wheel-house, the stern lanterns (above), a chest high up
+    put('gwheelh', -18.5, 0, Math.PI / 2, { lift: F3 }); light(-17.7, 0, F3 + 1.6, '#ffc070', 7, 'lantern');
+    put('ggrate', -28, -5, 0, { w: 3, d: 2, lift: F3 }); for (const [x, y, a] of [[-35, -10.75, 0], [-22, 10.75, Math.PI]]) put('gpins', x, y, a, { w: 3.5, lift: F3 });
+    for (const [x, y, a] of [[-42, -8.5, Math.PI], [-42, 8.5, 0]]) put('ggun', x, y, a + Math.PI / 2, { lift: F3, raise: 0.1, bare: true });
+    put('wlamp', -30, -10.7, Math.PI, { z: 1.6, lift: F3 }); light(-30, -10.3, F3 + 1.7, '#ffc070', 9, 'lantern');
+    spot(-20, -10.3, 0, 1, F3, 'qdeck');
+    // ---- the Forecastle Deck: the belfry and the ship's bell, the bow chasers
+    put('gbelfry', 24.5, 0, 0, { lift: F3 }); put('wlamp', 24.5, 0.4, 0, { z: 2.2, lift: F3 }); light(24.5, 0.8, F3 + 2.2, '#ffc070', 9, 'lantern');
+    for (const y of [-2.2, 2.2]) put('ggun', 39.5, y, -Math.PI / 2, { lift: F3, raise: 0.35, bare: true });
+    put('gcable', 32, -5.5, 0, { r: 0.8, lift: F3 });
+    // ---- the hole round each stair's head: a rail on the deck above (only to look at)
+    for (const [h, top] of [[S1, F1], [S2, F2], [S3, F3], [S4, F3]]) {
+      const [x0, x1, y0, y1] = h;
+      for (const y of [y0, y1]) put('vbanister', x0, y, -Math.PI / 2, { len: x1 - x0, rise: 0, base: top });
+    }
+    // ---- out of bounds for you (the drowned walk and climb where they like): her far side, round her ends, out
+    // over her rails on the upper decks, and the sea; the Strand is yours, between her and the water
+    Z.keep = [[-99, 99, 11.3, 99, -99, 999], [-99, -46.3, -99, 99, -99, 999], [44.3, 99, -99, 99, -99, 999], [-99, 99, -99, -11.3, 2.5, 999],
+      [40.3, 44.3, -11.25, 99, -99, 8], [-99, -44.3, -11.25, 99, -99, 8], [-99, -50, -99, 99, -99, 999], [50, 99, -99, 99, -99, 999]]
+      .map(([x0, x1, y0, y1, z0, z1]) => ({ b: [OX + x0, OX + x1, OY + y0, OY + y1], z0, z1 }));
+    Z.glass = (Z.glassQ || []).slice();
+  },
+  decor(H) {
+    const { I } = H, OX = FPSC.CX, OY = FPSC.CY, rr = seeded(0x7e1d);
+    // shingle on the Strand, wrack along the tideline, stones round her on the far side
+    for (let i = 0; i < 420; i++) {
+      const x = (rr() - 0.5) * 100, y = -11.6 - rr() * 13; if (y < ZM_SHORE(x) + 0.3) continue;
+      H.decor('pebble', OX + x, OY + y, { s: 0.08 + rr() * 0.22 });
+    }
+    for (let i = 0; i < 90; i++) { const x = (rr() - 0.5) * 100, y = ZM_SHORE(x) + 0.4 + rr() * 1.8; H.decor('wrack', OX + x, OY + y, { s: 0.5 + rr(), ang: rr() * 0.6 - 0.3 }); }
+    for (let i = 0; i < 160; i++) { const x = (rr() - 0.5) * 110, y = 12 + rr() * 30; if (Math.hypot(x, y) > FPSC.R - 4) continue; H.decor(rr() < 0.7 ? 'pebble' : 'wetstone', OX + x, OY + y, { s: 0.15 + rr() * 0.4 }); }
+  },
+};
 
 // ---- src/zmpap.js ----
 // The Lighthouse: the Lampwright's Bench. A brass-and-glass bench up the tower where the keepers once ground and
@@ -28963,7 +29953,7 @@ ZM_BOXW.push(['duckfoot', 10], ['bomblance', 6], ['grapnel', 8], ['flaregun', 8]
 // (what each becomes at the Lampwright's Bench: ZM_PAP_W, in src/zmpap.js)
 const ZX_ID = { d: 'duckfoot', w: 'bomblance', g: 'grapnel', s: 'flaregun', x: 'axe', u: 'puntgun', n: 'netmortar', y: 'chainshot' };
 const ZX = { proj: [], pools: [], nets: [], booms: [], burn: [], later: [], shove: null, axeOut: false, n: 0 };
-function zxReset() { ZX.proj = []; ZX.pools = []; ZX.nets = []; ZX.booms = []; ZX.burn = []; ZX.later = []; ZX.shove = null; ZX.axeOut = false; if (typeof zrReset === 'function') zrReset(); }   // [crab] src/zmcrab.js
+function zxReset() { ZX.proj = []; ZX.pools = []; ZX.nets = []; ZX.booms = []; ZX.burn = []; ZX.later = []; ZX.shove = null; ZX.axeOut = false; if (typeof zrReset === 'function') zrReset(); if (typeof zlReset === 'function') zlReset(); }   // [crab] src/zmcrab.js [elmo] src/zmelmo.js
 const zxT = id => (typeof zmpTier === 'function' ? zmpTier(id) : 0);
 const zxG = o => FPSC.GROUND + (o.jz || 0);
 const zxHp = () => zmHp(Math.max(1, ZM.round));
@@ -28980,6 +29970,7 @@ function zxShot(sh, mine) {
   else if (code === 'd') zxVolley(x, y, z, h, p, by, mine, t);
   else if (code === 'u') zxPunt(x, y, z, h, p, by, seed, mine, t);
   else if (code === 'r') zrShot(x, y, z, h, p, by, mine, t);   // [crab] the Hermit's Claw (src/zmcrab.js)
+  else if (code === 'e') zlShot(x, y, z, h, p, by, mine, t);   // [elmo] the Corposant (src/zmelmo.js)
   else zxLaunch(code, x, y, z, h, p, by, mine, t);
   return true;
 }
@@ -28989,6 +29980,7 @@ function zxShotFx(r, code, x, y, z, h, p, d, pan) {
   sndFrom(fpsDir(pan), () => zxSound(code, d));   // (from where they stand: src/audio.js)
   if (code === 'x') { r.slashT = 0.3; return true; }
   if (code === 'r') { zrShot(x, y, z, h, p, r.id, false, 0); return true; }   // [crab]
+  if (code === 'e') { zlShot(x, y, z, h, p, r.id, false, r.rf | 0); return true; }   // [elmo] (as big as theirs is reforged, only to look at)
   if (code === 'd' || code === 'u') {
     const n = code === 'd' ? FPSW.duckfoot.fan : 6;
     for (let i = 0; i < n; i++) {
@@ -29147,6 +30139,7 @@ function zxTick(dt) {
   if (ZX.axeOut && FPS.weapon === 'axe') m.cd = Math.max(m.cd, 0.05);
   zxPools(dt); zxNets(dt);
   if (typeof zrTick === 'function') zrTick(dt);   // [crab]
+  if (typeof zlTick === 'function') zlTick(dt);   // [elmo]
   // set alight by a flare: they burn on a while
   for (const B of ZX.burn) {
     B.t -= dt; B.k -= dt;
@@ -29467,11 +30460,13 @@ const ZX3 = { grp: null, L: [] };
 function zx3d(dt) {
   if (!Z3.grp) return;
   if (typeof zr3d === 'function') zr3d(dt);   // [crab] the Hermit's Claw's crabs
+  if (typeof zl3d === 'function') zl3d(dt);   // [elmo] the Corposant's globes
   if (ZX3.grp !== Z3.grp) { ZX3.grp = Z3.grp; ZX3.L = []; for (let i = 0; i < 3; i++) { const L = new THREE.PointLight(0xff9a40, 0, 9, 1.6); Z3.grp.add(L); ZX3.L.push(L); } }
   const m = FPS.me, src = [], t = g.t;
   for (const F of ZX.pools) src.push([F.x, F.y, FPSC.GROUND + F.fz + 0.6, (F.small ? 1.0 : 1.8) * Math.min(1, F.t / 1.2) * (reduceMotion ? 1 : 0.85 + 0.15 * Math.sin(t * 19 + F.seed)), 0xff9a40, F.small ? 6 : 9]);
   for (const P of ZX.proj) if (P.k === 's' || P.k === 't') src.push([P.x, P.y, P.z, 1.6, 0xff6a3a, 8]);
   for (const b of ZX.booms) src.push([b.x, b.y, b.z, (b.star ? 3 : 5) * (1 - b.t / 0.55), b.star ? 0xffd0a0 : 0xffc070, b.R * 3.5]);
+  if (typeof zlLights === 'function') zlLights(src);   // [elmo] the Corposant's globes and bursts
   src.sort((a, b) => Math.hypot(a[0] - m.x, a[1] - m.y) - Math.hypot(b[0] - m.x, b[1] - m.y));
   ZX3.L.forEach((L, i) => {
     const s = src[i];
@@ -29483,6 +30478,7 @@ function zx3d(dt) {
 // ---------- painted over the view: what's flying, the fires, the nets, the blasts, the hauling lines ----------
 function zxDrawOver() {
   if (typeof zrDrawOver === 'function') zrDrawOver();   // [crab]
+  if (typeof zlDrawOver === 'function') zlDrawOver();   // [elmo]
   const tm = FPS.g ? FPS.g.t : 0, G0 = FPSC.GROUND;
   const line = (pts, col, lw) => { const p = polyProj(pts); if (p.length < 2) return; ctx.strokeStyle = col; ctx.lineWidth = lw; ctx.beginPath(); ctx.moveTo(p[0].x, p[0].y); for (const q of p.slice(1)) ctx.lineTo(q.x, q.y); ctx.stroke(); };
   const dot = (x, y, z, r, col, glow) => {
@@ -30112,6 +31108,7 @@ function zrShot(x, y, z, h, p, by, mine, t) {
   if (mine) {
     if (typeof zeShot === 'function') zeShot(x, y, z, h, p, by);   // [egg hook] src/zmegg.js
     if (typeof zhShot === 'function') zhShot(x, y, z, h, p, by);   // [egg2 hook] src/zmegg2.js
+    if (typeof zsShot === 'function') zsShot(x, y, z, h, p, by);   // [egg3 hook] src/zmegg3.js
     // the snap's burst of water: all of them in front, near, hurt and thrown back
     let any = false;
     for (const o of ZM.z) {
@@ -30423,6 +31420,373 @@ VM_ANIM.hermit = (w, S) => {
   w.trig.rotation.x = S.trigger ? 0.35 : 0;
 };
 const zrvV = (x, y, z) => new THREE.Vector3(x, y, z);
+
+// ---- src/zmelmo.js ----
+// The San Telmo: the Corposant, her chest's wonder weapon (only aboard her: ZM_MAPS noBox, src/zombies.js, keeps it
+// out of the Lighthouse's chest and Wrackhaven's, as theirs keep the Fresnel Lamp and the Hermit's Claw out of hers).
+// St Elmo's fire, the blue-white fire sailors saw burning on the mastheads and yardarms in a storm, the saint's sign
+// that the worst was past, caught in a navigator's brass armillary sphere and set on a pistol grip. The rings of the
+// sphere turn slowly about it, and the fire crackles inside. Each pull of the trigger:
+//  - a globe of the fire is thrown out of the sphere, straight ahead, and drifts on slowly (FPSW.corposant.pv metres
+//    a second) for a few seconds, or until it strikes a wall or the floor;
+//  - as it drifts it lashes arcs of blue lightning down into the drowned near it (ZLC.ARCS at a time, every
+//    ZLC.PULSE seconds, out to ZLC.REACH metres): each arc hurts the one it strikes and drags it in towards the globe;
+//  - and at the end it bursts in a flash that hurts everything round it.
+// Reforged at the Lampwright's Bench, the Saint's Crown: a bigger, brighter globe that lasts longer, more arcs and
+// quicker, a wider reach; and when it bursts it splits into smaller globes (2 + t, up to 6) that drift on outwards and
+// lash out again, each bursting in its turn.
+// The arcs and the bursts are a fixed fraction of a drowned man's strength that round (like the Fresnel Lamp's), so
+// it stays a wonder weapon as the rounds go up; a boss takes half of it, and is never dragged. On the Saint's Crown,
+// zmpK makes them hit harder still. The crabs of a crab round are arced and dragged like the drowned.
+// Together (src/zmnet.js): the globes are worked out on the thrower's screen; the arcs and the bursts go to the host
+// through zmHurt, and the dragging through zmpStatus ('kb'). The others see their own copy of the globe drifting the
+// same way and lashing at the drowned near it, only to look at.
+
+Object.assign(ZM_AMMO, { corposant: 20 });
+Object.assign(ZM_DMG, { e: 1 });
+ZM_BOXW.push(['corposant', 9]);
+ZX_ID.e = 'corposant';
+ZM_PAP_W.corposant = { n: "Saint's Crown", mag: 6, res: 36, k: 2, fx: 'A bigger, brighter globe with more arcs and a wider reach, that splits as it bursts into smaller globes that lash out again.' };
+VM_PLAIN.corposant = { metal: '#3a3630', dark: '#1a1714', wood: '#3e2818', brass: '#b8913e', accent: '#8ab8e8', glow: null };
+
+const ZLC = {
+  LIFE: 3.2, LIFE_T: 0.4,      // how long a globe drifts (and more each reforging, up to 1.2 s more)
+  REACH: 6, REACH_T: 0.75,     // how far its arcs reach (and more each reforging, up to 3 m more)
+  ARCS: 3,                     // arcs at a time: plain, and reforged (4 + t, up to 8)
+  PULSE: 0.3, PULSE_T: 0.24,   // how often it lashes out: plain, and reforged
+  ARC: 0.12,                   // each arc: that much of a drowned man's strength
+  DRAG: 0.7,                   // and it drags them this far in towards the globe
+  BURST: 0.5, BURST_R: 3,      // the burst at the end, and how far it reaches
+  BOSS: 0.5,                   // a boss takes this share of it all
+  SPLIT: [2, 6], SMALL: 1.6,   // the Saint's Crown's splitting (2 + t, up to 6), and how long the small ones drift
+  MAX: 24,                     // globes out at once
+};
+const ZL = { orbs: [], arcs: [], booms: [], n: 0 };
+function zlReset() { ZL.orbs = []; ZL.arcs = []; ZL.booms = []; if (ZL3.pool) for (const M of ZL3.pool) M.g.visible = false; }
+const zlDist = (x, y) => Math.hypot(x - FPS.me.x, y - FPS.me.y);
+
+// ---------- a pull of the trigger: a globe of the fire, thrown straight ahead ----------
+function zlShot(x, y, z, h, p, by, mine, t) {
+  const w = FPSW.corposant;
+  sndFrom(mine ? 0 : fpsEar(x, y), () => zlSound('throw', mine ? 0 : zlDist(x, y)));
+  if (mine) {
+    if (typeof zeShot === 'function') zeShot(x, y, z, h, p, by);   // [egg hook] src/zmegg.js
+    if (typeof zhShot === 'function') zhShot(x, y, z, h, p, by);   // [egg2 hook] src/zmegg2.js
+    if (typeof zsShot === 'function') zsShot(x, y, z, h, p, by);   // [egg3 hook] src/zmegg3.js
+  }
+  const cp = Math.cos(p);
+  let ox = x + Math.sin(h) * cp * 0.8, oy = y + Math.cos(h) * cp * 0.8, oz = z - 0.2 + Math.sin(p) * 0.8;
+  if (fpsRay(x, y, z, h, p, by, [], 0.9).kind !== 'none') { ox = x; oy = y; oz = z - 0.1; }
+  zlOrb({ by, mine, tier: t | 0, small: false, x: ox, y: oy, z: oz, vx: Math.sin(h) * cp * w.pv, vy: Math.cos(h) * cp * w.pv, vz: Math.sin(p) * w.pv });
+  for (let i = 0; i < 10; i++) { const a = h + (Math.random() - 0.5) * 1.4, sp = 1 + Math.random() * 3; FPS.parts.push({ x: ox, y: oy, z: oz, vx: Math.sin(a) * sp, vy: Math.cos(a) * sp, vz: (Math.random() - 0.4) * 2, t: 0.3, c: '190,225,255' }); }
+}
+function zlOrb(o) {
+  const t = o.tier, small = o.small;
+  Object.assign(o, { id: ++ZL.n, t: 0, seed: Math.random() * 100, pulse: 0.15,
+    life: small ? ZLC.SMALL : ZLC.LIFE + (t ? Math.min(1.2, ZLC.LIFE_T * t) : 0),
+    reach: (t ? ZLC.REACH + Math.min(3, ZLC.REACH_T * t) : ZLC.REACH) * (small ? 0.7 : 1),
+    arcs: small ? 2 : t ? Math.min(8, 4 + t) : ZLC.ARCS,
+    every: t ? ZLC.PULSE_T : ZLC.PULSE,
+    R: (t ? 0.42 + Math.min(0.2, 0.05 * t) : 0.32) * (small ? 0.6 : 1) });
+  ZL.orbs.push(o);
+  while (ZL.orbs.length > ZLC.MAX) ZL.orbs.shift();
+  return o;
+}
+
+// ---------- each frame: the globes drifting and lashing out, the arcs and the bursts fading ----------
+function zlTick(dt) {
+  for (const O of ZL.orbs) zlDrift(O, dt);
+  ZL.orbs = ZL.orbs.filter(O => !O.done);
+  for (const A of ZL.arcs) A.t += dt;
+  ZL.arcs = ZL.arcs.filter(A => A.t < A.life);
+  for (const B of ZL.booms) B.t += dt;
+  ZL.booms = ZL.booms.filter(B => B.t < 0.6);
+}
+function zlDrift(O, dt) {
+  O.t += dt;
+  // (it slows a little as it goes, as if the air were thick with the storm)
+  const k = Math.exp(-dt * 0.25); O.vx *= k; O.vy *= k; O.vz *= k;
+  const ox = O.x, oy = O.y, oz = O.z, nx = ox + O.vx * dt, ny = oy + O.vy * dt, nz = oz + O.vz * dt;
+  const hd = Math.hypot(nx - ox, ny - oy), hh = bearingOf(nx - ox, ny - oy), pp = Math.atan2(nz - oz, Math.max(0.001, hd));
+  const r = fpsRay(ox, oy, oz, hh, pp, O.by, [], hd + O.R * 0.5 + 0.02);
+  if (r.kind !== 'none') { O.x = ox - Math.sin(hh) * 0.1; O.y = oy - Math.cos(hh) * 0.1; O.z = oz; zlBurst(O); return; }
+  O.x = nx; O.y = ny; O.z = nz;
+  if (O.mine && typeof zsOrb === 'function') zsOrb(O);   // [egg3 hook] src/zmegg3.js: close by a stern lantern
+  const G0 = FPSC.GROUND, fl = zxFloor(O.x, O.y, oz - G0);
+  if (O.z <= G0 + fl + 0.12) { O.z = G0 + fl + 0.15; zlBurst(O); return; }
+  if (Math.random() < dt * 30) FPS.parts.push({ x: O.x + (Math.random() - 0.5) * O.R, y: O.y + (Math.random() - 0.5) * O.R, z: O.z + (Math.random() - 0.5) * O.R, vx: (Math.random() - 0.5) * 0.8, vy: (Math.random() - 0.5) * 0.8, vz: 0.4 + Math.random() * 0.6, t: 0.35, c: Math.random() < 0.5 ? '200,230,255' : '140,190,255' });
+  O.pulse -= dt;
+  if (O.pulse <= 0) { O.pulse = O.every * (0.85 + Math.random() * 0.3); zlLash(O); }
+  if (O.t >= O.life) zlBurst(O);
+}
+// the drowned it can reach and see, the nearest first (a boss last of all)
+function zlNear(O) {
+  const L = [];
+  for (const o of ZM.z) {
+    if (o.dead || o.st === 'out') continue;
+    const tz = FPSC.GROUND + zmMid(o), hd = Math.hypot(o.x - O.x, o.y - O.y), d = Math.hypot(hd, tz - O.z);
+    if (d > O.reach + (o.rad || 0.3)) continue;
+    if (hd > 0.4 && fpsRay(O.x, O.y, O.z, bearingOf(o.x - O.x, o.y - O.y), Math.atan2(tz - O.z, hd), O.by, [o], hd + 1.5).kind !== 'body') continue;
+    L.push({ o, d: d + (o.boss ? 3 : 0), tz });
+  }
+  return L.sort((a, b) => a.d - b.d).slice(0, O.arcs);
+}
+function zlLash(O) {
+  const L = zlNear(O), G0 = FPSC.GROUND;
+  for (const { o, tz } of L) {
+    const jit = (o.tall || FPSC.TALL) * 0.25;
+    ZL.arcs.push({ a: O, b: [o.x, o.y, tz + (Math.random() - 0.5) * jit], t: 0, life: 0.13 + Math.random() * 0.05, w: O.tier ? 1.4 : 1, small: O.small, seed: Math.random() * 1000 });
+    for (let i = 0; i < 4; i++) FPS.parts.push({ x: o.x + (Math.random() - 0.5) * 0.4, y: o.y + (Math.random() - 0.5) * 0.4, z: tz + (Math.random() - 0.5) * 0.6, vx: (Math.random() - 0.5) * 2, vy: (Math.random() - 0.5) * 2, vz: Math.random() * 2, t: 0.25, c: '180,220,255' });
+    if (!O.mine) continue;
+    zmHurt(o, zxHp() * ZLC.ARC * (O.small ? 0.7 : 1) * (o.boss ? ZLC.BOSS : 1), false, 'e', FPS.me.id); o.hitT = 0.15;
+    // (drawn in towards it, and staggered: never past it, and never a boss)
+    const dx = O.x - o.x, dy = O.y - o.y, d = Math.hypot(dx, dy), pull = Math.min(ZLC.DRAG * (O.tier ? 1.25 : 1), d - 0.9);
+    if (!o.dead && !o.boss && pull > 0.05) zmpStatus(o, 'kb', dx / d * pull, dy / d * pull, 0.25);
+  }
+  // (nothing near: it crackles down to the floor or out into the dark round it, only to look at)
+  if (!L.length && Math.random() < 0.6) {
+    const a = Math.random() * 6.283, rr = 0.8 + Math.random() * 1.6, fx = O.x + Math.sin(a) * rr, fy = O.y + Math.cos(a) * rr, fz = G0 + zxFloor(fx, fy, O.z - G0);
+    if (O.z - fz < 3.2) ZL.arcs.push({ a: O, b: [fx, fy, fz + 0.02], t: 0, life: 0.1, w: 0.6, small: true, seed: Math.random() * 1000 });
+  }
+  if (L.length || Math.random() < 0.3) sndFrom(O.mine ? 0 : fpsEar(O.x, O.y), () => zlSound(L.length ? 'zap' : 'tick', zlDist(O.x, O.y)));
+}
+// the burst at the end: a flash that hurts all round it (and the Saint's Crown's splits into smaller globes)
+function zlBurst(O) {
+  if (O.done) return;
+  O.done = true;
+  const R = (O.tier ? ZLC.BURST_R + Math.min(1, 0.25 * O.tier) : ZLC.BURST_R) * (O.small ? 0.65 : 1);
+  ZL.booms.push({ x: O.x, y: O.y, z: O.z, R, t: 0, tier: O.tier });
+  sndFrom(O.mine ? 0 : fpsEar(O.x, O.y), () => zlSound(O.small ? 'pop' : 'burst', zlDist(O.x, O.y)));
+  for (let i = 0; i < (O.small ? 12 : 26); i++) { const a = Math.random() * 6.283, sp = 1.5 + Math.random() * R * 1.6; FPS.parts.push({ x: O.x, y: O.y, z: O.z, vx: Math.sin(a) * sp, vy: Math.cos(a) * sp, vz: (Math.random() - 0.3) * 4, t: 0.35 + Math.random() * 0.3, c: Math.random() < 0.5 ? '220,240,255' : '130,180,255' }); }
+  // (a last lash out at all those near, the arcs with it)
+  for (const o of ZM.z) {
+    if (o.dead || o.st === 'out') continue;
+    const tz = FPSC.GROUND + zmMid(o), hd = Math.hypot(o.x - O.x, o.y - O.y), d = Math.hypot(hd, tz - O.z);
+    if (d > R + (o.rad || 0.3)) continue;
+    if (hd > 0.5 && fpsRay(O.x, O.y, O.z, bearingOf(o.x - O.x, o.y - O.y), Math.atan2(tz - O.z, hd), O.by, [o], hd + 1.5).kind !== 'body') continue;
+    ZL.arcs.push({ a: { x: O.x, y: O.y, z: O.z }, b: [o.x, o.y, tz], t: 0, life: 0.2, w: 1.6, small: false, seed: Math.random() * 1000 });
+    if (!O.mine) continue;
+    zmHurt(o, zxHp() * ZLC.BURST * (O.small ? 0.6 : 1) * (1 - 0.5 * Math.min(1, d / R)) * (o.boss ? ZLC.BOSS : 1), false, 'e', FPS.me.id); o.hitT = 0.3;
+    if (!o.dead && !o.boss && hd > 0.05) zmpStatus(o, 'kb', (o.x - O.x) / hd * 0.6, (o.y - O.y) / hd * 0.6, 0.5);
+    O.hit = true;
+  }
+  if (O.mine && O.hit) zxMark(false);
+  if (!O.tier || O.small) return;
+  // the Saint's Crown: it splits, and the smaller globes drift on outwards and lash out again
+  const n = Math.min(ZLC.SPLIT[1], ZLC.SPLIT[0] + O.tier), a0 = Math.random() * 6.283;
+  for (let i = 0; i < n; i++) {
+    const a = a0 + i / n * 6.283, sp = 2.4 + Math.random() * 0.8;
+    zlOrb({ by: O.by, mine: O.mine, tier: O.tier, small: true, x: O.x, y: O.y, z: O.z, vx: Math.sin(a) * sp + O.vx * 0.2, vy: Math.cos(a) * sp + O.vy * 0.2, vz: 0.3 + Math.random() * 0.4 }).pulse = 0.2 + i * 0.05;
+  }
+}
+
+// ---------- the light the globes give (from zx3d: three lamps, given to the nearest) ----------
+function zlLights(src) {
+  const t = g.t;
+  for (const O of ZL.orbs) src.push([O.x, O.y, O.z, (O.small ? 1.1 : O.tier ? 2.4 : 1.8) * (reduceMotion ? 1 : 0.75 + 0.25 * Math.sin(t * 37 + O.seed) * Math.sin(t * 23)), 0x8ec4ff, O.small ? 6 : O.tier ? 11 : 9]);
+  for (const B of ZL.booms) src.push([B.x, B.y, B.z, 5 * (1 - B.t / 0.6), 0xb8dcff, B.R * 4]);
+}
+
+// ---------- sounds (made here: no recordings, but the storm's own crack for the burst) ----------
+function zlSound(k, d) {
+  try {
+    if (soundOff()) return;
+    const v = Math.max(0.05, 1 - (d || 0) / 120);
+    if (k === 'throw') { noise('lowpass', 600, 0.8, 0.004, 0.35 * v, 0.3); tone(160, 'sine', 0.01, 0.22 * v, 0.35, { to: 520 }); tone(55, 'sawtooth', 0.01, 0.06 * v, 0.4, { to: 110 }); for (let i = 0; i < 5; i++) noise('highpass', 3200 + Math.random() * 2000, 1.2, 0.001, 0.09 * v, 0.03, { delay: 0.04 + i * 0.035 + Math.random() * 0.02 }); }
+    else if (k === 'zap') { noise('highpass', 2400, 0.9, 0.001, 0.22 * v, 0.06); tone(1400 + Math.random() * 1600, 'square', 0.001, 0.05 * v, 0.05, { to: 300 }); tone(90, 'sawtooth', 0.002, 0.05 * v, 0.08); for (let i = 0; i < 3; i++) noise('highpass', 4000, 1, 0.001, 0.07 * v, 0.015, { delay: 0.03 + i * 0.025 + Math.random() * 0.02 }); }
+    else if (k === 'tick') { noise('highpass', 4500, 1, 0.001, 0.05 * v, 0.02); noise('highpass', 3800, 1, 0.001, 0.04 * v, 0.015, { delay: 0.03 }); }
+    else if (k === 'burst') { if (sfxPlay('stormbolt', { vol: 0.55 * v, vary: 0.12 })) { noise('highpass', 2600, 0.8, 0.001, 0.2 * v, 0.25); return; } noise('highpass', 1800, 0.7, 0.001, 0.5 * v, 0.35); noise('lowpass', 500, 0.8, 0.003, 0.5 * v, 0.6); tone(70, 'sawtooth', 0.003, 0.25 * v, 0.5, { to: 30 }); }
+    else if (k === 'pop') { noise('highpass', 2200, 0.8, 0.001, 0.25 * v, 0.18); noise('lowpass', 700, 0.8, 0.003, 0.2 * v, 0.25); }
+  } catch (e) {}
+}
+
+// ---------- in 3D: the globes (a pool of glows, kept with the scene they were made in) ----------
+// a ball of blue-white fire: a hard white heart, a blue halo round it, and a wider, fainter one that breathes
+const ZL3 = { grp: null, pool: [], tex: null };
+function zl3d(dt) {
+  if (!Z3.grp) return;
+  if (ZL3.grp !== Z3.grp) { ZL3.grp = Z3.grp; ZL3.pool = []; ZL3.tex = z3Soft('rgba(255,255,255,1)', 'rgba(255,255,255,0)'); }
+  const t = g.t, sm = reduceMotion;
+  ZL.orbs.forEach((O, i) => {
+    let M = ZL3.pool[i];
+    if (!M) {
+      const sp = c => new THREE.Sprite(new THREE.SpriteMaterial({ map: ZL3.tex, color: c, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false }));
+      M = { g: new THREE.Group(), heart: sp(0xf4faff), halo: sp(0x5a9cff), wide: sp(0x2a5ad0) };
+      M.g.add(M.wide); M.g.add(M.halo); M.g.add(M.heart); Z3.grp.add(M.g); ZL3.pool.push(M);
+    }
+    const fl = sm ? 1 : 0.85 + 0.15 * Math.sin(t * 41 + O.seed) * Math.sin(t * 17 + O.seed * 2), grow = Math.min(1, O.t / 0.15), fade = Math.min(1, (O.life - O.t) / 0.2 + 0.4), R = O.R * grow * fade;
+    // (it bobs a little as it drifts, as a light does on a mast)
+    M.g.position.copy(z3v(O.x, O.y, O.z + (sm ? 0 : Math.sin(O.t * 3 + O.seed) * 0.04)));
+    M.heart.scale.setScalar(R * 1.5 * fl); M.halo.scale.setScalar(R * 4.2 * fl); M.wide.scale.setScalar(R * (O.tier ? 10 : 8) * (sm ? 1 : 0.9 + 0.1 * Math.sin(t * 5 + O.seed)));
+    M.halo.material.opacity = 0.85; M.wide.material.opacity = O.tier ? 0.45 : 0.32;
+    M.halo.material.color.setHex(O.tier ? 0x86b4ff : 0x5a9cff);
+    M.g.visible = true;
+  });
+  for (let i = ZL.orbs.length; i < ZL3.pool.length; i++) ZL3.pool[i].g.visible = false;
+}
+
+// ---------- painted over the view: the arcs, the crackle round each globe, and the bursts ----------
+// (a jagged line from a to b, k kinks, thrown off to the side by up to j of its length; fresh every frame, so it crackles)
+function zlBolt(a, b, k, j) {
+  const pts = [a], L = Math.hypot(b[0] - a[0], b[1] - a[1], b[2] - a[2]);
+  for (let i = 1; i < k; i++) { const u = i / k, s = L * j * Math.sin(u * Math.PI); pts.push([a[0] + (b[0] - a[0]) * u + (Math.random() - 0.5) * s, a[1] + (b[1] - a[1]) * u + (Math.random() - 0.5) * s, a[2] + (b[2] - a[2]) * u + (Math.random() - 0.5) * s]); }
+  pts.push(b);
+  return pts;
+}
+function zlDrawOver() {
+  if (!ZL.arcs.length && !ZL.orbs.length && !ZL.booms.length) return;
+  const sm = reduceMotion;
+  ctx.save(); ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.globalCompositeOperation = 'lighter';
+  const stroke = (pts, w, k) => {
+    const q = []; for (const p of pts) { const c = cam(p[0], p[1], p[2]); if (c.f < 0.35) return; q.push(proj(c)); }
+    const sc = Math.max(0.7, Math.min(2.4, q[0].s / 90)) * w;
+    for (const [lw, col] of [[7, `rgba(70,120,255,${0.22 * k})`], [3, `rgba(140,190,255,${0.7 * k})`], [1.2, `rgba(245,250,255,${0.95 * k})`]]) {
+      ctx.strokeStyle = col; ctx.lineWidth = lw * sc; ctx.beginPath(); ctx.moveTo(q[0].x, q[0].y); for (const p of q.slice(1)) ctx.lineTo(p.x, p.y); ctx.stroke();
+    }
+  };
+  // the arcs, and now and then a fork off one
+  for (const A of ZL.arcs) {
+    const a = [A.a.x, A.a.y, A.a.z], k = 1 - A.t / A.life, pts = zlBolt(a, A.b, A.small ? 5 : 8, sm ? 0.12 : 0.28);
+    stroke(pts, A.w * (A.small ? 0.6 : 1), k);
+    if (!sm && Math.random() < 0.5) { const m = pts[2 + ((Math.random() * (pts.length - 3)) | 0)], e = [m[0] + (Math.random() - 0.5) * 1.2, m[1] + (Math.random() - 0.5) * 1.2, m[2] - Math.random() * 0.8]; stroke(zlBolt(m, e, 3, 0.4), A.w * 0.5, k * 0.8); }
+  }
+  // the crackle round each globe: little tongues of the fire, out and back
+  for (const O of ZL.orbs) {
+    const c = cam(O.x, O.y, O.z); if (c.f < 0.4) continue;
+    const n = sm ? 2 : O.tier ? 5 : 3;
+    for (let i = 0; i < n; i++) { const a = Math.random() * 6.283, b = (Math.random() - 0.5) * 2, r = O.R * (1.4 + Math.random() * 1.4); stroke(zlBolt([O.x, O.y, O.z], [O.x + Math.sin(a) * r, O.y + Math.cos(a) * r, O.z + b * r * 0.6], 3, 0.35), 0.45, 0.8); }
+  }
+  // the bursts: a white flash, a blue ring going out
+  for (const B of ZL.booms) {
+    const c = cam(B.x, B.y, B.z); if (c.f < 0.4) continue;
+    const q = proj(c), k = B.t / 0.6, s = Math.max(8, B.R * q.s * (0.35 + k * 0.9)), gr = ctx.createRadialGradient(q.x, q.y, 0, q.x, q.y, s);
+    gr.addColorStop(0, `rgba(250,252,255,${0.95 * (1 - k)})`); gr.addColorStop(0.35, `rgba(130,180,255,${0.55 * (1 - k)})`); gr.addColorStop(1, 'rgba(60,110,255,0)');
+    ctx.fillStyle = gr; ctx.beginPath(); ctx.arc(q.x, q.y, s, 0, 6.283); ctx.fill();
+    const ring = []; for (let i = 0; i <= 20; i++) { const a = i / 20 * 6.283, r = B.R * (0.3 + k * 0.8); ring.push([B.x + Math.sin(a) * r, B.y + Math.cos(a) * r, B.z]); }
+    const p = polyProj(ring); if (p.length > 2) { ctx.strokeStyle = `rgba(160,200,255,${0.6 * (1 - k)})`; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(p[0].x, p[0].y); for (const r of p.slice(1)) ctx.lineTo(r.x, r.y); ctx.stroke(); }
+  }
+  ctx.restore();
+}
+
+// ---------- in your hand: the armillary sphere on its grip ----------
+// A walnut pistol grip and a brass trigger guard, and on top a turned brass pillar holding the sphere out in front:
+// the meridian ring standing in its fork, the horizon ring round its middle, and inside them, on the tilted pole, the
+// equator, the two colures and the slanting ecliptic, marked with the signs. In the heart of it, the fire. The rings
+// turn slowly; firing, the heart leaps out (the globe) and the rings spin up, and the fire creeps back from nothing.
+// Reloading: the sphere tipped back, the left hand brings up a lead-glass phial of storm-light and pours it in at the
+// top, puts it away, and gives the rings a spin with a finger till the fire catches. The Saint's Crown: a crown of
+// little flames burns at the tips of the pole and round the horizon ring.
+function zlvRing(r, tube, mat, seg) { return new THREE.Mesh(new THREE.TorusGeometry(r, tube, 6, seg || 40), mat); }
+function zlvPhial(M) {
+  const g = new THREE.Group();
+  g.scale.setScalar(1.3);
+  g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.014, 0.016, 0.06, 12), M.glass));
+  const fire = new THREE.Mesh(new THREE.CylinderGeometry(0.011, 0.013, 0.045, 10), M.fireM); fire.position.y = -0.006; g.add(fire);
+  const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.006, 0.01, 0.018, 10), M.glass); neck.position.y = 0.038; g.add(neck);
+  const stop = new THREE.Mesh(new THREE.CylinderGeometry(0.007, 0.006, 0.012, 8), M.dark); stop.position.y = 0.052; g.add(stop);
+  const gl = new THREE.Sprite(new THREE.SpriteMaterial({ map: VM.softTex, color: 0x6aa8ff, transparent: true, opacity: 0.8, depthWrite: false, blending: THREE.AdditiveBlending })); gl.scale.setScalar(0.07); fire.add(gl);
+  g.userData.fire = fire;
+  return g;
+}
+VM_BUILD.corposant = (M) => {
+  const root = new THREE.Group(), C = new THREE.Vector3(0, 0.1, -0.1);
+  // (the fire: plain light, never painted by a weapon's finish or the Bench's)
+  M.fireM = new THREE.MeshBasicMaterial({ color: 0xcfe6ff });
+  M.glass = new THREE.MeshPhongMaterial({ color: 0x9ab0b8, specular: 0xffffff, shininess: 120, transparent: true, opacity: 0.35 }); M.glass.userData.zmpSkip = true;
+  const soft = VM.softTex;
+  const spr = (c, s, o) => { const m = new THREE.Sprite(new THREE.SpriteMaterial({ map: soft, color: c, transparent: true, opacity: o, depthWrite: false, blending: THREE.AdditiveBlending })); m.scale.setScalar(s); return m; };
+  // the grip, its cap, the guard and the trigger
+  root.add(profile([[0.0, 0.01], [0.03, -0.06], [0.025, -0.11], [0.06, -0.12], [0.075, -0.06], [0.05, 0.02]], 0.034, M.wood, 0.004));
+  root.add(zcyl(0.024, 0.026, 0.07, M.brass, 16, 0.04, 0, 0.03));
+  const pom = new THREE.Mesh(new THREE.SphereGeometry(0.018, 12, 8), M.brass); pom.position.set(0, -0.118, 0.07); root.add(pom);
+  const guard = new THREE.Mesh(new THREE.TorusGeometry(0.02, 0.003, 6, 18, Math.PI), M.brass); guard.rotation.set(0, Math.PI / 2, Math.PI); guard.position.set(0, 0.005, 0.005); root.add(guard);
+  const trig = box(0.005, 0.022, 0.007, M.dark, 0, 0.0, 0.004); root.add(trig);
+  // the pillar, turned, up from the front of the grip to the sphere
+  const pil = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.014, 0.045, 12), M.brass); pil.position.set(0, 0.045, -0.06); pil.rotation.x = -0.6; root.add(pil);
+  for (const [y, z, r] of [[0.03, -0.05, 0.016], [0.06, -0.075, 0.012]]) { const k = new THREE.Mesh(new THREE.SphereGeometry(r, 10, 6), M.brass); k.scale.y = 0.5; k.position.set(0, y, z); root.add(k); }
+  const sph = new THREE.Group(); sph.position.copy(C); sph.scale.setScalar(0.88); root.add(sph);
+  // the meridian ring in its fork (fixed), the horizon ring round it (turning slowly one way)
+  const mer = zlvRing(0.07, 0.0035, M.brass); mer.rotation.y = Math.PI / 2; sph.add(mer);
+  const fork = new THREE.Mesh(new THREE.TorusGeometry(0.074, 0.003, 6, 20, Math.PI * 0.5), M.iron); fork.rotation.set(0, Math.PI / 2, -Math.PI * 0.75); sph.add(fork);
+  const hor = new THREE.Group(); sph.add(hor);
+  { const r = zlvRing(0.076, 0.005, M.brass); r.rotation.x = Math.PI / 2; hor.add(r); for (let i = 0; i < 12; i++) { const a = i / 12 * 6.283, t = box(0.003, 0.004, 0.008, M.dark, Math.sin(a) * 0.076, 0.005, Math.cos(a) * 0.076); t.rotation.y = a; hor.add(t); } }
+  // the pole, tilted, and the rings that turn on it
+  const pole = new THREE.Group(); pole.rotation.x = 0.41; pole.rotation.z = -0.2; sph.add(pole);
+  pole.add(new THREE.Mesh(new THREE.CylinderGeometry(0.0022, 0.0022, 0.16, 6), M.iron));
+  const spin = new THREE.Group(); pole.add(spin);
+  { const eq = zlvRing(0.06, 0.003, M.brass); eq.rotation.x = Math.PI / 2; spin.add(eq); }
+  for (const a of [0, Math.PI / 2]) { const c = zlvRing(0.062, 0.0026, M.brass); c.rotation.y = a; spin.add(c); }
+  const ecl = new THREE.Group(); ecl.rotation.x = Math.PI / 2 + 0.41; spin.add(ecl);
+  ecl.add(zlvRing(0.058, 0.0055, M.accent));
+  for (let i = 0; i < 12; i++) { const a = i / 12 * 6.283, s = box(0.006, 0.006, 0.002, M.brass, Math.cos(a) * 0.058, Math.sin(a) * 0.058, 0.004); s.rotation.z = a; ecl.add(s); }
+  for (const s of [-1, 1]) { const k = new THREE.Mesh(new THREE.SphereGeometry(0.006, 8, 6), M.brass); k.position.y = s * 0.08; pole.add(k); }
+  // the fire in the heart: a white ball, its blue halo, and crackling threads out to the rings
+  const heart = new THREE.Group(); sph.add(heart);
+  const core = new THREE.Mesh(new THREE.SphereGeometry(0.016, 14, 10), M.fireM); heart.add(core);
+  const halo = spr(0x6aa8ff, 0.15, 0.95), wide = spr(0x3a6ae0, 0.3, 0.45); heart.add(halo); heart.add(wide);
+  const N = 10, lg = new THREE.BufferGeometry(); lg.setAttribute('position', new THREE.Float32BufferAttribute(new Float32Array(N * 2 * 3 * 3), 3));
+  const threads = new THREE.LineSegments(lg, new THREE.LineBasicMaterial({ color: 0xa8d0ff, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending, depthWrite: false })); threads.frustumCulled = false; sph.add(threads);
+  // the Saint's Crown: little flames at the pole's tips and round the horizon ring
+  const crown = new THREE.Group(); crown.visible = false; sph.add(crown);
+  const tips = [];
+  for (let i = 0; i < 8; i++) { const a = i / 8 * 6.283, f = spr(0x8ac0ff, 0.03, 0.9); f.position.set(Math.sin(a) * 0.076, 0.012, Math.cos(a) * 0.076); crown.add(f); tips.push(f); }
+  for (const s of [-1, 1]) { const f = spr(0xb8d8ff, 0.04, 0.9); f.position.set(0, s * 0.084, 0); f.position.applyEuler(pole.rotation); crown.add(f); tips.push(f); }
+  const fresh = zlvPhial(M); fresh.visible = false; root.add(fresh);
+  const hand = vmHand(VM.H, false); hand.position.set(0.01, -0.045, 0.045); root.add(hand);
+  const muzzle = new THREE.Object3D(); muzzle.position.set(0, C.y, C.z - 0.09); root.add(muzzle);
+  return { root, M, hand, trig, muzzle, sph, hor, spin, heart, core, halo, wide, threads, crown, tips, fresh, C, pose: { x: 0.13, y: -0.205, z: -0.46, rx: 0.12, ry: 0.3, rz: -0.05 }, smoke: 0, flashK: 0.5, beam: true };
+};
+VM_ANIM.corposant = (w, S) => {
+  const p = S.p, t = S.t, dt = S.dt, sm = S.still;
+  VM.lhand.visible = false;
+  const tier = FPS.zm && typeof zmpTier === 'function' ? zmpTier('corposant') : 0;
+  // the fire: gone with each globe thrown, and creeping back while there's a charge in it; out when it's empty
+  if (S.fired) { w.out = 1; w.whirl = 1; }
+  const empty = !(FPS.me && FPS.me.ammo > 0) && !S.reloading;
+  w.out = Math.max(0, (w.out || 0) - dt * 1.7);
+  const tip = vmSeg(p, 0, 0.12) - vmSeg(p, 0.86, 1), bring = vmSeg(p, 0.12, 0.36), pour = S.reloading ? vmSeg(p, 0.38, 0.5) - vmSeg(p, 0.58, 0.64) : 0, away = vmSeg(p, 0.6, 0.7), flick = S.reloading && p > 0.68 && p < 0.86 ? (p - 0.68) / 0.18 : -1;
+  // (while reloading: out till the storm-light's poured in, then it grows as it's spun)
+  let lit = S.reloading ? (p < 0.44 ? Math.max(0, 1 - p / 0.1) * 0.2 : p < 0.7 ? 0.25 * vmSeg(p, 0.44, 0.6) : 0.25 + 0.75 * vmSeg(p, 0.7, 0.88)) : empty ? 0.12 : 1 - w.out * w.out;
+  if (flick >= 0 && flick < 0.2) w.whirl = Math.max(w.whirl || 0, 0.8);
+  w.whirl = Math.max(0, (w.whirl || 0) - dt * 0.9);
+  w.steps = w.steps || [[0.2, () => vmClick(2400, 0.03)], [0.42, () => vmNoise(4200, 0.05, 0.3)], [0.66, () => vmClick(1800, 0.03)], [0.72, () => vmClick(900, 0.05)], [0.78, () => vmClick(1000, 0.04)], [0.86, () => { vmNoise(3500, 0.08, 0.2); vmClick(2600, 0.03); }]];
+  vmPlace(w, S, 0, { x: -tip * 0.03, y: tip * 0.03, z: -tip * 0.02, rx: -tip * 0.5, ry: -tip * 0.2, rz: tip * 0.25 });
+  // the rings: the horizon one way, the inner rings the other on their pole, spinning up at a throw or a flick
+  const sp = sm ? 0 : 0.35 + 7 * (w.whirl || 0) * (w.whirl || 0);
+  w.hor.rotation.y -= dt * sp * 0.4; w.spin.rotation.y += dt * sp;
+  const big = tier ? 1.3 + Math.min(0.3, 0.08 * tier) : 1, fl = sm ? 1 : 0.85 + 0.15 * Math.sin(t * 43) * Math.sin(t * 19);
+  const k = Math.max(0.02, lit) * big;
+  w.core.scale.setScalar(k * fl); w.halo.scale.setScalar(0.15 * k * fl); w.wide.scale.setScalar(0.3 * k * (sm ? 1 : 0.9 + 0.1 * Math.sin(t * 6)));
+  w.halo.material.color.setHex(tier ? 0x8ab8ff : 0x6aa8ff);
+  // (the threads of fire, out from the heart to the rings: new ones every few frames)
+  w.thrT = (w.thrT || 0) - dt;
+  if (w.thrT <= 0) {
+    w.thrT = sm ? 0.3 : 0.05;
+    const P = w.threads.geometry.attributes.position, A = P.array, n = Math.round((lit > 0.2 ? (tier ? 10 : 6) : 1) * (sm ? 0.5 : 1));
+    A.fill(0);
+    for (let i = 0; i < n; i++) {
+      const th = Math.random() * 6.283, ph = Math.acos(Math.random() * 2 - 1), R = 0.055 + Math.random() * 0.012, ex = Math.sin(ph) * Math.cos(th) * R, ey = Math.cos(ph) * R, ez = Math.sin(ph) * Math.sin(th) * R;
+      let px = 0, py = 0, pz = 0;
+      for (let j = 1; j <= 3; j++) { const u = j / 3, jt = j < 3 ? 0.012 : 0, qx = ex * u + (Math.random() - 0.5) * jt, qy = ey * u + (Math.random() - 0.5) * jt, qz = ez * u + (Math.random() - 0.5) * jt, o = (i * 3 + j - 1) * 6; A[o] = px; A[o + 1] = py; A[o + 2] = pz; A[o + 3] = qx; A[o + 4] = qy; A[o + 5] = qz; px = qx; py = qy; pz = qz; }
+    }
+    P.needsUpdate = true;
+  }
+  w.threads.material.opacity = Math.min(1, 0.2 + lit) * 0.9;
+  // the Saint's Crown's flames
+  w.crown.visible = !!tier;
+  if (tier) w.tips.forEach((f, i) => { const s = 0.025 + 0.012 * (sm ? 0.5 : 0.5 + 0.5 * Math.sin(t * 13 + i * 2.1)); f.scale.set(s, s * 1.6, s); f.material.opacity = 0.5 + 0.4 * lit; });
+  // the phial: up from below, tipped over the top of the sphere to pour, and away
+  w.fresh.visible = S.reloading && bring > 0.01 && away < 0.99;
+  if (w.fresh.visible) {
+    const home = zlvV(-0.22, -0.3, 0.02), over = w.C.clone().add(zlvV(-0.02, 0.11, 0.0)), gone = zlvV(-0.25, -0.32, 0.05);
+    w.fresh.position.copy(home).lerp(over, bring).lerp(gone, away);
+    w.fresh.rotation.set(0, 0, (1 - bring) * 0.5 - pour * 2.1);
+    w.fresh.userData.fire.scale.y = Math.max(0.05, 1 - vmSeg(p, 0.42, 0.58));
+    vmLeftAt(w, w.fresh.position.clone().add(zlvV(-0.03, -0.065, 0.045)), [0.3, 0, -0.6 - pour * 0.5]);
+  } else if (flick >= 0) vmLeftAt(w, w.C.clone().add(zlvV(-0.075, -0.01 + Math.sin(flick * Math.PI * 3) * 0.012, 0.02)), [0.2, 0.3, -1.0]);
+  w.trig.rotation.x = S.trigger ? 0.35 : 0;
+};
+const zlvV = (x, y, z) => new THREE.Vector3(x, y, z);
 
 // ---- src/zmboss.js ----
 // The Lighthouse: its bosses. Bigger things come up out of the sea with the drowned in the later rounds, each in a
@@ -33577,6 +34941,461 @@ function zhHud() {
       ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       ctx.font = `400 ${phone ? 22 : 34}px "IM Fell English SC", serif`; ctx.fillStyle = '#e8f4ff';
       ctx.fillText('Bethan’s Shilling', cx, H * 0.42 + r + (phone ? 26 : 38));
+      ctx.font = `600 ${phone ? 11 : 13}px "Courier Prime", monospace`; ctx.fillStyle = 'rgba(236,228,207,0.9)';
+      ctx.fillText(`A pirate token: yours to keep (${typeof ptTokens === 'function' ? ptTokens() : 1} to spend on the Keeper’s Last Light card)`, cx, H * 0.42 + r + (phone ? 48 : 68), W * 0.9);
+      ctx.restore();
+    }
+  }
+}
+
+// ---- src/zmegg3.js ----
+// The San Telmo: what her captain owed, and what it pays in. The third map's own secret (the Lighthouse keeps its own
+// in src/zmegg.js, Wrackhaven its own in src/zmegg2.js), for whoever goes looking: nothing on screen or in the README
+// says how it goes. The cues are in the world: a glint, a line in the feed in someone else's voice (her captain's, or
+// the ship's boy's who turned the glass), a word over Use in just the right place. It pays a pirate token, as the
+// others do (ptGrant, in src/zmegg.js), one for each night it's done; its coin is the San Telmo's Piece of Eight.
+//
+// ---------------------------------------------------------------------------------------------------------------
+// THE SOLUTION (spoilers; kept to this comment on purpose). "The Last Pay": the winter of 1597, the night she struck
+// the Skerries. The crew were two years owed, the pay locked in the squadron's coffer under three keys (the captain's,
+// the master's, the chaplain's, as the King's chests always were); the stern lanterns blew out in the gale, the ship's
+// boy fell asleep and let the half-hour glass run down, and she went onto the rocks with all hands, unpaid. In order:
+//   1. The Great Cabin: a glint on the charts on the captain's table. Use it: Don Rodrigo's last entry (the lanterns
+//      out, the glass, the three keys, "every man shall be paid at the capstan").
+//   2. The Steerage: the hourglass rack on the forward bulkhead glints. Use it to turn the glass, which only takes in
+//      the quiet between rounds. The boy sings the watch prayer, and the sand runs (ZS_SAND seconds).
+//   3. The Quarterdeck: before the sand runs out, set St Elmo's fire in each of the three great stern lanterns: a
+//      globe from the Corposant drifting close by each one lights it blue (nothing else will: a bullet only makes it
+//      gutter). If the sand runs out first, the fire goes out of them all, and the glass must be turned again.
+//   4. The Chaplain's Berth (the Gun Deck aft): kill eight of the drowned in the berth itself. Each one's light goes
+//      to a candle on the altar.
+//   5. The reliquary on the altar has opened (it glints). Use it: the chaplain's key. Whoever takes the first of
+//      the three keys carries the ring, and only they can add to it.
+//   6. The Forecastle Deck: something glints under the belfry's beam, out of reach. Shoot the cord it hangs by (or
+//      cut it with the cutlass): the master's key drops to the deck.
+//   7. Use it where it fell.
+//   8. The Steerage: the captain's key, on a cord knotted round the whipstaff, glints now. Use it.
+//      (5, 6 to 7 and 8 go in any order, once the altar is lit; the master's key, once down, stays down.)
+//   9. The Strong Room: the iron coffer on the floor before the pay chest (it says "three locks" over Use from the
+//      first). With all three keys, Use it: it opens, and whoever has the keys takes up the bag of pay.
+//  10. The Waist: carry the pay up to the capstan and Use it to call the pay. The crew's lights come to the capstan,
+//      San Telmo's fire burns on her three mastheads, eight bells, and the Piece of Eight drops: a pirate token.
+// If whoever carries the keys or the pay bleeds out or leaves, it goes back (each key where it was found, the master's
+// on the deck under the bell; the pay into the open coffer; the altar needn't be lit twice).
+// Together (src/zmnet.js): the host keeps it, as it keeps the rest of the night (`eg3` in its presence); anyone can
+// do a step (a client asks with the 'egg3' request); a globe lights a lantern on the screen of whoever threw it, who
+// asks; kills by anyone count; everyone in the night gets a token.
+// ---------------------------------------------------------------------------------------------------------------
+//
+// Hooks (each marked "[egg3 hook]"): zombies.js zmReset, zmTick, zmKill, zmResolveShot, zmMelee, zmNearest,
+// zmPrompt, zmUse, zm3dBuild, zmScene3D, zmHud; zmnet.js the request, the host's send and the client's apply;
+// zmcrab.js and zmelmo.js the Hermit's Claw's snap and the Corposant's throw (as shots), and each of the Corposant's
+// globes as it drifts (zsOrb).
+
+const ZS_N = 8, ZS_SAND = 90, ZS_END = 8;
+// st: 0 nothing yet; 1 the entry read; 2 the glass turned, the sand running; 3 the lanterns lit, the altar waiting;
+// 4 the altar lit, the keys to find; 5 the keys being gathered (carried); 6 the coffer open, the pay in it; 7 the pay
+// carried; 8 done
+const ZS = { st: 0, carrier: null, souls: 0, lit: 0, keys: 0, fell: false, sand: 0, later: [], P: null, cele: 0, granted: false, t: 0, said: {}, asked: [-9, -9, -9], myCut: -9, flare: 0 };
+
+// where everything is (relative to the island's middle, as the map's own layout in src/zmgalleon.js): x, y, z where
+// it's drawn and struck; ux, uy, uz where you stand to use it (the decks at 0, 4.4, 8.8 and 13.2)
+function zsPlaces() {
+  const OX = FPSC.CX, OY = FPSC.CY, [F0, F1, F2, F3] = ZGL.F, A = (x, y, z, ux, uy, uz) => ({ x: OX + x, y: OY + y, z, ux: OX + (ux == null ? x : ux), uy: OY + (uy == null ? y : uy), uz: uz == null ? 0 : uz });
+  return {
+    table: A(-37.6, -1.95, F2 + 0.9, -37.2, -0.4, F2),                       // the Great Cabin: the charts on the captain's table (x -37, y -2)
+    glass: A(-14.45, -4.83, F2 + 1.7, -15.3, -5, F2),                        // the Steerage: the hourglass rack on the bulkhead (x -14.3, y -5)
+    lan: [A(-47.3, -6, 16.2), A(-47.3, 0, 17.6), A(-47.3, 6, 16.2)],         // the three stern lanterns, over the taffrail
+    altar: A(-42.15, 0, F1 + 1.0, -41.2, 0, F1), relic: A(-42.7, 0, F1 + 1.45, -41.2, 0, F1),   // the Chaplain's Berth: the altar (x -42.5), its reliquary
+    bkey: A(25.15, 0, F3 + 2.3, 25.15, -1.1, F3), bfloor: A(25.15, -0.4, F3 + 0.04, null, null, F3),   // the Forecastle Deck: under the belfry's beam (x 24.5)
+    bell: A(24.5, 0, F3 + 2.0),                                                // the ship's bell
+    whip: A(-18.9, 0.25, F2 + 1.5, -19.2, -1.0, F2),                         // the Steerage: the whipstaff (x -19)
+    arca: A(-42.15, 1.0, F0, -42.95, 1.0, F0),                               // the Strong Room: on the floor before the pay chest (x -40.5, its front aft)
+    cap: A(-10, 2.5, F2 + 1.48, -10, 1.15, F2),                              // the Waist: the capstan's head (x -10, y 2.5)
+    masts: [[-24, 34.4], [-4, 52.4], [15, 46.4]].map(([x, z]) => A(x, 0, z)),  // her three mastheads (src/zmgalleon.js MASTS)
+  };
+}
+function zsReset() {
+  Object.assign(ZS, { st: 0, carrier: null, souls: 0, lit: 0, keys: 0, fell: false, sand: 0, later: [], cele: 0, granted: false, t: 0, said: {}, asked: [-9, -9, -9], myCut: -9, flare: 0 });
+  ZS.P = ZM_MAP === 'galleon' && FPS.g && FPS.g.isle && FPS.g.isle.zm ? zsPlaces() : null;
+}
+const zsMine = () => ZS.carrier && ZS.carrier === FPS.me.id;
+const zsHunt = st => st === 4 || st === 5;   // (the keys about)
+const zsCan = () => ZS.st === 4 || (ZS.st === 5 && zsMine());   // (can I take a key: the first, or I've the ring)
+function zsCarrierBody() { if (!ZS.carrier) return null; if (ZS.carrier === FPS.me.id) return FPS.me; return FPS.remote.get(ZS.carrier) || null; }
+const zsSay = (t, s) => zeSay(t, s);
+// (a whisper keeps to the step it was meant for: if the night has moved on by then, it goes unsaid)
+function zsWhisper(text, delay) { const st = ZS.st; ZS.later.push({ t: delay || 0, f: () => { if (ZS.st !== st) return; zeSay(text, 8); zeSound('whisper'); } }); }
+function zsLater(delay, f) { ZS.later.push({ t: delay, f }); }
+const ZS_LOG = '“Middle watch, the fourth glass. The lanterns are blown out and the squadron lost to sight; the boy has stopped singing. The pay is two years owing, under the three keys, mine, the master’s and the chaplain’s. If God brings us in, every man shall be paid at the capstan, on my honour. R. de A.”';
+const ZS_SONG = '“Bendita la hora en que Dios nació… buena es la que va, mejor es la que viene…”';
+
+// what happens when it moves on (on everyone's own screen)
+function zsEnter(st, prev) {
+  const P = ZS.P;
+  if (st < prev) {
+    if (st === 1) { zsSay('The last of the sand runs through. San Telmo’s fire goes out of the lanterns.', 8); zeSound('fizzle'); zsWhisper('“Turn it, turn it again… I won’t sleep this time…”', 1.5); }
+    else if (st === 4) zsSay('The keys are gone from the ring, back where they were kept.');
+    else if (st === 6) zsSay('Far below, a heavy bag drops back into an iron coffer.');
+    return;
+  }
+  if (st === 1) {
+    zsSay('The captain’s journal, open on the charts, the last entry in a hurried hand:', 10);
+    zsSay(ZS_LOG, 14); zeSound('page');
+    zsWhisper('“I let the glass run out, señor. I didn’t turn it…”', 3.5);
+  } else if (st === 2) {
+    zsSay('You turn the glass. The sand begins to run, and somewhere in the dark a boy is singing:', 10);
+    zsSay(ZS_SONG, 10); zeSound('take');
+    zsWhisper('“¡Los faroles! Light the lanterns before the glass runs down.”', 4);
+    zsWhisper('“No common flame will hold in this wind. San Telmo’s own fire, for San Telmo’s lanterns.”', 9);
+  } else if (st === 3) {
+    zsSay('The three great lanterns burn blue with the saint’s fire. Far forward, the ship’s bell strikes once, by itself.', 10); zeSound('bell', P && P.bell.x, P && P.bell.y, 0.6);
+    zsWhisper('“Father Anselmo heard us at the altar, all that could get down to him. The rest went unshriven.”', 4);
+  } else if (st === 4) {
+    zsSay(`${ZS_N} candles burn on the altar. The little door of the reliquary has swung open.`, 10); zeSound('soul');
+    zsWhisper('“The chaplain kept his key with the saint. The master hid his where only the bell could see it.”', 3.5);
+  } else if (st === 7 && prev === 5) {
+    zsSay('Three keys, three locks, in turn. The coffer opens: the pay book, and a heavy bag of silver.', 10); zeSound('clank', P && P.arca.x, P && P.arca.y, 0.6);
+    zsWhisper('“Call it at the capstan, as it should have been called.”', 3.5);
+  } else if (st === 7) zsSay('You take up the bag of pay again.');
+  else if (st === ZS_END) zsFinish();
+}
+// a key taken onto the ring (bit: 1 the chaplain's, 2 the master's, 4 the captain's), and what's still to find
+function zsGot(bit) {
+  zeSound('take');
+  if (bit === 1) zsSay('A small iron key, a rosary twisted through its bow. One of three.');
+  else if (bit === 2) zsSay('A long key, an anchor cut in its bow: the master’s.');
+  else zsSay('A key on a cord, knotted fast round the whipstaff. The captain’s.');
+  const k = ZS.keys | bit;   // (whether or not it's on the ring yet)
+  if (k === 7) { zsLater(1.2, () => { zsSay('Three keys on the one ring. Far below, in the Strong Room, something iron settles.', 9); zeSound('thunk'); }); zsWhisper('“The coffer, below, with the pay.”', 3.5); }
+  else if (!(k & 4)) zsWhisper('“Mine I kept on me. I held her myself at the last.”', 3.5);
+  else if (!(k & 2)) zsWhisper('“The master hid his where only the bell could see it.”', 3.5);
+  else zsWhisper('“The chaplain kept his with the saint.”', 3.5);
+}
+function zsFell() { const P = ZS.P; zsSay('The cord parts. Something drops ringing onto the deck under the bell.'); zeSound('bell', P.bell.x, P.bell.y, 0.25); }
+function zsLit(i) { const L = ZS.P.lan[i]; zsSay(i === 1 ? 'The great lantern takes the saint’s fire.' : `The ${i ? 'larboard' : 'starboard'} lantern burns blue.`, 6); zlSound('zap', Math.hypot(L.x - FPS.me.x, L.y - FPS.me.y)); zeSound('light', L.x, L.y); ZS.flare = Math.max(ZS.flare, 0.6); }
+function zsFinish() {
+  ZS.cele = 8; ZS.flare = 4;
+  FPS.flash = 0.6;
+  ZM.banner = { text: 'Paid in full', t: 3.5, col: '#d0e8ff' };
+  zeSound('eight');
+  zsSay('You set the pay on the capstan head and call the first name in the book. Out of the dark, one by one, they come to be paid.', 12);
+  zsLater(2.4, () => { zsSay('San Telmo’s fire burns on her mastheads, and the sea goes quiet. On the capstan head lies a silver coin.', 12); zeSound('coin'); });
+  zsWhisper('“Gracias, señor. Buenas noches.”', 6);
+  if (!ZS.granted) { ZS.granted = true; zsLater(2.4, () => { if (typeof ptGrant === 'function') ptGrant(); }); }
+}
+
+// ---------- doing it ----------
+function zsDo(a) { if (ZM.net === 'client') { if (typeof zmnRequest === 'function') zmnRequest('egg3', a); } else zsAct(FPS.me.id, a); }
+function zsSet(st) { const prev = ZS.st; if (st === prev) return; ZS.st = st; zsEnter(st, prev); }
+function zsAct(sid, a) {
+  const st = ZS.st;
+  if (a === 'table') { if (st === 0) zsSet(1); }
+  else if (a === 'glass') { if (st === 1 && ZM.phase !== 'round') { ZS.sand = ZS_SAND; ZS.lit = 0; zsSet(2); } }
+  else if (a === 'lan0' || a === 'lan1' || a === 'lan2') {
+    const i = +a[3], bit = 1 << i; if (st !== 2 || (ZS.lit & bit)) return;
+    ZS.lit |= bit; zsLit(i);
+    if (ZS.lit === 7) { ZS.souls = 0; zsSet(3); }
+  }
+  else if (a === 'cut') { if (zsHunt(st) && !ZS.fell) { ZS.fell = true; zsFell(); } }
+  else if (a === 'relic' || a === 'mkey' || a === 'ckey') {
+    const bit = a === 'relic' ? 1 : a === 'mkey' ? 2 : 4;
+    if (!zsHunt(st) || (ZS.keys & bit) || (bit === 2 && !ZS.fell)) return;
+    if (st === 5 && ZS.carrier !== sid) return;
+    ZS.keys |= bit;
+    if (st === 4) { ZS.carrier = sid; zsSet(5); }
+    zsGot(bit);
+  }
+  else if (a === 'arca') { if (st === 5 && ZS.carrier === sid && ZS.keys === 7) zsSet(7); else if (st === 6) { ZS.carrier = sid; zsSet(7); } }
+  else if (a === 'pay') { if (st === 7 && ZS.carrier === sid) { ZS.carrier = null; zsSet(ZS_END); } }
+}
+function zsRequest(sid, a) { if (ZS.P && typeof a === 'string') zsAct(sid, a.slice(0, 8)); }
+
+// ---------- each frame ----------
+function zsTick(dt) {
+  if (!ZS.P) return;
+  ZS.t += dt;
+  for (const l of ZS.later) l.t -= dt;
+  const due = ZS.later.filter(l => l.t <= 0); ZS.later = ZS.later.filter(l => l.t > 0);
+  for (const l of due) try { l.f(); } catch (e) {}
+  if (ZS.cele > 0) ZS.cele -= dt;
+  if (ZS.flare > 0) ZS.flare -= dt;
+  if (ZS.st === 2) ZS.sand = Math.max(0, ZS.sand - dt);
+  if (ZM.net === 'client') return;
+  // the sand run out before the lanterns were lit: all of it again, from the glass
+  if (ZS.st === 2 && ZS.sand <= 0) { ZS.lit = 0; zsSet(1); }
+  if (ZS.carrier) {
+    let gone = false;
+    if (ZS.carrier === FPS.me.id) gone = !!ZM.ghost || !!ZM.over;
+    else { const r = FPS.remote.get(ZS.carrier); gone = !r || r.left || (r.dead && !r.down); }
+    if (gone) { ZS.carrier = null; if (ZS.st === 5) { ZS.keys = 0; zsSet(4); } else if (ZS.st === 7) zsSet(6); }
+  }
+}
+// a kill in the Chaplain's Berth, once the lanterns are lit: one more of them shriven, a candle on the altar
+function zsKill(d) {
+  if (!ZS.P || ZM.net === 'client' || ZS.st !== 3) return;
+  if (zmZoneAt(d.x, d.y, d.jz || 0) !== 'chapel') return;
+  ZS.souls++; zsWisp(d.x, d.y, d.jz || 0); zeSound('soul', ZS.P.altar.x, ZS.P.altar.y);
+  if (ZS.souls >= ZS_N) zsSet(4);
+}
+function zsWisp(x, y, jz) {
+  const Q = ZS.P.altar, G0 = FPSC.GROUND, z0 = G0 + jz + 1.2, z1 = G0 + Q.z + 0.15;
+  for (let i = 0; i < 7; i++) { const T = 0.9 + i * 0.05; FPS.parts.push({ x: x + (Math.random() - 0.5) * 0.3, y: y + (Math.random() - 0.5) * 0.3, z: z0, vx: (Q.x - x) / T, vy: (Q.y - y) / T, vz: (z1 - z0) / T, t: T, c: i % 2 ? '255,226,160' : '200,226,255', up: true }); }
+}
+// one of my Corposant's globes, as it drifts: close by a stern lantern while the sand runs, it lights it
+function zsOrb(O) {
+  const P = ZS.P; if (!P || ZS.st !== 2) return;
+  const G0 = FPSC.GROUND;
+  P.lan.forEach((L, i) => {
+    if ((ZS.lit & (1 << i)) || ZS.t - ZS.asked[i] < 1) return;
+    if (Math.hypot(O.x - L.x, O.y - L.y, O.z - (G0 + L.z)) > (i === 1 ? 2.1 : 1.7)) return;
+    ZS.asked[i] = ZS.t;
+    if (typeof ZL !== 'undefined') ZL.arcs.push({ a: O, b: [L.x, L.y, G0 + L.z], t: 0, life: 0.35, w: 1.6, small: false, seed: Math.random() * 1000 });
+    zsDo('lan' + i);
+  });
+}
+
+// ---------- what's in front of you ----------
+function zsNearest(consider) {
+  const P = ZS.P; if (!P) return;
+  const st = ZS.st, mine = zsMine(), can = zsCan(), hunt = zsHunt(st);
+  consider({ k: 'egg3', a: 'table' }, P.table.ux, P.table.uy, P.table.uz, 1.5, true);
+  if (st === 1 || st === 2) consider({ k: 'egg3', a: 'glass' }, P.glass.ux, P.glass.uy, P.glass.uz, 1.4, true);
+  if (hunt && !(ZS.keys & 1) && can) consider({ k: 'egg3', a: 'relic' }, P.relic.ux, P.relic.uy, P.relic.uz, 1.5, true);
+  if (hunt && !ZS.fell) consider({ k: 'egg3', a: 'bell' }, P.bkey.ux, P.bkey.uy, P.bkey.uz, 1.5, true);
+  if (hunt && ZS.fell && !(ZS.keys & 2) && can) consider({ k: 'egg3', a: 'mkey' }, P.bfloor.ux, P.bfloor.uy, P.bfloor.uz, 1.3, false);
+  if (hunt && !(ZS.keys & 4) && can) consider({ k: 'egg3', a: 'ckey' }, P.whip.ux, P.whip.uy, P.whip.uz, 1.5, true);
+  if (st < 7) consider({ k: 'egg3', a: 'arca' }, P.arca.ux, P.arca.uy, P.arca.uz, 1.4, true);
+  if (st === 7 && mine) consider({ k: 'egg3', a: 'pay' }, P.cap.ux, P.cap.uy, P.cap.uz, 1.6, true);
+}
+function zsPrompt(o) {
+  const st = ZS.st, mine = zsMine();
+  if (o.a === 'table') return { text: st === 0 ? 'A book lies open on the charts' : 'The captain’s journal', free: true };
+  if (o.a === 'glass') return st === 1 ? { text: 'Turn the glass', free: true } : { text: 'The sand is running' };
+  if (o.a === 'relic') return { text: 'The reliquary stands open', free: true };
+  if (o.a === 'bell') return { text: 'Something hangs from the belfry’s beam, out of reach' };
+  if (o.a === 'mkey') return { text: 'Something lies on the deck', free: true };
+  if (o.a === 'ckey') return { text: 'The whipstaff', free: true };
+  if (o.a === 'arca') return st === 5 && mine && ZS.keys === 7 ? { text: 'Turn the three keys', free: true } : st === 6 ? { text: 'Take up the pay', free: true } : { text: 'An iron coffer: three locks' };
+  if (o.a === 'pay') return { text: 'Call the pay', free: true };
+  return null;
+}
+function zsUse(o) {
+  const st = ZS.st, mine = zsMine();
+  if (o.a === 'table') { if (st === 0) zsDo('table'); else { zsSay(ZS_LOG, 10); zeSound('page'); } return; }
+  if (o.a === 'glass') {
+    if (st !== 1) return;
+    if (ZM.phase === 'round') { zeSound('fizzle'); zsSay('The glass jumps in its rack and the sand won’t fall true. Not while the sea’s this loud.', 5); return; }
+    zsDo('glass'); return;
+  }
+  if (o.a === 'relic' || o.a === 'mkey' || o.a === 'ckey') { zsDo(o.a); return; }
+  if (o.a === 'bell') { zeSound('rustle'); if (!ZS.said.reach) { ZS.said.reach = true; zsSay('You can’t reach it.', 4); } return; }
+  if (o.a === 'arca') {
+    if ((st === 5 && mine && ZS.keys === 7) || st === 6) { zsDo('arca'); return; }
+    zeSound('thunk', ZS.P.arca.x, ZS.P.arca.y); if (!ZS.said.arca) { ZS.said.arca = true; zsSay('Locked fast. Three locks, and three keys to them.', 5); }
+    return;
+  }
+  if (o.a === 'pay') { if (st === 7 && mine) zsDo('pay'); }
+}
+
+// ---------- striking things ----------
+// a shot (one of its lines): the cord under the belfry's beam; and a stern lantern, which a bullet only makes gutter
+function zsShot(x, y, z, h, p, by) {
+  const P = ZS.P; if (!P) return;
+  // (as a ball of R about it, in 3D: the stern lanterns are steeply above you from the Quarterdeck)
+  const hitAt = (q, R) => {
+    const cp = Math.cos(p), dx = Math.sin(h) * cp, dy = Math.cos(h) * cp, dz = Math.sin(p), ox = q.x - x, oy = q.y - y, oz = FPSC.GROUND + q.z - z, along = ox * dx + oy * dy + oz * dz; if (along < 0 || along > 60) return false;
+    const side2 = ox * ox + oy * oy + oz * oz - along * along; if (side2 > R * R) return false;
+    const t = (along - Math.sqrt(R * R - side2)) * cp, wall = fpsRay(x, y, z, h, p, by, [], t + 1); return !(wall.t < t - 0.08);
+  };
+  if (zsHunt(ZS.st) && !ZS.fell && hitAt(P.bkey, 0.3)) zsCut();
+  if (ZS.st === 2 && FPS.weapon !== 'corposant' && !ZS.said.gutter && P.lan.some((L, i) => hitAt(L, i === 1 ? 0.8 : 0.6))) { ZS.said.gutter = true; zeSound('fizzle', P.lan[1].x, P.lan[1].y); zsSay('The flame gutters, and steadies. No common fire will do.', 5); }
+}
+function zsMelee(x, y, z, h, w) {
+  const P = ZS.P; if (!P || !zsHunt(ZS.st) || ZS.fell) return;
+  const reach = (w.reach || 2) + 0.6, q = P.bkey, d = Math.hypot(q.x - x, q.y - y);
+  if (d < reach && (d < 0.5 || Math.abs(angDiff(bearingOf(q.x - x, q.y - y), h)) < (w.arc || 0.9) + 0.15) && Math.abs(FPSC.GROUND + q.z - z) < 1.3) zsCut();
+}
+function zsCut() { if (ZS.t - ZS.myCut < 0.5) return; ZS.myCut = ZS.t; zeSound('cut'); zsDo('cut'); }
+
+// ---------- together: the host's word ----------
+function zsHostSend(z) { if (ZS.P) z.eg3 = [ZS.st, ZS.carrier || '', ZS.souls, ZS.lit, ZS.keys, ZS.fell ? 1 : 0, Math.round(ZS.sand * 10)]; }
+function zsApply(hz) {
+  const e = hz && hz.eg3;
+  if (!Array.isArray(e) || !ZS.P) return;
+  const st = Math.max(0, Math.min(ZS_END, e[0] | 0)), carrier = typeof e[1] === 'string' && e[1] ? e[1].slice(0, 40) : null;
+  const souls = Math.max(0, Math.min(99, e[2] | 0)), lit = (e[3] | 0) & 7, keys = (e[4] | 0) & 7, fell = !!e[5], sand = Math.max(0, Math.min(ZS_SAND, (+e[6] || 0) / 10));
+  ZS.carrier = carrier;
+  for (const i of [0, 1, 2]) if ((lit & (1 << i)) && !(ZS.lit & (1 << i))) zsLit(i);
+  ZS.lit = lit;
+  if (fell && !ZS.fell) zsFell();
+  ZS.fell = fell;
+  if (st === 3 && souls > ZS.souls) { const Q = ZS.P.altar; for (let i = ZS.souls; i < souls; i++) zsWisp(Q.x + 2 + Math.random() * 6, Q.y + (Math.random() - 0.5) * 8, ZGL.F[1]); zeSound('soul', Q.x, Q.y); }
+  ZS.souls = souls;
+  if (st === 2) ZS.sand = sand;
+  if (st !== ZS.st) { const prev = ZS.st; ZS.st = st; zsEnter(st, prev); }
+  // (the keys after the step, so what's still to find is said on the step the ring is on)
+  for (const bit of [1, 2, 4]) if ((keys & bit) && !(ZS.keys & bit)) { ZS.keys |= bit; zsGot(bit); }
+  ZS.keys = keys;
+}
+
+// ---------- in 3D ----------
+const Z3S = {};
+function zs3dBuild(grp) {
+  Z3S.ok = false; if (!ZS.P || typeof THREE === 'undefined') return;
+  const P = ZS.P, G0 = FPSC.GROUND, soft = z3Soft('rgba(255,250,225,1)', 'rgba(255,250,225,0)');
+  const sprite = (c, sc, par) => { const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: soft, color: new THREE.Color(c), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false })); s.scale.setScalar(sc || 1); (par || grp).add(s); return s; };
+  const glint = c => { const s = sprite(c || '#fff4d0'), h = sprite(c || '#fff4d0'); s.visible = h.visible = false; return { s, h }; };
+  Z3S.gl = { table: glint(), glass: glint('#ffe8b8'), relic: glint('#ffe0a8'), bkey: glint(), mkey: glint(), ckey: glint(), arca: glint('#e8e0c8'), cap: glint('#d8e8ff') };
+  Z3S.glL = new THREE.PointLight(0xfff0d0, 0, 2.6, 2); grp.add(Z3S.glL);
+  const iron = new THREE.MeshPhongMaterial({ color: 0x3a3c40, specular: 0x8a8c90, shininess: 40 }), brass = new THREE.MeshPhongMaterial({ color: 0x9a7a34, specular: 0xd0b060, shininess: 60, emissive: 0x181006 }), cord = z3Lam('#8a7a5a'), hide = z3Lam('#5a3e26'), oak = z3Lam('#3e2a1c');
+  const K = zeKit();
+  // a key: its bow, the shank, the bit (its origin at the bow; it hangs down -y)
+  const key = (mat, sc) => { const g = new THREE.Group(); K.add(mat, new THREE.TorusGeometry(0.03, 0.009, 5, 12), 0, 0, 0); K.add(mat, new THREE.CylinderGeometry(0.008, 0.008, 0.15, 5), 0, -0.1, 0); K.add(mat, new THREE.BoxGeometry(0.04, 0.03, 0.01), 0.022, -0.16, 0); K.add(mat, new THREE.BoxGeometry(0.025, 0.012, 0.01), 0.015, -0.12, 0); K.into(g); g.scale.setScalar(sc || 1); grp.add(g); return g; };
+  // the master's key, on its cord under the belfry's beam, then on the deck
+  { const g = key(iron, 1.3), sl = 0.32, c = new THREE.Mesh(new THREE.CylinderGeometry(0.005, 0.005, sl, 4), cord); c.position.copy(z3v(P.bkey.x, P.bkey.y, G0 + P.bkey.z + 0.04 + sl / 2)); grp.add(c); Z3S.mkey = { g, c }; }
+  // the captain's key, on its cord round the whipstaff; the chaplain's in the reliquary
+  { const g = key(brass, 1.2); g.position.copy(z3v(P.whip.x, P.whip.y, G0 + P.whip.z)); g.rotation.set(0, 0.4, 0); const r = new THREE.Mesh(new THREE.TorusGeometry(0.11, 0.008, 4, 12), cord); r.position.copy(z3v(P.whip.x - 0.02, P.whip.y - 0.05, G0 + P.whip.z + 0.06)); r.rotation.x = Math.PI / 2; grp.add(r); Z3S.ckey = { g, r }; }
+  { const g = key(iron, 0.9); g.position.copy(z3v(P.relic.x + 0.05, P.relic.y, G0 + P.relic.z + 0.02)); g.rotation.set(0, Math.PI / 2, 0); Z3S.rkey = g; }
+  // the ring of keys in hand
+  { const g = new THREE.Group(); grp.add(g); const ring = new THREE.Mesh(new THREE.TorusGeometry(0.05, 0.007, 5, 14), iron); g.add(ring); Z3S.ring = { g, k: [] };
+    for (let i = 0; i < 3; i++) { const k = key(i === 2 ? brass : iron, 0.8); grp.remove(k); k.position.set(-0.03 + i * 0.03, -0.04, 0); k.rotation.z = (i - 1) * 0.35; g.add(k); Z3S.ring.k.push(k); }
+    g.visible = false; }
+  // the coffer: an iron-bound box on the floor before the pay chest, three hasps, its lid on hinges at the back
+  { const g = new THREE.Group(); g.position.copy(z3v(P.arca.x, P.arca.y, G0 + P.arca.z)); g.rotation.y = -Math.PI / 2; grp.add(g);
+    K.add(oak, new THREE.BoxGeometry(0.7, 0.4, 0.45), 0, 0.2, 0);
+    for (const u of [-0.3, 0, 0.3]) K.add(iron, new THREE.BoxGeometry(0.05, 0.42, 0.47), u, 0.2, 0);
+    for (const u of [-0.2, 0, 0.2]) { K.add(brass, new THREE.BoxGeometry(0.08, 0.1, 0.02), u, 0.3, -0.235); K.add(z3Lam('#141210'), new THREE.BoxGeometry(0.015, 0.035, 0.01), u, 0.29, -0.247); }
+    K.into(g);
+    const lid = new THREE.Group(); lid.position.set(0, 0.4, 0.225); g.add(lid);
+    K.add(oak, new THREE.BoxGeometry(0.72, 0.08, 0.47), 0, 0.04, -0.225); for (const u of [-0.3, 0, 0.3]) K.add(iron, new THREE.BoxGeometry(0.05, 0.09, 0.48), u, 0.04, -0.225);
+    K.into(lid); Z3S.arca = { g, lid, open: 0 }; }
+  // the bag of pay: leather, tied at the neck
+  { const g = new THREE.Group(); grp.add(g); K.add(hide, new THREE.SphereGeometry(0.13, 10, 8), 0, 0.1, 0, 0, 0, 0, [1, 0.85, 1]); K.add(hide, new THREE.CylinderGeometry(0.035, 0.07, 0.08, 8), 0, 0.23, 0); K.add(cord, new THREE.TorusGeometry(0.04, 0.008, 4, 10), 0, 0.24, 0, Math.PI / 2, 0, 0); K.into(g); g.visible = false; Z3S.bag = g; }
+  // the hourglass's sand, running
+  { const m = new THREE.Mesh(new THREE.CylinderGeometry(0.004, 0.004, 0.16, 4), new THREE.MeshBasicMaterial({ color: 0xe8c890 })); m.position.copy(z3v(P.glass.x, P.glass.y, G0 + P.glass.z - 0.05)); m.visible = false; grp.add(m); Z3S.sand = m; }
+  // San Telmo's fire in the three stern lanterns, and on her mastheads at the last
+  Z3S.lan = P.lan.map((L, i) => { const s = i === 1 ? 1.35 : 1, a = sprite('#bfe4ff', 1.5 * s), b = sprite('#8ac0ff', 4.2 * s); a.position.copy(z3v(L.x, L.y, G0 + L.z)); b.position.copy(a.position); a.visible = b.visible = false; return { a, b, s }; });
+  Z3S.lanL = new THREE.PointLight(0x9ec8ff, 0, 22, 1.4); Z3S.lanL.position.copy(z3v(P.lan[1].x + 1.5, P.lan[1].y, G0 + P.lan[1].z - 0.8)); grp.add(Z3S.lanL);
+  Z3S.mast = P.masts.map(M => { const a = sprite('#c8e8ff', 1.8), b = sprite('#8ac0ff', 5); a.position.copy(z3v(M.x, M.y, G0 + M.z)); b.position.copy(a.position); a.visible = b.visible = false; return { a, b }; });
+  // the votive candles on the altar's front edge, one for each soul
+  { const g = new THREE.Group(); g.position.copy(z3v(P.altar.x, P.altar.y, G0 + P.altar.z)); grp.add(g);
+    K.add(brass, new THREE.BoxGeometry(0.08, 0.02, 1.2), 0, 0.01, 0); for (let i = 0; i < ZS_N; i++) K.add(z3Lam('#e8e0c8', { emissive: 0x201c14 }), new THREE.CylinderGeometry(0.018, 0.018, 0.09, 6), 0, 0.065, -0.525 + i * 0.15);
+    K.into(g); Z3S.flames = []; for (let i = 0; i < ZS_N; i++) { const s = sprite('#ffd890', 0.09); s.position.copy(z3v(P.altar.x, P.altar.y + 0.525 - i * 0.15, G0 + P.altar.z + 0.14)); s.visible = false; Z3S.flames.push(s); } }
+  // the crew come to be paid: small lights round the capstan at the last
+  Z3S.crew = []; for (let i = 0; i < 14; i++) { const s = sprite(i % 2 ? '#d8ecff' : '#ffe8c0', 0.5); s.visible = false; Z3S.crew.push(s); }
+  Z3S.ok = true;
+}
+function zs3d(dt) {
+  if (!Z3S.ok || !ZS.P || !Z3S.gl.table.s.parent) return;
+  const P = ZS.P, t = g.t, G0 = FPSC.GROUND, st = ZS.st, m = FPS.me, mine = zsMine(), can = zsCan(), hunt = zsHunt(st);
+  const GL = Z3S.glL; let lit = false;
+  const tw = (G, on, q, z, ph, big) => {
+    G.s.visible = G.h.visible = on; if (!on) return;
+    const k = Math.pow(Math.max(0, Math.sin(t * 1.25 + ph)), 14), pu = reduceMotion ? 0.5 : 0.5 + 0.5 * Math.sin(t * 2.2 + ph), b = (big || 0.22) * 1.2, at = z3v(q.x, q.y, G0 + (z == null ? q.z : z));
+    G.s.position.copy(at); G.s.material.opacity = 0.3 + 0.15 * pu + 0.55 * k; G.s.scale.setScalar(b * (0.65 + 0.2 * pu + 0.55 * k));
+    G.h.position.copy(at); G.h.material.opacity = 0.09 + 0.06 * pu + 0.1 * k; G.h.scale.setScalar(b * 3.4 * (0.9 + 0.15 * pu));
+    GL.position.copy(at); GL.position.y += 0.3; GL.color.copy(G.s.material.color); GL.intensity = 0.14 + 0.08 * pu + 0.16 * k; lit = true;
+  };
+  const Gl = Z3S.gl;
+  tw(Gl.table, st === 0, P.table, null, 0.3);
+  tw(Gl.glass, st === 1, P.glass, null, 1.1, 0.2);
+  tw(Gl.relic, hunt && !(ZS.keys & 1) && can, P.relic, null, 1.7);
+  tw(Gl.bkey, hunt && !ZS.fell, P.bkey, P.bkey.z - 0.12, 2.3, 0.2);
+  tw(Gl.mkey, hunt && ZS.fell && !(ZS.keys & 2) && can, P.bfloor, 0.1 + P.bfloor.z, 0.6);
+  tw(Gl.ckey, hunt && !(ZS.keys & 4) && can, P.whip, null, 2.9, 0.2);
+  tw(Gl.arca, (st === 5 && mine && ZS.keys === 7) || st === 6, P.arca, P.arca.z + 0.5, 0.9, 0.3);
+  tw(Gl.cap, st === 7 && mine, P.cap, null, 1.4, 0.3);
+  if (!lit) GL.intensity = 0;
+  // the keys where they're kept, and the ring in hand
+  { const M = Z3S.mkey, down = ZS.fell; M.c.visible = !down; M.g.visible = !(ZS.keys & 2) && st < 6;
+    if (!down) { M.g.position.copy(z3v(P.bkey.x, P.bkey.y, G0 + P.bkey.z + 0.04)); M.g.rotation.set(0, reduceMotion ? 0 : Math.sin(t * 0.9) * 0.5, 0); }
+    else { M.g.position.copy(z3v(P.bfloor.x, P.bfloor.y, G0 + P.bfloor.z + 0.01)); M.g.rotation.set(Math.PI / 2, 0, 0.7); } }
+  Z3S.ckey.g.visible = !(ZS.keys & 4) && st < 6;
+  Z3S.rkey.visible = st === 4 ? !(ZS.keys & 1) : st === 5 ? !(ZS.keys & 1) : false;
+  const who = zsCarrierBody(), held = (o, z) => { if (who === m) { const h = m.h, ez = FPSC.EYE + (m.jz || 0) - (FPS.eyeLag || 0) - (FPS.crouchEye || 0); o.position.copy(z3v(m.x + Math.sin(h) * 0.5 - Math.cos(h) * 0.28, m.y + Math.cos(h) * 0.5 + Math.sin(h) * 0.28, G0 + ez - 0.55)); o.rotation.set(0, -h, 0.3); } else { o.position.copy(z3v(who.x + Math.cos(who.h || 0) * 0.3, who.y - Math.sin(who.h || 0) * 0.3, G0 + (who.jz || 0) + z)); o.rotation.set(0, -(who.h || 0), 0.25); } };
+  { const R = Z3S.ring; R.g.visible = st === 5 && !!who; if (R.g.visible) { held(R.g, 1.0); R.k.forEach((k, i) => { k.visible = !!(ZS.keys & (1 << i)); }); } }
+  // the coffer's lid, and the pay: in it, in hand, on the capstan
+  { const A = Z3S.arca, want = st >= 6 ? 1 : 0; A.open += (want - A.open) * Math.min(1, dt * 2.5); A.lid.rotation.x = -A.open * 1.9; }
+  { const B = Z3S.bag; B.visible = st >= 6; if (st === 6) { B.position.copy(z3v(P.arca.x, P.arca.y, G0 + P.arca.z + 0.28)); B.rotation.set(0, 0, 0); } else if (st === 7) { if (who) held(B, 0.95); else B.visible = false; } else if (st === ZS_END) { B.position.copy(z3v(P.cap.x, P.cap.y, G0 + P.cap.z)); B.rotation.set(0, 0.6, 0); } }
+  // the sand
+  Z3S.sand.visible = st === 2 && ZS.sand > 0;
+  // the saint's fire in the lanterns (and flaring at the last), and on the mastheads
+  const fire = i => st >= 3 || (st === 2 && (ZS.lit & (1 << i)));
+  let nf = 0;
+  Z3S.lan.forEach((L, i) => {
+    const on = fire(i); L.a.visible = L.b.visible = on; if (!on) return; nf++;
+    const f = reduceMotion ? 1 : 0.85 + 0.15 * Math.sin(t * 11 + i * 2.1) * Math.sin(t * 6.7 + i), fl = 1 + Math.max(0, ZS.flare) * 0.25;
+    L.a.material.opacity = 0.85 * f; L.b.material.opacity = 0.32 * f; L.a.scale.setScalar(1.5 * L.s * fl * f); L.b.scale.setScalar(4.2 * L.s * fl);
+  });
+  Z3S.lanL.intensity = nf ? (0.5 + 0.35 * nf) * (1 + Math.max(0, ZS.flare) * 0.3) : 0;
+  Z3S.mast.forEach((M, i) => { const on = st === ZS_END; M.a.visible = M.b.visible = on; if (on) { const f = reduceMotion ? 1 : 0.8 + 0.2 * Math.sin(t * 9 + i * 1.7); M.a.material.opacity = 0.9 * f; M.b.material.opacity = 0.3 * f; } });
+  // the candles on the altar
+  Z3S.flames.forEach((s, i) => { s.visible = st >= 4 || (st === 3 && i < ZS.souls); if (s.visible) s.material.opacity = reduceMotion ? 0.9 : 0.75 + 0.25 * Math.sin(t * 13 + i * 2.3); });
+  // the crew come in to the capstan, one by one, and fade
+  const ct = ZS.cele > 0 ? 8 - ZS.cele : -1;
+  Z3S.crew.forEach((s, i) => {
+    const k = ct - i * 0.35; s.visible = st === ZS_END && k > 0 && ct < 8; if (!s.visible) return;
+    const a = i / Z3S.crew.length * 6.2832 + t * 0.4, r = 1.6 + 3 * Math.max(0, 1 - k / 2.5), z = P.cap.z + 0.2 + (reduceMotion ? 0 : Math.sin(t * 2 + i) * 0.15);
+    s.position.copy(z3v(P.cap.x + Math.cos(a) * r, P.cap.y + Math.sin(a) * r, G0 + z)); s.material.opacity = Math.min(1, k) * Math.min(1, (8 - ct) / 2) * 0.8;
+  });
+}
+
+// ---------- on top of the view ----------
+// the San Telmo's Piece of Eight: a struck silver cob, never quite round; the crowned shield and the 8 on its face,
+// and on its back the cross with the castles and lions in its quarters
+function zsDrawCoin(q, x, y, r, spin, t) {
+  const c = Math.cos((spin || 0) * Math.PI * 2), back = c < 0, sx = Math.max(0.04, Math.abs(c));
+  const lump = (rr, n) => { q.beginPath(); for (let i = 0; i <= 24; i++) { const a = i / 24 * 6.2832, k = rr * (1 + 0.045 * Math.sin(a * 3 + 0.7) + 0.03 * Math.sin(a * 5 + 2.1)); if (i) q.lineTo(Math.cos(a) * k, Math.sin(a) * k); else q.moveTo(Math.cos(a) * k, Math.sin(a) * k); } q.closePath(); };
+  q.save(); q.translate(x, y); q.scale(sx, 1);
+  q.fillStyle = '#5a5e64'; lump(r); q.fill();
+  const gr = q.createRadialGradient(-r * 0.35, -r * 0.4, r * 0.1, 0, 0, r); gr.addColorStop(0, '#ffffff'); gr.addColorStop(0.45, '#cfd4d8'); gr.addColorStop(1, '#868c92');
+  q.fillStyle = gr; lump(r * 0.92); q.fill();
+  q.strokeStyle = q.fillStyle = 'rgba(40,44,50,0.9)'; q.lineWidth = Math.max(1, r * 0.04); q.lineCap = 'round'; q.lineJoin = 'round';
+  q.setLineDash([r * 0.04, r * 0.05]); q.beginPath(); q.arc(0, 0, r * 0.8, 0, 6.2832); q.stroke(); q.setLineDash([]);
+  q.font = `700 ${Math.round(r * 0.18)}px "IM Fell English SC", Georgia, serif`; q.textAlign = 'center'; q.textBaseline = 'middle';
+  if (!back) {
+    // the shield, crowned, and the 8 beside it
+    q.beginPath(); q.moveTo(-r * 0.3, -r * 0.3); q.lineTo(r * 0.3, -r * 0.3); q.lineTo(r * 0.3, r * 0.1); q.quadraticCurveTo(r * 0.3, r * 0.4, 0, r * 0.5); q.quadraticCurveTo(-r * 0.3, r * 0.4, -r * 0.3, r * 0.1); q.closePath(); q.stroke();
+    q.beginPath(); q.moveTo(0, -r * 0.3); q.lineTo(0, r * 0.48); q.moveTo(-r * 0.3, r * 0.06); q.lineTo(r * 0.3, r * 0.06); q.stroke();
+    q.beginPath(); q.moveTo(-r * 0.22, -r * 0.36); q.lineTo(-r * 0.24, -r * 0.5); q.lineTo(-r * 0.1, -r * 0.42); q.lineTo(0, -r * 0.56); q.lineTo(r * 0.1, -r * 0.42); q.lineTo(r * 0.24, -r * 0.5); q.lineTo(r * 0.22, -r * 0.36); q.closePath(); q.fill();
+    q.font = `700 ${Math.round(r * 0.26)}px "IM Fell English SC", Georgia, serif`; q.fillText('8', r * 0.52, 0); q.fillText('S', -r * 0.52, 0);
+  } else {
+    // the cross, the castles and the lions
+    q.lineWidth = Math.max(1, r * 0.07); q.beginPath(); q.moveTo(0, -r * 0.62); q.lineTo(0, r * 0.62); q.moveTo(-r * 0.62, 0); q.lineTo(r * 0.62, 0); q.stroke();
+    q.lineWidth = Math.max(1, r * 0.035);
+    for (const [sx2, sy2, castle] of [[-1, -1, true], [1, 1, true], [1, -1, false], [-1, 1, false]]) {
+      const cx2 = sx2 * r * 0.3, cy2 = sy2 * r * 0.3;
+      if (castle) { q.fillRect(cx2 - r * 0.1, cy2 - r * 0.06, r * 0.2, r * 0.16); for (const u of [-1, 0, 1]) q.fillRect(cx2 + u * r * 0.075 - r * 0.025, cy2 - r * 0.12, r * 0.05, r * 0.06); }
+      else { q.beginPath(); q.arc(cx2, cy2 - r * 0.04, r * 0.07, 0, 6.2832); q.stroke(); q.beginPath(); q.moveTo(cx2 - r * 0.08, cy2 + r * 0.12); q.lineTo(cx2 - r * 0.04, cy2 + r * 0.02); q.lineTo(cx2 + r * 0.06, cy2 + r * 0.02); q.lineTo(cx2 + r * 0.1, cy2 + r * 0.12); q.stroke(); }
+    }
+    q.font = `700 ${Math.round(r * 0.11)}px "IM Fell English SC", Georgia, serif`; q.fillText('SAN TELMO · 1597', 0, r * 0.7);
+  }
+  if (t != null && !reduceMotion) { const k = ((t * 0.6) % 1) * 2.4 - 1.2; q.globalCompositeOperation = 'lighter'; const lg = q.createLinearGradient(k * r - r * 0.3, -r, k * r + r * 0.3, r); lg.addColorStop(0, 'rgba(255,255,255,0)'); lg.addColorStop(0.5, 'rgba(230,240,255,0.45)'); lg.addColorStop(1, 'rgba(255,255,255,0)'); q.fillStyle = lg; lump(r * 0.92); q.fill(); q.globalCompositeOperation = 'source-over'; }
+  q.restore();
+}
+function zsHud() {
+  if (!ZS.P) return;
+  const phone = FPS.touch, L = Math.max(14, FPS.safeLeft || 0), top = phone ? fpsHudTop() - 6 : 18;
+  // what you carry: a small mark, top left (the keys on their ring, or the bag of pay)
+  if (zsMine() && (ZS.st === 5 || ZS.st === 7) && !(FPS.me.dead > 0)) {
+    fpsHudNote(top + 30); ctx.save(); ctx.translate(L + 12, top + 14); ctx.lineWidth = 2;
+    if (ZS.st === 5) { ctx.strokeStyle = '#8a8e94'; ctx.beginPath(); ctx.arc(0, -8, 4, 0, 6.2832); ctx.stroke(); for (let i = 0; i < 3; i++) { const on = ZS.keys & (1 << i); ctx.strokeStyle = on ? (i === 2 ? '#d0a850' : '#a8acb2') : 'rgba(140,140,140,0.3)'; const u = (i - 1) * 6; ctx.beginPath(); ctx.moveTo(u * 0.4, -4); ctx.lineTo(u, 10); ctx.moveTo(u, 7); ctx.lineTo(u + 3, 7); ctx.stroke(); } }
+    else { ctx.fillStyle = '#6a4a2e'; ctx.beginPath(); ctx.ellipse(0, 3, 8, 7, 0, 0, 6.2832); ctx.fill(); ctx.fillRect(-3, -7, 6, 4); ctx.strokeStyle = '#c8b080'; ctx.beginPath(); ctx.moveTo(-4, -4); ctx.lineTo(4, -4); ctx.stroke(); }
+    ctx.restore();
+  }
+  if (ZS.cele > 0) {
+    const k = ZS.cele, a = Math.min(1, (8 - k) * 1.5, k), show = 8 - k;
+    if (show > 2.2) {
+      const t = g.t, r = Math.min(W, H) * (phone ? 0.13 : 0.11) * Math.min(1, (show - 2.2) * 2.5);
+      ctx.save(); ctx.globalAlpha = Math.max(0, Math.min(1, a));
+      const gr = ctx.createRadialGradient(cx, H * 0.42, r * 0.5, cx, H * 0.42, r * 3); gr.addColorStop(0, 'rgba(170,210,255,0.34)'); gr.addColorStop(1, 'rgba(170,210,255,0)'); ctx.fillStyle = gr; ctx.fillRect(cx - r * 3, H * 0.42 - r * 3, r * 6, r * 6);
+      if (!reduceMotion) for (let i = 0; i < 14; i++) { const an = i / 14 * 6.2832 + t * 0.7, rr = r * (1.5 + 0.3 * Math.sin(t * 3 + i)); if (Math.sin(t * 5 + i * 2.3) > 0.3) { ctx.fillStyle = '#d8ecff'; ctx.fillRect(cx + Math.cos(an) * rr - 1.5, H * 0.42 + Math.sin(an) * rr - 1.5, 3, 3); } }
+      zsDrawCoin(ctx, cx, H * 0.42, r, reduceMotion ? 0 : t * 0.35, t);
+      { const y0 = H * 0.42 + r + (phone ? 10 : 16), bh = phone ? 52 : 70, bw = Math.min(W * 0.92, phone ? 360 : 620); ctx.fillStyle = 'rgba(8,10,14,0.62)'; ctx.fillRect(cx - bw / 2, y0, bw, bh); }
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.font = `400 ${phone ? 22 : 34}px "IM Fell English SC", serif`; ctx.fillStyle = '#e0eeff';
+      ctx.fillText('The San Telmo’s Piece of Eight', cx, H * 0.42 + r + (phone ? 26 : 38), W * 0.9);
       ctx.font = `600 ${phone ? 11 : 13}px "Courier Prime", monospace`; ctx.fillStyle = 'rgba(236,228,207,0.9)';
       ctx.fillText(`A pirate token: yours to keep (${typeof ptTokens === 'function' ? ptTokens() : 1} to spend on the Keeper’s Last Light card)`, cx, H * 0.42 + r + (phone ? 48 : 68), W * 0.9);
       ctx.restore();
@@ -69268,6 +71087,7 @@ function znRequestFrom(sid, k, a) {
   if (k === 'pst') { if (typeof zmpStatusFrom === 'function') zmpStatusFrom(sid, a); return; }   // [pap] what a reforged weapon did to them
   if (k === 'egg') { if (typeof zeRequest === 'function') zeRequest(sid, a); return; }   // [egg hook] src/zmegg.js
   if (k === 'egg2') { if (typeof zhRequest === 'function') zhRequest(sid, a); return; }   // [egg2 hook] src/zmegg2.js
+  if (k === 'egg3') { if (typeof zsRequest === 'function') zsRequest(sid, a); return; }   // [egg3 hook] src/zmegg3.js
   if (k === 'raid') { if (typeof raidRequest === 'function') raidRequest(sid, a); return; }   // [raid] src/raid.js
 }
 // someone (by) gets someone (sid) up: everyone's told who got whom up (and if it's me, up I get)
@@ -69313,6 +71133,7 @@ function znHostSend() {
   if (typeof zbHostSend === 'function') zbHostSend(z);   // [boss] the bosses: their kinds, strength and blows (src/zmboss.js)
   if (typeof zeHostSend === 'function') zeHostSend(z);   // [egg hook] src/zmegg.js
   if (typeof zhHostSend === 'function') zhHostSend(z);   // [egg2 hook] src/zmegg2.js
+  if (typeof zsHostSend === 'function') zsHostSend(z);   // [egg3 hook] src/zmegg3.js
   if (typeof zmlHostSend === 'function') zmlHostSend(z);   // [lamp] the Light: lit or not, its beam, its price
   if (typeof raidHostSend === 'function') raidHostSend(z);   // [raid] Maren's End: its part, and the part's own state
   znSend(z);
@@ -69462,6 +71283,7 @@ function znApply(hz) {
   }
   if (typeof zeApply === 'function') zeApply(hz);   // [egg hook] src/zmegg.js
   if (typeof zhApply === 'function') zhApply(hz);   // [egg2 hook] src/zmegg2.js
+  if (typeof zsApply === 'function') zsApply(hz);   // [egg3 hook] src/zmegg3.js
   if (typeof zmlApply === 'function') zmlApply(hz);   // [lamp] src/zmlamp.js
   // things that happen once
   if (Array.isArray(hz.ev)) for (const e of hz.ev) {
@@ -75135,7 +76957,7 @@ var LORE = [
     "The tide turns often there. At low water the shoals dry into land bridges between the islands, and at high water they drown with anyone on them.",
   ]},
 ], also: ['reachwars', 'skerrylight', 'bell'] },
-{ id: 'ch_lastlight', t: "Keeper's Last Light", cat: ['Chronicles', 'Events'], box: [['Told in', "Keeper's Last Light"], ['When', 'Winter 1888 to 1889, and after'], ['Where', '[[station|The keeper\'s station]], and later [[wrackhaven]]'], ['Who', 'Whoever lands on the jetty that night'], ['Foes', '[[drowned]], [[diver|the Diver]], [[mooncusser|the Mooncusser]], [[keelback|the Keelback]], [[crabs]]']], sum: "After the Gannet rose, the drowned stopped waiting for ships. On the worst nights of that winter they came up out of the sea for the keeper's station itself, round after round, and anyone who could hold a gun landed on the jetty to keep them out of it.", secs: [
+{ id: 'ch_lastlight', t: "Keeper's Last Light", cat: ['Chronicles', 'Events'], box: [['Told in', "Keeper's Last Light"], ['When', 'Winter 1888 to 1889, and after'], ['Where', '[[station|The keeper\'s station]], and later [[wrackhaven]] and [[santelmo|the San Telmo]]'], ['Who', 'Whoever lands on the jetty that night'], ['Foes', '[[drowned]], [[diver|the Diver]], [[mooncusser|the Mooncusser]], [[keelback|the Keelback]], [[crabs]]']], sum: "After the Gannet rose, the drowned stopped waiting for ships. On the worst nights of that winter they came up out of the sea for the keeper's station itself, round after round, and anyone who could hold a gun landed on the jetty to keep them out of it.", secs: [
   { h: 'The siege', p: [
     "They came up the jetty's ladders and the shingle, tore the boards off the windows and climbed in, more every round and harder to put down. The defenders paid for what they used: guns chalked on the station walls, the doors between its rooms, and a go at [[wreckchest|the wreck chest]] wherever it had turned up that night.",
     "Bigger things came with them: from the tenth round the [[diver|Diver]], the [[mooncusser|Mooncusser]] and the [[keelback|Keelback]], and on some rounds a tide of [[crabs|crabs]] instead of men.",
@@ -75709,6 +77531,12 @@ var LORE = [
 ], also: ['ironship', 'plimsoll'] },
 
 // ---------------- ships ----------------
+{ id: 'santelmo', t: 'The San Telmo', cat: ['Ships'], box: [['Rig', 'Galleon'], ['Of', 'The Spanish squadron of c. 1597, its flagship'], ['Lost', 'A winter gale, on the Skerries, with all hands'], ['Lies', 'On a shingle bank in a cove, given back by the sea'], ['Appears in', '[[ch_lastlight]]']], sum: "The flagship of the Spanish squadron that was blown north in the Armada years. The rest of the squadron wintered on the headland and built [[seafort|the sea fort]]. The San Telmo never got in. She struck the Skerries in a winter gale with the squadron's pay aboard and went down with every man. Centuries later the sea gave her back, far bigger than any ship has a right to be, and her crew came up out of the water to take her back.", secs: [
+  { h: 'The ship', p: [
+    "She lies upright on a shingle bank, black with weed, her masts still standing with their sails in rags and the three great lanterns on her stern. Four decks: the hold and its stores, with the Strong Room aft where the pay was kept; the Gun Deck, with its rows of bronze guns, the Gunroom, the Chaplain's Berth and the Surgeon's Cockpit; the Waist, the Steerage, the Great Cabin and the Forecastle; and above them the Quarterdeck and the Forecastle Deck with the ship's bell.",
+    "Her crew named her for Saint Elmo, the sailors' saint, whose blue fire burns on the mastheads in a storm. The one weapon found aboard her is the Corposant, a navigator's brass sphere with that fire caught inside it.",
+  ]},
+], also: ['seafort', 'garrison', 'ch_lastlight'] },
 { id: 'gannet', t: 'The Gannet', cat: ['Ships'], box: [['Rig', 'Brig'], ['Master', '[[crane|Absalom Crane]]'], ['Lost', '14 December 1887, on the Skerries, with all hands'], ['Rose', '14 December 1888'], ['Figurehead', '[[knock]]'], ['Appears in', '[[ch_voyages]], [[ch_gannetswake]]']], sum: "The brig whose loss began everything. She was coming in under the cliffs on the night the lamp failed, and broke up on the skerries with all hands. A year to the night later, she rose again.", secs: [
   { h: 'The wreck', p: [
     "See [[wreck1887|the Night of the Gannet]]. Her bell was heard ringing as she went, and the Wrackhaven men found her spars on the rocks at first light. Her cabin boy's blue shoes were next seen on [[plimsoll]].",
